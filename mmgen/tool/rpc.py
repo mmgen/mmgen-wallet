@@ -21,7 +21,7 @@ tool/rpc.py: JSON/RPC routines for the 'mmgen-tool' utility
 """
 
 from .common import tool_cmd_base,options_annot_str
-from ..tw import TwCommon
+from ..tw.common import TwCommon
 
 class tool_cmd(tool_cmd_base):
 	"tracking wallet commands using the JSON-RPC interface"
@@ -37,7 +37,7 @@ class tool_cmd(tool_cmd_base):
 
 	async def getbalance(self,minconf=1,quiet=False,pager=False):
 		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
-		from ..twbal import TwGetBalance
+		from ..tw.bal import TwGetBalance
 		return (await TwGetBalance(self.proto,minconf,quiet)).format()
 
 	async def listaddress(self,
@@ -89,7 +89,7 @@ class tool_cmd(tool_cmd_base):
 			from ..addrlist import AddrIdxList
 			usr_addr_list = [MMGenID(self.proto,f'{a[0]}:{i}') for i in AddrIdxList(a[1])]
 
-		from ..twaddrs import TwAddrList
+		from ..tw.addrs import TwAddrList
 		al = await TwAddrList( self.proto, usr_addr_list, minconf, showempty, showbtcaddrs, all_labels )
 		if not al:
 			from ..util import die
@@ -107,7 +107,7 @@ class tool_cmd(tool_cmd_base):
 			wide_show_confs = True ):
 		"view tracking wallet"
 
-		from ..twuo import TwUnspentOutputs
+		from ..tw.unspent import TwUnspentOutputs
 		twuo = await TwUnspentOutputs(self.proto,minconf=minconf)
 		await twuo.get_unspent_data(reverse_sort=reverse)
 		twuo.age_fmt = age_fmt
@@ -121,7 +121,7 @@ class tool_cmd(tool_cmd_base):
 
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
-		from ..twctl import TrackingWallet
+		from ..tw.ctl import TrackingWallet
 		await (await TrackingWallet(self.proto,mode='w')).add_label( mmgen_or_coin_addr, label, on_fail='raise' )
 		return True
 
@@ -132,7 +132,7 @@ class tool_cmd(tool_cmd_base):
 
 	async def remove_address(self,mmgen_or_coin_addr:str):
 		"remove an address from tracking wallet"
-		from ..twctl import TrackingWallet
+		from ..tw.ctl import TrackingWallet
 		ret = await (await TrackingWallet(self.proto,mode='w')).remove_address(mmgen_or_coin_addr) # returns None on failure
 		if ret:
 			from ..util import msg

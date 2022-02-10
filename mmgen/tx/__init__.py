@@ -71,7 +71,7 @@ async def _get_obj_async( _clsname, _modname, *args, **kwargs ):
 	# No tracking wallet required for the Unsigned and Signed(data=unsigned.__dict__) classes used
 	# during signing.
 	if proto and proto.tokensym and clsname in ('New','OnlineSigned'):
-		from ..twctl import TrackingWallet
+		from ..tw.ctl import TrackingWallet
 		kwargs['tw'] = await TrackingWallet(proto)
 
 	return _base_proto_subclass( clsname, modname, proto )(*args,**kwargs)

@@ -643,11 +643,11 @@ def get_subclasses(cls,names=False):
 				yield j
 	return tuple((c.__name__ for c in gen(cls)) if names else gen(cls))
 
-def base_proto_subclass(cls,proto,modname):
+def base_proto_tw_subclass(cls,proto,modname):
 	"""
 	magic module loading and class selection
 	"""
-	modname = f'mmgen.base_proto.{proto.base_proto.lower()}.{modname}'
+	modname = f'mmgen.base_proto.{proto.base_proto.lower()}.tw.{modname}'
 	clsname = (
 		proto.mod_clsname
 		+ ('Token' if proto.tokensym else '')

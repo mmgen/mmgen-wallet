@@ -12,8 +12,8 @@
 base_proto.bitcoin.tw: Bitcoin base protocol tracking wallet dependency classes
 """
 
-from ...addrdata import TwAddrData
-from ...util import vmsg
+from ....addrdata import TwAddrData
+from ....util import vmsg
 
 class BitcoinTwAddrData(TwAddrData):
 

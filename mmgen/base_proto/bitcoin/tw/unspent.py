@@ -12,8 +12,8 @@
 base_proto.bitcoin.twuo: Bitcoin base protocol tracking wallet unspent outputs class
 """
 
-from ...twuo import TwUnspentOutputs
-from ...addr import CoinAddr
+from ....tw.unspent import TwUnspentOutputs
+from ....addr import CoinAddr
 
 class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 

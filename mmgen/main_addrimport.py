@@ -24,7 +24,7 @@ import time
 
 from .common import *
 from .addrlist import AddrList,KeyAddrList
-from .tw import TwLabel
+from .tw.common import TwLabel
 
 ai_msgs = lambda k: {
 	'rescan': """
@@ -158,9 +158,9 @@ def make_args_list(tw,al,batch,rescan):
 			yield (tw,e.addr,TwLabel(proto,label),rescan,fs,msg_args)
 
 async def main():
-	from .twctl import TrackingWallet
+	from .tw.ctl import TrackingWallet
 	if opt.token_addr:
-		proto.tokensym = 'foo' # hack to trigger 'Token' in base_proto_subclass()
+		proto.tokensym = 'foo' # hack to trigger 'Token' in base_proto_tw_subclass()
 
 	tw = await TrackingWallet(
 		proto      = proto,

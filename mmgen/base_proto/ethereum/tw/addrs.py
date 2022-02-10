@@ -20,7 +20,7 @@
 base_proto.ethereum.twaddrs: Ethereum tracking wallet address list class
 """
 
-from ...twaddrs import TwAddrList
+from ....tw.addrs import TwAddrList
 
 class EthereumTwAddrList(TwAddrList):
 
@@ -28,9 +28,9 @@ class EthereumTwAddrList(TwAddrList):
 
 	async def __init__(self,proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
 
-		from ...tw import TwLabel
-		from ...twctl import TrackingWallet
-		from ...addr import CoinAddr
+		from ....tw.common import TwLabel
+		from ....tw.ctl import TrackingWallet
+		from ....addr import CoinAddr
 
 		self.proto = proto
 		self.wallet = wallet or await TrackingWallet(self.proto,mode='w')

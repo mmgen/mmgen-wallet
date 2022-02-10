@@ -332,7 +332,7 @@ class New(Base):
 
 		assert isinstance( locktime, (int,type(None)) ), 'locktime must be of type int'
 
-		from ..twuo import TwUnspentOutputs
+		from ..tw.unspent import TwUnspentOutputs
 
 		if opt.comment_file:
 			self.add_comment(opt.comment_file)

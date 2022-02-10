@@ -23,9 +23,9 @@ twuo: Tracking wallet unspent outputs class for the MMGen suite
 import time
 from collections import namedtuple
 
-from .globalvars import g
-from .color import red,yellow,green
-from .util import (
+from ..globalvars import g
+from ..color import red,yellow,green
+from ..util import (
 	msg,
 	msg_r,
 	die,
@@ -36,19 +36,19 @@ from .util import (
 	keypress_confirm,
 	line_input,
 	do_pager,
-	base_proto_subclass
+	base_proto_tw_subclass
 )
-from .base_obj import AsyncInit
-from .objmethods import MMGenObject
-from .obj import ImmutableAttr,ListItemAttr,MMGenListItem,TwComment,get_obj,HexStr,CoinTxID
-from .addr import CoinAddr,MMGenID,AddrIdx
-from .rpc import rpc_init
-from .tw import TwCommon,TwMMGenID,get_tw_label
+from ..base_obj import AsyncInit
+from ..objmethods import MMGenObject
+from ..obj import ImmutableAttr,ListItemAttr,MMGenListItem,TwComment,get_obj,HexStr,CoinTxID
+from ..addr import CoinAddr,MMGenID,AddrIdx
+from ..rpc import rpc_init
+from .common import TwCommon,TwMMGenID,get_tw_label
 
 class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(base_proto_subclass(cls,proto,'twuo'))
+		return MMGenObject.__new__(base_proto_tw_subclass(cls,proto,'unspent'))
 
 	txid_w = 64
 	age_fmts_date_dependent = ('days','date','date_time')
@@ -95,7 +95,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		self.disp_prec    = self.get_display_precision()
 		self.rpc          = await rpc_init(proto)
 
-		from .twctl import TrackingWallet
+		from .ctl import TrackingWallet
 		self.wallet = await TrackingWallet(proto,mode='w')
 
 	@property
@@ -174,7 +174,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		return ret
 
 	def set_term_columns(self):
-		from .term import get_terminal_size
+		from ..term import get_terminal_size
 		while True:
 			self.cols = g.terminal_width or get_terminal_size().width
 			if self.cols >= g.min_screen_width:
@@ -387,10 +387,10 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 						return n
 
 	async def view_and_sort(self,tx):
-		from .term import get_char
+		from ..term import get_char
 		prompt = self.prompt.strip() + '\b'
 		no_output,oneshot_msg = False,None
-		from .opts import opt
+		from ..opts import opt
 		CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
 		CUR_RIGHT = lambda n: f'\033[{n}C'
 
@@ -464,7 +464,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 					self.proto.dcoin,
 					','.join(self.sort_info(include_group=False)).lower() )
 				msg('')
-				from .fileutil import write_data_to_file
+				from ..fileutil import write_data_to_file
 				try:
 					write_data_to_file(
 						of,

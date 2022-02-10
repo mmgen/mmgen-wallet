@@ -15,7 +15,7 @@ from mmgen.seedsplit import *
 from mmgen.protocol import *
 from mmgen.addr import *
 from mmgen.tx import *
-from mmgen.twuo import *
+from mmgen.tw.unspent import *
 from mmgen.key import *
 from ..include.common import getrand
 

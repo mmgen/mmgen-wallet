@@ -22,9 +22,9 @@ tw: Tracking wallet dependency classes and helper functions
 
 import time
 
-from .objmethods import Hilite,InitErrors,MMGenObject
-from .obj import TwComment
-from .addr import MMGenID
+from ..objmethods import Hilite,InitErrors,MMGenObject
+from ..obj import TwComment
+from ..addr import MMGenID
 
 # mixin class for TwUnspentOutputs,TwAddrList:
 class TwCommon:

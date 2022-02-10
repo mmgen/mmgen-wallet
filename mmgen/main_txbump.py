@@ -129,7 +129,7 @@ async def main():
 	kl = get_keylist(orig_tx.proto,opt)
 	sign_and_send = bool(seed_files or kl or kal)
 
-	from .twctl import TrackingWallet
+	from .tw.ctl import TrackingWallet
 	tx = await BumpTX(
 		data = orig_tx.__dict__,
 		send = sign_and_send,

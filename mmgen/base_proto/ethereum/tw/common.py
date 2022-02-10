@@ -20,8 +20,8 @@
 base_proto.ethereum.tw: Ethereum tracking wallet dependency classes
 """
 
-from ...addrdata import TwAddrData
-from ...util import vmsg
+from ....addrdata import TwAddrData
+from ....util import vmsg
 
 class EthereumTwAddrData(TwAddrData):
 
@@ -33,8 +33,8 @@ class EthereumTwAddrData(TwAddrData):
 	}
 
 	async def get_tw_data(self,wallet=None):
-		from ...twctl import TrackingWallet
-		from ...util import vmsg
+		from ....tw.ctl import TrackingWallet
+		from ....util import vmsg
 		vmsg('Getting address data from tracking wallet')
 		tw = (wallet or await TrackingWallet(self.proto)).mmid_ordered_dict
 		# emulate the output of RPC 'listaccounts' and 'getaddressesbyaccount'

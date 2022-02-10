@@ -20,14 +20,14 @@
 twctl: Tracking wallet control class for the MMGen suite
 """
 
-from .globalvars import g
-from .util import msg,dmsg,write_mode,base_proto_subclass,die
-from .base_obj import AsyncInit
-from .objmethods import MMGenObject
-from .obj import TwComment,get_obj
-from .addr import CoinAddr,is_mmgen_id,is_coin_addr
-from .rpc import rpc_init
-from .tw import TwMMGenID,TwLabel
+from ..globalvars import g
+from ..util import msg,dmsg,write_mode,base_proto_tw_subclass,die
+from ..base_obj import AsyncInit
+from ..objmethods import MMGenObject
+from ..obj import TwComment,get_obj
+from ..addr import CoinAddr,is_mmgen_id,is_coin_addr
+from ..rpc import rpc_init
+from .common import TwMMGenID,TwLabel
 
 class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
@@ -38,7 +38,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 	importing = False
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(base_proto_subclass(cls,proto,'twctl'))
+		return MMGenObject.__new__(base_proto_tw_subclass(cls,proto,'ctl'))
 
 	async def __init__(self,proto,mode='r',token_addr=None):
 
@@ -81,7 +81,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			))
 		self.tw_fn = os.path.join(tw_dir,'tracking-wallet.json')
 
-		from .fileutil import check_or_create_dir,get_data_from_file
+		from ..fileutil import check_or_create_dir,get_data_from_file
 		check_or_create_dir(tw_dir)
 
 		try:
@@ -185,7 +185,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
 	@write_mode
 	def write_changed(self,data):
-		from .fileutil import write_data_to_file
+		from ..fileutil import write_data_to_file
 		write_data_to_file(
 			self.tw_fn,
 			data,
@@ -216,7 +216,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			msg('Data is unchanged\n')
 
 	async def is_in_wallet(self,addr):
-		from .twaddrs import TwAddrList
+		from .addrs import TwAddrList
 		return addr in (await TwAddrList(self.proto,[],0,True,True,True,wallet=self)).coinaddr_list()
 
 	# returns on failure
@@ -230,7 +230,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			mmaddr = TwMMGenID(self.proto,arg1)
 
 		if mmaddr and not coinaddr:
-			from .addrdata import TwAddrData
+			from ..addrdata import TwAddrData
 			coinaddr = (await TwAddrData(self.proto)).mmaddr2coinaddr(mmaddr)
 
 		try:
@@ -245,7 +245,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		# Allow for the possibility that BTC addr of MMGen addr was entered.
 		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
 		if not mmaddr:
-			from .addrdata import TwAddrData
+			from ..addrdata import TwAddrData
 			mmaddr = (await TwAddrData(proto=self.proto)).coinaddr2mmaddr(coinaddr)
 
 		if not mmaddr:

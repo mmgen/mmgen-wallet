@@ -12,8 +12,8 @@
 base_proto.bitcoin.twctl: Bitcoin base protocol tracking wallet control class
 """
 
-from ...twctl import TrackingWallet
-from ...util import rmsg,write_mode
+from ....tw.ctl import TrackingWallet
+from ....util import rmsg,write_mode
 
 class BitcoinTrackingWallet(TrackingWallet):
 

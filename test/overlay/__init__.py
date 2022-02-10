@@ -41,17 +41,20 @@ def overlay_setup(repo_root):
 				'mmgen.base_proto',
 				'mmgen.base_proto.bitcoin',
 				'mmgen.base_proto.bitcoin.tx',
+				'mmgen.base_proto.bitcoin.tw',
 				'mmgen.base_proto.ethereum',
 				'mmgen.base_proto.ethereum.pyethereum',
 				'mmgen.base_proto.ethereum.rlp',
 				'mmgen.base_proto.ethereum.rlp.sedes',
 				'mmgen.base_proto.ethereum.tx',
+				'mmgen.base_proto.ethereum.tw',
 				'mmgen.base_proto.monero',
 				'mmgen.data',
 				'mmgen.proto',
 				'mmgen.share',
 				'mmgen.tool',
 				'mmgen.tx',
+				'mmgen.tw',
 				'mmgen.wallet' ):
 			process_srcdir(d)
 

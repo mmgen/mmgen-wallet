@@ -20,17 +20,17 @@
 twaddrs: Tracking wallet listaddresses class for the MMGen suite
 """
 
-from .color import green
-from .util import msg,die,base_proto_subclass
-from .base_obj import AsyncInit
-from .obj import MMGenDict,TwComment
-from .addr import CoinAddr,MMGenID
-from .tw import TwCommon
+from ..color import green
+from ..util import msg,die,base_proto_tw_subclass
+from ..base_obj import AsyncInit
+from ..obj import MMGenDict,TwComment
+from ..addr import CoinAddr,MMGenID
+from .common import TwCommon
 
 class TwAddrList(MMGenDict,TwCommon,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenDict.__new__(base_proto_subclass(cls,proto,'twaddrs'),*args,**kwargs)
+		return MMGenDict.__new__(base_proto_tw_subclass(cls,proto,'addrs'),*args,**kwargs)
 
 	def raw_list(self):
 		return [((k if k.type == 'mmgen' else 'Non-MMGen'),self[k]['addr'],self[k]['amt']) for k in self]

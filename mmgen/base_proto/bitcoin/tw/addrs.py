@@ -12,12 +12,12 @@
 base_proto.bitcoin.twaddrs: Bitcoin base protocol tracking wallet address list class
 """
 
-from ...twaddrs import TwAddrList
-from ...util import msg,die
-from ...obj import MMGenList
-from ...addr import CoinAddr
-from ...rpc import rpc_init
-from ...tw import get_tw_label
+from ....util import msg,die
+from ....obj import MMGenList
+from ....addr import CoinAddr
+from ....rpc import rpc_init
+from ....tw.addrs import TwAddrList
+from ....tw.common import get_tw_label
 
 class BitcoinTwAddrList(TwAddrList):
 

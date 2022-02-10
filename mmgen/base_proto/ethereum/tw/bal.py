@@ -20,8 +20,8 @@
 base_proto.ethereum.twbal: Ethereum tracking wallet getbalance class
 """
 
-from ...twctl import TrackingWallet
-from ...twbal import TwGetBalance
+from ....tw.ctl import TrackingWallet
+from ....tw.bal import TwGetBalance
 
 class EthereumTwGetBalance(TwGetBalance):
 

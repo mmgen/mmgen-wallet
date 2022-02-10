@@ -20,11 +20,11 @@
 base_proto.ethereum.twctl: Ethereum tracking wallet control class
 """
 
-from ...util import msg,ymsg,write_mode,die
-from ...twctl import TrackingWallet
-from ...addr import is_coin_addr,is_mmgen_id
-from ...amt import ETHAmt
-from .contract import Token,TokenResolve
+from ....util import msg,ymsg,write_mode,die
+from ....tw.ctl import TrackingWallet
+from ....addr import is_coin_addr,is_mmgen_id
+from ....amt import ETHAmt
+from ..contract import Token,TokenResolve
 
 class EthereumTrackingWallet(TrackingWallet):
 
@@ -167,7 +167,7 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 			if not is_coin_addr(proto,token_addr):
 				die( 'UnrecognizedTokenSymbol', f'Specified token {proto.tokensym!r} could not be resolved!' )
 
-		from ...addr import TokenAddr
+		from ....addr import TokenAddr
 		self.token = TokenAddr(proto,token_addr)
 
 		if self.token not in self.data['tokens']:

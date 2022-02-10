@@ -20,8 +20,8 @@
 base_proto.ethereum.twuo: Ethereum tracking wallet unspent outputs class
 """
 
-from ...tw import TwLabel
-from ...twuo import TwUnspentOutputs
+from ....tw.common import TwLabel
+from ....tw.unspent import TwUnspentOutputs
 
 # No unspent outputs with Ethereum, but naming must be consistent
 class EthereumTwUnspentOutputs(TwUnspentOutputs):
@@ -53,9 +53,9 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 	display_hdr_fs_fs = display_fs_fs
 
 	async def __init__(self,proto,*args,**kwargs):
-		from ...globalvars import g
+		from ....globalvars import g
 		if g.cached_balances:
-			from ...color import yellow
+			from ....color import yellow
 			self.hdr_fmt += '\n' + yellow('WARNING: Using cached balances. These may be out of date!')
 		await super().__init__(proto,*args,**kwargs)
 

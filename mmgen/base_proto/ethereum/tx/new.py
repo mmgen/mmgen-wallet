@@ -20,7 +20,7 @@ from ....opts import opt
 from ....obj import Int,ETHNonce,MMGenTxID,Str
 from ....amt import ETHAmt
 from ....util import msg,line_input,is_int,is_hex_str,make_chksum_6
-from ....twctl import TrackingWallet
+from ....tw.ctl import TrackingWallet
 from ....addr import is_mmgen_id,is_coin_addr
 from ..contract import Token
 

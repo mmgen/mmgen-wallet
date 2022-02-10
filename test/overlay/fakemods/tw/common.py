@@ -1,5 +1,5 @@
 import os
-from .tw_orig import *
+from .common_orig import *
 
 if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 	def _time_gen():
