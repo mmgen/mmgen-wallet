@@ -211,14 +211,14 @@ def get_keccak():
 	from .opts import opt
 	# called in opts.init() via CoinProtocol, so must use getattr():
 	if getattr(opt,'use_internal_keccak_module',False):
-		from .keccak import keccak_256
+		from .contrib.keccak import keccak_256
 		qmsg('Using internal keccak module by user request')
 		return keccak_256
 
 	try:
 		from sha3 import keccak_256
 	except:
-		from .keccak import keccak_256
+		from .contrib.keccak import keccak_256
 
 	return keccak_256
 
@@ -619,7 +619,7 @@ def do_license_msg(immed=False):
 	if opt.quiet or g.no_license or opt.yes or not g.stdin_tty:
 		return
 
-	import mmgen.license as gpl
+	import mmgen.contrib.license as gpl
 	msg(gpl.warning)
 
 	from .term import get_char

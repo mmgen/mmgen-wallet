@@ -137,7 +137,7 @@ class keygen_backend:
 
 			def __init__(self):
 				super().__init__()
-				from .ed25519 import edwards,encodepoint,B,scalarmult
+				from .contrib.ed25519 import edwards,encodepoint,B,scalarmult
 				self.edwards     = edwards
 				self.encodepoint = encodepoint
 				self.B           = B
@@ -173,7 +173,7 @@ class keygen_backend:
 
 			def __init__(self):
 				super().__init__()
-				from .ed25519ll_djbec import scalarmult
+				from .contrib.ed25519ll_djbec import scalarmult
 				self.scalarmult = scalarmult
 
 	class zcash_z:

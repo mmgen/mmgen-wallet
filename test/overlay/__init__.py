@@ -38,6 +38,7 @@ def overlay_setup(repo_root):
 		shutil.rmtree(overlay_dir,ignore_errors=True)
 		for d in (
 				'mmgen',
+				'mmgen.contrib',
 				'mmgen.base_proto',
 				'mmgen.base_proto.bitcoin',
 				'mmgen.base_proto.bitcoin.tx',

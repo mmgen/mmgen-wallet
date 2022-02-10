@@ -20,7 +20,7 @@
 license.py:  Copyright notice and text of GPLv3
 """
 
-from .globalvars import g
+from ..globalvars import g
 
 warning = f"""
   {g.proj_name} Copyright (C) {g.Cdates} by {g.author} {g.email}.  This

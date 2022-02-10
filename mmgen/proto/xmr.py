@@ -34,7 +34,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 	coin_amt       = 'XMRAmt'
 
 	def preprocess_key(self,sec,pubkey_type): # reduce key
-		from ..ed25519 import l
+		from ..contrib.ed25519 import l
 		return int.to_bytes(
 			int.from_bytes( sec[::-1], 'big' ) % l,
 			self.privkey_len,

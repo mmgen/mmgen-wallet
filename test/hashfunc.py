@@ -84,7 +84,7 @@ class TestHashFunc(object):
 class TestKeccak(TestHashFunc):
 	desc = 'keccak_256'
 	def __init__(self):
-		from mmgen.keccak import keccak_256
+		from mmgen.contrib.keccak import keccak_256
 		import sha3
 		self.t_cls = keccak_256
 		self.hashlib = sha3
