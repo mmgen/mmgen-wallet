@@ -79,6 +79,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--usecashaddr=0',        self.coin == 'BCH'],
 			['--mempoolreplacement=1', self.coin == 'LTC'],
 			['--txindex=1',            self.coin == 'LTC' or self.network == 'regtest'],
+			['--addresstype=bech32',   self.coin == 'LTC' and self.network == 'regtest'],
 		)
 
 		self.lockfile = os.path.join(self.network_datadir,'.cookie')

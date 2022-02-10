@@ -39,15 +39,18 @@ def create_data_dir(data_dir):
 	try: os.makedirs(data_dir)
 	except: pass
 
+miner_addr = {
+	# cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp hdseed=1 ('beadcafe'*8)
+	'btc': 'bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd',
+	'ltc': 'rltc1qaq8t3pakcftpk095tnqfv5cmmczysls05c8zyn',
+	'bch': 'n2fxhNx27GhHAWQhyuZ5REcBNrJqCJsJ12',
+}
+
 def create_hdseed(proto):
-	# cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp hdseed=1
-	#   addr=bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd
-	# cTEkSYCWKvNo757uwFPd4yuCXsbZvfJDipHsHWFRapXpnikMHvgn label=
-	#   addr=bcrt1q537rgyctcqdgs8nm8gvku05znka4h2m00lx8ps hdkeypath=m/0'/0'/0'
 	from .tool.api import tool_api
 	t = tool_api()
 	t.init_coin(proto.coin,proto.network)
-	t.addrtype = 'bech32'
+	t.addrtype = 'compressed' if proto.coin == 'BCH' else 'bech32'
 	return t.hex2wif('beadcafe'*8)
 
 def cliargs_convert(args):
@@ -82,24 +85,16 @@ class MMGenRegtest(MMGenObject):
 
 		blocks = int(blocks)
 
-		async def have_generatetoaddress():
-			ret = await self.rpc_call('help','generatetoaddress',wallet='miner')
-			return not 'unknown command:' in ret
-
-		async def get_miner_address():
-			return await self.rpc_call('getnewaddress',wallet='miner')
-
 		if self.d.state == 'stopped':
 			die(1,'Regtest daemon is not running')
 
 		self.d.wait_for_state('ready')
 
-		if await have_generatetoaddress():
-			cmd_args = ( 'generatetoaddress', blocks, await get_miner_address() )
-		else:
-			cmd_args = ( 'generate', blocks )
-
-		out = await self.rpc_call(*cmd_args,wallet='miner')
+		out = await self.rpc_call(
+			'generatetoaddress',
+			blocks,
+			miner_addr[self.coin],
+			wallet = 'miner' )
 
 		if len(out) != blocks:
 			die(4,'Error generating blocks')
@@ -126,16 +121,22 @@ class MMGenRegtest(MMGenObject):
 			await rpc.icall(
 				'createwallet',
 				wallet_name     = user,
-				blank           = user != 'miner' or self.coin == 'btc',
+				blank           = True,
 				no_keys         = user != 'miner',
 				load_on_startup = False )
 
-		if self.coin == 'btc': # BCH,LTC refuse to set HD seed while in IBD
-			await rpc.call(
-				'sethdseed',
-				True,
-				create_hdseed(self.proto),
-				wallet = 'miner' )
+		# BCH and LTC daemons refuse to set HD seed with empty blockchain ("in IBD" error),
+		# so generate a block:
+		await self.generate(1,silent=True)
+
+		# Unfortunately, we don’t get deterministic output with BCH and LTC even with fixed
+		# hdseed, as their 'sendtoaddress' calls produce non-deterministic TXIDs due to random
+		# input ordering and fee estimation.
+		await rpc.call(
+			'sethdseed',
+			True,
+			create_hdseed(self.proto),
+			wallet = 'miner' )
 
 		await self.generate(432,silent=True)
 
