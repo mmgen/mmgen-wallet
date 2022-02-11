@@ -220,16 +220,40 @@ if invoked_as == 'passchg':
 	if not ( opt.force_update or data_changed(('passwd','hash_preset','label')) ):
 		die(1,'Password, hash preset and label are unchanged.  Taking no action')
 
-if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
-	m1 = yellow('Confirmation of default wallet update')
-	m2 = 'update the default wallet'
-	confirm_or_raise(m1,m2,exit_msg='Password not changed')
-	ss_out.write_to_file(desc='New wallet',outdir=g.data_dir)
-	bmsg('Securely deleting old wallet')
-	from .fileutil import shred_file
-	shred_file(
-		ss_in.infile.name,
-		verbose = opt.verbose )
+if invoked_as == 'passchg':
+
+	def secure_delete(fn):
+		bmsg('Securely deleting old wallet')
+		from .fileutil import shred_file
+		shred_file( fn, verbose = opt.verbose )
+
+	def rename_old_wallet_maybe(silent):
+		# though very unlikely, old and new wallets could have same Key ID and thus same filename.
+		# If so, rename old wallet file before deleting.
+		old_fn = ss_in.infile.name
+		if os.path.basename(old_fn) == ss_out._filename():
+			if not silent:
+				ymsg(
+					'Warning: diverting old wallet {old_fn!r} due to Key ID collision.  ' +
+					'Please securely delete or move the diverted file!' )
+			os.rename( old_fn, old_fn+'.divert' )
+			return old_fn+'.divert'
+		else:
+			return old_fn
+
+	if ss_in.infile.dirname == g.data_dir:
+		confirm_or_raise(
+			message  = yellow('Confirmation of default wallet update'),
+			action   = 'update the default wallet',
+			exit_msg = 'Password not changed' )
+		old_wallet = rename_old_wallet_maybe(silent=True)
+		ss_out.write_to_file( desc='New wallet', outdir=g.data_dir )
+		secure_delete( old_wallet )
+	else:
+		old_wallet = rename_old_wallet_maybe(silent=False)
+		ss_out.write_to_file()
+		if keypress_confirm(f'Securely delete old wallet {old_wallet!r}?'):
+			secure_delete( old_wallet )
 elif invoked_as == 'gen' and not opt.outdir and not opt.stdout:
 	from .filename import find_file_in_dir
 	if (

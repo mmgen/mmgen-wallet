@@ -290,7 +290,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		assert ext == ocls.ext,f'incorrect file extension: {ext}'
 		return t
 
-	def passchg(self,wf,pf,label_action='cmdline',dfl_wallet=False):
+	def passchg(self,wf,pf,label_action='cmdline',dfl_wallet=False,delete=False):
 		silence()
 		self.write_to_tmpfile(pwfile,get_data_from_file(pf))
 		end_silence()
@@ -319,10 +319,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.expect_getend('has been changed to ')
 		else:
 			t.written_to_file(capfirst(wcls.desc))
+			t.expect( 'Securely delete .*: ', ('y' if delete else 'n' ), regex=True )
+			if delete:
+				t.expect( 'Securely deleting' )
 		return t
 
 	def passchg_keeplabel(self,wf,pf):
-		return self.passchg(wf,pf,label_action='keep')
+		return self.passchg(wf,pf,label_action='keep',delete=True)
 
 	def passchg_usrlabel(self,wf,pf):
 		return self.passchg(wf,pf,label_action='user')
