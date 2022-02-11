@@ -136,7 +136,9 @@ class wallet(wallet):
 		if check_offset:
 			self._check_valid_offset(f,'write')
 			if not opt.quiet:
-				confirm_or_raise( '', f'alter file {f.name!r}' )
+				confirm_or_raise(
+					message = '',
+					action  = f'alter file {f.name!r}' )
 
 		flgs = os.O_RDWR|os.O_BINARY if g.platform == 'win' else os.O_RDWR
 		fh = os.open(f.name,flgs)

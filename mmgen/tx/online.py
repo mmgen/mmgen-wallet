@@ -25,7 +25,7 @@ class OnlineSigned(Signed):
 
 	def confirm_send(self):
 		confirm_or_raise(
-			('' if opt.quiet else "Once this transaction is sent, there's no taking it back!"),
-			f'broadcast this transaction to the {self.proto.coin} {self.proto.network.upper()} network',
-			('YES' if opt.quiet or opt.yes else 'YES, I REALLY WANT TO DO THIS') )
+			message = '' if opt.quiet else 'Once this transaction is sent, there’s no taking it back!',
+			action  = f'broadcast this transaction to the {self.proto.coin} {self.proto.network.upper()} network',
+			expect  = 'YES' if opt.quiet or opt.yes else 'YES, I REALLY WANT TO DO THIS' )
 		msg('Sending transaction')

@@ -459,12 +459,13 @@ def check_wallet_extension(fn):
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 
-def confirm_or_raise(message,q,expect='YES',exit_msg='Exiting at user request'):
+def confirm_or_raise(message,action,expect='YES',exit_msg='Exiting at user request'):
 	if message.strip():
 		msg(message.strip())
-	a = f'{q}  ' if q[0].isupper() else f'Are you sure you want to {q}?\n'
-	b = f'Type uppercase {expect!r} to confirm: '
-	if line_input(a+b).strip() != expect:
+	if line_input(
+			(f'{action}  ' if action[0].isupper() else f'Are you sure you want to {action}?\n') +
+			f'Type uppercase {expect!r} to confirm: '
+		).strip() != expect:
 		die( 'UserNonConfirmation', exit_msg )
 
 def get_words_from_user(prompt):

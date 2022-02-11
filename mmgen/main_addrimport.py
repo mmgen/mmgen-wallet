@@ -109,7 +109,10 @@ def check_opts(tw):
 		rescan = False
 
 	if rescan and not opt.quiet:
-		confirm_or_raise(ai_msgs('rescan'),'continue',expect='YES')
+		confirm_or_raise(
+			message = ai_msgs('rescan'),
+			action  = 'continue',
+			expect  = 'YES' )
 
 	if batch and not 'batch' in tw.caps:
 		msg(f"'--batch' ignored: not supported by {type(tw).__name__}")

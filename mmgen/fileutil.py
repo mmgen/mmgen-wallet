@@ -177,7 +177,9 @@ def write_data_to_file( outfile,data,desc='data',
 			if no_tty:
 				die(2,f'Printing {desc} to screen is not allowed')
 			if (ask_tty and not opt.quiet) or binary:
-				confirm_or_raise('',f'output {desc} to screen')
+				confirm_or_raise(
+					message = '',
+					action  = f'output {desc} to screen' )
 		else:
 			try:    of = os.readlink(f'/proc/{os.getpid()}/fd/1') # Linux
 			except: of = None # Windows
@@ -187,7 +189,9 @@ def write_data_to_file( outfile,data,desc='data',
 					if no_tty:
 						die(2,f'Writing {desc} to pipe is not allowed')
 					if ask_tty and not opt.quiet:
-						confirm_or_raise('',f'output {desc} to pipe')
+						confirm_or_raise(
+							message = '',
+							action  = f'output {desc} to pipe' )
 						msg('')
 				of2,pd = os.path.relpath(of),os.path.pardir
 				msg('Redirecting output to file {!r}'.format(of if of2[:len(pd)] == pd else of2))
@@ -217,7 +221,9 @@ def write_data_to_file( outfile,data,desc='data',
 
 		hush = False
 		if os.path.lexists(outfile) and ask_overwrite:
-			confirm_or_raise('',f'File {outfile!r} already exists\nOverwrite?')
+			confirm_or_raise(
+				message = '',
+				action  = f'File {outfile!r} already exists\nOverwrite?' )
 			msg(f'Overwriting file {outfile!r}')
 			hush = True
 
