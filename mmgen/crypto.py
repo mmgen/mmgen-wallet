@@ -81,8 +81,8 @@ def scramble_seed(seed,scramble_key):
 		msg(f'Seed:  {seed.hex()!r}\nScramble key: {scramble_key}\nScrambled seed: {step1.hex()}\n')
 	return sha256_rounds( step1, scramble_hash_rounds )
 
-def encrypt_seed(seed,key):
-	return encrypt_data(seed,key,desc='seed')
+def encrypt_seed(data,key,desc='seed'):
+	return encrypt_data(data,key,desc=desc)
 
 def decrypt_seed(enc_seed,key,seed_id,key_id):
 	vmsg_r('Checking key...')

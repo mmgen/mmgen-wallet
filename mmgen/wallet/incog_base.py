@@ -65,9 +65,9 @@ class wallet(wallet):
 	def _encrypt (self):
 		self._get_first_pw_and_hp_and_encrypt_seed()
 		if opt.old_incog_fmt:
-			die(1,'Writing old-format incog wallets is unsupported')
+			die(1,'Writing old-format incognito wallets is unsupported')
 		d = self.ssdata
-		# IV is used BOTH to initialize counter and to salt password!
+
 		d.iv = crypto.get_random( crypto.aesctr_iv_len )
 		d.iv_id = self._make_iv_chksum(d.iv)
 		msg(f'New Incog Wallet ID: {d.iv_id}')
@@ -75,27 +75,37 @@ class wallet(wallet):
 		vmsg('\n  ' + self.msg['record_incog_id'].strip()+'\n')
 
 		d.salt = crypto.get_random( crypto.salt_len )
-		key = crypto.make_key( d.passwd, d.salt, d.hash_preset, 'incog wallet key' )
+		seed_key = crypto.make_key(
+			passwd      = d.passwd,
+			salt        = d.salt,
+			hash_preset = d.hash_preset,
+			desc        = 'incog wallet key' )
+
 		from hashlib import sha256
 		chk = sha256(self.seed.data).digest()[:8]
-		d.enc_seed = crypto.encrypt_data(
-			chk + self.seed.data,
-			key,
-			crypto.aesctr_dfl_iv,
-			'seed' )
+		d.enc_seed = crypto.encrypt_seed(
+			data = chk + self.seed.data,
+			key  = seed_key )
 
-		d.wrapper_key = crypto.make_key( d.passwd, d.iv, d.hash_preset, 'incog wrapper key' )
+		# IV is used BOTH to initialize counter and to salt password!
+		d.wrapper_key = crypto.make_key(
+			passwd      = d.passwd,
+			salt        = d.iv,
+			hash_preset = d.hash_preset,
+			desc        = 'incog wrapper key' )
+
 		d.key_id = make_chksum_8(d.wrapper_key)
 		vmsg(f'Key ID: {d.key_id}')
+
 		d.target_data_len = self._get_incog_data_len(self.seed.bitlen)
 
 	def _format(self):
 		d = self.ssdata
 		self.fmt_data = d.iv + crypto.encrypt_data(
-			d.salt + d.enc_seed,
-			d.wrapper_key,
-			d.iv,
-			self.desc )
+			data = d.salt + d.enc_seed,
+			key  = d.wrapper_key,
+			iv   = d.iv,
+			desc = self.desc )
 
 	def _filename(self):
 		s = self.seed
@@ -147,19 +157,37 @@ class wallet(wallet):
 		d.passwd = self._get_passphrase(add_desc=d.incog_id)
 
 		# IV is used BOTH to initialize counter and to salt password!
-		key = crypto.make_key( d.passwd, d.iv, d.hash_preset, 'wrapper key' )
-		dd = crypto.decrypt_data( d.enc_incog_data, key, d.iv, 'incog data' )
+		wrapper_key = crypto.make_key(
+			passwd      = d.passwd,
+			salt        = d.iv,
+			hash_preset = d.hash_preset,
+			desc        = 'wrapper key' )
+
+		dd = crypto.decrypt_data(
+			enc_data = d.enc_incog_data,
+			key      = wrapper_key,
+			iv       = d.iv,
+			desc     = 'incog data' )
 
 		d.salt     = dd[0:crypto.salt_len]
 		d.enc_seed = dd[crypto.salt_len:]
 
-		key = crypto.make_key( d.passwd, d.salt, d.hash_preset, 'main key' )
-		qmsg(f'Key ID: {make_chksum_8(key)}')
+		seed_key = crypto.make_key(
+			passwd      = d.passwd,
+			salt        = d.salt,
+			hash_preset = d.hash_preset,
+			desc        = 'main key' )
 
-		verify_seed = getattr(self,'_verify_seed_'+
-						('newfmt','oldfmt')[bool(opt.old_incog_fmt)])
+		qmsg(f'Key ID: {make_chksum_8(seed_key)}')
 
-		seed = verify_seed( crypto.decrypt_seed(d.enc_seed, key, '', '') )
+		verify_seed_func = getattr( self, '_verify_seed_'+ ('oldfmt' if opt.old_incog_fmt else 'newfmt') )
+
+		seed = verify_seed_func(
+			crypto.decrypt_seed(
+				enc_seed = d.enc_seed,
+				key      = seed_key,
+				seed_id  = '',
+				key_id   = '' ))
 
 		if seed:
 			self.seed = Seed(seed)
