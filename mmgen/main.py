@@ -17,14 +17,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-main.py - Script launcher for the MMGen suite
+main.py - Script launcher for the MMGen project
 """
 
-def launch(mod):
+def launch(mod,package='mmgen'):
 
 	if mod in ('walletgen','walletchk','walletconv','passchg','subwalletgen','seedsplit'):
 		mod = 'wallet'
-	if mod == 'keygen': mod = 'addrgen'
+
+	if mod == 'keygen':
+		mod = 'addrgen'
 
 	import sys,os
 	from .globalvars import g
@@ -36,7 +38,7 @@ def launch(mod):
 		atexit.register(lambda: termios.tcsetattr(fd,termios.TCSADRAIN,old))
 
 	try:
-		__import__('mmgen.main_' + mod)
+		__import__(f'{package}.main_{mod}')
 	except KeyboardInterrupt:
 		sys.stderr.write('\nUser interrupt\n')
 		sys.exit(1) # must exit normally so exit handlers will be called
@@ -57,7 +59,7 @@ def launch(mod):
 
 			_o = namedtuple('exit_data',['color','exit_val','fs'])
 			d = {
-				0:   _o(nocolor, 1, '{message}'),
+				0:   _o(nocolor, 0, '{message}'),
 				1:   _o(nocolor, 1, '{message}'),
 				2:   _o(yellow,  2, '{message}'),
 				3:   _o(yellow,  3, '\nMMGen Error ({name}):\n{message}'),

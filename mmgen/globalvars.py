@@ -312,7 +312,7 @@ class GlobalContext(Lockable):
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
 
-	def get_mmgen_data_file(self,filename):
+	def get_mmgen_data_file(self,filename,package='mmgen'):
 		"""
 		this is an expensive import, so do only when required
 		"""
@@ -326,14 +326,17 @@ class GlobalContext(Lockable):
 			from importlib.resources import files # Python 3.9
 		except ImportError:
 			from importlib_resources import files
-		return files('mmgen').joinpath('data',filename).read_text()
+		return files(package).joinpath('data',filename).read_text()
 
 	@property
 	def version(self):
-		return self.get_mmgen_data_file('version').strip()
+		return self.get_mmgen_data_file(
+				filename = 'version',
+				package  = 'mmgen_node_tools' if self.prog_name.startswith('mmnode-') else 'mmgen'
+			).strip()
 
 	@property
 	def release_date(self):
-		return self.get_mmgen_data_file('release_date').strip()
+		return self.get_mmgen_data_file(filename='release_date').strip()
 
 g = GlobalContext()

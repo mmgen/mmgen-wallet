@@ -44,7 +44,7 @@ def version():
 		{g.prog_name.upper()} version {g.version}
 		Part of the {g.proj_name} suite, an online/offline cryptocurrency wallet for the
 		command line.  Copyright (C){g.Cdates} {g.author} {g.email}
-	""",indent='    ').rstrip())
+	""",indent='  ').rstrip())
 
 def print_help(po,opts_data,opt_filter):
 	if not 'code' in opts_data:
@@ -99,6 +99,7 @@ def opt_preproc_debug(po):
 		('User-selected opts', po.user_opts),
 		('Cmd args',           po.cmd_args),
 	)
+	from .util import Msg
 	Msg('\n=== opts.py debug ===')
 	for e in d:
 		Msg('    {:<20}: {}'.format(*e))
@@ -106,6 +107,7 @@ def opt_preproc_debug(po):
 def opt_postproc_debug():
 	a = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) != None]
 	b = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) == None]
+	from .util import Msg
 	Msg('    Opts after processing:')
 	for k in a:
 		v = getattr(opt,k)
@@ -597,7 +599,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 #		if len(val) > 20 or not all(s.isalnum() for s in val):
 #			die( 'UserOptError', f'{val!r}: invalid parameter for --token option' )
 
-	from .util import is_int,die
+	from .util import is_int,die,Msg
 
 	cfuncs = { k:v for k,v in locals().items() if k.startswith('chk_') }
 
