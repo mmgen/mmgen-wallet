@@ -391,7 +391,6 @@ tests = {
 		'addr2pubhash': {
 			'btc_mainnet': [
 				( ['12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm'], '118089d66b4a5853765e94923abdd5de4616c6e5' ),
-				( ['3Eevao3DRVXnYym3tdrJDqS3Wc39PQzahn'], '8e34586186551f6320fa3eb2d238a9c61ab8264b' ),
 				( ['bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms'], '3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178' ),
 			],
 		},
@@ -399,7 +398,7 @@ tests = {
 			'btc_mainnet': [
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5'], '12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm',
 					None, 'legacy' ),
-				( ['8e34586186551f6320fa3eb2d238a9c61ab8264b'], '3Eevao3DRVXnYym3tdrJDqS3Wc39PQzahn',
+				( ['8e34586186551f6320fa3eb2d238a9c61ab8264b'], '37ZBgCBjjz9WSEzp1Zjv8sqdgmNie3Kd5s',
 					['--type=segwit'], 'segwit' ),
 				( ['3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], 'bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms',
 					['--type=bech32'], 'bech32' ),

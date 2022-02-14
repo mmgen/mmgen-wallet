@@ -390,8 +390,7 @@ class MMGenToolTestCmds(object):
 		cmd = ( '{c} {a} wif2hex {wif}' +
 				' | {c} {a} --type=compressed privhex2pubhex -' +
 				' | {c} {a} --type=segwit pubhex2redeem_script -' +
-				' | {c} {a} hash160 -' +
-				' | {c} {a} --type=segwit pubhash2addr -').format(
+				' | {c} {a} --type=segwit redeem_script2addr -').format(
 					c=' '.join(spawn_cmd),
 					a=' '.join(add_spawn_args),
 					wif=wif)

@@ -19,16 +19,17 @@ from ....opts import opt
 from ....obj import MMGenObject,MMGenList,HexStr
 from ....util import msg,dmsg,make_chksum_6,die
 
-def addr2pubhash(proto,addr):
-	ap = proto.parse_addr(addr)
-	assert ap,f'coin address {addr!r} could not be parsed'
-	return ap.bytes.hex()
-
 def addr2scriptPubKey(proto,addr):
+
+	def decode_addr(proto,addr):
+		ap = proto.parse_addr(addr)
+		assert ap, f'coin address {addr!r} could not be parsed'
+		return ap.bytes.hex()
+
 	return {
-		'p2pkh': '76a914' + addr2pubhash(proto,addr) + '88ac',
-		'p2sh':  'a914' + addr2pubhash(proto,addr) + '87',
-		'bech32': proto.witness_vernum_hex + '14' + addr2pubhash(proto,addr)
+		'p2pkh': '76a914' + decode_addr(proto,addr) + '88ac',
+		'p2sh':  'a914' + decode_addr(proto,addr) + '87',
+		'bech32': proto.witness_vernum_hex + '14' + decode_addr(proto,addr)
 	}[addr.addr_fmt]
 
 def scriptPubKey2addr(proto,s):
