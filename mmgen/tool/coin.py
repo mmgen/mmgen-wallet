@@ -132,14 +132,15 @@ class tool_cmd(tool_cmd_base):
 		pubkey = bytes.fromhex(pubkeyhex)
 		from ..proto.common import hash160
 		if self.mmtype.name == 'segwit':
-			return self.proto.pubkey2segwitaddr( pubkey )
+			return self.proto.pubhash2segwitaddr( hash160(pubkey) )
 		else:
 			return self.pubhash2addr( hash160(pubkey).hex() )
 
 	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
 		"convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script"
 		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
-		return self.proto.pubkey2redeem_script( bytes.fromhex(pubkeyhex) ).hex()
+		from ..proto.common import hash160
+		return self.proto.pubhash2redeem_script( hash160(bytes.fromhex(pubkeyhex)) ).hex()
 
 	def redeem_script2addr(self,redeem_scripthex:'sstr'): # new
 		"convert a Segwit P2SH-P2WPKH redeem script to an address"

@@ -105,15 +105,15 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 		)
 
 	# Segwit:
-	def pubkey2redeem_script(self,pubkey):
+	def pubhash2redeem_script(self,pubhash):
 		# https://bitcoincore.org/en/segwit_wallet_dev/
 		# The P2SH redeemScript is always 22 bytes. It starts with a OP_0, followed
 		# by a canonical push of the keyhash (i.e. 0x0014{20-byte keyhash})
-		return bytes.fromhex(self.witness_vernum_hex + '14') + hash160(pubkey)
+		return bytes.fromhex(self.witness_vernum_hex + '14') + pubhash
 
-	def pubkey2segwitaddr(self,pubkey):
+	def pubhash2segwitaddr(self,pubhash):
 		return self.pubhash2addr(
-			hash160( self.pubkey2redeem_script(pubkey) ),
+			hash160( self.pubhash2redeem_script(pubhash) ),
 			p2sh = True )
 
 	def pubhash2bech32addr(self,pubhash):

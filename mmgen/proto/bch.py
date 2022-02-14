@@ -26,8 +26,8 @@ class mainnet(mainnet):
 	max_tx_fee      = '0.1'
 	ignore_daemon_version = False
 
-	def pubkey2redeem_script(self,pubkey): raise NotImplementedError
-	def pubkey2segwitaddr(self,pubkey):    raise NotImplementedError
+	def pubhash2redeem_script(self,pubkey): raise NotImplementedError
+	def pubhash2segwitaddr(self,pubkey):    raise NotImplementedError
 
 class testnet(mainnet):
 	addr_ver_bytes = { '6f': 'p2pkh', 'c4': 'p2sh' }

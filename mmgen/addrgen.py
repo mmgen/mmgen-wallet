@@ -65,10 +65,10 @@ class addr_generator:
 		def to_addr(self,data):
 			return CoinAddr(
 				self.proto,
-				self.proto.pubkey2segwitaddr(data.pubkey) )
+				self.proto.pubhash2segwitaddr( hash160(data.pubkey)) )
 
 		def to_segwit_redeem_script(self,data): # NB: returns hex
-			return self.proto.pubkey2redeem_script(data.pubkey).hex()
+			return self.proto.pubhash2redeem_script( hash160(data.pubkey) ).hex()
 
 	class bech32(base):
 
