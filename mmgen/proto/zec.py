@@ -38,14 +38,14 @@ class mainnet(mainnet):
 		else:
 			return super().preprocess_key(sec,pubkey_type)
 
-	def pubhash2addr(self,pubkey_hash,p2sh):
-		hash_len = len(pubkey_hash)
+	def pubhash2addr(self,pubhash,p2sh):
+		hash_len = len(pubhash)
 		if hash_len == 20:
-			return super().pubhash2addr(pubkey_hash,p2sh)
+			return super().pubhash2addr(pubhash,p2sh)
 		elif hash_len == 64:
 			raise NotImplementedError('Zcash z-addresses do not support pubhash2addr()')
 		else:
-			raise ValueError(f'{hash_len}: incorrect pubkey_hash length')
+			raise ValueError(f'{hash_len}: incorrect pubkey hash length')
 
 class testnet(mainnet):
 	wif_ver_num  = { 'std': 'ef', 'zcash_z': 'ac08' }

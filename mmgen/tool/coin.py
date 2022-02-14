@@ -130,10 +130,10 @@ class tool_cmd(tool_cmd_base):
 	def pubhex2addr(self,pubkeyhex:'sstr'):
 		"convert a hex pubkey to an address"
 		pubkey = bytes.fromhex(pubkeyhex)
+		from ..proto.common import hash160
 		if self.mmtype.name == 'segwit':
 			return self.proto.pubkey2segwitaddr( pubkey )
 		else:
-			from ..proto.common import hash160
 			return self.pubhash2addr( hash160(pubkey).hex() )
 
 	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
@@ -147,7 +147,7 @@ class tool_cmd(tool_cmd_base):
 		assert redeem_scripthex[:4] == '0014', f'{redeem_scripthex!r}: invalid redeem script'
 		assert len(redeem_scripthex) == 44, f'{len(redeem_scripthex)//2} bytes: invalid redeem script length'
 		from ..proto.common import hash160
-		return self.pubhash2addr( hash160(bytes.fromhex(redeem_scripthex)).hex() )
+		return self.pubhash2addr( hash160( bytes.fromhex(redeem_scripthex) ).hex() )
 
 	def pubhash2addr(self,pubhashhex:'sstr'):
 		"convert public key hash to address"

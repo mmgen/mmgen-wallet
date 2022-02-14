@@ -76,7 +76,7 @@ class addr_generator:
 		def to_addr(self,data):
 			return CoinAddr(
 				self.proto,
-				self.proto.pubhash2bech32addr( hash160(data.pubkey)) )
+				self.proto.pubhash2bech32addr( hash160(data.pubkey) ))
 
 	class keccak(base):
 

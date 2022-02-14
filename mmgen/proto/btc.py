@@ -98,10 +98,10 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 
 		return self.parse_addr_bytes(b58chk_decode(addr))
 
-	def pubhash2addr(self,pubkey_hash,p2sh):
-		assert len(pubkey_hash) == 20, f'{len(pubkey_hash)}: invalid length for pubkey hash'
+	def pubhash2addr(self,pubhash,p2sh):
+		assert len(pubhash) == 20, f'{len(pubhash)}: invalid length for pubkey hash'
 		return b58chk_encode(
-			self.addr_fmt_to_ver_bytes(('p2pkh','p2sh')[p2sh],return_hex=False) + pubkey_hash
+			self.addr_fmt_to_ver_bytes(('p2pkh','p2sh')[p2sh],return_hex=False) + pubhash
 		)
 
 	# Segwit:
@@ -113,12 +113,14 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 
 	def pubkey2segwitaddr(self,pubkey):
 		return self.pubhash2addr(
-			hash160( self.pubkey2redeem_script(pubkey)), p2sh=True )
+			hash160( self.pubkey2redeem_script(pubkey) ),
+			p2sh = True )
 
 	def pubhash2bech32addr(self,pubhash):
-		d = list(pubhash)
 		import mmgen.contrib.bech32 as bech32
-		return bech32.bech32_encode(self.bech32_hrp,[self.witness_vernum]+bech32.convertbits(d,8,5))
+		return bech32.bech32_encode(
+			hrp  = self.bech32_hrp,
+			data = [self.witness_vernum] + bech32.convertbits(list(pubhash),8,5) )
 
 class testnet(mainnet):
 	addr_ver_bytes      = { '6f': 'p2pkh', 'c4': 'p2sh' }

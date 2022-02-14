@@ -64,10 +64,10 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 		h = self.keccak_256(addr.encode()).digest().hex()
 		return ''.join(addr[i].upper() if int(h[i],16) > 7 else addr[i] for i in range(len(addr)))
 
-	def pubhash2addr(self,pubkey_hash,p2sh):
-		assert len(pubkey_hash) == 20, f'{len(pubkey_hash)}: invalid length for {self.name} pubkey hash'
+	def pubhash2addr(self,pubhash,p2sh):
+		assert len(pubhash) == 20, f'{len(pubhash)}: invalid length for {self.name} pubkey hash'
 		assert not p2sh, f'{self.name} protocol has no P2SH address format'
-		return pubkey_hash.hex()
+		return pubhash.hex()
 
 class testnet(mainnet):
 	chain_names = ['kovan','goerli','rinkeby']
