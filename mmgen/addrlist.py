@@ -69,6 +69,7 @@ class AddrListEntryBase(MMGenListItem):
 
 class AddrListEntry(AddrListEntryBase):
 	addr          = ListItemAttr(CoinAddr,include_proto=True)
+	addr_p2pkh    = ListItemAttr(CoinAddr,include_proto=True)
 	idx           = ListItemAttr(AddrIdx) # not present in flat addrlists
 	label         = ListItemAttr(TwComment,reassign_ok=True)
 	sec           = ListItemAttr(PrivKey,include_proto=True)
@@ -148,9 +149,11 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			mmtype    = None,
 			skip_key_address_validity_check = False,
 			skip_chksum = False,
+			add_p2pkh = False,
 		):
 
 		self.skip_ka_check = skip_key_address_validity_check
+		self.add_p2pkh = add_p2pkh
 		self.proto = proto
 		do_chksum = False
 
@@ -227,6 +230,8 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			from .addr import KeyGenerator,AddrGenerator
 			kg = KeyGenerator( self.proto, mmtype.pubkey_type )
 			ag = AddrGenerator( self.proto, mmtype )
+			if self.add_p2pkh:
+				ag2 = AddrGenerator( self.proto, 'compressed' )
 
 		t_addrs,out = ( len(addr_idxs), AddrListData() )
 		le = self.entry_type
@@ -259,6 +264,8 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			if self.gen_addrs:
 				data = kg.gen_data(e.sec)
 				e.addr = ag.to_addr(data)
+				if self.add_p2pkh:
+					e.addr_p2pkh = ag2.to_addr(data)
 				if gen_viewkey:
 					e.viewkey = ag.to_viewkey(data)
 				if gen_wallet_passwd:

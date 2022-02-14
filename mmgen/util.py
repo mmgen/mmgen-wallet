@@ -84,6 +84,9 @@ def gmsg_r(s):
 def bmsg(s):
 	msg(blue(s))
 
+def pumsg(s):
+	msg(purple(s))
+
 def qmsg(s):
 	if not opt.quiet:
 		msg(s)
