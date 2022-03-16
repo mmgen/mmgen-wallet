@@ -455,7 +455,7 @@ class MoneroWalletOps:
 				msg('\n    Creating new account...')
 				ret = await self.c.call(
 					'create_account',
-					label = f'Sweep from {self.parent.source.idx}:{self.parent.account}'
+					label = f'Sweep from {self.parent.source.idx}:{self.parent.account} [{make_timestr()}]'
 				)
 				msg('      Index:   {}'.format( pink(str(ret['account_index'])) ))
 				msg('      Address: {}'.format( cyan(ret['address']) ))
@@ -474,7 +474,7 @@ class MoneroWalletOps:
 				msg('\n      Addresses of account #{} ({}):'.format(
 					account,
 					accts_data['subaddress_accounts'][account]['label']))
-				fs = '        {:6}  {:18}  {:%s}  {}' % max(len(e['label']) for e in d)
+				fs = '        {:6}  {:18}  {:%s}  {}' % max( [len(e['label']) for e in d], default=0 )
 				msg(fs.format('Index ','Address','Label','Used'))
 				for e in d:
 					msg(fs.format(
@@ -489,7 +489,7 @@ class MoneroWalletOps:
 				ret = await self.c.call(
 					'create_address',
 					account_index = account,
-					label         = 'Sweep from this account',
+					label         = f'Sweep from this account [{make_timestr()}]',
 				)
 				msg(cyan(ret['address']))
 				return ret['address']
