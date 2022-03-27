@@ -68,7 +68,10 @@ async def run_test(network_id):
 	msg(m.format('A091ABAA:111'))
 
 	pumsg('\nTesting verification:\n')
-	await m.verify()
+	await m.verify(summary=opt.verbose)
+
+	pumsg('\nTesting single address verification:\n')
+	await m.verify('A091ABAA:111',summary=opt.verbose)
 
 	stop_test_daemons(network_id)
 

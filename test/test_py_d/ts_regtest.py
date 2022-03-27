@@ -257,7 +257,16 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('alice_twview_date_time',       'twview (age_fmt=date_time)'),
 		('alice_txcreate_info',          'txcreate -i'),
 
-		('stop',                     'stopping regtest daemon'),
+		('bob_msgcreate',          'creating a message file for signing'),
+		('bob_msgsign',            'signing the message file (default wallet)'),
+		('bob_walletconv_words',   'creating an MMGen mnemonic wallet'),
+		('bob_subwalletgen_bip39', 'creating a BIP39 mnemonic subwallet'),
+		('bob_msgsign_userwallet',  'signing the message file (user-specified wallet)'),
+		('bob_msgsign_userwallets', 'signing the message file (user-specified wallets)'),
+		('bob_msgverify',           'verifying the message file (all addresses)'),
+		('bob_msgverify_single',    'verifying the message file (single address)'),
+
+		('stop',                 'stopping regtest daemon'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -283,6 +292,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		self.write_to_tmpfile('wallet_password',rt_pw)
+
+		self.dfl_mmtype = 'C' if self.proto.coin == 'BCH' else 'B'
 
 	def __del__(self):
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
@@ -1021,6 +1032,68 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				s,
 				regex=True )
 		return t
+
+	def bob_msgcreate(self):
+		sid1 = self._user_sid('bob')
+		sid2 = self._get_user_subsid('bob','29L')
+		return self.spawn(
+			'mmgen-msg', [
+				'--bob',
+				f'--outdir={self.tmpdir}',
+				'create',
+				'16/3/2022 Earthquake strikes Fukushima coast',
+				f'{sid1}:{self.dfl_mmtype}:1-4',
+				f'{sid2}:C:3-7,87,98'
+			])
+
+	def bob_msgsign(self,wallets=[]):
+		fn = get_file_with_ext(self.tmpdir,'rawmsg.json')
+		t = self.spawn(
+			'mmgen-msg', [
+				'--bob',
+				f'--outdir={self.tmpdir}',
+				'sign',
+				fn
+			] + wallets )
+		if not wallets:
+			t.passphrase(dfl_wcls.desc,rt_pw)
+		return t
+
+	def bob_walletconv_words(self):
+		t = self.spawn(
+			'mmgen-walletconv', [ '--bob', f'--outdir={self.tmpdir}', '--out-fmt=words' ] )
+		t.passphrase(dfl_wcls.desc,rt_pw)
+		t.written_to_file('data')
+		return t
+
+	def bob_subwalletgen_bip39(self):
+		t = self.spawn(
+			'mmgen-subwalletgen', [ '--bob', f'--outdir={self.tmpdir}', '--out-fmt=bip39', '29L' ] )
+		t.passphrase(dfl_wcls.desc,rt_pw)
+		t.written_to_file('data')
+		return t
+
+	def bob_msgsign_userwallet(self):
+		fn1 = get_file_with_ext(self.tmpdir,'mmwords')
+		return self.bob_msgsign([fn1])
+
+	def bob_msgsign_userwallets(self):
+		fn1 = get_file_with_ext(self.tmpdir,'mmwords')
+		fn2 = get_file_with_ext(self.tmpdir,'bip39')
+		return self.bob_msgsign([fn2,fn1])
+
+	def bob_msgverify(self,addr=None):
+		return self.spawn(
+			'mmgen-msg', [
+				'--bob',
+				f'--outdir={self.tmpdir}',
+				'verify',
+				get_file_with_ext(self.tmpdir,'sigmsg.json'),
+			] + ([addr] if addr else []) )
+
+	def bob_msgverify_single(self):
+		sid = self._user_sid('bob')
+		return self.bob_msgverify(addr=f'{sid}:{self.dfl_mmtype}:1')
 
 	def stop(self):
 		if opt.no_daemon_stop:

@@ -16,7 +16,7 @@ import os,importlib,json
 from .globalvars import g
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .util import msg,vmsg,die,suf,make_chksum_6,fmt_list,remove_dups
-from .color import orange
+from .color import orange,grnbg
 from .protocol import init_proto
 from .fileutil import get_data_from_file,write_data_to_file
 from .addr import MMGenID
@@ -116,9 +116,8 @@ class coin_msg:
 			if data:
 				self.__dict__ = data
 				return
-			elif infile:
-				self.infile = infile
 
+			self.infile = infile
 			self.data = get_data_from_file(
 				infile = self.infile,
 				desc   = f'{self.desc} data' )
@@ -168,7 +167,7 @@ class coin_msg:
 					yield res
 
 			disp_data = {
-				'message':   ('Message',        lambda v: repr(v) ),
+				'message':   ('Message',        lambda v: grnbg(v) ),
 				'network':   ('Network',        lambda v: v.replace('_',' ').upper() ),
 				'addrlists': ('Address Ranges', lambda v: fmt_list(v,fmt='bare') ),
 			}
@@ -255,12 +254,18 @@ class coin_msg:
 
 	class signed_online(signed):
 
-		async def verify(self):
+		async def verify(self,addr=None,summary=False):
 
 			from .rpc import rpc_init
 			self.rpc = await rpc_init(self.proto)
 
-			for k,v in self.sigs.items():
+			if addr:
+				mmaddr = MMGenID(self.proto,addr)
+				sigs = {k:v for k,v in self.sigs.items() if k == mmaddr}
+			else:
+				sigs = self.sigs
+
+			for k,v in sigs.items():
 				ret = await self.do_verify(
 					addr    = v.get('addr_p2pkh') or v['addr'],
 					sig     = v['sig'],
@@ -268,7 +273,8 @@ class coin_msg:
 				if not ret:
 					die(3,f'Invalid signature for address {k} ({v["addr"]})')
 
-			vmsg('{} signature{} verified'.format( len(self.sigs), suf(self.sigs) ))
+			if summary:
+				msg('{} signature{} verified'.format( len(sigs), suf(sigs) ))
 
 def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**kwargs):
 
