@@ -20,7 +20,7 @@
 mmgen-autosign: Auto-sign MMGen transactions
 """
 
-import sys,os,time,signal,shutil
+import sys,os,asyncio,signal,shutil
 from subprocess import run,PIPE,DEVNULL
 from stat import *
 
@@ -93,12 +93,12 @@ must contain the following entry:
     LABEL='MMGEN_TX' /mnt/tx auto noauto,user 0 0
 
 Transactions are signed with a wallet on the signing machine (in the directory
-{wallet_dir!r}) encrypted with a 64-character hexadecimal password on the
-removable device.
+{wallet_dir!r}) encrypted with a 64-character hexadecimal password saved
+in the file `autosign.key` in the root of the removable device partition.
 
 The password and wallet can be created in one operation by invoking the
-command with 'setup' with the removable device inserted.  The user will be
-prompted for a seed mnemonic.
+command with 'setup' with the removable device inserted.  In this case, the
+user will be prompted for a seed mnemonic.
 
 Alternatively, the password and wallet can be created separately by first
 invoking the command with 'gen_key' and then creating and encrypting the
@@ -145,7 +145,9 @@ if opt.mountpoint:
 	mountpoint = opt.mountpoint
 
 keyfile = os.path.join(mountpoint,'autosign.key')
-opt.outdir = tx_dir = os.path.join(mountpoint,'tx')
+tx_dir  = os.path.join(mountpoint,'tx')
+
+opt.outdir = tx_dir
 opt.passwd_file = keyfile
 
 async def check_daemons_running():
@@ -214,32 +216,34 @@ async def sign_tx_file(txfile):
 		return False
 
 async def sign():
-	raw,signed = [tuple(f[:-6] for f in os.listdir(tx_dir) if f.endswith(ext)) for ext in ('.rawtx','.sigtx')]
-	unsigned = [os.path.join(tx_dir,f+'.rawtx') for f in raw if f not in signed]
+
+	raw      = [fn[:-len('rawtx')] for fn in os.listdir(tx_dir) if fn.endswith('.rawtx')]
+	signed   = [fn[:-len('sigtx')] for fn in os.listdir(tx_dir) if fn.endswith('.sigtx')]
+	unsigned = [os.path.join(tx_dir,fn+'rawtx') for fn in raw if fn not in signed]
 
 	if unsigned:
-		signed_txs,fails = [],[]
+		ok,bad = ([],[])
 		for txfile in unsigned:
 			ret = await sign_tx_file(txfile)
 			if ret:
-				signed_txs.append(ret)
+				ok.append(ret)
 			else:
-				fails.append(txfile)
+				bad.append(txfile)
 			qmsg('')
-		time.sleep(0.3)
-		msg(f'{len(signed_txs)} transaction{suf(signed_txs)} signed')
-		if fails:
-			rmsg(f'{len(fails)} transaction{suf(fails)} failed to sign')
-		if signed_txs and not opt.no_summary:
-			print_summary(signed_txs)
-		if fails:
+		await asyncio.sleep(0.3)
+		msg(f'{len(ok)} transaction{suf(ok)} signed')
+		if bad:
+			rmsg(f'{len(bad)} transaction{suf(bad)} failed to sign')
+		if ok and not opt.no_summary:
+			print_summary(ok)
+		if bad:
 			msg('')
 			rmsg('Failed transactions:')
-			msg('  ' + '\n  '.join(red(s) for s in sorted(fails)) + '\n') # avoid the 'less' NL color bug
-		return False if fails else True
+			msg('  ' + '\n  '.join(red(s) for s in sorted(bad)) + '\n') # avoid the 'less' NL color bug
+		return False if bad else True
 	else:
 		msg('No unsigned transactions')
-		time.sleep(1)
+		await asyncio.sleep(0.5)
 		return True
 
 def decrypt_wallets():
@@ -378,7 +382,7 @@ async def do_loop():
 		if not n % 10:
 			msg_r(f"\r{' '*17}\rWaiting")
 			sys.stderr.flush()
-		time.sleep(1)
+		await asyncio.sleep(1)
 		msg_r('.')
 		n += 1
 

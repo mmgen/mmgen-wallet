@@ -16,7 +16,7 @@ import os,importlib,json
 from .globalvars import g
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .util import msg,vmsg,die,suf,make_chksum_6,fmt_list,remove_dups
-from .color import orange,grnbg
+from .color import red,orange,grnbg
 from .protocol import init_proto
 from .fileutil import get_data_from_file,write_data_to_file
 from .addr import MMGenID
@@ -127,7 +127,7 @@ class coin_msg:
 			self.sigs = d['signatures']
 			self.addrlists = [MMGenIDRange(self.proto,i) for i in self.data['addrlists']]
 			if d.get('failed_seed_ids'):
-				self.failed_seed_ids = d['failed_seed_ids']
+				self.failed_sids = d['failed_seed_ids']
 
 		def format(self,mmid=None):
 
@@ -143,10 +143,10 @@ class coin_msg:
 				fs = '{:16s} {}'
 				for k,v in disp_data.items():
 					yield fs.format( v[0]+':', v[1](self.data[k]) )
-				if hasattr(self,'failed_seed_ids'):
+				if hasattr(self,'failed_sids'):
 					yield fs.format(
 						'Failed Seed IDs:',
-						fmt_list(self.failed_seed_ids,fmt='bare') )
+						red(fmt_list(self.failed_sids,fmt='bare')) )
 				yield ''
 				yield 'Signatures:'
 				for n,(k,v) in enumerate(self.sigs.items()):

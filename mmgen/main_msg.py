@@ -45,13 +45,18 @@ class MsgOps:
 
 			await m.sign(wallet_files)
 
-			SignedMsg( data=m.__dict__ ).write_to_file( ask_overwrite=False )
+			m = SignedMsg( data=m.__dict__ )
+
+			m.write_to_file( ask_overwrite=False )
 
 	class verify(sign):
 
 		async def __init__(self,msgfile,addr=None):
+
 			m = SignedOnlineMsg( infile=msgfile )
+
 			qmsg(m.format(addr) + '\n')
+
 			await m.verify(addr,summary=True)
 
 opts_data = {
