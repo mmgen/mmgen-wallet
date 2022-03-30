@@ -111,6 +111,18 @@ class TestSuiteAutosignBase(TestSuiteBase):
 
 		self.tx_file_ops('set_count') # initialize tx_count here so we can resume anywhere
 
+		def gen_msg_fns():
+			fmap = dict(filedir_map)
+			for coin in self.coins:
+				sdir = os.path.join('test','ref',fmap[coin])
+				for fn in os.listdir(sdir):
+					if fn.endswith(f'[{coin.upper()}].rawmsg.json'):
+						yield os.path.join(sdir,fn)
+
+		self.ref_msgfiles = tuple(gen_msg_fns())
+		self.good_msg_count = 0
+		self.bad_msg_count = 0
+
 	def __del__(self):
 		if self.simulate or not self.live:
 			LEDControl.delete_dummy_control_files()
@@ -224,6 +236,44 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			self.bad_tx_count = 0
 		return 'ok'
 
+	def copy_msgfiles(self):
+		return self.msgfile_ops('copy')
+
+	def remove_signed_msgfiles(self):
+		return self.msgfile_ops('remove_signed')
+
+	def create_invalid_msgfile(self):
+		return self.msgfile_ops('create_invalid')
+
+	def remove_invalid_msgfile(self):
+		return self.msgfile_ops('remove_invalid')
+
+	def msgfile_ops(self,op):
+		self.spawn('',msg_only=True)
+		destdir = joinpath(self.mountpoint,'msg')
+		os.makedirs(destdir,exist_ok=True)
+		if op.endswith('_invalid'):
+			fn = os.path.join(destdir,'DEADBE[BTC].rawmsg.json')
+			if op == 'create_invalid':
+				with open(fn,'w') as fp:
+					fp.write('bad data\n')
+				self.bad_msg_count += 1
+			elif op == 'remove_invalid':
+				os.unlink(fn)
+				self.bad_msg_count -= 1
+		else:
+			for fn in self.ref_msgfiles:
+				if op == 'copy':
+					if os.path.basename(fn) == '9DA060[BTC].rawmsg.json': # contains bad Seed ID
+						self.bad_msg_count += 1
+					else:
+						self.good_msg_count += 1
+					imsg(f'Copying: {fn} -> {destdir}')
+					shutil.copy2(fn,destdir)
+				elif op == 'remove_signed':
+					os.unlink(os.path.join( destdir, os.path.basename(fn).replace('rawmsg','sigmsg') ))
+		return 'ok'
+
 class TestSuiteAutosign(TestSuiteAutosignBase):
 	'autosigning transactions for all supported coins'
 	coins        = ['btc','bch','ltc','eth']
@@ -247,16 +297,38 @@ class TestSuiteAutosign(TestSuiteAutosignBase):
 		('sign_led',                 'signing transactions (--led - BTC files only)'),
 		('remove_signed_txfiles',    'removing signed transaction files'),
 		('sign_stealth_led',         'signing transactions (--stealth-led)'),
+		('remove_signed_txfiles',    'removing signed transaction files'),
+		('copy_msgfiles',            'copying message files'),
+		('sign_quiet_msg',           'signing transactions and messages (--quiet)'),
+		('remove_signed_txfiles',    'removing signed transaction files'),
+		('create_bad_txfiles',       'creating bad transaction files'),
+		('remove_signed_msgfiles',   'removing signed message files'),
+		('create_invalid_msgfile',   'creating invalid message file'),
+		('sign_full_summary_msg',    'signing transactions and messages (--full-summary)'),
+		('remove_invalid_msgfile',   'removing invalid message file'),
+		('remove_bad_txfiles',       'removing bad transaction files'),
+		('sign_no_unsigned_msg',     'signing transactions and messages (nothing to sign)'),
 		('stop_daemons',             'stopping daemons'),
 	)
 
-	def do_sign(self,args):
+	def do_sign(self,args,have_msg=False):
 		t = self.spawn('mmgen-autosign', self.opts + args )
-		t.expect(f'{self.tx_count} transactions signed')
+		t.expect(
+			f'{self.tx_count} transactions signed' if self.tx_count else
+			'No unsigned transactions' )
 
 		if self.bad_tx_count:
 			t.expect(f'{self.bad_tx_count} transactions failed to sign')
 			t.req_exit_val = 1
+
+		if have_msg:
+			t.expect(
+				f'{self.good_msg_count} message files{{0,1}} signed' if self.good_msg_count else
+				'No unsigned message files', regex=True )
+
+			if self.bad_msg_count:
+				t.expect(f'{self.bad_msg_count} message files{{0,1}} failed to sign', regex=True)
+				t.req_exit_val = 1
 
 		if 'wait' in args:
 			t.expect('Waiting')
@@ -279,6 +351,18 @@ class TestSuiteAutosign(TestSuiteAutosignBase):
 
 	def sign_stealth_led(self):
 		return self.do_sign(['--quiet','--stealth-led','wait'])
+
+	def sign_quiet_msg(self):
+		return self.do_sign(['--quiet','wait'],have_msg=True)
+
+	def sign_full_summary_msg(self):
+		return self.do_sign(['--full-summary','wait'],have_msg=True)
+
+	def sign_no_unsigned_msg(self):
+		self.tx_count = 0
+		self.good_msg_count = 0
+		self.bad_msg_count = 0
+		return self.do_sign(['--quiet','wait'],have_msg=True)
 
 class TestSuiteAutosignBTC(TestSuiteAutosign):
 	'autosigning BTC transactions'
