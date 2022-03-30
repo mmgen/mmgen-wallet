@@ -210,9 +210,9 @@ def start_test_daemons(*network_ids,remove_datadir=False):
 	if not opt.no_daemon_autostart:
 		return test_daemons_ops(*network_ids,op='start',remove_datadir=remove_datadir)
 
-def stop_test_daemons(*network_ids):
-	if not opt.no_daemon_stop:
-		return test_daemons_ops(*network_ids,op='stop')
+def stop_test_daemons(*network_ids,force=False,remove_datadir=False):
+	if force or not opt.no_daemon_stop:
+		return test_daemons_ops(*network_ids,op='stop',remove_datadir=remove_datadir)
 
 def restart_test_daemons(*network_ids,remove_datadir=False):
 	if not stop_test_daemons(*network_ids):

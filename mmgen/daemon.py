@@ -311,6 +311,7 @@ class CoinDaemon(Daemon):
 				daemon_id + '_daemon' ))
 
 		assert network in me.networks, f'{network!r}: unsupported network for daemon {daemon_id}'
+		me.network_id = network_id
 		me.network = network
 		me.coin = coin
 		me.coin_name = cls.coins[coin].coin_name
@@ -373,7 +374,7 @@ class CoinDaemon(Daemon):
 
 	def init_datadir(self):
 		if self.test_suite:
-			return os.path.join('test','daemons',self.coin.lower())
+			return os.path.join('test','daemons',self.network_id)
 		else:
 			return os.path.join(*self.datadirs[self.platform])
 
