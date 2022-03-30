@@ -524,10 +524,10 @@ class CmdGroupMgr(object):
 	}
 
 	cmd_groups_extra = {
-		'autosign_btc':     ('TestSuiteAutosignBTC',{'modname':'autosign'}),
-		'autosign_live':    ('TestSuiteAutosignLive',{'modname':'autosign'}),
+		'autosign_btc':           ('TestSuiteAutosignBTC',{'modname':'autosign'}),
+		'autosign_live':          ('TestSuiteAutosignLive',{'modname':'autosign'}),
 		'autosign_live_simulate': ('TestSuiteAutosignLiveSimulate',{'modname':'autosign'}),
-		'create_ref_tx':    ('TestSuiteRefTX',{'modname':'misc','full_data':True}),
+		'create_ref_tx':          ('TestSuiteRefTX',{'modname':'misc','full_data':True}),
 	}
 
 	cmd_groups = cmd_groups_dfl.copy()
