@@ -264,6 +264,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_msgsign_userwallet',  'signing the message file (user-specified wallet)'),
 		('bob_msgsign_userwallets', 'signing the message file (user-specified wallets)'),
 		('bob_msgverify',           'verifying the message file (all addresses)'),
+		('bob_msgverify_raw',       'verifying the raw message file (all addresses)'),
 		('bob_msgverify_single',    'verifying the message file (single address)'),
 
 		('stop',                 'stopping regtest daemon'),
@@ -1082,14 +1083,19 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		fn2 = get_file_with_ext(self.tmpdir,'bip39')
 		return self.bob_msgsign([fn2,fn1])
 
-	def bob_msgverify(self,addr=None):
+	def bob_msgverify(self,addr=None,ext='sigmsg.json'):
 		return self.spawn(
 			'mmgen-msg', [
 				'--bob',
 				f'--outdir={self.tmpdir}',
 				'verify',
-				get_file_with_ext(self.tmpdir,'sigmsg.json'),
+				get_file_with_ext(self.tmpdir,ext),
 			] + ([addr] if addr else []) )
+
+	def bob_msgverify_raw(self):
+		t = self.bob_msgverify(ext='rawmsg.json')
+		t.req_exit_val = 1
+		return t
 
 	def bob_msgverify_single(self):
 		sid = self._user_sid('bob')

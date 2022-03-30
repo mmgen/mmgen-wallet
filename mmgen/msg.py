@@ -147,24 +147,26 @@ class coin_msg:
 					yield fs.format(
 						'Failed Seed IDs:',
 						red(fmt_list(self.failed_sids,fmt='bare')) )
-				yield ''
-				yield 'Signatures:'
-				for n,(k,v) in enumerate(self.sigs.items()):
+				if self.sigs:
 					yield ''
-					yield '{:>3}) {}'.format(n+1,k)
-					for res in gen_entry(v):
-						yield res
+					yield 'Signatures:'
+					for n,(k,v) in enumerate(self.sigs.items()):
+						yield ''
+						yield '{:>3}) {}'.format(n+1,k)
+						for res in gen_entry(v):
+							yield res
 
 			def gen_single():
 				fs = '{:8s} {}'
 				for k,v in disp_data.items():
 					yield fs.format( v[0]+':', v[1](self.data[k]) )
-				yield 'Signature data:'
-				k = MMGenID(self.proto,mmid)
-				if k not in self.sigs:
-					die(1,f'{k}: address not found in signature data')
-				for res in gen_entry(self.sigs[k]):
-					yield res
+				if self.sigs:
+					yield 'Signature data:'
+					k = MMGenID(self.proto,mmid)
+					if k not in self.sigs:
+						die(1,f'{k}: address not found in signature data')
+					for res in gen_entry(self.sigs[k]):
+						yield res
 
 			disp_data = {
 				'message':   ('Message',        lambda v: grnbg(v) ),
@@ -178,7 +180,9 @@ class coin_msg:
 				return '\n'.join(gen_single())
 			else:
 				fs2 = '     {:12s} {}'
-				return 'SIGNED MESSAGE DATA:\n\n  ' + '\n  '.join(gen_all())
+				return (
+					'{}SIGNED MESSAGE DATA:\n\n  '.format('' if self.sigs else 'UN') +
+					'\n  '.join(gen_all()) )
 
 	class unsigned(completed):
 
@@ -256,25 +260,28 @@ class coin_msg:
 
 		async def verify(self,addr=None,summary=False):
 
-			from .rpc import rpc_init
-			self.rpc = await rpc_init(self.proto)
-
 			if addr:
 				mmaddr = MMGenID(self.proto,addr)
 				sigs = {k:v for k,v in self.sigs.items() if k == mmaddr}
 			else:
 				sigs = self.sigs
 
-			for k,v in sigs.items():
-				ret = await self.do_verify(
-					addr    = v.get('addr_p2pkh') or v['addr'],
-					sig     = v['sig'],
-					message = self.data['message'] )
-				if not ret:
-					die(3,f'Invalid signature for address {k} ({v["addr"]})')
+			if sigs:
+				from .rpc import rpc_init
+				self.rpc = await rpc_init(self.proto)
 
-			if summary:
-				msg('{} signature{} verified'.format( len(sigs), suf(sigs) ))
+				for k,v in sigs.items():
+					ret = await self.do_verify(
+						addr    = v.get('addr_p2pkh') or v['addr'],
+						sig     = v['sig'],
+						message = self.data['message'] )
+					if not ret:
+						die(3,f'Invalid signature for address {k} ({v["addr"]})')
+
+				if summary:
+					msg('{} signature{} verified'.format( len(sigs), suf(sigs) ))
+			else:
+				die(1,'No signatures')
 
 def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**kwargs):
 

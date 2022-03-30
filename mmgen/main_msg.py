@@ -49,6 +49,9 @@ class MsgOps:
 
 			m.write_to_file( ask_overwrite=False )
 
+			if getattr(m,'failed_sids',None):
+				sys.exit(1)
+
 	class verify(sign):
 
 		async def __init__(self,msgfile,addr=None):
@@ -58,6 +61,9 @@ class MsgOps:
 			qmsg(m.format(addr) + '\n')
 
 			await m.verify(addr,summary=True)
+
+			if getattr(m,'failed_sids',None):
+				sys.exit(1)
 
 opts_data = {
 	'text': {
