@@ -31,7 +31,6 @@ mountpoint   = '/mnt/tx'
 tx_dir       = '/mnt/tx/tx'
 part_label   = 'MMGEN_TX'
 wallet_dir   = '/dev/shm/autosign'
-key_fn       = 'autosign.key'
 mn_fmts      = {
 	'mmgen': 'words',
 	'bip39': 'bip39',
@@ -67,7 +66,7 @@ opts_data = {
 
                               COMMANDS
 
-gen_key - generate the wallet encryption key and copy it to '{tx_dir}'
+gen_key - generate the wallet encryption key and copy it to {mountpoint!r}
 setup   - generate the wallet encryption key and wallet
 wait    - start in loop mode: wait-mount-sign-unmount-wait
 
@@ -105,7 +104,7 @@ Alternatively, the password and wallet can be created separately by first
 invoking the command with 'gen_key' and then creating and encrypting the
 wallet using the -P (--passwd-file) option:
 
-    $ mmgen-walletconv -r0 -q -iwords -d{wallet_dir} -p1 -P{tx_dir}/{key_fn} -Llabel
+    $ mmgen-walletconv -r0 -q -iwords -d{wallet_dir} -p1 -P/mnt/tx/autosign.key -Llabel
 
 Note that the hash preset must be '1'.  Multiple wallets are permissible.
 
@@ -145,8 +144,9 @@ from .rpc import rpc_init
 if opt.mountpoint:
 	mountpoint = opt.mountpoint
 
+keyfile = os.path.join(mountpoint,'autosign.key')
 opt.outdir = tx_dir = os.path.join(mountpoint,'tx')
-opt.passwd_file = os.path.join(tx_dir,key_fn)
+opt.passwd_file = keyfile
 
 async def check_daemons_running():
 	if opt.coin:
@@ -311,23 +311,21 @@ async def do_sign():
 		return False
 
 def wipe_existing_key():
-	fn = os.path.join(tx_dir,key_fn)
-	try: os.stat(fn)
+	try: os.stat(keyfile)
 	except: pass
 	else:
 		from .fileutil import shred_file
-		msg(f'\nShredding existing key {fn!r}')
-		shred_file( fn, verbose=opt.verbose )
+		msg(f'\nShredding existing key {keyfile!r}')
+		shred_file( keyfile, verbose=opt.verbose )
 
 def create_key():
 	kdata = os.urandom(32).hex()
-	fn = os.path.join(tx_dir,key_fn)
-	desc = f'key file {fn!r}'
+	desc = f'key file {keyfile!r}'
 	msg('Creating ' + desc)
 	try:
-		with open(fn,'w') as fp:
+		with open(keyfile,'w') as fp:
 			fp.write(kdata+'\n')
-		os.chmod(fn,0o400)
+		os.chmod(keyfile,0o400)
 		msg('Wrote ' + desc)
 	except:
 		die(2,'Unable to write ' + desc)
