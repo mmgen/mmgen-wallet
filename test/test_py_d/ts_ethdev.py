@@ -343,6 +343,19 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	async def setup(self):
 		self.spawn('',msg_only=True)
 
+		async def geth_devnet_init_bug_workaround(): # devnet_init_bug
+			from mmgen.daemon import CoinDaemon
+			d = CoinDaemon(
+				self.proto.coin+'_rt',
+				test_suite = True,
+				daemon_id  = g.daemon_id,
+				opts       = ['devnet_init_bug'] )
+			d.start()
+			import asyncio
+			await asyncio.sleep(1)
+			d.stop()
+			await asyncio.sleep(1)
+
 		if not self.using_solc:
 			srcdir = os.path.join(self.tr.repo_root,'test','ref','ethereum','bin')
 			from shutil import copytree
@@ -353,6 +366,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			if g.daemon_id == 'geth':
 				self.geth_setup()
 				set_vt100()
+				# await geth_devnet_init_bug_workaround() # uncomment to enable testing with v1.10.17
 			if not start_test_daemons(
 					self.proto.coin+'_rt',
 					remove_datadir = not g.daemon_id in ('geth','erigon') ):
