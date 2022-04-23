@@ -51,25 +51,6 @@ amt2 = '888.111122223333444455'
 parity_devkey_fn = 'parity.devkey'
 erigon_devkey_fn = 'erigon.devkey'
 
-tested_solc_ver = '0.8.7'
-
-def check_solc_ver():
-	cmd = 'python3 scripts/create-token.py --check-solc-version'
-	try:
-		cp = run(cmd.split(),check=False,stdout=PIPE)
-	except Exception as e:
-		die(4,f'Unable to execute {cmd!r}: {e}')
-	res = cp.stdout.decode().strip()
-	if cp.returncode == 0:
-		omsg(
-			orange(f'Found supported solc version {res}') if res == tested_solc_ver else
-			yellow(f'WARNING: solc version ({res}) does not match tested version ({tested_solc_ver})')
-		)
-		return True
-	else:
-		omsg(yellow(res + '\nUsing precompiled contract data'))
-		return False
-
 vbal1 = '1.2288409'
 vbal9 = '1.22626295'
 vbal2 = '99.997088755'
@@ -327,6 +308,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		from mmgen.daemon import CoinDaemon
 		self.rpc_port = CoinDaemon(proto=self.proto,test_suite=True).rpc_port
 		self.using_solc = check_solc_ver()
+		if not self.using_solc:
+			omsg(yellow('Using precompiled contract data'))
 
 		write_to_file(
 			joinpath(self.tmpdir,parity_devkey_fn),

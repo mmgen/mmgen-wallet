@@ -24,6 +24,7 @@ class TestSuiteException(Exception): pass
 class TestSuiteFatalException(Exception): pass
 
 import os
+from subprocess import run,PIPE
 from mmgen.common import *
 from mmgen.devtools import *
 from mmgen.fileutil import write_data_to_file,get_data_from_file
@@ -231,3 +232,23 @@ def test_daemons_ops(*network_ids,op,remove_datadir=False):
 				d.remove_datadir()
 			ret = d.cmd(op,silent=silent)
 		return ret
+
+tested_solc_ver = '0.8.7'
+
+def check_solc_ver():
+	cmd = 'python3 scripts/create-token.py --check-solc-version'
+	try:
+		cp = run(cmd.split(),check=False,stdout=PIPE)
+	except Exception as e:
+		die(4,f'Unable to execute {cmd!r}: {e}')
+	res = cp.stdout.decode().strip()
+	if cp.returncode == 0:
+		omsg(
+			orange(f'Found supported solc version {res}') if res == tested_solc_ver else
+			yellow(f'WARNING: solc version ({res}) does not match tested version ({tested_solc_ver})')
+		)
+		return True
+	else:
+		omsg(yellow('Warning: Solidity compiler (solc) could not be executed or has unsupported version'))
+		omsg(res)
+		return False

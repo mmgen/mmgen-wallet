@@ -6,12 +6,15 @@ test.unit_tests_d.ut_dep: dependency unit tests for the MMGen suite
   No data verification is performed.
 """
 
+from subprocess import run,PIPE
+
 from mmgen.common import *
 from mmgen.exception import NoLEDSupport
+from ..include.common import check_solc_ver
 
 class unit_tests:
 
-	altcoin_deps = ('pysha3','py_ecc')
+	altcoin_deps = ('pysha3','py_ecc','solc')
 	win_skip = ('aiohttp','pysha3','led')
 
 	def led(self,name,ut):
@@ -98,4 +101,26 @@ class unit_tests:
 		from hashlib import scrypt # max N == 14!!
 		scrypt(password=passwd,salt=salt,n=2**N,r=r,p=p,maxmem=0,dklen=buflen)
 
+		return True
+
+	def solc(self,name,ut):
+		from mmgen.protocol import init_proto
+		solc_ok = check_solc_ver()
+		if solc_ok:
+			cmd = [
+				'python3',
+				'scripts/create-token.py',
+				'--coin=ETH',
+				'--name=My Fake Token',
+				'--symbol=FAKE',
+				'--supply=100000000000000000000000000',
+				'--decimals=18',
+				'--stdout',
+				init_proto('eth').checksummed_addr('deadbeef'*5),
+			]
+			cp = run(cmd,stdout=PIPE,stderr=PIPE)
+			vmsg(cp.stderr.decode())
+			if cp.returncode:
+				msg(cp.stderr.decode())
+				return False
 		return True
