@@ -55,6 +55,8 @@ opts.UserOpts._reset_ok += ('use_internal_keccak_module',)
 
 cmd_args = opts.init(opts_data)
 
+os.environ['PYTHONPATH'] = repo_root
+
 file_pfx = 'nt_' if opt.node_tools else 'ut_'
 
 all_tests = sorted(

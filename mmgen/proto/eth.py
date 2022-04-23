@@ -59,8 +59,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 			Msg(f'Invalid address: {addr}')
 		return False
 
-	@classmethod
-	def checksummed_addr(cls,addr):
+	def checksummed_addr(self,addr):
 		h = self.keccak_256(addr.encode()).digest().hex()
 		return ''.join(addr[i].upper() if int(h[i],16) > 7 else addr[i] for i in range(len(addr)))
 

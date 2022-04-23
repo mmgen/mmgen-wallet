@@ -744,7 +744,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			'scripts/create-token.py',
 			'--coin=' + self.proto.coin,
 			'--outdir=' + odir
-		] + cmd_args + [CoinProtocol.Ethereum.checksummed_addr(dfl_devaddr)]
+		] + cmd_args + [self.proto.checksummed_addr(dfl_devaddr)]
 		imsg('Executing: {}'.format( ' '.join(cmd) ))
 		cp = run(cmd,stdout=DEVNULL,stderr=PIPE)
 		if cp.returncode != 0:

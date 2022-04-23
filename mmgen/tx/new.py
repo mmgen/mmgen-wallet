@@ -63,6 +63,7 @@ class New(Base):
 
 	fee_is_approximate = False
 	msg_low_coin = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
+	msg_wallet_low_coin = 'Wallet has insufficient funds for this transaction ({} {} needed)'
 	msg_no_change_output = """
 		ERROR: No change address specified.  If you wish to create a transaction with
 		only one output, specify a single output address with no {} amount

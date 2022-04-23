@@ -181,7 +181,7 @@ def create_src(proto,template,token_data,owner_addr):
 		for k in token_data.fields:
 			field = getattr(token_data,k)
 			if k == 'owner_addr':
-				from mmgen.obj import is_coin_addr
+				from mmgen.addr import is_coin_addr
 				if not is_coin_addr( proto, owner_addr.lower() ):
 					die(1,f'{owner_addr}: not a valid {proto.coin} coin address')
 				val = '0x' + owner_addr

@@ -22,7 +22,6 @@ class New(Base,TxBase.New):
 	usr_fee_prompt = 'Enter transaction fee: '
 	fee_fail_fs = 'Network fee estimation for {c} confirmations failed ({t})'
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
-	msg_wallet_low_coin = 'Wallet has insufficient funds for this transaction ({} {} needed)'
 
 	@property
 	def relay_fee(self):
