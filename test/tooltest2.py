@@ -316,6 +316,12 @@ tests = {
 			( ['nbytes=16'], {'boolfunc':is_b58_str}, ['-r0'] ),
 			( ['nbytes=12','pad=0'], is_b58_str, ['-r0'] ),
 		],
+		'eth_checksummed_addr': [
+			( ['00a329c0648769a73afac7f9381e08fb43dbea72'], '00a329c0648769A73afAc7F9381E08FB43dBEA72' ),
+			( ['deadbeef'*5], 'DeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF' ),
+			( ['ffffffff'*5], 'FFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF' ),
+			( ['0'*39 + '1'], '0'*39 + '1' ),
+		],
 	},
 	'Wallet': {
 		'gen_key': [

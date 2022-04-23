@@ -82,6 +82,7 @@ mods = {
 		'b6dtohex',
 		'bytespec',
 		'bytestob58',
+		'eth_checksummed_addr',
 		'hash160',
 		'hash256',
 		'hexdump',

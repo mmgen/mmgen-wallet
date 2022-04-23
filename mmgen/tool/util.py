@@ -173,3 +173,8 @@ class tool_cmd(tool_cmd_base):
 		from ..baseconv import baseconv
 		from ..util import remove_whitespace
 		return baseconv('b6d').tohex( remove_whitespace(b6d_num), pad )
+
+	def eth_checksummed_addr(self,addr:'sstr'):
+		"create a checksummed Ethereum address"
+		from ..protocol import init_proto
+		return init_proto('eth').checksummed_addr(addr)
