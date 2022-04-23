@@ -266,6 +266,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_msgverify',           'verifying the message file (all addresses)'),
 		('bob_msgverify_raw',       'verifying the raw message file (all addresses)'),
 		('bob_msgverify_single',    'verifying the message file (single address)'),
+		('bob_msgexport',           'exporting the message file'),
+		('bob_msgexport_single',    'exporting the message file (single address)'),
 
 		('stop',                 'stopping regtest daemon'),
 	)
@@ -1083,12 +1085,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		fn2 = get_file_with_ext(self.tmpdir,'bip39')
 		return self.bob_msgsign([fn2,fn1])
 
-	def bob_msgverify(self,addr=None,ext='sigmsg.json'):
+	def bob_msgverify(self,addr=None,ext='sigmsg.json',cmd='verify'):
 		return self.spawn(
 			'mmgen-msg', [
 				'--bob',
 				f'--outdir={self.tmpdir}',
-				'verify',
+				cmd,
 				get_file_with_ext(self.tmpdir,ext),
 			] + ([addr] if addr else []) )
 
@@ -1100,6 +1102,15 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_msgverify_single(self):
 		sid = self._user_sid('bob')
 		return self.bob_msgverify(addr=f'{sid}:{self.dfl_mmtype}:1')
+
+	def bob_msgexport(self,addr=None):
+		t = self.bob_msgverify( addr=addr, cmd='export' )
+		t.written_to_file('data')
+		return t
+
+	def bob_msgexport_single(self):
+		sid = self._user_sid('bob')
+		return self.bob_msgexport(addr=f'{sid}:{self.dfl_mmtype}:1')
 
 	def stop(self):
 		if opt.no_daemon_stop:

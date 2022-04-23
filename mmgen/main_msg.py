@@ -65,6 +65,17 @@ class MsgOps:
 			if getattr(m,'failed_sids',None):
 				sys.exit(1)
 
+	class export(sign):
+
+		async def __init__(self,msgfile,addr=None):
+
+			from .fileutil import write_data_to_file
+
+			write_data_to_file(
+				outfile       = 'signatures.json',
+				data          = SignedOnlineMsg( infile=msgfile ).get_json_for_export( addr ),
+				desc          = 'signature data' )
+
 opts_data = {
 	'text': {
 		'desc': 'Perform message signing operations for MMGen addresses',
@@ -72,6 +83,7 @@ opts_data = {
 			'[opts] create MESSAGE_TEXT ADDRESS_SPEC [...]',
 			'[opts] sign   MESSAGE_FILE [WALLET_FILE ...]',
 			'[opts] verify MESSAGE_FILE',
+			'[opts] export MESSAGE_FILE',
 		],
 		'options': """
 -h, --help      Print this help message
@@ -88,6 +100,8 @@ create - create a raw MMGen message file with specified message text for
          SPECIFIER below)
 sign   - perform signing operation on an unsigned MMGen message file
 verify - verify and display the contents of a signed MMGen message file
+export - dump signed MMGen message file to ‘signatures.json’, including only
+         data relevant for a third-party verifier
 
 
                               ADDRESS SPECIFIER
@@ -149,6 +163,9 @@ $ mmgen-msg verify <signed message file>
 
 Verify and display a single signature in the signed message file:
 $ mmgen-msg verify <signed message file> DEADBEEF:B:98
+
+Export data relevant for a third-party verifier to ‘signatures.json’:
+$ mmgen-msg export <signed message file>
 """
 	},
 	'code': {
@@ -174,10 +191,10 @@ async def main():
 		if len(cmd_args) < 1:
 			opts.usage()
 		await MsgOps.sign( cmd_args[0], cmd_args[1:] )
-	elif op == 'verify':
+	elif op in ('verify','export'):
 		if len(cmd_args) not in (1,2):
 			opts.usage()
-		await MsgOps.verify( cmd_args[0], cmd_args[1] if len(cmd_args) == 2 else None )
+		await getattr(MsgOps,op)( cmd_args[0], cmd_args[1] if len(cmd_args) == 2 else None )
 	else:
 		die(1,f'{op!r}: unrecognized operation')
 

@@ -73,6 +73,12 @@ async def run_test(network_id):
 	pumsg('\nTesting single address verification:\n')
 	await m.verify('A091ABAA:111',summary=opt.verbose)
 
+	pumsg('\nTesting JSON dump for export:\n')
+	msg( m.get_json_for_export() )
+
+	pumsg('\nTesting single address JSON dump for export:\n')
+	msg( m.get_json_for_export('A091ABAA:111') )
+
 	stop_test_daemons(network_id)
 
 	msg('\n')

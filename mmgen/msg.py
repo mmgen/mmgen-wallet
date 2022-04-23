@@ -258,7 +258,7 @@ class coin_msg:
 
 	class signed_online(signed):
 
-		async def verify(self,addr=None,summary=False):
+		def get_sigs(self,addr):
 
 			if addr:
 				mmaddr = MMGenID(self.proto,addr)
@@ -266,22 +266,39 @@ class coin_msg:
 			else:
 				sigs = self.sigs
 
-			if sigs:
-				from .rpc import rpc_init
-				self.rpc = await rpc_init(self.proto)
-
-				for k,v in sigs.items():
-					ret = await self.do_verify(
-						addr    = v.get('addr_p2pkh') or v['addr'],
-						sig     = v['sig'],
-						message = self.data['message'] )
-					if not ret:
-						die(3,f'Invalid signature for address {k} ({v["addr"]})')
-
-				if summary:
-					msg('{} signature{} verified'.format( len(sigs), suf(sigs) ))
-			else:
+			if not sigs:
 				die(1,'No signatures')
+
+			return sigs
+
+		async def verify(self,addr=None,summary=False):
+
+			sigs = self.get_sigs(addr)
+
+			from .rpc import rpc_init
+			self.rpc = await rpc_init(self.proto)
+
+			for k,v in sigs.items():
+				ret = await self.do_verify(
+					addr    = v.get('addr_p2pkh') or v['addr'],
+					sig     = v['sig'],
+					message = self.data['message'] )
+				if not ret:
+					die(3,f'Invalid signature for address {k} ({v["addr"]})')
+
+			if summary:
+				msg('{} signature{} verified'.format( len(sigs), suf(sigs) ))
+
+		def get_json_for_export(self,addr=None):
+			return json.dumps(
+				{
+					'message': self.data['message'],
+					'network': self.data['network'].upper(),
+					'signatures': tuple( self.get_sigs(addr).values() ),
+				},
+				sort_keys = True,
+				indent = 4
+			)
 
 def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**kwargs):
 
