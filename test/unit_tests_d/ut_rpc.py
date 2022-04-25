@@ -30,6 +30,29 @@ def cfg_file_auth_test(proto,d):
 	run_session(do())
 	d.stop()
 
+def print_daemon_info(rpc):
+
+	def fmt_dict(d):
+		return '\n        ' + '\n        '.join( pp_fmt(d).split('\n') ) + '\n'
+
+	msg(f"""
+    DAEMON VERSION: {rpc.daemon_version} [{rpc.daemon_version_str}]
+    CAPS:           {rpc.caps}
+    NETWORK:        {rpc.proto.coin} {rpc.proto.network.upper()}
+    CHAIN:          {rpc.chain}
+    BLOCKCOUNT:     {rpc.blockcount}
+    CUR_DATE:       {rpc.cur_date} [{make_timestr(rpc.cur_date)}]
+	""".rstrip())
+
+	if rpc.proto.base_proto == 'Bitcoin':
+		msg(f"""
+    NETWORKINFO:    {fmt_dict(rpc.cached["networkinfo"])}
+    BLOCKCHAININFO: {fmt_dict(rpc.cached["blockchaininfo"])}
+    DEPLOYMENTINFO: {fmt_dict(rpc.cached["deploymentinfo"])}
+		""".rstrip())
+
+	msg('')
+
 def do_msg(rpc,backend):
 	bname = type(rpc.backend).__name__
 	qmsg('  Testing backend {!r}{}'.format( bname, '' if backend == bname else f' [{backend}]' ))
@@ -43,10 +66,12 @@ class init_test:
 		bh = (await rpc.call('getblockchaininfo',timeout=300))['bestblockhash']
 		await rpc.gathered_call('getblock',((bh,),(bh,1)),timeout=300)
 		await rpc.gathered_call(None,(('getblock',(bh,)),('getblock',(bh,1))),timeout=300)
+		return rpc
 
 	async def bch(proto,backend,daemon):
 		rpc = await rpc_init(proto,backend,daemon)
 		do_msg(rpc,backend)
+		return rpc
 
 	ltc = bch
 
@@ -54,6 +79,7 @@ class init_test:
 		rpc = await rpc_init(proto,backend,daemon)
 		do_msg(rpc,backend)
 		await rpc.call('eth_blockNumber',timeout=300)
+		return rpc
 
 	etc = eth
 
@@ -68,9 +94,11 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 			d.remove_datadir()
 			d.start()
 
-		for backend in g.autoset_opts['rpc_backend'].choices:
+		for n,backend in enumerate(g.autoset_opts['rpc_backend'].choices):
 			test = getattr(init_test,d.proto.coin.lower())
-			run_session(test(d.proto,backend,d),backend=backend)
+			rpc = run_session(test(d.proto,backend,d),backend=backend)
+			if not n and opt.verbose:
+				print_daemon_info(rpc)
 
 		if not opt.no_daemon_stop:
 			d.stop()
