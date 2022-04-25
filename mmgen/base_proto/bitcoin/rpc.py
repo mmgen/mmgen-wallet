@@ -78,6 +78,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		self.caps = ('full_node',)
 		for func,cap in (
 			('setlabel','label_api'),
+			('getdeploymentinfo','deployment_info'),
 			('signrawtransactionwithkey','sign_with_key') ):
 			if len((await self.call('help',func)).split('\n')) > 3:
 				self.caps += (cap,)
@@ -87,14 +88,21 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			('getblockhash',(0,)),
 			('getnetworkinfo',()),
 			('getblockchaininfo',()),
-		]
+		] + (
+			[('getdeploymentinfo',())] if 'deployment_info' in self.caps else []
+		)
 
 		(
 			self.blockcount,
 			block0,
 			self.cached['networkinfo'],
 			self.cached['blockchaininfo'],
-		) = await self.gathered_call(None,tuple(call_group))
+			self.cached['deploymentinfo'],
+		) = (
+			await self.gathered_call(None,tuple(call_group))
+		) + (
+			[] if 'deployment_info' in self.caps else [None]
+		)
 
 		self.daemon_version = self.cached['networkinfo']['version']
 		self.daemon_version_str = self.cached['networkinfo']['subversion']
@@ -180,6 +188,13 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 	def info(self,info_id):
 
 		def segwit_is_active():
+
+			if 'deployment_info' in self.caps:
+				return (
+					self.cached['deploymentinfo']['deployments']['segwit']['active']
+					or ( g.test_suite and not os.getenv('MMGEN_TEST_SUITE_REGTEST') )
+				)
+
 			d = self.cached['blockchaininfo']
 
 			try:
