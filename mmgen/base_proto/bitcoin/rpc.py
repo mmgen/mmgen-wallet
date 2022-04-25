@@ -74,17 +74,28 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		self.set_backend(backend) # backend requires self.auth
 
 		self.cached = {}
+
+		self.caps = ('full_node',)
+		for func,cap in (
+			('setlabel','label_api'),
+			('signrawtransactionwithkey','sign_with_key') ):
+			if len((await self.call('help',func)).split('\n')) > 3:
+				self.caps += (cap,)
+
+		call_group = [
+			('getblockcount',()),
+			('getblockhash',(0,)),
+			('getnetworkinfo',()),
+			('getblockchaininfo',()),
+		]
+
 		(
-			self.cached['networkinfo'],
 			self.blockcount,
+			block0,
+			self.cached['networkinfo'],
 			self.cached['blockchaininfo'],
-			block0
-		) = await self.gathered_call(None, (
-				('getnetworkinfo',()),
-				('getblockcount',()),
-				('getblockchaininfo',()),
-				('getblockhash',(0,)),
-			))
+		) = await self.gathered_call(None,tuple(call_group))
+
 		self.daemon_version = self.cached['networkinfo']['version']
 		self.daemon_version_str = self.cached['networkinfo']['subversion']
 		self.chain = self.cached['blockchaininfo']['chain']
@@ -109,13 +120,6 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 		if self.chain == 'mainnet': # skip this for testnet, as Genesis block may change
 			await check_chainfork_mismatch(block0)
-
-		self.caps = ('full_node',)
-		for func,cap in (
-			('setlabel','label_api'),
-			('signrawtransactionwithkey','sign_with_key') ):
-			if len((await self.call('help',func)).split('\n')) > 3:
-				self.caps += (cap,)
 
 		if not self.chain == 'regtest':
 			await self.check_tracking_wallet()
@@ -177,8 +181,6 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 		def segwit_is_active():
 			d = self.cached['blockchaininfo']
-			if d['chain'] == 'regtest':
-				return True
 
 			try:
 				if d['softforks']['segwit']['active'] == True:

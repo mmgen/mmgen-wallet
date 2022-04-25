@@ -30,14 +30,15 @@ def cfg_file_auth_test(proto,d):
 	run_session(do())
 	d.stop()
 
-def do_msg(rpc):
-	qmsg('  Testing backend {!r}'.format( type(rpc.backend).__name__ ))
+def do_msg(rpc,backend):
+	bname = type(rpc.backend).__name__
+	qmsg('  Testing backend {!r}{}'.format( bname, '' if backend == bname else f' [{backend}]' ))
 
 class init_test:
 
 	async def btc(proto,backend,daemon):
 		rpc = await rpc_init(proto,backend,daemon)
-		do_msg(rpc)
+		do_msg(rpc,backend)
 
 		bh = (await rpc.call('getblockchaininfo',timeout=300))['bestblockhash']
 		await rpc.gathered_call('getblock',((bh,),(bh,1)),timeout=300)
@@ -45,13 +46,13 @@ class init_test:
 
 	async def bch(proto,backend,daemon):
 		rpc = await rpc_init(proto,backend,daemon)
-		do_msg(rpc)
+		do_msg(rpc,backend)
 
 	ltc = bch
 
 	async def eth(proto,backend,daemon):
 		rpc = await rpc_init(proto,backend,daemon)
-		do_msg(rpc)
+		do_msg(rpc,backend)
 		await rpc.call('eth_blockNumber',timeout=300)
 
 	etc = eth
