@@ -64,7 +64,7 @@ class coin_msg:
 		def chksum(self):
 			return make_chksum_6(
 				json.dumps(
-					self.data,
+					{k:v for k,v in self.data.items() if k != 'failed_sids'},
 					sort_keys = True,
 					separators = (',', ':')
 			))
@@ -98,9 +98,6 @@ class coin_msg:
 				'signatures': self.sigs,
 			}
 
-			if hasattr(self,'failed_sids'):
-				data.update({'failed_seed_ids':self.failed_sids})
-
 			write_data_to_file(
 				outfile       = os.path.join(outdir or '',self.filename),
 				data          = json.dumps(data,sort_keys=True,indent=4),
@@ -133,8 +130,6 @@ class coin_msg:
 			self.data = d['metadata']
 			self.sigs = d['signatures']
 			self.addrlists = [MMGenIDRange(self.proto,i) for i in self.data['addrlists']]
-			if d.get('failed_seed_ids'):
-				self.failed_sids = d['failed_seed_ids']
 
 		def format(self,req_addr=None):
 
@@ -153,10 +148,6 @@ class coin_msg:
 			def gen_all():
 				for k,v in hdr_data.items():
 					yield fs1.format( v[0], v[1](self.data[k]) )
-				if hasattr(self,'failed_sids'):
-					yield fs1.format(
-						'Failed Seed IDs:',
-						red(fmt_list(self.failed_sids,fmt='bare')) )
 				if self.sigs:
 					yield ''
 					yield 'Signatures:'
@@ -181,10 +172,14 @@ class coin_msg:
 				'message':     ('Message:',         lambda v: grnbg(v) ),
 				'network':     ('Network:',         lambda v: v.replace('_',' ').upper() ),
 				'addrlists':   ('Address Ranges:',  lambda v: fmt_list(v,fmt='bare') ),
+				'failed_sids': ('Failed Seed IDs:', lambda v: red(fmt_list(v,fmt='bare')) ),
 			}
 
 			if req_addr or type(self).__name__ == 'exported_sigs':
 				del hdr_data['addrlists']
+
+			if req_addr or not self.data.get('failed_sids'):
+				del hdr_data['failed_sids']
 
 			fs1 = '{:%s} {}' % max(len(v[0]) for v in hdr_data.values())
 			fs2 = '{:%s} {}' % max(len(labels[k]) for v in self.sigs.values() for k in v.keys())
@@ -264,7 +259,7 @@ class coin_msg:
 			if need_sids:
 				msg('Failed Seed IDs: {}'.format(orange(fmt_list(need_sids,fmt='bare'))))
 
-			self.failed_sids = need_sids
+			self.data['failed_sids'] = need_sids
 
 	class signed(completed):
 

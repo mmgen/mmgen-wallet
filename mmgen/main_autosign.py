@@ -225,8 +225,8 @@ async def sign_object(d,fn):
 			m.write_to_file(
 				outdir = os.path.abspath(msg_dir),
 				ask_overwrite = False )
-			if getattr(m,'failed_sids',None):
-				die('MsgFileFailedSID',f'Failed Seed IDs: {fmt_list(m.failed_sids,fmt="bare")}')
+			if m.data.get('failed_sids'):
+				die('MsgFileFailedSID',f'Failed Seed IDs: {fmt_list(m.data["failed_sids"],fmt="bare")}')
 			return m
 	except Exception as e:
 		ymsg(f'An error occurred with {d.desc} {fn!r}:\n    {e!s}')

@@ -49,7 +49,7 @@ class MsgOps:
 
 			m.write_to_file( ask_overwrite=False )
 
-			if getattr(m,'failed_sids',None):
+			if m.data.get('failed_sids'):
 				sys.exit(1)
 
 	class verify(sign):
@@ -62,7 +62,7 @@ class MsgOps:
 
 			await m.verify(addr,summary=True)
 
-			if getattr(m,'failed_sids',None):
+			if m.data.get('failed_sids'):
 				sys.exit(1)
 
 	class export(sign):
