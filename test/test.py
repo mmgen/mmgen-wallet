@@ -1054,6 +1054,8 @@ if opt.pause:
 
 set_environ_for_spawned_scripts()
 
+from mmgen.exception import TestSuiteException,TestSuiteFatalException
+
 try:
 	tr = TestSuiteRunner(data_dir,trash_dir)
 	tr.run_tests(usr_args)

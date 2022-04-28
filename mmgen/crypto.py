@@ -33,6 +33,7 @@ from .util import (
 	vmsg_r,
 	qmsg,
 	fmt,
+	die,
 	line_input,
 	get_words_from_user,
 	make_chksum_8,

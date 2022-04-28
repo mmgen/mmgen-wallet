@@ -20,9 +20,6 @@
 common.py: Shared routines and data for the MMGen test suites
 """
 
-class TestSuiteException(Exception): pass
-class TestSuiteFatalException(Exception): pass
-
 import os
 from subprocess import run,PIPE
 from mmgen.common import *

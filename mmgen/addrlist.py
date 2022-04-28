@@ -157,16 +157,10 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		self.proto = proto
 		do_chksum = False
 
-		mmtype = mmtype or proto.dfl_mmtype
-		assert mmtype in MMGenAddrType.mmtypes, f'{mmtype}: mmtype not in {MMGenAddrType.mmtypes!r}'
-
-		from .proto.btc import mainnet
-		self.bitcoin_addrtypes = tuple(
-			MMGenAddrType(mainnet,key).name for key in mainnet.mmtypes )
-
-		if seed and addr_idxs and mmtype: # data from seed + idxs
-			self.al_id,src = AddrListID(seed.sid,mmtype),'gen'
-			adata = self.generate(seed,addr_idxs)
+		if seed and addr_idxs:   # data from seed + idxs
+			self.al_id = AddrListID( seed.sid, MMGenAddrType(proto, mmtype or proto.dfl_mmtype) )
+			src = 'gen'
+			adata = self.generate(seed, addr_idxs if isinstance(addr_idxs,AddrIdxList) else AddrIdxList(addr_idxs))
 			do_chksum = True
 		elif addrfile:           # data from MMGen address file
 			self.infile = addrfile

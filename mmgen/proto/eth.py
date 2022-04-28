@@ -12,6 +12,7 @@
 Ethereum protocol
 """
 
+from ..globalvars import g
 from ..protocol import CoinProtocol,_nw,parsed_addr
 from ..util import is_hex_str_lc,Msg
 

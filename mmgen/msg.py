@@ -49,6 +49,8 @@ class MMGenIDRange(str,Hilite,InitErrors,MMGenObject):
 
 class coin_msg:
 
+	supported_base_protos = ('Bitcoin',)
+
 	class base(MMGenObject):
 
 		ext = 'rawmsg.json'
@@ -61,7 +63,11 @@ class coin_msg:
 		@property
 		def chksum(self):
 			return make_chksum_6(
-				json.dumps( self.data, sort_keys=True, separators=(',', ':') ))
+				json.dumps(
+					self.data,
+					sort_keys = True,
+					separators = (',', ':')
+			))
 
 		@property
 		def filename_stem(self):
@@ -80,7 +86,9 @@ class coin_msg:
 			return f'{self.filename_stem}.{coin_msg.signed.ext}'
 
 		def get_proto_from_file(self,filename):
-			coin,network = json.loads(get_data_from_file(filename))['metadata']['network'].split('_')
+			data = json.loads(get_data_from_file(filename))
+			network_id = data['metadata']['network']
+			coin,network = network_id.split('_')
 			return init_proto( coin=coin, network=network )
 
 		def write_to_file(self,outdir=None,ask_overwrite=False):
@@ -96,7 +104,7 @@ class coin_msg:
 			write_data_to_file(
 				outfile       = os.path.join(outdir or '',self.filename),
 				data          = json.dumps(data,sort_keys=True,indent=4),
-				desc          = f'{self.desc} data',
+				desc          = self.desc,
 				ask_overwrite = ask_overwrite )
 
 	class new(base):
@@ -117,10 +125,9 @@ class coin_msg:
 				self.__dict__ = data
 				return
 
-			self.infile = infile
 			self.data = get_data_from_file(
-				infile = self.infile,
-				desc   = f'{self.desc} data' )
+				infile = infile,
+				desc   = self.desc )
 
 			d = json.loads(self.data)
 			self.data = d['metadata']
@@ -129,22 +136,25 @@ class coin_msg:
 			if d.get('failed_seed_ids'):
 				self.failed_sids = d['failed_seed_ids']
 
-		def format(self,mmid=None):
+		def format(self,req_addr=None):
+
+			labels = {
+				'addr':       'address:',
+				'addr_p2pkh': 'addr_p2pkh:',
+				'pubhash':    'pubkey hash:',
+				'sig':        'signature:',
+			}
 
 			def gen_entry(e):
-				yield fs2.format( 'addr:', e['addr'] )
-				if e.get('addr_p2pkh'):
-					yield fs2.format( 'addr_p2pkh:', e['addr_p2pkh'] )
-				if e.get('pubhash'):
-					yield fs2.format( 'pubkey hash:', e['pubhash'] )
-				yield fs2.format('sig:', e['sig'] )
+				for k in labels:
+					if e.get(k):
+						yield fs2.format( labels[k], e[k] )
 
 			def gen_all():
-				fs = '{:16s} {}'
-				for k,v in disp_data.items():
-					yield fs.format( v[0]+':', v[1](self.data[k]) )
+				for k,v in hdr_data.items():
+					yield fs1.format( v[0], v[1](self.data[k]) )
 				if hasattr(self,'failed_sids'):
-					yield fs.format(
+					yield fs1.format(
 						'Failed Seed IDs:',
 						red(fmt_list(self.failed_sids,fmt='bare')) )
 				if self.sigs:
@@ -157,29 +167,33 @@ class coin_msg:
 							yield res
 
 			def gen_single():
-				fs = '{:8s} {}'
-				for k,v in disp_data.items():
-					yield fs.format( v[0]+':', v[1](self.data[k]) )
+				for k,v in hdr_data.items():
+					yield fs1.format( v[0], v[1](self.data[k]) )
 				if self.sigs:
 					yield 'Signature data:'
-					k = MMGenID(self.proto,mmid)
+					k = MMGenID(self.proto,req_addr)
 					if k not in self.sigs:
 						die(1,f'{k}: address not found in signature data')
 					for res in gen_entry(self.sigs[k]):
 						yield res
 
-			disp_data = {
-				'message':   ('Message',        lambda v: grnbg(v) ),
-				'network':   ('Network',        lambda v: v.replace('_',' ').upper() ),
-				'addrlists': ('Address Ranges', lambda v: fmt_list(v,fmt='bare') ),
+			hdr_data = {
+				'message':     ('Message:',         lambda v: grnbg(v) ),
+				'network':     ('Network:',         lambda v: v.replace('_',' ').upper() ),
+				'addrlists':   ('Address Ranges:',  lambda v: fmt_list(v,fmt='bare') ),
 			}
 
-			if mmid:
-				del disp_data['addrlists']
-				fs2 = '  {:12s} {}'
+			if req_addr or type(self).__name__ == 'exported_sigs':
+				del hdr_data['addrlists']
+
+			fs1 = '{:%s} {}' % max(len(v[0]) for v in hdr_data.values())
+			fs2 = '{:%s} {}' % max(len(labels[k]) for v in self.sigs.values() for k in v.keys())
+
+			if req_addr:
+				fs2 = ' ' * 2 + fs2
 				return '\n'.join(gen_single())
 			else:
-				fs2 = '     {:12s} {}'
+				fs2 = ' ' * 5 + fs2
 				return (
 					'{}SIGNED MESSAGE DATA:\n\n  '.format('' if self.sigs else 'UN') +
 					'\n  '.join(gen_all()) )
@@ -214,8 +228,9 @@ class coin_msg:
 
 					self.sigs[mmid] = data
 
-			from .rpc import rpc_init
-			self.rpc = await rpc_init(self.proto)
+			if self.proto.sign_mode == 'daemon':
+				from .rpc import rpc_init
+				self.rpc = await rpc_init(self.proto)
 
 			from .wallet import Wallet
 			from .addrlist import KeyAddrList
@@ -261,8 +276,8 @@ class coin_msg:
 		def get_sigs(self,addr):
 
 			if addr:
-				mmaddr = MMGenID(self.proto,addr)
-				sigs = {k:v for k,v in self.sigs.items() if k == mmaddr}
+				req_addr = MMGenID(self.proto,addr)
+				sigs = {k:v for k,v in self.sigs.items() if k == req_addr}
 			else:
 				sigs = self.sigs
 
@@ -275,8 +290,9 @@ class coin_msg:
 
 			sigs = self.get_sigs(addr)
 
-			from .rpc import rpc_init
-			self.rpc = await rpc_init(self.proto)
+			if self.proto.sign_mode == 'daemon':
+				from .rpc import rpc_init
+				self.rpc = await rpc_init(self.proto)
 
 			for k,v in sigs.items():
 				ret = await self.do_verify(
@@ -290,11 +306,12 @@ class coin_msg:
 				msg('{} signature{} verified'.format( len(sigs), suf(sigs) ))
 
 		def get_json_for_export(self,addr=None):
+			sigs = list( self.get_sigs(addr).values() )
 			return json.dumps(
 				{
 					'message': self.data['message'],
 					'network': self.data['network'].upper(),
-					'signatures': tuple( self.get_sigs(addr).values() ),
+					'signatures': sigs,
 				},
 				sort_keys = True,
 				indent = 4
@@ -313,6 +330,9 @@ def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**k
 		data['proto'] if data else
 		init_proto( coin=coin, network=network ) if coin else
 		coin_msg.base().get_proto_from_file(infile) )
+
+	if proto.base_proto not in coin_msg.supported_base_protos:
+		die(f'Message signing operations not supported for {proto.base_proto} protocol')
 
 	cls = getattr(
 		getattr(importlib.import_module(f'mmgen.base_proto.{proto.base_proto.lower()}.msg'),'coin_msg'),

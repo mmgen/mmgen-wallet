@@ -50,6 +50,7 @@ class CfgFileParseError(Exception):       mmcode = 1
 class UserOptError(Exception):            mmcode = 1
 class NoLEDSupport(Exception):            mmcode = 1
 class MsgFileFailedSID(Exception):        mmcode = 1
+class TestSuiteException(Exception):      mmcode = 1
 
 # 2: yellow hl, message only
 class InvalidTokenAddress(Exception):     mmcode = 2
@@ -77,6 +78,7 @@ class HexadecimalStringError(Exception):  mmcode = 3
 class SeedLengthError(Exception):         mmcode = 3
 class PrivateKeyError(Exception):         mmcode = 3
 class MMGenCalledProcessError(Exception): mmcode = 3
+class TestSuiteFatalException(Exception): mmcode = 3
 
 # 4: red hl, 'MMGen Fatal Error' + exception + message
 class BadMMGenTxID(Exception):            mmcode = 4

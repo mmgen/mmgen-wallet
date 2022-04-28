@@ -306,7 +306,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		from mmgen.protocol import init_proto
 		self.proto = init_proto(g.coin,network='regtest',need_amt=True)
 		from mmgen.daemon import CoinDaemon
-		self.rpc_port = CoinDaemon(proto=self.proto,test_suite=True).rpc_port
+		d = CoinDaemon(proto=self.proto,test_suite=True)
+		self.rpc_port = d.rpc_port
 		self.using_solc = check_solc_ver()
 		if not self.using_solc:
 			omsg(yellow('Using precompiled contract data'))

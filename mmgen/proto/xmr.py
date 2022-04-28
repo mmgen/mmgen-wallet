@@ -59,5 +59,8 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 
 		return self.parse_addr_bytes(ret)
 
+	def pubhash2addr(self,*args,**kwargs):
+		raise NotImplementedError('Monero addresses do not support pubhash2addr()')
+
 class testnet(mainnet): # use stagenet for testnet
 	addr_ver_bytes = { '18': 'monero', '24': 'monero_sub' } # testnet is ('35','3f')

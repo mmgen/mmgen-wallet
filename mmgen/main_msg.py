@@ -70,11 +70,10 @@ class MsgOps:
 		async def __init__(self,msgfile,addr=None):
 
 			from .fileutil import write_data_to_file
-
 			write_data_to_file(
-				outfile       = 'signatures.json',
-				data          = SignedOnlineMsg( infile=msgfile ).get_json_for_export( addr ),
-				desc          = 'signature data' )
+				outfile = 'signatures.json',
+				data    = SignedOnlineMsg( infile=msgfile ).get_json_for_export( addr ),
+				desc    = 'signature data' )
 
 opts_data = {
 	'text': {

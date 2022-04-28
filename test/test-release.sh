@@ -496,6 +496,7 @@ t_tool="
 	- $tooltest_py --coin=dash cryptocoin
 	- $tooltest_py --coin=doge cryptocoin
 	- $tooltest_py --coin=emc cryptocoin
+	- $tooltest_py --coin=xmr cryptocoin
 	- $tooltest_py --coin=zec cryptocoin
 	z $tooltest_py --coin=zec --type=zcash_z cryptocoin
 "

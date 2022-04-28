@@ -57,6 +57,8 @@ sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data)
 
+assert opt.type in (None,'zcash_z'), 'Only zcash-z permitted for --type argument'
+
 from mmgen.protocol import init_proto_from_opts
 proto = init_proto_from_opts()
 
@@ -98,8 +100,9 @@ if proto.coin in ('BTC','LTC'):
 		'pipetest':             ('randpair','o3')
 	})
 
-if opt.type == 'zcash_z':
+if proto.coin == 'XMR' or opt.type == 'zcash_z':
 	del cmd_data['cryptocoin']['cmd_data']['pubhash2addr']
+	del cmd_data['cryptocoin']['cmd_data']['addr2pubhash']
 
 cfg = {
 	'name':          'the tool utility',
@@ -197,10 +200,10 @@ def test_msg(m):
 	m2 = f'Testing {m}'
 	msg_r(green(m2+'\n') if opt.verbose else '{:{w}}'.format( m2, w=msg_w+8 ))
 
-compressed = ('','compressed')['C' in proto.mmtypes]
+compressed = opt.type or ('','compressed')['C' in proto.mmtypes]
 segwit     = ('','segwit')['S' in proto.mmtypes]
 bech32     = ('','bech32')['B' in proto.mmtypes]
-type_compressed_arg = ([],['--type=compressed'])['C' in proto.mmtypes]
+type_compressed_arg = ([],['--type=' + (opt.type or 'compressed')])[bool(opt.type) or 'C' in proto.mmtypes]
 type_segwit_arg     = ([],['--type=segwit'])['S' in proto.mmtypes]
 type_bech32_arg     = ([],['--type=bech32'])['B' in proto.mmtypes]
 

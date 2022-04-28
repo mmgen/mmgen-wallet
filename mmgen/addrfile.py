@@ -32,7 +32,7 @@ from .protocol import init_proto
 from .obj import MMGenObject,TwComment,WalletPassword,MMGenPWIDString
 from .seed import SeedID,is_seed_id
 from .key import PrivKey
-from .addr import ViewKey,AddrListID,MMGenPasswordType,is_addr_idx
+from .addr import ViewKey,AddrListID,MMGenAddrType,MMGenPasswordType,is_addr_idx
 from .addrlist import KeyList,AddrListData,dmsg_sc
 
 class AddrFile(MMGenObject):
@@ -209,7 +209,8 @@ class AddrFile(MMGenObject):
 			else:
 				network = 'mainnet'
 
-			if lbl in p.bitcoin_addrtypes:
+			from .proto.btc import mainnet
+			if lbl in [MMGenAddrType(mainnet,key).name for key in mainnet.mmtypes]:
 				coin,mmtype_key = ( 'BTC', lbl )
 			elif ':' in lbl: # first component is coin, second is mmtype_key
 				coin,mmtype_key = lbl.split(':')

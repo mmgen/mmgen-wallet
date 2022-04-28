@@ -17,7 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/api.py: tool_api interface for the 'mmgen-tool' utility
+tool/api.py:
+    Python interface to selected commands from the 'mmgen-tool' utility
 """
 
 from .common import tool_cmd_base

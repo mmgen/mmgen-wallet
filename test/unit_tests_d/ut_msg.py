@@ -8,7 +8,7 @@ import os
 from test.include.common import silence,end_silence,restart_test_daemons,stop_test_daemons
 from mmgen.opts import opt
 from mmgen.util import msg,bmsg,pumsg
-from mmgen.protocol import CoinProtocol,init_proto
+from mmgen.protocol import CoinProtocol
 from mmgen.msg import NewMsg,UnsignedMsg,SignedMsg,SignedOnlineMsg
 
 def get_obj(coin,network):
@@ -64,20 +64,22 @@ async def run_test(network_id):
 
 	msg(m.format())
 
+	single_addr = 'A091ABAA:111'
+
 	pumsg('\nTesting single address display:\n')
-	msg(m.format('A091ABAA:111'))
+	msg(m.format(single_addr))
 
 	pumsg('\nTesting verification:\n')
 	await m.verify(summary=opt.verbose)
 
 	pumsg('\nTesting single address verification:\n')
-	await m.verify('A091ABAA:111',summary=opt.verbose)
+	await m.verify(single_addr,summary=opt.verbose)
 
 	pumsg('\nTesting JSON dump for export:\n')
 	msg( m.get_json_for_export() )
 
 	pumsg('\nTesting single address JSON dump for export:\n')
-	msg( m.get_json_for_export('A091ABAA:111') )
+	msg( m.get_json_for_export(single_addr) )
 
 	stop_test_daemons(network_id)
 
