@@ -26,7 +26,7 @@ generator_data = namedtuple('generator_data',['kg','ag'])
 from .common import tool_cmd_base
 
 from ..key import PrivKey
-from ..addr import KeyGenerator,AddrGenerator,CoinAddr
+from ..addr import KeyGenerator,AddrGenerator,CoinAddr,MMGenAddrType
 
 class tool_cmd(tool_cmd_base):
 	"""

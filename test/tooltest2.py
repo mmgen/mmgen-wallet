@@ -101,6 +101,51 @@ kafile_opts = ['-p1','-Ptest/ref/keyaddrfile_password']
 from test.unit_tests_d.ut_baseconv import unit_test as ut_baseconv
 from test.unit_tests_d.ut_bip39 import unit_test as ut_bip39
 from test.unit_tests_d.ut_xmrseed import unit_test as ut_xmrseed
+
+btc_wif1 = '5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'
+btc_wif2 = 'KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'
+
+privhex1 = '0000000000000000000000000000000000000000000000000000000000000001'
+privhex2 = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+privhex3 = '0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+privhex4 = '00000000000000000000000000000000000000000000000000000000000000ff'
+privhex5 = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f'
+privhex6 = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'
+privhex7 = '118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'
+
+btc_addr1 = '1C5VPtgq9xQ6AcTgMAR3J6GDrs72HC4pS1'
+btc_addr2 = '1Kz9fVSUMshzPejpzW9D95kScgA3rY6QxF'
+btc_addr3 = '3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg'
+btc_addr4 = 'bc1q6pqnfwwakuuejpm9w52ds342f9d5u36v0qnz7c'
+btc_addr5 = '12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm'
+btc_addr6 = 'bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms'
+btc_addr7 = '3Eevao3DRVXnYym3tdrJDqS3Wc39PQzahn'
+
+eth_addr1 = '7e5f4552091a69125d5dfcb7b8c2659029395bdf'
+eth_addr2 = 'b92702b3eefb3c2049aeb845b0335b283e11e9c6'
+eth_addr3 = 'ad30adc7451c1dace34c5d1f328f8a74a4947534'
+eth_addr4 = '5044a80bd3eff58302e638018534bbda8896c48a'
+eth_addr5 = '8b10f977e27611516f186980d8161b25f8adca5e'
+eth_addr6 = 'c96aaa54e2d44c299564da76e1cd3184a2386b8d'
+
+xmr_addr1 = '42nsXK8WbVGTNayQ6Kjw5UdgqbQY5KCCufdxdCgF7NgTfjC69Mna7DJSYyie77hZTQ8H92G2HwgFhgEUYnDzrnLnQdF28r3'
+xmr_addr2 = '49voQEbjouUQSDikRWKUt1PGbS47TBde4hiGyftN46CvTDd8LXCaimjHRGtofCJwY5Ed5QhYwc12P15AH5w7SxUAMCz1nr1'
+xmr_addr3 = '45Ee1yJSjXBKuf8aaihf6KgSRGtMBN6NNDtkd9fLJzHiK4ar4NyNxDk6afc7MTRoruAsg6J6792tCJazHqs1sjbv7LuEsLx'
+xmr_addr4 = '43aZyywWW4MYt2Az32XioQYirxyT8xeRBP84EBNA7Cra5SqQNmca6iD9pM487pcR9JAEiKrnw2QwvA5uWiFNokEzLJ5coZ9'
+xmr_addr5 = '4AeR1owefiJGbrAdSKCbVL73ME4FGv2cpczjV2peqqkxagm5D4gBqAHJta6NpbtxyuRe3ywaTj6QCHD59savvPW69wfW9my'
+xmr_addr6 = '41i7saPWA53EoHenmJVRt34dubPxsXwoWMnw8AdMyx4mTD1svf7qYzcVjxxRfteLNdYrAxWUMmiPegFW9EfoNgXx7vDMExv'
+
+zec_addr1 = 'zceQDpyNwek7dKqF5ZuFGj7YrNVxh7X1aPkrVxDLVxWSiZAFDEuy5C7XNV8VhyZ3ghTPQ61xjCGiyLT3wqpiN1Yi6mdmaCq'
+zec_addr2 = 'zcY1hqJ3P5ifjnWk1BcXpjrLG5XeJZUSPCiiVTF9LXrejxBzAsFWcNyr6PudwQHm8DnQpD8HEaM3dh8sB6cf91ciAa53YQ1'
+zec_addr4 = 'zcck12KgVY34LJwVEDLN8sXhL787zmjKqPsP1uBYRHs75bL9sQu4P7wcc5ZJTjKsL376zaSpsYqGxK94JbiYcNoH8DkeGbN'
+zec_addr5 = 'zcJ9hEezG1Jeye5dciqiMDh6SXtYbUsircGmpVyhHWyzyxDVRRDs5Q8M7hG3c7nDcvd5Pw4u4wV9RAQmq5RCBZq5wVyMQV8'
+zec_addr6 = 'zchFELwBxqsAubsLQ8yZgPCDDGukjXJssgCbiTPwFNmFwn9haLnDatzfhLdZzJT4PcU4o2yr92B52UFirUzEdF6ZYM2gBkM'
+
+redeem_script1 = '0014d04134b9ddb7399907657514d846aa495b4e474c'
+
+btc_pubhex1 = '024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727'
+btc_pubhex2 = '044281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e972757f3254c322eeaa3cb6bf97cc5ecf8d4387b0df2c0b1e6ee18fe3a6977a7d57a'
+
 tests = {
 	'Mnemonic': {
 		'hex2mn': (
@@ -223,7 +268,7 @@ tests = {
 			( ['6h8cQN'], b'\xde\xad\xbe\xef' ),
 			( ['eFGDJURJykA'], b'\xde\xad\xbe\xef\xde\xad\xbe\xef' ),
 			( ['jpXCZedGfVQ'], b'\xff\xff\xff\xff\xff\xff\xff\xff' ),
-			( ['1','pad=8'],  b'\x00\x00\x00\x00\x00\x00\x00\x00' ),
+			( ['1','pad=8'], b'\x00\x00\x00\x00\x00\x00\x00\x00' ),
 			( ['1111111111','pad=8'], b'\x00\x00\x00\x00\x00\x00\x00\x00' ),
 			( ['111111115Q','pad=1'], b'\xff' ),
 		],
@@ -239,7 +284,7 @@ tests = {
 			( ['6h8cQN'], 'deadbeef' ),
 			( ['eFGDJURJykA'], 'deadbeefdeadbeef' ),
 			( ['jpXCZedGfVQ'], 'ffffffffffffffff' ),
-			( ['1','pad=16'],  '0000000000000000' ),
+			( ['1','pad=16'], '0000000000000000' ),
 			( ['1111111111','pad=16'], '0000000000000000' ),
 			( ['111111115Q','pad=2'], 'ff' ),
 		],
@@ -339,21 +384,13 @@ tests = {
 			),
 		],
 		'gen_addr': [
-			(   ['98831F3A:11','wallet=test/ref/98831F3A.mmwords'],
-				'12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm'
-			),
-			(   ['98831F3A:L:11','wallet=test/ref/98831F3A.mmwords'],
-				'12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm'
-			),
+			(   ['98831F3A:11','wallet=test/ref/98831F3A.mmwords'], btc_addr5 ),
+			(   ['98831F3A:L:11','wallet=test/ref/98831F3A.mmwords'], btc_addr5 ),
 			(   ['98831F3A:C:11','wallet=test/ref/98831F3A.mmwords'],
 				'1MPsZ7BY9qikqfPxqmrovE8gLDX2rYArZk'
 			),
-			(   ['98831F3A:B:11','wallet=test/ref/98831F3A.mmwords'],
-				'bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms'
-			),
-			(   ['98831F3A:S:11','wallet=test/ref/98831F3A.mmwords'],
-				'3Eevao3DRVXnYym3tdrJDqS3Wc39PQzahn'
-			),
+			(   ['98831F3A:B:11','wallet=test/ref/98831F3A.mmwords'], btc_addr6 ),
+			(   ['98831F3A:S:11','wallet=test/ref/98831F3A.mmwords'], btc_addr7 ),
 		],
 		'get_subseed': [
 			(   ['3s','wallet=test/ref/98831F3A.mmwords'], '4018EB17' ),
@@ -396,158 +433,96 @@ tests = {
 	'Coin': {
 		'addr2pubhash': {
 			'btc_mainnet': [
-				( ['12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm'], '118089d66b4a5853765e94923abdd5de4616c6e5' ),
-				( ['bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms'], '3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178' ),
+				( [ btc_addr5 ], '118089d66b4a5853765e94923abdd5de4616c6e5' ),
+				( [ btc_addr6 ], '3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178' ),
 			],
 		},
 		'pubhash2addr': {
 			'btc_mainnet': [
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5'], '12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm',
-					None, 'legacy' ),
+				( ['118089d66b4a5853765e94923abdd5de4616c6e5'], btc_addr5, None, 'legacy' ),
 				( ['8e34586186551f6320fa3eb2d238a9c61ab8264b'], '37ZBgCBjjz9WSEzp1Zjv8sqdgmNie3Kd5s',
 					['--type=segwit'], 'segwit' ),
-				( ['3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], 'bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms',
-					['--type=bech32'], 'bech32' ),
+				( ['3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], btc_addr6, ['--type=bech32'], 'bech32' ),
 			],
 		},
 		'addr2scriptpubkey': {
 			'btc_mainnet': [
-				( ['12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm'], '76a914118089d66b4a5853765e94923abdd5de4616c6e588ac' ),
-				( ['3Eevao3DRVXnYym3tdrJDqS3Wc39PQzahn'], 'a9148e34586186551f6320fa3eb2d238a9c61ab8264b87' ),
-				( ['bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms'], '00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178' ),
+				( [ btc_addr5 ], '76a914118089d66b4a5853765e94923abdd5de4616c6e588ac' ),
+				( [ btc_addr7 ], 'a9148e34586186551f6320fa3eb2d238a9c61ab8264b87' ),
+				( [ btc_addr6 ], '00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178' ),
 			],
 		},
 		'scriptpubkey2addr': {
 			'btc_mainnet': [
-				( ['76a914118089d66b4a5853765e94923abdd5de4616c6e588ac'], '12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm' ),
-				( ['a9148e34586186551f6320fa3eb2d238a9c61ab8264b87'], '3Eevao3DRVXnYym3tdrJDqS3Wc39PQzahn' ),
-				( ['00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], 'bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms' ),
+				( ['76a914118089d66b4a5853765e94923abdd5de4616c6e588ac'], btc_addr5 ),
+				( ['a9148e34586186551f6320fa3eb2d238a9c61ab8264b87'], btc_addr7 ),
+				( ['00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], btc_addr6 ),
 			],
 		},
 		'hex2wif': {
 			'btc_mainnet': [
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX',
-					None, 'legacy' ),
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm',
-					['--type=compressed'], 'compressed' ),
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm',
-					['--type=segwit'], 'segwit' ),
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm',
-					['--type=bech32'], 'bech32' ),
+				( [ privhex7 ], btc_wif1, None, 'legacy' ),
+				( [ privhex7 ], btc_wif2, ['--type=compressed'], 'compressed' ),
+				( [ privhex7 ], btc_wif2, ['--type=segwit'], 'segwit' ),
+				( [ privhex7 ], btc_wif2, ['--type=bech32'], 'bech32' ),
 			],
 		},
 		'privhex2addr': {
 			'btc_mainnet': [
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'1C5VPtgq9xQ6AcTgMAR3J6GDrs72HC4pS1',
-					None, 'legacy' ),
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'1Kz9fVSUMshzPejpzW9D95kScgA3rY6QxF',
-					['--type=compressed'], 'compressed' ),
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg',
-					['--type=segwit'], 'segwit' ),
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'bc1q6pqnfwwakuuejpm9w52ds342f9d5u36v0qnz7c',
-					['--type=bech32'], 'bech32' ),
+				( [ privhex7 ], btc_addr1, None, 'legacy' ),
+				( [ privhex7 ], btc_addr2, ['--type=compressed'], 'compressed' ),
+				( [ privhex7 ], btc_addr3, ['--type=segwit'], 'segwit' ),
+				( [ privhex7 ], btc_addr4, ['--type=bech32'], 'bech32' ),
 			],
 			'eth_mainnet': [
-				( ['0000000000000000000000000000000000000000000000000000000000000001'],
-					'7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
-				( ['ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'],
-					'b92702b3eefb3c2049aeb845b0335b283e11e9c6'),
-				( ['0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'],
-					'ad30adc7451c1dace34c5d1f328f8a74a4947534'),
-				( ['00000000000000000000000000000000000000000000000000000000000000ff'],
-					'5044a80bd3eff58302e638018534bbda8896c48a'),
-				( ['ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f'],
-					'8b10f977e27611516f186980d8161b25f8adca5e'),
-				( ['deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'],
-					'c96aaa54e2d44c299564da76e1cd3184a2386b8d'),
+				( [ privhex1 ], eth_addr1 ),
+				( [ privhex2 ], eth_addr2 ),
+				( [ privhex3 ], eth_addr3 ),
+				( [ privhex4 ], eth_addr4 ),
+				( [ privhex5 ], eth_addr5 ),
+				( [ privhex6 ], eth_addr6 ),
 			],
 			'xmr_mainnet': [
-				( ['0000000000000000000000000000000000000000000000000000000000000001'],
-			'42nsXK8WbVGTNayQ6Kjw5UdgqbQY5KCCufdxdCgF7NgTfjC69Mna7DJSYyie77hZTQ8H92G2HwgFhgEUYnDzrnLnQdF28r3'),
-				( ['ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'],
-			'49voQEbjouUQSDikRWKUt1PGbS47TBde4hiGyftN46CvTDd8LXCaimjHRGtofCJwY5Ed5QhYwc12P15AH5w7SxUAMCz1nr1'),
-				( ['0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'],
-			'45Ee1yJSjXBKuf8aaihf6KgSRGtMBN6NNDtkd9fLJzHiK4ar4NyNxDk6afc7MTRoruAsg6J6792tCJazHqs1sjbv7LuEsLx'),
-				( ['00000000000000000000000000000000000000000000000000000000000000ff'],
-			'43aZyywWW4MYt2Az32XioQYirxyT8xeRBP84EBNA7Cra5SqQNmca6iD9pM487pcR9JAEiKrnw2QwvA5uWiFNokEzLJ5coZ9'),
-				( ['ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f'],
-			'4AeR1owefiJGbrAdSKCbVL73ME4FGv2cpczjV2peqqkxagm5D4gBqAHJta6NpbtxyuRe3ywaTj6QCHD59savvPW69wfW9my'),
-				( ['deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'],
-			'41i7saPWA53EoHenmJVRt34dubPxsXwoWMnw8AdMyx4mTD1svf7qYzcVjxxRfteLNdYrAxWUMmiPegFW9EfoNgXx7vDMExv'),
+				( [ privhex1 ], xmr_addr1 ),
+				( [ privhex2 ], xmr_addr2 ),
+				( [ privhex3 ], xmr_addr3 ),
+				( [ privhex4 ], xmr_addr4 ),
+				( [ privhex5 ], xmr_addr5 ),
+				( [ privhex6 ], xmr_addr6 ),
 			],
 			'zec_mainnet': [
-				( ['0000000000000000000000000000000000000000000000000000000000000001'],
-			'zceQDpyNwek7dKqF5ZuFGj7YrNVxh7X1aPkrVxDLVxWSiZAFDEuy5C7XNV8VhyZ3ghTPQ61xjCGiyLT3wqpiN1Yi6mdmaCq',
-					['--type=zcash_z'], 'zcash_z' ),
-				( ['ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'],
-			'zcY1hqJ3P5ifjnWk1BcXpjrLG5XeJZUSPCiiVTF9LXrejxBzAsFWcNyr6PudwQHm8DnQpD8HEaM3dh8sB6cf91ciAa53YQ1',
-					['--type=zcash_z'], 'zcash_z' ),
-				( ['0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'],
-			'zcY1hqJ3P5ifjnWk1BcXpjrLG5XeJZUSPCiiVTF9LXrejxBzAsFWcNyr6PudwQHm8DnQpD8HEaM3dh8sB6cf91ciAa53YQ1',
-					['--type=zcash_z'], 'zcash_z' ),
-				( ['00000000000000000000000000000000000000000000000000000000000000ff'],
-			'zcck12KgVY34LJwVEDLN8sXhL787zmjKqPsP1uBYRHs75bL9sQu4P7wcc5ZJTjKsL376zaSpsYqGxK94JbiYcNoH8DkeGbN',
-					['--type=zcash_z'], 'zcash_z' ),
-				( ['ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f'],
-			'zcJ9hEezG1Jeye5dciqiMDh6SXtYbUsircGmpVyhHWyzyxDVRRDs5Q8M7hG3c7nDcvd5Pw4u4wV9RAQmq5RCBZq5wVyMQV8',
-					['--type=zcash_z'], 'zcash_z' ),
-				( ['deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'],
-			'zchFELwBxqsAubsLQ8yZgPCDDGukjXJssgCbiTPwFNmFwn9haLnDatzfhLdZzJT4PcU4o2yr92B52UFirUzEdF6ZYM2gBkM',
-					['--type=zcash_z'], 'zcash_z' ),
+				( [ privhex1 ], zec_addr1, ['--type=zcash_z'], 'zcash_z' ),
+				( [ privhex2 ], zec_addr2, ['--type=zcash_z'], 'zcash_z' ),
+				( [ privhex3 ], zec_addr2, ['--type=zcash_z'], 'zcash_z' ),
+				( [ privhex4 ], zec_addr4, ['--type=zcash_z'], 'zcash_z' ),
+				( [ privhex5 ], zec_addr5, ['--type=zcash_z'], 'zcash_z' ),
+				( [ privhex6 ], zec_addr6, ['--type=zcash_z'], 'zcash_z' ),
 			],
 		},
 		'privhex2pubhex': {
 			'btc_mainnet': [
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'044281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e972757f3254c322eeaa3cb6bf97cc5ecf8d4387b0df2c0b1e6ee18fe3a6977a7d57a',
-					None, 'legacy' ),
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727',
-					['--type=compressed'], 'compressed' ),
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727',
-					['--type=segwit'], 'segwit' ),
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
-					'024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727',
-					['--type=bech32'], 'bech32' ),
+				( [ privhex7 ], btc_pubhex2, None, 'legacy' ),
+				( [ privhex7 ], btc_pubhex1, ['--type=compressed'], 'compressed' ),
+				( [ privhex7 ], btc_pubhex1, ['--type=segwit'], 'segwit' ),
+				( [ privhex7 ], btc_pubhex1, ['--type=bech32'], 'bech32' ),
 			],
 		},
 		'pubhex2addr': {
 			'btc_mainnet': [
-				( ['044281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e972757f3254c322eeaa3cb6bf97cc5ecf8d4387b0df2c0b1e6ee18fe3a6977a7d57a'],
-					'1C5VPtgq9xQ6AcTgMAR3J6GDrs72HC4pS1',
-					None, 'legacy' ),
-				( ['024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727'],
-					'1Kz9fVSUMshzPejpzW9D95kScgA3rY6QxF',
-					['--type=compressed'], 'compressed' ),
-				( ['024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727'],
-					'3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg',
-					['--type=segwit'], 'segwit' ),
-				( ['024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727'],
-					'bc1q6pqnfwwakuuejpm9w52ds342f9d5u36v0qnz7c',
-					['--type=bech32'], 'bech32' ),
+				( [ btc_pubhex2 ], btc_addr1, None, 'legacy' ),
+				( [ btc_pubhex1 ], btc_addr2, ['--type=compressed'], 'compressed' ),
+				( [ btc_pubhex1 ], btc_addr3, ['--type=segwit'], 'segwit' ),
+				( [ btc_pubhex1 ], btc_addr4, ['--type=bech32'], 'bech32' ),
 			],
 		},
 		'pubhex2redeem_script': {
 			'btc_mainnet': [
-				( ['024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727'],
-					'0014d04134b9ddb7399907657514d846aa495b4e474c',
-					['--type=segwit'], 'segwit' ),
+				( [ btc_pubhex1 ], redeem_script1, ['--type=segwit'], 'segwit' ),
 			],
 		},
 		'redeem_script2addr': {
 			'btc_mainnet': [
-				( ['0014d04134b9ddb7399907657514d846aa495b4e474c'],
-					'3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg',
-					['--type=segwit'], 'segwit' ),
+				( [ redeem_script1 ], btc_addr3, ['--type=segwit'], 'segwit' ),
 			],
 		},
 		'randpair': {
@@ -560,92 +535,56 @@ tests = {
 		},
 		'wif2addr': {
 			'btc_mainnet': [
-				( ['5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'],
-					'1C5VPtgq9xQ6AcTgMAR3J6GDrs72HC4pS1', ['--type=legacy'], 'legacy' ),
-				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					'1Kz9fVSUMshzPejpzW9D95kScgA3rY6QxF', ['--type=compressed'], 'compressed' ),
-				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					'3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg', ['--type=segwit'], 'segwit' ),
-				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					'bc1q6pqnfwwakuuejpm9w52ds342f9d5u36v0qnz7c', ['--type=bech32'], 'bech32' ),
+				( [ btc_wif1 ], btc_addr1, ['--type=legacy'], 'legacy' ),
+				( [ btc_wif2 ], btc_addr2, ['--type=compressed'], 'compressed' ),
+				( [ btc_wif2 ], btc_addr3, ['--type=segwit'], 'segwit' ),
+				( [ btc_wif2 ], btc_addr4, ['--type=bech32'], 'bech32' ),
 			],
 			'eth_mainnet': [
-				( ['0000000000000000000000000000000000000000000000000000000000000001'],
-					'7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
-				( ['000000000000000000000000000000014551231950b75fc4402da1732fc9bebe'],
-					'b92702b3eefb3c2049aeb845b0335b283e11e9c6'),
-				( ['0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'],
-					'ad30adc7451c1dace34c5d1f328f8a74a4947534'),
-				( ['00000000000000000000000000000000000000000000000000000000000000ff'],
-					'5044a80bd3eff58302e638018534bbda8896c48a'),
-				( ['000000000000000000000000000000014551231950b75fc4402da1732fc9bdce'],
-					'8b10f977e27611516f186980d8161b25f8adca5e'),
-				( ['deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'],
-					'c96aaa54e2d44c299564da76e1cd3184a2386b8d'),
+				( [ privhex1 ], eth_addr1 ),
+				( ['000000000000000000000000000000014551231950b75fc4402da1732fc9bebe'], eth_addr2 ),
+				( [ privhex3 ], eth_addr3 ),
+				( [ privhex4 ], eth_addr4 ),
+				( ['000000000000000000000000000000014551231950b75fc4402da1732fc9bdce'], eth_addr5 ),
+				( [ privhex6 ], eth_addr6 ),
 			],
 			'xmr_mainnet': [
-				( ['0000000000000000000000000000000000000000000000000000000000000001'],
-			'42nsXK8WbVGTNayQ6Kjw5UdgqbQY5KCCufdxdCgF7NgTfjC69Mna7DJSYyie77hZTQ8H92G2HwgFhgEUYnDzrnLnQdF28r3'),
-				( ['1c95988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0f'],
-			'49voQEbjouUQSDikRWKUt1PGbS47TBde4hiGyftN46CvTDd8LXCaimjHRGtofCJwY5Ed5QhYwc12P15AH5w7SxUAMCz1nr1'),
-				( ['2c94988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0f'],
-			'45Ee1yJSjXBKuf8aaihf6KgSRGtMBN6NNDtkd9fLJzHiK4ar4NyNxDk6afc7MTRoruAsg6J6792tCJazHqs1sjbv7LuEsLx'),
-				( ['1d95988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0e'],
-			'43aZyywWW4MYt2Az32XioQYirxyT8xeRBP84EBNA7Cra5SqQNmca6iD9pM487pcR9JAEiKrnw2QwvA5uWiFNokEzLJ5coZ9'),
-				( ['ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f'],
-			'4AeR1owefiJGbrAdSKCbVL73ME4FGv2cpczjV2peqqkxagm5D4gBqAHJta6NpbtxyuRe3ywaTj6QCHD59savvPW69wfW9my'),
-				( ['e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f'],
-			'41i7saPWA53EoHenmJVRt34dubPxsXwoWMnw8AdMyx4mTD1svf7qYzcVjxxRfteLNdYrAxWUMmiPegFW9EfoNgXx7vDMExv'),
+				( [ privhex1 ], xmr_addr1 ),
+				( ['1c95988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0f'], xmr_addr2 ),
+				( ['2c94988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0f'], xmr_addr3 ),
+				( ['1d95988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0e'], xmr_addr4 ),
+				( [ privhex5 ], xmr_addr5 ),
+				( ['e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f'], xmr_addr6 ),
 			],
 			'zec_mainnet': [
 				( ['SKxny894fJe2rmZjeuoE6GVfNkWoXfPp8337VrLLNWG56FjqVUYR'],
-			'zceQDpyNwek7dKqF5ZuFGj7YrNVxh7X1aPkrVxDLVxWSiZAFDEuy5C7XNV8VhyZ3ghTPQ61xjCGiyLT3wqpiN1Yi6mdmaCq',
-					['--type=zcash_z'], 'zcash_z' ),
+					zec_addr1, ['--type=zcash_z'], 'zcash_z' ),
 				( ['SKxv1peuQvMT4TvqPLqKy1px3oqLm98Evi948VU8N8VKcf7C2umc'],
-			'zcY1hqJ3P5ifjnWk1BcXpjrLG5XeJZUSPCiiVTF9LXrejxBzAsFWcNyr6PudwQHm8DnQpD8HEaM3dh8sB6cf91ciAa53YQ1',
-					['--type=zcash_z'], 'zcash_z' ),
-				( ['SKxv1peuQvMT4TvqPLqKy1px3oqLm98Evi948VU8N8VKcf7C2umc'],
-			'zcY1hqJ3P5ifjnWk1BcXpjrLG5XeJZUSPCiiVTF9LXrejxBzAsFWcNyr6PudwQHm8DnQpD8HEaM3dh8sB6cf91ciAa53YQ1',
-					['--type=zcash_z'], 'zcash_z' ),
+					zec_addr2, ['--type=zcash_z'], 'zcash_z' ),
 				( ['SKxny894fJe2rmZjeuoE6GVfNkWoXfPp8337VrLLNWG56kQw4qjm'],
-			'zcck12KgVY34LJwVEDLN8sXhL787zmjKqPsP1uBYRHs75bL9sQu4P7wcc5ZJTjKsL376zaSpsYqGxK94JbiYcNoH8DkeGbN',
-					['--type=zcash_z'], 'zcash_z' ),
+					zec_addr4, ['--type=zcash_z'], 'zcash_z' ),
 				( ['SKxv1peuQvMT4TvqPLqKy1px3oqLm98Evi948VU8N8VKcBwrLwiu'],
-			'zcJ9hEezG1Jeye5dciqiMDh6SXtYbUsircGmpVyhHWyzyxDVRRDs5Q8M7hG3c7nDcvd5Pw4u4wV9RAQmq5RCBZq5wVyMQV8',
-					['--type=zcash_z'], 'zcash_z' ),
+					zec_addr5, ['--type=zcash_z'], 'zcash_z' ),
 				( ['SKxuS56e99jpCeD9mMQ5o63zoGPakNdM9HCvt4Vt2cypvRjCdvGJ'],
-			'zchFELwBxqsAubsLQ8yZgPCDDGukjXJssgCbiTPwFNmFwn9haLnDatzfhLdZzJT4PcU4o2yr92B52UFirUzEdF6ZYM2gBkM',
-					['--type=zcash_z'], 'zcash_z' ),
+					zec_addr6, ['--type=zcash_z'], 'zcash_z' ),
 			],
 		},
 		'wif2hex': {
 			'btc_mainnet': [
-				( ['5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'],
-					'118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492',
-					None, 'legacy' ),
-				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					'118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492',
-					['--type=compressed'], 'compressed' ),
-				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					'118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492',
-					['--type=segwit'], 'segwit' ),
-				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					'118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492',
-					['--type=bech32'], 'bech32' ),
+				( [ btc_wif1 ], privhex7, None, 'legacy' ),
+				( [ btc_wif2 ], privhex7, ['--type=compressed'], 'compressed' ),
+				( [ btc_wif2 ], privhex7, ['--type=segwit'], 'segwit' ),
+				( [ btc_wif2 ], privhex7, ['--type=bech32'], 'bech32' ),
 			],
 		},
 		'wif2redeem_script': {
 			'btc_mainnet': [
-				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					'0014d04134b9ddb7399907657514d846aa495b4e474c',
-					['--type=segwit'], 'segwit' ),
+				( [ btc_wif2 ], redeem_script1, ['--type=segwit'], 'segwit' ),
 			],
 		},
 		'wif2segwit_pair': {
 			'btc_mainnet': [
-				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					('0014d04134b9ddb7399907657514d846aa495b4e474c','3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg'),
-					['--type=segwit'], 'segwit' ),
+				( [ btc_wif2 ], (redeem_script1, btc_addr3), ['--type=segwit'], 'segwit' ),
 			],
 		},
 	},
