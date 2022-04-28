@@ -129,8 +129,16 @@ class tool_cmd(tool_cmd_base):
 
 	def pubhex2addr(self,pubkeyhex:'sstr'):
 		"convert a hex pubkey to an address"
-		from ..proto.common import hash160
-		return self.pubhash2addr( hash160( bytes.fromhex(pubkeyhex) ).hex() )
+		if self.proto.base_proto == 'Ethereum' and len(pubkeyhex) == 128: # support raw ETH pubkeys
+			pubkeyhex = '04' + pubkeyhex
+		from ..keygen import keygen_public_data
+		ag = AddrGenerator( self.proto, self.mmtype )
+		return ag.to_addr(keygen_public_data(
+			pubkey        = bytes.fromhex(pubkeyhex),
+			viewkey_bytes = None,
+			pubkey_type   = self.mmtype.pubkey_type,
+			compressed    = self.mmtype.compressed,
+		))
 
 	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
 		"convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script"

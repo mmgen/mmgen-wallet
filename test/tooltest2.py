@@ -146,6 +146,11 @@ redeem_script1 = '0014d04134b9ddb7399907657514d846aa495b4e474c'
 btc_pubhex1 = '024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727'
 btc_pubhex2 = '044281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e972757f3254c322eeaa3cb6bf97cc5ecf8d4387b0df2c0b1e6ee18fe3a6977a7d57a'
 
+eth_pubhex1 = '0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8' # Bitcoin-style '04'-prefixed pubkey
+eth_pubhex2 = '9166c289b9f905e55f9e3df9f69d7f356b4a22095f894f4715714aa4b56606aff181eb966be4acb5cff9e16b66d809be94e214f06c93fd091099af98499255e7'   # raw pubkey
+xmr_pubhex1 = '1ed49357e217e79dab3c5503822f2bdb561e302e24476ee6ff33242c7551d4e78944790c0cfa9998c2f196061be89b2b8387f9d397db20ea8e049899cdc947d1'
+zec_pubhex1 = 'e6a4edbff547f21bcc2a825b6cf70f06e266a452d2da9d6dc5c1da3d99d7e996f488704dcdfe8d92cafe47772b3f692a98d59de1e99e00ff815f64ae59910f0c'
+
 tests = {
 	'Mnemonic': {
 		'hex2mn': (
@@ -506,6 +511,15 @@ tests = {
 				( [ privhex7 ], btc_pubhex1, ['--type=segwit'], 'segwit' ),
 				( [ privhex7 ], btc_pubhex1, ['--type=bech32'], 'bech32' ),
 			],
+			'eth_mainnet': [
+				( [ privhex1 ], eth_pubhex1 ),
+			],
+			'xmr_mainnet': [
+				( [ privhex1 ], xmr_pubhex1 ),
+			],
+			'zec_mainnet': [
+				( [ privhex1 ], zec_pubhex1, ['--type=zcash_z'], 'zcash_z' ),
+			],
 		},
 		'pubhex2addr': {
 			'btc_mainnet': [
@@ -513,6 +527,16 @@ tests = {
 				( [ btc_pubhex1 ], btc_addr2, ['--type=compressed'], 'compressed' ),
 				( [ btc_pubhex1 ], btc_addr3, ['--type=segwit'], 'segwit' ),
 				( [ btc_pubhex1 ], btc_addr4, ['--type=bech32'], 'bech32' ),
+			],
+			'eth_mainnet': [
+				( [ eth_pubhex1 ], eth_addr1 ),
+				( [ eth_pubhex2 ], eth_addr2 ),
+			],
+			'xmr_mainnet': [
+				( [ xmr_pubhex1 ], xmr_addr1 ),
+			],
+			'zec_mainnet': [
+				( [ zec_pubhex1 ], zec_addr1, ['--type=zcash_z'], 'zcash_z' ),
 			],
 		},
 		'pubhex2redeem_script': {
