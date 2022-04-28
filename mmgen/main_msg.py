@@ -55,8 +55,10 @@ class MsgOps:
 	class verify(sign):
 
 		async def __init__(self,msgfile,addr=None):
-
-			m = SignedOnlineMsg( infile=msgfile )
+			try:
+				m = SignedOnlineMsg( infile=msgfile )
+			except:
+				m = ExportedMsgSigs( infile=msgfile )
 
 			qmsg(m.format(addr) + '\n')
 
@@ -81,7 +83,7 @@ opts_data = {
 		'usage2': [
 			'[opts] create MESSAGE_TEXT ADDRESS_SPEC [...]',
 			'[opts] sign   MESSAGE_FILE [WALLET_FILE ...]',
-			'[opts] verify MESSAGE_FILE',
+			'[opts] verify MESSAGE_FILE or exported JSON dump',
 			'[opts] export MESSAGE_FILE',
 		],
 		'options': """

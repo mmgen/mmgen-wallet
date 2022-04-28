@@ -9,7 +9,8 @@ from test.include.common import silence,end_silence,restart_test_daemons,stop_te
 from mmgen.opts import opt
 from mmgen.util import msg,bmsg,pumsg
 from mmgen.protocol import CoinProtocol
-from mmgen.msg import NewMsg,UnsignedMsg,SignedMsg,SignedOnlineMsg
+from mmgen.msg import NewMsg,UnsignedMsg,SignedMsg,SignedOnlineMsg,ExportedMsgSigs
+from mmgen.addr import MMGenID
 
 def get_obj(coin,network):
 
@@ -65,6 +66,7 @@ async def run_test(network_id):
 	msg(m.format())
 
 	single_addr = 'A091ABAA:111'
+	single_addr_coin = m.sigs[MMGenID(m.proto,single_addr)]['addr']
 
 	pumsg('\nTesting single address display:\n')
 	msg(m.format(single_addr))
@@ -80,6 +82,28 @@ async def run_test(network_id):
 
 	pumsg('\nTesting single address JSON dump for export:\n')
 	msg( m.get_json_for_export(single_addr) )
+
+	from mmgen.fileutil import write_data_to_file
+	exported_sigs = os.path.join(tmpdir,'signatures.json')
+	write_data_to_file(
+		outfile = exported_sigs,
+		data    = m.get_json_for_export(),
+		desc    = 'signature data',
+		ask_overwrite = False )
+
+	m = ExportedMsgSigs( infile=exported_sigs )
+
+	pumsg('\nTesting verification (exported data):\n')
+	await m.verify(summary=opt.verbose)
+
+	pumsg('\nTesting single address verification (exported data):\n')
+	await m.verify(single_addr_coin,summary=opt.verbose)
+
+	pumsg('\nTesting display (exported data):\n')
+	msg(m.format())
+
+	pumsg('\nTesting single address display (exported data):\n')
+	msg(m.format(single_addr_coin))
 
 	stop_test_daemons(network_id)
 

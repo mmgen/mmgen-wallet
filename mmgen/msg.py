@@ -19,7 +19,7 @@ from .util import msg,vmsg,die,suf,make_chksum_6,fmt_list,remove_dups
 from .color import red,orange,grnbg
 from .protocol import init_proto
 from .fileutil import get_data_from_file,write_data_to_file
-from .addr import MMGenID
+from .addr import MMGenID,CoinAddr
 
 class MMGenIDRange(str,Hilite,InitErrors,MMGenObject):
 	"""
@@ -87,7 +87,7 @@ class coin_msg:
 
 		def get_proto_from_file(self,filename):
 			data = json.loads(get_data_from_file(filename))
-			network_id = data['metadata']['network']
+			network_id = data['metadata']['network'] if 'metadata' in data else data['network'].lower()
 			coin,network = network_id.split('_')
 			return init_proto( coin=coin, network=network )
 
@@ -162,7 +162,9 @@ class coin_msg:
 					yield fs1.format( v[0], v[1](self.data[k]) )
 				if self.sigs:
 					yield 'Signature data:'
-					k = MMGenID(self.proto,req_addr)
+					k = (
+						CoinAddr(self.proto,req_addr) if type(self).__name__ == 'exported_sigs' else
+						MMGenID(self.proto,req_addr) )
 					if k not in self.sigs:
 						die(1,f'{k}: address not found in signature data')
 					for res in gen_entry(self.sigs[k]):
@@ -271,7 +273,9 @@ class coin_msg:
 		def get_sigs(self,addr):
 
 			if addr:
-				req_addr = MMGenID(self.proto,addr)
+				req_addr = (
+					CoinAddr(self.proto,addr) if type(self).__name__ == 'exported_sigs' else
+					MMGenID(self.proto,addr) )
 				sigs = {k:v for k,v in self.sigs.items() if k == req_addr}
 			else:
 				sigs = self.sigs
@@ -312,6 +316,22 @@ class coin_msg:
 				indent = 4
 			)
 
+	class exported_sigs(signed_online):
+
+		def __init__(self,infile,*args,**kwargs):
+
+			self.data = json.loads(
+				get_data_from_file(
+					infile = infile,
+					desc   = self.desc )
+				)
+
+			def gen_sigs():
+				for e in self.data['signatures']:
+					yield e
+
+			self.sigs = {e['addr']:e for e in gen_sigs()}
+
 def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**kwargs):
 
 	assert not args, 'msg:_get_obj(): only keyword args allowed'
@@ -348,3 +368,4 @@ CompletedMsg    = _get('completed')
 UnsignedMsg     = _get('unsigned')
 SignedMsg       = _get('signed')
 SignedOnlineMsg = _get('signed_online')
+ExportedMsgSigs = _get('exported_sigs')

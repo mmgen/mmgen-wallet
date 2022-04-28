@@ -266,8 +266,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_msgverify',           'verifying the message file (all addresses)'),
 		('bob_msgverify_raw',       'verifying the raw message file (all addresses)'),
 		('bob_msgverify_single',    'verifying the message file (single address)'),
-		('bob_msgexport',           'exporting the message file'),
 		('bob_msgexport_single',    'exporting the message file (single address)'),
+		('bob_msgexport',           'exporting the message file (all addresses)'),
+		('bob_msgverify_export',    'verifying the exported JSON data (all addresses)'),
+		('bob_msgverify_export_single','verifying the exported JSON data (single address)'),
 
 		('stop',                 'stopping regtest daemon'),
 	)
@@ -1087,13 +1089,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		fn2 = get_file_with_ext(self.tmpdir,'bip39')
 		return self.bob_msgsign([fn2,fn1])
 
-	def bob_msgverify(self,addr=None,ext='sigmsg.json',cmd='verify'):
+	def bob_msgverify(self,addr=None,ext='sigmsg.json',cmd='verify',msgfile=None):
 		return self.spawn(
 			'mmgen-msg', [
 				'--bob',
 				f'--outdir={self.tmpdir}',
 				cmd,
-				get_file_with_ext(self.tmpdir,ext),
+				msgfile or get_file_with_ext(self.tmpdir,ext),
 			] + ([addr] if addr else []) )
 
 	def bob_msgverify_raw(self):
@@ -1113,6 +1115,22 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_msgexport_single(self):
 		sid = self._user_sid('bob')
 		return self.bob_msgexport(addr=f'{sid}:{self.dfl_mmtype}:1')
+
+	def bob_msgverify_export(self):
+		return self.bob_msgverify(
+			msgfile = os.path.join(self.tmpdir,'signatures.json')
+		)
+
+	def bob_msgverify_export_single(self):
+		sid = self._user_sid('bob')
+		mmid = f'{sid}:{self.dfl_mmtype}:1'
+		t = self.spawn('mmgen-tool', [ '--bob', '--color=0', 'listaddress', mmid ], no_msg=True)
+		addr = t.expect_getend(mmid).split()[0]
+		t.close()
+		return self.bob_msgverify(
+			addr = addr,
+			msgfile = os.path.join(self.tmpdir,'signatures.json')
+		)
 
 	def stop(self):
 		if opt.no_daemon_stop:

@@ -33,3 +33,5 @@ class coin_msg(coin_msg):
 
 		async def do_verify(self,addr,sig,message):
 			return await self.rpc.call( 'verifymessage', addr, sig, message )
+
+	class exported_sigs(coin_msg.exported_sigs,signed_online): pass
