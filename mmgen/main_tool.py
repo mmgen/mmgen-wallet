@@ -32,6 +32,7 @@ opts_data = {
 -d, --outdir=       d  Specify an alternate directory 'd' for output
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
+-e, --echo-passphrase  Echo passphrase or mnemonic to screen upon entry
 -k, --use-internal-keccak-module Force use of the internal keccak module
 -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
                        for {coin_id}: {kgs}
@@ -83,6 +84,7 @@ mods = {
 		'bytespec',
 		'bytestob58',
 		'eth_checksummed_addr',
+		'extract_key_from_geth_wallet',
 		'hash160',
 		'hash256',
 		'hexdump',

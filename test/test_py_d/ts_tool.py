@@ -26,6 +26,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		('tool_encrypt',         (9,"'mmgen-tool encrypt' (random data)",     [])),
 		('tool_decrypt',         (9,"'mmgen-tool decrypt' (random data)", [[[enc_infn+'.mmenc'],9]])),
 		('tool_twview_bad_comment',(9,"'mmgen-tool twview' (with bad comment)", [])),
+		('tool_extract_key_from_geth_wallet',(9,"'mmgen-tool extract_key_from_geth_wallet'", [])),
 		('tool_api',             (9,'tool API (initialization, config methods, wif2addr)',[])),
 		# ('tool_encrypt_ref', (9,"'mmgen-tool encrypt' (reference text)",  [])),
 	)
@@ -83,6 +84,14 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		t = self.spawn('mmgen-tool',['twview'])
 		t.expect('cannot be converted to TwComment')
 		t.req_exit_val = 2
+		return t
+
+	def tool_extract_key_from_geth_wallet(self):
+		fn = 'test/ref/ethereum/geth-wallet.json'
+		key = '9627ddb68354f5e0ff45fb2da49d7a20a013b7257a83ef4adbbbd87aeaccc75e'
+		t = self.spawn('mmgen-tool',['-d',self.tmpdir,'extract_key_from_geth_wallet',fn])
+		t.expect('Enter passphrase: ','\n')
+		t.expect(key)
 		return t
 
 	def tool_api(self):
