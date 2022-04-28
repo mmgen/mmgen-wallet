@@ -49,7 +49,7 @@ class MMGenIDRange(str,Hilite,InitErrors,MMGenObject):
 
 class coin_msg:
 
-	supported_base_protos = ('Bitcoin',)
+	supported_base_protos = ('Bitcoin','Ethereum')
 
 	class base(MMGenObject):
 
@@ -184,7 +184,10 @@ class coin_msg:
 				del hdr_data['failed_sids']
 
 			fs1 = '{:%s} {}' % max(len(v[0]) for v in hdr_data.values())
-			fs2 = '{:%s} {}' % max(len(labels[k]) for v in self.sigs.values() for k in v.keys())
+			fs2 = '{:%s} %s{}' % (
+				max(len(labels[k]) for v in self.sigs.values() for k in v.keys()),
+				'0x' if self.proto.base_proto == 'Ethereum' else ''
+			)
 
 			if req_addr:
 				fs2 = ' ' * 2 + fs2
@@ -216,9 +219,10 @@ class coin_msg:
 					mmid = '{}:{}:{}'.format( al_in.sid, al_in.mmtype, e.idx )
 					data = {
 						'addr': e.addr,
-						'pubhash': self.proto.parse_addr(e.addr_p2pkh or e.addr).bytes.hex(),
 						'sig': sig,
 					}
+					if self.proto.base_proto != 'Ethereum':
+						data.update({ 'pubhash': self.proto.parse_addr(e.addr_p2pkh or e.addr).bytes.hex() })
 
 					if e.addr_p2pkh:
 						data.update({'addr_p2pkh': e.addr_p2pkh})
@@ -306,6 +310,8 @@ class coin_msg:
 
 		def get_json_for_export(self,addr=None):
 			sigs = list( self.get_sigs(addr).values() )
+			if self.proto.base_proto == 'Ethereum':
+				sigs = [{k:'0x'+v for k,v in e.items()} for e in sigs]
 			return json.dumps(
 				{
 					'message': self.data['message'],
@@ -326,11 +332,11 @@ class coin_msg:
 					desc   = self.desc )
 				)
 
-			def gen_sigs():
-				for e in self.data['signatures']:
-					yield e
-
-			self.sigs = {e['addr']:e for e in gen_sigs()}
+			self.sigs = {sig['addr']:sig for sig in (
+				[{k:v[2:] for k,v in e.items()} for e in self.data['signatures']]
+					if self.proto.base_proto == 'Ethereum' else
+				self.data['signatures']
+			)}
 
 def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**kwargs):
 

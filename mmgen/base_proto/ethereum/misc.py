@@ -66,3 +66,36 @@ def extract_key_from_geth_keystore_wallet(wallet_fn,passwd,check_addr=True):
 		assert addr == addr_chk, f'incorrect address: ({addr} != {addr_chk})'
 
 	return key
+
+def ec_sign_message_with_privkey(message,key):
+	"""
+	Sign an arbitrary string with an Ethereum private key, returning the signature
+
+	Conforms to the standard defined by the Geth `eth_sign` JSON-RPC call
+	"""
+	from ...util import get_keccak
+	msghash = get_keccak()(
+		'\x19Ethereum Signed Message:\n{}{}'.format( len(message), message ).encode()
+	).digest()
+
+	from py_ecc.secp256k1 import ecdsa_raw_sign
+	v,r,s = ecdsa_raw_sign( msghash, key )
+	return '{:064x}{:064x}{:02x}'.format(r,s,v)
+
+def ec_recover_pubkey(message,sig):
+	"""
+	Given a message and signature, recover the public key associated with the private key
+	used to make the signature
+
+	Conforms to the standard defined by the Geth `eth_sign` JSON-RPC call
+	"""
+	from ...util import get_keccak
+	msghash = get_keccak()(
+		'\x19Ethereum Signed Message:\n{}{}'.format( len(message), message ).encode()
+	).digest()
+
+	from py_ecc.secp256k1 import ecdsa_raw_recover
+	r,s,v = ( sig[:64], sig[64:128], sig[128:] )
+	return '{:064x}{:064x}'.format(
+		*ecdsa_raw_recover( msghash, tuple(int(hexstr,16) for hexstr in (v,r,s)) )
+	)

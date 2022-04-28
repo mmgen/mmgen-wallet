@@ -16,6 +16,8 @@ def get_obj(coin,network):
 
 	if coin == 'bch':
 		addrlists = 'DEADBEEF:C:1-20 98831F3A:C:8,2 A091ABAA:L:111 A091ABAA:C:1'
+	elif coin == 'eth':
+		addrlists = 'DEADBEEF:E:1-20 98831F3A:E:8,2 A091ABAA:E:111'
 	else:
 		# A091ABAA = 98831F3A:5S
 		addrlists = 'DEADBEEF:C:1-20 98831F3A:B:8,2 A091ABAA:S:10-11 A091ABAA:111 A091ABAA:C:1'
@@ -65,7 +67,7 @@ async def run_test(network_id):
 
 	msg(m.format())
 
-	single_addr = 'A091ABAA:111'
+	single_addr = 'A091ABAA:E:111' if m.proto.base_proto == 'Ethereum' else 'A091ABAA:111'
 	single_addr_coin = m.sigs[MMGenID(m.proto,single_addr)]['addr']
 
 	pumsg('\nTesting single address display:\n')
@@ -116,7 +118,7 @@ async def run_test(network_id):
 
 class unit_tests:
 
-	altcoin_deps = ('ltc','bch')
+	altcoin_deps = ('ltc','bch','eth')
 
 	def btc(self,name,ut):
 		return run_test('btc')
@@ -132,3 +134,6 @@ class unit_tests:
 
 	def bch(self,name,ut):
 		return run_test('bch')
+
+	def eth(self,name,ut):
+		return run_test('eth')

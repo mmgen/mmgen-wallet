@@ -24,8 +24,6 @@ class MsgOps:
 		def __init__(self,msg,addr_specs):
 			from .protocol import init_proto_from_opts
 			proto = init_proto_from_opts()
-			if proto.base_proto != 'Bitcoin':
-				die('Message signing operations are supported for Bitcoin and Bitcoin-derived coins only')
 			NewMsg(
 				coin      = proto.coin,
 				network   = proto.network,
@@ -124,8 +122,11 @@ separated address index ranges.
 
                                     NOTES
 
-Message signing operations are currently supported for Bitcoin and Bitcoin
-code fork coins only.
+Message signing operations are supported for Bitcoin, Ethereum and code forks
+thereof.
+
+Ethereum signatures conform to the standard defined by the Geth ‘eth_sign’
+JSON-RPC call.
 
 Messages signed for Segwit-P2SH addresses cannot be verified directly using
 the Bitcoin Core `verifymessage` RPC call, since such addresses are not hashes

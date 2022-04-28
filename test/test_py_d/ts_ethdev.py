@@ -141,6 +141,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('addrimport_erigon_dev_addr',      'importing Erigon dev faucet address'),
 
 		('fund_dev_address',                'funding the default (Parity dev) address'),
+
+		('msgsign_chk',                     "signing a message (low-level, check against 'eth_sign' RPC call)"),
+		('msgcreate',                       'creating a message file'),
+		('msgsign',                         'signing the message file'),
+		('msgverify',                       'verifying the message file'),
+		('msgexport',                       'exporting the message file data to JSON for third-party verifier'),
+		('msgverify_export',                'verifying the exported JSON data'),
+
 		('txcreate1',                       'creating a transaction (spend from dev address to address :1)'),
 		('txview1_raw',                     'viewing the raw transaction'),
 		('txsign1',                         'signing the transaction'),
@@ -308,6 +316,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		from mmgen.daemon import CoinDaemon
 		d = CoinDaemon(proto=self.proto,test_suite=True)
 		self.rpc_port = d.rpc_port
+		self.daemon_datadir  = d.datadir
 		self.using_solc = check_solc_ver()
 		if not self.using_solc:
 			omsg(yellow('Using precompiled contract data'))
@@ -328,6 +337,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 				devkey+'\n' )
 
 		os.environ['MMGEN_BOGUS_SEND'] = ''
+		self.message = 'attack at dawn'
 
 	def __del__(self):
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
@@ -340,6 +350,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			f'--rpc-port={self.rpc_port}',
 			'--quiet'
 		]
+
+	@property
+	def eth_args_noquiet(self):
+		return self.eth_args[:-1]
 
 	async def setup(self):
 		self.spawn('',msg_only=True)
@@ -435,6 +449,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		imsg(f'  Keystore:           {keystore}')
 
 		signer_addr = make_key(keystore)
+		self.write_to_tmpfile( 'signer_addr', signer_addr + '\n' )
+
 		imsg(f'  Signer address:     {signer_addr}')
 
 		imsg(f'  Faucet:             {dfl_devaddr} ({prealloc_amt} ETH)')
@@ -637,6 +653,72 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def tx_status1a(self):
 		return self.tx_status(ext='2.345,50000]{}.regtest.sigtx',expect_str='has 2 confirmations')
+
+	async def msgsign_chk(self): # NB: Geth only!
+
+		def create_signature_mmgen():
+			wallet_dir = os.path.relpath(os.path.join(self.daemon_datadir,'keystore'))
+			wallet_fn = os.path.join(wallet_dir,os.listdir(wallet_dir)[0])
+
+			from mmgen.base_proto.ethereum.misc import extract_key_from_geth_keystore_wallet
+			key = extract_key_from_geth_keystore_wallet(
+				wallet_fn = wallet_fn,
+				passwd = b'' )
+			imsg(f'Key:       {key.hex()}')
+
+			from mmgen.base_proto.ethereum.misc import ec_sign_message_with_privkey
+			return ec_sign_message_with_privkey(self.message,key)
+
+		async def create_signature_rpc():
+			from mmgen.rpc import rpc_init
+			rpc = await rpc_init(self.proto)
+			addr = self.read_from_tmpfile('signer_addr').strip()
+			imsg(f'Address:   {addr}')
+			return await rpc.call(
+				'eth_sign',
+				'0x' + addr,
+				'0x' + self.message.encode().hex() )
+
+		if not g.daemon_id == 'geth':
+			return 'skip'
+
+		self.spawn('',msg_only=True)
+
+		sig = '0x' + create_signature_mmgen()
+		sig_chk = await create_signature_rpc()
+
+		# Compare signatures
+		imsg(f'Message:   {self.message}')
+		imsg(f'Signature: {sig}')
+		cmp_or_die(sig,sig_chk,'message signatures')
+
+		return 'ok'
+
+	def msgcreate(self):
+		t = self.spawn('mmgen-msg', self.eth_args_noquiet + [ 'create', self.message, '98831F3A:E:1' ])
+		t.written_to_file('Unsigned message data')
+		return t
+
+	def msgsign(self):
+		fn = get_file_with_ext(self.tmpdir,'rawmsg.json')
+		t = self.spawn('mmgen-msg', self.eth_args_noquiet + [ 'sign', fn, dfl_words_file ])
+		t.written_to_file('Signed message data')
+		return t
+
+	def msgverify(self,fn=None):
+		fn = fn or get_file_with_ext(self.tmpdir,'sigmsg.json')
+		t = self.spawn('mmgen-msg', self.eth_args_noquiet + [ 'verify', fn ])
+		t.expect('1 signature verified')
+		return t
+
+	def msgexport(self):
+		fn = get_file_with_ext(self.tmpdir,'sigmsg.json')
+		t = self.spawn('mmgen-msg', self.eth_args_noquiet + [ 'export', fn ])
+		t.written_to_file('Signature data')
+		return t
+
+	def msgverify_export(self):
+		return self.msgverify( fn=os.path.join(self.tmpdir,'signatures.json') )
 
 	def txcreate4(self):
 		return self.txcreate(
