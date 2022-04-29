@@ -209,21 +209,22 @@ def exit_if_mswin(feature):
 	if g.platform == 'win':
 		die(2, capfirst(feature) + ' not supported on the MSWin / MSYS2 platform' )
 
-def get_keccak():
+def get_keccak(cached_ret=[]):
 
-	from .opts import opt
-	# called in opts.init() via CoinProtocol, so must use getattr():
-	if getattr(opt,'use_internal_keccak_module',False):
-		from .contrib.keccak import keccak_256
-		qmsg('Using internal keccak module by user request')
-		return keccak_256
+	if not cached_ret:
+		from .opts import opt
+		# called in opts.init() via CoinProtocol, so must use getattr():
+		if getattr(opt,'use_internal_keccak_module',False):
+			qmsg('Using internal keccak module by user request')
+			from .contrib.keccak import keccak_256
+		else:
+			try:
+				from sha3 import keccak_256
+			except:
+				from .contrib.keccak import keccak_256
+		cached_ret.append(keccak_256)
 
-	try:
-		from sha3 import keccak_256
-	except:
-		from .contrib.keccak import keccak_256
-
-	return keccak_256
+	return cached_ret[0]
 
 # From 'man dd':
 # c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
