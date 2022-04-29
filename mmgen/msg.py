@@ -171,10 +171,10 @@ class coin_msg:
 						yield res
 
 			hdr_data = {
-				'message':     ('Message:',         lambda v: grnbg(v) ),
-				'network':     ('Network:',         lambda v: v.replace('_',' ').upper() ),
-				'addrlists':   ('Address Ranges:',  lambda v: fmt_list(v,fmt='bare') ),
-				'failed_sids': ('Failed Seed IDs:', lambda v: red(fmt_list(v,fmt='bare')) ),
+				'message':      ('Message:',           lambda v: grnbg(v) ),
+				'network':      ('Network:',           lambda v: v.replace('_',' ').upper() ),
+				'addrlists':    ('Address Ranges:',    lambda v: fmt_list(v,fmt='bare') ),
+				'failed_sids':  ('Failed Seed IDs:',   lambda v: red(fmt_list(v,fmt='bare')) ),
 			}
 
 			if req_addr or type(self).__name__ == 'exported_sigs':
@@ -332,8 +332,8 @@ class coin_msg:
 					desc   = self.desc )
 				)
 
-			self.sigs = {sig['addr']:sig for sig in (
-				[{k:v[2:] for k,v in e.items()} for e in self.data['signatures']]
+			self.sigs = {sig_data['addr']:sig_data for sig_data in (
+				[{k:v[2:] for k,v in e.items()} for e in self.data['signatures']] # remove '0x' prefix
 					if self.proto.base_proto == 'Ethereum' else
 				self.data['signatures']
 			)}

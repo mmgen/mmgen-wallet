@@ -12,7 +12,7 @@
 base_proto.ethereum.misc: miscellaneous utilities for Ethereum base protocol
 """
 
-from ...util import die
+from ...util import die,get_keccak
 
 def extract_key_from_geth_keystore_wallet(wallet_fn,passwd,check_addr=True):
 	"""
@@ -41,7 +41,6 @@ def extract_key_from_geth_keystore_wallet(wallet_fn,passwd,check_addr=True):
 		dklen    = sp['dklen'] )
 
 	# Check password by comparing generated MAC to stored MAC
-	from ...util import get_keccak
 	mac_chk = get_keccak()(hashed_pw[16:32] + bytes.fromhex( cdata['ciphertext'] )).digest().hex()
 	if mac_chk != cdata['mac']:
 		die(1,'Incorrect passphrase')
@@ -67,19 +66,19 @@ def extract_key_from_geth_keystore_wallet(wallet_fn,passwd,check_addr=True):
 
 	return key
 
+def hash_message(message):
+	return get_keccak()(
+		'\x19Ethereum Signed Message:\n{}{}'.format( len(message), message ).encode()
+	).digest()
+
 def ec_sign_message_with_privkey(message,key):
 	"""
 	Sign an arbitrary string with an Ethereum private key, returning the signature
 
 	Conforms to the standard defined by the Geth `eth_sign` JSON-RPC call
 	"""
-	from ...util import get_keccak
-	msghash = get_keccak()(
-		'\x19Ethereum Signed Message:\n{}{}'.format( len(message), message ).encode()
-	).digest()
-
 	from py_ecc.secp256k1 import ecdsa_raw_sign
-	v,r,s = ecdsa_raw_sign( msghash, key )
+	v,r,s = ecdsa_raw_sign( hash_message(message), key )
 	return '{:064x}{:064x}{:02x}'.format(r,s,v)
 
 def ec_recover_pubkey(message,sig):
@@ -89,13 +88,8 @@ def ec_recover_pubkey(message,sig):
 
 	Conforms to the standard defined by the Geth `eth_sign` JSON-RPC call
 	"""
-	from ...util import get_keccak
-	msghash = get_keccak()(
-		'\x19Ethereum Signed Message:\n{}{}'.format( len(message), message ).encode()
-	).digest()
-
 	from py_ecc.secp256k1 import ecdsa_raw_recover
 	r,s,v = ( sig[:64], sig[64:128], sig[128:] )
 	return '{:064x}{:064x}'.format(
-		*ecdsa_raw_recover( msghash, tuple(int(hexstr,16) for hexstr in (v,r,s)) )
+		*ecdsa_raw_recover( hash_message(message), tuple(int(hexstr,16) for hexstr in (v,r,s)) )
 	)

@@ -81,14 +81,15 @@ opts_data = {
 		'usage2': [
 			'[opts] create MESSAGE_TEXT ADDRESS_SPEC [...]',
 			'[opts] sign   MESSAGE_FILE [WALLET_FILE ...]',
-			'[opts] verify MESSAGE_FILE or exported JSON dump',
-			'[opts] export MESSAGE_FILE',
+			'[opts] verify MESSAGE_FILE [MMGen ID]',
+			'[opts] verify <exported JSON dump file> [address]',
+			'[opts] export MESSAGE_FILE [MMGen ID]',
 		],
 		'options': """
--h, --help      Print this help message
---, --longhelp  Print help message for long options (common options)
--d, --outdir=d  Output file to directory 'd' instead of working dir
--q, --quiet     Produce quieter output
+-h, --help           Print this help message
+--, --longhelp       Print help message for long options (common options)
+-d, --outdir=d       Output file to directory 'd' instead of working dir
+-q, --quiet          Produce quieter output
 """,
 	'notes': """
 
@@ -168,6 +169,12 @@ $ mmgen-msg verify <signed message file> DEADBEEF:B:98
 
 Export data relevant for a third-party verifier to ‘signatures.json’:
 $ mmgen-msg export <signed message file>
+
+Same as above, but export only one signature:
+$ mmgen-msg export <signed message file> DEADBEEF:B:98
+
+Verify and display the exported JSON signature data:
+$ mmgen-msg verify signatures.json
 """
 	},
 	'code': {

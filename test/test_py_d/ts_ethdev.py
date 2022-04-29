@@ -691,6 +691,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		imsg(f'Message:   {self.message}')
 		imsg(f'Signature: {sig}')
 		cmp_or_die(sig,sig_chk,'message signatures')
+		imsg('Geth and MMGen signatures match')
 
 		return 'ok'
 

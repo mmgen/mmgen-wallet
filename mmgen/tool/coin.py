@@ -168,7 +168,6 @@ class tool_cmd(tool_cmd_base):
 
 	def addr2pubhash(self,addr:'sstr'):
 		"convert coin address to public key hash"
-		from ..opts import opt
 		ap = self.proto.parse_addr(addr)
 		assert ap, f'coin address {addr!r} could not be parsed'
 		if ap.fmt not in MMGenAddrType.pkh_fmts:
