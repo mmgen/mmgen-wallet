@@ -12,7 +12,7 @@ from mmgen.protocol import CoinProtocol
 from mmgen.msg import NewMsg,UnsignedMsg,SignedMsg,SignedOnlineMsg,ExportedMsgSigs
 from mmgen.addr import MMGenID
 
-def get_obj(coin,network):
+def get_obj(coin,network,msghash_type):
 
 	if coin == 'bch':
 		addrlists = 'DEADBEEF:C:1-20 98831F3A:C:8,2 A091ABAA:L:111 A091ABAA:C:1'
@@ -26,9 +26,10 @@ def get_obj(coin,network):
 		coin      = coin,
 		network   = network,
 		message   = '08/Jun/2021 Bitcoin Law Enacted by El Salvador Legislative Assembly',
-		addrlists = addrlists )
+		addrlists = addrlists,
+		msghash_type = msghash_type )
 
-async def run_test(network_id):
+async def run_test(network_id,msghash_type='raw'):
 
 	coin,network = CoinProtocol.Base.parse_network_id(network_id)
 
@@ -41,7 +42,7 @@ async def run_test(network_id):
 
 	pumsg('\nTesting data creation:\n')
 
-	m = get_obj(coin,network)
+	m = get_obj(coin,network,msghash_type)
 
 	tmpdir = os.path.join('test','trash2')
 
@@ -53,7 +54,7 @@ async def run_test(network_id):
 
 	pumsg('\nTesting signing:\n')
 
-	m = UnsignedMsg( infile = os.path.join(tmpdir,get_obj(coin,network).filename) )
+	m = UnsignedMsg( infile = os.path.join(tmpdir,get_obj(coin,network,msghash_type).filename) )
 	await m.sign(wallet_files=['test/ref/98831F3A.mmwords'])
 
 	m = SignedMsg( data=m.__dict__ )
@@ -63,7 +64,7 @@ async def run_test(network_id):
 
 	pumsg('\nTesting display:\n')
 
-	m = SignedOnlineMsg( infile = os.path.join(tmpdir,get_obj(coin,network).signed_filename) )
+	m = SignedOnlineMsg( infile = os.path.join(tmpdir,get_obj(coin,network,msghash_type).signed_filename) )
 
 	msg(m.format())
 
@@ -118,7 +119,7 @@ async def run_test(network_id):
 
 class unit_tests:
 
-	altcoin_deps = ('ltc','bch','eth')
+	altcoin_deps = ('ltc','bch','eth','eth_raw')
 
 	def btc(self,name,ut):
 		return run_test('btc')
@@ -136,4 +137,7 @@ class unit_tests:
 		return run_test('bch')
 
 	def eth(self,name,ut):
+		return run_test('eth',msghash_type='eth_sign')
+
+	def eth_raw(self,name,ut):
 		return run_test('eth')

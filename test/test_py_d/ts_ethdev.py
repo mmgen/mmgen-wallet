@@ -149,6 +149,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('msgexport',                       'exporting the message file data to JSON for third-party verifier'),
 		('msgverify_export',                'verifying the exported JSON data'),
 
+		('msgcreate_raw',                   'creating a message file (--msghash-type=raw)'),
+		('msgsign_raw',                     'signing the message file (msghash_type=raw)'),
+		('msgverify_raw',                   'verifying the message file (msghash_type=raw)'),
+		('msgexport_raw',                   'exporting the message file data to JSON (msghash_type=raw)'),
+		('msgverify_export_raw',            'verifying the exported JSON data (msghash_type=raw)'),
+
 		('txcreate1',                       'creating a transaction (spend from dev address to address :1)'),
 		('txview1_raw',                     'viewing the raw transaction'),
 		('txsign1',                         'signing the transaction'),
@@ -667,7 +673,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			imsg(f'Key:       {key.hex()}')
 
 			from mmgen.base_proto.ethereum.misc import ec_sign_message_with_privkey
-			return ec_sign_message_with_privkey(self.message,key)
+			return ec_sign_message_with_privkey(self.message,key,'eth_sign')
 
 		async def create_signature_rpc():
 			from mmgen.rpc import rpc_init
@@ -695,8 +701,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 		return 'ok'
 
-	def msgcreate(self):
-		t = self.spawn('mmgen-msg', self.eth_args_noquiet + [ 'create', self.message, '98831F3A:E:1' ])
+	def msgcreate(self,add_args=[]):
+		t = self.spawn('mmgen-msg', self.eth_args_noquiet + add_args + [ 'create', self.message, '98831F3A:E:1' ])
 		t.written_to_file('Unsigned message data')
 		return t
 
@@ -720,6 +726,24 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def msgverify_export(self):
 		return self.msgverify( fn=os.path.join(self.tmpdir,'signatures.json') )
+
+	def msgcreate_raw(self):
+		get_file_with_ext(self.tmpdir,'rawmsg.json',delete_all=True)
+		return self.msgcreate(add_args=['--msghash-type=raw'])
+
+	def msgsign_raw(self,*args,**kwargs):
+		get_file_with_ext(self.tmpdir,'sigmsg.json',delete_all=True)
+		return self.msgsign(*args,**kwargs)
+
+	def msgverify_raw(self,*args,**kwargs):
+		return self.msgverify(*args,**kwargs)
+
+	def msgexport_raw(self,*args,**kwargs):
+		get_file_with_ext(self.tmpdir,'signatures.json',no_dot=True,delete_all=True)
+		return self.msgexport(*args,**kwargs)
+
+	def msgverify_export_raw(self,*args,**kwargs):
+		return self.msgverify_export(*args,**kwargs)
 
 	def txcreate4(self):
 		return self.txcreate(

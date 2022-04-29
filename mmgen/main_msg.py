@@ -28,7 +28,9 @@ class MsgOps:
 				coin      = proto.coin,
 				network   = proto.network,
 				message   = msg,
-				addrlists = addr_specs ).write_to_file( ask_overwrite=False )
+				addrlists = addr_specs,
+				msghash_type = opt.msghash_type or proto.msghash_types[0]
+			).write_to_file( ask_overwrite=False )
 
 	class sign(metaclass=AsyncInit):
 
@@ -89,6 +91,8 @@ opts_data = {
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
 -d, --outdir=d       Output file to directory 'd' instead of working dir
+-t, --msghash-type=T Specify the message hash type.  Supported values:
+                     'eth_sign' (ETH default), 'raw' (non-ETH default)
 -q, --quiet          Produce quieter output
 """,
 	'notes': """
@@ -126,8 +130,9 @@ separated address index ranges.
 Message signing operations are supported for Bitcoin, Ethereum and code forks
 thereof.
 
-Ethereum signatures conform to the standard defined by the Geth ‘eth_sign’
-JSON-RPC call.
+By default, Ethereum messages are prefixed before hashing in conformity with
+the standard defined by the Geth ‘eth_sign’ JSON-RPC call.  This behavior may
+be overridden with the --msghash-type option.
 
 Messages signed for Segwit-P2SH addresses cannot be verified directly using
 the Bitcoin Core `verifymessage` RPC call, since such addresses are not hashes
@@ -190,6 +195,9 @@ if len(cmd_args) < 2:
 	opts.usage()
 
 op = cmd_args.pop(0)
+
+if opt.msghash_type and op != 'create':
+	die(1,'--msghash-type option may only be used with the "create" command')
 
 async def main():
 	if op == 'create':

@@ -64,7 +64,7 @@ class coin_msg:
 		def chksum(self):
 			return make_chksum_6(
 				json.dumps(
-					{k:v for k,v in self.data.items() if k != 'failed_sids'},
+					{k:v for k,v in self.data.items() if k in ('addrlists','message','network','msghash_type')},
 					sort_keys = True,
 					separators = (',', ':')
 			))
@@ -106,11 +106,14 @@ class coin_msg:
 
 	class new(base):
 
-		def __init__(self,message,addrlists,*args,**kwargs):
+		def __init__(self,message,addrlists,msghash_type,*args,**kwargs):
+			if msghash_type not in self.proto.msghash_types:
+				die(2,f'msghash_type {msghash_type!r} not supported for {self.proto.base_proto} protocol')
 			self.data = {
 				'network': '{}_{}'.format( self.proto.coin.lower(), self.proto.network ),
 				'addrlists': [MMGenIDRange(self.proto,i) for i in addrlists.split()],
 				'message': message,
+				'msghash_type': msghash_type,
 			}
 			self.sigs = {}
 
@@ -173,9 +176,13 @@ class coin_msg:
 			hdr_data = {
 				'message':      ('Message:',           lambda v: grnbg(v) ),
 				'network':      ('Network:',           lambda v: v.replace('_',' ').upper() ),
+				'msghash_type': ('Message Hash Type:', lambda v: v ),
 				'addrlists':    ('Address Ranges:',    lambda v: fmt_list(v,fmt='bare') ),
 				'failed_sids':  ('Failed Seed IDs:',   lambda v: red(fmt_list(v,fmt='bare')) ),
 			}
+
+			if len(self.proto.msghash_types) == 1:
+				del hdr_data['msghash_type']
 
 			if req_addr or type(self).__name__ == 'exported_sigs':
 				del hdr_data['addrlists']
@@ -214,7 +221,8 @@ class coin_msg:
 				for e in al.data:
 					sig = await self.do_sign(
 						wif     = e.sec.wif,
-						message = self.data['message'] )
+						message = self.data['message'],
+						msghash_type = self.data['msghash_type'] )
 
 					mmid = '{}:{}:{}'.format( al_in.sid, al_in.mmtype, e.idx )
 					data = {
@@ -301,7 +309,8 @@ class coin_msg:
 				ret = await self.do_verify(
 					addr    = v.get('addr_p2pkh') or v['addr'],
 					sig     = v['sig'],
-					message = self.data['message'] )
+					message = self.data['message'],
+					msghash_type = self.data['msghash_type'] )
 				if not ret:
 					die(3,f'Invalid signature for address {k} ({v["addr"]})')
 
@@ -315,6 +324,7 @@ class coin_msg:
 			return json.dumps(
 				{
 					'message': self.data['message'],
+					'msghash_type': self.data['msghash_type'],
 					'network': self.data['network'].upper(),
 					'signatures': sigs,
 				},

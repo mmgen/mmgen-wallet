@@ -24,14 +24,14 @@ class coin_msg(coin_msg):
 
 	class unsigned(completed,coin_msg.unsigned):
 
-		async def do_sign(self,wif,message):
+		async def do_sign(self,wif,message,msghash_type):
 			return await self.rpc.call( 'signmessagewithprivkey', wif, message )
 
 	class signed(completed,coin_msg.signed): pass
 
 	class signed_online(signed,coin_msg.signed_online):
 
-		async def do_verify(self,addr,sig,message):
+		async def do_verify(self,addr,sig,message,msghash_type):
 			return await self.rpc.call( 'verifymessage', addr, sig, message )
 
 	class exported_sigs(coin_msg.exported_sigs,signed_online): pass

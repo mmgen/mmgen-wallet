@@ -24,17 +24,17 @@ class coin_msg(coin_msg):
 
 	class unsigned(completed,coin_msg.unsigned):
 
-		async def do_sign(self,wif,message):
+		async def do_sign(self,wif,message,msghash_type):
 			from .misc import ec_sign_message_with_privkey
-			return ec_sign_message_with_privkey( message, bytes.fromhex(wif) )
+			return ec_sign_message_with_privkey( message, bytes.fromhex(wif), msghash_type )
 
 	class signed(completed,coin_msg.signed): pass
 
 	class signed_online(signed,coin_msg.signed_online):
 
-		async def do_verify(self,addr,sig,message):
+		async def do_verify(self,addr,sig,message,msghash_type):
 			from ...tool.coin import tool_cmd
 			from .misc import ec_recover_pubkey
-			return tool_cmd(proto=self.proto).pubhex2addr(ec_recover_pubkey( message, sig )) == addr
+			return tool_cmd(proto=self.proto).pubhex2addr(ec_recover_pubkey( message, sig, msghash_type )) == addr
 
 	class exported_sigs(coin_msg.exported_sigs,signed_online): pass
