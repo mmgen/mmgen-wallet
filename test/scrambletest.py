@@ -35,6 +35,7 @@ opts_data = {
 		'options': """
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
+-a, --no-altcoin    Skip altcoin tests
 -C, --coverage      Produce code coverage info using trace module
 -l, --list-cmds     List and describe the tests and commands in this test suite
 -s, --system        Test scripts and modules installed on system rather than
@@ -57,12 +58,15 @@ if not opt.system:
 from collections import namedtuple
 td = namedtuple('scrambletest_entry',['seed','str','id_str','lbl','addr'])
 
-coin_data = {
+bitcoin_data = {
 #                   SCRAMBLED_SEED[:8] SCRAMBLE_KEY     ID_STR   LBL              FIRST ADDR
 'btc':           td('456d7f5f1c4bfe3b','(none)',        '',      '',              '1MU7EdgqYy9JX35L25hR6CmXXcSEBDAwyv'),
 'btc_compressed':td('bf98a4af5464a4ef','compressed',    '-C',    'COMPRESSED',    '1F97Jd89wwmu4ELadesAdGDzg3d8Y6j5iP'),
 'btc_segwit':    td('b56962d829ffc678','segwit',        '-S',    'SEGWIT',        '36TvVzU5mxSjJ3D9qKAmYzCV7iUqtTDezF'),
 'btc_bech32':    td('d09eea818f9ad17f','bech32',        '-B',    'BECH32',        'bc1q8snv94j6959y3gkqv4gku0cm5mersnpucsvw5z'),
+}
+
+altcoin_data = {
 'bch':           td('456d7f5f1c4bfe3b','(none)',        '',      '',              '1MU7EdgqYy9JX35L25hR6CmXXcSEBDAwyv'),
 'bch_compressed':td('bf98a4af5464a4ef','compressed',    '-C',    'COMPRESSED',    '1F97Jd89wwmu4ELadesAdGDzg3d8Y6j5iP'),
 'ltc':           td('b11f16632e63ba92','ltc:legacy',    '-LTC',  'LTC',           'LMxB474SVfxeYdqxNrM1WZDZMnifteSMv1'),
@@ -120,7 +124,9 @@ def do_test(cmd,tdata,msg_str,addr_desc):
 
 def do_coin_tests():
 	bmsg('Testing address scramble strings and list IDs')
-	for tname,tdata in coin_data.items():
+	for tname,tdata in (
+			tuple(bitcoin_data.items()) +
+			tuple(altcoin_data.items() if not opt.no_altcoin else []) ):
 		if tname == 'zec_zcash_z' and g.platform == 'win':
 			msg("Skipping 'zec_zcash_z' test for Windows platform")
 			continue

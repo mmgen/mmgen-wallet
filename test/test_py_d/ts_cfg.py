@@ -171,6 +171,8 @@ class TestSuiteCfg(TestSuiteBase):
 			('ETH','True', '5.4321',True),
 			('ETC','False','5.4321',False)
 		):
+			if opt.no_altcoin and coin != 'BTC':
+				continue
 			t = self.spawn_test(
 				args = [
 					f'--coin={coin}',
@@ -206,6 +208,9 @@ class TestSuiteCfg(TestSuiteBase):
 		return run("{'mmgen': 'full', 'bip39': 'short'}")
 
 	def chain_names(self):
+
+		if opt.no_altcoin:
+			return 'skip'
 
 		def run(chk,testnet):
 			for coin,chain_chk in (('ETH',chk),('ETC',None)):

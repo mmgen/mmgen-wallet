@@ -102,7 +102,10 @@ do
 		echo
 		echo   "  By default, all tests are run"
 		exit ;;
-	A)  SKIP_ALT_DEP=1 unit_tests_py+=" --no-altcoin-deps" ;;
+	A)  SKIP_ALT_DEP=1
+		test_py+=" --no-altcoin"
+		unit_tests_py+=" --no-altcoin-deps"
+		scrambletest_py+=" --no-altcoin" ;;
 	b)  test_py+=" --buf-keypress" ;;
 	C)  mkdir -p 'test/trace'
 		touch 'test/trace.acc'
@@ -165,7 +168,11 @@ case $1 in
 	'')        tests=$dfl_tests ;;
 	'default') tests=$dfl_tests ;;
 	'extra')   tests=$extra_tests ;;
-	'noalt')   tests=$noalt_tests SKIP_ALT_DEP=1 unit_tests_py+=" --no-altcoin-deps" ;;
+	'noalt')   tests=$noalt_tests
+				SKIP_ALT_DEP=1
+				test_py+=" --no-altcoin"
+				unit_tests_py+=" --no-altcoin-deps"
+				scrambletest_py+=" --no-altcoin" ;;
 	'quick')   tests=$quick_tests ;;
 	'qskip')   tests=$qskip_tests ;;
 	*)         tests="$*" ;;
@@ -463,18 +470,18 @@ s_tool2="The following tests will run '$tooltest2_py' for all supported coins"
 t_tool2="
 	- $tooltest2_py --tool-api # test the tool_api subsystem
 	- $tooltest2_py --tool-api --testnet=1
-	- $tooltest2_py --tool-api --coin=eth
-	- $tooltest2_py --tool-api --coin=xmr
-	- $tooltest2_py --tool-api --coin=zec
+	e $tooltest2_py --tool-api --coin=eth
+	a $tooltest2_py --tool-api --coin=xmr
+	a $tooltest2_py --tool-api --coin=zec
 	- $tooltest2_py
 	- $tooltest2_py --testnet=1
-	- $tooltest2_py --coin=ltc
-	- $tooltest2_py --coin=ltc --testnet=1
-	- $tooltest2_py --coin=bch
-	- $tooltest2_py --coin=bch --testnet=1
-	- $tooltest2_py --coin=zec
-	- $tooltest2_py --coin=xmr
-	- $tooltest2_py --coin=dash
+	a $tooltest2_py --coin=ltc
+	a $tooltest2_py --coin=ltc --testnet=1
+	a $tooltest2_py --coin=bch
+	a $tooltest2_py --coin=bch --testnet=1
+	a $tooltest2_py --coin=zec
+	a $tooltest2_py --coin=xmr
+	a $tooltest2_py --coin=dash
 	e $tooltest2_py --coin=eth
 	e $tooltest2_py --coin=eth --testnet=1
 	e $tooltest2_py --coin=eth --token=mm1
@@ -483,61 +490,64 @@ t_tool2="
 	- $tooltest2_py --fork # run once with --fork so commands are actually executed
 "
 f_tool2='tooltest2 tests completed'
-[ "$SKIP_ALT_DEP" ] && t_tool2_skip='e' # skip ETH,ETC: txview requires py_ecc
+[ "$SKIP_ALT_DEP" ] && t_tool2_skip='a e' # skip ETH,ETC: txview requires py_ecc
 
 i_tool='Tooltest'
 s_tool="The following tests will run '$tooltest_py' for all supported coins"
 t_tool="
 	- $tooltest_py --coin=btc cryptocoin
 	- $tooltest_py --coin=btc mnemonic
-	- $tooltest_py --coin=ltc cryptocoin
-	- $tooltest_py --coin=eth cryptocoin
-	- $tooltest_py --coin=etc cryptocoin
-	- $tooltest_py --coin=dash cryptocoin
-	- $tooltest_py --coin=doge cryptocoin
-	- $tooltest_py --coin=emc cryptocoin
-	- $tooltest_py --coin=xmr cryptocoin
-	- $tooltest_py --coin=zec cryptocoin
+	a $tooltest_py --coin=ltc cryptocoin
+	a $tooltest_py --coin=eth cryptocoin
+	a $tooltest_py --coin=etc cryptocoin
+	a $tooltest_py --coin=dash cryptocoin
+	a $tooltest_py --coin=doge cryptocoin
+	a $tooltest_py --coin=emc cryptocoin
+	a $tooltest_py --coin=xmr cryptocoin
+	a $tooltest_py --coin=zec cryptocoin
 	z $tooltest_py --coin=zec --type=zcash_z cryptocoin
 "
 [ "$MSYS2" -o "$ARM32" -o "$ARM64" ] && t_tool_skip='z'
+[ "$SKIP_ALT_DEP" ] && t_tool_skip='a z'
 
 f_tool='tooltest tests completed'
 
 i_gen='Gentest'
-s_gen="The following tests will run '$gentest_py' for BTC and LTC mainnet and testnet"
+s_gen="The following tests will run '$gentest_py' for configured coins and address types"
 t_gen="
 	- # speed tests, no verification:
 	- $gentest_py --coin=btc 1 $rounds
 	- $gentest_py --coin=btc --type=compressed 1 $rounds
 	- $gentest_py --coin=btc --type=segwit 1 $rounds
 	- $gentest_py --coin=btc --type=bech32 1 $rounds
-	- $gentest_py --coin=ltc 1 $rounds
-	- $gentest_py --coin=ltc --type=compressed 1 $rounds
-	- $gentest_py --coin=ltc --type=segwit 1 $rounds
-	- $gentest_py --coin=ltc --type=bech32 1 $rounds
+	a $gentest_py --coin=ltc 1 $rounds
+	a $gentest_py --coin=ltc --type=compressed 1 $rounds
+	a $gentest_py --coin=ltc --type=segwit 1 $rounds
+	a $gentest_py --coin=ltc --type=bech32 1 $rounds
 	- # wallet dumps:
 	- $gentest_py --type=compressed 1 $REFDIR/btcwallet.dump
 	- $gentest_py --type=segwit 1 $REFDIR/btcwallet-segwit.dump
 	- $gentest_py --type=bech32 1 $REFDIR/btcwallet-bech32.dump
 	- $gentest_py --type=compressed --testnet=1 1 $REFDIR/btcwallet-testnet.dump
-	- $gentest_py --coin=ltc --type=compressed 1 $REFDIR/litecoin/ltcwallet.dump
-	- $gentest_py --coin=ltc --type=segwit 1 $REFDIR/litecoin/ltcwallet-segwit.dump
-	- $gentest_py --coin=ltc --type=bech32 1 $REFDIR/litecoin/ltcwallet-bech32.dump
-	- $gentest_py --coin=ltc --type=compressed --testnet=1 1 $REFDIR/litecoin/ltcwallet-testnet.dump
+	a $gentest_py --coin=ltc --type=compressed 1 $REFDIR/litecoin/ltcwallet.dump
+	a $gentest_py --coin=ltc --type=segwit 1 $REFDIR/litecoin/ltcwallet-segwit.dump
+	a $gentest_py --coin=ltc --type=bech32 1 $REFDIR/litecoin/ltcwallet-bech32.dump
+	a $gentest_py --coin=ltc --type=compressed --testnet=1 1 $REFDIR/litecoin/ltcwallet-testnet.dump
 	- # libsecp256k1 vs python-ecdsa:
 	- $gentest_py 1:2 $rounds
 	- $gentest_py --type=segwit 1:2 $rounds
 	- $gentest_py --type=bech32 1:2 $rounds
 	- $gentest_py --testnet=1 1:2 $rounds
 	- $gentest_py --testnet=1 --type=segwit 1:2 $rounds
-	- $gentest_py --coin=ltc 1:2 $rounds
-	- $gentest_py --coin=ltc --type=segwit 1:2 $rounds
-	- $gentest_py --coin=ltc --testnet=1 1:2 $rounds
-	- $gentest_py --coin=ltc --testnet=1 --type=segwit 1:2 $rounds
-	- # all backends vs pycoin:
-	- $gentest_py all:pycoin $rounds
+	a $gentest_py --coin=ltc 1:2 $rounds
+	a $gentest_py --coin=ltc --type=segwit 1:2 $rounds
+	a $gentest_py --coin=ltc --testnet=1 1:2 $rounds
+	a $gentest_py --coin=ltc --testnet=1 --type=segwit 1:2 $rounds
+	a # all backends vs pycoin:
+	a $gentest_py all:pycoin $rounds
 "
+
+[ "$SKIP_ALT_DEP" ] && t_gen_skip='a'
 f_gen='gentest tests completed'
 
 [ -d .git -a -n "$INSTALL"  -a -z "$LIST_CMDS" ] && {

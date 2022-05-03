@@ -83,6 +83,8 @@ def do_tests(coin,internal_keccak=False):
 
 class unit_tests:
 
+	altcoin_deps = ('eth','xmr','zec')
+
 	def btc(self,name,ut):
 		return do_tests('btc')
 

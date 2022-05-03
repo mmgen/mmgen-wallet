@@ -100,6 +100,7 @@ opts_data = {
 		'options': """
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
+-a, --no-altcoin     Skip altcoin tests (WIP)
 -A, --no-daemon-autostart Don't start and stop daemons automatically
 -B, --bech32         Generate and use Bech32 addresses
 -b, --buf-keypress   Use buffered keypresses as with real human input

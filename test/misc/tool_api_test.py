@@ -93,20 +93,21 @@ def run_test():
 		'KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm',
 		'bc1q6pqnfwwakuuejpm9w52ds342f9d5u36v0qnz7c' )
 
-	test_triplet(tool,'ltc','regtest','bech32',1,
-		'cV3ZRqf8PhyfiFwtJfkvGu2qmBsazE1wXoA2A16S3nixb3BTvvVx',
-		'rltc1qvmqas4maw7lg9clqu6kqu9zq9cluvllnz4kj9y' )
+	if not 'no_altcoin' in sys.argv:
+		test_triplet(tool,'ltc','regtest','bech32',1,
+			'cV3ZRqf8PhyfiFwtJfkvGu2qmBsazE1wXoA2A16S3nixb3BTvvVx',
+			'rltc1qvmqas4maw7lg9clqu6kqu9zq9cluvllnz4kj9y' )
 
-	test_triplet(tool,'xmr','mainnet','M',1,
-		'e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f',
-		'41i7saPWA53EoHenmJVRt34dubPxsXwoWMnw8AdMyx4mTD1svf7qYzcVjxxRfteLNdYrAxWUMmiPegFW9EfoNgXx7vDMExv' ),
+		test_triplet(tool,'xmr','mainnet','M',1,
+			'e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f',
+			'41i7saPWA53EoHenmJVRt34dubPxsXwoWMnw8AdMyx4mTD1svf7qYzcVjxxRfteLNdYrAxWUMmiPegFW9EfoNgXx7vDMExv' ),
 
-	test_triplet(tool,'etc','mainnet','E',1,
-		'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
-		'c96aaa54e2d44c299564da76e1cd3184a2386b8d' ),
+		test_triplet(tool,'etc','mainnet','E',1,
+			'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+			'c96aaa54e2d44c299564da76e1cd3184a2386b8d' ),
 
-	test_triplet(tool,'zec','mainnet','Z',1,
-		'SKxuS56e99jpCeD9mMQ5o63zoGPakNdM9HCvt4Vt2cypvRjCdvGJ',
-		'zchFELwBxqsAubsLQ8yZgPCDDGukjXJssgCbiTPwFNmFwn9haLnDatzfhLdZzJT4PcU4o2yr92B52UFirUzEdF6ZYM2gBkM' )
+		test_triplet(tool,'zec','mainnet','Z',1,
+			'SKxuS56e99jpCeD9mMQ5o63zoGPakNdM9HCvt4Vt2cypvRjCdvGJ',
+			'zchFELwBxqsAubsLQ8yZgPCDDGukjXJssgCbiTPwFNmFwn9haLnDatzfhLdZzJT4PcU4o2yr92B52UFirUzEdF6ZYM2gBkM' )
 
 run_test()
