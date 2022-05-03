@@ -68,6 +68,13 @@ class unit_tests:
 		pubkey = pko.get_verifying_key().to_string().hex()
 		return True
 
+	def ripemd160(self,name,ut):
+		import hashlib
+		if hashlib.new.__name__ == 'hashlib_new_wrapper':
+			ymsg('Warning: RIPEMD160 missing in hashlib, falling back on pure-Python implementation')
+		hashlib.new('ripemd160')
+		return True
+
 	def gmpy(self,name,ut):
 		from gmpy2 import context,set_context,sqrt,cbrt
 		# context() parameters are platform-dependent!

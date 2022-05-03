@@ -292,6 +292,7 @@ t_hash="
 	256    $python test/hashfunc.py sha256 $rounds_max
 	512    $python test/hashfunc.py sha512 $rounds_max # native SHA512 - not used by the MMGen wallet
 	keccak $python test/hashfunc.py keccak $rounds_max
+	ripemd160 $python mmgen/contrib/ripemd160.py $VERBOSE
 "
 f_hash='Hash function tests completed'
 

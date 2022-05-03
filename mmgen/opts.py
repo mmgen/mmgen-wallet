@@ -326,6 +326,9 @@ def init(
 	from .term import init_term
 	init_term()
 
+	from .util import wrap_ripemd160
+	wrap_ripemd160() # ripemd160 used by cfg_file()
+
 	if not (opt.skip_cfg_file or opt.bob or opt.alice or g.prog_name == 'mmgen-regtest'):
 		from .cfg import cfg_file
 		# check for changes in system template file - term must be initialized
