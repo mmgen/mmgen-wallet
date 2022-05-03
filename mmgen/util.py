@@ -689,3 +689,19 @@ def run_session(callback,backend=None):
 
 	import asyncio
 	return asyncio.run(do())
+
+def wrap_ripemd160(called=[]):
+	if not called:
+		try:
+			import hashlib
+			hashlib.new('ripemd160')
+		except ValueError:
+			def hashlib_new_wrapper(name,*args,**kwargs):
+				if name == 'ripemd160':
+					return ripemd160(*args,**kwargs)
+				else:
+					return hashlib_new(name,*args,**kwargs)
+			from .contrib.ripemd160 import ripemd160
+			hashlib_new = hashlib.new
+			hashlib.new = hashlib_new_wrapper
+		called.append(True)
