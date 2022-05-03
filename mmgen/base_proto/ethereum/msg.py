@@ -16,21 +16,17 @@ from ...msg import coin_msg
 
 class coin_msg(coin_msg):
 
-	class base(coin_msg.base): pass
+	include_pubhash = False
+	sigdata_pfx = '0x'
+	msghash_types = ('eth_sign','raw') # first-listed is the default
 
-	class new(base,coin_msg.new): pass
-
-	class completed(base,coin_msg.completed): pass
-
-	class unsigned(completed,coin_msg.unsigned):
+	class unsigned(coin_msg.unsigned):
 
 		async def do_sign(self,wif,message,msghash_type):
 			from .misc import ec_sign_message_with_privkey
 			return ec_sign_message_with_privkey( message, bytes.fromhex(wif), msghash_type )
 
-	class signed(completed,coin_msg.signed): pass
-
-	class signed_online(signed,coin_msg.signed_online):
+	class signed_online(coin_msg.signed_online):
 
 		async def do_verify(self,addr,sig,message,msghash_type):
 			from ...tool.coin import tool_cmd

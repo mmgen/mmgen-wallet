@@ -29,7 +29,7 @@ class MsgOps:
 				network   = proto.network,
 				message   = msg,
 				addrlists = addr_specs,
-				msghash_type = opt.msghash_type or proto.msghash_types[0]
+				msghash_type = opt.msghash_type
 			).write_to_file( ask_overwrite=False )
 
 	class sign(metaclass=AsyncInit):

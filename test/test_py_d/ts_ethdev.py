@@ -712,9 +712,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.written_to_file('Signed message data')
 		return t
 
-	def msgverify(self,fn=None):
+	def msgverify(self,fn=None,msghash_type='eth_sign'):
 		fn = fn or get_file_with_ext(self.tmpdir,'sigmsg.json')
 		t = self.spawn('mmgen-msg', self.eth_args_noquiet + [ 'verify', fn ])
+		t.expect(msghash_type)
 		t.expect('1 signature verified')
 		return t
 
@@ -725,25 +726,28 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def msgverify_export(self):
-		return self.msgverify( fn=os.path.join(self.tmpdir,'signatures.json') )
+		return self.msgverify(
+			fn = os.path.join(self.tmpdir,'signatures.json') )
 
 	def msgcreate_raw(self):
 		get_file_with_ext(self.tmpdir,'rawmsg.json',delete_all=True)
 		return self.msgcreate(add_args=['--msghash-type=raw'])
 
-	def msgsign_raw(self,*args,**kwargs):
+	def msgsign_raw(self):
 		get_file_with_ext(self.tmpdir,'sigmsg.json',delete_all=True)
-		return self.msgsign(*args,**kwargs)
+		return self.msgsign()
 
-	def msgverify_raw(self,*args,**kwargs):
-		return self.msgverify(*args,**kwargs)
+	def msgverify_raw(self):
+		return self.msgverify(msghash_type='raw')
 
-	def msgexport_raw(self,*args,**kwargs):
+	def msgexport_raw(self):
 		get_file_with_ext(self.tmpdir,'signatures.json',no_dot=True,delete_all=True)
-		return self.msgexport(*args,**kwargs)
+		return self.msgexport()
 
-	def msgverify_export_raw(self,*args,**kwargs):
-		return self.msgverify_export(*args,**kwargs)
+	def msgverify_export_raw(self):
+		return self.msgverify(
+			fn = os.path.join(self.tmpdir,'signatures.json'),
+			msghash_type = 'raw' )
 
 	def txcreate4(self):
 		return self.txcreate(

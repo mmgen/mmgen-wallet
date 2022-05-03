@@ -16,20 +16,16 @@ from ...msg import coin_msg
 
 class coin_msg(coin_msg):
 
-	class base(coin_msg.base): pass
+	include_pubhash = True
+	sigdata_pfx = None
+	msghash_types = ('raw',) # first-listed is the default
 
-	class new(base,coin_msg.new): pass
-
-	class completed(base,coin_msg.completed): pass
-
-	class unsigned(completed,coin_msg.unsigned):
+	class unsigned(coin_msg.unsigned):
 
 		async def do_sign(self,wif,message,msghash_type):
 			return await self.rpc.call( 'signmessagewithprivkey', wif, message )
 
-	class signed(completed,coin_msg.signed): pass
-
-	class signed_online(signed,coin_msg.signed_online):
+	class signed_online(coin_msg.signed_online):
 
 		async def do_verify(self,addr,sig,message,msghash_type):
 			return await self.rpc.call( 'verifymessage', addr, sig, message )

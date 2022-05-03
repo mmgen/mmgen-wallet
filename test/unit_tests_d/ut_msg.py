@@ -29,7 +29,7 @@ def get_obj(coin,network,msghash_type):
 		addrlists = addrlists,
 		msghash_type = msghash_type )
 
-async def run_test(network_id,msghash_type='raw'):
+async def run_test(network_id,chksum,msghash_type='raw'):
 
 	coin,network = CoinProtocol.Base.parse_network_id(network_id)
 
@@ -47,6 +47,8 @@ async def run_test(network_id,msghash_type='raw'):
 	tmpdir = os.path.join('test','trash2')
 
 	os.makedirs(tmpdir,exist_ok=True)
+
+	assert m.chksum.upper() == chksum, f'{m.chksum.upper()} != {chksum}'
 
 	m.write_to_file(
 		outdir        = tmpdir,
@@ -122,22 +124,22 @@ class unit_tests:
 	altcoin_deps = ('ltc','bch','eth','eth_raw')
 
 	def btc(self,name,ut):
-		return run_test('btc')
+		return run_test('btc','AA0DB5')
 
 	def btc_tn(self,name,ut):
-		return run_test('btc_tn')
+		return run_test('btc_tn','A88E1D')
 
 	def btc_rt(self,name,ut):
-		return run_test('btc_rt')
+		return run_test('btc_rt','578018')
 
 	def ltc(self,name,ut):
-		return run_test('ltc')
+		return run_test('ltc','BA7549')
 
 	def bch(self,name,ut):
-		return run_test('bch')
+		return run_test('bch','1B8065')
 
 	def eth(self,name,ut):
-		return run_test('eth',msghash_type='eth_sign')
+		return run_test('eth','35BAD9',msghash_type='eth_sign')
 
 	def eth_raw(self,name,ut):
-		return run_test('eth')
+		return run_test('eth','9D900C')

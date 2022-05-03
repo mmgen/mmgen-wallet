@@ -30,7 +30,6 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 	max_tx_fee    = '0.005'
 	chain_names   = ['ethereum','foundation']
 	sign_mode     = 'standalone'
-	msghash_types = ('eth_sign','raw') # first-listed is the default
 	caps          = ('token',)
 	mmcaps        = ('key','addr','rpc','tx')
 	base_proto    = 'Ethereum'

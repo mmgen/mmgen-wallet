@@ -43,7 +43,6 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	witness_vernum  = int(witness_vernum_hex,16)
 	bech32_hrp      = 'bc'
 	sign_mode       = 'daemon'
-	msghash_types   = ('raw',) # first-listed is the default
 	avg_bdi         = int(9.7 * 60) # average block discovery interval (historical)
 	halving_interval = 210000
 	max_halvings    = 64

@@ -49,12 +49,11 @@ class MMGenIDRange(str,Hilite,InitErrors,MMGenObject):
 
 class coin_msg:
 
-	supported_base_protos = ('Bitcoin','Ethereum')
-
 	class base(MMGenObject):
 
 		ext = 'rawmsg.json'
 		signed = False
+		chksum_keys = ('addrlists','message','msghash_type','network')
 
 		@property
 		def desc(self):
@@ -64,7 +63,7 @@ class coin_msg:
 		def chksum(self):
 			return make_chksum_6(
 				json.dumps(
-					{k:v for k,v in self.data.items() if k in ('addrlists','message','network','msghash_type')},
+					{k:self.data[k] for k in self.chksum_keys},
 					sort_keys = True,
 					separators = (',', ':')
 			))
@@ -107,7 +106,8 @@ class coin_msg:
 	class new(base):
 
 		def __init__(self,message,addrlists,msghash_type,*args,**kwargs):
-			if msghash_type not in self.proto.msghash_types:
+			msghash_type = msghash_type or self.msg_cls.msghash_types[0]
+			if msghash_type not in self.msg_cls.msghash_types:
 				die(2,f'msghash_type {msghash_type!r} not supported for {self.proto.base_proto} protocol')
 			self.data = {
 				'network': '{}_{}'.format( self.proto.coin.lower(), self.proto.network ),
@@ -181,7 +181,7 @@ class coin_msg:
 				'failed_sids':  ('Failed Seed IDs:',   lambda v: red(fmt_list(v,fmt='bare')) ),
 			}
 
-			if len(self.proto.msghash_types) == 1:
+			if len(self.msg_cls.msghash_types) == 1:
 				del hdr_data['msghash_type']
 
 			if req_addr or type(self).__name__ == 'exported_sigs':
@@ -193,7 +193,7 @@ class coin_msg:
 			fs1 = '{:%s} {}' % max(len(v[0]) for v in hdr_data.values())
 			fs2 = '{:%s} %s{}' % (
 				max(len(labels[k]) for v in self.sigs.values() for k in v.keys()),
-				'0x' if self.proto.base_proto == 'Ethereum' else ''
+				self.msg_cls.sigdata_pfx or ''
 			)
 
 			if req_addr:
@@ -229,7 +229,7 @@ class coin_msg:
 						'addr': e.addr,
 						'sig': sig,
 					}
-					if self.proto.base_proto != 'Ethereum':
+					if self.msg_cls.include_pubhash:
 						data.update({ 'pubhash': self.proto.parse_addr(e.addr_p2pkh or e.addr).bytes.hex() })
 
 					if e.addr_p2pkh:
@@ -319,8 +319,9 @@ class coin_msg:
 
 		def get_json_for_export(self,addr=None):
 			sigs = list( self.get_sigs(addr).values() )
-			if self.proto.base_proto == 'Ethereum':
-				sigs = [{k:'0x'+v for k,v in e.items()} for e in sigs]
+			pfx = self.msg_cls.sigdata_pfx
+			if pfx:
+				sigs = [{k:pfx+v for k,v in e.items()} for e in sigs]
 			return json.dumps(
 				{
 					'message': self.data['message'],
@@ -342,9 +343,10 @@ class coin_msg:
 					desc   = self.desc )
 				)
 
+			pfx = self.msg_cls.sigdata_pfx
 			self.sigs = {sig_data['addr']:sig_data for sig_data in (
-				[{k:v[2:] for k,v in e.items()} for e in self.data['signatures']] # remove '0x' prefix
-					if self.proto.base_proto == 'Ethereum' else
+				[{k:v[len(pfx):] for k,v in e.items()} for e in self.data['signatures']]
+					if pfx else
 				self.data['signatures']
 			)}
 
@@ -362,14 +364,15 @@ def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**k
 		init_proto( coin=coin, network=network ) if coin else
 		coin_msg.base().get_proto_from_file(infile) )
 
-	if proto.base_proto not in coin_msg.supported_base_protos:
-		die(f'Message signing operations not supported for {proto.base_proto} protocol')
+	try:
+		msg_cls = getattr(
+			importlib.import_module(f'mmgen.base_proto.{proto.base_proto.lower()}.msg'),
+			'coin_msg' )
+	except:
+		die(1,f'Message signing operations not supported for {proto.base_proto} protocol')
 
-	cls = getattr(
-		getattr(importlib.import_module(f'mmgen.base_proto.{proto.base_proto.lower()}.msg'),'coin_msg'),
-		clsname )
-
-	me = MMGenObject.__new__(cls)
+	me = MMGenObject.__new__(getattr( msg_cls, clsname, getattr(coin_msg,clsname) ))
+	me.msg_cls = msg_cls
 	me.proto = proto
 
 	me.__init__(infile=infile,data=data,*args,**kwargs)
