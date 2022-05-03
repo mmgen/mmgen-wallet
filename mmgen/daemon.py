@@ -25,6 +25,7 @@ from subprocess import run,PIPE,CompletedProcess
 from collections import namedtuple
 
 from .globalvars import g
+from .color import set_vt100
 from .util import msg,Msg_r,die
 from .flags import *
 
@@ -79,6 +80,7 @@ class Daemon(Lockable):
 			cp = run(cmd,check=False,stdout=out,stderr=out)
 		except Exception as e:
 			die( 'MMGenCalledProcessError', f'Error starting executable: {type(e).__name__} [Errno {e.errno}]' )
+		set_vt100()
 		if self.debug:
 			print(cp)
 		return cp
@@ -425,9 +427,10 @@ class CoinDaemon(Daemon):
 		"remove the network's datadir"
 		assert self.test_suite, 'datadir removal restricted to test suite'
 		if self.state == 'stopped':
-			try: # exception handling required for MSWin/MSYS2
-				run(['/bin/rm','-rf',self.network_datadir])
-			except:
-				pass
+			run([
+				('rm' if g.platform == 'win' else '/bin/rm'),
+				'-rf',
+				self.datadir ])
+			set_vt100()
 		else:
 			msg(f'Cannot remove {self.network_datadir!r} - daemon is not stopped')

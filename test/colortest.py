@@ -29,7 +29,6 @@ def test_color():
 	for t,c in (('rxvt',8),('xterm',8),('rxvt-unicode',88),('screen-256color',256),('xterm-256color',256)):
 		ret = get_terminfo_colors(t)
 		if ret == None:
-			set_vt100()
 			ymsg(f'Warning: unable to get info for terminal {t!r}')
 			continue
 		msg(f'{t}: {orange(str(ret))}')
@@ -37,6 +36,5 @@ def test_color():
 
 	ret = get_terminfo_colors()
 	msg(f'{os.getenv("TERM")} (this terminal): {orange(str(ret))}')
-	set_vt100()
 
 test_color()

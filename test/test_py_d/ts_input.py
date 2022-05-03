@@ -45,10 +45,12 @@ class TestSuiteInput(TestSuiteBase):
 	def get_seed_from_stdin(self):
 		self.spawn('',msg_only=True)
 		from subprocess import run,PIPE
-		cmd = ['cmds/mmgen-walletconv','--in-fmt=words','--out-fmt=bip39','--outdir=test/trash']
+		cmd = ['python3','cmds/mmgen-walletconv','--in-fmt=words','--out-fmt=bip39','--outdir=test/trash']
 		mn = sample_mn['mmgen']['mn']
 		os.environ['MMGEN_TEST_SUITE'] = ''
 		cp = run( cmd, input=mn.encode(), stdout=PIPE, stderr=PIPE )
+		from mmgen.color import set_vt100
+		set_vt100()
 		os.environ['MMGEN_TEST_SUITE'] = '1'
 		assert b'written to file' in cp.stderr, "test 'get_seed_from_stdin' failed"
 		imsg(cp.stderr.decode().strip())

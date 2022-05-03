@@ -41,6 +41,8 @@ noalt_tests='dep misc obj color unit hash ref autosign_btc btc btc_tn btc_rt too
 quick_tests='dep misc obj color unit hash ref altref alts xmr eth autosign btc btc_rt tool tool2 gen'
 qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
 
+[ "$MSYS2" ] && SKIP_LIST='autosign autosign_btc autosign_live'
+
 PROGNAME=$(basename $0)
 while getopts hAbCdDfFi:I:lNOps:tvV OPT
 do

@@ -84,6 +84,8 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		super().__init__(trunner,cfgs,spawn)
 		if trunner == None:
 			return
+		if g.platform == 'win':
+			die(1,f'Test {type(self).__name__} not supported for Windows platform')
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
 		if self.simulate and not opt.exact_output:
@@ -124,6 +126,8 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		self.bad_msg_count = 0
 
 	def __del__(self):
+		if g.platform == 'win':
+			return
 		if self.simulate or not self.live:
 			LEDControl.delete_dummy_control_files()
 

@@ -60,8 +60,10 @@ def get_terminfo_colors(term=None):
 	try:
 		cmdout = run(cmd,stdout=PIPE,check=True).stdout.decode()
 	except:
+		set_vt100()
 		return None
 	else:
+		set_vt100()
 		s = [e.split('#')[1] for e in cmdout.split(',') if e.startswith('colors')][0]
 		from .util import is_hex_str
 		if s.isdecimal():

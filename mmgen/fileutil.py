@@ -23,6 +23,7 @@ fileutil.py: Routines that read, write, execute or stat files
 import sys,os
 
 from .globalvars import g
+from .color import set_vt100
 from .util import (
 	msg,
 	qmsg,
@@ -43,10 +44,11 @@ def check_or_create_dir(path):
 	except:
 		if os.getenv('MMGEN_TEST_SUITE'):
 			from subprocess import run
-			try: # exception handling required for MSWin/MSYS2
-				run(['/bin/rm','-rf',path])
-			except:
-				pass
+			run([
+				('rm' if g.platform == 'win' else '/bin/rm'),
+				'-rf',
+				path ])
+			set_vt100()
 		try:
 			os.makedirs(path,0o700)
 		except:
@@ -58,6 +60,7 @@ def check_binary(args):
 		run(args,stdout=DEVNULL,stderr=DEVNULL,check=True)
 	except:
 		die(2,f'{args[0]!r} binary missing, not in path, or not executable')
+	set_vt100()
 
 def shred_file(fn,verbose=False):
 	check_binary(['shred','--version'])
@@ -67,6 +70,7 @@ def shred_file(fn,verbose=False):
 		+ (['--verbose'] if verbose else [])
 		+ [fn],
 		check=True )
+	set_vt100()
 
 def _check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
