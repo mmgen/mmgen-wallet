@@ -17,7 +17,7 @@ import json
 import mmgen.tx.new as TxBase
 from .base import Base,TokenBase
 from ....opts import opt
-from ....obj import Int,ETHNonce,MMGenTxID,Str
+from ....obj import Int,ETHNonce,MMGenTxID,Str,HexStr
 from ....amt import ETHAmt
 from ....util import msg,line_input,is_int,is_hex_str,make_chksum_6
 from ....tw.ctl import TrackingWallet
@@ -30,6 +30,19 @@ class New(Base,TxBase.New):
 	no_chg_msg = 'Warning: Transaction leaves account with zero balance'
 	usr_fee_prompt = 'Enter transaction fee or gas price: '
 	hexdata_type = 'hex'
+
+	def __init__(self,*args,**kwargs):
+
+		super().__init__(*args,**kwargs)
+
+		if opt.tx_gas:
+			self.tx_gas = self.start_gas = ETHAmt(int(opt.tx_gas),'wei')
+		if opt.contract_data:
+			m = "'--contract-data' option may not be used with token transaction"
+			assert not 'Token' in type(self).__name__, m
+			with open(opt.contract_data) as fp:
+				self.usr_contract_data = HexStr(fp.read().strip())
+			self.disable_fee_check = True
 
 	async def get_nonce(self):
 		return ETHNonce(int(await self.rpc.call('eth_getTransactionCount','0x'+self.inputs[0].addr,'pending'),16))

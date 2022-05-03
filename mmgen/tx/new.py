@@ -16,7 +16,7 @@ from ..globalvars import *
 from ..opts import opt
 from .base import Base
 from ..color import pink
-from ..obj import get_obj,HexStr
+from ..obj import get_obj
 from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension,keypress_confirm,do_license_msg,line_input
 from ..addr import is_mmgen_id,CoinAddr,is_coin_addr
 
@@ -68,21 +68,6 @@ class New(Base):
 		ERROR: No change address specified.  If you wish to create a transaction with
 		only one output, specify a single output address with no {} amount
 	"""
-
-	def __init__(self,*args,**kwargs):
-
-		super().__init__(*args,**kwargs)
-
-		if self.proto.base_proto == 'Ethereum':
-			if opt.tx_gas:
-				from ..amt import ETHAmt
-				self.tx_gas = self.start_gas = ETHAmt(int(opt.tx_gas),'wei')
-			if opt.contract_data:
-				m = "'--contract-data' option may not be used with token transaction"
-				assert not 'Token' in type(self).__name__, m
-				with open(opt.contract_data) as fp:
-					self.usr_contract_data = HexStr(fp.read().strip())
-				self.disable_fee_check = True
 
 	def update_output_amt(self,idx,amt):
 		o = self.outputs[idx]._asdict()
