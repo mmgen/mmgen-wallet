@@ -6,15 +6,11 @@ from py_ecc.secp256k1 import privtopub,ecdsa_raw_sign,ecdsa_raw_recover
 from .. import rlp
 from ..rlp.sedes import Binary
 
-from mmgen.globalvars import g
-try:
-	assert not g.use_internal_keccak_module
-	import sha3 as _sha3
-	def sha3_256(x): return _sha3.keccak_256(x).digest()
-except:
-	from mmgen.keccak import keccak_256
-	def sha3_256(x):
-		return keccak_256(x).digest()
+from ....util import get_keccak
+keccak_256 = get_keccak()
+
+def sha3_256(bstr):
+	return keccak_256(bstr).digest()
 
 import struct
 ALL_BYTES = tuple( struct.pack('B', i) for i in range(256) )

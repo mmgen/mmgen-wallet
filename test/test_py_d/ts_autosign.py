@@ -264,7 +264,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		else:
 			for fn in self.ref_msgfiles:
 				if op == 'copy':
-					if os.path.basename(fn) == '9DA060[BTC].rawmsg.json': # contains bad Seed ID
+					if os.path.basename(fn) == 'ED405C[BTC].rawmsg.json': # contains bad Seed ID
 						self.bad_msg_count += 1
 					else:
 						self.good_msg_count += 1

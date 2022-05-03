@@ -69,7 +69,7 @@ class tool_cmd(tool_cmd_base):
 		"decode hexdump from file (use '-' for stdin) (warning: outputs binary data)"
 		from ..globalvars import g
 		if g.platform == 'win':
-			import msvcrt
+			import sys,os,msvcrt
 			msvcrt.setmode( sys.stdout.fileno(), os.O_BINARY )
 		from ..fileutil import get_data_from_file
 		from ..util import decode_pretty_hexdump

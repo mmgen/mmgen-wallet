@@ -383,11 +383,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			for d in ('mm1','mm2'):
 				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
 
+		if g.daemon_id == 'geth' and not (opt.resume or opt.resume_after or opt.skip_deps):
+			self.geth_setup()
+			set_vt100()
+			# await geth_devnet_init_bug_workaround() # uncomment to enable testing with v1.10.17
+
 		if not opt.no_daemon_autostart:
-			if g.daemon_id == 'geth':
-				self.geth_setup()
-				set_vt100()
-				# await geth_devnet_init_bug_workaround() # uncomment to enable testing with v1.10.17
 			if not start_test_daemons(
 					self.proto.coin+'_rt',
 					remove_datadir = not g.daemon_id in ('geth','erigon') ):
@@ -438,7 +439,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 		def init_genesis(fn):
 			cmd = f'geth init --datadir {d.datadir} {fn}'
-			cp = run(cmd.split(),stdout=PIPE,stderr=PIPE)
+			cp = run( cmd.split(), stdout=PIPE, stderr=PIPE )
 			if cp.returncode:
 				die(1,cp.stderr.decode())
 

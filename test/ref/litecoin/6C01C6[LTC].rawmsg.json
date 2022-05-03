@@ -2,11 +2,11 @@
     "id": "MMGen unsigned message data",
     "metadata": {
         "addrlists": [
-            "98831F3A:B:9,3-5",
-            "99E0FC61:S:102"
+            "98831F3A:B:1"
         ],
         "message": "24/3/2022 Russia announces it will sell gas for bitcoin",
-        "network": "btc_mainnet"
+        "msghash_type": "raw",
+        "network": "ltc_mainnet"
     },
     "signatures": {}
 }

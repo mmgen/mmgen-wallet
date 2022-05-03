@@ -6,6 +6,7 @@
             "DEADBEEF:C:1"
         ],
         "message": "08/Jun/2021 Bitcoin Law Enacted by El Salvador Legislative Assembly",
+        "msghash_type": "raw",
         "network": "btc_mainnet"
     },
     "signatures": {}

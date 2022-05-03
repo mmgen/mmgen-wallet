@@ -134,10 +134,10 @@ do
 	N)  test_py+=" --no-timings" ;;
 	O)  test_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
-	s)  SKIP_LIST="$OPTARG" ;;
+	s)  SKIP_LIST+=" $OPTARG" ;;
 	t)  LIST_CMDS=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
-	V)  VERBOSE=1
+	V)  VERBOSE='--verbose'
 		[ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
 		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
 		altcoin_mod_opts="${altcoin_mod_opts/--quiet/--verbose}"

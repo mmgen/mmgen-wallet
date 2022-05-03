@@ -168,6 +168,7 @@ async def check_daemons_running():
 		proto = init_proto(coin,testnet=g.testnet,need_amt=True)
 		if proto.sign_mode == 'daemon':
 			vmsg(f'Checking {coin} daemon')
+			from .exception import SocketError
 			try:
 				await rpc_init(proto)
 			except SocketError as e:

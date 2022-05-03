@@ -57,8 +57,6 @@ def print_help(po,opts_data,opt_filter):
 		opts_data['code']['long_options'] = common_opts_data['code']
 		def remove_unneeded_long_opts():
 			d = opts_data['text']['long_options']
-			if g.prog_name != 'mmgen-tool':
-				d = '\n'.join(''+i for i in d.split('\n') if not '--monero-wallet' in i)
 			if proto.base_proto != 'Ethereum':
 				d = '\n'.join(''+i for i in d.split('\n') if not '--token' in i)
 			opts_data['text']['long_options'] = d

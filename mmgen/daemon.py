@@ -25,7 +25,7 @@ from subprocess import run,PIPE,CompletedProcess
 from collections import namedtuple
 
 from .globalvars import g
-from .util import msg,die
+from .util import msg,Msg_r,die
 from .flags import *
 
 _dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version

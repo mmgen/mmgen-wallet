@@ -15,7 +15,7 @@ tx.info: transaction info class
 from ..globalvars import *
 from ..color import red,green,orange
 from ..opts import opt
-from ..util import msg,msg_r
+from ..util import msg,msg_r,do_pager
 
 import importlib
 
