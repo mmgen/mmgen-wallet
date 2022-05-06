@@ -12,9 +12,11 @@ def build_libsecp256k1():
 	if not os.path.exists(cache_path):
 		os.makedirs(cache_path)
 	if not os.path.exists(ext_path):
+		print('\nCloning libsecp256k1')
 		run(['git','clone','https://github.com/bitcoin-core/secp256k1.git'],check=True,cwd=cache_path)
 	if not os.path.exists(os.path.join(ext_path,'.libs/libsecp256k1.a')):
 		import platform
+		print('\nBuilding libsecp256k1')
 		cmds = {
 			'Windows': (
 				['sh','./autogen.sh'],
@@ -24,16 +26,17 @@ def build_libsecp256k1():
 			'Linux': (
 				['./autogen.sh'],
 				['./configure','CFLAGS=-g -O2 -fPIC'],
-				['make','-j4']
+				['make'] + ([] if have_arm else ['-j4']),
 			),
 		}[platform.system()]
 		for cmd in cmds:
 			print('Executing {}'.format(' '.join(cmd)))
 			run(cmd,check=True,cwd=ext_path)
 
-have_msys2 = run(['uname','-s'],stdout=PIPE,check=True).stdout.startswith(b'MSYS_NT')
-if have_msys2:
-	print('MSYS2 system detected')
+uname = {k:run(['uname',f'-{k}'],stdout=PIPE,check=True).stdout.strip().decode() for k in ('m','s')}
+
+have_arm   = uname['m'] in ('aarch64','armv7l') # x86_64, aarch64, armv7l
+have_msys2 = uname['s'].startswith('MSYS_NT')   # Linux, MSYS_NT.*
 
 class my_build_ext(build_ext):
 	def build_extension(self,ext):

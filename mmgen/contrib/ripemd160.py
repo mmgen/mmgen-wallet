@@ -3,10 +3,23 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Source: https://github.com/bitcoin/bitcoin/blob/master/test/functional/test_framework/ripemd160.py
-# Ported to MMGen with the following changes:
+#
+# Adapted for the MMGen Project with the following changes:
 # - replace leading spaces with tabs
 # - reimplement as class with digest() and hexdigest() methods
 # - add custom test output display
+#
+# SECURITY DISCLAIMER:
+#   This code has been flagged as ‘test-only’ by its creator because it is not
+#   constant-time and therefore vulnerable to timing attacks.
+#
+#   The RIPEMD-160 algorithm is used in the MMGen code base in two places: a)
+#   in hash160(); and b) as a checksum for a config file template.  Here
+#   timing attacks are not meaningful, because in the first case the preimage
+#   is a secure cryptographic hash and in the second -- public data.
+#
+#   The MMGen Project assumes no responsibility for the use of this code in
+#   other contexts.
 
 """Test-only pure Python RIPEMD160 implementation."""
 

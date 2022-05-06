@@ -12,7 +12,6 @@ class unit_tests:
 
 	altcoin_deps = ('pycoin','moneropy','keyconv','zcash_mini','ethkey','ssh_socks_proxy')
 	win_skip = ('losetup','moneropy','zcash_mini')
-	arm_skip = ('zcash_mini','ethkey')
 
 	def core_repo(self,name,ut):
 		crr = os.getenv('CORE_REPO_ROOT')

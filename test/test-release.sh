@@ -350,7 +350,7 @@ t_alts="
 "
 
 [ "$MSYS2" ] && t_alts_skip='m z'  # no moneropy (pysha3), zcash-mini (golang)
-[ "$ARM32" -o "$ARM64" ] && t_alts_skip='z e'
+[ "$ARM32" ] && t_alts_skip='z e'
 
 f_alts='Gen-only altcoin tests completed'
 
@@ -510,7 +510,7 @@ t_tool="
 	a $tooltest_py --coin=zec cryptocoin
 	z $tooltest_py --coin=zec --type=zcash_z cryptocoin
 "
-[ "$MSYS2" -o "$ARM32" -o "$ARM64" ] && t_tool_skip='z'
+[ "$MSYS2" -o "$ARM32" ] && t_tool_skip='z'
 [ "$SKIP_ALT_DEP" ] && t_tool_skip='a z'
 
 f_tool='tooltest tests completed'
@@ -546,8 +546,8 @@ t_gen="
 	a $gentest_py --coin=ltc --type=segwit 1:2 $rounds
 	a $gentest_py --coin=ltc --testnet=1 1:2 $rounds
 	a $gentest_py --coin=ltc --testnet=1 --type=segwit 1:2 $rounds
-	a # all backends vs pycoin:
-	a $gentest_py all:pycoin $rounds
+	- # all backends vs pycoin:
+	- $gentest_py all:pycoin $rounds
 "
 
 [ "$SKIP_ALT_DEP" ] && t_gen_skip='a'

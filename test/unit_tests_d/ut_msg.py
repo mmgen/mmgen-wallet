@@ -38,11 +38,12 @@ async def run_test(network_id,chksum,msghash_type='raw'):
 
 	bmsg(f'\nTesting {coin.upper()} {network.upper()}:\n')
 
-	restart_test_daemons(network_id)
+	m = get_obj(coin,network,msghash_type)
+
+	if m.proto.sign_mode == 'daemon':
+		restart_test_daemons(network_id)
 
 	pumsg('\nTesting data creation:\n')
-
-	m = get_obj(coin,network,msghash_type)
 
 	tmpdir = os.path.join('test','trash2')
 
@@ -110,7 +111,8 @@ async def run_test(network_id,chksum,msghash_type='raw'):
 	pumsg('\nTesting single address display (exported data):\n')
 	msg(m.format(single_addr_coin))
 
-	stop_test_daemons(network_id)
+	if m.proto.sign_mode == 'daemon':
+		stop_test_daemons(network_id)
 
 	msg('\n')
 

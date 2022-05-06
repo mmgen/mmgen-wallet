@@ -50,7 +50,7 @@ class ethereum_daemon(CoinDaemon):
 			getattr(self.chain_subdirs,self.network) )
 
 class openethereum_daemon(ethereum_daemon):
-	daemon_data = _dd('OpenEthereum', 3003000, '3.3.0')
+	daemon_data = _dd('OpenEthereum', 3003005, '3.3.5')
 	version_pat = r'OpenEthereum//v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'openethereum'
 	cfg_file = 'parity.conf'

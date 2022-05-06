@@ -201,6 +201,7 @@ def KeyGenerator(proto,pubkey_type,backend=None,silent=False):
 		if not pubkey_type_cls.libsecp256k1.test_avail(silent=silent):
 			backend_id = 'python-ecdsa'
 			if not backend:
+				from .util import qmsg
 				qmsg('Using (slow) native Python ECDSA library for public key generation')
 
 	return getattr(pubkey_type_cls,backend_id.replace('-','_'))()
