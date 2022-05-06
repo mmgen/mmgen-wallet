@@ -10,7 +10,7 @@ sec = 'deadbeef' * 8
 
 class unit_tests:
 
-	altcoin_deps = ('pycoin','moneropy','keyconv','zcash_mini','ethkey')
+	altcoin_deps = ('pycoin','moneropy','keyconv','zcash_mini','ethkey','ssh_socks_proxy')
 	win_skip = ('losetup','moneropy','zcash_mini')
 	arm_skip = ('zcash_mini','ethkey')
 
@@ -50,3 +50,7 @@ class unit_tests:
 	def ethkey(self,name,ut):
 		res = run(['ethkey','generate','random'],stdout=PIPE)
 		return True
+
+	def ssh_socks_proxy(self,name,ut):
+		from test.test_py_d.ts_xmrwallet import TestSuiteXMRWallet
+		return TestSuiteXMRWallet.init_proxy(external_call=True)

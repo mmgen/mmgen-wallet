@@ -37,11 +37,14 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	"""
 	Monero wallet operations
 	"""
+
 	networks = ('xmr',)
 	passthru_opts = ()
 	tmpdir_nums = [29]
 	dfl_random_txs = 3
 	color = True
+	socks_port = 49237
+
 	cmd_group = (
 		('gen_kafiles',               'generating key-address files'),
 		('create_wallets_miner',      'creating Monero wallets (Miner)'),
@@ -85,8 +88,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		self.tx_relay_daemon_parm = 'localhost:{}'.format( self.users['bob'].md.rpc_port )
 		self.tx_relay_daemon_proxy_parm = (
-			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}' # proxy must be IP, not 'localhost'
-			if self.use_proxy else None )
+			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}' ) # must be IP, not 'localhost'
 
 		if not opt.no_daemon_stop:
 			atexit.register(self.stop_daemons)
@@ -102,7 +104,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	# init methods
 
-	def init_proxy(self):
+	@classmethod
+	def init_proxy(cls,external_call=False):
 
 		def port_in_use(port):
 			import socket
@@ -111,26 +114,23 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			else: return True
 
 		def start_proxy():
-			if not opt.no_daemon_autostart:
+			if external_call or not opt.no_daemon_autostart:
 				run(a+b2)
-				omsg(f'SSH SOCKS server started, listening at localhost:{self.socks_port}')
+				omsg(f'SSH SOCKS server started, listening at localhost:{cls.socks_port}')
 
 		def kill_proxy():
 			if g.platform == 'linux':
-				omsg(f'Killing SSH SOCKS server at localhost:{self.socks_port}')
+				omsg(f'Killing SSH SOCKS server at localhost:{cls.socks_port}')
 				cmd = [ 'pkill', '-f', ' '.join(a + b2) ]
 				run(cmd)
 
-		self.use_proxy = False
-		self.socks_port = 9060
-		a = ['ssh','-x','-o','ExitOnForwardFailure=True','-D',f'localhost:{self.socks_port}']
+		a = ['ssh','-x','-o','ExitOnForwardFailure=True','-D',f'localhost:{cls.socks_port}']
 		b0 = ['-o','PasswordAuthentication=False']
 		b1 = ['localhost','true']
 		b2 = ['-fN','-E','txrelay-proxy.debug','localhost']
 
-		if port_in_use(self.socks_port):
-			omsg(f'Port {self.socks_port} already in use.  Assuming SSH SOCKS server is running')
-			self.use_proxy = True
+		if port_in_use(cls.socks_port):
+			omsg(f'Port {cls.socks_port} already in use.  Assuming SSH SOCKS server is running')
 		else:
 			cp = run(a+b0+b1,stdout=PIPE,stderr=PIPE)
 			err = cp.stderr.decode()
@@ -139,7 +139,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 			if cp.returncode == 0:
 				start_proxy()
-				self.use_proxy = True
 			elif 'onnection refused' in err:
 				die(2,fmt("""
 					The SSH daemon must be running and listening on localhost in order to test
@@ -167,7 +166,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 				if keypress_confirm('Continue?'):
 					start_proxy()
-					self.use_proxy = True
 				else:
 					die(1,'Exiting at user request')
 			else:
@@ -179,8 +177,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 					Then restart the test.
 				""",indent='    '))
 
-		if not opt.no_daemon_stop:
+		if not (external_call or opt.no_daemon_stop):
 			atexit.register(kill_proxy)
+
+		return True
 
 	def init_users(self):
 		from mmgen.daemon import CoinDaemon
