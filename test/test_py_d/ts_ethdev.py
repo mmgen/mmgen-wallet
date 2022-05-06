@@ -49,7 +49,6 @@ amt1 = '999999.12345689012345678'
 amt2 = '888.111122223333444455'
 
 parity_devkey_fn = 'parity.devkey'
-erigon_devkey_fn = 'erigon.devkey'
 
 vbal1 = '1.2288409'
 vbal9 = '1.22626295'
@@ -138,7 +137,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('addrgen',                         'generating addresses'),
 		('addrimport',                      'importing addresses'),
 		('addrimport_dev_addr',             "importing dev faucet address 'Ox00a329c..'"),
-		('addrimport_erigon_dev_addr',      'importing Erigon dev faucet address'),
 
 		('fund_dev_address',                'funding the default (Parity dev) address'),
 
@@ -327,20 +325,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if not self.using_solc:
 			omsg(yellow('Using precompiled contract data'))
 
+		self.genesis_fn = joinpath(self.tmpdir,'genesis.json')
+		self.keystore_dir = os.path.relpath(joinpath(self.daemon_datadir,'keystore'))
+
 		write_to_file(
 			joinpath(self.tmpdir,parity_devkey_fn),
 			dfl_devkey+'\n' )
-
-		if g.daemon_id == 'erigon':
-			from hashlib import sha256
-			from mmgen.tool.api import tool_api
-			devkey = sha256(b'erigon devnet key').hexdigest()
-			t = tool_api()
-			t.init_coin(g.coin,'regtest')
-			self.erigon_devaddr = t.wif2addr(devkey)
-			write_to_file(
-				joinpath(self.tmpdir,erigon_devkey_fn),
-				devkey+'\n' )
 
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		self.message = 'attack at dawn'
@@ -383,35 +373,66 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			for d in ('mm1','mm2'):
 				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
 
-		if g.daemon_id == 'geth' and not (opt.resume or opt.resume_after or opt.skip_deps):
-			self.geth_setup()
+		from mmgen.daemon import CoinDaemon
+		d = CoinDaemon(
+			self.proto.coin + '_rt',
+			test_suite = True,
+			daemon_id  = g.daemon_id )
+
+		if g.daemon_id in ('geth','erigon'):
+			self.genesis_setup(d)
 			set_vt100()
 			# await geth_devnet_init_bug_workaround() # uncomment to enable testing with v1.10.17
 
+		if g.daemon_id == 'erigon':
+			self.write_to_tmpfile('signer_key',self.keystore_data['key']+'\n')
+			d.usr_coind_args = [
+				'--miner.sigfile={}'.format(os.path.join(self.tmpdir,'signer_key')),
+				'--miner.etherbase={}'.format(self.keystore_data['address']) ]
+
+		if g.daemon_id in ('geth','erigon'):
+			imsg('  {:19} {}'.format('Cmdline:',' '.join(e for e in d.start_cmd if not 'verbosity' in e)))
+
 		if not opt.no_daemon_autostart:
-			if not start_test_daemons(
-					self.proto.coin+'_rt',
-					remove_datadir = not g.daemon_id in ('geth','erigon') ):
-				return False
+			if not g.daemon_id in ('geth','erigon'):
+				d.stop(silent=True)
+				d.remove_datadir()
+			d.start( silent = not (opt.verbose or opt.exact_output) )
 			from mmgen.rpc import rpc_init
 			rpc = await rpc_init(self.proto)
 			imsg(f'Daemon: {rpc.daemon.coind_name} v{rpc.daemon_version_str}')
 
 		return 'ok'
 
-	def geth_setup(self):
+	@property
+	def keystore_data(self):
+		if not hasattr(self,'_keystore_data'):
 
-		def make_key(keystore):
+			wallet_fn = os.path.join( self.keystore_dir, os.listdir(self.keystore_dir)[0] )
+
+			from mmgen.base_proto.ethereum.misc import extract_key_from_geth_keystore_wallet
+			key = extract_key_from_geth_keystore_wallet(
+				wallet_fn = wallet_fn,
+				passwd = b'' )
+
+			with open(wallet_fn) as fh:
+				res = json.loads(fh.read())
+
+			res.update( { 'key': key.hex() } )
+			self._keystore_data = res
+
+		return self._keystore_data
+
+	def genesis_setup(self,d):
+
+		def make_key():
 			pwfile = joinpath(self.tmpdir,'account_passwd')
 			write_to_file(pwfile,'')
-			run(['rm','-rf',keystore])
-			cmd = f'geth account new --password={pwfile} --lightkdf --keystore {keystore}'
+			run(['rm','-rf',self.keystore_dir])
+			cmd = f'geth account new --password={pwfile} --lightkdf --keystore {self.keystore_dir}'
 			cp = run(cmd.split(),stdout=PIPE,stderr=PIPE)
 			if cp.returncode:
 				die(1,cp.stderr.decode())
-			keyfile = os.path.join(keystore,os.listdir(keystore)[0])
-			with open(keyfile) as fp:
-				return json.loads(fp.read())['address']
 
 		def make_genesis(signer_addr,prealloc_addr):
 			return {
@@ -438,38 +459,30 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			}
 
 		def init_genesis(fn):
-			cmd = f'geth init --datadir {d.datadir} {fn}'
+			cmd = f'{d.exec_fn} init --datadir {d.datadir} {fn}'
 			cp = run( cmd.split(), stdout=PIPE, stderr=PIPE )
 			if cp.returncode:
 				die(1,cp.stderr.decode())
 
-		from mmgen.daemon import CoinDaemon
 		import json
-
-		d = CoinDaemon(proto=self.proto,test_suite=True)
 		d.stop(quiet=True)
 		d.remove_datadir()
 
-		imsg(cyan('Initializing Geth:'))
+		imsg(cyan('Initializing Genesis Block:'))
 
-		keystore = os.path.relpath(os.path.join(d.datadir,'keystore'))
-		imsg(f'  Keystore:           {keystore}')
-
-		signer_addr = make_key(keystore)
+		make_key()
+		signer_addr = self.keystore_data['address']
 		self.write_to_tmpfile( 'signer_addr', signer_addr + '\n' )
 
+		imsg(f'  Keystore:           {self.keystore_dir}')
+		imsg(f'  Signer key:         {self.keystore_data["key"]}')
 		imsg(f'  Signer address:     {signer_addr}')
-
 		imsg(f'  Faucet:             {dfl_devaddr} ({prealloc_amt} ETH)')
+		imsg(f'  Genesis block data: {self.genesis_fn}')
 
 		genesis_data = make_genesis(signer_addr,dfl_devaddr)
-
-		genesis_fn = joinpath(self.tmpdir,'genesis.json')
-		imsg(f'  Genesis block data: {genesis_fn}')
-
-		write_to_file( genesis_fn, json.dumps(genesis_data,indent='  ')+'\n' )
-
-		init_genesis(genesis_fn)
+		write_to_file( self.genesis_fn, json.dumps(genesis_data,indent='  ')+'\n' )
+		init_genesis(self.genesis_fn)
 
 	def wallet_upgrade(self,src_file):
 		if self.proto.coin == 'ETC':
@@ -517,11 +530,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def addrimport_dev_addr(self):
 		return self.addrimport_one_addr(addr=dfl_devaddr)
-
-	def addrimport_erigon_dev_addr(self):
-		if not g.daemon_id == 'erigon':
-			return 'skip'
-		return self.addrimport_one_addr(addr=self.erigon_devaddr)
 
 	def addrimport_burn_addr(self):
 		return self.addrimport_one_addr(addr=burn_addr)
@@ -593,10 +601,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		For the others, send a junk TX to keep block counts equal for all daemons
 		"""
 		dt = namedtuple('data',['devkey_fn','dest','amt'])
-		if g.daemon_id == 'erigon':
-			d = dt( erigon_devkey_fn, dfl_devaddr, prealloc_amt )
-		else:
-			d = dt( parity_devkey_fn, burn_addr2, '1' )
+		d = dt( parity_devkey_fn, burn_addr2, '1' )
 		t = self.txcreate(
 			args    = [
 				f'--keys-from-file={joinpath(self.tmpdir,d.devkey_fn)}',
@@ -612,12 +617,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def txcreate1(self):
-		if g.daemon_id == 'erigon':
-			# delete Erigon devaddr so that wallet is same as for other daemons
-			menu = ['a','r','D','1\n','y\n'] # sort by reverse amount
-		else:
-			# include one invalid keypress 'X' -- see EthereumTwUnspentOutputs.key_mappings
-			menu = ['a','d','r','M','X','e','m','m']
+		# include one invalid keypress 'X' -- see EthereumTwUnspentOutputs.key_mappings
+		menu = ['a','d','r','M','X','e','m','m']
 		args = ['98831F3A:E:1,123.456']
 		return self.txcreate(args=args,menu=menu,acct='1',tweaks=['confirm_non_mmgen'])
 	def txview1_raw(self):
@@ -664,17 +665,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	async def msgsign_chk(self): # NB: Geth only!
 
 		def create_signature_mmgen():
-			wallet_dir = os.path.relpath(os.path.join(self.daemon_datadir,'keystore'))
-			wallet_fn = os.path.join(wallet_dir,os.listdir(wallet_dir)[0])
-
-			from mmgen.base_proto.ethereum.misc import extract_key_from_geth_keystore_wallet
-			key = extract_key_from_geth_keystore_wallet(
-				wallet_fn = wallet_fn,
-				passwd = b'' )
-			imsg(f'Key:       {key.hex()}')
-
+			key = self.keystore_data['key']
+			imsg(f'Key:       {key}')
 			from mmgen.base_proto.ethereum.misc import ec_sign_message_with_privkey
-			return ec_sign_message_with_privkey(self.message,key,'eth_sign')
+			return ec_sign_message_with_privkey(self.message,bytes.fromhex(key),'eth_sign')
 
 		async def create_signature_rpc():
 			from mmgen.rpc import rpc_init

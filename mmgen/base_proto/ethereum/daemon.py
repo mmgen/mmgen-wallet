@@ -112,7 +112,7 @@ class geth_daemon(ethereum_daemon):
 
 # https://github.com/ledgerwatch/erigon
 class erigon_daemon(geth_daemon):
-	daemon_data = _dd('Erigon', 2021009005, '2021.09.5')
+	daemon_data = _dd('Erigon', 2022099099, '2022.99.99')
 	version_pat = r'erigon/(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'erigon'
 	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
@@ -127,7 +127,7 @@ class erigon_daemon(geth_daemon):
 			[f'--port={self.p2p_port}', self.p2p_port],
 			['--maxpeers=0', not self.opt.online],
 			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
-			[f'--datadir={self.datadir}', self.non_dfl_datadir and not self.network=='regtest'],
+			[f'--datadir={self.datadir}', self.non_dfl_datadir],
 			['--chain=goerli', self.network=='testnet'],
 			['--chain=dev', self.network=='regtest'],
 			['--mine', self.network=='regtest'],
@@ -176,6 +176,6 @@ class erigon_rpcdaemon(RPCDaemon):
 			['--verbosity=0'],
 			[f'--private.api.addr=127.0.0.1:{private_port}'],
 			[f'--http.port={self.rpc_port}'],
-			[f'--datadir={self.datadir}', self.network != 'regtest'],
-			['--http.api=eth,web3,txpool'],
+			[f'--datadir={self.datadir}'],
+			['--http.api=eth,erigon,web3,net,debug,trace,txpool,parity'],
 		)
