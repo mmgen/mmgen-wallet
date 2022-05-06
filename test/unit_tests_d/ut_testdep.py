@@ -48,7 +48,8 @@ class unit_tests:
 		return True
 
 	def ethkey(self,name,ut):
-		res = run(['ethkey','generate','random'],stdout=PIPE)
+		from test.include.common import get_ethkey
+		get_ethkey()
 		return True
 
 	def ssh_socks_proxy(self,name,ut):

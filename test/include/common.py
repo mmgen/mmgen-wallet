@@ -249,3 +249,13 @@ def check_solc_ver():
 		omsg(yellow('Warning: Solidity compiler (solc) could not be executed or has unsupported version'))
 		omsg(res)
 		return False
+
+def get_ethkey():
+	cmdnames = ('ethkey','openethereum-ethkey')
+	for cmdname in cmdnames:
+		try: run([cmdname,'--help'],stdout=PIPE)
+		except: pass
+		else:
+			return cmdname
+	else:
+		die(1,f'ethkey executable not found (tried {cmdnames})')

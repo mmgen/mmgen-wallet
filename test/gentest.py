@@ -28,7 +28,7 @@ sys.path.insert(0,overlay_setup(repo_root))
 
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
-from test.include.common import getrand
+from test.include.common import getrand,get_ethkey
 
 results_file = 'gentest.out.json'
 
@@ -166,8 +166,13 @@ class GenTool(object):
 
 class GenToolEthkey(GenTool):
 	desc = 'ethkey'
+
+	def __init__(self,*args,**kwargs):
+		self.cmdname = get_ethkey()
+		return super().__init__(*args,**kwargs)
+
 	def run(self,sec,vcoin):
-		o = get_cmd_output(['ethkey','info',sec.hex()])
+		o = get_cmd_output([self.cmdname,'info',sec.hex()])
 		return gtr(
 			o[0].split()[1],
 			o[-1].split()[1],
