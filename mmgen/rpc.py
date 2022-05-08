@@ -290,7 +290,7 @@ class RPCClient(MMGenObject):
 	def set_backend(self,backend=None):
 		bn = backend or opt.rpc_backend
 		if bn == 'auto':
-			self.backend = {'linux':RPCBackends.httplib,'win':RPCBackends.curl}[g.platform](self)
+			self.backend = {'linux':RPCBackends.httplib,'win':RPCBackends.requests}[g.platform](self)
 		else:
 			self.backend = getattr(RPCBackends,bn)(self)
 
