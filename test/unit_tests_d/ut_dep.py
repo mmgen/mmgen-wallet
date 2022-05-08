@@ -39,6 +39,7 @@ class unit_tests:
 		import requests,urllib3
 		urllib3.disable_warnings()
 		session = requests.Session()
+		session.trust_env = False
 		session.proxies.update({'https':'socks5h://127.243.172.8:20677'})
 		try:
 			session.get('https://127.188.29.17')

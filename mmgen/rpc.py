@@ -108,7 +108,12 @@ class RPCBackends:
 			self.make_host_path = caller.make_host_path
 
 	class aiohttp(base):
-
+		"""
+		Contrary to the requests library, aiohttp won’t read environment variables by
+		default.  But you can do so by passing trust_env=True into aiohttp.ClientSession
+		constructor to honor HTTP_PROXY, HTTPS_PROXY, WS_PROXY or WSS_PROXY environment
+		variables (all are case insensitive).
+		"""
 		def __init__(self,caller):
 			super().__init__(caller)
 			self.session = g.session
@@ -138,6 +143,7 @@ class RPCBackends:
 			import requests,urllib3
 			urllib3.disable_warnings()
 			self.session = requests.Session()
+			self.session.trust_env = False # ignore *_PROXY environment vars
 			self.session.headers = caller.http_hdrs
 			if caller.auth_type:
 				auth = 'HTTP' + caller.auth_type.capitalize() + 'Auth'
@@ -158,7 +164,9 @@ class RPCBackends:
 			return (res.content,res.status_code)
 
 	class httplib(base):
-
+		"""
+		Ignores *_PROXY environment vars
+		"""
 		def __del__(self):
 			self.session.close()
 
