@@ -173,16 +173,3 @@ class tool_cmd(tool_cmd_base):
 		from ..baseconv import baseconv
 		from ..util import remove_whitespace
 		return baseconv('b6d').tohex( remove_whitespace(b6d_num), pad )
-
-	def eth_checksummed_addr(self,addr:'sstr'):
-		"create a checksummed Ethereum address"
-		from ..protocol import init_proto
-		return init_proto('eth').checksummed_addr(addr)
-
-	def extract_key_from_geth_wallet( self, wallet_file:str, check_addr=True ):
-		"decrypt the encrypted private key in a Geth keystore wallet, returning the decrypted key"
-		from ..util import line_input
-		from ..opts import opt
-		from ..base_proto.ethereum.misc import extract_key_from_geth_keystore_wallet
-		passwd = line_input( 'Enter passphrase: ', echo=opt.echo_passphrase ).strip().encode()
-		return extract_key_from_geth_keystore_wallet( wallet_file, passwd, check_addr ).hex()

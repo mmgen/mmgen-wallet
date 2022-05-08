@@ -83,8 +83,6 @@ mods = {
 		'b6dtohex',
 		'bytespec',
 		'bytestob58',
-		'eth_checksummed_addr',
-		'extract_key_from_geth_wallet',
 		'hash160',
 		'hash256',
 		'hexdump',
@@ -106,6 +104,7 @@ mods = {
 	'coin': (
 		'addr2pubhash',
 		'addr2scriptpubkey',
+		'eth_checksummed_addr',
 		'hex2wif',
 		'privhex2addr',
 		'privhex2pubhex',
@@ -142,6 +141,7 @@ mods = {
 		'encrypt',
 	),
 	'fileutil': (
+		'extract_key_from_geth_wallet',
 		'find_incog_data',
 		'rand2file',
 	),

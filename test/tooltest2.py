@@ -366,12 +366,6 @@ tests = {
 			( ['nbytes=16'], {'boolfunc':is_b58_str}, ['-r0'] ),
 			( ['nbytes=12','pad=0'], is_b58_str, ['-r0'] ),
 		],
-		'eth_checksummed_addr': [
-			( ['00a329c0648769a73afac7f9381e08fb43dbea72'], '00a329c0648769A73afAc7F9381E08FB43dBEA72' ),
-			( ['deadbeef'*5], 'DeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF' ),
-			( ['ffffffff'*5], 'FFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF' ),
-			( ['0'*39 + '1'], '0'*39 + '1' ),
-		],
 	},
 	'Wallet': {
 		'gen_key': [
@@ -440,6 +434,14 @@ tests = {
 			'btc_mainnet': [
 				( [ btc_addr5 ], '118089d66b4a5853765e94923abdd5de4616c6e5' ),
 				( [ btc_addr6 ], '3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178' ),
+			],
+		},
+		'eth_checksummed_addr': {
+			'eth_mainnet': [
+				( ['00a329c0648769a73afac7f9381e08fb43dbea72'], '00a329c0648769A73afAc7F9381E08FB43dBEA72' ),
+				( ['deadbeef'*5], 'DeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF' ),
+				( ['ffffffff'*5], 'FFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF' ),
+				( ['0'*39 + '1'], '0'*39 + '1' ),
 			],
 		},
 		'pubhash2addr': {
