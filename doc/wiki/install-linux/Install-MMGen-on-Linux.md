@@ -29,7 +29,7 @@ any old installations under `/usr` or `/usr/local`.
 	$ cd mmgen
 	$ git checkout stable_linux # see 'Note' below
 	$ python3 -m build --no-isolation
-	$ python3 -m pip install --user --upgrade dist/*.whl # see 'Testing Note' below
+	$ python3 -m pip install --user --upgrade dist/*.whl # see 'Install Note' below
 	$ cd ..
 
 **Note:** if you want to use features that have appeared since the latest
@@ -40,8 +40,11 @@ security vulnerabilities are more likely to be present in new code than in a
 stable release.  In addition, new code may require dependencies or installation
 steps not yet covered in the documentation.
 
-**Testing Note:** MMGen may be tested in place prior to installation.  Refer to
-the [Test Suite][ts] wiki page for details.
+**Install Note:** The `--force` and `--no-deps` options also come in handy
+on occasion.
+
+If you plan to run the test suite, additional installation steps are required.
+Refer to the [Test Suite][ts] wiki page for details.
 
 Install your coin daemon(s).  To install prebuilt binaries, go [here][01].  To
 install from source, go [here][02].

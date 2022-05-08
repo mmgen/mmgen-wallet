@@ -1,12 +1,11 @@
 ### MMGen Version 13.1.0 Release Notes
 
-This release introduces a major reorganization of the MMGen code base: its
-full modularization and a clean separation between protocol-dependent and
-protocol-independent code.
+This release completes the process of modularizing the MMGen code base and
+fully separating protocol-dependent from protocol-independent code.
 
 In addition to improved reliability, maintainability and extensibility, this
-code overhaul has led to significant performance improvements and reductions
-in memory usage.
+major code overhaul has led to significant performance improvements and
+reductions in memory usage.
 
 #### Important new features:
 
@@ -23,6 +22,7 @@ in memory usage.
 
 #### Important bugfixes:
 
+ - RPC: disable `*_PROXY` environment vars for `requests` backend: ba2cc40d
  - mmgen-tool pubhex2addr: fix incorrect output for ETH, XMR and ZEC-Z
    protocols: af65676d
  - mmgen-tool addr2pubhash: reject non-PKH addresses: 4e3b11a3

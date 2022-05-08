@@ -150,6 +150,9 @@ will produce a listing of the same directory.
 > trick using '>' works for most shell commands, by the way).  Copy `urls.txt`
 > to your online machine and download the URLs listed in it.
 
+> *NOTE: as of 01.05.2022, files in the `clang64` directory were found under
+> `mingw64` instead, so these URLS may have to be edited accordingly.*
+
 > Create a new folder on your offline machine:
 
 		$ mkdir packages1
@@ -187,7 +190,7 @@ specifically required by MMGen.
 
 Install the MMGen requirements and their dependencies:
 
-	$ pacman -S tar git vim autoconf automake-wrapper autogen libtool \
+	$ pacman -S tar git vim autoconf automake-wrapper autogen libtool cygrunsrv \
 		mingw64/mingw-w64-x86_64-python-build \
 		mingw64/mingw-w64-x86_64-python-wheel \
 		mingw64/mingw-w64-x86_64-python-pip \
@@ -219,7 +222,7 @@ Add the following two lines to the end of the file (if this is a Bitcoin-only
 installation, you may omit the Litecoin and Bitcoin Cash Node components of the
 path):
 
-	export PATH="/mingw64/bin:$PATH:/c/Program Files/Bitcoin/daemon:/c/Program Files/Litecoin/daemon:/c/Program Files/Bitcoin-Cash-Node/daemon"
+	export PATH="$HOMEPATH/.local/bin:/mingw64/bin:$PATH:/c/Program Files/Bitcoin/daemon:/c/Program Files/Litecoin/daemon:/c/Program Files/Bitcoin-Cash-Node/daemon"
 	export PYTHONUTF8=1
 
 Save and exit.  Close and reopen the terminal window to update your working
@@ -244,12 +247,12 @@ therefore highly recommended.
 
 On your online machine, download the tar archive:
 
-	$ pip3 download --no-deps scrypt==0.8.13
+	$ pip3 download --no-deps scrypt==0.8.20
 
 On your offline machine, unpack and enter the archive:
 
-	$ tar fax scrypt-0.8.13.tar.gz
-	$ cd scrypt-0.8.13
+	$ tar fax scrypt-0.8.20.tar.gz
+	$ cd scrypt-0.8.20
 
 Open the file `setup.py` in your text editor.  Right before the line beginning
 with:
@@ -297,25 +300,26 @@ repository:
 If you’re doing an offline install, then copy the cloned mmgen directory to
 your offline machine.
 
-Enter the repo directory and build:
+Enter the repo directory, build and install:
 
 	$ cd mmgen
 	$ git checkout stable_msys2 # See 'Note' below
 	$ python3 -m build --no-isolation
-
-Exit the repo directory and install:
-
-	$ cd ..
-	$ python3 -m pip install --upgrade mmgen/dist/*.whl
+	$ python3 -m pip install --user --upgrade dist/*.whl
 
 **Note:** if you want to use features that have appeared since the latest
-`stable_msys2` release, then you can omit the `git checkout` step and remain on
-the `master` branch.  Please bear in mind, however, that security
-vulnerabilities are more likely to be present in new code than in a stable
-release.  In addition, while the tip of `master` is always tested on Linux
-before being pushed to the public repository, it’s not guaranteed to install or
-run on MSYS2.  Installation or runtime issues may also arise due to missing
-dependencies or installation steps not yet covered in the documentation.
+`stable_msys2` release, then you can omit the `git checkout stable_msys2`
+step and remain on the `master` branch.  Please bear in mind, however, that
+security vulnerabilities are more likely to be present in new code than in a
+stable release.  In addition, while the tip of `master` is always tested on
+Linux before being pushed to the public repository, it’s not guaranteed to
+install or run on MSYS2.  Installation or runtime issues may also arise due
+to missing dependencies or installation steps not yet covered in the
+documentation.
+
+**Install Note:** The `--force` and `--no-deps` options also come in handy on
+occasion.  Note that MMGen has a test suite.  Refer to the [Test Suite][ts]
+wiki page for details.
 
 ### <a name='a_pe'>10. Install Python Ethereum dependencies (Ethereum users only)</a>
 
@@ -347,19 +351,17 @@ about adding to the Windows path, since your `PATH` variable was taken care of
 in [Step 5](#a_ev).  Note that the daemons must be installed on both your
 online and offline machines.
 
-To transact ETH, ETC or ERC20 tokens you’ll need the latest OpenEthereum binary
-build for Windows from the [OpenEthereum Github repository][og].  OpenEthereum,
-unlike the other coin daemons, is installed on the online machine only.  Copy
-the `openethereum.exe` and `ethkey.exe` binaries to `/usr/local/bin`.  Please
-note that OpenEthereum performs very poorly under Windows due to threading
-limitations.  Unless you have very fast hardware, transacting and syncing the
-blockchain could be painfully slow.
+To transact ETH, ETC or ERC20 tokens you’ll need the latest Geth, OpenEthereum
+or Parity (for Ethereum Classic) binary.  See the
+[**Altcoin-and-Forkcoin-Support**][pl] page for information on downloading and
+launching these daemons.  The `parity.exe`, `openethereum.exe` and `ethkey.exe`
+binaries should be copied to `/usr/local/bin`.  For Geth, download and run the
+Windows installer and add `/c/Program Files/Geth` to the end of the `PATH`
+variable in your `~/.bashrc` file:
 
-Typically you’ll wish to launch OpenEthereum as follows:
-
-	$ openethereum.exe --jsonrpc-apis=all
-
-More information on OpenEthereum’s command-line options can be found [here][pl].
+Please note that Ethereum daemons perform rather poorly under Windows due to
+threading limitations.  Unless you have very fast hardware, transacting and
+syncing the blockchain might be painfully slow.
 
 ### <a name='a_do'>12. You’re done!</a>
 
@@ -425,3 +427,4 @@ continue from the `git checkout stable_msys2` step.
 [pl]: Altcoin-and-Forkcoin-Support#a_oe
 [ax]: autosign-[MMGen-command-help]
 [mc]: Altcoin-and-Forkcoin-Support#a_xmr
+[ts]: Test-Suite

@@ -119,7 +119,7 @@ require a wallet or other seed source.*
 location other than your MMGen data directory.  Otherwise, it’s recommended,
 as it frees you from having to type your wallet filename on the command line.*
 
-*The following examples suppose that you’ve chosen to use a default wallet.
+*The following examples assume that you’ve chosen to use a default wallet.
 If you haven’t, then you must include the path to a wallet file or other seed
 source in all commands where a seed source is required.*
 
@@ -966,10 +966,11 @@ preceding step.  Information on recently added features can be found by typing
 `git log` or visiting the commits page on [Github][hc] or [Gitlab][lc].
 
 Check the latest release notes in `doc/release-notes` and make note of any new
-features or requirements.  Now perform the install:
+features or requirements.  Now build and install:
 
-	$ sudo ./setup.py install # Linux
-	$ ./setup.py install      # Windows / MSYS2
+	$ rm -rf dist build
+	$ python3 -m build --no-isolation
+	$ python3 -m pip install --user --upgrade dist/*.whl
 
 [01]: Tracking-and-spending-ordinary-Bitcoin-addresses
 [02]: https://tpfaucet.appspot.com

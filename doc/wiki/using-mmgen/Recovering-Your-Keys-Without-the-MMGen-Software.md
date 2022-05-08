@@ -287,7 +287,7 @@ out at the Python prompt:
 	L3R8Fn21PsY3PWgT8BMggFwXswA2EZntwEGFS5mfDJpSiLq29a9F # matches key for FE3C6545:S:1 above
 
 Explanation: the variable `b58a` holds the Base 58 alphabet; `num` holds the key
-in decimal, converted from hexidecimal by Python’s `int()` function; the third
+in decimal, converted from hexadecimal by Python’s `int()` function; the third
 line does the base-58 conversion; and the last line formats the result by
 reversing the order of the digits, converting it to a string and stripping off
 the leading zeroes (‘1’s).

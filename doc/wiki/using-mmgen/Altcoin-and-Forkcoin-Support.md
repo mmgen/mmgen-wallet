@@ -4,7 +4,7 @@
 
 #### [Ethereum (ETH), Ethereum Classic (ETC) and ERC20 Tokens](#a_eth)
 * [Install the Ethereum dependencies](#a_ed)
-* [Install and run Geth or OpenEthereum](#a_oe)
+* [Install and run Geth, Parity or OpenEthereum](#a_oe)
 * [Transacting and other basic operations](#a_tx)
 * [Creating and deploying ERC20 tokens](#a_dt)
 
@@ -35,13 +35,16 @@ From the MMGen repository root, type:
 
 	$ python3 -m pip install --no-deps --user -r eth-requirements.txt
 
-#### <a name='a_oe'>Install and run Geth or OpenEthereum</a>
+#### <a name='a_oe'>Install and run Geth, Parity or OpenEthereum</a>
 
 MMGen can use either Go-Ethereum (Geth) or OpenEthereum to communicate with
 the Ethereum network.  For information on installing Geth or OE on your
 system, visit the the Geth [Github repo][ge], or the OpenEthereum [wiki][ow]
-or [Github repo][og].  The daemons are not used for transaction signing, so
-you needn’t install them on your offline machine.
+or [Github repo][og].  On Arch Linux systems, Go-Ethereum and OpenEthereum are
+packages and may be installed with `pacman`.
+
+Note that Ethereum daemons are not used for transaction signing, so you
+needn’t install them on your offline machine.
 
 For Geth, the following command-line options are required:
 

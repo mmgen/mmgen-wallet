@@ -108,6 +108,8 @@ widespread standard.
   online passwords.  Password lists are identified by arbitrarily chosen strings
   like “alice@github” or “bob@reddit”.  Passwords of different lengths and
   formats, including BIP39, are supported.
+- **[Message signing][MS]** for BTC, BCH, LTC, ETH and ETC.  Signing for
+  multiple addresses and autosigning are supported.
 - **Selectable seed lengths** of 128, 192 or 256 bits.  Subwallets may have
   shorter seeds than their parent.
 - **User-enhanced entropy:** All operations requiring random data will prompt
@@ -194,6 +196,7 @@ Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [X]: https://github.com/mmgen/mmgen/wiki/autosign-[MMGen-command-help]
 [xm]: https://github.com/mmgen/mmgen/wiki/xmrwallet-[MMGen-command-help]
 [G]: https://github.com/mmgen/mmgen/wiki/passgen-[MMGen-command-help]
+[MS]: https://github.com/mmgen/mmgen/wiki/msg-[MMGen-command-help]
 [T]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen#a_ct
 [E]: https://github.com/mmgen/mmgen/wiki/Altcoin-and-Forkcoin-Support#a_tx
 [ag]: https://github.com/mmgen/mmgen/wiki/addrgen-[MMGen-command-help]
