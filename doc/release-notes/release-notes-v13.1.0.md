@@ -39,6 +39,7 @@ This release has been tested on the following platforms:
         Arch Linux / x86_64
         Arch Linux [userspace] / Rock Pi 4 (armv8)
         Debian 10 (Buster) [Armbian] / Rock Pi 4 (armv8)
+        Debian 11 (Bullseye) [Armbian] / Orange Pi PC2 (armv8) [BTC-only]
         Windows 10 Enterprise [MSYS2-2022.02.15] / x86_64 [qemu]
 
 and with the following coin daemon versions:
