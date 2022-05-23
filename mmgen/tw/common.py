@@ -78,7 +78,8 @@ class TwCommon:
 	async def set_dates(rpc,us):
 		if us and us[0].date is None:
 			# 'blocktime' differs from 'time', is same as getblockheader['time']
-			dates = [o['blocktime'] for o in await rpc.gathered_call('gettransaction',[(o.txid,) for o in us])]
+			dates = [ o.get('blocktime',0)
+				for o in await rpc.gathered_call('gettransaction',[(o.txid,) for o in us]) ]
 			for idx,o in enumerate(us):
 				o.date = dates[idx]
 
@@ -113,20 +114,21 @@ class TwCommon:
 			ret.append('Grouped')
 		return ret
 
+	sort_funcs = {
+		'addr':   lambda i: i.addr,
+		'age':    lambda i: 0 - i.confs,
+		'amt':    lambda i: i.amt,
+		'txid':   lambda i: f'{i.txid} {i.vout:04}',
+		'twmmid': lambda i: i.twmmid.sort_key
+	}
+
 	def do_sort(self,key=None,reverse=False):
-		sort_funcs = {
-			'addr':   lambda i: i.addr,
-			'age':    lambda i: 0 - i.confs,
-			'amt':    lambda i: i.amt,
-			'txid':   lambda i: f'{i.txid} {i.vout:04}',
-			'twmmid': lambda i: i.twmmid.sort_key
-		}
 		key = key or self.sort_key
-		if key not in sort_funcs:
-			die(1,f'{key!r}: invalid sort key.  Valid options: {" ".join(sort_funcs.keys())}')
+		if key not in self.sort_funcs:
+			die(1,f'{key!r}: invalid sort key.  Valid options: {" ".join(self.sort_funcs)}')
 		self.sort_key = key
 		assert type(reverse) == bool
-		self.data.sort(key=sort_funcs[key],reverse=reverse or self.reverse)
+		self.data.sort(key=self.sort_funcs[key],reverse=reverse or self.reverse)
 
 	async def format_for_display(self):
 		data = self.data
@@ -236,9 +238,10 @@ class TwCommon:
 			await getattr(self,action)(self.parent)
 
 		async def a_print(self,parent):
-			outfile = '{}-{}[{}].out'.format(
+			outfile = '{}-{}{}[{}].out'.format(
 				parent.dump_fn_pfx,
 				parent.proto.dcoin,
+				('' if parent.proto.network == 'mainnet' else '-'+parent.proto.network.upper()),
 				','.join(parent.sort_info(include_group=False)).lower() )
 			msg('')
 			from ..fileutil import write_data_to_file

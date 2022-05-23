@@ -98,10 +98,13 @@ class tool_cmd(tool_cmd_base):
 
 	async def twops(self,
 			obj,pager,reverse,wide,sort,age_fmt,show_mmid,wide_show_confs,interactive):
+
 		obj.reverse = reverse
 		obj.age_fmt = age_fmt
 		obj.show_mmid = show_mmid
+
 		await obj.get_data(sort_key=sort,reverse_sort=reverse)
+
 		if interactive:
 			await obj.view_and_sort()
 			return True

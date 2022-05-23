@@ -20,7 +20,7 @@
 twuo: Tracking wallet unspent outputs class for the MMGen suite
 """
 
-import time
+import asyncio
 from collections import namedtuple
 
 from ..globalvars import g
@@ -58,7 +58,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		txid         = ListItemAttr(CoinTxID)
 		vout         = ListItemAttr(int,typeconv=False)
 		amt          = ImmutableAttr(None)
-		amt2         = ListItemAttr(None)
+		amt2         = ListItemAttr(None) # the ETH balance for token account
 		label        = ListItemAttr(TwComment,reassign_ok=True)
 		twmmid       = ImmutableAttr(TwMMGenID,include_proto=True)
 		addr         = ImmutableAttr(CoinAddr,include_proto=True)
@@ -256,7 +256,6 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 				await uo.get_data()
 				uo.oneshot_msg = yellow(f'{capfirst(uo.item_desc)} #{idx} removed\n\n')
 			else:
-				import asyncio
 				await asyncio.sleep(3)
 				uo.oneshot_msg = red('Address could not be removed\n\n')
 
@@ -271,7 +270,6 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 						uo.item_desc,
 						idx ))
 				else:
-					import asyncio
 					await asyncio.sleep(3)
 					uo.oneshot_msg = red('Label could not be added\n\n')
 
