@@ -132,12 +132,12 @@ rt_data = {
 	}
 }
 
-def create_burn_addr(proto):
-	from mmgen.tool.api import tool_api
-	t = tool_api()
-	t.init_coin(proto.coin,proto.network)
-	t.addrtype = 'compressed'
-	return t.privhex2addr('beadface'*8)
+def make_burn_addr(proto):
+	from mmgen.tool.coin import tool_cmd
+	return tool_cmd(
+		cmdname = 'pubhash2addr',
+		proto   = proto,
+		mmtype  = 'compressed' ).pubhash2addr('00'*20)
 
 from .ts_base import *
 from .ts_shared import *
@@ -162,8 +162,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('addrimport_bob',           "importing Bob's addresses"),
 		('addrimport_alice',         "importing Alice's addresses"),
 		('bob_import_miner_addr',    "importing miner’s coinbase addr into Bob’s wallet"),
-		('fund_bob2',                "funding Bob’s first MMGen address"),
-		('fund_alice2',              "funding Alice’s first MMGen address"),
+		('fund_bob_deterministic',   "funding Bob’s first MMGen address (deterministic method)"),
+		('fund_alice_deterministic', "funding Alice’s first MMGen address (deterministic method)"),
 		('bob_recreate_tracking_wallet','creation of new tracking wallet (Bob)'),
 		('addrimport_bob2',          "reimporting Bob's addresses"),
 		('fund_bob',                 "funding Bob's wallet"),
@@ -291,9 +291,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC
 			if g.test_suite_deterministic:
 				self.deterministic = True
-				self.burn_addr = create_burn_addr(self.proto)
-				self.miner_addr = 'bcrt1q537rgyctcqdgs8nm8gvku05znka4h2m00lx8ps' # regtest.create_hdseed()
-				self.miner_wif = 'cTEkSYCWKvNo757uwFPd4yuCXsbZvfJDipHsHWFRapXpnikMHvgn'
+				self.miner_addr = 'bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd' # regtest.create_hdseed()
+				self.miner_wif = 'cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp'
 
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		os.environ['MMGEN_TEST_SUITE_REGTEST'] = '1'
@@ -414,7 +413,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			return 'skip'
 		return self.spawn('mmgen-addrimport', [ '--bob', '--rescan', '--quiet', f'--address={self.miner_addr}' ])
 
-	def fund_wallet2(self,user,addr,utxo_nums,skip_passphrase=False):
+	def fund_wallet_deterministic(self,user,addr,utxo_nums,skip_passphrase=False):
 		"""
 		the deterministic funding method using specific inputs
 		"""
@@ -422,21 +421,22 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			return 'skip'
 		self.write_to_tmpfile('miner.key',f'{self.miner_wif}\n')
 		keyfile = joinpath(self.tmpdir,'miner.key')
+
 		return self.user_txdo(
 			'bob', '40s',
-			[ f'{addr},{rtFundAmt}', self.burn_addr ],
+			[ f'{addr},{rtFundAmt}', make_burn_addr(self.proto) ],
 			utxo_nums,
 			extra_args = [f'--keys-from-file={keyfile}'],
 			skip_passphrase = skip_passphrase )
 
-	def fund_bob2(self):
-		return self.fund_wallet2( 'bob', f'{self._user_sid("bob")}:C:1', '1-11' )
+	def fund_bob_deterministic(self):
+		return self.fund_wallet_deterministic( 'bob', f'{self._user_sid("bob")}:C:1', '1-11' )
 
-	def fund_alice2(self):
+	def fund_alice_deterministic(self):
 		sid = self._user_sid('alice')
 		mmtype = ('L','S')[self.proto.cap('segwit')]
 		addr = self.get_addr_from_addrlist('alice',sid,mmtype,0,addr_range='1-5')
-		return self.fund_wallet2( 'alice', addr, '1-11', skip_passphrase=True )
+		return self.fund_wallet_deterministic( 'alice', addr, '1-11', skip_passphrase=True )
 
 	async def bob_recreate_tracking_wallet(self):
 		if not self.deterministic:
