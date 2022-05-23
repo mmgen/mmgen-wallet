@@ -404,11 +404,10 @@ computer and issue the following commands:
 	$ git checkout master
 	$ git pull
 	$ git checkout stable_msys2 # See 'Note' to step 9
-	$ rm -r dist/* build/*
+	$ rm -rf dist build
 	$ rm -r /mingw64/lib/python*/site-packages/{mmgen,MMGen}*
 	$ python3 -m build --no-isolation
-	$ cd ..
-	$ python3 -m pip install --upgrade mmgen/dist/*.whl
+	$ python3 -m pip install --upgrade dist/*.whl
 
 To update your offline installation, copy the updated repository (after `git
 pull`) to your offline machine, `cd` to the root of the copied repository and
