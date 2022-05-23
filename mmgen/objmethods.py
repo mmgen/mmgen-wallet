@@ -46,7 +46,7 @@ class Hilite:
 	# 'width' is screen width (greater than len(s) for CJK strings)
 	# 'append_chars' and 'encl' must consist of single-width chars only
 	def fmtc(cls,s,width=None,color=False,encl='',trunc_ok=None,
-				center=False,nullrepl='',append_chars='',append_color=False):
+				center=False,nullrepl='',append_chars='',append_color=False,color_override=''):
 		s_wide_count = len([1 for ch in s if unicodedata.east_asian_width(ch) in ('F','W')])
 		if encl:
 			a,b = list(encl)
@@ -77,7 +77,7 @@ class Hilite:
 					append_chars.ljust(width-len(s)-s_wide_count),
 					color_override = append_color ))
 		else:
-			return cls.colorize(s.ljust(width-s_wide_count),color=color)
+			return cls.colorize(s.ljust(width-s_wide_count),color=color,color_override=color_override)
 
 	@classmethod
 	def colorize(cls,s,color=True,color_override=''):
@@ -88,11 +88,11 @@ class Hilite:
 		return self.fmtc(self,*args,**kwargs)
 
 	@classmethod
-	def hlc(cls,s,color=True,encl=''):
+	def hlc(cls,s,color=True,encl='',color_override=''):
 		if encl:
 			assert isinstance(encl,str) and len(encl) == 2, "'encl' must be 2-character str"
 			s = encl[0] + s + encl[1]
-		return cls.colorize(s,color=color)
+		return cls.colorize(s,color=color,color_override=color_override)
 
 	def hl(self,*args,**kwargs):
 		assert args == () # forbid invocation w/o keywords

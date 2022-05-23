@@ -126,7 +126,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		self.bad_msg_count = 0
 
 	def __del__(self):
-		if g.platform == 'win':
+		if g.platform == 'win' or self.tr == None:
 			return
 		if self.simulate or not self.live:
 			LEDControl.delete_dummy_control_files()

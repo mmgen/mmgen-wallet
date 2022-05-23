@@ -281,8 +281,8 @@ class Int(int,Hilite,InitErrors):
 		cls.method_not_implemented()
 
 	@classmethod
-	def colorize(cls,n,color=True):
-		return super().colorize(repr(n),color=color)
+	def colorize(cls,n,**kwargs):
+		return super().colorize(repr(n),**kwargs)
 
 class MMGenIdx(Int):
 	min_val = 1
@@ -315,6 +315,12 @@ class HexStr(str,Hilite,InitErrors):
 			return str.__new__(cls,s)
 		except Exception as e:
 			return cls.init_fail(e,s)
+
+	def truncate(self,width,color=True,color_override=''):
+		return self.colorize(
+			self if width == None or width >= self.width else self[:width-2] + '..',
+			color = color,
+			color_override = color_override )
 
 class CoinTxID(HexStr):
 	color,width,hexcase = ('purple',64,'lower')

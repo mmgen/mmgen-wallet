@@ -48,13 +48,13 @@ rt_data = {
 	'rtBals': {
 		'btc': ('499.9999488','399.9998282','399.9998147','399.9996877',
 				'52.99980410','946.99933647','999.99914057','52.9999',
-				'946.99933647'),
+				'946.99933647','0.4169328'),
 		'bch': ('499.9999484','399.9999194','399.9998972','399.9997692',
 				'46.78890380','953.20966920','999.99857300','46.789',
-				'953.2096692'),
+				'953.2096692','0.4169328'),
 		'ltc': ('5499.99744','5399.994425','5399.993885','5399.987535',
 				'52.98520500','10946.93753500','10999.92274000','52.99',
-				'10946.937535'),
+				'10946.937535','0.41364'),
 	},
 	'rtBals_gb': {
 		'btc': {
@@ -590,8 +590,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_twview4(self):
 		sid = self._user_sid('bob')
-		amt = ('0.4169328','0.41364')[self.proto.coin=='LTC']
-		return self.user_twview('bob',chk=(sid+':L:5',amt),sort='twmmid')
+		return self.user_twview('bob',chk=(sid+':L:5',rtBals[9]),sort='twmmid')
 
 	def bob_getbalance(self,bals,confs=1):
 		for i in (0,1,2):
@@ -839,25 +838,27 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		self.write_to_tmpfile('non-mmgen.addrs','\n'.join([a[1] for a in pairs])+'\n')
 		return self.user_txdo('bob',rtFee[4],[pairs[0][1]],'3')
 
-	def user_import(self,user,args):
+	def user_import(self,user,args,nAddr):
 		t = self.spawn('mmgen-addrimport',['--'+user]+args)
 		if g.debug:
 			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
-		t.expect('Importing')
-		t.expect('OK')
+		t.expect(f'Importing {nAddr} address')
+		if '--rescan' in args:
+			for i in range(nAddr):
+				t.expect('OK')
 		return t
 
 	def bob_import_addr(self):
 		addr = self.read_from_tmpfile('non-mmgen.addrs').split()[0]
-		return self.user_import('bob',['--quiet','--address='+addr])
+		return self.user_import('bob',['--quiet','--address='+addr],nAddr=1)
 
 	def bob_import_list(self):
 		addrfile = joinpath(self.tmpdir,'non-mmgen.addrs')
-		return self.user_import('bob',['--quiet','--addrlist',addrfile])
+		return self.user_import('bob',['--quiet','--addrlist',addrfile],nAddr=5)
 
 	def bob_import_list_rescan(self):
 		addrfile = joinpath(self.tmpdir,'non-mmgen.addrs')
-		return self.user_import('bob',['--quiet','--rescan','--addrlist',addrfile])
+		return self.user_import('bob',['--quiet','--rescan','--addrlist',addrfile],nAddr=5)
 
 	def bob_split2(self):
 		addrs = self.read_from_tmpfile('non-mmgen.addrs').split()
