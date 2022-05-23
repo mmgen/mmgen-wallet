@@ -24,9 +24,9 @@ import time
 
 from ..globalvars import g
 from ..objmethods import Hilite,InitErrors,MMGenObject
-from ..obj import TwComment,get_obj,MMGenIdx
-from ..color import red,yellow
-from ..util import msg,msg_r,die,line_input,do_pager,capfirst
+from ..obj import TwComment,get_obj,MMGenIdx,MMGenList
+from ..color import nocolor,red,yellow,green
+from ..util import msg,msg_r,fmt,die,line_input,do_pager,capfirst,make_timestr
 from ..addr import MMGenID
 
 # mixin class for TwUnspentOutputs,TwAddrList:
@@ -57,6 +57,22 @@ class TwCommon:
 			return self.rpc.blockcount - (o.confs - 1)
 		else:
 			return self.date_formatter[age_fmt](self.rpc,o.date)
+
+	async def get_data(self,sort_key=None,reverse_sort=False):
+
+		rpc_data = await self.get_rpc_data()
+
+		if not rpc_data:
+			die(0,fmt(self.no_rpcdata_errmsg).strip())
+
+		lbl_id = ('account','label')['label_api' in self.rpc.caps]
+
+		self.data = MMGenList(self.gen_data(rpc_data,lbl_id))
+
+		if not self.data:
+			die(1,self.no_data_errmsg)
+
+		self.do_sort(key=sort_key,reverse=reverse_sort)
 
 	@staticmethod
 	async def set_dates(rpc,us):
@@ -111,6 +127,51 @@ class TwCommon:
 		self.sort_key = key
 		assert type(reverse) == bool
 		self.data.sort(key=sort_funcs[key],reverse=reverse or self.reverse)
+
+	async def format_for_display(self):
+		data = self.data
+		if self.has_age and self.age_fmt in self.age_fmts_date_dependent:
+			await self.set_dates(self.rpc,data)
+		self.set_term_columns()
+
+		c = getattr(self,'display_constants',None)
+		if not c:
+			c = self.display_constants = self.get_display_constants()
+
+		if self.group and (self.sort_key in ('addr','txid','twmmid')):
+			for a,b in [(data[i],data[i+1]) for i in range(len(data)-1)]:
+				for k in ('addr','txid','twmmid'):
+					if self.sort_key == k and getattr(a,k) == getattr(b,k):
+						b.skip = (k,'addr')[k=='twmmid']
+
+		self.fmt_display = (
+			self.hdr_fmt.format(
+				a = ' '.join(self.sort_info()),
+				b = self.proto.dcoin,
+				c = self.total.hl() if hasattr(self,'total') else None )
+			+ ('\nChain: '+green(self.proto.chain_name.upper()) if self.proto.chain_name != 'mainnet' else '')
+			+ '\n' + '\n'.join(self.gen_display_output(c))
+			+ '\n'
+		)
+
+		return self.fmt_display
+
+	async def format_for_printing(self,color=False,show_confs=True):
+		if self.has_age:
+			await self.set_dates(self.rpc,self.data)
+
+		self.fmt_print = self.print_hdr_fs.format(
+			a = capfirst(self.desc),
+			b = self.rpc.blockcount,
+			c = make_timestr(self.rpc.cur_date),
+			d = ('' if self.proto.chain_name == 'mainnet' else
+				'Chain: {}\n'.format((nocolor,green)[color](self.proto.chain_name.upper())) ),
+			e = ' '.join(self.sort_info(include_group=False)),
+			f = '\n'.join(self.gen_print_output(color,show_confs)),
+			g = self.proto.dcoin,
+			h = self.total.hl(color=color) if hasattr(self,'total') else None )
+
+		return self.fmt_print
 
 	async def item_action_loop(self,action):
 		msg('')
