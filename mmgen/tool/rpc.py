@@ -96,6 +96,20 @@ class tool_cmd(tool_cmd_base):
 			die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
 		return await al.format( showbtcaddrs, sort, show_age, age_fmt or 'confs' )
 
+	async def twops(self,
+			obj,pager,reverse,wide,sort,age_fmt,show_mmid,wide_show_confs,interactive):
+		obj.reverse = reverse
+		obj.age_fmt = age_fmt
+		obj.show_mmid = show_mmid
+		await obj.get_data(sort_key=sort,reverse_sort=reverse)
+		if interactive:
+			await obj.view_and_sort()
+			return True
+		elif wide:
+			return await obj.format_for_printing( color=True, show_confs=wide_show_confs )
+		else:
+			return await obj.format_for_display()
+
 	async def twview(self,
 			pager           = False,
 			reverse         = False,
@@ -104,20 +118,16 @@ class tool_cmd(tool_cmd_base):
 			sort            = 'age',
 			age_fmt: options_annot_str(TwCommon.age_fmts) = 'confs',
 			show_mmid       = True,
-			wide_show_confs = True ):
-		"view tracking wallet"
+			wide_show_confs = True,
+			interactive     = False ):
+		"view tracking wallet unspent outputs"
 
 		from ..tw.unspent import TwUnspentOutputs
-		twuo = await TwUnspentOutputs(self.proto,minconf=minconf)
-		await twuo.get_data(reverse_sort=reverse)
-		twuo.age_fmt = age_fmt
-		twuo.show_mmid = show_mmid
-		if wide:
-			ret = twuo.format_for_printing( color=True, show_confs=wide_show_confs )
-		else:
-			ret = twuo.format_for_display()
-		del twuo.wallet
-		return await ret
+		obj = await TwUnspentOutputs(self.proto,minconf=minconf)
+		ret = await self.twops(
+			obj,pager,reverse,wide,sort,age_fmt,show_mmid,wide_show_confs,interactive)
+		del obj.wallet
+		return ret
 
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"

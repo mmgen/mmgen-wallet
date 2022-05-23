@@ -173,7 +173,7 @@ class TwCommon:
 
 		return self.fmt_print
 
-	async def view_and_sort(self,tx):
+	async def view_and_sort(self):
 		from ..opts import opt
 		from ..term import get_char
 		self.prompt = type(self).prompt.strip() + '\b'
