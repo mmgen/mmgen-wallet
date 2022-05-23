@@ -238,7 +238,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			len(self.data),
 			suf(self.data) ))
 
-	class item_action:
+	class item_action(TwCommon.item_action):
 
 		async def a_balance_refresh(self,uo,idx):
 			if not keypress_confirm(

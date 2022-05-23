@@ -173,35 +173,27 @@ class TwCommon:
 
 		return self.fmt_print
 
-	async def item_action_loop(self,action):
-		msg('')
-		while True:
-			ret = line_input(f'Enter {self.item_desc} number (or RETURN to return to main menu): ')
-			if ret == '':
-				return None
-			idx = get_obj(MMGenIdx,n=ret,silent=True)
-			if not idx or idx < 1 or idx > len(self.data):
-				msg(f'Choice must be a single number between 1 and {len(self.data)}')
-			elif (await action(self,idx)) != 'redo':
-				break
-
 	async def view_and_sort(self,tx):
 		from ..opts import opt
 		from ..term import get_char
-		prompt = self.prompt.strip() + '\b'
-		no_output = False
+		self.prompt = type(self).prompt.strip() + '\b'
+		self.no_output = False
 		self.oneshot_msg = None
 		CUR_HOME  = '\033[H'
 		ERASE_ALL = '\033[0J'
-		CUR_RIGHT = lambda n: f'\033[{n}C'
 
 		while True:
-			msg_r('' if no_output else '\n\n' if opt.no_blank else CUR_HOME+ERASE_ALL)
+			msg_r('' if self.no_output else '\n\n' if opt.no_blank else CUR_HOME+ERASE_ALL)
 			reply = get_char(
-				'' if no_output else await self.format_for_display()+'\n'+(self.oneshot_msg or '')+prompt,
-				immed_chars=''.join(self.key_mappings.keys())
+				'' if self.no_output else (
+					await self.format_for_display()
+					+ '\n'
+					+ (self.oneshot_msg or '')
+					+ self.prompt
+				),
+				immed_chars = ''.join(self.key_mappings.keys())
 			)
-			no_output = False
+			self.no_output = False
 			self.oneshot_msg = '' if self.oneshot_msg else None # tristate, saves previous state
 			if reply not in self.key_mappings:
 				msg_r('\ninvalid keypress ')
@@ -229,33 +221,68 @@ class TwCommon:
 			elif action == 'a_quit':
 				msg('')
 				return self.data
-			elif action == 'a_print':
-				of = '{}-{}[{}].out'.format(
-					self.dump_fn_pfx,
-					self.proto.dcoin,
-					','.join(self.sort_info(include_group=False)).lower() )
-				msg('')
-				from ..fileutil import write_data_to_file
-				from ..exception import UserNonConfirmation
-				try:
-					write_data_to_file(
-						of,
-						await self.format_for_printing(color=False),
-						desc = f'{self.desc} listing' )
-				except UserNonConfirmation as e:
-					self.oneshot_msg = red(f'File {of!r} not overwritten by user request\n\n')
-				else:
-					self.oneshot_msg = yellow(f'Data written to {of!r}\n\n')
-			elif action in ('a_view','a_view_wide'):
-				do_pager(
-					self.fmt_display if action == 'a_view' else
-					await self.format_for_printing(color=True) )
-				if g.platform == 'linux' and self.oneshot_msg == None:
-					msg_r(CUR_RIGHT(len(prompt.split('\n')[-1])-2))
-					no_output = True
-			elif hasattr(self,'item_action') and hasattr(self.item_action,action):
-				await self.item_action_loop(getattr(self.item_action(),action))
+			elif hasattr(self.action,action):
+				await self.action(self).run(action)
+			elif hasattr(self.item_action,action):
+				await self.item_action(self).run(action)
 				self.display_constants = self.get_display_constants()
+
+	class action:
+
+		def __init__(self,parent):
+			self.parent = parent
+
+		async def run(self,action):
+			await getattr(self,action)(self.parent)
+
+		async def a_print(self,parent):
+			outfile = '{}-{}[{}].out'.format(
+				parent.dump_fn_pfx,
+				parent.proto.dcoin,
+				','.join(parent.sort_info(include_group=False)).lower() )
+			msg('')
+			from ..fileutil import write_data_to_file
+			from ..exception import UserNonConfirmation
+			try:
+				write_data_to_file(
+					outfile,
+					await parent.format_for_printing(color=False),
+					desc = f'{parent.desc} listing' )
+			except UserNonConfirmation as e:
+				parent.oneshot_msg = red(f'File {outfile!r} not overwritten by user request\n\n')
+			else:
+				parent.oneshot_msg = yellow(f'Data written to {outfile!r}\n\n')
+
+		async def a_view(self,parent):
+			do_pager(parent.fmt_display)
+			self.post_view(parent)
+
+		async def a_view_wide(self,parent):
+			do_pager( await parent.format_for_printing(color=True) )
+			self.post_view(parent)
+
+		def post_view(self,parent):
+			if g.platform == 'linux' and parent.oneshot_msg == None:
+				CUR_RIGHT = lambda n: f'\033[{n}C'
+				msg_r(CUR_RIGHT(len(parent.prompt.split('\n')[-1])-2))
+				parent.no_output = True
+
+	class item_action:
+
+		def __init__(self,parent):
+			self.parent = parent
+
+		async def run(self,action):
+			msg('')
+			while True:
+				ret = line_input(f'Enter {self.parent.item_desc} number (or RETURN to return to main menu): ')
+				if ret == '':
+					return None
+				idx = get_obj(MMGenIdx,n=ret,silent=True)
+				if not idx or idx < 1 or idx > len(self.parent.data):
+					msg(f'Choice must be a single number between 1 and {len(self.parent.data)}')
+				elif (await getattr(self,action)(self.parent,idx)) != 'redo':
+					break
 
 class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
