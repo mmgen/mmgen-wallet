@@ -27,7 +27,6 @@ from ..globalvars import g
 from ..color import red,yellow,green
 from ..util import (
 	msg,
-	msg_r,
 	die,
 	capfirst,
 	suf,
@@ -35,7 +34,6 @@ from ..util import (
 	make_timestr,
 	keypress_confirm,
 	line_input,
-	do_pager,
 	base_proto_tw_subclass
 )
 from ..base_obj import AsyncInit
@@ -298,36 +296,53 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			len(self.data),
 			suf(self.data) ))
 
-	def get_idx_from_user(self,action):
-		msg('')
-		while True:
-			ret = line_input(f'Enter {self.item_desc} number (or RETURN to return to main menu): ')
-			if ret == '':
-				return (None,None) if action == 'a_lbl_add' else None
-			n = get_obj(MMGenIdx,n=ret,silent=True)
-			if not n or n < 1 or n > len(self.data):
-				msg(f'Choice must be a single number between 1 and {len(self.data)}')
+	class item_action:
+
+		async def a_balance_refresh(self,uo,idx):
+			if not keypress_confirm(
+					f'Refreshing tracking wallet {uo.item_desc} #{idx}.  Is this what you want?'):
+				return 'redo'
+			await uo.wallet.get_balance( uo.data[idx-1].addr, force_rpc=True )
+			await uo.get_data()
+			uo.oneshot_msg = yellow(f'{uo.proto.dcoin} balance for account #{idx} refreshed\n\n')
+
+		async def a_addr_delete(self,uo,idx):
+			if not keypress_confirm(
+					f'Removing {uo.item_desc} #{idx} from tracking wallet.  Is this what you want?'):
+				return 'redo'
+			if await uo.wallet.remove_address( uo.data[idx-1].addr ):
+				await uo.get_data()
+				uo.oneshot_msg = yellow(f'{capfirst(uo.item_desc)} #{idx} removed\n\n')
 			else:
-				if action == 'a_lbl_add':
-					cur_lbl = self.data[n-1].label
-					msg('Current label: {}'.format(cur_lbl.hl() if cur_lbl else '(none)'))
-					while True:
-						s = line_input(
-							"Enter label text (or 'q' to return to main menu): ",
-							insert_txt = cur_lbl )
-						if s == 'q':
-							return None,None
-						elif s == '':
-							if keypress_confirm(
-									f'Removing label for {self.item_desc} #{n}.  Is this what you want?'):
-								return n,s
-						elif s:
-							if get_obj(TwComment,s=s):
-								return n,s
+				import asyncio
+				await asyncio.sleep(3)
+				uo.oneshot_msg = red('Address could not be removed\n\n')
+
+		async def a_lbl_add(self,uo,idx):
+
+			async def do_lbl_add(lbl):
+				e = uo.data[idx-1]
+				if await uo.wallet.add_label( e.twmmid, lbl, addr=e.addr ):
+					await uo.get_data()
+					uo.oneshot_msg = yellow('Label {} {} #{}\n\n'.format(
+						('added to' if lbl else 'removed from'),
+						uo.item_desc,
+						idx ))
 				else:
-					if action == 'a_addr_delete':
-						fs = 'Removing {} #{} from tracking wallet.  Is this what you want?'
-					elif action == 'a_balance_refresh':
-						fs = 'Refreshing tracking wallet {} #{}.  Is this what you want?'
-					if keypress_confirm(fs.format(self.item_desc,n)):
-						return n
+					import asyncio
+					await asyncio.sleep(3)
+					uo.oneshot_msg = red('Label could not be added\n\n')
+
+			cur_lbl = uo.data[idx-1].label
+			msg('Current label: {}'.format(cur_lbl.hl() if cur_lbl else '(none)'))
+
+			res = line_input(
+				"Enter label text (or ENTER to return to main menu): ",
+				insert_txt = cur_lbl )
+			if res == cur_lbl:
+				return None
+			elif res == '':
+				return (await do_lbl_add(res)) if keypress_confirm(
+					f'Removing label for {uo.item_desc} #{idx}.  Is this what you want?') else 'redo'
+			else:
+				return (await do_lbl_add(res)) if get_obj(TwComment,s=res) else 'redo'

@@ -24,7 +24,7 @@ import time
 
 from ..globalvars import g
 from ..objmethods import Hilite,InitErrors,MMGenObject
-from ..obj import TwComment
+from ..obj import TwComment,get_obj,MMGenIdx
 from ..color import red,yellow
 from ..util import msg,msg_r,die,line_input,do_pager,capfirst
 from ..addr import MMGenID
@@ -112,12 +112,24 @@ class TwCommon:
 		assert type(reverse) == bool
 		self.data.sort(key=sort_funcs[key],reverse=reverse or self.reverse)
 
+	async def item_action_loop(self,action):
+		msg('')
+		while True:
+			ret = line_input(f'Enter {self.item_desc} number (or RETURN to return to main menu): ')
+			if ret == '':
+				return None
+			idx = get_obj(MMGenIdx,n=ret,silent=True)
+			if not idx or idx < 1 or idx > len(self.data):
+				msg(f'Choice must be a single number between 1 and {len(self.data)}')
+			elif (await action(self,idx)) != 'redo':
+				break
+
 	async def view_and_sort(self,tx):
 		from ..opts import opt
 		from ..term import get_char
 		prompt = self.prompt.strip() + '\b'
 		no_output = False
-		oneshot_msg = None
+		self.oneshot_msg = None
 		CUR_HOME  = '\033[H'
 		ERASE_ALL = '\033[0J'
 		CUR_RIGHT = lambda n: f'\033[{n}C'
@@ -125,11 +137,11 @@ class TwCommon:
 		while True:
 			msg_r('' if no_output else '\n\n' if opt.no_blank else CUR_HOME+ERASE_ALL)
 			reply = get_char(
-				'' if no_output else await self.format_for_display()+'\n'+(oneshot_msg or '')+prompt,
+				'' if no_output else await self.format_for_display()+'\n'+(self.oneshot_msg or '')+prompt,
 				immed_chars=''.join(self.key_mappings.keys())
 			)
 			no_output = False
-			oneshot_msg = '' if oneshot_msg else None # tristate, saves previous state
+			self.oneshot_msg = '' if self.oneshot_msg else None # tristate, saves previous state
 			if reply not in self.key_mappings:
 				msg_r('\ninvalid keypress ')
 				time.sleep(0.5)
@@ -156,37 +168,6 @@ class TwCommon:
 			elif action == 'a_quit':
 				msg('')
 				return self.data
-			elif action == 'a_balance_refresh':
-				idx = self.get_idx_from_user(action)
-				if idx:
-					e = self.data[idx-1]
-					bal = await self.wallet.get_balance(e.addr,force_rpc=True)
-					await self.get_data()
-					oneshot_msg = yellow(f'{self.proto.dcoin} balance for account #{idx} refreshed\n\n')
-				self.display_constants = self.get_display_constants()
-			elif action == 'a_lbl_add':
-				idx,lbl = self.get_idx_from_user(action)
-				if idx:
-					e = self.data[idx-1]
-					if await self.wallet.add_label(e.twmmid,lbl,addr=e.addr):
-						await self.get_data()
-						oneshot_msg = yellow('Label {} {} #{}\n\n'.format(
-							('added to' if lbl else 'removed from'),
-							self.item_desc,
-							idx ))
-					else:
-						oneshot_msg = red('Label could not be added\n\n')
-				self.display_constants = self.get_display_constants()
-			elif action == 'a_addr_delete':
-				idx = self.get_idx_from_user(action)
-				if idx:
-					e = self.data[idx-1]
-					if await self.wallet.remove_address(e.addr):
-						await self.get_data()
-						oneshot_msg = yellow(f'{capfirst(self.item_desc)} #{idx} removed\n\n')
-					else:
-						oneshot_msg = red('Address could not be removed\n\n')
-				self.display_constants = self.get_display_constants()
 			elif action == 'a_print':
 				of = '{}-{}[{}].out'.format(
 					self.dump_fn_pfx,
@@ -201,16 +182,19 @@ class TwCommon:
 						await self.format_for_printing(color=False),
 						desc = f'{self.desc} listing' )
 				except UserNonConfirmation as e:
-					oneshot_msg = red(f'File {of!r} not overwritten by user request\n\n')
+					self.oneshot_msg = red(f'File {of!r} not overwritten by user request\n\n')
 				else:
-					oneshot_msg = yellow(f'Data written to {of!r}\n\n')
+					self.oneshot_msg = yellow(f'Data written to {of!r}\n\n')
 			elif action in ('a_view','a_view_wide'):
 				do_pager(
 					self.fmt_display if action == 'a_view' else
 					await self.format_for_printing(color=True) )
-				if g.platform == 'linux' and oneshot_msg == None:
+				if g.platform == 'linux' and self.oneshot_msg == None:
 					msg_r(CUR_RIGHT(len(prompt.split('\n')[-1])-2))
 					no_output = True
+			elif hasattr(self,'item_action') and hasattr(self.item_action,action):
+				await self.item_action_loop(getattr(self.item_action(),action))
+				self.display_constants = self.get_display_constants()
 
 class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
