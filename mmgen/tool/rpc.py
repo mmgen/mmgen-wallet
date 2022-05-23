@@ -97,7 +97,7 @@ class tool_cmd(tool_cmd_base):
 		return await al.format( showbtcaddrs, sort, show_age, age_fmt or 'confs' )
 
 	async def twops(self,
-			obj,pager,reverse,wide,sort,age_fmt,show_mmid,wide_show_confs,interactive):
+			obj,pager,reverse,detail,sort,age_fmt,interactive,show_mmid):
 
 		obj.interactive = interactive
 		obj.reverse = reverse
@@ -109,10 +109,10 @@ class tool_cmd(tool_cmd_base):
 		if interactive:
 			await obj.view_and_sort()
 			return True
-		elif wide:
-			return await obj.format_for_printing( color=True, show_confs=wide_show_confs )
+		elif detail:
+			return await obj.format_detail( color=True )
 		else:
-			return await obj.format_for_display()
+			return await obj.format_squeezed()
 
 	async def twview(self,
 			pager           = False,
@@ -121,15 +121,14 @@ class tool_cmd(tool_cmd_base):
 			minconf         = 1,
 			sort            = 'age',
 			age_fmt: options_annot_str(TwCommon.age_fmts) = 'confs',
-			show_mmid       = True,
-			wide_show_confs = True,
-			interactive     = False ):
+			interactive     = False,
+			show_mmid       = True ):
 		"view tracking wallet unspent outputs"
 
 		from ..tw.unspent import TwUnspentOutputs
 		obj = await TwUnspentOutputs(self.proto,minconf=minconf)
 		ret = await self.twops(
-			obj,pager,reverse,wide,sort,age_fmt,show_mmid,wide_show_confs,interactive)
+			obj,pager,reverse,wide,sort,age_fmt,interactive,show_mmid)
 		del obj.wallet
 		return ret
 

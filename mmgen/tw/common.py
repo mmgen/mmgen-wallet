@@ -25,15 +25,13 @@ import sys,time
 from ..globalvars import g
 from ..objmethods import Hilite,InitErrors,MMGenObject
 from ..obj import TwComment,get_obj,MMGenIdx,MMGenList
-from ..color import nocolor,red,yellow,green
+from ..color import nocolor,yellow,green
 from ..util import msg,msg_r,fmt,die,line_input,do_pager,capfirst,make_timestr
 from ..addr import MMGenID
 
 # mixin class for TwUnspentOutputs,TwAddrList:
 class TwCommon:
 
-	fmt_display = ''
-	fmt_print   = ''
 	cols        = None
 	reverse     = False
 	group       = False
@@ -44,6 +42,14 @@ class TwCommon:
 	age_fmts_date_dependent = ('days','date','date_time')
 	age_fmts_interactive = ('confs','block','days','date')
 	_age_fmt = 'confs'
+
+	age_col_params = {
+		'confs':     (7,  'Confs'),
+		'block':     (8,  'Block'),
+		'days':      (6,  'Age(d)'),
+		'date':      (8,  'Date'),
+		'date_time': (16, 'Date/Time'),
+	}
 
 	date_formatter = {
 		'days': lambda rpc,secs: (rpc.cur_date - secs) // 86400 if secs else 0,
@@ -72,7 +78,8 @@ class TwCommon:
 
 		lbl_id = ('account','label')['label_api' in self.rpc.caps]
 
-		self.data = MMGenList(self.gen_data(rpc_data,lbl_id))
+		res = self.gen_data(rpc_data,lbl_id)
+		self.data = MMGenList(await res if type(res).__name__ == 'coroutine' else res)
 
 		if not self.data:
 			die(1,self.no_data_errmsg)
@@ -87,6 +94,14 @@ class TwCommon:
 				for o in await rpc.gathered_call('gettransaction',[(o.txid,) for o in us]) ]
 			for idx,o in enumerate(us):
 				o.date = dates[idx]
+
+	@property
+	def age_w(self):
+		return self.age_col_params[self.age_fmt][0]
+
+	@property
+	def age_hdr(self):
+		return self.age_col_params[self.age_fmt][1]
 
 	@property
 	def age_fmt(self):
@@ -124,9 +139,17 @@ class TwCommon:
 			else:
 				return min_cols
 
+	sort_disp = {
+		'addr':   'Addr',
+		'age':    'Age',
+		'amt':    'Amt',
+		'txid':   'TxID',
+		'twmmid': 'MMGenID',
+	}
+
 	def sort_info(self,include_group=True):
 		ret = ([],['Reverse'])[self.reverse]
-		ret.append(capfirst(self.sort_key).replace('Twmmid','MMGenID'))
+		ret.append(self.sort_disp[self.sort_key])
 		if include_group and self.group and (self.sort_key in ('addr','txid','twmmid')):
 			ret.append('Grouped')
 		return ret
@@ -147,48 +170,53 @@ class TwCommon:
 		assert type(reverse) == bool
 		self.data.sort(key=self.sort_funcs[key],reverse=reverse or self.reverse)
 
-	async def format_for_display(self):
-		data = self.data
-		if self.has_age and self.age_fmt in self.age_fmts_date_dependent:
-			await self.set_dates(self.rpc,data)
+	async def format_squeezed(self,color=True,cached=False):
 
-		if not getattr(self,'column_params',None):
-			self.set_column_params()
+		if not cached:
+			data = self.data
+			if self.has_age and self.age_fmt in self.age_fmts_date_dependent:
+				await self.set_dates(self.rpc,data)
 
-		if self.group and (self.sort_key in ('addr','txid','twmmid')):
-			for a,b in [(data[i],data[i+1]) for i in range(len(data)-1)]:
-				for k in ('addr','txid','twmmid'):
-					if self.sort_key == k and getattr(a,k) == getattr(b,k):
-						b.skip = (k,'addr')[k=='twmmid']
+			if not getattr(self,'column_params',None):
+				self.set_column_params()
 
-		self.fmt_display = (
-			self.hdr_fmt.format(
-				a = ' '.join(self.sort_info()),
-				b = self.proto.dcoin,
-				c = self.total.hl() if hasattr(self,'total') else None )
-			+ ('\nChain: '+green(self.proto.chain_name.upper()) if self.proto.chain_name != 'mainnet' else '')
-			+ '\n' + '\n'.join(self.gen_display_output(self.column_params))
-			+ '\n'
-		)
+			if self.group and (self.sort_key in ('addr','txid','twmmid')):
+				for a,b in [(data[i],data[i+1]) for i in range(len(data)-1)]:
+					for k in ('addr','txid','twmmid'):
+						if self.sort_key == k and getattr(a,k) == getattr(b,k):
+							b.skip = (k,'addr')[k=='twmmid']
 
-		return self.fmt_display
+			self._format_squeezed_display_data = (
+				self.hdr_fmt.format(
+					a = ' '.join(self.sort_info()),
+					b = self.proto.dcoin,
+					c = self.total.hl() if hasattr(self,'total') else None )
+				+ '\nNetwork: {}'.format((nocolor,green)[color](
+					self.proto.coin + ' ' +
+					self.proto.chain_name.upper() ))
+				+ '\n' + '\n'.join(self.gen_squeezed_display(self.column_params,color=color))
+				+ '\n'
+			)
 
-	async def format_for_printing(self,color=False,show_confs=True):
+		return self._format_squeezed_display_data
+
+	async def format_detail(self,color):
 		if self.has_age:
 			await self.set_dates(self.rpc,self.data)
 
-		self.fmt_print = self.print_hdr_fs.format(
+		sep = self.detail_display_separator
+
+		return self.print_hdr_fs.format(
 			a = capfirst(self.desc),
 			b = self.rpc.blockcount,
 			c = make_timestr(self.rpc.cur_date),
-			d = ('' if self.proto.chain_name == 'mainnet' else
-				'Chain: {}\n'.format((nocolor,green)[color](self.proto.chain_name.upper())) ),
+			d = 'Network: {}\n'.format((nocolor,green)[color](
+				self.proto.coin + ' ' +
+				self.proto.chain_name.upper() )),
 			e = ' '.join(self.sort_info(include_group=False)),
-			f = '\n'.join(self.gen_print_output(color,show_confs)),
+			f = sep.join(self.gen_detail_display(color)),
 			g = self.proto.dcoin,
 			h = self.total.hl(color=color) if hasattr(self,'total') else None )
-
-		return self.fmt_print
 
 	async def view_and_sort(self):
 		from ..opts import opt
@@ -201,10 +229,10 @@ class TwCommon:
 		ERASE_ALL = '\033[0J'
 
 		while True:
-			msg_r('' if self.no_output else '\n\n' if opt.no_blank else CUR_HOME+ERASE_ALL)
+			msg_r('' if self.no_output else '\n\n' if (opt.no_blank or g.test_suite) else CUR_HOME+ERASE_ALL)
 			reply = get_char(
 				'' if self.no_output else (
-					await self.format_for_display()
+					await self.format_squeezed()
 					+ '\n'
 					+ (self.oneshot_msg or '')
 					+ self.prompt
@@ -219,67 +247,73 @@ class TwCommon:
 				continue
 
 			action = self.key_mappings[reply]
-			if action.startswith('s_'):
+			if hasattr(self.action,action):
+				await self.action().run(self,action)
+			elif action.startswith('s_'): # put here to allow overriding by action method
 				self.do_sort(action[2:])
-				if action == 's_twmmid':
-					self.show_mmid = True
-			elif action == 'd_days':
-				af = self.age_fmts_interactive
-				self.age_fmt = af[(af.index(self.age_fmt) + 1) % len(af)]
-				if self.update_params_on_age_toggle:
-					self.set_column_params()
-			elif action == 'd_mmid':
-				self.show_mmid = not self.show_mmid
-			elif action == 'd_group':
-				if self.can_group:
-					self.group = not self.group
-			elif action == 'd_redraw':
+			elif hasattr(self.item_action,action):
+				await self.item_action().run(self,action)
 				self.set_column_params()
-			elif action == 'd_reverse':
-				self.data.reverse()
-				self.reverse = not self.reverse
 			elif action == 'a_quit':
 				msg('')
 				return self.data
-			elif hasattr(self.action,action):
-				await self.action(self).run(action)
-			elif hasattr(self.item_action,action):
-				await self.item_action(self).run(action)
-				self.set_column_params()
 
 	class action:
 
-		def __init__(self,parent):
-			self.parent = parent
+		async def run(self,parent,action):
+			ret = getattr(self,action)(parent)
+			if type(ret).__name__ == 'coroutine':
+				await ret
 
-		async def run(self,action):
-			await getattr(self,action)(self.parent)
+		def d_days(self,parent):
+			af = parent.age_fmts_interactive
+			parent.age_fmt = af[(af.index(parent.age_fmt) + 1) % len(af)]
+			if parent.update_params_on_age_toggle:
+				parent.set_column_params()
 
-		async def a_print(self,parent):
-			outfile = '{}-{}{}[{}].out'.format(
+		def d_redraw(self,parent):
+			parent.set_column_params()
+
+		def d_reverse(self,parent):
+			parent.data.reverse()
+			parent.reverse = not parent.reverse
+
+		async def a_print_detail(self,parent):
+			return await self._print(parent,output_type='detail')
+
+		async def a_print_squeezed(self,parent):
+			return await self._print(parent,output_type='squeezed')
+
+		async def _print(self,parent,output_type):
+			outfile = '{}{}-{}{}[{}].out'.format(
 				parent.dump_fn_pfx,
+				f'-{output_type}' if len(parent.print_output_types) > 1 else '',
 				parent.proto.dcoin,
 				('' if parent.proto.network == 'mainnet' else '-'+parent.proto.network.upper()),
-				','.join(parent.sort_info(include_group=False)).lower() )
+				','.join(parent.sort_info(include_group=False)).replace(' ','') )
 			msg('')
 			from ..fileutil import write_data_to_file
 			from ..exception import UserNonConfirmation
+			hdr = {
+				'squeezed': f'[screen print truncated to width {parent.cols}]\n',
+				'detail': '',
+			}[output_type]
 			try:
 				write_data_to_file(
-					outfile,
-					await parent.format_for_printing(color=False),
-					desc = f'{parent.desc} listing' )
+					outfile = outfile,
+					data    = hdr + await getattr(parent,f'format_{output_type}')(color=False),
+					desc    = f'{parent.desc} listing' )
 			except UserNonConfirmation as e:
-				parent.oneshot_msg = red(f'File {outfile!r} not overwritten by user request\n\n')
+				parent.oneshot_msg = yellow(f'File {outfile!r} not overwritten by user request\n\n')
 			else:
-				parent.oneshot_msg = yellow(f'Data written to {outfile!r}\n\n')
+				parent.oneshot_msg = green(f'Data written to {outfile!r}\n\n')
 
 		async def a_view(self,parent):
-			do_pager(parent.fmt_display)
+			do_pager( await parent.format_squeezed(color=True,cached=True) )
 			self.post_view(parent)
 
-		async def a_view_wide(self,parent):
-			do_pager( await parent.format_for_printing(color=True) )
+		async def a_view_detail(self,parent):
+			do_pager( await parent.format_detail(color=True) )
 			self.post_view(parent)
 
 		def post_view(self,parent):
@@ -290,19 +324,16 @@ class TwCommon:
 
 	class item_action:
 
-		def __init__(self,parent):
-			self.parent = parent
-
-		async def run(self,action):
+		async def run(self,parent,action):
 			msg('')
 			while True:
-				ret = line_input(f'Enter {self.parent.item_desc} number (or RETURN to return to main menu): ')
+				ret = line_input(f'Enter {parent.item_desc} number (or RETURN to return to main menu): ')
 				if ret == '':
 					return None
 				idx = get_obj(MMGenIdx,n=ret,silent=True)
-				if not idx or idx < 1 or idx > len(self.parent.data):
-					msg(f'Choice must be a single number between 1 and {len(self.parent.data)}')
-				elif (await getattr(self,action)(self.parent,idx)) != 'redo':
+				if not idx or idx < 1 or idx > len(parent.data):
+					msg(f'Choice must be a single number between 1 and {len(parent.data)}')
+				elif (await getattr(self,action)(parent,idx)) != 'redo':
 					break
 
 class TwMMGenID(str,Hilite,InitErrors,MMGenObject):

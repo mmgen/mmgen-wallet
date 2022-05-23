@@ -44,13 +44,22 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
                  add [l]abel, [D]elete address, [R]efresh balance:
 """
 	key_mappings = {
-		'a':'s_amt','d':'s_addr','r':'d_reverse','M':'s_twmmid',
-		'm':'d_mmid','e':'d_redraw',
-		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide',
-		'l':'a_lbl_add','D':'a_addr_delete','R':'a_balance_refresh' }
-	display_fs_fs = ' {{n:{cw}}} {{a}} {{A}}'
-	print_fs_fs   = ' {{n:4}} {{a}} {{m}} {{A:{aw}}} {{l}}'
-	display_hdr_fs_fs = display_fs_fs
+		'a':'s_amt',
+		'd':'s_addr',
+		'r':'d_reverse',
+		'M':'s_twmmid',
+		'm':'d_mmid',
+		'e':'d_redraw',
+		'q':'a_quit',
+		'p':'a_print_detail',
+		'v':'a_view',
+		'w':'a_view_detail',
+		'l':'a_lbl_add',
+		'D':'a_addr_delete',
+		'R':'a_balance_refresh' }
+
+	squeezed_fs_fs = squeezed_hdr_fs_fs = ' {{n:{cw}}} {{a}} {{A}}'
+	wide_fs_fs = ' {{n:4}} {{a}} {{m}} {{A:{aw}}} {{l}}'
 	no_data_errmsg = 'No accounts in tracking wallet!'
 
 	async def __init__(self,proto,*args,**kwargs):
@@ -82,9 +91,8 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	prompt_fs = 'Total to spend: {} {}\n\n'
 	col_adj = 37
-	display_fs_fs = ' {{n:{cw}}} {{a}} {{A}} {{A2}}'
-	print_fs_fs   = ' {{n:4}} {{a}} {{m}} {{A:{aw}}} {{A2:{aw}}} {{l}}'
-	display_hdr_fs_fs = display_fs_fs
+	squeezed_fs_fs = squeezed_hdr_fs_fs = ' {{n:{cw}}} {{a}} {{A}} {{A2}}'
+	wide_fs_fs = ' {{n:4}} {{a}} {{m}} {{A:{aw}}} {{A2:{aw}}} {{l}}'
 
 	async def __init__(self,proto,*args,**kwargs):
 		await super().__init__(proto,*args,**kwargs)

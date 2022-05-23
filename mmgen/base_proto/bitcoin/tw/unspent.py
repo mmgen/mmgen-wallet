@@ -36,13 +36,26 @@ Display options: toggle [D]ays/date, show [g]roup, show [m]mgen addr, r[e]draw
 Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 """
 	key_mappings = {
-		't':'s_txid','a':'s_amt','d':'s_addr','A':'s_age','r':'d_reverse','M':'s_twmmid',
-		'D':'d_days','g':'d_group','m':'d_mmid','e':'d_redraw',
-		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide','l':'a_lbl_add' }
+		't':'s_txid',
+		'a':'s_amt',
+		'd':'s_addr',
+		'A':'s_age',
+		'r':'d_reverse',
+		'M':'s_twmmid',
+		'D':'d_days',
+		'g':'d_group',
+		'm':'d_mmid',
+		'e':'d_redraw',
+		'q':'a_quit',
+		'p':'a_print_detail',
+		'v':'a_view',
+		'w':'a_view_detail',
+		'l':'a_lbl_add' }
+
 	col_adj = 38
-	display_fs_fs     = ' {{n:{cw}}} {{t:{tw}}} {{v:2}} {{a}} {{A}} {{c:<}}'
-	display_hdr_fs_fs = ' {{n:{cw}}} {{t:{tw}}} {{a}} {{A}} {{c:<}}'
-	print_fs_fs       = ' {{n:4}} {{t:{tw}}} {{a}} {{m}} {{A:{aw}}} {cf}{{b:<8}} {{D:<19}} {{l}}'
+	squeezed_fs_fs     = ' {{n:{cw}}} {{t:{tw}}} {{v:2}} {{a}} {{A}} {{c:<}}'
+	squeezed_hdr_fs_fs = ' {{n:{cw}}} {{t:{tw}}} {{a}} {{A}} {{c:<}}'
+	wide_fs_fs         = ' {{n:4}} {{t:{tw}}} {{a}} {{m}} {{A:{aw}}} {cf}{{b:<8}} {{D:<19}} {{l}}'
 
 	async def get_rpc_data(self):
 		# bitcoin-cli help listunspent:

@@ -54,6 +54,8 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		watch-only wallet using 'mmgen-addrimport' and then re-run this program.
 	"""
 	update_params_on_age_toggle = False
+	detail_display_separator = '\n'
+	print_output_types = ('detail',)
 
 	class MMGenTwUnspentOutput(MMGenListItem):
 		txid         = ListItemAttr(CoinTxID)
@@ -136,23 +138,16 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			['col1_w','mmid_w','addr_w','btaddr_w','label_w','tx_w','txdots']
 			)(col1_w,  mmid_w,  addr_w,  btaddr_w,  label_w,  tx_w,  txdots)
 
-	def gen_display_output(self,c):
-		fs     = self.display_fs_fs.format(     cw=c.col1_w, tw=c.tx_w )
-		hdr_fs = self.display_hdr_fs_fs.format( cw=c.col1_w, tw=c.tx_w )
+	def gen_squeezed_display(self,c,color):
+		fs     = self.squeezed_fs_fs.format(     cw=c.col1_w, tw=c.tx_w )
+		hdr_fs = self.squeezed_hdr_fs_fs.format( cw=c.col1_w, tw=c.tx_w )
 		yield hdr_fs.format(
 			n  = 'Num',
 			t  = 'TXid'.ljust(c.tx_w - 2) + ' Vout',
 			a  = 'Address'.ljust(c.addr_w),
 			A  = f'Amt({self.proto.dcoin})'.ljust(self.disp_prec+5),
 			A2 = f' Amt({self.proto.coin})'.ljust(self.disp_prec+4),
-			c  = {
-					'confs':     'Confs',
-					'block':     'Block',
-					'days':      'Age(d)',
-					'date':      'Date',
-					'date_time': 'Date',
-				}[self.age_fmt],
-			).rstrip()
+			c  = self.age_hdr ).rstrip()
 
 		for n,i in enumerate(self.data):
 			addr_dots = '|' + '.'*(c.addr_w-1)
@@ -163,20 +158,20 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 					f'Non-{g.proj_name}'
 				),
 				width = c.mmid_w,
-				color = True )
+				color = color )
 
 			if self.show_mmid:
 				addr_out = '{} {}{}'.format((
-					type(i.addr).fmtc(addr_dots,width=c.btaddr_w,color=True) if i.skip == 'addr' else
-					i.addr.fmt(width=c.btaddr_w,color=True)
+					type(i.addr).fmtc(addr_dots,width=c.btaddr_w,color=color) if i.skip == 'addr' else
+					i.addr.fmt(width=c.btaddr_w,color=color)
 				),
 					mmid_disp,
-					(' ' + i.label.fmt(width=c.label_w,color=True)) if c.label_w > 0 else ''
+					(' ' + i.label.fmt(width=c.label_w,color=color)) if c.label_w > 0 else ''
 				)
 			else:
 				addr_out = (
-					type(i.addr).fmtc(addr_dots,width=c.addr_w,color=True) if i.skip=='addr' else
-					i.addr.fmt(width=c.addr_w,color=True) )
+					type(i.addr).fmtc(addr_dots,width=c.addr_w,color=color) if i.skip=='addr' else
+					i.addr.fmt(width=c.addr_w,color=color) )
 
 			yield fs.format(
 				n  = str(n+1)+')',
@@ -186,18 +181,21 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 					i.txid[:c.tx_w-len(c.txdots)] + c.txdots ),
 				v  = i.vout,
 				a  = addr_out,
-				A  = i.amt.fmt(color=True,prec=self.disp_prec),
-				A2 = (i.amt2.fmt(color=True,prec=self.disp_prec) if i.amt2 is not None else ''),
+				A  = i.amt.fmt(color=color,prec=self.disp_prec),
+				A2 = (i.amt2.fmt(color=color,prec=self.disp_prec) if i.amt2 is not None else ''),
 				c  = self.age_disp(i,self.age_fmt),
 				).rstrip()
 
-	def gen_print_output(self,color,show_confs):
+	def gen_detail_display(self,color):
+
 		addr_w = max(len(i.addr) for i in self.data)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.data) or 12 # DEADBEEF:S:1
-		fs = self.print_fs_fs.format(
+
+		fs = self.wide_fs_fs.format(
 			tw = self.txid_w + 3,
-			cf = '{c:<8} ' if show_confs else '',
+			cf = '{c:<8} ',
 			aw = self.proto.coin_amt.max_prec + 5 )
+
 		yield fs.format(
 			n  = 'Num',
 			t  = 'Tx ID,Vout',
@@ -211,6 +209,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			l  = 'Label' )
 
 		max_lbl_len = max([len(i.label) for i in self.data if i.label] or [2])
+
 		for n,i in enumerate(self.data):
 			yield fs.format(
 				n  = str(n+1) + ')',
@@ -243,6 +242,19 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			self.proto.dcoin,
 			len(self.data),
 			suf(self.data) ))
+
+	class action(TwCommon.action):
+
+		def s_twmmid(self,parent):
+			parent.do_sort('twmmid')
+			parent.show_mmid = True
+
+		def d_mmid(self,parent):
+			parent.show_mmid = not parent.show_mmid
+
+		def d_group(self,parent):
+			if parent.can_group:
+				parent.group = not parent.group
 
 	class item_action(TwCommon.item_action):
 
