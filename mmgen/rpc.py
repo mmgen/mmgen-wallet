@@ -386,6 +386,13 @@ class RPCClient(MMGenObject):
 			timeout = timeout,
 			wallet = wallet )
 
+	def gathered_icall(self,method,args_list,timeout=None,wallet=None):
+		return self.gathered_call(
+			method,
+			[getattr(self.call_sigs,method)(*a)[1:] for a in args_list],
+			timeout = timeout,
+			wallet = wallet )
+
 	async def process_http_resp(self,coro,batch=False):
 		text,status = await coro
 		if status == 200:

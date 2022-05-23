@@ -41,6 +41,16 @@ class CallSigs:
 				load_on_startup # 7. load_on_startup
 			)
 
+		@classmethod
+		def gettransaction(cls,txid,include_watchonly,verbose):
+			return (
+				'gettransaction',
+				txid,               # 1. transaction id
+				include_watchonly,  # 2. optional, default=true for watch-only wallets, otherwise false
+				verbose,            # 3. optional, default=false -- include a `decoded` field containing
+									#    the decoded transaction (equivalent to RPC decoderawtransaction)
+			)
+
 	class litecoin_core(bitcoin_core):
 
 		@classmethod
@@ -50,6 +60,14 @@ class CallSigs:
 				wallet_name,    # 1. wallet_name
 				no_keys,        # 2. disable_private_keys
 				blank,          # 3. blank (no keys or seed)
+			)
+
+		@classmethod
+		def gettransaction(cls,txid,include_watchonly,verbose):
+			return (
+				'gettransaction',
+				txid,               # 1. transaction id
+				include_watchonly,  # 2. optional, default=true for watch-only wallets, otherwise false
 			)
 
 	class bitcoin_cash_node(litecoin_core):

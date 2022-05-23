@@ -29,7 +29,11 @@ class Status(TxBase.Status):
 
 		async def is_in_wallet():
 			try:
-				ret = await tx.rpc.call('gettransaction',tx.coin_txid)
+				ret = await tx.rpc.icall(
+					'gettransaction',
+					txid              = tx.coin_txid,
+					include_watchonly = True,
+					verbose           = False )
 			except:
 				return False
 			if ret.get('confirmations',0) > 0:
@@ -54,7 +58,11 @@ class Status(TxBase.Status):
 			if await is_in_mempool():
 				return False
 			try:
-				ret = await tx.rpc.call('gettransaction',tx.coin_txid)
+				ret = await tx.rpc.icall(
+					'gettransaction',
+					txid              = tx.coin_txid,
+					include_watchonly = True,
+					verbose           = False )
 			except:
 				return False
 			else:
@@ -67,7 +75,11 @@ class Status(TxBase.Status):
 
 		if await is_in_mempool():
 			if usr_req:
-				d = await tx.rpc.call('gettransaction',tx.coin_txid)
+				d = await tx.rpc.icall(
+					'gettransaction',
+					txid              = tx.coin_txid,
+					include_watchonly = True,
+					verbose           = False )
 				rep = ('' if d.get('bip125-replaceable') == 'yes' else 'NOT ') + 'replaceable'
 				t = d['timereceived']
 				if opt.quiet:
