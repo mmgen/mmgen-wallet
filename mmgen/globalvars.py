@@ -116,9 +116,11 @@ class GlobalContext(Lockable):
 	test_suite           = False
 	test_suite_deterministic = False
 	test_suite_popen_spawn = False
-	terminal_width       = 0
 
 	mnemonic_entry_modes = {}
+
+	# display:
+	columns = 0
 	color = bool(
 		( sys.stdout.isatty() and not os.getenv('MMGEN_TEST_SUITE_PEXPECT') ) or
 		os.getenv('MMGEN_FORCE_COLOR')
@@ -166,6 +168,7 @@ class GlobalContext(Lockable):
 		'bob',
 		'coin',
 		'color',
+		'columns',
 		'daemon_data_dir',
 		'daemon_id',
 		'force_256_color',
@@ -233,10 +236,10 @@ class GlobalContext(Lockable):
 	env_opts = (
 		'MMGEN_DEBUG_ALL', # special: there is no g.debug_all var
 
+		'MMGEN_COLUMNS',
 		'MMGEN_TEST_SUITE',
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
-		'MMGEN_TERMINAL_WIDTH',
 		'MMGEN_BOGUS_SEND',
 		'MMGEN_DEBUG',
 		'MMGEN_DEBUG_OPTS',

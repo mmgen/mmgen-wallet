@@ -100,7 +100,7 @@ class TwCommon:
 	def set_term_columns(self):
 		from ..term import get_terminal_size
 		while True:
-			self.cols = g.terminal_width or get_terminal_size().width
+			self.cols = g.columns or get_terminal_size().width
 			if self.cols >= g.min_screen_width:
 				break
 			line_input(

@@ -218,6 +218,7 @@ common_opts_data = {
 --, --coin=c               Choose coin unit. Default: BTC. Current choice: {cu_dfl}
 --, --token=t              Specify an ERC20 token by address or symbol
 --, --color=0|1            Disable or enable color output (enabled by default)
+--, --columns=N            Force N columns of output with certain commands
 --, --force-256-color      Force 256-color output when color is enabled
 --, --data-dir=path        Specify {pnm} data directory location
 --, --daemon-data-dir=path Specify coin daemon data directory location
@@ -590,6 +591,9 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 	def chk_locktime(key,val,desc):
 		opt_is_int(val,desc)
 		opt_compares(int(val),'>',0,desc)
+
+	def chk_columns(key,val,desc):
+		opt_compares(int(val),'>',10,desc)
 
 # TODO: move this check elsewhere
 #	def chk_token(key,val,desc):
