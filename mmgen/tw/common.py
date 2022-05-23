@@ -38,6 +38,7 @@ class TwCommon:
 	reverse     = False
 	group       = False
 	sort_key    = 'age'
+	interactive = False
 
 	age_fmts = ('confs','block','days','date','date_time')
 	age_fmts_date_dependent = ('days','date','date_time')
@@ -45,9 +46,13 @@ class TwCommon:
 	_age_fmt = 'confs'
 
 	date_formatter = {
-		'days':      lambda rpc,secs: (rpc.cur_date - secs) // 86400,
-		'date':      lambda rpc,secs: '{}-{:02}-{:02}'.format(*time.gmtime(secs)[:3])[2:],
-		'date_time': lambda rpc,secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(secs)[:5]),
+		'days': lambda rpc,secs: (rpc.cur_date - secs) // 86400 if secs else 0,
+		'date': (
+			lambda rpc,secs: '{}-{:02}-{:02}'.format(*time.gmtime(secs)[:3])[2:]
+				if secs else '--------' ),
+		'date_time': (
+			lambda rpc,secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(secs)[:5])
+				if secs else '---------- -----' ),
 	}
 
 	def age_disp(self,o,age_fmt):
@@ -89,8 +94,12 @@ class TwCommon:
 
 	@age_fmt.setter
 	def age_fmt(self,val):
-		if val not in self.age_fmts:
-			die( 'BadAgeFormat', f'{val!r}: invalid age format (must be one of {self.age_fmts!r})' )
+		ok_vals,op_desc = (
+			(self.age_fmts_interactive,'interactive') if self.interactive else
+			(self.age_fmts,'non-interactive') )
+		if val not in ok_vals:
+			die('BadAgeFormat',
+				f'{val!r}: invalid age format for {op_desc} operation (must be one of {ok_vals!r})' )
 		self._age_fmt = val
 
 	@property
@@ -187,6 +196,7 @@ class TwCommon:
 		self.prompt = type(self).prompt.strip() + '\b'
 		self.no_output = False
 		self.oneshot_msg = None
+		self.interactive = True
 		CUR_HOME  = '\033[H'
 		ERASE_ALL = '\033[0J'
 
