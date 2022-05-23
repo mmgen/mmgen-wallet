@@ -15,7 +15,7 @@ if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 		'date_time': lambda rpc,secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(next(_time_iter))[:5]),
 	}
 
-if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
+if os.getenv('MMGEN_BOGUS_UNSPENT_DATA'):
 
 	async def fake_set_dates(foo,rpc,us):
 		for o in us:

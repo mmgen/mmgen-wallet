@@ -791,7 +791,7 @@ class TestSuiteRunner(object):
 			start_test_daemons(network_id,remove_datadir=True)
 			self.daemons_started = True
 
-		os.environ['MMGEN_BOGUS_WALLET_DATA'] = '' # zero this here, so test groups don't have to
+		os.environ['MMGEN_BOGUS_UNSPENT_DATA'] = '' # zero this here, so test groups don't have to
 
 		self.ts = self.gm.gm_init_group(self,gname,self.spawn_wrapper)
 		self.ts_clsname = type(self.ts).__name__

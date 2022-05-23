@@ -43,7 +43,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 	display_hdr_fs_fs = ' {{n:{cw}}} {{t:{tw}}} {{a}} {{A}} {{c:<}}'
 	print_fs_fs       = ' {{n:4}} {{t:{tw}}} {{a}} {{m}} {{A:{aw}}} {cf}{{b:<8}} {{D:<19}} {{l}}'
 
-	async def get_unspent_rpc(self):
+	async def get_rpc_data(self):
 		# bitcoin-cli help listunspent:
 		# Arguments:
 		# 1. minconf        (numeric, optional, default=1) The minimum confirmations to filter

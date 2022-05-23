@@ -7,7 +7,7 @@ In addition to improved reliability, maintainability and extensibility, this
 major code overhaul has led to significant performance improvements and
 reductions in memory usage.
 
-#### Important new features:
+#### Important new feature:
 
  - message signing: 86e3b273, e5cf3b6ec, 25efac31b, 770b209af, a81ff33f0
 

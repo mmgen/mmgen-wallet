@@ -63,7 +63,7 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		if key == 'txid': return
 		super().do_sort(key=key,reverse=reverse)
 
-	async def get_unspent_rpc(self):
+	async def get_rpc_data(self):
 		wl = self.wallet.sorted_list
 		if self.addrs:
 			wl = [d for d in wl if d['addr'] in self.addrs]
@@ -92,7 +92,7 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 	def get_display_precision(self):
 		return 10 # truncate precision for narrow display
 
-	async def get_unspent_data(self,*args,**kwargs):
-		await super().get_unspent_data(*args,**kwargs)
-		for e in self.unspent:
+	async def get_data(self,*args,**kwargs):
+		await super().get_data(*args,**kwargs)
+		for e in self.data:
 			e.amt2 = await self.wallet.get_eth_balance(e.addr)

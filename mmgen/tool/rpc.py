@@ -109,7 +109,7 @@ class tool_cmd(tool_cmd_base):
 
 		from ..tw.unspent import TwUnspentOutputs
 		twuo = await TwUnspentOutputs(self.proto,minconf=minconf)
-		await twuo.get_unspent_data(reverse_sort=reverse)
+		await twuo.get_data(reverse_sort=reverse)
 		twuo.age_fmt = age_fmt
 		twuo.show_mmid = show_mmid
 		if wide:

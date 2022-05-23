@@ -1,6 +1,6 @@
 from .rpc_orig import *
 
-if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
+if os.getenv('MMGEN_BOGUS_UNSPENT_DATA'):
 
 	rpc_init_orig = rpc_init
 

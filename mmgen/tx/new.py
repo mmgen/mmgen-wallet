@@ -290,10 +290,10 @@ class New(Base):
 
 		while True:
 			us_f = self.select_unspent_cmdline if opt.inputs else self.select_unspent
-			sel_nums = us_f(self.twuo.unspent)
+			sel_nums = us_f(self.twuo.data)
 
 			msg(f'Selected output{suf(sel_nums)}: {{}}'.format(' '.join(str(n) for n in sel_nums)))
-			sel_unspent = self.twuo.MMGenTwOutputList([self.twuo.unspent[i-1] for i in sel_nums])
+			sel_unspent = self.twuo.MMGenTwOutputList([self.twuo.data[i-1] for i in sel_nums])
 
 			inputs_sum = sum(s.amt for s in sel_unspent)
 			if not await self.precheck_sufficient_funds(inputs_sum,sel_unspent,outputs_sum):
@@ -326,7 +326,7 @@ class New(Base):
 		twuo_addrs = await self.get_cmdline_input_addrs()
 
 		self.twuo = await TwUnspentOutputs(self.proto,minconf=opt.minconf,addrs=twuo_addrs)
-		await self.twuo.get_unspent_data()
+		await self.twuo.get_data()
 
 		if not do_info:
 			await self.get_outputs_from_cmdline(cmd_args)

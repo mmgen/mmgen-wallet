@@ -40,8 +40,8 @@ from ..util import (
 )
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
-from ..obj import ImmutableAttr,ListItemAttr,MMGenListItem,TwComment,get_obj,HexStr,CoinTxID
-from ..addr import CoinAddr,MMGenID,AddrIdx
+from ..obj import ImmutableAttr,ListItemAttr,MMGenListItem,TwComment,get_obj,HexStr,CoinTxID,MMGenIdx
+from ..addr import CoinAddr,MMGenID
 from ..rpc import rpc_init
 from .common import TwCommon,TwMMGenID,get_tw_label
 
@@ -82,7 +82,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	async def __init__(self,proto,minconf=1,addrs=[]):
 		self.proto        = proto
-		self.unspent      = self.MMGenTwOutputList()
+		self.data         = self.MMGenTwOutputList()
 		self.fmt_display  = ''
 		self.fmt_print    = ''
 		self.cols         = None
@@ -113,11 +113,11 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	@property
 	def total(self):
-		return sum(i.amt for i in self.unspent)
+		return sum(i.amt for i in self.data)
 
-	async def get_unspent_data(self,sort_key=None,reverse_sort=False):
+	async def get_data(self,sort_key=None,reverse_sort=False):
 
-		us_raw = await self.get_unspent_rpc()
+		us_raw = await self.get_rpc_data()
 
 		if not us_raw:
 			die(0,fmt(f"""
@@ -144,9 +144,9 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 						self.proto,
 						**{ k:v for k,v in o.items() if k in self.MMGenTwUnspentOutput.valid_attrs } )
 
-		self.unspent = self.MMGenTwOutputList(gen_unspent())
+		self.data = self.MMGenTwOutputList(gen_unspent())
 
-		if not self.unspent:
+		if not self.data:
 			die(1, f'No tracked {self.item_desc}s in tracking wallet!')
 
 		self.do_sort(key=sort_key,reverse=reverse_sort)
@@ -164,7 +164,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			die(1,f'{key!r}: invalid sort key.  Valid options: {" ".join(sort_funcs.keys())}')
 		self.sort_key = key
 		assert type(reverse) == bool
-		self.unspent.sort(key=sort_funcs[key],reverse=reverse or self.reverse)
+		self.data.sort(key=sort_funcs[key],reverse=reverse or self.reverse)
 
 	def sort_info(self,include_group=True):
 		ret = ([],['Reverse'])[self.reverse]
@@ -184,15 +184,15 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 				+ f'Please resize your screen to at least {g.min_screen_width} characters and hit ENTER ' )
 
 	def get_display_constants(self):
-		unsp = self.unspent
-		for i in unsp:
+		data = self.data
+		for i in data:
 			i.skip = ''
 
 		# allow for 7-digit confirmation nums
-		col1_w = max(3,len(str(len(unsp)))+1) # num + ')'
-		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in unsp) or 12 # DEADBEEF:S:1
-		max_acct_w = max(i.label.screen_width for i in unsp) + mmid_w + 1
-		max_btcaddr_w = max(len(i.addr) for i in unsp)
+		col1_w = max(3,len(str(len(data)))+1) # num + ')'
+		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in data) or 12 # DEADBEEF:S:1
+		max_acct_w = max(i.label.screen_width for i in data) + mmid_w + 1
+		max_btcaddr_w = max(len(i.addr) for i in data)
 		min_addr_w = self.cols - self.col_adj
 		addr_w = min(max_btcaddr_w + (0,1+max_acct_w)[self.show_mmid],min_addr_w)
 		acct_w = min(max_acct_w, max(24,addr_w-10))
@@ -205,9 +205,9 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		return dc(col1_w,mmid_w,addr_w,btaddr_w,label_w,tx_w,txdots)
 
 	async def format_for_display(self):
-		unsp = self.unspent
+		data = self.data
 		if self.has_age and self.age_fmt in self.age_fmts_date_dependent:
-			await self.set_dates(self.rpc,unsp)
+			await self.set_dates(self.rpc,data)
 		self.set_term_columns()
 
 		c = getattr(self,'display_constants',None)
@@ -215,7 +215,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			c = self.display_constants = self.get_display_constants()
 
 		if self.group and (self.sort_key in ('addr','txid','twmmid')):
-			for a,b in [(unsp[i],unsp[i+1]) for i in range(len(unsp)-1)]:
+			for a,b in [(data[i],data[i+1]) for i in range(len(data)-1)]:
 				for k in ('addr','txid','twmmid'):
 					if self.sort_key == k and getattr(a,k) == getattr(b,k):
 						b.skip = (k,'addr')[k=='twmmid']
@@ -241,7 +241,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 					}[self.age_fmt],
 				).rstrip()
 
-			for n,i in enumerate(unsp):
+			for n,i in enumerate(data):
 				addr_dots = '|' + '.'*(c.addr_w-1)
 				mmid_disp = MMGenID.fmtc(
 					(
@@ -283,9 +283,9 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	async def format_for_printing(self,color=False,show_confs=True):
 		if self.has_age:
-			await self.set_dates(self.rpc,self.unspent)
-		addr_w = max(len(i.addr) for i in self.unspent)
-		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
+			await self.set_dates(self.rpc,self.data)
+		addr_w = max(len(i.addr) for i in self.data)
+		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.data) or 12 # DEADBEEF:S:1
 		fs = self.print_fs_fs.format(
 			tw = self.txid_w + 3,
 			cf = '{c:<8} ' if show_confs else '',
@@ -304,8 +304,8 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 				D  = 'Date',
 				l  = 'Label' )
 
-			max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [2])
-			for n,i in enumerate(self.unspent):
+			max_lbl_len = max([len(i.label) for i in self.data if i.label] or [2])
+			for n,i in enumerate(self.data):
 				yield fs.format(
 					n  = str(n+1) + ')',
 					t  = '{},{}'.format(
@@ -349,8 +349,8 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		msg('\nTotal unspent: {} {} ({} output{})'.format(
 			self.total.hl(),
 			self.proto.dcoin,
-			len(self.unspent),
-			suf(self.unspent) ))
+			len(self.data),
+			suf(self.data) ))
 
 	def get_idx_from_user(self,action):
 		msg('')
@@ -358,12 +358,12 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			ret = line_input(f'Enter {self.item_desc} number (or RETURN to return to main menu): ')
 			if ret == '':
 				return (None,None) if action == 'a_lbl_add' else None
-			n = get_obj(AddrIdx,n=ret,silent=True)
-			if not n or n < 1 or n > len(self.unspent):
-				msg(f'Choice must be a single number between 1 and {len(self.unspent)}')
+			n = get_obj(MMGenIdx,n=ret,silent=True)
+			if not n or n < 1 or n > len(self.data):
+				msg(f'Choice must be a single number between 1 and {len(self.data)}')
 			else:
 				if action == 'a_lbl_add':
-					cur_lbl = self.unspent[n-1].label
+					cur_lbl = self.data[n-1].label
 					msg('Current label: {}'.format(cur_lbl.hl() if cur_lbl else '(none)'))
 					while True:
 						s = line_input(
@@ -422,25 +422,25 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			elif action == 'd_redraw':
 				pass
 			elif action == 'd_reverse':
-				self.unspent.reverse()
+				self.data.reverse()
 				self.reverse = not self.reverse
 			elif action == 'a_quit':
 				msg('')
-				return self.unspent
+				return self.data
 			elif action == 'a_balance_refresh':
 				idx = self.get_idx_from_user(action)
 				if idx:
-					e = self.unspent[idx-1]
+					e = self.data[idx-1]
 					bal = await self.wallet.get_balance(e.addr,force_rpc=True)
-					await self.get_unspent_data()
+					await self.get_data()
 					oneshot_msg = yellow(f'{self.proto.dcoin} balance for account #{idx} refreshed\n\n')
 				self.display_constants = self.get_display_constants()
 			elif action == 'a_lbl_add':
 				idx,lbl = self.get_idx_from_user(action)
 				if idx:
-					e = self.unspent[idx-1]
+					e = self.data[idx-1]
 					if await self.wallet.add_label(e.twmmid,lbl,addr=e.addr):
-						await self.get_unspent_data()
+						await self.get_data()
 						oneshot_msg = yellow('Label {} {} #{}\n\n'.format(
 							('added to' if lbl else 'removed from'),
 							self.item_desc,
@@ -451,9 +451,9 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			elif action == 'a_addr_delete':
 				idx = self.get_idx_from_user(action)
 				if idx:
-					e = self.unspent[idx-1]
+					e = self.data[idx-1]
 					if await self.wallet.remove_address(e.addr):
-						await self.get_unspent_data()
+						await self.get_data()
 						oneshot_msg = yellow(f'{capfirst(self.item_desc)} #{idx} removed\n\n')
 					else:
 						oneshot_msg = red('Address could not be removed\n\n')
