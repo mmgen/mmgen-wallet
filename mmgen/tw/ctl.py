@@ -21,7 +21,7 @@ twctl: Tracking wallet control class for the MMGen suite
 """
 
 from ..globalvars import g
-from ..util import msg,dmsg,write_mode,base_proto_tw_subclass,die
+from ..util import msg,dmsg,write_mode,base_proto_subclass,die
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import TwComment,get_obj
@@ -38,7 +38,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 	importing = False
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(base_proto_tw_subclass(cls,proto,'ctl'))
+		return MMGenObject.__new__(base_proto_subclass(cls,proto,'tw','ctl'))
 
 	async def __init__(self,proto,mode='r',token_addr=None):
 

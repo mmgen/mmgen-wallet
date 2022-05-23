@@ -20,7 +20,7 @@
 addrdata.py: MMGen AddrData and related classes
 """
 
-from .util import vmsg,base_proto_tw_subclass,fmt,die
+from .util import vmsg,base_proto_subclass,fmt,die
 from .base_obj import AsyncInit
 from .obj import MMGenObject,MMGenDict,get_obj
 from .addr import MMGenID,AddrListID
@@ -69,7 +69,7 @@ class AddrData(MMGenObject):
 class TwAddrData(AddrData,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(base_proto_tw_subclass(cls,proto,'common'))
+		return MMGenObject.__new__(base_proto_subclass(cls,proto,'tw','common'))
 
 	async def __init__(self,proto,wallet=None):
 		from .rpc import rpc_init

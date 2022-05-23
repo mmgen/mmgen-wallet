@@ -163,7 +163,7 @@ def make_args_list(tw,al,batch,rescan):
 async def main():
 	from .tw.ctl import TrackingWallet
 	if opt.token_addr:
-		proto.tokensym = 'foo' # hack to trigger 'Token' in base_proto_tw_subclass()
+		proto.tokensym = 'foo' # hack to trigger 'Token' in base_proto_subclass()
 
 	tw = await TrackingWallet(
 		proto      = proto,

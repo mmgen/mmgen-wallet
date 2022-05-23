@@ -21,7 +21,7 @@ twbal: Tracking wallet getbalance class for the MMGen suite
 """
 
 from ..color import red,green
-from ..util import base_proto_tw_subclass
+from ..util import base_proto_subclass
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..rpc import rpc_init
@@ -29,7 +29,7 @@ from ..rpc import rpc_init
 class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(base_proto_tw_subclass(cls,proto,'bal'))
+		return MMGenObject.__new__(base_proto_subclass(cls,proto,'tw','bal'))
 
 	async def __init__(self,proto,minconf,quiet):
 
