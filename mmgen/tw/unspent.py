@@ -53,6 +53,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		No spendable outputs found!  Import addresses with balances into your
 		watch-only wallet using 'mmgen-addrimport' and then re-run this program.
 	"""
+	update_params_on_age_toggle = False
 
 	class MMGenTwUnspentOutput(MMGenListItem):
 		txid         = ListItemAttr(CoinTxID)
@@ -84,6 +85,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		self.minconf      = minconf
 		self.addrs        = addrs
 		self.rpc          = await rpc_init(proto)
+		self.min_cols     = g.min_screen_width
 
 		from .ctl import TrackingWallet
 		self.wallet = await TrackingWallet(proto,mode='w')
@@ -109,10 +111,12 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 					self.proto,
 					**{ k:v for k,v in o.items() if k in self.MMGenTwUnspentOutput.valid_attrs } )
 
-	def get_display_constants(self):
+	def set_column_params(self):
 		data = self.data
 		for i in data:
 			i.skip = ''
+
+		self.cols = self.get_term_columns(g.min_screen_width)
 
 		# allow for 7-digit confirmation nums
 		col1_w = max(3,len(str(len(data)))+1) # num + ')'
@@ -127,8 +131,10 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		tx_w = min(self.txid_w,self.cols-addr_w-29-col1_w) # min=6 TODO
 		txdots = ('','..')[tx_w < self.txid_w]
 
-		dc = namedtuple('display_constants',['col1_w','mmid_w','addr_w','btaddr_w','label_w','tx_w','txdots'])
-		return dc(col1_w,mmid_w,addr_w,btaddr_w,label_w,tx_w,txdots)
+		self.column_params = namedtuple(
+			'column_params',
+			['col1_w','mmid_w','addr_w','btaddr_w','label_w','tx_w','txdots']
+			)(col1_w,  mmid_w,  addr_w,  btaddr_w,  label_w,  tx_w,  txdots)
 
 	def gen_display_output(self,c):
 		fs     = self.display_fs_fs.format(     cw=c.col1_w, tw=c.tx_w )

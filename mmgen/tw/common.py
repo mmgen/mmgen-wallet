@@ -20,7 +20,7 @@
 tw: Tracking wallet dependency classes and helper functions
 """
 
-import time
+import sys,time
 
 from ..globalvars import g
 from ..objmethods import Hilite,InitErrors,MMGenObject
@@ -97,15 +97,23 @@ class TwCommon:
 	def disp_prec(self):
 		return self.proto.coin_amt.max_prec
 
-	def set_term_columns(self):
-		from ..term import get_terminal_size
+	def get_term_columns(self,min_cols):
+		from ..term import get_terminal_size,get_char_raw
 		while True:
-			self.cols = g.columns or get_terminal_size().width
-			if self.cols >= g.min_screen_width:
-				break
-			line_input(
-				'Screen too narrow to display the tracking wallet\n'
-				+ f'Please resize your screen to at least {g.min_screen_width} characters and hit ENTER ' )
+			cols = g.columns or get_terminal_size().width
+			if cols >= min_cols:
+				return cols
+			if sys.stdout.isatty():
+				if g.columns:
+					die(1,
+						f'\n--columns or MMGEN_COLUMNS value ({g.columns}) is too small to display the {self.desc}.\n'
+						+ f'Minimum value for this configuration: {min_cols}' )
+				else:
+					get_char_raw(
+						f'\nScreen is too narrow to display the {self.desc}\n'
+						+ f'Please resize your screen to at least {min_cols} characters and hit any key: ' )
+			else:
+				return min_cols
 
 	def sort_info(self,include_group=True):
 		ret = ([],['Reverse'])[self.reverse]
@@ -134,11 +142,9 @@ class TwCommon:
 		data = self.data
 		if self.has_age and self.age_fmt in self.age_fmts_date_dependent:
 			await self.set_dates(self.rpc,data)
-		self.set_term_columns()
 
-		c = getattr(self,'display_constants',None)
-		if not c:
-			c = self.display_constants = self.get_display_constants()
+		if not getattr(self,'column_params',None):
+			self.set_column_params()
 
 		if self.group and (self.sort_key in ('addr','txid','twmmid')):
 			for a,b in [(data[i],data[i+1]) for i in range(len(data)-1)]:
@@ -152,7 +158,7 @@ class TwCommon:
 				b = self.proto.dcoin,
 				c = self.total.hl() if hasattr(self,'total') else None )
 			+ ('\nChain: '+green(self.proto.chain_name.upper()) if self.proto.chain_name != 'mainnet' else '')
-			+ '\n' + '\n'.join(self.gen_display_output(c))
+			+ '\n' + '\n'.join(self.gen_display_output(self.column_params))
 			+ '\n'
 		)
 
@@ -210,13 +216,15 @@ class TwCommon:
 			elif action == 'd_days':
 				af = self.age_fmts_interactive
 				self.age_fmt = af[(af.index(self.age_fmt) + 1) % len(af)]
+				if self.update_params_on_age_toggle:
+					self.set_column_params()
 			elif action == 'd_mmid':
 				self.show_mmid = not self.show_mmid
 			elif action == 'd_group':
 				if self.can_group:
 					self.group = not self.group
 			elif action == 'd_redraw':
-				pass
+				self.set_column_params()
 			elif action == 'd_reverse':
 				self.data.reverse()
 				self.reverse = not self.reverse
@@ -227,7 +235,7 @@ class TwCommon:
 				await self.action(self).run(action)
 			elif hasattr(self.item_action,action):
 				await self.item_action(self).run(action)
-				self.display_constants = self.get_display_constants()
+				self.set_column_params()
 
 	class action:
 
