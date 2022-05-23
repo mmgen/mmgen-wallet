@@ -162,6 +162,7 @@ mods = {
 		'remove_address',
 		'remove_label',
 		'twview',
+		'txhist',
 	),
 }
 

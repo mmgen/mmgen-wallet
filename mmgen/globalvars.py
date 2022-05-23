@@ -81,6 +81,7 @@ class GlobalContext(Lockable):
 	debug_rpc            = False
 	debug_addrlist       = False
 	debug_subseed        = False
+	debug_tw             = False
 	quiet                = False
 	no_license           = False
 	force_256_color      = False
@@ -245,6 +246,7 @@ class GlobalContext(Lockable):
 		'MMGEN_DEBUG_OPTS',
 		'MMGEN_DEBUG_RPC',
 		'MMGEN_DEBUG_ADDRLIST',
+		'MMGEN_DEBUG_TW',
 		'MMGEN_DEBUG_UTF8',
 		'MMGEN_DEBUG_SUBSEED',
 		'MMGEN_QUIET',

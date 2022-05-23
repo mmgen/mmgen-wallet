@@ -132,6 +132,21 @@ class tool_cmd(tool_cmd_base):
 		del obj.wallet
 		return ret
 
+	async def txhist(self,
+			pager           = False,
+			reverse         = False,
+			detail          = False,
+			sinceblock      = 0,
+			sort            = 'age',
+			age_fmt: options_annot_str(TwCommon.age_fmts) = 'confs',
+			interactive     = False ):
+		"view transaction history"
+
+		from ..tw.txhistory import TwTxHistory
+		obj = await TwTxHistory(self.proto,sinceblock=sinceblock)
+		return await self.twops(
+			obj,pager,reverse,detail,sort,age_fmt,interactive,show_mmid=None)
+
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
 		from ..tw.ctl import TrackingWallet

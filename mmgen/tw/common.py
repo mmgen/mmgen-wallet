@@ -29,7 +29,7 @@ from ..color import nocolor,yellow,green
 from ..util import msg,msg_r,fmt,die,line_input,do_pager,capfirst,make_timestr
 from ..addr import MMGenID
 
-# mixin class for TwUnspentOutputs,TwAddrList:
+# mixin class for TwUnspentOutputs,TwAddrList,TwTxHistory:
 class TwCommon:
 
 	cols        = None

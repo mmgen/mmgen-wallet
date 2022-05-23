@@ -48,13 +48,13 @@ rt_data = {
 	'rtBals': {
 		'btc': ('499.9999488','399.9998282','399.9998147','399.9996877',
 				'52.99980410','946.99933647','999.99914057','52.9999',
-				'946.99933647','0.4169328'),
+				'946.99933647','0.4169328','6.24987417'),
 		'bch': ('499.9999484','399.9999194','399.9998972','399.9997692',
 				'46.78890380','953.20966920','999.99857300','46.789',
-				'953.2096692','0.4169328'),
+				'953.2096692','0.4169328','39.58187387'),
 		'ltc': ('5499.99744','5399.994425','5399.993885','5399.987535',
 				'52.98520500','10946.93753500','10999.92274000','52.99',
-				'10946.937535','0.41364'),
+				'10946.937535','0.41364','6.24846787'),
 	},
 	'rtBals_gb': {
 		'btc': {
@@ -230,6 +230,16 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_twview4',                "viewing Bob's tracking wallet"),
 
 		('bob_alice_bal',            "Bob and Alice's balances"),
+
+		('bob_nochg_burn',           'zero-change transaction to burn address'),
+		('generate',                 'mining a block'),
+
+		('bob_txhist1',              "viewing Bob's transaction history (sort=age)"),
+		('bob_txhist2',              "viewing Bob's transaction history (sort=blockheight reverse=1)"),
+		('bob_txhist3',              "viewing Bob's transaction history (sort=blockheight sinceblock=-7)"),
+		('bob_txhist4',              "viewing Bob's transaction history (sinceblock=439 detail=1)"),
+		('bob_txhist_interactive',   "viewing Bob's transaction history (age_fmt=date_time interactive=true)"),
+
 		('alice_bal2',               "Alice's balance"),
 
 		('alice_add_label1',         'adding a label'),
@@ -592,6 +602,45 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		sid = self._user_sid('bob')
 		return self.user_twview('bob',chk=(sid+':L:5',rtBals[9]),sort='twmmid')
 
+	def user_txhist(self,user,args,expect):
+		t = self.spawn('mmgen-tool',['--'+user,'txhist'] + args)
+		res = strip_ansi_escapes(t.read()).replace('\r','')
+		m = re.search(expect,res,re.DOTALL)
+		assert m, m
+		return t
+
+	def bob_txhist1(self):
+		return self.user_txhist('bob',
+			args = ['sort=age'],
+			expect = fr'\s1\).*\s{rtFundAmt}\s' )
+
+	def bob_txhist2(self):
+		return self.user_txhist('bob',
+			args = ['sort=blockheight','reverse=1','age_fmt=block'],
+			expect = fr'\s1\).*:{self.dfl_mmtype}:1\s' )
+
+	def bob_txhist3(self):
+		return self.user_txhist('bob',
+			args = ['sort=blockheight','sinceblock=-7','age_fmt=block'],
+			expect = fr'Displaying transactions since block 439.*\s6\).*:C:2\s.*\s{rtBals[9]}\s.*:L:5.*\s7\)'
+		)
+
+	def bob_txhist4(self):
+		return self.user_txhist('bob',
+			args = ['sort=blockheight','sinceblock=439','age_fmt=block','detail=1'],
+			expect = fr'Displaying transactions since block 439.*\s7\).*Block:.*446.*Value:.*{rtBals[10]}'
+		)
+
+	def bob_txhist_interactive(self):
+		self.get_file_with_ext('out',delete_all=True)
+		t = self.spawn('mmgen-tool',
+			['--bob',f'--outdir={self.tmpdir}','txhist','age_fmt=date_time','interactive=true'] )
+		for resp in ('u','i','t','a','m','T','A','r','r','D','D','D','D','p','P','b','V'):
+			t.expect('draw:\b',resp,regex=True)
+		txnum,idx = (8,1) if self.proto.coin == 'BCH' else (9,3)
+		t.expect(f'\s{txnum}\).*Inputs:.*:L:{idx}.*Outputs \(3\):.*:C:2.*\s10\)','q',regex=True)
+		return t
+
 	def bob_getbalance(self,bals,confs=1):
 		for i in (0,1,2):
 			assert Decimal(bals['mmgen'][i]) + Decimal(bals['nonmm'][i]) == Decimal(bals['total'][i])
@@ -610,6 +659,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_0conf1_getbalance(self): return self.bob_getbalance(rtBals_gb['0conf1'],confs=1)
 	def bob_1conf1_getbalance(self): return self.bob_getbalance(rtBals_gb['1conf1'],confs=1)
 	def bob_1conf2_getbalance(self): return self.bob_getbalance(rtBals_gb['1conf2'],confs=2)
+
+	def bob_nochg_burn(self):
+		return self.user_txdo('bob',
+			fee          = '0.00009713',
+			outputs_cl   = [f'{make_burn_addr(self.proto)}'],
+			outputs_list = '1' )
 
 	def bob_alice_bal(self):
 		t = self.spawn('mmgen-regtest',['balances'])
