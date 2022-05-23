@@ -24,9 +24,10 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 
 	has_age = True
 	can_group = True
-	hdr_fmt = 'UNSPENT OUTPUTS (sort order: {}) Total {}: {}'
+	hdr_fmt = 'UNSPENT OUTPUTS (sort order: {a}) Total {b}: {c}'
 	desc = 'unspent outputs'
 	item_desc = 'unspent output'
+	no_data_errmsg = 'No unspent outputs in tracking wallet!'
 	dump_fn_pfx = 'listunspent'
 	prompt_fs = 'Total to spend, excluding fees: {} {}\n\n'
 	prompt = """

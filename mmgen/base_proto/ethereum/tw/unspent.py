@@ -33,7 +33,7 @@ class EthereumTwUnspentOutputs(TwUnspentOutputs):
 	has_age = False
 	can_group = False
 	col_adj = 29
-	hdr_fmt = 'TRACKED ACCOUNTS (sort order: {})\nTotal {}: {}'
+	hdr_fmt = 'TRACKED ACCOUNTS (sort order: {a})\nTotal {b}: {c}'
 	desc    = 'account balances'
 	item_desc = 'account'
 	dump_fn_pfx = 'balances'
@@ -51,6 +51,7 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 	display_fs_fs = ' {{n:{cw}}} {{a}} {{A}}'
 	print_fs_fs   = ' {{n:4}} {{a}} {{m}} {{A:{aw}}} {{l}}'
 	display_hdr_fs_fs = display_fs_fs
+	no_data_errmsg = 'No accounts in tracking wallet!'
 
 	async def __init__(self,proto,*args,**kwargs):
 		from ....globalvars import g
@@ -89,7 +90,8 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 		await super().__init__(proto,*args,**kwargs)
 		self.proto.tokensym = self.wallet.symbol
 
-	def get_display_precision(self):
+	@property
+	def disp_prec(self):
 		return 10 # truncate precision for narrow display
 
 	async def get_data(self,*args,**kwargs):

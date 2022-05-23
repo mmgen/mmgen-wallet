@@ -16,7 +16,7 @@ from ..globalvars import *
 from ..opts import opt
 from .base import Base
 from ..color import pink
-from ..obj import get_obj
+from ..obj import get_obj,MMGenList
 from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension,keypress_confirm,do_license_msg,line_input
 from ..addr import is_mmgen_id,CoinAddr,is_coin_addr
 
@@ -293,7 +293,7 @@ class New(Base):
 			sel_nums = us_f(self.twuo.data)
 
 			msg(f'Selected output{suf(sel_nums)}: {{}}'.format(' '.join(str(n) for n in sel_nums)))
-			sel_unspent = self.twuo.MMGenTwOutputList([self.twuo.data[i-1] for i in sel_nums])
+			sel_unspent = MMGenList(self.twuo.data[i-1] for i in sel_nums)
 
 			inputs_sum = sum(s.amt for s in sel_unspent)
 			if not await self.precheck_sufficient_funds(inputs_sum,sel_unspent,outputs_sum):
