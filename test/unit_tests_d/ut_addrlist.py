@@ -10,12 +10,16 @@ from mmgen.addrlist import AddrIdxList,AddrList,KeyList,KeyAddrList
 from mmgen.passwdlist import PasswordList
 from mmgen.protocol import init_proto
 
-def do_test(list_type,chksum,pw_id_str=None,add_kwargs=None):
+def do_test(list_type,chksum,idx_spec=None,pw_id_str=None,add_kwargs=None):
 	qmsg(blue(f'Testing {list_type.__name__}'))
 	proto = init_proto('btc')
 	seed = Seed(seed_bin=bytes.fromhex('feedbead'*8))
 	mmtype = MMGenAddrType(proto,'C')
-	idxs = AddrIdxList('1-3')
+	idxs = AddrIdxList(idx_spec or '1-3')
+
+	if opt.verbose:
+		debug_addrlist_save = g.debug_addrlist
+		g.debug_addrlist = True
 
 	kwargs = {
 		'seed': seed,
@@ -43,12 +47,18 @@ def do_test(list_type,chksum,pw_id_str=None,add_kwargs=None):
 	if chksum:
 		assert al.chksum == chksum, f'{al.chksum} != {chksum}'
 
+	if opt.verbose:
+		g.debug_addrlist = debug_addrlist_save
+
 	return True
 
 class unit_tests:
 
 	def addr(self,name,ut):
-		return do_test(AddrList,'BCE8 082C 0973 A525')
+		return (
+			do_test(AddrList,'BCE8 082C 0973 A525','1-3') and
+			do_test(AddrList,'88FA B04B A380 C1CB','199999,99-101,77-78,7,3,2-9')
+		)
 
 	def key(self,name,ut):
 		return do_test(KeyList,None)

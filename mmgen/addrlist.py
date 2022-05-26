@@ -210,7 +210,6 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			(chk,rec)[record] )
 
 	def generate(self,seed,addr_idxs):
-		assert type(addr_idxs) is AddrIdxList
 
 		seed = self.scramble_seed(seed.data)
 		dmsg_sc('seed',seed[:8].hex())
@@ -227,31 +226,24 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			if self.add_p2pkh:
 				ag2 = AddrGenerator( self.proto, 'compressed' )
 
-		t_addrs,out = ( len(addr_idxs), AddrListData() )
-		le = self.entry_type
-		num,pos = (0,0)
-
-		from hashlib import sha256,sha512
 		from .globalvars import g
+		from .derive import derive_coin_privkey_bytes
 
-		while pos != t_addrs:
-			seed = sha512(seed).digest()
-			num += 1 # round
+		t_addrs = len(addr_idxs)
+		le = self.entry_type
+		out = AddrListData()
+		CR = '\n' if g.debug_addrlist else '\r'
 
-			if num != addr_idxs[pos]:
-				continue
-
-			pos += 1
+		for pk_bytes in derive_coin_privkey_bytes(seed,addr_idxs):
 
 			if not g.debug:
-				qmsg_r(f'\rGenerating {self.gen_desc} #{num} ({pos} of {t_addrs})')
+				qmsg_r(f'{CR}Generating {self.gen_desc} #{pk_bytes.idx} ({pk_bytes.pos} of {t_addrs})')
 
-			e = le(proto=self.proto,idx=num)
+			e = le( proto=self.proto, idx=pk_bytes.idx )
 
-			# Secret key is double sha256 of seed hash round /num/
 			e.sec = PrivKey(
 				self.proto,
-				sha256(sha256(seed).digest()).digest(),
+				pk_bytes.data,
 				compressed  = mmtype.compressed,
 				pubkey_type = mmtype.pubkey_type )
 
@@ -269,10 +261,8 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 
 			out.append(e)
 
-			if g.debug_addrlist:
-				Msg(f'generate():\n{e.pfmt()}')
-
-		qmsg('\r{}: {} {}{} generated{}'.format(
+		qmsg('{}{}: {} {}{} generated{}'.format(
+			CR,
 			self.al_id.hl(),
 			t_addrs,
 			self.gen_desc,

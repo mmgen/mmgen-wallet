@@ -52,6 +52,7 @@ If no test is specified, all available tests are run
 sys.argv.insert(1,'--skip-cfg-file')
 
 opts.UserOpts._reset_ok += ('use_internal_keccak_module',)
+g._reset_ok += ('debug_addrlist',)
 
 cmd_args = opts.init(opts_data)
 
