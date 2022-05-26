@@ -28,12 +28,12 @@ class BitcoinTrackingWallet(TrackingWallet):
 		raise NotImplementedError('not implemented')
 
 	@write_mode
-	async def import_address(self,addr,label,rescan):
-		return await self.rpc.call('importaddress',addr,label,rescan,timeout=(False,3600)[rescan])
+	async def import_address(self,addr,label): # rescan is True by default, so set to False
+		return await self.rpc.call('importaddress',addr,label,False)
 
 	@write_mode
-	def batch_import_address(self,arg_list):
-		return self.rpc.batch_call('importaddress',arg_list)
+	def batch_import_address(self,arg_list):   # rescan is True by default, so set to False
+		return self.rpc.batch_call('importaddress',[a+(False,) for a in arg_list])
 
 	@write_mode
 	async def remove_address(self,addr):

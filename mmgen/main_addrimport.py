@@ -20,7 +20,7 @@
 mmgen-addrimport: Import addresses into a MMGen coin daemon tracking wallet
 """
 
-import time
+from collections import namedtuple
 
 from .common import *
 from .addrlist import AddrList,KeyAddrList
@@ -38,15 +38,28 @@ opts_data = {
 -l, --addrlist     Address source is a flat list of non-MMGen coin addresses
 -k, --keyaddr-file Address source is a key-address file
 -q, --quiet        Suppress warnings
--r, --rescan       Rescan the blockchain.  Required if address to import is
-                   in the blockchain and has a balance.  Rescanning is slow.
+-r, --rescan       Update address balances by selectively rescanning the
+                   blockchain for unspent outputs that include the imported
+                   address(es).  Required if any of the imported addresses
+                   are already in the blockchain and have a balance.
 -t, --token-addr=A Import addresses for ERC20 token with address 'A'
 """,
-	'notes': """\n
-This command can also be used to update the comment fields of addresses
-already in the tracking wallet.
+	'notes': """
 
-The --batch and --rescan options cannot be used together.
+This command can also be used to update the comment fields or balances of
+addresses already in the tracking wallet.
+
+Rescanning now uses the ‘scantxoutset’ RPC call and a selective scan of
+blocks containing the relevant UTXOs for much faster performance than the
+previous implementation.  The rescan operation typically takes around two
+minutes total, independent of the number of addresses imported.
+
+Bear in mind that the UTXO scan will not find historical transactions: to add
+them to the tracking wallet, you must perform a full or partial rescan of the
+blockchain with the ‘mmgen-tool rescan_blockchain’ utility.  A full rescan of
+the blockchain may take up to several hours.
+
+It’s recommended to use ‘--rpc-backend=aio’ with ‘--rescan’.
 """
 	}
 }
@@ -116,31 +129,21 @@ def check_opts(tw):
 
 	return batch,rescan
 
-async def import_addr(tw,addr,label,rescan,msg_fmt,msg_args):
+async def import_address(args):
 	try:
-		task = asyncio.create_task(tw.import_address(addr,label,rescan))
-		if rescan:
-			start = time.time()
-			while True:
-				if task.done():
-					break
-				msg_r(('\r{} '+msg_fmt).format(
-					secs_to_hms(int(time.time()-start)),
-					*msg_args ))
-				await asyncio.sleep(0.5)
-			await task
-			msg('\nOK')
-		else:
-			await task
-			qmsg(msg_fmt.format(*msg_args) + ' - OK')
+		res = await args.tw.import_address( args.addr, args.lbl )
+		qmsg(args.msg)
+		return res
 	except Exception as e:
-		die(2,f'\nImport of address {addr!r} failed: {e.args[0]!r}')
+		die(2,f'\nImport of address {args.addr!r} failed: {e.args[0]!r}')
 
-def make_args_list(tw,al,batch,rescan):
+def gen_args_list(tw,al,batch):
 
-	fs = '{:%s} {:34} {:%s}' % (
+	fs = '{:%s} {:34} {:%s} - OK' % (
 		len(str(al.num_addrs)) * 2 + 2,
 		1 if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 13 )
+
+	ad = namedtuple('args_list_data',['addr','lbl','tw','msg'])
 
 	for num,e in enumerate(al.data,1):
 		if e.idx:
@@ -151,10 +154,13 @@ def make_args_list(tw,al,batch,rescan):
 			add_msg = 'non-'+g.proj_name
 
 		if batch:
-			yield (e.addr,TwLabel(proto,label),False)
+			yield ad( e.addr, TwLabel(proto,label), None, None )
 		else:
-			msg_args = ( f'{num}/{al.num_addrs}:', e.addr, '('+add_msg+')' )
-			yield (tw,e.addr,TwLabel(proto,label),rescan,fs,msg_args)
+			yield ad(
+				addr = e.addr,
+				lbl  = TwLabel(proto,label),
+				tw   = tw,
+				msg  = fs.format(f'{num}/{al.num_addrs}:', e.addr, f'({add_msg})') )
 
 async def main():
 	from .tw.ctl import TrackingWallet
@@ -187,18 +193,17 @@ async def main():
 
 	batch,rescan = check_opts(tw)
 
-	args_list = make_args_list(tw,al,batch,rescan)
+	args_list = list(gen_args_list(tw,al,batch))
 
 	if batch:
-		ret = await tw.batch_import_address(list(args_list))
+		ret = await tw.batch_import_address([ (a.addr,a.lbl) for a in args_list ])
 		msg(f'OK: {len(ret)} addresses imported')
-	elif rescan:
-		for arg_list in args_list:
-			await import_addr(*arg_list)
 	else:
-		tasks = [import_addr(*arg_list) for arg_list in args_list]
-		await asyncio.gather(*tasks)
-		msg('OK')
+		await asyncio.gather(*(import_address(a) for a in args_list))
+		msg('Address import completed OK')
+
+	if rescan:
+		await tw.rescan_addresses({a.addr for a in args_list})
 
 	del tw
 

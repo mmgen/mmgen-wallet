@@ -193,7 +193,6 @@ class GlobalContext(Lockable):
 		('label','keep_label'),
 		('tx_id','info'),
 		('tx_id','terse_info'),
-		('batch','rescan'), # TODO: still incompatible?
 	)
 	cfg_file_opts = (
 		'color',

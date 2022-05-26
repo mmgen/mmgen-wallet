@@ -84,7 +84,7 @@ class EthereumTrackingWallet(TrackingWallet):
 		return args_list
 
 	@write_mode
-	async def import_address(self,addr,label,foo):
+	async def import_address(self,addr,label):
 		r = self.data_root
 		if addr in r:
 			if not r[addr]['mmid'] and label.mmid:

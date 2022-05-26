@@ -202,6 +202,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_bal4',                 "Bob's balance (after import)"),
 		('bob_import_list',          'importing flat address list'),
 		('bob_import_list_rescan',   'importing flat address list with --rescan'),
+		('bob_import_list_rescan_aio','importing flat address list with --rescan (aiohttp backend)'),
 		('bob_resolve_addr',         'resolving an address in the tracking wallet'),
 		('bob_rescan_addr',          'rescanning an address'),
 		('bob_rescan_blockchain_all','rescanning the blockchain (full rescan)'),
@@ -907,13 +908,18 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		t.expect(f'Importing {nAddr} address')
 		if '--rescan' in args:
-			for i in range(nAddr):
-				t.expect('OK')
+			if not '--quiet' in args:
+				t.expect('Continue? (Y/n): ','y')
+			t.expect('Rescanning block')
 		return t
 
 	def bob_import_addr(self):
 		addr = self.read_from_tmpfile('non-mmgen.addrs').split()[0]
 		return self.user_import('bob',['--quiet','--address='+addr],nAddr=1)
+
+	def bob_import_list_rescan_aio(self):
+		addrfile = joinpath(self.tmpdir,'non-mmgen.addrs')
+		return self.user_import('bob',['--rescan','--rpc-backend=aio','--addrlist',addrfile],nAddr=5)
 
 	def bob_resolve_addr(self):
 		mmaddr = '{}:C:1'.format(self._user_sid('bob'))
