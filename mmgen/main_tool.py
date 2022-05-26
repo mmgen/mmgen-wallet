@@ -182,28 +182,33 @@ def create_call_sig(cmd,cls,parsed=False):
 		ann  = m.__annotations__
 
 	nargs = len(args) - len(dfls)
+	dfl_types = tuple(
+		ann[a] if a in ann and isinstance(ann[a],type) else type(dfls[i])
+			for i,a in enumerate(args[nargs:]) )
 
 	def get_type_from_ann(arg):
-		return ann[arg][1:] + (' or STDIN','')[parsed] if ann[arg] == 'sstr' else ann[arg].__name__
+		return (
+			('str' + ('' if parsed else ' or STDIN')) if ann[arg] == 'sstr' else
+			ann[arg].__name__ )
 
 	if parsed:
-		c_args = [(a,get_type_from_ann(a)) for a in args[:nargs]]
-		c_kwargs = [(a,dfls[n]) for n,a in enumerate(args[nargs:])]
 		return (
-			c_args,
-			dict(c_kwargs),
-			'STDIN_OK' if c_args and ann[args[0]] == 'sstr' else flag )
+			[(a,get_type_from_ann(a)) for a in args[:nargs]],            # c_args
+			dict([(a,dfls[n]) for n,a in enumerate(args[nargs:])]),      # c_kwargs
+			dict([(a,dfl_types[n]) for n,a in enumerate(args[nargs:])]), # c_kwargs_types
+			('STDIN_OK' if nargs and ann[args[0]] == 'sstr' else flag) ) # flag
 	else:
 		c_args = [f'{a} [{get_type_from_ann(a)}]' for a in args[:nargs]]
-		c_kwargs = ['"{}" [{}={!r}{}]'.format(
-			a,
-			type(dfls[n]).__name__, dfls[n],
-			(' ' + ann[a] if a in ann else '') )
+		c_kwargs = ['{a} [{b}={c!r}{d}]'.format(
+			a = a,
+			b = dfl_types[n].__name__,
+			c = dfls[n],
+			d = (' ' + ann[a] if a in ann and isinstance(ann[a],str) else '') )
 				for n,a in enumerate(args[nargs:])]
 		return ' '.join(c_args + c_kwargs)
 
 def process_args(cmd,cmd_args,cls):
-	c_args,c_kwargs,flag = create_call_sig(cmd,cls,parsed=True)
+	c_args,c_kwargs,c_kwargs_types,flag = create_call_sig(cmd,cls,parsed=True)
 	have_stdin_input = False
 
 	def usage_die(s):
@@ -281,7 +286,7 @@ def process_args(cmd,cmd_args,cls):
 		args = [conv_type(u_args[i],c_args[0][0],c_args[0][1]) for i in range(len(u_args))]
 	else:
 		args = [conv_type(u_args[i],c_args[i][0],c_args[i][1]) for i in range(len(c_args))]
-	kwargs = {k:conv_type(u_kwargs[k],k,type(c_kwargs[k]).__name__) for k in u_kwargs}
+	kwargs = {k:conv_type(u_kwargs[k],k,c_kwargs_types[k].__name__) for k in u_kwargs}
 
 	return ( args, kwargs )
 
