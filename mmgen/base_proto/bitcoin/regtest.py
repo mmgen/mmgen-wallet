@@ -138,7 +138,9 @@ class MMGenRegtest(MMGenObject):
 			create_hdseed(self.proto),
 			wallet = 'miner' )
 
-		await self.generate(432,silent=True)
+		# Broken litecoind can only mine 431 blocks in regtest mode, so generate just enough
+		# blocks to fund the test suite
+		await self.generate(392,silent=True)
 
 		gmsg('Setup complete')
 

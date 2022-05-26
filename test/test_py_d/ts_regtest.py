@@ -237,7 +237,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_txhist1',              "viewing Bob's transaction history (sort=age)"),
 		('bob_txhist2',              "viewing Bob's transaction history (sort=blockheight reverse=1)"),
 		('bob_txhist3',              "viewing Bob's transaction history (sort=blockheight sinceblock=-7)"),
-		('bob_txhist4',              "viewing Bob's transaction history (sinceblock=439 detail=1)"),
+		('bob_txhist4',              "viewing Bob's transaction history (sinceblock=399 detail=1)"),
 		('bob_txhist_interactive',   "viewing Bob's transaction history (age_fmt=date_time interactive=true)"),
 
 		('alice_bal2',               "Alice's balance"),
@@ -622,13 +622,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_txhist3(self):
 		return self.user_txhist('bob',
 			args = ['sort=blockheight','sinceblock=-7','age_fmt=block'],
-			expect = fr'Displaying transactions since block 439.*\s6\).*:C:2\s.*\s{rtBals[9]}\s.*:L:5.*\s7\)'
+			expect = fr'Displaying transactions since block 399.*\s6\).*:C:2\s.*\s{rtBals[9]}\s.*:L:5.*\s7\)'
 		)
 
 	def bob_txhist4(self):
 		return self.user_txhist('bob',
-			args = ['sort=blockheight','sinceblock=439','age_fmt=block','detail=1'],
-			expect = fr'Displaying transactions since block 439.*\s7\).*Block:.*446.*Value:.*{rtBals[10]}'
+			args = ['sort=blockheight','sinceblock=399','age_fmt=block','detail=1'],
+			expect = fr'Displaying transactions since block 399.*\s7\).*Block:.*406.*Value:.*{rtBals[10]}'
 		)
 
 	def bob_txhist_interactive(self):
