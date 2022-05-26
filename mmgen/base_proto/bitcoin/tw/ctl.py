@@ -12,8 +12,9 @@
 base_proto.bitcoin.twctl: Bitcoin base protocol tracking wallet control class
 """
 
+from ....globalvars import g
 from ....tw.ctl import TrackingWallet
-from ....util import rmsg,write_mode
+from ....util import msg,msg_r,rmsg,die,write_mode
 
 class BitcoinTrackingWallet(TrackingWallet):
 
@@ -46,3 +47,44 @@ class BitcoinTrackingWallet(TrackingWallet):
 		except Exception as e:
 			rmsg(e.args[0])
 			return False
+
+	@write_mode
+	async def rescan_blockchain(self,start,stop):
+
+		start = start or 0
+		endless = stop == None
+		CR = '\n' if g.test_suite else '\r'
+
+		if not ( start >= 0 and (stop if stop is not None else start) >= start ):
+			die(1,f'{start} {stop}: invalid range')
+
+		async def do_scan(chunks,tip):
+			res = None
+			for a,b in chunks:
+				msg_r(f'{CR}Scanning blocks {a}-{b} ')
+				res = await self.rpc.call('rescanblockchain',a,b,timeout=7200)
+				if res['start_height'] != a or res['stop_height'] != b:
+					die(1,f'\nAn error occurred in block range {a}-{b}')
+			msg('')
+			return b if res else tip
+
+		def gen_chunks(start,stop,tip):
+			n = start
+			if endless:
+				stop = tip
+			elif stop > tip:
+				die(1,f'{stop}: stop value is higher than chain tip')
+
+			while n <= stop:
+				yield ( n, min(n+99,stop) )
+				n += 100
+
+		last_block = await do_scan(gen_chunks(start,stop,self.rpc.blockcount),self.rpc.blockcount)
+
+		if endless:
+			tip = await self.rpc.call('getblockcount')
+			while last_block < tip:
+				last_block = await do_scan(gen_chunks(last_block+1,tip),tip)
+				tip = await self.rpc.call('getblockcount')
+
+		msg('Done')

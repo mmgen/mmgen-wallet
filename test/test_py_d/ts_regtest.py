@@ -203,6 +203,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_import_list',          'importing flat address list'),
 		('bob_import_list_rescan',   'importing flat address list with --rescan'),
 		('bob_resolve_addr',         'resolving an address in the tracking wallet'),
+		('bob_rescan_blockchain_all','rescanning the blockchain (full rescan)'),
+		('bob_rescan_blockchain_gb', 'rescanning the blockchain (Genesis block)'),
+		('bob_rescan_blockchain_one','rescanning the blockchain (single block)'),
+		('bob_rescan_blockchain_ss', 'rescanning the blockchain (range of blocks)'),
 		('bob_split2',               "splitting Bob's funds"),
 		('bob_0conf0_getbalance',    "Bob's balance (unconfirmed, minconf=0)"),
 		('bob_0conf1_getbalance',    "Bob's balance (unconfirmed, minconf=1)"),
@@ -926,6 +930,24 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_import_list_rescan(self):
 		addrfile = joinpath(self.tmpdir,'non-mmgen.addrs')
 		return self.user_import('bob',['--quiet','--rescan','--addrlist',addrfile],nAddr=5)
+
+	def bob_rescan_blockchain(self,add_args,expect):
+		t = self.spawn('mmgen-tool',['--bob','rescan_blockchain'] + add_args)
+		t.expect(f'Scanning blocks {expect}')
+		t.expect('Done')
+		return t
+
+	def bob_rescan_blockchain_all(self):
+		return self.bob_rescan_blockchain([],'400-400')
+
+	def bob_rescan_blockchain_gb(self):
+		return self.bob_rescan_blockchain(['start_block=0','stop_block=0'],'0-0')
+
+	def bob_rescan_blockchain_one(self):
+		return self.bob_rescan_blockchain(['start_block=300','stop_block=300'],'300-300')
+
+	def bob_rescan_blockchain_ss(self):
+		return self.bob_rescan_blockchain(['start_block=300','stop_block=302'],'300-302')
 
 	def bob_split2(self):
 		addrs = self.read_from_tmpfile('non-mmgen.addrs').split()

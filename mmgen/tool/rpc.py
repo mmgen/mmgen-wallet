@@ -178,3 +178,11 @@ class tool_cmd(tool_cmd_base):
 			return ret.mmaddr if is_coin_addr(self.proto,mmgen_or_coin_addr) else ret.coinaddr
 		else:
 			return False
+
+	async def rescan_blockchain(self,
+			start_block: int = None,
+			stop_block: int  = None ):
+		"rescan the blockchain to update historical transactions in the tracking wallet"
+		from ..tw.ctl import TrackingWallet
+		ret = await (await TrackingWallet(self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
+		return True
