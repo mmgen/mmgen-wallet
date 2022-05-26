@@ -20,7 +20,7 @@
 tw: Tracking wallet dependency classes and helper functions
 """
 
-import sys,time
+import sys,time,asyncio
 
 from ..globalvars import g
 from ..objmethods import Hilite,InitErrors,MMGenObject
@@ -243,7 +243,7 @@ class TwCommon:
 			self.oneshot_msg = '' if self.oneshot_msg else None # tristate, saves previous state
 			if reply not in self.key_mappings:
 				msg_r('\ninvalid keypress ')
-				time.sleep(0.5)
+				await asyncio.sleep(0.3)
 				continue
 
 			action = self.key_mappings[reply]

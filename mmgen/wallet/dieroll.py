@@ -12,6 +12,7 @@
 wallet.dieroll: dieroll wallet class
 """
 
+import time
 from ..globalvars import g
 from ..opts import opt
 from ..util import msg,msg_r,die,fmt,block_format,remove_whitespace,keypress_confirm
@@ -92,9 +93,9 @@ class wallet(wallet):
 		from ..term import get_char
 		def get_digit(n):
 			p = prompt_fs
-			sleep = g.short_disp_timeout
 			while True:
-				ch = get_char(p.format(n),num_chars=1,sleep=sleep)
+				time.sleep(g.short_disp_timeout)
+				ch = get_char(p.format(n),num_chars=1)
 				if ch in bc.digits:
 					msg_r(CUR_HIDE + ' OK')
 					return ch

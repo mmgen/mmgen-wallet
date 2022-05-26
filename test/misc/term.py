@@ -68,7 +68,7 @@ def tt_line_input():
 	reply = line_input('\nEnter text: ')
 	confirm(f'Did you enter the text {reply!r}?')
 
-def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
+def tt_get_char(raw=False,one_char=False,immed_chars=''):
 	funcname = ('get_char','get_char_raw')[raw]
 	fs = fmt("""
 		Press some keys in quick succession.
@@ -82,13 +82,9 @@ def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
 	)[raw]
 	m2 = (
 		'',
-		f'\nA delay of {sleep} seconds will added before each prompt'
-	)[bool(sleep)]
-	m3 = (
-		'',
 		f'\nThe characters {immed_chars!r} will be repeated immediately, the others with delay.'
 	)[bool(immed_chars)]
-	m4 = 'The F1-F12 keys will be ' + (
+	m3 = 'The F1-F12 keys will be ' + (
 		'blocked entirely.'
 			if one_char and not raw else
 		"echoed AS A SINGLE character '\\x1b'."
@@ -96,12 +92,10 @@ def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
 		'echoed as a FULL CONTROL SEQUENCE.'
 	)
 	if g.platform == 'win':
-		m4 = 'The Escape and F1-F12 keys will be returned as single characters.'
+		m3 = 'The Escape and F1-F12 keys will be returned as single characters.'
 	kwargs = {}
 	if one_char:
 		kwargs.update({'num_chars':1})
-	if sleep:
-		kwargs.update({'sleep':sleep})
 	if immed_chars:
 		kwargs.update({'immed_chars':immed_chars})
 
@@ -109,7 +103,7 @@ def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
 		funcname,
 		','.join(f'{a}={b!r}' for a,b in kwargs.items())
 	))
-	msg(fs.format( m1, yellow(m2), yellow(m3), yellow(m4) ))
+	msg(fs.format( m1, yellow(m2), yellow(m3) ))
 
 	try:
 		while True:
@@ -159,7 +153,6 @@ tt_urand()
 tt_txview()
 
 tt_get_char(one_char=True)
-tt_get_char(one_char=True,sleep=1)
 tt_get_char(one_char=True,raw=True)
 
 if g.platform == 'linux':
