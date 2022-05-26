@@ -281,7 +281,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 			async def do_lbl_add(lbl):
 				e = uo.data[idx-1]
-				if await uo.wallet.add_label( e.twmmid, lbl, addr=e.addr ):
+				if await uo.wallet.add_label( e.twmmid, lbl, coinaddr=e.addr ):
 					await uo.get_data()
 					uo.oneshot_msg = yellow('Label {} {} #{}\n\n'.format(
 						('added to' if lbl else 'removed from'),

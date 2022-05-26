@@ -161,6 +161,7 @@ mods = {
 		'listaddresses',
 		'remove_address',
 		'remove_label',
+		'resolve_address',
 		'twview',
 		'txhist',
 	),

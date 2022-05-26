@@ -167,3 +167,14 @@ class tool_cmd(tool_cmd_base):
 			from ..util import msg
 			msg(f'Address {ret!r} deleted from tracking wallet')
 		return ret
+
+	async def resolve_address(self,mmgen_or_coin_addr:str):
+		"resolve an MMGen address in the tracking wallet to a coin address or vice-versa"
+		from ..tw.ctl import TrackingWallet
+		ret = await (await TrackingWallet(self.proto,mode='w')).resolve_address( mmgen_or_coin_addr )
+		if ret:
+			from ..util import Msg
+			from ..addr import is_coin_addr
+			return ret.mmaddr if is_coin_addr(self.proto,mmgen_or_coin_addr) else ret.coinaddr
+		else:
+			return False

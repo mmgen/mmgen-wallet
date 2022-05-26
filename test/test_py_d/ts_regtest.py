@@ -202,6 +202,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_bal4',                 "Bob's balance (after import)"),
 		('bob_import_list',          'importing flat address list'),
 		('bob_import_list_rescan',   'importing flat address list with --rescan'),
+		('bob_resolve_addr',         'resolving an address in the tracking wallet'),
 		('bob_split2',               "splitting Bob's funds"),
 		('bob_0conf0_getbalance',    "Bob's balance (unconfirmed, minconf=0)"),
 		('bob_0conf1_getbalance',    "Bob's balance (unconfirmed, minconf=1)"),
@@ -908,6 +909,15 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_import_addr(self):
 		addr = self.read_from_tmpfile('non-mmgen.addrs').split()[0]
 		return self.user_import('bob',['--quiet','--address='+addr],nAddr=1)
+
+	def bob_resolve_addr(self):
+		mmaddr = '{}:C:1'.format(self._user_sid('bob'))
+		t = self.spawn('mmgen-tool',['--bob','resolve_address',mmaddr])
+		coinaddr = t.read().split()[0].strip()
+		t = self.spawn('mmgen-tool',['--bob','resolve_address',coinaddr],no_msg=True)
+		mmaddr_res = t.read().split()[0].strip()
+		assert mmaddr == mmaddr_res, f'{mmaddr} != {mmaddr_res}'
+		return t
 
 	def bob_import_list(self):
 		addrfile = joinpath(self.tmpdir,'non-mmgen.addrs')

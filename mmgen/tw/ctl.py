@@ -219,15 +219,15 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		from .addrs import TwAddrList
 		return addr in (await TwAddrList(self.proto,[],0,True,True,True,wallet=self)).coinaddr_list()
 
-	# returns on failure
-	@write_mode
-	async def add_label(self,arg1,label='',addr=None,silent=False,on_fail='return'):
-		assert on_fail in ('return','raise'), 'add_label_chk1'
+	async def resolve_address(self,addrspec,usr_coinaddr=None):
+
 		mmaddr,coinaddr = None,None
-		if is_coin_addr(self.proto,addr or arg1):
-			coinaddr = get_obj(CoinAddr,proto=self.proto,addr=addr or arg1)
-		if is_mmgen_id(self.proto,arg1):
-			mmaddr = TwMMGenID(self.proto,arg1)
+
+		if is_coin_addr(self.proto,usr_coinaddr or addrspec):
+			coinaddr = get_obj(CoinAddr,proto=self.proto,addr=usr_coinaddr or addrspec)
+
+		if is_mmgen_id(self.proto,addrspec):
+			mmaddr = TwMMGenID(self.proto,addrspec)
 
 		if mmaddr and not coinaddr:
 			from ..addrdata import TwAddrData
@@ -240,7 +240,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			assert await self.is_in_wallet(coinaddr), f'Address {coinaddr!r} not found in tracking wallet'
 		except Exception as e:
 			msg(str(e))
-			return False
+			return None
 
 		# Allow for the possibility that BTC addr of MMGen addr was entered.
 		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
@@ -251,18 +251,30 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		if not mmaddr:
 			mmaddr = f'{self.proto.base_coin.lower()}:{coinaddr}'
 
-		mmaddr = TwMMGenID(self.proto,mmaddr)
+		from collections import namedtuple
+		return namedtuple('addr_info',['mmaddr','coinaddr'])(
+			TwMMGenID(self.proto,mmaddr),
+			coinaddr )
+
+	# returns on failure
+	@write_mode
+	async def add_label(self,addrspec,label='',coinaddr=None,silent=False,on_fail='return'):
+		assert on_fail in ('return','raise'), 'add_label_chk1'
+
+		res = await self.resolve_address(addrspec,coinaddr)
+		if not res:
+			return False
 
 		cmt = TwComment(label) if on_fail=='raise' else get_obj(TwComment,s=label)
 		if cmt in (False,None):
 			return False
 
-		lbl_txt = mmaddr + (' ' + cmt if cmt else '')
+		lbl_txt = res.mmaddr + (' ' + cmt if cmt else '')
 		lbl = (
 			TwLabel(self.proto,lbl_txt) if on_fail == 'raise' else
 			get_obj(TwLabel,proto=self.proto,text=lbl_txt) )
 
-		if await self.set_label(coinaddr,lbl) == False:
+		if await self.set_label(res.coinaddr,lbl) == False:
 			if not silent:
 				msg( 'Label could not be {}'.format('added' if label else 'removed') )
 			return False
