@@ -161,6 +161,7 @@ mods = {
 		'listaddresses',
 		'remove_address',
 		'remove_label',
+		'rescan_address',
 		'rescan_blockchain',
 		'resolve_address',
 		'twview',

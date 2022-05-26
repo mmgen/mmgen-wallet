@@ -14,7 +14,7 @@ base_proto.bitcoin.twctl: Bitcoin base protocol tracking wallet control class
 
 from ....globalvars import g
 from ....tw.ctl import TrackingWallet
-from ....util import msg,msg_r,rmsg,die,write_mode
+from ....util import msg,msg_r,rmsg,vmsg,die,suf,fmt_list,write_mode
 
 class BitcoinTrackingWallet(TrackingWallet):
 
@@ -88,3 +88,68 @@ class BitcoinTrackingWallet(TrackingWallet):
 				tip = await self.rpc.call('getblockcount')
 
 		msg('Done')
+
+	@write_mode
+	async def rescan_address(self,addrspec):
+		res = await self.resolve_address(addrspec,None)
+		if not res:
+			return False
+		return await self.rescan_addresses([res.coinaddr])
+
+	@write_mode
+	async def rescan_addresses(self,coin_addrs):
+
+		import asyncio
+
+		async def do_scan():
+			return await self.rpc.call(
+				'scantxoutset',
+				'start',
+				[f'addr({a})' for a in coin_addrs],
+				timeout = 720 ) # call may take several minutes to complete
+
+		async def do_status():
+			m = f'{CR}Scanning UTXO set: '
+			msg_r(m)
+			while True:
+				await asyncio.sleep(2)
+				res = await self.rpc.call('scantxoutset','status')
+				if res:
+					msg_r(m + f'{res["progress"]}% completed ')
+				if task1.done():
+					msg('')
+					return
+
+		CR = '\r'
+
+		if self.rpc.backend.name == 'aiohttp':
+			task1 = asyncio.create_task( do_scan() )
+			task2 = asyncio.create_task( do_status() )
+			res = await task1
+			await task2
+		else:
+			msg_r(f'Scanning UTXO set, this could take several minutes...')
+			res = await do_scan()
+			msg('done')
+
+		if not res['success']:
+			msg('UTXO scanning failed or was interrupted')
+			return False
+		elif res['unspents']:
+			blocks = sorted({ i['height'] for i in res['unspents'] })
+			msg('Found {} unspent output{} in {} block{}'.format(
+				len(res['unspents']),
+				suf(res['unspents']),
+				len(blocks),
+				suf(blocks) ))
+			vmsg(f'Blocks to rescan: {fmt_list(blocks,fmt="bare")}')
+			for n,block in enumerate(blocks):
+				msg_r(f'{CR}Rescanning block: {block} ({n+1}/{len(blocks)})')
+				# httplib seems to require fresh connection here, so specify timeout
+				await self.rpc.call('rescanblockchain',block,block,timeout=60)
+			msg('\nRescan completed OK')
+			return True
+		else:
+			msg('Imported address has no balance' if len(coin_addrs) == 1 else
+				'Imported addresses have no balances' )
+			return True

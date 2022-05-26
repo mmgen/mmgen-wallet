@@ -179,6 +179,11 @@ class tool_cmd(tool_cmd_base):
 		else:
 			return False
 
+	async def rescan_address(self,mmgen_or_coin_addr:str):
+		"rescan an address in the tracking wallet to update its balance"
+		from ..tw.ctl import TrackingWallet
+		return await (await TrackingWallet(self.proto,mode='w')).rescan_address( mmgen_or_coin_addr )
+
 	async def rescan_blockchain(self,
 			start_block: int = None,
 			stop_block: int  = None ):

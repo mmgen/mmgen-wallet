@@ -203,6 +203,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_import_list',          'importing flat address list'),
 		('bob_import_list_rescan',   'importing flat address list with --rescan'),
 		('bob_resolve_addr',         'resolving an address in the tracking wallet'),
+		('bob_rescan_addr',          'rescanning an address'),
 		('bob_rescan_blockchain_all','rescanning the blockchain (full rescan)'),
 		('bob_rescan_blockchain_gb', 'rescanning the blockchain (Genesis block)'),
 		('bob_rescan_blockchain_one','rescanning the blockchain (single block)'),
@@ -930,6 +931,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_import_list_rescan(self):
 		addrfile = joinpath(self.tmpdir,'non-mmgen.addrs')
 		return self.user_import('bob',['--quiet','--rescan','--addrlist',addrfile],nAddr=5)
+
+	def bob_rescan_addr(self):
+		sid = self._user_sid('bob')
+		t = self.spawn('mmgen-tool',['--bob','rescan_address',f'{sid}:C:1'])
+		t.expect('Found 1 unspent output')
+		t.expect('completed OK')
+		return t
 
 	def bob_rescan_blockchain(self,add_args,expect):
 		t = self.spawn('mmgen-tool',['--bob','rescan_blockchain'] + add_args)
