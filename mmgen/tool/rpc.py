@@ -161,7 +161,8 @@ class tool_cmd(tool_cmd_base):
 	async def remove_address(self,mmgen_or_coin_addr:str):
 		"remove an address from tracking wallet"
 		from ..tw.ctl import TrackingWallet
-		ret = await (await TrackingWallet(self.proto,mode='w')).remove_address(mmgen_or_coin_addr) # returns None on failure
+		# returns None on failure:
+		ret = await (await TrackingWallet(self.proto,mode='w')).remove_address(mmgen_or_coin_addr)
 		if ret:
 			from ..util import msg
 			msg(f'Address {ret!r} deleted from tracking wallet')

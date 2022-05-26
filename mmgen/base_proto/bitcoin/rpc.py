@@ -258,7 +258,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		'getmempoolentry',
 		'getrawtransaction',
 		'gettransaction',
-		'importaddress',
+		'importaddress', # address (address or script) label rescan p2sh (Add P2SH version of the script)
 		'listaccounts',
 		'listlabels',
 		'listunspent',

@@ -176,7 +176,7 @@ def fmt_list(iterable,fmt='dfl',indent=''):
 		'min':       (",",         "'",    "'"),
 		'col':       ('\n'+indent, indent, '' ),
 	}[fmt]
-	return lq + sep.join(iterable) + rq
+	return lq + sep.join(str(i) for i in iterable) + rq
 
 def list_gen(*data):
 	"""
@@ -464,8 +464,8 @@ def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 
 def confirm_or_raise(message,action,expect='YES',exit_msg='Exiting at user request'):
-	if message.strip():
-		msg(message.strip())
+	if message:
+		msg(message)
 	if line_input(
 			(f'{action}  ' if action[0].isupper() else f'Are you sure you want to {action}?\n') +
 			f'Type uppercase {expect!r} to confirm: '

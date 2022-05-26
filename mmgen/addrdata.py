@@ -94,7 +94,7 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 				out[al_id].append(AddrListEntry(self.proto,idx=obj.idx,addr=addr_array[0],label=l.comment))
 				i += 1
 
-		vmsg(f'{i} {g.prog_name} addresses found, {len(twd)} accounts total')
+		vmsg(f'{i} {g.proj_name} addresses found, {len(twd)} accounts total')
 
 		for al_id in out:
 			self.add(AddrList(self.proto,al_id=al_id,adata=AddrListData(sorted(out[al_id],key=lambda a: a.idx))))

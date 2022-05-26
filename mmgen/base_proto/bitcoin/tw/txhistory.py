@@ -258,8 +258,7 @@ Actions: [q]uit, r[e]draw:
 		#                         chain. e.g. 1 would mean the best block hash. Note: this is not used
 		#                         as a filter, but only affects [lastblock] in the return value
 		# 3. include_watchonly    (boolean, optional, default=true for watch-only wallets, otherwise
-		#                         false) Include transactions to watch-only addresses (see
-		#                         'importaddress')
+		#                         false) Include transactions to watch-only addresses
 		# 4. include_removed      (boolean, optional, default=true) Show transactions that were removed
 		#                         due to a reorg in the "removed" array (not guaranteed to work on
 		#                         pruned nodes)

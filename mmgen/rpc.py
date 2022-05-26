@@ -106,6 +106,7 @@ class RPCBackends:
 			self.timeout        = caller.timeout
 			self.http_hdrs      = caller.http_hdrs
 			self.make_host_path = caller.make_host_path
+			self.name           = type(self).__name__
 
 	class aiohttp(base):
 		"""

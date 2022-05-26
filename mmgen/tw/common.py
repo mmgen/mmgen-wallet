@@ -221,27 +221,31 @@ class TwCommon:
 	async def view_and_sort(self):
 		from ..opts import opt
 		from ..term import get_char
-		self.prompt = type(self).prompt.strip() + '\b'
+		prompt = self.prompt.strip() + '\b'
 		self.no_output = False
 		self.oneshot_msg = None
 		self.interactive = True
+		immed_chars = ''.join(self.key_mappings.keys())
+
+		CUR_RIGHT = lambda n: f'\033[{n}C'
 		CUR_HOME  = '\033[H'
 		ERASE_ALL = '\033[0J'
+		self.cursor_to_end_of_prompt = CUR_RIGHT( len(prompt.split('\n')[-1]) - 2 )
+		clear_screen = '\n\n' if (opt.no_blank or g.test_suite) else CUR_HOME + ERASE_ALL
 
 		while True:
-			msg_r('' if self.no_output else '\n\n' if (opt.no_blank or g.test_suite) else CUR_HOME+ERASE_ALL)
 			reply = get_char(
 				'' if self.no_output else (
-					await self.format_squeezed()
+					clear_screen
+					+ await self.format_squeezed()
 					+ '\n'
 					+ (self.oneshot_msg or '')
-					+ self.prompt
+					+ prompt
 				),
-				immed_chars = ''.join(self.key_mappings.keys())
-			)
+				immed_chars = immed_chars )
 			self.no_output = False
 			self.oneshot_msg = '' if self.oneshot_msg else None # tristate, saves previous state
-			if reply not in self.key_mappings:
+			if reply not in immed_chars:
 				msg_r('\ninvalid keypress ')
 				await asyncio.sleep(0.3)
 				continue
@@ -318,8 +322,7 @@ class TwCommon:
 
 		def post_view(self,parent):
 			if g.platform == 'linux' and parent.oneshot_msg == None:
-				CUR_RIGHT = lambda n: f'\033[{n}C'
-				msg_r(CUR_RIGHT(len(parent.prompt.split('\n')[-1])-2))
+				msg_r(parent.cursor_to_end_of_prompt)
 				parent.no_output = True
 
 	class item_action:

@@ -198,8 +198,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_bal3',                 "Bob's balance"),
 		('bob_pre_import',           'sending to non-imported address'),
 		('generate',                 'mining a block'),
-		('bob_import_addr',          'importing non-MMGen address with --rescan'),
-		('bob_bal4',                 "Bob's balance (after import with rescan)"),
+		('bob_import_addr',          'importing non-MMGen address'),
+		('bob_bal4',                 "Bob's balance (after import)"),
 		('bob_import_list',          'importing flat address list'),
 		('bob_import_list_rescan',   'importing flat address list with --rescan'),
 		('bob_split2',               "splitting Bob's funds"),
@@ -421,7 +421,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_import_miner_addr(self):
 		if not self.deterministic:
 			return 'skip'
-		return self.spawn('mmgen-addrimport', [ '--bob', '--rescan', '--quiet', f'--address={self.miner_addr}' ])
+		return self.spawn(
+			'mmgen-addrimport',
+			[ '--bob', '--rescan', '--quiet', f'--address={self.miner_addr}' ] )
 
 	def fund_wallet_deterministic(self,user,addr,utxo_nums,skip_passphrase=False):
 		"""

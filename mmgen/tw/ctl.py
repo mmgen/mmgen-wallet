@@ -234,9 +234,9 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			coinaddr = (await TwAddrData(self.proto)).mmaddr2coinaddr(mmaddr)
 
 		try:
-			if not is_mmgen_id(self.proto,arg1):
-				assert coinaddr, f'Invalid coin address for this chain: {arg1}'
-			assert coinaddr, f'{g.proj_name} address {mmaddr!r} not found in tracking wallet'
+			assert coinaddr, (
+				f'{g.proj_name} address {mmaddr!r} not found in tracking wallet' if mmaddr else
+				f'Invalid coin address for this chain: {addrspec}' )
 			assert await self.is_in_wallet(coinaddr), f'Address {coinaddr!r} not found in tracking wallet'
 		except Exception as e:
 			msg(str(e))
@@ -268,8 +268,8 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			return False
 		else:
 			desc = '{} address {} in tracking wallet'.format(
-				mmaddr.type.replace('mmg','MMG'),
-				mmaddr.replace(self.proto.base_coin.lower()+':','') )
+				res.mmaddr.type.replace('mmgen','MMGen'),
+				res.mmaddr.replace(self.proto.base_coin.lower()+':','') )
 			if label:
 				msg(f'Added label {label!r} to {desc}')
 			else:

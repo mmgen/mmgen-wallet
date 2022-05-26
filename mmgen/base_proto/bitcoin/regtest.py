@@ -56,12 +56,10 @@ def create_hdseed(proto):
 def cliargs_convert(args):
 	def gen():
 		for arg in args:
-			if arg.lower() in ('true','false'):
-				yield (True,False)[arg.lower() == 'false']
-			elif len(str(arg)) < 20 and re.match(r'[0-9]+',arg):
-				yield int(arg)
-			else:
-				yield arg
+			try:
+				yield json.loads(arg) # list, dict, bool, int, null
+			except:
+				yield arg # arbitrary string
 
 	return tuple(gen())
 

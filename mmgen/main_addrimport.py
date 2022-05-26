@@ -26,31 +26,10 @@ from .common import *
 from .addrlist import AddrList,KeyAddrList
 from .tw.common import TwLabel
 
-ai_msgs = lambda k: {
-	'rescan': """
-WARNING: You've chosen the '--rescan' option.  Rescanning the blockchain is
-necessary only if an address you're importing is already in the blockchain,
-has a balance and is not in your tracking wallet.  Note that the rescanning
-process is very slow (>30 min. for each imported address on a low-powered
-computer).
-	""".strip() if opt.rescan else """
-WARNING: If any of the addresses you're importing is already in the blockchain,
-has a balance and is not in your tracking wallet, you must exit the program now
-and rerun it using the '--rescan' option.
-""".strip(),
-	'bad_args': f"""
-You must specify an {g.proj_name} address file, a single address with the '--address'
-option, or a list of non-{g.proj_name} addresses with the '--addrlist' option
-""".strip()
-}[k]
-
-# In batch mode, daemon just rescans each address separately anyway, so make
-# --batch and --rescan incompatible.
-
 opts_data = {
 	'text': {
 		'desc': f'Import addresses into an {g.proj_name} tracking wallet',
-		'usage':'[opts] [mmgen address file]',
+		'usage':'[opts] [MMGen address file]',
 		'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long options (common options)
@@ -70,6 +49,23 @@ already in the tracking wallet.
 The --batch and --rescan options cannot be used together.
 """
 	}
+}
+
+addrimport_msgs = {
+	'rescan': """
+		WARNING: You’ve chosen the ‘--rescan’ option.  Rescanning the blockchain is
+		necessary only if an address you’re importing is already in an output or
+		outputs in the blockchain but not all transactions involving the address
+		are known to the tracking wallet.
+
+		Rescanning is performed via the UTXO method, which is only minimally affected
+		by the number of addresses imported and typically takes just a few minutes.
+	""",
+	'bad_args': f"""
+		You must specify either an {g.proj_name} address file, a single address with
+		the ‘--address’ option, or a flat list of non-{g.proj_name} addresses with
+		the ‘--addrlist’ option.
+	"""
 }
 
 def parse_cmd_args(rpc,cmd_args):
@@ -96,7 +92,7 @@ def parse_cmd_args(rpc,cmd_args):
 		al = AddrList(proto=proto,addrlist=[opt.address])
 		infile = 'command line'
 	else:
-		die(1,ai_msgs('bad_args'))
+		die(1,addrimport_msgs['bad_args'])
 
 	return al,infile
 
@@ -105,17 +101,17 @@ def check_opts(tw):
 	rescan = bool(opt.rescan)
 
 	if rescan and not 'rescan' in tw.caps:
-		msg(f"'--rescan' ignored: not supported by {type(tw).__name__}")
+		msg(f"‘--rescan’ ignored: not supported by {type(tw).__name__}")
 		rescan = False
 
 	if rescan and not opt.quiet:
-		confirm_or_raise(
-			message = ai_msgs('rescan'),
-			action  = 'continue',
-			expect  = 'YES' )
+		if not keypress_confirm(
+				'\n{}\n\nContinue?'.format(addrimport_msgs['rescan']),
+				default_yes = True ):
+			die(1,'Exiting at user request')
 
 	if batch and not 'batch' in tw.caps:
-		msg(f"'--batch' ignored: not supported by {type(tw).__name__}")
+		msg(f"‘--batch’ ignored: not supported by {type(tw).__name__}")
 		batch = False
 
 	return batch,rescan
@@ -175,6 +171,9 @@ async def main():
 
 	from .rpc import rpc_init
 	tw.rpc = await rpc_init(proto)
+
+	for k,v in addrimport_msgs.items():
+		addrimport_msgs[k] = fmt(v,indent='  ',strip_char='\t').rstrip()
 
 	al,infile = parse_cmd_args(tw.rpc,cmd_args)
 
