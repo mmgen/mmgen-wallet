@@ -131,39 +131,6 @@ def check_opts(tw):
 
 	return batch,rescan
 
-async def import_address(args):
-	try:
-		res = await args.tw.import_address( args.addr, args.lbl )
-		qmsg(args.msg)
-		return res
-	except Exception as e:
-		die(2,f'\nImport of address {args.addr!r} failed: {e.args[0]!r}')
-
-def gen_args_list(tw,al,batch):
-
-	fs = '{:%s} {:34} {:%s} - OK' % (
-		len(str(al.num_addrs)) * 2 + 2,
-		1 if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 13 )
-
-	ad = namedtuple('args_list_data',['addr','lbl','tw','msg'])
-
-	for num,e in enumerate(al.data,1):
-		if e.idx:
-			label = f'{al.al_id}:{e.idx}' + (' ' + e.label if e.label else '')
-			add_msg = label
-		else:
-			label = f'{proto.base_coin.lower()}:{e.addr}'
-			add_msg = 'non-'+g.proj_name
-
-		if batch:
-			yield ad( e.addr, TwLabel(proto,label), None, None )
-		else:
-			yield ad(
-				addr = e.addr,
-				lbl  = TwLabel(proto,label),
-				tw   = tw,
-				msg  = fs.format(f'{num}/{al.num_addrs}:', e.addr, f'({add_msg})') )
-
 async def main():
 	from .tw.ctl import TrackingWallet
 	if opt.token_addr:
@@ -195,14 +162,17 @@ async def main():
 
 	batch,rescan = check_opts(tw)
 
-	args_list = list(gen_args_list(tw,al,batch))
+	def gen_args_list(al):
+		_d = namedtuple('import_data',['addr','twmmid','comment'])
+		for num,e in enumerate(al.data,1):
+			yield _d(
+				addr    = e.addr,
+				twmmid  = f'{al.al_id}:{e.idx}' if e.idx else f'{proto.base_coin.lower()}:{e.addr}',
+				comment = e.label )
 
-	if batch:
-		ret = await tw.batch_import_address([ (a.addr,a.lbl) for a in args_list ])
-		msg(f'OK: {len(ret)} addresses imported')
-	else:
-		await asyncio.gather(*(import_address(a) for a in args_list))
-		msg('Address import completed OK')
+	args_list = list(gen_args_list(al))
+
+	await tw.import_address_common( args_list, batch=batch )
 
 	if rescan:
 		await tw.rescan_addresses({a.addr for a in args_list})
