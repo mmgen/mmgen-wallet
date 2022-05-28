@@ -67,7 +67,7 @@ class MMGenRegtest(MMGenObject):
 
 	rpc_user     = 'bobandalice'
 	rpc_password = 'hodltothemoon'
-	users        = ('bob','alice','miner')
+	users        = ('bob','alice','carol','miner')
 	coins        = ('btc','bch','ltc')
 	usr_cmds     = ('setup','generate','send','start','stop', 'state', 'balances','mempool','cli','wallet_cli')
 

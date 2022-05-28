@@ -105,6 +105,8 @@ class GlobalContext(Lockable):
 	# regtest:
 	bob                  = False
 	alice                = False
+	carol                = False
+	regtest_user         = None
 
 	# miscellaneous features:
 	use_internal_keccak_module = False
@@ -165,8 +167,9 @@ class GlobalContext(Lockable):
 	common_opts = (
 		'accept_defaults',
 		'aiohttp_rpc_queue_len',
-		'alice',
 		'bob',
+		'alice',
+		'carol',
 		'coin',
 		'color',
 		'columns',
@@ -189,7 +192,7 @@ class GlobalContext(Lockable):
 	init_opts = ('show_hash_presets','yes','verbose')
 	incompatible_opts = (
 		('help','longhelp'),
-		('bob','alice'),
+		('bob','alice','carol'),
 		('label','keep_label'),
 		('tx_id','info'),
 		('tx_id','terse_info'),

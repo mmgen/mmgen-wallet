@@ -236,8 +236,9 @@ common_opts_data = {
 --, --testnet=0|1          Disable or enable testnet
 --, --skip-cfg-file        Skip reading the configuration file
 --, --version              Print version information and exit
---, --bob                  Specify user "Bob" in MMGen regtest mode
---, --alice                Specify user "Alice" in MMGen regtest mode
+--, --bob                  Specify user “Bob” in MMGen regtest mode
+--, --alice                Specify user “Alice” in MMGen regtest mode
+--, --carol                Specify user “Carol” in MMGen regtest mode
 	""",
 	'code': lambda help_notes,proto,s: s.format(
 			pnm    = g.proj_name,
@@ -375,9 +376,10 @@ def init(
 	g.coin = g.coin.upper() or 'BTC'
 	g.token = g.token.upper() or None
 
-	if g.bob or g.alice or g.prog_name == 'mmgen-regtest':
+	if g.bob or g.alice or g.carol or g.prog_name == 'mmgen-regtest':
+		g.regtest_user = 'bob' if g.bob else 'alice' if g.alice else 'carol' if g.carol else None
 		g.regtest = True
-		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
+		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),(g.regtest_user or 'none'))
 
 	# === end global var initialization === #
 

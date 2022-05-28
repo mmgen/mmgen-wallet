@@ -164,7 +164,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		is created, False otherwise
 		"""
 
-		if called or self.chain == 'regtest':
+		if called or (self.chain == 'regtest' and g.regtest_user != 'carol'):
 			return False
 
 		twname = self.daemon.tracking_wallet_name
@@ -173,7 +173,14 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		m = f'Please fix your {self.daemon.desc} wallet installation or cmdline options'
 		ret = False
 
-		if len(loaded_wnames) == 1:
+		if g.carol:
+			if 'carol' in loaded_wnames:
+				ret = True
+			elif wallet_create:
+				await self.icall('createwallet',wallet_name='carol')
+				ymsg(f'Created {self.daemon.coind_name} wallet {"carol"!r}')
+				ret = True
+		elif len(loaded_wnames) == 1:
 			loaded_wname = loaded_wnames[0]
 			if twname in wnames and loaded_wname != twname:
 				await self.call('unloadwallet',loaded_wname)
