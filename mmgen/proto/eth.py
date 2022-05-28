@@ -31,7 +31,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 	chain_names   = ['ethereum','foundation']
 	sign_mode     = 'standalone'
 	caps          = ('token',)
-	mmcaps        = ('key','addr','rpc','tx')
+	mmcaps        = ('key','addr','rpc_init','tx')
 	base_proto    = 'Ethereum'
 	avg_bdi       = 15
 	ignore_daemon_version = False

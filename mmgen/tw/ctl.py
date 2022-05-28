@@ -20,6 +20,8 @@
 twctl: Tracking wallet control class for the MMGen suite
 """
 
+from collections import namedtuple
+
 from ..globalvars import g
 from ..util import msg,dmsg,write_mode,base_proto_subclass,die
 from ..base_obj import AsyncInit
@@ -251,7 +253,6 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		if not mmaddr:
 			mmaddr = f'{self.proto.base_coin.lower()}:{coinaddr}'
 
-		from collections import namedtuple
 		return namedtuple('addr_info',['mmaddr','coinaddr'])(
 			TwMMGenID(self.proto,mmaddr),
 			coinaddr )

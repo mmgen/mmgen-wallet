@@ -4,13 +4,9 @@ if os.getenv('MMGEN_BOGUS_UNSPENT_DATA'):
 
 	rpc_init_orig = rpc_init
 
-	async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False):
+	async def rpc_init(*args,**kwargs):
 
-		ret = await rpc_init_orig(
-			proto = proto,
-			backend = backend,
-			daemon = daemon,
-			ignore_daemon_version = ignore_daemon_version )
+		ret = await rpc_init_orig(*args,**kwargs)
 
 		ret.blockcount = 1000000
 

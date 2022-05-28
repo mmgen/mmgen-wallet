@@ -87,11 +87,11 @@ class Daemon(Lockable):
 
 	def run_cmd(self,cmd,silent=False,is_daemon=False):
 
-		if is_daemon and not silent:
-			msg(f'Starting {self.desc} on port {self.bind_port}')
-
 		if self.debug:
-			msg(f'\nExecuting: {" ".join(cmd)}')
+			msg('\n\n')
+
+		if self.debug or (is_daemon and not silent):
+			msg(f'Starting {self.desc} on port {self.bind_port}')
 
 		if self.use_threads and is_daemon and not self.opt.no_daemonize:
 			ret = self.exec_cmd_thread(cmd)

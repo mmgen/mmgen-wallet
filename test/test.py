@@ -981,7 +981,7 @@ class TestSuiteRunner(object):
 		elif ret == 'ok':
 			ok()
 			self.cmd_total += 1
-		elif ret == 'skip':
+		elif ret in ('skip','silent'):
 			pass
 		elif type(ret) == tuple and ret[0] == 'skip_warn':
 			self.skipped_warnings.append(

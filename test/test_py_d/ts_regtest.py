@@ -338,7 +338,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def setup(self):
 		stop_test_daemons(self.proto.network_id,force=True,remove_datadir=True)
-		try: shutil.rmtree(joinpath(self.tr.data_dir,'regtest'))
+		from shutil import rmtree
+		try: rmtree(joinpath(self.tr.data_dir,'regtest'))
 		except: pass
 		t = self.spawn('mmgen-regtest',['-n','setup'])
 		for s in ('Starting','Creating','Creating','Creating','Mined','Setup complete'):
@@ -942,7 +943,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		sid = self._user_sid('bob')
 		t = self.spawn('mmgen-tool',['--bob','rescan_address',f'{sid}:C:1'])
 		t.expect('Found 1 unspent output')
-		t.expect('completed OK')
+		t.expect('updated successfully')
 		return t
 
 	def bob_rescan_blockchain(self,add_args,expect):

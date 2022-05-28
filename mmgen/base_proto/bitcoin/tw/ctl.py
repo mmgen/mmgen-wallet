@@ -147,9 +147,9 @@ class BitcoinTrackingWallet(TrackingWallet):
 				msg_r(f'{CR}Rescanning block: {block} ({n+1}/{len(blocks)})')
 				# httplib seems to require fresh connection here, so specify timeout
 				await self.rpc.call('rescanblockchain',block,block,timeout=60)
-			msg('\nRescan completed OK')
+			msg(f'\nAddress balance{suf(coin_addrs)} updated successfully')
 			return True
 		else:
-			msg('Imported address has no balance' if len(coin_addrs) == 1 else
-				'Imported addresses have no balances' )
+			msg('Address has no balance' if len(coin_addrs) == 1 else
+				'Addresses have no balances' )
 			return True

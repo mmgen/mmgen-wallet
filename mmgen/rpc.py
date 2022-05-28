@@ -466,11 +466,14 @@ def handle_unsupported_daemon_version(rpc,name,warn_only):
 			option, in which case you proceed at your own risk.
 			""",indent='    '))
 
-async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False):
+async def rpc_init(
+		proto,
+		backend               = None,
+		daemon                = None,
+		ignore_daemon_version = False ):
 
-	if not 'rpc' in proto.mmcaps:
-		die(1,f'Coin daemon operations not supported for {proto.name} protocol!')
-
+	if not 'rpc_init' in proto.mmcaps:
+		die(1,f'rpc_init() not supported for {proto.name} protocol!')
 
 	cls = getattr(
 		importlib.import_module(f'mmgen.base_proto.{proto.base_proto.lower()}.rpc'),

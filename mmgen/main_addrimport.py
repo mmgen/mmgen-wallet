@@ -97,8 +97,10 @@ def parse_cmd_args(rpc,cmd_args):
 		if opt.addrlist:
 			al = AddrList(
 				proto = proto,
-				addrlist = get_lines_from_file(infile,f'non-{g.proj_name} addresses',
-				trim_comments = True) )
+				addrlist = get_lines_from_file(
+					infile,
+					f'non-{g.proj_name} addresses',
+					trim_comments = True ) )
 		else:
 			al = import_mmgen_list(infile)
 	elif len(cmd_args) == 0 and opt.address:
