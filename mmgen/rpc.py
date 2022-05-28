@@ -102,10 +102,9 @@ class RPCBackends:
 			self.host           = caller.host
 			self.port           = caller.port
 			self.proxy          = caller.proxy
-			self.url            = caller.url
+			self.host_url       = caller.host_url
 			self.timeout        = caller.timeout
 			self.http_hdrs      = caller.http_hdrs
-			self.make_host_path = caller.make_host_path
 			self.name           = type(self).__name__
 
 	class aiohttp(base):
@@ -124,10 +123,10 @@ class RPCBackends:
 			else:
 				self.auth = None
 
-		async def run(self,payload,timeout,wallet):
+		async def run(self,payload,timeout,host_path):
 			dmsg_rpc('\n    RPC PAYLOAD data (aiohttp) ==>\n{}\n',payload)
 			async with self.session.post(
-				url     = self.url + self.make_host_path(wallet),
+				url     = self.host_url + host_path,
 				auth    = self.auth,
 				data    = json.dumps(payload,cls=json_encoder),
 				timeout = timeout or self.timeout,
@@ -155,10 +154,10 @@ class RPCBackends:
 					'https': f'socks5h://{self.proxy}'
 				})
 
-		async def run(self,payload,timeout,wallet):
+		async def run(self,payload,timeout,host_path):
 			dmsg_rpc('\n    RPC PAYLOAD data (requests) ==>\n{}\n',payload)
 			res = self.session.post(
-				url     = self.url + self.make_host_path(wallet),
+				url     = self.host_url + host_path,
 				data    = json.dumps(payload,cls=json_encoder),
 				timeout = timeout or self.timeout,
 				verify  = False )
@@ -184,7 +183,7 @@ class RPCBackends:
 					'',
 					auth_str_b64 ))
 
-		async def run(self,payload,timeout,wallet):
+		async def run(self,payload,timeout,host_path):
 			dmsg_rpc('\n    RPC PAYLOAD data (httplib) ==>\n{}\n',payload)
 
 			if timeout:
@@ -196,7 +195,7 @@ class RPCBackends:
 			try:
 				s.request(
 					method  = 'POST',
-					url     = self.make_host_path(wallet),
+					url     = host_path,
 					body    = json.dumps(payload,cls=json_encoder),
 					headers = self.http_hdrs )
 				r = s.getresponse() # => http.client.HTTPResponse instance
@@ -234,7 +233,7 @@ class RPCBackends:
 			self.exec_opts = list(gen_opts()) + ['--silent']
 			self.arg_max = 8192 # set way below system ARG_MAX, just to be safe
 
-		async def run(self,payload,timeout,wallet):
+		async def run(self,payload,timeout,host_path):
 			data = json.dumps(payload,cls=json_encoder)
 			if len(data) > self.arg_max:
 				return self.httplib(payload,timeout=timeout)
@@ -245,7 +244,7 @@ class RPCBackends:
 				'--connect-timeout', str(timeout or self.timeout),
 				'--write-out', '%{http_code}',
 				'--data-binary', data
-				] + self.exec_opts + [self.url + self.make_host_path(wallet)]
+				] + self.exec_opts + [self.host_url + host_path]
 
 			dmsg_rpc('    RPC curl exec data ==>\n{}\n',exec_cmd)
 
@@ -262,7 +261,6 @@ class RPCClient(MMGenObject):
 	auth_type = None
 	has_auth_cookie = False
 	network_proto = 'http'
-	host_path = ''
 	proxy = None
 
 	def __init__(self,host,port,test_connection=True):
@@ -282,15 +280,11 @@ class RPCClient(MMGenObject):
 				die( 'SocketError', f'Unable to connect to {host}:{port}' )
 
 		self.http_hdrs = { 'Content-Type': 'application/json' }
-		self.url = f'{self.network_proto}://{host}:{port}{self.host_path}'
+		self.host_url = f'{self.network_proto}://{host}:{port}'
 		self.host = host
 		self.port = port
 		self.timeout = g.http_timeout
 		self.auth = None
-
-	@staticmethod
-	def make_host_path(foo):
-		return ''
 
 	def set_backend(self,backend=None):
 		bn = backend or opt.rpc_backend
@@ -336,7 +330,7 @@ class RPCClient(MMGenObject):
 		return await self.process_http_resp(self.backend.run(
 			payload = {'id': 1, 'jsonrpc': '2.0', 'method': method, 'params': params },
 			timeout = timeout,
-			wallet  = wallet
+			host_path = self.make_host_path(wallet)
 		))
 
 	async def batch_call(self,method,param_list,timeout=None,wallet=None):
@@ -351,7 +345,7 @@ class RPCClient(MMGenObject):
 				'method': method,
 				'params': params } for n,params in enumerate(param_list,1) ],
 			timeout = timeout,
-			wallet  = wallet
+			host_path = self.make_host_path(wallet)
 		),batch=True)
 
 	async def gathered_call(self,method,args_list,timeout=None,wallet=None):
@@ -371,7 +365,7 @@ class RPCClient(MMGenObject):
 			tasks = [self.process_http_resp(self.backend.run(
 						payload = {'id': n, 'jsonrpc': '2.0', 'method': method, 'params': params },
 						timeout = timeout,
-						wallet  = wallet
+						host_path = self.make_host_path(wallet)
 					)) for n,(method,params)  in enumerate(cmd_list[cur_pos:chunk_size+cur_pos],1)]
 			ret.extend(await asyncio.gather(*tasks))
 			cur_pos += chunk_size

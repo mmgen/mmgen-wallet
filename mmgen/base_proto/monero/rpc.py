@@ -18,7 +18,6 @@ class MoneroRPCClient(RPCClient):
 
 	auth_type = None
 	network_proto = 'https'
-	host_path = '/json_rpc'
 	verify_server = False
 
 	def __init__(self,host,port,user,passwd,test_connection=True,proxy=None,daemon=None):
@@ -49,7 +48,7 @@ class MoneroRPCClient(RPCClient):
 		return await self.process_http_resp(self.backend.run(
 			payload = {'id': 0, 'jsonrpc': '2.0', 'method': method, 'params': kwargs },
 			timeout = 3600, # allow enough time to sync ≈1,000,000 blocks
-			wallet = None
+			host_path = '/json_rpc'
 		))
 
 	rpcmethods = ( 'get_info', )
@@ -57,19 +56,14 @@ class MoneroRPCClient(RPCClient):
 class MoneroRPCClientRaw(MoneroRPCClient):
 
 	json_rpc = False
-	host_path = '/'
 
 	async def call(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
 		return await self.process_http_resp(self.backend.run(
 			payload = kwargs,
 			timeout = self.timeout,
-			wallet = method
+			host_path = f'/{method}'
 		))
-
-	@staticmethod
-	def make_host_path(arg):
-		return arg
 
 	async def do_stop_daemon(self,silent=False):
 		return await self.call('stop_daemon')

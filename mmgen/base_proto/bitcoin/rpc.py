@@ -77,6 +77,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 	auth_type = 'basic'
 	has_auth_cookie = True
+	wallet_path = '/'
 
 	async def __init__(self,proto,daemon,backend):
 
@@ -150,6 +151,13 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		if not self.chain == 'regtest':
 			await self.check_tracking_wallet()
 
+		# for regtest, wallet path must remain '/' until Carol’s user wallet has been created
+		if g.regtest_user:
+			self.wallet_path = f'/wallet/{g.regtest_user}'
+
+	def make_host_path(self,wallet):
+		return f'/wallet/{wallet}' if wallet else self.wallet_path
+
 	async def check_tracking_wallet(self,wallet_checked=[]):
 		if not wallet_checked:
 			wallets = await self.call('listwallets')
@@ -195,13 +203,6 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 	def get_daemon_auth_cookie(self):
 		fn = self.get_daemon_auth_cookie_fn()
 		return get_lines_from_file(fn,'cookie',quiet=True)[0] if os.access(fn,os.R_OK) else ''
-
-	@staticmethod
-	def make_host_path(wallet):
-		return (
-			'/wallet/{}'.format('bob' if g.bob else 'alice') if (g.bob or g.alice) else
-			'/wallet/{}'.format(wallet) if wallet else '/'
-		)
 
 	def info(self,info_id):
 

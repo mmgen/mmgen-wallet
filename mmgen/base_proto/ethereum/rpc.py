@@ -80,6 +80,9 @@ class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
 			self.chainID = Int(ci,16)
 			self.chain = self.proto.chain_ids[self.chainID]
 
+	def make_host_path(self,wallet):
+		return ''
+
 	rpcmethods = (
 		'eth_blockNumber',
 		'eth_call',
