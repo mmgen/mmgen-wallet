@@ -267,6 +267,10 @@ class RPCClient(MMGenObject):
 
 	def __init__(self,host,port,test_connection=True):
 
+		# aiohttp workaround, and may speed up RPC performance overall on some systems:
+		if g.platform == 'win' and host == 'localhost':
+			host = '127.0.0.1'
+
 		dmsg_rpc(f'=== {type(self).__name__}.__init__() debug ===')
 		dmsg_rpc(f'    cls [{type(self).__name__}] host [{host}] port [{port}]\n')
 

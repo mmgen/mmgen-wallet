@@ -281,7 +281,6 @@ class GlobalContext(Lockable):
 		'rpc_backend':       ov('nocase_pfx', ['auto','httplib','curl','aiohttp','requests']),
 	}
 	if platform == 'win':
-		autoset_opts['rpc_backend'].choices.remove('aiohttp')
 		_skip_type_check = ('stdout','stderr')
 
 	auto_typeset_opts = {
