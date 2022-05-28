@@ -28,17 +28,23 @@ from ..util import (
 	msg,
 	msg_r,
 	qmsg,
+	ymsg,
 	dmsg,
 	suf,
 	write_mode,
 	base_proto_subclass,
-	die )
+	die,
+	make_timestamp,
+	make_chksum_8 )
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import TwComment,get_obj
 from ..addr import CoinAddr,is_mmgen_id,is_coin_addr
-from ..rpc import rpc_init
+from ..rpc import rpc_init,json_encoder
 from .common import TwMMGenID,TwLabel
+
+def json_dump(data):
+	return json.dumps( data, cls=json_encoder, separators=(',', ':'), sort_keys=True )
 
 class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
@@ -47,6 +53,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 	use_tw_file = False
 	aggressive_sync = False
 	importing = False
+	dump_fn_pfx = 'mmgen-tracking-wallet-dump'
 
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(base_proto_subclass(cls,proto,'tw','ctl'))
@@ -340,3 +347,106 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 				for d in out:
 					await do_import(*d)
 			msg('Address import completed OK')
+
+	async def twimport(self,filename,ignore_checksum=False,batch=False):
+
+		info_msg = """
+			This utility will create a new tracking wallet, import the addresses from
+			the JSON dump into it and update their balances.  The operation typically
+			takes just a few minutes.
+		"""
+
+		def check_chksum(d):
+			chksum = make_chksum_8( json_dump(d['data']).encode() ).lower()
+			if chksum != d['checksum']:
+				if ignore_checksum:
+					ymsg(f'Warning: ignoring incorrect checksum {chksum}')
+				else:
+					die(3,'File checksum incorrect! ({} != {})'.format(chksum,d['checksum']))
+
+		def check_mappings_chksum(d):
+			mappings_json = json_dump([e[:2] for e in d['entries']])
+			mappings_chksum = make_chksum_8(mappings_json.encode()).lower()
+			if mappings_chksum != d['mappings_checksum']:
+				die(3,f'ERROR: Mappings checksum incorrect! ({mappings_chksum} != {d["mappings_checksum"]})')
+
+		def check_network(d):
+			coin,network = d['network'].split('_')
+			if coin != self.proto.coin.lower():
+				die(2,f'Coin in wallet dump is {coin.upper()}, but configured coin is {self.proto.coin}')
+			if network != self.proto.network:
+				die(2,f'Network in wallet dump is {network}, but configured network is {self.proto.network}')
+
+		def get_and_verify_data():
+			from ..fileutil import get_data_from_file
+			d = json.loads(get_data_from_file(filename,quiet=True))
+			check_chksum(d)
+			check_mappings_chksum(d['data'])
+			check_network(d['data'])
+			return d
+
+		if not await self.twimport_check_and_create_wallet(info_msg):
+			return True
+
+		d = get_and_verify_data()
+
+		_d1 = namedtuple('import_data',d['data']['entries_keys'])
+		entries = [_d1(*e) for e in d['data']['entries']]
+
+		_d2 = namedtuple('import_data',['addr','twmmid','comment'])
+		await self.import_address_common(
+			[_d2(e.address, e.mmgen_id, e.comment) for e in entries],
+			batch = batch )
+
+		await self.rescan_addresses([e.address for e in entries])
+
+		return True
+
+	async def twexport(self,include_amts=True):
+
+		coin = self.proto.coin_id.lower()
+		network = self.proto.network
+
+		from .addrs import TwAddrList
+		al = await TwAddrList(
+			proto = self.proto,
+			usr_addr_list = None,
+			minconf = 0,
+			showempty = True,
+			showbtcaddrs = True,
+			all_labels = False )
+
+		keys = ['mmgen_id','address'] + (['amount'] if include_amts else []) + ['comment']
+
+		entries = sorted(
+			(
+				[(v['lbl'].mmid, v['addr'], v['amt'], v['lbl'].comment) for v in al.values()] if include_amts else
+				[(v['lbl'].mmid, v['addr'],           v['lbl'].comment) for v in al.values()]
+			),
+			key = lambda x: x[0].sort_key )
+
+		mappings_json = json_dump([e[:2] for e in entries])
+
+		data = {
+			'id': 'mmgen_tracking_wallet',
+			'version': 1,
+			'network': f'{coin}_{network}',
+			'blockheight': self.rpc.blockcount,
+			'time': make_timestamp(),
+			'mappings_checksum': make_chksum_8(mappings_json.encode()).lower(),
+			'entries_keys': keys,
+			'entries': entries,
+			'num_entries': len(entries),
+		}
+		if include_amts:
+			data['value'] = al.total
+
+		chksum = make_chksum_8( json_dump(data).encode() ).lower()
+
+		from ..fileutil import write_data_to_file
+		write_data_to_file(
+			outfile = f'{self.dump_fn_pfx}-{coin}-{network}.json',
+			data = json_dump( { 'checksum': chksum, 'data': data } ),
+			desc = f'tracking wallet JSON data' )
+
+		return True

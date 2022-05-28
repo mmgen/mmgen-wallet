@@ -79,9 +79,7 @@ class EthereumTrackingWallet(TrackingWallet):
 
 	@write_mode
 	async def batch_import_address(self,args_list):
-		for arg_list in args_list:
-			await self.import_address(*arg_list)
-		return args_list
+		return [await self.import_address(*a) for a in args_list]
 
 	@write_mode
 	async def import_address(self,addr,label):
@@ -221,3 +219,6 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 				'decimals': t.decimals
 			}
 		}
+
+	async def twimport_check_and_create_wallet(self,info_msg):
+		raise NotImplementedError('method not implemented for Ethereum')

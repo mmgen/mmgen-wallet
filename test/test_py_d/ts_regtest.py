@@ -209,6 +209,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_rescan_blockchain_gb', 'rescanning the blockchain (Genesis block)'),
 		('bob_rescan_blockchain_one','rescanning the blockchain (single block)'),
 		('bob_rescan_blockchain_ss', 'rescanning the blockchain (range of blocks)'),
+		('bob_twexport',             'exporting a tracking wallet to JSON'),
+		('carol_twimport',           'importing a tracking wallet JSON dump'),
+		('carol_delete_wallet',      'unloading and deleting Carol’s tracking wallet'),
+		('bob_twexport_noamt',       'exporting a tracking wallet to JSON (include_amts=0)'),
+		('carol_twimport_nochksum',  'importing a tracking wallet JSON dump (ignore_checksum=1)'),
+		('carol_delete_wallet',      'unloading and deleting Carol’s tracking wallet'),
+		('carol_twimport_batch',     'importing a tracking wallet JSON dump (batch=1)'),
 		('bob_split2',               "splitting Bob's funds"),
 		('bob_0conf0_getbalance',    "Bob's balance (unconfirmed, minconf=0)"),
 		('bob_0conf1_getbalance',    "Bob's balance (unconfirmed, minconf=1)"),
@@ -398,7 +405,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def addrgen_bob(self):   return self.addrgen('bob')
 	def addrgen_alice(self): return self.addrgen('alice')
 
-	def addrimport(self,user,sid=None,addr_range='1-5',num_addrs=5,mmtypes=[]):
+	def addrimport(self,user,sid=None,addr_range='1-5',num_addrs=5,mmtypes=[],batch=True,quiet=True):
 		id_strs = { 'legacy':'', 'compressed':'-C', 'segwit':'-S', 'bech32':'-B' }
 		if not sid: sid = self._user_sid(user)
 		from mmgen.addr import MMGenAddrType
@@ -412,19 +419,26 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				self._add_comments_to_addr_file(addrfile,addrfile,use_labels=True)
 			t = self.spawn(
 				'mmgen-addrimport',
-				['--quiet', '--'+user, '--batch', addrfile],
-				extra_desc=f'({desc})' )
+				args = (
+					(['--quiet'] if quiet else []) +
+					['--'+user] +
+					(['--batch'] if batch else []) +
+					[addrfile] ),
+				extra_desc = f'({desc})' )
 			if g.debug:
 				t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 			t.expect('Importing')
-			t.expect(f'{num_addrs} addresses imported')
-			ok_msg()
+			if batch:
+				t.expect(f'{num_addrs} addresses imported')
+			else:
+				t.expect(f'import completed OK')
+			t.ok()
 
 		t.skip_ok = True
 		return t
 
 	def addrimport_bob(self):   return self.addrimport('bob')
-	def addrimport_alice(self): return self.addrimport('alice')
+	def addrimport_alice(self): return self.addrimport('alice',batch=False,quiet=False)
 
 	def bob_import_miner_addr(self):
 		if not self.deterministic:
@@ -963,6 +977,44 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_rescan_blockchain_ss(self):
 		return self.bob_rescan_blockchain(['start_block=300','stop_block=302'],'300-302')
+
+	def bob_twexport(self,add_args=[]):
+		t = self.spawn('mmgen-tool',['--bob',f'--outdir={self.tmpdir}','twexport'] + add_args)
+		t.written_to_file('JSON data')
+		return t
+
+	def bob_twexport_noamt(self):
+		return self.bob_twexport(add_args=['include_amts=0'])
+
+	def carol_twimport(self,add_args=[]):
+		from mmgen.tw.ctl import TrackingWallet as twcls
+		fn = joinpath(self.tmpdir,f'{twcls.dump_fn_pfx}-{self.proto.coin.lower()}-regtest.json')
+		t = self.spawn('mmgen-tool',['--carol','twimport',fn] + add_args)
+		t.expect('(y/N): ','y')
+		if 'batch=true' in add_args:
+			t.expect('{} addresses imported'.format(15 if self.proto.coin == 'BCH' else 25))
+		else:
+			t.expect('import completed OK')
+		t.expect('Found 3 unspent outputs')
+		return t
+
+	def carol_twimport_nochksum(self):
+		return self.carol_twimport(add_args=['ignore_checksum=true'])
+
+	def carol_twimport_batch(self):
+		return self.carol_twimport(add_args=['batch=true'])
+
+	async def carol_delete_wallet(self):
+		imsg(f'Unloading Carol’s tracking wallet')
+		t = self.spawn('mmgen-regtest',['cli','unloadwallet','carol'])
+		t.ok()
+		from mmgen.rpc import rpc_init
+		rpc = await rpc_init(self.proto)
+		wdir = joinpath(rpc.daemon.network_datadir,'wallets','carol')
+		from shutil import rmtree
+		imsg(f'Deleting Carol’s tracking wallet')
+		rmtree(wdir)
+		return 'silent'
 
 	def bob_split2(self):
 		addrs = self.read_from_tmpfile('non-mmgen.addrs').split()

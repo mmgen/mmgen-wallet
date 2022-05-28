@@ -164,6 +164,8 @@ mods = {
 		'rescan_address',
 		'rescan_blockchain',
 		'resolve_address',
+		'twexport',
+		'twimport',
 		'twview',
 		'txhist',
 	),

@@ -1017,7 +1017,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.token_addrimport('token_addr2','21-23',expect='3/3')
 
 	def token_addrimport_batch(self):
-		return self.token_addrimport('token_addr1','11-13',expect='OK: 3',extra_args=['--batch'])
+		return self.token_addrimport('token_addr1','11-13',expect='3 addresses',extra_args=['--batch'])
 
 	def token_addrimport_sym(self):
 		return self.addrimport(
