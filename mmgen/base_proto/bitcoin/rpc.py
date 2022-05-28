@@ -79,7 +79,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 	has_auth_cookie = True
 	wallet_path = '/'
 
-	async def __init__(self,proto,daemon,backend):
+	async def __init__(self,proto,daemon,backend,ignore_wallet):
 
 		self.proto = proto
 		self.daemon = daemon
@@ -148,8 +148,8 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		if self.chain == 'mainnet': # skip this for testnet, as Genesis block may change
 			await check_chainfork_mismatch(block0)
 
-		if not self.chain == 'regtest':
-			await self.check_tracking_wallet()
+		if not ignore_wallet:
+			await self.check_or_create_daemon_wallet()
 
 		# for regtest, wallet path must remain '/' until Carol’s user wallet has been created
 		if g.regtest_user:
@@ -158,16 +158,46 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 	def make_host_path(self,wallet):
 		return f'/wallet/{wallet}' if wallet else self.wallet_path
 
-	async def check_tracking_wallet(self,wallet_checked=[]):
-		if not wallet_checked:
-			wallets = await self.call('listwallets')
-			if len(wallets) == 0:
-				wname = self.daemon.tracking_wallet_name
-				await self.icall('createwallet',wallet_name=wname)
-				ymsg(f'Created {self.daemon.coind_name} wallet {wname!r}')
-			elif len(wallets) > 1: # support only one loaded wallet for now
-				die(4,f'ERROR: more than one {self.daemon.coind_name} wallet loaded: {wallets}')
-			wallet_checked.append(True)
+	async def check_or_create_daemon_wallet(self,called=[],wallet_create=True):
+		"""
+		Returns True if the correct tracking wallet is currently loaded or if a new one
+		is created, False otherwise
+		"""
+
+		if called or self.chain == 'regtest':
+			return False
+
+		twname = self.daemon.tracking_wallet_name
+		loaded_wnames = await self.call('listwallets')
+		wnames = [i['name'] for i in (await self.call('listwalletdir'))['wallets']]
+		m = f'Please fix your {self.daemon.desc} wallet installation or cmdline options'
+		ret = False
+
+		if len(loaded_wnames) == 1:
+			loaded_wname = loaded_wnames[0]
+			if twname in wnames and loaded_wname != twname:
+				await self.call('unloadwallet',loaded_wname)
+				await self.call('loadwallet',twname)
+			elif loaded_wname == '':
+				ymsg(f'WARNING: use of default wallet as tracking wallet is not recommended!\n{m}')
+			elif loaded_wname != twname:
+				ymsg(f'WARNING: loaded wallet {loaded_wname!r} is not {twname!r}\n{m}')
+			ret = True
+		elif len(loaded_wnames) == 0:
+			if twname in wnames:
+				await self.call('loadwallet',twname)
+				ret = True
+			elif wallet_create:
+				await self.icall('createwallet',wallet_name=twname)
+				ymsg(f'Created {self.daemon.coind_name} wallet {twname!r}')
+				ret = True
+		else: # support only one loaded wallet for now
+			die(4,f'ERROR: more than one {self.daemon.coind_name} wallet loaded: {loaded_wnames}')
+
+		if wallet_create:
+			called.append(True)
+
+		return ret
 
 	def get_daemon_cfg_fn(self):
 		# Use dirname() to remove 'bob' or 'alice' component

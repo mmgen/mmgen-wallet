@@ -42,7 +42,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(base_proto_subclass(cls,proto,'tw','ctl'))
 
-	async def __init__(self,proto,mode='r',token_addr=None):
+	async def __init__(self,proto,mode='r',token_addr=None,rpc_ignore_wallet=False):
 
 		assert mode in ('r','w','i'), f"{mode!r}: wallet mode must be 'r','w' or 'i'"
 		if mode == 'i':
@@ -52,7 +52,8 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		if g.debug:
 			print_stack_trace(f'TW INIT {mode!r} {self!r}')
 
-		self.rpc = await rpc_init(proto) # TODO: create on demand - only certain ops require RPC
+		# TODO: create on demand - only certain ops require RPC
+		self.rpc = await rpc_init( proto, ignore_wallet=rpc_ignore_wallet )
 		self.proto = proto
 		self.mode = mode
 		self.desc = self.base_desc = f'{self.proto.name} tracking wallet'

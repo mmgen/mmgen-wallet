@@ -35,7 +35,7 @@ class CallSigs:
 
 class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
 
-	async def __init__(self,proto,daemon,backend):
+	async def __init__(self,proto,daemon,backend,ignore_wallet):
 		self.proto = proto
 		self.daemon = daemon
 		self.call_sigs = getattr(CallSigs,daemon.id,None)

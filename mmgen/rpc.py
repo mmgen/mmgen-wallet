@@ -464,7 +464,8 @@ async def rpc_init(
 		proto,
 		backend               = None,
 		daemon                = None,
-		ignore_daemon_version = False ):
+		ignore_daemon_version = False,
+		ignore_wallet         = False ):
 
 	if not 'rpc_init' in proto.mmcaps:
 		die(1,f'rpc_init() not supported for {proto.name} protocol!')
@@ -475,9 +476,10 @@ async def rpc_init(
 
 	from .daemon import CoinDaemon
 	rpc = await cls(
-		proto   = proto,
-		daemon  = daemon or CoinDaemon(proto=proto,test_suite=g.test_suite),
-		backend = backend or opt.rpc_backend )
+		proto         = proto,
+		daemon        = daemon or CoinDaemon(proto=proto,test_suite=g.test_suite),
+		backend       = backend or opt.rpc_backend,
+		ignore_wallet = ignore_wallet )
 
 	if rpc.daemon_version > rpc.daemon.coind_version:
 		handle_unsupported_daemon_version(
