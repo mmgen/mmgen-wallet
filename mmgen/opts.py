@@ -62,11 +62,15 @@ def print_help(po,opts_data,opt_filter):
 			opts_data['text']['long_options'] = d
 		remove_unneeded_long_opts()
 
-	mmgen.share.Opts.print_help( # exits
-		proto,
-		po,
-		opts_data,
-		opt_filter )
+	from .util import do_pager
+	do_pager(
+		mmgen.share.Opts.make_help(
+			proto,
+			po,
+			opts_data,
+			opt_filter ))
+
+	sys.exit(0)
 
 def fmt_opt(o):
 	return '--' + o.replace('_','-')
@@ -387,7 +391,7 @@ def init(
 	if getattr(opt,'help',None) or getattr(opt,'longhelp',None):
 		print_help(po,opts_data,opt_filter) # exits
 
-	del mmgen.share.Opts.print_help
+	del mmgen.share.Opts.make_help
 	del mmgen.share.Opts.process_uopts
 	del mmgen.share.Opts.parse_opts
 

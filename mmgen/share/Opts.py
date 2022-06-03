@@ -45,7 +45,11 @@ def usage(opts_data):
 		data      = opts_data['text'].get('usage2') or opts_data['text']['usage'] ))
 	sys.exit(1)
 
-def print_help(proto,po,opts_data,opt_filter):
+def print_help(*args):
+	print(make_help(*args))
+	sys.exit(0)
+
+def make_help(proto,po,opts_data,opt_filter):
 
 	def parse_lines(text):
 		filtered = False
@@ -96,8 +100,7 @@ def print_help(proto,po,opts_data,opt_filter):
 			for line in notes_text.splitlines():
 				yield line
 
-	print(nl.join(gen_text()))
-	sys.exit(0)
+	return nl.join(gen_text()) + '\n'
 
 def process_uopts(opts_data,short_opts,long_opts):
 
