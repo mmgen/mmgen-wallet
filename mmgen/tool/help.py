@@ -64,9 +64,10 @@ def usage(cmdname=None,exit_val=1):
 	m1 = """
 		USAGE INFORMATION FOR MMGEN-TOOL COMMANDS:
 
-		  Unquoted arguments are mandatory
-		  Quoted arguments are optional, default values will be used
-		  Argument types and default values are shown in square brackets
+		  Arguments with only type specified in square brackets are required
+
+		  Arguments with both type and default value specified in square brackets are
+		  optional; if used, they must be supplied in the form ‘name=value’
 		"""
 
 	m2 = """

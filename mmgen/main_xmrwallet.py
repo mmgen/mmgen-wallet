@@ -31,8 +31,8 @@ opts_data = {
 		'usage2': [
 			'[opts] create   <xmr_keyaddrfile> [wallets]',
 			'[opts] sync     <xmr_keyaddrfile> [wallets]',
-			'[opts] transfer <xmr_keyaddrfile> <transfer_spec>',
-			'[opts] sweep    <xmr_keyaddrfile> <sweep_spec>',
+			'[opts] transfer <xmr_keyaddrfile> TRANSFER_SPEC',
+			'[opts] sweep    <xmr_keyaddrfile> SWEEP_SPEC',
 			'[opts] relay    <TX_file>',
 		],
 		'options': """
@@ -83,7 +83,7 @@ relay     - relay a transaction from a transaction file created using 'sweep'
             or 'transfer' with the --do-not-relay option
 
 
-                      CREATE AND SYNC OPERATION NOTES
+                     'CREATE' AND 'SYNC' OPERATION NOTES
 
 These operations take an optional `wallets` argument: one or more address
 indexes (expressed as a comma-separated list, hyphenated range, or both)
@@ -91,10 +91,9 @@ in the specified key-address file, each corresponding to a Monero wallet
 to be created or synced.  If omitted, all wallets are operated upon.
 
 
-                          TRANSFER OPERATION NOTES
+                         'TRANSFER' OPERATION NOTES
 
-The transfer operation takes a `transfer specifier` arg with the following
-format:
+The transfer operation takes a TRANSFER_SPEC arg with the following format:
 
     SOURCE:ACCOUNT:ADDRESS,AMOUNT
 
@@ -102,9 +101,9 @@ where SOURCE is a wallet number; ACCOUNT the source account index; and ADDRESS
 and AMOUNT the destination Monero address and XMR amount, respectively.
 
 
-                           SWEEP OPERATION NOTES
+                           'SWEEP' OPERATION NOTES
 
-The sweep operation takes a `sweep specifier` arg with the following format:
+The sweep operation takes a SWEEP_SPEC arg with the following format:
 
     SOURCE:ACCOUNT[,DEST]
 
@@ -123,7 +122,7 @@ Note that multiple sweep operations may be required to sweep all the funds
 in an account.
 
 
-                           RELAY OPERATION NOTES
+                           'RELAY' OPERATION NOTES
 
 By default, transactions are relayed to a monerod running on localhost at the
 default RPC port.  To relay transactions to a remote or non-default monerod

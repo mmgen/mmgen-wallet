@@ -60,6 +60,13 @@ def dmsg_rpc(fs,data=None,is_json=False):
 			fs.format(pp_fmt(json.loads(data) if is_json else data))
 		)
 
+def dmsg_rpc_backend(host_url,host_path,payload):
+	if g.debug_rpc:
+		msg(
+			f'\n    RPC URL: {host_url}{host_path}' +
+			f'\n    RPC PAYLOAD data (httplib) ==>' +
+			f'\n{pp_fmt(payload)}\n' )
+
 class IPPort(str,Hilite,InitErrors):
 	color = 'yellow'
 	width = 0
@@ -124,7 +131,7 @@ class RPCBackends:
 				self.auth = None
 
 		async def run(self,payload,timeout,host_path):
-			dmsg_rpc('\n    RPC PAYLOAD data (aiohttp) ==>\n{}\n',payload)
+			dmsg_rpc_backend(self.host_url,host_path,payload)
 			async with self.session.post(
 				url     = self.host_url + host_path,
 				auth    = self.auth,
@@ -155,7 +162,7 @@ class RPCBackends:
 				})
 
 		async def run(self,payload,timeout,host_path):
-			dmsg_rpc('\n    RPC PAYLOAD data (requests) ==>\n{}\n',payload)
+			dmsg_rpc_backend(self.host_url,host_path,payload)
 			res = self.session.post(
 				url     = self.host_url + host_path,
 				data    = json.dumps(payload,cls=json_encoder),
@@ -184,7 +191,7 @@ class RPCBackends:
 					auth_str_b64 ))
 
 		async def run(self,payload,timeout,host_path):
-			dmsg_rpc('\n    RPC PAYLOAD data (httplib) ==>\n{}\n',payload)
+			dmsg_rpc_backend(self.host_url,host_path,payload)
 
 			if timeout:
 				import http.client
@@ -237,7 +244,7 @@ class RPCBackends:
 			data = json.dumps(payload,cls=json_encoder)
 			if len(data) > self.arg_max:
 				return self.httplib(payload,timeout=timeout)
-			dmsg_rpc('\n    RPC PAYLOAD data (curl) ==>\n{}\n',payload)
+			dmsg_rpc_backend(self.host_url,host_path,payload)
 			exec_cmd = [
 				'curl',
 				'--proxy', f'socks5h://{self.proxy}' if self.proxy else '',

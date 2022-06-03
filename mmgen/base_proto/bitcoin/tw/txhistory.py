@@ -109,7 +109,11 @@ class BitcoinTwTransaction(BitcoinTwCommon):
 		self.label = get_best_label()
 		self.vsize = self.tx['decoded'].get('vsize') or self.tx['decoded']['size']
 		self.txid = CoinTxID(self.tx['txid'])
-		self.time = self.tx['time']
+		# Though 'blocktime' is flagged as an “optional” field, it’s always present for transactions
+		# that are in the blockchain.  However, Bitcoin Core wallet saves a record of broadcast but
+		# unconfirmed transactions, e.g. replaced transactions, and the 'blocktime' field is missing
+		# for these, so use 'time' as a fallback.
+		self.time = self.tx.get('blocktime') or self.tx['time']
 
 	def blockheight_disp(self,color):
 		return (

@@ -362,4 +362,7 @@ if g.prog_name == 'mmgen-tool' and not opt._lock:
 	if type(ret).__name__ == 'coroutine':
 		ret = run_session(ret)
 
-	process_result(ret,pager='pager' in kwargs and kwargs['pager'],print_result=True)
+	process_result(
+		ret,
+		pager = kwargs.get('pager'),
+		print_result = True )
