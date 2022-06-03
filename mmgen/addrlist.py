@@ -147,12 +147,12 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			addrlist  = '',
 			keylist   = '',
 			mmtype    = None,
-			skip_key_address_validity_check = False,
+			key_address_validity_check = None, # None=prompt user, True=check without prompt, False=skip check
 			skip_chksum = False,
 			add_p2pkh = False,
 		):
 
-		self.skip_ka_check = skip_key_address_validity_check
+		self.ka_validity_chk = key_address_validity_check
 		self.add_p2pkh = add_p2pkh
 		self.proto = proto
 		do_chksum = False

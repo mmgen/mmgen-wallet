@@ -300,7 +300,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts + dir_opt + [ 'create', data.kafile, (wallet or data.kal_range) ] )
-		t.expect('Check key-to-address validity? (y/N): ','n')
 		for i in MMGenRange(wallet or data.kal_range).items:
 			t.expect('Address: ')
 		return t
@@ -337,7 +336,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts + cmd_opts + (add_opts or []) + [ 'sync', data.kafile ] + ([wallets] if wallets else []) )
-		t.expect('Check key-to-address validity? (y/N): ','n')
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
 		for n,wnum in enumerate(wlist):
 			t.expect('Syncing wallet {}/{} ({})'.format(
@@ -372,8 +370,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			'mmgen-xmrwallet',
 			self.extra_opts + cmd_opts + [ op, data.kafile, arg2 ],
 			extra_desc = f'({capfirst(user)}{add_desc})' )
-
-		t.expect('Check key-to-address validity? (y/N): ','n')
 
 		if op == 'sweep':
 			t.expect(
@@ -491,7 +487,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	async def open_wallet_user(self,user,wnum):
 		data = self.users[user]
 		silence()
-		kal = KeyAddrList(self.proto,data.kafile,skip_key_address_validity_check=True)
+		kal = KeyAddrList(self.proto,data.kafile,key_address_validity_check=False)
 		end_silence()
 		self.users[user].wd.start(silent=not (opt.exact_output or opt.verbose))
 		return await data.wd_rpc.call(

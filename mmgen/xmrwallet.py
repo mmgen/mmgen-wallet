@@ -334,7 +334,11 @@ class MoneroWalletOps:
 
 			super().__init__(uarg_tuple,uopt_tuple)
 
-			self.kal = KeyAddrList(self.proto,uarg.infile)
+			self.kal = KeyAddrList(
+				self.proto,
+				uarg.infile,
+				key_address_validity_check = True )
+
 			self.create_addr_data()
 
 			check_wallets()
