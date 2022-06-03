@@ -38,6 +38,7 @@ xmrwallet_uarg_info = (
 	lambda e,hp: {
 		'daemon':          e('HOST:PORT', hp),
 		'tx_relay_daemon': e('HOST:PORT[:PROXY_HOST:PROXY_PORT]', rf'({hp})(?::({hp}))?'),
+		'newaddr_spec':    e('WALLET_NUM[:ACCOUNT][,"label text"]', rf'(\d+)(?::(\d+))?(?:,(.*))?'),
 		'transfer_spec':   e('SOURCE_WALLET_NUM:ACCOUNT:ADDRESS,AMOUNT', rf'(\d+):(\d+):([{b58a}]+),([0-9.]+)'),
 		'sweep_spec':      e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
 	})(
@@ -221,7 +222,7 @@ class MoneroMMGenTX:
 
 class MoneroWalletOps:
 
-	ops = ('create','sync','transfer','sweep','relay')
+	ops = ('create','sync','new','transfer','sweep','relay')
 	opts = (
 		'wallet_dir',
 		'daemon',
@@ -455,12 +456,14 @@ class MoneroWalletOps:
 					self.print_accts(data,addrs_data)
 				return ( data, addrs_data )
 
-			async def create_acct(self):
+			async def create_acct(self,label=None):
 				msg('\n    Creating new account...')
 				ret = await self.c.call(
 					'create_account',
-					label = f'Sweep from {self.parent.source.idx}:{self.parent.account} [{make_timestr()}]'
-				)
+					label = label or 'Sweep from {}:{} [{}]'.format(
+						self.parent.source.idx,
+						self.parent.account,
+						make_timestr() ))
 				msg('      Index:   {}'.format( pink(str(ret['account_index'])) ))
 				msg('      Address: {}'.format( cyan(ret['address']) ))
 				return (ret['account_index'], ret['address'])
@@ -488,12 +491,12 @@ class MoneroWalletOps:
 						e['used']
 					))
 
-			async def create_new_addr(self,account):
+			async def create_new_addr(self,account,label=None):
 				msg_r('\n    Creating new address: ')
 				ret = await self.c.call(
 					'create_address',
 					account_index = account,
-					label         = f'Sweep from this account [{make_timestr()}]',
+					label         = label or f'Sweep from this account [{make_timestr()}]',
 				)
 				msg(cyan(ret['address']))
 				return ret['address']
@@ -732,11 +735,13 @@ class MoneroWalletOps:
 							yield res
 
 			self.addr_data = list(gen())
-			self.account = int(m[2])
+			self.account = None if m[2] is None else int(m[2])
 
 			if self.name == 'transfer':
 				self.dest_addr = CoinAddr(self.proto,m[3])
 				self.amount = self.proto.coin_amt(m[4])
+			elif self.name == 'new':
+				self.label = m[3]
 
 		def init_tx_relay_daemon(self):
 
@@ -846,6 +851,36 @@ class MoneroWalletOps:
 		past    = 'transferred'
 		spec_id = 'transfer_spec'
 		spec_key = ( (1,'source'), )
+
+	class new(sweep):
+		name    = 'new'
+		desc    = 'New'
+		past    = 'address created'
+		spec_id = 'newaddr_spec'
+		spec_key = ( (1,'source'), )
+
+		async def main(self):
+			h = self.rpc(self,self.source)
+			await h.open_wallet('Monero',refresh=True)
+			label = '{a} [{b}]'.format(
+				a = self.label or f"xmrwallet new {'account' if self.account == None else 'address'}",
+				b = make_timestr() )
+			if self.account == None:
+				acct,addr = await h.create_acct(label=label)
+			else:
+				msg_r('\n    Account index: {}'.format( pink(str(self.account)) ))
+				addr = await h.create_new_addr(self.account,label=label)
+
+			accts_data = (await h.get_accts())[0]
+
+			if self.account != None:
+				await h.print_addrs(accts_data,self.account)
+
+			# wallet must be left open: otherwise the 'stop_wallet' RPC call used to stop the daemon will fail
+			if uopt.no_stop_wallet_daemon:
+				await h.close_wallet('Monero')
+
+			msg('')
 
 	class relay(base):
 		name = 'relay'

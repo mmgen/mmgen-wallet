@@ -53,6 +53,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		('fund_alice',                'sending funds'),
 
 		('sync_wallets_all',          'syncing all wallets'),
+		('new_account_alice',         'creating a new account (Alice)'),
+		('new_account_alice_label',   'creating a new account (Alice, with label)'),
+		('new_address_alice',         'creating a new address (Alice)'),
+		('new_address_alice_label',   'creating a new address (Alice, with label)'),
 		('sync_wallets_selected',     'syncing selected wallets'),
 
 		('sweep_to_address_proxy',    'sweeping to new address (via TX relay + proxy)'),
@@ -303,6 +307,47 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		for i in MMGenRange(wallet or data.kal_range).items:
 			t.expect('Address: ')
 		return t
+
+	def new_addr_alice(self,spec,cfg,expect):
+		data = self.users['alice']
+		t = self.spawn(
+			'mmgen-xmrwallet',
+			self.extra_opts +
+			[f'--wallet-dir={data.udir}'] +
+			[f'--daemon=localhost:{data.md.rpc_port}'] +
+			(['--no-start-wallet-daemon'] if cfg in ('continue','stop') else []) +
+			(['--no-stop-wallet-daemon'] if cfg in ('start','continue') else []) +
+			[ '--alice', 'new', data.kafile, spec ] )
+		res = strip_ansi_escapes(t.read()).replace('\r','')
+		m = re.search(expect,res,re.DOTALL)
+		assert m, m
+		return t
+
+	na_idx = 1
+
+	def new_account_alice(self):
+		return self.new_addr_alice(
+			'4',
+			'start',
+			fr'Creating new account.*Index:\s+{self.na_idx}\s')
+
+	def new_account_alice_label(self):
+		return self.new_addr_alice(
+			'4,Alice’s new account',
+			'continue',
+			fr'Creating new account.*Index:\s+{self.na_idx+1}\s.*Alice’s new account')
+
+	def new_address_alice(self):
+		return self.new_addr_alice(
+			'4:2',
+			'continue',
+			fr'Account index:\s+2\s+Creating new address' )
+
+	def new_address_alice_label(self):
+		return self.new_addr_alice(
+			'4:2,Alice’s new address',
+			'stop',
+			fr'Account index:\s+2\s+Creating new address.*Alice’s new address' )
 
 	async def mine_initial_coins(self):
 		await self.open_wallet_user('miner',1)

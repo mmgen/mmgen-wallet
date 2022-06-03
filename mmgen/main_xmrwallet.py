@@ -31,6 +31,7 @@ opts_data = {
 		'usage2': [
 			'[opts] create   <xmr_keyaddrfile> [wallets]',
 			'[opts] sync     <xmr_keyaddrfile> [wallets]',
+			'[opts] new      <xmr_keyaddrfile> NEW_ADDRESS_SPEC',
 			'[opts] transfer <xmr_keyaddrfile> TRANSFER_SPEC',
 			'[opts] sweep    <xmr_keyaddrfile> SWEEP_SPEC',
 			'[opts] relay    <TX_file>',
@@ -75,6 +76,7 @@ plain HTTP is not supported.
 
 create    - create wallet for all or specified addresses in key-address file
 sync      - sync wallet for all or specified addresses in key-address file
+new       - create a new account in a wallet, or a new address in an account
 transfer  - transfer specified XMR amount to specified address from specified
             wallet:account
 sweep     - sweep funds in specified wallet:account to new address in same
@@ -89,6 +91,18 @@ These operations take an optional `wallets` argument: one or more address
 indexes (expressed as a comma-separated list, hyphenated range, or both)
 in the specified key-address file, each corresponding to a Monero wallet
 to be created or synced.  If omitted, all wallets are operated upon.
+
+
+                           'NEW' OPERATION NOTES
+
+This operation takes a NEW_ADDRESS_SPEC arg with the following format:
+
+    WALLET[:ACCOUNT][,"label text"]
+
+where WALLET is a wallet number and ACCOUNT an account index.  If ACCOUNT is
+omitted, a new account will be created in the wallet, otherwise a new address
+will be created in the specified account.  An optional label text may be
+appended to the spec following a comma.
 
 
                          'TRANSFER' OPERATION NOTES
@@ -167,6 +181,12 @@ $ mmgen-xmrwallet --do-not-relay sweep *.akeys.mmenc 2:0
 
 Relay the created sweep transaction via a host on the Tor network:
 $ mmgen-xmrwallet --tx-relay-daemon=abcdefghijklmnop.onion:127.0.0.1:9050 relay *XMR*.sigtx
+
+Create a new account in wallet 2:
+$ mmgen-xmrwallet new *.akeys.mmenc 2
+
+Create a new address in account 1 of wallet 2, with label:
+$ mmgen-xmrwallet new *.akeys.mmenc 2:1,"from ABC exchange"
 """
 	},
 	'code': {
@@ -199,7 +219,7 @@ elif op in ('create','sync'):
 		opts.usage()
 	if cmd_args:
 		wallets = cmd_args[0]
-elif op in ('transfer','sweep'):
+elif op in ('new','transfer','sweep'):
 	if len(cmd_args) != 1:
 		opts.usage()
 	spec = cmd_args[0]
