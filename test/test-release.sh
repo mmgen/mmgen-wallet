@@ -43,8 +43,9 @@ qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
 
 [ "$MSYS2" ] && SKIP_LIST='autosign autosign_btc autosign_live'
 
+ORIG_ARGS=$@
 PROGNAME=$(basename $0)
-while getopts hAbCdDfFi:I:lNOps:tvV OPT
+while getopts hAbCdDfFlNOps:StvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -57,14 +58,12 @@ do
 		echo   "           -D      Run tests in deterministic mode"
 		echo   "           -f      Speed up the tests by using fewer rounds"
 		echo   "           -F      Reduce rounds even further"
-		echo   "           -i BRANCH Create and install Python package from cloned BRANCH, then"
-		echo   "                   run tests in installed package"
-		echo   "           -I BRANCH Like '-i', but install the package without running the tests"
 		echo   "           -l      List the test name symbols"
 		echo   "           -N      Pass the --no-timings switch to test/test.py"
 		echo   "           -O      Use pexpect.spawn rather than popen_spawn where applicable"
 		echo   "           -p      Pause between tests"
 		echo   "           -s LIST Skip tests in LIST (space-separated)"
+		echo   "           -S      Build SDIST distribution, unpack, and run test in unpacked dir"
 		echo   "           -t      Print the tests without running them"
 		echo   "           -v      Run test/test.py with '--exact-output' and other commands"
 		echo   "                   with '--verbose' switch"
@@ -128,8 +127,6 @@ do
 		export MMGEN_DISABLE_COLOR=1 ;;
 	f)  FAST=1 rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 unit_tests_py+=" --fast" ;;
 	F)  FAST=1 rounds=3 rounds_min=1 rounds_mid=3 rounds_max=5 unit_tests_py+=" --fast" ;;
-	i)  INSTALL=$OPTARG ;;
-	I)  INSTALL=$OPTARG INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
 		echo -e "Extra tests:\n  $extra_tests"
 		echo -e "'noalt' test group:\n  $noalt_tests"
@@ -140,6 +137,7 @@ do
 	O)  test_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
 	s)  SKIP_LIST+=" $OPTARG" ;;
+	S)  SDIST_TEST=1 ;;
 	t)  LIST_CMDS=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
 	V)  VERBOSE='--verbose'
@@ -166,6 +164,20 @@ done
 
 shift $((OPTIND-1))
 
+[ "$SDIST_TEST" -a -z "$MMGEN_TEST_RELEASE_IN_SDIST" ] && {
+	test_dir='.sdist-test'
+	rm -rf build dist MMGen.egg-info $test_dir
+	python3 -m build --no-isolation --sdist
+	mkdir $test_dir
+	tar -C $test_dir -axf dist/*.tar.gz
+	cd $test_dir/MMGen-*
+	python3 setup.py build_ext --inplace
+	echo -e "\n${BLUE}Running 'test/test-release $ORIG_ARGS'$RESET $YELLOW[PWD=$PWD]$RESET\n"
+	export MMGEN_TEST_RELEASE_IN_SDIST=1
+	test/test-release.sh $ORIG_ARGS
+	exit
+}
+
 case $1 in
 	'')        tests=$dfl_tests ;;
 	'default') tests=$dfl_tests ;;
@@ -180,45 +192,7 @@ case $1 in
 	*)         tests="$*" ;;
 esac
 
-[ "$INSTALL" ] && {
-	BRANCH=$INSTALL
-	BRANCHES=$(git branch)
-	FOUND_BRANCH=$(for b in ${BRANCHES/\*}; do [ "$b" == "$BRANCH" ] && echo ok; done)
-	[ "$FOUND_BRANCH" ] || { echo "Branch '$BRANCH' not found!"; exit; }
-}
-
 set -e
-
-check() {
-	[ "$BRANCH" ] || { echo 'No branch specified.  Exiting'; exit; }
-	[ "$(git diff $BRANCH)" == "" ] || {
-		echo "Unmerged changes from branch '$BRANCH'. Exiting"
-		exit 1
-	}
-	git diff $BRANCH >/dev/null 2>&1 || exit 1
-}
-uninstall() {
-	set +e
-	eval "$SUDO ./scripts/uninstall-mmgen.py"
-	[ "$?" -ne 0 ] && { echo 'Uninstall failed, but proceeding anyway'; sleep 1; }
-	set -e
-}
-install() {
-	set -x
-	eval "$SUDO rm -rf .test-release"
-	git clone --branch $BRANCH --single-branch . .test-release
-	(
-		cd .test-release
-		./setup.py sdist
-		mkdir pydist && cd pydist
-		if [ "$MSYS2" ]; then unzip ../dist/mmgen-*.zip; else tar zxvf ../dist/mmgen-*gz; fi
-		cd mmgen-*
-		eval "$SUDO ./setup.py clean --all"
-		[ "$MSYS2" ] && ./setup.py build --compiler=mingw32
-		eval "$SUDO ./setup.py install --force"
-	)
-	set +x
-}
 
 do_test() {
 	set +x
@@ -552,14 +526,6 @@ t_gen="
 
 [ "$SKIP_ALT_DEP" ] && t_gen_skip='a'
 f_gen='gentest tests completed'
-
-[ -d .git -a -n "$INSTALL"  -a -z "$LIST_CMDS" ] && {
-	check
-	uninstall
-	install
-	cd .test-release/pydist/mmgen-*
-}
-[ "$INSTALL_ONLY" ] && exit
 
 prompt_skip() {
 	echo -n "Enter 's' to skip, or ENTER to continue: "; read -n1; echo
