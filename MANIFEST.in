@@ -1,37 +1,23 @@
+include README.md SIGNING_KEYS.pub LICENSE INSTALL eth-requirements.txt
+
+include doc/*
+include doc/*/*
+include doc/*/*/*
+
+include examples/*
+
+include mmgen/base_proto/ethereum/*/LICENSE
 include mmgen/data/*
 
-include README.md SIGNING_KEYS.pub LICENSE INSTALL
-include doc/wiki/using-mmgen/*
+include scripts/*
 
 include test/*.py
-include test/include/*.py
-include test/test_py_d/*.py
-include test/objtest_py_d/*.py
-include test/objattrtest_py_d/*.py
-include test/unit_tests_d/*.py
+include test/*/*.py
 include test/ref/*
-include test/ref/litecoin/*
-include test/ref/ethereum/*
-include test/ref/ethereum_classic/*
-include test/ref/dash/*
-include test/ref/zcash/*
-include test/ref/monero/*
-include test/ref/ethereum/bin/mm1/*
-include test/ref/ethereum/bin/mm2/*
-include test/misc/*.py
-include test/overlay/*.py
+include test/ref/*/*
+include test/ref/*/*/*/*
 include test/overlay/fakemods/*.py
+include test/overlay/fakemods/*/*.py
+include test/overlay/fakemods/*/*/*/*.py
 
 include test/test-release.sh
-
-include mmgen/altcoins/eth/rlp/LICENSE
-include mmgen/altcoins/eth/pyethereum/LICENSE
-
-include scripts/compute-file-chksum.py
-include scripts/create-token.py
-include scripts/traceback_run.py
-include scripts/uninstall-mmgen.py
-
-include examples/halving-calculator.py
-
-prune test/ref/__db*
