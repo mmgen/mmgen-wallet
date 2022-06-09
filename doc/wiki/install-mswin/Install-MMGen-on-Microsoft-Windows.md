@@ -191,21 +191,22 @@ specifically required by MMGen.
 Install the MMGen requirements and their dependencies:
 
 	$ pacman -S tar git vim autoconf automake-wrapper autogen libtool cygrunsrv \
-		mingw64/mingw-w64-x86_64-python-build \
-		mingw64/mingw-w64-x86_64-python-wheel \
-		mingw64/mingw-w64-x86_64-python-pip \
-		mingw64/mingw-w64-x86_64-libltdl \
-		mingw64/mingw-w64-x86_64-gcc \
-		mingw64/mingw-w64-x86_64-make \
-		mingw64/mingw-w64-x86_64-pcre \
-		mingw64/mingw-w64-x86_64-libsodium \
-		mingw64/mingw-w64-x86_64-python-cryptography \
-		mingw64/mingw-w64-x86_64-python-six \
-		mingw64/mingw-w64-x86_64-python-pexpect \
-		mingw64/mingw-w64-x86_64-python-gmpy2 \
-		mingw64/mingw-w64-x86_64-python-pynacl \
-		mingw64/mingw-w64-x86_64-python-pysocks \
-		mingw64/mingw-w64-x86_64-python-requests
+		mingw-w64-x86_64-python-build \
+		mingw-w64-x86_64-python-wheel \
+		mingw-w64-x86_64-python-pip \
+		mingw-w64-x86_64-libltdl \
+		mingw-w64-x86_64-gcc \
+		mingw-w64-x86_64-make \
+		mingw-w64-x86_64-pcre \
+		mingw-w64-x86_64-libsodium \
+		mingw-w64-x86_64-python-cryptography \
+		mingw-w64-x86_64-python-six \
+		mingw-w64-x86_64-python-pexpect \
+		mingw-w64-x86_64-python-gmpy2 \
+		mingw-w64-x86_64-python-pynacl \
+		mingw-w64-x86_64-python-pysocks \
+		mingw-w64-x86_64-python-requests \
+		mingw-w64-x86_64-python-aiohttp
 
 ### <a name='a_ev'>5. Set up your environment</a>
 
