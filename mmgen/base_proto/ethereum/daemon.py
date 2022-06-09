@@ -100,6 +100,7 @@ class geth_daemon(ethereum_daemon):
 	def init_subclass(self):
 		self.coind_args = list_gen(
 			['--verbosity=0'],
+			['--ipcdisable'], # IPC-RPC: if path to socket is longer than 108 chars, geth fails to start
 			['--http'],
 			['--http.api=eth,web3,txpool'],
 			[f'--http.port={self.rpc_port}'],
