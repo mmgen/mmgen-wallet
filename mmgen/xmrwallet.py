@@ -222,7 +222,7 @@ class MoneroMMGenTX:
 
 class MoneroWalletOps:
 
-	ops = ('create','sync','new','transfer','sweep','relay')
+	ops = ('create','sync','list','new','transfer','sweep','relay')
 	opts = (
 		'wallet_dir',
 		'daemon',
@@ -684,10 +684,29 @@ class MoneroWalletOps:
 
 		def post_main(self):
 			d = self.accts_data
+			op = type(self).__name__
 
-			for n,k in enumerate(d):
-				ad = self.addr_data[n]
-				self.rpc(self,ad).print_accts( d[k]['accts'], d[k]['addrs'], indent='')
+			for wnum,k in enumerate(d):
+				if op == 'sync':
+					self.rpc(self,self.addr_data[wnum]).print_accts( d[k]['accts'], d[k]['addrs'], indent='')
+				elif op == 'list':
+					fs = '  {:2} {} {} {}'
+					msg('\n' + green(f'Wallet {k}:'))
+					for acct_num,acct in enumerate(d[k]['addrs']):
+						msg('\n  Account #{} [{} {}]'.format(
+							acct_num,
+							self.proto.coin_amt(
+								d[k]['accts']['subaddress_accounts'][acct_num]['unlocked_balance'],
+								from_unit='atomic').hl(),
+							self.proto.coin_amt.hlc('XMR')
+						))
+						msg(fs.format('','Address'.ljust(95),'Used ','Label'))
+						for addr in acct['addresses']:
+							msg(fs.format(
+								addr['address_index'],
+								CoinAddr(self.proto,addr['address']).hl(),
+								( yellow('True ') if addr['used'] else green('False') ),
+								pink(addr['label']) ))
 
 			col1_w = max(map(len,d)) + 1
 			fs = '{:%s} {} {}' % col1_w
@@ -703,6 +722,9 @@ class MoneroWalletOps:
 
 			msg(fs.format( '-'*col1_w, '-'*18, '-'*18 ))
 			msg(fs.format( 'TOTAL:', fmt_amt(tbals[0]), fmt_amt(tbals[1]) ))
+
+	class list(sync):
+		pass
 
 	class sweep(wallet):
 		name     = 'sweep'

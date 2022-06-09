@@ -71,6 +71,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		('transfer_to_miner_send2',   'transferring funds to Miner (send TX, no proxy)'),
 
 		('sweep_create_and_send',     'sweeping to new account (create TX + send TX, in stages)'),
+		('list_wallets_all',          'listing wallets'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -372,7 +373,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def sync_wallets_selected(self):
 		return self.sync_wallets('alice',wallets='1-2,4')
 
-	def sync_wallets(self,user,wallets=None,add_opts=None):
+	def list_wallets_all(self):
+		return self.sync_wallets('alice',op='list')
+
+	def sync_wallets(self,user,op='sync',wallets=None,add_opts=None):
 		data = self.users[user]
 		cmd_opts = list_gen(
 			[f'--wallet-dir={data.udir}'],
@@ -380,7 +384,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		)
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.extra_opts + cmd_opts + (add_opts or []) + [ 'sync', data.kafile ] + ([wallets] if wallets else []) )
+			self.extra_opts + cmd_opts + (add_opts or []) + [ op, data.kafile ] + ([wallets] if wallets else []) )
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
 		for n,wnum in enumerate(wlist):
 			t.expect('Syncing wallet {}/{} ({})'.format(
