@@ -987,8 +987,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.bob_twexport(add_args=['include_amts=0'])
 
 	def carol_twimport(self,add_args=[]):
-		from mmgen.tw.ctl import TrackingWallet as twcls
-		fn = joinpath(self.tmpdir,f'{twcls.dump_fn_pfx}-{self.proto.coin.lower()}-regtest.json')
+		from mmgen.tw.json import TwJSON
+		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
 		t = self.spawn('mmgen-tool',['--carol','twimport',fn] + add_args)
 		t.expect('(y/N): ','y')
 		if 'batch=true' in add_args:

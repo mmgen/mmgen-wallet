@@ -14,7 +14,7 @@ base_proto.bitcoin.twctl: Bitcoin base protocol tracking wallet control class
 
 from ....globalvars import g
 from ....tw.ctl import TrackingWallet
-from ....util import msg,msg_r,rmsg,vmsg,die,suf,fmt,fmt_list,write_mode,keypress_confirm
+from ....util import msg,msg_r,rmsg,vmsg,die,suf,fmt_list,write_mode
 
 class BitcoinTrackingWallet(TrackingWallet):
 
@@ -153,21 +153,3 @@ class BitcoinTrackingWallet(TrackingWallet):
 			msg('Address has no balance' if len(coin_addrs) == 1 else
 				'Addresses have no balances' )
 			return True
-
-	async def twimport_check_and_create_wallet(self,info_msg):
-
-		if await self.rpc.check_or_create_daemon_wallet(wallet_create=False):
-			die(3,
-				f'Existing {self.rpc.daemon.desc} wallet detected!\n' +
-				'It must be moved, or backed up and securely deleted, before running this command' )
-
-		msg('\n'+fmt(info_msg.strip(),indent='  '))
-
-		if not keypress_confirm('Continue?'):
-			msg('Exiting at user request')
-			return False
-
-		if not await self.rpc.check_or_create_daemon_wallet(wallet_create=True):
-			die(3,'Wallet could not be created')
-
-		return True

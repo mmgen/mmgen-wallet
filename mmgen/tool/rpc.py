@@ -194,12 +194,12 @@ class tool_cmd(tool_cmd_base):
 
 	async def twexport(self,include_amts=True):
 		"export the tracking wallet to JSON format"
-		from ..tw.ctl import TrackingWallet
-		tw = await TrackingWallet( self.proto )
-		return await tw.twexport( include_amts=include_amts )
+		from ..tw.json import TwJSON
+		await TwJSON.Export( self.proto, include_amts=include_amts )
+		return True
 
 	async def twimport(self,filename:str,ignore_checksum=False,batch=False):
 		"restore the tracking wallet from a JSON dump created by ‘twexport’"
-		from ..tw.ctl import TrackingWallet
-		tw = await TrackingWallet( self.proto, mode='i', rpc_ignore_wallet=True )
-		return await tw.twimport( filename, ignore_checksum=ignore_checksum, batch=batch )
+		from ..tw.json import TwJSON
+		await TwJSON.Import( self.proto, filename, ignore_checksum=ignore_checksum, batch=batch )
+		return True
