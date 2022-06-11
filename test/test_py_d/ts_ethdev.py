@@ -307,6 +307,18 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_remove_addr1', f'removing addr #{del_addrs[0]} from {coin} token tracking wallet'),
 		('token_remove_addr2', f'removing addr #{del_addrs[1]} from {coin} token tracking wallet'),
 
+		('twexport_noamt',     'exporting the tracking wallet (include_amts=0)'),
+		('twmove',             'moving the tracking wallet'),
+		('twimport',           'importing the tracking wallet'),
+		('twview7',            'twview (cached_balances=1)'),
+		('twview8',            'twview'),
+		('twexport',           'exporting the tracking wallet'),
+		('tw_chktotal',        'checking total value in tracking wallet dump'),
+		('twmove',             'moving the tracking wallet'),
+		('twimport',           'importing the tracking wallet'),
+		('twcompare',          'comparing imported tracking wallet with original'),
+		('twview9',            'twview (check balance)'),
+
 		('stop',               'stopping daemon'),
 	)
 
@@ -1205,6 +1217,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.twview(tool_args=['wide=1','minconf=0'])
 	def twview6(self):
 		return self.twview(expect_str=vbal6)
+	def twview7(self):
+		return self.twview(args=['--cached-balances'])
+	def twview8(self):
+		return self.twview()
+	def twview9(self):
+		return self.twview(args=['--cached-balances'],expect_str=vbal6)
 
 	def token_twview1(self):
 		return self.twview(args=['--token=mm1'])
@@ -1247,6 +1265,48 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.edit_label(out_num=del_addrs[0],args=['--token=mm1'],action='D')
 	def token_remove_addr2(self):
 		return self.edit_label(out_num=del_addrs[1],args=['--token=mm1'],action='D')
+
+	def twexport_noamt(self):
+		return self.twexport(add_args=['include_amts=0'])
+
+	def twexport(self,add_args=[]):
+		t = self.spawn('mmgen-tool', self.eth_args + ['twexport'] + add_args)
+		t.written_to_file('JSON data')
+		return t
+
+	async def twmove(self):
+		self.spawn('',msg_only=True)
+		from mmgen.tw.ctl import TrackingWallet
+		tw = await TrackingWallet(self.proto)
+		imsg(f'Moving tracking wallet')
+		os.rename( tw.tw_fn, tw.tw_fn+'.bak.json' )
+		return 'ok'
+
+	def twimport(self,add_args=[]):
+		from mmgen.tw.json import TwJSON
+		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
+		t = self.spawn('mmgen-tool',self.eth_args + ['twimport',fn] + add_args)
+		t.expect('(y/N): ','y')
+		t.written_to_file('tracking wallet data')
+		return t
+
+	def tw_chktotal(self):
+		self.spawn('',msg_only=True)
+		from mmgen.tw.json import TwJSON
+		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
+		res = json.loads(read_from_file(fn))
+		cmp_or_die( res['data']['value'], vbal6, 'value in tracking wallet JSON dump' )
+		return 'ok'
+
+	async def twcompare(self):
+		self.spawn('',msg_only=True)
+		from mmgen.tw.ctl import TrackingWallet
+		tw = await TrackingWallet(self.proto)
+		fn = tw.tw_fn
+		imsg(f'Comparing imported tracking wallet with original')
+		data = [json.dumps(json.loads(read_from_file(f)),sort_keys=True) for f in (fn,fn+'.bak.json')]
+		cmp_or_die(*data,'tracking wallets')
+		return 'ok'
 
 	def stop(self):
 		self.spawn('',msg_only=True)
