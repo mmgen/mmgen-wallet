@@ -56,6 +56,7 @@ vbal2 = '99.997088755'
 vbal3 = '1.23142525'
 vbal4 = '127.0287909'
 vbal5 = '1000126.14828654512345678'
+vbal6 = '1000124.91944564512345678'
 
 bals = {
 	'1': [  ('98831F3A:E:1','123.456')],
@@ -301,6 +302,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_edit_label1',  f'adding label to addr #{del_addrs[0]} in {coin} token tracking wallet'),
 
 		('remove_addr1',       f'removing addr #{del_addrs[0]} from {coin} tracking wallet'),
+		('twview6',            'twview (balance reduced after address removal)'),
 		('remove_addr2',       f'removing addr #{del_addrs[1]} from {coin} tracking wallet'),
 		('token_remove_addr1', f'removing addr #{del_addrs[0]} from {coin} token tracking wallet'),
 		('token_remove_addr2', f'removing addr #{del_addrs[1]} from {coin} token tracking wallet'),
@@ -1080,7 +1082,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.token_bal(n='3')
 
 	def del_dev_addr(self):
-		return self.spawn('mmgen-tool', self.eth_args + ['remove_address',dfl_devaddr])
+		t = self.spawn('mmgen-tool', self.eth_args + ['remove_address', dfl_devaddr])
+		t.expect(f"'{dfl_devaddr}' deleted")
+		return t
 
 	def bal1_getbalance(self):
 		return self.bal_getbalance('1',etc_adj=True)
@@ -1199,6 +1203,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.twview(tool_args=['wide=1','minconf=999999999'])
 	def twview5(self):
 		return self.twview(tool_args=['wide=1','minconf=0'])
+	def twview6(self):
+		return self.twview(expect_str=vbal6)
 
 	def token_twview1(self):
 		return self.twview(args=['--token=mm1'])

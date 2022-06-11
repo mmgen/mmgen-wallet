@@ -30,10 +30,10 @@ def overlay_setup(repo_root):
 					os.path.join(destdir,link_fn) )
 
 	overlay_dir = get_overlay_dir(repo_root)
-	fakemod_root = os.path.join(repo_root,'test','overlay','fakemods')
-	make_link = os.symlink if sys.platform == 'linux' else shutil.copy2
 
 	if not os.path.exists(os.path.join(overlay_dir,'mmgen','main.py')):
+		fakemod_root = os.path.join(repo_root,'test','overlay','fakemods')
+		make_link = os.symlink if sys.platform == 'linux' else shutil.copy2
 		sys.stderr.write('Setting up overlay tree\n')
 		shutil.rmtree(overlay_dir,ignore_errors=True)
 		for d in (

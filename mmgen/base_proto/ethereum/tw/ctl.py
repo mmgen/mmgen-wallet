@@ -36,7 +36,12 @@ class EthereumTrackingWallet(TrackingWallet):
 		return addr in self.data_root
 
 	def init_empty(self):
-		self.data = { 'coin': self.proto.coin, 'accounts': {}, 'tokens': {} }
+		self.data = {
+			'coin': self.proto.coin,
+			'network': self.proto.network.upper(),
+			'accounts': {},
+			'tokens': {},
+		}
 
 	def upgrade_wallet_maybe(self):
 
@@ -68,6 +73,11 @@ class EthereumTrackingWallet(TrackingWallet):
 		if self.data['tokens'] and not have_token_params_fields():
 			ymsg(f'Upgrading {self.desc} (v2->v3: token params fields added)')
 			add_token_params_fields()
+			upgraded = True
+
+		if not 'network' in self.data:
+			ymsg(f'Upgrading {self.desc} (v3->v4: network field added)')
+			self.data['network'] = self.proto.network.upper()
 			upgraded = True
 
 		if upgraded:

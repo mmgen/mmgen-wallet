@@ -203,7 +203,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		self.mode = mode_save
 
 	@write_mode
-	def write_changed(self,data):
+	def write_changed(self,data,quiet):
 		from ..fileutil import write_data_to_file
 		write_data_to_file(
 			self.tw_fn,
@@ -211,25 +211,24 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			desc              = f'{self.base_desc} data',
 			ask_overwrite     = False,
 			ignore_opt_outdir = True,
-			quiet             = True,
-			check_data        = True,
+			quiet             = quiet,
+			check_data        = True, # die if wallet has been altered by another program
 			cmp_data          = self.orig_data )
 
 		self.orig_data = data
 
-	def write(self): # use 'check_data' to check wallet hasn't been altered by another program
+	def write(self,quiet=True):
 		if not self.use_tw_file:
 			dmsg("'use_tw_file' is False, doing nothing")
 			return
 		dmsg(f'write(): checking if {self.desc} data has changed')
 
 		wdata = json.dumps(self.data)
-
 		if self.orig_data != wdata:
 			if g.debug:
 				print_stack_trace(f'TW DATA CHANGED {self!r}')
 				print_diff(self.orig_data,wdata,from_json=True)
-			self.write_changed(wdata)
+			self.write_changed(wdata,quiet=quiet)
 		elif g.debug:
 			msg('Data is unchanged\n')
 
