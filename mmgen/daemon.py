@@ -38,6 +38,7 @@ class Daemon(Lockable):
 	debug = False
 	wait = True
 	use_pidfile = True
+	force_kill = False
 	pids = ()
 	use_threads = False
 	cfg_file = None
@@ -148,7 +149,10 @@ class Daemon(Lockable):
 
 	@property
 	def stop_cmd(self):
-		return ['kill','-Wf',self.pid] if self.platform == 'win' else ['kill',self.pid]
+		return (
+			['kill','-Wf',self.pid] if self.platform == 'win' else
+			['kill','-9',self.pid] if self.force_kill else
+			['kill',self.pid] )
 
 	def cmd(self,action,*args,**kwargs):
 		return getattr(self,action)(*args,**kwargs)

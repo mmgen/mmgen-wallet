@@ -117,12 +117,17 @@ class erigon_daemon(geth_daemon):
 	version_pat = r'erigon/(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'erigon'
 	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
+	torrent_ports = _nw(42069,42070,None) # testnet is non-standard
 	datadirs = {
 		'linux': [g.home_dir,'.local','share','erigon'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
 	}
 
 	def init_subclass(self):
+
+		if self.network == 'regtest':
+			self.force_kill = True
+
 		self.coind_args = list_gen(
 			['--verbosity=0'],
 			[f'--port={self.p2p_port}', self.p2p_port],
@@ -130,9 +135,11 @@ class erigon_daemon(geth_daemon):
 			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
 			[f'--datadir={self.datadir}', self.non_dfl_datadir],
 			['--chain=goerli', self.network=='testnet'],
+			[f'--torrent.port={self.torrent_ports.testnet}', self.network=='testnet'],
 			['--chain=dev', self.network=='regtest'],
 			['--mine', self.network=='regtest'],
 		)
+
 		self.rpc_d = erigon_rpcdaemon(
 			proto        = self.proto,
 			rpc_port     = self.rpc_port,
