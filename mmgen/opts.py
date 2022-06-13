@@ -578,6 +578,10 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		from .util import ymsg
 		ymsg(f'Adjusting transaction vsize by a factor of {float(val):1.2f}')
 
+	def chk_daemon_id(key,val,desc):
+		from .daemon import CoinDaemon
+		opt_is_in_list(val,CoinDaemon.all_daemon_ids(),desc)
+
 # TODO: move this check elsewhere
 #	def chk_rbf(key,val,desc):
 #		if not proto.cap('rbf'):

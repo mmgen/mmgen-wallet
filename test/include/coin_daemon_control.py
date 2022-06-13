@@ -15,6 +15,7 @@ opts_data = {
 --, --longhelp       Print help message for long options (common options)
 -D, --debug          Produce debugging output (implies --verbose)
 -d, --datadir=       Override the default datadir
+-i, --daemon-ids     Print all known daemon IDs
 -n, --no-daemonize   Don't fork daemon to background
 -p, --port-shift=    Shift the RPC port by this number
 -s, --get-state      Get the state of the daemon(s) and exit
@@ -60,7 +61,9 @@ def run(network_id=None,proto=None,daemon_id=None):
 		else:
 			d.cmd(action,quiet=opt.quiet)
 
-if 'all' in cmd_args or 'no_xmr' in cmd_args:
+if opt.daemon_ids:
+	print('\n'.join(CoinDaemon.all_daemon_ids()))
+elif 'all' in cmd_args or 'no_xmr' in cmd_args:
 	if len(cmd_args) != 1:
 		die(1,"'all' or 'no_xmr' must be the sole argument")
 	from mmgen.protocol import init_proto

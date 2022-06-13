@@ -272,6 +272,10 @@ class CoinDaemon(Daemon):
 	}
 
 	@classmethod
+	def all_daemon_ids(cls):
+		return [i for coin in cls.coins for i in cls.coins[coin].daemon_ids]
+
+	@classmethod
 	def get_network_ids(cls): # FIXME: gets IDs for _default_ daemon only
 		from .protocol import CoinProtocol
 		def gen():
