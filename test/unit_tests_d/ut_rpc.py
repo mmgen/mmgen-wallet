@@ -112,7 +112,7 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 		proto = init_proto(network_id=network_id)
 		ids = (lambda x:
 			set(daemon_ids) & set(x) if daemon_ids else x
-			)(CoinDaemon.coins[proto.coin].daemon_ids)
+			)(CoinDaemon.get_daemon_ids(proto.coin))
 		for daemon_id in ids:
 			do( CoinDaemon(proto=proto,test_suite=True,daemon_id=daemon_id) )
 

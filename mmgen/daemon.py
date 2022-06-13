@@ -26,7 +26,7 @@ from collections import namedtuple
 
 from .globalvars import g
 from .color import set_vt100
-from .util import msg,Msg_r,die
+from .util import msg,Msg_r,ymsg,die,remove_dups
 from .flags import *
 
 _dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version
@@ -260,15 +260,14 @@ class CoinDaemon(Daemon):
 	rpc_user = None
 	rpc_password = None
 
-	_cd = namedtuple('coins_data',['coin_name','networks','daemon_ids'])
+	_cd = namedtuple('coins_data',['daemon_ids'])
 	coins = {
-		'BTC': _cd('Bitcoin',           networks,              ['bitcoin_core']),
-		'BCH': _cd('Bitcoin Cash Node', networks,              ['bitcoin_cash_node']),
-		'LTC': _cd('Litecoin',          networks,              ['litecoin_core']),
-		'XMR': _cd('Monero',            ('mainnet','testnet'), ['monero']),
-		'ETH': _cd('Ethereum',          networks,              ['openethereum','geth']
-			+ (['erigon'] if g.enable_erigon else []) ),
-		'ETC': _cd('Ethereum Classic',  networks,              ['parity']),
+		'BTC': _cd(['bitcoin_core']),
+		'BCH': _cd(['bitcoin_cash_node']),
+		'LTC': _cd(['litecoin_core']),
+		'XMR': _cd(['monero']),
+		'ETH': _cd(['openethereum','geth','erigon']),
+		'ETC': _cd(['parity']),
 	}
 
 	@classmethod
@@ -276,13 +275,31 @@ class CoinDaemon(Daemon):
 		return [i for coin in cls.coins for i in cls.coins[coin].daemon_ids]
 
 	@classmethod
-	def get_network_ids(cls): # FIXME: gets IDs for _default_ daemon only
+	def get_daemon_ids(cls,coin):
+
+		ret = cls.coins[coin].daemon_ids
+		if 'erigon' in ret and not g.enable_erigon:
+			ret.remove('erigon')
+		return ret
+
+	@classmethod
+	def get_daemon(cls,coin,daemon_id,proto=None):
+		if not proto:
+			from .protocol import init_proto
+			proto = init_proto(coin)
+		return getattr(
+			importlib.import_module(f'mmgen.base_proto.{proto.base_proto.lower()}.daemon'),
+			daemon_id+'_daemon' )
+
+	@classmethod
+	def get_network_ids(cls):
 		from .protocol import CoinProtocol
 		def gen():
-			for coin,data in cls.coins.items():
-				for network in data.networks:
-					yield CoinProtocol.Base.create_network_id(coin,network)
-		return list(gen())
+			for coin in cls.coins:
+				for daemon_id in cls.get_daemon_ids(coin):
+					for network in cls.get_daemon(coin,daemon_id).networks:
+						yield CoinProtocol.Base.create_network_id(coin,network)
+		return remove_dups(list(gen()),quiet=True)
 
 	@classmethod
 	def get_exec_version_str(cls):
@@ -325,22 +342,20 @@ class CoinDaemon(Daemon):
 			coin,network = CoinProtocol.Base.parse_network_id(network_id)
 			coin = coin.upper()
 
-		daemon_ids = cls.coins[coin].daemon_ids
+		daemon_ids = cls.get_daemon_ids(coin)
+		if not daemon_ids:
+			die(1,f'No configured daemons for coin {coin}!')
 		daemon_id = daemon_id or g.daemon_id or daemon_ids[0]
 
 		if daemon_id not in daemon_ids:
 			die(1,f'{daemon_id!r}: invalid daemon_id - valid choices: {fmt_list(daemon_ids)}')
 
-		me = Daemon.__new__(
-			getattr(
-				importlib.import_module(f'mmgen.base_proto.{proto.base_proto.lower()}.daemon'),
-				daemon_id + '_daemon' ))
+		me = Daemon.__new__(cls.get_daemon( None, daemon_id, proto=proto ))
 
 		assert network in me.networks, f'{network!r}: unsupported network for daemon {daemon_id}'
 		me.network_id = network_id
 		me.network = network
 		me.coin = coin
-		me.coin_name = cls.coins[coin].coin_name
 		me.id = daemon_id
 		me.proto = proto
 

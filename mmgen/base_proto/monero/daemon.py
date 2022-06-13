@@ -80,6 +80,7 @@ class MoneroWalletDaemon(RPCDaemon):
 	exec_fn = 'monero-wallet-rpc'
 	coin = 'XMR'
 	new_console_mswin = True
+	networks = ('mainnet','testnet')
 	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
 
 	def __init__(self, proto, wallet_dir,
