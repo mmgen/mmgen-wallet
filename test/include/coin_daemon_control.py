@@ -23,6 +23,7 @@ opts_data = {
 -q, --quiet          Produce quieter output
 -u, --usermode       Run the daemon in user (non test-suite) mode
 -v, --verbose        Produce more verbose output
+-V, --print-version  Print version strings from exec’ed daemons (not RPC)
 -W, --no-wait        Don't wait for daemons to change state before exiting
 """,
 	'notes': """
@@ -50,7 +51,10 @@ def run(network_id=None,proto=None,daemon_id=None):
 		daemon_id  = daemon_id )
 	d.debug = d.debug or opt.debug
 	d.wait = not opt.no_wait
-	if opt.get_state:
+
+	if opt.print_version:
+		msg('{:16} {}'.format( d.exec_fn+':', d.get_exec_version_str() ))
+	elif opt.get_state:
 		print(d.state_msg())
 	elif opt.testing:
 		for cmd in d.start_cmds if action == 'start' else [d.stop_cmd]:
