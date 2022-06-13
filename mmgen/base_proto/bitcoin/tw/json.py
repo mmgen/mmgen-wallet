@@ -44,15 +44,14 @@ class BitcoinTwJSON(TwJSON):
 			return await self.tw.rpc.check_or_create_daemon_wallet(wallet_create=True)
 
 		async def get_entries(self):
-			d = self.data['data']
-			e_in = [self.entry_tuple_in(*e) for e in d['entries']]
+			entries_in = [self.entry_tuple_in(*e) for e in self.data['data']['entries']]
 			return sorted(
 				[self.entry_tuple(
 					TwMMGenID(self.proto,d.mmgen_id),
 					d.address,
 					getattr(d,'amount',None),
 					d.comment)
-						for d in e_in],
+						for d in entries_in],
 				key = lambda x: x.mmgen_id.sort_key )
 
 		async def do_import(self,batch):

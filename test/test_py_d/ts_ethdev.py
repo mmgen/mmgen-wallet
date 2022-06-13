@@ -20,7 +20,7 @@
 ts_ethdev.py: Ethdev tests for the test.py test suite
 """
 
-import sys,os,re,shutil
+import sys,os,re,shutil,asyncio
 from decimal import Decimal
 from collections import namedtuple
 from subprocess import run,PIPE,DEVNULL
@@ -331,16 +331,16 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 		from mmgen.protocol import init_proto
 		self.proto = init_proto(g.coin,network='regtest',need_amt=True)
+
 		from mmgen.daemon import CoinDaemon
-		d = CoinDaemon(proto=self.proto,test_suite=True)
-		self.rpc_port = d.rpc_port
-		self.daemon_datadir  = d.datadir
+		self.daemon = CoinDaemon(self.proto.coin+'_rt',test_suite=True)
+
 		self.using_solc = check_solc_ver()
 		if not self.using_solc:
 			omsg(yellow('Using precompiled contract data'))
 
 		self.genesis_fn = joinpath(self.tmpdir,'genesis.json')
-		self.keystore_dir = os.path.relpath(joinpath(self.daemon_datadir,'keystore'))
+		self.keystore_dir = os.path.relpath(joinpath(self.daemon.datadir,'keystore'))
 
 		write_to_file(
 			joinpath(self.tmpdir,parity_devkey_fn),
@@ -357,13 +357,20 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return [
 			f'--outdir={self.tmpdir}',
 			f'--coin={self.proto.coin}',
-			f'--rpc-port={self.rpc_port}',
+			f'--rpc-port={self.daemon.rpc_port}',
 			'--quiet'
 		]
 
 	@property
 	def eth_args_noquiet(self):
 		return self.eth_args[:-1]
+
+	@property
+	async def rpc(self):
+		if not hasattr(self,'_rpc'):
+			from mmgen.rpc import rpc_init
+			self._rpc = await rpc_init(self.proto)
+		return self._rpc
 
 	async def setup(self):
 		self.spawn('',msg_only=True)
@@ -373,10 +380,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			d = CoinDaemon(
 				self.proto.coin+'_rt',
 				test_suite = True,
-				daemon_id  = g.daemon_id,
 				opts       = ['devnet_init_bug'] )
 			d.start()
-			import asyncio
 			await asyncio.sleep(1)
 			d.stop()
 			await asyncio.sleep(1)
@@ -387,33 +392,28 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			for d in ('mm1','mm2'):
 				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
 
-		from mmgen.daemon import CoinDaemon
-		d = CoinDaemon(
-			self.proto.coin + '_rt',
-			test_suite = True,
-			daemon_id  = g.daemon_id )
+		d = self.daemon
 
-		if g.daemon_id in ('geth','erigon'):
+		if d.id in ('geth','erigon'):
 			self.genesis_setup(d)
 			set_vt100()
 			# await geth_devnet_init_bug_workaround() # uncomment to enable testing with v1.10.17
 
-		if g.daemon_id == 'erigon':
+		if d.id == 'erigon':
 			self.write_to_tmpfile('signer_key',self.keystore_data['key']+'\n')
 			d.usr_coind_args = [
 				'--miner.sigfile={}'.format(os.path.join(self.tmpdir,'signer_key')),
 				'--miner.etherbase={}'.format(self.keystore_data['address']) ]
 
-		if g.daemon_id in ('geth','erigon'):
+		if d.id in ('geth','erigon'):
 			imsg('  {:19} {}'.format('Cmdline:',' '.join(e for e in d.start_cmd if not 'verbosity' in e)))
 
 		if not opt.no_daemon_autostart:
-			if not g.daemon_id in ('geth','erigon'):
+			if not d.id in ('geth','erigon'):
 				d.stop(silent=True)
 				d.remove_datadir()
 			d.start( silent = not (opt.verbose or opt.exact_output) )
-			from mmgen.rpc import rpc_init
-			rpc = await rpc_init(self.proto)
+			rpc = await self.rpc
 			imsg(f'Daemon: {rpc.daemon.coind_name} v{rpc.daemon_version_str}')
 
 		return 'ok'
@@ -685,16 +685,15 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			return ec_sign_message_with_privkey(self.message,bytes.fromhex(key),'eth_sign')
 
 		async def create_signature_rpc():
-			from mmgen.rpc import rpc_init
-			rpc = await rpc_init(self.proto)
 			addr = self.read_from_tmpfile('signer_addr').strip()
 			imsg(f'Address:   {addr}')
+			rpc = await self.rpc
 			return await rpc.call(
 				'eth_sign',
 				'0x' + addr,
 				'0x' + self.message.encode().hex() )
 
-		if not g.daemon_id == 'geth':
+		if not self.daemon.id == 'geth':
 			return 'skip'
 
 		self.spawn('',msg_only=True)
@@ -882,8 +881,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	async def get_tx_receipt(self,txid):
 		from mmgen.tx import NewTX
 		tx = await NewTX(proto=self.proto)
-		from mmgen.rpc import rpc_init
-		tx.rpc = await rpc_init(self.proto)
+		tx.rpc = await self.rpc
 		res = await tx.get_receipt(txid)
 		imsg(f'Gas sent:  {res.gas_sent.hl():<9} {(res.gas_sent*res.gas_price).hl2(encl="()")}')
 		imsg(f'Gas used:  {res.gas_used.hl():<9} {(res.gas_used*res.gas_price).hl2(encl="()")}')
@@ -967,6 +965,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 					dfl_devkey,
 					start_gas = ETHAmt(60000,'wei'),
 					gasPrice  = ETHAmt(8,'Gwei') )
+				if self.daemon.id == 'geth': # yet another Geth bug
+					await asyncio.sleep(0.1)
 				if (await self.get_tx_receipt(txid)).status == 0:
 					die(2,'Transfer of token funds failed. Aborting')
 
@@ -983,14 +983,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 					usr_mmaddrs[i],
 					usr_addrs[i] ))
 
-		from mmgen.rpc import rpc_init
-		rpc = await rpc_init(self.proto)
-
 		silence()
 		if op == 'show_bals':
-			await show_bals(rpc)
+			await show_bals(await self.rpc)
 		elif op == 'do_transfer':
-			await do_transfer(rpc)
+			await do_transfer(await self.rpc)
 		end_silence()
 		return 'ok'
 
