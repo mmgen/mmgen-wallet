@@ -51,45 +51,14 @@ def test_flags_err(ut,d):
 		('flag (4)', 'ClassFlagsError', 'already set',       bad7 ),
 	))
 
-arm_skip_daemons = ('openethereum','parity')
-
-def test_cmds(op):
-	network_ids = CoinDaemon.get_network_ids()
-	import mmgen.daemon as daemon_mod
-	for test_suite in [True,False] if op == 'print' else [True]:
-		vmsg(orange(f'Start commands (op={op}, test_suite={test_suite}):'))
-		for coin,data in CoinDaemon.coins.items():
-			for daemon_id in data.daemon_ids:
-				if daemon_id in arm_skip_daemons:
-					continue
-				for network in data.networks:
-					if opt.no_altcoin_deps and coin != 'BTC':
-						continue
-					d = CoinDaemon(
-						proto=init_proto(coin=coin,network=network),
-						daemon_id = daemon_id,
-						test_suite = test_suite )
-					if op == 'print':
-						for cmd in d.start_cmds:
-							vmsg(' '.join(cmd))
-					elif op == 'check':
-						try:
-							cp = run([d.exec_fn,'--help'],stdout=PIPE,stderr=PIPE)
-						except:
-							die(2,f'Unable to execute {d.exec_fn}')
-						if cp.returncode:
-							die(2,f'Unable to execute {d.exec_fn}')
-						else:
-							vmsg('{:16} {}'.format(
-								d.exec_fn+':',
-								cp.stdout.decode().splitlines()[0] ))
-					else:
-						if opt.quiet:
-							msg_r('.')
-						if op == 'stop' and hasattr(d,'rpc'):
-							run_session(d.rpc.stop_daemon(quiet=opt.quiet))
-						else:
-							getattr(d,op)(silent=opt.quiet)
+def test_cmd(args_in,message):
+	qmsg_r(message)
+	args = [f'test/{args_in[0]}-coin-daemons.py'] + list(args_in[1:])
+	vmsg('\n' + orange(f"Running '{' '.join(args)}':"))
+	pipe = None if opt.verbose else PIPE
+	cp = run( args, stdout=pipe, stderr=pipe, check=True )
+	qmsg('OK')
+	return True
 
 class unit_tests:
 
@@ -109,37 +78,17 @@ class unit_tests:
 
 		return True
 
-	def cmds(self,name,ut):
-		qmsg_r('Testing start commands for coin daemons...')
-		vmsg('')
-		test_cmds('print')
-		qmsg('OK')
-		return True
-
 	def exec(self,name,ut):
-		qmsg_r('Testing availability of coin daemons...')
-		vmsg('')
-		test_cmds('check')
-		qmsg('OK')
-		return True
+		return test_cmd(['start','-Vm','all'], 'Testing availability of coin daemons...')
+
+	def cmds(self,name,ut):
+		return test_cmd(['start','-t','all'], 'Testing start commands for coin daemons...')
 
 	def start(self,name,ut):
-		msg_r('Starting coin daemons...')
-		qmsg('')
-		test_cmds('start')
-		msg('OK')
-		return True
+		return test_cmd(['start','all'], 'Starting coin daemons...')
 
 	def status(self,name,ut):
-		msg_r('Checking status of coin daemons...')
-		qmsg('')
-		test_cmds('start')
-		msg('OK')
-		return True
+		return test_cmd(['start','all'], 'Checking status of coin daemons...')
 
 	def stop(self,name,ut):
-		msg_r('Stopping coin daemons...')
-		qmsg('')
-		test_cmds('stop')
-		msg('OK')
-		return True
+		return test_cmd(['stop','all'], 'Stopping coin daemons...')

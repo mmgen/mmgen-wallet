@@ -16,6 +16,7 @@ opts_data = {
 -D, --debug          Produce debugging output (implies --verbose)
 -d, --datadir=       Override the default datadir
 -i, --daemon-ids     Print all known daemon IDs
+-m, --mainnet-only   Perform operations for mainnet daemons only
 -n, --no-daemonize   Don't fork daemon to background
 -p, --port-shift=    Shift the RPC port by this number
 -s, --get-state      Get the state of the daemon(s) and exit
@@ -41,6 +42,7 @@ cmd_args = opts.init(opts_data)
 from mmgen.daemon import *
 
 def run(network_id=None,proto=None,daemon_id=None):
+
 	d = CoinDaemon(
 		network_id = network_id,
 		proto      = proto,
@@ -49,6 +51,10 @@ def run(network_id=None,proto=None,daemon_id=None):
 		port_shift = int(opt.port_shift or 0),
 		datadir    = opt.datadir,
 		daemon_id  = daemon_id )
+
+	if opt.mainnet_only and d.network != 'mainnet':
+		return
+
 	d.debug = d.debug or opt.debug
 	d.wait = not opt.no_wait
 
