@@ -26,7 +26,7 @@ from collections import namedtuple
 
 from .globalvars import g
 from .color import set_vt100
-from .util import msg,Msg_r,ymsg,die,remove_dups
+from .util import msg,Msg_r,ymsg,die,remove_dups,oneshot_warning
 from .flags import *
 
 _dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version
@@ -274,12 +274,25 @@ class CoinDaemon(Daemon):
 	def all_daemon_ids(cls):
 		return [i for coin in cls.coins for i in cls.coins[coin].daemon_ids]
 
+	class warn_blacklisted(oneshot_warning):
+		color = 'yellow'
+		message = 'blacklisted daemon: {!r}'
+
 	@classmethod
 	def get_daemon_ids(cls,coin):
 
 		ret = cls.coins[coin].daemon_ids
 		if 'erigon' in ret and not g.enable_erigon:
 			ret.remove('erigon')
+		if g.blacklist_daemons:
+			blacklist = g.blacklist_daemons.split()
+			def gen():
+				for daemon_id in ret:
+					if daemon_id in blacklist:
+						cls.warn_blacklisted(div=daemon_id,fmt_args=[daemon_id])
+					else:
+						yield daemon_id
+			ret = list(gen())
 		return ret
 
 	@classmethod

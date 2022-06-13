@@ -146,6 +146,7 @@ class GlobalContext(Lockable):
 	data_dir_root,data_dir,cfg_file = (None,None,None)
 	daemon_data_dir = '' # set by user
 	daemon_id = ''
+	blacklist_daemons = ''
 
 	# must match CoinProtocol.coins
 	core_coins = ('btc','bch','ltc','eth','etc','zec','xmr')
@@ -243,6 +244,7 @@ class GlobalContext(Lockable):
 		'MMGEN_TEST_SUITE',
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
+		'MMGEN_BLACKLIST_DAEMONS',
 		'MMGEN_BOGUS_SEND',
 		'MMGEN_DEBUG',
 		'MMGEN_DEBUG_OPTS',

@@ -171,6 +171,9 @@ opts.UserOpts._reset_ok += ('no_daemon_autostart','names','no_timings','exit_aft
 # step 2: opts.init will create new data_dir in ./test (if not skipping_deps)
 usr_args = opts.init(opts_data)
 
+if opt.daemon_id and opt.daemon_id in g.blacklist_daemons.split():
+	die(0,f'test.py: daemon {opt.daemon_id!r} blacklisted, exiting')
+
 network_id = g.coin.lower() + ('_tn' if opt.testnet else '')
 
 from mmgen.protocol import init_proto_from_opts
