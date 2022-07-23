@@ -187,19 +187,43 @@ class tool_cmd(tool_cmd_base):
 	async def rescan_blockchain(self,
 			start_block: int = None,
 			stop_block: int  = None ):
-		"rescan the blockchain to update historical transactions in the tracking wallet"
+		"""
+		rescan the blockchain to update historical transactions in the tracking wallet
+
+		NOTE:
+
+		  The rescanning process typically takes several hours and may be interrupted
+		  using Ctrl-C.  An interrupted rescan may be resumed using the ‘start_block’
+		  parameter.
+		"""
 		from ..tw.ctl import TrackingWallet
 		ret = await (await TrackingWallet(self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
 		return True
 
 	async def twexport(self,include_amts=True):
-		"export the tracking wallet to JSON format"
+		"""
+		export a tracking wallet to JSON format
+
+		NOTE:
+
+		  If ‘include_amts’ is true (the default), Ethereum balances will be restored
+		  from the dump upon import. For Bitcoin and forks, amount fields in the dump
+		  are ignored.
+		"""
 		from ..tw.json import TwJSON
 		await TwJSON.Export( self.proto, include_amts=include_amts )
 		return True
 
 	async def twimport(self,filename:str,ignore_checksum=False,batch=False):
-		"restore the tracking wallet from a JSON dump created by ‘twexport’"
+		"""
+		restore a tracking wallet from a JSON dump created by ‘twexport’
+
+		NOTE:
+
+		  The restored tracking wallet will have correct balances but no record of
+		  historical transactions.  These may be restored by running ‘mmgen-tool
+		  ‘rescan_blockchain’.
+		"""
 		from ..tw.json import TwJSON
 		await TwJSON.Import( self.proto, filename, ignore_checksum=ignore_checksum, batch=batch )
 		return True

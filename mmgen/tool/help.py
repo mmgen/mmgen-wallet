@@ -67,7 +67,7 @@ def usage(cmdname=None,exit_val=1):
 		  Arguments with only type specified in square brackets are required
 
 		  Arguments with both type and default value specified in square brackets are
-		  optional; if used, they must be supplied in the form ‘name=value’
+		  optional and must be specified in the form ‘name=value’
 		"""
 
 	m2 = """
@@ -76,20 +76,20 @@ def usage(cmdname=None,exit_val=1):
 
 		EXAMPLES:
 
-		  Generate a random Bech32 public/private keypair for LTC:
+		  Generate a random LTC Bech32 public/private keypair:
 		  $ mmgen-tool -r0 --coin=ltc --type=bech32 randpair
 
-		  Generate a DASH compressed public key address from the supplied WIF key:
+		  Generate a DASH address with compressed public key from the supplied WIF key:
 		  $ mmgen-tool --coin=dash --type=compressed wif2addr XJkVRC3eGKurc9Uzx1wfQoio3yqkmaXVqLMTa6y7s3M3jTBnmxfw
 
 		  Generate a well-known burn address:
 		  $ mmgen-tool hextob58chk 000000000000000000000000000000000000000000
 
 		  Generate a random 12-word seed phrase:
-		  $ mmgen-tool -r0 mn_rand128
+		  $ mmgen-tool -r0 mn_rand128 fmt=bip39
 
 		  Same as above, but get additional entropy from user:
-		  $ mmgen-tool mn_rand128
+		  $ mmgen-tool mn_rand128 fmt=bip39
 
 		  Encode bytes from a file to base 58:
 		  $ mmgen-tool bytestob58 /etc/timezone pad=20
@@ -97,7 +97,7 @@ def usage(cmdname=None,exit_val=1):
 		  Reverse a hex string:
 		  $ mmgen-tool hexreverse "deadbeefcafe"
 
-		  Same as above, but use a pipe:
+		  Same as above, but supply input via stdin:
 		  $ echo "deadbeefcafe" | mmgen-tool hexreverse -
 		"""
 
