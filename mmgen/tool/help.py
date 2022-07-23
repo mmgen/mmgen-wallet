@@ -51,7 +51,7 @@ def main_help():
 						cmdname,
 						max_w,
 						pretty_format(
-							code.__doc__.strip().replace('\n\t\t',' '),
+							code.__doc__.strip().split('\n')[0].strip(),
 							width = 79-(max_w+7),
 							pfx   = ' '*(max_w+5)).lstrip()
 					)
@@ -108,13 +108,14 @@ def usage(cmdname=None,exit_val=1):
 		for mod,cmdlist in main_tool.mods.items():
 			if cmdname in cmdlist:
 				cls = main_tool.get_mod_cls(mod)
-				p1 = fmt(capfirst(getattr(cls,cmdname).__doc__.strip()),strip_char='\t').strip()
-				Msg('{}{}\nUSAGE: {} {} {}'.format(
-					p1,
-					('\n' if '\n' in p1 else ''),
-					g.prog_name,cmdname,
-					main_tool.create_call_sig(cmdname,cls))
-				)
+				docstr = getattr(cls,cmdname).__doc__.strip()
+				Msg('{a}\n\nUSAGE: {b} {c} {d}{e}'.format(
+					a = capfirst( docstr.split('\n')[0].strip() ),
+					b = g.prog_name,
+					c = cmdname,
+					d = main_tool.create_call_sig(cmdname,cls),
+					e = '\n\n' + fmt('\n'.join(docstr.split('\n')[1:]),strip_char='\t').rstrip()
+						if '\n' in docstr else '' ))
 				break
 		else:
 			die(1,f'{cmdname!r}: no such tool command')
