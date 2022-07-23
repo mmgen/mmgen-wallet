@@ -200,25 +200,31 @@ class tool_cmd(tool_cmd_base):
 		ret = await (await TrackingWallet(self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
 		return True
 
-	async def twexport(self,include_amts=True):
+	async def twexport(self,include_amts=True,pretty=False):
 		"""
 		export a tracking wallet to JSON format
 
-		NOTE:
+		NOTES:
 
 		  If ‘include_amts’ is true (the default), Ethereum balances will be restored
 		  from the dump upon import. For Bitcoin and forks, amount fields in the dump
 		  are ignored.
+
+		  If ‘pretty’ is true, JSON will be dumped in human-readable format to allow
+		  for editing of comment fields.
 		"""
 		from ..tw.json import TwJSON
-		await TwJSON.Export( self.proto, include_amts=include_amts )
+		await TwJSON.Export( self.proto, include_amts=include_amts, pretty=pretty )
 		return True
 
 	async def twimport(self,filename:str,ignore_checksum=False,batch=False):
 		"""
 		restore a tracking wallet from a JSON dump created by ‘twexport’
 
-		NOTE:
+		NOTES:
+
+		  If comment fields in the JSON dump have been edited, ‘ignore_checksum’ must
+		  be set to true.
 
 		  The restored tracking wallet will have correct balances but no record of
 		  historical transactions.  These may be restored by running ‘mmgen-tool

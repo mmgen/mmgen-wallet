@@ -317,6 +317,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('twmove',             'moving the tracking wallet'),
 		('twimport',           'importing the tracking wallet'),
 		('twcompare',          'comparing imported tracking wallet with original'),
+		('edit_json_twdump',   'editing the tracking wallet JSON dump'),
+		('twmove',             'moving the tracking wallet'),
+		('twimport_nochksum',  'importing the edited tracking wallet JSON dump (ignore_checksum=1)'),
+
+		('token_listaddresses3','listaddresses --token=mm1 showempty=1'),
+		('token_listaddresses4','listaddresses --token=mm2 showempty=1'),
 		('twview9',            'twview (check balance)'),
 
 		('stop',               'stopping daemon'),
@@ -1143,6 +1149,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.listaddresses(args=['--token=mm1'])
 	def token_listaddresses2(self):
 		return self.listaddresses(args=['--token=mm1'],tool_args=['showempty=1'])
+	def token_listaddresses3(self):
+		return self.listaddresses(args=['--token=mm1'],tool_args=['showempty=1'])
+	def token_listaddresses4(self):
+		return self.listaddresses(args=['--token=mm2'],tool_args=['showempty=1'])
 
 	def twview_cached_balances(self):
 		return self.twview(args=['--cached-balances'])
@@ -1279,13 +1289,18 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		os.rename( tw.tw_fn, tw.tw_fn+'.bak.json' )
 		return 'ok'
 
-	def twimport(self,add_args=[]):
+	def twimport(self,add_args=[],expect_str=None):
 		from mmgen.tw.json import TwJSON
 		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
-		t = self.spawn('mmgen-tool',self.eth_args + ['twimport',fn] + add_args)
+		t = self.spawn('mmgen-tool',self.eth_args_noquiet + ['twimport',fn] + add_args)
 		t.expect('(y/N): ','y')
+		if expect_str:
+			t.expect(expect_str)
 		t.written_to_file('tracking wallet data')
 		return t
+
+	def twimport_nochksum(self):
+		return self.twimport(add_args=['ignore_checksum=true'],expect_str='ignoring incorrect checksum')
 
 	def tw_chktotal(self):
 		self.spawn('',msg_only=True)
@@ -1303,6 +1318,16 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		imsg(f'Comparing imported tracking wallet with original')
 		data = [json.dumps(json.loads(read_from_file(f)),sort_keys=True) for f in (fn,fn+'.bak.json')]
 		cmp_or_die(*data,'tracking wallets')
+		return 'ok'
+
+	def edit_json_twdump(self):
+		self.spawn('',msg_only=True)
+		from mmgen.tw.json import TwJSON
+		fn = TwJSON.Base(self.proto).dump_fn
+		text = json.loads(self.read_from_tmpfile(fn))
+		token_addr = self.read_from_tmpfile('token_addr2').strip()
+		text['data']['entries']['tokens'][token_addr][2][3] = f'edited comment [фубар] [{gr_uc}]'
+		self.write_to_tmpfile( fn, json.dumps(text,indent=4) )
 		return 'ok'
 
 	def stop(self):

@@ -87,13 +87,15 @@ class EthereumTwJSON(TwJSON):
 
 		async def do_import(self,batch):
 
+			from ....obj import TwComment
+
 			def gen_data(data):
 				for d in data:
 					if hasattr(d,'address'):
 						if d.amount is None: # Python 3.9: {} | {}
-							yield (d.address, {'mmid':d.mmgen_id,'comment':d.comment})
+							yield (d.address, {'mmid':d.mmgen_id,'comment':TwComment(d.comment)})
 						else:
-							yield (d.address, {'mmid':d.mmgen_id,'comment':d.comment,'balance':d.amount})
+							yield (d.address, {'mmid':d.mmgen_id,'comment':TwComment(d.comment),'balance':d.amount})
 					else:
 						yield ('params', {'symbol':d.symbol,'decimals':d.decimals})
 

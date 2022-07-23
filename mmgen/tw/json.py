@@ -50,8 +50,13 @@ class TwJSON:
 		def dump_fn(self):
 			return f'{self.fn_pfx}-{self.coin}-{self.network}.json'
 
-		def json_dump(self,data):
-			return json.dumps( data, cls=json_encoder, separators=(',', ':'), sort_keys=True )
+		def json_dump(self,data,pretty=False):
+			return json.dumps(
+				data,
+				cls        = json_encoder,
+				sort_keys  = True,
+				separators = None if pretty else (',', ':'),
+				indent     = 4 if pretty else None )
 
 		def make_chksum(self,data):
 			return make_chksum_8( self.json_dump(data).encode() ).lower()
@@ -128,7 +133,7 @@ class TwJSON:
 
 	class Export(Base,metaclass=AsyncInit):
 
-		async def __init__(self,proto,include_amts=True):
+		async def __init__(self,proto,include_amts=True,pretty=False):
 
 			super().__init__(proto)
 
@@ -156,7 +161,10 @@ class TwJSON:
 			from ..fileutil import write_data_to_file
 			write_data_to_file(
 				outfile = self.dump_fn,
-				data = self.json_dump({
-					'checksum': self.make_chksum(data),
-					'data': data }),
+				data = self.json_dump(
+					{
+						'checksum': self.make_chksum(data),
+						'data': data
+					},
+					pretty = pretty ),
 				desc = f'tracking wallet JSON data' )

@@ -209,6 +209,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_rescan_blockchain_gb', 'rescanning the blockchain (Genesis block)'),
 		('bob_rescan_blockchain_one','rescanning the blockchain (single block)'),
 		('bob_rescan_blockchain_ss', 'rescanning the blockchain (range of blocks)'),
+
 		('bob_twexport',             'exporting a tracking wallet to JSON'),
 		('carol_twimport',           'importing a tracking wallet JSON dump'),
 		('carol_delete_wallet',      'unloading and deleting Carol’s tracking wallet'),
@@ -216,6 +217,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('carol_twimport_nochksum',  'importing a tracking wallet JSON dump (ignore_checksum=1)'),
 		('carol_delete_wallet',      'unloading and deleting Carol’s tracking wallet'),
 		('carol_twimport_batch',     'importing a tracking wallet JSON dump (batch=1)'),
+		('bob_twexport_pretty',      'exporting a tracking wallet to JSON (pretty=1)'),
+		('bob_edit_json_twdump',     'editing a tracking wallet JSON dump'),
+		('carol_delete_wallet',      'unloading and deleting Carol’s tracking wallet'),
+		('carol_twimport_pretty',    'importing an edited tracking wallet JSON dump (ignore_checksum=1)'),
+		('carol_listaddresses',      'viewing Carol’s tracking wallet'),
+
 		('bob_split2',               "splitting Bob's funds"),
 		('bob_0conf0_getbalance',    "Bob's balance (unconfirmed, minconf=0)"),
 		('bob_0conf1_getbalance',    "Bob's balance (unconfirmed, minconf=1)"),
@@ -986,12 +993,26 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_twexport_noamt(self):
 		return self.bob_twexport(add_args=['include_amts=0'])
 
-	def carol_twimport(self,add_args=[]):
+	def bob_twexport_pretty(self):
+		return self.bob_twexport(add_args=['pretty=1'])
+
+	def bob_edit_json_twdump(self):
+		self.spawn('',msg_only=True)
+		from mmgen.tw.json import TwJSON
+		fn = TwJSON.Base(self.proto).dump_fn
+		text = json.loads(self.read_from_tmpfile(fn))
+		text['data']['entries'][3][3] = f'edited comment [фубар] [{gr_uc}]'
+		self.write_to_tmpfile( fn, json.dumps(text,indent=4) )
+		return 'ok'
+
+	def carol_twimport(self,add_args=[],expect_str=None):
 		from mmgen.tw.json import TwJSON
 		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
 		t = self.spawn('mmgen-tool',['--carol','twimport',fn] + add_args)
 		t.expect('(y/N): ','y')
-		if 'batch=true' in add_args:
+		if expect_str:
+			t.expect(expect_str)
+		elif 'batch=true' in add_args:
 			t.expect('{} addresses imported'.format(15 if self.proto.coin == 'BCH' else 25))
 		else:
 			t.expect('import completed OK')
@@ -1003,6 +1024,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def carol_twimport_batch(self):
 		return self.carol_twimport(add_args=['batch=true'])
+
+	def carol_twimport_pretty(self):
+		return self.carol_twimport(add_args=['ignore_checksum=true'],expect_str='ignoring incorrect checksum')
+
+	def carol_listaddresses(self):
+		return self.spawn('mmgen-tool',['--carol','listaddresses','showempty=1'])
 
 	async def carol_delete_wallet(self):
 		imsg(f'Unloading Carol’s tracking wallet')
