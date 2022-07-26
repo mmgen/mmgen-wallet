@@ -108,7 +108,8 @@ def cleandir(d,do_msg=False):
 			rmtree(os.path.join(d_enc,f),ignore_errors=True)
 
 def mk_tmpdir(d):
-	try: os.mkdir(d,0o755)
+	try:
+		os.makedirs( d, mode=0o755, exist_ok=True )
 	except OSError as e:
 		if e.errno != 17:
 			raise

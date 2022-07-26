@@ -53,7 +53,7 @@ class TestSuiteBase(object):
 
 	@property
 	def tmpdir(self):
-		return os.path.join('test','tmp{}{}'.format(self.tmpdir_num,'-α' if g.debug_utf8 else ''))
+		return os.path.join('test','tmp','{}{}'.format(self.tmpdir_num,'-α' if g.debug_utf8 else ''))
 
 	@property
 	def segwit_mmtype(self):

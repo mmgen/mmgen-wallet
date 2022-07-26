@@ -107,7 +107,7 @@ if proto.coin == 'XMR' or opt.type == 'zcash_z':
 cfg = {
 	'name':          'the tool utility',
 	'enc_passwd':    'Ten Satoshis',
-	'tmpdir':        'test/tmp10',
+	'tmpdir':        'test/tmp/10',
 	'tmpdir_num':    10,
 	'refdir':        'test/ref',
 	'txfile': {
