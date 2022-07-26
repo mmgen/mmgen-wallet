@@ -1005,14 +1005,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		self.write_to_tmpfile( fn, json.dumps(text,indent=4) )
 		return 'ok'
 
-	def carol_twimport(self,add_args=[],expect_str=None):
+	def carol_twimport(self,add_args=[],add_parms=[],expect_str=None):
 		from mmgen.tw.json import TwJSON
 		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
-		t = self.spawn('mmgen-tool',['--carol','twimport',fn] + add_args)
+		t = self.spawn('mmgen-tool', add_args + ['--carol','twimport',fn] + add_parms)
 		t.expect('(y/N): ','y')
 		if expect_str:
 			t.expect(expect_str)
-		elif 'batch=true' in add_args:
+		elif 'batch=true' in add_parms:
 			t.expect('{} addresses imported'.format(15 if self.proto.coin == 'BCH' else 25))
 		else:
 			t.expect('import completed OK')
@@ -1020,13 +1020,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def carol_twimport_nochksum(self):
-		return self.carol_twimport(add_args=['ignore_checksum=true'])
+		return self.carol_twimport(add_args=['--rpc-backend=aio'],add_parms=['ignore_checksum=true'])
 
 	def carol_twimport_batch(self):
-		return self.carol_twimport(add_args=['batch=true'])
+		return self.carol_twimport(add_parms=['batch=true'])
 
 	def carol_twimport_pretty(self):
-		return self.carol_twimport(add_args=['ignore_checksum=true'],expect_str='ignoring incorrect checksum')
+		return self.carol_twimport(add_parms=['ignore_checksum=true'],expect_str='ignoring incorrect checksum')
 
 	def carol_listaddresses(self):
 		return self.spawn('mmgen-tool',['--carol','listaddresses','showempty=1'])

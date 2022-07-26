@@ -2,14 +2,13 @@
 # Tested on Linux, Armbian, Raspbian, MSYS2
 
 REFDIR='test/ref'
-SUDO='sudo'
 
 if [ "$(uname -m)" == 'armv7l' ]; then
 	ARM32=1
 elif [ "$(uname -m)" == 'aarch64' ]; then
 	ARM64=1
 elif uname -a | grep -q 'MSYS'; then
-	SUDO='' MSYS2=1;
+	MSYS2=1;
 fi
 
 trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
@@ -23,7 +22,6 @@ export PYTHONPATH=.
 test_py='test/test.py -n'
 objtest_py='test/objtest.py'
 objattrtest_py='test/objattrtest.py'
-colortest_py='test/colortest.py'
 unit_tests_py='test/unit_tests.py --names --quiet'
 tooltest_py='test/tooltest.py'
 tooltest2_py='test/tooltest2.py --names --quiet'
@@ -31,7 +29,6 @@ gentest_py='test/gentest.py --quiet'
 scrambletest_py='test/scrambletest.py'
 altcoin_mod_opts='--quiet'
 mmgen_tool='cmds/mmgen-tool'
-mmgen_keygen='cmds/mmgen-keygen'
 python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 
@@ -63,7 +60,7 @@ do
 		echo   "           -O      Use pexpect.spawn rather than popen_spawn where applicable"
 		echo   "           -p      Pause between tests"
 		echo   "           -s LIST Skip tests in LIST (space-separated)"
-		echo   "           -S      Build SDIST distribution, unpack, and run test in unpacked dir"
+		echo   "           -S      Build SDIST distribution, unpack, and run test"
 		echo   "           -t      Print the tests without running them"
 		echo   "           -v      Run test/test.py with '--exact-output' and other commands"
 		echo   "                   with '--verbose' switch"
@@ -119,8 +116,7 @@ do
 		objtest_py="$python $objtest_py"
 		objattrtest_py="$python $objattrtest_py"
 		gentest_py="$python $gentest_py"
-		mmgen_tool="$python $mmgen_tool"
-		mmgen_keygen="$python $mmgen_keygen" ;&
+		mmgen_tool="$python $mmgen_tool" ;&
 	d)  export PYTHONDEVMODE=1
 		export PYTHONWARNINGS='error' ;;
 	D)  export MMGEN_TEST_SUITE_DETERMINISTIC=1
@@ -556,7 +552,7 @@ run_tests() {
 	done
 }
 
-check_args() {
+check_tests() {
 	for i in $tests; do
 		echo "$dfl_tests $extra_tests" | grep -q "\<$i\>" || {
 			echo "$i: unrecognized argument"
@@ -575,7 +571,7 @@ remove_skipped_tests() {
 
 remove_skipped_tests
 
-check_args
+check_tests
 
 start_time=$(date +%s)
 

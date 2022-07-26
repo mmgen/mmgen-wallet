@@ -92,11 +92,15 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	def hl(self,color=True):
 		return self.colorize(self.__str__(),color=color)
 
-	def hl2(self,color=True,encl=''): # display with coin symbol
+	# fancy highlighting with coin unit, enclosure, formatting
+	def hl2(self,color=True,unit=False,fs='{}',encl=''):
+		res = fs.format(self)
 		return (
 			encl[:-1]
-			+ self.colorize(self.__str__(),color=color)
-			+ ' ' + type(self).__name__[:-3]
+			+ self.colorize(
+				(res.rstrip('0').rstrip('.') if '.' in res else res) +
+				((' ' + type(self).__name__[:-3]) if unit else ''),
+				color = color )
 			+ encl[1:]
 		)
 

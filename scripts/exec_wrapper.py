@@ -33,31 +33,35 @@ def exec_wrapper_init(): # don't change: name is used to test if script is runni
 			pass
 
 def exec_wrapper_write_traceback(e):
-	import traceback,re
-	lines = traceback.format_exception(*sys.exc_info()) # returns a list
+	import traceback
 
-	pat = re.compile('File "<string>"')
-	repl = f'File "{exec_wrapper_execed_file}"'
-	lines = [pat.sub(repl,line,count=1) for line in lines]
+	def gen_output():
+		cwd = os.path.abspath('.')
+		yield 'Traceback (most recent call last):'
+		for e in traceback.extract_tb(sys.exc_info()[2]):
+			yield '  File "{f}", line {l}, in {n}\n    {L}'.format(
+				f = (
+					exec_wrapper_execed_file if e.filename == '<string>' else
+					e.filename.removeprefix(cwd+'/').removeprefix('test/overlay/tree/').replace('_orig.py','.py')
+				),
+				l = '(scrubbed)' if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') else e.lineno,
+				n = e.name,
+				L = e.line or 'N/A' )
 
-	exc = lines.pop()
-	if exc.startswith('SystemExit:'):
-		lines.pop()
+	tb_lines = list( gen_output() )
+	exc_line = (
+		repr(e) if type(e).__name__ in ('MMGenError','MMGenSystemExit') else
+		'{}: {}'.format( type(e).__name__, e ))
 
-	if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
-		pat = re.compile(", line [0-9]+,")
-		lines = [pat.sub(", line (scrubbed),",line) for line in lines]
+	if 'SystemExit' in exc_line:
+		tb_lines.pop()
 
 	c = exec_wrapper_get_colors()
-	message = ( repr(e) if type(e).__name__ in ('MMGenError','MMGenSystemExit') else exc )
-	sys.stdout.write('{}{}'.format(
-		c.yellow( ''.join(lines) ),
-		c.red(message) )
-	+ '\n' )
+	sys.stdout.write('{}\n{}\n'.format( c.yellow( '\n'.join(tb_lines) ), c.red(exc_line) ))
 
 	if not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
 		with open('test.py.err','w') as fp:
-			fp.write(''.join(lines+[exc]))
+			fp.write('\n'.join(tb_lines + [exc_line]))
 
 def exec_wrapper_end_msg():
 	if os.getenv('EXEC_WRAPPER_SPAWN') and not os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):

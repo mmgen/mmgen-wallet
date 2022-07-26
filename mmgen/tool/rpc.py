@@ -228,7 +228,7 @@ class tool_cmd(tool_cmd_base):
 
 		  The restored tracking wallet will have correct balances but no record of
 		  historical transactions.  These may be restored by running ‘mmgen-tool
-		  ‘rescan_blockchain’.
+		  rescan_blockchain’.
 		"""
 		from ..tw.json import TwJSON
 		await TwJSON.Import( self.proto, filename, ignore_checksum=ignore_checksum, batch=batch )

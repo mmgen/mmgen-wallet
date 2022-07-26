@@ -236,11 +236,11 @@ class TestSuiteSeedSplit(TestSuiteBase):
 
 	def ss_bad_invocation3(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',[self.tmpdir+'/no.mmdat','1:9'],1,'exception.FileNotFound')
+			'mmgen-seedsplit',[self.tmpdir+'/no.mmdat','1:9'],1,'FileNotFound')
 
 	def ss_bad_invocation4(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:9'],1,'exception.BadFileExtension')
+			'mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:9'],1,'BadFileExtension')
 
 	def ss_bad_invocation5(self):
 		return self.ss_bad_invocation(
@@ -252,11 +252,11 @@ class TestSuiteSeedSplit(TestSuiteBase):
 
 	def ss_bad_invocation7(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedjoin',[self.tmpdir+'/a',self.tmpdir+'/b'],1,'exception.BadFileExtension')
+			'mmgen-seedjoin',[self.tmpdir+'/a',self.tmpdir+'/b'],1,'BadFileExtension')
 
 	def ss_bad_invocation8(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedjoin',[self.tmpdir+'/a.mmdat',self.tmpdir+'/b.mmdat'],1,'exception.FileNotFound')
+			'mmgen-seedjoin',[self.tmpdir+'/a.mmdat',self.tmpdir+'/b.mmdat'],1,'FileNotFound')
 
 	def ss_bad_invocation9(self):
 		return self.ss_bad_invocation(
@@ -264,8 +264,8 @@ class TestSuiteSeedSplit(TestSuiteBase):
 
 	def ss_bad_invocation10(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',[self.tmpdir+'/a.mmdat','1:2'],1,'exception.FileNotFound')
+			'mmgen-seedsplit',[self.tmpdir+'/a.mmdat','1:2'],1,'FileNotFound')
 
 	def ss_bad_invocation11(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:2'],1,'exception.BadFileExtension')
+			'mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:2'],1,'BadFileExtension')
