@@ -96,7 +96,7 @@ opts_data = {
 	'sets': [('list_current_cmd_groups',True,'list_cmd_groups',True)],
 	'text': {
 		'desc': 'Test suite for the MMGen suite',
-		'usage':'[options] [command(s) or metacommand(s)]',
+		'usage':'[options] [command [..command]] | [command_group[.command_subgroup][:command]]',
 		'options': """
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
@@ -114,7 +114,7 @@ opts_data = {
 -e, --exact-output   Show the exact output of the MMGen script(s) being run
 -G, --exclude-groups=G Exclude the specified command groups (comma-separated)
 -l, --list-cmds      List the test script’s available commands
--L, --list-cmd-groups Output a list of command groups with descriptions
+-L, --list-cmd-groups List the test script’s command groups and subgroups
 -g, --list-current-cmd-groups List command groups for current configuration
 -n, --names          Display command names instead of descriptions
 -N, --no-timings     Suppress display of timing information
@@ -345,6 +345,36 @@ class CmdGroupMgr(object):
 	cmd_groups = cmd_groups_dfl.copy()
 	cmd_groups.update(cmd_groups_extra)
 
+	@staticmethod
+	def create_cmd_group(cls,sg_name=None):
+
+		cmd_group_in = dict(cls.cmd_group_in)
+
+		if sg_name and 'subgroup.' + sg_name not in cmd_group_in:
+			die(1,f'{sg_name!r}: no such subgroup in test group {cls.__name__}')
+
+		def add_entries(key,add_deps=True):
+			if add_deps:
+				for dep in cmd_group_in['subgroup.'+key]:
+					for e in add_entries(dep):
+						yield e
+			for e in cls.cmd_subgroups[key][1:]:
+				yield e
+
+		def gen():
+			for name,data in cls.cmd_group_in:
+				if name.startswith('subgroup.'):
+					sg_key = name.removeprefix('subgroup.')
+					if sg_name in (None,sg_key):
+						for e in add_entries(
+								sg_key,
+								add_deps = sg_name and not skipping_deps ):
+							yield e
+				elif not skipping_deps:
+					yield (name,data)
+
+		return tuple(gen())
+
 	def load_mod(self,gname,modname=None):
 		clsname,kwargs = self.cmd_groups[gname]
 		if modname == None and 'modname' in kwargs:
@@ -353,7 +383,7 @@ class CmdGroupMgr(object):
 		modpath = f'test.test_py_d.ts_{modname or gname}'
 		return getattr(importlib.import_module(modpath),clsname)
 
-	def create_group(self,gname,full_data=False,modname=None,is3seed=False,add_dpy=False):
+	def create_group(self,gname,sg_name,full_data=False,modname=None,is3seed=False,add_dpy=False):
 		"""
 		Initializes the list 'cmd_list' and dict 'dpy_data' from module's cmd_group data.
 		Alternatively, if called with 'add_dpy=True', updates 'dpy_data' from module data
@@ -373,6 +403,9 @@ class CmdGroupMgr(object):
 
 			return [k for k,v in cfgs[str(tmpdir_idx)]['dep_generators'].items()
 						if k in cls.shared_deps and v != cmdname]
+
+		if not hasattr(cls,'cmd_group'):
+			cls.cmd_group = self.create_cmd_group(cls,sg_name)
 
 		for a,b in cls.cmd_group:
 			if is3seed:
@@ -396,9 +429,9 @@ class CmdGroupMgr(object):
 
 		return cls
 
-	def gm_init_group(self,trunner,gname,spawn_prog):
+	def gm_init_group(self,trunner,gname,sg_name,spawn_prog):
 		kwargs = self.cmd_groups[gname][1]
-		cls = self.create_group(gname,**kwargs)
+		cls = self.create_group(gname,sg_name,**kwargs)
 		cls.group_name = gname
 		return cls(trunner,cfgs,spawn_prog)
 
@@ -415,12 +448,23 @@ class CmdGroupMgr(object):
 						if network_id in g[1].networks
 							and not g[0] in exclude
 							and g[0] in tuple(self.cmd_groups_dfl) + tuple(usr_args) ]
+			desc = 'CONFIGURED'
+		else:
+			desc = 'AVAILABLE'
 
-		for name,cls in ginfo:
-			msg('{:17} - {}'.format(
-				name,
-				cls.__doc__.strip() if cls.__doc__ else cls.__name__
-			))
+		def gen_output():
+			yield green(f'{desc} COMMAND GROUPS AND SUBGROUPS:')
+			yield ''
+			for name,cls in ginfo:
+				yield '  {} - {}'.format(
+					yellow(name.ljust(13)),
+					(cls.__doc__.strip() if cls.__doc__ else cls.__name__) )
+				if hasattr(cls,'cmd_subgroups'):
+					max_w = max(len(k) for k in cls.cmd_subgroups)
+					for k,v in cls.cmd_subgroups.items():
+						yield '    + {} · {}'.format( cyan(k.ljust(max_w+1)), v[0] )
+
+		do_pager('\n'.join(gen_output()))
 
 		Msg( '\n' + ' '.join(e[0] for e in ginfo) )
 		sys.exit(0)
@@ -440,6 +484,9 @@ class CmdGroupMgr(object):
 		for gname in groups:
 			clsname,kwargs = self.cmd_groups[gname]
 			cls = self.load_mod(gname,kwargs['modname'] if 'modname' in kwargs else None)
+
+			if not hasattr(cls,'cmd_group'):
+				cls.cmd_group = self.create_cmd_group(cls)
 
 			if cmd in cls.cmd_group:             # first search the class
 				return gname
@@ -559,7 +606,7 @@ class TestSuiteRunner(object):
 			('\n' if opt.no_timings else f'.  Elapsed time: {t//60:02d}:{t%60:02d}\n')
 		))
 
-	def init_group(self,gname,cmd=None,quiet=False,do_clean=True):
+	def init_group(self,gname,sg_name=None,cmd=None,quiet=False,do_clean=True):
 
 		ts_cls = CmdGroupMgr().load_mod(gname)
 
@@ -607,7 +654,7 @@ class TestSuiteRunner(object):
 
 		os.environ['MMGEN_BOGUS_UNSPENT_DATA'] = '' # zero this here, so test groups don't have to
 
-		self.ts = self.gm.gm_init_group(self,gname,self.spawn_wrapper)
+		self.ts = self.gm.gm_init_group(self,gname,sg_name,self.spawn_wrapper)
 		self.ts_clsname = type(self.ts).__name__
 
 		self.passthru_opts = ['--{}{}'.format(
@@ -641,24 +688,37 @@ class TestSuiteRunner(object):
 						self.check_needs_rerun(cmd,build=True)
 						do_between()
 				else:
-					if ':' in arg:
-						gname,arg = arg.split(':')
-					else:
-						gname = self.gm.find_cmd_in_groups(arg)
+					def parse_arg(arg):
+						if '.' in arg:
+							a,b = arg.split('.')
+							return [a] + b.split(':') if ':' in b else [a,b,None]
+						elif ':' in arg:
+							a,b = arg.split(':')
+							return [a,None,b]
+						else:
+							return [self.gm.find_cmd_in_groups(arg),None,arg]
+
+					gname,sg_name,cmdname = parse_arg(arg)
+
 					if gname:
 						same_grp = gname == gname_save # same group as previous cmd: don't clean, suppress blue msg
-						if not self.init_group(gname,arg,quiet=same_grp,do_clean=not same_grp):
+						if not self.init_group(gname,sg_name,cmdname,quiet=same_grp,do_clean=not same_grp):
 							continue
-						try:
-							self.check_needs_rerun(arg,build=True)
-						except Exception as e: # allow calling of functions not in cmd_group
-							if isinstance(e,KeyError) and e.args[0] == arg:
-								ret = getattr(self.ts,arg)()
-								if type(ret).__name__ == 'coroutine':
-									run_session(ret)
-							else:
-								raise
-						do_between()
+						if cmdname:
+							try:
+								self.check_needs_rerun(cmdname,build=True)
+							except Exception as e: # allow calling of functions not in cmd_group
+								if isinstance(e,KeyError) and e.args[0] == cmdname:
+									ret = getattr(self.ts,cmdname)()
+									if type(ret).__name__ == 'coroutine':
+										run_session(ret)
+								else:
+									raise
+							do_between()
+						else:
+							for cmd in self.gm.cmd_list:
+								self.check_needs_rerun(cmd,build=True)
+								do_between()
 						gname_save = gname
 					else:
 						die(1,f'{arg!r}: command not recognized')
@@ -838,7 +898,7 @@ class TestSuiteRunner(object):
 			if gname:
 				kwargs = self.gm.cmd_groups[gname][1]
 				kwargs.update({'add_dpy':True})
-				self.gm.create_group(gname,**kwargs)
+				self.gm.create_group(gname,None,**kwargs)
 				num = str(self.gm.dpy_data[cmd][0])
 				qmsg(f' found in group {gname!r}')
 			else:
