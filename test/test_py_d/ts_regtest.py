@@ -1284,6 +1284,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_msgverify_raw(self):
 		t = self.bob_msgverify(ext='rawmsg.json')
+		t.expect('No signatures')
 		t.req_exit_val = 1
 		return t
 

@@ -146,11 +146,11 @@ class coin_msg:
 			def gen_entry(e):
 				for k in labels:
 					if e.get(k):
-						yield fs2.format( labels[k], e[k] )
+						yield fs_sig.format( labels[k], e[k] )
 
 			def gen_all():
 				for k,v in hdr_data.items():
-					yield fs1.format( v[0], v[1](self.data[k]) )
+					yield fs_hdr.format( v[0], v[1](self.data[k]) )
 				if self.sigs:
 					yield ''
 					yield 'Signatures:'
@@ -162,7 +162,7 @@ class coin_msg:
 
 			def gen_single():
 				for k,v in hdr_data.items():
-					yield fs1.format( v[0], v[1](self.data[k]) )
+					yield fs_hdr.format( v[0], v[1](self.data[k]) )
 				if self.sigs:
 					yield 'Signature data:'
 					k = (
@@ -190,17 +190,16 @@ class coin_msg:
 			if req_addr or not self.data.get('failed_sids'):
 				del hdr_data['failed_sids']
 
-			fs1 = '{:%s} {}' % max(len(v[0]) for v in hdr_data.values())
-			fs2 = '{:%s} %s{}' % (
+			fs_hdr = '{:%s} {}' % max(len(v[0]) for v in hdr_data.values())
+			fs_sig = '%s{:%s} %s{}' % (
+				' ' * (2 if req_addr else 5),
 				max(len(labels[k]) for v in self.sigs.values() for k in v.keys()),
 				self.msg_cls.sigdata_pfx or ''
-			)
+			) if self.sigs else None
 
 			if req_addr:
-				fs2 = ' ' * 2 + fs2
 				return '\n'.join(gen_single())
 			else:
-				fs2 = ' ' * 5 + fs2
 				return (
 					'{}SIGNED MESSAGE DATA:\n\n  '.format('' if self.sigs else 'UN') +
 					'\n  '.join(gen_all()) )

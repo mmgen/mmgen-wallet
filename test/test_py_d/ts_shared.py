@@ -176,6 +176,7 @@ class TestSuiteShared(object):
 		else:
 			t.do_comment(False,has_label=has_label)
 			t.expect('Save signed transaction? (Y/n): ','n')
+			t.expect('not saved')
 			t.req_exit_val = 1
 		return t
 

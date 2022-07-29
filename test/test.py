@@ -113,7 +113,7 @@ opts_data = {
                      debugging only)
 -e, --exact-output   Show the exact output of the MMGen script(s) being run
 -G, --exclude-groups=G Exclude the specified command groups (comma-separated)
--l, --list-cmds      List and describe the commands in the test suite
+-l, --list-cmds      List the test script’s available commands
 -L, --list-cmd-groups Output a list of command groups with descriptions
 -g, --list-current-cmd-groups List command groups for current configuration
 -n, --names          Display command names instead of descriptions
@@ -133,14 +133,16 @@ opts_data = {
 -u, --usr-random     Get random data interactively from user
 -T, --pexpect-timeout=T Set the timeout for pexpect
 -v, --verbose        Produce more verbose output
--W, --no-dw-delete   Don't remove default wallet from data dir after dw tests are done
+-W, --no-dw-delete   Don't remove default wallet from data dir after dw tests
+                     are done
 -X, --exit-after=C   Exit after command 'C'
 -y, --segwit         Generate and use Segwit addresses
 -Y, --segwit-random  Generate and use a random mix of Segwit and Legacy addrs
 """,
 		'notes': """
 
-If no command is given, the whole test suite is run.
+If no command is given, the whole test suite is run for the currently
+specified coin (default BTC).
 """
 	},
 	'code': {
@@ -217,28 +219,37 @@ utils = {
 }
 
 def list_cmds():
-	gm = CmdGroupMgr()
-	cw,d = 0,[]
-	Msg(green('AVAILABLE COMMANDS:'))
-	for gname in gm.cmd_groups:
-		ts = gm.gm_init_group(None,gname,None)
-		desc = ts.__doc__.strip() if ts.__doc__ else type(ts).__name__
-		d.append( (gname,desc,gm.cmd_list,gm.dpy_data) )
-		cw = max(max(len(k) for k in gm.dpy_data),cw)
 
-	for gname,gdesc,clist,dpdata in d:
-		Msg('\n'+green(f'{gname!r} - {gdesc}:'))
-		for cmd in clist:
-			data = dpdata[cmd]
-			Msg('    {:{w}} - {}'.format(
-				cmd,
-				(data if type(data) == str else data[1]),
-				w = cw ))
+	def gen_output():
 
-	w = max(map(len,utils))
-	Msg('\n'+green('AVAILABLE UTILITIES:'))
-	for cmd in sorted(utils):
-		Msg('  {:{w}} - {}'.format( cmd, utils[cmd], w=w ))
+		gm = CmdGroupMgr()
+		cw,d = 0,[]
+
+		yield green('AVAILABLE COMMANDS:')
+
+		for gname in gm.cmd_groups:
+			ts = gm.gm_init_group(None,gname,None,None)
+			desc = ts.__doc__.strip() if ts.__doc__ else type(ts).__name__
+			d.append( (gname,desc,gm.cmd_list,gm.dpy_data) )
+			cw = max(max(len(k) for k in gm.dpy_data),cw)
+
+		for gname,gdesc,clist,dpdata in d:
+			yield '\n'+green(f'{gname!r} - {gdesc}:')
+			for cmd in clist:
+				data = dpdata[cmd]
+				yield '    {:{w}} - {}'.format(
+					cmd,
+					(data if type(data) == str else data[1]),
+					w = cw )
+
+		w = max(map(len,utils))
+
+		yield '\n'+green('AVAILABLE UTILITIES:')
+
+		for cmd in sorted(utils):
+			yield '  {:{w}} - {}'.format( cmd, utils[cmd], w=w )
+
+	do_pager('\n'.join(gen_output()))
 
 	sys.exit(0)
 
@@ -426,10 +437,13 @@ class CmdGroupMgr(object):
 		for gname in groups:
 			clsname,kwargs = self.cmd_groups[gname]
 			cls = self.load_mod(gname,kwargs['modname'] if 'modname' in kwargs else None)
+
 			if cmd in cls.cmd_group:             # first search the class
 				return gname
+
 			if cmd in dir(cls(None,None,None)):  # then a throwaway instance
 				return gname # cmd might exist in more than one group - we'll go with the first
+
 		return None
 
 class TestSuiteRunner(object):
@@ -527,10 +541,10 @@ class TestSuiteRunner(object):
 		os.environ['MMGEN_FORCE_COLOR'] = '1' if self.ts.color else ''
 
 		env = { 'EXEC_WRAPPER_SPAWN':'1' }
+		env.update(os.environ)
 		if 'exec_wrapper_init' in globals():
 			# test.py itself is running under exec_wrapper, so disable traceback file writing for spawned script
 			env.update({ 'EXEC_WRAPPER_NO_TRACEBACK':'1' }) # Python 3.9: OR the dicts
-		env.update(os.environ)
 
 		from test.include.pexpect import MMGenPexpect
 		return MMGenPexpect( args, no_output=no_output, env=env )
