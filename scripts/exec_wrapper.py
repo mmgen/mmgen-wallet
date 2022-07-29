@@ -8,10 +8,10 @@ import sys,os,time
 
 def exec_wrapper_get_colors():
 	from collections import namedtuple
-	return namedtuple('colors',['red','green','yellow','blue'])(*[
+	return namedtuple('colors',['red','green','yellow','blue','purple'])(*[
 			(lambda s:s) if os.getenv('MMGEN_DISABLE_COLOR') else
 			(lambda s,n=n:f'\033[{n};1m{s}\033[0m' )
-		for n in (31,32,33,34) ])
+		for n in (31,32,33,34,35) ])
 
 def exec_wrapper_init(): # don't change: name is used to test if script is running under exec_wrapper
 
@@ -26,42 +26,47 @@ def exec_wrapper_init(): # don't change: name is used to test if script is runni
 	if 'TMUX' in os.environ:
 		del os.environ['TMUX']
 
-	if not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
+	if os.getenv('EXEC_WRAPPER_TRACEBACK'):
 		try:
 			os.unlink('test.py.err')
 		except:
 			pass
 
-def exec_wrapper_write_traceback(e):
-	import traceback
+def exec_wrapper_write_traceback(e,exit_val):
 
-	def gen_output():
-		cwd = os.path.abspath('.')
-		yield 'Traceback (most recent call last):'
-		for e in traceback.extract_tb(sys.exc_info()[2]):
-			yield '  File "{f}", line {l}, in {n}\n    {L}'.format(
-				f = (
-					exec_wrapper_execed_file if e.filename == '<string>' else
-					e.filename.removeprefix(cwd+'/').removeprefix('test/overlay/tree/').replace('_orig.py','.py')
-				),
-				l = '(scrubbed)' if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') else e.lineno,
-				n = e.name,
-				L = e.line or 'N/A' )
-
-	tb_lines = list( gen_output() )
 	exc_line = (
 		repr(e) if type(e).__name__ in ('MMGenError','MMGenSystemExit') else
 		'{}: {}'.format( type(e).__name__, e ))
-
-	if 'SystemExit' in exc_line:
-		tb_lines.pop()
-
 	c = exec_wrapper_get_colors()
-	sys.stdout.write('{}\n{}\n'.format( c.yellow( '\n'.join(tb_lines) ), c.red(exc_line) ))
 
-	if not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
+	if os.getenv('EXEC_WRAPPER_TRACEBACK'):
+		import traceback
+
+		cwd = os.path.abspath('.')
+		def fixup_fn(fn_in):
+			fn = fn_in.removeprefix(cwd+'/').removeprefix('test/overlay/tree/')
+			return (fn.removesuffix('_orig.py') + '.py') if fn.endswith('_orig.py') else fn
+
+		def gen_output():
+			yield 'Traceback (most recent call last):'
+			for e in traceback.extract_tb(sys.exc_info()[2]):
+				yield '  File "{f}", line {l}, in {n}\n    {L}'.format(
+					f = exec_wrapper_execed_file if e.filename == '<string>' else fixup_fn(e.filename),
+					l = '(scrubbed)' if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') else e.lineno,
+					n = e.name,
+					L = e.line or 'N/A' )
+
+		tb_lines = list( gen_output() )
+
+		if 'SystemExit' in exc_line:
+			tb_lines.pop()
+
+		sys.stdout.write('{}\n{}\n'.format( c.yellow( '\n'.join(tb_lines) ), c.red(exc_line) ))
+
 		with open('test.py.err','w') as fp:
 			fp.write('\n'.join(tb_lines + [exc_line]))
+	else:
+		sys.stdout.write( c.purple(('NONZERO_EXIT: ' if exit_val else '') + exc_line) + '\n' )
 
 def exec_wrapper_end_msg():
 	if os.getenv('EXEC_WRAPPER_SPAWN') and not os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
@@ -108,17 +113,16 @@ try:
 	with open(exec_wrapper_execed_file) as fp:
 		exec(fp.read())
 except SystemExit as e:
-	if e.code != 0 and not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
-		exec_wrapper_write_traceback(e)
+	if e.code != 0:
+		exec_wrapper_write_traceback(e,e.code)
 	else:
 		exec_wrapper_tracemalloc_log()
 		exec_wrapper_end_msg()
 	sys.exit(e.code)
 except Exception as e:
-	if not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
-		exec_wrapper_write_traceback(e)
-	retval = e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1
-	sys.exit(retval)
+	exit_val = e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1
+	exec_wrapper_write_traceback(e,exit_val)
+	sys.exit(exit_val)
 
 exec_wrapper_tracemalloc_log()
 exec_wrapper_end_msg()

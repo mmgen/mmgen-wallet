@@ -155,6 +155,9 @@ do
 		echo   "           -v      Run test/test.py with '--exact-output' and other commands"
 		echo   "                   with '--verbose' switch"
 		echo   "           -V      Run test/test.py and other commands with '--verbose' switch"
+		echo
+		echo   "  For traceback output and error file support, set the EXEC_WRAPPER_TRACEBACK"
+		echo   "  environment var"
 		exit ;;
 	A)  SKIP_ALT_DEP=1
 		test_py+=" --no-altcoin"

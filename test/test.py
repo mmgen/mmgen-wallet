@@ -143,6 +143,9 @@ opts_data = {
 
 If no command is given, the whole test suite is run for the currently
 specified coin (default BTC).
+
+For traceback output and error file support, set the EXEC_WRAPPER_TRACEBACK
+environment var
 """
 	},
 	'code': {
@@ -544,7 +547,7 @@ class TestSuiteRunner(object):
 		env.update(os.environ)
 		if 'exec_wrapper_init' in globals():
 			# test.py itself is running under exec_wrapper, so disable traceback file writing for spawned script
-			env.update({ 'EXEC_WRAPPER_NO_TRACEBACK':'1' }) # Python 3.9: OR the dicts
+			env.update({ 'EXEC_WRAPPER_TRACEBACK':'' }) # Python 3.9: OR the dicts
 
 		from test.include.pexpect import MMGenPexpect
 		return MMGenPexpect( args, no_output=no_output, env=env )
