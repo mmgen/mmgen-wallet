@@ -66,7 +66,7 @@ def exec_wrapper_write_traceback(e,exit_val):
 		with open('test.py.err','w') as fp:
 			fp.write('\n'.join(tb_lines + [exc_line]))
 	else:
-		sys.stdout.write( c.purple(('NONZERO_EXIT: ' if exit_val else '') + exc_line) + '\n' )
+		sys.stdout.write( c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n' )
 
 def exec_wrapper_end_msg():
 	if os.getenv('EXEC_WRAPPER_SPAWN') and not os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):

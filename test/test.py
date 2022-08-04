@@ -164,16 +164,22 @@ from test.test_py_d.common import *
 data_dir = get_data_dir() # include/common.py
 
 # step 1: delete data_dir symlink in ./test;
-resuming = any(k in po.user_opts for k in ('resume','resume_after'))
-skipping_deps = resuming or 'skip_deps' in po.user_opts
+opt.resuming = any(k in po.user_opts for k in ('resume','resume_after'))
+opt.skipping_deps = opt.resuming or 'skip_deps' in po.user_opts
 
-if not skipping_deps:
+if not opt.skipping_deps:
 	try: os.unlink(data_dir)
 	except: pass
 
-opts.UserOpts._reset_ok += ('no_daemon_autostart','names','no_timings','exit_after')
+opts.UserOpts._reset_ok += (
+	'no_daemon_autostart',
+	'names',
+	'no_timings',
+	'exit_after',
+	'resuming',
+	'skipping_deps' )
 
-# step 2: opts.init will create new data_dir in ./test (if not skipping_deps)
+# step 2: opts.init will create new data_dir in ./test (if not opt.skipping_deps)
 usr_args = opts.init(opts_data)
 
 if opt.daemon_id and opt.daemon_id in g.blacklist_daemons.split():
@@ -187,7 +193,7 @@ proto = init_proto_from_opts()
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
 trash_dir = os.path.join('test','trash')
 
-if not skipping_deps:
+if not opt.skipping_deps:
 	shm_dir = create_shm_dir(data_dir,trash_dir)
 
 check_segwit_opts()
@@ -206,7 +212,7 @@ if opt.exact_output:
 	def msg(s): pass
 	qmsg = qmsg_r = vmsg = vmsg_r = msg_r = msg
 
-if skipping_deps:
+if opt.skipping_deps:
 	opt.no_daemon_autostart = True
 
 from test.test_py_d.cfg import cfgs,fixup_cfgs
@@ -259,14 +265,14 @@ def list_cmds():
 def do_between():
 	if opt.pause:
 		confirm_continue()
-	elif (opt.verbose or opt.exact_output) and not skipping_deps:
+	elif (opt.verbose or opt.exact_output) and not opt.skipping_deps:
 		sys.stderr.write('\n')
 
 def list_tmpdirs():
 	return {k:cfgs[k]['tmpdir'] for k in cfgs}
 
 def clean(usr_dirs=None,clean_overlay=True):
-	if skipping_deps:
+	if opt.skipping_deps:
 		return
 	all_dirs = list_tmpdirs()
 	dirnums = map(int,(usr_dirs if usr_dirs is not None else all_dirs))
@@ -358,6 +364,9 @@ class CmdGroupMgr(object):
 				for dep in cmd_group_in['subgroup.'+key]:
 					for e in add_entries(dep):
 						yield e
+
+			assert isinstance(cls.cmd_subgroups[key][0],str), f'header for subgroup {key!r} missing!'
+
 			for e in cls.cmd_subgroups[key][1:]:
 				yield e
 
@@ -368,9 +377,9 @@ class CmdGroupMgr(object):
 					if sg_name in (None,sg_key):
 						for e in add_entries(
 								sg_key,
-								add_deps = sg_name and not skipping_deps ):
+								add_deps = sg_name and not opt.skipping_deps ):
 							yield e
-				elif not skipping_deps:
+				elif not opt.skipping_deps:
 					yield (name,data)
 
 		return tuple(gen())
@@ -435,12 +444,13 @@ class CmdGroupMgr(object):
 		cls.group_name = gname
 		return cls(trunner,cfgs,spawn_prog)
 
+	def get_cls_by_gname(self,gname):
+		return self.load_mod( gname, self.cmd_groups[gname][1].get('modname') )
+
 	def list_cmd_groups(self):
 		ginfo = []
 		for gname in self.cmd_groups:
-			clsname,kwargs = self.cmd_groups[gname]
-			cls = self.load_mod(gname,kwargs['modname'] if 'modname' in kwargs else None)
-			ginfo.append((gname,cls))
+			ginfo.append(( gname, self.get_cls_by_gname(gname) ))
 
 		if opt.list_current_cmd_groups:
 			exclude = (opt.exclude_groups or '').split(',')
@@ -482,8 +492,7 @@ class CmdGroupMgr(object):
 			groups = self.cmd_groups
 
 		for gname in groups:
-			clsname,kwargs = self.cmd_groups[gname]
-			cls = self.load_mod(gname,kwargs['modname'] if 'modname' in kwargs else None)
+			cls = self.get_cls_by_gname(gname)
 
 			if not hasattr(cls,'cmd_group'):
 				cls.cmd_group = self.create_cmd_group(cls)
@@ -648,9 +657,9 @@ class TestSuiteRunner(object):
 		if not quiet:
 			bmsg('Executing ' + m)
 
-		if not self.daemons_started and network_id not in ('eth','etc','xmr'):
+		if not self.daemon_started and network_id not in ('eth','etc','xmr'):
 			start_test_daemons(network_id,remove_datadir=True)
-			self.daemons_started = True
+			self.daemon_started = True
 
 		os.environ['MMGEN_BOGUS_UNSPENT_DATA'] = '' # zero this here, so test groups don't have to
 
@@ -662,7 +671,7 @@ class TestSuiteRunner(object):
 				'=' + getattr(opt,k) if getattr(opt,k) != True else ''
 			) for k in self.ts.base_passthru_opts + self.ts.passthru_opts if getattr(opt,k)]
 
-		if resuming:
+		if opt.resuming:
 			rc = opt.resume or opt.resume_after
 			offset = 1 if opt.resume_after else 0
 			self.resume_cmd = self.gm.cmd_list[self.gm.cmd_list.index(rc)+offset]
@@ -677,7 +686,7 @@ class TestSuiteRunner(object):
 
 	def run_tests(self,usr_args):
 		self.start_time = time.time()
-		self.daemons_started = False
+		self.daemon_started = False
 		gname_save = None
 		if usr_args:
 			for arg in usr_args:
@@ -783,7 +792,7 @@ class TestSuiteRunner(object):
 				for fn in fns:
 					if not root:
 						os.unlink(fn)
-				if not (dpy and skipping_deps):
+				if not (dpy and opt.skipping_deps):
 					self.run_test(cmd)
 				if not root:
 					do_between()
@@ -810,9 +819,8 @@ class TestSuiteRunner(object):
 				return
 			bmsg(f'Resuming at {self.resume_cmd!r}')
 			self.resume_cmd = None
-			global skipping_deps,resuming
-			skipping_deps = False
-			resuming = False
+			opt.skipping_deps = False
+			opt.resuming = False
 
 		if opt.profile:
 			start = time.time()
@@ -913,7 +921,7 @@ class TestSuiteRunner(object):
 
 # main()
 
-if not skipping_deps: # do this before list cmds exit, so we stay in sync with shm_dir
+if not opt.skipping_deps: # do this before list cmds exit, so we stay in sync with shm_dir
 	create_tmp_dirs(shm_dir)
 
 if opt.list_cmd_groups:

@@ -90,7 +90,8 @@ class MMGenPexpect(object):
 		if opt.profile:
 			return
 		if not self.skip_ok:
-			sys.stderr.write(green('OK\n') if opt.exact_output or opt.verbose else (' OK\n'))
+			m = 'OK\n' if ret == 0 else f'OK[{ret}]\n'
+			sys.stderr.write( green(m) if opt.exact_output or opt.verbose else ' '+m )
 		return self
 
 	def license(self):
@@ -168,6 +169,17 @@ class MMGenPexpect(object):
 
 	def kill(self,signal):
 		return self.p.kill(signal)
+
+	def match_expect_list(self,expect_list,greedy=False):
+		res = strip_ansi_escapes(self.read()).replace('\r','')
+		allrep = '.*' if greedy else '.*?'
+		expect = (
+			r'(\b|\s)' +
+			fr'\s{allrep}\s'.join(s.replace(r'.',r'\.').replace(' ',r'\s+') for s in expect_list) +
+			r'(\b|\s)' )
+		m = re.search(expect,res,re.DOTALL)
+		assert m, f'No match found for regular expression {expect!r}'
+		return m
 
 	def expect(self,s,t='',delay=None,regex=False,nonl=False,silent=False):
 		delay = delay or (0,0.3)[bool(opt.buf_keypress)]

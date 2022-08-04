@@ -38,7 +38,6 @@ opts_data = {
 -f, --fast                Speed up execution by reducing rounds on some tests
 -l, --list                List available tests
 -n, --names               Print command names instead of descriptions
--N, --node-tools          Select node-tools unit tests
 -q, --quiet               Produce quieter output
 -x, --exclude=T           Exclude tests 'T' (comma-separated)
 -v, --verbose             Produce more verbose output
@@ -58,7 +57,7 @@ cmd_args = opts.init(opts_data)
 
 os.environ['PYTHONPATH'] = repo_root
 
-file_pfx = 'nt_' if opt.node_tools else 'ut_'
+file_pfx = 'ut_'
 
 all_tests = sorted(
 	[fn[3:-3] for fn in os.listdir(os.path.join(repo_root,'test','unit_tests_d')) if fn[:3] == file_pfx])
