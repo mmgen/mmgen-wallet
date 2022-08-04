@@ -34,6 +34,7 @@ class TestSuiteMisc(TestSuiteBase):
 	cmd_group = (
 		('rpc_backends', 'RPC backends'),
 	)
+	need_daemon = True
 
 	def rpc_backends(self):
 		backends = g.autoset_opts['rpc_backend'][1]
@@ -173,6 +174,7 @@ class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 	segwit_opts_ok = False
 	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
 	tmpdir_nums = [31,32,33,34]
+	need_daemon = True
 	cmd_group = (
 		('ref_tx_addrgen1', (31,'address generation (legacy)', [[[],1]])),
 		('ref_tx_addrgen2', (32,'address generation (compressed)', [[[],1]])),

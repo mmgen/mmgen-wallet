@@ -657,7 +657,7 @@ class TestSuiteRunner(object):
 		if not quiet:
 			bmsg('Executing ' + m)
 
-		if not self.daemon_started and network_id not in ('eth','etc','xmr'):
+		if (not self.daemon_started) and self.gm.get_cls_by_gname(gname).need_daemon:
 			start_test_daemons(network_id,remove_datadir=True)
 			self.daemon_started = True
 
@@ -943,10 +943,10 @@ try:
 	tr = TestSuiteRunner(data_dir,trash_dir)
 	tr.run_tests(usr_args)
 	tr.warn_skipped()
-	if network_id not in ('eth','etc','xmr'):
+	if tr.daemon_started:
 		stop_test_daemons(network_id)
 except KeyboardInterrupt:
-	if network_id not in ('eth','etc','xmr'):
+	if tr.daemon_started:
 		stop_test_daemons(network_id)
 	tr.warn_skipped()
 	die(1,'\ntest.py exiting at user request')

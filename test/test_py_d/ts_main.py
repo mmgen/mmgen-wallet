@@ -72,6 +72,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
 	segwit_opts_ok = True
 	color = True
+	need_daemon = True
 	cmd_group = (
 		('walletgen_dfl_wallet', (15,'wallet generation (default wallet)',[[[],15]])),
 		('subwalletgen_dfl_wallet', (15,'subwallet generation (default wallet)',[[[pwfile],15]])),
