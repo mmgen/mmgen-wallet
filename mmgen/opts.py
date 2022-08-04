@@ -46,6 +46,22 @@ def version():
 		command line.  Copyright (C){g.Cdates} {g.author} {g.email}
 	""",indent='  ').rstrip())
 
+def delete_data(opts_data):
+	for k in ('text','notes','code'):
+		if k in opts_data:
+			del opts_data[k]
+	del mmgen.share.Opts.make_help
+	del mmgen.share.Opts.process_uopts
+	del mmgen.share.Opts.parse_opts
+
+def post_init():
+	global po_save,opts_data_save,opt_filter_save
+	if po_save.user_opts.get('help') or po_save.user_opts.get('longhelp'):
+		print_help(po_save,opts_data_save,opt_filter_save)
+	else:
+		delete_data(opts_data_save)
+		del po_save,opts_data_save,opt_filter_save
+
 def print_help(po,opts_data,opt_filter):
 	if not 'code' in opts_data:
 		opts_data['code'] = {}
@@ -268,7 +284,8 @@ def init(
 	opt_filter  = None,
 	parse_only  = False,
 	parsed_opts = None,
-	need_proto  = True ):
+	need_proto  = True,
+	do_post_init = False ):
 
 	if opts_data is None:
 		opts_data = opts_data_dfl
@@ -389,11 +406,8 @@ def init(
 
 	# print help screen only after global vars are initialized:
 	if getattr(opt,'help',None) or getattr(opt,'longhelp',None):
-		print_help(po,opts_data,opt_filter) # exits
-
-	del mmgen.share.Opts.make_help
-	del mmgen.share.Opts.process_uopts
-	del mmgen.share.Opts.parse_opts
+		if not do_post_init:
+			print_help(po,opts_data,opt_filter) # exits
 
 	if need_proto:
 		from .protocol import warn_trustlevel
@@ -420,13 +434,16 @@ def init(
 	if g.debug_opts:
 		opt_postproc_debug()
 
-	# We don't need this data anymore
-	for k in ('text','notes','code'):
-		if k in opts_data:
-			del opts_data[k]
-
 	g.lock()
 	opt.lock()
+
+	if do_post_init:
+		global po_save,opts_data_save,opt_filter_save
+		po_save = po
+		opts_data_save = opts_data
+		opt_filter_save = opt_filter
+	else:
+		delete_data(opts_data)
 
 	return po.cmd_args
 
