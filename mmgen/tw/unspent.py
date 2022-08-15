@@ -283,24 +283,29 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 				e = uo.data[idx-1]
 				if await uo.wallet.add_label( e.twmmid, lbl, coinaddr=e.addr ):
 					await uo.get_data()
-					uo.oneshot_msg = yellow('Label {} {} #{}\n\n'.format(
-						('added to' if lbl else 'removed from'),
-						uo.item_desc,
-						idx ))
+					uo.oneshot_msg = yellow('Label {a} {b}{c}\n\n'.format(
+						a = 'to' if cur_lbl and lbl else 'added to' if lbl else 'removed from',
+						b = desc,
+						c = ' edited' if cur_lbl and lbl else '' ))
 				else:
 					await asyncio.sleep(3)
-					uo.oneshot_msg = red('Label could not be added\n\n')
+					uo.oneshot_msg = red('Label could not be {}\n\n'.format(
+						'edited' if cur_lbl and lbl else
+						'added' if lbl else
+						'removed' ))
 
+			desc = f'{uo.item_desc} #{idx}'
 			cur_lbl = uo.data[idx-1].label
 			msg('Current label: {}'.format(cur_lbl.hl() if cur_lbl else '(none)'))
 
 			res = line_input(
 				"Enter label text (or ENTER to return to main menu): ",
 				insert_txt = cur_lbl )
+
 			if res == cur_lbl:
 				return None
 			elif res == '':
-				return (await do_lbl_add(res)) if keypress_confirm(
-					f'Removing label for {uo.item_desc} #{idx}.  Is this what you want?') else 'redo'
+				return (await do_lbl_add('')) if keypress_confirm(
+					f'Removing label for {desc}.  Is this what you want?') else 'redo'
 			else:
 				return (await do_lbl_add(res)) if get_obj(TwComment,s=res) else 'redo'

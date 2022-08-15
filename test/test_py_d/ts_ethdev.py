@@ -347,8 +347,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	'label': (
 		'creating, editing and removing labels',
 		('edit_label1',       f'adding label to addr #{del_addrs[0]} in {coin} tracking wallet (zh)'),
-		('edit_label2',       f'adding label to addr #{del_addrs[1]} in {coin} tracking wallet (lat+cyr+gr)'),
-		('edit_label3',       f'removing label from addr #{del_addrs[0]} in {coin} tracking wallet'),
+		('edit_label2',       f'editing label for addr #{del_addrs[0]} in {coin} tracking wallet (zh)'),
+		('edit_label3',       f'adding label to addr #{del_addrs[1]} in {coin} tracking wallet (lat+cyr+gr)'),
+		('edit_label4',       f'removing label from addr #{del_addrs[0]} in {coin} tracking wallet'),
 		('token_edit_label1', f'adding label to addr #{del_addrs[0]} in {coin} token tracking wallet'),
 	),
 	'remove': (
@@ -1271,16 +1272,18 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_twview3(self):
 		return self.twview(args=['--token=mm1'],tool_args=['wide=1','sort=age'])
 
-	def edit_label(self,out_num,args=[],action='l',label_text=None):
+	def edit_label(self,out_num,args=[],action='l',label_text=None,changed=False):
 		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B','-i'])
 		p1,p2 = ('efresh balance:\b','return to main menu): ')
 		p3,r3 = (p2,label_text+'\n') if label_text is not None else ('(y/N): ','y')
 		p4,r4 = (('(y/N): ',),('y',)) if label_text == self.erase_input else ((),())
 		for p,r in zip((p1,p1,p2,p3)+p4,('M',action,out_num+'\n',r3)+r4):
 			t.expect(p,r)
-		m = (   'Account #{} removed' if action == 'D' else
-				'Label added to account #{}' if label_text and label_text != self.erase_input else
-				'Label removed from account #{}' )
+		m = (
+			'Label to account #{} edited' if changed else
+			'Account #{} removed' if action == 'D' else
+			'Label added to account #{}' if label_text and label_text != self.erase_input else
+			'Label removed from account #{}' )
 		t.expect(m.format(out_num))
 		for p,r in zip((p1,p1),('M','q')):
 			t.expect(p,r)
@@ -1290,8 +1293,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def edit_label1(self):
 		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh)
 	def edit_label2(self):
-		return self.edit_label(out_num=del_addrs[1],label_text=tw_label_lat_cyr_gr)
+		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[:-1],changed=True)
 	def edit_label3(self):
+		return self.edit_label(out_num=del_addrs[1],label_text=tw_label_lat_cyr_gr)
+	def edit_label4(self):
 		return self.edit_label(out_num=del_addrs[0],label_text=self.erase_input)
 
 	def token_edit_label1(self):
