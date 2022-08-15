@@ -121,7 +121,7 @@ class bitcoin_core_daemon(CoinDaemon):
 		return e.args[0]
 
 class bitcoin_cash_node_daemon(bitcoin_core_daemon):
-	daemon_data = _dd('Bitcoin Cash Node', 24000000, '24.0.0')
+	daemon_data = _dd('Bitcoin Cash Node', 24010000, '24.1.0')
 	exec_fn = 'bitcoind-bchn'
 	cli_fn = 'bitcoin-cli-bchn'
 	rpc_ports = _nw(8432, 18432, 18543) # use non-standard ports (core+100)
@@ -149,7 +149,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 class litecoin_core_daemon(bitcoin_core_daemon):
 	# v0.21.2rc5 crashes when mining more than 431 blocks in regtest mode:
 	#   CreateNewBlock: TestBlockValidity failed: bad-txns-vin-empty, Transaction check failed
-	daemon_data = _dd('Litecoin Core', 210200, '0.21.2')
+	daemon_data = _dd('Litecoin Core', 210201, '0.21.2.1')
 	exec_fn = 'litecoind'
 	cli_fn = 'litecoin-cli'
 	testnet_dir = 'testnet4'

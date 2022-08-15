@@ -1006,7 +1006,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 					start_gas = ETHAmt(60000,'wei'),
 					gasPrice  = ETHAmt(8,'Gwei') )
 				if self.daemon.id == 'geth': # yet another Geth bug
-					await asyncio.sleep(0.1)
+					await asyncio.sleep(0.3)
 				if (await self.get_tx_receipt(txid)).status == 0:
 					die(2,'Transfer of token funds failed. Aborting')
 

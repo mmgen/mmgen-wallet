@@ -21,6 +21,7 @@ from ...daemon import CoinDaemon,RPCDaemon,_nw,_dd
 class ethereum_daemon(CoinDaemon):
 	chain_subdirs = _nw('ethereum','goerli','DevelopmentChain')
 	base_rpc_port = 8545  # same for all networks!
+	base_authrpc_port = 8551 # same for all networks!
 	base_p2p_port = 30303 # same for all networks!
 	daemon_port_offset = 100
 	network_port_offsets = _nw(0,10,20)
@@ -38,6 +39,10 @@ class ethereum_daemon(CoinDaemon):
 
 	def get_rpc_port(self):
 		return self.base_rpc_port + self.port_offset
+
+	@property
+	def authrpc_port(self):
+		return self.base_authrpc_port + self.port_offset
 
 	def get_p2p_port(self):
 		return self.base_p2p_port + self.port_offset
@@ -86,7 +91,7 @@ class parity_daemon(openethereum_daemon):
 class geth_daemon(ethereum_daemon):
 	# bug in v1.10.17 requires --dev to be omitted to initialize blockchain (devnet_init_bug)
 	# daemon_data = _dd('Geth', 1010017, '1.10.17')
-	daemon_data = _dd('Geth', 1010014, '1.10.14')
+	daemon_data = _dd('Geth', 1010021, '1.10.21')
 	version_pat = r'Geth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'geth'
 	use_pidfile = False
@@ -104,6 +109,7 @@ class geth_daemon(ethereum_daemon):
 			['--http'],
 			['--http.api=eth,web3,txpool'],
 			[f'--http.port={self.rpc_port}'],
+			[f'--authrpc.port={self.authrpc_port}'],
 			[f'--port={self.p2p_port}', self.p2p_port], # geth binds p2p port even with --maxpeers=0
 			['--maxpeers=0', not self.opt.online],
 			[f'--datadir={self.datadir}', self.non_dfl_datadir],
