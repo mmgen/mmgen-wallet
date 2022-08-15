@@ -58,14 +58,14 @@ class tool_cmd(tool_cmd_base):
 			age_fmt      = age_fmt )
 
 	async def listaddresses(self,
-			mmgen_addrs: 'hyphenated range or comma-separated list of addresses' = '',
-			minconf:     'minimum number of confirmations' = 1,
-			pager:       'send output to pager' = False,
-			showbtcaddr: 'display coin addresses in addition to MMGen IDs' = True,
-			showempty:   'show addresses with no balances' = True,
-			all_labels:  'show all addresses with labels' = False,
-			age_fmt:     'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
-			sort:        'address sort order ' + options_annot_str(['reverse','age']) = '' ):
+			mmgen_addrs:  'hyphenated range or comma-separated list of addresses' = '',
+			minconf:      'minimum number of confirmations' = 1,
+			pager:        'send output to pager' = False,
+			showbtcaddrs: 'display coin addresses in addition to MMGen IDs' = True,
+			showempty:    'show addresses with no balances' = True,
+			all_labels:   'show all addresses with labels' = False,
+			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
+			sort:         'address sort order ' + options_annot_str(['reverse','age']) = '' ):
 		"list MMGen addresses in the tracking wallet and their balances"
 
 		show_age = bool(age_fmt)
