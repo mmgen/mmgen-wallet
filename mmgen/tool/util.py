@@ -25,21 +25,64 @@ from .common import tool_cmd_base
 class tool_cmd(tool_cmd_base):
 	"general string conversion and hashing utilities"
 
+	# mmgen.util.bytespec_map
 	def bytespec(self,dd_style_byte_specifier:str):
-		"convert a byte specifier such as '1GB' into an integer"
+		"""
+		convert a byte specifier such as ‘4GB’ into an integer
+
+		Valid specifiers:
+
+		  c  = 1
+		  w  = 2
+		  b  = 512
+		  kB = 1000
+		  K  = 1024
+		  MB = 1000000
+		  M  = 1048576
+		  GB = 1000000000
+		  G  = 1073741824
+		  TB = 1000000000000
+		  T  = 1099511627776
+		  PB = 1000000000000000
+		  P  = 1125899906842624
+		  EB = 1000000000000000000
+		  E  = 1152921504606846976
+		"""
 		from ..util import parse_bytespec
 		return parse_bytespec(dd_style_byte_specifier)
 
+	# mmgen.util.bytespec_map
 	def to_bytespec(self,
 			n: int,
 			dd_style_byte_specifier: str,
-			fmt = '0.2',
-			print_sym = True ):
-		"convert an integer to a byte specifier such as '1GB'"
+			fmt:       'width and precision of output' = '0.2',
+			print_sym: 'print the specifier after the numerical value' = True ):
+		"""
+		convert an integer to a byte specifier such as ‘4GB’
+
+		Supported specifiers:
+
+		  c  = 1
+		  w  = 2
+		  b  = 512
+		  kB = 1000
+		  K  = 1024
+		  MB = 1000000
+		  M  = 1048576
+		  GB = 1000000000
+		  G  = 1073741824
+		  TB = 1000000000000
+		  T  = 1099511627776
+		  PB = 1000000000000000
+		  P  = 1125899906842624
+		  EB = 1000000000000000000
+		  E  = 1152921504606846976
+		"""
 		from ..util import int2bytespec
 		return int2bytespec( n, dd_style_byte_specifier, fmt, print_sym )
 
-	def randhex(self,nbytes=32):
+	def randhex(self,
+			nbytes: 'number of bytes to output' = 32 ):
 		"print 'n' bytes (default 32) of random data in hex format"
 		from ..crypto import get_random
 		return get_random( nbytes ).hex()
@@ -58,7 +101,10 @@ class tool_cmd(tool_cmd_base):
 		"convert a hexadecimal string to bytes (warning: outputs binary data)"
 		return bytes.fromhex(hexstr)
 
-	def hexdump(self,infile:str,cols=8,line_nums='hex'):
+	def hexdump(self,
+			infile: str,
+			cols:      'number of columns in output' = 8,
+			line_nums: "format for line numbers (valid choices: 'hex','dec')" = 'hex'):
 		"create hexdump of data from file (use '-' for stdin)"
 		from ..fileutil import get_data_from_file
 		from ..util import pretty_hexdump
@@ -81,7 +127,11 @@ class tool_cmd(tool_cmd_base):
 		from ..proto.common import hash160
 		return hash160( bytes.fromhex(hexstr) ).hex()
 
-	def hash256(self,data:str,file_input=False,hex_input=False): # TODO: handle stdin
+	# TODO: handle stdin
+	def hash256(self,
+			data: str,
+			file_input: 'first arg is the name of a file containing the data' = False,
+			hex_input:  'first arg is a hexadecimal string' = False ):
 		"compute sha256(sha256(data)) (double sha256)"
 		from hashlib import sha256
 		if file_input:
@@ -113,30 +163,32 @@ class tool_cmd(tool_cmd_base):
 		return make_chksum_8(
 			get_data_from_file( infile, dash=True, quiet=True, binary=True ))
 
-	def randb58(self,nbytes=32,pad=0):
+	def randb58(self,
+			nbytes: 'number of bytes to output' = 32,
+			pad:    'pad output to this width' = 0 ):
 		"generate random data (default: 32 bytes) and convert it to base 58"
 		from ..crypto import get_random
 		from ..baseconv import baseconv
 		return baseconv('b58').frombytes( get_random(nbytes), pad=pad, tostr=True )
 
-	def bytestob58(self,infile:str,pad=0):
+	def bytestob58(self,infile:str,pad: 'pad output to this width' = 0):
 		"convert bytes to base 58 (supply data via STDIN)"
 		from ..fileutil import get_data_from_file
 		from ..baseconv import baseconv
 		data = get_data_from_file( infile, dash=True, quiet=True, binary=True )
 		return baseconv('b58').frombytes( data, pad=pad, tostr=True )
 
-	def b58tobytes(self,b58_str:'sstr',pad=0):
+	def b58tobytes(self,b58_str:'sstr',pad: 'pad output to this width' = 0):
 		"convert a base 58 string to bytes (warning: outputs binary data)"
 		from ..baseconv import baseconv
 		return baseconv('b58').tobytes( b58_str, pad=pad )
 
-	def hextob58(self,hexstr:'sstr',pad=0):
+	def hextob58(self,hexstr:'sstr',pad: 'pad output to this width' = 0):
 		"convert a hexadecimal string to base 58"
 		from ..baseconv import baseconv
 		return baseconv('b58').fromhex( hexstr, pad=pad, tostr=True )
 
-	def b58tohex(self,b58_str:'sstr',pad=0):
+	def b58tohex(self,b58_str:'sstr',pad: 'pad output to this width' = 0):
 		"convert a base 58 string to hexadecimal"
 		from ..baseconv import baseconv
 		return baseconv('b58').tohex( b58_str, pad=pad )
@@ -151,24 +203,27 @@ class tool_cmd(tool_cmd_base):
 		from ..proto.common import b58chk_decode
 		return b58chk_decode(b58chk_str).hex()
 
-	def hextob32(self,hexstr:'sstr',pad=0):
+	def hextob32(self,hexstr:'sstr',pad: 'pad output to this width' = 0):
 		"convert a hexadecimal string to an MMGen-flavor base 32 string"
 		from ..baseconv import baseconv
 		return baseconv('b32').fromhex( hexstr, pad, tostr=True )
 
-	def b32tohex(self,b32_str:'sstr',pad=0):
+	def b32tohex(self,b32_str:'sstr',pad: 'pad output to this width' = 0):
 		"convert an MMGen-flavor base 32 string to hexadecimal"
 		from ..baseconv import baseconv
 		return baseconv('b32').tohex( b32_str.upper(), pad )
 
-	def hextob6d(self,hexstr:'sstr',pad=0,add_spaces=True):
+	def hextob6d(self,
+			hexstr:'sstr',
+			pad: 'pad output to this width' = 0,
+			add_spaces: 'add a space after every 5th character' = True):
 		"convert a hexadecimal string to die roll base6 (base6d)"
 		from ..baseconv import baseconv
 		from ..util import block_format
 		ret = baseconv('b6d').fromhex(hexstr,pad,tostr=True)
 		return block_format( ret, gw=5, cols=None ).strip() if add_spaces else ret
 
-	def b6dtohex(self,b6d_str:'sstr',pad=0):
+	def b6dtohex(self,b6d_str:'sstr',pad: 'pad output to this width' = 0):
 		"convert a die roll base6 (base6d) string to hexadecimal"
 		from ..baseconv import baseconv
 		from ..util import remove_whitespace

@@ -36,6 +36,7 @@ opts_data = {
 -k, --use-internal-keccak-module Force use of the internal keccak module
 -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
                        for {coin_id}: {kgs}
+-l, --list             List available commands
 -p, --hash-preset= p   Use the scrypt hash parameters defined by preset 'p'
                        for password hashing (default: '{g.dfl_hash_preset}')
 -P, --passwd-file= f   Get passphrase from file 'f'.
@@ -194,11 +195,10 @@ def create_call_sig(cmd,cls,as_string=False):
 		get_type_from_ann = lambda x: 'str or STDIN' if ann[x] == 'sstr' else ann[x].__name__
 		return ' '.join(
 			[f'{a} [{get_type_from_ann(a)}]' for a in args[:nargs]] +
-			['{a} [{b}={c!r}{d}]'.format(
+			['{a} [{b}={c!r}]'.format(
 				a = a,
 				b = dfl_types[n].__name__,
-				c = dfls[n],
-				d = (' ' + ann[a] if a in ann and isinstance(ann[a],str) else ''))
+				c = dfls[n] )
 					for n,a in enumerate(args[nargs:])] )
 	else:
 		get_type_from_ann = lambda x: 'str' if ann[x] == 'sstr' else ann[x].__name__
@@ -206,10 +206,11 @@ def create_call_sig(cmd,cls,as_string=False):
 			[(a,get_type_from_ann(a)) for a in args[:nargs]],            # c_args
 			dict([(a,dfls[n]) for n,a in enumerate(args[nargs:])]),      # c_kwargs
 			dict([(a,dfl_types[n]) for n,a in enumerate(args[nargs:])]), # c_kwargs_types
-			('STDIN_OK' if nargs and ann[args[0]] == 'sstr' else flag) ) # flag
+			('STDIN_OK' if nargs and ann[args[0]] == 'sstr' else flag),  # flag
+			ann )                                                        # ann
 
 def process_args(cmd,cmd_args,cls):
-	c_args,c_kwargs,c_kwargs_types,flag = create_call_sig(cmd,cls)
+	c_args,c_kwargs,c_kwargs_types,flag,ann = create_call_sig(cmd,cls)
 	have_stdin_input = False
 
 	def usage_die(s):
@@ -338,6 +339,18 @@ def get_mod_cls(modname):
 if g.prog_name == 'mmgen-tool' and not opt._lock:
 
 	po = opts.init( opts_data, parse_only=True )
+
+	if po.user_opts.get('list'):
+		def gen():
+			for mod,cmdlist in mods.items():
+				if mod == 'help':
+					continue
+				yield capfirst( get_mod_cls(mod).__doc__.lstrip().split('\n')[0] ) + ':'
+				for cmd in cmdlist:
+					yield '  ' + cmd
+				yield ''
+		Msg('\n'.join(gen()).rstrip())
+		sys.exit(0)
 
 	if len(po.cmd_args) < 1:
 		opts.usage()

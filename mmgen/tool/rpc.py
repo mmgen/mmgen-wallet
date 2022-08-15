@@ -22,6 +22,7 @@ tool/rpc.py: JSON/RPC routines for the 'mmgen-tool' utility
 
 from .common import tool_cmd_base,options_annot_str
 from ..tw.common import TwCommon
+from ..tw.txhistory import TwTxHistory
 
 class tool_cmd(tool_cmd_base):
 	"tracking-wallet commands using the JSON-RPC interface"
@@ -35,16 +36,19 @@ class tool_cmd(tool_cmd_base):
 		r = await rpc_init( self.proto, ignore_daemon_version=True )
 		return f'{r.daemon.coind_name} version {r.daemon_version} ({r.daemon_version_str})'
 
-	async def getbalance(self,minconf=1,quiet=False,pager=False):
+	async def getbalance(self,
+			minconf: 'minimum number of confirmations' = 1,
+			quiet:   'produce quieter output' = False,
+			pager:   'send output to pager' = False ):
 		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
 		from ..tw.bal import TwGetBalance
 		return (await TwGetBalance(self.proto,minconf,quiet)).format()
 
 	async def listaddress(self,
 			mmgen_addr:str,
-			minconf     = 1,
-			showbtcaddr = True,
-			age_fmt: options_annot_str(TwCommon.age_fmts) = 'confs' ):
+			minconf:     'minimum number of confirmations' = 1,
+			showbtcaddr: 'display coin address in addition to MMGen ID' = True,
+			age_fmt:     'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs' ):
 		"list the specified MMGen address in the tracking wallet and its balance"
 
 		return await self.listaddresses(
@@ -54,15 +58,15 @@ class tool_cmd(tool_cmd_base):
 			age_fmt      = age_fmt )
 
 	async def listaddresses(self,
-			mmgen_addrs:'(range or list)' = '',
-			minconf      = 1,
-			showempty    = False,
-			pager        = False,
-			showbtcaddrs = True,
-			all_labels   = False,
-			sort: options_annot_str(['reverse','age']) = '',
-			age_fmt: options_annot_str(TwCommon.age_fmts) = 'confs' ):
-		"list MMGen addresses and their balances"
+			mmgen_addrs: 'hyphenated range or comma-separated list of addresses' = '',
+			minconf:     'minimum number of confirmations' = 1,
+			pager:       'send output to pager' = False,
+			showbtcaddr: 'display coin addresses in addition to MMGen IDs' = True,
+			showempty:   'show addresses with no balances' = True,
+			all_labels:  'show all addresses with labels' = False,
+			age_fmt:     'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
+			sort:        'address sort order ' + options_annot_str(['reverse','age']) = '' ):
+		"list MMGen addresses in the tracking wallet and their balances"
 
 		show_age = bool(age_fmt)
 
@@ -111,14 +115,14 @@ class tool_cmd(tool_cmd_base):
 			return await obj.format_squeezed()
 
 	async def twview(self,
-			pager           = False,
-			reverse         = False,
-			wide            = False,
-			minconf         = 1,
-			sort            = 'age',
-			age_fmt: options_annot_str(TwCommon.age_fmts) = 'confs',
-			interactive     = False,
-			show_mmid       = True ):
+			pager:       'send output to pager' = False,
+			reverse:     'reverse order of unspent outputs' = False,
+			wide:        'display data in wide tabular format' = False,
+			minconf:     'minimum number of confirmations' = 1,
+			sort:        'unspent output sort order ' + options_annot_str(TwCommon.sort_funcs) = 'age',
+			age_fmt:     'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
+			interactive: 'enable interactive operation' = False,
+			show_mmid:   'show MMGen IDs along with coin addresses' = True ):
 		"view tracking wallet unspent outputs"
 
 		from ..tw.unspent import TwUnspentOutputs
@@ -129,16 +133,15 @@ class tool_cmd(tool_cmd_base):
 		return ret
 
 	async def txhist(self,
-			pager           = False,
-			reverse         = False,
-			detail          = False,
-			sinceblock      = 0,
-			sort            = 'age',
-			age_fmt: options_annot_str(TwCommon.age_fmts) = 'confs',
-			interactive     = False ):
+			pager:       'send output to pager' = False,
+			reverse:     'reverse order of transactions' = False,
+			detail:      'produce detailed, non-tabular output' = False,
+			sinceblock:  'display transactions starting from this block' = 0,
+			sort:        'transaction sort order ' + options_annot_str(TwTxHistory.sort_funcs) = 'age',
+			age_fmt:     'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
+			interactive: 'enable interactive operation' = False ):
 		"view transaction history of tracking wallet"
 
-		from ..tw.txhistory import TwTxHistory
 		obj = await TwTxHistory(self.proto,sinceblock=sinceblock)
 		return await self.twops(
 			obj,pager,reverse,detail,sort,age_fmt,interactive,show_mmid=None)

@@ -29,7 +29,10 @@ from ..crypto import get_random,aesctr_iv_len
 class tool_cmd(tool_cmd_base):
 	"file utilities"
 
-	def find_incog_data(self,filename:str,incog_id:str,keep_searching=False):
+	def find_incog_data(self,
+			filename: str,
+			incog_id: str,
+			keep_searching: 'continue search after finding data (ID collisions can yield false positives)' = False):
 		"Use an Incog ID to find hidden incognito wallet data"
 
 		from hashlib import sha256
@@ -67,6 +70,24 @@ class tool_cmd(tool_cmd_base):
 	def rand2file(self,outfile:str,nbytes:str,threads=4,silent=False):
 		"""
 		write ‘nbytes’ bytes of random data to specified file (dd-style byte specifiers supported)
+
+		Valid specifiers:
+
+		  c  = 1
+		  w  = 2
+		  b  = 512
+		  kB = 1000
+		  K  = 1024
+		  MB = 1000000
+		  M  = 1048576
+		  GB = 1000000000
+		  G  = 1073741824
+		  TB = 1000000000000
+		  T  = 1099511627776
+		  PB = 1000000000000000
+		  P  = 1125899906842624
+		  EB = 1000000000000000000
+		  E  = 1152921504606846976
 		"""
 		from threading import Thread
 		from queue import Queue

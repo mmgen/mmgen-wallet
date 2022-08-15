@@ -25,22 +25,19 @@ import mmgen.main_tool as main_tool
 
 def main_help():
 
-	from ..util import pretty_format
+	from ..util import pretty_format,capfirst
 
 	def do():
 		for clsname,cmdlist in main_tool.mods.items():
 			cls = main_tool.get_mod_cls(clsname)
-			cls_doc = cls.__doc__.strip().split('\n')
-			for l in cls_doc:
-				if l is cls_doc[0]:
-					l += ':'
-				l = l.replace('\t','',1)
-				if l:
-					l = l.replace('\t','  ')
-					yield l[0].upper() + l[1:]
-				else:
-					yield ''
+			cls_docstr = cls.__doc__.strip()
+			yield capfirst(cls_docstr.split('\n')[0].strip()) + ':'
 			yield ''
+
+			if '\n' in cls_docstr:
+				for line in cls_docstr.split('\n')[2:]:
+					yield '  ' + line.lstrip('\t')
+				yield ''
 
 			max_w = max(map(len,cmdlist))
 
@@ -64,7 +61,7 @@ def gen_tool_usage():
 	from ..util import capfirst
 
 	m1 = """
-		USAGE INFORMATION FOR MMGEN-TOOL COMMANDS:
+		GENERAL USAGE INFORMATION FOR MMGEN-TOOL COMMANDS
 
 		  Arguments with only type specified in square brackets are required
 
@@ -140,15 +137,49 @@ def gen_tool_cmd_usage(mod,cmdname):
 
 	cls = main_tool.get_mod_cls(mod)
 	docstr = getattr(cls,cmdname).__doc__.strip()
-	args,kwargs,kwargs_types,flag = main_tool.create_call_sig(cmdname,cls)
+	args,kwargs,kwargs_types,flag,ann = main_tool.create_call_sig(cmdname,cls)
+	ARGS = 'ARG' if len(args) == 1 else 'ARGS' if args else ''
+	KWARGS = 'KEYWORD ARG' if len(kwargs) == 1 else 'KEYWORD ARGS' if kwargs else ''
 
-	yield '{a}\n\nUSAGE: {b} {c} {d}{e}'.format(
-		a = capfirst( docstr.split('\n')[0].strip() ),
+	yield capfirst( docstr.split('\n')[0].strip() )
+	yield ''
+	yield 'USAGE: {b} [OPTS] {c}{d}{e}'.format(
 		b = g.prog_name,
 		c = cmdname,
-		d = main_tool.create_call_sig(cmdname,cls,as_string=True),
-		e = '\n\n' + fmt('\n'.join(docstr.split('\n')[1:]),strip_char='\t').rstrip()
-			if '\n' in docstr else '' )
+		d = f' {ARGS}' if ARGS else '',
+		e = f' [{KWARGS}]' if KWARGS else '' )
+
+	if args:
+		max_w = max(len(k[0]) for k in args)
+		yield ''
+		yield f'Required {ARGS} (type shown in square brackets):'
+		yield ''
+		for argname,argtype in args:
+			have_sstr = ann.get(argname) == 'sstr'
+			yield '  {a:{w}} [{b}]{c}{d}'.format(
+				a = argname,
+				b = argtype,
+				c = " (use '-' to read from STDIN)" if have_sstr else '',
+				d = ' ' + ann[argname] if isinstance(ann.get(argname),str) and not have_sstr else '',
+				w = max_w )
+
+	if kwargs:
+		max_w = max(len(k) for k in kwargs)
+		max_w2 = max(len(kwargs_types[k].__name__) + len(repr(kwargs[k])) for k in kwargs) + 3
+		yield ''
+		yield f'Optional {KWARGS} (type and default value shown in square brackets):'
+		yield ''
+		for argname in kwargs:
+			yield '  {a:{w}} {b:{w2}} {c}'.format(
+				a = argname,
+				b = '[{}={}]'.format( kwargs_types[argname].__name__, repr(kwargs[argname]) ),
+				c = capfirst(ann[argname]) if isinstance(ann.get(argname),str) else '',
+				w = max_w,
+				w2 = max_w2 ).rstrip()
+
+	if '\n' in docstr:
+		for line in docstr.split('\n')[1:]:
+			yield line.lstrip('\t')
 
 def usage(cmdname=None,exit_val=1):
 

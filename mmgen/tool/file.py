@@ -78,8 +78,10 @@ class tool_cmd(tool_cmd_base):
 				'dfls': ( False, False, 'addr', 'mtime' ),
 				'annots': {
 					'mmgen_tx_file(s)': str,
-					'sort':     options_annot_str(['addr','raw']),
-					'filesort': options_annot_str(['mtime','ctime','atime']),
+					'pager': 'send output to pager',
+					'terse': 'produce compact tabular output',
+					'sort':  'sort order for transaction inputs and outputs ' + options_annot_str(['addr','raw']),
+					'filesort': 'file sort order ' + options_annot_str(['mtime','ctime','atime']),
 				}
 			},
 			*infiles,

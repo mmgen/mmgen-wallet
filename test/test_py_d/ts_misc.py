@@ -54,6 +54,7 @@ class TestSuiteHelp(TestSuiteBase):
 		('longhelpscreens',       (1,'help screens (--longhelp)',[])),
 		('show_hash_presets',     (1,'info screen (--show-hash-presets)',[])),
 		('tool_help',             (1,"'mmgen-tool' usage screen",[])),
+		('tool_cmd_usage',        (1,"'mmgen-tool' usage screen",[])),
 		('test_help',             (1,"'test.py' help screens",[])),
 	)
 
@@ -112,6 +113,19 @@ class TestSuiteHelp(TestSuiteBase):
 			['help','randpair']
 		):
 			t = self.spawn_chk('mmgen-tool',args,extra_desc=f"('mmgen-tool {fmt_list(args,fmt='bare')}')")
+		return t
+
+	def tool_cmd_usage(self):
+
+		if os.getenv('PYTHONOPTIMIZE') == '2':
+			ymsg('Skipping tool cmd usage with PYTHONOPTIMIZE=2 (no docstrings)')
+			return 'skip'
+
+		from mmgen.main_tool import mods
+
+		for cmdlist in mods.values():
+			for cmd in cmdlist:
+				t = self.spawn_chk( 'mmgen-tool', ['help',cmd], extra_desc=f'({cmd})' )
 		return t
 
 	def test_help(self):

@@ -35,7 +35,7 @@ mnemonic_fmts = {
 	'bip39':   mft( 'bip39',   None,  bip39 ),
 	'xmrseed': mft( 'xmrseed', None,  xmrseed ),
 }
-mn_opts_disp = options_annot_str(mnemonic_fmts)
+mn_opts_disp = 'seed phrase format ' + options_annot_str(mnemonic_fmts)
 
 class tool_cmd(tool_cmd_base):
 	"""
@@ -106,7 +106,10 @@ class tool_cmd(tool_cmd_base):
 		f = mnemonic_fmts[fmt]
 		return f.conv_cls(fmt).tohex( seed_mnemonic.split(), f.pad )
 
-	def mn2hex_interactive( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, mn_len=24, print_mn=False ):
+	def mn2hex_interactive( self,
+			fmt: mn_opts_disp = dfl_mnemonic_fmt,
+			mn_len: 'length of seed phrase in words' = 24,
+			print_mn: 'print the seed phrase after entry' = False ):
 		"convert an interactively supplied mnemonic seed phrase to a hexadecimal string"
 		from ..mn_entry import mn_entry
 		mn = mn_entry(fmt).get_mnemonic_from_user(25 if fmt == 'xmrseed' else mn_len,validate=False)
@@ -119,7 +122,10 @@ class tool_cmd(tool_cmd_base):
 		"show stats for a mnemonic wordlist"
 		return mnemonic_fmts[fmt].conv_cls(fmt).check_wordlist()
 
-	def mn_printlist( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, enum=False, pager=False ):
+	def mn_printlist(self,
+			fmt: mn_opts_disp = dfl_mnemonic_fmt,
+			enum: 'enumerate the list' = False,
+			pager: 'send output to pager' = False ):
 		"print a mnemonic wordlist"
 		ret = mnemonic_fmts[fmt].conv_cls(fmt).get_wordlist()
 		if enum:
