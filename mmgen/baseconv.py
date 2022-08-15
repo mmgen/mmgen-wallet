@@ -132,7 +132,7 @@ class baseconv(object):
 			die('BaseConversionPadError',f"{pad!r}: illegal value for 'pad' (must be None,'seed' or int)")
 
 	def tohex(self,words_arg,pad=None):
-		"convert string or list data of instance base to hex string"
+		"convert string or list data of instance base to a hexadecimal string"
 		return self.tobytes(words_arg,pad//2 if type(pad)==int else pad).hex()
 
 	def tobytes(self,words_arg,pad=None):
@@ -166,7 +166,7 @@ class baseconv(object):
 		return ret.to_bytes(max(pad_val,bl//8+bool(bl%8)),'big')
 
 	def fromhex(self,hexstr,pad=None,tostr=False):
-		"convert hex string to list or string data of instance base"
+		"convert a hexadecimal string to a list or string data of instance base"
 
 		from .util import is_hex_str
 		if not is_hex_str(hexstr):

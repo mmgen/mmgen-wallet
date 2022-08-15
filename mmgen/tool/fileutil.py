@@ -65,7 +65,9 @@ class tool_cmd(tool_cmd_base):
 		return True
 
 	def rand2file(self,outfile:str,nbytes:str,threads=4,silent=False):
-		"write 'n' bytes of random data to specified file"
+		"""
+		write ‘nbytes’ bytes of random data to specified file (dd-style byte specifiers supported)
+		"""
 		from threading import Thread
 		from queue import Queue
 		from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes

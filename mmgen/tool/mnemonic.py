@@ -39,23 +39,25 @@ mn_opts_disp = options_annot_str(mnemonic_fmts)
 
 class tool_cmd(tool_cmd_base):
 	"""
-	seed phrase utilities (valid formats: 'mmgen' (default), 'bip39', 'xmrseed')
+	seed phrase utilities
 
-		IMPORTANT NOTE: MMGen's default seed phrase format uses the Electrum
-		wordlist, however seed phrases are computed using a different algorithm
-		and are NOT Electrum-compatible!
+	Supported seed phrase formats: 'mmgen' (default), 'bip39', 'xmrseed'
 
-		BIP39 support is fully compatible with the standard, allowing users to
-		import and export seed entropy from BIP39-compatible wallets.  However,
-		users should be aware that BIP39 support does not imply BIP32 support!
-		MMGen uses its own key derivation scheme differing from the one described
-		by the BIP32 protocol.
+	IMPORTANT NOTE: MMGen’s default seed phrase format uses the Electrum
+	wordlist, however seed phrases are computed using a different algorithm
+	and are NOT Electrum-compatible!
 
-		For Monero ('xmrseed') seed phrases, input data is reduced to a spendkey
-		before conversion so that a canonical seed phrase is produced.  This is
-		required because Monero seeds, unlike ordinary wallet seeds, are tied
-		to a concrete key/address pair.  To manually generate a Monero spendkey,
-		use the 'hex2wif' command.
+	BIP39 support is fully compatible with the standard, allowing users to
+	import and export seed entropy from BIP39-compatible wallets.  However,
+	users should be aware that BIP39 support does not imply BIP32 support!
+	MMGen uses its own key derivation scheme differing from the one described
+	by the BIP32 protocol.
+
+	For Monero (‘xmrseed’) seed phrases, input data is reduced to a spendkey
+	before conversion so that a canonical seed phrase is produced.  This is
+	required because Monero seeds, unlike ordinary wallet seeds, are tied
+	to a concrete key/address pair.  To manually generate a Monero spendkey,
+	use the ‘hex2wif’ command.
 	"""
 
 	@staticmethod
@@ -81,31 +83,31 @@ class tool_cmd(tool_cmd_base):
 		return self.hex2mn(randbytes.hex(),fmt=fmt)
 
 	def mn_rand128(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
-		"generate random 128-bit mnemonic seed phrase"
+		"generate a random 128-bit mnemonic seed phrase"
 		return self._do_random_mn(16,fmt)
 
 	def mn_rand192(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
-		"generate random 192-bit mnemonic seed phrase"
+		"generate a random 192-bit mnemonic seed phrase"
 		return self._do_random_mn(24,fmt)
 
 	def mn_rand256(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
-		"generate random 256-bit mnemonic seed phrase"
+		"generate a random 256-bit mnemonic seed phrase"
 		return self._do_random_mn(32,fmt)
 
 	def hex2mn( self, hexstr:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
-		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic seed phrase"
+		"convert a 16, 24 or 32-byte hexadecimal string to a mnemonic seed phrase"
 		if fmt == 'xmrseed':
 			hexstr = self._xmr_reduce(bytes.fromhex(hexstr)).hex()
 		f = mnemonic_fmts[fmt]
 		return ' '.join( f.conv_cls(fmt).fromhex(hexstr,f.pad) )
 
 	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
-		"convert a mnemonic seed phrase to a hexadecimal number"
+		"convert a mnemonic seed phrase to a hexadecimal string"
 		f = mnemonic_fmts[fmt]
 		return f.conv_cls(fmt).tohex( seed_mnemonic.split(), f.pad )
 
 	def mn2hex_interactive( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, mn_len=24, print_mn=False ):
-		"convert an interactively supplied mnemonic seed phrase to a hexadecimal number"
+		"convert an interactively supplied mnemonic seed phrase to a hexadecimal string"
 		from ..mn_entry import mn_entry
 		mn = mn_entry(fmt).get_mnemonic_from_user(25 if fmt == 'xmrseed' else mn_len,validate=False)
 		if print_mn:
@@ -114,11 +116,11 @@ class tool_cmd(tool_cmd_base):
 		return self.mn2hex(seed_mnemonic=mn,fmt=fmt)
 
 	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
-		"show stats for mnemonic wordlist"
+		"show stats for a mnemonic wordlist"
 		return mnemonic_fmts[fmt].conv_cls(fmt).check_wordlist()
 
 	def mn_printlist( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, enum=False, pager=False ):
-		"print mnemonic wordlist"
+		"print a mnemonic wordlist"
 		ret = mnemonic_fmts[fmt].conv_cls(fmt).get_wordlist()
 		if enum:
 			ret = [f'{n:>4} {e}' for n,e in enumerate(ret)]

@@ -67,23 +67,30 @@ class tool_cmd(tool_cmd_base):
 		return Wallet(sf).seed.split( share_count, id_str, master_share ).format()
 
 	def gen_key(self,mmgen_addr:str,wallet=''):
-		"generate a single MMGen WIF key from default or specified wallet"
-		return self.gen_addr( mmgen_addr, wallet, target='wif' )
+		"generate a single WIF key for specified MMGen address from default or specified wallet"
+		return self._gen_keyaddr( mmgen_addr, 'wif', wallet )
 
-	def gen_addr(self,mmgen_addr:str,wallet='',target='addr'):
+	def gen_addr(self,mmgen_addr:str,wallet=''):
 		"generate a single MMGen address from default or specified wallet"
+		return self._gen_keyaddr( mmgen_addr, 'addr', wallet )
+
+	def _gen_keyaddr(self,mmgen_addr,target,wallet=''):
 		from ..addr import MMGenID
 		from ..addrlist import AddrList,AddrIdxList
+
 		addr = MMGenID( self.proto, mmgen_addr )
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)
 		ss = Wallet(sf)
+
 		if ss.seed.sid != addr.sid:
 			from ..util import die
 			die(1,f'Seed ID of requested address ({addr.sid}) does not match wallet ({ss.seed.sid})')
+
 		d = AddrList(
 			proto     = self.proto,
 			seed      = ss.seed,
 			addr_idxs = AddrIdxList(str(addr.idx)),
 			mmtype    = addr.mmtype ).data[0]
-		return d.sec.wif if target == 'wif' else d.addr
+
+		return { 'wif': d.sec.wif, 'addr': d.addr }[target]

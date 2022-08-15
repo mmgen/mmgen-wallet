@@ -78,13 +78,13 @@ class tool_cmd(tool_cmd_base):
 				'dfls': ( False, False, 'addr', 'mtime' ),
 				'annots': {
 					'mmgen_tx_file(s)': str,
-					'sort': options_annot_str(['addr','raw']),
+					'sort':     options_annot_str(['addr','raw']),
 					'filesort': options_annot_str(['mtime','ctime','atime']),
 				}
 			},
 			*infiles,
 			**kwargs ):
-		"show raw/signed MMGen transaction in human-readable form"
+		"display specified raw or signed MMGen transaction files in human-readable form"
 
 		terse = bool(kwargs.get('terse'))
 		tx_sort = kwargs.get('sort') or 'addr'

@@ -42,7 +42,7 @@ opts_data = {
 -q, --quiet            Produce quieter output
 -r, --usr-randchars=n  Get 'n' characters of additional randomness from
                        user (min={g.min_urandchars}, max={g.max_urandchars})
--t, --type=t           Specify address type (valid options: 'legacy',
+-t, --type=t           Specify address type (valid choices: 'legacy',
                        'compressed', 'segwit', 'bech32', 'zcash_z')
 -v, --verbose          Produce more verbose output
 -X, --cached-balances  Use cached balances (Ethereum only)
@@ -53,7 +53,7 @@ opts_data = {
                                COMMANDS
 
 {ch}
-Type '{pn} help <command>' for help on a particular command
+Type ‘{pn} help <command>’ for help on a particular command
 """
 	},
 	'code': {
@@ -171,7 +171,7 @@ mods = {
 	),
 }
 
-def create_call_sig(cmd,cls,parsed=False):
+def create_call_sig(cmd,cls,as_string=False):
 
 	m = getattr(cls,cmd)
 
@@ -190,29 +190,26 @@ def create_call_sig(cmd,cls,parsed=False):
 		ann[a] if a in ann and isinstance(ann[a],type) else type(dfls[i])
 			for i,a in enumerate(args[nargs:]) )
 
-	def get_type_from_ann(arg):
-		return (
-			('str' + ('' if parsed else ' or STDIN')) if ann[arg] == 'sstr' else
-			ann[arg].__name__ )
-
-	if parsed:
+	if as_string:
+		get_type_from_ann = lambda x: 'str or STDIN' if ann[x] == 'sstr' else ann[x].__name__
+		return ' '.join(
+			[f'{a} [{get_type_from_ann(a)}]' for a in args[:nargs]] +
+			['{a} [{b}={c!r}{d}]'.format(
+				a = a,
+				b = dfl_types[n].__name__,
+				c = dfls[n],
+				d = (' ' + ann[a] if a in ann and isinstance(ann[a],str) else ''))
+					for n,a in enumerate(args[nargs:])] )
+	else:
+		get_type_from_ann = lambda x: 'str' if ann[x] == 'sstr' else ann[x].__name__
 		return (
 			[(a,get_type_from_ann(a)) for a in args[:nargs]],            # c_args
 			dict([(a,dfls[n]) for n,a in enumerate(args[nargs:])]),      # c_kwargs
 			dict([(a,dfl_types[n]) for n,a in enumerate(args[nargs:])]), # c_kwargs_types
 			('STDIN_OK' if nargs and ann[args[0]] == 'sstr' else flag) ) # flag
-	else:
-		c_args = [f'{a} [{get_type_from_ann(a)}]' for a in args[:nargs]]
-		c_kwargs = ['{a} [{b}={c!r}{d}]'.format(
-			a = a,
-			b = dfl_types[n].__name__,
-			c = dfls[n],
-			d = (' ' + ann[a] if a in ann and isinstance(ann[a],str) else '') )
-				for n,a in enumerate(args[nargs:])]
-		return ' '.join(c_args + c_kwargs)
 
 def process_args(cmd,cmd_args,cls):
-	c_args,c_kwargs,c_kwargs_types,flag = create_call_sig(cmd,cls,parsed=True)
+	c_args,c_kwargs,c_kwargs_types,flag = create_call_sig(cmd,cls)
 	have_stdin_input = False
 
 	def usage_die(s):

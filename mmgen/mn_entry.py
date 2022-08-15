@@ -392,7 +392,7 @@ class MnemonicEntry(object):
 		}
 		wl = wl.lower()
 		if wl not in d:
-			raise ValueError(f'wordlist {wl!r} not recognized (valid options: {fmt_list(list(d))})')
+			raise ValueError(f'wordlist {wl!r} not recognized (valid choices: {fmt_list(list(d))})')
 		return d[wl]
 
 	@classmethod
@@ -402,7 +402,7 @@ class MnemonicEntry(object):
 			if v not in tcls.entry_modes:
 				raise ValueError(
 					f'entry mode {v!r} not recognized for wordlist {k!r}:' +
-					f'\n    (valid options: {fmt_list(tcls.entry_modes)})' )
+					f'\n    (valid choices: {fmt_list(tcls.entry_modes)})' )
 			tcls.usr_dfl_entry_mode = v
 
 class MnemonicEntryMMGen(MnemonicEntry):

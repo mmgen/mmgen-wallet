@@ -24,7 +24,7 @@ from .common import tool_cmd_base,options_annot_str
 from ..tw.common import TwCommon
 
 class tool_cmd(tool_cmd_base):
-	"tracking wallet commands using the JSON-RPC interface"
+	"tracking-wallet commands using the JSON-RPC interface"
 
 	need_proto = True
 	need_amt = True
@@ -43,17 +43,13 @@ class tool_cmd(tool_cmd_base):
 	async def listaddress(self,
 			mmgen_addr:str,
 			minconf     = 1,
-			pager       = False,
-			showempty   = True,
 			showbtcaddr = True,
 			age_fmt: options_annot_str(TwCommon.age_fmts) = 'confs' ):
-		"list the specified MMGen address and its balance"
+		"list the specified MMGen address in the tracking wallet and its balance"
 
 		return await self.listaddresses(
 			mmgen_addrs  = mmgen_addr,
 			minconf      = minconf,
-			pager        = pager,
-			showempty    = showempty,
 			showbtcaddrs = showbtcaddr,
 			age_fmt      = age_fmt )
 
@@ -140,7 +136,7 @@ class tool_cmd(tool_cmd_base):
 			sort            = 'age',
 			age_fmt: options_annot_str(TwCommon.age_fmts) = 'confs',
 			interactive     = False ):
-		"view transaction history"
+		"view transaction history of tracking wallet"
 
 		from ..tw.txhistory import TwTxHistory
 		obj = await TwTxHistory(self.proto,sinceblock=sinceblock)

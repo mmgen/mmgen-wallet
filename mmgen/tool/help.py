@@ -59,7 +59,9 @@ def main_help():
 
 	return '\n'.join(do())
 
-def usage(cmdname=None,exit_val=1):
+def gen_tool_usage():
+
+	from ..util import capfirst
 
 	m1 = """
 		USAGE INFORMATION FOR MMGEN-TOOL COMMANDS:
@@ -68,11 +70,15 @@ def usage(cmdname=None,exit_val=1):
 
 		  Arguments with both type and default value specified in square brackets are
 		  optional and must be specified in the form ‘name=value’
+
+		  For more detailed usage information for a particular tool command, type
+		  ‘mmgen-tool help <command name>’
 		"""
 
 	m2 = """
 		  To force a command to read from STDIN instead of file (for commands taking
 		  a filename as their first argument), substitute "-" for the filename.
+
 
 		EXAMPLES:
 
@@ -97,39 +103,66 @@ def usage(cmdname=None,exit_val=1):
 		  Reverse a hex string:
 		  $ mmgen-tool hexreverse "deadbeefcafe"
 
-		  Same as above, but supply input via stdin:
+		  Same as above, but supply input via STDIN:
 		  $ echo "deadbeefcafe" | mmgen-tool hexreverse -
 		"""
 
-	from ..util import Msg,Msg_r,fmt,die,capfirst
+	for line in m1.lstrip().split('\n'):
+		yield line.lstrip('\t')
+
+	for clsname,cmdlist in main_tool.mods.items():
+		cls = main_tool.get_mod_cls(clsname)
+		cls_docstr = cls.__doc__.strip()
+		yield ''
+		yield '  {}:'.format( capfirst(cls_docstr.split('\n')[0].strip()) )
+		yield ''
+
+		if '\n' in cls_docstr:
+			for line in cls_docstr.split('\n')[2:]:
+				yield '    ' + line.lstrip('\t')
+			yield ''
+
+		max_w = max(map(len,cmdlist))
+		for cmdname in cmdlist:
+			yield '    {a:{w}} {b}'.format(
+				a = cmdname,
+				b = main_tool.create_call_sig(cmdname,cls,as_string=True),
+				w = max_w )
+		yield ''
+
+	for line in m2.rstrip().split('\n'):
+		yield line.lstrip('\t')
+
+def gen_tool_cmd_usage(mod,cmdname):
+
+	from ..globalvars import g
+	from ..util import capfirst
+
+	cls = main_tool.get_mod_cls(mod)
+	docstr = getattr(cls,cmdname).__doc__.strip()
+	args,kwargs,kwargs_types,flag = main_tool.create_call_sig(cmdname,cls)
+
+	yield '{a}\n\nUSAGE: {b} {c} {d}{e}'.format(
+		a = capfirst( docstr.split('\n')[0].strip() ),
+		b = g.prog_name,
+		c = cmdname,
+		d = main_tool.create_call_sig(cmdname,cls,as_string=True),
+		e = '\n\n' + fmt('\n'.join(docstr.split('\n')[1:]),strip_char='\t').rstrip()
+			if '\n' in docstr else '' )
+
+def usage(cmdname=None,exit_val=1):
+
+	from ..util import Msg,die,do_pager
 
 	if cmdname:
-		from ..globalvars import g
 		for mod,cmdlist in main_tool.mods.items():
 			if cmdname in cmdlist:
-				cls = main_tool.get_mod_cls(mod)
-				docstr = getattr(cls,cmdname).__doc__.strip()
-				Msg('{a}\n\nUSAGE: {b} {c} {d}{e}'.format(
-					a = capfirst( docstr.split('\n')[0].strip() ),
-					b = g.prog_name,
-					c = cmdname,
-					d = main_tool.create_call_sig(cmdname,cls),
-					e = '\n\n' + fmt('\n'.join(docstr.split('\n')[1:]),strip_char='\t').rstrip()
-						if '\n' in docstr else '' ))
+				Msg('\n'.join(gen_tool_cmd_usage(mod,cmdname)))
 				break
 		else:
 			die(1,f'{cmdname!r}: no such tool command')
 	else:
-		Msg(fmt(m1,strip_char='\t'))
-		for clsname,cmdlist in main_tool.mods.items():
-			cls = main_tool.get_mod_cls(clsname)
-			cls_info = cls.__doc__.strip().split('\n')[0]
-			Msg('  {}{}:\n'.format( cls_info[0].upper(), cls_info[1:] ))
-			max_w = max(map(len,cmdlist))
-			for cmdname in cmdlist:
-				Msg(f'    {cmdname:{max_w}} {main_tool.create_call_sig(cmdname,cls)}')
-			Msg('')
-		Msg_r('  ' + fmt(m2,strip_char='\t'))
+		do_pager('\n'.join(gen_tool_usage()))
 
 	import sys
 	sys.exit(exit_val)
@@ -142,5 +175,5 @@ class tool_cmd(tool_cmd_base):
 		usage(command_name,exit_val=0)
 
 	def usage(self,command_name=''):
-		"display usage information for a single command"
+		"display usage information for a single command or all commands"
 		usage(command_name,exit_val=0)

@@ -43,7 +43,7 @@ opts_data = {
 -L, --list-names    List the names of all tested 'mmgen-tool' commands
 -s, --system        Test scripts and modules installed on system rather than
                     those in the repo root
--t, --type=t        Specify address type (valid options: 'zcash_z')
+-t, --type=t        Specify address type (valid choices: 'zcash_z')
 -v, --verbose       Produce more verbose output
 """,
 	'notes': """

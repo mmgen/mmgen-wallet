@@ -30,10 +30,10 @@ class tool_cmd(tool_cmd_base):
 	"""
 	file encryption and decryption
 
-		MMGen encryption suite:
-		* Key: Scrypt (user-configurable hash parameters, 32-byte salt)
-		* Enc: AES256_CTR, 16-byte rand IV, sha256 hash + 32-byte nonce + data
-		* The encrypted file is indistinguishable from random data
+	MMGen encryption suite:
+	* Key: Scrypt (user-configurable hash parameters, 32-byte salt)
+	* Enc: AES256_CTR, 16-byte rand IV, sha256 hash + 32-byte nonce + data
+	* The encrypted file is indistinguishable from random data
 	"""
 	def encrypt(self,infile:str,outfile='',hash_preset=''):
 		"encrypt a file"
