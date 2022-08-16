@@ -373,7 +373,9 @@ class CmdGroupMgr(object):
 		def gen():
 			for name,data in cls.cmd_group_in:
 				if name.startswith('subgroup.'):
-					sg_key = name.removeprefix('subgroup.')
+					from mmgen.util import removeprefix
+					sg_key = removeprefix(name,'subgroup.')
+#					sg_key = name.removeprefix('subgroup.') # Python 3.9
 					if sg_name in (None,sg_key):
 						for e in add_entries(
 								sg_key,

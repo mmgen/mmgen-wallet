@@ -44,8 +44,12 @@ def exec_wrapper_write_traceback(e,exit_val):
 
 		cwd = os.path.abspath('.')
 		def fixup_fn(fn_in):
-			fn = fn_in.removeprefix(cwd+'/').removeprefix('test/overlay/tree/')
-			return (fn.removesuffix('_orig.py') + '.py') if fn.endswith('_orig.py') else fn
+			from mmgen.util import removeprefix,removesuffix
+			fn = removeprefix(removeprefix(fn_in,cwd+'/'),'test/overlay/tree/')
+			return removesuffix(fn,'_orig.py') + '.py' if fn.endswith('_orig.py') else fn
+			# Python 3.9:
+			# fn = fn_in.removeprefix(cwd+'/').removeprefix('test/overlay/tree/')
+			# return fn.removesuffix('_orig.py') + '.py' if fn.endswith('_orig.py') else fn
 
 		def gen_output():
 			yield 'Traceback (most recent call last):'

@@ -191,6 +191,12 @@ def list_gen(*data):
 				yield i[0]
 	return list(gen())
 
+def removeprefix(s,pfx): # workaround for pre-Python 3.9
+	return s[len(pfx):] if s.startswith(pfx) else s
+
+def removesuffix(s,sfx): # workaround for pre-Python 3.9
+	return s[:len(sfx)] if s.endswith(sfx) else s
+
 def remove_dups(iterable,edesc='element',desc='list',quiet=False,hide=False):
 	"""
 	Remove duplicate occurrences of iterable elements, preserving first occurrence
