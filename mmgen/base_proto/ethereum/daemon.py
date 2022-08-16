@@ -89,8 +89,6 @@ class parity_daemon(openethereum_daemon):
 	exec_fn = 'parity'
 
 class geth_daemon(ethereum_daemon):
-	# bug in v1.10.17 requires --dev to be omitted to initialize blockchain (devnet_init_bug)
-	# daemon_data = _dd('Geth', 1010017, '1.10.17')
 	daemon_data = _dd('Geth', 1010021, '1.10.21')
 	version_pat = r'Geth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'geth'
@@ -100,7 +98,8 @@ class geth_daemon(ethereum_daemon):
 		'linux': [g.home_dir,'.ethereum','geth'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Geth'] # FIXME
 	}
-	avail_opts = ('no_daemonize','online','devnet_init_bug')
+	avail_opts = ('no_daemonize','online')
+	version_info_arg = 'version'
 
 	def init_subclass(self):
 		self.coind_args = list_gen(
@@ -114,7 +113,7 @@ class geth_daemon(ethereum_daemon):
 			['--maxpeers=0', not self.opt.online],
 			[f'--datadir={self.datadir}', self.non_dfl_datadir],
 			['--goerli', self.network=='testnet'],
-			['--dev', self.network=='regtest' and not self.opt.devnet_init_bug],
+			['--dev', self.network=='regtest'],
 		)
 
 # https://github.com/ledgerwatch/erigon
@@ -128,6 +127,7 @@ class erigon_daemon(geth_daemon):
 		'linux': [g.home_dir,'.local','share','erigon'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
 	}
+	version_info_arg = '--version'
 
 	def init_subclass(self):
 

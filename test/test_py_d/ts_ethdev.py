@@ -415,17 +415,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	async def setup(self):
 		self.spawn('',msg_only=True)
 
-		async def geth_devnet_init_bug_workaround(): # devnet_init_bug
-			from mmgen.daemon import CoinDaemon
-			d = CoinDaemon(
-				self.proto.coin+'_rt',
-				test_suite = True,
-				opts       = ['devnet_init_bug'] )
-			d.start()
-			await asyncio.sleep(1)
-			d.stop()
-			await asyncio.sleep(1)
-
 		if not self.using_solc:
 			srcdir = os.path.join(self.tr.repo_root,'test','ref','ethereum','bin')
 			from shutil import copytree
@@ -437,7 +426,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if d.id in ('geth','erigon'):
 			self.genesis_setup(d)
 			set_vt100()
-			# await geth_devnet_init_bug_workaround() # uncomment to enable testing with v1.10.17
 
 		if d.id == 'erigon':
 			self.write_to_tmpfile('signer_key',self.keystore_data['key']+'\n')

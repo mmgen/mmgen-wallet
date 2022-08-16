@@ -39,7 +39,7 @@ class TestSuiteMisc(TestSuiteBase):
 	def rpc_backends(self):
 		backends = g.autoset_opts['rpc_backend'][1]
 		for b in backends:
-			t = self.spawn_chk('mmgen-tool',[f'--rpc-backend={b}','daemon_version'],extra_desc=f' ({b})')
+			t = self.spawn_chk('mmgen-tool',[f'--rpc-backend={b}','daemon_version'],extra_desc=f'({b})')
 		return t
 
 class TestSuiteHelp(TestSuiteBase):

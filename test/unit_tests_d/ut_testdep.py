@@ -39,11 +39,11 @@ class unit_tests:
 		return True
 
 	def keyconv(self,name,ut):
-		res = run(['keyconv','-G','ltc'],stdout=PIPE,stderr=PIPE)
+		res = run(['keyconv','-G','ltc'],stdout=PIPE,stderr=PIPE,check=True)
 		return True
 
 	def zcash_mini(self,name,ut):
-		res = run(['zcash-mini'],stdout=PIPE)
+		res = run(['zcash-mini'],stdout=PIPE,check=True)
 		return True
 
 	def ethkey(self,name,ut):

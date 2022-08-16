@@ -259,6 +259,7 @@ class CoinDaemon(Daemon):
 	test_suite_port_shift = 1237
 	rpc_user = None
 	rpc_password = None
+	version_info_arg = '--version'
 
 	_cd = namedtuple('coins_data',['daemon_ids'])
 	coins = {
@@ -317,12 +318,9 @@ class CoinDaemon(Daemon):
 	@classmethod
 	def get_exec_version_str(cls):
 		try:
-			cp = run([cls.exec_fn,'--version'],stdout=PIPE,stderr=PIPE,check=True)
+			cp = run([cls.exec_fn,cls.version_info_arg],stdout=PIPE,stderr=PIPE,check=True)
 		except:
-			try:
-				cp = run([cls.exec_fn,'version'],stdout=PIPE,stderr=PIPE,check=True)
-			except:
-				die(2,f'Unable to execute {cls.exec_fn}')
+			die(2,f'Unable to execute {cls.exec_fn}')
 
 		if cp.returncode:
 			die(2,f'Unable to execute {cls.exec_fn}')
