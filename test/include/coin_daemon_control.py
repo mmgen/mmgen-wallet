@@ -41,7 +41,11 @@ cmd_args = opts.init(opts_data)
 
 from mmgen.daemon import *
 
-def run(network_id=None,proto=None,daemon_id=None):
+class warn_missing_exec(oneshot_warning):
+	color = 'nocolor'
+	message = 'daemon executable {!r} not found on this system!'
+
+def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=True):
 
 	d = CoinDaemon(
 		network_id = network_id,
@@ -58,6 +62,13 @@ def run(network_id=None,proto=None,daemon_id=None):
 	d.debug = d.debug or opt.debug
 	d.wait = not opt.no_wait
 
+	if missing_exec_ok:
+		try:
+			d.get_exec_version_str()
+		except:
+			if not opt.quiet:
+				warn_missing_exec( div=d.exec_fn, fmt_args=(d.exec_fn,) )
+			return
 	if opt.print_version:
 		msg('{:16} {}'.format( d.exec_fn+':', d.get_exec_version_str() ))
 	elif opt.get_state:
@@ -82,7 +93,10 @@ elif 'all' in cmd_args or 'no_xmr' in cmd_args:
 			continue
 		for daemon_id in CoinDaemon.get_daemon_ids(coin):
 			for network in CoinDaemon.get_daemon(coin,daemon_id).networks:
-				run(proto=init_proto(coin=coin,network=network),daemon_id=daemon_id)
+				run(
+					proto           = init_proto(coin=coin,network=network),
+					daemon_id       = daemon_id,
+					missing_exec_ok = True )
 else:
 	ids = cmd_args
 	network_ids = CoinDaemon.get_network_ids()
