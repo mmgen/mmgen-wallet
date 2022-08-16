@@ -104,6 +104,13 @@ elif uname -a | grep -q 'MSYS'; then
 	MSYS2=1;
 fi
 
+if [ "$MSYS2" ]; then
+	DISTRO='MSYS2'
+else
+	DISTRO=$(grep '^ID=' '/etc/os-release' | cut -c 4-)
+	[ "$DISTRO" ] || { echo 'Unable to determine distro.  Aborting'; exit 1; }
+fi
+
 trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
 
 umask 0022

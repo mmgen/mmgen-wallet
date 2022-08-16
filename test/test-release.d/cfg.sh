@@ -162,6 +162,7 @@ init_tests() {
 
 	[ "$MSYS2" ] && t_alts_skip='m z'  # no moneropy (pysha3), zcash-mini (golang)
 	[ "$ARM32" ] && t_alts_skip='z e'
+	[ "$DISTRO" == 'arch' -o "$DISTRO" == 'archarm' ] || t_alts_skip+=' e' # ethkey available only on Arch Linux
 
 	f_alts='Gen-only altcoin tests completed'
 
@@ -182,7 +183,8 @@ init_tests() {
 	f_eth='Ethereum tests completed'
 
 	[ "$FAST" ] && t_eth_skip='oe'
-	[ "$ARM32" -o "$ARM64" ] && t_eth_skip='oe parity'
+	[ "$ARM32" -o "$ARM64" ] && t_eth_skip+=' parity'
+	[ \( "$ARM32" -o "$ARM64" \) -a "$DISTRO" != 'archarm' ] && t_eth_skip+=' oe' # ARM oe available only on ArchLinuxArm
 
 	i_autosign='Autosign'
 	s_autosign='The bitcoin, bitcoin-bchn and litecoin mainnet and testnet daemons must be running for the following test'
