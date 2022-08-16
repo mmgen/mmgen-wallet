@@ -102,13 +102,21 @@ class geth_daemon(ethereum_daemon):
 	version_info_arg = 'version'
 
 	def init_subclass(self):
+
+		def have_authrpc():
+			from subprocess import run,PIPE
+			try:
+				return b'authrpc' in run(['geth','help'],check=True,stdout=PIPE).stdout
+			except:
+				return False
+
 		self.coind_args = list_gen(
 			['--verbosity=0'],
 			['--ipcdisable'], # IPC-RPC: if path to socket is longer than 108 chars, geth fails to start
 			['--http'],
 			['--http.api=eth,web3,txpool'],
 			[f'--http.port={self.rpc_port}'],
-			[f'--authrpc.port={self.authrpc_port}'],
+			[f'--authrpc.port={self.authrpc_port}', have_authrpc()],
 			[f'--port={self.p2p_port}', self.p2p_port], # geth binds p2p port even with --maxpeers=0
 			['--maxpeers=0', not self.opt.online],
 			[f'--datadir={self.datadir}', self.non_dfl_datadir],
