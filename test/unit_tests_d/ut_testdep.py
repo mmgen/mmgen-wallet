@@ -47,10 +47,12 @@ class unit_tests:
 		return True
 
 	def ethkey(self,name,ut):
-		if g.platform == 'linux':
+		if g.platform == 'linux' and os.uname().machine != 'x86_64':
 			distro = [l for l in open('/etc/os-release').read().split('\n') if l.startswith('ID=')][0][3:]
-			if distro not in ('arch','archarm'):
-				ymsg(f'Skipping ethkey availability test for distro {distro!r}')
+			if distro != 'archarm':
+				ymsg('Skipping ethkey availability test for distro {!r} on architecture {!r}'.format(
+					distro,
+					os.uname().machine ))
 				return True
 		from test.include.common import get_ethkey
 		get_ethkey()

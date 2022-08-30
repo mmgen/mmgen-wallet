@@ -1312,7 +1312,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		from mmgen.tw.ctl import TrackingWallet
 		tw = await TrackingWallet(self.proto)
 		imsg(f'Moving tracking wallet')
-		os.rename( tw.tw_fn, tw.tw_fn+'.bak.json' )
+		bakfile = tw.tw_fn + '.bak.json'
+		if os.path.exists(bakfile):
+			os.unlink(bakfile)
+		os.rename( tw.tw_fn, bakfile )
 		return 'ok'
 
 	def twimport(self,add_args=[],expect_str=None):

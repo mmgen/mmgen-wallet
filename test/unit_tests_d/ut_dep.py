@@ -103,11 +103,13 @@ class unit_tests:
 		N,r,p = 4,8,16
 		buflen = 64
 
-		import scrypt
-		scrypt.hash(passwd, salt, N=2**N, r=r, p=p, buflen=buflen)
-
+		vmsg('Testing builtin scrypt module (hashlib)')
 		from hashlib import scrypt # max N == 14!!
 		scrypt(password=passwd,salt=salt,n=2**N,r=r,p=p,maxmem=0,dklen=buflen)
+
+		vmsg('Testing standalone scrypt module')
+		import scrypt
+		scrypt.hash(passwd, salt, N=2**N, r=r, p=p, buflen=buflen)
 
 		return True
 

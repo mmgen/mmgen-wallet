@@ -53,7 +53,7 @@ def test_flags_err(ut,d):
 
 def test_cmd(args_in,message):
 	qmsg_r(message)
-	args = [f'test/{args_in[0]}-coin-daemons.py'] + list(args_in[1:])
+	args = ['python3', f'test/{args_in[0]}-coin-daemons.py'] + list(args_in[1:])
 	vmsg('\n' + orange(f"Running '{' '.join(args)}':"))
 	pipe = None if opt.verbose else PIPE
 	cp = run( args, stdout=pipe, stderr=pipe, check=True )

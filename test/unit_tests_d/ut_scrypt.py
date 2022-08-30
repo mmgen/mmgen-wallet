@@ -40,7 +40,6 @@ class unit_test(object):
 					assert ret == res, ret
 
 		def test_presets(do_presets):
-			vmsg('  id    N   p  r')
 			for hp in do_presets:
 				hp = str(hp)
 				res = presets[hp]
@@ -59,15 +58,15 @@ class unit_test(object):
 			silence()
 
 		g.force_standalone_scrypt_module = False
-		vmsg('Passwords:')
+		vmsg('Passwords (auto module selection):')
 		test_passwords()
-		vmsg('Hash presets:')
+		vmsg('Hash presets (auto module selection):')
 		test_presets((1,2,3,4) if opt.fast else (1,2,3,4,5,6,7))
 
 		g.force_standalone_scrypt_module = True
-		vmsg('Passwords (standalone scrypt):')
+		vmsg('Passwords (force standalone scrypt module):')
 		test_passwords()
-		vmsg('Hash presets (standalone scrypt):')
+		vmsg('Hash presets (force standalone scrypt module):')
 		test_presets((1,2,3))
 
 		if opt.quiet:
