@@ -128,19 +128,15 @@ may also be started and stopped manually at the DOS or MSYS2 prompt as follows
 
 #### Ethkey
 
-On Arch Linux systems, ethkey is included in the OpenEthereum package:
+On Arch Linux and ArchLinuxArm systems, the ‘ethkey’ utility is included in the
+OpenEthereum package:
 
 	$ pacman -S openethereum
 
-For other systems, you may have to build ethkey from source:
+For 64-bit Windows and Linux systems, ‘ethkey’ can be found in the zip archives
+distributed with [this release][oz].
 
-	$ sudo apt-get install rustc  # skip this if Rust is already installed
-	$ git clone https://github.com/openethereum/openethereum
-	$ cd openethereum
-	$ git checkout v2.6.6 # this version builds on ARM boards - your mileage may vary
-	$ cargo build -p ethkey-cli --release
-	$ sudo install --strip ./target/release/ethkey /usr/local/bin
-	$ cd ..
+For other systems (i.e. Debian/Ubuntu ARM), tests involving ‘ethkey’ are skipped.
 
 #### Monero note
 
@@ -191,3 +187,4 @@ commands’ output on the screen as they’re being run.
 [ld]: https://download.litecoin.org/litecoin-0.17.1/
 [oe]: Altcoin-and-Forkcoin-Support#a_oe
 [sc]: Altcoin-and-Forkcoin-Support#a_dt
+[oz]: https://github.com/openethereum/openethereum/releases/tag/v3.1.0

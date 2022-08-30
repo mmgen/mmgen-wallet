@@ -77,12 +77,11 @@ Save your changes and double click the icon to launch your MSYS2-enabled
 PowerShell.  From now on, all your work will be done in this terminal.
 
 Note that the root of your MSYS2 installation is located in `C:\\msys64`, so the
-following commands, for example:
+following commands, for example, will produce a listing of the same directory:
 
 		$ ls /etc              # the path as seen within MSYS2
 		$ ls 'C:\\msys64\etc'  # the path as seen by Windows
 
-will produce a listing of the same directory.
 
 ### <a name='a_ug'>3. Upgrade MSYS2</a>
 
@@ -113,9 +112,10 @@ will produce a listing of the same directory.
 
 > The server that’s listed first in these files is the one that will used by
 > default, so you may wish to edit them and place the server you wish to use
-> first in the list.  For this you may use a text editor such as Notepad:
+> first in the list.  For this you may use a text editor such as Notepad or
+> Nano:
 
-		$ notepad /etc/pacman.d/mirrorlist.msys
+		$ nano /etc/pacman.d/mirrorlist.msys
 		... repeat for remaining mirrorlist files ...
 
 > You need to update your database files as well.  The database files and their
@@ -133,6 +133,8 @@ will produce a listing of the same directory.
 >> <https://mirror.yandex.ru/mirrors/msys2/mingw/i686/mingw32.db.sig>  
 >> <https://mirror.yandex.ru/mirrors/msys2/mingw/clang64/clang64.db>  
 >> <https://mirror.yandex.ru/mirrors/msys2/mingw/clang64/clang64.db.sig>  
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/clang32/clang32.db>  
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/clang32/clang32.db.sig>  
 >> <https://mirror.yandex.ru/mirrors/msys2/mingw/ucrt64/ucrt64.db>  
 >> <https://mirror.yandex.ru/mirrors/msys2/mingw/ucrt64/ucrt64.db.sig>
 
@@ -149,9 +151,6 @@ will produce a listing of the same directory.
 > The command's output is now saved in the file `urls.txt` (this redirection
 > trick using '>' works for most shell commands, by the way).  Copy `urls.txt`
 > to your online machine and download the URLs listed in it.
-
-> *NOTE: as of 01.05.2022, files in the `clang64` directory were found under
-> `mingw64` instead, so these URLS may have to be edited accordingly.*
 
 > Create a new folder on your offline machine:
 
@@ -213,11 +212,11 @@ Install the MMGen requirements and their dependencies:
 Create the `/usr/local/bin` directory.  This is where you’ll place various
 binaries required by MMGen:
 
-	$ mkdir -p /usr/local/bin  # seen by Windows as C:\\msys64\usr\local\bin
+	$ mkdir -p /usr/local/bin  # seen by Windows as 'C:\\msys64\usr\local\bin'
 
 Open your shell’s runtime configuration file in a text editor:
 
-	$ notepad ~/.bashrc
+	$ nano ~/.bashrc
 
 Add the following two lines to the end of the file (if this is a Bitcoin-only
 installation, you may omit the Litecoin and Bitcoin Cash Node components of the
@@ -255,27 +254,21 @@ On your offline machine, unpack and enter the archive:
 	$ tar fax scrypt-0.8.20.tar.gz
 	$ cd scrypt-0.8.20
 
-Open the file `setup.py` in your text editor.  Right before the line beginning
-with:
+Open the file `setup.py` in your text editor.  Right before the line reading:
 
-	scrypt_module = Extension(
+	elif sys.platform.startswith('win32'):
 
-add the following line (with no indentation):
+insert the following lines, carefully preserving indentation:
 
-	includes = ['/mingw64/include']
-
-Also change the line:
-
-	libraries = ['libcrypto_static']
-
-to read:
-
-	libraries = ['libcrypto']
+	elif os.environ.get('MSYSTEM') == 'MSYS':
+	    define_macros = []
+	    includes = ['/mingw64/include']
+	    libraries = ['libcrypto']
+	    CFLAGS.append('-O2')
 
 Save the file and exit the editor.  Now build and install:
 
-	$ python3 setup.py build --compiler=mingw32
-	$ python3 setup.py install
+	$ python3 setup.py install --user
 
 ### <a name='a_se'>8. Clone and copy the secp256k1 library (offline install only)</a>
 
@@ -371,7 +364,7 @@ Congratulations, your installation is now complete, and you can proceed to
 MMGen on Linux, except for [autosigning][ax], are now supported on MSYS2 too.
 Please be aware of the following, however:
 
-+ Non-ASCII filenames cannot be used with the Monero wallet syncing tool.  This
++ Non-ASCII filenames cannot be used with the `mmgen-xmrwallet` utility.  This
   is an issue with the Monero wallet RPC daemon rather than MMGen.
 
 + The Bitcoin Cash Node daemon cannot handle non-ASCII pathnames.  This is an
