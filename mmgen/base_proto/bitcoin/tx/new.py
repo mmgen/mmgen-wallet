@@ -16,7 +16,7 @@ import mmgen.tx.new as TxBase
 from .base import Base
 from ....opts import opt
 from ....obj import HexStr,MMGenTxID
-from ....util import dmsg,vmsg,make_chksum_6,die
+from ....util import msg,dmsg,vmsg,make_chksum_6,die
 
 class New(Base,TxBase.New):
 	usr_fee_prompt = 'Enter transaction fee: '

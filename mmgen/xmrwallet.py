@@ -126,7 +126,8 @@ class MoneroMMGenTX:
 						red(f'#{d.dest.account_address}')
 					)
 				)
-			return fmt("""
+
+			fs = """
 				Transaction info [Seed ID: {}. Network: {}]:
 				  TxID: {}
 				  Type: {}
@@ -134,7 +135,9 @@ class MoneroMMGenTX:
 				  Amt:  {} XMR
 				  Fee:  {} XMR
 				  Dest: {}
-			""",strip_char='\t',indent=indent).format(
+			"""
+
+			return fmt(fs,strip_char='\t',indent=indent).format(
 					d.seed_id.hl(), d.network.upper(),
 					d.txid.hl(),
 					blue(capfirst(d.op)),
@@ -143,7 +146,7 @@ class MoneroMMGenTX:
 					to_entry if d.dest else '',
 					d.amount.hl(),
 					d.fee.hl(),
-					d.dest_address.hl()
+					d.dest_address.hl(),
 				)
 
 		def write(self,delete_metadata=False):

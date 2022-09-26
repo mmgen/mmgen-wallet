@@ -21,7 +21,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 	base_coin      = 'XMR'
 	base_proto     = 'Monero'
 	addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
-	addr_len       = 68
+	addr_len       = 64
 	wif_ver_num    = {}
 	pubkey_types   = ('monero',)
 	mmtypes        = ('M',)
@@ -57,7 +57,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 
 		assert ret[-4:] == chk, f'{ret[-4:].hex()}: incorrect checksum.  Correct value: {chk.hex()}'
 
-		return self.decode_addr_bytes(ret)
+		return self.decode_addr_bytes(ret[:-4])
 
 	def pubhash2addr(self,*args,**kwargs):
 		raise NotImplementedError('Monero addresses do not support pubhash2addr()')

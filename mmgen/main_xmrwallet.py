@@ -62,8 +62,9 @@ opts_data = {
 """,
 	'notes': """
 
-All operations require a running Monero daemon.  Unless --daemon is specified,
-the monerod is assumed to be listening on localhost at the default RPC port.
+All operations except for ‘relay’ require a running Monero daemon.  Unless
+--daemon is specified, the monerod is assumed to be listening on localhost at
+the default RPC port.
 
 If --tx-relay-daemon is specified, the monerod at HOST:PORT will be used to
 relay any created transactions.  PROXY_HOST:PROXY_PORT, if specified, may
@@ -79,8 +80,8 @@ create    - create wallet for all or specified addresses in key-address file
 sync      - sync wallet for all or specified addresses in key-address file
 list      - same as 'sync', but also list detailed address info for accounts
 new       - create a new account in a wallet, or a new address in an account
-transfer  - transfer specified XMR amount to specified address from specified
-            wallet:account
+transfer  - transfer specified XMR amount from specified wallet:account to
+            specified address
 sweep     - sweep funds in specified wallet:account to new address in same
             account or new account in another wallet
 relay     - relay a transaction from a transaction file created using 'sweep'

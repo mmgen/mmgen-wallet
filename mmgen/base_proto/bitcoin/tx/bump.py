@@ -15,6 +15,7 @@ base_proto.bitcoin.tx.bump: Bitcoin transaction bump class
 import mmgen.tx.bump as TxBase
 from .new import New
 from .completed import Completed
+from ....util import msg
 
 class Bump(Completed,New,TxBase.Bump):
 	desc = 'fee-bumped transaction'
@@ -31,6 +32,8 @@ class Bump(Completed,New,TxBase.Bump):
 
 	def convert_and_check_fee(self,tx_fee,desc):
 		ret = super().convert_and_check_fee(tx_fee,desc)
+		if ret == False:
+			return ret
 		if ret < self.min_fee:
 			msg('{} {c}: {} fee too small. Minimum fee: {} {c} ({} {})'.format(
 				ret.hl(),

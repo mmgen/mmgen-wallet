@@ -40,7 +40,8 @@ class Completed(Base):
 			self.check_correct_chain()
 
 			if self.check_sigs() != self.signed:
-				die(1,'Transaction is {}signed!'.format('not' if self.signed else ''))
+				from ..util import die
+				die(1,'Transaction is {}signed!'.format('not ' if self.signed else ''))
 
 	@property
 	def info(self):
