@@ -26,7 +26,7 @@ from .devtools import *
 from .globalvars import g
 
 parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
-parsed_addr = namedtuple('parsed_addr',['bytes','fmt'])
+decoded_addr = namedtuple('decoded_addr',['bytes','fmt'])
 
 _finfo = namedtuple('fork_info',['height','hash','name','replayable'])
 _nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
@@ -140,13 +140,13 @@ class CoinProtocol(MMGenObject):
 		def get_addr_len(self,addr_fmt):
 			return self.addr_len
 
-		def parse_addr_bytes(self,addr_bytes):
+		def decode_addr_bytes(self,addr_bytes):
 			for ver_hex,addr_fmt in self.addr_ver_bytes.items():
 				ver_bytes = bytes.fromhex(ver_hex)
 				vlen = len(ver_bytes)
 				if addr_bytes[:vlen] == ver_bytes:
 					if len(addr_bytes[vlen:]) == self.get_addr_len(addr_fmt):
-						return parsed_addr( addr_bytes[vlen:], addr_fmt )
+						return decoded_addr( addr_bytes[vlen:], addr_fmt )
 
 			return False
 

@@ -12,7 +12,7 @@
 Bitcoin protocol
 """
 
-from ..protocol import CoinProtocol,parsed_wif,parsed_addr,_finfo,_nw
+from ..protocol import CoinProtocol,parsed_wif,decoded_addr,_finfo,_nw
 from .common import *
 
 class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
@@ -83,7 +83,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 			pubkey_type = pubkey_type,
 			compressed  = compressed )
 
-	def parse_addr(self,addr):
+	def decode_addr(self,addr):
 
 		if 'B' in self.mmtypes and addr[:len(self.bech32_hrp)] == self.bech32_hrp:
 			import mmgen.contrib.bech32 as bech32
@@ -94,9 +94,9 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 				msg(f'{ret[0]}: Invalid witness version number')
 				return False
 
-			return parsed_addr( bytes(ret[1]), 'bech32' ) if ret[1] else False
+			return decoded_addr( bytes(ret[1]), 'bech32' ) if ret[1] else False
 
-		return self.parse_addr_bytes(b58chk_decode(addr))
+		return self.decode_addr_bytes(b58chk_decode(addr))
 
 	def pubhash2addr(self,pubhash,p2sh):
 		assert len(pubhash) == 20, f'{len(pubhash)}: invalid length for pubkey hash'

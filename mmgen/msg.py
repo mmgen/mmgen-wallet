@@ -229,7 +229,7 @@ class coin_msg:
 						'sig': sig,
 					}
 					if self.msg_cls.include_pubhash:
-						data.update({ 'pubhash': self.proto.parse_addr(e.addr_p2pkh or e.addr).bytes.hex() })
+						data.update({ 'pubhash': self.proto.decode_addr(e.addr_p2pkh or e.addr).bytes.hex() })
 
 					if e.addr_p2pkh:
 						data.update({'addr_p2pkh': e.addr_p2pkh})

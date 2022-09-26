@@ -13,7 +13,7 @@ Ethereum protocol
 """
 
 from ..globalvars import g
-from ..protocol import CoinProtocol,_nw,parsed_addr
+from ..protocol import CoinProtocol,_nw,decoded_addr
 from ..util import is_hex_str_lc,Msg
 
 class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
@@ -53,9 +53,9 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 	def dcoin(self):
 		return self.tokensym or self.coin
 
-	def parse_addr(self,addr):
+	def decode_addr(self,addr):
 		if is_hex_str_lc(addr) and len(addr) == self.addr_len * 2:
-			return parsed_addr( bytes.fromhex(addr), 'ethereum' )
+			return decoded_addr( bytes.fromhex(addr), 'ethereum' )
 		if g.debug:
 			Msg(f'Invalid address: {addr}')
 		return False

@@ -22,7 +22,7 @@ from ....util import msg,dmsg,make_chksum_6,die
 def addr2scriptPubKey(proto,addr):
 
 	def decode_addr(proto,addr):
-		ap = proto.parse_addr(addr)
+		ap = proto.decode_addr(addr)
 		assert ap, f'coin address {addr!r} could not be parsed'
 		return ap.bytes.hex()
 

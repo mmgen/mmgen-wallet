@@ -40,7 +40,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 			self.privkey_len,
 			'big' )[::-1]
 
-	def parse_addr(self,addr):
+	def decode_addr(self,addr):
 
 		from ..baseconv import baseconv
 
@@ -57,7 +57,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 
 		assert ret[-4:] == chk, f'{ret[-4:].hex()}: incorrect checksum.  Correct value: {chk.hex()}'
 
-		return self.parse_addr_bytes(ret)
+		return self.decode_addr_bytes(ret)
 
 	def pubhash2addr(self,*args,**kwargs):
 		raise NotImplementedError('Monero addresses do not support pubhash2addr()')

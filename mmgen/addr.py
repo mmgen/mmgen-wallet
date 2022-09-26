@@ -144,7 +144,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		try:
 			assert addr.isascii() and addr.isalnum(), 'not an ASCII alphanumeric string'
 			me = str.__new__(cls,addr)
-			ap = proto.parse_addr(addr)
+			ap = proto.decode_addr(addr)
 			assert ap, f'coin address {addr!r} could not be parsed'
 			me.addr_fmt = ap.fmt
 			me.hex = ap.bytes.hex()
