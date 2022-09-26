@@ -16,7 +16,7 @@ from .btc import mainnet
 
 class mainnet(mainnet):
 	block0          = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'
-	addr_ver_bytes  = { '30': 'p2pkh', '32': 'p2sh', '05': 'p2sh' } # new p2sh ver 0x32 must come first
+	addr_ver_bytes  = { '30': 'p2pkh', '05': 'p2sh', '32': 'p2sh' } # new p2sh ver 0x32 must come last
 	wif_ver_num     = { 'std': 'b0' }
 	mmtypes         = ('L','C','S','B')
 	coin_amt        = 'LTCAmt'
@@ -30,7 +30,7 @@ class mainnet(mainnet):
 
 class testnet(mainnet):
 	# addr ver nums same as Bitcoin testnet, except for 'p2sh'
-	addr_ver_bytes     = { '6f':'p2pkh', '3a':'p2sh', 'c4':'p2sh' }
+	addr_ver_bytes     = { '6f':'p2pkh', 'c4':'p2sh', '3a':'p2sh' }
 	wif_ver_num        = { 'std': 'ef' } # same as Bitcoin testnet
 	bech32_hrp         = 'tltc'
 

@@ -67,6 +67,9 @@ class CoinProtocol(MMGenObject):
 				'regtest': '_rt',
 			}[network]
 
+			if hasattr(self,'addr_ver_bytes'):
+				self.addr_fmt_to_ver_bytes = {v:bytes.fromhex(k) for k,v in self.addr_ver_bytes.items()}
+
 			if 'tx' not in self.mmcaps and g.is_txprog:
 				from .util import die
 				die(2,f'Command {g.prog_name!r} not supported for coin {self.coin}')
@@ -130,12 +133,6 @@ class CoinProtocol(MMGenObject):
 
 		def cap(self,s):
 			return s in self.caps
-
-		def addr_fmt_to_ver_bytes(self,req_fmt,return_hex=False):
-			for ver_hex,fmt in self.addr_ver_bytes.items():
-				if req_fmt == fmt:
-					return ver_hex if return_hex else bytes.fromhex(ver_hex)
-			return False
 
 		def get_addr_len(self,addr_fmt):
 			return self.addr_len

@@ -101,7 +101,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	def pubhash2addr(self,pubhash,p2sh):
 		assert len(pubhash) == 20, f'{len(pubhash)}: invalid length for pubkey hash'
 		return b58chk_encode(
-			self.addr_fmt_to_ver_bytes(('p2pkh','p2sh')[p2sh],return_hex=False) + pubhash
+			self.addr_fmt_to_ver_bytes[('p2pkh','p2sh')[p2sh]] + pubhash
 		)
 
 	# Segwit:

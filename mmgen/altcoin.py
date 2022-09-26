@@ -460,13 +460,13 @@ class CoinInfo(object):
 					test_equal(
 						'P2PKH version number',
 						e.p2pkh_info[0],
-						int.from_bytes(proto.addr_fmt_to_ver_bytes('p2pkh'),'big'),
+						int.from_bytes(proto.addr_fmt_to_ver_bytes['p2pkh'],'big'),
 						*cdata )
 
 					test_equal(
 						'P2SH version number',
 						e.p2sh_info[0],
-						int.from_bytes(proto.addr_fmt_to_ver_bytes('p2sh'),'big'),
+						int.from_bytes(proto.addr_fmt_to_ver_bytes['p2sh'],'big'),
 						*cdata )
 
 	@classmethod

@@ -105,7 +105,7 @@ class addr_generator:
 
 		@check_data
 		def to_addr(self,data):
-			step1 = self.proto.addr_fmt_to_ver_bytes('monero') + data.pubkey
+			step1 = self.proto.addr_fmt_to_ver_bytes['monero'] + data.pubkey
 			return CoinAddr(
 				proto = self.proto,
 				addr = self.b58enc( step1 + self.keccak_256(step1).digest()[:4]) )
@@ -119,13 +119,13 @@ class addr_generator:
 		@check_data
 		def to_addr(self,data):
 			ret = b58chk_encode(
-				self.proto.addr_fmt_to_ver_bytes('zcash_z')
+				self.proto.addr_fmt_to_ver_bytes['zcash_z']
 				+ data.pubkey )
 			return CoinAddr( self.proto, ret )
 
 		@check_data
 		def to_viewkey(self,data):
 			ret = b58chk_encode(
-				self.proto.addr_fmt_to_ver_bytes('viewkey')
+				self.proto.addr_fmt_to_ver_bytes['viewkey']
 				+ data.viewkey_bytes )
 			return ZcashViewKey( self.proto, ret )
