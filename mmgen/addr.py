@@ -147,12 +147,18 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 			ap = proto.decode_addr(addr)
 			assert ap, f'coin address {addr!r} could not be parsed'
 			me.addr_fmt = ap.fmt
-			me.hex = ap.bytes.hex()
+			me.bytes = ap.bytes
 			me.ver_bytes = ap.ver_bytes
 			me.proto = proto
 			return me
 		except Exception as e:
 			return cls.init_fail(e,addr,objname=f'{proto.cls_name} address')
+
+	@property
+	def parsed(self):
+		if not hasattr(self,'_parsed'):
+			self._parsed = self.proto.parse_addr(self.ver_bytes,self.bytes,self.addr_fmt)
+		return self._parsed
 
 	@classmethod
 	def fmtc(cls,addr,**kwargs):

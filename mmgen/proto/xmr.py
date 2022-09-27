@@ -12,7 +12,11 @@
 Monero protocol
 """
 
+from collections import namedtuple
+
 from ..protocol import CoinProtocol,_nw
+
+parsed_addr = namedtuple('parsed_addr',['ver_bytes','data'])
 
 # https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
@@ -58,6 +62,13 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 		assert ret[-4:] == chk, f'{ret[-4:].hex()}: incorrect checksum.  Correct value: {chk.hex()}'
 
 		return self.decode_addr_bytes(ret[:-4])
+
+	def parse_addr(self,ver_bytes,addr_bytes,fmt):
+		addr_len = self.get_addr_len('monero')
+		return parsed_addr(
+			ver_bytes  = ver_bytes,
+			data       = addr_bytes[:addr_len],
+		)
 
 	def pubhash2addr(self,*args,**kwargs):
 		raise NotImplementedError('Monero addresses do not support pubhash2addr()')

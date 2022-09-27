@@ -27,6 +27,7 @@ from .globalvars import g
 
 parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
 decoded_addr = namedtuple('decoded_addr',['bytes','ver_bytes','fmt'])
+parsed_addr = namedtuple('parsed_addr',['ver_bytes','data'])
 
 _finfo = namedtuple('fork_info',['height','hash','name','replayable'])
 _nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
@@ -162,6 +163,12 @@ class CoinProtocol(MMGenObject):
 		secp256k1_ge = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 		privkey_len  = 32
 		pubkey_types = ('std',)
+
+		def parse_addr(self,ver_bytes,addr_bytes,fmt):
+			return parsed_addr(
+				ver_bytes  = ver_bytes,
+				data       = addr_bytes,
+			)
 
 		def preprocess_key(self,sec,pubkey_type):
 			# Key must be non-zero and less than group order of secp256k1 curve
