@@ -148,6 +148,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 			assert ap, f'coin address {addr!r} could not be parsed'
 			me.addr_fmt = ap.fmt
 			me.hex = ap.bytes.hex()
+			me.ver_bytes = ap.ver_bytes
 			me.proto = proto
 			return me
 		except Exception as e:

@@ -94,7 +94,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 				msg(f'{ret[0]}: Invalid witness version number')
 				return False
 
-			return decoded_addr( bytes(ret[1]), 'bech32' ) if ret[1] else False
+			return decoded_addr( bytes(ret[1]), None, 'bech32' ) if ret[1] else False
 
 		return self.decode_addr_bytes(b58chk_decode(addr))
 
