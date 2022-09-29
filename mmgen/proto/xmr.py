@@ -16,7 +16,7 @@ from collections import namedtuple
 
 from ..protocol import CoinProtocol,_nw
 
-parsed_addr = namedtuple('parsed_addr',['ver_bytes','data'])
+parsed_addr = namedtuple('parsed_addr',['ver_bytes','data','payment_id'])
 
 # https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
@@ -24,8 +24,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 	network_names  = _nw('mainnet','stagenet',None)
 	base_coin      = 'XMR'
 	base_proto     = 'Monero'
-	addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
-	addr_len       = 64
+	addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub', '13': 'monero_integrated' }
 	wif_ver_num    = {}
 	pubkey_types   = ('monero',)
 	mmtypes        = ('M',)
@@ -36,6 +35,9 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 	mmcaps         = ('key','addr')
 	ignore_daemon_version = False
 	coin_amt       = 'XMRAmt'
+
+	def get_addr_len(self,addr_fmt):
+		return (64,72)[addr_fmt == 'monero_integrated']
 
 	def preprocess_key(self,sec,pubkey_type): # reduce key
 		from ..contrib.ed25519 import l
@@ -68,10 +70,11 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 		return parsed_addr(
 			ver_bytes  = ver_bytes,
 			data       = addr_bytes[:addr_len],
+			payment_id = addr_bytes[addr_len:] if fmt == 'monero_integrated' else None,
 		)
 
 	def pubhash2addr(self,*args,**kwargs):
 		raise NotImplementedError('Monero addresses do not support pubhash2addr()')
 
 class testnet(mainnet): # use stagenet for testnet
-	addr_ver_bytes = { '18': 'monero', '24': 'monero_sub' } # testnet is ('35','3f')
+	addr_ver_bytes = { '18': 'monero', '24': 'monero_sub', '19': 'monero_integrated' } # testnet is {'35','3f','36'}

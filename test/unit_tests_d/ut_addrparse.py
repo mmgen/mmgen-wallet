@@ -19,8 +19,13 @@ vectors = {
 	'xmr_mainnet': [
 		{ # ut_xmrseed.vectors[0]:
 'std': '42ey1afDFnn4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfJJQAWDm',
+# https://github.com/monero-project/monero/tests/functional_tests/integrated_address.py
+'int': '4CMe2PUhs4J4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfSbLRB61BQVATzerHGj',
+'id':  '0123456789abcdef'
 		},{
 'std': '46r4nYSevkfBUMhuykdK3gQ98XDqDTYW1hNLaXNvjpsJaSbNtdXh1sKMsdVgqkaihChAzEy29zEDPMR3NHQvGoZCLGwTerK',
+'int': '4GYjoMG9Y2BBUMhuykdK3gQ98XDqDTYW1hNLaXNvjpsJaSbNtdXh1sKMsdVgqkaihChAzEy29zEDPMR3NHQvGoZCVSs1ZojwrDCGS5rUuo',
+'id':  '1122334455667788'
 		}
 	],
 	'zec_mainnet': [
@@ -43,7 +48,7 @@ def test_network(proto,addrs):
 				addr.parsed.ver_bytes,
 				proto.addr_fmt_to_ver_bytes.get(addr.addr_fmt) )
 		check_equal(
-			addr.parsed.data,
+			addr.parsed.data + ((addr.parsed.payment_id or b'') if proto.coin == 'XMR' else b''),
 			addr.bytes )
 
 	def fmt_addr_data(addr):
@@ -64,6 +69,14 @@ def test_network(proto,addrs):
 		a1 = CoinAddr(proto,addr['std'])
 		print_info(a1)
 		check_bytes(a1)
+		assert not hasattr(a1.parsed,'payment_id') or a1.parsed.payment_id == None
+
+		if 'int' in addr:
+			a2 = CoinAddr(proto,addr['int'])
+			print_info(a2)
+			check_bytes(a2)
+			check_equal( a1.parsed.data, a2.parsed.data )
+			check_equal( a2.parsed.payment_id, bytes.fromhex(addr['id']) )
 
 	msg('OK')
 	vmsg('')

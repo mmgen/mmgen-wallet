@@ -137,6 +137,10 @@ class MoneroMMGenTX:
 				  Dest: {}
 			"""
 
+			pmid = d.dest_address.parsed.payment_id
+			if pmid:
+				fs += '  Payment ID: {pmid}'
+
 			return fmt(fs,strip_char='\t',indent=indent).format(
 					d.seed_id.hl(), d.network.upper(),
 					d.txid.hl(),
@@ -147,6 +151,7 @@ class MoneroMMGenTX:
 					d.amount.hl(),
 					d.fee.hl(),
 					d.dest_address.hl(),
+					pmid = pink(pmid.hex()) if pmid else None
 				)
 
 		def write(self,delete_metadata=False):
