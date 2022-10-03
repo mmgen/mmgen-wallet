@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-Functions and constants used by multiple protocols
+proto.common: Functions and constants used by multiple protocols
 """
 
 import hashlib

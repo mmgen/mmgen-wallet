@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.tx.completed: Ethereum completed transaction class
+proto.eth.tx.completed: Ethereum completed transaction class
 """
 
 import mmgen.tx.completed as TxBase

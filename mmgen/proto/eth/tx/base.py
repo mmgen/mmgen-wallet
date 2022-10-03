@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.tx.base: Ethereum base transaction class
+proto.eth.tx.base: Ethereum base transaction class
 """
 
 from collections import namedtuple

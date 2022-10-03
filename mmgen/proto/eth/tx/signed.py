@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.tx.signed: Ethereum signed transaction class
+proto.eth.tx.signed: Ethereum signed transaction class
 """
 
 import mmgen.tx.signed as TxBase

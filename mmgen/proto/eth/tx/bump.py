@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.tx.bump: Ethereum transaction bump class
+proto.eth.tx.bump: Ethereum transaction bump class
 """
 
 import mmgen.tx.bump as TxBase

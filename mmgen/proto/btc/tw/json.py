@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tw.json: export and import tracking wallet to JSON format
+proto.btc.tw.json: export and import tracking wallet to JSON format
 """
 
 from collections import namedtuple

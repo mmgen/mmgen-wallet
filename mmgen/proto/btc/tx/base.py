@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tx.base: Bitcoin base transaction class
+proto.btc.tx.base: Bitcoin base transaction class
 """
 
 from collections import namedtuple

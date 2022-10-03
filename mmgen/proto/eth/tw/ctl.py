@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-base_proto.ethereum.twctl: Ethereum tracking wallet control class
+proto.eth.twctl: Ethereum tracking wallet control class
 """
 
 from ....util import msg,ymsg,write_mode,die

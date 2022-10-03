@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tx.bump: Bitcoin transaction bump class
+proto.btc.tx.bump: Bitcoin transaction bump class
 """
 
 import mmgen.tx.bump as TxBase

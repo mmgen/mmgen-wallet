@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-base_proto.ethereum.twaddrs: Ethereum tracking wallet address list class
+proto.eth.twaddrs: Ethereum tracking wallet address list class
 """
 
 from ....tw.addrs import TwAddrList

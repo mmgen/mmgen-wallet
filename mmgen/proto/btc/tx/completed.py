@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tx.completed: Bitcoin completed transaction class
+proto.btc.tx.completed: Bitcoin completed transaction class
 """
 
 import mmgen.tx.completed as TxBase

@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tx.signed: Bitcoin signed transaction class
+proto.btc.tx.signed: Bitcoin signed transaction class
 """
 
 import mmgen.tx.signed as TxBase

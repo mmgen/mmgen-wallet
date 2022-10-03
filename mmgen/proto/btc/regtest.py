@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-base_proto.bitcoin.regtest: Coin daemon regression test mode setup and operations
+proto.btc.regtest: Coin daemon regression test mode setup and operations
 """
 
 import os,time,shutil,json,re

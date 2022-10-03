@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.tx.status: Ethereum transaction status class
+proto.eth.tx.status: Ethereum transaction status class
 """
 
 import mmgen.tx.status as TxBase

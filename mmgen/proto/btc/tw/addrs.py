@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.twaddrs: Bitcoin base protocol tracking wallet address list class
+proto.btc.twaddrs: Bitcoin base protocol tracking wallet address list class
 """
 
 from ....util import msg,die

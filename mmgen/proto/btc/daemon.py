@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.daemon: Bitcoin base protocol daemon classes
+proto.btc.daemon: Bitcoin base protocol daemon classes
 """
 
 import os

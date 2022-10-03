@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tw: Bitcoin base protocol tracking wallet dependency classes
+proto.btc.tw: Bitcoin base protocol tracking wallet dependency classes
 """
 
 from ....addr import CoinAddr

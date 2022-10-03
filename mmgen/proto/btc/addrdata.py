@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.addrdata: Bitcoin base protocol addrdata classes
+proto.btc.addrdata: Bitcoin base protocol addrdata classes
 """
 
 from ...addrdata import TwAddrData

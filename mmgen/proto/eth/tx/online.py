@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.tx.online: Ethereum online signed transaction class
+proto.eth.tx.online: Ethereum online signed transaction class
 """
 
 from ....globalvars import *

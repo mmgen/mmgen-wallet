@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.msg: Ethereum base protocol message signing classes
+proto.eth.msg: Ethereum base protocol message signing classes
 """
 
 from ...msg import coin_msg

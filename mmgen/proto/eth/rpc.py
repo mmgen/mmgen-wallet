@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.rpc: Ethereum base protocol RPC client class
+proto.eth.rpc: Ethereum base protocol RPC client class
 """
 
 import re

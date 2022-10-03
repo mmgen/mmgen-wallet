@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.twuo: Bitcoin base protocol tracking wallet unspent outputs class
+proto.btc.twuo: Bitcoin base protocol tracking wallet unspent outputs class
 """
 
 from ....tw.unspent import TwUnspentOutputs

@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.tx.unsigned: Ethereum unsigned transaction class
+proto.eth.tx.unsigned: Ethereum unsigned transaction class
 """
 
 import json

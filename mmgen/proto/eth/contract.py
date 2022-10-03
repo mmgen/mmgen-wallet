@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.base_proto.ethereum.contract: Ethereum ERC20 token classes
+proto.eth.contract: Ethereum ERC20 token classes
 """
 
 from decimal import Decimal

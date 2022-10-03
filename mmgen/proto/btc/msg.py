@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.msg: Bitcoin base protocol message signing classes
+proto.btc.msg: Bitcoin base protocol message signing classes
 """
 
 from ...msg import coin_msg

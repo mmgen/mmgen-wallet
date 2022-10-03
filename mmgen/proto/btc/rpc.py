@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.rpc: Bitcoin base protocol RPC client class
+proto.btc.rpc: Bitcoin base protocol RPC client class
 """
 
 import os

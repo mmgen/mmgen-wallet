@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.misc: miscellaneous utilities for Ethereum base protocol
+proto.eth.misc: miscellaneous utilities for Ethereum base protocol
 """
 
 from ...util import die,get_keccak

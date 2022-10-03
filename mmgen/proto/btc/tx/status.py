@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tx.status: Bitcoin transaction status class
+proto.btc.tx.status: Bitcoin transaction status class
 """
 
 import time

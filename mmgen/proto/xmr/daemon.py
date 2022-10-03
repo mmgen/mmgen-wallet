@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.monero.daemon: Monero base protocol daemon classes
+proto.xmr.daemon: Monero base protocol daemon classes
 """
 
 import os

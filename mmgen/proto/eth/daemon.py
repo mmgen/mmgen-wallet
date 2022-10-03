@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.daemon: Ethereum base protocol daemon classes
+proto.eth.daemon: Ethereum base protocol daemon classes
 """
 
 import os

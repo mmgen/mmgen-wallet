@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tx.online: Bitcoin online signed transaction class
+proto.btc.tx.online: Bitcoin online signed transaction class
 """
 
 import mmgen.tx.online as TxBase

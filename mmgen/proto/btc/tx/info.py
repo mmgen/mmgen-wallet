@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tx.info: Bitcoin transaction info class
+proto.btc.tx.info: Bitcoin transaction info class
 """
 
 from ....tx.info import TxInfo

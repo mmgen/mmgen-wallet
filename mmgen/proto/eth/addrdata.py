@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-base_proto.ethereum.addrdata: Ethereum TwAddrData classes
+proto.eth.addrdata: Ethereum TwAddrData classes
 """
 
 from ...addrdata import TwAddrData

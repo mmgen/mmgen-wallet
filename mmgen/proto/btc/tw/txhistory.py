@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tw.txhistory: Bitcoin base protocol tracking wallet transaction history class
+proto.btc.tw.txhistory: Bitcoin base protocol tracking wallet transaction history class
 """
 
 from collections import namedtuple

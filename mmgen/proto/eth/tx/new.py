@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.tx.new: Ethereum new transaction class
+proto.eth.tx.new: Ethereum new transaction class
 """
 
 import json

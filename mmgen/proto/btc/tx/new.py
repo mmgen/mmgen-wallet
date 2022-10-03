@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tx.new: Bitcoin new transaction class
+proto.btc.tx.new: Bitcoin new transaction class
 """
 
 import mmgen.tx.new as TxBase

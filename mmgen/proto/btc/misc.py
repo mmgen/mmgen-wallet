@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.misc: miscellaneous functions for Bitcoin base protocol
+proto.btc.misc: miscellaneous functions for Bitcoin base protocol
 """
 
 from ...globalvars import g

@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.twctl: Bitcoin base protocol tracking wallet control class
+proto.btc.twctl: Bitcoin base protocol tracking wallet control class
 """
 
 from ....globalvars import g

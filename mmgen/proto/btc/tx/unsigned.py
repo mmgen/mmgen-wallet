@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.bitcoin.tx.unsigned: Bitcoin unsigned transaction class
+proto.btc.tx.unsigned: Bitcoin unsigned transaction class
 """
 
 import mmgen.tx.unsigned as TxBase

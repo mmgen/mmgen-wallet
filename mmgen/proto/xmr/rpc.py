@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.monero.rpc: Monero base protocol RPC client class
+proto.xmr.rpc: Monero base protocol RPC client class
 """
 
 from ...rpc import RPCClient,IPPort,auth_data

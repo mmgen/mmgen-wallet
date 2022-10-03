@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.ethereum.tx.info: Ethereum transaction info class
+proto.eth.tx.info: Ethereum transaction info class
 """
 
 from ....tx.info import TxInfo
