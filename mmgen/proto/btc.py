@@ -12,7 +12,7 @@
 Bitcoin protocol
 """
 
-from ..protocol import CoinProtocol,parsed_wif,decoded_addr,_finfo,_nw
+from ..protocol import CoinProtocol,decoded_wif,decoded_addr,_finfo,_nw
 from .common import *
 
 class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
@@ -58,7 +58,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 			+ privbytes
 			+ (b'',b'\x01')[bool(compressed)])
 
-	def parse_wif(self,wif):
+	def decode_wif(self,wif):
 		key = b58chk_decode(wif)
 
 		for k,v in self.wif_ver_num.items():
@@ -78,7 +78,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 		else:
 			raise ValueError(f'{len(key)}: invalid key length')
 
-		return parsed_wif(
+		return decoded_wif(
 			sec         = key[:self.privkey_len],
 			pubkey_type = pubkey_type,
 			compressed  = compressed )

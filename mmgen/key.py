@@ -35,7 +35,7 @@ class WifKey(str,Hilite,InitErrors):
 			return wif
 		try:
 			assert wif.isascii() and wif.isalnum(), 'not an ASCII alphanumeric string'
-			proto.parse_wif(wif) # raises exception on error
+			proto.decode_wif(wif) # raises exception on error
 			return str.__new__(cls,wif)
 		except Exception as e:
 			return cls.init_fail(e,wif)
@@ -76,7 +76,7 @@ class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 			try:
 				assert s == None,"'wif' and key hex args are mutually exclusive"
 				assert wif.isascii() and wif.isalnum(), 'not an ASCII alphanumeric string'
-				k = proto.parse_wif(wif) # raises exception on error
+				k = proto.decode_wif(wif) # raises exception on error
 				me = bytes.__new__(cls,k.sec)
 				me.compressed = k.compressed
 				me.pubkey_type = k.pubkey_type

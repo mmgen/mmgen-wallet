@@ -25,7 +25,7 @@ from collections import namedtuple
 from .devtools import *
 from .globalvars import g
 
-parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
+decoded_wif = namedtuple('decoded_wif',['sec','pubkey_type','compressed'])
 decoded_addr = namedtuple('decoded_addr',['bytes','ver_bytes','fmt'])
 parsed_addr = namedtuple('parsed_addr',['ver_bytes','data'])
 
@@ -194,8 +194,8 @@ class CoinProtocol(MMGenObject):
 			assert compressed == False, f'{self.name} protocol does not support compressed pubkeys!'
 			return privbytes.hex()
 
-		def parse_wif(self,wif):
-			return parsed_wif(
+		def decode_wif(self,wif):
+			return decoded_wif(
 				sec         = bytes.fromhex(wif),
 				pubkey_type = self.pubkey_type,
 				compressed  = False )
