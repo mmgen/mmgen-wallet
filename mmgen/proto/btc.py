@@ -21,7 +21,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	"""
 	mod_clsname     = 'Bitcoin'
 	network_names   = _nw('mainnet','testnet','regtest')
-	addr_ver_bytes  = { '00': 'p2pkh', '05': 'p2sh' }
+	addr_ver_info   = { '00': 'p2pkh', '05': 'p2sh' }
 	addr_len        = 20
 	wif_ver_num     = { 'std': '80' }
 	mmtypes         = ('L','C','S','B')
@@ -123,7 +123,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 			data = [self.witness_vernum] + bech32.convertbits(list(pubhash),8,5) )
 
 class testnet(mainnet):
-	addr_ver_bytes      = { '6f': 'p2pkh', 'c4': 'p2sh' }
+	addr_ver_info       = { '6f': 'p2pkh', 'c4': 'p2sh' }
 	wif_ver_num         = { 'std': 'ef' }
 	bech32_hrp          = 'tb'
 

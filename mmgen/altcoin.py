@@ -756,7 +756,7 @@ def create_altcoin_protos(data):
 				(mainnet,),
 				{
 					'base_coin': e.symbol,
-					'addr_ver_bytes': dict(
+					'addr_ver_info': dict(
 						[( num2hexstr(e.p2pkh_info[0]), 'p2pkh' )] +
 						([( num2hexstr(e.p2sh_info[0]), 'p2sh' )] if e.p2sh_info else [])
 					),

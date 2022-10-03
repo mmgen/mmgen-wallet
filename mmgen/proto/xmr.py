@@ -24,7 +24,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 	network_names  = _nw('mainnet','stagenet',None)
 	base_coin      = 'XMR'
 	base_proto     = 'Monero'
-	addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub', '13': 'monero_integrated' }
+	addr_ver_info  = { '12': 'monero', '2a': 'monero_sub', '13': 'monero_integrated' }
 	wif_ver_num    = {}
 	pubkey_types   = ('monero',)
 	mmtypes        = ('M',)
@@ -77,4 +77,4 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 		raise NotImplementedError('Monero addresses do not support pubhash2addr()')
 
 class testnet(mainnet): # use stagenet for testnet
-	addr_ver_bytes = { '18': 'monero', '24': 'monero_sub', '19': 'monero_integrated' } # testnet is {'35','3f','36'}
+	addr_ver_info = { '18': 'monero', '24': 'monero_sub', '19': 'monero_integrated' } # testnet is {'35','3f','36'}

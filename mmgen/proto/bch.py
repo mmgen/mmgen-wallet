@@ -30,7 +30,7 @@ class mainnet(mainnet):
 	def pubhash2segwitaddr(self,pubkey):    raise NotImplementedError
 
 class testnet(mainnet):
-	addr_ver_bytes = { '6f': 'p2pkh', 'c4': 'p2sh' }
+	addr_ver_info  = { '6f': 'p2pkh', 'c4': 'p2sh' }
 	wif_ver_num    = { 'std': 'ef' }
 
 class regtest(testnet):

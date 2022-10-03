@@ -68,8 +68,10 @@ class CoinProtocol(MMGenObject):
 				'regtest': '_rt',
 			}[network]
 
-			if hasattr(self,'addr_ver_bytes'):
-				self.addr_fmt_to_ver_bytes = {v:bytes.fromhex(k) for k,v in self.addr_ver_bytes.items()}
+			if hasattr(self,'addr_ver_info'):
+				self.addr_ver_bytes = {bytes.fromhex(k):v for k,v in self.addr_ver_info.items()}
+				self.addr_fmt_to_ver_bytes = {v:k for k,v in self.addr_ver_bytes.items()}
+				self.addr_ver_bytes_len = len(list(self.addr_ver_bytes)[0])
 
 			if 'tx' not in self.mmcaps and g.is_txprog:
 				from .util import die
@@ -139,14 +141,11 @@ class CoinProtocol(MMGenObject):
 			return self.addr_len
 
 		def decode_addr_bytes(self,addr_bytes):
-			for ver_hex,addr_fmt in self.addr_ver_bytes.items():
-				ver_bytes = bytes.fromhex(ver_hex)
-				vlen = len(ver_bytes)
-				if addr_bytes[:vlen] == ver_bytes:
-					if len(addr_bytes[vlen:]) == self.get_addr_len(addr_fmt):
-						return decoded_addr( addr_bytes[vlen:], ver_bytes, addr_fmt )
-
-			return False
+			vlen = self.addr_ver_bytes_len
+			return decoded_addr(
+				addr_bytes[vlen:],
+				addr_bytes[:vlen],
+				self.addr_ver_bytes[addr_bytes[:vlen]] )
 
 		def coin_addr(self,addr):
 			from .addr import CoinAddr
