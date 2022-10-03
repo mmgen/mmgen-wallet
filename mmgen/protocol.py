@@ -68,6 +68,12 @@ class CoinProtocol(MMGenObject):
 				'regtest': '_rt',
 			}[network]
 
+			if hasattr(self,'wif_ver_num'):
+				self.wif_ver_bytes = {k:bytes.fromhex(v) for k,v in self.wif_ver_num.items()}
+				self.wif_ver_bytes_to_pubkey_type = {v:k for k,v in self.wif_ver_bytes.items()}
+				vbs = list(self.wif_ver_bytes.values())
+				self.wif_ver_bytes_len = len(vbs[0]) if len(set(len(b) for b in vbs)) == 1 else None
+
 			if hasattr(self,'addr_ver_info'):
 				self.addr_ver_bytes = {bytes.fromhex(k):v for k,v in self.addr_ver_info.items()}
 				self.addr_fmt_to_ver_bytes = {v:k for k,v in self.addr_ver_bytes.items()}

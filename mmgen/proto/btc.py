@@ -52,36 +52,26 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 
 	def encode_wif(self,privbytes,pubkey_type,compressed): # input is preprocessed hex
 		assert len(privbytes) == self.privkey_len, f'{len(privbytes)} bytes: incorrect private key length!'
-		assert pubkey_type in self.wif_ver_num, f'{pubkey_type!r}: invalid pubkey_type'
+		assert pubkey_type in self.wif_ver_bytes, f'{pubkey_type!r}: invalid pubkey_type'
 		return b58chk_encode(
-			bytes.fromhex(self.wif_ver_num[pubkey_type])
+			self.wif_ver_bytes[pubkey_type]
 			+ privbytes
 			+ (b'',b'\x01')[bool(compressed)])
 
 	def decode_wif(self,wif):
-		key = b58chk_decode(wif)
-
-		for k,v in self.wif_ver_num.items():
-			v = bytes.fromhex(v)
-			if key[:len(v)] == v:
-				pubkey_type = k
-				key = key[len(v):]
-				break
-		else:
-			raise ValueError('Invalid WIF version number')
+		key_data = b58chk_decode(wif)
+		vlen = self.wif_ver_bytes_len or self.get_wif_ver_bytes_len(key_data)
+		key = key_data[vlen:]
 
 		if len(key) == self.privkey_len + 1:
 			assert key[-1] == 0x01, f'{key[-1]!r}: invalid compressed key suffix byte'
-			compressed = True
-		elif len(key) == self.privkey_len:
-			compressed = False
-		else:
+		elif len(key) != self.privkey_len:
 			raise ValueError(f'{len(key)}: invalid key length')
 
 		return decoded_wif(
 			sec         = key[:self.privkey_len],
-			pubkey_type = pubkey_type,
-			compressed  = compressed )
+			pubkey_type = self.wif_ver_bytes_to_pubkey_type[key_data[:vlen]],
+			compressed  = len(key) == self.privkey_len + 1 )
 
 	def decode_addr(self,addr):
 

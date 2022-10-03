@@ -25,7 +25,6 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 	base_coin      = 'XMR'
 	base_proto     = 'Monero'
 	addr_ver_info  = { '12': 'monero', '2a': 'monero_sub', '13': 'monero_integrated' }
-	wif_ver_num    = {}
 	pubkey_types   = ('monero',)
 	mmtypes        = ('M',)
 	dfl_mmtype     = 'M'

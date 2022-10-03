@@ -13,7 +13,8 @@ Zcash protocol
 """
 
 from .btc import mainnet
-from ..protocol import decoded_addr
+from .common import b58chk_decode
+from ..protocol import decoded_wif,decoded_addr
 
 class mainnet(mainnet):
 	base_coin      = 'ZEC'
@@ -30,12 +31,22 @@ class mainnet(mainnet):
 		from ..opts import opt
 		self.coin_id = 'ZEC-Z' if opt.type in ('zcash_z','Z') else 'ZEC-T'
 
+	def get_wif_ver_bytes_len(self,key_data):
+		"""
+		vlen must be set dynamically since Zcash has variable-length version bytes
+		"""
+		for v in self.wif_ver_bytes.values():
+			if key_data[:len(v)] == v:
+				return len(v)
+		else:
+			raise ValueError('Invalid WIF version number')
+
 	def get_addr_len(self,addr_fmt):
 		return (20,64)[addr_fmt in ('zcash_z','viewkey')]
 
 	def decode_addr_bytes(self,addr_bytes):
 		"""
-		vlen must be set dynamically since Zcash has variable length ver_bytes
+		vlen must be set dynamically since Zcash has variable-length version bytes
 		"""
 		for ver_bytes,addr_fmt in self.addr_ver_bytes.items():
 			vlen = len(ver_bytes)

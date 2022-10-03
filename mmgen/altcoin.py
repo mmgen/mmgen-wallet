@@ -454,7 +454,7 @@ class CoinInfo(object):
 					test_equal(
 						'WIF version number',
 						e.wif_ver_num,
-						int.from_bytes(bytes.fromhex(proto.wif_ver_num['std']),'big'),
+						int.from_bytes(proto.wif_ver_bytes['std'],'big'),
 						*cdata )
 
 					test_equal(
