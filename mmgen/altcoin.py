@@ -736,7 +736,7 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 def create_altcoin_protos(data):
 
 	from .protocol import CoinProtocol
-	from .proto.btc import mainnet
+	from .proto.btc.params import mainnet
 
 	def make_proto(e,testnet=False):
 

@@ -12,8 +12,8 @@
 Bitcoin protocol
 """
 
-from ..protocol import CoinProtocol,decoded_wif,decoded_addr,_finfo,_nw
-from .common import *
+from ...protocol import CoinProtocol,decoded_wif,decoded_addr,_finfo,_nw
+from ..common import *
 
 class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	"""
@@ -80,7 +80,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 			ret = bech32.decode(self.bech32_hrp,addr)
 
 			if ret[0] != self.witness_vernum:
-				from ..util import msg
+				from ...util import msg
 				msg(f'{ret[0]}: Invalid witness version number')
 				return False
 

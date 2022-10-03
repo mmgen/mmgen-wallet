@@ -107,7 +107,7 @@ class keygen_backend:
 
 			def __init__(self):
 
-				from .proto.xmr import mainnet
+				from .proto.xmr.params import mainnet
 				self.proto_cls = mainnet
 
 				from .util import get_keccak

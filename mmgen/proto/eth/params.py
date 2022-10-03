@@ -12,9 +12,9 @@
 Ethereum protocol
 """
 
-from ..globalvars import g
-from ..protocol import CoinProtocol,_nw,decoded_addr
-from ..util import is_hex_str_lc,Msg
+from ...globalvars import g
+from ...protocol import CoinProtocol,_nw,decoded_addr
+from ...util import is_hex_str_lc,Msg
 
 class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 

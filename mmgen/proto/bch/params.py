@@ -12,7 +12,7 @@
 Bitcoin Cash protocol
 """
 
-from .btc import mainnet,_finfo
+from ..btc.params import mainnet,_finfo
 
 class mainnet(mainnet):
 	is_fork_of      = 'Bitcoin'

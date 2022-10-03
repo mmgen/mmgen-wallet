@@ -12,7 +12,7 @@
 Litecoin protocol
 """
 
-from .btc import mainnet
+from ..btc.params import mainnet
 
 class mainnet(mainnet):
 	block0          = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'

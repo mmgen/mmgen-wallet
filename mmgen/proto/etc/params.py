@@ -12,7 +12,7 @@
 Ethereum Classic protocol
 """
 
-from .eth import mainnet
+from ..eth.params import mainnet
 
 class mainnet(mainnet):
 	chain_names = ['classic','ethereum_classic']

@@ -14,7 +14,7 @@ Monero protocol
 
 from collections import namedtuple
 
-from ..protocol import CoinProtocol,_nw
+from ...protocol import CoinProtocol,_nw
 
 parsed_addr = namedtuple('parsed_addr',['ver_bytes','data','payment_id'])
 
@@ -39,7 +39,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 		return (64,72)[addr_fmt == 'monero_integrated']
 
 	def preprocess_key(self,sec,pubkey_type): # reduce key
-		from ..contrib.ed25519 import l
+		from ...contrib.ed25519 import l
 		return int.to_bytes(
 			int.from_bytes( sec[::-1], 'big' ) % l,
 			self.privkey_len,
@@ -47,7 +47,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 
 	def decode_addr(self,addr):
 
-		from ..baseconv import baseconv
+		from ...baseconv import baseconv
 
 		def b58dec(addr_str):
 			bc = baseconv('b58')

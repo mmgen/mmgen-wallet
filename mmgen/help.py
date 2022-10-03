@@ -162,7 +162,7 @@ one address with no amount on the command line.
 """
 
 		def txsign():
-			from .proto.btc import mainnet
+			from .proto.btc.params import mainnet
 			return """
 Transactions may contain both {pnm} or non-{pnm} input addresses.
 

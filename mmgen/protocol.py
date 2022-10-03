@@ -236,7 +236,7 @@ def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=Non
 		setattr(
 			CoinProtocol,
 			proto_name,
-			getattr(importlib.import_module(f'mmgen.proto.{coin}'),network)
+			getattr(importlib.import_module(f'mmgen.proto.{coin}.params'),network)
 		)
 
 	return getattr(CoinProtocol,proto_name)(

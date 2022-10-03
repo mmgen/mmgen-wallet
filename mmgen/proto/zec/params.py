@@ -12,9 +12,9 @@
 Zcash protocol
 """
 
-from .btc import mainnet
-from .common import b58chk_decode
-from ..protocol import decoded_wif,decoded_addr
+from ..btc.params import mainnet
+from ..common import b58chk_decode
+from ...protocol import decoded_wif,decoded_addr
 
 class mainnet(mainnet):
 	base_coin      = 'ZEC'
@@ -28,7 +28,7 @@ class mainnet(mainnet):
 
 	def __init__(self,*args,**kwargs):
 		super().__init__(*args,**kwargs)
-		from ..opts import opt
+		from ...opts import opt
 		self.coin_id = 'ZEC-Z' if opt.type in ('zcash_z','Z') else 'ZEC-T'
 
 	def get_wif_ver_bytes_len(self,key_data):

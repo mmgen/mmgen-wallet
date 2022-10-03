@@ -209,7 +209,7 @@ class AddrFile(MMGenObject):
 			else:
 				network = 'mainnet'
 
-			from .proto.btc import mainnet
+			from .proto.btc.params import mainnet
 			if lbl in [MMGenAddrType(mainnet,key).name for key in mainnet.mmtypes]:
 				coin,mmtype_key = ( 'BTC', lbl )
 			elif ':' in lbl: # first component is coin, second is mmtype_key
