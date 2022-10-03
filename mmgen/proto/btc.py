@@ -50,7 +50,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	ignore_daemon_version = False
 	max_int         = 0xffffffff
 
-	def bytes2wif(self,privbytes,pubkey_type,compressed): # input is preprocessed hex
+	def encode_wif(self,privbytes,pubkey_type,compressed): # input is preprocessed hex
 		assert len(privbytes) == self.privkey_len, f'{len(privbytes)} bytes: incorrect private key length!'
 		assert pubkey_type in self.wif_ver_num, f'{pubkey_type!r}: invalid pubkey_type'
 		return b58chk_encode(

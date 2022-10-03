@@ -189,7 +189,7 @@ class CoinProtocol(MMGenObject):
 		"""
 		Ethereum and Monero protocols inherit from this class
 		"""
-		def bytes2wif(self,privbytes,pubkey_type,compressed):
+		def encode_wif(self,privbytes,pubkey_type,compressed):
 			assert pubkey_type == self.pubkey_type, f'{pubkey_type}: invalid pubkey_type for {self.name} protocol!'
 			assert compressed == False, f'{self.name} protocol does not support compressed pubkeys!'
 			return privbytes.hex()

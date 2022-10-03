@@ -103,7 +103,7 @@ class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 					assert type(compressed) == bool,(
 						f"'compressed' must be of type bool, not {type(compressed).__name__}" )
 					me = bytes.__new__( cls, proto.preprocess_key(s,pubkey_type) )
-					me.wif = WifKey( proto, proto.bytes2wif(me,pubkey_type,compressed) )
+					me.wif = WifKey( proto, proto.encode_wif(me,pubkey_type,compressed) )
 					me.compressed = compressed
 				me.pubkey_type = pubkey_type
 				me.orig_bytes = s # save the non-preprocessed key
