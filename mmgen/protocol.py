@@ -49,6 +49,8 @@ class CoinProtocol(MMGenObject):
 
 	class Base(MMGenObject):
 		base_proto = None
+		base_proto_coin  = None
+		base_coin  = None
 		is_fork_of = None
 		networks   = ('mainnet','testnet','regtest')
 

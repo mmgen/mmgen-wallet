@@ -117,5 +117,5 @@ class TxInfo:
 
 def init_info(tx):
 	return getattr(
-		importlib.import_module(f'mmgen.base_proto.{tx.proto.base_proto.lower()}.tx.info'),
+		importlib.import_module(f'mmgen.proto.{tx.proto.base_proto_coin.lower()}.tx.info'),
 		('Token' if tx.proto.tokensym else '') + 'TxInfo' )(tx)

@@ -35,7 +35,7 @@ from mmgen.common import *
 from mmgen.addrlist import *
 from mmgen.passwdlist import *
 from mmgen.tx.base import Base
-from mmgen.base_proto.bitcoin.tw.unspent import BitcoinTwUnspentOutputs
+from mmgen.proto.btc.tw.unspent import BitcoinTwUnspentOutputs
 
 opts_data = {
 	'sets': [

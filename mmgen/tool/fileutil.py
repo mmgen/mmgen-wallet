@@ -153,6 +153,6 @@ class tool_cmd(tool_cmd_base):
 		"decrypt the encrypted private key in a Geth keystore wallet, returning the decrypted key"
 		from ..util import line_input
 		from ..opts import opt
-		from ..base_proto.ethereum.misc import extract_key_from_geth_keystore_wallet
+		from ..proto.eth.misc import extract_key_from_geth_keystore_wallet
 		passwd = line_input( 'Enter passphrase: ', echo=opt.echo_passphrase ).strip().encode()
 		return extract_key_from_geth_keystore_wallet( wallet_file, passwd, check_addr ).hex()

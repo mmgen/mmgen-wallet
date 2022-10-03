@@ -22,8 +22,9 @@ parsed_addr = namedtuple('parsed_addr',['ver_bytes','data','payment_id'])
 class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 
 	network_names  = _nw('mainnet','stagenet',None)
-	base_coin      = 'XMR'
 	base_proto     = 'Monero'
+	base_proto_coin = 'XMR'
+	base_coin      = 'XMR'
 	addr_ver_info  = { '12': 'monero', '2a': 'monero_sub', '13': 'monero_integrated' }
 	pubkey_types   = ('monero',)
 	mmtypes        = ('M',)

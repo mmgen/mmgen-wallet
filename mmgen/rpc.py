@@ -478,7 +478,7 @@ async def rpc_init(
 		die(1,f'rpc_init() not supported for {proto.name} protocol!')
 
 	cls = getattr(
-		importlib.import_module(f'mmgen.base_proto.{proto.base_proto.lower()}.rpc'),
+		importlib.import_module(f'mmgen.proto.{proto.base_proto_coin.lower()}.rpc'),
 			proto.base_proto + 'RPCClient' )
 
 	from .daemon import CoinDaemon

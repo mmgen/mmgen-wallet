@@ -23,7 +23,6 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 	mmtypes       = ('E',)
 	dfl_mmtype    = 'E'
 	mod_clsname   = 'Ethereum'
-	base_coin     = 'ETH'
 	pubkey_type   = 'std' # required by DummyWIF
 
 	coin_amt      = 'ETHAmt'
@@ -33,6 +32,8 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 	caps          = ('token',)
 	mmcaps        = ('key','addr','rpc_init','tx')
 	base_proto    = 'Ethereum'
+	base_proto_coin = 'ETH'
+	base_coin     = 'ETH'
 	avg_bdi       = 15
 	ignore_daemon_version = False
 

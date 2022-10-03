@@ -35,8 +35,9 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	]
 	caps            = ('rbf','segwit')
 	mmcaps          = ('key','addr','rpc_init','tx')
-	base_coin       = 'BTC'
 	base_proto      = 'Bitcoin'
+	base_proto_coin = 'BTC'
+	base_coin       = 'BTC'
 	# From BIP173: witness version 'n' is stored as 'OP_n'. OP_0 is encoded as 0x00,
 	# but OP_1 through OP_16 are encoded as 0x51 though 0x60 (81 to 96 in decimal).
 	witness_vernum_hex = '00'

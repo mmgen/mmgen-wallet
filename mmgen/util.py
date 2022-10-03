@@ -660,8 +660,8 @@ def base_proto_subclass(cls,proto,subdir,modname,sub_clsname=None):
 	"""
 	magic module loading and class selection
 	"""
-	modpath = 'mmgen.base_proto.{}.{}{}'.format(
-		proto.base_proto.lower(),
+	modpath = 'mmgen.proto.{}.{}{}'.format(
+		proto.base_proto_coin.lower(),
 		subdir + '.' if subdir else '',
 		modname )
 

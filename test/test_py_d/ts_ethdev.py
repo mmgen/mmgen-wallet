@@ -452,7 +452,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 			wallet_fn = os.path.join( self.keystore_dir, os.listdir(self.keystore_dir)[0] )
 
-			from mmgen.base_proto.ethereum.misc import extract_key_from_geth_keystore_wallet
+			from mmgen.proto.eth.misc import extract_key_from_geth_keystore_wallet
 			key = extract_key_from_geth_keystore_wallet(
 				wallet_fn = wallet_fn,
 				passwd = b'' )
@@ -709,7 +709,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		def create_signature_mmgen():
 			key = self.keystore_data['key']
 			imsg(f'Key:       {key}')
-			from mmgen.base_proto.ethereum.misc import ec_sign_message_with_privkey
+			from mmgen.proto.eth.misc import ec_sign_message_with_privkey
 			return ec_sign_message_with_privkey(self.message,bytes.fromhex(key),'eth_sign')
 
 		async def create_signature_rpc():
@@ -976,7 +976,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11,21)]
 		usr_addrs = [tool_cmd(cmdname='gen_addr',proto=self.proto).gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
 
-		from mmgen.base_proto.ethereum.contract import TokenResolve
+		from mmgen.proto.eth.contract import TokenResolve
 		async def do_transfer(rpc):
 			for i in range(2):
 				tk = await TokenResolve(

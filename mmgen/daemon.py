@@ -302,7 +302,7 @@ class CoinDaemon(Daemon):
 			from .protocol import init_proto
 			proto = init_proto(coin)
 		return getattr(
-			importlib.import_module(f'mmgen.base_proto.{proto.base_proto.lower()}.daemon'),
+			importlib.import_module(f'mmgen.proto.{proto.base_proto_coin.lower()}.daemon'),
 			daemon_id+'_daemon' )
 
 	@classmethod

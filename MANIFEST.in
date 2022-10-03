@@ -6,7 +6,7 @@ include doc/*/*/*
 
 include examples/*
 
-include mmgen/base_proto/ethereum/*/LICENSE
+include mmgen/proto/eth/*/LICENSE
 include mmgen/data/*
 
 include scripts/*

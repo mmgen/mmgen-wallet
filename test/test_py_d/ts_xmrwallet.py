@@ -189,8 +189,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	def init_users(self):
 		from mmgen.daemon import CoinDaemon
-		from mmgen.base_proto.monero.daemon import MoneroWalletDaemon
-		from mmgen.base_proto.monero.rpc import MoneroRPCClient,MoneroRPCClientRaw,MoneroWalletRPCClient
+		from mmgen.proto.xmr.daemon import MoneroWalletDaemon
+		from mmgen.proto.xmr.rpc import MoneroRPCClient,MoneroRPCClientRaw,MoneroWalletRPCClient
 		self.users = {}
 		n = self.tmpdir_nums[0]
 		ud = namedtuple('user_data',[

@@ -31,8 +31,8 @@ from .proto.common import b58a
 from .addr import CoinAddr,AddrIdx
 from .addrlist import KeyAddrList,AddrIdxList
 from .rpc import json_encoder
-from .base_proto.monero.rpc import MoneroRPCClientRaw,MoneroWalletRPCClient
-from .base_proto.monero.daemon import MoneroWalletDaemon
+from .proto.xmr.rpc import MoneroRPCClientRaw,MoneroWalletRPCClient
+from .proto.xmr.daemon import MoneroWalletDaemon
 
 xmrwallet_uarg_info = (
 	lambda e,hp: {

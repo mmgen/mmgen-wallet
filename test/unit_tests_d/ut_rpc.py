@@ -8,8 +8,8 @@ from mmgen.common import *
 from mmgen.protocol import init_proto
 from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
-from mmgen.base_proto.monero.rpc import MoneroRPCClient,MoneroRPCClientRaw,MoneroWalletRPCClient
-from mmgen.base_proto.monero.daemon import MoneroWalletDaemon
+from mmgen.proto.xmr.rpc import MoneroRPCClient,MoneroRPCClientRaw,MoneroWalletRPCClient
+from mmgen.proto.xmr.daemon import MoneroWalletDaemon
 
 def cfg_file_auth_test(proto,d):
 	qmsg(cyan(f'\n  Testing authentication with credentials from {d.cfg_file}:'))

@@ -17,7 +17,7 @@ from ..objmethods import MMGenObject
 def _base_proto_subclass(clsname,modname,proto):
 	if proto:
 		clsname = ('Token' if proto.tokensym else '') + clsname
-		modname = 'mmgen.base_proto.{}.tx.{}'.format( proto.base_proto.lower(), modname )
+		modname = 'mmgen.proto.{}.tx.{}'.format( proto.base_proto_coin.lower(), modname )
 	else:
 		modname = 'mmgen.tx.base'
 	import importlib

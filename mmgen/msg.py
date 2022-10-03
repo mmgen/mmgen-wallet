@@ -365,7 +365,7 @@ def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**k
 
 	try:
 		msg_cls = getattr(
-			importlib.import_module(f'mmgen.base_proto.{proto.base_proto.lower()}.msg'),
+			importlib.import_module(f'mmgen.proto.{proto.base_proto_coin.lower()}.msg'),
 			'coin_msg' )
 	except:
 		die(1,f'Message signing operations not supported for {proto.base_proto} protocol')

@@ -9,7 +9,7 @@ from mmgen.common import *
 from ..include.common import *
 from mmgen.protocol import init_proto
 from mmgen.tx import CompletedTX
-from mmgen.base_proto.bitcoin.tx.base import DeserializeTX
+from mmgen.proto.btc.tx.base import DeserializeTX
 from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
 

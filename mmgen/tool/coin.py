@@ -180,12 +180,12 @@ class tool_cmd(tool_cmd_base):
 
 	def addr2scriptpubkey(self,addr:'sstr'):
 		"convert coin address to scriptPubKey"
-		from ..base_proto.bitcoin.tx.base import addr2scriptPubKey
+		from ..proto.btc.tx.base import addr2scriptPubKey
 		return addr2scriptPubKey( self.proto, CoinAddr(self.proto,addr) )
 
 	def scriptpubkey2addr(self,hexstr:'sstr'):
 		"convert scriptPubKey to coin address"
-		from ..base_proto.bitcoin.tx.base import scriptPubKey2addr
+		from ..proto.btc.tx.base import scriptPubKey2addr
 		return scriptPubKey2addr( self.proto, hexstr )[0]
 
 	def eth_checksummed_addr(self,addr:'sstr'):
