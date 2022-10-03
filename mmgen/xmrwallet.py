@@ -259,6 +259,9 @@ class MoneroWalletOps:
 			classes = tuple(gen_classes())
 			self.opts = tuple(set(opt for cls in classes for opt in cls.opts))
 
+			if not hasattr(self,'stem'):
+				self.stem = self.name
+
 			global uarg, uopt, uarg_info, fmt_amt, hl_amt
 
 			uarg = uarg_tuple
@@ -387,14 +390,14 @@ class MoneroWalletOps:
 
 		async def main(self):
 			gmsg('\n{}ing {} wallet{}'.format(
-				self.desc,
+				self.stem.capitalize(),
 				len(self.addr_data),
 				suf(self.addr_data) ))
 			processed = 0
 			for n,d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
 				fn = self.get_wallet_fn(d)
 				gmsg('\n{}ing wallet {}/{} ({})'.format(
-					self.desc,
+					self.stem.capitalize(),
 					n+1,
 					len(self.addr_data),
 					os.path.basename(fn),
@@ -403,7 +406,7 @@ class MoneroWalletOps:
 					d,
 					fn,
 					last = n == len(self.addr_data)-1 )
-			gmsg(f'\n{processed} wallet{suf(processed)} {self.past}')
+			gmsg(f'\n{processed} wallet{suf(processed)} {self.stem}ed')
 			return processed
 
 		class rpc:
@@ -586,8 +589,7 @@ class MoneroWalletOps:
 
 	class create(wallet):
 		name    = 'create'
-		desc    = 'Creat'
-		past    = 'created'
+		stem    = 'creat'
 		wallet_exists = False
 		opts    = ('restore_height',)
 
@@ -612,8 +614,6 @@ class MoneroWalletOps:
 
 	class sync(wallet):
 		name    = 'sync'
-		desc    = 'Sync'
-		past    = 'synced'
 		opts    = ('rescan_blockchain',)
 
 		def __init__(self,uarg_tuple,uopt_tuple):
@@ -736,8 +736,6 @@ class MoneroWalletOps:
 
 	class sweep(wallet):
 		name     = 'sweep'
-		desc     = 'Sweep'
-		past     = 'swept'
 		spec_id  = 'sweep_spec'
 		spec_key = ( (1,'source'), (3,'dest') )
 		opts     = ('do_not_relay','tx_relay_daemon')
@@ -792,7 +790,7 @@ class MoneroWalletOps:
 			self.c = MoneroWalletRPCClient(daemon=wd2)
 
 		async def main(self):
-			gmsg(f'\n{self.desc}ing account #{self.account} of wallet {self.source.idx}' + (
+			gmsg(f'\n{self.stem.capitalize()}ing account #{self.account} of wallet {self.source.idx}' + (
 				f': {self.amount} XMR to {self.dest_addr}' if self.name == 'transfer'
 				else ' to new address' if self.dest == None
 				else f' to new account in wallet {self.dest.idx}' ))
@@ -877,15 +875,12 @@ class MoneroWalletOps:
 
 	class transfer(sweep):
 		name    = 'transfer'
-		desc    = 'Transfer'
-		past    = 'transferred'
+		stem    = 'transferr'
 		spec_id = 'transfer_spec'
 		spec_key = ( (1,'source'), )
 
 	class new(sweep):
 		name    = 'new'
-		desc    = 'New'
-		past    = 'address created'
 		spec_id = 'newaddr_spec'
 		spec_key = ( (1,'source'), )
 
@@ -914,8 +909,6 @@ class MoneroWalletOps:
 
 	class relay(base):
 		name = 'relay'
-		desc = 'Relay'
-		past = 'relayed'
 		opts = ('tx_relay_daemon',)
 
 		def __init__(self,uarg_tuple,uopt_tuple):
