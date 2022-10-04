@@ -17,11 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-keygen.py: Public key generation classes for the MMGen suite
+keygen.py: Public key generation initialization code for the MMGen suite
 """
 
 from collections import namedtuple
-from .key import PubKey,PrivKey
+from .key import PrivKey
 
 keygen_public_data = namedtuple(
 	'keygen_public_data', [
@@ -47,174 +47,29 @@ class keygen_base:
 	def test_avail(cls,silent=False):
 		return cls.__name__
 
-class keygen_backend:
-
-	class std:
-		backends = ('libsecp256k1','python-ecdsa')
-
-		class libsecp256k1(keygen_base):
-
-			def __init__(self):
-				from .secp256k1 import priv2pub
-				self.priv2pub = priv2pub
-
-			def to_pubkey(self,privkey):
-				return PubKey(
-					s = self.priv2pub( privkey, int(privkey.compressed) ),
-					compressed = privkey.compressed )
-
-			@classmethod
-			def test_avail(cls,silent=False):
-				try:
-					from .secp256k1 import priv2pub
-					if not priv2pub(bytes.fromhex('deadbeef'*8),1):
-						from .util import die
-						die( 'ExtensionModuleError',
-							'Unable to execute priv2pub() from secp256k1 extension module' )
-					return cls.__name__
-				except Exception as e:
-					if not silent:
-						from .util import ymsg
-						ymsg(str(e))
-					from .util import qmsg
-					qmsg('Using (slow) native Python ECDSA library for public key generation')
-					return 'python_ecdsa'
-
-		class python_ecdsa(keygen_base):
-
-			def __init__(self):
-				import ecdsa
-				self.ecdsa = ecdsa
-
-			def to_pubkey(self,privkey):
-				"""
-				devdoc/guide_wallets.md:
-				Uncompressed public keys start with 0x04; compressed public keys begin with 0x03 or
-				0x02 depending on whether they're greater or less than the midpoint of the curve.
-				"""
-				def privnum2pubkey(numpriv,compressed=False):
-					pko = self.ecdsa.SigningKey.from_secret_exponent(numpriv,curve=self.ecdsa.SECP256k1)
-					# pubkey = x (32 bytes) + y (32 bytes) (unsigned big-endian)
-					pubkey = pko.get_verifying_key().to_string()
-					if compressed: # discard Y coord, replace with appropriate version byte
-						# even y: <0, odd y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
-						return (b'\x02',b'\x03')[pubkey[-1] & 1] + pubkey[:32]
-					else:
-						return b'\x04' + pubkey
-
-				return PubKey(
-					s = privnum2pubkey( int.from_bytes(privkey,'big'), compressed=privkey.compressed ),
-					compressed = privkey.compressed )
-
-	class monero:
-		backends = ('nacl','ed25519ll-djbec','ed25519')
-
-		class base(keygen_base):
-
-			def __init__(self):
-
-				from .proto.xmr.params import mainnet
-				self.proto_cls = mainnet
-
-				from .util import get_keccak
-				self.keccak_256 = get_keccak()
-
-			def to_viewkey(self,privkey):
-				return self.proto_cls.preprocess_key(
-					self.proto_cls,
-					self.keccak_256(privkey).digest(),
-					None )
-
-		class nacl(base):
-
-			def __init__(self):
-				super().__init__()
-				from nacl.bindings import crypto_scalarmult_ed25519_base_noclamp
-				self.scalarmultbase = crypto_scalarmult_ed25519_base_noclamp
-
-			def to_pubkey(self,privkey):
-				return PubKey(
-					self.scalarmultbase( privkey ) +
-					self.scalarmultbase( self.to_viewkey(privkey) ),
-					compressed = privkey.compressed
-				)
-
-		class ed25519(base):
-
-			def __init__(self):
-				super().__init__()
-				from .contrib.ed25519 import edwards,encodepoint,B,scalarmult
-				self.edwards     = edwards
-				self.encodepoint = encodepoint
-				self.B           = B
-				self.scalarmult  = scalarmult
-
-			def scalarmultbase(self,privnum):
-				"""
-				Source and license for scalarmultbase function:
-				  https://github.com/bigreddmachine/MoneroPy/blob/master/moneropy/crypto/ed25519.py
-				Copyright (c) 2014-2016, The Monero Project
-				All rights reserved.
-				"""
-				if privnum == 0:
-					return [0, 1]
-				Q = self.scalarmult(self.B, privnum//2)
-				Q = self.edwards(Q, Q)
-				if privnum & 1:
-					Q = self.edwards(Q, self.B)
-				return Q
-
-			@staticmethod
-			def rev_bytes2int(in_bytes):
-				return int.from_bytes( in_bytes[::-1], 'big' )
-
-			def to_pubkey(self,privkey):
-				return PubKey(
-					self.encodepoint( self.scalarmultbase( self.rev_bytes2int(privkey) )) +
-					self.encodepoint( self.scalarmultbase( self.rev_bytes2int(self.to_viewkey(privkey)) )),
-					compressed = privkey.compressed
-				)
-
-		class ed25519ll_djbec(ed25519):
-
-			def __init__(self):
-				super().__init__()
-				from .contrib.ed25519ll_djbec import scalarmult
-				self.scalarmult = scalarmult
-
-	class zcash_z:
-		backends = ('nacl',)
-
-		class nacl(keygen_base):
-
-			def __init__(self):
-				from nacl.bindings import crypto_scalarmult_base
-				self.crypto_scalarmult_base = crypto_scalarmult_base
-				from .sha2 import Sha256
-				self.Sha256 = Sha256
-
-			def zhash256(self,s,t):
-				s = bytearray(s + bytes(32))
-				s[0] |= 0xc0
-				s[32] = t
-				return self.Sha256(s,preprocess=False).digest()
-
-			def to_pubkey(self,privkey):
-				return PubKey(
-					self.zhash256(privkey,0)
-					+ self.crypto_scalarmult_base(self.zhash256(privkey,1)),
-					compressed = privkey.compressed
-				)
-
-			def to_viewkey(self,privkey):
-				vk = bytearray( self.zhash256(privkey,0) + self.zhash256(privkey,1) )
-				vk[32] &= 0xf8
-				vk[63] &= 0x7f
-				vk[63] |= 0x40
-				return vk
+backend_data = {
+	'std': {
+		'backends': ('libsecp256k1','python-ecdsa'),
+		'package': 'secp256k1',
+	},
+	'monero': {
+		'backends': ('nacl','ed25519ll-djbec','ed25519'),
+		'package': 'xmr',
+	},
+	'zcash_z': {
+		'backends': ('nacl',),
+		'package': 'zec',
+	},
+}
 
 def get_backends(pubkey_type):
-	return getattr(keygen_backend,pubkey_type).backends
+	return backend_data[pubkey_type]['backends']
+
+def get_pubkey_type_cls(pubkey_type):
+	import importlib
+	return getattr(
+		importlib.import_module(f'mmgen.proto.{backend_data[pubkey_type]["package"]}.keygen'),
+		'backend' )
 
 def _check_backend(backend,pubkey_type,desc='keygen backend'):
 
@@ -244,3 +99,26 @@ def check_backend(proto,backend,addr_type):
 		backend,
 		pubkey_type,
 		desc = '--keygen-backend parameter' )
+
+def KeyGenerator(proto,pubkey_type,backend=None,silent=False):
+	"""
+	factory function returning a key generator backend for the specified pubkey type
+	"""
+	assert pubkey_type in proto.pubkey_types, f'{pubkey_type!r}: invalid pubkey type for coin {proto.coin}'
+
+	pubkey_type_cls = get_pubkey_type_cls(pubkey_type)
+
+	from .opts import opt
+	backend = backend or opt.keygen_backend
+
+	if backend:
+		_check_backend(backend,pubkey_type)
+
+	backend_id = backend_data[pubkey_type]['backends'][int(backend) - 1 if backend else 0]
+
+	backend_clsname = getattr(
+		pubkey_type_cls,
+		backend_id.replace('-','_')
+			).test_avail(silent=silent)
+
+	return getattr(pubkey_type_cls,backend_clsname)()

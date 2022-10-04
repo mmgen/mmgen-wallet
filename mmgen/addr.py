@@ -25,6 +25,7 @@ from collections import namedtuple
 from .objmethods import Hilite,InitErrors,MMGenObject
 from .obj import ImmutableAttr,MMGenIdx,HexStr,get_obj
 from .seed import SeedID
+from .keygen import KeyGenerator # stub
 
 ati = namedtuple('addrtype_info',
 	['name','pubkey_type','compressed','gen_method','addr_fmt','wif_label','extra_attrs','desc'])
@@ -185,31 +186,6 @@ class MoneroViewKey(HexStr):
 
 class ZcashViewKey(CoinAddr):
 	hex_width = 128
-
-def KeyGenerator(proto,pubkey_type,backend=None,silent=False):
-	"""
-	factory function returning a key generator backend for the specified pubkey type
-	"""
-	assert pubkey_type in proto.pubkey_types, f'{pubkey_type!r}: invalid pubkey type for coin {proto.coin}'
-
-	from .keygen import keygen_backend,_check_backend
-
-	pubkey_type_cls = getattr(keygen_backend,pubkey_type)
-
-	from .opts import opt
-	backend = backend or opt.keygen_backend
-
-	if backend:
-		_check_backend(backend,pubkey_type)
-
-	backend_id = pubkey_type_cls.backends[int(backend) - 1 if backend else 0]
-
-	backend_clsname = getattr(
-		pubkey_type_cls,
-		backend_id.replace('-','_')
-			).test_avail(silent=silent)
-
-	return getattr(pubkey_type_cls,backend_clsname)()
 
 def AddrGenerator(proto,addr_type):
 	"""

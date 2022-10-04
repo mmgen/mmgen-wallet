@@ -53,6 +53,7 @@ def overlay_setup(repo_root):
 				'mmgen.proto.eth.tx',
 				'mmgen.proto.eth.tw',
 				'mmgen.proto.ltc',
+				'mmgen.proto.secp256k1',
 				'mmgen.proto.xmr',
 				'mmgen.proto.zec',
 				'mmgen.share',
