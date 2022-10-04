@@ -20,6 +20,8 @@
 addrgen.py: Address generation initialization code for the MMGen suite
 """
 
+from .keygen import KeyGenerator # convenience import
+
 # decorator for to_addr() and to_viewkey()
 def check_data(orig_func):
 	def f(self,data):

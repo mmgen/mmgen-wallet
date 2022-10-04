@@ -37,7 +37,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 		qmsg(f'Passing {len(keys)} key{suf(keys)} to {self.rpc.daemon.exec_fn}')
 
 		if self.has_segwit_inputs():
-			from ....addr import KeyGenerator,AddrGenerator
+			from ....addrgen import KeyGenerator,AddrGenerator
 			kg = KeyGenerator(self.proto,'std')
 			ag = AddrGenerator(self.proto,'segwit')
 			keydict = MMGenDict([(d.addr,d.sec) for d in keys])

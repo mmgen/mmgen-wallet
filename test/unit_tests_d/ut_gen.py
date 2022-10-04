@@ -6,7 +6,8 @@ test.unit_tests_d.ut_gen: key/address generation unit tests for the MMGen suite
 from mmgen.common import *
 from mmgen.protocol import init_proto
 from mmgen.key import PrivKey
-from mmgen.addr import MMGenAddrType,KeyGenerator,AddrGenerator
+from mmgen.addr import MMGenAddrType
+from mmgen.addrgen import KeyGenerator,AddrGenerator
 from mmgen.keygen import get_backends
 
 # TODO: add viewkey checks

@@ -543,7 +543,8 @@ from collections import namedtuple
 from mmgen.protocol import init_proto,init_proto_from_opts,CoinProtocol
 from mmgen.altcoin import init_genonly_altcoins,CoinInfo as cinfo
 from mmgen.key import PrivKey
-from mmgen.addr import KeyGenerator,AddrGenerator,MMGenAddrType
+from mmgen.addr import MMGenAddrType
+from mmgen.addrgen import KeyGenerator,AddrGenerator
 from mmgen.keygen import get_backends
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]

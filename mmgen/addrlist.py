@@ -220,7 +220,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		gen_viewkey       = type(self) == KeyAddrList and 'viewkey' in mmtype.extra_attrs
 
 		if self.gen_addrs:
-			from .addr import KeyGenerator,AddrGenerator
+			from .addrgen import KeyGenerator,AddrGenerator
 			kg = KeyGenerator( self.proto, mmtype.pubkey_type )
 			ag = AddrGenerator( self.proto, mmtype )
 			if self.add_p2pkh:
@@ -345,7 +345,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		"""
 		def gen_addr(pk,t):
 			at = self.proto.addr_type(t)
-			from .addr import KeyGenerator,AddrGenerator
+			from .addrgen import KeyGenerator,AddrGenerator
 			kg = KeyGenerator(self.proto,at.pubkey_type)
 			ag = AddrGenerator(self.proto,at)
 			return ag.to_addr(kg.gen_data(pk))

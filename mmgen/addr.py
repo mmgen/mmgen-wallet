@@ -25,8 +25,6 @@ from collections import namedtuple
 from .objmethods import Hilite,InitErrors,MMGenObject
 from .obj import ImmutableAttr,MMGenIdx,HexStr,get_obj
 from .seed import SeedID
-from .keygen import KeyGenerator # stub
-from .addrgen import AddrGenerator # stub
 
 ati = namedtuple('addrtype_info',
 	['name','pubkey_type','compressed','gen_method','addr_fmt','wif_label','extra_attrs','desc'])

@@ -168,7 +168,7 @@ class AddrFile(MMGenObject):
 		if p.has_keys and p.ka_validity_chk != False:
 			from .opts import opt
 			if opt.yes or p.ka_validity_chk == True or keypress_confirm('Check key-to-address validity?'):
-				from .addr import KeyGenerator,AddrGenerator
+				from .addrgen import KeyGenerator,AddrGenerator
 				kg = KeyGenerator(p.proto,p.al_id.mmtype.pubkey_type)
 				ag = AddrGenerator(p.proto,p.al_id.mmtype)
 				llen = len(ret)

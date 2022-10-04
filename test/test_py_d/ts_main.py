@@ -382,7 +382,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 				getrand(32),
 				compressed  = non_mmgen_input_compressed,
 				pubkey_type = 'std' )
-			from mmgen.addr import KeyGenerator,AddrGenerator
+			from mmgen.addrgen import KeyGenerator,AddrGenerator
 			rand_coinaddr = AddrGenerator(
 				self.proto,
 				('legacy','compressed')[non_mmgen_input_compressed]
@@ -422,7 +422,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		from mmgen.key import PrivKey
 		privkey = PrivKey(self.proto,getrand(32),compressed=True,pubkey_type='std')
 		t = ('compressed','segwit')['S' in self.proto.mmtypes]
-		from mmgen.addr import KeyGenerator,AddrGenerator
+		from mmgen.addrgen import KeyGenerator,AddrGenerator
 		rand_coinaddr = AddrGenerator(self.proto,t).to_addr(
 			KeyGenerator(self.proto,'std').gen_data(privkey)
 		)
