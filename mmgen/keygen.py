@@ -43,6 +43,10 @@ class keygen_base:
 	def to_viewkey(self,privkey):
 		return None
 
+	@classmethod
+	def test_avail(cls,silent=False):
+		return cls.__name__
+
 class keygen_backend:
 
 	class std:
@@ -67,12 +71,14 @@ class keygen_backend:
 						from .util import die
 						die( 'ExtensionModuleError',
 							'Unable to execute priv2pub() from secp256k1 extension module' )
-					return True
+					return cls.__name__
 				except Exception as e:
 					if not silent:
 						from .util import ymsg
 						ymsg(str(e))
-					return False
+					from .util import qmsg
+					qmsg('Using (slow) native Python ECDSA library for public key generation')
+					return 'python_ecdsa'
 
 		class python_ecdsa(keygen_base):
 

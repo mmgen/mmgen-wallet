@@ -204,14 +204,12 @@ def KeyGenerator(proto,pubkey_type,backend=None,silent=False):
 
 	backend_id = pubkey_type_cls.backends[int(backend) - 1 if backend else 0]
 
-	if backend_id == 'libsecp256k1':
-		if not pubkey_type_cls.libsecp256k1.test_avail(silent=silent):
-			backend_id = 'python-ecdsa'
-			if not backend:
-				from .util import qmsg
-				qmsg('Using (slow) native Python ECDSA library for public key generation')
+	backend_clsname = getattr(
+		pubkey_type_cls,
+		backend_id.replace('-','_')
+			).test_avail(silent=silent)
 
-	return getattr(pubkey_type_cls,backend_id.replace('-','_'))()
+	return getattr(pubkey_type_cls,backend_clsname)()
 
 def AddrGenerator(proto,addr_type):
 	"""
