@@ -26,6 +26,7 @@ from .objmethods import Hilite,InitErrors,MMGenObject
 from .obj import ImmutableAttr,MMGenIdx,HexStr,get_obj
 from .seed import SeedID
 from .keygen import KeyGenerator # stub
+from .addrgen import AddrGenerator # stub
 
 ati = namedtuple('addrtype_info',
 	['name','pubkey_type','compressed','gen_method','addr_fmt','wif_label','extra_attrs','desc'])
@@ -186,18 +187,3 @@ class MoneroViewKey(HexStr):
 
 class ZcashViewKey(CoinAddr):
 	hex_width = 128
-
-def AddrGenerator(proto,addr_type):
-	"""
-	factory function returning an address generator for the specified address type
-	"""
-	if type(addr_type) == str:
-		addr_type = MMGenAddrType(proto=proto,id_str=addr_type)
-	elif type(addr_type) == MMGenAddrType:
-		assert addr_type in proto.mmtypes, f'{addr_type}: invalid address type for coin {proto.coin}'
-	else:
-		raise TypeError(f'{type(addr_type)}: incorrect argument type for {cls.__name__}()')
-
-	from .addrgen import addr_generator
-
-	return getattr(addr_generator,addr_type.name)(proto,addr_type)

@@ -17,11 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-addrgen.py: Address and view key generation classes for the MMGen suite
+addrgen.py: Address generation initialization code for the MMGen suite
 """
-
-from .proto.common import hash160,b58chk_encode
-from .addr import CoinAddr,MMGenAddrType,MoneroViewKey,ZcashViewKey
 
 # decorator for to_addr() and to_viewkey()
 def check_data(orig_func):
@@ -34,9 +31,7 @@ def check_data(orig_func):
 	return f
 
 class addr_generator:
-	"""
-	provide a generator for each supported address format
-	"""
+
 	class base:
 
 		def __init__(self,proto,addr_type):
@@ -45,39 +40,6 @@ class addr_generator:
 			self.compressed = addr_type.compressed
 			desc = f'AddrGenerator {type(self).__name__!r}'
 
-		def to_segwit_redeem_script(self,data):
-			raise NotImplementedError('Segwit redeem script not supported by this address type')
-
-	class p2pkh(base):
-
-		@check_data
-		def to_addr(self,data):
-			return CoinAddr(
-				self.proto,
-				self.proto.pubhash2addr( hash160(data.pubkey), p2sh=False ))
-
-	class legacy(p2pkh): pass
-	class compressed(p2pkh): pass
-
-	class segwit(base):
-
-		@check_data
-		def to_addr(self,data):
-			return CoinAddr(
-				self.proto,
-				self.proto.pubhash2segwitaddr( hash160(data.pubkey)) )
-
-		def to_segwit_redeem_script(self,data): # NB: returns hex
-			return self.proto.pubhash2redeem_script( hash160(data.pubkey) ).hex()
-
-	class bech32(base):
-
-		@check_data
-		def to_addr(self,data):
-			return CoinAddr(
-				self.proto,
-				self.proto.pubhash2bech32addr( hash160(data.pubkey) ))
-
 	class keccak(base):
 
 		def __init__(self,proto,addr_type):
@@ -85,47 +47,31 @@ class addr_generator:
 			from .util import get_keccak
 			self.keccak_256 = get_keccak()
 
-	class ethereum(keccak):
+def AddrGenerator(proto,addr_type):
+	"""
+	factory function returning an address generator for the specified address type
+	"""
 
-		@check_data
-		def to_addr(self,data):
-			return CoinAddr(
-				self.proto,
-				self.keccak_256(data.pubkey[1:]).hexdigest()[24:] )
+	package_map = {
+		'legacy':     'btc',
+		'compressed': 'btc',
+		'segwit':     'btc',
+		'bech32':     'btc',
+		'monero':     'xmr',
+		'ethereum':   'eth',
+		'zcash_z':    'zec',
+	}
 
-	class monero(keccak):
+	from .addr import MMGenAddrType
 
-		def b58enc(self,addr_bytes):
-			from .baseconv import baseconv
-			enc = baseconv('b58').frombytes
-			l = len(addr_bytes)
-			a = ''.join([enc( addr_bytes[i*8:i*8+8], pad=11, tostr=True ) for i in range(l//8)])
-			b = enc( addr_bytes[l-l%8:], pad=7, tostr=True )
-			return a + b
+	if type(addr_type) == str:
+		addr_type = MMGenAddrType(proto=proto,id_str=addr_type)
+	elif type(addr_type) == MMGenAddrType:
+		assert addr_type in proto.mmtypes, f'{addr_type}: invalid address type for coin {proto.coin}'
+	else:
+		raise TypeError(f'{type(addr_type)}: incorrect argument type for {cls.__name__}()')
 
-		@check_data
-		def to_addr(self,data):
-			step1 = self.proto.addr_fmt_to_ver_bytes['monero'] + data.pubkey
-			return CoinAddr(
-				proto = self.proto,
-				addr = self.b58enc( step1 + self.keccak_256(step1).digest()[:4]) )
-
-		@check_data
-		def to_viewkey(self,data):
-			return MoneroViewKey( data.viewkey_bytes.hex() )
-
-	class zcash_z(base):
-
-		@check_data
-		def to_addr(self,data):
-			ret = b58chk_encode(
-				self.proto.addr_fmt_to_ver_bytes['zcash_z']
-				+ data.pubkey )
-			return CoinAddr( self.proto, ret )
-
-		@check_data
-		def to_viewkey(self,data):
-			ret = b58chk_encode(
-				self.proto.addr_fmt_to_ver_bytes['viewkey']
-				+ data.viewkey_bytes )
-			return ZcashViewKey( self.proto, ret )
+	import importlib
+	return getattr(
+		importlib.import_module(f'mmgen.proto.{package_map[addr_type.name]}.addrgen'),
+		addr_type.name )(proto,addr_type)
