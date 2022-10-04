@@ -15,6 +15,10 @@ Zcash protocol
 from ..btc.params import mainnet
 from ..common import b58chk_decode
 from ...protocol import decoded_wif,decoded_addr
+from ...addr import CoinAddr
+
+class ZcashViewKey(CoinAddr):
+	hex_width = 128
 
 class mainnet(mainnet):
 	base_coin      = 'ZEC'
@@ -70,6 +74,9 @@ class mainnet(mainnet):
 			raise NotImplementedError('Zcash z-addresses do not support pubhash2addr()')
 		else:
 			raise ValueError(f'{hash_len}: incorrect pubkey hash length')
+
+	def viewkey(self,viewkey_str):
+		return ZcashViewKey.__new__(ZcashViewKey,self,viewkey_str)
 
 class testnet(mainnet):
 	wif_ver_num  = { 'std': 'ef', 'zcash_z': 'ac08' }

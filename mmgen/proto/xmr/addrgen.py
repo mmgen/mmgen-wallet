@@ -13,7 +13,7 @@ proto.xmr.addrgen: Monero address generation class for the MMGen suite
 """
 
 from ...addrgen import addr_generator,check_data
-from ...addr import CoinAddr,MoneroViewKey
+from ...addr import CoinAddr
 
 class monero(addr_generator.keccak):
 
@@ -34,4 +34,4 @@ class monero(addr_generator.keccak):
 
 	@check_data
 	def to_viewkey(self,data):
-		return MoneroViewKey( data.viewkey_bytes.hex() )
+		return self.proto.viewkey( data.viewkey_bytes.hex() )

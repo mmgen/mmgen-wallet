@@ -163,6 +163,9 @@ class CoinProtocol(MMGenObject):
 			from .addr import MMGenAddrType
 			return MMGenAddrType( proto=self, id_str=id_str )
 
+		def viewkey(self,viewkey_str):
+			raise NotImplementedError(f'{self.name} protocol does not support view keys')
+
 	class Secp256k1(Base):
 		"""
 		Bitcoin and Ethereum protocols inherit from this class

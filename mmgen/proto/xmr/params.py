@@ -15,8 +15,12 @@ Monero protocol
 from collections import namedtuple
 
 from ...protocol import CoinProtocol,_nw
+from ...obj import HexStr
 
 parsed_addr = namedtuple('parsed_addr',['ver_bytes','data','payment_id'])
+
+class MoneroViewKey(HexStr):
+	color,width,hexcase = 'cyan',64,'lower' # FIXME - no checking performed
 
 # https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
@@ -75,6 +79,9 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 
 	def pubhash2addr(self,*args,**kwargs):
 		raise NotImplementedError('Monero addresses do not support pubhash2addr()')
+
+	def viewkey(self,viewkey_str):
+		return MoneroViewKey.__new__(MoneroViewKey,viewkey_str)
 
 class testnet(mainnet): # use stagenet for testnet
 	addr_ver_info = { '18': 'monero', '24': 'monero_sub', '19': 'monero_integrated' } # testnet is {'35','3f','36'}

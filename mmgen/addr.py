@@ -23,7 +23,7 @@ addr.py: MMGen address-related types
 from collections import namedtuple
 
 from .objmethods import Hilite,InitErrors,MMGenObject
-from .obj import ImmutableAttr,MMGenIdx,HexStr,get_obj
+from .obj import ImmutableAttr,MMGenIdx,get_obj
 from .seed import SeedID
 
 ati = namedtuple('addrtype_info',
@@ -171,17 +171,5 @@ def is_coin_addr(proto,s):
 class TokenAddr(CoinAddr):
 	color = 'blue'
 
-class ViewKey(object):
-	def __new__(cls,proto,viewkey):
-		if proto.name == 'Zcash':
-			return ZcashViewKey.__new__(ZcashViewKey,proto,viewkey)
-		elif proto.name == 'Monero':
-			return MoneroViewKey.__new__(MoneroViewKey,viewkey)
-		else:
-			raise ValueError(f'{proto.name}: protocol does not support view keys')
-
-class MoneroViewKey(HexStr):
-	color,width,hexcase = 'cyan',64,'lower' # FIXME - no checking performed
-
-class ZcashViewKey(CoinAddr):
-	hex_width = 128
+def ViewKey(proto,viewkey_str):
+	return proto.viewkey(viewkey_str)

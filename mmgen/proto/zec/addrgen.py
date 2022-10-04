@@ -13,7 +13,7 @@ proto.zec.addrgen: Zcash-Z address generation class for the MMGen suite
 """
 
 from ...addrgen import addr_generator,check_data
-from ...addr import CoinAddr,ZcashViewKey
+from ...addr import CoinAddr
 from ..common import b58chk_encode
 
 class zcash_z(addr_generator.base):
@@ -27,7 +27,7 @@ class zcash_z(addr_generator.base):
 
 	@check_data
 	def to_viewkey(self,data):
-		ret = b58chk_encode(
-			self.proto.addr_fmt_to_ver_bytes['viewkey']
-			+ data.viewkey_bytes )
-		return ZcashViewKey( self.proto, ret )
+		return self.proto.viewkey(
+			b58chk_encode(
+				self.proto.addr_fmt_to_ver_bytes['viewkey']
+				+ data.viewkey_bytes ) )
