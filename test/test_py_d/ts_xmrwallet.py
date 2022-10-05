@@ -399,7 +399,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	def do_op(self, op, user, arg2,
 			tx_relay_parm = None,
-			do_not_relay  = False,
+			no_relay      = False,
 			return_amt    = False,
 			reuse_acct    = False,
 			add_desc      = None,
@@ -411,7 +411,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			[f'--outdir={data.udir}'],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
 			[f'--tx-relay-daemon={tx_relay_parm}', tx_relay_parm],
-			['--do-not-relay', do_not_relay]
+			['--no-relay', no_relay]
 		)
 		add_desc = (', ' + add_desc) if add_desc else ''
 
@@ -431,7 +431,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		if return_amt:
 			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amt: ')).replace('XMR','').strip())
 
-		if do_not_relay:
+		if no_relay:
 			t.expect('Save MoneroMMGenTX data? (y/N): ','y')
 			t.written_to_file('MoneroMMGenTX data')
 		else:
@@ -473,7 +473,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def transfer_to_miner_create(self,amt):
 		get_file_with_ext(self.users['alice'].udir,'sigtx',delete_all=True)
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
-		return self.do_op('transfer','alice',f'2:1:{addr},{amt}',do_not_relay=True,do_ret=True)
+		return self.do_op('transfer','alice',f'2:1:{addr},{amt}',no_relay=True,do_ret=True)
 
 	def transfer_to_miner_create1(self):
 		return self.transfer_to_miner_create('0.0111')
@@ -517,7 +517,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			get_file_with_ext(self.users['alice'].udir,'sigtx',delete_all=True)
 			send_amt = self.do_op(
 				'sweep','alice','2:1,3', # '2:1,3'
-				do_not_relay = True,
+				no_relay     = True,
 				reuse_acct   = True,
 				add_desc     = f'TX #{i+1}',
 				return_amt   = True )

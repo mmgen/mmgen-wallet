@@ -240,7 +240,7 @@ class MoneroWalletOps:
 		'restore_height',
 		'no_start_wallet_daemon',
 		'no_stop_wallet_daemon',
-		'do_not_relay',
+		'no_relay',
 	)
 	pat_opts = ('daemon','tx_relay_daemon')
 
@@ -738,7 +738,7 @@ class MoneroWalletOps:
 		name     = 'sweep'
 		spec_id  = 'sweep_spec'
 		spec_key = ( (1,'source'), (3,'dest') )
-		opts     = ('do_not_relay','tx_relay_daemon')
+		opts     = ('no_relay','tx_relay_daemon')
 
 		def create_addr_data(self):
 			m = re.fullmatch(uarg_info[self.spec_id].pat,uarg.spec,re.ASCII)
@@ -852,7 +852,7 @@ class MoneroWalletOps:
 			if uopt.tx_relay_daemon:
 				self.display_tx_relay_info(indent='    ')
 
-			if uopt.do_not_relay:
+			if uopt.no_relay:
 				msg('Saving TX data to file')
 				new_tx.write(delete_metadata=True)
 			elif keypress_confirm(f'Relay {self.name} transaction?'):

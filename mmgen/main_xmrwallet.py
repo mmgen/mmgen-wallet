@@ -51,7 +51,7 @@ opts_data = {
 -p, --hash-preset=P              Use scrypt hash preset 'P' for password
                                  hashing (default: '{g.dfl_hash_preset}')
 -r, --restore-height=H           Scan from height 'H' when creating wallets
--R, --do-not-relay               Save transaction to file instead of relaying
+-R, --no-relay                   Save transaction to file instead of relaying
 -s, --no-start-wallet-daemon     Don’t start the wallet daemon at startup
 -S, --no-stop-wallet-daemon      Don’t stop the wallet daemon at exit
 -w, --wallet-dir=D               Output or operate on wallets in directory 'D'
@@ -85,7 +85,7 @@ transfer  - transfer specified XMR amount from specified wallet:account to
 sweep     - sweep funds in specified wallet:account to new address in same
             account or new account in another wallet
 relay     - relay a transaction from a transaction file created using 'sweep'
-            or 'transfer' with the --do-not-relay option
+            or 'transfer' with the --no-relay option
 
 
                  'CREATE', 'SYNC' AND 'LIST' OPERATION NOTES
@@ -149,7 +149,7 @@ via optional SOCKS proxy, use the --tx-relay-daemon option described above.
                                   WARNING
 
 To avoid exposing your private keys on a network-connected machine, you’re
-strongly advised to create all transactions offline using the --do-not-relay
+strongly advised to create all transactions offline using the --no-relay
 option.  For this, a monerod with a fully synced blockchain must be running
 on the offline machine.  The resulting transaction files are then sent using
 the 'relay' operation.
@@ -180,7 +180,7 @@ $ mmgen-xmrwallet transfer *.akeys.mmenc 2:0:<monero address>,0.1
 
 Sweep all funds from account #0 of wallet 2 to a new address, saving the
 transaction to a file:
-$ mmgen-xmrwallet --do-not-relay sweep *.akeys.mmenc 2:0
+$ mmgen-xmrwallet --no-relay sweep *.akeys.mmenc 2:0
 
 Relay the created sweep transaction via a host on the Tor network:
 $ mmgen-xmrwallet --tx-relay-daemon=abcdefghijklmnop.onion:127.0.0.1:9050 relay *XMR*.sigtx
@@ -235,7 +235,7 @@ uo = namedtuple('uopts',[
 	'rescan_blockchain',
 	'no_start_wallet_daemon',
 	'no_stop_wallet_daemon',
-	'do_not_relay',
+	'no_relay',
 	'wallet_dir',
 ])
 
@@ -247,7 +247,7 @@ uopts = uo(
 	opt.rescan_blockchain,
 	opt.no_start_wallet_daemon,
 	opt.no_stop_wallet_daemon,
-	opt.do_not_relay,
+	opt.no_relay,
 	opt.wallet_dir,
 )
 
