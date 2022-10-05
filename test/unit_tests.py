@@ -107,13 +107,14 @@ def run_test(test,subtest=None):
 	mod = importlib.import_module(modname)
 
 	def run_subtest(subtest):
-		msg(f'Running unit subtest {test}.{subtest}')
+		subtest_disp = subtest.replace('_','-')
+		msg(f'Running unit subtest {test}.{subtest_disp}')
 		t = getattr(mod,'unit_tests')()
-		ret = getattr(t,subtest)(test,UnitTestHelpers)
+		ret = getattr(t,subtest.replace('-','_'))(test,UnitTestHelpers)
 		if type(ret).__name__ == 'coroutine':
 			ret = run_session(ret)
 		if not ret:
-			die(4,f'Unit subtest {subtest!r} failed')
+			die(4,f'Unit subtest {subtest_disp!r} failed')
 		pass
 
 	if test not in tests_seen:
@@ -130,14 +131,15 @@ def run_test(test,subtest=None):
 			arm_skip = getattr(t,'arm_skip',())
 			subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function']
 			for subtest in subtests:
+				subtest_disp = subtest.replace('_','-')
 				if opt.no_altcoin_deps and subtest in altcoin_deps:
-					qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping {subtest!r}'))
+					qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping {subtest_disp!r}'))
 					continue
 				if g.platform == 'win' and subtest in win_skip:
-					qmsg(gray(f'Skipping {subtest!r} for Windows platform'))
+					qmsg(gray(f'Skipping {subtest_disp!r} for Windows platform'))
 					continue
 				elif platform.machine() == 'aarch64' and subtest in arm_skip:
-					qmsg(gray(f'Skipping {subtest!r} for ARM platform'))
+					qmsg(gray(f'Skipping {subtest_disp!r} for ARM platform'))
 					continue
 				run_subtest(subtest)
 		else:
