@@ -20,7 +20,7 @@ class backend:
 	class libsecp256k1(keygen_base):
 
 		def __init__(self):
-			from ...secp256k1 import priv2pub
+			from .secp256k1 import priv2pub
 			self.priv2pub = priv2pub
 
 		def to_pubkey(self,privkey):
@@ -31,7 +31,7 @@ class backend:
 		@classmethod
 		def test_avail(cls,silent=False):
 			try:
-				from ...secp256k1 import priv2pub
+				from .secp256k1 import priv2pub
 				if not priv2pub(bytes.fromhex('deadbeef'*8),1):
 					from ...util import die
 					die( 'ExtensionModuleError',

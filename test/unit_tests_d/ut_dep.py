@@ -51,7 +51,7 @@ class unit_tests:
 		return False
 
 	def secp256k1(self,name,ut):
-		from mmgen.secp256k1 import priv2pub
+		from mmgen.proto.secp256k1.secp256k1 import priv2pub
 		priv2pub(bytes.fromhex('deadbeef'*8),1)
 		return True
 
