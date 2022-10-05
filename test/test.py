@@ -78,8 +78,11 @@ from test.overlay import get_overlay_dir,overlay_setup
 overlay_dir = get_overlay_dir(repo_root)
 sys.path.insert(0,overlay_dir)
 
-if not (len(sys.argv) == 2 and sys.argv[1] == 'clean'):
-	'hack: overlay must be set up before mmgen mods are imported'
+if sys.argv[-1] == 'clean':
+	from shutil import rmtree
+	rmtree(overlay_dir,ignore_errors=True)
+else:
+	# overlay must be set up before importing mmgen mods!
 	overlay_setup(repo_root)
 
 from mmgen.common import *
