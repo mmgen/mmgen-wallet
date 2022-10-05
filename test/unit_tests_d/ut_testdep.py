@@ -10,8 +10,8 @@ sec = 'deadbeef' * 8
 
 class unit_tests:
 
-	altcoin_deps = ('pycoin','moneropy','keyconv','zcash_mini','ethkey','ssh_socks_proxy')
-	win_skip = ('losetup','moneropy','zcash_mini')
+	altcoin_deps = ('pycoin','monero_python','keyconv','zcash_mini','ethkey','ssh_socks_proxy')
+	win_skip = ('losetup','monero_python','zcash_mini')
 
 	def core_repo(self,name,ut):
 		crr = os.getenv('CORE_REPO_ROOT')
@@ -33,9 +33,9 @@ class unit_tests:
 		addr = network.address.for_p2pkh_wit(hash160_c)
 		return True
 
-	def moneropy(self,name,ut):
-		from moneropy import account
-		res = account.account_from_spend_key(sec)
+	def monero_python(self,name,ut):
+		from monero.seed import Seed
+		res = Seed('deadbeef' * 8).public_address()
 		return True
 
 	def keyconv(self,name,ut):

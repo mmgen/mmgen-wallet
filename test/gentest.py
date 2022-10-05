@@ -94,9 +94,9 @@ EXAMPLES:
   Same for Zcash:
   $ test/gentest.py --coin=zec --type=zcash_z 1 10000
 
-  Test all configured Monero backends against 'moneropy' library, 3 rounds
+  Test all configured Monero backends against the 'monero-python' library, 3 rounds
   + edge cases:
-  $ test/gentest.py --coin=xmr all:moneropy 3
+  $ test/gentest.py --coin=xmr all:monero-python 3
 
   Test 'nacl' and 'ed25519ll_djbec' backends against each other, 10,000 rounds
   + edge cases:
@@ -111,8 +111,8 @@ SUPPORTED EXTERNAL TOOLS:
   + zcash-mini (for Zcash-Z addresses and view keys)
     https://github.com/FiloSottile/zcash-mini
 
-  + moneropy (for Monero addresses and view keys)
-    https://github.com/bigreddmachine/MoneroPy
+  + monero-python (for Monero addresses and view keys)
+    https://github.com/monero-ecosystem/monero-python
 
   + pycoin (for supported coins)
     https://github.com/richardkiss/pycoin
@@ -226,19 +226,22 @@ class GenToolPycoin(GenTool):
 			addr = key.address()
 		return gtr( key.wif(), addr, None )
 
-class GenToolMoneropy(GenTool):
-	desc = 'moneropy'
+class GenToolMonero_python(GenTool):
+	desc = 'monero-python'
 
 	def __init__(self,*args,**kwargs):
 		super().__init__(*args,**kwargs)
 		try:
-			import moneropy.account
+			from monero.seed import Seed
 		except:
-			raise ImportError('Unable to import moneropy. Is moneropy installed on your system?')
-		self.mpa = moneropy.account
+			raise ImportError('Unable to import monero-python. Is monero-python installed on your system?')
+		self.Seed = Seed
 
 	def run(self,sec,vcoin):
-		sk,vk,addr = self.mpa.account_from_spend_key(sec.hex()) # VERY slow!
+		seed = self.Seed( sec.orig_bytes.hex() )
+		sk = seed.secret_spend_key()
+		vk = seed.secret_view_key()
+		addr = seed.public_address()
 		return gtr( sk, addr, vk )
 
 def find_or_check_tool(proto,addr_type,toolname):

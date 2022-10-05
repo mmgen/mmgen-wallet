@@ -672,7 +672,7 @@ class CoinInfo(object):
 				'WUBS', 'XC', 'XPM', 'YAC', 'ZOOM', 'ZRC'),
 			'ethkey': ('ETH','ETC'),
 			'zcash-mini': ('ZEC',),
-			'moneropy': ('XMR',),
+			'monero-python': ('XMR',),
 		},
 		'testnet': {
 			'pycoin': {

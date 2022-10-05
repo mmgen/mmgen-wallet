@@ -59,9 +59,9 @@ class unit_test(object):
 				vmsg(f'    {chk}')
 				chk = tuple(chk.split())
 				res = b.fromhex(privhex)
-				if use_moneropy:
-					mp_chk = tuple( mnemonic.mn_encode(privhex) )
-					assert res[:24] == mp_chk, f'check failed:\nres: {res[:24]}\nchk: {chk}'
+				if use_monero_python:
+					mp_chk = tuple( wl.encode(privhex).split() )
+					assert res == mp_chk, f'check failed:\nres: {res}\nchk: {chk}'
 				assert res == chk, f'check failed:\nres: {res}\nchk: {chk}'
 
 		def test_tohex(b):
@@ -70,8 +70,8 @@ class unit_test(object):
 			for chk,words in self.vectors:
 				vmsg(f'    {chk}')
 				res = b.tohex( words.split() )
-				if use_moneropy:
-					mp_chk = mnemonic.mn_decode( words.split() )
+				if use_monero_python:
+					mp_chk = wl.decode( words )
 					assert res == mp_chk, f'check failed:\nres: {res}\nchk: {mp_chk}'
 				assert res == chk, f'check failed:\nres: {res}\nchk: {chk}'
 
@@ -84,12 +84,13 @@ class unit_test(object):
 		b.check_wordlist()
 
 		try:
-			from moneropy import mnemonic
+			from monero.wordlists.english import English
+			wl = English()
 		except ImportError:
-			use_moneropy = False
-			ymsg('Warning: unable to import moneropy, skipping external library checks')
+			use_monero_python = False
+			ymsg('Warning: unable to import monero-python, skipping external library checks')
 		else:
-			use_moneropy = True
+			use_monero_python = True
 
 		test_fromhex(b)
 		test_tohex(b)
