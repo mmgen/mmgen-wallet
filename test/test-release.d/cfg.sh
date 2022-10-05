@@ -100,10 +100,10 @@ init_tests() {
 	i_hash='Internal hash function implementations'
 	s_hash='Testing internal hash function implementations'
 	t_hash="
-		256    $python test/hashfunc.py sha256 $rounds_max
-		512    $python test/hashfunc.py sha512 $rounds_max # native SHA512 - not used by the MMGen wallet
-		keccak $python test/hashfunc.py keccak $rounds_max
-		ripemd160 $python mmgen/contrib/ripemd160.py $VERBOSE
+		256    $python test/hashfunc.py sha256 $rounds5x
+		512    $python test/hashfunc.py sha512 $rounds5x # native SHA512 - not used by the MMGen wallet
+		keccak $python test/hashfunc.py keccak $rounds5x
+		ripemd160 $python mmgen/contrib/ripemd160.py $VERBOSE $fast_opt
 	"
 	f_hash='Hash function tests completed'
 
@@ -129,14 +129,14 @@ init_tests() {
 	s_alts='The following tests will test generation operations for all supported altcoins'
 	t_alts="
 		- # speed tests, no verification:
-		- $gentest_py --coin=etc 1 $rounds
-		- $gentest_py --coin=etc --use-internal-keccak-module 1 $rounds_min
-		- $gentest_py --coin=eth 1 $rounds
-		- $gentest_py --coin=eth --use-internal-keccak-module 1 $rounds_min
-		- $gentest_py --coin=xmr 1 $rounds
-		- $gentest_py --coin=xmr --use-internal-keccak-module 1 $rounds_min
-		- $gentest_py --coin=zec 1 $rounds
-		- $gentest_py --coin=zec --type=zcash_z 1 $rounds_mid
+		- $gentest_py --coin=etc 1 $rounds10x
+		- $gentest_py --coin=etc --use-internal-keccak-module 1 $rounds10x
+		- $gentest_py --coin=eth 1 $rounds10x
+		- $gentest_py --coin=eth --use-internal-keccak-module 1 $rounds10x
+		- $gentest_py --coin=xmr 1 $rounds10x
+		- $gentest_py --coin=xmr --use-internal-keccak-module 1 $rounds10x
+		- $gentest_py --coin=zec 1 $rounds10x
+		- $gentest_py --coin=zec --type=zcash_z 1 $rounds10x
 		- # verification against external libraries and tools:
 		- #   pycoin
 		- $gentest_py --all-coins --type=legacy 1:pycoin $rounds
@@ -149,19 +149,21 @@ init_tests() {
 		- $gentest_py --all-coins --type=segwit --testnet=1 1:pycoin $rounds
 		- $gentest_py --all-coins --type=bech32 --testnet=1 1:pycoin $rounds
 		- #   keyconv
-		- $gentest_py --all-coins --type=legacy 1:keyconv $rounds
-		- $gentest_py --all-coins --type=compressed 1:keyconv $rounds
+		- $gentest_py --all-coins --type=legacy 1:keyconv $rounds_min
+		- $gentest_py --all-coins --type=compressed 1:keyconv $rounds_min
 		e #   ethkey
-		e $gentest_py --coin=eth 1:ethkey $rounds
-		e $gentest_py --coin=eth --use-internal-keccak-module 2:ethkey $rounds_mid
-		m #   moneropy
-		m $gentest_py --coin=xmr all:moneropy $rounds_mid # very slow, please be patient!
+		e $gentest_py --coin=eth 1:ethkey $rounds10x
+		e $gentest_py --coin=eth --use-internal-keccak-module 2:ethkey $rounds5x
+		m #   monero-python
+		m $gentest_py --coin=xmr 1:monero-python $rounds100x
+		M $gentest_py --coin=xmr all:monero-python $rounds_min # very slow, please be patient!
 		z #   zcash-mini
-		z $gentest_py --coin=zec --type=zcash_z all:zcash-mini $rounds_mid
+		z $gentest_py --coin=zec --type=zcash_z all:zcash-mini $rounds50x
 	"
 
-	[ "$MSYS2" ] && t_alts_skip='m z'  # no moneropy (pysha3), zcash-mini (golang)
+	[ "$MSYS2" ] && t_alts_skip='M m z'  # no moneropy (pysha3), zcash-mini (golang)
 	[ "$ARM32" ] && t_alts_skip='z e'
+	[ "$FAST" ]  && t_alts_skip+=' M'
 	# ARM ethkey available only on Arch Linux:
 	[ \( "$ARM32" -o "$ARM64" \) -a "$DISTRO" != 'archarm' ] && t_alts_skip+=' e'
 
@@ -322,14 +324,14 @@ init_tests() {
 	s_gen="The following tests will run '$gentest_py' for configured coins and address types"
 	t_gen="
 		- # speed tests, no verification:
-		- $gentest_py --coin=btc 1 $rounds
-		- $gentest_py --coin=btc --type=compressed 1 $rounds
-		- $gentest_py --coin=btc --type=segwit 1 $rounds
-		- $gentest_py --coin=btc --type=bech32 1 $rounds
-		a $gentest_py --coin=ltc 1 $rounds
-		a $gentest_py --coin=ltc --type=compressed 1 $rounds
-		a $gentest_py --coin=ltc --type=segwit 1 $rounds
-		a $gentest_py --coin=ltc --type=bech32 1 $rounds
+		- $gentest_py --coin=btc 1 $rounds10x
+		- $gentest_py --coin=btc --type=compressed 1 $rounds10x
+		- $gentest_py --coin=btc --type=segwit 1 $rounds10x
+		- $gentest_py --coin=btc --type=bech32 1 $rounds10x
+		a $gentest_py --coin=ltc 1 $rounds10x
+		a $gentest_py --coin=ltc --type=compressed 1 $rounds10x
+		a $gentest_py --coin=ltc --type=segwit 1 $rounds10x
+		a $gentest_py --coin=ltc --type=bech32 1 $rounds10x
 		- # wallet dumps:
 		- $gentest_py --type=compressed 1 $REFDIR/btcwallet.dump
 		- $gentest_py --type=segwit 1 $REFDIR/btcwallet-segwit.dump
@@ -340,17 +342,17 @@ init_tests() {
 		a $gentest_py --coin=ltc --type=bech32 1 $REFDIR/litecoin/ltcwallet-bech32.dump
 		a $gentest_py --coin=ltc --type=compressed --testnet=1 1 $REFDIR/litecoin/ltcwallet-testnet.dump
 		- # libsecp256k1 vs python-ecdsa:
-		- $gentest_py 1:2 $rounds
-		- $gentest_py --type=segwit 1:2 $rounds
-		- $gentest_py --type=bech32 1:2 $rounds
-		- $gentest_py --testnet=1 1:2 $rounds
-		- $gentest_py --testnet=1 --type=segwit 1:2 $rounds
-		a $gentest_py --coin=ltc 1:2 $rounds
-		a $gentest_py --coin=ltc --type=segwit 1:2 $rounds
-		a $gentest_py --coin=ltc --testnet=1 1:2 $rounds
-		a $gentest_py --coin=ltc --testnet=1 --type=segwit 1:2 $rounds
+		- $gentest_py 1:2 $rounds100x
+		- $gentest_py --type=segwit 1:2 $rounds100x
+		- $gentest_py --type=bech32 1:2 $rounds100x
+		- $gentest_py --testnet=1 1:2 $rounds100x
+		- $gentest_py --testnet=1 --type=segwit 1:2 $rounds100x
+		a $gentest_py --coin=ltc 1:2 $rounds100x
+		a $gentest_py --coin=ltc --type=segwit 1:2 $rounds100x
+		a $gentest_py --coin=ltc --testnet=1 1:2 $rounds100x
+		a $gentest_py --coin=ltc --testnet=1 --type=segwit 1:2 $rounds100x
 		- # all backends vs pycoin:
-		- $gentest_py all:pycoin $rounds
+		- $gentest_py all:pycoin $rounds100x
 	"
 
 	[ "$SKIP_ALT_DEP" ] && t_gen_skip='a'

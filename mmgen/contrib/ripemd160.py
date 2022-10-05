@@ -159,7 +159,8 @@ if __name__ == '__main__':
 
 	def test_ripemd160():
 		import sys
-		verbose = [s for s in ('verbose','--verbose','-v') if s in sys.argv]
+		verbose = [s for s in ('verbose','--verbose') if s in sys.argv]
+		fast = [s for s in ('fast','--fast') if s in sys.argv]
 		sys.stderr.write("Testing RIPEMD-160 test vectors...")
 		sys.stderr.flush()
 
@@ -168,7 +169,7 @@ if __name__ == '__main__':
 		if verbose:
 			sys.stderr.write('\n' + fs.format('BYTES','INPUT','','OUTPUT'))
 
-		for msg,hexout in vectors:
+		for msg,hexout in (vectors[:-1] if fast else vectors):
 
 			a = ripemd160(msg).hexdigest()
 			b = hexout

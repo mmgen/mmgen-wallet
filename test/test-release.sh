@@ -130,8 +130,7 @@ scrambletest_py='test/scrambletest.py'
 altcoin_mod_opts='--quiet'
 mmgen_tool='cmds/mmgen-tool'
 python='python3'
-
-rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
+rounds=10
 
 ORIG_ARGS=$@
 PROGNAME=$(basename $0)
@@ -187,8 +186,8 @@ do
 		export PYTHONWARNINGS='error' ;;
 	D)  export MMGEN_TEST_SUITE_DETERMINISTIC=1
 		export MMGEN_DISABLE_COLOR=1 ;;
-	f)  FAST=1 rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 unit_tests_py+=" --fast" ;;
-	F)  FAST=1 rounds=3 rounds_min=1 rounds_mid=3 rounds_max=5 unit_tests_py+=" --fast" ;;
+	f)  rounds=6 FAST=1 fast_opt='--fast' unit_tests_py+=" --fast" ;;
+	F)  rounds=3 FAST=1 fast_opt='--fast' unit_tests_py+=" --fast" ;;
 	L)  list_avail_tests; exit ;;
 	l)  list_group_symbols; exit ;;
 	N)  test_py+=" --no-timings" ;;
@@ -251,6 +250,11 @@ case $1 in
 esac
 
 set -e
+
+rounds_min=$((rounds / 2))
+for n in 2 5 10 20 50 100 200 500 1000; do
+	eval "rounds${n}x=$((rounds*n))"
+done
 
 init_tests
 
