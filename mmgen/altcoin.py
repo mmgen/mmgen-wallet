@@ -99,7 +99,7 @@ class CoinInfo(object):
 	ce('CryptoBullion',         'CBX',     0x8b,   (0x0b,'5'),       None,             False, 0),
 	ce('Cryptonite',            'XCN',     0x80,   (0x1c,'C'),       None,             False, 0),
 	ce('CryptoPennies',         'CRPS',    0xc2,   (0x42,'T'),       None,             False, 0),
-	ce('Dash',                  'DASH',    0xcc,   (0x4c,'X'),       (0x10,'7'),       False, 1),
+	ce('Dash',                  'DASH',    0xcc,   (0x4c,'X'),       (0x10,'7'),       False, 2),
 	ce('Decred',                'DCR',     0x22de, (0x073f,'D'),     (0x071a,'D'),     False, 1),
 	ce('DeepOnion',             'ONION',   0x9f,   (0x1f,'D'),       None,             False, 1),
 	ce('Defcoin',               'DFC',     0x9e,   (0x1e,'D'),       (0x05,'3'),       False, 1),
@@ -696,8 +696,8 @@ class CoinInfo(object):
 	}
 	external_tests_blacklist = {
 		# Unconditionally block testing of the given coin/addr_type with given tool, or all coins if True
-		'legacy': { 'pycoin': ('DASH',) },
-		'segwit': { 'pycoin': ('LTC',), 'keyconv': True },
+		'legacy': {},
+		'segwit': { 'keyconv': True },
 		'bech32': { 'keyconv': True },
 	}
 

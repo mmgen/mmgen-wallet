@@ -394,7 +394,7 @@ def ab_test(proto,cfg):
 
 	if cfg.all_backends: # check all backends against external tool
 		for n in range(len(get_backends(addr_type.pubkey_type))):
-			do_ab_test( proto, cfg, addr_type, gen1=n+1, kg2=kg2, ag=ag, tool=tool, cache_data=not n )
+			do_ab_test( proto, cfg, addr_type, gen1=n+1, kg2=kg2, ag=ag, tool=tool, cache_data=cfg.rounds < 1000 and not n )
 	else:                # check specific backend against external tool or another backend
 		do_ab_test( proto, cfg, addr_type, gen1=cfg.gen1, kg2=kg2, ag=ag, tool=tool, cache_data=False )
 
