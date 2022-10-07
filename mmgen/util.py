@@ -377,6 +377,22 @@ def secs_to_hms(secs):
 def secs_to_ms(secs):
 	return '{:02d}:{:02d}'.format(secs//60, secs % 60)
 
+def format_elapsed_hr(t,now=None,cached={}):
+	now = now or time.time()
+	e = int(now - t)
+	if not e in cached:
+		abs_e = abs(e)
+		d = abs_e // 86400 # 60 * 60 * 24
+		h = abs_e // 3600 % 24
+		m = abs_e // 60 % 60
+		cached[e] = '{d}{h}{m} minute{M} {w}'.format(
+			d = '{} day{}, '.format(d,suf(d)) if d else '',
+			h = '{} hour{}, '.format(h,suf(h)) if h else '',
+			m = m,
+			M = suf(m),
+			w = 'ago' if e > 0 else 'in the future' ) if (h or m) else 'just now'
+	return cached[e]
+
 def is_int(s):
 	try:
 		int(str(s))

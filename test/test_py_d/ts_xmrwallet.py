@@ -429,7 +429,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				t.expect( r'to last existing account .* \(y/N\): ','y', regex=True )
 
 		if return_amt:
-			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amt: ')).replace('XMR','').strip())
+			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amount: ')).replace('XMR','').strip())
 
 		if no_relay:
 			t.expect('Save MoneroMMGenTX data? (y/N): ','y')

@@ -119,7 +119,7 @@ class MoneroMMGenTX:
 		def get_info(self,indent=''):
 			d = self.data
 			if d.dest:
-				to_entry = f'\n{indent}  To:   ' + (
+				to_entry = f'\n{indent}  To:     ' + (
 					'Wallet {}, account {}, address {}'.format(
 						d.dest.wallet.hl(),
 						red(f'#{d.dest.account}'),
@@ -128,13 +128,14 @@ class MoneroMMGenTX:
 				)
 
 			fs = """
-				Transaction info [Seed ID: {}. Network: {}]:
-				  TxID: {}
-				  Type: {}
-				  From: Wallet {}, account {}{}
-				  Amt:  {} XMR
-				  Fee:  {} XMR
-				  Dest: {}
+				Info for transaction {} [Seed ID: {}. Network: {}]:
+				  TxID:   {}
+				  Signed: {} [{}]
+				  Type:   {}
+				  From:   Wallet {}, account {}{}
+				  Amount: {} XMR
+				  Fee:    {} XMR
+				  Dest:   {}
 			"""
 
 			pmid = d.dest_address.parsed.payment_id
@@ -142,8 +143,12 @@ class MoneroMMGenTX:
 				fs += '  Payment ID: {pmid}'
 
 			return fmt(fs,strip_char='\t',indent=indent).format(
-					d.seed_id.hl(), d.network.upper(),
+					orange(self.base_chksum.upper()),
+					d.seed_id.hl(),
+					yellow(d.network.upper()),
 					d.txid.hl(),
+					make_timestr(d.sign_time),
+					format_elapsed_hr(d.sign_time),
 					blue(capfirst(d.op)),
 					d.source.wallet.hl(),
 					red(f'#{d.source.account}'),
