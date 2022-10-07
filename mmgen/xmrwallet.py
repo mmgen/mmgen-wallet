@@ -235,7 +235,7 @@ class MoneroMMGenTX:
 
 class MoneroWalletOps:
 
-	ops = ('create','sync','list','new','transfer','sweep','relay')
+	ops = ('create','sync','list','new','transfer','sweep','relay','txview')
 	opts = (
 		'wallet_dir',
 		'daemon',
@@ -959,3 +959,15 @@ class MoneroWalletOps:
 					die( 'RPCFailure', repr(res) )
 			else:
 				die(1,'Exiting at user request')
+
+	class txview(base):
+		name = 'txview'
+
+		async def main(self):
+			stdout_or_pager(
+				'\n'.join(
+					tx.get_info() for tx in
+					sorted(
+						(MoneroMMGenTX.Signed(fn) for fn in uarg.infile),
+						key = lambda x: x.data.sign_time )
+			))

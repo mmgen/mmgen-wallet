@@ -36,6 +36,7 @@ opts_data = {
 			'[opts] transfer <xmr_keyaddrfile> TRANSFER_SPEC',
 			'[opts] sweep    <xmr_keyaddrfile> SWEEP_SPEC',
 			'[opts] relay    <TX_file>',
+			'[opts] txview   <TX_file> ...',
 		],
 		'options': """
 -h, --help                       Print this help message
@@ -86,6 +87,8 @@ sweep     - sweep funds in specified wallet:account to new address in same
             account or new account in another wallet
 relay     - relay a transaction from a transaction file created using 'sweep'
             or 'transfer' with the --no-relay option
+txview    - view a transaction file or files created using 'sweep' or
+            'transfer' with the --no-relay option
 
 
                  'CREATE', 'SYNC' AND 'LIST' OPERATION NOTES
@@ -190,6 +193,10 @@ $ mmgen-xmrwallet new *.akeys.mmenc 2
 
 Create a new address in account 1 of wallet 2, with label:
 $ mmgen-xmrwallet new *.akeys.mmenc 2:1,"from ABC exchange"
+
+View all the XMR transaction files in the current directory, sending output
+to pager:
+$ mmgen-xmrwallet --pager txview *XMR*.sigtx
 """
 	},
 	'code': {
@@ -217,6 +224,8 @@ wallets = spec = ''
 if op == 'relay':
 	if len(cmd_args) != 0:
 		opts.usage()
+elif op == 'txview':
+	infile = [infile] + cmd_args
 elif op in ('create','sync','list'):
 	if len(cmd_args) not in (0,1):
 		opts.usage()

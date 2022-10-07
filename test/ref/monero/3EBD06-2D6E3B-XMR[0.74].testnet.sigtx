@@ -1,0 +1,21 @@
+{
+    "MoneroMMGenTX": {
+        "base_chksum": "3ebd06",
+        "full_chksum": "2d6e3b",
+        "data": {
+            "op": "sweep",
+            "create_time": 1665169030,
+            "sign_time": 1665169030,
+            "network": "testnet",
+            "seed_id": "FE3C6545",
+            "source": "2:1:None",
+            "dest": "3:0:0",
+            "dest_address": "56VQ9M6k3C2H7awPLUcUKA86fkh4NqqJ3SQhVnFw7odfRVj3Xkpb3rv4J18o7c5KUBa36eCNpGDo16nKPvJgYHorEuu9WZj",
+            "txid": "63ca48f93968788d7756328e55947f50c939ef764d5049ad7d43c03c7202f779",
+            "amount": "0.74",
+            "fee": "0.002",
+            "blob": "deadbeef",
+            "metadata": null
+        }
+    }
+}

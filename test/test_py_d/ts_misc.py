@@ -32,14 +32,26 @@ class TestSuiteMisc(TestSuiteBase):
 	tmpdir_nums = [99]
 	passthru_opts = ('daemon_data_dir','rpc_port')
 	cmd_group = (
-		('rpc_backends', 'RPC backends'),
+		('rpc_backends',     'RPC backends'),
+		('xmrwallet_txview', "'mmgen-xmrwallet' txview"),
 	)
 	need_daemon = True
+	color = True
 
 	def rpc_backends(self):
 		backends = g.autoset_opts['rpc_backend'][1]
 		for b in backends:
 			t = self.spawn_chk('mmgen-tool',[f'--rpc-backend={b}','daemon_version'],extra_desc=f'({b})')
+		return t
+
+	def xmrwallet_txview(self):
+		t = self.spawn(f'mmgen-xmrwallet',['txview','test/ref/monero/3EBD06-2D6E3B-XMR[0.74].testnet.sigtx'])
+		res = strip_ansi_escapes(t.read()).replace('\r','')
+		for s in (
+			'Amount: 0.74 XMR',
+			'Dest:   56VQ9M6k',
+		):
+			assert s in res, s
 		return t
 
 class TestSuiteHelp(TestSuiteBase):
