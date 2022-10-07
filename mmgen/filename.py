@@ -26,18 +26,10 @@ from .obj import *
 from .util import die,get_extension
 from .seed import *
 
-class Filename(MMGenObject):
+class File:
 
-	def __init__(self,fn,base_class=None,subclass=None,proto=None,write=False):
-		"""
-		'base_class' - a base class with an 'ext_to_cls' method
-		'subclass'   - a subclass with an 'ext' attribute
+	def __init__(self,fn,write=False):
 
-		One or the other must be provided, but not both.
-
-		The base class signals support for the Filename API by setting its 'filename_api'
-		attribute to True.
-		"""
 		self.name     = fn
 		self.dirname  = os.path.dirname(fn)
 		self.basename = os.path.basename(fn)
@@ -45,18 +37,6 @@ class Filename(MMGenObject):
 		self.mtime    = None
 		self.ctime    = None
 		self.atime    = None
-
-		assert (subclass or base_class) and not (subclass and base_class), 'Filename chk1'
-
-		if not getattr(subclass or base_class,'filename_api',False):
-			die(3,f'Class {(subclass or base_class).__name__!r} does not support the Filename API')
-
-		if base_class:
-			subclass = base_class.ext_to_cls( self.ext, proto )
-			if not subclass:
-				die( 'BadFileExtension', f'{self.ext!r}: not a recognized file extension for {base_class}' )
-
-		self.subclass = subclass
 
 		try:
 			st = os.stat(fn)
@@ -83,19 +63,53 @@ class Filename(MMGenObject):
 			self.ctime = st.st_ctime
 			self.atime = st.st_atime
 
-class MMGenFileList(list,MMGenObject):
+class FileList(list):
 
-	def __init__(self,fns,base_class,proto=None):
-		flist = [Filename( fn, base_class=base_class, proto=proto ) for fn in fns]
-		return list.__init__(self,flist)
+	def __init__(self,fns,write=False):
+		return list.__init__(
+			self,
+			[File(fn,write) for fn in fns] )
 
 	def names(self):
 		return [f.name for f in self]
 
 	def sort_by_age(self,key='mtime',reverse=False):
-		if key not in ('atime','ctime','mtime'):
-			die(1,f'{key!r}: illegal sort key')
+		assert key in ('atime','ctime','mtime'), f'{key!r}: invalid sort key'
 		self.sort( key=lambda a: getattr(a,key), reverse=reverse )
+
+class Filename(File):
+
+	def __init__(self,fn,base_class=None,subclass=None,proto=None,write=False):
+		"""
+		'base_class' - a base class with an 'ext_to_cls' method
+		'subclass'   - a subclass with an 'ext' attribute
+
+		One or the other must be provided, but not both.
+
+		The base class signals support for the Filename API by setting its 'filename_api'
+		attribute to True.
+		"""
+
+		super().__init__(fn,write)
+
+		assert (subclass or base_class) and not (subclass and base_class), 'Filename chk1'
+
+		if not getattr(subclass or base_class,'filename_api',False):
+			die(3,f'Class {(subclass or base_class).__name__!r} does not support the Filename API')
+
+		if base_class:
+			subclass = base_class.ext_to_cls( self.ext, proto )
+			if not subclass:
+				die( 'BadFileExtension', f'{self.ext!r}: not a recognized file extension for {base_class}' )
+
+		self.subclass = subclass
+
+class MMGenFileList(FileList):
+
+	def __init__(self,fns,base_class,proto=None,write=False):
+		return list.__init__(
+			self,
+			[Filename( fn, base_class=base_class, proto=proto, write=write ) for fn in fns] )
 
 def find_files_in_dir(subclass,fdir,no_dups=False):
 
