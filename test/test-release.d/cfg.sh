@@ -16,7 +16,7 @@ list_avail_tests() {
 	echo   "   hash     - internal hash function implementations"
 	echo   "   ref      - reference file checks"
 	echo   "   altref   - altcoin reference file checks"
-	echo   "   alts     - operations for all supported gen-only altcoins"
+	echo   "   altgen   - gentest (altcoins)"
 	echo   "   xmr      - Monero xmrwallet operations"
 	echo   "   eth      - operations for Ethereum and Ethereum Classic"
 	echo   "   autosign - autosign"
@@ -31,7 +31,7 @@ list_avail_tests() {
 	echo   "   ltc_rt   - Litecoin regtest"
 	echo   "   tool     - tooltest (all supported coins)"
 	echo   "   tool2    - tooltest2 (all supported coins)"
-	echo   "   gen      - gentest (all supported coins)"
+	echo   "   gen      - gentest (Bitcoin,Litecoin)"
 	echo   "   misc     - miscellaneous tests that don't fit in the above categories"
 	echo
 	echo   "AVAILABLE TEST GROUPS:"
@@ -45,10 +45,10 @@ list_avail_tests() {
 }
 
 init_groups() {
-	dfl_tests='dep misc obj color unit hash ref tool tool2 gen autosign btc btc_tn btc_rt altref alts bch bch_rt ltc ltc_rt eth xmr'
+	dfl_tests='dep misc obj color unit hash ref tool tool2 gen autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth xmr'
 	extra_tests='dep autosign_btc autosign_live ltc_tn bch_tn'
 	noalt_tests='dep misc obj color unit hash ref tool tool2 gen autosign_btc btc btc_tn btc_rt'
-	quick_tests='dep misc obj color unit hash ref tool tool2 gen autosign btc btc_rt altref alts eth xmr'
+	quick_tests='dep misc obj color unit hash ref tool tool2 gen autosign btc btc_rt altref altgen eth xmr'
 	qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
 
 	[ "$MSYS2" ] && SKIP_LIST='autosign autosign_btc autosign_live'
@@ -125,9 +125,9 @@ init_tests() {
 	"
 	f_altref='Altcoin reference file tests completed'
 
-	i_alts='Gen-only altcoin'
-	s_alts='The following tests will test generation operations for all supported altcoins'
-	t_alts="
+	i_altgen='Altcoin generation'
+	s_altgen='The following tests will test generation operations for all supported altcoins'
+	t_altgen="
 		- # speed tests, no verification:
 		- $gentest_py --coin=etc 1 $rounds10x
 		- $gentest_py --coin=etc --use-internal-keccak-module 1 $rounds10x
@@ -161,13 +161,13 @@ init_tests() {
 		z $gentest_py --coin=zec --type=zcash_z all:zcash-mini $rounds50x
 	"
 
-	[ "$MSYS2" ] && t_alts_skip='M m z'  # no moneropy (pysha3), zcash-mini (golang)
-	[ "$ARM32" ] && t_alts_skip='z e'
-	[ "$FAST" ]  && t_alts_skip+=' M'
+	[ "$MSYS2" ] && t_altgen_skip='M m z'  # no moneropy (pysha3), zcash-mini (golang)
+	[ "$ARM32" ] && t_altgen_skip='z e'
+	[ "$FAST" ]  && t_altgen_skip+=' M'
 	# ARM ethkey available only on Arch Linux:
-	[ \( "$ARM32" -o "$ARM64" \) -a "$DISTRO" != 'archarm' ] && t_alts_skip+=' e'
+	[ \( "$ARM32" -o "$ARM64" \) -a "$DISTRO" != 'archarm' ] && t_altgen_skip+=' e'
 
-	f_alts='Gen-only altcoin tests completed'
+	f_altgen='Altcoin generation tests completed'
 
 	i_xmr='Monero'
 	s_xmr='Testing Monero operations'
@@ -320,8 +320,8 @@ init_tests() {
 
 	f_tool='tooltest tests completed'
 
-	i_gen='Gentest'
-	s_gen="The following tests will run '$gentest_py' for configured coins and address types"
+	i_gen='Generation'
+	s_gen='The following tests will test generation operations for Bitcoin and Litecoin'
 	t_gen="
 		- # speed tests, no verification:
 		- $gentest_py --coin=btc 1 $rounds10x
