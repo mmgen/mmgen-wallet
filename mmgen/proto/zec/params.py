@@ -13,7 +13,7 @@ Zcash protocol
 """
 
 from ..btc.params import mainnet
-from ..common import b58chk_decode
+from ..btc.common import b58chk_decode
 from ...protocol import decoded_wif,decoded_addr
 from ...addr import CoinAddr
 

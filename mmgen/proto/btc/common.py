@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-proto.common: Functions and constants used by multiple protocols
+proto.btc.common: Shared Bitcoin functions and constants
 """
 
 import hashlib

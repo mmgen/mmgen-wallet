@@ -14,7 +14,7 @@ proto.zec.addrgen: Zcash-Z address generation class for the MMGen suite
 
 from ...addrgen import addr_generator,check_data
 from ...addr import CoinAddr
-from ..common import b58chk_encode
+from ..btc.common import b58chk_encode
 
 class zcash_z(addr_generator.base):
 

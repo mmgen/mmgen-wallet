@@ -124,7 +124,7 @@ class tool_cmd(tool_cmd_base):
 
 	def hash160(self,hexstr:'sstr'):
 		"compute ripemd160(sha256(data)) (convert hex pubkey to hex addr)"
-		from ..proto.common import hash160
+		from ..proto.btc.common import hash160
 		return hash160( bytes.fromhex(hexstr) ).hex()
 
 	# TODO: handle stdin
@@ -195,12 +195,12 @@ class tool_cmd(tool_cmd_base):
 
 	def hextob58chk(self,hexstr:'sstr'):
 		"convert a hexadecimal string to base58-check encoding"
-		from ..proto.common import b58chk_encode
+		from ..proto.btc.common import b58chk_encode
 		return b58chk_encode( bytes.fromhex(hexstr) )
 
 	def b58chktohex(self,b58chk_str:'sstr'):
 		"convert a base58-check encoded string to hexadecimal"
-		from ..proto.common import b58chk_decode
+		from ..proto.btc.common import b58chk_decode
 		return b58chk_decode(b58chk_str).hex()
 
 	def hextob32(self,hexstr:'sstr',pad: 'pad output to this width' = 0):

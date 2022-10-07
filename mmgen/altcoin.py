@@ -556,7 +556,7 @@ class CoinInfo(object):
 			return '1'
 
 		def phash2addr(ver_num,pk_hash):
-			from .proto.common import b58chk_encode
+			from .proto.btc.common import b58chk_encode
 			bl = ver_num.bit_length()
 			ver_bytes = int.to_bytes(ver_num,bl//8 + bool(bl%8),'big')
 			return b58chk_encode(ver_bytes + pk_hash)

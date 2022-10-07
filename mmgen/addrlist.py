@@ -272,7 +272,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		return out
 
 	def gen_wallet_passwd(self,privbytes):
-		from .proto.common import hash256
+		from .proto.btc.common import hash256
 		return WalletPassword( hash256(privbytes)[:16].hex() )
 
 	def check_format(self,addr):

@@ -14,7 +14,7 @@ proto.btc.addrgen: Bitcoin address generation classes for the MMGen suite
 
 from ...addrgen import addr_generator,check_data
 from ...addr import CoinAddr
-from ..common import hash160
+from .common import hash160
 
 class p2pkh(addr_generator.base):
 

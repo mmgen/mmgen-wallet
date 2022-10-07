@@ -13,7 +13,7 @@ Bitcoin protocol
 """
 
 from ...protocol import CoinProtocol,decoded_wif,decoded_addr,_finfo,_nw
-from ..common import *
+from .common import b58chk_decode,b58chk_encode,hash160
 
 class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	"""

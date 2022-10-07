@@ -27,7 +27,7 @@ from .objmethods import Hilite,InitErrors
 from .obj import CoinTxID
 from .seed import SeedID
 from .protocol import init_proto
-from .proto.common import b58a
+from .proto.btc.common import b58a
 from .addr import CoinAddr,AddrIdx
 from .addrlist import KeyAddrList,AddrIdxList
 from .rpc import json_encoder
