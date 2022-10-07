@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-filename.py:  Filename class and methods for the MMGen suite
+filename.py:  File and MMGenFile classes and methods for the MMGen suite
 """
 
 import sys,os
@@ -77,7 +77,7 @@ class FileList(list):
 		assert key in ('atime','ctime','mtime'), f'{key!r}: invalid sort key'
 		self.sort( key=lambda a: getattr(a,key), reverse=reverse )
 
-class Filename(File):
+class MMGenFile(File):
 
 	def __init__(self,fn,base_class=None,subclass=None,proto=None,write=False):
 		"""
@@ -86,16 +86,16 @@ class Filename(File):
 
 		One or the other must be provided, but not both.
 
-		The base class signals support for the Filename API by setting its 'filename_api'
+		The base class signals support for the MMGenFile API by setting its 'filename_api'
 		attribute to True.
 		"""
 
 		super().__init__(fn,write)
 
-		assert (subclass or base_class) and not (subclass and base_class), 'Filename chk1'
+		assert (subclass or base_class) and not (subclass and base_class), 'MMGenFile chk1'
 
 		if not getattr(subclass or base_class,'filename_api',False):
-			die(3,f'Class {(subclass or base_class).__name__!r} does not support the Filename API')
+			die(3,f'Class {(subclass or base_class).__name__!r} does not support the MMGenFile API')
 
 		if base_class:
 			subclass = base_class.ext_to_cls( self.ext, proto )
@@ -109,14 +109,14 @@ class MMGenFileList(FileList):
 	def __init__(self,fns,base_class,proto=None,write=False):
 		return list.__init__(
 			self,
-			[Filename( fn, base_class=base_class, proto=proto, write=write ) for fn in fns] )
+			[MMGenFile( fn, base_class=base_class, proto=proto, write=write ) for fn in fns] )
 
 def find_files_in_dir(subclass,fdir,no_dups=False):
 
 	assert isinstance(subclass,type), f'{subclass}: not a class'
 
 	if not getattr(subclass,'filename_api',False):
-		die(3,f'Class {subclass.__name__!r} does not support the Filename API')
+		die(3,f'Class {subclass.__name__!r} does not support the MMGenFile API')
 
 	matches = [l for l in os.listdir(fdir) if l.endswith('.'+subclass.ext)]
 

@@ -137,8 +137,8 @@ def Wallet(
 		else:
 			fn = ','.join(opt.hidden_incog_input_params.split(',')[:-1]) # permit comma in filename
 			me = _get_me( 'incog_hidden' )
-		from ..filename import Filename
-		me.infile = Filename( fn, subclass=type(me) )
+		from ..filename import MMGenFile
+		me.infile = MMGenFile( fn, subclass=type(me) )
 		me.op = 'pwchg_old' if passchg else 'old'
 	elif in_fmt:
 		me = _get_me( get_wallet_data(fmt_code=in_fmt).type )

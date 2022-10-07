@@ -125,8 +125,8 @@ class wallet(wallet):
 			else:
 				die(1,'Exiting at user request')
 
-		from ..filename import Filename
-		f = Filename(fn,subclass=type(self),write=True)
+		from ..filename import MMGenFile
+		f = MMGenFile(fn,subclass=type(self),write=True)
 
 		dmsg('{} data len {}, offset {}'.format(
 			capfirst(self.desc),
