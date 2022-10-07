@@ -601,6 +601,9 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete
 		else:
 			msg_r('\nInvalid reply\n' if verbose else '\r')
 
+def stdout_or_pager(s):
+	(do_pager if opt.pager else Msg_r)(s)
+
 def do_pager(text):
 
 	pagers = ['less','more']

@@ -240,6 +240,7 @@ common_opts_data = {
 --, --color=0|1            Disable or enable color output (enabled by default)
 --, --columns=N            Force N columns of output with certain commands
 --, --force-256-color      Force 256-color output when color is enabled
+--, --pager                Pipe output of certain commands to pager (WIP)
 --, --data-dir=path        Specify {pnm} data directory location
 --, --daemon-data-dir=path Specify coin daemon data directory location
 --, --daemon-id=ID         Specify the coin daemon ID
