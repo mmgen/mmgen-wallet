@@ -14,7 +14,7 @@ tw.txhistory: Tracking wallet transaction history class for the MMGen suite
 
 from collections import namedtuple
 
-from ..util import base_proto_subclass,fmt
+from ..util import fmt
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import CoinTxID,MMGenList,Int
@@ -24,7 +24,7 @@ from .common import TwCommon
 class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(base_proto_subclass(cls,proto,'tw','txhistory'))
+		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','txhistory'))
 
 	txid_w = 64
 	show_txid = False

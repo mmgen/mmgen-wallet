@@ -134,7 +134,7 @@ def check_opts(tw):
 async def main():
 	from .tw.ctl import TrackingWallet
 	if opt.token_addr:
-		proto.tokensym = 'foo' # hack to trigger 'Token' in base_proto_subclass()
+		proto.tokensym = 'foo' # hack to trigger 'Token' in proto.base_proto_subclass()
 
 	tw = await TrackingWallet(
 		proto      = proto,

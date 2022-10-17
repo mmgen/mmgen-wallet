@@ -166,6 +166,27 @@ class CoinProtocol(MMGenObject):
 		def viewkey(self,viewkey_str):
 			raise NotImplementedError(f'{self.name} protocol does not support view keys')
 
+		def base_proto_subclass(self,cls,subdir,modname,sub_clsname=None):
+			"""
+			magic module loading and class selection
+			"""
+			modpath = 'mmgen.proto.{}.{}{}'.format(
+				self.base_proto_coin.lower(),
+				subdir + '.' if subdir else '',
+				modname )
+
+			clsname = (
+				self.mod_clsname
+				+ ('Token' if self.tokensym else '')
+				+ cls.__name__ )
+
+			import importlib
+			if sub_clsname:
+				return getattr(getattr(importlib.import_module(modpath),clsname),sub_clsname)
+			else:
+				return getattr(importlib.import_module(modpath),clsname)
+
+
 	class Secp256k1(Base):
 		"""
 		Bitcoin and Ethereum protocols inherit from this class

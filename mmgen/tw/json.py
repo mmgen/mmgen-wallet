@@ -19,7 +19,6 @@ from ..util import (
 	msg,
 	ymsg,
 	fmt,
-	base_proto_subclass,
 	die,
 	make_timestamp,
 	make_chksum_8,
@@ -37,7 +36,7 @@ class TwJSON:
 		fn_pfx = 'mmgen-tracking-wallet-dump'
 
 		def __new__(cls,proto,*args,**kwargs):
-			return MMGenObject.__new__(base_proto_subclass(TwJSON,proto,'tw','json',cls.__name__))
+			return MMGenObject.__new__(proto.base_proto_subclass(TwJSON,'tw','json',cls.__name__))
 
 		def __init__(self,proto):
 			self.proto = proto

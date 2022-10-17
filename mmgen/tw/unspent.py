@@ -33,7 +33,6 @@ from ..util import (
 	fmt,
 	keypress_confirm,
 	line_input,
-	base_proto_subclass
 )
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
@@ -45,7 +44,7 @@ from .common import TwCommon,TwMMGenID,get_tw_label
 class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(base_proto_subclass(cls,proto,'tw','unspent'))
+		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','unspent'))
 
 	txid_w = 64
 	print_hdr_fs = '{a} (block #{b}, {c} UTC)\n{d}Sort order: {e}\n{f}\n\nTotal {g}: {h}\n'
