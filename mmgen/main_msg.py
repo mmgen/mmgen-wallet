@@ -60,9 +60,14 @@ class MsgOps:
 			except:
 				m = ExportedMsgSigs( infile=msgfile )
 
-			qmsg(m.format(addr) + '\n')
+			nSigs = await m.verify(addr)
 
-			await m.verify(addr,summary=True)
+			summary = f'{nSigs} signature{suf(nSigs)} verified'
+
+			if opt.quiet:
+				msg(summary)
+			else:
+				stdout_or_pager(m.format(addr) + '\n\n' + summary + '\n')
 
 			if m.data.get('failed_sids'):
 				sys.exit(1)

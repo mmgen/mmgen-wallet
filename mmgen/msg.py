@@ -296,7 +296,7 @@ class coin_msg:
 
 			return sigs
 
-		async def verify(self,addr=None,summary=False):
+		async def verify(self,addr=None):
 
 			sigs = self.get_sigs(addr)
 
@@ -313,8 +313,7 @@ class coin_msg:
 				if not ret:
 					die(3,f'Invalid signature for address {k} ({v["addr"]})')
 
-			if summary:
-				msg('{} signature{} verified'.format( len(sigs), suf(sigs) ))
+			return len(sigs)
 
 		def get_json_for_export(self,addr=None):
 			sigs = list( self.get_sigs(addr).values() )

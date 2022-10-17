@@ -7,7 +7,7 @@ import os
 
 from test.include.common import silence,end_silence,restart_test_daemons,stop_test_daemons
 from mmgen.opts import opt
-from mmgen.util import msg,bmsg,pumsg
+from mmgen.util import msg,bmsg,pumsg,suf
 from mmgen.protocol import CoinProtocol
 from mmgen.msg import NewMsg,UnsignedMsg,SignedMsg,SignedOnlineMsg,ExportedMsgSigs
 from mmgen.addr import MMGenID
@@ -28,6 +28,9 @@ def get_obj(coin,network,msghash_type):
 		message   = '08/Jun/2021 Bitcoin Law Enacted by El Salvador Legislative Assembly',
 		addrlists = addrlists,
 		msghash_type = msghash_type )
+
+def print_total(n):
+	msg(f'{n} signature{suf(n)} verified')
 
 async def run_test(network_id,chksum,msghash_type='raw'):
 
@@ -78,10 +81,10 @@ async def run_test(network_id,chksum,msghash_type='raw'):
 	msg(m.format(single_addr))
 
 	pumsg('\nTesting verification:\n')
-	await m.verify(summary=opt.verbose)
+	print_total( await m.verify() )
 
 	pumsg('\nTesting single address verification:\n')
-	await m.verify(single_addr,summary=opt.verbose)
+	print_total( await m.verify(single_addr) )
 
 	pumsg('\nTesting JSON dump for export:\n')
 	msg( m.get_json_for_export() )
@@ -100,10 +103,10 @@ async def run_test(network_id,chksum,msghash_type='raw'):
 	m = ExportedMsgSigs( infile=exported_sigs )
 
 	pumsg('\nTesting verification (exported data):\n')
-	await m.verify(summary=opt.verbose)
+	print_total( await m.verify() )
 
 	pumsg('\nTesting single address verification (exported data):\n')
-	await m.verify(single_addr_coin,summary=opt.verbose)
+	print_total( await m.verify(single_addr_coin) )
 
 	pumsg('\nTesting display (exported data):\n')
 	msg(m.format())
