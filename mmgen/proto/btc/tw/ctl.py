@@ -13,8 +13,8 @@ proto.btc.twctl: Bitcoin base protocol tracking wallet control class
 """
 
 from ....globalvars import g
-from ....tw.ctl import TrackingWallet
-from ....util import msg,msg_r,rmsg,vmsg,die,suf,fmt_list,write_mode
+from ....tw.ctl import TrackingWallet,write_mode
+from ....util import msg,msg_r,rmsg,vmsg,die,suf,fmt_list
 
 class BitcoinTrackingWallet(TrackingWallet):
 

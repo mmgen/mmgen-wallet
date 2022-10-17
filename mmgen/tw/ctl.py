@@ -30,7 +30,6 @@ from ..util import (
 	qmsg,
 	dmsg,
 	suf,
-	write_mode,
 	die )
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
@@ -38,6 +37,17 @@ from ..obj import TwComment,get_obj
 from ..addr import CoinAddr,is_mmgen_id,is_coin_addr
 from ..rpc import rpc_init
 from .common import TwMMGenID,TwLabel
+
+# decorator for TrackingWallet
+def write_mode(orig_func):
+	def f(self,*args,**kwargs):
+		if self.mode != 'w':
+			die(1,'{} opened in read-only mode: cannot execute method {}()'.format(
+				type(self).__name__,
+				locals()['orig_func'].__name__
+			))
+		return orig_func(self,*args,**kwargs)
+	return f
 
 class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
