@@ -96,7 +96,7 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 
 		for n,backend in enumerate(g.autoset_opts['rpc_backend'].choices):
 			test = getattr(init_test,d.proto.coin.lower())
-			rpc = run_session(test(d.proto,backend,d),backend=backend)
+			rpc = run_session(test(d.proto,backend,d))
 			if not n and opt.verbose:
 				print_daemon_info(rpc)
 

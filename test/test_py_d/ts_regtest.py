@@ -145,7 +145,7 @@ from .ts_shared import *
 class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	'transacting and tracking wallet operations via regtest mode'
 	networks = ('btc','ltc','bch')
-	passthru_opts = ('coin',)
+	passthru_opts = ('coin','rpc_backend')
 	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [17]
 	color = True

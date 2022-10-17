@@ -69,7 +69,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	'basic operations with emulated tracking wallet'
 	tmpdir_nums = [1,2,3,4,5,14,15,16,20,21]
 	networks = ('btc','btc_tn','ltc','ltc_tn','bch','bch_tn')
-	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
+	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet','rpc_backend')
 	segwit_opts_ok = True
 	color = True
 	need_daemon = True

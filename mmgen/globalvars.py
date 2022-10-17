@@ -40,7 +40,7 @@ class GlobalContext(Lockable):
 	  3 - command line
 	"""
 	_autolock = False
-	_set_ok = ('session',)
+	_set_ok = ()
 	_reset_ok = ('stdout','stderr','accept_defaults')
 	_use_class_attr = True
 
@@ -99,7 +99,6 @@ class GlobalContext(Lockable):
 	monero_wallet_rpc_user = 'monero'
 	monero_wallet_rpc_password = ''
 	aiohttp_rpc_queue_len = 16
-	session              = None
 	cached_balances      = False
 
 	# regtest:
@@ -181,7 +180,6 @@ class GlobalContext(Lockable):
 		'ignore_daemon_version',
 		'no_license',
 		'regtest',
-		'rpc_backend',
 		'rpc_host',
 		'rpc_password',
 		'rpc_port',
@@ -313,7 +311,7 @@ class GlobalContext(Lockable):
 			stdin_tty = True
 		if prog_name == 'unit_tests.py':
 			_set_ok += ('debug_subseed',)
-			_reset_ok += ('force_standalone_scrypt_module','session')
+			_reset_ok += ('force_standalone_scrypt_module',)
 
 	if os.getenv('MMGEN_DEBUG_ALL'):
 		for name in env_opts:

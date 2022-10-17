@@ -90,7 +90,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			port = daemon.rpc_port )
 
 		self.set_auth() # set_auth() requires cookie, so must be called after __init__() tests daemon is listening
-		self.set_backend(backend) # backend requires self.auth
+		await self.set_backend_async(backend) # backend requires self.auth
 
 		self.cached = {}
 

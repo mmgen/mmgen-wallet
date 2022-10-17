@@ -127,7 +127,7 @@ coin = g.coin
 class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
 	networks = ('eth','etc')
-	passthru_opts = ('coin','daemon_id','http_timeout')
+	passthru_opts = ('coin','daemon_id','http_timeout','rpc_backend')
 	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [22]
 	color = True
@@ -407,10 +407,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	@property
 	async def rpc(self):
-		if not hasattr(self,'_rpc'):
-			from mmgen.rpc import rpc_init
-			self._rpc = await rpc_init(self.proto)
-		return self._rpc
+		from mmgen.rpc import rpc_init
+		return await rpc_init(self.proto)
 
 	async def setup(self):
 		self.spawn('',msg_only=True)

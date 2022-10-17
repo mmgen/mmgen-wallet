@@ -25,6 +25,7 @@ from decimal import Decimal
 from collections import namedtuple
 
 from .common import *
+from .base_obj import AsyncInit
 from .objmethods import Hilite,InitErrors
 
 auth_data = namedtuple('rpc_auth_data',['user','passwd'])
@@ -114,18 +115,28 @@ class RPCBackends:
 			self.http_hdrs      = caller.http_hdrs
 			self.name           = type(self).__name__
 
-	class aiohttp(base):
+	class aiohttp(base,metaclass=AsyncInit):
 		"""
 		Contrary to the requests library, aiohttp won’t read environment variables by
 		default.  But you can do so by passing trust_env=True into aiohttp.ClientSession
 		constructor to honor HTTP_PROXY, HTTPS_PROXY, WS_PROXY or WSS_PROXY environment
 		variables (all are case insensitive).
 		"""
-		def __init__(self,caller):
+
+		def __del__(self):
+			self.connector.close()
+			self.session.detach()
+			del self.session
+
+		async def __init__(self,caller):
 			super().__init__(caller)
-			self.session = g.session
+			import aiohttp
+			self.connector = aiohttp.TCPConnector(limit_per_host=g.aiohttp_rpc_queue_len)
+			self.session = aiohttp.ClientSession(
+				headers = { 'Content-Type': 'application/json' },
+				connector = self.connector,
+			)
 			if caller.auth_type == 'basic':
-				import aiohttp
 				self.auth = aiohttp.BasicAuth(*caller.auth,encoding='UTF-8')
 			else:
 				self.auth = None
@@ -293,12 +304,19 @@ class RPCClient(MMGenObject):
 		self.timeout = g.http_timeout
 		self.auth = None
 
-	def set_backend(self,backend=None):
-		bn = backend or opt.rpc_backend
-		if bn == 'auto':
-			self.backend = {'linux':RPCBackends.httplib,'win':RPCBackends.requests}[g.platform](self)
+	def _get_backend(self,backend):
+		backend_id = backend or opt.rpc_backend
+		if backend_id == 'auto':
+			return {'linux':RPCBackends.httplib,'win':RPCBackends.requests}[g.platform](self)
 		else:
-			self.backend = getattr(RPCBackends,bn)(self)
+			return getattr(RPCBackends,backend_id)(self)
+
+	def set_backend(self,backend=None):
+		self.backend = self._get_backend(backend)
+
+	async def set_backend_async(self,backend=None):
+		ret = self._get_backend(backend)
+		self.backend = (await ret) if type(ret).__name__ == 'coroutine' else ret
 
 	def set_auth(self):
 		"""

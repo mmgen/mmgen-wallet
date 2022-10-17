@@ -44,7 +44,7 @@ class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
 			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),
 			port = daemon.rpc_port )
 
-		self.set_backend(backend)
+		await self.set_backend_async(backend)
 
 		vi,bh,ci = await self.gathered_call(None, (
 				('web3_clientVersion',()),

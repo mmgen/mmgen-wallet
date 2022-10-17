@@ -383,21 +383,9 @@ def get_subclasses(cls,names=False):
 				yield j
 	return tuple((c.__name__ for c in gen(cls)) if names else gen(cls))
 
-def run_session(callback,backend=None):
-
-	async def do():
-		if (backend or opt.rpc_backend) == 'aiohttp':
-			import aiohttp
-			async with aiohttp.ClientSession(
-				headers = { 'Content-Type': 'application/json' },
-				connector = aiohttp.TCPConnector(limit_per_host=g.aiohttp_rpc_queue_len),
-			) as g.session:
-				return await callback
-		else:
-			return await callback
-
+def run_session(coro):
 	import asyncio
-	return asyncio.run(do())
+	return asyncio.run(coro)
 
 def wrap_ripemd160(called=[]):
 	if not called:
