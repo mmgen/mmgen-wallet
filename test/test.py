@@ -183,7 +183,8 @@ opts.UserOpts._reset_ok += (
 	'skipping_deps' )
 
 # step 2: opts.init will create new data_dir in ./test (if not opt.skipping_deps)
-usr_args = opts.init(opts_data)
+parsed_opts = opts.init(opts_data,return_parsed=True)
+usr_args = parsed_opts.cmd_args
 
 if opt.daemon_id and opt.daemon_id in g.blacklist_daemons.split():
 	die(0,f'test.py: daemon {opt.daemon_id!r} blacklisted, exiting')
@@ -673,10 +674,11 @@ class TestSuiteRunner(object):
 		self.ts = self.gm.gm_init_group(self,gname,sg_name,self.spawn_wrapper)
 		self.ts_clsname = type(self.ts).__name__
 
+		# only pass through opts that are explicitly set on cmdline (po.user_opts)
 		self.passthru_opts = ['--{}{}'.format(
 				k.replace('_','-'),
 				'=' + getattr(opt,k) if getattr(opt,k) != True else ''
-			) for k in self.ts.base_passthru_opts + self.ts.passthru_opts if getattr(opt,k)]
+			) for k in self.ts.base_passthru_opts + self.ts.passthru_opts if k in parsed_opts.user_opts]
 
 		if opt.resuming:
 			rc = opt.resume or opt.resume_after

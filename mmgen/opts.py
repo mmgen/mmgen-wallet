@@ -286,7 +286,8 @@ def init(
 	parse_only  = False,
 	parsed_opts = None,
 	need_proto  = True,
-	do_post_init = False ):
+	do_post_init = False,
+	return_parsed = False ):
 
 	if opts_data is None:
 		opts_data = opts_data_dfl
@@ -446,7 +447,7 @@ def init(
 	else:
 		delete_data(opts_data)
 
-	return po.cmd_args
+	return po if return_parsed else po.cmd_args
 
 def check_usr_opts(usr_opts): # Raises an exception if any check fails
 
