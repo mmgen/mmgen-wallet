@@ -33,6 +33,7 @@ from .addrlist import KeyAddrList,AddrIdxList
 from .rpc import json_encoder
 from .proto.xmr.rpc import MoneroRPCClientRaw,MoneroWalletRPCClient
 from .proto.xmr.daemon import MoneroWalletDaemon
+from .ui import keypress_confirm
 
 xmrwallet_uarg_info = (
 	lambda e,hp: {

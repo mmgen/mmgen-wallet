@@ -78,7 +78,7 @@ def print_help(po,opts_data,opt_filter):
 			opts_data['text']['long_options'] = d
 		remove_unneeded_long_opts()
 
-	from .util import do_pager
+	from .ui import do_pager
 	do_pager(
 		mmgen.share.Opts.make_help(
 			proto,

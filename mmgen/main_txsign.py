@@ -106,6 +106,7 @@ for i in infiles:
 	check_infile(i)
 
 if not opt.info and not opt.terse_info:
+	from .ui import do_license_msg
 	do_license_msg(immed=True)
 
 from .tx.sign import *

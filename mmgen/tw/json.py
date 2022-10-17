@@ -15,15 +15,7 @@ tw.json: export and import tracking wallet to JSON format
 import json
 from collections import namedtuple
 
-from ..util import (
-	msg,
-	ymsg,
-	fmt,
-	die,
-	make_timestamp,
-	make_chksum_8,
-	keypress_confirm,
-	compare_or_die )
+from ..util import msg,ymsg,fmt,die,make_timestamp,make_chksum_8,compare_or_die
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..rpc import json_encoder
@@ -121,6 +113,7 @@ class TwJSON:
 
 			msg('\n'+fmt(self.info_msg.strip(),indent='  '))
 
+			from ..ui import keypress_confirm
 			if not keypress_confirm('Continue?'):
 				msg('Exiting at user request')
 				return False

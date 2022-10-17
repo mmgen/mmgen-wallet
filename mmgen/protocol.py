@@ -302,7 +302,7 @@ def warn_trustlevel(coinsym):
 		Are you sure you want to continue?
 	"""
 
-	from .util import qmsg,fmt,keypress_confirm
+	from .util import qmsg,fmt
 	from .color import red,yellow,green
 
 	warning = fmt(m).strip().format(
@@ -319,6 +319,7 @@ def warn_trustlevel(coinsym):
 		qmsg(warning)
 		return
 
+	from .ui import keypress_confirm
 	if not keypress_confirm(warning,default_yes=True):
 		import sys
 		sys.exit(0)

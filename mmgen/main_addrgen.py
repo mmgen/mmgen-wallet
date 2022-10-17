@@ -148,6 +148,7 @@ idxs = mmgen.addrlist.AddrIdxList( fmt_str=cmd_args.pop() )
 from .fileutil import get_seed_file
 sf = get_seed_file(cmd_args,1)
 
+from .ui import do_license_msg
 do_license_msg()
 
 ss = Wallet(sf)
@@ -170,6 +171,7 @@ af.format()
 if al.gen_addrs and opt.print_checksum:
 	Die(0,al.checksum)
 
+from .ui import keypress_confirm
 if al.gen_keys and keypress_confirm('Encrypt key list?'):
 	af.encrypt()
 	af.write(

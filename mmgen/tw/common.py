@@ -26,7 +26,7 @@ from ..globalvars import g
 from ..objmethods import Hilite,InitErrors,MMGenObject
 from ..obj import TwComment,get_obj,MMGenIdx,MMGenList
 from ..color import nocolor,yellow,green
-from ..util import msg,msg_r,fmt,die,line_input,do_pager,capfirst,make_timestr
+from ..util import msg,msg_r,fmt,die,capfirst,make_timestr
 from ..addr import MMGenID
 
 # mixin class for TwUnspentOutputs,TwAddrList,TwTxHistory:
@@ -313,10 +313,12 @@ class TwCommon:
 				parent.oneshot_msg = green(f'Data written to {outfile!r}\n\n')
 
 		async def a_view(self,parent):
+			from ..ui import do_pager
 			do_pager( await parent.format_squeezed(color=True,cached=True) )
 			self.post_view(parent)
 
 		async def a_view_detail(self,parent):
+			from ..ui import do_pager
 			do_pager( await parent.format_detail(color=True) )
 			self.post_view(parent)
 
@@ -329,6 +331,7 @@ class TwCommon:
 
 		async def run(self,parent,action):
 			msg('')
+			from ..ui import line_input
 			while True:
 				ret = line_input(f'Enter {parent.item_desc} number (or RETURN to return to main menu): ')
 				if ret == '':

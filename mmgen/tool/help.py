@@ -184,7 +184,7 @@ def gen_tool_cmd_usage(mod,cmdname):
 
 def usage(cmdname=None,exit_val=1):
 
-	from ..util import Msg,die,do_pager
+	from ..util import Msg,die
 
 	if cmdname:
 		for mod,cmdlist in main_tool.mods.items():
@@ -194,6 +194,7 @@ def usage(cmdname=None,exit_val=1):
 		else:
 			die(1,f'{cmdname!r}: no such tool command')
 	else:
+		from ..ui import do_pager
 		do_pager('\n'.join(gen_tool_usage()))
 
 	import sys

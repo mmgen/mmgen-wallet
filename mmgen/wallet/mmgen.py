@@ -17,7 +17,7 @@ import os
 from ..globalvars import g
 from ..opts import opt
 from ..seed import Seed
-from ..util import msg,qmsg,line_input,make_timestamp,make_chksum_6,split_into_cols,is_chksum_6,compare_chksums
+from ..util import msg,qmsg,make_timestamp,make_chksum_6,split_into_cols,is_chksum_6,compare_chksums
 from ..obj import MMGenWalletLabel,get_obj
 from ..baseconv import baseconv
 
@@ -43,6 +43,7 @@ class wallet(wallet):
 		prompt = 'Enter a wallet label, or hit ENTER {}: '.format(
 			'to reuse the label {}'.format(old_lbl.hl(encl="''")) if old_lbl else
 			'for no label' )
+		from ..ui import line_input
 		while True:
 			ret = line_input(prompt)
 			if ret:

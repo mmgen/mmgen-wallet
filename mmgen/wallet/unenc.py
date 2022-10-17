@@ -14,7 +14,7 @@ wallet.unenc: unencrypted wallet base class
 
 from ..globalvars import g
 from ..color import blue,yellow
-from ..util import msg,msg_r,capfirst,is_int,keypress_confirm
+from ..util import msg,msg_r,capfirst,is_int
 from .base import wallet
 
 class wallet(wallet):
@@ -53,5 +53,6 @@ class wallet(wallet):
 		while True:
 			usr_len = choose_len()
 			prompt = self.choose_seedlen_confirm.format(usr_len)
+			from ..ui import keypress_confirm
 			if keypress_confirm(prompt,default_yes=True,no_nl=not g.test_suite):
 				return usr_len

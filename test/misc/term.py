@@ -22,6 +22,7 @@ opts_data = {
 cmd_args = opts.init(opts_data)
 
 from mmgen.term import get_char,get_char_raw,get_terminal_size
+from mmgen.ui import line_input,keypress_confirm,do_license_msg
 import mmgen.term as term_mod
 
 def cmsg(m):

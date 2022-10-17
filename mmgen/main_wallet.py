@@ -176,6 +176,7 @@ if cmd_args:
 sf = get_seed_file(cmd_args,nargs,invoked_as=invoked_as)
 
 if invoked_as != 'chk':
+	from .ui import do_license_msg
 	do_license_msg()
 
 if invoked_as == 'gen':
@@ -242,6 +243,7 @@ if invoked_as == 'passchg':
 			return old_fn
 
 	if ss_in.infile.dirname == g.data_dir:
+		from .ui import confirm_or_raise
 		confirm_or_raise(
 			message  = yellow('Confirmation of default wallet update'),
 			action   = 'update the default wallet',
@@ -252,18 +254,21 @@ if invoked_as == 'passchg':
 	else:
 		old_wallet = rename_old_wallet_maybe(silent=False)
 		ss_out.write_to_file()
+		from .ui import keypress_confirm
 		if keypress_confirm(f'Securely delete old wallet {old_wallet!r}?'):
 			secure_delete( old_wallet )
 elif invoked_as == 'gen' and not opt.outdir and not opt.stdout:
 	from .filename import find_file_in_dir
-	if (
-		not find_file_in_dir( get_wallet_cls('mmgen'), g.data_dir )
-		and keypress_confirm(
-			'Make this wallet your default and move it to the data directory?',
-			default_yes = True ) ):
-		ss_out.write_to_file(outdir=g.data_dir)
-	else:
+	if find_file_in_dir( get_wallet_cls('mmgen'), g.data_dir ):
 		ss_out.write_to_file()
+	else:
+		from .ui import keypress_confirm
+		if keypress_confirm(
+				'Make this wallet your default and move it to the data directory?',
+				default_yes = True ):
+			ss_out.write_to_file(outdir=g.data_dir)
+		else:
+			ss_out.write_to_file()
 else:
 	ss_out.write_to_file()
 

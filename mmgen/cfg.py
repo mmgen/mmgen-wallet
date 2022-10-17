@@ -271,6 +271,8 @@ class CfgFileSampleUsr(CfgFileSample):
 							{'  ' + fmt_list(bad,fmt='bare')}
 						"""
 						ymsg(fmt(m,indent='  ',strip_char='\t'))
+
+		from .ui import keypress_confirm,do_pager
 		while True:
 			if not keypress_confirm(self.details_confirm_prompt,no_nl=True):
 				return

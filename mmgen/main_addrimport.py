@@ -120,6 +120,7 @@ def check_opts(tw):
 		rescan = False
 
 	if rescan and not opt.quiet:
+		from .ui import keypress_confirm
 		if not keypress_confirm(
 				'\n{}\n\nContinue?'.format(addrimport_msgs['rescan']),
 				default_yes = True ):

@@ -17,7 +17,7 @@ from ..opts import opt
 from .base import Base
 from ..color import pink
 from ..obj import get_obj,MMGenList
-from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension,keypress_confirm,do_license_msg,line_input
+from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension
 from ..addr import is_mmgen_id,CoinAddr,is_coin_addr
 
 def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
@@ -50,6 +50,7 @@ def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
 			coin_addr = ad_f.mmaddr2coinaddr(mmaddr)
 			if coin_addr:
 				msg(wmsg('addr_in_addrfile_only'))
+				from ..ui import keypress_confirm
 				if not (opt.yes or keypress_confirm('Continue anyway?')):
 					sys.exit(1)
 			else:
@@ -108,6 +109,7 @@ class New(Base):
 
 	def get_usr_fee_interactive(self,tx_fee=None,desc='Starting'):
 		abs_fee = None
+		from ..ui import line_input
 		while True:
 			if tx_fee:
 				abs_fee = self.convert_and_check_fee(tx_fee,desc)
@@ -122,6 +124,7 @@ class New(Base):
 						self.coin,
 						pink(str(self.fee_abs2rel(abs_fee))),
 						self.rel_fee_disp)
+				from ..ui import keypress_confirm
 				if opt.yes or keypress_confirm(prompt+'OK?',default_yes=True):
 					if opt.yes:
 						msg(prompt)
@@ -231,6 +234,7 @@ class New(Base):
 	# inputs methods
 	def select_unspent(self,unspent):
 		prompt = 'Enter a range or space-separated list of outputs to spend: '
+		from ..ui import line_input
 		while True:
 			reply = line_input(prompt).strip()
 			if reply:
@@ -307,6 +311,7 @@ class New(Base):
 
 			if funds_left >= 0:
 				p = self.final_inputs_ok_msg(funds_left)
+				from ..ui import keypress_confirm
 				if opt.yes or keypress_confirm(p+'. OK?',default_yes=True):
 					if opt.yes:
 						msg(p)
@@ -331,6 +336,7 @@ class New(Base):
 		if not do_info:
 			await self.get_outputs_from_cmdline(cmd_args)
 
+		from ..ui import do_license_msg
 		do_license_msg()
 
 		if not opt.inputs:

@@ -14,7 +14,7 @@ wallet.mnemonic: MMGen mnemonic wallet base class
 
 from ..globalvars import g
 from ..baseconv import baseconv
-from ..util import msg,compare_or_die,get_data_from_user
+from ..util import msg,compare_or_die
 from ..seed import Seed
 from .unenc import wallet
 
@@ -32,6 +32,7 @@ class wallet(wallet):
 	def _get_data_from_user(self,desc):
 
 		if not g.stdin_tty:
+			from ..ui import get_data_from_user
 			return get_data_from_user(desc)
 
 		from ..mn_entry import mn_entry # import here to catch cfg var errors

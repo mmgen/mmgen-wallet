@@ -29,13 +29,11 @@ from .util import (
 	qmsg,
 	dmsg,
 	die,
-	confirm_or_raise,
 	get_extension,
 	is_utf8,
 	capfirst,
 	make_full_path,
 	strip_comments,
-	keypress_confirm,
 )
 
 def check_or_create_dir(path):
@@ -181,6 +179,7 @@ def write_data_to_file( outfile,data,desc='data',
 			if no_tty:
 				die(2,f'Printing {desc} to screen is not allowed')
 			if (ask_tty and not opt.quiet) or binary:
+				from .ui import confirm_or_raise
 				confirm_or_raise(
 					message = '',
 					action  = f'output {desc} to screen' )
@@ -193,6 +192,7 @@ def write_data_to_file( outfile,data,desc='data',
 					if no_tty:
 						die(2,f'Writing {desc} to pipe is not allowed')
 					if ask_tty and not opt.quiet:
+						from .ui import confirm_or_raise
 						confirm_or_raise(
 							message = '',
 							action  = f'output {desc} to pipe' )
@@ -219,12 +219,14 @@ def write_data_to_file( outfile,data,desc='data',
 		if ask_write:
 			if not ask_write_prompt:
 				ask_write_prompt = f'Save {desc}?'
+			from .ui import keypress_confirm
 			if not keypress_confirm(ask_write_prompt,
 						default_yes=ask_write_default_yes):
 				die(1,f'{capfirst(desc)} not saved')
 
 		hush = False
 		if os.path.lexists(outfile) and ask_overwrite:
+			from .ui import confirm_or_raise
 			confirm_or_raise(
 				message = '',
 				action  = f'File {outfile!r} already exists\nOverwrite?' )

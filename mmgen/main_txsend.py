@@ -48,6 +48,7 @@ else:
 	opts.usage()
 
 if not opt.status:
+	from .ui import do_license_msg
 	do_license_msg()
 
 async def main():

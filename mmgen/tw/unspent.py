@@ -25,15 +25,7 @@ from collections import namedtuple
 
 from ..globalvars import g
 from ..color import red,yellow
-from ..util import (
-	msg,
-	die,
-	capfirst,
-	suf,
-	fmt,
-	keypress_confirm,
-	line_input,
-)
+from ..util import msg,die,capfirst,suf,fmt
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import ImmutableAttr,ListItemAttr,MMGenListItem,TwComment,get_obj,HexStr,CoinTxID,MMGenList
@@ -258,6 +250,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 	class item_action(TwCommon.item_action):
 
 		async def a_balance_refresh(self,uo,idx):
+			from ..ui import keypress_confirm
 			if not keypress_confirm(
 					f'Refreshing tracking wallet {uo.item_desc} #{idx}.  Is this what you want?'):
 				return 'redo'
@@ -266,6 +259,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			uo.oneshot_msg = yellow(f'{uo.proto.dcoin} balance for account #{idx} refreshed\n\n')
 
 		async def a_addr_delete(self,uo,idx):
+			from ..ui import keypress_confirm
 			if not keypress_confirm(
 					f'Removing {uo.item_desc} #{idx} from tracking wallet.  Is this what you want?'):
 				return 'redo'
@@ -297,6 +291,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			cur_lbl = uo.data[idx-1].label
 			msg('Current label: {}'.format(cur_lbl.hl() if cur_lbl else '(none)'))
 
+			from ..ui import line_input
 			res = line_input(
 				"Enter label text (or ENTER to return to main menu): ",
 				insert_txt = cur_lbl )
@@ -304,6 +299,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			if res == cur_lbl:
 				return None
 			elif res == '':
+				from ..ui import keypress_confirm
 				return (await do_lbl_add('')) if keypress_confirm(
 					f'Removing label for {desc}.  Is this what you want?') else 'redo'
 			else:

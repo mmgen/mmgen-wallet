@@ -78,6 +78,7 @@ def skip(name,reason=None):
 	return 'skip'
 
 def confirm_continue():
+	from mmgen.ui import keypress_confirm
 	if keypress_confirm(blue('Continue? (Y/n): '),default_yes=True,complete_prompt=True):
 		if opt.verbose or opt.exact_output: sys.stderr.write('\n')
 	else:

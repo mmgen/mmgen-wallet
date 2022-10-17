@@ -15,7 +15,7 @@ tx.bump: transaction bump class
 from .new import New
 from .completed import Completed
 from ..opts import opt
-from ..util import line_input,is_int,keypress_confirm
+from ..util import is_int
 
 class Bump(Completed,New):
 	desc = 'fee-bumped transaction'
@@ -60,6 +60,7 @@ class Bump(Completed,New):
 
 		while True:
 			if init_reply == None:
+				from ..ui import line_input
 				m = 'Choose an output to deduct the fee from (Hit ENTER for the change output): '
 				reply = line_input(m) or 'c'
 			else:
@@ -77,8 +78,11 @@ class Bump(Completed,New):
 					cm = ' (change output)' if chg_idx == idx else ''
 					prompt = f'Fee will be deducted from output {idx+1}{cm} ({o_amt} {self.coin})'
 					if check_sufficient_funds(o_amt):
-						if opt.yes or keypress_confirm(prompt+'.  OK?',default_yes=True):
-							if opt.yes:
-								msg(prompt)
-							self.bump_output_idx = idx
-							return idx
+						if opt.yes:
+							msg(prompt)
+						else:
+							from ..ui import keypress_confirm
+							if not keypress_confirm(prompt+'.  OK?',default_yes=True):
+								continue
+						self.bump_output_idx = idx
+						return idx

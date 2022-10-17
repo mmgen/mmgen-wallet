@@ -16,7 +16,7 @@ import os
 
 from ..globalvars import g
 from ..opts import opt
-from ..util import msg,qmsg,die,get_data_from_user
+from ..util import msg,qmsg,die
 from ..objmethods import MMGenObject
 from . import Wallet,wallet_data,get_wallet_cls
 
@@ -82,6 +82,7 @@ class wallet(MMGenObject,metaclass=WalletMeta):
 			self.fmt_data = self._get_data_from_user(self.desc)
 
 	def _get_data_from_user(self,desc):
+		from ..ui import get_data_from_user
 		return get_data_from_user(desc)
 
 	def _deformat_once(self):

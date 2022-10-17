@@ -154,6 +154,7 @@ PasswordList(
 	pw_fmt          = pw_fmt,
 	chk_params_only = True )
 
+from .ui import do_license_msg
 do_license_msg()
 
 ss = Wallet(sf)
@@ -170,6 +171,7 @@ af = al.get_file()
 
 af.format()
 
+from .ui import keypress_confirm
 if keypress_confirm('Encrypt password list?'):
 	af.encrypt()
 	af.write(binary=True,desc='encrypted password list')

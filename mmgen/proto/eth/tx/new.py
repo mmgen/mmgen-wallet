@@ -19,7 +19,7 @@ from .base import Base,TokenBase
 from ....opts import opt
 from ....obj import Int,ETHNonce,MMGenTxID,Str,HexStr
 from ....amt import ETHAmt
-from ....util import msg,line_input,is_int,is_hex_str,make_chksum_6
+from ....util import msg,is_int,is_hex_str,make_chksum_6
 from ....tw.ctl import TrackingWallet
 from ....addr import is_mmgen_id,is_coin_addr
 from ..contract import Token
@@ -88,6 +88,7 @@ class New(Base,TxBase.New):
 			self.process_cmd_arg(a,ad_f,ad_w)
 
 	def select_unspent(self,unspent):
+		from ....ui import line_input
 		while True:
 			reply = line_input('Enter an account to spend from: ').strip()
 			if reply:

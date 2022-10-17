@@ -12,5 +12,6 @@ cmd_args = opts.init({'text': { 'desc': '', 'usage':'', 'options':'-e, --echo-pa
 
 p = ('Enter passphrase: ','Enter passphrase (echoed): ')[bool(opt.echo_passphrase)]
 
+from mmgen.ui import get_words_from_user
 pw = get_words_from_user(p)
 msg('Entered: {}'.format(' '.join(pw)))

@@ -15,7 +15,7 @@ tx.info: transaction info class
 from ..globalvars import *
 from ..color import red,green,orange
 from ..opts import opt
-from ..util import msg,msg_r,do_pager
+from ..util import msg,msg_r
 
 import importlib
 
@@ -107,6 +107,7 @@ class TxInfo:
 	def view(self,pager=False,pause=True,terse=False):
 		o = self.format(terse=terse)
 		if pager:
+			from ..ui import do_pager
 			do_pager(o)
 		else:
 			msg_r(o)

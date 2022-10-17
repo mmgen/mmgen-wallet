@@ -16,7 +16,7 @@ from ..globalvars import *
 from ..objmethods import MMGenObject
 from ..obj import ImmutableAttr,ListItemAttr,MMGenListItem,MMGenTxLabel,TwComment,CoinTxID,HexStr
 from ..addr import MMGenID,CoinAddr
-from ..util import msg,ymsg,fmt,remove_dups,keypress_confirm,make_timestamp,line_input,die
+from ..util import msg,ymsg,fmt,remove_dups,make_timestamp,die
 from ..opts import opt
 
 class MMGenTxIO(MMGenListItem):
@@ -153,6 +153,7 @@ class Base(MMGenObject):
 			self.label = MMGenTxLabel(get_data_from_file(infile,'transaction comment'))
 		else: # get comment from user, or edit existing comment
 			m = ('Add a comment to transaction?','Edit transaction comment?')[bool(self.label)]
+			from ..ui import keypress_confirm,line_input
 			if keypress_confirm(m,default_yes=False):
 				while True:
 					s = MMGenTxLabel(line_input('Comment: ',insert_txt=self.label))
@@ -180,5 +181,7 @@ class Base(MMGenObject):
 					die( 'UserOptError', f'\n{indent}ERROR: {m}\n' )
 			else:
 				msg(f'\n{indent}WARNING: {m}\n')
-				if not (opt.yes or keypress_confirm('Continue?',default_yes=True)):
-					die(1,'Exiting at user request')
+				if not opt.yes:
+					from ..ui import keypress_confirm
+					if not keypress_confirm('Continue?',default_yes=True):
+						die(1,'Exiting at user request')

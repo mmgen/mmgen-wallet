@@ -294,15 +294,24 @@ def process_args(cmd,cmd_args,cls):
 	return ( args, kwargs )
 
 def process_result(ret,pager=False,print_result=False):
-	from .util import Msg,die
 	"""
 	Convert result to something suitable for output to screen and return it.
 	If result is bytes and not convertible to utf8, output as binary using os.write().
 	If 'print_result' is True, send the converted result directly to screen or
 	pager instead of returning it.
 	"""
+
+	from .util import Msg,die
+
 	def triage_result(o):
-		return o if not print_result else do_pager(o) if pager else Msg(o)
+		if print_result:
+			if pager:
+				from .ui import do_pager
+				do_pager(o)
+			else:
+				Msg(o)
+		else:
+			return o
 
 	if ret == True:
 		return True
@@ -316,8 +325,7 @@ def process_result(ret,pager=False,print_result=False):
 		return triage_result('\n'.join([r.decode() if isinstance(r,bytes) else r for r in ret]))
 	elif isinstance(ret,bytes):
 		try:
-			o = ret.decode()
-			return o if not print_result else do_pager(o) if pager else Msg(o)
+			return triage_result(ret.decode())
 		except:
 			# don't add NL to binary data if it can't be converted to utf8
 			if print_result:

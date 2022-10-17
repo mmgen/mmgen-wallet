@@ -261,6 +261,7 @@ def list_cmds():
 		for cmd in sorted(utils):
 			yield '  {:{w}} - {}'.format( cmd, utils[cmd], w=w )
 
+	from mmgen.ui import do_pager
 	do_pager('\n'.join(gen_output()))
 
 	sys.exit(0)
@@ -479,6 +480,7 @@ class CmdGroupMgr(object):
 					for k,v in cls.cmd_subgroups.items():
 						yield '    + {} · {}'.format( cyan(k.ljust(max_w+1)), v[0] )
 
+		from mmgen.ui import do_pager
 		do_pager('\n'.join(gen_output()))
 
 		Msg( '\n' + ' '.join(e[0] for e in ginfo) )

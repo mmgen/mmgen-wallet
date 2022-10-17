@@ -15,7 +15,7 @@ wallet.dieroll: dieroll wallet class
 import time
 from ..globalvars import g
 from ..opts import opt
-from ..util import msg,msg_r,die,fmt,remove_whitespace,keypress_confirm
+from ..util import msg,msg_r,die,fmt,remove_whitespace
 from ..util2 import block_format
 from ..seed import Seed
 from ..baseconv import baseconv
@@ -54,6 +54,7 @@ class wallet(wallet):
 		seed_bytes = bc.tobytes( d, pad='seed' )[-seed_len:]
 
 		if self.interactive_input and opt.usr_randchars:
+			from ..ui import keypress_confirm
 			if keypress_confirm(self.user_entropy_prompt):
 				from ..crypto import add_user_random
 				seed_bytes = add_user_random(
@@ -70,6 +71,7 @@ class wallet(wallet):
 	def _get_data_from_user(self,desc):
 
 		if not g.stdin_tty:
+			from ..ui import get_data_from_user
 			return get_data_from_user(desc)
 
 		bc = baseconv('b6d')

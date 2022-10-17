@@ -17,17 +17,7 @@ import os
 from ..globalvars import g
 from ..opts import opt
 from ..seed import Seed
-from ..util import (
-	msg,
-	dmsg,
-	qmsg,
-	die,
-	compare_or_die,
-	keypress_confirm,
-	line_input,
-	capfirst,
-	confirm_or_raise
-)
+from ..util import msg,dmsg,qmsg,die,compare_or_die,capfirst
 from ..util2 import parse_bytespec
 from .incog_base import wallet
 
@@ -108,6 +98,7 @@ class wallet(wallet):
 		try:
 			os.stat(fn)
 		except:
+			from ..ui import keypress_confirm,line_input
 			if keypress_confirm(
 					f'Requested file {fn!r} does not exist.  Create?',
 					default_yes = True ):
@@ -136,6 +127,7 @@ class wallet(wallet):
 		if check_offset:
 			self._check_valid_offset(f,'write')
 			if not opt.quiet:
+				from ..ui import confirm_or_raise
 				confirm_or_raise(
 					message = '',
 					action  = f'alter file {f.name!r}' )

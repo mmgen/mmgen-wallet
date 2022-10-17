@@ -153,3 +153,6 @@ def Wallet(
 		passwd_file = passwd_file )
 
 	return me
+
+def check_wallet_extension(fn):
+	get_wallet_data( ext=get_extension(fn), die_on_fail=True ) # raises exception on failure

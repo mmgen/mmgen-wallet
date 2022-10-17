@@ -119,10 +119,12 @@ if opt.id_str and not opt.master_share:
 	die(1,'--id-str option meaningless in context of non-master-share join')
 
 from .fileutil import check_infile
+from .wallet import check_wallet_extension
 for arg in cmd_args:
 	check_wallet_extension(arg)
 	check_infile(arg)
 
+from .ui import do_license_msg
 do_license_msg()
 
 qmsg('Input files:\n  {}\n'.format('\n  '.join(cmd_args)))

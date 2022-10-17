@@ -111,6 +111,7 @@ from .tx.sign import *
 
 seed_files = get_seed_files(opt,cmd_args) if (cmd_args or opt.send) else None
 
+from .ui import do_license_msg
 do_license_msg()
 
 silent = opt.yes and opt.tx_fee != None and opt.output_to_reduce != None

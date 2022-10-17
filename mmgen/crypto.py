@@ -34,8 +34,6 @@ from .util import (
 	qmsg,
 	fmt,
 	die,
-	line_input,
-	get_words_from_user,
 	make_chksum_8,
 	compare_chksums,
 	oneshot_warning,
@@ -246,6 +244,7 @@ def _get_random_data_from_user(uchars,desc):
 	if g.debug:
 		msg(f'USER ENTROPY (user input + keystroke timings):\n{ret}')
 
+	from .ui import line_input
 	line_input('User random data successfully acquired.  Press ENTER to continue: ')
 
 	return ret.encode()
@@ -299,6 +298,7 @@ def get_hash_preset_from_user(
 		f'Enter hash preset for {data_desc},\n' +
 		f'or hit ENTER to accept the default value ({hash_preset!r}): ' )
 
+	from .ui import line_input
 	while True:
 		ret = line_input(prompt)
 		if ret:
@@ -324,6 +324,7 @@ def get_new_passphrase(data_desc,hash_preset,passwd_file,pw_desc='passphrase'):
 			quiet = pwfile_reuse_warning(passwd_file).warning_shown ))
 	else:
 		qmsg('\n'+fmt(message,indent='  '))
+		from .ui import get_words_from_user
 		if opt.echo_passphrase:
 			pw = ' '.join(get_words_from_user(f'Enter {pw_desc} for {data_desc}: '))
 		else:
@@ -352,6 +353,7 @@ def get_passphrase(data_desc,passwd_file,pw_desc='passphrase'):
 			desc = f'{pw_desc} for {data_desc}',
 			quiet = pwfile_reuse_warning(passwd_file).warning_shown ))
 	else:
+		from .ui import get_words_from_user
 		return ' '.join(get_words_from_user(f'Enter {pw_desc} for {data_desc}: '))
 
 mmenc_salt_len = 32

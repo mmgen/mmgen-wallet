@@ -22,7 +22,7 @@ passwdlist.py: Password list class for the MMGen suite
 
 from collections import namedtuple
 
-from .util import ymsg,is_int,keypress_confirm,die
+from .util import ymsg,is_int,die
 from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString,TwComment
 from .key import PrivKey
 from .addr import MMGenPasswordType,AddrIdx,AddrListID
@@ -184,6 +184,7 @@ class PasswordList(AddrList):
 				).format(good_pw_len) )
 
 		if pf in ('bip39','hex') and pw_bytes < seed.byte_len:
+			from .ui import keypress_confirm
 			if not keypress_confirm(
 					f'WARNING: requested {self.pw_info[pf].desc} length has less entropy ' +
 					'than underlying seed!\nIs this what you want?',

@@ -152,7 +152,7 @@ class tool_cmd(tool_cmd_base):
 
 	def extract_key_from_geth_wallet( self, wallet_file:str, check_addr=True ):
 		"decrypt the encrypted private key in a Geth keystore wallet, returning the decrypted key"
-		from ..util import line_input
+		from ..ui import line_input
 		from ..opts import opt
 		from ..proto.eth.misc import extract_key_from_geth_keystore_wallet
 		passwd = line_input( 'Enter passphrase: ', echo=opt.echo_passphrase ).strip().encode()

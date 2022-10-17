@@ -15,7 +15,7 @@ wallet.incog_base: incognito wallet base class
 from ..globalvars import g
 from ..opts import opt
 from ..seed import Seed
-from ..util import msg,vmsg,qmsg,make_chksum_8,keypress_confirm
+from ..util import msg,vmsg,qmsg,make_chksum_8
 from .enc import wallet
 import mmgen.crypto as crypto
 
@@ -146,6 +146,7 @@ class wallet(wallet):
 
 	def _verify_seed_oldfmt(self,seed):
 		m = f'Seed ID: {make_chksum_8(seed)}.  Is the Seed ID correct?'
+		from ..ui import keypress_confirm
 		if keypress_confirm(m, True):
 			return seed
 		else:

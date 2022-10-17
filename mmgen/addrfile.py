@@ -20,14 +20,7 @@
 addrfile.py:  Address and password file classes for the MMGen suite
 """
 
-from .util import (
-	msg,
-	qmsg,
-	qmsg_r,
-	die,
-	capfirst,
-	keypress_confirm,
-)
+from .util import msg,qmsg,qmsg_r,die,capfirst
 from .protocol import init_proto
 from .obj import MMGenObject,TwComment,WalletPassword,MMGenPWIDString
 from .seed import SeedID,is_seed_id
@@ -166,8 +159,8 @@ class AddrFile(MMGenObject):
 			ret.append(a)
 
 		if p.has_keys and p.ka_validity_chk != False:
-			from .opts import opt
-			if opt.yes or p.ka_validity_chk == True or keypress_confirm('Check key-to-address validity?'):
+
+			def verify_keys():
 				from .addrgen import KeyGenerator,AddrGenerator
 				kg = KeyGenerator(p.proto,p.al_id.mmtype.pubkey_type)
 				ag = AddrGenerator(p.proto,p.al_id.mmtype)
@@ -177,6 +170,14 @@ class AddrFile(MMGenObject):
 					assert e.addr == ag.to_addr(kg.gen_data(e.sec)),(
 						f'Key doesn’t match address!\n  {e.sec.wif}\n  {e.addr}')
 				qmsg(' - done')
+
+			from .opts import opt
+			if opt.yes or p.ka_validity_chk == True:
+				verify_keys()
+			else:
+				from .ui import keypress_confirm
+				if keypress_confirm('Check key-to-address validity?'):
+					verify_keys()
 
 		return ret
 

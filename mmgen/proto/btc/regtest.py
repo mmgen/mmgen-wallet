@@ -30,6 +30,7 @@ def create_data_dir(data_dir):
 	try: os.stat(os.path.join(data_dir,'regtest'))
 	except: pass
 	else:
+		from ...ui import keypress_confirm
 		if keypress_confirm(
 				f'Delete your existing MMGen regtest setup at {data_dir!r} and create a new one?'):
 			shutil.rmtree(data_dir)

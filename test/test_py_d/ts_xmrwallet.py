@@ -169,6 +169,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 					      {' '.join(a+b2)}
 				""",indent='    ',strip_char='\t'))
 
+				from mmgen.ui import keypress_confirm
 				if keypress_confirm('Continue?'):
 					start_proxy()
 				else:

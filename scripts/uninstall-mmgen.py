@@ -83,6 +83,7 @@ if opt.list_paths:
 
 if not opt.no_prompt:
 	m = 'Deleting the following paths and files:\n  {}\nProceed?'
+	from mmgen.ui import keypress_confirm
 	if not keypress_confirm(m.format('\n  '.join(del_list))):
 		die(1,'Exiting at user request')
 

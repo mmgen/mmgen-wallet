@@ -13,8 +13,6 @@ tx.online: online signed transaction class
 """
 
 from .signed import Signed
-from ..util import msg,confirm_or_raise
-from ..opts import opt
 
 class OnlineSigned(Signed):
 
@@ -24,6 +22,9 @@ class OnlineSigned(Signed):
 		return _base_proto_subclass('Status','status',self.proto)(self)
 
 	def confirm_send(self):
+		from ..opts import opt
+		from ..util import msg
+		from ..ui import confirm_or_raise
 		confirm_or_raise(
 			message = '' if opt.quiet else 'Once this transaction is sent, there’s no taking it back!',
 			action  = f'broadcast this transaction to the {self.proto.coin} {self.proto.network.upper()} network',
