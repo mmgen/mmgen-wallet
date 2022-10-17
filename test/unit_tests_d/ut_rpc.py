@@ -85,7 +85,7 @@ class init_test:
 
 def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 
-	def do(d):
+	def do_test(d):
 
 		if not opt.no_daemon_stop:
 			d.stop()
@@ -114,7 +114,7 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 			set(daemon_ids) & set(x) if daemon_ids else x
 			)(CoinDaemon.get_daemon_ids(proto.coin))
 		for daemon_id in ids:
-			do( CoinDaemon(proto=proto,test_suite=True,daemon_id=daemon_id) )
+			do_test( CoinDaemon(proto=proto,test_suite=True,daemon_id=daemon_id) )
 
 	return True
 

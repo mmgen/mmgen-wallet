@@ -49,6 +49,10 @@ class bitcoin_core_daemon(CoinDaemon):
 				'regtest': 'regtest',
 			}[self.network] )
 
+	@property
+	def auth_cookie_fn(self):
+		return os.path.join(self.network_datadir,'.cookie')
+
 	def init_subclass(self):
 
 		if self.network == 'regtest':

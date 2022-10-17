@@ -20,7 +20,7 @@ def print_info(name,extra_desc):
 			cyan(f'{name} ({extra_desc})'),
 			'' if opt.quiet else '\n'))
 	else:
-		Msg_r(f'Testing {extra_desc} transactions')
+		Msg_r(f'Testing {extra_desc}')
 		if not opt.quiet:
 			Msg('')
 

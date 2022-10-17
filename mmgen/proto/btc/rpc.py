@@ -89,7 +89,8 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),
 			port = daemon.rpc_port )
 
-		self.set_auth() # set_auth() requires cookie, so must be called after __init__() tests daemon is listening
+		self.set_auth()
+
 		await self.set_backend_async(backend) # backend requires self.auth
 
 		self.cached = {}
@@ -212,9 +213,6 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			(os.path.dirname(g.data_dir) if self.proto.regtest else self.daemon.datadir),
 			self.daemon.cfg_file )
 
-	def get_daemon_auth_cookie_fn(self):
-		return os.path.join(self.daemon.network_datadir,'.cookie')
-
 	def get_daemon_cfg_options(self,req_keys):
 
 		fn = self.get_daemon_cfg_fn()
@@ -238,7 +236,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		return dict(gen())
 
 	def get_daemon_auth_cookie(self):
-		fn = self.get_daemon_auth_cookie_fn()
+		fn = self.daemon.auth_cookie_fn
 		return get_lines_from_file(fn,'cookie',quiet=True)[0] if os.access(fn,os.R_OK) else ''
 
 	def info(self,info_id):
