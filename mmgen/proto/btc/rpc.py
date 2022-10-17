@@ -16,9 +16,33 @@ import os
 
 from ...globalvars import g
 from ...base_obj import AsyncInit
-from ...util import ymsg,vmsg,die
+from ...util import ymsg,vmsg,die,fmt
 from ...fileutil import get_lines_from_file
-from ...rpc import RPCClient
+from ...rpc import RPCClient,auth_data
+
+no_credentials_errmsg = """
+	Error: no {proto_name} RPC authentication method found
+
+	RPC credentials must be supplied using one of the following methods:
+
+	1) If daemon is local and running as same user as you:
+
+	   - no credentials required, or matching rpcuser/rpcpassword and
+	     rpc_user/rpc_password values in {cf_name}.conf and mmgen.cfg
+
+	2) If daemon is running remotely or as different user:
+
+	   - matching credentials in {cf_name}.conf and mmgen.cfg as described
+	     above
+
+	The --rpc-user/--rpc-password options may be supplied on the MMGen command
+	line.  They override the corresponding values in mmgen.cfg. Set them to an
+	empty string to use cookie authentication with a local server when the
+	options are set in mmgen.cfg.
+
+	For better security, rpcauth should be used in {cf_name}.conf instead of
+	rpcuser/rpcpassword.
+"""
 
 class CallSigs:
 
@@ -155,6 +179,33 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		# for regtest, wallet path must remain '/' until Carol’s user wallet has been created
 		if g.regtest_user:
 			self.wallet_path = f'/wallet/{g.regtest_user}'
+
+	def set_auth(self):
+		"""
+		MMGen's credentials override coin daemon's
+		"""
+		if g.rpc_user:
+			user,passwd = (g.rpc_user,g.rpc_password)
+		else:
+			user,passwd = self.get_daemon_cfg_options(('rpcuser','rpcpassword')).values()
+
+		if not (user and passwd):
+			user,passwd = (self.daemon.rpc_user,self.daemon.rpc_password)
+
+		if user and passwd:
+			self.auth = auth_data(user,passwd)
+			return
+
+		if self.has_auth_cookie:
+			cookie = self.get_daemon_auth_cookie()
+			if cookie:
+				self.auth = auth_data(*cookie.split(':'))
+				return
+
+		die(1, '\n\n' + fmt(no_credentials_errmsg,strip_char='\t',indent='  ').format(
+				proto_name = self.proto.name,
+				cf_name = (self.proto.is_fork_of or self.proto.name).lower(),
+			))
 
 	def make_host_path(self,wallet):
 		return f'/wallet/{wallet}' if wallet else self.wallet_path

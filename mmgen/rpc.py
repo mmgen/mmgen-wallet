@@ -30,30 +30,6 @@ from .objmethods import Hilite,InitErrors
 
 auth_data = namedtuple('rpc_auth_data',['user','passwd'])
 
-rpc_credentials_msg = '\n'+fmt("""
-	Error: no {proto_name} RPC authentication method found
-
-	RPC credentials must be supplied using one of the following methods:
-
-	A) If daemon is local and running as same user as you:
-
-	   - no credentials required, or matching rpcuser/rpcpassword and
-	     rpc_user/rpc_password values in {cf_name}.conf and mmgen.cfg
-
-	B) If daemon is running remotely or as different user:
-
-	   - matching credentials in {cf_name}.conf and mmgen.cfg as described above
-
-	The --rpc-user/--rpc-password options may be supplied on the MMGen command line.
-	They override the corresponding values in mmgen.cfg. Set them to an empty string
-	to use cookie authentication with a local server when the options are set
-	in mmgen.cfg.
-
-	For better security, rpcauth should be used in {cf_name}.conf instead of
-	rpcuser/rpcpassword.
-
-""",strip_char='\t')
-
 def dmsg_rpc(fs,data=None,is_json=False):
 	if g.debug_rpc:
 		msg(
@@ -317,33 +293,6 @@ class RPCClient(MMGenObject):
 	async def set_backend_async(self,backend=None):
 		ret = self._get_backend(backend)
 		self.backend = (await ret) if type(ret).__name__ == 'coroutine' else ret
-
-	def set_auth(self):
-		"""
-		MMGen's credentials override coin daemon's
-		"""
-		if g.rpc_user:
-			user,passwd = (g.rpc_user,g.rpc_password)
-		else:
-			user,passwd = self.get_daemon_cfg_options(('rpcuser','rpcpassword')).values()
-
-		if not (user and passwd):
-			user,passwd = (self.daemon.rpc_user,self.daemon.rpc_password)
-
-		if user and passwd:
-			self.auth = auth_data(user,passwd)
-			return
-
-		if self.has_auth_cookie:
-			cookie = self.get_daemon_auth_cookie()
-			if cookie:
-				self.auth = auth_data(*cookie.split(':'))
-				return
-
-		die(1,rpc_credentials_msg.format(
-			proto_name = self.proto.name,
-			cf_name = (self.proto.is_fork_of or self.proto.name).lower(),
-		))
 
 	# Call family of methods - direct-to-daemon RPC call:
 	# positional params are passed to the daemon, 'timeout' and 'wallet' kwargs to the backend
