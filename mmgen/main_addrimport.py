@@ -184,4 +184,4 @@ cmd_args = opts.init(opts_data)
 from .protocol import init_proto_from_opts
 proto = init_proto_from_opts()
 import asyncio
-run_session(main())
+async_run(main())

@@ -220,4 +220,4 @@ async def main():
 	else:
 		die(1,f'{op!r}: unrecognized operation')
 
-run_session(main())
+async_run(main())

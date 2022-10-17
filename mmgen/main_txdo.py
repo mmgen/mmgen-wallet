@@ -151,4 +151,4 @@ async def main():
 	else:
 		die(2,'Transaction could not be signed')
 
-run_session(main())
+async_run(main())

@@ -112,7 +112,7 @@ def run_test(test,subtest=None):
 		t = getattr(mod,'unit_tests')()
 		ret = getattr(t,subtest.replace('-','_'))(test,UnitTestHelpers)
 		if type(ret).__name__ == 'coroutine':
-			ret = run_session(ret)
+			ret = async_run(ret)
 		if not ret:
 			die(4,f'Unit subtest {subtest_disp!r} failed')
 		pass

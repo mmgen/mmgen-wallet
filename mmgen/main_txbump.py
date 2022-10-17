@@ -181,4 +181,4 @@ async def main():
 	else:
 		tx.file.write(ask_write=not opt.yes,ask_write_default_yes=False,ask_overwrite=not opt.yes)
 
-run_session(main())
+async_run(main())

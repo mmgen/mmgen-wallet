@@ -372,7 +372,7 @@ class MoneroWalletOps:
 			self.c = MoneroWalletRPCClient(daemon=self.wd,test_connection=False)
 
 			if not uopt.no_start_wallet_daemon:
-				run_session(self.c.restart_daemon())
+				async_run(self.c.restart_daemon())
 
 		def create_addr_data(self):
 			if uarg.wallets:

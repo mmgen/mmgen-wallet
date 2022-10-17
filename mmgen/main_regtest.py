@@ -82,4 +82,4 @@ elif cmd_args[0] not in ('cli','wallet_cli','balances'):
 async def main():
 	await MMGenRegtest(g.coin).cmd(cmd_args)
 
-run_session(main())
+async_run(main())

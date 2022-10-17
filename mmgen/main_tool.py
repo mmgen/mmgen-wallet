@@ -379,7 +379,7 @@ if g.prog_name == 'mmgen-tool' and not opt._lock:
 	ret = getattr(cls(cmdname=cmd),cmd)(*args,**kwargs)
 
 	if type(ret).__name__ == 'coroutine':
-		ret = run_session(ret)
+		ret = async_run(ret)
 
 	process_result(
 		ret,

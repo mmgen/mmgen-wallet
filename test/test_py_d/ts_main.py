@@ -194,7 +194,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
 		if trunner == None or self.proto.coin.lower() not in self.networks:
 			return
-		self.rpc = run_session(rpc_init(self.proto))
+		self.rpc = async_run(rpc_init(self.proto))
 		self.lbl_id = ('account','label')['label_api' in self.rpc.caps]
 		if self.proto.coin in ('BTC','BCH','LTC'):
 			self.tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[self.proto.coin.lower()]

@@ -79,4 +79,4 @@ async def main():
 	tx.file.write(ask_overwrite=False,ask_write=False)
 	tx.print_contract_addr()
 
-run_session(main())
+async_run(main())

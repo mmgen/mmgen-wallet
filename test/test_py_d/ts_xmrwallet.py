@@ -707,7 +707,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	def stop_daemons(self):
 		for v in self.users.values():
-			run_session(v.md_rpc.stop_daemon())
+			async_run(v.md_rpc.stop_daemon())
 
 	def stop_miner_wallet_daemon(self):
-		run_session(self.users['miner'].wd_rpc.stop_daemon())
+		async_run(self.users['miner'].wd_rpc.stop_daemon())

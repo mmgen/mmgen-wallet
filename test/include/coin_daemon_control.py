@@ -78,7 +78,7 @@ def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=True):
 			print(' '.join(cmd))
 	else:
 		if action == 'stop' and hasattr(d,'rpc'):
-			run_session(d.rpc.stop_daemon(quiet=opt.quiet))
+			async_run(d.rpc.stop_daemon(quiet=opt.quiet))
 		else:
 			d.cmd(action,quiet=opt.quiet)
 

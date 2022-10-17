@@ -98,4 +98,4 @@ async def main():
 		ask_overwrite         = not opt.yes,
 		ask_write_default_yes = False )
 
-run_session(main())
+async_run(main())

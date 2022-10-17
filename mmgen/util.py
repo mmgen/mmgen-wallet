@@ -383,7 +383,7 @@ def get_subclasses(cls,names=False):
 				yield j
 	return tuple((c.__name__ for c in gen(cls)) if names else gen(cls))
 
-def run_session(coro):
+def async_run(coro):
 	import asyncio
 	return asyncio.run(coro)
 

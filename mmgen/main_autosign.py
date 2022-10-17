@@ -468,4 +468,4 @@ async def main():
 	elif cmd_args[0] == 'wait':
 		await do_loop()
 
-run_session(main())
+async_run(main())

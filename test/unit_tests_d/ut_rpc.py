@@ -27,7 +27,7 @@ def cfg_file_auth_test(proto,d):
 		rpc = await rpc_init(proto)
 		assert rpc.auth.user == 'ut_rpc', f'{rpc.auth.user}: user is not ut_rpc!'
 
-	run_session(do())
+	async_run(do())
 	d.stop()
 
 def print_daemon_info(rpc):
@@ -96,7 +96,7 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 
 		for n,backend in enumerate(g.autoset_opts['rpc_backend'].choices):
 			test = getattr(init_test,d.proto.coin.lower())
-			rpc = run_session(test(d.proto,backend,d))
+			rpc = async_run(test(d.proto,backend,d))
 			if not n and opt.verbose:
 				print_daemon_info(rpc)
 
@@ -209,5 +209,5 @@ class unit_tests:
 		import shutil
 		shutil.rmtree('test/trash2',ignore_errors=True)
 		os.makedirs('test/trash2')
-		run_session(run())
+		async_run(run())
 		return True

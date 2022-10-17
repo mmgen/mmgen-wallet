@@ -160,4 +160,4 @@ async def main():
 	if bad_tx_count:
 		die(2,f'{bad_tx_count} transaction{suf(bad_tx_count)} could not be signed')
 
-run_session(main())
+async_run(main())

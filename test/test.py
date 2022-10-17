@@ -729,7 +729,7 @@ class TestSuiteRunner(object):
 								if isinstance(e,KeyError) and e.args[0] == cmdname:
 									ret = getattr(self.ts,cmdname)()
 									if type(ret).__name__ == 'coroutine':
-										run_session(ret)
+										async_run(ret)
 								else:
 									raise
 							do_between()
@@ -850,7 +850,7 @@ class TestSuiteRunner(object):
 
 		ret = getattr(self.ts,cmd)(*arg_list) # run the test
 		if type(ret).__name__ == 'coroutine':
-			ret = run_session(ret)
+			ret = async_run(ret)
 		self.process_retval(cmd,ret)
 
 		if opt.profile:
