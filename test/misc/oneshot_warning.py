@@ -30,6 +30,8 @@ class wg(oneshot_warning_group):
 
 for i in (1,2,3):
 
+	from mmgen.crypto import pwfile_reuse_warning
+
 	msg('\npw')
 	for k in ('A','B'):
 		ret = pwfile_reuse_warning(k).warning_shown

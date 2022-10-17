@@ -229,6 +229,7 @@ def process_args(cmd,cmd_args,cls):
 			if sys.stdin.isatty():
 				die( 'BadFilename', "Standard input is a TTY.  Can't use '-' as a filename" )
 			else:
+				from .util2 import parse_bytespec
 				max_dlen_spec = '10kB' # limit input to 10KB for now
 				max_dlen = parse_bytespec(max_dlen_spec)
 				u_args[0] = os.read(0,max_dlen)
@@ -293,7 +294,7 @@ def process_args(cmd,cmd_args,cls):
 	return ( args, kwargs )
 
 def process_result(ret,pager=False,print_result=False):
-	from .util import Msg,die,parse_bytespec
+	from .util import Msg,die
 	"""
 	Convert result to something suitable for output to screen and return it.
 	If result is bytes and not convertible to utf8, output as binary using os.write().

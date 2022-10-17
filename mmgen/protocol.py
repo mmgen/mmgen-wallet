@@ -95,7 +95,7 @@ class CoinProtocol(MMGenObject):
 				assert self.name.startswith('Ethereum'), 'CoinProtocol.Base_chk1'
 
 			if self.base_coin in ('ETH','XMR'):
-				from .util import get_keccak
+				from .util2 import get_keccak
 				self.keccak_256 = get_keccak()
 
 			if need_amt:

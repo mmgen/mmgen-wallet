@@ -23,7 +23,7 @@ tool/fileutil.py: File routines for the 'mmgen-tool' utility
 import os
 
 from .common import tool_cmd_base
-from ..util import msg,msg_r,qmsg,die,suf,parse_bytespec,make_full_path
+from ..util import msg,msg_r,qmsg,die,suf,make_full_path
 from ..crypto import get_random,aesctr_iv_len
 
 class tool_cmd(tool_cmd_base):
@@ -95,6 +95,7 @@ class tool_cmd(tool_cmd_base):
 		from cryptography.hazmat.backends import default_backend
 
 		from ..opts import opt
+		from ..util2 import parse_bytespec
 
 		def encrypt_worker(wid):
 			ctr_init_val = os.urandom( aesctr_iv_len )

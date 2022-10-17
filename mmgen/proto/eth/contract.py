@@ -155,7 +155,7 @@ class Token(TokenCommon):
 
 	def __init__(self,proto,addr,decimals,rpc=None):
 		if type(self).__name__ == 'Token':
-			from ...util import get_keccak
+			from ...util2 import get_keccak
 			self.keccak_256 = get_keccak()
 		self.proto = proto
 		self.addr = TokenAddr(proto,addr)
@@ -167,7 +167,7 @@ class Token(TokenCommon):
 class TokenResolve(TokenCommon,metaclass=AsyncInit):
 
 	async def __init__(self,proto,rpc,addr):
-		from ...util import get_keccak
+		from ...util2 import get_keccak
 		self.keccak_256 = get_keccak()
 		self.proto = proto
 		self.rpc = rpc

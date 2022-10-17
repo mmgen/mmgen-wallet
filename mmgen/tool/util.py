@@ -25,7 +25,7 @@ from .common import tool_cmd_base
 class tool_cmd(tool_cmd_base):
 	"general string conversion and hashing utilities"
 
-	# mmgen.util.bytespec_map
+	# mmgen.util2.bytespec_map
 	def bytespec(self,dd_style_byte_specifier:str):
 		"""
 		convert a byte specifier such as ‘4GB’ into an integer
@@ -48,10 +48,10 @@ class tool_cmd(tool_cmd_base):
 		  EB = 1000000000000000000
 		  E  = 1152921504606846976
 		"""
-		from ..util import parse_bytespec
+		from ..util2 import parse_bytespec
 		return parse_bytespec(dd_style_byte_specifier)
 
-	# mmgen.util.bytespec_map
+	# mmgen.util2.bytespec_map
 	def to_bytespec(self,
 			n: int,
 			dd_style_byte_specifier: str,
@@ -78,7 +78,7 @@ class tool_cmd(tool_cmd_base):
 		  EB = 1000000000000000000
 		  E  = 1152921504606846976
 		"""
-		from ..util import int2bytespec
+		from ..util2 import int2bytespec
 		return int2bytespec( n, dd_style_byte_specifier, fmt, print_sym )
 
 	def randhex(self,
@@ -107,7 +107,7 @@ class tool_cmd(tool_cmd_base):
 			line_nums: "format for line numbers (valid choices: 'hex','dec')" = 'hex'):
 		"create hexdump of data from file (use '-' for stdin)"
 		from ..fileutil import get_data_from_file
-		from ..util import pretty_hexdump
+		from ..util2 import pretty_hexdump
 		data = get_data_from_file( infile, dash=True, quiet=True, binary=True )
 		return pretty_hexdump( data, cols=cols, line_nums=line_nums ).rstrip()
 
@@ -118,7 +118,7 @@ class tool_cmd(tool_cmd_base):
 			import sys,os,msvcrt
 			msvcrt.setmode( sys.stdout.fileno(), os.O_BINARY )
 		from ..fileutil import get_data_from_file
-		from ..util import decode_pretty_hexdump
+		from ..util2 import decode_pretty_hexdump
 		hexdata = get_data_from_file( infile, dash=True, quiet=True )
 		return decode_pretty_hexdump(hexdata)
 
@@ -138,7 +138,7 @@ class tool_cmd(tool_cmd_base):
 			from ..fileutil import get_data_from_file
 			b = get_data_from_file( data, binary=True )
 		elif hex_input:
-			from ..util import decode_pretty_hexdump
+			from ..util2 import decode_pretty_hexdump
 			b = decode_pretty_hexdump(data)
 		else:
 			b = data
@@ -219,7 +219,7 @@ class tool_cmd(tool_cmd_base):
 			add_spaces: 'add a space after every 5th character' = True):
 		"convert a hexadecimal string to die roll base6 (base6d)"
 		from ..baseconv import baseconv
-		from ..util import block_format
+		from ..util2 import block_format
 		ret = baseconv('b6d').fromhex(hexstr,pad,tostr=True)
 		return block_format( ret, gw=5, cols=None ).strip() if add_spaces else ret
 

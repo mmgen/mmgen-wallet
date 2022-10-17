@@ -15,7 +15,8 @@ wallet.dieroll: dieroll wallet class
 import time
 from ..globalvars import g
 from ..opts import opt
-from ..util import msg,msg_r,die,fmt,block_format,remove_whitespace,keypress_confirm
+from ..util import msg,msg_r,die,fmt,remove_whitespace,keypress_confirm
+from ..util2 import block_format
 from ..seed import Seed
 from ..baseconv import baseconv
 from .unenc import wallet

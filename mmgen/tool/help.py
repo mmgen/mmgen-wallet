@@ -25,7 +25,8 @@ import mmgen.main_tool as main_tool
 
 def main_help():
 
-	from ..util import pretty_format,capfirst
+	from ..util import capfirst
+	from ..util2 import pretty_format
 
 	def do():
 		for clsname,cmdlist in main_tool.mods.items():

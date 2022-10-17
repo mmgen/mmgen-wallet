@@ -46,7 +46,7 @@ class addr_generator:
 
 		def __init__(self,proto,addr_type):
 			super().__init__(proto,addr_type)
-			from .util import get_keccak
+			from .util2 import get_keccak
 			self.keccak_256 = get_keccak()
 
 def AddrGenerator(proto,addr_type):

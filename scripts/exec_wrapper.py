@@ -44,7 +44,7 @@ def exec_wrapper_write_traceback(e,exit_val):
 
 		cwd = os.path.abspath('.')
 		def fixup_fn(fn_in):
-			from mmgen.util import removeprefix,removesuffix
+			from mmgen.util2 import removeprefix,removesuffix
 			fn = removeprefix(removeprefix(fn_in,cwd+'/'),'test/overlay/tree/')
 			return removesuffix(fn,'_orig.py') + '.py' if fn.endswith('_orig.py') else fn
 			# Python 3.9:

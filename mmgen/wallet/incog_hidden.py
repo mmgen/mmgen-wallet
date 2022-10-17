@@ -24,11 +24,11 @@ from ..util import (
 	die,
 	compare_or_die,
 	keypress_confirm,
-	parse_bytespec,
 	line_input,
 	capfirst,
 	confirm_or_raise
 )
+from ..util2 import parse_bytespec
 from .incog_base import wallet
 
 class wallet(wallet):

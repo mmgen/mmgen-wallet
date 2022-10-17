@@ -24,7 +24,7 @@ class backend:
 			from ...proto.xmr.params import mainnet
 			self.proto_cls = mainnet
 
-			from ...util import get_keccak
+			from ...util2 import get_keccak
 			self.keccak_256 = get_keccak()
 
 		def to_viewkey(self,privkey):

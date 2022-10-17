@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-util.py:  Low-level routines imported by other modules in the MMGen suite
+util.py: Frequently-used variables, classes and functions for the MMGen suite
 """
 
 import sys,os,time,re
@@ -25,8 +25,6 @@ import sys,os,time,re
 from .color import *
 from .globalvars import g
 from .opts import opt
-
-import mmgen.color as color_mod
 
 ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
 
@@ -136,21 +134,6 @@ def die(ev,s='',stdout=False):
 	else:
 		raise ValueError(f'{ev}: exit value must be string or int instance')
 
-def die_wait(delay,ev=0,s=''):
-	assert isinstance(delay,int)
-	assert isinstance(ev,int)
-	if s:
-		msg(s)
-	time.sleep(delay)
-	sys.exit(ev)
-
-def die_pause(ev=0,s=''):
-	assert isinstance(ev,int)
-	if s:
-		msg(s)
-	input('Press ENTER to exit')
-	sys.exit(ev)
-
 def Die(ev=0,s=''):
 	die(ev=ev,s=s,stdout=True)
 
@@ -191,12 +174,6 @@ def list_gen(*data):
 				yield i[0]
 	return list(gen())
 
-def removeprefix(s,pfx): # workaround for pre-Python 3.9
-	return s[len(pfx):] if s.startswith(pfx) else s
-
-def removesuffix(s,sfx): # workaround for pre-Python 3.9
-	return s[:len(sfx)] if s.endswith(sfx) else s
-
 def remove_dups(iterable,edesc='element',desc='list',quiet=False,hide=False):
 	"""
 	Remove duplicate occurrences of iterable elements, preserving first occurrence
@@ -214,70 +191,6 @@ def remove_dups(iterable,edesc='element',desc='list',quiet=False,hide=False):
 def exit_if_mswin(feature):
 	if g.platform == 'win':
 		die(2, capfirst(feature) + ' not supported on the MSWin / MSYS2 platform' )
-
-def get_keccak(cached_ret=[]):
-
-	if not cached_ret:
-		from .opts import opt
-		# called in opts.init() via CoinProtocol, so must use getattr():
-		if getattr(opt,'use_internal_keccak_module',False):
-			qmsg('Using internal keccak module by user request')
-			from .contrib.keccak import keccak_256
-		else:
-			try:
-				from sha3 import keccak_256
-			except:
-				from .contrib.keccak import keccak_256
-		cached_ret.append(keccak_256)
-
-	return cached_ret[0]
-
-# From 'man dd':
-# c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
-# GB=1000*1000*1000, G=1024*1024*1024, and so on for T, P, E, Z, Y.
-bytespec_map = (
-	('c',  1),
-	('w',  2),
-	('b',  512),
-	('kB', 1000),
-	('K',  1024),
-	('MB', 1000000),
-	('M',  1048576),
-	('GB', 1000000000),
-	('G',  1073741824),
-	('TB', 1000000000000),
-	('T',  1099511627776),
-	('PB', 1000000000000000),
-	('P',  1125899906842624),
-	('EB', 1000000000000000000),
-	('E',  1152921504606846976),
-)
-
-def int2bytespec(n,spec,fmt,print_sym=True):
-	def spec2int(spec):
-		for k,v in bytespec_map:
-			if k == spec:
-				return v
-		else:
-			die('{spec}: unrecognized bytespec')
-	return '{:{}f}{}'.format( n / spec2int(spec), fmt, spec if print_sym else '' )
-
-def parse_bytespec(nbytes):
-	m = re.match(r'([0123456789.]+)(.*)',nbytes)
-	if m:
-		if m.group(2):
-			for k,v in bytespec_map:
-				if k == m.group(2):
-					from decimal import Decimal
-					return int(Decimal(m.group(1)) * v)
-			else:
-				msg("Valid byte specifiers: '{}'".format("' '".join([i[0] for i in bytespec_map])))
-		elif '.' in nbytes:
-			raise ValueError('fractional bytes not allowed')
-		else:
-			return int(nbytes)
-
-	die(1,f'{nbytes!r}: invalid byte specifier')
 
 def suf(arg,suf_type='s',verb='none'):
 	suf_types = {
@@ -338,10 +251,6 @@ def make_chksum_6(s):
 def is_chksum_6(s):
 	return len(s) == 6 and set(s) <= set(hexdigits_lc)
 
-def make_iv_chksum(s):
-	from hashlib import sha256
-	return sha256(s).hexdigest()[:8].upper()
-
 def split_into_cols(col_wid,s):
 	return ' '.join([s[col_wid*i:col_wid*(i+1)] for i in range(len(s)//col_wid+1)]).rstrip()
 
@@ -377,19 +286,6 @@ def secs_to_hms(secs):
 def secs_to_ms(secs):
 	return '{:02d}:{:02d}'.format(secs//60, secs % 60)
 
-def format_elapsed_hr(t,now=None,cached={}):
-	e = int((now or time.time()) - t)
-	if not e in cached:
-		abs_e = abs(e)
-		cached[e] = ', '.join(
-			'{} {}{}'.format(n,desc,suf(n)) for desc,n in (
-				('day',    abs_e // 86400),
-				('hour',   abs_e // 3600 % 24),
-				('minute', abs_e // 60 % 60),
-			) if n
-		) + (' ago' if e > 0 else ' in the future') if abs_e // 60 else 'just now'
-	return cached[e]
-
 def is_int(s):
 	try:
 		int(str(s))
@@ -410,43 +306,6 @@ def is_utf8(s):
 
 def remove_whitespace(s,ws='\t\r\n '):
 	return s.translate(dict((ord(e),None) for e in ws))
-
-def pretty_format(s,width=80,pfx=''):
-	out = []
-	while(s):
-		if len(s) <= width:
-			out.append(s)
-			break
-		i = s[:width].rfind(' ')
-		out.append(s[:i])
-		s = s[i+1:]
-	return pfx + ('\n'+pfx).join(out)
-
-def block_format(data,gw=2,cols=8,line_nums=None,data_is_hex=False):
-	assert line_nums in (None,'hex','dec'),"'line_nums' must be one of None, 'hex' or 'dec'"
-	ln_fs = '{:06x}: ' if line_nums == 'hex' else '{:06}: '
-	bytes_per_chunk = gw
-	if data_is_hex:
-		gw *= 2
-	nchunks = len(data)//gw + bool(len(data)%gw)
-	return ''.join(
-		('' if (line_nums == None or i % cols) else ln_fs.format(i*bytes_per_chunk))
-		+ data[i*gw:i*gw+gw]
-		+ (' ' if (not cols or (i+1) % cols) else '\n')
-			for i in range(nchunks)
-	).rstrip() + '\n'
-
-def pretty_hexdump(data,gw=2,cols=8,line_nums=None):
-	return block_format(data.hex(),gw,cols,line_nums,data_is_hex=True)
-
-def decode_pretty_hexdump(data):
-	pat = re.compile(fr'^[{hexdigits}]+:\s+')
-	lines = [pat.sub('',line) for line in data.splitlines()]
-	try:
-		return bytes.fromhex(''.join((''.join(lines).split())))
-	except:
-		msg('Data not in hexdump format')
-		return False
 
 def strip_comment(line):
 	return re.sub('#.*','',line).rstrip()
@@ -511,8 +370,9 @@ class oneshot_warning:
 	def do(self,wcls,div,fmt_args,reverse):
 
 		def do_warning():
+			import mmgen.color
 			message = getattr(wcls,'message')
-			color = getattr( color_mod, getattr(wcls,'color') )
+			color = getattr( mmgen.color, getattr(wcls,'color') )
 			msg(color('WARNING: ' + message.format(*fmt_args)))
 
 		if not hasattr(wcls,'data'):
@@ -534,11 +394,6 @@ class oneshot_warning_group(oneshot_warning):
 
 	def __init__(self,wcls,div=None,fmt_args=[],reverse=False):
 		self.do(getattr(self,wcls),div,fmt_args,reverse)
-
-class pwfile_reuse_warning(oneshot_warning):
-	message = 'Reusing passphrase from file {!r} at user request'
-	def __init__(self,fn):
-		oneshot_warning.__init__(self,div=fn,fmt_args=[fn],reverse=True)
 
 def line_input(prompt,echo=True,insert_txt=''):
 	"""

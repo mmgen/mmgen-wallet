@@ -12,7 +12,8 @@
 proto.eth.misc: miscellaneous utilities for Ethereum base protocol
 """
 
-from ...util import die,get_keccak
+from ...util import die
+from ...util2 import get_keccak
 
 def extract_key_from_geth_keystore_wallet(wallet_fn,passwd,check_addr=True):
 	"""

@@ -33,7 +33,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 
 	def tool_rand2file(self):
 		outfile = os.path.join(self.tmpdir,'rand2file.out')
-		from mmgen.util import parse_bytespec
+		from mmgen.util2 import parse_bytespec
 		for nbytes in ('1','1023','1K','1048575','1M','1048577','123M'):
 			t = self.spawn(
 				'mmgen-tool',

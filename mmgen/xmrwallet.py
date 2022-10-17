@@ -142,6 +142,7 @@ class MoneroMMGenTX:
 			if pmid:
 				fs += '  Payment ID: {pmid}'
 
+			from .util2 import format_elapsed_hr
 			return fmt(fs,strip_char='\t',indent=indent).format(
 					orange(self.base_chksum.upper()),
 					d.seed_id.hl(),

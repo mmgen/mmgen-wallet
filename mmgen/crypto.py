@@ -38,7 +38,7 @@ from .util import (
 	get_words_from_user,
 	make_chksum_8,
 	compare_chksums,
-	pwfile_reuse_warning,
+	oneshot_warning,
 )
 
 mmenc_ext = 'mmenc'
@@ -62,6 +62,11 @@ hash_presets = {
 	'6': _hp(17, 8, 20),
 	'7': _hp(18, 8, 24),
 }
+
+class pwfile_reuse_warning(oneshot_warning):
+	message = 'Reusing passphrase from file {!r} at user request'
+	def __init__(self,fn):
+		oneshot_warning.__init__(self,div=fn,fmt_args=[fn],reverse=True)
 
 def get_hash_params(hash_preset):
 	if hash_preset in hash_presets:

@@ -6,7 +6,7 @@ from py_ecc.secp256k1 import privtopub,ecdsa_raw_sign,ecdsa_raw_recover
 from .. import rlp
 from ..rlp.sedes import Binary
 
-from ....util import get_keccak
+from ....util2 import get_keccak
 keccak_256 = get_keccak()
 
 def sha3_256(bstr):
