@@ -111,6 +111,9 @@ exec_wrapper_init() # sets sys.path[0], runs overlay_setup()
 exec_wrapper_tstart = time.time()
 exec_wrapper_tracemalloc_setup()
 
+from mmgen.devinit import init_dev # import mmgen mods only after overlay setup!
+init_dev()
+
 try:
 	sys.argv.pop(0)
 	exec_wrapper_execed_file = sys.argv[0]

@@ -22,8 +22,14 @@ objmethods.py: Mixin classes for MMGen data objects
 
 import unicodedata
 from .globalvars import g
-from .devtools import *
 import mmgen.color as color_mod
+
+if 'MMGenObject' in __builtins__: # added to builtins by devinit.init_dev()
+	MMGenObject = __builtins__['MMGenObject']
+else:
+	class MMGenObject:
+		'placeholder - overridden when testing'
+		def immutable_attr_init_check(self): pass
 
 def truncate_str(s,width): # width = screen width
 	wide_count = 0

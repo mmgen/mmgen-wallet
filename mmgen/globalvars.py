@@ -22,8 +22,6 @@ globalvars.py:  Constants and configuration options for the MMGen suite
 
 import sys,os
 from collections import namedtuple
-from .devtools import *
-
 from .base_obj import Lockable
 
 def die(exit_val,s=''):

@@ -7,6 +7,8 @@
 test.objtest_py_d.ot_btc_mainnet: BTC mainnet test vectors for MMGen data objects
 """
 
+from decimal import Decimal
+
 from mmgen.obj import *
 from mmgen.addrlist import AddrIdxList
 from mmgen.seedsplit import *

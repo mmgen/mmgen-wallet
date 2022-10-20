@@ -20,7 +20,7 @@
 ts_ethdev.py: Ethdev tests for the test.py test suite
 """
 
-import sys,os,re,shutil,asyncio
+import sys,os,re,shutil,asyncio,json
 from decimal import Decimal
 from collections import namedtuple
 from subprocess import run,PIPE,DEVNULL
@@ -504,7 +504,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			if cp.returncode:
 				die(1,cp.stderr.decode())
 
-		import json
 		d.stop(quiet=True)
 		d.remove_datadir()
 

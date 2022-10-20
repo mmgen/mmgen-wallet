@@ -26,7 +26,7 @@ from collections import namedtuple
 
 from .common import *
 from .base_obj import AsyncInit
-from .objmethods import Hilite,InitErrors
+from .objmethods import Hilite,InitErrors,MMGenObject
 
 auth_data = namedtuple('rpc_auth_data',['user','passwd'])
 

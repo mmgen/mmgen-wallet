@@ -24,6 +24,10 @@ import sys,os,time,importlib,platform
 
 from include.tests_header import repo_root
 from include.common import end_msg
+
+from mmgen.devinit import init_dev
+init_dev()
+
 from mmgen.common import *
 
 opts_data = {

@@ -25,6 +25,7 @@ from subprocess import run,PIPE
 from ...common import *
 from ...protocol import init_proto
 from ...rpc import rpc_init,json_encoder
+from ...objmethods import MMGenObject
 
 def create_data_dir(data_dir):
 	try: os.stat(os.path.join(data_dir,'regtest'))

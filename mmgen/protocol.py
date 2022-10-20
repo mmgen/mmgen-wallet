@@ -22,8 +22,8 @@ protocol.py: Coin protocol base classes and initializer
 
 from collections import namedtuple
 
-from .devtools import *
 from .globalvars import g
+from .objmethods import MMGenObject
 
 decoded_wif = namedtuple('decoded_wif',['sec','pubkey_type','compressed'])
 decoded_addr = namedtuple('decoded_addr',['bytes','ver_bytes','fmt'])
