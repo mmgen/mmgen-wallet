@@ -56,6 +56,7 @@ class unit_test(object):
 				assert len(ss2_list) == 10, len(ss2_list)
 
 				assert seed.pfmt() == seed2.pfmt()
+				assert seed.subseeds.pfmt() == seed2.subseeds.pfmt()
 
 				s = seed.subseeds.format(1,nSubseeds)
 				s_lines = s.strip().split('\n')

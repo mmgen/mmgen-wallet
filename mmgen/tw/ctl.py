@@ -67,9 +67,6 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			self.importing = True
 			mode = 'w'
 
-		if g.debug:
-			print_stack_trace(f'TW INIT {mode!r} {self!r}')
-
 		# TODO: create on demand - only certain ops require RPC
 		self.rpc = await rpc_init( proto, ignore_wallet=rpc_ignore_wallet )
 		self.proto = proto
@@ -140,9 +137,6 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
 		Since no exceptions are raised, errors will not be caught by the test suite.
 		"""
-		if g.debug:
-			print_stack_trace(f'TW DEL {self!r}')
-
 		if getattr(self,'mode',None) == 'w': # mode attr might not exist in this state
 			self.write()
 		elif g.debug:
@@ -227,9 +221,6 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
 		wdata = json.dumps(self.data)
 		if self.orig_data != wdata:
-			if g.debug:
-				print_stack_trace(f'TW DATA CHANGED {self!r}')
-				print_diff(self.orig_data,wdata,from_json=True)
 			self.write_changed(wdata,quiet=quiet)
 		elif g.debug:
 			msg('Data is unchanged\n')

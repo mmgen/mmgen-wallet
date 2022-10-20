@@ -170,25 +170,21 @@ class ListItemAttr(ImmutableAttr):
 
 class MMGenListItem(MMGenObject):
 	valid_attrs = set()
-	valid_attrs_extra = set()
 	invalid_attrs = {
-		'print_stack_trace',
 		'pfmt',
 		'pmsg',
 		'pdie',
 		'pexit',
 		'valid_attrs',
-		'valid_attrs_extra',
 		'invalid_attrs',
 		'immutable_attr_init_check',
 		'conv_funcs',
-		'_asdict',
 	}
 
 	def __init__(self,*args,**kwargs):
 		# generate valid_attrs, or use the class valid_attrs if set
 		self.__dict__['valid_attrs'] = self.valid_attrs or (
-				( {e for e in dir(self) if e[:2] != '__'} | self.valid_attrs_extra )
+				{e for e in dir(self) if e[0] != '_'}
 				- MMGenListItem.invalid_attrs
 				- self.invalid_attrs
 			)

@@ -107,7 +107,7 @@ def exec_wrapper_tracemalloc_log():
 				s = sum(stat.size for stat in stats) / 1024,
 				w = col1w ))
 
-exec_wrapper_init() # sets sys.path[0]
+exec_wrapper_init() # sets sys.path[0], runs overlay_setup()
 exec_wrapper_tstart = time.time()
 exec_wrapper_tracemalloc_setup()
 

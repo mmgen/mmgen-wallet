@@ -49,9 +49,6 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 
 	class MMGenObject(object):
 
-		def print_stack_trace(self,*args,**kwargs):
-			print_stack_trace(*args,**kwargs)
-
 		# Pretty-print any object subclassed from MMGenObject, recursing into sub-objects - WIP
 		def pmsg(self,*args):
 			print(args[0] if len(args) == 1 else args if args else self.pfmt())

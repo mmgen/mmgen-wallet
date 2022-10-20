@@ -243,8 +243,6 @@ def write_data_to_file( outfile,data,desc='data',
 				d = ''
 			finally:
 				if d != cmp_data:
-					if g.test_suite:
-						print_diff(cmp_data,d)
 					die(3,f'{desc} in file {outfile!r} has been altered by some other program! Aborting file write')
 
 		# To maintain portability, always open files in binary mode

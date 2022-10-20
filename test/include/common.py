@@ -23,7 +23,6 @@ common.py: Shared routines and data for the MMGen test suites
 import os
 from subprocess import run,PIPE
 from mmgen.common import *
-from mmgen.devtools import *
 from mmgen.fileutil import write_data_to_file,get_data_from_file
 
 def strip_ansi_escapes(s):
@@ -163,8 +162,7 @@ def init_coverage():
 
 def silence():
 	if not (opt.verbose or opt.exact_output):
-		devnull_fn = ('/dev/null','null.out')[g.platform == 'win']
-		g.stdout = g.stderr = open(devnull_fn,'w')
+		g.stdout = g.stderr = open(os.devnull,'w')
 
 def end_silence():
 	if not (opt.verbose or opt.exact_output):

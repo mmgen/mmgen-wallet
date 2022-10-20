@@ -110,12 +110,15 @@ def run_test(test,subtest=None):
 		subtest_disp = subtest.replace('_','-')
 		msg(f'Running unit subtest {test}.{subtest_disp}')
 		t = getattr(mod,'unit_tests')()
+		if hasattr(t,'_pre_subtest'):
+			getattr(t,'_pre_subtest')(test,subtest,UnitTestHelpers)
 		ret = getattr(t,subtest.replace('-','_'))(test,UnitTestHelpers)
+		if hasattr(t,'_post_subtest'):
+			getattr(t,'_post_subtest')(test,subtest,UnitTestHelpers)
 		if type(ret).__name__ == 'coroutine':
 			ret = async_run(ret)
 		if not ret:
 			die(4,f'Unit subtest {subtest_disp!r} failed')
-		pass
 
 	if test not in tests_seen:
 		gmsg(f'Running unit test {test}')
@@ -129,7 +132,7 @@ def run_test(test,subtest=None):
 			altcoin_deps = getattr(t,'altcoin_deps',())
 			win_skip = getattr(t,'win_skip',())
 			arm_skip = getattr(t,'arm_skip',())
-			subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function']
+			subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
 			for subtest in subtests:
 				subtest_disp = subtest.replace('_','-')
 				if opt.no_altcoin_deps and subtest in altcoin_deps:
