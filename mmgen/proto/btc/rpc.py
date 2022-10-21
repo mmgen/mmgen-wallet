@@ -297,7 +297,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			if 'deployment_info' in self.caps:
 				return (
 					self.cached['deploymentinfo']['deployments']['segwit']['active']
-					or ( g.test_suite and not os.getenv('MMGEN_TEST_SUITE_REGTEST') )
+					or ( g.test_suite and not self.chain == 'regtest' )
 				)
 
 			d = self.cached['blockchaininfo']
@@ -314,7 +314,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			except:
 				pass
 
-			if g.test_suite:
+			if g.test_suite and not self.chain == 'regtest':
 				return True
 
 			return False

@@ -34,7 +34,7 @@ def removeprefix(s,pfx): # workaround for pre-Python 3.9
 	return s[len(pfx):] if s.startswith(pfx) else s
 
 def removesuffix(s,sfx): # workaround for pre-Python 3.9
-	return s[:len(sfx)] if s.endswith(sfx) else s
+	return s[:-len(sfx)] if s.endswith(sfx) else s
 
 def get_keccak(cached_ret=[]):
 

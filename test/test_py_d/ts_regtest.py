@@ -367,14 +367,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				self.miner_wif = 'cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp'
 
 		os.environ['MMGEN_BOGUS_SEND'] = ''
-		os.environ['MMGEN_TEST_SUITE_REGTEST'] = '1'
 		self.write_to_tmpfile('wallet_password',rt_pw)
 
 		self.dfl_mmtype = 'C' if self.proto.coin == 'BCH' else 'B'
 
 	def __del__(self):
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
-		os.environ['MMGEN_TEST_SUITE_REGTEST'] = ''
 
 	def _add_comments_to_addr_file(self,addrfile,outfile,use_labels=False):
 		silence()

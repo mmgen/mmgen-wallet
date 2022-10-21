@@ -46,6 +46,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	sign_mode       = 'daemon'
 	avg_bdi         = int(9.7 * 60) # average block discovery interval (historical)
 	halving_interval = 210000
+	diff_adjust_interval = 2016
 	max_halvings    = 64
 	start_subsidy   = 50
 	ignore_daemon_version = False
