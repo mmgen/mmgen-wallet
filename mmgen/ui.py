@@ -86,7 +86,7 @@ def line_input(prompt,echo=True,insert_txt='',hold_protect=True):
 	if hold_protect:
 		kb_hold_protect()
 
-	return (insert_txt if insert_txt and not readline else '') + reply.strip()
+	return reply.strip()
 
 def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete_prompt=False):
 
