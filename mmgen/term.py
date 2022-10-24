@@ -42,7 +42,11 @@ class MMGenTerm(object):
 	tdim = namedtuple('terminal_dimensions',['width','height'])
 
 	@classmethod
-	def init(cls):
+	def init(cls,noecho=False):
+		pass
+
+	@classmethod
+	def reset(cls):
 		pass
 
 	@classmethod
@@ -52,8 +56,19 @@ class MMGenTerm(object):
 class MMGenTermLinux(MMGenTerm):
 
 	@classmethod
-	def init(cls):
+	def reset(cls):
+		termios.tcsetattr( cls.stdin_fd, termios.TCSANOW, cls.orig_term )
+		cls.old_term = cls.orig_term
+
+	@classmethod
+	def init(cls,noecho=False):
 		cls.stdin_fd = sys.stdin.fileno()
+		if not hasattr(cls,'orig_term'):
+			cls.orig_term = termios.tcgetattr(cls.stdin_fd)
+		if noecho: # don’t echo input characters
+			t = termios.tcgetattr(cls.stdin_fd)
+			t[3] &= ~(termios.ECHO | termios.ECHONL)
+			termios.tcsetattr( cls.stdin_fd, termios.TCSANOW, t )
 		cls.old_term = termios.tcgetattr(cls.stdin_fd)
 
 	@classmethod
@@ -119,8 +134,12 @@ class MMGenTermLinux(MMGenTerm):
 class MMGenTermLinuxStub(MMGenTermLinux):
 
 	@classmethod
-	def init(cls):
+	def init(cls,noecho=False):
 		cls.stdin_fd = sys.stdin.fileno()
+
+	@classmethod
+	def reset(cls):
+		pass
 
 	@classmethod
 	def get_char(cls,prompt='',immed_chars='',prehold_protect=None,num_chars=None):
@@ -217,15 +236,21 @@ class MMGenTermMSWinStub(MMGenTermMSWin):
 
 	get_char_raw = get_char
 
-def init_term():
-
-	term = {
+def get_term():
+	return {
 		'linux': (MMGenTermLinux if sys.stdin.isatty() else MMGenTermLinuxStub),
 		'mswin': (MMGenTermMSWin if sys.stdin.isatty() else MMGenTermMSWinStub),
 	}[_platform]
 
-	term.init()
+def init_term(noecho=False):
+
+	term = get_term()
+
+	term.init(noecho=noecho)
 
 	import mmgen.term as self
 	for var in ('get_char','get_char_raw','kb_hold_protect','get_terminal_size'):
 		setattr( self, var, getattr(term,var) )
+
+def reset_term():
+	get_term().reset()
