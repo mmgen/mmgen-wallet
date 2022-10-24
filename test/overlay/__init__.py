@@ -5,17 +5,17 @@ def get_overlay_tree_dir(repo_root):
 
 def overlay_setup(repo_root):
 
-	def process_srcdir(d):
+	def process_srcdir(pkgname,d):
 		relpath = d.split('.')
 		srcdir = os.path.join(repo_root,*relpath)
 		destdir = os.path.join(overlay_tree_dir,*relpath)
-		fakemod_dir = os.path.join(fakemod_root,*(relpath[1:]))
+		fakemod_dir = os.path.join(fakemod_root,pkgname,*(relpath[1:]))
 		os.makedirs(destdir)
 		for fn in os.listdir(srcdir):
 			if (
 				fn.endswith('.py') or
-				d == 'mmgen.data' or
-				d == 'mmgen.proto.secp256k1' and fn.startswith('secp256k1')
+				d == f'{pkgname}.data' or
+				(d == f'mmgen.proto.secp256k1' and fn.startswith('secp256k1'))
 			):
 				if os.path.exists(os.path.join(fakemod_dir,fn)):
 					make_link(
@@ -30,38 +30,26 @@ def overlay_setup(repo_root):
 					os.path.join(destdir,link_fn) )
 
 	overlay_tree_dir = get_overlay_tree_dir(repo_root)
+	fakemod_root = os.path.join(repo_root,'test','overlay','fakemods')
+	common_path = os.path.join(os.path.sep,'test','overlay','fakemods')
+	pkgdata = ((
+			os.path.realpath(e.path)[:-len(os.path.join(common_path,e.name))], # Python 3.9: removesuffix()
+			e.name
+		) for e in os.scandir(fakemod_root) if e.is_dir() )
 
-	if not os.path.exists(os.path.join(overlay_tree_dir,'mmgen','main.py')):
-		fakemod_root = os.path.join(repo_root,'test','overlay','fakemods')
-		make_link = os.symlink if sys.platform == 'linux' else shutil.copy2
-		sys.stderr.write('Setting up overlay tree\n')
-		shutil.rmtree(overlay_tree_dir,ignore_errors=True)
-		for d in (
-				'mmgen',
-				'mmgen.contrib',
-				'mmgen.data',
-				'mmgen.proto',
-				'mmgen.proto.bch',
-				'mmgen.proto.btc',
-				'mmgen.proto.btc.tx',
-				'mmgen.proto.btc.tw',
-				'mmgen.proto.etc',
-				'mmgen.proto.eth',
-				'mmgen.proto.eth.pyethereum',
-				'mmgen.proto.eth.rlp',
-				'mmgen.proto.eth.rlp.sedes',
-				'mmgen.proto.eth.tx',
-				'mmgen.proto.eth.tw',
-				'mmgen.proto.ltc',
-				'mmgen.proto.secp256k1',
-				'mmgen.proto.xmr',
-				'mmgen.proto.zec',
-				'mmgen.share',
-				'mmgen.tool',
-				'mmgen.tx',
-				'mmgen.tw',
-				'mmgen.wallet',
-				'mmgen.wordlist' ):
-			process_srcdir(d)
+	for repodir,pkgname in pkgdata:
+		if not os.path.exists(os.path.join(overlay_tree_dir,pkgname)):
+
+			sys.stderr.write(f'Setting up overlay tree: {pkgname}\n')
+
+			make_link = os.symlink if sys.platform == 'linux' else shutil.copy2
+			shutil.rmtree(os.path.join(overlay_tree_dir,pkgname),ignore_errors=True)
+
+			import configparser
+			cfg = configparser.ConfigParser()
+			cfg.read(os.path.join(repodir,'setup.cfg'))
+
+			for d in cfg.get('options','packages').split():
+				process_srcdir(pkgname,d)
 
 	return overlay_tree_dir
