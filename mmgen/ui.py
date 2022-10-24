@@ -37,7 +37,7 @@ def get_data_from_user(desc='data'): # user input MUST be UTF-8
 	dmsg(f'User input: [{data}]')
 	return data
 
-def line_input(prompt,echo=True,insert_txt=''):
+def line_input(prompt,echo=True,insert_txt='',hold_protect=True):
 	"""
 	multi-line prompts OK
 	one-line prompts must begin at beginning of line
@@ -45,34 +45,33 @@ def line_input(prompt,echo=True,insert_txt=''):
 	"""
 	assert prompt,'calling line_input() with an empty prompt forbidden'
 
-	def init_readline():
+	def get_readline():
 		try:
 			import readline
+			return readline
 		except ImportError:
 			return False
-		else:
-			if insert_txt:
-				readline.set_startup_hook(lambda: readline.insert_text(insert_txt))
-				return True
-			else:
-				return False
 
 	if not sys.stdout.isatty():
 		msg_r(prompt)
 		prompt = ''
 
-	from .term import kb_hold_protect
-	kb_hold_protect()
+	if hold_protect:
+		from .term import kb_hold_protect
+		kb_hold_protect()
+
+	readline = None
 
 	if g.test_suite_popen_spawn:
 		msg(prompt)
 		sys.stderr.flush()
 		reply = os.read(0,4096).decode().rstrip('\n') # strip NL to mimic behavior of input()
 	elif echo or not sys.stdin.isatty():
-		clear_buffer = init_readline() if sys.stdin.isatty() else False
+		readline = sys.stdin.isatty() and get_readline()
+		if readline and insert_txt:
+			readline.set_startup_hook(lambda: readline.insert_text(insert_txt))
 		reply = input(prompt)
-		if clear_buffer:
-			import readline
+		if readline and insert_txt:
 			readline.set_startup_hook(lambda: readline.insert_text(''))
 	else:
 		from getpass import getpass
@@ -84,9 +83,10 @@ def line_input(prompt,echo=True,insert_txt=''):
 		else:
 			reply = getpass(prompt)
 
-	kb_hold_protect()
+	if hold_protect:
+		kb_hold_protect()
 
-	return reply.strip()
+	return (insert_txt if insert_txt and not readline else '') + reply.strip()
 
 def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete_prompt=False):
 

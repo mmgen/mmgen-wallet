@@ -1276,12 +1276,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def edit_label1(self):
-		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh)
+		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[:3])
 	def edit_label2(self):
-		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[:-1],changed=True)
+		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[3:],changed=True)
 	def edit_label3(self):
 		return self.edit_label(out_num=del_addrs[1],label_text=tw_label_lat_cyr_gr)
 	def edit_label4(self):
+		if not opt.pexpect_spawn:
+			return 'skip'
 		return self.edit_label(out_num=del_addrs[0],label_text=self.erase_input)
 
 	def token_edit_label1(self):
