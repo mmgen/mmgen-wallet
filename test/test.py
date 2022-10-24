@@ -73,14 +73,14 @@ def create_shm_dir(data_dir,trash_dir):
 import sys,os,time
 
 from include.tests_header import repo_root
-from test.overlay import get_overlay_dir,overlay_setup
+from test.overlay import get_overlay_tree_dir,overlay_setup
 
-overlay_dir = get_overlay_dir(repo_root)
-sys.path.insert(0,overlay_dir)
+overlay_tree_dir = get_overlay_tree_dir(repo_root)
+sys.path.insert(0,overlay_tree_dir)
 
 if sys.argv[-1] == 'clean':
 	from shutil import rmtree
-	rmtree(overlay_dir,ignore_errors=True)
+	rmtree(overlay_tree_dir,ignore_errors=True)
 else:
 	# overlay must be set up before importing mmgen mods!
 	overlay_setup(repo_root)
@@ -297,8 +297,8 @@ def clean(usr_dirs=None,clean_overlay=True):
 	iqmsg(green(f'Cleaned directories {data_dir!r} {trash_dir!r}'))
 
 	if clean_overlay:
-		cleandir(overlay_dir)
-		iqmsg(green(f'Cleaned directory {os.path.relpath(overlay_dir)!r}'))
+		cleandir(overlay_tree_dir)
+		iqmsg(green(f'Cleaned directory {os.path.relpath(overlay_tree_dir)!r}'))
 
 def create_tmp_dirs(shm_dir):
 	if g.platform == 'win':

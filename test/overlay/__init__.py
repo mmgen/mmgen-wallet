@@ -1,6 +1,6 @@
 import sys,os,shutil
 
-def get_overlay_dir(repo_root):
+def get_overlay_tree_dir(repo_root):
 	return os.path.join(repo_root,'test','overlay','tree')
 
 def overlay_setup(repo_root):
@@ -8,7 +8,7 @@ def overlay_setup(repo_root):
 	def process_srcdir(d):
 		relpath = d.split('.')
 		srcdir = os.path.join(repo_root,*relpath)
-		destdir = os.path.join(overlay_dir,*relpath)
+		destdir = os.path.join(overlay_tree_dir,*relpath)
 		fakemod_dir = os.path.join(fakemod_root,*(relpath[1:]))
 		os.makedirs(destdir)
 		for fn in os.listdir(srcdir):
@@ -29,13 +29,13 @@ def overlay_setup(repo_root):
 					os.path.join(srcdir,fn),
 					os.path.join(destdir,link_fn) )
 
-	overlay_dir = get_overlay_dir(repo_root)
+	overlay_tree_dir = get_overlay_tree_dir(repo_root)
 
-	if not os.path.exists(os.path.join(overlay_dir,'mmgen','main.py')):
+	if not os.path.exists(os.path.join(overlay_tree_dir,'mmgen','main.py')):
 		fakemod_root = os.path.join(repo_root,'test','overlay','fakemods')
 		make_link = os.symlink if sys.platform == 'linux' else shutil.copy2
 		sys.stderr.write('Setting up overlay tree\n')
-		shutil.rmtree(overlay_dir,ignore_errors=True)
+		shutil.rmtree(overlay_tree_dir,ignore_errors=True)
 		for d in (
 				'mmgen',
 				'mmgen.contrib',
@@ -64,4 +64,4 @@ def overlay_setup(repo_root):
 				'mmgen.wordlist' ):
 			process_srcdir(d)
 
-	return overlay_dir
+	return overlay_tree_dir
