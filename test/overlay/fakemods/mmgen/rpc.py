@@ -1,13 +1,12 @@
+import os as overlay_fake_os
 from .rpc_orig import *
 
-if os.getenv('MMGEN_BOGUS_UNSPENT_DATA'):
+if overlay_fake_os.getenv('MMGEN_BOGUS_UNSPENT_DATA'):
 
-	rpc_init_orig = rpc_init
+	class overlay_fake_data:
+		rpc_init = rpc_init
 
 	async def rpc_init(*args,**kwargs):
-
-		ret = await rpc_init_orig(*args,**kwargs)
-
+		ret = await overlay_fake_data.rpc_init(*args,**kwargs)
 		ret.blockcount = 1000000
-
 		return ret

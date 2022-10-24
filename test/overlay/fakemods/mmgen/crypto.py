@@ -1,25 +1,28 @@
+import os as overlay_fake_os
 from .crypto_orig import *
 
-if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
+if overlay_fake_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 
-	get_random_orig = get_random
-	add_user_random_orig = add_user_random
+	class overlay_fake_data:
 
-	import sys
-	from hashlib import sha256
-	fake_rand_h = sha256('.'.join(sys.argv).encode())
+		import sys
+		from hashlib import sha256
+		rand_h = sha256('.'.join(sys.argv).encode())
 
-	def fake_urandom(n):
+		get_random = get_random
+		add_user_random = add_user_random
 
-		def gen(rounds):
-			for i in range(rounds):
-				fake_rand_h.update(b'foo')
-				yield fake_rand_h.digest()
+		def urandom(n):
 
-		return b''.join(gen(int(n/32)+1))[:n]
+			def gen(rounds):
+				for i in range(rounds):
+					overlay_fake_data.rand_h.update(b'foo')
+					yield overlay_fake_data.rand_h.digest()
+
+			return b''.join(gen(int(n/32)+1))[:n]
 
 	def get_random(length):
-		return fake_urandom(len(get_random_orig(length)))
+		return overlay_fake_data.urandom(len(overlay_fake_data.get_random(length)))
 
 	def add_user_random(rand_bytes,desc):
-		return fake_urandom(len(add_user_random_orig(rand_bytes,desc)))
+		return overlay_fake_data.urandom(len(overlay_fake_data.add_user_random(rand_bytes,desc)))
