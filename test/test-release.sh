@@ -48,9 +48,26 @@ prompt_skip() {
 	return 1
 }
 
+list_avail_tests() {
+	echo   "AVAILABLE TESTS:"
+	init_tests
+	for i in $all_tests; do
+		z="d_$i"
+		printf "   %-8s - %s\n" $i "${!z}"
+	done
+	echo
+	echo   "AVAILABLE TEST GROUPS:"
+	while read a b c; do
+		[ "$a" ] && printf "   %-8s - %s\n" $a "$c"
+	done <<<$groups_desc
+	echo
+	echo   "By default, all tests are run"
+}
+
 run_tests() {
 	[ "$LIST_CMDS" ] || echo "Running tests: $1"
 	for t in $1; do
+		desc_id="d_$t" desc=${!desc_id}
 		if [ "$SKIP_ALT_DEP" ]; then
 			ok=$(for a in $noalt_tests; do if [ $t == $a ]; then echo 'ok'; fi; done)
 			if [ ! "$ok" ]; then
@@ -59,15 +76,14 @@ run_tests() {
 			fi
 		fi
 		if [ "$LIST_CMDS" ]; then
-			eval echo -e '\\n#' $(echo \$i_$t) "\($t\)"
+			echo -e "\n### $t: $desc"
 		else
-			eval echo -e "'\n'"\${GREEN}'###' Running $(echo \$i_$t) tests\$RESET
-			eval echo -e $(echo \$s_$t)
+			echo -e "\n${BLUE}Testing:$RESET $GREEN$desc$RESET"
 		fi
 		[ "$PAUSE" ] && prompt_skip && continue
 		CUR_TEST=$t
 		do_test $t
-		[ "$LIST_CMDS" ] || eval echo -e $(echo \$f_$t)
+		[ "$LIST_CMDS" ] || echo -e "${BLUE}Finished testing:$RESET $GREEN$desc$RESET"
 	done
 }
 
@@ -271,8 +287,8 @@ elapsed_fmt=$(printf %02d:%02d $((elapsed/60)) $((elapsed%60)))
 
 [ "$LIST_CMDS" ] || {
 	if [ "$MMGEN_TEST_SUITE_DETERMINISTIC" ]; then
-		echo -e "${GREEN}All OK"
+		echo -e "\n${GREEN}All OK"
 	else
-		echo -e "${GREEN}All OK.  Total elapsed time: $elapsed_fmt$RESET"
+		echo -e "\n${GREEN}All OK.  Total elapsed time: $elapsed_fmt$RESET"
 	fi
 }
