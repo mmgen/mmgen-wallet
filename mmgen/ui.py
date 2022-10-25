@@ -60,18 +60,16 @@ def line_input(prompt,echo=True,insert_txt='',hold_protect=True):
 		from .term import kb_hold_protect
 		kb_hold_protect()
 
-	readline = None
-
 	if g.test_suite_popen_spawn:
 		msg(prompt)
 		sys.stderr.flush()
 		reply = os.read(0,4096).decode().rstrip('\n') # strip NL to mimic behavior of input()
 	elif echo or not sys.stdin.isatty():
-		readline = sys.stdin.isatty() and get_readline()
-		if readline and insert_txt:
+		readline = insert_txt and sys.stdin.isatty() and get_readline()
+		if readline:
 			readline.set_startup_hook(lambda: readline.insert_text(insert_txt))
 		reply = input(prompt)
-		if readline and insert_txt:
+		if readline:
 			readline.set_startup_hook(lambda: readline.insert_text(''))
 	else:
 		from getpass import getpass
