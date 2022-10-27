@@ -20,9 +20,10 @@
 proto.btc.regtest: Coin daemon regression test mode setup and operations
 """
 
-import os,time,shutil,json,re
-from subprocess import run,PIPE
-from ...common import *
+import os,shutil,json
+from ...opts import opt
+from ...globalvars import g
+from ...util import msg,gmsg,die,capfirst,suf
 from ...protocol import init_proto
 from ...rpc import rpc_init,json_encoder
 from ...objmethods import MMGenObject
@@ -40,20 +41,6 @@ def create_data_dir(data_dir):
 
 	try: os.makedirs(data_dir)
 	except: pass
-
-miner_addr = {
-	# cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp hdseed=1 ('beadcafe'*8)
-	'btc': 'bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd',
-	'ltc': 'rltc1qaq8t3pakcftpk095tnqfv5cmmczysls05c8zyn',
-	'bch': 'n2fxhNx27GhHAWQhyuZ5REcBNrJqCJsJ12',
-}
-
-def create_hdseed(proto):
-	from ...tool.api import tool_api
-	t = tool_api()
-	t.init_coin(proto.coin,proto.network)
-	t.addrtype = 'compressed' if proto.coin == 'BCH' else 'bech32'
-	return t.hex2wif('beadcafe'*8)
 
 def cliargs_convert(args):
 	def gen():
@@ -73,6 +60,15 @@ class MMGenRegtest(MMGenObject):
 	coins        = ('btc','bch','ltc')
 	usr_cmds     = ('setup','generate','send','start','stop', 'state', 'balances','mempool','cli','wallet_cli')
 
+	hdseed = 'beadcafe' * 8
+	miner_wif = 'cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp'
+	miner_addrs = {
+		# cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp hdseed=1
+		'btc': 'bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd',
+		'ltc': 'rltc1qaq8t3pakcftpk095tnqfv5cmmczysls05c8zyn',
+		'bch': 'n2fxhNx27GhHAWQhyuZ5REcBNrJqCJsJ12',
+	}
+
 	def __init__(self,coin):
 		self.coin = coin.lower()
 		assert self.coin in self.coins, f'{coin!r}: invalid coin for regtest'
@@ -80,6 +76,14 @@ class MMGenRegtest(MMGenObject):
 		from ...daemon import CoinDaemon
 		self.proto = init_proto(self.coin,regtest=True,need_amt=True)
 		self.d = CoinDaemon(self.coin+'_rt',test_suite=g.test_suite)
+		self.miner_addr = self.miner_addrs[self.coin]
+
+	def create_hdseed_wif(self):
+		from ...tool.api import tool_api
+		t = tool_api()
+		t.init_coin(self.proto.coin,self.proto.network)
+		t.addrtype = 'compressed' if self.proto.coin == 'BCH' else 'bech32'
+		return t.hex2wif(self.hdseed)
 
 	async def generate(self,blocks=1,silent=False):
 
@@ -93,13 +97,14 @@ class MMGenRegtest(MMGenObject):
 		out = await self.rpc_call(
 			'generatetoaddress',
 			blocks,
-			miner_addr[self.coin],
+			self.miner_addr,
 			wallet = 'miner' )
 
 		if len(out) != blocks:
 			die(4,'Error generating blocks')
 
-		gmsg(f'Mined {blocks} block{suf(blocks)}')
+		if not silent:
+			gmsg(f'Mined {blocks} block{suf(blocks)}')
 
 	async def setup(self):
 
@@ -127,7 +132,7 @@ class MMGenRegtest(MMGenObject):
 
 		# BCH and LTC daemons refuse to set HD seed with empty blockchain ("in IBD" error),
 		# so generate a block:
-		await self.generate(1,silent=True)
+		await self.generate(1,silent=False)
 
 		# Unfortunately, we don’t get deterministic output with BCH and LTC even with fixed
 		# hdseed, as their 'sendtoaddress' calls produce non-deterministic TXIDs due to random
@@ -135,7 +140,7 @@ class MMGenRegtest(MMGenObject):
 		await rpc.call(
 			'sethdseed',
 			True,
-			create_hdseed(self.proto),
+			self.create_hdseed_wif(),
 			wallet = 'miner' )
 
 		# Broken litecoind can only mine 431 blocks in regtest mode, so generate just enough
