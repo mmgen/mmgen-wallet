@@ -239,12 +239,12 @@ class Base(TxBase.Base):
 		wsize = get_witness_size()
 
 		# TODO: compute real varInt sizes instead of assuming 1 byte
-		# old serialization: [nVersion]              [vInt][txins][vInt][txouts]         [nLockTime]
-		old_size =           4                     + 1   + isize + 1  + osize          + 4
-		# marker = 0x00, flag = 0x01
-		# new serialization: [nVersion][marker][flag][vInt][txins][vInt][txouts][witness][nLockTime]
-		new_size =           4       + 1     + 1   + 1   + isize + 1  + osize + wsize  + 4 \
-				if wsize else old_size
+		# Serialization:
+		#   old:     [nVersion]              [vInt][txins][vInt][txouts]         [nLockTime]
+		old_size =   4                     + 1   + isize + 1  + osize          + 4
+		#   marker = 0x00, flag = 0x01
+		#   new:     [nVersion][marker][flag][vInt][txins][vInt][txouts][witness][nLockTime]
+		new_size =   4       + 1     + 1   + 1   + isize + 1  + osize + wsize  + 4 if wsize else old_size
 
 		ret = (old_size * 3 + new_size) // 4
 

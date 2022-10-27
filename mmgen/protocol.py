@@ -100,12 +100,11 @@ class CoinProtocol(MMGenObject):
 
 			if need_amt:
 				import mmgen.amt
-				setattr( self, 'coin_amt', getattr(mmgen.amt,self.coin_amt) )
-				fee = getattr(self,'max_tx_fee',None)
-				setattr( self, 'max_tx_fee', (self.coin_amt(fee) if fee else None) )
+				self.coin_amt = getattr(mmgen.amt,self.coin_amt)
+				self.max_tx_fee = self.coin_amt(self.max_tx_fee) if hasattr(self,'max_tx_fee') else None
 			else:
-				setattr( self, 'coin_amt', None )
-				setattr( self, 'max_tx_fee', None )
+				self.coin_amt = None
+				self.max_tx_fee = None
 
 		@property
 		def dcoin(self):

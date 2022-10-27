@@ -289,6 +289,11 @@ def is_int(s):
 	except:
 		return False
 
+def check_int_between(val,imin,imax,desc):
+	if not imin <= int(val) <= imax:
+		die(1,f'{val}: invalid value for {desc} (must be between {imin} and {imax})')
+	return int(val)
+
 def is_hex_str(s):
 	return set(s) <= set(hexdigits)
 
