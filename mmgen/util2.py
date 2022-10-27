@@ -74,14 +74,20 @@ bytespec_map = (
 	('E',  1152921504606846976),
 )
 
-def int2bytespec(n,spec,fmt,print_sym=True):
+def int2bytespec(n,spec,fmt,print_sym=True,strip=False,add_space=False):
+
 	def spec2int(spec):
 		for k,v in bytespec_map:
 			if k == spec:
 				return v
 		else:
 			die('{spec}: unrecognized bytespec')
-	return '{:{}f}{}'.format( n / spec2int(spec), fmt, spec if print_sym else '' )
+
+	if strip:
+		ret = '{:{}f}'.format(n/spec2int(spec),fmt).rstrip('0')
+		return ret + ('0' if ret.endswith('.') else '') + ((' ' if add_space else '') + spec if print_sym else '')
+	else:
+		return '{:{}f}'.format(n/spec2int(spec),fmt) + ((' ' if add_space else '') + spec if print_sym else '')
 
 def parse_bytespec(nbytes):
 	m = re.match(r'([0123456789.]+)(.*)',nbytes)

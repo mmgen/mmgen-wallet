@@ -56,7 +56,9 @@ class tool_cmd(tool_cmd_base):
 			n: int,
 			dd_style_byte_specifier: str,
 			fmt:       'width and precision of output' = '0.2',
-			print_sym: 'print the specifier after the numerical value' = True ):
+			print_sym: 'print the specifier after the numerical value' = True,
+			strip:     'strip trailing zeroes' = False,
+			add_space: 'with print_sym, add space between value and specifier' = False ):
 		"""
 		convert an integer to a byte specifier such as ‘4GB’
 
@@ -79,7 +81,13 @@ class tool_cmd(tool_cmd_base):
 		  E  = 1152921504606846976
 		"""
 		from ..util2 import int2bytespec
-		return int2bytespec( n, dd_style_byte_specifier, fmt, print_sym )
+		return int2bytespec(
+			n,
+			dd_style_byte_specifier,
+			fmt,
+			print_sym = print_sym,
+			strip     = strip,
+			add_space = add_space )
 
 	def randhex(self,
 			nbytes: 'number of bytes to output' = 32 ):
