@@ -99,8 +99,6 @@ class TestSuiteCfg(TestSuiteBase):
 		return self.bad_sample(s,e)
 
 	def old_sample_common(self,old_set=False,args=[]):
-		if opt.pexpect_spawn: # FIXME: get_char() is blocking
-			return 'skip'
 		s = read_from_file(self.path('sys'))
 		d = s.replace('monero_','zcash_').splitlines()
 		a1 = ['','# Uncomment to make foo true:','# foo true']
@@ -125,6 +123,11 @@ class TestSuiteCfg(TestSuiteBase):
 
 		for s in ('CHANGES','Removed','# zcash_','# foo','# bar','Added','# monero_'):
 			t.expect(s)
+
+		if opt.pexpect_spawn: # view and exit pager
+			if opt.exact_output:
+				time.sleep(1)
+			t.send('q')
 
 		t.expect(cp,'n')
 

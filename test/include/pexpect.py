@@ -39,9 +39,13 @@ def debug_pexpect_msg(p):
 
 NL = '\n'
 
-class MMGenPexpect(object):
+class MMGenPexpect:
 
 	def __init__(self,args,no_output=False,env=None):
+
+		self.req_exit_val = 0
+		self.skip_ok = False
+		self.sent_value = None
 
 		if opt.direct_exec:
 			msg('')
@@ -51,17 +55,11 @@ class MMGenPexpect(object):
 			timeout = int(opt.pexpect_timeout or 0) or (60,5)[bool(opt.debug_pexpect)]
 			if opt.pexpect_spawn:
 				self.p = pexpect.spawn(args[0],args[1:],encoding='utf8',timeout=timeout,env=env)
-				self.p.delaybeforesend = 0
 			else:
 				self.p = PopenSpawn(args,encoding='utf8',timeout=timeout,env=env)
-#				self.p.delaybeforesend = 0 # TODO: try this here too
 
 			if opt.exact_output:
 				self.p.logfile = sys.stdout
-
-		self.req_exit_val = 0
-		self.skip_ok = False
-		self.sent_value = None
 
 	def do_decrypt_ka_data(self,hp,pw,desc='key-address data',check=True,have_yes_opt=False):
 #		self.hash_preset(desc,hp)

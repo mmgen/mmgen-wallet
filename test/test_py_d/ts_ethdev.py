@@ -379,6 +379,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if not self.using_solc:
 			omsg(yellow('Using precompiled contract data'))
 
+		omsg(blue(f'Coin daemon {self.daemon.id!r} selected'))
+
 		self.genesis_fn = joinpath(self.tmpdir,'genesis.json')
 		self.keystore_dir = os.path.relpath(joinpath(self.daemon.datadir,'keystore'))
 
