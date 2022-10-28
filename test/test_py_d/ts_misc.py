@@ -158,7 +158,8 @@ class TestSuiteOutput(TestSuiteBase):
 		('output_ru', (1,"Russian text", [])),
 		('output_zh', (1,"Chinese text", [])),
 		('output_jp', (1,"Japanese text", [])),
-		('oneshot_warning', (1,"Oneshot warnings", []))
+		('oneshot_warning', (1,"Oneshot warnings", [])),
+		('oneshot_warning_term', (1,"Oneshot warnings (pexpect_spawn)", []))
 	)
 	color = True
 
@@ -170,9 +171,9 @@ class TestSuiteOutput(TestSuiteBase):
 	def output_zh(self): return self.screen_output('zh')
 	def output_jp(self): return self.screen_output('jp')
 
-	def oneshot_warning(self):
-		nl = '\r\n' if g.platform == 'win' or opt.pexpect_spawn else '\n'
-		t = self.spawn('test/misc/oneshot_warning.py',cmd_dir='.')
+	def oneshot_warning(self,pexpect_spawn=None):
+		t = self.spawn('test/misc/oneshot_warning.py',cmd_dir='.',pexpect_spawn=pexpect_spawn)
+		nl = '\r\n' if g.platform == 'win' or t.pexpect_spawn else '\n'
 		for s in (
 			f'pw{nl}wg1',
 			'foo is experimental',
@@ -194,6 +195,9 @@ class TestSuiteOutput(TestSuiteBase):
 		):
 			t.expect(s)
 		return t
+
+	def oneshot_warning_term(self):
+		return self.oneshot_warning(pexpect_spawn=True)
 
 class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 	'create a reference transaction file (administrative command)'

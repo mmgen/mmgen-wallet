@@ -20,7 +20,7 @@
 ts_regtest.py: Regtest tests for the test.py test suite
 """
 
-import os,json
+import os,json,time
 from decimal import Decimal
 from mmgen.globalvars import g
 from mmgen.opts import opt
@@ -343,6 +343,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('alice_twview_date',             'twview (age_fmt=date)'),
 		('alice_twview_date_time',        'twview (age_fmt=date_time)'),
 		('alice_txcreate_info',           'txcreate -i'),
+		('alice_txcreate_info_term',      'txcreate -i (pexpect_spawn)'),
 	),
 	}
 
@@ -1242,26 +1243,31 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			args = ['age_fmt=date_time'],
 			expect = (rtAmts[0],pat_date_time) )
 
-	def alice_txcreate_info(self,args=[]):
-		t = self.spawn('mmgen-txcreate',['--alice','-Bi'])
+	def alice_txcreate_info(self,pexpect_spawn=None):
+		t = self.spawn('mmgen-txcreate',['--alice','-Bi'],pexpect_spawn=pexpect_spawn)
 		pats = (
-				( '\d+',                       'D'),
-				( '\d+',                       'D'),
-				( '\d+',                       'D'),
-				( pat_date,                    'q'),
-		) if opt.pexpect_spawn else (
-				( '\d+',                       'D'),
-				( '\d+',                       'D'),
-				( '\d+',                       'D'),
-				( pat_date,                    'w'),
-				( '\d+\s+\d+\s+'+pat_date_time,'q'),
+			( '\d+',    'w'),
+			( '\d+',    'D'),
+			( '\d+',    'D'),
+			( '\d+',    'D'),
+			( pat_date, 'q'),
 		)
 		for d,s in pats:
 			t.expect(
 				r'\D{}\D.*\b{}\b'.format( rtAmts[0], d ),
 				s,
 				regex=True )
+			if t.pexpect_spawn and s == 'w':
+				t.expect(r'Total.*',regex=True)
+				if opt.exact_output:
+					time.sleep(1)
+				t.send('q')
+				time.sleep(0.2)
+				t.send('e')
 		return t
+
+	def alice_txcreate_info_term(self):
+		return self.alice_txcreate_info(pexpect_spawn=True)
 
 	def bob_msgcreate(self):
 		sid1 = self._user_sid('bob')

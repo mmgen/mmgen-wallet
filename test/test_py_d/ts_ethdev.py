@@ -367,8 +367,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if trunner == None:
 			return
 
-		self.erase_input = Ctrl_U if opt.pexpect_spawn else ''
-
 		from mmgen.protocol import init_proto
 		self.proto = init_proto(g.coin,network='regtest',need_amt=True)
 
@@ -1259,17 +1257,17 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_twview3(self):
 		return self.twview(args=['--token=mm1'],tool_args=['wide=1','sort=age'])
 
-	def edit_label(self,out_num,args=[],action='l',label_text=None,changed=False):
-		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B','-i'])
+	def edit_label(self,out_num,args=[],action='l',label_text=None,changed=False,pexpect_spawn=None):
+		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B','-i'],pexpect_spawn=pexpect_spawn)
 		p1,p2 = ('efresh balance:\b','return to main menu): ')
 		p3,r3 = (p2,label_text+'\n') if label_text is not None else ('(y/N): ','y')
-		p4,r4 = (('(y/N): ',),('y',)) if label_text == self.erase_input else ((),())
+		p4,r4 = (('(y/N): ',),('y',)) if label_text == Ctrl_U else ((),())
 		for p,r in zip((p1,p1,p2,p3)+p4,('M',action,out_num+'\n',r3)+r4):
 			t.expect(p,r)
 		m = (
 			'Label to account #{} edited' if changed else
 			'Account #{} removed' if action == 'D' else
-			'Label added to account #{}' if label_text and label_text != self.erase_input else
+			'Label added to account #{}' if label_text and label_text != Ctrl_U else
 			'Label removed from account #{}' )
 		t.expect(m.format(out_num))
 		for p,r in zip((p1,p1),('M','q')):
@@ -1280,12 +1278,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def edit_label1(self):
 		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[:3])
 	def edit_label2(self):
-		idx = 3 if opt.pexpect_spawn else 0
-		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[idx:],changed=True)
+		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[3:],changed=True,pexpect_spawn=True)
 	def edit_label3(self):
 		return self.edit_label(out_num=del_addrs[1],label_text=tw_label_lat_cyr_gr)
 	def edit_label4(self):
-		return self.edit_label(out_num=del_addrs[0],label_text=self.erase_input)
+		return self.edit_label(out_num=del_addrs[0],label_text=Ctrl_U,pexpect_spawn=True)
 
 	def token_edit_label1(self):
 		return self.edit_label(out_num='1',label_text='Token label #1',args=['--token=mm1'])

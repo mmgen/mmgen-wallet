@@ -41,8 +41,9 @@ NL = '\n'
 
 class MMGenPexpect:
 
-	def __init__(self,args,no_output=False,env=None):
+	def __init__(self,args,no_output=False,env=None,pexpect_spawn=False):
 
+		self.pexpect_spawn = pexpect_spawn
 		self.req_exit_val = 0
 		self.skip_ok = False
 		self.sent_value = None
@@ -53,7 +54,7 @@ class MMGenPexpect:
 			run([args[0]] + args[1:],check=True,stdout=DEVNULL if no_output else None)
 		else:
 			timeout = int(opt.pexpect_timeout or 0) or (60,5)[bool(opt.debug_pexpect)]
-			if opt.pexpect_spawn:
+			if pexpect_spawn:
 				self.p = pexpect.spawn(args[0],args[1:],encoding='utf8',timeout=timeout,env=env)
 			else:
 				self.p = PopenSpawn(args,encoding='utf8',timeout=timeout,env=env)
@@ -79,7 +80,7 @@ class MMGenPexpect:
 			self.expect('Comment: ',add_comment+'\n')
 
 	def ok(self):
-		if not opt.pexpect_spawn:
+		if not self.pexpect_spawn:
 			self.p.sendeof()
 		self.p.read()
 		ret = self.p.wait()
@@ -234,5 +235,5 @@ class MMGenPexpect:
 		return self.p.read(n)
 
 	def close(self):
-		if opt.pexpect_spawn:
+		if self.pexpect_spawn:
 			self.p.close()

@@ -327,9 +327,6 @@ def set_environ_for_spawned_scripts():
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
 
-	if not opt.pexpect_spawn:
-		os.environ['MMGEN_TEST_SUITE_POPEN_SPAWN'] = '1'
-
 	if not opt.system:
 		os.environ['PYTHONPATH'] = repo_root
 
@@ -555,7 +552,8 @@ class TestSuiteRunner(object):
 			msg_only     = False,
 			no_msg       = False,
 			cmd_dir      = 'cmds',
-			no_exec_wrapper = False ):
+			no_exec_wrapper = False,
+			pexpect_spawn = None ):
 
 		desc = self.ts.test_name if opt.names else self.gm.dpy_data[self.ts.test_name][1]
 		if extra_desc:
@@ -605,6 +603,9 @@ class TestSuiteRunner(object):
 				self.ts.test_name,
 				cmd_disp))
 
+		pexpect_spawn = pexpect_spawn if pexpect_spawn is not None else bool(opt.pexpect_spawn)
+
+		os.environ['MMGEN_TEST_SUITE_POPEN_SPAWN'] = '' if pexpect_spawn else '1'
 		os.environ['MMGEN_FORCE_COLOR'] = '1' if self.ts.color else ''
 
 		env = { 'EXEC_WRAPPER_SPAWN':'1' }
@@ -614,7 +615,7 @@ class TestSuiteRunner(object):
 			env.update({ 'EXEC_WRAPPER_TRACEBACK':'' }) # Python 3.9: OR the dicts
 
 		from test.include.pexpect import MMGenPexpect
-		return MMGenPexpect( args, no_output=no_output, env=env )
+		return MMGenPexpect( args, no_output=no_output, env=env, pexpect_spawn=pexpect_spawn )
 
 	def end_msg(self):
 		t = int(time.time() - self.start_time)

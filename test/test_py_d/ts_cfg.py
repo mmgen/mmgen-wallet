@@ -41,12 +41,13 @@ class TestSuiteCfg(TestSuiteBase):
 	def __del__(self):
 		os.environ['MMGEN_TEST_SUITE_CFGTEST'] = ''
 
-	def spawn_test(self,args=[],extra_desc=''):
+	def spawn_test(self,args=[],extra_desc='',pexpect_spawn=None):
 		return self.spawn(
 			'test/misc/cfg.py',
 			[f'--data-dir={self.path("data_dir")}'] + args,
 			cmd_dir = '.',
-			extra_desc = extra_desc )
+			extra_desc = extra_desc,
+			pexpect_spawn = pexpect_spawn )
 
 	def path(self,id_str):
 		return {
@@ -98,7 +99,7 @@ class TestSuiteCfg(TestSuiteBase):
 		e = CfgFileSampleUsr.altered_by_user_fs.format(self.path('sample'))
 		return self.bad_sample(s,e)
 
-	def old_sample_common(self,old_set=False,args=[]):
+	def old_sample_common(self,old_set=False,args=[],pexpect_spawn=None):
 		s = read_from_file(self.path('sys'))
 		d = s.replace('monero_','zcash_').splitlines()
 		a1 = ['','# Uncomment to make foo true:','# foo true']
@@ -107,7 +108,7 @@ class TestSuiteCfg(TestSuiteBase):
 		chk = CfgFileSample.cls_make_metadata(d)
 		write_to_file(self.path('sample'),'\n'.join(d+chk) + '\n')
 
-		t = self.spawn_test(args=args)
+		t = self.spawn_test(args=args,pexpect_spawn=pexpect_spawn)
 
 		t.expect('options have changed')
 		for s in ('have been added','monero_','have been removed','zcash_','foo','bar'):
@@ -124,7 +125,7 @@ class TestSuiteCfg(TestSuiteBase):
 		for s in ('CHANGES','Removed','# zcash_','# foo','# bar','Added','# monero_'):
 			t.expect(s)
 
-		if opt.pexpect_spawn: # view and exit pager
+		if t.pexpect_spawn: # view and exit pager
 			if opt.exact_output:
 				time.sleep(1)
 			t.send('q')
@@ -152,7 +153,7 @@ class TestSuiteCfg(TestSuiteBase):
 	def old_sample_bad_var(self):
 		d = ['foo true','bar false']
 		write_to_file(self.path('usr'),'\n'.join(d) + '\n')
-		return self.old_sample_common(old_set=True)
+		return self.old_sample_common(old_set=True,pexpect_spawn=True)
 
 	def coin_specific_vars(self):
 		"""
