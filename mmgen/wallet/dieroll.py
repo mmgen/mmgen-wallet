@@ -98,7 +98,7 @@ class wallet(wallet):
 			p = prompt_fs
 			while True:
 				time.sleep(g.short_disp_timeout)
-				ch = get_char(p.format(n),num_chars=1)
+				ch = get_char(p.format(n),num_bytes=1)
 				if ch in bc.digits:
 					msg_r(CUR_HIDE + ' OK')
 					return ch

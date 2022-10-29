@@ -65,7 +65,7 @@ def tt_line_input():
 		The held-down "y" and ENTER keys should be blocked, not affecting the output
 		on screen or entered text.
 	"""))
-	get_char_raw('Ready? ',num_chars=1)
+	get_char_raw('Ready? ',num_bytes=1)
 	reply = line_input('\nEnter text: ')
 	confirm(f'Did you enter the text {reply!r}?')
 
@@ -96,7 +96,7 @@ def tt_get_char(raw=False,one_char=False,immed_chars=''):
 		m3 = 'The Escape and F1-F12 keys will be returned as single characters.'
 	kwargs = {}
 	if one_char:
-		kwargs.update({'num_chars':1})
+		kwargs.update({'num_bytes':1})
 	if immed_chars:
 		kwargs.update({'immed_chars':immed_chars})
 

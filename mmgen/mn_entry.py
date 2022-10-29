@@ -51,7 +51,7 @@ class MnEntryMode(object):
 	def get_char(self,s):
 		did_erase = False
 		while True:
-			ch = get_char_raw('',num_chars=1)
+			ch = get_char_raw('',num_bytes=1)
 			if s and ch in _erase_chars:
 				s = s[:-1]
 				did_erase = True
