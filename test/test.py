@@ -337,9 +337,6 @@ def set_environ_for_spawned_scripts():
 	if not opt.system:
 		os.environ['PYTHONPATH'] = repo_root
 
-	if not opt.buf_keypress:
-		os.environ['MMGEN_DISABLE_HOLD_PROTECT'] = '1'
-
 	os.environ['MMGEN_NO_LICENSE'] = '1'
 	os.environ['MMGEN_MIN_URANDCHARS'] = '3'
 	os.environ['MMGEN_BOGUS_SEND'] = '1'
@@ -610,8 +607,13 @@ class TestSuiteRunner(object):
 				self.ts.test_name,
 				cmd_disp))
 
+		# NB: the `pexpect_spawn` arg enables hold_protect and send_delay while the corresponding cmdline
+		# option does not.  For performance reasons, this is the desired behavior.  For full emulation of
+		# the user experience with hold protect enabled, specify --buf-keypress or --demo.
+		send_delay = 0.4 if pexpect_spawn is True or opt.buf_keypress else None
 		pexpect_spawn = pexpect_spawn if pexpect_spawn is not None else bool(opt.pexpect_spawn)
 
+		os.environ['MMGEN_HOLD_PROTECT_DISABLE'] = '' if send_delay else '1'
 		os.environ['MMGEN_TEST_SUITE_POPEN_SPAWN'] = '' if pexpect_spawn else '1'
 		os.environ['MMGEN_FORCE_COLOR'] = '1' if self.ts.color else ''
 
@@ -626,7 +628,8 @@ class TestSuiteRunner(object):
 			args          = args,
 			no_output     = no_output,
 			env           = env,
-			pexpect_spawn = pexpect_spawn )
+			pexpect_spawn = pexpect_spawn,
+			send_delay    = send_delay )
 
 	def end_msg(self):
 		t = int(time.time() - self.start_time)

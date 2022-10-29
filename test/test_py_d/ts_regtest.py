@@ -1258,11 +1258,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				s,
 				regex=True )
 			if t.pexpect_spawn and s == 'w':
-				t.expect(r'Total.*',regex=True)
-				if opt.exact_output:
-					time.sleep(1)
-				t.send('q')
-				time.sleep(0.2)
+				t.expect(r'Total.*','q',regex=True,delay=1 if opt.exact_output else t.send_delay)
+				time.sleep(t.send_delay)
 				t.send('e')
 		return t
 

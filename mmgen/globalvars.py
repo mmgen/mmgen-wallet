@@ -116,6 +116,7 @@ class GlobalContext(Lockable):
 	test_suite           = False
 	test_suite_deterministic = False
 	test_suite_popen_spawn = False
+	hold_protect_disable = False
 
 	mnemonic_entry_modes = {}
 
@@ -249,6 +250,7 @@ class GlobalContext(Lockable):
 		'MMGEN_DEBUG_TW',
 		'MMGEN_DEBUG_UTF8',
 		'MMGEN_DEBUG_SUBSEED',
+		'MMGEN_HOLD_PROTECT_DISABLE',
 		'MMGEN_QUIET',
 		'MMGEN_FORCE_256_COLOR',
 		'MMGEN_MIN_URANDCHARS',

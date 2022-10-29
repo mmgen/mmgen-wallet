@@ -84,7 +84,7 @@ class MMGenTermLinux(MMGenTerm):
 
 	@classmethod
 	def kb_hold_protect(cls):
-		if g.test_suite:
+		if g.hold_protect_disable:
 			return
 		tty.setcbreak(cls.stdin_fd)
 		timeout = 0.3
@@ -106,7 +106,7 @@ class MMGenTermLinux(MMGenTerm):
 		timeout = 0.3
 		tty.setcbreak(cls.stdin_fd)
 		msg_r(prompt)
-		if g.test_suite:
+		if g.hold_protect_disable:
 			prehold_protect = False
 		while True:
 			# Protect against held-down key before read()
@@ -142,9 +142,9 @@ class MMGenTermLinuxStub(MMGenTermLinux):
 		pass
 
 	@classmethod
-	def get_char(cls,prompt='',immed_chars='',prehold_protect=None,num_bytes=None):
+	def get_char(cls,prompt='',immed_chars='',prehold_protect=None,num_bytes=5):
 		msg_r(prompt)
-		return sys.stdin.read(1)
+		return os.read(0,num_bytes).decode()
 
 	get_char_raw = get_char
 

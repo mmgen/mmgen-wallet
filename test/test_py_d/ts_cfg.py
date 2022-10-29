@@ -126,8 +126,7 @@ class TestSuiteCfg(TestSuiteBase):
 			t.expect(s)
 
 		if t.pexpect_spawn: # view and exit pager
-			if opt.exact_output:
-				time.sleep(1)
+			time.sleep(1 if opt.exact_output else t.send_delay)
 			t.send('q')
 
 		t.expect(cp,'n')

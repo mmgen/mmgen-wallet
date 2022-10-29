@@ -40,9 +40,10 @@ NL = '\n'
 
 class MMGenPexpect:
 
-	def __init__(self,args,no_output=False,env=None,pexpect_spawn=False):
+	def __init__(self,args,no_output=False,env=None,pexpect_spawn=False,send_delay=None):
 
 		self.pexpect_spawn = pexpect_spawn
+		self.send_delay = send_delay
 		self.req_exit_val = 0
 		self.skip_ok = False
 		self.sent_value = None
@@ -182,7 +183,6 @@ class MMGenPexpect:
 		return m
 
 	def expect(self,s,t='',delay=None,regex=False,nonl=False,silent=False):
-		delay = delay or (0,0.3)[bool(opt.buf_keypress)]
 
 		if not silent:
 			if opt.verbose:
@@ -217,7 +217,7 @@ class MMGenPexpect:
 			return ret
 
 	def send(self,t,delay=None,s=False):
-		delay = delay or (0,0.3)[bool(opt.buf_keypress)]
+		delay = delay or self.send_delay
 		if delay:
 			time.sleep(delay)
 		ret = self.p.send(t) # returns num bytes written
