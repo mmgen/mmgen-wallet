@@ -18,29 +18,51 @@ from mmgen.wallet import get_wallet_cls
 class TestSuiteInput(TestSuiteBase):
 	'user input'
 	networks = ('btc',)
-	tmpdir_nums = []
+	tmpdir_nums = [1]
 	color = True
-	cmd_group = (
-		('get_seed_from_stdin',           (1,'reading seed phrase from STDIN', [])),
-		('get_passphrase_ui',             (1,"hash preset, password and label (wallet.py)", [])),
-		('get_passphrase_cmdline',        (1,"hash preset, password and label (wallet.py - from cmdline)", [])),
-		('get_passphrase_crypto',         (1,"hash preset, password and label (crypto.py)", [])),
-		('password_entry_noecho',         (1,"utf8 password entry", [])),
-		('password_entry_echo',           (1,"utf8 password entry (echoed)", [])),
-		('mnemonic_entry_mmgen',          (1,"stealth mnemonic entry (mmgen)", [])),
-		('mnemonic_entry_mmgen_minimal',  (1,"stealth mnemonic entry (mmgen - minimal entry mode)", [])),
-		('mnemonic_entry_bip39',          (1,"stealth mnemonic entry (bip39)", [])),
-		('mnemonic_entry_bip39_short',    (1,"stealth mnemonic entry (bip39 - short entry mode)", [])),
-		('mn2hex_interactive_mmgen',      (1,"mn2hex_interactive (mmgen)", [])),
-		('mn2hex_interactive_mmgen_fixed',(1,"mn2hex_interactive (mmgen - fixed (10-letter) entry mode)", [])),
-		('mn2hex_interactive_bip39',      (1,"mn2hex_interactive (bip39)", [])),
-		('mn2hex_interactive_bip39_short',(1,"mn2hex_interactive (bip39 - short entry mode (+pad entry))", [])),
-		('mn2hex_interactive_bip39_fixed',(1,"mn2hex_interactive (bip39 - fixed (4-letter) entry mode)", [])),
-		('mn2hex_interactive_xmr',        (1,"mn2hex_interactive (xmrseed)", [])),
-		('mn2hex_interactive_xmr_short',  (1,"mn2hex_interactive (xmrseed - short entry mode)", [])),
-		('dieroll_entry',                 (1,"dieroll entry (base6d)", [])),
-		('dieroll_entry_usrrand',         (1,"dieroll entry (base6d) with added user entropy", [])),
+	cmd_group_in = (
+		('subgroup.password', []),
+		('subgroup.misc', []),
+		('subgroup.wallet', []),
+		('subgroup.mnemonic', []),
+		('subgroup.dieroll', []),
 	)
+	cmd_subgroups = {
+	'password': (
+		'password entry via line_input()',
+		('password_entry_noecho',         'utf8 password entry'),
+		('password_entry_echo',           'utf8 password entry (echoed)'),
+	),
+	'misc': (
+		'miscellaneous user-level UI functions',
+		('get_seed_from_stdin',           'reading seed phrase from STDIN'),
+	),
+	'wallet': (
+		'hash preset, password and label entry',
+		('get_passphrase_ui',             'hash preset, password and label (wallet.py)'),
+		('get_passphrase_cmdline',        'hash preset, password and label (wallet.py - from cmdline)'),
+		('get_passphrase_crypto',         'hash preset, password and label (crypto.py)'),
+	),
+	'mnemonic': (
+		'mnemonic entry',
+		('mnemonic_entry_mmgen',          'stealth mnemonic entry (mmgen)'),
+		('mnemonic_entry_mmgen_minimal',  'stealth mnemonic entry (mmgen - minimal entry mode)'),
+		('mnemonic_entry_bip39',          'stealth mnemonic entry (bip39)'),
+		('mnemonic_entry_bip39_short',    'stealth mnemonic entry (bip39 - short entry mode)'),
+		('mn2hex_interactive_mmgen',      'mn2hex_interactive (mmgen)'),
+		('mn2hex_interactive_mmgen_fixed','mn2hex_interactive (mmgen - fixed (10-letter) entry mode)'),
+		('mn2hex_interactive_bip39',      'mn2hex_interactive (bip39)'),
+		('mn2hex_interactive_bip39_short','mn2hex_interactive (bip39 - short entry mode (+pad entry))'),
+		('mn2hex_interactive_bip39_fixed','mn2hex_interactive (bip39 - fixed (4-letter) entry mode)'),
+		('mn2hex_interactive_xmr',        'mn2hex_interactive (xmrseed)'),
+		('mn2hex_interactive_xmr_short',  'mn2hex_interactive (xmrseed - short entry mode)'),
+	),
+	'dieroll': (
+		'dieroll entry',
+		('dieroll_entry',                 'dieroll entry (base6d)'),
+		('dieroll_entry_usrrand',         'dieroll entry (base6d) with added user entropy'),
+	)
+	}
 
 	def get_seed_from_stdin(self):
 		self.spawn('',msg_only=True)

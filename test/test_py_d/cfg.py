@@ -27,7 +27,7 @@ cmd_groups_dfl = {
 	'ref_altcoin':      ('TestSuiteRefAltcoin',{}),
 	'seedsplit':        ('TestSuiteSeedSplit',{}),
 	'tool':             ('TestSuiteTool',{'full_data':True}),
-	'input':            ('TestSuiteInput',{'full_data':True}),
+	'input':            ('TestSuiteInput',{}),
 	'output':           ('TestSuiteOutput',{'modname':'misc','full_data':True}),
 	'autosign':         ('TestSuiteAutosign',{}),
 	'regtest':          ('TestSuiteRegtest',{}),
