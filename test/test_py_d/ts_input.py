@@ -10,6 +10,8 @@
 ts_input.py: user input tests for the MMGen test.py test suite
 """
 
+import time
+
 from ..include.common import *
 from .ts_base import *
 from .input import *
@@ -21,6 +23,8 @@ class TestSuiteInput(TestSuiteBase):
 	tmpdir_nums = [1]
 	color = True
 	cmd_group_in = (
+		('subgroup.char', []),
+		('subgroup.line', []),
 		('subgroup.password', []),
 		('subgroup.misc', []),
 		('subgroup.wallet', []),
@@ -28,10 +32,34 @@ class TestSuiteInput(TestSuiteBase):
 		('subgroup.dieroll', []),
 	)
 	cmd_subgroups = {
+	'char': (
+		'get_char() function',
+		('get_char1',                    'get_char()'),
+		('get_char2',                    'get_char() [multiple characters]'),
+		('get_char3',                    'get_char() [no prompt]'),
+		('get_char4',                    'get_char() [utf8]'),
+		('get_char_term1',               'get_char() [term, utf8]'),
+		('get_char_term2',               'get_char() [term, multiple characters]'),
+		('get_char_term3',               'get_char() [term, prehold_protect=False]'),
+		('get_char_term4',               'get_char() [term, immed_chars="xyz"]'),
+	),
+	'line': (
+		'line_input() function',
+		('line_input',                    'line_input()'),
+		('line_input_term1',              'line_input() [term]'),
+		('line_input_term2',              'line_input() [term, no hold protect]'),
+		('line_input_insert',             'line_input() [inserted text]'),
+		('line_input_insert_term1',       'line_input() [inserted text, term]'),
+		('line_input_insert_term2',       'line_input() [inserted text, term, no hold protect]'),
+		('line_input_edit_term',          'line_input() [inserted + edited text, term, utf8]'),
+		('line_input_erase_term',         'line_input() [inserted + erased text, term]'),
+	),
 	'password': (
 		'password entry via line_input()',
 		('password_entry_noecho',         'utf8 password entry'),
+		('password_entry_noecho_term',    'utf8 password entry [term]'),
 		('password_entry_echo',           'utf8 password entry (echoed)'),
+		('password_entry_echo_term',      'utf8 password entry (echoed) [term]'),
 	),
 	'misc': (
 		'miscellaneous user-level UI functions',
@@ -190,8 +218,95 @@ class TestSuiteInput(TestSuiteBase):
 
 		return t
 
+	def _input_func(self,func_name,arg_dfls,func_args,text,expect,term):
+		func_args = {k:v for k,v in zip(arg_dfls.keys(),func_args)}
+		t = self.spawn(
+			'test/misc/input_func.py',
+			[func_name,repr(func_args)],
+			cmd_dir='.',
+			pexpect_spawn=term )
+		imsg('Parameters:')
+		imsg('  terminal:      {}'.format(term))
+		imsg('  sending:       {!r}'.format(text))
+		imsg('  expecting:     {!r}'.format(expect))
+		imsg('\nFunction args:')
+		for k,v in func_args.items():
+			imsg('  {:14} {!r}'.format(k+':',v))
+		imsg_r('\nScript output: ')
+		prompt_add = (func_args['insert_txt'] if term else '') if func_name == 'line_input' else ''
+		t.expect( func_args['prompt'] + prompt_add, text )
+		ret = t.expect_getend('  ==> ')
+		assert ret == repr(expect), f'Text mismatch! {ret} != {repr(expect)}'
+		return t
+
+	def _get_char(self,func_args,text,expect,term):
+		arg_dfls = {
+			'prompt': '',
+			'immed_chars': '',
+			'prehold_protect': True,
+			'num_bytes': 5,
+		}
+		return self._input_func('get_char',arg_dfls,func_args,text,expect,term)
+
+	def _line_input(self,func_args,text,expect,term):
+		arg_dfls = {
+			'prompt': '', # positional
+			'echo': True,
+			'insert_txt': '',
+			'hold_protect': True,
+		}
+		return self._input_func('line_input',arg_dfls,func_args,text+'\n',expect,term)
+
+	def get_char1(self):
+		return self._get_char(['prompt> ','',True,5],'x','x',False)
+
+	def get_char2(self):
+		return self._get_char(['prompt> ','',True,5],'xxxxx','xxxxx',False)
+
+	def get_char3(self):
+		return self._get_char(['','',True,5],'x','x',False)
+
+	def get_char4(self):
+		return self._get_char(['prompt> ','',True,2],'α','α',False) # UTF-8, must get 2 bytes
+
+	def get_char_term1(self):
+		return self._get_char(['prompt> ','',True,2],'β','β',True)  # UTF-8, must get 2 bytes
+
+	def get_char_term2(self):
+		return self._get_char(['prompt> ','',True,5],'xxxxx','xxxxx',True)
+
+	def get_char_term3(self):
+		return self._get_char(['','',False,5],'x','x',True)
+
+	def get_char_term4(self):
+		return self._get_char(['prompt> ','xyz',False,5],'x','x',True)
+
+	def line_input(self):
+		return self._line_input(['prompt> ',True,'',True],'foo','foo',False)
+
+	def line_input_term1(self):
+		return self._line_input(['prompt> ',True,'',True],'foo','foo',True)
+
+	def line_input_term2(self):
+		return self._line_input(['prompt> ',True,'',False],'foo','foo',True)
+
+	def line_input_insert(self):
+		return self._line_input(['prompt> ',True,'inserted text',True],'foo','foo',False)
+
+	def line_input_insert_term1(self):
+		return self._line_input(['prompt> ',True,'foo',True],'bar','foobar',True)
+
+	def line_input_insert_term2(self):
+		return self._line_input(['prompt> ',True,'foo',False],'bar','foobar',True)
+
+	def line_input_edit_term(self):
+		return self._line_input(['prompt> ',True,'φυφυ',True],'\b\bβαρ','φυβαρ',True)
+
+	def line_input_erase_term(self):
+		return self._line_input(['prompt> ',True,'foobarbaz',True],Ctrl_U+'foobar','foobar',True)
+
 	def _password_entry(self,prompt,opts=[],term=False):
-		t = self.spawn( 'test/misc/password_entry.py', opts, cmd_dir='.', pexpect_spawn=term )
+		t = self.spawn( 'test/misc/input_func.py', opts + ['passphrase'], cmd_dir='.', pexpect_spawn=term )
 		imsg('Terminal: {}'.format(term))
 		pw = 'abc-α'
 		t.expect(prompt,pw+'\n')
@@ -211,8 +326,18 @@ class TestSuiteInput(TestSuiteBase):
 	def password_entry_noecho(self,term=False):
 		return self._password_entry('Enter passphrase: ',term=term)
 
+	def password_entry_noecho_term(self):
+		if self.skip_for_win():
+			return ('skip_warn','\n' + fmt(self.winskip_msg.format(''),strip_char='\t'))
+		return self.password_entry_noecho(term=True)
+
 	def password_entry_echo(self,term=False):
 		return self._password_entry('Enter passphrase (echoed): ',['--echo-passphrase'],term=term)
+
+	def password_entry_echo_term(self):
+		if self.skip_for_win():
+			return ('skip_warn','\n' + fmt(self.winskip_msg.format(' --echo-passphrase'),strip_char='\t'))
+		return self.password_entry_echo(term=True)
 
 	def _mn2hex(self,fmt,entry_mode='full',mn=None,pad_entry=False,enter_for_dfl=False):
 		mn = mn or sample_mn[fmt]['mn'].split()
