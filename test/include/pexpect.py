@@ -33,9 +33,8 @@ except ImportError as e:
 	die(2,red(f'Pexpect module is missing.  Cannnot run test suite ({e!r})'))
 
 def debug_pexpect_msg(p):
-	if opt.debug_pexpect:
-		msg('\n{}{}{}'.format( red('BEFORE ['), p.before, red(']') ))
-		msg('{}{}{}'.format( red('MATCH ['), p.after, red(']') ))
+	msg('\n{}{}{}'.format( red('BEFORE ['), p.before, red(']') ))
+	msg('{}{}{}'.format( red('MATCH ['), p.after, red(']') ))
 
 NL = '\n'
 
@@ -154,10 +153,12 @@ class MMGenPexpect:
 
 	def expect_getend(self,s,regex=False):
 		ret = self.expect(s,regex=regex,nonl=True)
-		debug_pexpect_msg(self.p)
+		if opt.debug_pexpect:
+			debug_pexpect_msg(self.p)
 		# readline() of partial lines doesn't work with PopenSpawn, so do this instead:
 		self.expect(NL,nonl=True,silent=True)
-		debug_pexpect_msg(self.p)
+		if opt.debug_pexpect:
+			debug_pexpect_msg(self.p)
 		end = self.p.before.rstrip()
 		if not g.debug:
 			vmsg(f' ==> {cyan(end)}')
@@ -186,14 +187,11 @@ class MMGenPexpect:
 		if not silent:
 			if opt.verbose:
 				msg_r('EXPECT ' + yellow(str(s)))
-			elif not opt.exact_output: msg_r('+')
+			elif not opt.exact_output:
+				msg_r('+')
 
 		try:
-			if s == '':
-				ret = 0
-			else:
-				f = (self.p.expect_exact,self.p.expect)[bool(regex)]
-				ret = f(s)
+			ret = (self.p.expect_exact,self.p.expect)[bool(regex)](s) if s else 0
 		except pexpect.TIMEOUT:
 			if opt.debug_pexpect:
 				raise
@@ -202,7 +200,8 @@ class MMGenPexpect:
 			m3 = f'sent value: [{self.sent_value}]' if self.sent_value != None else ''
 			die(2,m1+m2+m3)
 
-		debug_pexpect_msg(self.p)
+		if opt.debug_pexpect:
+			debug_pexpect_msg(self.p)
 
 		if opt.verbose and type(s) != str:
 			msg_r(f' ==> {ret} ')
@@ -210,20 +209,21 @@ class MMGenPexpect:
 		if ret == -1:
 			die(4,f'Error.  Expect returned {ret}')
 		else:
-			if t == '':
-				if not nonl and not silent: vmsg('')
-			else:
+			if t:
 				self.send(t,delay,s)
+			else:
+				if not nonl and not silent:
+					vmsg('')
 			return ret
 
 	def send(self,t,delay=None,s=False):
-		self.sent_value = None
 		delay = delay or (0,0.3)[bool(opt.buf_keypress)]
-		if delay: time.sleep(delay)
+		if delay:
+			time.sleep(delay)
 		ret = self.p.send(t) # returns num bytes written
-		if ret:
-			self.sent_value = t
-		if delay: time.sleep(delay)
+		self.sent_value = t if ret else None
+		if opt.demo and delay:
+			time.sleep(delay)
 		if opt.verbose:
 			ls = '' if opt.debug or not s else ' '
 			es = '' if s else '  '

@@ -74,7 +74,7 @@ def line_input(prompt,echo=True,insert_txt='',hold_protect=True):
 	else:
 		from getpass import getpass
 		if g.platform == 'win':
-			# MSWin hack - getpass('foo') doesn't flush stderr
+			# MSYS2/MSWin hack - getpass('foo') doesn't flush stderr - TODO: has this been fixed?
 			msg_r(prompt.strip()) # getpass('') adds a space
 			sys.stderr.flush()
 			reply = getpass('')

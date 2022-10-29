@@ -190,29 +190,29 @@ class TestSuiteInput(TestSuiteBase):
 
 		return t
 
-	def password_entry(self,prompt,cmd_args):
-		t = self.spawn('test/misc/password_entry.py',cmd_args,cmd_dir='.')
+	def _password_entry(self,prompt,opts=[],term=False):
+		t = self.spawn( 'test/misc/password_entry.py', opts, cmd_dir='.', pexpect_spawn=term )
+		imsg('Terminal: {}'.format(term))
 		pw = 'abc-α'
 		t.expect(prompt,pw+'\n')
 		ret = t.expect_getend('Entered: ')
 		assert ret == pw, f'Password mismatch! {ret} != {pw}'
 		return t
 
-	def password_entry_noecho(self):
-		if self.skip_for_win():
-			m = "getpass() doesn't work with pexpect.popen_spawn!\n"
-			m += 'Perform the following test by hand with non-ASCII password abc-α:\n'
-			m += '  test/misc/password_entry.py'
-			return ('skip_warn',m)
-		return self.password_entry('Enter passphrase: ',[])
+	# TODO: has this been fixed?
+	winskip_msg = """
+		getpass() doesn't work with pexpect.popen_spawn on MSYS2!
+		Perform the following test by hand with non-ASCII password abc-α
+		or another password in your native alphabet:
 
-	def password_entry_echo(self):
-		if self.skip_for_win():
-			m = "getpass() doesn't work with pexpect.popen_spawn!\n"
-			m += 'Perform the following test by hand with non-ASCII password abc-α:\n'
-			m += '  test/misc/password_entry.py --echo-passphrase'
-			return ('skip_warn',m)
-		return self.password_entry('Enter passphrase (echoed): ',['--echo-passphrase'])
+		  test/misc/input_func.py{} passphrase
+	"""
+
+	def password_entry_noecho(self,term=False):
+		return self._password_entry('Enter passphrase: ',term=term)
+
+	def password_entry_echo(self,term=False):
+		return self._password_entry('Enter passphrase (echoed): ',['--echo-passphrase'],term=term)
 
 	def _mn2hex(self,fmt,entry_mode='full',mn=None,pad_entry=False,enter_for_dfl=False):
 		mn = mn or sample_mn[fmt]['mn'].split()

@@ -96,7 +96,12 @@ g.quiet = False # if 'quiet' was set in config file, disable here
 os.environ['MMGEN_QUIET'] = '0' # for this script and spawned scripts
 
 opts_data = {
-	'sets': [('list_current_cmd_groups',True,'list_cmd_groups',True)],
+	'sets': [
+		('list_current_cmd_groups',True,'list_cmd_groups',True),
+		('demo',True,'exact_output',True),
+		('demo',True,'buf_keypress',True),
+		('demo',True,'pexpect_spawn',True),
+	],
 	'text': {
 		'desc': 'Test suite for the MMGen suite',
 		'usage':'[options] [command [..command]] | [command_group[.command_subgroup][:command]]',
@@ -111,6 +116,8 @@ opts_data = {
 -c, --print-cmdline  Print the command line of each spawned command
 -C, --coverage       Produce code coverage info using trace module
 -x, --debug-pexpect  Produce debugging output for pexpect calls
+--, --demo           Add extra delay after each send to make input visible.
+                     Implies --exact-output --pexpect-spawn --buf-keypress
 -D, --no-daemon-stop Don't stop auto-started daemons after running tests
 -E, --direct-exec    Bypass pexpect and execute a command directly (for
                      debugging only)
@@ -615,7 +622,11 @@ class TestSuiteRunner(object):
 			env.update({ 'EXEC_WRAPPER_TRACEBACK':'' }) # Python 3.9: OR the dicts
 
 		from test.include.pexpect import MMGenPexpect
-		return MMGenPexpect( args, no_output=no_output, env=env, pexpect_spawn=pexpect_spawn )
+		return MMGenPexpect(
+			args          = args,
+			no_output     = no_output,
+			env           = env,
+			pexpect_spawn = pexpect_spawn )
 
 	def end_msg(self):
 		t = int(time.time() - self.start_time)
