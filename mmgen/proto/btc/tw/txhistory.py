@@ -66,7 +66,13 @@ class BitcoinTwTransaction(BitcoinTwCommon):
 						data = d.data )
 			return sorted(
 				gen(),
-				key = lambda d: d.twlabel.twmmid.sort_key if d.twlabel else 'zz_' + d.coin_addr )
+				# if address is not MMGen, ignore address and sort by TxID + vout only
+				key = lambda d: (
+					(d.twlabel.twmmid.sort_key if d.twlabel and d.twlabel.twmmid.type == 'mmgen' else '')
+					+ '_'
+					+ d.txid
+					+ '{:08d}'.format(d.data['n'])
+				))
 
 		def gen_all_addrs(src):
 			for e in self.vouts_info[src]:
