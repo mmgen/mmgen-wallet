@@ -82,6 +82,15 @@ class TestSuiteHelp(TestSuiteBase):
 		t.expect('MMGEN-TOOL version')
 		return t
 
+	def spawn_chk_expect(self,*args,**kwargs):
+		expect = kwargs.pop('expect')
+		t = self.spawn(*args,**kwargs)
+		t.expect(expect)
+		t.read()
+		t.ok()
+		t.skip_ok = True
+		return t
+
 	def helpscreens(self,arg='--help',scripts=(),expect='USAGE:.*OPTIONS:'):
 
 		scripts = list(scripts) or [s.replace('mmgen-','') for s in os.listdir('cmds')]
@@ -119,12 +128,15 @@ class TestSuiteHelp(TestSuiteBase):
 			ymsg('Skipping tool help with PYTHONOPTIMIZE=2 (no docstrings)')
 			return 'skip'
 
-		for args in (
-			['help'],
-			['usage'],
-			['help','randpair']
+		for arg in (
+			'help',
+			'usage',
 		):
-			t = self.spawn_chk('mmgen-tool',args,extra_desc=f"('mmgen-tool {fmt_list(args,fmt='bare')}')")
+			t = self.spawn_chk_expect(
+				'mmgen-tool',
+				[arg],
+				extra_desc = f'(mmgen-tool {arg})',
+				expect = 'GENERAL USAGE' )
 		return t
 
 	def tool_cmd_usage(self):
@@ -141,12 +153,17 @@ class TestSuiteHelp(TestSuiteBase):
 		return t
 
 	def test_help(self):
-		for args in (
-			['--help'],
-			['--list-cmds'],
-			['--list-cmd-groups']
+		for arg,expect in (
+			('--help','USAGE'),
+			('--list-cmds','AVAILABLE COMMANDS'),
+			('--list-cmd-groups','AVAILABLE COMMAND GROUPS')
 		):
-			t = self.spawn_chk('test.py',args,cmd_dir='test',extra_desc=f"('test.py {fmt_list(args,fmt='bare')}')")
+			t = self.spawn_chk_expect(
+				'test.py',
+				[arg],
+				cmd_dir = 'test',
+				extra_desc = f'(test.py {arg})',
+				expect = expect )
 		return t
 
 class TestSuiteOutput(TestSuiteBase):

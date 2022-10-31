@@ -867,7 +867,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
 		return self.user_txbump('bob',self.tmpdir,txfile,rtFee[2],add_args=['--send'])
 
-	def generate(self,coin=None,num_blocks=1):
+	def generate(self,num_blocks=1):
 		int(num_blocks)
 		t = self.spawn('mmgen-regtest',['generate',str(num_blocks)])
 		t.expect(f'Mined {num_blocks} block')
