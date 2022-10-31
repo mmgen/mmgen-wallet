@@ -195,6 +195,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('fund_alice',                   "funding Alice's wallet"),
 		('generate',                     'mining a block'),
 		('bob_bal1',                     "Bob's balance"),
+		('generate_extra_deterministic', "generate extra blocks for deterministic run"),
 	),
 	'msg': (
 		'message signing',
@@ -518,6 +519,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		mmtype = ('L','S')[self.proto.cap('segwit')]
 		addr = self.get_addr_from_addrlist('alice',sid,mmtype,0,addr_range='1-5')
 		return self.fund_wallet_deterministic( 'alice', addr, '1-11', skip_passphrase=True )
+
+	def generate_extra_deterministic(self):
+		if not self.deterministic:
+			return 'skip'
+		return self.generate(num_blocks=2) # do this so block count matches non-deterministic run
 
 	async def bob_recreate_tracking_wallet(self):
 		if not self.deterministic:
