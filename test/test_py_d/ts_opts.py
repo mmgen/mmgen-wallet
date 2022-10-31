@@ -44,12 +44,14 @@ class TestSuiteOpts(TestSuiteBase):
 		return t
 
 	def opt_helpscreen(self):
-		return self.do_run(
-			['--help'],
-			r'OPTS.PY: Opts test.*USAGE:\s+opts.py.*--minconf.*'
-			+ r'NOTES FOR THIS.*a note',
-			0,
-			regex=True )
+		expect = r'OPTS.PY: Opts test.*USAGE:\s+opts.py'
+		if not opt.pexpect_spawn:
+			expect += r'.*--minconf.*NOTES FOR THIS.*a note'
+		t = self.do_run( ['--help'], expect, 0, regex=True )
+		if t.pexpect_spawn:
+			time.sleep(0.4)
+			t.send('q')
+		return t
 
 	def opt_noargs(self):
 		return self.check_vals(

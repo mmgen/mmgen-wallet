@@ -86,12 +86,15 @@ class TestSuiteHelp(TestSuiteBase):
 		expect = kwargs.pop('expect')
 		t = self.spawn(*args,**kwargs)
 		t.expect(expect)
+		if t.pexpect_spawn:
+			time.sleep(0.4)
+			t.send('q')
 		t.read()
 		t.ok()
 		t.skip_ok = True
 		return t
 
-	def helpscreens(self,arg='--help',scripts=(),expect='USAGE:.*OPTIONS:'):
+	def helpscreens(self,arg='--help',scripts=(),expect='USAGE:.*OPTIONS:',pager=True):
 
 		scripts = list(scripts) or [s.replace('mmgen-','') for s in os.listdir('cmds')]
 
@@ -104,6 +107,9 @@ class TestSuiteHelp(TestSuiteBase):
 		for s in sorted(scripts):
 			t = self.spawn(f'mmgen-{s}',[arg],extra_desc=f'(mmgen-{s})')
 			t.expect(expect,regex=True)
+			if pager and t.pexpect_spawn:
+				time.sleep(0.2)
+				t.send('q')
 			t.read()
 			t.ok()
 			t.skip_ok = True
@@ -120,7 +126,8 @@ class TestSuiteHelp(TestSuiteBase):
 					'walletgen','walletconv','walletchk','passchg','subwalletgen',
 					'addrgen','keygen','passgen',
 					'txsign','txdo','txbump'),
-			expect = 'Available parameters.*Preset' )
+			expect = 'Available parameters.*Preset',
+			pager  = False )
 
 	def tool_help(self):
 

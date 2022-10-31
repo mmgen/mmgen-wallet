@@ -99,7 +99,7 @@ class TestSuiteCfg(TestSuiteBase):
 		e = CfgFileSampleUsr.altered_by_user_fs.format(self.path('sample'))
 		return self.bad_sample(s,e)
 
-	def old_sample_common(self,old_set=False,args=[],pexpect_spawn=None):
+	def old_sample_common(self,old_set=False,args=[],pexpect_spawn=False):
 		s = read_from_file(self.path('sys'))
 		d = s.replace('monero_','zcash_').splitlines()
 		a1 = ['','# Uncomment to make foo true:','# foo true']

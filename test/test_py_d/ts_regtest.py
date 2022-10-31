@@ -708,8 +708,16 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			['--bob',f'--outdir={self.tmpdir}','txhist','age_fmt=date_time','interactive=true'] )
 		for resp in ('u','i','t','a','m','T','A','r','r','D','D','D','D','p','P','b','V'):
 			t.expect('draw:\b',resp,regex=True)
-		txnum,idx = (8,1) if self.proto.coin == 'BCH' else (9,3)
-		t.expect(f'\s{txnum}\).*Inputs:.*:L:{idx}.*Outputs \(3\):.*:C:2.*\s10\)','q',regex=True)
+		if t.pexpect_spawn:
+			t.expect(r'Block:.*\b394\b',regex=True)
+			time.sleep(1)
+			t.send('q')
+			time.sleep(0.2)
+			t.send('b')
+			t.expect('draw:\b','q',regex=True)
+		else:
+			txnum,idx = (8,1) if self.proto.coin == 'BCH' else (9,3)
+			t.expect(f'\s{txnum}\).*Inputs:.*:L:{idx}.*Outputs \(3\):.*:C:2.*\s10\)','q',regex=True)
 		return t
 
 	def bob_getbalance(self,bals,confs=1):
@@ -1243,7 +1251,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			args = ['age_fmt=date_time'],
 			expect = (rtAmts[0],pat_date_time) )
 
-	def alice_txcreate_info(self,pexpect_spawn=None):
+	def alice_txcreate_info(self,pexpect_spawn=False):
 		t = self.spawn('mmgen-txcreate',['--alice','-Bi'],pexpect_spawn=pexpect_spawn)
 		pats = (
 			( '\d+',    'w'),
