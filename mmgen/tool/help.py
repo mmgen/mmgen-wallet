@@ -195,7 +195,7 @@ def usage(cmdname=None,exit_val=1):
 			die(1,f'{cmdname!r}: no such tool command')
 	else:
 		from ..ui import do_pager
-		do_pager('\n'.join(gen_tool_usage()))
+		do_pager('\n'.join(gen_tool_usage()) + '\n')
 
 	import sys
 	sys.exit(exit_val)

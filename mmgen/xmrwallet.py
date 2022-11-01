@@ -23,7 +23,7 @@ xmrwallet.py - MoneroWalletOps class
 import os,re,time,json
 from collections import namedtuple
 from .common import *
-from .objmethods import Hilite,InitErrors
+from .objmethods import MMGenObject,Hilite,InitErrors
 from .obj import CoinTxID
 from .seed import SeedID
 from .protocol import init_proto
