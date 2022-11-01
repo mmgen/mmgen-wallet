@@ -19,7 +19,8 @@ elif cmd_args[0] in ('get_char','line_input'):
 	from mmgen.ui import line_input
 	from ast import literal_eval
 	func_args = literal_eval(cmd_args[1])
-	Msg(f'\n  g.hold_protect_disable: {g.hold_protect_disable}')
+	Msg(f'\n  term: {get_char.__self__.__name__}')
+	Msg(f'  g.hold_protect_disable: {g.hold_protect_disable}')
 	Msg('  {name}( {args} )'.format(
 		name = cmd_args[0],
 		args = ', '.join(f'{k}={v!r}' for k,v in func_args.items())

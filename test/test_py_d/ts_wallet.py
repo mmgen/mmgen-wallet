@@ -153,7 +153,8 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		def do_run(cmd):
 			from subprocess import run,PIPE,DEVNULL
 			return run(cmd,stdout=PIPE,stderr=DEVNULL,check=True)
-		if self.skip_for_win(): return 'skip'
+		if self.skip_for_win():
+			return 'skip'
 		imsg('Creating block device image file')
 		ic_img = joinpath(self.tmpdir,'hincog_blkdev_img')
 		do_run(['dd','if=/dev/zero','of='+ic_img,'bs=1K','count=1'])

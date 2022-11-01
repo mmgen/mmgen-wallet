@@ -194,7 +194,7 @@ parsed_opts = opts.init(opts_data,return_parsed=True)
 usr_args = parsed_opts.cmd_args
 
 if opt.daemon_id and opt.daemon_id in g.blacklist_daemons.split():
-	die(0,f'test.py: daemon {opt.daemon_id!r} blacklisted, exiting')
+	die(1,f'test.py: daemon {opt.daemon_id!r} blacklisted, exiting')
 
 network_id = g.coin.lower() + ('_tn' if opt.testnet else '')
 

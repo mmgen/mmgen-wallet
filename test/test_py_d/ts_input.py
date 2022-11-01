@@ -226,7 +226,7 @@ class TestSuiteInput(TestSuiteBase):
 			cmd_dir='.',
 			pexpect_spawn=term )
 		imsg('Parameters:')
-		imsg('  terminal:      {}'.format(term))
+		imsg('  pexpect_spawn: {}'.format(term))
 		imsg('  sending:       {!r}'.format(text))
 		imsg('  expecting:     {!r}'.format(expect))
 		imsg('\nFunction args:')
@@ -314,9 +314,8 @@ class TestSuiteInput(TestSuiteBase):
 		assert ret == pw, f'Password mismatch! {ret} != {pw}'
 		return t
 
-	# TODO: has this been fixed?
 	winskip_msg = """
-		getpass() doesn't work with pexpect.popen_spawn on MSYS2!
+		pexpect_spawn not supported on Windows platform
 		Perform the following test by hand with non-ASCII password abc-α
 		or another password in your native alphabet:
 
