@@ -118,7 +118,7 @@ init_tests() {
 		z $gentest_py --coin=zec --type=zcash_z all:zcash-mini $rounds50x
 	"
 
-	[ "$MSYS2" ] && t_altgen_skip='M m z'  # no moneropy (pysha3), zcash-mini (golang)
+	[ "$MSYS2" ] && t_altgen_skip='z'    # no zcash-mini (golang)
 	[ "$ARM32" ] && t_altgen_skip='z e'
 	[ "$FAST" ]  && t_altgen_skip+=' M'
 	# ARM ethkey available only on Arch Linux:

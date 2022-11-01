@@ -1278,6 +1278,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def alice_txcreate_info_term(self):
+		if self.skip_for_win():
+			return 'skip'
 		return self.alice_txcreate_info(pexpect_spawn=True)
 
 	def bob_msgcreate(self):

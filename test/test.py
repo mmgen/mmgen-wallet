@@ -193,6 +193,9 @@ opts.UserOpts._reset_ok += (
 parsed_opts = opts.init(opts_data,return_parsed=True)
 usr_args = parsed_opts.cmd_args
 
+if opt.pexpect_spawn and g.platform == 'win':
+	die(1,'--pexpect-spawn option not supported on Windows platform, exiting')
+
 if opt.daemon_id and opt.daemon_id in g.blacklist_daemons.split():
 	die(1,f'test.py: daemon {opt.daemon_id!r} blacklisted, exiting')
 

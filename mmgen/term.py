@@ -231,8 +231,11 @@ class MMGenTermMSWinStub(MMGenTermMSWin):
 
 	@classmethod
 	def get_char(cls,prompt='',immed_chars='',prehold_protect=None,num_bytes=None):
+		"""
+		Use stdin to allow UTF-8 and emulate the one-character behavior of MMGenTermMSWin
+		"""
 		msg_r(prompt)
-		return os.read(0,1).decode()
+		return sys.stdin.read(1)
 
 	get_char_raw = get_char
 

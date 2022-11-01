@@ -152,7 +152,9 @@ class TestSuiteCfg(TestSuiteBase):
 	def old_sample_bad_var(self):
 		d = ['foo true','bar false']
 		write_to_file(self.path('usr'),'\n'.join(d) + '\n')
-		return self.old_sample_common(old_set=True,pexpect_spawn=True)
+		return self.old_sample_common(
+			old_set       = True,
+			pexpect_spawn = False if g.platform == 'win' else True )
 
 	def coin_specific_vars(self):
 		"""

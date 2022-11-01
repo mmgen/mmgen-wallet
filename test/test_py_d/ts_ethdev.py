@@ -1278,10 +1278,13 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def edit_label1(self):
 		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[:3])
 	def edit_label2(self):
-		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[3:],changed=True,pexpect_spawn=True)
+		spawn = False if g.platform == 'win' else True
+		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[3:],changed=True,pexpect_spawn=spawn)
 	def edit_label3(self):
 		return self.edit_label(out_num=del_addrs[1],label_text=tw_label_lat_cyr_gr)
 	def edit_label4(self):
+		if self.skip_for_win():
+			return 'skip'
 		return self.edit_label(out_num=del_addrs[0],label_text=Ctrl_U,pexpect_spawn=True)
 
 	def token_edit_label1(self):

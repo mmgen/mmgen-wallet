@@ -221,6 +221,8 @@ class TestSuiteOutput(TestSuiteBase):
 		return t
 
 	def oneshot_warning_term(self):
+		if self.skip_for_win():
+			return 'skip'
 		return self.oneshot_warning(pexpect_spawn=True)
 
 class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
