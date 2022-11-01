@@ -35,7 +35,7 @@ def MMGenObject_call(methodname,*args,**kwargs):
 	from .devtools import MMGenObjectMethods
 	return getattr(MMGenObjectMethods,methodname)(*args,**kwargs)
 
-class MMGenObject:
+class MMGenObjectDevTools:
 
 	pmsg  = lambda *args,**kwargs: MMGenObject_call('pmsg',*args,**kwargs)
 	pdie  = lambda *args,**kwargs: MMGenObject_call('pdie',*args,**kwargs)
@@ -63,6 +63,8 @@ class MMGenObject:
 
 def init_dev():
 	import builtins
-	setattr(builtins,'MMGenObject',MMGenObject)
+	# MMGenObject is added to the namespace by objmethods.py, so we must name the builtin differently
+	# to avoid inadvertently adding MMGenObject to the global namespace here:
+	setattr(builtins,'MMGenObjectDevTools',MMGenObjectDevTools)
 	for funcname,func in devtools_funcs.items():
 		setattr(builtins,funcname,func)
