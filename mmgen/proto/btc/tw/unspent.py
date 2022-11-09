@@ -24,7 +24,7 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 
 	has_age = True
 	can_group = True
-	hdr_fmt = 'UNSPENT OUTPUTS (sort order: {a}) Total {b}: {c}'
+	hdr_lbl = 'unspent outputs'
 	desc = 'unspent outputs'
 	item_desc = 'unspent output'
 	no_data_errmsg = 'No unspent outputs in tracking wallet!'

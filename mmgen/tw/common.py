@@ -26,7 +26,7 @@ from collections import namedtuple
 from ..globalvars import g
 from ..objmethods import Hilite,InitErrors,MMGenObject
 from ..obj import TwComment,get_obj,MMGenIdx,MMGenList
-from ..color import nocolor,yellow,green
+from ..color import nocolor,yellow,green,red,blue
 from ..util import msg,msg_r,fmt,die,capfirst,make_timestr
 from ..addr import MMGenID
 
@@ -39,6 +39,8 @@ class TwCommon:
 	group       = False
 	sort_key    = 'age'
 	interactive = False
+	_display_data = {}
+	filters = ()
 
 	age_fmts = ('confs','block','days','date','date_time')
 	age_fmts_date_dependent = ('days','date','date_time')
@@ -71,6 +73,22 @@ class TwCommon:
 		Screen is too narrow to display the {}
 		Please resize your screen to at least {} characters and hit any key:
 	"""
+
+	class display_type:
+
+		class squeezed:
+			detail = False
+			fmt_method = 'gen_squeezed_display'
+			need_column_widths = True
+			item_separator = '\n'
+			print_header = '[screen print truncated to width {}]\n'
+
+		class detail:
+			detail = True
+			fmt_method = 'gen_detail_display'
+			need_column_widths = True
+			item_separator = '\n'
+			print_header = ''
 
 	def age_disp(self,o,age_fmt):
 		if age_fmt == 'confs':
@@ -237,53 +255,60 @@ class TwCommon:
 		else:
 			return do_ret(get_freews(self.cols,varws,varw,minw))
 
-	async def format_squeezed(self,color=True,cached=False):
+	def header(self,color):
+
+		Blue,Green = (blue,green) if color else (nocolor,nocolor)
+		yes,no = green('yes'),red('no') if color else ('yes','no')
+
+		def fmt_filter(k):
+			return '{}:{}'.format(k,yes if getattr(self,k) else no)
+
+		return '{h} (sort order: {s}){f}\nNetwork: {n}\nBlock {b} [{d}]\n{t}'.format(
+			h = self.hdr_lbl.upper(),
+			f = '\nFilters: '+' '.join(fmt_filter(k) for k in self.filters) if self.filters else '',
+			s = Blue(' '.join(self.sort_info())),
+			n = Green(self.proto.coin + ' ' + self.proto.chain_name.upper()),
+			b = self.rpc.blockcount.hl(color=color),
+			d = make_timestr(self.rpc.cur_date),
+			t = f'Total {self.proto.dcoin}: {self.total.hl(color=color)}\n' if hasattr(self,'total') else '',
+		)
+
+	def subheader(self,color):
+		return ''
+
+	def filter_data(self):
+		return self.data
+
+	async def format(self,display_type,color=True,cached=False,interactive=False):
 
 		if not cached:
-			data = self.data
-			if self.has_age and self.age_fmt in self.age_fmts_date_dependent:
-				await self.set_dates(data)
 
-			if not getattr(self,'column_widths',None):
-				self.set_column_params()
+			data = list(self.filter_data()) # method could be a generator
 
-			if self.group and (self.sort_key in ('addr','txid','twmmid')):
-				for a,b in [(data[i],data[i+1]) for i in range(len(data)-1)]:
-					for k in ('addr','txid','twmmid'):
-						if self.sort_key == k and getattr(a,k) == getattr(b,k):
-							b.skip = (k,'addr')[k=='twmmid']
+			if data:
 
-			self._format_squeezed_display_data = (
-				self.hdr_fmt.format(
-					a = ' '.join(self.sort_info()),
-					b = self.proto.dcoin,
-					c = self.total.hl() if hasattr(self,'total') else None )
-				+ '\nNetwork: {}'.format((nocolor,green)[color](
-					self.proto.coin + ' ' +
-					self.proto.chain_name.upper() ))
-				+ '\n' + '\n'.join(self.gen_squeezed_display(self.column_widths,color=color))
-				+ '\n'
+				dt = getattr(self.display_type,display_type)
+
+				cw = self.get_column_widths(data,wide=dt.detail) if dt.need_column_widths else None
+
+				if self.has_age and (self.age_fmt in self.age_fmts_date_dependent or dt.detail):
+					await self.set_dates(data)
+
+			self._display_data[display_type] = (
+				self.header(color) + self.subheader(color) + '\n'
+				+ (
+					dt.item_separator.join(getattr(self,dt.fmt_method)(data,cw,color=color)) + '\n'
+					if data else (nocolor,yellow)[color]('[no data for requested parameters]') + '\n'
+				)
 			)
 
-		return self._format_squeezed_display_data
+		return self._display_data[display_type] + ('' if interactive else self.footer(color))
 
-	async def format_detail(self,color):
-		if self.has_age:
-			await self.set_dates(self.data)
-
-		sep = self.detail_display_separator
-
-		return self.print_hdr_fs.format(
-			a = capfirst(self.desc),
-			b = self.rpc.blockcount,
-			c = make_timestr(self.rpc.cur_date),
-			d = 'Network: {}\n'.format((nocolor,green)[color](
-				self.proto.coin + ' ' +
-				self.proto.chain_name.upper() )),
-			e = ' '.join(self.sort_info(include_group=False)),
-			f = sep.join(self.gen_detail_display(color)),
-			g = self.proto.dcoin,
-			h = self.total.hl(color=color) if hasattr(self,'total') else None )
+	def footer(self,color):
+		return '\nTOTAL: {} {}\n'.format(
+			self.total.hl(color=color) if hasattr(self,'total') else None,
+			self.proto.dcoin
+		) if hasattr(self,'total') else ''
 
 	async def view_and_sort(self):
 		from ..opts import opt
@@ -304,7 +329,7 @@ class TwCommon:
 			reply = get_char(
 				'' if self.no_output else (
 					clear_screen
-					+ await self.format_squeezed()
+					+ await self.format('squeezed',interactive=True)
 					+ '\n'
 					+ (self.oneshot_msg or '')
 					+ prompt
@@ -324,7 +349,6 @@ class TwCommon:
 				self.do_sort(action[2:])
 			elif hasattr(self.item_action,action):
 				await self.item_action().run(self,action)
-				self.set_column_params()
 			elif action == 'a_quit':
 				msg('')
 				return self.data
@@ -339,11 +363,11 @@ class TwCommon:
 		def d_days(self,parent):
 			af = parent.age_fmts_interactive
 			parent.age_fmt = af[(af.index(parent.age_fmt) + 1) % len(af)]
-			if parent.update_widths_on_age_toggle:
-				parent.set_column_params()
+			if parent.update_widths_on_age_toggle: # TODO
+				pass
 
 		def d_redraw(self,parent):
-			parent.set_column_params()
+			pass
 
 		def d_reverse(self,parent):
 			parent.data.reverse()
@@ -365,14 +389,11 @@ class TwCommon:
 			msg('')
 			from ..fileutil import write_data_to_file
 			from ..exception import UserNonConfirmation
-			hdr = {
-				'squeezed': f'[screen print truncated to width {parent.cols}]\n',
-				'detail': '',
-			}[output_type]
+			hdr = getattr(parent.display_type,output_type).print_header.format(parent.cols)
 			try:
 				write_data_to_file(
 					outfile = outfile,
-					data    = hdr + await getattr(parent,f'format_{output_type}')(color=False),
+					data    = hdr + await parent.format(display_type=output_type,color=False),
 					desc    = f'{parent.desc} listing' )
 			except UserNonConfirmation as e:
 				parent.oneshot_msg = yellow(f'File {outfile!r} not overwritten by user request\n\n')
@@ -381,12 +402,12 @@ class TwCommon:
 
 		async def a_view(self,parent):
 			from ..ui import do_pager
-			do_pager( await parent.format_squeezed(color=True,cached=True) )
+			do_pager( await parent.format('squeezed',color=True,cached=True) )
 			self.post_view(parent)
 
 		async def a_view_detail(self,parent):
 			from ..ui import do_pager
-			do_pager( await parent.format_detail(color=True) )
+			do_pager( await parent.format('detail',color=True) )
 			self.post_view(parent)
 
 		def post_view(self,parent):

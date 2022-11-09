@@ -7,6 +7,7 @@ if overlay_fake_os.getenv('MMGEN_BOGUS_UNSPENT_DATA'):
 		rpc_init = rpc_init
 
 	async def rpc_init(*args,**kwargs):
+		from .obj import NonNegativeInt
 		ret = await overlay_fake_data.rpc_init(*args,**kwargs)
-		ret.blockcount = 1000000
+		ret.blockcount = NonNegativeInt(1000000)
 		return ret

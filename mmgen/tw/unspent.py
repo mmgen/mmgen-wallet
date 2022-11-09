@@ -39,13 +39,11 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','unspent'))
 
 	txid_w = 64
-	print_hdr_fs = '{a} (block #{b}, {c} UTC)\n{d}Sort order: {e}\n{f}\n\nTotal {g}: {h}\n'
-	no_rpcdata_errmsg = f"""
+	no_rpcdata_errmsg = """
 		No spendable outputs found!  Import addresses with balances into your
 		watch-only wallet using 'mmgen-addrimport' and then re-run this program.
 	"""
 	update_widths_on_age_toggle = False
-	detail_display_separator = '\n'
 	print_output_types = ('detail',)
 
 	class MMGenTwUnspentOutput(MMGenListItem):
@@ -104,10 +102,23 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 					self.proto,
 					**{ k:v for k,v in o.items() if k in self.MMGenTwUnspentOutput.valid_attrs } )
 
-	def set_column_params(self):
+	def filter_data(self):
+
 		data = self.data
-		for i in data:
-			i.skip = ''
+
+		for d in data:
+			d.skip = ''
+
+		gkeys = {'addr':'addr','twmmid':'addr','txid':'txid'}
+		if self.group and self.sort_key in gkeys:
+			for a,b in [(data[i],data[i+1]) for i in range(len(data)-1)]:
+				for k in gkeys:
+					if self.sort_key == k and getattr(a,k) == getattr(b,k):
+						b.skip = gkeys[k]
+
+		return data
+
+	def get_column_widths(self,data,wide=False):
 
 		self.cols = self.get_term_columns(g.min_screen_width)
 
@@ -122,14 +133,13 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		btaddr_w = addr_w - acct_w - 1
 		comment_w = acct_w - mmid_w - 1
 		tx_w = min(self.txid_w,self.cols-addr_w-29-col1_w) # min=6 TODO
-		txdots = ('','..')[tx_w < self.txid_w]
 
-		self.column_widths = namedtuple(
+		return namedtuple(
 			'column_widths',
 			['num','mmid','addr','btaddr','comment','tx']
 			)(col1_w,  mmid_w,  addr_w,  btaddr_w,  comment_w,  tx_w)
 
-	def gen_squeezed_display(self,cw,color):
+	def gen_squeezed_display(self,data,cw,color):
 		fs     = self.squeezed_fs_fs.format(     cw=cw.num, tw=cw.tx )
 		hdr_fs = self.squeezed_hdr_fs_fs.format( cw=cw.num, tw=cw.tx )
 		yield hdr_fs.format(
@@ -140,7 +150,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			A2 = f' Amt({self.proto.coin})'.ljust(self.disp_prec+4),
 			c  = self.age_hdr ).rstrip()
 
-		for n,i in enumerate(self.data):
+		for n,i in enumerate(data):
 			addr_dots = '|' + '.'*(cw.addr-1)
 			mmid_disp = MMGenID.fmtc(
 				(
@@ -177,9 +187,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 				c  = self.age_disp(i,self.age_fmt),
 				).rstrip()
 
-	def gen_detail_display(self,color):
-
-		data = self.data
+	def gen_detail_display(self,data,cw,color):
 
 		addr_w = max(len(i.addr) for i in data)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in data) or 12 # DEADBEEF:S:1

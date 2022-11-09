@@ -224,7 +224,7 @@ class BitcoinTwTransaction(BitcoinTwCommon):
 class BitcoinTwTxHistory(TwTxHistory,BitcoinTwCommon):
 
 	has_age = True
-	hdr_fmt = 'TRANSACTION HISTORY (sort order: {a})'
+	hdr_lbl = 'transaction history'
 	desc = 'transaction history'
 	item_desc = 'transaction'
 	no_data_errmsg = 'No transactions in tracking wallet!'

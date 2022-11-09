@@ -23,6 +23,12 @@ from .common import TwCommon
 
 class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 
+	class display_type(TwCommon.display_type):
+
+		class detail(TwCommon.display_type.detail):
+			need_column_widths = False
+			item_separator = '\n\n'
+
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','txhistory'))
 
@@ -30,11 +36,10 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 	show_txid = False
 	show_unconfirmed = False
 	show_total_amt = False
-	print_hdr_fs = '{a} (block #{b}, {c} UTC)\n{d}Sort order: {e}\n{f}\n'
 	age_fmts_interactive = ('confs','block','days','date','date_time')
 	update_widths_on_age_toggle = True
-	detail_display_separator = '\n\n'
 	print_output_types = ('squeezed','detail')
+	filters = ('show_unconfirmed',)
 
 	async def __init__(self,proto,sinceblock=0):
 		self.proto        = proto
@@ -47,11 +52,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 		return 'No transaction history {}found!'.format(
 			f'from block {self.sinceblock} ' if self.sinceblock else '')
 
-	def set_column_params(self):
-		data = self.data
-		show_txid = self.show_txid
-		for d in data:
-			d.skip = ''
+	def get_column_widths(self,data,wide=False):
 
 		# var cols: addr1 addr2 comment [txid]
 		if not hasattr(self,'varcol_maxwidths'):
@@ -81,9 +82,9 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 			'spc': 6 + self.show_txid, # 5(6) spaces between cols + 1 leading space in fs
 		}
 
-		self.column_widths = self.compute_column_widths(widths,maxws,minws,maxws_nice)
+		return self.compute_column_widths(widths,maxws,minws,maxws_nice,wide=wide)
 
-	def gen_squeezed_display(self,cw,color):
+	def gen_squeezed_display(self,data,cw,color):
 
 		if self.sinceblock:
 			yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
@@ -116,7 +117,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 			l  = 'Comment' ).rstrip()
 
 		n = 0
-		for d in self.data:
+		for d in data:
 			if d.confirmations > 0 or self.show_unconfirmed:
 				n += 1
 				yield fs.format(
@@ -128,7 +129,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 					a2 = d.vouts_disp( 'outputs', width=cw.addr2, color=color ),
 					l  = d.comment.fmt( width=cw.comment, color=color ) ).rstrip()
 
-	def gen_detail_display(self,color):
+	def gen_detail_display(self,data,cw,color):
 
 		yield (
 			(f'Displaying transactions since block {self.sinceblock.hl(color=color)}\n'
@@ -150,7 +151,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 		""",strip_char='\t').strip()
 
 		n = 0
-		for d in self.data:
+		for d in data:
 			if d.confirmations > 0 or self.show_unconfirmed:
 				n += 1
 				yield fs.format(
@@ -202,7 +203,6 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 		def d_show_txid(self,parent):
 			parent.show_txid = not parent.show_txid
-			parent.set_column_params()
 
 		def d_show_unconfirmed(self,parent):
 			parent.show_unconfirmed = not parent.show_unconfirmed

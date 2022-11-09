@@ -280,6 +280,9 @@ class Int(int,Hilite,InitErrors):
 	def colorize(cls,n,**kwargs):
 		return super().colorize(repr(n),**kwargs)
 
+class NonNegativeInt(Int):
+	min_val = 0
+
 class MMGenIdx(Int):
 	min_val = 1
 

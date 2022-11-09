@@ -112,10 +112,8 @@ class tool_cmd(tool_cmd_base):
 		if interactive:
 			await obj.view_and_sort()
 			return True
-		elif detail:
-			return await obj.format_detail( color=True )
 		else:
-			return await obj.format_squeezed()
+			return await obj.format('detail' if detail else 'squeezed')
 
 	async def twview(self,
 			pager:       'send output to pager' = False,

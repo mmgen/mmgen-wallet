@@ -26,6 +26,7 @@ from collections import namedtuple
 
 from .common import *
 from .base_obj import AsyncInit
+from .obj import NonNegativeInt
 from .objmethods import Hilite,InitErrors,MMGenObject
 
 auth_data = namedtuple('rpc_auth_data',['user','passwd'])
@@ -467,5 +468,7 @@ async def rpc_init(
 			Valid chain names:  {fmt_list(proto.chain_names,fmt='bare')}
 			RPC client chain:   {rpc.chain}
 			""",indent='  ').rstrip() )
+
+	rpc.blockcount = NonNegativeInt(rpc.blockcount)
 
 	return rpc

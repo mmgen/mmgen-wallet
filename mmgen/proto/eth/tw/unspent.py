@@ -20,6 +20,7 @@
 proto.eth.twuo: Ethereum tracking wallet unspent outputs class
 """
 
+from ....globalvars import g
 from ....tw.common import TwLabel
 from ....tw.unspent import TwUnspentOutputs
 
@@ -33,7 +34,7 @@ class EthereumTwUnspentOutputs(TwUnspentOutputs):
 	has_age = False
 	can_group = False
 	col_adj = 29
-	hdr_fmt = 'TRACKED ACCOUNTS (sort order: {a})\nTotal {b}: {c}'
+	hdr_lbl = 'tracked accounts'
 	desc    = 'account balances'
 	item_desc = 'account'
 	dump_fn_pfx = 'balances'
@@ -62,12 +63,13 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 	wide_fs_fs = ' {{n:4}} {{a}} {{m}} {{A:{aw}}} {{l}}'
 	no_data_errmsg = 'No accounts in tracking wallet!'
 
-	async def __init__(self,proto,*args,**kwargs):
-		from ....globalvars import g
+	def subheader(self,color):
 		if g.cached_balances:
-			from ....color import yellow
-			self.hdr_fmt += '\n' + yellow('WARNING: Using cached balances. These may be out of date!')
-		await super().__init__(proto,*args,**kwargs)
+			from ....color import nocolor,yellow
+			return (nocolor,yellow)[color](
+				'WARNING: Using cached balances. These may be out of date!') + '\n'
+		else:
+			return ''
 
 	def do_sort(self,key=None,reverse=False):
 		if key == 'txid': return
