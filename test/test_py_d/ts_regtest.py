@@ -699,7 +699,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_txhist3(self):
 		return self.user_txhist('bob',
 			args = ['sort=blockheight','sinceblock=-7','age_fmt=block'],
-			expect = fr'Displaying transactions since block 399.*\s6\).*:C:2\s.*\s{rtBals[9]}\s.*:L:5.*\s7\)'
+			expect = fr'Displaying transactions since block 399.*\s6\)\s+405.*:C:3\s.*\s{rtBals[9]}\s.*:L:5.*\s7\)'
 		)
 
 	def bob_txhist4(self):

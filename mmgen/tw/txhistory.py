@@ -53,6 +53,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 		for d in data:
 			d.skip = ''
 
+		# var cols: addr1 addr2 comment [txid]
 		if not hasattr(self,'varcol_maxwidths'):
 			self.varcol_maxwidths = {
 				'addr1': max(len(d.vouts_disp('inputs',width=None,color=False)) for d in data),
@@ -60,51 +61,27 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 				'comment': max(len(d.comment) for d in data),
 			}
 
-		# var cols: addr1 addr2 comment [txid]
-		maxw = self.varcol_maxwidths
-
-		if show_txid:
-			txid_adj = 40 # we don't need much of the txid, so weight it less than other columns
-			maxw.update({'txid': self.txid_w - txid_adj})
-		elif 'txid' in maxw:
-			del maxw['txid']
-
-		minw = {
+		maxws = self.varcol_maxwidths.copy()
+		minws = {
 			'addr1': 15,
 			'addr2': 15,
 			'comment': len('Comment'),
 		}
-		if show_txid:
-			minw.update({'txid': 8})
+		if self.show_txid:
+			maxws['txid'] = self.txid_w
+			minws['txid'] = 8
+			maxws_nice = {'txid': 20}
+		else:
+			maxws_nice = {}
 
-		# fixed cols: num age amt
-		col1_w = max(2,len(str(len(data)))+1) # num + ')'
-		amt_w = self.disp_prec + 5
-		fixed_w = col1_w + self.age_w + amt_w + sum(minw.values()) + (6 + show_txid) # one leading space in fs
-		var_w = sum(maxw.values()) - sum(minw.values())
+		widths = { # fixed cols
+			'num': max(2,len(str(len(data)))+1),
+			'age': self.age_w,
+			'amt': self.disp_prec + 5,
+			'spc': 6 + self.show_txid, # 5(6) spaces between cols + 1 leading space in fs
+		}
 
-		# get actual screen width:
-		self.all_maxw = fixed_w + var_w + (txid_adj if show_txid else 0)
-		self.cols = min( self.get_term_columns(fixed_w), self.all_maxw )
-		total_freew = self.cols - fixed_w
-		varw = {k: max(maxw[k] - minw[k],0) for k in maxw}
-		freew = {k: int(min(total_freew * (varw[k] / var_w), varw[k])) for k in maxw}
-
-		varcols = set(maxw.keys())
-		for k in maxw:
-			freew[k] = min( total_freew - sum(freew[k2] for k2 in varcols-{k}), varw[k] )
-
-		self.column_widths = namedtuple('column_params',
-			['num','txid','addr1','amt','addr2','comment'])(
-				col1_w,
-				min(
-					# max txid was reduced by txid_adj, so stretch to fill available space, if any
-					minw['txid'] + freew['txid'] + total_freew - sum(freew.values()),
-					self.txid_w ) if 'txid' in minw else 0,
-				minw['addr1'] + freew['addr1'],
-				amt_w,
-				minw['addr2'] + freew['addr2'],
-				minw['comment'] + freew['comment'] )
+		self.column_widths = self.compute_column_widths(widths,maxws,minws,maxws_nice)
 
 	def gen_squeezed_display(self,cw,color):
 
@@ -144,7 +121,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 				n += 1
 				yield fs.format(
 					n  = str(n) + ')',
-					i  = d.txid_disp( width=cw.txid, color=color ),
+					i  = d.txid_disp( width=cw.txid, color=color ) if hasattr(cw,'txid') else None,
 					d  = d.age_disp( self.age_fmt, width=self.age_w, color=color ),
 					a1 = d.vouts_disp( 'inputs', width=cw.addr1, color=color ),
 					A  = d.amt_disp(self.show_total_amt).fmt( prec=self.disp_prec, color=color ),
