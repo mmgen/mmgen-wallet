@@ -126,50 +126,50 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 		self.column_widths = namedtuple(
 			'column_widths',
-			['col1_w','mmid_w','addr_w','btaddr_w','comment_w','tx_w','txdots']
-			)(col1_w,  mmid_w,  addr_w,  btaddr_w,  comment_w,  tx_w,  txdots)
+			['num','mmid','addr','btaddr','comment','tx']
+			)(col1_w,  mmid_w,  addr_w,  btaddr_w,  comment_w,  tx_w)
 
-	def gen_squeezed_display(self,c,color):
-		fs     = self.squeezed_fs_fs.format(     cw=c.col1_w, tw=c.tx_w )
-		hdr_fs = self.squeezed_hdr_fs_fs.format( cw=c.col1_w, tw=c.tx_w )
+	def gen_squeezed_display(self,cw,color):
+		fs     = self.squeezed_fs_fs.format(     cw=cw.num, tw=cw.tx )
+		hdr_fs = self.squeezed_hdr_fs_fs.format( cw=cw.num, tw=cw.tx )
 		yield hdr_fs.format(
 			n  = 'Num',
-			t  = 'TXid'.ljust(c.tx_w - 2) + ' Vout',
-			a  = 'Address'.ljust(c.addr_w),
+			t  = 'TXid'.ljust(cw.tx - 2) + ' Vout',
+			a  = 'Address'.ljust(cw.addr),
 			A  = f'Amt({self.proto.dcoin})'.ljust(self.disp_prec+5),
 			A2 = f' Amt({self.proto.coin})'.ljust(self.disp_prec+4),
 			c  = self.age_hdr ).rstrip()
 
 		for n,i in enumerate(self.data):
-			addr_dots = '|' + '.'*(c.addr_w-1)
+			addr_dots = '|' + '.'*(cw.addr-1)
 			mmid_disp = MMGenID.fmtc(
 				(
-					'.'*c.mmid_w if i.skip == 'addr' else
+					'.'*cw.mmid if i.skip == 'addr' else
 					i.twmmid if i.twmmid.type == 'mmgen' else
 					f'Non-{g.proj_name}'
 				),
-				width = c.mmid_w,
+				width = cw.mmid,
 				color = color )
 
 			if self.show_mmid:
 				addr_out = '{} {}{}'.format((
-					type(i.addr).fmtc(addr_dots,width=c.btaddr_w,color=color) if i.skip == 'addr' else
-					i.addr.fmt(width=c.btaddr_w,color=color)
+					type(i.addr).fmtc(addr_dots,width=cw.btaddr,color=color) if i.skip == 'addr' else
+					i.addr.fmt(width=cw.btaddr,color=color)
 				),
 					mmid_disp,
-					(' ' + i.comment.fmt(width=c.comment_w,color=color)) if c.comment_w > 0 else ''
+					(' ' + i.comment.fmt(width=cw.comment,color=color)) if cw.comment > 0 else ''
 				)
 			else:
 				addr_out = (
-					type(i.addr).fmtc(addr_dots,width=c.addr_w,color=color) if i.skip=='addr' else
-					i.addr.fmt(width=c.addr_w,color=color) )
+					type(i.addr).fmtc(addr_dots,width=cw.addr,color=color) if i.skip=='addr' else
+					i.addr.fmt(width=cw.addr,color=color) )
 
 			yield fs.format(
 				n  = str(n+1)+')',
 				t  = (
 					'' if not i.txid else
-					' ' * (c.tx_w-4) + '|...' if i.skip  == 'txid' else
-					i.txid[:c.tx_w-len(c.txdots)] + c.txdots ),
+					' ' * (cw.tx-4) + '|...' if i.skip  == 'txid' else
+					i.txid.truncate(width=cw.tx,color=True) ),
 				v  = i.vout,
 				a  = addr_out,
 				A  = i.amt.fmt(color=color,prec=self.disp_prec),
@@ -179,8 +179,10 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	def gen_detail_display(self,color):
 
-		addr_w = max(len(i.addr) for i in self.data)
-		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.data) or 12 # DEADBEEF:S:1
+		data = self.data
+
+		addr_w = max(len(i.addr) for i in data)
+		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in data) or 12 # DEADBEEF:S:1
 
 		fs = self.wide_fs_fs.format(
 			tw = self.txid_w + 3,
@@ -199,9 +201,9 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			D  = 'Date',
 			l  = 'Label' )
 
-		max_comment_len = max([len(i.comment) for i in self.data if i.comment] or [2])
+		max_comment_len = max([len(i.comment) for i in data if i.comment] or [2])
 
-		for n,i in enumerate(self.data):
+		for n,i in enumerate(data):
 			yield fs.format(
 				n  = str(n+1) + ')',
 				t  = '{},{}'.format(

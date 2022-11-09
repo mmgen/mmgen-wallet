@@ -71,7 +71,7 @@ class Hilite:
 			assert trunc_ok, "If 'trunc_ok' is false, 'width' must be >= screen width of string"
 			s = truncate_str(s,width-add_len)
 		if s == '' and nullrepl:
-			s = nullrepl.center(width)
+			s = nullrepl.ljust(width)
 		else:
 			s = a+s+b
 			if center:

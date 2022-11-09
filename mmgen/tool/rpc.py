@@ -97,12 +97,15 @@ class tool_cmd(tool_cmd_base):
 		return await al.format( showcoinaddrs, sort, show_age, age_fmt or 'confs' )
 
 	async def twops(self,
-			obj,pager,reverse,detail,sort,age_fmt,interactive,show_mmid):
+			obj,pager,reverse,detail,sort,age_fmt,interactive,
+			**kwargs ):
 
-		obj.interactive = interactive
 		obj.reverse = reverse
 		obj.age_fmt = age_fmt
-		obj.show_mmid = show_mmid
+		obj.interactive = interactive
+
+		for k,v in kwargs.items():
+			setattr(obj,k,v)
 
 		await obj.get_data(sort_key=sort,reverse_sort=reverse)
 
@@ -128,7 +131,8 @@ class tool_cmd(tool_cmd_base):
 		from ..tw.unspent import TwUnspentOutputs
 		obj = await TwUnspentOutputs(self.proto,minconf=minconf)
 		ret = await self.twops(
-			obj,pager,reverse,wide,sort,age_fmt,interactive,show_mmid)
+			obj,pager,reverse,wide,sort,age_fmt,interactive,
+			show_mmid = show_mmid )
 		del obj.wallet
 		return ret
 
@@ -144,7 +148,7 @@ class tool_cmd(tool_cmd_base):
 
 		obj = await TwTxHistory(self.proto,sinceblock=sinceblock)
 		return await self.twops(
-			obj,pager,reverse,detail,sort,age_fmt,interactive,show_mmid=None)
+			obj,pager,reverse,detail,sort,age_fmt,interactive )
 
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"

@@ -63,9 +63,7 @@ class TwAddrList(MMGenDict,TwCommon,metaclass=AsyncInit):
 
 		mmids = sorted(self,key=sort_algo,reverse=bool(sort and 'reverse' in sort))
 		if show_age:
-			await self.set_dates(
-				self.rpc,
-				[o for o in mmids if hasattr(o,'confs')] )
+			await self.set_dates( [o for o in mmids if hasattr(o,'confs')] )
 
 		def gen_output():
 

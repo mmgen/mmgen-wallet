@@ -605,7 +605,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			t.read()
 		return t
 
-	def txsign(self,ni=False,ext='{}.regtest.rawtx',add_args=[]):
+	def txsign(self,ni=False,ext='{}.regtest.rawtx',add_args=[],dev_send=False):
 		ext = ext.format('-α' if g.debug_utf8 else '')
 		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
 		txfile = self.get_file_with_ext(ext,no_dot=True)
@@ -616,7 +616,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 						+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
 						+ add_args
 						+ ([],['--yes'])[ni]
-						+ ['-k', keyfile, txfile, dfl_words_file] )
+						+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
+						+ [txfile, dfl_words_file] )
 		return self.txsign_ui_common(t,ni=ni,has_label=True)
 
 	def txsend(self,ni=False,ext='{}.regtest.sigtx',add_args=[]):
@@ -662,10 +663,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.txcreate(args=args,menu=menu,acct='1',tweaks=['confirm_non_mmgen'])
 	def txview1_raw(self):
 		return self.txview(ext_fs='{}.regtest.rawtx')
-	def txsign1(self):    return self.txsign(add_args=['--use-internal-keccak-module'])
+	def txsign1(self):    return self.txsign(add_args=['--use-internal-keccak-module'],dev_send=True)
 	def tx_status0_bad(self):
 		return self.tx_status(ext='{}.regtest.sigtx',expect_str='neither in mempool nor blockchain',exit_val=1)
-	def txsign1_ni(self): return self.txsign(ni=True)
+	def txsign1_ni(self): return self.txsign(ni=True,dev_send=True)
 	def txsend1(self):    return self.txsend()
 	def txview1_sig(self): # do after send so that TxID is displayed
 		return self.txview(ext_fs='{}.regtest.sigtx')
@@ -674,14 +675,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def txcreate2(self):
 		args = ['98831F3A:E:11,1.234']
 		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
-	def txsign2(self): return self.txsign(ni=True,ext='1.234,50000]{}.regtest.rawtx')
+	def txsign2(self): return self.txsign(ni=True,ext='1.234,50000]{}.regtest.rawtx',dev_send=True)
 	def txsend2(self): return self.txsend(ext='1.234,50000]{}.regtest.sigtx')
 	def bal2(self):    return self.bal(n='2')
 
 	def txcreate3(self):
 		args = ['98831F3A:E:21,2.345']
 		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
-	def txsign3(self): return self.txsign(ni=True,ext='2.345,50000]{}.regtest.rawtx')
+	def txsign3(self): return self.txsign(ni=True,ext='2.345,50000]{}.regtest.rawtx',dev_send=True)
 	def txsend3(self): return self.txsend(ext='2.345,50000]{}.regtest.sigtx')
 	def bal3(self):    return self.bal(n='3')
 
@@ -797,14 +798,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.expect('or gas price: ',fee+'\n')
 		return t
 
-	def txsign4(self): return self.txsign(ni=True,ext='.45495,50000]{}.regtest.rawtx')
+	def txsign4(self): return self.txsign(ni=True,ext='.45495,50000]{}.regtest.rawtx',dev_send=True)
 	def txsend4(self): return self.txsend(ext='.45495,50000]{}.regtest.sigtx')
 	def bal4(self):    return self.bal(n='4')
 
 	def txcreate5(self):
 		args = [burn_addr + ','+amt1]
 		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
-	def txsign5(self): return self.txsign(ni=True,ext=amt1+',50000]{}.regtest.rawtx')
+	def txsign5(self): return self.txsign(ni=True,ext=amt1+',50000]{}.regtest.rawtx',dev_send=True)
 	def txsend5(self): return self.txsend(ext=amt1+',50000]{}.regtest.sigtx')
 	def bal5(self):    return self.bal(n='5')
 

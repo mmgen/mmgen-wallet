@@ -32,6 +32,7 @@ from ..addr import MMGenID
 # mixin class for TwUnspentOutputs,TwAddrList,TwTxHistory:
 class TwCommon:
 
+	dates_set   = False
 	cols        = None
 	reverse     = False
 	group       = False
@@ -55,11 +56,20 @@ class TwCommon:
 		'days': lambda rpc,secs: (rpc.cur_date - secs) // 86400 if secs else 0,
 		'date': (
 			lambda rpc,secs: '{}-{:02}-{:02}'.format(*time.gmtime(secs)[:3])[2:]
-				if secs else '--------' ),
+				if secs else '-       '),
 		'date_time': (
 			lambda rpc,secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(secs)[:5])
-				if secs else '---------- -----' ),
+				if secs else '-               '),
 	}
+
+	tcols_errmsg = """
+		--columns or MMGEN_COLUMNS value ({}) is too small to display the {}.
+		Minimum value for this configuration: {}
+	"""
+	twid_errmsg = """
+		Screen is too narrow to display the {}
+		Please resize your screen to at least {} characters and hit any key:
+	"""
 
 	def age_disp(self,o,age_fmt):
 		if age_fmt == 'confs':
@@ -86,14 +96,14 @@ class TwCommon:
 
 		self.do_sort(key=sort_key,reverse=reverse_sort)
 
-	@staticmethod
-	async def set_dates(rpc,us):
-		if us and us[0].date is None:
+	async def set_dates(self,us):
+		if not self.dates_set:
 			# 'blocktime' differs from 'time', is same as getblockheader['time']
 			dates = [ o.get('blocktime',0)
-				for o in await rpc.gathered_icall('gettransaction',[(o.txid,True,False) for o in us]) ]
+				for o in await self.rpc.gathered_icall('gettransaction',[(o.txid,True,False) for o in us]) ]
 			for idx,o in enumerate(us):
 				o.date = dates[idx]
+			self.dates_set = True
 
 	@property
 	def age_w(self):
@@ -129,13 +139,9 @@ class TwCommon:
 				return cols
 			if sys.stdout.isatty():
 				if g.columns:
-					die(1,
-						f'\n--columns or MMGEN_COLUMNS value ({g.columns}) is too small to display the {self.desc}.\n'
-						+ f'Minimum value for this configuration: {min_cols}' )
+					die(1,'\n'+fmt(self.tcols_errmsg.format(g.columns,self.desc,min_cols),indent='  '))
 				else:
-					get_char_raw(
-						f'\nScreen is too narrow to display the {self.desc}\n'
-						+ f'Please resize your screen to at least {min_cols} characters and hit any key: ' )
+					get_char_raw('\n'+fmt(self.twid_errmsg.format(self.desc,min_cols),append=''))
 			else:
 				return min_cols
 
@@ -175,7 +181,7 @@ class TwCommon:
 		if not cached:
 			data = self.data
 			if self.has_age and self.age_fmt in self.age_fmts_date_dependent:
-				await self.set_dates(self.rpc,data)
+				await self.set_dates(data)
 
 			if not getattr(self,'column_widths',None):
 				self.set_column_params()
@@ -202,7 +208,7 @@ class TwCommon:
 
 	async def format_detail(self,color):
 		if self.has_age:
-			await self.set_dates(self.rpc,self.data)
+			await self.set_dates(self.data)
 
 		sep = self.detail_display_separator
 

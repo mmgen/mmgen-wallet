@@ -1367,7 +1367,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_msgverify_export_single(self):
 		sid = self._user_sid('bob')
 		mmid = f'{sid}:{self.dfl_mmtype}:1'
-		t = self.spawn('mmgen-tool', [ '--bob', '--color=0', 'listaddress', mmid ], no_msg=True)
+		args = [ '--bob', '--color=0', 'listaddress', mmid ]
+		imsg(f'Running mmgen-tool {fmt_list(args,fmt="bare")}')
+		t = self.spawn('mmgen-tool', args, no_msg=True)
 		addr = t.expect_getend(mmid).split()[0]
 		t.close()
 		return self.bob_msgverify(

@@ -231,7 +231,7 @@ class BitcoinTwTxHistory(TwTxHistory,BitcoinTwCommon):
 	prompt = """
 Sort options: [t]xid, [a]mt, total a[m]t, [A]ge, [b]locknum, [r]everse
 Column options: toggle [D]ays/date/confs/block, tx[i]d, [T]otal amt
-Filter options: show [u]nconfirmed
+Filters: show [u]nconfirmed
 View/Print: pager [v]iew, full [V]iew, screen [p]rint, full [P]rint
 Actions: [q]uit, r[e]draw:
 """

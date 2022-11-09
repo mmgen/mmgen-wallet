@@ -96,6 +96,7 @@ class BitcoinTwCommon:
 				else:
 					lm.confs = d['confirmations']
 					lm.txid = d['txid']
+					lm.vout = d['vout']
 					lm.date = None
 					data[lm] = {
 						'amt': self.proto.coin_amt('0'),

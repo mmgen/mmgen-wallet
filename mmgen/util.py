@@ -144,9 +144,9 @@ def pp_fmt(d):
 def pp_msg(d):
 	msg(pp_fmt(d))
 
-def fmt(s,indent='',strip_char=None):
+def fmt(s,indent='',strip_char=None,append='\n'):
 	"de-indent multiple lines of text, or indent with specified string"
-	return indent + ('\n'+indent).join([l.strip(strip_char) for l in s.strip().splitlines()]) + '\n'
+	return indent + ('\n'+indent).join([l.strip(strip_char) for l in s.strip().splitlines()]) + append
 
 def fmt_list(iterable,fmt='dfl',indent=''):
 	"pretty-format a list"

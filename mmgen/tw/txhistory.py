@@ -95,7 +95,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 			freew[k] = min( total_freew - sum(freew[k2] for k2 in varcols-{k}), varw[k] )
 
 		self.column_widths = namedtuple('column_params',
-			['col1','txid','addr1','amt','addr2','comment'])(
+			['num','txid','addr1','amt','addr2','comment'])(
 				col1_w,
 				min(
 					# max txid was reduced by txid_adj, so stretch to fill available space, if any
@@ -118,14 +118,14 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 		yield ''
 
 		hdr_fs = self.squeezed_hdr_fs_fs.format(
-			nw = cw.col1,
+			nw = cw.num,
 			dw = self.age_w,
 			txid_fs = f'{{i:{cw.txid}}} ' if self.show_txid else '',
 			aw = cw.addr1,
 			a2w = cw.addr2 )
 
 		fs = self.squeezed_fs_fs.format(
-			nw = cw.col1,
+			nw = cw.num,
 			dw = self.age_w,
 			txid_fs = f'{{i:{cw.txid}}} ' if self.show_txid else '' )
 
@@ -206,8 +206,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 		'txid':        lambda i: i.txid,
 	}
 
-	@staticmethod
-	async def set_dates(rpc,us):
+	async def set_dates(self,us):
 		pass
 
 	@property
