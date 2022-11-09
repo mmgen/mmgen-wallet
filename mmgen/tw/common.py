@@ -21,6 +21,7 @@ tw: Tracking wallet dependency classes and helper functions
 """
 
 import sys,time,asyncio
+from collections import namedtuple
 
 from ..globalvars import g
 from ..objmethods import Hilite,InitErrors,MMGenObject
@@ -175,6 +176,66 @@ class TwCommon:
 		self.sort_key = key
 		assert type(reverse) == bool
 		self.data.sort(key=self.sort_funcs[key],reverse=reverse or self.reverse)
+
+	def compute_column_widths(self,widths,maxws,minws,maxws_nice={},wide=False):
+
+		def do_ret(freews):
+			widths.update({k:minws[k] + freews.get(k,0) for k in minws})
+			return namedtuple('column_widths',widths.keys())(*widths.values())
+
+		def do_ret_max():
+			widths.update({k:max(minws[k],maxws[k]) for k in minws})
+			return namedtuple('column_widths',widths.keys())(*widths.values())
+
+		def get_freews(cols,varws,varw,minw):
+			freew = cols - minw
+			if freew and varw:
+				x = freew / varw
+				freews = {k:int(varws[k] * x) for k in varws}
+				remainder = freew - sum(freews.values())
+				for k in varws:
+					if not remainder:
+						break
+					if freews[k] < varws[k]:
+						freews[k] += 1
+						remainder -= 1
+				return freews
+			else:
+				return {k:0 for k in varws}
+
+		if wide:
+			return do_ret_max()
+
+		varws = {k:maxws[k] - minws[k] for k in maxws if maxws[k] > minws[k]}
+		minw = sum(widths.values()) + sum(minws.values())
+		varw = sum(varws.values())
+
+		term_cols = self.get_term_columns(minw)
+		self.cols = min(term_cols,minw + varw)
+
+		if self.cols == minw + varw:
+			return do_ret_max()
+
+		if maxws_nice:
+			# compute high-priority widths:
+			varws_hp = {k: maxws_nice[k] - minws[k] if k in maxws_nice else varws[k] for k in varws}
+			varw_hp = sum(varws_hp.values())
+			widths_hp = get_freews(
+				min(term_cols,minw + varw_hp),
+				varws_hp,
+				varw_hp,
+				minw )
+			# compute low-priority (nice) widths:
+			varws_lp = {k: varws[k] - varws_hp[k] for k in maxws_nice if k in varws}
+			widths_lp = get_freews(
+				self.cols,
+				varws_lp,
+				sum(varws_lp.values()),
+				minw + sum(widths_hp.values()) )
+			# sum the two for each field:
+			return do_ret({k:widths_hp[k] + widths_lp.get(k,0) for k in varws})
+		else:
+			return do_ret(get_freews(self.cols,varws,varw,minw))
 
 	async def format_squeezed(self,color=True,cached=False):
 
