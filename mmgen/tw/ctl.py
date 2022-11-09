@@ -38,6 +38,8 @@ from ..addr import CoinAddr,is_mmgen_id,is_coin_addr
 from ..rpc import rpc_init
 from .common import TwMMGenID,TwLabel
 
+addr_info = namedtuple('addr_info',['twmmid','coinaddr'])
+
 # decorator for TrackingWallet
 def write_mode(orig_func):
 	def f(self,*args,**kwargs):
@@ -179,19 +181,6 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			self.cache_balance(addr,ret,self.cur_balances,self.data_root)
 		return ret
 
-	@property
-	def sorted_list(self):
-		return sorted(
-			[ { 'addr':x[0],
-				'mmid':x[1]['mmid'],
-				'comment':x[1]['comment'] }
-					for x in self.data_root.items() if x[0] not in ('params','coin') ],
-			key=lambda x: x['mmid'].sort_key+x['addr'] )
-
-	@property
-	def mmid_ordered_dict(self):
-		return dict((x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list)
-
 	def force_write(self):
 		mode_save = self.mode
 		self.mode = 'w'
@@ -261,45 +250,49 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		if not mmaddr:
 			mmaddr = f'{self.proto.base_coin.lower()}:{coinaddr}'
 
-		return namedtuple('addr_info',['mmaddr','coinaddr'])(
-			TwMMGenID(self.proto,mmaddr),
-			coinaddr )
+		return addr_info( TwMMGenID(self.proto,mmaddr), coinaddr )
 
 	# returns on failure
 	@write_mode
-	async def add_comment(self,addrspec,comment='',coinaddr=None,silent=False,on_fail='return'):
-		assert on_fail in ('return','raise'), 'add_comment_chk1'
+	async def set_comment(self,addrspec,comment='',trusted_coinaddr=None,silent=False):
 
-		res = await self.resolve_address(addrspec,coinaddr)
+		res = (
+			addr_info(addrspec,trusted_coinaddr) if trusted_coinaddr
+			else await self.resolve_address(addrspec) )
+
 		if not res:
 			return False
 
-		cmt = TwComment(comment) if on_fail=='raise' else get_obj(TwComment,s=comment)
-		if cmt in (False,None):
+		comment = get_obj(TwComment,s=comment)
+
+		if comment == False:
 			return False
 
-		lbl_txt = res.mmaddr + (' ' + cmt if cmt else '')
-		lbl = (
-			TwLabel(self.proto,lbl_txt) if on_fail == 'raise' else
-			get_obj(TwLabel,proto=self.proto,text=lbl_txt) )
+		lbl = get_obj(
+			TwLabel,
+			proto = self.proto,
+			text = res.twmmid + (' ' + comment if comment else ''))
 
-		if await self.set_comment(res.coinaddr,lbl) == False:
-			if not silent:
-				msg( 'Label could not be {}'.format('added' if comment else 'removed') )
+		if lbl == False:
 			return False
-		else:
+
+		if await self.set_label(res.coinaddr,lbl):
 			desc = '{} address {} in tracking wallet'.format(
-				res.mmaddr.type.replace('mmgen','MMGen'),
-				res.mmaddr.replace(self.proto.base_coin.lower()+':','') )
+				res.twmmid.type.replace('mmgen','MMGen'),
+				res.twmmid.addr.hl() )
 			if comment:
-				msg(f'Added label {comment!r} to {desc}')
+				msg('Added label {} to {}'.format(comment.hl(encl="''"),desc))
 			else:
 				msg(f'Removed label from {desc}')
 			return True
+		else:
+			if not silent:
+				msg( 'Label could not be {}'.format('added' if comment else 'removed') )
+			return False
 
 	@write_mode
 	async def remove_comment(self,mmaddr):
-		await self.add_comment(mmaddr,'')
+		await self.set_comment(mmaddr,'')
 
 	async def import_address_common(self,data,batch=False,gather=False):
 

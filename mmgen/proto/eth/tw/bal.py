@@ -33,11 +33,12 @@ class EthereumTwGetBalance(TwGetBalance):
 
 	async def create_data(self):
 		data = self.wallet.mmid_ordered_dict
+		amt0 = self.proto.coin_amt('0')
 		for d in data:
 			if d.type == 'mmgen':
 				key = d.obj.sid
 				if key not in self.data:
-					self.data[key] = [self.proto.coin_amt('0')] * 4
+					self.data[key] = [amt0] * 4
 			else:
 				key = 'Non-MMGen'
 

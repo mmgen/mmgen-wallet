@@ -71,7 +71,6 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	async def __init__(self,proto,minconf=1,addrs=[]):
 		self.proto        = proto
-		self.data         = MMGenList()
 		self.show_mmid    = True
 		self.minconf      = minconf
 		self.addrs        = addrs
@@ -104,7 +103,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	def filter_data(self):
 
-		data = self.data
+		data = self.data.copy()
 
 		for d in data:
 			d.skip = ''
@@ -220,10 +219,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 				a  = (
 					'|'+'.' * addr_w if i.skip == 'addr' and self.group else
 					i.addr.fmt(color=color,width=addr_w) ),
-				m  = MMGenID.fmtc(
-						(i.twmmid if i.twmmid.type == 'mmgen' else f'Non-{g.proj_name}'),
-						width = mmid_w,
-						color = color ),
+				m  = MMGenID.fmtc( i.twmmid.disp, width=mmid_w, color=color ),
 				A  = i.amt.fmt(color=color),
 				A2 = ( i.amt2.fmt(color=color) if i.amt2 is not None else '' ),
 				c  = i.confs,
@@ -244,6 +240,15 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			len(self.data),
 			suf(self.data) ))
 
+	async def set_dates(self,us):
+		if not self.dates_set:
+			# 'blocktime' differs from 'time', is same as getblockheader['time']
+			dates = [ o.get('blocktime',0)
+				for o in await self.rpc.gathered_icall('gettransaction',[(o.txid,True,False) for o in us]) ]
+			for idx,o in enumerate(us):
+				o.date = dates[idx]
+			self.dates_set = True
+
 	class action(TwCommon.action):
 
 		def s_twmmid(self,parent):
@@ -256,61 +261,3 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		def d_group(self,parent):
 			if parent.can_group:
 				parent.group = not parent.group
-
-	class item_action(TwCommon.item_action):
-
-		async def a_balance_refresh(self,uo,idx):
-			from ..ui import keypress_confirm
-			if not keypress_confirm(
-					f'Refreshing tracking wallet {uo.item_desc} #{idx}.  Is this what you want?'):
-				return 'redo'
-			await uo.wallet.get_balance( uo.data[idx-1].addr, force_rpc=True )
-			await uo.get_data()
-			uo.oneshot_msg = yellow(f'{uo.proto.dcoin} balance for account #{idx} refreshed\n\n')
-
-		async def a_addr_delete(self,uo,idx):
-			from ..ui import keypress_confirm
-			if not keypress_confirm(
-					f'Removing {uo.item_desc} #{idx} from tracking wallet.  Is this what you want?'):
-				return 'redo'
-			if await uo.wallet.remove_address( uo.data[idx-1].addr ):
-				await uo.get_data()
-				uo.oneshot_msg = yellow(f'{capfirst(uo.item_desc)} #{idx} removed\n\n')
-			else:
-				await asyncio.sleep(3)
-				uo.oneshot_msg = red('Address could not be removed\n\n')
-
-		async def a_comment_add(self,uo,idx):
-
-			async def do_comment_add(comment):
-				e = uo.data[idx-1]
-				if await uo.wallet.add_comment( e.twmmid, comment, coinaddr=e.addr ):
-					await uo.get_data()
-					uo.oneshot_msg = yellow('Label {a} {b}{c}\n\n'.format(
-						a = 'to' if cur_comment and comment else 'added to' if comment else 'removed from',
-						b = desc,
-						c = ' edited' if cur_comment and comment else '' ))
-				else:
-					await asyncio.sleep(3)
-					uo.oneshot_msg = red('Label could not be {}\n\n'.format(
-						'edited' if cur_comment and comment else
-						'added' if comment else
-						'removed' ))
-
-			desc = f'{uo.item_desc} #{idx}'
-			cur_comment = uo.data[idx-1].comment
-			msg('Current label: {}'.format(cur_comment.hl() if cur_comment else '(none)'))
-
-			from ..ui import line_input
-			res = line_input(
-				"Enter label text (or ENTER to return to main menu): ",
-				insert_txt = cur_comment )
-
-			if res == cur_comment:
-				return None
-			elif res == '':
-				from ..ui import keypress_confirm
-				return (await do_comment_add('')) if keypress_confirm(
-					f'Removing label for {desc}.  Is this what you want?') else 'redo'
-			else:
-				return (await do_comment_add(res)) if get_obj(TwComment,s=res) else 'redo'

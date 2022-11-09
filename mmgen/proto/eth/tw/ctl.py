@@ -127,12 +127,12 @@ class EthereumTrackingWallet(TrackingWallet):
 			return None
 
 	@write_mode
-	async def set_comment(self,coinaddr,lbl):
+	async def set_label(self,coinaddr,lbl):
 		for addr,d in list(self.data_root.items()):
 			if addr == coinaddr:
 				d['comment'] = lbl.comment
 				self.write()
-				return None
+				return True
 		else:
 			msg(f'Address {coinaddr!r} not found in {self.data_root_desc!r} section of tracking wallet')
 			return False
@@ -155,6 +155,19 @@ class EthereumTrackingWallet(TrackingWallet):
 		if token in self.data['tokens']:
 			return self.data['tokens'][token]['params'].get(param)
 		return None
+
+	@property
+	def sorted_list(self):
+		return sorted(
+			[ { 'addr':x[0],
+				'mmid':x[1]['mmid'],
+				'comment':x[1]['comment'] }
+					for x in self.data_root.items() if x[0] not in ('params','coin') ],
+			key=lambda x: x['mmid'].sort_key+x['addr'] )
+
+	@property
+	def mmid_ordered_dict(self):
+		return dict((x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list)
 
 class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 

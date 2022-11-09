@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-proto.btc.tw: Bitcoin base protocol tracking wallet dependency classes
+proto.btc.tw.common: Bitcoin base protocol tracking wallet dependency classes
 """
 
 from ....addr import CoinAddr
@@ -26,7 +26,7 @@ class BitcoinTwCommon:
 		"""
 		def check_dup_mmid(acct_labels):
 			mmid_prev,err = None,False
-			for mmid in sorted(a.mmid for a in acct_labels if a):
+			for mmid in sorted(label.mmid for label in acct_labels if label):
 				if mmid == mmid_prev:
 					err = True
 					msg(f'Duplicate MMGen ID ({mmid}) discovered in tracking wallet!\n')
@@ -72,6 +72,7 @@ class BitcoinTwCommon:
 		"""
 		data = {}
 		lbl_id = ('account','label')['label_api' in self.rpc.caps]
+		amt0 = self.proto.coin_amt('0')
 
 		for d in await self.rpc.call('listunspent',0):
 
@@ -99,7 +100,7 @@ class BitcoinTwCommon:
 					lm.vout = d['vout']
 					lm.date = None
 					data[lm] = {
-						'amt': self.proto.coin_amt('0'),
+						'amt': amt0,
 						'lbl': label,
 						'addr': CoinAddr(self.proto,d['address']) }
 				amt = self.proto.coin_amt(d['amount'])

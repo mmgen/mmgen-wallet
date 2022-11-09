@@ -22,13 +22,14 @@ class BitcoinTwGetBalance(TwGetBalance):
 	async def create_data(self):
 		# 0: unconfirmed, 1: below minconf, 2: confirmed, 3: spendable (privkey in wallet)
 		lbl_id = ('account','label')['label_api' in self.rpc.caps]
+		amt0 = self.proto.coin_amt('0')
 		for d in await self.rpc.call('listunspent',0):
 			lbl = get_tw_label(self.proto,d[lbl_id])
 			if lbl:
 				if lbl.mmid.type == 'mmgen':
 					key = lbl.mmid.obj.sid
 					if key not in self.data:
-						self.data[key] = [self.proto.coin_amt('0')] * 4
+						self.data[key] = [amt0] * 4
 				else:
 					key = 'Non-MMGen'
 			else:

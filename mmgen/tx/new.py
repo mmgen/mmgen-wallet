@@ -340,7 +340,7 @@ class New(Base):
 		do_license_msg()
 
 		if not opt.inputs:
-			await self.twuo.view_and_sort()
+			await self.twuo.view_filter_and_sort()
 
 		self.twuo.display_total()
 

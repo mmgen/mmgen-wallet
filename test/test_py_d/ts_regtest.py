@@ -683,7 +683,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-tool',['--'+user,'txhist'] + args)
 		res = strip_ansi_escapes(t.read()).replace('\r','')
 		m = re.search(expect,res,re.DOTALL)
-		assert m, m
+		assert m, f'Expected: {expect}'
 		return t
 
 	def bob_txhist1(self):
@@ -699,7 +699,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_txhist3(self):
 		return self.user_txhist('bob',
 			args = ['sort=blockheight','sinceblock=-7','age_fmt=block'],
-			expect = fr'Displaying transactions since block 399.*\s6\)\s+405.*:C:3\s.*\s{rtBals[9]}\s.*:L:5.*\s7\)'
+			expect = fr'Displaying transactions since block 399.*\s6\)\s+405\s.*\s{rtBals[9]}\s.*:L:5.*\s7\)'
 		)
 
 	def bob_txhist4(self):
@@ -1147,28 +1147,29 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		mmid = self._user_sid('alice') + (':S:1',':L:1')[self.proto.coin=='BCH']
 		return self._user_chk_comment('alice',mmid,'Label added using coin address of MMGen address')
 
-	def alice_add_comment_badaddr(self,addr,reply):
+	def alice_add_comment_badaddr(self,addr,reply,exit_val):
 		if os.getenv('PYTHONOPTIMIZE'):
 			omsg(yellow(f'PYTHONOPTIMIZE set, skipping test {self.test_name!r}'))
 			return 'skip'
 		t = self.spawn('mmgen-tool',['--alice','add_label',addr,'(none)'])
 		t.expect(reply,regex=True)
+		t.req_exit_val = exit_val
 		return t
 
 	def alice_add_comment_badaddr1(self):
-		return self.alice_add_comment_badaddr( rt_pw,'Invalid coin address for this chain: ')
+		return self.alice_add_comment_badaddr( rt_pw,'Invalid coin address for this chain: ', 2)
 
 	def alice_add_comment_badaddr2(self):
 		addr = init_proto(self.proto.coin,network='mainnet').pubhash2addr(bytes(20),False) # mainnet zero address
-		return self.alice_add_comment_badaddr( addr, f'Invalid coin address for this chain: {addr}' )
+		return self.alice_add_comment_badaddr( addr, f'Invalid coin address for this chain: {addr}', 2 )
 
 	def alice_add_comment_badaddr3(self):
 		addr = self._user_sid('alice') + ':C:123'
-		return self.alice_add_comment_badaddr( addr, f'MMGen address {addr!r} not found in tracking wallet' )
+		return self.alice_add_comment_badaddr( addr, f'MMGen address {addr!r} not found in tracking wallet', 2 )
 
 	def alice_add_comment_badaddr4(self):
 		addr = self.proto.pubhash2addr(bytes(20),False) # regtest (testnet) zero address
-		return self.alice_add_comment_badaddr( addr, f'Address {addr!r} not found in tracking wallet' )
+		return self.alice_add_comment_badaddr( addr, f'Address {addr!r} not found in tracking wallet', 2 )
 
 	def alice_remove_comment1(self):
 		sid = self._user_sid('alice')
@@ -1201,7 +1202,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect(r'add \[l\]abel:.','M',regex=True)
 		t.expect(r'add \[l\]abel:.','l',regex=True)
 		t.expect(r"Enter unspent.*return to main menu\):.",output+'\n',regex=True)
-		t.expect(r"Enter label text.*return to main menu\):.",comment+'\n',regex=True)
+		t.expect(r"Enter label text.*:.",comment+'\n',regex=True)
 		t.expect(r'\[q\]uit view, .*?:.','q',regex=True)
 		return t
 

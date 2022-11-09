@@ -92,9 +92,9 @@ class TwCommon:
 
 	def age_disp(self,o,age_fmt):
 		if age_fmt == 'confs':
-			return o.confs
+			return o.confs or '-'
 		elif age_fmt == 'block':
-			return self.rpc.blockcount - (o.confs - 1)
+			return self.rpc.blockcount + 1 - o.confs if o.confs else '-'
 		else:
 			return self.date_formatter[age_fmt](self.rpc,o.date)
 
@@ -109,20 +109,12 @@ class TwCommon:
 
 		res = self.gen_data(rpc_data,lbl_id)
 		self.data = MMGenList(await res if type(res).__name__ == 'coroutine' else res)
+		self.disp_data = list(self.filter_data())
 
 		if not self.data:
 			die(1,self.no_data_errmsg)
 
 		self.do_sort(key=sort_key,reverse=reverse_sort)
-
-	async def set_dates(self,us):
-		if not self.dates_set:
-			# 'blocktime' differs from 'time', is same as getblockheader['time']
-			dates = [ o.get('blocktime',0)
-				for o in await self.rpc.gathered_icall('gettransaction',[(o.txid,True,False) for o in us]) ]
-			for idx,o in enumerate(us):
-				o.date = dates[idx]
-			self.dates_set = True
 
 	@property
 	def age_w(self):
@@ -258,10 +250,10 @@ class TwCommon:
 	def header(self,color):
 
 		Blue,Green = (blue,green) if color else (nocolor,nocolor)
-		yes,no = green('yes'),red('no') if color else ('yes','no')
+		Yes,No = (green('yes'),red('no')) if color else ('yes','no')
 
 		def fmt_filter(k):
-			return '{}:{}'.format(k,yes if getattr(self,k) else no)
+			return '{}:{}'.format(k,{0:No,1:Yes}[getattr(self,k)])
 
 		return '{h} (sort order: {s}){f}\nNetwork: {n}\nBlock {b} [{d}]\n{t}'.format(
 			h = self.hdr_lbl.upper(),
@@ -277,29 +269,26 @@ class TwCommon:
 		return ''
 
 	def filter_data(self):
-		return self.data
+		return self.data.copy()
 
 	async def format(self,display_type,color=True,cached=False,interactive=False):
 
 		if not cached:
 
-			data = list(self.filter_data()) # method could be a generator
+			dt = getattr(self.display_type,display_type)
 
-			if data:
+			if self.has_age and (self.age_fmt in self.age_fmts_date_dependent or dt.detail):
+				await self.set_dates(self.data)
 
-				dt = getattr(self.display_type,display_type)
+			data = self.disp_data = list(self.filter_data()) # method could be a generator
 
-				cw = self.get_column_widths(data,wide=dt.detail) if dt.need_column_widths else None
+			cw = self.get_column_widths(data,wide=dt.detail) if data and dt.need_column_widths else None
 
-				if self.has_age and (self.age_fmt in self.age_fmts_date_dependent or dt.detail):
-					await self.set_dates(data)
-
-			self._display_data[display_type] = (
-				self.header(color) + self.subheader(color) + '\n'
-				+ (
-					dt.item_separator.join(getattr(self,dt.fmt_method)(data,cw,color=color)) + '\n'
-					if data else (nocolor,yellow)[color]('[no data for requested parameters]') + '\n'
-				)
+			self._display_data[display_type] = '{a}{b}\n{c}\n'.format(
+				a = self.header(color),
+				b = self.subheader(color),
+				c = dt.item_separator.join(getattr(self,dt.fmt_method)(data,cw,color=color))
+					if data else (nocolor,yellow)[color]('[no data for requested parameters]')
 			)
 
 		return self._display_data[display_type] + ('' if interactive else self.footer(color))
@@ -310,7 +299,7 @@ class TwCommon:
 			self.proto.dcoin
 		) if hasattr(self,'total') else ''
 
-	async def view_and_sort(self):
+	async def view_filter_and_sort(self):
 		from ..opts import opt
 		from ..term import get_char
 		prompt = self.prompt.strip() + '\b'
@@ -351,7 +340,7 @@ class TwCommon:
 				await self.item_action().run(self,action)
 			elif action == 'a_quit':
 				msg('')
-				return self.data
+				return self.disp_data
 
 	class action:
 
@@ -421,14 +410,74 @@ class TwCommon:
 			msg('')
 			from ..ui import line_input
 			while True:
-				ret = line_input(f'Enter {parent.item_desc} number (or RETURN to return to main menu): ')
+				ret = line_input(f'Enter {parent.item_desc} number (or ENTER to return to main menu): ')
 				if ret == '':
 					return None
 				idx = get_obj(MMGenIdx,n=ret,silent=True)
-				if not idx or idx < 1 or idx > len(parent.data):
-					msg(f'Choice must be a single number between 1 and {len(parent.data)}')
+				if not idx or idx < 1 or idx > len(parent.disp_data):
+					msg(f'Choice must be a single number between 1 and {len(parent.disp_data)}')
 				elif (await getattr(self,action)(parent,idx)) != 'redo':
 					break
+
+		async def a_balance_refresh(self,parent,idx):
+			from ..ui import keypress_confirm
+			if not keypress_confirm(
+					f'Refreshing tracking wallet {parent.item_desc} #{idx}.  Is this what you want?'):
+				return 'redo'
+			await parent.wallet.get_balance( parent.disp_data[idx-1].addr, force_rpc=True )
+			await parent.get_data()
+			parent.oneshot_msg = yellow(f'{parent.proto.dcoin} balance for account #{idx} refreshed\n\n')
+
+		async def a_addr_delete(self,parent,idx):
+			from ..ui import keypress_confirm
+			if not keypress_confirm(
+					'Removing {} {} from tracking wallet.  Is this what you want?'.format(
+						parent.item_desc, red(f'#{idx}') )):
+				return 'redo'
+			if await parent.wallet.remove_address( parent.disp_data[idx-1].addr ):
+				await parent.get_data()
+				parent.oneshot_msg = yellow(f'{capfirst(parent.item_desc)} #{idx} removed\n\n')
+			else:
+				await asyncio.sleep(3)
+				parent.oneshot_msg = red('Address could not be removed\n\n')
+
+		async def a_comment_add(self,parent,idx):
+
+			async def do_comment_add(comment):
+				if await parent.wallet.set_comment( entry.twmmid, comment, entry.addr ):
+					await parent.get_data()
+					parent.oneshot_msg = yellow('Label {a} {b}{c}\n\n'.format(
+						a = 'for' if cur_comment and comment else 'added to' if comment else 'removed from',
+						b = desc,
+						c = ' edited' if cur_comment and comment else '' ))
+					return True
+				else:
+					await asyncio.sleep(3)
+					parent.oneshot_msg = red('Label for {desc} could not be {action}\n\n'.format(
+						desc = desc,
+						action = 'edited' if cur_comment and comment else 'added' if comment else 'removed'
+					))
+					return False
+
+			entry = parent.disp_data[idx-1]
+			desc = f'{parent.item_desc} #{idx}'
+			cur_comment = parent.disp_data[idx-1].comment
+			msg('Current label: {}'.format(cur_comment.hl() if cur_comment else '(none)'))
+
+			from ..ui import line_input
+			res = line_input(
+				'Enter label text for {} {}: '.format(parent.item_desc,red(f'#{idx}')),
+				insert_txt = cur_comment )
+
+			if res == cur_comment:
+				parent.oneshot_msg = green(f'Label for {desc} unchanged\n\n')
+				return None
+			elif res == '':
+				from ..ui import keypress_confirm
+				if not keypress_confirm(f'Removing label for {desc}.  Is this what you want?'):
+					return None
+
+			return await do_comment_add(res)
 
 class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
@@ -437,22 +486,24 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	def __new__(cls,proto,id_str):
 		if type(id_str) == cls:
 			return id_str
-		ret = None
 		try:
-			ret = MMGenID(proto,id_str)
-			sort_key,idtype = ret.sort_key,'mmgen'
+			ret = addr = disp = MMGenID(proto,id_str)
+			sort_key,idtype = (ret.sort_key,'mmgen')
 		except Exception as e:
 			try:
-				assert id_str.split(':',1)[0] == proto.base_coin.lower(),(
+				coin,addr = id_str.split(':',1)
+				assert coin == proto.base_coin.lower(),(
 					f'not a string beginning with the prefix {proto.base_coin.lower()!r}:' )
-				assert id_str.isascii() and id_str[4:].isalnum(), 'not an ASCII alphanumeric string'
-				assert len(id_str) > 4,'not more that four characters long'
-				ret,sort_key,idtype = str(id_str),'z_'+id_str,'non-mmgen'
+				assert addr.isascii() and addr.isalnum(), 'not an ASCII alphanumeric string'
+				ret,sort_key,idtype,disp = (id_str,'z_'+id_str,'non-mmgen','non-MMGen')
+				addr = proto.coin_addr(addr)
 			except Exception as e2:
 				return cls.init_fail(e,id_str,e2=e2)
 
 		me = str.__new__(cls,ret)
 		me.obj = ret
+		me.disp = disp
+		me.addr = addr
 		me.sort_key = sort_key
 		me.type = idtype
 		me.proto = proto

@@ -40,10 +40,11 @@ class BitcoinTrackingWallet(TrackingWallet):
 		raise NotImplementedError(f'address removal not implemented for coin {self.proto.coin}')
 
 	@write_mode
-	async def set_comment(self,coinaddr,lbl):
+	async def set_label(self,coinaddr,lbl):
 		args = self.rpc.daemon.set_comment_args( self.rpc, coinaddr, lbl )
 		try:
-			return await self.rpc.call(*args)
+			await self.rpc.call(*args)
+			return True
 		except Exception as e:
 			rmsg(e.args[0])
 			return False
@@ -91,7 +92,7 @@ class BitcoinTrackingWallet(TrackingWallet):
 
 	@write_mode
 	async def rescan_address(self,addrspec):
-		res = await self.resolve_address(addrspec,None)
+		res = await self.resolve_address(addrspec)
 		if not res:
 			return False
 		return await self.rescan_addresses([res.coinaddr])

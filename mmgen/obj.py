@@ -46,8 +46,8 @@ def get_obj(objname,*args,**kwargs):
 		ret = objname(**kwargs)
 	except Exception as e:
 		if not silent:
-			from .util import msg
-			msg(f'{e!s}')
+			from .util import rmsg
+			rmsg(f'{e!s}')
 		return False
 	else:
 		return True if return_bool else ret

@@ -18,6 +18,7 @@ from .ot_common import *
 from mmgen.protocol import init_proto
 proto = init_proto('btc',need_amt=True)
 tw_pfx = proto.base_coin.lower() + ':'
+zero_addr = '1111111111111111111114oLvT2'
 
 ssm = str(SeedShareCount.max_val)
 privkey = PrivKey(proto=proto,s=bytes.fromhex('deadbeef'*8),compressed=True,pubkey_type='std')
@@ -162,9 +163,10 @@ tests = {
 			{'id_str':'F00BAA12:Z:99', 'proto':proto},
 			{'id_str':tw_pfx,          'proto':proto},
 			{'id_str':tw_pfx+'я',      'proto':proto},
+			{'id_str':tw_pfx+'x',      'proto':proto},
 		),
 		'good':  (
-			{'id_str':tw_pfx+'x',           'proto':proto},
+			{'id_str':tw_pfx+zero_addr,     'proto':proto},
 			{'id_str':'F00BAA12:99',        'proto':proto, 'ret':'F00BAA12:L:99'},
 			{'id_str':'F00BAA12:L:99',      'proto':proto},
 			{'id_str':'F00BAA12:S:9999999', 'proto':proto},
@@ -188,13 +190,14 @@ tests = {
 			{'text':tw_pfx+'я x',    'proto':proto},
 			{'text':utf8_ctrl[:40],  'proto':proto},
 			{'text':'F00BAA12:S:1 ' + utf8_ctrl[:40], 'proto':proto, 'exc_name': 'BadTwComment'},
+			{'text':tw_pfx+'x comment','proto':proto},
 		),
 		'good':  (
 			{'text':'F00BAA12:99 a comment',            'proto':proto, 'ret':'F00BAA12:L:99 a comment'},
 			{'text':'F00BAA12:L:99 a comment',          'proto':proto},
 			{'text': 'F00BAA12:L:99 comment (UTF-8) α', 'proto':proto},
 			{'text':'F00BAA12:S:9999999 comment',       'proto':proto},
-			{'text':tw_pfx+'x comment',                 'proto':proto},
+			{'text':tw_pfx+zero_addr+' comment',        'proto':proto},
 		),
 	},
 	'MMGenTxID': {

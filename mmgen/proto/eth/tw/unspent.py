@@ -42,7 +42,7 @@ class EthereumTwUnspentOutputs(TwUnspentOutputs):
 Sort options:    [a]mount, a[d]dress, [r]everse, [M]mgen addr
 Display options: show [m]mgen addr, r[e]draw screen
 Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
-                 add [l]abel, [D]elete address, [R]efresh balance:
+                 [D]elete address, add [l]abel, [R]efresh balance:
 """
 	key_mappings = {
 		'a':'s_amt',

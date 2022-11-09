@@ -110,7 +110,7 @@ class tool_cmd(tool_cmd_base):
 		await obj.get_data(sort_key=sort,reverse_sort=reverse)
 
 		if interactive:
-			await obj.view_and_sort()
+			await obj.view_filter_and_sort()
 			return True
 		else:
 			return await obj.format('detail' if detail else 'squeezed')
@@ -151,8 +151,7 @@ class tool_cmd(tool_cmd_base):
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
 		from ..tw.ctl import TrackingWallet
-		await (await TrackingWallet(self.proto,mode='w')).add_comment( mmgen_or_coin_addr, label, on_fail='raise' )
-		return True
+		return await (await TrackingWallet(self.proto,mode='w')).set_comment(mmgen_or_coin_addr,label)
 
 	async def remove_label(self,mmgen_or_coin_addr:str):
 		"remove descriptive label for address in tracking wallet"
@@ -176,7 +175,7 @@ class tool_cmd(tool_cmd_base):
 		if ret:
 			from ..util import Msg
 			from ..addr import is_coin_addr
-			return ret.mmaddr if is_coin_addr(self.proto,mmgen_or_coin_addr) else ret.coinaddr
+			return ret.twmmid if is_coin_addr(self.proto,mmgen_or_coin_addr) else ret.coinaddr
 		else:
 			return False
 

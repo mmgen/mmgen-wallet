@@ -43,7 +43,6 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	async def __init__(self,proto,sinceblock=0):
 		self.proto        = proto
-		self.data         = MMGenList()
 		self.rpc          = await rpc_init(proto)
 		self.sinceblock   = Int( sinceblock if sinceblock >= 0 else self.rpc.blockcount + sinceblock )
 
@@ -51,6 +50,9 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 	def no_rpcdata_errmsg(self):
 		return 'No transaction history {}found!'.format(
 			f'from block {self.sinceblock} ' if self.sinceblock else '')
+
+	def filter_data(self):
+		return (d for d in self.data if d.confirmations > 0 or self.show_unconfirmed)
 
 	def get_column_widths(self,data,wide=False):
 
@@ -116,18 +118,15 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 			a2 = 'Outputs',
 			l  = 'Comment' ).rstrip()
 
-		n = 0
-		for d in data:
-			if d.confirmations > 0 or self.show_unconfirmed:
-				n += 1
-				yield fs.format(
-					n  = str(n) + ')',
-					i  = d.txid_disp( width=cw.txid, color=color ) if hasattr(cw,'txid') else None,
-					d  = d.age_disp( self.age_fmt, width=self.age_w, color=color ),
-					a1 = d.vouts_disp( 'inputs', width=cw.addr1, color=color ),
-					A  = d.amt_disp(self.show_total_amt).fmt( prec=self.disp_prec, color=color ),
-					a2 = d.vouts_disp( 'outputs', width=cw.addr2, color=color ),
-					l  = d.comment.fmt( width=cw.comment, color=color ) ).rstrip()
+		for n,d in enumerate(data,1):
+			yield fs.format(
+				n  = str(n) + ')',
+				i  = d.txid_disp( width=cw.txid, color=color ) if hasattr(cw,'txid') else None,
+				d  = d.age_disp( self.age_fmt, width=self.age_w, color=color ),
+				a1 = d.vouts_disp( 'inputs', width=cw.addr1, color=color ),
+				A  = d.amt_disp(self.show_total_amt).fmt( prec=self.disp_prec, color=color ),
+				a2 = d.vouts_disp( 'outputs', width=cw.addr2, color=color ),
+				l  = d.comment.fmt( width=cw.comment, color=color ) ).rstrip()
 
 	def gen_detail_display(self,data,cw,color):
 
@@ -150,23 +149,20 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 		        {a2}
 		""",strip_char='\t').strip()
 
-		n = 0
-		for d in data:
-			if d.confirmations > 0 or self.show_unconfirmed:
-				n += 1
-				yield fs.format(
-					n  = str(n) + ')',
-					d  = d.age_disp( 'date_time', width=None, color=None ),
-					b  = d.blockheight_disp(color=color),
-					D  = d.txdate_disp( 'date_time' ),
-					i  = d.txid_disp( width=None, color=color ),
-					A1 = d.amt_disp(True).hl( color=color ),
-					A2 = d.amt_disp(False).hl( color=color ),
-					f  = d.fee_disp( color=color ),
-					a1 = d.vouts_list_disp( 'inputs', color=color, indent=' '*8 ),
-					oc = d.nOutputs,
-					a2 = d.vouts_list_disp( 'outputs', color=color, indent=' '*8 ),
-				)
+		for n,d in enumerate(data,1):
+			yield fs.format(
+				n  = str(n) + ')',
+				d  = d.age_disp( 'date_time', width=None, color=None ),
+				b  = d.blockheight_disp(color=color),
+				D  = d.txdate_disp( 'date_time' ),
+				i  = d.txid_disp( width=None, color=color ),
+				A1 = d.amt_disp(True).hl( color=color ),
+				A2 = d.amt_disp(False).hl( color=color ),
+				f  = d.fee_disp( color=color ),
+				a1 = d.vouts_list_disp( 'inputs', color=color, indent=' '*8 ),
+				oc = d.nOutputs,
+				a2 = d.vouts_list_disp( 'outputs', color=color, indent=' '*8 ),
+			)
 
 	sort_disp = {
 		'age':         'Age',
@@ -184,7 +180,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 		'txid':        lambda i: i.txid,
 	}
 
-	async def set_dates(self,us):
+	async def set_dates(self,foo):
 		pass
 
 	@property

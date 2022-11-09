@@ -71,26 +71,26 @@ bals = {
 			('98831F3A:E:2','23.45495'),
 			('98831F3A:E:11','1.234'),
 			('98831F3A:E:21','2.345'),
-			(burn_addr + r'\s+Non-MMGen',amt1)],
+			(burn_addr + r'\s+non-MMGen',amt1)],
 	'8': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
 			('98831F3A:E:11',vbal1,'a1'),
 			('98831F3A:E:12','99.99895'),
 			('98831F3A:E:21','2.345'),
-			(burn_addr + r'\s+Non-MMGen',amt1)],
+			(burn_addr + r'\s+non-MMGen',amt1)],
 	'9': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
 			('98831F3A:E:11',vbal1,'a1'),
 			('98831F3A:E:12',vbal2),
 			('98831F3A:E:21','2.345'),
-			(burn_addr + r'\s+Non-MMGen',amt1)],
+			(burn_addr + r'\s+non-MMGen',amt1)],
 	'10': [ ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.0218'),
 			('98831F3A:E:3','0.4321'),
 			('98831F3A:E:11',vbal1,'a1'),
 			('98831F3A:E:12',vbal2),
 			('98831F3A:E:21','2.345'),
-			(burn_addr + r'\s+Non-MMGen',amt1)]
+			(burn_addr + r'\s+non-MMGen',amt1)]
 }
 
 token_bals = {
@@ -101,18 +101,18 @@ token_bals = {
 			('98831F3A:E:12','1.23456','0')],
 	'4': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
 			('98831F3A:E:12','1.23456','0'),
-			(burn_addr + r'\s+Non-MMGen',amt2,amt1)],
+			(burn_addr + r'\s+non-MMGen',amt2,amt1)],
 	'5': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
 			('98831F3A:E:12','1.23456','99.99895'),
-			(burn_addr + r'\s+Non-MMGen',amt2,amt1)],
+			(burn_addr + r'\s+non-MMGen',amt2,amt1)],
 	'6': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
 			('98831F3A:E:12','0',vbal2),
 			('98831F3A:E:13','1.23456','0'),
-			(burn_addr + r'\s+Non-MMGen',amt2,amt1)],
+			(burn_addr + r'\s+non-MMGen',amt2,amt1)],
 	'7': [  ('98831F3A:E:11','67.444317776666555545',vbal9,'a2'),
 			('98831F3A:E:12','43.21',vbal2),
 			('98831F3A:E:13','1.23456','0'),
-			(burn_addr + r'\s+Non-MMGen',amt2,amt1)]
+			(burn_addr + r'\s+non-MMGen',amt2,amt1)]
 }
 token_bals_getbalance = {
 	'1': (vbal4,'999999.12345689012345678'),
@@ -1260,20 +1260,32 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def edit_comment(self,out_num,args=[],action='l',comment_text=None,changed=False,pexpect_spawn=None):
 		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B','-i'],pexpect_spawn=pexpect_spawn)
-		p1,p2 = ('efresh balance:\b','return to main menu): ')
-		p3,r3 = (p2,comment_text+'\n') if comment_text is not None else ('(y/N): ','y')
-		p4,r4 = (('(y/N): ',),('y',)) if comment_text == Ctrl_U else ((),())
-		for p,r in zip((p1,p1,p2,p3)+p4,('M',action,out_num+'\n',r3)+r4):
-			t.expect(p,r)
+
+		menu_prompt = 'efresh balance:\b'
+
+		t.expect(menu_prompt,'M')
+		t.expect(menu_prompt,action)
+		t.expect(r'return to main menu): ',out_num+'\n')
+
+		for p,r in (
+			('Enter label text.*: ',comment_text+'\n') if comment_text is not None else (r'\(y/N\): ','y'),
+			(r'\(y/N\): ','y') if comment_text == Ctrl_U else (None,None),
+		):
+			if p:
+				t.expect(p,r,regex=True)
+
 		m = (
-			'Label to account #{} edited' if changed else
+			'Label for account #{} edited' if changed else
 			'Account #{} removed' if action == 'D' else
 			'Label added to account #{}' if comment_text and comment_text != Ctrl_U else
 			'Label removed from account #{}' )
+
 		t.expect(m.format(out_num))
-		for p,r in zip((p1,p1),('M','q')):
-			t.expect(p,r)
+		t.expect(menu_prompt,'M')
+		t.expect(menu_prompt,'q')
+
 		t.expect('Total unspent:')
+
 		return t
 
 	def edit_comment1(self):
