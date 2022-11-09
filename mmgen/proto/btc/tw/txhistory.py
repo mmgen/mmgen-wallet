@@ -310,8 +310,8 @@ Actions: [q]uit, r[e]draw:
 
 		if self.sinceblock: # mapping data may be incomplete for inputs, so update from 'listlabels'
 			mm_map.update(
-				{ addr: _mmp(lbl.mmid, lbl.comment) if lbl else _mmp(None,None) for lbl,addr in
-					[(get_tw_label(self.proto,a), b) for a,b in await self.get_addr_label_pairs()] }
+				{ addr: _mmp(label.mmid, label.comment) if label else _mmp(None,None)
+					for label,addr in await self.get_addr_label_pairs() }
 			)
 
 		msg_r('Getting wallet transactions...')

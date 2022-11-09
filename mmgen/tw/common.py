@@ -445,7 +445,7 @@ class TwCommon:
 
 			async def do_comment_add(comment):
 				if await parent.wallet.set_comment( entry.twmmid, comment, entry.addr ):
-					await parent.get_data()
+					entry.comment = comment
 					parent.oneshot_msg = yellow('Label {a} {b}{c}\n\n'.format(
 						a = 'for' if cur_comment and comment else 'added to' if comment else 'removed from',
 						b = desc,

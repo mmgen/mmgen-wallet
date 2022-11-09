@@ -25,15 +25,13 @@ from ....tw.ctl import TrackingWallet,write_mode
 from ....addr import is_coin_addr,is_mmgen_id
 from ....amt import ETHAmt
 from ..contract import Token,TokenResolve
+from .common import EthereumTwCommon
 
-class EthereumTrackingWallet(TrackingWallet):
+class EthereumTrackingWallet(TrackingWallet,EthereumTwCommon):
 
 	caps = ('batch',)
 	data_key = 'accounts'
 	use_tw_file = True
-
-	async def is_in_wallet(self,addr):
-		return addr in self.data_root
 
 	def init_empty(self):
 		self.data = {
@@ -204,9 +202,6 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 		self.symbol   = self.get_param('symbol')
 
 		proto.tokensym = self.symbol
-
-	async def is_in_wallet(self,addr):
-		return addr in self.data['tokens'][self.token]
 
 	@property
 	def data_root(self):

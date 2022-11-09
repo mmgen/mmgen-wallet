@@ -214,43 +214,41 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		elif g.debug:
 			msg('Data is unchanged\n')
 
-	async def is_in_wallet(self,addr):
-		from .addrs import TwAddrList
-		return addr in (await TwAddrList(self.proto,[],0,True,True,True,wallet=self)).coinaddr_list()
+	async def resolve_address(self,addrspec):
 
-	async def resolve_address(self,addrspec,usr_coinaddr=None):
+		twmmid,coinaddr = (None,None)
 
-		mmaddr,coinaddr = None,None
-
-		if is_coin_addr(self.proto,usr_coinaddr or addrspec):
-			coinaddr = get_obj(CoinAddr,proto=self.proto,addr=usr_coinaddr or addrspec)
-
-		if is_mmgen_id(self.proto,addrspec):
-			mmaddr = TwMMGenID(self.proto,addrspec)
-
-		if mmaddr and not coinaddr:
-			from ..addrdata import TwAddrData
-			coinaddr = (await TwAddrData(self.proto)).mmaddr2coinaddr(mmaddr)
-
-		try:
-			assert coinaddr, (
-				f'{g.proj_name} address {mmaddr!r} not found in tracking wallet' if mmaddr else
-				f'Invalid coin address for this chain: {addrspec}' )
-			assert await self.is_in_wallet(coinaddr), f'Address {coinaddr!r} not found in tracking wallet'
-		except Exception as e:
-			msg(str(e))
+		if is_coin_addr(self.proto,addrspec):
+			coinaddr = get_obj(CoinAddr,proto=self.proto,addr=addrspec)
+		elif is_mmgen_id(self.proto,addrspec):
+			twmmid = TwMMGenID(self.proto,addrspec)
+		else:
+			msg(f'{addrspec!r}: invalid address for this network')
 			return None
+
+		pairs = await self.get_addr_label_pairs(twmmid)
+
+		if not pairs:
+			msg(f'MMGen address {twmmid!r} not found in tracking wallet')
+			return None
+
+		pairs_data = dict((label.mmid,addr) for label,addr in pairs)
+
+		if twmmid and not coinaddr:
+			coinaddr = pairs_data[twmmid]
 
 		# Allow for the possibility that BTC addr of MMGen addr was entered.
 		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
-		if not mmaddr:
-			from ..addrdata import TwAddrData
-			mmaddr = (await TwAddrData(proto=self.proto)).coinaddr2mmaddr(coinaddr)
+		if not twmmid:
+			for mmid,addr in pairs_data.items():
+				if coinaddr == addr:
+					twmmid = mmid
+					break
+			else:
+				msg(f'Coin address {addrspec!r} not found in tracking wallet')
+				return None
 
-		if not mmaddr:
-			mmaddr = f'{self.proto.base_coin.lower()}:{coinaddr}'
-
-		return addr_info( TwMMGenID(self.proto,mmaddr), coinaddr )
+		return addr_info(twmmid,coinaddr)
 
 	# returns on failure
 	@write_mode
@@ -277,6 +275,10 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			return False
 
 		if await self.set_label(res.coinaddr,lbl):
+			# redundant paranoia step:
+			pairs = await self.get_addr_label_pairs(res.twmmid)
+			assert pairs[0][0].comment == comment, f'{pairs[0][0].comment!r} != {comment!r}'
+
 			desc = '{} address {} in tracking wallet'.format(
 				res.twmmid.type.replace('mmgen','MMGen'),
 				res.twmmid.addr.hl() )

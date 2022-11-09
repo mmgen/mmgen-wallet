@@ -1157,11 +1157,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def alice_add_comment_badaddr1(self):
-		return self.alice_add_comment_badaddr( rt_pw,'Invalid coin address for this chain: ', 2)
+		return self.alice_add_comment_badaddr( rt_pw, 'invalid address', 2 )
 
 	def alice_add_comment_badaddr2(self):
 		addr = init_proto(self.proto.coin,network='mainnet').pubhash2addr(bytes(20),False) # mainnet zero address
-		return self.alice_add_comment_badaddr( addr, f'Invalid coin address for this chain: {addr}', 2 )
+		return self.alice_add_comment_badaddr( addr, 'invalid address', 2 )
 
 	def alice_add_comment_badaddr3(self):
 		addr = self._user_sid('alice') + ':C:123'
@@ -1169,7 +1169,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def alice_add_comment_badaddr4(self):
 		addr = self.proto.pubhash2addr(bytes(20),False) # regtest (testnet) zero address
-		return self.alice_add_comment_badaddr( addr, f'Address {addr!r} not found in tracking wallet', 2 )
+		return self.alice_add_comment_badaddr( addr, f'Coin address {addr!r} not found in tracking wallet', 2 )
 
 	def alice_remove_comment1(self):
 		sid = self._user_sid('alice')

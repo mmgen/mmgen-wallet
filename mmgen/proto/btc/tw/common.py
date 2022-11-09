@@ -13,13 +13,13 @@ proto.btc.tw.common: Bitcoin base protocol tracking wallet dependency classes
 """
 
 from ....addr import CoinAddr
-from ....util import die
+from ....util import die,msg,rmsg
 from ....obj import MMGenList
 from ....tw.common import get_tw_label
 
 class BitcoinTwCommon:
 
-	async def get_addr_label_pairs(self):
+	async def get_addr_label_pairs(self,twmmid=None):
 		"""
 		Get all the accounts in the tracking wallet and their associated addresses.
 		Returns list of (label,address) tuples.
@@ -34,36 +34,39 @@ class BitcoinTwCommon:
 			if err:
 				die(4,'Tracking wallet is corrupted!')
 
-		def check_addr_array_lens(acct_pairs):
-			err = False
-			for label,addrs in acct_pairs:
-				if not label:
-					continue
-				if len(addrs) != 1:
-					err = True
-					if len(addrs) == 0:
-						msg(f'Label {label!r}: has no associated address!')
-					else:
-						msg(f'{addrs!r}: more than one {self.proto.coin} address in account!')
-			if err:
-				die(4,'Tracking wallet is corrupted!')
+		async def get_acct_list():
+			if 'label_api' in self.rpc.caps:
+				return await self.rpc.call('listlabels')
+			else:
+				return (await self.rpc.call('listaccounts',0,True)).keys()
 
-		# for compatibility with old mmids, must use raw RPC rather than native data for matching
-		# args: minconf,watchonly, MUST use keys() so we get list, not dict
-		if 'label_api' in self.rpc.caps:
-			acct_list = await self.rpc.call('listlabels')
-			aa = await self.rpc.batch_call('getaddressesbylabel',[(k,) for k in acct_list])
-			acct_addrs = [list(a.keys()) for a in aa]
-		else:
-			acct_list = list((await self.rpc.call('listaccounts',0,True)).keys()) # raw list, no 'L'
-			# use raw list here
-			acct_addrs = await self.rpc.batch_call('getaddressesbyaccount',[(a,) for a in acct_list])
-		acct_labels = MMGenList([get_tw_label(self.proto,a) for a in acct_list])
+		async def get_acct_addrs(acct_list):
+			if 'label_api' in self.rpc.caps:
+				return [list(a.keys())
+					for a in await self.rpc.batch_call('getaddressesbylabel',[(k,) for k in acct_list])]
+			else:
+				return await self.rpc.batch_call('getaddressesbyaccount',[(a,) for a in acct_list])
+
+		acct_labels = [get_tw_label(self.proto,a) for a in await get_acct_list()]
+
+		if twmmid:
+			acct_labels = [lbl for lbl in acct_labels if lbl.mmid == twmmid]
+
+		if not acct_labels:
+			return None
+
 		check_dup_mmid(acct_labels)
-		assert len(acct_list) == len(acct_addrs), 'len(listaccounts()) != len(getaddressesbyaccount())'
-		addr_pairs = list(zip(acct_labels,acct_addrs))
-		check_addr_array_lens(addr_pairs)
-		return [(lbl,addrs[0]) for lbl,addrs in addr_pairs]
+
+		acct_addrs = await get_acct_addrs(acct_labels)
+
+		for n,a in enumerate(acct_addrs):
+			if len(a) != 1:
+				raise ValueError(f'{a}: label {acct_labels[n]!r} has != 1 associated address!')
+
+		return [(
+			label,
+			CoinAddr(self.proto,addrs[0])
+		) for label,addrs in zip(acct_labels,acct_addrs)]
 
 	async def get_unspent_by_mmid(self,minconf=1,mmid_filter=[]):
 		"""
