@@ -14,7 +14,7 @@ tx.base: base transaction class
 
 from ..globalvars import *
 from ..objmethods import MMGenObject
-from ..obj import ImmutableAttr,ListItemAttr,MMGenListItem,MMGenTxLabel,TwComment,CoinTxID,HexStr
+from ..obj import ImmutableAttr,ListItemAttr,MMGenListItem,MMGenTxComment,TwComment,CoinTxID,HexStr
 from ..addr import MMGenID,CoinAddr
 from ..util import msg,ymsg,fmt,remove_dups,make_timestamp,die
 from ..opts import opt
@@ -22,7 +22,7 @@ from ..opts import opt
 class MMGenTxIO(MMGenListItem):
 	vout     = ListItemAttr(int,typeconv=False)
 	amt      = ImmutableAttr(None)
-	label    = ListItemAttr(TwComment,reassign_ok=True)
+	comment  = ListItemAttr(TwComment,reassign_ok=True)
 	mmid     = ListItemAttr(MMGenID,include_proto=True)
 	addr     = ImmutableAttr(CoinAddr,include_proto=True)
 	confs    = ListItemAttr(int) # confs of type long exist in the wild, so convert
@@ -65,7 +65,7 @@ class MMGenTxIOList(list,MMGenObject):
 
 class Base(MMGenObject):
 	desc         = 'transaction'
-	label        = None
+	comment      = None
 	txid         = None
 	coin_txid    = None
 	timestamp    = None
@@ -89,7 +89,7 @@ class Base(MMGenObject):
 	class Input(MMGenTxIO):
 		scriptPubKey = ListItemAttr(HexStr)
 		sequence     = ListItemAttr(int,typeconv=False)
-		tw_copy_attrs = { 'scriptPubKey','vout','amt','label','mmid','addr','confs','txid' }
+		tw_copy_attrs = { 'scriptPubKey','vout','amt','comment','mmid','addr','confs','txid' }
 
 	class Output(MMGenTxIO):
 		is_chg = ListItemAttr(bool,typeconv=False)
@@ -150,18 +150,18 @@ class Base(MMGenObject):
 	def add_comment(self,infile=None):
 		if infile:
 			from ..fileutil import get_data_from_file
-			self.label = MMGenTxLabel(get_data_from_file(infile,'transaction comment'))
+			self.comment = MMGenTxComment(get_data_from_file(infile,'transaction comment'))
 		else: # get comment from user, or edit existing comment
-			m = ('Add a comment to transaction?','Edit transaction comment?')[bool(self.label)]
+			m = ('Add a comment to transaction?','Edit transaction comment?')[bool(self.comment)]
 			from ..ui import keypress_confirm,line_input
 			if keypress_confirm(m,default_yes=False):
 				while True:
-					s = MMGenTxLabel(line_input('Comment: ',insert_txt=self.label))
+					s = MMGenTxComment(line_input('Comment: ',insert_txt=self.comment))
 					if not s:
 						ymsg('Warning: comment is empty')
-					lbl_save = self.label
-					self.label = s
-					return (True,False)[lbl_save == self.label]
+					save = self.comment
+					self.comment = s
+					return (True,False)[save == self.comment]
 			return False
 
 	def get_non_mmaddrs(self,desc):

@@ -267,14 +267,14 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
 	# returns on failure
 	@write_mode
-	async def add_label(self,addrspec,label='',coinaddr=None,silent=False,on_fail='return'):
-		assert on_fail in ('return','raise'), 'add_label_chk1'
+	async def add_comment(self,addrspec,comment='',coinaddr=None,silent=False,on_fail='return'):
+		assert on_fail in ('return','raise'), 'add_comment_chk1'
 
 		res = await self.resolve_address(addrspec,coinaddr)
 		if not res:
 			return False
 
-		cmt = TwComment(label) if on_fail=='raise' else get_obj(TwComment,s=label)
+		cmt = TwComment(comment) if on_fail=='raise' else get_obj(TwComment,s=comment)
 		if cmt in (False,None):
 			return False
 
@@ -283,29 +283,29 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			TwLabel(self.proto,lbl_txt) if on_fail == 'raise' else
 			get_obj(TwLabel,proto=self.proto,text=lbl_txt) )
 
-		if await self.set_label(res.coinaddr,lbl) == False:
+		if await self.set_comment(res.coinaddr,lbl) == False:
 			if not silent:
-				msg( 'Label could not be {}'.format('added' if label else 'removed') )
+				msg( 'Label could not be {}'.format('added' if comment else 'removed') )
 			return False
 		else:
 			desc = '{} address {} in tracking wallet'.format(
 				res.mmaddr.type.replace('mmgen','MMGen'),
 				res.mmaddr.replace(self.proto.base_coin.lower()+':','') )
-			if label:
-				msg(f'Added label {label!r} to {desc}')
+			if comment:
+				msg(f'Added label {comment!r} to {desc}')
 			else:
 				msg(f'Removed label from {desc}')
 			return True
 
 	@write_mode
-	async def remove_label(self,mmaddr):
-		await self.add_label(mmaddr,'')
+	async def remove_comment(self,mmaddr):
+		await self.add_comment(mmaddr,'')
 
 	async def import_address_common(self,data,batch=False,gather=False):
 
-		async def do_import(address,label,message):
+		async def do_import(address,comment,message):
 			try:
-				res = await self.import_address( address, label )
+				res = await self.import_address( address, comment )
 				qmsg(message)
 				return res
 			except Exception as e:

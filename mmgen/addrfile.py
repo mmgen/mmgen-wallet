@@ -102,7 +102,7 @@ class AddrFile(MMGenObject):
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(p.data[-1].idx))
 		for e in p.data:
-			c = ' '+e.label if add_comments and e.label else ''
+			c = ' ' + e.comment if add_comments and e.comment else ''
 			if type(p) == KeyList:
 				out.append(fs.format( e.idx, f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
 			elif type(p).__name__ == 'PasswordList':
@@ -137,12 +137,12 @@ class AddrFile(MMGenObject):
 		iifs = "{!r}: invalid identifier [expected '{}:']"
 
 		while lines:
-			idx,addr,lbl = self.get_line(lines)
+			idx,addr,comment = self.get_line(lines)
 
 			assert is_addr_idx(idx), f'invalid address index {idx!r}'
 			p.check_format(addr)
 
-			a = le(**{ 'proto': p.proto, 'idx':int(idx), p.main_attr:addr, 'label':lbl })
+			a = le(**{ 'proto': p.proto, 'idx':int(idx), p.main_attr:addr, 'comment':comment })
 
 			if p.has_keys: # order: wif,(orig_hex),viewkey,wallet_passwd
 				d = self.get_line(lines)

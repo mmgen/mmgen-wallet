@@ -240,7 +240,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	),
 	'main': (
 		'creating, signing, sending and bumping transactions',
-		('bob_add_label',              "adding an 80-screen-width label (lat+cyr+gr)"),
+		('bob_add_comment',            "adding an 80-screen-width label (lat+cyr+gr)"),
 		('bob_twview1',                "viewing Bob's tracking wallet"),
 		('bob_split1',                 "splitting Bob's funds"),
 		('generate',                   'mining a block'),
@@ -316,22 +316,22 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	),
 	'label': (
 		'adding, removing and editing labels',
-		('alice_bal2',               "Alice's balance"),
-		('alice_add_label1',         'adding a label'),
-		('alice_chk_label1',         'the label'),
-		('alice_add_label2',         'adding a label'),
-		('alice_chk_label2',         'the label'),
-		('alice_edit_label1',        'editing a label (zh)'),
-		('alice_edit_label2',        'editing a label (lat+cyr+gr)'),
-		('alice_chk_label3',         'the label'),
-		('alice_remove_label1',      'removing a label'),
-		('alice_chk_label4',         'the label'),
-		('alice_add_label_coinaddr', 'adding a label using the coin address'),
-		('alice_chk_label_coinaddr', 'the label'),
-		('alice_add_label_badaddr1', 'adding a label with invalid address'),
-		('alice_add_label_badaddr2', 'adding a label with invalid address for this chain'),
-		('alice_add_label_badaddr3', 'adding a label with wrong MMGen address'),
-		('alice_add_label_badaddr4', 'adding a label with wrong coin address'),
+		('alice_bal2',                 "Alice's balance"),
+		('alice_add_comment1',         'adding a label'),
+		('alice_chk_comment1',         'the label'),
+		('alice_add_comment2',         'adding a label'),
+		('alice_chk_comment2',         'the label'),
+		('alice_edit_comment1',        'editing a label (zh)'),
+		('alice_edit_comment2',        'editing a label (lat+cyr+gr)'),
+		('alice_chk_comment3',         'the label'),
+		('alice_remove_comment1',      'removing a label'),
+		('alice_chk_comment4',         'the label'),
+		('alice_add_comment_coinaddr', 'adding a label using the coin address'),
+		('alice_chk_comment_coinaddr', 'the label'),
+		('alice_add_comment_badaddr1', 'adding a label with invalid address'),
+		('alice_add_comment_badaddr2', 'adding a label with invalid address for this chain'),
+		('alice_add_comment_badaddr3', 'adding a label with wrong MMGen address'),
+		('alice_add_comment_badaddr4', 'adding a label with wrong coin address'),
 	),
 	'view': (
 		'viewing addresses and unspent outputs',
@@ -376,13 +376,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def __del__(self):
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 
-	def _add_comments_to_addr_file(self,addrfile,outfile,use_labels=False):
+	def _add_comments_to_addr_file(self,addrfile,outfile,use_comments=False):
 		silence()
 		gmsg(f'Adding comments to address file {addrfile!r}')
 		a = AddrList(self.proto,addrfile)
 		for n,idx in enumerate(a.idxs(),1):
-			if use_labels:
-				a.set_comment(idx,get_label())
+			if use_comments:
+				a.set_comment(idx,get_comment())
 			else:
 				if n % 2: a.set_comment(idx,f'Test address {n}')
 		af = a.get_file()
@@ -464,7 +464,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 					sid,self.altcoin_pfx,id_strs[desc],addr_range,
 					x='-α' if g.debug_utf8 else ''))
 			if mmtype == self.proto.mmtypes[0] and user == 'bob':
-				self._add_comments_to_addr_file(addrfile,addrfile,use_labels=True)
+				self._add_comments_to_addr_file(addrfile,addrfile,use_comments=True)
 			t = self.spawn(
 				'mmgen-addrimport',
 				args = (
@@ -787,7 +787,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			inputs          = outputs_list,
 			file_desc       = 'Signed transaction',
 			interactive_fee = (tx_fee,'')[bool(fee)],
-			add_comment     = tx_label_jp,
+			add_comment     = tx_comment_jp,
 			view            = 't',save=True)
 
 		if not skip_passphrase:
@@ -1109,45 +1109,45 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		outputs2 = [sid+':C:2,6.333', sid+':L:3,6.667',sid+l1+':4,0.123',sid+l2+':5']
 		return self.user_txdo('bob',rtFee[5],outputs1+outputs2,'1-2')
 
-	def user_add_label(self,user,addr,label):
-		t = self.spawn('mmgen-tool',['--'+user,'add_label',addr,label])
+	def user_add_comment(self,user,addr,comment):
+		t = self.spawn('mmgen-tool',['--'+user,'add_label',addr,comment])
 		t.expect('Added label.*in tracking wallet',regex=True)
 		return t
 
-	def user_remove_label(self,user,addr):
+	def user_remove_comment(self,user,addr):
 		t = self.spawn('mmgen-tool',['--'+user,'remove_label',addr])
 		t.expect('Removed label.*in tracking wallet',regex=True)
 		return t
 
-	def bob_add_label(self):
+	def bob_add_comment(self):
 		sid = self._user_sid('bob')
-		return self.user_add_label('bob',sid+':C:1',tw_label_lat_cyr_gr)
+		return self.user_add_comment('bob',sid+':C:1',tw_comment_lat_cyr_gr)
 
-	def alice_add_label1(self):
+	def alice_add_comment1(self):
 		sid = self._user_sid('alice')
-		return self.user_add_label('alice',sid+':C:1','Original Label - 月へ')
+		return self.user_add_comment('alice',sid+':C:1','Original Label - 月へ')
 
-	def alice_add_label2(self):
+	def alice_add_comment2(self):
 		sid = self._user_sid('alice')
-		return self.user_add_label('alice',sid+':C:1','Replacement Label')
+		return self.user_add_comment('alice',sid+':C:1','Replacement Label')
 
-	def _user_chk_label(self,user,addr,label):
+	def _user_chk_comment(self,user,addr,comment):
 		t = self.spawn('mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
 		ret = strip_ansi_escapes(t.expect_getend(addr)).strip().split(None,1)[1]
-		cmp_or_die(ret[:len(label)],label)
+		cmp_or_die(ret[:len(comment)],comment)
 		return t
 
-	def alice_add_label_coinaddr(self):
+	def alice_add_comment_coinaddr(self):
 		mmid = self._user_sid('alice') + (':S:1',':L:1')[self.proto.coin=='BCH']
 		t = self.spawn('mmgen-tool',['--alice','listaddress',mmid],no_msg=True)
 		addr = [i for i in strip_ansi_escapes(t.read()).splitlines() if i.startswith(mmid)][0].split()[1]
-		return self.user_add_label('alice',addr,'Label added using coin address of MMGen address')
+		return self.user_add_comment('alice',addr,'Label added using coin address of MMGen address')
 
-	def alice_chk_label_coinaddr(self):
+	def alice_chk_comment_coinaddr(self):
 		mmid = self._user_sid('alice') + (':S:1',':L:1')[self.proto.coin=='BCH']
-		return self._user_chk_label('alice',mmid,'Label added using coin address of MMGen address')
+		return self._user_chk_comment('alice',mmid,'Label added using coin address of MMGen address')
 
-	def alice_add_label_badaddr(self,addr,reply):
+	def alice_add_comment_badaddr(self,addr,reply):
 		if os.getenv('PYTHONOPTIMIZE'):
 			omsg(yellow(f'PYTHONOPTIMIZE set, skipping test {self.test_name!r}'))
 			return 'skip'
@@ -1155,53 +1155,53 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect(reply,regex=True)
 		return t
 
-	def alice_add_label_badaddr1(self):
-		return self.alice_add_label_badaddr( rt_pw,'Invalid coin address for this chain: ')
+	def alice_add_comment_badaddr1(self):
+		return self.alice_add_comment_badaddr( rt_pw,'Invalid coin address for this chain: ')
 
-	def alice_add_label_badaddr2(self):
+	def alice_add_comment_badaddr2(self):
 		addr = init_proto(self.proto.coin,network='mainnet').pubhash2addr(bytes(20),False) # mainnet zero address
-		return self.alice_add_label_badaddr( addr, f'Invalid coin address for this chain: {addr}' )
+		return self.alice_add_comment_badaddr( addr, f'Invalid coin address for this chain: {addr}' )
 
-	def alice_add_label_badaddr3(self):
+	def alice_add_comment_badaddr3(self):
 		addr = self._user_sid('alice') + ':C:123'
-		return self.alice_add_label_badaddr( addr, f'MMGen address {addr!r} not found in tracking wallet' )
+		return self.alice_add_comment_badaddr( addr, f'MMGen address {addr!r} not found in tracking wallet' )
 
-	def alice_add_label_badaddr4(self):
+	def alice_add_comment_badaddr4(self):
 		addr = self.proto.pubhash2addr(bytes(20),False) # regtest (testnet) zero address
-		return self.alice_add_label_badaddr( addr, f'Address {addr!r} not found in tracking wallet' )
+		return self.alice_add_comment_badaddr( addr, f'Address {addr!r} not found in tracking wallet' )
 
-	def alice_remove_label1(self):
+	def alice_remove_comment1(self):
 		sid = self._user_sid('alice')
 		mmid = sid + (':S:3',':L:3')[self.proto.coin=='BCH']
-		return self.user_remove_label('alice',mmid)
+		return self.user_remove_comment('alice',mmid)
 
-	def alice_chk_label1(self):
+	def alice_chk_comment1(self):
 		sid = self._user_sid('alice')
-		return self._user_chk_label('alice',sid+':C:1','Original Label - 月へ')
+		return self._user_chk_comment('alice',sid+':C:1','Original Label - 月へ')
 
-	def alice_chk_label2(self):
+	def alice_chk_comment2(self):
 		sid = self._user_sid('alice')
-		return self._user_chk_label('alice',sid+':C:1','Replacement Label')
+		return self._user_chk_comment('alice',sid+':C:1','Replacement Label')
 
-	def alice_edit_label1(self): return self.user_edit_label('alice','4',tw_label_lat_cyr_gr)
-	def alice_edit_label2(self): return self.user_edit_label('alice','3',tw_label_zh)
+	def alice_edit_comment1(self): return self.user_edit_comment('alice','4',tw_comment_lat_cyr_gr)
+	def alice_edit_comment2(self): return self.user_edit_comment('alice','3',tw_comment_zh)
 
-	def alice_chk_label3(self):
-		sid = self._user_sid('alice')
-		mmid = sid + (':S:3',':L:3')[self.proto.coin=='BCH']
-		return self._user_chk_label('alice',mmid,tw_label_lat_cyr_gr)
-
-	def alice_chk_label4(self):
+	def alice_chk_comment3(self):
 		sid = self._user_sid('alice')
 		mmid = sid + (':S:3',':L:3')[self.proto.coin=='BCH']
-		return self._user_chk_label('alice',mmid,'-')
+		return self._user_chk_comment('alice',mmid,tw_comment_lat_cyr_gr)
 
-	def user_edit_label(self,user,output,label):
+	def alice_chk_comment4(self):
+		sid = self._user_sid('alice')
+		mmid = sid + (':S:3',':L:3')[self.proto.coin=='BCH']
+		return self._user_chk_comment('alice',mmid,'-')
+
+	def user_edit_comment(self,user,output,comment):
 		t = self.spawn('mmgen-txcreate',['-B','--'+user,'-i'])
 		t.expect(r'add \[l\]abel:.','M',regex=True)
 		t.expect(r'add \[l\]abel:.','l',regex=True)
 		t.expect(r"Enter unspent.*return to main menu\):.",output+'\n',regex=True)
-		t.expect(r"Enter label text.*return to main menu\):.",label+'\n',regex=True)
+		t.expect(r"Enter label text.*return to main menu\):.",comment+'\n',regex=True)
 		t.expect(r'\[q\]uit view, .*?:.','q',regex=True)
 		return t
 

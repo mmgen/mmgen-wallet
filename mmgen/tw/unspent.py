@@ -44,7 +44,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		No spendable outputs found!  Import addresses with balances into your
 		watch-only wallet using 'mmgen-addrimport' and then re-run this program.
 	"""
-	update_params_on_age_toggle = False
+	update_widths_on_age_toggle = False
 	detail_display_separator = '\n'
 	print_output_types = ('detail',)
 
@@ -53,7 +53,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		vout         = ListItemAttr(int,typeconv=False)
 		amt          = ImmutableAttr(None)
 		amt2         = ListItemAttr(None) # the ETH balance for token account
-		label        = ListItemAttr(TwComment,reassign_ok=True)
+		comment      = ListItemAttr(TwComment,reassign_ok=True)
 		twmmid       = ImmutableAttr(TwMMGenID,include_proto=True)
 		addr         = ImmutableAttr(CoinAddr,include_proto=True)
 		confs        = ImmutableAttr(int,typeconv=False)
@@ -94,11 +94,11 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			l = get_tw_label(self.proto,o[lbl_id])
 			if l:
 				o.update({
-					'twmmid': l.mmid,
-					'label':  l.comment or '',
-					'amt':    self.proto.coin_amt(o['amount']),
-					'addr':   CoinAddr(self.proto,o['address']),
-					'confs':  o['confirmations']
+					'twmmid':  l.mmid,
+					'comment': l.comment or '',
+					'amt':     self.proto.coin_amt(o['amount']),
+					'addr':    CoinAddr(self.proto,o['address']),
+					'confs':   o['confirmations']
 				})
 				yield self.MMGenTwUnspentOutput(
 					self.proto,
@@ -114,20 +114,20 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		# allow for 7-digit confirmation nums
 		col1_w = max(3,len(str(len(data)))+1) # num + ')'
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in data) or 12 # DEADBEEF:S:1
-		max_acct_w = max(i.label.screen_width for i in data) + mmid_w + 1
+		max_acct_w = max(i.comment.screen_width for i in data) + mmid_w + 1
 		max_btcaddr_w = max(len(i.addr) for i in data)
 		min_addr_w = self.cols - self.col_adj
 		addr_w = min(max_btcaddr_w + (0,1+max_acct_w)[self.show_mmid],min_addr_w)
 		acct_w = min(max_acct_w, max(24,addr_w-10))
 		btaddr_w = addr_w - acct_w - 1
-		label_w = acct_w - mmid_w - 1
+		comment_w = acct_w - mmid_w - 1
 		tx_w = min(self.txid_w,self.cols-addr_w-29-col1_w) # min=6 TODO
 		txdots = ('','..')[tx_w < self.txid_w]
 
-		self.column_params = namedtuple(
-			'column_params',
-			['col1_w','mmid_w','addr_w','btaddr_w','label_w','tx_w','txdots']
-			)(col1_w,  mmid_w,  addr_w,  btaddr_w,  label_w,  tx_w,  txdots)
+		self.column_widths = namedtuple(
+			'column_widths',
+			['col1_w','mmid_w','addr_w','btaddr_w','comment_w','tx_w','txdots']
+			)(col1_w,  mmid_w,  addr_w,  btaddr_w,  comment_w,  tx_w,  txdots)
 
 	def gen_squeezed_display(self,c,color):
 		fs     = self.squeezed_fs_fs.format(     cw=c.col1_w, tw=c.tx_w )
@@ -157,7 +157,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 					i.addr.fmt(width=c.btaddr_w,color=color)
 				),
 					mmid_disp,
-					(' ' + i.label.fmt(width=c.label_w,color=color)) if c.label_w > 0 else ''
+					(' ' + i.comment.fmt(width=c.comment_w,color=color)) if c.comment_w > 0 else ''
 				)
 			else:
 				addr_out = (
@@ -199,7 +199,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 			D  = 'Date',
 			l  = 'Label' )
 
-		max_lbl_len = max([len(i.label) for i in self.data if i.label] or [2])
+		max_comment_len = max([len(i.comment) for i in self.data if i.comment] or [2])
 
 		for n,i in enumerate(self.data):
 			yield fs.format(
@@ -219,12 +219,12 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 				c  = i.confs,
 				b  = self.rpc.blockcount - (i.confs - 1),
 				D  = self.age_disp(i,'date_time'),
-				l  = i.label.hl(color=color) if i.label else
+				l  = i.comment.hl(color=color) if i.comment else
 					TwComment.fmtc(
 						s        = '',
 						color    = color,
 						nullrepl = '-',
-						width    = max_lbl_len )
+						width    = max_comment_len )
 				).rstrip()
 
 	def display_total(self):
@@ -270,37 +270,37 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 				await asyncio.sleep(3)
 				uo.oneshot_msg = red('Address could not be removed\n\n')
 
-		async def a_lbl_add(self,uo,idx):
+		async def a_comment_add(self,uo,idx):
 
-			async def do_lbl_add(lbl):
+			async def do_comment_add(comment):
 				e = uo.data[idx-1]
-				if await uo.wallet.add_label( e.twmmid, lbl, coinaddr=e.addr ):
+				if await uo.wallet.add_comment( e.twmmid, comment, coinaddr=e.addr ):
 					await uo.get_data()
 					uo.oneshot_msg = yellow('Label {a} {b}{c}\n\n'.format(
-						a = 'to' if cur_lbl and lbl else 'added to' if lbl else 'removed from',
+						a = 'to' if cur_comment and comment else 'added to' if comment else 'removed from',
 						b = desc,
-						c = ' edited' if cur_lbl and lbl else '' ))
+						c = ' edited' if cur_comment and comment else '' ))
 				else:
 					await asyncio.sleep(3)
 					uo.oneshot_msg = red('Label could not be {}\n\n'.format(
-						'edited' if cur_lbl and lbl else
-						'added' if lbl else
+						'edited' if cur_comment and comment else
+						'added' if comment else
 						'removed' ))
 
 			desc = f'{uo.item_desc} #{idx}'
-			cur_lbl = uo.data[idx-1].label
-			msg('Current label: {}'.format(cur_lbl.hl() if cur_lbl else '(none)'))
+			cur_comment = uo.data[idx-1].comment
+			msg('Current label: {}'.format(cur_comment.hl() if cur_comment else '(none)'))
 
 			from ..ui import line_input
 			res = line_input(
 				"Enter label text (or ENTER to return to main menu): ",
-				insert_txt = cur_lbl )
+				insert_txt = cur_comment )
 
-			if res == cur_lbl:
+			if res == cur_comment:
 				return None
 			elif res == '':
 				from ..ui import keypress_confirm
-				return (await do_lbl_add('')) if keypress_confirm(
+				return (await do_comment_add('')) if keypress_confirm(
 					f'Removing label for {desc}.  Is this what you want?') else 'redo'
 			else:
-				return (await do_lbl_add(res)) if get_obj(TwComment,s=res) else 'redo'
+				return (await do_comment_add(res)) if get_obj(TwComment,s=res) else 'redo'

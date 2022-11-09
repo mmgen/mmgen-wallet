@@ -339,9 +339,11 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(f'Fake transaction wallet data written to file {self.unspent_data_file!r}\n')
 
-	def _create_fake_unspent_entry(self,coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
-		if 'S' not in self.proto.mmtypes: segwit = False
-		if lbl: lbl = ' ' + lbl
+	def _create_fake_unspent_entry(self,coinaddr,al_id=None,idx=None,comment=None,non_mmgen=False,segwit=False):
+		if 'S' not in self.proto.mmtypes:
+			segwit = False
+		if comment:
+			comment = ' ' + comment
 		k = coinaddr.addr_fmt
 		if not segwit and k == 'p2sh': k = 'p2pkh'
 		s_beg,s_end = { 'p2pkh':  ('76a914','88ac'),
@@ -351,7 +353,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		ret = {
 			self.lbl_id: (
 				f'{self.proto.base_coin.lower()}:{coinaddr}' if non_mmgen
-				else f'{al_id}:{idx}{lbl}' ),
+				else f'{al_id}:{idx}{comment}' ),
 			'vout': int(getrandnum(4) % 8),
 			'txid': getrandhex(32),
 			'amount': self.proto.coin_amt('{}.{}'.format(
@@ -370,10 +372,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		for d in tx_data.values():
 			al = adata.addrlist(al_id=d['al_id'])
 			for n,(idx,coinaddr) in enumerate(al.addrpairs()):
-				lbl = get_label(do_shuffle=not g.test_suite_deterministic)
-				out.append(self._create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
+				comment = get_comment(do_shuffle=not g.test_suite_deterministic)
+				out.append(self._create_fake_unspent_entry(coinaddr,d['al_id'],idx,comment,segwit=d['segwit']))
 				if n == 0:  # create a duplicate address. This means addrs_per_wallet += 1
-					out.append(self._create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
+					out.append(self._create_fake_unspent_entry(coinaddr,d['al_id'],idx,comment,segwit=d['segwit']))
 
 		if non_mmgen_input:
 			from mmgen.key import PrivKey
@@ -526,7 +528,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		self.txcreate_ui_common(t,
 			menu        = (['M'],['M','D','D','D','D','m','g'])[self.test_name=='txcreate'],
 			inputs      = ' '.join(map(str,outputs_list)),
-			add_comment = ('',tx_label_lat_cyr_gr)[do_label],
+			add_comment = ('',tx_comment_lat_cyr_gr)[do_label],
 			view        = view,
 			tweaks      = tweaks )
 

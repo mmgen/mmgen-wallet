@@ -40,8 +40,8 @@ class BitcoinTrackingWallet(TrackingWallet):
 		raise NotImplementedError(f'address removal not implemented for coin {self.proto.coin}')
 
 	@write_mode
-	async def set_label(self,coinaddr,lbl):
-		args = self.rpc.daemon.set_label_args( self.rpc, coinaddr, lbl )
+	async def set_comment(self,coinaddr,lbl):
+		args = self.rpc.daemon.set_comment_args( self.rpc, coinaddr, lbl )
 		try:
 			return await self.rpc.call(*args)
 		except Exception as e:

@@ -84,7 +84,7 @@ class New(Base):
 			if e.addr and e.addr in d:
 				e.mmid,f = d[e.addr]
 				if f:
-					e.label = f
+					e.comment = f
 
 	def check_dup_addrs(self,io_str):
 		assert io_str in ('inputs','outputs')

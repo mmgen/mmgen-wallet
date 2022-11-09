@@ -213,11 +213,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('addrimport_burn_addr', 'importing burn address'),
 		('bal5',                 f'the {coin} balance'),
 
-		('add_label1',           'adding a UTF-8 label (zh)'),
-		('chk_label1',           'checking the label'),
-		('add_label2',           'adding a UTF-8 label (lat+cyr+gr)'),
-		('chk_label2',           'checking the label'),
-		('remove_label',         'removing the label'),
+		('add_comment1',         'adding a UTF-8 label (zh)'),
+		('chk_comment1',         'checking the label'),
+		('add_comment2',         'adding a UTF-8 label (lat+cyr+gr)'),
+		('chk_comment2',         'checking the label'),
+		('remove_comment',       'removing the label'),
 	),
 	'contract': (
 		'creating and deploying ERC20 tokens',
@@ -346,11 +346,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	),
 	'label': (
 		'creating, editing and removing labels',
-		('edit_label1',       f'adding label to addr #{del_addrs[0]} in {coin} tracking wallet (zh)'),
-		('edit_label2',       f'editing label for addr #{del_addrs[0]} in {coin} tracking wallet (zh)'),
-		('edit_label3',       f'adding label to addr #{del_addrs[1]} in {coin} tracking wallet (lat+cyr+gr)'),
-		('edit_label4',       f'removing label from addr #{del_addrs[0]} in {coin} tracking wallet'),
-		('token_edit_label1', f'adding label to addr #{del_addrs[0]} in {coin} token tracking wallet'),
+		('edit_comment1',       f'adding label to addr #{del_addrs[0]} in {coin} tracking wallet (zh)'),
+		('edit_comment2',       f'editing label for addr #{del_addrs[0]} in {coin} tracking wallet (zh)'),
+		('edit_comment3',       f'adding label to addr #{del_addrs[1]} in {coin} tracking wallet (lat+cyr+gr)'),
+		('edit_comment4',       f'removing label from addr #{del_addrs[0]} in {coin} tracking wallet'),
+		('token_edit_comment1', f'adding label to addr #{del_addrs[0]} in {coin} token tracking wallet'),
 	),
 	'remove': (
 		'removing addresses from tracking wallet',
@@ -599,7 +599,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			fee_res           = fee_res,
 			fee_desc          = fee_desc,
 			eth_fee_res       = eth_fee_res,
-			add_comment       = tx_label_jp,
+			add_comment       = tx_comment_jp,
 			tweaks            = tweaks )
 		if not no_read:
 			t.read()
@@ -850,22 +850,22 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		assert Decimal(bal1) + Decimal(bal2) == Decimal(total)
 		return t
 
-	def add_label(self,lbl,addr='98831F3A:E:3'):
-		t = self.spawn('mmgen-tool', self.eth_args + ['add_label',addr,lbl])
+	def add_comment(self,comment,addr='98831F3A:E:3'):
+		t = self.spawn('mmgen-tool', self.eth_args + ['add_label',addr,comment])
 		t.expect('Added label.*in tracking wallet',regex=True)
 		return t
 
-	def chk_label(self,lbl_pat,addr='98831F3A:E:3'):
+	def chk_comment(self,comment_pat,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['listaddresses','all_labels=1'])
-		t.expect(fr'{addr}\b.*\S{{30}}\b.*{lbl_pat}\b',regex=True)
+		t.expect(fr'{addr}\b.*\S{{30}}\b.*{comment_pat}\b',regex=True)
 		return t
 
-	def add_label1(self): return self.add_label(lbl=tw_label_zh)
-	def chk_label1(self): return self.chk_label(lbl_pat=tw_label_zh)
-	def add_label2(self): return self.add_label(lbl=tw_label_lat_cyr_gr)
-	def chk_label2(self): return self.chk_label(lbl_pat=tw_label_lat_cyr_gr)
+	def add_comment1(self): return self.add_comment(comment=tw_comment_zh)
+	def chk_comment1(self): return self.chk_comment(comment_pat=tw_comment_zh)
+	def add_comment2(self): return self.add_comment(comment=tw_comment_lat_cyr_gr)
+	def chk_comment2(self): return self.chk_comment(comment_pat=tw_comment_lat_cyr_gr)
 
-	def remove_label(self,addr='98831F3A:E:3'):
+	def remove_comment(self,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['remove_label',addr])
 		t.expect('Removed label.*in tracking wallet',regex=True)
 		return t
@@ -1070,7 +1070,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			menu              = [],
 			inputs            = inputs,
 			input_sels_prompt = 'to spend from',
-			add_comment       = tx_label_lat_cyr_gr )
+			add_comment       = tx_comment_lat_cyr_gr )
 	def token_txsign(self,ext='',token=''):
 		return self.txsign(ni=True,ext=ext,add_args=['--token='+token])
 	def token_txsend(self,ext='',token=''):
@@ -1257,17 +1257,17 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_twview3(self):
 		return self.twview(args=['--token=mm1'],tool_args=['wide=1','sort=age'])
 
-	def edit_label(self,out_num,args=[],action='l',label_text=None,changed=False,pexpect_spawn=None):
+	def edit_comment(self,out_num,args=[],action='l',comment_text=None,changed=False,pexpect_spawn=None):
 		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B','-i'],pexpect_spawn=pexpect_spawn)
 		p1,p2 = ('efresh balance:\b','return to main menu): ')
-		p3,r3 = (p2,label_text+'\n') if label_text is not None else ('(y/N): ','y')
-		p4,r4 = (('(y/N): ',),('y',)) if label_text == Ctrl_U else ((),())
+		p3,r3 = (p2,comment_text+'\n') if comment_text is not None else ('(y/N): ','y')
+		p4,r4 = (('(y/N): ',),('y',)) if comment_text == Ctrl_U else ((),())
 		for p,r in zip((p1,p1,p2,p3)+p4,('M',action,out_num+'\n',r3)+r4):
 			t.expect(p,r)
 		m = (
 			'Label to account #{} edited' if changed else
 			'Account #{} removed' if action == 'D' else
-			'Label added to account #{}' if label_text and label_text != Ctrl_U else
+			'Label added to account #{}' if comment_text and comment_text != Ctrl_U else
 			'Label removed from account #{}' )
 		t.expect(m.format(out_num))
 		for p,r in zip((p1,p1),('M','q')):
@@ -1275,29 +1275,29 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.expect('Total unspent:')
 		return t
 
-	def edit_label1(self):
-		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[:3])
-	def edit_label2(self):
+	def edit_comment1(self):
+		return self.edit_comment(out_num=del_addrs[0],comment_text=tw_comment_zh[:3])
+	def edit_comment2(self):
 		spawn = False if g.platform == 'win' else True
-		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh[3:],changed=True,pexpect_spawn=spawn)
-	def edit_label3(self):
-		return self.edit_label(out_num=del_addrs[1],label_text=tw_label_lat_cyr_gr)
-	def edit_label4(self):
+		return self.edit_comment(out_num=del_addrs[0],comment_text=tw_comment_zh[3:],changed=True,pexpect_spawn=spawn)
+	def edit_comment3(self):
+		return self.edit_comment(out_num=del_addrs[1],comment_text=tw_comment_lat_cyr_gr)
+	def edit_comment4(self):
 		if self.skip_for_win():
 			return 'skip'
-		return self.edit_label(out_num=del_addrs[0],label_text=Ctrl_U,pexpect_spawn=True)
+		return self.edit_comment(out_num=del_addrs[0],comment_text=Ctrl_U,pexpect_spawn=True)
 
-	def token_edit_label1(self):
-		return self.edit_label(out_num='1',label_text='Token label #1',args=['--token=mm1'])
+	def token_edit_comment1(self):
+		return self.edit_comment(out_num='1',comment_text='Token label #1',args=['--token=mm1'])
 
 	def remove_addr1(self):
-		return self.edit_label(out_num=del_addrs[0],action='D')
+		return self.edit_comment(out_num=del_addrs[0],action='D')
 	def remove_addr2(self):
-		return self.edit_label(out_num=del_addrs[1],action='D')
+		return self.edit_comment(out_num=del_addrs[1],action='D')
 	def token_remove_addr1(self):
-		return self.edit_label(out_num=del_addrs[0],args=['--token=mm1'],action='D')
+		return self.edit_comment(out_num=del_addrs[0],args=['--token=mm1'],action='D')
 	def token_remove_addr2(self):
-		return self.edit_label(out_num=del_addrs[1],args=['--token=mm1'],action='D')
+		return self.edit_comment(out_num=del_addrs[1],args=['--token=mm1'],action='D')
 
 	def twexport_noamt(self):
 		return self.twexport(add_args=['include_amts=0'])

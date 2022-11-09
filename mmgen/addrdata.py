@@ -91,7 +91,7 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 				al_id = AddrListID(SeedID(sid=obj.sid),self.proto.addr_type(obj.mmtype))
 				if al_id not in out:
 					out[al_id] = []
-				out[al_id].append(AddrListEntry(self.proto,idx=obj.idx,addr=addr_array[0],label=l.comment))
+				out[al_id].append(AddrListEntry(self.proto,idx=obj.idx,addr=addr_array[0],comment=l.comment))
 				i += 1
 
 		vmsg(f'{i} {g.proj_name} addresses found, {len(twd)} accounts total')

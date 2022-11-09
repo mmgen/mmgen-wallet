@@ -28,7 +28,7 @@ tests = {
 	'AddrListEntry': atd({
 		'addr':          (0b001, CoinAddr),
 		'idx':           (0b001, AddrIdx),
-		'label':         (0b101, TwComment),
+		'comment':       (0b101, TwComment),
 		'sec':           (0b001, PrivKey),
 #		'viewkey':       (0b001, ViewKey),        # TODO
 #		'wallet_passwd': (0b001, WalletPassword), # TODO
@@ -39,7 +39,7 @@ tests = {
 	'PasswordListEntry': atd({
 		'passwd': (0b001, str),
 		'idx':    (0b001, AddrIdx),
-		'label':  (0b101, TwComment),
+		'comment':(0b101, TwComment),
 		'sec':    (0b001, PrivKey),
 		},
 		(proto,),
@@ -115,7 +115,7 @@ tests = {
 		'vout':         (0b001, int),
 		'amt':          (0b001, BTCAmt),
 		'amt2':         (0b001, BTCAmt),
-		'label':        (0b101, TwComment),
+		'comment':      (0b101, TwComment),
 		'twmmid':       (0b001, TwMMGenID),
 		'addr':         (0b001, CoinAddr),
 		'confs':        (0b001, int),
@@ -135,7 +135,7 @@ tests = {
 	'Base.Input': atd({
 		'vout':         (0b001, int),
 		'amt':          (0b001, BTCAmt),
-		'label':        (0b101, TwComment),
+		'comment':      (0b101, TwComment),
 		'mmid':         (0b001, MMGenID),
 		'addr':         (0b001, CoinAddr),
 		'confs':        (0b001, int),
@@ -150,7 +150,7 @@ tests = {
 	'Base.Output': atd({
 		'vout':         (0b001, int),
 		'amt':          (0b001, BTCAmt),
-		'label':        (0b101, TwComment),
+		'comment':      (0b101, TwComment),
 		'mmid':         (0b001, MMGenID),
 		'addr':         (0b001, CoinAddr),
 		'confs':        (0b001, int),

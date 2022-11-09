@@ -67,8 +67,8 @@ class TxInfo:
 			enl = ('\n','')[bool(terse)]
 			yield enl
 
-			if tx.label:
-				yield f'Comment: {tx.label.hl()}\n{enl}'
+			if tx.comment:
+				yield f'Comment: {tx.comment.hl()}\n{enl}'
 
 			yield self.format_body(blockcount,nonmm_str,max_mmwid,enl,terse=terse,sort=sort)
 

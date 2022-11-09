@@ -35,10 +35,10 @@ from .addrlist import (
 )
 
 class PasswordListEntry(AddrListEntryBase):
-	passwd = ListItemAttr(str,typeconv=False) # TODO: create Password type
-	idx    = ImmutableAttr(AddrIdx)
-	label  = ListItemAttr(TwComment,reassign_ok=True)
-	sec    = ListItemAttr(PrivKey,include_proto=True)
+	passwd  = ListItemAttr(str,typeconv=False) # TODO: create Password type
+	idx     = ImmutableAttr(AddrIdx)
+	comment = ListItemAttr(TwComment,reassign_ok=True)
+	sec     = ListItemAttr(PrivKey,include_proto=True)
 
 class PasswordList(AddrList):
 	entry_type  = PasswordListEntry

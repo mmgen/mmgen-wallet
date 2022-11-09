@@ -26,8 +26,8 @@ class BitcoinTwTransaction(BitcoinTwCommon):
 
 	def __init__(self,parent,proto,rpc,
 			idx,          # unique numeric identifier of this transaction in listing
-			unspent_info, # addrs in wallet with balances: { 'mmid': {'addr','label','amt'} }
-			mm_map,       # all addrs in wallet: ['addr', ['twmmid','label']]
+			unspent_info, # addrs in wallet with balances: { 'mmid': {'addr','comment','amt'} }
+			mm_map,       # all addrs in wallet: ['addr', ['twmmid','comment']]
 			tx,           # the decoded transaction data
 			wallet_vouts, # list of ints - wallet-related vouts
 			prevouts,     # list of (txid,vout) pairs
@@ -88,12 +88,12 @@ class BitcoinTwTransaction(BitcoinTwCommon):
 		def total(data):
 			return self.proto.coin_amt( sum(d.data['value'] for d in data) )
 
-		def get_best_label():
+		def get_best_comment():
 			"""
-			find the most relevant label for tabular (squeezed) display
+			find the most relevant comment for tabular (squeezed) display
 			"""
 			def vouts_labels(src):
-				return [ d.twlabel.label for d in self.vouts_info[src] if d.twlabel and d.twlabel.label ]
+				return [ d.twlabel.comment for d in self.vouts_info[src] if d.twlabel and d.twlabel.comment ]
 			ret = vouts_labels('outputs') or vouts_labels('inputs')
 			return ret[0] if ret else TwComment('')
 
@@ -112,7 +112,7 @@ class BitcoinTwTransaction(BitcoinTwCommon):
 		self.fee = self.inputs_total - self.outputs_total
 		self.nOutputs = len(self.tx['decoded']['vout'])
 		self.confirmations = self.tx['confirmations']
-		self.label = get_best_label()
+		self.comment = get_best_comment()
 		self.vsize = self.tx['decoded'].get('vsize') or self.tx['decoded']['size']
 		self.txid = CoinTxID(self.tx['txid'])
 		# Though 'blocktime' is flagged as an “optional” field, it’s always present for transactions
@@ -172,7 +172,7 @@ class BitcoinTwTransaction(BitcoinTwCommon):
 							color = color,
 							color_override = co ),
 						A = self.proto.coin_amt( e.data['value'] ).fmt(color=color),
-						l = e.twlabel.label.hl(color=color)
+						l = e.twlabel.comment.hl(color=color)
 					).rstrip()
 
 		return f'\n{indent}'.join( gen_output() ).strip()
@@ -285,7 +285,7 @@ Actions: [q]uit, r[e]draw:
 					l = None
 				o.update({
 					'twmmid': l.mmid if l else None,
-					'label': (l.comment or '') if l else None,
+					'comment': (l.comment or '') if l else None,
 				})
 				yield o
 
@@ -299,11 +299,11 @@ Actions: [q]uit, r[e]draw:
 				for d,fn_stem in data:
 					open(f'/tmp/{fn_stem}-{nw}.json','w').write(json.dumps(d,cls=json_encoder))
 
-		_mmp = namedtuple('mmap_datum',['twmmid','label'])
+		_mmp = namedtuple('mmap_datum',['twmmid','comment'])
 
 		mm_map = {
 			i['address']: (
-				_mmp( TwMMGenID(self.proto,i['twmmid']), TwComment(i['label']) )
+				_mmp( TwMMGenID(self.proto,i['twmmid']), TwComment(i['comment']) )
 					if i['twmmid'] else _mmp(None,None)
 			)
 			for i in data }

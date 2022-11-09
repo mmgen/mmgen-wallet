@@ -127,7 +127,7 @@ class EthereumTrackingWallet(TrackingWallet):
 			return None
 
 	@write_mode
-	async def set_label(self,coinaddr,lbl):
+	async def set_comment(self,coinaddr,lbl):
 		for addr,d in list(self.data_root.items()):
 			if addr == coinaddr:
 				d['comment'] = lbl.comment

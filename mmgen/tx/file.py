@@ -21,7 +21,7 @@ tx.file:  Transaction file operations for the MMGen suite
 """
 
 from ..common import *
-from ..obj import MMGenObject,HexStr,MMGenTxID,CoinTxID,MMGenTxLabel
+from ..obj import MMGenObject,HexStr,MMGenTxID,CoinTxID,MMGenTxComment
 
 class MMGenTxFile(MMGenObject):
 
@@ -48,6 +48,9 @@ class MMGenTxFile(MMGenObject):
 				assert len(d), f'no {desc}!'
 			for e in d:
 				e['amt'] = tx.proto.coin_amt(e['amt'])
+				if 'label' in e:
+					e['comment'] = e['label']
+					del e['label']
 			io,io_list = {
 				'inputs':  ( tx.Input, tx.InputList ),
 				'outputs': ( tx.Output, tx.OutputList ),
@@ -74,7 +77,7 @@ class MMGenTxFile(MMGenObject):
 
 			if len(tx_data) == 5:
 				# rough check: allow for 4-byte utf8 characters + base58 (4 * 11 / 8 = 6 (rounded up))
-				assert len(tx_data[-1]) < MMGenTxLabel.max_len*6,'invalid comment length'
+				assert len(tx_data[-1]) < MMGenTxComment.max_len*6,'invalid comment length'
 				c = tx_data.pop(-1)
 				if c != '-':
 					desc = 'encoded comment (not base58)'
@@ -82,7 +85,7 @@ class MMGenTxFile(MMGenObject):
 					comment = baseconv('b58').tobytes(c).decode()
 					assert comment != False,'invalid comment'
 					desc = 'comment'
-					tx.label = MMGenTxLabel(comment)
+					tx.comment = MMGenTxComment(comment)
 
 			desc = 'number of lines' # four required lines
 			( metadata, tx.serialized, inputs_data, outputs_data ) = tx_data
@@ -174,12 +177,12 @@ class MMGenTxFile(MMGenObject):
 			ascii([amt_to_str(e._asdict()) for e in tx.outputs])
 		]
 
-		if tx.label:
+		if tx.comment:
 			from ..baseconv import baseconv
-			lines.append(baseconv('b58').frombytes(tx.label.encode(),tostr=True))
+			lines.append(baseconv('b58').frombytes(tx.comment.encode(),tostr=True))
 
 		if tx.coin_txid:
-			if not tx.label:
+			if not tx.comment:
 				lines.append('-') # keep old tx files backwards compatible
 			lines.append(tx.coin_txid)
 

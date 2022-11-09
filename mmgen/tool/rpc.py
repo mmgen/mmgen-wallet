@@ -149,7 +149,7 @@ class tool_cmd(tool_cmd_base):
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
 		from ..tw.ctl import TrackingWallet
-		await (await TrackingWallet(self.proto,mode='w')).add_label( mmgen_or_coin_addr, label, on_fail='raise' )
+		await (await TrackingWallet(self.proto,mode='w')).add_comment( mmgen_or_coin_addr, label, on_fail='raise' )
 		return True
 
 	async def remove_label(self,mmgen_or_coin_addr:str):

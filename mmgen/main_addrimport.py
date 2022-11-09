@@ -169,7 +169,7 @@ async def main():
 			yield _d(
 				addr    = e.addr,
 				twmmid  = f'{al.al_id}:{e.idx}' if e.idx else f'{proto.base_coin.lower()}:{e.addr}',
-				comment = e.label )
+				comment = e.comment )
 
 	args_list = list(gen_args_list(al))
 

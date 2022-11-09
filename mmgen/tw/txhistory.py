@@ -32,7 +32,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 	show_total_amt = False
 	print_hdr_fs = '{a} (block #{b}, {c} UTC)\n{d}Sort order: {e}\n{f}\n'
 	age_fmts_interactive = ('confs','block','days','date','date_time')
-	update_params_on_age_toggle = True
+	update_widths_on_age_toggle = True
 	detail_display_separator = '\n\n'
 	print_output_types = ('squeezed','detail')
 
@@ -57,7 +57,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 			self.varcol_maxwidths = {
 				'addr1': max(len(d.vouts_disp('inputs',width=None,color=False)) for d in data),
 				'addr2': max(len(d.vouts_disp('outputs',width=None,color=False)) for d in data),
-				'lbl':   max(len(d.label) for d in data),
+				'comment': max(len(d.comment) for d in data),
 			}
 
 		# var cols: addr1 addr2 comment [txid]
@@ -72,7 +72,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 		minw = {
 			'addr1': 15,
 			'addr2': 15,
-			'lbl': len('Comment'),
+			'comment': len('Comment'),
 		}
 		if show_txid:
 			minw.update({'txid': 8})
@@ -94,8 +94,8 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 		for k in maxw:
 			freew[k] = min( total_freew - sum(freew[k2] for k2 in varcols-{k}), varw[k] )
 
-		self.column_params = namedtuple('column_params',
-			['col1','txid','addr1','amt','addr2','lbl'])(
+		self.column_widths = namedtuple('column_params',
+			['col1','txid','addr1','amt','addr2','comment'])(
 				col1_w,
 				min(
 					# max txid was reduced by txid_adj, so stretch to fill available space, if any
@@ -104,7 +104,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 				minw['addr1'] + freew['addr1'],
 				amt_w,
 				minw['addr2'] + freew['addr2'],
-				minw['lbl'] + freew['lbl'] )
+				minw['comment'] + freew['comment'] )
 
 	def gen_squeezed_display(self,cw,color):
 
@@ -149,7 +149,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 					a1 = d.vouts_disp( 'inputs', width=cw.addr1, color=color ),
 					A  = d.amt_disp(self.show_total_amt).fmt( prec=self.disp_prec, color=color ),
 					a2 = d.vouts_disp( 'outputs', width=cw.addr2, color=color ),
-					l  = d.label.fmt( width=cw.lbl, color=color ) ).rstrip()
+					l  = d.comment.fmt( width=cw.comment, color=color ) ).rstrip()
 
 	def gen_detail_display(self,color):
 

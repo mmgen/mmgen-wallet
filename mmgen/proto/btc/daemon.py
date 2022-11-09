@@ -109,7 +109,7 @@ class bitcoin_core_daemon(CoinDaemon):
 	def stop_cmd(self):
 		return self.cli_cmd('stop')
 
-	def set_label_args(self,rpc,coinaddr,lbl):
+	def set_comment_args(self,rpc,coinaddr,lbl):
 		if 'label_api' in rpc.caps:
 			return ('setlabel',coinaddr,lbl)
 		else:
@@ -136,7 +136,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	cfg_file_hdr = '# Bitcoin Cash Node config file\n'
 	nonstd_datadir = True
 
-	def set_label_args(self,rpc,coinaddr,lbl):
+	def set_comment_args(self,rpc,coinaddr,lbl):
 		# bitcoin-{abc,bchn} 'setlabel' RPC is broken, so use old 'importaddress' method to set label
 		# Broken behavior: new label is set OK, but old label gets attached to another address
 		return ('importaddress',coinaddr,lbl,False)

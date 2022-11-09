@@ -177,7 +177,7 @@ class TwCommon:
 			if self.has_age and self.age_fmt in self.age_fmts_date_dependent:
 				await self.set_dates(self.rpc,data)
 
-			if not getattr(self,'column_params',None):
+			if not getattr(self,'column_widths',None):
 				self.set_column_params()
 
 			if self.group and (self.sort_key in ('addr','txid','twmmid')):
@@ -194,7 +194,7 @@ class TwCommon:
 				+ '\nNetwork: {}'.format((nocolor,green)[color](
 					self.proto.coin + ' ' +
 					self.proto.chain_name.upper() ))
-				+ '\n' + '\n'.join(self.gen_squeezed_display(self.column_params,color=color))
+				+ '\n' + '\n'.join(self.gen_squeezed_display(self.column_widths,color=color))
 				+ '\n'
 			)
 
@@ -272,7 +272,7 @@ class TwCommon:
 		def d_days(self,parent):
 			af = parent.age_fmts_interactive
 			parent.age_fmt = af[(af.index(parent.age_fmt) + 1) % len(af)]
-			if parent.update_params_on_age_toggle:
+			if parent.update_widths_on_age_toggle:
 				parent.set_column_params()
 
 		def d_redraw(self,parent):

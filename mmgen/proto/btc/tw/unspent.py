@@ -19,7 +19,7 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 
 	class MMGenTwUnspentOutput(TwUnspentOutputs.MMGenTwUnspentOutput):
 		# required by gen_unspent(); setting valid_attrs explicitly is also more efficient
-		valid_attrs = {'txid','vout','amt','amt2','label','twmmid','addr','confs','date','scriptPubKey','skip'}
+		valid_attrs = {'txid','vout','amt','amt2','comment','twmmid','addr','confs','date','scriptPubKey','skip'}
 		invalid_attrs = {'proto'}
 
 	has_age = True
@@ -50,7 +50,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		'p':'a_print_detail',
 		'v':'a_view',
 		'w':'a_view_detail',
-		'l':'a_lbl_add' }
+		'l':'a_comment_add' }
 
 	col_adj = 38
 	squeezed_fs_fs     = ' {{n:{cw}}} {{t:{tw}}} {{v:2}} {{a}} {{A}} {{c:<}}'

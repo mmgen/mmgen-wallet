@@ -48,16 +48,16 @@ ref_dir = os.path.join('test','ref')
 dfl_words_file = os.path.join(ref_dir,'98831F3A.mmwords')
 dfl_bip39_file = os.path.join(ref_dir,'98831F3A.bip39')
 
-from mmgen.obj import MMGenTxLabel,TwComment
+from mmgen.obj import MMGenTxComment,TwComment
 
-tx_label_jp = text_jp
-tx_label_zh = text_zh
+tx_comment_jp = text_jp
+tx_comment_zh = text_zh
 
 lcg = ascii_cyr_gr if g.platform == 'win' else lat_cyr_gr # MSYS2 popen_spawn issue
-tx_label_lat_cyr_gr = lcg[:MMGenTxLabel.max_len] # 72 chars
+tx_comment_lat_cyr_gr = lcg[:MMGenTxComment.max_len] # 72 chars
 
-tw_label_zh         = text_zh[:TwComment.max_screen_width // 2]
-tw_label_lat_cyr_gr = lcg[:TwComment.max_screen_width] # 80 chars
+tw_comment_zh         = text_zh[:TwComment.max_screen_width // 2]
+tw_comment_lat_cyr_gr = lcg[:TwComment.max_screen_width] # 80 chars
 
 ref_bw_hash_preset = '1'
 ref_bw_file = 'wallet.mmbrain'
@@ -120,13 +120,13 @@ def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete
 	else:
 		return flist[0]
 
-def get_label(do_shuffle=False):
+def get_comment(do_shuffle=False):
 	labels = [
 		"Automotive",
 		"Travel expenses",
 		"Healthcare",
-		tx_label_jp[:40],
-		tx_label_zh[:40],
+		tx_comment_jp[:40],
+		tx_comment_zh[:40],
 		"Alice's allowance",
 		"Bob's bequest",
 		"House purchase",

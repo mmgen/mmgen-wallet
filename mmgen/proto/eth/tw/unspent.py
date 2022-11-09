@@ -27,7 +27,7 @@ from ....tw.unspent import TwUnspentOutputs
 class EthereumTwUnspentOutputs(TwUnspentOutputs):
 
 	class MMGenTwUnspentOutput(TwUnspentOutputs.MMGenTwUnspentOutput):
-		valid_attrs = {'txid','vout','amt','amt2','label','twmmid','addr','confs','skip'}
+		valid_attrs = {'txid','vout','amt','amt2','comment','twmmid','addr','confs','skip'}
 		invalid_attrs = {'proto'}
 
 	has_age = False
@@ -54,7 +54,7 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		'p':'a_print_detail',
 		'v':'a_view',
 		'w':'a_view_detail',
-		'l':'a_lbl_add',
+		'l':'a_comment_add',
 		'D':'a_addr_delete',
 		'R':'a_balance_refresh' }
 

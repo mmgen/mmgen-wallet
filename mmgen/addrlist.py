@@ -71,7 +71,7 @@ class AddrListEntry(AddrListEntryBase):
 	addr          = ListItemAttr(CoinAddr,include_proto=True)
 	addr_p2pkh    = ListItemAttr(CoinAddr,include_proto=True)
 	idx           = ListItemAttr(AddrIdx) # not present in flat addrlists
-	label         = ListItemAttr(TwComment,reassign_ok=True)
+	comment       = ListItemAttr(TwComment,reassign_ok=True)
 	sec           = ListItemAttr(PrivKey,include_proto=True)
 	viewkey       = ListItemAttr(ViewKey,include_proto=True)
 	wallet_passwd = ListItemAttr(WalletPassword)
@@ -306,7 +306,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		return [e.addr for e in self.data]
 
 	def comments(self):
-		return [e.label for e in self.data]
+		return [e.comment for e in self.data]
 
 	def entry(self,idx):
 		for e in self.data:
@@ -321,19 +321,19 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 	def comment(self,idx):
 		for e in self.data:
 			if idx == e.idx:
-				return e.label
+				return e.comment
 
 	def set_comment(self,idx,comment):
 		for e in self.data:
 			if idx == e.idx:
-				e.label = comment
+				e.comment = comment
 
 	def make_reverse_dict_addrlist(self,coinaddrs):
 		d = MMGenDict()
 		b = coinaddrs
 		for e in self.data:
 			try:
-				d[b[b.index(e.addr)]] = ( MMGenID(self.proto, f'{self.al_id}:{e.idx}'), e.label )
+				d[b[b.index(e.addr)]] = ( MMGenID(self.proto, f'{self.al_id}:{e.idx}'), e.comment )
 			except ValueError:
 				pass
 		return d

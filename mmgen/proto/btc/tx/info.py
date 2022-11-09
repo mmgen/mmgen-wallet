@@ -94,8 +94,8 @@ class TxInfo(TxInfo):
 							yield ('',  'address:', f'{e.addr.hl()} {mmid_fmt}')
 						else:
 							yield (n+1, 'address:', f'{e.addr.hl()} {mmid_fmt}')
-						if e.label:
-							yield ('',  'comment:', e.label.hl())
+						if e.comment:
+							yield ('',  'comment:', e.comment.hl())
 						yield     ('',  'amount:',  f'{e.amt.hl()} {tx.dcoin}')
 						if is_input and blockcount:
 							yield ('',  'confirmations:', f'{confs} (around {days} days)')

@@ -381,7 +381,7 @@ class TwComment(MMGenLabel):
 	desc = 'tracking wallet comment'
 	exc = 'BadTwComment'
 
-class MMGenTxLabel(MMGenLabel):
+class MMGenTxComment(MMGenLabel):
 	max_len = 72
 	desc = 'transaction label'
 
