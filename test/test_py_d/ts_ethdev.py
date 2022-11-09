@@ -858,13 +858,13 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def chk_comment(self,comment_pat,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['listaddresses','all_labels=1'])
-		t.expect(fr'{addr}\b.*\S{{30}}\b.*{comment_pat}\b',regex=True)
+		t.expect(fr'{addr}\b.*{comment_pat}',regex=True)
 		return t
 
 	def add_comment1(self): return self.add_comment(comment=tw_comment_zh)
-	def chk_comment1(self): return self.chk_comment(comment_pat=tw_comment_zh)
+	def chk_comment1(self): return self.chk_comment(comment_pat=tw_comment_zh[:3])
 	def add_comment2(self): return self.add_comment(comment=tw_comment_lat_cyr_gr)
-	def chk_comment2(self): return self.chk_comment(comment_pat=tw_comment_lat_cyr_gr)
+	def chk_comment2(self): return self.chk_comment(comment_pat=tw_comment_lat_cyr_gr[:3])
 
 	def remove_comment(self,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['remove_label',addr])
@@ -1161,18 +1161,18 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def listaddresses2(self):
 		return self.listaddresses(tool_args=['minconf=999999999'])
 	def listaddresses3(self):
-		return self.listaddresses(tool_args=['sort=age'])
+		return self.listaddresses(tool_args=['sort=amt','reverse=1'])
 	def listaddresses4(self):
-		return self.listaddresses(tool_args=['sort=age','showempty=1'])
+		return self.listaddresses(tool_args=['sort=age','showempty=0'])
 
 	def token_listaddresses1(self):
 		return self.listaddresses(args=['--token=mm1'])
 	def token_listaddresses2(self):
 		return self.listaddresses(args=['--token=mm1'],tool_args=['showempty=1'])
 	def token_listaddresses3(self):
-		return self.listaddresses(args=['--token=mm1'],tool_args=['showempty=1'])
+		return self.listaddresses(args=['--token=mm1'],tool_args=['showempty=0'])
 	def token_listaddresses4(self):
-		return self.listaddresses(args=['--token=mm2'],tool_args=['showempty=1'])
+		return self.listaddresses(args=['--token=mm2'],tool_args=['sort=age','reverse=1'])
 
 	def twview_cached_balances(self):
 		return self.twview(args=['--cached-balances'])

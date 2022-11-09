@@ -66,20 +66,14 @@ class BitcoinTwJSON(TwJSON):
 		@property
 		async def addrlist(self):
 			if not hasattr(self,'_addrlist'):
-				from .addrs import TwAddrList
-				self._addrlist = await TwAddrList(
-					proto         = self.proto,
-					usr_addr_list = None,
-					minconf       = 0,
-					showempty     = True,
-					showcoinaddrs = True,
-					all_labels    = False )
+				from .addresses import TwAddresses
+				self._addrlist = await TwAddresses(self.proto,get_data=True)
 			return self._addrlist
 
-		async def get_entries(self):
+		async def get_entries(self): # TODO: include 'received' field
 			return sorted(
-				[self.entry_tuple(v['lbl'].mmid, v['addr'], v['amt'], v['lbl'].comment)
-					for v in (await self.addrlist).values()],
+				[self.entry_tuple(d.twmmid.obj, d.addr, d.amt, d.comment)
+					for d in (await self.addrlist).data],
 				key = lambda x: x.mmgen_id.sort_key )
 
 		@property

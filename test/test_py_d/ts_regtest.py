@@ -604,10 +604,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.user_bal('bob',rtBals[0],args=['minconf=2'],skip_check=True)
 
 	def bob_bal2e(self):
-		return self.user_bal('bob',rtBals[0],args=['showempty=1','sort=age'])
+		return self.user_bal('bob',rtBals[0],args=['showempty=1','sort=amt'])
 
 	def bob_bal2f(self):
-		return self.user_bal('bob',rtBals[0],args=['showempty=1','sort=age,reverse'])
+		return self.user_bal('bob',rtBals[0],args=['showempty=0','sort=twmmid','reverse=1'])
 
 	def bob_bal3(self):
 		return self.user_bal('bob',rtBals[1])
@@ -1131,16 +1131,18 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		sid = self._user_sid('alice')
 		return self.user_add_comment('alice',sid+':C:1','Replacement Label')
 
-	def _user_chk_comment(self,user,addr,comment):
-		t = self.spawn('mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
-		ret = strip_ansi_escapes(t.expect_getend(addr)).strip().split(None,1)[1]
-		cmp_or_die(ret[:len(comment)],comment)
+	def _user_chk_comment(self,user,addr,comment,extra_args=[]):
+		t = self.spawn('mmgen-tool',['--'+user,'listaddresses','all_labels=1']+extra_args)
+		ret = strip_ansi_escapes(t.expect_getend(addr)).strip().split(None,2)[2]
+		cmp_or_die( # squeezed display, double-width chars, so truncate to min field width
+			ret[:3].strip(),
+			comment[:3].strip())
 		return t
 
 	def alice_add_comment_coinaddr(self):
 		mmid = self._user_sid('alice') + (':S:1',':L:1')[self.proto.coin=='BCH']
-		t = self.spawn('mmgen-tool',['--alice','listaddress',mmid],no_msg=True)
-		addr = [i for i in strip_ansi_escapes(t.read()).splitlines() if i.startswith(mmid)][0].split()[1]
+		t = self.spawn('mmgen-tool',['--alice','listaddress',mmid,'wide=true'],no_msg=True)
+		addr = [i for i in strip_ansi_escapes(t.read()).splitlines() if re.search(rf'\b{mmid}\b',i)][0].split()[3]
 		return self.user_add_comment('alice',addr,'Label added using coin address of MMGen address')
 
 	def alice_chk_comment_coinaddr(self):
@@ -1182,7 +1184,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def alice_chk_comment2(self):
 		sid = self._user_sid('alice')
-		return self._user_chk_comment('alice',sid+':C:1','Replacement Label')
+		return self._user_chk_comment('alice',sid+':C:1','Replacement Label',extra_args=['age_fmt=block'])
 
 	def alice_edit_comment1(self): return self.user_edit_comment('alice','4',tw_comment_lat_cyr_gr)
 	def alice_edit_comment2(self): return self.user_edit_comment('alice','3',tw_comment_zh)
@@ -1190,12 +1192,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def alice_chk_comment3(self):
 		sid = self._user_sid('alice')
 		mmid = sid + (':S:3',':L:3')[self.proto.coin=='BCH']
-		return self._user_chk_comment('alice',mmid,tw_comment_lat_cyr_gr)
+		return self._user_chk_comment('alice',mmid,tw_comment_lat_cyr_gr,extra_args=['age_fmt=date'])
 
 	def alice_chk_comment4(self):
 		sid = self._user_sid('alice')
 		mmid = sid + (':S:3',':L:3')[self.proto.coin=='BCH']
-		return self._user_chk_comment('alice',mmid,'-')
+		return self._user_chk_comment('alice',mmid,'-',extra_args=['age_fmt=date_time'])
 
 	def user_edit_comment(self,user,output,comment):
 		t = self.spawn('mmgen-txcreate',['-B','--'+user,'-i'])
@@ -1368,10 +1370,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_msgverify_export_single(self):
 		sid = self._user_sid('bob')
 		mmid = f'{sid}:{self.dfl_mmtype}:1'
-		args = [ '--bob', '--color=0', 'listaddress', mmid ]
+		args = [ '--bob', '--color=0', 'listaddress', mmid, 'wide=true' ]
 		imsg(f'Running mmgen-tool {fmt_list(args,fmt="bare")}')
 		t = self.spawn('mmgen-tool', args, no_msg=True)
-		addr = t.expect_getend(mmid).split()[0]
+		addr = t.expect_getend(mmid).split()[1]
 		t.close()
 		return self.bob_msgverify(
 			addr = addr,

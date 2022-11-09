@@ -30,7 +30,7 @@ from ..color import nocolor,yellow,green,red,blue
 from ..util import msg,msg_r,fmt,die,capfirst,make_timestr
 from ..addr import MMGenID
 
-# mixin class for TwUnspentOutputs,TwAddrList,TwTxHistory:
+# mixin class for TwUnspentOutputs,TwAddresses,TwTxHistory:
 class TwCommon:
 
 	dates_set   = False
@@ -250,10 +250,10 @@ class TwCommon:
 	def header(self,color):
 
 		Blue,Green = (blue,green) if color else (nocolor,nocolor)
-		Yes,No = (green('yes'),red('no')) if color else ('yes','no')
+		Yes,No,All = (green('yes'),red('no'),yellow('all')) if color else ('yes','no','all')
 
 		def fmt_filter(k):
-			return '{}:{}'.format(k,{0:No,1:Yes}[getattr(self,k)])
+			return '{}:{}'.format(k,{0:No,1:Yes,2:All}[getattr(self,k)])
 
 		return '{h} (sort order: {s}){f}\nNetwork: {n}\nBlock {b} [{d}]\n{t}'.format(
 			h = self.hdr_lbl.upper(),

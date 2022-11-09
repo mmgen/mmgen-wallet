@@ -44,58 +44,6 @@ class tool_cmd(tool_cmd_base):
 		from ..tw.bal import TwGetBalance
 		return (await TwGetBalance(self.proto,minconf,quiet)).format()
 
-	async def listaddress(self,
-			mmgen_addr:str,
-			minconf:      'minimum number of confirmations' = 1,
-			showcoinaddr: 'display coin address in addition to MMGen ID' = True,
-			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs' ):
-		"list the specified MMGen address in the tracking wallet and its balance"
-
-		return await self.listaddresses(
-			mmgen_addrs   = mmgen_addr,
-			minconf       = minconf,
-			showcoinaddrs = showcoinaddr,
-			age_fmt       = age_fmt )
-
-	async def listaddresses(self,
-			mmgen_addrs:  'hyphenated range or comma-separated list of addresses' = '',
-			minconf:      'minimum number of confirmations' = 1,
-			pager:        'send output to pager' = False,
-			showcoinaddrs:'display coin addresses in addition to MMGen IDs' = True,
-			showempty:    'show addresses with no balances' = True,
-			all_labels:   'show all addresses with labels' = False,
-			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
-			sort:         'address sort order ' + options_annot_str(['reverse','age']) = '' ):
-		"list MMGen addresses in the tracking wallet and their balances"
-
-		show_age = bool(age_fmt)
-
-		if sort:
-			sort = set(sort.split(','))
-			sort_params = {'reverse','age'}
-			if not sort.issubset( sort_params ):
-				from ..util import die
-				die(1,"The sort option takes the following parameters: '{}'".format( "','".join(sort_params) ))
-
-		usr_addr_list = []
-		if mmgen_addrs:
-			a = mmgen_addrs.rsplit(':',1)
-			if len(a) != 2:
-				from ..util import die
-				die(1,
-					f'{mmgen_addrs}: invalid address list argument ' +
-					'(must be in form <seed ID>:[<type>:]<idx list>)' )
-			from ..addr import MMGenID
-			from ..addrlist import AddrIdxList
-			usr_addr_list = [MMGenID(self.proto,f'{a[0]}:{i}') for i in AddrIdxList(a[1])]
-
-		from ..tw.addrs import TwAddrList
-		al = await TwAddrList( self.proto, usr_addr_list, minconf, showempty, showcoinaddrs, all_labels )
-		if not al:
-			from ..util import die
-			die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
-		return await al.format( showcoinaddrs, sort, show_age, age_fmt or 'confs' )
-
 	async def twops(self,
 			obj,pager,reverse,detail,sort,age_fmt,interactive,
 			**kwargs ):
@@ -147,6 +95,47 @@ class tool_cmd(tool_cmd_base):
 		obj = await TwTxHistory(self.proto,sinceblock=sinceblock)
 		return await self.twops(
 			obj,pager,reverse,detail,sort,age_fmt,interactive )
+
+	async def listaddress(self,
+			mmgen_addr:str,
+			wide:         'display data in wide tabular format' = False,
+			minconf:      'minimum number of confirmations' = 1,
+			showcoinaddr: 'display coin address in addition to MMGen ID' = True,
+			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs' ):
+		"list the specified MMGen address in the tracking wallet and its balance"
+
+		return await self.listaddresses(
+			mmgen_addrs   = mmgen_addr,
+			wide          = wide,
+			minconf       = minconf,
+			showcoinaddrs = showcoinaddr,
+			age_fmt       = age_fmt )
+
+	async def listaddresses(self,
+			pager:        'send output to pager' = False,
+			reverse:      'reverse order of unspent outputs' = False,
+			wide:         'display data in wide tabular format' = False,
+			minconf:      'minimum number of confirmations' = 1,
+			sort:         'address sort order ' + options_annot_str(['reverse','mmid','addr','amt']) = '',
+			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
+			interactive:  'enable interactive operation' = False,
+			mmgen_addrs:  'hyphenated range or comma-separated list of addresses' = '',
+			showcoinaddrs:'display coin addresses in addition to MMGen IDs' = True,
+			showempty:    'show addresses with no balances' = True,
+			showused:     'show used addresses (tristate: 0=no, 1=yes, 2=all)' = 1,
+			all_labels:   'show all addresses with labels' = False ):
+		"list MMGen addresses in the tracking wallet and their balances"
+
+		assert showused in (0,1,2), f"‘showused’ must have a value of 0, 1 or 2"
+
+		from ..tw.addresses import TwAddresses
+		obj = await TwAddresses(self.proto,minconf=minconf,mmgen_addrs=mmgen_addrs)
+		return await self.twops(
+			obj,pager,reverse,wide,sort,age_fmt,interactive,
+			showcoinaddrs = showcoinaddrs,
+			showempty     = showempty,
+			showused      = showused,
+			all_labels    = all_labels )
 
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
