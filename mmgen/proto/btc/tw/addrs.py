@@ -24,7 +24,7 @@ class BitcoinTwAddrList(TwAddrList,BitcoinTwCommon):
 
 	has_age = True
 
-	async def __init__(self,proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
+	async def __init__(self,proto,usr_addr_list,minconf,showempty,showcoinaddrs,all_labels,wallet=None):
 
 		self.rpc   = await rpc_init(proto)
 		self.proto = proto
@@ -42,5 +42,5 @@ class BitcoinTwAddrList(TwAddrList,BitcoinTwCommon):
 					continue
 				if label.mmid not in self:
 					self[label.mmid] = { 'amt':proto.coin_amt('0'), 'lbl':label, 'addr':'' }
-					if showbtcaddrs:
+					if showcoinaddrs:
 						self[label.mmid]['addr'] = CoinAddr(proto,addr)

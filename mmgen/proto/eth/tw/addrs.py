@@ -26,7 +26,7 @@ class EthereumTwAddrList(TwAddrList):
 
 	has_age = False
 
-	async def __init__(self,proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
+	async def __init__(self,proto,usr_addr_list,minconf,showempty,showcoinaddrs,all_labels,wallet=None):
 
 		from ....tw.common import TwLabel
 		from ....tw.ctl import TrackingWallet
@@ -47,7 +47,7 @@ class EthereumTwAddrList(TwAddrList):
 				if not label.comment or not all_labels:
 					continue
 			self[label.mmid] = {'amt': self.proto.coin_amt('0'), 'lbl':  label }
-			if showbtcaddrs:
+			if showcoinaddrs:
 				self[label.mmid]['addr'] = CoinAddr(self.proto,d['addr'])
 			self[label.mmid]['lbl'].mmid.confs = None
 			self[label.mmid]['amt'] += bal

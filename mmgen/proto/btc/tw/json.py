@@ -72,7 +72,7 @@ class BitcoinTwJSON(TwJSON):
 					usr_addr_list = None,
 					minconf       = 0,
 					showempty     = True,
-					showbtcaddrs  = True,
+					showcoinaddrs = True,
 					all_labels    = False )
 			return self._addrlist
 

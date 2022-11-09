@@ -46,22 +46,22 @@ class tool_cmd(tool_cmd_base):
 
 	async def listaddress(self,
 			mmgen_addr:str,
-			minconf:     'minimum number of confirmations' = 1,
-			showbtcaddr: 'display coin address in addition to MMGen ID' = True,
-			age_fmt:     'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs' ):
+			minconf:      'minimum number of confirmations' = 1,
+			showcoinaddr: 'display coin address in addition to MMGen ID' = True,
+			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs' ):
 		"list the specified MMGen address in the tracking wallet and its balance"
 
 		return await self.listaddresses(
-			mmgen_addrs  = mmgen_addr,
-			minconf      = minconf,
-			showbtcaddrs = showbtcaddr,
-			age_fmt      = age_fmt )
+			mmgen_addrs   = mmgen_addr,
+			minconf       = minconf,
+			showcoinaddrs = showcoinaddr,
+			age_fmt       = age_fmt )
 
 	async def listaddresses(self,
 			mmgen_addrs:  'hyphenated range or comma-separated list of addresses' = '',
 			minconf:      'minimum number of confirmations' = 1,
 			pager:        'send output to pager' = False,
-			showbtcaddrs: 'display coin addresses in addition to MMGen IDs' = True,
+			showcoinaddrs:'display coin addresses in addition to MMGen IDs' = True,
 			showempty:    'show addresses with no balances' = True,
 			all_labels:   'show all addresses with labels' = False,
 			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
@@ -90,11 +90,11 @@ class tool_cmd(tool_cmd_base):
 			usr_addr_list = [MMGenID(self.proto,f'{a[0]}:{i}') for i in AddrIdxList(a[1])]
 
 		from ..tw.addrs import TwAddrList
-		al = await TwAddrList( self.proto, usr_addr_list, minconf, showempty, showbtcaddrs, all_labels )
+		al = await TwAddrList( self.proto, usr_addr_list, minconf, showempty, showcoinaddrs, all_labels )
 		if not al:
 			from ..util import die
 			die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
-		return await al.format( showbtcaddrs, sort, show_age, age_fmt or 'confs' )
+		return await al.format( showcoinaddrs, sort, show_age, age_fmt or 'confs' )
 
 	async def twops(self,
 			obj,pager,reverse,detail,sort,age_fmt,interactive,show_mmid):

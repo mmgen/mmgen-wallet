@@ -38,12 +38,12 @@ class TwAddrList(MMGenDict,TwCommon,metaclass=AsyncInit):
 	def coinaddr_list(self):
 		return [self[k]['addr'] for k in self]
 
-	async def format(self,showbtcaddrs,sort,show_age,age_fmt):
+	async def format(self,showcoinaddrs,sort,show_age,age_fmt):
 		if not self.has_age:
 			show_age = False
 		if age_fmt not in self.age_fmts:
 			die( 'BadAgeFormat', f'{age_fmt!r}: invalid age format (must be one of {self.age_fmts!r})' )
-		fs = '{mid}' + ('',' {addr}')[showbtcaddrs] + ' {cmt} {amt}' + ('',' {age}')[show_age]
+		fs = '{mid}' + ('',' {addr}')[showcoinaddrs] + ' {cmt} {amt}' + ('',' {age}')[show_age]
 		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
 		max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
 		max_cmt_width = max(max(v['lbl'].comment.screen_width for v in self.values()),7)
@@ -74,7 +74,7 @@ class TwAddrList(MMGenDict,TwCommon,metaclass=AsyncInit):
 
 			yield fs.format(
 					mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
-					addr=(CoinAddr.fmtc('ADDRESS',width=addr_width) if showbtcaddrs else None),
+					addr=(CoinAddr.fmtc('ADDRESS',width=addr_width) if showcoinaddrs else None),
 					cmt=TwComment.fmtc('COMMENT',width=max_cmt_width+1),
 					amt='BALANCE'.ljust(max_fp_len+4),
 					age=age_fmt.upper(),
@@ -95,7 +95,7 @@ class TwAddrList(MMGenDict,TwCommon,metaclass=AsyncInit):
 				e = self[mmid]
 				yield fs.format(
 					mid=MMGenID.fmtc(mmid_disp,width=max_mmid_len,color=True),
-					addr=(e['addr'].fmt(color=True,width=addr_width) if showbtcaddrs else None),
+					addr=(e['addr'].fmt(color=True,width=addr_width) if showcoinaddrs else None),
 					cmt=e['lbl'].comment.fmt(width=max_cmt_width,color=True,nullrepl='-'),
 					amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
 					age=self.age_disp(mmid,age_fmt) if show_age and hasattr(mmid,'confs') else '-'
