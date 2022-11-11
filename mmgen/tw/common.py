@@ -42,6 +42,24 @@ class TwCommon:
 	_display_data = {}
 	filters = ()
 
+	fp = namedtuple('fs_params',['fs_key','hdr_fs_repl','fs_repl','hdr_fs','fs'])
+	fs_params = {
+		'num':       fp('n', True, True,  ' {n:>%s}', ' {n:>%s}'),
+		'txid':      fp('t', True, False, ' {t:%s}',  ' {t}'),
+		'vout':      fp('v', True, False, '{v:%s}',   '{v}'),
+		'used':      fp('u', True, False, ' {u:%s}',  ' {u}'),
+		'addr':      fp('a', True, False, ' {a:%s}',  ' {a}'),
+		'mmid':      fp('m', True, False, ' {m:%s}',  ' {m}'),
+		'comment':   fp('c', True, False, ' {c:%s}',  ' {c}'),
+		'amt':       fp('A', True, False, ' {A:%s}',  ' {A}'),
+		'amt2':      fp('B', True, False, ' {B:%s}',  ' {B}'),
+		'date':      fp('d', True, True,  ' {d:%s}',  ' {d:<%s}'),
+		'date_time': fp('D', True, True,  ' {D:%s}',  ' {D:%s}'),
+		'block':     fp('b', True, True,  ' {b:%s}',  ' {b:<%s}'),
+		'inputs':    fp('i', True, False, ' {i:%s}',  ' {i}'),
+		'outputs':   fp('o', True, False, ' {o:%s}',  ' {o}'),
+	}
+
 	age_fmts = ('confs','block','days','date','date_time')
 	age_fmts_date_dependent = ('days','date','date_time')
 	age_fmts_interactive = ('confs','block','days','date','date_time')
@@ -283,12 +301,21 @@ class TwCommon:
 
 			data = self.disp_data = list(self.filter_data()) # method could be a generator
 
-			cw = self.get_column_widths(data,wide=dt.detail) if data and dt.need_column_widths else None
+			if data and dt.need_column_widths:
+				cw = self.get_column_widths(data,wide=dt.detail)
+				cwh = cw._asdict()
+				fp = self.fs_params
+				hdr_fs = ''.join(fp[name].hdr_fs % ((),cwh[name])[fp[name].hdr_fs_repl]
+					for name in dt.cols if cwh[name])
+				fs = ''.join(fp[name].fs % ((),cwh[name])[fp[name].fs_repl]
+					for name in dt.cols if cwh[name])
+			else:
+				cw = hdr_fs = fs = None
 
 			self._display_data[display_type] = '{a}{b}\n{c}\n'.format(
 				a = self.header(color),
 				b = self.subheader(color),
-				c = dt.item_separator.join(getattr(self,dt.fmt_method)(data,cw,color=color))
+				c = dt.item_separator.join(getattr(self,dt.fmt_method)(data,cw,hdr_fs,fs,color=color))
 					if data else (nocolor,yellow)[color]('[no data for requested parameters]')
 			)
 

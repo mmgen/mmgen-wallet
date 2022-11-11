@@ -40,10 +40,30 @@ Actions: [q]uit, r[e]draw, [D]elete address, add [l]abel:
 		'w':'a_view_detail',
 		'p':'a_print_detail' }
 
-	squeezed_fs_fs     = ' {{n:>{nw}}} {{m:}}%s {{c:}} {{A:}}'
-	squeezed_hdr_fs_fs = ' {{n:>{nw}}} {{m:{mw}}}%s {{c:{cw}}} {{A:{Aw}}}'
-	wide_fs_fs         = ' {{n:>{nw}}} {{m:}} {{a:}} {{c:}} {{A:}}'
-	wide_hdr_fs_fs     = ' {{n:>{nw}}} {{m:{mw}}} {{a:{aw}}} {{c:{cw}}} {{A:{Aw}}}'
+	def get_column_widths(self,data,wide=False):
+
+		return self.compute_column_widths(
+			widths = { # fixed cols
+				'num':  max(2,len(str(len(data)))+1),
+				'mmid': max(len(d.twmmid.disp) for d in data),
+				'used': 0,
+				'amt':  self.disp_prec + 5,
+				'date': 0,
+				'block': 0,
+				'date_time': 0,
+				'spc':  5, # 4 spaces between cols + 1 leading space in fs
+			},
+			maxws = { # expandable cols
+				'addr':    max(len(d.addr) for d in data) if self.showcoinaddrs else 0,
+				'comment': max(d.comment.screen_width for d in data),
+			},
+			minws = {
+				'addr': 12 if self.showcoinaddrs else 0,
+				'comment': len('Comment'),
+			},
+			maxws_nice = {'addr': 18},
+			wide = wide,
+		)
 
 	async def get_rpc_data(self):
 

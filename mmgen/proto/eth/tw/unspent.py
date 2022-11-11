@@ -20,20 +20,28 @@
 proto.eth.twuo: Ethereum tracking wallet unspent outputs class
 """
 
-from ....globalvars import g
 from ....tw.common import TwLabel
 from ....tw.unspent import TwUnspentOutputs
+from .common import EthereumTwCommon
 
 # No unspent outputs with Ethereum, but naming must be consistent
-class EthereumTwUnspentOutputs(TwUnspentOutputs):
+class EthereumTwUnspentOutputs(EthereumTwCommon,TwUnspentOutputs):
+
+	class display_type(TwUnspentOutputs.display_type):
+
+		class squeezed(TwUnspentOutputs.display_type.squeezed):
+			cols = ('num','addr','mmid','comment','amt','amt2')
+
+		class detail(TwUnspentOutputs.display_type.detail):
+			cols = ('num','addr','mmid','amt','amt2','comment')
 
 	class MMGenTwUnspentOutput(TwUnspentOutputs.MMGenTwUnspentOutput):
 		valid_attrs = {'txid','vout','amt','amt2','comment','twmmid','addr','confs','skip'}
 		invalid_attrs = {'proto'}
 
+	token_cls = False
 	has_age = False
 	can_group = False
-	col_adj = 29
 	hdr_lbl = 'tracked accounts'
 	desc    = 'account balances'
 	item_desc = 'account'
@@ -59,17 +67,35 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		'D':'a_addr_delete',
 		'R':'a_balance_refresh' }
 
-	squeezed_fs_fs = squeezed_hdr_fs_fs = ' {{n:{cw}}} {{a}} {{A}}'
-	wide_fs_fs = ' {{n:4}} {{a}} {{m}} {{A:{aw}}} {{l}}'
 	no_data_errmsg = 'No accounts in tracking wallet!'
 
-	def subheader(self,color):
-		if g.cached_balances:
-			from ....color import nocolor,yellow
-			return (nocolor,yellow)[color](
-				'WARNING: Using cached balances. These may be out of date!') + '\n'
-		else:
-			return ''
+	def get_column_widths(self,data,wide=False):
+		# min screen width: 80 cols
+		# num addr [mmid] [comment] amt [amt2]
+		return self.compute_column_widths(
+			widths = { # fixed cols
+				'num': max(2,len(str(len(data)))+1),
+				'mmid': max(len(d.twmmid.disp) for d in data) if self.show_mmid else 0,
+				'amt': self.disp_prec + 5,
+				'amt2': self.disp_prec + 5 if self.token_cls else 0,
+				'spc': (5 if self.show_mmid else 3) + self.token_cls, # 5(3) spaces in fs
+				'txid': 0,
+				'vout': 0,
+				'block': 0,
+				'date': 0,
+				'date_time': 0,
+			},
+			maxws = { # expandable cols
+				'addr': max(len(d.addr) for d in data),
+				'comment': max(d.comment.screen_width for d in data) if self.show_mmid else 0,
+			},
+			minws = {
+				'addr': 10,
+				'comment': len('Comment') if self.show_mmid else 0,
+			},
+			maxws_nice = {'addr': 14} if self.show_mmid else {},
+			wide = wide,
+		)
 
 	def do_sort(self,key=None,reverse=False):
 		if key == 'txid': return
@@ -86,15 +112,10 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 				'confirmations': 0, # TODO
 				} for d in wl]
 
-	def age_disp(self,o,age_fmt): # TODO
-		pass
-
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	prompt_fs = 'Total to spend: {} {}\n\n'
-	col_adj = 37
-	squeezed_fs_fs = squeezed_hdr_fs_fs = ' {{n:{cw}}} {{a}} {{A}} {{A2}}'
-	wide_fs_fs = ' {{n:4}} {{a}} {{m}} {{A:{aw}}} {{A2:{aw}}} {{l}}'
+	token_cls = True
 
 	async def __init__(self,proto,*args,**kwargs):
 		await super().__init__(proto,*args,**kwargs)

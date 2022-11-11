@@ -25,6 +25,9 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	class display_type(TwCommon.display_type):
 
+		class squeezed(TwCommon.display_type.squeezed):
+			cols = ('num','txid','date','inputs','amt','outputs','comment')
+
 		class detail(TwCommon.display_type.detail):
 			need_column_widths = False
 			item_separator = '\n\n'
@@ -87,7 +90,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 		return self.compute_column_widths(widths,maxws,minws,maxws_nice,wide=wide)
 
-	def gen_squeezed_display(self,data,cw,color):
+	def gen_squeezed_display(self,data,cw,hdr_fs,fs,color):
 
 		if self.sinceblock:
 			yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
@@ -97,18 +100,6 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 			cw.outputs < self.varcol_maxwidths['outputs'] ):
 			yield 'Due to screen width limitations, not all addresses could be displayed'
 		yield ''
-
-		hdr_fs = self.squeezed_hdr_fs_fs.format(
-			nw = cw.num,
-			dw = self.age_w,
-			txid_fs = f'{{i:{cw.txid}}} ' if self.show_txid else '',
-			iw = cw.inputs,
-			ow = cw.outputs )
-
-		fs = self.squeezed_fs_fs.format(
-			nw = cw.num,
-			dw = self.age_w,
-			txid_fs = f'{{i:{cw.txid}}} ' if self.show_txid else '' )
 
 		yield hdr_fs.format(
 			n = '',
@@ -127,9 +118,9 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 				i = d.vouts_disp( 'inputs', width=cw.inputs, color=color ),
 				A = d.amt_disp(self.show_total_amt).fmt( prec=self.disp_prec, color=color ),
 				o = d.vouts_disp( 'outputs', width=cw.outputs, color=color ),
-				c = d.comment.fmt( width=cw.comment, color=color ) ).rstrip()
+				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ) ).rstrip()
 
-	def gen_detail_display(self,data,cw,color):
+	def gen_detail_display(self,data,cw,hdr_fs,fs,color):
 
 		if self.sinceblock:
 			yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'

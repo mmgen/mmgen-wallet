@@ -37,6 +37,14 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 	all_labels = False
 	no_data_errmsg = 'No addresses in tracking wallet!'
 
+	class display_type(TwCommon.display_type):
+
+		class squeezed(TwCommon.display_type.squeezed):
+			cols = ('num','mmid','used','addr','comment','amt','date')
+
+		class detail(TwCommon.display_type.detail):
+			cols = ('num','mmid','used','addr','comment','amt','block','date_time')
+
 	class TwAddress(MMGenListItem):
 		valid_attrs = {'twmmid','addr','al_id','confs','comment','amt','recvd','date','skip'}
 		invalid_attrs = {'proto'}
@@ -153,20 +161,7 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 		else:
 			return ''
 
-	def gen_squeezed_display(self,data,cw,color):
-
-		fs_parms = {
-			'nw': cw.num,
-			'mw': cw.mmid,
-			'uw': cw.used,
-			'aw': cw.addr,
-			'cw': cw.comment,
-			'Aw': cw.amt,
-			'dw': cw.date
-		}
-
-		hdr_fs = (self.squeezed_hdr_fs_fs % ('',' {{a:{aw}}}')[self.showcoinaddrs]).format(**fs_parms)
-		fs = (self.squeezed_fs_fs % ('',' {{a}}')[self.showcoinaddrs]).format(**fs_parms)
+	def gen_squeezed_display(self,data,cw,hdr_fs,fs,color):
 
 		yield hdr_fs.format(
 			n  = '',
@@ -194,21 +189,7 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 				d = self.age_disp( d, self.age_fmt )
 			)
 
-	def gen_detail_display(self,data,cw,color):
-
-		fs_parms = {
-			'nw': cw.num,
-			'mw': cw.mmid,
-			'uw': cw.used,
-			'aw': cw.addr,
-			'cw': cw.comment,
-			'Aw': cw.amt,
-			'bw': self.age_col_params['block'][0],
-			'Dw': self.age_col_params['date_time'][0],
-		}
-
-		hdr_fs = self.wide_hdr_fs_fs.format(**fs_parms)
-		fs = self.wide_fs_fs.format(**fs_parms)
+	def gen_detail_display(self,data,cw,hdr_fs,fs,color):
 
 		yield hdr_fs.format(
 			n  = '',

@@ -45,11 +45,6 @@ Actions: [q]uit, r[e]draw, add [l]abel:
 		'p':'a_print_detail',
 		'l':'a_comment_add' }
 
-	squeezed_fs_fs     = ' {{n:>{nw}}} {{m}} {{u}}%s {{c}} {{A}} {{d}}'
-	squeezed_hdr_fs_fs = ' {{n:>{nw}}} {{m:{mw}}} {{u:{uw}}}%s {{c:{cw}}} {{A:{Aw}}} {{d}}'
-	wide_fs_fs         = ' {{n:>{nw}}} {{m}} {{u}} {{a}} {{c}} {{A}} {{b:<{bw}}} {{D}}'
-	wide_hdr_fs_fs     = ' {{n:>{nw}}} {{m:{mw}}} {{u:{uw}}} {{a:{aw}}} {{c:{cw}}} {{A:{Aw}}} {{b:{bw}}} {{D}}'
-
 	async def get_rpc_data(self):
 
 		msg_r('Getting unspent outputs...')

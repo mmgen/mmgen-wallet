@@ -20,8 +20,6 @@
 twuo: Tracking wallet unspent outputs class for the MMGen suite
 """
 
-from collections import namedtuple
-
 from ..globalvars import g
 from ..util import msg,suf,fmt
 from ..base_obj import AsyncInit
@@ -40,6 +38,14 @@ from ..rpc import rpc_init
 from .common import TwCommon,TwMMGenID,get_tw_label
 
 class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
+
+	class display_type(TwCommon.display_type):
+
+		class squeezed(TwCommon.display_type.squeezed):
+			cols = ('num','txid','vout','addr','mmid','comment','amt','amt2','date')
+
+		class detail(TwCommon.display_type.detail):
+			cols = ('num','txid','vout','addr','mmid','amt','amt2','block','date_time','comment')
 
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','unspent'))
@@ -124,120 +130,94 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		return data
 
 	def get_column_widths(self,data,wide=False):
+		# min screen width: 80 cols
+		# num txid vout addr [mmid] [comment] amt [amt2] date
+		maxws_nice = {'txid': 12}
+		if self.show_mmid:
+				maxws_nice['addr'] = 16
 
-		self.cols = self.get_term_columns(g.min_screen_width)
+		return self.compute_column_widths(
+			widths = { # fixed cols
+				'num': max(2,len(str(len(data)))+1),
+				'vout': 4,
+				'mmid': max(len(d.twmmid.disp) for d in data) if self.show_mmid else 0,
+				'amt': self.disp_prec + 5,
+				'amt2': 0,
+				'block': self.age_col_params['block'][0] if wide else 0,
+				'date_time': self.age_col_params['date_time'][0] if wide else 0,
+				'date': self.age_w,
+				'spc': 7 if self.show_mmid else 5, # 7(5) spaces in fs
+			},
+			maxws = { # expandable cols
+				'txid': self.txid_w,
+				'addr': max(len(d.addr) for d in data),
+				'comment': max(d.comment.screen_width for d in data) if self.show_mmid else 0,
+			},
+			minws = {
+				'txid': 7,
+				'addr': 10,
+				'comment': len('Comment') if self.show_mmid else 0,
+			},
+			maxws_nice = maxws_nice,
+			wide = wide,
+		)
 
-		# allow for 7-digit confirmation nums
-		col1_w = max(3,len(str(len(data)))+1) # num + ')'
-		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in data) or 12 # DEADBEEF:S:1
-		max_acct_w = max(i.comment.screen_width for i in data) + mmid_w + 1
-		max_btcaddr_w = max(len(i.addr) for i in data)
-		min_addr_w = self.cols - self.col_adj
-		addr_w = min(max_btcaddr_w + (0,1+max_acct_w)[self.show_mmid],min_addr_w)
-		acct_w = min(max_acct_w, max(24,addr_w-10))
-		btaddr_w = addr_w - acct_w - 1
-		comment_w = acct_w - mmid_w - 1
-		tx_w = min(self.txid_w,self.cols-addr_w-29-col1_w) # min=6 TODO
+	def gen_squeezed_display(self,data,cw,hdr_fs,fs,color):
 
-		return namedtuple(
-			'column_widths',
-			['num','mmid','addr','btaddr','comment','tx']
-			)(col1_w,  mmid_w,  addr_w,  btaddr_w,  comment_w,  tx_w)
-
-	def gen_squeezed_display(self,data,cw,color):
-		fs     = self.squeezed_fs_fs.format(     cw=cw.num, tw=cw.tx )
-		hdr_fs = self.squeezed_hdr_fs_fs.format( cw=cw.num, tw=cw.tx )
 		yield hdr_fs.format(
-			n  = 'Num',
-			t  = 'TXid'.ljust(cw.tx - 2) + ' Vout',
-			a  = 'Address'.ljust(cw.addr),
-			A  = f'Amt({self.proto.dcoin})'.ljust(self.disp_prec+5),
-			A2 = f' Amt({self.proto.coin})'.ljust(self.disp_prec+4),
-			c  = self.age_hdr ).rstrip()
+			n = '',
+			t = 'TxID',
+			v = 'Vout',
+			a = 'Address',
+			m = 'MMGenID',
+			c = 'Comment',
+			A = 'Amt({})'.format(self.proto.dcoin),
+			B = 'Amt({})'.format(self.proto.coin),
+			d = self.age_hdr )
 
-		for n,i in enumerate(data):
-			addr_dots = '|' + '.'*(cw.addr-1)
-			mmid_disp = MMGenID.fmtc(
-				(
-					'.'*cw.mmid if i.skip == 'addr' else
-					i.twmmid if i.twmmid.type == 'mmgen' else
-					f'Non-{g.proj_name}'
-				),
-				width = cw.mmid,
-				color = color )
-
-			if self.show_mmid:
-				addr_out = '{} {}{}'.format((
-					type(i.addr).fmtc(addr_dots,width=cw.btaddr,color=color) if i.skip == 'addr' else
-					i.addr.fmt(width=cw.btaddr,color=color)
-				),
-					mmid_disp,
-					(' ' + i.comment.fmt(width=cw.comment,color=color)) if cw.comment > 0 else ''
-				)
-			else:
-				addr_out = (
-					type(i.addr).fmtc(addr_dots,width=cw.addr,color=color) if i.skip=='addr' else
-					i.addr.fmt(width=cw.addr,color=color) )
-
+		for n,d in enumerate(data):
 			yield fs.format(
-				n  = str(n+1)+')',
-				t  = (
-					'' if not i.txid else
-					' ' * (cw.tx-4) + '|...' if i.skip  == 'txid' else
-					i.txid.truncate(width=cw.tx,color=True) ),
-				v  = i.vout,
-				a  = addr_out,
-				A  = i.amt.fmt(color=color,prec=self.disp_prec),
-				A2 = (i.amt2.fmt(color=color,prec=self.disp_prec) if i.amt2 is not None else ''),
-				c  = self.age_disp(i,self.age_fmt),
-				).rstrip()
+				n = str(n+1)+')',
+				t = (CoinTxID.fmtc('|' + '.'*(cw.txid-1),color=color) if d.skip  == 'txid'
+					else d.txid.truncate(width=cw.txid,color=color)) if cw.txid else None,
+				v = ' ' + d.vout.fmt(width=cw.vout-1,color=color) if cw.vout else None,
+				a = type(d.addr).fmtc('|' + '.'*(cw.addr-1),width=cw.addr,color=color) if d.skip == 'addr'
+					else d.addr.fmt(width=cw.addr,color=color),
+				m = (MMGenID.fmtc('.'*cw.mmid,color=color) if d.skip == 'addr'
+					else d.twmmid.fmt(width=cw.mmid,color=color)) if cw.mmid else None,
+				c = d.comment.fmt(width=cw.comment,color=color,nullrepl='-') if cw.comment else None,
+				A = d.amt.fmt(color=color,prec=self.disp_prec),
+				B = d.amt2.fmt(color=color,prec=self.disp_prec) if cw.amt2 else None,
+				d = self.age_disp(d,self.age_fmt),
+			)
 
-	def gen_detail_display(self,data,cw,color):
+	def gen_detail_display(self,data,cw,hdr_fs,fs,color):
 
-		addr_w = max(len(i.addr) for i in data)
-		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in data) or 12 # DEADBEEF:S:1
+		yield hdr_fs.format(
+			n = '',
+			t = 'TxID',
+			v = 'Vout',
+			a = 'Address',
+			m = 'MMGenID',
+			A = 'Amt({})'.format(self.proto.dcoin),
+			B = 'Amt({})'.format(self.proto.coin) if cw.amt2 else None,
+			b = 'Block',
+			D = 'Date/Time',
+			c = 'Comment' ).rstrip()
 
-		fs = self.wide_fs_fs.format(
-			tw = self.txid_w + 3,
-			cf = '{c:<8} ',
-			aw = self.proto.coin_amt.max_prec + 5 )
-
-		yield fs.format(
-			n  = 'Num',
-			t  = 'Tx ID,Vout',
-			a  = 'Address'.ljust(addr_w),
-			m  = 'MMGen ID'.ljust(mmid_w),
-			A  = f'Amount({self.proto.dcoin})',
-			A2 = f'Amount({self.proto.coin})',
-			c  = 'Confs',  # skipped for eth
-			b  = 'Block',  # skipped for eth
-			D  = 'Date',
-			l  = 'Label' )
-
-		max_comment_len = max([len(i.comment) for i in data if i.comment] or [2])
-
-		for n,i in enumerate(data):
+		for n,d in enumerate(data):
 			yield fs.format(
-				n  = str(n+1) + ')',
-				t  = '{},{}'.format(
-						('|'+'.'*63 if i.skip == 'txid' and self.group else i.txid),
-						i.vout ),
-				a  = (
-					'|'+'.' * addr_w if i.skip == 'addr' and self.group else
-					i.addr.fmt(color=color,width=addr_w) ),
-				m  = MMGenID.fmtc( i.twmmid.disp, width=mmid_w, color=color ),
-				A  = i.amt.fmt(color=color),
-				A2 = ( i.amt2.fmt(color=color) if i.amt2 is not None else '' ),
-				c  = i.confs,
-				b  = self.rpc.blockcount - (i.confs - 1),
-				D  = self.age_disp(i,'date_time'),
-				l  = i.comment.hl(color=color) if i.comment else
-					TwComment.fmtc(
-						s        = '',
-						color    = color,
-						nullrepl = '-',
-						width    = max_comment_len )
-				).rstrip()
+				n = str(n+1) + ')',
+				t = d.txid.fmt(color=color) if cw.txid else None,
+				v = ' ' + d.vout.fmt(width=cw.vout-1,color=color) if cw.vout else None,
+				a = d.addr.fmt(width=cw.addr,color=color),
+				m = d.twmmid.fmt(width=cw.mmid,color=color),
+				A = d.amt.fmt(color=color,prec=self.disp_prec),
+				B = d.amt2.fmt(color=color,prec=self.disp_prec) if cw.amt2 else None,
+				b = self.age_disp(d,'block'),
+				D = self.age_disp(d,'date_time'),
+				c = d.comment.fmt(width=cw.comment,color=color,nullrepl='-'),
+			).rstrip()
 
 	def display_total(self):
 		msg('\nTotal unspent: {} {} ({} output{})'.format(

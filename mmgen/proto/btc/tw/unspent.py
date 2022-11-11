@@ -52,11 +52,6 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		'w':'a_view_detail',
 		'l':'a_comment_add' }
 
-	col_adj = 38
-	squeezed_fs_fs     = ' {{n:{cw}}} {{t:{tw}}} {{v:2}} {{a}} {{A}} {{c:<}}'
-	squeezed_hdr_fs_fs = ' {{n:{cw}}} {{t:{tw}}} {{a}} {{A}} {{c:<}}'
-	wide_fs_fs         = ' {{n:4}} {{t:{tw}}} {{a}} {{m}} {{A:{aw}}} {cf}{{b:<8}} {{D:<19}} {{l}}'
-
 	async def get_rpc_data(self):
 		# bitcoin-cli help listunspent:
 		# Arguments:

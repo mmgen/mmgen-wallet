@@ -253,9 +253,6 @@ Actions: [q]uit, r[e]draw:
 		'p':'a_print_squeezed',
 		'P':'a_print_detail' }
 
-	squeezed_fs_fs     = ' {{n:>{nw}}} {{d:>{dw}}} {txid_fs}{{i}} {{A}} {{o}} {{c}}'
-	squeezed_hdr_fs_fs = ' {{n:>{nw}}} {{d:{dw}}} {txid_fs}{{i:{iw}}} {{A}} {{o:{ow}}} {{c}}'
-
 	async def get_rpc_data(self):
 		blockhash = (
 			await self.rpc.call( 'getblockhash', self.sinceblock )
