@@ -36,7 +36,6 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 	show_txid = False
 	show_unconfirmed = False
 	show_total_amt = False
-	age_fmts_interactive = ('confs','block','days','date','date_time')
 	update_widths_on_age_toggle = True
 	print_output_types = ('squeezed','detail')
 	filters = ('show_unconfirmed',)
@@ -56,18 +55,18 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	def get_column_widths(self,data,wide=False):
 
-		# var cols: addr1 addr2 comment [txid]
+		# var cols: inputs outputs comment [txid]
 		if not hasattr(self,'varcol_maxwidths'):
 			self.varcol_maxwidths = {
-				'addr1': max(len(d.vouts_disp('inputs',width=None,color=False)) for d in data),
-				'addr2': max(len(d.vouts_disp('outputs',width=None,color=False)) for d in data),
+				'inputs': max(len(d.vouts_disp('inputs',width=None,color=False)) for d in data),
+				'outputs': max(len(d.vouts_disp('outputs',width=None,color=False)) for d in data),
 				'comment': max(len(d.comment) for d in data),
 			}
 
 		maxws = self.varcol_maxwidths.copy()
 		minws = {
-			'addr1': 15,
-			'addr2': 15,
+			'inputs': 15,
+			'outputs': 15,
 			'comment': len('Comment'),
 		}
 		if self.show_txid:
@@ -75,11 +74,13 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 			minws['txid'] = 8
 			maxws_nice = {'txid': 20}
 		else:
+			maxws['txid'] = 0
+			minws['txid'] = 0
 			maxws_nice = {}
 
 		widths = { # fixed cols
 			'num': max(2,len(str(len(data)))+1),
-			'age': self.age_w,
+			'date': self.age_w,
 			'amt': self.disp_prec + 5,
 			'spc': 6 + self.show_txid, # 5(6) spaces between cols + 1 leading space in fs
 		}
@@ -92,8 +93,8 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 			yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
 		yield 'Only wallet-related outputs are shown'
 		yield 'Comment is from first wallet address in outputs or inputs'
-		if (cw.addr1 < self.varcol_maxwidths['addr1'] or
-			cw.addr2 < self.varcol_maxwidths['addr2'] ):
+		if (cw.inputs < self.varcol_maxwidths['inputs'] or
+			cw.outputs < self.varcol_maxwidths['outputs'] ):
 			yield 'Due to screen width limitations, not all addresses could be displayed'
 		yield ''
 
@@ -101,8 +102,8 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 			nw = cw.num,
 			dw = self.age_w,
 			txid_fs = f'{{i:{cw.txid}}} ' if self.show_txid else '',
-			aw = cw.addr1,
-			a2w = cw.addr2 )
+			iw = cw.inputs,
+			ow = cw.outputs )
 
 		fs = self.squeezed_fs_fs.format(
 			nw = cw.num,
@@ -110,58 +111,56 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 			txid_fs = f'{{i:{cw.txid}}} ' if self.show_txid else '' )
 
 		yield hdr_fs.format(
-			n  = '',
-			i  = 'TxID',
-			d  = self.age_hdr,
-			a1 = 'Inputs',
-			A  = 'Amt({})'.format('TX' if self.show_total_amt else 'Wallet').ljust(cw.amt),
-			a2 = 'Outputs',
-			l  = 'Comment' ).rstrip()
+			n = '',
+			t = 'TxID',
+			d = self.age_hdr,
+			i = 'Inputs',
+			A = 'Amt({})'.format('TX' if self.show_total_amt else 'Wallet'),
+			o = 'Outputs',
+			c = 'Comment' ).rstrip()
 
 		for n,d in enumerate(data,1):
 			yield fs.format(
-				n  = str(n) + ')',
-				i  = d.txid_disp( width=cw.txid, color=color ) if hasattr(cw,'txid') else None,
-				d  = d.age_disp( self.age_fmt, width=self.age_w, color=color ),
-				a1 = d.vouts_disp( 'inputs', width=cw.addr1, color=color ),
-				A  = d.amt_disp(self.show_total_amt).fmt( prec=self.disp_prec, color=color ),
-				a2 = d.vouts_disp( 'outputs', width=cw.addr2, color=color ),
-				l  = d.comment.fmt( width=cw.comment, color=color ) ).rstrip()
+				n = str(n) + ')',
+				t = d.txid_disp( width=cw.txid, color=color ) if hasattr(cw,'txid') else None,
+				d = d.age_disp( self.age_fmt, width=self.age_w, color=color ),
+				i = d.vouts_disp( 'inputs', width=cw.inputs, color=color ),
+				A = d.amt_disp(self.show_total_amt).fmt( prec=self.disp_prec, color=color ),
+				o = d.vouts_disp( 'outputs', width=cw.outputs, color=color ),
+				c = d.comment.fmt( width=cw.comment, color=color ) ).rstrip()
 
 	def gen_detail_display(self,data,cw,color):
 
-		yield (
-			(f'Displaying transactions since block {self.sinceblock.hl(color=color)}\n'
-				if self.sinceblock else '')
-			+ 'Only wallet-related outputs are shown'
-		)
+		if self.sinceblock:
+			yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
+		yield 'Only wallet-related outputs are shown'
 
 		fs = fmt("""
 		{n}
 		    Block:        [{d}] {b}
-		    TxID:         [{D}] {i}
-		    Value:        {A1}
-		    Wallet Value: {A2}
+		    TxID:         [{D}] {t}
+		    Value:        {A}
+		    Wallet Value: {B}
 		    Fee:          {f}
 		    Inputs:
-		        {a1}
-		    Outputs ({oc}):
-		        {a2}
+		        {i}
+		    Outputs ({N}):
+		        {o}
 		""",strip_char='\t').strip()
 
 		for n,d in enumerate(data,1):
 			yield fs.format(
-				n  = str(n) + ')',
-				d  = d.age_disp( 'date_time', width=None, color=None ),
-				b  = d.blockheight_disp(color=color),
-				D  = d.txdate_disp( 'date_time' ),
-				i  = d.txid_disp( width=None, color=color ),
-				A1 = d.amt_disp(True).hl( color=color ),
-				A2 = d.amt_disp(False).hl( color=color ),
-				f  = d.fee_disp( color=color ),
-				a1 = d.vouts_list_disp( 'inputs', color=color, indent=' '*8 ),
-				oc = d.nOutputs,
-				a2 = d.vouts_list_disp( 'outputs', color=color, indent=' '*8 ),
+				n = str(n) + ')',
+				d = d.age_disp( 'date_time', width=None, color=None ),
+				b = d.blockheight_disp(color=color),
+				D = d.txdate_disp( 'date_time' ),
+				t = d.txid_disp( width=None, color=color ),
+				A = d.amt_disp(True).hl( color=color ),
+				B = d.amt_disp(False).hl( color=color ),
+				f = d.fee_disp( color=color ),
+				i = d.vouts_list_disp( 'inputs', color=color, indent=' '*8 ),
+				N = d.nOutputs,
+				o = d.vouts_list_disp( 'outputs', color=color, indent=' '*8 ),
 			)
 
 	sort_disp = {

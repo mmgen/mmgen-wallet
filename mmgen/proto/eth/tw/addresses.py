@@ -17,7 +17,7 @@ from ....tw.ctl import TrackingWallet
 from ....addr import CoinAddr
 from .common import EthereumTwCommon
 
-class EthereumTwAddresses(TwAddresses,EthereumTwCommon):
+class EthereumTwAddresses(EthereumTwCommon,TwAddresses):
 
 	has_age = False
 	prompt = """
@@ -40,10 +40,10 @@ Actions: [q]uit, r[e]draw, [D]elete address, add [l]abel:
 		'w':'a_view_detail',
 		'p':'a_print_detail' }
 
-	squeezed_fs_fs     = ' {{n:>{nw}}} {{m:}}%s {{c:}} {{b:}}'
-	squeezed_hdr_fs_fs = ' {{n:>{nw}}} {{m:{mw}}}%s {{c:{cw}}} {{b:{bw}}}'
-	wide_fs_fs         = ' {{n:>{nw}}} {{m:}} {{a:}} {{c:}} {{b:}}'
-	wide_hdr_fs_fs     = ' {{n:>{nw}}} {{m:{mw}}} {{a:{aw}}} {{c:{cw}}} {{b:{bw}}}'
+	squeezed_fs_fs     = ' {{n:>{nw}}} {{m:}}%s {{c:}} {{A:}}'
+	squeezed_hdr_fs_fs = ' {{n:>{nw}}} {{m:{mw}}}%s {{c:{cw}}} {{A:{Aw}}}'
+	wide_fs_fs         = ' {{n:>{nw}}} {{m:}} {{a:}} {{c:}} {{A:}}'
+	wide_hdr_fs_fs     = ' {{n:>{nw}}} {{m:{mw}}} {{a:{aw}}} {{c:{cw}}} {{A:{Aw}}}'
 
 	async def get_rpc_data(self):
 

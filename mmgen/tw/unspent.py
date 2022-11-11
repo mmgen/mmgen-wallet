@@ -20,15 +20,21 @@
 twuo: Tracking wallet unspent outputs class for the MMGen suite
 """
 
-import asyncio
 from collections import namedtuple
 
 from ..globalvars import g
-from ..color import red,yellow
-from ..util import msg,die,capfirst,suf,fmt
+from ..util import msg,suf,fmt
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
-from ..obj import ImmutableAttr,ListItemAttr,MMGenListItem,TwComment,get_obj,HexStr,CoinTxID,MMGenList
+from ..obj import (
+	ImmutableAttr,
+	ListItemAttr,
+	MMGenListItem,
+	TwComment,
+	get_obj,
+	HexStr,
+	CoinTxID,
+	NonNegativeInt )
 from ..addr import CoinAddr,MMGenID
 from ..rpc import rpc_init
 from .common import TwCommon,TwMMGenID,get_tw_label
@@ -48,7 +54,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	class MMGenTwUnspentOutput(MMGenListItem):
 		txid         = ListItemAttr(CoinTxID)
-		vout         = ListItemAttr(int,typeconv=False)
+		vout         = ListItemAttr(NonNegativeInt)
 		amt          = ImmutableAttr(None)
 		amt2         = ListItemAttr(None) # the ETH balance for token account
 		comment      = ListItemAttr(TwComment,reassign_ok=True)

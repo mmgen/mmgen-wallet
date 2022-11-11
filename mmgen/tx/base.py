@@ -14,13 +14,22 @@ tx.base: base transaction class
 
 from ..globalvars import *
 from ..objmethods import MMGenObject
-from ..obj import ImmutableAttr,ListItemAttr,MMGenListItem,MMGenTxComment,TwComment,CoinTxID,HexStr
+from ..obj import (
+	ImmutableAttr,
+	ListItemAttr,
+	MMGenListItem,
+	MMGenTxComment,
+	TwComment,
+	CoinTxID,
+	HexStr,
+	NonNegativeInt
+)
 from ..addr import MMGenID,CoinAddr
 from ..util import msg,ymsg,fmt,remove_dups,make_timestamp,die
 from ..opts import opt
 
 class MMGenTxIO(MMGenListItem):
-	vout     = ListItemAttr(int,typeconv=False)
+	vout     = ListItemAttr(NonNegativeInt)
 	amt      = ImmutableAttr(None)
 	comment  = ListItemAttr(TwComment,reassign_ok=True)
 	mmid     = ListItemAttr(MMGenID,include_proto=True)

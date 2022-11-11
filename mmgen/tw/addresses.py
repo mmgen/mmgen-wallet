@@ -12,12 +12,10 @@
 tw.addresses: Tracking wallet listaddresses class for the MMGen suite
 """
 
-from collections import namedtuple
-
 from ..util import suf
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
-from ..obj import MMGenList,MMGenListItem,ImmutableAttr,ListItemAttr,TwComment,NonNegativeInt
+from ..obj import MMGenListItem,ImmutableAttr,ListItemAttr,TwComment,NonNegativeInt
 from ..rpc import rpc_init
 from ..addr import CoinAddr,MMGenID
 from ..color import red,green
@@ -30,7 +28,6 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 	item_desc = 'address'
 	txid_w = 64
 	sort_key = 'twmmid'
-	age_fmts_interactive = ('confs','block','days','date','date_time')
 	update_widths_on_age_toggle = True
 	print_output_types = ('detail',)
 	filters = ('showempty','showused','all_labels')
@@ -133,15 +130,17 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 				'mmid': max(len(d.twmmid.disp) for d in data),
 				'used': 4,
 				'amt':  self.disp_prec + 5,
-				'date': self.age_w,
+				'date': self.age_w if self.has_age else 0,
+				'block': self.age_col_params['block'][0] if wide and self.has_age else 0,
+				'date_time': self.age_col_params['date_time'][0] if wide and self.has_age else 0,
 				'spc':  7, # 6 spaces between cols + 1 leading space in fs
 			},
 			maxws = { # expandable cols
-				'addr':    max(len(d.addr) for d in data),
+				'addr':    max(len(d.addr) for d in data) if self.showcoinaddrs else 0,
 				'comment': max(d.comment.screen_width for d in data),
 			},
 			minws = {
-				'addr': 12,
+				'addr': 12 if self.showcoinaddrs else 0,
 				'comment': len('Comment'),
 			},
 			maxws_nice = {'addr': 18},
@@ -162,12 +161,12 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 			'uw': cw.used,
 			'aw': cw.addr,
 			'cw': cw.comment,
-			'bw': cw.amt,
+			'Aw': cw.amt,
 			'dw': cw.date
 		}
 
 		hdr_fs = (self.squeezed_hdr_fs_fs % ('',' {{a:{aw}}}')[self.showcoinaddrs]).format(**fs_parms)
-		fs = (self.squeezed_fs_fs % ('',' {{a:}}')[self.showcoinaddrs]).format(**fs_parms)
+		fs = (self.squeezed_fs_fs % ('',' {{a}}')[self.showcoinaddrs]).format(**fs_parms)
 
 		yield hdr_fs.format(
 			n  = '',
@@ -175,7 +174,7 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 			u  = 'Used',
 			a  = 'Address',
 			c  = 'Comment',
-			b  = 'Balance',
+			A  = 'Balance',
 			d  = self.age_hdr )
 
 		yes,no = (red('Yes '),green('No  ')) if color else ('Yes ','No  ')
@@ -187,11 +186,11 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 				yield ''
 			yield fs.format(
 				n = str(n) + ')',
-				m = MMGenID.fmtc(d.twmmid.disp,width=cw.mmid,color=True),
+				m = d.twmmid.fmt(width=cw.mmid,color=color),
 				u = yes if d.recvd else no,
-				a = d.addr.fmt(color=True,width=cw.addr),
-				c = d.comment.fmt(width=cw.comment,color=True,nullrepl='-'),
-				b = d.amt.fmt(color=True),
+				a = d.addr.fmt(color=color,width=cw.addr),
+				c = d.comment.fmt(width=cw.comment,color=color,nullrepl='-'),
+				A = d.amt.fmt(color=color,prec=self.disp_prec),
 				d = self.age_disp( d, self.age_fmt )
 			)
 
@@ -203,9 +202,9 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 			'uw': cw.used,
 			'aw': cw.addr,
 			'cw': cw.comment,
-			'bw': cw.amt,
-			'Bw': self.age_col_params['block'][0],
-			'dw': self.age_col_params['date_time'][0],
+			'Aw': cw.amt,
+			'bw': self.age_col_params['block'][0],
+			'Dw': self.age_col_params['date_time'][0],
 		}
 
 		hdr_fs = self.wide_hdr_fs_fs.format(**fs_parms)
@@ -217,9 +216,9 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 			u  = 'Used',
 			a  = 'Address',
 			c  = 'Comment',
-			b  = 'Balance',
-			B  = 'Block',
-			d  = 'Date' )
+			A  = 'Balance',
+			b  = 'Block',
+			D  = 'Date/Time' ).rstrip()
 
 		yes,no = (red('Yes '),green('No  ')) if color else ('Yes ','No  ')
 		id_save = data[0].al_id
@@ -230,14 +229,14 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 				yield ''
 			yield fs.format(
 				n = str(n) + ')',
-				m = MMGenID.fmtc(d.twmmid.disp,width=fs_parms['mw'],color=color),
+				m = d.twmmid.fmt(width=cw.mmid,color=color),
 				u = yes if d.recvd else no,
-				a = d.addr.fmt(color=color,width=fs_parms['aw']),
-				c = d.comment.fmt(width=fs_parms['cw'],color=color,nullrepl='-'),
-				b = d.amt.fmt(color=color),
-				B = self.age_disp( d, 'block' ),
-				d = self.age_disp( d, 'date_time' ),
-			)
+				a = d.addr.fmt(color=color,width=cw.addr),
+				c = d.comment.fmt(width=cw.comment,color=color,nullrepl='-'),
+				A = d.amt.fmt(color=color,prec=self.disp_prec),
+				b = self.age_disp( d, 'block' ),
+				D = self.age_disp( d, 'date_time' ),
+			).rstrip()
 
 	async def set_dates(self,addrs):
 		if not self.dates_set:

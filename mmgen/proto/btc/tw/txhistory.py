@@ -129,11 +129,11 @@ class BitcoinTwTransaction(BitcoinTwCommon):
 
 	def age_disp(self,age_fmt,width,color):
 		if age_fmt == 'confs':
-			ret_str = str(self.confirmations).rjust(width)
+			ret_str = str(self.confirmations).ljust(width)
 			return gray(ret_str) if self.confirmations < 0 and color else ret_str
 		elif age_fmt == 'block':
 			ret = (self.rpc.blockcount - (abs(self.confirmations) - 1)) * (-1 if self.confirmations < 0 else 1)
-			ret_str = str(ret).rjust(width)
+			ret_str = str(ret).ljust(width)
 			return gray(ret_str) if ret < 0 and color else ret_str
 		else:
 			return self.parent.date_formatter[age_fmt](self.rpc,self.tx.get('blocktime',0))
@@ -253,8 +253,8 @@ Actions: [q]uit, r[e]draw:
 		'p':'a_print_squeezed',
 		'P':'a_print_detail' }
 
-	squeezed_fs_fs     = ' {{n:>{nw}}} {{d:>{dw}}} {txid_fs}{{a1}} {{A}} {{a2}} {{l}}'
-	squeezed_hdr_fs_fs = ' {{n:>{nw}}} {{d:{dw}}} {txid_fs}{{a1:{aw}}} {{A}} {{a2:{a2w}}} {{l}}'
+	squeezed_fs_fs     = ' {{n:>{nw}}} {{d:>{dw}}} {txid_fs}{{i}} {{A}} {{o}} {{c}}'
+	squeezed_hdr_fs_fs = ' {{n:>{nw}}} {{d:{dw}}} {txid_fs}{{i:{iw}}} {{A}} {{o:{ow}}} {{c}}'
 
 	async def get_rpc_data(self):
 		blockhash = (

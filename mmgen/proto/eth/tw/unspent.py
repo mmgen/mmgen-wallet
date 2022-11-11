@@ -100,10 +100,6 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 		await super().__init__(proto,*args,**kwargs)
 		self.proto.tokensym = self.wallet.symbol
 
-	@property
-	def disp_prec(self):
-		return 10 # truncate precision for narrow display
-
 	async def get_data(self,*args,**kwargs):
 		await super().get_data(*args,**kwargs)
 		for e in self.data:

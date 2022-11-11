@@ -44,7 +44,7 @@ class TwCommon:
 
 	age_fmts = ('confs','block','days','date','date_time')
 	age_fmts_date_dependent = ('days','date','date_time')
-	age_fmts_interactive = ('confs','block','days','date')
+	age_fmts_interactive = ('confs','block','days','date','date_time')
 	_age_fmt = 'confs'
 
 	age_col_params = {
@@ -138,8 +138,7 @@ class TwCommon:
 				f'{val!r}: invalid age format for {op_desc} operation (must be one of {ok_vals!r})' )
 		self._age_fmt = val
 
-	@property
-	def disp_prec(self):
+	def get_disp_prec(self,wide):
 		return self.proto.coin_amt.max_prec
 
 	def get_term_columns(self,min_cols):
@@ -276,6 +275,8 @@ class TwCommon:
 		if not cached:
 
 			dt = getattr(self.display_type,display_type)
+
+			self.disp_prec = self.get_disp_prec(wide=dt.detail)
 
 			if self.has_age and (self.age_fmt in self.age_fmts_date_dependent or dt.detail):
 				await self.set_dates(self.data)
@@ -508,6 +509,10 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 		me.type = idtype
 		me.proto = proto
 		return me
+
+	@classmethod
+	def fmtc(cls,twmmid,*args,**kwargs):
+		return super().fmtc(twmmid.disp,*args,**kwargs)
 
 # non-displaying container for TwMMGenID,TwComment
 class TwLabel(str,InitErrors,MMGenObject):

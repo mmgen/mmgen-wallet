@@ -27,7 +27,7 @@ from ....amt import ETHAmt
 from ..contract import Token,TokenResolve
 from .common import EthereumTwCommon
 
-class EthereumTrackingWallet(TrackingWallet,EthereumTwCommon):
+class EthereumTrackingWallet(EthereumTwCommon,TrackingWallet):
 
 	caps = ('batch',)
 	data_key = 'accounts'
