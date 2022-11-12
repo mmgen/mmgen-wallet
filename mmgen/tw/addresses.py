@@ -13,16 +13,14 @@ tw.addresses: Tracking wallet listaddresses class for the MMGen suite
 """
 
 from ..util import suf
-from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import MMGenListItem,ImmutableAttr,ListItemAttr,TwComment,NonNegativeInt
-from ..rpc import rpc_init
 from ..addr import CoinAddr,MMGenID
 from ..color import red,green
 from .view import TwView
 from .shared import TwMMGenID
 
-class TwAddresses(TwView,metaclass=AsyncInit):
+class TwAddresses(TwView):
 
 	hdr_lbl = 'tracking wallet addresses'
 	desc = 'address list'
@@ -76,14 +74,11 @@ class TwAddresses(TwView,metaclass=AsyncInit):
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','addresses'))
 
-	async def __init__(self,proto,minconf=1,mmgen_addrs='',wallet=None,get_data=False):
+	async def __init__(self,proto,minconf=1,mmgen_addrs='',get_data=False):
 
-		self.proto   = proto
+		await super().__init__(proto)
+
 		self.minconf = NonNegativeInt(minconf)
-		self.rpc     = await rpc_init(proto)
-
-		from .ctl import TrackingWallet
-		self.wallet = wallet or await TrackingWallet(proto,mode='w')
 
 		if mmgen_addrs:
 			a = mmgen_addrs.rsplit(':',1)

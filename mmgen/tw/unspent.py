@@ -22,7 +22,6 @@ tw.unspent: Tracking wallet unspent outputs class for the MMGen suite
 
 from ..globalvars import g
 from ..util import msg,suf,fmt
-from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import (
 	ImmutableAttr,
@@ -33,11 +32,10 @@ from ..obj import (
 	CoinTxID,
 	NonNegativeInt )
 from ..addr import CoinAddr,MMGenID
-from ..rpc import rpc_init
-from .view import TwView
 from .shared import TwMMGenID,get_tw_label
+from .view import TwView
 
-class TwUnspentOutputs(TwView,metaclass=AsyncInit):
+class TwUnspentOutputs(TwView):
 
 	class display_type(TwView.display_type):
 
@@ -82,14 +80,10 @@ class TwUnspentOutputs(TwView,metaclass=AsyncInit):
 				return self.proto.coin_amt(value)
 
 	async def __init__(self,proto,minconf=1,addrs=[]):
-		self.proto        = proto
-		self.minconf      = minconf
-		self.addrs        = addrs
-		self.rpc          = await rpc_init(proto)
-		self.min_cols     = g.min_screen_width
-
-		from .ctl import TrackingWallet
-		self.wallet = await TrackingWallet(proto,mode='w')
+		await super().__init__(proto)
+		self.minconf  = minconf
+		self.addrs    = addrs
+		self.min_cols = g.min_screen_width
 
 	@property
 	def total(self):

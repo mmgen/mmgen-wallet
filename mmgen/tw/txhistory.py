@@ -13,13 +13,11 @@ tw.txhistory: Tracking wallet transaction history class for the MMGen suite
 """
 
 from ..util import fmt
-from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
-from ..rpc import rpc_init
 from ..obj import NonNegativeInt
 from .view import TwView
 
-class TwTxHistory(TwView,metaclass=AsyncInit):
+class TwTxHistory(TwView):
 
 	class display_type(TwView.display_type):
 
@@ -42,9 +40,8 @@ class TwTxHistory(TwView,metaclass=AsyncInit):
 	filters = ('show_unconfirmed',)
 
 	async def __init__(self,proto,sinceblock=0):
-		self.proto      = proto
-		self.rpc        = await rpc_init(proto)
-		self.sinceblock = NonNegativeIntInt( sinceblock if sinceblock >= 0 else self.rpc.blockcount + sinceblock )
+		await super().__init__(proto)
+		self.sinceblock = NonNegativeInt( sinceblock if sinceblock >= 0 else self.rpc.blockcount + sinceblock )
 
 	@property
 	def no_rpcdata_errmsg(self):

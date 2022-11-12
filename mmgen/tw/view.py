@@ -28,9 +28,11 @@ from ..objmethods import Hilite,InitErrors,MMGenObject
 from ..obj import get_obj,MMGenIdx,MMGenList
 from ..color import nocolor,yellow,green,red,blue
 from ..util import msg,msg_r,fmt,die,capfirst,make_timestr
+from ..rpc import rpc_init
+from ..base_obj import AsyncInit
 
 # base class for TwUnspentOutputs,TwAddresses,TwTxHistory:
-class TwView(MMGenObject):
+class TwView(MMGenObject,metaclass=AsyncInit):
 
 	class display_type:
 
@@ -108,6 +110,13 @@ class TwView(MMGenObject):
 		Screen is too narrow to display the {}
 		Please resize your screen to at least {} characters and hit any key:
 	"""
+
+	async def __init__(self,proto):
+		self.proto = proto
+		self.rpc = await rpc_init(proto)
+		if self.has_wallet:
+			from .ctl import TrackingWallet
+			self.wallet = await TrackingWallet(proto,mode='w')
 
 	@property
 	def age_w(self):
