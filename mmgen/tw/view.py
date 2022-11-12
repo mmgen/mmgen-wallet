@@ -111,6 +111,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		Please resize your screen to at least {} characters and hit any key:
 	"""
 
+	def __new__(cls,proto,*args,**kwargs):
+		return MMGenObject.__new__(proto.base_proto_subclass(cls,cls.mod_subpath))
+
 	async def __init__(self,proto):
 		self.proto = proto
 		self.rpc = await rpc_init(proto)

@@ -45,9 +45,6 @@ class TwUnspentOutputs(TwView):
 		class detail(TwView.display_type.detail):
 			cols = ('num','txid','vout','addr','mmid','amt','amt2','block','date_time','comment')
 
-	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.unspent'))
-
 	show_mmid = True
 	no_rpcdata_errmsg = """
 		No spendable outputs found!  Import addresses with balances into your
@@ -55,6 +52,7 @@ class TwUnspentOutputs(TwView):
 	"""
 	update_widths_on_age_toggle = False
 	print_output_types = ('detail',)
+	mod_subpath = 'tw.unspent'
 
 	class MMGenTwUnspentOutput(MMGenListItem):
 		txid         = ListItemAttr(CoinTxID)

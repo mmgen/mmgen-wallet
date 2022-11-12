@@ -21,18 +21,13 @@ class EthereumTwRPC(TwRPC):
 
 	async def get_addr_label_pairs(self,twmmid=None):
 
-		wallet = self.wallet or await TrackingWallet(self.proto,mode='w')
-
 		ret = [(
 				TwLabel( self.proto, mmid + ' ' + d['comment'] ),
 				CoinAddr( self.proto, d['addr'] )
-			) for mmid,d in wallet.mmid_ordered_dict.items() ]
+			) for mmid,d in self.wallet.mmid_ordered_dict.items() ]
 
 		if twmmid:
 			ret = [e for e in ret if e[0].mmid == twmmid]
-
-		if wallet is not self.wallet:
-			del wallet
 
 		return ret or None
 

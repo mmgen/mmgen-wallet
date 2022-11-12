@@ -28,9 +28,6 @@ class TwTxHistory(TwView):
 			need_column_widths = False
 			item_separator = '\n\n'
 
-	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.txhistory'))
-
 	has_wallet = False
 	show_txid = False
 	show_unconfirmed = False
@@ -38,6 +35,7 @@ class TwTxHistory(TwView):
 	update_widths_on_age_toggle = True
 	print_output_types = ('squeezed','detail')
 	filters = ('show_unconfirmed',)
+	mod_subpath = 'tw.txhistory'
 
 	async def __init__(self,proto,sinceblock=0):
 		await super().__init__(proto)

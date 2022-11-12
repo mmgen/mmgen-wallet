@@ -34,6 +34,7 @@ class TwAddresses(TwView):
 	showused = 1 # tristate: 0:no, 1:yes, 2:all
 	all_labels = False
 	no_data_errmsg = 'No addresses in tracking wallet!'
+	mod_subpath = 'tw.addresses'
 
 	class display_type(TwView.display_type):
 
@@ -70,9 +71,6 @@ class TwAddresses(TwView):
 	@property
 	def coinaddr_list(self):
 		return [d.addr for d in self.data]
-
-	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.addresses'))
 
 	async def __init__(self,proto,minconf=1,mmgen_addrs='',get_data=False):
 
