@@ -20,17 +20,11 @@
 twctl: Tracking wallet control class for the MMGen suite
 """
 
-import asyncio,json
+import json
 from collections import namedtuple
 
 from ..globalvars import g
-from ..util import (
-	msg,
-	msg_r,
-	qmsg,
-	dmsg,
-	suf,
-	die )
+from ..util import msg,msg_r,qmsg,dmsg,suf,die
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import TwComment,get_obj
@@ -329,6 +323,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			msg(f'done\n{len(ret)} addresses imported')
 		else:
 			if gather: # this seems to provide little performance benefit
+				import asyncio
 				await asyncio.gather(*(do_import(*d) for d in out))
 			else:
 				for d in out:

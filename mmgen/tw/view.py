@@ -30,7 +30,7 @@ from ..color import nocolor,yellow,green,red,blue
 from ..util import msg,msg_r,fmt,die,capfirst,make_timestr
 
 # base class for TwUnspentOutputs,TwAddresses,TwTxHistory:
-class TwView:
+class TwView(MMGenObject):
 
 	dates_set   = False
 	cols        = None

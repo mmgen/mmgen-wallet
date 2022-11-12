@@ -21,7 +21,7 @@ from ..obj import CoinTxID,MMGenList,Int
 from ..rpc import rpc_init
 from .view import TwView
 
-class TwTxHistory(MMGenObject,TwView,metaclass=AsyncInit):
+class TwTxHistory(TwView,metaclass=AsyncInit):
 
 	class display_type(TwView.display_type):
 

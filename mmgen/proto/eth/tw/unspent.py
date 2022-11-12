@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-proto.eth.twuo: Ethereum tracking wallet unspent outputs class
+proto.eth.tw.unspent: Ethereum tracking wallet unspent outputs class
 """
 
 from ....tw.shared import TwLabel

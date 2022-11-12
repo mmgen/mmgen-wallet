@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-twuo: Tracking wallet unspent outputs class for the MMGen suite
+tw.unspent: Tracking wallet unspent outputs class for the MMGen suite
 """
 
 from ..globalvars import g
@@ -38,7 +38,7 @@ from ..rpc import rpc_init
 from .view import TwView
 from .shared import TwMMGenID,get_tw_label
 
-class TwUnspentOutputs(MMGenObject,TwView,metaclass=AsyncInit):
+class TwUnspentOutputs(TwView,metaclass=AsyncInit):
 
 	class display_type(TwView.display_type):
 
@@ -51,6 +51,7 @@ class TwUnspentOutputs(MMGenObject,TwView,metaclass=AsyncInit):
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','unspent'))
 
+	show_mmid = True
 	txid_w = 64
 	no_rpcdata_errmsg = """
 		No spendable outputs found!  Import addresses with balances into your
@@ -84,7 +85,6 @@ class TwUnspentOutputs(MMGenObject,TwView,metaclass=AsyncInit):
 
 	async def __init__(self,proto,minconf=1,addrs=[]):
 		self.proto        = proto
-		self.show_mmid    = True
 		self.minconf      = minconf
 		self.addrs        = addrs
 		self.rpc          = await rpc_init(proto)
@@ -178,7 +178,7 @@ class TwUnspentOutputs(MMGenObject,TwView,metaclass=AsyncInit):
 
 		for n,d in enumerate(data):
 			yield fs.format(
-				n = str(n+1)+')',
+				n = str(n+1) + ')',
 				t = (CoinTxID.fmtc('|' + '.'*(cw.txid-1),color=color) if d.skip  == 'txid'
 					else d.txid.truncate(width=cw.txid,color=color)) if cw.txid else None,
 				v = ' ' + d.vout.fmt(width=cw.vout-1,color=color) if cw.vout else None,
@@ -201,7 +201,7 @@ class TwUnspentOutputs(MMGenObject,TwView,metaclass=AsyncInit):
 			a = 'Address',
 			m = 'MMGenID',
 			A = 'Amt({})'.format(self.proto.dcoin),
-			B = 'Amt({})'.format(self.proto.coin) if cw.amt2 else None,
+			B = 'Amt({})'.format(self.proto.coin),
 			b = 'Block',
 			D = 'Date/Time',
 			c = 'Comment' ).rstrip()

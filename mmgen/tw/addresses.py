@@ -22,7 +22,7 @@ from ..color import red,green
 from .view import TwView
 from .shared import TwMMGenID
 
-class TwAddresses(MMGenObject,TwView,metaclass=AsyncInit):
+class TwAddresses(TwView,metaclass=AsyncInit):
 
 	hdr_lbl = 'tracking wallet addresses'
 	desc = 'address list'
