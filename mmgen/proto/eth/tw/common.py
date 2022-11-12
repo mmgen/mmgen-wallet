@@ -13,11 +13,11 @@ proto.eth.tw.common: Ethereum base protocol tracking wallet dependency classes
 """
 from ....globalvars import g
 from ....tw.ctl import TrackingWallet
-from ....tw.common import TwCommon
+from ....tw.common import TwView
 from ....addr import CoinAddr
 from ....tw.common import TwLabel
 
-class EthereumTwCommon(TwCommon):
+class EthereumTwCommon(TwView):
 
 	def age_disp(self,o,age_fmt): # TODO
 		pass

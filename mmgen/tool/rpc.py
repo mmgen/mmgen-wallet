@@ -21,7 +21,7 @@ tool/rpc.py: JSON/RPC routines for the 'mmgen-tool' utility
 """
 
 from .common import tool_cmd_base,options_annot_str
-from ..tw.common import TwCommon
+from ..tw.common import TwView
 from ..tw.txhistory import TwTxHistory
 
 class tool_cmd(tool_cmd_base):
@@ -68,8 +68,8 @@ class tool_cmd(tool_cmd_base):
 			reverse:     'reverse order of unspent outputs' = False,
 			wide:        'display data in wide tabular format' = False,
 			minconf:     'minimum number of confirmations' = 1,
-			sort:        'unspent output sort order ' + options_annot_str(TwCommon.sort_funcs) = 'age',
-			age_fmt:     'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
+			sort:        'unspent output sort order ' + options_annot_str(TwView.sort_funcs) = 'age',
+			age_fmt:     'format for the Age/Date column ' + options_annot_str(TwView.age_fmts) = 'confs',
 			interactive: 'enable interactive operation' = False,
 			show_mmid:   'show MMGen IDs along with coin addresses' = True ):
 		"view tracking wallet unspent outputs"
@@ -88,7 +88,7 @@ class tool_cmd(tool_cmd_base):
 			detail:      'produce detailed, non-tabular output' = False,
 			sinceblock:  'display transactions starting from this block' = 0,
 			sort:        'transaction sort order ' + options_annot_str(TwTxHistory.sort_funcs) = 'age',
-			age_fmt:     'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
+			age_fmt:     'format for the Age/Date column ' + options_annot_str(TwView.age_fmts) = 'confs',
 			interactive: 'enable interactive operation' = False ):
 		"view transaction history of tracking wallet"
 
@@ -101,7 +101,7 @@ class tool_cmd(tool_cmd_base):
 			wide:         'display data in wide tabular format' = False,
 			minconf:      'minimum number of confirmations' = 1,
 			showcoinaddr: 'display coin address in addition to MMGen ID' = True,
-			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs' ):
+			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwView.age_fmts) = 'confs' ):
 		"list the specified MMGen address in the tracking wallet and its balance"
 
 		return await self.listaddresses(
@@ -117,7 +117,7 @@ class tool_cmd(tool_cmd_base):
 			wide:         'display data in wide tabular format' = False,
 			minconf:      'minimum number of confirmations' = 1,
 			sort:         'address sort order ' + options_annot_str(['reverse','mmid','addr','amt']) = '',
-			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwCommon.age_fmts) = 'confs',
+			age_fmt:      'format for the Age/Date column ' + options_annot_str(TwView.age_fmts) = 'confs',
 			interactive:  'enable interactive operation' = False,
 			mmgen_addrs:  'hyphenated range or comma-separated list of addresses' = '',
 			showcoinaddrs:'display coin addresses in addition to MMGen IDs' = True,

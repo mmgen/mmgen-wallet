@@ -35,16 +35,16 @@ from ..obj import (
 	NonNegativeInt )
 from ..addr import CoinAddr,MMGenID
 from ..rpc import rpc_init
-from .common import TwCommon,TwMMGenID,get_tw_label
+from .common import TwView,TwMMGenID,get_tw_label
 
-class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
+class TwUnspentOutputs(MMGenObject,TwView,metaclass=AsyncInit):
 
-	class display_type(TwCommon.display_type):
+	class display_type(TwView.display_type):
 
-		class squeezed(TwCommon.display_type.squeezed):
+		class squeezed(TwView.display_type.squeezed):
 			cols = ('num','txid','vout','addr','mmid','comment','amt','amt2','date')
 
-		class detail(TwCommon.display_type.detail):
+		class detail(TwView.display_type.detail):
 			cols = ('num','txid','vout','addr','mmid','amt','amt2','block','date_time','comment')
 
 	def __new__(cls,proto,*args,**kwargs):
@@ -235,7 +235,7 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 				o.date = dates[idx]
 			self.dates_set = True
 
-	class action(TwCommon.action):
+	class action(TwView.action):
 
 		def s_twmmid(self,parent):
 			parent.do_sort('twmmid')

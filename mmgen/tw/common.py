@@ -31,7 +31,7 @@ from ..util import msg,msg_r,fmt,die,capfirst,make_timestr
 from ..addr import MMGenID
 
 # mixin class for TwUnspentOutputs,TwAddresses,TwTxHistory:
-class TwCommon:
+class TwView:
 
 	dates_set   = False
 	cols        = None

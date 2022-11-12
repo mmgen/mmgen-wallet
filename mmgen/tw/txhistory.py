@@ -19,16 +19,16 @@ from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import CoinTxID,MMGenList,Int
 from ..rpc import rpc_init
-from .common import TwCommon
+from .common import TwView
 
-class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
+class TwTxHistory(MMGenObject,TwView,metaclass=AsyncInit):
 
-	class display_type(TwCommon.display_type):
+	class display_type(TwView.display_type):
 
-		class squeezed(TwCommon.display_type.squeezed):
+		class squeezed(TwView.display_type.squeezed):
 			cols = ('num','txid','date','inputs','amt','outputs','comment')
 
-		class detail(TwCommon.display_type.detail):
+		class detail(TwView.display_type.detail):
 			need_column_widths = False
 			item_separator = '\n\n'
 
@@ -177,7 +177,7 @@ class TwTxHistory(MMGenObject,TwCommon,metaclass=AsyncInit):
 	def dump_fn_pfx(self):
 		return 'transaction-history' + (f'-since-block-{self.sinceblock}' if self.sinceblock else '')
 
-	class action(TwCommon.action):
+	class action(TwView.action):
 
 		def s_amt(self,parent):
 			parent.do_sort('amt')

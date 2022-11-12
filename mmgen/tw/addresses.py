@@ -19,9 +19,9 @@ from ..obj import MMGenListItem,ImmutableAttr,ListItemAttr,TwComment,NonNegative
 from ..rpc import rpc_init
 from ..addr import CoinAddr,MMGenID
 from ..color import red,green
-from .common import TwCommon,TwMMGenID
+from .common import TwView,TwMMGenID
 
-class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
+class TwAddresses(MMGenObject,TwView,metaclass=AsyncInit):
 
 	hdr_lbl = 'tracking wallet addresses'
 	desc = 'address list'
@@ -37,12 +37,12 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 	all_labels = False
 	no_data_errmsg = 'No addresses in tracking wallet!'
 
-	class display_type(TwCommon.display_type):
+	class display_type(TwView.display_type):
 
-		class squeezed(TwCommon.display_type.squeezed):
+		class squeezed(TwView.display_type.squeezed):
 			cols = ('num','mmid','used','addr','comment','amt','date')
 
-		class detail(TwCommon.display_type.detail):
+		class detail(TwView.display_type.detail):
 			cols = ('num','mmid','used','addr','comment','amt','block','date_time')
 
 	class TwAddress(MMGenListItem):
@@ -249,7 +249,7 @@ class TwAddresses(MMGenObject,TwCommon,metaclass=AsyncInit):
 	def dump_fn_pfx(self):
 		return 'listaddresses' + (f'-minconf-{self.minconf}' if self.minconf else '')
 
-	class action(TwCommon.action):
+	class action(TwView.action):
 
 		def s_amt(self,parent):
 			parent.do_sort('amt')
