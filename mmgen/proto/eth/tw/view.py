@@ -9,15 +9,13 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-proto.eth.tw.common: Ethereum base protocol tracking wallet dependency classes
+proto.eth.tw.view: Ethereum base protocol base class for tracking wallet view classes
 """
-from ....globalvars import g
-from ....tw.ctl import TrackingWallet
-from ....tw.view import TwView
-from ....addr import CoinAddr
-from ....tw.shared import TwLabel
 
-class EthereumTwCommon(TwView):
+from ....globalvars import g
+from ....tw.view import TwView
+
+class EthereumTwView(TwView):
 
 	def age_disp(self,o,age_fmt): # TODO
 		pass
@@ -34,22 +32,3 @@ class EthereumTwCommon(TwView):
 			ret += (nocolor,yellow)[color](
 				'WARNING: Using cached balances. These may be out of date!') + '\n'
 		return ret
-
-	async def get_addr_label_pairs(self,twmmid=None):
-		wallet = (
-			self if isinstance(self,TrackingWallet) else
-			(self.wallet or await TrackingWallet(self.proto,mode='w'))
-		)
-
-		ret = [(
-				TwLabel( self.proto, mmid + ' ' + d['comment'] ),
-				CoinAddr( self.proto, d['addr'] )
-			) for mmid,d in wallet.mmid_ordered_dict.items() ]
-
-		if wallet is not self:
-			del wallet
-
-		if twmmid:
-			ret = [e for e in ret if e[0].mmid == twmmid]
-
-		return ret or None

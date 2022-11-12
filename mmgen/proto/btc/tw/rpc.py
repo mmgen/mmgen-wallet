@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-proto.btc.tw.common: Bitcoin base protocol tracking wallet dependency classes
+proto.btc.tw.rpc: Bitcoin base protocol tracking wallet RPC classes
 """
 
 from ....addr import CoinAddr
@@ -17,7 +17,7 @@ from ....util import die,msg,rmsg
 from ....obj import MMGenList
 from ....tw.shared import get_tw_label
 
-class BitcoinTwCommon:
+class BitcoinTwRPC:
 
 	async def get_addr_label_pairs(self,twmmid=None):
 		"""

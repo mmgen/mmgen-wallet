@@ -20,9 +20,9 @@ from ....addr import CoinAddr
 from ....util import msg,msg_r
 from ....color import nocolor,red,pink,gray
 from ....obj import TwComment,CoinTxID,Int
-from .common import BitcoinTwCommon
+from .rpc import BitcoinTwRPC
 
-class BitcoinTwTransaction(BitcoinTwCommon):
+class BitcoinTwTransaction(BitcoinTwRPC):
 
 	def __init__(self,parent,proto,rpc,
 			idx,          # unique numeric identifier of this transaction in listing
@@ -221,7 +221,7 @@ class BitcoinTwTransaction(BitcoinTwCommon):
 				self.fee.to_unit(atomic_unit) // self.vsize,
 				atomic_unit )) )
 
-class BitcoinTwTxHistory(TwTxHistory,BitcoinTwCommon):
+class BitcoinTwTxHistory(TwTxHistory,BitcoinTwRPC):
 
 	has_age = True
 	hdr_lbl = 'transaction history'

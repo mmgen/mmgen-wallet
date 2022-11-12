@@ -17,9 +17,9 @@ from ....tw.shared import TwLabel
 from ....util import msg,msg_r
 from ....addr import CoinAddr
 from ....obj import NonNegativeInt,get_obj
-from .common import BitcoinTwCommon
+from .rpc import BitcoinTwRPC
 
-class BitcoinTwAddresses(TwAddresses,BitcoinTwCommon):
+class BitcoinTwAddresses(TwAddresses,BitcoinTwRPC):
 
 	has_age = True
 	prompt = """

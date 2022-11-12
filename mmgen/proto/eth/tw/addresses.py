@@ -15,9 +15,10 @@ proto.eth.tw.addresses: Ethereum base protocol tracking wallet address list clas
 from ....tw.addresses import TwAddresses
 from ....tw.ctl import TrackingWallet
 from ....addr import CoinAddr
-from .common import EthereumTwCommon
+from .view import EthereumTwView
+from .rpc import EthereumTwRPC
 
-class EthereumTwAddresses(EthereumTwCommon,TwAddresses):
+class EthereumTwAddresses(EthereumTwView,EthereumTwRPC,TwAddresses):
 
 	has_age = False
 	prompt = """

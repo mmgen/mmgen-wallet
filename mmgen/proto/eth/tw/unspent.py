@@ -22,10 +22,10 @@ proto.eth.twuo: Ethereum tracking wallet unspent outputs class
 
 from ....tw.shared import TwLabel
 from ....tw.unspent import TwUnspentOutputs
-from .common import EthereumTwCommon
+from .view import EthereumTwView
 
 # No unspent outputs with Ethereum, but naming must be consistent
-class EthereumTwUnspentOutputs(EthereumTwCommon,TwUnspentOutputs):
+class EthereumTwUnspentOutputs(EthereumTwView,TwUnspentOutputs):
 
 	class display_type(TwUnspentOutputs.display_type):
 
