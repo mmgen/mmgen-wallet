@@ -29,7 +29,6 @@ from ..obj import (
 	ListItemAttr,
 	MMGenListItem,
 	TwComment,
-	get_obj,
 	HexStr,
 	CoinTxID,
 	NonNegativeInt )
@@ -52,7 +51,6 @@ class TwUnspentOutputs(TwView,metaclass=AsyncInit):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','unspent'))
 
 	show_mmid = True
-	txid_w = 64
 	no_rpcdata_errmsg = """
 		No spendable outputs found!  Import addresses with balances into your
 		watch-only wallet using 'mmgen-addrimport' and then re-run this program.

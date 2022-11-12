@@ -27,7 +27,6 @@ class TwAddresses(TwView,metaclass=AsyncInit):
 	hdr_lbl = 'tracking wallet addresses'
 	desc = 'address list'
 	item_desc = 'address'
-	txid_w = 64
 	sort_key = 'twmmid'
 	update_widths_on_age_toggle = True
 	print_output_types = ('detail',)
@@ -79,10 +78,9 @@ class TwAddresses(TwView,metaclass=AsyncInit):
 
 	async def __init__(self,proto,minconf=1,mmgen_addrs='',wallet=None,get_data=False):
 
-		self.proto         = proto
-		self.minconf       = NonNegativeInt(minconf)
-		self.usr_addr_list = []
-		self.rpc           = await rpc_init(proto)
+		self.proto   = proto
+		self.minconf = NonNegativeInt(minconf)
+		self.rpc     = await rpc_init(proto)
 
 		from .ctl import TrackingWallet
 		self.wallet = wallet or await TrackingWallet(proto,mode='w')
@@ -96,6 +94,8 @@ class TwAddresses(TwView,metaclass=AsyncInit):
 					'(must be in form <seed ID>:[<type>:]<idx list>)' )
 			from ..addrlist import AddrIdxList
 			self.usr_addr_list = [MMGenID(self.proto,f'{a[0]}:{i}') for i in AddrIdxList(a[1])]
+		else:
+			self.usr_addr_list = []
 
 		if get_data:
 			await self.get_data()

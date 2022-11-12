@@ -32,10 +32,28 @@ from ..util import msg,msg_r,fmt,die,capfirst,make_timestr
 # base class for TwUnspentOutputs,TwAddresses,TwTxHistory:
 class TwView(MMGenObject):
 
+	class display_type:
+
+		class squeezed:
+			detail = False
+			fmt_method = 'gen_squeezed_display'
+			need_column_widths = True
+			item_separator = '\n'
+			print_header = '[screen print truncated to width {}]\n'
+
+		class detail:
+			detail = True
+			fmt_method = 'gen_detail_display'
+			need_column_widths = True
+			item_separator = '\n'
+			print_header = ''
+
+	has_wallet  = True
 	dates_set   = False
 	cols        = None
 	reverse     = False
 	group       = False
+	txid_w      = 64
 	sort_key    = 'age'
 	interactive = False
 	_display_data = {}
@@ -91,48 +109,6 @@ class TwView(MMGenObject):
 		Please resize your screen to at least {} characters and hit any key:
 	"""
 
-	class display_type:
-
-		class squeezed:
-			detail = False
-			fmt_method = 'gen_squeezed_display'
-			need_column_widths = True
-			item_separator = '\n'
-			print_header = '[screen print truncated to width {}]\n'
-
-		class detail:
-			detail = True
-			fmt_method = 'gen_detail_display'
-			need_column_widths = True
-			item_separator = '\n'
-			print_header = ''
-
-	def age_disp(self,o,age_fmt):
-		if age_fmt == 'confs':
-			return o.confs or '-'
-		elif age_fmt == 'block':
-			return self.rpc.blockcount + 1 - o.confs if o.confs else '-'
-		else:
-			return self.date_formatter[age_fmt](self.rpc,o.date)
-
-	async def get_data(self,sort_key=None,reverse_sort=False):
-
-		rpc_data = await self.get_rpc_data()
-
-		if not rpc_data:
-			die(0,fmt(self.no_rpcdata_errmsg).strip())
-
-		lbl_id = ('account','label')['label_api' in self.rpc.caps]
-
-		res = self.gen_data(rpc_data,lbl_id)
-		self.data = MMGenList(await res if type(res).__name__ == 'coroutine' else res)
-		self.disp_data = list(self.filter_data())
-
-		if not self.data:
-			die(1,self.no_data_errmsg)
-
-		self.do_sort(key=sort_key,reverse=reverse_sort)
-
 	@property
 	def age_w(self):
 		return self.age_col_params[self.age_fmt][0]
@@ -155,8 +131,68 @@ class TwView(MMGenObject):
 				f'{val!r}: invalid age format for {op_desc} operation (must be one of {ok_vals!r})' )
 		self._age_fmt = val
 
+	def age_disp(self,o,age_fmt):
+		if age_fmt == 'confs':
+			return o.confs or '-'
+		elif age_fmt == 'block':
+			return self.rpc.blockcount + 1 - o.confs if o.confs else '-'
+		else:
+			return self.date_formatter[age_fmt](self.rpc,o.date)
+
 	def get_disp_prec(self,wide):
 		return self.proto.coin_amt.max_prec
+
+	sort_disp = {
+		'addr':   'Addr',
+		'age':    'Age',
+		'amt':    'Amt',
+		'txid':   'TxID',
+		'twmmid': 'MMGenID',
+	}
+
+	sort_funcs = {
+		'addr':   lambda i: i.addr,
+		'age':    lambda i: 0 - i.confs,
+		'amt':    lambda i: i.amt,
+		'txid':   lambda i: f'{i.txid} {i.vout:04}',
+		'twmmid': lambda i: i.twmmid.sort_key
+	}
+
+	def sort_info(self,include_group=True):
+		ret = ([],['Reverse'])[self.reverse]
+		ret.append(self.sort_disp[self.sort_key])
+		if include_group and self.group and (self.sort_key in ('addr','txid','twmmid')):
+			ret.append('Grouped')
+		return ret
+
+	def do_sort(self,key=None,reverse=False):
+		key = key or self.sort_key
+		if key not in self.sort_funcs:
+			die(1,f'{key!r}: invalid sort key.  Valid options: {" ".join(self.sort_funcs)}')
+		self.sort_key = key
+		assert type(reverse) == bool
+		self.data.sort(key=self.sort_funcs[key],reverse=reverse or self.reverse)
+
+	async def get_data(self,sort_key=None,reverse_sort=False):
+
+		rpc_data = await self.get_rpc_data()
+
+		if not rpc_data:
+			die(0,fmt(self.no_rpcdata_errmsg).strip())
+
+		lbl_id = ('account','label')['label_api' in self.rpc.caps]
+
+		res = self.gen_data(rpc_data,lbl_id)
+		self.data = MMGenList(await res if type(res).__name__ == 'coroutine' else res)
+		self.disp_data = list(self.filter_data())
+
+		if not self.data:
+			die(1,self.no_data_errmsg)
+
+		self.do_sort(key=sort_key,reverse=reverse_sort)
+
+	def filter_data(self):
+		return self.data.copy()
 
 	def get_term_columns(self,min_cols):
 		from ..term import get_terminal_size,get_char_raw
@@ -171,37 +207,6 @@ class TwView(MMGenObject):
 					get_char_raw('\n'+fmt(self.twid_errmsg.format(self.desc,min_cols),append=''))
 			else:
 				return min_cols
-
-	sort_disp = {
-		'addr':   'Addr',
-		'age':    'Age',
-		'amt':    'Amt',
-		'txid':   'TxID',
-		'twmmid': 'MMGenID',
-	}
-
-	def sort_info(self,include_group=True):
-		ret = ([],['Reverse'])[self.reverse]
-		ret.append(self.sort_disp[self.sort_key])
-		if include_group and self.group and (self.sort_key in ('addr','txid','twmmid')):
-			ret.append('Grouped')
-		return ret
-
-	sort_funcs = {
-		'addr':   lambda i: i.addr,
-		'age':    lambda i: 0 - i.confs,
-		'amt':    lambda i: i.amt,
-		'txid':   lambda i: f'{i.txid} {i.vout:04}',
-		'twmmid': lambda i: i.twmmid.sort_key
-	}
-
-	def do_sort(self,key=None,reverse=False):
-		key = key or self.sort_key
-		if key not in self.sort_funcs:
-			die(1,f'{key!r}: invalid sort key.  Valid options: {" ".join(self.sort_funcs)}')
-		self.sort_key = key
-		assert type(reverse) == bool
-		self.data.sort(key=self.sort_funcs[key],reverse=reverse or self.reverse)
 
 	def compute_column_widths(self,widths,maxws,minws,maxws_nice={},wide=False):
 
@@ -284,8 +289,11 @@ class TwView(MMGenObject):
 	def subheader(self,color):
 		return ''
 
-	def filter_data(self):
-		return self.data.copy()
+	def footer(self,color):
+		return '\nTOTAL: {} {}\n'.format(
+			self.total.hl(color=color) if hasattr(self,'total') else None,
+			self.proto.dcoin
+		) if hasattr(self,'total') else ''
 
 	async def format(self,display_type,color=True,cached=False,interactive=False):
 
@@ -319,12 +327,6 @@ class TwView(MMGenObject):
 			)
 
 		return self._display_data[display_type] + ('' if interactive else self.footer(color))
-
-	def footer(self,color):
-		return '\nTOTAL: {} {}\n'.format(
-			self.total.hl(color=color) if hasattr(self,'total') else None,
-			self.proto.dcoin
-		) if hasattr(self,'total') else ''
 
 	async def view_filter_and_sort(self):
 		from ..opts import opt
