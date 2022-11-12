@@ -13,7 +13,7 @@ proto.btc.tw.addresses: Bitcoin base protocol tracking wallet address list class
 """
 
 from ....tw.addresses import TwAddresses
-from ....tw.common import TwLabel,get_obj
+from ....tw.view import TwLabel,get_obj
 from ....util import msg,msg_r
 from ....addr import CoinAddr
 from ....obj import NonNegativeInt

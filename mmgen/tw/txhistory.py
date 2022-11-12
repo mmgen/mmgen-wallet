@@ -19,7 +19,7 @@ from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import CoinTxID,MMGenList,Int
 from ..rpc import rpc_init
-from .common import TwView
+from .view import TwView
 
 class TwTxHistory(MMGenObject,TwView,metaclass=AsyncInit):
 

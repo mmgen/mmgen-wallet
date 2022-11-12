@@ -24,7 +24,7 @@ from collections import namedtuple
 
 from .common import *
 from .addrlist import AddrList,KeyAddrList
-from .tw.common import TwLabel
+from .tw.view import TwLabel
 
 opts_data = {
 	'text': {

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tw: Tracking wallet dependency classes and helper functions
+tw.view: base class for tracking wallet view classes
 """
 
 import sys,time,asyncio
@@ -30,7 +30,7 @@ from ..color import nocolor,yellow,green,red,blue
 from ..util import msg,msg_r,fmt,die,capfirst,make_timestr
 from ..addr import MMGenID
 
-# mixin class for TwUnspentOutputs,TwAddresses,TwTxHistory:
+# base class for TwUnspentOutputs,TwAddresses,TwTxHistory:
 class TwView:
 
 	dates_set   = False

@@ -13,7 +13,7 @@ proto.btc.twbal: Bitcoin base protocol tracking wallet balance class
 """
 
 from ....tw.bal import TwGetBalance
-from ....tw.common import get_tw_label
+from ....tw.view import get_tw_label
 
 class BitcoinTwGetBalance(TwGetBalance):
 

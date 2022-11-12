@@ -19,7 +19,7 @@ from ..obj import MMGenListItem,ImmutableAttr,ListItemAttr,TwComment,NonNegative
 from ..rpc import rpc_init
 from ..addr import CoinAddr,MMGenID
 from ..color import red,green
-from .common import TwView,TwMMGenID
+from .view import TwView,TwMMGenID
 
 class TwAddresses(MMGenObject,TwView,metaclass=AsyncInit):
 

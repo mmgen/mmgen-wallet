@@ -13,9 +13,9 @@ proto.eth.tw.common: Ethereum base protocol tracking wallet dependency classes
 """
 from ....globalvars import g
 from ....tw.ctl import TrackingWallet
-from ....tw.common import TwView
+from ....tw.view import TwView
 from ....addr import CoinAddr
-from ....tw.common import TwLabel
+from ....tw.view import TwLabel
 
 class EthereumTwCommon(TwView):
 

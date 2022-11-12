@@ -15,7 +15,7 @@ proto.btc.tw.common: Bitcoin base protocol tracking wallet dependency classes
 from ....addr import CoinAddr
 from ....util import die,msg,rmsg
 from ....obj import MMGenList
-from ....tw.common import get_tw_label
+from ....tw.view import get_tw_label
 
 class BitcoinTwCommon:
 

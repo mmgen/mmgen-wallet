@@ -38,7 +38,7 @@ from mmgen.seedsplit import *
 from mmgen.addr import *
 from mmgen.addrlist import *
 from mmgen.addrdata import *
-from mmgen.tw.common import *
+from mmgen.tw.view import *
 from mmgen.amt import *
 from mmgen.key import *
 from mmgen.rpc import IPPort

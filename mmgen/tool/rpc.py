@@ -21,7 +21,7 @@ tool/rpc.py: JSON/RPC routines for the 'mmgen-tool' utility
 """
 
 from .common import tool_cmd_base,options_annot_str
-from ..tw.common import TwView
+from ..tw.view import TwView
 from ..tw.txhistory import TwTxHistory
 
 class tool_cmd(tool_cmd_base):
