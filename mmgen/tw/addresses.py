@@ -72,7 +72,7 @@ class TwAddresses(TwView):
 		return [d.addr for d in self.data]
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','addresses'))
+		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.addresses'))
 
 	async def __init__(self,proto,minconf=1,mmgen_addrs='',get_data=False):
 

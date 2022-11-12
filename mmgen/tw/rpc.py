@@ -17,7 +17,7 @@ from ..objmethods import MMGenObject
 class TwRPC:
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','rpc'))
+		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.rpc'))
 
 	def __init__(self,proto,rpc,wallet):
 		self.proto = proto

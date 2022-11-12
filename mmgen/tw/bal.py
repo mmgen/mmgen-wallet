@@ -28,7 +28,7 @@ from ..rpc import rpc_init
 class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','bal'))
+		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.bal'))
 
 	async def __init__(self,proto,minconf,quiet):
 

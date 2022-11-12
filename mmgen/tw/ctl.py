@@ -54,7 +54,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 	importing = False
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','ctl'))
+		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.ctl'))
 
 	async def __init__(self,proto,mode='r',token_addr=None,rpc_ignore_wallet=False):
 

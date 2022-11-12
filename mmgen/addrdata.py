@@ -69,7 +69,7 @@ class AddrData(MMGenObject):
 class TwAddrData(AddrData,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,None,'addrdata'))
+		return MMGenObject.__new__(proto.base_proto_subclass(cls,'addrdata'))
 
 	async def __init__(self,proto,wallet=None):
 		from .rpc import rpc_init

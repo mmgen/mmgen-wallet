@@ -46,7 +46,7 @@ class TwUnspentOutputs(TwView):
 			cols = ('num','txid','vout','addr','mmid','amt','amt2','block','date_time','comment')
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','unspent'))
+		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.unspent'))
 
 	show_mmid = True
 	no_rpcdata_errmsg = """

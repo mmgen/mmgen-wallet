@@ -29,7 +29,7 @@ class TwTxHistory(TwView):
 			item_separator = '\n\n'
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw','txhistory'))
+		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.txhistory'))
 
 	has_wallet = False
 	show_txid = False

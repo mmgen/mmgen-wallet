@@ -165,13 +165,12 @@ class CoinProtocol(MMGenObject):
 		def viewkey(self,viewkey_str):
 			raise NotImplementedError(f'{self.name} protocol does not support view keys')
 
-		def base_proto_subclass(self,cls,subdir,modname,sub_clsname=None):
+		def base_proto_subclass(self,cls,modname,sub_clsname=None):
 			"""
 			magic module loading and class selection
 			"""
-			modpath = 'mmgen.proto.{}.{}{}'.format(
+			modpath = 'mmgen.proto.{}.{}'.format(
 				self.base_proto_coin.lower(),
-				subdir + '.' if subdir else '',
 				modname )
 
 			clsname = (
