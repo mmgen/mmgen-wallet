@@ -483,7 +483,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		cmd_args = self._make_txcreate_cmdline(tx_data)
 
 		if cmdline_inputs:
-			from mmgen.tw.view import TwLabel
+			from mmgen.tw.shared import TwLabel
 			cmd_args = [
 				'--inputs={},{},{},{},{},{}'.format(
 					TwLabel(self.proto,dfake[0][self.lbl_id]).mmid,dfake[1]['address'],

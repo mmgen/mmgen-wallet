@@ -15,7 +15,7 @@ from ....globalvars import g
 from ....tw.ctl import TrackingWallet
 from ....tw.view import TwView
 from ....addr import CoinAddr
-from ....tw.view import TwLabel
+from ....tw.shared import TwLabel
 
 class EthereumTwCommon(TwView):
 

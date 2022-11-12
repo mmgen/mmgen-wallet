@@ -36,7 +36,7 @@ from ..objmethods import MMGenObject
 from ..obj import TwComment,get_obj
 from ..addr import CoinAddr,is_mmgen_id,is_coin_addr
 from ..rpc import rpc_init
-from .view import TwMMGenID,TwLabel
+from .shared import TwMMGenID,TwLabel
 
 addr_info = namedtuple('addr_info',['twmmid','coinaddr'])
 

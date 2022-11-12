@@ -35,7 +35,8 @@ from ..obj import (
 	NonNegativeInt )
 from ..addr import CoinAddr,MMGenID
 from ..rpc import rpc_init
-from .view import TwView,TwMMGenID,get_tw_label
+from .view import TwView
+from .shared import TwMMGenID,get_tw_label
 
 class TwUnspentOutputs(MMGenObject,TwView,metaclass=AsyncInit):
 

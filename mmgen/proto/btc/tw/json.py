@@ -14,7 +14,7 @@ proto.btc.tw.json: export and import tracking wallet to JSON format
 
 from collections import namedtuple
 from ....tw.json import TwJSON
-from ....tw.view import TwMMGenID
+from ....tw.shared import TwMMGenID
 
 class BitcoinTwJSON(TwJSON):
 
