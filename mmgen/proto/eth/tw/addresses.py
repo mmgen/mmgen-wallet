@@ -18,7 +18,7 @@ from ....addr import CoinAddr
 from .view import EthereumTwView
 from .rpc import EthereumTwRPC
 
-class EthereumTwAddresses(EthereumTwView,EthereumTwRPC,TwAddresses):
+class EthereumTwAddresses(TwAddresses,EthereumTwView,EthereumTwRPC):
 
 	has_age = False
 	prompt = """

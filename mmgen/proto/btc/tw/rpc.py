@@ -16,8 +16,9 @@ from ....addr import CoinAddr
 from ....util import die,msg,rmsg
 from ....obj import MMGenList
 from ....tw.shared import get_tw_label
+from ....tw.rpc import TwRPC
 
-class BitcoinTwRPC:
+class BitcoinTwRPC(TwRPC):
 
 	async def get_addr_label_pairs(self,twmmid=None):
 		"""

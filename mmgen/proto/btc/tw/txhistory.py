@@ -22,7 +22,7 @@ from ....color import nocolor,red,pink,gray
 from ....obj import TwComment,CoinTxID,Int
 from .rpc import BitcoinTwRPC
 
-class BitcoinTwTransaction(BitcoinTwRPC):
+class BitcoinTwTransaction:
 
 	def __init__(self,parent,proto,rpc,
 			idx,          # unique numeric identifier of this transaction in listing

@@ -15,24 +15,26 @@ proto.eth.tw.rpc: Ethereum base protocol tracking wallet RPC class
 from ....tw.ctl import TrackingWallet
 from ....addr import CoinAddr
 from ....tw.shared import TwLabel
+from ....tw.rpc import TwRPC
 
-class EthereumTwRPC:
+class EthereumTwRPC(TwRPC):
 
 	async def get_addr_label_pairs(self,twmmid=None):
-		wallet = (
-			self if isinstance(self,TrackingWallet) else
-			(self.wallet or await TrackingWallet(self.proto,mode='w'))
-		)
+
+		wallet = self.wallet or await TrackingWallet(self.proto,mode='w')
 
 		ret = [(
 				TwLabel( self.proto, mmid + ' ' + d['comment'] ),
 				CoinAddr( self.proto, d['addr'] )
 			) for mmid,d in wallet.mmid_ordered_dict.items() ]
 
-		if wallet is not self:
-			del wallet
-
 		if twmmid:
 			ret = [e for e in ret if e[0].mmid == twmmid]
 
+		if wallet is not self.wallet:
+			del wallet
+
 		return ret or None
+
+class EthereumTokenTwRPC(EthereumTwRPC):
+	pass

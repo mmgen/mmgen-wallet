@@ -25,9 +25,8 @@ from ....tw.ctl import TrackingWallet,write_mode
 from ....addr import is_coin_addr,is_mmgen_id
 from ....amt import ETHAmt
 from ..contract import Token,TokenResolve
-from .rpc import EthereumTwRPC
 
-class EthereumTrackingWallet(EthereumTwRPC,TrackingWallet):
+class EthereumTrackingWallet(TrackingWallet):
 
 	caps = ('batch',)
 	data_key = 'accounts'
