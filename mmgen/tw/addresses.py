@@ -175,11 +175,11 @@ class TwAddresses(TwView):
 				yield ''
 			yield fs.format(
 				n = str(n) + ')',
-				m = d.twmmid.fmt(width=cw.mmid,color=color),
+				m = d.twmmid.fmt( width=cw.mmid, color=color ),
 				u = yes if d.recvd else no,
-				a = d.addr.fmt(color=color,width=cw.addr),
-				c = d.comment.fmt(width=cw.comment,color=color,nullrepl='-'),
-				A = d.amt.fmt(color=color,prec=self.disp_prec),
+				a = d.addr.fmt( color=color, width=cw.addr ),
+				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
+				A = d.amt.fmt( color=color, prec=self.disp_prec ),
 				d = self.age_disp( d, self.age_fmt )
 			)
 
@@ -204,11 +204,11 @@ class TwAddresses(TwView):
 				yield ''
 			yield fs.format(
 				n = str(n) + ')',
-				m = d.twmmid.fmt(width=cw.mmid,color=color),
+				m = d.twmmid.fmt( width=cw.mmid, color=color ),
 				u = yes if d.recvd else no,
-				a = d.addr.fmt(color=color,width=cw.addr),
-				c = d.comment.fmt(width=cw.comment,color=color,nullrepl='-'),
-				A = d.amt.fmt(color=color,prec=self.disp_prec),
+				a = d.addr.fmt( color=color, width=cw.addr ),
+				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
+				A = d.amt.fmt( color=color, prec=self.disp_prec ),
 				b = self.age_disp( d, 'block' ),
 				D = self.age_disp( d, 'date_time' ),
 			).rstrip()

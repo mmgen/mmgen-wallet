@@ -39,7 +39,6 @@ class EthereumTwUnspentOutputs(EthereumTwView,TwUnspentOutputs):
 		valid_attrs = {'txid','vout','amt','amt2','comment','twmmid','addr','confs','skip'}
 		invalid_attrs = {'proto'}
 
-	token_cls = False
 	has_age = False
 	can_group = False
 	hdr_lbl = 'tracked accounts'
@@ -77,8 +76,8 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 				'num': max(2,len(str(len(data)))+1),
 				'mmid': max(len(d.twmmid.disp) for d in data) if self.show_mmid else 0,
 				'amt': self.disp_prec + 5,
-				'amt2': self.disp_prec + 5 if self.token_cls else 0,
-				'spc': (5 if self.show_mmid else 3) + self.token_cls, # 5(3) spaces in fs
+				'amt2': self.disp_prec + 5 if self.has_amt2 else 0,
+				'spc': (5 if self.show_mmid else 3) + self.has_amt2, # 5(3) spaces in fs
 				'txid': 0,
 				'vout': 0,
 				'block': 0,
@@ -115,7 +114,7 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	prompt_fs = 'Total to spend: {} {}\n\n'
-	token_cls = True
+	has_amt2 = True
 
 	async def __init__(self,proto,*args,**kwargs):
 		await super().__init__(proto,*args,**kwargs)

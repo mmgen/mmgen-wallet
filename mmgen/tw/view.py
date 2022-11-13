@@ -51,6 +51,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			print_header = ''
 
 	has_wallet  = True
+	has_amt2    = False
 	dates_set   = False
 	cols        = None
 	reverse     = False

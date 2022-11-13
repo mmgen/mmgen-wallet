@@ -578,14 +578,21 @@ class TestSuiteRunner(object):
 			self.ts.extra_spawn_args +
 			args )
 
-		for i in args:
+		qargs = ['{q}{}{q}'.format( a, q = "'" if ' ' in a else '' ) for a in args]
+		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw
+
+		if opt.log:
+			self.log_fd.write('[{}][{}:{}] {}\n'.format(
+				proto.coin.lower(),
+				self.ts.group_name,
+				self.ts.test_name,
+				cmd_disp))
+
+		for i in args: # die only after writing log entry
 			if not isinstance(i,str):
 				die(2,'Error: missing input files in cmd line?:\nName: {}\nCmdline: {!r}'.format(
 					self.ts.test_name,
 					args ))
-
-		qargs = ['{q}{}{q}'.format( a, q = "'" if ' ' in a else '' ) for a in args]
-		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw
 
 		if not no_msg:
 			t_pfx = '' if opt.no_timings else f'[{time.time() - self.start_time:08.2f}] '
@@ -602,13 +609,6 @@ class TestSuiteRunner(object):
 
 		if msg_only:
 			return
-
-		if opt.log:
-			self.log_fd.write('[{}][{}:{}] {}\n'.format(
-				proto.coin.lower(),
-				self.ts.group_name,
-				self.ts.test_name,
-				cmd_disp))
 
 		# NB: the `pexpect_spawn` arg enables hold_protect and send_delay while the corresponding cmdline
 		# option does not.  For performance reasons, this is the desired behavior.  For full emulation of
