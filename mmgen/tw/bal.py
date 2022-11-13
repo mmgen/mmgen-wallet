@@ -20,9 +20,11 @@
 twbal: Tracking wallet getbalance class for the MMGen suite
 """
 
-from ..color import red,green
+from collections import namedtuple
+
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
+from ..obj import NonNegativeInt
 from ..rpc import rpc_init
 
 class TwGetBalance(MMGenObject,metaclass=AsyncInit):
@@ -32,39 +34,77 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 
 	async def __init__(self,proto,minconf,quiet):
 
-		self.minconf = minconf
+		class BalanceInfo(dict):
+			def __init__(self):
+				amt0 = proto.coin_amt('0')
+				data = {
+					'unconfirmed': amt0,
+					'lt_minconf': amt0,
+					'ge_minconf': amt0,
+					'spendable': amt0,
+				}
+				return dict.__init__(self,**data)
+
+		self.minconf = NonNegativeInt(minconf)
+		self.balance_info = BalanceInfo
 		self.quiet = quiet
-		self.data = {k:[proto.coin_amt('0')] * 4 for k in ('TOTAL','Non-MMGen','Non-wallet')}
-		self.rpc = await rpc_init(proto)
 		self.proto = proto
+		self.data = {k:self.balance_info() for k in self.start_labels}
+		self.rpc = await rpc_init(proto)
+
+		if minconf < 2 and 'lt_minconf' in self.conf_cols:
+			del self.conf_cols['lt_minconf']
+
 		await self.create_data()
 
-	def format(self):
+	def format(self,color):
+
 		def gen_output():
-			if self.proto.chain_name != 'mainnet':
-				yield 'Chain: ' + green(self.proto.chain_name.upper())
 
 			if self.quiet:
-				yield str(self.data['TOTAL'][2] if self.data else 0)
+				yield str(self.data['TOTAL']['ge_minconf'] if self.data else 0)
 			else:
-				yield self.fs.format(
-					w = 'Wallet',
-					u = ' Unconfirmed',
-					p = f' <{self.minconf} confirms',
-					c = f' >={self.minconf} confirms' )
 
-				for key in sorted(self.data):
-					if not any(self.data[key]):
-						continue
-					yield self.fs.format(**dict(zip(
-						('w','u','p','c'),
-						[key+':'] + [a.fmt(color=True,suf=' '+self.proto.dcoin) for a in self.data[key]]
-						)))
+				def get_col_iwidth(colname):
+					return len(str(int(max(v[colname] for v in self.data.values())))) + iwidth_adj
 
-			for key,vals in list(self.data.items()):
-				if key == 'TOTAL':
+				def make_col(label,col):
+					return(self.data[label][col].fmt(fs=f'{iwidths[col]}.{add_w-1}',color=color))
+
+				if color:
+					from ..color import red,green,yellow
+				else:
+					from ..color import nocolor
+					red = green = yellow = nocolor
+
+				add_w = self.proto.coin_amt.max_prec + 1 # 1 = len('.')
+				iwidth_adj = 1 # so that min iwidth (1) + add_w + iwidth_adj >= len('Unconfirmed')
+				col1_w = max(len(l) for l in self.start_labels) + 1 # 1 = len(':')
+
+				iwidths = {colname: get_col_iwidth(colname) for colname in self.conf_cols}
+
+				net_desc = self.proto.coin + ' ' + self.proto.network.upper()
+				if net_desc != 'BTC MAINNET':
+					yield 'Network: {}'.format(green(net_desc))
+
+				yield '{lbl:{w}} {cols}'.format(
+					lbl = 'Wallet',
+					w = col1_w + iwidth_adj,
+					cols = ' '.join(v.format(minconf=self.minconf).ljust(iwidths[k]+add_w)
+						for k,v in self.conf_cols.items()) )
+
+				from ..addr import MMGenID
+				for label in sorted(self.data.keys()):
+					yield '{lbl} {cols}'.format(
+						lbl = yellow((label + ' ' + self.proto.coin).ljust(col1_w)) if label == 'TOTAL'
+							else MMGenID.hlc((label+':').ljust(col1_w),color=color),
+						cols = ' '.join(make_col(label,col) for col in self.conf_cols)
+					)
+
+			for k,v in self.data.items():
+				if k == 'TOTAL':
 					continue
-				if vals[3]:
-					yield red(f'Warning: this wallet contains PRIVATE KEYS for {key} outputs!')
+				if v['spendable']:
+					yield red(f'Warning: this wallet contains PRIVATE KEYS for {k} outputs!')
 
 		return '\n'.join(gen_output()).rstrip()

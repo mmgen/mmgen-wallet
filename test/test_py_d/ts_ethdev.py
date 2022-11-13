@@ -838,16 +838,16 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		assert re.search(ss,text),ss
 		return t
 
-	def bal_getbalance(self,idx,etc_adj=False,extra_args=[]):
+	def bal_getbalance(self,sid,idx,etc_adj=False,extra_args=[]):
 		bal1 = token_bals_getbalance[idx][0]
 		bal2 = token_bals_getbalance[idx][1]
 		bal1 = Decimal(bal1)
 		if etc_adj and self.proto.coin == 'ETC':
 			bal1 += self.bal_corr
 		t = self.spawn('mmgen-tool', self.eth_args + extra_args + ['getbalance'])
-		t.expect(r'\n[0-9A-F]{8}: .*\D'+str(bal1),regex=True)
-		t.expect(r'\nNon-MMGen: .*\D'+bal2,regex=True)
-		total = strip_ansi_escapes(t.expect_getend(r'\nTOTAL:\s+',regex=True)).split()[0]
+		t.expect(rf'{sid}:.*'+str(bal1),regex=True)
+		t.expect(r'Non-MMGen:.*'+bal2,regex=True)
+		total = strip_ansi_escapes(t.expect_getend(rf'TOTAL {self.proto.coin}')).split()[0]
 		assert Decimal(bal1) + Decimal(bal2) == Decimal(total)
 		return t
 
@@ -1122,7 +1122,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def bal1_getbalance(self):
-		return self.bal_getbalance('1',etc_adj=True)
+		return self.bal_getbalance(dfl_sid,'1',etc_adj=True)
 
 	def addrimport_token_burn_addr(self):
 		return self.addrimport_one_addr(addr=burn_addr,extra_args=['--token=mm1'])
@@ -1131,7 +1131,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.token_bal(n='4')
 
 	def token_bal_getbalance(self):
-		return self.bal_getbalance('2',extra_args=['--token=mm1'])
+		return self.bal_getbalance(dfl_sid,'2',extra_args=['--token=mm1'])
 
 	def txcreate_noamt(self):
 		return self.txcreate(args=['98831F3A:E:12'],eth_fee_res=True)

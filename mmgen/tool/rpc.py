@@ -42,7 +42,8 @@ class tool_cmd(tool_cmd_base):
 			pager:   'send output to pager' = False ):
 		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
 		from ..tw.bal import TwGetBalance
-		return (await TwGetBalance(self.proto,minconf,quiet)).format()
+		from ..globalvars import g
+		return (await TwGetBalance(self.proto,minconf,quiet)).format(color=g.color)
 
 	async def twops(self,
 			obj,pager,reverse,detail,sort,age_fmt,interactive,

@@ -25,29 +25,31 @@ from ....tw.bal import TwGetBalance
 
 class EthereumTwGetBalance(TwGetBalance):
 
-	fs = '{w:13} {c}\n' # TODO - for now, just suppress display of meaningless data
+	start_labels = ('TOTAL','Non-MMGen')
+	conf_cols = {
+		'ge_minconf': 'Balance',
+	}
 
 	async def __init__(self,proto,*args,**kwargs):
 		self.wallet = await TrackingWallet(proto,mode='w')
 		await super().__init__(proto,*args,**kwargs)
 
 	async def create_data(self):
-		data = self.wallet.mmid_ordered_dict
-		amt0 = self.proto.coin_amt('0')
-		for d in data:
+		in_data = self.wallet.mmid_ordered_dict
+		for d in in_data:
 			if d.type == 'mmgen':
-				key = d.obj.sid
-				if key not in self.data:
-					self.data[key] = [amt0] * 4
+				label = d.obj.sid
+				if label not in self.data:
+					self.data[label] = self.balance_info()
 			else:
-				key = 'Non-MMGen'
+				label = 'Non-MMGen'
 
-			conf_level = 2 # TODO
-			amt = await self.wallet.get_balance(data[d]['addr'])
+			amt = await self.wallet.get_balance(in_data[d]['addr'])
 
-			self.data['TOTAL'][conf_level] += amt
-			self.data[key][conf_level] += amt
+			self.data['TOTAL']['ge_minconf'] += amt
+			self.data[label]['ge_minconf'] += amt
 
 		del self.wallet
 
-class EthereumTokenTwGetBalance(EthereumTwGetBalance): pass
+class EthereumTokenTwGetBalance(EthereumTwGetBalance):
+	pass

@@ -17,34 +17,37 @@ from ....tw.shared import get_tw_label
 
 class BitcoinTwGetBalance(TwGetBalance):
 
-	fs = '{w:13} {u:<16} {p:<16} {c}'
+	start_labels = ('TOTAL','Non-MMGen','Non-wallet')
+	conf_cols = {
+		'unconfirmed': 'Unconfirmed',
+		'lt_minconf':  '<{minconf} confs',
+		'ge_minconf':  '>={minconf} confs',
+	}
 
 	async def create_data(self):
-		# 0: unconfirmed, 1: below minconf, 2: confirmed, 3: spendable (privkey in wallet)
 		lbl_id = ('account','label')['label_api' in self.rpc.caps]
 		amt0 = self.proto.coin_amt('0')
 		for d in await self.rpc.call('listunspent',0):
-			lbl = get_tw_label(self.proto,d[lbl_id])
-			if lbl:
-				if lbl.mmid.type == 'mmgen':
-					key = lbl.mmid.obj.sid
-					if key not in self.data:
-						self.data[key] = [amt0] * 4
+			tw_lbl = get_tw_label(self.proto,d[lbl_id])
+			if tw_lbl:
+				if tw_lbl.mmid.type == 'mmgen':
+					label = tw_lbl.mmid.obj.sid
+					if label not in self.data:
+						self.data[label] = self.balance_info()
 				else:
-					key = 'Non-MMGen'
+					label = 'Non-MMGen'
 			else:
-				lbl,key = None,'Non-wallet'
+				label = 'Non-wallet'
 
 			amt = self.proto.coin_amt(d['amount'])
 
 			if not d['confirmations']:
-				self.data['TOTAL'][0] += amt
-				self.data[key][0] += amt
+				self.data['TOTAL']['unconfirmed'] += amt
+				self.data[label]['unconfirmed'] += amt
 
-			conf_level = (1,2)[d['confirmations'] >= self.minconf]
-
-			self.data['TOTAL'][conf_level] += amt
-			self.data[key][conf_level] += amt
+			col_key = ('lt_minconf','ge_minconf')[d['confirmations'] >= self.minconf]
+			self.data['TOTAL'][col_key] += amt
+			self.data[label][col_key] += amt
 
 			if d['spendable']:
-				self.data[key][3] += amt
+				self.data[label]['spendable'] += amt
