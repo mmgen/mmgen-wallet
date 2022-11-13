@@ -276,7 +276,7 @@ class MoneroWalletOps:
 			uarg_info = xmrwallet_uarg_info
 
 			def fmt_amt(amt):
-				return self.proto.coin_amt(amt,from_unit='atomic').fmt(fs='5.12',color=True)
+				return self.proto.coin_amt(amt,from_unit='atomic').fmt( iwidth=5, prec=12, color=True )
 			def hl_amt(amt):
 				return self.proto.coin_amt(amt,from_unit='atomic').hl()
 

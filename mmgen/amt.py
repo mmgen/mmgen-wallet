@@ -38,7 +38,6 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	max_prec = 0      # number of decimal places for this coin
 	max_amt  = None   # coin supply if known, otherwise None
 	units    = ()     # defined unit names, e.g. ('satoshi',...)
-	amt_fs   = '0.0'  # format string for the fmt() method
 
 	def __new__(cls,num,from_unit=None,from_decimal=False):
 		if type(num) == cls:
@@ -73,21 +72,18 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	def fmtc(cls):
 		cls.method_not_implemented()
 
-	def fmt(self,fs=None,color=False,suf='',prec=1000):
-		if fs == None:
-			fs = self.amt_fs
+	def fmt(self,color=False,iwidth=1,prec=None): # iwidth: width of the integer part
 		s = self.__str__()
-		if '.' in fs:
-			p1,p2 = list(map(int,fs.split('.',1)))
-			ss = s.split('.',1)
-			if len(ss) == 2:
-				a,b = ss
-				ret = a.rjust(p1) + '.' + ((b+suf).ljust(p2+len(suf)))[:prec]
-			else:
-				ret = s.rjust(p1) + suf + (' ' * (p2+1))[:prec+1-len(suf)]
+		prec = prec or self.max_prec
+		if '.' in s:
+			a,b = s.split('.',1)
+			return self.colorize(
+				a.rjust(iwidth) + '.' + b.ljust(prec)[:prec], # truncation, not rounding!
+				color = color )
 		else:
-			ret = s.ljust(int(fs))
-		return self.colorize(ret,color=color)
+			return self.colorize(
+				s.rjust(iwidth).ljust(iwidth+prec+1),
+				color = color )
 
 	def hl(self,color=True):
 		return self.colorize(self.__str__(),color=color)
@@ -165,7 +161,6 @@ class BTCAmt(CoinAmt):
 	max_amt = 21000000
 	satoshi = Decimal('0.00000001')
 	units = ('satoshi',)
-	amt_fs = '4.8'
 
 class BCHAmt(BTCAmt):
 	pass
@@ -177,7 +172,6 @@ class XMRAmt(CoinAmt):
 	max_prec = 12
 	atomic = Decimal('0.000000000001')
 	units = ('atomic',)
-	amt_fs = '4.12'
 
 # Kwei (babbage) 3, Mwei (lovelace) 6, Gwei (shannon) 9, µETH (szabo) 12, mETH (finney) 15, ETH 18
 class ETHAmt(CoinAmt):
@@ -189,7 +183,6 @@ class ETHAmt(CoinAmt):
 	szabo   = Decimal('0.000001')
 	finney  = Decimal('0.001')
 	units   = ('wei','Kwei','Mwei','Gwei','szabo','finney')
-	amt_fs  = '4.18'
 
 	def toWei(self):
 		return int(Decimal(self) // self.wei)

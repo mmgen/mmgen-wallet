@@ -131,7 +131,7 @@ class TwAddresses(TwView):
 				'num':  max(2,len(str(len(data)))+1),
 				'mmid': max(len(d.twmmid.disp) for d in data),
 				'used': 4,
-				'amt':  self.disp_prec + 5,
+				'amt':  self.amt_widths['amt'],
 				'date': self.age_w if self.has_age else 0,
 				'block': self.age_col_params['block'][0] if wide and self.has_age else 0,
 				'date_time': self.age_col_params['date_time'][0] if wide and self.has_age else 0,
@@ -179,7 +179,7 @@ class TwAddresses(TwView):
 				u = yes if d.recvd else no,
 				a = d.addr.fmt( color=color, width=cw.addr ),
 				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
-				A = d.amt.fmt( color=color, prec=self.disp_prec ),
+				A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
 				d = self.age_disp( d, self.age_fmt )
 			)
 
@@ -208,7 +208,7 @@ class TwAddresses(TwView):
 				u = yes if d.recvd else no,
 				a = d.addr.fmt( color=color, width=cw.addr ),
 				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
-				A = d.amt.fmt( color=color, prec=self.disp_prec ),
+				A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
 				b = self.age_disp( d, 'block' ),
 				D = self.age_disp( d, 'date_time' ),
 			).rstrip()

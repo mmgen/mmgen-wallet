@@ -121,6 +121,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		if self.has_wallet:
 			from .ctl import TrackingWallet
 			self.wallet = await TrackingWallet(proto,mode='w')
+		self.amt_keys = {'amt':'iwidth','amt2':'iwidth2'} if self.has_amt2 else {'amt':'iwidth'}
 
 	@property
 	def age_w(self):
@@ -225,10 +226,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		def do_ret(freews):
 			widths.update({k:minws[k] + freews.get(k,0) for k in minws})
+			widths.update({ikey: widths[key] - self.disp_prec - 1 for key,ikey in self.amt_keys.items()})
 			return namedtuple('column_widths',widths.keys())(*widths.values())
 
 		def do_ret_max():
 			widths.update({k:max(minws[k],maxws[k]) for k in minws})
+			widths.update({ikey: widths[key] - self.disp_prec - 1 for key,ikey in self.amt_keys.items()})
 			return namedtuple('column_widths',widths.keys())(*widths.values())
 
 		def get_freews(cols,varws,varw,minw):
@@ -308,6 +311,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			self.proto.dcoin
 		) if hasattr(self,'total') else ''
 
+	def set_amt_widths(self,data):
+		# width of amts column: min(7,width of integer part) + len('.') + width of fractional part
+		self.amt_widths = {k:
+			min(7,max(len(str(getattr(d,k).to_integral_value())) for d in data)) + 1 + self.disp_prec
+				for k in self.amt_keys}
+
 	async def format(self,display_type,color=True,cached=False,interactive=False):
 
 		if not cached:
@@ -322,6 +331,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			data = self.disp_data = list(self.filter_data()) # method could be a generator
 
 			if data and dt.need_column_widths:
+				self.set_amt_widths(data)
 				cw = self.get_column_widths(data,wide=dt.detail)
 				cwh = cw._asdict()
 				fp = self.fs_params

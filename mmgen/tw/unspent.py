@@ -132,8 +132,8 @@ class TwUnspentOutputs(TwView):
 				'num': max(2,len(str(len(data)))+1),
 				'vout': 4,
 				'mmid': max(len(d.twmmid.disp) for d in data) if self.show_mmid else 0,
-				'amt': self.disp_prec + 5,
-				'amt2': 0,
+				'amt': self.amt_widths['amt'],
+				'amt2': self.amt_widths.get('amt2',0),
 				'block': self.age_col_params['block'][0] if wide else 0,
 				'date_time': self.age_col_params['date_time'][0] if wide else 0,
 				'date': self.age_w,
@@ -177,8 +177,8 @@ class TwUnspentOutputs(TwView):
 				m = (MMGenID.fmtc( '.'*cw.mmid, color=color ) if d.skip == 'addr'
 					else d.twmmid.fmt( width=cw.mmid, color=color )) if cw.mmid else None,
 				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ) if cw.comment else None,
-				A = d.amt.fmt( color=color, prec=self.disp_prec ),
-				B = d.amt2.fmt( color=color, prec=self.disp_prec ) if cw.amt2 else None,
+				A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
+				B = d.amt2.fmt( color=color, iwidth=cw.iwidth2, prec=self.disp_prec ) if cw.amt2 else None,
 				d = self.age_disp(d,self.age_fmt),
 			)
 
@@ -203,8 +203,8 @@ class TwUnspentOutputs(TwView):
 				v = ' ' + d.vout.fmt( width=cw.vout-1, color=color ) if cw.vout else None,
 				a = d.addr.fmt( width=cw.addr, color=color ),
 				m = d.twmmid.fmt( width=cw.mmid, color=color ),
-				A = d.amt.fmt( color=color, prec=self.disp_prec ),
-				B = d.amt2.fmt( color=color, prec=self.disp_prec ) if cw.amt2 else None,
+				A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
+				B = d.amt2.fmt( color=color, iwidth=cw.iwidth2, prec=self.disp_prec ) if cw.amt2 else None,
 				b = self.age_disp(d,'block'),
 				D = self.age_disp(d,'date_time'),
 				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),

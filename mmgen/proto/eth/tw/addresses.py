@@ -48,7 +48,7 @@ Actions: [q]uit, r[e]draw, [D]elete address, add [l]abel:
 				'num':  max(2,len(str(len(data)))+1),
 				'mmid': max(len(d.twmmid.disp) for d in data),
 				'used': 0,
-				'amt':  self.disp_prec + 5,
+				'amt':  self.amt_widths['amt'],
 				'date': 0,
 				'block': 0,
 				'date_time': 0,

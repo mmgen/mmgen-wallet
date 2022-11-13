@@ -75,8 +75,8 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 			widths = { # fixed cols
 				'num': max(2,len(str(len(data)))+1),
 				'mmid': max(len(d.twmmid.disp) for d in data) if self.show_mmid else 0,
-				'amt': self.disp_prec + 5,
-				'amt2': self.disp_prec + 5 if self.has_amt2 else 0,
+				'amt': self.amt_widths['amt'],
+				'amt2': self.amt_widths.get('amt2',0),
 				'spc': (5 if self.show_mmid else 3) + self.has_amt2, # 5(3) spaces in fs
 				'txid': 0,
 				'vout': 0,

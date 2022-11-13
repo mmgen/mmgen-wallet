@@ -12,6 +12,8 @@
 tw.txhistory: Tracking wallet transaction history class for the MMGen suite
 """
 
+from collections import namedtuple
+
 from ..util import fmt
 from ..objmethods import MMGenObject
 from ..obj import NonNegativeInt
@@ -49,6 +51,10 @@ class TwTxHistory(TwView):
 	def filter_data(self):
 		return (d for d in self.data if d.confirmations > 0 or self.show_unconfirmed)
 
+	def set_amt_widths(self,data):
+		amts_tuple = namedtuple('amts_data',['amt'])
+		return super().set_amt_widths([amts_tuple(d.amt_disp(self.show_total_amt)) for d in data])
+
 	def get_column_widths(self,data,wide=False):
 
 		# var cols: inputs outputs comment [txid]
@@ -77,7 +83,7 @@ class TwTxHistory(TwView):
 		widths = { # fixed cols
 			'num': max(2,len(str(len(data)))+1),
 			'date': self.age_w,
-			'amt': self.disp_prec + 5,
+			'amt': self.amt_widths['amt'],
 			'spc': 6 + self.show_txid, # 5(6) spaces between cols + 1 leading space in fs
 		}
 
@@ -109,7 +115,7 @@ class TwTxHistory(TwView):
 				t = d.txid_disp( width=cw.txid, color=color ) if hasattr(cw,'txid') else None,
 				d = d.age_disp( self.age_fmt, width=self.age_w, color=color ),
 				i = d.vouts_disp( 'inputs', width=cw.inputs, color=color ),
-				A = d.amt_disp(self.show_total_amt).fmt( prec=self.disp_prec, color=color ),
+				A = d.amt_disp(self.show_total_amt).fmt( iwidth=cw.iwidth, prec=self.disp_prec, color=color ),
 				o = d.vouts_disp( 'outputs', width=cw.outputs, color=color ),
 				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ) ).rstrip()
 
