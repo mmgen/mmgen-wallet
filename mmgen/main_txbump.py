@@ -134,7 +134,7 @@ async def main():
 	tx = await BumpTX(
 		data = orig_tx.__dict__,
 		send = sign_and_send,
-		tw   = await TwCtl(orig_tx.proto) if orig_tx.proto.tokensym else None )
+		twctl = await TwCtl(orig_tx.proto) if orig_tx.proto.tokensym else None )
 
 	from .rpc import rpc_init
 	tx.rpc = await rpc_init(tx.proto)

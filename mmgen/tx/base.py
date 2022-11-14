@@ -114,7 +114,7 @@ class Base(MMGenObject):
 		self.outputs  = self.OutputList(self)
 		self.name     = type(self).__name__
 		self.proto    = kwargs.get('proto')
-		self.tw       = kwargs.get('tw')
+		self.twctl    = kwargs.get('twctl')
 
 	@property
 	def coin(self):

@@ -26,7 +26,7 @@ class BitcoinTwAddrData(TwAddrData):
 		"""
 	}
 
-	async def get_tw_data(self,wallet=None):
+	async def get_tw_data(self,twctl=None):
 		vmsg('Getting address data from tracking wallet')
 		c = self.rpc
 		if 'label_api' in c.caps:

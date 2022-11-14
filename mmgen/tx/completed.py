@@ -27,7 +27,7 @@ class Completed(Base):
 		super().__init__(*args,**kwargs)
 
 		if data:
-			data['tw'] = self.tw
+			data['twctl'] = self.twctl
 			self.__dict__ = data
 			self.name = type(self).__name__
 		else:

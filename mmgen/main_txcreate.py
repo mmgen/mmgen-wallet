@@ -82,7 +82,6 @@ async def main():
 	proto = init_proto_from_opts(need_amt=True)
 
 	from .tx import NewTX
-	from .tw.ctl import TwCtl
 	tx1 = await NewTX(proto=proto)
 
 	from .rpc import rpc_init

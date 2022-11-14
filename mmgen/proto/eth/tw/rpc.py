@@ -24,7 +24,7 @@ class EthereumTwRPC(TwRPC):
 		ret = [(
 				TwLabel( self.proto, mmid + ' ' + d['comment'] ),
 				CoinAddr( self.proto, d['addr'] )
-			) for mmid,d in self.wallet.mmid_ordered_dict.items() ]
+			) for mmid,d in self.twctl.mmid_ordered_dict.items() ]
 
 		if twmmid:
 			ret = [e for e in ret if e[0].mmid == twmmid]

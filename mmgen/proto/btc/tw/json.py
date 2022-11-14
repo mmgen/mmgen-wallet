@@ -38,10 +38,10 @@ class BitcoinTwJSON(TwJSON):
 
 		@property
 		async def tracking_wallet_exists(self):
-			return await self.tw.rpc.check_or_create_daemon_wallet(wallet_create=False)
+			return await self.twctl.rpc.check_or_create_daemon_wallet(wallet_create=False)
 
 		async def create_tracking_wallet(self):
-			return await self.tw.rpc.check_or_create_daemon_wallet(wallet_create=True)
+			return await self.twctl.rpc.check_or_create_daemon_wallet(wallet_create=True)
 
 		async def get_entries(self):
 			entries_in = [self.entry_tuple_in(*e) for e in self.data['data']['entries']]
@@ -56,7 +56,7 @@ class BitcoinTwJSON(TwJSON):
 
 		async def do_import(self,batch):
 			import_tuple = namedtuple('import_data',['addr','twmmid','comment'])
-			await self.tw.import_address_common(
+			await self.twctl.import_address_common(
 				[import_tuple(e.address, e.mmgen_id, e.comment) for e in self.entries],
 				batch = batch )
 			return [e.address for e in self.entries]

@@ -66,7 +66,7 @@ class TwJSON:
 
 			super().__init__(proto)
 
-			self.tw = await TwCtl( proto, mode='i', rpc_ignore_wallet=True )
+			self.twctl = await TwCtl( proto, mode='i', rpc_ignore_wallet=True )
 
 			def check_network(data):
 				coin,network = data['network'].split('_')
@@ -102,13 +102,13 @@ class TwJSON:
 
 			addrs = await self.do_import(batch)
 
-			await self.tw.rescan_addresses(addrs)
+			await self.twctl.rescan_addresses(addrs)
 
 		async def check_and_create_wallet(self):
 
 			if await self.tracking_wallet_exists:
 				die(3,
-					f'Existing {self.tw.rpc.daemon.desc} wallet detected!\n' +
+					f'Existing {self.twctl.rpc.daemon.desc} wallet detected!\n' +
 					'It must be moved, or backed up and securely deleted, before running this command' )
 
 			msg('\n'+fmt(self.info_msg.strip(),indent='  '))
@@ -132,7 +132,7 @@ class TwJSON:
 			if not include_amts:
 				self.keys.remove('amount')
 
-			self.tw = await TwCtl( proto )
+			self.twctl = await TwCtl( proto )
 
 			self.entries = await self.get_entries()
 
@@ -140,7 +140,7 @@ class TwJSON:
 				'id': 'mmgen_tracking_wallet',
 				'version': 1,
 				'network': f'{self.coin}_{self.network}',
-				'blockheight': self.tw.rpc.blockcount,
+				'blockheight': self.twctl.rpc.blockcount,
 				'time': make_timestamp(),
 				'mappings_checksum': self.mappings_chksum,
 				'entries_keys': self.keys,

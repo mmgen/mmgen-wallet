@@ -175,7 +175,7 @@ class TokenNew(TokenBase,New):
 
 	async def make_txobj(self): # called by create_serialized()
 		await super().make_txobj()
-		t = Token(self.proto,self.tw.token,self.tw.decimals)
+		t = Token(self.proto,self.twctl.token,self.twctl.decimals)
 		o = self.txobj
 		o['token_addr'] = t.addr
 		o['decimals'] = t.decimals
@@ -189,14 +189,14 @@ class TokenNew(TokenBase,New):
 	# token transaction, so check both eth and token balances
 	# TODO: add test with insufficient funds
 	async def precheck_sufficient_funds(self,inputs_sum,sel_unspent,outputs_sum):
-		eth_bal = await self.tw.get_eth_balance(sel_unspent[0].addr)
+		eth_bal = await self.twctl.get_eth_balance(sel_unspent[0].addr)
 		if eth_bal == 0: # we don't know the fee yet
 			msg('This account has no ether to pay for the transaction fee!')
 			return False
 		return await super().precheck_sufficient_funds(inputs_sum,sel_unspent,outputs_sum)
 
 	async def get_funds_left(self,fee,outputs_sum):
-		return ( await self.tw.get_eth_balance(self.inputs[0].addr) ) - fee
+		return ( await self.twctl.get_eth_balance(self.inputs[0].addr) ) - fee
 
 	def final_inputs_ok_msg(self,funds_left):
 		token_bal = (

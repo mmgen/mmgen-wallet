@@ -68,11 +68,11 @@ async def _get_obj_async( _clsname, _modname, *args, **kwargs ):
 
 	# NB: tracking wallet needed to retrieve the 'symbol' and 'decimals' parameters of token addr
 	# (see twctl:import_token()).
-	# No tracking wallet required for the Unsigned and Signed(data=unsigned.__dict__) classes used
-	# during signing.
+	# No twctl required for the Unsigned and Signed(data=unsigned.__dict__) classes used during
+	# signing.
 	if proto and proto.tokensym and clsname in ('New','OnlineSigned'):
 		from ..tw.ctl import TwCtl
-		kwargs['tw'] = await TwCtl(proto)
+		kwargs['twctl'] = await TwCtl(proto)
 
 	return _base_proto_subclass( clsname, modname, proto )(*args,**kwargs)
 

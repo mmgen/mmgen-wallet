@@ -120,7 +120,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		self.rpc = await rpc_init(proto)
 		if self.has_wallet:
 			from .ctl import TwCtl
-			self.wallet = await TwCtl(proto,mode='w')
+			self.twctl = await TwCtl(proto,mode='w')
 		self.amt_keys = {'amt':'iwidth','amt2':'iwidth2'} if self.has_amt2 else {'amt':'iwidth'}
 
 	@property
@@ -476,7 +476,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			if not keypress_confirm(
 					f'Refreshing tracking wallet {parent.item_desc} #{idx}.  Is this what you want?'):
 				return 'redo'
-			await parent.wallet.get_balance( parent.disp_data[idx-1].addr, force_rpc=True )
+			await parent.twctl.get_balance( parent.disp_data[idx-1].addr, force_rpc=True )
 			await parent.get_data()
 			parent.oneshot_msg = yellow(f'{parent.proto.dcoin} balance for account #{idx} refreshed\n\n')
 
@@ -486,7 +486,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					'Removing {} {} from tracking wallet.  Is this what you want?'.format(
 						parent.item_desc, red(f'#{idx}') )):
 				return 'redo'
-			if await parent.wallet.remove_address( parent.disp_data[idx-1].addr ):
+			if await parent.twctl.remove_address( parent.disp_data[idx-1].addr ):
 				await parent.get_data()
 				parent.oneshot_msg = yellow(f'{capfirst(parent.item_desc)} #{idx} removed\n\n')
 			else:
@@ -496,7 +496,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		async def a_comment_add(self,parent,idx):
 
 			async def do_comment_add(comment):
-				if await parent.wallet.set_comment( entry.twmmid, comment, entry.addr ):
+				if await parent.twctl.set_comment( entry.twmmid, comment, entry.addr ):
 					entry.comment = comment
 					parent.oneshot_msg = yellow('Label {a} {b}{c}\n\n'.format(
 						a = 'for' if cur_comment and comment else 'added to' if comment else 'removed from',

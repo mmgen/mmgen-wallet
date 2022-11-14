@@ -115,15 +115,15 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		# ensure that wallet file is written when user exits via KeyboardInterrupt:
 		if self.mode == 'w':
 			import atexit
-			def del_tw(tw):
-				dmsg(f'Running exit handler del_tw() for {tw!r}')
-				del tw
-			atexit.register(del_tw,self)
+			def del_twctl(twctl):
+				dmsg(f'Running exit handler del_twctl() for {twctl!r}')
+				del twctl
+			atexit.register(del_twctl,self)
 
 	def __del__(self):
 		"""
-		TwCtl instances opened in write or import mode must be explicitly destroyed with 'del
-		twuo.twctl' and the like to ensure the instance is deleted and wallet is written before
+		TwCtl instances opened in write or import mode must be explicitly destroyed with ‘del
+		twuo.twctl’ and the like to ensure the instance is deleted and wallet is written before
 		global vars are destroyed by the interpreter at shutdown.
 
 		Not that this code can only be debugged by examining the program output, as exceptions
@@ -221,7 +221,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			return None
 
 		from .rpc import TwRPC
-		pairs = await TwRPC(proto=self.proto,rpc=self.rpc,wallet=self).get_addr_label_pairs(twmmid)
+		pairs = await TwRPC(proto=self.proto,rpc=self.rpc,twctl=self).get_addr_label_pairs(twmmid)
 
 		if not pairs:
 			msg(f'MMGen address {twmmid!r} not found in tracking wallet')
@@ -272,7 +272,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		if await self.set_label(res.coinaddr,lbl):
 			# redundant paranoia step:
 			from .rpc import TwRPC
-			pairs = await TwRPC(proto=self.proto,rpc=self.rpc,wallet=self).get_addr_label_pairs(res.twmmid)
+			pairs = await TwRPC(proto=self.proto,rpc=self.rpc,twctl=self).get_addr_label_pairs(res.twmmid)
 			assert pairs[0][0].comment == comment, f'{pairs[0][0].comment!r} != {comment!r}'
 
 			desc = '{} address {} in tracking wallet'.format(

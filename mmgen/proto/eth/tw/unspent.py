@@ -101,13 +101,13 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		super().do_sort(key=key,reverse=reverse)
 
 	async def get_rpc_data(self):
-		wl = self.wallet.sorted_list
+		wl = self.twctl.sorted_list
 		if self.addrs:
 			wl = [d for d in wl if d['addr'] in self.addrs]
 		return [{
 				'account': TwLabel(self.proto,d['mmid']+' '+d['comment']),
 				'address': d['addr'],
-				'amount': await self.wallet.get_balance(d['addr']),
+				'amount': await self.twctl.get_balance(d['addr']),
 				'confirmations': 0, # TODO
 				} for d in wl]
 
@@ -118,9 +118,9 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	async def __init__(self,proto,*args,**kwargs):
 		await super().__init__(proto,*args,**kwargs)
-		self.proto.tokensym = self.wallet.symbol
+		self.proto.tokensym = self.twctl.symbol
 
 	async def get_data(self,*args,**kwargs):
 		await super().get_data(*args,**kwargs)
 		for e in self.data:
-			e.amt2 = await self.wallet.get_eth_balance(e.addr)
+			e.amt2 = await self.twctl.get_eth_balance(e.addr)

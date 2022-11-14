@@ -224,7 +224,7 @@ class New(Base):
 			check_infile(a)
 			ad_f.add(AddrList(self.proto,a))
 
-		ad_w = await TwAddrData(self.proto,wallet=self.tw)
+		ad_w = await TwAddrData(self.proto,twctl=self.twctl)
 
 		self.process_cmd_args(cmd_args,ad_f,ad_w)
 
@@ -345,7 +345,7 @@ class New(Base):
 		self.twuo.display_total()
 
 		if do_info:
-			del self.twuo.wallet
+			del self.twuo.twctl
 			sys.exit(0)
 
 		outputs_sum = self.sum_outputs()
@@ -378,5 +378,5 @@ class New(Base):
 		if not opt.yes:
 			new.info.view_with_prompt('View transaction details?')
 
-		del new.twuo.wallet
+		del new.twuo.twctl
 		return new

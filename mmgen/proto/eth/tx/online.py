@@ -75,9 +75,9 @@ class TokenOnlineSigned(TokenSigned,OnlineSigned):
 		from ..contract import Token
 		d = OnlineSigned.parse_txfile_serialized_data(self)
 		o = self.txobj
-		assert self.tw.token == o['to']
+		assert self.twctl.token == o['to']
 		o['token_addr'] = TokenAddr(self.proto,o['to'])
-		o['decimals']   = self.tw.decimals
+		o['decimals']   = self.twctl.decimals
 		t = Token(self.proto,o['token_addr'],o['decimals'])
 		o['amt'] = t.transferdata2amt(o['data'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])

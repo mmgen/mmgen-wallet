@@ -52,7 +52,7 @@ class EthereumTwJSON(TwJSON):
 
 		@property
 		async def tracking_wallet_exists(self):
-			return bool(self.tw.data['accounts'] or self.tw.data['tokens'])
+			return bool(self.twctl.data['accounts'] or self.twctl.data['tokens'])
 
 		async def create_tracking_wallet(self):
 			return True
@@ -99,13 +99,13 @@ class EthereumTwJSON(TwJSON):
 					else:
 						yield ('params', {'symbol':d.symbol,'decimals':d.decimals})
 
-			self.tw.data = { # keys must be in correct order
+			self.twctl.data = { # keys must be in correct order
 				'coin': self.coin.upper(),
 				'network': self.network.upper(),
 				'accounts': dict(gen_data(self.entries['accounts'])),
 				'tokens': {k:dict(gen_data(v)) for k,v in self.entries['tokens'].items()},
 			}
-			self.tw.write(quiet=False)
+			self.twctl.write(quiet=False)
 
 	class Export(TwJSON.Export,Base):
 
@@ -121,7 +121,7 @@ class EthereumTwJSON(TwJSON):
 						yield self.entry_tuple_in(TwMMGenID(self.proto,v['mmid']), k, v['comment'])
 
 			def gen_token_data():
-				for token_addr,token_data in self.tw.data['tokens'].items():
+				for token_addr,token_data in self.twctl.data['tokens'].items():
 					yield (
 						token_addr,
 						sorted(
@@ -132,7 +132,7 @@ class EthereumTwJSON(TwJSON):
 
 			return {
 				'accounts': sorted(
-					gen_data(self.tw.data['accounts']),
+					gen_data(self.twctl.data['accounts']),
 					key = lambda x: x.mmgen_id.sort_key ),
 				'tokens': dict(sorted(gen_token_data()))
 			}

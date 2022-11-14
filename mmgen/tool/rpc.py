@@ -64,8 +64,8 @@ class tool_cmd(tool_cmd_base):
 		else:
 			ret = await obj.format('detail' if detail else 'squeezed')
 
-		if hasattr(obj,'wallet'):
-			del obj.wallet
+		if hasattr(obj,'twctl'):
+			del obj.twctl
 
 		return ret
 

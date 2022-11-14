@@ -71,7 +71,7 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'addrdata'))
 
-	async def __init__(self,proto,wallet=None):
+	async def __init__(self,proto,twctl=None):
 		from .rpc import rpc_init
 		from .tw.shared import TwLabel
 		from .globalvars import g
@@ -79,7 +79,7 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 		self.proto = proto
 		self.rpc = await rpc_init(proto)
 		self.al_ids = {}
-		twd = await self.get_tw_data(wallet)
+		twd = await self.get_tw_data(twctl)
 		out,i = {},0
 		for acct,addr_array in twd:
 			l = get_obj(TwLabel,proto=self.proto,text=acct,silent=True)

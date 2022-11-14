@@ -31,11 +31,11 @@ class EthereumTwGetBalance(TwGetBalance):
 	}
 
 	async def __init__(self,proto,*args,**kwargs):
-		self.wallet = await TwCtl(proto,mode='w')
+		self.twctl = await TwCtl(proto,mode='w')
 		await super().__init__(proto,*args,**kwargs)
 
 	async def create_data(self):
-		in_data = self.wallet.mmid_ordered_dict
+		in_data = self.twctl.mmid_ordered_dict
 		for d in in_data:
 			if d.type == 'mmgen':
 				label = d.obj.sid
@@ -44,12 +44,12 @@ class EthereumTwGetBalance(TwGetBalance):
 			else:
 				label = 'Non-MMGen'
 
-			amt = await self.wallet.get_balance(in_data[d]['addr'])
+			amt = await self.twctl.get_balance(in_data[d]['addr'])
 
 			self.data['TOTAL']['ge_minconf'] += amt
 			self.data[label]['ge_minconf'] += amt
 
-		del self.wallet
+		del self.twctl
 
 class EthereumTokenTwGetBalance(EthereumTwGetBalance):
 	pass

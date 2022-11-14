@@ -111,12 +111,12 @@ def parse_cmd_args(rpc,cmd_args):
 
 	return al,infile
 
-def check_opts(tw):
+def check_opts(twctl):
 	batch = bool(opt.batch)
 	rescan = bool(opt.rescan)
 
-	if rescan and not 'rescan' in tw.caps:
-		msg(f"‘--rescan’ ignored: not supported by {type(tw).__name__}")
+	if rescan and not 'rescan' in twctl.caps:
+		msg(f"‘--rescan’ ignored: not supported by {type(twctl).__name__}")
 		rescan = False
 
 	if rescan and not opt.quiet:
@@ -126,8 +126,8 @@ def check_opts(tw):
 				default_yes = True ):
 			die(1,'Exiting at user request')
 
-	if batch and not 'batch' in tw.caps:
-		msg(f"‘--batch’ ignored: not supported by {type(tw).__name__}")
+	if batch and not 'batch' in twctl.caps:
+		msg(f"‘--batch’ ignored: not supported by {type(twctl).__name__}")
 		batch = False
 
 	return batch,rescan
@@ -137,21 +137,21 @@ async def main():
 	if opt.token_addr:
 		proto.tokensym = 'foo' # hack to trigger 'Token' in proto.base_proto_subclass()
 
-	tw = await TwCtl(
+	twctl = await TwCtl(
 		proto      = proto,
 		token_addr = opt.token_addr,
 		mode       = 'i' )
 
 	if opt.token or opt.token_addr:
-		msg(f'Importing for token {tw.token.hl()} ({tw.token.hlc(proto.tokensym)})')
+		msg(f'Importing for token {twctl.token.hl()} ({twctl.token.hlc(proto.tokensym)})')
 
 	from .rpc import rpc_init
-	tw.rpc = await rpc_init(proto)
+	twctl.rpc = await rpc_init(proto)
 
 	for k,v in addrimport_msgs.items():
 		addrimport_msgs[k] = fmt(v,indent='  ',strip_char='\t').rstrip()
 
-	al,infile = parse_cmd_args(tw.rpc,cmd_args)
+	al,infile = parse_cmd_args(twctl.rpc,cmd_args)
 
 	qmsg(
 		f'OK. {al.num_addrs} addresses'
@@ -161,7 +161,7 @@ async def main():
 		f'Importing {len(al.data)} address{suf(al.data,"es")} from {infile}'
 		+ (' (batch mode)' if opt.batch else '') )
 
-	batch,rescan = check_opts(tw)
+	batch,rescan = check_opts(twctl)
 
 	def gen_args_list(al):
 		_d = namedtuple('import_data',['addr','twmmid','comment'])
@@ -173,12 +173,12 @@ async def main():
 
 	args_list = list(gen_args_list(al))
 
-	await tw.import_address_common( args_list, batch=batch )
+	await twctl.import_address_common( args_list, batch=batch )
 
 	if rescan:
-		await tw.rescan_addresses({a.addr for a in args_list})
+		await twctl.rescan_addresses({a.addr for a in args_list})
 
-	del tw
+	del twctl
 
 cmd_args = opts.init(opts_data)
 from .protocol import init_proto_from_opts

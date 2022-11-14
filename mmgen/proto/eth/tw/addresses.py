@@ -74,7 +74,7 @@ Actions: [q]uit, r[e]draw, [D]elete address, add [l]abel:
 		addrs = {}
 
 		for label,addr in await self.get_addr_label_pairs():
-			bal = await self.wallet.get_balance(addr)
+			bal = await self.twctl.get_balance(addr)
 			addrs[label.mmid] = {
 				'addr':  addr,
 				'amt':   bal,

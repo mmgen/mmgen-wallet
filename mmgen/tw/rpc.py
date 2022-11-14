@@ -19,7 +19,7 @@ class TwRPC:
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.rpc'))
 
-	def __init__(self,proto,rpc,wallet):
+	def __init__(self,proto,rpc,twctl):
 		self.proto = proto
 		self.rpc = rpc
-		self.wallet = wallet
+		self.twctl = twctl
