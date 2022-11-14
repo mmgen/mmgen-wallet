@@ -20,7 +20,7 @@ from ....opts import opt
 from ....obj import Int,ETHNonce,MMGenTxID,Str,HexStr
 from ....amt import ETHAmt
 from ....util import msg,is_int,is_hex_str,make_chksum_6
-from ....tw.ctl import TrackingWallet
+from ....tw.ctl import TwCtl
 from ....addr import is_mmgen_id,is_coin_addr
 from ..contract import Token
 
@@ -144,7 +144,7 @@ class New(Base,TxBase.New):
 	async def get_cmdline_input_addrs(self):
 		ret = []
 		if opt.inputs:
-			data_root = (await TrackingWallet(self.proto)).data_root # must create new instance here
+			data_root = (await TwCtl(self.proto)).data_root # must create new instance here
 			errmsg = 'Address {!r} not in tracking wallet'
 			for addr in opt.inputs.split(','):
 				if is_mmgen_id(self.proto,addr):

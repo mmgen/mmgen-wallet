@@ -119,8 +119,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		self.proto = proto
 		self.rpc = await rpc_init(proto)
 		if self.has_wallet:
-			from .ctl import TrackingWallet
-			self.wallet = await TrackingWallet(proto,mode='w')
+			from .ctl import TwCtl
+			self.wallet = await TwCtl(proto,mode='w')
 		self.amt_keys = {'amt':'iwidth','amt2':'iwidth2'} if self.has_amt2 else {'amt':'iwidth'}
 
 	@property

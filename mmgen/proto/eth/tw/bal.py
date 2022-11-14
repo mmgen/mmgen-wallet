@@ -20,7 +20,7 @@
 proto.eth.twbal: Ethereum tracking wallet getbalance class
 """
 
-from ....tw.ctl import TrackingWallet
+from ....tw.ctl import TwCtl
 from ....tw.bal import TwGetBalance
 
 class EthereumTwGetBalance(TwGetBalance):
@@ -31,7 +31,7 @@ class EthereumTwGetBalance(TwGetBalance):
 	}
 
 	async def __init__(self,proto,*args,**kwargs):
-		self.wallet = await TrackingWallet(proto,mode='w')
+		self.wallet = await TwCtl(proto,mode='w')
 		await super().__init__(proto,*args,**kwargs)
 
 	async def create_data(self):

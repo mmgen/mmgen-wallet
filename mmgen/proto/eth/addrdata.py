@@ -33,10 +33,10 @@ class EthereumTwAddrData(TwAddrData):
 	}
 
 	async def get_tw_data(self,wallet=None):
-		from ...tw.ctl import TrackingWallet
+		from ...tw.ctl import TwCtl
 		from ...util import vmsg
 		vmsg('Getting address data from tracking wallet')
-		tw = (wallet or await TrackingWallet(self.proto)).mmid_ordered_dict
+		tw = (wallet or await TwCtl(self.proto)).mmid_ordered_dict
 		# emulate the output of RPC 'listaccounts' and 'getaddressesbyaccount'
 		return [(mmid+' '+d['comment'],[d['addr']]) for mmid,d in list(tw.items())]
 

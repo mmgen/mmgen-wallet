@@ -140,8 +140,8 @@ class tool_cmd(tool_cmd_base):
 
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
-		from ..tw.ctl import TrackingWallet
-		return await (await TrackingWallet(self.proto,mode='w')).set_comment(mmgen_or_coin_addr,label)
+		from ..tw.ctl import TwCtl
+		return await (await TwCtl(self.proto,mode='w')).set_comment(mmgen_or_coin_addr,label)
 
 	async def remove_label(self,mmgen_or_coin_addr:str):
 		"remove descriptive label for address in tracking wallet"
@@ -150,9 +150,9 @@ class tool_cmd(tool_cmd_base):
 
 	async def remove_address(self,mmgen_or_coin_addr:str):
 		"remove an address from tracking wallet"
-		from ..tw.ctl import TrackingWallet
+		from ..tw.ctl import TwCtl
 		# returns None on failure:
-		ret = await (await TrackingWallet(self.proto,mode='w')).remove_address(mmgen_or_coin_addr)
+		ret = await (await TwCtl(self.proto,mode='w')).remove_address(mmgen_or_coin_addr)
 		if ret:
 			from ..util import msg
 			msg(f'Address {ret!r} deleted from tracking wallet')
@@ -160,8 +160,8 @@ class tool_cmd(tool_cmd_base):
 
 	async def resolve_address(self,mmgen_or_coin_addr:str):
 		"resolve an MMGen address in the tracking wallet to a coin address or vice-versa"
-		from ..tw.ctl import TrackingWallet
-		ret = await (await TrackingWallet(self.proto,mode='w')).resolve_address( mmgen_or_coin_addr )
+		from ..tw.ctl import TwCtl
+		ret = await (await TwCtl(self.proto,mode='w')).resolve_address( mmgen_or_coin_addr )
 		if ret:
 			from ..util import Msg
 			from ..addr import is_coin_addr
@@ -171,8 +171,8 @@ class tool_cmd(tool_cmd_base):
 
 	async def rescan_address(self,mmgen_or_coin_addr:str):
 		"rescan an address in the tracking wallet to update its balance"
-		from ..tw.ctl import TrackingWallet
-		return await (await TrackingWallet(self.proto,mode='w')).rescan_address( mmgen_or_coin_addr )
+		from ..tw.ctl import TwCtl
+		return await (await TwCtl(self.proto,mode='w')).rescan_address( mmgen_or_coin_addr )
 
 	async def rescan_blockchain(self,
 			start_block: int = None,
@@ -186,8 +186,8 @@ class tool_cmd(tool_cmd_base):
 		  using Ctrl-C.  An interrupted rescan may be resumed using the ‘start_block’
 		  parameter.
 		"""
-		from ..tw.ctl import TrackingWallet
-		ret = await (await TrackingWallet(self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
+		from ..tw.ctl import TwCtl
+		ret = await (await TwCtl(self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
 		return True
 
 	async def twexport(self,include_amts=True,pretty=False):

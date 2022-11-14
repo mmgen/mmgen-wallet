@@ -19,7 +19,7 @@ from ..util import msg,ymsg,fmt,die,make_timestamp,make_chksum_8,compare_or_die
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..rpc import json_encoder
-from .ctl import TrackingWallet
+from .ctl import TwCtl
 
 class TwJSON:
 
@@ -66,7 +66,7 @@ class TwJSON:
 
 			super().__init__(proto)
 
-			self.tw = await TrackingWallet( proto, mode='i', rpc_ignore_wallet=True )
+			self.tw = await TwCtl( proto, mode='i', rpc_ignore_wallet=True )
 
 			def check_network(data):
 				coin,network = data['network'].split('_')
@@ -132,7 +132,7 @@ class TwJSON:
 			if not include_amts:
 				self.keys.remove('amount')
 
-			self.tw = await TrackingWallet( proto )
+			self.tw = await TwCtl( proto )
 
 			self.entries = await self.get_entries()
 

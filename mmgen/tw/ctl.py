@@ -34,7 +34,7 @@ from .shared import TwMMGenID,TwLabel
 
 addr_info = namedtuple('addr_info',['twmmid','coinaddr'])
 
-# decorator for TrackingWallet
+# decorator for TwCtl
 def write_mode(orig_func):
 	def f(self,*args,**kwargs):
 		if self.mode != 'w':
@@ -45,7 +45,7 @@ def write_mode(orig_func):
 		return orig_func(self,*args,**kwargs)
 	return f
 
-class TrackingWallet(MMGenObject,metaclass=AsyncInit):
+class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 	caps = ('rescan','batch')
 	data_key = 'addresses'
@@ -122,9 +122,9 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
 	def __del__(self):
 		"""
-		TrackingWallet instances opened in write or import mode must be explicitly destroyed
-		with 'del twctl', 'del twuo.wallet' and the like to ensure the instance is deleted and
-		wallet is written before global vars are destroyed by the interpreter at shutdown.
+		TwCtl instances opened in write or import mode must be explicitly destroyed with 'del
+		twuo.twctl' and the like to ensure the instance is deleted and wallet is written before
+		global vars are destroyed by the interpreter at shutdown.
 
 		Not that this code can only be debugged by examining the program output, as exceptions
 		are ignored within __del__():

@@ -21,12 +21,12 @@ proto.eth.twctl: Ethereum tracking wallet control class
 """
 
 from ....util import msg,ymsg,die
-from ....tw.ctl import TrackingWallet,write_mode
+from ....tw.ctl import TwCtl,write_mode
 from ....addr import is_coin_addr,is_mmgen_id
 from ....amt import ETHAmt
 from ..contract import Token,TokenResolve
 
-class EthereumTrackingWallet(TrackingWallet):
+class EthereumTwCtl(TwCtl):
 
 	caps = ('batch',)
 	data_key = 'accounts'
@@ -166,7 +166,7 @@ class EthereumTrackingWallet(TrackingWallet):
 	def mmid_ordered_dict(self):
 		return dict((x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list)
 
-class EthereumTokenTrackingWallet(EthereumTrackingWallet):
+class EthereumTokenTwCtl(EthereumTwCtl):
 
 	desc = 'Ethereum token tracking wallet'
 	decimals = None
@@ -183,7 +183,7 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 			if not is_coin_addr(proto,token_addr):
 				die( 'InvalidTokenAddress', f'{token_addr!r}: invalid token address' )
 		else:
-			assert token_addr == None,'EthereumTokenTrackingWallet_chk1'
+			assert token_addr == None,'EthereumTokenTwCtl_chk1'
 			token_addr = await self.sym2addr(proto.tokensym) # returns None on failure
 			if not is_coin_addr(proto,token_addr):
 				die( 'UnrecognizedTokenSymbol', f'Specified token {proto.tokensym!r} could not be resolved!' )

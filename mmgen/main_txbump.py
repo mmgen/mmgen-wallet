@@ -130,11 +130,11 @@ async def main():
 	kl = get_keylist(orig_tx.proto,opt)
 	sign_and_send = bool(seed_files or kl or kal)
 
-	from .tw.ctl import TrackingWallet
+	from .tw.ctl import TwCtl
 	tx = await BumpTX(
 		data = orig_tx.__dict__,
 		send = sign_and_send,
-		tw   = await TrackingWallet(orig_tx.proto) if orig_tx.proto.tokensym else None )
+		tw   = await TwCtl(orig_tx.proto) if orig_tx.proto.tokensym else None )
 
 	from .rpc import rpc_init
 	tx.rpc = await rpc_init(tx.proto)

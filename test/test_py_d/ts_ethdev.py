@@ -1322,8 +1322,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	async def twmove(self):
 		self.spawn('',msg_only=True)
-		from mmgen.tw.ctl import TrackingWallet
-		tw = await TrackingWallet(self.proto)
+		from mmgen.tw.ctl import TwCtl
+		tw = await TwCtl(self.proto)
 		imsg(f'Moving tracking wallet')
 		bakfile = tw.tw_fn + '.bak.json'
 		if os.path.exists(bakfile):
@@ -1354,8 +1354,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	async def twcompare(self):
 		self.spawn('',msg_only=True)
-		from mmgen.tw.ctl import TrackingWallet
-		tw = await TrackingWallet(self.proto)
+		from mmgen.tw.ctl import TwCtl
+		tw = await TwCtl(self.proto)
 		fn = tw.tw_fn
 		imsg(f'Comparing imported tracking wallet with original')
 		data = [json.dumps(json.loads(read_from_file(f)),sort_keys=True) for f in (fn,fn+'.bak.json')]

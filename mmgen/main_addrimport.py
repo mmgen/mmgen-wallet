@@ -133,11 +133,11 @@ def check_opts(tw):
 	return batch,rescan
 
 async def main():
-	from .tw.ctl import TrackingWallet
+	from .tw.ctl import TwCtl
 	if opt.token_addr:
 		proto.tokensym = 'foo' # hack to trigger 'Token' in proto.base_proto_subclass()
 
-	tw = await TrackingWallet(
+	tw = await TwCtl(
 		proto      = proto,
 		token_addr = opt.token_addr,
 		mode       = 'i' )

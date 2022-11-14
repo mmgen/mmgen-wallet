@@ -13,10 +13,10 @@ proto.btc.tw.ctl: Bitcoin base protocol tracking wallet control class
 """
 
 from ....globalvars import g
-from ....tw.ctl import TrackingWallet,write_mode
+from ....tw.ctl import TwCtl,write_mode
 from ....util import msg,msg_r,rmsg,vmsg,die,suf,fmt_list
 
-class BitcoinTrackingWallet(TrackingWallet):
+class BitcoinTwCtl(TwCtl):
 
 	def init_empty(self):
 		self.data = { 'coin': self.proto.coin, 'addresses': {} }

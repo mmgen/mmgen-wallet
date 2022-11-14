@@ -122,7 +122,7 @@ from .tx.sign import *
 seed_files = get_seed_files(opt,cmd_args)
 
 async def main():
-	from .tw.ctl import TrackingWallet
+	from .tw.ctl import TwCtl
 
 	from .protocol import init_proto_from_opts
 	proto = init_proto_from_opts(need_amt=True)
