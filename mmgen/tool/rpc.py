@@ -60,9 +60,14 @@ class tool_cmd(tool_cmd_base):
 
 		if interactive:
 			await obj.view_filter_and_sort()
-			return True
+			ret = True
 		else:
-			return await obj.format('detail' if detail else 'squeezed')
+			ret = await obj.format('detail' if detail else 'squeezed')
+
+		if hasattr(obj,'wallet'):
+			del obj.wallet
+
+		return ret
 
 	async def twview(self,
 			pager:       'send output to pager' = False,
@@ -77,11 +82,9 @@ class tool_cmd(tool_cmd_base):
 
 		from ..tw.unspent import TwUnspentOutputs
 		obj = await TwUnspentOutputs(self.proto,minconf=minconf)
-		ret = await self.twops(
+		return await self.twops(
 			obj,pager,reverse,wide,sort,age_fmt,interactive,
 			show_mmid = show_mmid )
-		del obj.wallet
-		return ret
 
 	async def txhist(self,
 			pager:       'send output to pager' = False,
