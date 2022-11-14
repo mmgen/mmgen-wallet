@@ -52,7 +52,7 @@ Actions: [q]uit, r[e]draw, add [l]abel:
 		msg('done')
 
 		amt0 = self.proto.coin_amt('0')
-		self.total = sum((v['amt'] for v in addrs.values()), start=amt0 )
+		self.total = sum((v['amt'] for v in addrs.values())) or amt0 # Python 3.8: start=amt0
 
 		msg_r('Getting labels and associated addresses...')
 		for label,addr in await self.get_addr_label_pairs():
