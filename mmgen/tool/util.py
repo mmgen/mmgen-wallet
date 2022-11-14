@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/util.py: Utility commands for the 'mmgen-tool' utility
+tool.util: Utility commands for the 'mmgen-tool' utility
 """
 
 from .common import tool_cmd_base

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-addrlist.py: Address list classes for the MMGen suite
+addrlist: Address list classes for the MMGen suite
 """
 
 from .util import qmsg,qmsg_r,suf,make_chksum_N,Msg,die

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/file.py: Address and transaction file routines for the 'mmgen-tool' utility
+tool.file: Address and transaction file routines for the 'mmgen-tool' utility
 """
 
 from .common import tool_cmd_base,options_annot_str

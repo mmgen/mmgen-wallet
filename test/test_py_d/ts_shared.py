@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-ts_shared.py: Shared methods for the test.py test suite
+test.test_py_d.ts_shared: Shared methods for the test.py test suite
 """
 
 import os

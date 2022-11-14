@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/help.py: Help screen routines for the 'mmgen-tool' utility
+tool.help: Help screen routines for the 'mmgen-tool' utility
 """
 
 from .common import tool_cmd_base

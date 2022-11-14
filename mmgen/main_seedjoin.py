@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen/main_seedjoin: Regenerate an MMGen deterministic wallet from seed shares
-                     created by 'mmgen-seedsplit'
+mmgen-seedjoin: Regenerate an MMGen deterministic wallet from seed shares
+                created by 'mmgen-seedsplit'
 """
 
 from .common import *

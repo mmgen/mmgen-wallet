@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/rpc.py: JSON/RPC routines for the 'mmgen-tool' utility
+tool.rpc: JSON/RPC routines for the 'mmgen-tool' utility
 """
 
 from .common import tool_cmd_base,options_annot_str

@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-ts_ref_3seed.py: Saved and generated reference file tests for 128, 192 and
-                 256-bit seeds for the test.py test suite
+test.test_py_d.ts_ref_3seed: Saved and generated reference file tests for 128,
+                             192 and 256-bit seeds for the test.py test suite
 """
 
 from mmgen.globalvars import g

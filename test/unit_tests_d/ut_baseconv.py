@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+
 """
-test/unit_tests_d/ut_baseconv.py: Base conversion unit test for the MMGen suite
+test.unit_tests_d.ut_baseconv: Base conversion unit test for the MMGen suite
 """
 
 from mmgen.common import *

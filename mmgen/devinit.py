@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-devinit.py: Developer tools init/launch code for the MMGen suite
+devinit: Developer tools init/launch code for the MMGen suite
 """
 
 devtools_funcs = {

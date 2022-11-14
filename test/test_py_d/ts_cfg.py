@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-ts_cfg.py: CfgFile tests for the MMGen test.py test suite
+test.test_py_d.ts_cfg: CfgFile tests for the MMGen test.py test suite
 """
 
 import shutil

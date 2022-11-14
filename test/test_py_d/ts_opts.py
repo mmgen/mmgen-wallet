@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-ts_opts.py: options processing tests for the MMGen test.py test suite
+test.test_py_d.ts_opts: options processing tests for the MMGen test.py test suite
 """
 
 from ..include.common import *

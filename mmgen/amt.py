@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-amt.py: MMGen CoinAmt and related classes
+amt: MMGen CoinAmt and related classes
 """
 
 from decimal import Decimal

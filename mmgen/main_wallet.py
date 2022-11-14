@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen/main_wallet:  Entry point for MMGen wallet-related scripts
+main_wallet: Entry point for MMGen wallet-related scripts
 """
 
 import os

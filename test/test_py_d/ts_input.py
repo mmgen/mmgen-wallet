@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-ts_input.py: user input tests for the MMGen test.py test suite
+test.test_py_d.ts_input: user input tests for the MMGen test.py test suite
 """
 
 import time

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Opts.py:  Generic options parsing
+share.Opts: Generic options parsing
 """
 
 import sys,re

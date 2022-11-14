@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/wallet.py: Wallet routines for the 'mmgen-tool' utility
+tool.wallet: Wallet routines for the 'mmgen-tool' utility
 """
 
 from .common import tool_cmd_base

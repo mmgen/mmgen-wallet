@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-license.py:  Copyright notice and text of GPLv3
+contrib.license: Copyright notice and text of GPLv3
 """
 
 from ..globalvars import g

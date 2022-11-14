@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-subseed.py:  Subseed classes and methods for the MMGen suite
+subseed: Subseed classes and methods for the MMGen suite
 """
 
 from .color import green

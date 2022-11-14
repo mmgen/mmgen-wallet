@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/fileutil.py: File routines for the 'mmgen-tool' utility
+tool.fileutil: File routines for the 'mmgen-tool' utility
 """
 
 import os

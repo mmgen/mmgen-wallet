@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-addr.py: MMGen address-related types
+addr: MMGen address-related types
 """
 
 from collections import namedtuple

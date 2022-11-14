@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-baseconv.py:  base conversion class for the MMGen suite
+baseconv: base conversion class for the MMGen suite
 """
 
 from collections import namedtuple

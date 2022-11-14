@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """
 test/unit_tests_d/ut_bip39: BIP39 unit test for the MMGen suite
 """

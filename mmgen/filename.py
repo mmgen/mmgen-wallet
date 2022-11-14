@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-filename.py:  File and MMGenFile classes and methods for the MMGen suite
+filename: File and MMGenFile classes and methods for the MMGen suite
 """
 
 import sys,os

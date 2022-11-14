@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-term.py:  Terminal classes for the MMGen suite
+term: Terminal classes for the MMGen suite
 """
 
 import sys,os,time

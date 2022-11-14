@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-help.py:  help notes for MMGen suite commands
+help: help notes for MMGen suite commands
 """
 
 def help_notes_func(proto,po,k):

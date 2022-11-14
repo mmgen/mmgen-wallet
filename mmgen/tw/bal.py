@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-twbal: Tracking wallet getbalance class for the MMGen suite
+tw.bal: Tracking wallet getbalance class for the MMGen suite
 """
 
 from collections import namedtuple

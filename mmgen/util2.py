@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-util2.py: Less frequently-used variables, classes and utility functions for the MMGen suite
+util2: Less frequently-used variables, classes and utility functions for the MMGen suite
 """
 
 import re,time

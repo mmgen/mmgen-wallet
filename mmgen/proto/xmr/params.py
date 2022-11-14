@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-Monero protocol
+proto.xmr.params: Monero protocol
 """
 
 from collections import namedtuple

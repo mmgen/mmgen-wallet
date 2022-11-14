@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-addrfile.py:  Address and password file classes for the MMGen suite
+addrfile: Address and password file classes for the MMGen suite
 """
 
 from .util import msg,qmsg,qmsg_r,die,capfirst

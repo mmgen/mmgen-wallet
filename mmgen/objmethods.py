@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-objmethods.py: Mixin classes for MMGen data objects
+objmethods: Mixin classes for MMGen data objects
 """
 
 import unicodedata

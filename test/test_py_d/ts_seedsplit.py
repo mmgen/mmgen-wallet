@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-ts_seedsplit.py: Seed split/join tests for the test.py test suite
+test.test_py_d.ts_seedsplit: Seed split/join tests for the test.py test suite
 """
 
 from mmgen.globalvars import g

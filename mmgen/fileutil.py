@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-fileutil.py: Routines that read, write, execute or stat files
+fileutil: Routines that read, write, execute or stat files
 """
 
 import sys,os

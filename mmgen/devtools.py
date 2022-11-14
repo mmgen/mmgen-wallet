@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-devtools.py: Developer tools for the MMGen suite
+devtools: Developer tools for the MMGen suite
 """
 
 import sys

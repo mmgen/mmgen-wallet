@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-test.py: functions required by the MMGen test suite
+test: functions required by the MMGen test suite
 """
 
 import sys

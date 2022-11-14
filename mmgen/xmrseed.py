@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-xmrseed.py: Monero mnemonic conversion class for the MMGen suite
+xmrseed: Monero mnemonic conversion class for the MMGen suite
 """
 
 from .baseconv import baseconv

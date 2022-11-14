@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-addrdata.py: MMGen AddrData and related classes
+addrdata: MMGen AddrData and related classes
 """
 
 from .util import vmsg,fmt,die

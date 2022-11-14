@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen/main_xmrwallet: Perform various Monero wallet operations for addresses
-                      in an MMGen XMR key-address file
+mmgen-xmrwallet: Perform various Monero wallet operations for addresses
+                 in an MMGen XMR key-address file
 """
 
 from .common import *

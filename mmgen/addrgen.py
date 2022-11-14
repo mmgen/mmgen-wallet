@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-addrgen.py: Address generation initialization code for the MMGen suite
+addrgen: Address generation initialization code for the MMGen suite
 """
 
 from .keygen import KeyGenerator # convenience import

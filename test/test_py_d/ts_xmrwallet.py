@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-ts_xmrwallet.py: xmrwallet tests for the test.py test suite
+test.test_py_d.ts_xmrwallet: xmrwallet tests for the test.py test suite
 """
 
 import sys,os,atexit,asyncio,shutil

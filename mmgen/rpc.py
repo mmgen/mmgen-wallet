@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-rpc.py:  Cryptocoin RPC library for the MMGen suite
+rpc: Cryptocoin RPC library for the MMGen suite
 """
 
 import base64,json,asyncio,importlib

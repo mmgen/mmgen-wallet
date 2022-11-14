@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-Bitcoin Cash protocol
+proto.bch.params: Bitcoin Cash protocol
 """
 
 from ..btc.params import mainnet,_finfo

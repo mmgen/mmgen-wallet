@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
 test/hashfunc.py: Test internal implementations of SHA256, SHA512 and Keccak256
 """

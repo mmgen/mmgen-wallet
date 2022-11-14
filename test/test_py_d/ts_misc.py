@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-ts_misc.py: Miscellaneous test groups for the test.py test suite
+test.test_py_d.ts_misc: Miscellaneous test groups for the test.py test suite
 """
 
 from mmgen.globalvars import g

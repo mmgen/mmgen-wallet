@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-proto.eth.twbal: Ethereum tracking wallet getbalance class
+proto.eth.tw.bal: Ethereum tracking wallet getbalance class
 """
 
 from ....tw.ctl import TwCtl

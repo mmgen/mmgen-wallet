@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-Zcash protocol
+proto.zec.params: Zcash protocol
 """
 
 from ..btc.params import mainnet

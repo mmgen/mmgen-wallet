@@ -18,7 +18,7 @@
 
 """
 test/scrambletest.py: seed scrambling and addrlist data generation tests for all
-supported coins + passwords
+                      supported coins + passwords
 """
 
 import sys,os

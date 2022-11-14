@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-twctl: Tracking wallet control class for the MMGen suite
+tw.ctl: Tracking wallet control class for the MMGen suite
 """
 
 import json

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/mnemonic.py: Mnemonic routines for the 'mmgen-tool' utility
+tool.mnemonic: Mnemonic routines for the 'mmgen-tool' utility
 """
 
 from collections import namedtuple

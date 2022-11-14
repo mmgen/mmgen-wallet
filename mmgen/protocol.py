@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-protocol.py: Coin protocol base classes and initializer
+protocol: Coin protocol base classes and initializer
 """
 
 from collections import namedtuple

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-main.py - Script launcher for the MMGen project
+main: Script launcher for the MMGen project
 """
 
 def launch(mod,package='mmgen'):

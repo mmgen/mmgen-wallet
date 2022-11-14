@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-obj.py: MMGen native classes
+obj: MMGen native classes
 """
 
 import sys,os,re,unicodedata

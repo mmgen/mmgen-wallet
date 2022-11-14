@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-Ethereum protocol
+proto.eth.params: Ethereum protocol
 """
 
 from ...globalvars import g

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-util.py: Frequently-used variables, classes and utility functions for the MMGen suite
+util: Frequently-used variables, classes and utility functions for the MMGen suite
 """
 
 import sys,os,time,re

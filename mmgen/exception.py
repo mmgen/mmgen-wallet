@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen.exception: Exception classes for the MMGen suite
+exception: Exception classes for the MMGen suite
 """
 
 class MMGenError(Exception):

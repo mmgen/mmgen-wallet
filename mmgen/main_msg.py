@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-mmgen.main_msg: Message signing operations for the MMGen suite
+mmgen-msg: Message signing operations for the MMGen suite
 """
 
 from .base_obj import AsyncInit

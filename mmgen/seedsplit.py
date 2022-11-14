@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-seedsplit.py: Seed split classes and methods for the MMGen suite
+seedsplit: Seed split classes and methods for the MMGen suite
 """
 
 from .globalvars import g

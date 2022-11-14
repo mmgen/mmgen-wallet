@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test/tooltest2.py:  Simple tests for the 'mmgen-tool' utility
+test/tooltest2.py: Simple tests for the 'mmgen-tool' utility
 """
 
 # TODO: move all non-interactive 'mmgen-tool' tests in 'test.py' here

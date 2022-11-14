@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 """
+scripts/gendiff.py:
+
 Clean up control characters and trailing whitespace in the listed source files
 and create a unified diff between them.
 

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tx.file:  Transaction file operations for the MMGen suite
+tx.file: Transaction file operations for the MMGen suite
 """
 
 from ..common import *

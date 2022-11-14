@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-color.py:  color handling for the MMGen suite
+color: color handling for the MMGen suite
 """
 
 _colors = {

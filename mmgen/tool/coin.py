@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/coin.py: Cryptocoin routines for the 'mmgen-tool' utility
+tool.coin: Cryptocoin routines for the 'mmgen-tool' utility
 """
 
 from collections import namedtuple

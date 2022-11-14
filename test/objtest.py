@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test/objtest.py:  Test MMGen data objects
+test/objtest.py: Test MMGen data objects
 """
 
 import sys,os,re

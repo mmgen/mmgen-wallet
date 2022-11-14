@@ -4,7 +4,7 @@
 # Copyright (C)2013-2022 The MMGen Project <mmgen@tuta.io>
 
 """
-colortest.py:  test color handling for the MMGen suite
+test/colortest.py: test color handling for the MMGen suite
 """
 
 import include.tests_header

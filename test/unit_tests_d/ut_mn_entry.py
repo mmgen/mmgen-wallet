@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+
 """
-test/unit_tests_d/ut_mn_entry.py: Mnemonic user entry unit test for the MMGen suite
+test.unit_tests_d.ut_mn_entry: Mnemonic user entry unit test for the MMGen suite
 """
 
 from mmgen.util import msg,msg_r,qmsg,qmsg_r

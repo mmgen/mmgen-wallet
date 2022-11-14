@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-key.py: MMGen public and private key objects
+key: MMGen public and private key objects
 """
 
 from .objmethods import Hilite,InitErrors,MMGenObject

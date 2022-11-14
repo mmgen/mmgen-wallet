@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-keygen.py: Public key generation initialization code for the MMGen suite
+keygen: Public key generation initialization code for the MMGen suite
 """
 
 from collections import namedtuple

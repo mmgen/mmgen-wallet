@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/filecrypt.py: File encryption/decryption routines for the 'mmgen-tool' utility
+tool.filecrypt: File encryption/decryption routines for the 'mmgen-tool' utility
 """
 
 import os

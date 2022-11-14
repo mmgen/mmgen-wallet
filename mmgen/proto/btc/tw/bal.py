@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-proto.btc.twbal: Bitcoin base protocol tracking wallet balance class
+proto.btc.tw.bal: Bitcoin base protocol tracking wallet balance class
 """
 
 from ....tw.bal import TwGetBalance

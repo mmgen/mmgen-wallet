@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-ui.py: Interactive user interface functions for the MMGen suite
+ui: Interactive user interface functions for the MMGen suite
 """
 
 import sys,os

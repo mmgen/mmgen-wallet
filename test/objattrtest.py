@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test/objattrtest.py:  Test immutable attributes of MMGen data objects
+test/objattrtest.py: Test immutable attributes of MMGen data objects
 """
 
 # TODO: test 'typeconv' during instance creation

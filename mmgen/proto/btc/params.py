@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-Bitcoin protocol
+proto.btc.params: Bitcoin protocol
 """
 
 from ...protocol import CoinProtocol,decoded_wif,decoded_addr,_finfo,_nw

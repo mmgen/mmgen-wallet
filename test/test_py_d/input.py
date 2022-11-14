@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-input.py: Shared input routines for the test.py test suite
+test.test_py_d.input: Shared input routines for the test.py test suite
 """
 
 import os,time

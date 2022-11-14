@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """
 test.unit_tests_d.ut_gen: key/address generation unit tests for the MMGen suite
 """

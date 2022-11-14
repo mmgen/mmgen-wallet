@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test/pexpect.py: pexpect implementation for MMGen test suites
+test.include.pexpect: pexpect implementation for MMGen test suites
 """
 
 import sys,os,time

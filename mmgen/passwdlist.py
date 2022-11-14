@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-passwdlist.py: Password list class for the MMGen suite
+passwdlist: Password list class for the MMGen suite
 """
 
 from collections import namedtuple

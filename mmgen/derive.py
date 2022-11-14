@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-derive.py: coin private key secret derivation for the MMGen suite
+derive: coin private key secret derivation for the MMGen suite
 """
 
 from collections import namedtuple

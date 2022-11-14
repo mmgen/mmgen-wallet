@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-common.py:  Common imports for all MMGen scripts
+common: Common imports for all MMGen scripts
 """
 
 import sys,os

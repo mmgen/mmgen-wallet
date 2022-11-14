@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-common.py: Shared routines and data for the MMGen test suites
+test.include.common: Shared routines and data for the MMGen test suites
 """
 
 import os

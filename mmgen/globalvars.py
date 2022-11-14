@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-globalvars.py:  Constants and configuration options for the MMGen suite
+globalvars: Constants and configuration options for the MMGen suite
 """
 
 import sys,os

@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-ts_chainsplit.py: Forking scenario tests for the test.py test suite
-This module is currently non-functional
+test.test_py_d.ts_chainsplit: Forking scenario tests for the test.py test suite
+This module is unmaintained and currently non-functional
 """
 import os
 from mmgen.globalvars import g

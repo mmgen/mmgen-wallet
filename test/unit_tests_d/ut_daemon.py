@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+
 """
-test/unit_tests_d/ut_daemon.py: unit test for the MMGen suite's Daemon class
+test.unit_tests_d.ut_daemon: unit test for the MMGen suite's Daemon class
 """
 
 from subprocess import run,DEVNULL

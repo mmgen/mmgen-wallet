@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test/unit_tests.py:  Unit tests for the MMGen suite
+test/unit_tests.py: Unit tests for the MMGen suite
 """
 
 import sys,os,time,importlib,platform

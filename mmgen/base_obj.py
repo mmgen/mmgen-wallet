@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-base_obj.py: base objects with no internal imports for the MMGen suite
+base_obj: base objects with no internal imports for the MMGen suite
 """
 
 class AsyncInit(type):

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-seed.py:  Seed-related classes and methods for the MMGen suite
+seed: Seed-related classes and methods for the MMGen suite
 """
 
 from .util import make_chksum_8,hexdigits_uc

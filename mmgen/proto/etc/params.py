@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-Ethereum Classic protocol
+proto.etc.params: Ethereum Classic protocol
 """
 
 from ..eth.params import mainnet

@@ -4,7 +4,7 @@
 # Copyright (C)2013-2022 The MMGen Project <mmgen@tuta.io>
 
 """
-tool_api_test.py: test the MMGen suite tool API
+test.misc.tool_api_test: test the MMGen suite tool API
 """
 
 import sys,os

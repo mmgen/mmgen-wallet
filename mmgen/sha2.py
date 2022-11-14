@@ -17,9 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-sha2.py: A non-optimized but very compact implementation of the SHA2 hash
-         algorithm for the MMGen suite.  Implements SHA256, SHA512 and
-         SHA256Compress (unpadded SHA256, required for Zcash addresses)
+sha2: A non-optimized but very compact implementation of the SHA2 hash
+      algorithm for the MMGen suite.  Implements SHA256, SHA512 and
+      SHA256Compress (unpadded SHA256, required for Zcash addresses)
 """
 
 # IMPORTANT NOTE: Since GMP precision is platform-dependent, generated constants

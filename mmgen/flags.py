@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-flags.py:  Class flags and opts for the MMGen suite
+flags: Class flags and opts for the MMGen suite
 """
 
 from .base_obj import AttrCtrl,Lockable

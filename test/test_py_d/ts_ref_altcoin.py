@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-ts_ref_altcoin.py: Altcoin reference file tests for the test.py test suite
+test.test_py_d.ts_ref_altcoin: Altcoin reference file tests for the test.py test suite
 """
 
 import os

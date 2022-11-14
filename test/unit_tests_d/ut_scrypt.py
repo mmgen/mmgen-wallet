@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+
 """
-test/unit_tests_d/ut_scrypt.py: password hashing unit test for the MMGen suite
+test.unit_tests_d.ut_scrypt: password hashing unit test for the MMGen suite
 """
 
 from ..include.common import *

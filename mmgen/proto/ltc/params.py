@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-Litecoin protocol
+proto.ltc.params: Litecoin protocol
 """
 
 from ..btc.params import mainnet

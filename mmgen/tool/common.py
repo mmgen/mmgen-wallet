@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool/common.py: Base class and shared routines for the 'mmgen-tool' utility
+tool.common: Base class and shared routines for the 'mmgen-tool' utility
 """
 
 from ..objmethods import MMGenObject

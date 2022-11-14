@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-opts.py:  MMGen-specific options processing after generic processing by share.Opts
+opts: MMGen-specific options processing after generic processing by share.Opts
 """
 import sys,os,stat
 

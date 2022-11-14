@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+
 """
-test/unit_tests_d/ut_lockable.py: unit test for the MMGen suite's Lockable class
+test.unit_tests_d.ut_lockable: unit test for the MMGen suite's Lockable class
 """
 
 from mmgen.common import *
