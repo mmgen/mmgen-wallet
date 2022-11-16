@@ -167,7 +167,7 @@ class New(Base):
 	def add_output(self,coinaddr,amt,is_chg=None):
 		self.outputs.append(self.Output(self.proto,addr=coinaddr,amt=amt,is_chg=is_chg))
 
-	def process_cmd_arg(self,arg,ad_f,ad_w):
+	async def process_cmd_arg(self,arg,ad_f,ad_w):
 
 		if ',' in arg:
 			addr,amt = arg.split(',',1)
@@ -189,10 +189,10 @@ class New(Base):
 
 		self.add_output(coin_addr,self.proto.coin_amt(amt or '0'),is_chg=not amt)
 
-	def process_cmd_args(self,cmd_args,ad_f,ad_w):
+	async def process_cmd_args(self,cmd_args,ad_f,ad_w):
 
 		for a in cmd_args:
-			self.process_cmd_arg(a,ad_f,ad_w)
+			await self.process_cmd_arg(a,ad_f,ad_w)
 
 		if self.get_chg_output_idx() == None:
 			die(2,(
@@ -230,7 +230,7 @@ class New(Base):
 
 		ad_w = await TwAddrData(self.proto,twctl=self.twctl)
 
-		self.process_cmd_args(cmd_args,ad_f,ad_w)
+		await self.process_cmd_args(cmd_args,ad_f,ad_w)
 
 		self.add_mmaddrs_to_outputs(ad_w,ad_f)
 		self.check_dup_addrs('outputs')
@@ -351,7 +351,7 @@ class New(Base):
 		if opt.comment_file:
 			self.add_comment(opt.comment_file)
 
-		twuo_addrs = await self.get_cmdline_input_addrs()
+		twuo_addrs = await self.get_input_addrs_from_cmdline()
 
 		self.twuo = await TwUnspentOutputs(self.proto,minconf=opt.minconf,addrs=twuo_addrs)
 		await self.twuo.get_data()

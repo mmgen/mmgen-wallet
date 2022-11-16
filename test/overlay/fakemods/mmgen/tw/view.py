@@ -1,5 +1,5 @@
 import os as overlay_fake_os
-from .common_orig import *
+from .view_orig import *
 
 if overlay_fake_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 

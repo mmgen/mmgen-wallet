@@ -372,6 +372,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		self.write_to_tmpfile('wallet_password',rt_pw)
 
 		self.dfl_mmtype = 'C' if self.proto.coin == 'BCH' else 'B'
+		self.burn_addr = make_burn_addr(self.proto)
 
 	def __del__(self):
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
@@ -506,7 +507,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		return self.user_txdo(
 			'bob', '40s',
-			[ f'{addr},{rtFundAmt}', make_burn_addr(self.proto) ],
+			[ f'{addr},{rtFundAmt}', self.burn_addr ],
 			utxo_nums,
 			extra_args = [f'--keys-from-file={keyfile}'],
 			skip_passphrase = skip_passphrase )
@@ -757,7 +758,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_nochg_burn(self):
 		return self.user_txdo('bob',
 			fee          = '0.00009713',
-			outputs_cl   = [f'{make_burn_addr(self.proto)}'],
+			outputs_cl   = [self.burn_addr],
 			outputs_list = '1' )
 
 	def bob_alice_bal(self):

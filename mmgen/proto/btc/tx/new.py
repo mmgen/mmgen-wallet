@@ -81,7 +81,7 @@ class New(Base,TxBase.New):
 		msg(err)
 		return False
 
-	async def get_cmdline_input_addrs(self):
+	async def get_input_addrs_from_cmdline(self):
 		# Bitcoin full node, call doesn't go to the network, so just call listunspent with addrs=[]
 		return []
 

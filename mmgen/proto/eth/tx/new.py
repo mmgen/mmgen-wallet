@@ -77,7 +77,7 @@ class New(Base,TxBase.New):
 			'update_txid() must be called only when self.serialized is not hex data' )
 		self.txid = MMGenTxID(make_chksum_6(self.serialized).upper())
 
-	def process_cmd_args(self,cmd_args,ad_f,ad_w):
+	async def process_cmd_args(self,cmd_args,ad_f,ad_w):
 		lc = len(cmd_args)
 		if lc == 0 and self.usr_contract_data and not 'Token' in type(self).__name__:
 			return
@@ -85,7 +85,7 @@ class New(Base,TxBase.New):
 			die(1,f'{lc} output{suf(lc)} specified, but Ethereum transactions must have exactly one')
 
 		for a in cmd_args:
-			self.process_cmd_arg(a,ad_f,ad_w)
+			await self.process_cmd_arg(a,ad_f,ad_w)
 
 	def select_unspent(self,unspent):
 		from ....ui import line_input
@@ -141,7 +141,7 @@ class New(Base,TxBase.New):
 		if self.outputs and self.outputs[0].is_chg:
 			self.update_output_amt(0,ETHAmt(funds_left))
 
-	async def get_cmdline_input_addrs(self):
+	async def get_input_addrs_from_cmdline(self):
 		ret = []
 		if opt.inputs:
 			data_root = (await TwCtl(self.proto)).data_root # must create new instance here
