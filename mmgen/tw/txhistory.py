@@ -107,7 +107,7 @@ class TwTxHistory(TwView):
 			i = 'Inputs',
 			A = 'Amt({})'.format('TX' if self.show_total_amt else 'Wallet'),
 			o = 'Outputs',
-			c = 'Comment' ).rstrip()
+			c = 'Comment' )
 
 		for n,d in enumerate(data,1):
 			yield fs.format(
@@ -117,7 +117,7 @@ class TwTxHistory(TwView):
 				i = d.vouts_disp( 'inputs', width=cw.inputs, color=color ),
 				A = d.amt_disp(self.show_total_amt).fmt( iwidth=cw.iwidth, prec=self.disp_prec, color=color ),
 				o = d.vouts_disp( 'outputs', width=cw.outputs, color=color ),
-				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ) ).rstrip()
+				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ) )
 
 	def gen_detail_display(self,data,cw,hdr_fs,fs,color):
 

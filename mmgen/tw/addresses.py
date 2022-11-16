@@ -193,7 +193,7 @@ class TwAddresses(TwView):
 			c  = 'Comment',
 			A  = 'Balance',
 			b  = 'Block',
-			D  = 'Date/Time' ).rstrip()
+			D  = 'Date/Time' )
 
 		yes,no = (red('Yes '),green('No  ')) if color else ('Yes ','No  ')
 		id_save = data[0].al_id
@@ -210,8 +210,7 @@ class TwAddresses(TwView):
 				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
 				A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
 				b = self.age_disp( d, 'block' ),
-				D = self.age_disp( d, 'date_time' ),
-			).rstrip()
+				D = self.age_disp( d, 'date_time' ))
 
 	async def set_dates(self,addrs):
 		if not self.dates_set:

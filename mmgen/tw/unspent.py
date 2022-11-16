@@ -194,7 +194,7 @@ class TwUnspentOutputs(TwView):
 			B = 'Amt({})'.format(self.proto.coin),
 			b = 'Block',
 			D = 'Date/Time',
-			c = 'Comment' ).rstrip()
+			c = 'Comment' )
 
 		for n,d in enumerate(data):
 			yield fs.format(
@@ -207,8 +207,7 @@ class TwUnspentOutputs(TwView):
 				B = d.amt2.fmt( color=color, iwidth=cw.iwidth2, prec=self.disp_prec ) if cw.amt2 else None,
 				b = self.age_disp(d,'block'),
 				D = self.age_disp(d,'date_time'),
-				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
-			).rstrip()
+				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ))
 
 	def display_total(self):
 		msg('\nTotal unspent: {} {} ({} output{})'.format(
