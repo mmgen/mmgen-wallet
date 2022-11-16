@@ -638,9 +638,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		sid1 = self._get_user_subsid('bob','29L')
 		sid2 = self._get_user_subsid('bob','127S')
 		chg_addr = self._user_sid('bob') + (':B:1',':L:1')[self.proto.coin=='BCH']
-		outputs_cl = [sid1+':C:2,0.29',sid2+':C:3,0.127',chg_addr]
-		inputs = ('3','1')[self.proto.coin=='BCH']
-		return self.user_txdo('bob',rtFee[1],outputs_cl,inputs,extra_args=['--subseeds=127'])
+		return self.user_txdo(
+			user               = 'bob',
+			fee                = rtFee[1],
+			outputs_cl         = [sid1+':C:2,0.29',sid2+':C:3,0.127',chg_addr],
+			outputs_list       = ('3','1')[self.proto.coin=='BCH'],
+			extra_args         = ['--subseeds=127'],
+			used_chg_addr_resp = (None,'y')[self.proto.coin=='BCH'] )
 
 	def bob_twview2(self):
 		sid1 = self._get_user_subsid('bob','29L')
@@ -779,7 +783,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			bad_locktime = False,
 			full_tx_view = False,
 			menu         = ['M'],
-			skip_passphrase = False ):
+			skip_passphrase = False,
+			used_chg_addr_resp = None ):
 
 		t = self.spawn('mmgen-txdo',
 			['-d',self.tmpdir,'-B','--'+user] +
@@ -793,7 +798,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			file_desc       = 'Signed transaction',
 			interactive_fee = (tx_fee,'')[bool(fee)],
 			add_comment     = tx_comment_jp,
-			view            = 't',save=True)
+			view            = 't',
+			save            = True,
+			used_chg_addr_resp = used_chg_addr_resp )
 
 		if not skip_passphrase:
 			t.passphrase(dfl_wcls.desc,rt_pw)
@@ -848,7 +855,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		outputs_cl = self._create_tx_outputs('alice',(('L',1,',60'),('C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
 		outputs_cl += [self._user_sid('bob')+':'+rtBobOp3]
 		return self.user_txdo('bob',rtFee[1],outputs_cl,'3',
-					extra_args=([],['--rbf'])[self.proto.cap('rbf')])
+					extra_args = ([],['--rbf'])[self.proto.cap('rbf')],
+					used_chg_addr_resp = 'y' )
 
 	def bob_send_non_mmgen(self):
 		outputs_cl = self._create_tx_outputs('alice',(

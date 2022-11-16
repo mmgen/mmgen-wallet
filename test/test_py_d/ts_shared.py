@@ -46,13 +46,18 @@ class TestSuiteShared(object):
 			add_comment       = '',
 			view              = 't',
 			save              = True,
-			tweaks            = [] ):
+			tweaks            = [],
+			used_chg_addr_resp = None ):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
 		expect_pat = r'\[q\]uit view, .*?:.'
 		delete_pat = r'Enter account number .*:.'
 		confirm_pat = r'Is this what you want.*:.'
+
+		if used_chg_addr_resp is not None:
+			t.expect('reuse harms your privacy.*:.*',used_chg_addr_resp,regex=True)
+
 		pat = expect_pat
 		for choice in menu + ['q']:
 			t.expect(pat,choice,regex=True)

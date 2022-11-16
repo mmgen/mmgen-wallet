@@ -15,7 +15,7 @@ tx.new: new transaction class
 from ..globalvars import *
 from ..opts import opt
 from .base import Base
-from ..color import pink
+from ..color import pink,yellow
 from ..obj import get_obj,MMGenList
 from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension
 from ..addr import is_mmgen_id,CoinAddr,is_coin_addr
@@ -234,6 +234,25 @@ class New(Base):
 
 		self.add_mmaddrs_to_outputs(ad_w,ad_f)
 		self.check_dup_addrs('outputs')
+
+		chg_idx = self.get_chg_output_idx()
+		if chg_idx is not None:
+			await self.warn_chg_addr_used(self.outputs[chg_idx])
+
+	async def warn_chg_addr_used(self,chg):
+		from ..tw.addresses import TwAddresses
+		if (await TwAddresses(self.proto,get_data=True)).is_used(chg.addr):
+			from ..ui import keypress_confirm
+			if not keypress_confirm(
+					'{a} {b} {c}\n{d}'.format(
+						a = yellow(f'Requested change address'),
+						b = (chg.mmid or chg.addr).hl(),
+						c = yellow('is already used!'),
+						d = yellow('Address reuse harms your privacy and security. Continue anyway? (y/N): ')
+					),
+					complete_prompt = True,
+					default_yes = False ):
+				die(1,'Exiting at user request')
 
 	# inputs methods
 	def select_unspent(self,unspent):

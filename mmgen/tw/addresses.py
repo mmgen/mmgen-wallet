@@ -242,6 +242,13 @@ class TwAddresses(TwView):
 	def dump_fn_pfx(self):
 		return 'listaddresses' + (f'-minconf-{self.minconf}' if self.minconf else '')
 
+	def is_used(self,coinaddr):
+		for e in self.data:
+			if e.addr == coinaddr:
+				return bool(e.recvd)
+		else: # addr not in tracking wallet
+			return None
+
 	class action(TwView.action):
 
 		def s_amt(self,parent):
