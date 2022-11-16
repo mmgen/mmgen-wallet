@@ -55,14 +55,14 @@ def delete_data(opts_data):
 	del mmgen.share.Opts.parse_opts
 
 def post_init():
-	global po_save,opts_data_save,opt_filter_save
-	if po_save.user_opts.get('help') or po_save.user_opts.get('longhelp'):
-		print_help(po_save,opts_data_save,opt_filter_save)
+	global opts_data_save,opt_filter_save
+	if opt.help or opt.longhelp:
+		print_help(opt,opts_data_save,opt_filter_save)
 	else:
 		delete_data(opts_data_save)
-		del po_save,opts_data_save,opt_filter_save
+		del opts_data_save,opt_filter_save
 
-def print_help(po,opts_data,opt_filter):
+def print_help(opt,opts_data,opt_filter):
 	if not 'code' in opts_data:
 		opts_data['code'] = {}
 
@@ -82,7 +82,7 @@ def print_help(po,opts_data,opt_filter):
 	do_pager(
 		mmgen.share.Opts.make_help(
 			proto,
-			po,
+			opt,
 			opts_data,
 			opt_filter ))
 
@@ -408,11 +408,6 @@ def init(
 
 	# === end global var initialization === #
 
-	# print help screen only after global vars are initialized:
-	if getattr(opt,'help',None) or getattr(opt,'longhelp',None):
-		if not do_post_init:
-			print_help(po,opts_data,opt_filter) # exits
-
 	if need_proto:
 		from .protocol import warn_trustlevel
 		warn_trustlevel(g.coin)
@@ -441,9 +436,13 @@ def init(
 	g.lock()
 	opt.lock()
 
+	# print help screen only after globals and opts initialized and locked:
+	if opt.help or opt.longhelp:
+		if not do_post_init:
+			print_help(opt,opts_data,opt_filter) # exits
+
 	if do_post_init:
-		global po_save,opts_data_save,opt_filter_save
-		po_save = po
+		global opts_data_save,opt_filter_save
 		opts_data_save = opts_data
 		opt_filter_save = opt_filter
 	else:

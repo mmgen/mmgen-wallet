@@ -20,7 +20,7 @@
 help: help notes for MMGen suite commands
 """
 
-def help_notes_func(proto,po,k):
+def help_notes_func(proto,opt,k):
 	from .globalvars import g
 
 	def fee_spec_letters(use_quotes=False):
@@ -91,7 +91,7 @@ def help_notes_func(proto,po,k):
 			from .keygen import get_backends
 			from .addr import MMGenAddrType
 			backends = get_backends(
-				MMGenAddrType(proto,po.user_opts.get('type') or proto.dfl_mmtype).pubkey_type
+				MMGenAddrType(proto,opt.type or proto.dfl_mmtype).pubkey_type
 			)
 			return ' '.join( f'{n}:{k}{" [default]" if n==1 else ""}' for n,k in enumerate(backends,1) )
 

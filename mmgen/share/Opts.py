@@ -49,7 +49,7 @@ def print_help(*args):
 	print(make_help(*args))
 	sys.exit(0)
 
-def make_help(proto,po,opts_data,opt_filter):
+def make_help(proto,opt,opts_data,opt_filter):
 
 	def parse_lines(text):
 		filtered = False
@@ -62,7 +62,7 @@ def make_help(proto,po,opts_data,opt_filter):
 			elif not filtered:
 				yield line
 
-	opts_type,fs = ('options','{:<3} --{} {}') if 'help' in po.user_opts else ('long_options','{}  --{} {}')
+	opts_type,fs = ('options','{:<3} --{} {}') if opt.help else ('long_options','{}  --{} {}')
 	t = opts_data['text']
 	c = opts_data['code']
 	nl = '\n  '
@@ -71,7 +71,7 @@ def make_help(proto,po,opts_data,opt_filter):
 
 	from mmgen.help import help_notes_func
 	def help_notes(k):
-		return help_notes_func(proto,po,k)
+		return help_notes_func(proto,opt,k)
 
 	def gen_arg_tuple(func,text):
 		d = {'proto': proto,'help_notes':help_notes}
@@ -166,8 +166,7 @@ def parse_opts(opts_data,opt_filter=None,parse_only=False):
 
 	uopts,uargs = process_uopts(opts_data,short_opts,long_opts)
 
-	po = namedtuple('parsed_cmd_opts',['user_opts','cmd_args','opts','skipped_opts'])
-	return po(
+	return namedtuple('parsed_cmd_opts',['user_opts','cmd_args','opts','skipped_opts'])(
 		uopts, # dict
 		uargs, # list, callers can pop
 		tuple(o.replace('-','_').rstrip('=') for o in long_opts),
