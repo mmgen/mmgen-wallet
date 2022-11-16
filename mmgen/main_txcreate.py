@@ -34,7 +34,8 @@ opts_data = {
 -a, --tx-fee-adj=  f  Adjust transaction fee by factor 'f' (see below)
 -B, --no-blank        Don't blank screen before displaying unspent outputs
 -c, --comment-file=f  Source the transaction's comment from file 'f'
--C, --tx-confs=    c  Desired number of confirmations (default: {g.tx_confs})
+-C, --tx-confs=    c  Desired number of confirmations for fee estimation
+                      (default: {g.tx_confs})
 -d, --outdir=      d  Specify an alternate directory 'd' for output
 -D, --contract-data=D Path to hex-encoded contract data (ETH only)
 -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
@@ -58,7 +59,7 @@ opts_data = {
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 -X, --cached-balances Use cached balances (Ethereum only)
 """,
-		'notes': '\n{}{}',
+		'notes': '\n{c}\n{F}\n{x}',
 	},
 	'code': {
 		'options': lambda proto,help_notes,s: s.format(
@@ -69,8 +70,9 @@ opts_data = {
 			cu=proto.coin,
 			g=g),
 		'notes': lambda help_notes,s: s.format(
-			help_notes('txcreate'),
-			help_notes('fee'))
+			c = help_notes('txcreate'),
+			F = help_notes('fee'),
+			x = help_notes('txcreate_examples') )
 	}
 }
 

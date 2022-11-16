@@ -113,10 +113,11 @@ def help_notes_func(proto,opt,k):
 		def fee():
 			from .tx import BaseTX
 			return """
-FEE SPECIFICATION: Transaction fees, both on the command line and at the
-interactive prompt, may be specified as either absolute {c} amounts, using
-a plain decimal number, or as {r}, using an integer followed by
-'{l}', for {u}.
+                               FEE SPECIFICATION
+
+Transaction fees, both on the command line and at the interactive prompt, may
+be specified as either absolute {c} amounts, using a plain decimal number, or
+as {r}, using an integer followed by '{l}', for {u}.
 """.format(
 	c = proto.coin,
 	r = BaseTX(proto=proto).rel_fee_desc,
@@ -141,24 +142,54 @@ with brainwallets.  For a brainwallet passphrase to generate the correct
 seed, the same seed length and hash preset parameters must always be used.
 """.strip()
 
+		def txcreate_examples():
+
+			mmtype = 'S' if 'segwit' in proto.caps else 'C'
+			from .tool.coin import tool_cmd
+			t = tool_cmd(mmtype=mmtype)
+			sample_addr = t.privhex2addr('bead'*16)
+
+			return f"""
+EXAMPLES:
+
+  Send 0.123 {proto.coin} to an external {proto.name} address, returning the change to a
+  specific MMGen address in the tracking wallet:
+
+    $ {g.prog_name} {sample_addr},0.123 01ABCDEF:{mmtype}:7
+
+  Same as above, but reduce verbosity and specify fee of 20 satoshis
+  per byte:
+
+    $ {g.prog_name} -q -f 20s {sample_addr},0.123 01ABCDEF:{mmtype}:7
+
+  Send entire balance of selected inputs minus fee to an external {proto.name}
+  address:
+
+    $ {g.prog_name} {sample_addr}
+"""
+
 		def txcreate():
 			return f"""
-The transaction's outputs are specified on the command line, while its inputs
-are chosen from a list of the user's unspent outputs via an interactive menu.
+The transaction’s outputs are listed on the command line, while its inputs
+are chosen from a list of the wallet’s unspent outputs via an interactive
+menu.  Alternatively, inputs may be specified using the --inputs option.
+
+All addresses on the command line can be either {proto.name} addresses or MMGen
+IDs in the form <seed ID>:<address type letter>:<index>.
+
+Outputs are specified in the form <address>,<amount>, with the change output
+specified by address only.
 
 If the transaction fee is not specified on the command line (see FEE
 SPECIFICATION below), it will be calculated dynamically using network fee
 estimation for the default (or user-specified) number of confirmations.
 If network fee estimation fails, the user will be prompted for a fee.
 
-Network-estimated fees will be multiplied by the value of '--tx-fee-adj',
-if specified.
-
-All addresses on the command line can be either {proto.name} addresses or {g.proj_name}
-addresses of the form <seed ID>:<index>.
+Network-estimated fees will be multiplied by the value of --tx-fee-adj, if
+specified.
 
 To send the value of all inputs (minus TX fee) to a single output, specify
-one address with no amount on the command line.
+a single address with no amount on the command line.
 """
 
 		def txsign():

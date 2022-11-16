@@ -37,7 +37,8 @@ opts_data = {
                        brainwallet input
 -B, --no-blank         Don't blank screen before displaying unspent outputs
 -c, --comment-file=  f Source the transaction's comment from file 'f'
--C, --tx-confs=      c Desired number of confirmations (default: {g.tx_confs})
+-C, --tx-confs=      c Desired number of confirmations for fee estimation
+                       (default: {g.tx_confs})
 -d, --outdir=        d Specify an alternate directory 'd' for output
 -D, --contract-data= D Path to hex-encoded contract data (ETH only)
 -e, --echo-passphrase  Print passphrase to screen when typing it
@@ -84,14 +85,18 @@ opts_data = {
 -z, --show-hash-presets Show information on available hash presets
 """,
 	'notes': """
-{}{}{}
+{c}\n{F}
+
+                                 SIGNING NOTES
+{s}
 Seed source files must have the canonical extensions listed in the 'FileExt'
 column below:
 
 FMT CODES:
 
   {f}
-"""
+
+{x}"""
 	},
 	'code': {
 		'options': lambda proto,help_notes,s: s.format(
@@ -107,10 +112,11 @@ FMT CODES:
 			dsl=help_notes('dfl_seed_len'),
 			cu=proto.coin),
 		'notes': lambda help_notes,s: s.format(
-			help_notes('txcreate'),
-			help_notes('fee'),
-			help_notes('txsign'),
-			f=help_notes('fmt_codes')),
+			c = help_notes('txcreate'),
+			F = help_notes('fee'),
+			s = help_notes('txsign'),
+			f = help_notes('fmt_codes'),
+			x = help_notes('txcreate_examples') ),
 	}
 }
 
