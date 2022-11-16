@@ -164,6 +164,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('subgroup.txhist',     ['main']),
 		('subgroup.label',      ['main']),
 		('subgroup.view',       ['label']),
+		('subgroup.auto_chg',   ['view']),
 		('stop',                'stopping regtest daemon'),
 	)
 	cmd_subgroups = {
@@ -345,6 +346,18 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('alice_twview_date_time',        'twview (age_fmt=date_time)'),
 		('alice_txcreate_info',           'txcreate -i'),
 		('alice_txcreate_info_term',      'txcreate -i (pexpect_spawn)'),
+	),
+	'auto_chg': (
+		'automatic change address selection',
+		('bob_split3',        'splitting Bob’s funds'),
+		('generate',          'mining a block'),
+		('bob_auto_chg1',     'creating an automatic change address transaction (C)'),
+		('bob_auto_chg2',     'creating an automatic change address transaction (B)'),
+		('bob_auto_chg3',     'creating an automatic change address transaction (S)'),
+		('bob_auto_chg4',     'creating an automatic change address transaction (single address)'),
+		('bob_auto_chg_bad1', 'error handling for auto change address transaction (bad ID FFFFFFFF:C)'),
+		('bob_auto_chg_bad2', 'error handling for auto change address transaction (bad ID 00000000:C)'),
+		('bob_auto_chg_bad3', 'error handling for auto change address transaction (no unused addresses)'),
 	),
 	}
 
@@ -1393,6 +1406,66 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			addr = addr,
 			msgfile = os.path.join(self.tmpdir,'signatures.json')
 		)
+
+	def bob_split3(self):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		sid = self._user_sid('bob')
+		return self.user_txdo(
+			user = 'bob',
+			fee = '23s',
+			outputs_cl = [sid+':C:5,0.0135', sid+':L:4'],
+			outputs_list = '1' )
+
+	def _bob_auto_chg(self,al_id,include_dest=True):
+		dest = [self.burn_addr+',0.01'] if include_dest else []
+		t = self.spawn(
+			'mmgen-txcreate',
+			['-d',self.tr.trash_dir,'-B','--bob', al_id] + dest)
+		return self.txcreate_ui_common(t,
+			menu            = [],
+			inputs          = '1',
+			interactive_fee = '20s',
+			auto_chg_al_id  = al_id )
+
+	def bob_auto_chg1(self):
+		return self._bob_auto_chg(self._user_sid('bob') + ':C')
+
+	def bob_auto_chg2(self):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		return self._bob_auto_chg(self._user_sid('bob') + ':B')
+
+	def bob_auto_chg3(self):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		return self._bob_auto_chg(self._user_sid('bob') + ':S')
+
+	def bob_auto_chg4(self):
+		return self._bob_auto_chg( self._user_sid('bob') + ':C', include_dest=False )
+
+	def _bob_auto_chg_bad(self,al_id,expect):
+		t = self.spawn(
+			'mmgen-txcreate',
+			['-d',self.tr.trash_dir,'-B','--bob', self.burn_addr+',0.01', al_id] )
+		t.req_exit_val = 2
+		t.expect(expect)
+		return t
+
+	def bob_auto_chg_bad1(self):
+		return self._bob_auto_chg_bad(
+			'FFFFFFFF:C',
+			'contains no addresses' )
+
+	def bob_auto_chg_bad2(self):
+		return self._bob_auto_chg_bad(
+			'00000000:C',
+			'contains no addresses' )
+
+	def bob_auto_chg_bad3(self):
+		return self._bob_auto_chg_bad(
+			self._user_sid('bob') + ':L',
+			'contains no unused addresses' )
 
 	def stop(self):
 		if opt.no_daemon_stop:

@@ -157,10 +157,14 @@ EXAMPLES:
 
     $ {g.prog_name} {sample_addr},0.123 01ABCDEF:{mmtype}:7
 
+  Same as above, but select the change address automatically:
+
+    $ {g.prog_name} {sample_addr},0.123 01ABCDEF:{mmtype}
+
   Same as above, but reduce verbosity and specify fee of 20 satoshis
   per byte:
 
-    $ {g.prog_name} -q -f 20s {sample_addr},0.123 01ABCDEF:{mmtype}:7
+    $ {g.prog_name} -q -f 20s {sample_addr},0.123 01ABCDEF:{mmtype}
 
   Send entire balance of selected inputs minus fee to an external {proto.name}
   address:
@@ -178,7 +182,10 @@ All addresses on the command line can be either {proto.name} addresses or MMGen
 IDs in the form <seed ID>:<address type letter>:<index>.
 
 Outputs are specified in the form <address>,<amount>, with the change output
-specified by address only.
+specified by address only.  Alternatively, the change output may be an
+addrlist ID in the form <seed ID>:<address type letter>, in which case the
+first unused address in the tracking wallet matching the requested ID will
+be automatically selected as the change output.
 
 If the transaction fee is not specified on the command line (see FEE
 SPECIFICATION below), it will be calculated dynamically using network fee
@@ -189,7 +196,9 @@ Network-estimated fees will be multiplied by the value of --tx-fee-adj, if
 specified.
 
 To send the value of all inputs (minus TX fee) to a single output, specify
-a single address with no amount on the command line.
+a single address with no amount on the command line.  Alternatively, an
+addrlist ID may be specified, and the address will be chosen automatically
+as described above for the change output.
 """
 
 		def txsign():

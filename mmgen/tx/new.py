@@ -18,7 +18,7 @@ from .base import Base
 from ..color import pink,yellow
 from ..obj import get_obj,MMGenList
 from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension
-from ..addr import is_mmgen_id,CoinAddr,is_coin_addr
+from ..addr import is_mmgen_id,CoinAddr,is_coin_addr,AddrListID,is_addrlist_id
 
 def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
 
@@ -69,6 +69,7 @@ class New(Base):
 		ERROR: No change address specified.  If you wish to create a transaction with
 		only one output, specify a single output address with no {} amount
 	"""
+	chg_autoselected = False
 
 	def update_output_amt(self,idx,amt):
 		o = self.outputs[idx]._asdict()
@@ -180,6 +181,18 @@ class New(Base):
 			coin_addr = mmaddr2coinaddr(addr,ad_w,ad_f,self.proto)
 		elif is_coin_addr(self.proto,addr):
 			coin_addr = CoinAddr(self.proto,addr)
+		elif is_addrlist_id(self.proto,addr):
+			if self.proto.base_proto_coin != 'BTC':
+				die(2,f'Change addresses not supported for {self.proto.name} protocol')
+			from ..tw.addresses import TwAddresses
+			res = (await TwAddresses(self.proto,get_data=True)).get_change_address(addr)
+			if res:
+				coin_addr = res.addr
+				self.chg_autoselected = True
+			else:
+				die(2,'Tracking wallet contains no {t}addresses from address list {a!r}'.format(
+					t = ('unused ','')[res is None],
+					a = addr ))
 		else:
 			die(2,f'{addr}: invalid {err_desc} {{!r}}'.format(f'{addr},{amt}' if amt else addr))
 
@@ -236,8 +249,19 @@ class New(Base):
 		self.check_dup_addrs('outputs')
 
 		if self.chg_output is not None:
-			if len(self.outputs) > 1:
+			if self.chg_autoselected:
+				self.confirm_autoselected_addr(self.chg_output)
+			elif len(self.outputs) > 1:
 				await self.warn_chg_addr_used(self.chg_output)
+
+	def confirm_autoselected_addr(self,chg):
+		from ..ui import keypress_confirm
+		if not keypress_confirm(
+				'Using {a} as {b} address. OK?'.format(
+					a = chg.mmid.hl(),
+					b = 'single output' if len(self.outputs) == 1 else 'change' ),
+				default_yes = True ):
+			die(1,'Exiting at user request')
 
 	async def warn_chg_addr_used(self,chg):
 		from ..tw.addresses import TwAddresses

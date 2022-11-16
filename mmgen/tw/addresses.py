@@ -249,6 +249,52 @@ class TwAddresses(TwView):
 		else: # addr not in tracking wallet
 			return None
 
+	def get_change_address(self,al_id):
+		"""
+		Get lowest-indexed unused address in tracking wallet for requested AddrListID.
+		Return values on failure:
+		    None:  no addresses in wallet with requested AddrListID
+		    False: no unused addresses in wallet with requested AddrListID
+		"""
+
+		def get_start():
+			"""
+			bisecting algorithm to find first entry with requested al_id
+
+			Since 'btc' > 'F' and pre_target sorts below the first twmmid of the al_id
+			stringwise, we can just search on raw twmmids.
+			"""
+			pre_target = al_id + ':0'
+			bot = 0
+			top = len(data) - 1
+			n = top >> 1
+
+			while True:
+
+				if bot == top:
+					return bot if data[bot].al_id == al_id else None
+
+				if data[n].twmmid < pre_target:
+					bot = n + 1
+				else:
+					top = n
+
+				n = (top + bot) >> 1
+
+		self.reverse = False
+		self.do_sort('twmmid')
+
+		data = self.data
+		start = get_start()
+
+		if start is not None:
+			for d in data[start:]:
+				if d.al_id == al_id:
+					if not d.recvd:
+						return d
+				else:
+					return False
+
 	class action(TwView.action):
 
 		def s_amt(self,parent):
