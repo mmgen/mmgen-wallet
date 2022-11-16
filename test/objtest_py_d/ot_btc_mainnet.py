@@ -263,12 +263,14 @@ tests = {
 			{'proto':proto, 's':r32,'compressed':True,'pubkey_type':'std','ret':r32}
 		)
 	},
-	'AddrListID': { # a rather pointless test, but do it anyway
+	'AddrListID': {
 		'arg1': 'sid',
 		'bad':  (
 			{'sid':SeedID(sid='F00BAA12'),'mmtype':'Z','ret':'F00BAA12:Z'},
+			{'id_str':'G00BAA12:B','proto':proto},
 		),
 		'good':  (
+			{'id_str':'F00BAA12:B','proto':proto,'ret':'F00BAA12:B'},
 			{'sid':SeedID(sid='F00BAA12'),'mmtype':proto.addr_type(id_str='S'),'ret':'F00BAA12:S'},
 			{'sid':SeedID(sid='F00BAA12'),'mmtype':proto.addr_type(id_str='L'),'ret':'F00BAA12:L'},
 		)

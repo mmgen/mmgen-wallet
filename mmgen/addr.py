@@ -94,11 +94,19 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	width = 10
 	trunc_ok = False
 	color = 'yellow'
-	def __new__(cls,sid,mmtype):
+	def __new__(cls,sid=None,mmtype=None,proto=None,id_str=None):
 		try:
-			assert type(sid) == SeedID, f'{sid!r} not a SeedID instance'
-			if not isinstance(mmtype,(MMGenAddrType,MMGenPasswordType)):
-				raise ValueError(f'{mmtype!r}: not an instance of MMGenAddrType or MMGenPasswordType')
+			if id_str:
+				a,b = id_str.split(':')
+				sid = SeedID(sid=a)
+				try:
+					mmtype = MMGenAddrType( proto=proto, id_str=b )
+				except:
+					mmtype = MMGenPasswordType( proto=proto, id_str=b )
+			else:
+				assert type(sid) == SeedID, f'{sid!r} not a SeedID instance'
+				if not isinstance(mmtype,(MMGenAddrType,MMGenPasswordType)):
+					raise ValueError(f'{mmtype!r}: not an instance of MMGenAddrType or MMGenPasswordType')
 			me = str.__new__(cls,sid+':'+mmtype)
 			me.sid = sid
 			me.mmtype = mmtype
@@ -106,8 +114,8 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 		except Exception as e:
 			return cls.init_fail(e, f'sid={sid}, mmtype={mmtype}')
 
-def is_addrlist_id(s):
-	return get_obj( AddrListID, sid=s, silent=True, return_bool=True )
+def is_addrlist_id(proto,s):
+	return get_obj( AddrListID, proto=proto, id_str=s, silent=False, return_bool=True )
 
 class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
