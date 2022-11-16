@@ -92,7 +92,7 @@ class PasswordList(AddrList):
 			if self.hex2bip39:
 				ymsg(self.feature_warn_fs.format(pw_fmt))
 			self.set_pw_len_vs_seed_len(pw_len,seed) # sets self.bip39, self.xmrseed, self.xmrproto self.baseconv
-			self.al_id = AddrListID(seed.sid,MMGenPasswordType(self.proto,'P'))
+			self.al_id = AddrListID( sid=seed.sid, mmtype=MMGenPasswordType(self.proto,'P') )
 			self.data = self.generate(seed,pw_idxs)
 
 		self.num_addrs = len(self.data)

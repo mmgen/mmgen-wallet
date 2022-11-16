@@ -88,7 +88,9 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 				if len(addr_array) != 1:
 					message = self.msgs['multiple_acct_addrs'].strip().format( acct=acct, proj=g.proj_name )
 					die(3, fmt( message, indent='  ' ))
-				al_id = AddrListID(SeedID(sid=obj.sid),self.proto.addr_type(obj.mmtype))
+				al_id = AddrListID(
+					sid = SeedID(sid=obj.sid),
+					mmtype = self.proto.addr_type(obj.mmtype) )
 				if al_id not in out:
 					out[al_id] = []
 				out[al_id].append(AddrListEntry(self.proto,idx=obj.idx,addr=addr_array[0],comment=l.comment))

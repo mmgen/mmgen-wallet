@@ -117,12 +117,14 @@ class New(Base,TxBase.New):
 
 		self.outputs.sort_bip69()
 
-		ret = await self.rpc.call(
-			'createrawtransaction', [
+		inputs_list = [
 			{'txid':e.txid,'vout':e.vout,'sequence':e.sequence} if n == 0 and e.sequence else
 			{'txid':e.txid,'vout':e.vout}
-				for n,e in enumerate(self.inputs) ],
-			{e.addr:e.amt for e in self.outputs} )
+				for n,e in enumerate(self.inputs) ]
+
+		outputs_dict = {e.addr:e.amt for e in self.outputs}
+
+		ret = await self.rpc.call( 'createrawtransaction', inputs_list, outputs_dict )
 
 		if locktime and not bump:
 			msg(f'Setting nLockTime to {self.strfmt_locktime(locktime)}!')

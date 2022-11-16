@@ -273,7 +273,7 @@ class AddrFile(MMGenObject):
 
 			p.base_coin = proto.base_coin
 			p.network = proto.network
-			p.al_id = AddrListID(SeedID(sid=sid),mmtype)
+			p.al_id = AddrListID( sid=SeedID(sid=sid), mmtype=mmtype )
 
 			data = self.parse_file_body(lines[1:-1])
 			assert isinstance(data,list),'Invalid file body data'
