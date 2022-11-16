@@ -65,7 +65,7 @@ class Completed(Base,TxBase.Completed):
 	@property
 	def send_amt(self):
 		return self.sum_outputs(
-			exclude = None if len(self.outputs) == 1 else self.get_chg_output_idx()
+			exclude = None if len(self.outputs) == 1 else self.chg_idx
 		)
 
 	def check_txfile_hex_data(self):

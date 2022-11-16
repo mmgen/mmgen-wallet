@@ -86,12 +86,13 @@ class New(Base,TxBase.New):
 		return []
 
 	def update_change_output(self,funds_left):
-		chg_idx = self.get_chg_output_idx()
-		if funds_left == 0:
+		if funds_left == 0: # TODO: test
 			msg(self.no_chg_msg)
-			self.outputs.pop(chg_idx)
+			self.outputs.pop(self.chg_idx)
 		else:
-			self.update_output_amt(chg_idx,self.proto.coin_amt(funds_left))
+			self.update_output_amt(
+				self.chg_idx,
+				self.proto.coin_amt(funds_left) )
 
 	def check_fee(self):
 		fee = self.sum_inputs() - self.sum_outputs()

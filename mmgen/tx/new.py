@@ -183,7 +183,7 @@ class New(Base):
 		else:
 			die(2,f'{addr}: invalid {err_desc} {{!r}}'.format(f'{addr},{amt}' if amt else addr))
 
-		if not amt and self.get_chg_output_idx() is not None:
+		if not (amt or self.chg_idx is None):
 			die(2,'ERROR: More than one change address {} on command line'.format(
 				'requested' if self.chg_autoselected else 'listed'))
 
@@ -194,7 +194,7 @@ class New(Base):
 		for a in cmd_args:
 			await self.process_cmd_arg(a,ad_f,ad_w)
 
-		if self.get_chg_output_idx() == None:
+		if self.chg_idx is None:
 			die(2,(
 				fmt( self.msg_no_change_output.format(self.dcoin) ).strip()
 					if len(self.outputs) == 1 else
@@ -235,9 +235,9 @@ class New(Base):
 		self.add_mmaddrs_to_outputs(ad_w,ad_f)
 		self.check_dup_addrs('outputs')
 
-		chg_idx = self.get_chg_output_idx()
-		if chg_idx is not None:
-			await self.warn_chg_addr_used(self.outputs[chg_idx])
+		if self.chg_output is not None:
+			if len(self.outputs) > 1:
+				await self.warn_chg_addr_used(self.chg_output)
 
 	async def warn_chg_addr_used(self,chg):
 		from ..tw.addresses import TwAddresses

@@ -142,12 +142,24 @@ class Base(MMGenObject):
 			return self.proto.coin_amt('0')
 		return self.proto.coin_amt(sum(e.amt for e in olist))
 
-	def get_chg_output_idx(self):
-		ch_ops = [x.is_chg for x in self.outputs]
-		try:
-			return ch_ops.index(True)
-		except ValueError:
+	def _chg_output_ops(self,op):
+		is_chgs = [x.is_chg for x in self.outputs]
+		if is_chgs.count(True) == 1:
+			return (
+				is_chgs.index(True) if op == 'idx' else
+				self.outputs[is_chgs.index(True)] )
+		elif is_chgs.count(True) == 0:
 			return None
+		else:
+			raise ValueError('more than one change output!')
+
+	@property
+	def chg_idx(self):
+		return self._chg_output_ops('idx')
+
+	@property
+	def chg_output(self):
+		return self._chg_output_ops('output')
 
 	def add_timestamp(self):
 		self.timestamp = make_timestamp()

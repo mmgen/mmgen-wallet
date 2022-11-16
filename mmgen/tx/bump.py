@@ -42,8 +42,6 @@ class Bump(Completed,New):
 				f'All outputs contain less than the minimum fee ({self.min_fee} {self.coin})')
 
 	def choose_output(self):
-		chg_idx = self.get_chg_output_idx()
-		init_reply = opt.output_to_reduce
 
 		def check_sufficient_funds(o_amt):
 			if o_amt < self.min_fee:
@@ -57,6 +55,9 @@ class Bump(Completed,New):
 				return 0
 			else:
 				die(1,'Insufficient funds to bump transaction')
+
+		init_reply = opt.output_to_reduce
+		chg_idx = self.chg_idx
 
 		while True:
 			if init_reply == None:
