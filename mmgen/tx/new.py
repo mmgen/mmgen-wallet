@@ -169,21 +169,25 @@ class New(Base):
 
 	def process_cmd_arg(self,arg,ad_f,ad_w):
 
-		def add_output_chk(addr,amt,err_desc):
-			if not amt and self.get_chg_output_idx() != None:
-				die(2,'ERROR: More than one change address listed on command line')
-			if is_mmgen_id(self.proto,addr) or is_coin_addr(self.proto,addr):
-				coin_addr = ( mmaddr2coinaddr(addr,ad_w,ad_f,self.proto) if is_mmgen_id(self.proto,addr)
-								else CoinAddr(self.proto,addr) )
-				self.add_output(coin_addr,self.proto.coin_amt(amt or '0'),is_chg=not amt)
-			else:
-				die(2,f'{addr}: invalid {err_desc} {{!r}}'.format(f'{addr},{amt}' if amt else addr))
-
 		if ',' in arg:
 			addr,amt = arg.split(',',1)
-			add_output_chk(addr,amt,'coin argument in command-line argument')
+			err_desc = 'coin argument in command-line argument'
 		else:
-			add_output_chk(arg,None,'command-line argument')
+			addr,amt = (arg,None)
+			err_desc = 'command-line argument'
+
+		if is_mmgen_id(self.proto,addr):
+			coin_addr = mmaddr2coinaddr(addr,ad_w,ad_f,self.proto)
+		elif is_coin_addr(self.proto,addr):
+			coin_addr = CoinAddr(self.proto,addr)
+		else:
+			die(2,f'{addr}: invalid {err_desc} {{!r}}'.format(f'{addr},{amt}' if amt else addr))
+
+		if not amt and self.get_chg_output_idx() is not None:
+			die(2,'ERROR: More than one change address {} on command line'.format(
+				'requested' if self.chg_autoselected else 'listed'))
+
+		self.add_output(coin_addr,self.proto.coin_amt(amt or '0'),is_chg=not amt)
 
 	def process_cmd_args(self,cmd_args,ad_f,ad_w):
 

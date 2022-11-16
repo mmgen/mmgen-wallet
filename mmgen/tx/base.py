@@ -155,23 +155,24 @@ class Base(MMGenObject):
 	def add_blockcount(self):
 		self.blockcount = self.rpc.blockcount
 
-	# returns true if comment added or changed
+	# returns True if comment added or changed, False otherwise
 	def add_comment(self,infile=None):
 		if infile:
 			from ..fileutil import get_data_from_file
 			self.comment = MMGenTxComment(get_data_from_file(infile,'transaction comment'))
-		else: # get comment from user, or edit existing comment
-			m = ('Add a comment to transaction?','Edit transaction comment?')[bool(self.comment)]
+		else:
 			from ..ui import keypress_confirm,line_input
-			if keypress_confirm(m,default_yes=False):
-				while True:
-					s = MMGenTxComment(line_input('Comment: ',insert_txt=self.comment))
-					if not s:
-						ymsg('Warning: comment is empty')
-					save = self.comment
-					self.comment = s
-					return (True,False)[save == self.comment]
-			return False
+			if keypress_confirm(
+					prompt = 'Edit transaction comment?' if self.comment else 'Add a comment to transaction?',
+					default_yes = False ):
+				res = MMGenTxComment(line_input('Comment: ',insert_txt=self.comment))
+				if not res:
+					ymsg('Warning: comment is empty')
+				changed = res != self.comment
+				self.comment = res
+				return changed
+			else:
+				return False
 
 	def get_non_mmaddrs(self,desc):
 		return remove_dups(
