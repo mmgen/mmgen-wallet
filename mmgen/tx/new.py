@@ -18,7 +18,12 @@ from .base import Base
 from ..color import pink,yellow
 from ..obj import get_obj,MMGenList
 from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension
-from ..addr import is_mmgen_id,CoinAddr,is_coin_addr,AddrListID,is_addrlist_id
+from ..addr import (
+	is_mmgen_id,
+	CoinAddr,
+	is_coin_addr,
+	is_addrlist_id
+)
 
 def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
 
@@ -168,33 +173,34 @@ class New(Base):
 	def add_output(self,coinaddr,amt,is_chg=None):
 		self.outputs.append(self.Output(self.proto,addr=coinaddr,amt=amt,is_chg=is_chg))
 
-	async def process_cmd_arg(self,arg,ad_f,ad_w):
+	async def process_cmd_arg(self,arg_in,ad_f,ad_w):
 
-		if ',' in arg:
-			addr,amt = arg.split(',',1)
-			err_desc = 'coin argument in command-line argument'
-		else:
-			addr,amt = (arg,None)
-			err_desc = 'command-line argument'
+		arg,amt = arg_in.split(',',1) if ',' in arg_in else (arg_in,None)
 
-		if is_mmgen_id(self.proto,addr):
-			coin_addr = mmaddr2coinaddr(addr,ad_w,ad_f,self.proto)
-		elif is_coin_addr(self.proto,addr):
-			coin_addr = CoinAddr(self.proto,addr)
-		elif is_addrlist_id(self.proto,addr):
+		if is_mmgen_id(self.proto,arg):
+			coin_addr = mmaddr2coinaddr(arg,ad_w,ad_f,self.proto)
+		elif is_coin_addr(self.proto,arg):
+			coin_addr = CoinAddr(self.proto,arg)
+		elif is_addrlist_id(self.proto,arg):
 			if self.proto.base_proto_coin != 'BTC':
 				die(2,f'Change addresses not supported for {self.proto.name} protocol')
+
 			from ..tw.addresses import TwAddresses
-			res = (await TwAddresses(self.proto,get_data=True)).get_change_address(addr)
+			al = await TwAddresses(self.proto,get_data=True)
+			al.reverse = False
+			al.do_sort('twmmid')
+
+			res = al.get_change_address(arg)
+
 			if res:
 				coin_addr = res.addr
 				self.chg_autoselected = True
 			else:
 				die(2,'Tracking wallet contains no {t}addresses from address list {a!r}'.format(
 					t = ('unused ','')[res is None],
-					a = addr ))
+					a = arg ))
 		else:
-			die(2,f'{addr}: invalid {err_desc} {{!r}}'.format(f'{addr},{amt}' if amt else addr))
+			die(2,f'{arg_in}: invalid command-line argument')
 
 		if not (amt or self.chg_idx is None):
 			die(2,'ERROR: More than one change address {} on command line'.format(

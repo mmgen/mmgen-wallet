@@ -1465,7 +1465,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_auto_chg_bad3(self):
 		return self._bob_auto_chg_bad(
 			self._user_sid('bob') + ':L',
-			'contains no unused addresses' )
+			'contains no unused addresses from address list' )
 
 	def stop(self):
 		if opt.no_daemon_stop:

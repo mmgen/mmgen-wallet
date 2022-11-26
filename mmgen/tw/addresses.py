@@ -257,7 +257,7 @@ class TwAddresses(TwView):
 		    False: no unused addresses in wallet with requested AddrListID
 		"""
 
-		def get_start():
+		def get_start(bot,top):
 			"""
 			bisecting algorithm to find first entry with requested al_id
 
@@ -265,8 +265,6 @@ class TwAddresses(TwView):
 			stringwise, we can just search on raw twmmids.
 			"""
 			pre_target = al_id + ':0'
-			bot = 0
-			top = len(data) - 1
 			n = top >> 1
 
 			while True:
@@ -281,11 +279,10 @@ class TwAddresses(TwView):
 
 				n = (top + bot) >> 1
 
-		self.reverse = False
-		self.do_sort('twmmid')
+		assert self.sort_key == 'twmmid'
 
 		data = self.data
-		start = get_start()
+		start = get_start( bot=0, top=len(data) - 1 )
 
 		if start is not None:
 			for d in data[start:]:
