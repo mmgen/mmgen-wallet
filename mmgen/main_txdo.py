@@ -37,8 +37,8 @@ opts_data = {
                        brainwallet input
 -B, --no-blank         Don't blank screen before displaying unspent outputs
 -c, --comment-file=  f Source the transaction's comment from file 'f'
--C, --tx-confs=      c Desired number of confirmations for fee estimation
-                       (default: {g.tx_confs})
+-C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
+                       (default: {g.fee_estimate_confs})
 -d, --outdir=        d Specify an alternate directory 'd' for output
 -D, --contract-data= D Path to hex-encoded contract data (ETH only)
 -e, --echo-passphrase  Print passphrase to screen when typing it

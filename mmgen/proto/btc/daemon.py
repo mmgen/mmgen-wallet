@@ -120,7 +120,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			return ('importaddress',coinaddr,lbl,False)
 
 	def estimatefee_args(self,rpc):
-		return (opt.tx_confs,)
+		return (opt.fee_estimate_confs,)
 
 	def sigfail_errmsg(self,e):
 		return e.args[0]
@@ -143,7 +143,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 		return ('importaddress',coinaddr,lbl,False)
 
 	def estimatefee_args(self,rpc):
-		return () if rpc.daemon_version >= 190100 else (opt.tx_confs,)
+		return () if rpc.daemon_version >= 190100 else (opt.fee_estimate_confs,)
 
 	def sigfail_errmsg(self,e):
 		return (

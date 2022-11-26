@@ -151,13 +151,13 @@ class New(Base):
 		else:
 			desc = 'Network-estimated ({}, {} conf{})'.format(
 				opt.fee_estimate_mode.upper(),
-				pink(str(opt.tx_confs)),
-				suf(opt.tx_confs) )
+				pink(str(opt.fee_estimate_confs)),
+				suf(opt.fee_estimate_confs) )
 			fee_per_kb,fe_type = await self.get_rel_fee_from_network()
 
 			if fee_per_kb < 0:
 				if not have_estimate_fail:
-					msg(self.fee_fail_fs.format(c=opt.tx_confs,t=fe_type))
+					msg(self.fee_fail_fs.format(c=opt.fee_estimate_confs,t=fe_type))
 					have_estimate_fail.append(True)
 				start_fee = None
 			else:

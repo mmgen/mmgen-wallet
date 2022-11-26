@@ -32,7 +32,7 @@ class New(Base,TxBase.New):
 
 	async def get_rel_fee_from_network(self):
 		try:
-			ret = await self.rpc.call('estimatesmartfee',opt.tx_confs,opt.fee_estimate_mode.upper())
+			ret = await self.rpc.call('estimatesmartfee',opt.fee_estimate_confs,opt.fee_estimate_mode.upper())
 			fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
 			fe_type = 'estimatesmartfee'
 		except:
@@ -58,7 +58,7 @@ class New(Base,TxBase.New):
 			from_decimal = True )
 		if opt.verbose:
 			msg(fmt(f"""
-				{fe_type.upper()} fee for {opt.tx_confs} confirmations: {fee_per_kb} {self.coin}/kB
+				{fe_type.upper()} fee for {opt.fee_estimate_confs} confirmations: {fee_per_kb} {self.coin}/kB
 				TX size (estimated): {tx_size} bytes
 				Fee adjustment factor: {opt.tx_fee_adj:.2f}
 				Absolute fee (fee_per_kb * adj_factor * tx_size / 1024): {ret} {self.coin}

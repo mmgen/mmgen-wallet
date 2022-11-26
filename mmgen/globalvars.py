@@ -68,7 +68,7 @@ class GlobalContext(Lockable):
 	usr_randchars   = 30
 
 	tx_fee_adj   = 1.0
-	tx_confs     = 3
+	fee_estimate_confs = 3
 
 	# Constant vars - some of these might be overridden in opts.py, but they don't change thereafter
 
@@ -154,7 +154,7 @@ class GlobalContext(Lockable):
 		'debug',
 		'minconf',
 		'quiet',
-		'tx_confs',
+		'fee_estimate_confs',
 		'tx_fee_adj',
 		'use_internal_keccak_module',
 		'usr_randchars' )
