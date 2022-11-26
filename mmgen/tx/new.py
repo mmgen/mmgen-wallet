@@ -117,8 +117,8 @@ class New(Base):
 			if abs_fee:
 				prompt = '{} TX fee{}: {}{} {} ({} {})\n'.format(
 						desc,
-						(f' (after {opt.tx_fee_adj:.2f}X adjustment)'
-							if opt.tx_fee_adj != 1 and desc.startswith('Network-estimated')
+						(f' (after {opt.fee_adjust:.2f}X adjustment)'
+							if opt.fee_adjust != 1 and desc.startswith('Network-estimated')
 								else ''),
 						('','≈')[self.fee_is_approximate],
 						abs_fee.hl(),

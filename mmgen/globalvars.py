@@ -67,7 +67,7 @@ class GlobalContext(Lockable):
 	dfl_hash_preset = '3'
 	usr_randchars   = 30
 
-	tx_fee_adj   = 1.0
+	fee_adjust = 1.0
 	fee_estimate_confs = 3
 
 	# Constant vars - some of these might be overridden in opts.py, but they don't change thereafter
@@ -155,7 +155,7 @@ class GlobalContext(Lockable):
 		'minconf',
 		'quiet',
 		'fee_estimate_confs',
-		'tx_fee_adj',
+		'fee_adjust',
 		'use_internal_keccak_module',
 		'usr_randchars' )
 
@@ -199,6 +199,7 @@ class GlobalContext(Lockable):
 		'color',
 		'daemon_data_dir',
 		'debug',
+		'fee_adjust',
 		'force_256_color',
 		'hash_preset',
 		'http_timeout',
@@ -217,7 +218,6 @@ class GlobalContext(Lockable):
 		'rpc_user',
 		'subseeds',
 		'testnet',
-		'tx_fee_adj',
 		'usr_randchars',
 		'bch_max_tx_fee',
 		'btc_max_tx_fee',

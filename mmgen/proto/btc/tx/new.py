@@ -54,13 +54,13 @@ class New(Base,TxBase.New):
 		from decimal import Decimal
 		tx_size = self.estimate_size()
 		ret = self.proto.coin_amt(
-			fee_per_kb * Decimal(opt.tx_fee_adj) * tx_size / 1024,
+			fee_per_kb * Decimal(opt.fee_adjust) * tx_size / 1024,
 			from_decimal = True )
 		if opt.verbose:
 			msg(fmt(f"""
 				{fe_type.upper()} fee for {opt.fee_estimate_confs} confirmations: {fee_per_kb} {self.coin}/kB
 				TX size (estimated): {tx_size} bytes
-				Fee adjustment factor: {opt.tx_fee_adj:.2f}
+				Fee adjustment factor: {opt.fee_adjust:.2f}
 				Absolute fee (fee_per_kb * adj_factor * tx_size / 1024): {ret} {self.coin}
 			""").strip())
 		return ret

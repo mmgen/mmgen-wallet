@@ -192,7 +192,7 @@ SPECIFICATION below), it will be calculated dynamically using network fee
 estimation for the default (or user-specified) number of confirmations.
 If network fee estimation fails, the user will be prompted for a fee.
 
-Network-estimated fees will be multiplied by the value of --tx-fee-adj, if
+Network-estimated fees will be multiplied by the value of --fee-adjust, if
 specified.
 
 To send the value of all inputs (minus TX fee) to a single output, specify

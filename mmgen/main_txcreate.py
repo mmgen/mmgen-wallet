@@ -31,7 +31,7 @@ opts_data = {
 		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
--a, --tx-fee-adj=  f  Adjust transaction fee by factor 'f' (see below)
+-a, --fee-adjust=  f  Adjust transaction fee by factor 'f' (see below)
 -B, --no-blank        Don't blank screen before displaying unspent outputs
 -c, --comment-file=f  Source the transaction's comment from file 'f'
 -C, --fee-estimate-confs=c Desired number of confirmations for fee estimation

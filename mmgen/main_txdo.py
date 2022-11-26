@@ -32,7 +32,7 @@ opts_data = {
 		'options': """
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
--a, --tx-fee-adj=    f Adjust transaction fee by factor 'f' (see below)
+-a, --fee-adjust=    f Adjust transaction fee by factor 'f' (see below)
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
                        brainwallet input
 -B, --no-blank         Don't blank screen before displaying unspent outputs

@@ -116,9 +116,9 @@ class New(Base,TxBase.New):
 			from_unit='wei'
 		)
 
-	# given fee estimate (gas price) in wei, return absolute fee, adjusting by opt.tx_fee_adj
+	# given fee estimate (gas price) in wei, return absolute fee, adjusting by opt.fee_adjust
 	def fee_est2abs(self,rel_fee,fe_type=None):
-		ret = self.fee_gasPrice2abs(rel_fee) * opt.tx_fee_adj
+		ret = self.fee_gasPrice2abs(rel_fee) * opt.fee_adjust
 		if opt.verbose:
 			msg(f'Estimated fee: {ret} ETH')
 		return ret

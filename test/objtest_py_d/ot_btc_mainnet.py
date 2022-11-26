@@ -85,7 +85,7 @@ tests = {
 				{'num':Decimal('1.234'),'from_decimal':True,'ret':Decimal('1.234')},
 				{'num':Decimal('0.0'),'from_decimal':True,'ret':Decimal('0')},
 				# emulate network fee estimation:
-				#                  BTC/kB         tx_fee_adj       tx size
+				#                  BTC/kB         fee_adjust       tx size
 				{   'num':Decimal('0.00053249') * Decimal('0.9') * 109 / 1024 , # ≈53 sat/byte
 					'from_decimal':True,
 					'ret':Decimal('0.00005101') },
