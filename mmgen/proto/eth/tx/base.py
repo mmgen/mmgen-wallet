@@ -24,23 +24,23 @@ class Base(TxBase.Base):
 	rel_fee_desc = 'gas price'
 	rel_fee_disp = 'gas price in Gwei'
 	txobj  = None # ""
-	tx_gas = ETHAmt(21000,'wei')    # an approximate number, used for fee estimation purposes
+	gas = ETHAmt(21000,'wei')       # an approximate number, used for fee estimation purposes
 	start_gas = ETHAmt(21000,'wei') # the actual startgas amt used in the transaction
-									# for simple sends with no data, tx_gas = start_gas = 21000
+									# for simple sends with no data, gas = start_gas = 21000
 	contract_desc = 'contract'
 	usr_contract_data = HexStr('')
 	disable_fee_check = False
 
-	# given absolute fee in ETH, return gas price in Gwei using tx_gas
+	# given absolute fee in ETH, return gas price in Gwei using self.gas
 	def fee_abs2rel(self,abs_fee,to_unit='Gwei'):
-		ret = ETHAmt(int(abs_fee.toWei() // self.tx_gas.toWei()),'wei')
+		ret = ETHAmt(int(abs_fee.toWei() // self.gas.toWei()),'wei')
 		dmsg(f'fee_abs2rel() ==> {ret} ETH')
 		return ret if to_unit == 'eth' else ret.to_unit(to_unit,show_decimal=True)
 
-	# given rel fee (gasPrice) in wei, return absolute fee using tx_gas (Ethereum-only method)
+	# given rel fee (gasPrice) in wei, return absolute fee using self.gas (Ethereum-only method)
 	def fee_gasPrice2abs(self,rel_fee):
 		assert isinstance(rel_fee,int), f'{rel_fee!r}: incorrect type for fee estimate (not an integer)'
-		return ETHAmt(rel_fee * self.tx_gas.toWei(),'wei')
+		return ETHAmt(rel_fee * self.gas.toWei(),'wei')
 
 	def is_replaceable(self):
 		return True
@@ -64,6 +64,6 @@ class Base(TxBase.Base):
 		return True
 
 class TokenBase(Base):
-	tx_gas = ETHAmt(52000,'wei')
+	gas = ETHAmt(52000,'wei')
 	start_gas = ETHAmt(60000,'wei')
 	contract_desc = 'token contract'

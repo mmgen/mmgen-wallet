@@ -35,8 +35,8 @@ class New(Base,TxBase.New):
 
 		super().__init__(*args,**kwargs)
 
-		if opt.tx_gas:
-			self.tx_gas = self.start_gas = ETHAmt(int(opt.tx_gas),'wei')
+		if opt.gas:
+			self.gas = self.start_gas = ETHAmt(int(opt.gas),'wei')
 		if opt.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
 			assert not 'Token' in type(self).__name__, m
@@ -109,10 +109,10 @@ class New(Base,TxBase.New):
 		if not self.disable_fee_check:
 			assert self.usr_fee <= self.proto.max_tx_fee
 
-	# given rel fee and units, return absolute fee using self.tx_gas
+	# given rel fee and units, return absolute fee using self.gas
 	def fee_rel2abs(self,tx_size,units,amt,unit):
 		return ETHAmt(
-			ETHAmt(amt,units[unit]).toWei() * self.tx_gas.toWei(),
+			ETHAmt(amt,units[unit]).toWei() * self.gas.toWei(),
 			from_unit='wei'
 		)
 

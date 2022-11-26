@@ -46,7 +46,7 @@ class Signed(Completed,TxBase.Signed):
 			self.disable_fee_check = True
 		txid = CoinTxID(etx.hash.hex())
 		assert txid == self.coin_txid,"txid in tx.serialized doesn't match value in MMGen transaction file"
-		self.tx_gas = o['startGas'] # approximate, but better than nothing
+		self.gas = o['startGas'] # approximate, but better than nothing
 		self.txobj = o
 		return d # 'token_addr','decimals' required by Token subclass
 

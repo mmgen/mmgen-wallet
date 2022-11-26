@@ -38,7 +38,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 			'nonce':    ETHNonce(d['nonce']),
 			'chainId':  None if d['chainId'] == 'None' else Int(d['chainId']),
 			'data':     HexStr(d['data']) }
-		self.tx_gas = o['startGas'] # approximate, but better than nothing
+		self.gas = o['startGas'] # approximate, but better than nothing
 		self.txobj = o
 		return d # 'token_addr','decimals' required by Token subclass
 

@@ -922,7 +922,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		args = [
 			'-B',
 			f'--fee={tx_fee}',
-			f'--tx-gas={gas}',
+			f'--gas={gas}',
 			f'--contract-data={fn}',
 			f'--inputs={dfl_devaddr}',
 			'--yes',

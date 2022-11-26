@@ -44,7 +44,7 @@ opts_data = {
                       {fu} (an integer followed by {fl!r}).
                       See FEE SPECIFICATION below.  If omitted, fee will be
                       calculated using network fee estimation.
--g, --tx-gas=      g  Specify start gas amount in Wei (ETH only)
+-g, --gas=         g  Specify start gas amount in Wei (ETH only)
 -i, --info            Display unspent outputs and exit
 -I, --inputs=      i  Specify transaction inputs (comma-separated list of
                       MMGen IDs or coin addresses).  Note that ALL unspent

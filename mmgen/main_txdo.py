@@ -48,7 +48,7 @@ opts_data = {
                        {fu} (an integer followed by {fl!r}).
                        See FEE SPECIFICATION below.  If omitted, fee will be
                        calculated using network fee estimation.
--g, --tx-gas=        g Specify start gas amount in Wei (ETH only)
+-g, --gas=           g Specify start gas amount in Wei (ETH only)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
 -i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
