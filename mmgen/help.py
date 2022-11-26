@@ -161,15 +161,24 @@ EXAMPLES:
 
     $ {g.prog_name} {sample_addr},0.123 01ABCDEF:{mmtype}
 
+  Same as above, but select the change address automatically by address type:
+
+    $ {g.prog_name} {sample_addr},0.123 {mmtype}
+
   Same as above, but reduce verbosity and specify fee of 20 satoshis
   per byte:
 
-    $ {g.prog_name} -q -f 20s {sample_addr},0.123 01ABCDEF:{mmtype}
+    $ {g.prog_name} -q -f 20s {sample_addr},0.123 {mmtype}
 
   Send entire balance of selected inputs minus fee to an external {proto.name}
   address:
 
     $ {g.prog_name} {sample_addr}
+
+  Send entire balance of selected inputs minus fee to first unused wallet
+  address of specified type:
+
+    $ {g.prog_name} {mmtype}
 """
 
 		def txcreate():

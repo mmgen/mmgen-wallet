@@ -27,7 +27,7 @@ opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
 		'desc': f'Create a transaction with outputs to specified coin or {g.proj_name} addresses',
-		'usage':   '[opts]  [<addr,amt> ...] <change addr or addrlist ID> [addr file ...]',
+		'usage':   '[opts]  [<addr,amt> ...] <change addr, addrlist ID or addr type> [addr file ...]',
 		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)

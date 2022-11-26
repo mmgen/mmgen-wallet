@@ -355,9 +355,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_auto_chg2',     'creating an automatic change address transaction (B)'),
 		('bob_auto_chg3',     'creating an automatic change address transaction (S)'),
 		('bob_auto_chg4',     'creating an automatic change address transaction (single address)'),
+		('bob_auto_chg_addrtype1', 'creating an automatic change address transaction by addrtype (C)'),
+		('bob_auto_chg_addrtype2', 'creating an automatic change address transaction by addrtype (B)'),
+		('bob_auto_chg_addrtype3', 'creating an automatic change address transaction by addrtype (S)'),
+		('bob_auto_chg_addrtype4', 'creating an automatic change address transaction by addrtype (single address)'),
 		('bob_auto_chg_bad1', 'error handling for auto change address transaction (bad ID FFFFFFFF:C)'),
 		('bob_auto_chg_bad2', 'error handling for auto change address transaction (bad ID 00000000:C)'),
 		('bob_auto_chg_bad3', 'error handling for auto change address transaction (no unused addresses)'),
+		('bob_auto_chg_bad4', 'error handling for auto change address transaction by addrtype (no unused addresses)'),
 	),
 	}
 
@@ -1417,16 +1422,17 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			outputs_cl = [sid+':C:5,0.0135', sid+':L:4'],
 			outputs_list = '1' )
 
-	def _bob_auto_chg(self,al_id,include_dest=True):
+	def _bob_auto_chg(self,arg,include_dest=True,choices=1):
 		dest = [self.burn_addr+',0.01'] if include_dest else []
 		t = self.spawn(
 			'mmgen-txcreate',
-			['-d',self.tr.trash_dir,'-B','--bob', al_id] + dest)
+			['-d',self.tr.trash_dir,'-B','--bob', arg] + dest)
 		return self.txcreate_ui_common(t,
 			menu            = [],
 			inputs          = '1',
 			interactive_fee = '20s',
-			auto_chg_al_id  = al_id )
+			auto_chg_arg    = arg,
+			auto_chg_choices = choices )
 
 	def bob_auto_chg1(self):
 		return self._bob_auto_chg(self._user_sid('bob') + ':C')
@@ -1443,6 +1449,22 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_auto_chg4(self):
 		return self._bob_auto_chg( self._user_sid('bob') + ':C', include_dest=False )
+
+	def bob_auto_chg_addrtype1(self):
+		return self._bob_auto_chg( 'C', choices=3 )
+
+	def bob_auto_chg_addrtype2(self):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		return self._bob_auto_chg( 'B', choices=1 )
+
+	def bob_auto_chg_addrtype3(self):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		return self._bob_auto_chg( 'S', choices=1 )
+
+	def bob_auto_chg_addrtype4(self):
+		return self._bob_auto_chg( 'C', choices=3, include_dest=False )
 
 	def _bob_auto_chg_bad(self,al_id,expect):
 		t = self.spawn(
@@ -1466,6 +1488,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self._bob_auto_chg_bad(
 			self._user_sid('bob') + ':L',
 			'contains no unused addresses from address list' )
+
+	def bob_auto_chg_bad4(self):
+		return self._bob_auto_chg_bad(
+			'L',
+			'contains no unused addresses of address type' )
 
 	def stop(self):
 		if opt.no_daemon_stop:

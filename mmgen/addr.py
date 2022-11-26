@@ -79,6 +79,9 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	def get_names(cls):
 		return [v.name for v in cls.mmtypes.values()]
 
+def is_mmgen_addrtype(proto,id_str):
+	return get_obj( MMGenAddrType, proto=proto, id_str=id_str, silent=True, return_bool=True )
+
 class MMGenPasswordType(MMGenAddrType):
 	mmtypes = {
 		'P': ati('password', 'password', None, None, None, None, None, 'Password generated from MMGen seed')

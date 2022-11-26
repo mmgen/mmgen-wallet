@@ -48,7 +48,8 @@ class TestSuiteShared(object):
 			save              = True,
 			tweaks            = [],
 			used_chg_addr_resp = None,
-			auto_chg_al_id    = None ):
+			auto_chg_arg      = None,
+			auto_chg_choices  = 1 ):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
@@ -59,8 +60,10 @@ class TestSuiteShared(object):
 		if used_chg_addr_resp is not None:
 			t.expect('reuse harms your privacy.*:.*',used_chg_addr_resp,regex=True)
 
-		if auto_chg_al_id is not None:
-			t.expect(fr'Using .*{auto_chg_al_id}:\d+\D.* as.*address','y',regex=True)
+		if auto_chg_arg is not None:
+			if auto_chg_choices > 1:
+				t.expect('Enter a number> ',f'{auto_chg_choices}\n')
+			t.expect(fr'Using .*{auto_chg_arg}:\d+\D.* as.*address','y',regex=True)
 
 		pat = expect_pat
 		for choice in menu + ['q']:

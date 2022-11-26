@@ -20,7 +20,9 @@ from ..obj import get_obj,MMGenList
 from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension
 from ..addr import (
 	is_mmgen_id,
+	MMGenAddrType,
 	CoinAddr,
+	is_mmgen_addrtype,
 	is_coin_addr,
 	is_addrlist_id
 )
@@ -181,7 +183,7 @@ class New(Base):
 			coin_addr = mmaddr2coinaddr(arg,ad_w,ad_f,self.proto)
 		elif is_coin_addr(self.proto,arg):
 			coin_addr = CoinAddr(self.proto,arg)
-		elif is_addrlist_id(self.proto,arg):
+		elif is_mmgen_addrtype(self.proto,arg) or is_addrlist_id(self.proto,arg):
 			if self.proto.base_proto_coin != 'BTC':
 				die(2,f'Change addresses not supported for {self.proto.name} protocol')
 
@@ -190,14 +192,21 @@ class New(Base):
 			al.reverse = False
 			al.do_sort('twmmid')
 
-			res = al.get_change_address(arg)
+			if is_mmgen_addrtype(self.proto,arg):
+				arg = MMGenAddrType(self.proto,arg)
+				res = al.get_change_address_by_addrtype(arg)
+				desc = 'of address type'
+			else:
+				res = al.get_change_address(arg)
+				desc = 'from address list'
 
 			if res:
 				coin_addr = res.addr
 				self.chg_autoselected = True
 			else:
-				die(2,'Tracking wallet contains no {t}addresses from address list {a!r}'.format(
+				die(2,'Tracking wallet contains no {t}addresses {d} {a!r}'.format(
 					t = ('unused ','')[res is None],
+					d = desc,
 					a = arg ))
 		else:
 			die(2,f'{arg_in}: invalid command-line argument')

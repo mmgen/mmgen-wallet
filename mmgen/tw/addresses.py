@@ -12,10 +12,10 @@
 tw.addresses: Tracking wallet listaddresses class for the MMGen suite
 """
 
-from ..util import suf
+from ..util import msg,suf,is_int
 from ..objmethods import MMGenObject
 from ..obj import MMGenListItem,ImmutableAttr,ListItemAttr,TwComment,NonNegativeInt
-from ..addr import CoinAddr,MMGenID
+from ..addr import CoinAddr,MMGenID,MMGenAddrType
 from ..color import red,green
 from .view import TwView
 from .shared import TwMMGenID
@@ -242,6 +242,39 @@ class TwAddresses(TwView):
 	def dump_fn_pfx(self):
 		return 'listaddresses' + (f'-minconf-{self.minconf}' if self.minconf else '')
 
+	@property
+	def sid_ranges(self):
+
+		def gen_sid_ranges():
+
+			from collections import namedtuple
+			sid_range = namedtuple('sid_range',['bot','top'])
+
+			sid_save = None
+			bot = None
+
+			for n,e in enumerate(self.data):
+				if e.twmmid.type == 'mmgen':
+					if e.twmmid.obj.sid != sid_save:
+						if sid_save:
+							yield (sid_save, sid_range(bot, n-1))
+						sid_save = e.twmmid.obj.sid
+						bot = n
+				else:
+					break
+			else:
+				n += 1
+
+			if sid_save:
+				yield (sid_save, sid_range(bot, n-1))
+
+		assert self.sort_key == 'twmmid'
+
+		if not hasattr(self,'_sid_ranges'):
+			self._sid_ranges = dict(gen_sid_ranges())
+
+		return self._sid_ranges
+
 	def is_used(self,coinaddr):
 		for e in self.data:
 			if e.addr == coinaddr:
@@ -249,7 +282,7 @@ class TwAddresses(TwView):
 		else: # addr not in tracking wallet
 			return None
 
-	def get_change_address(self,al_id):
+	def get_change_address(self,al_id,bot=None,top=None):
 		"""
 		Get lowest-indexed unused address in tracking wallet for requested AddrListID.
 		Return values on failure:
@@ -282,7 +315,9 @@ class TwAddresses(TwView):
 		assert self.sort_key == 'twmmid'
 
 		data = self.data
-		start = get_start( bot=0, top=len(data) - 1 )
+		start = get_start(
+			bot = 0             if bot is None else bot,
+			top = len(data) - 1 if top is None else top )
 
 		if start is not None:
 			for d in data[start:]:
@@ -291,6 +326,40 @@ class TwAddresses(TwView):
 						return d
 				else:
 					return False
+
+	def get_change_address_by_addrtype(self,mmtype):
+		"""
+		Find the lowest-indexed change addresses in tracking wallet of given address type,
+		present them in a menu and return a single change address chosen by the user.
+
+		Return values on failure:
+		    None:  no addresses in wallet of requested address type
+		    False: no unused addresses in wallet of requested address type
+		"""
+
+		def choose_address(addrs):
+			from ..ui import line_input
+			prompt = '\nChoose a change address:\n\n{m}\n\nEnter a number> '.format(
+				m = '\n'.join(f'{n:3}) {a.twmmid.hl()}' for n,a in enumerate(addrs,1))
+			)
+			while True:
+				res = line_input(prompt)
+				if is_int(res) and 0 < int(res) <= len(addrs):
+					return addrs[int(res)-1]
+				msg(f'{res}: invalid entry')
+
+		assert isinstance(mmtype,MMGenAddrType)
+
+		res = [self.get_change_address( f'{sid}:{mmtype}', r.bot, r.top ) for sid,r in self.sid_ranges.items()]
+
+		if any(res):
+			res = list(filter(None,res))
+			if len(res) == 1:
+				return res[0]
+			else:
+				return choose_address(res)
+		elif False in res:
+			return False
 
 	class action(TwView.action):
 
