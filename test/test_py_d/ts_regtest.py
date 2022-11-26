@@ -164,7 +164,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('subgroup.txhist',     ['main']),
 		('subgroup.label',      ['main']),
 		('subgroup.view',       ['label']),
-		('subgroup.auto_chg',   ['view']),
+		('subgroup.auto_chg',   ['label']),
 		('stop',                'stopping regtest daemon'),
 	)
 	cmd_subgroups = {

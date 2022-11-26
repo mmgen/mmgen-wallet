@@ -107,7 +107,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		--columns or MMGEN_COLUMNS value ({}) is too small to display the {}.
 		Minimum value for this configuration: {}
 	"""
-	twid_errmsg = """
+	twidth_errmsg = """
 		Screen is too narrow to display the {}
 		Please resize your screen to at least {} characters and hit any key:
 	"""
@@ -218,7 +218,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				if g.columns:
 					die(1,'\n'+fmt(self.tcols_errmsg.format(g.columns,self.desc,min_cols),indent='  '))
 				else:
-					get_char_raw('\n'+fmt(self.twid_errmsg.format(self.desc,min_cols),append=''))
+					get_char_raw('\n'+fmt(self.twidth_errmsg.format(self.desc,min_cols),append=''))
 			else:
 				return min_cols
 
