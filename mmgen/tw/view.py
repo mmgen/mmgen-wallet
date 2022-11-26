@@ -50,6 +50,13 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			item_separator = '\n'
 			print_header = ''
 
+	class line_processing:
+
+		class print:
+			color = False
+			def do(method,data,cw,hdr_fs,fs,color):
+				return [l.rstrip() for l in method(data,cw,hdr_fs,fs,color)]
+
 	has_wallet  = True
 	has_amt2    = False
 	dates_set   = False
@@ -317,7 +324,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			min(7,max(len(str(getattr(d,k).to_integral_value())) for d in data)) + 1 + self.disp_prec
 				for k in self.amt_keys}
 
-	async def format(self,display_type,color=True,cached=False,interactive=False,for_printing=False):
+	async def format(self,display_type,color=True,cached=False,interactive=False,line_processing=None):
 
 		if not cached:
 
@@ -342,18 +349,22 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			else:
 				cw = hdr_fs = fs = None
 
-			if for_printing:
-				color = False
+			if line_processing:
+				lp_cls = getattr(self.line_processing,line_processing)
+				color = lp_cls.color
+
+			def get_body(method):
+				if line_processing:
+					return lp_cls.do(method,data,cw,hdr_fs,fs,color)
+				else:
+					return method(data,cw,hdr_fs,fs,color)
 
 			self._display_data[display_type] = '{a}{b}\n{c}\n'.format(
 				a = self.header(color),
 				b = self.subheader(color),
 				c = (
-					dt.item_separator.join(
-						(l.rstrip() for l in getattr(self,dt.fmt_method)(data,cw,hdr_fs,fs,color=color)))
-							if for_printing else
-					dt.item_separator.join(getattr(self,dt.fmt_method)(data,cw,hdr_fs,fs,color=color))
-				) if data else (nocolor,yellow)[color]('[no data for requested parameters]')
+					dt.item_separator.join(get_body(getattr(self,dt.fmt_method))) if data else
+					(nocolor,yellow)[color]('[no data for requested parameters]'))
 			)
 
 		return self._display_data[display_type] + ('' if interactive else self.footer(color))
@@ -441,8 +452,10 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			try:
 				write_data_to_file(
 					outfile = outfile,
-					data    = print_hdr + await parent.format(display_type=output_type,for_printing=True),
-					desc    = f'{parent.desc} listing' )
+					data = print_hdr + await parent.format(
+						display_type = output_type,
+						line_processing = 'print' ),
+					desc = f'{parent.desc} listing' )
 			except UserNonConfirmation as e:
 				parent.oneshot_msg = yellow(f'File {outfile!r} not overwritten by user request\n\n')
 			else:
