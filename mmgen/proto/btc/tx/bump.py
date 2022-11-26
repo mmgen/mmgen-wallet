@@ -30,8 +30,8 @@ class Bump(Completed,New,TxBase.Bump):
 			self.sum_inputs() - self.sum_outputs(exclude=idx) - fee
 		)
 
-	def convert_and_check_fee(self,tx_fee,desc):
-		ret = super().convert_and_check_fee(tx_fee,desc)
+	def convert_and_check_fee(self,fee,desc):
+		ret = super().convert_and_check_fee(fee,desc)
 		if ret == False:
 			return ret
 		if ret < self.min_fee:

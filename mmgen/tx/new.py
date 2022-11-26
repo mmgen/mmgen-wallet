@@ -95,25 +95,25 @@ class New(Base):
 
 	# given tx size and absolute fee or fee spec, return absolute fee
 	# relative fee is N+<first letter of unit name>
-	def feespec2abs(self,tx_fee,tx_size):
-		fee = get_obj(self.proto.coin_amt,num=tx_fee,silent=True)
+	def feespec2abs(self,fee_arg,tx_size):
+		fee = get_obj(self.proto.coin_amt,num=fee_arg,silent=True)
 		if fee:
 			return fee
 		else:
 			import re
 			units = {u[0]:u for u in self.proto.coin_amt.units}
 			pat = re.compile(r'([1-9][0-9]*)({})'.format('|'.join(units)))
-			if pat.match(tx_fee):
-				amt,unit = pat.match(tx_fee).groups()
+			if pat.match(fee_arg):
+				amt,unit = pat.match(fee_arg).groups()
 				return self.fee_rel2abs(tx_size,units,int(amt),unit)
 		return False
 
-	def get_usr_fee_interactive(self,tx_fee=None,desc='Starting'):
+	def get_usr_fee_interactive(self,fee=None,desc='Starting'):
 		abs_fee = None
 		from ..ui import line_input
 		while True:
-			if tx_fee:
-				abs_fee = self.convert_and_check_fee(tx_fee,desc)
+			if fee:
+				abs_fee = self.convert_and_check_fee(fee,desc)
 			if abs_fee:
 				prompt = '{} TX fee{}: {}{} {} ({} {})\n'.format(
 						desc,
@@ -130,7 +130,7 @@ class New(Base):
 					if opt.yes:
 						msg(prompt)
 					return abs_fee
-			tx_fee = line_input(self.usr_fee_prompt)
+			fee = line_input(self.usr_fee_prompt)
 			desc = 'User-selected'
 
 	# we don't know fee yet, so perform preliminary check with fee == 0

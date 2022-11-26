@@ -148,7 +148,7 @@ async def main():
 	if not silent:
 		msg(f'Minimum fee for new transaction: {tx.min_fee.hl()} {tx.proto.coin}')
 
-	tx.usr_fee = tx.get_usr_fee_interactive(tx_fee=opt.fee,desc='User-selected')
+	tx.usr_fee = tx.get_usr_fee_interactive(fee=opt.fee,desc='User-selected')
 
 	tx.bump_fee(output_idx,tx.usr_fee)
 

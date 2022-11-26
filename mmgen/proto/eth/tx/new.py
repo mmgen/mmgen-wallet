@@ -123,8 +123,8 @@ class New(Base,TxBase.New):
 			msg(f'Estimated fee: {ret} ETH')
 		return ret
 
-	def convert_and_check_fee(self,tx_fee,desc):
-		abs_fee = self.feespec2abs(tx_fee,None)
+	def convert_and_check_fee(self,fee,desc):
+		abs_fee = self.feespec2abs(fee,None)
 		if abs_fee == False:
 			return False
 		elif not self.disable_fee_check and (abs_fee > self.proto.max_tx_fee):

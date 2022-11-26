@@ -65,13 +65,13 @@ class New(Base,TxBase.New):
 			""").strip())
 		return ret
 
-	def convert_and_check_fee(self,tx_fee,desc):
-		abs_fee = self.feespec2abs(tx_fee,self.estimate_size())
+	def convert_and_check_fee(self,fee,desc):
+		abs_fee = self.feespec2abs(fee,self.estimate_size())
 		if abs_fee == None:
-			raise ValueError(f'{tx_fee}: cannot convert {self.rel_fee_desc} to {self.coin}'
+			raise ValueError(f'{fee}: cannot convert {self.rel_fee_desc} to {self.coin}'
 								+ ' because transaction size is unknown')
 		if abs_fee == False:
-			err = f'{tx_fee!r}: invalid TX fee (not a {self.coin} amount or {self.rel_fee_desc} specification)'
+			err = f'{fee!r}: invalid TX fee (not a {self.coin} amount or {self.rel_fee_desc} specification)'
 		elif abs_fee > self.proto.max_tx_fee:
 			err = f'{abs_fee} {self.coin}: {desc} fee too large (maximum fee: {self.proto.max_tx_fee} {self.coin})'
 		elif abs_fee < self.relay_fee:
