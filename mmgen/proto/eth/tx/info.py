@@ -55,8 +55,8 @@ class TxInfo(TxInfo):
 			t_mmid = m['outputs'] if len(tx.outputs) else '',
 			f_mmid = m['inputs'] )
 
-	def format_abs_fee(self):
-		return self.tx.fee.hl() + (' (max)' if self.tx.txobj['data'] else '')
+	def format_abs_fee(self,color,iwidth):
+		return self.tx.fee.fmt(color=color,iwidth=iwidth) + (' (max)' if self.tx.txobj['data'] else '')
 
 	def format_rel_fee(self,terse):
 		return ' ({} of spend amount)'.format(

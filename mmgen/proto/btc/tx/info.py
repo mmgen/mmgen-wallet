@@ -36,8 +36,8 @@ class TxInfo(TxInfo):
 			pink('{:0.6f}%'.format( tx.fee / tx.send_amt * 100 ))
 		)
 
-	def format_abs_fee(self):
-		return self.tx.proto.coin_amt(self.tx.fee).hl()
+	def format_abs_fee(self,color,iwidth):
+		return self.tx.proto.coin_amt(self.tx.fee).fmt(color=color,iwidth=iwidth)
 
 	def format_verbose_footer(self):
 		tx = self.tx
@@ -67,6 +67,8 @@ class TxInfo(TxInfo):
 					key = lambda o: (o.mmid.sort_key if o.mmid else f'+{o.addr}') + f'{o.amt:040.20f}' ),
 				'raw':  lambda: io
 			}[sort]
+			if terse:
+				iwidth = max(len(str(int(e.amt))) for e in io)
 			for n,e in enumerate(io_sorted()):
 				if is_input and blockcount:
 					confs = e.confs + blockcount - tx.blockcount
@@ -85,7 +87,7 @@ class TxInfo(TxInfo):
 						n+1,
 						e.addr.fmt(color=True,width=addr_w),
 						mmid_fmt,
-						e.amt.hl(),
+						e.amt.fmt(iwidth=iwidth,color=True),
 						tx.dcoin )
 				else:
 					def gen():

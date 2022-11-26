@@ -72,12 +72,14 @@ class TxInfo:
 
 			yield self.format_body(blockcount,nonmm_str,max_mmwid,enl,terse=terse,sort=sort)
 
+			iwidth = len(str(int(tx.sum_inputs())))
+
 			yield self.txinfo_ftr_fs.format(
-				i = tx.sum_inputs().hl(),
-				o = tx.sum_outputs().hl(),
-				C = tx.change.hl(),
-				s = tx.send_amt.hl(),
-				a = self.format_abs_fee(),
+				i = tx.sum_inputs().fmt(color=True,iwidth=iwidth),
+				o = tx.sum_outputs().fmt(color=True,iwidth=iwidth),
+				C = tx.change.fmt(color=True,iwidth=iwidth),
+				s = tx.send_amt.fmt(color=True,iwidth=iwidth),
+				a = self.format_abs_fee(color=True,iwidth=iwidth),
 				r = self.format_rel_fee(terse),
 				d = tx.dcoin,
 				c = tx.coin )
