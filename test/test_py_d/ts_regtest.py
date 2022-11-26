@@ -802,7 +802,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		t = self.spawn('mmgen-txdo',
 			['-d',self.tmpdir,'-B','--'+user] +
-			(['--tx-fee='+fee] if fee else []) +
+			(['--fee='+fee] if fee else []) +
 			extra_args + ([],[wf])[bool(wf)] + outputs_cl)
 
 		self.txcreate_ui_common(t,
@@ -889,7 +889,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if not self.proto.cap('rbf'):
 			return 'skip'
 		t = self.spawn('mmgen-txbump',
-			['-d',outdir,'--'+user,'--tx-fee='+fee,'--output-to-reduce=c'] + add_args + [txfile])
+			['-d',outdir,'--'+user,'--fee='+fee,'--output-to-reduce=c'] + add_args + [txfile])
 		if not one_output:
 			t.expect('OK? (Y/n): ','y') # output OK?
 		t.expect('OK? (Y/n): ','y') # fee OK?

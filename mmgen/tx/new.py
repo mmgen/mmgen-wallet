@@ -145,9 +145,9 @@ class New(Base):
 
 	async def get_fee_from_user(self,have_estimate_fail=[]):
 
-		if opt.tx_fee:
+		if opt.fee:
 			desc = 'User-selected'
-			start_fee = opt.tx_fee
+			start_fee = opt.fee
 		else:
 			desc = 'Network-estimated ({}, {} conf{})'.format(
 				opt.fee_estimate_mode.upper(),

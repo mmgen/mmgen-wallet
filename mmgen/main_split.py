@@ -116,8 +116,8 @@ from .protocol import init_proto
 if opt.tx_fees:
 	for idx,g_coin in ((1,opt.other_coin),(0,proto.coin)):
 		proto = init_proto(g_coin)
-		opt.tx_fee = opt.tx_fees.split(',')[idx]
-		opts.opt_is_tx_fee('foo',opt.tx_fee,'transaction fee') # raises exception on error
+		opt.fee = opt.tx_fees.split(',')[idx]
+		opts.opt_is_tx_fee('foo',opt.fee,'transaction fee') # raises exception on error
 
 tx1 = MMGenSplitTX()
 opt.no_blank = True

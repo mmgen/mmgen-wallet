@@ -41,7 +41,7 @@ opts_data = {
 -c, --comment-file=  f Source the transaction's comment from file 'f'
 -d, --outdir=        d Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Print passphrase to screen when typing it
--f, --tx-fee=        f Transaction fee, as a decimal {cu} amount or as
+-f, --fee=           f Transaction fee, as a decimal {cu} amount or as
                        {fu} (an integer followed by {fl!r}).
                        See FEE SPECIFICATION below.
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
@@ -114,7 +114,7 @@ seed_files = get_seed_files(opt,cmd_args) if (cmd_args or opt.send) else None
 from .ui import do_license_msg
 do_license_msg()
 
-silent = opt.yes and opt.tx_fee != None and opt.output_to_reduce != None
+silent = opt.yes and opt.fee != None and opt.output_to_reduce != None
 
 from .tx import CompletedTX,BumpTX,UnsignedTX,OnlineSignedTX
 
@@ -148,7 +148,7 @@ async def main():
 	if not silent:
 		msg(f'Minimum fee for new transaction: {tx.min_fee.hl()} {tx.proto.coin}')
 
-	tx.usr_fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
+	tx.usr_fee = tx.get_usr_fee_interactive(tx_fee=opt.fee,desc='User-selected')
 
 	tx.bump_fee(output_idx,tx.usr_fee)
 

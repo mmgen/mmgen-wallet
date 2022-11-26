@@ -44,7 +44,7 @@ opts_data = {
 -e, --echo-passphrase  Print passphrase to screen when typing it
 -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
                        {fe_all}.  Default: {fe_dfl!r}
--f, --tx-fee=        f Transaction fee, as a decimal {cu} amount or as
+-f, --fee=           f Transaction fee, as a decimal {cu} amount or as
                        {fu} (an integer followed by {fl!r}).
                        See FEE SPECIFICATION below.  If omitted, fee will be
                        calculated using network fee estimation.

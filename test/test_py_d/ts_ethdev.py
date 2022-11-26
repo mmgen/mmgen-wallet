@@ -921,7 +921,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		fn = joinpath(self.tmpdir,'mm'+str(num),key+'.bin')
 		args = [
 			'-B',
-			f'--tx-fee={tx_fee}',
+			f'--fee={tx_fee}',
 			f'--tx-gas={gas}',
 			f'--contract-data={fn}',
 			f'--inputs={dfl_devaddr}',
@@ -1067,7 +1067,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def token_txcreate(self,args=[],token='',inputs='1',fee='50G'):
 		return self.txcreate_ui_common(
-			self.spawn('mmgen-txcreate', self.eth_args + ['--token='+token,'-B','--tx-fee='+fee] + args),
+			self.spawn('mmgen-txcreate', self.eth_args + ['--token='+token,'-B','--fee='+fee] + args),
 			menu              = [],
 			inputs            = inputs,
 			input_sels_prompt = 'to spend from',
@@ -1180,17 +1180,17 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.twview(args=['--token=mm1','--cached-balances'])
 
 	def txcreate_cached_balances(self):
-		args = ['--tx-fee=20G','--cached-balances','98831F3A:E:3,0.1276']
+		args = ['--fee=20G','--cached-balances','98831F3A:E:3,0.1276']
 		return self.txcreate(args=args,acct='2')
 	def token_txcreate_cached_balances(self):
-		args=['--cached-balances','--tx-fee=12G','98831F3A:E:12,1.2789']
+		args=['--cached-balances','--fee=12G','98831F3A:E:12,1.2789']
 		return self.token_txcreate(args=args,token='mm1')
 
 	def txdo_cached_balances(self,
 			acct = '2',
 			fee_res_data = ('0.00105','50'),
 			add_args = ['98831F3A:E:3,0.4321']):
-		args = ['--tx-fee=20G','--cached-balances'] + add_args + [dfl_words_file]
+		args = ['--fee=20G','--cached-balances'] + add_args + [dfl_words_file]
 		t = self.txcreate(args=args,acct=acct,caller='txdo',fee_res_data=fee_res_data,no_read=True)
 		self._do_confirm_send(t,quiet=not g.debug,sure=False)
 		return t
