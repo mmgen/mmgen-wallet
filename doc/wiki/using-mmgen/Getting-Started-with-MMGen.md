@@ -51,8 +51,8 @@ See [Altcoin-and-Forkcoin-Support][09] for more details.
 #### <a name='a_iv'>Invocation</a>
 
 The MMGen wallet system is not a single program but a suite of lightweight
-commands run from the command line.  MMGen’s commands all begin, not
-surprisingly, with `mmgen`.  To see a list of available commands, type `mmgen`
+scripts run from the command line.  MMGen’s commands all begin, not
+surprisingly, with `mmgen`.  To view all available commands, type `mmgen`
 followed by the TAB key.  Every mmgen command has a help screen displaying
 detailed usage and options information.  To view it, type the command name
 followed by `--help`.  Note that most command options have long and short

@@ -205,7 +205,8 @@ Install the MMGen requirements and their dependencies:
 		mingw-w64-x86_64-python-pynacl \
 		mingw-w64-x86_64-python-pysocks \
 		mingw-w64-x86_64-python-requests \
-		mingw-w64-x86_64-python-aiohttp
+		mingw-w64-x86_64-python-aiohttp \
+		mingw-w64-x86_64-python-pyreadline3
 
 ### <a name='a_ev'>5. Set up your environment</a>
 

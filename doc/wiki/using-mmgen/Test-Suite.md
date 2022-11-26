@@ -99,12 +99,10 @@ may also be started and stopped manually at the DOS or MSYS2 prompt as follows
 	# net start msys2_sshd
 	# net stop msys2_sshd
 
-#### MoneroPy
+#### Monero-Python
 
-	$ git clone https://github.com/bigreddmachine/MoneroPy
-	$ cd MoneroPy
-	$ python3 setup.py install --user
-	$ cd ..
+	$ python3 -m pip install --user pycryptodomex ipaddress varint
+	$ python3 -m pip install --user --no-deps monero
 
 #### Vanitygen PlusPlus (forked from Vanitygen Plus)
 
