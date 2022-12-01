@@ -32,6 +32,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	For multiplication and division, operand types may differ.
 	Negative amounts, floor division and modulus operation are unimplemented.
 	"""
+	coin = 'Coin'
 	color = 'yellow'
 	forbidden_types = (float,int)
 
@@ -95,7 +96,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 			encl[:-1]
 			+ self.colorize(
 				(res.rstrip('0').rstrip('.') if '.' in res else res) +
-				((' ' + type(self).__name__[:-3]) if unit else ''),
+				(' ' + self.coin if unit else ''),
 				color = color )
 			+ encl[1:]
 		)
@@ -157,24 +158,28 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 		self.method_not_implemented()
 
 class BTCAmt(CoinAmt):
+	coin = 'BTC'
 	max_prec = 8
 	max_amt = 21000000
 	satoshi = Decimal('0.00000001')
 	units = ('satoshi',)
 
 class BCHAmt(BTCAmt):
-	pass
+	coin = 'BCH'
 
 class LTCAmt(BTCAmt):
+	coin = 'LTC'
 	max_amt = 84000000
 
 class XMRAmt(CoinAmt):
+	coin = 'XMR'
 	max_prec = 12
 	atomic = Decimal('0.000000000001')
 	units = ('atomic',)
 
 # Kwei (babbage) 3, Mwei (lovelace) 6, Gwei (shannon) 9, µETH (szabo) 12, mETH (finney) 15, ETH 18
 class ETHAmt(CoinAmt):
+	coin    = 'ETH'
 	max_prec = 18
 	wei     = Decimal('0.000000000000000001')
 	Kwei    = Decimal('0.000000000000001')
