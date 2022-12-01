@@ -39,6 +39,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		class squeezed:
 			detail = False
 			fmt_method = 'gen_squeezed_display'
+			line_fmt_method = 'squeezed_format_line'
 			hdr_fmt_method = 'squeezed_col_hdr'
 			need_column_widths = True
 			item_separator = '\n'
@@ -47,6 +48,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		class detail:
 			detail = True
 			fmt_method = 'gen_detail_display'
+			line_fmt_method = 'detail_format_line'
 			hdr_fmt_method = 'detail_col_hdr'
 			need_column_widths = True
 			item_separator = '\n'
@@ -56,8 +58,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		class print:
 			color = False
-			def do(method,data,cw,fs,color):
-				return [l.rstrip() for l in method(data,cw,fs,color)]
+			def do(method,data,cw,fs,color,fmt_method):
+				return [l.rstrip() for l in method(data,cw,fs,color,fmt_method)]
 
 	has_wallet  = True
 	has_amt2    = False
@@ -120,6 +122,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		Screen is too narrow to display the {}
 		Please resize your screen to at least {} characters and hit any key:
 	"""
+
+	squeezed_format_line = None
+	detail_format_line = None
 
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,cls.mod_subpath))
@@ -357,9 +362,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 			def get_body(method):
 				if line_processing:
-					return lp_cls.do(method,data,cw,fs,color)
+					return lp_cls.do(method,data,cw,fs,color,getattr(self,dt.line_fmt_method))
 				else:
-					return method(data,cw,fs,color)
+					return method(data,cw,fs,color,getattr(self,dt.line_fmt_method))
 
 			self._display_data[display_type] = '{a}{b}\n{c}{d}\n'.format(
 				a = self.header(color),

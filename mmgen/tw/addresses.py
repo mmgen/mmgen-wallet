@@ -40,9 +40,11 @@ class TwAddresses(TwView):
 
 		class squeezed(TwView.display_type.squeezed):
 			cols = ('num','mmid','used','addr','comment','amt','date')
+			fmt_method = 'gen_display'
 
 		class detail(TwView.display_type.detail):
 			cols = ('num','mmid','used','addr','comment','amt','block','date_time')
+			fmt_method = 'gen_display'
 
 	class TwAddress(MMGenListItem):
 		valid_attrs = {'twmmid','addr','al_id','confs','comment','amt','recvd','date','skip'}
@@ -176,7 +178,29 @@ class TwAddresses(TwView):
 			b  = 'Block',
 			D  = 'Date/Time' )
 
-	def gen_squeezed_display(self,data,cw,fs,color):
+	def squeezed_format_line(self,n,d,cw,fs,color,yes,no):
+		return fs.format(
+			n = str(n) + ')',
+			m = d.twmmid.fmt( width=cw.mmid, color=color ),
+			u = yes if d.recvd else no,
+			a = d.addr.fmt( color=color, width=cw.addr ),
+			c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
+			A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
+			d = self.age_disp( d, self.age_fmt )
+		)
+
+	def detail_format_line(self,n,d,cw,fs,color,yes,no):
+		return fs.format(
+			n = str(n) + ')',
+			m = d.twmmid.fmt( width=cw.mmid, color=color ),
+			u = yes if d.recvd else no,
+			a = d.addr.fmt( color=color, width=cw.addr ),
+			c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
+			A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
+			b = self.age_disp( d, 'block' ),
+			D = self.age_disp( d, 'date_time' ))
+
+	def gen_display(self,data,cw,fs,color,fmt_method):
 
 		yes,no = (red('Yes '),green('No  ')) if color else ('Yes ','No  ')
 		id_save = data[0].al_id
@@ -185,34 +209,7 @@ class TwAddresses(TwView):
 			if id_save != d.al_id:
 				id_save = d.al_id
 				yield ''
-			yield fs.format(
-				n = str(n) + ')',
-				m = d.twmmid.fmt( width=cw.mmid, color=color ),
-				u = yes if d.recvd else no,
-				a = d.addr.fmt( color=color, width=cw.addr ),
-				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
-				A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
-				d = self.age_disp( d, self.age_fmt )
-			)
-
-	def gen_detail_display(self,data,cw,fs,color):
-
-		yes,no = (red('Yes '),green('No  ')) if color else ('Yes ','No  ')
-		id_save = data[0].al_id
-
-		for n,d in enumerate(data,1):
-			if id_save != d.al_id:
-				id_save = d.al_id
-				yield ''
-			yield fs.format(
-				n = str(n) + ')',
-				m = d.twmmid.fmt( width=cw.mmid, color=color ),
-				u = yes if d.recvd else no,
-				a = d.addr.fmt( color=color, width=cw.addr ),
-				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
-				A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
-				b = self.age_disp( d, 'block' ),
-				D = self.age_disp( d, 'date_time' ))
+			yield fmt_method(n,d,cw,fs,color,yes,no)
 
 	async def set_dates(self,addrs):
 		if not self.dates_set:

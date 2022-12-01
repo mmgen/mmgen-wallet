@@ -178,7 +178,7 @@ class TwUnspentOutputs(TwView):
 			D = 'Date/Time',
 			c = 'Comment' )
 
-	def gen_squeezed_display(self,data,cw,fs,color):
+	def gen_squeezed_display(self,data,cw,fs,color,fmt_method):
 
 		for n,d in enumerate(data):
 			yield fs.format(
@@ -196,7 +196,7 @@ class TwUnspentOutputs(TwView):
 				d = self.age_disp(d,self.age_fmt),
 			)
 
-	def gen_detail_display(self,data,cw,fs,color):
+	def gen_detail_display(self,data,cw,fs,color,fmt_method):
 
 		for n,d in enumerate(data):
 			yield fs.format(

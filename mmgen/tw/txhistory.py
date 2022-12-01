@@ -123,7 +123,7 @@ class TwTxHistory(TwView):
 
 		return '\n'.join(gen()) + '\n\n'
 
-	def gen_squeezed_display(self,data,cw,fs,color):
+	def gen_squeezed_display(self,data,cw,fs,color,fmt_method):
 
 		for n,d in enumerate(data,1):
 			yield fs.format(
@@ -135,7 +135,7 @@ class TwTxHistory(TwView):
 				o = d.vouts_disp( 'outputs', width=cw.outputs, color=color ),
 				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ) )
 
-	def gen_detail_display(self,data,cw,fs,color):
+	def gen_detail_display(self,data,cw,fs,color,fmt_method):
 
 		fs = fmt("""
 		{n}
