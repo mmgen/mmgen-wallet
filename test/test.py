@@ -118,6 +118,8 @@ opts_data = {
 -x, --debug-pexpect  Produce debugging output for pexpect calls
 --, --demo           Add extra delay after each send to make input visible.
                      Implies --exact-output --pexpect-spawn --buf-keypress
+-d, --deps-only      Run a command or command subgroup’s dependencies without
+                     running the command or command group itself.
 -D, --no-daemon-stop Don't stop auto-started daemons after running tests
 -E, --direct-exec    Bypass pexpect and execute a command directly (for
                      debugging only)
@@ -391,8 +393,11 @@ class CmdGroupMgr(object):
 					if sg_name in (None,sg_key):
 						for e in add_entries(
 								sg_key,
-								add_deps = sg_name and not opt.skipping_deps ):
+								add_deps = sg_name and not opt.skipping_deps,
+								added_subgroups = [sg_name] if opt.deps_only else [] ):
 							yield e
+					if opt.deps_only and sg_key == sg_name:
+						return
 				elif not opt.skipping_deps:
 					yield (name,data)
 
@@ -537,6 +542,7 @@ class TestSuiteRunner(object):
 		self.repo_root = repo_root
 		self.skipped_warnings = []
 		self.resume_cmd = None
+		self.deps_only = None
 
 		if opt.log:
 			self.log_fd = open(log_file,'a')
@@ -744,6 +750,8 @@ class TestSuiteRunner(object):
 						if not self.init_group(gname,sg_name,cmdname,quiet=same_grp,do_clean=not same_grp):
 							continue
 						if cmdname:
+							if opt.deps_only:
+								self.deps_only = cmdname
 							try:
 								self.check_needs_rerun(cmdname,build=True)
 							except Exception as e: # allow calling of functions not in cmd_group
@@ -834,6 +842,9 @@ class TestSuiteRunner(object):
 		return rerun
 
 	def run_test(self,cmd):
+
+		if self.deps_only and cmd == self.deps_only:
+			sys.exit(0)
 
 		d = [(str(num),ext) for exts,num in self.gm.dpy_data[cmd][2] for ext in exts]
 
