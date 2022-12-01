@@ -368,7 +368,8 @@ class CmdGroupMgr(object):
 		if sg_name and 'subgroup.' + sg_name not in cmd_group_in:
 			die(1,f'{sg_name!r}: no such subgroup in test group {cls.__name__}')
 
-		def add_entries(key,add_deps=True):
+		def add_entries(key,add_deps=True,added_subgroups=[]):
+
 			if add_deps:
 				for dep in cmd_group_in['subgroup.'+key]:
 					for e in add_entries(dep):
@@ -376,8 +377,10 @@ class CmdGroupMgr(object):
 
 			assert isinstance(cls.cmd_subgroups[key][0],str), f'header for subgroup {key!r} missing!'
 
-			for e in cls.cmd_subgroups[key][1:]:
-				yield e
+			if not key in added_subgroups:
+				for e in cls.cmd_subgroups[key][1:]:
+					yield e
+				added_subgroups.append(key)
 
 		def gen():
 			for name,data in cls.cmd_group_in:
