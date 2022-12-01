@@ -62,6 +62,8 @@ class TwJSON:
 
 	class Import(Base,metaclass=AsyncInit):
 
+		blockchain_rescan_warning = None
+
 		async def __init__(self,proto,filename,ignore_checksum=False,batch=False):
 
 			super().__init__(proto)
@@ -103,6 +105,9 @@ class TwJSON:
 			addrs = await self.do_import(batch)
 
 			await self.twctl.rescan_addresses(addrs)
+
+			if self.blockchain_rescan_warning:
+				ymsg('\n' + fmt(self.blockchain_rescan_warning.strip(),indent='  '))
 
 		async def check_and_create_wallet(self):
 

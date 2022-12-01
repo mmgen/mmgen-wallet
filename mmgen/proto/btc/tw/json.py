@@ -36,6 +36,16 @@ class BitcoinTwJSON(TwJSON):
 			few minutes.
 		"""
 
+		blockchain_rescan_warning = """
+			Balances have been updated in the new tracking wallet.  However, the wallet
+			is unaware of the used state of any spent addresses without balances, which
+			creates the danger of address reuse, especially when automatic change address
+			selection is in effect.
+
+			To avoid this danger and restore full tracking wallet functionality, rescan
+			the blockchain for used addresses by running ‘mmgen-tool rescan_blockchain’.
+		"""
+
 		@property
 		async def tracking_wallet_exists(self):
 			return await self.twctl.rpc.check_or_create_daemon_wallet(wallet_create=False)
