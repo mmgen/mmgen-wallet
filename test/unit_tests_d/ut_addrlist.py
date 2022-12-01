@@ -55,6 +55,30 @@ def do_test(list_type,chksum,idx_spec=None,pw_id_str=None,add_kwargs=None):
 
 class unit_tests:
 
+	def idxlist(self,name,ut):
+		for i,o in (
+				('99,88-102,1-3,4,9,818,444-445,816',        '1-4,9,88-102,444-445,816,818'),
+				('99,88-99,100,102,4-7,9,818,444-445,816,1', '1,4-7,9,88-100,102,444-445,816,818'),
+				('8',             '8'),
+				('2-4',           '2-4'),
+				('1,2-4',         '1-4'),
+				('2-4,1-9,9,1,8', '1-9'),
+				('2-4,1',         '1-4'),
+				('2-2',           '2'),
+				('2,2',           '2'),
+				('2-3',           '2-3'),
+				('2,3',           '2-3'),
+				('3,2',           '2-3'),
+				('2,4',           '2,4'),
+				('',              ''),
+			):
+			l = AddrIdxList(i)
+			if opt.verbose:
+				msg('list: {}\nin:   {}\nout:  {}\n'.format(list(l),i,o))
+			assert l.id_str == o, f'{l.id_str} != {o}'
+
+		return True
+
 	def addr(self,name,ut):
 		return (
 			do_test(AddrList,'BCE8 082C 0973 A525','1-3') and

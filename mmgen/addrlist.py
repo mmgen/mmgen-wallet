@@ -31,35 +31,52 @@ def dmsg_sc(desc,data):
 	if g.debug_addrlist:
 		Msg(f'sc_debug_{desc}: {data}')
 
-class AddrIdxList(list,InitErrors,MMGenObject):
+class AddrIdxList(tuple,InitErrors,MMGenObject):
+
 	max_len = 1000000
-	def __init__(self,fmt_str=None,idx_list=None,sep=','):
+
+	def __new__(cls,fmt_str=None,idx_list=None,sep=','):
 		try:
-			if idx_list:
-				return list.__init__(self,sorted({AddrIdx(i) for i in idx_list}))
-			elif fmt_str:
-				ret = []
-				for i in (fmt_str.split(sep)):
-					j = i.split('-')
-					if len(j) == 1:
-						idx = AddrIdx(i)
-						if not idx:
-							break
-						ret.append(idx)
-					elif len(j) == 2:
-						beg = AddrIdx(j[0])
-						if not beg:
-							break
-						end = AddrIdx(j[1])
-						if not beg or (end < beg):
-							break
-						ret.extend([AddrIdx(x) for x in range(beg,end+1)])
-					else: break
-				else:
-					return list.__init__(self,sorted(set(ret))) # fell off end of loop - success
-				raise ValueError(f'{i!r}: invalid range')
+			if fmt_str:
+				def gen():
+					for i in (fmt_str.split(sep)):
+						j = [int(x) for x in i.split('-')]
+						if len(j) == 1:
+							yield j[0]
+						elif len(j) == 2:
+							if j[0] > j[1]:
+								raise ValueError(f'{i}: invalid range')
+							for k in range(j[0], j[1] + 1):
+								yield k
+						else:
+							raise ValueError(f'{i}: invalid range')
+				idx_list = tuple(gen())
+			return tuple.__new__(cls,sorted({AddrIdx(i) for i in (idx_list or [])}))
 		except Exception as e:
-			return type(self).init_fail(e,idx_list or fmt_str)
+			return cls.init_fail(e,idx_list or fmt_str)
+
+	@property
+	def id_str(self):
+
+		def gen():
+			i_save = self[0]
+			yield f'{i_save}'
+			in_range = False
+
+			for i in self[1:]:
+				if i - i_save == 1:
+					in_range = True
+				else:
+					if in_range:
+						in_range = False
+						yield f'-{i_save}'
+					yield f',{i}'
+				i_save = i
+
+			if in_range:
+				yield f'-{i_save}'
+
+		return ''.join(gen()) if self else ''
 
 class AddrListEntryBase(MMGenListItem):
 	invalid_attrs = {'proto'}
