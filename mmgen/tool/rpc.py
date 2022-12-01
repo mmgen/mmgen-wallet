@@ -193,7 +193,7 @@ class tool_cmd(tool_cmd_base):
 		ret = await (await TwCtl(self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
 		return True
 
-	async def twexport(self,include_amts=True,pretty=False):
+	async def twexport(self,include_amts=True,pretty=False,prune=False,warn_used=False):
 		"""
 		export a tracking wallet to JSON format
 
@@ -205,9 +205,21 @@ class tool_cmd(tool_cmd_base):
 
 		  If ‘pretty’ is true, JSON will be dumped in human-readable format to allow
 		  for editing of comment fields.
+
+		  If ‘prune’ is true, an interactive menu will be launched allowing the user
+		  to prune unwanted addresses before creating the JSON dump.  Pruning has no
+		  effect on the existing tracking wallet.
+
+		  If ‘warn_used’ is true, the user will be prompted before pruning used
+		  addresses.
 		"""
 		from ..tw.json import TwJSON
-		await TwJSON.Export( self.proto, include_amts=include_amts, pretty=pretty )
+		await TwJSON.Export(
+			self.proto,
+			include_amts = include_amts,
+			pretty       = pretty,
+			prune        = prune,
+			warn_used    = warn_used )
 		return True
 
 	async def twimport(self,filename:str,ignore_checksum=False,batch=False):

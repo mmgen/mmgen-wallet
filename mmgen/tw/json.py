@@ -15,7 +15,7 @@ tw.json: export and import tracking wallet to JSON format
 import json
 from collections import namedtuple
 
-from ..util import msg,ymsg,fmt,die,make_timestamp,make_chksum_8,compare_or_die
+from ..util import msg,ymsg,fmt,suf,die,make_timestamp,make_chksum_8,compare_or_die
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..rpc import json_encoder
@@ -25,6 +25,8 @@ class TwJSON:
 
 	class Base(MMGenObject):
 
+		can_prune = False
+		pruned = None
 		fn_pfx = 'mmgen-tracking-wallet-dump'
 
 		def __new__(cls,proto,*args,**kwargs):
@@ -39,7 +41,14 @@ class TwJSON:
 
 		@property
 		def dump_fn(self):
-			return f'{self.fn_pfx}-{self.coin}-{self.network}.json'
+			if self.pruned:
+				from ..addrlist import AddrIdxList
+				pruned_id = AddrIdxList(idx_list=self.pruned).id_str
+			return '{a}{b}-{c}-{d}.json'.format(
+				a = self.fn_pfx,
+				b = f'-pruned[{pruned_id}]' if self.pruned else '',
+				c = self.coin,
+				d = self.network )
 
 		def json_dump(self,data,pretty=False):
 			return json.dumps(
@@ -130,7 +139,13 @@ class TwJSON:
 
 	class Export(Base,metaclass=AsyncInit):
 
-		async def __init__(self,proto,include_amts=True,pretty=False):
+		async def __init__(self,proto,include_amts=True,pretty=False,prune=False,warn_used=False):
+
+			if prune and not self.can_prune:
+				die(1,f'Pruning not supported for {proto.name} protocol')
+
+			self.prune = prune
+			self.warn_used = warn_used
 
 			super().__init__(proto)
 
@@ -140,6 +155,11 @@ class TwJSON:
 			self.twctl = await TwCtl( proto )
 
 			self.entries = await self.get_entries()
+
+			if self.prune:
+				msg('Pruned {} address{}'.format( len(self.pruned), suf(self.pruned,'es') ))
+
+			msg('Exporting {} address{}'.format( self.num_entries, suf(self.num_entries,'es') ))
 
 			data = {
 				'id': 'mmgen_tracking_wallet',

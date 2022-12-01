@@ -161,6 +161,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('subgroup.twexport',   ['fund_users']),
 		('subgroup.rescan',     ['fund_users']),
 		('subgroup.main',       ['fund_users']),
+		('subgroup.twprune',    ['main']),
 		('subgroup.txhist',     ['main']),
 		('subgroup.label',      ['main']),
 		('subgroup.view',       ['label']),
@@ -306,6 +307,22 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		('bob_nochg_burn',             'zero-change transaction to burn address'),
 		('generate',                   'mining a block'),
+	),
+	'twprune': (
+		'exporting a pruned tracking wallet to JSON',
+		('bob_twprune_noask',    'pruning a tracking wallet'),
+		('bob_twprune_skip',     'pruning a tracking wallet (skip pruning)'),
+		('bob_twprune_all',      'pruning a tracking wallet (pruning all addrs)'),
+		('bob_twprune_skipamt',  'pruning a tracking wallet (skipping addrs with amt)'),
+		('bob_twprune_skipused', 'pruning a tracking wallet (skipping used addrs)'),
+		('bob_twprune_allamt',   'pruning a tracking wallet (pruning addrs with amt)'),
+		('bob_twprune_allused',  'pruning a tracking wallet (pruning used addrs)'),
+		('bob_twprune1',         'pruning a tracking wallet (selective prune)'),
+		('bob_twprune2',         'pruning a tracking wallet (selective prune)'),
+		('bob_twprune3',         'pruning a tracking wallet (selective prune)'),
+		('bob_twprune4',         'pruning a tracking wallet (selective prune)'),
+		('bob_twprune5',         'pruning a tracking wallet (selective prune)'),
+		('bob_twprune6',         'pruning a tracking wallet (selective prune)'),
 	),
 	'txhist': (
 		'viewing transaction history',
@@ -1094,6 +1111,143 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_twexport_pretty(self):
 		return self.bob_twexport(add_args=['pretty=1'])
+
+	def _bob_twprune(
+			self,
+			prune_spec,
+			npruned,
+			expect_menu   = (),
+			expect        = (),
+			expect2       = (),
+			warn_used     = False,
+			non_segwit_ok = False ):
+
+		if not (non_segwit_ok or self.proto.cap('segwit')):
+			return 'skip'
+
+		t = self.spawn(
+			'mmgen-tool',
+			['--bob',f'--outdir={self.tr.trash_dir}','twexport','prune=1']
+			+ (['warn_used=1'] if warn_used else []) )
+
+		for s in expect_menu:
+			t.expect('prune list:\b',s)
+
+		t.expect('prune list:\b','p')
+		t.expect('addresses to prune: ',f'{prune_spec}\n')
+
+		for p,s in expect:
+			t.expect(p,s,regex=True)
+
+		t.expect('prune list:\b','q')
+
+		for p,s in expect2:
+			t.expect(p,s,regex=True)
+
+		if npruned:
+			t.expect('Pruned {} addresses'.format(npruned))
+
+		taddr = 35 if self.proto.cap('segwit') else 25
+		t.expect('Exporting {} addresses'.format(taddr-npruned))
+		fn = t.written_to_file('JSON data')
+		return t
+
+	def bob_twprune_noask(self):
+		return self._bob_twprune(
+			expect_menu = 'a', # sort by amt to make address order deterministic
+			prune_spec  = '35,12,18,3-5',
+			npruned     = 6 )
+
+	def bob_twprune_all(self):
+		taddr = 35 if self.proto.cap('segwit') else 25
+		return self._bob_twprune(
+			prune_spec = f'1-{taddr}',
+			npruned    = taddr,
+			expect     = [('all with balance: ','P')],
+			non_segwit_ok = True )
+
+	def bob_twprune_skip(self):
+		return self._bob_twprune(
+			prune_spec = '',
+			npruned    = 0,
+			non_segwit_ok = True )
+
+	def bob_twprune_skipamt(self):
+		return self._bob_twprune(
+			prune_spec = '1-35',
+			npruned    = 32,
+			expect     = [('all with balance: ','S')] )
+
+	def bob_twprune_skipused(self):
+		return self._bob_twprune(
+			prune_spec = '1-35',
+			npruned    = 18,
+			expect     = [('all used: ','S')],
+			warn_used  = True )
+
+	def bob_twprune_allamt(self):
+		return self._bob_twprune(
+			prune_spec = '1-35',
+			npruned    = 35,
+			expect     = [('all with balance: ','P')],
+			expect2    = [('Warning: pruned address .* has a balance',None)] )
+
+	def bob_twprune_allused(self):
+		return self._bob_twprune(
+			prune_spec = '1-35',
+			npruned    = 32,
+			expect     = [('all used: ','P'),('all with balance: ','S')],
+			expect2    = [('Warning: pruned address .* used',None)],
+			warn_used  = True )
+
+	@property
+	def _b_start(self):
+		"""
+		SIDs sort non-deterministically, so we must search for start of main (not subseeds) group, i.e. ':B:1'
+		"""
+		assert self.proto.cap('segwit')
+		if not hasattr(self,'_b_start_'):
+			t = self.spawn( 'mmgen-tool', ['--color=0','--bob','listaddresses'], no_msg=True )
+			self._b_start_ = int([e for e in t.read().split('\n') if f':B:1' in e][0].split()[0].rstrip(')'))
+			t.close()
+		return self._b_start_
+
+	def _bob_twprune_selected(self,resp,npruned):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		B = self._b_start
+		a,b,c,d,e,f = resp
+		return self._bob_twprune(
+			expect_menu = 'a', # sort by amt to make address order deterministic
+			prune_spec  = f'31-32,{B+14},{B+9},{B}-{B+4}',
+			npruned     = npruned,
+			expect      = [
+				('all used: ',         a),
+				('all used: ',         b),
+				('all with balance: ', c),
+				('all with balance: ', d),
+				('all used: ',         e),
+				('all used: ',         f),
+			],
+			warn_used   = True )
+
+	def bob_twprune1(self):
+		return self._bob_twprune_selected(resp='sssssS',npruned=3)
+
+	def bob_twprune2(self):
+		return self._bob_twprune_selected(resp='sppPsS',npruned=3)
+
+	def bob_twprune3(self):
+		return self._bob_twprune_selected(resp='sssPpS',npruned=3)
+
+	def bob_twprune4(self):
+		return self._bob_twprune_selected(resp='sssPpP',npruned=9)
+
+	def bob_twprune5(self):
+		return self._bob_twprune_selected(resp='pppPpP',npruned=9)
+
+	def bob_twprune6(self):
+		return self._bob_twprune_selected(resp='sssSpP',npruned=7)
 
 	def bob_edit_json_twdump(self):
 		self.spawn('',msg_only=True)

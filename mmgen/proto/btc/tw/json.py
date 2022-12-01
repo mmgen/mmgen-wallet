@@ -20,6 +20,8 @@ class BitcoinTwJSON(TwJSON):
 
 	class Base(TwJSON.Base):
 
+		can_prune = True
+
 		@property
 		def mappings_json(self):
 			return self.json_dump([(e.mmgen_id,e.address) for e in self.entries])
@@ -76,8 +78,17 @@ class BitcoinTwJSON(TwJSON):
 		@property
 		async def addrlist(self):
 			if not hasattr(self,'_addrlist'):
-				from .addresses import TwAddresses
-				self._addrlist = await TwAddresses(self.proto,get_data=True)
+				if self.prune:
+					from .prune import TwAddressesPrune
+					self._addrlist = al = await TwAddressesPrune(
+						self.proto,
+						get_data  = True,
+						warn_used = self.warn_used )
+					await al.view_filter_and_sort()
+					self.pruned = al.do_prune()
+				else:
+					from .addresses import TwAddresses
+					self._addrlist = await TwAddresses(self.proto,get_data=True)
 			return self._addrlist
 
 		async def get_entries(self): # TODO: include 'received' field
