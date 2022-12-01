@@ -364,12 +364,18 @@ if g.prog_name == 'mmgen-tool' and not opt._lock:
 	if len(po.cmd_args) < 1:
 		opts.usage()
 
-	cls = get_cmd_cls(po.cmd_args[0])
+	cmd = po.cmd_args[0]
+
+	cls = get_cmd_cls(cmd)
 
 	if not cls:
-		die(1,f'{po.cmd_args[0]!r}: no such command')
+		die(1,f'{cmd!r}: no such command')
 
-	cmd,*args = opts.init( opts_data, parsed_opts=po, need_proto=cls.need_proto )
+	cmd,*args = opts.init(
+		opts_data,
+		parsed_opts = po,
+		need_proto  = cls.need_proto,
+		init_opts   = {'rpc_backend':'aiohttp'} if cmd == 'twimport' else None )
 
 	if cmd in ('help','usage') and args:
 		args[0] = 'command_name=' + args[0]

@@ -1104,10 +1104,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		self.write_to_tmpfile( fn, json.dumps(text,indent=4) )
 		return 'ok'
 
-	def carol_twimport(self,add_args=[],add_parms=[],expect_str=None,expect_str2='Found 1 unspent output'):
+	def carol_twimport(self,rpc_backend='http',add_parms=[],expect_str=None,expect_str2='Found 1 unspent output'):
 		from mmgen.tw.json import TwJSON
 		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
-		t = self.spawn('mmgen-tool', add_args + ['--carol','twimport',fn] + add_parms)
+		t = self.spawn(
+			'mmgen-tool',
+			([f'--rpc-backend={rpc_backend}'] if rpc_backend else [])
+			+ ['--carol','twimport',fn]
+			+ add_parms )
 		t.expect('(y/N): ','y')
 		if expect_str:
 			t.expect(expect_str)
@@ -1119,7 +1123,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def carol_twimport_nochksum(self):
-		return self.carol_twimport(add_args=['--rpc-backend=aio'],add_parms=['ignore_checksum=true'])
+		return self.carol_twimport(rpc_backend=None,add_parms=['ignore_checksum=true'])
 
 	def carol_twimport_batch(self):
 		return self.carol_twimport(add_parms=['batch=true'])
@@ -1528,7 +1532,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def carol_twimport2(self):
 		u,b = (4,3) if self.proto.cap('segwit') else (3,2)
 		return self.carol_twimport(
-			add_args    = ['--rpc-backend=aio'],
+			rpc_backend = None,
 			add_parms   = ['ignore_checksum=true'],
 			expect_str2 =  f'Found {u} unspent outputs in {b} blocks' )
 
