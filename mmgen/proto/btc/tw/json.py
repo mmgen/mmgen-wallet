@@ -72,7 +72,7 @@ class BitcoinTwJSON(TwJSON):
 
 		async def get_entries(self): # TODO: include 'received' field
 			return sorted(
-				[self.entry_tuple(d.twmmid.obj, d.addr, d.amt, d.comment)
+				[self.entry_tuple(d.twmmid, d.addr, d.amt, d.comment)
 					for d in (await self.addrlist).data],
 				key = lambda x: x.mmgen_id.sort_key )
 
