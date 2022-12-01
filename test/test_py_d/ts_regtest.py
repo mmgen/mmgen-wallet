@@ -164,7 +164,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('subgroup.txhist',     ['main']),
 		('subgroup.label',      ['main']),
 		('subgroup.view',       ['label']),
-		('subgroup.auto_chg',   ['label']),
+		('subgroup.auto_chg',   ['twexport','label']),
 		('stop',                'stopping regtest daemon'),
 	)
 	cmd_subgroups = {
@@ -363,6 +363,17 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_auto_chg_bad2', 'error handling for auto change address transaction (bad ID 00000000:C)'),
 		('bob_auto_chg_bad3', 'error handling for auto change address transaction (no unused addresses)'),
 		('bob_auto_chg_bad4', 'error handling for auto change address transaction by addrtype (no unused addresses)'),
+		('carol_twimport2',          'recreating Carol’s tracking wallet from JSON dump'),
+		('carol_rescan_blockchain',  'rescanning the blockchain (full rescan)'),
+		('carol_auto_chg1',          'creating an automatic change address transaction (C)'),
+		('carol_auto_chg2',          'creating an automatic change address transaction (B)'),
+		('carol_auto_chg3',          'creating an automatic change address transaction (S)'),
+		('carol_auto_chg_addrtype1', 'creating an automatic change address transaction by addrtype (C)'),
+		('carol_auto_chg_addrtype2', 'creating an automatic change address transaction by addrtype (B)'),
+		('carol_auto_chg_addrtype3', 'creating an automatic change address transaction by addrtype (S)'),
+		('carol_auto_chg_bad1',      'error handling for auto change address transaction (no unused addresses)'),
+		('carol_auto_chg_bad2',      'error handling for auto change address transaction by addrtype (no unused addresses)'),
+		('carol_delete_wallet',      'unloading and deleting Carol’s tracking wallet'),
 	),
 	}
 
@@ -1091,7 +1102,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		self.write_to_tmpfile( fn, json.dumps(text,indent=4) )
 		return 'ok'
 
-	def carol_twimport(self,add_args=[],add_parms=[],expect_str=None):
+	def carol_twimport(self,add_args=[],add_parms=[],expect_str=None,expect_str2='Found 1 unspent output'):
 		from mmgen.tw.json import TwJSON
 		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
 		t = self.spawn('mmgen-tool', add_args + ['--carol','twimport',fn] + add_parms)
@@ -1102,7 +1113,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			t.expect('{} addresses imported'.format(10 if self.proto.coin == 'BCH' else 20))
 		else:
 			t.expect('import completed OK')
-		t.expect('Found 1 unspent output')
+		t.expect(expect_str2)
 		return t
 
 	def carol_twimport_nochksum(self):
@@ -1495,6 +1506,54 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_auto_chg_bad4(self):
 		return self._usr_auto_chg_bad(
 			'bob',
+			'L',
+			'contains no unused addresses of address type' )
+
+	def carol_twimport2(self):
+		u,b = (4,3) if self.proto.cap('segwit') else (3,2)
+		return self.carol_twimport(
+			add_args    = ['--rpc-backend=aio'],
+			add_parms   = ['ignore_checksum=true'],
+			expect_str2 =  f'Found {u} unspent outputs in {b} blocks' )
+
+	def carol_rescan_blockchain(self):
+		return self._usr_rescan_blockchain('carol',[],'400-407')
+
+	def carol_auto_chg1(self):
+		return self._usr_auto_chg( 'carol', self._user_sid('bob') + ':C' )
+
+	def carol_auto_chg2(self):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		return self._usr_auto_chg( 'carol', self._user_sid('bob') + ':B' )
+
+	def carol_auto_chg3(self):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		return self._usr_auto_chg( 'carol', self._user_sid('bob') + ':S' )
+
+	def carol_auto_chg_addrtype1(self):
+		return self._usr_auto_chg( 'carol', 'C' )
+
+	def carol_auto_chg_addrtype2(self):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		return self._usr_auto_chg( 'carol', 'B' )
+
+	def carol_auto_chg_addrtype3(self):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		return self._usr_auto_chg( 'carol', 'S' )
+
+	def carol_auto_chg_bad1(self):
+		return self._usr_auto_chg_bad(
+			'carol',
+			self._user_sid('bob') + ':L',
+			'contains no unused addresses from address list' )
+
+	def carol_auto_chg_bad2(self):
+		return self._usr_auto_chg_bad(
+			'carol',
 			'L',
 			'contains no unused addresses of address type' )
 
