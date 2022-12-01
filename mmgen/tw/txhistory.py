@@ -25,9 +25,11 @@ class TwTxHistory(TwView):
 
 		class squeezed(TwView.display_type.squeezed):
 			cols = ('num','txid','date','inputs','amt','outputs','comment')
+			hdr_fmt_method = 'squeezed_hdr'
 
 		class detail(TwView.display_type.detail):
 			need_column_widths = False
+			hdr_fmt_method = 'detail_hdr'
 			item_separator = '\n\n'
 
 	has_wallet = False
@@ -89,25 +91,39 @@ class TwTxHistory(TwView):
 
 		return self.compute_column_widths(widths,maxws,minws,maxws_nice,wide=wide)
 
-	def gen_squeezed_display(self,data,cw,hdr_fs,fs,color):
+	def squeezed_hdr(self,cw,fs,color):
 
-		if self.sinceblock:
-			yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
-		yield 'Only wallet-related outputs are shown'
-		yield 'Comment is from first wallet address in outputs or inputs'
-		if (cw.inputs < self.varcol_maxwidths['inputs'] or
-			cw.outputs < self.varcol_maxwidths['outputs'] ):
-			yield 'Due to screen width limitations, not all addresses could be displayed'
-		yield ''
+		def gen():
+			if self.sinceblock:
+				yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
+			yield 'Only wallet-related outputs are shown'
+			yield 'Comment is from first wallet address in outputs or inputs'
+			if (cw.inputs < self.varcol_maxwidths['inputs'] or
+				cw.outputs < self.varcol_maxwidths['outputs'] ):
+				yield 'Due to screen width limitations, not all addresses could be displayed'
+			yield ''
 
-		yield hdr_fs.format(
-			n = '',
-			t = 'TxID',
-			d = self.age_hdr,
-			i = 'Inputs',
-			A = 'Amt({})'.format('TX' if self.show_total_amt else 'Wallet'),
-			o = 'Outputs',
-			c = 'Comment' )
+			yield fs.format(
+				n = '',
+				t = 'TxID',
+				d = self.age_hdr,
+				i = 'Inputs',
+				A = 'Amt({})'.format('TX' if self.show_total_amt else 'Wallet'),
+				o = 'Outputs',
+				c = 'Comment' )
+
+		return '\n'.join(gen())
+
+	def detail_hdr(self,cw,fs,color):
+
+		def gen():
+			if self.sinceblock:
+				yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
+			yield 'Only wallet-related outputs are shown'
+
+		return '\n'.join(gen()) + '\n\n'
+
+	def gen_squeezed_display(self,data,cw,fs,color):
 
 		for n,d in enumerate(data,1):
 			yield fs.format(
@@ -119,11 +135,7 @@ class TwTxHistory(TwView):
 				o = d.vouts_disp( 'outputs', width=cw.outputs, color=color ),
 				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ) )
 
-	def gen_detail_display(self,data,cw,hdr_fs,fs,color):
-
-		if self.sinceblock:
-			yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
-		yield 'Only wallet-related outputs are shown'
+	def gen_detail_display(self,data,cw,fs,color):
 
 		fs = fmt("""
 		{n}

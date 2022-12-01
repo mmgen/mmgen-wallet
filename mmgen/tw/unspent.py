@@ -153,9 +153,8 @@ class TwUnspentOutputs(TwView):
 			wide = wide,
 		)
 
-	def gen_squeezed_display(self,data,cw,hdr_fs,fs,color):
-
-		yield hdr_fs.format(
+	def squeezed_col_hdr(self,cw,fs,color):
+		return fs.format(
 			n = '',
 			t = 'TxID',
 			v = 'Vout',
@@ -165,6 +164,21 @@ class TwUnspentOutputs(TwView):
 			A = 'Amt({})'.format(self.proto.dcoin),
 			B = 'Amt({})'.format(self.proto.coin),
 			d = self.age_hdr )
+
+	def detail_col_hdr(self,cw,fs,color):
+		return fs.format(
+			n = '',
+			t = 'TxID',
+			v = 'Vout',
+			a = 'Address',
+			m = 'MMGenID',
+			A = 'Amt({})'.format(self.proto.dcoin),
+			B = 'Amt({})'.format(self.proto.coin),
+			b = 'Block',
+			D = 'Date/Time',
+			c = 'Comment' )
+
+	def gen_squeezed_display(self,data,cw,fs,color):
 
 		for n,d in enumerate(data):
 			yield fs.format(
@@ -182,19 +196,7 @@ class TwUnspentOutputs(TwView):
 				d = self.age_disp(d,self.age_fmt),
 			)
 
-	def gen_detail_display(self,data,cw,hdr_fs,fs,color):
-
-		yield hdr_fs.format(
-			n = '',
-			t = 'TxID',
-			v = 'Vout',
-			a = 'Address',
-			m = 'MMGenID',
-			A = 'Amt({})'.format(self.proto.dcoin),
-			B = 'Amt({})'.format(self.proto.coin),
-			b = 'Block',
-			D = 'Date/Time',
-			c = 'Comment' )
+	def gen_detail_display(self,data,cw,fs,color):
 
 		for n,d in enumerate(data):
 			yield fs.format(

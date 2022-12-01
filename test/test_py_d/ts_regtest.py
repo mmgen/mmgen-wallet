@@ -336,6 +336,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	),
 	'view': (
 		'viewing addresses and unspent outputs',
+		('alice_listaddresses_empty',     'listaddresses (no data)'),
+		('alice_listaddresses_menu',      'listaddresses (menu items)'),
 		('alice_listaddresses1',          'listaddresses'),
 		('alice_listaddresses_days',      'listaddresses (age_fmt=days)'),
 		('alice_listaddresses_date',      'listaddresses (age_fmt=date)'),
@@ -1250,6 +1252,20 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect(r"Enter label text.*:.",comment+'\n',regex=True)
 		t.expect(r'\[q\]uit view, .*?:.','q',regex=True)
 		return t
+
+	def _alice_listaddresses_interactive(self,expect=(),expect_menu=()):
+		t = self.spawn('mmgen-tool',['--alice','listaddresses','interactive=1'])
+		for s in expect_menu:
+			t.expect('abel:\b',s)
+		for p,s in expect:
+			t.expect(p,s)
+		return t
+
+	def alice_listaddresses_empty(self):
+		return self._alice_listaddresses_interactive(expect_menu='uuEq')
+
+	def alice_listaddresses_menu(self):
+		return self._alice_listaddresses_interactive(expect_menu='aAMrDDDDLeq')
 
 	def alice_listaddresses(self,args,expect):
 		t = self.spawn('mmgen-tool',['--alice','listaddresses','showempty=1'] + args)

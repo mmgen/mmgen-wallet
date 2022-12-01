@@ -39,6 +39,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		class squeezed:
 			detail = False
 			fmt_method = 'gen_squeezed_display'
+			hdr_fmt_method = 'squeezed_col_hdr'
 			need_column_widths = True
 			item_separator = '\n'
 			print_header = '[screen print truncated to width {}]\n'
@@ -46,6 +47,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		class detail:
 			detail = True
 			fmt_method = 'gen_detail_display'
+			hdr_fmt_method = 'detail_col_hdr'
 			need_column_widths = True
 			item_separator = '\n'
 			print_header = ''
@@ -54,8 +56,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		class print:
 			color = False
-			def do(method,data,cw,hdr_fs,fs,color):
-				return [l.rstrip() for l in method(data,cw,hdr_fs,fs,color)]
+			def do(method,data,cw,fs,color):
+				return [l.rstrip() for l in method(data,cw,fs,color)]
 
 	has_wallet  = True
 	has_amt2    = False
@@ -343,7 +345,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				cwh = cw._asdict()
 				fp = self.fs_params
 				hdr_fs = ''.join(fp[name].hdr_fs % ((),cwh[name])[fp[name].hdr_fs_repl]
-					for name in dt.cols if cwh[name])
+					for name in dt.cols if cwh[name]) + '\n'
 				fs = ''.join(fp[name].fs % ((),cwh[name])[fp[name].fs_repl]
 					for name in dt.cols if cwh[name])
 			else:
@@ -355,14 +357,15 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 			def get_body(method):
 				if line_processing:
-					return lp_cls.do(method,data,cw,hdr_fs,fs,color)
+					return lp_cls.do(method,data,cw,fs,color)
 				else:
-					return method(data,cw,hdr_fs,fs,color)
+					return method(data,cw,fs,color)
 
-			self._display_data[display_type] = '{a}{b}\n{c}\n'.format(
+			self._display_data[display_type] = '{a}{b}\n{c}{d}\n'.format(
 				a = self.header(color),
 				b = self.subheader(color),
-				c = (
+				c = getattr(self,dt.hdr_fmt_method)(cw,hdr_fs,color) if data else '',
+				d = (
 					dt.item_separator.join(get_body(getattr(self,dt.fmt_method))) if data else
 					(nocolor,yellow)[color]('[no data for requested parameters]'))
 			)
@@ -402,6 +405,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				continue
 
 			action = self.key_mappings[reply]
+
 			if hasattr(self.action,action):
 				await self.action().run(self,action)
 			elif action.startswith('s_'): # put here to allow overriding by action method

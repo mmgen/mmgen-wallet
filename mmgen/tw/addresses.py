@@ -155,9 +155,8 @@ class TwAddresses(TwView):
 		else:
 			return ''
 
-	def gen_squeezed_display(self,data,cw,hdr_fs,fs,color):
-
-		yield hdr_fs.format(
+	def squeezed_col_hdr(self,cw,fs,color):
+		return fs.format(
 			n  = '',
 			m  = 'MMGenID',
 			u  = 'Used',
@@ -165,6 +164,19 @@ class TwAddresses(TwView):
 			c  = 'Comment',
 			A  = 'Balance',
 			d  = self.age_hdr )
+
+	def detail_col_hdr(self,cw,fs,color):
+		return fs.format(
+			n  = '',
+			m  = 'MMGenID',
+			u  = 'Used',
+			a  = 'Address',
+			c  = 'Comment',
+			A  = 'Balance',
+			b  = 'Block',
+			D  = 'Date/Time' )
+
+	def gen_squeezed_display(self,data,cw,fs,color):
 
 		yes,no = (red('Yes '),green('No  ')) if color else ('Yes ','No  ')
 		id_save = data[0].al_id
@@ -183,17 +195,7 @@ class TwAddresses(TwView):
 				d = self.age_disp( d, self.age_fmt )
 			)
 
-	def gen_detail_display(self,data,cw,hdr_fs,fs,color):
-
-		yield hdr_fs.format(
-			n  = '',
-			m  = 'MMGenID',
-			u  = 'Used',
-			a  = 'Address',
-			c  = 'Comment',
-			A  = 'Balance',
-			b  = 'Block',
-			D  = 'Date/Time' )
+	def gen_detail_display(self,data,cw,fs,color):
 
 		yes,no = (red('Yes '),green('No  ')) if color else ('Yes ','No  ')
 		id_save = data[0].al_id
