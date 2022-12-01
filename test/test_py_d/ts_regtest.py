@@ -1053,23 +1053,23 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect('updated successfully')
 		return t
 
-	def bob_rescan_blockchain(self,add_args,expect):
-		t = self.spawn('mmgen-tool',['--bob','rescan_blockchain'] + add_args)
+	def _usr_rescan_blockchain(self,user,add_args,expect):
+		t = self.spawn('mmgen-tool',[f'--{user}','rescan_blockchain'] + add_args)
 		t.expect(f'Scanning blocks {expect}')
 		t.expect('Done')
 		return t
 
 	def bob_rescan_blockchain_all(self):
-		return self.bob_rescan_blockchain([],'300-396')
+		return self._usr_rescan_blockchain('bob',[],'300-396')
 
 	def bob_rescan_blockchain_gb(self):
-		return self.bob_rescan_blockchain(['start_block=0','stop_block=0'],'0-0')
+		return self._usr_rescan_blockchain('bob',['start_block=0','stop_block=0'],'0-0')
 
 	def bob_rescan_blockchain_one(self):
-		return self.bob_rescan_blockchain(['start_block=300','stop_block=300'],'300-300')
+		return self._usr_rescan_blockchain('bob',['start_block=300','stop_block=300'],'300-300')
 
 	def bob_rescan_blockchain_ss(self):
-		return self.bob_rescan_blockchain(['start_block=300','stop_block=302'],'300-302')
+		return self._usr_rescan_blockchain('bob',['start_block=300','stop_block=302'],'300-302')
 
 	def bob_twexport(self,add_args=[]):
 		t = self.spawn('mmgen-tool',['--bob',f'--outdir={self.tmpdir}','twexport'] + add_args)
@@ -1422,11 +1422,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			outputs_cl = [sid+':C:5,0.0135', sid+':L:4'],
 			outputs_list = '1' )
 
-	def _bob_auto_chg(self,arg,include_dest=True,choices=1):
+	def _usr_auto_chg(self,user,arg,include_dest=True,choices=1):
 		dest = [self.burn_addr+',0.01'] if include_dest else []
 		t = self.spawn(
 			'mmgen-txcreate',
-			['-d',self.tr.trash_dir,'-B','--bob', arg] + dest)
+			['-d',self.tr.trash_dir,'-B',f'--{user}', arg] + dest)
 		return self.txcreate_ui_common(t,
 			menu            = [],
 			inputs          = '1',
@@ -1435,62 +1435,66 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			auto_chg_choices = choices )
 
 	def bob_auto_chg1(self):
-		return self._bob_auto_chg(self._user_sid('bob') + ':C')
+		return self._usr_auto_chg( 'bob', self._user_sid('bob') + ':C' )
 
 	def bob_auto_chg2(self):
 		if not self.proto.cap('segwit'):
 			return 'skip'
-		return self._bob_auto_chg(self._user_sid('bob') + ':B')
+		return self._usr_auto_chg( 'bob', self._user_sid('bob') + ':B' )
 
 	def bob_auto_chg3(self):
 		if not self.proto.cap('segwit'):
 			return 'skip'
-		return self._bob_auto_chg(self._user_sid('bob') + ':S')
+		return self._usr_auto_chg( 'bob', self._user_sid('bob') + ':S' )
 
 	def bob_auto_chg4(self):
-		return self._bob_auto_chg( self._user_sid('bob') + ':C', include_dest=False )
+		return self._usr_auto_chg( 'bob', self._user_sid('bob') + ':C', include_dest=False )
 
 	def bob_auto_chg_addrtype1(self):
-		return self._bob_auto_chg( 'C', choices=3 )
+		return self._usr_auto_chg( 'bob', 'C', choices=3 )
 
 	def bob_auto_chg_addrtype2(self):
 		if not self.proto.cap('segwit'):
 			return 'skip'
-		return self._bob_auto_chg( 'B', choices=1 )
+		return self._usr_auto_chg( 'bob', 'B', choices=1 )
 
 	def bob_auto_chg_addrtype3(self):
 		if not self.proto.cap('segwit'):
 			return 'skip'
-		return self._bob_auto_chg( 'S', choices=1 )
+		return self._usr_auto_chg( 'bob', 'S', choices=1 )
 
 	def bob_auto_chg_addrtype4(self):
-		return self._bob_auto_chg( 'C', choices=3, include_dest=False )
+		return self._usr_auto_chg( 'bob', 'C', choices=3, include_dest=False )
 
-	def _bob_auto_chg_bad(self,al_id,expect):
+	def _usr_auto_chg_bad(self,user,al_id,expect):
 		t = self.spawn(
 			'mmgen-txcreate',
-			['-d',self.tr.trash_dir,'-B','--bob', self.burn_addr+',0.01', al_id] )
+			['-d',self.tr.trash_dir,'-B',f'--{user}', self.burn_addr+',0.01', al_id] )
 		t.req_exit_val = 2
 		t.expect(expect)
 		return t
 
 	def bob_auto_chg_bad1(self):
-		return self._bob_auto_chg_bad(
+		return self._usr_auto_chg_bad(
+			'bob',
 			'FFFFFFFF:C',
 			'contains no addresses' )
 
 	def bob_auto_chg_bad2(self):
-		return self._bob_auto_chg_bad(
+		return self._usr_auto_chg_bad(
+			'bob',
 			'00000000:C',
 			'contains no addresses' )
 
 	def bob_auto_chg_bad3(self):
-		return self._bob_auto_chg_bad(
+		return self._usr_auto_chg_bad(
+			'bob',
 			self._user_sid('bob') + ':L',
 			'contains no unused addresses from address list' )
 
 	def bob_auto_chg_bad4(self):
-		return self._bob_auto_chg_bad(
+		return self._usr_auto_chg_bad(
+			'bob',
 			'L',
 			'contains no unused addresses of address type' )
 
