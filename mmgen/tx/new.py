@@ -189,8 +189,6 @@ class New(Base):
 
 			from ..tw.addresses import TwAddresses
 			al = await TwAddresses(self.proto,get_data=True)
-			al.reverse = False
-			al.do_sort('twmmid')
 
 			if is_mmgen_addrtype(self.proto,arg):
 				arg = MMGenAddrType(self.proto,arg)

@@ -269,6 +269,7 @@ class TwAddresses(TwView):
 				yield (sid_save, sid_range(bot, n-1))
 
 		assert self.sort_key == 'twmmid'
+		assert self.reverse == False
 
 		if not hasattr(self,'_sid_ranges'):
 			self._sid_ranges = dict(gen_sid_ranges())
@@ -313,6 +314,7 @@ class TwAddresses(TwView):
 				n = (top + bot) >> 1
 
 		assert self.sort_key == 'twmmid'
+		assert self.reverse == False
 
 		data = self.data
 		start = get_start(
@@ -325,7 +327,8 @@ class TwAddresses(TwView):
 					if not d.recvd:
 						return d
 				else:
-					return False
+					break
+			return False
 
 	def get_change_address_by_addrtype(self,mmtype):
 		"""
