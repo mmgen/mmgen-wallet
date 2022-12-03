@@ -66,8 +66,8 @@ Actions: [q]uit, r[e]draw, add [l]abel:
 		msg('done')
 
 		msg_r('Getting received funds data...')
-		# args: 1:minconf, 2:include_empty, 3:include_watchonly, 4:include_immature_coinbase
-		for d in await self.rpc.call( 'listreceivedbylabel', 1, False, True ):
+		# args: 1:minconf, 2:include_empty, 3:include_watchonly, 4:include_immature_coinbase (>=v23.0.0)
+		for d in await self.rpc.call( 'listreceivedbylabel', 1, True, True ):
 			label = get_obj( TwLabel, proto=self.proto, text=d['label'] )
 			if label:
 				assert label.mmid in addrs, f'{label.mmid!r} not found in addrlist!'
