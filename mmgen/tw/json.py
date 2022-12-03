@@ -12,9 +12,10 @@
 tw.json: export and import tracking wallet to JSON format
 """
 
-import json
+import os,json
 from collections import namedtuple
 
+from ..opts import opt
 from ..util import msg,ymsg,fmt,suf,die,make_timestamp,make_chksum_8,compare_or_die
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
@@ -41,14 +42,24 @@ class TwJSON:
 
 		@property
 		def dump_fn(self):
+
+			def get_fn(prune_id):
+				return '{a}{b}-{c}-{d}.json'.format(
+					a = self.fn_pfx,
+					b = f'-pruned[{prune_id}]' if prune_id else '',
+					c = self.coin,
+					d = self.network )
+
 			if self.pruned:
 				from ..addrlist import AddrIdxList
-				pruned_id = AddrIdxList(idx_list=self.pruned).id_str
-			return '{a}{b}-{c}-{d}.json'.format(
-				a = self.fn_pfx,
-				b = f'-pruned[{pruned_id}]' if self.pruned else '',
-				c = self.coin,
-				d = self.network )
+				prune_id = AddrIdxList(idx_list=self.pruned).id_str
+				fn = get_fn(prune_id)
+				if len(fn) > os.statvfs(opt.outdir or os.curdir).f_namemax:
+					fn = get_fn(f'idhash={make_chksum_8(prune_id.encode()).lower()}')
+			else:
+				fn = get_fn(None)
+
+			return fn
 
 		def json_dump(self,data,pretty=False):
 			return json.dumps(
