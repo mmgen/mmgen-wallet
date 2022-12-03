@@ -186,7 +186,7 @@ class TwUnspentOutputs(TwView):
 				t = (CoinTxID.fmtc('|' + '.'*(cw.txid-1),color=color) if d.skip  == 'txid'
 					else d.txid.truncate( width=cw.txid, color=color )) if cw.txid else None,
 				v = ' ' + d.vout.fmt( width=cw.vout-1, color=color ) if cw.vout else None,
-				a = type(d.addr).fmtc( '|' + '.'*(cw.addr-1), width=cw.addr, color=color ) if d.skip == 'addr'
+				a = d.addr.fmtc( '|' + '.'*(cw.addr-1), width=cw.addr, color=color ) if d.skip == 'addr'
 					else d.addr.fmt( width=cw.addr, color=color ),
 				m = (MMGenID.fmtc( '.'*cw.mmid, color=color ) if d.skip == 'addr'
 					else d.twmmid.fmt( width=cw.mmid, color=color )) if cw.mmid else None,

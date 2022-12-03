@@ -73,9 +73,15 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	def fmtc(cls):
 		cls.method_not_implemented()
 
-	def fmt(self,color=False,iwidth=1,prec=None): # iwidth: width of the integer part
+	def fmt(
+			self,
+			color  = False,
+			iwidth = 1,      # width of the integer part
+			prec   = None ):
+
 		s = self.__str__()
 		prec = prec or self.max_prec
+
 		if '.' in s:
 			a,b = s.split('.',1)
 			return self.colorize(

@@ -273,12 +273,12 @@ class Int(int,Hilite,InitErrors):
 			return cls.init_fail(e,n)
 
 	@classmethod
-	def fmtc(cls,n,*args,**kwargs):
-		return super().fmtc(str(n),*args,**kwargs)
+	def fmtc(cls,s,**kwargs):
+		return super().fmtc(s.__str__(),**kwargs)
 
 	@classmethod
-	def colorize(cls,n,*args,**kwargs):
-		return super().colorize(str(n),*args,**kwargs)
+	def colorize(cls,s,**kwargs):
+		return super().colorize(s.__str__(),**kwargs)
 
 class NonNegativeInt(Int):
 	min_val = 0

@@ -33,14 +33,14 @@ else:
 
 def truncate_str(s,width): # width = screen width
 	wide_count = 0
-	for i in range(len(s)):
-		wide_count += unicodedata.east_asian_width(s[i]) in ('F','W')
-		if wide_count + i >= width:
-			return s[:i] + ('',' ')[
-				unicodedata.east_asian_width(s[i]) in ('F','W')
-				and wide_count + i == width]
-	else: # pad the string to width if necessary
-		return s + ' '*(width-len(s)-wide_count)
+	for n,ch in enumerate(s,1):
+		wide_count += unicodedata.east_asian_width(ch) in ('F','W')
+		if n + wide_count > width:
+			return s[:n-1] + ('',' ')[
+				unicodedata.east_asian_width(ch) in ('F','W')
+				and n + wide_count == width + 1]
+	else:
+		raise ValueError('string requires no truncating')
 
 class Hilite:
 

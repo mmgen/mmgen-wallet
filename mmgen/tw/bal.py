@@ -97,7 +97,7 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 				for label in sorted(self.data.keys()):
 					yield '{lbl} {cols}'.format(
 						lbl = yellow((label + ' ' + self.proto.coin).ljust(col1_w)) if label == 'TOTAL'
-							else MMGenID.hlc((label+':').ljust(col1_w),color=color),
+							else MMGenID.hlc( (label+':').ljust(col1_w), color=color ),
 						cols = ' '.join(make_col(label,col) for col in self.conf_cols)
 					)
 

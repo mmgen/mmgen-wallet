@@ -81,7 +81,7 @@ class TxInfo(TxInfo):
 						append_chars=('',' (chg)')[bool(not is_input and e.is_chg and terse)],
 						append_color='green')
 				else:
-					mmid_fmt = MMGenID.fmtc(nonmm_str,width=max_mmwid,color=True)
+					mmid_fmt = MMGenID.fmtc( nonmm_str, width=max_mmwid, color=True )
 				if terse:
 					yield '{:3} {} {} {} {}\n'.format(
 						n+1,
