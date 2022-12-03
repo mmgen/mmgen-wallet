@@ -41,7 +41,7 @@ class wallet(wallet):
 	# logic identical to _get_hash_preset_from_user()
 	def _get_label_from_user(self,old_lbl=''):
 		prompt = 'Enter a wallet label, or hit ENTER {}: '.format(
-			'to reuse the label {}'.format(old_lbl.hl(encl="''")) if old_lbl else
+			'to reuse the label {}'.format(old_lbl.hl2(encl='‘’')) if old_lbl else
 			'for no label' )
 		from ..ui import line_input
 		while True:
@@ -61,17 +61,17 @@ class wallet(wallet):
 			old_lbl = self.ss_in.ssdata.label
 			if opt.keep_label:
 				lbl = old_lbl
-				qmsg('Reusing label {} at user request'.format( lbl.hl(encl="''") ))
+				qmsg('Reusing label {} at user request'.format( lbl.hl2(encl='‘’') ))
 			elif self.label:
 				lbl = self.label
-				qmsg('Using label {} requested on command line'.format( lbl.hl(encl="''") ))
+				qmsg('Using label {} requested on command line'.format( lbl.hl2(encl='‘’') ))
 			else: # Prompt, using old value as default
 				lbl = self._get_label_from_user(old_lbl)
 			if (not opt.keep_label) and self.op == 'pwchg_new':
 				qmsg('Label {}'.format( 'unchanged' if lbl == old_lbl else f'changed to {lbl!r}' ))
 		elif self.label:
 			lbl = self.label
-			qmsg('Using label {} requested on command line'.format( lbl.hl(encl="''") ))
+			qmsg('Using label {} requested on command line'.format( lbl.hl2(encl='‘’') ))
 		else:
 			lbl = self._get_label_from_user()
 		self.ssdata.label = lbl

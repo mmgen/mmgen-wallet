@@ -74,7 +74,7 @@ class TxInfo(TxInfo):
 					confs = e.confs + blockcount - tx.blockcount
 					days = int(confs // confs_per_day)
 				if e.mmid:
-					mmid_fmt = e.mmid.fmt(
+					mmid_fmt = e.mmid.fmt2(
 						width=max_mmwid,
 						encl='()',
 						color=True,

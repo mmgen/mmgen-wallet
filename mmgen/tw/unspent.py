@@ -31,7 +31,7 @@ from ..obj import (
 	HexStr,
 	CoinTxID,
 	NonNegativeInt )
-from ..addr import CoinAddr,MMGenID
+from ..addr import CoinAddr
 from .shared import TwMMGenID,get_tw_label
 from .view import TwView
 
@@ -183,14 +183,14 @@ class TwUnspentOutputs(TwView):
 		for n,d in enumerate(data):
 			yield fs.format(
 				n = str(n+1) + ')',
-				t = (CoinTxID.fmtc('|' + '.'*(cw.txid-1),color=color) if d.skip  == 'txid'
+				t = (d.txid.fmtc( '|' + '.'*(cw.txid-1), width=d.txid.width, color=color ) if d.skip  == 'txid'
 					else d.txid.truncate( width=cw.txid, color=color )) if cw.txid else None,
 				v = ' ' + d.vout.fmt( width=cw.vout-1, color=color ) if cw.vout else None,
 				a = d.addr.fmtc( '|' + '.'*(cw.addr-1), width=cw.addr, color=color ) if d.skip == 'addr'
 					else d.addr.fmt( width=cw.addr, color=color ),
-				m = (MMGenID.fmtc( '.'*cw.mmid, color=color ) if d.skip == 'addr'
+				m = (d.twmmid.fmtc( '.'*cw.mmid, color=color ) if d.skip == 'addr'
 					else d.twmmid.fmt( width=cw.mmid, color=color )) if cw.mmid else None,
-				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ) if cw.comment else None,
+				c = d.comment.fmt2( width=cw.comment, color=color, nullrepl='-' ) if cw.comment else None,
 				A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
 				B = d.amt2.fmt( color=color, iwidth=cw.iwidth2, prec=self.disp_prec ) if cw.amt2 else None,
 				d = self.age_disp(d,self.age_fmt),
@@ -201,7 +201,7 @@ class TwUnspentOutputs(TwView):
 		for n,d in enumerate(data):
 			yield fs.format(
 				n = str(n+1) + ')',
-				t = d.txid.fmt( color=color ) if cw.txid else None,
+				t = d.txid.fmt( width=d.txid.width, color=color ) if cw.txid else None,
 				v = ' ' + d.vout.fmt( width=cw.vout-1, color=color ) if cw.vout else None,
 				a = d.addr.fmt( width=cw.addr, color=color ),
 				m = d.twmmid.fmt( width=cw.mmid, color=color ),
@@ -209,7 +209,7 @@ class TwUnspentOutputs(TwView):
 				B = d.amt2.fmt( color=color, iwidth=cw.iwidth2, prec=self.disp_prec ) if cw.amt2 else None,
 				b = self.age_disp(d,'block'),
 				D = self.age_disp(d,'date_time'),
-				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ))
+				c = d.comment.fmt2( width=cw.comment, color=color, nullrepl='-' ))
 
 	def display_total(self):
 		msg('\nTotal unspent: {} {} ({} output{})'.format(

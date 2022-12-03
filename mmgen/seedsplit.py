@@ -183,7 +183,7 @@ class SeedShareBase(MMGenObject):
 			m   = ( yellow("(share {} of {} of ")
 					+ pl.parent_seed.sid.hl()
 					+ yellow(', split id ')
-					+ pl.id_str.hl(encl="''")
+					+ pl.id_str.hl2(encl='‘’')
 					+ yellow('{})') )
 		else:
 			m = "share {} of {} of " + pl.parent_seed.sid + ", split id '" + pl.id_str + "'{}"

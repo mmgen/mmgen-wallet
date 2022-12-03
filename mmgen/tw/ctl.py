@@ -279,7 +279,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 				res.twmmid.type.replace('mmgen','MMGen'),
 				res.twmmid.addr.hl() )
 			if comment:
-				msg('Added label {} to {}'.format(comment.hl(encl="''"),desc))
+				msg('Added label {} to {}'.format(comment.hl2(encl='‘’'),desc))
 			else:
 				msg(f'Removed label from {desc}')
 			return True

@@ -107,7 +107,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		if spec:
 			from mmgen.seedsplit import SeedSplitSpecifier
 			sss = SeedSplitSpecifier(spec)
-			pat = rf'Processing .*\b{sss.idx}\b of \b{sss.count}\b of .* id .*{sss.id!r}'
+			pat = rf'Processing .*\b{sss.idx}\b of \b{sss.count}\b of .* id .*‘{sss.id}’'
 		else:
 			pat = f'master share #{master}'
 		t.expect(pat,regex=True)
@@ -144,7 +144,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		if icls:
 			t.passphrase(icls.desc,sh1_passwd)
 		if master:
-			fs = "master share #{}, split id.*'{}'.*, share count {}"
+			fs = "master share #{}, split id.*‘{}’.*, share count {}"
 			pat = fs.format(
 				master,
 				id_str or 'default',

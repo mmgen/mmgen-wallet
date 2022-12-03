@@ -99,7 +99,7 @@ def print_shares_info():
 				shares[0].sid,
 				share1.sid,
 				master_idx,
-				id_str.hl(encl="''"),
+				id_str.hl2(encl='‘’'),
 				len(shares) )
 		si = 1
 	for n,s in enumerate(shares[si:],si+1):

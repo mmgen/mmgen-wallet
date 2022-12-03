@@ -272,13 +272,15 @@ class Int(int,Hilite,InitErrors):
 		except Exception as e:
 			return cls.init_fail(e,n)
 
+	def fmt(self,**kwargs):
+		return super().fmtc(self.__str__(),**kwargs)
+
 	@classmethod
 	def fmtc(cls,s,**kwargs):
 		return super().fmtc(s.__str__(),**kwargs)
 
-	@classmethod
-	def colorize(cls,s,**kwargs):
-		return super().colorize(s.__str__(),**kwargs)
+	def hl(self,**kwargs):
+		return super().colorize(self.__str__(),**kwargs)
 
 class NonNegativeInt(Int):
 	min_val = 0
@@ -315,11 +317,10 @@ class HexStr(str,Hilite,InitErrors):
 		except Exception as e:
 			return cls.init_fail(e,s)
 
-	def truncate(self,width,color=True,color_override=''):
+	def truncate(self,width,color=True):
 		return self.colorize(
-			self if width == None or width >= self.width else self[:width-2] + '..',
-			color = color,
-			color_override = color_override )
+			self if width >= self.width else self[:width-2] + '..',
+			color = color )
 
 class CoinTxID(HexStr):
 	color,width,hexcase = ('purple',64,'lower')

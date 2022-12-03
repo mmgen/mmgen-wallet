@@ -48,61 +48,79 @@ class Hilite:
 	width = 0
 	trunc_ok = True
 
+	# supports single-width characters only
+	def fmt( self, width, color=False ):
+		if len(self) > width:
+			assert self.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= width of string"
+			return self.colorize( self[:width].ljust(width), color=color )
+		else:
+			return self.colorize( self.ljust(width), color=color )
+
+	# class method equivalent of fmt()
 	@classmethod
-	# 'width' is screen width (greater than len(s) for CJK strings)
-	# 'append_chars' and 'encl' must consist of single-width chars only
-	def fmtc(cls,s,width=None,color=False,encl='',trunc_ok=None,
-				center=False,nullrepl='',append_chars='',append_color=False,color_override=''):
-		s_wide_count = len([1 for ch in s if unicodedata.east_asian_width(ch) in ('F','W')])
-		if encl:
-			a,b = list(encl)
-			add_len = len(append_chars) + 2
+	def fmtc( cls, s, width, color=False ):
+		if len(s) > width:
+			assert cls.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= width of string"
+			return cls.colorize( s[:width].ljust(width), color=color )
 		else:
-			a,b = ('','')
-			add_len = len(append_chars)
-		if width == None:
-			width = cls.width
-		if trunc_ok == None:
-			trunc_ok = cls.trunc_ok
-		if g.test_suite:
-			assert isinstance(encl,str) and len(encl) in (0,2),"'encl' must be 2-character str"
-			assert width >= 2 + add_len, f'{s!r}: invalid width ({width}) (must be at least 2)' # CJK: 2 cells
-		if len(s) + s_wide_count + add_len > width:
-			assert trunc_ok, "If 'trunc_ok' is false, 'width' must be >= screen width of string"
-			s = truncate_str(s,width-add_len)
-		if s == '' and nullrepl:
-			s = nullrepl
+			return cls.colorize( s.ljust(width), color=color )
+
+	# an alternative to fmt(), with double-width char support and other features
+	def fmt2(
+			self,
+			width,                  # screen width - must be at least 2 (one wide char)
+			color          = False,
+			encl           = '',    # if set, must be exactly 2 single-width chars
+			nullrepl       = '',
+			append_chars   = '',    # single-width chars only
+			append_color   = False,
+			color_override = '' ):
+
+		if self == '':
+			return getattr( color_mod, self.color )(nullrepl.ljust(width)) if color else nullrepl.ljust(width)
+
+		s_wide_count = len(['' for ch in self if unicodedata.east_asian_width(ch) in ('F','W')])
+
+		a,b = encl or ('','')
+		add_len = len(append_chars) + len(encl)
+
+		if len(self) + s_wide_count + add_len > width:
+			assert self.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= screen width of string"
+			s = a + (truncate_str(self,width-add_len) if s_wide_count else self[:width-add_len]) + b
 		else:
-			s = a+s+b
-			if center:
-				s = s.center(width)
+			s = a + self + b
+
 		if append_chars:
 			return (
-				cls.colorize(s,color=color)
-				+ cls.colorize(
+				self.colorize(s,color=color)
+				+ self.colorize2(
 					append_chars.ljust(width-len(s)-s_wide_count),
 					color_override = append_color ))
 		else:
-			return cls.colorize(s.ljust(width-s_wide_count),color=color,color_override=color_override)
+			return self.colorize2( s.ljust(width-s_wide_count), color=color, color_override=color_override )
 
 	@classmethod
-	def colorize(cls,s,color=True,color_override=''):
+	def colorize(cls,s,color=True):
+		return getattr( color_mod, cls.color )(s) if color else s
+
+	@classmethod
+	def colorize2(cls,s,color=True,color_override=''):
 		return getattr( color_mod, color_override or cls.color )(s) if color else s
 
-	def fmt(self,*args,**kwargs):
-		assert args == () # forbid invocation w/o keywords
-		return self.fmtc(self,*args,**kwargs)
+	def hl(self,color=True):
+		return getattr( color_mod, self.color )(self) if color else self
 
 	@classmethod
-	def hlc(cls,s,color=True,encl='',color_override=''):
-		if encl:
-			assert isinstance(encl,str) and len(encl) == 2, "'encl' must be 2-character str"
-			s = encl[0] + s + encl[1]
-		return cls.colorize(s,color=color,color_override=color_override)
+	def hlc(cls,s,color=True):
+		return getattr( color_mod, cls.color )(s) if color else s
 
-	def hl(self,*args,**kwargs):
-		assert args == () # forbid invocation w/o keywords
-		return self.hlc(self,*args,**kwargs)
+	# an alternative to hl(), with enclosure and color override
+	# can be called as an unbound method with class as first argument
+	def hl2(self,s=None,color=True,encl='',color_override=''):
+		if encl:
+			return self.colorize2( encl[0]+(s or self)+encl[1], color=color, color_override=color_override )
+		else:
+			return self.colorize2( (s or self), color=color, color_override=color_override )
 
 class InitErrors:
 

@@ -133,7 +133,7 @@ class TwTxHistory(TwView):
 				i = d.vouts_disp( 'inputs', width=cw.inputs, color=color ),
 				A = d.amt_disp(self.show_total_amt).fmt( iwidth=cw.iwidth, prec=self.disp_prec, color=color ),
 				o = d.vouts_disp( 'outputs', width=cw.outputs, color=color ),
-				c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ) )
+				c = d.comment.fmt2( width=cw.comment, color=color, nullrepl='-' ) )
 
 	def gen_detail_display(self,data,cw,fs,color,fmt_method):
 
@@ -156,7 +156,7 @@ class TwTxHistory(TwView):
 				d = d.age_disp( 'date_time', width=None, color=None ),
 				b = d.blockheight_disp(color=color),
 				D = d.txdate_disp( 'date_time' ),
-				t = d.txid_disp( width=None, color=color ),
+				t = d.txid_disp( color=color ),
 				A = d.amt_disp(show_total_amt=True).hl( color=color ),
 				B = d.amt_disp(show_total_amt=False).hl( color=color ),
 				f = d.fee_disp( color=color ),

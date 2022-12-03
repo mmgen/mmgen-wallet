@@ -910,7 +910,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		res = await tx.get_receipt(txid)
 		imsg(f'Gas sent:  {res.gas_sent.hl():<9} {(res.gas_sent*res.gas_price).hl2(encl="()")}')
 		imsg(f'Gas used:  {res.gas_used.hl():<9} {(res.gas_used*res.gas_price).hl2(encl="()")}')
-		imsg(f'Gas price: {res.gas_price.hl2()}')
+		imsg(f'Gas price: {res.gas_price.hl()}')
 		if res.gas_used == res.gas_sent:
 			omsg(yellow(f'Warning: all gas was used!'))
 		return res

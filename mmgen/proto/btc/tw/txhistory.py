@@ -141,8 +141,8 @@ class BitcoinTwTransaction:
 	def txdate_disp(self,age_fmt):
 		return self.parent.date_formatter[age_fmt](self.rpc,self.time)
 
-	def txid_disp(self,width,color):
-		return self.txid.truncate(width=width,color=color)
+	def txid_disp(self,color,width=None):
+		return self.txid.hl(color=color) if width == None else self.txid.truncate(width=width,color=color)
 
 	def vouts_list_disp(self,src,color,indent=''):
 
@@ -167,8 +167,9 @@ class BitcoinTwTransaction:
 					yield fs2.format(
 						i = CoinTxID(e.txid).hl(color=color),
 						n = (nocolor,red)[color](str(e.data['n']).ljust(3)),
-						a = TwMMGenID.hlc(
-							'{:{w}}'.format( addr_out + bal_star, w=self.max_addrlen[src] ),
+						a = TwMMGenID.hl2(
+							TwMMGenID,
+							s = '{:{w}}'.format( addr_out + bal_star, w=self.max_addrlen[src] ),
 							color = color,
 							color_override = co ),
 						A = self.proto.coin_amt( e.data['value'] ).fmt(color=color),
@@ -194,13 +195,14 @@ class BitcoinTwTransaction:
 					mmid_disp = mmid + bal_star
 					if width and x.space_left < len(mmid_disp):
 						break
-					yield TwMMGenID.hlc( mmid_disp, color=color, color_override=co )
+					yield TwMMGenID.hl2( TwMMGenID, s=mmid_disp, color=color, color_override=co )
 					x.space_left -= len(mmid_disp)
 				else:
 					if width and x.space_left < addr_w:
 						break
-					yield TwMMGenID.hlc(
-						CoinAddr.fmtc( mmid.split(':',1)[1] + bal_star, width=addr_w ),
+					yield TwMMGenID.hl2(
+						TwMMGenID,
+						s = CoinAddr.fmtc( mmid.split(':',1)[1] + bal_star, width=addr_w ),
 						color = color,
 						color_override = co )
 					x.space_left -= addr_w

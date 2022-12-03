@@ -184,7 +184,7 @@ class TwAddresses(TwView):
 			m = d.twmmid.fmt( width=cw.mmid, color=color ),
 			u = yes if d.recvd else no,
 			a = d.addr.fmt( color=color, width=cw.addr ),
-			c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
+			c = d.comment.fmt2( width=cw.comment, color=color, nullrepl='-' ),
 			A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
 			d = self.age_disp( d, self.age_fmt )
 		)
@@ -195,7 +195,7 @@ class TwAddresses(TwView):
 			m = d.twmmid.fmt( width=cw.mmid, color=color ),
 			u = yes if d.recvd else no,
 			a = d.addr.fmt( color=color, width=cw.addr ),
-			c = d.comment.fmt( width=cw.comment, color=color, nullrepl='-' ),
+			c = d.comment.fmt2( width=cw.comment, color=color, nullrepl='-' ),
 			A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
 			b = self.age_disp( d, 'block' ),
 			D = self.age_disp( d, 'date_time' ))
