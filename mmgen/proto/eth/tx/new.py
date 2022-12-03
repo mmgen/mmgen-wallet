@@ -18,7 +18,6 @@ import mmgen.tx.new as TxBase
 from .base import Base,TokenBase
 from ....opts import opt
 from ....obj import Int,ETHNonce,MMGenTxID,Str,HexStr
-from ....amt import ETHAmt
 from ....util import msg,is_int,is_hex_str,make_chksum_6
 from ....tw.ctl import TwCtl
 from ....addr import is_mmgen_id,is_coin_addr
@@ -36,7 +35,11 @@ class New(Base,TxBase.New):
 		super().__init__(*args,**kwargs)
 
 		if opt.gas:
-			self.gas = self.start_gas = ETHAmt(int(opt.gas),'wei')
+			self.gas = self.start_gas = self.proto.coin_amt(int(opt.gas),'wei')
+		else:
+			self.gas = self.proto.coin_amt(self.dfl_gas,'wei')
+			self.start_gas = self.proto.coin_amt(self.dfl_start_gas,'wei')
+
 		if opt.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
 			assert not 'Token' in type(self).__name__, m
@@ -51,7 +54,7 @@ class New(Base,TxBase.New):
 		self.txobj = {
 			'from': self.inputs[0].addr,
 			'to':   self.outputs[0].addr if self.outputs else Str(''),
-			'amt':  self.outputs[0].amt if self.outputs else ETHAmt('0'),
+			'amt':  self.outputs[0].amt if self.outputs else self.proto.coin_amt('0'),
 			'gasPrice': self.fee_abs2rel(self.usr_fee,to_unit='eth'),
 			'startGas': self.start_gas,
 			'nonce': await self.get_nonce(),
@@ -111,8 +114,8 @@ class New(Base,TxBase.New):
 
 	# given rel fee and units, return absolute fee using self.gas
 	def fee_rel2abs(self,tx_size,units,amt,unit):
-		return ETHAmt(
-			ETHAmt(amt,units[unit]).toWei() * self.gas.toWei(),
+		return self.proto.coin_amt(
+			self.proto.coin_amt(amt,units[unit]).toWei() * self.gas.toWei(),
 			from_unit='wei'
 		)
 
@@ -139,7 +142,7 @@ class New(Base,TxBase.New):
 
 	def update_change_output(self,funds_left):
 		if self.outputs and self.outputs[0].is_chg:
-			self.update_output_amt(0,ETHAmt(funds_left))
+			self.update_output_amt(0,self.proto.coin_amt(funds_left))
 
 	async def get_input_addrs_from_cmdline(self):
 		ret = []
@@ -165,7 +168,7 @@ class New(Base,TxBase.New):
 	def final_inputs_ok_msg(self,funds_left):
 		chg = '0' if (self.outputs and self.outputs[0].is_chg) else funds_left
 		return 'Transaction leaves {} {} in the sender’s account'.format(
-			ETHAmt(chg).hl(),
+			self.proto.coin_amt(chg).hl(),
 			self.proto.coin
 		)
 
@@ -200,7 +203,7 @@ class TokenNew(TokenBase,New):
 
 	def final_inputs_ok_msg(self,funds_left):
 		token_bal = (
-			ETHAmt('0') if self.outputs[0].is_chg
+			self.proto.coin_amt('0') if self.outputs[0].is_chg
 			else self.inputs[0].amt - self.outputs[0].amt
 		)
 		return "Transaction leaves ≈{} {} and {} {} in the sender's account".format(

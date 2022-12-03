@@ -20,7 +20,6 @@ from ..contract import Token
 from ....util import msg,msg_r,ymsg
 from ....obj import Str,CoinTxID,ETHNonce,Int,HexStr
 from ....addr import CoinAddr,TokenAddr
-from ....amt import ETHAmt
 
 class Unsigned(Completed,TxBase.Unsigned):
 	desc = 'unsigned transaction'
@@ -32,9 +31,9 @@ class Unsigned(Completed,TxBase.Unsigned):
 			'from':     CoinAddr(self.proto,d['from']),
 			# NB: for token, 'to' is sendto address
 			'to':       CoinAddr(self.proto,d['to']) if d['to'] else Str(''),
-			'amt':      ETHAmt(d['amt']),
-			'gasPrice': ETHAmt(d['gasPrice']),
-			'startGas': ETHAmt(d['startGas']),
+			'amt':      self.proto.coin_amt(d['amt']),
+			'gasPrice': self.proto.coin_amt(d['gasPrice']),
+			'startGas': self.proto.coin_amt(d['startGas']),
 			'nonce':    ETHNonce(d['nonce']),
 			'chainId':  None if d['chainId'] == 'None' else Int(d['chainId']),
 			'data':     HexStr(d['data']) }

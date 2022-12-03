@@ -17,6 +17,7 @@ from ..eth.params import mainnet
 class mainnet(mainnet):
 	chain_names = ['classic','ethereum_classic']
 	max_tx_fee  = '0.005'
+	coin_amt    = 'ETCAmt'
 	ignore_daemon_version = False
 
 class testnet(mainnet):

@@ -17,7 +17,6 @@ from .completed import Completed,TokenCompleted
 from ..contract import Token
 from ....obj import Str,CoinTxID,ETHNonce,HexStr
 from ....addr import CoinAddr,TokenAddr
-from ....amt import ETHAmt
 
 class Signed(Completed,TxBase.Signed):
 
@@ -35,9 +34,9 @@ class Signed(Completed,TxBase.Signed):
 			'from':     CoinAddr(self.proto,d['sender']),
 			# NB: for token, 'to' is token address
 			'to':       CoinAddr(self.proto,d['to']) if d['to'] else Str(''),
-			'amt':      ETHAmt(d['value'],'wei'),
-			'gasPrice': ETHAmt(d['gasprice'],'wei'),
-			'startGas': ETHAmt(d['startgas'],'wei'),
+			'amt':      self.proto.coin_amt(d['value'],'wei'),
+			'gasPrice': self.proto.coin_amt(d['gasprice'],'wei'),
+			'startGas': self.proto.coin_amt(d['startgas'],'wei'),
 			'nonce':    ETHNonce(d['nonce']),
 			'data':     HexStr(d['data']) }
 		if o['data'] and not o['to']: # token- or contract-creating transaction

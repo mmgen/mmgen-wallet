@@ -15,7 +15,6 @@ proto.eth.tx.base: Ethereum base transaction class
 from collections import namedtuple
 
 import mmgen.tx.base as TxBase
-from ....amt import ETHAmt
 from ....obj import HexStr,Int
 from ....util import dmsg
 
@@ -24,23 +23,23 @@ class Base(TxBase.Base):
 	rel_fee_desc = 'gas price'
 	rel_fee_disp = 'gas price in Gwei'
 	txobj  = None # ""
-	gas = ETHAmt(21000,'wei')       # an approximate number, used for fee estimation purposes
-	start_gas = ETHAmt(21000,'wei') # the actual startgas amt used in the transaction
-									# for simple sends with no data, gas = start_gas = 21000
+	dfl_gas = 21000               # an approximate number, used for fee estimation purposes
+	dfl_start_gas = 21000         # the actual startgas amt used in the transaction
+	                              # for simple sends with no data, gas = start_gas = 21000
 	contract_desc = 'contract'
 	usr_contract_data = HexStr('')
 	disable_fee_check = False
 
 	# given absolute fee in ETH, return gas price in Gwei using self.gas
 	def fee_abs2rel(self,abs_fee,to_unit='Gwei'):
-		ret = ETHAmt(int(abs_fee.toWei() // self.gas.toWei()),'wei')
+		ret = self.proto.coin_amt(int(abs_fee.toWei() // self.gas.toWei()),'wei')
 		dmsg(f'fee_abs2rel() ==> {ret} ETH')
 		return ret if to_unit == 'eth' else ret.to_unit(to_unit,show_decimal=True)
 
 	# given rel fee (gasPrice) in wei, return absolute fee using self.gas (Ethereum-only method)
 	def fee_gasPrice2abs(self,rel_fee):
 		assert isinstance(rel_fee,int), f'{rel_fee!r}: incorrect type for fee estimate (not an integer)'
-		return ETHAmt(rel_fee * self.gas.toWei(),'wei')
+		return self.proto.coin_amt(rel_fee * self.gas.toWei(),'wei')
 
 	def is_replaceable(self):
 		return True
@@ -54,7 +53,7 @@ class Base(TxBase.Base):
 			status        = Int(rx['status'],16), # zero is failure, non-zero success
 			gas_sent      = Int(tx['gas'],16),
 			gas_used      = Int(rx['gasUsed'],16),
-			gas_price     = ETHAmt(int(tx['gasPrice'],16),from_unit='wei'),
+			gas_price     = self.proto.coin_amt(int(tx['gasPrice'],16),from_unit='wei'),
 			contract_addr = self.proto.coin_addr(rx['contractAddress'][2:]) if rx['contractAddress'] else None,
 			tx            = tx,
 			rx            = rx,
@@ -64,6 +63,6 @@ class Base(TxBase.Base):
 		return True
 
 class TokenBase(Base):
-	gas = ETHAmt(52000,'wei')
-	start_gas = ETHAmt(60000,'wei')
+	dfl_gas = 52000
+	dfl_start_gas = 60000
 	contract_desc = 'token contract'

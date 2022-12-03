@@ -18,6 +18,13 @@ from .base import Base,TokenBase
 class Completed(Base,TxBase.Completed):
 	fn_fee_unit = 'Mwei'
 
+	def __init__(self,*args,**kwargs):
+
+		super().__init__(*args,**kwargs)
+
+		self.gas = self.proto.coin_amt(self.dfl_gas,'wei')
+		self.start_gas = self.proto.coin_amt(self.dfl_start_gas,'wei')
+
 	@property
 	def send_amt(self):
 		return self.outputs[0].amt if self.outputs else self.proto.coin_amt('0')

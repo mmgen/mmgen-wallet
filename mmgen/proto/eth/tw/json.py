@@ -143,5 +143,4 @@ class EthereumTwJSON(TwJSON):
 
 		@property
 		async def total(self):
-			from ....amt import ETHAmt
-			return sum(ETHAmt(i.amount) for i in self.entries['accounts']) or ETHAmt('0')
+			return sum(self.proto.coin_amt(i.amount) for i in self.entries['accounts']) or self.proto.coin_amt('0')

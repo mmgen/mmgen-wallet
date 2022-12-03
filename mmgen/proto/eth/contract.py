@@ -29,7 +29,6 @@ from ...globalvars import g
 from ...base_obj import AsyncInit
 from ...obj import MMGenObject,CoinTxID
 from ...addr import CoinAddr,TokenAddr
-from ...amt import ETHAmt
 
 def parse_abi(s):
 	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]
@@ -43,7 +42,7 @@ class TokenCommon(MMGenObject):
 		return CoinAddr(self.proto,parse_abi(data)[1][-40:])
 
 	def transferdata2amt(self,data): # online
-		return ETHAmt(int(parse_abi(data)[-1],16) * self.base_unit)
+		return self.proto.coin_amt(int(parse_abi(data)[-1],16) * self.base_unit)
 
 	async def do_call(self,method_sig,method_args='',toUnit=False):
 		data = self.create_method_id(method_sig) + method_args
@@ -59,7 +58,7 @@ class TokenCommon(MMGenObject):
 			return ret
 
 	async def get_balance(self,acct_addr):
-		return ETHAmt(await self.do_call('balanceOf(address)',acct_addr.rjust(64,'0'),toUnit=True))
+		return self.proto.coin_amt(await self.do_call('balanceOf(address)',acct_addr.rjust(64,'0'),toUnit=True))
 
 	def strip(self,s):
 		return ''.join([chr(b) for b in s if 32 <= b <= 127]).strip()

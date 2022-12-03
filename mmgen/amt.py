@@ -191,3 +191,6 @@ class ETHAmt(CoinAmt):
 
 	def toWei(self):
 		return int(Decimal(self) // self.wei)
+
+class ETCAmt(ETHAmt):
+	coin = 'ETC'

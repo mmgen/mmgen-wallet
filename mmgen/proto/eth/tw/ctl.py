@@ -23,7 +23,6 @@ proto.eth.tw.ctl: Ethereum tracking wallet control class
 from ....util import msg,ymsg,die
 from ....tw.ctl import TwCtl,write_mode
 from ....addr import is_coin_addr,is_mmgen_id
-from ....amt import ETHAmt
 from ..contract import Token,TokenResolve
 
 class EthereumTwCtl(TwCtl):
@@ -82,7 +81,7 @@ class EthereumTwCtl(TwCtl):
 			msg(f'{self.desc} upgraded successfully!')
 
 	async def rpc_get_balance(self,addr):
-		return ETHAmt(int(await self.rpc.call('eth_getBalance','0x'+addr,'latest'),16),'wei')
+		return self.proto.coin_amt(int(await self.rpc.call('eth_getBalance','0x'+addr,'latest'),16),'wei')
 
 	@write_mode
 	async def batch_import_address(self,args_list):

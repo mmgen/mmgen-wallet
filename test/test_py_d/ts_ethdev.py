@@ -28,7 +28,6 @@ from subprocess import run,PIPE,DEVNULL
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import die
-from mmgen.amt import ETHAmt
 from mmgen.protocol import CoinProtocol
 from ..include.common import *
 from .common import *
@@ -39,8 +38,6 @@ dfl_sid = '98831F3A'
 # The OpenEthereum dev address with lots of coins.  Create with "ethkey -b info ''":
 dfl_devaddr = '00a329c0648769a73afac7f9381e08fb43dbea72'
 dfl_devkey = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
-
-prealloc_amt = ETHAmt('1_000_000_000')
 
 burn_addr  = 'deadbeef'*5
 burn_addr2 = 'beadcafe'*5
@@ -508,6 +505,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		d.remove_datadir()
 
 		imsg(cyan('Initializing Genesis Block:'))
+
+		prealloc_amt = self.proto.coin_amt('1_000_000_000')
 
 		make_key()
 		signer_addr = self.keystore_data['address']
@@ -989,8 +988,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 					usr_addrs[i],
 					amt,
 					dfl_devkey,
-					start_gas = ETHAmt(60000,'wei'),
-					gasPrice  = ETHAmt(8,'Gwei') )
+					start_gas = self.proto.coin_amt(60000,'wei'),
+					gasPrice  = self.proto.coin_amt(8,'Gwei') )
 				if self.daemon.id == 'geth': # yet another Geth bug
 					await asyncio.sleep(0.5)
 				if (await self.get_tx_receipt(txid)).status == 0:

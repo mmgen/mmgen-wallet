@@ -15,7 +15,6 @@ proto.eth.tx.bump: Ethereum transaction bump class
 import mmgen.tx.bump as TxBase
 from .completed import Completed,TokenCompleted
 from .new import New,TokenNew
-from ....amt import ETHAmt
 from decimal import Decimal
 
 class Bump(Completed,New,TxBase.Bump):
@@ -23,7 +22,7 @@ class Bump(Completed,New,TxBase.Bump):
 
 	@property
 	def min_fee(self):
-		return ETHAmt(self.fee * Decimal('1.101'))
+		return self.proto.coin_amt(self.fee * Decimal('1.101'))
 
 	def bump_fee(self,idx,fee):
 		self.txobj['gasPrice'] = self.fee_abs2rel(fee,to_unit='eth')
