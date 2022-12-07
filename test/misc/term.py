@@ -8,20 +8,45 @@ sys.path[0] = os.curdir
 
 from mmgen.common import *
 
+commands = [
+	'start',
+	'get_terminal_size',
+	'color',
+	'license',
+	'line_input',
+	'urand',
+	'txview',
+	'get_char_one',
+	'get_char_one_raw',
+]
+if g.platform == 'linux':
+	commands.extend([
+		'get_char',
+		'get_char_immed_chars',
+		'get_char_raw',
+	])
+elif g.platform == 'win':
+	commands.extend([
+		'get_char_one_char_immed_chars',
+	])
+
 opts_data = {
 	'text': {
 		'desc': 'Interactively test MMGen terminal functionality',
-		'usage':'',
+		'usage': 'command',
 		'options': """
 -h, --help     Print this help message
 """,
-	'notes': """
+	'notes': f"""
+available commands for platform {g.platform!r}:
+{fmt_list(commands,fmt='col',indent='    ')}
 """
 	}
 }
+
 cmd_args = opts.init(opts_data)
 
-from mmgen.term import get_char,get_char_raw,get_terminal_size
+from mmgen.term import get_char,get_char_raw,get_terminal_size,get_term
 from mmgen.ui import line_input,keypress_confirm,do_license_msg
 import mmgen.term as term_mod
 
@@ -58,6 +83,7 @@ def tt_license():
 	do_license_msg()
 
 def tt_line_input():
+	set_vt100()
 	cmsg('Testing line_input():')
 	msg(fmt("""
 		At the Ready? prompt type and hold down "y".
@@ -69,11 +95,11 @@ def tt_line_input():
 	reply = line_input('\nEnter text: ')
 	confirm(f'Did you enter the text {reply!r}?')
 
-def tt_get_char(raw=False,one_char=False,immed_chars=''):
+def _tt_get_char(raw=False,one_char=False,immed_chars=''):
 	funcname = ('get_char','get_char_raw')[raw]
 	fs = fmt("""
 		Press some keys in quick succession.
-		{}{}{}
+		{}{}
 		{}
 		When you’re finished, use Ctrl-C to exit.
 		""").strip()
@@ -137,26 +163,30 @@ def tt_txview():
 		if not keypress_confirm('Continue testing transaction view?',default_yes=True):
 			break
 
-term_mod.register_cleanup()
+def tt_get_char_one():
+	_tt_get_char(one_char=True)
 
-tt_start()
+def tt_get_char_one_raw():
+	_tt_get_char(one_char=True,raw=True)
 
-tt_get_terminal_size()
-tt_color()
-tt_license()
-set_vt100()
-tt_line_input()
-tt_urand()
-tt_txview()
+def tt_get_char():
+	_tt_get_char(one_char=False)
 
-tt_get_char(one_char=True)
-tt_get_char(one_char=True,raw=True)
+def tt_get_char_immed_chars():
+	_tt_get_char(one_char=False,immed_chars='asdf')
 
-if g.platform == 'linux':
-	tt_get_char(one_char=False)
-	tt_get_char(one_char=False,immed_chars='asdf')
-	tt_get_char(one_char=False,raw=True)
+def tt_get_char_raw():
+	_tt_get_char(one_char=False,raw=True)
+
+def tt_get_char_one_char_immed_chars():
+	_tt_get_char(one_char=True,immed_chars='asdf')
+
+get_term().register_cleanup()
+
+if cmd_args:
+	locals()['tt_'+cmd_args[0]]()
 else:
-	tt_get_char(one_char=True,immed_chars='asdf')
+	for command in commands:
+		locals()['tt_'+command]()
 
 gmsg('\nTest completed')
