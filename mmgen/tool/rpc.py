@@ -51,7 +51,6 @@ class tool_cmd(tool_cmd_base):
 
 		obj.reverse = reverse
 		obj.age_fmt = age_fmt
-		obj.interactive = interactive
 
 		for k,v in kwargs.items():
 			setattr(obj,k,v)

@@ -69,7 +69,6 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	group       = False
 	txid_w      = 64
 	sort_key    = 'age'
-	interactive = False
 	_display_data = {}
 	filters = ()
 
@@ -93,7 +92,6 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 	age_fmts = ('confs','block','days','date','date_time')
 	age_fmts_date_dependent = ('days','date','date_time')
-	age_fmts_interactive = ('confs','block','days','date','date_time')
 	_age_fmt = 'confs'
 
 	age_col_params = {
@@ -151,12 +149,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 	@age_fmt.setter
 	def age_fmt(self,val):
-		ok_vals,op_desc = (
-			(self.age_fmts_interactive,'interactive') if self.interactive else
-			(self.age_fmts,'non-interactive') )
-		if val not in ok_vals:
-			die('BadAgeFormat',
-				f'{val!r}: invalid age format for {op_desc} operation (must be one of {ok_vals!r})' )
+		if val not in self.age_fmts:
+			die( 'BadAgeFormat', f'{val!r}: invalid age format (must be one of {self.age_fmts!r})' )
 		self._age_fmt = val
 
 	def age_disp(self,o,age_fmt):
@@ -383,7 +377,6 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		prompt = self.prompt.strip() + '\b'
 		self.no_output = False
 		self.oneshot_msg = None
-		self.interactive = True
 		immed_chars = ''.join(self.key_mappings.keys())
 
 		CUR_RIGHT = lambda n: f'\033[{n}C'
@@ -429,7 +422,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				await ret
 
 		def d_days(self,parent):
-			af = parent.age_fmts_interactive
+			af = parent.age_fmts
 			parent.age_fmt = af[(af.index(parent.age_fmt) + 1) % len(af)]
 			if parent.update_widths_on_age_toggle: # TODO
 				pass
