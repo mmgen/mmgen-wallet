@@ -42,7 +42,22 @@ _term_dimensions = namedtuple('terminal_dimensions',['width','height'])
 class MMGenTerm(object):
 
 	@classmethod
+	def register_cleanup(cls):
+		if g.platform == 'linux' and not hasattr(cls,'cleanup_registered'):
+			import atexit
+			atexit.register(
+				lambda: termios.tcsetattr(
+					cls.stdin_fd,
+					termios.TCSADRAIN,
+					cls.orig_term) )
+			cls.cleanup_registered = True
+
+	@classmethod
 	def init(cls,noecho=False):
+		pass
+
+	@classmethod
+	def set(cls,*args,**kwargs):
 		pass
 
 	@classmethod
@@ -61,15 +76,22 @@ class MMGenTermLinux(MMGenTerm):
 		cls.cur_term = cls.orig_term
 
 	@classmethod
+	def set(cls,setting):
+		d = {
+			'echo':   lambda t: t[:3] + [t[3] |  (termios.ECHO | termios.ECHONL)] + t[4:], # echo input chars
+			'noecho': lambda t: t[:3] + [t[3] & ~(termios.ECHO | termios.ECHONL)] + t[4:], # don’t echo input chars
+		}
+		termios.tcsetattr( cls.stdin_fd, termios.TCSANOW, d[setting](cls.cur_term) )
+		cls.cur_term = termios.tcgetattr(cls.stdin_fd)
+
+	@classmethod
 	def init(cls,noecho=False):
 		cls.stdin_fd = sys.stdin.fileno()
-		if not hasattr(cls,'orig_term'):
-			cls.orig_term = termios.tcgetattr(cls.stdin_fd)
-		if noecho: # don’t echo input characters
-			t = termios.tcgetattr(cls.stdin_fd)
-			t[3] &= ~(termios.ECHO | termios.ECHONL)
-			termios.tcsetattr( cls.stdin_fd, termios.TCSANOW, t )
 		cls.cur_term = termios.tcgetattr(cls.stdin_fd)
+		if not hasattr(cls,'orig_term'):
+			cls.orig_term = cls.cur_term
+		if noecho:
+			cls.set('noecho')
 
 	@classmethod
 	def get_terminal_size(cls):
@@ -136,6 +158,10 @@ class MMGenTermLinuxStub(MMGenTermLinux):
 	@classmethod
 	def init(cls,noecho=False):
 		cls.stdin_fd = sys.stdin.fileno()
+
+	@classmethod
+	def set(cls,*args,**kwargs):
+		pass
 
 	@classmethod
 	def reset(cls):

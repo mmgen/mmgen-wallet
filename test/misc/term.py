@@ -137,11 +137,7 @@ def tt_txview():
 		if not keypress_confirm('Continue testing transaction view?',default_yes=True):
 			break
 
-if g.platform == 'linux':
-	import termios,atexit
-	fd = sys.stdin.fileno()
-	old = termios.tcgetattr(fd)
-	atexit.register(lambda: termios.tcsetattr(fd,termios.TCSADRAIN,old))
+term_mod.register_cleanup()
 
 tt_start()
 

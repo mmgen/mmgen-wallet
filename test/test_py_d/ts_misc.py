@@ -27,13 +27,15 @@ from .ts_base import *
 from .ts_main import TestSuiteMain
 
 class TestSuiteMisc(TestSuiteBase):
-	'miscellaneous tests (RPC backends)'
+	'miscellaneous tests (RPC backends, xmrwallet_txview, term)'
 	networks = ('btc',)
 	tmpdir_nums = [99]
 	passthru_opts = ('daemon_data_dir','rpc_port')
 	cmd_group = (
 		('rpc_backends',     'RPC backends'),
 		('xmrwallet_txview', "'mmgen-xmrwallet' txview"),
+		('term_echo',        "term.set('echo')"),
+		('term_cleanup',     'term.register_cleanup()'),
 	)
 	need_daemon = True
 	color = True
@@ -53,6 +55,40 @@ class TestSuiteMisc(TestSuiteBase):
 		):
 			assert s in res, s
 		return t
+
+	def term_echo(self):
+
+		def test_echo():
+			t.expect('echo> ','foo\n')
+			t.expect('foo')
+
+		def test_noecho():
+			t.expect('noecho> ','foo\n')
+			import pexpect
+			try:
+				t.expect('foo')
+			except pexpect.TIMEOUT:
+				imsg('[input not echoed - OK]')
+			t.send('x')
+
+		if self.skip_for_win():
+			return 'skip'
+
+		t = self.spawn('test/misc/term_ni.py',['echo'],cmd_dir='.',pexpect_spawn=True,timeout=1)
+		t.p.logfile = None
+		t.p.logfile_read = sys.stdout if opt.verbose or opt.exact_output else None
+		t.p.logfile_send = None
+
+		test_noecho()
+		test_echo()
+		test_noecho()
+
+		return t
+
+	def term_cleanup(self):
+		if self.skip_for_win():
+			return 'skip'
+		return self.spawn('test/misc/term_ni.py',['cleanup'],cmd_dir='.',pexpect_spawn=True)
 
 class TestSuiteHelp(TestSuiteBase):
 	'help, info and usage screens'
