@@ -45,7 +45,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			detail = False
 			fmt_method = 'gen_squeezed_display'
 			line_fmt_method = 'squeezed_format_line'
-			hdr_fmt_method = 'squeezed_col_hdr'
+			subhdr_fmt_method = 'gen_subheader'
+			colhdr_fmt_method = 'squeezed_col_hdr'
 			need_column_widths = True
 			item_separator = '\n'
 			print_header = '[screen print truncated to width {}]\n'
@@ -54,7 +55,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			detail = True
 			fmt_method = 'gen_detail_display'
 			line_fmt_method = 'detail_format_line'
-			hdr_fmt_method = 'detail_col_hdr'
+			subhdr_fmt_method = 'gen_subheader'
+			colhdr_fmt_method = 'detail_col_hdr'
 			need_column_widths = True
 			item_separator = '\n'
 			print_header = ''
@@ -302,7 +304,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		else:
 			return do_ret(get_freews(self.cols,varws,varw,minw))
 
-	def gen_subheader(self,color):
+	def gen_subheader(self,cw,color):
 		return ()
 
 	def gen_footer(self,color):
@@ -348,12 +350,14 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				if hasattr(self,'total'):
 					yield 'Total {}: {}'.format( self.proto.dcoin, self.total.hl(color=color) )
 
-				yield from self.gen_subheader(color)
+				yield from getattr(self,dt.subhdr_fmt_method)(cw,color)
 
 				yield ''
 
 				if data:
-					yield getattr(self,dt.hdr_fmt_method)(cw,hdr_fs,color)
+					res = getattr(self,dt.colhdr_fmt_method)(cw,hdr_fs,color)
+					if res:
+						yield res
 
 			self.disp_prec = self.get_disp_prec(wide=dt.detail)
 

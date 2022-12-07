@@ -151,7 +151,7 @@ class TwAddresses(TwView):
 			wide = wide,
 		)
 
-	def gen_subheader(self,color):
+	def gen_subheader(self,cw,color):
 		if self.minconf:
 			yield f'Displaying balances with at least {self.minconf} confirmation{suf(self.minconf)}'
 

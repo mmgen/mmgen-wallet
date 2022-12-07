@@ -23,7 +23,7 @@ class EthereumTwView(TwView):
 	def get_disp_prec(self,wide):
 		return self.proto.coin_amt.max_prec if wide else 8
 
-	def gen_subheader(self,color):
+	def gen_subheader(self,cw,color):
 		if self.disp_prec == 8:
 			yield 'Balances truncated to 8 decimal points'
 		if g.cached_balances:

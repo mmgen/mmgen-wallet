@@ -25,11 +25,11 @@ class TwTxHistory(TwView):
 
 		class squeezed(TwView.display_type.squeezed):
 			cols = ('num','txid','date','inputs','amt','outputs','comment')
-			hdr_fmt_method = 'squeezed_hdr'
+			subhdr_fmt_method = 'gen_squeezed_subheader'
 
 		class detail(TwView.display_type.detail):
 			need_column_widths = False
-			hdr_fmt_method = 'detail_hdr'
+			subhdr_fmt_method = 'gen_detail_subheader'
 			item_separator = '\n\n'
 
 	has_wallet = False
@@ -91,37 +91,32 @@ class TwTxHistory(TwView):
 
 		return self.compute_column_widths(widths,maxws,minws,maxws_nice,wide=wide)
 
-	def squeezed_hdr(self,cw,fs,color):
+	def gen_squeezed_subheader(self,cw,color):
+		if self.sinceblock:
+			yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
+		yield 'Only wallet-related outputs are shown'
+		yield 'Comment is from first wallet address in outputs or inputs'
+		if (cw.inputs < self.varcol_maxwidths['inputs'] or
+			cw.outputs < self.varcol_maxwidths['outputs'] ):
+			yield 'Due to screen width limitations, not all addresses could be displayed'
 
-		def gen():
-			if self.sinceblock:
-				yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
-			yield 'Only wallet-related outputs are shown'
-			yield 'Comment is from first wallet address in outputs or inputs'
-			if (cw.inputs < self.varcol_maxwidths['inputs'] or
-				cw.outputs < self.varcol_maxwidths['outputs'] ):
-				yield 'Due to screen width limitations, not all addresses could be displayed'
-			yield ''
+	def gen_detail_subheader(self,cw,color):
+		if self.sinceblock:
+			yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
+		yield 'Only wallet-related outputs are shown'
 
-			yield fs.format(
-				n = '',
-				t = 'TxID',
-				d = self.age_hdr,
-				i = 'Inputs',
-				A = 'Amt({})'.format('TX' if self.show_total_amt else 'Wallet'),
-				o = 'Outputs',
-				c = 'Comment' )
+	def squeezed_col_hdr(self,cw,fs,color):
+		return fs.format(
+			n = '',
+			t = 'TxID',
+			d = self.age_hdr,
+			i = 'Inputs',
+			A = 'Amt({})'.format('TX' if self.show_total_amt else 'Wallet'),
+			o = 'Outputs',
+			c = 'Comment' )
 
-		return '\n'.join(gen())
-
-	def detail_hdr(self,cw,fs,color):
-
-		def gen():
-			if self.sinceblock:
-				yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
-			yield 'Only wallet-related outputs are shown'
-
-		return '\n'.join(gen()) + '\n\n'
+	def detail_col_hdr(self,cw,fs,color):
+		return ''
 
 	def gen_squeezed_display(self,data,cw,fs,color,fmt_method):
 
