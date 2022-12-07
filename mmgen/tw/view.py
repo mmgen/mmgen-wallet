@@ -24,6 +24,7 @@ import sys,time,asyncio
 from collections import namedtuple
 
 from ..globalvars import g
+from ..opts import opt
 from ..objmethods import Hilite,InitErrors,MMGenObject
 from ..obj import get_obj,MMGenIdx,MMGenList
 from ..color import nocolor,yellow,green,red,blue
@@ -372,12 +373,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		return self._display_data[display_type] + ('' if interactive else self.footer(color))
 
 	async def view_filter_and_sort(self):
-		from ..opts import opt
+
 		from ..term import get_char
+
 		prompt = self.prompt.strip() + '\b'
 		self.no_output = False
 		self.oneshot_msg = None
-		immed_chars = ''.join(self.key_mappings.keys())
 
 		CUR_RIGHT = lambda n: f'\033[{n}C'
 		CUR_HOME  = '\033[H'
@@ -394,10 +395,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					+ (self.oneshot_msg or '')
 					+ prompt
 				),
-				immed_chars = immed_chars )
+				immed_chars = self.key_mappings )
+
 			self.no_output = False
 			self.oneshot_msg = '' if self.oneshot_msg else None # tristate, saves previous state
-			if reply not in immed_chars:
+
+			if reply not in self.key_mappings:
 				msg_r('\ninvalid keypress ')
 				await asyncio.sleep(0.3)
 				continue
