@@ -40,7 +40,7 @@ NL = '\n'
 
 class MMGenPexpect:
 
-	def __init__(self,args,no_output=False,env=None,pexpect_spawn=False,send_delay=None):
+	def __init__(self,args,no_output=False,env=None,pexpect_spawn=False,send_delay=None,timeout=None):
 
 		self.pexpect_spawn = pexpect_spawn
 		self.send_delay = send_delay
@@ -53,7 +53,7 @@ class MMGenPexpect:
 			from subprocess import run,DEVNULL
 			run([args[0]] + args[1:],check=True,stdout=DEVNULL if no_output else None)
 		else:
-			timeout = int(opt.pexpect_timeout or 0) or (60,5)[bool(opt.debug_pexpect)]
+			timeout = int(timeout or opt.pexpect_timeout or 0) or (60,5)[bool(opt.debug_pexpect)]
 			if pexpect_spawn:
 				self.p = pexpect.spawn(args[0],args[1:],encoding='utf8',timeout=timeout,env=env)
 			else:
@@ -198,7 +198,7 @@ class MMGenPexpect:
 			m1 = f'\nERROR.  Expect {s!r} timed out.  Exiting\n'
 			m2 = f'before: [{self.p.before}]\n'
 			m3 = f'sent value: [{self.sent_value}]' if self.sent_value != None else ''
-			die(2,m1+m2+m3)
+			raise pexpect.TIMEOUT(m1+m2+m3)
 
 		if opt.debug_pexpect:
 			debug_pexpect_msg(self.p)

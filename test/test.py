@@ -569,6 +569,7 @@ class TestSuiteRunner(object):
 			no_msg       = False,
 			cmd_dir      = 'cmds',
 			no_exec_wrapper = False,
+			timeout       = None,
 			pexpect_spawn = None ):
 
 		desc = self.ts.test_name if opt.names else self.gm.dpy_data[self.ts.test_name][1]
@@ -641,6 +642,7 @@ class TestSuiteRunner(object):
 			no_output     = no_output,
 			env           = env,
 			pexpect_spawn = pexpect_spawn,
+			timeout       = timeout,
 			send_delay    = send_delay )
 
 	def end_msg(self):
