@@ -36,6 +36,12 @@ Display options: toggle [D]ays/date, show gr[o]up, show [m]mid
 View options: pager [v]iew, [w]ide view
 Actions: [q]uit view, [p]rint, r[e]draw, add [l]abel:
 """
+	prompt_scroll = """
+Sort options: [t]xid, [a]mount, a[d]dr, [A]ge, [r]everse, [M]mid
+Display options: toggle [D]ays/date, show gr[o]up, show [m]mid
+Scrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom
+View/Actions: [w]ide view, [q]uit, [p]rint, r[e]draw, add [l]abel:
+"""
 	key_mappings = {
 		't':'s_txid',
 		'a':'s_amt',

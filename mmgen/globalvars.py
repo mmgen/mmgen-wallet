@@ -121,6 +121,7 @@ class GlobalContext(Lockable):
 	mnemonic_entry_modes = {}
 
 	# display:
+	scroll = False
 	columns = 0
 	color = bool(
 		( sys.stdout.isatty() and not os.getenv('MMGEN_TEST_SUITE_PEXPECT') ) or
@@ -183,6 +184,7 @@ class GlobalContext(Lockable):
 		'rpc_password',
 		'rpc_port',
 		'rpc_user',
+		'scroll',
 		'testnet',
 		'token' )
 
@@ -216,6 +218,7 @@ class GlobalContext(Lockable):
 		'rpc_password',
 		'rpc_port',
 		'rpc_user',
+		'scroll',
 		'subseeds',
 		'testnet',
 		'usr_randchars',

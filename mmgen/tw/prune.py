@@ -37,7 +37,7 @@ class TwAddressesPrune(TwAddresses):
 		for n,d in enumerate(data,1):
 			if id_save != d.al_id:
 				id_save = d.al_id
-				yield ''
+				yield ''.ljust(self.term_width)
 			yield (
 				gray(fmt_method(n,d,cw,fs,False,'Yes ','No  ')) if d.tag else
 				fmt_method(n,d,cw,fs,True,yes,no) )

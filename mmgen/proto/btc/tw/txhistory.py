@@ -236,6 +236,13 @@ Column opts: toggle [D]ays/date/confs/block, tx[i]d, [T]otal amt
 View/Print: pager [v]iew, full [V]iew, screen [p]rint, full [P]rint
 Filters/Actions: show [u]nconfirmed, [q]uit view, r[e]draw:
 """
+	prompt_scroll = """
+Sorting: [t]xid, [a]mt, total a[m]t, [A]ge, block[n]um, [r]everse
+Column opts: toggle [D]ays/date/confs/block, tx[i]d, [T]otal amt
+View/Print: full [V]iew, screen [p]rint, full [P]rint
+Scrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom
+Filters/Actions: show [u]nconfirmed, [q]uit view, r[e]draw:
+"""
 	key_mappings = {
 		'A':'s_age',
 		'n':'s_blockheight',

@@ -33,6 +33,8 @@ from ..rpc import rpc_init
 from ..base_obj import AsyncInit
 
 CUR_HOME  = '\033[H'
+CUR_UP    = lambda n: f'\033[{n}A'
+CUR_DOWN  = lambda n: f'\033[{n}B'
 CUR_RIGHT = lambda n: f'\033[{n}C'
 ERASE_ALL = '\033[0J'
 
@@ -81,6 +83,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	cols = 0
 	term_height = 0
 	term_width = 0
+	scrollable_height = 0
+	min_scrollable_height = 5
+	pos = 0
 	filters = ()
 
 	fp = namedtuple('fs_params',['fs_key','hdr_fs_repl','fs_repl','hdr_fs','fs'])
@@ -131,9 +136,40 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		Screen is too narrow to display the {}
 		Please resize your screen to at least {} characters and hit any key:
 	"""
+	theight_errmsg = """
+		Terminal window is too small to display the {}
+		Please resize it to at least {} lines and hit any key:
+	"""
 
 	squeezed_format_line = None
 	detail_format_line = None
+
+	scroll_keys = {
+		'vi': {
+			'k': 'm_cursor_up',
+			'j': 'm_cursor_down',
+			'b': 'm_pg_up',
+			'f': 'm_pg_down',
+			'g': 'm_top',
+			'G': 'm_bot',
+		},
+		'linux': {
+			'\x1b[A': 'm_cursor_up',
+			'\x1b[B': 'm_cursor_down',
+			'\x1b[5~': 'm_pg_up',
+			'\x1b[6~': 'm_pg_down',
+			'\x1b[7~': 'm_top',
+			'\x1b[8~': 'm_bot',
+		},
+		'win': {
+			'\xe0H': 'm_cursor_up',
+			'\xe0P': 'm_cursor_down',
+			'\xe0I': 'm_pg_up',
+			'\xe0Q': 'm_pg_down',
+			'\xe0G': 'm_top',
+			'\xe0O': 'm_bot',
+		}
+	}
 
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,cls.mod_subpath))
@@ -204,7 +240,10 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			die(1,f'{key!r}: invalid sort key.  Valid options: {" ".join(self.sort_funcs)}')
 		self.sort_key = key
 		assert type(reverse) == bool
+		save = self.data.copy()
 		self.data.sort(key=self.sort_funcs[key],reverse=reverse or self.reverse)
+		if self.data != save:
+			self.pos = 0
 
 	async def get_data(self,sort_key=None,reverse_sort=False):
 
@@ -227,21 +266,22 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	def filter_data(self):
 		return self.data.copy()
 
-	def get_term_dimensions(self,min_cols):
+	def get_term_dimensions(self,min_cols,min_lines=None):
 		from ..term import get_terminal_size,get_char_raw,_term_dimensions
 		user_resized = False
 		while True:
 			ts = get_terminal_size()
 			cols = g.columns or ts.width
-			if cols >= min_cols:
+			lines = ts.height
+			if cols >= min_cols and (min_lines is None or lines >= min_lines):
 				if user_resized:
 					msg_r(CUR_HOME + ERASE_ALL)
 				return _term_dimensions(cols,ts.height)
 			if sys.stdout.isatty():
-				if g.columns:
+				if g.columns and cols < min_cols:
 					die(1,'\n'+fmt(self.twidth_diemsg.format(g.columns,self.desc,min_cols),indent='  '))
 				else:
-					m,dim = (self.twidth_errmsg,min_cols)
+					m,dim = (self.twidth_errmsg,min_cols) if cols < min_cols else (self.theight_errmsg,min_lines)
 					get_char_raw( CUR_HOME + ERASE_ALL + fmt( m.format(self.desc,dim), append='' ))
 					user_resized = True
 			else:
@@ -323,7 +363,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			min(7,max(len(str(getattr(d,k).to_integral_value())) for d in data)) + 1 + self.disp_prec
 				for k in self.amt_keys}
 
-	async def format(self,display_type,color=True,interactive=False,line_processing=None):
+	async def format(self,display_type,color=True,interactive=False,line_processing=None,scroll=False):
 
 		def make_display():
 
@@ -375,10 +415,11 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				cw = self.get_column_widths(data,wide=dt.detail,interactive=interactive)
 				cwh = cw._asdict()
 				fp = self.fs_params
+				rfill = ' ' * (self.term_width - self.cols) if scroll else ''
 				hdr_fs = ''.join(fp[name].hdr_fs % ((),cwh[name])[fp[name].hdr_fs_repl]
-					for name in dt.cols if cwh[name])
+					for name in dt.cols if cwh[name]) + rfill
 				fs = ''.join(fp[name].fs % ((),cwh[name])[fp[name].fs_repl]
-					for name in dt.cols if cwh[name])
+					for name in dt.cols if cwh[name]) + rfill
 			else:
 				cw = hdr_fs = fs = None
 
@@ -407,11 +448,34 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			if data != dsave:
 				self.pos = 0
 
-			display_hdr,display_body = make_display()
+			if scroll:
+				display_hdr,display_body = make_display()
+				fixed_height = len(display_hdr) + self.prompt_height + 1
+
+				if self.term_height - fixed_height < self.min_scrollable_height:
+					td = self.get_term_dimensions(
+						self.min_term_width,
+						min_lines = self.min_scrollable_height + fixed_height )
+					self.term_height = td.height
+					self.term_width = td.width
+					display_hdr,display_body = make_display()
+
+				self.scrollable_height = self.term_height - fixed_height
+				self.max_pos = max(0, len(display_body) - self.scrollable_height)
+				self.pos = min(self.pos,self.max_pos)
+			else:
+				display_hdr,display_body = make_display()
 
 			if not dt.detail:
 				self.display_hdr = display_hdr
 				self.display_body = display_body
+
+		if scroll:
+			top = self.pos
+			bot = self.pos + self.scrollable_height
+			fill = ('\n' + ''.ljust(self.term_width)) * (self.scrollable_height - len(display_body))
+		else:
+			top,bot,fill = (None,None,'')
 
 		if interactive:
 			footer = ''
@@ -421,15 +485,26 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		return (
 			'\n'.join(display_hdr) + '\n'
-			+ dt.item_separator.join(display_body)
+			+ dt.item_separator.join(display_body[top:bot])
+			+ fill
 			+ footer
 		)
 
 	async def view_filter_and_sort(self):
 
-		from ..term import get_char
+		from ..term import get_term,get_char,get_char_raw
 
-		prompt = self.prompt.strip()
+		scroll = self.scroll = g.scroll
+
+		if scroll:
+			del self.key_mappings['v']
+			for k in self.scroll_keys['vi']:
+				assert k not in self.key_mappings, f'{k!r} is in key_mappings'
+			self.key_mappings.update(self.scroll_keys['vi'])
+			self.key_mappings.update(self.scroll_keys[g.platform])
+			prompt = self.prompt_scroll.strip()
+		else:
+			prompt = self.prompt.strip()
 
 		self.prompt_width = max(len(l) for l in prompt.split('\n'))
 		self.prompt_height = len(prompt.split('\n'))
@@ -438,18 +513,32 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		prompt += '\b'
 
 		self.cursor_to_end_of_prompt = CUR_RIGHT( len(prompt.split('\n')[-1]) - 2 )
-		clear_screen = '\n\n' if (opt.no_blank or g.test_suite) else CUR_HOME + ERASE_ALL
+		clear_screen = (
+			'\n\n' if (opt.no_blank or g.test_suite) else
+			CUR_HOME + ('' if scroll else ERASE_ALL) )
+
+		if scroll:
+			term = get_term()
+			term.register_cleanup()
+			term.set('noecho')
+			get_char = get_char_raw
 
 		if not (opt.no_blank or g.test_suite):
 			msg_r(CUR_HOME + ERASE_ALL)
 
 		while True:
+
+			if self.oneshot_msg and scroll:
+				msg_r(self.blank_prompt + self.oneshot_msg + ' ') # oneshot_msg must be a one-liner
+				await asyncio.sleep(2)
+				msg_r('\r' + ''.ljust(self.term_width))
+
 			reply = get_char(
 				'' if self.no_output else (
 					clear_screen
-					+ await self.format('squeezed',interactive=True)
+					+ await self.format('squeezed',interactive=True,scroll=scroll)
 					+ '\n\n'
-					+ (self.oneshot_msg + '\n\n' if self.oneshot_msg else '')
+					+ (self.oneshot_msg + '\n\n' if self.oneshot_msg and not scroll else '')
 					+ prompt
 				),
 				immed_chars = self.key_mappings )
@@ -458,27 +547,40 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			self.oneshot_msg = '' if self.oneshot_msg else None # tristate, saves previous state
 
 			if reply not in self.key_mappings:
-				msg_r('\ninvalid keypress ')
-				await asyncio.sleep(0.3)
+				if not scroll:
+					msg_r('\ninvalid keypress ')
+					await asyncio.sleep(0.3)
 				continue
 
 			action = self.key_mappings[reply]
 
 			if hasattr(self.action,action):
+				if action.startswith('m_'): # scrolling actions
+					self.use_cached = True
 				await self.action().run(self,action)
 			elif action.startswith('s_'): # put here to allow overriding by action method
 				self.do_sort(action[2:])
 			elif hasattr(self.item_action,action):
+				if scroll:
+					term.set('echo') # item actions may require user input
 				await self.item_action().run(self,action)
+				if scroll:
+					term.set('noecho')
 			elif action == 'a_quit':
 				msg('')
 				return self.disp_data
 
+	@property
+	def blank_prompt(self):
+		return CUR_HOME + CUR_DOWN(self.term_height - self.prompt_height) + ERASE_ALL
+
 	def keypress_confirm(self,*args,**kwargs):
 		from ..ui import keypress_confirm
-		if keypress_confirm(*args,**kwargs):
+		if keypress_confirm(*args,no_nl=self.scroll,**kwargs):
 			return True
 		else:
+			if self.scroll:
+				msg_r('\r'+''.ljust(self.term_width)+'\r'+yellow('Canceling! '))
 			return False
 
 	class action:
@@ -523,7 +625,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			from ..exception import UserNonConfirmation
 			print_hdr = getattr(parent.display_type,output_type).print_header.format(parent.cols)
 
-			msg('')
+			msg_r(parent.blank_prompt if parent.scroll else '\n')
 
 			try:
 				write_data_to_file(
@@ -554,6 +656,24 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				msg_r(parent.cursor_to_end_of_prompt)
 				parent.no_output = True
 
+		async def m_cursor_up(self,parent):
+			parent.pos -= min( parent.pos - 0, 1 )
+
+		async def m_cursor_down(self,parent):
+			parent.pos += min( parent.max_pos - parent.pos, 1 )
+
+		async def m_pg_up(self,parent):
+			parent.pos -= min( parent.scrollable_height, parent.pos - 0 )
+
+		async def m_pg_down(self,parent):
+			parent.pos += min( parent.scrollable_height, parent.max_pos - parent.pos )
+
+		async def m_top(self,parent):
+			parent.pos = 0
+
+		async def m_bot(self,parent):
+			parent.pos = parent.max_pos
+
 	class item_action:
 
 		async def run(self,parent,action):
@@ -563,13 +683,21 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 			from ..ui import line_input
 			while True:
-				msg_r('\n')
+				msg_r(parent.blank_prompt if parent.scroll else '\n')
 				ret = line_input(f'Enter {parent.item_desc} number (or ENTER to return to main menu): ')
 				if ret == '':
+					if parent.scroll:
+						msg_r( CUR_UP(1) + '\r' + ''.ljust(parent.term_width) )
 					return
 				idx = get_obj(MMGenIdx,n=ret,silent=True)
 				if not idx or idx < 1 or idx > len(parent.disp_data):
-					msg_r(f'Choice must be a single number between 1 and {len(parent.disp_data)}')
+					msg_r(
+						'Choice must be a single number between 1 and {n}{s}'.format(
+							n = len(parent.disp_data),
+							s = ' ' if parent.scroll else '' ))
+					if parent.scroll:
+						await asyncio.sleep(1.5)
+						msg_r(CUR_UP(1) + ERASE_ALL + '\r')
 				else:
 					# action return values:
 					#  True:   action successfully performed
@@ -580,6 +708,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					if ret != 'redo':
 						break
 					await asyncio.sleep(0.5)
+
+			if parent.scroll and ret == False:
+				# error messages could leave screen in messy state, so do complete redraw:
+				msg_r(
+					CUR_HOME + ERASE_ALL +
+					await parent.format(display_type='squeezed',interactive=True,scroll=True) )
 
 		async def a_balance_refresh(self,parent,idx):
 			if not parent.keypress_confirm(
@@ -607,7 +741,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 			async def do_comment_add(comment):
 
-				if await parent.twctl.set_comment( entry.twmmid, comment, entry.addr, silent=True ):
+				if await parent.twctl.set_comment( entry.twmmid, comment, entry.addr, silent=parent.scroll ):
 					entry.comment = comment
 					edited = cur_comment and comment
 					parent.oneshot_msg = (green if comment else yellow)('Label {a} {b}{c}'.format(

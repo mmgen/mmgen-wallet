@@ -207,7 +207,7 @@ class TwAddresses(TwView):
 		for n,d in enumerate(data,1):
 			if id_save != d.al_id:
 				id_save = d.al_id
-				yield ''
+				yield ''.ljust(self.term_width)
 			yield fmt_method(n,d,cw,fs,color,yes,no)
 
 	async def set_dates(self,addrs):

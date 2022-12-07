@@ -27,6 +27,13 @@ Filters: show [E]mpty addrs, all [L]abels
 View/Print: pager [v]iew, [w]ide view, [p]rint
 Actions: [q]uit view, r[e]draw, [D]elete addr, add [l]abel:
 """
+	prompt_scroll = """
+Sort options: [a]mt, [M]mgen addr, [r]everse
+Filters: show [E]mpty addrs, all [L]abels
+View/Print: [w]ide view, [p]rint
+Scrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom
+Actions: [q]uit view, r[e]draw, [D]elete addr, add [l]abel:
+"""
 	key_mappings = {
 		'a':'s_amt',
 		'M':'s_twmmid',
