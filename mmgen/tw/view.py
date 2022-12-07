@@ -71,6 +71,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	txid_w      = 64
 	sort_key    = 'age'
 	_display_data = {}
+	term_height = 0
+	term_width = 0
 	filters = ()
 
 	fp = namedtuple('fs_params',['fs_key','hdr_fs_repl','fs_repl','hdr_fs','fs'])
@@ -217,19 +219,20 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	def filter_data(self):
 		return self.data.copy()
 
-	def get_term_columns(self,min_cols):
-		from ..term import get_terminal_size,get_char_raw
+	def get_term_dimensions(self,min_cols):
+		from ..term import get_terminal_size,get_char_raw,_term_dimensions
 		while True:
-			cols = g.columns or get_terminal_size().width
+			ts = get_terminal_size()
+			cols = g.columns or ts.width
 			if cols >= min_cols:
-				return cols
+				return _term_dimensions(cols,ts.height)
 			if sys.stdout.isatty():
 				if g.columns:
 					die(1,'\n'+fmt(self.tcols_errmsg.format(g.columns,self.desc,min_cols),indent='  '))
 				else:
 					get_char_raw('\n'+fmt(self.twidth_errmsg.format(self.desc,min_cols),append=''))
 			else:
-				return min_cols
+				return _term_dimensions(min_cols,ts.height)
 
 	def compute_column_widths(self,widths,maxws,minws,maxws_nice={},wide=False):
 
@@ -259,17 +262,17 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			else:
 				return {k:0 for k in varws}
 
-		if wide:
-			return do_ret_max()
-
 		varws = {k:maxws[k] - minws[k] for k in maxws if maxws[k] > minws[k]}
 		minw = sum(widths.values()) + sum(minws.values())
 		varw = sum(varws.values())
 
-		term_cols = self.get_term_columns(minw)
-		self.cols = min(term_cols,minw + varw)
+		td = self.get_term_dimensions(minw)
+		self.term_height = td.height
+		self.term_width = td.width
 
-		if self.cols == minw + varw:
+		self.cols = min(self.term_width,minw + varw)
+
+		if wide or self.cols == minw + varw:
 			return do_ret_max()
 
 		if maxws_nice:
@@ -277,7 +280,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			varws_hp = {k: maxws_nice[k] - minws[k] if k in maxws_nice else varws[k] for k in varws}
 			varw_hp = sum(varws_hp.values())
 			widths_hp = get_freews(
-				min(term_cols,minw + varw_hp),
+				min(self.term_width,minw + varw_hp),
 				varws_hp,
 				varw_hp,
 				minw )
