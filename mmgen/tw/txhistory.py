@@ -30,6 +30,7 @@ class TwTxHistory(TwView):
 		class detail(TwView.display_type.detail):
 			need_column_widths = False
 			subhdr_fmt_method = 'gen_detail_subheader'
+			colhdr_fmt_method = None
 			item_separator = '\n\n'
 
 	has_wallet = False
@@ -115,9 +116,6 @@ class TwTxHistory(TwView):
 			A = 'Amt({})'.format('TX' if self.show_total_amt else 'Wallet'),
 			o = 'Outputs',
 			c = 'Comment' )
-
-	def detail_col_hdr(self,cw,fs,color):
-		return ''
 
 	def gen_squeezed_display(self,data,cw,fs,color,fmt_method):
 

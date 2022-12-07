@@ -56,7 +56,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			fmt_method = 'gen_detail_display'
 			line_fmt_method = 'detail_format_line'
 			subhdr_fmt_method = 'gen_subheader'
-			colhdr_fmt_method = 'detail_col_hdr'
+			colhdr_fmt_method = 'detail_col_hdr' # set to None to disable
 			need_column_widths = True
 			item_separator = '\n'
 			print_header = ''
@@ -123,8 +123,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				if secs else '-               '),
 	}
 
-	tcols_errmsg = """
-		--columns or MMGEN_COLUMNS value ({}) is too small to display the {}.
+	twidth_diemsg = """
+		--columns or MMGEN_COLUMNS value ({}) is too small to display the {}
 		Minimum value for this configuration: {}
 	"""
 	twidth_errmsg = """
@@ -229,16 +229,21 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 	def get_term_dimensions(self,min_cols):
 		from ..term import get_terminal_size,get_char_raw,_term_dimensions
+		user_resized = False
 		while True:
 			ts = get_terminal_size()
 			cols = g.columns or ts.width
 			if cols >= min_cols:
+				if user_resized:
+					msg_r(CUR_HOME + ERASE_ALL)
 				return _term_dimensions(cols,ts.height)
 			if sys.stdout.isatty():
 				if g.columns:
-					die(1,'\n'+fmt(self.tcols_errmsg.format(g.columns,self.desc,min_cols),indent='  '))
+					die(1,'\n'+fmt(self.twidth_diemsg.format(g.columns,self.desc,min_cols),indent='  '))
 				else:
-					get_char_raw('\n'+fmt(self.twidth_errmsg.format(self.desc,min_cols),append=''))
+					m,dim = (self.twidth_errmsg,min_cols)
+					get_char_raw( CUR_HOME + ERASE_ALL + fmt( m.format(self.desc,dim), append='' ))
+					user_resized = True
 			else:
 				return _term_dimensions(min_cols,ts.height)
 
@@ -355,10 +360,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 				yield ''
 
-				if data:
-					res = getattr(self,dt.colhdr_fmt_method)(cw,hdr_fs,color)
-					if res:
-						yield res
+				if data and dt.colhdr_fmt_method:
+					yield getattr(self,dt.colhdr_fmt_method)(cw,hdr_fs,color)
 
 			self.disp_prec = self.get_disp_prec(wide=dt.detail)
 
@@ -433,6 +436,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		self.cursor_to_end_of_prompt = CUR_RIGHT( len(prompt.split('\n')[-1]) - 2 )
 		clear_screen = '\n\n' if (opt.no_blank or g.test_suite) else CUR_HOME + ERASE_ALL
 
+		if not (opt.no_blank or g.test_suite):
+			msg_r(CUR_HOME + ERASE_ALL)
+
 		while True:
 			reply = get_char(
 				'' if self.no_output else (
@@ -485,7 +491,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				pass
 
 		def d_redraw(self,parent):
-			msg_r(CUR_HOME+ERASE_ALL)
+			msg_r(CUR_HOME + ERASE_ALL)
 
 		def d_reverse(self,parent):
 			parent.data.reverse()
@@ -508,10 +514,13 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				parent.proto.dcoin,
 				('' if parent.proto.network == 'mainnet' else '-'+parent.proto.network.upper()),
 				','.join(parent.sort_info(include_group=False)).replace(' ','') )
-			msg('')
+
 			from ..fileutil import write_data_to_file
 			from ..exception import UserNonConfirmation
 			print_hdr = getattr(parent.display_type,output_type).print_header.format(parent.cols)
+
+			msg('')
+
 			try:
 				write_data_to_file(
 					outfile = outfile,
@@ -546,24 +555,27 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		async def run(self,parent,action):
 
 			if not parent.disp_data:
-				return None
+				return
 
-			msg('')
 			from ..ui import line_input
 			while True:
+				msg_r('\n')
 				ret = line_input(f'Enter {parent.item_desc} number (or ENTER to return to main menu): ')
 				if ret == '':
-					return None
+					return
 				idx = get_obj(MMGenIdx,n=ret,silent=True)
 				if not idx or idx < 1 or idx > len(parent.disp_data):
-					msg_r(f'Choice must be a single number between 1 and {len(parent.disp_data)}{nl}')
+					msg_r(f'Choice must be a single number between 1 and {len(parent.disp_data)}')
 				else:
+					# action return values:
+					#  True:   action successfully performed
+					#  None:   action aborted by user or no action performed
+					#  False:  an error occurred
+					#  'redo': user will be re-prompted for item number
 					ret = await getattr(self,action)(parent,idx)
-					if ret == 'redo':
-						await asyncio.sleep(0.5)
-						continue
-					else:
+					if ret != 'redo':
 						break
+					await asyncio.sleep(0.5)
 
 		async def a_balance_refresh(self,parent,idx):
 			if not parent.keypress_confirm(
@@ -581,9 +593,11 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			if await parent.twctl.remove_address( parent.disp_data[idx-1].addr ):
 				await parent.get_data()
 				parent.oneshot_msg = yellow(f'{capfirst(parent.item_desc)} #{idx} removed')
+				return True
 			else:
 				await asyncio.sleep(3)
 				parent.oneshot_msg = red('Address could not be removed')
+				return False
 
 		async def a_comment_add(self,parent,idx):
 
