@@ -765,14 +765,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		self.get_file_with_ext('out',delete_all=True)
 		t = self.spawn('mmgen-tool',
 			['--bob',f'--outdir={self.tmpdir}','txhist','age_fmt=date_time','interactive=true'] )
-		for resp in ('u','i','t','a','m','T','A','r','r','D','D','D','D','p','P','b','V'):
+		for resp in ('u','i','t','a','m','T','A','r','r','D','D','D','D','p','P','n','V'):
 			t.expect('draw:\b',resp,regex=True)
 		if t.pexpect_spawn:
 			t.expect(r'Block:.*\b394\b',regex=True)
 			time.sleep(1)
 			t.send('q')
 			time.sleep(0.2)
-			t.send('b')
+			t.send('n')
 			t.expect('draw:\b','q',regex=True)
 		else:
 			txnum,idx = (8,1) if self.proto.coin == 'BCH' else (9,3)

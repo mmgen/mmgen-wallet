@@ -231,15 +231,14 @@ class BitcoinTwTxHistory(TwTxHistory,BitcoinTwRPC):
 	item_desc = 'transaction'
 	no_data_errmsg = 'No transactions in tracking wallet!'
 	prompt = """
-Sort options: [t]xid, [a]mt, total a[m]t, [A]ge, [b]locknum, [r]everse
-Column options: toggle [D]ays/date/confs/block, tx[i]d, [T]otal amt
-Filters: show [u]nconfirmed
+Sorting: [t]xid, [a]mt, total a[m]t, [A]ge, block[n]um, [r]everse
+Column opts: toggle [D]ays/date/confs/block, tx[i]d, [T]otal amt
 View/Print: pager [v]iew, full [V]iew, screen [p]rint, full [P]rint
-Actions: [q]uit, r[e]draw:
+Filters/Actions: show [u]nconfirmed, [q]uit view, r[e]draw:
 """
 	key_mappings = {
 		'A':'s_age',
-		'b':'s_blockheight',
+		'n':'s_blockheight',
 		'a':'s_amt',
 		'm':'s_total_amt',
 		't':'s_txid',

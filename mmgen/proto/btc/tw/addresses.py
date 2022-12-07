@@ -23,11 +23,11 @@ class BitcoinTwAddresses(TwAddresses,BitcoinTwRPC):
 
 	has_age = True
 	prompt = """
-Sort options: [a]mt, [A]ge, [M]mid, [r]everse
+Sort options: [a]mt, [A]ge, [M]mgen addr, [r]everse
 Column options: toggle [D]ays/date/confs/block
 Filters: show [E]mpty addrs, [u]sed addrs, all [L]abels
 View/Print: pager [v]iew, [w]ide view, [p]rint
-Actions: [q]uit, r[e]draw, add [l]abel:
+Actions: [q]uit view, r[e]draw, add [l]abel:
 """
 	key_mappings = {
 		'a':'s_amt',

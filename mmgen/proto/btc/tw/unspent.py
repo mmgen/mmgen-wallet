@@ -31,9 +31,10 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 	dump_fn_pfx = 'listunspent'
 	prompt_fs = 'Total to spend, excluding fees: {} {}\n\n'
 	prompt = """
-Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
-Display options: toggle [D]ays/date, show [g]roup, show [m]mgen addr, r[e]draw
-Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
+Sort options: [t]xid, [a]mount, a[d]dr, [A]ge, [r]everse, [M]mid
+Display options: toggle [D]ays/date, show gr[o]up, show [m]mid
+View options: pager [v]iew, [w]ide view
+Actions: [q]uit view, [p]rint, r[e]draw, add [l]abel:
 """
 	key_mappings = {
 		't':'s_txid',
@@ -43,7 +44,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		'r':'d_reverse',
 		'M':'s_twmmid',
 		'D':'d_days',
-		'g':'d_group',
+		'o':'d_group',
 		'm':'d_mmid',
 		'e':'d_redraw',
 		'q':'a_quit',

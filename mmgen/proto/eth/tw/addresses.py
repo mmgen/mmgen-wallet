@@ -22,10 +22,10 @@ class EthereumTwAddresses(TwAddresses,EthereumTwView,EthereumTwRPC):
 
 	has_age = False
 	prompt = """
-Sort options: [a]mt, [M]mid, [r]everse
+Sort options: [a]mt, [M]mgen addr, [r]everse
 Filters: show [E]mpty addrs, all [L]abels
 View/Print: pager [v]iew, [w]ide view, [p]rint
-Actions: [q]uit, r[e]draw, [D]elete address, add [l]abel:
+Actions: [q]uit view, r[e]draw, [D]elete addr, add [l]abel:
 """
 	key_mappings = {
 		'a':'s_amt',

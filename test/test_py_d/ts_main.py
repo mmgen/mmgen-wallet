@@ -526,7 +526,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			outputs_list.append(len(tx_data)*(addrs_per_wallet+1) + 1)
 
 		self.txcreate_ui_common(t,
-			menu        = (['M'],['M','D','D','D','D','m','g'])[self.test_name=='txcreate'],
+			menu        = (['M'],['M','D','D','D','D','m','o'])[self.test_name=='txcreate'],
 			inputs      = ' '.join(map(str,outputs_list)),
 			add_comment = ('',tx_comment_lat_cyr_gr)[do_label],
 			view        = view,
