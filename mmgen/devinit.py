@@ -15,6 +15,7 @@ devinit: Developer tools init/launch code for the MMGen suite
 devtools_funcs = {
 	'pfmt':              lambda *args,**kwargs: devtools_call('pfmt',*args,**kwargs),
 	'pmsg':              lambda *args,**kwargs: devtools_call('pmsg',*args,**kwargs),
+	'pmsg_r':            lambda *args,**kwargs: devtools_call('pmsg_r',*args,**kwargs),
 	'pdie':              lambda *args,**kwargs: devtools_call('pdie',*args,**kwargs),
 	'pexit':             lambda *args,**kwargs: devtools_call('pexit',*args,**kwargs),
 	'Pmsg':              lambda *args,**kwargs: devtools_call('Pmsg',*args,**kwargs),

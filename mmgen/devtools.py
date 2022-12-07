@@ -16,12 +16,13 @@ import sys
 
 def pfmt(*args):
 	import pprint
-	return (
-		pprint.PrettyPrinter(indent=4).pformat(
-			args if len(args) > 1 else '' if not args else args[0] )
-		+ '\n' )
+	return pprint.PrettyPrinter(indent=4).pformat(
+		args if len(args) > 1 else '' if not args else args[0] )
 
 def pmsg(*args):
+	sys.stderr.write(pfmt(*args) + '\n')
+
+def pmsg_r(*args):
 	sys.stderr.write(pfmt(*args))
 
 def pdie(*args,exit_val=1):
@@ -32,7 +33,7 @@ def pexit(*args):
 	pdie(*args,exit_val=0)
 
 def Pmsg(*args):
-	sys.stdout.write(pfmt(*args))
+	sys.stdout.write(pfmt(*args) + '\n')
 
 def Pdie(*args,exit_val=1):
 	Pmsg(*args)
