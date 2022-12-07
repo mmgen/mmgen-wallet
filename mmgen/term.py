@@ -37,9 +37,9 @@ except:
 	if not sys.stdin.isatty():
 		msvcrt.setmode(sys.stdin.fileno(),os.O_BINARY)
 
-class MMGenTerm(object):
+_term_dimensions = namedtuple('terminal_dimensions',['width','height'])
 
-	tdim = namedtuple('terminal_dimensions',['width','height'])
+class MMGenTerm(object):
 
 	@classmethod
 	def init(cls,noecho=False):
@@ -58,7 +58,7 @@ class MMGenTermLinux(MMGenTerm):
 	@classmethod
 	def reset(cls):
 		termios.tcsetattr( cls.stdin_fd, termios.TCSANOW, cls.orig_term )
-		cls.old_term = cls.orig_term
+		cls.cur_term = cls.orig_term
 
 	@classmethod
 	def init(cls,noecho=False):
@@ -69,7 +69,7 @@ class MMGenTermLinux(MMGenTerm):
 			t = termios.tcgetattr(cls.stdin_fd)
 			t[3] &= ~(termios.ECHO | termios.ECHONL)
 			termios.tcsetattr( cls.stdin_fd, termios.TCSANOW, t )
-		cls.old_term = termios.tcgetattr(cls.stdin_fd)
+		cls.cur_term = termios.tcgetattr(cls.stdin_fd)
 
 	@classmethod
 	def get_terminal_size(cls):
@@ -80,7 +80,7 @@ class MMGenTermLinux(MMGenTerm):
 				ret = (os.environ['COLUMNS'],os.environ['LINES'])
 			except:
 				ret = (80,25)
-		return cls.tdim(*ret)
+		return _term_dimensions(*ret)
 
 	@classmethod
 	def kb_hold_protect(cls):
@@ -93,7 +93,7 @@ class MMGenTermLinux(MMGenTerm):
 			if key:
 				sys.stdin.read(1)
 			else:
-				termios.tcsetattr(cls.stdin_fd, termios.TCSADRAIN, cls.old_term)
+				termios.tcsetattr(cls.stdin_fd, termios.TCSADRAIN, cls.cur_term)
 				break
 
 	@classmethod
@@ -120,15 +120,15 @@ class MMGenTermLinux(MMGenTerm):
 			key = select([sys.stdin], [], [], timeout)[0]
 			if not key:
 				break
-		termios.tcsetattr(cls.stdin_fd, termios.TCSADRAIN, cls.old_term)
+		termios.tcsetattr(cls.stdin_fd, termios.TCSADRAIN, cls.cur_term)
 		return s
 
 	@classmethod
-	def get_char_raw(cls,prompt='',num_bytes=5):
+	def get_char_raw(cls,prompt='',num_bytes=5,**kwargs):
 		tty.setcbreak(cls.stdin_fd)
 		msg_r(prompt)
 		s = os.read(cls.stdin_fd,num_bytes).decode()
-		termios.tcsetattr(cls.stdin_fd, termios.TCSADRAIN, cls.old_term)
+		termios.tcsetattr(cls.stdin_fd, termios.TCSADRAIN, cls.cur_term)
 		return s
 
 class MMGenTermLinuxStub(MMGenTermLinux):
@@ -172,10 +172,10 @@ class MMGenTermMSWin(MMGenTerm):
 			pass
 
 		if x and y:
-			return cls.tdim(x,y)
+			return _term_dimensions(x,y)
 		else:
 			msg(yellow('Warning: could not get terminal size. Using fallback dimensions.'))
-			return cls.tdim(80,25)
+			return _term_dimensions(80,25)
 
 	@classmethod
 	def kb_hold_protect(cls):
@@ -213,7 +213,7 @@ class MMGenTermMSWin(MMGenTerm):
 						return ch
 
 	@classmethod
-	def get_char_raw(cls,prompt='',num_bytes=None):
+	def get_char_raw(cls,prompt='',num_bytes=None,**kwargs):
 		"""
 		always return a single character, ignore num_bytes
 		first character of 2-character sequence returned by F1-F12 keys is discarded
