@@ -32,6 +32,10 @@ from ..util import msg,msg_r,fmt,die,capfirst,make_timestr
 from ..rpc import rpc_init
 from ..base_obj import AsyncInit
 
+CUR_HOME  = '\033[H'
+CUR_RIGHT = lambda n: f'\033[{n}C'
+ERASE_ALL = '\033[0J'
+
 # base class for TwUnspentOutputs,TwAddresses,TwTxHistory:
 class TwView(MMGenObject,metaclass=AsyncInit):
 
@@ -58,7 +62,6 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	class line_processing:
 
 		class print:
-			color = False
 			def do(method,data,cw,fs,color,fmt_method):
 				return [l.rstrip() for l in method(data,cw,fs,color,fmt_method)]
 
@@ -371,13 +374,10 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			else:
 				cw = hdr_fs = fs = None
 
-			if line_processing:
-				lp_cls = getattr(self.line_processing,line_processing)
-				color = lp_cls.color
-
 			def get_body(method):
 				if line_processing:
-					return lp_cls.do(method,data,cw,fs,color,getattr(self,dt.line_fmt_method))
+					return getattr(self.line_processing,line_processing).do(
+						method,data,cw,fs,color,getattr(self,dt.line_fmt_method))
 				else:
 					return method(data,cw,fs,color,getattr(self,dt.line_fmt_method))
 
@@ -423,9 +423,6 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		self.no_output = False
 		self.oneshot_msg = None
 
-		CUR_RIGHT = lambda n: f'\033[{n}C'
-		CUR_HOME  = '\033[H'
-		ERASE_ALL = '\033[0J'
 		self.cursor_to_end_of_prompt = CUR_RIGHT( len(prompt.split('\n')[-1]) - 2 )
 		clear_screen = '\n\n' if (opt.no_blank or g.test_suite) else CUR_HOME + ERASE_ALL
 
@@ -460,6 +457,13 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				msg('')
 				return self.disp_data
 
+	def keypress_confirm(self,*args,**kwargs):
+		from ..ui import keypress_confirm
+		if keypress_confirm(*args,**kwargs):
+			return True
+		else:
+			return False
+
 	class action:
 
 		async def run(self,parent,action):
@@ -474,7 +478,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				pass
 
 		def d_redraw(self,parent):
-			pass
+			msg_r(CUR_HOME+ERASE_ALL)
 
 		def d_reverse(self,parent):
 			parent.data.reverse()
@@ -487,6 +491,10 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			return await self._print(parent,output_type='squeezed')
 
 		async def _print(self,parent,output_type):
+
+			if not parent.disp_data:
+				return None
+
 			outfile = '{}{}-{}{}[{}].out'.format(
 				parent.dump_fn_pfx,
 				f'-{output_type}' if len(parent.print_output_types) > 1 else '',
@@ -502,7 +510,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					outfile = outfile,
 					data = print_hdr + await parent.format(
 						display_type = output_type,
-						line_processing = 'print' ),
+						line_processing = 'print',
+						color = False ),
 					desc = f'{parent.desc} listing' )
 			except UserNonConfirmation as e:
 				parent.oneshot_msg = yellow(f'File {outfile!r} not overwritten by user request')
@@ -528,6 +537,10 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	class item_action:
 
 		async def run(self,parent,action):
+
+			if not parent.disp_data:
+				return None
+
 			msg('')
 			from ..ui import line_input
 			while True:
@@ -536,13 +549,17 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					return None
 				idx = get_obj(MMGenIdx,n=ret,silent=True)
 				if not idx or idx < 1 or idx > len(parent.disp_data):
-					msg(f'Choice must be a single number between 1 and {len(parent.disp_data)}')
-				elif (await getattr(self,action)(parent,idx)) != 'redo':
-					break
+					msg_r(f'Choice must be a single number between 1 and {len(parent.disp_data)}{nl}')
+				else:
+					ret = await getattr(self,action)(parent,idx)
+					if ret == 'redo':
+						await asyncio.sleep(0.5)
+						continue
+					else:
+						break
 
 		async def a_balance_refresh(self,parent,idx):
-			from ..ui import keypress_confirm
-			if not keypress_confirm(
+			if not parent.keypress_confirm(
 					f'Refreshing tracking wallet {parent.item_desc} #{idx}.  Is this what you want?'):
 				return 'redo'
 			await parent.twctl.get_balance( parent.disp_data[idx-1].addr, force_rpc=True )
@@ -550,8 +567,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			parent.oneshot_msg = yellow(f'{parent.proto.dcoin} balance for account #{idx} refreshed')
 
 		async def a_addr_delete(self,parent,idx):
-			from ..ui import keypress_confirm
-			if not keypress_confirm(
+			if not parent.keypress_confirm(
 					'Removing {} {} from tracking wallet.  Is this what you want?'.format(
 						parent.item_desc, red(f'#{idx}') )):
 				return 'redo'
@@ -565,12 +581,14 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		async def a_comment_add(self,parent,idx):
 
 			async def do_comment_add(comment):
-				if await parent.twctl.set_comment( entry.twmmid, comment, entry.addr ):
+
+				if await parent.twctl.set_comment( entry.twmmid, comment, entry.addr, silent=True ):
 					entry.comment = comment
-					parent.oneshot_msg = yellow('Label {a} {b}{c}'.format(
-						a = 'for' if cur_comment and comment else 'added to' if comment else 'removed from',
+					edited = cur_comment and comment
+					parent.oneshot_msg = (green if comment else yellow)('Label {a} {b}{c}'.format(
+						a = 'for' if edited else 'added to' if comment else 'removed from',
 						b = desc,
-						c = ' edited' if cur_comment and comment else '' ))
+						c = ' edited' if edited else '' ))
 					return True
 				else:
 					await asyncio.sleep(3)
@@ -591,11 +609,10 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				insert_txt = cur_comment )
 
 			if res == cur_comment:
-				parent.oneshot_msg = green(f'Label for {desc} unchanged')
+				parent.oneshot_msg = yellow(f'Label for {desc} unchanged')
 				return None
 			elif res == '':
-				from ..ui import keypress_confirm
-				if not keypress_confirm(f'Removing label for {desc}.  Is this what you want?'):
-					return None
+				if not parent.keypress_confirm(f'Removing label for {desc}.  Is this what you want?'):
+					return 'redo'
 
 			return await do_comment_add(res)

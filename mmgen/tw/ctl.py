@@ -274,14 +274,13 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			from .rpc import TwRPC
 			pairs = await TwRPC(proto=self.proto,rpc=self.rpc,twctl=self).get_addr_label_pairs(res.twmmid)
 			assert pairs[0][0].comment == comment, f'{pairs[0][0].comment!r} != {comment!r}'
-
-			desc = '{} address {} in tracking wallet'.format(
-				res.twmmid.type.replace('mmgen','MMGen'),
-				res.twmmid.addr.hl() )
-			if comment:
-				msg('Added label {} to {}'.format(comment.hl2(encl='‘’'),desc))
-			else:
-				msg(f'Removed label from {desc}')
+			if not silent:
+				desc = '{} address {} in tracking wallet'.format(
+					res.twmmid.type.replace('mmgen','MMGen'),
+					res.twmmid.addr.hl() )
+				msg(
+					'Added label {} to {}'.format(comment.hl2(encl='‘’'),desc) if comment else
+					'Removed label from {}'.format(desc) )
 			return True
 		else:
 			if not silent:
