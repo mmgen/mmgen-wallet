@@ -119,7 +119,10 @@ def _tt_get_char(raw=False,one_char=False,immed_chars=''):
 		'echoed as a FULL CONTROL SEQUENCE.'
 	)
 	if g.platform == 'win':
-		m3 = 'The Escape and F1-F12 keys will be returned as single characters.'
+		if raw:
+			m3 = 'The Escape and F1-F12 keys will be returned as two-character strings.'
+		else:
+			m3 = 'The Escape and F1-F12 keys will be returned as single characters.'
 	kwargs = {}
 	if one_char:
 		kwargs.update({'num_bytes':1})

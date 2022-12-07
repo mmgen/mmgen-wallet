@@ -241,17 +241,15 @@ class MMGenTermMSWin(MMGenTerm):
 	@classmethod
 	def get_char_raw(cls,prompt='',num_bytes=None,**kwargs):
 		"""
-		always return a single character, ignore num_bytes
-		first character of 2-character sequence returned by F1-F12 keys is discarded
+		return single ASCII char or 2-char escape sequence, ignoring num_bytes
 		"""
-		while True:
-			msg_r(prompt)
-			ch = chr(msvcrt.getch()[0])
-			if ch in '\x00\xe0': # first char of 2-char sequence for F1-F12 keys
-				continue
-			if ch == '\x03':
-				raise KeyboardInterrupt
-			return ch
+		msg_r(prompt)
+		ret = msvcrt.getch()
+		if ret in (b'\x00',b'\xe0'): # first byte of 2-byte escape sequence
+			return chr(ret[0]) + chr(msvcrt.getch()[0])
+		if ret == b'\x03':
+			raise KeyboardInterrupt
+		return chr(ret[0])
 
 class MMGenTermMSWinStub(MMGenTermMSWin):
 

@@ -73,13 +73,7 @@ def line_input(prompt,echo=True,insert_txt='',hold_protect=True):
 			readline.set_startup_hook(lambda: readline.insert_text(''))
 	else:
 		from getpass import getpass
-		if g.platform == 'win':
-			# MSYS2/MSWin hack - getpass('foo') doesn't flush stderr - TODO: has this been fixed?
-			msg_r(prompt.strip()) # getpass('') adds a space
-			sys.stderr.flush()
-			reply = getpass('')
-		else:
-			reply = getpass(prompt)
+		reply = getpass(prompt)
 
 	if hold_protect:
 		kb_hold_protect()
@@ -115,7 +109,7 @@ def do_pager(text):
 	end_msg = '\n(end of text)\n\n'
 	# --- Non-MSYS Windows code deleted ---
 	# raw, chop, horiz scroll 8 chars, disable buggy line chopping in MSYS
-	os.environ['LESS'] = (('--shift 8 -RS'),('-cR -#1'))[g.platform=='win']
+	os.environ['LESS'] = (('--shift 8 -RS'),('--shift 16 -RS'))[g.platform=='win']
 
 	if 'PAGER' in os.environ and os.environ['PAGER'] != pagers[0]:
 		pagers = [os.environ['PAGER']] + pagers
