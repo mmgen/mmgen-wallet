@@ -68,7 +68,7 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 
 	no_data_errmsg = 'No accounts in tracking wallet!'
 
-	def get_column_widths(self,data,wide=False):
+	def get_column_widths(self,data,wide,interactive):
 		# min screen width: 80 cols
 		# num addr [mmid] [comment] amt [amt2]
 		return self.compute_column_widths(
@@ -94,6 +94,7 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 			},
 			maxws_nice = {'addr': 14} if self.show_mmid else {},
 			wide = wide,
+			interactive = interactive,
 		)
 
 	def do_sort(self,key=None,reverse=False):

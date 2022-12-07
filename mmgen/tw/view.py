@@ -242,7 +242,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			else:
 				return _term_dimensions(min_cols,ts.height)
 
-	def compute_column_widths(self,widths,maxws,minws,maxws_nice={},wide=False):
+	def compute_column_widths(self,widths,maxws,minws,maxws_nice,wide,interactive):
 
 		def do_ret(freews):
 			widths.update({k:minws[k] + freews.get(k,0) for k in minws})
@@ -274,7 +274,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		minw = sum(widths.values()) + sum(minws.values())
 		varw = sum(varws.values())
 
-		td = self.get_term_dimensions(minw)
+		self.min_term_width = max(self.prompt_width,minw) if interactive else minw
+		td = self.get_term_dimensions(self.min_term_width)
 		self.term_height = td.height
 		self.term_width = td.width
 
@@ -368,7 +369,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 			if data and dt.need_column_widths:
 				self.set_amt_widths(data)
-				cw = self.get_column_widths(data,wide=dt.detail)
+				cw = self.get_column_widths(data,wide=dt.detail,interactive=interactive)
 				cwh = cw._asdict()
 				fp = self.fs_params
 				hdr_fs = ''.join(fp[name].hdr_fs % ((),cwh[name])[fp[name].hdr_fs_repl]
@@ -421,11 +422,13 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		from ..term import get_char
 
-		prompt = self.prompt.strip() + '\b'
+		prompt = self.prompt.strip()
 
+		self.prompt_width = max(len(l) for l in prompt.split('\n'))
 		self.prompt_height = len(prompt.split('\n'))
 		self.no_output = False
 		self.oneshot_msg = None
+		prompt += '\b'
 
 		self.cursor_to_end_of_prompt = CUR_RIGHT( len(prompt.split('\n')[-1]) - 2 )
 		clear_screen = '\n\n' if (opt.no_blank or g.test_suite) else CUR_HOME + ERASE_ALL

@@ -41,7 +41,7 @@ Actions: [q]uit, r[e]draw, [D]elete address, add [l]abel:
 		'w':'a_view_detail',
 		'p':'a_print_detail' }
 
-	def get_column_widths(self,data,wide=False):
+	def get_column_widths(self,data,wide,interactive):
 
 		return self.compute_column_widths(
 			widths = { # fixed cols
@@ -64,6 +64,7 @@ Actions: [q]uit, r[e]draw, [D]elete address, add [l]abel:
 			},
 			maxws_nice = {'addr': 18},
 			wide = wide,
+			interactive = interactive,
 		)
 
 	async def get_rpc_data(self):

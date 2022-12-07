@@ -120,7 +120,7 @@ class TwUnspentOutputs(TwView):
 
 		return data
 
-	def get_column_widths(self,data,wide=False):
+	def get_column_widths(self,data,wide,interactive):
 		# min screen width: 80 cols
 		# num txid vout addr [mmid] [comment] amt [amt2] date
 		maxws_nice = {'txid': 12}
@@ -151,6 +151,7 @@ class TwUnspentOutputs(TwView):
 			},
 			maxws_nice = maxws_nice,
 			wide = wide,
+			interactive = interactive,
 		)
 
 	def squeezed_col_hdr(self,cw,fs,color):

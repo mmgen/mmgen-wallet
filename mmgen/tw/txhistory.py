@@ -57,7 +57,7 @@ class TwTxHistory(TwView):
 		amts_tuple = namedtuple('amts_data',['amt'])
 		return super().set_amt_widths([amts_tuple(d.amt_disp(self.show_total_amt)) for d in data])
 
-	def get_column_widths(self,data,wide=False):
+	def get_column_widths(self,data,wide,interactive):
 
 		# var cols: inputs outputs comment [txid]
 		if not hasattr(self,'varcol_maxwidths'):
@@ -89,16 +89,17 @@ class TwTxHistory(TwView):
 			'spc': 6 + self.show_txid, # 5(6) spaces between cols + 1 leading space in fs
 		}
 
-		return self.compute_column_widths(widths,maxws,minws,maxws_nice,wide=wide)
+		return self.compute_column_widths(widths,maxws,minws,maxws_nice,wide=wide,interactive=interactive)
 
 	def gen_squeezed_subheader(self,cw,color):
+		# keep these shorter than min screen width (currently prompt width, or 65 chars)
 		if self.sinceblock:
 			yield f'Displaying transactions since block {self.sinceblock.hl(color=color)}'
 		yield 'Only wallet-related outputs are shown'
 		yield 'Comment is from first wallet address in outputs or inputs'
 		if (cw.inputs < self.varcol_maxwidths['inputs'] or
 			cw.outputs < self.varcol_maxwidths['outputs'] ):
-			yield 'Due to screen width limitations, not all addresses could be displayed'
+			yield 'Note: screen is too narrow to display all inputs and outputs'
 
 	def gen_detail_subheader(self,cw,color):
 		if self.sinceblock:

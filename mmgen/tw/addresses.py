@@ -126,7 +126,7 @@ class TwAddresses(TwView):
 				(not (d.recvd and not self.showused) and (d.amt or self.showempty))
 			)
 
-	def get_column_widths(self,data,wide=False):
+	def get_column_widths(self,data,wide,interactive):
 
 		return self.compute_column_widths(
 			widths = { # fixed cols
@@ -149,6 +149,7 @@ class TwAddresses(TwView):
 			},
 			maxws_nice = {'addr': 18},
 			wide = wide,
+			interactive = interactive,
 		)
 
 	def gen_subheader(self,cw,color):
