@@ -435,7 +435,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					clear_screen
 					+ await self.format('squeezed',interactive=True)
 					+ '\n\n'
-					+ (self.oneshot_msg or '')
+					+ (self.oneshot_msg + '\n\n' if self.oneshot_msg else '')
 					+ prompt
 				),
 				immed_chars = self.key_mappings )
@@ -505,9 +505,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 						line_processing = 'print' ),
 					desc = f'{parent.desc} listing' )
 			except UserNonConfirmation as e:
-				parent.oneshot_msg = yellow(f'File {outfile!r} not overwritten by user request\n\n')
+				parent.oneshot_msg = yellow(f'File {outfile!r} not overwritten by user request')
 			else:
-				parent.oneshot_msg = green(f'Data written to {outfile!r}\n\n')
+				parent.oneshot_msg = green(f'Data written to {outfile!r}')
 
 		async def a_view(self,parent):
 			from ..ui import do_pager
@@ -547,7 +547,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				return 'redo'
 			await parent.twctl.get_balance( parent.disp_data[idx-1].addr, force_rpc=True )
 			await parent.get_data()
-			parent.oneshot_msg = yellow(f'{parent.proto.dcoin} balance for account #{idx} refreshed\n\n')
+			parent.oneshot_msg = yellow(f'{parent.proto.dcoin} balance for account #{idx} refreshed')
 
 		async def a_addr_delete(self,parent,idx):
 			from ..ui import keypress_confirm
@@ -557,24 +557,24 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				return 'redo'
 			if await parent.twctl.remove_address( parent.disp_data[idx-1].addr ):
 				await parent.get_data()
-				parent.oneshot_msg = yellow(f'{capfirst(parent.item_desc)} #{idx} removed\n\n')
+				parent.oneshot_msg = yellow(f'{capfirst(parent.item_desc)} #{idx} removed')
 			else:
 				await asyncio.sleep(3)
-				parent.oneshot_msg = red('Address could not be removed\n\n')
+				parent.oneshot_msg = red('Address could not be removed')
 
 		async def a_comment_add(self,parent,idx):
 
 			async def do_comment_add(comment):
 				if await parent.twctl.set_comment( entry.twmmid, comment, entry.addr ):
 					entry.comment = comment
-					parent.oneshot_msg = yellow('Label {a} {b}{c}\n\n'.format(
+					parent.oneshot_msg = yellow('Label {a} {b}{c}'.format(
 						a = 'for' if cur_comment and comment else 'added to' if comment else 'removed from',
 						b = desc,
 						c = ' edited' if cur_comment and comment else '' ))
 					return True
 				else:
 					await asyncio.sleep(3)
-					parent.oneshot_msg = red('Label for {desc} could not be {action}\n\n'.format(
+					parent.oneshot_msg = red('Label for {desc} could not be {action}'.format(
 						desc = desc,
 						action = 'edited' if cur_comment and comment else 'added' if comment else 'removed'
 					))
@@ -591,7 +591,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				insert_txt = cur_comment )
 
 			if res == cur_comment:
-				parent.oneshot_msg = green(f'Label for {desc} unchanged\n\n')
+				parent.oneshot_msg = green(f'Label for {desc} unchanged')
 				return None
 			elif res == '':
 				from ..ui import keypress_confirm
