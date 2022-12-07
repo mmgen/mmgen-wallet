@@ -568,6 +568,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					term.set('noecho')
 			elif action == 'a_quit':
 				msg('')
+				if scroll:
+					term.set('echo')
 				return self.disp_data
 
 	@property
