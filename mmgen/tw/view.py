@@ -65,12 +65,15 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	has_wallet  = True
 	has_amt2    = False
 	dates_set   = False
-	cols        = None
 	reverse     = False
 	group       = False
+	use_cached  = False
 	txid_w      = 64
 	sort_key    = 'age'
-	_display_data = {}
+	display_hdr = ()
+	display_body = ()
+	nodata_msg = '[no data for requested parameters]'
+	cols = 0
 	term_height = 0
 	term_width = 0
 	filters = ()
@@ -296,32 +299,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		else:
 			return do_ret(get_freews(self.cols,varws,varw,minw))
 
-	def header(self,color):
+	def gen_subheader(self,color):
+		return ()
 
-		Blue,Green = (blue,green) if color else (nocolor,nocolor)
-		Yes,No,All = (green('yes'),red('no'),yellow('all')) if color else ('yes','no','all')
-
-		def fmt_filter(k):
-			return '{}:{}'.format(k,{0:No,1:Yes,2:All}[getattr(self,k)])
-
-		return '{h} (sort order: {s}){f}\nNetwork: {n}\nBlock {b} [{d}]\n{t}'.format(
-			h = self.hdr_lbl.upper(),
-			f = '\nFilters: '+' '.join(fmt_filter(k) for k in self.filters) if self.filters else '',
-			s = Blue(' '.join(self.sort_info())),
-			n = Green(self.proto.coin + ' ' + self.proto.chain_name.upper()),
-			b = self.rpc.blockcount.hl(color=color),
-			d = make_timestr(self.rpc.cur_date),
-			t = f'Total {self.proto.dcoin}: {self.total.hl(color=color)}\n' if hasattr(self,'total') else '',
-		)
-
-	def subheader(self,color):
-		return ''
-
-	def footer(self,color):
-		return '\nTOTAL: {} {}\n'.format(
-			self.total.hl(color=color) if hasattr(self,'total') else None,
-			self.proto.dcoin
-		) if hasattr(self,'total') else ''
+	def gen_footer(self,color):
+		if hasattr(self,'total'):
+			yield 'TOTAL: {} {}'.format( self.total.hl(color=color), self.proto.dcoin )
 
 	def set_amt_widths(self,data):
 		# width of amts column: min(7,width of integer part) + len('.') + width of fractional part
@@ -329,11 +312,45 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			min(7,max(len(str(getattr(d,k).to_integral_value())) for d in data)) + 1 + self.disp_prec
 				for k in self.amt_keys}
 
-	async def format(self,display_type,color=True,cached=False,interactive=False,line_processing=None):
+	async def format(self,display_type,color=True,interactive=False,line_processing=None):
 
-		if not cached:
+		async def make_display(color):
 
-			dt = getattr(self.display_type,display_type)
+			def gen_display_hdr():
+
+				Blue,Green = (blue,green) if color else (nocolor,nocolor)
+				Yes,No,All = (green('yes'),red('no'),yellow('all')) if color else ('yes','no','all')
+				sort_info = ' '.join(self.sort_info())
+
+				def fmt_filter(k):
+					return '{}:{}'.format(k,{0:No,1:Yes,2:All}[getattr(self,k)])
+
+				yield '{} (sort order: {}){}'.format(
+					self.hdr_lbl.upper(),
+					Blue(sort_info),
+					' ' * (self.cols - len('{} (sort order: {})'.format(self.hdr_lbl,sort_info))) )
+
+				if self.filters:
+					yield 'Filters: {}{}'.format(
+						' '.join(map(fmt_filter,self.filters)),
+						' ' * len(self.filters) )
+
+				yield 'Network: {}'.format(Green(
+					self.proto.coin + ' ' + self.proto.chain_name.upper() ))
+
+				yield 'Block {} [{}]'.format(
+					self.rpc.blockcount.hl(color=color),
+					make_timestr(self.rpc.cur_date) )
+
+				if hasattr(self,'total'):
+					yield 'Total {}: {}'.format( self.proto.dcoin, self.total.hl(color=color) )
+
+				yield from self.gen_subheader(color)
+
+				yield ''
+
+				if data:
+					yield getattr(self,dt.hdr_fmt_method)(cw,hdr_fs,color)
 
 			self.disp_prec = self.get_disp_prec(wide=dt.detail)
 
@@ -348,7 +365,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				cwh = cw._asdict()
 				fp = self.fs_params
 				hdr_fs = ''.join(fp[name].hdr_fs % ((),cwh[name])[fp[name].hdr_fs_repl]
-					for name in dt.cols if cwh[name]) + '\n'
+					for name in dt.cols if cwh[name])
 				fs = ''.join(fp[name].fs % ((),cwh[name])[fp[name].fs_repl]
 					for name in dt.cols if cwh[name])
 			else:
@@ -364,22 +381,45 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				else:
 					return method(data,cw,fs,color,getattr(self,dt.line_fmt_method))
 
-			self._display_data[display_type] = '{a}{b}\n{c}{d}\n'.format(
-				a = self.header(color),
-				b = self.subheader(color),
-				c = getattr(self,dt.hdr_fmt_method)(cw,hdr_fs,color) if data else '',
-				d = (
-					dt.item_separator.join(get_body(getattr(self,dt.fmt_method))) if data else
-					(nocolor,yellow)[color]('[no data for requested parameters]'))
-			)
+			display_hdr = tuple(gen_display_hdr())
 
-		return self._display_data[display_type] + ('' if interactive else self.footer(color))
+			display_body = tuple(
+				get_body(getattr(self,dt.fmt_method)) if data else
+				[(nocolor,yellow)[color](self.nodata_msg)] )
+
+			return (display_hdr,display_body)
+
+		dt = getattr(self.display_type,display_type)
+
+		if self.use_cached:
+			self.use_cached = False
+			display_hdr = self.display_hdr
+			display_body = self.display_body
+		else:
+			display_hdr,display_body = await make_display(color)
+			if not dt.detail:
+				self.display_hdr = display_hdr
+				self.display_body = display_body
+
+		if interactive:
+			footer = ''
+		else:
+			footer = '\n'.join(self.gen_footer(color))
+			footer = ('\n\n' + footer if footer else '') + '\n'
+
+		return (
+			'\n'.join(display_hdr) + '\n'
+			+ dt.item_separator.join(display_body)
+			+ footer
+		)
 
 	async def view_filter_and_sort(self):
 
 		from ..term import get_char
 
 		prompt = self.prompt.strip() + '\b'
+
+		self.prompt_height = len(prompt.split('\n'))
 		self.no_output = False
 		self.oneshot_msg = None
 
@@ -394,7 +434,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				'' if self.no_output else (
 					clear_screen
 					+ await self.format('squeezed',interactive=True)
-					+ '\n'
+					+ '\n\n'
 					+ (self.oneshot_msg or '')
 					+ prompt
 				),
@@ -471,7 +511,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		async def a_view(self,parent):
 			from ..ui import do_pager
-			do_pager( await parent.format('squeezed',color=True,cached=True) )
+			parent.use_cached = True
+			do_pager( await parent.format('squeezed',color=True) )
 			self.post_view(parent)
 
 		async def a_view_detail(self,parent):

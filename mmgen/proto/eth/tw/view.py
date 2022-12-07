@@ -23,12 +23,9 @@ class EthereumTwView(TwView):
 	def get_disp_prec(self,wide):
 		return self.proto.coin_amt.max_prec if wide else 8
 
-	def subheader(self,color):
-		ret = ''
+	def gen_subheader(self,color):
 		if self.disp_prec == 8:
-			ret += 'Balances truncated to 8 decimal points\n'
+			yield 'Balances truncated to 8 decimal points'
 		if g.cached_balances:
 			from ....color import nocolor,yellow
-			ret += (nocolor,yellow)[color](
-				'WARNING: Using cached balances. These may be out of date!') + '\n'
-		return ret
+			yield (nocolor,yellow)[color]('WARNING: Using cached balances. These may be out of date!')

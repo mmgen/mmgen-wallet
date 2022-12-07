@@ -151,11 +151,9 @@ class TwAddresses(TwView):
 			wide = wide,
 		)
 
-	def subheader(self,color):
+	def gen_subheader(self,color):
 		if self.minconf:
-			return f'Displaying balances with at least {self.minconf} confirmation{suf(self.minconf)}\n'
-		else:
-			return ''
+			yield f'Displaying balances with at least {self.minconf} confirmation{suf(self.minconf)}'
 
 	def squeezed_col_hdr(self,cw,fs,color):
 		return fs.format(
