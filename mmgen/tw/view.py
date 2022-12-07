@@ -325,9 +325,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 	async def format(self,display_type,color=True,interactive=False,line_processing=None):
 
-		async def make_display(color):
+		def make_display():
 
-			def gen_display_hdr():
+			def gen_hdr():
 
 				Blue,Green = (blue,green) if color else (nocolor,nocolor)
 				Yes,No,All = (green('yes'),red('no'),yellow('all')) if color else ('yes','no','all')
@@ -363,12 +363,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				if data and dt.colhdr_fmt_method:
 					yield getattr(self,dt.colhdr_fmt_method)(cw,hdr_fs,color)
 
-			self.disp_prec = self.get_disp_prec(wide=dt.detail)
-
-			if self.has_age and (self.age_fmt in self.age_fmts_date_dependent or dt.detail):
-				await self.set_dates(self.data)
-
-			data = self.disp_data = list(self.filter_data()) # method could be a generator
+			def get_body(method):
+				if line_processing:
+					return getattr(self.line_processing,line_processing).do(
+						method,data,cw,fs,color,getattr(self,dt.line_fmt_method))
+				else:
+					return method(data,cw,fs,color,getattr(self,dt.line_fmt_method))
 
 			if data and dt.need_column_widths:
 				self.set_amt_widths(data)
@@ -382,20 +382,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			else:
 				cw = hdr_fs = fs = None
 
-			def get_body(method):
-				if line_processing:
-					return getattr(self.line_processing,line_processing).do(
-						method,data,cw,fs,color,getattr(self,dt.line_fmt_method))
-				else:
-					return method(data,cw,fs,color,getattr(self,dt.line_fmt_method))
-
-			display_hdr = tuple(gen_display_hdr())
-
-			display_body = tuple(
-				get_body(getattr(self,dt.fmt_method)) if data else
-				[(nocolor,yellow)[color](self.nodata_msg)] )
-
-			return (display_hdr,display_body)
+			return (
+				tuple(gen_hdr()),
+				tuple(
+					get_body(getattr(self,dt.fmt_method)) if data else
+					[(nocolor,yellow)[color](self.nodata_msg.ljust(self.term_width))] )
+			)
 
 		dt = getattr(self.display_type,display_type)
 
@@ -404,7 +396,19 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			display_hdr = self.display_hdr
 			display_body = self.display_body
 		else:
-			display_hdr,display_body = await make_display(color)
+			self.disp_prec = self.get_disp_prec(wide=dt.detail)
+
+			if self.has_age and (self.age_fmt in self.age_fmts_date_dependent or dt.detail):
+				await self.set_dates(self.data)
+
+			dsave = self.disp_data
+			data = self.disp_data = list(self.filter_data()) # method could be a generator
+
+			if data != dsave:
+				self.pos = 0
+
+			display_hdr,display_body = make_display()
+
 			if not dt.detail:
 				self.display_hdr = display_hdr
 				self.display_body = display_body
