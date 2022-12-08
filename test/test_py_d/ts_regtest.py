@@ -365,6 +365,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('alice_twview_date_time',        'twview (age_fmt=date_time)'),
 		('alice_txcreate_info',           'txcreate -i'),
 		('alice_txcreate_info_term',      'txcreate -i (pexpect_spawn)'),
+		('bob_send_to_alice_2addr',       'sending a TX to 2 addresses in Alice’s wallet'),
+		('bob_send_to_alice_reuse',       'sending a TX to a used address in Alice’s wallet'),
+		('generate',                      'mining a block'),
+		('alice_twview_grouped',          'twview (testing ‘grouped’ option for TX and address)'),
 	),
 	'auto_chg': (
 		'automatic change address selection',
@@ -1083,9 +1087,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect('updated successfully')
 		return t
 
-	def _usr_rescan_blockchain(self,user,add_args,expect):
+	def _usr_rescan_blockchain(self,user,add_args,expect=None):
 		t = self.spawn('mmgen-tool',[f'--{user}','rescan_blockchain'] + add_args)
-		t.expect(f'Scanning blocks {expect}')
+		if expect:
+			t.expect(f'Scanning blocks {expect}')
 		t.expect('Done')
 		return t
 
@@ -1502,6 +1507,32 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			return 'skip'
 		return self.alice_txcreate_info(pexpect_spawn=True)
 
+	# send one TX to 2 addrs in Alice’s wallet - required for alice_twview_grouped()
+	def bob_send_to_alice_2addr(self):
+		outputs_cl = self._create_tx_outputs('alice',[('C',1,',0.02'),('C',2,',0.2')])
+		outputs_cl += [self._user_sid('bob')+':C:5']
+		return self.user_txdo('bob','25s',outputs_cl,'1')
+
+	# send to a used addr in Alice’s wallet - required for alice_twview_grouped()
+	def bob_send_to_alice_reuse(self):
+		outputs_cl = self._create_tx_outputs('alice',[('C',1,',0.2')])
+		outputs_cl += [self._user_sid('bob')+':C:5']
+		return self.user_txdo('bob','25s',outputs_cl,'1')
+
+	def alice_twview_grouped(self):
+		t = self.spawn('mmgen-tool',['--alice','twview','interactive=1'])
+		prompt = 'abel:\b'
+		for s,dots in (
+				('o',False),
+				('M',False),
+				('t',True),
+				('q',True),
+			):
+			if dots:
+				t.expect('........')
+			t.expect(prompt,s)
+		return t
+
 	def bob_msgcreate(self):
 		sid1 = self._user_sid('bob')
 		sid2 = self._get_user_subsid('bob','29L')
@@ -1691,7 +1722,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			expect_str2 =  f'Found {u} unspent outputs in {b} blocks' )
 
 	def carol_rescan_blockchain(self):
-		return self._usr_rescan_blockchain('carol',[],'400-407')
+		return self._usr_rescan_blockchain('carol',[])
 
 	def carol_auto_chg1(self):
 		return self._usr_auto_chg( 'carol', self._user_sid('bob') + ':C' )

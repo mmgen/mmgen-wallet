@@ -189,7 +189,7 @@ class TwUnspentOutputs(TwView):
 				v = ' ' + d.vout.fmt( width=cw.vout-1, color=color ) if cw.vout else None,
 				a = d.addr.fmtc( '|' + '.'*(cw.addr-1), width=cw.addr, color=color ) if d.skip == 'addr'
 					else d.addr.fmt( width=cw.addr, color=color ),
-				m = (d.twmmid.fmtc( '.'*cw.mmid, color=color ) if d.skip == 'addr'
+				m = (d.twmmid.fmtc( '.'*cw.mmid, width=cw.mmid, color=color ) if d.skip == 'addr'
 					else d.twmmid.fmt( width=cw.mmid, color=color )) if cw.mmid else None,
 				c = d.comment.fmt2( width=cw.comment, color=color, nullrepl='-' ) if cw.comment else None,
 				A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
