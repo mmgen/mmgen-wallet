@@ -449,8 +449,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			if data != dsave:
 				self.pos = 0
 
+			display_hdr,display_body = make_display()
+
 			if scroll:
-				display_hdr,display_body = make_display()
 				fixed_height = len(display_hdr) + self.prompt_height + 1
 
 				if self.term_height - fixed_height < self.min_scrollable_height:
@@ -464,8 +465,6 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				self.scrollable_height = self.term_height - fixed_height
 				self.max_pos = max(0, len(display_body) - self.scrollable_height)
 				self.pos = min(self.pos,self.max_pos)
-			else:
-				display_hdr,display_body = make_display()
 
 			if not dt.detail:
 				self.display_hdr = display_hdr
@@ -695,7 +694,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 							s = ' ' if parent.scroll else '' ))
 					if parent.scroll:
 						await asyncio.sleep(1.5)
-						msg_r(CUR_UP(1) + ERASE_ALL + '\r')
+						msg_r(CUR_UP(1) + '\r' + ERASE_ALL)
 				else:
 					# action return values:
 					#  True:   action successfully performed
