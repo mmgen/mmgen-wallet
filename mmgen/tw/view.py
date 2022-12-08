@@ -32,6 +32,7 @@ from ..util import msg,msg_r,fmt,die,capfirst,make_timestr
 from ..rpc import rpc_init
 from ..base_obj import AsyncInit
 
+# these are replaced by fake versions in overlay:
 CUR_HOME  = '\033[H'
 CUR_UP    = lambda n: f'\033[{n}A'
 CUR_DOWN  = lambda n: f'\033[{n}B'
@@ -513,18 +514,13 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		prompt += '\b'
 
 		self.cursor_to_end_of_prompt = CUR_RIGHT( len(prompt.split('\n')[-1]) - 2 )
-		clear_screen = (
-			'\n\n' if (opt.no_blank or g.test_suite) else
-			CUR_HOME + ('' if scroll else ERASE_ALL) )
+		clear_screen = '\n\n' if opt.no_blank else CUR_HOME + ('' if scroll else ERASE_ALL)
 
 		if scroll:
 			term = get_term()
 			term.register_cleanup()
 			term.set('noecho')
 			get_char = get_char_raw
-
-		if not (opt.no_blank or g.test_suite):
-			msg_r(CUR_HOME + ERASE_ALL)
 
 		while True:
 

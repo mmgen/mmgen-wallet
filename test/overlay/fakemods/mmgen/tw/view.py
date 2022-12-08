@@ -1,5 +1,12 @@
 import os as overlay_fake_os
 from .view_orig import *
+import mmgen.tw.view_orig as overlay_fake_orig_mod
+
+overlay_fake_orig_mod.CUR_HOME  = '\n[CUR_HOME]\n'
+overlay_fake_orig_mod.CUR_UP    = lambda n: f'\n[CUR_UP({n})]\n'
+overlay_fake_orig_mod.CUR_DOWN  = lambda n: f'\n[CUR_DOWN({n})]\n'
+overlay_fake_orig_mod.CUR_RIGHT = lambda n: f'\n[CUR_RIGHT({n})]\n'
+overlay_fake_orig_mod.ERASE_ALL = '\n[ERASE_ALL]\n'
 
 if overlay_fake_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 
