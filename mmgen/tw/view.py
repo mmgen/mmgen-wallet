@@ -36,7 +36,6 @@ from ..base_obj import AsyncInit
 CUR_HOME  = '\033[H'
 CUR_UP    = lambda n: f'\033[{n}A'
 CUR_DOWN  = lambda n: f'\033[{n}B'
-CUR_RIGHT = lambda n: f'\033[{n}C'
 ERASE_ALL = '\033[0J'
 
 # base class for TwUnspentOutputs,TwAddresses,TwTxHistory:
@@ -508,11 +507,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		self.prompt_width = max(len(l) for l in prompt.split('\n'))
 		self.prompt_height = len(prompt.split('\n'))
-		self.no_output = False
 		self.oneshot_msg = None
 		prompt += '\b'
 
-		self.cursor_to_end_of_prompt = CUR_RIGHT( len(prompt.split('\n')[-1]) - 2 )
 		clear_screen = '\n\n' if opt.no_blank else CUR_HOME + ('' if scroll else ERASE_ALL)
 
 		if scroll:
@@ -529,16 +526,13 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				msg_r('\r' + ''.ljust(self.term_width))
 
 			reply = get_char(
-				'' if self.no_output else (
-					clear_screen
-					+ await self.format('squeezed',interactive=True,scroll=scroll)
-					+ '\n\n'
-					+ (self.oneshot_msg + '\n\n' if self.oneshot_msg and not scroll else '')
-					+ prompt
-				),
+				clear_screen
+				+ await self.format('squeezed',interactive=True,scroll=scroll)
+				+ '\n\n'
+				+ (self.oneshot_msg + '\n\n' if self.oneshot_msg and not scroll else '')
+				+ prompt,
 				immed_chars = self.key_mappings )
 
-			self.no_output = False
 			self.oneshot_msg = '' if self.oneshot_msg else None # tristate, saves previous state
 
 			if reply not in self.key_mappings:
@@ -640,18 +634,13 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		async def a_view(self,parent):
 			from ..ui import do_pager
 			parent.use_cached = True
+			msg_r(CUR_HOME)
 			do_pager( await parent.format('squeezed',color=True) )
-			self.post_view(parent)
 
 		async def a_view_detail(self,parent):
 			from ..ui import do_pager
+			msg_r(CUR_HOME)
 			do_pager( await parent.format('detail',color=True) )
-			self.post_view(parent)
-
-		def post_view(self,parent):
-			if g.platform == 'linux' and parent.oneshot_msg == None:
-				msg_r(parent.cursor_to_end_of_prompt)
-				parent.no_output = True
 
 		async def m_cursor_up(self,parent):
 			parent.pos -= min( parent.pos - 0, 1 )
