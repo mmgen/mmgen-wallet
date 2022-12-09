@@ -133,11 +133,11 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		Minimum value for this configuration: {}
 	"""
 	twidth_errmsg = """
-		Screen is too narrow to display the {}
+		Screen is too narrow to display the {} with current configuration
 		Please resize your screen to at least {} characters and hit any key:
 	"""
 	theight_errmsg = """
-		Terminal window is too small to display the {}
+		Terminal window is too small to display the {} with current configuration
 		Please resize it to at least {} lines and hit any key:
 	"""
 
@@ -263,6 +263,10 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		self.do_sort(key=sort_key,reverse=reverse_sort)
 
+		# get_data() is immediately followed by display header, and get_rpc_data() produces output,
+		# so add NL here (' ' required because CUR_HOME erases preceding blank lines)
+		msg(' ')
+
 	def filter_data(self):
 		return self.data.copy()
 
@@ -319,7 +323,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		minw = sum(widths.values()) + sum(minws.values())
 		varw = sum(varws.values())
 
-		self.min_term_width = max(self.prompt_width,minw) if interactive else minw
+		self.min_term_width = 40 if wide else max(self.prompt_width,minw) if interactive else minw
 		td = self.get_term_dimensions(self.min_term_width)
 		self.term_height = td.height
 		self.term_width = td.width
@@ -491,19 +495,22 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 	async def view_filter_and_sort(self):
 
+		def make_prompt(scroll):
+			if scroll:
+				del self.key_mappings['v']
+				for k in self.scroll_keys['vi']:
+					assert k not in self.key_mappings, f'{k!r} is in key_mappings'
+				self.key_mappings.update(self.scroll_keys['vi'])
+				self.key_mappings.update(self.scroll_keys[g.platform])
+				return self.prompt_scroll.strip()
+			else:
+				return self.prompt.strip()
+
 		from ..term import get_term,get_char,get_char_raw
 
 		scroll = self.scroll = g.scroll
 
-		if scroll:
-			del self.key_mappings['v']
-			for k in self.scroll_keys['vi']:
-				assert k not in self.key_mappings, f'{k!r} is in key_mappings'
-			self.key_mappings.update(self.scroll_keys['vi'])
-			self.key_mappings.update(self.scroll_keys[g.platform])
-			prompt = self.prompt_scroll.strip()
-		else:
-			prompt = self.prompt.strip()
+		prompt = make_prompt(scroll)
 
 		self.prompt_width = max(len(l) for l in prompt.split('\n'))
 		self.prompt_height = len(prompt.split('\n'))
@@ -517,6 +524,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			term.register_cleanup()
 			term.set('noecho')
 			get_char = get_char_raw
+			msg_r(CUR_HOME + ERASE_ALL)
 
 		while True:
 
