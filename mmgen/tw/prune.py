@@ -12,10 +12,11 @@
 tw.prune: Tracking wallet pruned listaddresses class for the MMGen suite
 """
 
-from ..util import msg,rmsg,ymsg
+from ..util import msg,msg_r,rmsg,ymsg
 from ..color import red,green,gray,yellow
 from ..obj import ListItemAttr
 from .addresses import TwAddresses
+from .view import CUR_HOME,ERASE_ALL
 
 class TwAddressesPrune(TwAddresses):
 
@@ -156,9 +157,15 @@ class TwAddressesPrune(TwAddresses):
 				else:
 					e.tag = True
 
+			if parent.scroll:
+				msg_r(CUR_HOME + ERASE_ALL)
+
 		def a_unprune(self,parent):
 			for addrnum in self.get_addrnums(parent,'unprune'):
 				parent.disp_data[addrnum-1].tag = False
+
+			if parent.scroll:
+				msg_r(CUR_HOME + ERASE_ALL)
 
 		def a_clear_prune_list(self,parent):
 			for d in parent.data:

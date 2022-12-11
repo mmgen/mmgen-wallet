@@ -551,6 +551,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 			action = self.key_mappings[reply]
 
+			if scroll and action.startswith('a_'): # 'a_' actions may require line input
+				term.set('echo')
+
 			if hasattr(self.action,action):
 				if action.startswith('m_'): # scrolling actions
 					self.use_cached = True
@@ -558,16 +561,13 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			elif action.startswith('s_'): # put here to allow overriding by action method
 				self.do_sort(action[2:])
 			elif hasattr(self.item_action,action):
-				if scroll:
-					term.set('echo') # item actions may require user input
 				await self.item_action().run(self,action)
-				if scroll:
-					term.set('noecho')
 			elif action == 'a_quit':
 				msg('')
-				if scroll:
-					term.set('echo')
 				return self.disp_data
+
+			if scroll and action.startswith('a_'):
+				term.set('noecho')
 
 	@property
 	def blank_prompt(self):
