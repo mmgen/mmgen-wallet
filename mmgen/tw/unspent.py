@@ -121,35 +121,33 @@ class TwUnspentOutputs(TwView):
 		return data
 
 	def get_column_widths(self,data,wide,interactive):
-		# min screen width: 80 cols
-		# num txid vout addr [mmid] [comment] amt [amt2] date
-		maxws_nice = {'txid': 12}
-		if self.show_mmid:
-				maxws_nice['addr'] = 16
 
+		show_mmid = self.show_mmid or wide
+
+		# num txid vout addr [mmid] [comment] amt [amt2] date
 		return self.compute_column_widths(
 			widths = { # fixed cols
 				'num': max(2,len(str(len(data)))+1),
 				'vout': 4,
-				'mmid': max(len(d.twmmid.disp) for d in data) if self.show_mmid else 0,
+				'mmid': max(len(d.twmmid.disp) for d in data) if show_mmid else 0,
 				'amt': self.amt_widths['amt'],
 				'amt2': self.amt_widths.get('amt2',0),
 				'block': self.age_col_params['block'][0] if wide else 0,
 				'date_time': self.age_col_params['date_time'][0] if wide else 0,
 				'date': self.age_w,
-				'spc': 7 if self.show_mmid else 5, # 7(5) spaces in fs
+				'spc': 7 if show_mmid else 5, # 7(5) spaces in fs
 			},
 			maxws = { # expandable cols
 				'txid': self.txid_w,
 				'addr': max(len(d.addr) for d in data),
-				'comment': max(d.comment.screen_width for d in data) if self.show_mmid else 0,
+				'comment': max(d.comment.screen_width for d in data) if show_mmid else 0,
 			},
 			minws = {
 				'txid': 7,
 				'addr': 10,
-				'comment': len('Comment') if self.show_mmid else 0,
+				'comment': len('Comment') if show_mmid else 0,
 			},
-			maxws_nice = maxws_nice,
+			maxws_nice = {'txid':12, 'addr':16} if show_mmid else {'txid':12},
 			wide = wide,
 			interactive = interactive,
 		)

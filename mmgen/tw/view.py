@@ -495,26 +495,23 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 	async def view_filter_and_sort(self):
 
-		def make_prompt(scroll):
+		def make_key_mappings(scroll):
 			if scroll:
 				for k in self.scroll_keys['vi']:
 					assert k not in self.key_mappings, f'{k!r} is in key_mappings'
 				self.key_mappings.update(self.scroll_keys['vi'])
 				self.key_mappings.update(self.scroll_keys[g.platform])
-				s = '\nScrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom'
-			else:
-				s = ''
-			return self.prompt_fs.strip().format(s=s)
-
-		from ..term import get_term,get_char,get_char_raw
+			return self.key_mappings
 
 		scroll = self.scroll = g.scroll
 
-		prompt = make_prompt(scroll)
+		key_mappings = make_key_mappings(scroll)
+		prompt = self.prompt_fs.strip().format(
+			s='\nScrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom' if scroll else '' )
 
 		self.prompt_width = max(len(l) for l in prompt.split('\n'))
 		self.prompt_height = len(prompt.split('\n'))
-		self.oneshot_msg = None
+		self.oneshot_msg = ''
 		prompt += '\b'
 
 		clear_screen = '\n\n' if opt.no_blank else CUR_HOME + ('' if scroll else ERASE_ALL)
@@ -539,17 +536,17 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				+ '\n\n'
 				+ (self.oneshot_msg + '\n\n' if self.oneshot_msg and not scroll else '')
 				+ prompt,
-				immed_chars = self.key_mappings )
+				immed_chars = key_mappings )
 
-			self.oneshot_msg = '' if self.oneshot_msg else None # tristate, saves previous state
+			self.oneshot_msg = ''
 
-			if reply not in self.key_mappings:
+			if reply not in key_mappings:
 				if not scroll:
 					msg_r('\ninvalid keypress ')
 					await asyncio.sleep(0.3)
 				continue
 
-			action = self.key_mappings[reply]
+			action = key_mappings[reply]
 
 			if scroll and action.startswith('a_'): # 'a_' actions may require line input
 				term.set('echo')
