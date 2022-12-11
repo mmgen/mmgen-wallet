@@ -119,7 +119,7 @@ class TwAddressesPrune(TwAddresses):
 				else:
 					msg('\nInvalid keypress')
 
-		def a_prune(self,parent):
+		async def a_prune(self,parent):
 
 			def do_entry(desc,n,addrnum,e):
 				if auto[desc]:
@@ -160,13 +160,13 @@ class TwAddressesPrune(TwAddresses):
 			if parent.scroll:
 				msg_r(CUR_HOME + ERASE_ALL)
 
-		def a_unprune(self,parent):
+		async def a_unprune(self,parent):
 			for addrnum in self.get_addrnums(parent,'unprune'):
 				parent.disp_data[addrnum-1].tag = False
 
 			if parent.scroll:
 				msg_r(CUR_HOME + ERASE_ALL)
 
-		def a_clear_prune_list(self,parent):
+		async def a_clear_prune_list(self,parent):
 			for d in parent.data:
 				d.tag = False

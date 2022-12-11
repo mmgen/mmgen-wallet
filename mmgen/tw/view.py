@@ -38,6 +38,17 @@ CUR_UP    = lambda n: f'\033[{n}A'
 CUR_DOWN  = lambda n: f'\033[{n}B'
 ERASE_ALL = '\033[0J'
 
+# decorator for action.run():
+def enable_echo(orig_func):
+	async def f(self,parent,action_method):
+		if parent.scroll:
+			parent.term.set('echo')
+		ret = await orig_func(self,parent,action_method)
+		if parent.scroll:
+			parent.term.set('noecho')
+		return ret
+	return f
+
 # base class for TwUnspentOutputs,TwAddresses,TwTxHistory:
 class TwView(MMGenObject,metaclass=AsyncInit):
 
@@ -495,6 +506,14 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 	async def view_filter_and_sort(self):
 
+		action_map = {
+			'a_': 'action',
+			's_': 'sort_action',
+			'd_': 'display_action',
+			'm_': 'scroll_action',
+			'i_': 'item_action',
+		}
+
 		def make_key_mappings(scroll):
 			if scroll:
 				for k in self.scroll_keys['vi']:
@@ -506,6 +525,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		scroll = self.scroll = g.scroll
 
 		key_mappings = make_key_mappings(scroll)
+		action_classes = { k: getattr(self,action_map[v[:2]])() for k,v in key_mappings.items() }
+		action_methods = { k: getattr(v,key_mappings[k]) for k,v in action_classes.items() }
 		prompt = self.prompt_fs.strip().format(
 			s='\nScrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom' if scroll else '' )
 
@@ -516,10 +537,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		clear_screen = '\n\n' if opt.no_blank else CUR_HOME + ('' if scroll else ERASE_ALL)
 
+		from ..term import get_term,get_char,get_char_raw
+
 		if scroll:
-			term = get_term()
-			term.register_cleanup()
-			term.set('noecho')
+			self.term = get_term()
+			self.term.register_cleanup()
+			self.term.set('noecho')
 			get_char = get_char_raw
 			msg_r(CUR_HOME + ERASE_ALL)
 
@@ -540,31 +563,18 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 			self.oneshot_msg = ''
 
-			if reply not in key_mappings:
-				if not scroll:
-					msg_r('\ninvalid keypress ')
-					await asyncio.sleep(0.3)
-				continue
-
-			action = key_mappings[reply]
-
-			if scroll and action.startswith('a_'): # 'a_' actions may require line input
-				term.set('echo')
-
-			if hasattr(self.action,action):
-				if action.startswith('m_'): # scrolling actions
-					self.use_cached = True
-				await self.action().run(self,action)
-			elif action.startswith('s_'): # put here to allow overriding by action method
-				self.do_sort(action[2:])
-			elif hasattr(self.item_action,action):
-				await self.item_action().run(self,action)
-			elif action == 'a_quit':
+			if reply in key_mappings:
+				ret = action_classes[reply].run(self,action_methods[reply])
+				if type(ret).__name__ == 'coroutine':
+					await ret
+			elif reply == 'q':
 				msg('')
+				if self.scroll:
+					self.term.set('echo')
 				return self.disp_data
-
-			if scroll and action.startswith('a_'):
-				term.set('noecho')
+			elif not scroll:
+				msg_r('\ninvalid keypress ')
+				await asyncio.sleep(0.3)
 
 	@property
 	def blank_prompt(self):
@@ -581,23 +591,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 	class action:
 
-		async def run(self,parent,action):
-			ret = getattr(self,action)(parent)
-			if type(ret).__name__ == 'coroutine':
-				await ret
-
-		def d_days(self,parent):
-			af = parent.age_fmts
-			parent.age_fmt = af[(af.index(parent.age_fmt) + 1) % len(af)]
-			if parent.update_widths_on_age_toggle: # TODO
-				pass
-
-		def d_redraw(self,parent):
-			msg_r(CUR_HOME + ERASE_ALL)
-
-		def d_reverse(self,parent):
-			parent.data.reverse()
-			parent.reverse = not parent.reverse
+		@enable_echo
+		async def run(self,parent,action_method):
+			return await action_method(parent)
 
 		async def a_print_detail(self,parent):
 			return await self._print(parent,output_type='detail')
@@ -647,27 +643,10 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			msg_r(CUR_HOME)
 			do_pager( await parent.format('detail',color=True) )
 
-		async def m_cursor_up(self,parent):
-			parent.pos -= min( parent.pos - 0, 1 )
-
-		async def m_cursor_down(self,parent):
-			parent.pos += min( parent.max_pos - parent.pos, 1 )
-
-		async def m_pg_up(self,parent):
-			parent.pos -= min( parent.scrollable_height, parent.pos - 0 )
-
-		async def m_pg_down(self,parent):
-			parent.pos += min( parent.scrollable_height, parent.max_pos - parent.pos )
-
-		async def m_top(self,parent):
-			parent.pos = 0
-
-		async def m_bot(self,parent):
-			parent.pos = parent.max_pos
-
 	class item_action:
 
-		async def run(self,parent,action):
+		@enable_echo
+		async def run(self,parent,action_method):
 
 			if not parent.disp_data:
 				return
@@ -695,7 +674,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					#  None:   action aborted by user or no action performed
 					#  False:  an error occurred
 					#  'redo': user will be re-prompted for item number
-					ret = await getattr(self,action)(parent,idx)
+					ret = await action_method(parent,idx)
 					if ret != 'redo':
 						break
 					await asyncio.sleep(0.5)
@@ -706,7 +685,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					CUR_HOME + ERASE_ALL +
 					await parent.format(display_type='squeezed',interactive=True,scroll=True) )
 
-		async def a_balance_refresh(self,parent,idx):
+		async def i_balance_refresh(self,parent,idx):
 			if not parent.keypress_confirm(
 					f'Refreshing tracking wallet {parent.item_desc} #{idx}.  Is this what you want?'):
 				return 'redo'
@@ -714,7 +693,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			await parent.get_data()
 			parent.oneshot_msg = yellow(f'{parent.proto.dcoin} balance for account #{idx} refreshed')
 
-		async def a_addr_delete(self,parent,idx):
+		async def i_addr_delete(self,parent,idx):
 			if not parent.keypress_confirm(
 					'Removing {} {} from tracking wallet.  Is this what you want?'.format(
 						parent.item_desc, red(f'#{idx}') )):
@@ -728,7 +707,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				parent.oneshot_msg = red('Address could not be removed')
 				return False
 
-		async def a_comment_add(self,parent,idx):
+		async def i_comment_add(self,parent,idx):
 
 			async def do_comment_add(comment):
 
@@ -766,3 +745,65 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					return 'redo'
 
 			return await do_comment_add(res)
+
+	class scroll_action:
+
+		def run(self,parent,action_method):
+			self.use_cached = True
+			return action_method(parent)
+
+		def m_cursor_up(self,parent):
+			parent.pos -= min( parent.pos - 0, 1 )
+
+		def m_cursor_down(self,parent):
+			parent.pos += min( parent.max_pos - parent.pos, 1 )
+
+		def m_pg_up(self,parent):
+			parent.pos -= min( parent.scrollable_height, parent.pos - 0 )
+
+		def m_pg_down(self,parent):
+			parent.pos += min( parent.scrollable_height, parent.max_pos - parent.pos )
+
+		def m_top(self,parent):
+			parent.pos = 0
+
+		def m_bot(self,parent):
+			parent.pos = parent.max_pos
+
+	class sort_action:
+
+		def run(self,parent,action_method):
+			return action_method(parent)
+
+		def s_addr(self,parent):
+			parent.do_sort('addr')
+
+		def s_age(self,parent):
+			parent.do_sort('age')
+
+		def s_amt(self,parent):
+			parent.do_sort('amt')
+
+		def s_txid(self,parent):
+			parent.do_sort('txid')
+
+		def s_twmmid(self,parent):
+			parent.do_sort('twmmid')
+
+		def s_reverse(self,parent):
+			parent.data.reverse()
+			parent.reverse = not parent.reverse
+
+	class display_action:
+
+		def run(self,parent,action_method):
+			return action_method(parent)
+
+		def d_days(self,parent):
+			af = parent.age_fmts
+			parent.age_fmt = af[(af.index(parent.age_fmt) + 1) % len(af)]
+			if parent.update_widths_on_age_toggle: # TODO
+				pass
+
+		def d_redraw(self,parent):
+			msg_r(CUR_HOME + ERASE_ALL)

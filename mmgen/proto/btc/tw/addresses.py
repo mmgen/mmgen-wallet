@@ -33,17 +33,16 @@ Actions: [q]uit menu, r[e]draw, add [l]abel:
 		'a':'s_amt',
 		'A':'s_age',
 		'M':'s_twmmid',
-		'r':'d_reverse',
+		'r':'s_reverse',
 		'D':'d_days',
 		'e':'d_redraw',
 		'E':'d_showempty',
 		'u':'d_showused',
 		'L':'d_all_labels',
-		'q':'a_quit',
 		'v':'a_view',
 		'w':'a_view_detail',
 		'p':'a_print_detail',
-		'l':'a_comment_add' }
+		'l':'i_comment_add' }
 
 	async def get_rpc_data(self):
 

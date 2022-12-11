@@ -40,17 +40,16 @@ Actions: [q]uit menu, [p]rint, r[e]draw, add [l]abel:
 		'a':'s_amt',
 		'd':'s_addr',
 		'A':'s_age',
-		'r':'d_reverse',
 		'M':'s_twmmid',
+		'r':'s_reverse',
 		'D':'d_days',
 		'o':'d_group',
 		'm':'d_mmid',
 		'e':'d_redraw',
-		'q':'a_quit',
 		'p':'a_print_detail',
 		'v':'a_view',
 		'w':'a_view_detail',
-		'l':'a_comment_add' }
+		'l':'i_comment_add' }
 
 	async def get_rpc_data(self):
 		# bitcoin-cli help listunspent:

@@ -182,7 +182,10 @@ class TwTxHistory(TwView):
 	def dump_fn_pfx(self):
 		return 'transaction-history' + (f'-since-block-{self.sinceblock}' if self.sinceblock else '')
 
-	class action(TwView.action):
+	class sort_action(TwView.sort_action):
+
+		def s_blockheight(self,parent):
+			parent.do_sort('blockheight')
 
 		def s_amt(self,parent):
 			parent.do_sort('amt')
@@ -191,6 +194,8 @@ class TwTxHistory(TwView):
 		def s_total_amt(self,parent):
 			parent.do_sort('total_amt')
 			parent.show_total_amt = True
+
+	class display_action(TwView.display_action):
 
 		def d_show_txid(self,parent):
 			parent.show_txid = not parent.show_txid

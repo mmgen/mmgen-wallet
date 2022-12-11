@@ -362,10 +362,7 @@ class TwAddresses(TwView):
 		elif False in res:
 			return False
 
-	class action(TwView.action):
-
-		def s_amt(self,parent):
-			parent.do_sort('amt')
+	class display_action(TwView.display_action):
 
 		def d_showempty(self,parent):
 			parent.showempty = not parent.showempty

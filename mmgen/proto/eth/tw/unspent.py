@@ -54,17 +54,16 @@ Actions: [q]uit menu, [D]elete addr, add [l]abel, [R]efresh balance:
 	key_mappings = {
 		'a':'s_amt',
 		'd':'s_addr',
-		'r':'d_reverse',
+		'r':'s_reverse',
 		'M':'s_twmmid',
 		'm':'d_mmid',
 		'e':'d_redraw',
-		'q':'a_quit',
 		'p':'a_print_detail',
 		'v':'a_view',
 		'w':'a_view_detail',
-		'l':'a_comment_add',
-		'D':'a_addr_delete',
-		'R':'a_balance_refresh' }
+		'l':'i_comment_add',
+		'D':'i_addr_delete',
+		'R':'i_balance_refresh' }
 
 	no_data_errmsg = 'No accounts in tracking wallet!'
 
