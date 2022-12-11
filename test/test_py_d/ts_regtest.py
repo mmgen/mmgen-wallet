@@ -1413,7 +1413,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect(r'add \[l\]abel:.','l',regex=True)
 		t.expect(r"Enter unspent.*return to main menu\):.",output+'\n',regex=True)
 		t.expect(r"Enter label text.*:.",comment+'\n',regex=True)
-		t.expect(r'\[q\]uit view, .*?:.','q',regex=True)
+		t.expect(r'\[q\]uit menu, .*?:.','q',regex=True)
 		return t
 
 	def _alice_listaddresses_interactive(self,expect=(),expect_menu=()):

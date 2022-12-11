@@ -45,18 +45,11 @@ class EthereumTwUnspentOutputs(EthereumTwView,TwUnspentOutputs):
 	desc    = 'account balances'
 	item_desc = 'account'
 	dump_fn_pfx = 'balances'
-	prompt = """
-Sort options: [a]mount, a[d]dress, [r]everse, [M]mgen addr
+	prompt_fs = """
+Sort options: [a]mount, a[d]dr, [M]mgen addr, [r]everse
 Display options: show [m]mgen addr, r[e]draw screen
-View options: [q]uit view, [p]rint to file, [v]iew, [w]ide view
-Actions: [D]elete addr, add [l]abel, [R]efresh balance:
-"""
-	prompt_scroll = """
-Sort options: [a]mount, a[d]dress, [r]everse, [M]mgen addr
-Display options: show [m]mgen addr, r[e]draw screen
-View options: [q]uit view, [p]rint to file, [w]ide view
-Scrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom
-Actions: [D]elete addr, add [l]abel, [R]efresh balance:
+View/Print: pager [v]iew, [w]ide pager view, [p]rint to file{s}
+Actions: [q]uit menu, [D]elete addr, add [l]abel, [R]efresh balance:
 """
 	key_mappings = {
 		'a':'s_amt',
@@ -121,7 +114,6 @@ Actions: [D]elete addr, add [l]abel, [R]efresh balance:
 
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
-	prompt_fs = 'Total to spend: {} {}\n\n'
 	has_amt2 = True
 
 	async def __init__(self,proto,*args,**kwargs):

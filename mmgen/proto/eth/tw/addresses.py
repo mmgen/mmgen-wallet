@@ -21,18 +21,11 @@ from .rpc import EthereumTwRPC
 class EthereumTwAddresses(TwAddresses,EthereumTwView,EthereumTwRPC):
 
 	has_age = False
-	prompt = """
+	prompt_fs = """
 Sort options: [a]mt, [M]mgen addr, [r]everse
-Filters: show [E]mpty addrs, all [L]abels
-View/Print: pager [v]iew, [w]ide view, [p]rint
-Actions: [q]uit view, r[e]draw, [D]elete addr, add [l]abel:
-"""
-	prompt_scroll = """
-Sort options: [a]mt, [M]mgen addr, [r]everse
-Filters: show [E]mpty addrs, all [L]abels
-View/Print: [w]ide view, [p]rint
-Scrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom
-Actions: [q]uit view, r[e]draw, [D]elete addr, add [l]abel:
+Filters: show [E]mpty addrs, show all [L]abels
+View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}
+Actions: [q]uit menu, r[e]draw, [D]elete addr, add [l]abel:
 """
 	key_mappings = {
 		'a':'s_amt',

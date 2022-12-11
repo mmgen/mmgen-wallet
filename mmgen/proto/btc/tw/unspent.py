@@ -29,18 +29,11 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 	item_desc = 'unspent output'
 	no_data_errmsg = 'No unspent outputs in tracking wallet!'
 	dump_fn_pfx = 'listunspent'
-	prompt_fs = 'Total to spend, excluding fees: {} {}\n\n'
-	prompt = """
-Sort options: [t]xid, [a]mount, a[d]dr, [A]ge, [r]everse, [M]mid
-Display options: toggle [D]ays/date, show gr[o]up, show [m]mid
-View options: pager [v]iew, [w]ide view
-Actions: [q]uit view, [p]rint, r[e]draw, add [l]abel:
-"""
-	prompt_scroll = """
-Sort options: [t]xid, [a]mount, a[d]dr, [A]ge, [r]everse, [M]mid
-Display options: toggle [D]ays/date, show gr[o]up, show [m]mid
-Scrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom
-View/Actions: [w]ide view, [q]uit, [p]rint, r[e]draw, add [l]abel:
+	prompt_fs = """
+Sort options: [t]xid, [a]mount, [A]ge, a[d]dr, [M]mgen addr, [r]everse
+Column options: toggle [D]ays/date/confs/block, gr[o]up, show [m]mgen addr
+View options: pager [v]iew, [w]ide pager view{s}
+Actions: [q]uit menu, [p]rint, r[e]draw, add [l]abel:
 """
 	key_mappings = {
 		't':'s_txid',

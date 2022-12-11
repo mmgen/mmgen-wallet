@@ -497,14 +497,14 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		def make_prompt(scroll):
 			if scroll:
-				del self.key_mappings['v']
 				for k in self.scroll_keys['vi']:
 					assert k not in self.key_mappings, f'{k!r} is in key_mappings'
 				self.key_mappings.update(self.scroll_keys['vi'])
 				self.key_mappings.update(self.scroll_keys[g.platform])
-				return self.prompt_scroll.strip()
+				s = '\nScrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom'
 			else:
-				return self.prompt.strip()
+				s = ''
+			return self.prompt_fs.strip().format(s=s)
 
 		from ..term import get_term,get_char,get_char_raw
 

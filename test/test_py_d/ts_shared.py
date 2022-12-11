@@ -53,7 +53,7 @@ class TestSuiteShared(object):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
-		expect_pat = r'\[q\]uit view, .*?:.'
+		expect_pat = r'\[q\]uit menu, .*?:.'
 		delete_pat = r'Enter account number .*:.'
 		confirm_pat = r'Is this what you want.*:.'
 

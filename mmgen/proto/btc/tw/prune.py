@@ -17,13 +17,12 @@ from .addresses import BitcoinTwAddresses
 
 class BitcoinTwAddressesPrune(BitcoinTwAddresses,TwAddressesPrune):
 
-	prompt = """
-Sort options: [a]mt, [A]ge, [M]mid, [r]everse
+	prompt_fs = """
+Sort options: [a]mt, [A]ge, [M]mgen addr, [r]everse
 Column options: toggle [D]ays/date/confs/block
 Filters: show [E]mpty addrs, [U]sed addrs, all [L]abels
-View/Print: pager [v]iew, [w]ide view
-Actions: [q]uit pruning, r[e]draw,
-Pruning: [p]rune, [u]nprune, [c]lear prune list:
+View/Actions: pager [v]iew, [w]ide view, r[e]draw{s}
+Pruning: [q]uit pruning, [p]rune, [u]nprune, [c]lear prune list:
 """
 	key_mappings = {
 		'a':'s_amt',

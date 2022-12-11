@@ -22,19 +22,12 @@ from .rpc import BitcoinTwRPC
 class BitcoinTwAddresses(TwAddresses,BitcoinTwRPC):
 
 	has_age = True
-	prompt = """
+	prompt_fs = """
 Sort options: [a]mt, [A]ge, [M]mgen addr, [r]everse
 Column options: toggle [D]ays/date/confs/block
 Filters: show [E]mpty addrs, [u]sed addrs, all [L]abels
-View/Print: pager [v]iew, [w]ide view, [p]rint
-Actions: [q]uit view, r[e]draw, add [l]abel:
-"""
-	prompt_scroll = """
-Sort options: [a]mt, [A]ge, [M]mgen addr, [r]everse
-Column options: toggle [D]ays/date/confs/block
-Filters: show [E]mpty addrs, [u]sed addrs, all [L]abels
-Scrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom
-Actions: [w]ide view, [q]uit, [p]rint, r[e]draw, add [l]abel:
+View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}
+Actions: [q]uit menu, r[e]draw, add [l]abel:
 """
 	key_mappings = {
 		'a':'s_amt',

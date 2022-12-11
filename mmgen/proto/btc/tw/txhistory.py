@@ -230,18 +230,11 @@ class BitcoinTwTxHistory(TwTxHistory,BitcoinTwRPC):
 	desc = 'transaction history'
 	item_desc = 'transaction'
 	no_data_errmsg = 'No transactions in tracking wallet!'
-	prompt = """
-Sorting: [t]xid, [a]mt, total a[m]t, [A]ge, block[n]um, [r]everse
-Column opts: toggle [D]ays/date/confs/block, tx[i]d, [T]otal amt
-View/Print: pager [v]iew, full [V]iew, screen [p]rint, full [P]rint
-Filters/Actions: show [u]nconfirmed, [q]uit view, r[e]draw:
-"""
-	prompt_scroll = """
-Sorting: [t]xid, [a]mt, total a[m]t, [A]ge, block[n]um, [r]everse
-Column opts: toggle [D]ays/date/confs/block, tx[i]d, [T]otal amt
-View/Print: full [V]iew, screen [p]rint, full [P]rint
-Scrolling: k=up, j=down, b=pgup, f=pgdown, g=top, G=bottom
-Filters/Actions: show [u]nconfirmed, [q]uit view, r[e]draw:
+	prompt_fs = """
+Sort options: [t]xid, [a]mt, total a[m]t, [A]ge, block[n]um, [r]everse
+Column options: toggle [D]ays/date/confs/block, tx[i]d, [T]otal amt
+View/Print: pager [v]iew, full pager [V]iew, [p]rint, full [P]rint{s}
+Filters/Actions: show [u]nconfirmed, [q]uit menu, r[e]draw:
 """
 	key_mappings = {
 		'A':'s_age',

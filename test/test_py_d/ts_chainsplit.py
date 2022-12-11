@@ -91,7 +91,7 @@ class TestSuiteChainsplit(TestSuiteRegtest):
 			'--outdir='+self.tmpdir,
 			'--tx-fees=0.0001,0.0003',
 			sid+':S:1',sid+':S:2'])
-		t.expect(r'\[q\]uit view, .*?:.','q', regex=True)
+		t.expect(r'\[q\]uit menu, .*?:.','q', regex=True)
 		t.expect('outputs to spend: ','1\n')
 
 		for tx in ('timelocked','split'):
