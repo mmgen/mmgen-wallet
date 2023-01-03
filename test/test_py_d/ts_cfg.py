@@ -29,6 +29,10 @@ class TestSuiteCfg(TestSuiteBase):
 		('altered_sample',           (40,'init with user-modified cfg sample file', [])),
 		('old_sample',               (40,'init with old v2 cfg sample file', [])),
 		('old_sample_bad_var',       (40,'init with old v2 cfg sample file and bad variable in mmgen.cfg', [])),
+		('autoset_opts',             (40,'setting autoset opts', [])),
+		('autoset_opts_cmdline',     (40,'setting autoset opts (override on cmdline)', [])),
+		('autoset_opts_bad',         (40,'setting autoset opts (bad value in cfg file)', [])),
+		('autoset_opts_bad_cmdline', (40,'setting autoset opts (bad param on cmdline)', [])),
 		('coin_specific_vars',       (40,'setting coin-specific vars', [])),
 		('chain_names',              (40,'setting chain names', [])),
 		('mnemonic_entry_modes',     (40,'setting mnemonic entry modes', [])),
@@ -155,6 +159,28 @@ class TestSuiteCfg(TestSuiteBase):
 		return self.old_sample_common(
 			old_set       = True,
 			pexpect_spawn = False if g.platform == 'win' else True )
+
+	def _autoset_opts(self,args=[],text='rpc_backend aiohttp\n'):
+		write_to_file( self.path('usr'), text )
+		imsg(yellow(f'Wrote cfg file:\n  {text}'))
+		return self.spawn_test(args=args)
+
+	def autoset_opts(self):
+		return self._autoset_opts(args=['autoset_opts'])
+
+	def autoset_opts_cmdline(self):
+		return self._autoset_opts(args=['--rpc-backend=curl','autoset_opts_cmdline'])
+
+	def _autoset_opts_bad(self,kwargs):
+		t = self._autoset_opts(**kwargs)
+		t.req_exit_val = 1
+		return t
+
+	def autoset_opts_bad(self):
+		return self._autoset_opts_bad({'text':'rpc_backend foo\n'})
+
+	def autoset_opts_bad_cmdline(self):
+		return self._autoset_opts_bad({'args':['--rpc-backend=foo']})
 
 	def coin_specific_vars(self):
 		"""

@@ -161,7 +161,7 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 		' in {!r}'.format(src) if src else '',
 		type(refval).__name__) )
 
-def override_globals_from_cfg_file(ucfg,need_proto):
+def override_globals_from_cfg_file(ucfg,autoset_opts,need_proto):
 	if need_proto:
 		from .protocol import init_proto
 	for d in ucfg.get_lines():
@@ -186,6 +186,8 @@ def override_globals_from_cfg_file(ucfg,need_proto):
 				die( 'CfgFileParseError', f'Parse error in file {ucfg.fn!r}, line {d.lineno}' )
 			val_conv = set_for_type(val,refval,attr,src=ucfg.fn)
 			setattr(cls,attr,val_conv)
+		elif d.name in g.autoset_opts:
+			autoset_opts[d.name] = d.value
 		else:
 			from .util import die
 			die( 'CfgFileParseError', f'{d.name!r}: unrecognized option in {ucfg.fn!r}, line {d.lineno}' )
@@ -356,13 +358,15 @@ def init(
 	from .util import wrap_ripemd160
 	wrap_ripemd160() # ripemd160 used by cfg_file()
 
+	cfgfile_autoset_opts = {}
+
 	if not (opt.skip_cfg_file or opt.bob or opt.alice or g.prog_name == 'mmgen-regtest'):
 		from .cfg import cfg_file
 		# check for changes in system template file - term must be initialized
 		# workaround: g.test_suite is needed by cfg.py, but g is not set from environment yet
 		g.test_suite = False if os.getenv('MMGEN_TEST_SUITE') in (None,'','false','0') else True
 		cfg_file('sample')
-		override_globals_from_cfg_file( cfg_file('usr'), need_proto )
+		override_globals_from_cfg_file( cfg_file('usr'), cfgfile_autoset_opts, need_proto )
 
 	override_globals_and_set_opts_from_env(opt)
 
@@ -421,8 +425,15 @@ def init(
 	# Check user-set opts without modifying them
 	check_usr_opts(po.user_opts)
 
-	# Check all opts against g.autoset_opts, setting if unset
-	check_and_set_autoset_opts()
+	# Check autoset opts, setting if unset
+	for key in g.autoset_opts:
+		if hasattr(opt,key):
+			if getattr(opt,key) is not None:
+				setattr(opt, key, get_autoset_opt(key,getattr(opt,key),src='cmdline'))
+			elif key in cfgfile_autoset_opts:
+				setattr(opt, key, get_autoset_opt(key,cfgfile_autoset_opts[key],src='cfgfile'))
+			else:
+				setattr(opt, key, g.autoset_opts[key].choices[0])
 
 	set_auto_typeset_opts()
 
@@ -662,37 +673,36 @@ def set_auto_typeset_opts():
 			if val is not None: # typeset only if opt is set
 				setattr(opt,key,ref_type(val))
 
-def check_and_set_autoset_opts(): # Raises exception if any check fails
+def get_autoset_opt(key,val,src):
 
-	def nocase_str(key,val,asd):
-		try:
-			return asd.choices.index(val)
-		except:
-			return 'one of'
+	def die_on_err(desc):
+		from .util import fmt_list,die
+		die(
+			'UserOptError',
+			'{a!r}: invalid {b} (not {c}: {d})'.format(
+				a = val,
+				b = {
+					'cmdline': 'parameter for option --{}'.format(key.replace('_','-')),
+					'cfgfile': 'value for cfg file option {!r}'.format(key)
+				}[src],
+				c = desc,
+				d = fmt_list(data.choices) ))
 
-	def nocase_pfx(key,val,asd):
-		cs = [s.startswith(val.lower()) for s in asd.choices]
-		if cs.count(True) == 1:
-			return cs.index(True)
-		else:
-			return 'unique substring of'
+	class opt_type:
 
-	for key,asd in g.autoset_opts.items():
-		if hasattr(opt,key):
-			val = getattr(opt,key)
-			if val is None:
-				setattr(opt,key,asd.choices[0])
+		def nocase_str():
+			if val.lower() in data.choices:
+				return val.lower()
 			else:
-				ret = locals()[asd.type](key,val,asd)
-				if type(ret) is str:
-					from .util import fmt_list,die
-					die( 'UserOptError',
-						'{!r}: invalid parameter for option --{} (not {}: {})'.format(
-							val,
-							key.replace('_','-'),
-							ret,
-							fmt_list(asd.choices) ))
-				elif ret is True:
-					setattr(opt,key,val)
-				else:
-					setattr(opt,key,asd.choices[ret])
+				die_on_err('one of')
+
+		def nocase_pfx():
+			cs = [s for s in data.choices if s.startswith(val.lower())]
+			if len(cs) == 1:
+				return cs[0]
+			else:
+				die_on_err('unique substring of')
+
+	data = g.autoset_opts[key]
+
+	return getattr(opt_type,data.type)()

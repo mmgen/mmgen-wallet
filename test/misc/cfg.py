@@ -29,5 +29,9 @@ if cmd_args:
 				varname,
 				getattr(proto,varname)
 			))
+	elif cmd_args[0] == 'autoset_opts':
+		assert opt.rpc_backend == 'aiohttp', "opt.rpc_backend != 'aiohttp'"
+	elif cmd_args[0] == 'autoset_opts_cmdline':
+		assert opt.rpc_backend == 'curl', "opt.rpc_backend != 'curl'"
 	elif cmd_args[0] == 'mnemonic_entry_modes':
 		msg( 'mnemonic_entry_modes: {}'.format(g.mnemonic_entry_modes) )
