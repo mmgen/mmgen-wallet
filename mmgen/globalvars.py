@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2022 The MMGen Project <mmgen@tuta.io>
+# Copyright (C)2013-2023 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ class GlobalContext(Lockable):
 	prog_name = os.path.basename(sys.argv[0])
 	author    = 'The MMGen Project'
 	email     = '<mmgen@tuta.io>'
-	Cdates    = '2013-2022'
+	Cdates    = '2013-2023'
 
 	is_txprog = prog_name == 'mmgen-regtest' or prog_name.startswith('mmgen-tx')
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # mmgen = Multi-Mode GENerator, a command-line cryptocurrency wallet
-# Copyright (C)2013-2022 The MMGen Project <mmgen@tuta.io>
+# Copyright (C)2013-2023 The MMGen Project <mmgen@tuta.io>
 # Licensed under the GNU General Public License, Version 3:
 #   https://www.gnu.org/licenses
 # Public project repositories:
