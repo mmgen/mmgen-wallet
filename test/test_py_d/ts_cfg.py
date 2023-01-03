@@ -24,14 +24,14 @@ class TestSuiteCfg(TestSuiteBase):
 	color = True
 
 	cmd_group = (
-		('sysfile',            (40,'init with system cfg sample file in place', [])),
-		('no_metadata_sample', (40,'init with unversioned cfg sample file', [])),
-		('altered_sample',     (40,'init with user-modified cfg sample file', [])),
-		('old_sample',         (40,'init with old v2 cfg sample file', [])),
-		('old_sample_bad_var', (40,'init with old v2 cfg sample file and bad variable in mmgen.cfg', [])),
-		('coin_specific_vars', (40,'test setting of coin-specific vars', [])),
-		('chain_names',        (40,'test setting of chain names', [])),
-		('mnemonic_entry_modes',(40,'test setting of mnemonic entry modes', [])),
+		('sysfile',                  (40,'init with system cfg sample file in place', [])),
+		('no_metadata_sample',       (40,'init with unversioned cfg sample file', [])),
+		('altered_sample',           (40,'init with user-modified cfg sample file', [])),
+		('old_sample',               (40,'init with old v2 cfg sample file', [])),
+		('old_sample_bad_var',       (40,'init with old v2 cfg sample file and bad variable in mmgen.cfg', [])),
+		('coin_specific_vars',       (40,'setting coin-specific vars', [])),
+		('chain_names',              (40,'setting chain names', [])),
+		('mnemonic_entry_modes',     (40,'setting mnemonic entry modes', [])),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):

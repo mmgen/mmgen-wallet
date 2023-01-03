@@ -278,9 +278,6 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		# so add NL here (' ' required because CUR_HOME erases preceding blank lines)
 		msg(' ')
 
-	def filter_data(self):
-		return self.data.copy()
-
 	def get_term_dimensions(self,min_cols,min_lines=None):
 		from ..term import get_terminal_size,get_char_raw,_term_dimensions
 		user_resized = False
@@ -572,8 +569,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				if self.scroll:
 					self.term.set('echo')
 				return self.disp_data
-			elif not scroll:
-				msg_r('\ninvalid keypress ')
+			else:
+				if not scroll:
+					msg_r('\ninvalid keypress ')
 				await asyncio.sleep(0.3)
 
 	@property
