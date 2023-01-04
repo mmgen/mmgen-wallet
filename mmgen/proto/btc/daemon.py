@@ -20,7 +20,7 @@ from ...util import list_gen
 from ...daemon import CoinDaemon,_nw,_dd
 
 class bitcoin_core_daemon(CoinDaemon):
-	daemon_data = _dd('Bitcoin Core', 230000, '23.0.0')
+	daemon_data = _dd('Bitcoin Core', 240001, '24.0.1')
 	exec_fn = 'bitcoind'
 	cli_fn = 'bitcoin-cli'
 	testnet_dir = 'testnet3'
@@ -126,7 +126,7 @@ class bitcoin_core_daemon(CoinDaemon):
 		return e.args[0]
 
 class bitcoin_cash_node_daemon(bitcoin_core_daemon):
-	daemon_data = _dd('Bitcoin Cash Node', 24010000, '24.1.0')
+	daemon_data = _dd('Bitcoin Cash Node', 25000000, '25.0.0')
 	exec_fn = 'bitcoind-bchn'
 	cli_fn = 'bitcoin-cli-bchn'
 	rpc_ports = _nw(8432, 18432, 18543) # use non-standard ports (core+100)
