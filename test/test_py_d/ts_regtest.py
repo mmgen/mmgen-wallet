@@ -1515,7 +1515,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	# send to a used addr in Alice’s wallet - required for alice_twview_grouped()
 	def bob_send_to_alice_reuse(self):
-		outputs_cl = self._create_tx_outputs('alice',[('C',1,',0.2')])
+		outputs_cl = self._create_tx_outputs('alice',[('C',1,',0.0111')])
 		outputs_cl += [self._user_sid('bob')+':C:5']
 		return self.user_txdo('bob','25s',outputs_cl,'1')
 

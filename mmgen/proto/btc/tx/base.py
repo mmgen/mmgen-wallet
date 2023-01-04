@@ -17,7 +17,7 @@ from collections import namedtuple
 import mmgen.tx.base as TxBase
 from ....opts import opt
 from ....obj import MMGenObject,MMGenList,HexStr
-from ....util import msg,dmsg,make_chksum_6,die
+from ....util import msg,dmsg,make_chksum_6,die,pp_fmt
 
 def addr2scriptPubKey(proto,addr):
 
@@ -307,8 +307,8 @@ class Base(TxBase.Base):
 
 		check_equal(
 			'sequence numbers',
-			[int(i['nSeq'],16) for i in dtx.txins],
-			[i.sequence or self.proto.max_int for i in self.inputs] )
+			[i['nSeq'] for i in dtx.txins],
+			['{:08x}'.format(i.sequence or self.proto.max_int) for i in self.inputs] )
 
 		check_equal(
 			'inputs',
