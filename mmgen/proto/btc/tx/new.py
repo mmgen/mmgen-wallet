@@ -110,18 +110,18 @@ class New(Base,TxBase.New):
 
 		if not bump:
 			self.inputs.sort_bip69()
-			# do this only after inputs are sorted
-			if opt.rbf:
-				self.inputs[0].sequence = self.proto.max_int - 2 # handles the nLockTime case too
-			elif locktime:
-				self.inputs[0].sequence = self.proto.max_int - 1
+			# Set all sequence numbers to the same value, in conformity with the behavior of most modern wallets:
+			seqnum_val = self.proto.max_int - (2 if opt.rbf else 1 if locktime else 0)
+			for i in self.inputs:
+				i.sequence = seqnum_val
 
 		self.outputs.sort_bip69()
 
-		inputs_list = [
-			{'txid':e.txid,'vout':e.vout,'sequence':e.sequence} if n == 0 and e.sequence else
-			{'txid':e.txid,'vout':e.vout}
-				for n,e in enumerate(self.inputs) ]
+		inputs_list = [{
+				'txid':     e.txid,
+				'vout':     e.vout,
+				'sequence': e.sequence
+			} for n,e in enumerate(self.inputs) ]
 
 		outputs_dict = {e.addr:e.amt for e in self.outputs}
 
