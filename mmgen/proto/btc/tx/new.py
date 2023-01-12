@@ -121,7 +121,7 @@ class New(Base,TxBase.New):
 				'txid':     e.txid,
 				'vout':     e.vout,
 				'sequence': e.sequence
-			} for n,e in enumerate(self.inputs) ]
+			} for e in self.inputs ]
 
 		outputs_dict = {e.addr:e.amt for e in self.outputs}
 

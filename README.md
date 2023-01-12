@@ -1,4 +1,4 @@
-# MMGen = Multi-Mode GENerator
+# MMGen Wallet
 
 ##### An online/offline cryptocurrency wallet for the command line
 
@@ -169,16 +169,18 @@ Linux, Armbian, Raspbian, Windows/MSYS2
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-[**Forum**][4] |
-[Reddit][0] |
-[PGP Public Keys][5] |
-Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
+Homepage:
+[I2P](http://mmgen-wallet.i2p) |
+[Tor](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion)    
+[Keybase](https://keybase.io/mmgen) |
+[Reddit](https://www.reddit.com/user/mmgen-py) |
+[Bitcointalk](https://bitcointalk.org/index.php?topic=567069.new#new)   
+[PGP Signing Key][5]: 5C84 CB45 AEE2 250F 31A6 A570 3F8B 1861 E32B 7DA2    
+Donate (BTC,BCH): *15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w*
 
-[0]: https://www.reddit.com/user/mmgen-py
 [1]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Microsoft-Windows
 [2]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Linux
 [3]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen
-[4]: https://bitcointalk.org/index.php?topic=567069.0
 [5]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Keys
 [6]: https://github.com/mmgen/mmgen/wiki/MMGen-command-help
 [7]: http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
