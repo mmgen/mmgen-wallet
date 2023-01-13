@@ -171,7 +171,13 @@ Linux, Armbian, Raspbian, Windows/MSYS2
 
 Homepage:
 [I2P](http://mmgen-wallet.i2p) |
-[Tor](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion)    
+[Onion](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion)    
+Mirrors:
+[Github](https://github.com/mmgen/mmgen) |
+[Gitlab](https://gitlab.com/mmgen/mmgen) |
+[Gitflic](https://gitflic.ru/project/mmgen/mmgen) |
+[I2P](http://mmgen-wallet.i2p/repos/mmgen/mmgen) |
+[Onion](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion/repos/mmgen/mmgen)    
 [Keybase](https://keybase.io/mmgen) |
 [Reddit](https://www.reddit.com/user/mmgen-py) |
 [Bitcointalk](https://bitcointalk.org/index.php?topic=567069.new#new)   
