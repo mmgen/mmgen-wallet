@@ -170,54 +170,58 @@ Linux, Armbian, Raspbian, Windows/MSYS2
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Homepage:
+[Clearnet](https://mmgen-wallet.cc) |
 [I2P](http://mmgen-wallet.i2p) |
 [Onion](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion)    
-Mirrors:
+Code repository:
+[Clearnet](https://mmgen.org/project/mmgen/mmgen) |
+[I2P](http://mmgen-wallet.i2p/project/mmgen/mmgen) |
+[Onion](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion/project/mmgen/mmgen)    
+Code repository mirrors:
 [Github](https://github.com/mmgen/mmgen) |
 [Gitlab](https://gitlab.com/mmgen/mmgen) |
-[Gitflic](https://gitflic.ru/project/mmgen/mmgen) |
-[I2P](http://mmgen-wallet.i2p/repos/mmgen/mmgen) |
-[Onion](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion/repos/mmgen/mmgen)    
+[Gitflic](https://gitflic.ru/project/mmgen/mmgen)     
 [Keybase](https://keybase.io/mmgen) |
 [Reddit](https://www.reddit.com/user/mmgen-py) |
 [Bitcointalk](https://bitcointalk.org/index.php?topic=567069.new#new)   
 [PGP Signing Key][5]: 5C84 CB45 AEE2 250F 31A6 A570 3F8B 1861 E32B 7DA2    
-Donate (BTC,BCH): *15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w*
+Donate (BTC): *bc1qxmymxf8p5ckvlxkmkwgw8ap5t2xuaffmrpexap*     
+Donate (BCH): *15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w*
 
-[1]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Microsoft-Windows
-[2]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Linux
-[3]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen
-[5]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Keys
-[6]: https://github.com/mmgen/mmgen/wiki/MMGen-command-help
-[7]: http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
-[8]: https://github.com/mmgen/MMGenLive
-[9]: https://cloud.githubusercontent.com/assets/6071028/20677261/6ccab1bc-b58a-11e6-8ab6-094f88befef2.jpg
-[Q]: https://github.com/mmgen/mmgen/wiki/MMGen-Quick-Start-with-Regtest-Mode
-[K]: https://github.com/mmgen/mmgen/wiki/Recovering-Your-Keys-Without-the-MMGen-Software
-[S]: https://github.com/mmgen/mmgen/wiki/Recovering-Your-Keys-Without-the-MMGen-Software#a_mh
-[F]: https://github.com/mmgen/mmgen/wiki/Altcoin-and-Forkcoin-Support
-[W]: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+[1]:  ../../wiki/Install-MMGen-on-Microsoft-Windows
+[2]:  ../../wiki/Install-MMGen-on-Linux
+[3]:  ../../wiki/Getting-Started-with-MMGen
+[5]:  ../../wiki/MMGen-Signing-Keys
+[6]:  ../../wiki/MMGen-command-help
+[7]:  http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
+[8]:  https://github.com/mmgen/MMGenLive
+[9]:  https://cloud.githubusercontent.com/assets/6071028/20677261/6ccab1bc-b58a-11e6-8ab6-094f88befef2.jpg
+[Q]:  ../../wiki/MMGen-Quick-Start-with-Regtest-Mode
+[K]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Software
+[S]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Software#a_mh
+[F]:  ../../wiki/Altcoin-and-Forkcoin-Support
+[W]:  https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 [ew]: https://github.com/spesmilo/electrum/blob/1.9.5/lib/mnemonic.py
 [bw]: https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
 [fl]: https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Contemporary_poetry
-[U]: https://github.com/mmgen/mmgen/wiki/Subwallets
-[X]: https://github.com/mmgen/mmgen/wiki/autosign-[MMGen-command-help]
-[xm]: https://github.com/mmgen/mmgen/wiki/xmrwallet-[MMGen-command-help]
-[G]: https://github.com/mmgen/mmgen/wiki/passgen-[MMGen-command-help]
-[MS]: https://github.com/mmgen/mmgen/wiki/msg-[MMGen-command-help]
-[T]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen#a_ct
-[E]: https://github.com/mmgen/mmgen/wiki/Altcoin-and-Forkcoin-Support#a_tx
-[ag]: https://github.com/mmgen/mmgen/wiki/addrgen-[MMGen-command-help]
-[bx]: https://github.com/mmgen/mmgen/wiki/Altcoin-and-Forkcoin-Support#a_bch
-[mx]: https://github.com/mmgen/mmgen/wiki/Altcoin-and-Forkcoin-Support#a_xmr
-[zx]: https://github.com/mmgen/mmgen/wiki/Altcoin-and-Forkcoin-Support#a_zec
-[ax]: https://github.com/mmgen/mmgen/wiki/Altcoin-and-Forkcoin-Support#a_kg
-[M]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen#a_fee
-[R]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen#a_rbf
-[B]: https://github.com/mmgen/mmgen/wiki/txbump-[MMGen-command-help]
+[U]:  ../../wiki/Subwallets
+[X]:  ../../wiki/autosign-[MMGen-command-help]
+[xm]: ../../wiki/xmrwallet-[MMGen-command-help]
+[G]:  ../../wiki/passgen-[MMGen-command-help]
+[MS]: ../../wiki/msg-[MMGen-command-help]
+[T]:  ../../wiki/Getting-Started-with-MMGen#a_ct
+[E]:  ../../wiki/Altcoin-and-Forkcoin-Support#a_tx
+[ag]: ../../wiki/addrgen-[MMGen-command-help]
+[bx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_bch
+[mx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_xmr
+[zx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_zec
+[ax]: ../../wiki/Altcoin-and-Forkcoin-Support#a_kg
+[M]:  ../../wiki/Getting-Started-with-MMGen#a_fee
+[R]:  ../../wiki/Getting-Started-with-MMGen#a_rbf
+[B]:  ../../wiki/txbump-[MMGen-command-help]
 [69]: https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
-[O]: https://github.com/mmgen/mmgen/wiki/XOR-Seed-Splitting:-Theory-and-Practice
-[ms]: https://github.com/mmgen/mmgen/wiki/seedsplit-[MMGen-command-help]
-[ta]: https://github.com/mmgen/mmgen/wiki/Tool-API
-[ts]: https://github.com/mmgen/mmgen/wiki/Test-Suite
-[L]: https://github.com/mmgen/mmgen/wiki/tool-[MMGen-command-help].md
+[O]:  ../../wiki/XOR-Seed-Splitting:-Theory-and-Practice
+[ms]: ../../wiki/seedsplit-[MMGen-command-help]
+[ta]: ../../wiki/Tool-API
+[ts]: ../../wiki/Test-Suite
+[L]:  ../../wiki/tool-[MMGen-command-help].md
