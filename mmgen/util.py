@@ -158,6 +158,7 @@ def fmt_list(iterable,fmt='dfl',indent=''):
 		'no_spc':    ("','",       "'",    "'"),
 		'min':       (",",         "'",    "'"),
 		'col':       ('\n'+indent, indent, '' ),
+		'list':      ('\n- '+indent, '- '+indent, '' ),
 	}[fmt]
 	return lq + sep.join(str(i) for i in iterable) + rq
 

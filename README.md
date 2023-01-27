@@ -185,8 +185,10 @@ Code repository mirrors:
 [Reddit](https://www.reddit.com/user/mmgen-py) |
 [Bitcointalk](https://bitcointalk.org/index.php?topic=567069.new#new)   
 [PGP Signing Key][5]: 5C84 CB45 AEE2 250F 31A6 A570 3F8B 1861 E32B 7DA2    
-Donate (BTC): *bc1qxmymxf8p5ckvlxkmkwgw8ap5t2xuaffmrpexap*     
-Donate (BCH): *15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w*
+Donate:    
+&nbsp;⊙&nbsp;BTC:&nbsp;*bc1qxmymxf8p5ckvlxkmkwgw8ap5t2xuaffmrpexap*    
+&nbsp;⊙&nbsp;BCH:&nbsp;*15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w*    
+&nbsp;⊙&nbsp;XMR:&nbsp;*8B14zb8wgLuKDdse5p8f3aKpFqRdB4i4xj83b7BHYABHMvHifWxiDXeKRELnaxL5FySfeRRS5girgUvgy8fQKsYMEzPUJ8h*
 
 [1]:  ../../wiki/Install-MMGen-on-Microsoft-Windows
 [2]:  ../../wiki/Install-MMGen-on-Linux
@@ -195,7 +197,7 @@ Donate (BCH): *15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w*
 [6]:  ../../wiki/MMGen-command-help
 [7]:  http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
 [8]:  https://github.com/mmgen/MMGenLive
-[9]:  https://cloud.githubusercontent.com/assets/6071028/20677261/6ccab1bc-b58a-11e6-8ab6-094f88befef2.jpg
+[9]:  https://mmgen.org/images/rxvt-txcreate.jpg
 [Q]:  ../../wiki/MMGen-Quick-Start-with-Regtest-Mode
 [K]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Software
 [S]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Software#a_mh
