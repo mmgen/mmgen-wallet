@@ -152,21 +152,22 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	deterministic = False
 	test_rbf = False
 	cmd_group_in = (
-		('setup',               'regtest (Bob and Alice) mode setup'),
-		('subgroup.misc',       []),
-		('subgroup.init_bob',   []),
-		('subgroup.init_alice', []),
-		('subgroup.fund_users', ['init_bob','init_alice']),
-		('subgroup.msg',        ['init_bob']),
-		('subgroup.twexport',   ['fund_users']),
-		('subgroup.rescan',     ['fund_users']),
-		('subgroup.main',       ['fund_users']),
-		('subgroup.twprune',    ['main']),
-		('subgroup.txhist',     ['main']),
-		('subgroup.label',      ['main']),
-		('subgroup.view',       ['label']),
-		('subgroup.auto_chg',   ['twexport','label']),
-		('stop',                'stopping regtest daemon'),
+		('setup',                   'regtest (Bob and Alice) mode setup'),
+		('subgroup.misc',           []),
+		('subgroup.init_bob',       []),
+		('subgroup.init_alice',     []),
+		('subgroup.fund_users',     ['init_bob','init_alice']),
+		('subgroup.msg',            ['init_bob']),
+		('subgroup.twexport',       ['fund_users']),
+		('subgroup.rescan',         ['fund_users']),
+		('subgroup.main',           ['fund_users']),
+		('subgroup.twprune',        ['main']),
+		('subgroup.txhist',         ['main']),
+		('subgroup.label',          ['main']),
+		('subgroup.view',           ['label']),
+		('subgroup._auto_chg_deps', ['twexport','label']),
+		('subgroup.auto_chg',       ['_auto_chg_deps']),
+		('stop',                    'stopping regtest daemon'),
 	)
 	cmd_subgroups = {
 	'misc': (
@@ -242,7 +243,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	),
 	'main': (
 		'creating, signing, sending and bumping transactions',
-		('bob_add_comment',            "adding an 80-screen-width label (lat+cyr+gr)"),
+		('bob_add_comment1',           "adding an 80-screen-width label (lat+cyr+gr)"),
 		('bob_twview1',                "viewing Bob's tracking wallet"),
 		('bob_split1',                 "splitting Bob's funds"),
 		('generate',                   'mining a block'),
@@ -370,10 +371,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('generate',                      'mining a block'),
 		('alice_twview_grouped',          'twview (testing ‘grouped’ option for TX and address)'),
 	),
+	'_auto_chg_deps': (
+		'automatic change address selection dependencies',
+		('bob_auto_chg_split',    'splitting Bob’s funds (auto-chg-addr dependency)'),
+		('bob_auto_chg_generate', 'mining a block (auto-chg-addr dependency)'),
+	),
 	'auto_chg': (
 		'automatic change address selection',
-		('bob_split3',        'splitting Bob’s funds'),
-		('generate',          'mining a block'),
 		('bob_auto_chg1',     'creating an automatic change address transaction (C)'),
 		('bob_auto_chg2',     'creating an automatic change address transaction (B)'),
 		('bob_auto_chg3',     'creating an automatic change address transaction (S)'),
@@ -425,6 +429,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		self.dfl_mmtype = 'C' if self.proto.coin == 'BCH' else 'B'
 		self.burn_addr = make_burn_addr(self.proto)
+		self.user_sids = {}
 
 	def __del__(self):
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
@@ -479,7 +484,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return joinpath(self.tr.data_dir,'regtest',coin or self.proto.coin.lower(),user)
 
 	def _user_sid(self,user):
-		return os.path.basename(get_file_with_ext(self._user_dir(user),'mmdat'))[:8]
+		if user in self.user_sids:
+			return self.user_sids[user]
+		else:
+			self.user_sids[user] = os.path.basename(get_file_with_ext(self._user_dir(user),'mmdat'))[:8]
+			return self.user_sids[user]
 
 	def _get_user_subsid(self,user,subseed_idx):
 		fn = get_file_with_ext(self._user_dir(user),dfl_wcls.ext)
@@ -1327,7 +1336,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect('Removed label.*in tracking wallet',regex=True)
 		return t
 
-	def bob_add_comment(self):
+	def bob_add_comment1(self):
 		sid = self._user_sid('bob')
 		return self.user_add_comment('bob',sid+':C:1',tw_comment_lat_cyr_gr)
 
@@ -1628,7 +1637,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			msgfile = os.path.join(self.tmpdir,'signatures.json')
 		)
 
-	def bob_split3(self):
+	def bob_auto_chg_split(self):
 		if not self.proto.cap('segwit'):
 			return 'skip'
 		sid = self._user_sid('bob')
@@ -1638,49 +1647,50 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			outputs_cl = [sid+':C:5,0.0135', sid+':L:4'],
 			outputs_list = '1' )
 
-	def _usr_auto_chg(self,user,arg,include_dest=True,choices=1):
-		dest = [self.burn_addr+',0.01'] if include_dest else []
+	def bob_auto_chg_generate(self):
+		if not self.proto.cap('segwit'):
+			return 'skip'
+		return self.generate()
+
+	def _usr_auto_chg(self,user,mmtype,idx,by_mmtype=False,include_dest=True,by_addrtype=False):
+		if mmtype in ('S','B') and not self.proto.cap('segwit'):
+			return 'skip'
+		sid = self._user_sid('bob')
 		t = self.spawn(
 			'mmgen-txcreate',
-			['-d',self.tr.trash_dir,'-B',f'--{user}', arg] + dest)
+				[f'--outdir={self.tr.trash_dir}', '--no-blank', f'--{user}'] +
+				[mmtype if by_mmtype else f'{sid}:{mmtype}'] +
+				([self.burn_addr+',0.01'] if include_dest else [])
+			)
 		return self.txcreate_ui_common(t,
 			menu            = [],
 			inputs          = '1',
 			interactive_fee = '20s',
-			auto_chg_arg    = arg,
-			auto_chg_choices = choices )
+			auto_chg_addr   = f'{sid}:{mmtype}:{idx}')
 
 	def bob_auto_chg1(self):
-		return self._usr_auto_chg( 'bob', self._user_sid('bob') + ':C' )
+		return self._usr_auto_chg( 'bob', 'C', '3' )
 
 	def bob_auto_chg2(self):
-		if not self.proto.cap('segwit'):
-			return 'skip'
-		return self._usr_auto_chg( 'bob', self._user_sid('bob') + ':B' )
+		return self._usr_auto_chg( 'bob', 'B', '2' )
 
 	def bob_auto_chg3(self):
-		if not self.proto.cap('segwit'):
-			return 'skip'
-		return self._usr_auto_chg( 'bob', self._user_sid('bob') + ':S' )
+		return self._usr_auto_chg( 'bob', 'S', '1' )
 
 	def bob_auto_chg4(self):
-		return self._usr_auto_chg( 'bob', self._user_sid('bob') + ':C', include_dest=False )
+		return self._usr_auto_chg( 'bob', 'C', '3', include_dest=False )
 
 	def bob_auto_chg_addrtype1(self):
-		return self._usr_auto_chg( 'bob', 'C', choices=3 )
+		return self._usr_auto_chg( 'bob', 'C', '3', True )
 
 	def bob_auto_chg_addrtype2(self):
-		if not self.proto.cap('segwit'):
-			return 'skip'
-		return self._usr_auto_chg( 'bob', 'B', choices=1 )
+		return self._usr_auto_chg( 'bob', 'B', '2', True )
 
 	def bob_auto_chg_addrtype3(self):
-		if not self.proto.cap('segwit'):
-			return 'skip'
-		return self._usr_auto_chg( 'bob', 'S', choices=1 )
+		return self._usr_auto_chg( 'bob', 'S', '1', True )
 
 	def bob_auto_chg_addrtype4(self):
-		return self._usr_auto_chg( 'bob', 'C', choices=3, include_dest=False )
+		return self._usr_auto_chg( 'bob', 'C', '3', True, include_dest=False )
 
 	def _usr_auto_chg_bad(self,user,al_id,expect):
 		t = self.spawn(
@@ -1725,30 +1735,22 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self._usr_rescan_blockchain('carol',[])
 
 	def carol_auto_chg1(self):
-		return self._usr_auto_chg( 'carol', self._user_sid('bob') + ':C' )
+		return self._usr_auto_chg( 'carol', 'C', '3' )
 
 	def carol_auto_chg2(self):
-		if not self.proto.cap('segwit'):
-			return 'skip'
-		return self._usr_auto_chg( 'carol', self._user_sid('bob') + ':B' )
+		return self._usr_auto_chg( 'carol', 'B', '2' )
 
 	def carol_auto_chg3(self):
-		if not self.proto.cap('segwit'):
-			return 'skip'
-		return self._usr_auto_chg( 'carol', self._user_sid('bob') + ':S' )
+		return self._usr_auto_chg( 'carol', 'S', '1' )
 
 	def carol_auto_chg_addrtype1(self):
-		return self._usr_auto_chg( 'carol', 'C' )
+		return self._usr_auto_chg( 'carol', 'C', '3', True )
 
 	def carol_auto_chg_addrtype2(self):
-		if not self.proto.cap('segwit'):
-			return 'skip'
-		return self._usr_auto_chg( 'carol', 'B' )
+		return self._usr_auto_chg( 'carol', 'B', '2', True )
 
 	def carol_auto_chg_addrtype3(self):
-		if not self.proto.cap('segwit'):
-			return 'skip'
-		return self._usr_auto_chg( 'carol', 'S' )
+		return self._usr_auto_chg( 'carol', 'S', '1', True )
 
 	def carol_auto_chg_bad1(self):
 		return self._usr_auto_chg_bad(
