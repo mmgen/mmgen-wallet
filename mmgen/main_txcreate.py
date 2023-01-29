@@ -49,7 +49,7 @@ opts_data = {
 -I, --inputs=      i  Specify transaction inputs (comma-separated list of
                       MMGen IDs or coin addresses).  Note that ALL unspent
                       outputs associated with each address will be included.
--L, --locktime=    t  Lock time (block height or unix seconds) (default: 0)
+-l, --locktime=    t  Lock time (block height or unix seconds) (default: 0)
 -m, --minconf=     n  Minimum number of confirmations required to spend
                       outputs (default: 1)
 -q, --quiet           Suppress warnings; overwrite files without prompting

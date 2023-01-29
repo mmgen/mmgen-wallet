@@ -48,7 +48,7 @@ opts_data = {
 -v, --verbose        Produce more verbose output
 -y, --yes            Answer 'yes' to prompts, suppress non-essential output
 -R, --rpc-host2=   h Host the other coin daemon is running on (default: none)
--L, --locktime=    t Lock time (block height or unix seconds)
+-l, --locktime=    t Lock time (block height or unix seconds)
                      (default: {bh})
 """,
 	'notes': f"""\n

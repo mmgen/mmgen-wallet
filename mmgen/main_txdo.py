@@ -61,7 +61,7 @@ opts_data = {
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
 -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
                        for {coin_id}: {kgs}
--L, --locktime=      t Lock time (block height or unix seconds) (default: 0)
+-l, --locktime=      t Lock time (block height or unix seconds) (default: 0)
 -m, --minconf=n        Minimum number of confirmations required to spend
                        outputs (default: 1)
 -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
