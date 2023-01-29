@@ -180,35 +180,38 @@ class BitcoinTwTransaction:
 
 	def vouts_disp(self,src,width,color):
 
-		class x: space_left = width or 0
-
 		def gen_output():
+
+			nonlocal space_left
+
 			for e in self.vouts_info[src]:
 				mmid = e.twlabel.twmmid if e.twlabel else None
 				bal_star,addr_w,co = ('*',16,'melon') if mmid in self.unspent_info else ('',15,'brown')
 				if not mmid:
-					if width and x.space_left < addr_w:
+					if width and space_left < addr_w:
 						break
 					yield CoinAddr( self.proto, e.coin_addr ).fmt(width=addr_w,color=color)
-					x.space_left -= addr_w
+					space_left -= addr_w
 				elif mmid.type == 'mmgen':
 					mmid_disp = mmid + bal_star
-					if width and x.space_left < len(mmid_disp):
+					if width and space_left < len(mmid_disp):
 						break
 					yield TwMMGenID.hl2( TwMMGenID, s=mmid_disp, color=color, color_override=co )
-					x.space_left -= len(mmid_disp)
+					space_left -= len(mmid_disp)
 				else:
-					if width and x.space_left < addr_w:
+					if width and space_left < addr_w:
 						break
 					yield TwMMGenID.hl2(
 						TwMMGenID,
 						s = CoinAddr.fmtc( mmid.split(':',1)[1] + bal_star, width=addr_w ),
 						color = color,
 						color_override = co )
-					x.space_left -= addr_w
-				x.space_left -= 1
+					space_left -= addr_w
+				space_left -= 1
 
-		return ' '.join(gen_output()) + ' ' * (x.space_left + 1 if width else 0)
+		space_left = width or 0
+
+		return ' '.join(gen_output()) + ' ' * (space_left + 1 if width else 0)
 
 	def amt_disp(self,show_total_amt):
 		return (

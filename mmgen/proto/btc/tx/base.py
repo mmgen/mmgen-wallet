@@ -57,47 +57,46 @@ def DeserializeTX(proto,txhex):
 		return proto.coin_amt(bytes2int(bytes_le) * proto.coin_amt.satoshi)
 
 	def bshift(n,skip=False,sub_null=False):
-		ret = tx[var.idx:var.idx+n]
-		var.idx += n
+		nonlocal idx, raw_tx
+		ret = tx[idx:idx+n]
+		idx += n
 		if sub_null:
-			var.raw_tx += b'\x00'
+			raw_tx += b'\x00'
 		elif not skip:
-			var.raw_tx += ret
+			raw_tx += ret
 		return ret
 
 	# https://bitcoin.org/en/developer-reference#compactsize-unsigned-integers
 	# For example, the number 515 is encoded as 0xfd0302.
 	def readVInt(skip=False):
-		s = tx[var.idx]
-		var.idx += 1
+		nonlocal idx, raw_tx
+		s = tx[idx]
+		idx += 1
 		if not skip:
-			var.raw_tx.append(s)
+			raw_tx.append(s)
 
 		vbytes_len = 1 if s < 0xfd else 2 if s == 0xfd else 4 if s == 0xfe else 8
 
 		if vbytes_len == 1:
 			return s
 		else:
-			vbytes = tx[var.idx:var.idx+vbytes_len]
-			var.idx += vbytes_len
+			vbytes = tx[idx:idx+vbytes_len]
+			idx += vbytes_len
 			if not skip:
-				var.raw_tx += vbytes
+				raw_tx += vbytes
 			return int(vbytes[::-1].hex(),16)
 
 	def make_txid(tx_bytes):
 		from hashlib import sha256
 		return sha256(sha256(tx_bytes).digest()).digest()[::-1].hex()
 
-	class vardata:
-		idx = 0
-		raw_tx = bytearray()
-
-	var = vardata()
-
 	tx = bytes.fromhex(txhex)
+	raw_tx = bytearray()
+	idx = 0
+
 	d = { 'version': bytes2int(bshift(4)) }
 
-	has_witness = tx[var.idx] == 0
+	has_witness = tx[idx] == 0
 	if has_witness:
 		u = bshift(2,skip=True).hex()
 		if u != '0001':
@@ -127,11 +126,11 @@ def DeserializeTX(proto,txhex):
 		# A non-witness program (defined hereinafter) txin MUST be associated with an empty
 		# witness field, represented by a 0x00.
 
-		d['txid'] = make_txid(tx[:4] + tx[6:var.idx] + tx[-4:])
-		d['witness_size'] = len(tx) - var.idx + 2 - 4 # add len(marker+flag), subtract len(locktime)
+		d['txid'] = make_txid(tx[:4] + tx[6:idx] + tx[-4:])
+		d['witness_size'] = len(tx) - idx + 2 - 4 # add len(marker+flag), subtract len(locktime)
 
 		for txin in d['txins']:
-			if tx[var.idx] == 0:
+			if tx[idx] == 0:
 				bshift(1,skip=True)
 				continue
 			txin['witness'] = [
@@ -140,11 +139,11 @@ def DeserializeTX(proto,txhex):
 		d['txid'] = make_txid(tx)
 		d['witness_size'] = 0
 
-	if len(tx) - var.idx != 4:
-		die( 'TxHexParseError', 'TX hex has invalid length: {} extra bytes'.format(len(tx)-var.idx-4) )
+	if len(tx) - idx != 4:
+		die( 'TxHexParseError', 'TX hex has invalid length: {} extra bytes'.format(len(tx)-idx-4) )
 
 	d['locktime'] = bytes2int(bshift(4))
-	d['unsigned_hex'] = var.raw_tx.hex()
+	d['unsigned_hex'] = raw_tx.hex()
 
 	return namedtuple('deserialized_tx',list(d.keys()))(**d)
 
