@@ -86,6 +86,7 @@ class GlobalContext(Lockable):
 	testnet              = False
 	regtest              = False
 	accept_defaults      = False
+	autochg_ignore_labels = False
 
 	# rpc:
 	rpc_host             = ''
@@ -152,6 +153,7 @@ class GlobalContext(Lockable):
 
 	# global var sets user opt:
 	global_sets_opt = (
+		'autochg_ignore_labels',
 		'debug',
 		'minconf',
 		'quiet',
@@ -198,6 +200,7 @@ class GlobalContext(Lockable):
 		('tx_id','terse_info'),
 	)
 	cfg_file_opts = (
+		'autochg_ignore_labels',
 		'color',
 		'daemon_data_dir',
 		'debug',

@@ -50,6 +50,7 @@ opts_data = {
                       MMGen IDs or coin addresses).  Note that ALL unspent
                       outputs associated with each address will be included.
 -l, --locktime=    t  Lock time (block height or unix seconds) (default: 0)
+-L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
 -m, --minconf=     n  Minimum number of confirmations required to spend
                       outputs (default: 1)
 -q, --quiet           Suppress warnings; overwrite files without prompting

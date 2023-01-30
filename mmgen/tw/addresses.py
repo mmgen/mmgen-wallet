@@ -16,7 +16,7 @@ from ..util import msg,suf,is_int
 from ..objmethods import MMGenObject
 from ..obj import MMGenListItem,ImmutableAttr,ListItemAttr,TwComment,NonNegativeInt
 from ..addr import CoinAddr,MMGenID,MMGenAddrType
-from ..color import red,green
+from ..color import red,green,yellow
 from .view import TwView
 from .shared import TwMMGenID
 
@@ -320,9 +320,18 @@ class TwAddresses(TwView):
 			top = len(data) - 1 if top is None else top )
 
 		if start is not None:
+			from ..opts import opt
 			for d in data[start:]:
 				if d.al_id == al_id:
-					if not d.recvd:
+					if not d.recvd and (opt.autochg_ignore_labels or not d.comment):
+						if d.comment:
+							msg('{} {} {} {}{}'.format(
+								yellow('WARNING: address'),
+								d.twmmid.hl(),
+								yellow('has a label,'),
+								d.comment.hl2(encl='‘’'),
+								yellow(',\n  but allowing it for change anyway by user request')
+							))
 						return d
 				else:
 					break
@@ -339,10 +348,19 @@ class TwAddresses(TwView):
 		"""
 
 		def choose_address(addrs):
-			from ..ui import line_input
-			prompt = '\nChoose a change address:\n\n{m}\n\nEnter a number> '.format(
-				m = '\n'.join(f'{n:3}) {a.twmmid.hl()}' for n,a in enumerate(addrs,1))
+
+			def format_line(n,d):
+				return '{a:3}) {b}{c}'.format(
+					a = n,
+					b = d.twmmid.hl(),
+					c = yellow(' <== has a label!') if d.comment else ''
+				)
+
+			prompt = '\nChoose a change address:\n\n{}\n\nEnter a number> '.format(
+				'\n'.join(format_line(n,d) for n,d in enumerate(addrs,1))
 			)
+
+			from ..ui import line_input
 			while True:
 				res = line_input(prompt)
 				if is_int(res) and 0 < int(res) <= len(addrs):

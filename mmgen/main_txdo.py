@@ -62,6 +62,7 @@ opts_data = {
 -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
                        for {coin_id}: {kgs}
 -l, --locktime=      t Lock time (block height or unix seconds) (default: 0)
+-L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
 -m, --minconf=n        Minimum number of confirmations required to spend
                        outputs (default: 1)
 -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-

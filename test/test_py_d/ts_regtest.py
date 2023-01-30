@@ -386,6 +386,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_auto_chg_addrtype2', 'creating an automatic change address transaction by addrtype (B)'),
 		('bob_auto_chg_addrtype3', 'creating an automatic change address transaction by addrtype (S)'),
 		('bob_auto_chg_addrtype4', 'creating an automatic change address transaction by addrtype (single address)'),
+		('bob_add_comment_uua1',   'adding a comment for unused address in tracking wallet (C)'),
+		('bob_auto_chg5',          'creating an auto-chg-address TX, skipping unused address with label (C)'),
+		('bob_auto_chg_addrtype5', 'creating an auto-chg-address TX by addrtype, skipping unused address with label (C)'),
+		('bob_auto_chg6',          'creating an auto-chg-address TX, using unused address with label (C)'),
+		('bob_auto_chg_addrtype6', 'creating an auto-chg-address TX by addrtype, using unused address with label (C)'),
+		('bob_remove_comment_uua1', 'removing a comment for unused address in tracking wallet (C)'),
 		('bob_auto_chg_bad1', 'error handling for auto change address transaction (bad ID FFFFFFFF:C)'),
 		('bob_auto_chg_bad2', 'error handling for auto change address transaction (bad ID 00000000:C)'),
 		('bob_auto_chg_bad3', 'error handling for auto change address transaction (no unused addresses)'),
@@ -1652,13 +1658,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			return 'skip'
 		return self.generate()
 
-	def _usr_auto_chg(self,user,mmtype,idx,by_mmtype=False,include_dest=True,by_addrtype=False):
+	def _usr_auto_chg(self,user,mmtype,idx,by_mmtype=False,include_dest=True,by_addrtype=False,ignore_labels=False):
 		if mmtype in ('S','B') and not self.proto.cap('segwit'):
 			return 'skip'
 		sid = self._user_sid('bob')
 		t = self.spawn(
 			'mmgen-txcreate',
 				[f'--outdir={self.tr.trash_dir}', '--no-blank', f'--{user}'] +
+				(['--autochg-ignore-labels'] if ignore_labels else []) +
 				[mmtype if by_mmtype else f'{sid}:{mmtype}'] +
 				([self.burn_addr+',0.01'] if include_dest else [])
 			)
@@ -1691,6 +1698,32 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_auto_chg_addrtype4(self):
 		return self._usr_auto_chg( 'bob', 'C', '3', True, include_dest=False )
+
+	def _bob_add_comment_uua(self,addrspec,comment):
+		sid = self._user_sid('bob')
+		return self.user_add_comment('bob',sid+addrspec,comment)
+
+	def bob_add_comment_uua1(self):
+		return self._bob_add_comment_uua(':C:3','comment for unused address')
+
+	def bob_auto_chg5(self):
+		return self._usr_auto_chg( 'bob', 'C', '4' )
+
+	def bob_auto_chg_addrtype5(self):
+		return self._usr_auto_chg( 'bob', 'C', '4', True )
+
+	def bob_auto_chg6(self):
+		return self._usr_auto_chg( 'bob', 'C', '3', ignore_labels=True )
+
+	def bob_auto_chg_addrtype6(self):
+		return self._usr_auto_chg( 'bob', 'C', '3', True, ignore_labels=True )
+
+	def _bob_remove_comment_uua(self,addrspec):
+		sid = self._user_sid('bob')
+		return self.user_remove_comment('bob',sid+addrspec)
+
+	def bob_remove_comment_uua1(self):
+		return self._bob_remove_comment_uua(':C:3')
 
 	def _usr_auto_chg_bad(self,user,al_id,expect):
 		t = self.spawn(
