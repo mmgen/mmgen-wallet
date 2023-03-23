@@ -138,6 +138,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			[f'--pidfile={self.pidfile}',            self.platform == 'linux'],
 			['--detach',                             not (self.opt.no_daemonize or self.platform=='win')],
 			['--stagenet',                           self.network == 'testnet'],
+			['--allow-mismatched-daemon-version',    test_suite],
 		)
 
 		from .rpc import MoneroWalletRPCClient

@@ -80,9 +80,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			return
 
 		from mmgen.protocol import init_proto
-		self.proto = init_proto('XMR',network='testnet')
+		self.proto = init_proto('XMR',network='mainnet')
 		self.datadir_base  = os.path.join('test','daemons','xmrtest')
-		self.extra_opts = ['--testnet=1', '--wallet-rpc-password=passw0rd']
+		self.extra_opts = ['--wallet-rpc-password=passw0rd']
 		self.init_users()
 		self.init_daemon_args()
 
@@ -256,9 +256,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				udir          = udir,
 				datadir       = datadir,
 				kal_range     = kal_range,
-				kafile        = f'{udir}/{sid}-XMR-M[{kal_range}].testnet.akeys',
-				walletfile_fs = f'{udir}/{sid}-{{}}-MoneroWallet.testnet',
-				addrfile_fs   = f'{udir}/{sid}-{{}}-MoneroWallet.testnet.address.txt',
+				kafile        = f'{udir}/{sid}-XMR-M[{kal_range}].akeys',
+				walletfile_fs = f'{udir}/{sid}-{{}}-MoneroWallet',
+				addrfile_fs   = f'{udir}/{sid}-{{}}-MoneroWallet.address.txt',
 				md            = md,
 				md_rpc        = md_rpc,
 				md_json_rpc   = md_json_rpc,
@@ -267,7 +267,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			)
 
 	def init_daemon_args(self):
-		common_args = ['--p2p-bind-ip=127.0.0.1','--fixed-difficulty=1'] # ,'--rpc-ssl-allow-any-cert']
+		common_args = ['--p2p-bind-ip=127.0.0.1','--fixed-difficulty=1','--regtest'] # ,'--rpc-ssl-allow-any-cert']
 		for u in self.users:
 			other_ports = [self.users[u2].md.p2p_port for u2 in self.users if u2 != u]
 			node_args = [f'--add-exclusive-node=127.0.0.1:{p}' for p in other_ports]
@@ -283,7 +283,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			run(f'rm -f {data.kafile}',shell=True)
 			t = self.spawn(
 				'mmgen-keygen', [
-					'--testnet=1','-q', '--accept-defaults', '--coin=xmr',
+					'-q', '--accept-defaults', '--coin=xmr',
 					f'--outdir={data.udir}', data.mmwords, data.kal_range
 				],
 				extra_desc = f'({capfirst(user)})' )
@@ -307,7 +307,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			'mmgen-xmrwallet',
 			self.extra_opts + dir_opt + [ 'create', data.kafile, (wallet or data.kal_range) ] )
 		for i in MMGenRange(wallet or data.kal_range).items:
-			t.expect('Address: ')
+			write_data_to_file(
+				self.users[user].addrfile_fs.format(i),
+				t.expect_getend('Address: '),
+				quiet = True
+			)
 		return t
 
 	def new_addr_alice(self,spec,cfg,expect):
@@ -607,7 +611,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		async def send_random_txs():
 			from mmgen.tool.api import tool_api
 			t = tool_api()
-			t.init_coin('XMR','testnet')
+			t.init_coin('XMR','mainnet')
 			t.usr_randchars = 0
 			imsg_r(f'Sending random transactions: ')
 			for i in range(random_txs):
