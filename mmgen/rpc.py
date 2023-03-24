@@ -415,25 +415,25 @@ class RPCClient(MMGenObject):
 		await self.stop_daemon(quiet=quiet,silent=silent)
 		return self.daemon.start(silent=silent)
 
-def handle_unsupported_daemon_version(rpc,name,warn_only):
+	def handle_unsupported_daemon_version(self,name,warn_only):
 
-	class daemon_version_warning(oneshot_warning):
-		color = 'yellow'
-		message = 'ignoring unsupported {} daemon version at user request'
+		class daemon_version_warning(oneshot_warning):
+			color = 'yellow'
+			message = 'ignoring unsupported {} daemon version at user request'
 
-	if warn_only:
-		daemon_version_warning(div=name,fmt_args=[rpc.daemon.coind_name])
-	else:
-		name = rpc.daemon.coind_name
-		die(2,'\n'+fmt(f"""
-			The running {name} daemon has version {rpc.daemon_version_str}.
-			This version of MMGen is tested only on {name} v{rpc.daemon.coind_version_str} and below.
+		if warn_only:
+			daemon_version_warning(div=name,fmt_args=[self.daemon.coind_name])
+		else:
+			name = self.daemon.coind_name
+			die(2,'\n'+fmt(f"""
+				The running {name} daemon has version {self.daemon_version_str}.
+				This version of MMGen is tested only on {name} v{self.daemon.coind_version_str} and below.
 
-			To avoid this error, downgrade your daemon to a supported version.
+				To avoid this error, downgrade your daemon to a supported version.
 
-			Alternatively, you may invoke the command with the --ignore-daemon-version
-			option, in which case you proceed at your own risk.
-			""",indent='    '))
+				Alternatively, you may invoke the command with the --ignore-daemon-version
+				option, in which case you proceed at your own risk.
+				""",indent='    '))
 
 async def rpc_init(
 		proto,
@@ -457,8 +457,7 @@ async def rpc_init(
 		ignore_wallet = ignore_wallet )
 
 	if rpc.daemon_version > rpc.daemon.coind_version:
-		handle_unsupported_daemon_version(
-			rpc,
+		rpc.handle_unsupported_daemon_version(
 			proto.name,
 			ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version )
 
