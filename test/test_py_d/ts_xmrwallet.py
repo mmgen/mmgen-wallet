@@ -657,7 +657,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		for count in range(500):
 			ub = await get_balance(dest,count)
-			if dest.test(ub) is True or ( chk_bal_chg and ub != ub_start ):
+			if h > 300 and (dest.test(ub) is True or ( chk_bal_chg and ub != ub_start )):
 				imsg('')
 				oqmsg_r('+')
 				print_balance(dest,ub)
