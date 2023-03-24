@@ -51,24 +51,24 @@ class MoneroRPCClient(RPCClient):
 
 		self.daemon = daemon
 
-	async def call(self,method,*params,**kwargs):
+	def call(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
-		return self.process_http_resp(await self.backend.run(
+		return self.process_http_resp(self.backend.run_noasync(
 			payload = {'id': 0, 'jsonrpc': '2.0', 'method': method, 'params': kwargs },
 			timeout = 3600, # allow enough time to sync ≈1,000,000 blocks
 			host_path = '/json_rpc'
 		))
 
-	async def call_raw(self,method,*params,**kwargs):
+	def call_raw(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
-		return self.process_http_resp(await self.backend.run(
+		return self.process_http_resp(self.backend.run_noasync(
 			payload = kwargs,
 			timeout = self.timeout,
 			host_path = f'/{method}'
 		),json_rpc=False)
 
 	async def do_stop_daemon(self,silent=False):
-		return await self.call_raw('stop_daemon')
+		return self.call_raw('stop_daemon')
 
 	rpcmethods = ( 'get_info', )
 	rpcmethods_raw = ( 'get_height', 'send_raw_transaction', 'stop_daemon' )
@@ -109,4 +109,4 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		NB: the 'stop_wallet' RPC call closes the open wallet before shutting down the daemon,
 		returning an error if no wallet is open
 		"""
-		return await self.call('stop_wallet')
+		return self.call('stop_wallet')

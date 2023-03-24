@@ -159,16 +159,16 @@ class unit_tests:
 
 	def xmrwallet(self,name,ut):
 
-		async def test_monerod_rpc(md):
-			md = MoneroRPCClient(
+		def test_monerod_rpc(md):
+			rpc = MoneroRPCClient(
 				host   = md.host,
 				port   = md.rpc_port,
 				user   = None,
 				passwd = None,
 				daemon = md,
 			)
-			await md.call_raw('get_height')
-			await md.call('get_last_block_header')
+			rpc.call_raw('get_height')
+			rpc.call('get_last_block_header')
 
 		async def run():
 			networks = init_proto('xmr').networks
@@ -186,18 +186,18 @@ class unit_tests:
 					md.start()
 				wd.start()
 
-				await test_monerod_rpc(md)
+				test_monerod_rpc(md)
 
 				c = MoneroWalletRPCClient(daemon=wd)
 				fn = f'monero-{wd.network}-junk-wallet'
 				qmsg(f'Creating {wd.network} wallet')
-				await c.call(
+				c.call(
 					'restore_deterministic_wallet',
 					filename = fn,
 					password = 'foo',
 					seed     = xmrseed().fromhex('beadface'*8,tostr=True) )
 				qmsg(f'Opening {wd.network} wallet')
-				await c.call( 'open_wallet', filename=fn, password='foo' )
+				c.call( 'open_wallet', filename=fn, password='foo' )
 
 			for md,wd in daemons:
 				wd.wait = False

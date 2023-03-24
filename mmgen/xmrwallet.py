@@ -426,7 +426,7 @@ class MoneroWalletOps:
 
 			async def open_wallet(self,desc,refresh=True):
 				gmsg_r(f'\n  Opening {desc} wallet...')
-				await self.c.call( # returns {}
+				self.c.call( # returns {}
 					'open_wallet',
 					filename=os.path.basename(self.fn),
 					password=self.d.wallet_passwd )
@@ -434,14 +434,14 @@ class MoneroWalletOps:
 
 				if refresh:
 					gmsg_r(f'  Refreshing {desc} wallet...')
-					ret = await self.c.call('refresh')
+					ret = self.c.call('refresh')
 					gmsg('done')
 					if ret['received_money']:
 						msg('  Wallet has received funds')
 
 			async def close_wallet(self,desc):
 				gmsg_r(f'\n  Closing {desc} wallet...')
-				await self.c.call('close_wallet')
+				self.c.call('close_wallet')
 				gmsg_r('done')
 
 			async def stop_wallet(self,desc):
@@ -465,9 +465,9 @@ class MoneroWalletOps:
 					))
 
 			async def get_accts(self,print=True):
-				data = await self.c.call('get_accounts')
+				data = self.c.call('get_accounts')
 				addrs_data = [
-					await self.c.call('get_address',account_index=i)
+					self.c.call('get_address',account_index=i)
 						for i in range(len(data['subaddress_accounts']))
 				]
 				if print:
@@ -476,7 +476,7 @@ class MoneroWalletOps:
 
 			async def create_acct(self,label=None):
 				msg('\n    Creating new account...')
-				ret = await self.c.call(
+				ret = self.c.call(
 					'create_account',
 					label = label or 'Sweep from {}:{} [{}]'.format(
 						self.parent.source.idx,
@@ -494,7 +494,7 @@ class MoneroWalletOps:
 				return (ret['account_index'], ret['base_address'])
 
 			async def print_addrs(self,accts_data,account):
-				ret = await self.c.call('get_address',account_index=account)
+				ret = self.c.call('get_address',account_index=account)
 				d = ret['addresses']
 				msg('\n      Addresses of account #{} ({}):'.format(
 					account,
@@ -511,7 +511,7 @@ class MoneroWalletOps:
 
 			async def create_new_addr(self,account,label=None):
 				msg_r('\n    Creating new address: ')
-				ret = await self.c.call(
+				ret = self.c.call(
 					'create_address',
 					account_index = account,
 					label         = label or f'Sweep from this account [{make_timestr()}]',
@@ -522,17 +522,17 @@ class MoneroWalletOps:
 			async def get_last_addr(self,account,display=True):
 				if display:
 					msg('\n    Getting last address:')
-				ret = (await self.c.call(
+				ret = self.c.call(
 					'get_address',
 					account_index = account,
-				))['addresses']
+				)['addresses']
 				addr = ret[-1]['address']
 				if display:
 					msg('      ' + cyan(addr))
 				return ( addr, len(ret) - 1 )
 
 			async def make_transfer_tx(self,account,addr,amt):
-				res = await self.c.call(
+				res = self.c.call(
 					'transfer',
 					account_index = account,
 					destinations = [{
@@ -558,7 +558,7 @@ class MoneroWalletOps:
 				)
 
 			async def make_sweep_tx(self,account,dest_acct,dest_addr_idx,addr):
-				res = await self.c.call(
+				res = self.c.call(
 					'sweep_all',
 					address = addr,
 					account_index = account,
@@ -588,7 +588,7 @@ class MoneroWalletOps:
 				)
 
 			async def relay_tx(self,tx_hex):
-				ret = await self.c.call('relay_tx',hex=tx_hex)
+				ret = self.c.call('relay_tx',hex=tx_hex)
 				try:
 					msg('\n    Relayed {}'.format( CoinTxID(ret['tx_hash']).hl() ))
 				except:
@@ -608,7 +608,7 @@ class MoneroWalletOps:
 			msg_r('') # for pexpect
 
 			from .xmrseed import xmrseed
-			ret = await self.c.call(
+			ret = self.c.call(
 				'restore_deterministic_wallet',
 				filename       = os.path.basename(fn),
 				password       = d.wallet_passwd,
@@ -636,20 +636,20 @@ class MoneroWalletOps:
 			self.accts_data = {}
 
 		async def process_wallet(self,d,fn,last):
-			chain_height = (await self.dc.call_raw('get_height'))['height']
+			chain_height = self.dc.call_raw('get_height')['height']
 			msg(f'  Chain height: {chain_height}')
 
 			t_start = time.time()
 
 			msg_r('  Opening wallet...')
-			await self.c.call(
+			self.c.call(
 				'open_wallet',
 				filename=os.path.basename(fn),
 				password=d.wallet_passwd )
 			msg('done')
 
 			msg_r('  Getting wallet height (be patient, this could take a long time)...')
-			wallet_height = (await self.c.call('get_height'))['height']
+			wallet_height = self.c.call('get_height')['height']
 			msg_r('\r' + ' '*68 + '\r')
 			msg(f'  Wallet height: {wallet_height}        ')
 
@@ -657,7 +657,7 @@ class MoneroWalletOps:
 			if behind > 1000:
 				msg_r(f'  Wallet is {behind} blocks behind chain tip.  Please be patient.  Syncing...')
 
-			ret = await self.c.call('refresh')
+			ret = self.c.call('refresh')
 
 			if behind > 1000:
 				msg('done')
@@ -666,15 +666,15 @@ class MoneroWalletOps:
 				msg('  Wallet has received funds')
 
 			for i in range(2):
-				wallet_height = (await self.c.call('get_height'))['height']
+				wallet_height = self.c.call('get_height')['height']
 				if wallet_height >= chain_height:
 					break
 				ymsg(f'  Wallet failed to sync (wallet height [{wallet_height}] < chain height [{chain_height}])')
 				if i or not uopt.rescan_blockchain:
 					break
 				msg_r('  Rescanning blockchain, please be patient...')
-				await self.c.call('rescan_blockchain')
-				await self.c.call('refresh')
+				self.c.call('rescan_blockchain')
+				self.c.call('refresh')
 				msg('done')
 
 			t_elapsed = int(time.time() - t_start)
@@ -696,7 +696,7 @@ class MoneroWalletOps:
 				t_elapsed % 60 ))
 
 			if not last:
-				await self.c.call('close_wallet')
+				self.c.call('close_wallet')
 
 			return wallet_height >= chain_height
 
@@ -951,7 +951,7 @@ class MoneroWalletOps:
 				self.display_tx_relay_info()
 
 			if keypress_confirm('Relay transaction?'):
-				res = await self.dc.call_raw(
+				res = self.dc.call_raw(
 					'send_raw_transaction',
 					tx_as_hex = self.tx.data.blob
 				)

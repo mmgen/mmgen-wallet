@@ -534,7 +534,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		kal = KeyAddrList(self.proto,data.kafile,key_address_validity_check=False)
 		end_silence()
 		self.users[user].wd.start(silent=not (opt.exact_output or opt.verbose))
-		return await data.wd_rpc.call(
+		return data.wd_rpc.call(
 			'open_wallet',
 			filename = os.path.basename(data.walletfile_fs.format(wnum)),
 			password = kal.entry(wnum).wallet_passwd )
@@ -550,7 +550,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		addr = read_from_file(data.addrfile_fs.format(1)) # mine to wallet #1, account 0
 
 		for i in range(20):
-			ret = await data.md_rpc.call_raw(
+			ret = data.md_rpc.call_raw(
 				'start_mining',
 				do_background_mining = False, # run mining in background or foreground
 				ignore_battery       = True,  # ignore battery state (on laptop)
@@ -568,7 +568,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			die(2,'Max retries exceeded')
 
 	async def stop_mining(self):
-		ret = await self.users['miner'].md_rpc.call_raw('stop_mining')
+		ret = self.users['miner'].md_rpc.call_raw('stop_mining')
 		return self.get_status(ret)
 
 	async def mine_chk(self,user,wnum,account,test,test_desc,random_txs=None,return_amt=False):
@@ -585,7 +585,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			u = self.users['miner']
 			for i in range(20):
 				try:
-					return (await u.md_rpc.call('get_last_block_header'))['block_header']['height']
+					return u.md_rpc.call('get_last_block_header')['block_header']['height']
 				except Exception as e:
 					if 'onnection refused' in str(e):
 						omsg(f'{e}\nMonerod appears to have crashed. Attempting to restart...')
@@ -625,10 +625,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		async def get_balance(dest,count):
 			data = self.users[dest.user]
-			await data.wd_rpc.call('refresh')
+			data.wd_rpc.call('refresh')
 			if count and not count % 20:
-				await data.wd_rpc.call('rescan_blockchain')
-			ret = await data.wd_rpc.call('get_accounts')
+				data.wd_rpc.call('rescan_blockchain')
+			ret = data.wd_rpc.call('get_accounts')
 			return XMRAmt(ret['subaddress_accounts'][dest.account]['unlocked_balance'],from_unit='atomic')
 
 		# start execution:
@@ -690,7 +690,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		)
 
 	async def transfer(self,user,amt,addr):
-		return await self.users[user].wd_rpc.call('transfer',destinations=[{'amount':amt,'address':addr}])
+		return self.users[user].wd_rpc.call('transfer',destinations=[{'amount':amt,'address':addr}])
 
 	# daemon start/stop methods
 

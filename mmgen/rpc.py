@@ -149,7 +149,10 @@ class RPCBackends:
 					'https': f'socks5h://{self.proxy}'
 				})
 
-		async def run(self,payload,timeout,host_path):
+		async def run(self,*args,**kwargs):
+			return self.run_noasync(*args,**kwargs)
+
+		def run_noasync(self,payload,timeout,host_path):
 			dmsg_rpc_backend(self.host_url,host_path,payload)
 			res = self.session.post(
 				url     = self.host_url + host_path,
