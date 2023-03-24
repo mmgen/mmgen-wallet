@@ -302,7 +302,7 @@ class RPCClient(MMGenObject):
 		"""
 		default call: call with param list unrolled, exactly as with cli
 		"""
-		return await self.process_http_resp(self.backend.run(
+		return self.process_http_resp(await self.backend.run(
 			payload = {'id': 1, 'jsonrpc': '2.0', 'method': method, 'params': params },
 			timeout = timeout,
 			host_path = self.make_host_path(wallet)
@@ -313,7 +313,7 @@ class RPCClient(MMGenObject):
 		Make a single call with a list of tuples as first argument
 		For RPC calls that return a list of results
 		"""
-		return await self.process_http_resp(self.backend.run(
+		return self.process_http_resp(await self.backend.run(
 			payload = [{
 				'id': n,
 				'jsonrpc': '2.0',
@@ -337,15 +337,15 @@ class RPCClient(MMGenObject):
 		ret = []
 
 		while cur_pos < len(cmd_list):
-			tasks = [self.process_http_resp(self.backend.run(
+			tasks = [self.backend.run(
 						payload = {'id': n, 'jsonrpc': '2.0', 'method': method, 'params': params },
 						timeout = timeout,
 						host_path = self.make_host_path(wallet)
-					)) for n,(method,params)  in enumerate(cmd_list[cur_pos:chunk_size+cur_pos],1)]
+					) for n,(method,params)  in enumerate(cmd_list[cur_pos:chunk_size+cur_pos],1)]
 			ret.extend(await asyncio.gather(*tasks))
 			cur_pos += chunk_size
 
-		return ret
+		return [self.process_http_resp(r) for r in ret]
 
 	# Icall family of methods - indirect RPC call using CallSigs mechanism:
 	# - 'timeout' and 'wallet' kwargs are passed to corresponding Call method
@@ -367,8 +367,8 @@ class RPCClient(MMGenObject):
 			timeout = timeout,
 			wallet = wallet )
 
-	async def process_http_resp(self,coro,batch=False):
-		text,status = await coro
+	def process_http_resp(self,run_ret,batch=False,json_rpc=True):
+		text,status = run_ret
 		if status == 200:
 			dmsg_rpc('    RPC RESPONSE data ==>\n{}\n',text,is_json=True)
 			if batch:

@@ -53,7 +53,7 @@ class MoneroRPCClient(RPCClient):
 
 	async def call(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
-		return await self.process_http_resp(self.backend.run(
+		return self.process_http_resp(await self.backend.run(
 			payload = {'id': 0, 'jsonrpc': '2.0', 'method': method, 'params': kwargs },
 			timeout = 3600, # allow enough time to sync ≈1,000,000 blocks
 			host_path = '/json_rpc'
@@ -67,7 +67,7 @@ class MoneroRPCClientRaw(MoneroRPCClient):
 
 	async def call(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
-		return await self.process_http_resp(self.backend.run(
+		return self.process_http_resp(await self.backend.run(
 			payload = kwargs,
 			timeout = self.timeout,
 			host_path = f'/{method}'
