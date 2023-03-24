@@ -44,14 +44,20 @@ def cfg_file_auth_test(proto,d,bad_auth=False):
 
 def print_daemon_info(rpc):
 
-	msg(f"""
+	if rpc.proto.base_proto == 'Monero':
+		msg(f"""
+    DAEMON VERSION: {rpc.daemon_version} [{rpc.daemon_version_str}]
+    NETWORK:        {rpc.proto.coin} {rpc.proto.network.upper()}
+		""".rstrip())
+	else:
+		msg(f"""
     DAEMON VERSION: {rpc.daemon_version} [{rpc.daemon_version_str}]
     CAPS:           {rpc.caps}
     NETWORK:        {rpc.proto.coin} {rpc.proto.network.upper()}
     CHAIN:          {rpc.chain}
     BLOCKCOUNT:     {rpc.blockcount}
     CUR_DATE:       {rpc.cur_date} [{make_timestr(rpc.cur_date)}]
-	""".rstrip())
+		""".rstrip())
 
 	if rpc.proto.base_proto == 'Bitcoin':
 		def fmt_dict(d):
@@ -168,6 +174,7 @@ class unit_tests:
 				passwd = None,
 				daemon = md,
 			)
+			print_daemon_info(rpc)
 			rpc.call_raw('get_height')
 			rpc.call('get_last_block_header')
 

@@ -32,9 +32,23 @@ class tool_cmd(tool_cmd_base):
 
 	async def daemon_version(self):
 		"print coin daemon version"
-		from ..rpc import rpc_init
-		r = await rpc_init( self.proto, ignore_daemon_version=True )
-		return f'{r.daemon.coind_name} version {r.daemon_version} ({r.daemon_version_str})'
+		from ..daemon import CoinDaemon
+		from ..globalvars import g
+		d = CoinDaemon( proto=self.proto, test_suite=g.test_suite )
+		if self.proto.base_proto == 'Monero':
+			from ..proto.xmr.rpc import MoneroRPCClient
+			r = MoneroRPCClient(
+				proto  = self.proto,
+				daemon = d,
+				host   = d.host,
+				port   = d.rpc_port,
+				user   = None,
+				passwd = None,
+				ignore_daemon_version = True )
+		else:
+			from ..rpc import rpc_init
+			r = await rpc_init( self.proto, ignore_daemon_version=True )
+		return f'{d.coind_name} version {r.daemon_version} ({r.daemon_version_str})'
 
 	async def getbalance(self,
 			minconf: 'minimum number of confirmations' = 1,

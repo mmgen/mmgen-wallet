@@ -628,8 +628,11 @@ class MoneroWalletOps:
 			super().__init__(uarg_tuple,uopt_tuple)
 
 			host,port = uopt.daemon.split(':') if uopt.daemon else ('localhost',self.wd.daemon_port)
+
+			from .daemon import CoinDaemon
 			self.dc = MoneroRPCClient(
 				proto  = self.proto,
+				daemon = CoinDaemon('xmr'),
 				host   = host,
 				port   = int(port),
 				user   = None,
@@ -930,6 +933,7 @@ class MoneroWalletOps:
 				m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
 				host,port = m[1].split(':')
 				proxy = m[2]
+				md = None
 			else:
 				from .daemon import CoinDaemon
 				md = CoinDaemon('xmr',test_suite=g.test_suite)
@@ -938,6 +942,7 @@ class MoneroWalletOps:
 
 			self.dc = MoneroRPCClient(
 				proto  = self.proto,
+				daemon = md,
 				host   = host,
 				port   = int(port),
 				user   = None,

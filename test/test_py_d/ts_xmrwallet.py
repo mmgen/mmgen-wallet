@@ -46,6 +46,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	socks_port = 49237
 
 	cmd_group = (
+		('daemon_version',            'checking daemon version'),
 		('gen_kafiles',               'generating key-address files'),
 		('create_wallets_miner',      'creating Monero wallets (Miner)'),
 		('mine_initial_coins',        'mining initial coins'),
@@ -265,6 +266,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			self.users[u].md.usr_coind_args = common_args + node_args
 
 	# cmd_group methods
+
+	def daemon_version(self):
+		rpc_port = self.users['miner'].md.rpc_port
+		return self.spawn( 'mmgen-tool', ['--coin=xmr', f'--rpc-port={rpc_port}', 'daemon_version'] )
 
 	def gen_kafiles(self):
 		for user,data in self.users.items():

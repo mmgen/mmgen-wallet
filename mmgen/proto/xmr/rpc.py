@@ -12,6 +12,8 @@
 proto.xmr.rpc: Monero base protocol RPC client class
 """
 
+import re
+from ...globalvars import g
 from ...rpc import RPCClient,IPPort,auth_data
 
 class MoneroRPCClient(RPCClient):
@@ -29,7 +31,8 @@ class MoneroRPCClient(RPCClient):
 			passwd,
 			test_connection       = True,
 			proxy                 = None,
-			daemon                = None ):
+			daemon                = None,
+			ignore_daemon_version = False ):
 
 		self.proto = proto
 
@@ -53,6 +56,18 @@ class MoneroRPCClient(RPCClient):
 			self.backend.exec_opts.append('--verbose')
 
 		self.daemon = daemon
+
+		if test_connection:
+			# https://github.com/monero-project/monero src/rpc/rpc_version_str.cpp
+			self.daemon_version_str = self.call_raw('getinfo')['version']
+			self.daemon_version = sum(
+				int(m) * (1000 ** n) for n,m in
+					enumerate(reversed(re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)',self.daemon_version_str).groups()))
+			)
+			if self.daemon and self.daemon_version > self.daemon.coind_version:
+				self.handle_unsupported_daemon_version(
+					proto.name,
+					ignore_daemon_version or g.ignore_daemon_version )
 
 	def call(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
