@@ -44,9 +44,6 @@ def cfg_file_auth_test(proto,d,bad_auth=False):
 
 def print_daemon_info(rpc):
 
-	def fmt_dict(d):
-		return '\n        ' + '\n        '.join( pp_fmt(d).split('\n') ) + '\n'
-
 	msg(f"""
     DAEMON VERSION: {rpc.daemon_version} [{rpc.daemon_version_str}]
     CAPS:           {rpc.caps}
@@ -57,6 +54,8 @@ def print_daemon_info(rpc):
 	""".rstrip())
 
 	if rpc.proto.base_proto == 'Bitcoin':
+		def fmt_dict(d):
+			return '\n        ' + '\n        '.join( pp_fmt(d).split('\n') ) + '\n'
 		msg(f"""
     NETWORKINFO:    {fmt_dict(rpc.cached["networkinfo"])}
     BLOCKCHAININFO: {fmt_dict(rpc.cached["blockchaininfo"])}

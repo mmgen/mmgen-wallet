@@ -83,7 +83,10 @@ class MoneroWalletDaemon(RPCDaemon):
 	networks = ('mainnet','testnet')
 	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
 
-	def __init__(self, proto, wallet_dir,
+	def __init__(
+			self,
+			proto,
+			wallet_dir,
 			test_suite  = False,
 			host        = None,
 			user        = None,

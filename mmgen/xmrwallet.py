@@ -628,7 +628,11 @@ class MoneroWalletOps:
 			super().__init__(uarg_tuple,uopt_tuple)
 
 			host,port = uopt.daemon.split(':') if uopt.daemon else ('localhost',self.wd.daemon_port)
-			self.dc = MoneroRPCClientRaw(host=host, port=int(port), user=None, passwd=None)
+			self.dc = MoneroRPCClient(
+				host   = host,
+				port   = int(port),
+				user   = None,
+				passwd = None )
 			self.accts_data = {}
 
 		async def process_wallet(self,d,fn,last):

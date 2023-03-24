@@ -20,7 +20,15 @@ class MoneroRPCClient(RPCClient):
 	network_proto = 'https'
 	verify_server = False
 
-	def __init__(self,host,port,user,passwd,test_connection=True,proxy=None,daemon=None):
+	def __init__(
+			self,
+			host,
+			port,
+			user,
+			passwd,
+			test_connection       = True,
+			proxy                 = None,
+			daemon                = None ):
 
 		if proxy is not None:
 			self.proxy = IPPort(proxy)
