@@ -629,6 +629,7 @@ class MoneroWalletOps:
 
 			host,port = uopt.daemon.split(':') if uopt.daemon else ('localhost',self.wd.daemon_port)
 			self.dc = MoneroRPCClient(
+				proto  = self.proto,
 				host   = host,
 				port   = int(port),
 				user   = None,
@@ -936,6 +937,7 @@ class MoneroWalletOps:
 				proxy = None
 
 			self.dc = MoneroRPCClient(
+				proto  = self.proto,
 				host   = host,
 				port   = int(port),
 				user   = None,

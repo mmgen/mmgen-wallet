@@ -223,6 +223,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				datadir    = datadir
 			)
 			md_rpc = MoneroRPCClient(
+				proto  = self.proto,
 				host   = md.host,
 				port   = md.rpc_port,
 				user   = None,

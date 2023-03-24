@@ -22,6 +22,7 @@ class MoneroRPCClient(RPCClient):
 
 	def __init__(
 			self,
+			proto,
 			host,
 			port,
 			user,
@@ -29,6 +30,8 @@ class MoneroRPCClient(RPCClient):
 			test_connection       = True,
 			proxy                 = None,
 			daemon                = None ):
+
+		self.proto = proto
 
 		if proxy is not None:
 			self.proxy = IPPort(proxy)

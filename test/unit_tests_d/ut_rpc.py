@@ -161,6 +161,7 @@ class unit_tests:
 
 		def test_monerod_rpc(md):
 			rpc = MoneroRPCClient(
+				proto  = md.proto,
 				host   = md.host,
 				port   = md.rpc_port,
 				user   = None,
