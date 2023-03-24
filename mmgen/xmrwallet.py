@@ -31,7 +31,7 @@ from .proto.btc.common import b58a
 from .addr import CoinAddr,AddrIdx
 from .addrlist import KeyAddrList,AddrIdxList
 from .rpc import json_encoder
-from .proto.xmr.rpc import MoneroRPCClientRaw,MoneroWalletRPCClient
+from .proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
 from .proto.xmr.daemon import MoneroWalletDaemon
 from .ui import keypress_confirm
 
@@ -636,8 +636,7 @@ class MoneroWalletOps:
 			self.accts_data = {}
 
 		async def process_wallet(self,d,fn,last):
-
-			chain_height = (await self.dc.call('get_height'))['height']
+			chain_height = (await self.dc.call_raw('get_height'))['height']
 			msg(f'  Chain height: {chain_height}')
 
 			t_start = time.time()
@@ -936,7 +935,7 @@ class MoneroWalletOps:
 				host,port = md.host,md.rpc_port
 				proxy = None
 
-			self.dc = MoneroRPCClientRaw(
+			self.dc = MoneroRPCClient(
 				host   = host,
 				port   = int(port),
 				user   = None,
@@ -952,7 +951,7 @@ class MoneroWalletOps:
 				self.display_tx_relay_info()
 
 			if keypress_confirm('Relay transaction?'):
-				res = await self.dc.call(
+				res = await self.dc.call_raw(
 					'send_raw_transaction',
 					tx_as_hex = self.tx.data.blob
 				)

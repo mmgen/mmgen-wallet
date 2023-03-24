@@ -191,7 +191,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def init_users(self):
 		from mmgen.daemon import CoinDaemon
 		from mmgen.proto.xmr.daemon import MoneroWalletDaemon
-		from mmgen.proto.xmr.rpc import MoneroRPCClient,MoneroRPCClientRaw,MoneroWalletRPCClient
+		from mmgen.proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
 		self.users = {}
 		n = self.tmpdir_nums[0]
 		ud = namedtuple('user_data',[
@@ -205,7 +205,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			'addrfile_fs',
 			'md',
 			'md_rpc',
-			'md_json_rpc',
 			'wd',
 			'wd_rpc',
 		])
@@ -223,15 +222,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				opts       = ['online'],
 				datadir    = datadir
 			)
-			md_rpc = MoneroRPCClientRaw(
-				host   = md.host,
-				port   = md.rpc_port,
-				user   = None,
-				passwd = None,
-				test_connection = False,
-				daemon = md,
-			)
-			md_json_rpc = MoneroRPCClient(
+			md_rpc = MoneroRPCClient(
 				host   = md.host,
 				port   = md.rpc_port,
 				user   = None,
@@ -261,7 +252,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				addrfile_fs   = f'{udir}/{sid}-{{}}-MoneroWallet.address.txt',
 				md            = md,
 				md_rpc        = md_rpc,
-				md_json_rpc   = md_json_rpc,
 				wd            = wd,
 				wd_rpc        = wd_rpc,
 			)
@@ -560,7 +550,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		addr = read_from_file(data.addrfile_fs.format(1)) # mine to wallet #1, account 0
 
 		for i in range(20):
-			ret = await data.md_rpc.call(
+			ret = await data.md_rpc.call_raw(
 				'start_mining',
 				do_background_mining = False, # run mining in background or foreground
 				ignore_battery       = True,  # ignore battery state (on laptop)
@@ -578,7 +568,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			die(2,'Max retries exceeded')
 
 	async def stop_mining(self):
-		ret = await self.users['miner'].md_rpc.call('stop_mining')
+		ret = await self.users['miner'].md_rpc.call_raw('stop_mining')
 		return self.get_status(ret)
 
 	async def mine_chk(self,user,wnum,account,test,test_desc,random_txs=None,return_amt=False):
@@ -595,7 +585,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			u = self.users['miner']
 			for i in range(20):
 				try:
-					return (await u.md_json_rpc.call('get_last_block_header'))['block_header']['height']
+					return (await u.md_rpc.call('get_last_block_header'))['block_header']['height']
 				except Exception as e:
 					if 'onnection refused' in str(e):
 						omsg(f'{e}\nMonerod appears to have crashed. Attempting to restart...')

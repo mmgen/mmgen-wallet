@@ -252,7 +252,6 @@ class RPCBackends:
 
 class RPCClient(MMGenObject):
 
-	json_rpc = True
 	auth_type = None
 	has_auth_cookie = False
 	network_proto = 'http'
@@ -375,7 +374,7 @@ class RPCClient(MMGenObject):
 				return [r['result'] for r in json.loads(text,parse_float=Decimal)]
 			else:
 				try:
-					if self.json_rpc:
+					if json_rpc:
 						return json.loads(text,parse_float=Decimal)['result']
 					else:
 						return json.loads(text,parse_float=Decimal)

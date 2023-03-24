@@ -44,8 +44,8 @@ class monero_daemon(CoinDaemon):
 
 	def init_subclass(self):
 
-		from .rpc import MoneroRPCClientRaw
-		self.rpc = MoneroRPCClientRaw(
+		from .rpc import MoneroRPCClient
+		self.rpc = MoneroRPCClient(
 			host   = self.host,
 			port   = self.rpc_port,
 			user   = None,

@@ -59,24 +59,19 @@ class MoneroRPCClient(RPCClient):
 			host_path = '/json_rpc'
 		))
 
-	rpcmethods = ( 'get_info', )
-
-class MoneroRPCClientRaw(MoneroRPCClient):
-
-	json_rpc = False
-
-	async def call(self,method,*params,**kwargs):
+	async def call_raw(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
 		return self.process_http_resp(await self.backend.run(
 			payload = kwargs,
 			timeout = self.timeout,
 			host_path = f'/{method}'
-		))
+		),json_rpc=False)
 
 	async def do_stop_daemon(self,silent=False):
-		return await self.call('stop_daemon')
+		return await self.call_raw('stop_daemon')
 
-	rpcmethods = ( 'get_height', 'send_raw_transaction', 'stop_daemon' )
+	rpcmethods = ( 'get_info', )
+	rpcmethods_raw = ( 'get_height', 'send_raw_transaction', 'stop_daemon' )
 
 class MoneroWalletRPCClient(MoneroRPCClient):
 
@@ -105,6 +100,9 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		'restore_deterministic_wallet',
 		'refresh',       # start_height
 	)
+
+	def call_raw(*args,**kwargs):
+		raise NotImplementedError('call_raw() not implemented for class MoneroWalletRPCClient')
 
 	async def do_stop_daemon(self,silent=False):
 		"""

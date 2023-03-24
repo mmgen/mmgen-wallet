@@ -11,7 +11,7 @@ from mmgen.common import *
 from mmgen.protocol import init_proto
 from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
-from mmgen.proto.xmr.rpc import MoneroRPCClient,MoneroRPCClientRaw,MoneroWalletRPCClient
+from mmgen.proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
 from mmgen.proto.xmr.daemon import MoneroWalletDaemon
 
 def cfg_file_auth_test(proto,d,bad_auth=False):
@@ -160,24 +160,15 @@ class unit_tests:
 	def xmrwallet(self,name,ut):
 
 		async def test_monerod_rpc(md):
-			md_rpc = MoneroRPCClientRaw(
+			md = MoneroRPCClient(
 				host   = md.host,
 				port   = md.rpc_port,
 				user   = None,
 				passwd = None,
-				test_connection = False,
 				daemon = md,
 			)
-			md_json_rpc = MoneroRPCClient(
-				host   = md.host,
-				port   = md.rpc_port,
-				user   = None,
-				passwd = None,
-				test_connection = False,
-				daemon = md,
-			)
-			await md_rpc.call('get_height')
-			await md_json_rpc.call('get_last_block_header')
+			await md.call_raw('get_height')
+			await md.call('get_last_block_header')
 
 		async def run():
 			networks = init_proto('xmr').networks
