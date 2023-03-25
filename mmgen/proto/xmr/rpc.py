@@ -59,15 +59,20 @@ class MoneroRPCClient(RPCClient):
 
 		if test_connection:
 			# https://github.com/monero-project/monero src/rpc/rpc_version_str.cpp
-			self.daemon_version_str = self.call_raw('getinfo')['version']
-			self.daemon_version = sum(
-				int(m) * (1000 ** n) for n,m in
-					enumerate(reversed(re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)',self.daemon_version_str).groups()))
-			)
-			if self.daemon and self.daemon_version > self.daemon.coind_version:
-				self.handle_unsupported_daemon_version(
-					proto.name,
-					ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version )
+			ver_str = self.call_raw('getinfo')['version']
+			if ver_str:
+				self.daemon_version_str = ver_str
+				self.daemon_version = sum(
+					int(m) * (1000 ** n) for n,m in
+						enumerate(reversed(re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)',ver_str).groups()))
+				)
+				if self.daemon and self.daemon_version > self.daemon.coind_version:
+					self.handle_unsupported_daemon_version(
+						proto.name,
+						ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version )
+			else: # restricted (public) node:
+				self.daemon_version_str = None
+				self.daemon_version = None
 
 	def call(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'

@@ -208,11 +208,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			'md_rpc',
 			'wd',
 			'wd_rpc',
+			'add_coind_args',
 		])
-		for user,sid,shift,kal_range in ( # kal_range must be None, a single digit, or a single hyphenated range
-				('miner', '98831F3A', 130,  '1-2'),
-				('bob',   '1378FC64', 140, None),
-				('alice', 'FE3C6545', 150, '1-4'),
+		# kal_range must be None, a single digit, or a single hyphenated range
+		for user,sid,shift,kal_range,add_coind_args in (
+				('miner', '98831F3A', 130, '1-2', []),
+				('bob',   '1378FC64', 140, None,  ['--restricted-rpc']),
+				('alice', 'FE3C6545', 150, '1-4', []),
 			):
 			udir = os.path.join('test',f'tmp{n}',user)
 			datadir = os.path.join(self.datadir_base,user)
@@ -256,6 +258,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				md_rpc        = md_rpc,
 				wd            = wd,
 				wd_rpc        = wd_rpc,
+				add_coind_args = add_coind_args,
 			)
 
 	def init_daemon_args(self):
@@ -263,7 +266,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		for u in self.users:
 			other_ports = [self.users[u2].md.p2p_port for u2 in self.users if u2 != u]
 			node_args = [f'--add-exclusive-node=127.0.0.1:{p}' for p in other_ports]
-			self.users[u].md.usr_coind_args = common_args + node_args
+			self.users[u].md.usr_coind_args = (
+				common_args +
+				node_args +
+				self.users[u].add_coind_args )
 
 	# cmd_group methods
 
@@ -707,7 +713,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	def stop_daemons(self):
 		for v in self.users.values():
-			async_run(v.md_rpc.stop_daemon())
+			if '--restricted-rpc' in v.md.start_cmd:
+				v.md.stop()
+			else:
+				async_run(v.md_rpc.stop_daemon())
 
 	def stop_miner_wallet_daemon(self):
 		async_run(self.users['miner'].wd_rpc.stop_daemon())

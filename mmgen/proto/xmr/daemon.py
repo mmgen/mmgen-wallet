@@ -72,7 +72,12 @@ class monero_daemon(CoinDaemon):
 
 	@property
 	def stop_cmd(self):
-		return ['kill','-Wf',self.pid] if self.platform == 'win' else [self.exec_fn] + self.shared_args + ['exit']
+		if self.platform == 'win':
+			return ['kill','-Wf',self.pid]
+		elif '--restricted-rpc' in self.start_cmd or '--public-node' in self.start_cmd:
+			return ['kill',self.pid]
+		else:
+			return [self.exec_fn] + self.shared_args + ['exit']
 
 class MoneroWalletDaemon(RPCDaemon):
 
