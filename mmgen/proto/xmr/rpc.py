@@ -67,7 +67,7 @@ class MoneroRPCClient(RPCClient):
 			if self.daemon and self.daemon_version > self.daemon.coind_version:
 				self.handle_unsupported_daemon_version(
 					proto.name,
-					ignore_daemon_version or g.ignore_daemon_version )
+					ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version )
 
 	def call(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'

@@ -234,6 +234,7 @@ class GlobalContext(Lockable):
 		'etc_ignore_daemon_version',
 		'eth_ignore_daemon_version',
 		'ltc_ignore_daemon_version',
+		'xmr_ignore_daemon_version',
 		'eth_mainnet_chain_names',
 		'eth_testnet_chain_names' )
 
