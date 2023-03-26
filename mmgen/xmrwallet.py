@@ -424,7 +424,7 @@ class MoneroWalletOps:
 				self.d = d
 				self.fn = parent.get_wallet_fn(d)
 
-			async def open_wallet(self,desc,refresh=True):
+			def open_wallet(self,desc,refresh=True):
 				gmsg_r(f'\n  Opening {desc} wallet...')
 				self.c.call( # returns {}
 					'open_wallet',
@@ -439,7 +439,7 @@ class MoneroWalletOps:
 					if ret['received_money']:
 						msg('  Wallet has received funds')
 
-			async def close_wallet(self,desc):
+			def close_wallet(self,desc):
 				gmsg_r(f'\n  Closing {desc} wallet...')
 				self.c.call('close_wallet')
 				gmsg_r('done')
@@ -464,7 +464,7 @@ class MoneroWalletOps:
 						fmt_amt(e['unlocked_balance']),
 					))
 
-			async def get_accts(self,print=True):
+			def get_accts(self,print=True):
 				data = self.c.call('get_accounts')
 				addrs_data = [
 					self.c.call('get_address',account_index=i)
@@ -474,7 +474,7 @@ class MoneroWalletOps:
 					self.print_accts(data,addrs_data)
 				return ( data, addrs_data )
 
-			async def create_acct(self,label=None):
+			def create_acct(self,label=None):
 				msg('\n    Creating new account...')
 				ret = self.c.call(
 					'create_account',
@@ -493,7 +493,7 @@ class MoneroWalletOps:
 				msg('      Address: {}'.format( cyan(ret['base_address']) ))
 				return (ret['account_index'], ret['base_address'])
 
-			async def print_addrs(self,accts_data,account):
+			def print_addrs(self,accts_data,account):
 				ret = self.c.call('get_address',account_index=account)
 				d = ret['addresses']
 				msg('\n      Addresses of account #{} ({}):'.format(
@@ -509,7 +509,7 @@ class MoneroWalletOps:
 						e['used']
 					))
 
-			async def create_new_addr(self,account,label=None):
+			def create_new_addr(self,account,label=None):
 				msg_r('\n    Creating new address: ')
 				ret = self.c.call(
 					'create_address',
@@ -519,7 +519,7 @@ class MoneroWalletOps:
 				msg(cyan(ret['address']))
 				return ret['address']
 
-			async def get_last_addr(self,account,display=True):
+			def get_last_addr(self,account,display=True):
 				if display:
 					msg('\n    Getting last address:')
 				ret = self.c.call(
@@ -531,7 +531,7 @@ class MoneroWalletOps:
 					msg('      ' + cyan(addr))
 				return ( addr, len(ret) - 1 )
 
-			async def make_transfer_tx(self,account,addr,amt):
+			def make_transfer_tx(self,account,addr,amt):
 				res = self.c.call(
 					'transfer',
 					account_index = account,
@@ -557,7 +557,7 @@ class MoneroWalletOps:
 					metadata       = res['tx_metadata'],
 				)
 
-			async def make_sweep_tx(self,account,dest_acct,dest_addr_idx,addr):
+			def make_sweep_tx(self,account,dest_acct,dest_addr_idx,addr):
 				res = self.c.call(
 					'sweep_all',
 					address = addr,
@@ -587,7 +587,7 @@ class MoneroWalletOps:
 					metadata       = res['tx_metadata_list'][0],
 				)
 
-			async def relay_tx(self,tx_hex):
+			def relay_tx(self,tx_hex):
 				ret = self.c.call('relay_tx',hex=tx_hex)
 				try:
 					msg('\n    Relayed {}'.format( CoinTxID(ret['tx_hash']).hl() ))
@@ -685,7 +685,7 @@ class MoneroWalletOps:
 
 			bn = os.path.basename(fn)
 
-			a,b = await self.rpc(self,d).get_accts(print=False)
+			a,b = self.rpc(self,d).get_accts(print=False)
 
 			msg('  Balance: {} Unlocked balance: {}'.format(
 				hl_amt(a['total_balance']),
@@ -814,55 +814,55 @@ class MoneroWalletOps:
 
 			h = self.rpc(self,self.source)
 
-			await h.open_wallet('source')
-			accts_data = (await h.get_accts())[0]
+			h.open_wallet('source')
+			accts_data = h.get_accts()[0]
 
 			max_acct = len(accts_data['subaddress_accounts']) - 1
 			if self.account > max_acct:
 				die(1,f'{self.account}: requested account index out of bounds (>{max_acct})')
 
-			await h.print_addrs(accts_data,self.account)
+			h.print_addrs(accts_data,self.account)
 
 			if self.name == 'transfer':
 				dest_addr = self.dest_addr
 			elif self.dest == None:
 				dest_acct = self.account
 				if keypress_confirm(f'\nCreate new address for account #{self.account}?'):
-					dest_addr_chk = await h.create_new_addr(self.account)
+					dest_addr_chk = h.create_new_addr(self.account)
 				elif keypress_confirm(f'Sweep to last existing address of account #{self.account}?'):
 					dest_addr_chk = None
 				else:
 					die(1,'Exiting at user request')
-				dest_addr,dest_addr_idx = await h.get_last_addr(self.account,display=not dest_addr_chk)
+				dest_addr,dest_addr_idx = h.get_last_addr(self.account,display=not dest_addr_chk)
 				assert dest_addr_chk in (None,dest_addr), 'dest_addr_chk1'
-				await h.print_addrs(accts_data,self.account)
+				h.print_addrs(accts_data,self.account)
 			else:
-				await h.close_wallet('source')
+				h.close_wallet('source')
 				bn = os.path.basename(self.get_wallet_fn(self.dest))
 				h2 = self.rpc(self,self.dest)
-				await h2.open_wallet('destination')
-				accts_data = (await h2.get_accts())[0]
+				h2.open_wallet('destination')
+				accts_data = h2.get_accts()[0]
 
 				if keypress_confirm(f'\nCreate new account for wallet {bn!r}?'):
-					dest_acct,dest_addr = await h2.create_acct()
+					dest_acct,dest_addr = h2.create_acct()
 					dest_addr_idx = 0
-					await h2.get_accts()
+					h2.get_accts()
 				elif keypress_confirm(f'Sweep to last existing account of wallet {bn!r}?'):
 					dest_acct,dest_addr_chk = h2.get_last_acct(accts_data)
-					dest_addr,dest_addr_idx = await h2.get_last_addr(dest_acct,display=False)
+					dest_addr,dest_addr_idx = h2.get_last_addr(dest_acct,display=False)
 					assert dest_addr_chk == dest_addr, 'dest_addr_chk2'
 				else:
 					die(1,'Exiting at user request')
 
-				await h2.close_wallet('destination')
-				await h.open_wallet('source',refresh=False)
+				h2.close_wallet('destination')
+				h.open_wallet('source',refresh=False)
 
 			msg(f'\n    Creating {self.name} transaction...')
 
 			if self.name == 'transfer':
-				new_tx = await h.make_transfer_tx(self.account,dest_addr,self.amount)
+				new_tx = h.make_transfer_tx(self.account,dest_addr,self.amount)
 			elif self.name == 'sweep':
-				new_tx = await h.make_sweep_tx(self.account,dest_acct,dest_addr_idx,dest_addr)
+				new_tx = h.make_sweep_tx(self.account,dest_acct,dest_addr_idx,dest_addr)
 
 			msg('\n' + new_tx.get_info(indent='    '))
 
@@ -880,9 +880,9 @@ class MoneroWalletOps:
 					self.init_tx_relay_daemon()
 					h = self.rpc(self,self.source)
 					w_desc = 'TX relay source'
-					await h.open_wallet(w_desc,refresh=False)
+					h.open_wallet(w_desc,refresh=False)
 				msg_r(f'\n    Relaying {self.name} transaction...')
-				await h.relay_tx(new_tx.data.metadata)
+				h.relay_tx(new_tx.data.metadata)
 
 				gmsg('\n\nAll done')
 			else:
@@ -903,24 +903,24 @@ class MoneroWalletOps:
 
 		async def main(self):
 			h = self.rpc(self,self.source)
-			await h.open_wallet('Monero',refresh=True)
+			h.open_wallet('Monero',refresh=True)
 			label = '{a} [{b}]'.format(
 				a = self.label or f"xmrwallet new {'account' if self.account == None else 'address'}",
 				b = make_timestr() )
 			if self.account == None:
-				acct,addr = await h.create_acct(label=label)
+				acct,addr = h.create_acct(label=label)
 			else:
 				msg_r('\n    Account index: {}'.format( pink(str(self.account)) ))
-				addr = await h.create_new_addr(self.account,label=label)
+				addr = h.create_new_addr(self.account,label=label)
 
-			accts_data = (await h.get_accts())[0]
+			accts_data = h.get_accts()[0]
 
 			if self.account != None:
-				await h.print_addrs(accts_data,self.account)
+				h.print_addrs(accts_data,self.account)
 
 			# wallet must be left open: otherwise the 'stop_wallet' RPC call used to stop the daemon will fail
 			if uopt.no_stop_wallet_daemon:
-				await h.close_wallet('Monero')
+				h.close_wallet('Monero')
 
 			msg('')
 
