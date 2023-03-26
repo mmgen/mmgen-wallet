@@ -32,6 +32,7 @@ opts_data = {
 			'[opts] create   <xmr_keyaddrfile> [wallets]',
 			'[opts] sync     <xmr_keyaddrfile> [wallets]',
 			'[opts] list     <xmr_keyaddrfile> [wallets]',
+			'[opts] label    <xmr_keyaddrfile> LABEL_SPEC',
 			'[opts] new      <xmr_keyaddrfile> NEW_ADDRESS_SPEC',
 			'[opts] transfer <xmr_keyaddrfile> TRANSFER_SPEC',
 			'[opts] sweep    <xmr_keyaddrfile> SWEEP_SPEC',
@@ -80,6 +81,7 @@ plain HTTP is not supported.
 create    - create wallet for all or specified addresses in key-address file
 sync      - sync wallet for all or specified addresses in key-address file
 list      - same as 'sync', but also list detailed address info for accounts
+label     - set a label for an address
 new       - create a new account in a wallet, or a new address in an account
 transfer  - transfer specified XMR amount from specified wallet:account to
             specified address
@@ -97,6 +99,16 @@ These operations take an optional `wallets` argument: one or more address
 indexes (expressed as a comma-separated list, hyphenated range, or both)
 in the specified key-address file, each corresponding to a Monero wallet
 to be created, synced or listed.  If omitted, all wallets are operated upon.
+
+
+                          'LABEL' OPERATION NOTES
+
+This operation takes a LABEL_SPEC arg with the following format:
+
+    WALLET:ACCOUNT:ADDRESS,"label text"
+
+where WALLET is a wallet number, ACCOUNT an account index, and ADDRESS an
+address index.
 
 
                            'NEW' OPERATION NOTES
@@ -231,7 +243,7 @@ elif op in ('create','sync','list'):
 		opts.usage()
 	if cmd_args:
 		wallets = cmd_args[0]
-elif op in ('new','transfer','sweep'):
+elif op in ('new','transfer','sweep','label'):
 	if len(cmd_args) != 1:
 		opts.usage()
 	spec = cmd_args[0]

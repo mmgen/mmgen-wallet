@@ -49,6 +49,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		('daemon_version',            'checking daemon version'),
 		('gen_kafiles',               'generating key-address files'),
 		('create_wallets_miner',      'creating Monero wallets (Miner)'),
+		('set_label_miner',           'setting an address label (Miner, primary account)'),
 		('mine_initial_coins',        'mining initial coins'),
 		('create_wallets_alice',      'creating Monero wallets (Alice)'),
 		('fund_alice',                'sending funds'),
@@ -58,6 +59,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		('new_account_alice_label',   'creating a new account (Alice, with label)'),
 		('new_address_alice',         'creating a new address (Alice)'),
 		('new_address_alice_label',   'creating a new address (Alice, with label)'),
+		('remove_label_alice',        'removing an address label (Alice, subaddress)'),
+		('set_label_alice',           'setting an address label (Alice, subaddress)'),
 		('sync_wallets_selected',     'syncing selected wallets'),
 
 		('sweep_to_address_proxy',    'sweeping to new address (via TX relay + proxy)'),
@@ -373,6 +376,26 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			lambda x: str(x) == bal,f'unlocked balance == {bal}',
 			random_txs = self.dfl_random_txs
 		)
+
+	def set_label_miner(self):
+		return self.set_label_user( 'miner', '1:0:0,"Miner’s new primary account label [1:0:0]"' )
+
+	def remove_label_alice(self):
+		return self.set_label_user( 'alice', '4:2:2,""' )
+
+	def set_label_alice(self):
+		return self.set_label_user( 'alice', '4:2:2,"Alice’s new subaddress label [4:2:2]"' )
+
+	def set_label_user(self,user,label_spec):
+		data = self.users[user]
+		cmd_opts = [f'--wallet-dir={data.udir}', f'--daemon=localhost:{data.md.rpc_port}']
+		t = self.spawn(
+			'mmgen-xmrwallet',
+			self.extra_opts + cmd_opts + ['label', data.kafile, label_spec]
+		)
+		t.expect('(y/N): ','y')
+		t.expect(['successfully set','successfully removed'])
+		return t
 
 	def sync_wallets_all(self):
 		return self.sync_wallets('alice',add_opts=['--rescan-blockchain'])

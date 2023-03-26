@@ -42,6 +42,7 @@ xmrwallet_uarg_info = (
 		'newaddr_spec':    e('WALLET_NUM[:ACCOUNT][,"label text"]', rf'(\d+)(?::(\d+))?(?:,(.*))?'),
 		'transfer_spec':   e('SOURCE_WALLET_NUM:ACCOUNT:ADDRESS,AMOUNT', rf'(\d+):(\d+):([{b58a}]+),([0-9.]+)'),
 		'sweep_spec':      e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
+		'label_spec':      e('WALLET_NUM:ACCOUNT:ADDRESS,"label text"', rf'(\d+):(\d+):(\d+),(.*)'),
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),
 		r'(?:[^:]+):(?:\d+)'
@@ -237,7 +238,7 @@ class MoneroMMGenTX:
 
 class MoneroWalletOps:
 
-	ops = ('create','sync','list','new','transfer','sweep','relay','txview')
+	ops = ('create','sync','list','new','transfer','sweep','relay','txview','label')
 	opts = (
 		'wallet_dir',
 		'daemon',
@@ -508,6 +509,7 @@ class MoneroWalletOps:
 						e['label'],
 						e['used']
 					))
+				return ret
 
 			def create_new_addr(self,account,label=None):
 				msg_r('\n    Creating new address: ')
@@ -530,6 +532,13 @@ class MoneroWalletOps:
 				if display:
 					msg('      ' + cyan(addr))
 				return ( addr, len(ret) - 1 )
+
+			def set_label(self,account,address_idx,label):
+				return self.c.call(
+					'label_address',
+					index = { 'major': account, 'minor': address_idx },
+					label = label
+				)
 
 			def make_transfer_tx(self,account,addr,amt):
 				res = self.c.call(
@@ -788,6 +797,9 @@ class MoneroWalletOps:
 				self.amount = self.proto.coin_amt(m[4])
 			elif self.name == 'new':
 				self.label = strip_quotes(m[3])
+			elif self.name == 'label':
+				self.address_idx = int(m[3])
+				self.label = strip_quotes(m[4])
 
 	class sweep(spec):
 		name     = 'sweep'
@@ -932,6 +944,61 @@ class MoneroWalletOps:
 				h.close_wallet('Monero')
 
 			msg('')
+
+	class label(spec):
+		name     = 'label'
+		spec_id  = 'label_spec'
+		spec_key = ( (1,'source'), )
+		opts     = ()
+
+		async def main(self):
+
+			gmsg('\n{} label for wallet {}, account #{}, address #{}'.format(
+				'Setting' if self.label else 'Removing',
+				self.source.idx,
+				self.account,
+				self.address_idx
+			))
+			h = self.rpc(self,self.source)
+
+			h.open_wallet('source')
+			accts_data = h.get_accts()[0]
+
+			max_acct = len(accts_data['subaddress_accounts']) - 1
+			if self.account > max_acct:
+				die(1,f'{self.account}: requested account index out of bounds (>{max_acct})')
+
+			ret = h.print_addrs(accts_data,self.account)
+
+			if self.address_idx > len(ret['addresses']) - 1:
+				die(1,'{}: requested address index out of bounds (>{})'.format(
+					self.account,
+					len(ret['addresses']) - 1 ))
+
+			addr = ret['addresses'][self.address_idx]
+
+			msg('\n  {} {}\n  {} {}\n  {} {}'.format(
+					'Address:       ',
+					cyan(addr['address'][:15] + '...'),
+					'Existing label:',
+					pink(addr['label']) if addr['label'] else '[none]',
+					'New label:     ',
+					pink(self.label) if self.label else '[none]' ))
+
+			if addr['label'] == self.label:
+				ymsg('\nLabel is unchanged, operation cancelled')
+			elif keypress_confirm('  {} label?'.format('Set' if self.label else 'Remove')):
+				h.set_label( self.account, self.address_idx, self.label )
+				accts_data = h.get_accts(print=False)[0]
+				ret = h.print_addrs(accts_data,self.account)
+				new_label = ret['addresses'][self.address_idx]['label']
+				if new_label != self.label:
+					ymsg(f'Warning: new label {new_label!r} does not match requested value!')
+					return False
+				else:
+					msg(cyan('\nLabel successfully {}'.format('set' if self.label else 'removed')))
+			else:
+				ymsg('\nOperation cancelled by user request')
 
 	class relay(base):
 		name = 'relay'
