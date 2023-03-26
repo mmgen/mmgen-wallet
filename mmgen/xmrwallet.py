@@ -748,11 +748,7 @@ class MoneroWalletOps:
 	class list(sync):
 		pass
 
-	class sweep(wallet):
-		name     = 'sweep'
-		spec_id  = 'sweep_spec'
-		spec_key = ( (1,'source'), (3,'dest') )
-		opts     = ('no_relay','tx_relay_daemon')
+	class spec(wallet): # virtual class
 
 		def create_addr_data(self):
 			m = re.fullmatch(uarg_info[self.spec_id].pat,uarg.spec,re.ASCII)
@@ -785,6 +781,12 @@ class MoneroWalletOps:
 			elif self.name == 'new':
 				self.label = m[3]
 
+	class sweep(spec):
+		name     = 'sweep'
+		spec_id  = 'sweep_spec'
+		spec_key = ( (1,'source'), (3,'dest') )
+		opts     = ('no_relay','tx_relay_daemon')
+
 		def init_tx_relay_daemon(self):
 
 			m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
@@ -804,6 +806,7 @@ class MoneroWalletOps:
 			self.c = MoneroWalletRPCClient(daemon=wd2)
 
 		async def main(self):
+
 			gmsg(f'\n{self.stem.capitalize()}ing account #{self.account} of wallet {self.source.idx}' + (
 				f': {self.amount} XMR to {self.dest_addr}' if self.name == 'transfer'
 				else ' to new address' if self.dest == None
@@ -893,7 +896,7 @@ class MoneroWalletOps:
 		spec_id = 'transfer_spec'
 		spec_key = ( (1,'source'), )
 
-	class new(sweep):
+	class new(spec):
 		name    = 'new'
 		spec_id = 'newaddr_spec'
 		spec_key = ( (1,'source'), )
