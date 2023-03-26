@@ -189,6 +189,9 @@ def remove_dups(iterable,edesc='element',desc='list',quiet=False,hide=False):
 			ret.append(e)
 	return ret if type(iterable).__name__ == 'generator' else type(iterable)(ret)
 
+def contains_any(target_list,source_list):
+	return any(map(target_list.count,source_list))
+
 def suf(arg,suf_type='s',verb='none'):
 	suf_types = {
 		'none': {

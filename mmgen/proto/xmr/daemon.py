@@ -16,7 +16,7 @@ import os
 
 from ...globalvars import g
 from ...opts import opt
-from ...util import list_gen,die
+from ...util import list_gen,die,contains_any
 from ...daemon import CoinDaemon,RPCDaemon,_nw,_dd
 
 class monero_daemon(CoinDaemon):
@@ -74,7 +74,7 @@ class monero_daemon(CoinDaemon):
 	def stop_cmd(self):
 		if self.platform == 'win':
 			return ['kill','-Wf',self.pid]
-		elif '--restricted-rpc' in self.start_cmd or '--public-node' in self.start_cmd:
+		elif contains_any( self.start_cmd, ['--restricted-rpc','--public-node'] ):
 			return ['kill',self.pid]
 		else:
 			return [self.exec_fn] + self.shared_args + ['exit']

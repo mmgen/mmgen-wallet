@@ -775,11 +775,19 @@ class MoneroWalletOps:
 			self.addr_data = list(gen())
 			self.account = None if m[2] is None else int(m[2])
 
+			def strip_quotes(s):
+				if s and s[0] in ("'",'"'):
+					if s[-1] != s[0] or len(s) < 2:
+						die(1,f'{s!r}: unbalanced quotes in label string!')
+					return s[1:-1]
+				else:
+					return s # None or empty string
+
 			if self.name == 'transfer':
 				self.dest_addr = CoinAddr(self.proto,m[3])
 				self.amount = self.proto.coin_amt(m[4])
 			elif self.name == 'new':
-				self.label = m[3]
+				self.label = strip_quotes(m[3])
 
 	class sweep(spec):
 		name     = 'sweep'
@@ -883,8 +891,7 @@ class MoneroWalletOps:
 					h.open_wallet(w_desc,refresh=False)
 				msg_r(f'\n    Relaying {self.name} transaction...')
 				h.relay_tx(new_tx.data.metadata)
-
-				gmsg('\n\nAll done')
+				gmsg('\nAll done')
 			else:
 				die(1,'\nExiting at user request')
 
@@ -950,6 +957,7 @@ class MoneroWalletOps:
 				port   = int(port),
 				user   = None,
 				passwd = None,
+				test_connection = False, # relay is presumably a public node, so avoid extra connections
 				proxy  = proxy )
 
 			self.tx = MoneroMMGenTX.Signed(uarg.infile)
