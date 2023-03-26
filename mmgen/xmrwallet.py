@@ -877,10 +877,13 @@ class MoneroWalletOps:
 			if uopt.tx_relay_daemon:
 				self.display_tx_relay_info(indent='    ')
 
+			msg('Saving TX data to file')
+			new_tx.write(delete_metadata=True)
+
 			if uopt.no_relay:
-				msg('Saving TX data to file')
-				new_tx.write(delete_metadata=True)
-			elif keypress_confirm(f'Relay {self.name} transaction?'):
+				return True
+
+			if keypress_confirm(f'Relay {self.name} transaction?'):
 				w_desc = 'source'
 				if uopt.tx_relay_daemon:
 					await h.stop_wallet('source')
@@ -892,10 +895,9 @@ class MoneroWalletOps:
 				msg_r(f'\n    Relaying {self.name} transaction...')
 				h.relay_tx(new_tx.data.metadata)
 				gmsg('\nAll done')
+				return True
 			else:
 				die(1,'\nExiting at user request')
-
-			return True
 
 	class transfer(sweep):
 		name    = 'transfer'

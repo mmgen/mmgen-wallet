@@ -438,11 +438,12 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		if return_amt:
 			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amount: ')).replace('XMR','').strip())
 
-		if no_relay:
-			t.expect('Save MoneroMMGenTX data? (y/N): ','y')
-			t.written_to_file('MoneroMMGenTX data')
-		else:
+		t.expect('Save MoneroMMGenTX data? (y/N): ','y')
+		t.written_to_file('MoneroMMGenTX data')
+
+		if not no_relay:
 			t.expect(f'Relay {op} transaction? (y/N): ','y')
+			get_file_with_ext(self.users[user].udir,'sigtx',delete_all=True)
 
 		t.read()
 
