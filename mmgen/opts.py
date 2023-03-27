@@ -363,16 +363,16 @@ def init(
 	init_term()
 
 	from .util import wrap_ripemd160
-	wrap_ripemd160() # ripemd160 used by cfg_file()
+	wrap_ripemd160() # ripemd160 used by mmgen_cfg_file()
 
 	cfgfile_autoset_opts = {}
 
 	if not (opt.skip_cfg_file or opt.bob or opt.alice or g.prog_name == 'mmgen-regtest'):
-		from .cfgfile import cfg_file
+		from .cfgfile import mmgen_cfg_file
 		# check for changes in system template file - term must be initialized
-		cfg_file('sample')
+		mmgen_cfg_file('sample',g.data_dir_root)
 		override_globals_from_cfg_file(
-			cfg_file('usr'),
+			mmgen_cfg_file('usr',g.data_dir_root),
 			cfgfile_autoset_opts,
 			env_globals,
 			need_proto )

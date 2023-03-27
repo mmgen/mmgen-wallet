@@ -4,11 +4,11 @@ from mmgen.common import *
 
 cmd_args = opts.init()
 
-from mmgen.cfgfile import cfg_file
+from mmgen.cfgfile import mmgen_cfg_file
 
-cf_usr = cfg_file('usr')
-cf_sys = cfg_file('sys')
-cf_sample = cfg_file('sample')
+cf_usr = mmgen_cfg_file('usr',g.data_dir_root)
+cf_sys = mmgen_cfg_file('sys',g.data_dir_root)
+cf_sample = mmgen_cfg_file('sample',g.data_dir_root)
 
 msg(f'Usr cfg file:    {os.path.relpath(cf_usr.fn)}')
 msg(f'Sys cfg file:    {os.path.relpath(cf_sys.fn)}')

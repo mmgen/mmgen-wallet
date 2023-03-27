@@ -20,18 +20,14 @@
 cfgfile: API for the MMGen runtime configuration file and related files
 """
 
-# NB: This module is used by override_globals_from_cfg_file(), which is called before
-# override_from_env() during init, so global config vars that are set from the environment
-# (such as g.test_suite) cannot be used here.
-
-import sys,os,re
+import os,re
 from collections import namedtuple
 
-from .globalvars import *
-from .util import *
+from .globalvars import g
+from .util import msg,ymsg,suf,fmt,fmt_list,oneshot_warning,strip_comment,capfirst
 
-def cfg_file(id_str):
-	return CfgFile.get_cls_by_id(id_str)()
+def mmgen_cfg_file(id_str,data_dir_root):
+	return CfgFile.get_cls_by_id(id_str)(data_dir_root)
 
 class CfgFile(object):
 	cur_ver = 2
@@ -46,8 +42,9 @@ class CfgFile(object):
 		color = 'yellow' # has no effect, as color not initialized yet
 		message = '{} not found at {!r}'
 
-	def __init__(self):
-		self.fn = os.path.join(g.data_dir_root,self.fn_base)
+	def __init__(self,data_dir_root):
+		self.fn = os.path.join(data_dir_root,self.fn_base)
+		self.data_dir_root = data_dir_root
 		try:
 			with open(self.fn) as fp:
 				self.data = fp.read().splitlines()
@@ -58,7 +55,7 @@ class CfgFile(object):
 
 	def copy_data(self):
 		assert self.write_ok, f'writing to file {self.fn!r} not allowed!'
-		src = cfg_file('sys')
+		src = mmgen_cfg_file('sys',self.data_dir_root)
 		if src.data:
 			data = src.data + src.make_metadata() if self.write_metadata else src.data
 			try:
@@ -174,8 +171,8 @@ class CfgFileUsr(CfgFile):
 	warn_missing = False
 	write_ok = True
 
-	def __init__(self):
-		super().__init__()
+	def __init__(self,data_dir_root):
+		super().__init__(data_dir_root)
 		if not self.data:
 			self.copy_data()
 
@@ -183,9 +180,9 @@ class CfgFileSampleSys(CfgFileSample):
 	desc = 'system sample configuration file'
 	test_fn_subdir = 'usr.local.share'
 
-	def __init__(self):
-		if os.getenv('MMGEN_TEST_SUITE_CFGTEST'):
-			self.fn = os.path.join(g.data_dir_root,self.test_fn_subdir,self.fn_base)
+	def __init__(self,data_dir_root):
+		if g.test_suite_cfgtest:
+			self.fn = os.path.join(data_dir_root,self.test_fn_subdir,self.fn_base)
 			with open(self.fn) as fp:
 				self.data = fp.read().splitlines()
 		else:
@@ -207,10 +204,10 @@ class CfgFileSampleUsr(CfgFileSample):
 	out_of_date_fs = 'File {!r} is out of date - replacing'
 	altered_by_user_fs = 'File {!r} was altered by user - replacing'
 
-	def __init__(self):
-		super().__init__()
+	def __init__(self,data_dir_root):
+		super().__init__(data_dir_root)
 
-		src = cfg_file('sys')
+		src = mmgen_cfg_file('sys',self.data_dir_root)
 		if not src.data:
 			return
 
@@ -258,7 +255,7 @@ class CfgFileSampleUsr(CfgFileSample):
 				opts = fmt_list([i.name for i in data],fmt='bare')
 				msg(f'  The following option{suf(data,verb="has")} been {desc}:\n    {opts}\n')
 				if desc == 'removed' and data:
-					uc = cfg_file('usr')
+					uc = mmgen_cfg_file('usr',self.data_dir_root)
 					usr_names = [i.name for i in uc.get_lines()]
 					rm_names = [i.name for i in data]
 					bad = sorted(set(usr_names).intersection(rm_names))
