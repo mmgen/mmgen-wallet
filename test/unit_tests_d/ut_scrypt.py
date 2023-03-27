@@ -13,7 +13,9 @@ class unit_test(object):
 
 		msg_r('Testing password hashing...')
 		qmsg('')
-		from mmgen.crypto import scrypt_hash_passphrase,hash_presets
+
+		from mmgen.crypto import Crypto
+		crypto = Crypto()
 
 		salt = bytes.fromhex('f00f' * 16)
 
@@ -37,7 +39,7 @@ class unit_test(object):
 						omsg_r('.')
 					else:
 						msg_r(f'\n  password {pw_disp:9} ')
-					ret = scrypt_hash_passphrase(pw,salt,'1').hex()
+					ret = crypto.scrypt_hash_passphrase(pw,salt,'1').hex()
 					assert ret == res, ret
 
 		def test_presets(do_presets):
@@ -48,9 +50,9 @@ class unit_test(object):
 				if opt.quiet:
 					omsg_r('.')
 				else:
-					msg_r(f'\n  {hp!r:3}: {hash_presets[hp]!r:12}  ')
+					msg_r(f'\n  {hp!r:3}: {crypto.hash_presets[hp]!r:12}  ')
 				st = time.time()
-				ret = scrypt_hash_passphrase(pw,salt,hp).hex()
+				ret = crypto.scrypt_hash_passphrase(pw,salt,hp).hex()
 				t = time.time() - st
 				vmsg('' if g.test_suite_deterministic else f'  {t:0.4f} secs')
 				assert ret == res, ret

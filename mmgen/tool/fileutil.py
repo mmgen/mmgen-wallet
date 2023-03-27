@@ -24,7 +24,7 @@ import os
 
 from .common import tool_cmd_base
 from ..util import msg,msg_r,qmsg,die,suf,make_full_path
-from ..crypto import get_random,aesctr_iv_len
+from ..crypto import Crypto
 
 class tool_cmd(tool_cmd_base):
 	"file utilities"
@@ -38,7 +38,7 @@ class tool_cmd(tool_cmd_base):
 		from hashlib import sha256
 		from ..globalvars import g
 
-		ivsize,bsize,mod = ( aesctr_iv_len, 4096, 4096*8 )
+		ivsize,bsize,mod = ( Crypto.aesctr_iv_len, 4096, 4096*8 )
 		n,carry = 0,b' '*ivsize
 		flgs = os.O_RDONLY|os.O_BINARY if g.platform == 'win' else os.O_RDONLY
 		f = os.open(filename,flgs)
@@ -98,7 +98,7 @@ class tool_cmd(tool_cmd_base):
 		from ..util2 import parse_bytespec
 
 		def encrypt_worker(wid):
-			ctr_init_val = os.urandom( aesctr_iv_len )
+			ctr_init_val = os.urandom( Crypto.aesctr_iv_len )
 			c = Cipher( algorithms.AES(key), modes.CTR(ctr_init_val), backend=default_backend() )
 			encryptor = c.encryptor()
 			while True:
@@ -115,7 +115,7 @@ class tool_cmd(tool_cmd_base):
 			outfile = make_full_path( opt.outdir, outfile )
 		f = open(outfile,'wb')
 
-		key = get_random(32)
+		key = Crypto().get_random(32)
 		q1,q2 = ( Queue(), Queue() )
 
 		for i in range(max(1,threads-2)):

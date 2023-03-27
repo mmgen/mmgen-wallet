@@ -312,11 +312,11 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			scramble_key = self.proto.coin.lower()
 		else:
 			scramble_key = (self.proto.coin.lower()+':','')[is_btcfork] + self.al_id.mmtype.name
-		from .crypto import scramble_seed
+		from .crypto import Crypto
 		if self.proto.testnet:
 			scramble_key += ':' + self.proto.network
 		self.dmsg_sc('str',scramble_key)
-		return scramble_seed(seed,scramble_key.encode())
+		return Crypto().scramble_seed(seed,scramble_key.encode())
 
 	def idxs(self):
 		return [e.idx for e in self.data]

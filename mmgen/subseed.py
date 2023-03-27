@@ -24,7 +24,6 @@ from .color import green
 from .util import msg_r,msg,qmsg,die
 from .obj import MMGenRange,IndexedDict
 from .seed import *
-from .crypto import scramble_seed
 
 class SubSeedIdxRange(MMGenRange):
 	min_idx = 1
@@ -75,7 +74,8 @@ class SubSeed(SeedBase):
 		short = { 'short': True, 'long': False }[length]
 		# field maximums: idx: 4294967295 (1000000), nonce: 65535 (1000), short: 255 (1)
 		scramble_key  = idx.to_bytes(4,'big') + nonce.to_bytes(2,'big') + short.to_bytes(1,'big')
-		return scramble_seed(seed.data,scramble_key)[:16 if short else seed.byte_len]
+		from .crypto import Crypto
+		return Crypto().scramble_seed(seed.data,scramble_key)[:16 if short else seed.byte_len]
 
 class SubSeedList(MMGenObject):
 	have_short = True

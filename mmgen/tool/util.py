@@ -92,8 +92,8 @@ class tool_cmd(tool_cmd_base):
 	def randhex(self,
 			nbytes: 'number of bytes to output' = 32 ):
 		"print 'n' bytes (default 32) of random data in hex format"
-		from ..crypto import get_random
-		return get_random( nbytes ).hex()
+		from ..crypto import Crypto
+		return Crypto().get_random( nbytes ).hex()
 
 	def hexreverse(self,hexstr:'sstr'):
 		"reverse bytes of a hexadecimal string"
@@ -175,9 +175,9 @@ class tool_cmd(tool_cmd_base):
 			nbytes: 'number of bytes to output' = 32,
 			pad:    'pad output to this width' = 0 ):
 		"generate random data (default: 32 bytes) and convert it to base 58"
-		from ..crypto import get_random
 		from ..baseconv import baseconv
-		return baseconv('b58').frombytes( get_random(nbytes), pad=pad, tostr=True )
+		from ..crypto import Crypto
+		return baseconv('b58').frombytes( Crypto().get_random(nbytes), pad=pad, tostr=True )
 
 	def bytestob58(self,infile:str,pad: 'pad output to this width' = 0):
 		"convert bytes to base 58 (supply data via STDIN)"

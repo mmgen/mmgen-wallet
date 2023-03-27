@@ -21,8 +21,6 @@ from ..util import msg,qmsg,make_timestamp,make_chksum_6,split_into_cols,is_chks
 from ..obj import MMGenWalletLabel,get_obj
 from ..baseconv import baseconv
 
-import mmgen.crypto as crypto
-
 from .enc import wallet
 
 class wallet(wallet):
@@ -92,7 +90,7 @@ class wallet(wallet):
 		lines = (
 			d.label,
 			'{} {} {} {} {}'.format( s.sid.lower(), d.key_id.lower(), s.bitlen, d.pw_status, d.timestamp ),
-			'{}: {} {} {}'.format( d.hash_preset, *crypto.get_hash_params(d.hash_preset) ),
+			'{}: {} {} {}'.format( d.hash_preset, *self.crypto.get_hash_params(d.hash_preset) ),
 			'{} {}'.format( make_chksum_6(slt_fmt), split_into_cols(4,slt_fmt) ),
 			'{} {}'.format( make_chksum_6(es_fmt),  split_into_cols(4,es_fmt) )
 		)
@@ -140,7 +138,7 @@ class wallet(wallet):
 
 		hash_params = tuple(map(int,hpdata[1:]))
 
-		if hash_params != crypto.get_hash_params(d.hash_preset):
+		if hash_params != self.crypto.get_hash_params(d.hash_preset):
 			msg(f'Hash parameters {" ".join(hash_params)!r} don’t match hash preset {d.hash_preset!r}')
 			return False
 
@@ -172,8 +170,8 @@ class wallet(wallet):
 		# Needed for multiple transactions with {}-txsign
 		d.passwd = self._get_passphrase(
 			add_desc = os.path.basename(self.infile.name) if opt.quiet else '' )
-		key = crypto.make_key( d.passwd, d.salt, d.hash_preset )
-		ret = crypto.decrypt_seed( d.enc_seed, key, d.seed_id, d.key_id )
+		key = self.crypto.make_key( d.passwd, d.salt, d.hash_preset )
+		ret = self.crypto.decrypt_seed( d.enc_seed, key, d.seed_id, d.key_id )
 		if ret:
 			self.seed = Seed(ret)
 			return True

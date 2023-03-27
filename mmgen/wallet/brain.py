@@ -17,7 +17,6 @@ from ..util import msg,qmsg,qmsg_r
 from ..color import yellow
 from .enc import wallet
 from .seed import Seed
-import mmgen.crypto as crypto
 
 class wallet(wallet):
 
@@ -46,7 +45,7 @@ class wallet(wallet):
 			bw_seed_len = opt.seed_len or Seed.dfl_len
 		qmsg_r('Hashing brainwallet data.  Please wait...')
 		# Use buflen arg of scrypt.hash() to get seed of desired length
-		seed = crypto.scrypt_hash_passphrase(
+		seed = self.crypto.scrypt_hash_passphrase(
 			self.brainpasswd.encode(),
 			b'',
 			d.hash_preset,

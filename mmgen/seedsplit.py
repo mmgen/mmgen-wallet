@@ -24,6 +24,7 @@ from .globalvars import g
 from .color import yellow
 from .obj import MMGenPWIDString,MMGenIdx
 from .subseed import *
+from .crypto import Crypto
 
 class SeedShareIdx(MMGenIdx):
 	max_val = 1024
@@ -209,7 +210,7 @@ class SeedShare(SeedShareBase,SubSeed):
 				b':master:' +
 				parent_list.master_share.idx.to_bytes(2,'big')
 			)
-		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
+		return Crypto().scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 class SeedShareLast(SeedShareBase,SeedBase):
 
@@ -261,14 +262,14 @@ class SeedShareMaster(SeedBase,SeedShareBase):
 		seed = self.parent_list.parent_seed
 		# field maximums: idx: 65535 (1024)
 		scramble_key = b'master_share:' + self.idx.to_bytes(2,'big') + self.nonce.to_bytes(2,'big')
-		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
+		return Crypto().scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 	# Don't bother with avoiding seed ID collision here, as sid of derived seed is not used
 	# by user as an identifier
 	def make_derived_seed_bin(self,id_str,count):
 		# field maximums: id_str: none (256 chars), count: 65535 (1024)
 		scramble_key = id_str.encode() + b':' + count.to_bytes(2,'big')
-		return scramble_seed(self.data,scramble_key)[:self.byte_len]
+		return Crypto().scramble_seed(self.data,scramble_key)[:self.byte_len]
 
 	def get_desc(self,ui=False):
 		psid = self.parent_list.parent_seed.sid

@@ -51,20 +51,20 @@ class tool_cmd(tool_cmd_base):
 
 	def randwif(self):
 		"generate a random private key in WIF format"
-		from ..crypto import get_random
+		from ..crypto import Crypto
 		return PrivKey(
 			self.proto,
-			get_random(32),
+			Crypto().get_random(32),
 			pubkey_type = self.mmtype.pubkey_type,
 			compressed  = self.mmtype.compressed ).wif
 
 	def randpair(self):
 		"generate a random private key/address pair"
 		gd = self._init_generators()
-		from ..crypto import get_random
+		from ..crypto import Crypto
 		privkey = PrivKey(
 			self.proto,
-			get_random(32),
+			Crypto().get_random(32),
 			pubkey_type = self.mmtype.pubkey_type,
 			compressed  = self.mmtype.compressed )
 		return (

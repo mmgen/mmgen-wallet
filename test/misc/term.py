@@ -144,8 +144,8 @@ def _tt_get_char(raw=False,one_char=False,immed_chars=''):
 
 def tt_urand():
 	cmsg('Testing _get_random_data_from_user():')
-	from mmgen.crypto import _get_random_data_from_user
-	ret = _get_random_data_from_user(10,desc='data').decode()
+	from mmgen.crypto import Crypto
+	ret = Crypto()._get_random_data_from_user(uchars=10,desc='data').decode()
 	msg(f'USER ENTROPY (user input + keystroke timings):\n\n{fmt(ret,"  ")}')
 	times = ret.splitlines()[1:]
 	avg_prec = sum(len(t.split('.')[1]) for t in times) // len(times)

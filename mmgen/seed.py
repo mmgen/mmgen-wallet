@@ -57,10 +57,10 @@ class SeedBase(MMGenObject):
 	def __init__(self,seed_bin=None,nSubseeds=None):
 		if not seed_bin:
 			from .opts import opt
-			from .crypto import get_random
+			from .crypto import Crypto
 			from hashlib import sha256
 			# Truncate random data for smaller seed lengths
-			seed_bin = sha256(get_random(1033)).digest()[:(opt.seed_len or self.dfl_len)//8]
+			seed_bin = sha256(Crypto().get_random(1033)).digest()[:(opt.seed_len or self.dfl_len)//8]
 		elif len(seed_bin)*8 not in self.lens:
 			die(3,f'{len(seed_bin)*8}: invalid seed bit length')
 

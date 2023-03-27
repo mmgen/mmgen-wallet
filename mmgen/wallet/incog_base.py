@@ -17,7 +17,6 @@ from ..opts import opt
 from ..seed import Seed
 from ..util import msg,vmsg,qmsg,make_chksum_8
 from .enc import wallet
-import mmgen.crypto as crypto
 
 class wallet(wallet):
 
@@ -39,9 +38,9 @@ class wallet(wallet):
 
 	def _get_incog_data_len(self,seed_len):
 		return (
-			crypto.aesctr_iv_len
-			+ crypto.salt_len
-			+ (0 if opt.old_incog_fmt else crypto.hincog_chk_len)
+			self.crypto.aesctr_iv_len
+			+ self.crypto.salt_len
+			+ (0 if opt.old_incog_fmt else self.crypto.hincog_chk_len)
 			+ seed_len//8 )
 
 	def _incog_data_size_chk(self):
@@ -67,6 +66,7 @@ class wallet(wallet):
 		if opt.old_incog_fmt:
 			die(1,'Writing old-format incognito wallets is unsupported')
 		d = self.ssdata
+		crypto = self.crypto
 
 		d.iv = crypto.get_random( crypto.aesctr_iv_len )
 		d.iv_id = self._make_iv_chksum(d.iv)
@@ -101,7 +101,7 @@ class wallet(wallet):
 
 	def _format(self):
 		d = self.ssdata
-		self.fmt_data = d.iv + crypto.encrypt_data(
+		self.fmt_data = d.iv + self.crypto.encrypt_data(
 			data = d.salt + d.enc_seed,
 			key  = d.wrapper_key,
 			iv   = d.iv,
@@ -124,9 +124,9 @@ class wallet(wallet):
 			return False
 
 		d = self.ssdata
-		d.iv             = self.fmt_data[0:crypto.aesctr_iv_len]
+		d.iv             = self.fmt_data[0:self.crypto.aesctr_iv_len]
 		d.incog_id       = self._make_iv_chksum(d.iv)
-		d.enc_incog_data = self.fmt_data[crypto.aesctr_iv_len:]
+		d.enc_incog_data = self.fmt_data[self.crypto.aesctr_iv_len:]
 		msg(f'Incog Wallet ID: {d.incog_id}')
 		qmsg('Check this value against your records')
 		vmsg('\n  ' + self.msg['check_incog_id'].strip()+'\n')
@@ -155,6 +155,7 @@ class wallet(wallet):
 		d = self.ssdata
 		self._get_hash_preset(add_desc=d.incog_id)
 		d.passwd = self._get_passphrase(add_desc=d.incog_id)
+		crypto = self.crypto
 
 		# IV is used BOTH to initialize counter and to salt password!
 		wrapper_key = crypto.make_key(

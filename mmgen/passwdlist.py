@@ -239,5 +239,5 @@ class PasswordList(AddrList):
 			scramble_key = f'hex:{pwlen}:{self.pw_id_str}'
 
 		self.dmsg_sc('str',scramble_key)
-		from .crypto import scramble_seed
-		return scramble_seed(seed,scramble_key.encode())
+		from .crypto import Crypto
+		return Crypto().scramble_seed(seed,scramble_key.encode())

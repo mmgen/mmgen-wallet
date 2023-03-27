@@ -21,22 +21,24 @@ cmd_args = opts.init({
 		"""
 	}})
 
-from mmgen.crypto import get_passphrase,get_new_passphrase,get_hash_preset_from_user
 from mmgen.wallet import Wallet
 
 def crypto():
 	desc = 'test data'
 
-	pw = get_new_passphrase(data_desc=desc,hash_preset=g.dfl_hash_preset,passwd_file=None)
+	from mmgen.crypto import Crypto
+	crypto = Crypto()
+
+	pw = crypto.get_new_passphrase(data_desc=desc,hash_preset=g.dfl_hash_preset,passwd_file=None)
 	msg(f'==> got new passphrase: [{pw}]\n')
 
-	pw = get_passphrase(data_desc=desc,passwd_file=None)
+	pw = crypto.get_passphrase(data_desc=desc,passwd_file=None)
 	msg(f'==> got passphrase: [{pw}]\n')
 
-	hp = get_hash_preset_from_user(data_desc=desc)
+	hp = crypto.get_hash_preset_from_user(data_desc=desc)
 	msg(f'==> got hash preset: [{hp}]')
 
-	hp = get_hash_preset_from_user(data_desc=desc)
+	hp = crypto.get_hash_preset_from_user(data_desc=desc)
 	msg(f'==> got hash preset: [{hp}]')
 
 def seed():

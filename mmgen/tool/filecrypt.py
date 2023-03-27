@@ -23,7 +23,7 @@ tool.filecrypt: File encryption/decryption routines for the 'mmgen-tool' utility
 import os
 
 from .common import tool_cmd_base
-from ..crypto import mmgen_encrypt,mmgen_decrypt,mmenc_ext
+from ..crypto import Crypto
 from ..fileutil import get_data_from_file,write_data_to_file
 
 class tool_cmd(tool_cmd_base):
@@ -38,9 +38,9 @@ class tool_cmd(tool_cmd_base):
 	def encrypt(self,infile:str,outfile='',hash_preset=''):
 		"encrypt a file"
 		data = get_data_from_file( infile, 'data for encryption', binary=True )
-		enc_d = mmgen_encrypt( data, 'data', hash_preset )
+		enc_d = Crypto().mmgen_encrypt( data, 'data', hash_preset )
 		if not outfile:
-			outfile = f'{os.path.basename(infile)}.{mmenc_ext}'
+			outfile = f'{os.path.basename(infile)}.{Crypto.mmenc_ext}'
 		write_data_to_file( outfile, enc_d, 'encrypted data', binary=True )
 		return True
 
@@ -48,14 +48,14 @@ class tool_cmd(tool_cmd_base):
 		"decrypt a file"
 		enc_d = get_data_from_file( infile, 'encrypted data', binary=True )
 		while True:
-			dec_d = mmgen_decrypt( enc_d, 'data', hash_preset )
+			dec_d = Crypto().mmgen_decrypt( enc_d, 'data', hash_preset )
 			if dec_d:
 				break
 			msg('Trying again...')
 		if not outfile:
 			from ..util import remove_extension
 			o = os.path.basename(infile)
-			outfile = remove_extension(o,mmenc_ext)
+			outfile = remove_extension(o,Crypto.mmenc_ext)
 			if outfile == o:
 				outfile += '.dec'
 		write_data_to_file( outfile, dec_d, 'decrypted data', binary=True )

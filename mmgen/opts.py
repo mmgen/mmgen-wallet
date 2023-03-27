@@ -96,11 +96,11 @@ def die_on_incompatible_opts(incompat_list):
 def _show_hash_presets():
 	fs = '  {:<7} {:<6} {:<3}  {}'
 	from .util import msg
-	from .crypto import hash_presets
+	from .crypto import Crypto
 	msg('Available parameters for scrypt.hash():')
 	msg(fs.format('Preset','N','r','p'))
-	for i in sorted(hash_presets.keys()):
-		msg(fs.format(i,*hash_presets[i]))
+	for i in sorted(Crypto.hash_presets.keys()):
+		msg(fs.format(i,*Crypto.hash_presets[i]))
 	msg('N = memory usage (power of two), p = iterations (rounds)')
 	sys.exit(0)
 
@@ -559,11 +559,10 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		opt_is_in_list(int(val),Seed.lens,desc)
 
 	def chk_hash_preset(key,val,desc):
-		from .crypto import hash_presets
-		opt_is_in_list(val,list(hash_presets.keys()),desc)
+		from .crypto import Crypto
+		opt_is_in_list(val,list(Crypto.hash_presets.keys()),desc)
 
 	def chk_brain_params(key,val,desc):
-		from .crypto import hash_presets
 		a = val.split(',')
 		if len(a) != 2:
 			opt_display(key,val)
@@ -571,7 +570,8 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		opt_is_int(a[0],'seed length '+desc)
 		from .seed import Seed
 		opt_is_in_list(int(a[0]),Seed.lens,'seed length '+desc)
-		opt_is_in_list(a[1],list(hash_presets.keys()),'hash preset '+desc)
+		from .crypto import Crypto
+		opt_is_in_list(a[1],list(Crypto.hash_presets.keys()),'hash preset '+desc)
 
 	def chk_usr_randchars(key,val,desc):
 		if val == 0:

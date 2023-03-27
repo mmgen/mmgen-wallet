@@ -56,8 +56,8 @@ class wallet(wallet):
 		if self.interactive_input and opt.usr_randchars:
 			from ..ui import keypress_confirm
 			if keypress_confirm(self.user_entropy_prompt):
-				from ..crypto import add_user_random
-				seed_bytes = add_user_random(
+				from ..crypto import Crypto
+				seed_bytes = Crypto().add_user_random(
 					rand_bytes = seed_bytes,
 					desc       = 'gathered from your die rolls' )
 				self.desc += ' plus user-supplied entropy'

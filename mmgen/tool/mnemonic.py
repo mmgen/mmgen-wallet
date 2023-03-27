@@ -71,8 +71,8 @@ class tool_cmd(tool_cmd_base):
 
 	def _do_random_mn(self,nbytes:int,fmt:str):
 		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
-		from ..crypto import get_random
-		randbytes = get_random(nbytes)
+		from ..crypto import Crypto
+		randbytes = Crypto().get_random(nbytes)
 		if fmt == 'xmrseed':
 			randbytes = self._xmr_reduce(randbytes)
 		from ..opts import opt

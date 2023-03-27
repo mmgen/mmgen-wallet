@@ -30,11 +30,11 @@ class wg(oneshot_warning_group):
 
 for i in (1,2,3):
 
-	from mmgen.crypto import pwfile_reuse_warning
+	from mmgen.crypto import Crypto
 
 	msg('\npw')
 	for k in ('A','B'):
-		ret = pwfile_reuse_warning(k).warning_shown
+		ret = Crypto.pwfile_reuse_warning(k).warning_shown
 		assert ret == (i != 1), 'warning_shown incorrect'
 
 	msg('wg1')

@@ -322,13 +322,12 @@ def get_lines_from_file(
 
 	def decrypt_file_maybe():
 		data = get_data_from_file( fn, desc=desc, binary=True, quiet=quiet, silent=silent )
-		from .crypto import mmenc_ext
-		have_enc_ext = get_extension(fn) == mmenc_ext
+		from .crypto import Crypto
+		have_enc_ext = get_extension(fn) == Crypto.mmenc_ext
 		if have_enc_ext or not is_utf8(data):
 			m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
 			qmsg(f'{m} {desc} {fn!r}')
-			from .crypto import mmgen_decrypt_retry
-			data = mmgen_decrypt_retry(data,desc)
+			data = Crypto().mmgen_decrypt_retry(data,desc)
 		return data
 
 	lines = decrypt_file_maybe().decode().splitlines()
