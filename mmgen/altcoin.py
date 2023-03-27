@@ -782,13 +782,20 @@ def create_altcoin_protos(data):
 			trust_level = e.trust_level )
 
 if __name__ == '__main__':
-	quiet = '--quiet' in sys.argv
-	verbose = '--verbose' in sys.argv
-	if verbose:
-		quiet = False
+
+	opts_data = {
+		'text': {
+			'desc': f'Check altcoin data',
+			'usage':'[opts]',
+			'options': '-q, --quiet    Be quieter\n-v, --verbose  Be more verbose'
+		}
+	}
+
+	from mmgen.opts import init,opt
+	init( opts_data )
 
 	msg('Checking CoinInfo WIF/P2PKH/P2SH version numbers and trust levels against protocol.py')
-	CoinInfo.verify_core_coin_data(quiet=quiet,verbose=verbose)
+	CoinInfo.verify_core_coin_data( quiet=opt.quiet, verbose=opt.verbose )
 
 	msg('Checking CoinInfo address leading symbols')
-	CoinInfo.verify_leading_symbols(quiet=quiet,verbose=verbose)
+	CoinInfo.verify_leading_symbols( quiet=opt.quiet, verbose=opt.verbose )
