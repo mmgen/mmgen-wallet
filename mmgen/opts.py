@@ -354,9 +354,9 @@ def init(
 	if not opt.skip_cfg_file:
 		from .cfgfile import mmgen_cfg_file
 		# check for changes in system template file - term must be initialized
-		mmgen_cfg_file('sample',g.data_dir_root)
+		mmgen_cfg_file('sample')
 		override_globals_from_cfg_file(
-			mmgen_cfg_file('usr',g.data_dir_root),
+			mmgen_cfg_file('usr'),
 			cfgfile_autoset_opts,
 			env_globals,
 			need_proto )

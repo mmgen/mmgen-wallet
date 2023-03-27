@@ -26,8 +26,8 @@ from collections import namedtuple
 from .globalvars import g
 from .util import msg,ymsg,suf,fmt,fmt_list,oneshot_warning,strip_comment,capfirst
 
-def mmgen_cfg_file(id_str,data_dir_root):
-	return cfg_file.get_cls_by_id(id_str)(data_dir_root)
+def mmgen_cfg_file(id_str):
+	return cfg_file.get_cls_by_id(id_str)()
 
 class cfg_file:
 	cur_ver = 2
@@ -35,35 +35,33 @@ class cfg_file:
 	write_ok = False
 	warn_missing = True
 	write_metadata = False
-	fn_base = g.proj_name.lower() + '.cfg'
 	line_data = namedtuple('cfgfile_line',['name','value','lineno','chunk'])
+	fn_base = 'mmgen.cfg'
 
 	class warn_missing_file(oneshot_warning):
 		color = 'yellow' # has no effect, as color not initialized yet
 		message = '{} not found at {!r}'
 
-	def __init__(self,data_dir_root):
-		self.fn = os.path.join(data_dir_root,self.fn_base)
-		self.data_dir_root = data_dir_root
+	def get_data(self,fn):
 		try:
-			with open(self.fn) as fp:
-				self.data = fp.read().splitlines()
+			with open(fn) as fp:
+				return fp.read().splitlines()
 		except:
 			if self.warn_missing:
-				self.warn_missing_file( div=self.fn, fmt_args=(self.desc,self.fn) )
-			self.data = ''
+				self.warn_missing_file( div=fn, fmt_args=(self.desc,fn) )
+			return ''
 
-	def copy_data(self):
-		assert self.write_ok, f'writing to file {self.fn!r} not allowed!'
-		src = mmgen_cfg_file('sys',self.data_dir_root)
+	def copy_system_data(self,fn):
+		assert self.write_ok, f'writing to file {fn!r} not allowed!'
+		src = mmgen_cfg_file('sys')
 		if src.data:
 			data = src.data + src.make_metadata() if self.write_metadata else src.data
 			try:
-				with open(self.fn,'w') as fp:
+				with open(fn,'w') as fp:
 					fp.write('\n'.join(data)+'\n')
-				os.chmod(self.fn,0o600)
+				os.chmod(fn,0o600)
 			except:
-				die(2,f'ERROR: unable to write to {self.fn!r}')
+				die(2,f'ERROR: unable to write to {fn!r}')
 
 	def parse_value(self,value,refval):
 		if isinstance(refval,dict):
@@ -171,18 +169,19 @@ class CfgFileUsr(cfg_file):
 	warn_missing = False
 	write_ok = True
 
-	def __init__(self,data_dir_root):
-		super().__init__(data_dir_root)
+	def __init__(self):
+		self.fn = os.path.join(g.data_dir_root,self.fn_base)
+		self.data = self.get_data(self.fn)
 		if not self.data:
-			self.copy_data()
+			self.copy_system_data(self.fn)
 
 class CfgFileSampleSys(cfg_file_sample):
 	desc = 'system sample configuration file'
 	test_fn_subdir = 'usr.local.share'
 
-	def __init__(self,data_dir_root):
+	def __init__(self):
 		if g.test_suite_cfgtest:
-			self.fn = os.path.join(data_dir_root,self.test_fn_subdir,self.fn_base)
+			self.fn = os.path.join(g.data_dir_root,self.test_fn_subdir,self.fn_base)
 			with open(self.fn) as fp:
 				self.data = fp.read().splitlines()
 		else:
@@ -196,7 +195,6 @@ class CfgFileSampleSys(cfg_file_sample):
 class CfgFileSampleUsr(cfg_file_sample):
 	desc = 'sample configuration file'
 	warn_missing = False
-	fn_base = g.proj_name.lower() + '.cfg.sample'
 	write_ok = True
 	chksum = None
 	write_metadata = True
@@ -204,10 +202,12 @@ class CfgFileSampleUsr(cfg_file_sample):
 	out_of_date_fs = 'File {!r} is out of date - replacing'
 	altered_by_user_fs = 'File {!r} was altered by user - replacing'
 
-	def __init__(self,data_dir_root):
-		super().__init__(data_dir_root)
+	def __init__(self):
+		self.fn = os.path.join(g.data_dir_root,f'{self.fn_base}.sample')
+		self.data = self.get_data(self.fn)
 
-		src = mmgen_cfg_file('sys',self.data_dir_root)
+		src = mmgen_cfg_file('sys')
+
 		if not src.data:
 			return
 
@@ -223,7 +223,7 @@ class CfgFileSampleUsr(cfg_file_sample):
 			else:
 				msg(self.out_of_date_fs.format(self.fn))
 
-		self.copy_data()
+		self.copy_system_data(self.fn)
 
 	def parse_metadata(self):
 		if self.data:
@@ -255,7 +255,7 @@ class CfgFileSampleUsr(cfg_file_sample):
 				opts = fmt_list([i.name for i in data],fmt='bare')
 				msg(f'  The following option{suf(data,verb="has")} been {desc}:\n    {opts}\n')
 				if desc == 'removed' and data:
-					uc = mmgen_cfg_file('usr',self.data_dir_root)
+					uc = mmgen_cfg_file('usr')
 					usr_names = [i.name for i in uc.get_lines()]
 					rm_names = [i.name for i in data]
 					bad = sorted(set(usr_names).intersection(rm_names))
