@@ -81,7 +81,7 @@ class unit_test(object):
 
 		lc.epsilon = [0]
 
-		class MyLockableClsCheck(Lockable): # class has attrs, like GlobalContext
+		class MyLockableClsCheck(Lockable): # class has attrs, like GlobalConfig
 			_autolock = False
 			_use_class_attr = True
 			_set_ok = ('foo','baz')

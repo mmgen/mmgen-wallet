@@ -198,7 +198,7 @@ usr_args = parsed_opts.cmd_args
 if opt.pexpect_spawn and g.platform == 'win':
 	die(1,'--pexpect-spawn option not supported on Windows platform, exiting')
 
-if opt.daemon_id and opt.daemon_id in g.blacklist_daemons.split():
+if opt.daemon_id and opt.daemon_id in g.blacklisted_daemons.split():
 	die(1,f'test.py: daemon {opt.daemon_id!r} blacklisted, exiting')
 
 network_id = g.coin.lower() + ('_tn' if opt.testnet else '')
@@ -907,6 +907,8 @@ class TestSuiteRunner(object):
 		elif ret == 'ok':
 			ok()
 			self.cmd_total += 1
+		elif ret == 'error':
+			die(2,red(f'\nTest {self.ts.test_name!r} failed'))
 		elif ret in ('skip','silent'):
 			pass
 		elif type(ret) == tuple and ret[0] == 'skip_warn':

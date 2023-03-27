@@ -285,8 +285,8 @@ class CoinDaemon(Daemon):
 		ret = cls.coins[coin].daemon_ids
 		if 'erigon' in ret and not g.enable_erigon:
 			ret.remove('erigon')
-		if g.blacklist_daemons:
-			blacklist = g.blacklist_daemons.split()
+		if g.blacklisted_daemons:
+			blacklist = g.blacklisted_daemons.split()
 			def gen():
 				for daemon_id in ret:
 					if daemon_id in blacklist:

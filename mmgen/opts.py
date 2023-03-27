@@ -19,7 +19,7 @@
 """
 opts: MMGen-specific options processing after generic processing by share.Opts
 """
-import sys,os,stat
+import sys,os
 
 from .globalvars import g
 from .base_obj import Lockable
@@ -193,7 +193,7 @@ def override_globals_from_cfg_file(ucfg,autoset_opts,env_globals,need_proto):
 			from .util import die
 			die( 'CfgFileParseError', f'{d.name!r}: unrecognized option in {ucfg.fn!r}, line {d.lineno}' )
 
-def override_globals_and_set_opts_from_env(opt):
+def override_globals_from_env():
 	for name,val in ((k,v) for k,v in os.environ.items() if k.startswith('MMGEN_')):
 		if name == 'MMGEN_DEBUG_ALL':
 			continue
@@ -204,11 +204,8 @@ def override_globals_and_set_opts_from_env(opt):
 				if hasattr(g,gname):
 					setattr(g,gname,set_for_type(val,getattr(g,gname),name,disable))
 					yield gname
-				elif hasattr(opt,gname):
-					if getattr(opt,gname) is None: # env must not override cmdline!
-						setattr(opt,gname,val)
 				else:
-					raise ValueError(f'Name {gname!r} not present in globals or opts')
+					raise ValueError(f'Name {gname!r} not present in globals')
 		else:
 			raise ValueError(f'{name!r} is not a valid MMGen environment variable')
 
@@ -333,9 +330,18 @@ def init(
 	if opt.version:
 		version() # exits
 
+	if opt.show_hash_presets:
+		_show_hash_presets() # exits
+
+	from .term import init_term
+	init_term()
+
+	from .util import wrap_ripemd160
+	wrap_ripemd160() # ripemd160 used by mmgen_cfg_file()
+
 	# === begin global var initialization === #
 
-	env_globals = tuple(override_globals_and_set_opts_from_env(opt))
+	env_globals = tuple(override_globals_from_env())
 
 	"""
 	NB: user opt --data-dir is actually data_dir_root
@@ -358,12 +364,6 @@ def init(
 
 	from .fileutil import check_or_create_dir
 	check_or_create_dir(g.data_dir_root)
-
-	from .term import init_term
-	init_term()
-
-	from .util import wrap_ripemd160
-	wrap_ripemd160() # ripemd160 used by mmgen_cfg_file()
 
 	cfgfile_autoset_opts = {}
 
@@ -408,9 +408,6 @@ def init(
 		else:
 			setattr(opt,k,getattr(g,k))
 
-	if opt.show_hash_presets: # exits
-		_show_hash_presets()
-
 	g.coin = g.coin.upper() or 'BTC'
 	g.token = g.token.upper() or None
 
@@ -431,7 +428,7 @@ def init(
 
 	die_on_incompatible_opts(g.incompatible_opts)
 
-	check_or_create_dir(g.data_dir) # g.data_dir is finalized, so we can create it
+	check_or_create_dir(g.data_dir)
 
 	# Check user-set opts without modifying them
 	check_usr_opts(po.user_opts)

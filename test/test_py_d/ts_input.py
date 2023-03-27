@@ -98,13 +98,18 @@ class TestSuiteInput(TestSuiteBase):
 		cmd = ['python3','cmds/mmgen-walletconv','--in-fmt=words','--out-fmt=bip39','--outdir=test/trash']
 		mn = sample_mn['mmgen']['mn']
 		os.environ['MMGEN_TEST_SUITE'] = ''
-		cp = run( cmd, input=mn.encode(), stdout=PIPE, stderr=PIPE )
+
+		# the test can fail the first time if cfg file has changed, so run it twice if necessary:
+		for i in range(2):
+			cp = run( cmd, input=mn.encode(), stdout=PIPE, stderr=PIPE )
+			if b'written to file' in cp.stderr:
+				break
+
 		from mmgen.color import set_vt100
 		set_vt100()
 		os.environ['MMGEN_TEST_SUITE'] = '1'
-		assert b'written to file' in cp.stderr, "test 'get_seed_from_stdin' failed"
 		imsg(cp.stderr.decode().strip())
-		return 'ok'
+		return 'ok' if b'written to file' in cp.stderr else 'error'
 
 	def get_passphrase_ui(self):
 		t = self.spawn('test/misc/get_passphrase.py',['--usr-randchars=0','seed'],cmd_dir='.')

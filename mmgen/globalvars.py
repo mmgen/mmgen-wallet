@@ -29,7 +29,7 @@ def die(exit_val,s=''):
 		sys.stderr.write(s+'\n')
 	sys.exit(exit_val)
 
-class GlobalContext(Lockable):
+class GlobalConfig(Lockable):
 	"""
 	Set global vars to default values
 	Globals are overridden in this order:
@@ -117,6 +117,7 @@ class GlobalContext(Lockable):
 	debug_utf8           = False
 	exec_wrapper         = False
 	test_suite           = False
+	test_suite_autosign_led_simulate = False
 	test_suite_cfgtest   = False
 	test_suite_deterministic = False
 	test_suite_pexpect   = False
@@ -147,10 +148,10 @@ class GlobalContext(Lockable):
 	else:
 		die(2,'$HOME is not set!  Unable to determine home directory')
 
-	data_dir_root,data_dir,cfg_file = (None,None,None)
+	data_dir_root,data_dir = (None,None)
 	daemon_data_dir = '' # set by user
 	daemon_id = ''
-	blacklist_daemons = ''
+	blacklisted_daemons = ''
 
 	# must match CoinProtocol.coins
 	core_coins = ('btc','bch','ltc','eth','etc','zec','xmr')
@@ -250,6 +251,7 @@ class GlobalContext(Lockable):
 
 		'MMGEN_COLUMNS',
 		'MMGEN_TEST_SUITE',
+		'MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE',
 		'MMGEN_TEST_SUITE_CFGTEST',
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
 		'MMGEN_TEST_SUITE_PEXPECT',
@@ -279,9 +281,7 @@ class GlobalContext(Lockable):
 		'MMGEN_IGNORE_DAEMON_VERSION',
 		'MMGEN_USE_STANDALONE_SCRYPT_MODULE',
 		'MMGEN_ENABLE_ERIGON',
-
 		'MMGEN_DISABLE_COLOR',
-		'MMGEN_DISABLE_MSWIN_PW_WARNING',
 	)
 	infile_opts = (
 		'keys_from_file',
@@ -360,4 +360,4 @@ class GlobalContext(Lockable):
 	def release_date(self):
 		return self.get_mmgen_data_file(filename='release_date').strip()
 
-g = GlobalContext()
+g = GlobalConfig()
