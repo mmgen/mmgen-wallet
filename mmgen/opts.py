@@ -368,7 +368,7 @@ def init(
 	cfgfile_autoset_opts = {}
 
 	if not (opt.skip_cfg_file or opt.bob or opt.alice or g.prog_name == 'mmgen-regtest'):
-		from .cfg import cfg_file
+		from .cfgfile import cfg_file
 		# check for changes in system template file - term must be initialized
 		cfg_file('sample')
 		override_globals_from_cfg_file(

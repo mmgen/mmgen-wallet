@@ -17,7 +17,7 @@ from .common import *
 cmd_groups_dfl = {
 	'misc':             ('TestSuiteMisc',{}),
 	'opts':             ('TestSuiteOpts',{'full_data':True}),
-	'cfg':              ('TestSuiteCfg',{'full_data':True}),
+	'cfgfile':          ('TestSuiteCfgFile',{'full_data':True}),
 	'helpscreens':      ('TestSuiteHelp',{'modname':'misc','full_data':True}),
 	'main':             ('TestSuiteMain',{'full_data':True}),
 	'conv':             ('TestSuiteWalletConv',{'is3seed':True,'modname':'wallet'}),

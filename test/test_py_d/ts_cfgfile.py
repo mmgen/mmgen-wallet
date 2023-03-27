@@ -7,16 +7,16 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.test_py_d.ts_cfg: CfgFile tests for the MMGen test.py test suite
+test.test_py_d.ts_cfgfile: CfgFile tests for the MMGen test.py test suite
 """
 
 import shutil
 
 from ..include.common import *
 from .ts_base import *
-from mmgen.cfg import *
+from mmgen.cfgfile import *
 
-class TestSuiteCfg(TestSuiteBase):
+class TestSuiteCfgFile(TestSuiteBase):
 	'CfgFile API'
 	networks = ('btc',)
 	tmpdir_nums = [40]

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-cfg: API for the MMGen runtime configuration file and related files
+cfgfile: API for the MMGen runtime configuration file and related files
 """
 
 # NB: This module is used by override_globals_from_cfg_file(), which is called before

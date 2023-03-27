@@ -4,7 +4,7 @@ from mmgen.common import *
 
 cmd_args = opts.init()
 
-from mmgen.cfg import cfg_file
+from mmgen.cfgfile import cfg_file
 
 cf_usr = cfg_file('usr')
 cf_sys = cfg_file('sys')
