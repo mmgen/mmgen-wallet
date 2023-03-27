@@ -161,7 +161,7 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 		' in {!r}'.format(src) if src else '',
 		type(refval).__name__) )
 
-def override_globals_from_cfg_file(ucfg,autoset_opts,need_proto):
+def override_globals_from_cfg_file(ucfg,autoset_opts,env_globals,need_proto):
 	if need_proto:
 		from .protocol import init_proto
 	for d in ucfg.get_lines():
@@ -185,7 +185,8 @@ def override_globals_from_cfg_file(ucfg,autoset_opts,need_proto):
 				from .util import die
 				die( 'CfgFileParseError', f'Parse error in file {ucfg.fn!r}, line {d.lineno}' )
 			val_conv = set_for_type(val,refval,attr,src=ucfg.fn)
-			setattr(cls,attr,val_conv)
+			if attr not in env_globals:
+				setattr(cls,attr,val_conv)
 		elif d.name in g.autoset_opts:
 			autoset_opts[d.name] = d.value
 		else:
@@ -193,20 +194,23 @@ def override_globals_from_cfg_file(ucfg,autoset_opts,need_proto):
 			die( 'CfgFileParseError', f'{d.name!r}: unrecognized option in {ucfg.fn!r}, line {d.lineno}' )
 
 def override_globals_and_set_opts_from_env(opt):
-	for name in g.env_opts:
+	for name,val in ((k,v) for k,v in os.environ.items() if k.startswith('MMGEN_')):
 		if name == 'MMGEN_DEBUG_ALL':
 			continue
-		disable = name[:14] == 'MMGEN_DISABLE_'
-		val = os.getenv(name) # os.getenv() returns None if env var is unset
-		if val: # exclude empty string values; string value of '0' or 'false' sets variable to False
-			gname = name[(6,14)[disable]:].lower()
-			if hasattr(g,gname):
-				setattr(g,gname,set_for_type(val,getattr(g,gname),name,disable))
-			elif hasattr(opt,gname):
-				if getattr(opt,gname) is None: # env must not override cmdline!
-					setattr(opt,gname,val)
-			else:
-				raise ValueError(f'Name {gname} not present in globals or opts')
+		elif name in g.env_opts:
+			if val: # ignore empty string values; string value of '0' or 'false' sets variable to False
+				disable = name.startswith('MMGEN_DISABLE_')
+				gname = name[(6,14)[disable]:].lower()
+				if hasattr(g,gname):
+					setattr(g,gname,set_for_type(val,getattr(g,gname),name,disable))
+					yield gname
+				elif hasattr(opt,gname):
+					if getattr(opt,gname) is None: # env must not override cmdline!
+						setattr(opt,gname,val)
+				else:
+					raise ValueError(f'Name {gname!r} not present in globals or opts')
+		else:
+			raise ValueError(f'{name!r} is not a valid MMGen environment variable')
 
 def show_common_opts_diff():
 
@@ -330,6 +334,9 @@ def init(
 		version() # exits
 
 	# === begin global var initialization === #
+
+	env_globals = tuple(override_globals_and_set_opts_from_env(opt))
+
 	"""
 	NB: user opt --data-dir is actually data_dir_root
 	- data_dir is data_dir_root plus optionally 'regtest' or 'testnet', so for mainnet
@@ -343,7 +350,7 @@ def init(
 	"""
 	if opt.data_dir:
 		g.data_dir_root = os.path.normpath(os.path.abspath(opt.data_dir))
-	elif os.getenv('MMGEN_TEST_SUITE'):
+	elif g.test_suite:
 		from test.include.common import get_test_data_dir
 		g.data_dir_root = get_test_data_dir()
 	else:
@@ -363,12 +370,12 @@ def init(
 	if not (opt.skip_cfg_file or opt.bob or opt.alice or g.prog_name == 'mmgen-regtest'):
 		from .cfg import cfg_file
 		# check for changes in system template file - term must be initialized
-		# workaround: g.test_suite is needed by cfg.py, but g is not set from environment yet
-		g.test_suite = False if os.getenv('MMGEN_TEST_SUITE') in (None,'','false','0') else True
 		cfg_file('sample')
-		override_globals_from_cfg_file( cfg_file('usr'), cfgfile_autoset_opts, need_proto )
-
-	override_globals_and_set_opts_from_env(opt)
+		override_globals_from_cfg_file(
+			cfg_file('usr'),
+			cfgfile_autoset_opts,
+			env_globals,
+			need_proto )
 
 	# Set globals from opts, setting type from original global value
 	# Do here, before opts are set from globals below

@@ -82,6 +82,7 @@ class GlobalContext(Lockable):
 	debug_tw             = False
 	quiet                = False
 	no_license           = False
+	force_color          = False
 	force_256_color      = False
 	testnet              = False
 	regtest              = False
@@ -112,10 +113,13 @@ class GlobalContext(Lockable):
 
 	# test suite:
 	bogus_send           = False
+	bogus_unspent_data   = ''
 	debug_utf8           = False
 	exec_wrapper         = False
 	test_suite           = False
+	test_suite_cfgtest   = False
 	test_suite_deterministic = False
+	test_suite_pexpect   = False
 	test_suite_popen_spawn = False
 	hold_protect_disable = False
 
@@ -246,10 +250,13 @@ class GlobalContext(Lockable):
 
 		'MMGEN_COLUMNS',
 		'MMGEN_TEST_SUITE',
+		'MMGEN_TEST_SUITE_CFGTEST',
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
+		'MMGEN_TEST_SUITE_PEXPECT',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
 		'MMGEN_BLACKLIST_DAEMONS',
 		'MMGEN_BOGUS_SEND',
+		'MMGEN_BOGUS_UNSPENT_DATA',
 		'MMGEN_DEBUG',
 		'MMGEN_DEBUG_OPTS',
 		'MMGEN_DEBUG_RPC',
@@ -257,9 +264,10 @@ class GlobalContext(Lockable):
 		'MMGEN_DEBUG_TW',
 		'MMGEN_DEBUG_UTF8',
 		'MMGEN_DEBUG_SUBSEED',
+		'MMGEN_FORCE_COLOR',
+		'MMGEN_FORCE_256_COLOR',
 		'MMGEN_HOLD_PROTECT_DISABLE',
 		'MMGEN_QUIET',
-		'MMGEN_FORCE_256_COLOR',
 		'MMGEN_MIN_URANDCHARS',
 		'MMGEN_NO_LICENSE',
 		'MMGEN_RPC_HOST',
