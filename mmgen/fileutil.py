@@ -313,17 +313,6 @@ def get_data_from_file(
 
 	return data
 
-def _mmgen_decrypt_file_maybe(fn,desc='data',quiet=False,silent=False):
-	d = get_data_from_file(fn,desc=desc,binary=True,quiet=quiet,silent=silent)
-	from .crypto import mmenc_ext
-	have_enc_ext = get_extension(fn) == mmenc_ext
-	if have_enc_ext or not is_utf8(d):
-		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
-		qmsg(f'{m} {desc} {fn!r}')
-		from .crypto import mmgen_decrypt_retry
-		d = mmgen_decrypt_retry(d,desc)
-	return d
-
 def get_lines_from_file(
 		fn,
 		desc          = 'data',
@@ -331,9 +320,19 @@ def get_lines_from_file(
 		quiet         = False,
 		silent        = False ):
 
-	dec = _mmgen_decrypt_file_maybe(fn,desc=desc,quiet=quiet,silent=silent)
-	ret = dec.decode().splitlines()
+	def decrypt_file_maybe():
+		data = get_data_from_file( fn, desc=desc, binary=True, quiet=quiet, silent=silent )
+		from .crypto import mmenc_ext
+		have_enc_ext = get_extension(fn) == mmenc_ext
+		if have_enc_ext or not is_utf8(data):
+			m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
+			qmsg(f'{m} {desc} {fn!r}')
+			from .crypto import mmgen_decrypt_retry
+			data = mmgen_decrypt_retry(data,desc)
+		return data
+
+	lines = decrypt_file_maybe().decode().splitlines()
 	if trim_comments:
-		ret = strip_comments(ret)
-	dmsg(f'Got {len(ret)} lines from file {fn!r}')
-	return ret
+		lines = strip_comments(lines)
+	dmsg(f'Got {len(lines)} lines from file {fn!r}')
+	return lines
