@@ -173,7 +173,7 @@ po = opts.init(opts_data,parse_only=True)
 from test.include.common import *
 from test.test_py_d.common import *
 
-data_dir = get_data_dir() # include/common.py
+data_dir = get_test_data_dir() # include/common.py
 
 # step 1: delete data_dir symlink in ./test;
 opt.resuming = any(k in po.user_opts for k in ('resume','resume_after'))

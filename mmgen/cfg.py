@@ -47,7 +47,7 @@ class CfgFile(object):
 		message = '{} not found at {!r}'
 
 	def __init__(self):
-		self.fn = os.path.join(self.fn_dir,self.fn_base)
+		self.fn = os.path.join(g.data_dir_root,self.fn_base)
 		try:
 			with open(self.fn) as fp:
 				self.data = fp.read().splitlines()
@@ -172,7 +172,6 @@ class CfgFileSample(CfgFile):
 class CfgFileUsr(CfgFile):
 	desc = 'user configuration file'
 	warn_missing = False
-	fn_dir = g.data_dir_root
 	write_ok = True
 
 	def __init__(self):
@@ -201,7 +200,6 @@ class CfgFileSampleUsr(CfgFileSample):
 	desc = 'sample configuration file'
 	warn_missing = False
 	fn_base = g.proj_name.lower() + '.cfg.sample'
-	fn_dir = g.data_dir_root
 	write_ok = True
 	chksum = None
 	write_metadata = True

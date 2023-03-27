@@ -103,7 +103,12 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 	has_auth_cookie = True
 	wallet_path = '/'
 
-	async def __init__(self,proto,daemon,backend,ignore_wallet):
+	async def __init__(
+			self,
+			proto,
+			daemon,
+			backend,
+			ignore_wallet ):
 
 		self.proto = proto
 		self.daemon = daemon

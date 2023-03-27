@@ -344,8 +344,8 @@ def init(
 	if opt.data_dir:
 		g.data_dir_root = os.path.normpath(os.path.abspath(opt.data_dir))
 	elif os.getenv('MMGEN_TEST_SUITE'):
-		from test.include.common import get_data_dir
-		g.data_dir_root = get_data_dir()
+		from test.include.common import get_test_data_dir
+		g.data_dir_root = get_test_data_dir()
 	else:
 		g.data_dir_root = os.path.join(g.home_dir,'.'+g.proj_name.lower())
 
@@ -410,7 +410,11 @@ def init(
 	if g.bob or g.alice or g.carol or g.prog_name == 'mmgen-regtest':
 		g.regtest_user = 'bob' if g.bob else 'alice' if g.alice else 'carol' if g.carol else None
 		g.regtest = True
-		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),(g.regtest_user or 'none'))
+		g.data_dir = os.path.join(
+			g.data_dir_root,
+			'regtest',
+			g.coin.lower(),
+			(g.regtest_user or 'none') )
 
 	# === end global var initialization === #
 
