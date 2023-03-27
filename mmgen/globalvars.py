@@ -148,7 +148,6 @@ class GlobalConfig(Lockable):
 	else:
 		die(2,'$HOME is not set!  Unable to determine home directory')
 
-	data_dir_root,data_dir = (None,None)
 	daemon_data_dir = '' # set by user
 	daemon_id = ''
 	blacklisted_daemons = ''
@@ -359,5 +358,37 @@ class GlobalConfig(Lockable):
 	@property
 	def release_date(self):
 		return self.get_mmgen_data_file(filename='release_date').strip()
+
+	@property
+	def data_dir_root(self):
+		"""
+		location of mmgen.cfg
+		"""
+		if hasattr(self,'_data_dir_root'):
+			return self._data_dir_root
+		else:
+			if self.data_dir_root_override:
+				self._data_dir_root = os.path.normpath(os.path.abspath(self.data_dir_root_override))
+			elif self.test_suite:
+				from test.include.common import get_test_data_dir
+				self._data_dir_root = get_test_data_dir()
+			else:
+				self._data_dir_root = os.path.join(self.home_dir,'.'+self.proj_name.lower())
+			return self._data_dir_root
+
+	@property
+	def data_dir(self):
+		"""
+		location of wallet and other data - same as data_dir_root for mainnet
+		"""
+		if hasattr(self,'_data_dir'):
+			return self._data_dir
+		else:
+			self._data_dir = os.path.normpath(os.path.join(*{
+				'regtest': (self.data_dir_root, 'regtest', self.coin.lower(), (self.regtest_user or 'none') ),
+				'testnet': (self.data_dir_root, 'testnet'),
+				'mainnet': (self.data_dir_root,),
+			}[self.network] ))
+			return self._data_dir
 
 g = GlobalConfig()

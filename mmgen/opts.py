@@ -343,24 +343,8 @@ def init(
 
 	env_globals = tuple(override_globals_from_env())
 
-	"""
-	NB: user opt --data-dir is actually data_dir_root
-	- data_dir is data_dir_root plus optionally 'regtest' or 'testnet', so for mainnet
-	  data_dir == data_dir_root
-	- As with Bitcoin Core, cfg file is in data_dir_root, wallets and other data are
-	  in data_dir
-	- Since cfg file is in data_dir_root, data_dir_root must be finalized before we
-	  can process cfg file
-	- Since data_dir depends on the values of g.testnet and g.regtest, these must be
-	  finalized before setting data_dir
-	"""
-	if opt.data_dir:
-		g.data_dir_root = os.path.normpath(os.path.abspath(opt.data_dir))
-	elif g.test_suite:
-		from test.include.common import get_test_data_dir
-		g.data_dir_root = get_test_data_dir()
-	else:
-		g.data_dir_root = os.path.join(g.home_dir,'.'+g.proj_name.lower())
+	# --data-dir overrides computed value of data_dir_root
+	g.data_dir_root_override = opt.data_dir
 
 	from .fileutil import check_or_create_dir
 	check_or_create_dir(g.data_dir_root)
@@ -403,13 +387,6 @@ def init(
 		from .color import init_color
 		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
 
-	"""
-	g.testnet and g.regtest are finalized, so we can set g.data_dir
-	"""
-	g.data_dir = os.path.normpath(os.path.join(
-		g.data_dir_root,
-		('regtest' if g.regtest else 'testnet' if g.testnet else '') ))
-
 	# Set user opts from globals:
 	# - if opt is unset, set it to global value
 	# - if opt is set, convert its type to that of global value
@@ -418,13 +395,6 @@ def init(
 			setattr(opt,k,set_for_type(getattr(opt,k),getattr(g,k),'--'+k))
 		else:
 			setattr(opt,k,getattr(g,k))
-
-	if g.network == 'regtest':
-		g.data_dir = os.path.join(
-			g.data_dir_root,
-			'regtest',
-			g.coin.lower(),
-			(g.regtest_user or 'none') )
 
 	if need_proto:
 		from .protocol import warn_trustlevel
