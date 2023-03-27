@@ -213,19 +213,6 @@ class MnEntryModeMinimal(MnEntryMode):
 				if pad > self.pad_max:
 					return mne.idx(s,'full',lo_idx=lo,hi_idx=hi)
 
-def mn_entry(wl_id,entry_mode=None):
-	if wl_id == 'words':
-		wl_id = 'mmgen'
-	me = MnemonicEntry.get_cls_by_wordlist(wl_id)
-	import importlib
-	me.bconv = getattr(importlib.import_module(f'mmgen.{me.modname}'),me.modname)(wl_id)
-	me.wl = me.bconv.digits
-	obj = me()
-	if entry_mode:
-		import mmgen.mn_entry
-		obj.em = getattr( mmgen.mn_entry, 'MnEntryMode'+capfirst(entry_mode) )(obj)
-	return obj
-
 class MnemonicEntry(object):
 
 	prompt_info = {
@@ -244,6 +231,9 @@ class MnemonicEntry(object):
 	_lw = None
 	_sw = None
 	_usl = None
+
+	def __init__(self):
+		self.set_dfl_entry_mode()
 
 	@property
 	def longest_word(self):
@@ -394,15 +384,22 @@ class MnemonicEntry(object):
 			raise ValueError(f'wordlist {wl!r} not recognized (valid choices: {fmt_list(list(d))})')
 		return d[wl]
 
-	@classmethod
-	def get_cfg_vars(cls):
+	def set_dfl_entry_mode(self):
+		"""
+		In addition to setting the default entry mode for the current wordlist, checks validity
+		of all user-configured entry modes
+		"""
 		for k,v in g.mnemonic_entry_modes.items():
-			tcls = cls.get_cls_by_wordlist(k)
-			if v not in tcls.entry_modes:
-				raise ValueError(
-					f'entry mode {v!r} not recognized for wordlist {k!r}:' +
-					f'\n    (valid choices: {fmt_list(tcls.entry_modes)})' )
-			tcls.usr_dfl_entry_mode = v
+			cls = self.get_cls_by_wordlist(k)
+			if v not in cls.entry_modes:
+				errmsg = """
+					Error in cfg file option 'mnemonic_entry_modes':
+					Entry mode {!r} not recognized for wordlist {!r}:
+					Valid choices: {}
+				""".format( v, k, fmt_list(cls.entry_modes) )
+				die(2, '\n' + fmt(errmsg,indent='  '))
+			if cls == type(self):
+				self.usr_dfl_entry_mode = v
 
 class MnemonicEntryMMGen(MnemonicEntry):
 	wl_id = 'mmgen'
@@ -425,7 +422,14 @@ class MnemonicEntryMonero(MnemonicEntry):
 	dfl_entry_mode = 'short'
 	has_chksum = True
 
-try:
-	MnemonicEntry.get_cfg_vars()
-except Exception as e:
-	die(2, f"Error in cfg file option 'mnemonic_entry_modes':\n  {e.args[0]}")
+def mn_entry(wl_id,entry_mode=None):
+	if wl_id == 'words':
+		wl_id = 'mmgen'
+	me = MnemonicEntry.get_cls_by_wordlist(wl_id)()
+	import importlib
+	me.bconv = getattr(importlib.import_module(f'mmgen.{me.modname}'),me.modname)(wl_id)
+	me.wl = me.bconv.digits
+	if entry_mode:
+		import mmgen.mn_entry
+		me.em = getattr( mmgen.mn_entry, 'MnEntryMode'+capfirst(entry_mode) )(me)
+	return me

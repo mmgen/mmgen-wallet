@@ -236,7 +236,11 @@ class TestSuiteCfgFile(TestSuiteBase):
 		txt = 'mnemonic_entry_modes mmgen:full bip39:short'
 		write_to_file(self.path('usr'),txt+'\n')
 		imsg(yellow(f'Wrote cfg file: {txt!r}'))
-		return run("{'mmgen': 'full', 'bip39': 'short'}")
+		t = run("{'mmgen': 'full', 'bip39': 'short'}")
+		# check that set_dfl_entry_mode() set the mode correctly:
+		t.expect('mmgen: full')
+		t.expect('bip39: short')
+		return t
 
 	def chain_names(self):
 

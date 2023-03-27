@@ -34,4 +34,8 @@ if cmd_args:
 	elif cmd_args[0] == 'autoset_opts_cmdline':
 		assert opt.rpc_backend == 'curl', "opt.rpc_backend != 'curl'"
 	elif cmd_args[0] == 'mnemonic_entry_modes':
-		msg( 'mnemonic_entry_modes: {}'.format(g.mnemonic_entry_modes) )
+		from mmgen.mn_entry import mn_entry
+		msg('mnemonic_entry_modes: {}\nmmgen: {}\nbip39: {}'.format(
+			g.mnemonic_entry_modes,
+			mn_entry('mmgen').usr_dfl_entry_mode,
+			mn_entry('bip39').usr_dfl_entry_mode ))
