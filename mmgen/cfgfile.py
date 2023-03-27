@@ -27,9 +27,9 @@ from .globalvars import g
 from .util import msg,ymsg,suf,fmt,fmt_list,oneshot_warning,strip_comment,capfirst
 
 def mmgen_cfg_file(id_str,data_dir_root):
-	return CfgFile.get_cls_by_id(id_str)(data_dir_root)
+	return cfg_file.get_cls_by_id(id_str)(data_dir_root)
 
-class CfgFile(object):
+class cfg_file:
 	cur_ver = 2
 	ver = None
 	write_ok = False
@@ -100,7 +100,7 @@ class CfgFile(object):
 		}
 		return d[id_str]
 
-class CfgFileSample(CfgFile):
+class cfg_file_sample(cfg_file):
 
 	@classmethod
 	def cls_make_metadata(cls,data):
@@ -166,7 +166,7 @@ class CfgFileSample(CfgFile):
 
 		return list(gen_chunks(self.data))
 
-class CfgFileUsr(CfgFile):
+class CfgFileUsr(cfg_file):
 	desc = 'user configuration file'
 	warn_missing = False
 	write_ok = True
@@ -176,7 +176,7 @@ class CfgFileUsr(CfgFile):
 		if not self.data:
 			self.copy_data()
 
-class CfgFileSampleSys(CfgFileSample):
+class CfgFileSampleSys(cfg_file_sample):
 	desc = 'system sample configuration file'
 	test_fn_subdir = 'usr.local.share'
 
@@ -193,7 +193,7 @@ class CfgFileSampleSys(CfgFileSample):
 	def make_metadata(self):
 		return [f'# Version {self.cur_ver} {self.computed_chksum}']
 
-class CfgFileSampleUsr(CfgFileSample):
+class CfgFileSampleUsr(cfg_file_sample):
 	desc = 'sample configuration file'
 	warn_missing = False
 	fn_base = g.proj_name.lower() + '.cfg.sample'

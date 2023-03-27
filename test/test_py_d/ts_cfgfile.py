@@ -109,7 +109,7 @@ class TestSuiteCfgFile(TestSuiteBase):
 		a1 = ['','# Uncomment to make foo true:','# foo true']
 		a2 = ['','# Uncomment to make bar false:','# bar false']
 		d = d + a1 + a2
-		chk = CfgFileSample.cls_make_metadata(d)
+		chk = cfg_file_sample.cls_make_metadata(d)
 		write_to_file(self.path('sample'),'\n'.join(d+chk) + '\n')
 
 		t = self.spawn_test(args=args,pexpect_spawn=pexpect_spawn)
