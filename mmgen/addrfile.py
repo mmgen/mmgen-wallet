@@ -20,13 +20,14 @@
 addrfile: Address and password file classes for the MMGen suite
 """
 
+from .globalvars import g
 from .util import msg,qmsg,qmsg_r,die,capfirst
 from .protocol import init_proto
 from .obj import MMGenObject,TwComment,WalletPassword,MMGenPWIDString
 from .seed import SeedID,is_seed_id
 from .key import PrivKey
 from .addr import ViewKey,AddrListID,MMGenAddrType,MMGenPasswordType,is_addr_idx
-from .addrlist import KeyList,AddrListData,dmsg_sc
+from .addrlist import KeyList,AddrListData
 
 class AddrFile(MMGenObject):
 	desc        = 'addresses'
@@ -57,12 +58,10 @@ class AddrFile(MMGenObject):
 
 	@property
 	def filename(self):
-		from .globalvars import g
-		return '{}{x}{}.{}'.format(
+		return '{}{}.{}'.format(
 			self.parent.id_str,
 			('.' + self.parent.proto.network) if self.parent.proto.testnet else '',
-			self.ext,
-			x = '-α' if g.debug_utf8 else '' )
+			self.ext )
 
 	def write(self,fn=None,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
 		from .opts import opt
@@ -97,7 +96,7 @@ class AddrFile(MMGenObject):
 			out.append('# Record this value to a secure location.\n')
 
 		lbl = self.make_label()
-		dmsg_sc('lbl',lbl[9:])
+		self.parent.dmsg_sc('lbl',lbl[9:])
 		out.append(f'{lbl} {{')
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(p.data[-1].idx))

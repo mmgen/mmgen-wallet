@@ -343,7 +343,6 @@ def set_environ_for_spawned_scripts():
 		os.environ['PYTHONPATH'] = repo_root
 
 	os.environ['MMGEN_NO_LICENSE'] = '1'
-	os.environ['MMGEN_MIN_URANDCHARS'] = '3'
 	os.environ['MMGEN_BOGUS_SEND'] = '1'
 	os.environ['MMGEN_TEST_SUITE_PEXPECT'] = '1'
 
@@ -704,7 +703,7 @@ class TestSuiteRunner(object):
 		self.ts = self.gm.gm_init_group(self,gname,sg_name,self.spawn_wrapper)
 		self.ts_clsname = type(self.ts).__name__
 
-		# only pass through opts that are explicitly set on cmdline (po.user_opts)
+		# pass through opts from cmdline (po.user_opts)
 		self.passthru_opts = ['--{}{}'.format(
 				k.replace('_','-'),
 				'=' + getattr(opt,k) if getattr(opt,k) != True else ''

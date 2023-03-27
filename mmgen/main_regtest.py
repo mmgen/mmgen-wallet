@@ -21,7 +21,9 @@ mmgen-regtest: Coin daemon regression test mode setup and operations for the MMG
                suite
 """
 
-from .common import *
+import mmgen.opts as opts
+from .globalvars import g
+from .util import die,async_run
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],

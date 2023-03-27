@@ -75,7 +75,10 @@ class wallet(MMGenObject,metaclass=WalletMeta):
 	def _get_data(self):
 		if hasattr(self,'infile'):
 			from ..fileutil import get_data_from_file
-			self.fmt_data = get_data_from_file(self.infile.name,self.desc,binary=self.file_mode=='binary')
+			self.fmt_data = get_data_from_file(
+				self.infile.name,
+				self.desc,
+				binary = self.file_mode=='binary' )
 		elif self.in_data:
 			self.fmt_data = self.in_data
 		else:

@@ -53,7 +53,7 @@ class unit_test(object):
 		qmsg('OK')
 		qmsg_r('Testing class Lockable...')
 
-		class MyLockable(Lockable): # class has no attrs, like UserOpts
+		class MyLockable(Lockable): # class without attrs
 			_autolock = False
 			_set_ok = ('foo','baz','alpha','beta','gamma','delta','epsilon')
 			_reset_ok = ('bar','baz')
@@ -81,7 +81,7 @@ class unit_test(object):
 
 		lc.epsilon = [0]
 
-		class MyLockableClsCheck(Lockable): # class has attrs, like GlobalConfig
+		class MyLockableClsCheck(Lockable): # class with attrs
 			_autolock = False
 			_use_class_attr = True
 			_set_ok = ('foo','baz')

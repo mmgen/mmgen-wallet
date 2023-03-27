@@ -20,15 +20,18 @@
 test/gentest.py: Cryptocoin key/address generation tests for the MMGen suite
 """
 
-import sys,os
+import sys,os,time
 
 from include.tests_header import repo_root
 from test.overlay import overlay_setup
 sys.path.insert(0,overlay_setup(repo_root))
 
 # Import these _after_ local path's been added to sys.path
-from mmgen.common import *
-from test.include.common import getrand,get_ethkey
+import mmgen.opts as opts
+from mmgen.globalvars import g
+from mmgen.opts import opt
+from mmgen.color import green,red,purple
+from mmgen.util import msg,qmsg,qmsg_r,vmsg,capfirst,is_int,die
 
 results_file = 'gentest.out.json'
 
@@ -132,9 +135,6 @@ SUPPORTED EXTERNAL TOOLS:
 			snum=rounds )
 	}
 }
-
-gtr = namedtuple('gen_tool_result',['wif','addr','viewkey'])
-sd = namedtuple('saved_data_item',['reduced','wif','addr','viewkey'])
 
 def get_cmd_output(cmd,input=None):
 	return run(cmd,input=input,stdout=PIPE,stderr=DEVNULL).stdout.decode().splitlines()
@@ -466,7 +466,6 @@ def parse_args():
 		opts.usage()
 
 	arg1,arg2 = cmd_args
-	cfg = namedtuple('parsed_args',['test','gen1','gen2','rounds','tool','all_backends','dumpfile'])
 	gen1,gen2,rounds = (0,0,0)
 	tool,all_backends,dumpfile = (None,None,None)
 
@@ -509,7 +508,7 @@ def parse_args():
 			if b not in ext_progs:
 				die(1,f'Second part of first argument must be a generator backend number or one of {ext_progs}')
 
-	return cfg(
+	return namedtuple('parsed_args',['test','gen1','gen2','rounds','tool','all_backends','dumpfile'])(
 		test,
 		int(gen1) or None,
 		int(gen2) or None,
@@ -549,6 +548,11 @@ from mmgen.key import PrivKey
 from mmgen.addr import MMGenAddrType
 from mmgen.addrgen import KeyGenerator,AddrGenerator
 from mmgen.keygen import get_backends
+
+from test.include.common import getrand,get_ethkey
+
+gtr = namedtuple('gen_tool_result',['wif','addr','viewkey'])
+sd = namedtuple('saved_data_item',['reduced','wif','addr','viewkey'])
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 cmd_args = opts.init(opts_data)

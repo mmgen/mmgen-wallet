@@ -26,11 +26,14 @@ opts_data = {
 -q, --quiet           Be quieter
 -X, --cached-balances Use cached balances (Ethereum only)
 -v, --verbose         Be more verbose
+                      sample help_note: {kgs}
+                      sample help_note: {coin_id}
 """,
 	'notes': """
 
                            NOTES FOR THIS COMMAND
-	{nn}
+
+sample note: {nn}
 """
 	},
 	'code': {

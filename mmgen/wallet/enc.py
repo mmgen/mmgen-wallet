@@ -30,15 +30,15 @@ class wallet(wallet):
 				die(2,'Passphrase from password file, so exiting')
 			msg('Trying again...')
 
-	def _get_hash_preset_from_user(self,hp,add_desc=''):
+	def _get_hash_preset_from_user(self,old_preset,add_desc=''):
 		prompt = 'Enter {}hash preset for {}{}{},\nor hit ENTER to {} value ({!r}): '.format(
 			('old ' if self.op=='pwchg_old' else 'new ' if self.op=='pwchg_new' else ''),
 			('','new ')[self.op=='new'],
 			self.desc,
 			('',' '+add_desc)[bool(add_desc)],
 			('accept the default','reuse the old')[self.op=='pwchg_new'],
-			hp )
-		return crypto.get_hash_preset_from_user( hash_preset=hp, prompt=prompt )
+			old_preset )
+		return crypto.get_hash_preset_from_user( old_preset=old_preset, prompt=prompt )
 
 	def _get_hash_preset(self,add_desc=''):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'hash_preset'):
@@ -57,7 +57,9 @@ class wallet(wallet):
 			hp = opt.hash_preset
 			qmsg(f'Using hash preset {hp!r} requested on command line')
 		else:
-			hp = self._get_hash_preset_from_user(g.dfl_hash_preset,add_desc)
+			hp = self._get_hash_preset_from_user(
+				old_preset = g.dfl_hash_preset,
+				add_desc   = add_desc )
 		self.ssdata.hash_preset = hp
 
 	def _get_new_passphrase(self):

@@ -21,7 +21,9 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
                deterministic wallet
 """
 
-from .common import *
+import mmgen.opts as opts
+from .globalvars import g
+from .opts import opt
 from .addr import MMGenAddrType
 from .addrfile import AddrFile
 from .wallet import Wallet
@@ -126,15 +128,13 @@ FMT CODES:
 
 cmd_args = opts.init(opts_data,opt_filter=opt_filter)
 
-errmsg = f'{opt.type!r}: invalid parameter for --type option'
-
 from .protocol import init_proto_from_opts
 proto = init_proto_from_opts()
 
 addr_type = MMGenAddrType(
 	proto = proto,
 	id_str = opt.type or proto.dfl_mmtype,
-	errmsg = errmsg )
+	errmsg = f'{opt.type!r}: invalid parameter for --type option' )
 
 if len(cmd_args) < 1:
 	opts.usage()

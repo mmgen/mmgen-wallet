@@ -113,7 +113,7 @@ class Base(MMGenObject):
 		self.inputs   = self.InputList(self)
 		self.outputs  = self.OutputList(self)
 		self.name     = type(self).__name__
-		self.proto    = kwargs.get('proto')
+		self.proto    = kwargs['proto']
 		self.twctl    = kwargs.get('twctl')
 
 	@property

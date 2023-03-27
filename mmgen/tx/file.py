@@ -148,8 +148,6 @@ class MMGenTxFile(MMGenObject):
 			if tx.get_serialized_locktime():
 				yield ',tl={}'.format(tx.get_serialized_locktime())
 			yield ']'
-			if g.debug_utf8:
-				yield '-α'
 			if tx.proto.testnet:
 				yield '.' + tx.proto.network
 			yield '.' + tx.ext

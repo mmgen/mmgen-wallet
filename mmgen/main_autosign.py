@@ -25,7 +25,11 @@ from subprocess import run,PIPE,DEVNULL
 from collections import namedtuple
 from stat import *
 
-from .common import *
+import mmgen.opts as opts
+from .globalvars import g
+from .opts import opt
+from .util import msg,msg_r,vmsg,qmsg,ymsg,rmsg,gmsg,bmsg,die,suf,fmt_list,async_run,exit_if_mswin
+from .color import yellow,red,orange
 
 mountpoint   = '/mnt/tx'
 tx_dir       = '/mnt/tx/tx'
@@ -37,8 +41,6 @@ mn_fmts      = {
 	'bip39': 'bip39',
 }
 mn_fmt_dfl   = 'mmgen'
-
-opts.UserOpts._set_ok += ('outdir','passwd_file')
 
 opts_data = {
 	'sets': [('stealth_led', True, 'led', True)],
@@ -130,6 +132,8 @@ cmd_args = opts.init(
 		'hash_preset': '1',
 		'label': 'Autosign Wallet',
 	})
+
+type(opt)._set_ok += ('outdir','passwd_file')
 
 exit_if_mswin('autosigning')
 

@@ -70,7 +70,8 @@ chksum_pat = r'\b[A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4}\b'
 Ctrl_U = '\x15'
 
 def ok_msg():
-	if opt.profile: return
+	if opt.profile:
+		return
 	sys.stderr.write(green('\nOK\n') if opt.exact_output or opt.verbose else ' OK\n')
 
 def skip(name,reason=None):
@@ -79,8 +80,12 @@ def skip(name,reason=None):
 
 def confirm_continue():
 	from mmgen.ui import keypress_confirm
-	if keypress_confirm(blue('Continue? (Y/n): '),default_yes=True,complete_prompt=True):
-		if opt.verbose or opt.exact_output: sys.stderr.write('\n')
+	if keypress_confirm(
+			blue('Continue? (Y/n): '),
+			default_yes     = True,
+			complete_prompt = True ):
+		if opt.verbose or opt.exact_output:
+			sys.stderr.write('\n')
 	else:
 		raise KeyboardInterrupt('Exiting at user request')
 
@@ -104,8 +109,11 @@ def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete
 	dot = ('.','')[bool(no_dot)]
 	flist = [os.path.join(tdir,f) for f in os.listdir(tdir) if f == ext or f[-len(dot+ext):] == dot+ext]
 
-	if not flist: return False
-	if return_list: return flist
+	if not flist:
+		return False
+
+	if return_list:
+		return flist
 
 	if len(flist) > 1 or delete_all:
 		if delete or delete_all:
@@ -127,21 +135,21 @@ def get_comment(do_shuffle=False):
 		"Healthcare",
 		tx_comment_jp[:40],
 		tx_comment_zh[:40],
-		"Alice's allowance",
-		"Bob's bequest",
+		"Alice’s allowance",
+		"Bob’s bequest",
 		"House purchase",
 		"Real estate fund",
 		"Job 1",
 		"XYZ Corp.",
-		"Eddie's endowment",
+		"Eddie’s endowment",
 		"Emergency fund",
 		"Real estate fund",
-		"Ian's inheritance",
+		"Ian’s inheritance",
 		"",
 		"Rainy day",
-		"Fred's funds",
+		"Fred’s funds",
 		"Job 2",
-		"Carl's capital",
+		"Carl’s capital",
 	]
 	from random import shuffle
 	global label_iter

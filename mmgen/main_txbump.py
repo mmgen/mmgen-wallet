@@ -21,7 +21,11 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
               transaction, and optionally sign and send it
 """
 
-from .common import *
+import mmgen.opts as opts
+from .globalvars import g
+from .opts import opt
+from .util import msg,msg_r,qmsg,die,async_run
+from .color import green
 from .wallet import Wallet
 
 opts_data = {
@@ -106,8 +110,8 @@ tx_file = cmd_args.pop(0)
 from .fileutil import check_infile
 check_infile(tx_file)
 
-from .tx import *
-from .tx.sign import *
+from .tx import CompletedTX,BumpTX,UnsignedTX,OnlineSignedTX
+from .tx.sign import txsign,get_seed_files,get_keyaddrlist,get_keylist
 
 seed_files = get_seed_files(opt,cmd_args) if (cmd_args or opt.send) else None
 
@@ -115,8 +119,6 @@ from .ui import do_license_msg
 do_license_msg()
 
 silent = opt.yes and opt.fee != None and opt.output_to_reduce != None
-
-from .tx import CompletedTX,BumpTX,UnsignedTX,OnlineSignedTX
 
 async def main():
 

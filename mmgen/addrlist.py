@@ -20,16 +20,12 @@
 addrlist: Address list classes for the MMGen suite
 """
 
+from .globalvars import g
 from .util import qmsg,qmsg_r,suf,make_chksum_N,Msg,die
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .obj import MMGenListItem,ListItemAttr,MMGenDict,TwComment,WalletPassword
 from .key import PrivKey
 from .addr import MMGenID,MMGenAddrType,CoinAddr,AddrIdx,AddrListID,ViewKey
-
-def dmsg_sc(desc,data):
-	from .globalvars import g
-	if g.debug_addrlist:
-		Msg(f'sc_debug_{desc}: {data}')
 
 class AddrIdxList(tuple,InitErrors,MMGenObject):
 
@@ -135,7 +131,7 @@ class AddrListIDStr(str,Hilite):
 				('-'+mt,'')[mt in ('L','E')],
 				s )
 
-		dmsg_sc('id_str',ret[8:].split('[')[0])
+		addrlist.dmsg_sc('id_str',ret[8:].split('[')[0])
 
 		return str.__new__(cls,ret)
 
@@ -154,7 +150,15 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 	has_keys     = False
 	chksum_rec_f = lambda foo,e: ( str(e.idx), e.addr )
 
-	def __init__(self,proto,
+	def dmsg_sc(self,desc,data):
+		Msg(f'sc_debug_{desc}: {data}')
+
+	def noop(self,desc,data):
+		pass
+
+	def __init__(
+			self,
+			proto,
 			addrfile  = '',
 			al_id     = '',
 			adata     = [],
@@ -166,13 +170,16 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			mmtype    = None,
 			key_address_validity_check = None, # None=prompt user, True=check without prompt, False=skip check
 			skip_chksum = False,
-			add_p2pkh = False,
-		):
+			skip_chksum_msg = False,
+			add_p2pkh = False ):
 
 		self.ka_validity_chk = key_address_validity_check
 		self.add_p2pkh = add_p2pkh
 		self.proto = proto
 		do_chksum = False
+
+		if not g.debug_addrlist:
+			self.dmsg_sc = self.noop
 
 		if seed and addr_idxs:   # data from seed + idxs
 			self.al_id = AddrListID( sid=seed.sid, mmtype=MMGenAddrType(proto, mmtype or proto.dfl_mmtype) )
@@ -217,7 +224,8 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 
 		if do_chksum and not skip_chksum:
 			self.chksum = AddrListChksum(self)
-			self.do_chksum_msg(record=src=='gen')
+			if not skip_chksum_msg:
+				self.do_chksum_msg(record=src=='gen')
 
 	def do_chksum_msg(self,record):
 		chk = 'Check this value against your records'
@@ -229,7 +237,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 	def generate(self,seed,addr_idxs):
 
 		seed = self.scramble_seed(seed.data)
-		dmsg_sc('seed',seed[:8].hex())
+		self.dmsg_sc('seed',seed[:8].hex())
 
 		mmtype = self.al_id.mmtype
 
@@ -298,7 +306,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 	def scramble_seed(self,seed):
 		is_btcfork = self.proto.base_coin == 'BTC'
 		if is_btcfork and self.al_id.mmtype == 'L' and not self.proto.testnet:
-			dmsg_sc('str','(none)')
+			self.dmsg_sc('str','(none)')
 			return seed
 		if self.proto.base_coin == 'ETH':
 			scramble_key = self.proto.coin.lower()
@@ -307,7 +315,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		from .crypto import scramble_seed
 		if self.proto.testnet:
 			scramble_key += ':' + self.proto.network
-		dmsg_sc('str',scramble_key)
+		self.dmsg_sc('str',scramble_key)
 		return scramble_seed(seed,scramble_key.encode())
 
 	def idxs(self):

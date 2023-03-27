@@ -60,8 +60,7 @@ class tool_cmd(tool_cmd_base):
 	use the ‘hex2wif’ command.
 	"""
 
-	@staticmethod
-	def _xmr_reduce(bytestr):
+	def _xmr_reduce(self,bytestr):
 		from ..protocol import init_proto
 		proto = init_proto('xmr')
 		if len(bytestr) != proto.privkey_len:

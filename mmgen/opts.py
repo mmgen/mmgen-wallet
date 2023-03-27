@@ -79,12 +79,7 @@ def print_help(opt,opts_data,opt_filter):
 		remove_unneeded_long_opts()
 
 	from .ui import do_pager
-	do_pager(
-		mmgen.share.Opts.make_help(
-			proto,
-			opt,
-			opts_data,
-			opt_filter ))
+	do_pager(mmgen.share.Opts.make_help( proto, opt, opts_data, opt_filter ))
 
 	sys.exit(0)
 
@@ -130,11 +125,11 @@ def opt_postproc_debug():
 	for k in a:
 		v = getattr(opt,k)
 		Msg('        {:18}: {!r:<6} [{}]'.format(k,v,type(v).__name__))
-	Msg("    Opts set to 'None':")
-	Msg('        {}\n'.format('\n        '.join(b)))
 	Msg('    Global vars:')
 	for e in [d for d in dir(g) if d[:2] != '__']:
 		Msg('        {:<20}: {}'.format(e, getattr(g,e)))
+	Msg("    Opts set to 'None':")
+	Msg('        {}\n'.format('\n        '.join(b)))
 	Msg('\n=== end opts.py debug ===\n')
 
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
@@ -161,7 +156,12 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 		' in {!r}'.format(src) if src else '',
 		type(refval).__name__) )
 
-def override_globals_from_cfg_file(ucfg,autoset_opts,env_globals,need_proto):
+def override_globals_from_cfg_file(
+		ucfg,
+		autoset_opts,
+		env_globals,
+		need_proto ):
+
 	if need_proto:
 		from .protocol import init_proto
 	for d in ucfg.get_lines():
@@ -563,13 +563,13 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		opt_is_in_list(val,list(hash_presets.keys()),desc)
 
 	def chk_brain_params(key,val,desc):
-		from .seed import Seed
 		from .crypto import hash_presets
 		a = val.split(',')
 		if len(a) != 2:
 			opt_display(key,val)
 			die( 'UserOptError', 'Option requires two comma-separated arguments' )
 		opt_is_int(a[0],'seed length '+desc)
+		from .seed import Seed
 		opt_is_in_list(int(a[0]),Seed.lens,'seed length '+desc)
 		opt_is_in_list(a[1],list(hash_presets.keys()),'hash preset '+desc)
 
@@ -649,11 +649,13 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 			Msg(f'check_usr_opts(): No test for opt {key!r}')
 
 def set_auto_typeset_opts():
+
+	def do_set(key,val,ref_type):
+		setattr(opt,key,None if val is None else ref_type(val))
+
 	for key,ref_type in g.auto_typeset_opts.items():
 		if hasattr(opt,key):
-			val = getattr(opt,key)
-			if val is not None: # typeset only if opt is set
-				setattr(opt,key,ref_type(val))
+			do_set(key, getattr(opt,key), ref_type)
 
 def get_autoset_opt(key,val,src):
 

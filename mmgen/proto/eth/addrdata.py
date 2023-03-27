@@ -21,7 +21,6 @@ proto.eth.addrdata: Ethereum TwAddrData classes
 """
 
 from ...addrdata import TwAddrData
-from ...util import vmsg
 
 class EthereumTwAddrData(TwAddrData):
 

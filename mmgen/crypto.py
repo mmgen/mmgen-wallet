@@ -290,13 +290,13 @@ def add_user_random(
 		return rand_bytes
 
 def get_hash_preset_from_user(
-		hash_preset = g.dfl_hash_preset,
+		old_preset = g.dfl_hash_preset,
 		data_desc = 'data',
 		prompt = None ):
 
 	prompt = prompt or (
 		f'Enter hash preset for {data_desc},\n' +
-		f'or hit ENTER to accept the default value ({hash_preset!r}): ' )
+		f'or hit ENTER to accept the default value ({old_preset!r}): ' )
 
 	from .ui import line_input
 	while True:
@@ -307,7 +307,7 @@ def get_hash_preset_from_user(
 			else:
 				msg('Invalid input.  Valid choices are {}'.format(', '.join(hash_presets)))
 		else:
-			return hash_preset
+			return old_preset
 
 def get_new_passphrase(data_desc,hash_preset,passwd_file,pw_desc='passphrase'):
 	message = f"""

@@ -173,6 +173,7 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 	cur_eth_balances = {}
 
 	async def __init__(self,proto,mode='r',token_addr=None):
+
 		await super().__init__(proto,mode=mode)
 
 		for v in self.data['tokens'].values():

@@ -20,8 +20,12 @@
 main_wallet: Entry point for MMGen wallet-related scripts
 """
 
-import os
-from .common import *
+import sys,os
+import mmgen.opts as opts
+from .globalvars import g
+from .opts import opt
+from .color import green,yellow
+from .util import msg,qmsg,vmsg,gmsg_r,ymsg,bmsg,die,capfirst
 from .wallet import Wallet,get_wallet_cls
 
 usage = '[opts] [infile]'
@@ -182,7 +186,9 @@ if invoked_as != 'chk':
 if invoked_as == 'gen':
 	ss_in = None
 else:
-	ss_in = Wallet(sf,passchg=(invoked_as=='passchg'))
+	ss_in = Wallet(
+		sf,
+		passchg = invoked_as=='passchg' )
 	m1 = green('Processing input wallet ')
 	m2 = ss_in.seed.sid.hl()
 	m3 = yellow(' (default wallet)') if sf and os.path.dirname(sf) == g.data_dir else ''
@@ -198,12 +204,14 @@ if invoked_as != 'gen':
 	gmsg_r('Processing output wallet' + ('\n',' ')[invoked_as == 'seedsplit'])
 
 if invoked_as == 'subgen':
-	ss_out = Wallet( seed_bin = ss_in.seed.subseed(ss_idx,print_msg=True).data )
+	ss_out = Wallet(
+		seed_bin = ss_in.seed.subseed(ss_idx,print_msg=True).data )
 elif invoked_as == 'seedsplit':
 	shares = ss_in.seed.split(sss.count,sss.id,master_share)
 	seed_out = shares.get_share_by_idx(sss.idx,base_seed=True)
 	msg(seed_out.get_desc(ui=True))
-	ss_out = Wallet(seed=seed_out)
+	ss_out = Wallet(
+		seed = seed_out )
 else:
 	ss_out = Wallet(
 		ss      = ss_in,

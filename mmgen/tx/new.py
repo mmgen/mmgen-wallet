@@ -250,9 +250,9 @@ class New(Base):
 
 		ad_f = AddrData(self.proto)
 		from ..fileutil import check_infile
-		for a in addrfiles:
-			check_infile(a)
-			ad_f.add(AddrList(self.proto,a))
+		for addrfile in addrfiles:
+			check_infile(addrfile)
+			ad_f.add(AddrList( self.proto, addrfile ))
 
 		ad_w = await TwAddrData(self.proto,twctl=self.twctl)
 
@@ -406,6 +406,7 @@ class New(Base):
 
 		if do_info:
 			del self.twuo.twctl
+			import sys
 			sys.exit(0)
 
 		outputs_sum = self.sum_outputs()

@@ -21,7 +21,9 @@ mmgen-passgen: Generate a series or range of passwords from an MMGen
                deterministic wallet
 """
 
-from .common import *
+import mmgen.opts as opts
+from .globalvars import g
+from .opts import opt
 from .addrlist import AddrIdxList
 from .passwdlist import PasswordList
 from .wallet import Wallet
@@ -177,5 +179,6 @@ if keypress_confirm('Encrypt password list?'):
 	af.write(binary=True,desc='encrypted password list')
 else:
 	if g.test_suite_popen_spawn and g.platform == 'win':
+		import time
 		time.sleep(0.1)
 	af.write(desc='password list')

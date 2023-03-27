@@ -135,7 +135,8 @@ class SeedShareList(SubSeedList):
 			return self.get_subseed_by_seed_id(sid)
 
 	def join(self):
-		return Seed.join_shares(self.get_share_by_idx(i+1) for i in range(len(self)))
+		return Seed.join_shares(
+			[self.get_share_by_idx(i+1) for i in range(len(self))] )
 
 	def format(self):
 		assert self.split_type == 'N-of-N'
@@ -218,7 +219,9 @@ class SeedShareLast(SeedShareBase,SeedBase):
 	def __init__(self,parent_list):
 		self.idx = parent_list.count
 		self.parent_list = parent_list
-		SeedBase.__init__(self,seed_bin=self.make_subseed_bin(parent_list))
+		SeedBase.__init__(
+			self,
+			seed_bin=self.make_subseed_bin(parent_list) )
 
 	@staticmethod
 	def make_subseed_bin(parent_list):
@@ -240,9 +243,12 @@ class SeedShareMaster(SeedBase,SeedShareBase):
 		self.idx = idx
 		self.nonce = nonce
 		self.parent_list = parent_list
-		SeedBase.__init__(self,self.make_base_seed_bin())
 
-		self.derived_seed = SeedBase(self.make_derived_seed_bin(parent_list.id_str,parent_list.count))
+		SeedBase.__init__( self, self.make_base_seed_bin() )
+
+		self.derived_seed = SeedBase(
+			self.make_derived_seed_bin( parent_list.id_str, parent_list.count )
+		)
 
 	@property
 	def fn_stem(self):
@@ -275,13 +281,18 @@ class SeedShareMasterJoining(SeedShareMaster):
 	count  = ImmutableAttr(SeedShareCount)
 
 	def __init__(self,idx,base_seed,id_str,count):
+
 		SeedBase.__init__(self,seed_bin=base_seed.data)
 
 		self.id_str = id_str or 'default'
 		self.count = count
-		self.derived_seed = SeedBase(self.make_derived_seed_bin(self.id_str,self.count))
+		self.derived_seed = SeedBase( self.make_derived_seed_bin(self.id_str,self.count) )
 
-def join_shares(seed_list,master_idx=None,id_str=None):
+def join_shares(
+		seed_list,
+		master_idx = None,
+		id_str     = None ):
+
 	if not hasattr(seed_list,'__next__'): # seed_list can be iterator or iterable
 		seed_list = iter(seed_list)
 
@@ -305,5 +316,6 @@ def join_shares(seed_list,master_idx=None,id_str=None):
 	if master_idx:
 		add_share(SeedShareMasterJoining(master_idx,master_share,id_str,d.count+1).derived_seed)
 
-	SeedShareCount(d.count)
+	SeedShareCount(d.count) # check that d.count is in valid range
+
 	return Seed(seed_bin=d.ret.to_bytes(d.byte_len,'big'))

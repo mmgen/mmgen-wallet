@@ -32,18 +32,19 @@ from .objmethods import Hilite,InitErrors,MMGenObject
 auth_data = namedtuple('rpc_auth_data',['user','passwd'])
 
 def dmsg_rpc(fs,data=None,is_json=False):
-	if g.debug_rpc:
-		msg(
-			fs if data == None else
-			fs.format(pp_fmt(json.loads(data) if is_json else data))
-		)
+	msg(
+		fs if data == None else
+		fs.format(pp_fmt(json.loads(data) if is_json else data))
+	)
 
 def dmsg_rpc_backend(host_url,host_path,payload):
-	if g.debug_rpc:
-		msg(
-			f'\n    RPC URL: {host_url}{host_path}' +
-			f'\n    RPC PAYLOAD data (httplib) ==>' +
-			f'\n{pp_fmt(payload)}\n' )
+	msg(
+		f'\n    RPC URL: {host_url}{host_path}' +
+		f'\n    RPC PAYLOAD data (httplib) ==>' +
+		f'\n{pp_fmt(payload)}\n' )
+
+def noop(*args,**kwargs):
+	pass
 
 class IPPort(str,Hilite,InitErrors):
 	color = 'yellow'
@@ -265,6 +266,10 @@ class RPCClient(MMGenObject):
 		# aiohttp workaround, and may speed up RPC performance overall on some systems:
 		if g.platform == 'win' and host == 'localhost':
 			host = '127.0.0.1'
+
+		global dmsg_rpc,dmsg_rpc_backend
+		if not g.debug_rpc:
+			dmsg_rpc = dmsg_rpc_backend = noop
 
 		dmsg_rpc(f'=== {type(self).__name__}.__init__() debug ===')
 		dmsg_rpc(f'    cls [{type(self).__name__}] host [{host}] port [{port}]\n')

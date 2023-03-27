@@ -32,7 +32,10 @@ class New(Base,TxBase.New):
 
 	async def get_rel_fee_from_network(self):
 		try:
-			ret = await self.rpc.call('estimatesmartfee',opt.fee_estimate_confs,opt.fee_estimate_mode.upper())
+			ret = await self.rpc.call(
+				'estimatesmartfee',
+				opt.fee_estimate_confs,
+				opt.fee_estimate_mode.upper() )
 			fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
 			fe_type = 'estimatesmartfee'
 		except:

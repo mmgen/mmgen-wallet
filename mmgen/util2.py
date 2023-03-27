@@ -40,7 +40,6 @@ def get_keccak(cached_ret=[]):
 
 	if not cached_ret:
 		from .opts import opt
-		# called in opts.init() via CoinProtocol, so must use getattr():
 		if getattr(opt,'use_internal_keccak_module',False):
 			qmsg('Using internal keccak module by user request')
 			from .contrib.keccak import keccak_256

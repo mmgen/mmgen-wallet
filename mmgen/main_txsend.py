@@ -20,7 +20,12 @@
 mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 """
 
-from .common import *
+import sys
+
+import mmgen.opts as opts
+from .globalvars import g
+from .opts import opt
+from .util import vmsg,qmsg,async_run
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],

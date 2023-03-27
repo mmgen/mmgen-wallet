@@ -22,9 +22,28 @@ xmrwallet.py - MoneroWalletOps class
 
 import os,re,time,json
 from collections import namedtuple
-from .common import *
+
+from .globalvars import g
+from .opts import opt
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .obj import CoinTxID
+from .color import red,yellow,green,blue,cyan,pink,orange
+from .util import (
+	msg,
+	msg_r,
+	gmsg,
+	ymsg,
+	gmsg_r,
+	pp_msg,
+	die,
+	fmt,
+	suf,
+	async_run,
+	make_timestr,
+	make_chksum_6,
+	capfirst,
+	stdout_or_pager,
+)
 from .seed import SeedID
 from .protocol import init_proto
 from .proto.btc.common import b58a
@@ -183,15 +202,23 @@ class MoneroMMGenTX:
 				(lambda s: '' if s == 'mainnet' else f'.{s}')(self.data.network),
 			)
 			from .fileutil import write_data_to_file
-			write_data_to_file(fn,out,desc='MoneroMMGenTX data',ask_write=True,ask_write_default_yes=False)
+			write_data_to_file(
+				outfile               = fn,
+				data                  = out,
+				desc                  = 'MoneroMMGenTX data',
+				ask_write             = True,
+				ask_write_default_yes = False )
 
 	class NewSigned(Base):
 
 		def __init__(self,*args,**kwargs):
+
 			assert not args, 'Non-keyword args not permitted'
+
 			d = namedtuple('kwargs_tuple',kwargs)(**kwargs)
 			proto = init_proto( 'xmr', network=d.network, need_amt=True )
 			now = int(time.time())
+
 			self.data = self.xmrwallet_tx_data(
 				op             = d.op,
 				create_time    = now,
@@ -370,7 +397,10 @@ class MoneroWalletOps:
 				daemon_addr = uopt.daemon or None,
 			)
 
-			self.c = MoneroWalletRPCClient(daemon=self.wd,test_connection=False)
+			self.c = MoneroWalletRPCClient(
+				daemon          = self.wd,
+				test_connection = False,
+			)
 
 			if not uopt.no_start_wallet_daemon:
 				async_run(self.c.restart_daemon())
@@ -390,11 +420,10 @@ class MoneroWalletOps:
 
 		def get_wallet_fn(self,d):
 			return os.path.join(
-				uopt.wallet_dir or '.','{}-{}-MoneroWallet{}{}'.format(
+				uopt.wallet_dir or '.','{}-{}-MoneroWallet{}'.format(
 					self.kal.al_id.sid,
 					d.idx,
-					f'.{g.network}' if g.network != 'mainnet' else '',
-					'-α' if g.debug_utf8 else '' ))
+					f'.{g.network}' if g.network != 'mainnet' else ''))
 
 		async def main(self):
 			gmsg('\n{}ing {} wallet{}'.format(
@@ -646,9 +675,11 @@ class MoneroWalletOps:
 				port   = int(port),
 				user   = None,
 				passwd = None )
+
 			self.accts_data = {}
 
 		async def process_wallet(self,d,fn,last):
+
 			chain_height = self.dc.call_raw('get_height')['height']
 			msg(f'  Chain height: {chain_height}')
 
@@ -823,7 +854,8 @@ class MoneroWalletOps:
 
 			wd2.start()
 
-			self.c = MoneroWalletRPCClient(daemon=wd2)
+			self.c = MoneroWalletRPCClient(
+				daemon = wd2 )
 
 		async def main(self):
 

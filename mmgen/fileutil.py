@@ -114,7 +114,7 @@ def check_outfile(f,blkdev_ok=False):
 def check_outdir(f):
 	return _check_file_type_and_access(f,'output directory')
 
-def get_seed_file(cmd_args,nargs,invoked_as=None):
+def get_seed_file(wallets,nargs,invoked_as=None):
 
 	from .opts import opt
 	from .filename import find_file_in_dir
@@ -125,19 +125,19 @@ def get_seed_file(cmd_args,nargs,invoked_as=None):
 	wd_from_opt = bool(opt.hidden_incog_input_params or opt.in_fmt) # have wallet data from opt?
 
 	import mmgen.opts as opts
-	if len(cmd_args) + (wd_from_opt or bool(wf)) < nargs:
+	if len(wallets) + (wd_from_opt or bool(wf)) < nargs:
 		if not wf:
 			msg('No default wallet found, and no other seed source was specified')
 		opts.usage()
-	elif len(cmd_args) > nargs:
+	elif len(wallets) > nargs:
 		opts.usage()
-	elif len(cmd_args) == nargs and wf and invoked_as != 'gen':
+	elif len(wallets) == nargs and wf and invoked_as != 'gen':
 		qmsg('Warning: overriding default wallet with user-supplied wallet')
 
-	if cmd_args or wf:
-		check_infile(cmd_args[0] if cmd_args else wf)
+	if wallets or wf:
+		check_infile(wallets[0] if wallets else wf)
 
-	return cmd_args[0] if cmd_args else (wf,None)[wd_from_opt]
+	return wallets[0] if wallets else (wf,None)[wd_from_opt]
 
 def _open_or_die(filename,mode,silent=False):
 	try:
@@ -149,18 +149,21 @@ def _open_or_die(filename,mode,silent=False):
 				('reading' if 'r' in mode else 'writing')
 			))
 
-def write_data_to_file( outfile,data,desc='data',
-						ask_write=False,
-						ask_write_prompt='',
-						ask_write_default_yes=True,
-						ask_overwrite=True,
-						ask_tty=True,
-						no_tty=False,
-						quiet=False,
-						binary=False,
-						ignore_opt_outdir=False,
-						check_data=False,
-						cmp_data=None):
+def write_data_to_file(
+		outfile,
+		data,
+		desc                  = 'data',
+		ask_write             = False,
+		ask_write_prompt      = '',
+		ask_write_default_yes = True,
+		ask_overwrite         = True,
+		ask_tty               = True,
+		no_tty                = False,
+		quiet                 = False,
+		binary                = False,
+		ignore_opt_outdir     = False,
+		check_data            = False,
+		cmp_data              = None):
 
 	from .opts import opt
 
@@ -220,8 +223,9 @@ def write_data_to_file( outfile,data,desc='data',
 			if not ask_write_prompt:
 				ask_write_prompt = f'Save {desc}?'
 			from .ui import keypress_confirm
-			if not keypress_confirm(ask_write_prompt,
-						default_yes=ask_write_default_yes):
+			if not keypress_confirm(
+					ask_write_prompt,
+					default_yes = ask_write_default_yes ):
 				die(1,f'{capfirst(desc)} not saved')
 
 		hush = False
@@ -282,7 +286,13 @@ def get_words_from_file(infile,desc,quiet=False):
 
 	return words
 
-def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,quiet=False):
+def get_data_from_file(
+		infile,
+		desc   = 'data',
+		dash   = False,
+		silent = False,
+		binary = False,
+		quiet  = False ):
 
 	from .opts import opt
 	if not (opt.quiet or silent or quiet):
@@ -314,7 +324,13 @@ def _mmgen_decrypt_file_maybe(fn,desc='data',quiet=False,silent=False):
 		d = mmgen_decrypt_retry(d,desc)
 	return d
 
-def get_lines_from_file(fn,desc='data',trim_comments=False,quiet=False,silent=False):
+def get_lines_from_file(
+		fn,
+		desc          = 'data',
+		trim_comments = False,
+		quiet         = False,
+		silent        = False ):
+
 	dec = _mmgen_decrypt_file_maybe(fn,desc=desc,quiet=quiet,silent=silent)
 	ret = dec.decode().splitlines()
 	if trim_comments:

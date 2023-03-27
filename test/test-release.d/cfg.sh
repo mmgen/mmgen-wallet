@@ -153,11 +153,11 @@ init_tests() {
 
 	d_btc="overall operations with emulated RPC data (Bitcoin)"
 	t_btc="
+		- $python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1
 		- $test_py --exclude regtest,autosign,ref_altcoin
 		- $test_py --segwit
 		- $test_py --segwit-random
 		- $test_py --bech32
-		- $python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1
 	"
 
 	d_btc_tn="overall operations with emulated RPC data (Bitcoin testnet)"

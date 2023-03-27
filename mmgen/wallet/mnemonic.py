@@ -35,8 +35,9 @@ class wallet(wallet):
 			from ..ui import get_data_from_user
 			return get_data_from_user(desc)
 
-		from ..mn_entry import mn_entry # import here to catch cfg var errors
 		mn_len = self._choose_seedlen( self.mn_lens )
+
+		from ..mn_entry import mn_entry
 		return mn_entry(self.wl_id).get_mnemonic_from_user(mn_len)
 
 	def _format(self):
@@ -76,8 +77,13 @@ class wallet(wallet):
 			msg('Invalid mnemonic (produces too large a number)')
 			return False
 
-		# Internal error, so just die
-		compare_or_die( ' '.join(rev), 'recomputed mnemonic', ' '.join(mn), 'original', e='Internal error' )
+		# Internal error, so just die:
+		compare_or_die(
+			val1  = ' '.join(rev),
+			val2  = ' '.join(mn),
+			desc1 = 'recomputed mnemonic',
+			desc2 = 'original mnemonic',
+			e     = 'Internal error' )
 
 		self.seed = Seed(bytes.fromhex(hexseed))
 		self.ssdata.mnemonic = mn

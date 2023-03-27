@@ -20,11 +20,8 @@
 filename: File and MMGenFile classes and methods for the MMGen suite
 """
 
-import sys,os
-
-from .obj import *
+import os
 from .util import die,get_extension
-from .seed import *
 
 class File:
 
@@ -46,6 +43,7 @@ class File:
 		import stat
 		if stat.S_ISBLK(st.st_mode):
 			mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]
+			from .globalvars import g
 			if g.platform == 'win':
 				mode |= os.O_BINARY
 			try:

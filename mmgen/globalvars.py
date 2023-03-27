@@ -169,7 +169,7 @@ class GlobalConfig(Lockable):
 	# user opt sets global var:
 	opt_sets_global = ( 'cached_balances', )
 
-	# 'long' opt sets global var (subset of common_opts_data):
+	# 'long' opts (subset of common_opts_data):
 	common_opts = (
 		'accept_defaults',
 		'aiohttp_rpc_queue_len',
@@ -196,6 +196,7 @@ class GlobalConfig(Lockable):
 
 	# opts not in common_opts but required to be set during opts initialization
 	init_opts = ('show_hash_presets','yes','verbose')
+
 	incompatible_opts = (
 		('help','longhelp'),
 		('bob','alice','carol'),
@@ -203,6 +204,7 @@ class GlobalConfig(Lockable):
 		('tx_id','info'),
 		('tx_id','terse_info'),
 	)
+
 	cfg_file_opts = (
 		'autochg_ignore_labels',
 		'color',
@@ -269,7 +271,6 @@ class GlobalConfig(Lockable):
 		'MMGEN_FORCE_256_COLOR',
 		'MMGEN_HOLD_PROTECT_DISABLE',
 		'MMGEN_QUIET',
-		'MMGEN_MIN_URANDCHARS',
 		'MMGEN_NO_LICENSE',
 		'MMGEN_RPC_HOST',
 		'MMGEN_RPC_FAIL_ON_COMMAND',
@@ -290,12 +291,11 @@ class GlobalConfig(Lockable):
 		'comment_file',
 		'contract_data',
 	)
-	# Auto-typechecked and auto-set opts.  These have no corresponding value in g.
-	# First value in list is the default
-	ov = namedtuple('autoset_opt_info',['type','choices'])
+	# Auto-typechecked and auto-set opts - first value in list is the default
+	_ov = namedtuple('autoset_opt_info',['type','choices'])
 	autoset_opts = {
-		'fee_estimate_mode': ov('nocase_pfx', ['conservative','economical']),
-		'rpc_backend':       ov('nocase_pfx', ['auto','httplib','curl','aiohttp','requests']),
+		'fee_estimate_mode': _ov('nocase_pfx', ['conservative','economical']),
+		'rpc_backend':       _ov('nocase_pfx', ['auto','httplib','curl','aiohttp','requests']),
 	}
 	if platform == 'win':
 		_skip_type_check = ('stdout','stderr')
@@ -319,6 +319,7 @@ class GlobalConfig(Lockable):
 	force_standalone_scrypt_module = False
 
 	if os.getenv('MMGEN_TEST_SUITE'):
+		min_urandchars = 3
 		err_disp_timeout = 0.1
 		short_disp_timeout = 0.1
 		if os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'):

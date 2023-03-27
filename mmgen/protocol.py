@@ -230,7 +230,14 @@ class CoinProtocol(MMGenObject):
 				pubkey_type = self.pubkey_type,
 				compressed  = False )
 
-def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=None,tokensym=None,need_amt=False):
+def init_proto(
+		coin       = None,
+		testnet    = False,
+		regtest    = False,
+		network    = None,
+		network_id = None,
+		tokensym   = None,
+		need_amt   = False ):
 
 	assert type(testnet) == bool, 'init_proto_chk1'
 	assert type(regtest) == bool, 'init_proto_chk2'

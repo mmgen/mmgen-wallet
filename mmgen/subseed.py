@@ -65,7 +65,9 @@ class SubSeed(SeedBase):
 		self.nonce = nonce
 		self.ss_idx = str(idx) + { 'long': 'L', 'short': 'S' }[length]
 		self.parent_list = parent_list
-		SeedBase.__init__(self,seed_bin=type(self).make_subseed_bin(parent_list,idx,nonce,length))
+		SeedBase.__init__(
+			self,
+			seed_bin=self.make_subseed_bin( parent_list, idx, nonce, length ))
 
 	@staticmethod
 	def make_subseed_bin(parent_list,idx:int,nonce:int,length:str):

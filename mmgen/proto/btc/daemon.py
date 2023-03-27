@@ -130,12 +130,12 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	exec_fn = 'bitcoind-bchn'
 	cli_fn = 'bitcoin-cli-bchn'
 	rpc_ports = _nw(8432, 18432, 18543) # use non-standard ports (core+100)
+	cfg_file_hdr = '# Bitcoin Cash Node config file\n'
+	nonstd_datadir = True
 	datadirs = {
 		'linux': [g.home_dir,'.bitcoin-bchn'],
 		'win':   [os.getenv('APPDATA'),'Bitcoin_ABC']
 	}
-	cfg_file_hdr = '# Bitcoin Cash Node config file\n'
-	nonstd_datadir = True
 
 	def set_comment_args(self,rpc,coinaddr,lbl):
 		# bitcoin-{abc,bchn} 'setlabel' RPC is broken, so use old 'importaddress' method to set label
@@ -160,8 +160,8 @@ class litecoin_core_daemon(bitcoin_core_daemon):
 	testnet_dir = 'testnet4'
 	rpc_ports = _nw(9332, 19332, 19443)
 	cfg_file = 'litecoin.conf'
+	cfg_file_hdr = '# Litecoin Core config file\n'
 	datadirs = {
 		'linux': [g.home_dir,'.litecoin'],
 		'win':   [os.getenv('APPDATA'),'Litecoin']
 	}
-	cfg_file_hdr = '# Litecoin Core config file\n'

@@ -21,8 +21,11 @@ mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
              Part of the MMGen suite
 """
 
-import os,importlib
-from .common import *
+import sys,os,importlib
+import mmgen.opts as opts
+from .globalvars import g
+from .opts import opt
+from .util import msg,Msg,die,capfirst,suf,async_run
 
 opts_data = {
 	'text': {
@@ -300,8 +303,6 @@ def process_result(ret,pager=False,print_result=False):
 	If 'print_result' is True, send the converted result directly to screen or
 	pager instead of returning it.
 	"""
-
-	from .util import Msg,die
 
 	def triage_result(o):
 		if print_result:

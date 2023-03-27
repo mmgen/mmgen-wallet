@@ -29,12 +29,14 @@ def confirm_or_raise(message,action,expect='YES',exit_msg='Exiting at user reque
 
 def get_words_from_user(prompt):
 	words = line_input(prompt, echo=opt.echo_passphrase).split()
-	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
+	if g.debug:
+		msg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
 def get_data_from_user(desc='data'): # user input MUST be UTF-8
 	data = line_input(f'Enter {desc}: ',echo=opt.echo_passphrase)
-	dmsg(f'User input: [{data}]')
+	if g.debug:
+		msg(f'User input: [{data}]')
 	return data
 
 def line_input(prompt,echo=True,insert_txt='',hold_protect=True):
@@ -80,7 +82,12 @@ def line_input(prompt,echo=True,insert_txt='',hold_protect=True):
 
 	return reply.strip()
 
-def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete_prompt=False):
+def keypress_confirm(
+	prompt,
+	default_yes     = False,
+	verbose         = False,
+	no_nl           = False,
+	complete_prompt = False ):
 
 	if not complete_prompt:
 		prompt = '{} {}: '.format( prompt, '(Y/n)' if default_yes else '(y/N)' )

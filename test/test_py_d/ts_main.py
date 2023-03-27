@@ -205,12 +205,12 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def _get_addrfile_checksum(self,display=False):
 		addrfile = self.get_file_with_ext('addrs')
-		silence()
 		from mmgen.addrlist import AddrList
-		chk = AddrList(self.proto,addrfile).chksum
+		silence()
+		chk = AddrList( self.proto, addrfile ).chksum
+		end_silence()
 		if opt.verbose and display:
 			msg(f'Checksum: {cyan(chk)}')
-		end_silence()
 		return chk
 
 	def walletgen_dfl_wallet(self,seed_len=None):
@@ -239,7 +239,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def delete_dfl_wallet(self,pf):
 		self.write_to_tmpfile('del_dw_run',b'',binary=True)
-		if opt.no_dw_delete: return 'skip'
+		if opt.no_dw_delete:
+			return 'skip'
 		for wf in [f for f in os.listdir(g.data_dir) if f[-6:]=='.mmdat']:
 			os.unlink(joinpath(g.data_dir,wf))
 		self.spawn('',msg_only=True)

@@ -109,8 +109,10 @@ class TwJSON:
 				check_network(d['data'])
 				check_chksum(d)
 				compare_or_die(
-					self.mappings_chksum,           'computed mappings checksum',
-					d['data']['mappings_checksum'], 'saved checksum' )
+					val1  = self.mappings_chksum,
+					val2  = d['data']['mappings_checksum'],
+					desc1 = 'computed mappings checksum',
+					desc2 = 'saved checksum' )
 
 			if not await self.check_and_create_wallet():
 				return True
@@ -189,10 +191,10 @@ class TwJSON:
 			from ..fileutil import write_data_to_file
 			write_data_to_file(
 				outfile = self.dump_fn,
-				data = self.json_dump(
+				data    = self.json_dump(
 					{
 						'checksum': self.make_chksum(data),
 						'data': data
 					},
 					pretty = pretty ),
-				desc = f'tracking wallet JSON data' )
+				desc    = f'tracking wallet JSON data' )

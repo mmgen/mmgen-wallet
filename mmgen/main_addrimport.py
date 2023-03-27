@@ -22,7 +22,10 @@ mmgen-addrimport: Import addresses into a MMGen coin daemon tracking wallet
 
 from collections import namedtuple
 
-from .common import *
+import mmgen.opts as opts
+from .globalvars import g
+from .opts import opt
+from .util import msg,qmsg,suf,die,fmt,async_run
 from .addrlist import AddrList,KeyAddrList
 from .tw.shared import TwLabel
 
@@ -181,7 +184,8 @@ async def main():
 	del twctl
 
 cmd_args = opts.init(opts_data)
+
 from .protocol import init_proto_from_opts
 proto = init_proto_from_opts()
-import asyncio
+
 async_run(main())

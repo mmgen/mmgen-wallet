@@ -31,6 +31,8 @@ class coin_msg(coin_msg):
 		async def do_verify(self,addr,sig,message,msghash_type):
 			from ...tool.coin import tool_cmd
 			from .misc import ec_recover_pubkey
-			return tool_cmd(proto=self.proto).pubhex2addr(ec_recover_pubkey( message, sig, msghash_type )) == addr
+			return tool_cmd(
+				proto = self.proto).pubhex2addr(
+					ec_recover_pubkey( message, sig, msghash_type )) == addr
 
 	class exported_sigs(coin_msg.exported_sigs,signed_online): pass

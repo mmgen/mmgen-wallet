@@ -37,9 +37,6 @@ class wallet(wallet):
 	def _decrypt(self):
 		d = self.ssdata
 		if opt.brain_params:
-			"""
-			Don't set opt.seed_len!  When using multiple wallets, BW seed len might differ from others
-			"""
 			bw_seed_len,d.hash_preset = self.get_bw_params()
 		else:
 			if not opt.seed_len:

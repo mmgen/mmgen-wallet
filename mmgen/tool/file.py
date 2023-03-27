@@ -33,12 +33,12 @@ class tool_cmd(tool_cmd_base):
 		super().__init__(cmdname=cmdname,proto=proto,mmtype=mmtype)
 
 	def _file_chksum(self,mmgen_addrfile,obj):
+		kwargs = {'skip_chksum_msg':True}
+		if not obj.__name__ == 'PasswordList':
+			kwargs.update({'key_address_validity_check':False})
+		ret = obj( self.proto, mmgen_addrfile, **kwargs )
 		from ..opts import opt
-		verbose,yes,quiet = [bool(i) for i in (opt.verbose,opt.yes,opt.quiet)]
-		opt.verbose,opt.yes,opt.quiet = (False,True,True)
-		ret = obj(self.proto,mmgen_addrfile)
-		opt.verbose,opt.yes,opt.quiet = (verbose,yes,quiet)
-		if verbose:
+		if opt.verbose:
 			from ..util import msg,capfirst
 			if ret.al_id.mmtype.name == 'password':
 				msg('Passwd fmt:  {}\nPasswd len:  {}\nID string:   {}'.format(

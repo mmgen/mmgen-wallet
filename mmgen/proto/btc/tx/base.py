@@ -247,9 +247,10 @@ class Base(TxBase.Base):
 
 		ret = (old_size * 3 + new_size) // 4
 
-		dmsg('\nData from estimate_size():')
-		dmsg(f'  inputs size: {isize}, outputs size: {osize}, witness size: {wsize}')
-		dmsg(f'  size: {new_size}, vsize: {ret}, old_size: {old_size}')
+		dmsg(
+			'\nData from estimate_size():\n' +
+			f'  inputs size: {isize}, outputs size: {osize}, witness size: {wsize}\n' +
+			f'  size: {new_size}, vsize: {ret}, old_size: {old_size}' )
 
 		return int(ret * (opt.vsize_adj or 1))
 

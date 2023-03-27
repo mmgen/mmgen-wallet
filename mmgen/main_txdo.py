@@ -20,7 +20,10 @@
 mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
-from .common import *
+import mmgen.opts as opts
+from .globalvars import g
+from .opts import opt
+from .util import die,fmt_list,async_run
 from .wallet import Wallet
 from .subseed import SubSeedIdxRange
 
@@ -124,7 +127,7 @@ FMT CODES:
 cmd_args = opts.init(opts_data)
 
 from .tx import NewTX,OnlineSignedTX
-from .tx.sign import *
+from .tx.sign import txsign,get_seed_files,get_keyaddrlist,get_keylist
 
 seed_files = get_seed_files(opt,cmd_args)
 

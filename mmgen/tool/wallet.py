@@ -31,13 +31,14 @@ class tool_cmd(tool_cmd_base):
 	"key, address or subseed generation from an MMGen wallet"
 
 	def __init__(self,cmdname=None,proto=None,mmtype=None):
-		if cmdname in ('gen_key','gen_addr'):
-			self.need_proto = True
+		self.need_proto = cmdname in ('gen_key','gen_addr')
 		super().__init__(cmdname=cmdname,proto=proto,mmtype=mmtype)
 
 	def _get_seed_file(self,wallet):
 		from ..fileutil import get_seed_file
-		return get_seed_file([wallet] if wallet else [],1)
+		return get_seed_file(
+			wallets = [wallet] if wallet else [],
+			nargs   = 1 )
 
 	def get_subseed(self,subseed_idx:str,wallet=''):
 		"get the Seed ID of a single subseed by Subseed Index for default or specified wallet"
@@ -89,6 +90,7 @@ class tool_cmd(tool_cmd_base):
 			proto     = self.proto,
 			seed      = ss.seed,
 			addr_idxs = AddrIdxList(str(addr.idx)),
-			mmtype    = addr.mmtype ).data[0]
+			mmtype    = addr.mmtype,
+			skip_chksum = True ).data[0]
 
 		return { 'wif': d.sec.wif, 'addr': d.addr }[target]

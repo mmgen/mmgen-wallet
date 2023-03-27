@@ -120,7 +120,12 @@ class MoneroWalletDaemon(RPCDaemon):
 
 		self.proxy = proxy
 		self.daemon_addr = daemon_addr
-		self.daemon_port = None if daemon_addr else CoinDaemon(proto=proto,test_suite=test_suite).rpc_port
+		self.daemon_port = (
+			None if daemon_addr else
+			CoinDaemon(
+				proto      = proto,
+				test_suite = test_suite).rpc_port
+		)
 
 		self.host = host or opt.wallet_rpc_host or g.monero_wallet_rpc_host
 		self.user = user or opt.wallet_rpc_user or g.monero_wallet_rpc_user
@@ -151,4 +156,6 @@ class MoneroWalletDaemon(RPCDaemon):
 		)
 
 		from .rpc import MoneroWalletRPCClient
-		self.rpc = MoneroWalletRPCClient( daemon=self, test_connection=False )
+		self.rpc = MoneroWalletRPCClient(
+			daemon          = self,
+			test_connection = False )

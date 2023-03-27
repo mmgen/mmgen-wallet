@@ -20,8 +20,9 @@
 help: help notes for MMGen suite commands
 """
 
+from .globalvars import g
+
 def help_notes_func(proto,opt,k):
-	from .globalvars import g
 
 	def fee_spec_letters(use_quotes=False):
 		cu = proto.coin_amt.units

@@ -94,12 +94,12 @@ class geth_daemon(ethereum_daemon):
 	exec_fn = 'geth'
 	use_pidfile = False
 	use_threads = True
+	avail_opts = ('no_daemonize','online')
+	version_info_arg = 'version'
 	datadirs = {
 		'linux': [g.home_dir,'.ethereum','geth'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Geth'] # FIXME
 	}
-	avail_opts = ('no_daemonize','online')
-	version_info_arg = 'version'
 
 	def init_subclass(self):
 
@@ -131,11 +131,11 @@ class erigon_daemon(geth_daemon):
 	exec_fn = 'erigon'
 	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
 	torrent_ports = _nw(42069,42070,None) # testnet is non-standard
+	version_info_arg = '--version'
 	datadirs = {
 		'linux': [g.home_dir,'.local','share','erigon'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
 	}
-	version_info_arg = '--version'
 
 	def init_subclass(self):
 

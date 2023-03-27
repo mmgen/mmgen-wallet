@@ -110,14 +110,13 @@ class wallet(wallet):
 	def _filename(self):
 		s = self.seed
 		d = self.ssdata
-		return '{}-{}-{}[{},{}]{x}.{}'.format(
-				s.fn_stem,
-				d.key_id,
-				d.iv_id,
-				s.bitlen,
-				d.hash_preset,
-				self.ext,
-				x='-α' if g.debug_utf8 else '')
+		return '{}-{}-{}[{},{}].{}'.format(
+			s.fn_stem,
+			d.key_id,
+			d.iv_id,
+			s.bitlen,
+			d.hash_preset,
+			self.ext )
 
 	def _deformat(self):
 

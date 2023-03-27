@@ -18,6 +18,10 @@
 
 import sys,os
 
+import mmgen.opts as opts
+from mmgen.globalvars import g
+from mmgen.util import msg,die
+
 def normalize_path(p):
 	return os.path.normpath(os.path.realpath(os.path.abspath(p)))
 
@@ -27,14 +31,13 @@ for n in reversed(range(len(sys.path))):
 	if normalize_path(sys.path[n]) == curdir:
 		del(sys.path[n])
 
-try: import mmgen.main
+try:
+	import mmgen.main
 except:
 	sys.stderr.write('Failed to import mmgen.main module.  Is MMGen installed?\n')
 	sys.exit(1)
 
 modpath_save = sys.modules['mmgen.main'].__spec__.origin
-
-from mmgen.common import *
 
 opts_data = {
 	'text': {

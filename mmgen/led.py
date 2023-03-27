@@ -20,9 +20,10 @@
 led: Control the LED on a single-board computer
 """
 
-import sys,time
-from mmgen.common import *
-import threading
+import os,threading
+from collections import namedtuple
+
+from .util import msg,msg_r,fmt,die
 
 class LEDControl:
 

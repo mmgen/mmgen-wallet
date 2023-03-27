@@ -85,8 +85,11 @@ class wallet(wallet):
 	def write_to_file(self):
 		d = self.ssdata
 		self._format()
-		compare_or_die(d.target_data_len, 'target data length',
-				len(self.fmt_data),'length of formatted ' + self.desc)
+		compare_or_die(
+			val1  = d.target_data_len,
+			desc1 = 'target data length',
+			val2  = len(self.fmt_data),
+			desc2 = 'length of formatted ' + self.desc )
 
 		k = ('output','input')[self.op=='pwchg_new']
 		fn,d.hincog_offset = self._get_hincog_params(k)

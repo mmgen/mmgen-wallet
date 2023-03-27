@@ -187,9 +187,9 @@ def create_src(proto,template,token_data,owner_addr):
 				val = '0x' + owner_addr
 			else:
 				val = (
-					getattr(opt,k) if getattr(opt,k,None) else
-					field.default  if field.default is not None else
-					die(1,f'The --{k} option must be specified')
+					getattr(opt,k)
+					or getattr(field,'default',None)
+					or die(1,f'The --{k} option must be specified')
 				)
 				if not field.test(val):
 					die(1,f'{val!r}: invalid parameter for option --{k}')

@@ -611,20 +611,20 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				('' if parent.proto.network == 'mainnet' else '-'+parent.proto.network.upper()),
 				','.join(parent.sort_info(include_group=False)).replace(' ','') )
 
-			from ..fileutil import write_data_to_file
-			from ..exception import UserNonConfirmation
 			print_hdr = getattr(parent.display_type,output_type).print_header.format(parent.cols)
 
 			msg_r(parent.blank_prompt if parent.scroll else '\n')
 
+			from ..fileutil import write_data_to_file
+			from ..exception import UserNonConfirmation
 			try:
 				write_data_to_file(
 					outfile = outfile,
-					data = print_hdr + await parent.format(
-						display_type = output_type,
+					data    = print_hdr + await parent.format(
+						display_type    = output_type,
 						line_processing = 'print',
-						color = False ),
-					desc = f'{parent.desc} listing' )
+						color           = False ),
+					desc    = f'{parent.desc} listing' )
 			except UserNonConfirmation as e:
 				parent.oneshot_msg = yellow(f'File {outfile!r} not overwritten by user request')
 			else:
@@ -652,7 +652,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			from ..ui import line_input
 			while True:
 				msg_r(parent.blank_prompt if parent.scroll else '\n')
-				ret = line_input(f'Enter {parent.item_desc} number (or ENTER to return to main menu): ')
+				ret = line_input(
+					f'Enter {parent.item_desc} number (or ENTER to return to main menu): ' )
 				if ret == '':
 					if parent.scroll:
 						msg_r( CUR_UP(1) + '\r' + ''.ljust(parent.term_width) )
@@ -685,7 +686,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		async def i_balance_refresh(self,parent,idx):
 			if not parent.keypress_confirm(
-					f'Refreshing tracking wallet {parent.item_desc} #{idx}.  Is this what you want?'):
+					f'Refreshing tracking wallet {parent.item_desc} #{idx}.  Is this what you want?' ):
 				return 'redo'
 			await parent.twctl.get_balance( parent.disp_data[idx-1].addr, force_rpc=True )
 			await parent.get_data()
@@ -739,7 +740,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				parent.oneshot_msg = yellow(f'Label for {desc} unchanged')
 				return None
 			elif res == '':
-				if not parent.keypress_confirm(f'Removing label for {desc}.  Is this what you want?'):
+				if not parent.keypress_confirm(
+						f'Removing label for {desc}.  Is this what you want?' ):
 					return 'redo'
 
 			return await do_comment_add(res)

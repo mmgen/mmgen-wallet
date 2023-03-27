@@ -4,9 +4,8 @@
 # file, as all names will be seen by the exec'ed code.  To prevent name collisions, all names
 # defined here should begin with 'exec_wrapper_'
 
-import sys,os,time
-
 def exec_wrapper_get_colors():
+	import os
 	from collections import namedtuple
 	return namedtuple('colors',['red','green','yellow','blue','purple'])(*[
 			(lambda s:s) if os.getenv('MMGEN_DISABLE_COLOR') else
@@ -15,6 +14,7 @@ def exec_wrapper_get_colors():
 
 def exec_wrapper_init(): # don't change: name is used to test if script is running under exec_wrapper
 
+	import os
 	if os.path.dirname(sys.argv[1]) == 'test': # scripts in ./test do overlay setup themselves
 		sys.path[0] = 'test'
 	else:
@@ -39,6 +39,7 @@ def exec_wrapper_write_traceback(e,exit_val):
 		'{}: {}'.format( type(e).__name__, e ))
 	c = exec_wrapper_get_colors()
 
+	import os
 	if os.getenv('EXEC_WRAPPER_TRACEBACK'):
 		import traceback
 
@@ -73,12 +74,15 @@ def exec_wrapper_write_traceback(e,exit_val):
 		sys.stdout.write( c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n' )
 
 def exec_wrapper_end_msg():
+	import os
 	if os.getenv('EXEC_WRAPPER_SPAWN') and not os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 		c = exec_wrapper_get_colors()
 		# write to stdout to ensure script output gets to terminal first
+		import time
 		sys.stdout.write(c.blue('Runtime: {:0.5f} secs\n'.format(time.time() - exec_wrapper_tstart)))
 
 def exec_wrapper_tracemalloc_setup():
+	import os
 	if os.getenv('MMGEN_TRACEMALLOC'):
 		os.environ['PYTHONTRACEMALLOC'] = '1'
 		import tracemalloc
@@ -86,6 +90,7 @@ def exec_wrapper_tracemalloc_setup():
 		sys.stderr.write("INFO → Appending memory allocation stats to 'tracemalloc.log'\n")
 
 def exec_wrapper_tracemalloc_log():
+	import os
 	if os.getenv('MMGEN_TRACEMALLOC'):
 		import tracemalloc,re
 		snapshot = tracemalloc.take_snapshot()
@@ -107,12 +112,19 @@ def exec_wrapper_tracemalloc_log():
 				s = sum(stat.size for stat in stats) / 1024,
 				w = col1w ))
 
+def exec_wrapper_get_tstart():
+	import time
+	return time.time()
+
+import sys # this is the only module we import into namespace of exec’ed code
+
 exec_wrapper_init() # sets sys.path[0], runs overlay_setup()
-exec_wrapper_tstart = time.time()
 exec_wrapper_tracemalloc_setup()
 
 from mmgen.devinit import init_dev # import mmgen mods only after overlay setup!
 init_dev()
+
+exec_wrapper_tstart = exec_wrapper_get_tstart()
 
 try:
 	sys.argv.pop(0)

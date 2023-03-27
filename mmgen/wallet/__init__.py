@@ -95,7 +95,7 @@ def format_fmt_codes():
 		('Format','FileExt','Valid codes'),
 		('------','-------','-----------')
 		] + sorted(d) ]
-	return '\n'.join(ret) + ('','-α')[g.debug_utf8] + '\n'
+	return '\n'.join(ret) + '\n'
 
 def _get_me(modname):
 	return MMGenObject.__new__( getattr( importlib.import_module(f'mmgen.wallet.{modname}'), 'wallet' ) )

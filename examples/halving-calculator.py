@@ -13,8 +13,10 @@ examples.halving-calculator.py: Demonstrate use of the MMGen asyncio/aiohttp JSO
 """
 
 import time
-from decimal import Decimal
-from mmgen.common import *
+
+import mmgen.opts as opts
+from mmgen.opts import opt
+from mmgen.util import async_run
 
 opts.init({
 	'text': {

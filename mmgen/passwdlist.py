@@ -22,6 +22,7 @@ passwdlist: Password list class for the MMGen suite
 
 from collections import namedtuple
 
+from .globalvars import g
 from .util import ymsg,is_int,die
 from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString,TwComment
 from .key import PrivKey
@@ -31,7 +32,6 @@ from .addrlist import (
 	AddrListIDStr,
 	AddrListEntryBase,
 	AddrList,
-	dmsg_sc,
 )
 
 class PasswordListEntry(AddrListEntryBase):
@@ -64,7 +64,9 @@ class PasswordList(AddrList):
 	feature_warn_fs = 'WARNING: {!r} is a potentially dangerous feature.  Use at your own risk!'
 	hex2bip39 = False
 
-	def __init__(self,proto,
+	def __init__(
+			self,
+			proto,
 			infile          = None,
 			seed            = None,
 			pw_idxs         = None,
@@ -72,9 +74,12 @@ class PasswordList(AddrList):
 			pw_len          = None,
 			pw_fmt          = None,
 			chk_params_only = False,
-		):
+			skip_chksum_msg = False ):
 
 		self.proto = proto # proto is ignored
+
+		if not g.debug_addrlist:
+			self.dmsg_sc = self.noop
 
 		if infile:
 			self.infile = infile
@@ -101,7 +106,9 @@ class PasswordList(AddrList):
 
 		fs = f'{self.al_id.sid}-{self.pw_id_str}-{self.pw_fmt_disp}-{self.pw_len}[{{}}]'
 		self.id_str = AddrListIDStr(self,fs)
-		self.do_chksum_msg(record=not infile)
+
+		if not skip_chksum_msg:
+			self.do_chksum_msg(record=not infile)
 
 	def set_pw_fmt(self,pw_fmt):
 		if pw_fmt == 'hex2bip39':
@@ -231,6 +238,6 @@ class PasswordList(AddrList):
 			pwlen = self.bip39.nwords2seedlen(self.pw_len,in_hex=True)
 			scramble_key = f'hex:{pwlen}:{self.pw_id_str}'
 
+		self.dmsg_sc('str',scramble_key)
 		from .crypto import scramble_seed
-		dmsg_sc('str',scramble_key)
 		return scramble_seed(seed,scramble_key.encode())
