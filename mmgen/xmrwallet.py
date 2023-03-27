@@ -287,7 +287,7 @@ class MoneroWalletOps:
 					cls.check_uopts(self)
 					id_cur = id(cls.check_uopts)
 
-			self.proto = init_proto( 'xmr', testnet=g.testnet, need_amt=True )
+			self.proto = init_proto( 'xmr', network=g.network, need_amt=True )
 
 		def check_uopts(self):
 
@@ -393,7 +393,7 @@ class MoneroWalletOps:
 				uopt.wallet_dir or '.','{}-{}-MoneroWallet{}{}'.format(
 					self.kal.al_id.sid,
 					d.idx,
-					'.testnet' if g.testnet else '',
+					f'.{g.network}' if g.network != 'mainnet' else '',
 					'-α' if g.debug_utf8 else '' ))
 
 		async def main(self):

@@ -367,7 +367,7 @@ def init(
 
 	cfgfile_autoset_opts = {}
 
-	if not (opt.skip_cfg_file or opt.bob or opt.alice or g.prog_name == 'mmgen-regtest'):
+	if not opt.skip_cfg_file:
 		from .cfgfile import mmgen_cfg_file
 		# check for changes in system template file - term must be initialized
 		mmgen_cfg_file('sample',g.data_dir_root)
@@ -384,6 +384,17 @@ def init(
 			val = getattr(opt,k)
 			if val != None and hasattr(g,k):
 				setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
+
+	if g.regtest or g.bob or g.alice or g.carol or g.prog_name == 'mmgen-regtest':
+		g.network = 'regtest'
+		g.regtest_user = 'bob' if g.bob else 'alice' if g.alice else 'carol' if g.carol else None
+	else:
+		g.network = 'testnet' if g.testnet else 'mainnet'
+
+	g.coin = g.coin.upper() or 'BTC'
+	g.token = g.token.upper() or None
+
+	# === end global var initialization === #
 
 	"""
 	g.color is finalized, so initialize color
@@ -408,19 +419,12 @@ def init(
 		else:
 			setattr(opt,k,getattr(g,k))
 
-	g.coin = g.coin.upper() or 'BTC'
-	g.token = g.token.upper() or None
-
-	if g.bob or g.alice or g.carol or g.prog_name == 'mmgen-regtest':
-		g.regtest_user = 'bob' if g.bob else 'alice' if g.alice else 'carol' if g.carol else None
-		g.regtest = True
+	if g.network == 'regtest':
 		g.data_dir = os.path.join(
 			g.data_dir_root,
 			'regtest',
 			g.coin.lower(),
 			(g.regtest_user or 'none') )
-
-	# === end global var initialization === #
 
 	if need_proto:
 		from .protocol import warn_trustlevel

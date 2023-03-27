@@ -273,8 +273,7 @@ def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=Non
 def init_proto_from_opts(need_amt=False):
 	return init_proto(
 		coin      = g.coin,
-		testnet   = g.testnet,
-		regtest   = g.regtest,
+		network   = g.network,
 		tokensym  = g.token,
 		need_amt  = need_amt )
 

@@ -328,7 +328,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			[f'--daemon=localhost:{data.md.rpc_port}'] +
 			(['--no-start-wallet-daemon'] if cfg in ('continue','stop') else []) +
 			(['--no-stop-wallet-daemon'] if cfg in ('start','continue') else []) +
-			[ '--alice', 'new', data.kafile, spec ] )
+			[ 'new', data.kafile, spec ] )
 		res = strip_ansi_escapes(t.read()).replace('\r','')
 		m = re.search(expect,res,re.DOTALL)
 		assert m, m
