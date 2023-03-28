@@ -178,6 +178,7 @@ class MMGenPexpect:
 			r'(\b|\s)' +
 			fr'\s{allrep}\s'.join(s.replace(r'.',r'\.').replace(' ',r'\s+') for s in expect_list) +
 			r'(\b|\s)' )
+		import re
 		m = re.search(expect,res,re.DOTALL)
 		assert m, f'No match found for regular expression {expect!r}'
 		return m

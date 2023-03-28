@@ -28,11 +28,11 @@ class bitcoin_core_daemon(CoinDaemon):
 	tracking_wallet_name = 'mmgen-tracking-wallet'
 	rpc_ports = _nw(8332, 18332, 18443)
 	cfg_file = 'bitcoin.conf'
+	nonstd_datadir = False
 	datadirs = {
 		'linux': [gc.home_dir,'.bitcoin'],
 		'win':   [os.getenv('APPDATA'),'Bitcoin']
 	}
-	nonstd_datadir = False
 
 	def init_datadir(self):
 		if self.network == 'regtest' and not self.test_suite:

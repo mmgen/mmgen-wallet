@@ -31,10 +31,12 @@ def cfg_file_auth_test(proto,d,bad_auth=False):
 
 	if bad_auth:
 		os.rename(d.auth_cookie_fn,d.auth_cookie_fn+'.bak')
-		try: async_run(rpc_init(proto))
+		try:
+			async_run(rpc_init(proto))
 		except Exception as e:
 			vmsg(yellow(str(e)))
-		else: die(3,'No error on missing credentials!')
+		else:
+			die(3,'No error on missing credentials!')
 		os.rename(d.auth_cookie_fn+'.bak',d.auth_cookie_fn)
 	else:
 		rpc = async_run(rpc_init(proto))
@@ -174,7 +176,8 @@ class unit_tests:
 				passwd = None,
 				daemon = md,
 			)
-			print_daemon_info(rpc)
+			if opt.verbose:
+				print_daemon_info(rpc)
 			rpc.call_raw('get_height')
 			rpc.call('get_last_block_header')
 

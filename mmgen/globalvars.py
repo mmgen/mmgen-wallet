@@ -34,6 +34,8 @@ class GlobalConstants(Lockable):
 	These values are non-configurable.  They’re constant for a given machine,
 	user, executable and MMGen release.
 	"""
+	_autolock = True
+
 	proj_name          = 'MMGen'
 	proj_url           = 'https://github.com/mmgen/mmgen'
 	author             = 'The MMGen Project'
@@ -304,10 +306,10 @@ class GlobalConfig(Lockable):
 		'eth_testnet_chain_names' )
 
 	# Supported environmental vars
-	# The corresponding vars (lowercase, minus 'mmgen_') must be initialized in g
-	# 'DISABLE_' env vars disable the corresponding var in g
+	# The corresponding attributes (lowercase, without 'mmgen_') must exist in the class.
+	# The 'MMGEN_DISABLE_' prefix sets the corresponding attribute to False.
 	env_opts = (
-		'MMGEN_DEBUG_ALL', # special: there is no g.debug_all var
+		'MMGEN_DEBUG_ALL', # special: there is no `debug_all` attribute
 
 		'MMGEN_COLUMNS',
 		'MMGEN_TEST_SUITE',

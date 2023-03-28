@@ -1385,6 +1385,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.alice_add_comment_badaddr( rt_pw, 'invalid address', 2 )
 
 	def alice_add_comment_badaddr2(self):
+		# mainnet zero address:
 		addr = init_proto(self.proto.coin,network='mainnet').pubhash2addr(bytes(20),False) # mainnet zero address
 		return self.alice_add_comment_badaddr( addr, 'invalid address', 2 )
 

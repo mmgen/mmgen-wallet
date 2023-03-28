@@ -34,11 +34,8 @@ class tool_cmd_base(MMGenObject):
 	def __init__(self,cmdname=None,proto=None,mmtype=None):
 
 		if self.need_proto:
-			if proto:
-				self.proto = proto
-			else:
-				from ..protocol import init_proto_from_opts
-				self.proto = init_proto_from_opts(need_amt=self.need_amt)
+			from ..protocol import init_proto_from_opts
+			self.proto = proto or init_proto_from_opts(need_amt=self.need_amt)
 			from ..globalvars import g
 			if g.token:
 				self.proto.tokensym = g.token.upper()

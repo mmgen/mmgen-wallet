@@ -266,10 +266,12 @@ class MMGenToolTestUtils(object):
 
 	def run_cmd_out(self,name,carg=None,Return=False,kwargs='',fn_idx='',extra_msg='',
 						literal=False,chkdata='',hush=False,add_opts=[]):
-		if carg: write_to_tmpfile(cfg,f'{name}{fn_idx}.in',carg+'\n')
+		if carg:
+			write_to_tmpfile(cfg,f'{name}{fn_idx}.in',carg+'\n')
 		ret = self.run_cmd(name,([],[carg])[bool(carg)],kwargs=kwargs,
 								extra_msg=extra_msg,add_opts=add_opts)
-		if carg: vmsg('In:   ' + repr(carg))
+		if carg:
+			vmsg('In:   ' + repr(carg))
 		vmsg('Out:  ' + (repr(ret),ret)[literal])
 		if ret or ret == '':
 			write_to_tmpfile(cfg,f'{name}{fn_idx}.out',ret+'\n')

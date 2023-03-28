@@ -121,7 +121,8 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 			]
 			slarg = [f'-l{self.seed_len} ']
 			hparg = ['-p1']
-			if wtype == 'hic_wallet_old' and opt.profile: msg('')
+			if wtype == 'hic_wallet_old' and opt.profile:
+				msg('')
 			t = self.spawn('mmgen-walletchk',
 				slarg + hparg + of_arg + ic_arg,
 				extra_desc=edesc)
