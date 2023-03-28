@@ -54,19 +54,20 @@ class SeedBase(MMGenObject):
 	data = ImmutableAttr(bytes,typeconv=False)
 	sid  = ImmutableAttr(SeedID,typeconv=False)
 
-	def __init__(self,seed_bin=None,nSubseeds=None):
+	def __init__(self,cfg,seed_bin=None,nSubseeds=None):
+
 		if not seed_bin:
-			from .opts import opt
 			from .crypto import Crypto
 			from hashlib import sha256
 			# Truncate random data for smaller seed lengths
-			seed_bin = sha256(Crypto().get_random(1033)).digest()[:(opt.seed_len or self.dfl_len)//8]
+			seed_bin = sha256(Crypto(cfg).get_random(1033)).digest()[:(cfg.seed_len or self.dfl_len)//8]
 		elif len(seed_bin)*8 not in self.lens:
 			die(3,f'{len(seed_bin)*8}: invalid seed bit length')
 
+		self.cfg = cfg
 		self.data = seed_bin
 		self.sid  = SeedID(seed=self)
-		self.nSubseeds = nSubseeds # will override opt.subseeds
+		self.nSubseeds = nSubseeds # overrides cfg.subseeds
 
 	@property
 	def bitlen(self):
@@ -90,10 +91,9 @@ class Seed(SeedBase):
 	def subseeds(self):
 		if not hasattr(self,'_subseeds'):
 			from .subseed import SubSeedList
-			from .opts import opt
 			self._subseeds = SubSeedList(
 				self,
-				length = self.nSubseeds or opt.subseeds )
+				length = self.nSubseeds or self.cfg.subseeds )
 		return self._subseeds
 
 	def subseed(self,*args,**kwargs):

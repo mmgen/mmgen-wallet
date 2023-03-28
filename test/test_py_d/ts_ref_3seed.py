@@ -21,8 +21,6 @@ test.test_py_d.ts_ref_3seed: Saved and generated reference file tests for 128,
                              192 and 256-bit seeds for the test.py test suite
 """
 
-from mmgen.globalvars import g
-from mmgen.opts import opt
 from mmgen.wallet import get_wallet_cls
 from ..include.common import *
 from .common import *
@@ -121,7 +119,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 			]
 			slarg = [f'-l{self.seed_len} ']
 			hparg = ['-p1']
-			if wtype == 'hic_wallet_old' and opt.profile:
+			if wtype == 'hic_wallet_old' and cfg.profile:
 				msg('')
 			t = self.spawn('mmgen-walletchk',
 				slarg + hparg + of_arg + ic_arg,
@@ -155,7 +153,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		pat = r'{}-[0-9A-F]{{8}}\[{},1\]{}.mmdat'.format(
 			self.chk_data['sids'][idx],
 			self.chk_data['lens'][idx],
-			'-α' if g.debug_utf8 else '')
+			'-α' if cfg.debug_utf8 else '')
 		assert re.match(pat,fn), f'{pat} != {fn}'
 		sid = os.path.basename(fn.split('-')[0])
 		cmp_or_die(sid,self.seed_id,desc='Seed ID')
@@ -178,7 +176,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 			cmp_or_die('{}[{}]{}.{}'.format(
 				sid,
 				slen,
-				'-α' if g.debug_utf8 else '',
+				'-α' if cfg.debug_utf8 else '',
 				wcls.ext),
 				fn )
 		return t
@@ -192,7 +190,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 
 	def ref_walletconv_incog(self,ofmt='incog',ext='mmincog'):
 		args = ['-r0','-p1']
-		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\]' + ('-α' if g.debug_utf8 else '') + '.' + ext
+		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\]' + ('-α' if cfg.debug_utf8 else '') + '.' + ext
 		return self.ref_walletconv(ofmt=ofmt,extra_args=args,re_pat=pat)
 
 	def ref_walletconv_hexincog(self):

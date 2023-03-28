@@ -87,7 +87,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		return t
 
 	def tool_extract_key_from_geth_wallet(self):
-		if opt.no_altcoin:
+		if cfg.no_altcoin:
 			return 'skip'
 		fn = 'test/ref/ethereum/geth-wallet.json'
 		key = '9627ddb68354f5e0ff45fb2da49d7a20a013b7257a83ef4adbbbd87aeaccc75e'
@@ -99,7 +99,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 	def tool_api(self):
 		t = self.spawn(
 				'tool_api_test.py',
-				(['no_altcoin'] if opt.no_altcoin else []),
+				(['no_altcoin'] if cfg.no_altcoin else []),
 				cmd_dir = 'test/misc' )
 		t.expect('legacy.*compressed.*segwit.*bech32',regex=True)
 		return t

@@ -78,10 +78,12 @@ class unit_tests(unit_tests_base):
 		from mmgen.protocol import init_proto
 		from mmgen.seed import Seed
 		from mmgen.addrlist import AddrList
+		from ..include.common import cfg
 		print_hdr('MMGenObject.pmsg()')
 		AddrList(
-			proto       = init_proto('btc'),
-			seed        = Seed(seed_bin=bytes.fromhex('bead'*16)),
+			cfg         = cfg,
+			proto       = init_proto( cfg, 'btc' ),
+			seed        = Seed(cfg,seed_bin=bytes.fromhex('bead'*16)),
 			addr_idxs   = '1',
 			mmtype      = 'B',
 			skip_chksum = True ).pmsg()

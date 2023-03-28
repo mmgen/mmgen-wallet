@@ -13,7 +13,6 @@ proto.xmr.rpc: Monero base protocol RPC client class
 """
 
 import re
-from ...globalvars import g
 from ...rpc import RPCClient,IPPort,auth_data
 
 class MoneroRPCClient(RPCClient):
@@ -24,6 +23,7 @@ class MoneroRPCClient(RPCClient):
 
 	def __init__(
 			self,
+			cfg,
 			proto,
 			host,
 			port,
@@ -42,7 +42,7 @@ class MoneroRPCClient(RPCClient):
 			if host.endswith('.onion'):
 				self.network_proto = 'http'
 
-		super().__init__(host,port,test_connection)
+		super().__init__(cfg,host,port,test_connection)
 
 		if self.auth_type:
 			self.auth = auth_data(user,passwd)
@@ -69,7 +69,7 @@ class MoneroRPCClient(RPCClient):
 				if self.daemon and self.daemon_version > self.daemon.coind_version:
 					self.handle_unsupported_daemon_version(
 						proto.name,
-						ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version )
+						ignore_daemon_version or proto.ignore_daemon_version or self.cfg.ignore_daemon_version )
 			else: # restricted (public) node:
 				self.daemon_version_str = None
 				self.daemon_version = None
@@ -100,10 +100,11 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 
 	auth_type = 'digest'
 
-	def __init__(self,daemon,test_connection=True):
+	def __init__(self,cfg,daemon,test_connection=True):
 
 		RPCClient.__init__(
 			self,
+			cfg,
 			daemon.host,
 			daemon.rpc_port,
 			test_connection = test_connection )

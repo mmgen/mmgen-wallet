@@ -36,7 +36,7 @@ class addr_generator:
 
 	class base:
 
-		def __init__(self,proto,addr_type):
+		def __init__(self,cfg,proto,addr_type):
 			self.proto = proto
 			self.pubkey_type = addr_type.pubkey_type
 			self.compressed = addr_type.compressed
@@ -44,12 +44,12 @@ class addr_generator:
 
 	class keccak(base):
 
-		def __init__(self,proto,addr_type):
-			super().__init__(proto,addr_type)
+		def __init__(self,cfg,proto,addr_type):
+			super().__init__(cfg,proto,addr_type)
 			from .util2 import get_keccak
-			self.keccak_256 = get_keccak()
+			self.keccak_256 = get_keccak(cfg)
 
-def AddrGenerator(proto,addr_type):
+def AddrGenerator(cfg,proto,addr_type):
 	"""
 	factory function returning an address generator for the specified address type
 	"""
@@ -76,4 +76,4 @@ def AddrGenerator(proto,addr_type):
 	import importlib
 	return getattr(
 		importlib.import_module(f'mmgen.proto.{package_map[addr_type.name]}.addrgen'),
-		addr_type.name )(proto,addr_type)
+		addr_type.name )(cfg,proto,addr_type)

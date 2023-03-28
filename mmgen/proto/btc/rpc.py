@@ -14,9 +14,8 @@ proto.btc.rpc: Bitcoin base protocol RPC client class
 
 import os
 
-from ...globalvars import g
 from ...base_obj import AsyncInit
-from ...util import ymsg,vmsg,die,fmt
+from ...util import ymsg,die,fmt
 from ...fileutil import get_lines_from_file
 from ...rpc import RPCClient,auth_data
 
@@ -105,6 +104,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 	async def __init__(
 			self,
+			cfg,
 			proto,
 			daemon,
 			backend,
@@ -115,7 +115,8 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		self.call_sigs = getattr(CallSigs,daemon.id,None)
 
 		super().__init__(
-			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),
+			cfg  = cfg,
+			host = 'localhost' if cfg.test_suite else (cfg.rpc_host or 'localhost'),
 			port = daemon.rpc_port )
 
 		self.set_auth()
@@ -182,15 +183,15 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			await self.check_or_create_daemon_wallet()
 
 		# for regtest, wallet path must remain '/' until Carol’s user wallet has been created
-		if g.regtest_user:
-			self.wallet_path = f'/wallet/{g.regtest_user}'
+		if cfg.regtest_user:
+			self.wallet_path = f'/wallet/{cfg.regtest_user}'
 
 	def set_auth(self):
 		"""
 		MMGen's credentials override coin daemon's
 		"""
-		if g.rpc_user:
-			user,passwd = (g.rpc_user,g.rpc_password)
+		if self.cfg.rpc_user:
+			user,passwd = (self.cfg.rpc_user,self.cfg.rpc_password)
 		else:
 			user,passwd = self.get_daemon_cfg_options(('rpcuser','rpcpassword')).values()
 
@@ -221,7 +222,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		is created, False otherwise
 		"""
 
-		if called or (self.chain == 'regtest' and g.regtest_user != 'carol'):
+		if called or (self.chain == 'regtest' and self.cfg.regtest_user != 'carol'):
 			return False
 
 		twname = self.daemon.tracking_wallet_name
@@ -230,7 +231,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		m = f'Please fix your {self.daemon.desc} wallet installation or cmdline options'
 		ret = False
 
-		if g.carol:
+		if self.cfg.carol:
 			if 'carol' in loaded_wnames:
 				ret = True
 			elif wallet_create:
@@ -266,17 +267,16 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 	def get_daemon_cfg_fn(self):
 		# Use dirname() to remove 'bob' or 'alice' component
 		return os.path.join(
-			(os.path.dirname(g.data_dir) if self.proto.regtest else self.daemon.datadir),
+			(os.path.dirname(self.cfg.data_dir) if self.proto.regtest else self.daemon.datadir),
 			self.daemon.cfg_file )
 
 	def get_daemon_cfg_options(self,req_keys):
 
 		fn = self.get_daemon_cfg_fn()
-		from ...opts import opt
 		try:
-			lines = get_lines_from_file(fn,'daemon config file',silent=not opt.verbose)
+			lines = get_lines_from_file( self.cfg, fn, 'daemon config file', silent=not self.cfg.verbose )
 		except:
-			vmsg(f'Warning: {fn!r} does not exist or is unreadable')
+			self.cfg._util.vmsg(f'Warning: {fn!r} does not exist or is unreadable')
 			return dict((k,None) for k in req_keys)
 
 		def gen():
@@ -293,7 +293,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 	def get_daemon_auth_cookie(self):
 		fn = self.daemon.auth_cookie_fn
-		return get_lines_from_file(fn,'cookie',quiet=True)[0] if os.access(fn,os.R_OK) else ''
+		return get_lines_from_file( self.cfg, fn, 'cookie', quiet=True )[0] if os.access(fn,os.R_OK) else ''
 
 	def info(self,info_id):
 
@@ -302,7 +302,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			if 'deployment_info' in self.caps:
 				return (
 					self.cached['deploymentinfo']['deployments']['segwit']['active']
-					or ( g.test_suite and not self.chain == 'regtest' )
+					or ( self.cfg.test_suite and not self.chain == 'regtest' )
 				)
 
 			d = self.cached['blockchaininfo']
@@ -319,7 +319,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			except:
 				pass
 
-			if g.test_suite and not self.chain == 'regtest':
+			if self.cfg.test_suite and not self.chain == 'regtest':
 				return True
 
 			return False

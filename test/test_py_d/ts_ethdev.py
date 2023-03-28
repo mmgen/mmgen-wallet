@@ -25,8 +25,7 @@ from decimal import Decimal
 from collections import namedtuple
 from subprocess import run,PIPE,DEVNULL
 
-from mmgen.globalvars import g,gc
-from mmgen.opts import opt
+from mmgen.globalvars import gc
 from mmgen.util import die
 from mmgen.protocol import CoinProtocol
 from ..include.common import *
@@ -119,7 +118,7 @@ token_bals_getbalance = {
 from .ts_base import *
 from .ts_shared import *
 
-coin = g.coin
+coin = cfg.coin
 
 class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
@@ -365,10 +364,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			return
 
 		from mmgen.protocol import init_proto
-		self.proto = init_proto(g.coin,network='regtest',need_amt=True)
+		self.proto = init_proto( cfg, cfg.coin, network='regtest', need_amt=True )
 
 		from mmgen.daemon import CoinDaemon
-		self.daemon = CoinDaemon(self.proto.coin+'_rt',test_suite=True)
+		self.daemon = CoinDaemon( cfg, self.proto.coin+'_rt', test_suite=True )
 
 		self.using_solc = check_solc_ver()
 		if not self.using_solc:
@@ -405,7 +404,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	@property
 	async def rpc(self):
 		from mmgen.rpc import rpc_init
-		return await rpc_init(self.proto)
+		return await rpc_init(cfg,self.proto)
 
 	async def setup(self):
 		self.spawn('',msg_only=True)
@@ -431,11 +430,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if d.id in ('geth','erigon'):
 			imsg('  {:19} {}'.format('Cmdline:',' '.join(e for e in d.start_cmd if not 'verbosity' in e)))
 
-		if not opt.no_daemon_autostart:
+		if not cfg.no_daemon_autostart:
 			if not d.id in ('geth','erigon'):
 				d.stop(silent=True)
 				d.remove_datadir()
-			d.start( silent = not (opt.verbose or opt.exact_output) )
+			d.start( silent = not (cfg.verbose or cfg.exact_output) )
 			rpc = await self.rpc
 			imsg(f'Daemon: {rpc.daemon.coind_name} v{rpc.daemon_version_str}')
 
@@ -449,6 +448,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 			from mmgen.proto.eth.misc import extract_key_from_geth_keystore_wallet
 			key = extract_key_from_geth_keystore_wallet(
+				cfg       = cfg,
 				wallet_fn = wallet_fn,
 				passwd = b'' )
 
@@ -552,7 +552,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def addrimport(self,ext='21-23]{}.regtest.addrs',expect='9/9',add_args=[],bad_input=False):
-		ext = ext.format('-α' if g.debug_utf8 else '')
+		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		fn = self.get_file_with_ext(ext,no_dot=True,delete=False)
 		t = self.spawn('mmgen-addrimport', self.eth_args[1:-1] + add_args + [fn])
 		if bad_input:
@@ -605,7 +605,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def txsign(self,ni=False,ext='{}.regtest.rawtx',add_args=[],dev_send=False):
-		ext = ext.format('-α' if g.debug_utf8 else '')
+		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn( 'mmgen-txsign',
@@ -620,17 +620,17 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.txsign_ui_common(t,ni=ni,has_label=True)
 
 	def txsend(self,ni=False,ext='{}.regtest.sigtx',add_args=[]):
-		ext = ext.format('-α' if g.debug_utf8 else '')
+		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile])
 		txid = self.txsend_ui_common(t,
-			quiet      = not g.debug,
+			quiet      = not cfg.debug,
 			bogus_send = False,
 			has_label  = True )
 		return t
 
 	def txview(self,ext_fs):
-		ext = ext_fs.format('-α' if g.debug_utf8 else '')
+		ext = ext_fs.format('-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		return self.spawn( 'mmgen-tool',['--verbose','txview',txfile] )
 
@@ -650,7 +650,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			caller  = 'txdo',
 			acct    = '1',
 			no_read = True )
-		self._do_confirm_send(t,quiet=not g.debug,sure=False)
+		self._do_confirm_send(t,quiet=not cfg.debug,sure=False)
 		t.read()
 		self.get_file_with_ext('sigtx',delete_all=True)
 		return t
@@ -686,7 +686,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def bal3(self):    return self.bal(n='3')
 
 	def tx_status(self,ext,expect_str,expect_str2='',add_args=[],exit_val=0):
-		ext = ext.format('-α' if g.debug_utf8 else '')
+		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn('mmgen-txsend', self.eth_args + add_args + ['--status',txfile])
 		t.expect(expect_str)
@@ -707,7 +707,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			key = self.keystore_data['key']
 			imsg(f'Key:       {key}')
 			from mmgen.proto.eth.misc import ec_sign_message_with_privkey
-			return ec_sign_message_with_privkey(self.message,bytes.fromhex(key),'eth_sign')
+			return ec_sign_message_with_privkey(cfg,self.message,bytes.fromhex(key),'eth_sign')
 
 		async def create_signature_rpc():
 			addr = self.read_from_tmpfile('signer_addr').strip()
@@ -791,7 +791,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			eth_fee_res      = True )
 
 	def txbump(self,ext=',40000]{}.regtest.rawtx',fee='50G',add_args=[]):
-		ext = ext.format('-α' if g.debug_utf8 else '')
+		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn('mmgen-txbump', self.eth_args + add_args + ['--yes',txfile])
 		t.expect('or gas price: ',fee+'\n')
@@ -905,7 +905,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	async def get_tx_receipt(self,txid):
 		from mmgen.tx import NewTX
-		tx = await NewTX(proto=self.proto)
+		tx = await NewTX(cfg=cfg,proto=self.proto)
 		tx.rpc = await self.rpc
 		res = await tx.get_receipt(txid)
 		imsg(f'Gas sent:  {res.gas_sent.hl():<9} {(res.gas_sent*res.gas_price).hl2(encl="()")}')
@@ -931,7 +931,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t = self.spawn( 'mmgen-'+mmgen_cmd, self.eth_args + args)
 		if mmgen_cmd == 'txcreate':
 			t.written_to_file('transaction')
-			ext = '[0,8000]{}.regtest.rawtx'.format('-α' if g.debug_utf8 else '')
+			ext = '[0,8000]{}.regtest.rawtx'.format('-α' if cfg.debug_utf8 else '')
 			txfile = self.get_file_with_ext(ext,no_dot=True)
 			t = self.spawn('mmgen-txsign', self.eth_args + ['--yes','-k',keyfile,txfile],no_msg=True)
 			self.txsign_ui_common(t,ni=True)
@@ -940,7 +940,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 		txid = self.txsend_ui_common(t,
 			caller = mmgen_cmd,
-			quiet  = mmgen_cmd == 'txdo' or not g.debug,
+			quiet  = mmgen_cmd == 'txdo' or not cfg.debug,
 			bogus_send = False )
 		addr = strip_ansi_escapes(t.expect_getend('Contract address: '))
 		if (await self.get_tx_receipt(txid)).status == 0:
@@ -971,12 +971,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		sid = dfl_sid
 		from mmgen.tool.wallet import tool_cmd
 		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11,21)]
-		usr_addrs = [tool_cmd(cmdname='gen_addr',proto=self.proto).gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
 
 		from mmgen.proto.eth.contract import TokenResolve
 		async def do_transfer(rpc):
 			for i in range(2):
 				tk = await TokenResolve(
+					cfg,
 					self.proto,
 					rpc,
 					self.read_from_tmpfile(f'token_addr{i+1}').strip() )
@@ -998,6 +998,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		async def show_bals(rpc):
 			for i in range(2):
 				tk = await TokenResolve(
+					cfg,
 					self.proto,
 					rpc,
 					self.read_from_tmpfile(f'token_addr{i+1}').strip() )
@@ -1008,7 +1009,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 					usr_mmaddrs[i],
 					usr_addrs[i] ))
 
+		def gen_addr(addr):
+			return tool_cmd(cfg,cmdname='gen_addr',proto=self.proto).gen_addr(addr,dfl_words_file)
+
 		silence()
+		usr_addrs = list(map(gen_addr,usr_mmaddrs))
 		if op == 'show_bals':
 			await show_bals(await self.rpc)
 		elif op == 'do_transfer':
@@ -1191,7 +1196,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			add_args = ['98831F3A:E:3,0.4321']):
 		args = ['--fee=20G','--cached-balances'] + add_args + [dfl_words_file]
 		t = self.txcreate(args=args,acct=acct,caller='txdo',fee_res_data=fee_res_data,no_read=True)
-		self._do_confirm_send(t,quiet=not g.debug,sure=False)
+		self._do_confirm_send(t,quiet=not cfg.debug,sure=False)
 		return t
 
 	def txcreate_refresh_balances(self,
@@ -1322,7 +1327,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	async def twmove(self):
 		self.spawn('',msg_only=True)
 		from mmgen.tw.ctl import TwCtl
-		twctl = await TwCtl(self.proto)
+		twctl = await TwCtl(cfg,self.proto)
 		imsg(f'Moving tracking wallet')
 		bakfile = twctl.tw_fn + '.bak.json'
 		if os.path.exists(bakfile):
@@ -1332,7 +1337,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def twimport(self,add_args=[],expect_str=None):
 		from mmgen.tw.json import TwJSON
-		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
+		fn = joinpath( self.tmpdir, TwJSON.Base(cfg,self.proto).dump_fn )
 		t = self.spawn('mmgen-tool',self.eth_args_noquiet + ['twimport',fn] + add_args)
 		t.expect('(y/N): ','y')
 		if expect_str:
@@ -1346,7 +1351,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def tw_chktotal(self):
 		self.spawn('',msg_only=True)
 		from mmgen.tw.json import TwJSON
-		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
+		fn = joinpath( self.tmpdir, TwJSON.Base(cfg,self.proto).dump_fn )
 		res = json.loads(read_from_file(fn))
 		cmp_or_die( res['data']['value'], vbal6, 'value in tracking wallet JSON dump' )
 		return 'ok'
@@ -1354,7 +1359,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	async def twcompare(self):
 		self.spawn('',msg_only=True)
 		from mmgen.tw.ctl import TwCtl
-		twctl = await TwCtl(self.proto)
+		twctl = await TwCtl(cfg,self.proto)
 		fn = twctl.tw_fn
 		imsg(f'Comparing imported tracking wallet with original')
 		data = [json.dumps(json.loads(read_from_file(f)),sort_keys=True) for f in (fn,fn+'.bak.json')]
@@ -1364,7 +1369,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def edit_json_twdump(self):
 		self.spawn('',msg_only=True)
 		from mmgen.tw.json import TwJSON
-		fn = TwJSON.Base(self.proto).dump_fn
+		fn = TwJSON.Base(cfg,self.proto).dump_fn
 		text = json.loads(self.read_from_tmpfile(fn))
 		token_addr = self.read_from_tmpfile('token_addr2').strip()
 		text['data']['entries']['tokens'][token_addr][2][3] = f'edited comment [фубар] [{gr_uc}]'
@@ -1373,7 +1378,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def stop(self):
 		self.spawn('',msg_only=True)
-		if not opt.no_daemon_stop:
+		if not cfg.no_daemon_stop:
 			if not stop_test_daemons(self.proto.coin+'_rt'):
 				return False
 		set_vt100()

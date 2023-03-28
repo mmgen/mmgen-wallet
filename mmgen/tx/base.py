@@ -26,7 +26,6 @@ from ..obj import (
 )
 from ..addr import MMGenID,CoinAddr
 from ..util import msg,ymsg,fmt,remove_dups,make_timestamp,die
-from ..opts import opt
 
 class MMGenTxIO(MMGenListItem):
 	vout     = ListItemAttr(NonNegativeInt)
@@ -110,6 +109,7 @@ class Base(MMGenObject):
 		desc = 'transaction outputs'
 
 	def __init__(self,*args,**kwargs):
+		self.cfg      = kwargs['cfg']
 		self.inputs   = self.InputList(self)
 		self.outputs  = self.OutputList(self)
 		self.name     = type(self).__name__
@@ -171,13 +171,14 @@ class Base(MMGenObject):
 	def add_comment(self,infile=None):
 		if infile:
 			from ..fileutil import get_data_from_file
-			self.comment = MMGenTxComment(get_data_from_file(infile,'transaction comment'))
+			self.comment = MMGenTxComment(get_data_from_file( self.cfg, infile, 'transaction comment' ))
 		else:
 			from ..ui import keypress_confirm,line_input
 			if keypress_confirm(
+					self.cfg,
 					prompt = 'Edit transaction comment?' if self.comment else 'Add a comment to transaction?',
 					default_yes = False ):
-				res = MMGenTxComment(line_input('Comment: ',insert_txt=self.comment))
+				res = MMGenTxComment(line_input( self.cfg, 'Comment: ', insert_txt=self.comment ))
 				if not res:
 					ymsg('Warning: comment is empty')
 				changed = res != self.comment
@@ -199,11 +200,11 @@ class Base(MMGenObject):
 			fs = fmt(self.non_mmgen_inputs_msg,strip_char='\t',indent=indent).strip()
 			m = fs.format('\n    '.join(non_mmaddrs))
 			if caller in ('txdo','txsign'):
-				if not opt.keys_from_file:
+				if not self.cfg.keys_from_file:
 					die( 'UserOptError', f'\n{indent}ERROR: {m}\n' )
 			else:
 				msg(f'\n{indent}WARNING: {m}\n')
-				if not opt.yes:
+				if not self.cfg.yes:
 					from ..ui import keypress_confirm
-					if not keypress_confirm('Continue?',default_yes=True):
+					if not keypress_confirm( self.cfg, 'Continue?', default_yes=True ):
 						die(1,'Exiting at user request')

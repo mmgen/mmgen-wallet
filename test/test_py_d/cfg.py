@@ -13,6 +13,7 @@ test.test_py_d.cfg: configuration data for test.py
 """
 
 from .common import *
+from ..include.common import cfg
 
 cmd_groups_dfl = {
 	'misc':             ('TestSuiteMisc',{}),
@@ -229,8 +230,8 @@ def fixup_cfgs():
 		cfgs[target]['tmpdir'] = os.path.join('test','tmp',target)
 
 	for k in cfgs:
-		cfgs[k]['segwit'] = randbool() if opt.segwit_random else bool(opt.segwit or opt.bech32)
+		cfgs[k]['segwit'] = randbool() if cfg.segwit_random else bool(cfg.segwit or cfg.bech32)
 
-	if g.debug_utf8:
+	if cfg.debug_utf8:
 		for k in cfgs:
 			cfgs[k]['tmpdir'] += '-α'

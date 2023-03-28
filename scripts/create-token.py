@@ -175,19 +175,20 @@ contract Token is ERC20Interface, Owned, SafeMath {
 }
 """ % req_solc_ver_pat
 
-def create_src(proto,template,token_data,owner_addr):
+def create_src(cfg,template,token_data):
 
 	def gen():
 		for k in token_data.fields:
 			field = getattr(token_data,k)
 			if k == 'owner_addr':
+				owner_addr = cfg._args[0]
 				from mmgen.addr import is_coin_addr
-				if not is_coin_addr( proto, owner_addr.lower() ):
-					die(1,f'{owner_addr}: not a valid {proto.coin} coin address')
+				if not is_coin_addr( cfg._proto, owner_addr.lower() ):
+					die(1,f'{owner_addr}: not a valid {cfg._proto.coin} coin address')
 				val = '0x' + owner_addr
 			else:
 				val = (
-					getattr(opt,k)
+					getattr(cfg,k)
 					or getattr(field,'default',None)
 					or die(1,f'The --{k} option must be specified')
 				)
@@ -231,10 +232,10 @@ def check_solc_version():
 		Msg(f'solc version ({version_str}) does not match requirement ({req_solc_ver_pat})')
 		return False
 
-def compile_code(code):
+def compile_code(cfg,code):
 	cmd = ['solc','--optimize','--bin','--overwrite']
-	if not opt.stdout:
-		cmd += ['--output-dir', opt.outdir or '.']
+	if not cfg.stdout:
+		cmd += ['--output-dir', cfg.outdir or '.']
 	cmd += ['-']
 	msg(f"Executing: {' '.join(cmd)}")
 	cp = run(cmd,input=code.encode(),stdout=PIPE,stderr=PIPE)
@@ -247,37 +248,34 @@ def compile_code(code):
 	if err:
 		ymsg('Solidity compiler produced the following warning:')
 		msg(err)
-	if opt.stdout:
+	if cfg.stdout:
 		o = out.split('\n')
 		return {k:o[i+2] for k in ('SafeMath','Owned','Token') for i in range(len(o)) if k in o[i]}
 	else:
-		vmsg(out)
+		cfg._util.vmsg(out)
 
 if __name__ == '__main__':
 
-	cmd_args = opts.init(opts_data)
+	cfg = opts.init(opts_data)
 
-	if opt.check_solc_version:
+	if cfg.check_solc_version:
 		sys.exit(0 if check_solc_version() else 1)
 
-	from mmgen.protocol import init_proto_from_opts
-	proto = init_proto_from_opts()
-
-	if not proto.coin in ('ETH','ETC'):
+	if not cfg._proto.coin in ('ETH','ETC'):
 		die(1,'--coin option must be ETH or ETC')
 
-	if not len(cmd_args) == 1:
+	if not len(cfg._args) == 1:
 		opts.usage()
 
-	code = create_src( proto, solidity_code_template, token_data, cmd_args[0] )
+	code = create_src( cfg, solidity_code_template, token_data )
 
-	if opt.preprocess:
+	if cfg.preprocess:
 		Msg(code)
 		sys.exit(0)
 
-	out = compile_code(code)
+	out = compile_code( cfg, code )
 
-	if opt.stdout:
+	if cfg.stdout:
 		print(json.dumps(out))
 
 	msg('Contract successfully compiled')

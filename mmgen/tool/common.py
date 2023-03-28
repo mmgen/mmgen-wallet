@@ -31,21 +31,21 @@ class tool_cmd_base(MMGenObject):
 	need_addrtype = False
 	need_amt = False
 
-	def __init__(self,cmdname=None,proto=None,mmtype=None):
+	def __init__(self,cfg,cmdname=None,proto=None,mmtype=None):
+
+		self.cfg = cfg
 
 		if self.need_proto:
-			from ..protocol import init_proto_from_opts
-			self.proto = proto or init_proto_from_opts(need_amt=self.need_amt)
-			from ..globalvars import g
-			if g.token:
-				self.proto.tokensym = g.token.upper()
+			from ..protocol import init_proto_from_cfg
+			self.proto = proto or cfg._proto or init_proto_from_cfg(cfg,need_amt=True)
+			if cfg.token:
+				self.proto.tokensym = cfg.token.upper()
 
 		if self.need_addrtype:
-			from ..opts import opt
 			from ..addr import MMGenAddrType
 			self.mmtype = MMGenAddrType(
 				self.proto,
-				mmtype or opt.type or self.proto.dfl_mmtype )
+				mmtype or cfg.type or self.proto.dfl_mmtype )
 
 	@property
 	def user_commands(self):

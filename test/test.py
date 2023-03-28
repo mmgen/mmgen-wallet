@@ -22,7 +22,7 @@ test/test.py: Test suite for the MMGen wallet system
 
 def check_segwit_opts():
 	for k,m in (('segwit','S'),('segwit_random','S'),('bech32','B')):
-		if getattr(opt,k) and m not in proto.mmtypes:
+		if getattr(cfg,k) and m not in proto.mmtypes:
 			die(1,f'--{k.replace("_","-")} option incompatible with {proto.cls_name}')
 
 def create_shm_dir(data_dir,trash_dir):
@@ -92,7 +92,6 @@ try:
 except:
 	pass
 
-g.quiet = False # if 'quiet' was set in config file, disable here
 os.environ['MMGEN_QUIET'] = '0' # for this script and spawned scripts
 
 opts_data = {
@@ -170,20 +169,23 @@ environment var
 # we need some opt values before running opts.init, so parse without initializing:
 po = opts.init(opts_data,parse_only=True)
 
-from test.include.common import *
-from test.test_py_d.common import *
+from test.include.common import set_globals,get_test_data_dir
 
 data_dir = get_test_data_dir() # include/common.py
 
 # step 1: delete data_dir symlink in ./test;
-opt.resuming = any(k in po.user_opts for k in ('resume','resume_after'))
-opt.skipping_deps = opt.resuming or 'skip_deps' in po.user_opts
-
-if not opt.skipping_deps:
+if not po.user_opts.get('skipping_deps'):
 	try: os.unlink(data_dir)
 	except: pass
 
-opts.UserOpts._reset_ok += (
+# step 2: opts.init will create new data_dir in ./test (if not cfg.skipping_deps)
+cfg = opts.init(opts_data)
+
+set_globals(cfg)
+
+from test.test_py_d.common import * # this must be loaded after set_globals()
+
+type(cfg)._reset_ok += (
 	'no_daemon_autostart',
 	'names',
 	'no_timings',
@@ -191,45 +193,49 @@ opts.UserOpts._reset_ok += (
 	'resuming',
 	'skipping_deps' )
 
-# step 2: opts.init will create new data_dir in ./test (if not opt.skipping_deps)
-parsed_opts = opts.init(opts_data,return_parsed=True)
-usr_args = parsed_opts.cmd_args
+cfg.resuming = any(k in po.user_opts for k in ('resume','resume_after'))
+cfg.skipping_deps = cfg.resuming or 'skip_deps' in po.user_opts
 
-if opt.pexpect_spawn and gc.platform == 'win':
+cmd_args = cfg._args
+
+if cfg.pexpect_spawn and gc.platform == 'win':
 	die(1,'--pexpect-spawn option not supported on Windows platform, exiting')
 
-if opt.daemon_id and opt.daemon_id in g.blacklisted_daemons.split():
-	die(1,f'test.py: daemon {opt.daemon_id!r} blacklisted, exiting')
+if cfg.daemon_id and cfg.daemon_id in cfg.blacklisted_daemons.split():
+	die(1,f'test.py: daemon {cfg.daemon_id!r} blacklisted, exiting')
 
-network_id = g.coin.lower() + ('_tn' if opt.testnet else '')
+network_id = cfg.coin.lower() + ('_tn' if cfg.testnet else '')
 
-from mmgen.protocol import init_proto_from_opts
-proto = init_proto_from_opts()
+proto = cfg._proto
 
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
 trash_dir = os.path.join('test','trash')
 
-if not opt.skipping_deps:
+if not cfg.skipping_deps:
 	shm_dir = create_shm_dir(data_dir,trash_dir)
 
 check_segwit_opts()
 
-testing_segwit = opt.segwit or opt.segwit_random or opt.bech32
+testing_segwit = cfg.segwit or cfg.segwit_random or cfg.bech32
 
-if g.test_suite_deterministic:
-	opt.no_timings = True
+if cfg.test_suite_deterministic:
+	cfg.no_timings = True
 	init_color(num_colors=0)
 	os.environ['MMGEN_DISABLE_COLOR'] = '1'
 
-if opt.profile:
-	opt.names = True
+if cfg.profile:
+	cfg.names = True
 
-if opt.exact_output:
-	def msg(s): pass
-	qmsg = qmsg_r = vmsg = vmsg_r = msg_r = msg
+if cfg.exact_output:
+	def noop(s):
+		pass
+	qmsg = qmsg_r = msg = noop
+else:
+	qmsg = cfg._util.qmsg
+	qmsg_r = cfg._util.qmsg_r
 
-if opt.skipping_deps:
-	opt.no_daemon_autostart = True
+if cfg.skipping_deps:
+	cfg.no_daemon_autostart = True
 
 from test.test_py_d.cfg import cfgs,fixup_cfgs
 
@@ -280,16 +286,16 @@ def list_cmds():
 	sys.exit(0)
 
 def do_between():
-	if opt.pause:
+	if cfg.pause:
 		confirm_continue()
-	elif (opt.verbose or opt.exact_output) and not opt.skipping_deps:
+	elif (cfg.verbose or cfg.exact_output) and not cfg.skipping_deps:
 		sys.stderr.write('\n')
 
 def list_tmpdirs():
 	return {k:cfgs[k]['tmpdir'] for k in cfgs}
 
 def clean(usr_dirs=None,clean_overlay=True):
-	if opt.skipping_deps:
+	if cfg.skipping_deps:
 		return
 	all_dirs = list_tmpdirs()
 	dirnums = map(int,(usr_dirs if usr_dirs is not None else all_dirs))
@@ -335,11 +341,11 @@ def set_environ_for_spawned_scripts():
 	os.environ['MMGEN_COLUMNS'] = str(get_terminal_size().width)
 
 	if os.getenv('MMGEN_DEBUG_ALL'):
-		for name in g.env_opts:
+		for name in cfg.env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
 
-	if not opt.system:
+	if not cfg.system:
 		os.environ['PYTHONPATH'] = repo_root
 
 	os.environ['MMGEN_NO_LICENSE'] = '1'
@@ -392,12 +398,12 @@ class CmdGroupMgr(object):
 					if sg_name in (None,sg_key):
 						for e in add_entries(
 								sg_key,
-								add_deps = sg_name and not opt.skipping_deps,
-								added_subgroups = [sg_name] if opt.deps_only else [] ):
+								add_deps = sg_name and not cfg.skipping_deps,
+								added_subgroups = [sg_name] if cfg.deps_only else [] ):
 							yield e
-					if opt.deps_only and sg_key == sg_name:
+					if cfg.deps_only and sg_key == sg_name:
 						return
-				elif not opt.skipping_deps:
+				elif not cfg.skipping_deps:
 					yield (name,data)
 
 		return tuple(gen())
@@ -470,12 +476,12 @@ class CmdGroupMgr(object):
 		for gname in self.cmd_groups:
 			ginfo.append(( gname, self.get_cls_by_gname(gname) ))
 
-		if opt.list_current_cmd_groups:
-			exclude = (opt.exclude_groups or '').split(',')
+		if cfg.list_current_cmd_groups:
+			exclude = (cfg.exclude_groups or '').split(',')
 			ginfo = [g for g in ginfo
 						if network_id in g[1].networks
 							and not g[0] in exclude
-							and g[0] in tuple(self.cmd_groups_dfl) + tuple(usr_args) ]
+							and g[0] in tuple(self.cmd_groups_dfl) + tuple(cmd_args) ]
 			desc = 'CONFIGURED'
 		else:
 			desc = 'AVAILABLE'
@@ -529,7 +535,7 @@ class TestSuiteRunner(object):
 	'test suite runner'
 
 	def __del__(self):
-		if opt.log:
+		if cfg.log:
 			self.log_fd.close()
 
 	def __init__(self,data_dir,trash_dir):
@@ -544,21 +550,21 @@ class TestSuiteRunner(object):
 		self.resume_cmd = None
 		self.deps_only = None
 
-		if opt.log:
+		if cfg.log:
 			self.log_fd = open(log_file,'a')
 			self.log_fd.write(f'\nLog started: {make_timestr()} UTC\n')
 			omsg(f'INFO → Logging to file {log_file!r}')
 		else:
 			self.log_fd = None
 
-		if opt.coverage:
+		if cfg.coverage:
 			coverdir,accfile = init_coverage()
 			omsg(f'INFO → Writing coverage files to {coverdir!r}')
 			self.pre_args = ['python3','-m','trace','--count','--coverdir='+coverdir,'--file='+accfile]
 		else:
 			self.pre_args = ['python3'] if gc.platform == 'win' else []
 
-		if opt.pexpect_spawn:
+		if cfg.pexpect_spawn:
 			omsg(f'INFO → Using pexpect.spawn() for real terminal emulation')
 
 	def spawn_wrapper(self,cmd,
@@ -572,12 +578,12 @@ class TestSuiteRunner(object):
 			timeout       = None,
 			pexpect_spawn = None ):
 
-		desc = self.ts.test_name if opt.names else self.gm.dpy_data[self.ts.test_name][1]
+		desc = self.ts.test_name if cfg.names else self.gm.dpy_data[self.ts.test_name][1]
 		if extra_desc:
 			desc += ' ' + extra_desc
 
 		cmd_path = (
-			cmd if opt.system # opt.system is broken for main test group with overlay tree
+			cmd if cfg.system # cfg.system is broken for main test group with overlay tree
 			else os.path.relpath(os.path.join(repo_root,cmd_dir,cmd)) )
 
 		args = (
@@ -591,7 +597,7 @@ class TestSuiteRunner(object):
 		qargs = ['{q}{}{q}'.format( a, q = "'" if ' ' in a else '' ) for a in args]
 		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw
 
-		if opt.log:
+		if cfg.log:
 			self.log_fd.write('[{}][{}:{}] {}\n'.format(
 				proto.coin.lower(),
 				self.ts.group_name,
@@ -605,11 +611,11 @@ class TestSuiteRunner(object):
 					args ))
 
 		if not no_msg:
-			t_pfx = '' if opt.no_timings else f'[{time.time() - self.start_time:08.2f}] '
-			if opt.verbose or opt.print_cmdline or opt.exact_output:
+			t_pfx = '' if cfg.no_timings else f'[{time.time() - self.start_time:08.2f}] '
+			if cfg.verbose or cfg.print_cmdline or cfg.exact_output:
 				omsg(green(f'{t_pfx}Testing: {desc}'))
 				if not msg_only:
-					clr1,clr2 = (nocolor,nocolor) if opt.print_cmdline else (green,cyan)
+					clr1,clr2 = (nocolor,nocolor) if cfg.print_cmdline else (green,cyan)
 					omsg(
 						clr1('Executing: ') +
 						clr2(repr(cmd_disp) if gc.platform == 'win' else cmd_disp)
@@ -623,8 +629,8 @@ class TestSuiteRunner(object):
 		# NB: the `pexpect_spawn` arg enables hold_protect and send_delay while the corresponding cmdline
 		# option does not.  For performance reasons, this is the desired behavior.  For full emulation of
 		# the user experience with hold protect enabled, specify --buf-keypress or --demo.
-		send_delay = 0.4 if pexpect_spawn is True or opt.buf_keypress else None
-		pexpect_spawn = pexpect_spawn if pexpect_spawn is not None else bool(opt.pexpect_spawn)
+		send_delay = 0.4 if pexpect_spawn is True or cfg.buf_keypress else None
+		pexpect_spawn = pexpect_spawn if pexpect_spawn is not None else bool(cfg.pexpect_spawn)
 
 		os.environ['MMGEN_HOLD_PROTECT_DISABLE'] = '' if send_delay else '1'
 		os.environ['MMGEN_TEST_SUITE_POPEN_SPAWN'] = '' if pexpect_spawn else '1'
@@ -649,7 +655,7 @@ class TestSuiteRunner(object):
 		t = int(time.time() - self.start_time)
 		sys.stderr.write(green(
 			f'{self.cmd_total} test{suf(self.cmd_total)} performed' +
-			('\n' if opt.no_timings else f'.  Elapsed time: {t//60:02d}:{t%60:02d}\n')
+			('\n' if cfg.no_timings else f'.  Elapsed time: {t//60:02d}:{t%60:02d}\n')
 		))
 
 	def init_group(self,gname,sg_name=None,cmd=None,quiet=False,do_clean=True):
@@ -657,7 +663,7 @@ class TestSuiteRunner(object):
 		ts_cls = CmdGroupMgr().load_mod(gname)
 
 		for k in ('segwit','segwit_random','bech32'):
-			if getattr(opt,k):
+			if getattr(cfg,k):
 				segwit_opt = k
 				break
 		else:
@@ -706,28 +712,28 @@ class TestSuiteRunner(object):
 		# pass through opts from cmdline (po.user_opts)
 		self.passthru_opts = ['--{}{}'.format(
 				k.replace('_','-'),
-				'=' + getattr(opt,k) if getattr(opt,k) != True else ''
-			) for k in self.ts.base_passthru_opts + self.ts.passthru_opts if k in parsed_opts.user_opts]
+				'' if cfg._uopts[k] is True else '=' + cfg._uopts[k]
+			) for k in cfg._uopts if k in self.ts.base_passthru_opts + self.ts.passthru_opts]
 
-		if opt.resuming:
-			rc = opt.resume or opt.resume_after
-			offset = 1 if opt.resume_after else 0
+		if cfg.resuming:
+			rc = cfg.resume or cfg.resume_after
+			offset = 1 if cfg.resume_after else 0
 			self.resume_cmd = self.gm.cmd_list[self.gm.cmd_list.index(rc)+offset]
 			omsg(f'INFO → Resuming at command {self.resume_cmd!r}')
-			if opt.step:
-				opt.exit_after = self.resume_cmd
+			if cfg.step:
+				cfg.exit_after = self.resume_cmd
 
-		if opt.exit_after and opt.exit_after not in self.gm.cmd_list:
-			die(1,f'{opt.exit_after!r}: command not recognized')
+		if cfg.exit_after and cfg.exit_after not in self.gm.cmd_list:
+			die(1,f'{cfg.exit_after!r}: command not recognized')
 
 		return True
 
-	def run_tests(self,usr_args):
+	def run_tests(self,cmd_args):
 		self.start_time = time.time()
 		self.daemon_started = False
 		gname_save = None
-		if usr_args:
-			for arg in usr_args:
+		if cmd_args:
+			for arg in cmd_args:
 				if arg in self.gm.cmd_groups:
 					if not self.init_group(arg):
 						continue
@@ -752,7 +758,7 @@ class TestSuiteRunner(object):
 						if not self.init_group(gname,sg_name,cmdname,quiet=same_grp,do_clean=not same_grp):
 							continue
 						if cmdname:
-							if opt.deps_only:
+							if cfg.deps_only:
 								self.deps_only = cmdname
 							try:
 								self.check_needs_rerun(cmdname,build=True)
@@ -772,13 +778,13 @@ class TestSuiteRunner(object):
 					else:
 						die(1,f'{arg!r}: command not recognized')
 		else:
-			if opt.exclude_groups:
-				exclude = opt.exclude_groups.split(',')
+			if cfg.exclude_groups:
+				exclude = cfg.exclude_groups.split(',')
 				for e in exclude:
 					if e not in self.gm.cmd_groups_dfl:
 						die(1,f'{e!r}: group not recognized')
 			for gname in self.gm.cmd_groups_dfl:
-				if opt.exclude_groups and gname in exclude:
+				if cfg.exclude_groups and gname in exclude:
 					continue
 				if not self.init_group(gname):
 					continue
@@ -832,7 +838,7 @@ class TestSuiteRunner(object):
 				for fn in fns:
 					if not root:
 						os.unlink(fn)
-				if not (dpy and opt.skipping_deps):
+				if not (dpy and cfg.skipping_deps):
 					self.run_test(cmd)
 				if not root:
 					do_between()
@@ -862,10 +868,10 @@ class TestSuiteRunner(object):
 				return
 			bmsg(f'Resuming at {self.resume_cmd!r}')
 			self.resume_cmd = None
-			opt.skipping_deps = False
-			opt.resuming = False
+			cfg.skipping_deps = False
+			cfg.resuming = False
 
-		if opt.profile:
+		if cfg.profile:
 			start = time.time()
 
 		self.ts.test_name = cmd # NB: Do not remove, this needs to be set twice
@@ -873,24 +879,24 @@ class TestSuiteRunner(object):
 #		self.ts.test_dpydata = cdata
 		self.ts.tmpdir_num = cdata[0]
 #		self.ts.cfg = cfgs[str(cdata[0])] # will remove this eventually
-		cfg = cfgs[str(cdata[0])]
+		test_cfg = cfgs[str(cdata[0])]
 		for k in (  'seed_len', 'seed_id',
 					'wpasswd', 'kapasswd',
 					'segwit', 'hash_preset',
 					'bw_filename', 'bw_params', 'ref_bw_seed_id',
 					'addr_idx_list', 'pass_idx_list' ):
-			if k in cfg:
-				setattr(self.ts,k,cfg[k])
+			if k in test_cfg:
+				setattr(self.ts,k,test_cfg[k])
 
 		ret = getattr(self.ts,cmd)(*arg_list) # run the test
 		if type(ret).__name__ == 'coroutine':
 			ret = async_run(ret)
 		self.process_retval(cmd,ret)
 
-		if opt.profile:
+		if cfg.profile:
 			omsg('\r\033[50C{:.4f}'.format( time.time() - start ))
 
-		if cmd == opt.exit_after:
+		if cmd == cfg.exit_after:
 			sys.exit(0)
 
 	def warn_skipped(self):
@@ -925,7 +931,7 @@ class TestSuiteRunner(object):
 		if cmd not in self.gm.cmd_list:
 			die(1,f'{cmd!r}: unrecognized command')
 
-		if not opt.quiet:
+		if not cfg.quiet:
 			omsg(f'Checking dependencies for {cmd!r}')
 
 		self.check_needs_rerun(self.ts,cmd,build=False)
@@ -966,18 +972,18 @@ class TestSuiteRunner(object):
 
 # main()
 
-if not opt.skipping_deps: # do this before list cmds exit, so we stay in sync with shm_dir
+if not cfg.skipping_deps: # do this before list cmds exit, so we stay in sync with shm_dir
 	create_tmp_dirs(shm_dir)
 
-if opt.list_cmd_groups:
+if cfg.list_cmd_groups:
 	CmdGroupMgr().list_cmd_groups()
-elif opt.list_cmds:
+elif cfg.list_cmds:
 	list_cmds()
-elif usr_args and usr_args[0] in utils:
-	globals()[usr_args[0]](*usr_args[1:])
+elif cmd_args and cmd_args[0] in utils:
+	globals()[cmd_args[0]](*cmd_args[1:])
 	sys.exit(0)
 
-if opt.pause:
+if cfg.pause:
 	set_restore_term_at_exit()
 
 set_environ_for_spawned_scripts()
@@ -986,7 +992,7 @@ from mmgen.exception import TestSuiteException,TestSuiteFatalException
 
 try:
 	tr = TestSuiteRunner(data_dir,trash_dir)
-	tr.run_tests(usr_args)
+	tr.run_tests(cmd_args)
 	tr.warn_skipped()
 	if tr.daemon_started:
 		stop_test_daemons(network_id)

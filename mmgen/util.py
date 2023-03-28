@@ -23,14 +23,68 @@ util: Frequently-used variables, classes and utility functions for the MMGen sui
 import sys,os,time,re
 
 from .color import *
-from .globalvars import g,gc,gv
-from .opts import opt
+from .globalvars import gv,gc
 
 ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
 
 hexdigits = '0123456789abcdefABCDEF'
 hexdigits_uc = '0123456789ABCDEF'
 hexdigits_lc = '0123456789abcdef'
+
+def noop(*args,**kwargs):
+	pass
+
+class Util:
+
+	def __init__(self,cfg):
+
+		self.cfg = cfg
+
+		if cfg.quiet:
+			self.qmsg = self.qmsg_r = noop
+		else:
+			self.qmsg = msg
+			self.qmsg_r = msg_r
+
+		if cfg.verbose:
+			self.vmsg = msg
+			self.vmsg_r = msg_r
+			self.Vmsg = Msg
+			self.Vmsg_r = Msg_r
+		else:
+			self.vmsg = self.vmsg_r = self.Vmsg = self.Vmsg_r = noop
+
+		self.dmsg = msg if cfg.debug else noop
+
+		if cfg.pager:
+			from .ui import do_pager
+			self.stdout_or_pager = do_pager
+		else:
+			self.stdout_or_pager = Msg_r
+
+	def compare_chksums(self,chk1,desc1,chk2,desc2,hdr='',die_on_fail=False,verbose=False):
+
+		if not chk1 == chk2:
+			fs = "{} ERROR: {} checksum ({}) doesn't match {} checksum ({})"
+			m = fs.format((hdr+':\n   ' if hdr else 'CHECKSUM'),desc2,chk2,desc1,chk1)
+			if die_on_fail:
+				die(3,m)
+			else:
+				if verbose or self.cfg.verbose:
+					msg(m)
+				return False
+
+		if self.cfg.verbose:
+			msg(f'{capfirst(desc1)} checksum OK ({chk1})')
+
+		return True
+
+	def compare_or_die(self, val1, desc1, val2, desc2, e='Error'):
+		if val1 != val2:
+			die(3,f"{e}: {desc2} ({val2}) doesn't match {desc1} ({val1})")
+		if self.cfg.debug:
+			msg(f'{capfirst(desc2)} OK ({val2})')
+		return True
 
 if gc.platform == 'win':
 	def msg_r(s):
@@ -84,34 +138,6 @@ def bmsg(s):
 
 def pumsg(s):
 	msg(purple(s))
-
-def qmsg(s):
-	if not opt.quiet:
-		msg(s)
-
-def qmsg_r(s):
-	if not opt.quiet:
-		msg_r(s)
-
-def vmsg(s,force=False):
-	if opt.verbose or force:
-		msg(s)
-
-def vmsg_r(s,force=False):
-	if opt.verbose or force:
-		msg_r(s)
-
-def Vmsg(s,force=False):
-	if opt.verbose or force:
-		Msg(s)
-
-def Vmsg_r(s,force=False):
-	if opt.verbose or force:
-		Msg_r(s)
-
-def dmsg(s):
-	if opt.debug:
-		msg(s)
 
 def mmsg(*args):
 	for d in args:
@@ -319,26 +345,6 @@ def strip_comments(lines):
 	pat = re.compile('#.*')
 	return [m for m in [pat.sub('',l).rstrip() for l in lines] if m != '']
 
-def compare_chksums(chk1,desc1,chk2,desc2,hdr='',die_on_fail=False,verbose=False):
-
-	if not chk1 == chk2:
-		fs = "{} ERROR: {} checksum ({}) doesn't match {} checksum ({})"
-		m = fs.format((hdr+':\n   ' if hdr else 'CHECKSUM'),desc2,chk2,desc1,chk1)
-		if die_on_fail:
-			die(3,m)
-		else:
-			vmsg(m,force=verbose)
-			return False
-
-	vmsg(f'{capfirst(desc1)} checksum OK ({chk1})')
-	return True
-
-def compare_or_die(val1, desc1, val2, desc2, e='Error'):
-	if val1 != val2:
-		die(3,f"{e}: {desc2} ({val2}) doesn't match {desc1} ({val1})")
-	dmsg(f'{capfirst(desc2)} OK ({val2})')
-	return True
-
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 
@@ -376,13 +382,6 @@ class oneshot_warning_group(oneshot_warning):
 
 	def __init__(self,wcls,div=None,fmt_args=[],reverse=False):
 		self.do(getattr(self,wcls),div,fmt_args,reverse)
-
-def stdout_or_pager(s):
-	if opt.pager:
-		from .ui import do_pager
-		do_pager(s)
-	else:
-		Msg_r(s)
 
 def get_subclasses(cls,names=False):
 	def gen(cls):

@@ -5,6 +5,7 @@ test/unit_tests_d/ut_indexed_dict: IndexedDict class unit test for the MMGen sui
 """
 
 from mmgen.common import *
+from ..include.common import vmsg
 
 class unit_test(object):
 

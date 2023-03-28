@@ -20,10 +20,12 @@
 term: Terminal classes for the MMGen suite
 """
 
+# TODO: reimplement as instance instead of class
+
 import sys,os,time
 from collections import namedtuple
 
-from .globalvars import g,gc
+from .globalvars import gc
 from .util import msg,msg_r,die
 
 try:
@@ -108,7 +110,7 @@ class MMGenTermLinux(MMGenTerm):
 
 	@classmethod
 	def kb_hold_protect(cls):
-		if g.hold_protect_disable:
+		if cls.cfg.hold_protect_disable:
 			return
 		tty.setcbreak(cls.stdin_fd)
 		timeout = 0.3
@@ -130,7 +132,7 @@ class MMGenTermLinux(MMGenTerm):
 		timeout = 0.3
 		tty.setcbreak(cls.stdin_fd)
 		msg_r(prompt)
-		if g.hold_protect_disable:
+		if cls.cfg.hold_protect_disable:
 			prehold_protect = False
 		while True:
 			# Protect against held-down key before read()
@@ -271,7 +273,7 @@ def get_term():
 		'mswin': (MMGenTermMSWin if sys.stdin.isatty() else MMGenTermMSWinStub),
 	}[_platform]
 
-def init_term(noecho=False):
+def init_term(cfg,noecho=False):
 
 	term = get_term()
 
@@ -280,6 +282,8 @@ def init_term(noecho=False):
 	import mmgen.term as self
 	for var in ('get_char','get_char_raw','kb_hold_protect','get_terminal_size'):
 		setattr( self, var, getattr(term,var) )
+
+	term.cfg = cfg # setting the _class_ attribute
 
 def reset_term():
 	get_term().reset()

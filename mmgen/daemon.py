@@ -24,7 +24,7 @@ import os,time,importlib
 from subprocess import run,PIPE,CompletedProcess
 from collections import namedtuple
 
-from .globalvars import g,gc
+from .globalvars import gc
 from .color import set_vt100
 from .util import msg,Msg_r,ymsg,die,remove_dups,oneshot_warning
 from .flags import *
@@ -49,8 +49,9 @@ class Daemon(Lockable):
 	avail_flags = () # like opts, but can be set or unset after instantiation
 	_reset_ok = ('debug','wait','pids')
 
-	def __init__(self,opts=None,flags=None):
+	def __init__(self,cfg,opts=None,flags=None):
 
+		self.cfg = cfg
 		self.platform = gc.platform
 		if self.platform == 'win':
 			self.use_pidfile = False
@@ -237,8 +238,8 @@ class RPCDaemon(Daemon):
 
 	avail_opts = ('no_daemonize',)
 
-	def __init__(self):
-		super().__init__()
+	def __init__(self,cfg):
+		super().__init__(cfg)
 		self.desc = '{} {} {}RPC daemon'.format(
 			self.rpc_type,
 			getattr(self.proto.network_names,self.proto.network),
@@ -280,13 +281,13 @@ class CoinDaemon(Daemon):
 		message = 'blacklisted daemon: {!r}'
 
 	@classmethod
-	def get_daemon_ids(cls,coin):
+	def get_daemon_ids(cls,cfg,coin):
 
 		ret = cls.coins[coin].daemon_ids
-		if 'erigon' in ret and not g.enable_erigon:
+		if 'erigon' in ret and not cfg.enable_erigon:
 			ret.remove('erigon')
-		if g.blacklisted_daemons:
-			blacklist = g.blacklisted_daemons.split()
+		if cfg.blacklisted_daemons:
+			blacklist = cfg.blacklisted_daemons.split()
 			def gen():
 				for daemon_id in ret:
 					if daemon_id in blacklist:
@@ -297,21 +298,21 @@ class CoinDaemon(Daemon):
 		return ret
 
 	@classmethod
-	def get_daemon(cls,coin,daemon_id,proto=None):
+	def get_daemon(cls,cfg,coin,daemon_id,proto=None):
 		if not proto:
 			from .protocol import init_proto
-			proto = init_proto(coin)
+			proto = init_proto( cfg, coin )
 		return getattr(
 			importlib.import_module(f'mmgen.proto.{proto.base_proto_coin.lower()}.daemon'),
 			daemon_id+'_daemon' )
 
 	@classmethod
-	def get_network_ids(cls):
+	def get_network_ids(cls,cfg):
 		from .protocol import CoinProtocol
 		def gen():
 			for coin in cls.coins:
-				for daemon_id in cls.get_daemon_ids(coin):
-					for network in cls.get_daemon(coin,daemon_id).networks:
+				for daemon_id in cls.get_daemon_ids(cfg,coin):
+					for network in cls.get_daemon( cfg, coin, daemon_id ).networks:
 						yield CoinProtocol.Base.create_network_id(coin,network)
 		return remove_dups(list(gen()),quiet=True)
 
@@ -329,6 +330,7 @@ class CoinDaemon(Daemon):
 			return ( res[0] if len(res) == 1 else [s for s in res if 'ersion' in s][0] ).strip()
 
 	def __new__(cls,
+			cfg,
 			network_id = None,
 			proto      = None,
 			opts       = None,
@@ -349,19 +351,19 @@ class CoinDaemon(Daemon):
 		else:
 			network_id = network_id.lower()
 			from .protocol import CoinProtocol,init_proto
-			proto = init_proto(network_id=network_id)
+			proto = init_proto( cfg, network_id=network_id )
 			coin,network = CoinProtocol.Base.parse_network_id(network_id)
 			coin = coin.upper()
 
-		daemon_ids = cls.get_daemon_ids(coin)
+		daemon_ids = cls.get_daemon_ids(cfg,coin)
 		if not daemon_ids:
 			die(1,f'No configured daemons for coin {coin}!')
-		daemon_id = daemon_id or g.daemon_id or daemon_ids[0]
+		daemon_id = daemon_id or cfg.daemon_id or daemon_ids[0]
 
 		if daemon_id not in daemon_ids:
 			die(1,f'{daemon_id!r}: invalid daemon_id - valid choices: {fmt_list(daemon_ids)}')
 
-		me = Daemon.__new__(cls.get_daemon( None, daemon_id, proto=proto ))
+		me = Daemon.__new__(cls.get_daemon( cfg, None, daemon_id, proto=proto ))
 
 		assert network in me.networks, f'{network!r}: unsupported network for daemon {daemon_id}'
 		me.network_id = network_id
@@ -373,6 +375,7 @@ class CoinDaemon(Daemon):
 		return me
 
 	def __init__(self,
+			cfg,
 			network_id = None,
 			proto      = None,
 			opts       = None,
@@ -385,7 +388,7 @@ class CoinDaemon(Daemon):
 
 		self.test_suite = test_suite
 
-		super().__init__(opts=opts,flags=flags)
+		super().__init__(cfg=cfg,opts=opts,flags=flags)
 
 		self._set_ok += ('shared_args','usr_coind_args')
 		self.shared_args = []
@@ -400,8 +403,8 @@ class CoinDaemon(Daemon):
 			'test suite ' if test_suite else '' )
 
 		# user-set values take precedence
-		self.datadir = os.path.abspath(datadir or g.daemon_data_dir or self.init_datadir())
-		self.non_dfl_datadir = bool(datadir or g.daemon_data_dir or test_suite or self.network == 'regtest')
+		self.datadir = os.path.abspath(datadir or cfg.daemon_data_dir or self.init_datadir())
+		self.non_dfl_datadir = bool(datadir or cfg.daemon_data_dir or test_suite or self.network == 'regtest')
 
 		# init_datadir() may have already initialized logdir
 		self.logdir = os.path.abspath(getattr(self,'logdir',self.datadir))
@@ -409,7 +412,7 @@ class CoinDaemon(Daemon):
 		ps_adj = (port_shift or 0) + (self.test_suite_port_shift if test_suite else 0)
 
 		# user-set values take precedence
-		self.rpc_port = (g.rpc_port or 0) + (port_shift or 0) if g.rpc_port else ps_adj + self.get_rpc_port()
+		self.rpc_port = (cfg.rpc_port or 0) + (port_shift or 0) if cfg.rpc_port else ps_adj + self.get_rpc_port()
 		self.p2p_port = (
 			p2p_port or (
 				self.get_p2p_port() + ps_adj if self.get_p2p_port() and (test_suite or ps_adj) else None

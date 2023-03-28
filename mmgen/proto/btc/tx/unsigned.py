@@ -14,9 +14,8 @@ proto.btc.tx.unsigned: Bitcoin unsigned transaction class
 
 import mmgen.tx.unsigned as TxBase
 from .completed import Completed
-from ....globalvars import *
 from ....obj import HexStr,CoinTxID,MMGenDict
-from ....util import msg,msg_r,ymsg,qmsg,suf
+from ....util import msg,msg_r,ymsg,suf
 
 class Unsigned(Completed,TxBase.Unsigned):
 	desc = 'unsigned transaction'
@@ -34,12 +33,12 @@ class Unsigned(Completed,TxBase.Unsigned):
 
 		self.check_pubkey_scripts()
 
-		qmsg(f'Passing {len(keys)} key{suf(keys)} to {self.rpc.daemon.exec_fn}')
+		self.cfg._util.qmsg(f'Passing {len(keys)} key{suf(keys)} to {self.rpc.daemon.exec_fn}')
 
 		if self.has_segwit_inputs():
 			from ....addrgen import KeyGenerator,AddrGenerator
-			kg = KeyGenerator(self.proto,'std')
-			ag = AddrGenerator(self.proto,'segwit')
+			kg = KeyGenerator( self.cfg, self.proto, 'std' )
+			ag = AddrGenerator( self.cfg, self.proto, 'segwit' )
 			keydict = MMGenDict([(d.addr,d.sec) for d in keys])
 
 		sig_data = []
@@ -68,7 +67,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 
 		try:
 			self.update_serialized(ret['hex'])
-			new = await SignedTX(data=self.__dict__)
+			new = await SignedTX(cfg=self.cfg,data=self.__dict__)
 			tx_decoded = await self.rpc.call( 'decoderawtransaction', ret['hex'] )
 			new.compare_size_and_estimated_size(tx_decoded)
 			new.coin_txid = CoinTxID(self.deserialized.txid)
@@ -78,7 +77,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 			return new
 		except Exception as e:
 			ymsg(f'\n{e.args[0]}')
-			if g.exec_wrapper:
-				import traceback
+			if self.cfg.exec_wrapper:
+				import sys,traceback
 				ymsg( '\n' + ''.join(traceback.format_exception(*sys.exc_info())) )
 			return False

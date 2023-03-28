@@ -22,11 +22,11 @@ class OnlineSigned(Signed):
 		return _base_proto_subclass('Status','status',self.proto)(self)
 
 	def confirm_send(self):
-		from ..opts import opt
 		from ..util import msg
 		from ..ui import confirm_or_raise
 		confirm_or_raise(
-			message = '' if opt.quiet else 'Once this transaction is sent, there’s no taking it back!',
+			cfg     = self.cfg,
+			message = '' if self.cfg.quiet else 'Once this transaction is sent, there’s no taking it back!',
 			action  = f'broadcast this transaction to the {self.proto.coin} {self.proto.network.upper()} network',
-			expect  = 'YES' if opt.quiet or opt.yes else 'YES, I REALLY WANT TO DO THIS' )
+			expect  = 'YES' if self.cfg.quiet or self.cfg.yes else 'YES, I REALLY WANT TO DO THIS' )
 		msg('Sending transaction')

@@ -13,7 +13,6 @@ proto.btc.tw.txhistory: Bitcoin base protocol tracking wallet transaction histor
 """
 
 from collections import namedtuple
-from ....globalvars import g
 from ....tw.txhistory import TwTxHistory
 from ....tw.shared import get_tw_label,TwMMGenID
 from ....addr import CoinAddr
@@ -291,7 +290,7 @@ Filters/Actions: show [u]nconfirmed, [q]uit menu, r[e]draw:
 
 		data = list(gen_parsed_data())
 
-		if g.debug_tw:
+		if self.cfg.debug_tw:
 			import json
 			from ....rpc import json_encoder
 			def do_json_dump(*data):
@@ -328,7 +327,7 @@ Filters/Actions: show [u]nconfirmed, [q]uit menu, r[e]draw:
 			for tx in _wallet_txs:
 				tx['decoded'] = next(_decoded_txs)
 
-		if g.debug_tw:
+		if self.cfg.debug_tw:
 			do_json_dump((_wallet_txs, 'wallet-txs'),)
 
 		_wip = namedtuple('prevout',['txid','vout'])
@@ -353,7 +352,7 @@ Filters/Actions: show [u]nconfirmed, [q]uit menu, r[e]draw:
 		for d in txdata:
 			d['prevout_txs'] = [_prevout_txs_dict[txid] for txid in {i.txid for i in d['prevouts']} ]
 
-		if g.debug_tw:
+		if self.cfg.debug_tw:
 			do_json_dump(
 				(rpc_data,     'txhist-rpc'),
 				(data,         'txhist'),

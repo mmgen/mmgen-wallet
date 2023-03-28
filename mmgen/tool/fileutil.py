@@ -24,7 +24,7 @@ import os
 
 from .common import tool_cmd_base
 from ..globalvars import gc
-from ..util import msg,msg_r,qmsg,die,suf,make_full_path
+from ..util import msg,msg_r,die,suf,make_full_path
 from ..crypto import Crypto
 
 class tool_cmd(tool_cmd_base):
@@ -94,7 +94,6 @@ class tool_cmd(tool_cmd_base):
 		from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
 		from cryptography.hazmat.backends import default_backend
 
-		from ..opts import opt
 		from ..util2 import parse_bytespec
 
 		def encrypt_worker(wid):
@@ -111,11 +110,11 @@ class tool_cmd(tool_cmd_base):
 				q2.task_done()
 
 		nbytes = parse_bytespec(nbytes)
-		if opt.outdir:
-			outfile = make_full_path( opt.outdir, outfile )
+		if self.cfg.outdir:
+			outfile = make_full_path( self.cfg.outdir, outfile )
 		f = open(outfile,'wb')
 
-		key = Crypto().get_random(32)
+		key = Crypto(self.cfg).get_random(32)
 		q1,q2 = ( Queue(), Queue() )
 
 		for i in range(max(1,threads-2)):
@@ -146,14 +145,13 @@ class tool_cmd(tool_cmd_base):
 
 		if not silent:
 			msg(f'\rRead: {nbytes} bytes')
-			qmsg(f'\r{nbytes} byte{suf(nbytes)} of random data written to file {outfile!r}')
+			self.cfg._util.qmsg(f'\r{nbytes} byte{suf(nbytes)} of random data written to file {outfile!r}')
 
 		return True
 
 	def extract_key_from_geth_wallet( self, wallet_file:str, check_addr=True ):
 		"decrypt the encrypted private key in a Geth keystore wallet, returning the decrypted key"
 		from ..ui import line_input
-		from ..opts import opt
 		from ..proto.eth.misc import extract_key_from_geth_keystore_wallet
-		passwd = line_input( 'Enter passphrase: ', echo=opt.echo_passphrase ).strip().encode()
-		return extract_key_from_geth_keystore_wallet( wallet_file, passwd, check_addr ).hex()
+		passwd = line_input( self.cfg, 'Enter passphrase: ', echo=self.cfg.echo_passphrase ).strip().encode()
+		return extract_key_from_geth_keystore_wallet( self.cfg, wallet_file, passwd, check_addr ).hex()

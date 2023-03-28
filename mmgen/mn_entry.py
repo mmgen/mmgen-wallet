@@ -23,7 +23,7 @@ mn_entry.py - Mnemonic user entry methods for the MMGen suite
 import time
 
 from .globalvars import *
-from .util import msg,msg_r,qmsg,fmt,fmt_list,capfirst,die,ascii_lowercase
+from .util import msg,msg_r,fmt,fmt_list,capfirst,die,ascii_lowercase
 from .term import get_char,get_char_raw
 from .color import cyan
 
@@ -232,7 +232,8 @@ class MnemonicEntry(object):
 	_sw = None
 	_usl = None
 
-	def __init__(self):
+	def __init__(self,cfg):
+		self.cfg = cfg
 		self.set_dfl_entry_mode()
 
 	@property
@@ -321,7 +322,7 @@ class MnemonicEntry(object):
 				return em_objs[int(uret)-1]
 			else:
 				msg_r(f'\b {uret!r}: invalid choice ')
-				time.sleep(g.err_disp_timeout)
+				time.sleep(self.cfg.err_disp_timeout)
 				msg_r(erase)
 
 	def get_mnemonic_from_user(self,mn_len,validate=True):
@@ -350,7 +351,7 @@ class MnemonicEntry(object):
 					sw       = self.shortest_word,
 			))
 
-		clear_line = '\n' if g.test_suite else '{r}{s}{r}'.format(r='\r',s=' '*40)
+		clear_line = '\n' if self.cfg.test_suite else '{r}{s}{r}'.format(r='\r',s=' '*40)
 		idx,idxs = 1,[] # initialize idx to a non-None value
 
 		while len(idxs) < mn_len:
@@ -366,7 +367,7 @@ class MnemonicEntry(object):
 
 		if validate:
 			self.bconv.tohex(words)
-			qmsg(
+			self.cfg._util.qmsg(
 				'Mnemonic is valid' if self.has_chksum else
 				'Mnemonic is well-formed (mnemonic format has no checksum to validate)' )
 
@@ -389,7 +390,7 @@ class MnemonicEntry(object):
 		In addition to setting the default entry mode for the current wordlist, checks validity
 		of all user-configured entry modes
 		"""
-		for k,v in g.mnemonic_entry_modes.items():
+		for k,v in self.cfg.mnemonic_entry_modes.items():
 			cls = self.get_cls_by_wordlist(k)
 			if v not in cls.entry_modes:
 				errmsg = """
@@ -422,10 +423,10 @@ class MnemonicEntryMonero(MnemonicEntry):
 	dfl_entry_mode = 'short'
 	has_chksum = True
 
-def mn_entry(wl_id,entry_mode=None):
+def mn_entry(cfg,wl_id,entry_mode=None):
 	if wl_id == 'words':
 		wl_id = 'mmgen'
-	me = MnemonicEntry.get_cls_by_wordlist(wl_id)()
+	me = MnemonicEntry.get_cls_by_wordlist(wl_id)(cfg)
 	import importlib
 	me.bconv = getattr(importlib.import_module(f'mmgen.{me.modname}'),me.modname)(wl_id)
 	me.wl = me.bconv.digits

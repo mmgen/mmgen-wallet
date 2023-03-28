@@ -22,8 +22,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 """
 
 import mmgen.opts as opts
-from .globalvars import g,gc
-from .opts import opt
+from .globalvars import gc
 from .addr import MMGenAddrType
 from .addrfile import AddrFile
 from .wallet import Wallet
@@ -74,7 +73,7 @@ opts_data = {
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Produce quieter output; suppress some warnings
 -r, --usr-randchars=n Get 'n' characters of additional randomness from user
-                      (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars})
+                      (min={cfg.min_urandchars}, max={cfg.max_urandchars}, default={cfg.usr_randchars})
 -S, --stdout          Print {what} to stdout
 -t, --type=t          Choose address type. Options: see ADDRESS TYPES below
                       (default: {dmat})
@@ -106,14 +105,14 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda proto,help_notes,s: s.format(
+		'options': lambda proto,help_notes,cfg,s: s.format(
 			dmat=help_notes('dfl_mmtype'),
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
 			dsl=help_notes('dfl_seed_len'),
 			pnm=gc.proj_name,
 			what=gen_what,
-			g=g,
+			cfg=cfg,
 			gc=gc,
 		),
 		'notes': lambda help_notes,s: s.format(
@@ -127,39 +126,39 @@ FMT CODES:
 	}
 }
 
-cmd_args = opts.init(opts_data,opt_filter=opt_filter)
+cfg = opts.init(opts_data,opt_filter=opt_filter,need_amt=False)
 
-from .protocol import init_proto_from_opts
-proto = init_proto_from_opts()
+proto = cfg._proto
 
 addr_type = MMGenAddrType(
 	proto = proto,
-	id_str = opt.type or proto.dfl_mmtype,
-	errmsg = f'{opt.type!r}: invalid parameter for --type option' )
+	id_str = cfg.type or proto.dfl_mmtype,
+	errmsg = f'{cfg.type!r}: invalid parameter for --type option' )
 
-if len(cmd_args) < 1:
+if len(cfg._args) < 1:
 	opts.usage()
 
-if opt.keygen_backend:
+if cfg.keygen_backend:
 	from .keygen import check_backend
-	check_backend( proto, opt.keygen_backend, opt.type )
+	check_backend( cfg, proto, cfg.keygen_backend, cfg.type )
 
-idxs = mmgen.addrlist.AddrIdxList( fmt_str=cmd_args.pop() )
+idxs = mmgen.addrlist.AddrIdxList( fmt_str=cfg._args.pop() )
 
 from .fileutil import get_seed_file
-sf = get_seed_file(cmd_args,1)
+sf = get_seed_file(cfg,1)
 
 from .ui import do_license_msg
-do_license_msg()
+do_license_msg(cfg)
 
-ss = Wallet(sf)
+ss = Wallet(cfg,sf)
 
-ss_seed = ss.seed if opt.subwallet is None else ss.seed.subseed(opt.subwallet,print_msg=True)
+ss_seed = ss.seed if cfg.subwallet is None else ss.seed.subseed(cfg.subwallet,print_msg=True)
 
-if opt.no_addresses:
+if cfg.no_addresses:
 	gen_clsname = 'KeyList'
 
 al = getattr( mmgen.addrlist, gen_clsname )(
+	cfg       = cfg,
 	proto     = proto,
 	seed      = ss_seed,
 	addr_idxs = idxs,
@@ -169,11 +168,11 @@ af = al.get_file()
 
 af.format()
 
-if al.gen_addrs and opt.print_checksum:
+if al.gen_addrs and cfg.print_checksum:
 	Die(0,al.checksum)
 
 from .ui import keypress_confirm
-if al.gen_keys and keypress_confirm('Encrypt key list?'):
+if al.gen_keys and keypress_confirm( cfg, 'Encrypt key list?' ):
 	af.encrypt()
 	af.write(
 		binary = True,

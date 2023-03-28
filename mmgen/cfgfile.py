@@ -23,11 +23,10 @@ cfgfile: API for the MMGen runtime configuration file and related files
 import os,re
 from collections import namedtuple
 
-from .globalvars import g,gc
 from .util import msg,ymsg,suf,fmt,fmt_list,oneshot_warning,strip_comment,capfirst
 
-def mmgen_cfg_file(id_str):
-	return cfg_file.get_cls_by_id(id_str)()
+def mmgen_cfg_file(cfg,id_str):
+	return cfg_file.get_cls_by_id(id_str)(cfg)
 
 class cfg_file:
 	cur_ver = 2
@@ -53,7 +52,7 @@ class cfg_file:
 
 	def copy_system_data(self,fn):
 		assert self.write_ok, f'writing to file {fn!r} not allowed!'
-		src = mmgen_cfg_file('sys')
+		src = mmgen_cfg_file(self.cfg,'sys')
 		if src.data:
 			data = src.data + src.make_metadata() if self.write_metadata else src.data
 			try:
@@ -169,8 +168,9 @@ class CfgFileUsr(cfg_file):
 	warn_missing = False
 	write_ok = True
 
-	def __init__(self):
-		self.fn = os.path.join(g.data_dir_root,self.fn_base)
+	def __init__(self,cfg):
+		self.cfg = cfg
+		self.fn = os.path.join(cfg.data_dir_root,self.fn_base)
 		self.data = self.get_data(self.fn)
 		if not self.data:
 			self.copy_system_data(self.fn)
@@ -179,14 +179,16 @@ class CfgFileSampleSys(cfg_file_sample):
 	desc = 'system sample configuration file'
 	test_fn_subdir = 'usr.local.share'
 
-	def __init__(self):
-		if g.test_suite_cfgtest:
-			self.fn = os.path.join(g.data_dir_root,self.test_fn_subdir,self.fn_base)
+	def __init__(self,cfg):
+		self.cfg = cfg
+		if self.cfg.test_suite_cfgtest:
+			self.fn = os.path.join(cfg.data_dir_root,self.test_fn_subdir,self.fn_base)
 			with open(self.fn) as fp:
 				self.data = fp.read().splitlines()
 		else:
 			# self.fn is used for error msgs only, so file need not exist on filesystem
 			self.fn = os.path.join(os.path.dirname(__file__),'data',self.fn_base)
+			from .globalvars import gc
 			self.data = gc.get_mmgen_data_file(self.fn_base).splitlines()
 
 	def make_metadata(self):
@@ -202,11 +204,12 @@ class CfgFileSampleUsr(cfg_file_sample):
 	out_of_date_fs = 'File {!r} is out of date - replacing'
 	altered_by_user_fs = 'File {!r} was altered by user - replacing'
 
-	def __init__(self):
-		self.fn = os.path.join(g.data_dir_root,f'{self.fn_base}.sample')
+	def __init__(self,cfg):
+		self.cfg = cfg
+		self.fn = os.path.join(cfg.data_dir_root,f'{self.fn_base}.sample')
 		self.data = self.get_data(self.fn)
 
-		src = mmgen_cfg_file('sys')
+		src = mmgen_cfg_file(cfg,'sys')
 
 		if not src.data:
 			return
@@ -255,7 +258,7 @@ class CfgFileSampleUsr(cfg_file_sample):
 				opts = fmt_list([i.name for i in data],fmt='bare')
 				msg(f'  The following option{suf(data,verb="has")} been {desc}:\n    {opts}\n')
 				if desc == 'removed' and data:
-					uc = mmgen_cfg_file('usr')
+					uc = mmgen_cfg_file(self.cfg,'usr')
 					usr_names = [i.name for i in uc.get_lines()]
 					rm_names = [i.name for i in data]
 					bad = sorted(set(usr_names).intersection(rm_names))
@@ -269,7 +272,7 @@ class CfgFileSampleUsr(cfg_file_sample):
 
 		from .ui import keypress_confirm,do_pager
 		while True:
-			if not keypress_confirm(self.details_confirm_prompt,no_nl=True):
+			if not keypress_confirm( self.cfg, self.details_confirm_prompt, no_nl=True ):
 				return
 
 			def get_details():

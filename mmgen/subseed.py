@@ -21,7 +21,7 @@ subseed: Subseed classes and methods for the MMGen suite
 """
 
 from .color import green
-from .util import msg_r,msg,qmsg,die
+from .util import msg_r,msg,die
 from .obj import MMGenRange,IndexedDict
 from .seed import *
 
@@ -66,6 +66,7 @@ class SubSeed(SeedBase):
 		self.parent_list = parent_list
 		SeedBase.__init__(
 			self,
+			parent_list.parent_seed.cfg,
 			seed_bin=self.make_subseed_bin( parent_list, idx, nonce, length ))
 
 	@staticmethod
@@ -75,7 +76,7 @@ class SubSeed(SeedBase):
 		# field maximums: idx: 4294967295 (1000000), nonce: 65535 (1000), short: 255 (1)
 		scramble_key  = idx.to_bytes(4,'big') + nonce.to_bytes(2,'big') + short.to_bytes(1,'big')
 		from .crypto import Crypto
-		return Crypto().scramble_seed(seed.data,scramble_key)[:16 if short else seed.byte_len]
+		return Crypto(parent_list.parent_seed.cfg).scramble_seed(seed.data,scramble_key)[:16 if short else seed.byte_len]
 
 class SubSeedList(MMGenObject):
 	have_short = True
@@ -129,7 +130,7 @@ class SubSeedList(MMGenObject):
 
 		def do_msg(subseed):
 			if print_msg:
-				qmsg('{} {} ({}:{})'.format(
+				self.parent_seed.cfg._util.qmsg('{} {} ({}:{})'.format(
 					green('Found subseed'),
 					subseed.sid.hl(),
 					self.parent_seed.sid.hl(),
@@ -186,8 +187,7 @@ class SubSeedList(MMGenObject):
 			for nonce in range(self.nonce_start,self.member_type.max_nonce+1): # handle SeedID collisions
 				sid = make_chksum_8(self.member_type.make_subseed_bin(self,idx,nonce,length))
 				if sid in self.data['long'] or sid in self.data['short'] or sid == self.parent_seed.sid:
-					from .globalvars import g
-					if g.debug_subseed: # should get ≈450 collisions for first 1,000,000 subseeds
+					if self.parent_seed.cfg.debug_subseed: # should get ≈450 collisions for first 1,000,000 subseeds
 						self._collision_debug_msg(sid,idx,nonce)
 				else:
 					self.data[length][sid] = (idx,nonce)

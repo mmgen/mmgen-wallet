@@ -23,7 +23,6 @@ test/hashfunc.py: Test internal implementations of SHA256, SHA512 and Keccak256
 import sys,os
 import include.tests_header
 from mmgen.util import die
-from test.include.common import getrand
 
 assert len(sys.argv) in (2,3),"Test takes 1 or 2 arguments: test name, plus optional rounds count"
 test = sys.argv[1].capitalize()
@@ -136,6 +135,11 @@ class TestSha512(TestSha2):
 		0xd186b8c721c0c207, 0xeada7dd6cde0eb1e, 0xf57d4f7fee6ed178, 0x06f067aa72176fba, 0x0a637dc5a2c898a6,
 		0x113f9804bef90dae, 0x1b710b35131c471b, 0x28db77f523047d84, 0x32caab7b40c72493, 0x3c9ebe0a15c9bebc,
 		0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817 )
+
+from test.include.common import getrand,set_globals
+from mmgen.globalvars import Config
+
+set_globals(Config())
 
 t = globals()['Test'+test]()
 msg(f'Testing internal implementation of {t.desc}\n')

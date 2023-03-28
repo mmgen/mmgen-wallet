@@ -51,12 +51,12 @@ opts_data = {
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
 if gc.platform == 'linux' and os.getenv('USER') != 'root':
 	die(1,'This program must be run as root')
 
-if len(cmd_args):
+if len(cfg._args):
 	opts.usage()
 
 mod_dir = os.path.split(normalize_path(modpath_save))[0]
@@ -77,13 +77,13 @@ for d in (ulb,mod_pardir):
 	# add files only, not directories
 	del_list += [os.path.join(d,e) for e in os.listdir(d) if is_reg(os.path.join(d,e)) and e[:6] == 'mmgen-']
 
-if opt.list_paths:
+if cfg.list_paths:
 	die(1,'\n'.join(del_list))
 
-if not opt.no_prompt:
+if not cfg.no_prompt:
 	m = 'Deleting the following paths and files:\n  {}\nProceed?'
 	from mmgen.ui import keypress_confirm
-	if not keypress_confirm(m.format('\n  '.join(del_list))):
+	if not keypress_confirm( cfg, m.format('\n  '.join(del_list)) ):
 		die(1,'Exiting at user request')
 
 import shutil

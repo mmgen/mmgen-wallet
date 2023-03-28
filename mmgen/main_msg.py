@@ -14,10 +14,8 @@ mmgen-msg: Message signing operations for the MMGen suite
 
 import sys
 import mmgen.opts as opts
-from .globalvars import g
-from .opts import opt
 from .base_obj import AsyncInit
-from .util import msg,suf,async_run,stdout_or_pager
+from .util import msg,suf,async_run
 from .msg import (
 	NewMsg,
 	CompletedMsg,
@@ -33,30 +31,29 @@ class MsgOps:
 	class create:
 
 		def __init__(self,msg,addr_specs):
-			from .protocol import init_proto_from_opts
-			proto = init_proto_from_opts()
 			NewMsg(
-				coin      = proto.coin,
-				network   = proto.network,
+				cfg       = cfg,
+				coin      = cfg._proto.coin,
+				network   = cfg._proto.network,
 				message   = msg,
 				addrlists = addr_specs,
-				msghash_type = opt.msghash_type
+				msghash_type = cfg.msghash_type
 			).write_to_file( ask_overwrite=False )
 
 	class sign(metaclass=AsyncInit):
 
 		async def __init__(self,msgfile,wallet_files):
 
-			m = UnsignedMsg( infile=msgfile )
+			m = UnsignedMsg( cfg, infile=msgfile )
 
 			if not wallet_files:
 				from .filename import find_file_in_dir
 				from .wallet import get_wallet_cls
-				wallet_files = [find_file_in_dir( get_wallet_cls('mmgen'), g.data_dir )]
+				wallet_files = [find_file_in_dir( get_wallet_cls('mmgen'), cfg.data_dir )]
 
 			await m.sign(wallet_files)
 
-			m = SignedMsg( data=m.__dict__ )
+			m = SignedMsg( cfg, data=m.__dict__ )
 
 			m.write_to_file( ask_overwrite=False )
 
@@ -67,18 +64,18 @@ class MsgOps:
 
 		async def __init__(self,msgfile,addr=None):
 			try:
-				m = SignedOnlineMsg( infile=msgfile )
+				m = SignedOnlineMsg( cfg, infile=msgfile )
 			except:
-				m = ExportedMsgSigs( infile=msgfile )
+				m = ExportedMsgSigs( cfg, infile=msgfile )
 
 			nSigs = await m.verify(addr)
 
 			summary = f'{nSigs} signature{suf(nSigs)} verified'
 
-			if opt.quiet:
+			if cfg.quiet:
 				msg(summary)
 			else:
-				stdout_or_pager(m.format(addr) + '\n\n' + summary + '\n')
+				cfg._util.stdout_or_pager(m.format(addr) + '\n\n' + summary + '\n')
 
 			if m.data.get('failed_sids'):
 				sys.exit(1)
@@ -89,8 +86,9 @@ class MsgOps:
 
 			from .fileutil import write_data_to_file
 			write_data_to_file(
+				cfg     = cfg,
 				outfile = 'signatures.json',
-				data    = SignedOnlineMsg( infile=msgfile ).get_json_for_export( addr ),
+				data    = SignedOnlineMsg( cfg, infile=msgfile ).get_json_for_export( addr ),
 				desc    = 'signature data' )
 
 opts_data = {
@@ -205,14 +203,16 @@ $ mmgen-msg verify signatures.json
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data,need_amt=False)
+
+cmd_args = cfg._args
 
 if len(cmd_args) < 2:
 	opts.usage()
 
 op = cmd_args.pop(0)
 
-if opt.msghash_type and op != 'create':
+if cfg.msghash_type and op != 'create':
 	die(1,'--msghash-type option may only be used with the "create" command')
 
 async def main():

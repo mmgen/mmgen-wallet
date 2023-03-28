@@ -19,7 +19,7 @@ class backend:
 
 	class nacl(keygen_base):
 
-		def __init__(self):
+		def __init__(self,cfg):
 			from nacl.bindings import crypto_scalarmult_base
 			self.crypto_scalarmult_base = crypto_scalarmult_base
 			from ...sha2 import Sha256

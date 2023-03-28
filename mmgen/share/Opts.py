@@ -49,7 +49,7 @@ def print_help(*args):
 	print(make_help(*args))
 	sys.exit(0)
 
-def make_help(proto,opt,opts_data,opt_filter):
+def make_help(cfg,proto,opts_data,opt_filter):
 
 	def parse_lines(text):
 		filtered = False
@@ -62,7 +62,7 @@ def make_help(proto,opt,opts_data,opt_filter):
 			elif not filtered:
 				yield line
 
-	opts_type,fs = ('options','{:<3} --{} {}') if opt.help else ('long_options','{}  --{} {}')
+	opts_type,fs = ('options','{:<3} --{} {}') if cfg.help else ('long_options','{}  --{} {}')
 	t = opts_data['text']
 	c = opts_data['code']
 	nl = '\n  '
@@ -71,10 +71,10 @@ def make_help(proto,opt,opts_data,opt_filter):
 
 	from mmgen.help import help_notes_func
 	def help_notes(k):
-		return help_notes_func(proto,opt,k)
+		return help_notes_func(proto,cfg,k)
 
 	def gen_arg_tuple(func,text):
-		d = {'proto': proto,'help_notes':help_notes}
+		d = {'proto': proto,'help_notes':help_notes,'cfg':cfg}
 		for arg in func.__code__.co_varnames:
 			yield d[arg] if arg in d else text
 

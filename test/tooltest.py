@@ -55,12 +55,15 @@ If no command is given, the whole suite of tests is run.
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
-assert opt.type in (None,'zcash_z'), 'Only zcash-z permitted for --type argument'
+set_globals(cfg)
 
-from mmgen.protocol import init_proto_from_opts
-proto = init_proto_from_opts()
+vmsg = cfg._util.vmsg
+
+proto = cfg._proto
+
+assert cfg.type in (None,'zcash_z'), 'Only zcash-z permitted for --type argument'
 
 cmd_data = {
 	'cryptocoin': {
@@ -100,11 +103,11 @@ if proto.coin in ('BTC','LTC'):
 		'pipetest':             ('randpair','o3')
 	})
 
-if proto.coin == 'XMR' or opt.type == 'zcash_z':
+if proto.coin == 'XMR' or cfg.type == 'zcash_z':
 	del cmd_data['cryptocoin']['cmd_data']['pubhash2addr']
 	del cmd_data['cryptocoin']['cmd_data']['addr2pubhash']
 
-cfg = {
+tcfg = {
 	'name':          'the tool utility',
 	'enc_passwd':    'Ten Satoshis',
 	'tmpdir':        'test/tmp/10',
@@ -132,23 +135,24 @@ tn_ext = ('','.testnet')[proto.testnet]
 
 mmgen_cmd = 'mmgen-tool'
 
-if not opt.system:
+if not cfg.system:
 	os.environ['PYTHONPATH'] = repo_root
 	mmgen_cmd = os.path.relpath(os.path.join(repo_root,'cmds',mmgen_cmd))
 
 spawn_cmd = ['scripts/exec_wrapper.py',mmgen_cmd]
 
-if opt.coverage:
+if cfg.coverage:
 	d,f = init_coverage()
 	spawn_cmd = ['python3','-m','trace','--count','--coverdir='+d,'--file='+f] + spawn_cmd
 elif gc.platform == 'win':
 	spawn_cmd = ['python3'] + spawn_cmd
 
-add_spawn_args = ['--data-dir='+cfg['tmpdir']] + ['--{}{}'.format(
-		k.replace('_','-'),'='+getattr(opt,k) if getattr(opt,k) != True else '')
-			for k in ('testnet','rpc_host','regtest','coin','type') if getattr(opt,k)]
+add_spawn_args = ['--data-dir='+tcfg['tmpdir']] + ['--{}{}'.format(
+		k.replace('_','-'),
+		'='+getattr(cfg,k) if getattr(cfg,k) != True else '')
+			for k in ('testnet','rpc_host','regtest','coin','type') if getattr(cfg,k)]
 
-if opt.list_cmds:
+if cfg.list_cmds:
 	fs = '  {:<{w}} - {}'
 	Msg('Available commands:')
 	w = max(map(len,cmd_data))
@@ -157,7 +161,7 @@ if opt.list_cmds:
 	Msg('\nAvailable utilities:')
 	Msg(fs.format('clean','Clean the tmp directory',w=w))
 	sys.exit(0)
-if opt.list_names:
+if cfg.list_names:
 	tcmd = ['python3','test/tooltest2.py','--list-tested-cmds']
 	tested_in = {
 		'tooltest.py': [],
@@ -198,12 +202,12 @@ def is_coin_addr_loc(s):
 msg_w = 35
 def test_msg(m):
 	m2 = f'Testing {m}'
-	msg_r(green(m2+'\n') if opt.verbose else '{:{w}}'.format( m2, w=msg_w+8 ))
+	msg_r(green(m2+'\n') if cfg.verbose else '{:{w}}'.format( m2, w=msg_w+8 ))
 
-compressed = opt.type or ('','compressed')['C' in proto.mmtypes]
+compressed = cfg.type or ('','compressed')['C' in proto.mmtypes]
 segwit     = ('','segwit')['S' in proto.mmtypes]
 bech32     = ('','bech32')['B' in proto.mmtypes]
-type_compressed_arg = ([],['--type=' + (opt.type or 'compressed')])[bool(opt.type) or 'C' in proto.mmtypes]
+type_compressed_arg = ([],['--type=' + (cfg.type or 'compressed')])[bool(cfg.type) or 'C' in proto.mmtypes]
 type_segwit_arg     = ([],['--type=segwit'])['S' in proto.mmtypes]
 type_bech32_arg     = ([],['--type=bech32'])['B' in proto.mmtypes]
 
@@ -213,7 +217,7 @@ class MMGenToolTestUtils(object):
 		sys_cmd = (
 			spawn_cmd +
 			add_spawn_args +
-			['-r0','-d',cfg['tmpdir']] +
+			['-r0','-d',tcfg['tmpdir']] +
 			add_opts +
 			[name.lower()] +
 			tool_args +
@@ -222,7 +226,7 @@ class MMGenToolTestUtils(object):
 		if extra_msg: extra_msg = f'({extra_msg})'
 		full_name = ' '.join([name.lower()]+add_opts+kwargs.split()+extra_msg.split())
 		if not silent:
-			if opt.verbose:
+			if cfg.verbose:
 				sys.stderr.write(green(f'Testing {full_name}\nExecuting '))
 				sys.stderr.write(cyan(' '.join(sys_cmd)+'\n'))
 			else:
@@ -231,7 +235,7 @@ class MMGenToolTestUtils(object):
 		cp = run(sys_cmd,stdout=PIPE,stderr=PIPE)
 		out = cp.stdout
 		err = cp.stderr
-		if opt.debug:
+		if cfg.debug:
 			try: dmsg(err.decode())
 			except: dmsg(repr(err))
 		if not binary:
@@ -267,14 +271,14 @@ class MMGenToolTestUtils(object):
 	def run_cmd_out(self,name,carg=None,Return=False,kwargs='',fn_idx='',extra_msg='',
 						literal=False,chkdata='',hush=False,add_opts=[]):
 		if carg:
-			write_to_tmpfile(cfg,f'{name}{fn_idx}.in',carg+'\n')
+			write_to_tmpfile(tcfg,f'{name}{fn_idx}.in',carg+'\n')
 		ret = self.run_cmd(name,([],[carg])[bool(carg)],kwargs=kwargs,
 								extra_msg=extra_msg,add_opts=add_opts)
 		if carg:
 			vmsg('In:   ' + repr(carg))
 		vmsg('Out:  ' + (repr(ret),ret)[literal])
 		if ret or ret == '':
-			write_to_tmpfile(cfg,f'{name}{fn_idx}.out',ret+'\n')
+			write_to_tmpfile(tcfg,f'{name}{fn_idx}.out',ret+'\n')
 			if chkdata:
 				cmp_or_die(ret,chkdata)
 				return
@@ -287,10 +291,10 @@ class MMGenToolTestUtils(object):
 	def run_cmd_randinput(self,name,strip=True,add_opts=[]):
 		s = getrand(128)
 		fn = name+'.in'
-		write_to_tmpfile(cfg,fn,s,binary=True)
-		ret = self.run_cmd(name,[get_tmpfile(cfg,fn)],strip=strip,add_opts=add_opts)
+		write_to_tmpfile(tcfg,fn,s,binary=True)
+		ret = self.run_cmd(name,[get_tmpfile(tcfg,fn)],strip=strip,add_opts=add_opts)
 		fn = name+'.out'
-		write_to_tmpfile(cfg,fn,ret+'\n')
+		write_to_tmpfile(tcfg,fn,ret+'\n')
 		ok()
 		vmsg(f'Returned: {ret}')
 
@@ -342,7 +346,7 @@ class MMGenToolTestCmds(object):
 		for n,k in enumerate(('',compressed,segwit,bech32)):
 			ao = ['--type='+k] if k else []
 			ret = tu.run_cmd(name,[keys[n]],add_opts=ao).rstrip()
-			iaddr = read_from_tmpfile(cfg,f'randpair{n+1}.out').split()[-1]
+			iaddr = read_from_tmpfile(tcfg,f'randpair{n+1}.out').split()[-1]
 			vmsg(f'Out: {ret}')
 			cmp_or_die(iaddr,ret)
 			ok()
@@ -371,16 +375,16 @@ class MMGenToolTestCmds(object):
 	def pubhex2redeem_script(self,name,f1,f2,f3): # from above
 		addr = read_from_file(f3).strip()
 		tu.run_cmd_out(name,addr,add_opts=type_segwit_arg,fn_idx=3)
-		rs = read_from_tmpfile(cfg,'privhex2pubhex3.out').strip()
+		rs = read_from_tmpfile(tcfg,'privhex2pubhex3.out').strip()
 		tu.run_cmd_out('pubhex2addr',rs,add_opts=type_segwit_arg,fn_idx=3,hush=True)
-		addr1 = read_from_tmpfile(cfg,'pubhex2addr3.out').strip()
-		addr2 = read_from_tmpfile(cfg,'randpair3.out').split()[1]
+		addr1 = read_from_tmpfile(tcfg,'pubhex2addr3.out').strip()
+		addr2 = read_from_tmpfile(tcfg,'randpair3.out').split()[1]
 		cmp_or_die(addr1,addr2)
 		ok()
 	def wif2redeem_script(self,name,f1,f2,f3): # compare output with above
 		wif = read_from_file(f3).split()[0]
 		ret1 = tu.run_cmd_out(name,wif,add_opts=type_segwit_arg,fn_idx=3,Return=True)
-		ret2 = read_from_tmpfile(cfg,'pubhex2redeem_script3.out').strip()
+		ret2 = read_from_tmpfile(tcfg,'pubhex2redeem_script3.out').strip()
 		cmp_or_die(ret1,ret2)
 		ok()
 	def wif2segwit_pair(self,name,f1,f2): # does its own checking, so just run
@@ -400,10 +404,10 @@ class MMGenToolTestCmds(object):
 					a=' '.join(add_spawn_args),
 					wif=wif)
 		test_msg('command piping')
-		if opt.verbose:
+		if cfg.verbose:
 			sys.stderr.write(green('Executing ') + cyan(cmd) + '\n')
 		res = run(cmd,stdout=PIPE,shell=True).stdout.decode().strip()
-		addr = read_from_tmpfile(cfg,'wif2addr3.out').strip()
+		addr = read_from_tmpfile(tcfg,'wif2addr3.out').strip()
 		cmp_or_die(addr,res)
 		ok()
 
@@ -426,7 +430,7 @@ class MMGenToolTestCmds(object):
 # main()
 import time
 start_time = int(time.time())
-mk_tmpdir(cfg['tmpdir'])
+mk_tmpdir(tcfg['tmpdir'])
 
 def gen_deps_for_cmd(cmd,cdata):
 	fns = []
@@ -446,25 +450,25 @@ def do_cmds(cmd_group):
 	gdata = cmd_data[cmd_group]['cmd_data']
 	for cmd in gdata:
 		fns = gen_deps_for_cmd(cmd,gdata[cmd])
-		cmdline = [cmd] + [os.path.join(cfg['tmpdir'],fn) for fn in fns]
+		cmdline = [cmd] + [os.path.join(tcfg['tmpdir'],fn) for fn in fns]
 		getattr(tc,cmd)(*cmdline)
 
 try:
-	if cmd_args:
-		if len(cmd_args) != 1:
+	if cfg._args:
+		if len(cfg._args) != 1:
 			die(1,'Only one command may be specified')
-		cmd = cmd_args[0]
+		cmd = cfg._args[0]
 		if cmd in cmd_data:
-			cleandir(cfg['tmpdir'],do_msg=True)
+			cleandir(tcfg['tmpdir'],do_msg=True)
 			msg('Running tests for {}:'.format( cmd_data[cmd]['desc'] ))
 			do_cmds(cmd)
 		elif cmd == 'clean':
-			cleandir(cfg['tmpdir'],do_msg=True)
+			cleandir(tcfg['tmpdir'],do_msg=True)
 			sys.exit(0)
 		else:
 			die(1,f'{cmd!r}: unrecognized command')
 	else:
-		cleandir(cfg['tmpdir'],do_msg=True)
+		cleandir(tcfg['tmpdir'],do_msg=True)
 		for cmd in cmd_data:
 			msg('Running tests for {}:'.format( cmd_data[cmd]['desc'] ))
 			do_cmds(cmd)

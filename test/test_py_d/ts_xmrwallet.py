@@ -24,7 +24,6 @@ import sys,os,atexit,asyncio,shutil
 from subprocess import run,PIPE
 
 from mmgen.globalvars import gc
-from mmgen.opts import opt
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
 from mmgen.addrlist import KeyAddrList,AddrIdxList
@@ -84,7 +83,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			return
 
 		from mmgen.protocol import init_proto
-		self.proto = init_proto('XMR',network='mainnet')
+		self.proto = init_proto( cfg, 'XMR', network='mainnet' )
 		self.datadir_base  = os.path.join('test','daemons','xmrtest')
 		self.extra_opts = ['--wallet-rpc-password=passw0rd']
 		self.init_users()
@@ -99,11 +98,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		self.tx_relay_daemon_proxy_parm = (
 			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}' ) # must be IP, not 'localhost'
 
-		if not opt.no_daemon_stop:
+		if not cfg.no_daemon_stop:
 			atexit.register(self.stop_daemons)
 			atexit.register(self.stop_miner_wallet_daemon)
 
-		if not opt.no_daemon_autostart:
+		if not cfg.no_daemon_autostart:
 			self.stop_daemons()
 			shutil.rmtree(self.datadir_base,ignore_errors=True)
 			os.makedirs(self.datadir_base)
@@ -123,7 +122,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			else: return True
 
 		def start_proxy():
-			if external_call or not opt.no_daemon_autostart:
+			if external_call or not cfg.no_daemon_autostart:
 				run(a+b2)
 				omsg(f'SSH SOCKS server started, listening at localhost:{cls.socks_port}')
 
@@ -174,7 +173,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				""",indent='    ',strip_char='\t'))
 
 				from mmgen.ui import keypress_confirm
-				if keypress_confirm('Continue?'):
+				if keypress_confirm(cfg,'Continue?'):
 					start_proxy()
 				else:
 					die(1,'Exiting at user request')
@@ -187,7 +186,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 					Then restart the test.
 				""",indent='    '))
 
-		if not (external_call or opt.no_daemon_stop):
+		if not (external_call or cfg.no_daemon_stop):
 			atexit.register(kill_proxy)
 
 		return True
@@ -222,6 +221,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			udir = os.path.join('test',f'tmp{n}',user)
 			datadir = os.path.join(self.datadir_base,user)
 			md = CoinDaemon(
+				cfg        = cfg,
 				proto      = self.proto,
 				test_suite = True,
 				port_shift = shift,
@@ -229,6 +229,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				datadir    = datadir
 			)
 			md_rpc = MoneroRPCClient(
+				cfg    = cfg,
 				proto  = self.proto,
 				host   = md.host,
 				port   = md.rpc_port,
@@ -238,6 +239,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				daemon = md,
 			)
 			wd = MoneroWalletDaemon(
+				cfg        = cfg,
 				proto      = self.proto,
 				test_suite = True,
 				wallet_dir = udir,
@@ -248,6 +250,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				daemon_addr = f'127.0.0.1:{md.rpc_port}',
 			)
 			wd_rpc = MoneroWalletRPCClient(
+				cfg             = cfg,
 				daemon          = wd,
 				test_connection = False,
 			)
@@ -316,6 +319,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			self.extra_opts + dir_opt + [ 'create', data.kafile, (wallet or data.kal_range) ] )
 		for i in MMGenRange(wallet or data.kal_range).items:
 			write_data_to_file(
+				cfg,
 				self.users[user].addrfile_fs.format(i),
 				t.expect_getend('Address: '),
 				quiet = True
@@ -570,16 +574,16 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	async def open_wallet_user(self,user,wnum):
 		data = self.users[user]
 		silence()
-		kal = KeyAddrList(self.proto,data.kafile,key_address_validity_check=False)
+		kal = KeyAddrList( cfg, self.proto, data.kafile, key_address_validity_check=False )
 		end_silence()
-		self.users[user].wd.start(silent=not (opt.exact_output or opt.verbose))
+		self.users[user].wd.start(silent=not (cfg.exact_output or cfg.verbose))
 		return data.wd_rpc.call(
 			'open_wallet',
 			filename = os.path.basename(data.walletfile_fs.format(wnum)),
 			password = kal.entry(wnum).wallet_passwd )
 
 	async def stop_wallet_user(self,user):
-		await self.users[user].wd_rpc.stop_daemon(silent=not (opt.exact_output or opt.verbose))
+		await self.users[user].wd_rpc.stop_daemon(silent=not (cfg.exact_output or cfg.verbose))
 		return 'ok'
 
 	# mining methods
@@ -639,7 +643,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		async def send_random_txs():
 			from mmgen.tool.api import tool_api
-			t = tool_api()
+			t = tool_api(cfg)
 			t.init_coin('XMR','mainnet')
 			t.usr_randchars = 0
 			imsg_r(f'Sending random transactions: ')

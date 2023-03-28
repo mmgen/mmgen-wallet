@@ -22,7 +22,7 @@ mmgen-regtest: Coin daemon regression test mode setup and operations for the MMG
 """
 
 import mmgen.opts as opts
-from .globalvars import g,gc
+from .globalvars import gc
 from .util import die,async_run
 
 opts_data = {
@@ -57,7 +57,9 @@ opts_data = {
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
+
+cmd_args = cfg._args
 
 from .proto.btc.regtest import MMGenRegtest
 
@@ -82,6 +84,6 @@ elif cmd_args[0] not in ('cli','wallet_cli','balances'):
 	check_num_args()
 
 async def main():
-	await MMGenRegtest(g.coin).cmd(cmd_args)
+	await MMGenRegtest(cfg,cfg.coin).cmd(cmd_args)
 
 async_run(main())

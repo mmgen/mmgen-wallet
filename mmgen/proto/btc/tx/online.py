@@ -14,7 +14,6 @@ proto.btc.tx.online: Bitcoin online signed transaction class
 
 import mmgen.tx.online as TxBase
 from .signed import Signed
-from ....globalvars import *
 from ....util import msg,ymsg,rmsg
 
 class OnlineSigned(Signed,TxBase.OnlineSigned):
@@ -23,7 +22,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 
 		self.check_correct_chain()
 
-		if not g.bogus_send:
+		if not self.cfg.bogus_send:
 			if self.has_segwit_outputs() and not self.rpc.info('segwit_is_active'):
 				die(2,'Transaction has Segwit outputs, but this blockchain does not support Segwit'
 						+ ' at the current height')
@@ -40,7 +39,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 		if prompt_user:
 			self.confirm_send()
 
-		if g.bogus_send:
+		if self.cfg.bogus_send:
 			ret = None
 		else:
 			try:
@@ -67,7 +66,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 				sys.exit(1)
 			return False
 		else:
-			if g.bogus_send:
+			if self.cfg.bogus_send:
 				m = 'BOGUS transaction NOT sent: {}'
 			else:
 				m = 'Transaction sent: {}'

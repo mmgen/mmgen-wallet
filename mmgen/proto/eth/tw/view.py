@@ -12,7 +12,6 @@
 proto.eth.tw.view: Ethereum base protocol base class for tracking wallet view classes
 """
 
-from ....globalvars import g
 from ....tw.view import TwView
 
 class EthereumTwView(TwView):
@@ -26,6 +25,6 @@ class EthereumTwView(TwView):
 	def gen_subheader(self,cw,color):
 		if self.disp_prec == 8:
 			yield 'Balances truncated to 8 decimal points'
-		if g.cached_balances:
+		if self.cfg.cached_balances:
 			from ....color import nocolor,yellow
 			yield (nocolor,yellow)[color]('WARNING: Using cached balances. These may be out of date!')

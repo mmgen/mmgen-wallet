@@ -20,8 +20,6 @@
 test.test_py_d.ts_seedsplit: Seed split/join tests for the test.py test suite
 """
 
-from mmgen.globalvars import g
-from mmgen.opts import opt
 from mmgen.wallet import get_wallet_cls
 
 from .ts_base import *

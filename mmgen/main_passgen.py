@@ -22,8 +22,7 @@ mmgen-passgen: Generate a series or range of passwords from an MMGen
 """
 
 import mmgen.opts as opts
-from .globalvars import g,gc
-from .opts import opt
+from .globalvars import gc
 from .addrlist import AddrIdxList
 from .passwdlist import PasswordList
 from .wallet import Wallet
@@ -62,7 +61,7 @@ opts_data = {
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Produce quieter output; suppress some warnings
 -r, --usr-randchars=n Get 'n' characters of additional randomness from user
-                      (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars})
+                      (min={cfg.min_urandchars}, max={cfg.max_urandchars}, default={cfg.usr_randchars})
 -S, --stdout          Print passwords to stdout
 -v, --verbose         Produce more verbose output
 """,
@@ -115,14 +114,15 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda help_notes,s: s.format(
-			g=g,pnm=gc.proj_name,
+		'options': lambda cfg,help_notes,s: s.format(
+			pnm=gc.proj_name,
 			dsl=help_notes('dfl_seed_len'),
 			dpf=PasswordList.dfl_pw_fmt,
+			cfg=cfg,
 			gc=gc,
 		),
-		'notes': lambda help_notes,s: s.format(
-				o=opts,g=g,i58=pwi['b58'],i32=pwi['b32'],i39=pwi['bip39'],
+		'notes': lambda cfg,help_notes,s: s.format(
+				o=opts,cfg=cfg,i58=pwi['b58'],i32=pwi['b32'],i39=pwi['bip39'],
 				ml=MMGenPWIDString.max_len,
 				fs="', '".join(MMGenPWIDString.forbidden),
 				n_pw=help_notes('passwd'),
@@ -134,24 +134,25 @@ FMT CODES:
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
-if len(cmd_args) < 2: opts.usage()
+if len(cfg._args) < 2: opts.usage()
 
-pw_idxs = AddrIdxList(fmt_str=cmd_args.pop())
+pw_idxs = AddrIdxList(fmt_str=cfg._args.pop())
 
-pw_id_str = cmd_args.pop()
+pw_id_str = cfg._args.pop()
 
 from .fileutil import get_seed_file
-sf = get_seed_file(cmd_args,1)
+sf = get_seed_file(cfg,1)
 
-pw_fmt = opt.passwd_fmt or PasswordList.dfl_pw_fmt
-pw_len = pwi[pw_fmt].dfl_len // 2 if opt.passwd_len in ('h','H') else opt.passwd_len
+pw_fmt = cfg.passwd_fmt or PasswordList.dfl_pw_fmt
+pw_len = pwi[pw_fmt].dfl_len // 2 if cfg.passwd_len in ('h','H') else cfg.passwd_len
 
 from .protocol import init_proto
-proto = init_proto('btc') # TODO: get rid of dummy proto
+proto = init_proto( cfg, 'btc' ) # TODO: get rid of dummy proto
 
 PasswordList(
+	cfg             = cfg,
 	proto           = proto,
 	pw_id_str       = pw_id_str,
 	pw_len          = pw_len,
@@ -159,11 +160,12 @@ PasswordList(
 	chk_params_only = True )
 
 from .ui import do_license_msg
-do_license_msg()
+do_license_msg(cfg)
 
-ss = Wallet(sf)
+ss = Wallet(cfg,sf)
 
 al = PasswordList(
+	cfg       = cfg,
 	proto     = proto,
 	seed      = ss.seed,
 	pw_idxs   = pw_idxs,
@@ -176,11 +178,11 @@ af = al.get_file()
 af.format()
 
 from .ui import keypress_confirm
-if keypress_confirm('Encrypt password list?'):
+if keypress_confirm( cfg, 'Encrypt password list?' ):
 	af.encrypt()
 	af.write(binary=True,desc='encrypted password list')
 else:
-	if g.test_suite_popen_spawn and gc.platform == 'win':
+	if cfg.test_suite_popen_spawn and gc.platform == 'win':
 		import time
 		time.sleep(0.1)
 	af.write(desc='password list')

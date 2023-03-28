@@ -15,9 +15,8 @@ proto.btc.tx.base: Bitcoin base transaction class
 from collections import namedtuple
 
 import mmgen.tx.base as TxBase
-from ....opts import opt
 from ....obj import MMGenObject,MMGenList,HexStr
-from ....util import msg,dmsg,make_chksum_6,die,pp_fmt
+from ....util import msg,make_chksum_6,die,pp_fmt
 
 def addr2scriptPubKey(proto,addr):
 
@@ -247,12 +246,12 @@ class Base(TxBase.Base):
 
 		ret = (old_size * 3 + new_size) // 4
 
-		dmsg(
+		self.cfg._util.dmsg(
 			'\nData from estimate_size():\n' +
 			f'  inputs size: {isize}, outputs size: {osize}, witness size: {wsize}\n' +
 			f'  size: {new_size}, vsize: {ret}, old_size: {old_size}' )
 
-		return int(ret * (opt.vsize_adj or 1))
+		return int(ret * (self.cfg.vsize_adj or 1))
 
 	# convert absolute CoinAmt fee to sat/byte using estimated size
 	def fee_abs2rel(self,abs_fee,to_unit='satoshi'):

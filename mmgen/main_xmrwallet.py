@@ -21,7 +21,11 @@ mmgen-xmrwallet: Perform various Monero wallet operations for addresses
                  in an MMGen XMR key-address file
 """
 
-from .common import *
+from collections import namedtuple
+
+import mmgen.opts as opts
+from .globalvars import gc
+from .util import ymsg,die,async_run
 from .xmrwallet import xmrwallet_uarg_info,MoneroWalletOps
 
 opts_data = {
@@ -58,9 +62,9 @@ opts_data = {
 -S, --no-stop-wallet-daemon      Don’t stop the wallet daemon at exit
 -w, --wallet-dir=D               Output or operate on wallets in directory 'D'
                                  instead of the working directory
--H, --wallet-rpc-host=host       Wallet RPC hostname (default: {g.monero_wallet_rpc_host!r})
--U, --wallet-rpc-user=user       Wallet RPC username (default: {g.monero_wallet_rpc_user!r})
--P, --wallet-rpc-password=pass   Wallet RPC password (default: {g.monero_wallet_rpc_password!r})
+-H, --wallet-rpc-host=host       Wallet RPC hostname (default: {cfg.monero_wallet_rpc_host!r})
+-U, --wallet-rpc-user=user       Wallet RPC username (default: {cfg.monero_wallet_rpc_user!r})
+-P, --wallet-rpc-password=pass   Wallet RPC password (default: {cfg.monero_wallet_rpc_password!r})
 """,
 	'notes': """
 
@@ -212,16 +216,18 @@ $ mmgen-xmrwallet --pager txview *XMR*.sigtx
 """
 	},
 	'code': {
-		'options': lambda s: s.format(
+		'options': lambda cfg,s: s.format(
 			D=xmrwallet_uarg_info['daemon'].annot,
 			R=xmrwallet_uarg_info['tx_relay_daemon'].annot,
-			g=g,
+			cfg=cfg,
 			gc=gc,
 		),
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
+
+cmd_args = cfg._args
 
 if len(cmd_args) < 2:
 	opts.usage()
@@ -263,17 +269,17 @@ uo = namedtuple('uopts',[
 
 uargs = ua( op, infile, wallets, spec )
 uopts = uo(
-	opt.daemon or '',
-	opt.tx_relay_daemon or '',
-	opt.restore_height or 0,
-	opt.rescan_blockchain,
-	opt.no_start_wallet_daemon,
-	opt.no_stop_wallet_daemon,
-	opt.no_relay,
-	opt.wallet_dir,
+	cfg.daemon or '',
+	cfg.tx_relay_daemon or '',
+	cfg.restore_height or 0,
+	cfg.rescan_blockchain,
+	cfg.no_start_wallet_daemon,
+	cfg.no_stop_wallet_daemon,
+	cfg.no_relay,
+	cfg.wallet_dir,
 )
 
-m = getattr(MoneroWalletOps,op)(uargs,uopts)
+m = getattr(MoneroWalletOps,op)(cfg,uargs,uopts)
 
 try:
 	if async_run(m.main()):

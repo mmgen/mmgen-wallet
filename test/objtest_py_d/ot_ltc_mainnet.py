@@ -11,9 +11,10 @@ from decimal import Decimal
 
 from mmgen.obj import *
 from .ot_common import *
+from ..include.common import cfg
 
 from mmgen.protocol import init_proto
-proto = init_proto('ltc',need_amt=True)
+proto = init_proto( cfg, 'ltc', need_amt=True )
 
 tests = {
 	'LTCAmt': {

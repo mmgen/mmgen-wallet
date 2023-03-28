@@ -12,9 +12,8 @@
 wallet.mnemonic: MMGen mnemonic wallet base class
 """
 
-from ..globalvars import g
 from ..baseconv import baseconv
-from ..util import msg,compare_or_die
+from ..util import msg
 from ..seed import Seed
 from .unenc import wallet
 
@@ -31,14 +30,14 @@ class wallet(wallet):
 
 	def _get_data_from_user(self,desc):
 
-		if not g.stdin_tty:
+		if not self.cfg.stdin_tty:
 			from ..ui import get_data_from_user
-			return get_data_from_user(desc)
+			return get_data_from_user( self.cfg, desc )
 
 		mn_len = self._choose_seedlen( self.mn_lens )
 
 		from ..mn_entry import mn_entry
-		return mn_entry(self.wl_id).get_mnemonic_from_user(mn_len)
+		return mn_entry( self.cfg, self.wl_id ).get_mnemonic_from_user(mn_len)
 
 	def _format(self):
 
@@ -49,7 +48,7 @@ class wallet(wallet):
 		rev = bc.tohex( mn, 'seed' )
 
 		# Internal error, so just die on fail
-		compare_or_die( rev, 'recomputed seed', hexseed, 'original', e='Internal error' )
+		self.cfg._util.compare_or_die( rev, 'recomputed seed', hexseed, 'original', e='Internal error' )
 
 		self.ssdata.mnemonic = mn
 		self.fmt_data = ' '.join(mn) + '\n'
@@ -78,14 +77,14 @@ class wallet(wallet):
 			return False
 
 		# Internal error, so just die:
-		compare_or_die(
+		self.cfg._util.compare_or_die(
 			val1  = ' '.join(rev),
 			val2  = ' '.join(mn),
 			desc1 = 'recomputed mnemonic',
 			desc2 = 'original mnemonic',
 			e     = 'Internal error' )
 
-		self.seed = Seed(bytes.fromhex(hexseed))
+		self.seed = Seed( self.cfg, bytes.fromhex(hexseed) )
 		self.ssdata.mnemonic = mn
 
 		self.check_usr_seed_len()

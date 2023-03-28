@@ -20,7 +20,7 @@
 tx.file: Transaction file operations for the MMGen suite
 """
 
-from ..common import *
+from ..util import ymsg,make_chksum_6,die
 from ..obj import MMGenObject,HexStr,MMGenTxID,CoinTxID,MMGenTxComment
 
 class MMGenTxFile(MMGenObject):
@@ -58,12 +58,12 @@ class MMGenTxFile(MMGenObject):
 			return io_list( parent=tx, data=[io(tx.proto,**e) for e in d] )
 
 		from ..fileutil import get_data_from_file
-		tx_data = get_data_from_file(infile,tx.desc+' data',quiet=quiet_open)
+		tx_data = get_data_from_file( tx.cfg, infile, tx.desc+' data', quiet=quiet_open )
 
 		try:
 			desc = 'data'
-			if len(tx_data) > g.max_tx_file_size:
-				die( 'MaxFileSizeExceeded', f'Transaction file size exceeds limit ({g.max_tx_file_size} bytes)' )
+			if len(tx_data) > tx.cfg.max_tx_file_size:
+				die( 'MaxFileSizeExceeded', f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)' )
 			tx_data = tx_data.splitlines()
 			assert len(tx_data) >= 5,'number of lines less than 5'
 			assert len(tx_data[0]) == 6,'invalid length of first line'
@@ -104,10 +104,10 @@ class MMGenTxFile(MMGenObject):
 			tx.chain = metadata.pop(0).lower() if len(metadata) == 5 else 'mainnet'
 
 			from ..protocol import CoinProtocol,init_proto
-			network = CoinProtocol.Base.chain_name_to_network(coin,tx.chain)
+			network = CoinProtocol.Base.chain_name_to_network(tx.cfg,coin,tx.chain)
 
 			desc = 'initialization of protocol'
-			tx.proto = init_proto(coin,network=network,need_amt=True)
+			tx.proto = init_proto( tx.cfg, coin, network=network, need_amt=True )
 			if tokensym:
 				tx.proto.tokensym = tokensym
 
@@ -186,8 +186,8 @@ class MMGenTxFile(MMGenObject):
 
 		self.chksum = make_chksum_6(' '.join(lines))
 		fmt_data = '\n'.join([self.chksum] + lines) + '\n'
-		if len(fmt_data) > g.max_tx_file_size:
-			die( 'MaxFileSizeExceeded', f'Transaction file size exceeds limit ({g.max_tx_file_size} bytes)' )
+		if len(fmt_data) > tx.cfg.max_tx_file_size:
+			die( 'MaxFileSizeExceeded', f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)' )
 		return fmt_data
 
 	def write(self,
@@ -208,6 +208,7 @@ class MMGenTxFile(MMGenObject):
 
 		from ..fileutil import write_data_to_file
 		write_data_to_file(
+			cfg                   = self.tx.cfg,
 			outfile               = self.filename,
 			data                  = self.fmt_data,
 			desc                  = self.tx.desc + add_desc,
@@ -217,8 +218,8 @@ class MMGenTxFile(MMGenObject):
 			ask_write_default_yes = ask_write_default_yes )
 
 	@classmethod
-	def get_proto(cls,filename,quiet_open=False):
+	def get_proto(cls,cfg,filename,quiet_open=False):
 		from . import BaseTX
-		tmp_tx = BaseTX()
+		tmp_tx = BaseTX(cfg=cfg)
 		cls(tmp_tx).parse(filename,metadata_only=True,quiet_open=quiet_open)
 		return tmp_tx.proto

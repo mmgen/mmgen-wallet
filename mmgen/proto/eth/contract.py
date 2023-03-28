@@ -25,7 +25,6 @@ from . import rlp
 
 from . import erigon_sleep
 from ...util import msg,pp_msg
-from ...globalvars import g
 from ...base_obj import AsyncInit
 from ...obj import MMGenObject,CoinTxID
 from ...addr import CoinAddr,TokenAddr
@@ -46,7 +45,7 @@ class TokenCommon(MMGenObject):
 
 	async def do_call(self,method_sig,method_args='',toUnit=False):
 		data = self.create_method_id(method_sig) + method_args
-		if g.debug:
+		if self.cfg.debug:
 			msg('ETH_CALL {}:  {}'.format(
 				method_sig,
 				'\n  '.join(parse_abi(data)) ))
@@ -121,7 +120,7 @@ class TokenCommon(MMGenObject):
 		if tx.sender.hex() != from_addr:
 			die(3,f'Sender address {from_addr!r} does not match address of key {tx.sender.hex()!r}!')
 
-		if g.debug:
+		if self.cfg.debug:
 			msg('TOKEN DATA:')
 			pp_msg(tx.to_dict())
 			msg('PARSED ABI DATA:\n  {}'.format(
@@ -152,10 +151,11 @@ class TokenCommon(MMGenObject):
 
 class Token(TokenCommon):
 
-	def __init__(self,proto,addr,decimals,rpc=None):
+	def __init__(self,cfg,proto,addr,decimals,rpc=None):
 		if type(self).__name__ == 'Token':
 			from ...util2 import get_keccak
-			self.keccak_256 = get_keccak()
+			self.keccak_256 = get_keccak(cfg)
+		self.cfg = cfg
 		self.proto = proto
 		self.addr = TokenAddr(proto,addr)
 		assert isinstance(decimals,int),f'decimals param must be int instance, not {type(decimals)}'
@@ -165,13 +165,14 @@ class Token(TokenCommon):
 
 class TokenResolve(TokenCommon,metaclass=AsyncInit):
 
-	async def __init__(self,proto,rpc,addr):
+	async def __init__(self,cfg,proto,rpc,addr):
 		from ...util2 import get_keccak
-		self.keccak_256 = get_keccak()
+		self.keccak_256 = get_keccak(cfg)
+		self.cfg = cfg
 		self.proto = proto
 		self.rpc = rpc
 		self.addr = TokenAddr(proto,addr)
 		decimals = await self.get_decimals() # requires self.addr!
 		if not decimals:
 			die( 'TokenNotInBlockchain', f'Token {addr!r} not in blockchain' )
-		Token.__init__(self,proto,addr,decimals,rpc)
+		Token.__init__(self,cfg,proto,addr,decimals,rpc)

@@ -22,7 +22,6 @@ tool.wallet: Wallet routines for the 'mmgen-tool' utility
 
 from .common import tool_cmd_base
 
-from ..opts import opt
 from ..subseed import SubSeedList
 from ..seedsplit import MasterShareIdx
 from ..wallet import Wallet
@@ -30,32 +29,33 @@ from ..wallet import Wallet
 class tool_cmd(tool_cmd_base):
 	"key, address or subseed generation from an MMGen wallet"
 
-	def __init__(self,cmdname=None,proto=None,mmtype=None):
+	def __init__(self,cfg,cmdname=None,proto=None,mmtype=None):
 		self.need_proto = cmdname in ('gen_key','gen_addr')
-		super().__init__(cmdname=cmdname,proto=proto,mmtype=mmtype)
+		super().__init__(cfg,cmdname=cmdname,proto=proto,mmtype=mmtype)
 
 	def _get_seed_file(self,wallet):
 		from ..fileutil import get_seed_file
 		return get_seed_file(
+			cfg     = self.cfg,
 			wallets = [wallet] if wallet else [],
 			nargs   = 1 )
 
 	def get_subseed(self,subseed_idx:str,wallet=''):
 		"get the Seed ID of a single subseed by Subseed Index for default or specified wallet"
-		opt.quiet = True
-		return Wallet(self._get_seed_file(wallet)).seed.subseed(subseed_idx).sid
+		self.cfg.quiet = True
+		return Wallet(self.cfg,self._get_seed_file(wallet)).seed.subseed(subseed_idx).sid
 
 	def get_subseed_by_seed_id(self,seed_id:str,wallet='',last_idx=SubSeedList.dfl_len):
 		"get the Subseed Index of a single subseed by Seed ID for default or specified wallet"
-		opt.quiet = True
-		ret = Wallet(self._get_seed_file(wallet)).seed.subseed_by_seed_id( seed_id, last_idx )
+		self.cfg.quiet = True
+		ret = Wallet(self.cfg,self._get_seed_file(wallet)).seed.subseed_by_seed_id( seed_id, last_idx )
 		return ret.ss_idx if ret else None
 
 	def list_subseeds(self,subseed_idx_range:str,wallet=''):
 		"list a range of subseed Seed IDs for default or specified wallet"
-		opt.quiet = True
+		self.cfg.quiet = True
 		from ..subseed import SubSeedIdxRange
-		return Wallet(self._get_seed_file(wallet)).seed.subseeds.format( *SubSeedIdxRange(subseed_idx_range) )
+		return Wallet(self.cfg,self._get_seed_file(wallet)).seed.subseeds.format( *SubSeedIdxRange(subseed_idx_range) )
 
 	def list_shares(self,
 			share_count: int,
@@ -63,8 +63,8 @@ class tool_cmd(tool_cmd_base):
 			master_share: f'(min:1, max:{MasterShareIdx.max_val}, 0=no master share)' = 0,
 			wallet = '' ):
 		"list the Seed IDs of the shares resulting from a split of default or specified wallet"
-		opt.quiet = True
-		return Wallet(self._get_seed_file(wallet)).seed.split( share_count, id_str, master_share ).format()
+		self.cfg.quiet = True
+		return Wallet(self.cfg,self._get_seed_file(wallet)).seed.split( share_count, id_str, master_share ).format()
 
 	def gen_key(self,mmgen_addr:str,wallet=''):
 		"generate a single WIF key for specified MMGen address from default or specified wallet"
@@ -79,14 +79,15 @@ class tool_cmd(tool_cmd_base):
 		from ..addrlist import AddrList,AddrIdxList
 
 		addr = MMGenID( self.proto, mmgen_addr )
-		opt.quiet = True
-		ss = Wallet(self._get_seed_file(wallet))
+		self.cfg.quiet = True
+		ss = Wallet(self.cfg,self._get_seed_file(wallet))
 
 		if ss.seed.sid != addr.sid:
 			from ..util import die
 			die(1,f'Seed ID of requested address ({addr.sid}) does not match wallet ({ss.seed.sid})')
 
 		d = AddrList(
+			cfg       = self.cfg,
 			proto     = self.proto,
 			seed      = ss.seed,
 			addr_idxs = AddrIdxList(str(addr.idx)),

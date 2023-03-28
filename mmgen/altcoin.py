@@ -434,14 +434,14 @@ class CoinInfo(object):
 					test_equal('P2SH leading symbol',vn_info[1],ret,*cdata)
 
 	@classmethod
-	def verify_core_coin_data(cls,quiet=False,verbose=False):
+	def verify_core_coin_data(cls,cfg,quiet=False,verbose=False):
 		from .protocol import CoinProtocol,init_proto
 
 		for network in ('mainnet','testnet'):
 			for coin in gc.core_coins:
 				e = cls.get_entry(coin,network)
 				if e:
-					proto = init_proto(coin,testnet=network=='testnet')
+					proto = init_proto( cfg, coin, network=network )
 					cdata = (network,coin,e,type(proto).__name__,verbose)
 					if not quiet:
 						msg(f'Verifying {coin.upper()} {network}')
@@ -791,11 +791,11 @@ if __name__ == '__main__':
 		}
 	}
 
-	from mmgen.opts import init,opt
-	init( opts_data )
+	from mmgen.opts import init
+	cfg = init( opts_data, need_amt=False )
 
 	msg('Checking CoinInfo WIF/P2PKH/P2SH version numbers and trust levels against protocol.py')
-	CoinInfo.verify_core_coin_data( quiet=opt.quiet, verbose=opt.verbose )
+	CoinInfo.verify_core_coin_data( cfg, cfg.quiet, cfg.verbose )
 
 	msg('Checking CoinInfo address leading symbols')
-	CoinInfo.verify_leading_symbols( quiet=opt.quiet, verbose=opt.verbose )
+	CoinInfo.verify_leading_symbols( cfg.quiet, cfg.verbose )

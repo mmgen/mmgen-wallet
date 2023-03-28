@@ -13,8 +13,6 @@ wallet.dieroll: dieroll wallet class
 """
 
 import time
-from ..globalvars import g
-from ..opts import opt
 from ..util import msg,msg_r,die,fmt,remove_whitespace
 from ..util2 import block_format
 from ..seed import Seed
@@ -53,16 +51,16 @@ class wallet(wallet):
 		seed_len = rmap[len(d)]
 		seed_bytes = bc.tobytes( d, pad='seed' )[-seed_len:]
 
-		if self.interactive_input and opt.usr_randchars:
+		if self.interactive_input and self.cfg.usr_randchars:
 			from ..ui import keypress_confirm
-			if keypress_confirm(self.user_entropy_prompt):
+			if keypress_confirm( self.cfg, self.user_entropy_prompt ):
 				from ..crypto import Crypto
-				seed_bytes = Crypto().add_user_random(
+				seed_bytes = Crypto(self.cfg).add_user_random(
 					rand_bytes = seed_bytes,
 					desc       = 'gathered from your die rolls' )
 				self.desc += ' plus user-supplied entropy'
 
-		self.seed = Seed(seed_bytes)
+		self.seed = Seed( self.cfg, seed_bytes )
 		self.ssdata.hexseed = seed_bytes.hex()
 
 		self.check_usr_seed_len()
@@ -70,9 +68,9 @@ class wallet(wallet):
 
 	def _get_data_from_user(self,desc):
 
-		if not g.stdin_tty:
+		if not self.cfg.stdin_tty:
 			from ..ui import get_data_from_user
-			return get_data_from_user(desc)
+			return get_data_from_user( self.cfg, desc )
 
 		bc = baseconv('b6d')
 
@@ -88,23 +86,23 @@ class wallet(wallet):
 
 		CUR_HIDE = '\033[?25l'
 		CUR_SHOW = '\033[?25h'
-		cr = '\n' if g.test_suite else '\r'
+		cr = '\n' if self.cfg.test_suite else '\r'
 		prompt_fs = f'\b\b\b   {cr}Enter die roll #{{}}: {CUR_SHOW}'
-		clear_line = '' if g.test_suite else '\r' + ' ' * 25
+		clear_line = '' if self.cfg.test_suite else '\r' + ' ' * 25
 		invalid_msg = CUR_HIDE + cr + 'Invalid entry' + ' ' * 11
 
 		from ..term import get_char
 		def get_digit(n):
 			p = prompt_fs
 			while True:
-				time.sleep(g.short_disp_timeout)
+				time.sleep(self.cfg.short_disp_timeout)
 				ch = get_char(p.format(n),num_bytes=1)
 				if ch in bc.digits:
 					msg_r(CUR_HIDE + ' OK')
 					return ch
 				else:
 					msg_r(invalid_msg)
-					sleep = g.err_disp_timeout
+					sleep = self.cfg.err_disp_timeout
 					p = clear_line + prompt_fs
 
 		dierolls,n = [],1

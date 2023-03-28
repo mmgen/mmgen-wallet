@@ -12,8 +12,6 @@
 proto.eth.tx.online: Ethereum online signed transaction class
 """
 
-from ....globalvars import *
-
 import mmgen.tx.online as TxBase
 from .signed import Signed,TokenSigned
 from .. import erigon_sleep
@@ -37,7 +35,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 		if prompt_user:
 			self.confirm_send()
 
-		if g.bogus_send:
+		if self.cfg.bogus_send:
 			ret = None
 		else:
 			try:
@@ -52,7 +50,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 				sys.exit(1)
 			return False
 		else:
-			if g.bogus_send:
+			if self.cfg.bogus_send:
 				m = 'BOGUS transaction NOT sent: {}'
 			else:
 				m = 'Transaction sent: {}'
@@ -78,6 +76,6 @@ class TokenOnlineSigned(TokenSigned,OnlineSigned):
 		assert self.twctl.token == o['to']
 		o['token_addr'] = TokenAddr(self.proto,o['to'])
 		o['decimals']   = self.twctl.decimals
-		t = Token(self.proto,o['token_addr'],o['decimals'])
+		t = Token(self.cfg,self.proto,o['token_addr'],o['decimals'])
 		o['amt'] = t.transferdata2amt(o['data'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])

@@ -21,19 +21,18 @@ proto.btc.regtest: Coin daemon regression test mode setup and operations
 """
 
 import os,shutil,json
-from ...opts import opt
-from ...globalvars import g
 from ...util import msg,gmsg,die,capfirst,suf
 from ...protocol import init_proto
 from ...rpc import rpc_init,json_encoder
 from ...objmethods import MMGenObject
 
-def create_data_dir(data_dir):
+def create_data_dir(cfg,data_dir):
 	try: os.stat(os.path.join(data_dir,'regtest'))
 	except: pass
 	else:
 		from ...ui import keypress_confirm
 		if keypress_confirm(
+				cfg,
 				f'Delete your existing MMGen regtest setup at {data_dir!r} and create a new one?'):
 			shutil.rmtree(data_dir)
 		else:
@@ -69,18 +68,19 @@ class MMGenRegtest(MMGenObject):
 		'bch': 'n2fxhNx27GhHAWQhyuZ5REcBNrJqCJsJ12',
 	}
 
-	def __init__(self,coin):
+	def __init__(self,cfg,coin):
+		self.cfg = cfg
 		self.coin = coin.lower()
 		assert self.coin in self.coins, f'{coin!r}: invalid coin for regtest'
 
 		from ...daemon import CoinDaemon
-		self.proto = init_proto(self.coin,regtest=True,need_amt=True)
-		self.d = CoinDaemon(self.coin+'_rt',test_suite=g.test_suite)
+		self.proto = init_proto( cfg, self.coin, regtest=True, need_amt=True )
+		self.d = CoinDaemon(cfg,self.coin+'_rt',test_suite=cfg.test_suite)
 		self.miner_addr = self.miner_addrs[self.coin]
 
 	def create_hdseed_wif(self):
 		from ...tool.api import tool_api
-		t = tool_api()
+		t = tool_api(self.cfg)
 		t.init_coin(self.proto.coin,self.proto.network)
 		t.addrtype = 'compressed' if self.proto.coin == 'BCH' else 'bech32'
 		return t.hex2wif(self.hdseed)
@@ -114,13 +114,13 @@ class MMGenRegtest(MMGenObject):
 		if self.d.state != 'stopped':
 			await self.rpc_call('stop')
 
-		create_data_dir(self.d.datadir)
+		create_data_dir( self.cfg, self.d.datadir )
 
 		gmsg(f'Starting {self.coin.upper()} regtest setup')
 
 		self.d.start(silent=True)
 
-		rpc = await rpc_init(self.proto,backend=None,daemon=self.d)
+		rpc = await rpc_init(self.cfg,self.proto,backend=None,daemon=self.d)
 		for user in ('miner','bob','alice'):
 			gmsg(f'Creating {capfirst(user)}’s tracking wallet')
 			await rpc.icall(
@@ -149,7 +149,7 @@ class MMGenRegtest(MMGenObject):
 
 		gmsg('Setup complete')
 
-		if opt.setup_no_stop_daemon:
+		if self.cfg.setup_no_stop_daemon:
 			msg('Leaving regtest daemon running')
 		else:
 			msg('Stopping regtest daemon')
@@ -169,20 +169,20 @@ class MMGenRegtest(MMGenObject):
 	async def rpc_call(self,*args,wallet=None,start_daemon=True):
 		if start_daemon and self.d.state == 'stopped':
 			await self.start_daemon()
-		rpc = await rpc_init(self.proto,backend=None,daemon=self.d)
+		rpc = await rpc_init(self.cfg,self.proto,backend=None,daemon=self.d)
 		return await rpc.call(*args,wallet=wallet)
 
 	async def start(self):
 		if self.d.state == 'stopped':
 			await self.start_daemon(silent=False)
 		else:
-			msg(f'{g.coin} regtest daemon already started')
+			msg(f'{self.cfg.coin} regtest daemon already started')
 
 	async def stop(self):
 		if self.d.state == 'stopped':
-			msg(f'{g.coin} regtest daemon already stopped')
+			msg(f'{self.cfg.coin} regtest daemon already stopped')
 		else:
-			msg(f'Stopping {g.coin} regtest daemon')
+			msg(f'Stopping {self.cfg.coin} regtest daemon')
 			self.d.stop(silent=True)
 
 	def state(self):
@@ -222,13 +222,13 @@ class MMGenRegtest(MMGenObject):
 
 	async def fork(self,coin): # currently disabled
 
-		proto = init_proto(coin,False)
+		proto = init_proto( self.cfg, coin, False )
 		if not [f for f in proto.forks if f[2] == proto.coin.lower() and f[3] == True]:
 			die(1,f'Coin {proto.coin} is not a replayable fork of coin {coin}')
 
 		gmsg(f'Creating fork from coin {coin} to coin {proto.coin}')
 
-		source_rt = MMGenRegtest(coin)
+		source_rt = MMGenRegtest( self.cfg, coin )
 
 		try:
 			os.stat(source_rt.d.datadir)
@@ -246,7 +246,7 @@ class MMGenRegtest(MMGenObject):
 		try: os.makedirs(self.d.datadir)
 		except: pass
 
-		create_data_dir(self.d.datadir)
+		create_data_dir( self.cfg, self.d.datadir )
 		os.rmdir(self.d.datadir)
 		shutil.copytree(source_data_dir,self.d.datadir,symlinks=True)
 		await self.start_daemon(reindex=True)

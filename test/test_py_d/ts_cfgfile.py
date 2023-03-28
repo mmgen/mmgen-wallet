@@ -130,7 +130,7 @@ class TestSuiteCfgFile(TestSuiteBase):
 			t.expect(s)
 
 		if t.pexpect_spawn: # view and exit pager
-			time.sleep(1 if opt.exact_output else t.send_delay)
+			time.sleep(1 if cfg.exact_output else t.send_delay)
 			t.send('q')
 
 		t.expect(cp,'n')
@@ -202,7 +202,7 @@ class TestSuiteCfgFile(TestSuiteBase):
 			('ETH','True', '5.4321',True),
 			('ETC','False','5.4321',False)
 		):
-			if opt.no_altcoin and coin != 'BTC':
+			if cfg.no_altcoin and coin != 'BTC':
 				continue
 			t = self.spawn_test(
 				args = [
@@ -244,7 +244,7 @@ class TestSuiteCfgFile(TestSuiteBase):
 
 	def chain_names(self):
 
-		if opt.no_altcoin:
+		if cfg.no_altcoin:
 			return 'skip'
 
 		def run(chk,testnet):

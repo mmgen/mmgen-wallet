@@ -21,7 +21,7 @@ test.test_py_d.common: Shared routines and data for the test.py test suite
 """
 
 import sys,os
-from mmgen.globalvars import g,gc
+from mmgen.globalvars import gc
 from mmgen.util import msg
 from ..include.common import *
 
@@ -71,9 +71,9 @@ chksum_pat = r'\b[A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4}\b'
 Ctrl_U = '\x15'
 
 def ok_msg():
-	if opt.profile:
+	if cfg.profile:
 		return
-	sys.stderr.write(green('\nOK\n') if opt.exact_output or opt.verbose else ' OK\n')
+	sys.stderr.write(green('\nOK\n') if cfg.exact_output or cfg.verbose else ' OK\n')
 
 def skip(name,reason=None):
 	msg('Skipping {}{}'.format( name, f' ({reason})' if reason else '' ))
@@ -82,10 +82,11 @@ def skip(name,reason=None):
 def confirm_continue():
 	from mmgen.ui import keypress_confirm
 	if keypress_confirm(
+			cfg,
 			blue('Continue? (Y/n): '),
 			default_yes     = True,
 			complete_prompt = True ):
-		if opt.verbose or opt.exact_output:
+		if cfg.verbose or cfg.exact_output:
 			sys.stderr.write('\n')
 	else:
 		raise KeyboardInterrupt('Exiting at user request')
@@ -96,7 +97,7 @@ def randbool():
 def disable_debug():
 	global save_debug
 	save_debug = {}
-	for k in g.env_opts:
+	for k in cfg.env_opts:
 		if k[:11] == 'MMGEN_DEBUG':
 			save_debug[k] = os.getenv(k)
 			os.environ[k] = ''
@@ -118,7 +119,7 @@ def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete
 
 	if len(flist) > 1 or delete_all:
 		if delete or delete_all:
-			if (opt.exact_output or opt.verbose) and not opt.quiet:
+			if (cfg.exact_output or cfg.verbose) and not cfg.quiet:
 				if delete_all:
 					msg(f'Deleting all *.{ext} files in {tdir!r}')
 				else:

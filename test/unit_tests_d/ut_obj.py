@@ -7,6 +7,7 @@ test.unit_tests_d.ut_obj: data object unit tests for the MMGen suite
 from decimal import Decimal
 
 from mmgen.common import *
+from ..include.common import qmsg,qmsg_r,vmsg
 
 class unit_tests:
 

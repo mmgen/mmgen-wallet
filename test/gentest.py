@@ -28,10 +28,9 @@ sys.path.insert(0,overlay_setup(repo_root))
 
 # Import these _after_ local path's been added to sys.path
 import mmgen.opts as opts
-from mmgen.globalvars import g,gc
-from mmgen.opts import opt
+from mmgen.globalvars import gc
 from mmgen.color import green,red,purple
-from mmgen.util import msg,qmsg,qmsg_r,vmsg,capfirst,is_int,die
+from mmgen.util import msg,capfirst,is_int,die
 
 results_file = 'gentest.out.json'
 
@@ -149,7 +148,7 @@ class GenTool(object):
 		self.data = {}
 
 	def __del__(self):
-		if opt.save_results:
+		if cfg.save_results:
 			key = f'{self.proto.coin}-{self.proto.network}-{self.addr_type.name}-{self.desc}'.lower()
 			saved_results[key] = {k.hex():v._asdict() for k,v in self.data.items()}
 
@@ -251,14 +250,14 @@ def find_or_check_tool(proto,addr_type,toolname):
 	if toolname not in ext_progs + ['ext']:
 		die(1,f'{toolname!r}: unsupported tool for network {proto.network}')
 
-	if opt.all_coins and toolname == 'ext':
+	if cfg.all_coins and toolname == 'ext':
 		die(1,"'--all-coins' must be combined with a specific external testing tool")
 	else:
 		tool = cinfo.get_test_support(
 			proto.coin,
 			addr_type.name,
 			proto.network,
-			verbose = not opt.quiet,
+			verbose = not cfg.quiet,
 			toolname = toolname if toolname != 'ext' else None )
 		if tool and toolname in ext_progs and toolname != tool:
 			sys.exit(3)
@@ -283,11 +282,11 @@ def test_equal(desc,a_val,b_val,in_bytes,sec,wif,a_desc,b_desc):
 				w=max(len(e) for e in (a_desc,b_desc)) + 1
 		).rstrip())
 
-def do_ab_test(proto,cfg,addr_type,gen1,kg2,ag,tool,cache_data):
+def do_ab_test(proto,scfg,addr_type,gen1,kg2,ag,tool,cache_data):
 
 	def do_ab_inner(n,trounds,in_bytes):
 		global last_t
-		if opt.verbose or time.time() - last_t >= 0.1:
+		if cfg.verbose or time.time() - last_t >= 0.1:
 			qmsg_r(f'\rRound {i+1}/{trounds} ')
 			last_t = time.time()
 		sec = PrivKey(proto,in_bytes,compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
@@ -296,7 +295,7 @@ def do_ab_test(proto,cfg,addr_type,gen1,kg2,ag,tool,cache_data):
 		tinfo = ( in_bytes, sec, sec.wif, type(kg1).__name__, type(kg2).__name__ if kg2 else tool.desc )
 
 		def do_msg():
-			if opt.verbose:
+			if cfg.verbose:
 				msg( fs.format( b=in_bytes.hex(), r=sec.hex(), k=sec.wif, v=vk2, a=addr1 ))
 
 		if tool:
@@ -321,10 +320,10 @@ def do_ab_test(proto,cfg,addr_type,gen1,kg2,ag,tool,cache_data):
 			for privbytes in tuple(tool.data)[len(edgecase_sks):]:
 				yield privbytes
 		else:
-			for i in range(cfg.rounds):
+			for i in range(scfg.rounds):
 				yield getrand(32)
 
-	kg1 = KeyGenerator( proto, addr_type.pubkey_type, gen1 )
+	kg1 = KeyGenerator( cfg, proto, addr_type.pubkey_type, gen1 )
 	if type(kg1) == type(kg2):
 		die(4,'Key generators are the same!')
 
@@ -364,39 +363,39 @@ def do_ab_test(proto,cfg,addr_type,gen1,kg2,ag,tool,cache_data):
 	qmsg(purple('edge cases:'))
 	for i,privbytes in enumerate(edgecase_sks):
 		do_ab_inner(i,len(edgecase_sks),privbytes)
-	qmsg(green('\rOK            ' if opt.verbose else 'OK'))
+	qmsg(green('\rOK            ' if cfg.verbose else 'OK'))
 
 	qmsg(purple('random input:'))
 	for i,privbytes in enumerate(get_randbytes()):
-		do_ab_inner(i,cfg.rounds,privbytes)
-	qmsg(green('\rOK            ' if opt.verbose else 'OK'))
+		do_ab_inner(i,scfg.rounds,privbytes)
+	qmsg(green('\rOK            ' if cfg.verbose else 'OK'))
 
 def init_tool(proto,addr_type,toolname):
 	return globals()['GenTool'+capfirst(toolname.replace('-','_'))](proto,addr_type)
 
-def ab_test(proto,cfg):
+def ab_test(proto,scfg):
 
-	addr_type = MMGenAddrType( proto=proto, id_str=opt.type or proto.dfl_mmtype )
+	addr_type = MMGenAddrType( proto=proto, id_str=cfg.type or proto.dfl_mmtype )
 
-	if cfg.gen2:
-		assert cfg.gen1 != 'all', "'all' must be used only with external tool"
-		kg2 = KeyGenerator( proto, addr_type.pubkey_type, cfg.gen2 )
+	if scfg.gen2:
+		assert scfg.gen1 != 'all', "'all' must be used only with external tool"
+		kg2 = KeyGenerator( cfg, proto, addr_type.pubkey_type, scfg.gen2 )
 		tool = None
 	else:
-		toolname = find_or_check_tool( proto, addr_type, cfg.tool )
+		toolname = find_or_check_tool( proto, addr_type, scfg.tool )
 		if toolname == None:
-			ymsg(f'Warning: skipping tool {cfg.tool!r} for {proto.coin} {addr_type.name}')
+			ymsg(f'Warning: skipping tool {scfg.tool!r} for {proto.coin} {addr_type.name}')
 			return
 		tool = init_tool( proto, addr_type, toolname )
 		kg2 = None
 
-	ag = AddrGenerator( proto, addr_type )
+	ag = AddrGenerator( cfg, proto, addr_type )
 
-	if cfg.all_backends: # check all backends against external tool
+	if scfg.all_backends: # check all backends against external tool
 		for n in range(len(get_backends(addr_type.pubkey_type))):
-			do_ab_test( proto, cfg, addr_type, gen1=n+1, kg2=kg2, ag=ag, tool=tool, cache_data=cfg.rounds < 1000 and not n )
+			do_ab_test( proto, scfg, addr_type, gen1=n+1, kg2=kg2, ag=ag, tool=tool, cache_data=scfg.rounds < 1000 and not n )
 	else:                # check specific backend against external tool or another backend
-		do_ab_test( proto, cfg, addr_type, gen1=cfg.gen1, kg2=kg2, ag=ag, tool=tool, cache_data=False )
+		do_ab_test( proto, scfg, addr_type, gen1=scfg.gen1, kg2=kg2, ag=ag, tool=tool, cache_data=False )
 
 def speed_test(proto,kg,ag,rounds):
 	qmsg(green('Testing speed of address generator {!r} for coin {}'.format(
@@ -419,7 +418,7 @@ def speed_test(proto,kg,ag,rounds):
 	qmsg(
 		f'\rRound {i+1}/{rounds} ' +
 		f'\n{rounds} addresses generated' +
-		('' if g.test_suite_deterministic else f' in {time.time()-start:.2f} seconds')
+		('' if cfg.test_suite_deterministic else f' in {time.time()-start:.2f} seconds')
 	)
 
 def dump_test(proto,kg,ag,filename):
@@ -446,7 +445,7 @@ def dump_test(proto,kg,ag,filename):
 		tinfo = (b_sec,b_sec.hex(),b_wif,type(kg).__name__,filename)
 		test_equal('addresses',a_addr,b_addr,*tinfo)
 
-	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
+	qmsg(green(('\n','')[bool(cfg.verbose)] + 'OK'))
 
 def get_protos(proto,addr_type,toolname):
 
@@ -455,17 +454,17 @@ def get_protos(proto,addr_type,toolname):
 	for coin in cinfo.external_tests[proto.network][toolname]:
 		if coin.lower() not in CoinProtocol.coins:
 			continue
-		ret = init_proto(coin,testnet=proto.testnet)
+		ret = init_proto( cfg, coin, testnet=proto.testnet )
 		if addr_type not in ret.mmtypes:
 			continue
 		yield ret
 
 def parse_args():
 
-	if len(cmd_args) != 2:
+	if len(cfg._args) != 2:
 		opts.usage()
 
-	arg1,arg2 = cmd_args
+	arg1,arg2 = cfg._args
 	gen1,gen2,rounds = (0,0,0)
 	tool,all_backends,dumpfile = (None,None,None)
 
@@ -498,13 +497,12 @@ def parse_args():
 				die(1,"First part of first argument must be a generator backend number or 'all'")
 
 		if is_int(b):
-			if opt.all_coins:
+			if cfg.all_coins:
 				die(1,'--all-coins must be used with external tool only')
 			gen2 = b
 		else:
 			tool = b
-			proto = init_proto_from_opts()
-			ext_progs = list(cinfo.external_tests[proto.network]) + ['ext']
+			ext_progs = list(cinfo.external_tests[cfg._proto.network]) + ['ext']
 			if b not in ext_progs:
 				die(1,f'Second part of first argument must be a generator backend number or one of {ext_progs}')
 
@@ -519,21 +517,21 @@ def parse_args():
 
 def main():
 
-	cfg = parse_args()
-	proto = init_proto_from_opts()
-	addr_type = MMGenAddrType( proto=proto, id_str=opt.type or proto.dfl_mmtype )
+	scfg = parse_args()
 
-	if cfg.test == 'ab':
-		protos = get_protos(proto,addr_type,cfg.tool) if opt.all_coins else [proto]
-		for proto in protos:
-			ab_test( proto, cfg )
+	addr_type = MMGenAddrType( proto=proto, id_str=cfg.type or proto.dfl_mmtype )
+
+	if scfg.test == 'ab':
+		protos = get_protos(proto,addr_type,scfg.tool) if cfg.all_coins else [proto]
+		for p in protos:
+			ab_test( p, scfg )
 	else:
-		kg = KeyGenerator( proto, addr_type.pubkey_type, cfg.gen1 )
-		ag = AddrGenerator( proto, addr_type )
-		if cfg.test == 'speed':
-			speed_test( proto, kg, ag, cfg.rounds )
-		elif cfg.test == 'dump':
-			dump_test( proto, kg, ag, cfg.dumpfile )
+		kg = KeyGenerator( cfg, proto, addr_type.pubkey_type, scfg.gen1 )
+		ag = AddrGenerator( cfg, proto, addr_type )
+		if scfg.test == 'speed':
+			speed_test( proto, kg, ag, scfg.rounds )
+		elif scfg.test == 'dump':
+			dump_test( proto, kg, ag, scfg.dumpfile )
 
 	if saved_results:
 		import json
@@ -542,19 +540,26 @@ def main():
 
 from subprocess import run,PIPE,DEVNULL
 from collections import namedtuple
-from mmgen.protocol import init_proto,init_proto_from_opts,CoinProtocol
+from mmgen.protocol import init_proto,CoinProtocol
 from mmgen.altcoin import init_genonly_altcoins,CoinInfo as cinfo
 from mmgen.key import PrivKey
 from mmgen.addr import MMGenAddrType
 from mmgen.addrgen import KeyGenerator,AddrGenerator
 from mmgen.keygen import get_backends
-
-from test.include.common import getrand,get_ethkey
+from test.include.common import getrand,get_ethkey,set_globals
 
 gtr = namedtuple('gen_tool_result',['wif','addr','viewkey'])
 sd = namedtuple('saved_data_item',['reduced','wif','addr','viewkey'])
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
-cmd_args = opts.init(opts_data)
+
+cfg = opts.init(opts_data)
+set_globals(cfg)
+
+qmsg = cfg._util.qmsg
+qmsg_r = cfg._util.qmsg_r
+vmsg = cfg._util.vmsg
+
+proto = cfg._proto
 
 main()

@@ -20,8 +20,7 @@
 addrlist: Address list classes for the MMGen suite
 """
 
-from .globalvars import g
-from .util import qmsg,qmsg_r,suf,make_chksum_N,Msg,die
+from .util import suf,make_chksum_N,Msg,die
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .obj import MMGenListItem,ListItemAttr,MMGenDict,TwComment,WalletPassword
 from .key import PrivKey
@@ -158,6 +157,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 
 	def __init__(
 			self,
+			cfg,
 			proto,
 			addrfile  = '',
 			al_id     = '',
@@ -173,12 +173,13 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			skip_chksum_msg = False,
 			add_p2pkh = False ):
 
+		self.cfg = cfg
 		self.ka_validity_chk = key_address_validity_check
 		self.add_p2pkh = add_p2pkh
 		self.proto = proto
 		do_chksum = False
 
-		if not g.debug_addrlist:
+		if not cfg.debug_addrlist:
 			self.dmsg_sc = self.noop
 
 		if seed and addr_idxs:   # data from seed + idxs
@@ -230,7 +231,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 	def do_chksum_msg(self,record):
 		chk = 'Check this value against your records'
 		rec = f'Record this checksum: it will be used to verify the {self.desc} file in the future'
-		qmsg(
+		self.cfg._util.qmsg(
 			f'Checksum for {self.desc} data {self.id_str.hl()}: {self.chksum.hl()}\n' +
 			(chk,rec)[record] )
 
@@ -246,23 +247,23 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 
 		if self.gen_addrs:
 			from .addrgen import KeyGenerator,AddrGenerator
-			kg = KeyGenerator( self.proto, mmtype.pubkey_type )
-			ag = AddrGenerator( self.proto, mmtype )
+			kg = KeyGenerator( self.cfg, self.proto, mmtype.pubkey_type )
+			ag = AddrGenerator( self.cfg, self.proto, mmtype )
 			if self.add_p2pkh:
-				ag2 = AddrGenerator( self.proto, 'compressed' )
+				ag2 = AddrGenerator( self.cfg, self.proto, 'compressed' )
 
-		from .globalvars import g
 		from .derive import derive_coin_privkey_bytes
 
 		t_addrs = len(addr_idxs)
 		le = self.entry_type
 		out = AddrListData()
-		CR = '\n' if g.debug_addrlist else '\r'
+		CR = '\n' if self.cfg.debug_addrlist else '\r'
 
 		for pk_bytes in derive_coin_privkey_bytes(seed,addr_idxs):
 
-			if not g.debug:
-				qmsg_r(f'{CR}Generating {self.gen_desc} #{pk_bytes.idx} ({pk_bytes.pos} of {t_addrs})')
+			if not self.cfg.debug:
+				self.cfg._util.qmsg_r(
+					f'{CR}Generating {self.gen_desc} #{pk_bytes.idx} ({pk_bytes.pos} of {t_addrs})' )
 
 			e = le( proto=self.proto, idx=pk_bytes.idx )
 
@@ -286,7 +287,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 
 			out.append(e)
 
-		qmsg('{}{}: {} {}{} generated{}'.format(
+		self.cfg._util.qmsg('{}{}: {} {}{} generated{}'.format(
 			CR,
 			self.al_id.hl(),
 			t_addrs,
@@ -316,7 +317,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		if self.proto.testnet:
 			scramble_key += ':' + self.proto.network
 		self.dmsg_sc('str',scramble_key)
-		return Crypto().scramble_seed(seed,scramble_key.encode())
+		return Crypto(self.cfg).scramble_seed(seed,scramble_key.encode())
 
 	def idxs(self):
 		return [e.idx for e in self.data]
@@ -371,8 +372,8 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		def gen_addr(pk,t):
 			at = self.proto.addr_type(t)
 			from .addrgen import KeyGenerator,AddrGenerator
-			kg = KeyGenerator(self.proto,at.pubkey_type)
-			ag = AddrGenerator(self.proto,at)
+			kg = KeyGenerator( self.cfg, self.proto, at.pubkey_type )
+			ag = AddrGenerator( self.cfg, self.proto, at )
 			return ag.to_addr(kg.gen_data(pk))
 
 		compressed_types = set(self.proto.mmtypes) - {'L','E'}

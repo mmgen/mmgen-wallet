@@ -5,6 +5,7 @@ test/unit_tests_d/ut_xmrseed: Monero mnemonic unit test for the MMGen suite
 """
 
 from mmgen.common import *
+from ..include.common import cfg,qmsg,vmsg
 
 class unit_test(object):
 
@@ -82,7 +83,7 @@ class unit_test(object):
 		from mmgen.xmrseed import xmrseed
 
 		b = xmrseed()
-		b.check_wordlist()
+		b.check_wordlist(cfg)
 
 		try:
 			from monero.wordlists.english import English

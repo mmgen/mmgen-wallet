@@ -14,8 +14,7 @@ proto.btc.daemon: Bitcoin base protocol daemon classes
 
 import os
 
-from ...globalvars import g,gc
-from ...opts import opt
+from ...globalvars import gc
 from ...util import list_gen
 from ...daemon import CoinDaemon,_nw,_dd
 
@@ -36,7 +35,7 @@ class bitcoin_core_daemon(CoinDaemon):
 
 	def init_datadir(self):
 		if self.network == 'regtest' and not self.test_suite:
-			return os.path.join( g.data_dir_root, 'regtest', g.coin.lower() )
+			return os.path.join( self.cfg.data_dir_root, 'regtest', self.cfg.coin.lower() )
 		else:
 			return super().init_datadir()
 
@@ -120,7 +119,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			return ('importaddress',coinaddr,lbl,False)
 
 	def estimatefee_args(self,rpc):
-		return (opt.fee_estimate_confs,)
+		return (self.cfg.fee_estimate_confs,)
 
 	def sigfail_errmsg(self,e):
 		return e.args[0]
@@ -143,7 +142,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 		return ('importaddress',coinaddr,lbl,False)
 
 	def estimatefee_args(self,rpc):
-		return () if rpc.daemon_version >= 190100 else (opt.fee_estimate_confs,)
+		return () if rpc.daemon_version >= 190100 else (self.cfg.fee_estimate_confs,)
 
 	def sigfail_errmsg(self,e):
 		return (

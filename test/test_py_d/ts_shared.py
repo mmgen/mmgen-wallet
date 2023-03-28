@@ -21,8 +21,6 @@ test.test_py_d.ts_shared: Shared methods for the test.py test suite
 """
 
 import os
-from mmgen.globalvars import g
-from mmgen.opts import opt
 from mmgen.util import ymsg
 from mmgen.wallet import get_wallet_cls
 

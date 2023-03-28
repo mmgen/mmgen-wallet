@@ -14,9 +14,10 @@ from mmgen.addrlist import AddrIdxList
 from mmgen.seedsplit import *
 from mmgen.key import *
 from .ot_common import *
+from ..include.common import cfg
 
 from mmgen.protocol import init_proto
-proto = init_proto('btc',need_amt=True)
+proto = init_proto( cfg, 'btc', need_amt=True )
 tw_pfx = proto.base_coin.lower() + ':'
 zero_addr = '1111111111111111111114oLvT2'
 
@@ -123,8 +124,8 @@ tests = {
 			),
 		'good': (
 			{'sid':'F00BAA12'},
-			{'seed': Seed(r16),    'ret': SeedID(seed=Seed(r16))},
-			{'sid': Seed(r16).sid, 'ret': SeedID(seed=Seed(r16))}
+			{'seed': Seed(cfg,r16),     'ret': SeedID(seed=Seed(cfg,r16))},
+			{'sid':  Seed(cfg,r16).sid, 'ret': SeedID(seed=Seed(cfg,r16))}
 			)
 	},
 	'SubSeedIdx': {

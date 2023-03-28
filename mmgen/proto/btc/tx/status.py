@@ -15,7 +15,6 @@ proto.btc.tx.status: Bitcoin transaction status class
 import time
 
 import mmgen.tx.status as TxBase
-from ....opts import opt
 from ....util import msg,suf,die,secs_to_dhms
 
 class Status(TxBase.Status):
@@ -82,7 +81,7 @@ class Status(TxBase.Status):
 					verbose           = False )
 				rep = ('' if d.get('bip125-replaceable') == 'yes' else 'NOT ') + 'replaceable'
 				t = d['timereceived']
-				if opt.quiet:
+				if tx.cfg.quiet:
 					msg('Transaction is in mempool')
 				else:
 					msg(f'TX status: in mempool, {rep}')
@@ -101,7 +100,7 @@ class Status(TxBase.Status):
 					f'has {r.replacing_confs} confirmation{suf(r.replacing_confs)}'
 				if r.replacing_confs else
 					'is in mempool' ) )
-			if not opt.quiet:
+			if not tx.cfg.quiet:
 				msg('Replacing transactions:')
 				d = []
 				for txid in r.replacing_txs:

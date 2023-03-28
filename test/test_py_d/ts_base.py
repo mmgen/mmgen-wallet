@@ -21,8 +21,7 @@ test.test_py_d.ts_base: Base class for the test.py test suite
 """
 
 import os
-from mmgen.globalvars import g,gc
-from mmgen.opts import opt
+from mmgen.globalvars import gc
 from ..include.common import *
 from .common import *
 
@@ -37,13 +36,12 @@ class TestSuiteBase(object):
 	need_daemon = False
 
 	def __init__(self,trunner,cfgs,spawn):
-		from mmgen.protocol import init_proto_from_opts
-		self.proto = init_proto_from_opts(need_amt=True)
+		self.proto = cfg._proto
 		self.tr = trunner
 		self.cfgs = cfgs
 		self.spawn = spawn
 		self.have_dfl_wallet = False
-		self.usr_rand_chars = (5,30)[bool(opt.usr_random)]
+		self.usr_rand_chars = (5,30)[bool(cfg.usr_random)]
 		self.usr_rand_arg = f'-r{self.usr_rand_chars}'
 		self.altcoin_pfx = '' if self.proto.base_coin == 'BTC' else '-'+self.proto.base_coin
 		self.tn_ext = ('','.testnet')[self.proto.testnet]
@@ -54,11 +52,11 @@ class TestSuiteBase(object):
 
 	@property
 	def tmpdir(self):
-		return os.path.join('test','tmp','{}{}'.format(self.tmpdir_num,'-α' if g.debug_utf8 else ''))
+		return os.path.join('test','tmp','{}{}'.format(self.tmpdir_num,'-α' if cfg.debug_utf8 else ''))
 
 	@property
 	def segwit_mmtype(self):
-		return ('segwit','bech32')[bool(opt.bech32)] if self.segwit else None
+		return ('segwit','bech32')[bool(cfg.bech32)] if self.segwit else None
 
 	@property
 	def segwit_arg(self):

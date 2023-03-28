@@ -5,6 +5,7 @@ test/unit_tests_d/ut_bip39: BIP39 unit test for the MMGen suite
 """
 
 from mmgen.common import *
+from ..include.common import cfg,qmsg,vmsg
 
 class unit_test(object):
 
@@ -91,7 +92,7 @@ class unit_test(object):
 		from mmgen.bip39 import bip39
 
 		b = bip39()
-		b.check_wordlist()
+		b.check_wordlist(cfg)
 
 		vmsg('')
 		qmsg('Checking seed to mnemonic conversion:')

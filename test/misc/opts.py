@@ -37,38 +37,42 @@ sample note: {nn}
 """
 	},
 	'code': {
-		'options': lambda help_notes,s: s.format(
+		'options': lambda cfg,help_notes,s: s.format(
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
-			g=g,
 		),
 		'notes': lambda s: s.format(nn='a note'),
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
-if cmd_args == ['show_common_opts_diff']:
+if cfg._args == ['show_common_opts_diff']:
 	from mmgen.opts import show_common_opts_diff
-	show_common_opts_diff()
+	show_common_opts_diff(cfg)
 	sys.exit(0)
 
 for k in (
 	'foo',               # added opt
 	'print_checksum',    # sets 'quiet'
 	'quiet','verbose',   # init_opts, incompatible_opts
-	'fee_estimate_mode', # autoset_opts
 	'passwd_file',       # infile_opts - check_infile()
 	'outdir',            # check_outdir()
 	'cached_balances',   # opt_sets_global
 	'minconf',           # global_sets_opt
 	'hidden_incog_input_params',
 	):
-	msg('{:30} {}'.format( f'opt.{k}:', getattr(opt,k) ))
+	msg('{:30} {}'.format( f'cfg.{k}:', getattr(cfg,k) ))
 
 msg('')
 for k in (
 	'cached_balances',   # opt_sets_global
 	'minconf',           # global_sets_opt
 	):
-	msg('{:30} {}'.format( f'g.{k}:', getattr(opt,k) ))
+	msg('{:30} {}'.format( f'cfg.{k}:', getattr(cfg,k) ))
+
+msg('')
+for k in (
+	'fee_estimate_mode', # autoset_opts
+	):
+	msg('{:30} {}'.format( f'cfg.{k}:', getattr(cfg,k) ))

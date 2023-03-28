@@ -4,7 +4,8 @@
 test.unit_tests_d.ut_mn_entry: Mnemonic user entry unit test for the MMGen suite
 """
 
-from mmgen.util import msg,msg_r,qmsg,qmsg_r
+from mmgen.util import msg,msg_r
+from ..include.common import cfg,qmsg
 
 class unit_test(object):
 
@@ -49,7 +50,7 @@ class unit_test(object):
 		usl = {}
 		for wl_id in self.vectors:
 			for j,k in (('uniq_ss_len','usl'),('shortest_word','sw'),('longest_word','lw')):
-				a = getattr(mn_entry(wl_id),j)
+				a = getattr(mn_entry( cfg, wl_id ),j)
 				b = self.vectors[wl_id][k]
 				assert a == b, f'{wl_id}:{j} {a} != {b}'
 		msg('OK')
@@ -58,7 +59,7 @@ class unit_test(object):
 		qmsg('')
 		junk = 'a g z aa gg zz aaa ggg zzz aaaa gggg zzzz aaaaaaaaaaaaaa gggggggggggggg zzzzzzzzzzzzzz'
 		for wl_id in self.vectors:
-			m = mn_entry(wl_id)
+			m = mn_entry( cfg, wl_id )
 			qmsg('Wordlist: '+wl_id)
 			for entry_mode in ('full','short'):
 				for a,word in enumerate(m.wl):

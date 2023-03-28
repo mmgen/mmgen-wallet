@@ -17,11 +17,11 @@ opts_data = {
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
 from mmgen.fileutil import get_lines_from_file
-lines = get_lines_from_file(cmd_args[0])
-start = (1,0)[bool(opt.include_first_line)]
+lines = get_lines_from_file( cfg, cfg._args[0] )
+start = (1,0)[bool(cfg.include_first_line)]
 a = make_chksum_6(' '.join(lines[start:]).encode())
 if start == 1:
 	b = lines[0]

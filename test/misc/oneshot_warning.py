@@ -2,7 +2,7 @@
 
 from mmgen.common import *
 
-cmd_args = opts.init()
+cfg = opts.init()
 
 class foo(oneshot_warning):
 

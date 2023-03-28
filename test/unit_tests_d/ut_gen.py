@@ -10,6 +10,7 @@ from mmgen.key import PrivKey
 from mmgen.addr import MMGenAddrType
 from mmgen.addrgen import KeyGenerator,AddrGenerator
 from mmgen.keygen import get_backends
+from ..include.common import cfg,qmsg
 
 # TODO: add viewkey checks
 vectors = { # from tooltest2
@@ -50,7 +51,7 @@ vectors = { # from tooltest2
 def do_test(proto,wif,addr_chk,addr_type,internal_keccak):
 
 	if internal_keccak:
-		opt.use_internal_keccak_module = True
+		cfg.use_internal_keccak_module = True
 		add_msg = ' (internal keccak module)'
 	else:
 		add_msg = ''
@@ -60,7 +61,7 @@ def do_test(proto,wif,addr_chk,addr_type,internal_keccak):
 
 	for n,backend in enumerate(get_backends(at.pubkey_type)):
 
-		kg = KeyGenerator(proto,at.pubkey_type,n+1)
+		kg = KeyGenerator( cfg, proto, at.pubkey_type, n+1 )
 		qmsg(blue(f'  Testing backend {backend!r} for addr type {addr_type!r}{add_msg}'))
 
 		data = kg.gen_data(privkey)
@@ -69,16 +70,16 @@ def do_test(proto,wif,addr_chk,addr_type,internal_keccak):
 			if v and k in ('pubkey','viewkey_bytes'):
 				qmsg(f'    {k+":":19} {v.hex()}')
 
-		ag = AddrGenerator(proto,addr_type)
+		ag = AddrGenerator( cfg, proto, addr_type )
 		addr = ag.to_addr(data)
 		qmsg(f'    addr:               {addr}\n')
 
 		assert addr == addr_chk, f'{addr} != {addr_chk}'
 
-	opt.use_internal_keccak_module = False
+	cfg.use_internal_keccak_module = False
 
 def do_tests(coin,internal_keccak=False):
-	proto = init_proto(coin)
+	proto = init_proto( cfg, coin )
 	for wif,addr,addr_type in vectors[coin]:
 		do_test(proto,wif,addr,addr_type,internal_keccak)
 	return True
@@ -95,7 +96,7 @@ class unit_tests:
 		return do_tests('eth',internal_keccak=True)
 
 	def xmr(self,name,ut):
-		if not opt.fast:
+		if not cfg.fast:
 			do_tests('xmr')
 		return do_tests('xmr',internal_keccak=True)
 

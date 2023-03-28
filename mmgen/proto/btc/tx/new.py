@@ -14,9 +14,8 @@ proto.btc.tx.new: Bitcoin new transaction class
 
 import mmgen.tx.new as TxBase
 from .base import Base
-from ....opts import opt
 from ....obj import HexStr,MMGenTxID
-from ....util import msg,dmsg,vmsg,make_chksum_6,die
+from ....util import msg,make_chksum_6,die
 
 class New(Base,TxBase.New):
 	usr_fee_prompt = 'Enter transaction fee: '
@@ -27,15 +26,15 @@ class New(Base,TxBase.New):
 	def relay_fee(self):
 		kb_fee = self.proto.coin_amt(self.rpc.cached['networkinfo']['relayfee'])
 		ret = kb_fee * self.estimate_size() / 1024
-		vmsg('Relay fee: {} {c}/kB, for transaction: {} {c}'.format(kb_fee,ret,c=self.coin))
+		self.cfg._util.vmsg('Relay fee: {} {c}/kB, for transaction: {} {c}'.format(kb_fee,ret,c=self.coin))
 		return ret
 
 	async def get_rel_fee_from_network(self):
 		try:
 			ret = await self.rpc.call(
 				'estimatesmartfee',
-				opt.fee_estimate_confs,
-				opt.fee_estimate_mode.upper() )
+				self.cfg.fee_estimate_confs,
+				self.cfg.fee_estimate_mode.upper() )
 			fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
 			fe_type = 'estimatesmartfee'
 		except:
@@ -57,13 +56,13 @@ class New(Base,TxBase.New):
 		from decimal import Decimal
 		tx_size = self.estimate_size()
 		ret = self.proto.coin_amt(
-			fee_per_kb * Decimal(opt.fee_adjust) * tx_size / 1024,
+			fee_per_kb * Decimal(self.cfg.fee_adjust) * tx_size / 1024,
 			from_decimal = True )
-		if opt.verbose:
+		if self.cfg.verbose:
 			msg(fmt(f"""
-				{fe_type.upper()} fee for {opt.fee_estimate_confs} confirmations: {fee_per_kb} {self.coin}/kB
+				{fe_type.upper()} fee for {self.cfg.fee_estimate_confs} confirmations: {fee_per_kb} {self.coin}/kB
 				TX size (estimated): {tx_size} bytes
-				Fee adjustment factor: {opt.fee_adjust:.2f}
+				Fee adjustment factor: {self.cfg.fee_adjust:.2f}
 				Absolute fee (fee_per_kb * adj_factor * tx_size / 1024): {ret} {self.coin}
 			""").strip())
 		return ret
@@ -114,7 +113,7 @@ class New(Base,TxBase.New):
 		if not bump:
 			self.inputs.sort_bip69()
 			# Set all sequence numbers to the same value, in conformity with the behavior of most modern wallets:
-			seqnum_val = self.proto.max_int - (2 if opt.rbf else 1 if locktime else 0)
+			seqnum_val = self.proto.max_int - (2 if self.cfg.rbf else 1 if locktime else 0)
 			for i in self.inputs:
 				i.sequence = seqnum_val
 

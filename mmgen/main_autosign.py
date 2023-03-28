@@ -26,9 +26,7 @@ from collections import namedtuple
 from stat import *
 
 import mmgen.opts as opts
-from .globalvars import g
-from .opts import opt
-from .util import msg,msg_r,vmsg,qmsg,ymsg,rmsg,gmsg,bmsg,die,suf,fmt_list,async_run,exit_if_mswin
+from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt_list,async_run,exit_if_mswin
 from .color import yellow,red,orange
 
 mountpoint   = '/mnt/tx'
@@ -122,7 +120,7 @@ This command is currently available only on Linux-based platforms.
 	}
 }
 
-cmd_args = opts.init(
+cfg = opts.init(
 	opts_data,
 	add_opts = ['outdir','passwd_file'], # in _set_ok, so must be set
 	init_opts = {
@@ -133,14 +131,16 @@ cmd_args = opts.init(
 		'label': 'Autosign Wallet',
 	})
 
-type(opt)._set_ok += ('outdir','passwd_file')
+cmd_args = cfg._args
+
+type(cfg)._set_ok += ('outdir','passwd_file')
 
 exit_if_mswin('autosigning')
 
-if opt.mnemonic_fmt:
-	if opt.mnemonic_fmt not in mn_fmts:
+if cfg.mnemonic_fmt:
+	if cfg.mnemonic_fmt not in mn_fmts:
 		die(1,'{!r}: invalid mnemonic format (must be one of: {})'.format(
-			opt.mnemonic_fmt,
+			cfg.mnemonic_fmt,
 			fmt_list(mn_fmts,fmt='no_spc') ))
 
 from .wallet import Wallet
@@ -149,32 +149,32 @@ from .tx.sign import txsign
 from .protocol import init_proto
 from .rpc import rpc_init
 
-if opt.mountpoint:
-	mountpoint = opt.mountpoint
+if cfg.mountpoint:
+	mountpoint = cfg.mountpoint
 
 keyfile = os.path.join(mountpoint,'autosign.key')
 msg_dir = os.path.join(mountpoint,'msg')
 tx_dir  = os.path.join(mountpoint,'tx')
 
-opt.outdir = tx_dir
-opt.passwd_file = keyfile
+cfg.outdir = tx_dir
+cfg.passwd_file = keyfile
 
 async def check_daemons_running():
-	if opt.coin:
+	if cfg.coin != type(cfg).coin:
 		die(1,'--coin option not supported with this command.  Use --coins instead')
-	if opt.coins:
-		coins = opt.coins.upper().split(',')
+	if cfg.coins:
+		coins = cfg.coins.upper().split(',')
 	else:
 		ymsg('Warning: no coins specified, defaulting to BTC')
 		coins = ['BTC']
 
 	for coin in coins:
-		proto = init_proto( coin, testnet=g.network=='testnet', need_amt=True )
+		proto = init_proto( cfg,  coin, testnet=cfg.network=='testnet', need_amt=True )
 		if proto.sign_mode == 'daemon':
-			vmsg(f'Checking {coin} daemon')
+			cfg._util.vmsg(f'Checking {coin} daemon')
 			from .exception import SocketError
 			try:
-				await rpc_init(proto)
+				await rpc_init(cfg,proto)
 			except SocketError as e:
 				die(2,f'{coin} daemon not running or not listening on port {proto.rpc_port}')
 
@@ -213,10 +213,10 @@ def do_umount():
 async def sign_object(d,fn):
 	try:
 		if d.desc == 'transaction':
-			tx1 = UnsignedTX(filename=fn)
+			tx1 = UnsignedTX(cfg=cfg,filename=fn)
 			if tx1.proto.sign_mode == 'daemon':
-				tx1.rpc = await rpc_init(tx1.proto)
-			tx2 = await txsign(tx1,wfs[:],None,None)
+				tx1.rpc = await rpc_init(cfg,tx1.proto)
+			tx2 = await txsign(cfg,tx1,wfs[:],None,None)
 			if tx2:
 				tx2.file.write(ask_write=False)
 				return tx2
@@ -224,9 +224,9 @@ async def sign_object(d,fn):
 				return False
 		elif d.desc == 'message file':
 			from .msg import UnsignedMsg,SignedMsg
-			m = UnsignedMsg(infile=fn)
+			m = UnsignedMsg(cfg,infile=fn)
 			await m.sign(wallet_files=wfs[:])
-			m = SignedMsg(data=m.__dict__)
+			m = SignedMsg(cfg,data=m.__dict__)
 			m.write_to_file(
 				outdir = os.path.abspath(msg_dir),
 				ask_overwrite = False )
@@ -259,12 +259,12 @@ async def sign(target):
 				ok.append(ret)
 			else:
 				bad.append(fn)
-			qmsg('')
+			cfg._util.qmsg('')
 		await asyncio.sleep(0.3)
 		msg(f'{len(ok)} {d.desc}{suf(ok)} signed')
 		if bad:
 			rmsg(f'{len(bad)} {d.desc}{suf(bad)} failed to {d.fail_desc}')
-		if ok and not opt.no_summary:
+		if ok and not cfg.no_summary:
 			print_summary(d,ok)
 		if bad:
 			msg('')
@@ -285,11 +285,11 @@ async def sign(target):
 		return True
 
 def decrypt_wallets():
-	msg(f'Unlocking wallet{suf(wfs)} with key from {opt.passwd_file!r}')
+	msg(f'Unlocking wallet{suf(wfs)} with key from {cfg.passwd_file!r}')
 	fails = 0
 	for wf in wfs:
 		try:
-			Wallet(wf,ignore_in_fmt=True)
+			Wallet(cfg,wf,ignore_in_fmt=True)
 		except SystemExit as e:
 			if e.code != 0:
 				fails += 1
@@ -304,7 +304,7 @@ def print_summary(d,signed_objects):
 			gmsg('  ' + os.path.join(msg_dir,m.signed_filename) )
 		return
 
-	if opt.full_summary:
+	if cfg.full_summary:
 		bmsg('\nAutosign summary:\n')
 		def gen():
 			for tx in signed_objects:
@@ -340,23 +340,23 @@ def print_summary(d,signed_objects):
 		msg('No non-MMGen outputs')
 
 async def do_sign():
-	if not opt.stealth_led:
+	if not cfg.stealth_led:
 		led.set('busy')
 	do_mount()
 	key_ok = decrypt_wallets()
 	if key_ok:
-		if opt.stealth_led:
+		if cfg.stealth_led:
 			led.set('busy')
 		ret1 = await sign('tx')
 		ret2 = await sign('msg') if have_msg_dir else True
 		ret = ret1 and ret2
 		do_umount()
-		led.set(('standby','off','error')[(not ret)*2 or bool(opt.stealth_led)])
+		led.set(('standby','off','error')[(not ret)*2 or bool(cfg.stealth_led)])
 		return ret
 	else:
 		msg('Password is incorrect!')
 		do_umount()
-		if not opt.stealth_led:
+		if not cfg.stealth_led:
 			led.set('error')
 		return False
 
@@ -366,7 +366,7 @@ def wipe_existing_key():
 	else:
 		from .fileutil import shred_file
 		msg(f'\nShredding existing key {keyfile!r}')
-		shred_file( keyfile, verbose=opt.verbose )
+		shred_file( keyfile, verbose=cfg.verbose )
 
 def create_key():
 	kdata = os.urandom(32).hex()
@@ -404,12 +404,12 @@ def create_wallet_dir():
 def setup():
 	remove_wallet_dir()
 	gen_key(no_unmount=True)
-	ss_in = Wallet(in_fmt=mn_fmts[opt.mnemonic_fmt or mn_fmt_dfl])
-	ss_out = Wallet(ss=ss_in)
+	ss_in = Wallet(cfg,in_fmt=mn_fmts[cfg.mnemonic_fmt or mn_fmt_dfl])
+	ss_out = Wallet(cfg,ss=ss_in)
 	ss_out.write_to_file(desc='autosign wallet',outdir=wallet_dir)
 
 def get_insert_status():
-	if opt.no_insert_check:
+	if cfg.no_insert_check:
 		return True
 	try: os.stat(os.path.join('/dev/disk/by-label',part_label))
 	except: return False
@@ -417,7 +417,7 @@ def get_insert_status():
 
 async def do_loop():
 	n,prev_status = 0,False
-	if not opt.stealth_led:
+	if not cfg.stealth_led:
 		led.set('standby')
 	while True:
 		status = get_insert_status()
@@ -459,7 +459,7 @@ signal.signal(signal.SIGINT,handler)
 
 from .led import LEDControl
 led = LEDControl(
-	enabled = opt.led,
+	enabled = cfg.led,
 	simulate = os.getenv('MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE') )
 led.set('off')
 

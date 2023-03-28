@@ -20,7 +20,7 @@
 test.test_py_d.ts_misc: Miscellaneous test groups for the test.py test suite
 """
 
-from mmgen.globalvars import g,gc
+from mmgen.globalvars import gc
 from ..include.common import *
 from .common import *
 from .ts_base import *
@@ -41,7 +41,7 @@ class TestSuiteMisc(TestSuiteBase):
 	color = True
 
 	def rpc_backends(self):
-		backends = g.autoset_opts['rpc_backend'][1]
+		backends = cfg.autoset_opts['rpc_backend'][1]
 		for b in backends:
 			t = self.spawn_chk('mmgen-tool',[f'--rpc-backend={b}','daemon_version'],extra_desc=f'({b})')
 		return t
@@ -76,7 +76,7 @@ class TestSuiteMisc(TestSuiteBase):
 
 		t = self.spawn('test/misc/term_ni.py',['echo'],cmd_dir='.',pexpect_spawn=True,timeout=1)
 		t.p.logfile = None
-		t.p.logfile_read = sys.stdout if opt.verbose or opt.exact_output else None
+		t.p.logfile_read = sys.stdout if cfg.verbose or cfg.exact_output else None
 		t.p.logfile_send = None
 
 		test_noecho()

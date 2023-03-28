@@ -21,8 +21,7 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
 import mmgen.opts as opts
-from .globalvars import g,gc
-from .opts import opt
+from .globalvars import gc
 from .util import die,fmt_list,async_run
 from .wallet import Wallet
 from .subseed import SubSeedIdxRange
@@ -41,7 +40,7 @@ opts_data = {
 -B, --no-blank         Don't blank screen before displaying unspent outputs
 -c, --comment-file=  f Source the transaction's comment from file 'f'
 -C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
-                       (default: {g.fee_estimate_confs})
+                       (default: {cfg.fee_estimate_confs})
 -d, --outdir=        d Specify an alternate directory 'd' for output
 -D, --contract-data= D Path to hex-encoded contract data (ETH only)
 -e, --echo-passphrase  Print passphrase to screen when typing it
@@ -103,19 +102,19 @@ FMT CODES:
 {x}"""
 	},
 	'code': {
-		'options': lambda proto,help_notes,s: s.format(
-			g=g,gc=gc,pnm=gc.proj_name,pnl=gc.proj_name.lower(),
+		'options': lambda cfg,proto,help_notes,s: s.format(
+			gc=gc,cfg=cfg,pnm=gc.proj_name,pnl=gc.proj_name.lower(),
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
 			ss=help_notes('dfl_subseeds'),
 			ss_max=SubSeedIdxRange.max_idx,
-			fe_all=fmt_list(g.autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
-			fe_dfl=g.autoset_opts['fee_estimate_mode'].choices[0],
+			fe_all=fmt_list(cfg.autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
+			fe_dfl=cfg.autoset_opts['fee_estimate_mode'].choices[0],
 			dsl=help_notes('dfl_seed_len'),
 			cu=proto.coin),
-		'notes': lambda help_notes,s: s.format(
+		'notes': lambda cfg,help_notes,s: s.format(
 			c = help_notes('txcreate'),
 			F = help_notes('fee'),
 			s = help_notes('txsign'),
@@ -124,34 +123,32 @@ FMT CODES:
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
 from .tx import NewTX,OnlineSignedTX
 from .tx.sign import txsign,get_seed_files,get_keyaddrlist,get_keylist
 
-seed_files = get_seed_files(opt,cmd_args)
+seed_files = get_seed_files(cfg,cfg._args)
 
 async def main():
-	from .protocol import init_proto_from_opts
-	proto = init_proto_from_opts(need_amt=True)
 
-	tx1 = await NewTX(proto=proto)
+	tx1 = await NewTX(cfg=cfg,proto=cfg._proto)
 
 	from .rpc import rpc_init
-	tx1.rpc = await rpc_init(proto)
+	tx1.rpc = await rpc_init(cfg,cfg._proto)
 
 	tx2 = await tx1.create(
-		cmd_args = cmd_args,
-		locktime = int(opt.locktime or 0),
+		cmd_args = cfg._args,
+		locktime = int(cfg.locktime or 0),
 		caller   = 'txdo' )
 
-	kal = get_keyaddrlist(proto,opt)
-	kl = get_keylist(proto,opt)
+	kal = get_keyaddrlist(cfg,cfg._proto)
+	kl = get_keylist(cfg,cfg._proto)
 
-	tx3 = await txsign(tx2,seed_files,kl,kal)
+	tx3 = await txsign(cfg,tx2,seed_files,kl,kal)
 
 	if tx3:
-		tx4 = await OnlineSignedTX(data=tx3.__dict__)
+		tx4 = await OnlineSignedTX(cfg=cfg,data=tx3.__dict__)
 		tx4.file.write(ask_write=False)
 		await tx4.send(exit_on_fail=True)
 		tx4.file.write(ask_overwrite=False,ask_write=False)

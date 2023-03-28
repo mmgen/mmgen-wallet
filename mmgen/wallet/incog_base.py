@@ -12,10 +12,8 @@
 wallet.incog_base: incognito wallet base class
 """
 
-from ..globalvars import g
-from ..opts import opt
 from ..seed import Seed
-from ..util import msg,vmsg,qmsg,make_chksum_8
+from ..util import msg,make_chksum_8
 from .enc import wallet
 
 class wallet(wallet):
@@ -40,18 +38,18 @@ class wallet(wallet):
 		return (
 			self.crypto.aesctr_iv_len
 			+ self.crypto.salt_len
-			+ (0 if opt.old_incog_fmt else self.crypto.hincog_chk_len)
+			+ (0 if self.cfg.old_incog_fmt else self.crypto.hincog_chk_len)
 			+ seed_len//8 )
 
 	def _incog_data_size_chk(self):
 		# valid sizes: 56, 64, 72
 		dlen = len(self.fmt_data)
-		seed_len = opt.seed_len or Seed.dfl_len
+		seed_len = self.cfg.seed_len or Seed.dfl_len
 		valid_dlen = self._get_incog_data_len(seed_len)
 		if dlen == valid_dlen:
 			return True
 		else:
-			if opt.old_incog_fmt:
+			if self.cfg.old_incog_fmt:
 				msg('WARNING: old-style incognito format requested.  Are you sure this is correct?')
 			msg(f'Invalid incognito data size ({dlen} bytes) for this seed length ({seed_len} bits)')
 			msg(f'Valid data size for this seed length: {valid_dlen} bytes')
@@ -63,7 +61,7 @@ class wallet(wallet):
 
 	def _encrypt (self):
 		self._get_first_pw_and_hp_and_encrypt_seed()
-		if opt.old_incog_fmt:
+		if self.cfg.old_incog_fmt:
 			die(1,'Writing old-format incognito wallets is unsupported')
 		d = self.ssdata
 		crypto = self.crypto
@@ -71,8 +69,8 @@ class wallet(wallet):
 		d.iv = crypto.get_random( crypto.aesctr_iv_len )
 		d.iv_id = self._make_iv_chksum(d.iv)
 		msg(f'New Incog Wallet ID: {d.iv_id}')
-		qmsg('Make a record of this value')
-		vmsg('\n  ' + self.msg['record_incog_id'].strip()+'\n')
+		self.cfg._util.qmsg('Make a record of this value')
+		self.cfg._util.vmsg('\n  ' + self.msg['record_incog_id'].strip()+'\n')
 
 		d.salt = crypto.get_random( crypto.salt_len )
 		seed_key = crypto.make_key(
@@ -95,7 +93,7 @@ class wallet(wallet):
 			desc        = 'incog wrapper key' )
 
 		d.key_id = make_chksum_8(d.wrapper_key)
-		vmsg(f'Key ID: {d.key_id}')
+		self.cfg._util.vmsg(f'Key ID: {d.key_id}')
 
 		d.target_data_len = self._get_incog_data_len(self.seed.bitlen)
 
@@ -128,8 +126,8 @@ class wallet(wallet):
 		d.incog_id       = self._make_iv_chksum(d.iv)
 		d.enc_incog_data = self.fmt_data[self.crypto.aesctr_iv_len:]
 		msg(f'Incog Wallet ID: {d.incog_id}')
-		qmsg('Check this value against your records')
-		vmsg('\n  ' + self.msg['check_incog_id'].strip()+'\n')
+		self.cfg._util.qmsg('Check this value against your records')
+		self.cfg._util.vmsg('\n  ' + self.msg['check_incog_id'].strip()+'\n')
 
 		return True
 
@@ -137,7 +135,7 @@ class wallet(wallet):
 		chk,seed = data[:8],data[8:]
 		from hashlib import sha256
 		if sha256(seed).digest()[:8] == chk:
-			qmsg('Passphrase{} are correct'.format( self.msg['decrypt_params'].format('and') ))
+			self.cfg._util.qmsg('Passphrase{} are correct'.format( self.msg['decrypt_params'].format('and') ))
 			return seed
 		else:
 			msg('Incorrect passphrase{}'.format( self.msg['decrypt_params'].format('or') ))
@@ -146,7 +144,7 @@ class wallet(wallet):
 	def _verify_seed_oldfmt(self,seed):
 		m = f'Seed ID: {make_chksum_8(seed)}.  Is the Seed ID correct?'
 		from ..ui import keypress_confirm
-		if keypress_confirm(m, True):
+		if keypress_confirm( self.cfg, m, True ):
 			return seed
 		else:
 			return False
@@ -179,9 +177,9 @@ class wallet(wallet):
 			hash_preset = d.hash_preset,
 			desc        = 'main key' )
 
-		qmsg(f'Key ID: {make_chksum_8(seed_key)}')
+		self.cfg._util.qmsg(f'Key ID: {make_chksum_8(seed_key)}')
 
-		verify_seed_func = getattr( self, '_verify_seed_'+ ('oldfmt' if opt.old_incog_fmt else 'newfmt') )
+		verify_seed_func = getattr( self, '_verify_seed_'+ ('oldfmt' if self.cfg.old_incog_fmt else 'newfmt') )
 
 		seed = verify_seed_func(
 			crypto.decrypt_seed(
@@ -191,7 +189,7 @@ class wallet(wallet):
 				key_id   = '' ))
 
 		if seed:
-			self.seed = Seed(seed)
+			self.seed = Seed( self.cfg, seed )
 			msg(f'Seed ID: {self.seed.sid}')
 			return True
 		else:

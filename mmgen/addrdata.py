@@ -20,7 +20,8 @@
 addrdata: MMGen AddrData and related classes
 """
 
-from .util import vmsg,fmt,die
+from .globalvars import gc
+from .util import fmt,die
 from .base_obj import AsyncInit
 from .obj import MMGenObject,MMGenDict,get_obj
 from .addr import MMGenID,AddrListID
@@ -68,16 +69,16 @@ class AddrData(MMGenObject):
 
 class TwAddrData(AddrData,metaclass=AsyncInit):
 
-	def __new__(cls,proto,*args,**kwargs):
+	def __new__(cls,cfg,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'addrdata'))
 
-	async def __init__(self,proto,twctl=None):
+	async def __init__(self,cfg,proto,twctl=None):
 		from .rpc import rpc_init
 		from .tw.shared import TwLabel
-		from .globalvars import gc
 		from .seed import SeedID
+		self.cfg = cfg
 		self.proto = proto
-		self.rpc = await rpc_init(proto)
+		self.rpc = await rpc_init(cfg,proto)
 		self.al_ids = {}
 		twd = await self.get_tw_data(twctl)
 		out,i = {},0
@@ -96,10 +97,11 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 				out[al_id].append(AddrListEntry(self.proto,idx=obj.idx,addr=addr_array[0],comment=l.comment))
 				i += 1
 
-		vmsg(f'{i} {gc.proj_name} addresses found, {len(twd)} accounts total')
+		self.cfg._util.vmsg(f'{i} {gc.proj_name} addresses found, {len(twd)} accounts total')
 
 		for al_id in out:
 			self.add(AddrList(
+				self.cfg,
 				self.proto,
 				al_id = al_id,
 				adata = AddrListData(sorted( out[al_id], key=lambda a: a.idx ))

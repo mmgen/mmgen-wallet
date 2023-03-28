@@ -12,10 +12,9 @@
 proto.btc.misc: miscellaneous functions for Bitcoin base protocol
 """
 
-from ...globalvars import g
 from ...util import msg,msg_r
 
-async def scantxoutset(rpc,descriptor_list):
+async def scantxoutset(cfg,rpc,descriptor_list):
 
 	import asyncio
 
@@ -28,8 +27,8 @@ async def scantxoutset(rpc,descriptor_list):
 
 	async def do_status():
 
-		CR = '\n' if g.test_suite else '\r'
-		sleep_secs = 0.1 if g.test_suite else 2
+		CR = '\n' if cfg.test_suite else '\r'
+		sleep_secs = 0.1 if cfg.test_suite else 2
 		m = f'{CR}Scanning UTXO set: '
 		msg_r(m + '0% completed ')
 

@@ -71,9 +71,9 @@ def get_pubkey_type_cls(pubkey_type):
 		importlib.import_module(f'mmgen.proto.{backend_data[pubkey_type]["package"]}.keygen'),
 		'backend' )
 
-def _check_backend(backend,pubkey_type,desc='keygen backend'):
+def _check_backend(cfg,backend,pubkey_type,desc='keygen backend'):
 
-	from .util import is_int,qmsg,die
+	from .util import is_int,die
 
 	assert is_int(backend), f'illegal value for {desc} (must be an integer)'
 
@@ -86,21 +86,22 @@ def _check_backend(backend,pubkey_type,desc='keygen backend'):
 			' '.join( f'{n}:{k}' for n,k in enumerate(backends,1) )
 		)
 
-	qmsg(f'Using backend {backends[int(backend)-1]!r} for public key generation')
+	cfg._util.qmsg(f'Using backend {backends[int(backend)-1]!r} for public key generation')
 
 	return True
 
-def check_backend(proto,backend,addr_type):
+def check_backend(cfg,proto,backend,addr_type):
 
 	from .addr import MMGenAddrType
 	pubkey_type = MMGenAddrType(proto,addr_type or proto.dfl_mmtype).pubkey_type
 
 	return  _check_backend(
+		cfg,
 		backend,
 		pubkey_type,
 		desc = '--keygen-backend parameter' )
 
-def KeyGenerator(proto,pubkey_type,backend=None,silent=False):
+def KeyGenerator(cfg,proto,pubkey_type,backend=None,silent=False):
 	"""
 	factory function returning a key generator backend for the specified pubkey type
 	"""
@@ -108,11 +109,10 @@ def KeyGenerator(proto,pubkey_type,backend=None,silent=False):
 
 	pubkey_type_cls = get_pubkey_type_cls(pubkey_type)
 
-	from .opts import opt
-	backend = backend or opt.keygen_backend
+	backend = backend or cfg.keygen_backend
 
 	if backend:
-		_check_backend(backend,pubkey_type)
+		_check_backend( cfg, backend, pubkey_type )
 
 	backend_id = backend_data[pubkey_type]['backends'][int(backend) - 1 if backend else 0]
 
@@ -121,4 +121,4 @@ def KeyGenerator(proto,pubkey_type,backend=None,silent=False):
 		backend_id.replace('-','_')
 			).test_avail(silent=silent)
 
-	return getattr(pubkey_type_cls,backend_clsname)()
+	return getattr(pubkey_type_cls,backend_clsname)(cfg)

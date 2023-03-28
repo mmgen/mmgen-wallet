@@ -12,7 +12,6 @@
 proto.eth.params: Ethereum protocol
 """
 
-from ...globalvars import g
 from ...protocol import CoinProtocol,_nw,decoded_addr
 from ...util import is_hex_str_lc,Msg
 
@@ -57,7 +56,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 	def decode_addr(self,addr):
 		if is_hex_str_lc(addr) and len(addr) == self.addr_len * 2:
 			return decoded_addr( bytes.fromhex(addr), None, 'ethereum' )
-		if g.debug:
+		if self.cfg.debug:
 			Msg(f'Invalid address: {addr}')
 		return False
 

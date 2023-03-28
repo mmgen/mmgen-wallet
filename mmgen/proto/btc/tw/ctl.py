@@ -12,9 +12,8 @@
 proto.btc.tw.ctl: Bitcoin base protocol tracking wallet control class
 """
 
-from ....globalvars import g
 from ....tw.ctl import TwCtl,write_mode
-from ....util import msg,msg_r,rmsg,vmsg,die,suf,fmt_list
+from ....util import msg,msg_r,rmsg,die,suf,fmt_list
 
 class BitcoinTwCtl(TwCtl):
 
@@ -54,7 +53,7 @@ class BitcoinTwCtl(TwCtl):
 
 		start = start or 0
 		endless = stop == None
-		CR = '\n' if g.test_suite else '\r'
+		CR = '\n' if self.cfg.test_suite else '\r'
 
 		if not ( start >= 0 and (stop if stop is not None else start) >= start ):
 			die(1,f'{start} {stop}: invalid range')
@@ -101,7 +100,7 @@ class BitcoinTwCtl(TwCtl):
 	async def rescan_addresses(self,coin_addrs):
 
 		from ..misc import scantxoutset
-		res = await scantxoutset( self.rpc, [f'addr({addr})' for addr in coin_addrs] )
+		res = await scantxoutset( self.cfg, self.rpc, [f'addr({addr})' for addr in coin_addrs] )
 
 		if not res['success']:
 			msg('UTXO scanning failed or was interrupted')
@@ -113,8 +112,8 @@ class BitcoinTwCtl(TwCtl):
 				suf(res['unspents']),
 				len(blocks),
 				suf(blocks) ))
-			vmsg(f'Blocks to rescan: {fmt_list(blocks,fmt="bare")}')
-			CR = '\n' if g.test_suite else '\r'
+			self.cfg._util.vmsg(f'Blocks to rescan: {fmt_list(blocks,fmt="bare")}')
+			CR = '\n' if self.cfg.test_suite else '\r'
 			for n,block in enumerate(blocks):
 				msg_r(f'{CR}Rescanning block: {block} ({n+1}/{len(blocks)})')
 				# httplib seems to require fresh connection here, so specify timeout

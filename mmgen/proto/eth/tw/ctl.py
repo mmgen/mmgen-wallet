@@ -172,9 +172,9 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 	symbol = None
 	cur_eth_balances = {}
 
-	async def __init__(self,proto,mode='r',token_addr=None):
+	async def __init__(self,cfg,proto,mode='r',token_addr=None):
 
-		await super().__init__(proto,mode=mode)
+		await super().__init__(cfg,proto,mode=mode)
 
 		for v in self.data['tokens'].values():
 			self.conv_types(v)
@@ -211,7 +211,7 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 		return 'token ' + self.get_param('symbol')
 
 	async def rpc_get_balance(self,addr):
-		return await Token(self.proto,self.token,self.decimals,self.rpc).get_balance(addr)
+		return await Token(self.cfg,self.proto,self.token,self.decimals,self.rpc).get_balance(addr)
 
 	async def get_eth_balance(self,addr,force_rpc=False):
 		cache = self.cur_eth_balances
@@ -232,7 +232,7 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 		once, upon token import.  Thereafter, token address, symbol and decimals are resolved
 		either from the tracking wallet (online operations) or transaction file (when signing).
 		"""
-		t = await TokenResolve(self.proto,self.rpc,tokenaddr)
+		t = await TokenResolve(self.cfg,self.proto,self.rpc,tokenaddr)
 		self.data['tokens'][tokenaddr] = {
 			'params': {
 				'symbol': await t.get_symbol(),

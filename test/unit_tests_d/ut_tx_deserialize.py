@@ -7,7 +7,7 @@ test/unit_tests_d/ut_tx_deserialize: TX deserialization unit tests for the MMGen
 import os,json
 
 from mmgen.common import *
-from ..include.common import *
+from ..include.common import cfg,start_test_daemons,stop_test_daemons
 from mmgen.protocol import init_proto
 from mmgen.tx import CompletedTX
 from mmgen.proto.btc.tx.base import DeserializeTX
@@ -15,14 +15,14 @@ from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
 
 def print_info(name,extra_desc):
-	if opt.names:
+	if cfg.names:
 		Msg_r('{} {} {}'.format(
 			purple('Testing'),
 			cyan(f'{name} ({extra_desc})'),
-			'' if opt.quiet else '\n'))
+			'' if cfg.quiet else '\n'))
 	else:
 		Msg_r(f'Testing {extra_desc}')
-		if not opt.quiet:
+		if not cfg.quiet:
 			Msg('')
 
 async def test_tx(tx_proto,tx_hex,desc,n):
@@ -34,17 +34,17 @@ async def test_tx(tx_proto,tx_hex,desc,n):
 				return True
 		return False
 
-	rpc = await rpc_init(proto=tx_proto)
+	rpc = await rpc_init( cfg, proto=tx_proto )
 	d = await rpc.call('decoderawtransaction',tx_hex)
 
 	if has_nonstandard_outputs(d['vout']): return False
 
 	dt = DeserializeTX(tx_proto,tx_hex)
 
-	if opt.verbose:
+	if cfg.verbose:
 		Msg('\n\n================================ Core vector: ==================================')
-	Msg_r('.' if opt.quiet else f'{n:>3}) {desc}\n')
-	if opt.verbose:
+	Msg_r('.' if cfg.quiet else f'{n:>3}) {desc}\n')
+	if cfg.verbose:
 		Pmsg(d)
 		Msg('\n------------------------------ MMGen deserialized: -----------------------------')
 		Pmsg(dt._asdict())
@@ -88,7 +88,7 @@ async def do_mmgen_ref(daemons,fns,name,desc):
 	start_test_daemons(*daemons)
 	print_info(name,desc)
 	for n,fn in enumerate(fns):
-		tx = await CompletedTX(filename=fn,quiet_open=True)
+		tx = await CompletedTX( cfg=cfg, filename=fn, quiet_open=True )
 		await test_tx(
 			tx_proto = tx.proto,
 			tx_hex   = tx.serialized,
@@ -119,7 +119,7 @@ class unit_tests:
 		for e in core_data:
 			if type(e[0]) == list:
 				await test_tx(
-					tx_proto = init_proto('btc',need_amt=True),
+					tx_proto = init_proto( cfg, 'btc', need_amt=True ),
 					tx_hex   = e[1],
 					desc     = desc,
 					n        = n )

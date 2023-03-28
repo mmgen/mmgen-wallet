@@ -49,7 +49,7 @@ Valid network IDs: {nid}, all, or no_xmr
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
 from mmgen.daemon import *
 
@@ -60,58 +60,59 @@ class warn_missing_exec(oneshot_warning):
 def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=True):
 
 	d = CoinDaemon(
+		cfg,
 		network_id = network_id,
 		proto      = proto,
-		test_suite = not opt.usermode,
-		opts       = ['no_daemonize'] if opt.no_daemonize else None,
-		port_shift = int(opt.port_shift or 0),
-		datadir    = opt.datadir,
+		test_suite = not cfg.usermode,
+		opts       = ['no_daemonize'] if cfg.no_daemonize else None,
+		port_shift = int(cfg.port_shift or 0),
+		datadir    = cfg.datadir,
 		daemon_id  = daemon_id )
 
-	if opt.mainnet_only and d.network != 'mainnet':
+	if cfg.mainnet_only and d.network != 'mainnet':
 		return
 
-	d.debug = d.debug or opt.debug
-	d.wait = not opt.no_wait
+	d.debug = d.debug or cfg.debug
+	d.wait = not cfg.no_wait
 
 	if missing_exec_ok:
 		try:
 			d.get_exec_version_str()
 		except:
-			if not opt.quiet:
+			if not cfg.quiet:
 				warn_missing_exec( div=d.exec_fn, fmt_args=(d.exec_fn,) )
 			return
-	if opt.print_version:
+	if cfg.print_version:
 		msg('{:16} {}'.format( d.exec_fn+':', d.get_exec_version_str() ))
-	elif opt.get_state:
+	elif cfg.get_state:
 		print(d.state_msg())
-	elif opt.testing:
+	elif cfg.testing:
 		for cmd in d.start_cmds if action == 'start' else [d.stop_cmd]:
 			print(' '.join(cmd))
 	else:
 		if action == 'stop' and hasattr(d,'rpc'):
-			async_run(d.rpc.stop_daemon(quiet=opt.quiet))
+			async_run(d.rpc.stop_daemon(quiet=cfg.quiet))
 		else:
-			d.cmd(action,quiet=opt.quiet)
+			d.cmd(action,quiet=cfg.quiet)
 
-if opt.daemon_ids:
+if cfg.daemon_ids:
 	print('\n'.join(CoinDaemon.all_daemon_ids()))
-elif 'all' in cmd_args or 'no_xmr' in cmd_args:
-	if len(cmd_args) != 1:
+elif 'all' in cfg._args or 'no_xmr' in cfg._args:
+	if len(cfg._args) != 1:
 		die(1,"'all' or 'no_xmr' must be the sole argument")
 	from mmgen.protocol import init_proto
 	for coin in CoinDaemon.coins:
-		if coin == 'XMR' and cmd_args[0] == 'no_xmr':
+		if coin == 'XMR' and cfg._args[0] == 'no_xmr':
 			continue
-		for daemon_id in CoinDaemon.get_daemon_ids(coin):
-			for network in CoinDaemon.get_daemon(coin,daemon_id).networks:
+		for daemon_id in CoinDaemon.get_daemon_ids(cfg,coin):
+			for network in CoinDaemon.get_daemon(cfg,coin,daemon_id).networks:
 				run(
-					proto           = init_proto(coin=coin,network=network),
+					proto           = init_proto( cfg, coin=coin, network=network ),
 					daemon_id       = daemon_id,
 					missing_exec_ok = True )
 else:
-	ids = cmd_args
-	network_ids = CoinDaemon.get_network_ids()
+	ids = cfg._args
+	network_ids = CoinDaemon.get_network_ids(cfg)
 	if not ids:
 		opts.usage()
 	for i in ids:

@@ -62,7 +62,7 @@ class tool_cmd(tool_cmd_base):
 
 	def _xmr_reduce(self,bytestr):
 		from ..protocol import init_proto
-		proto = init_proto('xmr')
+		proto = init_proto( self.cfg, 'xmr' )
 		if len(bytestr) != proto.privkey_len:
 			die(1,'{!r}: invalid bit length for Monero private key (must be {})'.format(
 				len(bytestr*8),
@@ -72,11 +72,10 @@ class tool_cmd(tool_cmd_base):
 	def _do_random_mn(self,nbytes:int,fmt:str):
 		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
 		from ..crypto import Crypto
-		randbytes = Crypto().get_random(nbytes)
+		randbytes = Crypto(self.cfg).get_random(nbytes)
 		if fmt == 'xmrseed':
 			randbytes = self._xmr_reduce(randbytes)
-		from ..opts import opt
-		if opt.verbose:
+		if self.cfg.verbose:
 			from ..util import msg
 			msg(f'Seed: {randbytes.hex()}')
 		return self.hex2mn(randbytes.hex(),fmt=fmt)
@@ -111,7 +110,7 @@ class tool_cmd(tool_cmd_base):
 			print_mn: 'print the seed phrase after entry' = False ):
 		"convert an interactively supplied mnemonic seed phrase to a hexadecimal string"
 		from ..mn_entry import mn_entry
-		mn = mn_entry(fmt).get_mnemonic_from_user(25 if fmt == 'xmrseed' else mn_len,validate=False)
+		mn = mn_entry( self.cfg, fmt ).get_mnemonic_from_user(25 if fmt == 'xmrseed' else mn_len,validate=False)
 		if print_mn:
 			from ..util import msg
 			msg(mn)
@@ -119,7 +118,7 @@ class tool_cmd(tool_cmd_base):
 
 	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"show stats for a mnemonic wordlist"
-		return mnemonic_fmts[fmt].conv_cls(fmt).check_wordlist()
+		return mnemonic_fmts[fmt].conv_cls(fmt).check_wordlist(self.cfg)
 
 	def mn_printlist(self,
 			fmt: mn_opts_disp = dfl_mnemonic_fmt,

@@ -44,7 +44,7 @@ available commands for platform {gc.platform!r}:
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
 from mmgen.term import get_char,get_char_raw,get_terminal_size,get_term
 from mmgen.ui import line_input,keypress_confirm,do_license_msg
@@ -54,8 +54,8 @@ def cmsg(m):
 	msg('\n'+cyan(m))
 
 def confirm(m):
-	if not keypress_confirm(m):
-		if keypress_confirm('Are you sure you want to exit test?'):
+	if not keypress_confirm( cfg, m ):
+		if keypress_confirm( cfg, 'Are you sure you want to exit test?' ):
 			die(1,'Exiting test at user request')
 		else:
 			msg('Continuing...')
@@ -80,7 +80,7 @@ def tt_color():
 def tt_license():
 	cmsg('Testing do_license_msg() with pager')
 	ymsg('Press "w" to test the pager, then "c" to continue')
-	do_license_msg()
+	do_license_msg(cfg)
 
 def tt_line_input():
 	set_vt100()
@@ -92,7 +92,7 @@ def tt_line_input():
 		on screen or entered text.
 	"""))
 	get_char_raw('Ready? ',num_bytes=1)
-	reply = line_input('\nEnter text: ')
+	reply = line_input( cfg, '\nEnter text: ' )
 	confirm(f'Did you enter the text {reply!r}?')
 
 def _tt_get_char(raw=False,one_char=False,immed_chars=''):
@@ -145,7 +145,7 @@ def _tt_get_char(raw=False,one_char=False,immed_chars=''):
 def tt_urand():
 	cmsg('Testing _get_random_data_from_user():')
 	from mmgen.crypto import Crypto
-	ret = Crypto()._get_random_data_from_user(uchars=10,desc='data').decode()
+	ret = Crypto(cfg)._get_random_data_from_user(uchars=10,desc='data').decode()
 	msg(f'USER ENTROPY (user input + keystroke timings):\n\n{fmt(ret,"  ")}')
 	times = ret.splitlines()[1:]
 	avg_prec = sum(len(t.split('.')[1]) for t in times) // len(times)
@@ -153,7 +153,7 @@ def tt_urand():
 		ymsg(f'WARNING: Avg. time precision of only {avg_prec} decimal points.  User entropy quality is degraded!')
 	else:
 		msg(f'Average time precision: {avg_prec} decimal points - OK')
-	line_input('Press ENTER to continue: ')
+	line_input( cfg, 'Press ENTER to continue: ' )
 
 def tt_txview():
 	cmsg('Testing tx.info.view_with_prompt() (try each viewing option)')
@@ -163,7 +163,7 @@ def tt_txview():
 	while True:
 		tx.info.view_with_prompt('View data for transaction?',pause=False)
 		set_vt100()
-		if not keypress_confirm('Continue testing transaction view?',default_yes=True):
+		if not keypress_confirm( cfg, 'Continue testing transaction view?', default_yes=True ):
 			break
 
 def tt_get_char_one():
@@ -186,8 +186,8 @@ def tt_get_char_one_char_immed_chars():
 
 get_term().register_cleanup()
 
-if cmd_args:
-	locals()['tt_'+cmd_args[0]]()
+if cfg._args:
+	locals()['tt_'+cfg._args[0]]()
 else:
 	for command in commands:
 		locals()['tt_'+command]()

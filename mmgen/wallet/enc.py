@@ -13,15 +13,14 @@ wallet.enc: encrypted wallet base class
 """
 
 from ..globalvars import gc
-from ..opts import opt
-from ..util import msg,qmsg,make_chksum_8
+from ..util import msg,make_chksum_8
 from .base import wallet
 
 class wallet(wallet):
 
 	def __init__(self,*args,**kwargs):
 		from mmgen.crypto import Crypto
-		self.crypto = Crypto()
+		self.crypto = Crypto(self.cfg)
 		return super().__init__(*args,**kwargs)
 
 	def _decrypt_retry(self):
@@ -45,19 +44,19 @@ class wallet(wallet):
 	def _get_hash_preset(self,add_desc=''):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'hash_preset'):
 			old_hp = self.ss_in.ssdata.hash_preset
-			if opt.keep_hash_preset:
+			if self.cfg.keep_hash_preset:
 				hp = old_hp
-				qmsg(f'Reusing hash preset {hp!r} at user request')
-			elif opt.hash_preset:
-				hp = opt.hash_preset
-				qmsg(f'Using hash preset {hp!r} requested on command line')
+				self.cfg._util.qmsg(f'Reusing hash preset {hp!r} at user request')
+			elif self.cfg.hash_preset:
+				hp = self.cfg.hash_preset
+				self.cfg._util.qmsg(f'Using hash preset {hp!r} requested on command line')
 			else: # Prompt, using old value as default
-				hp = self._get_hash_preset_from_user(old_hp,add_desc)
-			if (not opt.keep_hash_preset) and self.op == 'pwchg_new':
-				qmsg('Hash preset {}'.format( 'unchanged' if hp == old_hp else f'changed to {hp!r}' ))
-		elif opt.hash_preset:
-			hp = opt.hash_preset
-			qmsg(f'Using hash preset {hp!r} requested on command line')
+				hp = self._get_hash_preset_from_user( old_preset=old_hp, add_desc=add_desc )
+			if (not self.cfg.keep_hash_preset) and self.op == 'pwchg_new':
+				self.cfg._util.qmsg('Hash preset {}'.format( 'unchanged' if hp == old_hp else f'changed to {hp!r}' ))
+		elif self.cfg.hash_preset:
+			hp = self.cfg.hash_preset
+			self.cfg._util.qmsg(f'Using hash preset {hp!r} requested on command line')
 		else:
 			hp = self._get_hash_preset_from_user(
 				old_preset = gc.dfl_hash_preset,
@@ -83,13 +82,13 @@ class wallet(wallet):
 
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'passwd'):
 			old_pw = self.ss_in.ssdata.passwd
-			if opt.keep_passphrase:
+			if self.cfg.keep_passphrase:
 				d.passwd = old_pw
-				qmsg('Reusing passphrase at user request')
+				self.cfg._util.qmsg('Reusing passphrase at user request')
 			else:
 				d.passwd = self._get_new_passphrase()
 				if self.op == 'pwchg_new':
-					qmsg('Passphrase {}'.format( 'unchanged' if d.passwd == old_pw else 'changed' ))
+					self.cfg._util.qmsg('Passphrase {}'.format( 'unchanged' if d.passwd == old_pw else 'changed' ))
 		else:
 			d.passwd = self._get_new_passphrase()
 

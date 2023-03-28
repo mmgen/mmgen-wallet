@@ -5,6 +5,7 @@ test/unit_tests_d/ut_seedsplit: seed splitting unit test for the MMGen suite
 """
 
 from mmgen.common import *
+from ..include.common import cfg,vmsg,vmsg_r
 
 class unit_test(object):
 
@@ -12,7 +13,7 @@ class unit_test(object):
 		from mmgen.seed import Seed
 		from mmgen.seedsplit import SeedShareList,SeedShareIdx
 
-		g.debug_subseed = bool(opt.verbose)
+		cfg.debug_subseed = bool(cfg.verbose)
 
 		def basic_ops(master_idx):
 			test_data = {
@@ -56,7 +57,7 @@ class unit_test(object):
 
 				for a,b,c,d,e,f,h,i,p in test_data[id_str if id_str is not None else 'default']:
 					seed_bin = bytes.fromhex('deadbeef' * a)
-					seed = Seed(seed_bin)
+					seed = Seed( cfg, seed_bin )
 					assert seed.sid == b, seed.sid
 
 					for share_count,j,k,l,m in ((2,c,c,d,i),(5,e,f,h,p)):
@@ -91,7 +92,7 @@ class unit_test(object):
 
 						if master_idx:
 							slist = [shares.get_share_by_idx(i+1,base_seed=True) for i in range(len(shares))]
-							A = Seed.join_shares(slist,master_idx,id_str).sid
+							A = Seed.join_shares( cfg, slist, master_idx, id_str ).sid
 							assert A == b, A
 
 				msg('OK')
@@ -100,7 +101,7 @@ class unit_test(object):
 			msg_r('Testing defaults and limits...')
 
 			seed_bin = bytes.fromhex('deadbeef' * 8)
-			seed = Seed(seed_bin)
+			seed = Seed( cfg, seed_bin )
 
 			shares = seed.split(SeedShareIdx.max_val)
 			s = shares.format()
@@ -124,7 +125,7 @@ class unit_test(object):
 			vmsg('')
 
 			seed_bin = bytes.fromhex(seed_hex)
-			seed = Seed(seed_bin)
+			seed = Seed( cfg, seed_bin )
 
 			SeedShareIdx.max_val = ss_count
 			shares = seed.split(ss_count,master_idx=master_idx)
@@ -147,7 +148,7 @@ class unit_test(object):
 			msg_r('Testing last share collisions with shortened Seed IDs')
 			vmsg('')
 			seed_bin = bytes.fromhex('2eadbeef'*8)
-			seed = Seed(seed_bin)
+			seed = Seed( cfg, seed_bin )
 			ssm_save = SeedShareIdx.max_val
 			ssm = SeedShareIdx.max_val = 2048
 			shares = SeedShareList(seed,count=ssm,id_str='foo',master_idx=1,debug_last_share=True)

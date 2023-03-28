@@ -10,17 +10,19 @@ from mmgen.addr import MMGenAddrType
 from mmgen.addrlist import AddrIdxList,AddrList,KeyList,KeyAddrList
 from mmgen.passwdlist import PasswordList
 from mmgen.protocol import init_proto
+from ..include.common import cfg,qmsg,vmsg
 
 def do_test(list_type,chksum,idx_spec=None,pw_id_str=None,add_kwargs=None):
+
 	qmsg(blue(f'Testing {list_type.__name__}'))
-	proto = init_proto('btc')
-	seed = Seed(seed_bin=bytes.fromhex('feedbead'*8))
+	proto = init_proto( cfg, 'btc' )
+	seed = Seed(cfg,seed_bin=bytes.fromhex('feedbead'*8))
 	mmtype = MMGenAddrType(proto,'C')
 	idxs = AddrIdxList(idx_spec or '1-3')
 
-	if opt.verbose:
-		debug_addrlist_save = g.debug_addrlist
-		g.debug_addrlist = True
+	if cfg.verbose:
+		debug_addrlist_save = cfg.debug_addrlist
+		cfg.debug_addrlist = True
 
 	kwargs = {
 		'seed': seed,
@@ -36,7 +38,7 @@ def do_test(list_type,chksum,idx_spec=None,pw_id_str=None,add_kwargs=None):
 	if add_kwargs:
 		kwargs.update(add_kwargs)
 
-	al = list_type( proto, **kwargs )
+	al = list_type( cfg, proto, **kwargs )
 
 	af = al.get_file()
 	af.format()
@@ -48,8 +50,8 @@ def do_test(list_type,chksum,idx_spec=None,pw_id_str=None,add_kwargs=None):
 	if chksum:
 		assert al.chksum == chksum, f'{al.chksum} != {chksum}'
 
-	if opt.verbose:
-		g.debug_addrlist = debug_addrlist_save
+	if cfg.verbose:
+		cfg.debug_addrlist = debug_addrlist_save
 
 	return True
 
@@ -73,7 +75,7 @@ class unit_tests:
 				('',              ''),
 			):
 			l = AddrIdxList(i)
-			if opt.verbose:
+			if cfg.verbose:
 				msg('list: {}\nin:   {}\nout:  {}\n'.format(list(l),i,o))
 			assert l.id_str == o, f'{l.id_str} != {o}'
 

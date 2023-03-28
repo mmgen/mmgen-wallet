@@ -27,18 +27,17 @@ class tool_cmd(tool_cmd_base):
 
 	need_proto = True
 
-	def __init__(self,cmdname=None,proto=None,mmtype=None):
+	def __init__(self,cfg,cmdname=None,proto=None,mmtype=None):
 		if cmdname == 'txview':
 			self.need_amt = True
-		super().__init__(cmdname=cmdname,proto=proto,mmtype=mmtype)
+		super().__init__(cfg=cfg,cmdname=cmdname,proto=proto,mmtype=mmtype)
 
 	def _file_chksum(self,mmgen_addrfile,obj):
 		kwargs = {'skip_chksum_msg':True}
 		if not obj.__name__ == 'PasswordList':
 			kwargs.update({'key_address_validity_check':False})
-		ret = obj( self.proto, mmgen_addrfile, **kwargs )
-		from ..opts import opt
-		if opt.verbose:
+		ret = obj( self.cfg, self.proto, mmgen_addrfile, **kwargs )
+		if self.cfg.verbose:
 			from ..util import msg,capfirst
 			if ret.al_id.mmtype.name == 'password':
 				msg('Passwd fmt:  {}\nPasswd len:  {}\nID string:   {}'.format(
@@ -99,6 +98,7 @@ class tool_cmd(tool_cmd_base):
 
 		async def process_file(f):
 			return (await CompletedTX(
+				cfg        = self.cfg,
 				filename   = f.name,
 				quiet_open = True)).info.format( terse=terse, sort=tx_sort )
 

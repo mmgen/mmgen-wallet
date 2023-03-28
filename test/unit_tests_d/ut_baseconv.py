@@ -5,6 +5,7 @@ test.unit_tests_d.ut_baseconv: Base conversion unit test for the MMGen suite
 """
 
 from mmgen.common import *
+from ..include.common import cfg,qmsg,qmsg_r,vmsg,vmsg_r
 
 class unit_test(object):
 
@@ -164,7 +165,7 @@ class unit_test(object):
 		qmsg_r('\nChecking hex-to-base conversion:')
 		for base,data in self.vectors.items():
 			fs = "  {h:%s}  {p:<6} {r}" % max(len(d[0][0]) for d in data)
-			if not opt.verbose:
+			if not cfg.verbose:
 				qmsg_r(f' {base}')
 			vmsg(f'\nBase: {base}')
 			vmsg(fs.format(h='Input',p='Pad',r='Output'))
@@ -180,7 +181,7 @@ class unit_test(object):
 		qmsg_r('\nChecking base-to-hex conversion:')
 		for base,data in self.vectors.items():
 			fs = "  {h:%s}  {p:<6} {r}" % max(len(d[1]) for d in data)
-			if not opt.verbose:
+			if not cfg.verbose:
 				qmsg_r(f' {base}')
 			vmsg(f'\nBase: {base}')
 			vmsg(fs.format(h='Input',p='Pad',r='Output'))
@@ -200,7 +201,7 @@ class unit_test(object):
 
 		for wl_id in baseconv.constants['wl_chksum']:
 			vmsg_r(f'  {wl_id+":":9}')
-			baseconv(wl_id).check_wordlist()
+			baseconv(wl_id).check_wordlist(cfg)
 
 		qmsg('')
 

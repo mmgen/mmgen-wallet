@@ -23,5 +23,4 @@ common: Common imports for all MMGen scripts
 import sys,os
 from .globalvars import *
 import mmgen.opts as opts
-from .opts import opt
 from .util import *

@@ -21,10 +21,8 @@ test.include.pexpect: pexpect implementation for MMGen test suites
 """
 
 import sys,os,time
-from mmgen.globalvars import g
-from mmgen.opts import opt
-from mmgen.util import msg,msg_r,vmsg,vmsg_r,rmsg,red,yellow,green,cyan,die
-from .common import *
+from mmgen.util import msg,msg_r,rmsg,red,yellow,green,cyan,die
+from .common import cfg,vmsg,vmsg_r,getrandstr,strip_ansi_escapes
 
 try:
 	import pexpect
@@ -48,18 +46,18 @@ class MMGenPexpect:
 		self.skip_ok = False
 		self.sent_value = None
 
-		if opt.direct_exec:
+		if cfg.direct_exec:
 			msg('')
 			from subprocess import run,DEVNULL
 			run([args[0]] + args[1:],check=True,stdout=DEVNULL if no_output else None)
 		else:
-			timeout = int(timeout or opt.pexpect_timeout or 0) or (60,5)[bool(opt.debug_pexpect)]
+			timeout = int(timeout or cfg.pexpect_timeout or 0) or (60,5)[bool(cfg.debug_pexpect)]
 			if pexpect_spawn:
 				self.p = pexpect.spawn(args[0],args[1:],encoding='utf8',timeout=timeout,env=env)
 			else:
 				self.p = PopenSpawn(args,encoding='utf8',timeout=timeout,env=env)
 
-			if opt.exact_output:
+			if cfg.exact_output:
 				self.p.logfile = sys.stdout
 
 	def do_decrypt_ka_data(self,hp,pw,desc='key-address data',check=True,have_yes_opt=False):
@@ -84,13 +82,13 @@ class MMGenPexpect:
 			self.p.sendeof()
 		self.p.read()
 		ret = self.p.wait()
-		if ret != self.req_exit_val and not opt.coverage:
+		if ret != self.req_exit_val and not cfg.coverage:
 			die(1,red(f'test.py: spawned program exited with value {ret}'))
-		if opt.profile:
+		if cfg.profile:
 			return
 		if not self.skip_ok:
 			m = 'OK\n' if ret == 0 else f'OK[{ret}]\n'
-			sys.stderr.write( green(m) if opt.exact_output or opt.verbose else ' '+m )
+			sys.stderr.write( green(m) if cfg.exact_output or cfg.verbose else ' '+m )
 		return self
 
 	def license(self):
@@ -101,7 +99,7 @@ class MMGenPexpect:
 		self.expect('Enter a wallet label, or hit ENTER for no label: ',label+'\n')
 
 	def usr_rand(self,num_chars):
-		if opt.usr_random:
+		if cfg.usr_random:
 			self.interactive()
 			self.send('\n')
 		else:
@@ -109,7 +107,7 @@ class MMGenPexpect:
 			vmsg_r('SEND ')
 			while rand_chars:
 				ch = rand_chars.pop(0)
-				msg_r(yellow(ch)+' ' if opt.verbose else '+')
+				msg_r(yellow(ch)+' ' if cfg.verbose else '+')
 				ret = self.expect('left: ',ch,delay=0.005)
 			self.expect('ENTER to continue: ','\n')
 
@@ -134,7 +132,7 @@ class MMGenPexpect:
 			return self.expect_getend("Overwriting file '").rstrip("'")
 		self.expect(NL,nonl=True)
 		outfile = self.p.before.strip().strip("'")
-		if opt.debug_pexpect:
+		if cfg.debug_pexpect:
 			rmsg(f'Outfile [{outfile}]')
 		vmsg('{} file: {}'.format( desc, cyan(outfile.replace('"',"")) ))
 		return outfile
@@ -154,14 +152,14 @@ class MMGenPexpect:
 
 	def expect_getend(self,s,regex=False):
 		ret = self.expect(s,regex=regex,nonl=True)
-		if opt.debug_pexpect:
+		if cfg.debug_pexpect:
 			debug_pexpect_msg(self.p)
 		# readline() of partial lines doesn't work with PopenSpawn, so do this instead:
 		self.expect(NL,nonl=True,silent=True)
-		if opt.debug_pexpect:
+		if cfg.debug_pexpect:
 			debug_pexpect_msg(self.p)
 		end = self.p.before.rstrip()
-		if not g.debug:
+		if not cfg.debug:
 			vmsg(f' ==> {cyan(end)}')
 		return end
 
@@ -186,25 +184,25 @@ class MMGenPexpect:
 	def expect(self,s,t='',delay=None,regex=False,nonl=False,silent=False):
 
 		if not silent:
-			if opt.verbose:
+			if cfg.verbose:
 				msg_r('EXPECT ' + yellow(str(s)))
-			elif not opt.exact_output:
+			elif not cfg.exact_output:
 				msg_r('+')
 
 		try:
 			ret = (self.p.expect_exact,self.p.expect)[bool(regex)](s) if s else 0
 		except pexpect.TIMEOUT:
-			if opt.debug_pexpect:
+			if cfg.debug_pexpect:
 				raise
 			m1 = f'\nERROR.  Expect {s!r} timed out.  Exiting\n'
 			m2 = f'before: [{self.p.before}]\n'
 			m3 = f'sent value: [{self.sent_value}]' if self.sent_value != None else ''
 			raise pexpect.TIMEOUT(m1+m2+m3)
 
-		if opt.debug_pexpect:
+		if cfg.debug_pexpect:
 			debug_pexpect_msg(self.p)
 
-		if opt.verbose and type(s) != str:
+		if cfg.verbose and type(s) != str:
 			msg_r(f' ==> {ret} ')
 
 		if ret == -1:
@@ -223,10 +221,10 @@ class MMGenPexpect:
 			time.sleep(delay)
 		ret = self.p.send(t) # returns num bytes written
 		self.sent_value = t if ret else None
-		if opt.demo and delay:
+		if cfg.demo and delay:
 			time.sleep(delay)
-		if opt.verbose:
-			ls = '' if opt.debug or not s else ' '
+		if cfg.verbose:
+			ls = '' if cfg.debug or not s else ' '
 			es = '' if s else '  '
 			yt = yellow('{!r}'.format( t.replace('\n',r'\n') ))
 			msg(f'{ls}SEND {es}{yt}')

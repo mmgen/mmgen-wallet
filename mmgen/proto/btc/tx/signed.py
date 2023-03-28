@@ -14,7 +14,7 @@ proto.btc.tx.signed: Bitcoin signed transaction class
 
 import mmgen.tx.signed as TxBase
 from .completed import Completed
-from ....util import fmt,vmsg,die
+from ....util import fmt,die
 
 class Signed(Completed,TxBase.Signed):
 
@@ -22,7 +22,7 @@ class Signed(Completed,TxBase.Signed):
 		est_vsize = self.estimate_size()
 		d = tx_decoded
 		vsize = d['vsize'] if 'vsize' in d else d['size']
-		vmsg(f'\nVsize: {vsize} (true) {est_vsize} (estimated)')
+		self.cfg._util.vmsg(f'\nVsize: {vsize} (true) {est_vsize} (estimated)')
 		ratio = float(est_vsize) / vsize
 		if not (0.95 < ratio < 1.05): # allow for 5% error
 			die( 'BadTxSizeEstimate', fmt(f"""

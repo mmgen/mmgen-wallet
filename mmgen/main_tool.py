@@ -23,8 +23,7 @@ mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
 
 import sys,os,importlib
 import mmgen.opts as opts
-from .globalvars import g,gc
-from .opts import opt
+from .globalvars import gc
 from .util import msg,Msg,die,capfirst,suf,async_run
 
 opts_data = {
@@ -45,7 +44,7 @@ opts_data = {
 -P, --passwd-file= f   Get passphrase from file 'f'.
 -q, --quiet            Produce quieter output
 -r, --usr-randchars=n  Get 'n' characters of additional randomness from
-                       user (min={g.min_urandchars}, max={g.max_urandchars})
+                       user (min={cfg.min_urandchars}, max={cfg.max_urandchars})
 -t, --type=t           Specify address type (valid choices: 'legacy',
                        'compressed', 'segwit', 'bech32', 'zcash_z')
 -v, --verbose          Produce more verbose output
@@ -61,13 +60,13 @@ Type ‘{pn} help <command>’ for help on a particular command
 """
 	},
 	'code': {
-		'options': lambda s, help_notes: s.format(
+		'options': lambda cfg,s, help_notes: s.format(
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
-			g=g,
+			cfg=cfg,
 			gc=gc,
 		),
-		'notes': lambda s, help_notes: s.format(
+		'notes': lambda cfg,s, help_notes: s.format(
 			ch=help_notes('tool_help'),
 			pn=gc.prog_name)
 	}
@@ -346,7 +345,7 @@ def get_cmd_cls(cmd):
 def get_mod_cls(modname):
 	return getattr(importlib.import_module(f'mmgen.tool.{modname}'),'tool_cmd')
 
-if gc.prog_name == 'mmgen-tool' and not opt._lock:
+if gc.prog_name == 'mmgen-tool':
 
 	po = opts.init( opts_data, parse_only=True )
 
@@ -372,18 +371,20 @@ if gc.prog_name == 'mmgen-tool' and not opt._lock:
 	if not cls:
 		die(1,f'{cmd!r}: no such command')
 
-	cmd,*args = opts.init(
+	cfg = opts.init(
 		opts_data,
 		parsed_opts = po,
 		need_proto  = cls.need_proto,
 		init_opts   = {'rpc_backend':'aiohttp'} if cmd == 'twimport' else None )
+
+	cmd,*args = cfg._args
 
 	if cmd in ('help','usage') and args:
 		args[0] = 'command_name=' + args[0]
 
 	args,kwargs = process_args(cmd,args,cls)
 
-	ret = getattr(cls(cmdname=cmd),cmd)(*args,**kwargs)
+	ret = getattr(cls(cfg,cmdname=cmd),cmd)(*args,**kwargs)
 
 	if type(ret).__name__ == 'coroutine':
 		ret = async_run(ret)

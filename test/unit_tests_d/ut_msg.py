@@ -6,8 +6,7 @@ test.unit_tests_d.ut_msg: message signing unit tests for the MMGen suite
 
 import os
 
-from test.include.common import silence,end_silence,restart_test_daemons,stop_test_daemons
-from mmgen.opts import opt
+from ..include.common import cfg,silence,end_silence,restart_test_daemons,stop_test_daemons
 from mmgen.util import msg,bmsg,pumsg,suf
 from mmgen.protocol import CoinProtocol
 from mmgen.msg import NewMsg,UnsignedMsg,SignedMsg,SignedOnlineMsg,ExportedMsgSigs
@@ -24,6 +23,7 @@ def get_obj(coin,network,msghash_type):
 		addrlists = 'DEADBEEF:C:1-20 98831F3A:B:8,2 A091ABAA:S:10-11 A091ABAA:111 A091ABAA:C:1'
 
 	return NewMsg(
+		cfg       = cfg,
 		coin      = coin,
 		network   = network,
 		message   = '08/Jun/2021 Bitcoin Law Enacted by El Salvador Legislative Assembly',
@@ -37,7 +37,7 @@ async def run_test(network_id,chksum,msghash_type='raw'):
 
 	coin,network = CoinProtocol.Base.parse_network_id(network_id)
 
-	if not opt.verbose:
+	if not cfg.verbose:
 		silence()
 
 	bmsg(f'\nTesting {coin.upper()} {network.upper()}:\n')
@@ -61,17 +61,17 @@ async def run_test(network_id,chksum,msghash_type='raw'):
 
 	pumsg('\nTesting signing:\n')
 
-	m = UnsignedMsg( infile = os.path.join(tmpdir,get_obj(coin,network,msghash_type).filename) )
+	m = UnsignedMsg( cfg, infile = os.path.join(tmpdir,get_obj(coin,network,msghash_type).filename) )
 	await m.sign(wallet_files=['test/ref/98831F3A.mmwords'])
 
-	m = SignedMsg( data=m.__dict__ )
+	m = SignedMsg( cfg, data=m.__dict__ )
 	m.write_to_file(
 		outdir        = tmpdir,
 		ask_overwrite = False )
 
 	pumsg('\nTesting display:\n')
 
-	m = SignedOnlineMsg( infile = os.path.join(tmpdir,get_obj(coin,network,msghash_type).signed_filename) )
+	m = SignedOnlineMsg( cfg, infile = os.path.join(tmpdir,get_obj(coin,network,msghash_type).signed_filename) )
 
 	msg(m.format())
 
@@ -96,12 +96,13 @@ async def run_test(network_id,chksum,msghash_type='raw'):
 	from mmgen.fileutil import write_data_to_file
 	exported_sigs = os.path.join(tmpdir,'signatures.json')
 	write_data_to_file(
+		cfg     = cfg,
 		outfile = exported_sigs,
 		data    = m.get_json_for_export(),
 		desc    = 'signature data',
 		ask_overwrite = False )
 
-	m = ExportedMsgSigs( infile=exported_sigs )
+	m = ExportedMsgSigs( cfg, infile=exported_sigs )
 
 	pumsg('\nTesting verification (exported data):\n')
 	print_total( await m.verify() )
@@ -120,7 +121,7 @@ async def run_test(network_id,chksum,msghash_type='raw'):
 
 	msg('\n')
 
-	if not opt.verbose:
+	if not cfg.verbose:
 		end_silence()
 
 	return True

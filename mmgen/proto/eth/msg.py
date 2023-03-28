@@ -24,7 +24,7 @@ class coin_msg(coin_msg):
 
 		async def do_sign(self,wif,message,msghash_type):
 			from .misc import ec_sign_message_with_privkey
-			return ec_sign_message_with_privkey( message, bytes.fromhex(wif), msghash_type )
+			return ec_sign_message_with_privkey( self.cfg, message, bytes.fromhex(wif), msghash_type )
 
 	class signed_online(coin_msg.signed_online):
 
@@ -32,7 +32,8 @@ class coin_msg(coin_msg):
 			from ...tool.coin import tool_cmd
 			from .misc import ec_recover_pubkey
 			return tool_cmd(
+				self.cfg,
 				proto = self.proto).pubhex2addr(
-					ec_recover_pubkey( message, sig, msghash_type )) == addr
+					ec_recover_pubkey( self.cfg, message, sig, msghash_type )) == addr
 
 	class exported_sigs(coin_msg.exported_sigs,signed_online): pass

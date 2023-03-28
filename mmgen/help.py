@@ -22,7 +22,7 @@ help: help notes for MMGen suite commands
 
 from .globalvars import gc
 
-def help_notes_func(proto,opt,k):
+def help_notes_func(proto,cfg,k):
 
 	def fee_spec_letters(use_quotes=False):
 		cu = proto.coin_amt.units
@@ -36,7 +36,7 @@ def help_notes_func(proto,opt,k):
 	def coind_exec():
 		from .daemon import CoinDaemon
 		return (
-			CoinDaemon(proto.coin).exec_fn if proto.coin in CoinDaemon.coins else 'bitcoind' )
+			CoinDaemon(cfg,proto.coin).exec_fn if proto.coin in CoinDaemon.coins else 'bitcoind' )
 
 	class help_notes:
 
@@ -92,7 +92,7 @@ def help_notes_func(proto,opt,k):
 			from .keygen import get_backends
 			from .addr import MMGenAddrType
 			backends = get_backends(
-				MMGenAddrType(proto,opt.type or proto.dfl_mmtype).pubkey_type
+				MMGenAddrType(proto,cfg.type or proto.dfl_mmtype).pubkey_type
 			)
 			return ' '.join( f'{n}:{k}{" [default]" if n==1 else ""}' for n,k in enumerate(backends,1) )
 
@@ -102,11 +102,11 @@ def help_notes_func(proto,opt,k):
 		def coin_daemon_network_ids():
 			from .daemon import CoinDaemon
 			from .util import fmt_list
-			return fmt_list(CoinDaemon.get_network_ids(),fmt='bare')
+			return fmt_list(CoinDaemon.get_network_ids(cfg),fmt='bare')
 
 		def rel_fee_desc():
 			from .tx import BaseTX
-			return BaseTX(proto=proto).rel_fee_desc
+			return BaseTX(cfg=cfg,proto=proto).rel_fee_desc
 
 		def fee_spec_letters():
 			return fee_spec_letters()
@@ -121,7 +121,7 @@ be specified as either absolute {c} amounts, using a plain decimal number, or
 as {r}, using an integer followed by '{l}', for {u}.
 """.format(
 	c = proto.coin,
-	r = BaseTX(proto=proto).rel_fee_desc,
+	r = BaseTX(cfg=cfg,proto=proto).rel_fee_desc,
 	l = fee_spec_letters(use_quotes=True),
 	u = fee_spec_names() )
 
@@ -147,7 +147,7 @@ seed, the same seed length and hash preset parameters must always be used.
 
 			mmtype = 'S' if 'segwit' in proto.caps else 'C'
 			from .tool.coin import tool_cmd
-			t = tool_cmd(mmtype=mmtype)
+			t = tool_cmd(cfg,mmtype=mmtype)
 			sample_addr = t.privhex2addr('bead'*16)
 
 			return f"""

@@ -21,7 +21,6 @@ test.test_py_d.ts_wallet: Wallet conversion tests for the test.py test suite
 """
 
 import os
-from mmgen.opts import opt
 from mmgen.wallet import get_wallet_cls
 from .common import *
 from .ts_base import *
@@ -192,7 +191,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		wf = t.written_to_file(capfirst(ocls.desc),oo=oo)
 		t.p.wait()
 		# back check of result
-		msg('' if opt.profile else ' OK')
+		msg('' if cfg.profile else ' OK')
 		return self.walletchk(  wf,
 								pf         = None,
 								extra_desc = '(check)',
@@ -222,7 +221,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		if wcls.type == 'incog_hidden':
 			add_args += uopts_chk
 			wf = None
-		msg('' if opt.profile else ' OK')
+		msg('' if cfg.profile else ' OK')
 		return self.walletchk(  wf,
 								pf         = pf,
 								wcls       = wcls,

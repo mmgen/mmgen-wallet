@@ -23,12 +23,12 @@ test/unit_tests.py: Unit tests for the MMGen suite
 import sys,os,time,importlib,platform
 
 from include.tests_header import repo_root
-from include.common import end_msg
 
 from mmgen.devinit import init_dev
 init_dev()
 
 from mmgen.common import *
+from test.include.common import set_globals,end_msg
 
 opts_data = {
 	'text': {
@@ -54,10 +54,11 @@ If no test is specified, all available tests are run
 
 sys.argv.insert(1,'--skip-cfg-file')
 
-opts.UserOpts._reset_ok += ('use_internal_keccak_module',)
-g._reset_ok += ('debug_addrlist',)
+cfg = opts.init(opts_data)
 
-cmd_args = opts.init(opts_data)
+type(cfg)._reset_ok += ('use_internal_keccak_module','debug_addrlist')
+
+set_globals(cfg)
 
 os.environ['PYTHONPATH'] = repo_root
 
@@ -66,7 +67,7 @@ file_pfx = 'ut_'
 all_tests = sorted(
 	[fn[3:-3] for fn in os.listdir(os.path.join(repo_root,'test','unit_tests_d')) if fn[:3] == file_pfx])
 
-exclude = opt.exclude.split(',') if opt.exclude else []
+exclude = cfg.exclude.split(',') if cfg.exclude else []
 
 for e in exclude:
 	if e not in all_tests:
@@ -74,7 +75,7 @@ for e in exclude:
 
 start_time = int(time.time())
 
-if opt.list:
+if cfg.list:
 	Msg(' '.join(all_tests))
 	sys.exit(0)
 
@@ -93,12 +94,12 @@ class UnitTestHelpers(object):
 		m_noraise = "\nillegal action 'bad {}' failed to raise exception {!r}"
 		for (desc,exc_chk,emsg_chk,func) in data:
 			try:
-				vmsg_r('  bad {:{w}}'.format( desc+':', w=desc_w+1 ))
+				cfg._util.vmsg_r('  bad {:{w}}'.format( desc+':', w=desc_w+1 ))
 				func()
 			except Exception as e:
 				exc = type(e).__name__
 				emsg = e.args[0]
-				vmsg(' {:{w}} [{}]'.format( exc, emsg, w=exc_w ))
+				cfg._util.vmsg(' {:{w}} [{}]'.format( exc, emsg, w=exc_w ))
 				assert exc == exc_chk, m_exc.format(exc,exc_chk)
 				assert re.search(emsg_chk,emsg), m_err.format(emsg,emsg_chk)
 			else:
@@ -139,14 +140,14 @@ def run_test(test,subtest=None):
 			subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
 			for subtest in subtests:
 				subtest_disp = subtest.replace('_','-')
-				if opt.no_altcoin_deps and subtest in altcoin_deps:
-					qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping {subtest_disp!r}'))
+				if cfg.no_altcoin_deps and subtest in altcoin_deps:
+					cfg._util.qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping {subtest_disp!r}'))
 					continue
 				if gc.platform == 'win' and subtest in win_skip:
-					qmsg(gray(f'Skipping {subtest_disp!r} for Windows platform'))
+					cfg._util.qmsg(gray(f'Skipping {subtest_disp!r} for Windows platform'))
 					continue
 				elif platform.machine() == 'aarch64' and subtest in arm_skip:
-					qmsg(gray(f'Skipping {subtest_disp!r} for ARM platform'))
+					cfg._util.qmsg(gray(f'Skipping {subtest_disp!r} for ARM platform'))
 					continue
 				run_subtest(subtest)
 		else:
@@ -154,7 +155,7 @@ def run_test(test,subtest=None):
 				die(4,'Unit test {test!r} failed')
 
 try:
-	for test in (cmd_args or all_tests):
+	for test in (cfg._args or all_tests):
 		if '.' in test:
 			test,subtest = test.split('.')
 		else:

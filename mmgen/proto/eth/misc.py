@@ -15,7 +15,7 @@ proto.eth.misc: miscellaneous utilities for Ethereum base protocol
 from ...util import die
 from ...util2 import get_keccak
 
-def extract_key_from_geth_keystore_wallet(wallet_fn,passwd,check_addr=True):
+def extract_key_from_geth_keystore_wallet(cfg,wallet_fn,passwd,check_addr=True):
 	"""
 	Decrypt the encrypted private key in a Geth keystore wallet, returning the decrypted key
 	"""
@@ -42,7 +42,7 @@ def extract_key_from_geth_keystore_wallet(wallet_fn,passwd,check_addr=True):
 		dklen    = sp['dklen'] )
 
 	# Check password by comparing generated MAC to stored MAC
-	mac_chk = get_keccak()(hashed_pw[16:32] + bytes.fromhex( cdata['ciphertext'] )).digest().hex()
+	mac_chk = get_keccak(cfg)(hashed_pw[16:32] + bytes.fromhex( cdata['ciphertext'] )).digest().hex()
 	if mac_chk != cdata['mac']:
 		die(1,'Incorrect passphrase')
 
@@ -60,32 +60,32 @@ def extract_key_from_geth_keystore_wallet(wallet_fn,passwd,check_addr=True):
 	if check_addr:
 		from ...tool.coin import tool_cmd
 		from ...protocol import init_proto
-		t = tool_cmd( proto=init_proto('eth') )
+		t = tool_cmd( cfg=cfg, proto=init_proto(cfg,'eth') )
 		addr = t.wif2addr(key.hex())
 		addr_chk = wallet_data['address']
 		assert addr == addr_chk, f'incorrect address: ({addr} != {addr_chk})'
 
 	return key
 
-def hash_message(message,msghash_type):
-	return get_keccak()(
+def hash_message(cfg,message,msghash_type):
+	return get_keccak(cfg)(
 		{
 			'raw': message,
 			'eth_sign': '\x19Ethereum Signed Message:\n{}{}'.format( len(message), message ),
 		}[msghash_type].encode()
 	).digest()
 
-def ec_sign_message_with_privkey(message,key,msghash_type):
+def ec_sign_message_with_privkey(cfg,message,key,msghash_type):
 	"""
 	Sign an arbitrary string with an Ethereum private key, returning the signature
 
 	Conforms to the standard defined by the Geth `eth_sign` JSON-RPC call
 	"""
 	from py_ecc.secp256k1 import ecdsa_raw_sign
-	v,r,s = ecdsa_raw_sign( hash_message(message,msghash_type), key )
+	v,r,s = ecdsa_raw_sign( hash_message(cfg,message,msghash_type), key )
 	return '{:064x}{:064x}{:02x}'.format(r,s,v)
 
-def ec_recover_pubkey(message,sig,msghash_type):
+def ec_recover_pubkey(cfg,message,sig,msghash_type):
 	"""
 	Given a message and signature, recover the public key associated with the private key
 	used to make the signature
@@ -95,5 +95,5 @@ def ec_recover_pubkey(message,sig,msghash_type):
 	from py_ecc.secp256k1 import ecdsa_raw_recover
 	r,s,v = ( sig[:64], sig[64:128], sig[128:] )
 	return '{:064x}{:064x}'.format(
-		*ecdsa_raw_recover( hash_message(message,msghash_type), tuple(int(hexstr,16) for hexstr in (v,r,s)) )
+		*ecdsa_raw_recover( hash_message(cfg,message,msghash_type), tuple(int(hexstr,16) for hexstr in (v,r,s)) )
 	)

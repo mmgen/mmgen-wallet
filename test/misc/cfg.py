@@ -2,13 +2,15 @@
 
 from mmgen.common import *
 
-cmd_args = opts.init()
+cfg = opts.init()
+
+cmd_args = cfg._args
 
 from mmgen.cfgfile import mmgen_cfg_file
 
-cf_usr = mmgen_cfg_file('usr')
-cf_sys = mmgen_cfg_file('sys')
-cf_sample = mmgen_cfg_file('sample')
+cf_usr = mmgen_cfg_file(cfg,'usr')
+cf_sys = mmgen_cfg_file(cfg,'sys')
+cf_sample = mmgen_cfg_file(cfg,'sample')
 
 msg(f'Usr cfg file:    {os.path.relpath(cf_usr.fn)}')
 msg(f'Sys cfg file:    {os.path.relpath(cf_sys.fn)}')
@@ -21,21 +23,19 @@ if cmd_args:
 		pu = cf_usr.get_lines()
 		msg('usr cfg: {}'.format( ' '.join(f'{i.name}={i.value}' for i in pu) ))
 	elif cmd_args[0] == 'coin_specific_vars':
-		from mmgen.protocol import init_proto_from_opts
-		proto = init_proto_from_opts(need_amt=True)
 		for varname in cmd_args[1:]:
 			msg('{}.{}: {}'.format(
-				type(proto).__name__,
+				type(cfg._proto).__name__,
 				varname,
-				getattr(proto,varname)
+				getattr(cfg._proto,varname)
 			))
 	elif cmd_args[0] == 'autoset_opts':
-		assert opt.rpc_backend == 'aiohttp', "opt.rpc_backend != 'aiohttp'"
+		assert cfg.rpc_backend == 'aiohttp', "cfg.rpc_backend != 'aiohttp'"
 	elif cmd_args[0] == 'autoset_opts_cmdline':
-		assert opt.rpc_backend == 'curl', "opt.rpc_backend != 'curl'"
+		assert cfg.rpc_backend == 'curl', "cfg.rpc_backend != 'curl'"
 	elif cmd_args[0] == 'mnemonic_entry_modes':
 		from mmgen.mn_entry import mn_entry
 		msg('mnemonic_entry_modes: {}\nmmgen: {}\nbip39: {}'.format(
-			g.mnemonic_entry_modes,
-			mn_entry('mmgen').usr_dfl_entry_mode,
-			mn_entry('bip39').usr_dfl_entry_mode ))
+			cfg.mnemonic_entry_modes,
+			mn_entry(cfg,'mmgen').usr_dfl_entry_mode,
+			mn_entry(cfg,'bip39').usr_dfl_entry_mode ))

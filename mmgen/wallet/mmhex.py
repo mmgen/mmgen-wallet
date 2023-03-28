@@ -14,7 +14,7 @@ wallet.mmhex: MMGen hexadecimal file wallet class
 
 from ..util import make_chksum_6,split_into_cols
 from ..seed import Seed
-from ..util import msg,vmsg_r,is_chksum_6,is_hex_str,compare_chksums
+from ..util import msg,is_chksum_6,is_hex_str
 from .unenc import wallet
 
 class wallet(wallet):
@@ -52,12 +52,12 @@ class wallet(wallet):
 			msg(f'{hstr!r}: not a hexadecimal string, in {desc}')
 			return False
 
-		vmsg_r(f'Validating {desc} checksum...')
+		self.cfg._util.vmsg_r(f'Validating {desc} checksum...')
 
-		if not compare_chksums(chk,'file',make_chksum_6(hstr),'computed',verbose=True):
+		if not self.cfg._util.compare_chksums(chk,'file',make_chksum_6(hstr),'computed',verbose=True):
 			return False
 
-		self.seed = Seed(bytes.fromhex(hstr))
+		self.seed = Seed( self.cfg, bytes.fromhex(hstr) )
 		self.ssdata.chksum = chk
 		self.ssdata.hexseed = hstr
 

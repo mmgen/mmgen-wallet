@@ -25,6 +25,33 @@ from subprocess import run,PIPE
 from mmgen.common import *
 from mmgen.fileutil import write_data_to_file,get_data_from_file
 
+def noop(*args,**kwargs):
+	pass
+
+def set_globals(cfg):
+	"""
+	make `cfg`, `qmsg`, `vmsg`, etc. available as globals to scripts by setting
+	the module attr
+	"""
+	import test.include.common as this
+	this.cfg = cfg
+
+	if cfg.quiet:
+		this.qmsg = this.qmsg_r = noop
+	else:
+		this.qmsg = msg
+		this.qmsg_r = msg_r
+
+	if cfg.verbose:
+		this.vmsg = msg
+		this.vmsg_r = msg_r
+		this.Vmsg = Msg
+		this.Vmsg_r = Msg_r
+	else:
+		this.vmsg = this.vmsg_r = this.Vmsg = this.Vmsg_r = noop
+
+	this.dmsg = msg if cfg.debug else noop
+
 def strip_ansi_escapes(s):
 	import re
 	return re.sub('\x1b' + r'\[[;0-9]+?m','',s)
@@ -65,7 +92,7 @@ ref_kafile_pass = 'kafile password'
 ref_kafile_hash_preset = '1'
 
 def getrand(n):
-	if g.test_suite_deterministic:
+	if cfg.test_suite_deterministic:
 		from mmgen.test import fake_urandom
 		return fake_urandom(n)
 	else:
@@ -120,6 +147,7 @@ def get_tmpfile(cfg,fn):
 
 def write_to_file(fn,data,binary=False):
 	write_data_to_file(
+		cfg,
 		fn,
 		data,
 		quiet = True,
@@ -130,7 +158,7 @@ def write_to_tmpfile(cfg,fn,data,binary=False):
 	write_to_file(  os.path.join(cfg['tmpdir'],fn), data=data, binary=binary )
 
 def read_from_file(fn,binary=False):
-	return get_data_from_file(fn,quiet=True,binary=binary)
+	return get_data_from_file( cfg, fn, quiet=True, binary=binary )
 
 def read_from_tmpfile(cfg,fn,binary=False):
 	return read_from_file(os.path.join(cfg['tmpdir'],fn),binary=binary)
@@ -139,9 +167,9 @@ def joinpath(*args,**kwargs):
 	return os.path.join(*args,**kwargs)
 
 def ok():
-	if opt.profile:
+	if cfg.profile:
 		return
-	if opt.verbose or opt.exact_output:
+	if cfg.verbose or cfg.exact_output:
 		gmsg('OK')
 	else:
 		msg(' OK')
@@ -161,11 +189,11 @@ def init_coverage():
 	return coverdir,acc_file
 
 def silence():
-	if not (opt.verbose or opt.exact_output):
+	if not (cfg.verbose or cfg.exact_output):
 		gv.stdout = gv.stderr = open(os.devnull,'w')
 
 def end_silence():
-	if not (opt.verbose or opt.exact_output):
+	if not (cfg.verbose or cfg.exact_output):
 		gv.stdout.close()
 		gv.stdout = sys.stdout
 		gv.stderr = sys.stderr
@@ -177,38 +205,38 @@ def omsg_r(s):
 	sys.stderr.flush()
 
 def imsg(s):
-	if opt.verbose or opt.exact_output:
+	if cfg.verbose or cfg.exact_output:
 		omsg(s)
 def imsg_r(s):
-	if opt.verbose or opt.exact_output:
+	if cfg.verbose or cfg.exact_output:
 		omsg_r(s)
 
 def iqmsg(s):
-	if not opt.quiet:
+	if not cfg.quiet:
 		omsg(s)
 def iqmsg_r(s):
-	if not opt.quiet:
+	if not cfg.quiet:
 		omsg_r(s)
 
 def oqmsg(s):
-	if not (opt.verbose or opt.exact_output):
+	if not (cfg.verbose or cfg.exact_output):
 		omsg(s)
 def oqmsg_r(s):
-	if not (opt.verbose or opt.exact_output):
+	if not (cfg.verbose or cfg.exact_output):
 		omsg_r(s)
 
 def end_msg(t):
 	omsg(green(
 		'All requested tests finished OK' +
-		('' if g.test_suite_deterministic else f', elapsed time: {t//60:02d}:{t%60:02d}')
+		('' if cfg.test_suite_deterministic else f', elapsed time: {t//60:02d}:{t%60:02d}')
 	))
 
 def start_test_daemons(*network_ids,remove_datadir=False):
-	if not opt.no_daemon_autostart:
+	if not cfg.no_daemon_autostart:
 		return test_daemons_ops(*network_ids,op='start',remove_datadir=remove_datadir)
 
 def stop_test_daemons(*network_ids,force=False,remove_datadir=False):
-	if force or not opt.no_daemon_stop:
+	if force or not cfg.no_daemon_stop:
 		return test_daemons_ops(*network_ids,op='stop',remove_datadir=remove_datadir)
 
 def restart_test_daemons(*network_ids,remove_datadir=False):
@@ -217,12 +245,12 @@ def restart_test_daemons(*network_ids,remove_datadir=False):
 	return start_test_daemons(*network_ids,remove_datadir=remove_datadir)
 
 def test_daemons_ops(*network_ids,op,remove_datadir=False):
-	if not opt.no_daemon_autostart:
+	if not cfg.no_daemon_autostart:
 		from mmgen.daemon import CoinDaemon
-		silent = not (opt.verbose or opt.exact_output)
+		silent = not (cfg.verbose or cfg.exact_output)
 		ret = False
 		for network_id in network_ids:
-			d = CoinDaemon(network_id,test_suite=True)
+			d = CoinDaemon(cfg,network_id,test_suite=True)
 			if remove_datadir:
 				d.stop(silent=True)
 				d.remove_datadir()

@@ -8,7 +8,6 @@ test.misc.tool_api_test: test the MMGen suite tool API
 """
 
 import sys,os
-from mmgen.common import *
 from mmgen.key import PrivKey
 from mmgen.addr import CoinAddr
 
@@ -64,7 +63,7 @@ def test_triplet(tool,coin,network,addrtype,key_idx,wif_chk,addr_chk):
 def run_test():
 
 	from mmgen.tool.api import tool_api
-	tool = tool_api()
+	tool = tool_api(cfg)
 
 	tool.coins
 	tool.print_addrtypes()
@@ -109,5 +108,9 @@ def run_test():
 		test_triplet(tool,'zec','mainnet','Z',1,
 			'SKxuS56e99jpCeD9mMQ5o63zoGPakNdM9HCvt4Vt2cypvRjCdvGJ',
 			'zchFELwBxqsAubsLQ8yZgPCDDGukjXJssgCbiTPwFNmFwn9haLnDatzfhLdZzJT4PcU4o2yr92B52UFirUzEdF6ZYM2gBkM' )
+
+from mmgen.opts import init
+
+cfg = init()
 
 run_test()

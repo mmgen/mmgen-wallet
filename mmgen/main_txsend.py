@@ -24,8 +24,7 @@ import sys
 
 import mmgen.opts as opts
 from .globalvars import gc
-from .opts import opt
-from .util import vmsg,qmsg,async_run
+from .util import async_run
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
@@ -43,39 +42,40 @@ opts_data = {
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
-if len(cmd_args) == 1:
-	infile = cmd_args[0]
+if len(cfg._args) == 1:
+	infile = cfg._args[0]
 	from .fileutil import check_infile
 	check_infile(infile)
 else:
 	opts.usage()
 
-if not opt.status:
+if not cfg.status:
 	from .ui import do_license_msg
-	do_license_msg()
+	do_license_msg(cfg)
 
 async def main():
 
 	from .tx import OnlineSignedTX
 
 	tx = await OnlineSignedTX(
+		cfg        = cfg,
 		filename   = infile,
 		quiet_open = True )
 
 	from .rpc import rpc_init
-	tx.rpc = await rpc_init(tx.proto)
+	tx.rpc = await rpc_init(cfg,tx.proto)
 
-	vmsg(f'Signed transaction file {infile!r} is valid')
+	cfg._util.vmsg(f'Signed transaction file {infile!r} is valid')
 
-	if opt.status:
+	if cfg.status:
 		if tx.coin_txid:
-			qmsg(f'{tx.proto.coin} txid: {tx.coin_txid.hl()}')
+			cfg._util.qmsg(f'{tx.proto.coin} txid: {tx.coin_txid.hl()}')
 		await tx.status.display(usr_req=True)
 		sys.exit(0)
 
-	if not opt.yes:
+	if not cfg.yes:
 		tx.info.view_with_prompt('View transaction details?')
 		if tx.add_comment(): # edits an existing comment, returns true if changed
 			tx.file.write(ask_write_default_yes=True)

@@ -20,11 +20,11 @@ class Completed(Base):
 	"""
 	filename_api = True
 
-	def __init__(self,filename=None,data=None,quiet_open=False,*args,**kwargs):
+	def __init__(self,cfg,filename=None,data=None,quiet_open=False,*args,**kwargs):
 
 		assert (filename or data) and not (filename and data), 'CompletedTX_chk1'
 
-		super().__init__(*args,**kwargs)
+		super().__init__(cfg=cfg,*args,**kwargs)
 
 		if data:
 			data['twctl'] = self.twctl

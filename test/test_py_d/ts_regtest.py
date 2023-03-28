@@ -22,8 +22,6 @@ test.test_py_d.ts_regtest: Regtest tests for the test.py test suite
 
 import os,json,time
 from decimal import Decimal
-from mmgen.globalvars import g
-from mmgen.opts import opt
 from mmgen.util import die,gmsg
 from mmgen.protocol import init_proto
 from mmgen.addrlist import AddrList
@@ -135,6 +133,7 @@ rt_data = {
 def make_burn_addr(proto):
 	from mmgen.tool.coin import tool_cmd
 	return tool_cmd(
+		cfg     = cfg,
 		cmdname = 'pubhash2addr',
 		proto   = proto,
 		mmtype  = 'compressed' ).pubhash2addr('00'*20)
@@ -416,7 +415,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			return
 		if self.proto.testnet:
 			die(2,'--testnet and --regtest options incompatible with regtest test suite')
-		self.proto = init_proto(self.proto.coin,network='regtest',need_amt=True)
+		self.proto = init_proto( cfg, self.proto.coin, network='regtest', need_amt=True )
 		coin = self.proto.coin.lower()
 
 		import test.test_py_d.ts_regtest as rt_mod
@@ -425,7 +424,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		if self.proto.coin == 'BTC':
 			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC
-			if g.test_suite_deterministic:
+			if cfg.test_suite_deterministic:
 				self.deterministic = True
 				self.miner_addr = 'bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd' # regtest.create_hdseed()
 				self.miner_wif = 'cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp'
@@ -443,7 +442,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def _add_comments_to_addr_file(self,addrfile,outfile,use_comments=False):
 		silence()
 		gmsg(f'Adding comments to address file {addrfile!r}')
-		a = AddrList(self.proto,addrfile)
+		a = AddrList( cfg, self.proto, addrfile )
 		for n,idx in enumerate(a.idxs(),1):
 			if use_comments:
 				a.set_comment(idx,get_comment())
@@ -452,7 +451,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		af = a.get_file()
 		af.format(add_comments=True)
 		from mmgen.fileutil import write_data_to_file
-		write_data_to_file(outfile,af.fmt_data,quiet=True,ignore_opt_outdir=True)
+		write_data_to_file(cfg,outfile,af.fmt_data,quiet=True,ignore_opt_outdir=True)
 		end_silence()
 
 	def setup(self):
@@ -499,7 +498,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def _get_user_subsid(self,user,subseed_idx):
 		fn = get_file_with_ext(self._user_dir(user),dfl_wcls.ext)
 		silence()
-		w = Wallet( fn=fn, passwd_file=os.path.join(self.tmpdir,'wallet_password') )
+		w = Wallet( cfg, fn=fn, passwd_file=os.path.join(self.tmpdir,'wallet_password') )
 		end_silence()
 		return w.seed.subseed(subseed_idx).sid
 
@@ -530,7 +529,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			addrfile = joinpath(self._user_dir(user),
 				'{}{}{}[{}]{x}.regtest.addrs'.format(
 					sid,self.altcoin_pfx,id_strs[desc],addr_range,
-					x='-α' if g.debug_utf8 else ''))
+					x='-α' if cfg.debug_utf8 else ''))
 			if mmtype == self.proto.mmtypes[0] and user == 'bob':
 				self._add_comments_to_addr_file(addrfile,addrfile,use_comments=True)
 			t = self.spawn(
@@ -541,7 +540,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 					(['--batch'] if batch else []) +
 					[addrfile] ),
 				extra_desc = f'({desc})' )
-			if g.debug:
+			if cfg.debug:
 				t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 			t.expect('Importing')
 			if batch:
@@ -598,7 +597,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			return 'skip'
 		self.spawn('',msg_only=True)
 		from mmgen.proto.btc.regtest import MMGenRegtest
-		rt = MMGenRegtest(self.proto.coin)
+		rt = MMGenRegtest(cfg,self.proto.coin)
 		await rt.stop()
 		from shutil import rmtree
 		imsg(f'Deleting Bob’s old tracking wallet')
@@ -888,10 +887,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def get_addr_from_addrlist(self,user,sid,mmtype,idx,addr_range='1-5'):
 		id_str = { 'L':'', 'S':'-S', 'C':'-C', 'B':'-B' }[mmtype]
 		ext = '{}{}{}[{}]{x}.regtest.addrs'.format(
-			sid,self.altcoin_pfx,id_str,addr_range,x='-α' if g.debug_utf8 else '')
+			sid,self.altcoin_pfx,id_str,addr_range,x='-α' if cfg.debug_utf8 else '')
 		addrfile = get_file_with_ext(self._user_dir(user),ext,no_dot=True)
 		silence()
-		addr = AddrList(self.proto,addrfile).data[idx].addr
+		addr = AddrList( cfg, self.proto, addrfile ).data[idx].addr
 		end_silence()
 		return addr
 
@@ -909,7 +908,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_rbf_1output_bump(self):
 		if not self.test_rbf:
 			return 'skip'
-		ext = '9343,3]{x}.regtest.rawtx'.format(x='-α' if g.debug_utf8 else '')
+		ext = '9343,3]{x}.regtest.rawtx'.format(x='-α' if cfg.debug_utf8 else '')
 		txfile = get_file_with_ext(self.tr.trash_dir,ext,delete=False,no_dot=True)
 		return self.user_txbump('bob',
 			self.tr.trash_dir,
@@ -958,7 +957,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def bob_rbf_bump(self):
-		ext = ',{}]{x}.regtest.sigtx'.format(rtFee[1][:-1],x='-α' if g.debug_utf8 else '')
+		ext = ',{}]{x}.regtest.sigtx'.format(rtFee[1][:-1],x='-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
 		return self.user_txbump('bob',self.tmpdir,txfile,rtFee[2],add_args=['--send'])
 
@@ -969,10 +968,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def _get_mempool(self):
-		if not g.debug_utf8:
+		if not cfg.debug_utf8:
 			disable_debug()
 		ret = self.spawn('mmgen-regtest',['mempool']).read()
-		if not g.debug_utf8:
+		if not cfg.debug_utf8:
 			restore_debug()
 		m = re.search(r'(\[\s*"[a-f0-9]{64}"\s*])',ret) # allow for extra output by handler at end
 		return json.loads(m.group(1))
@@ -987,7 +986,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_rbf_status(self,fee,exp1,exp2=''):
 		if not self.proto.cap('rbf'):
 			return 'skip'
-		ext = ',{}]{x}.regtest.sigtx'.format(fee[:-1],x='-α' if g.debug_utf8 else '')
+		ext = ',{}]{x}.regtest.sigtx'.format(fee[:-1],x='-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
 		return self.user_txsend_status('bob',txfile,exp1,exp2)
 
@@ -1043,7 +1042,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def _gen_pairs(self,n):
 		from mmgen.tool.api import tool_api
-		t = tool_api()
+		t = tool_api(cfg)
 		t.init_coin(self.proto.coin,self.proto.network)
 
 		def gen_addr(Type):
@@ -1061,7 +1060,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def user_import(self,user,args,nAddr):
 		t = self.spawn('mmgen-addrimport',['--'+user]+args)
-		if g.debug:
+		if cfg.debug:
 			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		t.expect(f'Importing {nAddr} address')
 		if '--rescan' in args:
@@ -1272,7 +1271,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_edit_json_twdump(self):
 		self.spawn('',msg_only=True)
 		from mmgen.tw.json import TwJSON
-		fn = TwJSON.Base(self.proto).dump_fn
+		fn = TwJSON.Base(cfg,self.proto).dump_fn
 		text = json.loads(self.read_from_tmpfile(fn))
 		text['data']['entries'][3][3] = f'edited comment [фубар] [{gr_uc}]'
 		self.write_to_tmpfile( fn, json.dumps(text,indent=4) )
@@ -1280,7 +1279,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def carol_twimport(self,rpc_backend='http',add_parms=[],expect_str=None,expect_str2='Found 1 unspent output'):
 		from mmgen.tw.json import TwJSON
-		fn = joinpath( self.tmpdir, TwJSON.Base(self.proto).dump_fn )
+		fn = joinpath( self.tmpdir, TwJSON.Base(cfg,self.proto).dump_fn )
 		t = self.spawn(
 			'mmgen-tool',
 			([f'--rpc-backend={rpc_backend}'] if rpc_backend else [])
@@ -1313,7 +1312,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-regtest',['cli','unloadwallet','carol'])
 		t.ok()
 		from mmgen.rpc import rpc_init
-		rpc = await rpc_init(self.proto)
+		rpc = await rpc_init(cfg,self.proto)
 		wdir = joinpath(rpc.daemon.network_datadir,'wallets','carol')
 		from shutil import rmtree
 		imsg(f'Deleting Carol’s tracking wallet')
@@ -1386,7 +1385,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def alice_add_comment_badaddr2(self):
 		# mainnet zero address:
-		addr = init_proto(self.proto.coin,network='mainnet').pubhash2addr(bytes(20),False) # mainnet zero address
+		addr = init_proto( cfg, self.proto.coin, network='mainnet' ).pubhash2addr(bytes(20),False)
 		return self.alice_add_comment_badaddr( addr, 'invalid address', 2 )
 
 	def alice_add_comment_badaddr3(self):
@@ -1513,7 +1512,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				s,
 				regex=True )
 			if t.pexpect_spawn and s == 'w':
-				t.expect(r'Total.*','q',regex=True,delay=1 if opt.exact_output else t.send_delay)
+				t.expect(r'Total.*','q',regex=True,delay=1 if cfg.exact_output else t.send_delay)
 				time.sleep(t.send_delay)
 				t.send('e')
 		return t
@@ -1799,7 +1798,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			'contains no unused addresses of address type' )
 
 	def stop(self):
-		if opt.no_daemon_stop:
+		if cfg.no_daemon_stop:
 			self.spawn('',msg_only=True)
 			msg_r('(leaving daemon running by user request)')
 			return 'ok'

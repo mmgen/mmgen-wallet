@@ -23,8 +23,7 @@ tw.ctl: Tracking wallet control class for the MMGen suite
 import json
 from collections import namedtuple
 
-from ..globalvars import g
-from ..util import msg,msg_r,qmsg,dmsg,suf,die
+from ..util import msg,msg_r,suf,die
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import TwComment,get_obj
@@ -53,10 +52,10 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 	aggressive_sync = False
 	importing = False
 
-	def __new__(cls,proto,*args,**kwargs):
+	def __new__(cls,cfg,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.ctl'))
 
-	async def __init__(self,proto,mode='r',token_addr=None,rpc_ignore_wallet=False):
+	async def __init__(self,cfg,proto,mode='r',token_addr=None,rpc_ignore_wallet=False):
 
 		assert mode in ('r','w','i'), f"{mode!r}: wallet mode must be 'r','w' or 'i'"
 		if mode == 'i':
@@ -64,7 +63,8 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			mode = 'w'
 
 		# TODO: create on demand - only certain ops require RPC
-		self.rpc = await rpc_init( proto, ignore_wallet=rpc_ignore_wallet )
+		self.cfg = cfg
+		self.rpc = await rpc_init( cfg, proto, ignore_wallet=rpc_ignore_wallet )
 		self.proto = proto
 		self.mode = mode
 		self.desc = self.base_desc = f'{self.proto.name} tracking wallet'
@@ -86,9 +86,9 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 	def init_from_wallet_file(self):
 		import os
 		tw_dir = (
-			os.path.join(g.data_dir) if self.proto.coin == 'BTC' else
+			os.path.join(self.cfg.data_dir) if self.proto.coin == 'BTC' else
 			os.path.join(
-				g.data_dir_root,
+				self.cfg.data_dir_root,
 				'altcoins',
 				self.proto.coin.lower(),
 				('' if self.proto.network == 'mainnet' else 'testnet')
@@ -99,7 +99,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		check_or_create_dir(tw_dir)
 
 		try:
-			self.orig_data = get_data_from_file(self.tw_fn,quiet=True)
+			self.orig_data = get_data_from_file( self.cfg, self.tw_fn, quiet=True )
 			self.data = json.loads(self.orig_data)
 		except:
 			try: os.stat(self.tw_fn)
@@ -116,7 +116,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		if self.mode == 'w':
 			import atexit
 			def del_twctl(twctl):
-				dmsg(f'Running exit handler del_twctl() for {twctl!r}')
+				self.cfg._util.dmsg(f'Running exit handler del_twctl() for {twctl!r}')
 				del twctl
 			atexit.register(del_twctl,self)
 
@@ -135,7 +135,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		"""
 		if getattr(self,'mode',None) == 'w': # mode attr might not exist in this state
 			self.write()
-		elif g.debug:
+		elif self.cfg.debug:
 			msg('read-only wallet, doing nothing')
 
 	def conv_types(self,ad):
@@ -163,7 +163,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 	def get_cached_balance(self,addr,session_cache,data_root):
 		if addr in session_cache:
 			return self.proto.coin_amt(session_cache[addr])
-		if not g.cached_balances:
+		if not self.cfg.cached_balances:
 			return None
 		if addr in data_root and 'balance' in data_root[addr]:
 			return self.proto.coin_amt(data_root[addr]['balance'])
@@ -185,6 +185,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 	def write_changed(self,data,quiet):
 		from ..fileutil import write_data_to_file
 		write_data_to_file(
+			self.cfg,
 			self.tw_fn,
 			data,
 			desc              = f'{self.base_desc} data',
@@ -198,14 +199,14 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 	def write(self,quiet=True):
 		if not self.use_tw_file:
-			dmsg("'use_tw_file' is False, doing nothing")
+			self.cfg._util.dmsg("'use_tw_file' is False, doing nothing")
 			return
-		dmsg(f'write(): checking if {self.desc} data has changed')
+		self.cfg._util.dmsg(f'write(): checking if {self.desc} data has changed')
 
 		wdata = json.dumps(self.data)
 		if self.orig_data != wdata:
 			self.write_changed(wdata,quiet=quiet)
-		elif g.debug:
+		elif self.cfg.debug:
 			msg('Data is unchanged\n')
 
 	async def resolve_address(self,addrspec):
@@ -296,7 +297,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		async def do_import(address,comment,message):
 			try:
 				res = await self.import_address( address, comment )
-				qmsg(message)
+				self.cfg._util.qmsg(message)
 				return res
 			except Exception as e:
 				die(2,f'\nImport of address {address!r} failed: {e.args[0]!r}')

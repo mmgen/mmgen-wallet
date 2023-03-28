@@ -29,10 +29,10 @@ from ..rpc import rpc_init
 
 class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 
-	def __new__(cls,proto,*args,**kwargs):
+	def __new__(cls,cfg,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.bal'))
 
-	async def __init__(self,proto,minconf,quiet):
+	async def __init__(self,cfg,proto,minconf,quiet):
 
 		class BalanceInfo(dict):
 			def __init__(self):
@@ -50,7 +50,7 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 		self.quiet = quiet
 		self.proto = proto
 		self.data = {k:self.balance_info() for k in self.start_labels}
-		self.rpc = await rpc_init(proto)
+		self.rpc = await rpc_init(cfg,proto)
 
 		if minconf < 2 and 'lt_minconf' in self.conf_cols:
 			del self.conf_cols['lt_minconf']

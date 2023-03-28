@@ -20,11 +20,12 @@
 rpc: Cryptocoin RPC library for the MMGen suite
 """
 
-import base64,json,asyncio,importlib
+import re,base64,json,asyncio,importlib
 from decimal import Decimal
 from collections import namedtuple
 
-from .common import *
+from .globalvars import gc
+from .util import msg,die,fmt,fmt_list,pp_fmt
 from .base_obj import AsyncInit
 from .obj import NonNegativeInt
 from .objmethods import Hilite,InitErrors,MMGenObject
@@ -85,6 +86,7 @@ class RPCBackends:
 	class base:
 
 		def __init__(self,caller):
+			self.cfg            = caller.cfg
 			self.host           = caller.host
 			self.port           = caller.port
 			self.proxy          = caller.proxy
@@ -109,7 +111,7 @@ class RPCBackends:
 		async def __init__(self,caller):
 			super().__init__(caller)
 			import aiohttp
-			self.connector = aiohttp.TCPConnector(limit_per_host=g.aiohttp_rpc_queue_len)
+			self.connector = aiohttp.TCPConnector(limit_per_host=self.cfg.aiohttp_rpc_queue_len)
 			self.session = aiohttp.ClientSession(
 				headers = { 'Content-Type': 'application/json' },
 				connector = self.connector,
@@ -261,14 +263,16 @@ class RPCClient(MMGenObject):
 	network_proto = 'http'
 	proxy = None
 
-	def __init__(self,host,port,test_connection=True):
+	def __init__(self,cfg,host,port,test_connection=True):
+
+		self.cfg = cfg
 
 		# aiohttp workaround, and may speed up RPC performance overall on some systems:
 		if gc.platform == 'win' and host == 'localhost':
 			host = '127.0.0.1'
 
 		global dmsg_rpc,dmsg_rpc_backend
-		if not g.debug_rpc:
+		if not self.cfg.debug_rpc:
 			dmsg_rpc = dmsg_rpc_backend = noop
 
 		dmsg_rpc(f'=== {type(self).__name__}.__init__() debug ===')
@@ -285,11 +289,11 @@ class RPCClient(MMGenObject):
 		self.host_url = f'{self.network_proto}://{host}:{port}'
 		self.host = host
 		self.port = port
-		self.timeout = g.http_timeout
+		self.timeout = self.cfg.http_timeout
 		self.auth = None
 
 	def _get_backend(self,backend):
-		backend_id = backend or opt.rpc_backend
+		backend_id = backend or self.cfg.rpc_backend
 		if backend_id == 'auto':
 			return {'linux':RPCBackends.httplib,'win':RPCBackends.requests}[gc.platform](self)
 		else:
@@ -443,6 +447,7 @@ class RPCClient(MMGenObject):
 				""",indent='    '))
 
 async def rpc_init(
+		cfg,
 		proto,
 		backend               = None,
 		daemon                = None,
@@ -458,15 +463,16 @@ async def rpc_init(
 
 	from .daemon import CoinDaemon
 	rpc = await cls(
+		cfg           = cfg,
 		proto         = proto,
-		daemon        = daemon or CoinDaemon(proto=proto,test_suite=g.test_suite),
-		backend       = backend or opt.rpc_backend,
+		daemon        = daemon or CoinDaemon(cfg,proto=proto,test_suite=cfg.test_suite),
+		backend       = backend or cfg.rpc_backend,
 		ignore_wallet = ignore_wallet )
 
 	if rpc.daemon_version > rpc.daemon.coind_version:
 		rpc.handle_unsupported_daemon_version(
 			proto.name,
-			ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version )
+			ignore_daemon_version or proto.ignore_daemon_version or cfg.ignore_daemon_version )
 
 	if rpc.chain not in proto.chain_names:
 		die( 'RPCChainMismatch', '\n' + fmt(f"""

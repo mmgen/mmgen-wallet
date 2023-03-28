@@ -60,7 +60,10 @@ opts_data = {
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
+
+from test.include.common import set_globals
+set_globals(cfg)
 
 def run_test(test,arg,input_data,arg1,exc_name):
 	arg_copy = arg
@@ -96,22 +99,22 @@ def run_test(test,arg,input_data,arg1,exc_name):
 	else:
 		args = [arg]
 
-	if opt.getobj:
+	if cfg.getobj:
 		if args:
 			assert len(args) == 1, 'objtest_chk1: only one positional arg is allowed'
 			kwargs.update( { arg1: args[0] } )
-		if opt.silent:
+		if cfg.silent:
 			kwargs.update( { 'silent': True } )
 
 	try:
-		if not opt.super_silent:
+		if not cfg.super_silent:
 			arg_disp = repr(arg_copy[0] if type(arg_copy) == tuple else arg_copy)
-			if g.test_suite_deterministic and isinstance(arg_copy,dict):
+			if cfg.test_suite_deterministic and isinstance(arg_copy,dict):
 				arg_disp = re.sub(r'object at 0x[0-9a-f]+','object at [SCRUBBED]',arg_disp)
 			msg_r((green if input_data=='good' else orange)(f'{arg_disp+":":<22}'))
 		cls = globals()[test]
 
-		if opt.getobj:
+		if cfg.getobj:
 			ret = get_obj(globals()[test],**kwargs)
 		else:
 			ret = cls(*args,**kwargs)
@@ -121,14 +124,14 @@ def run_test(test,arg,input_data,arg1,exc_name):
 		if isinstance(ret_chk,str): ret_chk = ret_chk.encode()
 		if isinstance(ret,str): ret = ret.encode()
 
-		if opt.getobj:
+		if cfg.getobj:
 			if input_data == 'bad':
 				assert ret == False, 'non-False return on bad input data'
 		else:
-			if (opt.silent and input_data=='bad' and ret!=bad_ret) or (not opt.silent and input_data=='bad'):
+			if (cfg.silent and input_data=='bad' and ret!=bad_ret) or (not cfg.silent and input_data=='bad'):
 				raise UserWarning(f"Non-'None' return value {ret!r} with bad input data")
 
-		if opt.silent and input_data=='good' and ret==bad_ret:
+		if cfg.silent and input_data=='good' and ret==bad_ret:
 			raise UserWarning("'None' returned with good input data")
 
 		if input_data=='good':
@@ -137,17 +140,17 @@ def run_test(test,arg,input_data,arg1,exc_name):
 			if ret != ret_chk and repr(ret) != repr(ret_chk):
 				raise UserWarning(f"Return value ({ret!r}) doesn't match expected value ({ret_chk!r})")
 
-		if opt.super_silent:
+		if cfg.super_silent:
 			return
 
-		if opt.getobj and (not opt.silent and input_data == 'bad'):
+		if cfg.getobj and (not cfg.silent and input_data == 'bad'):
 			pass
 		else:
 			try: ret_disp = ret.decode()
 			except: ret_disp = ret
 			msg(f'==> {ret_disp!r}')
 
-		if opt.verbose and issubclass(cls,MMGenObject):
+		if cfg.verbose and issubclass(cls,MMGenObject):
 			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
 
 	except Exception as e:
@@ -156,16 +159,16 @@ def run_test(test,arg,input_data,arg1,exc_name):
 		if not type(e).__name__ == exc_name:
 			msg(f'Incorrect exception: expected {exc_name} but got {type(e).__name__}')
 			raise
-		if opt.super_silent:
+		if cfg.super_silent:
 			pass
-		elif opt.silent:
+		elif cfg.silent:
 			msg(f'==> {exc_name}')
 		else:
 			msg( yellow(f' {exc_name}:') + str(e) )
 	except SystemExit as e:
 		if input_data == 'good':
 			raise ValueError('Error on good input data')
-		if opt.verbose:
+		if cfg.verbose:
 			msg(f'exitval: {e.code}')
 	except UserWarning as e:
 		msg(f'==> {ret!r}')
@@ -178,21 +181,21 @@ def do_loop():
 	gmsg(f'Running data object tests for {proto.coin} {proto.network}')
 
 	clr = None
-	utests = cmd_args
+	utests = cfg._args
 	for test in test_data:
 		arg1 = test_data[test].get('arg1')
 		if utests and test not in utests: continue
-		nl = ('\n','')[bool(opt.super_silent) or clr == None]
-		clr = (blue,nocolor)[bool(opt.super_silent)]
+		nl = ('\n','')[bool(cfg.super_silent) or clr == None]
+		clr = (blue,nocolor)[bool(cfg.super_silent)]
 
-		if opt.getobj and arg1 is None:
+		if cfg.getobj and arg1 is None:
 			msg(gray(f'{nl}Skipping {test}'))
 			continue
 		else:
 			msg(clr(f'{nl}Testing {test}'))
 
 		for k in ('bad','good'):
-			if not opt.super_silent:
+			if not cfg.super_silent:
 				msg(purple(capfirst(k)+' input:'))
 			for arg in test_data[test][k]:
 				run_test(
@@ -203,6 +206,6 @@ def do_loop():
 					exc_name   = test_data[test].get('exc_name') or ('ObjectInitError','None')[k=='good'],
 				)
 
-from mmgen.protocol import init_proto_from_opts
-proto = init_proto_from_opts(need_amt=True)
+proto = cfg._proto
+
 do_loop()

@@ -5,6 +5,7 @@ test/unit_tests_d/ut_addrparse: address parsing tests for the MMGen suite
 """
 
 from mmgen.common import *
+from ..include.common import cfg,vmsg
 
 vectors = {
 	'btc_mainnet': [
@@ -92,7 +93,7 @@ class unit_test(object):
 		for net_id,addrs in vectors.items():
 			coin,network = net_id.split('_')
 			test_network(
-				init_proto(coin,network=network),
+				init_proto( cfg, coin, network=network ),
 				addrs )
 
 		return True

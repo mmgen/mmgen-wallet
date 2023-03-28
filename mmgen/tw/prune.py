@@ -70,7 +70,7 @@ class TwAddressesPrune(TwAddresses):
 			from ..ui import line_input
 			msg('')
 			while True:
-				reply = line_input(prompt).strip()
+				reply = line_input( parent.cfg, prompt ).strip()
 				if reply:
 					from ..addrlist import AddrIdxList
 					from ..obj import get_obj

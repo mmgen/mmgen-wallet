@@ -5,6 +5,7 @@ test/unit_tests_d/ut_subseed: subseed unit test for the MMGen suite
 """
 
 from mmgen.common import *
+from ..include.common import cfg,vmsg_r
 
 class unit_test(object):
 
@@ -23,7 +24,7 @@ class unit_test(object):
 				):
 
 				seed_bin = bytes.fromhex('deadbeef' * a)
-				seed = Seed(seed_bin)
+				seed = Seed( cfg, seed_bin )
 				assert seed.sid == b, seed.sid
 
 				subseed = seed.subseed('2s')
@@ -38,7 +39,7 @@ class unit_test(object):
 				assert subseed.idx == 10, subseed.idx
 				assert subseed.ss_idx == h, subseed.ss_idx
 
-				seed2 = Seed(seed_bin)
+				seed2 = Seed( cfg, seed_bin )
 				ss2_list = seed2.subseeds
 
 				seed2.subseeds._generate(1)
@@ -96,31 +97,31 @@ class unit_test(object):
 
 			seed_bin = bytes.fromhex('deadbeef' * 8)
 
-			seed = Seed(seed_bin,nSubseeds=11)
+			seed = Seed( cfg, seed_bin, nSubseeds=11 )
 			seed.subseeds._generate()
 			ss = seed.subseeds
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert len(ss) == 11, len(ss)
 
-			seed = Seed(seed_bin)
+			seed = Seed( cfg, seed_bin )
 			seed.subseeds._generate()
 			ss = seed.subseeds
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert len(ss) == nSubseeds, len(ss)
 
-			seed = Seed(seed_bin)
+			seed = Seed( cfg, seed_bin )
 			seed.subseed_by_seed_id('EEEEEEEE')
 			ss = seed.subseeds
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert len(ss) == nSubseeds, len(ss)
 
-			seed = Seed(seed_bin)
+			seed = Seed( cfg, seed_bin )
 			subseed = seed.subseed_by_seed_id('803B165C')
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert subseed.sid == '803B165C', subseed.sid
 			assert subseed.idx == 3, subseed.idx
 
-			seed = Seed(seed_bin)
+			seed = Seed( cfg, seed_bin )
 			subseed = seed.subseed_by_seed_id('803B165C',last_idx=1)
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert subseed == None, subseed
@@ -160,14 +161,14 @@ class unit_test(object):
 			ss_count,ltr,last_sid,collisions_chk = (
 				(SubSeedIdxRange.max_idx,'S','2788F26B',470),
 				(49509,'L','8D1FE500',2)
-			)[bool(opt.fast)]
+			)[bool(cfg.fast)]
 
 			last_idx = str(ss_count) + ltr
 
 			msg_r(f'Testing Seed ID collisions ({ss_count} subseed pairs)...')
 
 			seed_bin = bytes.fromhex('12abcdef' * 8) # 95B3D78D
-			seed = Seed(seed_bin)
+			seed = Seed( cfg, seed_bin )
 
 			seed.subseeds._generate(ss_count)
 			ss = seed.subseeds

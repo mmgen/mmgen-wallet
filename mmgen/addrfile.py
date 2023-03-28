@@ -20,8 +20,8 @@
 addrfile: Address and password file classes for the MMGen suite
 """
 
-from .globalvars import g
-from .util import msg,qmsg,qmsg_r,die,capfirst
+from .globalvars import gc
+from .util import msg,die,capfirst
 from .protocol import init_proto
 from .obj import MMGenObject,TwComment,WalletPassword,MMGenPWIDString
 from .seed import SeedID,is_seed_id
@@ -44,13 +44,13 @@ class AddrFile(MMGenObject):
 """
 
 	def __init__(self,parent):
-
 		self.parent = parent
+		self.cfg    = parent.cfg
 		self.infile = None
 
 	def encrypt(self):
 		from .crypto import Crypto
-		self.fmt_data = Crypto().mmgen_encrypt(
+		self.fmt_data = Crypto(self.cfg).mmgen_encrypt(
 			data = self.fmt_data.encode(),
 			desc = f'new {self.parent.desc} list' )
 		self.ext += f'.{Crypto.mmenc_ext}'
@@ -63,13 +63,13 @@ class AddrFile(MMGenObject):
 			self.ext )
 
 	def write(self,fn=None,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
-		from .opts import opt
 		from .fileutil import write_data_to_file
 		write_data_to_file(
+			self.cfg,
 			fn or self.filename,
 			self.fmt_data,
 			desc or self.desc,
-			ask_tty = self.parent.has_keys and not opt.quiet,
+			ask_tty = self.parent.has_keys and not self.cfg.quiet,
 			binary = binary )
 
 	def make_label(self):
@@ -87,8 +87,7 @@ class AddrFile(MMGenObject):
 			self.file_header_mn.format(p.pw_fmt.upper())
 				if p.gen_passwds and p.pw_fmt in ('bip39','xmrseed') else
 			self.file_header ).strip()
-		from .globalvars import gc
-		out = [fh.format(pnm=gc.proj_name,n=TwComment.max_screen_width) + '\n']
+		out = [fh.format( pnm=gc.proj_name, n=TwComment.max_screen_width ) + '\n']
 
 		if p.chksum:
 			out.append(f'# {capfirst(p.desc)} data checksum for {p.id_str}: {p.chksum}')
@@ -108,8 +107,7 @@ class AddrFile(MMGenObject):
 			else: # First line with idx
 				out.append(fs.format(e.idx,e.addr,c))
 				if p.has_keys:
-					from .opts import opt
-					if opt.b16:
+					if self.cfg.b16:
 						out.append(fs.format( '', f'orig_hex: {e.sec.orig_bytes.hex()}', c ))
 					out.append(fs.format( '', f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
 					for k in ('viewkey','wallet_passwd'):
@@ -160,21 +158,21 @@ class AddrFile(MMGenObject):
 
 			def verify_keys():
 				from .addrgen import KeyGenerator,AddrGenerator
-				kg = KeyGenerator(p.proto,p.al_id.mmtype.pubkey_type)
-				ag = AddrGenerator(p.proto,p.al_id.mmtype)
+				kg = KeyGenerator( self.cfg, p.proto, p.al_id.mmtype.pubkey_type )
+				ag = AddrGenerator( self.cfg, p.proto, p.al_id.mmtype )
 				llen = len(ret)
+				qmsg_r = p.cfg._util.qmsg_r
 				for n,e in enumerate(ret):
 					qmsg_r(f'\rVerifying keys {n+1}/{llen}')
 					assert e.addr == ag.to_addr(kg.gen_data(e.sec)),(
 						f'Key doesn’t match address!\n  {e.sec.wif}\n  {e.addr}')
-				qmsg(' - done')
+				p.cfg._util.qmsg(' - done')
 
-			from .opts import opt
-			if opt.yes or p.ka_validity_chk == True:
+			if self.cfg.yes or p.ka_validity_chk == True:
 				verify_keys()
 			else:
 				from .ui import keypress_confirm
-				if keypress_confirm('Check key-to-address validity?'):
+				if keypress_confirm( p.cfg, 'Check key-to-address validity?' ):
 					verify_keys()
 
 		return ret
@@ -216,7 +214,7 @@ class AddrFile(MMGenObject):
 			else:            # only component is coin
 				coin,mmtype_key = ( lbl, None )
 
-			proto = init_proto(coin=coin,network=network)
+			proto = init_proto( p.cfg, coin=coin, network=network )
 
 			if mmtype_key == None:
 				mmtype_key = proto.mmtypes[0]
@@ -224,8 +222,9 @@ class AddrFile(MMGenObject):
 			return ( proto, proto.addr_type(mmtype_key) )
 
 		p = self.parent
+
 		from .fileutil import get_lines_from_file
-		lines = get_lines_from_file(fn,p.desc+' data',trim_comments=True)
+		lines = get_lines_from_file( p.cfg, fn, p.desc+' data', trim_comments=True )
 
 		try:
 			assert len(lines) >= 3, f'Too few lines in address file ({len(lines)})'
@@ -246,12 +245,12 @@ class AddrFile(MMGenObject):
 				modname,funcname = p.pw_info[p.pw_fmt].chk_func.split('.')
 				import importlib
 				p.chk_func = getattr(importlib.import_module('mmgen.'+modname),funcname)
-				proto = init_proto('btc') # FIXME: dummy protocol
+				proto = init_proto( p.cfg, 'btc' ) # FIXME: dummy protocol
 				mmtype = MMGenPasswordType(proto,'P')
 			elif len(ls) == 1:
 				proto,mmtype = parse_addrfile_label(ls[0])
 			elif len(ls) == 0:
-				proto = init_proto('btc')
+				proto = init_proto( p.cfg, 'btc' )
 				mmtype = proto.addr_type('L')
 			else:
 				raise ValueError(f'{lines[0]}: Invalid first line for {p.gen_desc} file {fn!r}')

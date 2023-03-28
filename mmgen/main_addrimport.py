@@ -24,8 +24,7 @@ from collections import namedtuple
 
 import mmgen.opts as opts
 from .globalvars import gc
-from .opts import opt
-from .util import msg,qmsg,suf,die,fmt,async_run
+from .util import msg,suf,die,fmt,async_run
 from .addrlist import AddrList,KeyAddrList
 from .tw.shared import TwLabel
 
@@ -87,7 +86,7 @@ addrimport_msgs = {
 def parse_cmd_args(rpc,cmd_args):
 
 	def import_mmgen_list(infile):
-		al = (AddrList,KeyAddrList)[bool(opt.keyaddr_file)](proto,infile)
+		al = (AddrList,KeyAddrList)[bool(cfg.keyaddr_file)](cfg,proto,infile)
 		if al.al_id.mmtype in ('S','B'):
 			if not rpc.info('segwit_is_active'):
 				die(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
@@ -97,17 +96,19 @@ def parse_cmd_args(rpc,cmd_args):
 		infile = cmd_args[0]
 		from .fileutil import check_infile,get_lines_from_file
 		check_infile(infile)
-		if opt.addrlist:
+		if cfg.addrlist:
 			al = AddrList(
-				proto = proto,
+				cfg      = cfg,
+				proto    = proto,
 				addrlist = get_lines_from_file(
+					cfg,
 					infile,
 					f'non-{gc.proj_name} addresses',
 					trim_comments = True ) )
 		else:
 			al = import_mmgen_list(infile)
-	elif len(cmd_args) == 0 and opt.address:
-		al = AddrList(proto=proto,addrlist=[opt.address])
+	elif len(cmd_args) == 0 and cfg.address:
+		al = AddrList( cfg, proto=proto, addrlist=[cfg.address] )
 		infile = 'command line'
 	else:
 		die(1,addrimport_msgs['bad_args'])
@@ -115,16 +116,17 @@ def parse_cmd_args(rpc,cmd_args):
 	return al,infile
 
 def check_opts(twctl):
-	batch = bool(opt.batch)
-	rescan = bool(opt.rescan)
+	batch = bool(cfg.batch)
+	rescan = bool(cfg.rescan)
 
 	if rescan and not 'rescan' in twctl.caps:
 		msg(f"‘--rescan’ ignored: not supported by {type(twctl).__name__}")
 		rescan = False
 
-	if rescan and not opt.quiet:
+	if rescan and not cfg.quiet:
 		from .ui import keypress_confirm
 		if not keypress_confirm(
+				cfg,
 				'\n{}\n\nContinue?'.format(addrimport_msgs['rescan']),
 				default_yes = True ):
 			die(1,'Exiting at user request')
@@ -137,32 +139,33 @@ def check_opts(twctl):
 
 async def main():
 	from .tw.ctl import TwCtl
-	if opt.token_addr:
+	if cfg.token_addr:
 		proto.tokensym = 'foo' # hack to trigger 'Token' in proto.base_proto_subclass()
 
 	twctl = await TwCtl(
+		cfg        = cfg,
 		proto      = proto,
-		token_addr = opt.token_addr,
+		token_addr = cfg.token_addr,
 		mode       = 'i' )
 
-	if opt.token or opt.token_addr:
+	if cfg.token or cfg.token_addr:
 		msg(f'Importing for token {twctl.token.hl()} ({twctl.token.hlc(proto.tokensym)})')
 
 	from .rpc import rpc_init
-	twctl.rpc = await rpc_init(proto)
+	twctl.rpc = await rpc_init(cfg,proto)
 
 	for k,v in addrimport_msgs.items():
 		addrimport_msgs[k] = fmt(v,indent='  ',strip_char='\t').rstrip()
 
-	al,infile = parse_cmd_args(twctl.rpc,cmd_args)
+	al,infile = parse_cmd_args(twctl.rpc,cfg._args)
 
-	qmsg(
+	cfg._util.qmsg(
 		f'OK. {al.num_addrs} addresses'
 		+ (f' from Seed ID {al.al_id.sid}' if hasattr(al.al_id,'sid') else '') )
 
 	msg(
 		f'Importing {len(al.data)} address{suf(al.data,"es")} from {infile}'
-		+ (' (batch mode)' if opt.batch else '') )
+		+ (' (batch mode)' if cfg.batch else '') )
 
 	batch,rescan = check_opts(twctl)
 
@@ -183,9 +186,8 @@ async def main():
 
 	del twctl
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data,need_amt=False)
 
-from .protocol import init_proto_from_opts
-proto = init_proto_from_opts()
+proto = cfg._proto
 
 async_run(main())

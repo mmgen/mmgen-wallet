@@ -22,7 +22,6 @@ passwdlist: Password list class for the MMGen suite
 
 from collections import namedtuple
 
-from .globalvars import g
 from .util import ymsg,is_int,die
 from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString,TwComment
 from .key import PrivKey
@@ -66,6 +65,7 @@ class PasswordList(AddrList):
 
 	def __init__(
 			self,
+			cfg,
 			proto,
 			infile          = None,
 			seed            = None,
@@ -76,9 +76,10 @@ class PasswordList(AddrList):
 			chk_params_only = False,
 			skip_chksum_msg = False ):
 
+		self.cfg = cfg
 		self.proto = proto # proto is ignored
 
-		if not g.debug_addrlist:
+		if not cfg.debug_addrlist:
 			self.dmsg_sc = self.noop
 
 		if infile:
@@ -167,7 +168,7 @@ class PasswordList(AddrList):
 			from .xmrseed import xmrseed
 			from .protocol import init_proto
 			self.xmrseed = xmrseed()
-			self.xmrproto = init_proto('xmr')
+			self.xmrproto = init_proto( self.cfg, 'xmr' )
 			pw_bytes = xmrseed().seedlen_map_rev[self.pw_len]
 			try:
 				good_pw_len = xmrseed().seedlen_map[seed.byte_len]
@@ -193,6 +194,7 @@ class PasswordList(AddrList):
 		if pf in ('bip39','hex') and pw_bytes < seed.byte_len:
 			from .ui import keypress_confirm
 			if not keypress_confirm(
+					self.cfg,
 					f'WARNING: requested {self.pw_info[pf].desc} length has less entropy ' +
 					'than underlying seed!\nIs this what you want?',
 					default_yes = True ):
@@ -240,4 +242,4 @@ class PasswordList(AddrList):
 
 		self.dmsg_sc('str',scramble_key)
 		from .crypto import Crypto
-		return Crypto().scramble_seed(seed,scramble_key.encode())
+		return Crypto(self.cfg).scramble_seed(seed,scramble_key.encode())

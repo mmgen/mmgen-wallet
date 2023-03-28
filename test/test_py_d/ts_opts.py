@@ -45,7 +45,7 @@ class TestSuiteOpts(TestSuiteBase):
 
 	def opt_helpscreen(self):
 		expect = r'OPTS.PY: Opts test.*USAGE:\s+opts.py'
-		if not opt.pexpect_spawn:
+		if not cfg.pexpect_spawn:
 			expect += r'.*--minconf.*NOTES FOR THIS.*a note'
 		t = self.do_run( ['--help'], expect, 0, regex=True )
 		if t.pexpect_spawn:
@@ -57,17 +57,15 @@ class TestSuiteOpts(TestSuiteBase):
 		return self.check_vals(
 				[],
 				(
-					('opt.foo',               'None'),         # added opt
-					('opt.print_checksum',    'None'),         # sets 'quiet'
-					('opt.quiet',             'False'),        # init_opts, incompatible_opts
-					('opt.verbose',           'None'),         # init_opts, incompatible_opts
-					('opt.fee_estimate_mode', 'conservative'), # autoset_opts
-					('opt.passwd_file',       'None'),         # infile_opts - check_infile()
-					('opt.outdir',            'None'),         # check_outdir()
-					('opt.cached_balances',   'None'),         # opt_sets_global
-					('opt.minconf',           '1'),            # global_sets_opt
-					('g.cached_balances',     'None'),
-					('g.minconf',             '1'),
+					('cfg.foo',                 'None'),         # added opt
+					('cfg.print_checksum',      'None'),         # sets 'quiet'
+					('cfg.quiet',               'False'),        # init_opts, incompatible_opts
+					('cfg.verbose',             'False'),        # init_opts, incompatible_opts
+					('cfg.passwd_file',         ''),             # infile_opts - check_infile()
+					('cfg.outdir',              ''),             # check_outdir()
+					('cfg.cached_balances',     'False'),
+					('cfg.minconf',             '1'),
+					('cfg.fee_estimate_mode',   'conservative'), # autoset_opts
 				)
 			)
 
@@ -85,14 +83,13 @@ class TestSuiteOpts(TestSuiteBase):
 					f'--hidden-incog-input-params={pf},123',
 				],
 				(
-					('opt.print_checksum',    'True'),
-					('opt.quiet',             'True'), # set by print_checksum
-					('opt.fee_estimate_mode', 'economical'),
-					('opt.passwd_file',       pf),
-					('opt.outdir',            self.tmpdir),
-					('opt.cached_balances',   'True'),
-					('opt.hidden_incog_input_params', pf+',123'),
-					('g.cached_balances',     'True'),
+					('cfg.print_checksum',           'True'),
+					('cfg.quiet',                    'True'), # set by print_checksum
+					('cfg.passwd_file',              pf),
+					('cfg.outdir',                   self.tmpdir),
+					('cfg.cached_balances',          'True'),
+					('cfg.hidden_incog_input_params', pf+',123'),
+					('cfg.fee_estimate_mode',         'economical'),
 				)
 			)
 

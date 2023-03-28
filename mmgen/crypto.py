@@ -23,22 +23,15 @@ crypto: Random number, password hashing and symmetric encryption routines for th
 import os
 from collections import namedtuple
 
-from .globalvars import g,gc
-from .opts import opt
+from .globalvars import gc
 from .util import (
 	msg,
 	msg_r,
-	dmsg,
-	vmsg,
-	vmsg_r,
-	qmsg,
 	fmt,
 	die,
 	make_chksum_8,
-	compare_chksums,
 	oneshot_warning,
 )
-
 
 class Crypto:
 
@@ -72,6 +65,10 @@ class Crypto:
 		def __init__(self,fn):
 			oneshot_warning.__init__(self,div=fn,fmt_args=[fn],reverse=True)
 
+	def __init__(self,cfg):
+		self.cfg = cfg
+		self.util = cfg._util
+
 	def get_hash_params(self,hash_preset):
 		if hash_preset in self.hash_presets:
 			return self.hash_presets[hash_preset] # N,r,p
@@ -87,7 +84,7 @@ class Crypto:
 	def scramble_seed(self,seed,scramble_key):
 		import hmac
 		step1 = hmac.digest(seed,scramble_key,'sha256')
-		if g.debug:
+		if self.cfg.debug:
 			msg(f'Seed:  {seed.hex()!r}\nScramble key: {scramble_key}\nScrambled seed: {step1.hex()}\n')
 		return self.sha256_rounds(step1)
 
@@ -95,56 +92,56 @@ class Crypto:
 		return self.encrypt_data(data,key,desc=desc)
 
 	def decrypt_seed(self,enc_seed,key,seed_id,key_id):
-		vmsg_r('Checking key...')
+		self.util.vmsg_r('Checking key...')
 		chk1 = make_chksum_8(key)
 		if key_id:
-			if not compare_chksums(key_id,'key ID',chk1,'computed'):
+			if not self.util.compare_chksums(key_id,'key ID',chk1,'computed'):
 				msg('Incorrect passphrase or hash preset')
 				return False
 
 		dec_seed = self.decrypt_data(enc_seed,key,desc='seed')
 		chk2     = make_chksum_8(dec_seed)
 		if seed_id:
-			if compare_chksums(seed_id,'Seed ID',chk2,'decrypted seed'):
-				qmsg('Passphrase is OK')
+			if self.util.compare_chksums(seed_id,'Seed ID',chk2,'decrypted seed'):
+				self.util.qmsg('Passphrase is OK')
 			else:
-				if not opt.debug:
+				if not self.cfg.debug:
 					msg_r('Checking key ID...')
-					if compare_chksums(key_id,'key ID',chk1,'computed'):
+					if self.util.compare_chksums(key_id,'key ID',chk1,'computed'):
 						msg('Key ID is correct but decryption of seed failed')
 					else:
 						msg('Incorrect passphrase or hash preset')
-				vmsg('')
+				self.util.vmsg('')
 				return False
 
-		dmsg(f'Decrypted seed: {dec_seed.hex()}')
+		self.util.dmsg(f'Decrypted seed: {dec_seed.hex()}')
 		return dec_seed
 
 	def encrypt_data(self,data,key,iv=aesctr_dfl_iv,desc='data',verify=True,silent=False):
 		from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
 		from cryptography.hazmat.backends import default_backend
 		if not silent:
-			vmsg(f'Encrypting {desc}')
+			self.util.vmsg(f'Encrypting {desc}')
 		c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
 		encryptor = c.encryptor()
 		enc_data = encryptor.update(data) + encryptor.finalize()
 
 		if verify:
-			vmsg_r(f'Performing a test decryption of the {desc}...')
+			self.util.vmsg_r(f'Performing a test decryption of the {desc}...')
 			c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
 			encryptor = c.encryptor()
 			dec_data = encryptor.update(enc_data) + encryptor.finalize()
 			if dec_data != data:
 				die(2,f'ERROR.\nDecrypted {desc} doesn’t match original {desc}')
 			if not silent:
-				vmsg('done')
+				self.util.vmsg('done')
 
 		return enc_data
 
 	def decrypt_data(self,enc_data,key,iv=aesctr_dfl_iv,desc='data'):
 		from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
 		from cryptography.hazmat.backends import default_backend
-		vmsg_r(f'Decrypting {desc} with key...')
+		self.util.vmsg_r(f'Decrypting {desc} with key...')
 		c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
 		encryptor = c.encryptor()
 		return encryptor.update(enc_data) + encryptor.finalize()
@@ -184,7 +181,7 @@ class Crypto:
 
 		# hashlib.scrypt doesn't support N > 14 (hash preset > 3)
 		ret = (
-			do_standalone_scrypt() if ps.N > 14 or g.force_standalone_scrypt_module else
+			do_standalone_scrypt() if ps.N > 14 or self.cfg.force_standalone_scrypt_module else
 			do_hashlib_scrypt() )
 
 		if int(hash_preset) > 3:
@@ -193,17 +190,17 @@ class Crypto:
 		return ret
 
 	def make_key(self,passwd,salt,hash_preset,desc='encryption key',from_what='passphrase',verbose=False):
-		if opt.verbose or verbose:
+		if self.cfg.verbose or verbose:
 			msg_r(f"Generating {desc}{' from ' + from_what if from_what else ''}...")
 		key = self.scrypt_hash_passphrase(passwd,salt,hash_preset)
-		if opt.verbose or verbose: msg('done')
-		dmsg(f'Key: {key.hex()}')
+		if self.cfg.verbose or verbose: msg('done')
+		self.util.dmsg(f'Key: {key.hex()}')
 		return key
 
 	def _get_random_data_from_user(self,uchars=None,desc='data'):
 
 		if uchars is None:
-			uchars = opt.usr_randchars
+			uchars = self.cfg.usr_randchars
 
 		info1 = f"""
 			Now we're going to gather some additional input from the keyboard to further
@@ -225,7 +222,7 @@ class Crypto:
 			on the screen.
 		"""
 
-		msg(f'Enter {uchars} random symbols' if opt.quiet else
+		msg(f'Enter {uchars} random symbols' if self.cfg.quiet else
 			'\n' + fmt(info1,indent='  ') +
 			'\n' + fmt(info2) )
 
@@ -238,7 +235,7 @@ class Crypto:
 			key_data += get_char_raw(f'\rYou may begin typing.  {uchars-i} symbols left: ')
 			time_data.append(time.time())
 
-		msg_r( '\r' if opt.quiet else f'\rThank you.  That’s enough.{" "*18}\n\n' )
+		msg_r( '\r' if self.cfg.quiet else f'\rThank you.  That’s enough.{" "*18}\n\n' )
 
 		time_data = [f'{t:.22f}'.rstrip('0') for t in time_data]
 
@@ -249,11 +246,11 @@ class Crypto:
 
 		ret = key_data + '\n' + '\n'.join(time_data)
 
-		if g.debug:
+		if self.cfg.debug:
 			msg(f'USER ENTROPY (user input + keystroke timings):\n{ret}')
 
 		from .ui import line_input
-		line_input( 'User random data successfully acquired.  Press ENTER to continue: ' )
+		line_input( self.cfg, 'User random data successfully acquired.  Press ENTER to continue: ' )
 
 		return ret.encode()
 
@@ -274,7 +271,7 @@ class Crypto:
 
 		assert type(rand_bytes) == bytes, 'add_user_random_chk1'
 
-		if opt.usr_randchars:
+		if self.cfg.usr_randchars:
 
 			if not urand['data']:
 				from hashlib import sha256
@@ -310,7 +307,7 @@ class Crypto:
 
 		from .ui import line_input
 		while True:
-			ret = line_input( prompt )
+			ret = line_input( self.cfg, prompt )
 			if ret:
 				if ret in self.hash_presets:
 					return ret
@@ -329,29 +326,30 @@ class Crypto:
 		if passwd_file:
 			from .fileutil import get_words_from_file
 			pw = ' '.join(get_words_from_file(
+				cfg    = self.cfg,
 				infile = passwd_file,
 				desc   = f'{pw_desc} for {data_desc}',
 				quiet  = self.pwfile_reuse_warning(passwd_file).warning_shown ))
 		else:
-			qmsg('\n'+fmt(message,indent='  '))
+			self.util.qmsg('\n'+fmt(message,indent='  '))
 			from .ui import get_words_from_user
-			if opt.echo_passphrase:
-				pw = ' '.join(get_words_from_user( f'Enter {pw_desc} for {data_desc}: ' ))
+			if self.cfg.echo_passphrase:
+				pw = ' '.join(get_words_from_user( self.cfg, f'Enter {pw_desc} for {data_desc}: ' ))
 			else:
 				for i in range(gc.passwd_max_tries):
-					pw = ' '.join(get_words_from_user( f'Enter {pw_desc} for {data_desc}: ' ))
-					pw_chk = ' '.join(get_words_from_user( f'Repeat {pw_desc}: ' ))
-					dmsg(f'Passphrases: [{pw}] [{pw_chk}]')
+					pw = ' '.join(get_words_from_user( self.cfg, f'Enter {pw_desc} for {data_desc}: ' ))
+					pw_chk = ' '.join(get_words_from_user( self.cfg, f'Repeat {pw_desc}: ' ))
+					self.util.dmsg(f'Passphrases: [{pw}] [{pw_chk}]')
 					if pw == pw_chk:
-						vmsg('Passphrases match')
+						self.util.vmsg('Passphrases match')
 						break
 					else:
 						msg('Passphrases do not match.  Try again.')
 				else:
-					die(2,f'User failed to duplicate passphrase in {g.passwd_max_tries} attempts')
+					die(2,f'User failed to duplicate passphrase in {gc.passwd_max_tries} attempts')
 
 		if pw == '':
-			qmsg('WARNING: Empty passphrase')
+			self.util.qmsg('WARNING: Empty passphrase')
 
 		return pw
 
@@ -359,48 +357,49 @@ class Crypto:
 		if passwd_file:
 			from .fileutil import get_words_from_file
 			return ' '.join(get_words_from_file(
+				cfg    = self.cfg,
 				infile = passwd_file,
 				desc   = f'{pw_desc} for {data_desc}',
 				quiet  = self.pwfile_reuse_warning(passwd_file).warning_shown ))
 		else:
 			from .ui import get_words_from_user
-			return ' '.join(get_words_from_user( f'Enter {pw_desc} for {data_desc}: ' ))
+			return ' '.join(get_words_from_user( self.cfg, f'Enter {pw_desc} for {data_desc}: ' ))
 
 	def mmgen_encrypt(self,data,desc='data',hash_preset=None):
 		salt  = self.get_random(self.mmenc_salt_len)
 		iv    = self.get_random(self.aesctr_iv_len)
 		nonce = self.get_random(self.mmenc_nonce_len)
-		hp    = hash_preset or opt.hash_preset or self.get_hash_preset_from_user(data_desc=desc)
+		hp    = hash_preset or self.cfg.hash_preset or self.get_hash_preset_from_user(data_desc=desc)
 		m     = ('user-requested','default')[hp=='3']
-		vmsg(f'Encrypting {desc}')
-		qmsg(f'Using {m} hash preset of {hp!r}')
+		self.util.vmsg(f'Encrypting {desc}')
+		self.util.qmsg(f'Using {m} hash preset of {hp!r}')
 		passwd = self.get_new_passphrase(
 			data_desc = desc,
 			hash_preset = hp,
-			passwd_file = opt.passwd_file )
+			passwd_file = self.cfg.passwd_file )
 		key    = self.make_key(passwd,salt,hp)
 		from hashlib import sha256
 		enc_d  = self.encrypt_data( sha256(nonce+data).digest() + nonce + data, key, iv, desc=desc )
 		return salt+iv+enc_d
 
 	def mmgen_decrypt(self,data,desc='data',hash_preset=None):
-		vmsg(f'Preparing to decrypt {desc}')
+		self.util.vmsg(f'Preparing to decrypt {desc}')
 		dstart = self.mmenc_salt_len + self.aesctr_iv_len
 		salt   = data[:self.mmenc_salt_len]
 		iv     = data[self.mmenc_salt_len:dstart]
 		enc_d  = data[dstart:]
-		hp     = hash_preset or opt.hash_preset or self.get_hash_preset_from_user(data_desc=desc)
+		hp     = hash_preset or self.cfg.hash_preset or self.get_hash_preset_from_user(data_desc=desc)
 		m  = ('user-requested','default')[hp=='3']
-		qmsg(f'Using {m} hash preset of {hp!r}')
+		self.util.qmsg(f'Using {m} hash preset of {hp!r}')
 		passwd = self.get_passphrase(
 			data_desc = desc,
-			passwd_file = opt.passwd_file )
+			passwd_file = self.cfg.passwd_file )
 		key    = self.make_key(passwd,salt,hp)
 		dec_d  = self.decrypt_data( enc_d, key, iv, desc )
 		sha256_len = 32
 		from hashlib import sha256
 		if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
-			vmsg('OK')
+			self.util.vmsg('OK')
 			return dec_d[sha256_len+self.mmenc_nonce_len:]
 		else:
 			msg('Incorrect passphrase or hash preset')

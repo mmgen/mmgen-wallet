@@ -19,7 +19,7 @@ class backend:
 
 	class libsecp256k1(keygen_base):
 
-		def __init__(self):
+		def __init__(self,cfg):
 			from .secp256k1 import priv2pub
 			self.priv2pub = priv2pub
 
@@ -41,13 +41,12 @@ class backend:
 				if not silent:
 					from ...util import ymsg
 					ymsg(str(e))
-				from ...util import qmsg
-				qmsg('Using (slow) native Python ECDSA library for public key generation')
+				self.cfg._util.qmsg('Using (slow) native Python ECDSA library for public key generation')
 				return 'python_ecdsa'
 
 	class python_ecdsa(keygen_base):
 
-		def __init__(self):
+		def __init__(self,cfg):
 			import ecdsa
 			self.ecdsa = ecdsa
 

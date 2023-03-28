@@ -100,14 +100,13 @@ class baseconv(object):
 		from hashlib import sha256
 		return sha256( ' '.join(self.digits).encode() ).hexdigest()[:8]
 
-	def check_wordlist(self):
+	def check_wordlist(self,cfg):
 
 		wl = self.digits
-		from .util import qmsg,compare_chksums
 		ret = f'Wordlist: {self.wl_id}\nLength: {len(wl)} words'
 		new_chksum = self.get_wordlist_chksum()
 
-		compare_chksums( new_chksum, 'generated', self.wl_chksum, 'saved', die_on_fail=True )
+		cfg._util.compare_chksums( new_chksum, 'generated', self.wl_chksum, 'saved', die_on_fail=True )
 
 		if tuple(sorted(wl)) == wl:
 			return ret + '\nList is sorted'

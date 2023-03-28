@@ -22,8 +22,7 @@ mmgen-txcreate: Create a cryptocoin transaction with MMGen- and/or non-MMGen
 """
 
 import mmgen.opts as opts
-from .globalvars import g,gc
-from .opts import opt
+from .globalvars import gc
 from .util import fmt_list,async_run
 
 opts_data = {
@@ -38,7 +37,7 @@ opts_data = {
 -B, --no-blank        Don't blank screen before displaying unspent outputs
 -c, --comment-file=f  Source the transaction's comment from file 'f'
 -C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
-                      (default: {g.fee_estimate_confs})
+                      (default: {cfg.fee_estimate_confs})
 -d, --outdir=      d  Specify an alternate directory 'd' for output
 -D, --contract-data=D Path to hex-encoded contract data (ETH only)
 -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
@@ -66,41 +65,38 @@ opts_data = {
 		'notes': '\n{c}\n{F}\n{x}',
 	},
 	'code': {
-		'options': lambda proto,help_notes,s: s.format(
+		'options': lambda cfg,proto,help_notes,s: s.format(
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
-			fe_all=fmt_list(g.autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
-			fe_dfl=g.autoset_opts['fee_estimate_mode'].choices[0],
+			fe_all=fmt_list(cfg.autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
+			fe_dfl=cfg.autoset_opts['fee_estimate_mode'].choices[0],
 			cu=proto.coin,
-			g=g),
-		'notes': lambda help_notes,s: s.format(
+			cfg=cfg),
+		'notes': lambda cfg,help_notes,s: s.format(
 			c = help_notes('txcreate'),
 			F = help_notes('fee'),
 			x = help_notes('txcreate_examples') )
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
 async def main():
 
-	from .protocol import init_proto_from_opts
-	proto = init_proto_from_opts(need_amt=True)
-
 	from .tx import NewTX
-	tx1 = await NewTX(proto=proto)
+	tx1 = await NewTX(cfg=cfg,proto=cfg._proto)
 
 	from .rpc import rpc_init
-	tx1.rpc = await rpc_init(proto)
+	tx1.rpc = await rpc_init(cfg,cfg._proto)
 
 	tx2 = await tx1.create(
-		cmd_args = cmd_args,
-		locktime = int(opt.locktime or 0),
-		do_info  = opt.info )
+		cmd_args = cfg._args,
+		locktime = int(cfg.locktime or 0),
+		do_info  = cfg.info )
 
 	tx2.file.write(
-		ask_write             = not opt.yes,
-		ask_overwrite         = not opt.yes,
+		ask_write             = not cfg.yes,
+		ask_overwrite         = not cfg.yes,
 		ask_write_default_yes = False )
 
 async_run(main())

@@ -22,10 +22,9 @@ main_wallet: Entry point for MMGen wallet-related scripts
 
 import sys,os
 import mmgen.opts as opts
-from .globalvars import g,gc
-from .opts import opt
+from .globalvars import gc
 from .color import green,yellow
-from .util import msg,qmsg,vmsg,gmsg_r,ymsg,bmsg,die,capfirst
+from .util import msg,gmsg_r,ymsg,bmsg,die,capfirst
 from .wallet import Wallet,get_wallet_cls
 
 usage = '[opts] [infile]'
@@ -113,7 +112,7 @@ opts_data = {
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Produce quieter output; suppress some warnings
 -r, --usr-randchars=n Get 'n' characters of additional randomness from user
-                      (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars})
+                      (min={cfg.min_urandchars}, max={cfg.max_urandchars}, default={cfg.usr_randchars})
 -S, --stdout          Write wallet data to stdout instead of file
 -v, --verbose         Produce more verbose output
 """,
@@ -127,16 +126,16 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda help_notes,s: s.format(
+		'options': lambda cfg,help_notes,s: s.format(
 			iaction=capfirst(iaction),
 			oaction=capfirst(oaction),
 			ms_min=help_notes('MasterShareIdx').min_val,
 			ms_max=help_notes('MasterShareIdx').max_val,
 			dsl=help_notes('dfl_seed_len'),
-			g=g,
+			cfg=cfg,
 			gc=gc,
 		),
-		'notes': lambda help_notes,s: s.format(
+		'notes': lambda cfg,help_notes,s: s.format(
 			f=help_notes('fmt_codes'),
 			n_ss=('',help_notes('seedsplit')+'\n\n')[do_ss_note],
 			n_sw=('',help_notes('subwallet')+'\n\n')[do_sw_note],
@@ -146,7 +145,9 @@ FMT CODES:
 	}
 }
 
-cmd_args = opts.init(opts_data,opt_filter=opt_filter,need_proto=False)
+cfg = opts.init(opts_data,opt_filter=opt_filter,need_proto=False)
+
+cmd_args = cfg._args
 
 if invoked_as == 'subgen':
 	from .subseed import SubSeedIdx
@@ -154,7 +155,7 @@ if invoked_as == 'subgen':
 elif invoked_as == 'seedsplit':
 	from .obj import get_obj
 	from .seedsplit import SeedSplitSpecifier,MasterShareIdx
-	master_share = MasterShareIdx(opt.master_share) if opt.master_share else None
+	master_share = MasterShareIdx(cfg.master_share) if cfg.master_share else None
 	if cmd_args:
 		sss = get_obj(SeedSplitSpecifier,s=cmd_args.pop(),silent=True)
 		if master_share:
@@ -178,26 +179,27 @@ if cmd_args:
 		opts.usage()
 	check_infile(cmd_args[0])
 
-sf = get_seed_file(cmd_args,nargs,invoked_as=invoked_as)
+sf = get_seed_file(cfg,nargs,invoked_as=invoked_as)
 
 if invoked_as != 'chk':
 	from .ui import do_license_msg
-	do_license_msg()
+	do_license_msg(cfg)
 
 if invoked_as == 'gen':
 	ss_in = None
 else:
 	ss_in = Wallet(
-		sf,
+		cfg     = cfg,
+		fn      = sf,
 		passchg = invoked_as=='passchg' )
 	m1 = green('Processing input wallet ')
 	m2 = ss_in.seed.sid.hl()
-	m3 = yellow(' (default wallet)') if sf and os.path.dirname(sf) == g.data_dir else ''
+	m3 = yellow(' (default wallet)') if sf and os.path.dirname(sf) == cfg.data_dir else ''
 	msg(m1+m2+m3)
 
 if invoked_as == 'chk':
 	lbl = ss_in.ssdata.label.hl() if hasattr(ss_in.ssdata,'label') else 'NONE'
-	vmsg(f'Wallet label: {lbl}')
+	cfg._util.vmsg(f'Wallet label: {lbl}')
 	# TODO: display creation date
 	sys.exit(0)
 
@@ -206,20 +208,23 @@ if invoked_as != 'gen':
 
 if invoked_as == 'subgen':
 	ss_out = Wallet(
+		cfg      = cfg,
 		seed_bin = ss_in.seed.subseed(ss_idx,print_msg=True).data )
 elif invoked_as == 'seedsplit':
 	shares = ss_in.seed.split(sss.count,sss.id,master_share)
 	seed_out = shares.get_share_by_idx(sss.idx,base_seed=True)
 	msg(seed_out.get_desc(ui=True))
 	ss_out = Wallet(
+		cfg  = cfg,
 		seed = seed_out )
 else:
 	ss_out = Wallet(
+		cfg     = cfg,
 		ss      = ss_in,
 		passchg = invoked_as == 'passchg' )
 
 if invoked_as == 'gen':
-	qmsg(f"This wallet's Seed ID: {ss_out.seed.sid.hl()}")
+	cfg._util.qmsg(f"This wallet's Seed ID: {ss_out.seed.sid.hl()}")
 
 if invoked_as == 'passchg':
 	def data_changed(attrs):
@@ -227,7 +232,7 @@ if invoked_as == 'passchg':
 			if getattr(ss_out.ssdata,attr) != getattr(ss_in.ssdata,attr):
 				return True
 		return False
-	if not ( opt.force_update or data_changed(('passwd','hash_preset','label')) ):
+	if not ( cfg.force_update or data_changed(('passwd','hash_preset','label')) ):
 		die(1,'Password, hash preset and label are unchanged.  Taking no action')
 
 if invoked_as == 'passchg':
@@ -235,7 +240,7 @@ if invoked_as == 'passchg':
 	def secure_delete(fn):
 		bmsg('Securely deleting old wallet')
 		from .fileutil import shred_file
-		shred_file( fn, verbose = opt.verbose )
+		shred_file( fn, verbose = cfg.verbose )
 
 	def rename_old_wallet_maybe(silent):
 		# though very unlikely, old and new wallets could have same Key ID and thus same filename.
@@ -251,31 +256,33 @@ if invoked_as == 'passchg':
 		else:
 			return old_fn
 
-	if ss_in.infile.dirname == g.data_dir:
+	if ss_in.infile.dirname == cfg.data_dir:
 		from .ui import confirm_or_raise
 		confirm_or_raise(
+			cfg      = cfg,
 			message  = yellow('Confirmation of default wallet update'),
 			action   = 'update the default wallet',
 			exit_msg = 'Password not changed' )
 		old_wallet = rename_old_wallet_maybe(silent=True)
-		ss_out.write_to_file( desc='New wallet', outdir=g.data_dir )
+		ss_out.write_to_file( desc='New wallet', outdir=cfg.data_dir )
 		secure_delete( old_wallet )
 	else:
 		old_wallet = rename_old_wallet_maybe(silent=False)
 		ss_out.write_to_file()
 		from .ui import keypress_confirm
-		if keypress_confirm(f'Securely delete old wallet {old_wallet!r}?'):
+		if keypress_confirm( cfg, f'Securely delete old wallet {old_wallet!r}?' ):
 			secure_delete( old_wallet )
-elif invoked_as == 'gen' and not opt.outdir and not opt.stdout:
+elif invoked_as == 'gen' and not cfg.outdir and not cfg.stdout:
 	from .filename import find_file_in_dir
-	if find_file_in_dir( get_wallet_cls('mmgen'), g.data_dir ):
+	if find_file_in_dir( get_wallet_cls('mmgen'), cfg.data_dir ):
 		ss_out.write_to_file()
 	else:
 		from .ui import keypress_confirm
 		if keypress_confirm(
+				cfg,
 				'Make this wallet your default and move it to the data directory?',
 				default_yes = True ):
-			ss_out.write_to_file(outdir=g.data_dir)
+			ss_out.write_to_file(outdir=cfg.data_dir)
 		else:
 			ss_out.write_to_file()
 else:

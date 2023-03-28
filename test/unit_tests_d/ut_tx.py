@@ -11,20 +11,21 @@ from mmgen.tx import NewTX,CompletedTX
 from mmgen.tx.file import MMGenTxFile
 from mmgen.daemon import CoinDaemon
 from mmgen.protocol import init_proto
+from ..include.common import cfg,qmsg,vmsg
 
 async def do_txfile_test(desc,fns):
 	qmsg(f'  Testing CompletedTX initializer ({desc})')
 	for fn in fns:
 		qmsg(f'     parsing: {os.path.basename(fn)}')
 		fpath = os.path.join('test','ref',fn)
-		tx = await CompletedTX(filename=fpath,quiet_open=True)
+		tx = await CompletedTX( cfg=cfg, filename=fpath, quiet_open=True )
 
 		vmsg(tx.info.format())
 
 		f = MMGenTxFile(tx)
 		fn_gen = f.make_filename()
 
-		if g.debug_utf8:
+		if cfg.debug_utf8:
 			fn_gen = fn_gen.replace('-α','')
 
 		assert fn_gen == os.path.basename(fn), f'{fn_gen} != {fn}'
@@ -57,11 +58,11 @@ class unit_tests:
 
 	async def tx(self,name,ut):
 		qmsg('  Testing NewTX initializer')
-		d = CoinDaemon('btc',test_suite=True)
+		d = CoinDaemon( cfg, 'btc', test_suite=True )
 		d.start()
 
-		proto = init_proto('btc',need_amt=True)
-		tx = await NewTX(proto=proto)
+		proto = init_proto( cfg, 'btc', need_amt=True )
+		tx = await NewTX( cfg=cfg, proto=proto )
 
 		d.stop()
 		qmsg('  OK')

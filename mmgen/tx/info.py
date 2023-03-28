@@ -14,7 +14,6 @@ tx.info: transaction info class
 
 from ..globalvars import gc
 from ..color import red,green,orange
-from ..opts import opt
 from ..util import msg,msg_r
 
 import importlib
@@ -84,7 +83,7 @@ class TxInfo:
 				d = tx.dcoin,
 				c = tx.coin )
 
-			if opt.verbose:
+			if tx.cfg.verbose:
 				yield self.format_verbose_footer()
 
 		return ''.join(gen_view()) # TX label might contain non-ascii chars

@@ -94,7 +94,7 @@ class tool_cmd(tool_cmd_base):
 			nbytes: 'number of bytes to output' = 32 ):
 		"print 'n' bytes (default 32) of random data in hex format"
 		from ..crypto import Crypto
-		return Crypto().get_random( nbytes ).hex()
+		return Crypto(self.cfg).get_random( nbytes ).hex()
 
 	def hexreverse(self,hexstr:'sstr'):
 		"reverse bytes of a hexadecimal string"
@@ -103,7 +103,7 @@ class tool_cmd(tool_cmd_base):
 	def hexlify(self,infile:str):
 		"convert bytes in file to hexadecimal (use '-' for stdin)"
 		from ..fileutil import get_data_from_file
-		data = get_data_from_file( infile, dash=True, quiet=True, binary=True )
+		data = get_data_from_file( self.cfg, infile, dash=True, quiet=True, binary=True )
 		return data.hex()
 
 	def unhexlify(self,hexstr:'sstr'):
@@ -117,7 +117,7 @@ class tool_cmd(tool_cmd_base):
 		"create hexdump of data from file (use '-' for stdin)"
 		from ..fileutil import get_data_from_file
 		from ..util2 import pretty_hexdump
-		data = get_data_from_file( infile, dash=True, quiet=True, binary=True )
+		data = get_data_from_file( self.cfg, infile, dash=True, quiet=True, binary=True )
 		return pretty_hexdump( data, cols=cols, line_nums=line_nums ).rstrip()
 
 	def unhexdump(self,infile:str):
@@ -127,7 +127,7 @@ class tool_cmd(tool_cmd_base):
 			msvcrt.setmode( sys.stdout.fileno(), os.O_BINARY )
 		from ..fileutil import get_data_from_file
 		from ..util2 import decode_pretty_hexdump
-		hexdata = get_data_from_file( infile, dash=True, quiet=True )
+		hexdata = get_data_from_file( self.cfg, infile, dash=True, quiet=True )
 		return decode_pretty_hexdump(hexdata)
 
 	def hash160(self,hexstr:'sstr'):
@@ -144,7 +144,7 @@ class tool_cmd(tool_cmd_base):
 		from hashlib import sha256
 		if file_input:
 			from ..fileutil import get_data_from_file
-			b = get_data_from_file( data, binary=True )
+			b = get_data_from_file( self.cfg, data, binary=True )
 		elif hex_input:
 			from ..util2 import decode_pretty_hexdump
 			b = decode_pretty_hexdump(data)
@@ -157,7 +157,7 @@ class tool_cmd(tool_cmd_base):
 		from ..util import make_chksum_6
 		from ..fileutil import get_data_from_file
 		return make_chksum_6(
-			get_data_from_file( infile, dash=True, quiet=True, binary=True ))
+			get_data_from_file( self.cfg, infile, dash=True, quiet=True, binary=True ))
 
 	def str2id6(self,string:'sstr'): # retain ignoring of space for backwards compat
 		"generate 6-character MMGen ID for a string, ignoring spaces in string"
@@ -169,7 +169,7 @@ class tool_cmd(tool_cmd_base):
 		from ..util import make_chksum_8
 		from ..fileutil import get_data_from_file
 		return make_chksum_8(
-			get_data_from_file( infile, dash=True, quiet=True, binary=True ))
+			get_data_from_file( self.cfg, infile, dash=True, quiet=True, binary=True ))
 
 	def randb58(self,
 			nbytes: 'number of bytes to output' = 32,
@@ -177,13 +177,13 @@ class tool_cmd(tool_cmd_base):
 		"generate random data (default: 32 bytes) and convert it to base 58"
 		from ..baseconv import baseconv
 		from ..crypto import Crypto
-		return baseconv('b58').frombytes( Crypto().get_random(nbytes), pad=pad, tostr=True )
+		return baseconv('b58').frombytes( Crypto(self.cfg).get_random(nbytes), pad=pad, tostr=True )
 
 	def bytestob58(self,infile:str,pad: 'pad output to this width' = 0):
 		"convert bytes to base 58 (supply data via STDIN)"
 		from ..fileutil import get_data_from_file
 		from ..baseconv import baseconv
-		data = get_data_from_file( infile, dash=True, quiet=True, binary=True )
+		data = get_data_from_file( self.cfg, infile, dash=True, quiet=True, binary=True )
 		return baseconv('b58').frombytes( data, pad=pad, tostr=True )
 
 	def b58tobytes(self,b58_str:'sstr',pad: 'pad output to this width' = 0):

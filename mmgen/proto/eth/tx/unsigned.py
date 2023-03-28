@@ -79,7 +79,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 			await self.do_sign(keys[0].sec.wif,tx_num_str)
 			msg('OK')
 			from ....tx import SignedTX
-			return await SignedTX(data=self.__dict__)
+			return await SignedTX(cfg=self.cfg,data=self.__dict__)
 		except Exception as e:
 			msg(f'{e}: transaction signing failed!')
 			return False
@@ -92,12 +92,12 @@ class TokenUnsigned(TokenCompleted,Unsigned):
 		o = self.txobj
 		o['token_addr'] = TokenAddr(self.proto,d['token_addr'])
 		o['decimals'] = Int(d['decimals'])
-		t = Token(self.proto,o['token_addr'],o['decimals'])
+		t = Token(self.cfg,self.proto,o['token_addr'],o['decimals'])
 		o['data'] = t.create_data(o['to'],o['amt'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
 
 	async def do_sign(self,wif,tx_num_str):
 		o = self.txobj
-		t = Token(self.proto,o['token_addr'],o['decimals'])
+		t = Token(self.cfg,self.proto,o['token_addr'],o['decimals'])
 		tx_in = t.make_tx_in(o['from'],o['to'],o['amt'],self.start_gas,o['gasPrice'],nonce=o['nonce'])
 		(self.serialized,self.coin_txid) = await t.txsign(tx_in,wif,o['from'],chain_id=o['chainId'])

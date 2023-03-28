@@ -21,9 +21,8 @@ test.test_py_d.ts_ref_altcoin: Altcoin reference file tests for the test.py test
 """
 
 import os
-from mmgen.globalvars import g
-from mmgen.opts import opt
 from .common import *
+from ..include.common import cfg
 from .ts_ref import *
 from .ts_base import *
 
@@ -101,7 +100,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 					ref_dir,
 					self._get_ref_subdir_by_coin(coin),
 					fn )
-				proto = MMGenTxFile.get_proto(txfile,quiet_open=True)
+				proto = MMGenTxFile.get_proto(cfg,txfile,quiet_open=True)
 				if proto.sign_mode == 'daemon':
 					start_test_daemons(proto.network_id)
 					set_vt100()

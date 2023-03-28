@@ -12,8 +12,7 @@
 wallet.brain: brainwallet wallet class
 """
 
-from ..opts import opt
-from ..util import msg,qmsg,qmsg_r
+from ..util import msg
 from ..color import yellow
 from .enc import wallet
 from .seed import Seed
@@ -26,7 +25,7 @@ class wallet(wallet):
 
 	def get_bw_params(self):
 		# already checked
-		a = opt.brain_params.split(',')
+		a = self.cfg.brain_params.split(',')
 		return int(a[0]),a[1]
 
 	def _deformat(self):
@@ -35,25 +34,25 @@ class wallet(wallet):
 
 	def _decrypt(self):
 		d = self.ssdata
-		if opt.brain_params:
+		if self.cfg.brain_params:
 			bw_seed_len,d.hash_preset = self.get_bw_params()
 		else:
-			if not opt.seed_len:
-				qmsg(f'Using default seed length of {yellow(str(Seed.dfl_len))} bits\n'
+			if not self.cfg.seed_len:
+				self.cfg._util.qmsg(f'Using default seed length of {yellow(str(Seed.dfl_len))} bits\n'
 					+ 'If this is not what you want, use the --seed-len option' )
 			self._get_hash_preset()
-			bw_seed_len = opt.seed_len or Seed.dfl_len
-		qmsg_r('Hashing brainwallet data.  Please wait...')
+			bw_seed_len = self.cfg.seed_len or Seed.dfl_len
+		self.cfg._util.qmsg_r('Hashing brainwallet data.  Please wait...')
 		# Use buflen arg of scrypt.hash() to get seed of desired length
 		seed = self.crypto.scrypt_hash_passphrase(
 			self.brainpasswd.encode(),
 			b'',
 			d.hash_preset,
 			buflen = bw_seed_len // 8 )
-		qmsg('Done')
-		self.seed = Seed(seed)
+		self.cfg._util.qmsg('Done')
+		self.seed = Seed( self.cfg, seed )
 		msg(f'Seed ID: {self.seed.sid}')
-		qmsg('Check this value against your records')
+		self.cfg._util.qmsg('Check this value against your records')
 		return True
 
 	def _format(self):

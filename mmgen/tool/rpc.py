@@ -33,11 +33,11 @@ class tool_cmd(tool_cmd_base):
 	async def daemon_version(self):
 		"print coin daemon version"
 		from ..daemon import CoinDaemon
-		from ..globalvars import g
-		d = CoinDaemon( proto=self.proto, test_suite=g.test_suite )
+		d = CoinDaemon( cfg=self.cfg, proto=self.proto, test_suite=self.cfg.test_suite )
 		if self.proto.base_proto == 'Monero':
 			from ..proto.xmr.rpc import MoneroRPCClient
 			r = MoneroRPCClient(
+				cfg    = self.cfg,
 				proto  = self.proto,
 				daemon = d,
 				host   = d.host,
@@ -47,7 +47,7 @@ class tool_cmd(tool_cmd_base):
 				ignore_daemon_version = True )
 		else:
 			from ..rpc import rpc_init
-			r = await rpc_init( self.proto, ignore_daemon_version=True )
+			r = await rpc_init( self.cfg, self.proto, ignore_daemon_version=True )
 		return f'{d.coind_name} version {r.daemon_version} ({r.daemon_version_str})'
 
 	async def getbalance(self,
@@ -56,8 +56,7 @@ class tool_cmd(tool_cmd_base):
 			pager:   'send output to pager' = False ):
 		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
 		from ..tw.bal import TwGetBalance
-		from ..globalvars import g
-		return (await TwGetBalance(self.proto,minconf,quiet)).format(color=g.color)
+		return (await TwGetBalance(self.cfg,self.proto,minconf,quiet)).format(color=self.cfg.color)
 
 	async def twops(self,
 			obj,pager,reverse,detail,sort,age_fmt,interactive,
@@ -94,7 +93,7 @@ class tool_cmd(tool_cmd_base):
 		"view tracking wallet unspent outputs"
 
 		from ..tw.unspent import TwUnspentOutputs
-		obj = await TwUnspentOutputs(self.proto,minconf=minconf)
+		obj = await TwUnspentOutputs(self.cfg,self.proto,minconf=minconf)
 		return await self.twops(
 			obj,pager,reverse,wide,sort,age_fmt,interactive,
 			show_mmid = show_mmid )
@@ -109,7 +108,7 @@ class tool_cmd(tool_cmd_base):
 			interactive: 'enable interactive operation' = False ):
 		"view transaction history of tracking wallet"
 
-		obj = await TwTxHistory(self.proto,sinceblock=sinceblock)
+		obj = await TwTxHistory(self.cfg,self.proto,sinceblock=sinceblock)
 		return await self.twops(
 			obj,pager,reverse,detail,sort,age_fmt,interactive )
 
@@ -146,7 +145,7 @@ class tool_cmd(tool_cmd_base):
 		assert showused in (0,1,2), f"‘showused’ must have a value of 0, 1 or 2"
 
 		from ..tw.addresses import TwAddresses
-		obj = await TwAddresses(self.proto,minconf=minconf,mmgen_addrs=mmgen_addrs)
+		obj = await TwAddresses(self.cfg,self.proto,minconf=minconf,mmgen_addrs=mmgen_addrs)
 		return await self.twops(
 			obj,pager,reverse,wide,sort,age_fmt,interactive,
 			showcoinaddrs = showcoinaddrs,
@@ -157,7 +156,7 @@ class tool_cmd(tool_cmd_base):
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
 		from ..tw.ctl import TwCtl
-		return await (await TwCtl(self.proto,mode='w')).set_comment(mmgen_or_coin_addr,label)
+		return await (await TwCtl(self.cfg,self.proto,mode='w')).set_comment(mmgen_or_coin_addr,label)
 
 	async def remove_label(self,mmgen_or_coin_addr:str):
 		"remove descriptive label for address in tracking wallet"
@@ -168,7 +167,7 @@ class tool_cmd(tool_cmd_base):
 		"remove an address from tracking wallet"
 		from ..tw.ctl import TwCtl
 		# returns None on failure:
-		ret = await (await TwCtl(self.proto,mode='w')).remove_address(mmgen_or_coin_addr)
+		ret = await (await TwCtl(self.cfg,self.proto,mode='w')).remove_address(mmgen_or_coin_addr)
 		if ret:
 			from ..util import msg
 			msg(f'Address {ret!r} deleted from tracking wallet')
@@ -177,7 +176,7 @@ class tool_cmd(tool_cmd_base):
 	async def resolve_address(self,mmgen_or_coin_addr:str):
 		"resolve an MMGen address in the tracking wallet to a coin address or vice-versa"
 		from ..tw.ctl import TwCtl
-		ret = await (await TwCtl(self.proto,mode='w')).resolve_address( mmgen_or_coin_addr )
+		ret = await (await TwCtl(self.cfg,self.proto,mode='w')).resolve_address( mmgen_or_coin_addr )
 		if ret:
 			from ..util import Msg
 			from ..addr import is_coin_addr
@@ -188,7 +187,7 @@ class tool_cmd(tool_cmd_base):
 	async def rescan_address(self,mmgen_or_coin_addr:str):
 		"rescan an address in the tracking wallet to update its balance"
 		from ..tw.ctl import TwCtl
-		return await (await TwCtl(self.proto,mode='w')).rescan_address( mmgen_or_coin_addr )
+		return await (await TwCtl(self.cfg,self.proto,mode='w')).rescan_address( mmgen_or_coin_addr )
 
 	async def rescan_blockchain(self,
 			start_block: int = None,
@@ -203,7 +202,7 @@ class tool_cmd(tool_cmd_base):
 		  parameter.
 		"""
 		from ..tw.ctl import TwCtl
-		ret = await (await TwCtl(self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
+		ret = await (await TwCtl(self.cfg,self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
 		return True
 
 	async def twexport(self,include_amts=True,pretty=False,prune=False,warn_used=False):
@@ -228,6 +227,7 @@ class tool_cmd(tool_cmd_base):
 		"""
 		from ..tw.json import TwJSON
 		await TwJSON.Export(
+			self.cfg,
 			self.proto,
 			include_amts = include_amts,
 			pretty       = pretty,
@@ -249,5 +249,5 @@ class tool_cmd(tool_cmd_base):
 		  rescan_blockchain’.
 		"""
 		from ..tw.json import TwJSON
-		await TwJSON.Import( self.proto, filename, ignore_checksum=ignore_checksum, batch=batch )
+		await TwJSON.Import( self.cfg, self.proto, filename, ignore_checksum=ignore_checksum, batch=batch )
 		return True

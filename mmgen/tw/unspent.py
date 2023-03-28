@@ -20,7 +20,6 @@
 tw.unspent: Tracking wallet unspent outputs class for the MMGen suite
 """
 
-from ..globalvars import g
 from ..util import msg,suf,fmt
 from ..objmethods import MMGenObject
 from ..obj import (
@@ -77,8 +76,8 @@ class TwUnspentOutputs(TwView):
 			def amt2(self,value):
 				return self.proto.coin_amt(value)
 
-	async def __init__(self,proto,minconf=1,addrs=[]):
-		await super().__init__(proto)
+	async def __init__(self,cfg,proto,minconf=1,addrs=[]):
+		await super().__init__(cfg,proto)
 		self.minconf  = minconf
 		self.addrs    = addrs
 		from ..globalvars import gc

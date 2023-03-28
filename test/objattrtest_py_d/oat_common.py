@@ -17,7 +17,7 @@ from mmgen.addr import *
 from mmgen.tx import *
 from mmgen.tw.unspent import *
 from mmgen.key import *
-from ..include.common import getrand
+from ..include.common import cfg,getrand
 
 from collections import namedtuple
 atd = namedtuple('attrtest_entry',['attrs','args','kwargs'])
@@ -43,13 +43,13 @@ sample_objs = {
 	'CoinTxID':  CoinTxID('aa'*32),
 
 	'SeedID':    SeedID(sid='F00F00BB'),
-	'Seed':      Seed(seed_bin=seed_bin),
+	'Seed':      Seed(cfg,seed_bin=seed_bin),
 
-	'SubSeedList': SubSeedList(Seed(seed_bin=seed_bin)),
+	'SubSeedList': SubSeedList(Seed(cfg,seed_bin=seed_bin)),
 	'SubSeedIdx':  SubSeedIdx('1S'),
 
 	'SeedSplitIDString': SeedSplitIDString('alice'),
-	'SeedShareList':     SeedShareList(Seed(seed_bin=seed_bin),SeedShareCount(2)),
+	'SeedShareList':     SeedShareList(Seed(cfg,seed_bin=seed_bin),SeedShareCount(2)),
 	'SeedShareIdx':      SeedShareIdx(1),
 	'SeedShareCount':    SeedShareCount(2),
 	'MasterShareIdx':    MasterShareIdx(7),

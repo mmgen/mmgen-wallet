@@ -8,10 +8,11 @@ test.objattrtest_py_d.oat_btc_mainnet: BTC mainnet test vectors for MMGen data o
 """
 
 from .oat_common import *
+from ..include.common import cfg
 from mmgen.protocol import init_proto
 from mmgen.amt import BTCAmt
 
-proto = init_proto('btc',need_amt=True)
+proto = init_proto( cfg, 'btc', need_amt=True )
 
 sample_objs.update({
 	'PrivKey':   PrivKey(proto,seed_bin,compressed=True,pubkey_type='std'),
@@ -70,7 +71,7 @@ tests = {
 		'data': (0b001, bytes),
 		'sid':  (0b001, SeedID),
 		},
-		[seed_bin],
+		[cfg,seed_bin],
 		{},
 	),
 	'SubSeed': atd({
@@ -105,7 +106,7 @@ tests = {
 		'id_str': (0b001, SeedSplitIDString),
 		'count':  (0b001, SeedShareCount),
 		},
-		[sample_objs['MasterShareIdx'], sample_objs['Seed'], 'foo', 2],
+		[cfg,sample_objs['MasterShareIdx'], sample_objs['Seed'], 'foo', 2],
 		{},
 	),
 	# twuo.py

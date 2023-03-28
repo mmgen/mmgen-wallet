@@ -4,7 +4,8 @@
 test.unit_tests_d.ut_scrypt: password hashing unit test for the MMGen suite
 """
 
-from ..include.common import *
+from ..include.common import cfg,qmsg,vmsg,omsg_r,silence,end_silence
+from mmgen.util import msg,msg_r
 
 class unit_test(object):
 
@@ -15,7 +16,7 @@ class unit_test(object):
 		qmsg('')
 
 		from mmgen.crypto import Crypto
-		crypto = Crypto()
+		crypto = Crypto(cfg)
 
 		salt = bytes.fromhex('f00f' * 16)
 
@@ -35,7 +36,7 @@ class unit_test(object):
 			for pw_base,res in pws:
 				for pw in (pw_base,pw_base.encode()):
 					pw_disp = "'"+pw+"'" if type(pw) == str else "b'"+pw.decode()+"'"
-					if opt.quiet:
+					if cfg.quiet:
 						omsg_r('.')
 					else:
 						msg_r(f'\n  password {pw_disp:9} ')
@@ -47,32 +48,32 @@ class unit_test(object):
 				hp = str(hp)
 				res = presets[hp]
 				pw = 'φυβαρ'
-				if opt.quiet:
+				if cfg.quiet:
 					omsg_r('.')
 				else:
 					msg_r(f'\n  {hp!r:3}: {crypto.hash_presets[hp]!r:12}  ')
 				st = time.time()
 				ret = crypto.scrypt_hash_passphrase(pw,salt,hp).hex()
 				t = time.time() - st
-				vmsg('' if g.test_suite_deterministic else f'  {t:0.4f} secs')
+				vmsg('' if cfg.test_suite_deterministic else f'  {t:0.4f} secs')
 				assert ret == res, ret
 
-		if opt.quiet:
+		if cfg.quiet:
 			silence()
 
-		g.force_standalone_scrypt_module = False
+		cfg.force_standalone_scrypt_module = False
 		vmsg('Passwords (auto module selection):')
 		test_passwords()
 		vmsg('Hash presets (auto module selection):')
-		test_presets((1,2,3,4) if opt.fast else (1,2,3,4,5,6,7))
+		test_presets((1,2,3,4) if cfg.fast else (1,2,3,4,5,6,7))
 
-		g.force_standalone_scrypt_module = True
+		cfg.force_standalone_scrypt_module = True
 		vmsg('Passwords (force standalone scrypt module):')
 		test_passwords()
 		vmsg('Hash presets (force standalone scrypt module):')
 		test_presets((1,2,3))
 
-		if opt.quiet:
+		if cfg.quiet:
 			end_silence()
 
 		msg('OK')

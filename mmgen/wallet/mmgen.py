@@ -14,10 +14,8 @@ wallet.mmgen: MMGen native wallet class
 
 import os
 
-from ..globalvars import g
-from ..opts import opt
 from ..seed import Seed
-from ..util import msg,qmsg,make_timestamp,make_chksum_6,split_into_cols,is_chksum_6,compare_chksums
+from ..util import msg,make_timestamp,make_chksum_6,split_into_cols,is_chksum_6
 from ..obj import MMGenWalletLabel,get_obj
 from ..baseconv import baseconv
 
@@ -28,9 +26,9 @@ class wallet(wallet):
 	desc = 'MMGen wallet'
 
 	def __init__(self,*args,**kwargs):
-		if opt.label:
+		if self.cfg.label:
 			self.label = MMGenWalletLabel(
-				opt.label,
+				self.cfg.label,
 				msg = "Error in option '--label'" )
 		else:
 			self.label = None
@@ -43,7 +41,7 @@ class wallet(wallet):
 			'for no label' )
 		from ..ui import line_input
 		while True:
-			ret = line_input(prompt)
+			ret = line_input( self.cfg, prompt )
 			if ret:
 				lbl = get_obj(MMGenWalletLabel,s=ret)
 				if lbl:
@@ -57,19 +55,19 @@ class wallet(wallet):
 	def _get_label(self):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'label'):
 			old_lbl = self.ss_in.ssdata.label
-			if opt.keep_label:
+			if self.cfg.keep_label:
 				lbl = old_lbl
-				qmsg('Reusing label {} at user request'.format( lbl.hl2(encl='‘’') ))
+				self.cfg._util.qmsg('Reusing label {} at user request'.format( lbl.hl2(encl='‘’') ))
 			elif self.label:
 				lbl = self.label
-				qmsg('Using label {} requested on command line'.format( lbl.hl2(encl='‘’') ))
+				self.cfg._util.qmsg('Using label {} requested on command line'.format( lbl.hl2(encl='‘’') ))
 			else: # Prompt, using old value as default
 				lbl = self._get_label_from_user(old_lbl)
-			if (not opt.keep_label) and self.op == 'pwchg_new':
-				qmsg('Label {}'.format( 'unchanged' if lbl == old_lbl else f'changed to {lbl!r}' ))
+			if (not self.cfg.keep_label) and self.op == 'pwchg_new':
+				self.cfg._util.qmsg('Label {}'.format( 'unchanged' if lbl == old_lbl else f'changed to {lbl!r}' ))
 		elif self.label:
 			lbl = self.label
-			qmsg('Using label {} requested on command line'.format( lbl.hl2(encl='‘’') ))
+			self.cfg._util.qmsg('Using label {} requested on command line'.format( lbl.hl2(encl='‘’') ))
 		else:
 			lbl = self._get_label_from_user()
 		self.ssdata.label = lbl
@@ -110,7 +108,7 @@ class wallet(wallet):
 				return False
 
 			chk = make_chksum_6(' '.join(lines[1:]))
-			if not compare_chksums(lines[0],'master',chk,'computed',
+			if not self.cfg._util.compare_chksums(lines[0],'master',chk,'computed',
 						hdr='For wallet master checksum',verbose=True):
 				return False
 
@@ -132,9 +130,9 @@ class wallet(wallet):
 		hpdata = lines[3].split()
 
 		d.hash_preset = hp = hpdata[0][:-1]  # a string!
-		qmsg(f'Hash preset of wallet: {hp!r}')
-		if opt.hash_preset and opt.hash_preset != hp:
-			qmsg(f'Warning: ignoring user-requested hash preset {opt.hash_preset!r}')
+		self.cfg._util.qmsg(f'Hash preset of wallet: {hp!r}')
+		if self.cfg.hash_preset and self.cfg.hash_preset != hp:
+			self.cfg._util.qmsg(f'Warning: ignoring user-requested hash preset {self.cfg.hash_preset!r}')
 
 		hash_params = tuple(map(int,hpdata[1:]))
 
@@ -152,7 +150,7 @@ class wallet(wallet):
 				msg(f'Invalid format for {key} in {self.desc}: {l}')
 				return False
 
-			if not compare_chksums(chk,key,
+			if not self.cfg._util.compare_chksums(chk,key,
 					make_chksum_6(b58_val),'computed checksum',verbose=True):
 				return False
 
@@ -169,11 +167,11 @@ class wallet(wallet):
 		d = self.ssdata
 		# Needed for multiple transactions with {}-txsign
 		d.passwd = self._get_passphrase(
-			add_desc = os.path.basename(self.infile.name) if opt.quiet else '' )
+			add_desc = os.path.basename(self.infile.name) if self.cfg.quiet else '' )
 		key = self.crypto.make_key( d.passwd, d.salt, d.hash_preset )
 		ret = self.crypto.decrypt_seed( d.enc_seed, key, d.seed_id, d.key_id )
 		if ret:
-			self.seed = Seed(ret)
+			self.seed = Seed( self.cfg, ret )
 			return True
 		else:
 			return False

@@ -9,9 +9,10 @@ test.objtest_py_d.ot_ltc_testnet: LTC testnet test vectors for MMGen data object
 
 from mmgen.obj import *
 from .ot_common import *
+from ..include.common import cfg
 
 from mmgen.protocol import init_proto
-proto = init_proto('ltc',network='testnet',need_amt=True)
+proto = init_proto( cfg, 'ltc', network='testnet', need_amt=True )
 
 tests = {
 	'CoinAddr': {

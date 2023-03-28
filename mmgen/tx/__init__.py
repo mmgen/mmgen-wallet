@@ -33,7 +33,7 @@ def _get_cls_info(clsname,modname,args,kwargs):
 		proto = kwargs['data']['proto']
 	elif 'filename' in kwargs:
 		from .file import MMGenTxFile
-		proto = MMGenTxFile.get_proto( kwargs['filename'], quiet_open=True )
+		proto = MMGenTxFile.get_proto( kwargs['cfg'], kwargs['filename'], quiet_open=True )
 	elif clsname == 'Base':
 		proto = None
 	else:
@@ -52,19 +52,20 @@ def _get_cls_info(clsname,modname,args,kwargs):
 
 	kwargs['proto'] = proto
 
-	return ( proto, clsname, modname, kwargs )
+	return ( kwargs['cfg'], proto, clsname, modname, kwargs )
+
 
 def _get_obj( _clsname, _modname, *args, **kwargs ):
 	"""
 	determine cls/mod/proto and pass them to _base_proto_subclass() to get a transaction instance
 	"""
-	proto,clsname,modname,kwargs = _get_cls_info(_clsname,_modname,args,kwargs)
+	cfg,proto,clsname,modname,kwargs = _get_cls_info(_clsname,_modname,args,kwargs)
 
 	return _base_proto_subclass( clsname, modname, proto )(*args,**kwargs)
 
 async def _get_obj_async( _clsname, _modname, *args, **kwargs ):
 
-	proto,clsname,modname,kwargs = _get_cls_info(_clsname,_modname,args,kwargs)
+	cfg,proto,clsname,modname,kwargs = _get_cls_info(_clsname,_modname,args,kwargs)
 
 	# NB: tracking wallet needed to retrieve the 'symbol' and 'decimals' parameters of token addr
 	# (see twctl:import_token()).
@@ -72,7 +73,7 @@ async def _get_obj_async( _clsname, _modname, *args, **kwargs ):
 	# signing.
 	if proto and proto.tokensym and clsname in ('New','OnlineSigned'):
 		from ..tw.ctl import TwCtl
-		kwargs['twctl'] = await TwCtl(proto)
+		kwargs['twctl'] = await TwCtl(cfg,proto)
 
 	return _base_proto_subclass( clsname, modname, proto )(*args,**kwargs)
 

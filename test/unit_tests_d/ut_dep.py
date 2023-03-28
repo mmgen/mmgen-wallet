@@ -11,7 +11,7 @@ from subprocess import run,PIPE
 
 from mmgen.common import *
 from mmgen.exception import NoLEDSupport
-from ..include.common import check_solc_ver
+from ..include.common import cfg,vmsg,check_solc_ver
 
 class unit_tests:
 
@@ -127,7 +127,7 @@ class unit_tests:
 				'--supply=100000000000000000000000000',
 				'--decimals=18',
 				'--stdout',
-				init_proto('eth').checksummed_addr('deadbeef'*5),
+				init_proto( cfg, 'eth' ).checksummed_addr('deadbeef'*5),
 			]
 			cp = run(cmd,stdout=PIPE,stderr=PIPE)
 			vmsg(cp.stderr.decode())

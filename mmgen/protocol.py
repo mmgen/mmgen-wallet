@@ -22,7 +22,7 @@ protocol: Coin protocol base classes and initializer
 
 from collections import namedtuple
 
-from .globalvars import g,gc
+from .globalvars import gc
 from .objmethods import MMGenObject
 
 decoded_wif = namedtuple('decoded_wif',['sec','pubkey_type','compressed'])
@@ -54,7 +54,8 @@ class CoinProtocol(MMGenObject):
 		is_fork_of = None
 		networks   = ('mainnet','testnet','regtest')
 
-		def __init__(self,coin,name,network,tokensym=None,need_amt=False):
+		def __init__(self,cfg,coin,name,network,tokensym=None,need_amt=False):
+			self.cfg        = cfg
 			self.coin       = coin.upper()
 			self.coin_id    = self.coin
 			self.name       = name
@@ -96,7 +97,7 @@ class CoinProtocol(MMGenObject):
 
 			if self.base_coin in ('ETH','XMR'):
 				from .util2 import get_keccak
-				self.keccak_256 = get_keccak()
+				self.keccak_256 = get_keccak(cfg)
 
 			if need_amt:
 				import mmgen.amt
@@ -111,7 +112,7 @@ class CoinProtocol(MMGenObject):
 			return self.coin
 
 		@classmethod
-		def chain_name_to_network(cls,coin,chain_name):
+		def chain_name_to_network(cls,cfg,coin,chain_name):
 			"""
 			The generic networks 'mainnet', 'testnet' and 'regtest' are required for all coins
 			that support transaction operations.
@@ -121,7 +122,7 @@ class CoinProtocol(MMGenObject):
 			For Bitcoin and Bitcoin forks, 'network' and 'chain_name' are equivalent.
 			"""
 			for network in ('mainnet','testnet','regtest'):
-				proto = init_proto(coin,network=network)
+				proto = init_proto( cfg, coin, network=network )
 				for proto_chain_name in proto.chain_names:
 					if chain_name == proto_chain_name:
 						return network
@@ -211,7 +212,7 @@ class CoinProtocol(MMGenObject):
 				elif pk == self.secp256k1_ge: # ditto
 					die(4,'Private key == secp256k1_ge!')
 				else:
-					if not g.test_suite:
+					if not self.cfg.test_suite:
 						ymsg(f'Warning: private key is greater than secp256k1 group order!:\n  {hexpriv}')
 					return (pk % self.secp256k1_ge).to_bytes(self.privkey_len,'big')
 
@@ -231,6 +232,7 @@ class CoinProtocol(MMGenObject):
 				compressed  = False )
 
 def init_proto(
+		cfg,
 		coin       = None,
 		testnet    = False,
 		regtest    = False,
@@ -271,20 +273,24 @@ def init_proto(
 		)
 
 	return getattr(CoinProtocol,proto_name)(
+		cfg       = cfg,
 		coin      = coin,
 		name      = name,
 		network   = network,
 		tokensym  = tokensym,
 		need_amt  = need_amt )
 
-def init_proto_from_opts(need_amt=False):
+def init_proto_from_cfg(cfg,need_amt):
 	return init_proto(
-		coin      = g.coin,
-		network   = g.network,
-		tokensym  = g.token,
+		cfg       = cfg,
+		coin      = cfg.coin,
+		network   = cfg.network,
+		tokensym  = cfg.token,
 		need_amt  = need_amt )
 
-def warn_trustlevel(coinsym):
+def warn_trustlevel(cfg):
+
+	coinsym = cfg.coin
 
 	if coinsym.lower() in CoinProtocol.coins:
 		trust_level = CoinProtocol.coins[coinsym.lower()].trust_level
@@ -306,7 +312,7 @@ def warn_trustlevel(coinsym):
 		Are you sure you want to continue?
 	"""
 
-	from .util import qmsg,fmt
+	from .util import fmt
 	from .color import red,yellow,green
 
 	warning = fmt(m).strip().format(
@@ -319,11 +325,11 @@ def warn_trustlevel(coinsym):
 		}[trust_level],
 		p = gc.proj_name )
 
-	if g.test_suite:
-		qmsg(warning)
+	if cfg.test_suite:
+		cfg._util.qmsg(warning)
 		return
 
 	from .ui import keypress_confirm
-	if not keypress_confirm(warning,default_yes=True):
+	if not keypress_confirm( cfg, warning, default_yes=True ):
 		import sys
 		sys.exit(0)

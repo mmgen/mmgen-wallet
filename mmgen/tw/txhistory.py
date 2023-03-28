@@ -42,8 +42,8 @@ class TwTxHistory(TwView):
 	filters = ('show_unconfirmed',)
 	mod_subpath = 'tw.txhistory'
 
-	async def __init__(self,proto,sinceblock=0):
-		await super().__init__(proto)
+	async def __init__(self,cfg,proto,sinceblock=0):
+		await super().__init__(cfg,proto)
 		self.sinceblock = NonNegativeInt( sinceblock if sinceblock >= 0 else self.rpc.blockcount + sinceblock )
 
 	@property

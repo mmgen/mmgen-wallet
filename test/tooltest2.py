@@ -32,7 +32,7 @@ from test.overlay import overlay_setup
 sys.path.insert(0,overlay_setup(repo_root))
 
 from mmgen.common import *
-from test.include.common import *
+from test.include.common import set_globals,end_msg,sample_text
 from mmgen.bip39 import is_bip39_mnemonic
 from mmgen.baseconv import is_mmgen_mnemonic
 from mmgen.xmrseed import is_xmrseed
@@ -88,6 +88,18 @@ If no command is given, the whole suite of tests is run.
 """
 	}
 }
+
+sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
+
+cfg = opts.init(
+	opts_data,
+	init_opts = {
+		'usr_randchars': 0,
+		'hash_preset': '1',
+		'passwd_file': 'test/ref/keyaddrfile_password',
+	})
+
+set_globals(cfg)
 
 sample_text_hexdump = (
 	'000000: 5468 6520 5469 6d65 7320 3033 2f4a 616e{n}' +
@@ -764,9 +776,9 @@ async def call_method(cls,method,cmd_name,args,out,opts,mmtype,stdin_input):
 			' '.join([cmd_name]+[repr(e) for e in args]),
 			' '+mmtype if mmtype else '' ))
 	aargs,kwargs = main_tool.process_args(cmd_name,args,cls)
-	oq_save = bool(opt.quiet)
-	if not opt.verbose:
-		opt.quiet = True
+	oq_save = bool(cfg.quiet)
+	if not cfg.verbose:
+		cfg.quiet = True
 	if stdin_input:
 		fd0,fd1 = os.pipe()
 		if os.fork(): # parent
@@ -776,7 +788,7 @@ async def call_method(cls,method,cmd_name,args,out,opts,mmtype,stdin_input):
 			cmd_out = method(*aargs,**kwargs)
 			os.dup2(stdin_save,0)
 			os.wait()
-			opt.quiet = oq_save
+			cfg.quiet = oq_save
 			return cmd_out
 		else: # child
 			os.close(fd0)
@@ -787,12 +799,12 @@ async def call_method(cls,method,cmd_name,args,out,opts,mmtype,stdin_input):
 		ret = method(*aargs,**kwargs)
 		if type(ret).__name__ == 'coroutine':
 			ret = await ret
-		opt.quiet = oq_save
+		cfg.quiet = oq_save
 		return ret
 
 def tool_api(cls,cmd_name,args,out,opts):
 	from mmgen.tool.api import tool_api
-	tool = tool_api()
+	tool = tool_api(cfg)
 	if opts:
 		for o in opts:
 			if o.startswith('--type='):
@@ -832,7 +844,7 @@ async def run_test(cls,gid,cmd_name):
 	# behavior is like test.py: run coin-dependent tests only if proto.testnet or proto.coin != BTC
 	if gid in coin_dependent_groups:
 		k = '{}_{}'.format(
-			( g.token.lower() if proto.tokensym else proto.coin.lower() ),
+			( cfg.token.lower() if proto.tokensym else proto.coin.lower() ),
 			('mainnet','testnet')[proto.testnet] )
 		if k in data:
 			data = data[k]
@@ -847,10 +859,10 @@ async def run_test(cls,gid,cmd_name):
 
 	m = '{} {}{}'.format(
 		purple('Testing'),
-		cmd_name if opt.names else docstring_head(getattr(cls,cmd_name)),
+		cmd_name if cfg.names else docstring_head(getattr(cls,cmd_name)),
 		m2 )
 
-	msg_r(green(m)+'\n' if opt.verbose else m)
+	msg_r(green(m)+'\n' if cfg.verbose else m)
 
 	for d in data:
 		args,out,opts,mmtype = d + tuple([None] * (4-len(d)))
@@ -859,17 +871,17 @@ async def run_test(cls,gid,cmd_name):
 			stdin_input = args[0]
 			args[0] = '-'
 
-		if opt.tool_api:
+		if cfg.tool_api:
 			if args and args[0 ]== '-':
 				continue
 			cmd_out = tool_api(cls,cmd_name,args,out,opts)
-		elif opt.fork:
+		elif cfg.fork:
 			cmd_out = fork_cmd(cmd_name,args,out,opts,stdin_input)
 		else:
 			if stdin_input and gc.platform == 'win':
 				msg('Skipping for MSWin - no os.fork()')
 				continue
-			method = getattr(cls(cmdname=cmd_name,proto=proto,mmtype=mmtype),cmd_name)
+			method = getattr(cls(cfg,cmdname=cmd_name,proto=proto,mmtype=mmtype),cmd_name)
 			cmd_out = await call_method(cls,method,cmd_name,args,out,opts,mmtype,stdin_input)
 
 		try:
@@ -886,15 +898,15 @@ async def run_test(cls,gid,cmd_name):
 					out[1],
 					func_out ))
 		elif isinstance(out,(list,tuple)):
-			for co,o in zip(cmd_out.split(NL) if opt.fork else cmd_out,out):
+			for co,o in zip(cmd_out.split(NL) if cfg.fork else cmd_out,out):
 				check_output(co,o)
 		else:
 			check_output(cmd_out,out)
 
-		if not opt.verbose:
+		if not cfg.verbose:
 			msg_r('.')
 
-	if not opt.verbose:
+	if not cfg.verbose:
 		msg('OK')
 
 def docstring_head(obj):
@@ -904,16 +916,16 @@ async def do_group(gid):
 	desc = f'command group {gid!r}'
 	cls = main_tool.get_mod_cls(gid.lower())
 	qmsg(blue('Testing ' +
-		desc if opt.names else
+		desc if cfg.names else
 		( docstring_head(cls) or desc )
 	))
 
-	for cmdname in cls().user_commands:
+	for cmdname in cls(cfg).user_commands:
 		if cmdname in skipped_tests:
 			continue
 		if cmdname not in tests[gid]:
 			m = f'No test for command {cmdname!r} in group {gid!r}!'
-			if opt.die_on_missing:
+			if cfg.die_on_missing:
 				die(1,m+'  Aborting')
 			else:
 				msg(m)
@@ -933,52 +945,44 @@ def list_tested_cmds():
 	for gid in tests:
 		Msg('\n'.join(tests[gid]))
 
-sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
+qmsg = cfg._util.qmsg
+vmsg = cfg._util.vmsg
 
-cmd_args = opts.init(
-	opts_data,
-	init_opts = {
-		'usr_randchars': 0,
-		'hash_preset': '1',
-		'passwd_file': 'test/ref/keyaddrfile_password',
-	})
+proto = cfg._proto
 
-from mmgen.protocol import init_proto_from_opts
-proto = init_proto_from_opts(need_amt=True)
-
-if opt.tool_api:
+if cfg.tool_api:
 	del tests['Wallet']
 	del tests['File']
 
 import mmgen.main_tool as main_tool
 
-if opt.list_tests:
+if cfg.list_tests:
 	Msg('Available tests:')
 	for modname,cmdlist in main_tool.mods.items():
 		cls = getattr(importlib.import_module(f'mmgen.tool.{modname}'),'tool_cmd')
 		Msg('  {:6} - {}'.format( modname, docstring_head(cls) ))
 	sys.exit(0)
 
-if opt.list_tested_cmds:
+if cfg.list_tested_cmds:
 	list_tested_cmds()
 	sys.exit(0)
 
-if opt.system:
+if cfg.system:
 	tool_exec = 'mmgen-tool'
 	sys.path.pop(0)
 else:
 	os.environ['PYTHONPATH'] = repo_root
 	tool_exec = os.path.relpath(os.path.join('cmds','mmgen-tool'))
 
-if opt.fork:
+if cfg.fork:
 	passthru_args = ['coin','type','testnet','token']
 	tool_cmd = [ tool_exec, '--skip-cfg-file' ] + [
 		'--{}{}'.format(
 			k.replace('_','-'),
-			'='+getattr(opt,k) if getattr(opt,k) != True else '')
-		for k in passthru_args if getattr(opt,k) ]
+			'='+getattr(cfg,k) if getattr(cfg,k) != True else '')
+		for k in passthru_args if getattr(cfg,k) ]
 
-	if opt.coverage:
+	if cfg.coverage:
 		d,f = init_coverage()
 		tool_cmd_preargs = ['python3','-m','trace','--count','--coverdir='+d,'--file='+f]
 	else:
@@ -988,8 +992,8 @@ start_time = int(time.time())
 
 async def main():
 	try:
-		if cmd_args:
-			for cmd in cmd_args:
+		if cfg._args:
+			for cmd in cfg._args:
 				if cmd in tests:
 					await do_group(cmd)
 				else:

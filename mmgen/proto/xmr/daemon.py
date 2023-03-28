@@ -14,8 +14,7 @@ proto.xmr.daemon: Monero base protocol daemon classes
 
 import os
 
-from ...globalvars import g,gc
-from ...opts import opt
+from ...globalvars import gc
 from ...util import list_gen,die,contains_any
 from ...daemon import CoinDaemon,RPCDaemon,_nw,_dd
 
@@ -46,6 +45,7 @@ class monero_daemon(CoinDaemon):
 
 		from .rpc import MoneroRPCClient
 		self.rpc = MoneroRPCClient(
+			cfg    = self.cfg,
 			proto  = self.proto,
 			host   = self.host,
 			port   = self.rpc_port,
@@ -91,6 +91,7 @@ class MoneroWalletDaemon(RPCDaemon):
 
 	def __init__(
 			self,
+			cfg,
 			proto,
 			wallet_dir,
 			test_suite  = False,
@@ -105,7 +106,7 @@ class MoneroWalletDaemon(RPCDaemon):
 		self.proto = proto
 		self.test_suite = test_suite
 
-		super().__init__()
+		super().__init__(cfg)
 
 		self.network = proto.network
 		self.wallet_dir = wallet_dir
@@ -123,13 +124,14 @@ class MoneroWalletDaemon(RPCDaemon):
 		self.daemon_port = (
 			None if daemon_addr else
 			CoinDaemon(
+				cfg        = self.cfg,
 				proto      = proto,
 				test_suite = test_suite).rpc_port
 		)
 
-		self.host = host or opt.wallet_rpc_host or g.monero_wallet_rpc_host
-		self.user = user or opt.wallet_rpc_user or g.monero_wallet_rpc_user
-		self.passwd = passwd or opt.wallet_rpc_password or g.monero_wallet_rpc_password
+		self.host = host or self.cfg.wallet_rpc_host or self.cfg.monero_wallet_rpc_host
+		self.user = user or self.cfg.wallet_rpc_user or self.cfg.monero_wallet_rpc_user
+		self.passwd = passwd or self.cfg.wallet_rpc_password or self.cfg.monero_wallet_rpc_password
 
 		assert self.host
 		assert self.user
@@ -157,5 +159,6 @@ class MoneroWalletDaemon(RPCDaemon):
 
 		from .rpc import MoneroWalletRPCClient
 		self.rpc = MoneroWalletRPCClient(
+			cfg             = self.cfg,
 			daemon          = self,
 			test_connection = False )

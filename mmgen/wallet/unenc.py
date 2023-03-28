@@ -12,7 +12,6 @@
 wallet.unenc: unencrypted wallet base class
 """
 
-from ..globalvars import g
 from ..color import blue,yellow
 from ..util import msg,msg_r,capfirst,is_int
 from .base import wallet
@@ -41,7 +40,7 @@ class wallet(wallet):
 				r = get_char('\r'+prompt)
 				if is_int(r) and 1 <= int(r) <= len(ok_lens):
 					break
-			msg_r(('\r','\n')[g.test_suite] + ' '*len(prompt) + '\r')
+			msg_r(('\r','\n')[self.cfg.test_suite] + ' '*len(prompt) + '\r')
 			return ok_lens[int(r)-1]
 
 		msg('{} {}'.format(
@@ -54,7 +53,8 @@ class wallet(wallet):
 			prompt = self.choose_seedlen_confirm.format(usr_len)
 			from ..ui import keypress_confirm
 			if keypress_confirm(
+					self.cfg,
 					prompt,
 					default_yes = True,
-					no_nl       = not g.test_suite ):
+					no_nl       = not self.cfg.test_suite ):
 				return usr_len

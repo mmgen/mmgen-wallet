@@ -16,7 +16,6 @@ import json
 
 import mmgen.tx.new as TxBase
 from .base import Base,TokenBase
-from ....opts import opt
 from ....obj import Int,ETHNonce,MMGenTxID,Str,HexStr
 from ....util import msg,is_int,is_hex_str,make_chksum_6
 from ....tw.ctl import TwCtl
@@ -34,16 +33,16 @@ class New(Base,TxBase.New):
 
 		super().__init__(*args,**kwargs)
 
-		if opt.gas:
-			self.gas = self.start_gas = self.proto.coin_amt(int(opt.gas),'wei')
+		if self.cfg.gas:
+			self.gas = self.start_gas = self.proto.coin_amt(int(self.cfg.gas),'wei')
 		else:
 			self.gas = self.proto.coin_amt(self.dfl_gas,'wei')
 			self.start_gas = self.proto.coin_amt(self.dfl_start_gas,'wei')
 
-		if opt.contract_data:
+		if self.cfg.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
 			assert not 'Token' in type(self).__name__, m
-			with open(opt.contract_data) as fp:
+			with open(self.cfg.contract_data) as fp:
 				self.usr_contract_data = HexStr(fp.read().strip())
 			self.disable_fee_check = True
 
@@ -93,7 +92,7 @@ class New(Base,TxBase.New):
 	def select_unspent(self,unspent):
 		from ....ui import line_input
 		while True:
-			reply = line_input('Enter an account to spend from: ').strip()
+			reply = line_input( self.cfg, 'Enter an account to spend from: ' ).strip()
 			if reply:
 				if not is_int(reply):
 					msg('Account number must be an integer')
@@ -119,10 +118,10 @@ class New(Base,TxBase.New):
 			from_unit='wei'
 		)
 
-	# given fee estimate (gas price) in wei, return absolute fee, adjusting by opt.fee_adjust
+	# given fee estimate (gas price) in wei, return absolute fee, adjusting by self.cfg.fee_adjust
 	def fee_est2abs(self,rel_fee,fe_type=None):
-		ret = self.fee_gasPrice2abs(rel_fee) * opt.fee_adjust
-		if opt.verbose:
+		ret = self.fee_gasPrice2abs(rel_fee) * self.cfg.fee_adjust
+		if self.cfg.verbose:
 			msg(f'Estimated fee: {ret} ETH')
 		return ret
 
@@ -146,10 +145,10 @@ class New(Base,TxBase.New):
 
 	async def get_input_addrs_from_cmdline(self):
 		ret = []
-		if opt.inputs:
-			data_root = (await TwCtl(self.proto)).data_root # must create new instance here
+		if self.cfg.inputs:
+			data_root = (await TwCtl(self.cfg,self.proto)).data_root # must create new instance here
 			errmsg = 'Address {!r} not in tracking wallet'
-			for addr in opt.inputs.split(','):
+			for addr in self.cfg.inputs.split(','):
 				if is_mmgen_id(self.proto,addr):
 					for waddr in data_root:
 						if data_root[waddr]['mmid'] == addr:
@@ -178,7 +177,7 @@ class TokenNew(TokenBase,New):
 
 	async def make_txobj(self): # called by create_serialized()
 		await super().make_txobj()
-		t = Token(self.proto,self.twctl.token,self.twctl.decimals)
+		t = Token(self.cfg,self.proto,self.twctl.token,self.twctl.decimals)
 		o = self.txobj
 		o['token_addr'] = t.addr
 		o['decimals'] = t.decimals

@@ -15,8 +15,7 @@ tw.json: export and import tracking wallet to JSON format
 import os,json
 from collections import namedtuple
 
-from ..opts import opt
-from ..util import msg,ymsg,fmt,suf,die,make_timestamp,make_chksum_8,compare_or_die
+from ..util import msg,ymsg,fmt,suf,die,make_timestamp,make_chksum_8
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..rpc import json_encoder
@@ -30,10 +29,11 @@ class TwJSON:
 		pruned = None
 		fn_pfx = 'mmgen-tracking-wallet-dump'
 
-		def __new__(cls,proto,*args,**kwargs):
+		def __new__(cls,cfg,proto,*args,**kwargs):
 			return MMGenObject.__new__(proto.base_proto_subclass(TwJSON,'tw.json',cls.__name__))
 
-		def __init__(self,proto):
+		def __init__(self,cfg,proto):
+			self.cfg = cfg
 			self.proto = proto
 			self.coin = proto.coin_id.lower()
 			self.network = proto.network
@@ -54,7 +54,7 @@ class TwJSON:
 				from ..addrlist import AddrIdxList
 				prune_id = AddrIdxList(idx_list=self.pruned).id_str
 				fn = get_fn(prune_id)
-				if len(fn) > os.statvfs(opt.outdir or os.curdir).f_namemax:
+				if len(fn) > os.statvfs(self.cfg.outdir or os.curdir).f_namemax:
 					fn = get_fn(f'idhash={make_chksum_8(prune_id.encode()).lower()}')
 			else:
 				fn = get_fn(None)
@@ -84,11 +84,11 @@ class TwJSON:
 
 		blockchain_rescan_warning = None
 
-		async def __init__(self,proto,filename,ignore_checksum=False,batch=False):
+		async def __init__(self,cfg,proto,filename,ignore_checksum=False,batch=False):
 
-			super().__init__(proto)
+			super().__init__(cfg,proto)
 
-			self.twctl = await TwCtl( proto, mode='i', rpc_ignore_wallet=True )
+			self.twctl = await TwCtl( cfg, proto, mode='i', rpc_ignore_wallet=True )
 
 			def check_network(data):
 				coin,network = data['network'].split('_')
@@ -108,7 +108,7 @@ class TwJSON:
 			def verify_data(d):
 				check_network(d['data'])
 				check_chksum(d)
-				compare_or_die(
+				self.cfg._util.compare_or_die(
 					val1  = self.mappings_chksum,
 					val2  = d['data']['mappings_checksum'],
 					desc1 = 'computed mappings checksum',
@@ -118,7 +118,7 @@ class TwJSON:
 				return True
 
 			from ..fileutil import get_data_from_file
-			self.data = json.loads(get_data_from_file(filename,quiet=True))
+			self.data = json.loads(get_data_from_file( self.cfg, filename, quiet=True ))
 			self.keys = self.data['data']['entries_keys']
 			self.entries = await self.get_entries()
 
@@ -141,7 +141,7 @@ class TwJSON:
 			msg('\n'+fmt(self.info_msg.strip(),indent='  '))
 
 			from ..ui import keypress_confirm
-			if not keypress_confirm('Continue?'):
+			if not keypress_confirm( self.cfg, 'Continue?' ):
 				msg('Exiting at user request')
 				return False
 
@@ -152,7 +152,7 @@ class TwJSON:
 
 	class Export(Base,metaclass=AsyncInit):
 
-		async def __init__(self,proto,include_amts=True,pretty=False,prune=False,warn_used=False):
+		async def __init__(self,cfg,proto,include_amts=True,pretty=False,prune=False,warn_used=False):
 
 			if prune and not self.can_prune:
 				die(1,f'Pruning not supported for {proto.name} protocol')
@@ -160,12 +160,12 @@ class TwJSON:
 			self.prune = prune
 			self.warn_used = warn_used
 
-			super().__init__(proto)
+			super().__init__(cfg,proto)
 
 			if not include_amts:
 				self.keys.remove('amount')
 
-			self.twctl = await TwCtl( proto )
+			self.twctl = await TwCtl( cfg, proto )
 
 			self.entries = await self.get_entries()
 
@@ -190,6 +190,7 @@ class TwJSON:
 
 			from ..fileutil import write_data_to_file
 			write_data_to_file(
+				cfg     = self.cfg,
 				outfile = self.dump_fn,
 				data    = self.json_dump(
 					{

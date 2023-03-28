@@ -13,7 +13,6 @@ proto.btc.addrdata: Bitcoin base protocol addrdata classes
 """
 
 from ...addrdata import TwAddrData
-from ...util import vmsg
 
 class BitcoinTwAddrData(TwAddrData):
 
@@ -27,7 +26,7 @@ class BitcoinTwAddrData(TwAddrData):
 	}
 
 	async def get_tw_data(self,twctl=None):
-		vmsg('Getting address data from tracking wallet')
+		self.cfg._util.vmsg('Getting address data from tracking wallet')
 		c = self.rpc
 		if 'label_api' in c.caps:
 			accts = await c.call('listlabels')

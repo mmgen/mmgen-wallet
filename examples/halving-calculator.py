@@ -15,10 +15,9 @@ examples.halving-calculator.py: Demonstrate use of the MMGen asyncio/aiohttp JSO
 import time
 
 import mmgen.opts as opts
-from mmgen.opts import opt
 from mmgen.util import async_run
 
-opts.init({
+cfg = opts.init({
 	'text': {
 		'desc': 'Estimate date of next block subsidy halving',
 		'usage':'[opts]',
@@ -55,16 +54,15 @@ def time_diff_warning(t_diff):
 
 async def main():
 
-	from mmgen.protocol import init_proto_from_opts
-	proto = init_proto_from_opts(need_amt=True)
+	proto = cfg._proto
 
 	from mmgen.rpc import rpc_init
-	c = await rpc_init(proto)
+	c = await rpc_init(cfg,proto)
 
 	tip = await c.call('getblockcount')
 	assert tip > 1, 'block tip must be > 1'
 	remaining = proto.halving_interval - tip % proto.halving_interval
-	sample_size = int(opt.sample_size) if opt.sample_size else min(tip-1,max(remaining,144))
+	sample_size = int(cfg.sample_size) if cfg.sample_size else min(tip-1,max(remaining,144))
 
 	# aiohttp backend will perform these two calls concurrently:
 	cur,old = await c.gathered_call('getblockstats',((tip,),(tip - sample_size,)))

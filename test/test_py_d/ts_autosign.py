@@ -23,8 +23,7 @@ test.test_py_d.ts_autosign: Autosign tests for the test.py test suite
 import os,shutil
 from subprocess import run
 
-from mmgen.globalvars import g,gc
-from mmgen.opts import opt
+from mmgen.globalvars import gc
 
 from ..include.common import *
 from .common import *
@@ -88,7 +87,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			die(1,f'Test {type(self).__name__} not supported for Windows platform')
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
-		if self.simulate and not opt.exact_output:
+		if self.simulate and not cfg.exact_output:
 			die(1,red('This command must be run with --exact-output enabled!'))
 
 		if self.simulate or not self.live:
@@ -168,7 +167,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		mn = read_from_file(mn_file).strip().split()
 		from mmgen.mn_entry import mn_entry
 		entry_mode = 'full'
-		mne = mn_entry(mn_type,entry_mode)
+		mne = mn_entry( cfg, mn_type, entry_mode )
 		t.expect('Type a number.*: ',str(mne.entry_modes.index(entry_mode)+1),regex=True)
 		stealth_mnemonic_entry(t,mne,mn,entry_mode)
 		wf = t.written_to_file('Autosign wallet')
@@ -203,7 +202,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 
 		for f,fn in zip(tfs,tfns):
 			if fn: # use empty fn to skip file
-				if g.debug_utf8:
+				if cfg.debug_utf8:
 					ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
 					fn = fn[:-len(ext)] + '-α' + ext
 				target = joinpath(self.mountpoint,'tx',fn)
@@ -432,7 +431,7 @@ class TestSuiteAutosignLive(TestSuiteAutosignBTC):
 		t = self.spawn(
 			'mmgen-autosign',
 			self.opts + led_opts + ['--quiet','--no-summary','wait'])
-		if not opt.exact_output:
+		if not cfg.exact_output:
 			omsg('')
 		prompt_insert_sign(t)
 

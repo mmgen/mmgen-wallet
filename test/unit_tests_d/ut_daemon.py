@@ -8,9 +8,10 @@ from subprocess import run,DEVNULL
 from mmgen.common import *
 from mmgen.daemon import *
 from mmgen.protocol import init_proto
+from ..include.common import cfg,qmsg,qmsg_r,vmsg
 
 def test_flags():
-	d = CoinDaemon('eth')
+	d = CoinDaemon(cfg,'eth')
 	vmsg(f'Available opts:  {fmt_list(d.avail_opts,fmt="bare")}')
 	vmsg(f'Available flags: {fmt_list(d.avail_flags,fmt="bare")}')
 	vals = namedtuple('vals',['online','no_daemonize','keep_cfg_file'])
@@ -22,7 +23,7 @@ def test_flags():
 				(['online'],['keep_cfg_file'],                vals(True,False,True)),
 				(['online','no_daemonize'],['keep_cfg_file'], vals(True,True,True)),
 			):
-			d = CoinDaemon('eth',opts=opts,flags=flags)
+			d = CoinDaemon(cfg,'eth',opts=opts,flags=flags)
 			assert d.flag.keep_cfg_file == val.keep_cfg_file
 			assert d.opt.online == val.online
 			assert d.opt.no_daemonize == val.no_daemonize
@@ -56,7 +57,7 @@ def test_cmd(args_in,message):
 	qmsg_r(message)
 	args = ['python3', f'test/{args_in[0]}-coin-daemons.py'] + list(args_in[1:])
 	vmsg('\n' + orange(f"Running '{' '.join(args)}':"))
-	pipe = None if opt.verbose else PIPE
+	pipe = None if cfg.verbose else PIPE
 	cp = run( args, stdout=pipe, stderr=pipe, check=True )
 	qmsg('OK')
 	return True

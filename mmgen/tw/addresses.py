@@ -74,9 +74,9 @@ class TwAddresses(TwView):
 	def coinaddr_list(self):
 		return [d.addr for d in self.data]
 
-	async def __init__(self,proto,minconf=1,mmgen_addrs='',get_data=False):
+	async def __init__(self,cfg,proto,minconf=1,mmgen_addrs='',get_data=False):
 
-		await super().__init__(proto)
+		await super().__init__(cfg,proto)
 
 		self.minconf = NonNegativeInt(minconf)
 
@@ -320,10 +320,9 @@ class TwAddresses(TwView):
 			top = len(data) - 1 if top is None else top )
 
 		if start is not None:
-			from ..opts import opt
 			for d in data[start:]:
 				if d.al_id == al_id:
-					if not d.recvd and (opt.autochg_ignore_labels or not d.comment):
+					if not d.recvd and (self.cfg.autochg_ignore_labels or not d.comment):
 						if d.comment:
 							msg('{} {} {} {}{}'.format(
 								yellow('WARNING: address'),
@@ -362,7 +361,7 @@ class TwAddresses(TwView):
 
 			from ..ui import line_input
 			while True:
-				res = line_input(prompt)
+				res = line_input( self.cfg, prompt )
 				if is_int(res) and 0 < int(res) <= len(addrs):
 					return addrs[int(res)-1]
 				msg(f'{res}: invalid entry')

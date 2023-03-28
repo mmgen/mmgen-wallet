@@ -19,13 +19,13 @@ class backend:
 
 	class base(keygen_base):
 
-		def __init__(self):
+		def __init__(self,cfg):
 
 			from ...proto.xmr.params import mainnet
 			self.proto_cls = mainnet
 
 			from ...util2 import get_keccak
-			self.keccak_256 = get_keccak()
+			self.keccak_256 = get_keccak(cfg)
 
 		def to_viewkey(self,privkey):
 			return self.proto_cls.preprocess_key(
@@ -35,8 +35,8 @@ class backend:
 
 	class nacl(base):
 
-		def __init__(self):
-			super().__init__()
+		def __init__(self,cfg):
+			super().__init__(cfg)
 			from nacl.bindings import crypto_scalarmult_ed25519_base_noclamp
 			self.scalarmultbase = crypto_scalarmult_ed25519_base_noclamp
 
@@ -49,8 +49,8 @@ class backend:
 
 	class ed25519(base):
 
-		def __init__(self):
-			super().__init__()
+		def __init__(self,cfg):
+			super().__init__(cfg)
 			from ...contrib.ed25519 import edwards,encodepoint,B,scalarmult
 			self.edwards     = edwards
 			self.encodepoint = encodepoint
@@ -85,7 +85,7 @@ class backend:
 
 	class ed25519ll_djbec(ed25519):
 
-		def __init__(self):
-			super().__init__()
+		def __init__(self,cfg):
+			super().__init__(cfg)
 			from ...contrib.ed25519ll_djbec import scalarmult
 			self.scalarmult = scalarmult

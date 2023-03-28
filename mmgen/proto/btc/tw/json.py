@@ -81,6 +81,7 @@ class BitcoinTwJSON(TwJSON):
 				if self.prune:
 					from .prune import TwAddressesPrune
 					self._addrlist = al = await TwAddressesPrune(
+						self.cfg,
 						self.proto,
 						get_data  = True,
 						warn_used = self.warn_used )
@@ -88,7 +89,7 @@ class BitcoinTwJSON(TwJSON):
 					self.pruned = al.do_prune()
 				else:
 					from .addresses import TwAddresses
-					self._addrlist = await TwAddresses(self.proto,get_data=True)
+					self._addrlist = await TwAddresses(self.cfg,self.proto,get_data=True)
 			return self._addrlist
 
 		async def get_entries(self): # TODO: include 'received' field

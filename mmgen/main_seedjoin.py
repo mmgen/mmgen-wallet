@@ -22,9 +22,8 @@ mmgen-seedjoin: Regenerate an MMGen deterministic wallet from seed shares
 """
 
 import mmgen.opts as opts
-from .globalvars import g,gc
-from .opts import opt
-from .util import msg,msg_r,qmsg,die
+from .globalvars import gc
+from .util import msg,msg_r,die
 from .color import yellow
 from .obj import MMGenWalletLabel
 from .seed import Seed
@@ -58,7 +57,7 @@ opts_data = {
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Produce quieter output; suppress some warnings
 -r, --usr-randchars=n Get 'n' characters of additional randomness from user
-                      (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars})
+                      (min={cfg.min_urandchars}, max={cfg.max_urandchars}, default={cfg.usr_randchars})
 -S, --stdout          Write wallet data to stdout instead of file
 -v, --verbose         Produce more verbose output
 """,
@@ -82,13 +81,13 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda s: s.format(
+		'options': lambda cfg,s: s.format(
 			ms_min=MasterShareIdx.min_val,
 			ms_max=MasterShareIdx.max_val,
-			g=g,
+			cfg=cfg,
 			gc=gc,
 		),
-		'notes': lambda help_notes,s: s.format(
+		'notes': lambda cfg,help_notes,s: s.format(
 			f=help_notes('fmt_codes'),
 			n_pw=help_notes('passwd'),
 		)
@@ -97,7 +96,7 @@ FMT CODES:
 
 def print_shares_info():
 	si,out = 0,'\nComputed shares:\n'
-	if opt.master_share:
+	if cfg.master_share:
 		fs = '{:3}: {}->{} ' + yellow('(master share #{}, split id ') + '{}' + yellow(', share count {})\n')
 		out += fs.format(
 				1,
@@ -109,36 +108,36 @@ def print_shares_info():
 		si = 1
 	for n,s in enumerate(shares[si:],si+1):
 		out += f'{n:3}: {s.sid}\n'
-	qmsg(out)
+	cfg._util.qmsg(out)
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
-if len(cmd_args) + bool(opt.hidden_incog_input_params) < 2:
+if len(cfg._args) + bool(cfg.hidden_incog_input_params) < 2:
 	opts.usage()
 
-if opt.master_share:
-	master_idx = MasterShareIdx(opt.master_share)
-	id_str = SeedSplitIDString(opt.id_str or 'default')
+if cfg.master_share:
+	master_idx = MasterShareIdx(cfg.master_share)
+	id_str = SeedSplitIDString(cfg.id_str or 'default')
 
-if opt.id_str and not opt.master_share:
+if cfg.id_str and not cfg.master_share:
 	die(1,'--id-str option meaningless in context of non-master-share join')
 
 from .fileutil import check_infile
 from .wallet import check_wallet_extension
-for arg in cmd_args:
+for arg in cfg._args:
 	check_wallet_extension(arg)
 	check_infile(arg)
 
 from .ui import do_license_msg
-do_license_msg()
+do_license_msg(cfg)
 
-qmsg('Input files:\n  {}\n'.format('\n  '.join(cmd_args)))
+cfg._util.qmsg('Input files:\n  {}\n'.format('\n  '.join(cfg._args)))
 
-shares = [Wallet().seed] if opt.hidden_incog_input_params else []
-shares += [Wallet(fn).seed for fn in cmd_args]
+shares = [Wallet(cfg).seed] if cfg.hidden_incog_input_params else []
+shares += [Wallet(cfg,fn).seed for fn in cfg._args]
 
-if opt.master_share:
-	share1 = SeedShareMasterJoining(master_idx,shares[0],id_str,len(shares)).derived_seed
+if cfg.master_share:
+	share1 = SeedShareMasterJoining( cfg, master_idx, shares[0], id_str, len(shares) ).derived_seed
 else:
 	share1 = shares[0]
 
@@ -146,8 +145,8 @@ print_shares_info()
 
 msg_r('Joining {n}-of-{n} XOR split...'.format(n=len(shares)))
 
-seed_out = Seed.join_shares([share1]+shares[1:])
+seed_out = Seed.join_shares( cfg, [share1] + shares[1:] )
 
 msg(f'OK\nJoined Seed ID: {seed_out.sid.hl()}')
 
-Wallet(seed=seed_out).write_to_file()
+Wallet(cfg,seed=seed_out).write_to_file()

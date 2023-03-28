@@ -20,8 +20,6 @@
 test.test_py_d.ts_main: Basic operations tests for the test.py test suite
 """
 
-from mmgen.globalvars import g
-from mmgen.opts import opt
 from mmgen.fileutil import get_data_from_file,write_data_to_file
 from mmgen.wallet import get_wallet_cls
 from mmgen.wallet.mmgen import wallet as MMGenWallet
@@ -41,9 +39,9 @@ def make_brainwallet_file(fn):
 		return ''.join([ws_list[getrandnum_range(1,200) % len(ws_list)] for i in range(nchars)])
 	rand_pairs = [wl[getrandnum_range(1,200) % len(wl)] + rand_ws_seq() for i in range(nwords)]
 	d = ''.join(rand_pairs).rstrip() + '\n'
-	if opt.verbose:
+	if cfg.verbose:
 		msg_r(f'Brainwallet password:\n{cyan(d)}')
-	write_data_to_file(fn,d,'brainwallet password',quiet=True,ignore_opt_outdir=True)
+	write_data_to_file(cfg,fn,d,'brainwallet password',quiet=True,ignore_opt_outdir=True)
 
 def verify_checksum_or_exit(checksum,chk):
 	chk = strip_ansi_escapes(chk)
@@ -194,7 +192,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
 		if trunner == None or self.proto.coin.lower() not in self.networks:
 			return
-		self.rpc = async_run(rpc_init(self.proto))
+		self.rpc = async_run(rpc_init(cfg,self.proto))
 		self.lbl_id = ('account','label')['label_api' in self.rpc.caps]
 		if self.proto.coin in ('BTC','BCH','LTC'):
 			self.tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[self.proto.coin.lower()]
@@ -207,9 +205,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		addrfile = self.get_file_with_ext('addrs')
 		from mmgen.addrlist import AddrList
 		silence()
-		chk = AddrList( self.proto, addrfile ).chksum
+		chk = AddrList( cfg, self.proto, addrfile ).chksum
 		end_silence()
-		if opt.verbose and display:
+		if cfg.verbose and display:
 			msg(f'Checksum: {cyan(chk)}')
 		return chk
 
@@ -239,10 +237,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def delete_dfl_wallet(self,pf):
 		self.write_to_tmpfile('del_dw_run',b'',binary=True)
-		if opt.no_dw_delete:
+		if cfg.no_dw_delete:
 			return 'skip'
-		for wf in [f for f in os.listdir(g.data_dir) if f[-6:]=='.mmdat']:
-			os.unlink(joinpath(g.data_dir,wf))
+		for wf in [f for f in os.listdir(cfg.data_dir) if f[-6:]=='.mmdat']:
+			os.unlink(joinpath(cfg.data_dir,wf))
 		self.spawn('',msg_only=True)
 		self.have_dfl_wallet = False
 		return 'ok'
@@ -294,7 +292,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def passchg(self,wf,pf,label_action='cmdline',dfl_wallet=False,delete=False):
 		silence()
-		self.write_to_tmpfile(pwfile,get_data_from_file(pf))
+		self.write_to_tmpfile( pwfile, get_data_from_file(cfg,pf) )
 		end_silence()
 		add_args = {'cmdline': ['-d',self.tmpdir,'-L','Changed label (UTF-8) α'],
 					'keep':    ['-d',self.tr.trash_dir,'--keep-label'],
@@ -336,8 +334,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.walletchk(wf,pf,wcls=wcls,dfl_wallet=dfl_wallet)
 
 	def _write_fake_data_to_file(self,d):
-		write_data_to_file(self.unspent_data_file,d,'Unspent outputs',quiet=True,ignore_opt_outdir=True)
-		if opt.verbose or opt.exact_output:
+		write_data_to_file(cfg,self.unspent_data_file,d,'Unspent outputs',quiet=True,ignore_opt_outdir=True)
+		if cfg.verbose or cfg.exact_output:
 			sys.stderr.write(f'Fake transaction wallet data written to file {self.unspent_data_file!r}\n')
 
 	def _create_fake_unspent_entry(self,coinaddr,al_id=None,idx=None,comment=None,non_mmgen=False,segwit=False):
@@ -373,7 +371,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		for d in tx_data.values():
 			al = adata.addrlist(al_id=d['al_id'])
 			for n,(idx,coinaddr) in enumerate(al.addrpairs()):
-				comment = get_comment(do_shuffle=not g.test_suite_deterministic)
+				comment = get_comment(do_shuffle=not cfg.test_suite_deterministic)
 				out.append(self._create_fake_unspent_entry(coinaddr,d['al_id'],idx,comment,segwit=d['segwit']))
 				if n == 0:  # create a duplicate address. This means addrs_per_wallet += 1
 					out.append(self._create_fake_unspent_entry(coinaddr,d['al_id'],idx,comment,segwit=d['segwit']))
@@ -387,11 +385,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 				pubkey_type = 'std' )
 			from mmgen.addrgen import KeyGenerator,AddrGenerator
 			rand_coinaddr = AddrGenerator(
+				cfg,
 				self.proto,
 				('legacy','compressed')[non_mmgen_input_compressed]
-				).to_addr(KeyGenerator(self.proto,'std').gen_data(privkey))
+				).to_addr(KeyGenerator( cfg, self.proto, 'std' ).gen_data(privkey))
 			of = joinpath(self.cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 			write_data_to_file(
+				cfg               = cfg,
 				outfile           = of,
 				data              = privkey.wif + '\n',
 				desc              = f'compressed {self.proto.name} key',
@@ -406,14 +406,14 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		from mmgen.addrdata import AddrData
 		tx_data,ad = {},AddrData(self.proto)
 		for s in sources:
-			afile = get_file_with_ext(self.cfgs[s]['tmpdir'],'addrs')
-			al = AddrList(self.proto,afile)
+			addrfile = get_file_with_ext(self.cfgs[s]['tmpdir'],'addrs')
+			al = AddrList( cfg, self.proto, addrfile )
 			ad.add(al)
 			aix = AddrIdxList(fmt_str=self.cfgs[s]['addr_idx_list'])
 			if len(aix) != addrs_per_wallet:
 				die( 'TestSuiteFatalException', f'Address index list length != {addrs_per_wallet}: {repr(aix)}' )
 			tx_data[s] = {
-				'addrfile': afile,
+				'addrfile': addrfile,
 				'chk': al.chksum,
 				'al_id': al.al_id,
 				'addr_idxs': aix[-2:],
@@ -426,8 +426,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		privkey = PrivKey(self.proto,getrand(32),compressed=True,pubkey_type='std')
 		t = ('compressed','segwit')['S' in self.proto.mmtypes]
 		from mmgen.addrgen import KeyGenerator,AddrGenerator
-		rand_coinaddr = AddrGenerator(self.proto,t).to_addr(
-			KeyGenerator(self.proto,'std').gen_data(privkey)
+		rand_coinaddr = AddrGenerator( cfg, self.proto, t ).to_addr(
+			KeyGenerator( cfg, self.proto, 'std' ).gen_data(privkey)
 		)
 
 		# total of two outputs must be < 10 BTC (<1000 LTC)
@@ -472,7 +472,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 						cmdline_inputs             = False,
 						tweaks                     = [] ):
 
-		if opt.verbose or opt.exact_output:
+		if cfg.verbose or cfg.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
 
 		silence()
@@ -496,7 +496,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 		end_silence()
 
-		if opt.verbose or opt.exact_output:
+		if cfg.verbose or cfg.exact_output:
 			sys.stderr.write('\n')
 
 		t = self.spawn(
@@ -557,8 +557,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.do_comment(False,has_label=True)
 			for cnum,wcls in (('1',IncogWallet),('3',MMGenWallet),('4',MMGenWallet)):
 				t.passphrase(wcls.desc,self.cfgs[cnum]['wpasswd'])
-			self._do_confirm_send(t,quiet=not g.debug,confirm_send=True)
-			if g.debug:
+			self._do_confirm_send(t,quiet=not cfg.debug,confirm_send=True)
+			if cfg.debug:
 				t.written_to_file('Transaction')
 		else:
 			t.do_comment(False)
@@ -617,7 +617,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		wcls = get_wallet_cls(fmt_code=out_fmt)
 		msg('==> {}: {}'.format(
 			wcls.desc,
-			cyan(get_data_from_file(f,wcls.desc)) ))
+			cyan(get_data_from_file( cfg, f, wcls.desc ))
+		))
 		end_silence()
 		return t
 

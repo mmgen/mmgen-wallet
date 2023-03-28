@@ -22,13 +22,13 @@ opts_data = {
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
 
 import asyncio
 from mmgen.tx import CompletedTX
 
-if len(cmd_args) != 1:
+if len(cfg._args) != 1:
 	opts.usage()
 
-tx = asyncio.run(CompletedTX(cmd_args[0],quiet_open=True))
-tx.file.write(ask_tty=False,ask_overwrite=not opt.quiet,ask_write=not opt.quiet)
+tx = asyncio.run(CompletedTX(cfg._args[0],quiet_open=True))
+tx.file.write(ask_tty=False,ask_overwrite=not cfg.quiet,ask_write=not cfg.quiet)

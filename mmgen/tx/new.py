@@ -12,13 +12,11 @@
 tx.new: new transaction class
 """
 
-from ..globalvars import *
-from ..opts import opt
 from .base import Base
 from ..globalvars import gc
 from ..color import pink,yellow
 from ..obj import get_obj,MMGenList
-from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension
+from ..util import msg,fmt,die,suf,remove_dups,get_extension
 from ..addr import (
 	is_mmgen_id,
 	MMGenAddrType,
@@ -28,7 +26,7 @@ from ..addr import (
 	is_addrlist_id
 )
 
-def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
+def mmaddr2coinaddr(cfg,mmaddr,ad_w,ad_f,proto):
 
 	def wmsg(k):
 		messages = {
@@ -59,7 +57,7 @@ def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
 			if coin_addr:
 				msg(wmsg('addr_in_addrfile_only'))
 				from ..ui import keypress_confirm
-				if not (opt.yes or keypress_confirm('Continue anyway?')):
+				if not (cfg.yes or keypress_confirm( cfg, 'Continue anyway?' )):
 					sys.exit(1)
 			else:
 				die(2,wmsg('addr_not_found'))
@@ -125,8 +123,8 @@ class New(Base):
 			if abs_fee:
 				prompt = '{} TX fee{}: {}{} {} ({} {})\n'.format(
 						desc,
-						(f' (after {opt.fee_adjust:.2f}X adjustment)'
-							if opt.fee_adjust != 1 and desc.startswith('Network-estimated')
+						(f' (after {self.cfg.fee_adjust:.2f}X adjustment)'
+							if self.cfg.fee_adjust != 1 and desc.startswith('Network-estimated')
 								else ''),
 						('','≈')[self.fee_is_approximate],
 						abs_fee.hl(),
@@ -134,11 +132,11 @@ class New(Base):
 						pink(str(self.fee_abs2rel(abs_fee))),
 						self.rel_fee_disp)
 				from ..ui import keypress_confirm
-				if opt.yes or keypress_confirm(prompt+'OK?',default_yes=True):
-					if opt.yes:
+				if self.cfg.yes or keypress_confirm( self.cfg, prompt+'OK?', default_yes=True ):
+					if self.cfg.yes:
 						msg(prompt)
 					return abs_fee
-			fee = line_input(self.usr_fee_prompt)
+			fee = line_input( self.cfg, self.usr_fee_prompt )
 			desc = 'User-selected'
 
 	# we don't know fee yet, so perform preliminary check with fee == 0
@@ -153,19 +151,19 @@ class New(Base):
 
 	async def get_fee_from_user(self,have_estimate_fail=[]):
 
-		if opt.fee:
+		if self.cfg.fee:
 			desc = 'User-selected'
-			start_fee = opt.fee
+			start_fee = self.cfg.fee
 		else:
 			desc = 'Network-estimated ({}, {} conf{})'.format(
-				opt.fee_estimate_mode.upper(),
-				pink(str(opt.fee_estimate_confs)),
-				suf(opt.fee_estimate_confs) )
+				self.cfg.fee_estimate_mode.upper(),
+				pink(str(self.cfg.fee_estimate_confs)),
+				suf(self.cfg.fee_estimate_confs) )
 			fee_per_kb,fe_type = await self.get_rel_fee_from_network()
 
 			if fee_per_kb < 0:
 				if not have_estimate_fail:
-					msg(self.fee_fail_fs.format(c=opt.fee_estimate_confs,t=fe_type))
+					msg(self.fee_fail_fs.format(c=self.cfg.fee_estimate_confs,t=fe_type))
 					have_estimate_fail.append(True)
 				start_fee = None
 			else:
@@ -181,7 +179,7 @@ class New(Base):
 		arg,amt = arg_in.split(',',1) if ',' in arg_in else (arg_in,None)
 
 		if is_mmgen_id(self.proto,arg):
-			coin_addr = mmaddr2coinaddr(arg,ad_w,ad_f,self.proto)
+			coin_addr = mmaddr2coinaddr(self.cfg,arg,ad_w,ad_f,self.proto)
 		elif is_coin_addr(self.proto,arg):
 			coin_addr = CoinAddr(self.proto,arg)
 		elif is_mmgen_addrtype(self.proto,arg) or is_addrlist_id(self.proto,arg):
@@ -189,7 +187,7 @@ class New(Base):
 				die(2,f'Change addresses not supported for {self.proto.name} protocol')
 
 			from ..tw.addresses import TwAddresses
-			al = await TwAddresses(self.proto,get_data=True)
+			al = await TwAddresses(self.cfg,self.proto,get_data=True)
 
 			if is_mmgen_addrtype(self.proto,arg):
 				arg = MMGenAddrType(self.proto,arg)
@@ -253,9 +251,9 @@ class New(Base):
 		from ..fileutil import check_infile
 		for addrfile in addrfiles:
 			check_infile(addrfile)
-			ad_f.add(AddrList( self.proto, addrfile ))
+			ad_f.add(AddrList( self.cfg, self.proto, addrfile ))
 
-		ad_w = await TwAddrData(self.proto,twctl=self.twctl)
+		ad_w = await TwAddrData(self.cfg,self.proto,twctl=self.twctl)
 
 		await self.process_cmd_args(cmd_args,ad_f,ad_w)
 
@@ -271,6 +269,7 @@ class New(Base):
 	def confirm_autoselected_addr(self,chg):
 		from ..ui import keypress_confirm
 		if not keypress_confirm(
+				self.cfg,
 				'Using {a} as {b} address. OK?'.format(
 					a = chg.mmid.hl(),
 					b = 'single output' if len(self.outputs) == 1 else 'change' ),
@@ -279,9 +278,10 @@ class New(Base):
 
 	async def warn_chg_addr_used(self,chg):
 		from ..tw.addresses import TwAddresses
-		if (await TwAddresses(self.proto,get_data=True)).is_used(chg.addr):
+		if (await TwAddresses(self.cfg,self.proto,get_data=True)).is_used(chg.addr):
 			from ..ui import keypress_confirm
 			if not keypress_confirm(
+					self.cfg,
 					'{a} {b} {c}\n{d}'.format(
 						a = yellow(f'Requested change address'),
 						b = (chg.mmid or chg.addr).hl(),
@@ -297,7 +297,7 @@ class New(Base):
 		prompt = 'Enter a range or space-separated list of outputs to spend: '
 		from ..ui import line_input
 		while True:
-			reply = line_input(prompt).strip()
+			reply = line_input( self.cfg, prompt ).strip()
 			if reply:
 				from ..addrlist import AddrIdxList
 				selected = get_obj(AddrIdxList, fmt_str=','.join(reply.split()) )
@@ -315,7 +315,7 @@ class New(Base):
 			return idx + 1
 
 		def get_uo_nums():
-			for addr in opt.inputs.split(','):
+			for addr in self.cfg.inputs.split(','):
 				if is_mmgen_id(self.proto,addr):
 					attr = 'twmmid'
 				elif is_coin_addr(self.proto,addr):
@@ -354,7 +354,7 @@ class New(Base):
 	async def get_inputs_from_user(self,outputs_sum):
 
 		while True:
-			us_f = self.select_unspent_cmdline if opt.inputs else self.select_unspent
+			us_f = self.select_unspent_cmdline if self.cfg.inputs else self.select_unspent
 			sel_nums = us_f(self.twuo.data)
 
 			msg(f'Selected output{suf(sel_nums)}: {{}}'.format(' '.join(str(n) for n in sel_nums)))
@@ -373,8 +373,8 @@ class New(Base):
 			if funds_left >= 0:
 				p = self.final_inputs_ok_msg(funds_left)
 				from ..ui import keypress_confirm
-				if opt.yes or keypress_confirm(p+'. OK?',default_yes=True):
-					if opt.yes:
+				if self.cfg.yes or keypress_confirm( self.cfg, p+'. OK?', default_yes=True ):
+					if self.cfg.yes:
 						msg(p)
 					return funds_left
 			else:
@@ -386,21 +386,21 @@ class New(Base):
 
 		from ..tw.unspent import TwUnspentOutputs
 
-		if opt.comment_file:
-			self.add_comment(opt.comment_file)
+		if self.cfg.comment_file:
+			self.add_comment(self.cfg.comment_file)
 
 		twuo_addrs = await self.get_input_addrs_from_cmdline()
 
-		self.twuo = await TwUnspentOutputs(self.proto,minconf=opt.minconf,addrs=twuo_addrs)
+		self.twuo = await TwUnspentOutputs(self.cfg,self.proto,minconf=self.cfg.minconf,addrs=twuo_addrs)
 		await self.twuo.get_data()
 
 		if not do_info:
 			await self.get_outputs_from_cmdline(cmd_args)
 
 		from ..ui import do_license_msg
-		do_license_msg()
+		do_license_msg(self.cfg)
 
-		if not opt.inputs:
+		if not self.cfg.inputs:
 			await self.twuo.view_filter_and_sort()
 
 		self.twuo.display_total()
@@ -422,7 +422,7 @@ class New(Base):
 
 		self.update_change_output(funds_left)
 
-		if not opt.yes:
+		if not self.cfg.yes:
 			self.add_comment()  # edits an existing comment
 
 		await self.create_serialized(locktime=locktime) # creates self.txid too
@@ -432,12 +432,12 @@ class New(Base):
 		self.chain = self.proto.chain_name
 		self.check_fee()
 
-		qmsg('Transaction successfully created')
+		self.cfg._util.qmsg('Transaction successfully created')
 
 		from . import UnsignedTX
-		new = UnsignedTX(data=self.__dict__)
+		new = UnsignedTX(cfg=self.cfg,data=self.__dict__)
 
-		if not opt.yes:
+		if not self.cfg.yes:
 			new.info.view_with_prompt('View transaction details?')
 
 		del new.twuo.twctl

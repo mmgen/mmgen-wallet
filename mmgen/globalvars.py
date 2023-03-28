@@ -104,7 +104,7 @@ class GlobalVars:
 
 gv = GlobalVars()
 
-class GlobalConfig(Lockable):
+class Config(Lockable):
 	"""
 	These values are configurable - RHS values are defaults
 	Globals are overridden with the following precedence:
@@ -113,12 +113,13 @@ class GlobalConfig(Lockable):
 	  3 - config file
 	"""
 	_autolock = False
-	_set_ok = ()
-	_reset_ok = ('accept_defaults',)
+	_set_ok = ('usr_randchars','_proto')
+	_reset_ok = ('accept_defaults','quiet','verbose','yes')
 	_use_class_attr = True
+	_default_to_none = True
 
 	# general
-	coin        = ''
+	coin        = 'BTC'
 	token       = ''
 	outdir      = ''
 	passwd_file = ''
@@ -189,7 +190,7 @@ class GlobalConfig(Lockable):
 	bob          = False
 	alice        = False
 	carol        = False
-	regtest_user = None
+	regtest_user = ''
 
 	# test suite:
 	bogus_send               = False
@@ -215,20 +216,6 @@ class GlobalConfig(Lockable):
 	# placeholders:
 	_proto = None
 	pager = False
-
-	# global var sets user opt:
-	global_sets_opt = (
-		'autochg_ignore_labels',
-		'debug',
-		'minconf',
-		'quiet',
-		'fee_estimate_confs',
-		'fee_adjust',
-		'use_internal_keccak_module',
-		'usr_randchars' )
-
-	# user opt sets global var:
-	opt_sets_global = ( 'cached_balances', )
 
 	# 'long' opts (subset of common_opts_data):
 	common_opts = (
@@ -415,5 +402,3 @@ class GlobalConfig(Lockable):
 				'mainnet': (self.data_dir_root,),
 			}[self.network] ))
 			return self._data_dir
-
-g = GlobalConfig()

@@ -22,9 +22,6 @@ xmrwallet.py - MoneroWalletOps class
 
 import os,re,time,json
 from collections import namedtuple
-
-from .globalvars import g
-from .opts import opt
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .obj import CoinTxID
 from .color import red,yellow,green,blue,cyan,pink,orange
@@ -42,7 +39,6 @@ from .util import (
 	make_timestr,
 	make_chksum_6,
 	capfirst,
-	stdout_or_pager,
 )
 from .seed import SeedID
 from .protocol import init_proto
@@ -203,6 +199,7 @@ class MoneroMMGenTX:
 			)
 			from .fileutil import write_data_to_file
 			write_data_to_file(
+				cfg                   = self.cfg,
 				outfile               = fn,
 				data                  = out,
 				desc                  = 'MoneroMMGenTX data',
@@ -216,7 +213,10 @@ class MoneroMMGenTX:
 			assert not args, 'Non-keyword args not permitted'
 
 			d = namedtuple('kwargs_tuple',kwargs)(**kwargs)
-			proto = init_proto( 'xmr', network=d.network, need_amt=True )
+			self.cfg = d.cfg
+
+			proto = init_proto( self.cfg, 'xmr', network=d.network, need_amt=True )
+
 			now = int(time.time())
 
 			self.data = self.xmrwallet_tx_data(
@@ -237,12 +237,13 @@ class MoneroMMGenTX:
 
 	class Signed(Base):
 
-		def __init__(self,fn):
+		def __init__(self,cfg,fn):
 			from .fileutil import get_data_from_file
+			self.cfg = cfg
 			self.fn = fn
-			d_wrap = json.loads(get_data_from_file(fn))['MoneroMMGenTX']
+			d_wrap = json.loads(get_data_from_file( cfg, fn ))['MoneroMMGenTX']
 			d = self.xmrwallet_tx_data(**d_wrap['data'])
-			proto = init_proto( 'xmr', network=d.network, need_amt=True )
+			proto = init_proto( cfg, 'xmr', network=d.network, need_amt=True )
 			self.data = self.xmrwallet_tx_data(
 				op             = d.op,
 				create_time    = d.create_time,
@@ -283,7 +284,7 @@ class MoneroWalletOps:
 
 		opts = ('wallet_dir',)
 
-		def __init__(self,uarg_tuple,uopt_tuple):
+		def __init__(self,cfg,uarg_tuple,uopt_tuple):
 
 			def gen_classes():
 				for cls in type(self).__mro__:
@@ -291,6 +292,7 @@ class MoneroWalletOps:
 					if cls.__name__ == 'base':
 						break
 
+			self.cfg = cfg
 			classes = tuple(gen_classes())
 			self.opts = tuple(set(opt for cls in classes for opt in cls.opts))
 
@@ -314,7 +316,7 @@ class MoneroWalletOps:
 					cls.check_uopts(self)
 					id_cur = id(cls.check_uopts)
 
-			self.proto = init_proto( 'xmr', network=g.network, need_amt=True )
+			self.proto = init_proto( cfg, 'xmr', network=self.cfg.network, need_amt=True )
 
 		def check_uopts(self):
 
@@ -363,7 +365,7 @@ class MoneroWalletOps:
 		)
 		wallet_exists = True
 
-		def __init__(self,uarg_tuple,uopt_tuple):
+		def __init__(self,cfg,uarg_tuple,uopt_tuple):
 
 			def wallet_exists(fn):
 				try: os.stat(fn)
@@ -379,9 +381,10 @@ class MoneroWalletOps:
 					elif not exists and self.wallet_exists:
 						die(1,f'Wallet {fn!r} not found!')
 
-			super().__init__(uarg_tuple,uopt_tuple)
+			super().__init__(cfg,uarg_tuple,uopt_tuple)
 
 			self.kal = KeyAddrList(
+				cfg,
 				self.proto,
 				uarg.infile,
 				key_address_validity_check = True )
@@ -391,13 +394,15 @@ class MoneroWalletOps:
 			check_wallets()
 
 			self.wd = MoneroWalletDaemon(
+				cfg         = self.cfg,
 				proto       = self.proto,
 				wallet_dir  = uopt.wallet_dir or '.',
-				test_suite  = g.test_suite,
+				test_suite  = self.cfg.test_suite,
 				daemon_addr = uopt.daemon or None,
 			)
 
 			self.c = MoneroWalletRPCClient(
+				cfg             = self.cfg,
 				daemon          = self.wd,
 				test_connection = False,
 			)
@@ -423,7 +428,7 @@ class MoneroWalletOps:
 				uopt.wallet_dir or '.','{}-{}-MoneroWallet{}'.format(
 					self.kal.al_id.sid,
 					d.idx,
-					f'.{g.network}' if g.network != 'mainnet' else ''))
+					f'.{self.cfg.network}' if self.cfg.network != 'mainnet' else ''))
 
 		async def main(self):
 			gmsg('\n{}ing {} wallet{}'.format(
@@ -582,6 +587,7 @@ class MoneroWalletOps:
 					get_tx_metadata = True
 				)
 				return MoneroMMGenTX.NewSigned(
+					cfg            = self.parent.cfg,
 					op             = uarg.op,
 					network        = self.parent.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
@@ -609,6 +615,7 @@ class MoneroWalletOps:
 					die(3,'More than one TX required.  Cannot perform this sweep')
 
 				return MoneroMMGenTX.NewSigned(
+					cfg            = self.parent.cfg,
 					op             = uarg.op,
 					network        = self.parent.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
@@ -654,23 +661,24 @@ class MoneroWalletOps:
 				restore_height = uopt.restore_height,
 				language       = 'English' )
 
-			pp_msg(ret) if opt.debug else msg('  Address: {}'.format( ret['address'] ))
+			pp_msg(ret) if self.cfg.debug else msg('  Address: {}'.format( ret['address'] ))
 			return True
 
 	class sync(wallet):
 		name    = 'sync'
 		opts    = ('rescan_blockchain',)
 
-		def __init__(self,uarg_tuple,uopt_tuple):
+		def __init__(self,cfg,uarg_tuple,uopt_tuple):
 
-			super().__init__(uarg_tuple,uopt_tuple)
+			super().__init__(cfg,uarg_tuple,uopt_tuple)
 
 			host,port = uopt.daemon.split(':') if uopt.daemon else ('localhost',self.wd.daemon_port)
 
 			from .daemon import CoinDaemon
 			self.dc = MoneroRPCClient(
+				cfg    = self.cfg,
 				proto  = self.proto,
-				daemon = CoinDaemon('xmr'),
+				daemon = CoinDaemon( self.cfg, 'xmr' ),
 				host   = host,
 				port   = int(port),
 				user   = None,
@@ -843,18 +851,20 @@ class MoneroWalletOps:
 			m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
 
 			wd2 = MoneroWalletDaemon(
+				cfg         = self.cfg,
 				proto       = self.proto,
 				wallet_dir  = uopt.wallet_dir or '.',
-				test_suite  = g.test_suite,
+				test_suite  = self.cfg.test_suite,
 				daemon_addr = m[1],
 				proxy       = m[2] )
 
-			if g.test_suite:
+			if self.cfg.test_suite:
 				wd2.usr_daemon_args = ['--daemon-ssl-allow-any-cert']
 
 			wd2.start()
 
 			self.c = MoneroWalletRPCClient(
+				cfg    = self.cfg,
 				daemon = wd2 )
 
 		async def main(self):
@@ -879,9 +889,9 @@ class MoneroWalletOps:
 				dest_addr = self.dest_addr
 			elif self.dest == None:
 				dest_acct = self.account
-				if keypress_confirm(f'\nCreate new address for account #{self.account}?'):
+				if keypress_confirm( self.cfg, f'\nCreate new address for account #{self.account}?' ):
 					dest_addr_chk = h.create_new_addr(self.account)
-				elif keypress_confirm(f'Sweep to last existing address of account #{self.account}?'):
+				elif keypress_confirm( self.cfg, f'Sweep to last existing address of account #{self.account}?' ):
 					dest_addr_chk = None
 				else:
 					die(1,'Exiting at user request')
@@ -895,11 +905,11 @@ class MoneroWalletOps:
 				h2.open_wallet('destination')
 				accts_data = h2.get_accts()[0]
 
-				if keypress_confirm(f'\nCreate new account for wallet {bn!r}?'):
+				if keypress_confirm( self.cfg, f'\nCreate new account for wallet {bn!r}?' ):
 					dest_acct,dest_addr = h2.create_acct()
 					dest_addr_idx = 0
 					h2.get_accts()
-				elif keypress_confirm(f'Sweep to last existing account of wallet {bn!r}?'):
+				elif keypress_confirm( self.cfg, f'Sweep to last existing account of wallet {bn!r}?' ):
 					dest_acct,dest_addr_chk = h2.get_last_acct(accts_data)
 					dest_addr,dest_addr_idx = h2.get_last_addr(dest_acct,display=False)
 					assert dest_addr_chk == dest_addr, 'dest_addr_chk2'
@@ -927,7 +937,7 @@ class MoneroWalletOps:
 			if uopt.no_relay:
 				return True
 
-			if keypress_confirm(f'Relay {self.name} transaction?'):
+			if keypress_confirm( self.cfg, f'Relay {self.name} transaction?' ):
 				w_desc = 'source'
 				if uopt.tx_relay_daemon:
 					await h.stop_wallet('source')
@@ -1019,7 +1029,7 @@ class MoneroWalletOps:
 
 			if addr['label'] == self.label:
 				ymsg('\nLabel is unchanged, operation cancelled')
-			elif keypress_confirm('  {} label?'.format('Set' if self.label else 'Remove')):
+			elif keypress_confirm( self.cfg, '  {} label?'.format('Set' if self.label else 'Remove') ):
 				h.set_label( self.account, self.address_idx, self.label )
 				accts_data = h.get_accts(print=False)[0]
 				ret = h.print_addrs(accts_data,self.account)
@@ -1036,9 +1046,9 @@ class MoneroWalletOps:
 		name = 'relay'
 		opts = ('tx_relay_daemon',)
 
-		def __init__(self,uarg_tuple,uopt_tuple):
+		def __init__(self,cfg,uarg_tuple,uopt_tuple):
 
-			super().__init__(uarg_tuple,uopt_tuple)
+			super().__init__(cfg,uarg_tuple,uopt_tuple)
 
 			if uopt.tx_relay_daemon:
 				m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
@@ -1047,11 +1057,12 @@ class MoneroWalletOps:
 				md = None
 			else:
 				from .daemon import CoinDaemon
-				md = CoinDaemon('xmr',test_suite=g.test_suite)
+				md = CoinDaemon( self.cfg, 'xmr', test_suite=self.cfg.test_suite )
 				host,port = md.host,md.rpc_port
 				proxy = None
 
 			self.dc = MoneroRPCClient(
+				cfg    = self.cfg,
 				proto  = self.proto,
 				daemon = md,
 				host   = host,
@@ -1061,7 +1072,7 @@ class MoneroWalletOps:
 				test_connection = False, # relay is presumably a public node, so avoid extra connections
 				proxy  = proxy )
 
-			self.tx = MoneroMMGenTX.Signed(uarg.infile)
+			self.tx = MoneroMMGenTX.Signed( self.cfg, uarg.infile )
 
 		async def main(self):
 			msg('\n' + self.tx.get_info())
@@ -1069,7 +1080,7 @@ class MoneroWalletOps:
 			if uopt.tx_relay_daemon:
 				self.display_tx_relay_info()
 
-			if keypress_confirm('Relay transaction?'):
+			if keypress_confirm( self.cfg, 'Relay transaction?' ):
 				res = self.dc.call_raw(
 					'send_raw_transaction',
 					tx_as_hex = self.tx.data.blob
@@ -1088,10 +1099,10 @@ class MoneroWalletOps:
 		name = 'txview'
 
 		async def main(self):
-			stdout_or_pager(
+			self.cfg._util.stdout_or_pager(
 				'\n'.join(
 					tx.get_info() for tx in
 					sorted(
-						(MoneroMMGenTX.Signed(fn) for fn in uarg.infile),
+						(MoneroMMGenTX.Signed( self.cfg, fn ) for fn in uarg.infile),
 						key = lambda x: x.data.sign_time )
 			))

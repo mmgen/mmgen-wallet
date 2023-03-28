@@ -13,7 +13,7 @@ util2: Less frequently-used variables, classes and utility functions for the MMG
 """
 
 import re,time
-from .util import msg,qmsg,suf,hexdigits
+from .util import msg,suf,hexdigits
 
 def die_wait(delay,ev=0,s=''):
 	assert isinstance(delay,int)
@@ -36,12 +36,12 @@ def removeprefix(s,pfx): # workaround for pre-Python 3.9
 def removesuffix(s,sfx): # workaround for pre-Python 3.9
 	return s[:-len(sfx)] if s.endswith(sfx) else s
 
-def get_keccak(cached_ret=[]):
+# called with no arguments by pyethereum.utils:
+def get_keccak(cfg=None,cached_ret=[]):
 
 	if not cached_ret:
-		from .opts import opt
-		if getattr(opt,'use_internal_keccak_module',False):
-			qmsg('Using internal keccak module by user request')
+		if cfg and cfg.use_internal_keccak_module:
+			cfg._util.qmsg('Using internal keccak module by user request')
 			from .contrib.keccak import keccak_256
 		else:
 			try:

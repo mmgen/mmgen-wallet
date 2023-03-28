@@ -14,7 +14,6 @@ proto.eth.rpc: Ethereum base protocol RPC client class
 
 import re
 
-from ...globalvars import g
 from ...base_obj import AsyncInit
 from ...obj import Int
 from ...util import die,oneshot_warning_group
@@ -37,6 +36,7 @@ class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
 
 	async def __init__(
 			self,
+			cfg,
 			proto,
 			daemon,
 			backend,
@@ -47,7 +47,8 @@ class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
 		self.call_sigs = getattr(CallSigs,daemon.id,None)
 
 		super().__init__(
-			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),
+			cfg  = cfg,
+			host = 'localhost' if cfg.test_suite else (cfg.rpc_host or 'localhost'),
 			port = daemon.rpc_port )
 
 		await self.set_backend_async(backend)

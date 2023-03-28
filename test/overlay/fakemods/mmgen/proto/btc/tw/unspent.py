@@ -10,6 +10,7 @@ if overlay_fake_os.getenv('MMGEN_BOGUS_UNSPENT_DATA'):
 			import json
 			from ....fileutil import get_data_from_file
 			return json.loads(get_data_from_file(
+				self.cfg,
 				overlay_fake_os.getenv('MMGEN_BOGUS_UNSPENT_DATA')
 			), parse_float=Decimal)
 

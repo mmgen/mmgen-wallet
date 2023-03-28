@@ -6,27 +6,27 @@ sys.path[0] = os.curdir
 
 from mmgen.common import *
 
-cmd_args = opts.init()
+cfg = opts.init()
 
 from mmgen.term import get_term,get_char_raw
 term = get_term()
 
-if cmd_args[0] == 'echo':
+if cfg._args[0] == 'echo':
 
 	from mmgen.ui import line_input
 
 	term.init(noecho=True)
-	line_input('noecho> ')
+	line_input( cfg, 'noecho> ' )
 	get_char_raw()
 
 	term.set('echo')
-	line_input('echo> ')
+	line_input( cfg, 'echo> ' )
 
 	term.set('noecho')
-	line_input('noecho> ')
+	line_input( cfg, 'noecho> ' )
 	get_char_raw()
 
-elif cmd_args[0] == 'cleanup':
+elif cfg._args[0] == 'cleanup':
 
 	term.register_cleanup()
 

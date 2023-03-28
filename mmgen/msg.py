@@ -51,6 +51,9 @@ class coin_msg:
 
 	class base(MMGenObject):
 
+		def __init__(self,cfg):
+			self.cfg = cfg
+
 		ext = 'rawmsg.json'
 		signed = False
 		chksum_keys = ('addrlists','message','msghash_type','network')
@@ -85,10 +88,10 @@ class coin_msg:
 			return f'{self.filename_stem}.{coin_msg.signed.ext}'
 
 		def get_proto_from_file(self,filename):
-			data = json.loads(get_data_from_file(filename))
+			data = json.loads(get_data_from_file( self.cfg, filename ))
 			network_id = data['metadata']['network'] if 'metadata' in data else data['network'].lower()
 			coin,network = network_id.split('_')
-			return init_proto( coin=coin, network=network )
+			return init_proto( cfg=self.cfg, coin=coin, network=network )
 
 		def write_to_file(self,outdir=None,ask_overwrite=False):
 			data = {
@@ -98,6 +101,7 @@ class coin_msg:
 			}
 
 			write_data_to_file(
+				cfg           = self.cfg,
 				outfile       = os.path.join(outdir or '',self.filename),
 				data          = json.dumps(data,sort_keys=True,indent=4),
 				desc          = self.desc,
@@ -105,10 +109,15 @@ class coin_msg:
 
 	class new(base):
 
-		def __init__(self,message,addrlists,msghash_type,*args,**kwargs):
+		def __init__(self,cfg,message,addrlists,msghash_type,*args,**kwargs):
+
+			self.cfg = cfg
+
 			msghash_type = msghash_type or self.msg_cls.msghash_types[0]
+
 			if msghash_type not in self.msg_cls.msghash_types:
 				die(2,f'msghash_type {msghash_type!r} not supported for {self.proto.base_proto} protocol')
+
 			self.data = {
 				'network': '{}_{}'.format( self.proto.coin.lower(), self.proto.network ),
 				'addrlists': [MMGenIDRange(self.proto,i) for i in addrlists.split()],
@@ -119,13 +128,16 @@ class coin_msg:
 
 	class completed(base):
 
-		def __init__(self,data,infile,*args,**kwargs):
+		def __init__(self,cfg,data,infile,*args,**kwargs):
+
+			self.cfg = cfg
 
 			if data:
 				self.__dict__ = data
 				return
 
 			self.data = get_data_from_file(
+				cfg    = self.cfg,
 				infile = infile,
 				desc   = self.desc )
 
@@ -210,6 +222,7 @@ class coin_msg:
 
 			async def sign_list(al_in,seed):
 				al = KeyAddrList(
+					cfg         = self.cfg,
 					proto       = self.proto,
 					seed        = seed,
 					addr_idxs   = al_in.idxlist,
@@ -238,11 +251,11 @@ class coin_msg:
 
 			if self.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
-				self.rpc = await rpc_init(self.proto)
+				self.rpc = await rpc_init(self.cfg,self.proto)
 
 			from .wallet import Wallet
 			from .addrlist import KeyAddrList
-			wallet_seeds = [Wallet(fn=fn).seed for fn in wallet_files]
+			wallet_seeds = [Wallet(cfg=self.cfg,fn=fn).seed for fn in wallet_files]
 			need_sids = remove_dups([al.sid for al in self.addrlists], quiet=True)
 			saved_seeds = list()
 
@@ -302,7 +315,7 @@ class coin_msg:
 
 			if self.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
-				self.rpc = await rpc_init(self.proto)
+				self.rpc = await rpc_init(self.cfg,self.proto)
 
 			for k,v in sigs.items():
 				ret = await self.do_verify(
@@ -333,10 +346,13 @@ class coin_msg:
 
 	class exported_sigs(signed_online):
 
-		def __init__(self,infile,*args,**kwargs):
+		def __init__(self,cfg,infile,*args,**kwargs):
+
+			self.cfg = cfg
 
 			self.data = json.loads(
 				get_data_from_file(
+					cfg    = self.cfg,
 					infile = infile,
 					desc   = self.desc )
 				)
@@ -348,7 +364,7 @@ class coin_msg:
 				self.data['signatures']
 			)}
 
-def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**kwargs):
+def _get_obj(clsname,cfg,coin=None,network='mainnet',infile=None,data=None,*args,**kwargs):
 
 	assert not args, 'msg:_get_obj(): only keyword args allowed'
 
@@ -359,8 +375,8 @@ def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**k
 
 	proto = (
 		data['proto'] if data else
-		init_proto( coin=coin, network=network ) if coin else
-		coin_msg.base().get_proto_from_file(infile) )
+		init_proto( cfg=cfg, coin=coin, network=network ) if coin else
+		coin_msg.base(cfg=cfg).get_proto_from_file(infile) )
 
 	try:
 		msg_cls = getattr(
@@ -373,7 +389,7 @@ def _get_obj(clsname,coin=None,network='mainnet',infile=None,data=None,*args,**k
 	me.msg_cls = msg_cls
 	me.proto = proto
 
-	me.__init__(infile=infile,data=data,*args,**kwargs)
+	me.__init__(cfg,infile=infile,data=data,*args,**kwargs)
 
 	return me
 

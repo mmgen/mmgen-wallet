@@ -30,7 +30,6 @@ sys.path.__setitem__(0,os.path.abspath(os.curdir))
 os.environ['MMGEN_TEST_SUITE'] = '1'
 
 # Import these _after_ local path's been added to sys.path
-from test.objattrtest_py_d.oat_common import *
 from mmgen.common import *
 from mmgen.addrlist import *
 from mmgen.passwdlist import *
@@ -55,7 +54,12 @@ opts_data = {
 	}
 }
 
-cmd_args = opts.init(opts_data)
+cfg = opts.init(opts_data)
+
+from test.include.common import set_globals
+set_globals(cfg)
+
+from test.objattrtest_py_d.oat_common import *
 
 pd = namedtuple('permission_bits', ['read_ok','delete_ok','reassign_ok'])
 
@@ -120,10 +124,10 @@ def test_attr(data,obj,attrname,dobj,bits,attrval_type):
 				if d[k] != bits[k]:
 					fs = 'init value {iv}={a} for attr {n!r} does not match test data ({iv}={b})'
 					die(4,fs.format(iv=k,n=attrname,a=d[k],b=bits[k]))
-				if opt.verbose and d[k] == True:
+				if cfg.verbose and d[k] == True:
 					msg_r(f' {k}={d[k]!r}')
 
-		if opt.show_nonstandard_init:
+		if cfg.show_nonstandard_init:
 			for k,v in (('typeconv',False),('set_none_ok',True)):
 				if d[k] == v:
 					msg_r(f' {k}={v}')
@@ -136,19 +140,19 @@ def test_object(test_data,objname):
 	else:
 		cls = globals()[objname]
 
-	fs = 'Testing attribute ' + ('{!r:<15}{dt:13}' if opt.show_descriptor_type else '{!r}')
+	fs = 'Testing attribute ' + ('{!r:<15}{dt:13}' if cfg.show_descriptor_type else '{!r}')
 	data = test_data[objname]
 	obj = cls(*data.args,**data.kwargs)
 
 	for attrname,adata in data.attrs.items():
 		dobj = get_descriptor_obj(type(obj),attrname)
-		if opt.verbose:
+		if cfg.verbose:
 			msg_r(fs.format(attrname,dt=type(dobj).__name__.replace('MMGen','')))
 		bits = parse_permbits(adata[0])
 		test_attr(data,obj,attrname,dobj,bits,adata[1])
 		for perm_name,perm_value in bits._asdict().items():
 			test_attr_perm(obj,attrname,perm_name,perm_value,dobj,adata[1])
-		vmsg('')
+		cfg._util.vmsg('')
 
 def do_loop():
 	import importlib
@@ -156,12 +160,12 @@ def do_loop():
 	test_data = importlib.import_module(modname).tests
 	gmsg(f'Running immutable attribute tests for {proto.coin} {proto.network}')
 
-	utests = cmd_args
+	utests = cfg._args
 	for obj in test_data:
 		if utests and obj not in utests: continue
-		msg((blue if opt.verbose else nocolor)(f'Testing {obj}'))
+		msg((blue if cfg.verbose else nocolor)(f'Testing {obj}'))
 		test_object(test_data,obj)
 
-from mmgen.protocol import init_proto_from_opts
-proto = init_proto_from_opts(need_amt=True)
+proto = cfg._proto
+
 do_loop()

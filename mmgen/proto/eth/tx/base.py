@@ -16,7 +16,6 @@ from collections import namedtuple
 
 import mmgen.tx.base as TxBase
 from ....obj import HexStr,Int
-from ....util import dmsg
 
 class Base(TxBase.Base):
 
@@ -33,7 +32,7 @@ class Base(TxBase.Base):
 	# given absolute fee in ETH, return gas price in Gwei using self.gas
 	def fee_abs2rel(self,abs_fee,to_unit='Gwei'):
 		ret = self.proto.coin_amt(int(abs_fee.toWei() // self.gas.toWei()),'wei')
-		dmsg(f'fee_abs2rel() ==> {ret} ETH')
+		self.cfg._util.dmsg(f'fee_abs2rel() ==> {ret} ETH')
 		return ret if to_unit == 'eth' else ret.to_unit(to_unit,show_decimal=True)
 
 	# given rel fee (gasPrice) in wei, return absolute fee using self.gas (Ethereum-only method)

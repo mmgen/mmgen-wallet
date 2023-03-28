@@ -32,8 +32,7 @@ class mainnet(mainnet):
 
 	def __init__(self,*args,**kwargs):
 		super().__init__(*args,**kwargs)
-		from ...opts import opt
-		self.coin_id = 'ZEC-Z' if opt.type in ('zcash_z','Z') else 'ZEC-T'
+		self.coin_id = 'ZEC-Z' if self.cfg.type in ('zcash_z','Z') else 'ZEC-T'
 
 	def get_wif_ver_bytes_len(self,key_data):
 		"""

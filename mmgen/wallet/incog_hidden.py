@@ -15,9 +15,8 @@ wallet.incog_hidden: hidden incognito wallet class
 import os
 
 from ..globalvars import gc
-from ..opts import opt
 from ..seed import Seed
-from ..util import msg,dmsg,qmsg,die,compare_or_die,capfirst
+from ..util import msg,die,capfirst
 from ..util2 import parse_bytespec
 from .incog_base import wallet
 
@@ -49,7 +48,7 @@ class wallet(wallet):
 	}
 
 	def _get_hincog_params(self,wtype):
-		a = getattr(opt,'hidden_incog_'+ wtype +'_params').split(',')
+		a = getattr(self.cfg,'hidden_incog_'+ wtype +'_params').split(',')
 		return ','.join(a[:-1]),int(a[-1]) # permit comma in filename
 
 	def _check_valid_offset(self,fn,action):
@@ -68,10 +67,10 @@ class wallet(wallet):
 		d = self.ssdata
 		d.hincog_offset = self._get_hincog_params('input')[1]
 
-		qmsg(f'Getting hidden incog data from file {self.infile.name!r}')
+		self.cfg._util.qmsg(f'Getting hidden incog data from file {self.infile.name!r}')
 
 		# Already sanity-checked:
-		d.target_data_len = self._get_incog_data_len(opt.seed_len or Seed.dfl_len)
+		d.target_data_len = self._get_incog_data_len(self.cfg.seed_len or Seed.dfl_len)
 		self._check_valid_offset(self.infile,'read')
 
 		flgs = os.O_RDONLY|os.O_BINARY if gc.platform == 'win' else os.O_RDONLY
@@ -79,13 +78,13 @@ class wallet(wallet):
 		os.lseek(fh,int(d.hincog_offset),os.SEEK_SET)
 		self.fmt_data = os.read(fh,d.target_data_len)
 		os.close(fh)
-		qmsg(f'Data read from file {self.infile.name!r} at offset {d.hincog_offset}')
+		self.cfg._util.qmsg(f'Data read from file {self.infile.name!r} at offset {d.hincog_offset}')
 
 	# overrides method in Wallet
 	def write_to_file(self):
 		d = self.ssdata
 		self._format()
-		compare_or_die(
+		self.cfg._util.compare_or_die(
 			val1  = d.target_data_len,
 			desc1 = 'target data length',
 			val2  = len(self.fmt_data),
@@ -94,8 +93,8 @@ class wallet(wallet):
 		k = ('output','input')[self.op=='pwchg_new']
 		fn,d.hincog_offset = self._get_hincog_params(k)
 
-		if opt.outdir and not os.path.dirname(fn):
-			fn = os.path.join(opt.outdir,fn)
+		if self.cfg.outdir and not os.path.dirname(fn):
+			fn = os.path.join(self.cfg.outdir,fn)
 
 		check_offset = True
 		try:
@@ -103,18 +102,19 @@ class wallet(wallet):
 		except:
 			from ..ui import keypress_confirm,line_input
 			if keypress_confirm(
+					self.cfg,
 					f'Requested file {fn!r} does not exist.  Create?',
 					default_yes = True ):
 				min_fsize = d.target_data_len + d.hincog_offset
 				msg('\n  ' + self.msg['choose_file_size'].strip().format(min_fsize)+'\n')
 				while True:
-					fsize = parse_bytespec(line_input('Enter file size: '))
+					fsize = parse_bytespec(line_input( self.cfg, 'Enter file size: ' ))
 					if fsize >= min_fsize:
 						break
 					msg(f'File size must be an integer no less than {min_fsize}')
 
 				from ..tool.fileutil import tool_cmd
-				tool_cmd().rand2file(fn,str(fsize))
+				tool_cmd(self.cfg).rand2file(fn,str(fsize))
 				check_offset = False
 			else:
 				die(1,'Exiting at user request')
@@ -122,16 +122,17 @@ class wallet(wallet):
 		from ..filename import MMGenFile
 		f = MMGenFile(fn,subclass=type(self),write=True)
 
-		dmsg('{} data len {}, offset {}'.format(
+		self.cfg._util.dmsg('{} data len {}, offset {}'.format(
 			capfirst(self.desc),
 			d.target_data_len,
 			d.hincog_offset ))
 
 		if check_offset:
 			self._check_valid_offset(f,'write')
-			if not opt.quiet:
+			if not self.cfg.quiet:
 				from ..ui import confirm_or_raise
 				confirm_or_raise(
+					self.cfg,
 					message = '',
 					action  = f'alter file {f.name!r}' )
 

@@ -14,32 +14,32 @@ ui: Interactive user interface functions for the MMGen suite
 
 import sys,os
 
-from .globalvars import g,gc
-from .opts import opt
-from .util import msg,msg_r,Msg,dmsg,die
+from .globalvars import gc
+from .util import msg,msg_r,Msg,die
 
-def confirm_or_raise(message,action,expect='YES',exit_msg='Exiting at user request'):
+def confirm_or_raise(cfg,message,action,expect='YES',exit_msg='Exiting at user request'):
 	if message:
 		msg(message)
 	if line_input(
+			cfg,
 			(f'{action}  ' if action[0].isupper() else f'Are you sure you want to {action}?\n') +
 			f'Type uppercase {expect!r} to confirm: '
 		).strip() != expect:
 		die( 'UserNonConfirmation', exit_msg )
 
-def get_words_from_user(prompt):
-	words = line_input(prompt, echo=opt.echo_passphrase).split()
-	if g.debug:
+def get_words_from_user(cfg,prompt):
+	words = line_input( cfg, prompt, echo=cfg.echo_passphrase ).split()
+	if cfg.debug:
 		msg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
-def get_data_from_user(desc='data'): # user input MUST be UTF-8
-	data = line_input(f'Enter {desc}: ',echo=opt.echo_passphrase)
-	if g.debug:
+def get_data_from_user(cfg,desc='data'): # user input MUST be UTF-8
+	data = line_input( cfg, f'Enter {desc}: ', echo=cfg.echo_passphrase )
+	if cfg.debug:
 		msg(f'User input: [{data}]')
 	return data
 
-def line_input(prompt,echo=True,insert_txt='',hold_protect=True):
+def line_input(cfg,prompt,echo=True,insert_txt='',hold_protect=True):
 	"""
 	multi-line prompts OK
 	one-line prompts must begin at beginning of line
@@ -62,7 +62,7 @@ def line_input(prompt,echo=True,insert_txt='',hold_protect=True):
 		from .term import kb_hold_protect
 		kb_hold_protect()
 
-	if g.test_suite_popen_spawn:
+	if cfg.test_suite_popen_spawn:
 		msg(prompt)
 		sys.stderr.flush()
 		reply = os.read(0,4096).decode().rstrip('\n') # strip NL to mimic behavior of input()
@@ -83,6 +83,7 @@ def line_input(prompt,echo=True,insert_txt='',hold_protect=True):
 	return reply.strip()
 
 def keypress_confirm(
+	cfg,
 	prompt,
 	default_yes     = False,
 	verbose         = False,
@@ -94,7 +95,7 @@ def keypress_confirm(
 
 	nl = f'\r{" "*len(prompt)}\r' if no_nl else '\n'
 
-	if g.accept_defaults:
+	if cfg.accept_defaults:
 		msg(prompt)
 		return default_yes
 
@@ -136,9 +137,9 @@ def do_pager(text):
 		Msg(text+end_msg)
 	set_vt100()
 
-def do_license_msg(immed=False):
+def do_license_msg(cfg,immed=False):
 
-	if opt.quiet or g.no_license or opt.yes or not g.stdin_tty:
+	if cfg.quiet or cfg.no_license or cfg.yes or not cfg.stdin_tty:
 		return
 
 	import mmgen.contrib.license as gpl

@@ -12,7 +12,7 @@
 wallet.seed: seed file wallet class
 """
 
-from ..util import msg,vmsg_r,make_chksum_6,split_into_cols,is_chksum_6,compare_chksums
+from ..util import msg,make_chksum_6,split_into_cols,is_chksum_6
 from ..baseconv import baseconv,is_b58_str
 from ..seed import Seed
 from .unenc import wallet
@@ -48,9 +48,9 @@ class wallet(wallet):
 			msg(f'{b!r}: not a base 58 string, in {desc}')
 			return False
 
-		vmsg_r(f'Validating {desc} checksum...')
+		self.cfg._util.vmsg_r(f'Validating {desc} checksum...')
 
-		if not compare_chksums(a,'file',make_chksum_6(b),'computed',verbose=True):
+		if not self.cfg._util.compare_chksums(a,'file',make_chksum_6(b),'computed',verbose=True):
 			return False
 
 		ret = baseconv('b58').tobytes(b,pad='seed')
@@ -59,7 +59,7 @@ class wallet(wallet):
 			msg(f'Invalid base-58 encoded seed: {val}')
 			return False
 
-		self.seed = Seed(ret)
+		self.seed = Seed( self.cfg, ret )
 		self.ssdata.chksum = a
 		self.ssdata.b58seed = b
 

@@ -45,8 +45,8 @@ class tool_cmd(tool_cmd_base):
 
 	def _init_generators(self,arg=None):
 		return generator_data(
-			kg = KeyGenerator( self.proto, self.mmtype.pubkey_type ),
-			ag = AddrGenerator( self.proto, self.mmtype ),
+			kg = KeyGenerator( self.cfg, self.proto, self.mmtype.pubkey_type ),
+			ag = AddrGenerator( self.cfg, self.proto, self.mmtype ),
 		)
 
 	def randwif(self):
@@ -54,7 +54,7 @@ class tool_cmd(tool_cmd_base):
 		from ..crypto import Crypto
 		return PrivKey(
 			self.proto,
-			Crypto().get_random(32),
+			Crypto(self.cfg).get_random(32),
 			pubkey_type = self.mmtype.pubkey_type,
 			compressed  = self.mmtype.compressed ).wif
 
@@ -64,7 +64,7 @@ class tool_cmd(tool_cmd_base):
 		from ..crypto import Crypto
 		privkey = PrivKey(
 			self.proto,
-			Crypto().get_random(32),
+			Crypto(self.cfg).get_random(32),
 			pubkey_type = self.mmtype.pubkey_type,
 			compressed  = self.mmtype.compressed )
 		return (
@@ -136,7 +136,7 @@ class tool_cmd(tool_cmd_base):
 		if self.proto.base_proto == 'Ethereum' and len(pubkeyhex) == 128: # support raw ETH pubkeys
 			pubkeyhex = '04' + pubkeyhex
 		from ..keygen import keygen_public_data
-		ag = AddrGenerator( self.proto, self.mmtype )
+		ag = AddrGenerator( self.cfg, self.proto, self.mmtype )
 		return ag.to_addr(keygen_public_data(
 			pubkey        = bytes.fromhex(pubkeyhex),
 			viewkey_bytes = None,
@@ -192,4 +192,4 @@ class tool_cmd(tool_cmd_base):
 	def eth_checksummed_addr(self,addr:'sstr'):
 		"create a checksummed Ethereum address"
 		from ..protocol import init_proto
-		return init_proto('eth').checksummed_addr(addr)
+		return init_proto( self.cfg, 'eth' ).checksummed_addr(addr)

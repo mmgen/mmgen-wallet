@@ -21,17 +21,12 @@ opts: MMGen-specific options processing after generic processing by share.Opts
 """
 import sys,os
 
-from .globalvars import g,gc
+from .globalvars import gc,Config
 from .base_obj import Lockable
 
 import mmgen.share.Opts
 
-class UserOpts(Lockable):
-	_autolock = False
-	_default_to_none = True
-	_set_ok = ('usr_randchars',)
-	_reset_ok = ('quiet','verbose','yes')
-
+class UserOpts: pass
 opt = UserOpts()
 
 def usage():
@@ -54,22 +49,23 @@ def delete_data(opts_data):
 	del mmgen.share.Opts.process_uopts
 	del mmgen.share.Opts.parse_opts
 
-def post_init():
+def post_init(cfg):
 	global opts_data_save,opt_filter_save
-	if opt.help or opt.longhelp:
-		print_help(opt,opts_data_save,opt_filter_save)
+	if cfg.help or cfg.longhelp:
+		print_help(cfg,opts_data_save,opt_filter_save)
 	else:
 		delete_data(opts_data_save)
 		del opts_data_save,opt_filter_save
 
-def print_help(opt,opts_data,opt_filter):
+def print_help(cfg,opts_data,opt_filter):
+
 	if not 'code' in opts_data:
 		opts_data['code'] = {}
 
-	from .protocol import init_proto_from_opts
-	proto = init_proto_from_opts(need_amt=True)
+	from .protocol import init_proto_from_cfg
+	proto = init_proto_from_cfg(cfg,need_amt=True)
 
-	if getattr(opt,'longhelp',None):
+	if getattr(cfg,'longhelp',None):
 		opts_data['code']['long_options'] = common_opts_data['code']
 		def remove_unneeded_long_opts():
 			d = opts_data['text']['long_options']
@@ -79,16 +75,16 @@ def print_help(opt,opts_data,opt_filter):
 		remove_unneeded_long_opts()
 
 	from .ui import do_pager
-	do_pager(mmgen.share.Opts.make_help( proto, opt, opts_data, opt_filter ))
+	do_pager(mmgen.share.Opts.make_help( cfg, proto, opts_data, opt_filter ))
 
 	sys.exit(0)
 
 def fmt_opt(o):
 	return '--' + o.replace('_','-')
 
-def die_on_incompatible_opts(incompat_list):
-	for group in incompat_list:
-		bad = [k for k in opt.__dict__ if k in group and getattr(opt,k) != None]
+def die_on_incompatible_opts(cfg):
+	for group in cfg.incompatible_opts:
+		bad = [k for k in cfg.__dict__ if k in group and getattr(cfg,k) != None]
 		if len(bad) > 1:
 			from .util import die
 			die(1,'Conflicting options: {}'.format(', '.join(map(fmt_opt,bad))))
@@ -117,18 +113,14 @@ def opt_preproc_debug(po):
 	for e in d:
 		Msg('    {:<20}: {}'.format(*e))
 
-def opt_postproc_debug():
-	a = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) != None]
-	b = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) == None]
+def opt_postproc_debug(cfg):
+	a = [k for k in dir(cfg) if k[:2] != '__' and getattr(cfg,k) != None]
+	b = [k for k in dir(cfg) if k[:2] != '__' and getattr(cfg,k) == None]
 	from .util import Msg
-	Msg('    Opts after processing:')
-	for k in a:
-		v = getattr(opt,k)
-		Msg('        {:18}: {!r:<6} [{}]'.format(k,v,type(v).__name__))
 	Msg('    Global vars:')
-	for e in [d for d in dir(g) if d[:2] != '__']:
-		Msg('        {:<20}: {}'.format(e, getattr(g,e)))
-	Msg("    Opts set to 'None':")
+	for e in [d for d in dir(cfg) if d[:2] != '__']:
+		Msg('        {:<20}: {}'.format(e, getattr(cfg,e)))
+	Msg("    Global vars set to 'None':")
 	Msg('        {}\n'.format('\n        '.join(b)))
 	Msg('\n=== end opts.py debug ===\n')
 
@@ -157,15 +149,18 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 		type(refval).__name__) )
 
 def override_globals_from_cfg_file(
+		cfg,
 		ucfg,
-		autoset_opts,
+		cfgfile_autoset_opts,
+		cfgfile_auto_typeset_opts,
 		env_globals,
 		need_proto ):
 
 	if need_proto:
 		from .protocol import init_proto
+
 	for d in ucfg.get_lines():
-		if d.name in g.cfg_file_opts:
+		if d.name in cfg.cfg_file_opts:
 			ns = d.name.split('_')
 			if ns[0] in gc.core_coins:
 				if not need_proto:
@@ -174,10 +169,10 @@ def override_globals_from_cfg_file(
 					(ns[2:],ns[1]=='testnet') if len(ns) > 2 and ns[1] in ('mainnet','testnet') else
 					(ns[1:],False)
 				)
-				cls = type(init_proto( ns[0], tn, need_amt=True )) # no instance yet, so override _class_ attr
+				cls = type(init_proto( cfg, ns[0], tn, need_amt=True )) # no instance yet, so override _class_ attr
 				attr = '_'.join(nse)
 			else:
-				cls = g                          # g is "singleton" instance, so override _instance_ attr
+				cls = cfg
 				attr = d.name
 			refval = getattr(cls,attr)
 			val = ucfg.parse_value(d.value,refval)
@@ -187,29 +182,31 @@ def override_globals_from_cfg_file(
 			val_conv = set_for_type(val,refval,attr,src=ucfg.fn)
 			if attr not in env_globals:
 				setattr(cls,attr,val_conv)
-		elif d.name in g.autoset_opts:
-			autoset_opts[d.name] = d.value
+		elif d.name in cfg.autoset_opts:
+			cfgfile_autoset_opts[d.name] = d.value
+		elif d.name in cfg.auto_typeset_opts:
+			cfgfile_auto_typeset_opts[d.name] = d.value
 		else:
 			from .util import die
 			die( 'CfgFileParseError', f'{d.name!r}: unrecognized option in {ucfg.fn!r}, line {d.lineno}' )
 
-def override_globals_from_env():
+def override_globals_from_env(cfg):
 	for name,val in ((k,v) for k,v in os.environ.items() if k.startswith('MMGEN_')):
 		if name == 'MMGEN_DEBUG_ALL':
 			continue
-		elif name in g.env_opts:
+		elif name in cfg.env_opts:
 			if val: # ignore empty string values; string value of '0' or 'false' sets variable to False
 				disable = name.startswith('MMGEN_DISABLE_')
 				gname = name[(6,14)[disable]:].lower()
-				if hasattr(g,gname):
-					setattr(g,gname,set_for_type(val,getattr(g,gname),name,disable))
+				if hasattr(cfg,gname):
+					setattr(cfg,gname,set_for_type(val,getattr(cfg,gname),name,disable))
 					yield gname
 				else:
 					raise ValueError(f'Name {gname!r} not present in globals')
 		else:
 			raise ValueError(f'{name!r} is not a valid MMGen environment variable')
 
-def show_common_opts_diff():
+def show_common_opts_diff(cfg):
 
 	def common_opts_data_to_list():
 		for l in common_opts_data['text'].splitlines():
@@ -220,16 +217,16 @@ def show_common_opts_diff():
 		from .util import fmt_list
 		return fmt_list(['--'+s.replace('_','-') for s in set_data],fmt='col',indent='   ')
 
-	a = g.common_opts
+	a = cfg.common_opts
 	b = list(common_opts_data_to_list())
 	a_minus_b = [e for e in a if e not in b]
 	b_minus_a = [e for e in b if e not in a]
 	a_and_b   = [e for e in a if e in b]
 
 	from .util import msg
-	msg(f'g.common_opts - common_opts_data:\n   {do_fmt(a_minus_b) if a_minus_b else "None"}\n')
-	msg(f'common_opts_data - g.common_opts (these do not set global var):\n{do_fmt(b_minus_a)}\n')
-	msg(f'common_opts_data ^ g.common_opts (these set global var):\n{do_fmt(a_and_b)}\n')
+	msg(f'cfg.common_opts - common_opts_data:\n   {do_fmt(a_minus_b) if a_minus_b else "None"}\n')
+	msg(f'common_opts_data - cfg.common_opts (these do not set global var):\n{do_fmt(b_minus_a)}\n')
+	msg(f'common_opts_data ^ cfg.common_opts (these set global var):\n{do_fmt(a_and_b)}\n')
 
 	sys.exit(0)
 
@@ -291,8 +288,8 @@ def init(
 	parse_only  = False,
 	parsed_opts = None,
 	need_proto  = True,
-	do_post_init = False,
-	return_parsed = False ):
+	need_amt    = True,
+	do_post_init = False ):
 
 	if opts_data is None:
 		opts_data = opts_data_dfl
@@ -314,7 +311,9 @@ def init(
 	if parse_only and not any(k in po.user_opts for k in ('version','help','longhelp')):
 		return po
 
-	if g.debug_opts:
+	cfg = Config()
+
+	if cfg.debug_opts: # TODO: this does nothing
 		opt_preproc_debug(po)
 
 	# Copy parsed opts to opt, setting values to None if not set by user
@@ -323,8 +322,8 @@ def init(
 			+ po.skipped_opts
 			+ tuple(add_opts or [])
 			+ tuple(init_opts or [])
-			+ g.init_opts
-			+ g.common_opts ):
+			+ cfg.init_opts
+			+ cfg.common_opts ):
 		setattr(opt,o,po.user_opts[o] if o in po.user_opts else None)
 
 	if opt.version:
@@ -333,108 +332,110 @@ def init(
 	if opt.show_hash_presets:
 		_show_hash_presets() # exits
 
-	from .term import init_term
-	init_term()
-
 	from .util import wrap_ripemd160
 	wrap_ripemd160() # ripemd160 used by mmgen_cfg_file()
 
-	# === begin global var initialization === #
+	# === begin Config() initialization === #
 
-	env_globals = tuple(override_globals_from_env())
+	env_globals = tuple(override_globals_from_env(cfg))
+
+	# do this after setting ‘hold_protect_disable’ from env
+	from .term import init_term
+	init_term(cfg)
 
 	# --data-dir overrides computed value of data_dir_root
-	g.data_dir_root_override = opt.data_dir
+	cfg.data_dir_root_override = opt.data_dir
+	if opt.data_dir:
+		del opt.data_dir
 
 	from .fileutil import check_or_create_dir
-	check_or_create_dir(g.data_dir_root)
+	check_or_create_dir(cfg.data_dir_root)
 
 	cfgfile_autoset_opts = {}
+	cfgfile_auto_typeset_opts = {}
 
 	if not opt.skip_cfg_file:
 		from .cfgfile import mmgen_cfg_file
 		# check for changes in system template file - term must be initialized
-		mmgen_cfg_file('sample')
+		mmgen_cfg_file(cfg,'sample')
 		override_globals_from_cfg_file(
-			mmgen_cfg_file('usr'),
+			cfg,
+			mmgen_cfg_file(cfg,'usr'),
 			cfgfile_autoset_opts,
+			cfgfile_auto_typeset_opts,
 			env_globals,
 			need_proto )
 
-	# Set globals from opts, setting type from original global value
-	# Do here, before opts are set from globals below
-	for k in (g.common_opts + g.opt_sets_global):
-		if hasattr(opt,k):
-			val = getattr(opt,k)
-			if val != None and hasattr(g,k):
-				setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
+	# Set globals from opts, setting type from original global value if it exists:
+	auto_keys = tuple(cfg.autoset_opts.keys()) + tuple(cfg.auto_typeset_opts.keys())
+	for key,val in opt.__dict__.items():
+		if val is not None and key not in auto_keys:
+			setattr(cfg, key, set_for_type(val,getattr(cfg,key),'--'+key) if hasattr(cfg,key) else val)
 
-	if g.regtest or g.bob or g.alice or g.carol or gc.prog_name == 'mmgen-regtest':
-		g.network = 'regtest'
-		g.regtest_user = 'bob' if g.bob else 'alice' if g.alice else 'carol' if g.carol else None
+	if cfg.regtest or cfg.bob or cfg.alice or cfg.carol or gc.prog_name == 'mmgen-regtest':
+		cfg.network = 'regtest'
+		cfg.regtest_user = 'bob' if cfg.bob else 'alice' if cfg.alice else 'carol' if cfg.carol else None
 	else:
-		g.network = 'testnet' if g.testnet else 'mainnet'
+		cfg.network = 'testnet' if cfg.testnet else 'mainnet'
 
-	g.coin = g.coin.upper() or 'BTC'
-	g.token = g.token.upper() or None
+	cfg.coin = cfg.coin.upper()
+	cfg.token = cfg.token.upper() or None
 
 	# === end global var initialization === #
 
 	"""
-	g.color is finalized, so initialize color
+	cfg.color is finalized, so initialize color
 	"""
-	if g.color: # MMGEN_DISABLE_COLOR sets this to False
+	if cfg.color: # MMGEN_DISABLE_COLOR sets this to False
 		from .color import init_color
-		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
+		init_color(num_colors=('auto',256)[bool(cfg.force_256_color)])
 
-	# Set user opts from globals:
-	# - if opt is unset, set it to global value
-	# - if opt is set, convert its type to that of global value
-	for k in g.global_sets_opt:
-		if hasattr(opt,k) and getattr(opt,k) != None:
-			setattr(opt,k,set_for_type(getattr(opt,k),getattr(g,k),'--'+k))
-		else:
-			setattr(opt,k,getattr(g,k))
+	die_on_incompatible_opts(cfg)
 
-	if need_proto:
-		from .protocol import warn_trustlevel
-		warn_trustlevel(g.coin)
-
-	die_on_incompatible_opts(g.incompatible_opts)
-
-	check_or_create_dir(g.data_dir)
-
-	# Check user-set opts without modifying them
-	check_usr_opts(po.user_opts)
+	check_or_create_dir(cfg.data_dir)
 
 	# Check autoset opts, setting if unset
-	for key in g.autoset_opts:
+	for key in cfg.autoset_opts:
 		if hasattr(opt,key):
+			assert not hasattr(cfg,key), f'{key!r} is in cfg!'
 			if getattr(opt,key) is not None:
-				setattr(opt, key, get_autoset_opt(key,getattr(opt,key),src='cmdline'))
+				setattr(cfg, key, get_autoset_opt(cfg,key,getattr(opt,key),src='cmdline'))
 			elif key in cfgfile_autoset_opts:
-				setattr(opt, key, get_autoset_opt(key,cfgfile_autoset_opts[key],src='cfgfile'))
+				setattr(cfg, key, get_autoset_opt(cfg,key,cfgfile_autoset_opts[key],src='cfgfile'))
 			else:
-				setattr(opt, key, g.autoset_opts[key].choices[0])
+				setattr(cfg, key, cfg.autoset_opts[key].choices[0])
 
-	set_auto_typeset_opts()
+	set_auto_typeset_opts(cfg,cfgfile_auto_typeset_opts)
 
-	if opt.verbose:
-		opt.quiet = None
+	if cfg.debug and gc.prog_name != 'test.py':
+		cfg.verbose = True
 
-	if g.debug and gc.prog_name != 'test.py':
-		opt.verbose,opt.quiet = (True,None)
+	if cfg.verbose:
+		cfg.quiet = False
 
-	if g.debug_opts:
-		opt_postproc_debug()
+	if cfg.debug_opts:
+		opt_postproc_debug(cfg)
 
-	g.lock()
-	opt.lock()
+	# Check user-set opts without modifying them
+	check_usr_opts(cfg,po.user_opts)
 
-	# print help screen only after globals and opts initialized and locked:
-	if opt.help or opt.longhelp:
+	from .util import Util
+	cfg._util = Util(cfg)
+	cfg._uopts = po.user_opts
+	cfg._args = po.cmd_args
+
+	cfg.lock()
+
+	if need_proto:
+		from .protocol import warn_trustlevel,init_proto_from_cfg
+		warn_trustlevel(cfg)
+		# requires the default-to-none behavior, so do after the lock:
+		cfg._proto = init_proto_from_cfg(cfg,need_amt=need_amt)
+
+	# print help screen only after globals initialized and locked:
+	if cfg.help or cfg.longhelp:
 		if not do_post_init:
-			print_help(opt,opts_data,opt_filter) # exits
+			print_help(cfg,opts_data,opt_filter) # exits
 
 	if do_post_init:
 		global opts_data_save,opt_filter_save
@@ -443,9 +444,9 @@ def init(
 	else:
 		delete_data(opts_data)
 
-	return po if return_parsed else po.cmd_args
+	return cfg
 
-def check_usr_opts(usr_opts): # Raises an exception if any check fails
+def check_usr_opts(cfg,usr_opts): # Raises an exception if any check fails
 
 	def opt_splits(val,sep,n,desc):
 		sepword = 'comma' if sep == ',' else 'colon' if sep == ':' else repr(sep)
@@ -577,8 +578,8 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		if val == 0:
 			return
 		opt_is_int(val,desc)
-		opt_compares(val,'>=',g.min_urandchars,desc)
-		opt_compares(val,'<=',g.max_urandchars,desc)
+		opt_compares(val,'>=',cfg.min_urandchars,desc)
+		opt_compares(val,'<=',cfg.max_urandchars,desc)
 
 	def chk_tx_fee(key,val,desc):
 		pass
@@ -605,7 +606,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 #	def chk_bob(key,val,desc):
 #		from .proto.btc.regtest import MMGenRegtest
 #		try:
-#			os.stat(os.path.join(MMGenRegtest(g.coin).d.datadir,'regtest','debug.log'))
+#			os.stat(os.path.join(MMGenRegtest(cfg,cfg.coin).d.datadir,'regtest','debug.log'))
 #		except:
 #			die( 'UserOptError',
 #				'Regtest (Bob and Alice) mode not set up yet.  ' +
@@ -634,10 +635,10 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 	cfuncs = { k:v for k,v in locals().items() if k.startswith('chk_') }
 
 	for key in usr_opts:
-		val = getattr(opt,key)
+		val = getattr(cfg,key)
 		desc = f'parameter for {fmt_opt(key)!r} option'
 
-		if key in g.infile_opts:
+		if key in cfg.infile_opts:
 			from .fileutil import check_infile
 			check_infile(val) # file exists and is readable - dies on error
 		elif key == 'outdir':
@@ -645,19 +646,22 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 			check_outdir(val) # dies on error
 		elif 'chk_'+key in cfuncs:
 			cfuncs['chk_'+key](key,val,desc)
-		elif g.debug:
+		elif cfg.debug:
 			Msg(f'check_usr_opts(): No test for opt {key!r}')
 
-def set_auto_typeset_opts():
+def set_auto_typeset_opts(cfg,cfgfile_auto_typeset_opts):
 
 	def do_set(key,val,ref_type):
-		setattr(opt,key,None if val is None else ref_type(val))
+		assert not hasattr(cfg,key), f'{key!r} is in cfg!'
+		setattr(cfg,key,None if val is None else ref_type(val))
 
-	for key,ref_type in g.auto_typeset_opts.items():
+	for key,ref_type in cfg.auto_typeset_opts.items():
 		if hasattr(opt,key):
 			do_set(key, getattr(opt,key), ref_type)
+		elif key in cfgfile_auto_typeset_opts:
+			do_set(key, cfgfile_auto_typeset_opts[key], ref_type)
 
-def get_autoset_opt(key,val,src):
+def get_autoset_opt(cfg,key,val,src):
 
 	def die_on_err(desc):
 		from .util import fmt_list,die
@@ -687,6 +691,6 @@ def get_autoset_opt(key,val,src):
 			else:
 				die_on_err('unique substring of')
 
-	data = g.autoset_opts[key]
+	data = cfg.autoset_opts[key]
 
 	return getattr(opt_type,data.type)()

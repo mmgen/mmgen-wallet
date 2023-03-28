@@ -15,8 +15,6 @@ wallet.__init__: wallet class initializer
 import importlib
 from collections import namedtuple
 
-from ..globalvars import g
-from ..opts import opt
 from ..util import die,get_extension
 from ..objmethods import MMGenObject
 from ..seed import Seed
@@ -101,6 +99,7 @@ def _get_me(modname):
 	return MMGenObject.__new__( getattr( importlib.import_module(f'mmgen.wallet.{modname}'), 'wallet' ) )
 
 def Wallet(
+	cfg,
 	fn            = None,
 	ss            = None,
 	seed_bin      = None,
@@ -111,31 +110,31 @@ def Wallet(
 	in_fmt        = None,
 	passwd_file   = None ):
 
-	in_fmt = in_fmt or opt.in_fmt
+	in_fmt = in_fmt or cfg.in_fmt
 
 	ss_out = (
 		get_wallet_data(
-			fmt_code    = opt.out_fmt,
+			fmt_code    = cfg.out_fmt,
 			die_on_fail = True ).type
-		if opt.out_fmt else None )
+		if cfg.out_fmt else None )
 
 	if seed or seed_bin:
 		me = _get_me( ss_out or 'mmgen' ) # default to native wallet format
-		me.seed = seed or Seed(seed_bin=seed_bin)
+		me.seed = seed or Seed( cfg, seed_bin=seed_bin )
 		me.op = 'new'
 	elif ss:
 		me = _get_me( ss.type if passchg else (ss_out or 'mmgen') )
 		me.seed = ss.seed
 		me.ss_in = ss
 		me.op = 'pwchg_new' if passchg else 'conv'
-	elif fn or opt.hidden_incog_input_params:
+	elif fn or cfg.hidden_incog_input_params:
 		if fn:
 			wd = get_wallet_data(ext=get_extension(fn),die_on_fail=True)
 			if in_fmt and (not ignore_in_fmt) and in_fmt not in wd.fmt_codes:
 				die(1,f'{in_fmt}: --in-fmt parameter does not match extension of input file')
 			me = _get_me( wd.type )
 		else:
-			fn = ','.join(opt.hidden_incog_input_params.split(',')[:-1]) # permit comma in filename
+			fn = ','.join(cfg.hidden_incog_input_params.split(',')[:-1]) # permit comma in filename
 			me = _get_me( 'incog_hidden' )
 		from ..filename import MMGenFile
 		me.infile = MMGenFile( fn, subclass=type(me) )
@@ -145,8 +144,10 @@ def Wallet(
 		me.op = 'pwchg_old' if passchg else 'old'
 	else: # called with no arguments: initialize with random seed
 		me = _get_me( ss_out or 'mmgen' ) # default to native wallet format
-		me.seed = Seed()
+		me.seed = Seed(cfg)
 		me.op = 'new'
+
+	me.cfg = cfg
 
 	me.__init__(
 		in_data     = in_data,

@@ -35,7 +35,10 @@ class tool_api(
 
 	Example:
 		from mmgen.tool.api import tool_api
-		tool = tool_api()
+		from mmgen.opts import init
+
+		# Initialize a tool API instance:
+		tool = tool_api(init())
 
 		# Set the coin and network:
 		tool.init_coin('btc','mainnet')
@@ -63,16 +66,15 @@ class tool_api(
 	need_proto = True
 	need_addrtype = True
 
-	def __init__(self):
+	def __init__(self,cfg):
 		"""
 		Initializer - takes no arguments
 		"""
-		import mmgen.opts as opts
-		from ..opts import opt
-		opts.UserOpts._reset_ok += ('usr_randchars',)
-		if not opt._lock:
+		type(cfg)._reset_ok += ('usr_randchars',)
+		if not cfg._lock:
+			import mmgen.opts as opts
 			opts.init()
-		super().__init__()
+		super().__init__(cfg)
 
 	def init_coin(self,coinsym,network):
 		"""
@@ -81,8 +83,8 @@ class tool_api(
 		Valid choices for network: 'mainnet','testnet','regtest'
 		"""
 		from ..protocol import init_proto,warn_trustlevel
-		warn_trustlevel(coinsym)
-		self.proto = init_proto(coinsym,network=network,need_amt=True)
+		warn_trustlevel(self.cfg)
+		self.proto = init_proto( self.cfg, coinsym, network=network, need_amt=True )
 		return self.proto
 
 	@property
@@ -139,10 +141,8 @@ class tool_api(
 		The number of keystrokes of entropy to be gathered from the user.
 		Setting to zero disables user entropy gathering.
 		"""
-		from ..opts import opt
-		return opt.usr_randchars
+		return self.cfg.usr_randchars
 
 	@usr_randchars.setter
 	def usr_randchars(self,val):
-		from ..opts import opt
-		opt.usr_randchars = val
+		self.cfg.usr_randchars = val

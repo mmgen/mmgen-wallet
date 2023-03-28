@@ -20,7 +20,6 @@
 seedsplit: Seed split classes and methods for the MMGen suite
 """
 
-from .globalvars import g
 from .color import yellow
 from .obj import MMGenPWIDString,MMGenIdx
 from .subseed import *
@@ -77,7 +76,7 @@ class SeedShareList(SubSeedList):
 			for nonce in range(SeedShare.max_nonce+1):
 				ms = SeedShareMaster(self,master_idx,nonce)
 				if ms.sid == parent_seed.sid:
-					if g.debug_subseed:
+					if parent_seed.cfg.debug_subseed:
 						msg(f'master_share seed ID collision with parent seed, incrementing nonce to {nonce+1}')
 				else:
 					return ms
@@ -103,7 +102,7 @@ class SeedShareList(SubSeedList):
 			self.last_share = ls = SeedShareLast(self)
 			if last_share_debug(ls) or ls.sid in self.data['long'] or ls.sid == parent_seed.sid:
 				# collision: throw out entire split list and redo with new start nonce
-				if g.debug_subseed:
+				if parent_seed.cfg.debug_subseed:
 					self._collision_debug_msg(ls.sid,count,nonce,'nonce_start',debug_last_share)
 			else:
 				self.data['long'][ls.sid] = (count,nonce)
@@ -111,7 +110,7 @@ class SeedShareList(SubSeedList):
 		else:
 			die( 'SubSeedNonceRangeExceeded', 'nonce range exceeded' )
 
-		if g.debug_subseed:
+		if parent_seed.cfg.debug_subseed:
 			A = parent_seed.data
 			B = self.join().data
 			assert A == B, f'Data mismatch!\noriginal seed: {A!r}\nrejoined seed: {B!r}'
@@ -137,6 +136,7 @@ class SeedShareList(SubSeedList):
 
 	def join(self):
 		return Seed.join_shares(
+			self.parent_seed.cfg,
 			[self.get_share_by_idx(i+1) for i in range(len(self))] )
 
 	def format(self):
@@ -210,7 +210,7 @@ class SeedShare(SeedShareBase,SubSeed):
 				b':master:' +
 				parent_list.master_share.idx.to_bytes(2,'big')
 			)
-		return Crypto().scramble_seed(seed.data,scramble_key)[:seed.byte_len]
+		return Crypto(parent_list.parent_seed.cfg).scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 class SeedShareLast(SeedShareBase,SeedBase):
 
@@ -222,6 +222,7 @@ class SeedShareLast(SeedShareBase,SeedBase):
 		self.parent_list = parent_list
 		SeedBase.__init__(
 			self,
+			parent_list.parent_seed.cfg,
 			seed_bin=self.make_subseed_bin(parent_list) )
 
 	@staticmethod
@@ -244,10 +245,12 @@ class SeedShareMaster(SeedBase,SeedShareBase):
 		self.idx = idx
 		self.nonce = nonce
 		self.parent_list = parent_list
+		self.cfg = parent_list.parent_seed.cfg
 
-		SeedBase.__init__( self, self.make_base_seed_bin() )
+		SeedBase.__init__( self, self.cfg, self.make_base_seed_bin() )
 
 		self.derived_seed = SeedBase(
+			self.cfg,
 			self.make_derived_seed_bin( parent_list.id_str, parent_list.count )
 		)
 
@@ -262,14 +265,14 @@ class SeedShareMaster(SeedBase,SeedShareBase):
 		seed = self.parent_list.parent_seed
 		# field maximums: idx: 65535 (1024)
 		scramble_key = b'master_share:' + self.idx.to_bytes(2,'big') + self.nonce.to_bytes(2,'big')
-		return Crypto().scramble_seed(seed.data,scramble_key)[:seed.byte_len]
+		return Crypto(self.cfg).scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 	# Don't bother with avoiding seed ID collision here, as sid of derived seed is not used
 	# by user as an identifier
 	def make_derived_seed_bin(self,id_str,count):
 		# field maximums: id_str: none (256 chars), count: 65535 (1024)
 		scramble_key = id_str.encode() + b':' + count.to_bytes(2,'big')
-		return Crypto().scramble_seed(self.data,scramble_key)[:self.byte_len]
+		return Crypto(self.cfg).scramble_seed(self.data,scramble_key)[:self.byte_len]
 
 	def get_desc(self,ui=False):
 		psid = self.parent_list.parent_seed.sid
@@ -281,15 +284,17 @@ class SeedShareMasterJoining(SeedShareMaster):
 	id_str = ImmutableAttr(SeedSplitIDString)
 	count  = ImmutableAttr(SeedShareCount)
 
-	def __init__(self,idx,base_seed,id_str,count):
+	def __init__(self,cfg,idx,base_seed,id_str,count):
 
-		SeedBase.__init__(self,seed_bin=base_seed.data)
+		SeedBase.__init__( self, cfg, seed_bin=base_seed.data )
 
+		self.cfg = cfg
 		self.id_str = id_str or 'default'
 		self.count = count
-		self.derived_seed = SeedBase( self.make_derived_seed_bin(self.id_str,self.count) )
+		self.derived_seed = SeedBase( cfg, self.make_derived_seed_bin(self.id_str,self.count) )
 
 def join_shares(
+		cfg,
 		seed_list,
 		master_idx = None,
 		id_str     = None ):
@@ -315,8 +320,8 @@ def join_shares(
 		add_share(ss)
 
 	if master_idx:
-		add_share(SeedShareMasterJoining(master_idx,master_share,id_str,d.count+1).derived_seed)
+		add_share(SeedShareMasterJoining( cfg, master_idx, master_share, id_str, d.count+1 ).derived_seed)
 
 	SeedShareCount(d.count) # check that d.count is in valid range
 
-	return Seed(seed_bin=d.ret.to_bytes(d.byte_len,'big'))
+	return Seed( cfg, seed_bin=d.ret.to_bytes(d.byte_len,'big') )

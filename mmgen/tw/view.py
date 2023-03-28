@@ -23,8 +23,6 @@ tw.view: base class for tracking wallet view classes
 import sys,time,asyncio
 from collections import namedtuple
 
-from ..globalvars import g
-from ..opts import opt
 from ..objmethods import Hilite,InitErrors,MMGenObject
 from ..obj import get_obj,MMGenIdx,MMGenList
 from ..color import nocolor,yellow,green,red,blue
@@ -182,15 +180,16 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		}
 	}
 
-	def __new__(cls,proto,*args,**kwargs):
+	def __new__(cls,cfg,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,cls.mod_subpath))
 
-	async def __init__(self,proto):
+	async def __init__(self,cfg,proto):
+		self.cfg = cfg
 		self.proto = proto
-		self.rpc = await rpc_init(proto)
+		self.rpc = await rpc_init(cfg,proto)
 		if self.has_wallet:
 			from .ctl import TwCtl
-			self.twctl = await TwCtl(proto,mode='w')
+			self.twctl = await TwCtl(cfg,proto,mode='w')
 		self.amt_keys = {'amt':'iwidth','amt2':'iwidth2'} if self.has_amt2 else {'amt':'iwidth'}
 
 	@property
@@ -283,15 +282,15 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		user_resized = False
 		while True:
 			ts = get_terminal_size()
-			cols = g.columns or ts.width
+			cols = self.cfg.columns or ts.width
 			lines = ts.height
 			if cols >= min_cols and (min_lines is None or lines >= min_lines):
 				if user_resized:
 					msg_r(CUR_HOME + ERASE_ALL)
 				return _term_dimensions(cols,ts.height)
 			if sys.stdout.isatty():
-				if g.columns and cols < min_cols:
-					die(1,'\n'+fmt(self.twidth_diemsg.format(g.columns,self.desc,min_cols),indent='  '))
+				if self.cfg.columns and cols < min_cols:
+					die(1,'\n'+fmt(self.twidth_diemsg.format(self.cfg.columns,self.desc,min_cols),indent='  '))
 				else:
 					m,dim = (self.twidth_errmsg,min_cols) if cols < min_cols else (self.theight_errmsg,min_lines)
 					get_char_raw( CUR_HOME + ERASE_ALL + fmt( m.format(self.desc,dim), append='' ))
@@ -520,7 +519,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				self.key_mappings.update(self.scroll_keys[gc.platform])
 			return self.key_mappings
 
-		scroll = self.scroll = g.scroll
+		scroll = self.scroll = self.cfg.scroll
 
 		key_mappings = make_key_mappings(scroll)
 		action_classes = { k: getattr(self,action_map[v[:2]])() for k,v in key_mappings.items() }
@@ -533,7 +532,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		self.oneshot_msg = ''
 		prompt += '\b'
 
-		clear_screen = '\n\n' if opt.no_blank else CUR_HOME + ('' if scroll else ERASE_ALL)
+		clear_screen = '\n\n' if self.cfg.no_blank else CUR_HOME + ('' if scroll else ERASE_ALL)
 
 		from ..term import get_term,get_char,get_char_raw
 
@@ -581,7 +580,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 	def keypress_confirm(self,*args,**kwargs):
 		from ..ui import keypress_confirm
-		if keypress_confirm(*args,no_nl=self.scroll,**kwargs):
+		if keypress_confirm( self.cfg, *args, no_nl=self.scroll, **kwargs ):
 			return True
 		else:
 			if self.scroll:
@@ -620,6 +619,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			from ..exception import UserNonConfirmation
 			try:
 				write_data_to_file(
+					cfg     = parent.cfg,
 					outfile = outfile,
 					data    = print_hdr + await parent.format(
 						display_type    = output_type,
@@ -654,6 +654,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			while True:
 				msg_r(parent.blank_prompt if parent.scroll else '\n')
 				ret = line_input(
+					parent.cfg,
 					f'Enter {parent.item_desc} number (or ENTER to return to main menu): ' )
 				if ret == '':
 					if parent.scroll:
@@ -734,6 +735,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 			from ..ui import line_input
 			res = line_input(
+				parent.cfg,
 				'Enter label text for {} {}: '.format(parent.item_desc,red(f'#{idx}')),
 				insert_txt = cur_comment )
 

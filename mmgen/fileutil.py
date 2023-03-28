@@ -22,12 +22,10 @@ fileutil: Routines that read, write, execute or stat files
 
 import sys,os
 
-from .globalvars import g,gc
+from .globalvars import gc
 from .color import set_vt100
 from .util import (
 	msg,
-	qmsg,
-	dmsg,
 	die,
 	get_extension,
 	is_utf8,
@@ -114,15 +112,16 @@ def check_outfile(f,blkdev_ok=False):
 def check_outdir(f):
 	return _check_file_type_and_access(f,'output directory')
 
-def get_seed_file(wallets,nargs,invoked_as=None):
+def get_seed_file(cfg,nargs,wallets=None,invoked_as=None):
 
-	from .opts import opt
+	wallets = wallets or cfg._args
+
 	from .filename import find_file_in_dir
 	from .wallet.mmgen import wallet
 
-	wf = find_file_in_dir(wallet,g.data_dir)
+	wf = find_file_in_dir(wallet,cfg.data_dir)
 
-	wd_from_opt = bool(opt.hidden_incog_input_params or opt.in_fmt) # have wallet data from opt?
+	wd_from_opt = bool(cfg.hidden_incog_input_params or cfg.in_fmt) # have wallet data from opt?
 
 	import mmgen.opts as opts
 	if len(wallets) + (wd_from_opt or bool(wf)) < nargs:
@@ -132,7 +131,7 @@ def get_seed_file(wallets,nargs,invoked_as=None):
 	elif len(wallets) > nargs:
 		opts.usage()
 	elif len(wallets) == nargs and wf and invoked_as != 'gen':
-		qmsg('Warning: overriding default wallet with user-supplied wallet')
+		cfg._util.qmsg('Warning: overriding default wallet with user-supplied wallet')
 
 	if wallets or wf:
 		check_infile(wallets[0] if wallets else wf)
@@ -150,6 +149,7 @@ def _open_or_die(filename,mode,silent=False):
 			))
 
 def write_data_to_file(
+		cfg,
 		outfile,
 		data,
 		desc                  = 'data',
@@ -165,25 +165,24 @@ def write_data_to_file(
 		check_data            = False,
 		cmp_data              = None):
 
-	from .opts import opt
-
 	if quiet:
 		ask_tty = ask_overwrite = False
 
-	if opt.quiet:
+	if cfg.quiet:
 		ask_overwrite = False
 
 	if ask_write_default_yes == False or ask_write_prompt:
 		ask_write = True
 
 	def do_stdout():
-		qmsg('Output to STDOUT requested')
-		if g.stdin_tty:
+		cfg._util.qmsg('Output to STDOUT requested')
+		if cfg.stdin_tty:
 			if no_tty:
 				die(2,f'Printing {desc} to screen is not allowed')
-			if (ask_tty and not opt.quiet) or binary:
+			if (ask_tty and not cfg.quiet) or binary:
 				from .ui import confirm_or_raise
 				confirm_or_raise(
+					cfg,
 					message = '',
 					action  = f'output {desc} to screen' )
 		else:
@@ -194,9 +193,10 @@ def write_data_to_file(
 				if of[:5] == 'pipe:':
 					if no_tty:
 						die(2,f'Writing {desc} to pipe is not allowed')
-					if ask_tty and not opt.quiet:
+					if ask_tty and not cfg.quiet:
 						from .ui import confirm_or_raise
 						confirm_or_raise(
+							cfg,
 							message = '',
 							action  = f'output {desc} to pipe' )
 						msg('')
@@ -216,14 +216,15 @@ def write_data_to_file(
 			os.write(1,data if isinstance(data,bytes) else data.encode())
 
 	def do_file(outfile,ask_write_prompt):
-		if opt.outdir and not ignore_opt_outdir and not os.path.isabs(outfile):
-			outfile = make_full_path(opt.outdir,outfile)
+		if cfg.outdir and not ignore_opt_outdir and not os.path.isabs(outfile):
+			outfile = make_full_path(cfg.outdir,outfile)
 
 		if ask_write:
 			if not ask_write_prompt:
 				ask_write_prompt = f'Save {desc}?'
 			from .ui import keypress_confirm
 			if not keypress_confirm(
+					cfg,
 					ask_write_prompt,
 					default_yes = ask_write_default_yes ):
 				die(1,f'{capfirst(desc)} not saved')
@@ -232,6 +233,7 @@ def write_data_to_file(
 		if os.path.lexists(outfile) and ask_overwrite:
 			from .ui import confirm_or_raise
 			confirm_or_raise(
+				cfg,
 				message = '',
 				action  = f'File {outfile!r} already exists\nOverwrite?' )
 			msg(f'Overwriting file {outfile!r}')
@@ -262,17 +264,17 @@ def write_data_to_file(
 
 		return True
 
-	if opt.stdout or outfile in ('','-'):
+	if cfg.stdout or outfile in ('','-'):
 		do_stdout()
 	elif sys.stdin.isatty() and not sys.stdout.isatty():
 		do_stdout()
 	else:
 		do_file(outfile,ask_write_prompt)
 
-def get_words_from_file(infile,desc,quiet=False):
+def get_words_from_file(cfg,infile,desc,quiet=False):
 
 	if not quiet:
-		qmsg(f'Getting {desc} from file {infile!r}')
+		cfg._util.qmsg(f'Getting {desc} from file {infile!r}')
 
 	with _open_or_die(infile, 'rb') as fp:
 		data = fp.read()
@@ -282,11 +284,12 @@ def get_words_from_file(infile,desc,quiet=False):
 	except:
 		die(1,f'{capfirst(desc)} data must be UTF-8 encoded.')
 
-	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
+	cfg._util.dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 
 	return words
 
 def get_data_from_file(
+		cfg,
 		infile,
 		desc   = 'data',
 		dash   = False,
@@ -294,26 +297,26 @@ def get_data_from_file(
 		binary = False,
 		quiet  = False ):
 
-	from .opts import opt
-	if not (opt.quiet or silent or quiet):
-		qmsg(f'Getting {desc} from file {infile!r}')
+	if not (cfg.quiet or silent or quiet):
+		cfg._util.qmsg(f'Getting {desc} from file {infile!r}')
 
 	with _open_or_die(
 			(0 if dash and infile == '-' else infile),
 			'rb',
 			silent=silent) as fp:
-		data = fp.read(g.max_input_size+1)
+		data = fp.read(cfg.max_input_size+1)
 
 	if not binary:
 		data = data.decode()
 
-	if len(data) == g.max_input_size + 1:
+	if len(data) == cfg.max_input_size + 1:
 		die( 'MaxInputSizeExceeded',
 			f'Too much input data!  Max input data size: {f.max_input_size} bytes' )
 
 	return data
 
 def get_lines_from_file(
+		cfg,
 		fn,
 		desc          = 'data',
 		trim_comments = False,
@@ -321,17 +324,17 @@ def get_lines_from_file(
 		silent        = False ):
 
 	def decrypt_file_maybe():
-		data = get_data_from_file( fn, desc=desc, binary=True, quiet=quiet, silent=silent )
+		data = get_data_from_file( cfg, fn, desc=desc, binary=True, quiet=quiet, silent=silent )
 		from .crypto import Crypto
 		have_enc_ext = get_extension(fn) == Crypto.mmenc_ext
 		if have_enc_ext or not is_utf8(data):
 			m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
-			qmsg(f'{m} {desc} {fn!r}')
-			data = Crypto().mmgen_decrypt_retry(data,desc)
+			cfg._util.qmsg(f'{m} {desc} {fn!r}')
+			data = Crypto(cfg).mmgen_decrypt_retry(data,desc)
 		return data
 
 	lines = decrypt_file_maybe().decode().splitlines()
 	if trim_comments:
 		lines = strip_comments(lines)
-	dmsg(f'Got {len(lines)} lines from file {fn!r}')
+	cfg._util.dmsg(f'Got {len(lines)} lines from file {fn!r}')
 	return lines
