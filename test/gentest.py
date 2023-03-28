@@ -28,7 +28,7 @@ sys.path.insert(0,overlay_setup(repo_root))
 
 # Import these _after_ local path's been added to sys.path
 import mmgen.opts as opts
-from mmgen.globalvars import g
+from mmgen.globalvars import g,gc
 from mmgen.opts import opt
 from mmgen.color import green,red,purple
 from mmgen.util import msg,qmsg,qmsg_r,vmsg,capfirst,is_int,die
@@ -131,7 +131,7 @@ SUPPORTED EXTERNAL TOOLS:
 		),
 		'notes': lambda s: s.format(
 			prog='test/gentest.py',
-			pnm=g.proj_name,
+			pnm=gc.proj_name,
 			snum=rounds )
 	}
 }

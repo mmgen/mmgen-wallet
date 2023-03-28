@@ -36,6 +36,8 @@ altcoin.py - Coin constants for Bitcoin-derived altcoins
 #   NBT:  150/191 c/u,  25/('B'),  26/('B')
 
 import sys
+
+from .globalvars import gc
 from .util import msg
 
 def test_equal(desc,a,b,*cdata):
@@ -434,10 +436,9 @@ class CoinInfo(object):
 	@classmethod
 	def verify_core_coin_data(cls,quiet=False,verbose=False):
 		from .protocol import CoinProtocol,init_proto
-		from .globalvars import g
 
 		for network in ('mainnet','testnet'):
-			for coin in g.core_coins:
+			for coin in gc.core_coins:
 				e = cls.get_entry(coin,network)
 				if e:
 					proto = init_proto(coin,testnet=network=='testnet')
@@ -718,8 +719,7 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 			data[network] = CoinInfo.get_supported_coins(network)
 		trust_level = 0
 	else:
-		from .globalvars import g
-		if usr_coin.lower() in g.core_coins: # core coin, so return immediately
+		if usr_coin.lower() in gc.core_coins: # core coin, so return immediately
 			from .protocol import CoinProtocol
 			return CoinProtocol.coins[usr_coin.lower()].trust_level
 		for network in networks:

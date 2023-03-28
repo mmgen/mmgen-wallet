@@ -22,7 +22,7 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
 """
 
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import gc
 from .opts import opt
 from .util import msg,msg_r,qmsg,die,async_run
 from .color import green
@@ -32,11 +32,11 @@ opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
 		'desc': f"""
-                Increase the fee on a replaceable (RBF) {g.proj_name} transaction,
+                Increase the fee on a replaceable (RBF) {gc.proj_name} transaction,
                 creating a new transaction, and optionally sign and send the
                 new transaction
 		 """,
-		'usage':   f'[opts] <{g.proj_name} TX file> [seed source] ...',
+		'usage':   f'[opts] <{gc.proj_name} TX file> [seed source] ...',
 		'options': """
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
@@ -66,7 +66,7 @@ opts_data = {
                        for the transaction's change output, if present)
 -O, --old-incog-fmt    Specify old-format incognito input
 -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
-                       for password hashing (default: '{g.dfl_hash_preset}')
+                       for password hashing (default: '{gc.dfl_hash_preset}')
 -P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -s, --send             Sign and send the transaction (the default if seed
@@ -87,9 +87,9 @@ FMT CODES:
 	},
 	'code': {
 		'options': lambda help_notes,proto,s: s.format(
-			g=g,
-			pnm=g.proj_name,
-			pnl=g.proj_name.lower(),
+			gc=gc,
+			pnm=gc.proj_name,
+			pnl=gc.proj_name.lower(),
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
 			kgs=help_notes('keygen_backends'),

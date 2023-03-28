@@ -25,7 +25,7 @@ from decimal import Decimal
 from collections import namedtuple
 from subprocess import run,PIPE,DEVNULL
 
-from mmgen.globalvars import g
+from mmgen.globalvars import g,gc
 from mmgen.opts import opt
 from mmgen.util import die
 from mmgen.protocol import CoinProtocol
@@ -1290,7 +1290,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def edit_comment1(self):
 		return self.edit_comment(out_num=del_addrs[0],comment_text=tw_comment_zh[:3])
 	def edit_comment2(self):
-		spawn = False if g.platform == 'win' else True
+		spawn = False if gc.platform == 'win' else True
 		return self.edit_comment(out_num=del_addrs[0],comment_text=tw_comment_zh[3:],changed=True,pexpect_spawn=spawn)
 	def edit_comment3(self):
 		return self.edit_comment(out_num=del_addrs[1],comment_text=tw_comment_lat_cyr_gr)

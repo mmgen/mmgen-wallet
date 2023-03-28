@@ -21,7 +21,7 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import g,gc
 from .opts import opt
 from .util import die,fmt_list,async_run
 from .wallet import Wallet
@@ -30,7 +30,7 @@ from .subseed import SubSeedIdxRange
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc': f'Create, sign and send an {g.proj_name} transaction',
+		'desc': f'Create, sign and send an {gc.proj_name} transaction',
 		'usage':   '[opts]  [<addr,amt> ...] <change addr, addrlist ID or addr type> [addr file ...] [seed source ...]',
 		'options': """
 -h, --help             Print this help message
@@ -75,7 +75,7 @@ opts_data = {
                        mappings, so the user should record its checksum.
 -O, --old-incog-fmt    Specify old-format incognito input
 -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
-                       for password hashing (default: '{g.dfl_hash_preset}')
+                       for password hashing (default: '{gc.dfl_hash_preset}')
 -P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
 -r, --rbf              Make transaction BIP 125 (replace-by-fee) replaceable
 -q, --quiet            Suppress warnings; overwrite files without prompting
@@ -104,7 +104,7 @@ FMT CODES:
 	},
 	'code': {
 		'options': lambda proto,help_notes,s: s.format(
-			g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),
+			g=g,gc=gc,pnm=gc.proj_name,pnl=gc.proj_name.lower(),
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
 			fu=help_notes('rel_fee_desc'),

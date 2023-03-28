@@ -23,7 +23,7 @@ test.test_py_d.ts_autosign: Autosign tests for the test.py test suite
 import os,shutil
 from subprocess import run
 
-from mmgen.globalvars import g
+from mmgen.globalvars import g,gc
 from mmgen.opts import opt
 
 from ..include.common import *
@@ -84,7 +84,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		super().__init__(trunner,cfgs,spawn)
 		if trunner == None:
 			return
-		if g.platform == 'win':
+		if gc.platform == 'win':
 			die(1,f'Test {type(self).__name__} not supported for Windows platform')
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
@@ -126,7 +126,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		self.bad_msg_count = 0
 
 	def __del__(self):
-		if g.platform == 'win' or self.tr == None:
+		if gc.platform == 'win' or self.tr == None:
 			return
 		if self.simulate or not self.live:
 			LEDControl.delete_dummy_control_files()

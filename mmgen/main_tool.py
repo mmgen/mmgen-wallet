@@ -23,13 +23,13 @@ mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
 
 import sys,os,importlib
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import g,gc
 from .opts import opt
 from .util import msg,Msg,die,capfirst,suf,async_run
 
 opts_data = {
 	'text': {
-		'desc':    f'Perform various {g.proj_name}- and cryptocoin-related operations',
+		'desc':    f'Perform various {gc.proj_name}- and cryptocoin-related operations',
 		'usage':   '[opts] <command> <command args>',
 		'options': """
 -d, --outdir=       d  Specify an alternate directory 'd' for output
@@ -41,7 +41,7 @@ opts_data = {
                        for {coin_id}: {kgs}
 -l, --list             List available commands
 -p, --hash-preset= p   Use the scrypt hash parameters defined by preset 'p'
-                       for password hashing (default: '{g.dfl_hash_preset}')
+                       for password hashing (default: '{gc.dfl_hash_preset}')
 -P, --passwd-file= f   Get passphrase from file 'f'.
 -q, --quiet            Produce quieter output
 -r, --usr-randchars=n  Get 'n' characters of additional randomness from
@@ -65,10 +65,11 @@ Type ‘{pn} help <command>’ for help on a particular command
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
 			g=g,
+			gc=gc,
 		),
 		'notes': lambda s, help_notes: s.format(
 			ch=help_notes('tool_help'),
-			pn=g.prog_name)
+			pn=gc.prog_name)
 	}
 }
 
@@ -269,8 +270,7 @@ def process_args(cmd,cmd_args,cls):
 			die(1,"'Binary input data must be supplied via STDIN")
 
 		if have_stdin_input and arg_type == 'str' and isinstance(arg,bytes):
-			from .globalvars import g
-			NL = '\r\n' if g.platform == 'win' else '\n'
+			NL = '\r\n' if gc.platform == 'win' else '\n'
 			arg = arg.decode()
 			if arg[-len(NL):] == NL: # rstrip one newline
 				arg = arg[:-len(NL)]
@@ -346,7 +346,7 @@ def get_cmd_cls(cmd):
 def get_mod_cls(modname):
 	return getattr(importlib.import_module(f'mmgen.tool.{modname}'),'tool_cmd')
 
-if g.prog_name == 'mmgen-tool' and not opt._lock:
+if gc.prog_name == 'mmgen-tool' and not opt._lock:
 
 	po = opts.init( opts_data, parse_only=True )
 

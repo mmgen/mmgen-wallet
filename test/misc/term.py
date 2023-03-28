@@ -19,13 +19,13 @@ commands = [
 	'get_char_one',
 	'get_char_one_raw',
 ]
-if g.platform == 'linux':
+if gc.platform == 'linux':
 	commands.extend([
 		'get_char',
 		'get_char_immed_chars',
 		'get_char_raw',
 	])
-elif g.platform == 'win':
+elif gc.platform == 'win':
 	commands.extend([
 		'get_char_one_char_immed_chars',
 	])
@@ -38,7 +38,7 @@ opts_data = {
 -h, --help     Print this help message
 """,
 	'notes': f"""
-available commands for platform {g.platform!r}:
+available commands for platform {gc.platform!r}:
 {fmt_list(commands,fmt='col',indent='    ')}
 """
 	}
@@ -118,7 +118,7 @@ def _tt_get_char(raw=False,one_char=False,immed_chars=''):
 			if one_char else
 		'echoed as a FULL CONTROL SEQUENCE.'
 	)
-	if g.platform == 'win':
+	if gc.platform == 'win':
 		if raw:
 			m3 = 'The Escape and F1-F12 keys will be returned as two-character strings.'
 		else:
@@ -149,7 +149,7 @@ def tt_urand():
 	msg(f'USER ENTROPY (user input + keystroke timings):\n\n{fmt(ret,"  ")}')
 	times = ret.splitlines()[1:]
 	avg_prec = sum(len(t.split('.')[1]) for t in times) // len(times)
-	if avg_prec < g.min_time_precision:
+	if avg_prec < gc.min_time_precision:
 		ymsg(f'WARNING: Avg. time precision of only {avg_prec} decimal points.  User entropy quality is degraded!')
 	else:
 		msg(f'Average time precision: {avg_prec} decimal points - OK')

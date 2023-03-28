@@ -13,7 +13,7 @@ msg: base message signing classes
 """
 
 import os,importlib,json
-from .globalvars import g
+from .globalvars import gc
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .util import msg,die,suf,make_chksum_6,fmt_list,remove_dups
 from .color import red,orange,grnbg
@@ -92,7 +92,7 @@ class coin_msg:
 
 		def write_to_file(self,outdir=None,ask_overwrite=False):
 			data = {
-				'id': f'{g.proj_name} {self.desc}',
+				'id': f'{gc.proj_name} {self.desc}',
 				'metadata': self.data,
 				'signatures': self.sigs,
 			}

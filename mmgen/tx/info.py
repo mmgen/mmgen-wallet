@@ -12,7 +12,7 @@
 tx.info: transaction info class
 """
 
-from ..globalvars import *
+from ..globalvars import gc
 from ..color import red,green,orange
 from ..opts import opt
 from ..util import msg,msg_r
@@ -43,7 +43,7 @@ class TxInfo:
 				sel_f = lambda o: len(o.mmid) + (2,8)[bool(o.is_chg)] # + len(' (chg)')
 			return  max(max([sel_f(o) for o in io if o.mmid] or [0]),len(nonmm_str))
 
-		nonmm_str = f'(non-{g.proj_name} address)'
+		nonmm_str = f'(non-{gc.proj_name} address)'
 		max_mmwid = max(get_max_mmwid(tx.inputs),get_max_mmwid(tx.outputs))
 
 		def gen_view():

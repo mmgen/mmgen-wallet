@@ -23,7 +23,7 @@ cfgfile: API for the MMGen runtime configuration file and related files
 import os,re
 from collections import namedtuple
 
-from .globalvars import g
+from .globalvars import g,gc
 from .util import msg,ymsg,suf,fmt,fmt_list,oneshot_warning,strip_comment,capfirst
 
 def mmgen_cfg_file(id_str):
@@ -187,7 +187,7 @@ class CfgFileSampleSys(cfg_file_sample):
 		else:
 			# self.fn is used for error msgs only, so file need not exist on filesystem
 			self.fn = os.path.join(os.path.dirname(__file__),'data',self.fn_base)
-			self.data = g.get_mmgen_data_file(self.fn_base).splitlines()
+			self.data = gc.get_mmgen_data_file(self.fn_base).splitlines()
 
 	def make_metadata(self):
 		return [f'# Version {self.cur_ver} {self.computed_chksum}']

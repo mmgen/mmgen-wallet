@@ -87,8 +87,8 @@ class AddrFile(MMGenObject):
 			self.file_header_mn.format(p.pw_fmt.upper())
 				if p.gen_passwds and p.pw_fmt in ('bip39','xmrseed') else
 			self.file_header ).strip()
-		from .globalvars import g
-		out = [fh.format(pnm=g.proj_name,n=TwComment.max_screen_width) + '\n']
+		from .globalvars import gc
+		out = [fh.format(pnm=gc.proj_name,n=TwComment.max_screen_width) + '\n']
 
 		if p.chksum:
 			out.append(f'# {capfirst(p.desc)} data checksum for {p.id_str}: {p.chksum}')

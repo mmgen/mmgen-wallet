@@ -30,7 +30,7 @@ from .common import *
 opts_data = {
 	'text': {
 		'desc': f"""
-               Split funds in an {g.proj_name} wallet after a chain fork using a
+               Split funds in an {gc.proj_name} wallet after a chain fork using a
                timelocked transaction
 		 """,
 		'usage':'[opts] [output addr1] [output addr2]',
@@ -54,7 +54,7 @@ opts_data = {
 	'notes': f"""\n
 This command creates two transactions: one (with the timelock) to be broadcast
 on the long chain and one on the short chain after a replayable chain fork.
-Only {g.proj_name} addresses may be spent to.
+Only {gc.proj_name} addresses may be spent to.
 
 The command must be run on the longest chain.  The user is reponsible for
 ensuring that the current chain is the longest.  The other chain is specified
@@ -99,7 +99,7 @@ if opt.other_coin.lower() not in [e[2] for e in proto.forks if e[3] == True]:
 	die(1,f'{opt.other_coin!r}: not a replayable fork of {proto.coin} chain')
 
 if len(cmd_args) != 2:
-	die(1,f'This command requires exactly two {g.proj_name} addresses as arguments')
+	die(1,f'This command requires exactly two {gc.proj_name} addresses as arguments')
 
 from .addr import MMGenID
 try:

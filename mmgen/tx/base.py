@@ -12,7 +12,7 @@
 tx.base: base transaction class
 """
 
-from ..globalvars import *
+from ..globalvars import gc
 from ..objmethods import MMGenObject
 from ..obj import (
 	ImmutableAttr,
@@ -85,13 +85,13 @@ class Base(MMGenObject):
 	chain        = None
 	signed       = False
 	non_mmgen_inputs_msg = f"""
-		This transaction includes inputs with non-{g.proj_name} addresses.  When
+		This transaction includes inputs with non-{gc.proj_name} addresses.  When
 		signing the transaction, private keys for the addresses listed below must
 		be supplied using the --keys-from-file option.  The key file must contain
 		one key per line.  Please note that this transaction cannot be autosigned,
 		as autosigning does not support the use of key files.
 
-		Non-{g.proj_name} addresses found in inputs:
+		Non-{gc.proj_name} addresses found in inputs:
 		    {{}}
 	"""
 

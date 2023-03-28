@@ -22,7 +22,7 @@ mmgen-passgen: Generate a series or range of passwords from an MMGen
 """
 
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import g,gc
 from .opts import opt
 from .addrlist import AddrIdxList
 from .passwdlist import PasswordList
@@ -35,7 +35,7 @@ opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
 	'text': {
 		'desc': f"""
-                 Generate a range or list of passwords from an {g.proj_name} wallet,
+                 Generate a range or list of passwords from an {gc.proj_name} wallet,
                  mnemonic, seed or brainwallet for the given ID string
 		 """,
 		'usage':'[opts] [seed source] <ID string> <index list or range(s)>',
@@ -57,7 +57,7 @@ opts_data = {
                       is required only for brainwallet and incognito inputs
                       with non-standard (< {dsl}-bit) seed lengths.
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{g.dfl_hash_preset}')
+                      for password hashing (default: '{gc.dfl_hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Produce quieter output; suppress some warnings
@@ -86,17 +86,17 @@ PASSWORD FORMATS:
 EXAMPLES:
 
   Generate ten base58 passwords of length {i58.dfl_len} for Alice's email account:
-  {g.prog_name} alice@nowhere.com 1-10
+  {gc.prog_name} alice@nowhere.com 1-10
 
   Generate ten base58 passwords of length 16 for Alice's email account:
-  {g.prog_name} --passwd-len=16 alice@nowhere.com 1-10
+  {gc.prog_name} --passwd-len=16 alice@nowhere.com 1-10
 
   Generate ten base32 passwords of length {i32.dfl_len} for Alice's email account:
-  {g.prog_name} --passwd-fmt=b32 alice@nowhere.com 1-10
+  {gc.prog_name} --passwd-fmt=b32 alice@nowhere.com 1-10
 
   Generate three BIP39 mnemonic seed phrases of length {i39.dfl_len} for Alice's
   Trezor device:
-  {g.prog_name} --passwd-fmt=bip39 mytrezor 1-3
+  {gc.prog_name} --passwd-fmt=bip39 mytrezor 1-3
 
   All passwords are cryptographically unlinkable with each other, including
   passwords with the same format but different length, so Alice needn't worry
@@ -116,9 +116,10 @@ FMT CODES:
 	},
 	'code': {
 		'options': lambda help_notes,s: s.format(
-			g=g,pnm=g.proj_name,
+			g=g,pnm=gc.proj_name,
 			dsl=help_notes('dfl_seed_len'),
 			dpf=PasswordList.dfl_pw_fmt,
+			gc=gc,
 		),
 		'notes': lambda help_notes,s: s.format(
 				o=opts,g=g,i58=pwi['b58'],i32=pwi['b32'],i39=pwi['bip39'],
@@ -128,6 +129,7 @@ FMT CODES:
 				n_bw=help_notes('brainwallet'),
 				pfi=help_notes('password_formats'),
 				n_fmt=help_notes('fmt_codes'),
+				gc=gc,
 		)
 	}
 }
@@ -178,7 +180,7 @@ if keypress_confirm('Encrypt password list?'):
 	af.encrypt()
 	af.write(binary=True,desc='encrypted password list')
 else:
-	if g.test_suite_popen_spawn and g.platform == 'win':
+	if g.test_suite_popen_spawn and gc.platform == 'win':
 		import time
 		time.sleep(0.1)
 	af.write(desc='password list')

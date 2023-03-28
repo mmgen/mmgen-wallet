@@ -141,7 +141,7 @@ spawn_cmd = ['scripts/exec_wrapper.py',mmgen_cmd]
 if opt.coverage:
 	d,f = init_coverage()
 	spawn_cmd = ['python3','-m','trace','--count','--coverdir='+d,'--file='+f] + spawn_cmd
-elif g.platform == 'win':
+elif gc.platform == 'win':
 	spawn_cmd = ['python3'] + spawn_cmd
 
 add_spawn_args = ['--data-dir='+cfg['tmpdir']] + ['--{}{}'.format(

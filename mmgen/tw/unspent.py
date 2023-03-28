@@ -81,7 +81,8 @@ class TwUnspentOutputs(TwView):
 		await super().__init__(proto)
 		self.minconf  = minconf
 		self.addrs    = addrs
-		self.min_cols = g.min_screen_width
+		from ..globalvars import gc
+		self.min_cols = gc.min_screen_width
 
 	@property
 	def total(self):

@@ -20,7 +20,7 @@
 test.test_py_d.ts_misc: Miscellaneous test groups for the test.py test suite
 """
 
-from mmgen.globalvars import g
+from mmgen.globalvars import g,gc
 from ..include.common import *
 from .common import *
 from .ts_base import *
@@ -233,7 +233,7 @@ class TestSuiteOutput(TestSuiteBase):
 
 	def oneshot_warning(self,pexpect_spawn=None):
 		t = self.spawn('test/misc/oneshot_warning.py',cmd_dir='.',pexpect_spawn=pexpect_spawn)
-		nl = '\r\n' if g.platform == 'win' or t.pexpect_spawn else '\n'
+		nl = '\r\n' if gc.platform == 'win' or t.pexpect_spawn else '\n'
 		for s in (
 			f'pw{nl}wg1',
 			'foo is experimental',

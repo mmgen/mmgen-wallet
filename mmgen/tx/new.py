@@ -15,6 +15,7 @@ tx.new: new transaction class
 from ..globalvars import *
 from ..opts import opt
 from .base import Base
+from ..globalvars import gc
 from ..color import pink,yellow
 from ..obj import get_obj,MMGenList
 from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension
@@ -37,12 +38,12 @@ def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
 				the address into your tracking wallet before broadcasting this transaction.
 			""",
 			'addr_not_found': f"""
-				No data for {g.proj_name} address {mmaddr} could be found in either the
+				No data for {gc.proj_name} address {mmaddr} could be found in either the
 				tracking wallet or the supplied address file.  Please import this address
 				into your tracking wallet, or supply an address file on the command line.
 			""",
 			'addr_not_found_no_addrfile': f"""
-				No data for {g.proj_name} address {mmaddr} could be found in the tracking
+				No data for {gc.proj_name} address {mmaddr} could be found in the tracking
 				wallet.  Please import this address into your tracking wallet or supply an
 				address file for it on the command line.
 			"""
@@ -227,7 +228,7 @@ class New(Base):
 				'ERROR: No change output specified' ))
 
 		if self.has_segwit_outputs() and not self.rpc.info('segwit_is_active'):
-			die(2,f'{g.proj_name} Segwit address requested on the command line, '
+			die(2,f'{gc.proj_name} Segwit address requested on the command line, '
 					+ 'but Segwit is not active on this chain')
 
 		if not self.outputs:

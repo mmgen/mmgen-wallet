@@ -74,7 +74,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		vmsg(f'Incog ID: {cyan(i_id)}')
 		t = self.spawn('mmgen-tool',['-d',self.tmpdir,'find_incog_data',f1,i_id])
 		o = t.expect_getend(f'Incog data for ID {i_id} found at offset ')
-		if not g.platform == 'win':
+		if not gc.platform == 'win':
 			os.unlink(f1) # causes problems with MSYS2
 		cmp_or_die(hincog_offset,int(o))
 		return t

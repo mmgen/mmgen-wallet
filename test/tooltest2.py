@@ -40,7 +40,7 @@ from mmgen.baseconv import *
 
 skipped_tests = ['mn2hex_interactive']
 
-NL = ('\n','\r\n')[g.platform=='win']
+NL = ('\n','\r\n')[gc.platform=='win']
 
 def is_str(s):
 	return type(s) == str
@@ -866,7 +866,7 @@ async def run_test(cls,gid,cmd_name):
 		elif opt.fork:
 			cmd_out = fork_cmd(cmd_name,args,out,opts,stdin_input)
 		else:
-			if stdin_input and g.platform == 'win':
+			if stdin_input and gc.platform == 'win':
 				msg('Skipping for MSWin - no os.fork()')
 				continue
 			method = getattr(cls(cmdname=cmd_name,proto=proto,mmtype=mmtype),cmd_name)

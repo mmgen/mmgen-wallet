@@ -20,7 +20,7 @@
 help: help notes for MMGen suite commands
 """
 
-from .globalvars import g
+from .globalvars import gc
 
 def help_notes_func(proto,opt,k):
 
@@ -156,30 +156,30 @@ EXAMPLES:
   Send 0.123 {proto.coin} to an external {proto.name} address, returning the change to a
   specific MMGen address in the tracking wallet:
 
-    $ {g.prog_name} {sample_addr},0.123 01ABCDEF:{mmtype}:7
+    $ {gc.prog_name} {sample_addr},0.123 01ABCDEF:{mmtype}:7
 
   Same as above, but select the change address automatically:
 
-    $ {g.prog_name} {sample_addr},0.123 01ABCDEF:{mmtype}
+    $ {gc.prog_name} {sample_addr},0.123 01ABCDEF:{mmtype}
 
   Same as above, but select the change address automatically by address type:
 
-    $ {g.prog_name} {sample_addr},0.123 {mmtype}
+    $ {gc.prog_name} {sample_addr},0.123 {mmtype}
 
   Same as above, but reduce verbosity and specify fee of 20 satoshis
   per byte:
 
-    $ {g.prog_name} -q -f 20s {sample_addr},0.123 {mmtype}
+    $ {gc.prog_name} -q -f 20s {sample_addr},0.123 {mmtype}
 
   Send entire balance of selected inputs minus fee to an external {proto.name}
   address:
 
-    $ {g.prog_name} {sample_addr}
+    $ {gc.prog_name} {sample_addr}
 
   Send entire balance of selected inputs minus fee to first unused wallet
   address of specified type:
 
-    $ {g.prog_name} {mmtype}
+    $ {gc.prog_name} {mmtype}
 """
 
 		def txcreate():
@@ -235,9 +235,9 @@ must also be supplied on the command line if the data can't be found in the
 default wallet.
 """.format(
 	wd  = (f'{coind_exec()} wallet dump or ' if isinstance(proto,mainnet) else ''),
-	pnm = g.proj_name,
+	pnm = gc.proj_name,
 	pnu = proto.name,
-	pnl = g.proj_name.lower() )
+	pnl = gc.proj_name.lower() )
 
 		def seedsplit():
 			from .seedsplit import SeedShareIdx,SeedShareCount,MasterShareIdx

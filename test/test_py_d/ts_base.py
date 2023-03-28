@@ -21,7 +21,7 @@ test.test_py_d.ts_base: Base class for the test.py test suite
 """
 
 import os
-from mmgen.globalvars import g
+from mmgen.globalvars import g,gc
 from mmgen.opts import opt
 from ..include.common import *
 from .common import *
@@ -74,7 +74,7 @@ class TestSuiteBase(object):
 		return write_to_file(os.path.join(self.tmpdir,fn),data,binary=binary)
 
 	def skip_for_win(self):
-		if g.platform == 'win':
+		if gc.platform == 'win':
 			msg(f'Skipping test {self.test_name!r}: not supported on MSys2 platform')
 			return True
 		else:

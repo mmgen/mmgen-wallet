@@ -22,7 +22,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 """
 
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import g,gc
 from .opts import opt
 from .addr import MMGenAddrType
 from .addrfile import AddrFile
@@ -30,7 +30,7 @@ from .wallet import Wallet
 
 import mmgen.addrlist
 
-if g.prog_name == 'mmgen-keygen':
+if gc.prog_name == 'mmgen-keygen':
 	gen_what = 'keys'
 	gen_clsname = 'KeyAddrList'
 	gen_desc = 'secret keys'
@@ -49,7 +49,7 @@ opts_data = {
 		'desc': """
                  Generate a range or list of {desc} from an {pnm} wallet,
                  mnemonic, seed or brainwallet
-			  """.format(desc=gen_desc,pnm=g.proj_name),
+			  """.format(desc=gen_desc,pnm=gc.proj_name),
 		'usage':'[opts] [seed source] <index list or range(s)>',
 		'options': """
 -h, --help            Print this help message
@@ -69,7 +69,7 @@ opts_data = {
                       is required only for brainwallet and incognito inputs
                       with non-standard (< {dsl}-bit) seed lengths.
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{g.dfl_hash_preset}')
+                      for password hashing (default: '{gc.dfl_hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Produce quieter output; suppress some warnings
@@ -111,9 +111,10 @@ FMT CODES:
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
 			dsl=help_notes('dfl_seed_len'),
-			pnm=g.proj_name,
+			pnm=gc.proj_name,
 			what=gen_what,
 			g=g,
+			gc=gc,
 		),
 		'notes': lambda help_notes,s: s.format(
 			n_addrkey=note_addrkey,

@@ -219,12 +219,12 @@ class TestSuiteInput(TestSuiteBase):
 
 		# hash preset (default)
 		t.expect('accept the default .*: ', '\n', regex=True)
-		t.expect(f'[{g.dfl_hash_preset}]')
+		t.expect(f'[{gc.dfl_hash_preset}]')
 
 		return t
 
 	def _input_func(self,func_name,arg_dfls,func_args,text,expect,term):
-		if term and g.platform == 'win':
+		if term and gc.platform == 'win':
 			return ('skip_warn','pexpect_spawn not supported on Windows platform')
 		func_args = {k:v for k,v in zip(arg_dfls.keys(),func_args)}
 		t = self.spawn(
@@ -268,7 +268,7 @@ class TestSuiteInput(TestSuiteBase):
 		return self._get_char(['prompt> ','',True,5],'x','x',False)
 
 	def get_char2(self):
-		expect = 'x' if g.platform == 'win' else 'xxxxx'
+		expect = 'x' if gc.platform == 'win' else 'xxxxx'
 		return self._get_char(['prompt> ','',True,5],'xxxxx',expect,False)
 
 	def get_char3(self):
@@ -314,7 +314,7 @@ class TestSuiteInput(TestSuiteBase):
 		return self._line_input(['prompt> ',True,'foobarbaz',True],Ctrl_U+'foobar','foobar',True)
 
 	def _password_entry(self,prompt,opts=[],term=False):
-		if term and g.platform == 'win':
+		if term and gc.platform == 'win':
 			return ('skip_warn','pexpect_spawn not supported on Windows platform')
 		t = self.spawn( 'test/misc/input_func.py', opts + ['passphrase'], cmd_dir='.', pexpect_spawn=term )
 		imsg('Terminal: {}'.format(term))

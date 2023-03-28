@@ -23,14 +23,14 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 import sys
 
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import gc
 from .opts import opt
 from .util import vmsg,qmsg,async_run
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc':    f'Send a signed {g.proj_name} cryptocoin transaction',
+		'desc':    f'Send a signed {gc.proj_name} cryptocoin transaction',
 		'usage':   '[opts] <signed transaction file>',
 		'options': """
 -h, --help      Print this help message

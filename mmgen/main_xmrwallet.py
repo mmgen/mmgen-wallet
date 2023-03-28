@@ -51,7 +51,7 @@ opts_data = {
                                  {R}
 -k, --use-internal-keccak-module Force use of the internal keccak module
 -p, --hash-preset=P              Use scrypt hash preset 'P' for password
-                                 hashing (default: '{g.dfl_hash_preset}')
+                                 hashing (default: '{gc.dfl_hash_preset}')
 -r, --restore-height=H           Scan from height 'H' when creating wallets
 -R, --no-relay                   Save transaction to file instead of relaying
 -s, --no-start-wallet-daemon     Don’t start the wallet daemon at startup
@@ -216,6 +216,7 @@ $ mmgen-xmrwallet --pager txview *XMR*.sigtx
 			D=xmrwallet_uarg_info['daemon'].annot,
 			R=xmrwallet_uarg_info['tx_relay_daemon'].annot,
 			g=g,
+			gc=gc,
 		),
 	}
 }

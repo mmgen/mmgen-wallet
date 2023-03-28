@@ -14,7 +14,7 @@ proto.btc.daemon: Bitcoin base protocol daemon classes
 
 import os
 
-from ...globalvars import g
+from ...globalvars import g,gc
 from ...opts import opt
 from ...util import list_gen
 from ...daemon import CoinDaemon,_nw,_dd
@@ -29,7 +29,7 @@ class bitcoin_core_daemon(CoinDaemon):
 	rpc_ports = _nw(8332, 18332, 18443)
 	cfg_file = 'bitcoin.conf'
 	datadirs = {
-		'linux': [g.home_dir,'.bitcoin'],
+		'linux': [gc.home_dir,'.bitcoin'],
 		'win':   [os.getenv('APPDATA'),'Bitcoin']
 	}
 	nonstd_datadir = False
@@ -133,7 +133,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	cfg_file_hdr = '# Bitcoin Cash Node config file\n'
 	nonstd_datadir = True
 	datadirs = {
-		'linux': [g.home_dir,'.bitcoin-bchn'],
+		'linux': [gc.home_dir,'.bitcoin-bchn'],
 		'win':   [os.getenv('APPDATA'),'Bitcoin_ABC']
 	}
 
@@ -162,6 +162,6 @@ class litecoin_core_daemon(bitcoin_core_daemon):
 	cfg_file = 'litecoin.conf'
 	cfg_file_hdr = '# Litecoin Core config file\n'
 	datadirs = {
-		'linux': [g.home_dir,'.litecoin'],
+		'linux': [gc.home_dir,'.litecoin'],
 		'win':   [os.getenv('APPDATA'),'Litecoin']
 	}

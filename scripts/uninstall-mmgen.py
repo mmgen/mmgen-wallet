@@ -19,7 +19,7 @@
 import sys,os
 
 import mmgen.opts as opts
-from mmgen.globalvars import g
+from mmgen.globalvars import gc
 from mmgen.util import msg,die
 
 def normalize_path(p):
@@ -53,7 +53,7 @@ opts_data = {
 
 cmd_args = opts.init(opts_data)
 
-if g.platform == 'linux' and os.getenv('USER') != 'root':
+if gc.platform == 'linux' and os.getenv('USER') != 'root':
 	die(1,'This program must be run as root')
 
 if len(cmd_args):

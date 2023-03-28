@@ -24,7 +24,7 @@ import os,time,importlib
 from subprocess import run,PIPE,CompletedProcess
 from collections import namedtuple
 
-from .globalvars import g
+from .globalvars import g,gc
 from .color import set_vt100
 from .util import msg,Msg_r,ymsg,die,remove_dups,oneshot_warning
 from .flags import *
@@ -51,7 +51,7 @@ class Daemon(Lockable):
 
 	def __init__(self,opts=None,flags=None):
 
-		self.platform = g.platform
+		self.platform = gc.platform
 		if self.platform == 'win':
 			self.use_pidfile = False
 			self.use_threads = True
@@ -478,7 +478,7 @@ class CoinDaemon(Daemon):
 		assert self.test_suite, 'datadir removal restricted to test suite'
 		if self.state == 'stopped':
 			run([
-				('rm' if g.platform == 'win' else '/bin/rm'),
+				('rm' if gc.platform == 'win' else '/bin/rm'),
 				'-rf',
 				self.datadir ])
 			set_vt100()

@@ -23,7 +23,7 @@ test.test_py_d.ts_xmrwallet: xmrwallet tests for the test.py test suite
 import sys,os,atexit,asyncio,shutil
 from subprocess import run,PIPE
 
-from mmgen.globalvars import g
+from mmgen.globalvars import gc
 from mmgen.opts import opt
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
@@ -128,7 +128,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				omsg(f'SSH SOCKS server started, listening at localhost:{cls.socks_port}')
 
 		def kill_proxy():
-			if g.platform == 'linux':
+			if gc.platform == 'linux':
 				omsg(f'Killing SSH SOCKS server at localhost:{cls.socks_port}')
 				cmd = [ 'pkill', '-f', ' '.join(a + b2) ]
 				run(cmd)

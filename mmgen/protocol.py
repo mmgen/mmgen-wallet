@@ -22,7 +22,7 @@ protocol: Coin protocol base classes and initializer
 
 from collections import namedtuple
 
-from .globalvars import g
+from .globalvars import g,gc
 from .objmethods import MMGenObject
 
 decoded_wif = namedtuple('decoded_wif',['sec','pubkey_type','compressed'])
@@ -36,7 +36,7 @@ class CoinProtocol(MMGenObject):
 
 	proto_info = namedtuple('proto_info',['name','trust_level']) # trust levels: see altcoin.py
 
-	# keys are mirrored in g.core_coins:
+	# keys are mirrored in gc.core_coins:
 	coins = {
 		'btc': proto_info('Bitcoin',         5),
 		'bch': proto_info('BitcoinCash',     5),
@@ -81,9 +81,9 @@ class CoinProtocol(MMGenObject):
 				self.addr_fmt_to_ver_bytes = {v:k for k,v in self.addr_ver_bytes.items()}
 				self.addr_ver_bytes_len = len(list(self.addr_ver_bytes)[0])
 
-			if 'tx' not in self.mmcaps and g.is_txprog:
+			if 'tx' not in self.mmcaps and gc.is_txprog:
 				from .util import die
-				die(2,f'Command {g.prog_name!r} not supported for coin {self.coin}')
+				die(2,f'Command {gc.prog_name!r} not supported for coin {self.coin}')
 
 			if hasattr(self,'chain_names'):
 				self.chain_name = self.chain_names[0] # first chain name is default
@@ -294,7 +294,7 @@ def warn_trustlevel(coinsym):
 		trust_level = e.trust_level if e else None
 		if trust_level in (None,-1):
 			from .util import die
-			die(1,f'Coin {coinsym} is not supported by {g.proj_name}')
+			die(1,f'Coin {coinsym} is not supported by {gc.proj_name}')
 
 	if trust_level > 3:
 		return
@@ -317,7 +317,7 @@ def warn_trustlevel(coinsym):
 			2: yellow('MEDIUM'),
 			3: green('OK'),
 		}[trust_level],
-		p = g.proj_name )
+		p = gc.proj_name )
 
 	if g.test_suite:
 		qmsg(warning)

@@ -12,7 +12,7 @@
 wallet.enc: encrypted wallet base class
 """
 
-from ..globalvars import g
+from ..globalvars import gc
 from ..opts import opt
 from ..util import msg,qmsg,make_chksum_8
 from .base import wallet
@@ -60,7 +60,7 @@ class wallet(wallet):
 			qmsg(f'Using hash preset {hp!r} requested on command line')
 		else:
 			hp = self._get_hash_preset_from_user(
-				old_preset = g.dfl_hash_preset,
+				old_preset = gc.dfl_hash_preset,
 				add_desc   = add_desc )
 		self.ssdata.hash_preset = hp
 

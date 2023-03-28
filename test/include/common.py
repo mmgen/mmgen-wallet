@@ -162,13 +162,13 @@ def init_coverage():
 
 def silence():
 	if not (opt.verbose or opt.exact_output):
-		g.stdout = g.stderr = open(os.devnull,'w')
+		gv.stdout = gv.stderr = open(os.devnull,'w')
 
 def end_silence():
 	if not (opt.verbose or opt.exact_output):
-		g.stdout.close()
-		g.stdout = sys.stdout
-		g.stderr = sys.stderr
+		gv.stdout.close()
+		gv.stdout = sys.stdout
+		gv.stderr = sys.stderr
 
 def omsg(s):
 	sys.stderr.write(s + '\n')

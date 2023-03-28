@@ -22,13 +22,13 @@ mmgen-regtest: Coin daemon regression test mode setup and operations for the MMG
 """
 
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import g,gc
 from .util import die,async_run
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc': f'Coin daemon regression test mode setup and operations for the {g.proj_name} suite',
+		'desc': f'Coin daemon regression test mode setup and operations for the {gc.proj_name} suite',
 		'usage':   '[opts] <command>',
 		'options': """
 -h, --help          Print this help message

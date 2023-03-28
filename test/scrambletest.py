@@ -127,7 +127,7 @@ def do_coin_tests():
 	for tname,tdata in (
 			tuple(bitcoin_data.items()) +
 			tuple(altcoin_data.items() if not opt.no_altcoin else []) ):
-		if tname == 'zec_zcash_z' and g.platform == 'win':
+		if tname == 'zec_zcash_z' and gc.platform == 'win':
 			msg("Skipping 'zec_zcash_z' test for Windows platform")
 			continue
 		coin,mmtype = tname.split('_',1) if '_' in tname else (tname,None)

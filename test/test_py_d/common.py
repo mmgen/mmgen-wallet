@@ -20,8 +20,9 @@
 test.test_py_d.common: Shared routines and data for the test.py test suite
 """
 
-import os
-from mmgen.common import *
+import sys,os
+from mmgen.globalvars import g,gc
+from mmgen.util import msg
 from ..include.common import *
 
 log_file = 'test.py.log'
@@ -53,7 +54,7 @@ from mmgen.obj import MMGenTxComment,TwComment
 tx_comment_jp = text_jp
 tx_comment_zh = text_zh
 
-lcg = ascii_cyr_gr if g.platform == 'win' else lat_cyr_gr # MSYS2 popen_spawn issue
+lcg = ascii_cyr_gr if gc.platform == 'win' else lat_cyr_gr # MSYS2 popen_spawn issue
 tx_comment_lat_cyr_gr = lcg[:MMGenTxComment.max_len] # 72 chars
 
 tw_comment_zh         = text_zh[:TwComment.max_screen_width // 2]

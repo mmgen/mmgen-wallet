@@ -21,7 +21,7 @@ opts: MMGen-specific options processing after generic processing by share.Opts
 """
 import sys,os
 
-from .globalvars import g
+from .globalvars import g,gc
 from .base_obj import Lockable
 
 import mmgen.share.Opts
@@ -36,14 +36,14 @@ opt = UserOpts()
 
 def usage():
 	from .util import Die
-	Die(1,mmgen.share.Opts.make_usage_str(g.prog_name,'user',usage_data))
+	Die(1,mmgen.share.Opts.make_usage_str(gc.prog_name,'user',usage_data))
 
 def version():
 	from .util import Die,fmt
 	Die(0,fmt(f"""
-		{g.prog_name.upper()} version {g.version}
-		Part of the {g.proj_name} suite, an online/offline cryptocurrency wallet for the
-		command line.  Copyright (C){g.Cdates} {g.author} {g.email}
+		{gc.prog_name.upper()} version {gc.version}
+		Part of the {gc.proj_name} suite, an online/offline cryptocurrency wallet for the
+		command line.  Copyright (C){gc.Cdates} {gc.author} {gc.email}
 	""",indent='  ').rstrip())
 
 def delete_data(opts_data):
@@ -167,7 +167,7 @@ def override_globals_from_cfg_file(
 	for d in ucfg.get_lines():
 		if d.name in g.cfg_file_opts:
 			ns = d.name.split('_')
-			if ns[0] in g.core_coins:
+			if ns[0] in gc.core_coins:
 				if not need_proto:
 					continue
 				nse,tn = (
@@ -267,7 +267,7 @@ common_opts_data = {
 --, --carol                Specify user “Carol” in MMGen regtest mode
 	""",
 	'code': lambda help_notes,proto,s: s.format(
-			pnm    = g.proj_name,
+			pnm    = gc.proj_name,
 			cu_dfl = proto.coin,
 		)
 }
@@ -369,7 +369,7 @@ def init(
 			if val != None and hasattr(g,k):
 				setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
 
-	if g.regtest or g.bob or g.alice or g.carol or g.prog_name == 'mmgen-regtest':
+	if g.regtest or g.bob or g.alice or g.carol or gc.prog_name == 'mmgen-regtest':
 		g.network = 'regtest'
 		g.regtest_user = 'bob' if g.bob else 'alice' if g.alice else 'carol' if g.carol else None
 	else:
@@ -422,7 +422,7 @@ def init(
 	if opt.verbose:
 		opt.quiet = None
 
-	if g.debug and g.prog_name != 'test.py':
+	if g.debug and gc.prog_name != 'test.py':
 		opt.verbose,opt.quiet = (True,None)
 
 	if g.debug_opts:
@@ -609,7 +609,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 #		except:
 #			die( 'UserOptError',
 #				'Regtest (Bob and Alice) mode not set up yet.  ' +
-#				f"Run '{g.proj_name.lower()}-regtest setup' to initialize." )
+#				f"Run '{gc.proj_name.lower()}-regtest setup' to initialize." )
 #
 #	chk_alice = chk_bob
 

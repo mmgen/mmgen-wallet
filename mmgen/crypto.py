@@ -23,7 +23,7 @@ crypto: Random number, password hashing and symmetric encryption routines for th
 import os
 from collections import namedtuple
 
-from .globalvars import g
+from .globalvars import g,gc
 from .opts import opt
 from .util import (
 	msg,
@@ -244,7 +244,7 @@ class Crypto:
 
 		avg_prec = sum(len(t.split('.')[1]) for t in time_data) // len(time_data)
 
-		if avg_prec < g.min_time_precision:
+		if avg_prec < gc.min_time_precision:
 			ymsg(f'WARNING: Avg. time precision of only {avg_prec} decimal points. User entropy quality is degraded!')
 
 		ret = key_data + '\n' + '\n'.join(time_data)
@@ -300,7 +300,7 @@ class Crypto:
 
 	def get_hash_preset_from_user(
 			self,
-			old_preset = g.dfl_hash_preset,
+			old_preset = gc.dfl_hash_preset,
 			data_desc  = 'data',
 			prompt     = None ):
 
@@ -338,7 +338,7 @@ class Crypto:
 			if opt.echo_passphrase:
 				pw = ' '.join(get_words_from_user( f'Enter {pw_desc} for {data_desc}: ' ))
 			else:
-				for i in range(g.passwd_max_tries):
+				for i in range(gc.passwd_max_tries):
 					pw = ' '.join(get_words_from_user( f'Enter {pw_desc} for {data_desc}: ' ))
 					pw_chk = ' '.join(get_words_from_user( f'Repeat {pw_desc}: ' ))
 					dmsg(f'Passphrases: [{pw}] [{pw_chk}]')

@@ -133,7 +133,7 @@ def gen_tool_usage():
 
 def gen_tool_cmd_usage(mod,cmdname):
 
-	from ..globalvars import g
+	from ..globalvars import gc
 	from ..util import capfirst
 
 	cls = main_tool.get_mod_cls(mod)
@@ -145,7 +145,7 @@ def gen_tool_cmd_usage(mod,cmdname):
 	yield capfirst( docstr.split('\n')[0].strip() )
 	yield ''
 	yield 'USAGE: {b} [OPTS] {c}{d}{e}'.format(
-		b = g.prog_name,
+		b = gc.prog_name,
 		c = cmdname,
 		d = f' {ARGS}' if ARGS else '',
 		e = f' [{KWARGS}]' if KWARGS else '' )

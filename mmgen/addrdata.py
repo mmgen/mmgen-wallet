@@ -74,7 +74,7 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 	async def __init__(self,proto,twctl=None):
 		from .rpc import rpc_init
 		from .tw.shared import TwLabel
-		from .globalvars import g
+		from .globalvars import gc
 		from .seed import SeedID
 		self.proto = proto
 		self.rpc = await rpc_init(proto)
@@ -86,7 +86,7 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 			if l and l.mmid.type == 'mmgen':
 				obj = l.mmid.obj
 				if len(addr_array) != 1:
-					message = self.msgs['multiple_acct_addrs'].strip().format( acct=acct, proj=g.proj_name )
+					message = self.msgs['multiple_acct_addrs'].strip().format( acct=acct, proj=gc.proj_name )
 					die(3, fmt( message, indent='  ' ))
 				al_id = AddrListID(
 					sid = SeedID(sid=obj.sid),
@@ -96,7 +96,7 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 				out[al_id].append(AddrListEntry(self.proto,idx=obj.idx,addr=addr_array[0],comment=l.comment))
 				i += 1
 
-		vmsg(f'{i} {g.proj_name} addresses found, {len(twd)} accounts total')
+		vmsg(f'{i} {gc.proj_name} addresses found, {len(twd)} accounts total')
 
 		for al_id in out:
 			self.add(AddrList(

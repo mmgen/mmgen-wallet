@@ -30,7 +30,7 @@ def create_shm_dir(data_dir,trash_dir):
 	# under '/dev/shm' and put datadir and tmpdirs here.
 	import shutil
 	from subprocess import run
-	if g.platform == 'win':
+	if gc.platform == 'win':
 		for tdir in (data_dir,trash_dir):
 			try: os.listdir(tdir)
 			except: pass
@@ -195,7 +195,7 @@ opts.UserOpts._reset_ok += (
 parsed_opts = opts.init(opts_data,return_parsed=True)
 usr_args = parsed_opts.cmd_args
 
-if opt.pexpect_spawn and g.platform == 'win':
+if opt.pexpect_spawn and gc.platform == 'win':
 	die(1,'--pexpect-spawn option not supported on Windows platform, exiting')
 
 if opt.daemon_id and opt.daemon_id in g.blacklisted_daemons.split():
@@ -313,7 +313,7 @@ def clean(usr_dirs=None,clean_overlay=True):
 		iqmsg(green(f'Cleaned directory {os.path.relpath(overlay_tree_dir)!r}'))
 
 def create_tmp_dirs(shm_dir):
-	if g.platform == 'win':
+	if gc.platform == 'win':
 		for cfg in sorted(cfgs):
 			mk_tmpdir(cfgs[cfg]['tmpdir'])
 	else:
@@ -556,7 +556,7 @@ class TestSuiteRunner(object):
 			omsg(f'INFO → Writing coverage files to {coverdir!r}')
 			self.pre_args = ['python3','-m','trace','--count','--coverdir='+coverdir,'--file='+accfile]
 		else:
-			self.pre_args = ['python3'] if g.platform == 'win' else []
+			self.pre_args = ['python3'] if gc.platform == 'win' else []
 
 		if opt.pexpect_spawn:
 			omsg(f'INFO → Using pexpect.spawn() for real terminal emulation')
@@ -612,7 +612,7 @@ class TestSuiteRunner(object):
 					clr1,clr2 = (nocolor,nocolor) if opt.print_cmdline else (green,cyan)
 					omsg(
 						clr1('Executing: ') +
-						clr2(repr(cmd_disp) if g.platform == 'win' else cmd_disp)
+						clr2(repr(cmd_disp) if gc.platform == 'win' else cmd_disp)
 					)
 			else:
 				omsg_r(f'{t_pfx}Testing {desc}: ')
@@ -918,7 +918,7 @@ class TestSuiteRunner(object):
 
 	def check_deps(self,cmds): # TODO: broken
 		if len(cmds) != 1:
-			die(1,f'Usage: {g.prog_name} check_deps <command>')
+			die(1,f'Usage: {gc.prog_name} check_deps <command>')
 
 		cmd = cmds[0]
 

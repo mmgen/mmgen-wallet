@@ -23,7 +23,7 @@ mmgen-addrimport: Import addresses into a MMGen coin daemon tracking wallet
 from collections import namedtuple
 
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import gc
 from .opts import opt
 from .util import msg,qmsg,suf,die,fmt,async_run
 from .addrlist import AddrList,KeyAddrList
@@ -31,7 +31,7 @@ from .tw.shared import TwLabel
 
 opts_data = {
 	'text': {
-		'desc': f'Import addresses into an {g.proj_name} tracking wallet',
+		'desc': f'Import addresses into an {gc.proj_name} tracking wallet',
 		'usage':'[opts] [MMGen address file]',
 		'options': """
 -h, --help         Print this help message
@@ -78,8 +78,8 @@ addrimport_msgs = {
 		by the number of addresses imported and typically takes just a few minutes.
 	""",
 	'bad_args': f"""
-		You must specify either an {g.proj_name} address file, a single address with
-		the ‘--address’ option, or a flat list of non-{g.proj_name} addresses with
+		You must specify either an {gc.proj_name} address file, a single address with
+		the ‘--address’ option, or a flat list of non-{gc.proj_name} addresses with
 		the ‘--addrlist’ option.
 	"""
 }
@@ -102,7 +102,7 @@ def parse_cmd_args(rpc,cmd_args):
 				proto = proto,
 				addrlist = get_lines_from_file(
 					infile,
-					f'non-{g.proj_name} addresses',
+					f'non-{gc.proj_name} addresses',
 					trim_comments = True ) )
 		else:
 			al = import_mmgen_list(infile)

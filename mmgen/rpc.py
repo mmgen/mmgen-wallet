@@ -264,7 +264,7 @@ class RPCClient(MMGenObject):
 	def __init__(self,host,port,test_connection=True):
 
 		# aiohttp workaround, and may speed up RPC performance overall on some systems:
-		if g.platform == 'win' and host == 'localhost':
+		if gc.platform == 'win' and host == 'localhost':
 			host = '127.0.0.1'
 
 		global dmsg_rpc,dmsg_rpc_backend
@@ -291,7 +291,7 @@ class RPCClient(MMGenObject):
 	def _get_backend(self,backend):
 		backend_id = backend or opt.rpc_backend
 		if backend_id == 'auto':
-			return {'linux':RPCBackends.httplib,'win':RPCBackends.requests}[g.platform](self)
+			return {'linux':RPCBackends.httplib,'win':RPCBackends.requests}[gc.platform](self)
 		else:
 			return getattr(RPCBackends,backend_id)(self)
 

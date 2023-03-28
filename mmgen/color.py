@@ -47,8 +47,8 @@ def nocolor(s):
 
 def set_vt100():
 	'hack to put term into VT100 mode under MSWin'
-	from .globalvars import g
-	if g.platform == 'win':
+	from .globalvars import gc
+	if gc.platform == 'win':
 		from subprocess import run
 		run([],shell=True)
 

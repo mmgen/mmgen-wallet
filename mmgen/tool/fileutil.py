@@ -23,6 +23,7 @@ tool.fileutil: File routines for the 'mmgen-tool' utility
 import os
 
 from .common import tool_cmd_base
+from ..globalvars import gc
 from ..util import msg,msg_r,qmsg,die,suf,make_full_path
 from ..crypto import Crypto
 
@@ -36,11 +37,10 @@ class tool_cmd(tool_cmd_base):
 		"Use an Incog ID to find hidden incognito wallet data"
 
 		from hashlib import sha256
-		from ..globalvars import g
 
 		ivsize,bsize,mod = ( Crypto.aesctr_iv_len, 4096, 4096*8 )
 		n,carry = 0,b' '*ivsize
-		flgs = os.O_RDONLY|os.O_BINARY if g.platform == 'win' else os.O_RDONLY
+		flgs = os.O_RDONLY|os.O_BINARY if gc.platform == 'win' else os.O_RDONLY
 		f = os.open(filename,flgs)
 		for ch in incog_id:
 			if ch not in '0123456789ABCDEF':

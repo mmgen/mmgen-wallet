@@ -120,7 +120,7 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 		if not opt.no_daemon_stop:
 			d.stop()
 
-		if test_cf_auth and g.platform != 'win':
+		if test_cf_auth and gc.platform != 'win':
 			cfg_file_auth_test(d.proto,d)
 			cfg_file_auth_test(d.proto,d,bad_auth=True)
 

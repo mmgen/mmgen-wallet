@@ -43,8 +43,8 @@ class File:
 		import stat
 		if stat.S_ISBLK(st.st_mode):
 			mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]
-			from .globalvars import g
-			if g.platform == 'win':
+			from .globalvars import gc
+			if gc.platform == 'win':
 				mode |= os.O_BINARY
 			try:
 				fd = os.open(fn, mode)

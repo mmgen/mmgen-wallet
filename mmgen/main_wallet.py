@@ -22,7 +22,7 @@ main_wallet: Entry point for MMGen wallet-related scripts
 
 import sys,os
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import g,gc
 from .opts import opt
 from .color import green,yellow
 from .util import msg,qmsg,vmsg,gmsg_r,ymsg,bmsg,die,capfirst
@@ -43,13 +43,13 @@ invoked_as = {
 	'mmgen-passchg':      'passchg',
 	'mmgen-subwalletgen': 'subgen',
 	'mmgen-seedsplit':    'seedsplit',
-}[g.prog_name]
+}[gc.prog_name]
 
-dsw = f'the default or specified {g.proj_name} wallet'
+dsw = f'the default or specified {gc.proj_name} wallet'
 
 # full: defhHiJkKlLmoOpPqrSvz-
 if invoked_as == 'gen':
-	desc = f'Generate an {g.proj_name} wallet from a random seed'
+	desc = f'Generate an {gc.proj_name} wallet from a random seed'
 	opt_filter = 'ehdoJlLpPqrSvz-'
 	usage = '[opts]'
 	oaction = 'output'
@@ -108,7 +108,7 @@ opts_data = {
 -m, --keep-label      Reuse label of input wallet for output wallet
 -M, --master-share=i  Use a master share with index 'i' (min:{ms_min}, max:{ms_max})
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{g.dfl_hash_preset}')
+                      for password hashing (default: '{gc.dfl_hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Produce quieter output; suppress some warnings
@@ -134,6 +134,7 @@ FMT CODES:
 			ms_max=help_notes('MasterShareIdx').max_val,
 			dsl=help_notes('dfl_seed_len'),
 			g=g,
+			gc=gc,
 		),
 		'notes': lambda help_notes,s: s.format(
 			f=help_notes('fmt_codes'),

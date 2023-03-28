@@ -29,6 +29,79 @@ def die(exit_val,s=''):
 		sys.stderr.write(s+'\n')
 	sys.exit(exit_val)
 
+class GlobalConstants(Lockable):
+	"""
+	These values are non-configurable.  They’re constant for a given machine,
+	user, executable and MMGen release.
+	"""
+	proj_name          = 'MMGen'
+	proj_url           = 'https://github.com/mmgen/mmgen'
+	author             = 'The MMGen Project'
+	email              = '<mmgen@tuta.io>'
+	Cdates             = '2013-2023'
+	dfl_hash_preset    = '3'
+	passwd_max_tries   = 5
+	min_screen_width   = 80
+	min_time_precision = 18
+
+	# must match CoinProtocol.coins
+	core_coins = ('btc','bch','ltc','eth','etc','zec','xmr')
+
+	prog_name = os.path.basename(sys.argv[0])
+	is_txprog = prog_name == 'mmgen-regtest' or prog_name.startswith('mmgen-tx')
+
+	for k in ('linux','win','msys'):
+		if sys.platform.startswith(k):
+			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
+			break
+	else:
+		die(1,f'{sys.platform!r}: platform not supported by {proj_name}')
+
+	if os.getenv('HOME'):   # Linux or MSYS2
+		home_dir = os.getenv('HOME')
+	elif platform == 'win': # Windows without MSYS2 - not supported
+		die(1,f'$HOME not set!  {proj_name} for Windows must be run in MSYS2 environment')
+	else:
+		die(2,'$HOME is not set!  Unable to determine home directory')
+
+	def get_mmgen_data_file(self,filename,package='mmgen'):
+		"""
+		this is an expensive import, so do only when required
+		"""
+		# Resource will be unpacked and then cleaned up if necessary, see:
+		#    https://docs.python.org/3/library/importlib.html:
+		#        Note: This module provides functionality similar to pkg_resources Basic
+		#        Resource Access without the performance overhead of that package.
+		#    https://importlib-resources.readthedocs.io/en/latest/migration.html
+		#    https://setuptools.readthedocs.io/en/latest/pkg_resources.html
+		try:
+			from importlib.resources import files # Python 3.9
+		except ImportError:
+			from importlib_resources import files
+		return files(package).joinpath('data',filename).read_text()
+
+	@property
+	def version(self):
+		return self.get_mmgen_data_file(
+				filename = 'version',
+				package  = 'mmgen_node_tools' if self.prog_name.startswith('mmnode-') else 'mmgen'
+			).strip()
+
+	@property
+	def release_date(self):
+		return self.get_mmgen_data_file(filename='release_date').strip()
+
+gc = GlobalConstants()
+
+class GlobalVars:
+	"""
+	These are used only by the test suite to redirect msg() and friends to /dev/null
+	"""
+	stdout = sys.stdout
+	stderr = sys.stderr
+
+gv = GlobalVars()
+
 class GlobalConfig(Lockable):
 	"""
 	Set global vars to default values
@@ -44,15 +117,6 @@ class GlobalConfig(Lockable):
 
 	# Constants:
 
-	proj_name = 'MMGen'
-	proj_url  = 'https://github.com/mmgen/mmgen'
-	prog_name = os.path.basename(sys.argv[0])
-	author    = 'The MMGen Project'
-	email     = '<mmgen@tuta.io>'
-	Cdates    = '2013-2023'
-
-	is_txprog = prog_name == 'mmgen-regtest' or prog_name.startswith('mmgen-tx')
-
 	stdin_tty = sys.stdin.isatty()
 	stdout = sys.stdout
 	stderr = sys.stderr
@@ -60,11 +124,9 @@ class GlobalConfig(Lockable):
 	http_timeout = 60
 	err_disp_timeout = 0.7
 	short_disp_timeout = 0.3
-	min_time_precision = 18
 
 	# Variables - these might be altered at runtime:
 
-	dfl_hash_preset = '3'
 	usr_randchars   = 30
 
 	fee_adjust = 1.0
@@ -134,26 +196,9 @@ class GlobalConfig(Lockable):
 		os.getenv('MMGEN_FORCE_COLOR')
 	)
 
-	for k in ('linux','win','msys'):
-		if sys.platform.startswith(k):
-			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
-			break
-	else:
-		die(1,f'{sys.platform!r}: platform not supported by {proj_name}')
-
-	if os.getenv('HOME'):   # Linux or MSYS2
-		home_dir = os.getenv('HOME')
-	elif platform == 'win': # Windows without MSYS2 - not supported
-		die(1,f'$HOME not set!  {proj_name} for Windows must be run in MSYS2 environment')
-	else:
-		die(2,'$HOME is not set!  Unable to determine home directory')
-
 	daemon_data_dir = '' # set by user
 	daemon_id = ''
 	blacklisted_daemons = ''
-
-	# must match CoinProtocol.coins
-	core_coins = ('btc','bch','ltc','eth','etc','zec','xmr')
 
 	# global var sets user opt:
 	global_sets_opt = (
@@ -297,7 +342,7 @@ class GlobalConfig(Lockable):
 		'fee_estimate_mode': _ov('nocase_pfx', ['conservative','economical']),
 		'rpc_backend':       _ov('nocase_pfx', ['auto','httplib','curl','aiohttp','requests']),
 	}
-	if platform == 'win':
+	if gc.platform == 'win':
 		_skip_type_check = ('stdout','stderr')
 
 	auto_typeset_opts = {
@@ -306,12 +351,9 @@ class GlobalConfig(Lockable):
 		'vsize_adj': float,
 	}
 
-	min_screen_width = 80
 	minconf = 1
 	max_tx_file_size = 100000
 	max_input_size   = 1024 * 1024
-
-	passwd_max_tries = 5
 
 	max_urandchars = 80
 	min_urandchars = 10
@@ -324,7 +366,7 @@ class GlobalConfig(Lockable):
 		short_disp_timeout = 0.1
 		if os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'):
 			stdin_tty = True
-		if prog_name == 'unit_tests.py':
+		if gc.prog_name == 'unit_tests.py':
 			_set_ok += ('debug_subseed',)
 			_reset_ok += ('force_standalone_scrypt_module',)
 
@@ -332,33 +374,6 @@ class GlobalConfig(Lockable):
 		for name in env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
-
-	def get_mmgen_data_file(self,filename,package='mmgen'):
-		"""
-		this is an expensive import, so do only when required
-		"""
-		# Resource will be unpacked and then cleaned up if necessary, see:
-		#    https://docs.python.org/3/library/importlib.html:
-		#        Note: This module provides functionality similar to pkg_resources Basic
-		#        Resource Access without the performance overhead of that package.
-		#    https://importlib-resources.readthedocs.io/en/latest/migration.html
-		#    https://setuptools.readthedocs.io/en/latest/pkg_resources.html
-		try:
-			from importlib.resources import files # Python 3.9
-		except ImportError:
-			from importlib_resources import files
-		return files(package).joinpath('data',filename).read_text()
-
-	@property
-	def version(self):
-		return self.get_mmgen_data_file(
-				filename = 'version',
-				package  = 'mmgen_node_tools' if self.prog_name.startswith('mmnode-') else 'mmgen'
-			).strip()
-
-	@property
-	def release_date(self):
-		return self.get_mmgen_data_file(filename='release_date').strip()
 
 	@property
 	def data_dir_root(self):
@@ -374,7 +389,7 @@ class GlobalConfig(Lockable):
 				from test.include.common import get_test_data_dir
 				self._data_dir_root = get_test_data_dir()
 			else:
-				self._data_dir_root = os.path.join(self.home_dir,'.'+self.proj_name.lower())
+				self._data_dir_root = os.path.join(gc.home_dir,'.'+gc.proj_name.lower())
 			return self._data_dir_root
 
 	@property

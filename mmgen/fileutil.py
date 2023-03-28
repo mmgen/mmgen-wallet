@@ -22,7 +22,7 @@ fileutil: Routines that read, write, execute or stat files
 
 import sys,os
 
-from .globalvars import g
+from .globalvars import g,gc
 from .color import set_vt100
 from .util import (
 	msg,
@@ -43,7 +43,7 @@ def check_or_create_dir(path):
 		if os.getenv('MMGEN_TEST_SUITE'):
 			from subprocess import run
 			run([
-				('rm' if g.platform == 'win' else '/bin/rm'),
+				('rm' if gc.platform == 'win' else '/bin/rm'),
 				'-rf',
 				path ])
 			set_vt100()
@@ -205,7 +205,7 @@ def write_data_to_file(
 			else:
 				msg('Redirecting output to file')
 
-		if binary and g.platform == 'win':
+		if binary and gc.platform == 'win':
 			import msvcrt
 			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 

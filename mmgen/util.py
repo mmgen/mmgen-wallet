@@ -23,7 +23,7 @@ util: Frequently-used variables, classes and utility functions for the MMGen sui
 import sys,os,time,re
 
 from .color import *
-from .globalvars import g
+from .globalvars import g,gc,gv
 from .opts import opt
 
 ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
@@ -32,11 +32,11 @@ hexdigits = '0123456789abcdefABCDEF'
 hexdigits_uc = '0123456789ABCDEF'
 hexdigits_lc = '0123456789abcdef'
 
-if g.platform == 'win':
+if gc.platform == 'win':
 	def msg_r(s):
 		try:
-			g.stderr.write(s)
-			g.stderr.flush()
+			gv.stderr.write(s)
+			gv.stderr.flush()
 		except:
 			os.write(2,s.encode())
 
@@ -45,8 +45,8 @@ if g.platform == 'win':
 
 	def Msg_r(s):
 		try:
-			g.stdout.write(s)
-			g.stdout.flush()
+			gv.stdout.write(s)
+			gv.stdout.flush()
 		except:
 			os.write(1,s.encode())
 
@@ -54,18 +54,18 @@ if g.platform == 'win':
 		Msg_r(s + '\n')
 else:
 	def msg(s):
-		g.stderr.write(s + '\n')
+		gv.stderr.write(s + '\n')
 
 	def msg_r(s):
-		g.stderr.write(s)
-		g.stderr.flush()
+		gv.stderr.write(s)
+		gv.stderr.flush()
 
 	def Msg(s):
-		g.stdout.write(s + '\n')
+		gv.stdout.write(s + '\n')
 
 	def Msg_r(s):
-		g.stdout.write(s)
-		g.stdout.flush()
+		gv.stdout.write(s)
+		gv.stdout.flush()
 
 def rmsg(s):
 	msg(red(s))
@@ -413,5 +413,5 @@ def wrap_ripemd160(called=[]):
 		called.append(True)
 
 def exit_if_mswin(feature):
-	if g.platform == 'win':
+	if gc.platform == 'win':
 		die(2, capfirst(feature) + ' not supported on the MSWin / MSYS2 platform' )

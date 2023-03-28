@@ -14,7 +14,7 @@ proto.eth.daemon: Ethereum base protocol daemon classes
 
 import os
 
-from ...globalvars import g
+from ...globalvars import gc
 from ...util import list_gen,get_subclasses
 from ...daemon import CoinDaemon,RPCDaemon,_nw,_dd
 
@@ -60,7 +60,7 @@ class openethereum_daemon(ethereum_daemon):
 	exec_fn = 'openethereum'
 	cfg_file = 'parity.conf'
 	datadirs = {
-		'linux': [g.home_dir,'.local','share','io.parity.ethereum'],
+		'linux': [gc.home_dir,'.local','share','io.parity.ethereum'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Parity','Ethereum']
 	}
 
@@ -97,7 +97,7 @@ class geth_daemon(ethereum_daemon):
 	avail_opts = ('no_daemonize','online')
 	version_info_arg = 'version'
 	datadirs = {
-		'linux': [g.home_dir,'.ethereum','geth'],
+		'linux': [gc.home_dir,'.ethereum','geth'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Geth'] # FIXME
 	}
 
@@ -133,7 +133,7 @@ class erigon_daemon(geth_daemon):
 	torrent_ports = _nw(42069,42070,None) # testnet is non-standard
 	version_info_arg = '--version'
 	datadirs = {
-		'linux': [g.home_dir,'.local','share','erigon'],
+		'linux': [gc.home_dir,'.local','share','erigon'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
 	}
 

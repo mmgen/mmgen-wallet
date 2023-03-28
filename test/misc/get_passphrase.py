@@ -29,7 +29,7 @@ def crypto():
 	from mmgen.crypto import Crypto
 	crypto = Crypto()
 
-	pw = crypto.get_new_passphrase(data_desc=desc,hash_preset=g.dfl_hash_preset,passwd_file=None)
+	pw = crypto.get_new_passphrase(data_desc=desc,hash_preset=gc.dfl_hash_preset,passwd_file=None)
 	msg(f'==> got new passphrase: [{pw}]\n')
 
 	pw = crypto.get_passphrase(data_desc=desc,passwd_file=None)

@@ -22,7 +22,7 @@ mmgen-seedjoin: Regenerate an MMGen deterministic wallet from seed shares
 """
 
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import g,gc
 from .opts import opt
 from .util import msg,msg_r,qmsg,die
 from .color import yellow
@@ -53,7 +53,7 @@ opts_data = {
 -L, --label=       l  Specify a label 'l' for output wallet
 -M, --master-share=i  Use a master share with index 'i' (min:{ms_min}, max:{ms_max})
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{g.dfl_hash_preset}')
+                      for password hashing (default: '{gc.dfl_hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Produce quieter output; suppress some warnings
@@ -86,6 +86,7 @@ FMT CODES:
 			ms_min=MasterShareIdx.min_val,
 			ms_max=MasterShareIdx.max_val,
 			g=g,
+			gc=gc,
 		),
 		'notes': lambda help_notes,s: s.format(
 			f=help_notes('fmt_codes'),

@@ -22,7 +22,9 @@ term: Terminal classes for the MMGen suite
 
 import sys,os,time
 from collections import namedtuple
-from .common import *
+
+from .globalvars import g,gc
+from .util import msg,msg_r,die
 
 try:
 	import tty,termios
@@ -43,7 +45,7 @@ class MMGenTerm(object):
 
 	@classmethod
 	def register_cleanup(cls):
-		if g.platform == 'linux' and not hasattr(cls,'cleanup_registered'):
+		if gc.platform == 'linux' and not hasattr(cls,'cleanup_registered'):
 			import atexit
 			atexit.register(
 				lambda: termios.tcsetattr(

@@ -14,7 +14,7 @@ proto.xmr.daemon: Monero base protocol daemon classes
 
 import os
 
-from ...globalvars import g
+from ...globalvars import g,gc
 from ...opts import opt
 from ...util import list_gen,die,contains_any
 from ...daemon import CoinDaemon,RPCDaemon,_nw,_dd
@@ -29,7 +29,7 @@ class monero_daemon(CoinDaemon):
 	rpc_ports = _nw(18081, 38081, None) # testnet is stagenet
 	cfg_file = 'bitmonero.conf'
 	datadirs = {
-		'linux': [g.home_dir,'.bitmonero'],
+		'linux': [gc.home_dir,'.bitmonero'],
 		'win':   ['/','c','ProgramData','bitmonero']
 	}
 

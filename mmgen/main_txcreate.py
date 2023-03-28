@@ -22,14 +22,14 @@ mmgen-txcreate: Create a cryptocoin transaction with MMGen- and/or non-MMGen
 """
 
 import mmgen.opts as opts
-from .globalvars import g
+from .globalvars import g,gc
 from .opts import opt
 from .util import fmt_list,async_run
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc': f'Create a transaction with outputs to specified coin or {g.proj_name} addresses',
+		'desc': f'Create a transaction with outputs to specified coin or {gc.proj_name} addresses',
 		'usage':   '[opts]  [<addr,amt> ...] <change addr, addrlist ID or addr type> [addr file ...]',
 		'options': """
 -h, --help            Print this help message

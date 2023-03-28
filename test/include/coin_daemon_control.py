@@ -15,7 +15,7 @@ test.include.coin_daemon_control: Start and stop daemons for the MMGen test suit
 from .tests_header import repo_root
 from mmgen.common import *
 
-action = g.prog_name.split('-')[0]
+action = gc.prog_name.split('-')[0]
 
 opts_data = {
 	'sets': [('debug',True,'verbose',True)],
@@ -44,7 +44,7 @@ Valid network IDs: {nid}, all, or no_xmr
 """
 	},
 	'code': {
-		'options': lambda s: s.format(a=action.capitalize(),pn=g.prog_name),
+		'options': lambda s: s.format(a=action.capitalize(),pn=gc.prog_name),
 		'notes': lambda s,help_notes: s.format(nid=help_notes('coin_daemon_network_ids'))
 	}
 }

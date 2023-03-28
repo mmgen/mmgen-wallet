@@ -29,9 +29,9 @@ def launch(mod,package='mmgen'):
 		mod = 'addrgen'
 
 	import sys,os
-	from .globalvars import g
+	from .globalvars import gc
 
-	if g.platform == 'linux' and sys.stdin.isatty():
+	if gc.platform == 'linux' and sys.stdin.isatty():
 		import termios,atexit
 		fd = sys.stdin.fileno()
 		old = termios.tcgetattr(fd)
