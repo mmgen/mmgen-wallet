@@ -104,101 +104,115 @@ gv = GlobalVars()
 
 class GlobalConfig(Lockable):
 	"""
-	Set global vars to default values
-	Globals are overridden in this order:
-	  1 - config file
+	These values are configurable - RHS values are defaults
+	Globals are overridden with the following precedence:
+	  1 - command line
 	  2 - environmental vars
-	  3 - command line
+	  3 - config file
 	"""
 	_autolock = False
 	_set_ok = ()
-	_reset_ok = ('stdout','stderr','accept_defaults')
+	_reset_ok = ('accept_defaults',)
 	_use_class_attr = True
 
-	# Constants:
+	# general
+	coin        = ''
+	token       = ''
+	outdir      = ''
+	passwd_file = ''
+	network     = 'mainnet'
+	testnet     = False
+	regtest     = False
 
-	stdin_tty = sys.stdin.isatty()
-	stdout = sys.stdout
-	stderr = sys.stderr
+	# verbosity / prompting behavior
+	quiet           = False
+	verbose         = False
+	yes             = False
+	accept_defaults = False
+	no_license      = False
 
-	http_timeout = 60
-	err_disp_timeout = 0.7
-	short_disp_timeout = 0.3
-
-	# Variables - these might be altered at runtime:
-
-	usr_randchars   = 30
-
-	fee_adjust = 1.0
+	# limits
+	http_timeout       = 60
+	usr_randchars      = 30
+	fee_adjust         = 1.0
 	fee_estimate_confs = 3
+	minconf            = 1
+	max_tx_file_size   = 100000
+	max_input_size     = 1024 * 1024
+	min_urandchars     = 10
+	max_urandchars     = 80
 
-	# Constant vars - some of these might be overridden in opts.py, but they don't change thereafter
-
-	coin                 = ''
-	token                = ''
+	# debug
 	debug                = False
 	debug_opts           = False
 	debug_rpc            = False
 	debug_addrlist       = False
 	debug_subseed        = False
 	debug_tw             = False
-	quiet                = False
-	no_license           = False
-	force_color          = False
-	force_256_color      = False
-	testnet              = False
-	regtest              = False
-	accept_defaults      = False
-	autochg_ignore_labels = False
 
 	# rpc:
-	rpc_host             = ''
-	rpc_port             = 0
-	rpc_user             = ''
-	rpc_password         = ''
-	ignore_daemon_version  = False
-	monero_wallet_rpc_host = 'localhost'
-	monero_wallet_rpc_user = 'monero'
+	rpc_host                   = ''
+	rpc_port                   = 0
+	rpc_user                   = ''
+	rpc_password               = ''
+	monero_wallet_rpc_host     = 'localhost'
+	monero_wallet_rpc_user     = 'monero'
 	monero_wallet_rpc_password = ''
-	aiohttp_rpc_queue_len = 16
-	cached_balances      = False
+	aiohttp_rpc_queue_len      = 16
+	cached_balances            = False
 
-	# regtest:
-	bob                  = False
-	alice                = False
-	carol                = False
-	regtest_user         = None
-
-	# miscellaneous features:
-	use_internal_keccak_module = False
-	enable_erigon = False
-
-	# test suite:
-	bogus_send           = False
-	bogus_unspent_data   = ''
-	debug_utf8           = False
-	exec_wrapper         = False
-	test_suite           = False
-	test_suite_autosign_led_simulate = False
-	test_suite_cfgtest   = False
-	test_suite_deterministic = False
-	test_suite_pexpect   = False
-	test_suite_popen_spawn = False
-	hold_protect_disable = False
-
-	mnemonic_entry_modes = {}
+	# daemons
+	daemon_data_dir       = '' # set by user
+	daemon_id             = ''
+	blacklisted_daemons   = ''
+	ignore_daemon_version = False
 
 	# display:
-	scroll = False
-	columns = 0
+	force_color     = False # placeholder
+	force_256_color = False
+	scroll          = False
+	columns         = 0
 	color = bool(
 		( sys.stdout.isatty() and not os.getenv('MMGEN_TEST_SUITE_PEXPECT') ) or
 		os.getenv('MMGEN_FORCE_COLOR')
 	)
 
-	daemon_data_dir = '' # set by user
-	daemon_id = ''
-	blacklisted_daemons = ''
+	# miscellaneous features:
+	use_internal_keccak_module     = False
+	force_standalone_scrypt_module = False
+	enable_erigon                  = False
+	autochg_ignore_labels          = False
+
+	# regtest:
+	bob          = False
+	alice        = False
+	carol        = False
+	regtest_user = None
+
+	# test suite:
+	bogus_send               = False
+	bogus_unspent_data       = ''
+	debug_utf8               = False
+	exec_wrapper             = False
+	test_suite               = False
+	test_suite_autosign_led_simulate = False
+	test_suite_cfgtest       = False
+	test_suite_deterministic = False
+	test_suite_pexpect       = False
+	test_suite_popen_spawn   = False
+	hold_protect_disable     = False
+	no_daemon_autostart      = False
+	names                    = False
+	no_timings               = False
+	exit_after               = ''
+	resuming                 = False
+	skipping_deps            = False
+
+	mnemonic_entry_modes = {}
+
+	# placeholders:
+	_proto = None
+	pager = False
 
 	# global var sets user opt:
 	global_sets_opt = (
@@ -342,8 +356,6 @@ class GlobalConfig(Lockable):
 		'fee_estimate_mode': _ov('nocase_pfx', ['conservative','economical']),
 		'rpc_backend':       _ov('nocase_pfx', ['auto','httplib','curl','aiohttp','requests']),
 	}
-	if gc.platform == 'win':
-		_skip_type_check = ('stdout','stderr')
 
 	auto_typeset_opts = {
 		'seed_len': int,
@@ -351,14 +363,9 @@ class GlobalConfig(Lockable):
 		'vsize_adj': float,
 	}
 
-	minconf = 1
-	max_tx_file_size = 100000
-	max_input_size   = 1024 * 1024
-
-	max_urandchars = 80
-	min_urandchars = 10
-
-	force_standalone_scrypt_module = False
+	err_disp_timeout   = 0.7
+	short_disp_timeout = 0.3
+	stdin_tty          = sys.stdin.isatty()
 
 	if os.getenv('MMGEN_TEST_SUITE'):
 		min_urandchars = 3
