@@ -98,6 +98,7 @@ class TestSuiteHelp(TestSuiteBase):
 	cmd_group = (
 		('usage',                 (1,'usage message',[])),
 		('version',               (1,'version message',[])),
+		('license',               (1,'license message',[])),
 		('helpscreens',           (1,'help screens',             [])),
 		('longhelpscreens',       (1,'help screens (--longhelp)',[])),
 		('show_hash_presets',     (1,'info screen (--show-hash-presets)',[])),
@@ -116,6 +117,23 @@ class TestSuiteHelp(TestSuiteBase):
 	def version(self):
 		t = self.spawn(f'mmgen-tool',['--version'])
 		t.expect('MMGEN-TOOL version')
+		return t
+
+	def license(self):
+		lsave = os.getenv('MMGEN_NO_LICENSE')
+		os.environ['MMGEN_NO_LICENSE'] = ''
+		t = self.spawn(f'mmgen-walletconv',['--stdout','--in-fmt=hex','--out-fmt=hex'])
+		t.expect('to continue: ', 'w')
+		t.expect('TERMS AND CONDITIONS') # start of GPL text
+		if cfg.pexpect_spawn:
+			t.send('G')
+		t.expect('return for a fee.')    # end of GPL text
+		if cfg.pexpect_spawn:
+			t.send('q')
+		t.expect('to continue: ', 'c')
+		t.expect('data: ','beadcafe'*4 + '\n')
+		t.expect('to confirm: ', 'YES\n')
+		os.environ['MMGEN_NO_LICENSE'] = lsave
 		return t
 
 	def spawn_chk_expect(self,*args,**kwargs):
