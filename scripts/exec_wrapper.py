@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-# Import as few modules and define as few names as possible at global level before exec'ing the
+# Import as few modules and define as few names as possible at module level before exec'ing the
 # file, as all names will be seen by the exec'ed code.  To prevent name collisions, all names
-# defined here should begin with 'exec_wrapper_'
+# defined or imported here at module level should begin with 'exec_wrapper_'
 
 def exec_wrapper_get_colors():
 	import os
@@ -15,11 +15,11 @@ def exec_wrapper_get_colors():
 def exec_wrapper_init(): # don't change: name is used to test if script is running under exec_wrapper
 
 	import os
-	if os.path.dirname(sys.argv[1]) == 'test': # scripts in ./test do overlay setup themselves
-		sys.path[0] = 'test'
+	if os.path.dirname(exec_wrapper_sys.argv[1]) == 'test': # scripts in ./test do overlay setup themselves
+		exec_wrapper_sys.path[0] = 'test'
 	else:
 		from test.overlay import overlay_setup
-		sys.path[0] = overlay_setup(repo_root=os.getcwd()) # assume we're in the repo root
+		exec_wrapper_sys.path[0] = overlay_setup(repo_root=os.getcwd()) # assume we're in the repo root
 
 	os.environ['MMGEN_EXEC_WRAPPER'] = '1'
 	os.environ['PYTHONPATH'] = '.'
@@ -54,7 +54,7 @@ def exec_wrapper_write_traceback(e,exit_val):
 
 		def gen_output():
 			yield 'Traceback (most recent call last):'
-			for e in traceback.extract_tb(sys.exc_info()[2]):
+			for e in traceback.extract_tb(exec_wrapper_sys.exc_info()[2]):
 				yield '  File "{f}", line {l}, in {n}\n    {L}'.format(
 					f = exec_wrapper_execed_file if e.filename == '<string>' else fixup_fn(e.filename),
 					l = '(scrubbed)' if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') else e.lineno,
@@ -66,12 +66,12 @@ def exec_wrapper_write_traceback(e,exit_val):
 		if 'SystemExit' in exc_line:
 			tb_lines.pop()
 
-		sys.stdout.write('{}\n{}\n'.format( c.yellow( '\n'.join(tb_lines) ), c.red(exc_line) ))
+		exec_wrapper_sys.stdout.write('{}\n{}\n'.format( c.yellow( '\n'.join(tb_lines) ), c.red(exc_line) ))
 
 		with open('test.py.err','w') as fp:
 			fp.write('\n'.join(tb_lines + [exc_line]))
 	else:
-		sys.stdout.write( c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n' )
+		exec_wrapper_sys.stdout.write( c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n' )
 
 def exec_wrapper_end_msg():
 	import os
@@ -79,7 +79,7 @@ def exec_wrapper_end_msg():
 		c = exec_wrapper_get_colors()
 		# write to stdout to ensure script output gets to terminal first
 		import time
-		sys.stdout.write(c.blue('Runtime: {:0.5f} secs\n'.format(time.time() - exec_wrapper_tstart)))
+		exec_wrapper_sys.stdout.write(c.blue('Runtime: {:0.5f} secs\n'.format(time.time() - exec_wrapper_tstart)))
 
 def exec_wrapper_tracemalloc_setup():
 	import os
@@ -87,7 +87,7 @@ def exec_wrapper_tracemalloc_setup():
 		os.environ['PYTHONTRACEMALLOC'] = '1'
 		import tracemalloc
 		tracemalloc.start()
-		sys.stderr.write("INFO → Appending memory allocation stats to 'tracemalloc.log'\n")
+		exec_wrapper_sys.stderr.write("INFO → Appending memory allocation stats to 'tracemalloc.log'\n")
 
 def exec_wrapper_tracemalloc_log():
 	import os
@@ -98,7 +98,7 @@ def exec_wrapper_tracemalloc_log():
 		depth = 100
 		col1w = 100
 		with open('tracemalloc.log','a') as fp:
-			fp.write('##### TOP {} {} #####\n'.format(depth,' '.join(sys.argv)))
+			fp.write('##### TOP {} {} #####\n'.format(depth,' '.join(exec_wrapper_sys.argv)))
 			for stat in stats[:depth]:
 				frame = stat.traceback[0]
 				fn = re.sub(r'.*\/site-packages\/|.*\/mmgen\/test\/overlay\/tree\/','',frame.filename)
@@ -108,7 +108,7 @@ def exec_wrapper_tracemalloc_log():
 					s = stat.size/1024,
 					w = col1w ))
 			fp.write('{f:{w}} {s:8.2f} KiB\n\n'.format(
-				f = 'TOTAL {}:'.format(' '.join(sys.argv))[:col1w],
+				f = 'TOTAL {}:'.format(' '.join(exec_wrapper_sys.argv))[:col1w],
 				s = sum(stat.size for stat in stats) / 1024,
 				w = col1w ))
 
@@ -116,19 +116,20 @@ def exec_wrapper_get_tstart():
 	import time
 	return time.time()
 
-import sys # this is the only module we import into namespace of exec’ed code
+import sys as exec_wrapper_sys
 
 exec_wrapper_init() # sets sys.path[0], runs overlay_setup()
 exec_wrapper_tracemalloc_setup()
 
-from mmgen.devinit import init_dev # import mmgen mods only after overlay setup!
-init_dev()
+# import mmgen mods only after overlay setup!
+from mmgen.devinit import init_dev as exec_wrapper_init_dev
+exec_wrapper_init_dev()
 
 exec_wrapper_tstart = exec_wrapper_get_tstart()
 
 try:
-	sys.argv.pop(0)
-	exec_wrapper_execed_file = sys.argv[0]
+	exec_wrapper_sys.argv.pop(0)
+	exec_wrapper_execed_file = exec_wrapper_sys.argv[0]
 	with open(exec_wrapper_execed_file) as fp:
 		exec(fp.read())
 except SystemExit as e:
@@ -137,11 +138,11 @@ except SystemExit as e:
 	else:
 		exec_wrapper_tracemalloc_log()
 		exec_wrapper_end_msg()
-	sys.exit(e.code)
+	exec_wrapper_sys.exit(e.code)
 except Exception as e:
 	exit_val = e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1
 	exec_wrapper_write_traceback(e,exit_val)
-	sys.exit(exit_val)
+	exec_wrapper_sys.exit(exit_val)
 
 exec_wrapper_tracemalloc_log()
 exec_wrapper_end_msg()
