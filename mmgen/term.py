@@ -47,14 +47,7 @@ class MMGenTerm(object):
 
 	@classmethod
 	def register_cleanup(cls):
-		if gc.platform == 'linux' and not hasattr(cls,'cleanup_registered'):
-			import atexit
-			atexit.register(
-				lambda: termios.tcsetattr(
-					cls.stdin_fd,
-					termios.TCSADRAIN,
-					cls.orig_term) )
-			cls.cleanup_registered = True
+		pass
 
 	@classmethod
 	def init(cls,noecho=False):
@@ -73,6 +66,17 @@ class MMGenTerm(object):
 		return None
 
 class MMGenTermLinux(MMGenTerm):
+
+	@classmethod
+	def register_cleanup(cls):
+		if not hasattr(cls,'cleanup_registered'):
+			import atexit
+			atexit.register(
+				lambda: termios.tcsetattr(
+					cls.stdin_fd,
+					termios.TCSADRAIN,
+					cls.orig_term) )
+			cls.cleanup_registered = True
 
 	@classmethod
 	def reset(cls):
@@ -158,6 +162,10 @@ class MMGenTermLinux(MMGenTerm):
 		return s
 
 class MMGenTermLinuxStub(MMGenTermLinux):
+
+	@classmethod
+	def register_cleanup(cls):
+		pass
 
 	@classmethod
 	def init(cls,noecho=False):
