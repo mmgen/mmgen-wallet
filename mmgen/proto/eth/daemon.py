@@ -26,16 +26,18 @@ class ethereum_daemon(CoinDaemon):
 	daemon_port_offset = 100
 	network_port_offsets = _nw(0,10,20)
 
-	def __init__(self,*args,**kwargs):
+	def __init__(self,*args,test_suite=False,**kwargs):
 
 		if not hasattr(self,'all_daemons'):
 			ethereum_daemon.all_daemons = get_subclasses(ethereum_daemon,names=True)
 
-		self.port_offset = (
+		daemon_idx_offset = (
 			self.all_daemons.index(self.id+'_daemon') * self.daemon_port_offset
-			+ getattr(self.network_port_offsets,self.network) )
+			if test_suite else 0 )
 
-		return super().__init__(*args,**kwargs)
+		self.port_offset = daemon_idx_offset + getattr(self.network_port_offsets,self.network)
+
+		return super().__init__( *args, test_suite=test_suite, **kwargs )
 
 	def get_rpc_port(self):
 		return self.base_rpc_port + self.port_offset
