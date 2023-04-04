@@ -353,6 +353,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	),
 	'view': (
 		'viewing addresses and unspent outputs',
+		('alice_listaddresses_scroll',    'listaddresses (--scroll, interactive=1)'),
 		('alice_listaddresses_empty',     'listaddresses (no data)'),
 		('alice_listaddresses_menu',      'listaddresses (menu items)'),
 		('alice_listaddresses1',          'listaddresses'),
@@ -1429,6 +1430,28 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect(r"Enter unspent.*return to main menu\):.",output+'\n',regex=True)
 		t.expect(r"Enter label text.*:.",comment+'\n',regex=True)
 		t.expect(r'\[q\]uit menu, .*?:.','q',regex=True)
+		return t
+
+	def alice_listaddresses_scroll(self):
+		t = self.spawn(
+			'mmgen-tool', [
+				'--alice',
+				'--scroll',
+				f'--outdir={self.tr.trash_dir}',
+				'listaddresses',
+				'interactive=1',
+			]
+		)
+		t.expect('abel:\b','p')
+		ret = t.expect([ 'abel:\b', 'to confirm: ' ])
+		if ret == 1:
+			t.send('YES\n')
+			t.expect('abel:\b')
+		t.send('l')
+		t.expect('main menu): ','1\n')
+		t.expect('for address.*: ','\n',regex=True)
+		t.expect('unchanged')
+		t.expect('abel:\b','q')
 		return t
 
 	def _alice_listaddresses_interactive(self,expect=(),expect_menu=()):
