@@ -34,6 +34,7 @@ class TestSuiteMisc(TestSuiteBase):
 	cmd_group = (
 		('rpc_backends',     'RPC backends'),
 		('xmrwallet_txview', "'mmgen-xmrwallet' txview"),
+		('coin_daemon_info', "'examples/coin-daemon-info.py'"),
 		('term_echo',        "term.set('echo')"),
 		('term_cleanup',     'term.register_cleanup()'),
 	)
@@ -54,6 +55,16 @@ class TestSuiteMisc(TestSuiteBase):
 			'Dest:   56VQ9M6k',
 		):
 			assert s in res, s
+		return t
+
+	def coin_daemon_info(self):
+		start_test_daemons('ltc','eth')
+		t = self.spawn(f'examples/coin-daemon-info.py',['btc','ltc','eth'],cmd_dir='.')
+		for s in ('BTC','LTC','ETH'):
+			t.expect(s + r'\s+mainnet\s+Up',regex=True)
+		if cfg.pexpect_spawn:
+			t.send('q')
+		stop_test_daemons('ltc','eth')
 		return t
 
 	def term_echo(self):
