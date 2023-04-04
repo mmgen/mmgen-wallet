@@ -91,7 +91,7 @@ class UnitTestHelpers(object):
 		exc_w = max(len(e[1]) for e in data)
 		m_exc = '{!r}: incorrect exception type (expected {!r})'
 		m_err = '{!r}: incorrect error msg (should match {!r}'
-		m_noraise = "\nillegal action 'bad {}' failed to raise exception {!r}"
+		m_noraise = "\nillegal action 'bad {}' failed to raise an exception (expected {!r})"
 		for (desc,exc_chk,emsg_chk,func) in data:
 			try:
 				cfg._util.vmsg_r('  bad {:{w}}'.format( desc+':', w=desc_w+1 ))

@@ -16,18 +16,18 @@ import re
 
 from ...base_obj import AsyncInit
 from ...obj import Int
-from ...util import die,oneshot_warning_group
+from ...util import die,fmt,oneshot_warning_group
 from ...rpc import RPCClient
 
 class daemon_warning(oneshot_warning_group):
 
 	class geth:
 		color = 'yellow'
-		message = 'Geth has not been tested on mainnet.  You may experience problems.'
+		message = 'Geth has not been tested on mainnet. You may experience problems.'
 
 	class erigon:
 		color = 'red'
-		message = 'Erigon support is EXPERIMENTAL.  Use at your own risk!!!'
+		message = 'Erigon support is EXPERIMENTAL. Use at your own risk!!!'
 
 class CallSigs:
 	pass

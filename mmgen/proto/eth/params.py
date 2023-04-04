@@ -47,6 +47,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 		62:   'morden',           # ethereum classic testnet
 		17:   'developmentchain', # parity dev chain
 		1337: 'developmentchain', # geth dev chain
+		711:  'ethereum',         # geth mainnet (empty chain)
 	}
 
 	@property

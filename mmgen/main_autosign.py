@@ -122,7 +122,6 @@ This command is currently available only on Linux-based platforms.
 
 cfg = Config(
 	opts_data = opts_data,
-	add_opts = ['outdir','passwd_file'], # in _set_ok, so must be set
 	init_opts = {
 		'quiet': True,
 		'out_fmt': 'wallet',

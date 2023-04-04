@@ -59,7 +59,7 @@ class unit_test(object):
 				('flag (1)',             'ClassFlagsError', 'unrecognized flag', bad1 ),
 				('opt (1)',              'ClassFlagsError', 'unrecognized opt',  bad2 ),
 				('avail_opts (1)',       'ClassFlagsError', 'underscore',        bad3 ),
-				('avail_opts (1)',       'ClassFlagsError', 'reserved name',     bad4 ),
+				('avail_opts (2)',       'ClassFlagsError', 'reserved name',     bad4 ),
 				('class invocation (1)', 'AssertionError',  'list or tuple',     bad5 ),
 				('class invocation (2)', 'ClassFlagsError', 'unrecognized opt',  bad6 ),
 				('flag (2)',             'ClassFlagsError', 'not set',           bad7 ),
