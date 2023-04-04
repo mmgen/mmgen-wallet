@@ -256,7 +256,7 @@ def compile_code(cfg,code):
 
 if __name__ == '__main__':
 
-	cfg = opts.init(opts_data)
+	cfg = Config(opts_data=opts_data)
 
 	if cfg.check_solc_version:
 		sys.exit(0 if check_solc_version() else 1)
@@ -265,7 +265,7 @@ if __name__ == '__main__':
 		die(1,'--coin option must be ETH or ETC')
 
 	if not len(cfg._args) == 1:
-		opts.usage()
+		cfg._opts.usage()
 
 	code = create_src( cfg, solidity_code_template, token_data )
 

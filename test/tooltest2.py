@@ -91,8 +91,8 @@ If no command is given, the whole suite of tests is run.
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
-cfg = opts.init(
-	opts_data,
+cfg = Config(
+	opts_data = opts_data,
 	init_opts = {
 		'usr_randchars': 0,
 		'hash_preset': '1',

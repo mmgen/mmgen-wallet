@@ -123,7 +123,7 @@ FMT CODES:
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 from .tx import NewTX,OnlineSignedTX
 from .tx.sign import txsign,get_seed_files,get_keyaddrlist,get_keylist

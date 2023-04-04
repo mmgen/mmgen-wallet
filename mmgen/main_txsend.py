@@ -42,14 +42,14 @@ opts_data = {
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 if len(cfg._args) == 1:
 	infile = cfg._args[0]
 	from .fileutil import check_infile
 	check_infile(infile)
 else:
-	opts.usage()
+	cfg._opts.usage()
 
 if not cfg.status:
 	from .ui import do_license_msg

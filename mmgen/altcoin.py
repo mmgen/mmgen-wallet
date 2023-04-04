@@ -791,8 +791,7 @@ if __name__ == '__main__':
 		}
 	}
 
-	from mmgen.opts import init
-	cfg = init( opts_data, need_amt=False )
+	cfg = Config( opts_data=opts_data, need_amt=False )
 
 	msg('Checking CoinInfo WIF/P2PKH/P2SH version numbers and trust levels against protocol.py')
 	CoinInfo.verify_core_coin_data( cfg, cfg.quiet, cfg.verbose )

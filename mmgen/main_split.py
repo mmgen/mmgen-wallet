@@ -86,7 +86,7 @@ transaction reconfirmed before the timelock expires. Use at your own risk.
 	}
 }
 
-cfg = opts.init(opts_data,need_amt=False)
+cfg = Config( opts_data=opts_data, need_amt=False )
 
 proto = cfg._proto
 

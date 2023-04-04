@@ -99,12 +99,12 @@ FMT CODES:
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 infiles = cfg._args
 
 if not infiles:
-	opts.usage()
+	cfg._opts.usage()
 
 from .fileutil import check_infile
 for i in infiles:

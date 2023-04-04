@@ -17,7 +17,7 @@ opts_data = {
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 from mmgen.fileutil import get_lines_from_file
 lines = get_lines_from_file( cfg, cfg._args[0] )

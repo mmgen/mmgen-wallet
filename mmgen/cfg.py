@@ -402,3 +402,38 @@ class Config(Lockable):
 				'mainnet': (self.data_dir_root,),
 			}[self.network] ))
 			return self._data_dir
+
+	def __init__(
+			self,
+			cfg          = None,
+			opts_data    = None,
+			add_opts     = None,
+			init_opts    = None,
+			opt_filter   = None,
+			parse_only   = False,
+			parsed_opts  = None,
+			need_proto   = True,
+			need_amt     = True,
+			do_post_init = False,
+			process_opts = False ):
+
+		if opts_data or parsed_opts or process_opts:
+
+			import mmgen.opts as opts
+
+			self._opts = opts
+
+			opts.init(
+				cfg          = self,
+				opts_data    = opts_data,
+				add_opts     = add_opts,
+				init_opts    = init_opts,
+				opt_filter   = opt_filter,
+				parse_only   = parse_only,
+				parsed_opts  = parsed_opts,
+				need_proto   = need_proto,
+				need_amt     = need_amt,
+				do_post_init = do_post_init )
+
+			if do_post_init:
+				self._post_init = opts.post_init

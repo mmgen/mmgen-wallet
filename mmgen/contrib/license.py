@@ -20,7 +20,7 @@
 contrib.license: Copyright notice and text of GPLv3
 """
 
-from ..globalvars import gc
+from ..cfg import gc
 
 warning = f"""
   {gc.proj_name} Copyright (C) {gc.Cdates} by {gc.author} {gc.email}.  This

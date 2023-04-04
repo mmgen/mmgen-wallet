@@ -123,13 +123,12 @@ def get_seed_file(cfg,nargs,wallets=None,invoked_as=None):
 
 	wd_from_opt = bool(cfg.hidden_incog_input_params or cfg.in_fmt) # have wallet data from opt?
 
-	import mmgen.opts as opts
 	if len(wallets) + (wd_from_opt or bool(wf)) < nargs:
 		if not wf:
 			msg('No default wallet found, and no other seed source was specified')
-		opts.usage()
+		cfg._opts.usage()
 	elif len(wallets) > nargs:
-		opts.usage()
+		cfg._opts.usage()
 	elif len(wallets) == nargs and wf and invoked_as != 'gen':
 		cfg._util.qmsg('Warning: overriding default wallet with user-supplied wallet')
 

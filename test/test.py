@@ -65,7 +65,7 @@ def create_shm_dir(data_dir,trash_dir):
 		os.symlink(dest,trash_dir)
 
 		dest = os.path.join(shm_dir,os.path.basename(data_dir))
-		shutil.move(data_dir,dest) # data_dir was created by opts.init()
+		shutil.move(data_dir,dest) # data_dir was created by Config()
 		os.symlink(dest,data_dir)
 
 	return shm_dir
@@ -167,7 +167,7 @@ environment var
 }
 
 # we need some opt values before running opts.init, so parse without initializing:
-po = opts.init(opts_data,parse_only=True)
+po = Config(opts_data=opts_data,parse_only=True)._parsed_opts
 
 from test.include.common import set_globals,get_test_data_dir
 
@@ -179,7 +179,7 @@ if not po.user_opts.get('skipping_deps'):
 	except: pass
 
 # step 2: opts.init will create new data_dir in ./test (if not cfg.skipping_deps)
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 set_globals(cfg)
 

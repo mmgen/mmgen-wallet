@@ -49,7 +49,7 @@ Valid network IDs: {nid}, all, or no_xmr
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 from mmgen.daemon import *
 
@@ -114,7 +114,7 @@ else:
 	ids = cfg._args
 	network_ids = CoinDaemon.get_network_ids(cfg)
 	if not ids:
-		opts.usage()
+		cfg._opts.usage()
 	for i in ids:
 		if i not in network_ids:
 			die(1,f'{i!r}: invalid network ID')

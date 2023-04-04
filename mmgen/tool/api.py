@@ -35,10 +35,10 @@ class tool_api(
 
 	Example:
 		from mmgen.tool.api import tool_api
-		from mmgen.opts import init
+		from mmgen.cfg import Config
 
 		# Initialize a tool API instance:
-		tool = tool_api(init())
+		tool = tool_api(Config())
 
 		# Set the coin and network:
 		tool.init_coin('btc','mainnet')
@@ -71,10 +71,7 @@ class tool_api(
 		Initializer - takes no arguments
 		"""
 		type(cfg)._reset_ok += ('usr_randchars',)
-		if not cfg._lock:
-			import mmgen.opts as opts
-			opts.init()
-		super().__init__(cfg)
+		super().__init__(cfg=cfg)
 
 	def init_coin(self,coinsym,network):
 		"""

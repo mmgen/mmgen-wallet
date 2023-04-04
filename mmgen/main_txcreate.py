@@ -79,7 +79,7 @@ opts_data = {
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 async def main():
 

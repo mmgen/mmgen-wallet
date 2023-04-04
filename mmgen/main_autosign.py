@@ -25,7 +25,7 @@ from subprocess import run,PIPE,DEVNULL
 from collections import namedtuple
 from stat import *
 
-import mmgen.opts as opts
+from .cfg import Config
 from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt_list,async_run,exit_if_mswin
 from .color import yellow,red,orange
 
@@ -120,8 +120,8 @@ This command is currently available only on Linux-based platforms.
 	}
 }
 
-cfg = opts.init(
-	opts_data,
+cfg = Config(
+	opts_data = opts_data,
 	add_opts = ['outdir','passwd_file'], # in _set_ok, so must be set
 	init_opts = {
 		'quiet': True,
@@ -433,7 +433,7 @@ async def do_loop():
 		n += 1
 
 if len(cmd_args) not in (0,1):
-	opts.usage()
+	cfg._opts.usage()
 
 if len(cmd_args) == 1:
 	cmd = cmd_args[0]

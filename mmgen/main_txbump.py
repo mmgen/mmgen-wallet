@@ -103,7 +103,7 @@ FMT CODES:
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 tx_file = cfg._args.pop(0)
 

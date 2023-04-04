@@ -110,10 +110,10 @@ def print_shares_info():
 		out += f'{n:3}: {s.sid}\n'
 	cfg._util.qmsg(out)
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 if len(cfg._args) + bool(cfg.hidden_incog_input_params) < 2:
-	opts.usage()
+	cfg._opts.usage()
 
 if cfg.master_share:
 	master_idx = MasterShareIdx(cfg.master_share)

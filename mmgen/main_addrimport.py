@@ -186,7 +186,7 @@ async def main():
 
 	del twctl
 
-cfg = opts.init(opts_data,need_amt=False)
+cfg = Config( opts_data=opts_data, need_amt=False )
 
 proto = cfg._proto
 

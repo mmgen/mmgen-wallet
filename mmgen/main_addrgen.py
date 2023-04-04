@@ -126,7 +126,7 @@ FMT CODES:
 	}
 }
 
-cfg = opts.init(opts_data,opt_filter=opt_filter,need_amt=False)
+cfg = Config( opts_data=opts_data, opt_filter=opt_filter, need_amt=False )
 
 proto = cfg._proto
 
@@ -136,7 +136,7 @@ addr_type = MMGenAddrType(
 	errmsg = f'{cfg.type!r}: invalid parameter for --type option' )
 
 if len(cfg._args) < 1:
-	opts.usage()
+	cfg._opts.usage()
 
 if cfg.keygen_backend:
 	from .keygen import check_backend

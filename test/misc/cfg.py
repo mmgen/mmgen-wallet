@@ -2,7 +2,7 @@
 
 from mmgen.common import *
 
-cfg = opts.init()
+cfg = Config(process_opts=True)
 
 cmd_args = cfg._args
 

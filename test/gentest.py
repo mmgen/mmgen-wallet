@@ -462,7 +462,7 @@ def get_protos(proto,addr_type,toolname):
 def parse_args():
 
 	if len(cfg._args) != 2:
-		opts.usage()
+		cfg._opts.usage()
 
 	arg1,arg2 = cfg._args
 	gen1,gen2,rounds = (0,0,0)
@@ -553,7 +553,7 @@ sd = namedtuple('saved_data_item',['reduced','wif','addr','viewkey'])
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 set_globals(cfg)
 
 qmsg = cfg._util.qmsg

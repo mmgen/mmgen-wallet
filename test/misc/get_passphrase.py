@@ -21,7 +21,7 @@ opts_data = {
 	}
 }
 
-cfg = opts.init( opts_data, init_opts={'color':True} )
+cfg = Config( opts_data=opts_data, init_opts={'color':True} )
 
 def crypto():
 	desc = 'test data'

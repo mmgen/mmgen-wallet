@@ -55,7 +55,7 @@ If no command is given, the whole suite of tests is run.
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 set_globals(cfg)
 

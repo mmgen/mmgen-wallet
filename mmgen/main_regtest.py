@@ -57,7 +57,7 @@ opts_data = {
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 cmd_args = cfg._args
 
@@ -77,7 +77,7 @@ def check_num_args():
 		die(1,m.format(args,'many','more',amax))
 
 if not cmd_args:
-	opts.usage()
+	cfg._opts.usage()
 elif cmd_args[0] not in MMGenRegtest.usr_cmds:
 	die(1,f'{cmd_args[0]!r}: invalid command')
 elif cmd_args[0] not in ('cli','wallet_cli','balances'):

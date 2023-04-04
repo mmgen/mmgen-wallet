@@ -14,7 +14,7 @@ examples.halving-calculator.py: Demonstrate use of the MMGen asyncio/aiohttp JSO
 
 import time
 
-import mmgen.opts as opts
+from mmgen.cfg import Config
 from mmgen.util import async_run
 
 opts_data = {
@@ -39,7 +39,7 @@ mmgen-node-tools repository.
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 def date(t):
 	return '{}-{:02}-{:02} {:02}:{:02}:{:02}'.format(*time.gmtime(t)[:6])

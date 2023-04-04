@@ -134,9 +134,10 @@ FMT CODES:
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
-if len(cfg._args) < 2: opts.usage()
+if len(cfg._args) < 2:
+	cfg._opts.usage()
 
 pw_idxs = AddrIdxList(fmt_str=cfg._args.pop())
 

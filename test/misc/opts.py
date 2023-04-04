@@ -45,7 +45,7 @@ sample note: {nn}
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 if cfg._args == ['show_common_opts_diff']:
 	from mmgen.opts import show_common_opts_diff

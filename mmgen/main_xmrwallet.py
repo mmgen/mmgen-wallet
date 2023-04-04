@@ -225,12 +225,12 @@ $ mmgen-xmrwallet --pager txview *XMR*.sigtx
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 cmd_args = cfg._args
 
 if len(cmd_args) < 2:
-	opts.usage()
+	cfg._opts.usage()
 
 op     = cmd_args.pop(0)
 infile = cmd_args.pop(0)
@@ -242,17 +242,17 @@ wallets = spec = ''
 
 if op == 'relay':
 	if len(cmd_args) != 0:
-		opts.usage()
+		cfg._opts.usage()
 elif op == 'txview':
 	infile = [infile] + cmd_args
 elif op in ('create','sync','list'):
 	if len(cmd_args) not in (0,1):
-		opts.usage()
+		cfg._opts.usage()
 	if cmd_args:
 		wallets = cmd_args[0]
 elif op in ('new','transfer','sweep','label'):
 	if len(cmd_args) != 1:
-		opts.usage()
+		cfg._opts.usage()
 	spec = cmd_args[0]
 
 ua = namedtuple('uargs',[ 'op', 'infile', 'wallets', 'spec' ])

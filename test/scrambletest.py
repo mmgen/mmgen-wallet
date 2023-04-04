@@ -50,7 +50,7 @@ If no command is given, the whole suite of tests is run.
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 from test.include.common import set_globals,end_msg,green
 

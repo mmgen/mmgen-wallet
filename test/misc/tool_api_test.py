@@ -109,8 +109,8 @@ def run_test():
 			'SKxuS56e99jpCeD9mMQ5o63zoGPakNdM9HCvt4Vt2cypvRjCdvGJ',
 			'zchFELwBxqsAubsLQ8yZgPCDDGukjXJssgCbiTPwFNmFwn9haLnDatzfhLdZzJT4PcU4o2yr92B52UFirUzEdF6ZYM2gBkM' )
 
-from mmgen.opts import init
+from mmgen.cfg import Config
 
-cfg = init()
+cfg = Config(process_opts=True)
 
 run_test()

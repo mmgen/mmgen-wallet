@@ -15,7 +15,7 @@ opts_data = {
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 cmd_args = cfg._args
 

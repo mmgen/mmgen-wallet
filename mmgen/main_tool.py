@@ -347,7 +347,8 @@ def get_mod_cls(modname):
 
 if gc.prog_name == 'mmgen-tool':
 
-	po = opts.init( opts_data, parse_only=True )
+	cfg = Config( opts_data=opts_data, parse_only=True )
+	po = cfg._parsed_opts
 
 	if po.user_opts.get('list'):
 		def gen():
@@ -362,7 +363,7 @@ if gc.prog_name == 'mmgen-tool':
 		sys.exit(0)
 
 	if len(po.cmd_args) < 1:
-		opts.usage()
+		cfg._opts.usage()
 
 	cmd = po.cmd_args[0]
 
@@ -371,11 +372,12 @@ if gc.prog_name == 'mmgen-tool':
 	if not cls:
 		die(1,f'{cmd!r}: no such command')
 
-	cfg = opts.init(
+	cfg = Config(
 		opts_data,
 		parsed_opts = po,
 		need_proto  = cls.need_proto,
-		init_opts   = {'rpc_backend':'aiohttp'} if cmd == 'twimport' else None )
+		init_opts   = {'rpc_backend':'aiohttp'} if cmd == 'twimport' else None,
+		process_opts = True )
 
 	cmd,*args = cfg._args
 

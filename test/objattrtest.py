@@ -54,7 +54,7 @@ opts_data = {
 	}
 }
 
-cfg = opts.init(opts_data)
+cfg = Config(opts_data=opts_data)
 
 from test.include.common import set_globals
 set_globals(cfg)

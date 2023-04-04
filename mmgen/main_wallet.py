@@ -145,7 +145,7 @@ FMT CODES:
 	}
 }
 
-cfg = opts.init(opts_data,opt_filter=opt_filter,need_proto=False)
+cfg = Config( opts_data=opts_data, opt_filter=opt_filter, need_proto=False )
 
 cmd_args = cfg._args
 
@@ -166,17 +166,17 @@ elif invoked_as == 'seedsplit':
 				m2 = 'To generate a master share, omit the seed split specifier.'
 				die(1,m1+'  '+m2)
 		elif not sss:
-			opts.usage()
+			cfg._opts.usage()
 	elif master_share:
 		sss = SeedSplitSpecifier('1:2')
 	else:
-		opts.usage()
+		cfg._opts.usage()
 
 from .fileutil import check_infile,get_seed_file
 
 if cmd_args:
 	if invoked_as == 'gen' or len(cmd_args) > 1:
-		opts.usage()
+		cfg._opts.usage()
 	check_infile(cmd_args[0])
 
 sf = get_seed_file(cfg,nargs,invoked_as=invoked_as)

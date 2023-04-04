@@ -281,6 +281,7 @@ opts_data_dfl = {
 }
 
 def init(
+	cfg,
 	opts_data   = None,
 	add_opts    = None,
 	init_opts   = None,
@@ -309,9 +310,8 @@ def init(
 				po.user_opts[uopt] = val
 
 	if parse_only and not any(k in po.user_opts for k in ('version','help','longhelp')):
-		return po
-
-	cfg = Config()
+		cfg._parsed_opts = po
+		return
 
 	if cfg.debug_opts: # TODO: this does nothing
 		opt_preproc_debug(po)
@@ -443,8 +443,6 @@ def init(
 		opt_filter_save = opt_filter
 	else:
 		delete_data(opts_data)
-
-	return cfg
 
 def check_usr_opts(cfg,usr_opts): # Raises an exception if any check fails
 

@@ -4,16 +4,17 @@ import sys,os
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(sys.argv[0])))))
 sys.path[0] = os.curdir
 
-from mmgen.common import *
+from mmgen.cfg import Config
+cfg = Config()
 
-cfg = opts.init()
-
-from mmgen.term import get_term,get_char_raw
+from mmgen.term import init_term,get_term
+init_term(cfg)
 term = get_term()
 
-if cfg._args[0] == 'echo':
+if sys.argv[1] == 'echo':
 
 	from mmgen.ui import line_input
+	from mmgen.term import get_char_raw
 
 	term.init(noecho=True)
 	line_input( cfg, 'noecho> ' )
@@ -26,7 +27,7 @@ if cfg._args[0] == 'echo':
 	line_input( cfg, 'noecho> ' )
 	get_char_raw()
 
-elif cfg._args[0] == 'cleanup':
+elif sys.argv[1] == 'cleanup':
 
 	term.register_cleanup()
 
