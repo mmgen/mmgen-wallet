@@ -7,7 +7,7 @@ sys.path[0] = os.curdir
 
 from mmgen.common import *
 
-cfg = opts.init({
+opts_data = {
 	'text': {
 		'desc':    '',
 		'usage':   '',
@@ -18,7 +18,10 @@ cfg = opts.init({
 -L, --label=l         d
 -m, --keep-label      e
 		"""
-	}},init_opts={'color':True})
+	}
+}
+
+cfg = opts.init( opts_data, init_opts={'color':True} )
 
 def crypto():
 	desc = 'test data'

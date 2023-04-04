@@ -7,7 +7,15 @@ sys.path[0] = os.curdir
 
 from mmgen.common import *
 
-cfg = opts.init({'text': { 'desc': '', 'usage':'', 'options':'-e, --echo-passphrase foo' }})
+opts_data = {
+	'text': {
+		'desc': '',
+		'usage':'',
+		'options':'-e, --echo-passphrase foo',
+	}
+}
+
+cfg = opts.init(opts_data)
 
 cmd_args = cfg._args
 

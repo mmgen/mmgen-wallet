@@ -17,7 +17,7 @@ import time
 import mmgen.opts as opts
 from mmgen.util import async_run
 
-cfg = opts.init({
+opts_data = {
 	'text': {
 		'desc': 'Estimate date of next block subsidy halving',
 		'usage':'[opts]',
@@ -37,7 +37,9 @@ A more full-featured version of this program can be found in the
 mmgen-node-tools repository.
 """
 	}
-})
+}
+
+cfg = opts.init(opts_data)
 
 def date(t):
 	return '{}-{:02}-{:02} {:02}:{:02}:{:02}'.format(*time.gmtime(t)[:6])
