@@ -59,13 +59,13 @@ class TestSuiteOpts(TestSuiteBase):
 				(
 					('cfg.foo',                 'None'),         # added opt
 					('cfg.print_checksum',      'None'),         # sets 'quiet'
-					('cfg.quiet',               'False'),        # init_opts, incompatible_opts
-					('cfg.verbose',             'False'),        # init_opts, incompatible_opts
-					('cfg.passwd_file',         ''),             # infile_opts - check_infile()
+					('cfg.quiet',               'False'),        # _incompatible_opts
+					('cfg.verbose',             'False'),        # _incompatible_opts
+					('cfg.passwd_file',         ''),             # _infile_opts - check_infile()
 					('cfg.outdir',              ''),             # check_outdir()
 					('cfg.cached_balances',     'False'),
 					('cfg.minconf',             '1'),
-					('cfg.fee_estimate_mode',   'conservative'), # autoset_opts
+					('cfg.fee_estimate_mode',   'conservative'), # _autoset_opts
 				)
 			)
 

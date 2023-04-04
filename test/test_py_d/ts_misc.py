@@ -41,7 +41,7 @@ class TestSuiteMisc(TestSuiteBase):
 	color = True
 
 	def rpc_backends(self):
-		backends = cfg.autoset_opts['rpc_backend'][1]
+		backends = cfg._autoset_opts['rpc_backend'][1]
 		for b in backends:
 			t = self.spawn_chk('mmgen-tool',[f'--rpc-backend={b}','daemon_version'],extra_desc=f'({b})')
 		return t

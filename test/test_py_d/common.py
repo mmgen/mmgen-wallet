@@ -97,7 +97,7 @@ def randbool():
 def disable_debug():
 	global save_debug
 	save_debug = {}
-	for k in cfg.env_opts:
+	for k in cfg._env_opts:
 		if k[:11] == 'MMGEN_DEBUG':
 			save_debug[k] = os.getenv(k)
 			os.environ[k] = ''

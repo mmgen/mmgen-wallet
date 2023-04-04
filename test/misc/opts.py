@@ -55,8 +55,8 @@ if cfg._args == ['show_common_opts_diff']:
 for k in (
 	'foo',               # added opt
 	'print_checksum',    # sets 'quiet'
-	'quiet','verbose',   # init_opts, incompatible_opts
-	'passwd_file',       # infile_opts - check_infile()
+	'quiet','verbose',   # _incompatible_opts
+	'passwd_file',       # _infile_opts - check_infile()
 	'outdir',            # check_outdir()
 	'cached_balances',   # opt_sets_global
 	'minconf',           # global_sets_opt
@@ -73,6 +73,6 @@ for k in (
 
 msg('')
 for k in (
-	'fee_estimate_mode', # autoset_opts
+	'fee_estimate_mode', # _autoset_opts
 	):
 	msg('{:30} {}'.format( f'cfg.{k}:', getattr(cfg,k) ))

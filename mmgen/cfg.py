@@ -24,9 +24,12 @@ import sys,os
 from collections import namedtuple
 from .base_obj import Lockable
 
-def die(exit_val,s=''):
-	if s:
-		sys.stderr.write(s+'\n')
+def die(*args,**kwargs):
+	from .util import die
+	die(*args,**kwargs)
+
+def die2(exit_val,s):
+	sys.stderr.write(s+'\n')
 	sys.exit(exit_val)
 
 class GlobalConstants(Lockable):
@@ -57,14 +60,14 @@ class GlobalConstants(Lockable):
 			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
 			break
 	else:
-		die(1,f'{sys.platform!r}: platform not supported by {proj_name}')
+		die2(1,f'{sys.platform!r}: platform not supported by {proj_name}')
 
 	if os.getenv('HOME'):   # Linux or MSYS2
 		home_dir = os.getenv('HOME')
 	elif platform == 'win': # Windows without MSYS2 - not supported
-		die(1,f'$HOME not set!  {proj_name} for Windows must be run in MSYS2 environment')
+		die2(1,f'$HOME not set!  {proj_name} for Windows must be run in MSYS2 environment')
 	else:
-		die(2,'$HOME is not set!  Unable to determine home directory')
+		die2(2,'$HOME is not set!  Unable to determine home directory')
 
 	def get_mmgen_data_file(self,filename,package='mmgen'):
 		"""
@@ -218,7 +221,7 @@ class Config(Lockable):
 	pager = False
 
 	# 'long' opts (subset of common_opts_data):
-	common_opts = (
+	_common_opts = (
 		'accept_defaults',
 		'aiohttp_rpc_queue_len',
 		'bob',
@@ -242,10 +245,10 @@ class Config(Lockable):
 		'testnet',
 		'token' )
 
-	# opts not in common_opts but required to be set during opts initialization
-	init_opts = ('show_hash_presets','yes','verbose')
+	# opts not in _common_opts but required to be set during opts initialization
+	_init_opts = ('show_hash_presets','yes','verbose')
 
-	incompatible_opts = (
+	_incompatible_opts = (
 		('help','longhelp'),
 		('bob','alice','carol'),
 		('label','keep_label'),
@@ -253,7 +256,7 @@ class Config(Lockable):
 		('tx_id','terse_info'),
 	)
 
-	cfg_file_opts = (
+	_cfg_file_opts = (
 		'autochg_ignore_labels',
 		'color',
 		'daemon_data_dir',
@@ -295,7 +298,7 @@ class Config(Lockable):
 	# Supported environmental vars
 	# The corresponding attributes (lowercase, without 'mmgen_') must exist in the class.
 	# The 'MMGEN_DISABLE_' prefix sets the corresponding attribute to False.
-	env_opts = (
+	_env_opts = (
 		'MMGEN_DEBUG_ALL', # special: there is no `debug_all` attribute
 
 		'MMGEN_COLUMNS',
@@ -331,7 +334,7 @@ class Config(Lockable):
 		'MMGEN_ENABLE_ERIGON',
 		'MMGEN_DISABLE_COLOR',
 	)
-	infile_opts = (
+	_infile_opts = (
 		'keys_from_file',
 		'mmgen_keys_from_file',
 		'passwd_file',
@@ -341,12 +344,12 @@ class Config(Lockable):
 	)
 	# Auto-typechecked and auto-set opts - first value in list is the default
 	_ov = namedtuple('autoset_opt_info',['type','choices'])
-	autoset_opts = {
+	_autoset_opts = {
 		'fee_estimate_mode': _ov('nocase_pfx', ['conservative','economical']),
 		'rpc_backend':       _ov('nocase_pfx', ['auto','httplib','curl','aiohttp','requests']),
 	}
 
-	auto_typeset_opts = {
+	_auto_typeset_opts = {
 		'seed_len': int,
 		'subseeds': int,
 		'vsize_adj': float,
@@ -367,7 +370,7 @@ class Config(Lockable):
 			_reset_ok += ('force_standalone_scrypt_module',)
 
 	if os.getenv('MMGEN_DEBUG_ALL'):
-		for name in env_opts:
+		for name in _env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
 
@@ -379,8 +382,8 @@ class Config(Lockable):
 		if hasattr(self,'_data_dir_root'):
 			return self._data_dir_root
 		else:
-			if self.data_dir_root_override:
-				self._data_dir_root = os.path.normpath(os.path.abspath(self.data_dir_root_override))
+			if self._data_dir_root_override:
+				self._data_dir_root = os.path.normpath(os.path.abspath(self._data_dir_root_override))
 			elif self.test_suite:
 				from test.include.common import get_test_data_dir
 				self._data_dir_root = get_test_data_dir()

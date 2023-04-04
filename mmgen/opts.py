@@ -83,7 +83,7 @@ def fmt_opt(o):
 	return '--' + o.replace('_','-')
 
 def die_on_incompatible_opts(cfg):
-	for group in cfg.incompatible_opts:
+	for group in cfg._incompatible_opts:
 		bad = [k for k in cfg.__dict__ if k in group and getattr(cfg,k) != None]
 		if len(bad) > 1:
 			from .util import die
@@ -161,7 +161,7 @@ def set_cfg_from_cfg_file(
 		from .protocol import init_proto
 
 	for d in ucfg.get_lines():
-		if d.name in cfg.cfg_file_opts:
+		if d.name in cfg._cfg_file_opts:
 			ns = d.name.split('_')
 			if ns[0] in gc.core_coins:
 				if not need_proto:
@@ -183,9 +183,9 @@ def set_cfg_from_cfg_file(
 			val_conv = set_for_type(val,refval,attr,src=ucfg.fn)
 			if attr not in env_cfg:
 				setattr(cls,attr,val_conv)
-		elif d.name in cfg.autoset_opts:
+		elif d.name in cfg._autoset_opts:
 			cfgfile_autoset_opts[d.name] = d.value
-		elif d.name in cfg.auto_typeset_opts:
+		elif d.name in cfg._auto_typeset_opts:
 			cfgfile_auto_typeset_opts[d.name] = d.value
 		else:
 			from .util import die
@@ -195,7 +195,7 @@ def set_cfg_from_env(cfg):
 	for name,val in ((k,v) for k,v in os.environ.items() if k.startswith('MMGEN_')):
 		if name == 'MMGEN_DEBUG_ALL':
 			continue
-		elif name in cfg.env_opts:
+		elif name in cfg._env_opts:
 			if val: # ignore empty string values; string value of '0' or 'false' sets variable to False
 				disable = name.startswith('MMGEN_DISABLE_')
 				gname = name[(6,14)[disable]:].lower()
@@ -218,16 +218,16 @@ def show_common_opts_diff(cfg):
 		from .util import fmt_list
 		return fmt_list(['--'+s.replace('_','-') for s in set_data],fmt='col',indent='   ')
 
-	a = cfg.common_opts
+	a = cfg._common_opts
 	b = list(common_opts_data_to_list())
 	a_minus_b = [e for e in a if e not in b]
 	b_minus_a = [e for e in b if e not in a]
 	a_and_b   = [e for e in a if e in b]
 
 	from .util import msg
-	msg(f'cfg.common_opts - common_opts_data:\n   {do_fmt(a_minus_b) if a_minus_b else "None"}\n')
-	msg(f'common_opts_data - cfg.common_opts (these do not set global var):\n{do_fmt(b_minus_a)}\n')
-	msg(f'common_opts_data ^ cfg.common_opts (these set global var):\n{do_fmt(a_and_b)}\n')
+	msg(f'cfg._common_opts - common_opts_data:\n   {do_fmt(a_minus_b) if a_minus_b else "None"}\n')
+	msg(f'common_opts_data - cfg._common_opts (these do not set global var):\n{do_fmt(b_minus_a)}\n')
+	msg(f'common_opts_data ^ cfg._common_opts (these set global var):\n{do_fmt(a_and_b)}\n')
 
 	sys.exit(0)
 
@@ -323,8 +323,8 @@ def init(
 			+ po.filtered_opts
 			+ tuple(add_opts or [])
 			+ tuple(init_opts or [])
-			+ cfg.init_opts
-			+ cfg.common_opts ):
+			+ cfg._init_opts
+			+ cfg._common_opts ):
 		setattr(opt,o,po.user_opts[o] if o in po.user_opts else None)
 
 	if opt.version:
@@ -345,7 +345,7 @@ def init(
 	init_term(cfg)
 
 	# --data-dir overrides computed value of data_dir_root
-	cfg.data_dir_root_override = opt.data_dir
+	cfg._data_dir_root_override = opt.data_dir
 	if opt.data_dir:
 		del opt.data_dir
 
@@ -368,7 +368,7 @@ def init(
 			need_proto )
 
 	# Set cfg from opts, setting type from original class attr in Config if it exists:
-	auto_keys = tuple(cfg.autoset_opts.keys()) + tuple(cfg.auto_typeset_opts.keys())
+	auto_keys = tuple(cfg._autoset_opts.keys()) + tuple(cfg._auto_typeset_opts.keys())
 	for key,val in opt.__dict__.items():
 		if val is not None and key not in auto_keys:
 			setattr(cfg, key, set_for_type(val,getattr(cfg,key),'--'+key) if hasattr(cfg,key) else val)
@@ -396,7 +396,7 @@ def init(
 	check_or_create_dir(cfg.data_dir)
 
 	# Set globals from opts, setting type from original global value if it exists:
-	for key in cfg.autoset_opts:
+	for key in cfg._autoset_opts:
 		if hasattr(opt,key):
 			assert not hasattr(cfg,key), f'{key!r} is in cfg!'
 			if getattr(opt,key) is not None:
@@ -404,7 +404,7 @@ def init(
 			elif key in cfgfile_autoset_opts:
 				setattr(cfg, key, get_autoset_opt(cfg,key,cfgfile_autoset_opts[key],src='cfgfile'))
 			else:
-				setattr(cfg, key, cfg.autoset_opts[key].choices[0])
+				setattr(cfg, key, cfg._autoset_opts[key].choices[0])
 
 	set_auto_typeset_opts(cfg,cfgfile_auto_typeset_opts)
 
@@ -637,7 +637,7 @@ def check_usr_opts(cfg,usr_opts): # Raises an exception if any check fails
 		val = getattr(cfg,key)
 		desc = f'parameter for {fmt_opt(key)!r} option'
 
-		if key in cfg.infile_opts:
+		if key in cfg._infile_opts:
 			from .fileutil import check_infile
 			check_infile(val) # file exists and is readable - dies on error
 		elif key == 'outdir':
@@ -654,7 +654,7 @@ def set_auto_typeset_opts(cfg,cfgfile_auto_typeset_opts):
 		assert not hasattr(cfg,key), f'{key!r} is in cfg!'
 		setattr(cfg,key,None if val is None else ref_type(val))
 
-	for key,ref_type in cfg.auto_typeset_opts.items():
+	for key,ref_type in cfg._auto_typeset_opts.items():
 		if hasattr(opt,key):
 			do_set(key, getattr(opt,key), ref_type)
 		elif key in cfgfile_auto_typeset_opts:
@@ -690,6 +690,6 @@ def get_autoset_opt(cfg,key,val,src):
 			else:
 				die_on_err('unique substring of')
 
-	data = cfg.autoset_opts[key]
+	data = cfg._autoset_opts[key]
 
 	return getattr(opt_type,data.type)()

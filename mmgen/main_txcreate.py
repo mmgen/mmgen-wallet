@@ -68,8 +68,8 @@ opts_data = {
 		'options': lambda cfg,proto,help_notes,s: s.format(
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
-			fe_all=fmt_list(cfg.autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
-			fe_dfl=cfg.autoset_opts['fee_estimate_mode'].choices[0],
+			fe_all=fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
+			fe_dfl=cfg._autoset_opts['fee_estimate_mode'].choices[0],
 			cu=proto.coin,
 			cfg=cfg),
 		'notes': lambda cfg,help_notes,s: s.format(

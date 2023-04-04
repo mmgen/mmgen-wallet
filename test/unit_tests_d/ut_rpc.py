@@ -114,7 +114,7 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 			d.remove_datadir()
 			d.start()
 
-		for n,backend in enumerate(cfg.autoset_opts['rpc_backend'].choices):
+		for n,backend in enumerate(cfg._autoset_opts['rpc_backend'].choices):
 			test = getattr(init_test,d.proto.coin.lower())
 			rpc = async_run(test(d.proto,backend,d))
 			if not n and cfg.verbose:

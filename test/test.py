@@ -341,7 +341,7 @@ def set_environ_for_spawned_scripts():
 	os.environ['MMGEN_COLUMNS'] = str(get_terminal_size().width)
 
 	if os.getenv('MMGEN_DEBUG_ALL'):
-		for name in cfg.env_opts:
+		for name in cfg._env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
 
