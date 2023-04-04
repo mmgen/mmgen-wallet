@@ -25,7 +25,6 @@ class TestSuiteOpts(TestSuiteBase):
 		('opt_bad_outdir',       (41,"bad outdir parameter", [])),
 		('opt_bad_incompatible', (41,"incompatible opts", [])),
 		('opt_bad_autoset',      (41,"invalid autoset value", [])),
-		('opt_show_diff',        (41,"show_common_opts_diff()", [])),
 	)
 
 	def spawn_prog(self,args):
@@ -106,6 +105,3 @@ class TestSuiteOpts(TestSuiteBase):
 
 	def opt_bad_autoset(self):
 		return self.do_run(['--fee-estimate-mode=Fubar'],'not unique substring',1)
-
-	def opt_show_diff(self):
-		return self.do_run(['show_common_opts_diff'],'common_opts_data',0)

@@ -47,11 +47,6 @@ sample note: {nn}
 
 cfg = Config(opts_data=opts_data)
 
-if cfg._args == ['show_common_opts_diff']:
-	from mmgen.opts import show_common_opts_diff
-	show_common_opts_diff(cfg)
-	sys.exit(0)
-
 for k in (
 	'foo',               # added opt
 	'print_checksum',    # sets 'quiet'

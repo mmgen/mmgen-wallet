@@ -207,33 +207,8 @@ def set_cfg_from_env(cfg):
 		else:
 			raise ValueError(f'{name!r} is not a valid MMGen environment variable')
 
-def show_common_opts_diff(cfg):
-
-	def common_opts_data_to_list():
-		for l in common_opts_data['text'].splitlines():
-			if l.startswith('--,'):
-				yield l.split()[1].split('=')[0][2:].replace('-','_')
-
-	def do_fmt(set_data):
-		from .util import fmt_list
-		return fmt_list(['--'+s.replace('_','-') for s in set_data],fmt='col',indent='   ')
-
-	a = cfg._common_opts
-	b = list(common_opts_data_to_list())
-	a_minus_b = [e for e in a if e not in b]
-	b_minus_a = [e for e in b if e not in a]
-	a_and_b   = [e for e in a if e in b]
-
-	from .util import msg
-	msg(f'cfg._common_opts - common_opts_data:\n   {do_fmt(a_minus_b) if a_minus_b else "None"}\n')
-	msg(f'common_opts_data - cfg._common_opts (these do not set global var):\n{do_fmt(b_minus_a)}\n')
-	msg(f'common_opts_data ^ cfg._common_opts (these set global var):\n{do_fmt(a_and_b)}\n')
-
-	sys.exit(0)
-
 common_opts_data = {
 	# Most but not all of these set the corresponding global var
-	# View differences with show_common_opts_diff()
 	'text': """
 --, --accept-defaults      Accept defaults at all prompts
 --, --coin=c               Choose coin unit. Default: BTC. Current choice: {cu_dfl}
