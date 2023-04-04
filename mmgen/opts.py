@@ -400,7 +400,7 @@ def init(
 	cfg._uopts = po.user_opts
 	cfg._args = po.cmd_args
 
-	cfg.lock()
+	cfg._lock()
 
 	if need_proto:
 		from .protocol import warn_trustlevel,init_proto_from_cfg

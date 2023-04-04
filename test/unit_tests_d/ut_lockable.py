@@ -20,7 +20,7 @@ class unit_test(object):
 			_autolock = False
 			foo = 'fooval'
 		ac = MyAttrCtrl()
-		ac.lock()
+		ac._lock()
 
 		ac.foo = 'new fooval'
 		ac.foo = 'new fooval2'
@@ -34,7 +34,7 @@ class unit_test(object):
 			foo = 'fooval'
 			bar = None
 		acc = MyAttrCtrlClsCheck()
-		acc.lock()
+		acc._lock()
 
 		acc.foo = 'new_fooval'
 		acc.foo = 'new_fooval2'
@@ -72,7 +72,7 @@ class unit_test(object):
 		lc.delta = 0.0           # yes
 		lc.epsilon = []          # no
 
-		lc.lock()
+		lc._lock()
 
 		lc.foo = 'fooval2'
 		lc.bar = 'barval2'
@@ -93,7 +93,7 @@ class unit_test(object):
 			qux = 'quxval'
 
 		lcc = MyLockableClsCheck()
-		lcc.lock()
+		lcc._lock()
 
 		lcc.foo = 'fooval2' # class attribute foo is None, so can be set to any type
 		lcc.bar = 2
@@ -110,7 +110,7 @@ class unit_test(object):
 
 		lca = MyLockableAutolock()
 		assert lca._autolock == True
-		assert lca._lock == True
+		assert lca._locked == True
 		assert lca.foo == True
 
 		class MyLockableAutolockDflNone(Lockable):
@@ -148,7 +148,7 @@ class unit_test(object):
 
 		def bad16(): lca.foo = None
 		def bad17(): lb = MyLockableBad()
-		def bad18(): aca.lock()
+		def bad18(): aca._lock()
 
 		def bad19(): acdn.baz = None
 		def bad20(): lcdn.foo = 1
@@ -175,7 +175,7 @@ class unit_test(object):
 			("attr (can't reset)", 'AttributeError', 'reset',       bad15 ),
 			("attr (can't set)",   'AttributeError', 'read-only',   bad16 ),
 			("attr (bad _set_ok)", 'AssertionError', 'not found in',bad17 ),
-			("call to lock()",     'AssertionError', 'only once',   bad18 ),
+			("call to _lock()",    'AssertionError', 'only once',   bad18 ),
 		))
 
 		qmsg('OK')

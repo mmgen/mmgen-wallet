@@ -30,7 +30,7 @@ class AttrCtrlMeta(type):
 	def __call__(cls,*args,**kwargs):
 		instance = super().__call__(*args,**kwargs)
 		if instance._autolock:
-			instance.lock()
+			instance._lock()
 		return instance
 
 class AttrCtrl(metaclass=AttrCtrlMeta):
@@ -46,24 +46,24 @@ class AttrCtrl(metaclass=AttrCtrlMeta):
 	instead of raising AttributeError.
 	"""
 	_autolock = True
-	_lock = False
+	_locked = False
 	_use_class_attr = False
 	_default_to_none = False
 	_skip_type_check = ()
 
-	def lock(self):
-		self._lock = True
+	def _lock(self):
+		self._locked = True
 
 	def __getattr__(self,name):
-		if self._lock and self._default_to_none:
+		if self._locked and self._default_to_none:
 			return None
 		else:
 			raise AttributeError(f'{type(self).__name__} object has no attribute {name!r}')
 
 	def __setattr__(self,name,value):
 
-		if self._lock:
-			assert name != '_lock', 'lock can be set only once'
+		if self._locked:
+			assert name != '_locked', 'lock can be set only once'
 
 			def do_error(name,value,ref_val):
 				raise AttributeError(
@@ -103,15 +103,15 @@ class Lockable(AttrCtrl):
 	_set_ok = ()
 	_reset_ok = ()
 
-	def lock(self):
+	def _lock(self):
 		for name in ('_set_ok','_reset_ok'):
 			for attr in getattr(self,name):
 				assert hasattr(self,attr), (
 					f'attribute {attr!r} in {name!r} not found in {type(self).__name__} object {id(self)}' )
-		super().lock()
+		super()._lock()
 
 	def __setattr__(self,name,value):
-		if self._lock and (name in self.__dict__ or hasattr(type(self),name)):
+		if self._locked and (name in self.__dict__ or hasattr(type(self),name)):
 			val = getattr(self,name)
 			if name not in (self._set_ok + self._reset_ok):
 				raise AttributeError(f'attribute {name!r} of {type(self).__name__} object is read-only')

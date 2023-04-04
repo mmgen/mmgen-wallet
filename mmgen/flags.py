@@ -26,7 +26,7 @@ from .util import fmt_list,die
 class ClassFlags(AttrCtrl):
 	_name = 'flags'
 	_desc = 'flag'
-	reserved_attrs = ('lock',)
+	reserved_attrs = ()
 
 	def __init__(self,parent,arg):
 		self._parent = parent
@@ -59,7 +59,7 @@ class ClassFlags(AttrCtrl):
 
 	def __setattr__(self,name,val):
 
-		if self._lock:
+		if self._locked:
 
 			if name not in self._available:
 				self.not_available_error(name)

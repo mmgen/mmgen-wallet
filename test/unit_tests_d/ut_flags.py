@@ -12,6 +12,9 @@ class unit_test(object):
 
 	def run_test(self,name,ut):
 
+		class MyClassOpts(ClassOpts):
+			reserved_attrs = ('foo',)
+
 		class cls1:
 			avail_opts = ()
 			avail_flags = ()
@@ -27,7 +30,10 @@ class unit_test(object):
 			avail_opts = ('_foo',)
 
 		class cls4(cls1):
-			avail_opts = ('lock',)
+			avail_opts = ('foo',)
+			def __init__(self,opts=None,flags=None):
+				self.opt = MyClassOpts(self,opts)
+				self.flag = MyClassFlags(self,flags)
 
 		def test_flags():
 			def gen():
