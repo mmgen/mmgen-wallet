@@ -448,11 +448,13 @@ class RPCClient(MMGenObject):
 
 async def rpc_init(
 		cfg,
-		proto,
+		proto                 = None,
 		backend               = None,
 		daemon                = None,
 		ignore_daemon_version = False,
 		ignore_wallet         = False ):
+
+	proto = proto or cfg._proto
 
 	if not 'rpc_init' in proto.mmcaps:
 		die(1,f'rpc_init() not supported for {proto.name} protocol!')
