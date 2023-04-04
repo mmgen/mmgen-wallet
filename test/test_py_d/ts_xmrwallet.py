@@ -23,7 +23,7 @@ test.test_py_d.ts_xmrwallet: xmrwallet tests for the test.py test suite
 import sys,os,atexit,asyncio,shutil
 from subprocess import run,PIPE
 
-from mmgen.globalvars import gc
+from mmgen.cfg import gc
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
 from mmgen.addrlist import KeyAddrList,AddrIdxList

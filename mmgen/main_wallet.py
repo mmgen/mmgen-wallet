@@ -22,7 +22,7 @@ main_wallet: Entry point for MMGen wallet-related scripts
 
 import sys,os
 import mmgen.opts as opts
-from .globalvars import gc
+from .cfg import gc,Config
 from .color import green,yellow
 from .util import msg,gmsg_r,ymsg,bmsg,die,capfirst
 from .wallet import Wallet,get_wallet_cls

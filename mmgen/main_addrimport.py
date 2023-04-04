@@ -23,7 +23,7 @@ mmgen-addrimport: Import addresses into a MMGen coin daemon tracking wallet
 from collections import namedtuple
 
 import mmgen.opts as opts
-from .globalvars import gc
+from .cfg import gc,Config
 from .util import msg,suf,die,fmt,async_run
 from .addrlist import AddrList,KeyAddrList
 from .tw.shared import TwLabel

@@ -20,7 +20,7 @@
 tool.util: Utility commands for the 'mmgen-tool' utility
 """
 
-from ..globalvars import gc
+from ..cfg import gc
 from .common import tool_cmd_base
 
 class tool_cmd(tool_cmd_base):

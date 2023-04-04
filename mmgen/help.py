@@ -20,7 +20,7 @@
 help: help notes for MMGen suite commands
 """
 
-from .globalvars import gc
+from .cfg import gc
 
 def help_notes_func(proto,cfg,k):
 

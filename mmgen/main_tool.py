@@ -23,7 +23,7 @@ mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
 
 import sys,os,importlib
 import mmgen.opts as opts
-from .globalvars import gc
+from .cfg import gc,Config
 from .util import msg,Msg,die,capfirst,suf,async_run
 
 opts_data = {

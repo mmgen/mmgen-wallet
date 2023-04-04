@@ -22,7 +22,7 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
 """
 
 import mmgen.opts as opts
-from .globalvars import gc
+from .cfg import gc,Config
 from .util import msg,msg_r,die,async_run
 from .color import green
 from .wallet import Wallet

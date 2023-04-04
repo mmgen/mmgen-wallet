@@ -23,7 +23,7 @@ crypto: Random number, password hashing and symmetric encryption routines for th
 import os
 from collections import namedtuple
 
-from .globalvars import gc
+from .cfg import gc
 from .util import (
 	msg,
 	msg_r,

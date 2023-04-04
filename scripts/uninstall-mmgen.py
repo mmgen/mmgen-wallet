@@ -19,7 +19,7 @@
 import sys,os
 
 import mmgen.opts as opts
-from mmgen.globalvars import gc
+from mmgen.cfg import gc,Config
 from mmgen.util import msg,die
 
 def normalize_path(p):

@@ -14,7 +14,7 @@ proto.eth.daemon: Ethereum base protocol daemon classes
 
 import os
 
-from ...globalvars import gc
+from ...cfg import gc
 from ...util import list_gen,get_subclasses
 from ...daemon import CoinDaemon,RPCDaemon,_nw,_dd
 

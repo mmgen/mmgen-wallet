@@ -26,7 +26,7 @@ from subprocess import run,PIPE
 
 from include.tests_header import repo_root
 import mmgen.opts as opts
-from mmgen.globalvars import gc
+from mmgen.cfg import gc,Config
 from mmgen.util import msg,msg_r,bmsg
 
 opts_data = {

@@ -23,7 +23,7 @@ tool.fileutil: File routines for the 'mmgen-tool' utility
 import os
 
 from .common import tool_cmd_base
-from ..globalvars import gc
+from ..cfg import gc
 from ..util import msg,msg_r,die,suf,make_full_path
 from ..crypto import Crypto
 

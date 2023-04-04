@@ -80,7 +80,7 @@ class TwUnspentOutputs(TwView):
 		await super().__init__(cfg,proto)
 		self.minconf  = minconf
 		self.addrs    = addrs
-		from ..globalvars import gc
+		from ..cfg import gc
 		self.min_cols = gc.min_screen_width
 
 	@property

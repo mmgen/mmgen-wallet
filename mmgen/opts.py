@@ -21,7 +21,7 @@ opts: MMGen-specific options processing after generic processing by share.Opts
 """
 import sys,os
 
-from .globalvars import gc,Config
+from .cfg import gc,Config
 from .base_obj import Lockable
 
 import mmgen.share.Opts

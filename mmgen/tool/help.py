@@ -133,7 +133,7 @@ def gen_tool_usage():
 
 def gen_tool_cmd_usage(cfg,mod,cmdname):
 
-	from ..globalvars import gc
+	from ..cfg import gc
 	from ..util import capfirst
 
 	cls = main_tool.get_mod_cls(mod)

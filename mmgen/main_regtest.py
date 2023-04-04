@@ -22,7 +22,7 @@ mmgen-regtest: Coin daemon regression test mode setup and operations for the MMG
 """
 
 import mmgen.opts as opts
-from .globalvars import gc
+from .cfg import gc,Config
 from .util import die,async_run
 
 opts_data = {

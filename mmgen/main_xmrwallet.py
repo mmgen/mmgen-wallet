@@ -24,7 +24,7 @@ mmgen-xmrwallet: Perform various Monero wallet operations for addresses
 from collections import namedtuple
 
 import mmgen.opts as opts
-from .globalvars import gc
+from .cfg import gc,Config
 from .util import ymsg,die,async_run
 from .xmrwallet import xmrwallet_uarg_info,MoneroWalletOps
 

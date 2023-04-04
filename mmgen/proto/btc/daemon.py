@@ -14,7 +14,7 @@ proto.btc.daemon: Bitcoin base protocol daemon classes
 
 import os
 
-from ...globalvars import gc
+from ...cfg import gc
 from ...util import list_gen
 from ...daemon import CoinDaemon,_nw,_dd
 

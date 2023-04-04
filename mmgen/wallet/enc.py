@@ -12,7 +12,7 @@
 wallet.enc: encrypted wallet base class
 """
 
-from ..globalvars import gc
+from ..cfg import gc
 from ..util import msg,make_chksum_8
 from .base import wallet
 

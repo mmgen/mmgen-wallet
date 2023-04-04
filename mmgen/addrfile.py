@@ -20,7 +20,7 @@
 addrfile: Address and password file classes for the MMGen suite
 """
 
-from .globalvars import gc
+from .cfg import gc
 from .util import msg,die,capfirst
 from .protocol import init_proto
 from .obj import MMGenObject,TwComment,WalletPassword,MMGenPWIDString

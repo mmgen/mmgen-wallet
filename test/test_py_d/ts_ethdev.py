@@ -25,7 +25,7 @@ from decimal import Decimal
 from collections import namedtuple
 from subprocess import run,PIPE,DEVNULL
 
-from mmgen.globalvars import gc
+from mmgen.cfg import gc
 from mmgen.util import die
 from mmgen.protocol import CoinProtocol
 from ..include.common import *

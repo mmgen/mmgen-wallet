@@ -21,7 +21,7 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
 import mmgen.opts as opts
-from .globalvars import gc
+from .cfg import gc,Config
 from .util import die,fmt_list,async_run
 from .wallet import Wallet
 from .subseed import SubSeedIdxRange

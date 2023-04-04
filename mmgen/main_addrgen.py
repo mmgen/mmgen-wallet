@@ -22,7 +22,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 """
 
 import mmgen.opts as opts
-from .globalvars import gc
+from .cfg import gc,Config
 from .addr import MMGenAddrType
 from .addrfile import AddrFile
 from .wallet import Wallet

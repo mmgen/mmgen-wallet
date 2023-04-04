@@ -13,7 +13,7 @@ msg: base message signing classes
 """
 
 import os,importlib,json
-from .globalvars import gc
+from .cfg import gc
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .util import msg,die,suf,make_chksum_6,fmt_list,remove_dups
 from .color import red,orange,grnbg

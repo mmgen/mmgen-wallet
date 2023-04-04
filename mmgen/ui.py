@@ -14,7 +14,7 @@ ui: Interactive user interface functions for the MMGen suite
 
 import sys,os
 
-from .globalvars import gc
+from .cfg import gc
 from .util import msg,msg_r,Msg,die
 
 def confirm_or_raise(cfg,message,action,expect='YES',exit_msg='Exiting at user request'):

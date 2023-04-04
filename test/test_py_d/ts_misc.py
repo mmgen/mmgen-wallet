@@ -20,7 +20,7 @@
 test.test_py_d.ts_misc: Miscellaneous test groups for the test.py test suite
 """
 
-from mmgen.globalvars import gc
+from mmgen.cfg import gc
 from ..include.common import *
 from .common import *
 from .ts_base import *

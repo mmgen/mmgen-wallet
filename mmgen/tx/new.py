@@ -13,7 +13,7 @@ tx.new: new transaction class
 """
 
 from .base import Base
-from ..globalvars import gc
+from ..cfg import gc
 from ..color import pink,yellow
 from ..obj import get_obj,MMGenList
 from ..util import msg,fmt,die,suf,remove_dups,get_extension

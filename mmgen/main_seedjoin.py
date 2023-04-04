@@ -22,7 +22,7 @@ mmgen-seedjoin: Regenerate an MMGen deterministic wallet from seed shares
 """
 
 import mmgen.opts as opts
-from .globalvars import gc
+from .cfg import gc,Config
 from .util import msg,msg_r,die
 from .color import yellow
 from .obj import MMGenWalletLabel

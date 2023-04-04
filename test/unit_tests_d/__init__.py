@@ -6,7 +6,7 @@ test.unit_tests_d.__init__: shared data for unit tests for the MMGen suite
 
 import sys,os
 
-from mmgen.globalvars import gv
+from mmgen.cfg import gv
 from ..include.common import cfg
 
 class unit_tests_base:

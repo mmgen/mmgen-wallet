@@ -25,7 +25,7 @@ term: Terminal classes for the MMGen suite
 import sys,os,time
 from collections import namedtuple
 
-from .globalvars import gc
+from .cfg import gc
 from .util import msg,msg_r,die
 
 try:

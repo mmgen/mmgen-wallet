@@ -37,7 +37,7 @@ altcoin.py - Coin constants for Bitcoin-derived altcoins
 
 import sys
 
-from .globalvars import gc
+from .cfg import gc,Config
 from .util import msg
 
 def test_equal(desc,a,b,*cdata):

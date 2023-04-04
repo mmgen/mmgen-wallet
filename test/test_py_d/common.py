@@ -21,7 +21,7 @@ test.test_py_d.common: Shared routines and data for the test.py test suite
 """
 
 import sys,os
-from mmgen.globalvars import gc
+from mmgen.cfg import gc
 from mmgen.util import msg
 from ..include.common import *
 

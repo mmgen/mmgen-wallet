@@ -22,7 +22,7 @@ protocol: Coin protocol base classes and initializer
 
 from collections import namedtuple
 
-from .globalvars import gc
+from .cfg import gc
 from .objmethods import MMGenObject
 
 decoded_wif = namedtuple('decoded_wif',['sec','pubkey_type','compressed'])

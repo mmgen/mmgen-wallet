@@ -14,7 +14,7 @@ wallet.incog_hidden: hidden incognito wallet class
 
 import os
 
-from ..globalvars import gc
+from ..cfg import gc
 from ..seed import Seed
 from ..util import msg,die,capfirst
 from ..util2 import parse_bytespec

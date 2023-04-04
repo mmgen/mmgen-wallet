@@ -24,7 +24,7 @@ import re,base64,json,asyncio,importlib
 from decimal import Decimal
 from collections import namedtuple
 
-from .globalvars import gc
+from .cfg import gc
 from .util import msg,die,fmt,fmt_list,pp_fmt
 from .base_obj import AsyncInit
 from .obj import NonNegativeInt

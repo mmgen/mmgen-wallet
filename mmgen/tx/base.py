@@ -12,7 +12,7 @@
 tx.base: base transaction class
 """
 
-from ..globalvars import gc
+from ..cfg import gc
 from ..objmethods import MMGenObject
 from ..obj import (
 	ImmutableAttr,

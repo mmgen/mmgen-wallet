@@ -24,7 +24,7 @@ import os,time,importlib
 from subprocess import run,PIPE,CompletedProcess
 from collections import namedtuple
 
-from .globalvars import gc
+from .cfg import gc
 from .color import set_vt100
 from .util import msg,Msg_r,ymsg,die,remove_dups,oneshot_warning
 from .flags import *

@@ -515,7 +515,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				for k in self.scroll_keys['vi']:
 					assert k not in self.key_mappings, f'{k!r} is in key_mappings'
 				self.key_mappings.update(self.scroll_keys['vi'])
-				from ..globalvars import gc
+				from ..cfg import gc
 				self.key_mappings.update(self.scroll_keys[gc.platform])
 			return self.key_mappings
 

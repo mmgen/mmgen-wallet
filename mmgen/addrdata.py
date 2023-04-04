@@ -20,7 +20,7 @@
 addrdata: MMGen AddrData and related classes
 """
 
-from .globalvars import gc
+from .cfg import gc
 from .util import fmt,die
 from .base_obj import AsyncInit
 from .obj import MMGenObject,MMGenDict,get_obj

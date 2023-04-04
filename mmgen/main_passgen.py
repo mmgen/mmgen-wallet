@@ -22,7 +22,7 @@ mmgen-passgen: Generate a series or range of passwords from an MMGen
 """
 
 import mmgen.opts as opts
-from .globalvars import gc
+from .cfg import gc,Config
 from .addrlist import AddrIdxList
 from .passwdlist import PasswordList
 from .wallet import Wallet

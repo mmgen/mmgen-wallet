@@ -22,7 +22,7 @@ fileutil: Routines that read, write, execute or stat files
 
 import sys,os
 
-from .globalvars import gc
+from .cfg import gc
 from .color import set_vt100
 from .util import (
 	msg,

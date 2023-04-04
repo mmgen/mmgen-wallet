@@ -28,7 +28,7 @@ sys.path.insert(0,overlay_setup(repo_root))
 
 # Import these _after_ local path's been added to sys.path
 import mmgen.opts as opts
-from mmgen.globalvars import gc
+from mmgen.cfg import gc,Config
 from mmgen.color import green,red,purple
 from mmgen.util import msg,capfirst,is_int,die
 

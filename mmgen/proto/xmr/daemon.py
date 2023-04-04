@@ -14,7 +14,7 @@ proto.xmr.daemon: Monero base protocol daemon classes
 
 import os
 
-from ...globalvars import gc
+from ...cfg import gc
 from ...util import list_gen,die,contains_any
 from ...daemon import CoinDaemon,RPCDaemon,_nw,_dd
 

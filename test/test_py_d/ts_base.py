@@ -21,7 +21,7 @@ test.test_py_d.ts_base: Base class for the test.py test suite
 """
 
 import os
-from mmgen.globalvars import gc
+from mmgen.cfg import gc
 from ..include.common import *
 from .common import *
 
