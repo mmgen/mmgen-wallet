@@ -148,13 +148,13 @@ def process_uopts(opts_data,short_opts,long_opts):
 
 def parse_opts(opts_data,opt_filter=None,parse_only=False):
 
-	short_opts,long_opts,skipped_opts = [],[],[]
+	short_opts,long_opts,filtered_opts = [],[],[]
 	def parse_lines(opts_type):
 		for line in opts_data['text'][opts_type].strip().splitlines():
 			m = pat.match(line)
 			if m:
-				if bool(opt_filter and m[1] not in opt_filter):
-					skipped_opts.append(m[2])
+				if opt_filter and m[1] not in opt_filter:
+					filtered_opts.append(m[2])
 				else:
 					if opts_type == 'options':
 						short_opts.append(m[1] + ('',':')[m[3] == '='])
@@ -166,9 +166,9 @@ def parse_opts(opts_data,opt_filter=None,parse_only=False):
 
 	uopts,uargs = process_uopts(opts_data,short_opts,long_opts)
 
-	return namedtuple('parsed_cmd_opts',['user_opts','cmd_args','opts','skipped_opts'])(
+	return namedtuple('parsed_cmd_opts',['user_opts','cmd_args','opts','filtered_opts'])(
 		uopts, # dict
 		uargs, # list, callers can pop
 		tuple(o.replace('-','_').rstrip('=') for o in long_opts),
-		tuple(o.replace('-','_') for o in skipped_opts),
+		tuple(o.replace('-','_') for o in filtered_opts),
 	)

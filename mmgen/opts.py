@@ -102,22 +102,23 @@ def _show_hash_presets():
 
 def opt_preproc_debug(po):
 	d = (
-		('Cmdline',            ' '.join(sys.argv)),
-		('Opts',               po.opts),
-		('Skipped opts',       po.skipped_opts),
-		('User-selected opts', po.user_opts),
-		('Cmd args',           po.cmd_args),
+		('Cmdline',            ' '.join(sys.argv), False),
+		('Filtered opts',      po.filtered_opts,   False),
+		('User-selected opts', po.user_opts,       False),
+		('Cmd args',           po.cmd_args,        False),
+		('Opts',               po.opts,            True),
 	)
-	from .util import Msg
+	from .util import Msg,fmt_list
+	from pprint import pformat
 	Msg('\n=== opts.py debug ===')
-	for e in d:
-		Msg('    {:<20}: {}'.format(*e))
+	for label,data,pretty in d:
+		Msg('    {:<20}: {}'.format(label,'\n' + fmt_list(data,fmt='col',indent=' '*8) if pretty else data))
 
 def opt_postproc_debug(cfg):
 	a = [k for k in dir(cfg) if k[:2] != '__' and getattr(cfg,k) != None]
 	b = [k for k in dir(cfg) if k[:2] != '__' and getattr(cfg,k) == None]
 	from .util import Msg
-	Msg('    Global vars:')
+	Msg('\n    Global vars:')
 	for e in [d for d in dir(cfg) if d[:2] != '__']:
 		Msg('        {:<20}: {}'.format(e, getattr(cfg,e)))
 	Msg("    Global vars set to 'None':")
@@ -148,12 +149,12 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 		' in {!r}'.format(src) if src else '',
 		type(refval).__name__) )
 
-def override_globals_from_cfg_file(
+def set_cfg_from_cfg_file(
 		cfg,
 		ucfg,
 		cfgfile_autoset_opts,
 		cfgfile_auto_typeset_opts,
-		env_globals,
+		env_cfg,
 		need_proto ):
 
 	if need_proto:
@@ -180,7 +181,7 @@ def override_globals_from_cfg_file(
 				from .util import die
 				die( 'CfgFileParseError', f'Parse error in file {ucfg.fn!r}, line {d.lineno}' )
 			val_conv = set_for_type(val,refval,attr,src=ucfg.fn)
-			if attr not in env_globals:
+			if attr not in env_cfg:
 				setattr(cls,attr,val_conv)
 		elif d.name in cfg.autoset_opts:
 			cfgfile_autoset_opts[d.name] = d.value
@@ -190,7 +191,7 @@ def override_globals_from_cfg_file(
 			from .util import die
 			die( 'CfgFileParseError', f'{d.name!r}: unrecognized option in {ucfg.fn!r}, line {d.lineno}' )
 
-def override_globals_from_env(cfg):
+def set_cfg_from_env(cfg):
 	for name,val in ((k,v) for k,v in os.environ.items() if k.startswith('MMGEN_')):
 		if name == 'MMGEN_DEBUG_ALL':
 			continue
@@ -301,7 +302,7 @@ def init(
 	global usage_data
 	usage_data = opts_data['text'].get('usage2') or opts_data['text']['usage']
 
-	# po: (user_opts,cmd_args,opts,skipped_opts)
+	# po: (user_opts,cmd_args,opts,filtered_opts)
 	po = parsed_opts or mmgen.share.Opts.parse_opts(opts_data,opt_filter=opt_filter,parse_only=parse_only)
 
 	if init_opts: # allow programs to preload user opts
@@ -313,13 +314,13 @@ def init(
 		cfg._parsed_opts = po
 		return
 
-	if cfg.debug_opts: # TODO: this does nothing
+	if os.getenv('MMGEN_DEBUG_OPTS'):
 		opt_preproc_debug(po)
 
 	# Copy parsed opts to opt, setting values to None if not set by user
 	for o in set(
 			po.opts
-			+ po.skipped_opts
+			+ po.filtered_opts
 			+ tuple(add_opts or [])
 			+ tuple(init_opts or [])
 			+ cfg.init_opts
@@ -337,7 +338,7 @@ def init(
 
 	# === begin Config() initialization === #
 
-	env_globals = tuple(override_globals_from_env(cfg))
+	env_cfg = tuple(set_cfg_from_env(cfg))
 
 	# do this after setting ‘hold_protect_disable’ from env
 	from .term import init_term
@@ -358,15 +359,15 @@ def init(
 		from .cfgfile import mmgen_cfg_file
 		# check for changes in system template file - term must be initialized
 		mmgen_cfg_file(cfg,'sample')
-		override_globals_from_cfg_file(
+		set_cfg_from_cfg_file(
 			cfg,
 			mmgen_cfg_file(cfg,'usr'),
 			cfgfile_autoset_opts,
 			cfgfile_auto_typeset_opts,
-			env_globals,
+			env_cfg,
 			need_proto )
 
-	# Set globals from opts, setting type from original global value if it exists:
+	# Set cfg from opts, setting type from original class attr in Config if it exists:
 	auto_keys = tuple(cfg.autoset_opts.keys()) + tuple(cfg.auto_typeset_opts.keys())
 	for key,val in opt.__dict__.items():
 		if val is not None and key not in auto_keys:
@@ -394,7 +395,7 @@ def init(
 
 	check_or_create_dir(cfg.data_dir)
 
-	# Check autoset opts, setting if unset
+	# Set globals from opts, setting type from original global value if it exists:
 	for key in cfg.autoset_opts:
 		if hasattr(opt,key):
 			assert not hasattr(cfg,key), f'{key!r} is in cfg!'
