@@ -61,6 +61,9 @@ class tool_api(
 
 		# Generate a random LTC testnet Bech32 keypair:
 		wif,addr = tool.randpair()
+
+		print('wif: ',wif)
+		print('addr:',addr)
 	"""
 
 	need_proto = True

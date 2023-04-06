@@ -23,7 +23,7 @@ proto.eth.tw.ctl: Ethereum tracking wallet control class
 from ....util import msg,ymsg,die
 from ....tw.ctl import TwCtl,write_mode
 from ....addr import is_coin_addr,is_mmgen_id
-from ..contract import Token,TokenResolve
+from ..contract import Token,ResolvedToken
 
 class EthereumTwCtl(TwCtl):
 
@@ -232,7 +232,7 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 		once, upon token import.  Thereafter, token address, symbol and decimals are resolved
 		either from the tracking wallet (online operations) or transaction file (when signing).
 		"""
-		t = await TokenResolve(self.cfg,self.proto,self.rpc,tokenaddr)
+		t = await ResolvedToken(self.cfg,self.proto,self.rpc,tokenaddr)
 		self.data['tokens'][tokenaddr] = {
 			'params': {
 				'symbol': await t.get_symbol(),

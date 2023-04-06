@@ -972,10 +972,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		from mmgen.tool.wallet import tool_cmd
 		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11,21)]
 
-		from mmgen.proto.eth.contract import TokenResolve
+		from mmgen.proto.eth.contract import ResolvedToken
 		async def do_transfer(rpc):
 			for i in range(2):
-				tk = await TokenResolve(
+				tk = await ResolvedToken(
 					cfg,
 					self.proto,
 					rpc,
@@ -997,7 +997,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 		async def show_bals(rpc):
 			for i in range(2):
-				tk = await TokenResolve(
+				tk = await ResolvedToken(
 					cfg,
 					self.proto,
 					rpc,

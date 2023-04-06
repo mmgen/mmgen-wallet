@@ -163,7 +163,7 @@ class Token(TokenCommon):
 		self.base_unit = Decimal('10') ** -self.decimals
 		self.rpc = rpc
 
-class TokenResolve(TokenCommon,metaclass=AsyncInit):
+class ResolvedToken(TokenCommon,metaclass=AsyncInit):
 
 	async def __init__(self,cfg,proto,rpc,addr):
 		from ...util2 import get_keccak
