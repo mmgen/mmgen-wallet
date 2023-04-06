@@ -134,10 +134,6 @@ class UserOpts:
 		if parse_only:
 			return
 
-		if 'data_dir' in uopts:
-			cfg._data_dir_root_override = uopts['data_dir']
-			del uopts['data_dir']
-
 	def init_bottom(self,cfg):
 
 		# print help screen only after globals initialized and locked:
