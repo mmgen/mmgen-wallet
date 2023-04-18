@@ -16,16 +16,28 @@ import sys,os,asyncio
 from subprocess import run,PIPE,DEVNULL
 from collections import namedtuple
 
-from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt_list
+from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt,fmt_list
 from .color import yellow,red,orange
 from .wallet import Wallet
 
 class Autosign:
 
-	dfl_mountpoint = os.path.join(os.sep,'mnt','tx')
+	dfl_mountpoint = os.path.join(os.sep,'mnt','mmgen_autosign')
 	wallet_dir     = os.path.join(os.sep,'dev','shm','autosign')
 	disk_label_dir = os.path.join(os.sep,'dev','disk','by-label')
 	part_label = 'MMGEN_TX'
+
+	old_dfl_mountpoint = os.path.join(os.sep,'mnt','tx')
+	old_dfl_mountpoint_errmsg = f"""
+		Mountpoint {old_dfl_mountpoint!r} is no longer supported!
+		Please rename {old_dfl_mountpoint!r} to {dfl_mountpoint!r}
+		and update your fstab accordingly.
+	"""
+	mountpoint_errmsg_fs = """
+		Mountpoint {!r} does not exist or does not point
+		to a directory!  Please create the mountpoint and add an entry
+		to your fstab as described in this script’s help text.
+	"""
 
 	mn_fmts    = {
 		'mmgen': 'words',
@@ -96,9 +108,17 @@ class Autosign:
 
 	def do_mount(self):
 
+		if not os.path.isdir(self.mountpoint):
+			def do_die(m):
+				die(1,'\n' + yellow(fmt(m.strip(),indent='  ')))
+			if os.path.isdir(self.old_dfl_mountpoint):
+				do_die(self.old_dfl_mountpoint_errmsg)
+			else:
+				do_die(self.mountpoint_errmsg_fs.format(self.mountpoint))
+
 		if not os.path.ismount(self.mountpoint):
 			if run( ['mount',self.mountpoint], stderr=DEVNULL, stdout=DEVNULL ).returncode == 0:
-				msg(f'Mounting {self.mountpoint}')
+				msg(f'Mounting {self.mountpoint!r}')
 
 		self.have_msg_dir = os.path.isdir(self.msg_dir)
 

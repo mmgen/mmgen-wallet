@@ -32,6 +32,7 @@ from .ts_shared import *
 from .input import *
 
 from mmgen.led import LEDControl
+from mmgen.autosign import Autosign
 
 filedir_map = (
 	('btc',''),
@@ -52,7 +53,7 @@ def init_led(simulate):
 		if fn:
 			run(['sudo','chmod','0666',fn],check=True)
 
-def check_mountpoint(mountpoint):
+def check_mountpoint(mountpoint,txdir):
 	if not os.path.ismount(mountpoint):
 		try:
 			run(['mount',mountpoint],check=True)
@@ -60,7 +61,6 @@ def check_mountpoint(mountpoint):
 		except:
 			die(2,f'Could not mount {mountpoint}!  Exiting')
 
-	txdir = joinpath(mountpoint,'tx')
 	if not os.path.isdir(txdir):
 		die(2,f'Directory {txdir} does not exist!  Exiting')
 
@@ -91,6 +91,10 @@ class TestSuiteAutosignBase(TestSuiteBase):
 
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
+		as_cfg = Config()
+		type(as_cfg)._set_ok += ('outdir','passwd_file')
+		self.asi = Autosign(as_cfg)
+
 		if self.simulate and not cfg.exact_output:
 			die(1,red('This command must be run with --exact-output enabled!'))
 
@@ -99,9 +103,9 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			LEDControl.create_dummy_control_files()
 
 		if self.live:
-			self.mountpoint = '/mnt/tx'
+			self.mountpoint = self.asi.mountpoint
 			self.opts = ['--coins='+','.join(self.coins)]
-			check_mountpoint(self.mountpoint)
+			check_mountpoint( self.mountpoint, self.asi.tx_dir )
 			init_led(self.simulate)
 		else:
 			self.mountpoint = self.tmpdir
