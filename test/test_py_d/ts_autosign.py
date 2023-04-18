@@ -277,6 +277,35 @@ class TestSuiteAutosignBase(TestSuiteBase):
 					os.unlink(os.path.join( destdir, os.path.basename(fn).replace('rawmsg','sigmsg') ))
 		return 'ok'
 
+	def do_sign(self,args,have_msg=False):
+		t = self.spawn('mmgen-autosign', self.opts + args )
+		t.expect(
+			f'{self.tx_count} transactions signed' if self.tx_count else
+			'No unsigned transactions' )
+
+		if self.bad_tx_count:
+			t.expect(f'{self.bad_tx_count} transactions failed to sign')
+			t.req_exit_val = 1
+
+		if have_msg:
+			t.expect(
+				f'{self.good_msg_count} message files{{0,1}} signed' if self.good_msg_count else
+				'No unsigned message files', regex=True )
+
+			if self.bad_msg_count:
+				t.expect(f'{self.bad_msg_count} message files{{0,1}} failed to sign', regex=True)
+				t.req_exit_val = 1
+
+		if 'wait' in args:
+			t.expect('Waiting')
+			t.kill(2)
+			t.req_exit_val = 1
+		else:
+			t.read()
+
+		imsg('')
+		return t
+
 class TestSuiteAutosign(TestSuiteAutosignBase):
 	'autosigning transactions for all supported coins'
 	coins        = ['btc','bch','ltc','eth']
@@ -313,35 +342,6 @@ class TestSuiteAutosign(TestSuiteAutosignBase):
 		('sign_no_unsigned_msg',     'signing transactions and messages (nothing to sign)'),
 		('stop_daemons',             'stopping daemons'),
 	)
-
-	def do_sign(self,args,have_msg=False):
-		t = self.spawn('mmgen-autosign', self.opts + args )
-		t.expect(
-			f'{self.tx_count} transactions signed' if self.tx_count else
-			'No unsigned transactions' )
-
-		if self.bad_tx_count:
-			t.expect(f'{self.bad_tx_count} transactions failed to sign')
-			t.req_exit_val = 1
-
-		if have_msg:
-			t.expect(
-				f'{self.good_msg_count} message files{{0,1}} signed' if self.good_msg_count else
-				'No unsigned message files', regex=True )
-
-			if self.bad_msg_count:
-				t.expect(f'{self.bad_msg_count} message files{{0,1}} failed to sign', regex=True)
-				t.req_exit_val = 1
-
-		if 'wait' in args:
-			t.expect('Waiting')
-			t.kill(2)
-			t.req_exit_val = 1
-		else:
-			t.read()
-
-		imsg('')
-		return t
 
 	def sign_quiet(self):
 		return self.do_sign(['--quiet','wait'])
