@@ -70,19 +70,18 @@ class Autosign:
 		cfg.outdir = self.tx_dir
 		cfg.passwd_file = self.keyfile
 
-	async def check_daemons_running(self):
-
-		if 'coin' in self.cfg._uopts:
+		if 'coin' in cfg._uopts:
 			die(1,'--coin option not supported with this command.  Use --coins instead')
 
-		if self.cfg.coins:
-			coins = self.cfg.coins.upper().split(',')
+		if cfg.coins:
+			self.coins = cfg.coins.upper().split(',')
 		else:
 			ymsg('Warning: no coins specified, defaulting to BTC')
-			coins = ['BTC']
+			self.coins = ['BTC']
 
+	async def check_daemons_running(self):
 		from .protocol import init_proto
-		for coin in coins:
+		for coin in self.coins:
 			proto = init_proto( self.cfg,  coin, testnet=self.cfg.network=='testnet', need_amt=True )
 			if proto.sign_mode == 'daemon':
 				self.cfg._util.vmsg(f'Checking {coin} daemon')
@@ -92,6 +91,7 @@ class Autosign:
 					await rpc_init( self.cfg, proto )
 				except SocketError as e:
 					die(2,f'{coin} daemon not running or not listening on port {proto.rpc_port}')
+
 	@property
 	def wallet_files(self):
 
@@ -126,7 +126,7 @@ class Autosign:
 
 		self.have_msg_dir = os.path.isdir(self.msg_dir)
 
-		from stat import S_ISDIR,S_IWUSR,S_IRUSR 
+		from stat import S_ISDIR,S_IWUSR,S_IRUSR
 		for cdir in [self.tx_dir] + ([self.msg_dir] if self.have_msg_dir else []):
 			try:
 				ds = os.stat(cdir)

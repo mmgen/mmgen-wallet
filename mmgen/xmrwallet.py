@@ -102,6 +102,15 @@ class XMRWalletAddrSpec(str,Hilite,InitErrors,MMGenObject):
 		except Exception as e:
 			return cls.init_fail(e,me)
 
+def is_xmr_tx_file(cfg,fn):
+	try:
+		MoneroMMGenTX.Completed(cfg,fn)
+		return True
+	except Exception as e:
+		if not 'MoneroMMGenTXFileParseError' in type(e).__name__:
+			ymsg(f'\n{type(e).__name__}: {e}')
+		return False
+
 class MoneroMMGenTX:
 
 	class Base:
@@ -250,15 +259,25 @@ class MoneroMMGenTX:
 				metadata       = d.metadata,
 			)
 
-	class Signed(Base):
+	class Completed(Base):
+		name = 'completed'
 
 		def __init__(self,cfg,fn):
-			from .fileutil import get_data_from_file
+
 			self.cfg = cfg
 			self.fn = fn
-			d_wrap = json.loads(get_data_from_file( cfg, fn ))['MoneroMMGenTX']
+
+			from .fileutil import get_data_from_file
+
+			try:
+				d_wrap = json.loads(get_data_from_file( cfg, fn ))['MoneroMMGenTX']
+			except Exception as e:
+				die( 'MoneroMMGenTXFileParseError', f'{type(e).__name__}: {e}\nCould not load transaction file' )
+
 			d = self.xmrwallet_tx_data(**d_wrap['data'])
+
 			proto = init_proto( cfg, 'xmr', network=d.network, need_amt=True )
+
 			self.data = self.xmrwallet_tx_data(
 				op             = d.op,
 				create_time    = d.create_time,
@@ -279,9 +298,22 @@ class MoneroMMGenTX:
 				b = d_wrap[k]
 				assert a == b, f'{k} mismatch: {a} != {b}'
 
+	class Signed(Completed):
+		name = 'signed'
+
 class MoneroWalletOps:
 
-	ops = ('create','sync','list','new','transfer','sweep','relay','txview','label')
+	ops = (
+		'create',
+		'sync',
+		'list',
+		'new',
+		'transfer',
+		'sweep',
+		'relay',
+		'txview',
+		'label' )
+
 	opts = (
 		'wallet_dir',
 		'daemon',
@@ -291,8 +323,8 @@ class MoneroWalletOps:
 		'restore_height',
 		'no_start_wallet_daemon',
 		'no_stop_wallet_daemon',
-		'no_relay',
-	)
+		'no_relay' )
+
 	pat_opts = ('daemon','tx_relay_daemon')
 
 	class base(MMGenObject):
@@ -441,11 +473,11 @@ class MoneroWalletOps:
 			if not self.cfg.no_stop_wallet_daemon:
 				await self.c.stop_daemon()
 
-		def get_wallet_fn(self,d):
+		def get_wallet_fn(self,data):
 			return os.path.join(
 				self.cfg.wallet_dir or '.','{a}-{b}-MoneroWallet{c}'.format(
 					a = self.kal.al_id.sid,
-					b = d.idx,
+					b = data.idx,
 					c = f'.{self.cfg.network}' if self.cfg.network != 'mainnet' else ''))
 
 		async def main(self):

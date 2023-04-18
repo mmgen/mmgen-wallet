@@ -218,7 +218,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			'add_coind_args',
 		])
 		# kal_range must be None, a single digit, or a single hyphenated range
-		for (	user,
+		for (   user,
 				sid,
 				shift,
 				kal_range,
@@ -322,7 +322,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		dir_opt = [f'--wallet-dir={data.udir}']
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.extra_opts + add_opts + dir_opt + [ 'create', data.kafile, (wallet or data.kal_range) ] )
+			self.extra_opts
+			+ add_opts
+			+ dir_opt
+			+ ['create']
+			+ [data.kafile]
+			+ [wallet or data.kal_range]
+		)
 		for i in MMGenRange(wallet or data.kal_range).items:
 			write_data_to_file(
 				cfg,
@@ -427,7 +433,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		)
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.extra_opts + cmd_opts + add_opts + [ op, data.kafile ] + ([wallets] if wallets else []) )
+			self.extra_opts
+			+ cmd_opts
+			+ add_opts
+			+ [op]
+			+ [data.kafile]
+			+ ([wallets] if wallets else [])
+		)
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
 		for n,wnum in enumerate(wlist):
 			t.expect('Syncing wallet {}/{} ({})'.format(
@@ -460,7 +472,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.extra_opts + cmd_opts + [ op, data.kafile, arg2 ],
+			self.extra_opts
+			+ cmd_opts
+			+ [op]
+			+ [data.kafile]
+			+ [arg2],
 			extra_desc = f'({capfirst(user)}{add_desc})' )
 
 		if op == 'sweep':

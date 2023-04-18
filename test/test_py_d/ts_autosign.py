@@ -53,16 +53,16 @@ def init_led(simulate):
 		if fn:
 			run(['sudo','chmod','0666',fn],check=True)
 
-def check_mountpoint(mountpoint,txdir):
-	if not os.path.ismount(mountpoint):
+def check_mountpoint(asi):
+	if not os.path.ismount(asi.mountpoint):
 		try:
-			run(['mount',mountpoint],check=True)
-			imsg(f'Mounted {mountpoint}')
+			run(['mount',asi.mountpoint],check=True)
+			imsg(f'Mounted {asi.mountpoint}')
 		except:
-			die(2,f'Could not mount {mountpoint}!  Exiting')
+			die(2,f'Could not mount {asi.mountpoint}!  Exiting')
 
-	if not os.path.isdir(txdir):
-		die(2,f'Directory {txdir} does not exist!  Exiting')
+	if not os.path.isdir(asi.tx_dir):
+		die(2,f'Directory {asi.tx_dir} does not exist!  Exiting')
 
 def do_mount(mountpoint):
 	if not os.path.ismount(mountpoint):
@@ -78,6 +78,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 	networks     = ('btc',)
 	tmpdir_nums  = [18]
 	color        = True
+	mountpoint_basename = 'mmgen_autosign'
 
 	def __init__(self,trunner,cfgs,spawn):
 
@@ -92,8 +93,14 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
 		self.asi = Autosign(
-			AutosignConfig()
+			AutosignConfig({
+				'mountpoint': (
+					None if self.live else
+					os.path.join(self.tmpdir,self.mountpoint_basename)
+				)
+			})
 		)
+		self.mountpoint = self.asi.mountpoint
 
 		if self.simulate and not cfg.exact_output:
 			die(1,red('This command must be run with --exact-output enabled!'))
@@ -102,21 +109,17 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			os.environ['MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE'] = '1'
 			LEDControl.create_dummy_control_files()
 
+		self.opts = ['--coins='+','.join(self.coins)]
+
 		if self.live:
-			self.mountpoint = self.asi.mountpoint
-			self.opts = ['--coins='+','.join(self.coins)]
-			check_mountpoint( self.mountpoint, self.asi.tx_dir )
+			check_mountpoint(self.asi)
 			init_led(self.simulate)
 		else:
-			self.mountpoint = self.tmpdir
-			try:
-				os.mkdir(joinpath(self.mountpoint,'tx'))
-			except:
-				pass
-			self.opts = [
-				'--coins='+','.join(self.coins),
-				'--mountpoint='+self.mountpoint,
-				'--no-insert-check' ]
+			os.makedirs(self.asi.tx_dir,exist_ok=True) # creates mountpoint
+			self.opts.extend([
+				'--mountpoint=' + self.mountpoint,
+				'--no-insert-check',
+			])
 
 		self.tx_file_ops('set_count') # initialize tx_count here so we can resume anywhere
 
