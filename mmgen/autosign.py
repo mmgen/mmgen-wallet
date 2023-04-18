@@ -27,7 +27,7 @@ class AutosignConfig(Config):
 class Autosign:
 
 	dfl_mountpoint = os.path.join(os.sep,'mnt','mmgen_autosign')
-	wallet_dir     = os.path.join(os.sep,'dev','shm','autosign')
+	dfl_wallet_dir = os.path.join(os.sep,'dev','shm','autosign')
 	disk_label_dir = os.path.join(os.sep,'dev','disk','by-label')
 	part_label = 'MMGEN_TX'
 
@@ -62,6 +62,7 @@ class Autosign:
 		self.cfg = cfg
 
 		self.mountpoint = cfg.mountpoint or self.dfl_mountpoint
+		self.wallet_dir = cfg.wallet_dir or self.dfl_wallet_dir
 
 		self.tx_dir  = os.path.join( self.mountpoint, 'tx' )
 		self.msg_dir = os.path.join( self.mountpoint, 'msg' )

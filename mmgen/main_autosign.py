@@ -49,6 +49,7 @@ opts_data = {
                       will not be printed.
 -q, --quiet           Produce quieter output
 -v, --verbose         Produce more verbose output
+-w, --wallet-dir=D    Specify an alternate wallet dir (default: {asi.dfl_wallet_dir!r})
 """,
 	'notes': """
 

@@ -92,12 +92,16 @@ class TestSuiteAutosignBase(TestSuiteBase):
 
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
+		if not self.live:
+			self.wallet_dir = os.path.join(self.tmpdir,'dev.shm.autosign')
+
 		self.asi = Autosign(
 			AutosignConfig({
 				'mountpoint': (
 					None if self.live else
 					os.path.join(self.tmpdir,self.mountpoint_basename)
-				)
+				),
+				'wallet_dir': None if self.live else self.wallet_dir,
 			})
 		)
 		self.mountpoint = self.asi.mountpoint
@@ -116,9 +120,11 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			init_led(self.simulate)
 		else:
 			os.makedirs(self.asi.tx_dir,exist_ok=True) # creates mountpoint
+			os.makedirs(self.wallet_dir,exist_ok=True)
 			self.opts.extend([
 				'--mountpoint=' + self.mountpoint,
 				'--no-insert-check',
+				'--wallet-dir=' + self.wallet_dir,
 			])
 
 		self.tx_file_ops('set_count') # initialize tx_count here so we can resume anywhere
