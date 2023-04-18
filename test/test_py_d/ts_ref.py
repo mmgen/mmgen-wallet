@@ -210,7 +210,6 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 			subdir   = None,
 			pfx      = None,
 			mmtype   = None,
-			add_args = [],
 			id_key   = None,
 			pat      = None ):
 
@@ -220,7 +219,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		af = joinpath(ref_dir,(subdir or self.ref_subdir,'')[ftype=='passwd'],af_fn)
 		coin_arg = [] if coin == None else ['--coin='+coin]
 		tool_cmd = ftype.replace('segwit','').replace('bech32','')+'file_chksum'
-		t = self.spawn('mmgen-tool',coin_arg+['--verbose','-p1',tool_cmd,af]+add_args)
+		t = self.spawn( 'mmgen-tool', coin_arg + ['--verbose','-p1',tool_cmd,af] )
 		if ftype == 'keyaddr':
 			t.do_decrypt_ka_data(hp=ref_kafile_hash_preset,pw=ref_kafile_pass,have_yes_opt=True)
 		chksum_key = '_'.join([af_key,'chksum'] + ([coin.lower()] if coin else []) + ([mmtype] if mmtype else []))

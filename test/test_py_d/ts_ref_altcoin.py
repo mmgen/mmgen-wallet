@@ -114,19 +114,20 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 					stop_test_daemons(proto.network_id)
 		return 'ok'
 
-	def ref_altcoin_addrgen(self,coin,mmtype,gen_what='addr',coin_suf='',add_args=[]):
+	def ref_altcoin_addrgen(self,coin,mmtype,gen_what='addr',coin_suf='',add_args=[],addr_idx_list=None):
 		wf = dfl_words_file
-		t = self.spawn(f'mmgen-{gen_what}gen',
+		t = self.spawn(
+				'mmgen-keygen' if 'key' in gen_what else 'mmgen-addrgen',
 				['-Sq','--coin='+coin] +
 				(['--type='+mmtype] if mmtype else []) +
 				add_args +
-				[wf,dfl_addr_idx_list])
-		if gen_what == 'key':
+				[wf,addr_idx_list or dfl_addr_idx_list])
+		if 'key' in gen_what:
 			t.expect('Encrypt key list? (y/N): ','N')
 		chk = t.expect_getend(r'.* data checksum for \S*: ',regex=True)
 		chk_ref = self.chk_data[
 			'ref_{}addrfile_chksum_{}{}'.format(
-				('key' if gen_what == 'key' else ''),
+				(gen_what if 'key' in gen_what else ''),
 				coin.lower(),
 				coin_suf )
 		]
