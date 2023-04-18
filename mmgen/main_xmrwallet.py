@@ -26,7 +26,11 @@ from collections import namedtuple
 import mmgen.opts as opts
 from .cfg import gc,Config
 from .util import ymsg,die,async_run
-from .xmrwallet import xmrwallet_uarg_info,MoneroWalletOps
+from .xmrwallet import (
+	MoneroWalletOps,
+	xmrwallet_uarg_info,
+	xmrwallet_uargs,
+)
 
 opts_data = {
 	'text': {
@@ -255,31 +259,9 @@ elif op in ('new','transfer','sweep','label'):
 		cfg._opts.usage()
 	spec = cmd_args[0]
 
-ua = namedtuple('uargs',[ 'op', 'infile', 'wallets', 'spec' ])
-uo = namedtuple('uopts',[
-	'daemon',
-	'tx_relay_daemon',
-	'restore_height',
-	'rescan_blockchain',
-	'no_start_wallet_daemon',
-	'no_stop_wallet_daemon',
-	'no_relay',
-	'wallet_dir',
-])
-
-uargs = ua( op, infile, wallets, spec )
-uopts = uo(
-	cfg.daemon or '',
-	cfg.tx_relay_daemon or '',
-	cfg.restore_height or 0,
-	cfg.rescan_blockchain,
-	cfg.no_start_wallet_daemon,
-	cfg.no_stop_wallet_daemon,
-	cfg.no_relay,
-	cfg.wallet_dir,
-)
-
-m = getattr(MoneroWalletOps,op)(cfg,uargs,uopts)
+m = getattr(MoneroWalletOps,op)(
+	cfg,
+	xmrwallet_uargs(op, infile, wallets, spec))
 
 try:
 	if async_run(m.main()):
