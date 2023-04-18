@@ -322,7 +322,7 @@ class MoneroWalletOps:
 
 			def check_pat_opt(name):
 				val = getattr(uopt,name)
-				if not re.fullmatch(uarg_info[name].pat,val,re.ASCII):
+				if not re.fullmatch( uarg_info[name].pat, val, re.ASCII ):
 					die(1,'{!r}: invalid value for --{}: it must have format {!r}'.format(
 						val,
 						name.replace('_','-'),
@@ -341,7 +341,10 @@ class MoneroWalletOps:
 					check_pat_opt(opt)
 
 		def display_tx_relay_info(self,indent=''):
-			m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
+			m = re.fullmatch(
+				uarg_info['tx_relay_daemon'].pat,
+				uopt.tx_relay_daemon,
+				re.ASCII )
 			msg(fmt(f"""
 				TX relay info:
 				  Host:  {blue(m[1])}
@@ -384,9 +387,9 @@ class MoneroWalletOps:
 			super().__init__(cfg,uarg_tuple,uopt_tuple)
 
 			self.kal = KeyAddrList(
-				cfg,
-				self.proto,
-				uarg.infile,
+				cfg      = cfg,
+				proto    = self.proto,
+				addrfile = uarg.infile,
 				key_address_validity_check = True )
 
 			self.create_addr_data()
@@ -848,7 +851,10 @@ class MoneroWalletOps:
 
 		def init_tx_relay_daemon(self):
 
-			m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
+			m = re.fullmatch(
+				uarg_info['tx_relay_daemon'].pat,
+				uopt.tx_relay_daemon,
+				re.ASCII )
 
 			wd2 = MoneroWalletDaemon(
 				cfg         = self.cfg,
@@ -1051,7 +1057,10 @@ class MoneroWalletOps:
 			super().__init__(cfg,uarg_tuple,uopt_tuple)
 
 			if uopt.tx_relay_daemon:
-				m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
+				m = re.fullmatch(
+					uarg_info['tx_relay_daemon'].pat,
+					self.cfg.tx_relay_daemon,
+					re.ASCII )
 				host,port = m[1].split(':')
 				proxy = m[2]
 				md = None

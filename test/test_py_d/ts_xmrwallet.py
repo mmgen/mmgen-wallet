@@ -218,7 +218,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				('bob',   '1378FC64', 140, None,  ['--restricted-rpc']),
 				('alice', 'FE3C6545', 150, '1-4', []),
 			):
-			udir = os.path.join('test',f'tmp{n}',user)
+			udir = os.path.join('test','tmp',str(n),user)
 			datadir = os.path.join(self.datadir_base,user)
 			md = CoinDaemon(
 				cfg        = cfg,
