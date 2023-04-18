@@ -37,9 +37,7 @@ opts_data = {
 		'desc': """Perform various Monero wallet operations for addresses
                    in an MMGen XMR key-address file""",
 		'usage2': [
-			'[opts] create   <xmr_keyaddrfile> [wallets]',
-			'[opts] sync     <xmr_keyaddrfile> [wallets]',
-			'[opts] list     <xmr_keyaddrfile> [wallets]',
+			'[opts] create | sync | list <xmr_keyaddrfile> [wallets]',
 			'[opts] label    <xmr_keyaddrfile> LABEL_SPEC',
 			'[opts] new      <xmr_keyaddrfile> NEW_ADDRESS_SPEC',
 			'[opts] transfer <xmr_keyaddrfile> TRANSFER_SPEC',

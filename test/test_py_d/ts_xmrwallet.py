@@ -315,16 +315,18 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def create_wallets(self,user,wallet=None,add_opts=[]):
 		assert wallet is None or is_int(wallet), 'wallet arg'
 		data = self.users[user]
-		run(
-			'rm -f {}*'.format( data.walletfile_fs.format(wallet or '*') ),
-			shell = True
-		)
-		dir_opt = [f'--wallet-dir={data.udir}']
+		stem_glob = data.walletfile_fs.format(wallet or '*')
+		for glob in (
+				stem_glob,
+				stem_glob + '.keys',
+				stem_glob + '.address.txt' ):
+#			imsg(f'rm -f {glob}')
+			run( f'rm -f {glob}', shell=True )
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.extra_opts
+			[f'--wallet-dir={data.udir}']
+			+ self.extra_opts
 			+ add_opts
-			+ dir_opt
 			+ ['create']
 			+ [data.kafile]
 			+ [wallet or data.kal_range]
@@ -350,7 +352,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			[ 'new', data.kafile, spec ] )
 		res = strip_ansi_escapes(t.read()).replace('\r','')
 		m = re.search(expect,res,re.DOTALL)
-		assert m, m
+		assert m, f'no match found for {expect!r}'
 		return t
 
 	na_idx = 1

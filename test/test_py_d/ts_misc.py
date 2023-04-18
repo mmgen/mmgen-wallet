@@ -51,10 +51,10 @@ class TestSuiteMisc(TestSuiteBase):
 		t = self.spawn(f'mmgen-xmrwallet',['txview','test/ref/monero/3EBD06-2D6E3B-XMR[0.74].testnet.sigtx'])
 		res = strip_ansi_escapes(t.read()).replace('\r','')
 		for s in (
-			'Amount: 0.74 XMR',
-			'Dest:   56VQ9M6k',
+			'Amount:  0.74 XMR',
+			'Dest:    56VQ9M6k',
 		):
-			assert s in res, s
+			assert s in res, f'{s} not in {res}'
 		return t
 
 	def coin_daemon_info(self):

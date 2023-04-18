@@ -131,7 +131,6 @@ class Signable:
 			gmsg('\nSigned message files:')
 			for m in messages:
 				gmsg('  ' + os.path.join( self.dir, m.signed_filename ))
-			return
 
 		def gen_bad_list(self,bad_files):
 			for f in bad_files:
@@ -185,7 +184,7 @@ class Autosign:
 		cfg.outdir = self.tx_dir
 		cfg.passwd_file = self.keyfile
 
-		if 'coin' in cfg._uopts:
+		if 'coin' in cfg._uopts and not any(k in cfg._uopts for k in ('help','longhelp')):
 			die(1,'--coin option not supported with this command.  Use --coins instead')
 
 		self.coins = cfg.coins.upper().split(',') if cfg.coins else []

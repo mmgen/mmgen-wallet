@@ -296,14 +296,14 @@ class TestSuiteAutosignBase(TestSuiteBase):
 					os.unlink(os.path.join( destdir, os.path.basename(fn).replace('rawmsg','sigmsg') ))
 		return 'ok'
 
-	def do_sign(self,args,have_msg=False):
+	def do_sign(self,args,have_msg=False,tx_name='transaction'):
 		t = self.spawn('mmgen-autosign', self.opts + args )
 		t.expect(
-			f'{self.tx_count} transaction{suf(self.tx_count)} signed' if self.tx_count else
+			f'{self.tx_count} {tx_name}{suf(self.tx_count)} signed' if self.tx_count else
 			'No unsigned transactions' )
 
 		if self.bad_tx_count:
-			t.expect(f'{self.bad_tx_count} transaction{suf(self.bad_tx_count)} failed to sign')
+			t.expect(f'{self.bad_tx_count} {tx_name}{suf(self.bad_tx_count)} failed to sign')
 			t.req_exit_val = 1
 
 		if have_msg:

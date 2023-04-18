@@ -40,6 +40,7 @@ from .util import (
 	make_chksum_6,
 	capfirst,
 )
+from .fileutil import get_data_from_file
 from .seed import SeedID
 from .protocol import init_proto
 from .proto.btc.common import b58a
@@ -111,12 +112,7 @@ def is_xmr_tx_file(cfg,fn):
 			ymsg(f'\n{type(e).__name__}: {e}')
 		return False
 
-class MoneroMMGenTX:
-
-	class Base:
-
-		def __init__(self):
-			self.name = type(self).__name__
+class MoneroMMGenFile:
 
 		def make_chksum(self,keys=None):
 			res = json.dumps(
@@ -127,14 +123,39 @@ class MoneroMMGenTX:
 
 		@property
 		def base_chksum(self):
-			return self.make_chksum(
-				('op','create_time','network','seed_id','source','dest','amount')
-			)
+			return self.make_chksum(self.base_chksum_fields)
 
 		@property
 		def full_chksum(self):
-			return self.make_chksum(set(self.data._fields) - {'metadata'})
+			return self.make_chksum(self.full_chksum_fields)
 
+		def check_checksums(self,d_wrap):
+			for k in ('base_chksum','full_chksum'):
+				a = getattr(self,k)
+				b = d_wrap[k]
+				assert a == b, f'{k} mismatch: {a} != {b}'
+
+		def make_wrapped_data(self,in_data):
+			return json.dumps(
+				{ self.data_label: {
+						'base_chksum': self.base_chksum,
+						'full_chksum': self.full_chksum,
+						'data': in_data,
+					}
+				},
+				cls = json_encoder,
+			)
+
+		def extract_data_from_file(self,cfg,fn):
+			return json.loads( get_data_from_file( cfg, fn, self.desc ))[self.data_label]
+
+class MoneroMMGenTX:
+
+	class Base(MoneroMMGenFile):
+
+		data_label = 'MoneroMMGenTX'
+		base_chksum_fields = ('op','create_time','network','seed_id','source','dest','amount')
+		full_chksum_fields = ('op','create_time','network','seed_id','source','dest','amount','fee','blob')
 		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
 			'op',
 			'create_time',
@@ -151,10 +172,13 @@ class MoneroMMGenTX:
 			'metadata',
 		])
 
+		def __init__(self):
+			self.name = type(self).__name__
+
 		def get_info(self,indent=''):
 			d = self.data
 			if d.dest:
-				to_entry = f'\n{indent}  To:     ' + (
+				to_entry = f'\n{indent}  To:      ' + (
 					'Wallet {}, account {}, address {}'.format(
 						d.dest.wallet.hl(),
 						red(f'#{d.dest.account}'),
@@ -203,16 +227,6 @@ class MoneroMMGenTX:
 			if delete_metadata:
 				dict_data['metadata'] = None
 
-			out = json.dumps(
-				{ 'MoneroMMGenTX': {
-						'base_chksum': self.base_chksum,
-						'full_chksum': self.full_chksum,
-						'data': dict_data,
-					}
-				},
-				cls = json_encoder,
-			)
-
 			fn = '{a}{b}-XMR[{c!s}]{d}.{e}'.format(
 				a = self.base_chksum.upper(),
 				b = (lambda s: f'-{s.upper()}' if s else '')(self.full_chksum),
@@ -225,7 +239,7 @@ class MoneroMMGenTX:
 			write_data_to_file(
 				cfg                   = self.cfg,
 				outfile               = fn,
-				data                  = out,
+				data                  = self.make_wrapped_data(dict_data),
 				desc                  = self.desc,
 				ask_write             = ask_write,
 				ask_write_default_yes = not ask_write,
@@ -276,10 +290,8 @@ class MoneroMMGenTX:
 			self.cfg = cfg
 			self.fn = fn
 
-			from .fileutil import get_data_from_file
-
 			try:
-				d_wrap = json.loads(get_data_from_file( cfg, fn ))['MoneroMMGenTX']
+				d_wrap = self.extract_data_from_file( cfg, fn )
 			except Exception as e:
 				die( 'MoneroMMGenTXFileParseError', f'{type(e).__name__}: {e}\nCould not load transaction file' )
 
@@ -307,10 +319,7 @@ class MoneroMMGenTX:
 				metadata       = d.metadata,
 			)
 
-			for k in ('base_chksum','full_chksum'):
-				a = getattr(self,k)
-				b = d_wrap[k]
-				assert a == b, f'{k} mismatch: {a} != {b}'
+			self.check_checksums(d_wrap)
 
 	class Signed(Completed):
 		desc = 'signed transaction'
@@ -404,11 +413,14 @@ class MoneroWalletOps:
 				if getattr(self.cfg,opt,None):
 					check_pat_opt(opt)
 
-		def display_tx_relay_info(self,indent=''):
-			m = re.fullmatch(
+		def parse_tx_relay_opt(self):
+			return re.fullmatch(
 				uarg_info['tx_relay_daemon'].pat,
 				self.cfg.tx_relay_daemon,
 				re.ASCII )
+
+		def display_tx_relay_info(self,indent=''):
+			m = self.parse_tx_relay_opt()
 			msg(fmt(f"""
 				TX relay info:
 				  Host:  {blue(m[1])}
@@ -431,6 +443,7 @@ class MoneroWalletOps:
 			'no_stop_wallet_daemon',
 		)
 		wallet_exists = True
+		skip_wallet_check = False # for debugging
 
 		def __init__(self,cfg,uarg_tuple):
 
@@ -456,9 +469,12 @@ class MoneroWalletOps:
 				addrfile = uarg.infile,
 				key_address_validity_check = True )
 
+			msg('')
+
 			self.create_addr_data()
 
-			check_wallets()
+			if not self.skip_wallet_check:
+				check_wallets()
 
 			self.wd = MoneroWalletDaemon(
 				cfg         = self.cfg,
@@ -468,8 +484,9 @@ class MoneroWalletOps:
 				daemon_addr = self.cfg.daemon or None,
 			)
 
+			u = self.wd.usr_daemon_args = []
 			if self.name == 'create' and self.cfg.restore_height is None:
-				self.wd.usr_daemon_args = ['--offline']
+				u.append('--offline')
 
 			self.c = MoneroWalletRPCClient(
 				cfg             = self.cfg,
@@ -927,10 +944,7 @@ class MoneroWalletOps:
 
 		def init_tx_relay_daemon(self):
 
-			m = re.fullmatch(
-				uarg_info['tx_relay_daemon'].pat,
-				self.cfg.tx_relay_daemon,
-				re.ASCII )
+			m = self.parse_tx_relay_opt()
 
 			wd2 = MoneroWalletDaemon(
 				cfg         = self.cfg,
@@ -1131,10 +1145,7 @@ class MoneroWalletOps:
 			self.tx = MoneroMMGenTX.Signed( self.cfg, uarg.infile )
 
 			if self.cfg.tx_relay_daemon:
-				m = re.fullmatch(
-					uarg_info['tx_relay_daemon'].pat,
-					self.cfg.tx_relay_daemon,
-					re.ASCII )
+				m = self.parse_tx_relay_opt()
 				host,port = m[1].split(':')
 				proxy = m[2]
 				md = None

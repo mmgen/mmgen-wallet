@@ -106,10 +106,17 @@ def restore_debug():
 	for k in save_debug:
 		os.environ[k] = save_debug[k] or ''
 
-def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete_all=False):
+def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete_all=False,substr=False):
 
-	dot = ('.','')[bool(no_dot)]
-	flist = [os.path.join(tdir,f) for f in os.listdir(tdir) if f == ext or f[-len(dot+ext):] == dot+ext]
+	dot = '' if no_dot else '.'
+
+	def have_match(fn):
+		return (
+			fn == ext
+			or fn.endswith( dot + ext )
+			or (substr and ext in fn) )
+
+	flist = [f.path for f in os.scandir(tdir) if have_match(f.name)]
 
 	if not flist:
 		return False
@@ -121,9 +128,9 @@ def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete
 		if delete or delete_all:
 			if (cfg.exact_output or cfg.verbose) and not cfg.quiet:
 				if delete_all:
-					msg(f'Deleting all *.{ext} files in {tdir!r}')
+					msg(f'Deleting all *{dot}{ext} files in {tdir!r}')
 				else:
-					msg(f'Multiple *.{ext} files in {tdir!r} - deleting')
+					msg(f'Multiple *{dot}{ext} files in {tdir!r} - deleting')
 			for f in flist:
 				os.unlink(f)
 		return False
