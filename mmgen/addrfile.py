@@ -47,6 +47,7 @@ class AddrFile(MMGenObject):
 		self.parent = parent
 		self.cfg    = parent.cfg
 		self.infile = None
+		self.fmt_data = None
 
 	def encrypt(self):
 		from .crypto import Crypto
@@ -62,15 +63,16 @@ class AddrFile(MMGenObject):
 			('.' + self.parent.proto.network) if self.parent.proto.testnet else '',
 			self.ext )
 
-	def write(self,fn=None,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
+	def write(self,fn=None,ask_tty=True,binary=False,desc=None,ask_overwrite=True):
 		from .fileutil import write_data_to_file
 		write_data_to_file(
 			self.cfg,
 			fn or self.filename,
-			self.fmt_data,
+			self.fmt_data or self.format(),
 			desc or self.desc,
 			ask_tty = self.parent.has_keys and not self.cfg.quiet,
-			binary = binary )
+			binary = binary,
+			ask_overwrite = ask_overwrite )
 
 	def make_label(self):
 		p = self.parent
@@ -125,6 +127,7 @@ class AddrFile(MMGenObject):
 
 		out.append('}')
 		self.fmt_data = '\n'.join([l.rstrip() for l in out]) + '\n'
+		return self.fmt_data
 
 	def get_line(self,lines):
 		ret = lines.pop(0).split(None,2)

@@ -189,7 +189,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			do_chksum = True
 		elif addrfile:           # data from MMGen address file
 			self.infile = addrfile
-			adata = self.get_file().parse_file(addrfile) # sets self.al_id
+			adata = self.file.parse_file(addrfile) # sets self.al_id
 			do_chksum = True
 		elif al_id and adata:    # data from tracking wallet
 			self.al_id = al_id
@@ -399,9 +399,12 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 	def list_missing(self,attr):
 		return [d.addr for d in self.data if not getattr(d,attr)]
 
-	def get_file(self):
-		import mmgen.addrfile as mod
-		return getattr( mod, type(self).__name__.replace('List','File') )(self)
+	@property
+	def file(self):
+		if not hasattr(self,'_file'):
+			import mmgen.addrfile as mod
+			self._file = getattr( mod, type(self).__name__.replace('List','File') )(self)
+		return self._file
 
 class KeyAddrList(AddrList):
 	desc         = 'key-address'

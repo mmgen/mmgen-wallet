@@ -449,10 +449,15 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				a.set_comment(idx,get_comment())
 			else:
 				if n % 2: a.set_comment(idx,f'Test address {n}')
-		af = a.get_file()
-		af.format(add_comments=True)
+		a.file.format(add_comments=True)
 		from mmgen.fileutil import write_data_to_file
-		write_data_to_file(cfg,outfile,af.fmt_data,quiet=True,ignore_opt_outdir=True)
+		write_data_to_file(
+			cfg,
+			outfile           = outfile,
+			data              = a.file.fmt_data,
+			quiet             = True,
+			ignore_opt_outdir = True )
+
 		end_silence()
 
 	def setup(self):

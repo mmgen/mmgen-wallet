@@ -167,7 +167,7 @@ al = getattr( mmgen.addrlist, gen_clsname )(
 	addr_idxs = idxs,
 	mmtype    = addr_type )
 
-af = al.get_file()
+af = al.file
 
 af.format()
 

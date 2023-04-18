@@ -40,12 +40,11 @@ def do_test(list_type,chksum,idx_spec=None,pw_id_str=None,add_kwargs=None,coin=N
 
 	al = list_type( cfg, proto, **kwargs )
 
-	af = al.get_file()
-	af.format()
+	al.file.format()
 
-	qmsg(f'Filename: {af.filename}\n')
-#	af.write('-')
-	vmsg(f'------------\n{af.fmt_data}\n------------')
+	qmsg(f'Filename: {al.file.filename}\n')
+
+	vmsg(f'------------\n{al.file.fmt_data}\n------------')
 
 	if chksum:
 		assert al.chksum == chksum, f'{al.chksum} != {chksum}'

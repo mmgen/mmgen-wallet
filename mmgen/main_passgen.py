@@ -174,7 +174,7 @@ al = PasswordList(
 	pw_len    = pw_len,
 	pw_fmt    = pw_fmt )
 
-af = al.get_file()
+af = al.file
 
 af.format()
 

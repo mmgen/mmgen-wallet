@@ -85,7 +85,7 @@ class PasswordList(AddrList):
 		if infile:
 			self.infile = infile
 			# sets self.pw_id_str, self.pw_fmt, self.pw_len, self.chk_func:
-			self.data = self.get_file().parse_file(infile)
+			self.data = self.file.parse_file(infile)
 		else:
 			if not chk_params_only:
 				for k in (seed,pw_idxs):
