@@ -79,6 +79,7 @@ opts_data = {
                       (default: {dmat})
 -U, --subwallet=   U  Generate {what} for subwallet 'U' (see SUBWALLETS
                       below)
+-V, --viewkeys        Print viewkeys, omitting secret keys
 -v, --verbose         Produce more verbose output
 -x, --b16             Print secret keys in hexadecimal too
 """,
@@ -156,6 +157,8 @@ ss_seed = ss.seed if cfg.subwallet is None else ss.seed.subseed(cfg.subwallet,pr
 
 if cfg.no_addresses:
 	gen_clsname = 'KeyList'
+elif cfg.viewkeys:
+	gen_clsname = 'ViewKeyAddrList'
 
 al = getattr( mmgen.addrlist, gen_clsname )(
 	cfg       = cfg,

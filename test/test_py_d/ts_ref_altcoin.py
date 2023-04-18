@@ -40,6 +40,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		'ref_keyaddrfile_chksum_zec': 'F05A 5A5C 0C8E 2617',
 		'ref_keyaddrfile_chksum_zec_z': '6B87 9B2D 0D8D 8D1E',
 		'ref_keyaddrfile_chksum_xmr': 'E0D7 9612 3D67 404A',
+		'ref_viewkeyaddrfile_chksum_xmr': '40C9 0E61 B743 229C',
 		'ref_keyaddrfile_chksum_dash': 'E83D 2C63 FEA2 4142',
 		'ref_keyaddrfile_chksum_eth': 'E400 70D9 0AE3 C7C2',
 		'ref_keyaddrfile_chksum_etc': 'EF49 967D BD6C FE45',
@@ -61,6 +62,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		('ref_keyaddrfile_gen_zec',  'generate key-address file (ZEC-T)'),
 		('ref_keyaddrfile_gen_zec_z','generate key-address file (ZEC-Z)'),
 		('ref_keyaddrfile_gen_xmr',  'generate key-address file (XMR)'),
+		('ref_viewkeyaddrfile_gen_xmr','generate viewkey-address file (XMR)'),
 
 		('ref_addrfile_chk_eth', 'reference address file (ETH)'),
 		('ref_addrfile_chk_etc', 'reference address file (ETC)'),
@@ -75,6 +77,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		('ref_keyaddrfile_chk_zec', 'reference key-address file (ZEC-T)'),
 		('ref_keyaddrfile_chk_zec_z','reference key-address file (ZEC-Z)'),
 		('ref_keyaddrfile_chk_xmr', 'reference key-address file (XMR)'),
+		('ref_viewkeyaddrfile_chk_xmr', 'reference viewkey-address file (XMR)'),
 	)
 
 	def ref_altcoin_tx_chk(self):
@@ -173,6 +176,13 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 	def ref_keyaddrfile_gen_xmr(self):
 		return self.ref_altcoin_addrgen(coin='XMR',mmtype='monero',gen_what='key')
 
+	def ref_viewkeyaddrfile_gen_xmr(self):
+		return self.ref_altcoin_addrgen(
+			coin          = 'XMR',
+			mmtype        = 'monero',
+			gen_what      = 'viewkey',
+			add_args      = ['--viewkeys'],
+			addr_idx_list = '1-3' )
 
 	def ref_addrfile_chk_eth(self):
 		return self.ref_addrfile_chk(ftype='addr',coin='ETH',subdir='ethereum',pfx='-ETH',
@@ -221,4 +231,8 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 
 	def ref_keyaddrfile_chk_xmr(self):
 		return self.ref_addrfile_chk(ftype='keyaddr',coin='XMR',subdir='monero',pfx='-XMR-M',
+				pat='XMR Mainnet.*Monero')
+
+	def ref_viewkeyaddrfile_chk_xmr(self):
+		return self.ref_addrfile_chk(ftype='viewkeyaddr',coin='XMR',subdir='monero',pfx='-XMR-M',
 				pat='XMR Mainnet.*Monero')

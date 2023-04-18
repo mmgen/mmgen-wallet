@@ -60,6 +60,11 @@ class tool_cmd(tool_cmd_base):
 		from ..addrlist import KeyAddrList
 		return self._file_chksum(mmgen_keyaddrfile,KeyAddrList)
 
+	def viewkeyaddrfile_chksum(self,mmgen_viewkeyaddrfile:str):
+		"compute checksum for MMGen key-address file"
+		from ..addrlist import ViewKeyAddrList
+		return self._file_chksum(mmgen_viewkeyaddrfile,ViewKeyAddrList)
+
 	def passwdfile_chksum(self,mmgen_passwdfile:str):
 		"compute checksum for MMGen password file"
 		from ..passwdlist import PasswordList

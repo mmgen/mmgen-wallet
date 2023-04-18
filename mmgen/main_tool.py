@@ -137,6 +137,7 @@ mods = {
 	'file': (
 		'addrfile_chksum',
 		'keyaddrfile_chksum',
+		'viewkeyaddrfile_chksum',
 		'passwdfile_chksum',
 		'txview',
 	),

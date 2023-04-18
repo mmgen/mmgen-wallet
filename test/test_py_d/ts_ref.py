@@ -41,6 +41,8 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		'ref_segwitaddrfile':'98831F3A{}-S[1,31-33,500-501,1010-1011]{}.addrs',
 		'ref_bech32addrfile':'98831F3A{}-B[1,31-33,500-501,1010-1011]{}.addrs',
 		'ref_keyaddrfile': '98831F3A{}[1,31-33,500-501,1010-1011]{}.akeys.mmenc',
+		'ref_viewkeyaddrfile': '98831F3A-XMR-M[1-3].vkeys',
+
 		'ref_passwdfile_b32_24': '98831F3A-фубар@crypto.org-b32-24[1,4,1100].pws',
 		'ref_passwdfile_b32_12': '98831F3A-фубар@crypto.org-b32-12[1,4,1100].pws',
 		'ref_passwdfile_b58_10': '98831F3A-фубар@crypto.org-b58-10[1,4,1100].pws',

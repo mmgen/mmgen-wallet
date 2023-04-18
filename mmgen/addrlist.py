@@ -218,6 +218,10 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		if self.al_id == None:
 			return
 
+		if type(self) == ViewKeyAddrList:
+			if not 'viewkey' in self.al_id.mmtype.extra_attrs:
+				die(1,f'viewkeys not supported for address type {self.al_id.mmtype.desc!r}')
+
 		self.id_str = AddrListIDStr(self)
 
 		if type(self) == KeyList:
@@ -242,8 +246,8 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 
 		mmtype = self.al_id.mmtype
 
-		gen_wallet_passwd = type(self) == KeyAddrList and 'wallet_passwd' in mmtype.extra_attrs
-		gen_viewkey       = type(self) == KeyAddrList and 'viewkey' in mmtype.extra_attrs
+		gen_wallet_passwd = type(self) in (KeyAddrList,ViewKeyAddrList) and 'wallet_passwd' in mmtype.extra_attrs
+		gen_viewkey       = type(self) in (KeyAddrList,ViewKeyAddrList) and 'viewkey' in mmtype.extra_attrs
 
 		if self.gen_addrs:
 			from .addrgen import KeyGenerator,AddrGenerator
@@ -281,7 +285,8 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 				if gen_viewkey:
 					e.viewkey = ag.to_viewkey(data)
 				if gen_wallet_passwd:
-					e.wallet_passwd = self.gen_wallet_passwd(e.sec)
+					e.wallet_passwd = self.gen_wallet_passwd(
+						e.viewkey.encode() if type(self) == ViewKeyAddrList else e.sec )
 			elif self.gen_passwds:
 				e.passwd = self.gen_passwd(e.sec) # TODO - own type
 
@@ -405,6 +410,11 @@ class KeyAddrList(AddrList):
 	gen_keys     = True
 	has_keys     = True
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr, e.sec.wif)
+
+class ViewKeyAddrList(KeyAddrList):
+	desc         = 'viewkey-address'
+	gen_desc     = 'viewkey/address pair'
+	chksum_rec_f = lambda foo,e: ( str(e.idx), e.addr )
 
 class KeyList(KeyAddrList):
 	desc         = 'key'

@@ -681,6 +681,11 @@ tests = {
 				( ['test/ref/ethereum_classic/98831F3A-ETC[1,31-33,500-501,1010-1011].addrs'],
 					'E97A D796 B495 E8BC'), ],
 		},
+		'viewkeyaddrfile_chksum': {
+			'xmr_mainnet': [
+				( ['test/ref/monero/98831F3A-XMR-M[1-3].vkeys'], '40C9 0E61 B743 229C' ),
+			],
+		},
 		'keyaddrfile_chksum': {
 			'btc_mainnet': [
 				( ['test/ref/98831F3A[1,31-33,500-501,1010-1011].akeys.mmenc'],

@@ -7,17 +7,17 @@ test.unit_tests_d.ut_addrlist: address list unit tests for the MMGen suite
 from mmgen.common import *
 from mmgen.seed import Seed
 from mmgen.addr import MMGenAddrType
-from mmgen.addrlist import AddrIdxList,AddrList,KeyList,KeyAddrList
+from mmgen.addrlist import AddrIdxList,AddrList,KeyList,KeyAddrList,ViewKeyAddrList
 from mmgen.passwdlist import PasswordList
 from mmgen.protocol import init_proto
 from ..include.common import cfg,qmsg,vmsg
 
-def do_test(list_type,chksum,idx_spec=None,pw_id_str=None,add_kwargs=None):
+def do_test(list_type,chksum,idx_spec=None,pw_id_str=None,add_kwargs=None,coin=None,addrtype=None):
 
 	qmsg(blue(f'Testing {list_type.__name__}'))
-	proto = init_proto( cfg, 'btc' )
+	proto = init_proto( cfg, coin or 'btc' )
 	seed = Seed(cfg,seed_bin=bytes.fromhex('feedbead'*8))
-	mmtype = MMGenAddrType(proto,'C')
+	mmtype = MMGenAddrType(proto, addrtype or 'C')
 	idxs = AddrIdxList(idx_spec or '1-3')
 
 	if cfg.verbose:
@@ -92,6 +92,12 @@ class unit_tests:
 
 	def keyaddr(self,name,ut):
 		return do_test(KeyAddrList,'4A36 AA65 8C2B 7C35')
+
+	def keyaddr_xmr(self,name,ut):
+		return do_test(KeyAddrList,'AAA2 BA69 17FC 9A88',coin='XMR',addrtype='M')
+
+	def viewkeyaddr(self,name,ut):
+		return do_test(ViewKeyAddrList,'C122 2E58 DC28 D6AE',coin='XMR',addrtype='M')
 
 	def passwd(self,name,ut):
 		return do_test(PasswordList,'FF4A B716 4513 8F8F',pw_id_str='foo')
