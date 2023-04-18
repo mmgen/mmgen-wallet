@@ -33,11 +33,11 @@ class AddrFile(MMGenObject):
 	desc        = 'addresses'
 	ext         = 'addrs'
 	line_ctr    = 0
-	file_header = """
-# {pnm} address file
-#
+	header = """
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
+"""
+	text_label_header = """
 # A text label of {n} screen cells or less may be added to the right of each
 # address, and it will be appended to the tracking wallet label upon import.
 # The label may contain any printable ASCII symbol.
@@ -83,11 +83,19 @@ class AddrFile(MMGenObject):
 
 	def format(self,add_comments=False):
 		p = self.parent
-		fh = (
-			self.file_header_mn.format(p.pw_fmt.upper())
-				if p.gen_passwds and p.pw_fmt in ('bip39','xmrseed') else
-			self.file_header ).strip()
-		out = [fh.format( pnm=gc.proj_name, n=TwComment.max_screen_width ) + '\n']
+		if p.gen_passwds and p.pw_fmt in ('bip39','xmrseed'):
+			desc_pfx = f'{p.pw_fmt.upper()} '
+			hdr2 = ''
+		else:
+			desc_pfx = ''
+			hdr2 = self.text_label_header
+		out = [
+			f'# {gc.proj_name} {desc_pfx}{p.desc} file\n#\n'
+			+ self.header.strip().format( pnm=gc.proj_name )
+			+ '\n'
+			+ hdr2.lstrip().format( n=TwComment.max_screen_width )
+			+ '#\n'
+		]
 
 		if p.chksum:
 			out.append(f'# {capfirst(p.desc)} data checksum for {p.id_str}: {p.chksum}')
@@ -294,31 +302,22 @@ class KeyAddrFile(AddrFile):
 
 class KeyFile(KeyAddrFile):
 	ext         = 'keys'
-	file_header = """
-# {pnm} key file
-#
+	header = """
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
 """
+	text_label_header = ''
 
 class PasswordFile(AddrFile):
 	desc        = 'passwords'
 	ext         = 'pws'
-	file_header = """
-# {pnm} password file
-#
+	header = """
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
+"""
+	text_label_header = """
 # A text label of {n} screen cells or less may be added to the right of each
 # password.  The label may contain any printable ASCII symbol.
-#
-"""
-	file_header_mn = """
-# {{pnm}} {} password file
-#
-# This file is editable.
-# Everything following a hash symbol '#' is a comment and ignored by {{pnm}}.
-#
 """
 
 	def get_line(self,lines):
