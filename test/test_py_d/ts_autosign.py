@@ -32,7 +32,7 @@ from .ts_shared import *
 from .input import *
 
 from mmgen.led import LEDControl
-from mmgen.autosign import Autosign
+from mmgen.autosign import Autosign,AutosignConfig
 
 filedir_map = (
 	('btc',''),
@@ -91,9 +91,9 @@ class TestSuiteAutosignBase(TestSuiteBase):
 
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
-		as_cfg = Config()
-		type(as_cfg)._set_ok += ('outdir','passwd_file')
-		self.asi = Autosign(as_cfg)
+		self.asi = Autosign(
+			AutosignConfig()
+		)
 
 		if self.simulate and not cfg.exact_output:
 			die(1,red('This command must be run with --exact-output enabled!'))

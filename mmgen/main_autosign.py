@@ -116,7 +116,9 @@ This command is currently available only on Linux-based platforms.
 	}
 }
 
-cfg = Config(
+from .autosign import Autosign,AutosignConfig
+
+cfg = AutosignConfig(
 	opts_data = opts_data,
 	init_opts = {
 		'quiet': True,
@@ -129,9 +131,6 @@ cfg = Config(
 
 cmd_args = cfg._args
 
-type(cfg)._set_ok += ('outdir','passwd_file')
-
-from .autosign import Autosign
 asi = Autosign(cfg)
 
 cfg._post_init()

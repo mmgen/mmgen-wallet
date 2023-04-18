@@ -16,9 +16,13 @@ import sys,os,asyncio
 from subprocess import run,PIPE,DEVNULL
 from collections import namedtuple
 
+from .cfg import Config
 from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt,fmt_list
 from .color import yellow,red,orange
 from .wallet import Wallet
+
+class AutosignConfig(Config):
+	_set_ok = ('usr_randchars','_proto','outdir','passwd_file')
 
 class Autosign:
 
