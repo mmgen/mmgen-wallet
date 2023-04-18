@@ -188,9 +188,9 @@ class Autosign:
 		if 'coin' in cfg._uopts:
 			die(1,'--coin option not supported with this command.  Use --coins instead')
 
-		if cfg.coins:
-			self.coins = cfg.coins.upper().split(',')
-		else:
+		self.coins = cfg.coins.upper().split(',') if cfg.coins else []
+
+		if not self.coins:
 			ymsg('Warning: no coins specified, defaulting to BTC')
 			self.coins = ['BTC']
 
@@ -227,6 +227,16 @@ class Autosign:
 
 	def do_mount(self):
 
+		from stat import S_ISDIR,S_IWUSR,S_IRUSR
+
+		def check_dir(cdir):
+			try:
+				ds = os.stat(cdir)
+				assert S_ISDIR(ds.st_mode), f'{cdir!r} is not a directory!'
+				assert ds.st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR, f'{cdir!r} is not read/write for this user!'
+			except:
+				die(1,f'{cdir!r} missing or not read/writable by user!')
+
 		if not os.path.isdir(self.mountpoint):
 			def do_die(m):
 				die(1,'\n' + yellow(fmt(m.strip(),indent='  ')))
@@ -241,14 +251,10 @@ class Autosign:
 
 		self.have_msg_dir = os.path.isdir(self.msg_dir)
 
-		from stat import S_ISDIR,S_IWUSR,S_IRUSR
-		for cdir in [self.tx_dir] + ([self.msg_dir] if self.have_msg_dir else []):
-			try:
-				ds = os.stat(cdir)
-				assert S_ISDIR(ds.st_mode), f'{cdir!r} is not a directory!'
-				assert ds.st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR, f'{cdir!r} is not read/write for this user!'
-			except:
-				die(1,f'{cdir!r} missing or not read/writable by user!')
+		check_dir(self.tx_dir)
+
+		if self.have_msg_dir:
+			check_dir(self.msg_dir)
 
 	def do_umount(self):
 		if os.path.ismount(self.mountpoint):

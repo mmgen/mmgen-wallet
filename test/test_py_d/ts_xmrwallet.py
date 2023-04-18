@@ -615,6 +615,23 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	# mining methods
 
+	async def mine5(self):
+		return await self.mine(5)
+
+	async def mine10(self):
+		return await self.mine(10)
+
+	async def mine60(self):
+		return await self.mine(60)
+
+	async def mine(self,nsecs):
+		imsg_r(f'Mining for {nsecs} seconds...')
+		await self.start_mining()
+		await asyncio.sleep(nsecs)
+		ret = await self.stop_mining()
+		imsg('done')
+		return ret
+
 	async def start_mining(self):
 		data = self.users['miner']
 		addr = read_from_file(data.addrfile_fs.format(1)) # mine to wallet #1, account 0

@@ -405,7 +405,9 @@ class Config(Lockable):
 		# Step 1: get user-supplied configuration data from a) command line, or b) first argument
 		#         to constructor; save to self._uopts:
 		if opts_data or parsed_opts or process_opts:
-			assert cfg is None
+			assert cfg is None, (
+				'Config(): ‘cfg’ cannot be used simultaneously with ' +
+				'‘opts_data’, ‘parsed_opts’ or ‘process_opts’' )
 			from mmgen.opts import UserOpts
 			UserOpts(
 				cfg          = self,

@@ -25,7 +25,7 @@ from mmgen.cfg import gc
 from ..include.common import *
 from .common import *
 
-class TestSuiteBase(object):
+class TestSuiteBase:
 	'initializer class for the test.py test suite'
 	base_passthru_opts = ('data_dir','skip_cfg_file')
 	passthru_opts = ()
@@ -36,6 +36,8 @@ class TestSuiteBase(object):
 	need_daemon = False
 
 	def __init__(self,trunner,cfgs,spawn):
+		if hasattr(self,'tr'): # init will be called multiple times for classes with multiple inheritance
+			return
 		self.proto = cfg._proto
 		self.tr = trunner
 		self.cfgs = cfgs

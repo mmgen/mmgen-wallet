@@ -97,6 +97,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 
 		self.asi = Autosign(
 			AutosignConfig({
+				'coins': ','.join(self.coins),
 				'mountpoint': (
 					None if self.live else
 					os.path.join(self.tmpdir,self.mountpoint_basename)
@@ -298,20 +299,23 @@ class TestSuiteAutosignBase(TestSuiteBase):
 	def do_sign(self,args,have_msg=False):
 		t = self.spawn('mmgen-autosign', self.opts + args )
 		t.expect(
-			f'{self.tx_count} transactions signed' if self.tx_count else
+			f'{self.tx_count} transaction{suf(self.tx_count)} signed' if self.tx_count else
 			'No unsigned transactions' )
 
 		if self.bad_tx_count:
-			t.expect(f'{self.bad_tx_count} transactions failed to sign')
+			t.expect(f'{self.bad_tx_count} transaction{suf(self.bad_tx_count)} failed to sign')
 			t.req_exit_val = 1
 
 		if have_msg:
 			t.expect(
-				f'{self.good_msg_count} message files{{0,1}} signed' if self.good_msg_count else
+				f'{self.good_msg_count} message file{suf(self.good_msg_count)}{{0,1}} signed'
+					if self.good_msg_count else
 				'No unsigned message files', regex=True )
 
 			if self.bad_msg_count:
-				t.expect(f'{self.bad_msg_count} message files{{0,1}} failed to sign', regex=True)
+				t.expect(
+					f'{self.bad_msg_count} message file{suf(self.bad_msg_count)}{{0,1}} failed to sign',
+					regex = True )
 				t.req_exit_val = 1
 
 		if 'wait' in args:

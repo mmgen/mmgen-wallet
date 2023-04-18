@@ -115,6 +115,9 @@ class MoneroMMGenTX:
 
 	class Base:
 
+		def __init__(self):
+			self.name = type(self).__name__
+
 		def make_chksum(self,keys=None):
 			res = json.dumps(
 				dict( (k,v) for k,v in self.data._asdict().items() if (not keys or k in keys) ),
@@ -195,7 +198,7 @@ class MoneroMMGenTX:
 					pmid = pink(pmid.hex()) if pmid else None
 				)
 
-		def write(self,delete_metadata=False):
+		def write(self,delete_metadata=False,ask_write=True,ask_overwrite=True):
 			dict_data = self.data._asdict()
 			if delete_metadata:
 				dict_data['metadata'] = None
@@ -224,15 +227,15 @@ class MoneroMMGenTX:
 				outfile               = fn,
 				data                  = out,
 				desc                  = self.desc,
-				ask_write             = True,
-				ask_write_default_yes = False )
+				ask_write             = ask_write,
+				ask_write_default_yes = not ask_write,
+				ask_overwrite         = ask_overwrite )
 
-	class NewSigned(Base):
-		signed = True
-		desc = 'signed transaction data'
-		ext = 'sigtx'
+	class New(Base):
 
 		def __init__(self,*args,**kwargs):
+
+			super().__init__()
 
 			assert not args, 'Non-keyword args not permitted'
 
@@ -259,10 +262,16 @@ class MoneroMMGenTX:
 				metadata       = d.metadata,
 			)
 
+	class NewSigned(New):
+		desc = 'signed transaction data'
+		ext = 'sigtx'
+		signed = True
+
 	class Completed(Base):
-		name = 'completed'
 
 		def __init__(self,cfg,fn):
+
+			super().__init__()
 
 			self.cfg = cfg
 			self.fn = fn
@@ -275,6 +284,10 @@ class MoneroMMGenTX:
 				die( 'MoneroMMGenTXFileParseError', f'{type(e).__name__}: {e}\nCould not load transaction file' )
 
 			d = self.xmrwallet_tx_data(**d_wrap['data'])
+
+			if self.name != 'Completed':
+				assert fn.endswith('.'+self.ext), 'TX filename {fn!r} has incorrect extension (not {self.ext!r})'
+				assert getattr(d,self.req_field), f'{self.name} TX missing required field {self.req_field!r}'
 
 			proto = init_proto( cfg, 'xmr', network=d.network, need_amt=True )
 
@@ -293,13 +306,17 @@ class MoneroMMGenTX:
 				blob           = d.blob,
 				metadata       = d.metadata,
 			)
+
 			for k in ('base_chksum','full_chksum'):
 				a = getattr(self,k)
 				b = d_wrap[k]
 				assert a == b, f'{k} mismatch: {a} != {b}'
 
 	class Signed(Completed):
-		name = 'signed'
+		desc = 'signed transaction'
+		ext = 'sigtx'
+		signed = True
+		req_field = 'blob'
 
 class MoneroWalletOps:
 
@@ -505,6 +522,7 @@ class MoneroWalletOps:
 
 			def __init__(self,parent,d):
 				self.parent = parent
+				self.cfg = parent.cfg
 				self.c = parent.c
 				self.d = d
 				self.fn = parent.get_wallet_fn(d)
@@ -637,7 +655,7 @@ class MoneroWalletOps:
 					get_tx_metadata = True
 				)
 				return MoneroMMGenTX.NewSigned(
-					cfg            = self.parent.cfg,
+					cfg            = self.cfg,
 					op             = self.parent.name,
 					network        = self.parent.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
@@ -665,7 +683,7 @@ class MoneroWalletOps:
 					die(3,'More than one TX required.  Cannot perform this sweep')
 
 				return MoneroMMGenTX.NewSigned(
-					cfg            = self.parent.cfg,
+					cfg            = self.cfg,
 					op             = self.parent.name,
 					network        = self.parent.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
@@ -858,7 +876,7 @@ class MoneroWalletOps:
 					else:
 						idx = int(m[i])
 						try:
-							res = [d for d in self.kal.data if d.idx == idx][0]
+							res = self.kal.entry(idx)
 						except:
 							die(1,'Supplied key-address file does not contain address {}:{}'.format(
 								self.kal.al_id.sid,
@@ -1095,6 +1113,8 @@ class MoneroWalletOps:
 
 			super().__init__(cfg,uarg_tuple)
 
+			self.tx = MoneroMMGenTX.Signed( self.cfg, uarg.infile )
+
 			if self.cfg.tx_relay_daemon:
 				m = re.fullmatch(
 					uarg_info['tx_relay_daemon'].pat,
@@ -1119,8 +1139,6 @@ class MoneroWalletOps:
 				passwd = None,
 				test_connection = False, # relay is presumably a public node, so avoid extra connections
 				proxy  = proxy )
-
-			self.tx = MoneroMMGenTX.Signed( self.cfg, uarg.infile )
 
 		async def main(self):
 			msg('\n' + self.tx.get_info())
@@ -1150,6 +1168,6 @@ class MoneroWalletOps:
 				'\n'.join(
 					tx.get_info() for tx in
 					sorted(
-						(MoneroMMGenTX.Signed( self.cfg, fn ) for fn in uarg.infile),
+						(MoneroMMGenTX.Completed( self.cfg, fn ) for fn in uarg.infile),
 						key = lambda x: x.data.sign_time )
 			))
