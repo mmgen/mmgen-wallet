@@ -468,6 +468,9 @@ class MoneroWalletOps:
 				daemon_addr = self.cfg.daemon or None,
 			)
 
+			if self.name == 'create' and self.cfg.restore_height is None:
+				self.wd.usr_daemon_args = ['--offline']
+
 			self.c = MoneroWalletRPCClient(
 				cfg             = self.cfg,
 				daemon          = self.wd,
@@ -476,6 +479,20 @@ class MoneroWalletOps:
 
 			if not self.cfg.no_start_wallet_daemon:
 				async_run(self.c.restart_daemon())
+
+		def get_coin_daemon_rpc(self):
+
+			host,port = self.cfg.daemon.split(':') if self.cfg.daemon else ('localhost',self.wd.daemon_port)
+
+			from .daemon import CoinDaemon
+			return MoneroRPCClient(
+				cfg    = self.cfg,
+				proto  = self.proto,
+				daemon = CoinDaemon( self.cfg, 'xmr' ),
+				host   = host,
+				port   = int(port),
+				user   = None,
+				passwd = None )
 
 		def create_addr_data(self):
 			if uarg.wallets:
@@ -713,11 +730,17 @@ class MoneroWalletOps:
 		opts    = ('restore_height',)
 
 		def check_uopts(self):
-			if int(self.cfg.restore_height or 0) < 0:
-				die(1,f'{self.cfg.restore_height}: invalid value for --restore-height (less than zero)')
+			if self.cfg.restore_height != 'current':
+				if int(self.cfg.restore_height or 0) < 0:
+					die(1,f'{self.cfg.restore_height}: invalid value for --restore-height (less than zero)')
 
 		async def process_wallet(self,d,fn,last):
 			msg_r('') # for pexpect
+
+			if self.cfg.restore_height == 'current':
+				restore_height = self.get_coin_daemon_rpc().call_raw('get_height')['height']
+			else:
+				restore_height = self.cfg.restore_height
 
 			from .xmrseed import xmrseed
 			ret = self.c.call(
@@ -725,7 +748,7 @@ class MoneroWalletOps:
 				filename       = os.path.basename(fn),
 				password       = d.wallet_passwd,
 				seed           = xmrseed().fromhex(d.sec.wif,tostr=True),
-				restore_height = self.cfg.restore_height,
+				restore_height = restore_height,
 				language       = 'English' )
 
 			pp_msg(ret) if self.cfg.debug else msg('  Address: {}'.format( ret['address'] ))
@@ -740,15 +763,7 @@ class MoneroWalletOps:
 
 			host,port = self.cfg.daemon.split(':') if self.cfg.daemon else ('localhost',self.wd.daemon_port)
 
-			from .daemon import CoinDaemon
-			self.dc = MoneroRPCClient(
-				cfg    = self.cfg,
-				proto  = self.proto,
-				daemon = CoinDaemon( self.cfg, 'xmr' ),
-				host   = host,
-				port   = int(port),
-				user   = None,
-				passwd = None )
+			self.dc = self.get_coin_daemon_rpc()
 
 			self.accts_data = {}
 
