@@ -19,7 +19,9 @@ from collections import namedtuple
 from .cfg import Config
 from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt,fmt_list
 from .color import yellow,red,orange
-from .wallet import Wallet
+from .wallet import Wallet,get_wallet_cls
+from .filename import find_file_in_dir
+from .ui import keypress_confirm
 
 class AutosignConfig(Config):
 	_set_ok = ('usr_randchars','_proto','outdir','passwd_file')
@@ -368,7 +370,15 @@ class Autosign:
 	def setup(self):
 		self.remove_wallet_dir()
 		self.gen_key(no_unmount=True)
-		ss_in  = Wallet( self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt] )
+		wf = find_file_in_dir( get_wallet_cls('mmgen'), self.cfg.data_dir )
+		if wf and keypress_confirm(
+				cfg         = self.cfg,
+				prompt      = f'Default wallet {wf!r} found.\nUse default wallet for autosigning?',
+				default_yes = True ):
+			from .cfg import Config
+			ss_in = Wallet( Config(), wf )
+		else:
+			ss_in = Wallet( self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt] )
 		ss_out = Wallet( self.cfg, ss=ss_in )
 		ss_out.write_to_file( desc='autosign wallet', outdir=self.wallet_dir )
 

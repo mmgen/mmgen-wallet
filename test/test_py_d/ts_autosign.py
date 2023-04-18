@@ -163,13 +163,24 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		t.expect_getend('Wrote key file ')
 		return t
 
-	def make_wallet_mmgen(self):
-		return self.make_wallet(mn_type='mmgen')
+	def create_dfl_wallet(self):
+		t = self.spawn( 'mmgen-walletconv', [
+				f'--outdir={cfg.data_dir}',
+				'--usr-randchars=0', '--quiet', '--hash-preset=1', '--label=foo',
+				'test/ref/98831F3A.hex'
+			]
+		)
+		t.passphrase_new('new MMGen wallet','abc')
+		t.written_to_file('MMGen wallet')
+		return t
+
+	def make_wallet_from_dfl_wallet(self):
+		return self.make_wallet(mn_type='default',use_dfl_wallet=True)
 
 	def make_wallet_bip39(self):
 		return self.make_wallet(mn_type='bip39')
 
-	def make_wallet(self,mn_type=None,mn_file=None):
+	def make_wallet(self,mn_type=None,mn_file=None,use_dfl_wallet=False):
 		mn_desc = mn_type or 'default'
 		mn_type = mn_type or 'mmgen'
 
@@ -179,16 +190,23 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			([] if mn_desc == 'default' else [f'--mnemonic-fmt={mn_type}']) +
 			['setup'] )
 
-		mn_file = mn_file or { 'mmgen': dfl_words_file, 'bip39': dfl_bip39_file }[mn_type]
-		mn = read_from_file(mn_file).strip().split()
-		from mmgen.mn_entry import mn_entry
-		entry_mode = 'full'
-		mne = mn_entry( cfg, mn_type, entry_mode )
+		if use_dfl_wallet:
+			t.expect( 'Use default wallet for autosigning? (Y/n): ', 'y' )
+			t.passphrase( 'MMGen wallet', 'abc' )
+		else:
+			if use_dfl_wallet is not None: # None => no dfl wallet present
+				t.expect( 'Use default wallet for autosigning? (Y/n): ', 'n' )
+			mn_file = mn_file or { 'mmgen': dfl_words_file, 'bip39': dfl_bip39_file }[mn_type]
+			mn = read_from_file(mn_file).strip().split()
+			from mmgen.mn_entry import mn_entry
+			entry_mode = 'full'
+			mne = mn_entry( cfg, mn_type, entry_mode )
 
-		t.expect('words: ',{ 12:'1', 18:'2', 24:'3' }[len(mn)])
-		t.expect('OK? (Y/n): ','\n')
-		t.expect('Type a number.*: ',str(mne.entry_modes.index(entry_mode)+1),regex=True)
-		stealth_mnemonic_entry(t,mne,mn,entry_mode)
+			t.expect('words: ',{ 12:'1', 18:'2', 24:'3' }[len(mn)])
+			t.expect('OK? (Y/n): ','\n')
+			t.expect('Type a number.*: ',str(mne.entry_modes.index(entry_mode)+1),regex=True)
+			stealth_mnemonic_entry(t,mne,mn,entry_mode)
+
 		wf = t.written_to_file('Autosign wallet')
 		return t
 
@@ -341,10 +359,11 @@ class TestSuiteAutosign(TestSuiteAutosignBase):
 		('start_daemons',            'starting daemons'),
 		('copy_tx_files',            'copying transaction files'),
 		('gen_key',                  'generating key'),
-		('make_wallet_mmgen',        'making wallet (MMGen native)'),
+		('create_dfl_wallet',        'creating default MMGen wallet'),
+		('make_wallet_from_dfl_wallet','making autosign wallet (from user’s default wallet)'),
 		('sign_quiet',               'signing transactions (--quiet)'),
 		('remove_signed_txfiles',    'removing signed transaction files'),
-		('make_wallet_bip39',        'making wallet (BIP39)'),
+		('make_wallet_bip39',        'making autosign wallet (from BIP39 mnemonic)'),
 		('create_bad_txfiles',       'creating bad transaction files'),
 		('sign_full_summary',        'signing transactions (--full-summary)'),
 		('remove_signed_txfiles_btc','removing transaction files (BTC only)'),
@@ -403,7 +422,7 @@ class TestSuiteAutosignLive(TestSuiteAutosignBTC):
 		('start_daemons',        'starting daemons'),
 		('copy_tx_files',        'copying transaction files'),
 		('gen_key',              'generating key'),
-		('make_wallet_bip39',    'making wallet (BIP39)'),
+		('make_wallet_mmgen',    'making autosign wallet (from MMGen native mnemonic)'),
 		('sign_live',            'signing transactions'),
 		('create_bad_txfiles',   'creating bad transaction files'),
 		('sign_live_led',        'signing transactions (--led)'),
@@ -411,6 +430,9 @@ class TestSuiteAutosignLive(TestSuiteAutosignBTC):
 		('sign_live_stealth_led','signing transactions (--stealth-led)'),
 		('stop_daemons',         'stopping daemons'),
 	)
+
+	def make_wallet_mmgen(self):
+		return self.make_wallet(mn_type='mmgen',use_dfl_wallet=None)
 
 	def sign_live(self):
 		return self.do_sign_live([])
