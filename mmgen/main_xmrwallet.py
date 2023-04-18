@@ -261,7 +261,7 @@ elif op in ('new','transfer','sweep','label'):
 
 m = getattr(MoneroWalletOps,op)(
 	cfg,
-	xmrwallet_uargs(op, infile, wallets, spec))
+	xmrwallet_uargs(infile, wallets, spec))
 
 try:
 	if async_run(m.main()):

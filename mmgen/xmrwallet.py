@@ -51,7 +51,6 @@ from .proto.xmr.daemon import MoneroWalletDaemon
 from .ui import keypress_confirm
 
 xmrwallet_uargs = namedtuple('xmrwallet_uargs',[
-	'op',
 	'infile',
 	'wallets',
 	'spec',
@@ -308,6 +307,7 @@ class MoneroWalletOps:
 					if cls.__name__ == 'base':
 						break
 
+			self.name = type(self).__name__
 			self.cfg = cfg
 			classes = tuple(gen_classes())
 			self.opts = tuple(set(opt for cls in classes for opt in cls.opts))
@@ -348,7 +348,7 @@ class MoneroWalletOps:
 				if attr in MoneroWalletOps.opts and not attr in self.opts:
 					die(1,'Option --{} not supported for {!r} operation'.format(
 						attr.replace('_','-'),
-						uarg.op
+						self.name,
 					))
 
 			for opt in MoneroWalletOps.pat_opts:
@@ -606,7 +606,7 @@ class MoneroWalletOps:
 				)
 				return MoneroMMGenTX.NewSigned(
 					cfg            = self.parent.cfg,
-					op             = uarg.op,
+					op             = self.parent.name,
 					network        = self.parent.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
 					source         = XMRWalletAddrSpec(self.parent.source.idx,self.parent.account,None),
@@ -634,7 +634,7 @@ class MoneroWalletOps:
 
 				return MoneroMMGenTX.NewSigned(
 					cfg            = self.parent.cfg,
-					op             = uarg.op,
+					op             = self.parent.name,
 					network        = self.parent.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
 					source         = XMRWalletAddrSpec(self.parent.source.idx,self.parent.account,None),
@@ -658,7 +658,6 @@ class MoneroWalletOps:
 					msg(f'\n   Server returned: {ret!s}')
 
 	class create(wallet):
-		name    = 'create'
 		stem    = 'creat'
 		wallet_exists = False
 		opts    = ('restore_height',)
@@ -683,7 +682,6 @@ class MoneroWalletOps:
 			return True
 
 	class sync(wallet):
-		name    = 'sync'
 		opts    = ('rescan_blockchain',)
 
 		def __init__(self,cfg,uarg_tuple):
@@ -811,7 +809,6 @@ class MoneroWalletOps:
 			msg(fs.format( 'TOTAL:', fmt_amt(tbals[0]), fmt_amt(tbals[1]) ))
 
 	class list(sync):
-		name = 'list'
 		stem = 'sync'
 
 	class spec(wallet): # virtual class
@@ -859,7 +856,6 @@ class MoneroWalletOps:
 				self.label = strip_quotes(m[4])
 
 	class sweep(spec):
-		name     = 'sweep'
 		spec_id  = 'sweep_spec'
 		spec_key = ( (1,'source'), (3,'dest') )
 		opts     = ('no_relay','tx_relay_daemon')
@@ -975,13 +971,11 @@ class MoneroWalletOps:
 				die(1,'\nExiting at user request')
 
 	class transfer(sweep):
-		name    = 'transfer'
 		stem    = 'transferr'
 		spec_id = 'transfer_spec'
 		spec_key = ( (1,'source'), )
 
 	class new(spec):
-		name    = 'new'
 		spec_id = 'newaddr_spec'
 		spec_key = ( (1,'source'), )
 
@@ -1009,7 +1003,6 @@ class MoneroWalletOps:
 			msg('')
 
 	class label(spec):
-		name     = 'label'
 		spec_id  = 'label_spec'
 		spec_key = ( (1,'source'), )
 		opts     = ()
@@ -1064,7 +1057,6 @@ class MoneroWalletOps:
 				ymsg('\nOperation cancelled by user request')
 
 	class relay(base):
-		name = 'relay'
 		opts = ('tx_relay_daemon',)
 
 		def __init__(self,cfg,uarg_tuple):
@@ -1120,7 +1112,6 @@ class MoneroWalletOps:
 				die(1,'Exiting at user request')
 
 	class txview(base):
-		name = 'txview'
 
 		async def main(self):
 			self.cfg._util.stdout_or_pager(
