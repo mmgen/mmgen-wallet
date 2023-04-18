@@ -43,6 +43,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	dfl_random_txs = 3
 	color = True
 	socks_port = 49237
+	user_data = (
+		('miner', '98831F3A', 130, '1-2', []),
+		('bob',   '1378FC64', 140, None,  ['--restricted-rpc']),
+		('alice', 'FE3C6545', 150, '1-4', []),
+	)
 
 	cmd_group = (
 		('daemon_version',            'checking daemon version'),
@@ -196,7 +201,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		from mmgen.proto.xmr.daemon import MoneroWalletDaemon
 		from mmgen.proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
 		self.users = {}
-		n = self.tmpdir_nums[0]
+		tmpdir_num = self.tmpdir_nums[0]
 		ud = namedtuple('user_data',[
 			'sid',
 			'mmwords',
@@ -213,12 +218,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			'add_coind_args',
 		])
 		# kal_range must be None, a single digit, or a single hyphenated range
-		for user,sid,shift,kal_range,add_coind_args in (
-				('miner', '98831F3A', 130, '1-2', []),
-				('bob',   '1378FC64', 140, None,  ['--restricted-rpc']),
-				('alice', 'FE3C6545', 150, '1-4', []),
-			):
-			udir = os.path.join('test','tmp',str(n),user)
+		for (	user,
+				sid,
+				shift,
+				kal_range,
+				add_coind_args ) in self.user_data:
+			tmpdir = os.path.join('test','tmp',str(tmpdir_num))
+			udir = os.path.join(tmpdir,user)
 			datadir = os.path.join(self.datadir_base,user)
 			md = CoinDaemon(
 				cfg        = cfg,
@@ -306,7 +312,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def create_wallets_miner(self): return self.create_wallets('miner')
 	def create_wallets_alice(self): return self.create_wallets('alice')
 
-	def create_wallets(self,user,wallet=None):
+	def create_wallets(self,user,wallet=None,add_opts=[]):
 		assert wallet is None or is_int(wallet), 'wallet arg'
 		data = self.users[user]
 		run(
@@ -316,7 +322,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		dir_opt = [f'--wallet-dir={data.udir}']
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.extra_opts + dir_opt + [ 'create', data.kafile, (wallet or data.kal_range) ] )
+			self.extra_opts + add_opts + dir_opt + [ 'create', data.kafile, (wallet or data.kal_range) ] )
 		for i in MMGenRange(wallet or data.kal_range).items:
 			write_data_to_file(
 				cfg,
@@ -413,7 +419,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def list_wallets_all(self):
 		return self.sync_wallets('alice',op='list')
 
-	def sync_wallets(self,user,op='sync',wallets=None,add_opts=None):
+	def sync_wallets(self,user,op='sync',wallets=None,add_opts=[]):
 		data = self.users[user]
 		cmd_opts = list_gen(
 			[f'--wallet-dir={data.udir}'],
@@ -421,7 +427,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		)
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.extra_opts + cmd_opts + (add_opts or []) + [ op, data.kafile ] + ([wallets] if wallets else []) )
+			self.extra_opts + cmd_opts + add_opts + [ op, data.kafile ] + ([wallets] if wallets else []) )
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
 		for n,wnum in enumerate(wlist):
 			t.expect('Syncing wallet {}/{} ({})'.format(
@@ -468,8 +474,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		if return_amt:
 			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amount: ')).replace('XMR','').strip())
 
-		t.expect('Save MoneroMMGenTX data? (y/N): ','y')
-		t.written_to_file('MoneroMMGenTX data')
+		dtype = 'signed'
+		t.expect(f'Save {dtype} transaction data? (y/N): ','y')
+		t.written_to_file(f'{dtype.capitalize()} transaction data')
 
 		if not no_relay:
 			t.expect(f'Relay {op} transaction? (y/N): ','y')
@@ -574,7 +581,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	async def open_wallet_user(self,user,wnum):
 		data = self.users[user]
 		silence()
-		kal = KeyAddrList( cfg, self.proto, data.kafile, key_address_validity_check=False )
+		kal = KeyAddrList(
+			cfg      = cfg,
+			proto    = self.proto,
+			addrfile = data.kafile,
+			key_address_validity_check = False )
 		end_silence()
 		self.users[user].wd.start(silent=not (cfg.exact_output or cfg.verbose))
 		return data.wd_rpc.call(

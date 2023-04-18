@@ -152,14 +152,15 @@ class MoneroMMGenTX:
 				)
 
 			fs = """
-				Info for transaction {} [Seed ID: {}. Network: {}]:
-				  TxID:   {}
-				  Signed: {} [{}]
-				  Type:   {}
-				  From:   Wallet {}, account {}{}
-				  Amount: {} XMR
-				  Fee:    {} XMR
-				  Dest:   {}
+				Info for transaction {a} [Seed ID: {b}. Network: {c}]:
+				  TxID:    {d}
+				  Created: {e:19} [{f}]
+				  Signed:  {g:19} [{h}]
+				  Type:    {i}
+				  From:    Wallet {j}, account {k}{l}
+				  Amount:  {m} XMR
+				  Fee:     {n} XMR
+				  Dest:    {o}
 			"""
 
 			pmid = d.dest_address.parsed.payment_id
@@ -168,19 +169,21 @@ class MoneroMMGenTX:
 
 			from .util2 import format_elapsed_hr
 			return fmt(fs,strip_char='\t',indent=indent).format(
-					orange(self.base_chksum.upper()),
-					d.seed_id.hl(),
-					yellow(d.network.upper()),
-					d.txid.hl(),
-					make_timestr(d.sign_time),
-					format_elapsed_hr(d.sign_time),
-					blue(capfirst(d.op)),
-					d.source.wallet.hl(),
-					red(f'#{d.source.account}'),
-					to_entry if d.dest else '',
-					d.amount.hl(),
-					d.fee.hl(),
-					d.dest_address.hl(),
+					a = orange(self.base_chksum.upper()),
+					b = d.seed_id.hl(),
+					c = yellow(d.network.upper()),
+					d = d.txid.hl(),
+					e = make_timestr(d.create_time),
+					f = format_elapsed_hr(d.create_time),
+					g = make_timestr(d.sign_time),
+					h = format_elapsed_hr(d.sign_time),
+					i = blue(capfirst(d.op)),
+					j = d.source.wallet.hl(),
+					k = red(f'#{d.source.account}'),
+					l = to_entry if d.dest else '',
+					m = d.amount.hl(),
+					n = d.fee.hl(),
+					o = d.dest_address.hl(),
 					pmid = pink(pmid.hex()) if pmid else None
 				)
 
@@ -198,22 +201,28 @@ class MoneroMMGenTX:
 				},
 				cls = json_encoder,
 			)
-			fn = '{}{}-XMR[{!s}]{}.sigtx'.format(
-				self.base_chksum.upper(),
-				(lambda s: f'-{s.upper()}' if s else '')(self.full_chksum),
-				self.data.amount,
-				(lambda s: '' if s == 'mainnet' else f'.{s}')(self.data.network),
+
+			fn = '{a}{b}-XMR[{c!s}]{d}.{e}'.format(
+				a = self.base_chksum.upper(),
+				b = (lambda s: f'-{s.upper()}' if s else '')(self.full_chksum),
+				c = self.data.amount,
+				d = (lambda s: '' if s == 'mainnet' else f'.{s}')(self.data.network),
+				e = self.ext
 			)
+
 			from .fileutil import write_data_to_file
 			write_data_to_file(
 				cfg                   = self.cfg,
 				outfile               = fn,
 				data                  = out,
-				desc                  = 'MoneroMMGenTX data',
+				desc                  = self.desc,
 				ask_write             = True,
 				ask_write_default_yes = False )
 
 	class NewSigned(Base):
+		signed = True
+		desc = 'signed transaction data'
+		ext = 'sigtx'
 
 		def __init__(self,*args,**kwargs):
 
@@ -434,16 +443,16 @@ class MoneroWalletOps:
 
 		def get_wallet_fn(self,d):
 			return os.path.join(
-				self.cfg.wallet_dir or '.','{}-{}-MoneroWallet{}'.format(
-					self.kal.al_id.sid,
-					d.idx,
-					f'.{self.cfg.network}' if self.cfg.network != 'mainnet' else ''))
+				self.cfg.wallet_dir or '.','{a}-{b}-MoneroWallet{c}'.format(
+					a = self.kal.al_id.sid,
+					b = d.idx,
+					c = f'.{self.cfg.network}' if self.cfg.network != 'mainnet' else ''))
 
 		async def main(self):
-			gmsg('\n{}ing {} wallet{}'.format(
-				self.stem.capitalize(),
-				len(self.addr_data),
-				suf(self.addr_data) ))
+			gmsg('\n{a}ing {b} wallet{c}'.format(
+				a = self.stem.capitalize(),
+				b = len(self.addr_data),
+				c = suf(self.addr_data) ))
 			processed = 0
 			for n,d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
 				fn = self.get_wallet_fn(d)
@@ -763,12 +772,11 @@ class MoneroWalletOps:
 
 		def post_main(self):
 			d = self.accts_data
-			op = type(self).__name__
 
 			for wnum,k in enumerate(d):
-				if op == 'sync':
+				if self.name == 'sync':
 					self.rpc(self,self.addr_data[wnum]).print_accts( d[k]['accts'], d[k]['addrs'], indent='')
-				elif op == 'list':
+				elif self.name == 'list':
 					fs = '  {:2} {} {} {}'
 					msg('\n' + green(f'Wallet {k}:'))
 					for acct_num,acct in enumerate(d[k]['addrs']):
@@ -803,7 +811,8 @@ class MoneroWalletOps:
 			msg(fs.format( 'TOTAL:', fmt_amt(tbals[0]), fmt_amt(tbals[1]) ))
 
 	class list(sync):
-		pass
+		name = 'list'
+		stem = 'sync'
 
 	class spec(wallet): # virtual class
 

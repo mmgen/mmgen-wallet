@@ -87,6 +87,9 @@ else:
 
 from mmgen.common import *
 
+from mmgen.devinit import init_dev
+init_dev()
+
 try:
 	os.unlink(os.path.join(repo_root,'test.py.err'))
 except:
