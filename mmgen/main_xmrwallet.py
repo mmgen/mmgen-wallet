@@ -238,11 +238,10 @@ if len(cmd_args) < 2:
 
 op     = cmd_args.pop(0)
 infile = cmd_args.pop(0)
+wallets = spec = None
 
 if op not in MoneroWalletOps.ops:
 	die(1,f'{op!r}: unrecognized operation')
-
-wallets = spec = ''
 
 if op == 'relay':
 	if len(cmd_args) != 0:
@@ -268,5 +267,8 @@ try:
 		m.post_main()
 except KeyboardInterrupt:
 	ymsg('\nUser interrupt')
-finally:
+
+try:
 	async_run(m.stop_wallet_daemon())
+except Exception as e:
+	ymsg(f'Unable to stop wallet daemon: {type(e).__name__}: {e}')

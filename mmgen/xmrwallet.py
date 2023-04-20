@@ -127,13 +127,14 @@ class MoneroMMGenFile:
 
 		@property
 		def full_chksum(self):
-			return self.make_chksum(self.full_chksum_fields)
+			return self.make_chksum(self.full_chksum_fields) if self.full_chksum_fields else None
 
 		def check_checksums(self,d_wrap):
 			for k in ('base_chksum','full_chksum'):
 				a = getattr(self,k)
-				b = d_wrap[k]
-				assert a == b, f'{k} mismatch: {a} != {b}'
+				if a is not None:
+					b = d_wrap[k]
+					assert a == b, f'{k} mismatch: {a} != {b}'
 
 		def make_wrapped_data(self,in_data):
 			return json.dumps(
@@ -144,6 +145,7 @@ class MoneroMMGenFile:
 					}
 				},
 				cls = json_encoder,
+				indent = 4,
 			)
 
 		def extract_data_from_file(self,cfg,fn):
@@ -155,7 +157,6 @@ class MoneroMMGenTX:
 
 		data_label = 'MoneroMMGenTX'
 		base_chksum_fields = ('op','create_time','network','seed_id','source','dest','amount')
-		full_chksum_fields = ('op','create_time','network','seed_id','source','dest','amount','fee','blob')
 		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
 			'op',
 			'create_time',
@@ -171,6 +172,7 @@ class MoneroMMGenTX:
 			'blob',
 			'metadata',
 		])
+		full_chksum_fields = set(xmrwallet_tx_data._fields) - {'metadata'}
 
 		def __init__(self):
 			self.name = type(self).__name__
@@ -277,11 +279,12 @@ class MoneroMMGenTX:
 			)
 
 	class NewSigned(New):
-		desc = 'signed transaction data'
+		desc = 'signed transaction'
 		ext = 'sigtx'
 		signed = True
 
 	class Completed(Base):
+		desc = 'transaction'
 
 		def __init__(self,cfg,fn):
 

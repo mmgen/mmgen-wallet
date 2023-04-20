@@ -493,8 +493,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amount: ')).replace('XMR','').strip())
 
 		dtype = 'signed'
-		t.expect(f'Save {dtype} transaction data? (y/N): ','y')
-		t.written_to_file(f'{dtype.capitalize()} transaction data')
+		t.expect(f'Save {dtype} transaction? (y/N): ','y')
+		t.written_to_file(f'{dtype.capitalize()} transaction')
 
 		if not no_relay:
 			t.expect(f'Relay {op} transaction? (y/N): ','y')
@@ -544,20 +544,19 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def transfer_to_miner_create2(self):
 		return self.transfer_to_miner_create('0.0012')
 
-	def relay_tx(self,relay_opt=None,add_desc=None):
+	def relay_tx(self,relay_opt,add_desc=None):
 		user = 'alice'
 		data = self.users[user]
-		fn = get_file_with_ext(data.udir,'sigtx')
 		add_desc = (', ' + add_desc) if add_desc else ''
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ ([relay_opt] if relay_opt else [])
-			+ [ 'relay', fn ],
+			+ [ relay_opt, 'relay', get_file_with_ext(data.udir,'sigtx') ],
 			extra_desc = f'(relaying TX, {capfirst(user)}{add_desc})' )
 		t.expect('Relay transaction? ','y')
 		t.read()
 		t.ok()
+		return t
 
 	async def transfer_to_miner_send1(self):
 		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_proxy_parm}',add_desc='via proxy')

@@ -37,13 +37,19 @@ class Signable:
 
 		@property
 		def unsigned(self):
-			if not hasattr(self,'_unsigned'):
+			return self._unprocessed( '_unsigned', self.rawext, self.sigext )
+
+		def _unprocessed(self,attrname,rawext,sigext):
+			if not hasattr(self,attrname):
 				dirlist = tuple(os.scandir(self.dir))
 				names = tuple(f.name for f in dirlist)
-				self._unsigned = tuple(f for f in dirlist
-					if f.name.endswith('.'+self.rawext)
-						and f.name[:-len(self.rawext)]+self.sigext not in names)
-			return self._unsigned
+				setattr(
+					self,
+					attrname,
+					tuple(f for f in dirlist
+						if f.name.endswith('.' + rawext)
+							and f.name[:-len(rawext)] + sigext not in names) )
+			return getattr(self,attrname)
 
 		def print_bad_list(self,bad_files):
 			msg('\n{a}\n{b}'.format(
@@ -186,7 +192,10 @@ class Autosign:
 		cfg.outdir = self.tx_dir
 		cfg.passwd_file = self.keyfile
 
-		if 'coin' in cfg._uopts and not any(k in cfg._uopts for k in ('help','longhelp')):
+		if any(k in cfg._uopts for k in ('help','longhelp')):
+			return
+
+		if 'coin' in cfg._uopts:
 			die(1,'--coin option not supported with this command.  Use --coins instead')
 
 		self.coins = cfg.coins.upper().split(',') if cfg.coins else []
@@ -260,7 +269,7 @@ class Autosign:
 	def do_umount(self):
 		if os.path.ismount(self.mountpoint):
 			run( ['sync'], check=True )
-			msg(f'Unmounting {self.mountpoint}')
+			msg(f'Unmounting {self.mountpoint!r}')
 			run( ['umount',self.mountpoint], check=True )
 
 	def decrypt_wallets(self):
