@@ -38,7 +38,8 @@ opts_data = {
 -c, --coins=c         Coins to sign for (comma-separated list)
 -I, --no-insert-check Don’t check for device insertion
 -l, --led             Use status LED to signal standby, busy and error
--m, --mountpoint=M    Specify an alternate mountpoint 'M' (default: {asi.dfl_mountpoint!r})
+-m, --mountpoint=M    Specify an alternate mountpoint 'M'
+                      (default: {asi.dfl_mountpoint!r})
 -M, --mnemonic-fmt=F  During setup, prompt for mnemonic seed phrase of format
                       'F' (choices: {mn_fmts}; default: {asi.dfl_mn_fmt!r})
 -n, --no-summary      Don’t print a transaction summary
@@ -49,25 +50,26 @@ opts_data = {
                       will not be printed.
 -q, --quiet           Produce quieter output
 -v, --verbose         Produce more verbose output
--w, --wallet-dir=D    Specify an alternate wallet dir (default: {asi.dfl_wallet_dir!r})
+-w, --wallet-dir=D    Specify an alternate wallet dir
+                      (default: {asi.dfl_wallet_dir!r})
 """,
 	'notes': """
 
-                              COMMANDS
+                               SUBCOMMANDS
 
 gen_key - generate the wallet encryption key and copy it to the mountpoint
-          (currently configured as {asi.mountpoint!r})
-setup   - generate the wallet encryption key and wallet
+          {asi.mountpoint!r} (as currently configured)
+setup   - generate both wallet encryption key and temporary signing wallet
 wait    - start in loop mode: wait-mount-sign-unmount-wait
 
 
-                             USAGE NOTES
+                               USAGE NOTES
 
-If invoked with no command, the program mounts a removable device containing
-unsigned MMGen transactions and/or message files, signs them, unmounts the
-removable device and exits.
+If invoked with no subcommand, this program mounts a removable device
+(typically a USB flash drive) containing unsigned MMGen transactions and/or
+message files, signs them, unmounts the removable device and exits.
 
-If invoked with 'wait', the program waits in a loop, mounting the removable
+If invoked with ‘wait’, the program waits in a loop, mounting the removable
 device, performing signing operations and unmounting the device every time it
 is inserted.
 
@@ -76,36 +78,58 @@ the status LED indicates whether the program is busy or in standby mode, i.e.
 ready for device insertion or removal.
 
 The removable device must have a partition labeled MMGEN_TX with a user-
-writable root directory and a directory named '/tx', where unsigned MMGen
-transactions are placed. Optionally, the directory '/msg' may also be created
-and unsigned message files created by `mmgen-msg` placed in this directory.
+writable root directory and a directory named ‘/tx’, where unsigned MMGen
+transactions are placed.  Optionally, the directory ‘/msg’ may be created
+and unsigned message files produced by ‘mmgen-msg’ placed there.
 
-On the signing machine the mount point (currently configured as {asi.mountpoint!r})
-must exist and /etc/fstab must contain the following entry:
+On both the signing and online machines the mountpoint ‘{asi.mountpoint}’
+(as currently configured) must exist and ‘/etc/fstab’ must contain the
+following entry:
 
-    LABEL='MMGEN_TX' /mnt/tx auto noauto,user 0 0
+    LABEL=MMGEN_TX {asi.mountpoint} auto noauto,user 0 0
 
-Transactions are signed with a wallet on the signing machine located in the wallet
-directory (currently configured as {asi.wallet_dir!r}) encrypted with a 64-character
-hexadecimal password saved in the file `autosign.key` in the root of the removable
-device partition.
+Signing is performed with a temporary wallet created in volatile memory in
+the directory ‘{asi.wallet_dir}’ (as currently configured).  The wallet is
+encrypted with a 32-byte password saved in the file ‘autosign.key’ in the
+root of the removable device’s filesystem.
 
-The password and wallet can be created in one operation by invoking the
-command with 'setup' with the removable device inserted.  In this case, the
-user will be prompted for a seed mnemonic.
+The password and temporary wallet may be created in one operation by invoking
+‘mmgen-autosign setup’ with the removable device inserted.  In this case, the
+temporary wallet is created from the user’s default wallet, if it exists and
+the user so desires.  If not, the user is prompted to enter a seed phrase.
 
-Alternatively, the password and wallet can be created separately by first
-invoking the command with 'gen_key' and then creating and encrypting the
+Alternatively, the password and temporary wallet may be created separately by
+first invoking ‘mmgen-autosign gen_key’ and then creating and encrypting the
 wallet using the -P (--passwd-file) option:
 
-    $ mmgen-walletconv -r0 -q -iwords -d{asi.wallet_dir} -p1 -P/mnt/tx/autosign.key -Llabel
+    $ mmgen-walletconv -iwords -d{asi.wallet_dir} -p1 -N -P{asi.mountpoint}/autosign.key -Lfoo
 
-Note that the hash preset must be '1'.  Multiple wallets are permissible.
-
-For good security, it's advisable to re-generate a new wallet and key for
-each signing session.
+Note that the hash preset must be ‘1’.  To use a wallet file as the source
+instead of an MMGen seed phrase, omit the ‘-i’ option and add the wallet
+file path to the end of the command line.  Multiple temporary wallets may
+be created in this way and used for signing (note, however, that for XMR
+operations only one wallet is supported).
 
 This command is currently available only on Linux-based platforms.
+
+
+                               SECURITY NOTE
+
+By placing wallet and password on separate devices, this program creates
+a two-factor authentication setup whereby an attacker must gain physical
+control of both the removable device and signing machine in order to sign
+transactions.  It’s therefore recommended to always keep the removable device
+secure, separated from the signing machine and hidden (in your pocket, for
+example) when not transacting.  In addition, since login access on the
+signing machine is required to steal the user’s seed, it’s good practice
+to lock the signing machine’s screen once the setup process is complete.
+
+As a last resort, cutting power to the signing machine will destroy the
+volatile memory where the temporary wallet resides and foil any attack,
+even if you’ve lost control of the removable device.
+
+Always remember to power off the signing machine when your signing session
+is over.
 """
 	},
 	'code': {
