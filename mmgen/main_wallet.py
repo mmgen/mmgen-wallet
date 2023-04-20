@@ -55,26 +55,26 @@ if invoked_as == 'gen':
 	nargs = 0
 elif invoked_as == 'conv':
 	desc = 'Convert ' + dsw + ' from one format to another'
-	opt_filter = 'dehHiJkKlLmoOpPqrSvz-'
+	opt_filter = 'dehHiJkKlLmNoOpPqrSvz-'
 elif invoked_as == 'chk':
 	desc = 'Check validity of ' + dsw
 	opt_filter = 'ehiHOlpPqrvz-'
 	iaction = 'input'
 elif invoked_as == 'passchg':
 	desc = 'Change the passphrase, hash preset or label of ' + dsw
-	opt_filter = 'efhdiHkKOlLmpPqrSvz-'
+	opt_filter = 'efhdiHkKOlLmNpPqrSvz-'
 	iaction = 'input'
 	do_bw_note = False
 elif invoked_as == 'subgen':
 	desc = 'Generate a subwallet from ' + dsw
-	opt_filter = 'dehHiJkKlLmoOpPqrSvz-' # omitted: f
+	opt_filter = 'dehHiJkKlLmNoOpPqrSvz-' # omitted: f
 	usage = '[opts] [infile] <Subseed Index>'
 	iaction = 'input'
 	oaction = 'output'
 	do_sw_note = True
 elif invoked_as == 'seedsplit':
 	desc = 'Generate a seed share from ' + dsw
-	opt_filter = 'dehHiJlLMIoOpPqrSvz-'
+	opt_filter = 'dehHiJlLMNIoOpPqrSvz-'
 	usage = '[opts] [infile] [<Split ID String>:]<index>:<share count>'
 	iaction = 'input'
 	oaction = 'output'
@@ -110,6 +110,7 @@ opts_data = {
                       for password hashing (default: '{gc.dfl_hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
+-N, --passwd-file-new-only Use passwd file only for new, not existing, wallet
 -q, --quiet           Produce quieter output; suppress some warnings
 -r, --usr-randchars=n Get 'n' characters of additional randomness from user
                       (min={cfg.min_urandchars}, max={cfg.max_urandchars}, default={cfg.usr_randchars})
@@ -191,7 +192,8 @@ else:
 	ss_in = Wallet(
 		cfg     = cfg,
 		fn      = sf,
-		passchg = invoked_as=='passchg' )
+		passchg = invoked_as == 'passchg',
+		passwd_file = False if cfg.passwd_file_new_only else None )
 	m1 = green('Processing input wallet ')
 	m2 = ss_in.seed.sid.hl()
 	m3 = yellow(' (default wallet)') if sf and os.path.dirname(sf) == cfg.data_dir else ''

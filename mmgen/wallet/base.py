@@ -43,7 +43,7 @@ class wallet(MMGenObject,metaclass=WalletMeta):
 		in_data       = None,
 		passwd_file   = None ):
 
-		self.passwd_file = passwd_file or self.cfg.passwd_file
+		self.passwd_file = None if passwd_file is False else (passwd_file or self.cfg.passwd_file)
 		self.ssdata = self.WalletData()
 		self.msg = {}
 		self.in_data = in_data
