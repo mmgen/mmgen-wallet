@@ -37,7 +37,7 @@ from .util import (
 	suf,
 	async_run,
 	make_timestr,
-	make_chksum_6,
+	make_chksum_N,
 	capfirst,
 )
 from .fileutil import get_data_from_file
@@ -119,7 +119,7 @@ class MoneroMMGenFile:
 				dict( (k,v) for k,v in self.data._asdict().items() if (not keys or k in keys) ),
 				cls = json_encoder
 			)
-			return make_chksum_6(res)
+			return make_chksum_N( res, rounds=1, nchars=self.chksum_nchars, upper=False )
 
 		@property
 		def base_chksum(self):
@@ -137,15 +137,18 @@ class MoneroMMGenFile:
 					assert a == b, f'{k} mismatch: {a} != {b}'
 
 		def make_wrapped_data(self,in_data):
+			out = {
+				'base_chksum': self.base_chksum,
+				'full_chksum': self.full_chksum,
+				'data': in_data,
+			} if self.full_chksum else {
+				'base_chksum': self.base_chksum,
+				'data': in_data,
+			}
 			return json.dumps(
-				{ self.data_label: {
-						'base_chksum': self.base_chksum,
-						'full_chksum': self.full_chksum,
-						'data': in_data,
-					}
-				},
+				{ self.data_label: out },
 				cls = json_encoder,
-				indent = 4,
+				indent = 2,
 			)
 
 		def extract_data_from_file(self,cfg,fn):
@@ -157,6 +160,7 @@ class MoneroMMGenTX:
 
 		data_label = 'MoneroMMGenTX'
 		base_chksum_fields = ('op','create_time','network','seed_id','source','dest','amount')
+		chksum_nchars = 6
 		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
 			'op',
 			'create_time',

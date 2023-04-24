@@ -262,6 +262,8 @@ class Autosign:
 		if not os.path.ismount(self.mountpoint):
 			if run( ['mount',self.mountpoint], stderr=DEVNULL, stdout=DEVNULL ).returncode == 0:
 				msg(f'Mounting {self.mountpoint!r}')
+			elif not self.cfg.test_suite:
+				die(1,f'Unable to mount device at {self.mountpoint!r}')
 
 		self.have_msg_dir = os.path.isdir(self.msg_dir)
 
@@ -275,6 +277,7 @@ class Autosign:
 			run( ['sync'], check=True )
 			msg(f'Unmounting {self.mountpoint!r}')
 			run( ['umount',self.mountpoint], check=True )
+		bmsg('It is now safe to extract the removable device')
 
 	def decrypt_wallets(self):
 		msg(f'Unlocking wallet{suf(self.wallet_files)} with key from {self.cfg.passwd_file!r}')

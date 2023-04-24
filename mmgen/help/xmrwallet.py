@@ -14,10 +14,16 @@ help.xmrwallet: xmrwallet help notes for MMGen suite
 
 def help(proto,cfg):
 
-	return f"""
-All operations except for ‘relay’ require a running Monero daemon.  Unless
---daemon is specified, the monerod is assumed to be listening on localhost at
-the default RPC port.
+	return """
+Many operations take an optional ‘wallets’ argument: one or more address
+indexes (expressed as a comma-separated list and/or hyphenated range) in
+the default or specified key-address file, each corresponding to a Monero
+wallet with the same index.  If the argument is omitted, all wallets are
+operated upon.
+
+All operations except for ‘relay’ require a running Monero daemon (monerod).
+Unless --daemon is specified, the daemon is assumed to be listening on
+localhost at the default RPC port.
 
 If --tx-relay-daemon is specified, the monerod at HOST:PORT will be used to
 relay any created transactions.  PROXY_HOST:PROXY_PORT, if specified, may
@@ -42,14 +48,6 @@ relay     - relay a transaction from a transaction file created using ‘sweep�
             or ‘transfer’ with the --no-relay option
 txview    - view a transaction file or files created using ‘sweep’ or
             ‘transfer’ with the --no-relay option
-
-
-                 ‘CREATE’, ‘SYNC’ AND ‘LIST’ OPERATION NOTES
-
-These operations take an optional `wallets` argument: one or more address
-indexes (expressed as a comma-separated list, hyphenated range, or both)
-in the specified key-address file, each corresponding to a Monero wallet
-to be created, synced or listed.  If omitted, all wallets are operated upon.
 
 
                            ‘LABEL’ OPERATION NOTES
@@ -105,24 +103,14 @@ Note that multiple sweep operations may be required to sweep all the funds
 in an account.
 
 
-                    ‘SUBMIT’ AND ‘RELAY’ OPERATION NOTES
+                           ‘RELAY’ OPERATION NOTES
 
 By default, transactions are relayed to a monerod running on localhost at the
 default RPC port.  To relay transactions to a remote or non-default monerod
 via optional SOCKS proxy, use the --tx-relay-daemon option described above.
 
-When ‘submit’ is used together with --autosign, the transaction filename may
-be omitted and the software will attempt to locate it automatically.
 
-
-                    ‘DUMP’ AND ‘RESTORE’ OPERATION NOTES
-
-These commands produce and read JSON wallet dump files located in the same
-directories as their corresponding wallets and having the same filenames,
-plus a .dump extension.
-
-
-                                   WARNING
+                              SECURITY WARNING
 
 To avoid exposing your private keys on a network-connected machine, you’re
 strongly advised to create all transactions offline using the --no-relay

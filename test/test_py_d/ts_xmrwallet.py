@@ -320,7 +320,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				stem_glob,
 				stem_glob + '.keys',
 				stem_glob + '.address.txt' ):
-#			imsg(f'rm -f {glob}')
 			run( f'rm -f {glob}', shell=True )
 		t = self.spawn(
 			'mmgen-xmrwallet',

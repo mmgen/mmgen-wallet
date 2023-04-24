@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-xmrwallet: Perform various Monero wallet operations for addresses
-                 in an MMGen XMR key-address file
+mmgen-xmrwallet: Perform various Monero wallet and transacting operations for
+                 addresses in an MMGen XMR key-address file
 """
 
 from collections import namedtuple
@@ -34,8 +34,8 @@ from .xmrwallet import (
 
 opts_data = {
 	'text': {
-		'desc': """Perform various Monero wallet operations for addresses
-                   in an MMGen XMR key-address file""",
+		'desc': """Perform various Monero wallet and transacting operations for
+                   addresses in an MMGen XMR key-address file""",
 		'usage2': [
 			'[opts] create | sync | list <xmr_keyaddrfile> [wallets]',
 			'[opts] label    <xmr_keyaddrfile> LABEL_SPEC',
@@ -66,9 +66,9 @@ opts_data = {
 -S, --no-stop-wallet-daemon      Don’t stop the wallet daemon at exit
 -w, --wallet-dir=D               Output or operate on wallets in directory 'D'
                                  instead of the working directory
--H, --wallet-rpc-host=host       Wallet RPC hostname (default: {cfg.monero_wallet_rpc_host!r})
--U, --wallet-rpc-user=user       Wallet RPC username (default: {cfg.monero_wallet_rpc_user!r})
--P, --wallet-rpc-password=pass   Wallet RPC password (default: {cfg.monero_wallet_rpc_password!r})
+-H, --wallet-rpc-host=host       Wallet RPC hostname (currently: {cfg.monero_wallet_rpc_host!r})
+-U, --wallet-rpc-user=user       Wallet RPC username (currently: {cfg.monero_wallet_rpc_user!r})
+-P, --wallet-rpc-password=pass   Wallet RPC password (currently: [scrubbed])
 """,
 	'notes': """
 

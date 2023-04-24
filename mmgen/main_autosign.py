@@ -31,7 +31,7 @@ opts_data = {
 	'sets': [('stealth_led', True, 'led', True)],
 	'text': {
 		'desc': 'Auto-sign MMGen transactions and message files',
-		'usage':'[opts] [command]',
+		'usage':'[opts] [operation]',
 		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
@@ -55,7 +55,7 @@ opts_data = {
 """,
 	'notes': """
 
-                               SUBCOMMANDS
+                               OPERATIONS
 
 gen_key - generate the wallet encryption key and copy it to the mountpoint
           {asi.mountpoint!r} (as currently configured)
@@ -65,7 +65,7 @@ wait    - start in loop mode: wait-mount-sign-unmount-wait
 
                                USAGE NOTES
 
-If invoked with no subcommand, this program mounts a removable device
+If no operation is specified, this program mounts a removable device
 (typically a USB flash drive) containing unsigned MMGen transactions and/or
 message files, signs them, unmounts the removable device and exits.
 
@@ -110,7 +110,7 @@ file path to the end of the command line.  Multiple temporary wallets may
 be created in this way and used for signing (note, however, that for XMR
 operations only one wallet is supported).
 
-This command is currently available only on Linux-based platforms.
+Autosigning is currently available only on Linux-based platforms.
 
 
                                SECURITY NOTE
