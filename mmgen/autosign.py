@@ -215,7 +215,11 @@ class Autosign:
 				try:
 					await rpc_init( self.cfg, proto )
 				except SocketError as e:
-					die(2,f'{coin} daemon not running or not listening on port {proto.rpc_port}')
+					from .daemon import CoinDaemon
+					d = CoinDaemon( self.cfg, proto=proto, test_suite=self.cfg.test_suite )
+					die(2,
+						f'\n{e}\nIs the {d.coind_name} daemon ({d.exec_fn}) running '
+						+ 'and listening on the correct port?' )
 
 	@property
 	def wallet_files(self):

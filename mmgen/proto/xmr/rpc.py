@@ -133,4 +133,13 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		NB: the 'stop_wallet' RPC call closes the open wallet before shutting down the daemon,
 		returning an error if no wallet is open
 		"""
-		return self.call('stop_wallet')
+		try:
+			return self.call('stop_wallet')
+		except Exception as e:
+			from ...util import msg,msg_r,ymsg
+			from ...color import yellow
+			msg(f'{type(e).__name__}: {e}')
+			msg_r(yellow(f'Unable to shut down wallet daemon gracefully, so killing process instead...'))
+			ret = self.daemon.stop(silent=True)
+			ymsg('done')
+			return ret

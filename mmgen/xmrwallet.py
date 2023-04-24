@@ -568,8 +568,8 @@ class MoneroWalletOps:
 				gmsg_r(f'\n  Opening {desc} wallet...')
 				self.c.call( # returns {}
 					'open_wallet',
-					filename=os.path.basename(self.fn),
-					password=self.d.wallet_passwd )
+					filename = os.path.basename(self.fn),
+					password = self.d.wallet_passwd )
 				gmsg('done')
 
 				if refresh:
@@ -797,8 +797,8 @@ class MoneroWalletOps:
 			msg_r('  Opening wallet...')
 			self.c.call(
 				'open_wallet',
-				filename=os.path.basename(fn),
-				password=d.wallet_passwd )
+				filename = os.path.basename(fn),
+				password = d.wallet_passwd )
 			msg('done')
 
 			msg_r('  Getting wallet height (be patient, this could take a long time)...')
