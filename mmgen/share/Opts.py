@@ -73,8 +73,17 @@ def make_help(cfg,proto,opts_data,opt_filter):
 	def help_notes(k):
 		return help_notes_func(proto,cfg,k)
 
+	def help_mod(modname):
+		import importlib
+		return importlib.import_module('mmgen.help.'+modname).help(proto,cfg)
+
 	def gen_arg_tuple(func,text):
-		d = {'proto': proto,'help_notes':help_notes,'cfg':cfg}
+		d = {
+			'proto':      proto,
+			'help_notes': help_notes,
+			'help_mod':   help_mod,
+			'cfg':        cfg,
+		}
 		for arg in func.__code__.co_varnames:
 			yield d[arg] if arg in d else text
 

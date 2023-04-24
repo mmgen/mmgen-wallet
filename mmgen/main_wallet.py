@@ -136,9 +136,9 @@ FMT CODES:
 			cfg=cfg,
 			gc=gc,
 		),
-		'notes': lambda cfg,help_notes,s: s.format(
+		'notes': lambda cfg,help_mod,help_notes,s: s.format(
 			f=help_notes('fmt_codes'),
-			n_ss=('',help_notes('seedsplit')+'\n\n')[do_ss_note],
+			n_ss=('',help_mod('seedsplit')+'\n\n')[do_ss_note],
 			n_sw=('',help_notes('subwallet')+'\n\n')[do_sw_note],
 			n_pw=help_notes('passwd'),
 			n_bw=('','\n\n'+help_notes('brainwallet'))[do_bw_note]

@@ -70,7 +70,7 @@ long_opts_data = {
 --, --alice                Specify user “Alice” in MMGen regtest mode
 --, --carol                Specify user “Carol” in MMGen regtest mode
 	""",
-	'code': lambda help_notes,proto,s: s.format(
+	'code': lambda proto,s: s.format(
 			pnm    = gc.proj_name,
 			cu_dfl = proto.coin,
 		)
