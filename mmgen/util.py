@@ -251,15 +251,19 @@ def remove_extension(fn,ext):
 	a,b = os.path.splitext(fn)
 	return a if b[1:] == ext else fn
 
-def make_chksum_N(s,nchars,sep=False):
+def make_chksum_N(s,nchars,sep=False,rounds=2,upper=True):
 	if isinstance(s,str):
 		s = s.encode()
-	if nchars%4 or not (4 <= nchars <= 64):
-		return False
 	from hashlib import sha256
-	s = sha256(sha256(s).digest()).hexdigest().upper()
-	sep = ('',' ')[bool(sep)]
-	return sep.join([s[i*4:i*4+4] for i in range(nchars//4)])
+	for i in range(rounds):
+		s = sha256(s).digest()
+	ret = s.hex()[:nchars]
+	if sep:
+		assert 4 <= nchars <= 64 and (not nchars % 4), 'illegal ‘nchars’ value'
+		ret = ' '.join([ret[i*4:i*4+4] for i in range(nchars//4)])
+	else:
+		assert 4 <= nchars <= 64, 'illegal ‘nchars’ value'
+	return ret.upper() if upper else ret
 
 def make_chksum_8(s,sep=False):
 	from .obj import HexStr
