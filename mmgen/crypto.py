@@ -65,6 +65,14 @@ class Crypto:
 		def __init__(self,fn):
 			oneshot_warning.__init__(self,div=fn,fmt_args=[fn],reverse=True)
 
+	def pwfile_used(self,passwd_file):
+		if hasattr(self,'_pwfile_used'):
+			self.pwfile_reuse_warning(passwd_file)
+			return True
+		else:
+			self._pwfile_used = True
+			return False
+
 	def __init__(self,cfg):
 		self.cfg = cfg
 		self.util = cfg._util
@@ -329,7 +337,7 @@ class Crypto:
 				cfg    = self.cfg,
 				infile = passwd_file,
 				desc   = f'{pw_desc} for {data_desc}',
-				quiet  = self.pwfile_reuse_warning(passwd_file).warning_shown ))
+				quiet  = self.pwfile_used(passwd_file) ))
 		else:
 			self.util.qmsg('\n'+fmt(message,indent='  '))
 			from .ui import get_words_from_user
@@ -360,7 +368,7 @@ class Crypto:
 				cfg    = self.cfg,
 				infile = passwd_file,
 				desc   = f'{pw_desc} for {data_desc}',
-				quiet  = self.pwfile_reuse_warning(passwd_file).warning_shown ))
+				quiet  = self.pwfile_used(passwd_file) ))
 		else:
 			from .ui import get_words_from_user
 			return ' '.join(get_words_from_user( self.cfg, f'Enter {pw_desc} for {data_desc}: ' ))
