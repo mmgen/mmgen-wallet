@@ -17,20 +17,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-autosign: Auto-sign MMGen transactions and message files
+autosign: Auto-sign MMGen transactions, message files and XMR wallet output files
 """
 
 import sys
 
 from .cfg import Config
-from .util import die,fmt_list,exit_if_mswin,async_run
+from .util import msg,die,fmt_list,exit_if_mswin,async_run
 
 exit_if_mswin('autosigning')
 
 opts_data = {
 	'sets': [('stealth_led', True, 'led', True)],
 	'text': {
-		'desc': 'Auto-sign MMGen transactions and message files',
+		'desc': 'Auto-sign MMGen transactions, message files and XMR wallet output files',
 		'usage':'[opts] [operation]',
 		'options': """
 -h, --help            Print this help message
@@ -52,6 +52,7 @@ opts_data = {
 -v, --verbose         Produce more verbose output
 -w, --wallet-dir=D    Specify an alternate wallet dir
                       (default: {asi.dfl_wallet_dir!r})
+-x, --xmrwallets=L    Range or list of wallets to be used for XMR autosigning
 """,
 	'notes': """
 
@@ -66,8 +67,9 @@ wait    - start in loop mode: wait-mount-sign-unmount-wait
                                USAGE NOTES
 
 If no operation is specified, this program mounts a removable device
-(typically a USB flash drive) containing unsigned MMGen transactions and/or
-message files, signs them, unmounts the removable device and exits.
+(typically a USB flash drive) containing unsigned MMGen transactions, message
+files, and/or XMR wallet output files, signs them, unmounts the removable
+device and exits.
 
 If invoked with ‘wait’, the program waits in a loop, mounting the removable
 device, performing signing operations and unmounting the device every time it
@@ -170,6 +172,10 @@ if len(cmd_args) == 1:
 		sys.exit(0)
 	elif cmd == 'setup':
 		asi.setup()
+		from .ui import keypress_confirm
+		if cfg.xmrwallets and keypress_confirm( cfg, '\nContinue with Monero setup?', default_yes=True ):
+			msg('')
+			asi.xmr_setup()
 		sys.exit(0)
 	elif cmd != 'wait':
 		die(1,f'{cmd!r}: unrecognized command')

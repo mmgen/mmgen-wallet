@@ -133,6 +133,8 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		def gen_msg_fns():
 			fmap = dict(filedir_map)
 			for coin in self.coins:
+				if coin == 'xmr':
+					continue
 				sdir = os.path.join('test','ref',fmap[coin])
 				for fn in os.listdir(sdir):
 					if fn.endswith(f'[{coin.upper()}].rawmsg.json'):

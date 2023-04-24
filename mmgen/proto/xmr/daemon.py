@@ -101,7 +101,8 @@ class MoneroWalletDaemon(RPCDaemon):
 			daemon_addr = None,
 			proxy       = None,
 			port_shift  = None,
-			datadir     = None ):
+			datadir     = None,
+			trust_daemon = False ):
 
 		self.proto = proto
 		self.test_suite = test_suite
@@ -143,7 +144,8 @@ class MoneroWalletDaemon(RPCDaemon):
 				"the MMGen config file." )
 
 		self.daemon_args = list_gen(
-			['--untrusted-daemon'],
+			['--trusted-daemon', trust_daemon],
+			['--untrusted-daemon', not trust_daemon],
 			[f'--rpc-bind-port={self.rpc_port}'],
 			['--wallet-dir='+self.wallet_dir],
 			['--log-file='+self.logfile],

@@ -35,6 +35,7 @@ cmd_groups_dfl = {
 #	'chainsplit':       ('TestSuiteChainsplit',{}),
 	'ethdev':           ('TestSuiteEthdev',{}),
 	'xmrwallet':        ('TestSuiteXMRWallet',{}),
+	'xmr_autosign':     ('TestSuiteXMRAutosign',{}),
 }
 
 cmd_groups_extra = {
@@ -212,6 +213,7 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 	'32': {},
 	'33': {},
 	'34': {},
+	'39': {},
 	'40': {},
 	'41': {},
 	'99': {}, # dummy

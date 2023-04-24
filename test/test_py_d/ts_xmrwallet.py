@@ -26,7 +26,7 @@ from subprocess import run,PIPE
 from mmgen.cfg import gc
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
-from mmgen.addrlist import KeyAddrList,AddrIdxList
+from mmgen.addrlist import ViewKeyAddrList,KeyAddrList,AddrIdxList
 from ..include.common import *
 from .common import *
 
@@ -44,10 +44,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	color = True
 	socks_port = 49237
 	user_data = (
-		('miner', '98831F3A', 130, '1-2', []),
-		('bob',   '1378FC64', 140, None,  ['--restricted-rpc']),
-		('alice', 'FE3C6545', 150, '1-4', []),
+		('miner', '98831F3A', False, 130, '1-2', []),
+		('bob',   '1378FC64', False, 140, None,  ['--restricted-rpc']),
+		('alice', 'FE3C6545', False, 150, '1-4', []),
 	)
+	tx_relay_user = 'bob'
 
 	cmd_group = (
 		('daemon_version',            'checking daemon version'),
@@ -91,15 +92,18 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		self.proto = init_proto( cfg, 'XMR', network='mainnet' )
 		self.datadir_base  = os.path.join('test','daemons','xmrtest')
 		self.extra_opts = ['--wallet-rpc-password=passw0rd']
+		self.autosign_mountpoint = os.path.join(self.tmpdir,'mmgen_autosign')
+		self.autosign_xmr_dir = os.path.join(self.tmpdir,'mmgen_autosign','xmr')
 		self.init_users()
 		self.init_daemon_args()
+		self.autosign_opts = []
 
 		for v in self.users.values():
 			run(['mkdir','-p',v.udir])
 
 		self.init_proxy()
 
-		self.tx_relay_daemon_parm = 'localhost:{}'.format( self.users['bob'].md.rpc_port )
+		self.tx_relay_daemon_parm = 'localhost:{}'.format( self.users[self.tx_relay_user].md.rpc_port )
 		self.tx_relay_daemon_proxy_parm = (
 			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}' ) # must be IP, not 'localhost'
 
@@ -205,6 +209,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		ud = namedtuple('user_data',[
 			'sid',
 			'mmwords',
+			'autosign',
 			'udir',
 			'datadir',
 			'kal_range',
@@ -220,6 +225,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		# kal_range must be None, a single digit, or a single hyphenated range
 		for (   user,
 				sid,
+				autosign,
 				shift,
 				kal_range,
 				add_coind_args ) in self.user_data:
@@ -260,15 +266,24 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				daemon          = wd,
 				test_connection = False,
 			)
+			if autosign:
+				kafile_suf = 'vkeys'
+				fn_stem    = 'MoneroWatchOnlyWallet'
+				kafile_dir = self.autosign_xmr_dir
+			else:
+				kafile_suf = 'akeys'
+				fn_stem    = 'MoneroWallet'
+				kafile_dir = udir
 			self.users[user] = ud(
 				sid           = sid,
 				mmwords       = f'test/ref/{sid}.mmwords',
+				autosign      = autosign,
 				udir          = udir,
 				datadir       = datadir,
 				kal_range     = kal_range,
-				kafile        = f'{udir}/{sid}-XMR-M[{kal_range}].akeys',
-				walletfile_fs = f'{udir}/{sid}-{{}}-MoneroWallet',
-				addrfile_fs   = f'{udir}/{sid}-{{}}-MoneroWallet.address.txt',
+				kafile        = f'{kafile_dir}/{sid}-XMR-M[{kal_range}].{kafile_suf}',
+				walletfile_fs = f'{udir}/{sid}-{{}}-{fn_stem}',
+				addrfile_fs   = f'{udir}/{sid}-{{}}-{fn_stem}.address.txt',
 				md            = md,
 				md_rpc        = md_rpc,
 				wd            = wd,
@@ -296,6 +311,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		for user,data in self.users.items():
 			if not data.kal_range:
 				continue
+			if data.autosign:
+				continue
 			run(['mkdir','-p',data.udir])
 			run(f'rm -f {data.kafile}',shell=True)
 			t = self.spawn(
@@ -312,7 +329,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def create_wallets_miner(self): return self.create_wallets('miner')
 	def create_wallets_alice(self): return self.create_wallets('alice')
 
-	def create_wallets(self,user,wallet=None,add_opts=[]):
+	def create_wallets(self,user,wallet=None,add_opts=[],op='create'):
 		assert wallet is None or is_int(wallet), 'wallet arg'
 		data = self.users[user]
 		stem_glob = data.walletfile_fs.format(wallet or '*')
@@ -325,9 +342,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			'mmgen-xmrwallet',
 			[f'--wallet-dir={data.udir}']
 			+ self.extra_opts
+			+ (self.autosign_opts if data.autosign else [])
 			+ add_opts
-			+ ['create']
-			+ [data.kafile]
+			+ [op]
+			+ ([] if data.autosign else [data.kafile])
 			+ [wallet or data.kal_range]
 		)
 		for i in MMGenRange(wallet or data.kal_range).items:
@@ -339,7 +357,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			)
 		return t
 
-	def new_addr_alice(self,spec,cfg,expect):
+	def new_addr_alice(self,spec,cfg,expect,kafile=None):
 		data = self.users['alice']
 		t = self.spawn(
 			'mmgen-xmrwallet',
@@ -348,7 +366,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			[f'--daemon=localhost:{data.md.rpc_port}'] +
 			(['--no-start-wallet-daemon'] if cfg in ('continue','stop') else []) +
 			(['--no-stop-wallet-daemon'] if cfg in ('start','continue') else []) +
-			[ 'new', data.kafile, spec ] )
+			['new', (kafile or data.kafile), spec] )
 		res = strip_ansi_escapes(t.read()).replace('\r','')
 		m = re.search(expect,res,re.DOTALL)
 		assert m, f'no match found for {expect!r}'
@@ -426,7 +444,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def list_wallets_all(self):
 		return self.sync_wallets('alice',op='list')
 
-	def sync_wallets(self,user,op='sync',wallets=None,add_opts=[]):
+	def sync_wallets(self,user,op='sync',wallets=None,add_opts=[],bal_chk_func=None):
 		data = self.users[user]
 		cmd_opts = list_gen(
 			[f'--wallet-dir={data.udir}'],
@@ -436,9 +454,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			'mmgen-xmrwallet',
 			self.extra_opts
 			+ cmd_opts
+			+ self.autosign_opts
 			+ add_opts
 			+ [op]
-			+ [data.kafile]
+			+ ([] if data.autosign else [data.kafile])
 			+ ([wallets] if wallets else [])
 		)
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
@@ -450,7 +469,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			))
 			t.expect('Chain height: ')
 			t.expect('Wallet height: ')
-			t.expect('Balance: ')
+			res = t.expect_getend('Unlocked balance: ')
+			if bal_chk_func:
+				bal = XMRAmt(strip_ansi_escapes(res))
+				assert bal_chk_func(n,bal), f'balance check for wallet {n} failed!'
 		return t
 
 	def do_op(self, op, user, arg2,
@@ -464,10 +486,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		data = self.users[user]
 		cmd_opts = list_gen(
 			[f'--wallet-dir={data.udir}'],
-			[f'--outdir={data.udir}'],
+			[f'--outdir={data.udir}', not data.autosign],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
 			[f'--tx-relay-daemon={tx_relay_parm}', tx_relay_parm],
-			['--no-relay', no_relay]
+			['--no-relay', no_relay and not data.autosign],
+			[f'--autosign-mountpoint={self.autosign_mountpoint}', data.autosign],
 		)
 		add_desc = (', ' + add_desc) if add_desc else ''
 
@@ -476,9 +499,12 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			self.extra_opts
 			+ cmd_opts
 			+ [op]
-			+ [data.kafile]
+			+ ([] if data.autosign else [data.kafile])
 			+ [arg2],
 			extra_desc = f'({capfirst(user)}{add_desc})' )
+
+		if op == 'sign':
+			return t
 
 		if op == 'sweep':
 			t.expect(
@@ -491,7 +517,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		if return_amt:
 			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amount: ')).replace('XMR','').strip())
 
-		dtype = 'signed'
+		dtype = 'unsigned' if data.autosign else 'signed'
 		t.expect(f'Save {dtype} transaction? (y/N): ','y')
 		t.written_to_file(f'{dtype.capitalize()} transaction')
 
@@ -597,7 +623,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	async def open_wallet_user(self,user,wnum):
 		data = self.users[user]
 		silence()
-		kal = KeyAddrList(
+		kal = (ViewKeyAddrList if data.autosign else KeyAddrList)(
 			cfg      = cfg,
 			proto    = self.proto,
 			addrfile = data.kafile,

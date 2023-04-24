@@ -39,6 +39,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 	mmcaps         = ('key','addr')
 	ignore_daemon_version = False
 	coin_amt       = 'XMRAmt'
+	sign_mode      = 'standalone'
 
 	def get_addr_len(self,addr_fmt):
 		return (64,72)[addr_fmt == 'monero_integrated']

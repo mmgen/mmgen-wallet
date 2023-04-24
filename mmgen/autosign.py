@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-autosign: Auto-sign MMGen transactions and message files
+autosign: Auto-sign MMGen transactions, message files and XMR wallet output files
 """
 
 import sys,os,asyncio
@@ -17,7 +17,7 @@ from subprocess import run,PIPE,DEVNULL
 from collections import namedtuple
 
 from .cfg import Config
-from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt,fmt_list
+from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt,fmt_list,async_run
 from .color import yellow,red,orange
 from .wallet import Wallet,get_wallet_cls
 from .filename import find_file_in_dir
@@ -38,6 +38,10 @@ class Signable:
 		@property
 		def unsigned(self):
 			return self._unprocessed( '_unsigned', self.rawext, self.sigext )
+
+		@property
+		def unsubmitted(self):
+			return self._unprocessed( '_unsubmitted', self.sigext, self.subext )
 
 		def _unprocessed(self,attrname,rawext,sigext):
 			if not hasattr(self,attrname):
@@ -115,6 +119,58 @@ class Signable:
 		def gen_bad_list(self,bad_files):
 			for f in bad_files:
 				yield red(f.path)
+
+	class xmr_transaction(transaction):
+		dir_name = 'xmr_tx_dir'
+		desc = 'Monero transaction'
+		subext = 'subtx'
+
+		def __init__(self,*args,**kwargs):
+			super().__init__(*args,**kwargs)
+			if len(self.unsigned) > 1:
+				die('AutosignTXError', 'Only one unsigned XMR transaction allowed at a time!')
+
+		async def sign(self,f):
+			from .xmrwallet import MoneroMMGenTX,MoneroWalletOps,xmrwallet_uargs
+			tx1 = MoneroMMGenTX.Completed( self.parent.xmrwallet_cfg, f.path )
+			m = MoneroWalletOps.sign(
+				self.parent.xmrwallet_cfg,
+				xmrwallet_uargs(
+					infile  = self.parent.wallet_files[0], # MMGen wallet file
+					wallets = str(tx1.src_wallet_idx),
+					spec    = None ),
+			)
+			tx2 = await m.main(f.path) # TODO: stop wallet daemon?
+			tx2.write(ask_write=False)
+			return tx2
+
+		def print_summary(self,txs):
+			bmsg('\nAutosign summary:\n')
+			msg_r('\n'.join(tx.get_info() for tx in txs))
+
+	class xmr_wallet_outputs_file(transaction):
+		desc = 'Monero wallet outputs file'
+		rawext = 'raw'
+		sigext = 'sig'
+		dir_name = 'xmr_outputs_dir'
+
+		async def sign(self,f):
+			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
+			wallet_idx = MoneroWalletOps.wallet.get_idx_from_fn(f.name)
+			m = MoneroWalletOps.export_key_images(
+				self.parent.xmrwallet_cfg,
+				xmrwallet_uargs(
+					infile  = self.parent.wallet_files[0], # MMGen wallet file
+					wallets = str(wallet_idx),
+					spec    = None ),
+			)
+			obj = await m.main( f, wallet_idx )
+			obj.write()
+			return obj
+
+		def print_summary(self,txs):
+			bmsg('\nAutosign summary:')
+			msg('  ' + '\n  '.join(tx.get_info() for tx in txs) + '\n')
 
 	class message(base):
 		desc = 'message file'
@@ -200,9 +256,17 @@ class Autosign:
 
 		self.coins = cfg.coins.upper().split(',') if cfg.coins else []
 
+		if cfg.xmrwallets and not 'XMR' in self.coins:
+			self.coins.append('XMR')
+
 		if not self.coins:
 			ymsg('Warning: no coins specified, defaulting to BTC')
 			self.coins = ['BTC']
+
+		if 'XMR' in self.coins:
+			self.xmr_dir = os.path.join( self.mountpoint, 'xmr' )
+			self.xmr_tx_dir = os.path.join( self.mountpoint, 'xmr', 'tx' )
+			self.xmr_outputs_dir = os.path.join( self.mountpoint, 'xmr', 'outputs' )
 
 	async def check_daemons_running(self):
 		from .protocol import init_proto
@@ -239,7 +303,7 @@ class Autosign:
 
 		return self._wallet_files
 
-	def do_mount(self):
+	def do_mount(self,no_xmr_chk=False):
 
 		from stat import S_ISDIR,S_IWUSR,S_IRUSR
 
@@ -271,6 +335,9 @@ class Autosign:
 
 		if self.have_msg_dir:
 			check_dir(self.msg_dir)
+
+		if 'XMR' in self.coins and not no_xmr_chk:
+			check_dir(self.xmr_tx_dir)
 
 	def do_umount(self):
 		if os.path.ismount(self.mountpoint):
@@ -330,7 +397,10 @@ class Autosign:
 				self.led.set('busy')
 			ret1 = await self.sign_all('transaction')
 			ret2 = await self.sign_all('message') if self.have_msg_dir else True
-			ret = ret1 and ret2
+			# import XMR wallet outputs BEFORE signing transactions:
+			ret3 = await self.sign_all('xmr_wallet_outputs_file') if 'XMR' in self.coins else True
+			ret4 = await self.sign_all('xmr_transaction') if 'XMR' in self.coins else True
+			ret = ret1 and ret2 and ret3 and ret4
 			self.do_umount()
 			self.led.set(('standby','off','error')[(not ret)*2 or bool(self.cfg.stealth_led)])
 			return ret
@@ -365,7 +435,7 @@ class Autosign:
 		self.create_wallet_dir()
 		if not self.get_insert_status():
 			die(1,'Removable device not present!')
-		self.do_mount()
+		self.do_mount(no_xmr_chk=True)
 		self.wipe_existing_key()
 		self.create_key()
 		if not no_unmount:
@@ -397,6 +467,53 @@ class Autosign:
 			ss_in = Wallet( self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt] )
 		ss_out = Wallet( self.cfg, ss=ss_in )
 		ss_out.write_to_file( desc='autosign wallet', outdir=self.wallet_dir )
+
+	@property
+	def xmrwallet_cfg(self):
+		if not hasattr(self,'_xmrwallet_cfg'):
+			from .cfg import Config
+			self._xmrwallet_cfg = Config({
+				'coin': 'xmr',
+				'wallet_rpc_user': 'autosigner',
+				'wallet_rpc_password': 'my very secret password',
+				'passwd_file': self.cfg.passwd_file,
+				'wallet_dir': self.wallet_dir,
+				'autosign': True,
+				'autosign_mountpoint': self.mountpoint,
+				'outdir': self.xmr_dir, # required by vkal.write()
+			})
+		return self._xmrwallet_cfg
+
+	def xmr_setup(self):
+
+		import shutil
+		try: shutil.rmtree(self.xmr_outputs_dir)
+		except: pass
+
+		os.makedirs(self.xmr_outputs_dir)
+
+		os.makedirs(self.xmr_tx_dir,exist_ok=True)
+
+		from .addrfile import ViewKeyAddrFile
+		from .fileutil import shred_file
+		for f in os.scandir(self.xmr_dir):
+			if f.name.endswith(ViewKeyAddrFile.ext):
+				msg(f'Shredding old viewkey-address file {f.name!r}')
+				shred_file(f.path)
+
+		if len(self.wallet_files) > 1:
+			ymsg(f'Warning: more that one wallet file, using the first ({self.wallet_files[0]}) for xmrwallet generation')
+
+		from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
+		m = MoneroWalletOps.create_offline(
+			self.xmrwallet_cfg,
+			xmrwallet_uargs(
+				infile  = self.wallet_files[0], # MMGen wallet file
+				wallets = self.cfg.xmrwallets,  # XMR wallet idxs
+				spec    = None ),
+		)
+		async_run(m.main())
+		async_run(m.stop_wallet_daemon())
 
 	def get_insert_status(self):
 		if self.cfg.no_insert_check:

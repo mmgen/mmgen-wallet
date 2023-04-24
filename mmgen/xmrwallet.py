@@ -23,13 +23,15 @@ xmrwallet.py - MoneroWalletOps class
 import os,re,time,json
 from collections import namedtuple
 from .objmethods import MMGenObject,Hilite,InitErrors
-from .obj import CoinTxID
+from .obj import CoinTxID,Int
 from .color import red,yellow,green,blue,cyan,pink,orange
 from .util import (
 	msg,
 	msg_r,
 	gmsg,
+	bmsg,
 	ymsg,
+	rmsg,
 	gmsg_r,
 	pp_msg,
 	die,
@@ -45,7 +47,7 @@ from .seed import SeedID
 from .protocol import init_proto
 from .proto.btc.common import b58a
 from .addr import CoinAddr,AddrIdx
-from .addrlist import KeyAddrList,AddrIdxList
+from .addrlist import KeyAddrList,ViewKeyAddrList,AddrIdxList
 from .rpc import json_encoder
 from .proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
 from .proto.xmr.daemon import MoneroWalletDaemon
@@ -68,6 +70,16 @@ xmrwallet_uarg_info = (
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),
 		r'(?:[^:]+):(?:\d+)'
+	)
+
+def get_autosign_obj(cfg):
+	from .autosign import Autosign,AutosignConfig
+	return Autosign(
+		AutosignConfig({
+			'mountpoint': cfg.autosign_mountpoint,
+			'test_suite': cfg.test_suite,
+			'coins': 'XMR',
+		})
 	)
 
 class XMRWalletAddrSpec(str,Hilite,InitErrors,MMGenObject):
@@ -160,6 +172,7 @@ class MoneroMMGenTX:
 
 		data_label = 'MoneroMMGenTX'
 		base_chksum_fields = ('op','create_time','network','seed_id','source','dest','amount')
+		full_chksum_fields = ('op','create_time','network','seed_id','source','dest','amount','fee','blob')
 		chksum_nchars = 6
 		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
 			'op',
@@ -175,11 +188,17 @@ class MoneroMMGenTX:
 			'fee',
 			'blob',
 			'metadata',
+			'unsigned_txset',
+			'signed_txset',
+			'complete',
 		])
-		full_chksum_fields = set(xmrwallet_tx_data._fields) - {'metadata'}
 
 		def __init__(self):
 			self.name = type(self).__name__
+
+		@property
+		def src_wallet_idx(self):
+			return int(self.data.source.split(':')[0])
 
 		def get_info(self,indent=''):
 			d = self.data
@@ -208,6 +227,10 @@ class MoneroMMGenTX:
 			if pmid:
 				fs += '  Payment ID: {pmid}'
 
+			coldsign_status = (
+				pink(' [cold signed{}]'.format(', submitted' if d.complete else ''))
+				if d.signed_txset else '' )
+
 			from .util2 import format_elapsed_hr
 			return fmt(fs,strip_char='\t',indent=indent).format(
 					a = orange(self.base_chksum.upper()),
@@ -216,9 +239,9 @@ class MoneroMMGenTX:
 					d = d.txid.hl(),
 					e = make_timestr(d.create_time),
 					f = format_elapsed_hr(d.create_time),
-					g = make_timestr(d.sign_time),
-					h = format_elapsed_hr(d.sign_time),
-					i = blue(capfirst(d.op)),
+					g = make_timestr(d.sign_time) if d.sign_time else '-',
+					h = format_elapsed_hr(d.sign_time) if d.sign_time else '-',
+					i = blue(capfirst(d.op)) + coldsign_status,
 					j = d.source.wallet.hl(),
 					k = red(f'#{d.source.account}'),
 					l = to_entry if d.dest else '',
@@ -241,6 +264,9 @@ class MoneroMMGenTX:
 				e = self.ext
 			)
 
+			if self.cfg.autosign:
+				fn = os.path.join( get_autosign_obj(self.cfg).xmr_tx_dir, fn )
+
 			from .fileutil import write_data_to_file
 			write_data_to_file(
 				cfg                   = self.cfg,
@@ -249,7 +275,8 @@ class MoneroMMGenTX:
 				desc                  = self.desc,
 				ask_write             = ask_write,
 				ask_write_default_yes = not ask_write,
-				ask_overwrite         = ask_overwrite )
+				ask_overwrite         = ask_overwrite,
+				ignore_opt_outdir     = self.cfg.autosign )
 
 	class New(Base):
 
@@ -259,7 +286,13 @@ class MoneroMMGenTX:
 
 			assert not args, 'Non-keyword args not permitted'
 
-			d = namedtuple('kwargs_tuple',kwargs)(**kwargs)
+			if '_in_tx' in kwargs:
+				in_data = kwargs.pop('_in_tx').data._asdict()
+				in_data.update(kwargs)
+			else:
+				in_data = kwargs
+
+			d = namedtuple('monero_tx_in_data_tuple',in_data)(**in_data)
 			self.cfg = d.cfg
 
 			proto = init_proto( self.cfg, 'xmr', network=d.network, need_amt=True )
@@ -268,8 +301,8 @@ class MoneroMMGenTX:
 
 			self.data = self.xmrwallet_tx_data(
 				op             = d.op,
-				create_time    = now,
-				sign_time      = now,
+				create_time    = getattr(d,'create_time',now),
+				sign_time      = (getattr(d,'sign_time',None) or now) if self.signed else None,
 				network        = d.network,
 				seed_id        = SeedID(sid=d.seed_id),
 				source         = XMRWalletAddrSpec(d.source),
@@ -280,15 +313,31 @@ class MoneroMMGenTX:
 				fee            = proto.coin_amt(d.fee,from_unit='atomic'),
 				blob           = d.blob,
 				metadata       = d.metadata,
+				unsigned_txset = d.unsigned_txset,
+				signed_txset   = getattr(d,'signed_txset',None),
+				complete       = True if self.name == 'NewSigned' else getattr(d,'complete',False),
 			)
+
+	class NewUnsigned(New):
+		desc = 'unsigned transaction'
+		ext = 'rawtx'
+		signed = False
 
 	class NewSigned(New):
 		desc = 'signed transaction'
 		ext = 'sigtx'
 		signed = True
 
+	class NewColdSigned(NewSigned):
+		pass
+
+	class NewSubmitted(NewColdSigned):
+		desc = 'submitted transaction'
+		ext = 'subtx'
+
 	class Completed(Base):
 		desc = 'transaction'
+		forbidden_fields = ()
 
 		def __init__(self,cfg,fn):
 
@@ -302,11 +351,23 @@ class MoneroMMGenTX:
 			except Exception as e:
 				die( 'MoneroMMGenTXFileParseError', f'{type(e).__name__}: {e}\nCould not load transaction file' )
 
+			if not 'unsigned_txset' in d_wrap['data']: # backwards compat: use old checksum fields
+				self.full_chksum_fields = (
+					set(self.xmrwallet_tx_data._fields) -
+					{'metadata','unsigned_txset','signed_txset','complete'} )
+
+			for key in self.xmrwallet_tx_data._fields: # backwards compat: fill in missing fields
+				if not key in d_wrap['data']:
+					d_wrap['data'][key] = None
+
 			d = self.xmrwallet_tx_data(**d_wrap['data'])
 
 			if self.name != 'Completed':
 				assert fn.endswith('.'+self.ext), 'TX filename {fn!r} has incorrect extension (not {self.ext!r})'
 				assert getattr(d,self.req_field), f'{self.name} TX missing required field {self.req_field!r}'
+				assert bool(d.sign_time)==self.signed,'{} has {}sign time!'.format(self.desc,'no 'if self.signed else'')
+				for f in self.forbidden_fields:
+					assert not getattr(d,f), f'{self.name} TX mismatch: contains forbidden field {f!r}'
 
 			proto = init_proto( cfg, 'xmr', network=d.network, need_amt=True )
 
@@ -324,20 +385,182 @@ class MoneroMMGenTX:
 				fee            = proto.coin_amt(d.fee),
 				blob           = d.blob,
 				metadata       = d.metadata,
+				unsigned_txset = d.unsigned_txset,
+				signed_txset   = d.signed_txset,
+				complete       = d.complete,
 			)
 
 			self.check_checksums(d_wrap)
+
+	class Unsigned(Completed):
+		desc = 'unsigned transaction'
+		ext = 'rawtx'
+		signed = False
+		req_field = 'unsigned_txset'
+		forbidden_fields = ('signed_txset',)
 
 	class Signed(Completed):
 		desc = 'signed transaction'
 		ext = 'sigtx'
 		signed = True
 		req_field = 'blob'
+		forbidden_fields = ('signed_txset','unsigned_txset')
+
+	class ColdSigned(Signed):
+		req_field = 'signed_txset'
+		forbidden_fields = ()
+
+	class Submitted(ColdSigned):
+		desc = 'submitted transaction'
+		ext = 'subtx'
+
+class MoneroWalletOutputsFile:
+
+	class Base(MoneroMMGenFile):
+
+		desc = 'wallet outputs'
+		data_label = 'MoneroMMGenWalletOutputsFile'
+		base_chksum_fields = ('seed_id','wallet_index','outputs_data_hex',)
+		full_chksum_fields = ('seed_id','wallet_index','outputs_data_hex','signed_key_images')
+		fn_fs = '{a}-outputs-{b}.{c}'
+		ext_offset = 25 # len('-outputs-') + len(chksum) ({b})
+		chksum_nchars = 16
+		data_tuple = namedtuple('wallet_outputs_data',[
+			'seed_id',
+			'wallet_index',
+			'outputs_data_hex',
+			'signed_key_images',
+		])
+
+		def __init__(self,cfg):
+			self.name = type(self).__name__
+			self.cfg = cfg
+
+		def write(self,add_suf=''):
+			from .fileutil import write_data_to_file
+			write_data_to_file(
+				cfg               = self.cfg,
+				outfile           = self.get_outfile( self.cfg, self.wallet_fn ) + add_suf,
+				data              = self.make_wrapped_data(self.data._asdict()),
+				desc              = self.desc,
+				ask_overwrite     = False,
+				ignore_opt_outdir = True )
+
+		def get_outfile(self,cfg,wallet_fn):
+			fn = self.fn_fs.format(
+				a = wallet_fn,
+				b = self.base_chksum,
+				c = self.ext,
+			)
+			return os.path.join(
+				get_autosign_obj(cfg).xmr_outputs_dir,
+				os.path.basename(fn) ) if cfg.autosign else fn
+
+		def get_wallet_fn(self,fn):
+			assert fn.endswith(f'.{self.ext}'), (
+				f'{type(self).__name__}: filename does not end with {"."+self.ext!r}'
+			)
+			return fn[:-(len(self.ext)+self.ext_offset+1)]
+
+		def get_info(self,indent=''):
+			if self.data.signed_key_images is not None:
+				data = self.data.signed_key_images or []
+				return f'{self.wallet_fn}: {len(data)} signed key image{suf(data)}'
+			else:
+				return f'{self.wallet_fn}: no key images'
+
+	class New(Base):
+		ext = 'raw'
+
+		def __init__( self, parent, wallet_fn, data, wallet_idx=None ):
+			super().__init__(parent.cfg)
+			self.wallet_fn = wallet_fn
+			init_data = dict.fromkeys(self.data_tuple._fields)
+			init_data.update({
+				'seed_id':      parent.kal.al_id.sid,
+				'wallet_index': wallet_idx or parent.get_idx_from_fn(os.path.basename(wallet_fn)),
+			})
+			init_data.update({k:v for k,v in data.items() if k in init_data})
+			self.data = self.data_tuple(**init_data)
+
+	class Completed(New):
+
+		def __init__( self, parent, fn=None, wallet_fn=None ):
+			def check_equal(desc,a,b):
+				assert a == b, f'{desc} mismatch: {a} (from file) != {b} (from filename)'
+			fn = fn or self.get_outfile( parent.cfg, wallet_fn )
+			wallet_fn = wallet_fn or self.get_wallet_fn(fn)
+			d_wrap = self.extract_data_from_file( parent.cfg, fn )
+			data = d_wrap['data']
+			check_equal( 'Seed ID', data['seed_id'], parent.kal.al_id.sid )
+			wallet_idx = parent.get_idx_from_fn(os.path.basename(wallet_fn))
+			check_equal( 'Wallet index', data['wallet_index'], wallet_idx )
+			super().__init__(
+				parent     = parent,
+				wallet_fn  = wallet_fn,
+				data       = data,
+				wallet_idx = wallet_idx,
+			)
+			self.check_checksums(d_wrap)
+
+		@classmethod
+		def find_fn_from_wallet_fn(cls,cfg,wallet_fn,ret_on_no_match=False):
+			path = get_autosign_obj(cfg).xmr_outputs_dir or os.curdir
+			fn = os.path.basename(wallet_fn)
+			pat = cls.fn_fs.format(
+				a = fn,
+				b = f'[0-9a-f]{{{cls.chksum_nchars}}}\\',
+				c = cls.ext,
+			)
+			matches = [f for f in os.scandir(path) if re.match(pat,f.name)]
+			if not matches and ret_on_no_match:
+				return None
+			if not matches or len(matches) > 1:
+				die(2,'{a} matching pattern {b!r} found in {c}!'.format(
+					a = 'No files' if not matches else 'More than one file',
+					b = pat,
+					c = path
+				))
+			return matches[0].path
+
+	class Unsigned(Completed):
+		pass
+
+	class SignedNew(New):
+		desc = 'signed key images'
+		ext = 'sig'
+
+	class Signed(Completed,SignedNew):
+		pass
+
+class MoneroWalletDumpFile:
+
+	class Base:
+		desc = 'Monero wallet dump'
+		data_label = 'MoneroMMGenWalletDumpFile'
+		base_chksum_fields = ('seed_id','wallet_index','wallet_metadata')
+		full_chksum_fields = None
+		ext = 'dump'
+		ext_offset = 0
+		data_tuple = namedtuple('wallet_dump_data',[
+			'seed_id',
+			'wallet_index',
+			'wallet_metadata',
+		])
+		def get_outfile(self,cfg,wallet_fn):
+			return f'{wallet_fn}.{self.ext}'
+
+	class New(Base,MoneroWalletOutputsFile.New):
+		pass
+
+	class Completed(Base,MoneroWalletOutputsFile.Completed):
+		pass
 
 class MoneroWalletOps:
 
 	ops = (
 		'create',
+		'create_offline',
 		'sync',
 		'list',
 		'new',
@@ -345,7 +568,24 @@ class MoneroWalletOps:
 		'sweep',
 		'relay',
 		'txview',
-		'label' )
+		'label',
+		'sign',
+		'submit',
+		'dump',
+		'restore',
+		'export_outputs',
+		'import_key_images' )
+
+	kafile_arg_ops = (
+		'create',
+		'sync',
+		'list',
+		'label',
+		'new',
+		'transfer',
+		'sweep',
+		'dump',
+		'restore' )
 
 	opts = (
 		'wallet_dir',
@@ -356,13 +596,16 @@ class MoneroWalletOps:
 		'restore_height',
 		'no_start_wallet_daemon',
 		'no_stop_wallet_daemon',
-		'no_relay' )
+		'no_relay',
+		'watch_only',
+		'autosign' )
 
 	pat_opts = ('daemon','tx_relay_daemon')
 
 	class base(MMGenObject):
 
 		opts = ('wallet_dir',)
+		trust_daemon = False
 
 		def __init__(self,cfg,uarg_tuple):
 
@@ -448,8 +691,12 @@ class MoneroWalletOps:
 			'daemon',
 			'no_start_wallet_daemon',
 			'no_stop_wallet_daemon',
+			'autosign',
+			'watch_only',
 		)
 		wallet_exists = True
+		start_daemon = True
+		offline = False
 		skip_wallet_check = False # for debugging
 
 		def __init__(self,cfg,uarg_tuple):
@@ -470,11 +717,36 @@ class MoneroWalletOps:
 
 			super().__init__(cfg,uarg_tuple)
 
-			self.kal = KeyAddrList(
-				cfg      = cfg,
-				proto    = self.proto,
-				addrfile = uarg.infile,
-				key_address_validity_check = True )
+			if self.offline:
+				from .wallet import Wallet
+				self.seed_src = Wallet(
+					cfg           = cfg,
+					fn            = uarg.infile,
+					ignore_in_fmt = True )
+
+				gmsg('\nCreating ephemeral key-address list for offline wallets')
+				self.kal = KeyAddrList(
+					cfg       = cfg,
+					proto     = self.proto,
+					seed      = self.seed_src.seed,
+					addr_idxs = uarg.wallets,
+					skip_chksum_msg = True )
+			else:
+				# with watch_only, make a second attempt to open the file as KeyAddrList:
+				for first_try in (True,False):
+					try:
+						self.kal = (ViewKeyAddrList if (self.cfg.watch_only and first_try) else KeyAddrList)(
+							cfg      = cfg,
+							proto    = self.proto,
+							addrfile = self.autosign_viewkey_addr_file if self.cfg.autosign else uarg.infile,
+							key_address_validity_check = True,
+							skip_chksum_msg = True )
+						break
+					except:
+						if first_try:
+							msg(f'Attempting to open {uarg.infile} as key-address list')
+							continue
+						raise
 
 			msg('')
 
@@ -483,17 +755,25 @@ class MoneroWalletOps:
 			if not self.skip_wallet_check:
 				check_wallets()
 
+			relay_opt = self.parse_tx_relay_opt() if self.name == 'submit' and self.cfg.tx_relay_daemon else None
+
 			self.wd = MoneroWalletDaemon(
 				cfg         = self.cfg,
 				proto       = self.proto,
 				wallet_dir  = self.cfg.wallet_dir or '.',
 				test_suite  = self.cfg.test_suite,
-				daemon_addr = self.cfg.daemon or None,
+				daemon_addr = relay_opt[1] if relay_opt else (self.cfg.daemon or None),
+				trust_daemon = self.trust_daemon,
 			)
 
 			u = self.wd.usr_daemon_args = []
-			if self.name == 'create' and self.cfg.restore_height is None:
+			if self.offline or (self.name in ('create','restore') and self.cfg.restore_height is None):
 				u.append('--offline')
+			if relay_opt:
+				if self.cfg.test_suite:
+					u.append('--daemon-ssl-allow-any-cert')
+				if relay_opt[2]:
+					u.append(f'--proxy={relay_opt[2]}')
 
 			self.c = MoneroWalletRPCClient(
 				cfg             = self.cfg,
@@ -501,8 +781,12 @@ class MoneroWalletOps:
 				test_connection = False,
 			)
 
-			if not self.cfg.no_start_wallet_daemon:
+			if self.start_daemon and not self.cfg.no_start_wallet_daemon:
 				async_run(self.c.restart_daemon())
+
+		@classmethod
+		def get_idx_from_fn(cls,fn):
+			return int( re.match(r'[0-9a-fA-F]{8}-(\d+)-Monero(WatchOnly)?Wallet.*',fn)[1] )
 
 		def get_coin_daemon_rpc(self):
 
@@ -518,6 +802,22 @@ class MoneroWalletOps:
 				user   = None,
 				passwd = None )
 
+		@property
+		def autosign_viewkey_addr_file(self):
+			from .addrfile import ViewKeyAddrFile
+			mpdir = get_autosign_obj(self.cfg).xmr_dir
+			fnlist = [f for f in os.listdir(mpdir) if f.endswith(ViewKeyAddrFile.ext)]
+			if len(fnlist) != 1:
+				die(2,
+					'{a} viewkey-address files found in autosign mountpoint directory {b!r}!\n'.format(
+						a = 'Multiple' if fnlist else 'No',
+						b = mpdir
+					)
+					+ 'Have you run ‘mmgen-autosign setup’ on your offline machine with the --xmrwallets option?'
+				)
+			else:
+				return os.path.join( mpdir, fnlist[0] )
+
 		def create_addr_data(self):
 			if uarg.wallets:
 				idxs = AddrIdxList(uarg.wallets)
@@ -531,18 +831,22 @@ class MoneroWalletOps:
 			if not self.cfg.no_stop_wallet_daemon:
 				await self.c.stop_daemon()
 
-		def get_wallet_fn(self,data):
+		def get_wallet_fn(self,data,watch_only=None):
+			if watch_only is None:
+				watch_only = self.cfg.watch_only
 			return os.path.join(
-				self.cfg.wallet_dir or '.','{a}-{b}-MoneroWallet{c}'.format(
+				self.cfg.wallet_dir or '.','{a}-{b}-Monero{c}Wallet{d}'.format(
 					a = self.kal.al_id.sid,
 					b = data.idx,
-					c = f'.{self.cfg.network}' if self.cfg.network != 'mainnet' else ''))
+					c = 'WatchOnly' if watch_only else '',
+					d = f'.{self.cfg.network}' if self.cfg.network != 'mainnet' else ''))
 
 		async def main(self):
-			gmsg('\n{a}ing {b} wallet{c}'.format(
+			gmsg('\n{a}ing {b} {c}wallet{d}'.format(
 				a = self.stem.capitalize(),
 				b = len(self.addr_data),
-				c = suf(self.addr_data) ))
+				c = 'watch-only ' if self.cfg.watch_only else '',
+				d = suf(self.addr_data) ))
 			processed = 0
 			for n,d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
 				fn = self.get_wallet_fn(d)
@@ -559,6 +863,14 @@ class MoneroWalletOps:
 			gmsg(f'\n{processed} wallet{suf(processed)} {self.stem}ed')
 			return processed
 
+		def head_msg(self,wallet_idx,fn):
+			gmsg('\n{} {} wallet #{} ({})'.format(
+				self.action.capitalize(),
+				self.wallet_desc,
+				wallet_idx,
+				os.path.basename(fn)
+			))
+
 		class rpc:
 
 			def __init__(self,parent,d):
@@ -567,6 +879,9 @@ class MoneroWalletOps:
 				self.c = parent.c
 				self.d = d
 				self.fn = parent.get_wallet_fn(d)
+				self.new_tx_cls = (
+					MoneroMMGenTX.NewUnsigned if self.cfg.watch_only else
+					MoneroMMGenTX.NewSigned )
 
 			def open_wallet(self,desc,refresh=True):
 				gmsg_r(f'\n  Opening {desc} wallet...')
@@ -577,7 +892,8 @@ class MoneroWalletOps:
 				gmsg('done')
 
 				if refresh:
-					gmsg_r(f'  Refreshing {desc} wallet...')
+					m = ' and contacting relay' if self.parent.name == 'submit' and self.cfg.tx_relay_daemon else ''
+					gmsg_r(f'  Refreshing {desc} wallet{m}...')
 					ret = self.c.call('refresh')
 					gmsg('done')
 					if ret['received_money']:
@@ -695,7 +1011,7 @@ class MoneroWalletOps:
 					get_tx_hex = True,
 					get_tx_metadata = True
 				)
-				return MoneroMMGenTX.NewSigned(
+				return self.new_tx_cls(
 					cfg            = self.cfg,
 					op             = self.parent.name,
 					network        = self.parent.proto.network,
@@ -708,6 +1024,7 @@ class MoneroWalletOps:
 					fee            = res['fee'],
 					blob           = res['tx_blob'],
 					metadata       = res['tx_metadata'],
+					unsigned_txset = res['unsigned_txset'] if self.cfg.watch_only else None,
 				)
 
 			def make_sweep_tx(self,account,dest_acct,dest_addr_idx,addr):
@@ -723,7 +1040,7 @@ class MoneroWalletOps:
 				if len(res['tx_hash_list']) > 1:
 					die(3,'More than one TX required.  Cannot perform this sweep')
 
-				return MoneroMMGenTX.NewSigned(
+				return self.new_tx_cls(
 					cfg            = self.cfg,
 					op             = self.parent.name,
 					network        = self.parent.proto.network,
@@ -739,6 +1056,7 @@ class MoneroWalletOps:
 					fee            = res['fee_list'][0],
 					blob           = res['tx_blob_list'][0],
 					metadata       = res['tx_metadata_list'][0],
+					unsigned_txset = res['unsigned_txset'] if self.cfg.watch_only else None,
 				)
 
 			def relay_tx(self,tx_hex):
@@ -766,26 +1084,137 @@ class MoneroWalletOps:
 			else:
 				restore_height = self.cfg.restore_height
 
-			from .xmrseed import xmrseed
-			ret = self.c.call(
-				'restore_deterministic_wallet',
-				filename       = os.path.basename(fn),
-				password       = d.wallet_passwd,
-				seed           = xmrseed().fromhex(d.sec.wif,tostr=True),
-				restore_height = restore_height,
-				language       = 'English' )
+			if self.cfg.watch_only:
+				ret = self.c.call(
+					'generate_from_keys',
+					filename       = os.path.basename(fn),
+					password       = d.wallet_passwd,
+					address        = d.addr,
+					viewkey        = d.viewkey,
+					restore_height = restore_height )
+			else:
+				from .xmrseed import xmrseed
+				ret = self.c.call(
+					'restore_deterministic_wallet',
+					filename       = os.path.basename(fn),
+					password       = d.wallet_passwd,
+					seed           = xmrseed().fromhex(d.sec.wif,tostr=True),
+					restore_height = restore_height,
+					language       = 'English' )
 
 			pp_msg(ret) if self.cfg.debug else msg('  Address: {}'.format( ret['address'] ))
 			return True
 
-	class sync(wallet):
-		opts    = ('rescan_blockchain',)
+	class create_offline(create):
+		offline = True
 
 		def __init__(self,cfg,uarg_tuple):
 
 			super().__init__(cfg,uarg_tuple)
 
-			host,port = self.cfg.daemon.split(':') if self.cfg.daemon else ('localhost',self.wd.daemon_port)
+			gmsg('\nCreating viewkey-address file for watch-only wallets')
+			vkal = ViewKeyAddrList(
+				cfg       = self.cfg,
+				proto     = self.proto,
+				addrfile  = None,
+				addr_idxs = uarg.wallets,
+				seed      = self.seed_src.seed,
+				skip_chksum_msg = True )
+			vkf = vkal.file
+
+			# before writing viewkey-address file, delete any old ones in the directory:
+			for fn in os.listdir(self.cfg.outdir):
+				if fn.endswith(vkf.ext):
+					os.unlink(os.path.join(self.cfg.outdir,fn))
+
+			vkf.write() # write file to self.cfg.outdir
+
+	class restore(create):
+
+		def check_uopts(self):
+			if self.cfg.restore_height is not None:
+				die(1,f'--restore-height must be unset when running the ‘restore’ command')
+
+		async def process_wallet(self,d,fn,last):
+
+			def get_dump_data():
+				fns = [fn for fn in
+						[self.get_wallet_fn(d,watch_only=wo) + '.dump' for wo in (True,False)]
+							if os.path.exists(fn)]
+				if not fns:
+					die(1,f'No suitable dump file found for {fn!r}')
+				elif len(fns) > 1:
+					ymsg(f'Warning: more than one dump file found for {fn!r} - using the first!')
+				return MoneroWalletDumpFile.Completed(
+					parent = self,
+					fn     = fns[0] ).data._asdict()['wallet_metadata']
+
+			def restore_accounts():
+				bmsg('  Restoring accounts:')
+				for acct_idx,acct_data in enumerate(data[1:],1):
+					msg(fs.format(acct_idx, 0, acct_data['address']))
+					self.c.call('create_account')
+
+			def restore_subaddresses():
+				bmsg('  Restoring subaddresses:')
+				for acct_idx,acct_data in enumerate(data):
+					for addr_idx,addr_data in enumerate(acct_data['addresses'][1:],1):
+						msg(fs.format(acct_idx, addr_idx, addr_data['address']))
+						ret = self.c.call( 'create_address', account_index=acct_idx )
+
+			def restore_labels():
+				bmsg('  Restoring labels:')
+				for acct_idx,acct_data in enumerate(data):
+					for addr_idx,addr_data in enumerate(acct_data['addresses']):
+						addr_data['used'] = False # do this so that restored data matches
+						msg(fs.format(acct_idx, addr_idx, addr_data['label']))
+						self.c.call(
+							'label_address',
+							index = { 'major': acct_idx, 'minor': addr_idx },
+							label = addr_data['label'],
+						)
+
+			def make_format_str():
+				return '    acct {:O>%s}, addr {:O>%s} [{}]' % (
+					len(str( len(data) - 1 )),
+					len(str( max(len(acct_data['addresses']) for acct_data in data) - 1))
+				)
+
+			def check_restored_data():
+				restored_data = h.get_accts(print=False)[1]
+				if restored_data != data:
+					rmsg(f'Restored data does not match original dump!  Dumping bad data.')
+					MoneroWalletDumpFile.New(
+						parent    = self,
+						wallet_fn = fn,
+						data      = {'wallet_metadata': restored_data} ).write(add_suf='.bad')
+					die(3,'Fatal error')
+
+			res = await super().process_wallet(d,fn,last)
+
+			h = self.rpc(self,d)
+			h.open_wallet('newly created')
+
+			msg('')
+			data = get_dump_data()
+			fs = make_format_str()
+
+			gmsg('\nRestoring accounts, subaddresses and labels from dump file:\n')
+
+			restore_accounts()
+			restore_subaddresses()
+			restore_labels()
+
+			check_restored_data()
+
+			return True
+
+	class sync(wallet):
+		opts = ('rescan_blockchain',)
+
+		def __init__(self,cfg,uarg_tuple):
+
+			super().__init__(cfg,uarg_tuple)
 
 			self.dc = self.get_coin_daemon_rpc()
 
@@ -947,7 +1376,11 @@ class MoneroWalletOps:
 	class sweep(spec):
 		spec_id  = 'sweep_spec'
 		spec_key = ( (1,'source'), (3,'dest') )
-		opts     = ('no_relay','tx_relay_daemon')
+		opts     = ('no_relay','tx_relay_daemon','watch_only')
+
+		def check_uopts(self):
+			if self.cfg.tx_relay_daemon and (self.cfg.no_relay or self.cfg.autosign):
+				die(1,'--tx-relay-daemon makes no sense in this context!')
 
 		def init_tx_relay_daemon(self):
 
@@ -1037,7 +1470,7 @@ class MoneroWalletOps:
 			msg('Saving TX data to file')
 			new_tx.write(delete_metadata=True)
 
-			if self.cfg.no_relay:
+			if self.cfg.no_relay or self.cfg.autosign:
 				return True
 
 			if keypress_confirm( self.cfg, f'Relay {self.name} transaction?' ):
@@ -1142,10 +1575,182 @@ class MoneroWalletOps:
 			else:
 				ymsg('\nOperation cancelled by user request')
 
+	class sign(wallet):
+		wallet_desc = 'offline signing'
+		action = 'signing transaction with'
+		start_daemon = False
+		offline = True
+
+		async def main(self,fn):
+			await self.c.restart_daemon()
+			tx = MoneroMMGenTX.Unsigned( self.cfg, fn )
+			h = self.rpc(self,self.addr_data[0])
+			self.head_msg(tx.src_wallet_idx,h.fn)
+			h.open_wallet('offline signing')
+			res = self.c.call(
+				'sign_transfer',
+				unsigned_txset = tx.data.unsigned_txset,
+				export_raw = True,
+				get_tx_keys = True
+			)
+			new_tx = MoneroMMGenTX.NewColdSigned(
+				cfg            = self.cfg,
+				txid           = res['tx_hash_list'][0],
+				unsigned_txset = None,
+				signed_txset   = res['signed_txset'],
+				_in_tx         = tx,
+			)
+			await self.stop_wallet_daemon()
+			return new_tx
+
+	class submit(wallet):
+		wallet_desc = 'watch-only'
+		action = 'submitting transaction with'
+		opts = ('tx_relay_daemon',)
+
+		def check_uopts(self):
+			if self.cfg.daemon:
+				die(1,f'--daemon is not supported for the ‘{self.name}’ operation. Use --tx-relay-daemon instead')
+
+		def get_unsubmitted_tx_fn(self):
+			from .autosign import Signable
+			t = Signable.xmr_transaction( get_autosign_obj(self.cfg) )
+			if len(t.unsubmitted) != 1:
+				die('AutosignTXError', '{a} unsubmitted transaction{b} in {c!r}!'.format(
+					a = 'More than one' if t.unsubmitted else 'No',
+					b = suf(t.unsubmitted),
+					c = t.parent.xmr_tx_dir,
+				))
+			return t.unsubmitted[0].path
+
+		async def main(self):
+			tx = MoneroMMGenTX.ColdSigned(
+				cfg = self.cfg,
+				fn  = uarg.infile or self.get_unsubmitted_tx_fn() )
+			h = self.rpc( self, self.kal.entry(tx.src_wallet_idx) )
+			self.head_msg(tx.src_wallet_idx,h.fn)
+			h.open_wallet(self.wallet_desc)
+
+			msg('\n' + tx.get_info())
+
+			if self.cfg.tx_relay_daemon:
+				self.display_tx_relay_info()
+
+			if keypress_confirm( self.cfg, 'Submit transaction?' ):
+				res = self.c.call(
+					'submit_transfer',
+					tx_data_hex = tx.data.signed_txset )
+				assert res['tx_hash_list'][0] == tx.data.txid, 'TxID mismatch in ‘submit_transfer’ result!'
+			else:
+				die(1,'Exiting at user request')
+
+			new_tx = MoneroMMGenTX.NewSubmitted(
+				cfg          = self.cfg,
+				complete     = True,
+				_in_tx       = tx,
+			)
+			gmsg('\nOK')
+			new_tx.write(
+				ask_write     = not self.cfg.autosign,
+				ask_overwrite = not self.cfg.autosign )
+			return new_tx
+
+	class dump(wallet):
+		wallet_desc = 'source'
+
+		async def process_wallet(self,d,fn,last):
+			h = self.rpc(self,d)
+			h.open_wallet(self.wallet_desc)
+			acct_data,addr_data = h.get_accts(print=False)
+			msg('')
+			MoneroWalletDumpFile.New(
+				parent    = self,
+				wallet_fn = fn,
+				data      = {'wallet_metadata': addr_data} ).write()
+			return True
+
+	class export_outputs(wallet):
+		wallet_desc = 'watch-only'
+		action = 'exporting outputs from'
+		stem = 'process'
+		opts = ('export_all',)
+
+		async def process_wallet(self,d,fn,last):
+			h = self.rpc(self,d)
+			h.open_wallet('source')
+			self.head_msg(d.idx,h.fn)
+			for ftype in ('Unsigned','Signed'):
+				old_fn = getattr(MoneroWalletOutputsFile,ftype).find_fn_from_wallet_fn(
+					cfg             = self.cfg,
+					wallet_fn       = fn,
+					ret_on_no_match = True )
+				if old_fn:
+					os.unlink(old_fn)
+			m = MoneroWalletOutputsFile.New(
+				parent    = self,
+				wallet_fn = fn,
+				data      = self.c.call('export_outputs', all=self.cfg.export_all ),
+			)
+			m.write()
+			return True
+
+	class export_key_images(wallet):
+		wallet_desc = 'offline signing'
+		action = 'signing wallet outputs file with'
+		start_daemon = False
+		offline = True
+
+		async def main(self,f,wallet_idx):
+			await self.c.restart_daemon()
+			h = self.rpc(self,self.addr_data[0])
+			self.head_msg(wallet_idx,f.name)
+			h.open_wallet('offline signing')
+			m = MoneroWalletOutputsFile.Unsigned(
+				parent = self,
+				fn     = f.path )
+			res = self.c.call(
+				'import_outputs',
+				outputs_data_hex = m.data.outputs_data_hex )
+			idata = res['num_imported']
+			bmsg('\n  {} output{} imported'.format( idata, suf(idata) ))
+			data = m.data._asdict()
+			data.update(self.c.call('export_key_images')) # for testing: all = True
+			m = MoneroWalletOutputsFile.SignedNew(
+				parent    = self,
+				wallet_fn = m.get_wallet_fn(f.name),
+				data      = data )
+			idata = m.data.signed_key_images or []
+			bmsg('  {} key image{} signed'.format( len(idata), suf(idata) ))
+			await self.stop_wallet_daemon()
+			return m
+
+	class import_key_images(wallet):
+		wallet_desc = 'watch-only'
+		action = 'importing key images into'
+		stem = 'process'
+		trust_daemon = True
+
+		async def process_wallet(self,d,fn,last):
+			h = self.rpc(self,d)
+			h.open_wallet(self.wallet_desc)
+			self.head_msg(d.idx,h.fn)
+			m = MoneroWalletOutputsFile.Signed(
+				parent = self,
+				fn  = MoneroWalletOutputsFile.Signed.find_fn_from_wallet_fn( self.cfg, fn ),
+			)
+			data = m.data.signed_key_images or []
+			bmsg('\n  {} signed key image{} to import'.format( len(data), suf(data) ))
+			if data:
+				res = self.c.call( 'import_key_images', signed_key_images=data )
+				bmsg(f'  Success: {res}')
+			return True
+
 	class relay(base):
 		opts = ('tx_relay_daemon',)
 
 		def __init__(self,cfg,uarg_tuple):
+
+			check_uopts = MoneroWalletOps.submit.check_uopts
 
 			super().__init__(cfg,uarg_tuple)
 
@@ -1202,5 +1807,5 @@ class MoneroWalletOps:
 					tx.get_info() for tx in
 					sorted(
 						(MoneroMMGenTX.Completed( self.cfg, fn ) for fn in uarg.infile),
-						key = lambda x: x.data.sign_time )
+						key = lambda x: x.data.sign_time or x.data.create_time )
 			))

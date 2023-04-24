@@ -30,25 +30,43 @@ from .xmrwallet import (
 	MoneroWalletOps,
 	xmrwallet_uarg_info,
 	xmrwallet_uargs,
+	get_autosign_obj,
 )
 
 opts_data = {
+	'sets': [
+		('autosign',True,'watch_only',True),
+		('autosign_mountpoint',bool,'autosign',True),
+		('autosign_mountpoint',bool,'watch_only',True),
+	],
 	'text': {
 		'desc': """Perform various Monero wallet and transacting operations for
                    addresses in an MMGen XMR key-address file""",
 		'usage2': [
-			'[opts] create | sync | list <xmr_keyaddrfile> [wallets]',
-			'[opts] label    <xmr_keyaddrfile> LABEL_SPEC',
-			'[opts] new      <xmr_keyaddrfile> NEW_ADDRESS_SPEC',
-			'[opts] transfer <xmr_keyaddrfile> TRANSFER_SPEC',
-			'[opts] sweep    <xmr_keyaddrfile> SWEEP_SPEC',
+			'[opts] create | sync | list | dump | restore [xmr_keyaddrfile] [wallets]',
+			'[opts] label    [xmr_keyaddrfile] LABEL_SPEC',
+			'[opts] new      [xmr_keyaddrfile] NEW_ADDRESS_SPEC',
+			'[opts] transfer [xmr_keyaddrfile] TRANSFER_SPEC',
+			'[opts] sweep    [xmr_keyaddrfile] SWEEP_SPEC',
+			'[opts] submit   [TX_file]',
 			'[opts] relay    <TX_file>',
 			'[opts] txview   <TX_file> ...',
+			'[opts] export-outputs    [wallets]',
+			'[opts] import-key-images [wallets]',
 		],
 		'options': """
 -h, --help                       Print this help message
 --, --longhelp                   Print help message for long options (common
                                  options)
+-A, --export-all                 Export all outputs when performing the
+                                 ‘export-outputs’ operation
+-a, --autosign                   Use appropriate outdir and other params for
+                                 autosigning operations (implies --watch-only).
+                                 When this option is in effect, the viewkey-
+                                 address file is located automatically, so the
+                                 xmr_keyaddrfile argument must be omitted.
+-m, --autosign-mountpoint=P      Specify the autosign mountpoint (defaults to
+                                 ‘/mnt/mmgen_autosign’, implies --autosign)
 -b, --rescan-blockchain          Rescan the blockchain if wallet fails to sync
 -d, --outdir=D                   Save transaction files to directory 'D'
                                  instead of the working directory
@@ -64,6 +82,7 @@ opts_data = {
 -R, --no-relay                   Save transaction to file instead of relaying
 -s, --no-start-wallet-daemon     Don’t start the wallet daemon at startup
 -S, --no-stop-wallet-daemon      Don’t stop the wallet daemon at exit
+-W, --watch-only                 Create or operate on watch-only wallets
 -w, --wallet-dir=D               Output or operate on wallets in directory 'D'
                                  instead of the working directory
 -H, --wallet-rpc-host=host       Wallet RPC hostname (currently: {cfg.monero_wallet_rpc_host!r})
@@ -92,6 +111,12 @@ cfg = Config(opts_data=opts_data)
 
 cmd_args = cfg._args
 
+if cmd_args and cfg.autosign and (
+		cmd_args[0] in (MoneroWalletOps.kafile_arg_ops + ('export-outputs','import-key-images'))
+		or len(cmd_args) == 1 and cmd_args[0] == 'submit'
+	):
+	cmd_args.insert(1,None)
+
 if len(cmd_args) < 2:
 	cfg._opts.usage()
 
@@ -99,25 +124,36 @@ op     = cmd_args.pop(0)
 infile = cmd_args.pop(0)
 wallets = spec = None
 
-if op not in MoneroWalletOps.ops:
+if op.replace('-','_') not in MoneroWalletOps.ops:
 	die(1,f'{op!r}: unrecognized operation')
 
-if op == 'relay':
+if op in ('relay','submit'):
 	if len(cmd_args) != 0:
 		cfg._opts.usage()
 elif op == 'txview':
 	infile = [infile] + cmd_args
-elif op in ('create','sync','list'):
-	if len(cmd_args) not in (0,1):
+elif op in ('create','sync','list','dump','restore'): # kafile_arg_ops
+	if len(cmd_args) > 1:
 		cfg._opts.usage()
-	if cmd_args:
-		wallets = cmd_args[0]
+	wallets = cmd_args.pop(0) if cmd_args else None
 elif op in ('new','transfer','sweep','label'):
 	if len(cmd_args) != 1:
 		cfg._opts.usage()
 	spec = cmd_args[0]
+elif op in ('export-outputs','import-key-images'):
+	if not cfg.autosign: # --autosign only for now - TODO
+		die(f'--autosign must be used with command {op!r}')
+	if len(cmd_args) > 1:
+		cfg._opts.usage()
+	wallets = cmd_args.pop(0) if cmd_args else None
 
-m = getattr(MoneroWalletOps,op)(
+if cfg.autosign and not cfg.test_suite:
+	asi = get_autosign_obj(cfg)
+	if not asi.get_insert_status():
+		die(1,'Removable device not present!')
+	asi.do_mount()
+
+m = getattr(MoneroWalletOps,op.replace('-','_'))(
 	cfg,
 	xmrwallet_uargs(infile, wallets, spec))
 
@@ -131,3 +167,6 @@ try:
 	async_run(m.stop_wallet_daemon())
 except Exception as e:
 	ymsg(f'Unable to stop wallet daemon: {type(e).__name__}: {e}')
+
+if cfg.autosign and not cfg.test_suite:
+	asi.do_umount()

@@ -125,9 +125,10 @@ init_tests() {
 	[ \( "$ARM32" -o "$ARM64" \) -a "$DISTRO" != 'archarm' ] && t_altgen_skip+=' e'
 
 
-	d_xmr="Monero xmrwallet operations using stagenet"
+	d_xmr="Monero xmrwallet operations"
 	t_xmr="
-		- $test_py --coin=xmr
+		- $test_py --coin=xmr --exclude=xmr_autosign
+		- $test_py --coin=xmr xmr_autosign
 	"
 
 	d_eth="operations for Ethereum and Ethereum Classic using devnet"
