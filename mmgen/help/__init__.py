@@ -20,7 +20,7 @@
 help: help notes for MMGen suite commands
 """
 
-from .cfg import gc
+from ..cfg import gc
 
 def help_notes_func(proto,cfg,k):
 
@@ -34,14 +34,14 @@ def help_notes_func(proto,cfg,k):
 		return ', '.join(cu[:-1]) + ('',' and ')[len(cu)>1] + cu[-1] + ('',',\nrespectively')[len(cu)>1]
 
 	def coind_exec():
-		from .daemon import CoinDaemon
+		from ..daemon import CoinDaemon
 		return (
 			CoinDaemon(cfg,proto.coin).exec_fn if proto.coin in CoinDaemon.coins else 'bitcoind' )
 
 	class help_notes:
 
 		def MasterShareIdx():
-			from .seedsplit import MasterShareIdx
+			from ..seedsplit import MasterShareIdx
 			return MasterShareIdx
 
 		def test_py_log_file():
@@ -49,19 +49,19 @@ def help_notes_func(proto,cfg,k):
 			return log_file
 
 		def tool_help():
-			from .tool.help import main_help
+			from ..tool.help import main_help
 			return main_help()
 
 		def dfl_subseeds():
-			from .subseed import SubSeedList
+			from ..subseed import SubSeedList
 			return str(SubSeedList.dfl_len)
 
 		def dfl_seed_len():
-			from .seed import Seed
+			from ..seed import Seed
 			return str(Seed.dfl_len)
 
 		def password_formats():
-			from .passwdlist import PasswordList
+			from ..passwdlist import PasswordList
 			pwi_fs = '{:8} {:1} {:26} {:<7}  {:<7}  {}'
 			return '\n  '.join(
 				[pwi_fs.format('Code','','Description','Min Len','Max Len','Default Len')] +
@@ -69,28 +69,28 @@ def help_notes_func(proto,cfg,k):
 			)
 
 		def dfl_mmtype():
-			from .addr import MMGenAddrType
+			from ..addr import MMGenAddrType
 			return "'{}' or '{}'".format(
 				proto.dfl_mmtype,
 				MMGenAddrType.mmtypes[proto.dfl_mmtype].name )
 
 		def address_types():
-			from .addr import MMGenAddrType
+			from ..addr import MMGenAddrType
 			return '\n  '.join([
 				"'{}','{:<12} - {}".format( k, v.name+"'", v.desc )
 					for k,v in MMGenAddrType.mmtypes.items()
 			])
 
 		def fmt_codes():
-			from .wallet import format_fmt_codes
+			from ..wallet import format_fmt_codes
 			return '\n  '.join( format_fmt_codes().splitlines() )
 
 		def coin_id():
 			return proto.coin_id
 
 		def keygen_backends():
-			from .keygen import get_backends
-			from .addr import MMGenAddrType
+			from ..keygen import get_backends
+			from ..addr import MMGenAddrType
 			backends = get_backends(
 				MMGenAddrType(proto,cfg.type or proto.dfl_mmtype).pubkey_type
 			)
@@ -100,19 +100,19 @@ def help_notes_func(proto,cfg,k):
 			return coind_exec()
 
 		def coin_daemon_network_ids():
-			from .daemon import CoinDaemon
-			from .util import fmt_list
+			from ..daemon import CoinDaemon
+			from ..util import fmt_list
 			return fmt_list(CoinDaemon.get_network_ids(cfg),fmt='bare')
 
 		def rel_fee_desc():
-			from .tx import BaseTX
+			from ..tx import BaseTX
 			return BaseTX(cfg=cfg,proto=proto).rel_fee_desc
 
 		def fee_spec_letters():
 			return fee_spec_letters()
 
 		def fee():
-			from .tx import BaseTX
+			from ..tx import BaseTX
 			return """
                                FEE SPECIFICATION
 
@@ -146,7 +146,7 @@ seed, the same seed length and hash preset parameters must always be used.
 		def txcreate_examples():
 
 			mmtype = 'S' if 'segwit' in proto.caps else 'C'
-			from .tool.coin import tool_cmd
+			from ..tool.coin import tool_cmd
 			t = tool_cmd(cfg,mmtype=mmtype)
 			sample_addr = t.privhex2addr('bead'*16)
 
@@ -212,7 +212,7 @@ as described above for the change output.
 """
 
 		def txsign():
-			from .proto.btc.params import mainnet
+			from ..proto.btc.params import mainnet
 			return """
 Transactions may contain both {pnm} or non-{pnm} input addresses.
 
@@ -240,7 +240,7 @@ default wallet.
 	pnl = gc.proj_name.lower() )
 
 		def seedsplit():
-			from .seedsplit import SeedShareIdx,SeedShareCount,MasterShareIdx
+			from ..seedsplit import SeedShareIdx,SeedShareCount,MasterShareIdx
 			return """
 COMMAND NOTES:
 
@@ -332,7 +332,7 @@ EXAMPLES:
 	mi = MasterShareIdx )
 
 		def subwallet():
-			from .subseed import SubSeedIdxRange
+			from ..subseed import SubSeedIdxRange
 			return f"""
 SUBWALLETS:
 
