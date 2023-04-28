@@ -143,6 +143,21 @@ is over.
 	}
 }
 
+def main(do_loop):
+
+	asi.init_led()
+	asi.init_exit_handler()
+
+	async def do():
+		await asi.check_daemons_running()
+		if do_loop:
+			await asi.do_loop()
+		else:
+			ret = await asi.do_sign()
+			asi.at_exit(not ret)
+
+	async_run(do())
+
 from .autosign import Autosign,AutosignConfig
 
 cfg = AutosignConfig(
@@ -165,33 +180,19 @@ cfg._post_init()
 if len(cmd_args) not in (0,1):
 	cfg._opts.usage()
 
-if len(cmd_args) == 1:
+if cmd_args:
 	cmd = cmd_args[0]
 	if cmd == 'gen_key':
 		asi.gen_key()
-		sys.exit(0)
 	elif cmd == 'setup':
 		asi.setup()
 		from .ui import keypress_confirm
 		if cfg.xmrwallets and keypress_confirm( cfg, '\nContinue with Monero setup?', default_yes=True ):
 			msg('')
 			asi.xmr_setup()
-		sys.exit(0)
-	elif cmd != 'wait':
+	elif cmd == 'wait':
+		main(do_loop=True)
+	else:
 		die(1,f'{cmd!r}: unrecognized command')
-
-asi.init_led()
-
-asi.init_exit_handler()
-
-async def main():
-
-	await asi.check_daemons_running()
-
-	if not cmd_args:
-		ret = await asi.do_sign()
-		asi.at_exit(not ret)
-	elif cmd_args[0] == 'wait':
-		await asi.do_loop()
-
-async_run(main())
+else:
+	main(do_loop=False)
