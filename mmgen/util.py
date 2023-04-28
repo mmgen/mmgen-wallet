@@ -260,7 +260,7 @@ def make_chksum_N(s,nchars,sep=False,rounds=2,upper=True):
 	ret = s.hex()[:nchars]
 	if sep:
 		assert 4 <= nchars <= 64 and (not nchars % 4), 'illegal ‘nchars’ value'
-		ret = ' '.join([ret[i*4:i*4+4] for i in range(nchars//4)])
+		ret = ' '.join( ret[i:i+4] for i in range(0,nchars,4) )
 	else:
 		assert 4 <= nchars <= 64, 'illegal ‘nchars’ value'
 	return ret.upper() if upper else ret
