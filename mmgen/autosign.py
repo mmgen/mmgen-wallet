@@ -13,6 +13,7 @@ autosign: Auto-sign MMGen transactions, message files and XMR wallet output file
 """
 
 import sys,os,asyncio
+from pathlib import Path
 from subprocess import run,PIPE,DEVNULL
 from collections import namedtuple
 
@@ -45,7 +46,7 @@ class Signable:
 
 		def _unprocessed(self,attrname,rawext,sigext):
 			if not hasattr(self,attrname):
-				dirlist = tuple(os.scandir(self.dir))
+				dirlist = tuple(self.dir.iterdir())
 				names = tuple(f.name for f in dirlist)
 				setattr(
 					self,
@@ -70,7 +71,7 @@ class Signable:
 
 		async def sign(self,f):
 			from .tx import UnsignedTX
-			tx1 = UnsignedTX( cfg=self.cfg, filename=f.path )
+			tx1 = UnsignedTX( cfg=self.cfg, filename=f )
 			if tx1.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
 				tx1.rpc = await rpc_init( self.cfg, tx1.proto )
@@ -118,7 +119,7 @@ class Signable:
 
 		def gen_bad_list(self,bad_files):
 			for f in bad_files:
-				yield red(f.path)
+				yield red(f.name)
 
 	class xmr_transaction(transaction):
 		dir_name = 'xmr_tx_dir'
@@ -132,15 +133,15 @@ class Signable:
 
 		async def sign(self,f):
 			from .xmrwallet import MoneroMMGenTX,MoneroWalletOps,xmrwallet_uargs
-			tx1 = MoneroMMGenTX.Completed( self.parent.xmrwallet_cfg, f.path )
+			tx1 = MoneroMMGenTX.Completed( self.parent.xmrwallet_cfg, f )
 			m = MoneroWalletOps.sign(
 				self.parent.xmrwallet_cfg,
 				xmrwallet_uargs(
-					infile  = self.parent.wallet_files[0], # MMGen wallet file
+					infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
 					wallets = str(tx1.src_wallet_idx),
 					spec    = None ),
 			)
-			tx2 = await m.main(f.path) # TODO: stop wallet daemon?
+			tx2 = await m.main(f) # TODO: stop wallet daemon?
 			tx2.write(ask_write=False)
 			return tx2
 
@@ -156,11 +157,11 @@ class Signable:
 
 		async def sign(self,f):
 			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
-			wallet_idx = MoneroWalletOps.wallet.get_idx_from_fn(f.name)
+			wallet_idx = MoneroWalletOps.wallet.get_idx_from_fn(f)
 			m = MoneroWalletOps.export_key_images(
 				self.parent.xmrwallet_cfg,
 				xmrwallet_uargs(
-					infile  = self.parent.wallet_files[0], # MMGen wallet file
+					infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
 					wallets = str(wallet_idx),
 					spec    = None ),
 			)
@@ -181,11 +182,11 @@ class Signable:
 
 		async def sign(self,f):
 			from .msg import UnsignedMsg,SignedMsg
-			m = UnsignedMsg( self.cfg, infile=f.path )
+			m = UnsignedMsg( self.cfg, infile=f )
 			await m.sign( wallet_files=self.parent.wallet_files[:] )
 			m = SignedMsg( self.cfg, data=m.__dict__ )
 			m.write_to_file(
-				outdir = os.path.abspath(self.dir),
+				outdir = self.dir.resolve(),
 				ask_overwrite = False )
 			if m.data.get('failed_sids'):
 				die('MsgFileFailedSID',f'Failed Seed IDs: {fmt_list(m.data["failed_sids"],fmt="bare")}')
@@ -194,28 +195,28 @@ class Signable:
 		def print_summary(self,messages):
 			gmsg('\nSigned message files:')
 			for m in messages:
-				gmsg('  ' + os.path.join( self.dir, m.signed_filename ))
+				gmsg('  ' + m.signed_filename)
 
 		def gen_bad_list(self,bad_files):
 			for f in bad_files:
-				sigfile = f.path[:-len(self.rawext)] + self.sigext
-				yield orange(sigfile) if os.path.exists(sigfile) else red(f.path)
+				sigfile = f.parent / ( f.name[:-len(self.rawext)] + self.sigext )
+				yield orange(sigfile.name) if sigfile.exists() else red(f.name)
 
 class Autosign:
 
-	dfl_mountpoint = os.path.join(os.sep,'mnt','mmgen_autosign')
-	dfl_wallet_dir = os.path.join(os.sep,'dev','shm','autosign')
-	disk_label_dir = os.path.join(os.sep,'dev','disk','by-label')
-	part_label = 'MMGEN_TX'
+	dfl_mountpoint     = '/mnt/mmgen_autosign'
+	dfl_wallet_dir     = '/dev/shm/autosign'
+	old_dfl_mountpoint = '/mnt/tx'
 
-	old_dfl_mountpoint = os.path.join(os.sep,'mnt','tx')
+	dev_disk_path = Path('/dev/disk/by-label/MMGEN_TX')
+
 	old_dfl_mountpoint_errmsg = f"""
-		Mountpoint {old_dfl_mountpoint!r} is no longer supported!
-		Please rename {old_dfl_mountpoint!r} to {dfl_mountpoint!r}
+		Mountpoint '{old_dfl_mountpoint}' is no longer supported!
+		Please rename '{old_dfl_mountpoint}' to '{dfl_mountpoint}'
 		and update your fstab accordingly.
 	"""
 	mountpoint_errmsg_fs = """
-		Mountpoint {!r} does not exist or does not point
+		Mountpoint '{}' does not exist or does not point
 		to a directory!  Please create the mountpoint and add an entry
 		to your fstab as described in this script’s help text.
 	"""
@@ -230,23 +231,23 @@ class Autosign:
 
 	def __init__(self,cfg):
 
+		self.cfg = cfg
+
 		if cfg.mnemonic_fmt:
 			if cfg.mnemonic_fmt not in self.mn_fmts:
 				die(1,'{!r}: invalid mnemonic format (must be one of: {})'.format(
 					cfg.mnemonic_fmt,
 					fmt_list( self.mn_fmts, fmt='no_spc' ) ))
 
-		self.cfg = cfg
+		self.mountpoint = Path(cfg.mountpoint or self.dfl_mountpoint)
+		self.wallet_dir = Path(cfg.wallet_dir or self.dfl_wallet_dir)
 
-		self.mountpoint = cfg.mountpoint or self.dfl_mountpoint
-		self.wallet_dir = cfg.wallet_dir or self.dfl_wallet_dir
+		self.tx_dir  = self.mountpoint / 'tx'
+		self.msg_dir = self.mountpoint / 'msg'
+		self.keyfile = self.mountpoint / 'autosign.key'
 
-		self.tx_dir  = os.path.join( self.mountpoint, 'tx' )
-		self.msg_dir = os.path.join( self.mountpoint, 'msg' )
-		self.keyfile = os.path.join( self.mountpoint, 'autosign.key' )
-
-		cfg.outdir = self.tx_dir
-		cfg.passwd_file = self.keyfile
+		cfg.outdir = str(self.tx_dir)
+		cfg.passwd_file = str(self.keyfile)
 
 		if any(k in cfg._uopts for k in ('help','longhelp')):
 			return
@@ -264,9 +265,9 @@ class Autosign:
 			self.coins = ['BTC']
 
 		if 'XMR' in self.coins:
-			self.xmr_dir = os.path.join( self.mountpoint, 'xmr' )
-			self.xmr_tx_dir = os.path.join( self.mountpoint, 'xmr', 'tx' )
-			self.xmr_outputs_dir = os.path.join( self.mountpoint, 'xmr', 'outputs' )
+			self.xmr_dir = self.mountpoint / 'xmr'
+			self.xmr_tx_dir = self.mountpoint / 'xmr' / 'tx'
+			self.xmr_outputs_dir = self.mountpoint / 'xmr' / 'outputs'
 
 	async def check_daemons_running(self):
 		from .protocol import init_proto
@@ -291,14 +292,13 @@ class Autosign:
 		if not hasattr(self,'_wallet_files'):
 
 			try:
-				dirlist = os.listdir(self.wallet_dir)
+				dirlist = self.wallet_dir.iterdir()
 			except:
-				die(1,f'Cannot open wallet directory {self.wallet_dir!r}. Did you run ‘mmgen-autosign setup’?')
+				die(1,f"Cannot open wallet directory '{self.wallet_dir}'. Did you run ‘mmgen-autosign setup’?")
 
-			fns = [fn for fn in dirlist if fn.endswith('.mmdat')]
-			if fns:
-				self._wallet_files = [os.path.join(self.wallet_dir,fn) for fn in fns]
-			else:
+			self._wallet_files = [f for f in dirlist if f.suffix == '.mmdat']
+
+			if not self._wallet_files:
 				die(1,'No wallet files present!')
 
 		return self._wallet_files
@@ -309,27 +309,27 @@ class Autosign:
 
 		def check_dir(cdir):
 			try:
-				ds = os.stat(cdir)
-				assert S_ISDIR(ds.st_mode), f'{cdir!r} is not a directory!'
-				assert ds.st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR, f'{cdir!r} is not read/write for this user!'
+				ds = cdir.stat()
+				assert S_ISDIR(ds.st_mode), f"'{cdir}' is not a directory!"
+				assert ds.st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR, f"'{cdir}' is not read/write for this user!"
 			except:
-				die(1,f'{cdir!r} missing or not read/writable by user!')
+				die(1,f"'{cdir}' missing or not read/writable by user!")
 
-		if not os.path.isdir(self.mountpoint):
+		if not self.mountpoint.is_dir():
 			def do_die(m):
 				die(1,'\n' + yellow(fmt(m.strip(),indent='  ')))
-			if os.path.isdir(self.old_dfl_mountpoint):
+			if Path(self.old_dfl_mountpoint).is_dir():
 				do_die(self.old_dfl_mountpoint_errmsg)
 			else:
 				do_die(self.mountpoint_errmsg_fs.format(self.mountpoint))
 
-		if not os.path.ismount(self.mountpoint):
+		if not self.mountpoint.is_mount():
 			if run( ['mount',self.mountpoint], stderr=DEVNULL, stdout=DEVNULL ).returncode == 0:
-				msg(f'Mounting {self.mountpoint!r}')
+				msg(f"Mounting '{self.mountpoint}'")
 			elif not self.cfg.test_suite:
-				die(1,f'Unable to mount device at {self.mountpoint!r}')
+				die(1,f"Unable to mount device at '{self.mountpoint}'")
 
-		self.have_msg_dir = os.path.isdir(self.msg_dir)
+		self.have_msg_dir = self.msg_dir.is_dir()
 
 		check_dir(self.tx_dir)
 
@@ -340,14 +340,14 @@ class Autosign:
 			check_dir(self.xmr_tx_dir)
 
 	def do_umount(self):
-		if os.path.ismount(self.mountpoint):
+		if self.mountpoint.is_mount():
 			run( ['sync'], check=True )
-			msg(f'Unmounting {self.mountpoint!r}')
+			msg(f"Unmounting '{self.mountpoint}'")
 			run( ['umount',self.mountpoint], check=True )
 		bmsg('It is now safe to extract the removable device')
 
 	def decrypt_wallets(self):
-		msg(f'Unlocking wallet{suf(self.wallet_files)} with key from {self.cfg.passwd_file!r}')
+		msg(f"Unlocking wallet{suf(self.wallet_files)} with key from '{self.cfg.passwd_file}'")
 		fails = 0
 		for wf in self.wallet_files:
 			try:
@@ -368,9 +368,9 @@ class Autosign:
 				try:
 					ret = await target.sign(f)
 				except Exception as e:
-					ymsg(f'An error occurred with {target.desc} {f.name!r}:\n    {type(e).__name__}: {e!s}')
+					ymsg(f"An error occurred with {target.desc} '{f.name}':\n    {type(e).__name__}: {e!s}")
 				except:
-					ymsg(f'An error occurred with {target.desc} {f.name!r}')
+					ymsg(f"An error occurred with {target.desc} '{f.name}'")
 				good.append(ret) if ret else bad.append(f)
 				self.cfg._util.qmsg('')
 			await asyncio.sleep(0.3)
@@ -412,24 +412,22 @@ class Autosign:
 			return False
 
 	def wipe_existing_key(self):
-		try: os.stat(self.keyfile)
+		try: self.keyfile.stat()
 		except: pass
 		else:
 			from .fileutil import shred_file
-			msg(f'\nShredding existing key {self.keyfile!r}')
+			msg(f"\nShredding existing key '{self.keyfile}'")
 			shred_file( self.keyfile, verbose=self.cfg.verbose )
 
 	def create_key(self):
-		kdata = os.urandom(32).hex()
-		desc = f'key file {self.keyfile!r}'
+		desc = f"key file '{self.keyfile}'"
 		msg('Creating ' + desc)
 		try:
-			with open(self.keyfile,'w') as fp:
-				fp.write(kdata+'\n')
-			os.chmod(self.keyfile,0o400)
-			msg('Wrote ' + desc)
+			self.keyfile.write_text( os.urandom(32).hex() )
+			self.keyfile.chmod(0o400)
 		except:
 			die(2,'Unable to write ' + desc)
+		msg('Wrote ' + desc)
 
 	def gen_key(self,no_unmount=False):
 		self.create_wallet_dir()
@@ -448,10 +446,10 @@ class Autosign:
 		except: pass
 
 	def create_wallet_dir(self):
-		try: os.mkdir(self.wallet_dir)
+		try: self.wallet_dir.mkdir(parents=True)
 		except: pass
-		try: os.stat(self.wallet_dir)
-		except: die(2,f'Unable to create wallet directory {self.wallet_dir!r}')
+		try: self.wallet_dir.stat()
+		except: die(2,f"Unable to create wallet directory '{self.wallet_dir}'")
 
 	def setup(self):
 		self.remove_wallet_dir()
@@ -459,7 +457,7 @@ class Autosign:
 		wf = find_file_in_dir( get_wallet_cls('mmgen'), self.cfg.data_dir )
 		if wf and keypress_confirm(
 				cfg         = self.cfg,
-				prompt      = f'Default wallet {wf!r} found.\nUse default wallet for autosigning?',
+				prompt      = f"Default wallet '{wf}' found.\nUse default wallet for autosigning?",
 				default_yes = True ):
 			from .cfg import Config
 			ss_in = Wallet( Config(), wf )
@@ -477,10 +475,10 @@ class Autosign:
 				'wallet_rpc_user': 'autosigner',
 				'wallet_rpc_password': 'my very secret password',
 				'passwd_file': self.cfg.passwd_file,
-				'wallet_dir': self.wallet_dir,
+				'wallet_dir': str(self.wallet_dir),
 				'autosign': True,
-				'autosign_mountpoint': self.mountpoint,
-				'outdir': self.xmr_dir, # required by vkal.write()
+				'autosign_mountpoint': str(self.mountpoint),
+				'outdir': str(self.xmr_dir), # required by vkal.write()
 			})
 		return self._xmrwallet_cfg
 
@@ -490,16 +488,16 @@ class Autosign:
 		try: shutil.rmtree(self.xmr_outputs_dir)
 		except: pass
 
-		os.makedirs(self.xmr_outputs_dir)
+		self.xmr_outputs_dir.mkdir(parents=True)
 
-		os.makedirs(self.xmr_tx_dir,exist_ok=True)
+		self.xmr_tx_dir.mkdir(exist_ok=True)
 
 		from .addrfile import ViewKeyAddrFile
 		from .fileutil import shred_file
-		for f in os.scandir(self.xmr_dir):
+		for f in self.xmr_dir.iterdir():
 			if f.name.endswith(ViewKeyAddrFile.ext):
 				msg(f'Shredding old viewkey-address file {f.name!r}')
-				shred_file(f.path)
+				shred_file(f)
 
 		if len(self.wallet_files) > 1:
 			ymsg(f'Warning: more that one wallet file, using the first ({self.wallet_files[0]}) for xmrwallet generation')
@@ -518,7 +516,7 @@ class Autosign:
 	def get_insert_status(self):
 		if self.cfg.no_insert_check:
 			return True
-		try: os.stat(os.path.join( self.disk_label_dir, self.part_label ))
+		try: self.dev_disk_path.stat()
 		except: return False
 		else: return True
 

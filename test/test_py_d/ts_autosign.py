@@ -22,6 +22,7 @@ test.test_py_d.ts_autosign: Autosign tests for the test.py test suite
 
 import os,shutil
 from subprocess import run
+from pathlib import Path
 
 from mmgen.cfg import gc
 
@@ -54,14 +55,14 @@ def init_led(simulate):
 			run(['sudo','chmod','0666',fn],check=True)
 
 def check_mountpoint(asi):
-	if not os.path.ismount(asi.mountpoint):
+	if not asi.mountpoint.is_mount():
 		try:
 			run(['mount',asi.mountpoint],check=True)
 			imsg(f'Mounted {asi.mountpoint}')
 		except:
 			die(2,f'Could not mount {asi.mountpoint}!  Exiting')
 
-	if not os.path.isdir(asi.tx_dir):
+	if not asi.tx_dir.is_dir():
 		die(2,f'Directory {asi.tx_dir} does not exist!  Exiting')
 
 def do_mount(mountpoint):
@@ -93,7 +94,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
 		if not self.live:
-			self.wallet_dir = os.path.join(self.tmpdir,'dev.shm.autosign')
+			self.wallet_dir = Path( self.tmpdir, 'dev.shm.autosign' )
 
 		self.asi = Autosign(
 			AutosignConfig({
@@ -120,12 +121,12 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			check_mountpoint(self.asi)
 			init_led(self.simulate)
 		else:
-			os.makedirs(self.asi.tx_dir,exist_ok=True) # creates mountpoint
-			os.makedirs(self.wallet_dir,exist_ok=True)
+			self.asi.tx_dir.mkdir(parents=True,exist_ok=True) # creates mountpoint
+			self.wallet_dir.mkdir(parents=True,exist_ok=True)
 			self.opts.extend([
-				'--mountpoint=' + self.mountpoint,
+				f'--mountpoint={self.mountpoint}',
+				f'--wallet-dir={self.wallet_dir}',
 				'--no-insert-check',
-				'--wallet-dir=' + self.wallet_dir,
 			])
 
 		self.tx_file_ops('set_count') # initialize tx_count here so we can resume anywhere

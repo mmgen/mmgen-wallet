@@ -14,6 +14,7 @@ test.test_py_d.ts_xmr_autosign: xmr autosigning tests for the test.py test suite
 """
 
 from .ts_xmrwallet import *
+from pathlib import Path
 from .ts_autosign import TestSuiteAutosignBase
 
 def make_burn_addr():
@@ -183,7 +184,6 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		return self._delete_files( '.dump' )
 
 	def autosign_setup(self):
-		from pathlib import Path
 		Path(self.autosign_xmr_dir).mkdir(parents=True,exist_ok=True)
 		Path(self.autosign_xmr_dir,'old.vkeys').touch()
 		t = self.run_setup(
