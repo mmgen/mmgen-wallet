@@ -31,6 +31,8 @@ class Signable:
 
 	class base:
 
+		multiple_ok = True
+
 		def __init__(self,parent):
 			self.parent = parent
 			self.cfg = parent.cfg
@@ -125,11 +127,7 @@ class Signable:
 		dir_name = 'xmr_tx_dir'
 		desc = 'Monero transaction'
 		subext = 'subtx'
-
-		def __init__(self,*args,**kwargs):
-			super().__init__(*args,**kwargs)
-			if len(self.unsigned) > 1:
-				die('AutosignTXError', 'Only one unsigned XMR transaction allowed at a time!')
+		multiple_ok = False
 
 		async def sign(self,f):
 			from .xmrwallet import MoneroMMGenTX,MoneroWalletOps,xmrwallet_uargs
@@ -361,6 +359,8 @@ class Autosign:
 	async def sign_all(self,target_name):
 		target = getattr(Signable,target_name)(self)
 		if target.unsigned:
+			if len(target.unsigned) > 1 and not target.multiple_ok:
+				die(f'AutosignTXError', 'Only one unsigned {target.desc} transaction allowed at a time!')
 			good = []
 			bad = []
 			for f in target.unsigned:
@@ -430,7 +430,6 @@ class Autosign:
 		msg('Wrote ' + desc)
 
 	def gen_key(self,no_unmount=False):
-		self.create_wallet_dir()
 		if not self.get_insert_status():
 			die(1,'Removable device not present!')
 		self.do_mount(no_xmr_chk=True)
@@ -439,20 +438,22 @@ class Autosign:
 		if not no_unmount:
 			self.do_umount()
 
-	def remove_wallet_dir(self):
-		msg(f'Deleting {self.wallet_dir!r}')
-		import shutil
-		try: shutil.rmtree(self.wallet_dir)
-		except: pass
-
-	def create_wallet_dir(self):
-		try: self.wallet_dir.mkdir(parents=True)
-		except: pass
-		try: self.wallet_dir.stat()
-		except: die(2,f"Unable to create wallet directory '{self.wallet_dir}'")
-
 	def setup(self):
-		self.remove_wallet_dir()
+
+		def remove_wallet_dir():
+			msg(f"Deleting '{self.wallet_dir}'")
+			import shutil
+			try: shutil.rmtree(self.wallet_dir)
+			except: pass
+
+		def create_wallet_dir():
+			try: self.wallet_dir.mkdir(parents=True)
+			except: pass
+			try: self.wallet_dir.stat()
+			except: die(2,f"Unable to create wallet directory '{self.wallet_dir}'")
+
+		remove_wallet_dir()
+		create_wallet_dir()
 		self.gen_key(no_unmount=True)
 		wf = find_file_in_dir( get_wallet_cls('mmgen'), self.cfg.data_dir )
 		if wf and keypress_confirm(
@@ -484,6 +485,20 @@ class Autosign:
 
 	def xmr_setup(self):
 
+		def create_signing_wallets():
+			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
+			if len(self.wallet_files) > 1:
+				ymsg(f'Warning: more that one wallet file, using the first ({self.wallet_files[0]}) for xmrwallet generation')
+			m = MoneroWalletOps.create_offline(
+				self.xmrwallet_cfg,
+				xmrwallet_uargs(
+					infile  = str(self.wallet_files[0]), # MMGen wallet file
+					wallets = self.cfg.xmrwallets,  # XMR wallet idxs
+					spec    = None ),
+			)
+			async_run(m.main())
+			async_run(m.stop_wallet_daemon())
+
 		import shutil
 		try: shutil.rmtree(self.xmr_outputs_dir)
 		except: pass
@@ -502,16 +517,7 @@ class Autosign:
 		if len(self.wallet_files) > 1:
 			ymsg(f'Warning: more that one wallet file, using the first ({self.wallet_files[0]}) for xmrwallet generation')
 
-		from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
-		m = MoneroWalletOps.create_offline(
-			self.xmrwallet_cfg,
-			xmrwallet_uargs(
-				infile  = self.wallet_files[0], # MMGen wallet file
-				wallets = self.cfg.xmrwallets,  # XMR wallet idxs
-				spec    = None ),
-		)
-		async_run(m.main())
-		async_run(m.stop_wallet_daemon())
+		create_signing_wallets()
 
 	def get_insert_status(self):
 		if self.cfg.no_insert_check:
