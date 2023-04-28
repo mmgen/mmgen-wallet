@@ -29,8 +29,11 @@ class AutosignConfig(Config):
 
 class Signable:
 
+	signables = ('transaction','message','xmr_transaction','xmr_wallet_outputs_file')
+
 	class base:
 
+		clean_all = False
 		multiple_ok = True
 
 		def __init__(self,parent):
@@ -152,6 +155,7 @@ class Signable:
 		rawext = 'raw'
 		sigext = 'sig'
 		dir_name = 'xmr_outputs_dir'
+		clean_all = True
 
 		async def sign(self,f):
 			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
@@ -254,6 +258,9 @@ class Autosign:
 			die(1,'--coin option not supported with this command.  Use --coins instead')
 
 		self.coins = cfg.coins.upper().split(',') if cfg.coins else []
+
+		if cfg._args and cfg._args[0] == 'clean':
+			return
 
 		if cfg.xmrwallets and not 'XMR' in self.coins:
 			self.coins.append('XMR')
@@ -507,17 +514,49 @@ class Autosign:
 
 		self.xmr_tx_dir.mkdir(exist_ok=True)
 
-		from .addrfile import ViewKeyAddrFile
-		from .fileutil import shred_file
-		for f in self.xmr_dir.iterdir():
-			if f.name.endswith(ViewKeyAddrFile.ext):
-				msg(f'Shredding old viewkey-address file {f.name!r}')
-				shred_file(f)
-
-		if len(self.wallet_files) > 1:
-			ymsg(f'Warning: more that one wallet file, using the first ({self.wallet_files[0]}) for xmrwallet generation')
+		self.clean_old_files()
 
 		create_signing_wallets()
+
+	def clean_old_files(self):
+
+		def do_shred(f):
+			nonlocal count
+			msg_r('.')
+			shred_file( f, verbose=self.cfg.verbose )
+			count += 1
+
+		def clean_dir(s_name):
+
+			def clean_files(rawext,sigext):
+				for f in s.dir.iterdir():
+					if s.clean_all and (f.name.endswith(f'.{rawext}') or f.name.endswith(f'.{sigext}')):
+						do_shred(f)
+					elif f.name.endswith(f'.{sigext}'):
+						raw = f.parent / ( f.name[:-len(sigext)] + rawext )
+						if raw.is_file():
+							do_shred(raw)
+
+			s = getattr(Signable,s_name)(asi)
+
+			msg_r(f"Cleaning directory '{s.dir}'..")
+
+			if s.dir.is_dir():
+				clean_files( s.rawext, s.sigext )
+				if hasattr(s,'subext'):
+					clean_files( s.rawext, s.subext )
+					clean_files( s.sigext, s.subext )
+
+			msg('done' if s.dir.is_dir() else 'skipped (no dir)')
+
+		asi = get_autosign_obj( self.cfg, 'btc,xmr' )
+		count = 0
+
+		from .fileutil import shred_file
+		for s_name in Signable.signables:
+			clean_dir(s_name)
+
+		bmsg(f'{count} file{suf(count)} shredded')
 
 	def get_insert_status(self):
 		if self.cfg.no_insert_check:

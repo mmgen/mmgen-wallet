@@ -36,6 +36,7 @@ opts_data = {
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
 -c, --coins=c         Coins to sign for (comma-separated list)
+-C, --clean           Remove unneeded files on the removable device
 -I, --no-insert-check Don’t check for device insertion
 -l, --led             Use status LED to signal standby, busy and error
 -m, --mountpoint=M    Specify an alternate mountpoint 'M'
@@ -192,6 +193,10 @@ if cmd_args:
 			asi.xmr_setup()
 	elif cmd == 'wait':
 		main(do_loop=True)
+	elif cmd == 'clean':
+		asi.do_mount()
+		asi.clean_old_files()
+		asi.do_umount()
 	else:
 		die(1,f'{cmd!r}: unrecognized command')
 else:

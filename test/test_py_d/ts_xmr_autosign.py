@@ -55,6 +55,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('new_address_alice_label',  'adding an address to Alice’s tmp wallet (with label)'),
 		('dump_tmp_wallets',         'dumping Alice’s tmp wallets'),
 		('delete_tmp_wallets',       'deleting Alice’s tmp wallets'),
+		('clean',                    'cleaning signable file directories'),
 		('autosign_setup',           'autosign setup with Alice’s seed'),
 		('create_watchonly_wallets', 'creating online (watch-only) wallets for Alice'),
 		('delete_tmp_dump_files',    'deleting Alice’s dump files'),
@@ -279,3 +280,81 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		return self._xmr_autosign_op(
 			op    = 'import-key-images',
 			desc  = 'importing key images' )
+
+	def create_fake_tx_files(self):
+		imsg('Creating fake transaction files')
+
+		self.asi.msg_dir.mkdir(exist_ok=True)
+		self.asi.xmr_dir.mkdir(exist_ok=True)
+		self.asi.xmr_tx_dir.mkdir(exist_ok=True)
+		self.asi.xmr_outputs_dir.mkdir(exist_ok=True)
+
+		for fn in (
+			'a.rawtx', 'a.sigtx',
+			'b.rawtx', 'b.sigtx',
+			'c.rawtx',
+			'd.sigtx',
+		):
+			(self.asi.tx_dir / fn).touch()
+
+		for fn in (
+			'a.rawmsg.json', 'a.sigmsg.json',
+			'b.rawmsg.json',
+			'c.sigmsg.json',
+			'd.rawmsg.json', 'd.sigmsg.json',
+		):
+			(self.asi.msg_dir / fn).touch()
+
+		for fn in (
+			'a.rawtx', 'a.sigtx', 'a.subtx',
+			'b.rawtx', 'b.sigtx',
+			'c.subtx',
+			'd.rawtx', 'd.subtx',
+			'e.rawtx',
+			'f.sigtx','f.subtx',
+		):
+			(self.asi.xmr_tx_dir / fn).touch()
+
+		for fn in (
+			'a.raw', 'a.sig',
+			'b.raw',
+			'c.sig',
+		):
+			(self.asi.xmr_outputs_dir / fn).touch()
+
+		return 'ok'
+
+	def clean(self):
+
+		def gen_listing():
+			for k in ('tx_dir','msg_dir','xmr_tx_dir','xmr_outputs_dir'):
+				d = getattr(self.asi,k)
+				if d.is_dir():
+					yield '{:12} {}'.format(
+						str(Path(*d.parts[4:])) + ':',
+						' '.join(sorted(i.name for i in d.iterdir()))).strip()
+
+		self.create_fake_tx_files()
+		before = '\n'.join(gen_listing())
+
+		t = self.spawn( 'mmgen-autosign', [f'--mountpoint={self.mountpoint}','clean'] )
+		out = t.read()
+
+		after = '\n'.join(gen_listing())
+		chk = """
+			tx:          a.sigtx b.sigtx c.rawtx d.sigtx
+			msg:         a.sigmsg.json b.rawmsg.json c.sigmsg.json d.sigmsg.json
+			xmr/tx:      a.subtx b.sigtx c.subtx d.subtx e.rawtx f.subtx
+			xmr/outputs:
+		"""
+
+		shutil.rmtree(self.asi.mountpoint)
+		self.asi.tx_dir.mkdir(parents=True)
+
+		imsg(f'\nBefore cleaning:\n{before}')
+		imsg(f'\nAfter cleaning:\n{after}')
+
+		assert '13 files shredded' in out
+		assert after + '\n' == fmt(chk), f'\n{after}\n!=\n{fmt(chk)}'
+
+		return t
