@@ -186,7 +186,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		from pathlib import Path
 		Path(self.autosign_xmr_dir).mkdir(parents=True,exist_ok=True)
 		Path(self.autosign_xmr_dir,'old.vkeys').touch()
-		t = self.make_wallet(
+		t = self.run_setup(
 			mn_type        = 'mmgen',
 			mn_file        = self.users['alice'].mmwords,
 			use_dfl_wallet = None )

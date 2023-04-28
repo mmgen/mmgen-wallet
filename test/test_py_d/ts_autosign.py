@@ -176,13 +176,13 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		t.written_to_file('MMGen wallet')
 		return t
 
-	def make_wallet_from_dfl_wallet(self):
-		return self.make_wallet(mn_type='default',use_dfl_wallet=True)
+	def run_setup_dfl_wallet(self):
+		return self.run_setup(mn_type='default',use_dfl_wallet=True)
 
-	def make_wallet_bip39(self):
-		return self.make_wallet(mn_type='bip39')
+	def run_setup_bip39(self):
+		return self.run_setup(mn_type='bip39')
 
-	def make_wallet(self,mn_type=None,mn_file=None,use_dfl_wallet=False):
+	def run_setup(self,mn_type=None,mn_file=None,use_dfl_wallet=False):
 		mn_desc = mn_type or 'default'
 		mn_type = mn_type or 'mmgen'
 
@@ -362,10 +362,10 @@ class TestSuiteAutosign(TestSuiteAutosignBase):
 		('copy_tx_files',            'copying transaction files'),
 		('gen_key',                  'generating key'),
 		('create_dfl_wallet',        'creating default MMGen wallet'),
-		('make_wallet_from_dfl_wallet','making autosign wallet (from user’s default wallet)'),
+		('run_setup_dfl_wallet',     'running ‘autosign setup’ (with default wallet)'),
 		('sign_quiet',               'signing transactions (--quiet)'),
 		('remove_signed_txfiles',    'removing signed transaction files'),
-		('make_wallet_bip39',        'making autosign wallet (from BIP39 mnemonic)'),
+		('run_setup_bip39',          'running ‘autosign setup’ (BIP39 mnemonic)'),
 		('create_bad_txfiles',       'creating bad transaction files'),
 		('sign_full_summary',        'signing transactions (--full-summary)'),
 		('remove_signed_txfiles_btc','removing transaction files (BTC only)'),
@@ -424,7 +424,7 @@ class TestSuiteAutosignLive(TestSuiteAutosignBTC):
 		('start_daemons',        'starting daemons'),
 		('copy_tx_files',        'copying transaction files'),
 		('gen_key',              'generating key'),
-		('make_wallet_mmgen',    'making autosign wallet (from MMGen native mnemonic)'),
+		('run_setup_mmgen',      'running ‘autosign setup’ (MMGen native mnemonic)'),
 		('sign_live',            'signing transactions'),
 		('create_bad_txfiles',   'creating bad transaction files'),
 		('sign_live_led',        'signing transactions (--led)'),
@@ -433,8 +433,8 @@ class TestSuiteAutosignLive(TestSuiteAutosignBTC):
 		('stop_daemons',         'stopping daemons'),
 	)
 
-	def make_wallet_mmgen(self):
-		return self.make_wallet(mn_type='mmgen',use_dfl_wallet=None)
+	def run_setup_mmgen(self):
+		return self.run_setup(mn_type='mmgen',use_dfl_wallet=None)
 
 	def sign_live(self):
 		return self.do_sign_live([])
