@@ -54,6 +54,7 @@ from .rpc import json_encoder
 from .proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
 from .proto.xmr.daemon import MoneroWalletDaemon
 from .ui import keypress_confirm
+from .autosign import get_autosign_obj
 
 xmrwallet_uargs = namedtuple('xmrwallet_uargs',[
 	'infile',
@@ -72,16 +73,6 @@ xmrwallet_uarg_info = (
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),
 		r'(?:[^:]+):(?:\d+)'
-	)
-
-def get_autosign_obj(cfg):
-	from .autosign import Autosign,AutosignConfig
-	return Autosign(
-		AutosignConfig({
-			'mountpoint': cfg.autosign_mountpoint,
-			'test_suite': cfg.test_suite,
-			'coins': 'XMR',
-		})
 	)
 
 class XMRWalletAddrSpec(str,Hilite,InitErrors,MMGenObject):
@@ -267,7 +258,7 @@ class MoneroMMGenTX:
 			)
 
 			if self.cfg.autosign:
-				fn = get_autosign_obj(self.cfg).xmr_tx_dir / fn
+				fn = get_autosign_obj(self.cfg,'xmr').xmr_tx_dir / fn
 
 			from .fileutil import write_data_to_file
 			write_data_to_file(
@@ -450,7 +441,7 @@ class MoneroWalletOutputsFile:
 
 		def get_outfile(self,cfg,wallet_fn):
 			return (
-				get_autosign_obj(cfg).xmr_outputs_dir if cfg.autosign else
+				get_autosign_obj(cfg,'xmr').xmr_outputs_dir if cfg.autosign else
 				wallet_fn.parent ) / self.fn_fs.format(
 					a = wallet_fn.name,
 					b = self.base_chksum,
@@ -506,7 +497,7 @@ class MoneroWalletOutputsFile:
 
 		@classmethod
 		def find_fn_from_wallet_fn(cls,cfg,wallet_fn,ret_on_no_match=False):
-			path = get_autosign_obj(cfg).xmr_outputs_dir or Path()
+			path = get_autosign_obj(cfg,'xmr').xmr_outputs_dir or Path()
 			pat = cls.fn_fs.format(
 				a = wallet_fn.name,
 				b = f'[0-9a-f]{{{cls.chksum_nchars}}}\\',
@@ -805,7 +796,7 @@ class MoneroWalletOps:
 		@property
 		def autosign_viewkey_addr_file(self):
 			from .addrfile import ViewKeyAddrFile
-			mpdir = get_autosign_obj(self.cfg).xmr_dir
+			mpdir = get_autosign_obj(self.cfg,'xmr').xmr_dir
 			flist = [f for f in mpdir.iterdir() if f.name.endswith(ViewKeyAddrFile.ext)]
 			if len(flist) != 1:
 				die(2,
@@ -1618,7 +1609,7 @@ class MoneroWalletOps:
 		@property
 		def unsubmitted_tx_path(self):
 			from .autosign import Signable
-			t = Signable.xmr_transaction( get_autosign_obj(self.cfg) )
+			t = Signable.xmr_transaction( get_autosign_obj(self.cfg,'xmr') )
 			if len(t.unsubmitted) != 1:
 				die('AutosignTXError', "{a} unsubmitted transaction{b} in '{c}'!".format(
 					a = 'More than one' if t.unsubmitted else 'No',

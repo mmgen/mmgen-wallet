@@ -30,7 +30,6 @@ from .xmrwallet import (
 	MoneroWalletOps,
 	xmrwallet_uarg_info,
 	xmrwallet_uargs,
-	get_autosign_obj,
 )
 
 opts_data = {
@@ -148,7 +147,8 @@ elif op in ('export-outputs','import-key-images'):
 	wallets = cmd_args.pop(0) if cmd_args else None
 
 if cfg.autosign and not cfg.test_suite:
-	asi = get_autosign_obj(cfg)
+	from .autosign import get_autosign_obj
+	asi = get_autosign_obj(cfg,'xmr')
 	if not asi.get_insert_status():
 		die(1,'Removable device not present!')
 	asi.do_mount()

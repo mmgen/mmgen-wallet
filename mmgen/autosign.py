@@ -558,3 +558,12 @@ class Autosign:
 			enabled = self.cfg.led,
 			simulate = os.getenv('MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE') )
 		self.led.set('off')
+
+def get_autosign_obj(cfg,coins=None):
+	return Autosign(
+		AutosignConfig({
+			'mountpoint': cfg.autosign_mountpoint or cfg.mountpoint,
+			'test_suite': cfg.test_suite,
+			'coins': coins if isinstance(coins,str) else ','.join(coins) if coins else 'btc',
+		})
+	)
