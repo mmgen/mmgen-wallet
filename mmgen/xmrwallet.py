@@ -833,12 +833,16 @@ class MoneroWalletOps:
 					c = 'WatchOnly' if watch_only else '',
 					d = f'.{self.cfg.network}' if self.cfg.network != 'mainnet' else '')
 			)
+		
+		@property
+		def add_wallet_desc(self):
+			return 'offline signing ' if self.offline else 'watch-only ' if self.cfg.watch_only else ''
 
 		async def main(self):
 			gmsg('\n{a}ing {b} {c}wallet{d}'.format(
 				a = self.stem.capitalize(),
 				b = len(self.addr_data),
-				c = 'watch-only ' if self.cfg.watch_only else '',
+				c = self.add_wallet_desc,
 				d = suf(self.addr_data) ))
 			processed = 0
 			for n,d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
@@ -857,11 +861,11 @@ class MoneroWalletOps:
 			return processed
 
 		def head_msg(self,wallet_idx,fn):
-			gmsg('\n{} {} wallet #{} ({})'.format(
-				self.action.capitalize(),
-				self.wallet_desc,
-				wallet_idx,
-				fn.name
+			gmsg('\n{a} {b}wallet #{c} ({d})'.format(
+				a = self.action.capitalize(),
+				b = self.add_wallet_desc,
+				c = wallet_idx,
+				d = fn.name
 			))
 
 		class rpc:
@@ -876,8 +880,9 @@ class MoneroWalletOps:
 					MoneroMMGenTX.NewUnsigned if self.cfg.watch_only else
 					MoneroMMGenTX.NewSigned )
 
-			def open_wallet(self,desc,refresh=True):
-				gmsg_r(f'\n  Opening {desc} wallet...')
+			def open_wallet(self,desc=None,refresh=True):
+				add_desc = desc + ' ' if desc else self.parent.add_wallet_desc
+				gmsg_r(f'\n  Opening {add_desc}wallet...')
 				self.c.call( # returns {}
 					'open_wallet',
 					filename = self.fn.name,
@@ -886,7 +891,7 @@ class MoneroWalletOps:
 
 				if refresh:
 					m = ' and contacting relay' if self.parent.name == 'submit' and self.cfg.tx_relay_daemon else ''
-					gmsg_r(f'  Refreshing {desc} wallet{m}...')
+					gmsg_r(f'  Refreshing {add_desc}wallet{m}...')
 					ret = self.c.call('refresh')
 					gmsg('done')
 					if ret['received_money']:
@@ -1470,14 +1475,12 @@ class MoneroWalletOps:
 				return True
 
 			if keypress_confirm( self.cfg, f'Relay {self.name} transaction?' ):
-				w_desc = 'source'
 				if self.cfg.tx_relay_daemon:
 					await h.stop_wallet('source')
 					msg('')
 					self.init_tx_relay_daemon()
 					h = self.rpc(self,self.source)
-					w_desc = 'TX relay source'
-					h.open_wallet(w_desc,refresh=False)
+					h.open_wallet('TX-relay-configured source',refresh=False)
 				msg_r(f'\n    Relaying {self.name} transaction...')
 				h.relay_tx(new_tx.data.metadata)
 				gmsg('\nAll done')
@@ -1572,7 +1575,6 @@ class MoneroWalletOps:
 				ymsg('\nOperation cancelled by user request')
 
 	class sign(wallet):
-		wallet_desc = 'offline signing'
 		action = 'signing transaction with'
 		start_daemon = False
 		offline = True
@@ -1582,7 +1584,7 @@ class MoneroWalletOps:
 			tx = MoneroMMGenTX.Unsigned( self.cfg, fn )
 			h = self.rpc(self,self.addr_data[0])
 			self.head_msg(tx.src_wallet_idx,h.fn)
-			h.open_wallet('offline signing')
+			h.open_wallet()
 			res = self.c.call(
 				'sign_transfer',
 				unsigned_txset = tx.data.unsigned_txset,
@@ -1600,7 +1602,6 @@ class MoneroWalletOps:
 			return new_tx
 
 	class submit(wallet):
-		wallet_desc = 'watch-only'
 		action = 'submitting transaction with'
 		opts = ('tx_relay_daemon',)
 
@@ -1626,7 +1627,7 @@ class MoneroWalletOps:
 				fn  = Path(uarg.infile) if uarg.infile else self.unsubmitted_tx_path )
 			h = self.rpc( self, self.kal.entry(tx.src_wallet_idx) )
 			self.head_msg(tx.src_wallet_idx,h.fn)
-			h.open_wallet(self.wallet_desc)
+			h.open_wallet()
 
 			msg('\n' + tx.get_info())
 
@@ -1653,11 +1654,10 @@ class MoneroWalletOps:
 			return new_tx
 
 	class dump(wallet):
-		wallet_desc = 'source'
 
 		async def process_wallet(self,d,fn,last):
 			h = self.rpc(self,d)
-			h.open_wallet(self.wallet_desc)
+			h.open_wallet('source')
 			acct_data,addr_data = h.get_accts(print=False)
 			msg('')
 			MoneroWalletDumpFile.New(
@@ -1667,7 +1667,6 @@ class MoneroWalletOps:
 			return True
 
 	class export_outputs(wallet):
-		wallet_desc = 'watch-only'
 		action = 'exporting outputs from'
 		stem = 'process'
 		opts = ('export_all',)
@@ -1692,7 +1691,6 @@ class MoneroWalletOps:
 			return True
 
 	class export_key_images(wallet):
-		wallet_desc = 'offline signing'
 		action = 'signing wallet outputs file with'
 		start_daemon = False
 		offline = True
@@ -1701,7 +1699,7 @@ class MoneroWalletOps:
 			await self.c.restart_daemon()
 			h = self.rpc(self,self.addr_data[0])
 			self.head_msg(wallet_idx,fn)
-			h.open_wallet('offline signing')
+			h.open_wallet()
 			m = MoneroWalletOutputsFile.Unsigned(
 				parent = self,
 				fn     = fn )
@@ -1722,14 +1720,13 @@ class MoneroWalletOps:
 			return m
 
 	class import_key_images(wallet):
-		wallet_desc = 'watch-only'
 		action = 'importing key images into'
 		stem = 'process'
 		trust_daemon = True
 
 		async def process_wallet(self,d,fn,last):
 			h = self.rpc(self,d)
-			h.open_wallet(self.wallet_desc)
+			h.open_wallet()
 			self.head_msg(d.idx,h.fn)
 			m = MoneroWalletOutputsFile.Signed(
 				parent = self,
