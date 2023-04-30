@@ -48,7 +48,8 @@ class TestSuiteMisc(TestSuiteBase):
 		return t
 
 	def xmrwallet_txview(self):
-		t = self.spawn(f'mmgen-xmrwallet',['txview','test/ref/monero/3EBD06-2D6E3B-XMR[0.74].testnet.sigtx'])
+		files = get_file_with_ext('test/ref/monero','tx',no_dot=True,delete=False,return_list=True)
+		t = self.spawn( f'mmgen-xmrwallet', ['txview'] + files )
 		res = strip_ansi_escapes(t.read()).replace('\r','')
 		for s in (
 			'Amount:    0.74 XMR',
