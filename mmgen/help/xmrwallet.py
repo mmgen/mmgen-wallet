@@ -137,7 +137,8 @@ JSON and thus suitable for efficient incremental backup using git.
                           ‘TXVIEW’ OPERATION NOTES
 
 Transactions are displayed in chronological order based on submit time or
-creation time.
+creation time.  With --autosign, submitted transactions on the removable
+device are displayed.
 
 
                               SECURITY WARNING

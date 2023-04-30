@@ -616,6 +616,7 @@ class MoneroWalletOps:
 
 		opts = ('wallet_dir',)
 		trust_daemon = False
+		do_umount = True
 
 		def __init__(self,cfg,uarg_tuple):
 
@@ -1812,12 +1813,21 @@ class MoneroWalletOps:
 				die(1,'Exiting at user request')
 
 	class txview(base):
+		opts = ('watch_only','autosign')
+		do_umount = False
 
 		async def main(self):
+			if self.cfg.autosign:
+				asi = get_autosign_obj(self.cfg,'xmr')
+				files = [f for f in asi.xmr_tx_dir.iterdir() if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]
+			else:
+				files = uarg.infile
 			txs = sorted(
-				(MoneroMMGenTX.View( self.cfg, Path(fn) ) for fn in uarg.infile),
+				(MoneroMMGenTX.View( self.cfg, Path(fn) ) for fn in files),
 					key = lambda x: x.data.create_time
 			)
+			if self.cfg.autosign:
+				asi.do_umount()
 			self.cfg._util.stdout_or_pager(
 				'\n'.join(tx.get_info() for tx in txs)
 			)

@@ -49,7 +49,7 @@ opts_data = {
 			'[opts] sweep    [xmr_keyaddrfile] SWEEP_SPEC',
 			'[opts] submit   [TX_file]',
 			'[opts] relay    <TX_file>',
-			'[opts] txview   <TX_file> ...',
+			'[opts] txview   [TX_file] ...',
 			'[opts] export-outputs    [wallets]',
 			'[opts] import-key-images [wallets]',
 		],
@@ -113,7 +113,7 @@ cmd_args = cfg._args
 if cmd_args and cfg.autosign and (
 		cmd_args[0] in (
 			MoneroWalletOps.kafile_arg_ops
-			+ ('export-outputs','import-key-images')
+			+ ('export-outputs','import-key-images','txview')
 		)
 		or len(cmd_args) == 1 and cmd_args[0] == 'submit'
 	):
@@ -171,5 +171,5 @@ try:
 except Exception as e:
 	ymsg(f'Unable to stop wallet daemon: {type(e).__name__}: {e}')
 
-if cfg.autosign and not cfg.test_suite:
+if m.do_umount and cfg.autosign and not cfg.test_suite:
 	asi.do_umount()
