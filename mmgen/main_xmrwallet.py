@@ -61,9 +61,9 @@ opts_data = {
                                  ‘export-outputs’ operation
 -a, --autosign                   Use appropriate outdir and other params for
                                  autosigning operations (implies --watch-only).
-                                 When this option is in effect, the viewkey-
-                                 address file is located automatically, so the
-                                 xmr_keyaddrfile argument must be omitted.
+                                 When this option is in effect, filename argu-
+                                 ments must be omitted, as files are located
+                                 automatically.
 -m, --autosign-mountpoint=P      Specify the autosign mountpoint (defaults to
                                  ‘/mnt/mmgen_autosign’, implies --autosign)
 -b, --rescan-blockchain          Rescan the blockchain if wallet fails to sync
@@ -111,7 +111,10 @@ cfg = Config(opts_data=opts_data)
 cmd_args = cfg._args
 
 if cmd_args and cfg.autosign and (
-		cmd_args[0] in (MoneroWalletOps.kafile_arg_ops + ('export-outputs','import-key-images'))
+		cmd_args[0] in (
+			MoneroWalletOps.kafile_arg_ops
+			+ ('export-outputs','import-key-images')
+		)
 		or len(cmd_args) == 1 and cmd_args[0] == 'submit'
 	):
 	cmd_args.insert(1,None)

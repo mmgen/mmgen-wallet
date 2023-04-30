@@ -47,8 +47,7 @@ sweep     - sweep funds in specified wallet:account to new address in same
 relay     - relay a transaction from a transaction file created using ‘sweep’
             or ‘transfer’ with the --no-relay option
 submit    - submit an autosigned transaction to a wallet and the network
-txview    - view a transaction file or files created using ‘sweep’ or
-            ‘transfer’ with the --no-relay option
+txview    - display detailed information about a transaction file or files
 dump      - produce JSON dumps of wallet metadata (accounts, addresses and
             labels) for a list or range of wallets
 restore   - same as ‘create’, but additionally restore wallet metadata from
@@ -133,6 +132,12 @@ the ‘restore’ operation, should the need arise.  For watch-only autosigning
 wallets, creating the dumps is as easy as executing ‘mmgen-xmrwallet
 --autosign dump’ from your wallet directory.  The dump files are formatted
 JSON and thus suitable for efficient incremental backup using git.
+
+
+                          ‘TXVIEW’ OPERATION NOTES
+
+Transactions are displayed in chronological order based on submit time or
+creation time.
 
 
                               SECURITY WARNING

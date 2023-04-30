@@ -43,6 +43,7 @@ from .util import (
 	make_timestr,
 	make_chksum_N,
 	capfirst,
+	list_gen,
 )
 from .fileutil import get_data_from_file
 from .seed import SeedID
@@ -119,6 +120,8 @@ def is_xmr_tx_file(cfg,fn):
 
 class MoneroMMGenFile:
 
+	silent_load = False
+
 	def make_chksum(self,keys=None):
 		res = json.dumps(
 			dict( (k,v) for k,v in self.data._asdict().items() if (not keys or k in keys) ),
@@ -157,15 +160,36 @@ class MoneroMMGenFile:
 		)
 
 	def extract_data_from_file(self,cfg,fn):
-		return json.loads( get_data_from_file( cfg, str(fn), self.desc ))[self.data_label]
+		return json.loads(
+			get_data_from_file( cfg, str(fn), self.desc, silent=self.silent_load )
+		)[self.data_label]
 
 class MoneroMMGenTX:
 
 	class Base(MoneroMMGenFile):
 
 		data_label = 'MoneroMMGenTX'
-		base_chksum_fields = ('op','create_time','network','seed_id','source','dest','amount')
-		full_chksum_fields = ('op','create_time','network','seed_id','source','dest','amount','fee','blob')
+
+		# both base_chksum and full_chksum are used to make the filename stem, so we must not include
+		# fields that change when TX is signed and submitted (e.g. ‘sign_time’)
+		base_chksum_fields = {
+			'op',
+			'create_time',
+			'network',
+			'seed_id',
+			'source',
+			'dest',
+			'amount' }
+		full_chksum_fields = {
+			'op',
+			'create_time',
+			'network',
+			'seed_id',
+			'source',
+			'dest',
+			'amount',
+			'fee',
+			'blob' }
 		chksum_nchars = 6
 		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
 			'op',
@@ -195,66 +219,58 @@ class MoneroMMGenTX:
 
 		def get_info(self,indent=''):
 			d = self.data
-			if d.dest:
-				to_entry = f'\n{indent}  To:      ' + (
-					'Wallet {}, account {}, address {}'.format(
-						d.dest.wallet.hl(),
-						red(f'#{d.dest.account}'),
-						red(f'#{d.dest.account_address}')
-					)
-				)
-
-			fs = """
-				Info for transaction {a} [Seed ID: {b}. Network: {c}]:
-				  TxID:    {d}
-				  Created: {e:19} [{f}]
-				  Signed:  {g:19} [{h}]
-				  Type:    {i}
-				  From:    Wallet {j}, account {k}{l}
-				  Amount:  {m} XMR
-				  Fee:     {n} XMR
-				  Dest:    {o}
-			"""
-
-			pmid = d.dest_address.parsed.payment_id
-			if pmid:
-				fs += '  Payment ID: {pmid}'
-
-			coldsign_status = (
-				pink(' [cold signed{}]'.format(', submitted' if d.complete else ''))
-				if d.signed_txset else '' )
+			pmt_id = d.dest_address.parsed.payment_id
+			fs = '\n'.join(list_gen(
+				['Info for transaction {a} [Seed ID: {b}. Network: {c}]:'],
+				['  TxID:      {d}'],
+				['  Created:   {e:19} [{f}]'],
+				['  Signed:    {g:19} [{h}]', d.sign_time],
+				['  Type:      {i}{S}'],
+				['  From:      Wallet {j}, account {k}'],
+				['  To:        Wallet {x}, account {y}, address {z}', d.dest],
+				['  Amount:    {m} XMR'],
+				['  Fee:       {n} XMR'],
+				['  Dest:      {o}'],
+				['  Payment ID: {P}', pmt_id],
+			))
 
 			from .util2 import format_elapsed_hr
 			return fmt(fs,strip_char='\t',indent=indent).format(
-					a = orange(self.base_chksum.upper()),
+					a = orange(self.file_id),
 					b = d.seed_id.hl(),
 					c = yellow(d.network.upper()),
 					d = d.txid.hl(),
 					e = make_timestr(d.create_time),
 					f = format_elapsed_hr(d.create_time),
-					g = make_timestr(d.sign_time) if d.sign_time else '-',
-					h = format_elapsed_hr(d.sign_time) if d.sign_time else '-',
-					i = blue(capfirst(d.op)) + coldsign_status,
+					g = make_timestr(d.sign_time) if d.sign_time else None,
+					h = format_elapsed_hr(d.sign_time) if d.sign_time else None,
+					i = blue(capfirst(d.op)),
 					j = d.source.wallet.hl(),
 					k = red(f'#{d.source.account}'),
-					l = to_entry if d.dest else '',
 					m = d.amount.hl(),
 					n = d.fee.hl(),
 					o = d.dest_address.hl(),
-					pmid = pink(pmid.hex()) if pmid else None
+					P = pink(pmt_id.hex()) if pmt_id else None,
+					S = pink(f" [cold signed{', submitted' if d.complete else ''}]") if d.signed_txset else '',
+					x = d.dest.wallet.hl() if d.dest else None,
+					y = red(f'#{d.dest.account}') if d.dest else None,
+					z = red(f'#{d.dest.account_address}') if d.dest else None,
 				)
+
+		@property
+		def file_id(self):
+			return (self.base_chksum + ('-' + self.full_chksum if self.full_chksum else '')).upper()
 
 		def write(self,delete_metadata=False,ask_write=True,ask_overwrite=True):
 			dict_data = self.data._asdict()
 			if delete_metadata:
 				dict_data['metadata'] = None
 
-			fn = '{a}{b}-XMR[{c!s}]{d}.{e}'.format(
-				a = self.base_chksum.upper(),
-				b = (lambda s: f'-{s.upper()}' if s else '')(self.full_chksum),
-				c = self.data.amount,
-				d = (lambda s: '' if s == 'mainnet' else f'.{s}')(self.data.network),
-				e = self.ext
+			fn = '{a}-XMR[{b!s}]{c}.{d}'.format(
+				a = self.file_id,
+				b = self.data.amount,
+				c = (lambda s: '' if s == 'mainnet' else f'.{s}')(self.data.network),
+				d = self.ext
 			)
 
 			if self.cfg.autosign:
@@ -294,8 +310,8 @@ class MoneroMMGenTX:
 
 			self.data = self.xmrwallet_tx_data(
 				op             = d.op,
-				create_time    = getattr(d,'create_time',now),
-				sign_time      = (getattr(d,'sign_time',None) or now) if self.signed else None,
+				create_time    = now if self.name in ('NewSigned','NewUnsigned') else getattr(d,'create_time',None),
+				sign_time      = now if self.name in ('NewSigned','NewColdSigned') else getattr(d,'sign_time',None),
 				network        = d.network,
 				seed_id        = SeedID(sid=d.seed_id),
 				source         = XMRWalletAddrSpec(d.source),
@@ -308,7 +324,7 @@ class MoneroMMGenTX:
 				metadata       = d.metadata,
 				unsigned_txset = d.unsigned_txset,
 				signed_txset   = getattr(d,'signed_txset',None),
-				complete       = True if self.name == 'NewSigned' else getattr(d,'complete',False),
+				complete       = self.name in ('NewSigned','NewSubmitted'),
 			)
 
 	class NewUnsigned(New):
@@ -337,17 +353,17 @@ class MoneroMMGenTX:
 			super().__init__()
 
 			self.cfg = cfg
-			self.fn = fn
+			self.fn = Path(fn)
 
 			try:
 				d_wrap = self.extract_data_from_file( cfg, fn )
 			except Exception as e:
 				die( 'MoneroMMGenTXFileParseError', f'{type(e).__name__}: {e}\nCould not load transaction file' )
 
-			if not 'unsigned_txset' in d_wrap['data']: # backwards compat: use old checksum fields
-				self.full_chksum_fields = (
-					set(self.xmrwallet_tx_data._fields) -
-					{'metadata','unsigned_txset','signed_txset','complete'} )
+			if 'unsigned_txset' in d_wrap['data']: # post-autosign
+				self.full_chksum_fields &= set(d_wrap['data']) # allow for added chksum fields in future
+			else:
+				self.full_chksum_fields = set(d_wrap['data']) - {'metadata'}
 
 			for key in self.xmrwallet_tx_data._fields: # backwards compat: fill in missing fields
 				if not key in d_wrap['data']:
@@ -355,7 +371,7 @@ class MoneroMMGenTX:
 
 			d = self.xmrwallet_tx_data(**d_wrap['data'])
 
-			if self.name != 'Completed':
+			if self.name not in ('View','Completed'):
 				assert fn.name.endswith('.'+self.ext), 'TX filename {fn} has incorrect extension (not {self.ext!r})'
 				assert getattr(d,self.req_field), f'{self.name} TX missing required field {self.req_field!r}'
 				assert bool(d.sign_time)==self.signed,'{} has {}sign time!'.format(self.desc,'no 'if self.signed else'')
@@ -407,14 +423,17 @@ class MoneroMMGenTX:
 		desc = 'submitted transaction'
 		ext = 'subtx'
 
+	class View(Completed):
+		silent_load = True
+
 class MoneroWalletOutputsFile:
 
 	class Base(MoneroMMGenFile):
 
 		desc = 'wallet outputs'
 		data_label = 'MoneroMMGenWalletOutputsFile'
-		base_chksum_fields = ('seed_id','wallet_index','outputs_data_hex',)
-		full_chksum_fields = ('seed_id','wallet_index','outputs_data_hex','signed_key_images')
+		base_chksum_fields = {'seed_id','wallet_index','outputs_data_hex',}
+		full_chksum_fields = {'seed_id','wallet_index','outputs_data_hex','signed_key_images'}
 		fn_fs = '{a}-outputs-{b}.{c}'
 		ext_offset = 25 # len('-outputs-') + len(chksum) ({b})
 		chksum_nchars = 16
@@ -529,7 +548,7 @@ class MoneroWalletDumpFile:
 	class Base:
 		desc = 'Monero wallet dump'
 		data_label = 'MoneroMMGenWalletDumpFile'
-		base_chksum_fields = ('seed_id','wallet_index','wallet_metadata')
+		base_chksum_fields = {'seed_id','wallet_index','wallet_metadata'}
 		full_chksum_fields = None
 		ext = 'dump'
 		ext_offset = 0
@@ -833,7 +852,7 @@ class MoneroWalletOps:
 					c = 'WatchOnly' if watch_only else '',
 					d = f'.{self.cfg.network}' if self.cfg.network != 'mainnet' else '')
 			)
-		
+
 		@property
 		def add_wallet_desc(self):
 			return 'offline signing ' if self.offline else 'watch-only ' if self.cfg.watch_only else ''
@@ -1644,7 +1663,6 @@ class MoneroWalletOps:
 
 			new_tx = MoneroMMGenTX.NewSubmitted(
 				cfg          = self.cfg,
-				complete     = True,
 				_in_tx       = tx,
 			)
 			gmsg('\nOK')
@@ -1796,10 +1814,10 @@ class MoneroWalletOps:
 	class txview(base):
 
 		async def main(self):
+			txs = sorted(
+				(MoneroMMGenTX.View( self.cfg, Path(fn) ) for fn in uarg.infile),
+					key = lambda x: x.data.create_time
+			)
 			self.cfg._util.stdout_or_pager(
-				'\n'.join(
-					tx.get_info() for tx in
-					sorted(
-						(MoneroMMGenTX.Completed( self.cfg, Path(fn) ) for fn in uarg.infile),
-						key = lambda x: x.data.sign_time or x.data.create_time )
-			))
+				'\n'.join(tx.get_info() for tx in txs)
+			)
