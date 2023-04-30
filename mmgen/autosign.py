@@ -495,7 +495,7 @@ class Autosign:
 		def create_signing_wallets():
 			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
 			if len(self.wallet_files) > 1:
-				ymsg(f'Warning: more that one wallet file, using the first ({self.wallet_files[0]}) for xmrwallet generation')
+				ymsg(f'Warning: more than one wallet file, using the first ({self.wallet_files[0]}) for xmrwallet generation')
 			m = MoneroWalletOps.create_offline(
 				self.xmrwallet_cfg,
 				xmrwallet_uargs(
