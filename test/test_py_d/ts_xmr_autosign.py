@@ -79,6 +79,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('import_key_images',        'importing signed key images into Alice’s online wallets'),
 		('list_wallets',             'listing Alice’s wallets and checking balance'),
 		('txlist',                   'listing Alice’s submitted transactions'),
+		('check_tx_dirs',            'cleaning and checking signable file directories'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -325,23 +326,23 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 
 		return 'ok'
 
+	def _gen_listing(self):
+		for k in ('tx_dir','msg_dir','xmr_tx_dir','xmr_outputs_dir'):
+			d = getattr(self.asi,k)
+			if d.is_dir():
+				yield '{:12} {}'.format(
+					str(Path(*d.parts[4:])) + ':',
+					' '.join(sorted(i.name for i in d.iterdir()))).strip()
+
 	def clean(self):
 
-		def gen_listing():
-			for k in ('tx_dir','msg_dir','xmr_tx_dir','xmr_outputs_dir'):
-				d = getattr(self.asi,k)
-				if d.is_dir():
-					yield '{:12} {}'.format(
-						str(Path(*d.parts[4:])) + ':',
-						' '.join(sorted(i.name for i in d.iterdir()))).strip()
-
 		self.create_fake_tx_files()
-		before = '\n'.join(gen_listing())
+		before = '\n'.join(self._gen_listing())
 
 		t = self.spawn( 'mmgen-autosign', [f'--mountpoint={self.mountpoint}','clean'] )
 		out = t.read()
 
-		after = '\n'.join(gen_listing())
+		after = '\n'.join(self._gen_listing())
 		chk = """
 			tx:          a.sigtx b.sigtx c.rawtx d.sigtx
 			msg:         a.sigmsg.json b.rawmsg.json c.sigmsg.json d.sigmsg.json
@@ -368,4 +369,15 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			'Transfer 1:0','-> ext',
 			'Transfer 1:0','-> ext'
 		])
+		return t
+
+	def check_tx_dirs(self):
+		before = '\n'.join(self._gen_listing())
+		t = self.spawn( 'mmgen-autosign', [f'--mountpoint={self.mountpoint}','clean'] )
+		t.read()
+		after = '\n'.join(self._gen_listing())
+		imsg(f'\nBefore cleaning:\n{before}')
+		imsg(f'\nAfter cleaning:\n{after}')
+		pat = r'xmr/tx: \s*\S+\.subtx \S+\.subtx\s+xmr/outputs:\s*$'
+		assert re.search( pat, after, re.DOTALL ), f'regex search for {pat} failed'
 		return t
