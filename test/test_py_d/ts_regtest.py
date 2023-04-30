@@ -758,8 +758,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def user_txhist(self,user,args,expect):
 		t = self.spawn('mmgen-tool',['--'+user,'txhist'] + args)
-		res = strip_ansi_escapes(t.read()).replace('\r','')
-		m = re.search(expect,res,re.DOTALL)
+		m = re.search( expect, t.read(strip_color=True), re.DOTALL )
 		assert m, f'Expected: {expect}'
 		return t
 

@@ -367,8 +367,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			(['--no-start-wallet-daemon'] if cfg in ('continue','stop') else []) +
 			(['--no-stop-wallet-daemon'] if cfg in ('start','continue') else []) +
 			['new', (kafile or data.kafile), spec] )
-		res = strip_ansi_escapes(t.read()).replace('\r','')
-		m = re.search(expect,res,re.DOTALL)
+		m = re.search( expect, t.read(strip_color=True), re.DOTALL )
 		assert m, f'no match found for {expect!r}'
 		return t
 

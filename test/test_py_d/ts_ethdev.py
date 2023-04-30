@@ -813,7 +813,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def bal(self,n):
 		t = self.spawn('mmgen-tool', self.eth_args + ['twview','wide=1'])
-		text = strip_ansi_escapes(t.read())
+		text = t.read(strip_color=True)
 		for b in bals[n]:
 			addr,amt,adj = b if len(b) == 3 else b + (False,)
 			if adj and self.proto.coin == 'ETC':
@@ -826,7 +826,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def token_bal(self,n=None):
 		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1','twview','wide=1'])
-		text = strip_ansi_escapes(t.read())
+		text = t.read(strip_color=True)
 		for b in token_bals[n]:
 			addr,_amt1,_amt2,adj = b if len(b) == 4 else b + (False,)
 			if adj and self.proto.coin == 'ETC':

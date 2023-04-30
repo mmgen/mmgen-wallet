@@ -170,14 +170,13 @@ class MMGenPexpect:
 		return self.p.kill(signal)
 
 	def match_expect_list(self,expect_list,greedy=False):
-		res = strip_ansi_escapes(self.read()).replace('\r','')
 		allrep = '.*' if greedy else '.*?'
 		expect = (
 			r'(\b|\s)' +
 			fr'\s{allrep}\s'.join(s.replace(r'.',r'\.').replace(' ',r'\s+') for s in expect_list) +
 			r'(\b|\s)' )
 		import re
-		m = re.search(expect,res,re.DOTALL)
+		m = re.search( expect, self.read(strip_color=True), re.DOTALL )
 		assert m, f'No match found for regular expression {expect!r}'
 		return m
 
@@ -230,8 +229,8 @@ class MMGenPexpect:
 			msg(f'{ls}SEND {es}{yt}')
 		return ret
 
-	def read(self,n=-1):
-		return self.p.read(n)
+	def read(self,n=-1,strip_color=False):
+		return strip_ansi_escapes(self.p.read(n)).replace('\r','') if strip_color else self.p.read(n)
 
 	def close(self):
 		if self.pexpect_spawn:
