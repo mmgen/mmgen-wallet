@@ -26,7 +26,7 @@ from pathlib import PosixPath as Path
 
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .obj import CoinTxID,Int
-from .color import red,yellow,green,blue,cyan,pink,orange
+from .color import red,yellow,green,blue,cyan,pink,orange,purple
 from .util import (
 	msg,
 	msg_r,
@@ -190,6 +190,7 @@ class MoneroMMGenTX:
 			'amount',
 			'fee',
 			'blob' }
+		oneline_fs = '{a:7} {b:8} {c:19} {d:13} {e:8} {f:6} {x:2} {g:6} {h:17} {j}'
 		chksum_nchars = 6
 		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
 			'op',
@@ -218,7 +219,22 @@ class MoneroMMGenTX:
 		def src_wallet_idx(self):
 			return int(self.data.source.split(':')[0])
 
-		def get_info(self,indent=''):
+		def get_info_oneline(self,indent='',cols=None):
+			d = self.data
+			return self.oneline_fs.format(
+					a = yellow(d.network),
+					b = d.seed_id.hl(),
+					c = make_timestr(d.submit_time if d.submit_time is not None else d.create_time),
+					d = orange(self.file_id),
+					e = purple(capfirst(d.op.ljust(8))),
+					f = red('{}:{}'.format(d.source.wallet,d.source.account).ljust(6)),
+					g = red('{}:{}'.format(d.dest.wallet,d.dest.account).ljust(6)) if d.dest else cyan('ext   '),
+					h = d.amount.fmt( color=True, iwidth=4, prec=12 ),
+					j = d.dest_address.fmt(width=cols-95,color=True) if cols else d.dest_address.hl(),
+					x = '->'
+				)
+
+		def get_info(self,indent='',cols=None):
 			d = self.data
 			pmt_id = d.dest_address.parsed.payment_id
 			fs = '\n'.join(list_gen(
@@ -584,6 +600,7 @@ class MoneroWalletOps:
 		'sweep',
 		'relay',
 		'txview',
+		'txlist',
 		'label',
 		'sign',
 		'submit',
@@ -1819,10 +1836,15 @@ class MoneroWalletOps:
 				die(1,'Exiting at user request')
 
 	class txview(base):
+		view_method = 'get_info'
 		opts = ('watch_only','autosign')
+		hdr = ''
+		col_hdr = ''
+		footer = ''
+		cols = None
 		do_umount = False
 
-		async def main(self):
+		async def main(self,cols=None):
 			if self.cfg.autosign:
 				asi = get_autosign_obj(self.cfg,'xmr')
 				files = [f for f in asi.xmr_tx_dir.iterdir() if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]
@@ -1836,5 +1858,43 @@ class MoneroWalletOps:
 			if self.cfg.autosign:
 				asi.do_umount()
 			self.cfg._util.stdout_or_pager(
-				'\n'.join(tx.get_info() for tx in txs)
+				(self.hdr if len(files) > 1 else '')
+				+ self.col_hdr
+				+ '\n'.join(getattr(tx,self.view_method)(cols=cols) for tx in txs)
+				+ self.footer
 			)
+
+	class txlist(txview):
+		view_method = 'get_info_oneline'
+		add_nl = True
+		footer = '\n'
+
+		@property
+		def hdr(self):
+			return ('SUBMITTED ' if self.cfg.autosign else '') + 'MONERO TRANSACTIONS\n'
+
+		@property
+		def col_hdr(self):
+			return MoneroMMGenTX.View.oneline_fs.format(
+				a = 'Network',
+				b = 'Seed ID',
+				c = 'Submitted' if self.cfg.autosign else 'Date',
+				d = 'TxID',
+				e = 'Type',
+				f = 'Src',
+				g = 'Dest',
+				h = '  Amount',
+				j = 'Dest Address',
+				x = '',
+			) + '\n'
+
+		async def main(self):
+			if self.cfg.pager:
+				cols = None
+			else:
+				from .term import get_terminal_size
+				cols = self.cfg.columns or get_terminal_size().width
+				if cols < 106:
+					die(1, 'A terminal at least 106 columns wide is required to display this output'
+						+ ' (or use --columns or --pager)' )
+			await super().main(cols=cols)

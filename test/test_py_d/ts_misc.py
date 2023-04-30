@@ -34,6 +34,7 @@ class TestSuiteMisc(TestSuiteBase):
 	cmd_group = (
 		('rpc_backends',     'RPC backends'),
 		('xmrwallet_txview', "'mmgen-xmrwallet' txview"),
+		('xmrwallet_txlist', "'mmgen-xmrwallet' txlist"),
 		('coin_daemon_info', "'examples/coin-daemon-info.py'"),
 		('term_echo',        "term.set('echo')"),
 		('term_cleanup',     'term.register_cleanup()'),
@@ -47,16 +48,22 @@ class TestSuiteMisc(TestSuiteBase):
 			t = self.spawn_chk('mmgen-tool',[f'--rpc-backend={b}','daemon_version'],extra_desc=f'({b})')
 		return t
 
-	def xmrwallet_txview(self):
+	def xmrwallet_txview(self,op='txview'):
 		files = get_file_with_ext('test/ref/monero','tx',no_dot=True,delete=False,return_list=True)
-		t = self.spawn( f'mmgen-xmrwallet', ['txview'] + files )
+		t = self.spawn( f'mmgen-xmrwallet', [op] + files )
 		res = strip_ansi_escapes(t.read()).replace('\r','')
-		for s in (
-			'Amount:    0.74 XMR',
-			'Dest:      56VQ9M6k',
-		):
-			assert s in res, f'{s} not in {res}'
+		if op == 'txview':
+			for s in (
+				'Amount:    0.74 XMR',
+				'Dest:      56VQ9M6k',
+			):
+				assert s in res, f'{s} not in {res}'
+		elif op == 'txlist':
+			assert re.search( '3EBD06-.*D94583-.*8BFA29-', res, re.DOTALL )
 		return t
+
+	def xmrwallet_txlist(self):
+		return self.xmrwallet_txview(op='txlist')
 
 	def coin_daemon_info(self):
 		start_test_daemons('ltc','eth')

@@ -48,6 +48,7 @@ relay     - relay a transaction from a transaction file created using ‘sweep�
             or ‘transfer’ with the --no-relay option
 submit    - submit an autosigned transaction to a wallet and the network
 txview    - display detailed information about a transaction file or files
+txlist    - same as above, but display terse information in tabular format
 dump      - produce JSON dumps of wallet metadata (accounts, addresses and
             labels) for a list or range of wallets
 restore   - same as ‘create’, but additionally restore wallet metadata from
@@ -134,7 +135,7 @@ wallets, creating the dumps is as easy as executing ‘mmgen-xmrwallet
 JSON and thus suitable for efficient incremental backup using git.
 
 
-                          ‘TXVIEW’ OPERATION NOTES
+                    ‘TXVIEW’ AND ‘TXLIST’ OPERATION NOTES
 
 Transactions are displayed in chronological order based on submit time or
 creation time.  With --autosign, submitted transactions on the removable

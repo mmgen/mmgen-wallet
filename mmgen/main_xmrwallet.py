@@ -49,7 +49,7 @@ opts_data = {
 			'[opts] sweep    [xmr_keyaddrfile] SWEEP_SPEC',
 			'[opts] submit   [TX_file]',
 			'[opts] relay    <TX_file>',
-			'[opts] txview   [TX_file] ...',
+			'[opts] txview | txlist [TX_file] ...',
 			'[opts] export-outputs    [wallets]',
 			'[opts] import-key-images [wallets]',
 		],
@@ -113,7 +113,7 @@ cmd_args = cfg._args
 if cmd_args and cfg.autosign and (
 		cmd_args[0] in (
 			MoneroWalletOps.kafile_arg_ops
-			+ ('export-outputs','import-key-images','txview')
+			+ ('export-outputs','import-key-images','txview','txlist')
 		)
 		or len(cmd_args) == 1 and cmd_args[0] == 'submit'
 	):
@@ -132,7 +132,7 @@ if op.replace('-','_') not in MoneroWalletOps.ops:
 if op in ('relay','submit'):
 	if len(cmd_args) != 0:
 		cfg._opts.usage()
-elif op == 'txview':
+elif op in ('txview','txlist'):
 	infile = [infile] + cmd_args
 elif op in ('create','sync','list','dump','restore'): # kafile_arg_ops
 	if len(cmd_args) > 1:

@@ -78,6 +78,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('export_key_images',        'exporting signed key images from Alice’s offline wallets'),
 		('import_key_images',        'importing signed key images into Alice’s online wallets'),
 		('list_wallets',             'listing Alice’s wallets and checking balance'),
+		('txlist',                   'listing Alice’s submitted transactions'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -357,4 +358,14 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		assert '13 files shredded' in out
 		assert after + '\n' == fmt(chk), f'\n{after}\n!=\n{fmt(chk)}'
 
+		return t
+
+	def txlist(self):
+		t = self.spawn( 'mmgen-xmrwallet', self.autosign_opts + ['txlist'] )
+		t.match_expect_list([
+			'SUBMITTED',
+			'Network','Submitted',
+			'Transfer 1:0','-> ext',
+			'Transfer 1:0','-> ext'
+		])
 		return t
