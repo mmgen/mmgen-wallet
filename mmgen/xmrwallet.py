@@ -171,7 +171,7 @@ class MoneroMMGenTX:
 		data_label = 'MoneroMMGenTX'
 
 		# both base_chksum and full_chksum are used to make the filename stem, so we must not include
-		# fields that change when TX is signed and submitted (e.g. ‘sign_time’)
+		# fields that change when TX is signed and submitted (e.g. ‘sign_time’, ‘submit_time’)
 		base_chksum_fields = {
 			'op',
 			'create_time',
@@ -195,6 +195,7 @@ class MoneroMMGenTX:
 			'op',
 			'create_time',
 			'sign_time',
+			'submit_time',
 			'network',
 			'seed_id',
 			'source',
@@ -225,6 +226,7 @@ class MoneroMMGenTX:
 				['  TxID:      {d}'],
 				['  Created:   {e:19} [{f}]'],
 				['  Signed:    {g:19} [{h}]', d.sign_time],
+				['  Submitted: {s:19} [{t}]', d.submit_time],
 				['  Type:      {i}{S}'],
 				['  From:      Wallet {j}, account {k}'],
 				['  To:        Wallet {x}, account {y}, address {z}', d.dest],
@@ -251,7 +253,9 @@ class MoneroMMGenTX:
 					n = d.fee.hl(),
 					o = d.dest_address.hl(),
 					P = pink(pmt_id.hex()) if pmt_id else None,
+					s = make_timestr(d.submit_time) if d.submit_time else None,
 					S = pink(f" [cold signed{', submitted' if d.complete else ''}]") if d.signed_txset else '',
+					t = format_elapsed_hr(d.submit_time) if d.submit_time else None,
 					x = d.dest.wallet.hl() if d.dest else None,
 					y = red(f'#{d.dest.account}') if d.dest else None,
 					z = red(f'#{d.dest.account_address}') if d.dest else None,
@@ -312,6 +316,7 @@ class MoneroMMGenTX:
 				op             = d.op,
 				create_time    = now if self.name in ('NewSigned','NewUnsigned') else getattr(d,'create_time',None),
 				sign_time      = now if self.name in ('NewSigned','NewColdSigned') else getattr(d,'sign_time',None),
+				submit_time    = now if self.name == 'NewSubmitted' else None,
 				network        = d.network,
 				seed_id        = SeedID(sid=d.seed_id),
 				source         = XMRWalletAddrSpec(d.source),
@@ -384,6 +389,7 @@ class MoneroMMGenTX:
 				op             = d.op,
 				create_time    = d.create_time,
 				sign_time      = d.sign_time,
+				submit_time    = d.submit_time,
 				network        = d.network,
 				seed_id        = SeedID(sid=d.seed_id),
 				source         = XMRWalletAddrSpec(d.source),
@@ -1824,7 +1830,8 @@ class MoneroWalletOps:
 				files = uarg.infile
 			txs = sorted(
 				(MoneroMMGenTX.View( self.cfg, Path(fn) ) for fn in files),
-					key = lambda x: x.data.create_time
+					# old TX files have no ‘submit_time’ field:
+					key = lambda x: getattr(x.data,'submit_time',None) or x.data.create_time
 			)
 			if self.cfg.autosign:
 				asi.do_umount()
