@@ -166,10 +166,5 @@ try:
 except KeyboardInterrupt:
 	ymsg('\nUser interrupt')
 
-try:
-	async_run(m.stop_wallet_daemon())
-except Exception as e:
-	ymsg(f'Unable to stop wallet daemon: {type(e).__name__}: {e}')
-
 if m.do_umount and cfg.autosign and not cfg.test_suite:
 	asi.do_umount()

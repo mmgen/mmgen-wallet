@@ -20,7 +20,7 @@
 xmrwallet.py - MoneroWalletOps class
 """
 
-import re,time,json
+import re,time,json,atexit
 from collections import namedtuple
 from pathlib import PosixPath as Path
 
@@ -816,7 +816,7 @@ class MoneroWalletOps:
 			)
 
 			if self.start_daemon and not self.cfg.no_start_wallet_daemon:
-				async_run(self.c.restart_daemon())
+				async_run(self.restart_wallet_daemon())
 
 		@classmethod
 		def get_idx_from_fn(cls,fn):
@@ -860,6 +860,10 @@ class MoneroWalletOps:
 					die(1,f'List {uarg.wallets!r} contains addresses not present in supplied key-address file')
 			else:
 				self.addr_data = self.kal.data
+
+		async def restart_wallet_daemon(self):
+			atexit.register(lambda: async_run(self.stop_wallet_daemon()))
+			await self.c.restart_daemon()
 
 		async def stop_wallet_daemon(self):
 			if not self.cfg.no_stop_wallet_daemon:
@@ -1623,7 +1627,7 @@ class MoneroWalletOps:
 		offline = True
 
 		async def main(self,fn):
-			await self.c.restart_daemon()
+			await self.restart_wallet_daemon()
 			tx = MoneroMMGenTX.Unsigned( self.cfg, fn )
 			h = self.rpc(self,self.addr_data[0])
 			self.head_msg(tx.src_wallet_idx,h.fn)
@@ -1641,7 +1645,6 @@ class MoneroWalletOps:
 				signed_txset   = res['signed_txset'],
 				_in_tx         = tx,
 			)
-			await self.stop_wallet_daemon()
 			return new_tx
 
 	class submit(wallet):
@@ -1738,7 +1741,7 @@ class MoneroWalletOps:
 		offline = True
 
 		async def main(self,fn,wallet_idx):
-			await self.c.restart_daemon()
+			await self.restart_wallet_daemon()
 			h = self.rpc(self,self.addr_data[0])
 			self.head_msg(wallet_idx,fn)
 			h.open_wallet()
@@ -1758,7 +1761,6 @@ class MoneroWalletOps:
 				data      = data )
 			idata = m.data.signed_key_images or []
 			bmsg('  {} key image{} signed'.format( len(idata), suf(idata) ))
-			await self.stop_wallet_daemon()
 			return m
 
 	class import_key_images(wallet):
