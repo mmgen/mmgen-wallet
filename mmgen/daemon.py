@@ -158,16 +158,6 @@ class Daemon(Lockable):
 	def cmd(self,action,*args,**kwargs):
 		return getattr(self,action)(*args,**kwargs)
 
-	def do_start(self,silent=False):
-		if not silent:
-			msg(f'Starting {self.desc} on port {self.bind_port}')
-		return self.run_cmd(self.start_cmd,silent=True,is_daemon=True)
-
-	def do_stop(self,silent=False):
-		if not silent:
-			msg(f'Stopping {self.desc} on port {self.bind_port}')
-		return self.run_cmd(self.stop_cmd,silent=True)
-
 	def cli(self,*cmds,silent=False):
 		return self.run_cmd(self.cli_cmd(*cmds),silent=silent)
 
@@ -191,7 +181,9 @@ class Daemon(Lockable):
 
 		self.pre_start()
 
-		ret = self.do_start(silent=silent)
+		if not silent:
+			msg(f'Starting {self.desc} on port {self.bind_port}')
+		ret = self.run_cmd(self.start_cmd,silent=True,is_daemon=True)
 
 		if self.wait:
 			self.wait_for_state('ready')
@@ -200,7 +192,10 @@ class Daemon(Lockable):
 
 	def stop(self,quiet=False,silent=False):
 		if self.state == 'ready':
-			ret = self.do_stop(silent=silent)
+			if not silent:
+				msg(f'Stopping {self.desc} on port {self.bind_port}')
+			ret = self.run_cmd(self.stop_cmd,silent=True)
+
 			if self.pids:
 				msg('Warning: multiple PIDs [{}] -- we may be stopping the wrong instance'.format(
 					fmt_list(self.pids,fmt='bare')
