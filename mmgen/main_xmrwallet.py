@@ -149,22 +149,22 @@ elif op in ('export-outputs','import-key-images'):
 		cfg._opts.usage()
 	wallets = cmd_args.pop(0) if cmd_args else None
 
+op_cls = getattr(MoneroWalletOps,op.replace('-','_'))
+
 if cfg.autosign and not cfg.test_suite:
 	from .autosign import get_autosign_obj
 	asi = get_autosign_obj(cfg,'xmr')
 	if not asi.get_insert_status():
 		die(1,'Removable device not present!')
+	if op_cls.do_umount:
+		import atexit
+		atexit.register(lambda: asi.do_umount())
 	asi.do_mount()
 
-m = getattr(MoneroWalletOps,op.replace('-','_'))(
-	cfg,
-	xmrwallet_uargs(infile, wallets, spec))
+m = op_cls(cfg, xmrwallet_uargs(infile, wallets, spec))
 
 try:
 	if async_run(m.main()):
 		m.post_main()
 except KeyboardInterrupt:
 	ymsg('\nUser interrupt')
-
-if m.do_umount and cfg.autosign and not cfg.test_suite:
-	asi.do_umount()
