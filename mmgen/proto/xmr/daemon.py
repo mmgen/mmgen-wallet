@@ -88,6 +88,7 @@ class MoneroWalletDaemon(RPCDaemon):
 	new_console_mswin = True
 	networks = ('mainnet','testnet')
 	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
+	_reset_ok = ('debug','wait','pids','force_kill')
 
 	def __init__(
 			self,

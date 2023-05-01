@@ -867,7 +867,12 @@ class MoneroWalletOps:
 
 		async def stop_wallet_daemon(self):
 			if not self.cfg.no_stop_wallet_daemon:
-				await self.c.stop_daemon()
+				try:
+					await self.c.stop_daemon()
+				except KeyboardInterrupt:
+					ymsg('\nForce killing wallet daemon')
+					self.c.daemon.force_kill = True
+					self.c.daemon.stop()
 
 		def get_wallet_fn(self,data,watch_only=None):
 			if watch_only is None:

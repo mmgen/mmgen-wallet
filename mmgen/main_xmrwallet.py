@@ -163,8 +163,5 @@ if cfg.autosign and not cfg.test_suite:
 
 m = op_cls(cfg, xmrwallet_uargs(infile, wallets, spec))
 
-try:
-	if async_run(m.main()):
-		m.post_main()
-except KeyboardInterrupt:
-	ymsg('\nUser interrupt')
+if async_run(m.main()):
+	m.post_main()

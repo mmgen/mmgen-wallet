@@ -194,6 +194,8 @@ class Daemon(Lockable):
 		if self.state == 'ready':
 			if not silent:
 				msg(f'Stopping {self.desc} on port {self.bind_port}')
+			if self.force_kill:
+				run(['sync'])
 			ret = self.run_cmd(self.stop_cmd,silent=True)
 
 			if self.pids:
