@@ -732,6 +732,7 @@ class MoneroWalletOps:
 		start_daemon = True
 		offline = False
 		skip_wallet_check = False # for debugging
+		test_monerod = False
 
 		def __init__(self,cfg,uarg_tuple):
 
@@ -798,6 +799,7 @@ class MoneroWalletOps:
 				test_suite  = self.cfg.test_suite,
 				monerod_addr = relay_opt[1] if relay_opt else (self.cfg.daemon or None),
 				trust_monerod = self.trust_monerod,
+				test_monerod = self.test_monerod,
 			)
 
 			u = self.wd.usr_daemon_args = []
@@ -1266,6 +1268,7 @@ class MoneroWalletOps:
 
 	class sync(wallet):
 		opts = ('rescan_blockchain',)
+		test_monerod = True
 
 		def __init__(self,cfg,uarg_tuple):
 
@@ -1430,6 +1433,7 @@ class MoneroWalletOps:
 		spec_id  = 'sweep_spec'
 		spec_key = ( (1,'source'), (3,'dest') )
 		opts     = ('no_relay','tx_relay_daemon','watch_only')
+		test_monerod = True
 
 		def check_uopts(self):
 			if self.cfg.tx_relay_daemon and (self.cfg.no_relay or self.cfg.autosign):
@@ -1655,6 +1659,7 @@ class MoneroWalletOps:
 	class submit(wallet):
 		action = 'submitting transaction with'
 		opts = ('tx_relay_daemon',)
+		test_monerod = True
 
 		def check_uopts(self):
 			if self.cfg.daemon:
