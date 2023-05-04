@@ -638,7 +638,7 @@ class MoneroWalletOps:
 	class base(MMGenObject):
 
 		opts = ('wallet_dir',)
-		trust_daemon = False
+		trust_monerod = False
 		do_umount = True
 
 		def __init__(self,cfg,uarg_tuple):
@@ -796,8 +796,8 @@ class MoneroWalletOps:
 				proto       = self.proto,
 				wallet_dir  = self.cfg.wallet_dir or '.',
 				test_suite  = self.cfg.test_suite,
-				daemon_addr = relay_opt[1] if relay_opt else (self.cfg.daemon or None),
-				trust_daemon = self.trust_daemon,
+				monerod_addr = relay_opt[1] if relay_opt else (self.cfg.daemon or None),
+				trust_monerod = self.trust_monerod,
 			)
 
 			u = self.wd.usr_daemon_args = []
@@ -824,7 +824,7 @@ class MoneroWalletOps:
 
 		def get_coin_daemon_rpc(self):
 
-			host,port = self.cfg.daemon.split(':') if self.cfg.daemon else ('localhost',self.wd.daemon_port)
+			host,port = self.cfg.daemon.split(':') if self.cfg.daemon else ('localhost',self.wd.monerod_port)
 
 			from .daemon import CoinDaemon
 			return MoneroRPCClient(
@@ -1444,7 +1444,7 @@ class MoneroWalletOps:
 				proto       = self.proto,
 				wallet_dir  = self.cfg.wallet_dir or '.',
 				test_suite  = self.cfg.test_suite,
-				daemon_addr = m[1],
+				monerod_addr = m[1],
 				proxy       = m[2] )
 
 			if self.cfg.test_suite:
@@ -1771,7 +1771,7 @@ class MoneroWalletOps:
 	class import_key_images(wallet):
 		action = 'importing key images into'
 		stem = 'process'
-		trust_daemon = True
+		trust_monerod = True
 
 		async def process_wallet(self,d,fn,last):
 			h = self.rpc(self,d)

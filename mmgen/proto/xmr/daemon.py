@@ -97,11 +97,11 @@ class MoneroWalletDaemon(RPCDaemon):
 			test_suite  = False,
 			user        = None,
 			passwd      = None,
-			daemon_addr = None,
+			monerod_addr = None,
 			proxy       = None,
 			port_shift  = None,
 			datadir     = None,
-			trust_daemon = False ):
+			trust_monerod = False ):
 
 		self.proto = proto
 		self.test_suite = test_suite
@@ -120,9 +120,9 @@ class MoneroWalletDaemon(RPCDaemon):
 		self.logfile = os.path.join(self.datadir,id_str+'.log')
 
 		self.proxy = proxy
-		self.daemon_addr = daemon_addr
-		self.daemon_port = (
-			None if daemon_addr else
+		self.monerod_addr = monerod_addr
+		self.monerod_port = (
+			None if monerod_addr else
 			CoinDaemon(
 				cfg        = self.cfg,
 				proto      = proto,
@@ -141,14 +141,14 @@ class MoneroWalletDaemon(RPCDaemon):
 				"the MMGen config file." )
 
 		self.daemon_args = list_gen(
-			['--trusted-daemon', trust_daemon],
-			['--untrusted-daemon', not trust_daemon],
+			['--trusted-daemon', trust_monerod],
+			['--untrusted-daemon', not trust_monerod],
 			[f'--rpc-bind-port={self.rpc_port}'],
 			[f'--wallet-dir={self.wallet_dir}'],
 			[f'--log-file={self.logfile}'],
 			[f'--rpc-login={self.user}:{self.passwd}'],
-			[f'--daemon-address={self.daemon_addr}', self.daemon_addr],
-			[f'--daemon-port={self.daemon_port}',    not self.daemon_addr],
+			[f'--daemon-address={self.monerod_addr}', self.monerod_addr],
+			[f'--daemon-port={self.monerod_port}',    not self.monerod_addr],
 			[f'--proxy={self.proxy}',                self.proxy],
 			[f'--pidfile={self.pidfile}',            self.platform == 'linux'],
 			['--detach',                             not (self.opt.no_daemonize or self.platform=='win')],
