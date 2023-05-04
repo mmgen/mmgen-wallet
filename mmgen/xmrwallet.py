@@ -393,9 +393,11 @@ class MoneroMMGenTX:
 			d = self.xmrwallet_tx_data(**d_wrap['data'])
 
 			if self.name not in ('View','Completed'):
-				assert fn.name.endswith('.'+self.ext), 'TX filename {fn} has incorrect extension (not {self.ext!r})'
+				assert fn.name.endswith('.'+self.ext), 'TX file {fn} has incorrect extension (not {self.ext!r})'
 				assert getattr(d,self.req_field), f'{self.name} TX missing required field {self.req_field!r}'
-				assert bool(d.sign_time)==self.signed,'{} has {}sign time!'.format(self.desc,'no 'if self.signed else'')
+				assert bool(d.sign_time) == self.signed, '{a} has {b}sign time!'.format(
+					a = self.desc,
+					b = 'no ' if self.signed else'' )
 				for f in self.forbidden_fields:
 					assert not getattr(d,f), f'{self.name} TX mismatch: contains forbidden field {f!r}'
 
@@ -1688,9 +1690,9 @@ class MoneroWalletOps:
 			msg('\n' + tx.get_info())
 
 			if self.cfg.tx_relay_daemon:
-				self.display_tx_relay_info()
+				self.display_tx_relay_info(indent='    ')
 
-			if keypress_confirm( self.cfg, 'Submit transaction?' ):
+			if keypress_confirm( self.cfg, f'{self.name.capitalize()} transaction?' ):
 				res = self.c.call(
 					'submit_transfer',
 					tx_data_hex = tx.data.signed_txset )
@@ -1798,9 +1800,9 @@ class MoneroWalletOps:
 
 		def __init__(self,cfg,uarg_tuple):
 
-			check_uopts = MoneroWalletOps.submit.check_uopts
-
 			super().__init__(cfg,uarg_tuple)
+
+			check_uopts = MoneroWalletOps.submit.check_uopts
 
 			self.tx = MoneroMMGenTX.Signed( self.cfg, Path(uarg.infile) )
 
@@ -1827,10 +1829,10 @@ class MoneroWalletOps:
 				proxy  = proxy )
 
 		async def main(self):
-			msg('\n' + self.tx.get_info())
+			msg('\n' + self.tx.get_info(indent='    '))
 
 			if self.cfg.tx_relay_daemon:
-				self.display_tx_relay_info()
+				self.display_tx_relay_info(indent='    ')
 
 			if keypress_confirm( self.cfg, 'Relay transaction?' ):
 				res = self.dc.call_raw(
