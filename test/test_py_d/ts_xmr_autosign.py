@@ -69,7 +69,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('create_transfer_tx2',      'creating a transfer TX (for relaying via proxy)'),
 		('sign_transfer_tx2',        'signing the transfer TX (for relaying via proxy)'),
 		('submit_transfer_tx2',      'submitting the transfer TX (relaying via proxy)'),
-		('list_wallets',             'listing Alice’s wallets and checking balance'),
+		('sync_chkbal1',             'syncing Alice’s wallets and checking balance'),
 		('dump_wallets',             'dumping Alice’s wallets'),
 		('delete_wallets',           'deleting Alice’s wallets'),
 		('restore_wallets',          'creating online (watch-only) wallets for Alice'),
@@ -77,7 +77,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('export_outputs',           'exporting outputs from Alice’s watch-only wallets'),
 		('export_key_images',        'exporting signed key images from Alice’s offline wallets'),
 		('import_key_images',        'importing signed key images into Alice’s online wallets'),
-		('list_wallets',             'listing Alice’s wallets and checking balance'),
+		('sync_chkbal2',             'syncing Alice’s wallets and checking balance'),
 		('txlist',                   'listing Alice’s submitted transactions'),
 		('check_tx_dirs',            'cleaning and checking signable file directories'),
 	)
@@ -203,13 +203,6 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 	def restore_wallets(self):
 		return self.create_wallets( 'alice', op='restore' )
 
-	def list_wallets(self):
-		return self.sync_wallets(
-			'alice',
-			op           = 'list',
-			bal_chk_func = lambda n,b,ub: (0.83 < b < 0.8536) if n == 1 else True )
-			# 1.234567891234 - 0.124 - 0.257 = 0.853567891234 (minus fees)
-
 	def _create_transfer_tx(self,amt):
 		return self.do_op('transfer','alice',f'1:0:{self.burn_addr},{amt}',no_relay=True,do_ret=True)
 
@@ -235,8 +228,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		args = (
 			self.extra_opts
 			+ self.autosign_opts
-			+ [f'--wallet-dir={data.udir}']
-			+ ([f'--daemon=localhost:{data.md.rpc_port}'] if not op == 'submit' else [])
+			+ [f'--wallet-dir={data.udir}', f'--daemon=localhost:{data.md.rpc_port}']
 			+ add_opts
 			+ [ op ]
 			+ ([get_file_with_ext(self.asi.xmr_tx_dir,ext)] if ext else [])
@@ -247,41 +239,73 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			t.written_to_file(dtype.capitalize())
 		return t
 
-	def submit_transfer_tx1(self):
-		return self._submit_transfer_tx( self.tx_relay_daemon_parm, ext='sigtx' )
+	def _sync_chkbal(self,bal_chk_func):
+		return self.sync_wallets(
+			'alice',
+			op           = 'sync',
+			wallets      = '1',
+			bal_chk_func = bal_chk_func )
 
-	def submit_transfer_tx2(self):
-		return self._submit_transfer_tx( self.tx_relay_daemon_proxy_parm, ext=None )
+	def sync_chkbal1(self):
+		return self._sync_chkbal( lambda n,b,ub: b == ub and 0.8 < b < 0.86 )
+		# 1.234567891234 - 0.124 - 0.257 = 0.853567891234 (minus fees)
 
-	def _submit_transfer_tx(self,relay_parm,ext):
-		t = self._xmr_autosign_op(
-			op       = 'submit',
-			desc     = 'submitting TX',
-			add_opts = [f'--tx-relay-daemon={relay_parm}'],
-			ext      = ext )
-		t.expect( 'Submit transaction? (y/N): ', 'y' )
-		t.written_to_file('Submitted transaction')
-		t.ok()
+	sync_chkbal2 = sync_chkbal1
+
+	def _mine_chk(self,desc):
+		bal_type = {'locked':'b','unlocked':'ub'}[desc]
 		return self.mine_chk(
 			'alice', 1, 0,
-			lambda x: 0 < x.ub < 1.234567891234,
-			'unlocked balance 0 < 1.234567891234' )
+			lambda x: 0 < getattr(x,bal_type) < 1.234567891234,
+			f'{desc} balance 0 < 1.234567891234' )
 
-	def export_outputs(self):
+	def submit_transfer_tx1(self):
+		return self._submit_transfer_tx( ext='sigtx' )
+
+	def submit_transfer_tx2(self):
+		return self._submit_transfer_tx( relay_parm=self.tx_relay_daemon_parm )
+
+	def _submit_transfer_tx(self,relay_parm=None,ext=None,op='submit',check_bal=True):
+		data = self.users['alice']
+		t = self._xmr_autosign_op(
+			op       = op,
+			desc     = 'submitting TX',
+			add_opts = [f'--tx-relay-daemon={relay_parm}'] if relay_parm else [],
+			ext      = ext )
+		t.expect( f'{op.capitalize()} transaction? (y/N): ', 'y' )
+		t.written_to_file('Submitted transaction')
+		if check_bal:
+			t.ok()
+			return self._mine_chk('unlocked')
+		else:
+			return t
+
+	def _export_outputs(self,wallet_arg,add_opts=[]):
 		return self._xmr_autosign_op(
 			op    = 'export-outputs',
 			desc  = 'exporting outputs',
 			dtype = 'wallet outputs',
-			wallet_arg = '1-2' )
+			wallet_arg = wallet_arg,
+			add_opts = add_opts )
 
-	def export_key_images(self):
-		self.tx_count = 2
+	def export_outputs(self):
+		return self._export_outputs('1-2')
+
+	def _export_key_images(self,tx_count):
+		self.tx_count = tx_count
 		return self.do_sign(['--full-summary'],tx_name='Monero wallet outputs file')
 
-	def import_key_images(self):
+	def export_key_images(self):
+		return self._export_key_images(2)
+
+	def _import_key_images(self,wallet_arg):
 		return self._xmr_autosign_op(
 			op    = 'import-key-images',
-			desc  = 'importing key images' )
+			desc  = 'importing key images',
+			wallet_arg = wallet_arg )
+
+	def import_key_images(self):
+		return self._import_key_images(None)
 
 	def create_fake_tx_files(self):
 		imsg('Creating fake transaction files')
