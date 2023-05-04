@@ -35,8 +35,8 @@ plain HTTP is not supported.
 
                             SUPPORTED OPERATIONS
 
-create    - create wallet for all or specified addresses in key-address file
-sync      - sync wallet for all or specified addresses in key-address file
+create    - create wallets for all or specified addresses in key-address file
+sync      - sync wallets for all or specified addresses in key-address file
 list      - same as ‘sync’, but also list detailed address info for accounts
 label     - set a label for an address
 new       - create a new account in a wallet, or a new address in an account
@@ -325,28 +325,29 @@ differences that apply to autosigning:
 
                               Exporting Outputs
 
-Exporting outputs from a wallet is generally required only in two cases:
+Exporting outputs from a watch-only wallet is generally required in only
+two cases:
 
-  a) after the wallet has received funds from an outside source or another
-     wallet; and
-  c) at the start of each signing session (after ‘mmgen-autosign setup’).
+  a) at the start of each signing session (after ‘mmgen-autosign setup’); and
+  b) after the wallet has received funds from an outside source or another
+     wallet.
 
-However, sometimes things go wrong and an offline wallet may be unable to
-sign a transaction due to missing outputs.  In this case, you may export all
-outputs from its corresponding watch-only wallet with the following command:
+You might also need to do it, however, if an offline wallet is unable to sign
+a transaction due to missing outputs.
 
-$ mmgen-xmrwallet --autosign --export-all export-outputs <wallet index>
+Export outputs from a wallet as follows:
 
-Then reinsert the removable device on the offline machine to redo the
-signing operation, which should now succeed.
+$ mmgen-xmrwallet --autosign export-outputs <wallet index>
 
-At the start of each new signing session, you must export ALL outputs from
-ALL wallets you intend to transact with:
+At the start of a new signing session, you must export outputs from ALL
+wallets you intend to transact with.  This is necessary because the offline
+signing wallets have just been created and know nothing about the state of
+their watch-only counterparts.
 
-$ mmgen-xmrwallet --autosign --export-all export-outputs [wallet indexes]
-
-This is necessary because the signing wallets have just been created and
-therefore know nothing about the state of their watch-only counterparts.
+Then insert the removable device on the offline machine to import the outputs
+into the corresponding signing wallet(s) (and optionally redo any failed
+transaction signing operation).  The signing wallet(s) will also create
+signed key images.
 
 
            Replacing Existing Hot Wallets with Watch-Only Wallets
