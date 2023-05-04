@@ -153,6 +153,7 @@ class unit_test(object):
 		def bad19(): acdn.baz = None
 		def bad20(): lcdn.foo = 1
 		def bad21(): lcdn.bar = None
+		def bad22(): del lcdn.foo
 
 		ut.process_bad_data((
 			('attr (1)',           'AttributeError', 'has no attr', bad1 ),
@@ -175,6 +176,7 @@ class unit_test(object):
 			("attr (can't reset)", 'AttributeError', 'reset',       bad15 ),
 			("attr (can't set)",   'AttributeError', 'read-only',   bad16 ),
 			("attr (bad _set_ok)", 'AssertionError', 'not found in',bad17 ),
+			("attr (can’t delete)",'AttributeError', 'not be delet',bad22 ),
 			("call to _lock()",    'AssertionError', 'only once',   bad18 ),
 		))
 
