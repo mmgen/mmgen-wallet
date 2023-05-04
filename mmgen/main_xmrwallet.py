@@ -163,4 +163,6 @@ if cfg.autosign and not cfg.test_suite:
 m = op_cls(cfg, xmrwallet_uargs(infile, wallets, spec))
 
 if async_run(m.main()):
-	m.post_main()
+	m.post_main_success()
+else:
+	m.post_main_failure()

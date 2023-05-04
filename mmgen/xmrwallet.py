@@ -713,7 +713,10 @@ class MoneroWalletOps:
 				  Proxy: {blue(m[2] or 'None')}
 				""",strip_char='\t',indent=indent))
 
-		def post_main(self):
+		def post_main_success(self):
+			pass
+
+		def post_main_failure(self):
 			pass
 
 		async def stop_wallet_daemon(self):
@@ -1344,7 +1347,7 @@ class MoneroWalletOps:
 
 			return wallet_height >= chain_height
 
-		def post_main(self):
+		def post_main_success(self):
 			d = self.accts_data
 
 			for wnum,k in enumerate(d):
@@ -1780,14 +1783,19 @@ class MoneroWalletOps:
 		stem = 'process'
 		trust_monerod = True
 
+		def post_main_failure(self):
+			rw_msg = ' for requested wallets' if uarg.wallets else ''
+			die(1,yellow(f'No signed key image files found{rw_msg}!'))
+
 		async def process_wallet(self,d,fn,last):
+			keyimage_fn = MoneroWalletOutputsFile.Signed.find_fn_from_wallet_fn( self.cfg, fn, ret_on_no_match=True )
+			if not keyimage_fn:
+				msg(f'No signed key image file found for wallet #{d.idx}')
+				return False
 			h = self.rpc(self,d)
 			h.open_wallet()
 			self.head_msg(d.idx,h.fn)
-			m = MoneroWalletOutputsFile.Signed(
-				parent = self,
-				fn  = MoneroWalletOutputsFile.Signed.find_fn_from_wallet_fn( self.cfg, fn ),
-			)
+			m = MoneroWalletOutputsFile.Signed( parent=self, fn=keyimage_fn )
 			data = m.data.signed_key_images or []
 			bmsg('\n  {} signed key image{} to import'.format( len(data), suf(data) ))
 			if data:
