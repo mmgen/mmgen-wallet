@@ -479,10 +479,10 @@ class Autosign:
 		if not hasattr(self,'_xmrwallet_cfg'):
 			from .cfg import Config
 			self._xmrwallet_cfg = Config({
+				'_clone': self.cfg,
 				'coin': 'xmr',
 				'wallet_rpc_user': 'autosigner',
 				'wallet_rpc_password': 'my very secret password',
-				'passwd_file': self.cfg.passwd_file,
 				'wallet_dir': str(self.wallet_dir),
 				'autosign': True,
 				'autosign_mountpoint': str(self.mountpoint),
