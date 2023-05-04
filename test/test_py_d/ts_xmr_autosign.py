@@ -66,18 +66,23 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('create_transfer_tx1',      'creating a transfer TX'),
 		('sign_transfer_tx1',        'signing the transfer TX'),
 		('submit_transfer_tx1',      'submitting the transfer TX'),
+		('resubmit_transfer_tx1',    'resubmitting the transfer TX'),
+		('export_outputs1',          'exporting outputs from Alice’s watch-only wallet #1'),
+		('export_key_images1',       'exporting signed key images from Alice’s offline wallets'),
+		('import_key_images1',       'importing signed key images into Alice’s online wallets'),
+		('sync_chkbal1',             'syncing Alice’s wallet #1'),
 		('create_transfer_tx2',      'creating a transfer TX (for relaying via proxy)'),
 		('sign_transfer_tx2',        'signing the transfer TX (for relaying via proxy)'),
 		('submit_transfer_tx2',      'submitting the transfer TX (relaying via proxy)'),
-		('sync_chkbal1',             'syncing Alice’s wallets and checking balance'),
+		('sync_chkbal2',             'syncing Alice’s wallets and checking balance'),
 		('dump_wallets',             'dumping Alice’s wallets'),
 		('delete_wallets',           'deleting Alice’s wallets'),
 		('restore_wallets',          'creating online (watch-only) wallets for Alice'),
 		('delete_dump_files',        'deleting Alice’s dump files'),
-		('export_outputs',           'exporting outputs from Alice’s watch-only wallets'),
-		('export_key_images',        'exporting signed key images from Alice’s offline wallets'),
-		('import_key_images',        'importing signed key images into Alice’s online wallets'),
-		('sync_chkbal2',             'syncing Alice’s wallets and checking balance'),
+		('export_outputs2',          'exporting outputs from Alice’s watch-only wallets'),
+		('export_key_images2',       'exporting signed key images from Alice’s offline wallets'),
+		('import_key_images2',       'importing signed key images into Alice’s online wallets'),
+		('sync_chkbal3',             'syncing Alice’s wallets and checking balance'),
 		('txlist',                   'listing Alice’s submitted transactions'),
 		('check_tx_dirs',            'cleaning and checking signable file directories'),
 	)
@@ -247,10 +252,14 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			bal_chk_func = bal_chk_func )
 
 	def sync_chkbal1(self):
+		return self._sync_chkbal( lambda n,b,ub: b == ub and 1 < b < 1.12 )
+		# 1.234567891234 - 0.124 = 1.110567891234 (minus fees)
+
+	def sync_chkbal2(self):
 		return self._sync_chkbal( lambda n,b,ub: b == ub and 0.8 < b < 0.86 )
 		# 1.234567891234 - 0.124 - 0.257 = 0.853567891234 (minus fees)
 
-	sync_chkbal2 = sync_chkbal1
+	sync_chkbal3 = sync_chkbal2
 
 	def _mine_chk(self,desc):
 		bal_type = {'locked':'b','unlocked':'ub'}[desc]
@@ -261,6 +270,9 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 
 	def submit_transfer_tx1(self):
 		return self._submit_transfer_tx( ext='sigtx' )
+
+	def resubmit_transfer_tx1(self):
+		return self._submit_transfer_tx( relay_parm=self.tx_relay_daemon_proxy_parm, op='resubmit', check_bal=False )
 
 	def submit_transfer_tx2(self):
 		return self._submit_transfer_tx( relay_parm=self.tx_relay_daemon_parm )
@@ -288,14 +300,20 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			wallet_arg = wallet_arg,
 			add_opts = add_opts )
 
-	def export_outputs(self):
+	def export_outputs1(self):
+		return self._export_outputs('1',['--rescan-blockchain'])
+
+	def export_outputs2(self):
 		return self._export_outputs('1-2')
 
 	def _export_key_images(self,tx_count):
 		self.tx_count = tx_count
 		return self.do_sign(['--full-summary'],tx_name='Monero wallet outputs file')
 
-	def export_key_images(self):
+	def export_key_images1(self):
+		return self._export_key_images(1)
+
+	def export_key_images2(self):
 		return self._export_key_images(2)
 
 	def _import_key_images(self,wallet_arg):
@@ -304,7 +322,10 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			desc  = 'importing key images',
 			wallet_arg = wallet_arg )
 
-	def import_key_images(self):
+	def import_key_images1(self):
+		return self._import_key_images(None)
+
+	def import_key_images2(self):
 		return self._import_key_images(None)
 
 	def create_fake_tx_files(self):

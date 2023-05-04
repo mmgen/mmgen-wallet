@@ -47,6 +47,8 @@ sweep     - sweep funds in specified wallet:account to new address in same
 relay     - relay a transaction from a transaction file created using ‘sweep’
             or ‘transfer’ with the --no-relay option
 submit    - submit an autosigned transaction to a wallet and the network
+resubmit  - resubmit most recently submitted autosigned transaction (other
+            actions are required: see Exporting Outputs below)
 txview    - display detailed information about a transaction file or files
 txlist    - same as above, but display terse information in tabular format
 dump      - produce JSON dumps of wallet metadata (accounts, addresses and
@@ -326,18 +328,20 @@ differences that apply to autosigning:
                               Exporting Outputs
 
 Exporting outputs from a watch-only wallet is generally required in only
-two cases:
+three cases:
 
-  a) at the start of each signing session (after ‘mmgen-autosign setup’); and
+  a) at the start of each signing session (after ‘mmgen-autosign setup’);
   b) after the wallet has received funds from an outside source or another
-     wallet.
+     wallet; and
+  c) after performing a ‘resubmit’ operation.
 
 You might also need to do it, however, if an offline wallet is unable to sign
 a transaction due to missing outputs.
 
-Export outputs from a wallet as follows:
+Export outputs from a wallet as follows (note that the --rescan-blockchain
+option is required only after a ‘resubmit’ – otherwise it should be omitted):
 
-$ mmgen-xmrwallet --autosign export-outputs <wallet index>
+$ mmgen-xmrwallet --autosign --rescan-blockchain export-outputs <wallet index>
 
 At the start of a new signing session, you must export outputs from ALL
 wallets you intend to transact with.  This is necessary because the offline
@@ -348,6 +352,11 @@ Then insert the removable device on the offline machine to import the outputs
 into the corresponding signing wallet(s) (and optionally redo any failed
 transaction signing operation).  The signing wallet(s) will also create
 signed key images.
+
+Following a ‘resubmit’, you must then import the signed key images into your
+online wallet as follows:
+
+$ mmgen-xmrwallet --autosign import-key-images
 
 
            Replacing Existing Hot Wallets with Watch-Only Wallets

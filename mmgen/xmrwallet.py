@@ -446,6 +446,7 @@ class MoneroMMGenTX:
 	class Submitted(ColdSigned):
 		desc = 'submitted transaction'
 		ext = 'subtx'
+		silent_load = True
 
 	class View(Completed):
 		silent_load = True
@@ -606,6 +607,7 @@ class MoneroWalletOps:
 		'label',
 		'sign',
 		'submit',
+		'resubmit',
 		'dump',
 		'restore',
 		'export_outputs',
@@ -1266,6 +1268,10 @@ class MoneroWalletOps:
 		opts = ('rescan_blockchain',)
 		test_monerod = True
 
+		def check_uopts(self):
+			if self.cfg.rescan_blockchain and self.cfg.watch_only:
+				die(1,f'Operation {self.name!r} does not support --rescan-blockchain with watch-only wallets')
+
 		def __init__(self,cfg,uarg_tuple):
 
 			super().__init__(cfg,uarg_tuple)
@@ -1748,6 +1754,25 @@ class MoneroWalletOps:
 				ask_overwrite = not self.cfg.autosign )
 			return new_tx
 
+	class resubmit(submit):
+		action = 'resubmitting transaction with'
+
+		def check_uopts(self):
+			if not self.cfg.autosign:
+				die(1,f'--autosign is required for this operation')
+
+		def get_tx(self):
+			asi = get_autosign_obj(self.cfg,'xmr')
+			files = [f for f in asi.xmr_tx_dir.iterdir() if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]
+			txs = sorted(
+				(MoneroMMGenTX.Submitted( self.cfg, Path(fn) ) for fn in files),
+					key = lambda x: getattr(x.data,'submit_time',None) or x.data.create_time
+			)
+			if txs:
+				return txs[-1]
+			else:
+				self.die_no_tx( 'submitted', 0, asi.xmr_tx_dir )
+
 	class dump(wallet):
 
 		async def process_wallet(self,d,fn,last):
@@ -1764,10 +1789,17 @@ class MoneroWalletOps:
 	class export_outputs(wallet):
 		action = 'exporting outputs from'
 		stem = 'process'
+		opts = ('rescan_blockchain',)
 
 		async def process_wallet(self,d,fn,last):
 			h = self.rpc(self,d)
 			h.open_wallet('source')
+
+			if self.cfg.rescan_blockchain:
+				gmsg_r(f'\n  Rescanning blockchain...')
+				self.c.call('rescan_blockchain')
+				gmsg('done')
+
 			self.head_msg(d.idx,h.fn)
 			for ftype in ('Unsigned','Signed'):
 				old_fn = getattr(MoneroWalletOutputsFile,ftype).find_fn_from_wallet_fn(
@@ -1803,7 +1835,7 @@ class MoneroWalletOps:
 			idata = res['num_imported']
 			bmsg('\n  {} output{} imported'.format( idata, suf(idata) ))
 			data = m.data._asdict()
-			data.update(self.c.call('export_key_images')) # for testing: all = True
+			data.update(self.c.call('export_key_images', all=True))
 			m = MoneroWalletOutputsFile.SignedNew(
 				parent    = self,
 				wallet_fn = m.get_wallet_fn(fn),
