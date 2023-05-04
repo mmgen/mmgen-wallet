@@ -222,7 +222,6 @@ class Config(Lockable):
 	_proto = None
 
 	# internal use:
-	_data_dir_root_override = None
 	_use_cfg_file           = False
 	_use_env                = False
 
@@ -404,6 +403,7 @@ class Config(Lockable):
 
 		# Step 1: get user-supplied configuration data from a) command line, or b) first argument
 		#         to constructor; save to self._uopts:
+		self._cloned = {}
 		if opts_data or parsed_opts or process_opts:
 			assert cfg is None, (
 				'Config(): ‘cfg’ cannot be used simultaneously with ' +
@@ -418,12 +418,22 @@ class Config(Lockable):
 				parsed_opts  = parsed_opts )
 			self._uopt_desc = 'command-line option'
 		else:
-			self._uopts = {} if cfg is None else cfg
+			if cfg is None:
+				self._uopts = {}
+			else:
+				if '_clone' in cfg:
+					assert isinstance( cfg['_clone'], Config )
+					self._cloned = cfg['_clone'].__dict__
+					for k,v in self._cloned.items():
+						if not k.startswith('_'):
+							setattr(self,k,v)
+					del cfg['_clone']
+				self._uopts = cfg
 			self._uopt_desc = 'configuration option'
 
-		if 'data_dir' in self._uopts:
-			self._data_dir_root_override = self._uopts['data_dir']
-			del self._uopts['data_dir']
+		self._data_dir_root_override = self._cloned.pop(
+			'_data_dir_root_override',
+			self._uopts.pop('data_dir',None))
 
 		if parse_only and not any(k in self._uopts for k in ['help','longhelp']):
 			return
@@ -470,7 +480,7 @@ class Config(Lockable):
 			self.network = 'testnet' if self.testnet else 'mainnet'
 
 		self.coin = self.coin.upper()
-		self.token = self.token.upper() or None
+		self.token = self.token.upper() if self.token else None
 
 		# self.color is finalized, so initialize color:
 		if self.color: # MMGEN_DISABLE_COLOR sets this to False
@@ -490,6 +500,8 @@ class Config(Lockable):
 
 		from .util import Util
 		self._util = Util(self)
+
+		del self._cloned
 
 		self._lock()
 
@@ -622,6 +634,9 @@ class Config(Lockable):
 
 		# Check autoset opts, setting if unset
 		for key in self._autoset_opts:
+
+			if key in self._cloned:
+				continue
 
 			assert not hasattr(self,key), f'autoset opt {key!r} is already set, but it shouldn’t be!'
 
