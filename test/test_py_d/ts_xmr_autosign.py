@@ -207,7 +207,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		return self.sync_wallets(
 			'alice',
 			op           = 'list',
-			bal_chk_func = lambda n,bal: (0.83 < bal < 0.8536) if n == 0 else True )
+			bal_chk_func = lambda n,b,ub: (0.83 < b < 0.8536) if n == 1 else True )
 			# 1.234567891234 - 0.124 - 0.257 = 0.853567891234 (minus fees)
 
 	def _create_transfer_tx(self,amt):
@@ -264,7 +264,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		t.ok()
 		return self.mine_chk(
 			'alice', 1, 0,
-			lambda x: 0 < x < 1.234567891234,
+			lambda x: 0 < x.ub < 1.234567891234,
 			'unlocked balance 0 < 1.234567891234' )
 
 	def export_outputs(self):

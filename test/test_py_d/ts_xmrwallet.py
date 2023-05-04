@@ -399,7 +399,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	async def mine_initial_coins(self):
 		await self.open_wallet_user('miner',1)
-		return await self.mine_chk('miner',1,0,lambda x: x > 20,'unlocked balance > 20')
+		return await self.mine_chk('miner',1,0,lambda x: x.ub > 20,'unlocked balance > 20')
 
 	async def fund_alice(self):
 		await self.transfer(
@@ -410,7 +410,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		bal = '1.234567891234'
 		return await self.mine_chk(
 			'alice',1,0,
-			lambda x: str(x) == bal,f'unlocked balance == {bal}',
+			lambda x: str(x.ub) == bal,f'unlocked balance == {bal}',
 			random_txs = self.dfl_random_txs
 		)
 
@@ -460,18 +460,19 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			+ ([wallets] if wallets else [])
 		)
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
-		for n,wnum in enumerate(wlist):
+		for n,wnum in enumerate(wlist,1):
 			t.expect('Syncing wallet {}/{} ({})'.format(
-				n+1,
+				n,
 				len(wlist),
 				os.path.basename(data.walletfile_fs.format(wnum)),
 			))
 			t.expect('Chain height: ')
 			t.expect('Wallet height: ')
-			res = t.expect_getend('Unlocked balance: ')
+			res = strip_ansi_escapes(t.expect_getend('Balance: '))
 			if bal_chk_func:
-				bal = XMRAmt(strip_ansi_escapes(res))
-				assert bal_chk_func(n,bal), f'balance check for wallet {n} failed!'
+				m = re.match( '(\S+) Unlocked balance: (\S+)', res, re.DOTALL )
+				amts = [XMRAmt(amt) for amt in m.groups()]
+				assert bal_chk_func(n,*amts), f'balance check for wallet {n} failed!'
 		return t
 
 	def do_op(self, op, user, arg2,
@@ -530,15 +531,15 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	def sweep_to_address_proxy(self):
 		self.do_op('sweep','alice','1:0',self.tx_relay_daemon_proxy_parm)
-		return self.mine_chk('alice',1,0,lambda x: x > 1,'unlocked balance > 1')
+		return self.mine_chk('alice',1,0,lambda x: x.ub > 1,'unlocked balance > 1')
 
 	def sweep_to_account(self):
 		self.do_op('sweep','alice','1:0,2')
-		return self.mine_chk('alice',2,1,lambda x: x > 1,'unlocked balance > 1')
+		return self.mine_chk('alice',2,1,lambda x: x.ub > 1,'unlocked balance > 1')
 
 	def sweep_to_address_noproxy(self):
 		self.do_op('sweep','alice','2:1',self.tx_relay_daemon_parm)
-		return self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
+		return self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')
 
 	async def transfer_to_miner_proxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
@@ -546,16 +547,16 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		self.do_op('transfer','alice',f'2:1:{addr},{amt}',self.tx_relay_daemon_proxy_parm)
 		await self.stop_wallet_user('miner')
 		await self.open_wallet_user('miner',2)
-		await self.mine_chk('miner',2,0,lambda x: str(x) == amt,f'unlocked balance == {amt}')
+		await self.mine_chk('miner',2,0,lambda x: str(x.ub) == amt,f'unlocked balance == {amt}')
 		ok()
-		return await self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
+		return await self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')
 
 	async def transfer_to_miner_noproxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
 		self.do_op('transfer','alice',f'2:1:{addr},0.0995',self.tx_relay_daemon_parm)
-		await self.mine_chk('miner',2,0,lambda x: str(x) == '0.2345','unlocked balance == 0.2345')
+		await self.mine_chk('miner',2,0,lambda x: str(x.ub) == '0.2345','unlocked balance == 0.2345')
 		ok()
-		return await self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
+		return await self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')
 
 	def transfer_to_miner_create(self,amt):
 		get_file_with_ext(self.users['alice'].udir,'sigtx',delete_all=True)
@@ -584,15 +585,15 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	async def transfer_to_miner_send1(self):
 		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_proxy_parm}',add_desc='via proxy')
-		await self.mine_chk('miner',2,0,lambda x: str(x) == '0.2456','unlocked balance == 0.2456')
+		await self.mine_chk('miner',2,0,lambda x: str(x.ub) == '0.2456','unlocked balance == 0.2456')
 		ok()
-		return await self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
+		return await self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')
 
 	async def transfer_to_miner_send2(self):
 		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}',add_desc='no proxy')
-		await self.mine_chk('miner',2,0,lambda x: str(x) == '0.2468','unlocked balance == 0.2468')
+		await self.mine_chk('miner',2,0,lambda x: str(x.ub) == '0.2468','unlocked balance == 0.2468')
 		ok()
-		return await self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
+		return await self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')
 
 	async def sweep_create_and_send(self):
 		bal = XMRAmt('0')
@@ -611,7 +612,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}',add_desc=f'send amt: {send_amt} XMR')
 			await self.mine_chk('alice',2,1,lambda x: 'chk_bal_chg','balance has changed')
 			ok()
-			bal += await self.mine_chk('alice',3,0,lambda x,y=bal: x > y, f'bal > {bal}',return_amt=True)
+			bal_info = await self.mine_chk('alice',3,0,lambda x,y=bal: x.ub > y, f'bal > {bal}',return_bal=True)
+			bal += bal_info.ub
 			if bal >= min_bal:
 				return 'ok'
 
@@ -643,19 +645,45 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	async def mine5(self):
 		return await self.mine(5)
 
+	async def _get_height(self):
+		u = self.users['miner']
+		for i in range(20):
+			try:
+				return u.md_rpc.call('get_last_block_header')['block_header']['height']
+			except Exception as e:
+				if 'onnection refused' in str(e):
+					omsg(f'{e}\nMonerod appears to have crashed. Attempting to restart...')
+					await asyncio.sleep(5)
+					u.md.restart()
+					await asyncio.sleep(5)
+					await self.start_mining()
+				else:
+					raise
+		else:
+			die(2,'Restart attempt limit exceeded')
+
 	async def mine10(self):
 		return await self.mine(10)
 
-	async def mine60(self):
-		return await self.mine(60)
+	async def mine30(self):
+		return await self.mine(30)
 
-	async def mine(self,nsecs):
-		imsg_r(f'Mining for {nsecs} seconds...')
+	async def mine100(self):
+		return await self.mine(100)
+
+	async def mine(self,nblks):
+		start_height = height = await self._get_height()
+		imsg(f'Height: {height}')
+		imsg_r(f'Mining {nblks} blocks...')
 		await self.start_mining()
-		await asyncio.sleep(nsecs)
+		while height < start_height + nblks:
+			await asyncio.sleep(2)
+			height = await self._get_height()
+			imsg_r('.')
 		ret = await self.stop_mining()
 		imsg('done')
-		return ret
+		imsg(f'Height: {height}')
+		return 'ok' if ret == 'OK' else False
 
 	async def start_mining(self):
 		data = self.users['miner']
@@ -683,7 +711,18 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		ret = self.users['miner'].md_rpc.call_raw('stop_mining')
 		return self.get_status(ret)
 
-	async def mine_chk(self,user,wnum,account,test,test_desc,random_txs=None,return_amt=False):
+	async def mine_chk(
+			self,
+			user,
+			wnum,
+			account,
+			test,
+			test_desc,
+			test2      = None,
+			test2_desc = None,
+			random_txs = None,
+			return_bal = False ):
+
 		"""
 		- open destination wallet
 		- optionally create and broadcast random TXs
@@ -692,23 +731,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		- stop mining
 		- close wallet
 		"""
-
-		async def get_height():
-			u = self.users['miner']
-			for i in range(20):
-				try:
-					return u.md_rpc.call('get_last_block_header')['block_header']['height']
-				except Exception as e:
-					if 'onnection refused' in str(e):
-						omsg(f'{e}\nMonerod appears to have crashed. Attempting to restart...')
-						await asyncio.sleep(5)
-						u.md.restart()
-						await asyncio.sleep(5)
-						await self.start_mining()
-					else:
-						raise
-			else:
-				die(2,'Restart attempt limit exceeded')
 
 		async def send_random_txs():
 			from mmgen.tool.api import tool_api
@@ -727,12 +749,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				await asyncio.sleep(0.5)
 			imsg('')
 
-		def print_balance(dest,ub):
-			imsg('Total balance in {}’s wallet {}, account #{}: {}'.format(
+		def print_balance(dest,bal_info):
+			imsg('Total balances in {}’s wallet {}, account #{}: {} (total), {} (unlocked)'.format(
 				capfirst(dest.user),
 				dest.wnum,
 				dest.account,
-				ub.hl()
+				bal_info.b.hl(),
+				bal_info.ub.hl(),
 			))
 
 		async def get_balance(dest,count):
@@ -740,8 +763,12 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			data.wd_rpc.call('refresh')
 			if count and not count % 20:
 				data.wd_rpc.call('rescan_blockchain')
-			ret = data.wd_rpc.call('get_accounts')
-			return XMRAmt(ret['subaddress_accounts'][dest.account]['unlocked_balance'],from_unit='atomic')
+			ret = data.wd_rpc.call('get_accounts')['subaddress_accounts'][dest.account]
+			d_tup = namedtuple('bal_info',['b','ub'])
+			return d_tup(
+				b  = XMRAmt(ret['balance'],from_unit='atomic'),
+				ub = XMRAmt(ret['unlocked_balance'],from_unit='atomic')
+			)
 
 		# start execution:
 
@@ -750,42 +777,49 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			f'mining, checking wallet {user}:{wnum}:{account}' )
 
 		dest = namedtuple(
-			'dest_info',['user','wnum','account','test','test_desc'])(user,wnum,account,test,test_desc)
+			'dest_info',['user','wnum','account','test','test_desc','test2','test2_desc'])(
+				user,wnum,account,test,test_desc,test2,test2_desc)
 
 		if dest.user != 'miner':
 			await self.open_wallet_user(dest.user,dest.wnum)
 
-		ub_start = await get_balance(dest,0)
-		chk_bal_chg = dest.test(ub_start) == 'chk_bal_chg'
+		bal_info_start = await get_balance(dest,0)
+		chk_bal_chg = dest.test(bal_info_start) == 'chk_bal_chg'
 
 		if random_txs:
 			await send_random_txs()
 
 		await self.start_mining()
 
-		h = await get_height()
+		h = await self._get_height()
 		imsg_r(f'Chain height: {h} ')
 
-		for count in range(500):
-			ub = await get_balance(dest,count)
-			if h > 300 and (dest.test(ub) is True or ( chk_bal_chg and ub != ub_start )):
+		for count in range(50):
+			bal_info = await get_balance(dest,count)
+			if h > 300 and (dest.test(bal_info) is True or ( chk_bal_chg and bal_info.ub != bal_info_start.ub )):
 				imsg('')
 				oqmsg_r('+')
-				print_balance(dest,ub)
+				print_balance(dest,bal_info)
+				if dest.test2:
+					assert dest.test2(bal_info) is True, f'test failed: {dest.test2_desc} ({bal_info})'
 				break
 			await asyncio.sleep(2)
-			h = await get_height()
-			imsg_r(f'{h} ')
-			oqmsg_r('+')
+			h = await self._get_height()
+			if count > 12: # something has probably gone wrong
+				imsg(f'Height: {h} ')
+				print_balance(dest,bal_info)
+			else:
+				imsg_r(f'{h} ')
+				oqmsg_r('+')
 		else:
-			die(2,'Timeout exceeded, balance {ub!r}')
+			die(2,'Timeout exceeded, balance {bal_info.ub!r}')
 
 		await self.stop_mining()
 
 		if user != 'miner':
 			await self.stop_wallet_user(dest.user)
 
-		return ub if return_amt else 'ok'
+		return bal_info if return_bal else 'ok'
 
 	# util methods
 
