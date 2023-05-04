@@ -1764,7 +1764,6 @@ class MoneroWalletOps:
 	class export_outputs(wallet):
 		action = 'exporting outputs from'
 		stem = 'process'
-		opts = ('export_all',)
 
 		async def process_wallet(self,d,fn,last):
 			h = self.rpc(self,d)
@@ -1780,7 +1779,7 @@ class MoneroWalletOps:
 			m = MoneroWalletOutputsFile.New(
 				parent    = self,
 				wallet_fn = fn,
-				data      = self.c.call('export_outputs', all=self.cfg.export_all ),
+				data      = self.c.call('export_outputs', all=True),
 			)
 			m.write()
 			return True

@@ -57,8 +57,6 @@ opts_data = {
 -h, --help                       Print this help message
 --, --longhelp                   Print help message for long options (common
                                  options)
--A, --export-all                 Export all outputs when performing the
-                                 ‘export-outputs’ operation
 -a, --autosign                   Use appropriate outdir and other params for
                                  autosigning operations (implies --watch-only).
                                  When this option is in effect, filename argu-
