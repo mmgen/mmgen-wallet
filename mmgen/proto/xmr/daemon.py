@@ -24,7 +24,6 @@ class monero_daemon(CoinDaemon):
 	exec_fn = 'monerod'
 	testnet_dir = 'stagenet'
 	new_console_mswin = True
-	host = 'localhost' # FIXME
 	rpc_ports = _nw(18081, 38081, None) # testnet is stagenet
 	cfg_file = 'bitmonero.conf'
 	datadirs = {
@@ -47,7 +46,7 @@ class monero_daemon(CoinDaemon):
 		self.rpc = MoneroRPCClient(
 			cfg    = self.cfg,
 			proto  = self.proto,
-			host   = self.host,
+			host   = 'localhost',
 			port   = self.rpc_port,
 			user   = None,
 			passwd = None,
@@ -96,7 +95,6 @@ class MoneroWalletDaemon(RPCDaemon):
 			proto,
 			wallet_dir,
 			test_suite  = False,
-			host        = None,
 			user        = None,
 			passwd      = None,
 			daemon_addr = None,
@@ -131,11 +129,9 @@ class MoneroWalletDaemon(RPCDaemon):
 				test_suite = test_suite).rpc_port
 		)
 
-		self.host = host or self.cfg.wallet_rpc_host or self.cfg.monero_wallet_rpc_host
 		self.user = user or self.cfg.wallet_rpc_user or self.cfg.monero_wallet_rpc_user
 		self.passwd = passwd or self.cfg.wallet_rpc_password or self.cfg.monero_wallet_rpc_password
 
-		assert self.host
 		assert self.user
 		if not self.passwd:
 			die(1,

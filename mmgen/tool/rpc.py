@@ -40,7 +40,7 @@ class tool_cmd(tool_cmd_base):
 				cfg    = self.cfg,
 				proto  = self.proto,
 				daemon = d,
-				host   = d.host,
+				host   = 'localhost',
 				port   = d.rpc_port,
 				user   = None,
 				passwd = None,

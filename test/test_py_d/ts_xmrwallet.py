@@ -243,7 +243,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			md_rpc = MoneroRPCClient(
 				cfg    = cfg,
 				proto  = self.proto,
-				host   = md.host,
+				host   = 'localhost',
 				port   = md.rpc_port,
 				user   = None,
 				passwd = None,

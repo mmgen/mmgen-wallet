@@ -103,10 +103,10 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 	def __init__(self,cfg,daemon,test_connection=True):
 
 		RPCClient.__init__(
-			self,
-			cfg,
-			daemon.host,
-			daemon.rpc_port,
+			self            = self,
+			cfg             = cfg,
+			host            = 'localhost',
+			port            = daemon.rpc_port,
 			test_connection = test_connection )
 
 		self.daemon = daemon

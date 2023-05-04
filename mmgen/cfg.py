@@ -161,7 +161,6 @@ class Config(Lockable):
 	rpc_port                   = 0
 	rpc_user                   = ''
 	rpc_password               = ''
-	monero_wallet_rpc_host     = 'localhost'
 	monero_wallet_rpc_user     = 'monero'
 	monero_wallet_rpc_password = ''
 	aiohttp_rpc_queue_len      = 16
@@ -249,7 +248,6 @@ class Config(Lockable):
 		'max_input_size',
 		'max_tx_file_size',
 		'mnemonic_entry_modes',
-		'monero_wallet_rpc_host',
 		'monero_wallet_rpc_password',
 		'monero_wallet_rpc_user',
 		'no_license',

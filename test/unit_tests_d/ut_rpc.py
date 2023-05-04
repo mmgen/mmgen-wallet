@@ -172,7 +172,7 @@ class unit_tests:
 			rpc = MoneroRPCClient(
 				cfg    = cfg,
 				proto  = md.proto,
-				host   = md.host,
+				host   = 'localhost',
 				port   = md.rpc_port,
 				user   = None,
 				passwd = None,

@@ -84,7 +84,6 @@ opts_data = {
 -W, --watch-only                 Create or operate on watch-only wallets
 -w, --wallet-dir=D               Output or operate on wallets in directory 'D'
                                  instead of the working directory
--H, --wallet-rpc-host=host       Wallet RPC hostname (currently: {cfg.monero_wallet_rpc_host!r})
 -U, --wallet-rpc-user=user       Wallet RPC username (currently: {cfg.monero_wallet_rpc_user!r})
 -P, --wallet-rpc-password=pass   Wallet RPC password (currently: [scrubbed])
 """,

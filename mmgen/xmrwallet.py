@@ -1807,7 +1807,7 @@ class MoneroWalletOps:
 			else:
 				from .daemon import CoinDaemon
 				md = CoinDaemon( self.cfg, 'xmr', test_suite=self.cfg.test_suite )
-				host,port = md.host,md.rpc_port
+				host,port = ('localhost', md.rpc_port)
 				proxy = None
 
 			self.dc = MoneroRPCClient(
@@ -1818,7 +1818,7 @@ class MoneroWalletOps:
 				port   = int(port),
 				user   = None,
 				passwd = None,
-				test_connection = False, # relay is presumably a public node, so avoid extra connections
+				test_connection = host == 'localhost', # avoid extra connections if relay is a public node
 				proxy  = proxy )
 
 		async def main(self):
