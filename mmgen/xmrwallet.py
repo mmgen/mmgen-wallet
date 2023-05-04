@@ -795,26 +795,18 @@ class MoneroWalletOps:
 			if not self.skip_wallet_check:
 				check_wallets()
 
-			relay_opt = self.parse_tx_relay_opt() if self.name == 'submit' and self.cfg.tx_relay_daemon else None
-
 			self.wd = MoneroWalletDaemon(
 				cfg         = self.cfg,
 				proto       = self.proto,
 				wallet_dir  = self.cfg.wallet_dir or '.',
 				test_suite  = self.cfg.test_suite,
-				monerod_addr = relay_opt[1] if relay_opt else (self.cfg.daemon or None),
+				monerod_addr = self.cfg.daemon or None,
 				trust_monerod = self.trust_monerod,
 				test_monerod = self.test_monerod,
 			)
 
-			u = self.wd.usr_daemon_args = []
 			if self.offline or (self.name in ('create','restore') and self.cfg.restore_height is None):
-				u.append('--offline')
-			if relay_opt:
-				if self.cfg.test_suite:
-					u.append('--daemon-ssl-allow-any-cert')
-				if relay_opt[2]:
-					u.append(f'--proxy={relay_opt[2]}')
+				self.wd.usr_daemon_args = ['--offline']
 
 			self.c = MoneroWalletRPCClient(
 				cfg             = self.cfg,
@@ -949,8 +941,7 @@ class MoneroWalletOps:
 				gmsg('done')
 
 				if refresh:
-					m = ' and contacting relay' if self.parent.name == 'submit' and self.cfg.tx_relay_daemon else ''
-					gmsg_r(f'  Refreshing {add_desc}wallet{m}...')
+					gmsg_r(f'  Refreshing {add_desc}wallet...')
 					ret = self.c.call('refresh')
 					gmsg('done')
 					if ret['received_money']:
@@ -1667,30 +1658,74 @@ class MoneroWalletOps:
 		test_monerod = True
 
 		def check_uopts(self):
-			if self.cfg.daemon:
-				die(1,f'--daemon is not supported for the ‘{self.name}’ operation. Use --tx-relay-daemon instead')
+			self.tx # trigger an exit if no suitable transaction present
+
+		def die_no_tx(self,desc,num_txs,tx_dir):
+			die('AutosignTXError', "{a} {b} transaction{c} in '{d}'!".format(
+				a = 'More than one' if num_txs else 'No',
+				b = desc,
+				c = suf(num_txs),
+				d = tx_dir,
+			))
 
 		@property
-		def unsubmitted_tx_path(self):
-			from .autosign import Signable
-			t = Signable.xmr_transaction( get_autosign_obj(self.cfg,'xmr') )
-			if len(t.unsubmitted) != 1:
-				die('AutosignTXError', "{a} unsubmitted transaction{b} in '{c}'!".format(
-					a = 'More than one' if t.unsubmitted else 'No',
-					b = suf(t.unsubmitted),
-					c = t.parent.xmr_tx_dir,
-				))
-			return t.unsubmitted[0]
+		def tx(self):
+			if not hasattr(self,'_tx'):
+				self._tx = self.get_tx()
+			return self._tx
+
+		def get_tx(self):
+			if uarg.infile:
+				fn = Path(uarg.infile)
+			else:
+				from .autosign import Signable
+				t = Signable.xmr_transaction( get_autosign_obj(self.cfg,'xmr') )
+				if len(t.unsubmitted) == 1:
+					fn = t.unsubmitted[0]
+				else:
+					self.die_no_tx( 'unsubmitted', len(t.unsubmitted), t.parent.xmr_tx_dir )
+			return MoneroMMGenTX.ColdSigned( cfg=self.cfg, fn=fn )
+
+		def get_relay_rpc(self):
+
+			relay_opt = self.parse_tx_relay_opt()
+
+			wd = MoneroWalletDaemon(
+				cfg         = self.cfg,
+				proto       = self.proto,
+				wallet_dir  = self.cfg.wallet_dir or '.',
+				test_suite  = self.cfg.test_suite,
+				monerod_addr = relay_opt[1],
+				trust_monerod = False,
+				test_monerod = False,
+			)
+
+			u = wd.usr_daemon_args = []
+			if self.cfg.test_suite:
+				u.append('--daemon-ssl-allow-any-cert')
+			if relay_opt[2]:
+				u.append(f'--proxy={relay_opt[2]}')
+
+			return MoneroWalletRPCClient(
+				cfg             = self.cfg,
+				daemon          = wd,
+				test_connection = False,
+			)
 
 		async def main(self):
-			tx = MoneroMMGenTX.ColdSigned(
-				cfg = self.cfg,
-				fn  = Path(uarg.infile) if uarg.infile else self.unsubmitted_tx_path )
+			tx = self.tx
 			h = self.rpc( self, self.kal.entry(tx.src_wallet_idx) )
 			self.head_msg(tx.src_wallet_idx,h.fn)
 			h.open_wallet()
 
-			msg('\n' + tx.get_info())
+			if self.cfg.tx_relay_daemon:
+				await self.c.stop_daemon()
+				self.c = self.get_relay_rpc()
+				self.c.start_daemon()
+				h = self.rpc( self, self.kal.entry(tx.src_wallet_idx) )
+				h.open_wallet( 'TX-relay-configured watch-only', refresh=False )
+
+			msg('\n' + tx.get_info(indent='    '))
 
 			if self.cfg.tx_relay_daemon:
 				self.display_tx_relay_info(indent='    ')

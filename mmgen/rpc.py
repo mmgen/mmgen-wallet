@@ -422,6 +422,9 @@ class RPCClient(MMGenObject):
 				msg(f'{self.daemon.desc} on port {self.daemon.bind_port} not running')
 			return True
 
+	def start_daemon(self,silent=False):
+		return self.daemon.start(silent=silent)
+
 	async def restart_daemon(self,quiet=False,silent=False):
 		await self.stop_daemon(quiet=quiet,silent=silent)
 		return self.daemon.start(silent=silent)
