@@ -14,29 +14,40 @@ devtools: Developer tools for the MMGen suite
 
 import sys
 
-def pfmt(*args):
+color_funcs = {
+	name: lambda s, n=n: f'\033[{n};1m{s}\033[0m'
+		for name,n in (
+			('red',   31),
+			('green', 32),
+			('yellow',33),
+			('blue',  34),
+			('purple',35))
+}
+
+def pfmt(*args,color=None):
 	import pprint
-	return pprint.PrettyPrinter(indent=4).pformat(
+	ret = pprint.PrettyPrinter(indent=4).pformat(
 		args if len(args) > 1 else '' if not args else args[0] )
+	return color_funcs[color](ret) if color else ret
 
-def pmsg(*args):
-	sys.stderr.write(pfmt(*args) + '\n')
+def pmsg(*args,color=None):
+	sys.stderr.write(pfmt(*args,color=color) + '\n')
 
-def pmsg_r(*args):
-	sys.stderr.write(pfmt(*args))
+def pmsg_r(*args,color=None):
+	sys.stderr.write(pfmt(*args,color=color))
 
 def pdie(*args,exit_val=1):
-	pmsg(*args)
+	pmsg(*args,color='red')
 	sys.exit(exit_val)
 
 def pexit(*args):
 	pdie(*args,exit_val=0)
 
-def Pmsg(*args):
-	sys.stdout.write(pfmt(*args) + '\n')
+def Pmsg(*args,color=None):
+	sys.stdout.write(pfmt(*args,color=color) + '\n')
 
 def Pdie(*args,exit_val=1):
-	Pmsg(*args)
+	Pmsg(*args,color='red')
 	sys.exit(exit_val)
 
 def Pexit(*args):
@@ -98,17 +109,17 @@ def get_ndiff(a,b):
 class MMGenObjectMethods: # mixin class for MMGenObject
 
 	# Pretty-print an MMGenObject instance, recursing into sub-objects - WIP
-	def pmsg(self):
-		sys.stdout.write('\n'+self.pfmt())
+	def pmsg(self,color=None):
+		sys.stdout.write('\n'+self.pfmt(color=color))
 
-	def pdie(self,exit_val=1):
-		self.pmsg()
+	def pdie(self,exit_val=1,color=None):
+		self.pmsg(color=color)
 		sys.exit(exit_val)
 
-	def pexit(self):
-		self.pdie(exit_val=0)
+	def pexit(self,color=None):
+		self.pdie(exit_val=0,color=color)
 
-	def pfmt(self,lvl=0,id_list=[]):
+	def pfmt(self,lvl=0,id_list=[],color=None):
 		from decimal import Decimal
 		scalars = (str,int,float,Decimal)
 		def do_list(out,e,lvl=0,is_dict=False):
@@ -178,4 +189,5 @@ class MMGenObjectMethods: # mixin class for MMGenObject
 					l=(lvl*8)+4 ))
 
 		import re
-		return re.sub('\n+','\n',''.join(out))
+		ret = re.sub('\n+','\n',''.join(out))
+		return color_funcs[color](ret) if color else ret

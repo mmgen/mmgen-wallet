@@ -6,6 +6,7 @@ test.unit_tests_d.ut_devtools: devtools unit tests for the MMGen suite
 
 import os,json
 from mmgen.devtools import *
+from mmgen.util import msg
 from . import unit_tests_base
 
 textA = """
@@ -86,5 +87,22 @@ class unit_tests(unit_tests_base):
 			seed        = Seed(cfg,seed_bin=bytes.fromhex('bead'*16)),
 			addr_idxs   = '1',
 			mmtype      = 'B',
-			skip_chksum = True ).pmsg()
+			skip_chksum = True ).pmsg(color='green')
+		return True
+
+	def pmsg(self,name,ut):
+		colors = (None,'red','green','yellow','blue','purple')
+
+		msg('\npmsg_r():')
+		for color in colors:
+			pmsg_r({'color':color},color=color)
+
+		msg('\n\npmsg():')
+		for color in colors:
+			pmsg({'color':color},color=color)
+
+		msg('\nPmsg():')
+		for color in colors:
+			Pmsg({'color':color},color=color)
+
 		return True
