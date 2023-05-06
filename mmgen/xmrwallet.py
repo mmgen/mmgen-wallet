@@ -1637,12 +1637,14 @@ class MoneroWalletOps:
 		start_daemon = False
 		offline = True
 
-		async def main(self,fn):
-			await self.restart_wallet_daemon()
+		async def main(self,fn,restart_daemon=True):
+			if restart_daemon:
+				await self.restart_wallet_daemon()
 			tx = MoneroMMGenTX.Unsigned( self.cfg, fn )
 			h = self.rpc(self,self.addr_data[0])
 			self.head_msg(tx.src_wallet_idx,h.fn)
-			h.open_wallet()
+			if restart_daemon:
+				h.open_wallet()
 			res = self.c.call(
 				'sign_transfer',
 				unsigned_txset = tx.data.unsigned_txset,
@@ -1821,11 +1823,13 @@ class MoneroWalletOps:
 		start_daemon = False
 		offline = True
 
-		async def main(self,fn,wallet_idx):
-			await self.restart_wallet_daemon()
+		async def main(self,fn,wallet_idx,restart_daemon=True):
+			if restart_daemon:
+				await self.restart_wallet_daemon()
 			h = self.rpc(self,self.addr_data[0])
 			self.head_msg(wallet_idx,fn)
-			h.open_wallet()
+			if restart_daemon:
+				h.open_wallet()
 			m = MoneroWalletOutputsFile.Unsigned(
 				parent = self,
 				fn     = fn )

@@ -128,6 +128,11 @@ class Signable:
 
 	class xmr_signable(transaction): # virtual class
 
+		def need_daemon_restart(self,new_idx):
+			old_idx = self.parent.xmr_cur_wallet_idx
+			self.parent.xmr_cur_wallet_idx = new_idx
+			return old_idx != new_idx
+
 		def print_summary(self,signables):
 			bmsg('\nAutosign summary:')
 			msg(
@@ -153,7 +158,7 @@ class Signable:
 					wallets = str(tx1.src_wallet_idx),
 					spec    = None ),
 			)
-			tx2 = await m.main(f) # TODO: stop wallet daemon?
+			tx2 = await m.main( f, restart_daemon=self.need_daemon_restart(tx1.src_wallet_idx) )
 			tx2.write(ask_write=False)
 			return tx2
 
@@ -176,7 +181,7 @@ class Signable:
 					wallets = str(wallet_idx),
 					spec    = None ),
 			)
-			obj = await m.main( f, wallet_idx )
+			obj = await m.main( f, wallet_idx, restart_daemon=self.need_daemon_restart(wallet_idx) )
 			obj.write()
 			return obj
 
@@ -282,6 +287,7 @@ class Autosign:
 			self.xmr_dir = self.mountpoint / 'xmr'
 			self.xmr_tx_dir = self.mountpoint / 'xmr' / 'tx'
 			self.xmr_outputs_dir = self.mountpoint / 'xmr' / 'outputs'
+			self.xmr_cur_wallet_idx = None
 
 	async def check_daemons_running(self):
 		from .protocol import init_proto
