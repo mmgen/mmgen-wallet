@@ -41,7 +41,7 @@ class New(Base,TxBase.New):
 
 		if self.cfg.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
-			assert not 'Token' in type(self).__name__, m
+			assert not 'Token' in self.name, m
 			with open(self.cfg.contract_data) as fp:
 				self.usr_contract_data = HexStr(fp.read().strip())
 			self.disable_fee_check = True
@@ -81,7 +81,7 @@ class New(Base,TxBase.New):
 
 	async def process_cmd_args(self,cmd_args,ad_f,ad_w):
 		lc = len(cmd_args)
-		if lc == 0 and self.usr_contract_data and not 'Token' in type(self).__name__:
+		if lc == 0 and self.usr_contract_data and not 'Token' in self.name:
 			return
 		if lc != 1:
 			die(1,f'{lc} output{suf(lc)} specified, but Ethereum transactions must have exactly one')

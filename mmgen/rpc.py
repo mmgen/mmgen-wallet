@@ -266,6 +266,7 @@ class RPCClient(MMGenObject):
 	def __init__(self,cfg,host,port,test_connection=True):
 
 		self.cfg = cfg
+		self.name = type(self).__name__
 
 		# aiohttp workaround, and may speed up RPC performance overall on some systems:
 		if gc.platform == 'win' and host == 'localhost':
@@ -275,8 +276,8 @@ class RPCClient(MMGenObject):
 		if not self.cfg.debug_rpc:
 			dmsg_rpc = dmsg_rpc_backend = noop
 
-		dmsg_rpc(f'=== {type(self).__name__}.__init__() debug ===')
-		dmsg_rpc(f'    cls [{type(self).__name__}] host [{host}] port [{port}]\n')
+		dmsg_rpc(f'=== {self.name}.__init__() debug ===')
+		dmsg_rpc(f'    cls [{self.name}] host [{host}] port [{port}]\n')
 
 		if test_connection:
 			import socket

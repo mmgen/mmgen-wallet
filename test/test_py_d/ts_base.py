@@ -38,6 +38,7 @@ class TestSuiteBase:
 	def __init__(self,trunner,cfgs,spawn):
 		if hasattr(self,'tr'): # init will be called multiple times for classes with multiple inheritance
 			return
+		self.name = type(self).__name__
 		self.proto = cfg._proto
 		self.tr = trunner
 		self.cfgs = cfgs

@@ -494,7 +494,7 @@ class MoneroWalletOutputsFile:
 
 		def get_wallet_fn(self,fn):
 			assert fn.name.endswith(f'.{self.ext}'), (
-				f'{type(self).__name__}: filename does not end with {"."+self.ext!r}'
+				f'{self.name}: filename does not end with {"."+self.ext!r}'
 			)
 			return fn.parent / fn.name[:-(len(self.ext)+self.ext_offset+1)]
 

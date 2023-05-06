@@ -89,7 +89,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			return
 
 		if gc.platform == 'win':
-			die(1,f'Test {type(self).__name__} not supported for Windows platform')
+			die(1,f'Test {self.name} not supported for Windows platform')
 
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
