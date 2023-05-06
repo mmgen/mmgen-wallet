@@ -579,7 +579,8 @@ class TestSuiteRunner(object):
 			cmd_dir      = 'cmds',
 			no_exec_wrapper = False,
 			timeout       = None,
-			pexpect_spawn = None ):
+			pexpect_spawn = None,
+			direct_exec  = False ):
 
 		desc = self.ts.test_name if cfg.names else self.gm.dpy_data[self.ts.test_name][1]
 		if extra_desc:
@@ -624,9 +625,10 @@ class TestSuiteRunner(object):
 						clr2(repr(cmd_disp) if gc.platform == 'win' else cmd_disp)
 					)
 			else:
-				omsg_r('{a}Testing {b}: '.format(
+				omsg_r('{a}Testing {b}: {c}'.format(
 					a = t_pfx,
-					b = desc )
+					b = desc,
+					c = 'OK\n' if direct_exec or cfg.direct_exec else ''))
 
 		if msg_only:
 			return
@@ -654,7 +656,8 @@ class TestSuiteRunner(object):
 			env           = env,
 			pexpect_spawn = pexpect_spawn,
 			timeout       = timeout,
-			send_delay    = send_delay )
+			send_delay    = send_delay,
+			direct_exec   = direct_exec )
 
 	def end_msg(self):
 		t = int(time.time() - self.start_time)

@@ -45,7 +45,8 @@ class MMGenPexpect:
 			env           = None,
 			pexpect_spawn = False,
 			send_delay    = None,
-			timeout       = None ):
+			timeout       = None,
+			direct_exec   = False ):
 
 		self.pexpect_spawn = pexpect_spawn
 		self.send_delay = send_delay
@@ -53,10 +54,10 @@ class MMGenPexpect:
 		self.skip_ok = False
 		self.sent_value = None
 
-		if cfg.direct_exec:
-			msg('')
-			from subprocess import run,DEVNULL
-			run([args[0]] + args[1:],check=True,stdout=DEVNULL if no_output else None)
+		if direct_exec or cfg.direct_exec:
+			from subprocess import Popen,DEVNULL
+			redir = DEVNULL if (no_output or not cfg.exact_output) else None
+			self.ep = Popen([args[0]] + args[1:], stderr=redir )
 		else:
 			timeout = int(timeout or cfg.pexpect_timeout or 0) or (60,5)[bool(cfg.debug_pexpect)]
 			if pexpect_spawn:
