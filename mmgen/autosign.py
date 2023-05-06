@@ -215,7 +215,8 @@ class Autosign:
 	dfl_wallet_dir     = '/dev/shm/autosign'
 	old_dfl_mountpoint = '/mnt/tx'
 
-	dev_disk_path = Path('/dev/disk/by-label/MMGEN_TX')
+	dfl_dev_disk_path = '/dev/disk/by-label/MMGEN_TX'
+	fake_dev_disk_path = '/tmp/mmgen-test-suite-dev.disk.by-label.MMGEN_TX'
 
 	old_dfl_mountpoint_errmsg = f"""
 		Mountpoint '{old_dfl_mountpoint}' is no longer supported!
@@ -246,6 +247,9 @@ class Autosign:
 					cfg.mnemonic_fmt,
 					fmt_list( self.mn_fmts, fmt='no_spc' ) ))
 
+		self.dev_disk_path = Path(
+			self.fake_dev_disk_path if cfg.test_suite_xmr_autosign else
+			self.dfl_dev_disk_path )
 		self.mountpoint = Path(cfg.mountpoint or self.dfl_mountpoint)
 		self.wallet_dir = Path(cfg.wallet_dir or self.dfl_wallet_dir)
 
@@ -488,6 +492,7 @@ class Autosign:
 				'coin': 'xmr',
 				'wallet_rpc_user': 'autosigner',
 				'wallet_rpc_password': 'my very secret password',
+				'wallet_rpc_port': 23232 if self.cfg.test_suite_xmr_autosign else None,
 				'wallet_dir': str(self.wallet_dir),
 				'autosign': True,
 				'autosign_mountpoint': str(self.mountpoint),
@@ -571,26 +576,33 @@ class Autosign:
 		else: return True
 
 	async def do_loop(self):
-		n,prev_status = 0,False
 		if not self.cfg.stealth_led:
 			self.led.set('standby')
+		testing_xmr = self.cfg.test_suite_xmr_autosign
+		if testing_xmr:
+			msg('Waiting for fake device insertion')
+		n = 1 if testing_xmr else 0
+		prev_status = False
 		while True:
 			status = self.get_insert_status()
 			if status and not prev_status:
 				msg('Device insertion detected')
 				await self.do_sign()
+				if testing_xmr:
+					self.dev_disk_path.unlink(missing_ok=True)
 			prev_status = status
 			if not n % 10:
 				msg_r(f"\r{' '*17}\rWaiting")
 			await asyncio.sleep(1)
-			msg_r('.')
-			n += 1
+			if not testing_xmr:
+				msg_r('.')
+				n += 1
 
 	def at_exit(self,exit_val,message=None):
 		if message:
 			msg(message)
 		self.led.stop()
-		sys.exit(int(exit_val))
+		sys.exit(0 if self.cfg.test_suite_xmr_autosign else int(exit_val))
 
 	def init_exit_handler(self):
 

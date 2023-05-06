@@ -202,6 +202,7 @@ class Config(Lockable):
 	exec_wrapper             = False
 	test_suite               = False
 	test_suite_autosign_led_simulate = False
+	test_suite_xmr_autosign  = False
 	test_suite_cfgtest       = False
 	test_suite_deterministic = False
 	test_suite_pexpect       = False
@@ -283,6 +284,7 @@ class Config(Lockable):
 		'MMGEN_COLUMNS',
 		'MMGEN_TEST_SUITE',
 		'MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE',
+		'MMGEN_TEST_SUITE_XMR_AUTOSIGN',
 		'MMGEN_TEST_SUITE_CFGTEST',
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
 		'MMGEN_TEST_SUITE_PEXPECT',

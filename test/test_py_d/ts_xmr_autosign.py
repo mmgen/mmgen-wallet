@@ -46,6 +46,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 	simulate     = False
 	bad_tx_count = 0
 	tx_relay_user = 'miner'
+	no_insert_check = False
 
 	cmd_group = (
 		('daemon_version',           'checking daemon version'),
@@ -63,16 +64,14 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('create_wallets_miner',     'creating Monero wallets for Miner'),
 		('mine_initial_coins',       'mining initial coins'),
 		('fund_alice',               'sending funds to Alice'),
+		('autosign_start_thread',    'starting autosign wait loop'),
 		('create_transfer_tx1',      'creating a transfer TX'),
-		('sign_transfer_tx1',        'signing the transfer TX'),
 		('submit_transfer_tx1',      'submitting the transfer TX'),
 		('resubmit_transfer_tx1',    'resubmitting the transfer TX'),
 		('export_outputs1',          'exporting outputs from Alice’s watch-only wallet #1'),
-		('export_key_images1',       'exporting signed key images from Alice’s offline wallets'),
 		('import_key_images1',       'importing signed key images into Alice’s online wallets'),
 		('sync_chkbal1',             'syncing Alice’s wallet #1'),
 		('create_transfer_tx2',      'creating a transfer TX (for relaying via proxy)'),
-		('sign_transfer_tx2',        'signing the transfer TX (for relaying via proxy)'),
 		('submit_transfer_tx2',      'submitting the transfer TX (relaying via proxy)'),
 		('sync_chkbal2',             'syncing Alice’s wallets and checking balance'),
 		('dump_wallets',             'dumping Alice’s wallets'),
@@ -80,14 +79,16 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('restore_wallets',          'creating online (watch-only) wallets for Alice'),
 		('delete_dump_files',        'deleting Alice’s dump files'),
 		('export_outputs2',          'exporting outputs from Alice’s watch-only wallets'),
-		('export_key_images2',       'exporting signed key images from Alice’s offline wallets'),
 		('import_key_images2',       'importing signed key images into Alice’s online wallets'),
 		('sync_chkbal3',             'syncing Alice’s wallets and checking balance'),
 		('txlist',                   'listing Alice’s submitted transactions'),
 		('check_tx_dirs',            'cleaning and checking signable file directories'),
+		('autosign_kill_thread',     'stopping autosign wait loop'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
+
+		os.environ['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = '1'
 
 		TestSuiteXMRWallet.__init__(self,trunner,cfgs,spawn)
 		TestSuiteAutosignBase.__init__(self,trunner,cfgs,spawn)
@@ -108,6 +109,9 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		self.opts.append('--xmrwallets={}'.format( self.users['alice'].kal_range )) # mmgen-autosign opts
 		self.autosign_opts = [f'--autosign-mountpoint={self.mountpoint}']           # mmgen-xmrwallet opts
 		self.tx_count = 1
+
+	def __del__(self):
+		os.environ['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = ''
 
 	def create_tmp_wallets(self):
 		self.spawn('',msg_only=True)
@@ -191,7 +195,11 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 	def delete_dump_files(self):
 		return self._delete_files( '.dump' )
 
+	def insert_device(self):
+		self.asi.dev_disk_path.touch()
+
 	def autosign_setup(self):
+		self.insert_device()
 		Path(self.autosign_xmr_dir).mkdir(parents=True,exist_ok=True)
 		Path(self.autosign_xmr_dir,'old.vkeys').touch()
 		t = self.run_setup(
@@ -202,6 +210,28 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		t.written_to_file('View keys')
 		return t
 
+	def autosign_start_thread(self):
+		self.asi.dev_disk_path.unlink(missing_ok=True)
+		def run():
+			t = self.spawn('mmgen-autosign', self.opts + ['wait'], direct_exec=True )
+			self.write_to_tmpfile('autosign_thread_pid',str(t.ep.pid))
+		import threading
+		threading.Thread( target=run, name='Autosign wait loop' ).start()
+		time.sleep(0.2)
+		return 'silent'
+
+	def autosign_kill_thread(self):
+		self.spawn('',msg_only=True)
+		pid = int(self.read_from_tmpfile('autosign_thread_pid'))
+		self.delete_tmpfile('autosign_thread_pid')
+		from signal import SIGTERM
+		imsg(purple(f'Killing autosign wait loop [PID {pid}]'))
+		try:
+			os.kill(pid,SIGTERM)
+		except:
+			imsg(yellow(f'{pid}: no such process'))
+		return 'ok'
+
 	def create_watchonly_wallets(self):
 		return self.create_wallets( 'alice', op='restore' )
 
@@ -209,7 +239,10 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		return self.create_wallets( 'alice', op='restore' )
 
 	def _create_transfer_tx(self,amt):
-		return self.do_op('transfer','alice',f'1:0:{self.burn_addr},{amt}',no_relay=True,do_ret=True)
+		t = self.do_op('transfer','alice',f'1:0:{self.burn_addr},{amt}',no_relay=True,do_ret=True)
+		t.read() # required!
+		self.insert_device()
+		return t
 
 	def create_transfer_tx1(self):
 		return self._create_transfer_tx('0.124')
@@ -219,16 +252,14 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		get_file_with_ext(self.asi.xmr_tx_dir,'sigtx',delete_all=True)
 		return self._create_transfer_tx('0.257')
 
-	def _sign_transfer_tx(self):
-		return self.do_sign(['--full-summary'],tx_name='Monero transaction')
-
-	def sign_transfer_tx1(self):
-		return self._sign_transfer_tx()
-
-	def sign_transfer_tx2(self):
-		return self._sign_transfer_tx()
-
-	def _xmr_autosign_op(self,op,desc=None,dtype=None,ext=None,wallet_arg=None,add_opts=[]):
+	def _xmr_autosign_op(self,op,desc=None,dtype=None,ext=None,wallet_arg=None,add_opts=[],wait_signed=False):
+		if wait_signed:
+			oqmsg_r(gray('[waiting for signing to complete]...'))
+			while True:
+				if not self.asi.dev_disk_path.exists():
+					break
+				time.sleep(0.2)
+			oqmsg(gray('OK'))
 		data = self.users['alice']
 		args = (
 			self.extra_opts
@@ -283,7 +314,8 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		t = self._xmr_autosign_op(
 			op       = op,
 			add_opts = [f'--tx-relay-daemon={relay_parm}'] if relay_parm else [],
-			ext      = ext )
+			ext      = ext,
+			wait_signed = op == 'submit' )
 		t.expect( f'{op.capitalize()} transaction? (y/N): ', 'y' )
 		t.written_to_file('Submitted transaction')
 		if check_bal:
@@ -293,11 +325,14 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			return t
 
 	def _export_outputs(self,wallet_arg,add_opts=[]):
-		return self._xmr_autosign_op(
+		t = self._xmr_autosign_op(
 			op    = 'export-outputs',
 			dtype = 'wallet outputs',
 			wallet_arg = wallet_arg,
 			add_opts = add_opts )
+		t.read() # required!
+		self.insert_device()
+		return t
 
 	def export_outputs1(self):
 		return self._export_outputs('1',['--rescan-blockchain'])
@@ -305,20 +340,11 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 	def export_outputs2(self):
 		return self._export_outputs('1-2')
 
-	def _export_key_images(self,tx_count):
-		self.tx_count = tx_count
-		return self.do_sign(['--full-summary'],tx_name='Monero wallet outputs file')
-
-	def export_key_images1(self):
-		return self._export_key_images(1)
-
-	def export_key_images2(self):
-		return self._export_key_images(2)
-
 	def _import_key_images(self,wallet_arg):
 		return self._xmr_autosign_op(
 			op    = 'import-key-images',
-			wallet_arg = wallet_arg )
+			wallet_arg = wallet_arg,
+			wait_signed = True )
 
 	def import_key_images1(self):
 		return self._import_key_images(None)

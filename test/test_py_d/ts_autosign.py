@@ -80,6 +80,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 	tmpdir_nums  = [18]
 	color        = True
 	mountpoint_basename = 'mmgen_autosign'
+	no_insert_check = True
 
 	def __init__(self,trunner,cfgs,spawn):
 
@@ -104,6 +105,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 					os.path.join(self.tmpdir,self.mountpoint_basename)
 				),
 				'wallet_dir': None if self.live else self.wallet_dir,
+				'test_suite_xmr_autosign': self.name == 'TestSuiteXMRAutosign',
 			})
 		)
 		self.mountpoint = self.asi.mountpoint
@@ -126,8 +128,9 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			self.opts.extend([
 				f'--mountpoint={self.mountpoint}',
 				f'--wallet-dir={self.wallet_dir}',
-				'--no-insert-check',
 			])
+			if self.no_insert_check:
+				self.opts.append('--no-insert-check')
 
 		self.tx_file_ops('set_count') # initialize tx_count here so we can resume anywhere
 
