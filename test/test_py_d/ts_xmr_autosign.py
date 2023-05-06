@@ -228,7 +228,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 	def sign_transfer_tx2(self):
 		return self._sign_transfer_tx()
 
-	def _xmr_autosign_op(self,op,desc,dtype=None,ext=None,wallet_arg=None,add_opts=[]):
+	def _xmr_autosign_op(self,op,desc=None,dtype=None,ext=None,wallet_arg=None,add_opts=[]):
 		data = self.users['alice']
 		args = (
 			self.extra_opts
@@ -239,7 +239,8 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			+ ([get_file_with_ext(self.asi.xmr_tx_dir,ext)] if ext else [])
 			+ ([wallet_arg] if wallet_arg else [])
 		)
-		t = self.spawn( 'mmgen-xmrwallet', args, extra_desc=f'({desc}, Alice)' )
+		desc_pfx = f'{desc}, ' if desc else ''
+		t = self.spawn( 'mmgen-xmrwallet', args, extra_desc=f'({desc_pfx}Alice)' )
 		if dtype:
 			t.written_to_file(dtype.capitalize())
 		return t
@@ -281,7 +282,6 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		data = self.users['alice']
 		t = self._xmr_autosign_op(
 			op       = op,
-			desc     = 'submitting TX',
 			add_opts = [f'--tx-relay-daemon={relay_parm}'] if relay_parm else [],
 			ext      = ext )
 		t.expect( f'{op.capitalize()} transaction? (y/N): ', 'y' )
@@ -295,7 +295,6 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 	def _export_outputs(self,wallet_arg,add_opts=[]):
 		return self._xmr_autosign_op(
 			op    = 'export-outputs',
-			desc  = 'exporting outputs',
 			dtype = 'wallet outputs',
 			wallet_arg = wallet_arg,
 			add_opts = add_opts )
@@ -319,7 +318,6 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 	def _import_key_images(self,wallet_arg):
 		return self._xmr_autosign_op(
 			op    = 'import-key-images',
-			desc  = 'importing key images',
 			wallet_arg = wallet_arg )
 
 	def import_key_images1(self):

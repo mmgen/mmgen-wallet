@@ -624,7 +624,9 @@ class TestSuiteRunner(object):
 						clr2(repr(cmd_disp) if gc.platform == 'win' else cmd_disp)
 					)
 			else:
-				omsg_r(f'{t_pfx}Testing {desc}: ')
+				omsg_r('{a}Testing {b}: '.format(
+					a = t_pfx,
+					b = desc )
 
 		if msg_only:
 			return
@@ -918,7 +920,8 @@ class TestSuiteRunner(object):
 		elif ret == 'error':
 			die(2,red(f'\nTest {self.ts.test_name!r} failed'))
 		elif ret in ('skip','silent'):
-			pass
+			if ret == 'silent':
+				self.cmd_total += 1
 		elif type(ret) == tuple and ret[0] == 'skip_warn':
 			self.skipped_warnings.append(
 				'Test {!r} was skipped:\n  {}'.format(cmd,'\n  '.join(ret[1].split('\n'))))

@@ -51,8 +51,8 @@ class Signable:
 
 		def _unprocessed(self,attrname,rawext,sigext):
 			if not hasattr(self,attrname):
-				dirlist = tuple(self.dir.iterdir())
-				names = tuple(f.name for f in dirlist)
+				dirlist = sorted(self.dir.iterdir())
+				names = {f.name for f in dirlist}
 				setattr(
 					self,
 					attrname,
@@ -126,11 +126,22 @@ class Signable:
 			for f in bad_files:
 				yield red(f.name)
 
-	class xmr_transaction(transaction):
+	class xmr_signable(transaction): # virtual class
+
+		def print_summary(self,signables):
+			bmsg('\nAutosign summary:')
+			msg(
+				self.summary_indent
+				+ f'\n{self.summary_indent}'.join(s.get_info() for s in signables)
+				+ self.summary_footer )
+
+	class xmr_transaction(xmr_signable):
 		dir_name = 'xmr_tx_dir'
 		desc = 'Monero transaction'
 		subext = 'subtx'
 		multiple_ok = False
+		summary_indent = ''
+		summary_footer = ''
 
 		async def sign(self,f):
 			from .xmrwallet import MoneroMMGenTX,MoneroWalletOps,xmrwallet_uargs
@@ -146,16 +157,14 @@ class Signable:
 			tx2.write(ask_write=False)
 			return tx2
 
-		def print_summary(self,txs):
-			bmsg('\nAutosign summary:\n')
-			msg_r('\n'.join(tx.get_info() for tx in txs))
-
-	class xmr_wallet_outputs_file(transaction):
+	class xmr_wallet_outputs_file(xmr_signable):
 		desc = 'Monero wallet outputs file'
 		rawext = 'raw'
 		sigext = 'sig'
 		dir_name = 'xmr_outputs_dir'
 		clean_all = True
+		summary_indent = '  '
+		summary_footer = '\n'
 
 		async def sign(self,f):
 			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
@@ -170,10 +179,6 @@ class Signable:
 			obj = await m.main( f, wallet_idx )
 			obj.write()
 			return obj
-
-		def print_summary(self,txs):
-			bmsg('\nAutosign summary:')
-			msg('  ' + '\n  '.join(tx.get_info() for tx in txs) + '\n')
 
 	class message(base):
 		desc = 'message file'
@@ -577,7 +582,6 @@ class Autosign:
 			prev_status = status
 			if not n % 10:
 				msg_r(f"\r{' '*17}\rWaiting")
-				sys.stderr.flush()
 			await asyncio.sleep(1)
 			msg_r('.')
 			n += 1
@@ -601,7 +605,7 @@ class Autosign:
 		from .led import LEDControl
 		self.led = LEDControl(
 			enabled = self.cfg.led,
-			simulate = os.getenv('MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE') )
+			simulate = self.cfg.test_suite_autosign_led_simulate )
 		self.led.set('off')
 
 def get_autosign_obj(cfg,coins=None):

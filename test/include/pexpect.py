@@ -38,7 +38,14 @@ NL = '\n'
 
 class MMGenPexpect:
 
-	def __init__(self,args,no_output=False,env=None,pexpect_spawn=False,send_delay=None,timeout=None):
+	def __init__(
+			self,
+			args,
+			no_output     = False,
+			env           = None,
+			pexpect_spawn = False,
+			send_delay    = None,
+			timeout       = None ):
 
 		self.pexpect_spawn = pexpect_spawn
 		self.send_delay = send_delay

@@ -74,6 +74,13 @@ class TestSuiteBase:
 	def write_to_tmpfile(self,fn,data,binary=False):
 		return write_to_file(os.path.join(self.tmpdir,fn),data,binary=binary)
 
+	def delete_tmpfile(self,fn):
+		fn = os.path.join(self.tmpdir,fn)
+		try:
+			return os.unlink(fn)
+		except:
+			msg(f'{fn}: file does not exist or could not be deleted')
+
 	def skip_for_win(self):
 		if gc.platform == 'win':
 			msg(f'Skipping test {self.test_name!r}: not supported on MSys2 platform')

@@ -398,7 +398,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			fr'Account index:\s+2\s+Creating new address.*Alice’s new address' )
 
 	async def mine_initial_coins(self):
+		self.spawn('', msg_only=True, extra_desc='(opening wallet)')
 		await self.open_wallet_user('miner',1)
+		ok()
 		return await self.mine_chk('miner',1,0,lambda x: x.ub > 20,'unlocked balance > 20')
 
 	async def fund_alice(self):
