@@ -63,7 +63,8 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('gen_kafiles',              'generating key-address files for Miner'),
 		('create_wallets_miner',     'creating Monero wallets for Miner'),
 		('mine_initial_coins',       'mining initial coins'),
-		('fund_alice',               'sending funds to Alice'),
+		('fund_alice1',              'sending funds to Alice (wallet #1)'),
+		('fund_alice2',              'sending funds to Alice (wallet #2)'),
 		('autosign_start_thread',    'starting autosign wait loop'),
 		('create_transfer_tx1',      'creating a transfer TX'),
 		('submit_transfer_tx1',      'submitting the transfer TX'),
@@ -199,6 +200,12 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 	def delete_dump_files(self):
 		return self._delete_files( '.dump' )
 
+	def fund_alice1(self):
+		return self.fund_alice(wallet=1,check_bal=False)
+
+	def fund_alice2(self):
+		return self.fund_alice(wallet=2)
+
 	def insert_device(self):
 		self.asi.dev_disk_path.touch()
 
@@ -295,7 +302,10 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		return self._sync_chkbal( '1', lambda n,b,ub: b == ub and 0.8 < b < 0.86 )
 		# 1.234567891234 - 0.124 - 0.257 = 0.853567891234 (minus fees)
 
-	sync_chkbal3 = sync_chkbal2
+	def sync_chkbal3(self):
+		return self._sync_chkbal(
+			'1-2',
+			lambda n,b,ub: b == ub and ((n == 1 and 0.8 < b < 0.86) or (n == 2 and b > 1.23)) )
 
 	def _mine_chk(self,desc):
 		bal_type = {'locked':'b','unlocked':'ub'}[desc]

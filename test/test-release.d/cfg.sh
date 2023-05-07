@@ -127,8 +127,7 @@ init_tests() {
 
 	d_xmr="Monero xmrwallet operations"
 	t_xmr="
-		- $test_py --coin=xmr --exclude=xmr_autosign
-		- $test_py --coin=xmr xmr_autosign
+		- $test_py --coin=xmr
 	"
 
 	d_eth="operations for Ethereum and Ethereum Classic using devnet"

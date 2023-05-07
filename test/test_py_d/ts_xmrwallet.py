@@ -416,13 +416,15 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		ok()
 		return await self.mine_chk('miner',1,0,lambda x: x.ub > 20,'unlocked balance > 20')
 
-	async def fund_alice(self,wallet=1):
+	async def fund_alice(self,wallet=1,check_bal=True):
 		self.spawn('', msg_only=True, extra_desc='(transferring funds from Miner wallet)')
 		await self.transfer(
 			'miner',
 			1234567891234,
 			read_from_file(self.users['alice'].addrfile_fs.format(wallet)),
 		)
+		if not check_bal:
+			return 'ok'
 		ok()
 		bal = '1.234567891234'
 		return await self.mine_chk(
