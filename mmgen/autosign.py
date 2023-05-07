@@ -128,10 +128,10 @@ class Signable:
 
 	class xmr_signable(transaction): # virtual class
 
-		def need_daemon_restart(self,new_idx):
+		def need_daemon_restart(self,m,new_idx):
 			old_idx = self.parent.xmr_cur_wallet_idx
 			self.parent.xmr_cur_wallet_idx = new_idx
-			return old_idx != new_idx
+			return old_idx != new_idx or m.wd.state != 'ready'
 
 		def print_summary(self,signables):
 			bmsg('\nAutosign summary:')
@@ -154,7 +154,7 @@ class Signable:
 					wallets = str(tx1.src_wallet_idx),
 					spec    = None ),
 			)
-			tx2 = await m.main( f, restart_daemon=self.need_daemon_restart(tx1.src_wallet_idx) )
+			tx2 = await m.main( f, restart_daemon=self.need_daemon_restart(m,tx1.src_wallet_idx) )
 			tx2.write(ask_write=False)
 			return tx2
 
@@ -176,7 +176,7 @@ class Signable:
 					wallets = str(wallet_idx),
 					spec    = None ),
 			)
-			obj = await m.main( f, wallet_idx, restart_daemon=self.need_daemon_restart(wallet_idx) )
+			obj = await m.main( f, wallet_idx, restart_daemon=self.need_daemon_restart(m,wallet_idx) )
 			obj.write()
 			return obj
 

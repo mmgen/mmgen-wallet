@@ -1642,7 +1642,7 @@ class MoneroWalletOps:
 			h = self.rpc(self,self.addr_data[0])
 			self.head_msg(tx.src_wallet_idx,h.fn)
 			if restart_daemon:
-				h.open_wallet()
+				h.open_wallet(refresh=False)
 			res = self.c.call(
 				'sign_transfer',
 				unsigned_txset = tx.data.unsigned_txset,
@@ -1831,7 +1831,7 @@ class MoneroWalletOps:
 			h = self.rpc(self,self.addr_data[0])
 			self.head_msg(wallet_idx,fn)
 			if restart_daemon:
-				h.open_wallet()
+				h.open_wallet(refresh=False)
 			m = MoneroWalletOutputsFile.Unsigned(
 				parent = self,
 				fn     = fn )
