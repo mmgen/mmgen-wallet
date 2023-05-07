@@ -192,6 +192,7 @@ class unit_tests:
 						proto      = proto,
 						test_suite = True,
 						wallet_dir = os.path.join('test','trash2'),
+						datadir    = os.path.join('test','trash2','wallet_rpc'),
 						passwd     = 'ut_rpc_passw0rd' )
 				) for proto in (init_proto( cfg, 'xmr', network=network ) for network in networks) ]
 

@@ -105,6 +105,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 					os.path.join(self.tmpdir,self.mountpoint_basename)
 				),
 				'wallet_dir': None if self.live else self.wallet_dir,
+				'test_suite': True,
 				'test_suite_xmr_autosign': self.name == 'TestSuiteXMRAutosign',
 			})
 		)

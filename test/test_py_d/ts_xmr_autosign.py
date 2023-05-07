@@ -103,6 +103,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			'outdir': self.users['alice'].udir,
 			'wallet_dir': self.users['alice'].udir,
 			'wallet_rpc_password': 'passwOrd',
+			'test_suite': True,
 		})
 
 		self.burn_addr = make_burn_addr()

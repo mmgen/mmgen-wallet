@@ -88,6 +88,7 @@ class MoneroWalletDaemon(RPCDaemon):
 	networks = ('mainnet','testnet')
 	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
 	_reset_ok = ('debug','wait','pids','force_kill')
+	test_suite_datadir = os.path.join('test','daemons','xmrtest','wallet_rpc')
 
 	def __init__(
 			self,
@@ -118,7 +119,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			self.rpc_port += port_shift
 
 		id_str = f'{self.exec_fn}-{self.bind_port}'
-		self.datadir = os.path.join((datadir or self.exec_fn),('','test_suite')[test_suite])
+		self.datadir = datadir or (self.test_suite_datadir if test_suite else self.exec_fn)
 		self.pidfile = os.path.join(self.datadir,id_str+'.pid')
 		self.logfile = os.path.join(self.datadir,id_str+'.log')
 
