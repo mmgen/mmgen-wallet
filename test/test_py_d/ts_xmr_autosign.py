@@ -84,6 +84,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('txlist',                   'listing Alice’s submitted transactions'),
 		('check_tx_dirs',            'cleaning and checking signable file directories'),
 		('autosign_kill_thread',     'stopping autosign wait loop'),
+		('stop_daemons',             'stopping all wallet and coin daemons'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):

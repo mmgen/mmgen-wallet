@@ -32,6 +32,23 @@ from .common import *
 
 from .ts_base import *
 
+# atexit functions:
+def stop_daemons(self):
+	for v in self.users.values():
+		if '--restricted-rpc' in v.md.start_cmd:
+			v.md.stop()
+		else:
+			async_run(v.md_rpc.stop_daemon())
+
+def stop_miner_wallet_daemon(self):
+	async_run(self.users['miner'].wd_rpc.stop_daemon())
+
+def kill_proxy(cls,args):
+	if gc.platform == 'linux':
+		omsg(f'Killing SSH SOCKS server at localhost:{cls.socks_port}')
+		cmd = [ 'pkill', '-f', ' '.join(args) ]
+		run(cmd)
+
 class TestSuiteXMRWallet(TestSuiteBase):
 	"""
 	Monero wallet operations
@@ -49,6 +66,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		('alice', 'FE3C6545', False, 150, '1-4', []),
 	)
 	tx_relay_user = 'bob'
+	datadir_base = os.path.join('test','daemons','xmrtest')
 
 	cmd_group = (
 		('daemon_version',            'checking daemon version'),
@@ -81,6 +99,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		('sweep_create_and_send',     'sweeping to new account (create TX + send TX, in stages)'),
 		('list_wallets_all',          'listing wallets'),
+		('stop_daemons',              'stopping all wallet and coin daemons'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -90,7 +109,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		from mmgen.protocol import init_proto
 		self.proto = init_proto( cfg, 'XMR', network='mainnet' )
-		self.datadir_base  = os.path.join('test','daemons','xmrtest')
 		self.extra_opts = ['--wallet-rpc-password=passw0rd']
 		self.autosign_mountpoint = os.path.join(self.tmpdir,'mmgen_autosign')
 		self.autosign_xmr_dir = os.path.join(self.tmpdir,'mmgen_autosign','xmr')
@@ -101,21 +119,22 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		for v in self.users.values():
 			run(['mkdir','-p',v.udir])
 
-		self.init_proxy()
-
 		self.tx_relay_daemon_parm = 'localhost:{}'.format( self.users[self.tx_relay_user].md.rpc_port )
 		self.tx_relay_daemon_proxy_parm = (
 			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}' ) # must be IP, not 'localhost'
 
 		if not cfg.no_daemon_stop:
-			atexit.register(self.stop_daemons)
-			atexit.register(self.stop_miner_wallet_daemon)
+			atexit.register(stop_daemons,self)
+			atexit.register(stop_miner_wallet_daemon,self)
 
 		if not cfg.no_daemon_autostart:
-			self.stop_daemons()
-			shutil.rmtree(self.datadir_base,ignore_errors=True)
+			stop_daemons(self)
+			time.sleep(0.2)
+			if os.path.exists(self.datadir_base):
+				shutil.rmtree(self.datadir_base)
 			os.makedirs(self.datadir_base)
 			self.start_daemons()
+			self.init_proxy()
 
 		self.balance = None
 
@@ -135,16 +154,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				run(a+b2)
 				omsg(f'SSH SOCKS server started, listening at localhost:{cls.socks_port}')
 
-		def kill_proxy():
-			if gc.platform == 'linux':
-				omsg(f'Killing SSH SOCKS server at localhost:{cls.socks_port}')
-				cmd = [ 'pkill', '-f', ' '.join(a + b2) ]
-				run(cmd)
-
 		a = ['ssh','-x','-o','ExitOnForwardFailure=True','-D',f'localhost:{cls.socks_port}']
 		b0 = ['-o','PasswordAuthentication=False']
 		b1 = ['localhost','true']
-		b2 = ['-fN','-E','txrelay-proxy.debug','localhost']
+		b2 = ['-fN','-E',os.path.join(cls.datadir_base,'txrelay-proxy.debug'),'localhost']
 
 		if port_in_use(cls.socks_port):
 			omsg(f'Port {cls.socks_port} already in use.  Assuming SSH SOCKS server is running')
@@ -196,7 +209,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				""",indent='    '))
 
 		if not (external_call or cfg.no_daemon_stop):
-			atexit.register(kill_proxy)
+			atexit.unregister(kill_proxy)
+			atexit.register(kill_proxy, cls, a + b2)
 
 		return True
 
@@ -848,11 +862,14 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			v.md.start()
 
 	def stop_daemons(self):
-		for v in self.users.values():
-			if '--restricted-rpc' in v.md.start_cmd:
-				v.md.stop()
-			else:
-				async_run(v.md_rpc.stop_daemon())
+		self.spawn('', msg_only=True)
+		if cfg.no_daemon_stop:
+			omsg('[not stopping daemons at user request]')
+		else:
+			omsg('')
+			stop_daemons(self)
+			atexit.unregister(stop_daemons)
 
-	def stop_miner_wallet_daemon(self):
-		async_run(self.users['miner'].wd_rpc.stop_daemon())
+			stop_miner_wallet_daemon(self)
+			atexit.unregister(stop_miner_wallet_daemon)
+		return 'silent'
