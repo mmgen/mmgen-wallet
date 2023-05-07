@@ -417,15 +417,17 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		ok()
 		return await self.mine_chk('miner',1,0,lambda x: x.ub > 20,'unlocked balance > 20')
 
-	async def fund_alice(self):
+	async def fund_alice(self,wallet=1):
+		self.spawn('', msg_only=True, extra_desc='(transferring funds from Miner wallet)')
 		await self.transfer(
 			'miner',
 			1234567891234,
-			read_from_file(self.users['alice'].addrfile_fs.format(1)),
+			read_from_file(self.users['alice'].addrfile_fs.format(wallet)),
 		)
+		ok()
 		bal = '1.234567891234'
 		return await self.mine_chk(
-			'alice',1,0,
+			'alice',wallet,0,
 			lambda x: str(x.ub) == bal,f'unlocked balance == {bal}',
 			random_txs = self.dfl_random_txs
 		)
@@ -644,6 +646,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			cfg      = cfg,
 			proto    = self.proto,
 			addrfile = data.kafile,
+			skip_chksum_msg = True,
 			key_address_validity_check = False )
 		end_silence()
 		self.users[user].wd.start(silent=not (cfg.exact_output or cfg.verbose))

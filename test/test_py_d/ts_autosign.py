@@ -161,7 +161,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 
 	def stop_daemons(self):
 		self.spawn('',msg_only=True)
-		stop_test_daemons(*[i for i in self.network_ids if i != 'btc'])
+		stop_test_daemons(*self.network_ids)
 		return 'ok'
 
 	def gen_key(self):

@@ -135,17 +135,13 @@ class Signable:
 
 		def print_summary(self,signables):
 			bmsg('\nAutosign summary:')
-			msg(
-				self.summary_indent
-				+ f'\n{self.summary_indent}'.join(s.get_info() for s in signables)
-				+ self.summary_footer )
+			msg('\n'.join(s.get_info(indent='  ') for s in signables) + self.summary_footer)
 
 	class xmr_transaction(xmr_signable):
 		dir_name = 'xmr_tx_dir'
 		desc = 'Monero transaction'
 		subext = 'subtx'
 		multiple_ok = False
-		summary_indent = ''
 		summary_footer = ''
 
 		async def sign(self,f):
@@ -168,7 +164,6 @@ class Signable:
 		sigext = 'sig'
 		dir_name = 'xmr_outputs_dir'
 		clean_all = True
-		summary_indent = '  '
 		summary_footer = '\n'
 
 		async def sign(self,f):
@@ -381,10 +376,12 @@ class Autosign:
 	async def sign_all(self,target_name):
 		target = getattr(Signable,target_name)(self)
 		if target.unsigned:
-			if len(target.unsigned) > 1 and not target.multiple_ok:
-				die(f'AutosignTXError', 'Only one unsigned {target.desc} transaction allowed at a time!')
 			good = []
 			bad = []
+			if len(target.unsigned) > 1 and not target.multiple_ok:
+				ymsg(f'Autosign error: only one unsigned {target.desc} transaction allowed at a time!')
+				target.print_bad_list(target.unsigned)
+				return False
 			for f in target.unsigned:
 				ret = None
 				try:

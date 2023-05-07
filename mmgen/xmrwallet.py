@@ -501,9 +501,9 @@ class MoneroWalletOutputsFile:
 		def get_info(self,indent=''):
 			if self.data.signed_key_images is not None:
 				data = self.data.signed_key_images or []
-				return f'{self.wallet_fn.name}: {len(data)} signed key image{suf(data)}'
+				return f'{indent}{self.wallet_fn.name}: {len(data)} signed key image{suf(data)}'
 			else:
-				return f'{self.wallet_fn.name}: no key images'
+				return f'{indent}{self.wallet_fn.name}: no key images'
 
 	class New(Base):
 		ext = 'raw'
@@ -789,8 +789,6 @@ class MoneroWalletOps:
 							msg(f"Attempting to open '{uarg.infile}' as key-address list")
 							continue
 						raise
-
-			msg('')
 
 			self.create_addr_data()
 
@@ -1557,7 +1555,7 @@ class MoneroWalletOps:
 
 		async def main(self):
 			h = self.rpc(self,self.source)
-			h.open_wallet('Monero',refresh=True)
+			h.open_wallet('Monero')
 			label = '{a} [{b}]'.format(
 				a = self.label or f"xmrwallet new {'account' if self.account == None else 'address'}",
 				b = make_timestr() )
@@ -1739,10 +1737,14 @@ class MoneroWalletOps:
 				self.display_tx_relay_info(indent='    ')
 
 			if keypress_confirm( self.cfg, f'{self.name.capitalize()} transaction?' ):
+				if self.cfg.tx_relay_daemon:
+					msg_r('Relaying transaction to remote daemon, please be patient...')
 				res = self.c.call(
 					'submit_transfer',
 					tx_data_hex = tx.data.signed_txset )
 				assert res['tx_hash_list'][0] == tx.data.txid, 'TxID mismatch in ‘submit_transfer’ result!'
+				if self.cfg.tx_relay_daemon:
+					msg('success')
 			else:
 				die(1,'Exiting at user request')
 

@@ -191,7 +191,7 @@ class unit_tests:
 						cfg        = cfg,
 						proto      = proto,
 						test_suite = True,
-						wallet_dir = 'test/trash2',
+						wallet_dir = os.path.join('test','trash2'),
 						passwd     = 'ut_rpc_passw0rd' )
 				) for proto in (init_proto( cfg, 'xmr', network=network ) for network in networks) ]
 

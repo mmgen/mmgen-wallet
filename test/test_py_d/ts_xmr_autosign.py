@@ -56,7 +56,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		('new_address_alice_label',  'adding an address to Alice’s tmp wallet (with label)'),
 		('dump_tmp_wallets',         'dumping Alice’s tmp wallets'),
 		('delete_tmp_wallets',       'deleting Alice’s tmp wallets'),
-		('clean',                    'cleaning signable file directories'),
+		('autosign_clean',           'cleaning signable file directories'),
 		('autosign_setup',           'autosign setup with Alice’s seed'),
 		('create_watchonly_wallets', 'creating online (watch-only) wallets for Alice'),
 		('delete_tmp_dump_files',    'deleting Alice’s dump files'),
@@ -124,7 +124,9 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			cfg       = self.cfg,
 			proto     = self.proto,
 			addr_idxs = '1-2',
-			seed      = Wallet(cfg,data.mmwords).seed )
+			seed      = Wallet(cfg,data.mmwords).seed,
+			skip_chksum_msg = True,
+			key_address_validity_check = False )
 		kal.file.write(ask_overwrite=False)
 		fn = get_file_with_ext(data.udir,'akeys')
 		m = MoneroWalletOps.create(
@@ -277,19 +279,19 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			t.written_to_file(dtype.capitalize())
 		return t
 
-	def _sync_chkbal(self,bal_chk_func):
+	def _sync_chkbal(self,wallet_arg,bal_chk_func):
 		return self.sync_wallets(
 			'alice',
 			op           = 'sync',
-			wallets      = '1',
+			wallets      = wallet_arg,
 			bal_chk_func = bal_chk_func )
 
 	def sync_chkbal1(self):
-		return self._sync_chkbal( lambda n,b,ub: b == ub and 1 < b < 1.12 )
+		return self._sync_chkbal( '1', lambda n,b,ub: b == ub and 1 < b < 1.12 )
 		# 1.234567891234 - 0.124 = 1.110567891234 (minus fees)
 
 	def sync_chkbal2(self):
-		return self._sync_chkbal( lambda n,b,ub: b == ub and 0.8 < b < 0.86 )
+		return self._sync_chkbal( '1', lambda n,b,ub: b == ub and 0.8 < b < 0.86 )
 		# 1.234567891234 - 0.124 - 0.257 = 0.853567891234 (minus fees)
 
 	sync_chkbal3 = sync_chkbal2
@@ -404,7 +406,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 					str(Path(*d.parts[4:])) + ':',
 					' '.join(sorted(i.name for i in d.iterdir()))).strip()
 
-	def clean(self):
+	def autosign_clean(self):
 
 		self.create_fake_tx_files()
 		before = '\n'.join(self._gen_listing())
