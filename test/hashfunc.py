@@ -45,32 +45,18 @@ class TestHashFunc(object):
 			die(3,m.format([hex(n) for n in self.K_ref],[hex(n) for n in h.K]))
 		msg('OK\n')
 
-	def compare_hashes(self,dlen,data):
-		sha2_ref = getattr(self.hashlib,self.desc)(data).hexdigest()
-		ret = self.t_cls(data).hexdigest()
-		if ret != sha2_ref:
+	def compare_hashes(self,dlen,data,chk=None):
+		if chk is None:
+			chk = getattr(self.hashlib,self.desc)(data).hexdigest()
+		res = self.t_cls(data).hexdigest()
+		if res != chk:
 			m ='\nHashes do not match!\nReference {d}: {}\nMMGen {d}:     {}'
-			die(3,m.format(sha2_ref,ret,d=self.desc.upper()))
+			die(3,m.format(chk,res,d=self.desc.upper()))
 
-	def test_ref(self,input_n=None):
-
-		inputs = (
-			'','x','xa','the','7_chars''8charmsg' '9_charmsg','10_charmsg'
-			'8charmsg' * 8,
-			'8charmsg' * 7 + '7_chars',
-			'8charmsg' * 7 + '9_charmsg',
-			'\x00','\x00\x00','\x00'*256,
-			'\x0f','\x0f\x0f','\x0f'*256,
-			'\x0f\x0d','\x0e\x0e'*256,
-			'\x00'*511,'\x00'*512,'\x00'*513,
-			'\x0f'*512,'\x0f'*511,'\x0f'*513,
-			'\x00\x0f'*512,'\x0e\x0f'*511,'\x0a\x0d'*513,
-			'\x00\x0f'*1024,'\x0e\x0f'*1023,'\x0a\x0d'*1025 )
-
-		for i,data in enumerate([inputs[input_n]] if input_n is not None else inputs):
-			msg(f'\rTesting reference input data: {i+1:4}/{len(inputs)} ')
-			self.compare_hashes(len(data),data.encode())
-
+	def test_ref(self):
+		for i,data in enumerate(self.vectors):
+			msg(f'\rTesting reference input data: {i+1:4}/{len(self.vectors)} ')
+			self.compare_hashes( len(data), data.encode(), chk=self.vectors[data] )
 		msg('OK\n')
 
 	def test_random(self,rounds):
@@ -83,6 +69,40 @@ class TestHashFunc(object):
 
 class TestKeccak(TestHashFunc):
 	desc = 'keccak_256'
+	vectors = {
+		'':                           'c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470',
+		'x':                          '7521d1cadbcfa91eec65aa16715b94ffc1c9654ba57ea2ef1a2127bca1127a83',
+		'xa':                         'ac3f7abb3970ce4fd85fbf46ddd6c87f63e9f91deb38aa155c237c4f81a74259',
+		'the':                        '58d5df6c336f348e541c83745572ac73656a0238a55c006a84123e2ace2e7aef',
+		'7_chars':                    '537d95bb6222fc8d333177a4310d5549c33aae32c638a01f8ca13f8271d49a89',
+		'8charmsg':                   '590d8871128ec3b84d833e2d36cc7e9e1b808b88d44aae653d6938f7e23af707',
+		'9_charmsg':                  '625b2ad4132fb699ba33a8cb7c8f1a11f656054cd2fac2156ddd92585c26caac',
+		'10_charmsg':                 'b24434a23e05b2f2f1a575df7647d1e6cb96e9c730190f8bc6b282aa18ff96fb',
+		'8charmsg' * 8:               'b90078637f407bde1b4e44bef157810b596430a375a4f094ab3fec5258aafe8f',
+		'8charmsg' * 7 + '7_chars':   'd566a70e4db4592d2649289024f6deaa1fff7138591e27c1844d172a9d16f2fe',
+		'8charmsg' * 7 + '9_charmsg': '149a1620df1447401c968f9593b190dbd519ed663cde7f8606c75d6121e7c980',
+		'\x00':                       'bc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a',
+		'\x00\x00':                   '54a8c0ab653c15bfb48b47fd011ba2b9617af01cb45cab344acd57c924d56798',
+		'\x00'*256:                   'd397b3b043d87fcd6fad1291ff0bfd16401c274896d8c63a923727f077b8e0b5',
+		'\x0f':                       '3d725c5ee53025f027da36bea8d3af3b6a3e9d2d1542d47c162631de48e66c1c',
+		'\x0f\x0f':                   'c5c1cadbf3ce871e667034a04649cafecd77792491ca7d75207bff6834725e5c',
+		'\x0f'*256:                   '634cd5b0c7131441a789340d2ddb9158809bcee04e3389428a99094c586ab9e3',
+		'\x0f\x0d':                   'ce69f143c196075c65560b98431330ed46e3bc14daeda0ed1dd7124be89f6c16',
+		'\x0e\x0e'*256:               'ccd35755ad4c2bf5dd30b8867e1bb956fceebb6ec95e3684362f1ce160527481',
+		'\x00'*511:                   'd28fcca01972cfdea3de8a981db12e426a4ffa25830c25f213e4823c41ab90f3',
+		'\x00'*512:                   'd5c44f659751a819616c58c9efe38e80f2b84cf621036da99c019bbe4f1fb647',
+		'\x00'*513:                   '8a1810ea3d9e5cc95089994be993c99382f2a7754e8c94ee14888b56ecaa05fd',
+		'\x0f'*512:                   'eae2f92f9d3564b346a1937626ca25b9fafb19433a624008c0b6c0eec469aa7c',
+		'\x0f'*511:                   'da69b07f366d33f62eb889e7bf05705dae4aaf8902bb8dece86346d33b540e71',
+		'\x0f'*513:                   '131640bf7001195b269d652efe137afdc17f19b403b4b5f9aba09a6fb8cbecbe',
+		'\x00\x0f'*512:               '330bd984f6c6361b02d7a5de6d4fc60ae8e72c7b791a511d428090b0c9af2313',
+		'\x0e\x0f'*511:               '5d17f4e0f63342d3d635bfe57c416a4dddc76ccb5bb6981aacdf3227d095d244',
+		'\x0a\x0d'*513:               '187c8fa19c9ac5dedbe4a3078290120eb2f5f7b3b0cb4590cdfbebcfb37bf2b3',
+		'\x00\x0f'*1024:              '7aa8a949809ac159cb98fe947ddc40de05be9309aff563130d7d55afb4cc9e11',
+		'\x0e\x0f'*1023:              '5c82fa38e3d35efe65a392835be500ba62d0dfc9c0de28950cdeb5bc0d96689d',
+		'\x0a\x0d'*1025:              'bc99495fcaf4a987c421ff1cc5854b25786964ab863836b34c82a437a473f4c4',
+	}
+
 	def __init__(self):
 		from mmgen.contrib.keccak import keccak_256
 		import sha3
@@ -98,6 +118,7 @@ class TestSha2(TestHashFunc):
 		import hashlib
 		self.t_cls = { 'sha256':Sha256, 'sha512':Sha512 }[self.desc]
 		self.hashlib = hashlib
+		self.vectors = {k:None for k in TestKeccak.vectors}
 
 class TestSha256(TestSha2):
 	desc = 'sha256'
