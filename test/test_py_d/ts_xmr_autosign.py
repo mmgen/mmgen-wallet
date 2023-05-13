@@ -265,12 +265,13 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 
 	def _xmr_autosign_op(self,op,desc=None,dtype=None,ext=None,wallet_arg=None,add_opts=[],wait_signed=False):
 		if wait_signed:
-			oqmsg_r(gray('[waiting for signing to complete]...'))
+			oqmsg_r(gray(f'→ offline wallet{"s" if dtype.endswith("s") else ""} signing {dtype}'))
 			while True:
+				oqmsg_r(gray('.'))
 				if not self.asi.dev_disk_path.exists():
 					break
-				time.sleep(0.2)
-			oqmsg(gray('OK'))
+				time.sleep(0.5)
+			oqmsg(gray('done'))
 		data = self.users['alice']
 		args = (
 			self.extra_opts
@@ -282,10 +283,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			+ ([wallet_arg] if wallet_arg else [])
 		)
 		desc_pfx = f'{desc}, ' if desc else ''
-		t = self.spawn( 'mmgen-xmrwallet', args, extra_desc=f'({desc_pfx}Alice)' )
-		if dtype:
-			t.written_to_file(dtype.capitalize())
-		return t
+		return self.spawn( 'mmgen-xmrwallet', args, extra_desc=f'({desc_pfx}Alice)' )
 
 	def _sync_chkbal(self,wallet_arg,bal_chk_func):
 		return self.sync_wallets(
@@ -329,6 +327,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 			op       = op,
 			add_opts = [f'--tx-relay-daemon={relay_parm}'] if relay_parm else [],
 			ext      = ext,
+			dtype    = 'transaction',
 			wait_signed = op == 'submit' )
 		t.expect( f'{op.capitalize()} transaction? (y/N): ', 'y' )
 		t.written_to_file('Submitted transaction')
@@ -341,9 +340,9 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 	def _export_outputs(self,wallet_arg,add_opts=[]):
 		t = self._xmr_autosign_op(
 			op    = 'export-outputs',
-			dtype = 'wallet outputs',
 			wallet_arg = wallet_arg,
 			add_opts = add_opts )
+		t.written_to_file('Wallet outputs')
 		t.read() # required!
 		self.insert_device()
 		return t
@@ -358,6 +357,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		return self._xmr_autosign_op(
 			op    = 'import-key-images',
 			wallet_arg = wallet_arg,
+			dtype = 'wallet outputs',
 			wait_signed = True )
 
 	def import_key_images1(self):

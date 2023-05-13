@@ -1452,7 +1452,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			t.send('YES\n')
 			t.expect('abel:\b')
 		t.send('l')
-		t.expect('main menu): ','1\n')
+		t.expect(
+			'main menu): ',
+			'{}\n'.format(2 if self.proto.coin == 'BCH' else 1) )
 		t.expect('for address.*: ','\n',regex=True)
 		t.expect('unchanged')
 		t.expect('abel:\b','q')
