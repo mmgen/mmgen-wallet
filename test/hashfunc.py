@@ -22,7 +22,7 @@ test/hashfunc.py: Test internal implementations of SHA256, SHA512 and Keccak256
 
 import sys,os
 import include.tests_header
-from mmgen.util import die
+from mmgen.util import die,ymsg
 
 assert len(sys.argv) in (2,3),"Test takes 1 or 2 arguments: test name, plus optional rounds count"
 test = sys.argv[1].capitalize()
@@ -60,6 +60,8 @@ class TestHashFunc(object):
 		msg('OK\n')
 
 	def test_random(self,rounds):
+		if not self.hashlib:
+			return
 		for i in range(rounds):
 			if i+1 in (1,rounds) or not (i+1) % 10:
 				msg(f'\rTesting random input data:    {i+1:4}/{rounds} ')
@@ -105,9 +107,15 @@ class TestKeccak(TestHashFunc):
 
 	def __init__(self):
 		from mmgen.contrib.keccak import keccak_256
-		import sha3
 		self.t_cls = keccak_256
-		self.hashlib = sha3
+		import platform
+		major,minor,_ = [int(s) for s in platform.python_version_tuple()]
+		if major > 3 or (major == 3 and minor >= 11):
+			ymsg(f'Skipping keccak random data test for Python version {major}.{minor} (no pysha3)')
+			self.hashlib = None
+		else:
+			import sha3
+			self.hashlib = sha3
 
 	def test_constants(self): pass
 

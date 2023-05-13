@@ -29,7 +29,12 @@ class unit_tests:
 		return True
 
 	def pysha3(self,name,ut): # ETH,XMR
-		from sha3 import keccak_256
+		import platform
+		major,minor,_ = [int(s) for s in platform.python_version_tuple()]
+		if major > 3 or (major == 3 and minor >= 11):
+			ymsg(f'Skipping pysha3 for Python version {major}.{minor}')
+		else:
+			from sha3 import keccak_256
 		return True
 
 	def py_ecc(self,name,ut): # ETH
