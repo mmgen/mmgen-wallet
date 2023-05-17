@@ -29,10 +29,9 @@ class unit_tests:
 		return True
 
 	def pysha3(self,name,ut): # ETH,XMR
-		import platform
-		major,minor,_ = [int(s) for s in platform.python_version_tuple()]
-		if major > 3 or (major == 3 and minor >= 11):
-			ymsg(f'Skipping pysha3 for Python version {major}.{minor}')
+		from mmgen.pyversion import python_version
+		if python_version >= '3.11':
+			ymsg(f'Skipping pysha3 for Python version {python_version}')
 		else:
 			from sha3 import keccak_256
 		return True

@@ -108,10 +108,9 @@ class TestKeccak(TestHashFunc):
 	def __init__(self):
 		from mmgen.contrib.keccak import keccak_256
 		self.t_cls = keccak_256
-		import platform
-		major,minor,_ = [int(s) for s in platform.python_version_tuple()]
-		if major > 3 or (major == 3 and minor >= 11):
-			ymsg(f'Skipping keccak random data test for Python version {major}.{minor} (no pysha3)')
+		from mmgen.pyversion import python_version
+		if python_version >= '3.11':
+			ymsg(f'Skipping keccak random data test for Python version {python_version} (no pysha3)')
 			self.hashlib = None
 		else:
 			import sha3
