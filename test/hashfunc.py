@@ -112,6 +112,9 @@ class TestKeccak(TestHashFunc):
 		if python_version >= '3.11':
 			ymsg(f'Skipping keccak random data test for Python version {python_version} (no pysha3)')
 			self.hashlib = None
+		elif gc.platform == 'win':
+			ymsg(f'Skipping keccak random data test for Windows platform (no pysha3)')
+			self.hashlib = None
 		else:
 			import sha3
 			self.hashlib = sha3
@@ -165,7 +168,7 @@ class TestSha512(TestSha2):
 		0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817 )
 
 from test.include.common import getrand,set_globals
-from mmgen.cfg import Config
+from mmgen.cfg import Config,gc
 
 set_globals(Config())
 

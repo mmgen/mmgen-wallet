@@ -66,13 +66,18 @@ class TestSuiteMisc(TestSuiteBase):
 		return self.xmrwallet_txview(op='txlist')
 
 	def coin_daemon_info(self):
-		start_test_daemons('ltc','eth')
-		t = self.spawn(f'examples/coin-daemon-info.py',['btc','ltc','eth'],cmd_dir='.')
-		for s in ('BTC','LTC','ETH'):
-			t.expect(s + r'\s+mainnet\s+Up',regex=True)
+		if cfg.no_altcoin:
+			coins = ['btc']
+		else:
+			coins = ['btc','ltc','eth']
+			start_test_daemons('ltc','eth')
+		t = self.spawn(f'examples/coin-daemon-info.py',coins,cmd_dir='.')
+		for coin in coins:
+			t.expect(coin.upper() + r'\s+mainnet\s+Up',regex=True)
 		if cfg.pexpect_spawn:
 			t.send('q')
-		stop_test_daemons('ltc','eth')
+		if not cfg.no_altcoin:
+			stop_test_daemons('ltc','eth')
 		return t
 
 	def term_echo(self):

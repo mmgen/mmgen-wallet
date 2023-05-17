@@ -69,8 +69,8 @@ init_tests() {
 		ripemd160 $python mmgen/contrib/ripemd160.py $VERBOSE $fast_opt
 	"
 
-	[ "$ARM32" ] && t_hash_skip='512'        # gmpy produces invalid init constants
-	[ "$MSYS2" ] && t_hash_skip='512 keccak' # 2:py_long_long issues, 3:no pysha3 for keccak reference
+	[ "$ARM32" ] && t_hash_skip='512' # gmpy produces invalid init constants
+	[ "$MSYS2" ] && t_hash_skip='512' # 2:py_long_long issues
 	[ "$SKIP_ALT_DEP" ] && t_hash_skip+=' keccak'
 
 	d_ref="generated values against reference data"
