@@ -116,7 +116,8 @@ def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete
 			or fn.endswith( dot + ext )
 			or (substr and ext in fn) )
 
-	flist = [f.path for f in os.scandir(tdir) if have_match(f.name)]
+	# Don’t use os.scandir here - it returns broken paths under Windows/MSYS2
+	flist = [os.path.join(tdir,name) for name in os.listdir(tdir) if have_match(name)]
 
 	if not flist:
 		return False

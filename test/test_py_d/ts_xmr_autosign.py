@@ -47,6 +47,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 	bad_tx_count = 0
 	tx_relay_user = 'miner'
 	no_insert_check = False
+	win_skip = True
 
 	cmd_group = (
 		('daemon_version',           'checking daemon version'),

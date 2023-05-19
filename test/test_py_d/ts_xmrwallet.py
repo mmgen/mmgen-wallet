@@ -60,10 +60,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	dfl_random_txs = 3
 	color = True
 	socks_port = 49237
+	# Bob’s daemon is stopped via process kill, not RPC, so put Bob last in list:
 	user_data = (
 		('miner', '98831F3A', False, 130, '1-2', []),
-		('bob',   '1378FC64', False, 140, None,  ['--restricted-rpc']),
 		('alice', 'FE3C6545', False, 150, '1-4', []),
+		('bob',   '1378FC64', False, 140, None,  ['--restricted-rpc']),
 	)
 	tx_relay_user = 'bob'
 	datadir_base = os.path.join('test','daemons','xmrtest')
@@ -814,9 +815,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		h = await self._get_height()
 		imsg_r(f'Chain height: {h} ')
 
-		for count in range(50):
+		max_iterations,height_threshold = (300,80) if gc.platform == 'win' else (50,300)
+
+		for count in range(max_iterations):
 			bal_info = await get_balance(dest,count)
-			if h > 300 and (dest.test(bal_info) is True or ( chk_bal_chg and bal_info.ub != bal_info_start.ub )):
+			if h > height_threshold and (dest.test(bal_info) is True or ( chk_bal_chg and bal_info.ub != bal_info_start.ub )):
 				imsg('')
 				oqmsg_r('+')
 				print_balance(dest,bal_info)

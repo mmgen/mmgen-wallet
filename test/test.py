@@ -672,6 +672,10 @@ class TestSuiteRunner(object):
 
 		ts_cls = CmdGroupMgr().load_mod(gname)
 
+		if gc.platform == 'win' and ts_cls.win_skip:
+			omsg(f'Skipping test {gname!r} for Windows platform')
+			return False
+
 		for k in ('segwit','segwit_random','bech32'):
 			if getattr(cfg,k):
 				segwit_opt = k

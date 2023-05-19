@@ -81,6 +81,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 	color        = True
 	mountpoint_basename = 'mmgen_autosign'
 	no_insert_check = True
+	win_skip = True
 
 	def __init__(self,trunner,cfgs,spawn):
 
@@ -88,9 +89,6 @@ class TestSuiteAutosignBase(TestSuiteBase):
 
 		if trunner == None:
 			return
-
-		if gc.platform == 'win':
-			die(1,f'Test {self.name} not supported for Windows platform')
 
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 

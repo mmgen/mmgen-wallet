@@ -211,14 +211,17 @@ class unit_tests:
 					filename = fn,
 					password = 'foo',
 					seed     = xmrseed().fromhex('beadface'*8,tostr=True) )
+
+				if gc.platform == 'win':
+					wd.stop()
+					wd.start()
+
 				qmsg(f'Opening {wd.network} wallet')
 				c.call( 'open_wallet', filename=fn, password='foo' )
 
-			for md,wd in daemons:
-				wd.wait = False
-				await wd.rpc.stop_daemon()
+				await c.stop_daemon()
+
 				if not cfg.no_daemon_stop:
-					md.wait = False
 					await md.rpc.stop_daemon()
 
 			gmsg('OK')

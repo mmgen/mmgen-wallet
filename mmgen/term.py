@@ -272,7 +272,12 @@ class MMGenTermMSWinStub(MMGenTermMSWin):
 		Use stdin to allow UTF-8 and emulate the one-character behavior of MMGenTermMSWin
 		"""
 		msg_r(prompt)
-		return sys.stdin.read(1)
+		while True:
+			try:
+				return sys.stdin.read(1)
+			except:
+				msg('[read error, trying again]')
+				time.sleep(0.5)
 
 	get_char_raw = get_char
 

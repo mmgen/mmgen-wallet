@@ -34,6 +34,7 @@ class TestSuiteBase:
 	segwit_opts_ok = False
 	color = False
 	need_daemon = False
+	win_skip = False
 
 	def __init__(self,trunner,cfgs,spawn):
 		if hasattr(self,'tr'): # init will be called multiple times for classes with multiple inheritance

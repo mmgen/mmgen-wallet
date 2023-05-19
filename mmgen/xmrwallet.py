@@ -22,7 +22,7 @@ xmrwallet.py - MoneroWalletOps class
 
 import re,time,json,atexit
 from collections import namedtuple
-from pathlib import PosixPath as Path
+from pathlib import Path
 
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .obj import CoinTxID,Int

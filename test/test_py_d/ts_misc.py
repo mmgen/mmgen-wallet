@@ -182,6 +182,9 @@ class TestSuiteHelp(TestSuiteBase):
 		if self.proto.coin not in ('BTC','XMR') and 'xmrwallet' in scripts:
 			scripts.remove('xmrwallet')
 
+		if gc.platform == 'win' and 'autosign' in scripts:
+			scripts.remove('autosign')
+
 		for s in sorted(scripts):
 			t = self.spawn(f'mmgen-{s}',[arg],extra_desc=f'(mmgen-{s})')
 			t.expect(expect,regex=True)

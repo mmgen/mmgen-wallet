@@ -54,7 +54,9 @@ class TwJSON:
 				from ..addrlist import AddrIdxList
 				prune_id = AddrIdxList(idx_list=self.pruned).id_str
 				fn = get_fn(prune_id)
-				if len(fn) > os.statvfs(self.cfg.outdir or os.curdir).f_namemax:
+				from ..cfg import gc
+				mf = 255 if gc.platform == 'win' else os.statvfs(self.cfg.outdir or os.curdir).f_namemax
+				if len(fn) > mf:
 					fn = get_fn(f'idhash={make_chksum_8(prune_id.encode()).lower()}')
 			else:
 				fn = get_fn(None)
