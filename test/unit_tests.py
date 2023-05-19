@@ -79,10 +79,15 @@ if cfg.list:
 	Msg(' '.join(all_tests))
 	sys.exit(0)
 
-class UnitTestHelpers(object):
+class UnitTestHelpers:
 
-	@classmethod
-	def process_bad_data(cls,data):
+	def __init__(self,subtest_name):
+		self.subtest_name = subtest_name
+
+	def skip_msg(self,desc):
+		cfg._util.qmsg(gray(f'Skipping subtest {self.subtest_name.replace("_","-")!r} for {desc}'))
+
+	def process_bad_data(self,data):
 		if os.getenv('PYTHONOPTIMIZE'):
 			ymsg('PYTHONOPTIMIZE set, skipping error handling tests')
 			return
@@ -116,10 +121,10 @@ def run_test(test,subtest=None):
 		msg(f'Running unit subtest {test}.{subtest_disp}')
 		t = getattr(mod,'unit_tests')()
 		if hasattr(t,'_pre_subtest'):
-			getattr(t,'_pre_subtest')(test,subtest,UnitTestHelpers)
-		ret = getattr(t,subtest.replace('-','_'))(test,UnitTestHelpers)
+			getattr(t,'_pre_subtest')(test,subtest,UnitTestHelpers(subtest))
+		ret = getattr(t,subtest.replace('-','_'))(test,UnitTestHelpers(subtest))
 		if hasattr(t,'_post_subtest'):
-			getattr(t,'_post_subtest')(test,subtest,UnitTestHelpers)
+			getattr(t,'_post_subtest')(test,subtest,UnitTestHelpers(subtest))
 		if type(ret).__name__ == 'coroutine':
 			ret = async_run(ret)
 		if not ret:
@@ -141,17 +146,17 @@ def run_test(test,subtest=None):
 			for subtest in subtests:
 				subtest_disp = subtest.replace('_','-')
 				if cfg.no_altcoin_deps and subtest in altcoin_deps:
-					cfg._util.qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping {subtest_disp!r}'))
+					cfg._util.qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping subtest {subtest_disp!r}'))
 					continue
 				if gc.platform == 'win' and subtest in win_skip:
-					cfg._util.qmsg(gray(f'Skipping {subtest_disp!r} for Windows platform'))
+					cfg._util.qmsg(gray(f'Skipping subtest {subtest_disp!r} for Windows platform'))
 					continue
 				elif platform.machine() == 'aarch64' and subtest in arm_skip:
-					cfg._util.qmsg(gray(f'Skipping {subtest_disp!r} for ARM platform'))
+					cfg._util.qmsg(gray(f'Skipping subtest {subtest_disp!r} for ARM platform'))
 					continue
 				run_subtest(subtest)
 		else:
-			if not mod.unit_test().run_test(test,UnitTestHelpers):
+			if not mod.unit_test().run_test(test,UnitTestHelpers(test)):
 				die(4,'Unit test {test!r} failed')
 
 try:

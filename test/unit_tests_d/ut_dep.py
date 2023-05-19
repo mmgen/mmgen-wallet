@@ -31,7 +31,7 @@ class unit_tests:
 	def pysha3(self,name,ut): # ETH,XMR
 		from mmgen.pyversion import python_version
 		if python_version >= '3.11':
-			ymsg(f'Skipping pysha3 for Python version {python_version}')
+			ut.skip_msg(f'Python version {python_version}')
 		else:
 			from sha3 import keccak_256
 		return True
