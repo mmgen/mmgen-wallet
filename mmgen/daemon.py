@@ -265,7 +265,7 @@ class CoinDaemon(Daemon):
 		'BCH': _cd(['bitcoin_cash_node']),
 		'LTC': _cd(['litecoin_core']),
 		'XMR': _cd(['monero']),
-		'ETH': _cd(['openethereum','geth','erigon']),
+		'ETH': _cd(['geth','erigon','openethereum']),
 		'ETC': _cd(['parity']),
 	}
 

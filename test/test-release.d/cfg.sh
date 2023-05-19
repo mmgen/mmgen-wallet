@@ -132,15 +132,10 @@ init_tests() {
 
 	d_eth="operations for Ethereum and Ethereum Classic using devnet"
 	t_eth="
-		oe     $test_py --coin=eth --daemon-id=openethereum ethdev
-		geth   $test_py --coin=eth --daemon-id=geth ethdev
+		geth   $test_py --coin=eth ethdev
 		parity $test_py --coin=etc ethdev
 	"
-
-	[ "$FAST" ] && t_eth_skip='oe'
 	[ "$ARM32" -o "$ARM64" ] && t_eth_skip+=' parity'
-	# ARM openethereum available only on ArchLinuxArm:
-	[ \( "$ARM32" -o "$ARM64" \) -a "$DISTRO" != 'archarm' ] && t_eth_skip+=' oe'
 
 	d_autosign="transaction and message autosigning"
 	t_autosign="- $test_py autosign"
