@@ -399,6 +399,15 @@ def async_run(coro):
 	import asyncio
 	return asyncio.run(coro)
 
+def load_cryptodomex(called=[]):
+	if not called:
+		try:
+			import Cryptodome
+		except ImportError:
+			import Crypto
+			sys.modules['Cryptodome'] = sys.modules['Crypto']
+		called.append(True)
+
 def wrap_ripemd160(called=[]):
 	if not called:
 		try:

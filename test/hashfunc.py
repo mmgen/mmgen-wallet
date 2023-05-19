@@ -109,12 +109,15 @@ class TestKeccak(TestHashFunc):
 		from mmgen.contrib.keccak import keccak_256
 		self.t_cls = keccak_256
 		from mmgen.pyversion import python_version
-		if python_version >= '3.11':
-			ymsg(f'Skipping keccak random data test for Python version {python_version} (no pysha3)')
-			self.hashlib = None
-		elif gc.platform == 'win':
-			ymsg(f'Skipping keccak random data test for Windows platform (no pysha3)')
-			self.hashlib = None
+		if python_version >= '3.11' or gc.platform == 'win':
+			class hashlib:
+				@staticmethod
+				def keccak_256(data):
+					return keccak.new(data=data,digest_bytes=32)
+			from mmgen.util import load_cryptodomex
+			load_cryptodomex()
+			from Cryptodome.Hash import keccak
+			self.hashlib = hashlib
 		else:
 			import sha3
 			self.hashlib = sha3

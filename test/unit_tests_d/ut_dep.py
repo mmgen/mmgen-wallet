@@ -15,7 +15,7 @@ from ..include.common import cfg,vmsg,check_solc_ver
 
 class unit_tests:
 
-	altcoin_deps = ('pysha3','py_ecc','solc')
+	altcoin_deps = ('pysha3','py_ecc','solc','pycryptodomex')
 	win_skip = ('pysha3','led')
 
 	def led(self,name,ut):
@@ -34,6 +34,21 @@ class unit_tests:
 			ut.skip_msg(f'Python version {python_version}')
 		else:
 			from sha3 import keccak_256
+		return True
+
+	def pycryptodomex(self,name,ut): # ETH,XMR
+		from mmgen.pyversion import python_version
+		if python_version >= '3.11' or gc.platform == 'win':
+			try:
+				from mmgen.util import load_cryptodomex
+			except Exception as e:
+				msg(str(e))
+				ymsg('Please install the ‘pycryptodome’ or ‘pycryptodomex’ package on your system')
+				return False
+		elif gc.platform != 'win':
+			ut.skip_msg(f'platform {gc.platform!r}')
+		else:
+			ut.skip_msg(f'Python version {python_version}')
 		return True
 
 	def py_ecc(self,name,ut): # ETH
