@@ -9,13 +9,28 @@ cache_path = os.path.join(os.environ['HOME'],'.cache','mmgen')
 ext_path = os.path.join(cache_path,'secp256k1')
 
 def build_libsecp256k1():
+
+	def fix_broken_libpython_fn():
+		from pathlib import Path
+		from_path = Path('C:/msys64/mingw64/lib/libpython3.10.dll.a')
+		to_path   = Path('C:/msys64/mingw64/lib/libpython310.dll.a')
+		if from_path.exists() and not to_path.exists():
+			import shutil
+			print(f'Fixing broken library filename: {from_path.name!r} -> {to_path.name!r}')
+			shutil.copy2(from_path,to_path)
+
+	import platform
+	if platform.system() == 'Windows':
+		fix_broken_libpython_fn()
+
 	if not os.path.exists(cache_path):
 		os.makedirs(cache_path)
+
 	if not os.path.exists(ext_path):
 		print('\nCloning libsecp256k1')
 		run(['git','clone','https://github.com/bitcoin-core/secp256k1.git'],check=True,cwd=cache_path)
+
 	if not os.path.exists(os.path.join(ext_path,'.libs/libsecp256k1.a')):
-		import platform
 		print('\nBuilding libsecp256k1')
 		cmds = {
 			'Windows': (
