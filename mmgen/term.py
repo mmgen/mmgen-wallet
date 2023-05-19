@@ -212,6 +212,7 @@ class MMGenTermMSWin(MMGenTerm):
 		if x and y:
 			return _term_dimensions(x,y)
 		else:
+			from .color import yellow
 			msg(yellow('Warning: could not get terminal size. Using fallback dimensions.'))
 			return _term_dimensions(80,25)
 

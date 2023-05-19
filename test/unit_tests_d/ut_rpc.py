@@ -226,6 +226,6 @@ class unit_tests:
 		from mmgen.xmrseed import xmrseed
 		import shutil
 		shutil.rmtree('test/trash2',ignore_errors=True)
-		os.makedirs('test/trash2')
+		os.makedirs('test/trash2/wallet_rpc')
 		async_run(run())
 		return True

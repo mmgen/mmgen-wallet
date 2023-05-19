@@ -16,7 +16,7 @@ from ..include.common import cfg,vmsg,check_solc_ver
 class unit_tests:
 
 	altcoin_deps = ('pysha3','py_ecc','solc')
-	win_skip = ('aiohttp','pysha3','led')
+	win_skip = ('pysha3','led')
 
 	def led(self,name,ut):
 		from mmgen.led import LEDControl

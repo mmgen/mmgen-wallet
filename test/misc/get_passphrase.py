@@ -10,8 +10,9 @@ from mmgen.common import *
 opts_data = {
 	'text': {
 		'desc':    '',
-		'usage':   '',
+		'usage':   f'crypto | seed',
 		'options': """
+-h, --help            Print this help message
 -P, --passwd-file=f   a
 -p, --hash-preset=p   b
 -r, --usr-randchars=n c

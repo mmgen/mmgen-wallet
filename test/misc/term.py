@@ -159,7 +159,7 @@ def tt_txview():
 	cmsg('Testing tx.info.view_with_prompt() (try each viewing option)')
 	from mmgen.tx import UnsignedTX
 	fn = 'test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx'
-	tx = UnsignedTX(filename=fn,quiet_open=True)
+	tx = UnsignedTX(cfg=cfg,filename=fn,quiet_open=True)
 	while True:
 		tx.info.view_with_prompt('View data for transaction?',pause=False)
 		set_vt100()

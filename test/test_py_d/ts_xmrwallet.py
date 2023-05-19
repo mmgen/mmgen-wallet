@@ -825,14 +825,14 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				break
 			await asyncio.sleep(2)
 			h = await self._get_height()
-			if count > 12: # something has probably gone wrong
+			if count > 12: # something might have gone wrong, so be more verbose
 				imsg(f'Height: {h} ')
 				print_balance(dest,bal_info)
 			else:
 				imsg_r(f'{h} ')
 				oqmsg_r('+')
 		else:
-			die(2,'Timeout exceeded, balance {bal_info.ub!r}')
+			die(2,f'Timeout exceeded, balance {bal_info.ub!r}')
 
 		await self.stop_mining()
 

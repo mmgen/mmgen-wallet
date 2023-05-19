@@ -213,6 +213,7 @@ proto = cfg._proto
 
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
 trash_dir = os.path.join('test','trash')
+trash_dir2 = os.path.join('test','trash2')
 
 if not cfg.skipping_deps:
 	shm_dir = create_shm_dir(data_dir,trash_dir)
@@ -315,7 +316,8 @@ def clean(usr_dirs=None,clean_overlay=True):
 		))
 	cleandir(data_dir)
 	cleandir(trash_dir)
-	iqmsg(green(f'Cleaned directories {data_dir!r} {trash_dir!r}'))
+	cleandir(trash_dir2)
+	iqmsg(green(f'Cleaned directories {data_dir!r} {trash_dir!r} {trash_dir2!r}'))
 
 	if clean_overlay:
 		cleandir(overlay_tree_dir)
@@ -326,7 +328,7 @@ def create_tmp_dirs(shm_dir):
 		for cfg in sorted(cfgs):
 			mk_tmpdir(cfgs[cfg]['tmpdir'])
 	else:
-		os.makedirs( 'test/tmp', mode=0o755, exist_ok=True )
+		os.makedirs( os.path.join('test','tmp'), mode=0o755, exist_ok=True )
 		for cfg in sorted(cfgs):
 			src = os.path.join(shm_dir,cfgs[cfg]['tmpdir'].split('/')[-1])
 			mk_tmpdir(src)

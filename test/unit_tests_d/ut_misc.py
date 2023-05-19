@@ -33,7 +33,7 @@ class unit_tests:
 		assert ver['current'] < '7.0'
 		assert ver['3.3']     < '4.3'
 		assert ver['3.12']    < '7.0'
-		assert ver['3.3']     < '3.12'
+		assert ver['3.3']     < '3.12' # ensure we’re comparing numerically, not stringwise
 
 		assert ver['current'] <= ver['current']
 		assert ver['3.3']     <= '4.3'
@@ -60,6 +60,7 @@ class unit_tests:
 		assert ver['3.12']    >= '3.3'
 
 		assert '3.0' < ver['3.12'] < '3.13'
+		assert '3.9' < ver['3.12'] # ensure we’re reverse comparing numerically, not stringwise
 		assert '3.3' < ver['4.3']  <= '4.3'
 		assert '4.3' <= ver['4.3'] <= '4.3'
 		assert '4.3' == ver['4.3'] == '4.3'
