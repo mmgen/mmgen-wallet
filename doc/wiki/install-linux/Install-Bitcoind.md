@@ -17,7 +17,7 @@ synchronize often (once a week, for example) and take care to import your
 addresses **before** spending into them, then it’s possible to get by with a
 more low-powered computer as your online machine.
 
-### <a name='a_d'>Download:</a>
+### <a id="a_d">Download:</a>
 
 > **Bitcoin Core:**
 
@@ -37,7 +37,7 @@ more low-powered computer as your online machine.
 >> versions appropriate for your online and offline computers.  Windows users
 >> should choose the executable installer.
 
-### <a name='a_i'>Install (both online and offline computers):</a>
+### <a id="a_i">Install (both online and offline computers):</a>
 
 > **Bitcoin Core:**
 
@@ -69,7 +69,7 @@ more low-powered computer as your online machine.
 >> **Linux:** Unpack the archive and copy the `litecoind` and
 >> `litecoin-cli` binaries to `/usr/local/bin`.
 
-### <a name='a_r'>Run (both online and offline computers):</a>
+### <a id="a_r">Run (both online and offline computers):</a>
 
 > **Windows:**
 
@@ -77,15 +77,17 @@ more low-powered computer as your online machine.
 >> background, so to run multiple daemons simultaneously you must start each
 >> one in a separate terminal window.  Start your daemons like this:
 
-	# Bitcoin Core:
-	$ bitcoind
+```text
+# Bitcoin Core:
+$ bitcoind
 
-	# Bitcoin Cash Node:
-	$ mkdir $APPDATA/Bitcoin-Cash-Node
-	$ bitcoind-bchn --listen=0 --rpcport=8442 --datadir=$APPDATA/Bitcoin-Cash-Node --usecashaddr=0
+# Bitcoin Cash Node:
+$ mkdir $APPDATA/Bitcoin-Cash-Node
+$ bitcoind-bchn --listen=0 --rpcport=8442 --datadir=$APPDATA/Bitcoin-Cash-Node --usecashaddr=0
 
-	# Litecoin
-	$ litecoind
+# Litecoin
+$ litecoind
+```
 
 >> Note that the `--listen=0` argument is required only when running Bitcoin
 >> Core and Bitcoin Cash Node simultaneously.
@@ -94,26 +96,30 @@ more low-powered computer as your online machine.
 
 >> Linux users start their daemons like this:
 
-	# Bitcoin Core:
-	$ bitcoind --daemon
+```text
+# Bitcoin Core:
+$ bitcoind --daemon
 
-	# Bitcoin Cash Node:
-	$ mkdir ~/.bitcoin-bchn
-	$ bitcoind-bchn --daemon --listen=0 --rpcport=8442 --datadir=$HOME/.bitcoin-bchn --usecashaddr=0
+# Bitcoin Cash Node:
+$ mkdir ~/.bitcoin-bchn
+$ bitcoind-bchn --daemon --listen=0 --rpcport=8442 --datadir=$HOME/.bitcoin-bchn --usecashaddr=0
 
-	# Litecoin:
-	$ litecoind --daemon
+# Litecoin:
+$ litecoind --daemon
+```
 
 > Communicate with your daemons like this:
 
-	# Core:
-	$ bitcoin-cli help
+```text
+# Core:
+$ bitcoin-cli help
 
-	# Bitcoin Cash Node:
-	$ bitcoin-cli-bchn --rpcport=8442 help
+# Bitcoin Cash Node:
+$ bitcoin-cli-bchn --rpcport=8442 help
 
-	# Litecoin:
-	$ litecoin-cli help
+# Litecoin:
+$ litecoin-cli help
+```
 
 > Warning: If you’re using an existing Bitcoin or Litecoin installation, **move
 > your wallet.dat out of harm’s way** before starting the daemon.  The new

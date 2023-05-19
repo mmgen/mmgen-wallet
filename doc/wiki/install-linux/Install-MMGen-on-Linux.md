@@ -1,6 +1,6 @@
 *NOTE: the instructions on this page are for a Bitcoin-only setup.  For
-altcoin support, additional installation steps are required.  See
-[**Altcoin and Forkcoin Support**][af] for more information.*
+altcoin support, additional installation steps are required.  See*
+[**Altcoin and Forkcoin Support**][af] *for more information.*
 
 ### Perform the following steps on both your online and offline computers:
 
@@ -10,27 +10,40 @@ For computers with no Internet connection, see **Note for offline machines** bel
 
 ##### Debian/Ubuntu:
 
-	$ sudo apt-get install curl git gcc libtool make autoconf libgmp-dev libssl-dev libpcre3-dev libmpfr-dev libmpc-dev python3-dev python3-pip
+```text
+$ sudo apt-get install curl git gcc libtool make autoconf libgmp-dev libssl-dev libpcre3-dev libmpfr-dev libmpc-dev python3-dev python3-pip
+```
 
 ##### Arch Linux:
 
-	$ sudo pacman -S curl git gcc libtool make autoconf automake autogen pcre python-pip
+```text
+$ sudo pacman -S curl git gcc libtool make autoconf automake autogen pcre python-pip
+```
 
 #### Upgrade the build tools:
 
-	$ python3 -m pip install --user --upgrade pip setuptools build wheel
+```text
+$ python3 -m pip install --user --upgrade pip setuptools build wheel
+```
+
+If you get an ‘externally-managed-environment’ error (with Debian bookworm,
+for example), add --break-system-packages to the command line.  Note that this
+will not in fact break any system packages, as pip installs all packages under
+the user’s home directory when --user is in effect.
 
 #### Install MMGen:
 
 Make sure that `~/.local/bin` is in `PATH`.  Existing MMGen users should delete
 any old installations under `/usr` or `/usr/local`.
 
-	$ git clone https://github.com/mmgen/mmgen.git
-	$ cd mmgen
-	$ git checkout stable_linux # see 'Note' below
-	$ python3 -m build --no-isolation
-	$ python3 -m pip install --user --upgrade dist/*.whl # see 'Install Note' below
-	$ cd ..
+```text
+$ git clone https://github.com/mmgen/mmgen.git
+$ cd mmgen
+$ git checkout stable_linux # see 'Note' below
+$ python3 -m build --no-isolation
+$ python3 -m pip install --user --upgrade dist/*.whl # see 'Install Note' below
+$ cd ..
+```
 
 **Note:** if you want to use features that have appeared since the latest
 `stable_linux` release, then you can omit the `git checkout` step and remain on

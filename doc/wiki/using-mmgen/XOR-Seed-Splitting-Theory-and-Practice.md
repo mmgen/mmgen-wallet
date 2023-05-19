@@ -6,7 +6,7 @@
    - [Master Shares](#a_ms)
 + [Seed Splitting with MMGen](#a_ss)
 
-### <a name="a_xor">XOR Seed Splitting: A Theoretical Introduction</a>
+### <a id="a_xor">XOR Seed Splitting: A Theoretical Introduction</a>
 
 The bitwise exclusive-or operation (usually denoted as `XOR`, or “![⊕]”)
 has interesting properties that make it very useful in cryptography.
@@ -94,7 +94,7 @@ Join shares 1 through *n* to recover the seed:
 
 Knowledge of any combination of *n*-1 shares reveals nothing about the seed.
 
-#### <a name="a_ds">Deterministic Shares</a>
+#### <a id="a_ds">Deterministic Shares</a>
 
 So we’ve seen that the mathematics behind XOR seed splitting is basically
 trivial.  In practice, though, there are several issues that need to be
@@ -134,14 +134,14 @@ to just keep hashing:
 ![]["share2 = SHA256(share1), share3 = SHA256(share2), ..."]
 
 But you may have already spotted the mistake here: the owner of the first share
-can generate all the successive shares up to *n*-1.  Without the final *n*’th
+can generate all the successive shares up to *n*-1.  Without the final <em>n</em>’th
 share he can’t recover the seed, but the whole benefit of having the additional
 shares has been nullified.
 
 ***Important disclaimer:*** *there are other reasons, beyond the scope of this
 discussion, why using a bare hash of the seed as our random number source might
-not be a good idea.  Bear in mind that this is a simplified **theoretical**
-introduction, and the examples presented herein are not suitable for
+not be a good idea.  Bear in mind that this is a simplified* **theoretical**
+*introduction, and the examples presented herein are not suitable for
 implementation in real production code.*
 
 The above example illustrates what happens when we violate the golden rule of
@@ -160,7 +160,7 @@ algorithm is ideally suited for this:
 Using these unique pseudorandom values, we can now split and rejoin our seed in
 the manner described at the end of the previous section.
 
-#### <a name="a_ns">Named Splits</a>
+#### <a id="a_ns">Named Splits</a>
 
 Now, we’d like to use seed splitting as part of our backup strategy, entrusting
 shares of our seed with various people we know.  Multiple 2-way splits seems
@@ -197,7 +197,7 @@ Create a 4-way split “friends” with Bob, Alice and Carol:
 
 Thus we’ve ensured the uniqueness of all shares across all possible splits.
 
-#### <a name="a_ms">Master Shares</a>
+#### <a id="a_ms">Master Shares</a>
 
 As the number of splits we create grows, the question of how to store our shares
 becomes especially problematic.  Each new split creates another new share that
@@ -235,7 +235,7 @@ Also note that an additional field, `master<n>`, has been appended to the share
 identifiers.  This is to ensure that the shares of each master share split are
 unique, and differ from their non-master-share counterparts.
 
-### <a name="a_ss">Seed Splitting with MMGen</a>
+### <a id="a_ss">Seed Splitting with MMGen</a>
 
 The MMGen wallet implements the seed splitting and joining functionality
 described above via the commands [`mmgen-seedsplit`][SS] and
@@ -246,37 +246,43 @@ Shares can be made from and exported to all supported MMGen wallet formats.
 This means you can split a BIP39 seed phrase, for example, and output the share
 back to BIP39 in one easy command:
 
-	# Create share 1 of a 2-way split of the provided BIP39 seed phrase:
-	$ mmgen-seedsplit -o bip39 sample.bip39 1:2
+```text
+# Create share 1 of a 2-way split of the provided BIP39 seed phrase:
+$ mmgen-seedsplit -o bip39 sample.bip39 1:2
+```
 
 Each share of a split has a unique share ID.  The share IDs are displayed by
 `mmgen-seedsplit` so that the user may record them for later reference.  They
 may also be viewed with the `mmgen-tool list_shares` command:
 
-	# List the share IDs of a 2-way named split 'alice' of your default wallet:
-	$ mmgen-tool list_shares 2 id_str=alice
+```bash
+# List the share IDs of a 2-way named split 'alice' of your default wallet:
+$ mmgen-tool list_shares 2 id_str=alice
 
-	Seed: 71CA5049 (256 bits)
-	Split Type: 2-of-2 (XOR)
-	ID String: alice
+Seed: 71CA5049 (256 bits)
+Split Type: 2-of-2 (XOR)
+ID String: alice
 
-	Shares
-	------
-	1: D0BBD210
-	2: 25F0BD65
+Shares
+------
+1: D0BBD210
+2: 25F0BD65
+```
 
-	# List the share IDs of a 3-way default split of provided BIP39 seed phrase:
-	$ mmgen-tool list_shares 3 wallet=sample.bip39
+```bash
+# List the share IDs of a 3-way default split of provided BIP39 seed phrase:
+$ mmgen-tool list_shares 3 wallet=sample.bip39
 
-	Seed: 03BAE887 (128 bits)
-	Split Type: 3-of-3 (XOR)
-	ID String: default
+Seed: 03BAE887 (128 bits)
+Split Type: 3-of-3 (XOR)
+ID String: default
 
-	Shares
-	------
-	1: 83B9AF74
-	2: 109485F4
-	3: 424522DC
+Shares
+------
+1: 83B9AF74
+2: 109485F4
+3: 424522DC
+```
 
 Share IDs are handy for checking the correctness of shares when rejoining a
 split.  Let’s say you’ve decided to rejoin your 2-way split with Alice, whose
@@ -294,8 +300,10 @@ First, each share must be converted to hexadecimal data.  If your shares are in
 BIP39 format, for example, there are command-line tools available to do this.
 Then a single line of Python code is all that’s required to finish the job:
 
-	$ python3
-	>>> seed_hex = hex(int(share1_hex,16) ^ int(share2_hex,16)) # rejoin a 2-way split
+```python
+$ python3
+>>> seed_hex = hex(int(share1_hex,16) ^ int(share2_hex,16)) # rejoin a 2-way split
+```
 
 (Note that the XOR operator in Python is `^`.)
 
@@ -338,5 +346,5 @@ example will be provided in a future version of this document.
 [wm]: https://en.wikipedia.org/wiki/Modular_arithmetic
 [otp]: https://en.wikipedia.org/wiki/One-time_pad
 [sc]: https://en.wikipedia.org/wiki/Stream_cipher
-[SS]: seedsplit-[MMGen-command-help]
-[SJ]: seedjoin-[MMGen-command-help]
+[SS]: command-help-seedsplit
+[SJ]: command-help-seedjoin

@@ -22,44 +22,60 @@ The test suite requires the `/dev/loopX` devices to exist and be enabled.  If
 you’re running in an LXC container, note that only privileged containers allow
 loop devices.  You may enable them in the config file as follows:
 
-	lxc.cgroup2.devices.allow = b 7:0 rwm # /dev/loop0
-	lxc.cgroup2.devices.allow = b 7:1 rwm # /dev/loop1
-	lxc.cgroup2.devices.allow = b 7:2 rwm # /dev/loop2
+```text
+lxc.cgroup2.devices.allow = b 7:0 rwm # /dev/loop0
+lxc.cgroup2.devices.allow = b 7:1 rwm # /dev/loop1
+lxc.cgroup2.devices.allow = b 7:2 rwm # /dev/loop2
+```
 
 Every time the container is started, you may need to create the files afresh:
 
-	# mknod /dev/loop0 b 7 0
-	# mknod /dev/loop1 b 7 1
-	# mknod /dev/loop2 b 7 2
+```text
+# mknod /dev/loop0 b 7 0
+# mknod /dev/loop1 b 7 1
+# mknod /dev/loop2 b 7 2
+```
 
 ### BTC-only testing
 
 Clone the Bitcoin Core repo somewhere on your system:
 
-	$ git clone https://github.com/bitcoin/bitcoin
+```text
+$ git clone https://github.com/bitcoin/bitcoin
+```
 
 Install the Bitcoin Core daemon [(source)][sd] [(binaries)][bd].
 
 Point the test suite to your copy of the Bitcoin Core repo:
 
-	$ export CORE_REPO_ROOT=/path/to/bitcoin/core/repo
+```text
+$ export CORE_REPO_ROOT=/path/to/bitcoin/core/repo
+```
 
 Install Pycoin:
 
-	$ python3 -m pip install --user pycoin
+```text
+$ python3 -m pip install --user pycoin
+```
 
 CD to the MMGen repository root and build without installing:
 
-	$ cd path/to/mmgen/repo
-	$ python3 setup.py build_ext --inplace
+```text
+$ cd path/to/mmgen/repo
+$ python3 setup.py build_ext --inplace
+```
 
 Run the following if upgrading from a previous version of MMGen:
 
-	$ test/test.py clean
+```text
+$ test/test.py clean
+```
 
 Run the test suite in fast mode, skipping altcoin tests:
 
-	$ test/test-release.sh -F noalt
+```text
+$ test/test-release.sh -FA
+```
 
 ### Complete testing (BTC plus all supported altcoins)
 
@@ -84,52 +100,66 @@ steps:
 
 Open PowerShell as administrator, and at the DOS prompt, execute:
 
-	system32> net user administrator /active:yes
-	system32> C:\\msys64\usr\bin\bash.exe --login
+```text
+system32> net user administrator /active:yes
+system32> C:\\msys64\usr\bin\bash.exe --login
+```
 
 Now, at the MSYS2 prompt, cd to the MMGen repository root and run the setup
 script:
 
-	$ scripts/msys2-sshd-setup.sh
+```text
+$ scripts/msys2-sshd-setup.sh
+```
 
 The daemon should now start automatically every time the system is booted. It
 may also be started and stopped manually at the DOS or MSYS2 prompt as follows
 (PowerShell must be running with admin privileges):
 
-	# net start msys2_sshd
-	# net stop msys2_sshd
+```text
+# net start msys2_sshd
+# net stop msys2_sshd
+```
 
 #### Monero-Python
 
-	$ python3 -m pip install --user pycryptodomex ipaddress varint
-	$ python3 -m pip install --user --no-deps monero
+```text
+$ python3 -m pip install --user pycryptodomex ipaddress varint
+$ python3 -m pip install --user --no-deps monero
+```
 
 #### Vanitygen PlusPlus (forked from Vanitygen Plus)
 
-    $ git clone https://github.com/10gic/vanitygen-plusplus
-	$ cd vanitygen-plusplus
-	$ git checkout -b vanitygen-plus e7858035d092  # rewind to fork commit
-	$ make keyconv # ‘mingw32-make.exe keyconv’ for MSYS2
-	$ sudo install --strip keyconv /usr/local/bin  # ‘keyconv.exe’ for MSYS2
-	$ cd ..
+```text
+$ git clone https://github.com/10gic/vanitygen-plusplus
+$ cd vanitygen-plusplus
+$ git checkout -b vanitygen-plus e7858035d092  # rewind to fork commit
+$ make keyconv # ‘mingw32-make.exe keyconv’ for MSYS2
+$ sudo install --strip keyconv /usr/local/bin  # ‘keyconv.exe’ for MSYS2
+$ cd ..
+```
 
 #### Zcash-Mini
 
-	$ sudo apt-get install golang  # skip this if Go is already installed
-    $ git clone https://github.com/FiloSottile/zcash-mini
-    $ cd zcash-mini
-	$ go mod init zcash-mini
-	$ go mod tidy
-	$ go build -mod=mod # or just ’go build’
-	$ sudo install --strip ./zcash-mini /usr/local/bin
-	$ cd ..
+```text
+$ sudo apt-get install golang  # skip this if Go is already installed
+$ git clone https://github.com/FiloSottile/zcash-mini
+$ cd zcash-mini
+$ go mod init zcash-mini
+$ go mod tidy
+$ go build -mod=mod # or just ’go build’
+$ sudo install --strip ./zcash-mini /usr/local/bin
+$ cd ..
+```
 
 #### Ethkey
 
 On Arch Linux and ArchLinuxArm systems, the ‘ethkey’ utility is included in the
 OpenEthereum package:
 
-	$ pacman -S openethereum
+```text
+$ pacman -S openethereum
+```
 
 For 64-bit Windows and Linux systems, ‘ethkey’ can be found in the zip archives
 distributed with [this release][oz].
@@ -146,7 +176,9 @@ If you experience such a failure, just restart the test.
 
 Now you can run the test suite for all coins:
 
-	$ test/test-release.sh -F
+```text
+$ test/test-release.sh -F
+```
 
 ## Overview of the individual tests
 
