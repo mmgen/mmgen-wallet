@@ -41,6 +41,7 @@ opts_data = {
 -D, --no-daemon-stop      Don't stop auto-started daemons after running tests
 -f, --fast                Speed up execution by reducing rounds on some tests
 -l, --list                List available tests
+-L, --list-subtests       List available tests and subtests
 -n, --names               Print command names instead of descriptions
 -q, --quiet               Produce quieter output
 -x, --exclude=T           Exclude tests 'T' (comma-separated)
@@ -79,6 +80,20 @@ if cfg.list:
 	Msg(' '.join(all_tests))
 	sys.exit(0)
 
+if cfg.list_subtests:
+	def gen():
+		for test in all_tests:
+			mod = importlib.import_module(f'test.unit_tests_d.{file_pfx}{test}')
+			if hasattr(mod,'unit_tests'):
+				t = getattr(mod,'unit_tests')
+				subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
+				yield fs.format( test, ' '.join(f'{subtest}' for subtest in subtests) )
+			else:
+				yield test
+	fs = '{:%s} {}' % max(len(t) for t in all_tests)
+	Msg( fs.format('TEST','SUBTESTS') + '\n' + '\n'.join(gen()) )
+	sys.exit(0)
+
 class UnitTestHelpers:
 
 	def __init__(self,subtest_name):
@@ -113,8 +128,7 @@ class UnitTestHelpers:
 tests_seen = []
 
 def run_test(test,subtest=None):
-	modname = f'test.unit_tests_d.{file_pfx}{test}'
-	mod = importlib.import_module(modname)
+	mod = importlib.import_module(f'test.unit_tests_d.{file_pfx}{test}')
 
 	def run_subtest(subtest):
 		subtest_disp = subtest.replace('_','-')
