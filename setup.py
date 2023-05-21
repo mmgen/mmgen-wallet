@@ -12,12 +12,13 @@ def build_libsecp256k1():
 
 	def fix_broken_libpython_fn():
 		from pathlib import Path
-		from_path = Path('C:/msys64/mingw64/lib/libpython3.10.dll.a')
-		to_path   = Path('C:/msys64/mingw64/lib/libpython310.dll.a')
-		if from_path.exists() and not to_path.exists():
+		path = Path(Path().resolve().anchor) / 'msys64/mingw64/lib'
+		old = path / 'libpython3.10.dll.a'
+		new = path / 'libpython310.dll.a'
+		if old.exists() and not new.exists():
 			import shutil
-			print(f'Fixing broken library filename: {from_path.name!r} -> {to_path.name!r}')
-			shutil.copy2(from_path,to_path)
+			print(f'Fixing broken library filename: {old.name!r} -> {new.name!r}')
+			shutil.copy2(old,new)
 
 	import platform
 	if platform.system() == 'Windows':

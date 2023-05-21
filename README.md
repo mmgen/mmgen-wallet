@@ -69,8 +69,7 @@ widespread standard.
 - **[Full transaction and address tracking support][T]** for Bitcoin, [Bcash][bx],
   [Litecoin][bx], [Ethereum][E], Ethereum Classic and [ERC20 tokens][E].
 - **Monero transacting and wallet management** via the interactive
-  [`mmgen-xmrwallet`][xm] command.  Offline transaction signing is possible
-  using a blockchain shared between online and offline machines.
+  [`mmgen-xmrwallet`][xm] command.
 - **[Address generation support][ag]** for the above coins, plus [Zcash][zx]
   (t and z addresses) and [144 Bitcoin-derived altcoins][ax].
 - **Support for all Bitcoin address types** including Segwit-P2SH and Bech32.

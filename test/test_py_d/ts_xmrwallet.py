@@ -155,10 +155,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				run(a+b2)
 				omsg(f'SSH SOCKS server started, listening at localhost:{cls.socks_port}')
 
+		debug_file = os.path.join('' if external_call else cls.datadir_base,'txrelay-proxy.debug')
 		a = ['ssh','-x','-o','ExitOnForwardFailure=True','-D',f'localhost:{cls.socks_port}']
 		b0 = ['-o','PasswordAuthentication=False']
 		b1 = ['localhost','true']
-		b2 = ['-fN','-E',os.path.join(cls.datadir_base,'txrelay-proxy.debug'),'localhost']
+		b2 = ['-fN','-E', debug_file, 'localhost']
 
 		if port_in_use(cls.socks_port):
 			omsg(f'Port {cls.socks_port} already in use.  Assuming SSH SOCKS server is running')

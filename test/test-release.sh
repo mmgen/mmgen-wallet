@@ -116,7 +116,7 @@ if [ "$(uname -m)" == 'armv7l' ]; then
 	ARM32=1
 elif [ "$(uname -m)" == 'aarch64' ]; then
 	ARM64=1
-elif uname -a | grep -q 'MSYS'; then
+elif [ "$MSYSTEM" ] && uname -a | grep -qi 'msys'; then
 	MSYS2=1;
 fi
 

@@ -141,9 +141,8 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 
 class unit_tests:
 
-	altcoin_deps = ('ltc','bch','geth','erigon','openethereum','parity','xmrwallet')
-	win_skip = ('xmrwallet',) # FIXME - wallet doesn't open
-	arm_skip = ('openethereum','parity') # no prebuilt binaries for ARM
+	altcoin_deps = ('ltc','bch','geth','erigon','parity','xmrwallet')
+	arm_skip = ('parity',) # no prebuilt binaries for ARM
 
 	def btc(self,name,ut):
 		return run_test(['btc','btc_tn'],test_cf_auth=True)
@@ -159,9 +158,6 @@ class unit_tests:
 
 	def erigon(self,name,ut):
 		return run_test(['eth','eth_tn','eth_rt'],daemon_ids=['erigon'])
-
-	def openethereum(self,name,ut):
-		return run_test(['eth','eth_tn','eth_rt'],daemon_ids=['openethereum'])
 
 	def parity(self,name,ut):
 		return run_test(['etc'])
