@@ -20,9 +20,14 @@ def build_libsecp256k1():
 			print(f'Fixing broken library filename: {old.name!r} -> {new.name!r}')
 			shutil.copy2(old,new)
 
+	def fix_broken_aclocal_path():
+		os.environ['ACLOCAL_PATH'] = '/ucrt64/share/aclocal:/usr/share/aclocal'
+
 	import platform
 	if platform.system() == 'Windows':
 		fix_broken_libpython_fn()
+		if os.getenv('MSYSTEM') == 'UCRT64':
+			fix_broken_aclocal_path()
 
 	if not os.path.exists(cache_path):
 		os.makedirs(cache_path)
