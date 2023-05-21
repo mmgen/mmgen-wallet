@@ -4,7 +4,7 @@
 
 #### [Ethereum (ETH), Ethereum Classic (ETC) and ERC20 Tokens](#a_eth)
 * [Install the Ethereum dependencies](#a_ed)
-* [Install and run Geth, Parity or OpenEthereum](#a_oe)
+* [Install and run Geth or Parity](#a_geth)
 * [Transacting and other basic operations](#a_tx)
 * [Creating and deploying ERC20 tokens](#a_dt)
 
@@ -37,16 +37,15 @@ From the MMGen repository root, type:
 $ python3 -m pip install --no-deps --user -r eth-requirements.txt
 ```
 
-#### <a id="a_oe">Install and run Geth, Parity or OpenEthereum</a>
+#### <a id="a_geth">Install and run Geth or Parity</a>
 
-MMGen can use either Go-Ethereum (Geth) or OpenEthereum to communicate with
-the Ethereum network.  For information on installing Geth or OE on your
-system, visit the the Geth [Github repo][ge], or the OpenEthereum [wiki][ow]
-or [Github repo][og].  On Arch Linux systems, Go-Ethereum and OpenEthereum are
-packages and may be installed with `pacman`.
+MMGen uses Go-Ethereum (Geth) to communicate with the Ethereum network.  For
+information on installing Geth on your system, visit the the Geth [Github
+repo][ge].  On Arch Linux systems, Go-Ethereum is a package and may be installed
+with `pacman`.
 
-Note that Ethereum daemons are not used for transaction signing, so you
-needn’t install them on your offline machine.
+Note that the Ethereum daemon is not used for transaction signing, so you
+needn’t install it on your offline machine.
 
 For Geth, the following command-line options are required:
 
@@ -54,19 +53,18 @@ For Geth, the following command-line options are required:
 --http --http.api=eth,web3,txpool --http.port=8745
 ```
 
-Geth and OE have dropped support for Ethereum Classic, but MMGen supports
-transacting ETC via the legacy [Parity][pd] daemon.  Invoke Parity with
-`--chain=classic --jsonrpc-port=8645`.  Other command-line options are the
-same as for OpenEthereum.
+Geth has dropped support for Ethereum Classic, but MMGen supports transacting
+ETC via the legacy [Parity][pd] daemon.  Invoke Parity with `--chain=classic
+--jsonrpc-port=8645`.
 
-If you’re running OE or Parity on a different machine from MMGen, add the
-following options to the daemon command line:
+If you’re running Parity on a different machine from MMGen, add the following
+options to the command line:
 
 ```text
 --jsonrpc-hosts=all --jsonrpc-interface=<daemon IP address>
 ```
 
-To run OE or Parity offline, use `--mode=offline`, otherwise `--mode=active`.
+To run Parity offline, use `--mode=offline`, otherwise `--mode=active`.
 
 MMGen can also be used with Parity’s light client mode, which queries other
 nodes on the network for blockchain data.  Add the `--light` option to the
@@ -74,7 +72,7 @@ Parity command line and read the applicable note in the [Transacting](#a_tx)
 section below.
 
 You may require other options as well.  Invoke your daemon with the `--help`
-switch for more complete information.
+option for more complete information.
 
 #### <a id="a_tx">Transacting and other basic operations</a>
 
@@ -88,7 +86,7 @@ Basic operations with ETH, ETC and ERC20 tokens work as described in the
 * Addresses and other hexadecimal values are given without the leading `0x`.
 * Fees are expressed in Gas price, e.g. `12G` for 12 Gwei or `1000M` for 1000
   Mwei.  This works at both the command line and interactive prompt.
-* When using OpenEthereum in light client mode, the `--cached-balances` option
+* When using Parity in light client mode, the `--cached-balances` option
   will greatly speed up operations of the `mmgen-txcreate`, `mmgen-txdo` and
   `mmgen-tool twview` commands by reducing network queries to a minimum.  If
   your account balances have changed, they may be refreshed interactively within
@@ -231,14 +229,14 @@ commands.  It’s that simple!
 ### <a id="a_xmr">Monero (XMR)</a>
 
 MMGen’s Monero support includes automated wallet creation/syncing and
-transaction creation/relaying via the `mmgen-xmrwallet` command.  Make sure
-that [Monerod][M] is installed and running and that `monero-wallet-rpc` is
-located in your executable path.
+transacting via the [`mmgen-xmrwallet`][mx] command.  Make sure that
+[Monerod][M] is installed and running and that `monero-wallet-rpc` is located
+in your executable path.
 
-*NOTE: by storing the Monero blockchain on a removable drive and installing
-Monerod on both your online and offline machines, it’s possible to perform
-wallet and transaction creation operations offline and thus avoid exposing
-private data on your online machine.*
+*The following instructions are applicable for a hot wallet setup.  To learn
+how to cold sign transactions using MMGen’s autosign feature, first
+familiarize yourself with the basic concepts here and then consult the OFFLINE
+AUTOSIGNING tutorial on the [`mmgen-xmrwallet`][mx] help screen.*
 
 To generate five Monero key/address pairs from your default wallet, invoke the
 following, making sure to answer ‘y’ at the Encrypt prompt:
@@ -277,8 +275,8 @@ $ mmgen-xmrwallet sync *XMR*.akeys.mmenc
 No user interaction is required here either, which is very helpful when you
 have multiple wallets requiring long sync times.
 
-`mmgen-xmrwallet` supports transacting via the `sweep` and `transfer`
-subcommands.  Type `mmgen-xmrwallet --help` for details.
+To learn how to transact using your wallets, continue on to the
+[`mmgen-xmrwallet`][mx] help screen.
 
 ### <a id="a_zec">Key/address generation for Zcash (ZEC)</a>
 
@@ -349,8 +347,6 @@ received only minimal testing, or no testing at all.  At startup you’ll be
 informed of the level of your selected coin’s support reliability as deemed by
 the MMGen Project.
 
-[ow]: https://openethereum.github.io/wiki
-[og]: https://github.com/openethereum/openethereum/releases
 [pd]: https://github.com/openethereum/parity-ethereum/releases/tag/v2.7.2
 [y]: https://github.com/ethereum/pyethereum
 [P]: https://pypi.org/project/pip
@@ -362,3 +358,4 @@ the MMGen Project.
 [bi]: Install-Bitcoind#a_d
 [p8]: Install-Bitcoind#a_r
 [ge]: https://github.com/ethereum/go-ethereum
+[mx]: command-help-xmrwallet

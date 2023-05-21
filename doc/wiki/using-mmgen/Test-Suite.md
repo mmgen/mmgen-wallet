@@ -55,7 +55,12 @@ $ export CORE_REPO_ROOT=/path/to/bitcoin/core/repo
 Install Pycoin:
 
 ```text
+# online install:
 $ python3 -m pip install --user pycoin
+
+# offline install:
+$ python3 -m pip download pycoin # online
+$ python3 -m pip install --user --no-build-isolation pycoin-*.tar.gz # offline
 ```
 
 CD to the MMGen repository root and build without installing:

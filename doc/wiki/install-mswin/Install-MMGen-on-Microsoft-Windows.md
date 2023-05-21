@@ -4,20 +4,19 @@
 
 #### [Install MSYS2 and MMGen](#a_m)
 * [1. Install MSYS2](#a_ms)
-* [2. Set up PowerShell as your MSYS2 terminal](#a_ps)
-* [3. Upgrade MSYS2](#a_ug)
-* [Online users](#a_ug1)
-* [Offline install](#a_ug2)
-* [4. Install MSYS2 MMGen dependencies](#a_md)
-* [Offline install](#a_md1)
-* [5. Set up your environment](#a_ev)
-* [6. Install the Python ECDSA library (offline install only)](#a_ec)
-* [7. Install the standalone scrypt package (required for strong password hashing)](#a_sc)
-* [8. Clone and copy the secp256k1 library (offline install only)](#a_se)
-* [9. Install MMGen](#a_mm)
-* [10. Install Python Ethereum dependencies (Ethereum users only)](#a_pe)
-* [11. Install and launch your coin daemons](#a_cd)
-* [12. You’re done!](#a_do)
+* [2. Upgrade MSYS2](#a_ug)
+	* [Online users](#a_ug1)
+	* [Offline install](#a_ug2)
+* [3. Install MSYS2 MMGen dependencies](#a_md)
+	* [Offline install](#a_md1)
+* [4. Set up your environment](#a_ev)
+* [5. Install the Python ECDSA library (offline install only)](#a_ec)
+* [6. Install the standalone scrypt package (required for strong password hashing)](#a_sc)
+* [7. Clone and copy the secp256k1 library (offline install only)](#a_se)
+* [8. Install MMGen](#a_mm)
+* [9. Install Python Ethereum dependencies (Ethereum users only)](#a_pe)
+* [10. Install and launch your coin daemons](#a_cd)
+* [11. You’re done!](#a_do)
 
 #### [Keeping your installation up to date](#a_u)
 * [MSYS2](#a_us)
@@ -26,16 +25,12 @@
 ## <a id="a_i">Introduction</a>
 
 MMGen is supported on Microsoft Windows via [MSYS2][mh], which provides a
-Unix-like command-line environment within Windows.  Windows 7 and later versions
-are supported.
+Unix-like command-line environment within Windows.  Windows 8.1 and later
+versions are supported.
 
 MSYS2 is the successor project to MinGW-64 and the earlier MSYS, bringing many
 improvements such as package management and support for Python 3.  The MSYS2
 project page is located [here][mp] and its wiki [here][mw].
-
-*Note: an [older version][ov] of MMGen can be run under MinGW-64 and MSYS, but
-its use is deprecated.  Installation instructions for MMGen under MinGW-64 and
-MSYS are archived [here][di] for historical interest only.*
 
 Before you get started, just a reminder that MMGen must be installed on two
 computers, one online and one offline, if you want to use it securely.  All
@@ -61,20 +56,10 @@ Download the MSYS2 executable installer for your architecture from the [MSYS2
 homepage][mh], but ignore the installation instructions there.
 
 Run the installer, accepting all defaults.  At the end of the installation,
-uncheck “Run MSYS2 now” and click Finish.
-
-### <a id="a_ps">2. Set up PowerShell as your MSYS2 terminal</a>
-
-MMGen is incompatible with the terminal provided by the MSYS2 project.  However,
-it works just fine with Windows’ native PowerShell.
-
-Drag or copy a PowerShell icon to the desktop, rename it to “MSYS2”, then right
-click the icon and select Properties.  After the existing path in the Target
-text window, append a space followed by the text `C:\\msys64\usr\bin\bash.exe
---login`
-
-Save your changes and double click the icon to launch your MSYS2-enabled
-PowerShell.  From now on, all your work will be done in this terminal.
+uncheck ‘Run MSYS2 now’ and click ‘Finish’.  From the Start menu, drag the
+‘MSYS2 UCRT64’ icon to the desktop.  This is the icon you will use to launch
+all MSYS2 terminal sessions from now on.  Double-click the icon to launch the
+terminal.
 
 Note that the root of your MSYS2 installation is located in `C:\\msys64`, so the
 following commands, for example, will produce a listing of the same directory:
@@ -96,9 +81,9 @@ $ ls 'C:\\msys64\etc'  # the path as seen by Windows
 $ pacman -Syu
 ```
 
-> Exit and restart the terminal.  If you’re using modified mirror lists, they
-> may have been overwritten by the update operation, in which case you should
-> restore them from your modified versions.
+> Exit and restart the MSYS2 terminal.  If you’re using modified mirror lists,
+> they may have been overwritten by the update operation, in which case you
+> should restore them from your modified versions.
 
 > Now complete upgrading the system:
 
@@ -158,7 +143,7 @@ $ ls /var/lib/pacman/sync
 $ pacman -Sup > urls.txt
 ```
 
-> This command may cause your MSYS terminal window to close.  If so, just
+> This command may cause your MSYS2 terminal window to close.  If so, just
 > reopen another one.
 
 > The command's output is now saved in the file `urls.txt` (this redirection
@@ -207,24 +192,25 @@ specifically required by MMGen.
 Install the MMGen requirements and their dependencies:
 
 ```text
-$ pacman -S tar git vim autoconf automake-wrapper autogen libtool cygrunsrv \
-	mingw-w64-x86_64-python-build \
-	mingw-w64-x86_64-python-wheel \
-	mingw-w64-x86_64-python-pip \
-	mingw-w64-x86_64-libltdl \
-	mingw-w64-x86_64-gcc \
-	mingw-w64-x86_64-make \
-	mingw-w64-x86_64-pcre \
-	mingw-w64-x86_64-libsodium \
-	mingw-w64-x86_64-python-cryptography \
-	mingw-w64-x86_64-python-six \
-	mingw-w64-x86_64-python-pexpect \
-	mingw-w64-x86_64-python-gmpy2 \
-	mingw-w64-x86_64-python-pynacl \
-	mingw-w64-x86_64-python-pysocks \
-	mingw-w64-x86_64-python-requests \
-	mingw-w64-x86_64-python-aiohttp \
-	mingw-w64-x86_64-python-pyreadline3
+pacman -S tar git vim autoconf automake-wrapper autogen libtool cygrunsrv \
+	mingw-w64-ucrt-x86_64-python-build \
+	mingw-w64-ucrt-x86_64-python-wheel \
+	mingw-w64-ucrt-x86_64-python-pip \
+	mingw-w64-ucrt-x86_64-libltdl \
+	mingw-w64-ucrt-x86_64-gcc \
+	mingw-w64-ucrt-x86_64-make \
+	mingw-w64-ucrt-x86_64-pcre \
+	mingw-w64-ucrt-x86_64-libsodium \
+	mingw-w64-ucrt-x86_64-python-pynacl \
+	mingw-w64-ucrt-x86_64-python-cryptography \
+	mingw-w64-ucrt-x86_64-python-pycryptodome \
+	mingw-w64-ucrt-x86_64-python-six \
+	mingw-w64-ucrt-x86_64-python-pexpect \
+	mingw-w64-ucrt-x86_64-python-gmpy2 \
+	mingw-w64-ucrt-x86_64-python-pysocks \
+	mingw-w64-ucrt-x86_64-python-requests \
+	mingw-w64-ucrt-x86_64-python-aiohttp \
+	mingw-w64-ucrt-x86_64-python-pyreadline3
 ```
 
 ### <a id="a_ev">5. Set up your environment</a>
@@ -242,12 +228,13 @@ Open your shell’s runtime configuration file in a text editor:
 $ nano ~/.bashrc
 ```
 
-Add the following two lines to the end of the file (if this is a Bitcoin-only
-installation, you may omit the Litecoin and Bitcoin Cash Node components of the
-path):
+Add the following lines to the end of the file (if this is a Bitcoin-only
+installation, you may omit the non-Bitcoin components of `daemon_paths`):
 
 ```bash
-export PATH="$HOMEPATH/.local/bin:/mingw64/bin:$PATH:/c/Program Files/Bitcoin/daemon:/c/Program Files/Litecoin/daemon:/c/Program Files/Bitcoin-Cash-Node/daemon"
+win_home="/${HOMEDRIVE/:}${HOMEPATH//\\//}"
+daemon_paths="/c/Program Files/Bitcoin/daemon:/c/Program Files/Litecoin/daemon:/c/Program Files/Bitcoin-Cash-Node/daemon:/c/Program Files/Geth"
+export PATH="$win_home/.local/bin:$PATH:$daemon_paths"
 export PYTHONUTF8=1
 ```
 
@@ -259,13 +246,13 @@ environment.
 On your online machine:
 
 ```text
-$ pip3 download ecdsa
+$ python3 -m pip download ecdsa
 ```
 
 Copy the downloaded file to your offline machine and install:
 
 ```text
-$ pip3 install --user ecdsa-*.whl
+$ python3 -m pip install --user ecdsa-*.whl
 ```
 
 ### <a id="a_sc">7. Install the standalone scrypt package (required for strong password hashing)</a>
@@ -283,11 +270,24 @@ $ git clone https://github.com/holgern/py-scrypt.git
 
 Copy the cloned repo to your offline machine.
 
-On both online and offline machines, enter the repo root and install:
+Enter the repo root and edit the file ‘setup.py’, adding the following lines
+before the line beginning with `elif sys.platform.startswith('win32'):`, making
+sure to preserve indentation:
+
+```text
+elif os.environ.get('MSYSTEM') == 'UCRT64':
+    define_macros = []
+    includes = []
+    libraries = ['crypto']
+    CFLAGS.append('-O2')
+```
+
+Save ‘setup.py’.  Now build and install:
 
 ```text
 $ cd py-scrypt
-$ python3 setup.py install --user
+$ python3 -m build --no-isolation
+$ python3 -m pip install --user dist/*.whl
 ```
 
 ### <a id="a_se">8. Clone and copy the secp256k1 library (offline install only)</a>
@@ -302,9 +302,9 @@ On your offline machine, create a magic location and copy the cloned secp256k1
 directory into it:
 
 ```text
-$ mkdir -p ~/.cache/mmgen
+$ mkdir -p ~/.cache/mmgen                # the magic location
 $ cp -a /path/to/secp256k1/repo/secp256k1 ~/.cache/mmgen
-$ ls ~/.cache/mmgen/secp256k1/autogen.sh # check that the location is correct
+$ ls ~/.cache/mmgen/secp256k1/autogen.sh # check that files were correctly copied
 ```
 
 ### <a id="a_mm">9. Install MMGen</a>
@@ -326,7 +326,7 @@ Enter the repo directory, build and install:
 $ cd mmgen
 $ git checkout stable_msys2 # See 'Note' below
 $ python3 -m build --no-isolation
-$ python3 -m pip install --user --upgrade dist/*.whl
+$ python3 -m pip install --user dist/*.whl
 ```
 
 **Note:** if you want to use features that have appeared since the latest
@@ -349,20 +349,20 @@ If you’ll be using MMGen with Ethereum, then you must install a few
 dependencies.  From the MMGen repository root, type the following:
 
 ```text
-$ pip3 install --no-deps --user -r eth-requirements.txt
+$ python3 -m pip install --no-deps --user -r eth-requirements.txt
 ```
 
 For an offline install, do this instead:
 
 ```text
-$ pip3 download --no-deps -r eth-requirements.txt
+$ python3 -m pip download --no-deps -r eth-requirements.txt
 ```
 
 Then transfer the downloaded files to your offline machine, `cd` to the
 directory containing the files and install them as follows:
 
 ```text
-$ pip3 install --no-deps --user *.whl
+$ python3 -m pip install --no-deps --user *.whl
 ```
 
 ### <a id="a_cd">11. Install and launch your coin daemons</a>
@@ -379,17 +379,16 @@ about adding to the Windows path, since your `PATH` variable was taken care of
 in [Step 5](#a_ev).  Note that the daemons must be installed on both your
 online and offline machines.
 
-To transact ETH, ETC or ERC20 tokens you’ll need the latest Geth, OpenEthereum
-or Parity (for Ethereum Classic) binary.  See the
-[**Altcoin-and-Forkcoin-Support**][pl] page for information on downloading and
-launching these daemons.  The `parity.exe`, `openethereum.exe` and `ethkey.exe`
-binaries should be copied to `/usr/local/bin`.  For Geth, download and run the
-Windows installer and add `/c/Program Files/Geth` to the end of the `PATH`
-variable in your `~/.bashrc` file:
+To transact ETH, ETC or ERC20 tokens you’ll need the latest Geth or Parity (for
+Ethereum Classic) binary.  See the [**Altcoin-and-Forkcoin-Support**][pl] page
+for information on downloading and launching these daemons.  The `parity.exe`
+and `ethkey.exe` binaries should be copied to `/usr/local/bin`.  For Geth,
+download and run the Windows installer and add `/c/Program Files/Geth` to the
+end of the `PATH` variable in your `~/.bashrc` file:
 
 Please note that Ethereum daemons perform rather poorly under Windows due to
 threading limitations.  Unless you have very fast hardware, transacting and
-syncing the blockchain might be painfully slow.
+syncing the blockchain could be painfully slow.
 
 ### <a id="a_do">12. You’re done!</a>
 
@@ -433,10 +432,11 @@ computer and issue the following commands:
 $ git checkout master
 $ git pull
 $ git checkout stable_msys2 # See 'Note' to step 9
-$ rm -rf dist build
-$ rm -r /mingw64/lib/python*/site-packages/{mmgen,MMGen}*
+$ rm -rf dist build *egg-info
+$ rm -rf /mingw64/lib/python*/site-packages/{mmgen,MMGen}*
 $ python3 -m build --no-isolation
-$ python3 -m pip install --upgrade dist/*.whl
+$ python3 -m pip install --user dist/*.whl
+$ rm -rf dist build *egg-info
 ```
 
 To update your offline installation, copy the updated repository (after `git
@@ -448,7 +448,6 @@ continue from the `git checkout stable_msys2` step.
 [mw]: https://github.com/msys2/msys2/wiki
 [ov]: ../releases/tag/v0.9.8
 [sd]: https://download.sysinternals.com/files/SDelete.zip
-[og]: https://github.com/openethereum/openethereum/releases
 [mr]: ../releases
 [di]: Deprecated-MSWin-Installation
 [ib]: Install-Bitcoind

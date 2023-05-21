@@ -6,8 +6,9 @@
 * [Configuration file](#a_cf)
 * [Bob and Alice regtest mode](#a_ts)
 
-#### [Basic Operations](#a_bo)
-* [Generate an MMGen wallet](#a_gw)
+#### [Generating an MMGen Wallet](#a_gw)
+
+#### [Transacting](#a_tr)
 * [Generate addresses](#a_ga)
 * [Import addresses](#a_ia)
 * [Create a transaction](#a_ct)
@@ -109,9 +110,7 @@ it an ideal way to learn to use the MMGen wallet without risking real coins.
 You may wish to pause here and perform the steps in the tutorial [MMGen Quick
 Start with Regtest Mode][04] before continuing on.
 
-### <a id="a_bo">Basic Operations</a>
-
-#### <a id="a_gw">Generate an MMGen wallet (offline computer)</a>
+### <a id="a_gw">Generating an MMGen Wallet</a>
 
 *NOTE: MMGen supports a “default wallet” feature.  After generating your wallet,
 you’ll be prompted to make it your default.  If you answer ‘y’, the wallet will
@@ -126,7 +125,7 @@ as it frees you from having to type your wallet filename on the command line.*
 If you haven’t, then you must include the path to a wallet file or other seed
 source in all commands where a seed source is required.*
 
-On your offline computer, generate an MMGen wallet:
+On your **offline** computer, generate an MMGen wallet:
 
 ```text
 $ mmgen-walletgen
@@ -161,6 +160,12 @@ memorize it.  If you have an average or better memory, you’ll find memorizing
 your seed phrase to be surprisingly easy. And the peace of mind that comes with
 knowing that your coins are recoverable **even if you lose all your physical
 backups** can’t be overestimated.
+
+### <a id="a_tr">Transacting</a>
+
+*The following transacting information is applicable to BTC, BCH, LTC, ETH and
+ETC.  For transacting with Monero, consult [Altcoin-and-Forkcoin-Support][ax]
+and the [`mmgen-xmrwallet`][mx] help screen.*
 
 #### <a id="a_ga">Generate addresses (offline computer)</a>
 
@@ -1130,4 +1135,6 @@ $ python3 -m pip install --user --upgrade dist/*.whl
 [07]: command-help-autosign
 [08]: Install-Bitcoind
 [09]: Altcoin-and-Forkcoin-Support
+[ax]: Altcoin-and-Forkcoin-Support#a_xmr
 [cp]: ../commits/master
+[mx]: command-help-xmrwallet
