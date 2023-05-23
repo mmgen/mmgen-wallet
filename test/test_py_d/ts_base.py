@@ -37,7 +37,7 @@ class TestSuiteBase:
 	win_skip = False
 
 	def __init__(self,trunner,cfgs,spawn):
-		if hasattr(self,'tr'): # init will be called multiple times for classes with multiple inheritance
+		if hasattr(self,'name'): # init will be called multiple times for classes with multiple inheritance
 			return
 		self.name = type(self).__name__
 		self.proto = cfg._proto

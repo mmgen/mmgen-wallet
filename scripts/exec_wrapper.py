@@ -12,7 +12,7 @@ def exec_wrapper_get_colors():
 			(lambda s,n=n:f'\033[{n};1m{s}\033[0m' )
 		for n in (31,32,33,34,35) ])
 
-def exec_wrapper_init(): # don't change: name is used to test if script is running under exec_wrapper
+def exec_wrapper_init():
 
 	import os
 	if os.path.dirname(exec_wrapper_sys.argv[1]) == 'test': # scripts in ./test do overlay setup themselves
@@ -21,8 +21,6 @@ def exec_wrapper_init(): # don't change: name is used to test if script is runni
 		from test.overlay import overlay_setup
 		exec_wrapper_sys.path[0] = overlay_setup(repo_root=os.getcwd()) # assume we're in the repo root
 
-	os.environ['MMGEN_EXEC_WRAPPER'] = '1'
-	os.environ['PYTHONPATH'] = '.'
 	if 'TMUX' in os.environ:
 		del os.environ['TMUX']
 
@@ -31,6 +29,8 @@ def exec_wrapper_init(): # don't change: name is used to test if script is runni
 			os.unlink('test.py.err')
 		except:
 			pass
+
+	os.environ['MMGEN_EXEC_WRAPPER'] = '1'
 
 def exec_wrapper_write_traceback(e,exit_val):
 

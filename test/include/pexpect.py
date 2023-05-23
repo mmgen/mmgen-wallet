@@ -42,7 +42,7 @@ class MMGenPexpect:
 			self,
 			args,
 			no_output     = False,
-			env           = None,
+			spawn_env     = None,
 			pexpect_spawn = False,
 			send_delay    = None,
 			timeout       = None,
@@ -61,9 +61,9 @@ class MMGenPexpect:
 		else:
 			timeout = int(timeout or cfg.pexpect_timeout or 0) or (60,5)[bool(cfg.debug_pexpect)]
 			if pexpect_spawn:
-				self.p = pexpect.spawn(args[0],args[1:],encoding='utf8',timeout=timeout,env=env)
+				self.p = pexpect.spawn(args[0],args[1:],encoding='utf8',timeout=timeout,env=spawn_env)
 			else:
-				self.p = PopenSpawn(args,encoding='utf8',timeout=timeout,env=env)
+				self.p = PopenSpawn(args,encoding='utf8',timeout=timeout,env=spawn_env)
 
 			if cfg.exact_output:
 				self.p.logfile = sys.stdout

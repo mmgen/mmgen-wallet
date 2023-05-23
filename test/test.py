@@ -647,7 +647,7 @@ class TestSuiteRunner(object):
 
 		env = { 'EXEC_WRAPPER_SPAWN':'1' }
 		env.update(os.environ)
-		if 'exec_wrapper_init' in globals():
+		if os.getenv('MMGEN_EXEC_WRAPPER'):
 			# test.py itself is running under exec_wrapper, so disable traceback file writing for spawned script
 			env.update({ 'EXEC_WRAPPER_TRACEBACK':'' }) # Python 3.9: OR the dicts
 
@@ -655,7 +655,7 @@ class TestSuiteRunner(object):
 		return MMGenPexpect(
 			args          = args,
 			no_output     = no_output,
-			env           = env,
+			spawn_env     = env,
 			pexpect_spawn = pexpect_spawn,
 			timeout       = timeout,
 			send_delay    = send_delay,
@@ -1021,7 +1021,7 @@ except TestSuiteException as e:
 except TestSuiteFatalException as e:
 	die(4,e.args[0])
 except Exception:
-	if 'exec_wrapper_init' in globals(): # test.py itself is running under exec_wrapper
+	if os.getenv('MMGEN_EXEC_WRAPPER'): # test.py itself is running under exec_wrapper
 		import traceback
 		print(''.join(traceback.format_exception(*sys.exc_info())))
 		msg(blue('Test script exited with error'))

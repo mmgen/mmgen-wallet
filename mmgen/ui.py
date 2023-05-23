@@ -117,7 +117,7 @@ def do_pager(text):
 	end_msg = '\n(end of text)\n\n'
 	# --- Non-MSYS Windows code deleted ---
 	# raw, chop, horiz scroll 8 chars, disable buggy line chopping in MSYS
-	os.environ['LESS'] = (('--shift 8 -RS'),('--shift 16 -RS'))[gc.platform=='win']
+	os.environ['LESS'] = '--shift 16 -RS' if gc.platform == 'win' else '--shift 8 -RS'
 
 	if 'PAGER' in os.environ and os.environ['PAGER'] != pagers[0]:
 		pagers = [os.environ['PAGER']] + pagers

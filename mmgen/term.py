@@ -107,7 +107,9 @@ class MMGenTermLinux(MMGenTerm):
 			ret = os.get_terminal_size()
 		except:
 			try:
-				ret = (os.environ['COLUMNS'],os.environ['LINES'])
+				ret = (
+					int(os.environ['COLUMNS']),
+					int(os.environ['LINES']) )
 			except:
 				ret = (80,25)
 		return _term_dimensions(*ret)
