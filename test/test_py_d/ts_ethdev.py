@@ -579,11 +579,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			caller          = 'txcreate',
 			interactive_fee = '50G',
 			eth_fee_res     = None,
-			fee_res_data    = ('0.00105','50'),
+			fee_info_data   = ('0.00105','50'),
 			fee_desc        = 'gas price',
 			no_read         = False,
 			tweaks          = [] ):
-		fee_res = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format( *fee_res_data, c=self.proto.coin )
+		fee_info_pat = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format( *fee_info_data, c=self.proto.coin )
 		t = self.spawn('mmgen-'+caller, self.eth_args + ['-B'] + args)
 		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 		t.written_to_file('Account balances listing')
@@ -595,7 +595,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			file_desc         = 'transaction',
 			bad_input_sels    = True,
 			interactive_fee   = interactive_fee,
-			fee_res           = fee_res,
+			fee_info_pat      = fee_info_pat,
 			fee_desc          = fee_desc,
 			eth_fee_res       = eth_fee_res,
 			add_comment       = tx_comment_jp,
@@ -787,7 +787,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			args             = ['98831F3A:E:2,23.45495'],
 			acct             = '1',
 			interactive_fee  = '40G',
-			fee_res_data     = ('0.00084','40'),
+			fee_info_data    = ('0.00084','40'),
 			eth_fee_res      = True )
 
 	def txbump(self,ext=',40000]{}.regtest.rawtx',fee='50G',add_args=[]):
@@ -1192,10 +1192,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def txdo_cached_balances(self,
 			acct = '2',
-			fee_res_data = ('0.00105','50'),
+			fee_info_data = ('0.00105','50'),
 			add_args = ['98831F3A:E:3,0.4321']):
 		args = ['--fee=20G','--cached-balances'] + add_args + [dfl_words_file]
-		t = self.txcreate(args=args,acct=acct,caller='txdo',fee_res_data=fee_res_data,no_read=True)
+		t = self.txcreate(args=args,acct=acct,caller='txdo',fee_info_data=fee_info_data,no_read=True)
 		self._do_confirm_send(t,quiet=not cfg.debug,sure=False)
 		return t
 
@@ -1225,7 +1225,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_txdo_cached_balances(self):
 		return self.txdo_cached_balances(
 					acct='1',
-					fee_res_data=('0.0026','50'),
+					fee_info_data=('0.0026','50'),
 					add_args=['--token=mm1','98831F3A:E:12,43.21'])
 
 	def token_txcreate_refresh_balances(self):

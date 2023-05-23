@@ -39,7 +39,7 @@ class TestSuiteShared(object):
 			bad_input_sels    = False,
 			interactive_fee   = '',
 			fee_desc          = 'transaction fee',
-			fee_res           = None,
+			fee_info_pat      = None,
 			eth_fee_res       = None,
 			add_comment       = '',
 			view              = 't',
@@ -91,8 +91,8 @@ class TestSuiteShared(object):
 				t.expect('fee: ',interactive_fee+'\n')
 			else:
 				t.send(interactive_fee+'\n')
-			if fee_res:
-				t.expect(fee_res,regex=True)
+			if fee_info_pat:
+				t.expect(fee_info_pat,regex=True)
 			t.expect('OK? (Y/n): ','y')
 
 		t.expect('(Y/n): ','\n')     # chg amt OK?
