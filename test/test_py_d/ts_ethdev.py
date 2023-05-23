@@ -608,15 +608,15 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
 		txfile = self.get_file_with_ext(ext,no_dot=True)
-		t = self.spawn( 'mmgen-txsign',
-						[f'--outdir={self.tmpdir}']
-						+ [f'--coin={self.proto.coin}']
-						+ ['--quiet']
-						+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
-						+ add_args
-						+ ([],['--yes'])[ni]
-						+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
-						+ [txfile, dfl_words_file] )
+		t = self.spawn('mmgen-txsign',
+			[f'--outdir={self.tmpdir}']
+			+ [f'--coin={self.proto.coin}']
+			+ ['--quiet']
+			+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
+			+ add_args
+			+ ([],['--yes'])[ni]
+			+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
+			+ [txfile, dfl_words_file] )
 		return self.txsign_ui_common(t,ni=ni,has_label=True)
 
 	def txsend(self,ni=False,ext='{}.regtest.sigtx',add_args=[]):
@@ -1094,10 +1094,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def tx_status3(self):
 		return self.tx_status(
-			ext='1.23456,50000]{}.regtest.sigtx',
-			add_args=['--token=mm1'],
-			expect_str='successfully executed',
-			expect_str2='has 1 confirmation')
+			ext         = '1.23456,50000]{}.regtest.sigtx',
+			add_args    = ['--token=mm1'],
+			expect_str  = 'successfully executed',
+			expect_str2 = 'has 1 confirmation' )
 
 	def token_bal2(self):
 		return self.token_bal(n='2')
@@ -1191,20 +1191,24 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.token_txcreate(args=args,token='mm1')
 
 	def txdo_cached_balances(self,
-			acct = '2',
+			acct          = '2',
 			fee_info_data = ('0.00105','50'),
-			add_args = ['98831F3A:E:3,0.4321']):
-		args = ['--fee=20G','--cached-balances'] + add_args + [dfl_words_file]
-		t = self.txcreate(args=args,acct=acct,caller='txdo',fee_info_data=fee_info_data,no_read=True)
+			add_args      = ['98831F3A:E:3,0.4321'] ):
+		t = self.txcreate(
+			args          = ['--fee=20G','--cached-balances'] + add_args + [dfl_words_file],
+			acct          = acct,
+			caller        = 'txdo',
+			fee_info_data = fee_info_data,
+			no_read       = True )
 		self._do_confirm_send(t,quiet=not cfg.debug,sure=False)
 		return t
 
 	def txcreate_refresh_balances(self,
-			bals=['2','3'],
-			args=['-B','--cached-balances','-i'],
-			total=vbal5,
-			adj_total=True,
-			total_coin=None ):
+			bals       = ['2','3'],
+			args       = ['-B','--cached-balances','-i'],
+			total      = vbal5,
+			adj_total  = True,
+			total_coin = None ):
 
 		if total_coin is None:
 			total_coin = self.proto.coin
@@ -1224,15 +1228,17 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def token_txdo_cached_balances(self):
 		return self.txdo_cached_balances(
-					acct='1',
-					fee_info_data=('0.0026','50'),
-					add_args=['--token=mm1','98831F3A:E:12,43.21'])
+			acct          = '1',
+			fee_info_data = ('0.0026','50'),
+			add_args      = ['--token=mm1','98831F3A:E:12,43.21'] )
 
 	def token_txcreate_refresh_balances(self):
 		return self.txcreate_refresh_balances(
-					bals=['1','2'],
-					args=['--token=mm1','-B','--cached-balances','-i'],
-					total='1000',adj_total=False,total_coin='MM1')
+			bals       = ['1','2'],
+			args       = ['--token=mm1','-B','--cached-balances','-i'],
+			total      = '1000',
+			adj_total  = False,
+			total_coin = 'MM1' )
 
 	def token_bal7(self): return self.token_bal(n='7')
 
