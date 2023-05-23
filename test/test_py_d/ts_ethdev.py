@@ -578,9 +578,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			acct            = '1',
 			caller          = 'txcreate',
 			interactive_fee = '50G',
-			eth_fee_res     = None,
 			fee_info_data   = ('0.00105','50'),
-			fee_desc        = 'gas price',
 			no_read         = False,
 			tweaks          = [] ):
 		fee_info_pat = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format( *fee_info_data, c=self.proto.coin )
@@ -596,8 +594,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			bad_input_sels    = True,
 			interactive_fee   = interactive_fee,
 			fee_info_pat      = fee_info_pat,
-			fee_desc          = fee_desc,
-			eth_fee_res       = eth_fee_res,
+			fee_desc          = 'transaction fee or gas price',
 			add_comment       = tx_comment_jp,
 			tweaks            = tweaks )
 		if not no_read:
@@ -787,8 +784,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			args             = ['98831F3A:E:2,23.45495'],
 			acct             = '1',
 			interactive_fee  = '40G',
-			fee_info_data    = ('0.00084','40'),
-			eth_fee_res      = True )
+			fee_info_data    = ('0.00084','40') )
 
 	def txbump(self,ext=',40000]{}.regtest.rawtx',fee='50G',add_args=[]):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
@@ -1138,7 +1134,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.bal_getbalance(dfl_sid,'2',extra_args=['--token=mm1'])
 
 	def txcreate_noamt(self):
-		return self.txcreate(args=['98831F3A:E:12'],eth_fee_res=True)
+		return self.txcreate(args=['98831F3A:E:12'])
 	def txsign_noamt(self):
 		return self.txsign(ext='99.99895,50000]{}.regtest.rawtx')
 	def txsend_noamt(self):

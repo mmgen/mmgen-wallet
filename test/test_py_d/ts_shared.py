@@ -40,7 +40,6 @@ class TestSuiteShared(object):
 			interactive_fee   = '',
 			fee_desc          = 'transaction fee',
 			fee_info_pat      = None,
-			eth_fee_res       = None,
 			add_comment       = '',
 			view              = 't',
 			save              = True,
@@ -79,23 +78,21 @@ class TestSuiteShared(object):
 
 		t.expect(input_sels_prompt+': ',inputs+'\n')
 
-		have_est_fee = t.expect([fee_desc+': ','OK? (Y/n): ']) == 1
+		have_est_fee = t.expect([f'{fee_desc}: ','OK? (Y/n): ']) == 1
+
 		if have_est_fee and not interactive_fee:
 			t.send('y')
 		else:
 			if have_est_fee:
 				t.send('n')
-			if eth_fee_res:
-				t.expect('or gas price: ',interactive_fee+'\n')
-			elif have_est_fee and self.proto.base_coin != 'ETH':
-				t.expect('fee: ',interactive_fee+'\n')
+				t.expect(f'{fee_desc}: ',interactive_fee+'\n')
 			else:
 				t.send(interactive_fee+'\n')
 			if fee_info_pat:
 				t.expect(fee_info_pat,regex=True)
 			t.expect('OK? (Y/n): ','y')
 
-		t.expect('(Y/n): ','\n')     # chg amt OK?
+		t.expect('(Y/n): ','\n') # chg amt OK prompt
 
 		if 'confirm_non_mmgen' in tweaks:
 			t.expect('Continue? (Y/n)','\n')
