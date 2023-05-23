@@ -173,14 +173,14 @@ class Config(Lockable):
 	ignore_daemon_version = False
 
 	# display:
-	force_color     = False # placeholder
+	test_suite_enable_color = False # placeholder
 	force_256_color = False
 	scroll          = False
 	pager           = False
 	columns         = 0
 	color = bool(
 		( sys.stdout.isatty() and not os.getenv('MMGEN_TEST_SUITE_PEXPECT') ) or
-		os.getenv('MMGEN_FORCE_COLOR')
+		os.getenv('MMGEN_TEST_SUITE_ENABLE_COLOR')
 	)
 
 	# miscellaneous features:
@@ -287,6 +287,7 @@ class Config(Lockable):
 		'MMGEN_TEST_SUITE_XMR_AUTOSIGN',
 		'MMGEN_TEST_SUITE_CFGTEST',
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
+		'MMGEN_TEST_SUITE_ENABLE_COLOR',
 		'MMGEN_TEST_SUITE_PEXPECT',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
 		'MMGEN_BLACKLIST_DAEMONS',
@@ -299,7 +300,6 @@ class Config(Lockable):
 		'MMGEN_DEBUG_TW',
 		'MMGEN_DEBUG_UTF8',
 		'MMGEN_DEBUG_SUBSEED',
-		'MMGEN_FORCE_COLOR',
 		'MMGEN_FORCE_256_COLOR',
 		'MMGEN_HOLD_PROTECT_DISABLE',
 		'MMGEN_QUIET',

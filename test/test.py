@@ -643,7 +643,7 @@ class TestSuiteRunner(object):
 
 		os.environ['MMGEN_HOLD_PROTECT_DISABLE'] = '' if send_delay else '1'
 		os.environ['MMGEN_TEST_SUITE_POPEN_SPAWN'] = '' if pexpect_spawn else '1'
-		os.environ['MMGEN_FORCE_COLOR'] = '1' if self.ts.color else ''
+		os.environ['MMGEN_TEST_SUITE_ENABLE_COLOR'] = '1' if self.ts.color else ''
 
 		env = { 'EXEC_WRAPPER_SPAWN':'1' }
 		env.update(os.environ)
