@@ -430,15 +430,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				self.miner_addr = 'bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd' # regtest.create_hdseed()
 				self.miner_wif = 'cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp'
 
-		os.environ['MMGEN_BOGUS_SEND'] = ''
+		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
 		self.write_to_tmpfile('wallet_password',rt_pw)
 
 		self.dfl_mmtype = 'C' if self.proto.coin == 'BCH' else 'B'
 		self.burn_addr = make_burn_addr(self.proto)
 		self.user_sids = {}
-
-	def __del__(self):
-		os.environ['MMGEN_BOGUS_SEND'] = '1'
 
 	def _add_comments_to_addr_file(self,addrfile,outfile,use_comments=False):
 		silence()
@@ -973,11 +970,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def _get_mempool(self):
-		if not cfg.debug_utf8:
-			disable_debug()
-		ret = self.spawn('mmgen-regtest',['mempool']).read()
-		if not cfg.debug_utf8:
-			restore_debug()
+		ret = self.spawn(
+			'mmgen-regtest',
+			['mempool'],
+			env = os.environ if cfg.debug_utf8 else get_env_without_debug_vars(),
+		).read()
 		m = re.search(r'(\[\s*"[a-f0-9]{64}"\s*])',ret) # allow for extra output by handler at end
 		return json.loads(m.group(1))
 

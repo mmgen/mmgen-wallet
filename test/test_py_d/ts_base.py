@@ -53,6 +53,11 @@ class TestSuiteBase:
 		self.fork = d[self.proto.coin.lower()] if self.proto.coin.lower() in d else None
 		if len(self.tmpdir_nums) == 1:
 			self.tmpdir_num = self.tmpdir_nums[0]
+		if self.tr:
+			self.spawn_env = dict(self.tr.spawn_env)
+			self.spawn_env['MMGEN_TEST_SUITE_ENABLE_COLOR'] = '1' if self.color else ''
+		else:
+			self.spawn_env = {} # placeholder
 
 	@property
 	def tmpdir(self):

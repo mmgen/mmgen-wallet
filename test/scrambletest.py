@@ -56,10 +56,6 @@ from test.include.common import set_globals,end_msg,green
 
 set_globals(cfg)
 
-os.environ['MMGEN_DEBUG_ADDRLIST'] = '1'
-if not cfg.system:
-	os.environ['PYTHONPATH'] = repo_root
-
 from collections import namedtuple
 td = namedtuple('scrambletest_entry',['seed','str','id_str','lbl','addr'])
 
@@ -103,8 +99,13 @@ passwd_data = {
 cvr_opts = ' -m trace --count --coverdir={} --file={}'.format( *init_coverage() ) if cfg.coverage else ''
 cmd_base = f'python3{cvr_opts} cmds/mmgen-{{}}gen -qS'
 
+run_env = dict(os.environ)
+run_env['MMGEN_DEBUG_ADDRLIST'] = '1'
+if not cfg.system:
+	run_env['PYTHONPATH'] = repo_root
+
 def get_cmd_output(cmd):
-	cp = run(cmd.split(),stdout=PIPE,stderr=PIPE)
+	cp = run( cmd.split(), stdout=PIPE, stderr=PIPE, env=run_env )
 	if cp.returncode != 0:
 		die(2,f'\nSpawned program exited with error code {cp.returncode}:\n{cp.stderr.decode()}')
 	return cp.stdout.decode().splitlines()

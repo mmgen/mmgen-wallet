@@ -225,7 +225,7 @@ testing_segwit = cfg.segwit or cfg.segwit_random or cfg.bech32
 if cfg.test_suite_deterministic:
 	cfg.no_timings = True
 	init_color(num_colors=0)
-	os.environ['MMGEN_DISABLE_COLOR'] = '1'
+	os.environ['MMGEN_DISABLE_COLOR'] = '1' # for this script and spawned scripts
 
 if cfg.profile:
 	cfg.names = True
@@ -339,23 +339,6 @@ def create_tmp_dirs(shm_dir):
 					raise
 			finally:
 				os.symlink(src,cfgs[cfg]['tmpdir'])
-
-def set_environ_for_spawned_scripts():
-
-	from mmgen.term import get_terminal_size
-	os.environ['MMGEN_COLUMNS'] = str(get_terminal_size().width)
-
-	if os.getenv('MMGEN_DEBUG_ALL'):
-		for name in cfg._env_opts:
-			if name[:11] == 'MMGEN_DEBUG':
-				os.environ[name] = '1'
-
-	if not cfg.system:
-		os.environ['PYTHONPATH'] = repo_root
-
-	os.environ['MMGEN_NO_LICENSE'] = '1'
-	os.environ['MMGEN_BOGUS_SEND'] = '1'
-	os.environ['MMGEN_TEST_SUITE_PEXPECT'] = '1'
 
 def set_restore_term_at_exit():
 	import termios,atexit
@@ -572,6 +555,34 @@ class TestSuiteRunner(object):
 		if cfg.pexpect_spawn:
 			omsg(f'INFO → Using pexpect.spawn() for real terminal emulation')
 
+		self.set_spawn_env()
+
+	def set_spawn_env(self):
+
+		self.spawn_env = dict(os.environ)
+		self.spawn_env.update({
+			'MMGEN_NO_LICENSE': '1',
+			'MMGEN_BOGUS_SEND': '1',
+			'MMGEN_TEST_SUITE_PEXPECT': '1',
+			'EXEC_WRAPPER_SPAWN':'1',
+			# if test.py itself is running under exec_wrapper, disable writing of traceback file for spawned script
+			'EXEC_WRAPPER_TRACEBACK': '' if os.getenv('MMGEN_EXEC_WRAPPER') else '1',
+		})
+
+		if cfg.exact_output:
+			from mmgen.term import get_terminal_size
+			self.spawn_env['MMGEN_COLUMNS'] = str(get_terminal_size().width)
+		else:
+			self.spawn_env['MMGEN_COLUMNS'] = '120'
+
+		if os.getenv('MMGEN_DEBUG_ALL'):
+			for name in cfg._env_opts:
+				if name[:11] == 'MMGEN_DEBUG':
+					self.spawn_env[name] = '1'
+
+		if not cfg.system:
+			self.spawn_env['PYTHONPATH'] = repo_root
+
 	def spawn_wrapper(self,cmd,
 			args         = [],
 			extra_desc   = '',
@@ -582,7 +593,8 @@ class TestSuiteRunner(object):
 			no_exec_wrapper = False,
 			timeout       = None,
 			pexpect_spawn = None,
-			direct_exec  = False ):
+			direct_exec   = False,
+			env           = {} ):
 
 		desc = self.ts.test_name if cfg.names else self.gm.dpy_data[self.ts.test_name][1]
 		if extra_desc:
@@ -641,21 +653,18 @@ class TestSuiteRunner(object):
 		send_delay = 0.4 if pexpect_spawn is True or cfg.buf_keypress else None
 		pexpect_spawn = pexpect_spawn if pexpect_spawn is not None else bool(cfg.pexpect_spawn)
 
-		os.environ['MMGEN_HOLD_PROTECT_DISABLE'] = '' if send_delay else '1'
-		os.environ['MMGEN_TEST_SUITE_POPEN_SPAWN'] = '' if pexpect_spawn else '1'
-		os.environ['MMGEN_TEST_SUITE_ENABLE_COLOR'] = '1' if self.ts.color else ''
-
-		env = { 'EXEC_WRAPPER_SPAWN':'1' }
-		env.update(os.environ)
-		if os.getenv('MMGEN_EXEC_WRAPPER'):
-			# test.py itself is running under exec_wrapper, so disable traceback file writing for spawned script
-			env.update({ 'EXEC_WRAPPER_TRACEBACK':'' }) # Python 3.9: OR the dicts
+		spawn_env = dict(self.ts.spawn_env)
+		spawn_env.update({
+			'MMGEN_HOLD_PROTECT_DISABLE': '' if send_delay else '1',
+			'MMGEN_TEST_SUITE_POPEN_SPAWN': '' if pexpect_spawn else '1',
+		})
+		spawn_env.update(env)
 
 		from test.include.pexpect import MMGenPexpect
 		return MMGenPexpect(
 			args          = args,
 			no_output     = no_output,
-			spawn_env     = env,
+			spawn_env     = spawn_env,
 			pexpect_spawn = pexpect_spawn,
 			timeout       = timeout,
 			send_delay    = send_delay,
@@ -717,8 +726,6 @@ class TestSuiteRunner(object):
 		if (not self.daemon_started) and self.gm.get_cls_by_gname(gname).need_daemon:
 			start_test_daemons(network_id,remove_datadir=True)
 			self.daemon_started = True
-
-		os.environ['MMGEN_BOGUS_UNSPENT_DATA'] = '' # zero this here, so test groups don't have to
 
 		self.ts = self.gm.gm_init_group(self,gname,sg_name,self.spawn_wrapper)
 		self.ts_clsname = type(self.ts).__name__
@@ -1000,8 +1007,6 @@ elif cmd_args and cmd_args[0] in utils:
 
 if cfg.pause:
 	set_restore_term_at_exit()
-
-set_environ_for_spawned_scripts()
 
 from mmgen.exception import TestSuiteException,TestSuiteFatalException
 

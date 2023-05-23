@@ -39,11 +39,8 @@ class TestSuiteCfgFile(TestSuiteBase):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
-		os.environ['MMGEN_TEST_SUITE_CFGTEST'] = '1'
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
-
-	def __del__(self):
-		os.environ['MMGEN_TEST_SUITE_CFGTEST'] = ''
+		self.spawn_env['MMGEN_TEST_SUITE_CFGTEST'] = '1'
 
 	def spawn_test(self,args=[],extra_desc='',pexpect_spawn=None):
 		return self.spawn(

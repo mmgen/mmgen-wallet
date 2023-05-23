@@ -113,8 +113,8 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			die(1,red('This command must be run with --exact-output enabled!'))
 
 		if self.simulate or not self.live:
-			os.environ['MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE'] = '1'
 			LEDControl.create_dummy_control_files()
+			self.spawn_env['MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE'] = '1'
 
 		self.opts = ['--coins='+','.join(self.coins)]
 

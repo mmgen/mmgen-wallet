@@ -53,11 +53,12 @@ class MMGenPexpect:
 		self.req_exit_val = 0
 		self.skip_ok = False
 		self.sent_value = None
+		self.spawn_env = spawn_env
 
 		if direct_exec or cfg.direct_exec:
 			from subprocess import Popen,DEVNULL
 			redir = DEVNULL if (no_output or not cfg.exact_output) else None
-			self.ep = Popen([args[0]] + args[1:], stderr=redir )
+			self.ep = Popen([args[0]] + args[1:], stderr=redir, env=spawn_env )
 		else:
 			timeout = int(timeout or cfg.pexpect_timeout or 0) or (60,5)[bool(cfg.debug_pexpect)]
 			if pexpect_spawn:
@@ -100,7 +101,8 @@ class MMGenPexpect:
 		return self
 
 	def license(self):
-		if 'MMGEN_NO_LICENSE' in os.environ: return
+		if self.spawn_env.get('MMGEN_NO_LICENSE'):
+			return
 		self.expect("'w' for conditions and warranty info, or 'c' to continue: ",'c')
 
 	def label(self,label='Test Label (UTF-8) α'):

@@ -382,11 +382,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			joinpath(self.tmpdir,parity_devkey_fn),
 			dfl_devkey+'\n' )
 
-		os.environ['MMGEN_BOGUS_SEND'] = ''
 		self.message = 'attack at dawn'
-
-	def __del__(self):
-		os.environ['MMGEN_BOGUS_SEND'] = '1'
+		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
 
 	@property
 	def eth_args(self):

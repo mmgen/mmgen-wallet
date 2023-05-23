@@ -199,7 +199,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			self.txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[self.proto.coin.lower()]
 
 		self.unspent_data_file = joinpath('test','trash','unspent.json')
-		os.environ['MMGEN_BOGUS_UNSPENT_DATA'] = self.unspent_data_file
+		self.spawn_env['MMGEN_BOGUS_UNSPENT_DATA'] = self.unspent_data_file
 
 	def _get_addrfile_checksum(self,display=False):
 		addrfile = self.get_file_with_ext('addrs')

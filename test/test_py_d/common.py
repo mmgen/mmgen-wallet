@@ -94,17 +94,12 @@ def confirm_continue():
 def randbool():
 	return getrand(1).hex()[0] in '02468ace'
 
-def disable_debug():
-	global save_debug
-	save_debug = {}
+def get_env_without_debug_vars():
+	ret = dict(os.environ)
 	for k in cfg._env_opts:
-		if k[:11] == 'MMGEN_DEBUG':
-			save_debug[k] = os.getenv(k)
-			os.environ[k] = ''
-
-def restore_debug():
-	for k in save_debug:
-		os.environ[k] = save_debug[k] or ''
+		if k[:11] == 'MMGEN_DEBUG' and k in ret:
+			del ret[k]
+	return ret
 
 def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete_all=False,substr=False):
 

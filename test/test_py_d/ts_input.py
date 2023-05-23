@@ -97,17 +97,17 @@ class TestSuiteInput(TestSuiteBase):
 		from subprocess import run,PIPE
 		cmd = ['python3','cmds/mmgen-walletconv','--in-fmt=words','--out-fmt=words','--outdir=test/trash']
 		mn = sample_mn['mmgen']['mn']
-		os.environ['MMGEN_TEST_SUITE'] = ''
+		run_env = dict(os.environ)
+		run_env['MMGEN_TEST_SUITE'] = ''
 
 		# the test can fail the first time if cfg file has changed, so run it twice if necessary:
 		for i in range(2):
-			cp = run( cmd, input=mn.encode(), stdout=PIPE, stderr=PIPE )
+			cp = run( cmd, input=mn.encode(), stdout=PIPE, stderr=PIPE, env=run_env )
 			if b'written to file' in cp.stderr:
 				break
 
 		from mmgen.color import set_vt100
 		set_vt100()
-		os.environ['MMGEN_TEST_SUITE'] = '1'
 		imsg(cp.stderr.decode().strip())
 		res = get_data_from_file(cfg,'test/trash/A773B05C[128].mmwords',silent=True).strip()
 		assert res == mn, f'{res} != {mn}'

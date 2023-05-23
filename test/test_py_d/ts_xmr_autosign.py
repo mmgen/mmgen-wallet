@@ -91,8 +91,6 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 
 	def __init__(self,trunner,cfgs,spawn):
 
-		os.environ['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = '1'
-
 		TestSuiteXMRWallet.__init__(self,trunner,cfgs,spawn)
 		TestSuiteAutosignBase.__init__(self,trunner,cfgs,spawn)
 
@@ -113,9 +111,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		self.opts.append('--xmrwallets={}'.format( self.users['alice'].kal_range )) # mmgen-autosign opts
 		self.autosign_opts = [f'--autosign-mountpoint={self.mountpoint}']           # mmgen-xmrwallet opts
 		self.tx_count = 1
-
-	def __del__(self):
-		os.environ['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = ''
+		self.spawn_env['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = '1'
 
 	def create_tmp_wallets(self):
 		self.spawn('',msg_only=True)

@@ -144,9 +144,10 @@ class TestSuiteHelp(TestSuiteBase):
 		return t
 
 	def license(self):
-		lsave = os.getenv('MMGEN_NO_LICENSE')
-		os.environ['MMGEN_NO_LICENSE'] = ''
-		t = self.spawn(f'mmgen-walletconv',['--stdout','--in-fmt=hex','--out-fmt=hex'])
+		t = self.spawn(
+			f'mmgen-walletconv',
+			['--stdout','--in-fmt=hex','--out-fmt=hex'],
+			env = {'MMGEN_NO_LICENSE':''} )
 		t.expect('to continue: ', 'w')
 		t.expect('TERMS AND CONDITIONS') # start of GPL text
 		if cfg.pexpect_spawn:
@@ -157,7 +158,6 @@ class TestSuiteHelp(TestSuiteBase):
 		t.expect('to continue: ', 'c')
 		t.expect('data: ','beadcafe'*4 + '\n')
 		t.expect('to confirm: ', 'YES\n')
-		os.environ['MMGEN_NO_LICENSE'] = lsave
 		return t
 
 	def spawn_chk_expect(self,*args,**kwargs):
