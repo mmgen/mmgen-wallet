@@ -3,13 +3,13 @@ from .crypto_orig import *
 
 if overlay_fake_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 
-	class overlay_fake_data:
-		get_random = get_random
-		add_user_random = add_user_random
-		from .test import fake_urandom as urandom
+	overlay_fake_get_random_orig = Crypto.get_random
+	overlay_fake_add_user_random_orig = Crypto.add_user_random
 
-	def get_random(length):
-		return overlay_fake_data.urandom(len(overlay_fake_data.get_random(length)))
+	from .test import fake_urandom as overlay_fake_urandom
 
-	def add_user_random(rand_bytes,desc):
-		return overlay_fake_data.urandom(len(overlay_fake_data.add_user_random(rand_bytes,desc)))
+	Crypto.get_random = lambda self,length: overlay_fake_urandom(
+		len(overlay_fake_get_random_orig( self, length )))
+
+	Crypto.add_user_random = lambda self,rand_bytes,desc: overlay_fake_urandom(
+		len(overlay_fake_add_user_random_orig( self, rand_bytes, desc )))
