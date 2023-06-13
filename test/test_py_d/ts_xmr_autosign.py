@@ -219,7 +219,8 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		return t
 
 	def autosign_start_thread(self):
-		self.asi.dev_disk_path.unlink(missing_ok=True)
+		if self.asi.dev_disk_path.exists():
+			self.asi.dev_disk_path.unlink()
 		def run():
 			t = self.spawn('mmgen-autosign', self.opts + ['wait'], direct_exec=True )
 			self.write_to_tmpfile('autosign_thread_pid',str(t.ep.pid))

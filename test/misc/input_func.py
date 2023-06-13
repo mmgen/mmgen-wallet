@@ -32,13 +32,13 @@ elif cmd in ('get_char','line_input'):
 	from mmgen.ui import line_input
 	from ast import literal_eval
 	func_args = literal_eval(cmd_args[1])
-	Msg(f'\n  term: {get_char.__self__.__name__}')
-	Msg(f'  cfg.hold_protect_disable: {cfg.hold_protect_disable}')
+	msg(f'\n  term: {get_char.__self__.__name__}')
+	msg(f'  cfg.hold_protect_disable: {cfg.hold_protect_disable}')
 	if cmd == 'line_input':
 		func_args.update({'cfg':cfg})
-	Msg('  {name}( {args} )'.format(
+	msg('  Calling {name}( {args} )'.format(
 		name = cmd,
 		args = ', '.join(f'{k}={v!r}' for k,v in func_args.items())
 		))
 	ret = locals()[cmd](**func_args)
-	Msg('  ==> {!r}'.format(ret))
+	msg('  ==> {!r}'.format(ret))

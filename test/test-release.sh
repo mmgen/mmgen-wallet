@@ -278,6 +278,8 @@ remove_skipped_tests
 
 check_tests
 
+test/test.py clean
+
 start_time=$(date +%s)
 
 run_tests "$tests"

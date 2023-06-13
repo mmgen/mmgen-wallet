@@ -243,7 +243,12 @@ class TestSuiteInput(TestSuiteBase):
 			imsg('  {:14} {!r}'.format(k+':',v))
 		imsg_r('\nScript output: ')
 		prompt_add = (func_args['insert_txt'] if term else '') if func_name == 'line_input' else ''
-		t.expect( func_args['prompt'] + prompt_add, text )
+		prompt = func_args['prompt'] + prompt_add
+		t.expect('Calling ')
+		if prompt:
+			t.expect(prompt,text)
+		else:
+			t.send(text)
 		ret = t.expect_getend('  ==> ')
 		assert ret == repr(expect), f'Text mismatch! {ret} != {repr(expect)}'
 		return t

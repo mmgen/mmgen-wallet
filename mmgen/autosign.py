@@ -592,7 +592,8 @@ class Autosign:
 				msg('Device insertion detected')
 				await self.do_sign()
 				if testing_xmr:
-					self.dev_disk_path.unlink(missing_ok=True)
+					if self.dev_disk_path.exists():
+						self.dev_disk_path.unlink()
 			prev_status = status
 			if not n % 10:
 				msg_r(f"\r{' '*17}\rWaiting")

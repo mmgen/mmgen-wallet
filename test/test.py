@@ -575,11 +575,6 @@ class TestSuiteRunner(object):
 		else:
 			self.spawn_env['MMGEN_COLUMNS'] = '120'
 
-		if os.getenv('MMGEN_DEBUG_ALL'):
-			for name in cfg._env_opts:
-				if name[:11] == 'MMGEN_DEBUG':
-					self.spawn_env[name] = '1'
-
 		if not cfg.system:
 			self.spawn_env['PYTHONPATH'] = repo_root
 
