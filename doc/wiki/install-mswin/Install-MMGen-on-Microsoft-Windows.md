@@ -69,7 +69,7 @@ $ ls /etc              # the path as seen within MSYS2
 $ ls 'C:\\msys64\etc'  # the path as seen by Windows
 ```
 
-### <a id="a_ug">3. Upgrade MSYS2</a>
+### <a id="a_ug">2. Upgrade MSYS2</a>
 
 #### <a id="a_ug1">Online users:</a>
 
@@ -174,7 +174,7 @@ $ pacman -U packages1/*
 
 > Your system upgrade is now complete.
 
-### <a id="a_md">4. Install MSYS2 MMGen dependencies</a>
+### <a id="a_md">3. Install MSYS2 MMGen dependencies</a>
 
 Now that your system’s fully up to date, you’re ready to install the packages
 specifically required by MMGen.
@@ -213,7 +213,7 @@ pacman -S tar git vim autoconf automake-wrapper autogen libtool cygrunsrv \
 	mingw-w64-ucrt-x86_64-python-pyreadline3
 ```
 
-### <a id="a_ev">5. Set up your environment</a>
+### <a id="a_ev">4. Set up your environment</a>
 
 Create the `/usr/local/bin` directory.  This is where you’ll place various
 binaries required by MMGen:
@@ -241,7 +241,7 @@ export PYTHONUTF8=1
 Save and exit.  Close and reopen the terminal window to update your working
 environment.
 
-### <a id="a_ec">6. Install the Python ECDSA library (offline install only)</a>
+### <a id="a_ec">5. Install the Python ECDSA library (offline install only)</a>
 
 On your online machine:
 
@@ -255,7 +255,7 @@ Copy the downloaded file to your offline machine and install:
 $ python3 -m pip install --user ecdsa-*.whl
 ```
 
-### <a id="a_sc">7. Install the standalone scrypt package (required for strong password hashing)</a>
+### <a id="a_sc">6. Install the standalone scrypt package (required for strong password hashing)</a>
 
 Thanks to a faulty implementation of the `scrypt` function included in Python’s
 `hashlib`, the standalone `scrypt` module is required for stronger-than-default
@@ -274,7 +274,7 @@ Enter the repo root and edit the file ‘setup.py’, adding the following lines
 before the line beginning with `elif sys.platform.startswith('win32'):`, making
 sure to preserve indentation:
 
-```text
+```python
 elif os.environ.get('MSYSTEM') == 'UCRT64':
     define_macros = []
     includes = []
@@ -290,7 +290,7 @@ $ python3 -m build --no-isolation
 $ python3 -m pip install --user dist/*.whl
 ```
 
-### <a id="a_se">8. Clone and copy the secp256k1 library (offline install only)</a>
+### <a id="a_se">7. Clone and copy the secp256k1 library (offline install only)</a>
 
 On your online machine, clone the secp256k1 repository from Github:
 
@@ -307,7 +307,7 @@ $ cp -a /path/to/secp256k1/repo/secp256k1 ~/.cache/mmgen
 $ ls ~/.cache/mmgen/secp256k1/autogen.sh # check that files were correctly copied
 ```
 
-### <a id="a_mm">9. Install MMGen</a>
+### <a id="a_mm">8. Install MMGen</a>
 
 Now you’re ready to install MMGen itself.  On your online machine, clone the
 repository:
@@ -343,7 +343,7 @@ documentation.
 occasion.  Note that MMGen has a test suite.  Refer to the [Test Suite][ts]
 wiki page for details.
 
-### <a id="a_pe">10. Install Python Ethereum dependencies (Ethereum users only)</a>
+### <a id="a_pe">9. Install Python Ethereum dependencies (Ethereum users only)</a>
 
 If you’ll be using MMGen with Ethereum, then you must install a few
 dependencies.  From the MMGen repository root, type the following:
@@ -365,7 +365,7 @@ directory containing the files and install them as follows:
 $ python3 -m pip install --no-deps --user *.whl
 ```
 
-### <a id="a_cd">11. Install and launch your coin daemons</a>
+### <a id="a_cd">10. Install and launch your coin daemons</a>
 
 At this point your MMGen installation will be able to generate wallets, along
 with keys and addresses for all supported coins.  However, if you intend to do
@@ -390,7 +390,7 @@ Please note that Ethereum daemons perform rather poorly under Windows due to
 threading limitations.  Unless you have very fast hardware, transacting and
 syncing the blockchain could be painfully slow.
 
-### <a id="a_do">12. You’re done!</a>
+### <a id="a_do">11. You’re done!</a>
 
 Congratulations, your installation is now complete, and you can proceed to
 [**Getting Started with MMGen**][gs].  Note that all features supported by

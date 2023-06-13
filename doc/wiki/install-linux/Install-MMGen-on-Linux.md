@@ -27,9 +27,9 @@ $ python3 -m pip install --user --upgrade pip setuptools build wheel
 ```
 
 If you get an ‘externally-managed-environment’ error (with Debian bookworm,
-for example), add --break-system-packages to the command line.  Note that this
+for example), add `--break-system-packages` to the command line.  Note that this
 will not in fact break any system packages, as pip installs all packages under
-the user’s home directory when --user is in effect.
+the user’s home directory when `--user` is in effect.
 
 #### Install MMGen:
 
