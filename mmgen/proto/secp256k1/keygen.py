@@ -29,7 +29,7 @@ class backend:
 				compressed = privkey.compressed )
 
 		@classmethod
-		def test_avail(cls,silent=False):
+		def test_avail(cls,cfg,silent=False):
 			try:
 				from .secp256k1 import priv2pub
 				if not priv2pub(bytes.fromhex('deadbeef'*8),1):
@@ -41,7 +41,7 @@ class backend:
 				if not silent:
 					from ...util import ymsg
 					ymsg(str(e))
-				self.cfg._util.qmsg('Using (slow) native Python ECDSA library for public key generation')
+				cfg._util.qmsg('Using (slow) native Python ECDSA library for public key generation')
 				return 'python_ecdsa'
 
 	class python_ecdsa(keygen_base):
