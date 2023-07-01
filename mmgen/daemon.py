@@ -168,10 +168,14 @@ class Daemon(Lockable):
 		return self.run_cmd(self.cli_cmd(*cmds),silent=silent)
 
 	def state_msg(self,extra_text=None):
+		try:
+			pid = self.pid
+		except:
+			pid = None
 		extra_text = 'not ' if self.state == 'stopped' else f'{extra_text} ' if extra_text else ''
 		return '{:{w}} {:10} {}'.format(
 			f'{self.desc} {extra_text}running',
-			'pid N/A' if self.pid is None or self.pids else f'pid {self.pid}',
+			'pid N/A' if pid is None or self.pids or self.state == 'stopped' else f'pid {pid}',
 			f'port {self.bind_port}',
 			w = 60 )
 
