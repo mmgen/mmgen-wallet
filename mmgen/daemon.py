@@ -61,6 +61,7 @@ class Daemon(Lockable):
 
 		self.opt = ClassOpts(self,opts)
 		self.flag = ClassFlags(self,flags)
+		self.debug = self.debug or cfg.debug_daemon
 
 	def exec_cmd_thread(self,cmd):
 		import threading

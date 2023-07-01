@@ -150,6 +150,7 @@ class Config(Lockable):
 
 	# debug
 	debug                = False
+	debug_daemon         = False
 	debug_opts           = False
 	debug_rpc            = False
 	debug_addrlist       = False
@@ -294,6 +295,7 @@ class Config(Lockable):
 		'MMGEN_BOGUS_SEND',
 		'MMGEN_BOGUS_UNSPENT_DATA',
 		'MMGEN_DEBUG',
+		'MMGEN_DEBUG_DAEMON',
 		'MMGEN_DEBUG_OPTS',
 		'MMGEN_DEBUG_RPC',
 		'MMGEN_DEBUG_ADDRLIST',
