@@ -25,9 +25,10 @@ from subprocess import run,PIPE,CompletedProcess
 from collections import namedtuple
 
 from .cfg import gc
+from .base_obj import Lockable
 from .color import set_vt100
-from .util import msg,Msg_r,ymsg,die,remove_dups,oneshot_warning
-from .flags import *
+from .util import msg,Msg_r,ymsg,die,remove_dups,oneshot_warning,fmt_list
+from .flags import ClassFlags,ClassOpts
 
 _dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version
 _nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
@@ -48,6 +49,7 @@ class Daemon(Lockable):
 	avail_opts = ()
 	avail_flags = () # like opts, but can be set or unset after instantiation
 	_reset_ok = ('debug','wait','pids')
+	version_info_arg = '--version'
 
 	def __init__(self,cfg,opts=None,flags=None):
 
@@ -94,6 +96,9 @@ class Daemon(Lockable):
 
 		if self.debug or (is_daemon and not silent):
 			msg(f'Starting {self.desc} on port {self.bind_port}')
+
+		if self.debug:
+			msg(f'\nExecuting:\n{fmt_list(cmd,fmt="col",indent="  ")}\n')
 
 		if self.use_threads and is_daemon and not self.opt.no_daemonize:
 			ret = self.exec_cmd_thread(cmd)
@@ -162,14 +167,15 @@ class Daemon(Lockable):
 		return self.run_cmd(self.cli_cmd(*cmds),silent=silent)
 
 	def state_msg(self,extra_text=None):
-		extra_text = f'{extra_text} ' if extra_text else ''
+		extra_text = 'not ' if self.state == 'stopped' else f'{extra_text} ' if extra_text else ''
 		return '{:{w}} {:10} {}'.format(
 			f'{self.desc} {extra_text}running',
 			'pid N/A' if self.pid is None or self.pids else f'pid {self.pid}',
 			f'port {self.bind_port}',
-			w = 52 + len(extra_text) )
+			w = 60 )
 
-	def pre_start(self): pass
+	def pre_start(self):
+		pass
 
 	def start(self,quiet=False,silent=False):
 		if self.state == 'ready':
@@ -231,12 +237,25 @@ class Daemon(Lockable):
 		else:
 			die(2,f'Wait for state {req_state!r} timeout exceeded for {self.desc} (port {self.bind_port})')
 
+	@classmethod
+	def get_exec_version_str(cls):
+		try:
+			cp = run([cls.exec_fn,cls.version_info_arg],stdout=PIPE,stderr=PIPE,check=True)
+		except Exception as e:
+			die(2,f'{e}\nUnable to execute {cls.exec_fn}')
+
+		if cp.returncode:
+			die(2,f'Unable to execute {cls.exec_fn}')
+		else:
+			res = cp.stdout.decode().splitlines()
+			return ( res[0] if len(res) == 1 else [s for s in res if 'ersion' in s][0] ).strip()
+
 class RPCDaemon(Daemon):
 
 	avail_opts = ('no_daemonize',)
 
-	def __init__(self,cfg):
-		super().__init__(cfg)
+	def __init__(self,cfg,opts=None,flags=None):
+		super().__init__(cfg,opts=opts,flags=flags)
 		self.desc = '{} {} {}RPC daemon'.format(
 			self.rpc_type,
 			getattr(self.proto.network_names,self.proto.network),
@@ -257,7 +276,6 @@ class CoinDaemon(Daemon):
 	test_suite_port_shift = 1237
 	rpc_user = None
 	rpc_password = None
-	version_info_arg = '--version'
 
 	_cd = namedtuple('coins_data',['daemon_ids'])
 	coins = {
@@ -312,19 +330,6 @@ class CoinDaemon(Daemon):
 					for network in cls.get_daemon( cfg, coin, daemon_id ).networks:
 						yield CoinProtocol.Base.create_network_id(coin,network)
 		return remove_dups(list(gen()),quiet=True)
-
-	@classmethod
-	def get_exec_version_str(cls):
-		try:
-			cp = run([cls.exec_fn,cls.version_info_arg],stdout=PIPE,stderr=PIPE,check=True)
-		except:
-			die(2,f'Unable to execute {cls.exec_fn}')
-
-		if cp.returncode:
-			die(2,f'Unable to execute {cls.exec_fn}')
-		else:
-			res = cp.stdout.decode().splitlines()
-			return ( res[0] if len(res) == 1 else [s for s in res if 'ersion' in s][0] ).strip()
 
 	def __new__(cls,
 			cfg,

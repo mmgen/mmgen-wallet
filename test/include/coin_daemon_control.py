@@ -14,6 +14,7 @@ test.include.coin_daemon_control: Start and stop daemons for the MMGen test suit
 
 from .tests_header import repo_root
 from mmgen.common import *
+from mmgen.protocol import init_proto
 
 action = gc.prog_name.split('-')[0]
 
@@ -51,13 +52,13 @@ Valid network IDs: {nid}, all, or no_xmr
 
 cfg = Config(opts_data=opts_data)
 
-from mmgen.daemon import *
+from mmgen.daemon import CoinDaemon
 
 class warn_missing_exec(oneshot_warning):
 	color = 'nocolor'
 	message = 'daemon executable {!r} not found on this system!'
 
-def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=True):
+def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=False):
 
 	d = CoinDaemon(
 		cfg,
@@ -78,8 +79,9 @@ def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=True):
 	if missing_exec_ok:
 		try:
 			d.get_exec_version_str()
-		except:
+		except Exception as e:
 			if not cfg.quiet:
+				msg(str(e))
 				warn_missing_exec( div=d.exec_fn, fmt_args=(d.exec_fn,) )
 			return
 	if cfg.print_version:
@@ -100,7 +102,6 @@ if cfg.daemon_ids:
 elif 'all' in cfg._args or 'no_xmr' in cfg._args:
 	if len(cfg._args) != 1:
 		die(1,"'all' or 'no_xmr' must be the sole argument")
-	from mmgen.protocol import init_proto
 	for coin in CoinDaemon.coins:
 		if coin == 'XMR' and cfg._args[0] == 'no_xmr':
 			continue

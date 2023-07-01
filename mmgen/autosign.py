@@ -493,8 +493,8 @@ class Autosign:
 			self._xmrwallet_cfg = Config({
 				'_clone': self.cfg,
 				'coin': 'xmr',
-				'wallet_rpc_user': 'autosigner',
-				'wallet_rpc_password': 'my very secret password',
+				'wallet_rpc_user': 'autosign',
+				'wallet_rpc_password': 'autosign password',
 				'wallet_rpc_port': 23232 if self.cfg.test_suite_xmr_autosign else None,
 				'wallet_dir': str(self.wallet_dir),
 				'autosign': True,

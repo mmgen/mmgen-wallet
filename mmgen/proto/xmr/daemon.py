@@ -103,12 +103,14 @@ class MoneroWalletDaemon(RPCDaemon):
 			port_shift  = None,
 			datadir     = None,
 			trust_monerod = False,
-			test_monerod = False ):
+			test_monerod = False,
+			opts         = None,
+			flags        = None ):
 
 		self.proto = proto
 		self.test_suite = test_suite
 
-		super().__init__(cfg)
+		super().__init__(cfg,opts=opts,flags=flags)
 
 		self.network = proto.network
 		self.wallet_dir = wallet_dir
@@ -119,7 +121,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			self.rpc_port += port_shift
 
 		id_str = f'{self.exec_fn}-{self.bind_port}'
-		self.datadir = datadir or (self.test_suite_datadir if test_suite else self.exec_fn)
+		self.datadir = datadir or (self.test_suite_datadir if test_suite else self.exec_fn + '.d')
 		self.pidfile = os.path.join(self.datadir,id_str+'.pid')
 		self.logfile = os.path.join(self.datadir,id_str+'.log')
 

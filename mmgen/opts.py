@@ -79,7 +79,7 @@ long_opts_data = {
 opts_data_dfl = {
 	'text': {
 		'desc': '',
-		'usage':'',
+		'usage':'[options]',
 		'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long (common) options
