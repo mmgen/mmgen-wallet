@@ -16,12 +16,17 @@ from .tests_header import repo_root
 from mmgen.common import *
 from mmgen.protocol import init_proto
 
+xmr_wallet_network_ids = {
+	'xmrw':    'mainnet',
+	'xmrw_tn': 'testnet'
+}
+
 action = gc.prog_name.split('-')[0]
 
 opts_data = {
 	'sets': [('debug',True,'verbose',True)],
 	'text': {
-		'desc': f'{action.capitalize()} coin daemons for the MMGen test suite',
+		'desc': f'{action.capitalize()} coin or wallet daemons for the MMGen test suite',
 		'usage':'[opts] <network IDs>',
 		'options': """
 -h, --help           Print this help message
@@ -41,12 +46,15 @@ opts_data = {
 -W, --no-wait        Don't wait for daemons to change state before exiting
 """,
 	'notes': """
-Valid network IDs: {nid}, all, or no_xmr
+Valid network IDs: {nid}, {xmrw_nid}, all, no_xmr
 """
 	},
 	'code': {
 		'options': lambda s: s.format(a=action.capitalize(),pn=gc.prog_name),
-		'notes': lambda s,help_notes: s.format(nid=help_notes('coin_daemon_network_ids'))
+		'notes': lambda s,help_notes: s.format(
+			nid = help_notes('coin_daemon_network_ids'),
+			xmrw_nid = ', '.join(xmr_wallet_network_ids),
+		)
 	}
 }
 
@@ -60,15 +68,28 @@ class warn_missing_exec(oneshot_warning):
 
 def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=False):
 
-	d = CoinDaemon(
-		cfg,
-		network_id = network_id,
-		proto      = proto,
-		test_suite = not cfg.usermode,
-		opts       = ['no_daemonize'] if cfg.no_daemonize else None,
-		port_shift = int(cfg.port_shift or 0),
-		datadir    = cfg.datadir,
-		daemon_id  = daemon_id )
+	if network_id in xmr_wallet_network_ids:
+		from mmgen.proto.xmr.daemon import MoneroWalletDaemon
+		d = MoneroWalletDaemon(
+			cfg           = cfg,
+			proto         = init_proto( cfg, coin='XMR', network=xmr_wallet_network_ids[network_id] ),
+			user          = 'test',
+			passwd        = 'test passwd',
+			test_suite    = True,
+			monerod_addr  = None,
+			trust_monerod = True,
+			test_monerod  = False,
+			opts          = ['no_daemonize'] if cfg.no_daemonize else None )
+	else:
+		d = CoinDaemon(
+			cfg,
+			network_id = network_id,
+			proto      = proto,
+			test_suite = not cfg.usermode,
+			opts       = ['no_daemonize'] if cfg.no_daemonize else None,
+			port_shift = int(cfg.port_shift or 0),
+			datadir    = cfg.datadir,
+			daemon_id  = daemon_id )
 
 	if cfg.mainnet_only and d.network != 'mainnet':
 		return
@@ -117,7 +138,7 @@ else:
 	if not ids:
 		cfg._opts.usage()
 	for i in ids:
-		if i not in network_ids:
+		if i not in network_ids + list(xmr_wallet_network_ids):
 			die(1,f'{i!r}: invalid network ID')
 	for network_id in ids:
 		run(network_id=network_id.lower())
