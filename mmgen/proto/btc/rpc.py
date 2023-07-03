@@ -101,6 +101,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 	auth_type = 'basic'
 	has_auth_cookie = True
 	wallet_path = '/'
+	twname = 'mmgen-tracking-wallet'
 
 	async def __init__(
 			self,
@@ -216,6 +217,12 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 	def make_host_path(self,wallet):
 		return f'/wallet/{wallet}' if wallet else self.wallet_path
 
+	@property
+	async def tracking_wallet_exists(self):
+		twname = self.cfg.regtest_user or self.twname
+		wnames = [i['name'] for i in (await self.call('listwalletdir'))['wallets']]
+		return twname in wnames
+
 	async def check_or_create_daemon_wallet(self,called=[],wallet_create=True):
 		"""
 		Returns True if the correct tracking wallet is currently loaded or if a new one
@@ -225,7 +232,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		if called or (self.chain == 'regtest' and self.cfg.regtest_user != 'carol'):
 			return False
 
-		twname = self.daemon.tracking_wallet_name
+		twname = self.twname
 		loaded_wnames = await self.call('listwallets')
 		wnames = [i['name'] for i in (await self.call('listwalletdir'))['wallets']]
 		m = f'Please fix your {self.daemon.desc} wallet installation or cmdline options'

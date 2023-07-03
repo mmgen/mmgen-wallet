@@ -50,7 +50,7 @@ class BitcoinTwJSON(TwJSON):
 
 		@property
 		async def tracking_wallet_exists(self):
-			return await self.twctl.rpc.check_or_create_daemon_wallet(wallet_create=False)
+			return await self.twctl.rpc.tracking_wallet_exists
 
 		async def create_tracking_wallet(self):
 			return await self.twctl.rpc.check_or_create_daemon_wallet(wallet_create=True)

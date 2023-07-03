@@ -24,7 +24,6 @@ class bitcoin_core_daemon(CoinDaemon):
 	cli_fn = 'bitcoin-cli'
 	testnet_dir = 'testnet3'
 	cfg_file_hdr = '# Bitcoin Core config file\n'
-	tracking_wallet_name = 'mmgen-tracking-wallet'
 	rpc_ports = _nw(8332, 18332, 18443)
 	cfg_file = 'bitcoin.conf'
 	nonstd_datadir = False
