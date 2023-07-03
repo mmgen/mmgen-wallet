@@ -167,7 +167,8 @@ class TwJSON:
 				include_amts    = True,
 				pretty          = False,
 				prune           = False,
-				warn_used       = False ):
+				warn_used       = False,
+				force_overwrite = False ):
 
 			if prune and not self.can_prune:
 				die(1,f'Pruning not supported for {proto.name} protocol')
@@ -213,4 +214,5 @@ class TwJSON:
 						'data': data
 					},
 					pretty = pretty ),
-				desc    = f'tracking wallet JSON data' )
+				desc    = f'tracking wallet JSON data',
+				ask_overwrite = not force_overwrite )

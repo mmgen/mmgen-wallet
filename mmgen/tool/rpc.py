@@ -205,7 +205,7 @@ class tool_cmd(tool_cmd_base):
 		ret = await (await TwCtl(self.cfg,self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
 		return True
 
-	async def twexport(self,include_amts=True,pretty=False,prune=False,warn_used=False):
+	async def twexport(self,include_amts=True,pretty=False,prune=False,warn_used=False,force=False):
 		"""
 		export a tracking wallet to JSON format
 
@@ -224,6 +224,8 @@ class tool_cmd(tool_cmd_base):
 
 		  If ‘warn_used’ is true, the user will be prompted before pruning used
 		  addresses.
+
+		  If ‘force’ is true, any existing dump will be overwritten without prompting.
 		"""
 		from ..tw.json import TwJSON
 		await TwJSON.Export(
@@ -232,7 +234,8 @@ class tool_cmd(tool_cmd_base):
 			include_amts    = include_amts,
 			pretty          = pretty,
 			prune           = prune,
-			warn_used       = warn_used )
+			warn_used       = warn_used,
+			force_overwrite = force )
 		return True
 
 	async def twimport(self,filename:str,ignore_checksum=False,batch=False):
