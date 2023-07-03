@@ -229,10 +229,10 @@ class tool_cmd(tool_cmd_base):
 		await TwJSON.Export(
 			self.cfg,
 			self.proto,
-			include_amts = include_amts,
-			pretty       = pretty,
-			prune        = prune,
-			warn_used    = warn_used )
+			include_amts    = include_amts,
+			pretty          = pretty,
+			prune           = prune,
+			warn_used       = warn_used )
 		return True
 
 	async def twimport(self,filename:str,ignore_checksum=False,batch=False):

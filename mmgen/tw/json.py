@@ -86,7 +86,13 @@ class TwJSON:
 
 		blockchain_rescan_warning = None
 
-		async def __init__(self,cfg,proto,filename,ignore_checksum=False,batch=False):
+		async def __init__(
+				self,
+				cfg,
+				proto,
+				filename,
+				ignore_checksum = False,
+				batch           = False ):
 
 			super().__init__(cfg,proto)
 
@@ -154,7 +160,14 @@ class TwJSON:
 
 	class Export(Base,metaclass=AsyncInit):
 
-		async def __init__(self,cfg,proto,include_amts=True,pretty=False,prune=False,warn_used=False):
+		async def __init__(
+				self,
+				cfg,
+				proto,
+				include_amts    = True,
+				pretty          = False,
+				prune           = False,
+				warn_used       = False ):
 
 			if prune and not self.can_prune:
 				die(1,f'Pruning not supported for {proto.name} protocol')

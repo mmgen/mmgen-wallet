@@ -308,7 +308,8 @@ class RPCClient(MMGenObject):
 		self.backend = (await ret) if type(ret).__name__ == 'coroutine' else ret
 
 	# Call family of methods - direct-to-daemon RPC call:
-	# positional params are passed to the daemon, 'timeout' and 'wallet' kwargs to the backend
+	# - positional params are passed to the daemon, 'timeout' and 'wallet' kwargs to the backend
+	# - 'wallet' kwarg is used only by regtest
 
 	async def call(self,method,*params,timeout=None,wallet=None):
 		"""
