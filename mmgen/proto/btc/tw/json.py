@@ -53,7 +53,11 @@ class BitcoinTwJSON(TwJSON):
 			return await self.twctl.rpc.tracking_wallet_exists
 
 		async def create_tracking_wallet(self):
-			return await self.twctl.rpc.check_or_create_daemon_wallet(wallet_create=True)
+			try:
+				await self.twctl.rpc.check_or_create_daemon_wallet()
+				return True
+			except:
+				return False
 
 		async def get_entries(self):
 			entries_in = [self.entry_tuple_in(*e) for e in self.data['data']['entries']]
