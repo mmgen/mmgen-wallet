@@ -137,7 +137,7 @@ async def main():
 
 		if tx1.proto.sign_mode == 'daemon':
 			from .rpc import rpc_init
-			tx1.rpc = await rpc_init(cfg,tx1.proto)
+			tx1.rpc = await rpc_init( cfg, tx1.proto, ignore_wallet=True )
 
 		if cfg.tx_id:
 			msg(tx1.txid)

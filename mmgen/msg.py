@@ -251,7 +251,7 @@ class coin_msg:
 
 			if self.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
-				self.rpc = await rpc_init(self.cfg,self.proto)
+				self.rpc = await rpc_init( self.cfg, self.proto, ignore_wallet=True )
 
 			from .wallet import Wallet
 			from .addrlist import KeyAddrList
@@ -315,7 +315,7 @@ class coin_msg:
 
 			if self.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
-				self.rpc = await rpc_init(self.cfg,self.proto)
+				self.rpc = await rpc_init( self.cfg, self.proto, ignore_wallet=True )
 
 			for k,v in sigs.items():
 				ret = await self.do_verify(

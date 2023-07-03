@@ -59,7 +59,7 @@ async def main():
 	proto = cfg._proto
 
 	from mmgen.rpc import rpc_init
-	c = await rpc_init(cfg,proto)
+	c = await rpc_init( cfg, proto, ignore_wallet=True )
 
 	tip = await c.call('getblockcount')
 	assert tip > 1, 'block tip must be > 1'

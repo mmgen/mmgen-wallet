@@ -79,7 +79,7 @@ class Signable:
 			tx1 = UnsignedTX( cfg=self.cfg, filename=f )
 			if tx1.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
-				tx1.rpc = await rpc_init( self.cfg, tx1.proto )
+				tx1.rpc = await rpc_init( self.cfg, tx1.proto, ignore_wallet=True )
 			from .tx.sign import txsign
 			tx2 = await txsign( self.cfg, tx1, self.parent.wallet_files[:], None, None )
 			if tx2:
@@ -293,7 +293,7 @@ class Autosign:
 				from .rpc import rpc_init
 				from .exception import SocketError
 				try:
-					await rpc_init( self.cfg, proto )
+					await rpc_init( self.cfg, proto, ignore_wallet=True )
 				except SocketError as e:
 					from .daemon import CoinDaemon
 					d = CoinDaemon( self.cfg, proto=proto, test_suite=self.cfg.test_suite )

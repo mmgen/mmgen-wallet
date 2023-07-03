@@ -25,7 +25,7 @@ async def main():
 
 	assert cfg.coin == 'BTC' and cfg.network == 'mainnet', 'This script works only on BTC mainnet!'
 
-	c = await rpc_init(cfg)
+	c = await rpc_init( cfg, ignore_wallet=True )
 
 	tx = await c.call('getrawtransaction',txid,True)
 
