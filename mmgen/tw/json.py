@@ -69,7 +69,7 @@ class TwJSON:
 				cls        = json_encoder,
 				sort_keys  = True,
 				separators = None if pretty else (',', ':'),
-				indent     = 4 if pretty else None )
+				indent     = 4 if pretty else None ) + ('\n' if pretty else '')
 
 		def make_chksum(self,data):
 			return make_chksum_8( self.json_dump(data).encode() ).lower()

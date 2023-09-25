@@ -23,6 +23,7 @@ tw.view: base class for tracking wallet view classes
 import sys,time,asyncio
 from collections import namedtuple
 
+from ..cfg import gc,gv
 from ..objmethods import Hilite,InitErrors,MMGenObject
 from ..obj import get_obj,MMGenIdx,MMGenList
 from ..color import nocolor,yellow,green,red,blue
@@ -412,7 +413,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				yield ''
 
 				if data and dt.colhdr_fmt_method:
-					yield getattr(self,dt.colhdr_fmt_method)(cw,hdr_fs,color)
+					col_hdr = getattr(self,dt.colhdr_fmt_method)(cw,hdr_fs,color)
+					yield col_hdr.rstrip() if line_processing == 'print' else col_hdr
 
 			def get_body(method):
 				if line_processing:
@@ -440,6 +442,9 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 					get_body(getattr(self,dt.fmt_method)) if data else
 					[(nocolor,yellow)[color](self.nodata_msg.ljust(self.term_width))] )
 			)
+
+		if not gv.stdout.isatty():
+			line_processing = 'print'
 
 		dt = getattr(self.display_type,display_type)
 
@@ -515,7 +520,6 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				for k in self.scroll_keys['vi']:
 					assert k not in self.key_mappings, f'{k!r} is in key_mappings'
 				self.key_mappings.update(self.scroll_keys['vi'])
-				from ..cfg import gc
 				self.key_mappings.update(self.scroll_keys[gc.platform])
 			return self.key_mappings
 

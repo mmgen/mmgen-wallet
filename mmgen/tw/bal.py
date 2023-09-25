@@ -91,7 +91,7 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 					lbl = 'Wallet',
 					w = col1_w + iwidth_adj,
 					cols = ' '.join(v.format(minconf=self.minconf).ljust(iwidths[k]+add_w)
-						for k,v in self.conf_cols.items()) )
+						for k,v in self.conf_cols.items()) ).rstrip()
 
 				from ..addr import MMGenID
 				for label in sorted(self.data.keys()):
@@ -99,7 +99,7 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 						lbl = yellow((label + ' ' + self.proto.coin).ljust(col1_w)) if label == 'TOTAL'
 							else MMGenID.hlc( (label+':').ljust(col1_w), color=color ),
 						cols = ' '.join(make_col(label,col) for col in self.conf_cols)
-					)
+					).rstrip()
 
 			for k,v in self.data.items():
 				if k == 'TOTAL':
@@ -107,4 +107,4 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 				if v['spendable']:
 					yield red(f'Warning: this wallet contains PRIVATE KEYS for {k} outputs!')
 
-		return '\n'.join(gen_output()).rstrip()
+		return '\n'.join(gen_output())
