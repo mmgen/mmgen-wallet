@@ -174,19 +174,21 @@ def fmt(s,indent='',strip_char=None,append='\n'):
 	"de-indent multiple lines of text, or indent with specified string"
 	return indent + ('\n'+indent).join([l.strip(strip_char) for l in s.strip().splitlines()]) + append
 
-def fmt_list(iterable,fmt='dfl',indent=''):
+def fmt_list(iterable,fmt='dfl',indent='',conv=None):
 	"pretty-format a list"
-	sep,lq,rq = {
-		'utf8':      ("“, ”",      "“",    "”"),
-		'dfl':       ("', '",      "'",    "'"),
-		'bare':      (' ',         '',     '' ),
-		'no_quotes': (', ',        '',     '' ),
-		'no_spc':    ("','",       "'",    "'"),
-		'min':       (",",         "'",    "'"),
-		'col':       ('\n'+indent, indent, '' ),
-		'list':      ('\n- '+indent, '- '+indent, '' ),
+	_conv,sep,lq,rq = {
+		'dfl':       ( str,  ", ", "'",  "'"),
+		'utf8':      ( str,  ", ", "“",  "”"),
+		'bare':      ( repr, " ",  "",   ""),
+		'no_quotes': ( str,  ", ", "",   ""),
+		'no_spc':    ( str,  ",",  "'",  "'"),
+		'min':       ( str,  ",",  "",   ""),
+		'repr':      ( repr, ", ", "",   ""),
+		'csv':       ( repr, ",",  "",   ""),
+		'col':       ( str,  "\n", "",   ""),
 	}[fmt]
-	return lq + sep.join(str(i) for i in iterable) + rq
+	conv = conv or _conv
+	return indent + (sep+indent).join(lq+conv(e)+rq for e in iterable)
 
 def list_gen(*data):
 	"""
