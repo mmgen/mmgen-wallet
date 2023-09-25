@@ -131,10 +131,6 @@ trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
 
 umask 0022
 
-export MMGEN_TEST_SUITE=1
-export MMGEN_NO_LICENSE=1
-export PYTHONPATH=.
-
 test_py='test/test.py -n'
 objtest_py='test/objtest.py'
 objattrtest_py='test/objattrtest.py'

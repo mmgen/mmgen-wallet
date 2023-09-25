@@ -29,8 +29,6 @@ sys.path.insert(0,overlay_setup(repo_root))
 from mmgen.devinit import init_dev
 init_dev()
 
-os.environ['MMGEN_TEST_SUITE'] = '1'
-
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from mmgen.obj import *

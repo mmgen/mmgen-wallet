@@ -23,11 +23,8 @@ test/objattrtest.py: Test immutable attributes of MMGen data objects
 # TODO: test 'typeconv' during instance creation
 
 import sys,os
-pn = os.path.dirname(sys.argv[0])
-os.chdir(os.path.join(pn,os.pardir))
-sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
-os.environ['MMGEN_TEST_SUITE'] = '1'
+from include.tests_header import repo_root
 
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *

@@ -201,6 +201,9 @@ cfg.skipping_deps = cfg.resuming or 'skip_deps' in po.user_opts
 
 cmd_args = cfg._args
 
+if not cfg.system:
+	os.environ['PYTHONPATH'] = repo_root
+
 if cfg.pexpect_spawn and gc.platform == 'win':
 	die(1,'--pexpect-spawn option not supported on Windows platform, exiting')
 
@@ -574,9 +577,6 @@ class TestSuiteRunner(object):
 			self.spawn_env['MMGEN_COLUMNS'] = str(get_terminal_size().width)
 		else:
 			self.spawn_env['MMGEN_COLUMNS'] = '120'
-
-		if not cfg.system:
-			self.spawn_env['PYTHONPATH'] = repo_root
 
 	def spawn_wrapper(self,cmd,
 			args         = [],
