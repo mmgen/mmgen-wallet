@@ -124,9 +124,6 @@ op     = cmd_args.pop(0)
 infile = cmd_args.pop(0)
 wallets = spec = None
 
-if op.replace('-','_') not in MoneroWalletOps.ops:
-	die(1,f'{op!r}: unrecognized operation')
-
 if op in ('relay','submit','resubmit'):
 	if len(cmd_args) != 0:
 		cfg._opts.usage()
@@ -146,6 +143,8 @@ elif op in ('export-outputs','import-key-images'):
 	if len(cmd_args) > 1:
 		cfg._opts.usage()
 	wallets = cmd_args.pop(0) if cmd_args else None
+else:
+	die(1,f'{op!r}: unrecognized operation')
 
 op_cls = getattr(MoneroWalletOps,op.replace('-','_'))
 

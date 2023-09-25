@@ -788,7 +788,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		for resp in ('u','i','t','a','m','T','A','r','r','D','D','D','D','p','P','n','V'):
 			t.expect('draw:\b',resp,regex=True)
 		if t.pexpect_spawn:
-			t.expect(r'Block:.*\b394\b',regex=True)
+			t.expect(r'Block:.*394',regex=True)
 			time.sleep(1)
 			t.send('q')
 			time.sleep(0.2)
