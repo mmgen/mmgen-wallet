@@ -190,6 +190,20 @@ def fmt_list(iterable,fmt='dfl',indent='',conv=None):
 	conv = conv or _conv
 	return indent + (sep+indent).join(lq+conv(e)+rq for e in iterable)
 
+def fmt_dict(mapping,fmt='dfl',kconv=None,vconv=None):
+	"pretty-format a dict"
+	kc,vc,sep,fs = {
+		'dfl':           ( str, str,  ", ",  "'{}' ({})" ),
+		'square':        ( str, str,  ", ",  "'{}' [{}]" ),
+		'equal':         ( str, str,  ", ",  "'{}'={}" ),
+		'equal_spaced':  ( str, str,  ", ",  "'{}' = {}" ),
+		'kwargs':        ( str, repr, ", ",  "{}={}" ),
+		'colon':         ( str, repr, ", ",  "{}:{}" ),
+	}[fmt]
+	kconv = kconv or kc
+	vconv = vconv or vc
+	return sep.join(fs.format(kconv(k),vconv(v)) for k,v in mapping.items())
+
 def list_gen(*data):
 	"""
 	Generate a list from an arg tuple of sublists

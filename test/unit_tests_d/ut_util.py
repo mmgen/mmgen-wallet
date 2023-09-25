@@ -5,7 +5,8 @@ test.unit_tests_d.ut_misc: utility unit tests for the MMGen suite
 """
 
 from ..include.common import vmsg
-from mmgen.util import fmt_list,list_gen
+from mmgen.util import fmt_list,fmt_dict,list_gen
+from mmgen.color import cyan
 
 class unit_tests:
 
@@ -40,6 +41,53 @@ class unit_tests:
 				indent = '    + ' if fmt == 'col' else ''
 				res = fmt_list(sample,fmt=fmt,indent=indent) if fmt else fmt_list(sample,indent=indent)
 				vmsg(f'  {str(fmt)+":":{col1_w}}{spc}{res}')
+				if name in chks:
+					assert res == chks[name][fmt], f'{res} != {chks[name][fmt]}'
+
+		vmsg('')
+		return True
+
+	def fmt_dict(self,name,ut):
+		samples = {
+			'url': {
+				'name':'Example',
+				'desc':'Sample URL',
+				'rank': 1,
+				'error': None,
+				'url':'https://example.com/foobar.html',
+			},
+			'choice': {
+				'c': 'curl',
+				'a': 'aiohttp',
+				'r': 'requests',
+			},
+			'cmdline': {
+				'cmd': ["ls","-l"],
+				'text': 'foo bar',
+				'stdin': None,
+				'offset': 123,
+				'env': {},
+			}
+		}
+		chks = {
+		'cmdline': {
+			None:           "'cmd' (['ls', '-l']), 'text' (foo bar), 'stdin' (None), 'offset' (123), 'env' ({})",
+			'dfl':          "'cmd' (['ls', '-l']), 'text' (foo bar), 'stdin' (None), 'offset' (123), 'env' ({})",
+			'square':       "'cmd' [['ls', '-l']], 'text' [foo bar], 'stdin' [None], 'offset' [123], 'env' [{}]",
+			'equal':        "'cmd'=['ls', '-l'], 'text'=foo bar, 'stdin'=None, 'offset'=123, 'env'={}",
+			'equal_spaced': "'cmd' = ['ls', '-l'], 'text' = foo bar, 'stdin' = None, 'offset' = 123, 'env' = {}",
+			'kwargs':       "cmd=['ls', '-l'], text='foo bar', stdin=None, offset=123, env={}",
+			'colon':        "cmd:['ls', '-l'], text:'foo bar', stdin:None, offset:123, env:{}",
+		}
+		}
+
+		col1_w = max(len(str(e)) for e in list(chks.values())[0]) + 1
+
+		for name,sample in samples.items():
+			vmsg(cyan(f'Input: {sample}'))
+			for fmt,chk in list(chks.values())[0].items():
+				res = fmt_dict(sample,fmt=fmt) if fmt else fmt_dict(sample)
+				vmsg(f'  {str(fmt)+":":{col1_w}} {res}')
 				if name in chks:
 					assert res == chks[name][fmt], f'{res} != {chks[name][fmt]}'
 
