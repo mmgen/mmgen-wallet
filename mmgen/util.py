@@ -190,15 +190,20 @@ def fmt_list(iterable,fmt='dfl',indent=''):
 
 def list_gen(*data):
 	"""
-	add element to list if condition is true or absent
+	Generate a list from an arg tuple of sublists
+	- The last element of each sublist is a condition.  If it evaluates to true, the preceding
+	  elements of the sublist are included in the result.  Otherwise the sublist is skipped.
+	- If a sublist contains only one element, the condition defaults to true.
 	"""
 	assert type(data) in (list,tuple), f'{type(data).__name__} not in (list,tuple)'
 	def gen():
-		for i in data:
-			assert type(i) == list, f'{type(i).__name__} != list'
-			assert len(i) in (1,2), f'{len(i)} not in (1,2)'
-			if len(i) == 1 or i[1]:
-				yield i[0]
+		for d in data:
+			assert type(d) == list, f'{type(d).__name__} != list'
+			if len(d) == 1:
+				yield d[0]
+			elif d[-1]:
+				for idx in range(len(d)-1):
+					yield d[idx]
 	return list(gen())
 
 def remove_dups(iterable,edesc='element',desc='list',quiet=False,hide=False):
