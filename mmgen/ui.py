@@ -54,24 +54,22 @@ def line_input(cfg,prompt,echo=True,insert_txt='',hold_protect=True):
 		except ImportError:
 			return False
 
-	if not sys.stdout.isatty():
-		msg_r(prompt)
-		prompt = ''
-
 	if hold_protect:
 		from .term import kb_hold_protect
 		kb_hold_protect()
 
 	if cfg.test_suite_popen_spawn:
 		msg(prompt)
-		sys.stderr.flush()
 		reply = os.read(0,4096).decode().rstrip('\n') # strip NL to mimic behavior of input()
-	elif echo or not sys.stdin.isatty():
-		readline = insert_txt and sys.stdin.isatty() and get_readline()
-		if readline:
+	elif not sys.stdin.isatty():
+		msg_r(prompt)
+		reply = input('')
+	elif echo:
+		readline = get_readline()
+		if readline and insert_txt:
 			readline.set_startup_hook(lambda: readline.insert_text(insert_txt))
 		reply = input(prompt)
-		if readline:
+		if readline and insert_txt:
 			readline.set_startup_hook(lambda: readline.insert_text(''))
 	else:
 		from getpass import getpass
