@@ -22,7 +22,7 @@ test/unit_tests.py: Unit tests for the MMGen suite
 
 import sys,os,time,importlib,platform
 
-from include.tests_header import repo_root
+import include.test_init
 
 from mmgen.devinit import init_dev
 init_dev()
@@ -61,11 +61,9 @@ type(cfg)._reset_ok += ('use_internal_keccak_module','debug_addrlist')
 
 set_globals(cfg)
 
-os.environ['PYTHONPATH'] = repo_root
-
 file_pfx = 'ut_'
 
-tests_d = os.path.join(repo_root,'test','unit_tests_d')
+tests_d = os.path.join(include.test_init.repo_root,'test','unit_tests_d')
 
 all_tests = sorted(fn[len(file_pfx):-len('.py')] for fn in os.listdir(tests_d) if fn.startswith(file_pfx))
 

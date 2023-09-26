@@ -72,18 +72,21 @@ def create_shm_dir(data_dir,trash_dir):
 
 import sys,os,time
 
-from include.tests_header import repo_root
-from test.overlay import get_overlay_tree_dir,overlay_setup
-
-overlay_tree_dir = get_overlay_tree_dir(repo_root)
-sys.path.insert(0,overlay_tree_dir)
-
 if sys.argv[-1] == 'clean':
+	os.environ['MMGEN_TEST_SUITE'] = '1'
+	repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
+	os.chdir(repo_root)
+	sys.path[0] = repo_root
+
 	from shutil import rmtree
+	from test.overlay import get_overlay_tree_dir
+	overlay_tree_dir = get_overlay_tree_dir(repo_root)
 	rmtree(overlay_tree_dir,ignore_errors=True)
+	print(f'Removed {os.path.relpath(overlay_tree_dir)!r}')
 else:
 	# overlay must be set up before importing mmgen mods!
-	overlay_setup(repo_root)
+	import include.test_init
+	repo_root = include.test_init.repo_root
 
 from mmgen.common import *
 

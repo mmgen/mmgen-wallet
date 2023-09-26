@@ -12,7 +12,7 @@
 test.include.coin_daemon_control: Start and stop daemons for the MMGen test suite
 """
 
-from .tests_header import repo_root
+import include.test_init
 from mmgen.common import *
 from mmgen.protocol import init_proto
 

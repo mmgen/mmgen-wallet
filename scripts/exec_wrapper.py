@@ -19,7 +19,7 @@ def exec_wrapper_init():
 		exec_wrapper_sys.path[0] = 'test'
 	else:
 		from test.overlay import overlay_setup
-		exec_wrapper_sys.path[0] = overlay_setup(repo_root=os.getcwd()) # assume we're in the repo root
+		overlay_setup(repo_root=os.getcwd()) # assume we're in the repo root
 
 	if 'TMUX' in os.environ:
 		del os.environ['TMUX']

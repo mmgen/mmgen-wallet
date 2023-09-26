@@ -24,7 +24,8 @@ test/scrambletest.py: seed scrambling and addrlist data generation tests for all
 import sys,os,time
 from subprocess import run,PIPE
 
-from include.tests_header import repo_root
+import include.test_init
+
 import mmgen.opts as opts
 from mmgen.cfg import gc,Config
 from mmgen.util import msg,msg_r,bmsg

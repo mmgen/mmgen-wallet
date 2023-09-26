@@ -23,9 +23,7 @@ test/tooltest.py: Tests for the 'mmgen-tool' utility
 import sys,os,binascii
 from subprocess import run,PIPE
 
-from include.tests_header import repo_root
-from test.overlay import overlay_setup
-sys.path.insert(0,overlay_setup(repo_root))
+import include.test_init
 
 from mmgen.common import *
 from test.include.common import *
@@ -131,11 +129,9 @@ ref_subdir  = '' if proto.base_coin == 'BTC' else proto.name.lower()
 altcoin_pfx = '' if proto.base_coin == 'BTC' else '-'+proto.base_coin
 tn_ext = ('','.testnet')[proto.testnet]
 
-os.environ['PYTHONPATH'] = repo_root
-
 spawn_cmd = [
 	'scripts/exec_wrapper.py',
-	os.path.relpath(os.path.join(repo_root,'cmds','mmgen-tool')) ]
+	os.path.relpath(os.path.join(include.test_init.repo_root,'cmds','mmgen-tool')) ]
 
 if cfg.coverage:
 	d,f = init_coverage()

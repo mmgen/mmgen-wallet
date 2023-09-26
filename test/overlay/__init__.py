@@ -66,4 +66,6 @@ def overlay_setup(repo_root):
 			for d in cfg.get('options','packages').split():
 				process_srcdir(pkgname,d)
 
+	sys.path.insert(0,overlay_tree_dir)
+
 	return overlay_tree_dir

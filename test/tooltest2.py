@@ -27,9 +27,7 @@ import sys,os,time,importlib
 from subprocess import run,PIPE
 from decimal import Decimal
 
-from include.tests_header import repo_root
-from test.overlay import overlay_setup
-sys.path.insert(0,overlay_setup(repo_root))
+import include.test_init
 
 from mmgen.common import *
 from test.include.common import set_globals,end_msg,sample_text
@@ -970,7 +968,6 @@ if cfg.list_tested_cmds:
 	list_tested_cmds()
 	sys.exit(0)
 
-os.environ['PYTHONPATH'] = repo_root
 tool_exec = os.path.relpath(os.path.join('cmds','mmgen-tool'))
 
 if cfg.fork:

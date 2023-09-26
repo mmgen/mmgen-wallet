@@ -22,9 +22,7 @@ test/gentest.py: Cryptocoin key/address generation tests for the MMGen suite
 
 import sys,os,time
 
-from include.tests_header import repo_root
-from test.overlay import overlay_setup
-sys.path.insert(0,overlay_setup(repo_root))
+import include.test_init
 
 # Import these _after_ local path's been added to sys.path
 import mmgen.opts as opts

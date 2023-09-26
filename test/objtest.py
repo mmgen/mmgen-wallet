@@ -22,9 +22,7 @@ test/objtest.py: Test MMGen data objects
 
 import sys,os,re
 
-from include.tests_header import repo_root
-from test.overlay import overlay_setup
-sys.path.insert(0,overlay_setup(repo_root))
+import include.test_init
 
 from mmgen.devinit import init_dev
 init_dev()
