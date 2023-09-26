@@ -60,6 +60,7 @@ def line_input(cfg,prompt,echo=True,insert_txt='',hold_protect=True):
 
 	if cfg.test_suite_popen_spawn:
 		msg(prompt)
+		sys.stderr.flush() # required by older Pythons (e.g. v3.7)
 		reply = os.read(0,4096).decode().rstrip('\n') # strip NL to mimic behavior of input()
 	elif not sys.stdin.isatty():
 		msg_r(prompt)
