@@ -65,8 +65,9 @@ os.environ['PYTHONPATH'] = repo_root
 
 file_pfx = 'ut_'
 
-all_tests = sorted(
-	[fn[3:-3] for fn in os.listdir(os.path.join(repo_root,'test','unit_tests_d')) if fn[:3] == file_pfx])
+tests_d = os.path.join(repo_root,'test','unit_tests_d')
+
+all_tests = sorted(fn[len(file_pfx):-len('.py')] for fn in os.listdir(tests_d) if fn.startswith(file_pfx))
 
 exclude = cfg.exclude.split(',') if cfg.exclude else []
 

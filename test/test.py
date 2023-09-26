@@ -141,8 +141,6 @@ opts_data = {
 -r, --resume=c       Resume at command 'c' after interrupted run
 -R, --resume-after=c Same, but resume at command following 'c'
 -t, --step           After resuming, execute one command and stop
--s, --system         Test scripts and modules installed on system rather
-                     than those in the repo root
 -S, --skip-deps      Skip dependency checking for command
 -u, --usr-random     Get random data interactively from user
 -T, --pexpect-timeout=T Set the timeout for pexpect
@@ -200,9 +198,6 @@ cfg.resuming = any(k in po.user_opts for k in ('resume','resume_after'))
 cfg.skipping_deps = cfg.resuming or 'skip_deps' in po.user_opts
 
 cmd_args = cfg._args
-
-if not cfg.system:
-	os.environ['PYTHONPATH'] = repo_root
 
 if cfg.pexpect_spawn and gc.platform == 'win':
 	die(1,'--pexpect-spawn option not supported on Windows platform, exiting')

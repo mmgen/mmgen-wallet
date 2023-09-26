@@ -76,8 +76,6 @@ opts_data = {
 -L, --list-tested-cmds Output the 'mmgen-tool' commands that are tested by this test suite
 -n, --names          Print command names instead of descriptions
 -q, --quiet          Produce quieter output
--s, --system         Test scripts and modules installed on system rather than
-                     those in the repo root
 -t, --type=          Specify coin type
 -f, --fork           Run commands via tool executable instead of importing tool module
 -v, --verbose        Produce more verbose output
@@ -972,12 +970,8 @@ if cfg.list_tested_cmds:
 	list_tested_cmds()
 	sys.exit(0)
 
-if cfg.system:
-	tool_exec = 'mmgen-tool'
-	sys.path.pop(0)
-else:
-	os.environ['PYTHONPATH'] = repo_root
-	tool_exec = os.path.relpath(os.path.join('cmds','mmgen-tool'))
+os.environ['PYTHONPATH'] = repo_root
+tool_exec = os.path.relpath(os.path.join('cmds','mmgen-tool'))
 
 if cfg.fork:
 	passthru_args = ['coin','type','testnet','token']

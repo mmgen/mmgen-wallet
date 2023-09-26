@@ -41,8 +41,6 @@ opts_data = {
 --, --longhelp      Print help message for long options (common options)
 -l, --list-cmds     List and describe the tests and commands in this test suite
 -L, --list-names    List the names of all tested 'mmgen-tool' commands
--s, --system        Test scripts and modules installed on system rather than
-                    those in the repo root
 -t, --type=t        Specify address type (valid choices: 'zcash_z')
 -v, --verbose       Produce more verbose output
 """,
@@ -133,13 +131,11 @@ ref_subdir  = '' if proto.base_coin == 'BTC' else proto.name.lower()
 altcoin_pfx = '' if proto.base_coin == 'BTC' else '-'+proto.base_coin
 tn_ext = ('','.testnet')[proto.testnet]
 
-mmgen_cmd = 'mmgen-tool'
+os.environ['PYTHONPATH'] = repo_root
 
-if not cfg.system:
-	os.environ['PYTHONPATH'] = repo_root
-	mmgen_cmd = os.path.relpath(os.path.join(repo_root,'cmds',mmgen_cmd))
-
-spawn_cmd = ['scripts/exec_wrapper.py',mmgen_cmd]
+spawn_cmd = [
+	'scripts/exec_wrapper.py',
+	os.path.relpath(os.path.join(repo_root,'cmds','mmgen-tool')) ]
 
 if cfg.coverage:
 	d,f = init_coverage()

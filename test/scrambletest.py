@@ -39,8 +39,6 @@ opts_data = {
 -a, --no-altcoin    Skip altcoin tests
 -C, --coverage      Produce code coverage info using trace module
 -l, --list-cmds     List and describe the tests and commands in this test suite
--s, --system        Test scripts and modules installed on system rather than
-                    those in the repo root
 -v, --verbose       Produce more verbose output
 """,
 	'notes': """
@@ -101,8 +99,6 @@ cmd_base = f'python3{cvr_opts} cmds/mmgen-{{}}gen -qS'
 
 run_env = dict(os.environ)
 run_env['MMGEN_DEBUG_ADDRLIST'] = '1'
-if not cfg.system:
-	run_env['PYTHONPATH'] = repo_root
 
 def get_cmd_output(cmd):
 	cp = run( cmd.split(), stdout=PIPE, stderr=PIPE, env=run_env )
