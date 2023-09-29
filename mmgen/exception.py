@@ -51,6 +51,7 @@ class UserOptError(Exception):            mmcode = 1
 class NoLEDSupport(Exception):            mmcode = 1
 class MsgFileFailedSID(Exception):        mmcode = 1
 class TestSuiteException(Exception):      mmcode = 1
+class TestSuiteSpawnedScriptException(Exception): mmcode = 1
 
 # 2: yellow hl, message only
 class InvalidTokenAddress(Exception):     mmcode = 2

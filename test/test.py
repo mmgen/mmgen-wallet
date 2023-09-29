@@ -1001,7 +1001,7 @@ elif cmd_args and cmd_args[0] in utils:
 if cfg.pause:
 	set_restore_term_at_exit()
 
-from mmgen.exception import TestSuiteException,TestSuiteFatalException
+from mmgen.exception import TestSuiteException,TestSuiteFatalException,TestSuiteSpawnedScriptException
 
 try:
 	tr = TestSuiteRunner(data_dir,trash_dir)
@@ -1018,13 +1018,14 @@ except TestSuiteException as e:
 	die(2,e.args[0])
 except TestSuiteFatalException as e:
 	die(4,e.args[0])
+except TestSuiteSpawnedScriptException as e:
+	# if spawned script is not running under exec_wrapper, output brief error msg:
+	if os.getenv('MMGEN_EXEC_WRAPPER'):
+		Msg(red(str(e)))
+		Msg(blue('test.py: spawned script exited with error'))
 except Exception:
-	if os.getenv('MMGEN_EXEC_WRAPPER'): # test.py itself is running under exec_wrapper
-		import traceback
-		print(''.join(traceback.format_exception(*sys.exc_info())))
-		msg(blue('Test script exited with error'))
-	else:
-		msg(blue('Spawned script exited with error'))
-	raise
+	# if test.py itself is running under exec_wrapper, re-raise so exec_wrapper can handle exception:
+	if os.getenv('MMGEN_EXEC_WRAPPER'):
+		raise
 except:
 	raise

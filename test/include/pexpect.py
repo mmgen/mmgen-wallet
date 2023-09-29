@@ -92,7 +92,7 @@ class MMGenPexpect:
 		self.p.read()
 		ret = self.p.wait()
 		if ret != self.req_exit_val and not cfg.coverage:
-			die(1,red(f'test.py: spawned program exited with value {ret}'))
+			die( 'TestSuiteSpawnedScriptException', f'Spawned script exited with value {ret}' )
 		if cfg.profile:
 			return
 		if not self.skip_ok:

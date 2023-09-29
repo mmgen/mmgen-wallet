@@ -40,11 +40,14 @@ def exec_wrapper_write_traceback(e,exit_val):
 
 	if os.getenv('EXEC_WRAPPER_TRACEBACK'):
 		import traceback
+		cwd = os.getcwd()
+		sys.path.insert(0,cwd)
+		from test.overlay import get_overlay_tree_dir
+		overlay_path_pfx = os.path.relpath(get_overlay_tree_dir(cwd)) + '/'
 
-		cwd = os.path.abspath('.')
 		def fixup_fn(fn_in):
 			from mmgen.util2 import removeprefix,removesuffix
-			fn = removeprefix(removeprefix(fn_in,cwd+'/'),'test/overlay/tree/')
+			fn = removeprefix(removeprefix(fn_in,cwd+'/'),overlay_path_pfx)
 			return removesuffix(fn,'_orig.py') + '.py' if fn.endswith('_orig.py') else fn
 			# Python 3.9:
 			# fn = fn_in.removeprefix(cwd+'/').removeprefix('test/overlay/tree/')
@@ -69,6 +72,10 @@ def exec_wrapper_write_traceback(e,exit_val):
 		from test.include.common import test_py_error_fn
 		with open(test_py_error_fn,'w') as fp:
 			fp.write('\n'.join(tb_lines + [exc_line]))
+
+		print(c.blue('{} script exited with error').format(
+			'Test' if os.path.dirname(sys.argv[0]) == 'test' else 'Spawned' ))
+
 	else:
 		sys.stdout.write( c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n' )
 
