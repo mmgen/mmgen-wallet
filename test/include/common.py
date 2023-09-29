@@ -56,6 +56,9 @@ def strip_ansi_escapes(s):
 	import re
 	return re.sub('\x1b' + r'\[[;0-9]+?m','',s)
 
+test_py_log_fn = 'test.py.log'
+test_py_error_fn = 'test.py.err'
+
 ascii_uc   = ''.join(map(chr,list(range(65,91))))   # 26 chars
 ascii_lc   = ''.join(map(chr,list(range(97,123))))  # 26 chars
 lat_accent = ''.join(map(chr,list(range(192,383)))) # 191 chars, L,S

@@ -25,8 +25,6 @@ from mmgen.cfg import gc
 from mmgen.util import msg
 from ..include.common import *
 
-log_file = 'test.py.log'
-
 rt_pw = 'abc-α'
 ref_wallet_brainpass = 'abc'
 ref_wallet_hash_preset = '1'

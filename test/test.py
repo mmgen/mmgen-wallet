@@ -93,8 +93,10 @@ from mmgen.common import *
 from mmgen.devinit import init_dev
 init_dev()
 
+from test.include.common import set_globals,test_py_log_fn,test_py_error_fn
+
 try:
-	os.unlink(os.path.join(repo_root,'test.py.err'))
+	os.unlink(os.path.join(repo_root,test_py_error_fn))
 except:
 	pass
 
@@ -165,7 +167,7 @@ environment var
 	},
 	'code': {
 		'options': lambda proto,help_notes,s: s.format(
-				lf = help_notes('test_py_log_file')
+				lf = test_py_log_fn
 			)
 	}
 }
@@ -173,7 +175,7 @@ environment var
 # we need some opt values before running opts.init, so parse without initializing:
 po = Config(opts_data=opts_data,parse_only=True)._parsed_opts
 
-from test.include.common import set_globals,get_test_data_dir
+from test.include.common import get_test_data_dir
 
 data_dir = get_test_data_dir() # include/common.py
 
@@ -540,9 +542,9 @@ class TestSuiteRunner(object):
 		self.deps_only = None
 
 		if cfg.log:
-			self.log_fd = open(log_file,'a')
+			self.log_fd = open(test_py_log_fn,'a')
 			self.log_fd.write(f'\nLog started: {make_timestr()} UTC\n')
-			omsg(f'INFO → Logging to file {log_file!r}')
+			omsg(f'INFO → Logging to file {test_py_log_fn!r}')
 		else:
 			self.log_fd = None
 

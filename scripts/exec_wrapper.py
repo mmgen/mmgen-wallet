@@ -66,7 +66,8 @@ def exec_wrapper_write_traceback(e,exit_val):
 
 		sys.stdout.write('{}\n{}\n'.format( c.yellow( '\n'.join(tb_lines) ), c.red(exc_line) ))
 
-		with open('test.py.err','w') as fp:
+		from test.include.common import test_py_error_fn
+		with open(test_py_error_fn,'w') as fp:
 			fp.write('\n'.join(tb_lines + [exc_line]))
 	else:
 		sys.stdout.write( c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n' )

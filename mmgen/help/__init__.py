@@ -44,10 +44,6 @@ def help_notes_func(proto,cfg,k):
 			from ..seedsplit import MasterShareIdx
 			return MasterShareIdx
 
-		def test_py_log_file():
-			from test.test_py_d.common import log_file
-			return log_file
-
 		def tool_help():
 			from ..tool.help import main_help
 			return main_help()
