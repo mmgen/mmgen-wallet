@@ -19,8 +19,8 @@ os.chdir(repo_root)
 sys.path[0] = repo_root
 
 from test.overlay import overlay_setup
-overlay_setup(repo_root)
-os.environ['PYTHONPATH'] = repo_root
+overlay_root = overlay_setup(repo_root)
+os.environ['PYTHONPATH'] = overlay_root
 
 if 'TMUX' in os.environ:
 	del os.environ['TMUX']

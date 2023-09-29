@@ -13,8 +13,12 @@ def exec_wrapper_get_colors():
 
 def exec_wrapper_init():
 
-	if exec_wrapper_os.path.dirname(exec_wrapper_sys.argv[1]) == 'test': # scripts in ./test do overlay setup themselves
-		exec_wrapper_sys.path[0] = 'test'
+	if exec_wrapper_os.path.dirname(exec_wrapper_sys.argv[1]) == 'test':
+		'support running of test scripts under wrapper'
+		cwd = exec_wrapper_os.getcwd() # assume we’re in repo root
+		exec_wrapper_sys.path[1] = cwd
+		from test.overlay import get_overlay_tree_dir
+		exec_wrapper_sys.path[0] = get_overlay_tree_dir(cwd)
 	else:
 		exec_wrapper_sys.path.pop(0)
 
@@ -111,12 +115,12 @@ import sys as exec_wrapper_sys
 import os as exec_wrapper_os
 import time as exec_wrapper_time
 
-exec_wrapper_init() # sets sys.path[0], runs overlay_setup()
+exec_wrapper_init() # sets sys.path[0] to overlay root
 
 if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
 	exec_wrapper_tracemalloc_setup()
 
-# import mmgen mods only after overlay setup!
+# import mmgen mods only after sys.path[0] is set to overlay root!
 from mmgen.devinit import init_dev as exec_wrapper_init_dev
 exec_wrapper_init_dev()
 
