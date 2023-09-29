@@ -232,9 +232,7 @@ if cfg.profile:
 	cfg.names = True
 
 if cfg.exact_output:
-	def noop(s):
-		pass
-	qmsg = qmsg_r = msg = noop
+	qmsg = qmsg_r = lambda s: None
 else:
 	qmsg = cfg._util.qmsg
 	qmsg_r = cfg._util.qmsg_r

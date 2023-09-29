@@ -18,15 +18,6 @@ def exec_wrapper_init():
 	else:
 		exec_wrapper_sys.path.pop(0)
 
-	if 'TMUX' in exec_wrapper_os.environ:
-		del exec_wrapper_os.environ['TMUX']
-
-	if exec_wrapper_os.getenv('EXEC_WRAPPER_TRACEBACK'):
-		try:
-			exec_wrapper_os.unlink('test.py.err')
-		except:
-			pass
-
 	exec_wrapper_os.environ['MMGEN_EXEC_WRAPPER'] = '1'
 
 def exec_wrapper_write_traceback(e,exit_val):
@@ -36,6 +27,7 @@ def exec_wrapper_write_traceback(e,exit_val):
 	exc_line = (
 		repr(e) if type(e).__name__ in ('MMGenError','MMGenSystemExit') else
 		'{}: {}'.format( type(e).__name__, e ))
+
 	c = exec_wrapper_get_colors()
 
 	if os.getenv('EXEC_WRAPPER_TRACEBACK'):
@@ -89,40 +81,40 @@ def exec_wrapper_end_msg():
 			exec_wrapper_time.time() - exec_wrapper_tstart )))
 
 def exec_wrapper_tracemalloc_setup():
-	if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
-		exec_wrapper_os.environ['PYTHONTRACEMALLOC'] = '1'
-		import tracemalloc
-		tracemalloc.start()
-		exec_wrapper_sys.stderr.write("INFO → Appending memory allocation stats to 'tracemalloc.log'\n")
+	exec_wrapper_os.environ['PYTHONTRACEMALLOC'] = '1'
+	import tracemalloc
+	tracemalloc.start()
+	exec_wrapper_sys.stderr.write("INFO → Appending memory allocation stats to 'tracemalloc.log'\n")
 
 def exec_wrapper_tracemalloc_log():
-	if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
-		import tracemalloc,re
-		snapshot = tracemalloc.take_snapshot()
-		stats = snapshot.statistics('lineno')
-		depth = 100
-		col1w = 100
-		with open('tracemalloc.log','a') as fp:
-			fp.write('##### TOP {} {} #####\n'.format(depth,' '.join(exec_wrapper_sys.argv)))
-			for stat in stats[:depth]:
-				frame = stat.traceback[0]
-				fn = re.sub(r'.*\/site-packages\/|.*\/mmgen\/test\/overlay\/tree\/','',frame.filename)
-				fn = re.sub(r'.*\/mmgen\/test\/','test/',fn)
-				fp.write('{f:{w}} {s:>8.2f} KiB\n'.format(
-					f = f'{fn}:{frame.lineno}:',
-					s = stat.size/1024,
-					w = col1w ))
-			fp.write('{f:{w}} {s:8.2f} KiB\n\n'.format(
-				f = 'TOTAL {}:'.format(' '.join(exec_wrapper_sys.argv))[:col1w],
-				s = sum(stat.size for stat in stats) / 1024,
+	import tracemalloc,re
+	snapshot = tracemalloc.take_snapshot()
+	stats = snapshot.statistics('lineno')
+	depth = 100
+	col1w = 100
+	with open('tracemalloc.log','a') as fp:
+		fp.write('##### TOP {} {} #####\n'.format(depth,' '.join(exec_wrapper_sys.argv)))
+		for stat in stats[:depth]:
+			frame = stat.traceback[0]
+			fn = re.sub(r'.*\/site-packages\/|.*\/mmgen\/test\/overlay\/tree\/','',frame.filename)
+			fn = re.sub(r'.*\/mmgen\/test\/','test/',fn)
+			fp.write('{f:{w}} {s:>8.2f} KiB\n'.format(
+				f = f'{fn}:{frame.lineno}:',
+				s = stat.size/1024,
 				w = col1w ))
+		fp.write('{f:{w}} {s:8.2f} KiB\n\n'.format(
+			f = 'TOTAL {}:'.format(' '.join(exec_wrapper_sys.argv))[:col1w],
+			s = sum(stat.size for stat in stats) / 1024,
+			w = col1w ))
 
 import sys as exec_wrapper_sys
 import os as exec_wrapper_os
 import time as exec_wrapper_time
 
 exec_wrapper_init() # sets sys.path[0], runs overlay_setup()
-exec_wrapper_tracemalloc_setup()
+
+if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
+	exec_wrapper_tracemalloc_setup()
 
 # import mmgen mods only after overlay setup!
 from mmgen.devinit import init_dev as exec_wrapper_init_dev
@@ -139,7 +131,8 @@ except SystemExit as e:
 	if e.code != 0:
 		exec_wrapper_write_traceback(e,e.code)
 	else:
-		exec_wrapper_tracemalloc_log()
+		if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
+			exec_wrapper_tracemalloc_log()
 		exec_wrapper_end_msg()
 	exec_wrapper_sys.exit(e.code)
 except Exception as e:
@@ -147,5 +140,7 @@ except Exception as e:
 	exec_wrapper_write_traceback(e,exit_val)
 	exec_wrapper_sys.exit(exit_val)
 
-exec_wrapper_tracemalloc_log()
+if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
+	exec_wrapper_tracemalloc_log()
+
 exec_wrapper_end_msg()
