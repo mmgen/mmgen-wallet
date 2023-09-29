@@ -5,41 +5,39 @@
 # defined or imported here at module level should begin with 'exec_wrapper_'
 
 def exec_wrapper_get_colors():
-	import os
 	from collections import namedtuple
 	return namedtuple('colors',['red','green','yellow','blue','purple'])(*[
-			(lambda s:s) if os.getenv('MMGEN_DISABLE_COLOR') else
+			(lambda s:s) if exec_wrapper_os.getenv('MMGEN_DISABLE_COLOR') else
 			(lambda s,n=n:f'\033[{n};1m{s}\033[0m' )
 		for n in (31,32,33,34,35) ])
 
 def exec_wrapper_init():
 
-	import os
-	if os.path.dirname(exec_wrapper_sys.argv[1]) == 'test': # scripts in ./test do overlay setup themselves
+	if exec_wrapper_os.path.dirname(exec_wrapper_sys.argv[1]) == 'test': # scripts in ./test do overlay setup themselves
 		exec_wrapper_sys.path[0] = 'test'
 	else:
-		from test.overlay import overlay_setup
-		overlay_setup(repo_root=os.getcwd()) # assume we're in the repo root
+		exec_wrapper_sys.path.pop(0)
 
-	if 'TMUX' in os.environ:
-		del os.environ['TMUX']
+	if 'TMUX' in exec_wrapper_os.environ:
+		del exec_wrapper_os.environ['TMUX']
 
-	if os.getenv('EXEC_WRAPPER_TRACEBACK'):
+	if exec_wrapper_os.getenv('EXEC_WRAPPER_TRACEBACK'):
 		try:
-			os.unlink('test.py.err')
+			exec_wrapper_os.unlink('test.py.err')
 		except:
 			pass
 
-	os.environ['MMGEN_EXEC_WRAPPER'] = '1'
+	exec_wrapper_os.environ['MMGEN_EXEC_WRAPPER'] = '1'
 
 def exec_wrapper_write_traceback(e,exit_val):
+
+	import sys,os
 
 	exc_line = (
 		repr(e) if type(e).__name__ in ('MMGenError','MMGenSystemExit') else
 		'{}: {}'.format( type(e).__name__, e ))
 	c = exec_wrapper_get_colors()
 
-	import os
 	if os.getenv('EXEC_WRAPPER_TRACEBACK'):
 		import traceback
 
@@ -54,7 +52,7 @@ def exec_wrapper_write_traceback(e,exit_val):
 
 		def gen_output():
 			yield 'Traceback (most recent call last):'
-			for e in traceback.extract_tb(exec_wrapper_sys.exc_info()[2]):
+			for e in traceback.extract_tb(sys.exc_info()[2]):
 				yield '  File "{f}", line {l}, in {n}\n    {L}'.format(
 					f = exec_wrapper_execed_file if e.filename == '<string>' else fixup_fn(e.filename),
 					l = '(scrubbed)' if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') else e.lineno,
@@ -66,32 +64,31 @@ def exec_wrapper_write_traceback(e,exit_val):
 		if 'SystemExit' in exc_line:
 			tb_lines.pop()
 
-		exec_wrapper_sys.stdout.write('{}\n{}\n'.format( c.yellow( '\n'.join(tb_lines) ), c.red(exc_line) ))
+		sys.stdout.write('{}\n{}\n'.format( c.yellow( '\n'.join(tb_lines) ), c.red(exc_line) ))
 
 		with open('test.py.err','w') as fp:
 			fp.write('\n'.join(tb_lines + [exc_line]))
 	else:
-		exec_wrapper_sys.stdout.write( c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n' )
+		sys.stdout.write( c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n' )
 
 def exec_wrapper_end_msg():
-	import os
-	if os.getenv('EXEC_WRAPPER_SPAWN') and not os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
+	if (
+		exec_wrapper_os.getenv('EXEC_WRAPPER_SPAWN')
+		and not exec_wrapper_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') ):
 		c = exec_wrapper_get_colors()
 		# write to stdout to ensure script output gets to terminal first
-		import time
-		exec_wrapper_sys.stdout.write(c.blue('Runtime: {:0.5f} secs\n'.format(time.time() - exec_wrapper_tstart)))
+		exec_wrapper_sys.stdout.write(c.blue('Runtime: {:0.5f} secs\n'.format(
+			exec_wrapper_time.time() - exec_wrapper_tstart )))
 
 def exec_wrapper_tracemalloc_setup():
-	import os
-	if os.getenv('MMGEN_TRACEMALLOC'):
-		os.environ['PYTHONTRACEMALLOC'] = '1'
+	if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
+		exec_wrapper_os.environ['PYTHONTRACEMALLOC'] = '1'
 		import tracemalloc
 		tracemalloc.start()
 		exec_wrapper_sys.stderr.write("INFO → Appending memory allocation stats to 'tracemalloc.log'\n")
 
 def exec_wrapper_tracemalloc_log():
-	import os
-	if os.getenv('MMGEN_TRACEMALLOC'):
+	if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
 		import tracemalloc,re
 		snapshot = tracemalloc.take_snapshot()
 		stats = snapshot.statistics('lineno')
@@ -112,11 +109,9 @@ def exec_wrapper_tracemalloc_log():
 				s = sum(stat.size for stat in stats) / 1024,
 				w = col1w ))
 
-def exec_wrapper_get_tstart():
-	import time
-	return time.time()
-
 import sys as exec_wrapper_sys
+import os as exec_wrapper_os
+import time as exec_wrapper_time
 
 exec_wrapper_init() # sets sys.path[0], runs overlay_setup()
 exec_wrapper_tracemalloc_setup()
@@ -125,7 +120,7 @@ exec_wrapper_tracemalloc_setup()
 from mmgen.devinit import init_dev as exec_wrapper_init_dev
 exec_wrapper_init_dev()
 
-exec_wrapper_tstart = exec_wrapper_get_tstart()
+exec_wrapper_tstart = exec_wrapper_time.time()
 
 try:
 	exec_wrapper_sys.argv.pop(0)
