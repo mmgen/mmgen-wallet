@@ -117,9 +117,6 @@ def getrandstr(num_chars,no_space=False):
 	n,m = (94,33) if no_space else (95,32)
 	return ''.join( chr(i % n + m) for i in list(getrand(num_chars)) )
 
-def get_test_data_dir():
-	return os.path.join('test','data_dir' + ('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
-
 # Windows uses non-UTF8 encodings in filesystem, so use raw bytes here
 def cleandir(d,do_msg=False):
 	d_enc = d.encode()

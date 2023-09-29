@@ -215,6 +215,7 @@ class Config(Lockable):
 	exit_after               = ''
 	resuming                 = False
 	skipping_deps            = False
+	test_datadir             = os.path.join('test','data_dir' + ('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
 
 	mnemonic_entry_modes = {}
 
@@ -369,8 +370,7 @@ class Config(Lockable):
 			if self._data_dir_root_override:
 				self._data_dir_root = os.path.normpath(os.path.abspath(self._data_dir_root_override))
 			elif self.test_suite:
-				from test.include.common import get_test_data_dir
-				self._data_dir_root = get_test_data_dir()
+				self._data_dir_root = self.test_datadir
 			else:
 				self._data_dir_root = os.path.join(gc.home_dir,'.'+gc.proj_name.lower())
 			return self._data_dir_root

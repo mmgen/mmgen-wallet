@@ -175,9 +175,7 @@ environment var
 # we need some opt values before running opts.init, so parse without initializing:
 po = Config(opts_data=opts_data,parse_only=True)._parsed_opts
 
-from test.include.common import get_test_data_dir
-
-data_dir = get_test_data_dir() # include/common.py
+data_dir = Config.test_datadir
 
 # step 1: delete data_dir symlink in ./test;
 if not po.user_opts.get('skipping_deps'):
