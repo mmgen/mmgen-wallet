@@ -13,11 +13,11 @@ class unit_tests_base:
 
 	def _silence(self):
 		if not cfg.verbose:
-			self.stdout = sys.stdout
-			self.stderr = sys.stderr
+			self.stdout_save = sys.stdout
+			self.stderr_save = sys.stderr
 			sys.stdout = sys.stderr = gv.stdout = gv.stderr = open(os.devnull,'w')
 
 	def _end_silence(self):
 		if not cfg.verbose:
-			sys.stdout = gv.stdout = self.stdout
-			sys.stderr = gv.stderr = self.stderr
+			sys.stdout = gv.stdout = self.stdout_save
+			sys.stderr = gv.stderr = self.stderr_save

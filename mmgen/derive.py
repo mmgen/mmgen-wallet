@@ -28,7 +28,7 @@ pk_bytes = namedtuple('coin_privkey_bytes',['idx','pos','data'])
 
 def derive_coin_privkey_bytes(seed,idxs):
 
-	assert isinstance(idxs,AddrIdxList)
+	assert isinstance(idxs,AddrIdxList), f'{type(idxs)}: idx list not of type AddrIdxList'
 
 	t_keys = len(idxs)
 	pos = 0

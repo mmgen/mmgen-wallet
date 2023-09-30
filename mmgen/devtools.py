@@ -37,7 +37,7 @@ def pmsg_r(*args,color=None):
 	sys.stderr.write(pfmt(*args,color=color))
 
 def pdie(*args,exit_val=1):
-	pmsg(*args,color='red')
+	pmsg(*args,color='red' if exit_val else None)
 	sys.exit(exit_val)
 
 def pexit(*args):
@@ -112,12 +112,12 @@ class MMGenObjectMethods: # mixin class for MMGenObject
 	def pmsg(self,color=None):
 		sys.stdout.write('\n'+self.pfmt(color=color))
 
-	def pdie(self,exit_val=1,color=None):
-		self.pmsg(color=color)
+	def pdie(self,exit_val=1):
+		self.pmsg(color='red' if exit_val else None)
 		sys.exit(exit_val)
 
-	def pexit(self,color=None):
-		self.pdie(exit_val=0,color=color)
+	def pexit(self):
+		self.pdie(exit_val=0)
 
 	def pfmt(self,lvl=0,id_list=[],color=None):
 		from decimal import Decimal
