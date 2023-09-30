@@ -132,14 +132,21 @@ def run_test(test,subtest=None):
 	def run_subtest(subtest):
 		subtest_disp = subtest.replace('_','-')
 		msg(f'Running unit subtest {test}.{subtest_disp}')
+
 		t = getattr(mod,'unit_tests')()
 		if hasattr(t,'_pre_subtest'):
 			getattr(t,'_pre_subtest')(test,subtest,UnitTestHelpers(subtest))
-		ret = getattr(t,subtest.replace('-','_'))(test,UnitTestHelpers(subtest))
+
+		try:
+			ret = getattr(t,subtest.replace('-','_'))(test,UnitTestHelpers(subtest))
+			if type(ret).__name__ == 'coroutine':
+				ret = async_run(ret)
+		except:
+			raise
+
 		if hasattr(t,'_post_subtest'):
 			getattr(t,'_post_subtest')(test,subtest,UnitTestHelpers(subtest))
-		if type(ret).__name__ == 'coroutine':
-			ret = async_run(ret)
+
 		if not ret:
 			die(4,f'Unit subtest {subtest_disp!r} failed')
 
@@ -147,30 +154,35 @@ def run_test(test,subtest=None):
 		gmsg(f'Running unit test {test}')
 		tests_seen.append(test)
 
-	if subtest:
-		run_subtest(subtest)
+	if hasattr(mod,'unit_tests'): # new class-based API
+		t = getattr(mod,'unit_tests')()
+		altcoin_deps = getattr(t,'altcoin_deps',())
+		win_skip = getattr(t,'win_skip',())
+		arm_skip = getattr(t,'arm_skip',())
+		subtests = (
+			[subtest] if subtest else
+			[k for k,v in type(t).__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
+		)
+		if hasattr(t,'_pre'):
+			t._pre()
+		for subtest in subtests:
+			subtest_disp = subtest.replace('_','-')
+			if cfg.no_altcoin_deps and subtest in altcoin_deps:
+				cfg._util.qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping subtest {subtest_disp!r}'))
+				continue
+			if gc.platform == 'win' and subtest in win_skip:
+				cfg._util.qmsg(gray(f'Skipping subtest {subtest_disp!r} for Windows platform'))
+				continue
+			elif platform.machine() == 'aarch64' and subtest in arm_skip:
+				cfg._util.qmsg(gray(f'Skipping subtest {subtest_disp!r} for ARM platform'))
+				continue
+			run_subtest(subtest)
+		if hasattr(t,'_post'):
+			t._post()
 	else:
-		if hasattr(mod,'unit_tests'): # new class-based API
-			t = getattr(mod,'unit_tests')
-			altcoin_deps = getattr(t,'altcoin_deps',())
-			win_skip = getattr(t,'win_skip',())
-			arm_skip = getattr(t,'arm_skip',())
-			subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
-			for subtest in subtests:
-				subtest_disp = subtest.replace('_','-')
-				if cfg.no_altcoin_deps and subtest in altcoin_deps:
-					cfg._util.qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping subtest {subtest_disp!r}'))
-					continue
-				if gc.platform == 'win' and subtest in win_skip:
-					cfg._util.qmsg(gray(f'Skipping subtest {subtest_disp!r} for Windows platform'))
-					continue
-				elif platform.machine() == 'aarch64' and subtest in arm_skip:
-					cfg._util.qmsg(gray(f'Skipping subtest {subtest_disp!r} for ARM platform'))
-					continue
-				run_subtest(subtest)
-		else:
-			if not mod.unit_test().run_test(test,UnitTestHelpers(test)):
-				die(4,'Unit test {test!r} failed')
+		assert not subtest, f'{subtest!r}: subtests not supported for this unit test'
+		if not mod.unit_test().run_test(test,UnitTestHelpers(test)):
+			die(4,'Unit test {test!r} failed')
 
 try:
 	for test in (cfg._args or all_tests):
