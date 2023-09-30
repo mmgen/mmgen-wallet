@@ -156,6 +156,7 @@ class Config(Lockable):
 	debug_addrlist       = False
 	debug_subseed        = False
 	debug_tw             = False
+	devtools             = False
 
 	# rpc:
 	rpc_host                   = ''
@@ -303,6 +304,7 @@ class Config(Lockable):
 		'MMGEN_DEBUG_TW',
 		'MMGEN_DEBUG_UTF8',
 		'MMGEN_DEBUG_SUBSEED',
+		'MMGEN_DEVTOOLS',
 		'MMGEN_FORCE_256_COLOR',
 		'MMGEN_HOLD_PROTECT_DISABLE',
 		'MMGEN_QUIET',

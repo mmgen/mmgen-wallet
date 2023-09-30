@@ -5,7 +5,6 @@ test.unit_tests_d.ut_devtools: devtools unit tests for the MMGen suite
 """
 
 import os,json
-from mmgen.devtools import *
 from mmgen.util import msg
 from . import unit_tests_base
 

@@ -121,8 +121,9 @@ if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
 	exec_wrapper_tracemalloc_setup()
 
 # import mmgen mods only after sys.path[0] is set to overlay root!
-from mmgen.devinit import init_dev as exec_wrapper_init_dev
-exec_wrapper_init_dev()
+if exec_wrapper_os.getenv('MMGEN_DEVTOOLS'):
+	from mmgen.devinit import init_dev as exec_wrapper_init_dev
+	exec_wrapper_init_dev()
 
 exec_wrapper_tstart = exec_wrapper_time.time()
 

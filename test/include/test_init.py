@@ -24,3 +24,7 @@ os.environ['PYTHONPATH'] = overlay_root
 
 if 'TMUX' in os.environ:
 	del os.environ['TMUX']
+
+if os.getenv('MMGEN_DEVTOOLS'):
+	from mmgen.devinit import init_dev
+	init_dev()

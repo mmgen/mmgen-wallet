@@ -24,8 +24,11 @@ import sys,os,time,importlib,platform
 
 import include.test_init
 
-from mmgen.devinit import init_dev
-init_dev()
+# for the unit tests, violate MMGen Project best practices and allow use of the dev tools
+# in production code:
+if not os.getenv('MMGEN_DEVTOOLS'):
+	from mmgen.devinit import init_dev
+	init_dev()
 
 from mmgen.common import *
 from test.include.common import set_globals,end_msg

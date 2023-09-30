@@ -24,8 +24,11 @@ import sys,os,re
 
 import include.test_init
 
-from mmgen.devinit import init_dev
-init_dev()
+# for objtest, violate MMGen Project best practices and allow use of the dev tools
+# in production code:
+if not os.getenv('MMGEN_DEVTOOLS'):
+	from mmgen.devinit import init_dev
+	init_dev()
 
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *

@@ -94,9 +94,6 @@ else:
 
 from mmgen.common import *
 
-from mmgen.devinit import init_dev
-init_dev()
-
 from test.include.common import set_globals,test_py_log_fn,test_py_error_fn
 
 try:
