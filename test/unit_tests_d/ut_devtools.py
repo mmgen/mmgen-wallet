@@ -51,12 +51,10 @@ def print_hdr(hdr):
 # TODO: add data checks
 class unit_tests(unit_tests_base):
 
-	def _pre_subtest(self,name,subname,ut):
-		self._silence()
+	silence_output = True
 
 	def _post_subtest(self,name,subname,ut):
 		print('-' * 80 + '\n')
-		self._end_silence()
 
 	def diff(self,name,ut):
 		for data in text_data + json_data:

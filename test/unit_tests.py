@@ -134,6 +134,10 @@ def run_test(test,subtest=None):
 		msg(f'Running unit subtest {test}.{subtest_disp}')
 
 		t = getattr(mod,'unit_tests')()
+
+		if getattr(t,'silence_output',False):
+			t._silence()
+
 		if hasattr(t,'_pre_subtest'):
 			getattr(t,'_pre_subtest')(test,subtest,UnitTestHelpers(subtest))
 
@@ -142,10 +146,15 @@ def run_test(test,subtest=None):
 			if type(ret).__name__ == 'coroutine':
 				ret = async_run(ret)
 		except:
+			if getattr(t,'silence_output',False):
+				t._end_silence()
 			raise
 
 		if hasattr(t,'_post_subtest'):
 			getattr(t,'_post_subtest')(test,subtest,UnitTestHelpers(subtest))
+
+		if getattr(t,'silence_output',False):
+			t._end_silence()
 
 		if not ret:
 			die(4,f'Unit subtest {subtest_disp!r} failed')

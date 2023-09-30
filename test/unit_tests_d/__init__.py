@@ -11,6 +11,8 @@ from ..include.common import cfg
 
 class unit_tests_base:
 
+	silence_output = False
+
 	def _silence(self):
 		if not cfg.verbose:
 			self.stdout_save = sys.stdout
