@@ -19,6 +19,7 @@ def exec_wrapper_init():
 		exec_wrapper_sys.path[1] = cwd
 		from test.overlay import get_overlay_tree_dir
 		exec_wrapper_sys.path[0] = get_overlay_tree_dir(cwd)
+		exec_wrapper_sys.path.insert(2, exec_wrapper_os.path.join(cwd,'test'))
 	else:
 		exec_wrapper_sys.path.pop(0)
 
