@@ -4,7 +4,8 @@
 test/unit_tests_d/ut_bip39: BIP39 unit test for the MMGen suite
 """
 
-from mmgen.common import *
+from mmgen.util import msg,msg_r
+
 from ..include.common import cfg,qmsg,vmsg
 
 class unit_test(object):

@@ -6,13 +6,14 @@ test/unit_tests_d/ut_tx_deserialize: TX deserialization unit tests for the MMGen
 
 import os,json
 
-from mmgen.common import *
-from ..include.common import cfg,start_test_daemons,stop_test_daemons
+from mmgen.util import msg,Msg,Msg_r
 from mmgen.protocol import init_proto
 from mmgen.tx import CompletedTX
 from mmgen.proto.btc.tx.base import DeserializeTX
 from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
+
+from ..include.common import cfg,start_test_daemons,stop_test_daemons
 
 def print_info(name,extra_desc):
 	if cfg.names:
@@ -106,7 +107,8 @@ class unit_tests:
 
 		core_repo_root = os.getenv('CORE_REPO_ROOT')
 		if not core_repo_root:
-			die(1,'The environmental variable CORE_REPO_ROOT must be set before running this test')
+			msg('The environmental variable CORE_REPO_ROOT must be set before running this test')
+			return False
 
 		start_test_daemons('btc')
 

@@ -30,7 +30,10 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	from mmgen.devinit import init_dev
 	init_dev()
 
-from mmgen.common import *
+from mmgen.cfg import Config,gc
+from mmgen.color import gray
+from mmgen.util import msg,gmsg,ymsg,Msg,die,async_run
+
 from test.include.common import set_globals,end_msg
 
 opts_data = {
@@ -59,6 +62,9 @@ If no test is specified, all available tests are run
 sys.argv.insert(1,'--skip-cfg-file')
 
 cfg = Config(opts_data=opts_data)
+
+if cfg.no_altcoin_deps:
+	ymsg(f'{gc.prog_name}: skipping altcoin tests by user request')
 
 type(cfg)._reset_ok += ('use_internal_keccak_module','debug_addrlist')
 
@@ -132,11 +138,9 @@ tests_seen = []
 def run_test(test,subtest=None):
 	mod = importlib.import_module(f'test.unit_tests_d.{file_pfx}{test}')
 
-	def run_subtest(subtest):
+	def run_subtest(t,subtest):
 		subtest_disp = subtest.replace('_','-')
 		msg(f'Running unit subtest {test}.{subtest_disp}')
-
-		t = getattr(mod,'unit_tests')()
 
 		if getattr(t,'silence_output',False):
 			t._silence()
@@ -188,7 +192,7 @@ def run_test(test,subtest=None):
 			elif platform.machine() == 'aarch64' and subtest in arm_skip:
 				cfg._util.qmsg(gray(f'Skipping subtest {subtest_disp!r} for ARM platform'))
 				continue
-			run_subtest(subtest)
+			run_subtest(t,subtest)
 		if hasattr(t,'_post'):
 			t._post()
 	else:

@@ -4,7 +4,8 @@
 test.unit_tests_d.ut_baseconv: Base conversion unit test for the MMGen suite
 """
 
-from mmgen.common import *
+from mmgen.util import msg,msg_r
+
 from ..include.common import cfg,qmsg,qmsg_r,vmsg,vmsg_r
 
 class unit_test(object):

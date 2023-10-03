@@ -4,7 +4,6 @@
 test.unit_tests_d.ut_lockable: unit test for the MMGen suite's Lockable class
 """
 
-from mmgen.common import *
 from ..include.common import qmsg,qmsg_r,vmsg
 
 class unit_test(object):

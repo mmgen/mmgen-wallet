@@ -4,15 +4,17 @@
 test.unit_tests_d.ut_rpc: RPC unit test for the MMGen suite
 """
 
-import time
+import os,time
 
-from mmgen.common import *
-
+from mmgen.cfg import gc
+from mmgen.color import yellow,cyan
+from mmgen.util import msg,gmsg,async_run,make_timestr,pp_fmt,die
 from mmgen.protocol import init_proto
 from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
 from mmgen.proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
 from mmgen.proto.xmr.daemon import MoneroWalletDaemon
+
 from ..include.common import cfg,qmsg,vmsg
 
 def cfg_file_auth_test(proto,d,bad_auth=False):

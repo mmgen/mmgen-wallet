@@ -4,8 +4,11 @@
 test.unit_tests_d.ut_testdep: test dependency unit tests for the MMGen suite
 """
 
-from mmgen.common import *
+import os
 from subprocess import run,PIPE
+
+from mmgen.cfg import gc
+from mmgen.util import ymsg
 
 sec = 'deadbeef' * 8
 

@@ -4,13 +4,13 @@
 test.unit_tests_d.ut_tx: TX unit tests for the MMGen suite
 """
 
-import re
+import os,re
 
-from mmgen.common import *
 from mmgen.tx import NewTX,CompletedTX
 from mmgen.tx.file import MMGenTxFile
 from mmgen.daemon import CoinDaemon
 from mmgen.protocol import init_proto
+
 from ..include.common import cfg,qmsg,vmsg
 
 async def do_txfile_test(desc,fns):

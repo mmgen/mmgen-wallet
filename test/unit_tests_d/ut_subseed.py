@@ -4,7 +4,8 @@
 test/unit_tests_d/ut_subseed: subseed unit test for the MMGen suite
 """
 
-from mmgen.common import *
+from mmgen.util import msg,msg_r
+
 from ..include.common import cfg,vmsg_r
 
 class unit_test(object):

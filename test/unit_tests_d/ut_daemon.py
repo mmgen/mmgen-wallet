@@ -4,10 +4,14 @@
 test.unit_tests_d.ut_daemon: unit test for the MMGen suite's Daemon class
 """
 
-from subprocess import run,DEVNULL
-from mmgen.common import *
-from mmgen.daemon import *
+from subprocess import run,DEVNULL,PIPE
+from collections import namedtuple
+
+from mmgen.color import orange
+from mmgen.util import fmt_list
+from mmgen.daemon import CoinDaemon
 from mmgen.protocol import init_proto
+
 from ..include.common import cfg,qmsg,qmsg_r,vmsg
 
 def test_flags():
@@ -53,18 +57,21 @@ def test_flags_err(ut,d):
 		('flag (4)', 'ClassFlagsError', 'already set',       bad7 ),
 	))
 
-def test_cmd(args_in,message):
-	qmsg_r(message)
-	args = ['python3', f'test/{args_in[0]}-coin-daemons.py'] + list(args_in[1:])
-	vmsg('\n' + orange(f"Running '{' '.join(args)}':"))
-	pipe = None if cfg.verbose else PIPE
-	cp = run( args, stdout=pipe, stderr=pipe, check=True )
-	qmsg('OK')
-	return True
-
 class unit_tests:
 
 	win_skip = ('start','status','stop')
+
+	def _pre(self):
+		self.daemon_ctrl_args = ['btc','btc_tn','btc_rt'] if cfg.no_altcoin_deps else ['all']
+
+	def _test_cmd(self,args_in,message):
+		qmsg_r(message)
+		args = ['python3', f'test/{args_in[0]}-coin-daemons.py'] + list(args_in[1:]) + self.daemon_ctrl_args
+		vmsg('\n' + orange(f"Running '{' '.join(args)}':"))
+		pipe = None if cfg.verbose else PIPE
+		cp = run( args, stdout=pipe, stderr=pipe, check=True )
+		qmsg('OK')
+		return True
 
 	def flags(self,name,ut):
 
@@ -81,16 +88,16 @@ class unit_tests:
 		return True
 
 	def exec(self,name,ut):
-		return test_cmd(['start','-Vm','all'], 'Testing availability of coin daemons...')
+		return self._test_cmd(['start','-Vm'], 'Testing availability of coin daemons...')
 
 	def cmds(self,name,ut):
-		return test_cmd(['start','-t','all'], 'Testing start commands for coin daemons...')
+		return self._test_cmd(['start','-t'], 'Testing start commands for coin daemons...')
 
 	def start(self,name,ut):
-		return test_cmd(['start','all'], 'Starting coin daemons...')
+		return self._test_cmd(['start'], 'Starting coin daemons...')
 
 	def status(self,name,ut):
-		return test_cmd(['start','all'], 'Checking status of coin daemons...')
+		return self._test_cmd(['start'], 'Checking status of coin daemons...')
 
 	def stop(self,name,ut):
-		return test_cmd(['stop','all'], 'Stopping coin daemons...')
+		return self._test_cmd(['stop'], 'Stopping coin daemons...')

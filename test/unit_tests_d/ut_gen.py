@@ -4,12 +4,13 @@
 test.unit_tests_d.ut_gen: key/address generation unit tests for the MMGen suite
 """
 
-from mmgen.common import *
+from mmgen.color import blue
 from mmgen.protocol import init_proto
 from mmgen.key import PrivKey
 from mmgen.addr import MMGenAddrType
 from mmgen.addrgen import KeyGenerator,AddrGenerator
 from mmgen.keygen import get_backends
+
 from ..include.common import cfg,qmsg
 
 # TODO: add viewkey checks

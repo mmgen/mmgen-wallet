@@ -4,8 +4,8 @@
 test.unit_tests_d.ut_flags: unit test for the MMGen suite's ClassFlags class
 """
 
-from mmgen.common import *
-from mmgen.flags import *
+from mmgen.flags import ClassOpts,ClassFlags
+
 from ..include.common import qmsg,qmsg_r,vmsg
 
 class unit_test(object):

@@ -4,7 +4,9 @@
 test.unit_tests_d.ut_addrlist: address list unit tests for the MMGen suite
 """
 
-from mmgen.common import *
+from mmgen.color import blue
+from mmgen.util import msg
+
 from mmgen.seed import Seed
 from mmgen.addr import MMGenAddrType
 from mmgen.addrlist import AddrIdxList,AddrList,KeyList,KeyAddrList,ViewKeyAddrList
