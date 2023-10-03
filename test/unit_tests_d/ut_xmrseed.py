@@ -110,15 +110,21 @@ class unit_test(object):
 
 		th = b.tohex
 		fh = b.fromhex
+
+		hse = 'HexadecimalStringError'
+		sle = 'SeedLengthError'
+		ase = 'AssertionError'
+		mne = 'MnemonicError'
+
 		bad_data = (
-('hex',               'HexadecimalStringError', 'not a hexadecimal',     lambda:fh('xx')),
-('seed len',          'SeedLengthError',        'invalid seed byte len', lambda:fh(bad_seed)),
-('mnemonic type',     'AssertionError',         'must be list',          lambda:th('string')),
-('pad arg (fromhex)', 'AssertionError',         "invalid 'pad' arg",     lambda:fh(good_hex,pad=23)),
-('pad arg (tohex)',   'AssertionError',         "invalid 'pad' arg",     lambda:th(good_mn,pad=23)),
-('word',              'MnemonicError',          "not in Monero",         lambda:th(bad_word_mn)),
-('checksum',          'MnemonicError',          "checksum",              lambda:th(bad_chksum_mn)),
-('seed phrase len',   'MnemonicError',          "phrase len",            lambda:th(bad_len_mn)),
+			('hex',               hse, 'not a hexadecimal',     lambda:fh('xx')),
+			('seed len',          sle, 'invalid seed byte len', lambda:fh(bad_seed)),
+			('mnemonic type',     ase, 'must be list',          lambda:th('string')),
+			('pad arg (fromhex)', ase, "invalid 'pad' arg",     lambda:fh(good_hex,pad=23)),
+			('pad arg (tohex)',   ase, "invalid 'pad' arg",     lambda:th(good_mn,pad=23)),
+			('word',              mne, "not in Monero",         lambda:th(bad_word_mn)),
+			('checksum',          mne, "checksum",              lambda:th(bad_chksum_mn)),
+			('seed phrase len',   mne, "phrase len",            lambda:th(bad_len_mn)),
 		)
 
 		ut.process_bad_data(bad_data)

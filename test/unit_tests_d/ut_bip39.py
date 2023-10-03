@@ -124,15 +124,15 @@ class unit_test(object):
 		th = b.tohex
 		fh = b.fromhex
 		bad_data = (
-('hex',              'AssertionError', 'not a hexadecimal',lambda:fh('xx')),
-('seed len',         'AssertionError', 'invalid seed bit', lambda:fh(bad_seed)),
-('mnemonic type',    'AssertionError', 'must be list',     lambda:th('string')),
-('arg (tostr=True)', 'AssertionError', "'tostr' must be",  lambda:fh(good_seed,tostr=True)),
-('pad len (fromhex)','AssertionError', "invalid 'pad' arg",lambda:fh(good_seed,pad=23)),
-('pad len (tohex)',  'AssertionError', "invalid 'pad' arg",lambda:th(good_mn,pad=23)),
-('word',             'MnemonicError',  "not in the BIP39", lambda:th(bad_word_mn)),
-('checksum',         'MnemonicError',  "checksum",         lambda:th(bad_chksum_mn)),
-('seed phrase len',  'MnemonicError',  "phrase len",       lambda:th(bad_len_mn)),
+			('hex',              'AssertionError', 'not a hexadecimal',lambda:fh('xx')),
+			('seed len',         'AssertionError', 'invalid seed bit', lambda:fh(bad_seed)),
+			('mnemonic type',    'AssertionError', 'must be list',     lambda:th('string')),
+			('arg (tostr=True)', 'AssertionError', "'tostr' must be",  lambda:fh(good_seed,tostr=True)),
+			('pad len (fromhex)','AssertionError', "invalid 'pad' arg",lambda:fh(good_seed,pad=23)),
+			('pad len (tohex)',  'AssertionError', "invalid 'pad' arg",lambda:th(good_mn,pad=23)),
+			('word',             'MnemonicError',  "not in the BIP39", lambda:th(bad_word_mn)),
+			('checksum',         'MnemonicError',  "checksum",         lambda:th(bad_chksum_mn)),
+			('seed phrase len',  'MnemonicError',  "phrase len",       lambda:th(bad_len_mn)),
 		)
 
 		ut.process_bad_data(bad_data)
