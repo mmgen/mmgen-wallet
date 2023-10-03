@@ -21,7 +21,8 @@ test.include.pexpect: pexpect implementation for MMGen test suites
 """
 
 import sys,os,time
-from mmgen.util import msg,msg_r,rmsg,red,yellow,green,cyan,die
+from mmgen.color import red,yellow,green,cyan
+from mmgen.util import msg,msg_r,rmsg,die
 from .common import cfg,vmsg,vmsg_r,getrandstr,strip_ansi_escapes
 
 try:

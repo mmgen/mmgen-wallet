@@ -12,7 +12,9 @@
 test.test_py_d.cfg: configuration data for test.py
 """
 
-from .common import *
+import os
+
+from .common import pwfile,hincog_fn,incog_id_fn,randbool
 from ..include.common import cfg
 
 cmd_groups_dfl = {

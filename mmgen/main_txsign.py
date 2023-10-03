@@ -114,7 +114,7 @@ if not cfg.info and not cfg.terse_info:
 	from .ui import do_license_msg
 	do_license_msg(cfg,immed=True)
 
-from .tx.sign import *
+from .tx.sign import txsign,get_tx_files,get_seed_files,get_keylist,get_keyaddrlist
 
 tx_files   = get_tx_files(cfg,infiles)
 seed_files = get_seed_files(cfg,infiles)

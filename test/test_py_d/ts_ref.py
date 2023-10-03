@@ -21,13 +21,34 @@ test.test_py_d.ts_ref: Reference file tests for the test.py test suite
 """
 
 import os
+
 from mmgen.util import capfirst
 from mmgen.wallet import get_wallet_cls
-from ..include.common import *
-from .common import *
+from ..include.common import (
+	cfg,
+	imsg_r,
+	ok,
+	joinpath,
+	cmp_or_die,
+	ref_kafile_hash_preset,
+	ref_kafile_pass,
+	read_from_file,
+	sample_text
+)
+from .common import (
+	dfl_words_file,
+	ref_dir,
+	chksum_pat,
+	pwfile,
+	ref_bw_file_spc,
+	ref_enc_fn,
+	get_env_without_debug_vars,
+	tool_enc_passwd,
+	skip
+)
 
-from .ts_base import *
-from .ts_shared import *
+from .ts_base import TestSuiteBase
+from .ts_shared import TestSuiteShared
 
 wpasswd = 'reference password'
 

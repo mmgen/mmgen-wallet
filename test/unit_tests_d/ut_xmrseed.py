@@ -4,7 +4,7 @@
 test/unit_tests_d/ut_xmrseed: Monero mnemonic unit test for the MMGen suite
 """
 
-from mmgen.util import msg,msg_r
+from mmgen.util import msg,msg_r,ymsg
 
 from ..include.common import cfg,qmsg,vmsg
 

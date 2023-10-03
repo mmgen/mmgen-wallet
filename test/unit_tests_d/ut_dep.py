@@ -10,7 +10,7 @@ test.unit_tests_d.ut_dep: dependency unit tests for the MMGen suite
 from subprocess import run,PIPE
 
 from mmgen.cfg import gc
-from mmgen.util import ymsg,gmsg
+from mmgen.util import msg,ymsg,gmsg
 from mmgen.exception import NoLEDSupport
 
 from ..include.common import cfg,vmsg,check_solc_ver

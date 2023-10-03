@@ -13,8 +13,23 @@
 test.test_py_d.ts_xmr_autosign: xmr autosigning tests for the test.py test suite
 """
 
-from .ts_xmrwallet import *
+import os,time,re,shutil
 from pathlib import Path
+
+from mmgen.color import yellow,purple,gray
+from mmgen.util import fmt,async_run
+
+from ..include.common import (
+	cfg,
+	oqmsg,
+	oqmsg_r,
+	imsg,
+	silence,
+	end_silence
+)
+from .common import get_file_with_ext
+
+from .ts_xmrwallet import TestSuiteXMRWallet
 from .ts_autosign import TestSuiteAutosignBase
 
 def make_burn_addr():
@@ -118,6 +133,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		data = self.users['alice']
 		from mmgen.wallet import Wallet
 		from mmgen.xmrwallet import MoneroWalletOps,xmrwallet_uargs
+		from mmgen.addrlist import KeyAddrList
 		silence()
 		kal = KeyAddrList(
 			cfg       = self.cfg,

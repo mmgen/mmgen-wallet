@@ -22,12 +22,37 @@ test.test_py_d.ts_regtest: Regtest tests for the test.py test suite
 
 import os,json,time,re
 from decimal import Decimal
-from mmgen.util import die,gmsg,capfirst,fmt_list,async_run
+
+from mmgen.color import yellow
+from mmgen.util import msg_r,die,gmsg,capfirst,fmt_list,async_run
 from mmgen.protocol import init_proto
 from mmgen.addrlist import AddrList
 from mmgen.wallet import Wallet,get_wallet_cls
-from ..include.common import *
-from .common import *
+
+from ..include.common import (
+	cfg,
+	imsg,
+	omsg,
+	stop_test_daemons,
+	joinpath,
+	silence,
+	end_silence,
+	cmp_or_die,
+	strip_ansi_escapes,
+	gr_uc,
+	getrandhex
+)
+from .common import (
+	ok_msg,
+	get_file_with_ext,
+	get_comment,
+	tw_comment_lat_cyr_gr,
+	tw_comment_zh,
+	tx_comment_jp,
+	get_env_without_debug_vars
+)
+from .ts_base import TestSuiteBase
+from .ts_shared import TestSuiteShared
 
 pat_date = r'\b\d\d-\d\d-\d\d\b'
 pat_date_time = r'\b\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d\b'
@@ -137,9 +162,6 @@ def make_burn_addr(proto):
 		cmdname = 'pubhash2addr',
 		proto   = proto,
 		mmtype  = 'compressed' ).pubhash2addr('00'*20)
-
-from .ts_base import *
-from .ts_shared import *
 
 class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	'transacting and tracking wallet operations via regtest mode'

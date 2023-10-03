@@ -21,11 +21,12 @@ test.test_py_d.ts_shared: Shared methods for the test.py test suite
 """
 
 import os
+
 from mmgen.util import ymsg,get_extension
 from mmgen.wallet import get_wallet_cls
 
-from ..include.common import *
-from .common import *
+from ..include.common import cmp_or_die,strip_ansi_escapes,joinpath
+from .common import ref_bw_file
 
 class TestSuiteShared(object):
 	'shared methods for the test.py test suite'

@@ -21,9 +21,12 @@ test.test_py_d.ts_base: Base class for the test.py test suite
 """
 
 import os
+
 from mmgen.cfg import gc
-from ..include.common import *
-from .common import *
+from mmgen.util import msg
+
+from ..include.common import cfg,write_to_file,read_from_file
+from .common import get_file_with_ext
 
 class TestSuiteBase:
 	'initializer class for the test.py test suite'

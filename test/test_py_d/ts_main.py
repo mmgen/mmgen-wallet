@@ -20,18 +20,42 @@
 test.test_py_d.ts_main: Basic operations tests for the test.py test suite
 """
 
-from mmgen.util import async_run,capfirst,get_extension
-from mmgen.color import green,cyan
+import sys,os
 
+from mmgen.util import msg,msg_r,async_run,capfirst,get_extension,die
+from mmgen.color import green,cyan
 from mmgen.fileutil import get_data_from_file,write_data_to_file
 from mmgen.wallet import get_wallet_cls
 from mmgen.wallet.mmgen import wallet as MMGenWallet
 from mmgen.wallet.incog import wallet as IncogWallet
 from mmgen.rpc import rpc_init
-from ..include.common import *
-from .common import *
-from .ts_base import *
-from .ts_shared import *
+
+from ..include.common import (
+	cfg,
+	vmsg,
+	joinpath,
+	silence,
+	end_silence,
+	getrand,
+	getrandnum,
+	getrandnum_range,
+	getrandhex,
+	strip_ansi_escapes
+)
+from .common import (
+	pwfile,
+	hincog_fn,
+	get_file_with_ext,
+	get_comment,
+	tx_comment_lat_cyr_gr,
+	hincog_offset,
+	hincog_bytes,
+	hincog_seedlen,
+	incog_id_fn,
+	non_mmgen_fn
+)
+from .ts_base import TestSuiteBase
+from .ts_shared import TestSuiteShared
 
 def make_brainwallet_file(fn):
 	# Print random words with random whitespace in between

@@ -26,13 +26,22 @@ from pathlib import Path
 
 from mmgen.cfg import gc
 from mmgen.color import red,green,blue,purple
-from mmgen.util import suf
+from mmgen.util import msg,suf,die
 
-from ..include.common import *
-from .common import *
-from .ts_base import *
-from .ts_shared import *
-from .input import *
+from ..include.common import (
+	cfg,
+	omsg,
+	omsg_r,
+	start_test_daemons,
+	stop_test_daemons,
+	joinpath,
+	imsg,
+	read_from_file
+)
+from .common import ref_dir,dfl_words_file,dfl_bip39_file
+
+from .ts_base import TestSuiteBase
+from .input import stealth_mnemonic_entry
 
 from mmgen.led import LEDControl
 from mmgen.autosign import Autosign,AutosignConfig

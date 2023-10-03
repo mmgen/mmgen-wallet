@@ -22,6 +22,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 """
 
 import mmgen.opts as opts
+
 from .cfg import gc,Config
 from .addr import MMGenAddrType
 from .addrfile import AddrFile
@@ -172,6 +173,7 @@ af = al.file
 af.format()
 
 if al.gen_addrs and cfg.print_checksum:
+	from .util import Die
 	Die(0,al.checksum)
 
 from .ui import keypress_confirm

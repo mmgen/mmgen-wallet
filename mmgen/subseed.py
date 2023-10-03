@@ -21,9 +21,10 @@ subseed: Subseed classes and methods for the MMGen suite
 """
 
 from .color import green
-from .util import msg_r,msg,die
-from .obj import MMGenRange,IndexedDict
-from .seed import *
+from .util import msg_r,msg,die,make_chksum_8
+from .objmethods import MMGenObject,Hilite,InitErrors
+from .obj import MMGenRange,IndexedDict,ImmutableAttr
+from .seed import SeedBase,SeedID
 
 class SubSeedIdxRange(MMGenRange):
 	min_idx = 1

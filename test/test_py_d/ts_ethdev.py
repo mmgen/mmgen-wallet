@@ -27,10 +27,38 @@ from subprocess import run,PIPE,DEVNULL
 
 from mmgen.cfg import gc
 from mmgen.color import yellow,blue,cyan,set_vt100
-from mmgen.util import die
+from mmgen.util import msg,rmsg,die
 from mmgen.protocol import CoinProtocol
-from ..include.common import *
-from .common import *
+
+from ..include.common import (
+	cfg,
+	check_solc_ver,
+	omsg,
+	imsg,
+	imsg_r,
+	joinpath,
+	read_from_file,
+	write_to_file,
+	cmp_or_die,
+	strip_ansi_escapes,
+	silence,
+	end_silence,
+	gr_uc,
+	stop_test_daemons
+)
+from .common import (
+	ref_dir,
+	dfl_words_file,
+	tx_comment_jp,
+	tx_comment_lat_cyr_gr,
+	tw_comment_zh,
+	tw_comment_lat_cyr_gr,
+	get_file_with_ext,
+	ok_msg,
+	Ctrl_U
+)
+from .ts_base import TestSuiteBase
+from .ts_shared import TestSuiteShared
 
 del_addrs = ('4','1')
 dfl_sid = '98831F3A'
@@ -115,9 +143,6 @@ token_bals_getbalance = {
 	'1': (vbal4,'999999.12345689012345678'),
 	'2': ('111.888877776666555545','888.111122223333444455')
 }
-
-from .ts_base import *
-from .ts_shared import *
 
 coin = cfg.coin
 

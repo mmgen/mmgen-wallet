@@ -22,7 +22,7 @@ obj: MMGen native classes
 
 import sys,os,re,unicodedata
 
-from .objmethods import *
+from .objmethods import MMGenObject,Hilite,InitErrors
 
 def get_obj(objname,*args,**kwargs):
 	"""

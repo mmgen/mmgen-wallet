@@ -21,11 +21,14 @@ test.test_py_d.ts_wallet: Wallet conversion tests for the test.py test suite
 """
 
 import os
-from mmgen.util import capfirst
+
+from mmgen.util import msg,capfirst,get_extension
 from mmgen.wallet import get_wallet_cls
-from .common import *
-from .ts_base import *
-from .ts_shared import *
+
+from ..include.common import cfg,joinpath,imsg
+from .common import ref_dir,ref_wallet_brainpass,ref_wallet_incog_offset,hincog_fn,hincog_bytes
+from .ts_base import TestSuiteBase
+from .ts_shared import TestSuiteShared
 
 class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 	'wallet conversion to and from reference data'

@@ -541,7 +541,8 @@ def main():
 from subprocess import run,PIPE,DEVNULL
 from collections import namedtuple
 from mmgen.protocol import init_proto,CoinProtocol
-from mmgen.altcoin import init_genonly_altcoins,CoinInfo as cinfo
+from mmgen.altcoin import init_genonly_altcoins
+from mmgen.altcoin import CoinInfo as cinfo
 from mmgen.key import PrivKey
 from mmgen.addr import MMGenAddrType
 from mmgen.addrgen import KeyGenerator,AddrGenerator

@@ -22,7 +22,7 @@ util: Frequently-used variables, classes and utility functions for the MMGen sui
 
 import sys,os,time,re
 
-from .color import *
+from .color import red,yellow,green,blue,purple
 from .cfg import gv,gc
 
 ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'

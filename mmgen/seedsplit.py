@@ -22,8 +22,10 @@ seedsplit: Seed split classes and methods for the MMGen suite
 
 from .color import yellow
 from .util import msg,die
-from .obj import MMGenPWIDString,MMGenIdx,get_obj
-from .subseed import *
+from .objmethods import MMGenObject,Hilite,InitErrors
+from .obj import ImmutableAttr,MMGenPWIDString,MMGenIdx,get_obj,IndexedDict
+from .seed import Seed,SeedBase
+from .subseed import SubSeedList,SubSeedIdx,SubSeed
 from .crypto import Crypto
 
 class SeedShareIdx(MMGenIdx):

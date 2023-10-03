@@ -24,10 +24,10 @@ import os
 
 from mmgen.color import set_vt100
 
-from .common import *
-from ..include.common import cfg
-from .ts_ref import *
-from .ts_base import *
+from .common import pwfile,dfl_wpasswd,ref_dir,dfl_words_file,dfl_addr_idx_list
+from ..include.common import cfg,joinpath,start_test_daemons,stop_test_daemons,cmp_or_die
+from .ts_ref import TestSuiteRef
+from .ts_base import TestSuiteBase
 
 class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 	'saved and generated altcoin reference files'

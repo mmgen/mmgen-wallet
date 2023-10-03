@@ -10,8 +10,10 @@
 test.test_py_d.ts_opts: options processing tests for the MMGen test.py test suite
 """
 
-from ..include.common import *
-from .ts_base import *
+import os
+
+from ..include.common import cfg
+from .ts_base import TestSuiteBase
 
 class TestSuiteOpts(TestSuiteBase):
 	'options processing'

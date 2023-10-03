@@ -20,14 +20,13 @@
 test.test_py_d.ts_chainsplit: Forking scenario tests for the test.py test suite
 This module is unmaintained and currently non-functional
 """
-import os
-from mmgen.util import die
-from ..include.common import *
-from .common import *
 
-from .ts_base import *
-from .ts_shared import *
-from .ts_regtest import *
+import os
+
+from mmgen.util import die
+
+from .common import get_file_with_ext
+from .ts_regtest import TestSuiteRegtest
 
 class TestSuiteChainsplit(TestSuiteRegtest):
 	'forking scenario tests for the test.py test suite'

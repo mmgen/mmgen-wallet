@@ -36,9 +36,8 @@ from mmgen.color import green,blue,purple,cyan
 from mmgen.util import msg,msg_r,Msg,is_hex_str,async_run,die
 
 from mmgen.bip39 import is_bip39_mnemonic
-from mmgen.baseconv import is_mmgen_mnemonic
+from mmgen.baseconv import is_mmgen_mnemonic,is_b58_str
 from mmgen.xmrseed import is_xmrseed
-from mmgen.baseconv import *
 
 skipped_tests = ['mn2hex_interactive']
 

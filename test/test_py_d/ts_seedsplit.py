@@ -20,10 +20,14 @@
 test.test_py_d.ts_seedsplit: Seed split/join tests for the test.py test suite
 """
 
+import os
+
 from mmgen.wallet import get_wallet_cls
 from mmgen.util import capfirst
 
-from .ts_base import *
+from ..include.common import strip_ansi_escapes,cmp_or_die
+from .common import get_file_with_ext
+from .ts_base import TestSuiteBase
 
 ref_wf = 'test/ref/98831F3A.bip39'
 ref_sid = '98831F3A'

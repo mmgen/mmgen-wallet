@@ -23,9 +23,11 @@ test.test_py_d.ts_misc: Miscellaneous test groups for the test.py test suite
 import re,time
 
 from mmgen.cfg import gc
-from ..include.common import *
-from .common import *
-from .ts_base import *
+from mmgen.util import ymsg
+
+from ..include.common import cfg,start_test_daemons,stop_test_daemons,imsg
+from .common import get_file_with_ext
+from .ts_base import TestSuiteBase
 from .ts_main import TestSuiteMain
 
 class TestSuiteMisc(TestSuiteBase):

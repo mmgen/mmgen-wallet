@@ -10,11 +10,23 @@
 test.test_py_d.ts_tool: tool tests for the MMGen test.py test suite
 """
 
+import os
+
+from mmgen.cfg import gc
 from mmgen.util import suf
 from mmgen.color import cyan
 
-from ..include.common import *
-from .ts_base import *
+from ..include.common import (
+	cfg,
+	vmsg,
+	read_from_file,
+	write_to_file,
+	cmp_or_die,
+	joinpath,
+	getrand
+)
+from .common import hincog_fn,incog_id_fn,hincog_offset,tool_enc_passwd,ref_dir
+from .ts_base import TestSuiteBase
 from .ts_main import TestSuiteMain
 
 class TestSuiteTool(TestSuiteMain,TestSuiteBase):

@@ -20,17 +20,31 @@
 test.test_py_d.ts_xmrwallet: xmrwallet tests for the test.py test suite
 """
 
-import sys,os,atexit,asyncio,shutil
+import sys,os,time,re,atexit,asyncio,shutil
 from subprocess import run,PIPE
+from collections import namedtuple
 
 from mmgen.cfg import gc
+from mmgen.util import msg,fmt,async_run,capfirst,is_int,die,list_gen
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
 from mmgen.addrlist import ViewKeyAddrList,KeyAddrList,AddrIdxList
-from ..include.common import *
-from .common import *
 
-from .ts_base import *
+from ..include.common import (
+	cfg,
+	omsg,
+	oqmsg_r,
+	ok,
+	imsg,
+	imsg_r,
+	write_data_to_file,
+	read_from_file,
+	silence,
+	end_silence,
+	strip_ansi_escapes
+)
+from .common import get_file_with_ext
+from .ts_base import TestSuiteBase
 
 # atexit functions:
 def stop_daemons(self):

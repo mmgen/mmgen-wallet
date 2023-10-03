@@ -22,7 +22,6 @@ mn_entry.py - Mnemonic user entry methods for the MMGen suite
 
 import time
 
-from .cfg import *
 from .util import msg,msg_r,fmt,fmt_list,capfirst,die,ascii_lowercase
 from .term import get_char,get_char_raw
 from .color import cyan
