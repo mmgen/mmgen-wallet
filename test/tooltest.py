@@ -25,8 +25,9 @@ from subprocess import run,PIPE
 
 import include.test_init
 
-from mmgen.common import *
-from test.include.common import *
+from mmgen.cfg import Config,gc
+from mmgen.color import green,cyan,yellow,blue
+from mmgen.util import msg,msg_r,Msg,die
 
 opts_data = {
 	'text': {
@@ -38,7 +39,7 @@ opts_data = {
 -d, --debug         Produce debugging output (stderr from spawned script)
 --, --longhelp      Print help message for long options (common options)
 -l, --list-cmds     List and describe the tests and commands in this test suite
--L, --list-names    List the names of all tested 'mmgen-tool' commands
+-s, --testing-status  List the testing status of all 'mmgen-tool' commands
 -t, --type=t        Specify address type (valid choices: 'zcash_z')
 -v, --verbose       Produce more verbose output
 """,
@@ -53,6 +54,19 @@ sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
 cfg = Config(opts_data=opts_data)
 
+from test.include.common import (
+	set_globals,
+	mk_tmpdir,
+	cleandir,
+	write_to_tmpfile,
+	ok,
+	read_from_file,
+	read_from_tmpfile,
+	cmp_or_die,
+	getrand,
+	getrandhex,
+	end_msg
+)
 set_globals(cfg)
 
 vmsg = cfg._util.vmsg
@@ -153,36 +167,45 @@ if cfg.list_cmds:
 	Msg('\nAvailable utilities:')
 	Msg(fs.format('clean','Clean the tmp directory',w=w))
 	sys.exit(0)
-if cfg.list_names:
-	tcmd = ['python3','test/tooltest2.py','--list-tested-cmds']
+if cfg.testing_status:
 	tested_in = {
 		'tooltest.py': [],
 		'test.py': (
 			'encrypt','decrypt','find_incog_data',
 			'addrfile_chksum','keyaddrfile_chksum','passwdfile_chksum',
 			'add_label','remove_label','remove_address','twview',
-			'getbalance','listaddresses','listaddress'),
-		'tooltest2.py': run(tcmd,stdout=PIPE,check=True).stdout.decode().split()
+			'getbalance','listaddresses','listaddress',
+			'daemon_version','extract_key_from_geth_wallet',
+			'mn2hex_interactive','rand2file',
+			'rescan_address','rescan_blockchain','resolve_address',
+			'twexport','twimport','txhist'
+		),
+		'tooltest2.py': run(
+			['python3','test/tooltest2.py','--list-tested-cmds'],
+			stdout = PIPE,
+			check = True
+		).stdout.decode().split()
 	}
 	for v in cmd_data.values():
 		tested_in['tooltest.py'] += list(v['cmd_data'].keys())
 
-	msg(green("TESTED 'MMGEN-TOOL' COMMANDS"))
-	for l in ('tooltest.py','tooltest2.py','test.py','test-release.sh'):
-		msg(blue(l+':'))
-		msg('  '+'\n  '.join(sorted(tested_in[l])))
+	Msg(green("Testing status of 'mmgen-tool' commands:"))
+	for l in ('tooltest.py','tooltest2.py','test.py'):
+		Msg('\n  ' + blue(l+':'))
+		Msg('    '+'\n    '.join(sorted(tested_in[l])))
 
 	ignore = ()
-	from mmgen.tool import MMGenToolCmd
+	from mmgen.main_tool import get_cmds
 	uc = sorted(
-		set(MMGenToolCmds) -
+		set(get_cmds()) -
 		set(ignore) -
 		set(tested_in['tooltest.py']) -
 		set(tested_in['tooltest2.py']) -
-		set(tested_in['test.py']) -
-		set(tested_in['test-release.sh'])
+		set(tested_in['test.py'])
 	)
-	die(0,'\n{}\n  {}'.format(yellow('Untested commands:'),'\n  '.join(uc)))
+	if uc:
+		Msg(yellow('\n  {}\n    {}'.format('Untested commands:','\n    '.join(uc))))
+	sys.exit(0)
 
 from mmgen.key import is_wif
 from mmgen.addr import is_coin_addr

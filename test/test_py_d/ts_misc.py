@@ -129,6 +129,7 @@ class TestSuiteHelp(TestSuiteBase):
 		('tool_help',             (1,"'mmgen-tool' usage screen",[])),
 		('tool_cmd_usage',        (1,"'mmgen-tool' usage screen",[])),
 		('test_help',             (1,"'test.py' help screens",[])),
+		('tooltest_help',         (1,"'tooltest.py' help screens",[])),
 	)
 
 	def usage(self):
@@ -251,6 +252,19 @@ class TestSuiteHelp(TestSuiteBase):
 				[arg],
 				cmd_dir = 'test',
 				extra_desc = f'(test.py {arg})',
+				expect = expect )
+		return t
+
+	def tooltest_help(self):
+		for arg,expect in (
+			('--list-cmds','Available commands'),
+			('--testing-status','Testing status')
+		):
+			t = self.spawn_chk_expect(
+				'tooltest.py',
+				[arg],
+				cmd_dir = 'test',
+				extra_desc = f'(tooltest.py {arg})',
 				expect = expect )
 		return t
 

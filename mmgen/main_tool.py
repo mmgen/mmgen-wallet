@@ -176,6 +176,9 @@ mods = {
 	),
 }
 
+def get_cmds():
+	return [cmd for mod,cmds in mods.items() if mod != 'help' for cmd in cmds]
+
 def create_call_sig(cmd,cls,as_string=False):
 
 	m = getattr(cls,cmd)
