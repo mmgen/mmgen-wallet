@@ -23,19 +23,17 @@ test/objattrtest.py: Test immutable attributes of MMGen data objects
 # TODO: test 'typeconv' during instance creation
 
 import sys,os
+from collections import namedtuple
 
 import include.test_init
 
-# Import these _after_ local path's been added to sys.path
-from mmgen.common import *
-from mmgen.addrlist import *
-from mmgen.passwdlist import *
-from mmgen.tx.base import Base
-from mmgen.proto.btc.tw.unspent import BitcoinTwUnspentOutputs
+from mmgen.cfg import Config
+from mmgen.util import msg,msg_r,gmsg,die
+from mmgen.color import red,yellow,green,blue,purple,nocolor
+from mmgen.obj import ImmutableAttr,ListItemAttr
 
 opts_data = {
 	'sets': [
-		('show_nonstandard_init', True, 'verbose', True),
 		('show_descriptor_type', True, 'verbose', True),
 	],
 	'text': {
@@ -44,7 +42,6 @@ opts_data = {
 		'options': """
 -h, --help                  Print this help message
 --, --longhelp              Print help message for long options (common options)
--i, --show-nonstandard-init Display non-standard attribute initialization info
 -d, --show-descriptor-type  Display the attribute's descriptor type
 -v, --verbose               Produce more verbose output
 """
@@ -56,15 +53,24 @@ cfg = Config(opts_data=opts_data)
 from test.include.common import set_globals
 set_globals(cfg)
 
-from test.objattrtest_py_d.oat_common import *
+from test.objattrtest_py_d.oat_common import sample_objs
 
-pd = namedtuple('permission_bits', ['read_ok','delete_ok','reassign_ok'])
+pd = namedtuple('attr_bits', ['read_ok','delete_ok','reassign_ok','typeconv','set_none_ok'])
+perm_bits = ('read_ok','delete_ok','reassign_ok')
+attr_dfls = {
+	'reassign_ok': False,
+	'delete_ok': False,
+	'typeconv': True,
+	'set_none_ok': False,
+}
 
-def parse_permbits(bits):
+def parse_attrbits(bits):
 	return pd(
-		bool(0b001 & bits), # read
-		bool(0b010 & bits), # delete
-		bool(0b100 & bits), # reassign
+		bool(0b00001 & bits), # read
+		bool(0b00010 & bits), # delete
+		bool(0b00100 & bits), # reassign
+		bool(0b01000 & bits), # typeconv
+		bool(0b10000 & bits), # set_none
 	)
 
 def get_descriptor_obj(objclass,attrname):
@@ -81,13 +87,13 @@ def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 	pstem = pname.rstrip('e')
 
 	try:
-		if perm_name == 'read_ok':
+		if perm_name == 'read_ok': # non-existent perm
 			getattr(obj,attrname)
 		elif perm_name == 'reassign_ok':
 			try:
 				so = sample_objs[attrval_type.__name__]
 			except:
-				die( 'SampleObjError', f'unable to find sample object of type {attrval_type.__name__!r}' )
+				raise SampleObjError(f'unable to find sample object of type {attrval_type.__name__!r}')
 			# ListItemAttr allows setting an attribute if its value is None
 			if type(dobj) == ListItemAttr and getattr(obj,attrname) == None:
 				setattr(obj,attrname,so)
@@ -116,26 +122,27 @@ def test_attr(data,obj,attrname,dobj,bits,attrval_type):
 	if hasattr(dobj,'__dict__'):
 		d = dobj.__dict__
 		bits = bits._asdict()
-		for k in ('reassign_ok','delete_ok'):
+		colors = {
+			'reassign_ok': purple,
+			'delete_ok': red,
+			'typeconv': green,
+			'set_none_ok': yellow,
+		}
+		for k in bits:
 			if k in d:
 				if d[k] != bits[k]:
 					fs = 'init value {iv}={a} for attr {n!r} does not match test data ({iv}={b})'
 					die(4,fs.format(iv=k,n=attrname,a=d[k],b=bits[k]))
-				if cfg.verbose and d[k] == True:
-					msg_r(f' {k}={d[k]!r}')
+				if cfg.verbose and d[k] != attr_dfls[k]:
+					msg_r(colors[k](f' {k}={d[k]!r}'))
 
-		if cfg.show_nonstandard_init:
-			for k,v in (('typeconv',False),('set_none_ok',True)):
-				if d[k] == v:
-					msg_r(f' {k}={v}')
-
-def test_object(test_data,objname):
+def test_object(mod,test_data,objname):
 
 	if '.' in objname:
 		on1,on2 = objname.split('.')
-		cls = getattr(globals()[on1],on2)
+		cls = getattr(getattr(mod,on1),on2)
 	else:
-		cls = globals()[objname]
+		cls = getattr(mod,objname)
 
 	fs = 'Testing attribute ' + ('{!r:<15}{dt:13}' if cfg.show_descriptor_type else '{!r}')
 	data = test_data[objname]
@@ -145,23 +152,25 @@ def test_object(test_data,objname):
 		dobj = get_descriptor_obj(type(obj),attrname)
 		if cfg.verbose:
 			msg_r(fs.format(attrname,dt=type(dobj).__name__.replace('MMGen','')))
-		bits = parse_permbits(adata[0])
+		bits = parse_attrbits(adata[0])
 		test_attr(data,obj,attrname,dobj,bits,adata[1])
-		for perm_name,perm_value in bits._asdict().items():
-			test_attr_perm(obj,attrname,perm_name,perm_value,dobj,adata[1])
+		for bit_name,bit_value in bits._asdict().items():
+			if bit_name in perm_bits:
+				test_attr_perm(obj,attrname,bit_name,bit_value,dobj,adata[1])
 		cfg._util.vmsg('')
 
 def do_loop():
 	import importlib
 	modname = f'test.objattrtest_py_d.oat_{proto.coin.lower()}_{proto.network}'
-	test_data = importlib.import_module(modname).tests
+	mod = importlib.import_module(modname)
+	test_data = getattr(mod,'tests')
 	gmsg(f'Running immutable attribute tests for {proto.coin} {proto.network}')
 
 	utests = cfg._args
 	for obj in test_data:
 		if utests and obj not in utests: continue
 		msg((blue if cfg.verbose else nocolor)(f'Testing {obj}'))
-		test_object(test_data,obj)
+		test_object(mod,test_data,obj)
 
 proto = cfg._proto
 

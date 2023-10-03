@@ -96,6 +96,9 @@ class ImmutableAttr: # Descriptor
 	ok_dtypes = (type,type(None),type(lambda:0))
 
 	def __init__(self,dtype,typeconv=True,set_none_ok=False,include_proto=False):
+		self.set_none_ok = set_none_ok
+		self.typeconv = typeconv
+
 		assert isinstance(dtype,self.ok_dtypes), 'ImmutableAttr_check1'
 		if include_proto:
 			assert typeconv, 'ImmutableAttr_check2'

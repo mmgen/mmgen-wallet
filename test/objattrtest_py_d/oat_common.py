@@ -7,17 +7,15 @@
 test.objattrtest_py_d.oat_common: shared data for MMGen data objects tests
 """
 
-import os
 from decimal import Decimal
 
-from mmgen.obj import *
-from mmgen.seedsplit import *
-from mmgen.protocol import *
-from mmgen.addr import *
-from mmgen.tx import *
-from mmgen.tw.unspent import *
-from mmgen.key import *
 from ..include.common import cfg,getrand
+
+from mmgen.obj import TwComment,CoinTxID,HexStr
+from mmgen.seed import Seed,SeedID
+from mmgen.subseed import SubSeedIdx,SubSeedList
+from mmgen.seedsplit import SeedShareList,SeedShareCount,SeedSplitIDString,SeedShareIdx,MasterShareIdx
+from mmgen.addr import AddrIdx
 
 from collections import namedtuple
 atd = namedtuple('attrtest_entry',['attrs','args','kwargs'])
