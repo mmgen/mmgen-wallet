@@ -181,6 +181,8 @@ class unit_tests:
 			rpc.call_raw('get_height')
 			rpc.call('get_last_block_header')
 
+		from mmgen.xmrseed import xmrseed
+
 		async def run():
 			networks = init_proto( cfg, 'xmr' ).networks
 			daemons = [(
@@ -224,7 +226,6 @@ class unit_tests:
 
 			gmsg('OK')
 
-		from mmgen.xmrseed import xmrseed
 		import shutil
 		shutil.rmtree('test/trash2',ignore_errors=True)
 		os.makedirs('test/trash2/wallet_rpc')

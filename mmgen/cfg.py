@@ -679,6 +679,8 @@ class Config(Lockable):
 
 def check_opts(cfg): # Raises exception if any check fails
 
+	from .util import is_int,Msg
+
 	def get_desc(desc_pfx=''):
 		return (
 			(desc_pfx + ' ' if desc_pfx else '')
@@ -830,8 +832,6 @@ def check_opts(cfg): # Raises exception if any check fails
 
 		def columns():
 			opt_compares(val,'>',10)
-
-	from .util import is_int,Msg
 
 	# TODO: add checks for token, rbf, tx_fee
 	check_funcs_names = tuple(check_funcs.__dict__)

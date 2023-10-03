@@ -200,6 +200,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			adata = AddrListData([AddrListEntry(proto=proto,addr=a) for a in addrlist])
 		elif keylist:            # data from flat key list
 			self.al_id = None
+			from .util import remove_dups
 			keylist = remove_dups(keylist,edesc='key',desc='key list',hide=True)
 			adata = AddrListData([AddrListEntry(proto=proto,sec=PrivKey(proto=proto,wif=k)) for k in keylist])
 		elif seed or addr_idxs:

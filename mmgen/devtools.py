@@ -120,8 +120,17 @@ class MMGenObjectMethods: # mixin class for MMGenObject
 		self.pdie(exit_val=0)
 
 	def pfmt(self,lvl=0,id_list=[],color=None):
+
 		from decimal import Decimal
 		scalars = (str,int,float,Decimal)
+
+		def isDict(obj):
+			return isinstance(obj,dict)
+		def isList(obj):
+			return isinstance(obj,list)
+		def isScalar(obj):
+			return isinstance(obj,scalars)
+
 		def do_list(out,e,lvl=0,is_dict=False):
 			out.append('\n')
 			for i in e:
@@ -154,13 +163,6 @@ class MMGenObjectMethods: # mixin class for MMGenObject
 
 			if not e:
 				out.append(f'{e!r}\n')
-
-		def isDict(obj):
-			return isinstance(obj,dict)
-		def isList(obj):
-			return isinstance(obj,list)
-		def isScalar(obj):
-			return isinstance(obj,scalars)
 
 		out = [f'<{type(self).__name__}>{" "+repr(self) if isScalar(self) else ""}\n']
 

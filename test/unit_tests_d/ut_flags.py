@@ -33,7 +33,6 @@ class unit_test(object):
 			avail_opts = ('foo',)
 			def __init__(self,opts=None,flags=None):
 				self.opt = MyClassOpts(self,opts)
-				self.flag = MyClassFlags(self,flags)
 
 		def test_flags():
 			def gen():

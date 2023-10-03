@@ -36,11 +36,10 @@ class TxInfo:
 				blockcount = None
 
 		def get_max_mmwid(io):
-			if io == tx.inputs:
-				sel_f = lambda o: len(o.mmid) + 2 # len('()')
-			else:
-				sel_f = lambda o: len(o.mmid) + (2,8)[bool(o.is_chg)] # + len(' (chg)')
-			return  max(max([sel_f(o) for o in io if o.mmid] or [0]),len(nonmm_str))
+			sel_f = (
+				(lambda o: len(o.mmid) + 2) if io == tx.inputs else  # 2 = len('()')
+				(lambda o: len(o.mmid) + (2,8)[bool(o.is_chg)]) )    # 6 = len(' (chg)')
+			return max(max([sel_f(o) for o in io if o.mmid] or [0]),len(nonmm_str))
 
 		nonmm_str = f'(non-{gc.proj_name} address)'
 		max_mmwid = max(get_max_mmwid(tx.inputs),get_max_mmwid(tx.outputs))

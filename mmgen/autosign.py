@@ -536,6 +536,7 @@ class Autosign:
 		def do_shred(f):
 			nonlocal count
 			msg_r('.')
+			from .fileutil import shred_file
 			shred_file( f, verbose=self.cfg.verbose )
 			count += 1
 
@@ -565,7 +566,6 @@ class Autosign:
 		asi = get_autosign_obj( self.cfg, 'btc,xmr' )
 		count = 0
 
-		from .fileutil import shred_file
 		for s_name in Signable.signables:
 			clean_dir(s_name)
 
