@@ -41,7 +41,7 @@ def _get_cls_info(clsname,modname,args,kwargs):
 			f"{clsname} must be instantiated with 'proto','data' or 'filename' keyword" )
 
 	if clsname == 'Completed':
-		from ..util import get_extension
+		from ..util import get_extension,die
 		from .completed import Completed
 		ext = get_extension( kwargs['filename'] )
 		cls = Completed.ext_to_cls( ext, proto )

@@ -28,7 +28,7 @@ import include.test_init
 import mmgen.opts as opts
 from mmgen.cfg import gc,Config
 from mmgen.color import green,red,purple
-from mmgen.util import msg,capfirst,is_int,die
+from mmgen.util import msg,ymsg,capfirst,is_int,die
 
 results_file = 'gentest.out.json'
 

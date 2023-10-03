@@ -14,7 +14,7 @@ tx.bump: transaction bump class
 
 from .new import New
 from .completed import Completed
-from ..util import is_int
+from ..util import msg,is_int,die
 
 class Bump(Completed,New):
 	desc = 'fee-bumped transaction'

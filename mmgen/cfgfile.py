@@ -24,7 +24,7 @@ import os,re
 from collections import namedtuple
 
 from .cfg import gc
-from .util import msg,ymsg,suf,fmt,fmt_list,oneshot_warning,strip_comment,capfirst
+from .util import msg,ymsg,suf,fmt,fmt_list,oneshot_warning,strip_comment,capfirst,die
 
 def mmgen_cfg_file(cfg,id_str):
 	return cfg_file.get_cls_by_id(id_str)(cfg)

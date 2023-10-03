@@ -51,6 +51,7 @@ class tool_cmd(tool_cmd_base):
 			dec_d = Crypto(self.cfg).mmgen_decrypt( enc_d, 'data', hash_preset )
 			if dec_d:
 				break
+			from ..util import msg
 			msg('Trying again...')
 		if not outfile:
 			from ..util import remove_extension

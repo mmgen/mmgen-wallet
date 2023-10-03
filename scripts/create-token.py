@@ -197,7 +197,7 @@ def create_src(cfg,template,token_data):
 				if not field.test(val):
 					die(1,f'{val!r}: invalid parameter for option --{k}')
 
-			yield(k,field.conversion(val))
+			yield (k, field.conversion(val))
 
 	from string import Template
 	return Template(template).substitute(**dict(gen()))

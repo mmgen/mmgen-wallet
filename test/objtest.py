@@ -31,8 +31,8 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	init_dev()
 
 from mmgen.cfg import Config
-from mmgen.util import msg,msg_r,gmsg,capfirst
-from mmgen.color import yellow,blue,green,orange,purple,gray,nocolor
+from mmgen.util import msg,msg_r,gmsg,capfirst,die
+from mmgen.color import red,yellow,blue,green,orange,purple,gray,nocolor
 from mmgen.obj import get_obj
 
 opts_data = {

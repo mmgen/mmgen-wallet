@@ -29,7 +29,7 @@ curdir = normalize_path(os.curdir)
 
 for n in reversed(range(len(sys.path))):
 	if normalize_path(sys.path[n]) == curdir:
-		del(sys.path[n])
+		del sys.path[n]
 
 try:
 	import mmgen.main

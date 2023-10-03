@@ -13,7 +13,7 @@ wallet.incog_base: incognito wallet base class
 """
 
 from ..seed import Seed
-from ..util import msg,make_chksum_8
+from ..util import msg,make_chksum_8,die
 from .enc import wallet
 
 class wallet(wallet):

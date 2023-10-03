@@ -28,7 +28,7 @@ import include.test_init
 
 import mmgen.opts as opts
 from mmgen.cfg import gc,Config
-from mmgen.util import msg,msg_r,bmsg
+from mmgen.util import msg,msg_r,bmsg,die
 
 opts_data = {
 	'text': {

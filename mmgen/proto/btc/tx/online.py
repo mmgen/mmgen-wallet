@@ -14,7 +14,7 @@ proto.btc.tx.online: Bitcoin online signed transaction class
 
 import mmgen.tx.online as TxBase
 from .signed import Signed
-from ....util import msg,ymsg,rmsg
+from ....util import msg,ymsg,rmsg,die
 
 class OnlineSigned(Signed,TxBase.OnlineSigned):
 

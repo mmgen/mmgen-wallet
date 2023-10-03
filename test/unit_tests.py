@@ -31,7 +31,7 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	init_dev()
 
 from mmgen.cfg import Config,gc
-from mmgen.color import gray
+from mmgen.color import green,gray
 from mmgen.util import msg,gmsg,ymsg,Msg,die,async_run
 
 from test.include.common import set_globals,end_msg

@@ -20,7 +20,7 @@
 seed: Seed-related classes and methods for the MMGen suite
 """
 
-from .util import make_chksum_8,hexdigits_uc
+from .util import make_chksum_8,hexdigits_uc,die
 from .objmethods import Hilite,InitErrors,MMGenObject
 from .obj import ImmutableAttr,get_obj
 

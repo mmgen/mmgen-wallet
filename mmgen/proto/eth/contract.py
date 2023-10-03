@@ -24,7 +24,7 @@ from decimal import Decimal
 from . import rlp
 
 from . import erigon_sleep
-from ...util import msg,pp_msg
+from ...util import msg,pp_msg,die
 from ...base_obj import AsyncInit
 from ...obj import MMGenObject,CoinTxID
 from ...addr import CoinAddr,TokenAddr

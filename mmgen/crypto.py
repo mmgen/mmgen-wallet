@@ -27,6 +27,7 @@ from .cfg import gc
 from .util import (
 	msg,
 	msg_r,
+	ymsg,
 	fmt,
 	die,
 	make_chksum_8,

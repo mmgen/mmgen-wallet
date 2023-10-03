@@ -29,7 +29,7 @@ from decimal import Decimal
 
 import include.test_init
 
-from test.include.common import set_globals,end_msg,sample_text
+from test.include.common import set_globals,end_msg,sample_text,init_coverage
 
 from mmgen.cfg import Config,gc
 from mmgen.color import green,blue,purple,cyan

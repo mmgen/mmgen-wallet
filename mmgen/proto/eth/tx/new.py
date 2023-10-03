@@ -17,7 +17,7 @@ import json
 import mmgen.tx.new as TxBase
 from .base import Base,TokenBase
 from ....obj import Int,ETHNonce,MMGenTxID,Str,HexStr
-from ....util import msg,is_int,is_hex_str,make_chksum_6
+from ....util import msg,is_int,is_hex_str,make_chksum_6,suf,die
 from ....tw.ctl import TwCtl
 from ....addr import is_mmgen_id,is_coin_addr
 from ..contract import Token

@@ -89,7 +89,7 @@ else:
 	repo_root = include.test_init.repo_root
 
 from mmgen.cfg import Config,gc
-from mmgen.color import red,yellow,green,blue,cyan,nocolor
+from mmgen.color import red,yellow,green,blue,cyan,nocolor,init_color
 from mmgen.util import Msg,bmsg,die,suf,make_timestr,async_run
 
 from test.include.common import (
@@ -104,6 +104,7 @@ from test.include.common import (
 	ok,
 	start_test_daemons,
 	stop_test_daemons,
+	init_coverage,
 )
 
 try:
@@ -198,7 +199,10 @@ cfg = Config(opts_data=opts_data)
 
 set_globals(cfg)
 
-from test.test_py_d.common import get_file_with_ext # this must be loaded after set_globals()
+from test.test_py_d.common import ( # this must be loaded after set_globals()
+	get_file_with_ext,
+	confirm_continue
+)
 
 type(cfg)._reset_ok += (
 	'no_daemon_autostart',

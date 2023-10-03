@@ -64,6 +64,7 @@ class tool_cmd(tool_cmd_base):
 		from ..protocol import init_proto
 		proto = init_proto( self.cfg, 'xmr' )
 		if len(bytestr) != proto.privkey_len:
+			from ..util import die
 			die(1,'{!r}: invalid bit length for Monero private key (must be {})'.format(
 				len(bytestr*8),
 				proto.privkey_len*8 ))

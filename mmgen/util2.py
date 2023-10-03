@@ -13,7 +13,7 @@ util2: Less frequently-used variables, classes and utility functions for the MMG
 """
 
 import re,time
-from .util import msg,suf,hexdigits
+from .util import msg,suf,hexdigits,die
 
 def die_wait(delay,ev=0,s=''):
 	assert isinstance(delay,int)
@@ -80,7 +80,7 @@ def int2bytespec(n,spec,fmt,print_sym=True,strip=False,add_space=False):
 			if k == spec:
 				return v
 		else:
-			die('{spec}: unrecognized bytespec')
+			die(1,f'{spec!r}: unrecognized bytespec')
 
 	if strip:
 		ret = '{:{}f}'.format(n/spec2int(spec),fmt).rstrip('0')
@@ -120,7 +120,7 @@ def format_elapsed_hr(t,now=None,cached={}):
 
 def pretty_format(s,width=80,pfx=''):
 	out = []
-	while(s):
+	while s:
 		if len(s) <= width:
 			out.append(s)
 			break

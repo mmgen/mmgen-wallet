@@ -26,7 +26,7 @@ from subprocess import run,PIPE
 import include.test_init
 
 from mmgen.cfg import Config,gc
-from mmgen.color import green,cyan,yellow,blue
+from mmgen.color import red,yellow,green,blue,cyan
 from mmgen.util import msg,msg_r,Msg,die
 
 opts_data = {
@@ -65,7 +65,8 @@ from test.include.common import (
 	cmp_or_die,
 	getrand,
 	getrandhex,
-	end_msg
+	end_msg,
+	init_coverage
 )
 set_globals(cfg)
 
