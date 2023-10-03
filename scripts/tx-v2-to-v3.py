@@ -7,7 +7,7 @@ import sys,os
 repo_root = os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))[0]
 sys.path = [repo_root] + sys.path
 
-from mmgen.common import *
+from mmgen.cfg import Config
 
 opts_data = {
 	'text': {

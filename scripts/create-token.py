@@ -19,7 +19,9 @@
 import sys,os,json,re
 from subprocess import run,PIPE
 from collections import namedtuple
-from mmgen.common import *
+
+from mmgen.cfg import Config
+from mmgen.util import Msg,msg,rmsg,ymsg,die
 
 ti = namedtuple('token_param_info',['default','conversion','test'])
 class TokenData:
