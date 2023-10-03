@@ -26,6 +26,7 @@ from collections import namedtuple
 from subprocess import run,PIPE,DEVNULL
 
 from mmgen.cfg import gc
+from mmgen.color import yellow,blue,cyan,set_vt100
 from mmgen.util import die
 from mmgen.protocol import CoinProtocol
 from ..include.common import *

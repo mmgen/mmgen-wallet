@@ -21,6 +21,7 @@ test.test_py_d.ts_ref: Reference file tests for the test.py test suite
 """
 
 import os
+from mmgen.util import capfirst
 from mmgen.wallet import get_wallet_cls
 from ..include.common import *
 from .common import *

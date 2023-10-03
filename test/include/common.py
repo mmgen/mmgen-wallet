@@ -20,9 +20,12 @@
 test.include.common: Shared routines and data for the MMGen test suites
 """
 
-import os
+import sys,os
 from subprocess import run,PIPE
-from mmgen.common import *
+
+from mmgen.cfg import gv
+from mmgen.color import yellow,green,orange
+from mmgen.util import msg,msg_r,Msg,Msg_r,gmsg,die
 from mmgen.fileutil import write_data_to_file,get_data_from_file
 
 def noop(*args,**kwargs):

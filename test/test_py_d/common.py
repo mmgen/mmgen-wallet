@@ -21,9 +21,12 @@ test.test_py_d.common: Shared routines and data for the test.py test suite
 """
 
 import sys,os
+
 from mmgen.cfg import gc
+from mmgen.color import green
 from mmgen.util import msg
-from ..include.common import *
+
+from ..include.common import cfg,getrand,text_jp,text_zh,ascii_cyr_gr,lat_cyr_gr
 
 rt_pw = 'abc-α'
 ref_wallet_brainpass = 'abc'

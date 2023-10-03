@@ -20,6 +20,8 @@
 test.test_py_d.ts_misc: Miscellaneous test groups for the test.py test suite
 """
 
+import re,time
+
 from mmgen.cfg import gc
 from ..include.common import *
 from .common import *

@@ -21,6 +21,7 @@ test.test_py_d.ts_seedsplit: Seed split/join tests for the test.py test suite
 """
 
 from mmgen.wallet import get_wallet_cls
+from mmgen.util import capfirst
 
 from .ts_base import *
 

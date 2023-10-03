@@ -29,8 +29,12 @@ from decimal import Decimal
 
 import include.test_init
 
-from mmgen.common import *
 from test.include.common import set_globals,end_msg,sample_text
+
+from mmgen.cfg import Config,gc
+from mmgen.color import green,blue,purple,cyan
+from mmgen.util import msg,msg_r,Msg,is_hex_str,async_run,die
+
 from mmgen.bip39 import is_bip39_mnemonic
 from mmgen.baseconv import is_mmgen_mnemonic
 from mmgen.xmrseed import is_xmrseed

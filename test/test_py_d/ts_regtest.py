@@ -20,9 +20,9 @@
 test.test_py_d.ts_regtest: Regtest tests for the test.py test suite
 """
 
-import os,json,time
+import os,json,time,re
 from decimal import Decimal
-from mmgen.util import die,gmsg
+from mmgen.util import die,gmsg,capfirst,fmt_list,async_run
 from mmgen.protocol import init_proto
 from mmgen.addrlist import AddrList
 from mmgen.wallet import Wallet,get_wallet_cls

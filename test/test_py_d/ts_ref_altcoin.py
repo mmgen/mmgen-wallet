@@ -21,6 +21,9 @@ test.test_py_d.ts_ref_altcoin: Altcoin reference file tests for the test.py test
 """
 
 import os
+
+from mmgen.color import set_vt100
+
 from .common import *
 from ..include.common import cfg
 from .ts_ref import *

@@ -6,6 +6,7 @@ test/unit_tests_d/ut_tx_deserialize: TX deserialization unit tests for the MMGen
 
 import os,json
 
+from mmgen.color import purple,cyan
 from mmgen.util import msg,Msg,Msg_r
 from mmgen.protocol import init_proto
 from mmgen.tx import CompletedTX

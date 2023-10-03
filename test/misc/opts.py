@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from mmgen.common import *
+from mmgen.cfg import Config
+from mmgen.util import msg
 
 opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],

@@ -5,7 +5,8 @@ pn = os.path.abspath(os.path.dirname(sys.argv[0]))
 os.chdir(os.path.dirname(os.path.dirname(pn)))
 sys.path[0] = os.curdir
 
-from mmgen.common import *
+from mmgen.cfg import Config,gc
+from mmgen.util import msg
 
 opts_data = {
 	'text': {
@@ -43,6 +44,9 @@ def crypto():
 	msg(f'==> got hash preset: [{hp}]')
 
 def seed():
+
+	from mmgen.wallet import Wallet
+
 	for n in range(1,3):
 		msg(f'------- NEW WALLET {n} -------\n')
 		w1 = Wallet(cfg)
@@ -56,7 +60,5 @@ def seed():
 	msg(f'------- WALLET FROM FILE -------\n')
 	w3 = Wallet(cfg,fn='test/ref/FE3C6545-D782B529[128,1].mmdat') # passphrase: 'reference password'
 	msg(f'\n==> got pw,preset,lbl: [{w3.ssdata.passwd}][{w3.ssdata.hash_preset}][{w3.ssdata.label}]\n')
-
-from mmgen.wallet import Wallet
 
 globals()[cfg._args[0]]()

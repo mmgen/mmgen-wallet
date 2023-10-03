@@ -15,6 +15,8 @@ import time
 from ..include.common import *
 from .ts_base import *
 from .input import *
+
+from mmgen.util import capfirst,remove_whitespace
 from mmgen.wallet import get_wallet_cls
 
 class TestSuiteInput(TestSuiteBase):

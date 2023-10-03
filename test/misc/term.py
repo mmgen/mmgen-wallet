@@ -6,7 +6,9 @@ parpar = os.path.dirname(os.path.dirname(pn))
 os.chdir(parpar)
 sys.path[0] = os.curdir
 
-from mmgen.common import *
+from mmgen.cfg import Config,gc
+from mmgen.color import yellow,blue,cyan,set_vt100
+from mmgen.util import msg,ymsg,gmsg,fmt,fmt_list,die
 
 commands = [
 	'start',

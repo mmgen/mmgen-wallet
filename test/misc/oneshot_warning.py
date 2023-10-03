@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from mmgen.common import *
+from mmgen.cfg import Config
+from mmgen.util import msg,oneshot_warning,oneshot_warning_group
 
 cfg = Config()
 

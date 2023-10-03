@@ -25,6 +25,8 @@ from subprocess import run
 from pathlib import Path
 
 from mmgen.cfg import gc
+from mmgen.color import red,green,blue,purple
+from mmgen.util import suf
 
 from ..include.common import *
 from .common import *

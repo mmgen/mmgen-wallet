@@ -13,7 +13,8 @@ test.include.coin_daemon_control: Start and stop daemons for the MMGen test suit
 """
 
 import include.test_init
-from mmgen.common import *
+from mmgen.cfg import Config,gc
+from mmgen.util import msg,die,oneshot_warning,async_run
 from mmgen.protocol import init_proto
 
 xmr_wallet_network_ids = {

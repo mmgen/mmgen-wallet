@@ -21,6 +21,7 @@ test.test_py_d.ts_wallet: Wallet conversion tests for the test.py test suite
 """
 
 import os
+from mmgen.util import capfirst
 from mmgen.wallet import get_wallet_cls
 from .common import *
 from .ts_base import *

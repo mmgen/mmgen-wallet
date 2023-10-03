@@ -89,8 +89,8 @@ else:
 	repo_root = include.test_init.repo_root
 
 from mmgen.cfg import Config,gc
-from mmgen.color import yellow,green,cyan
-from mmgen.util import Msg,bmsg,die,suf,make_timestr
+from mmgen.color import red,yellow,green,blue,cyan,nocolor
+from mmgen.util import Msg,bmsg,die,suf,make_timestr,async_run
 
 from test.include.common import (
 	set_globals,

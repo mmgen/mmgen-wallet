@@ -10,11 +10,13 @@
 test.test_py_d.ts_cfgfile: CfgFile tests for the MMGen test.py test suite
 """
 
-import shutil
+import time,shutil
 
 from ..include.common import *
 from .ts_base import *
+
 from mmgen.cfgfile import *
+from mmgen.color import yellow
 
 class TestSuiteCfgFile(TestSuiteBase):
 	'CfgFile API'

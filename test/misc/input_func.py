@@ -5,7 +5,8 @@ import sys,os
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(sys.argv[0])))))
 sys.path[0] = os.curdir
 
-from mmgen.common import *
+from mmgen.cfg import Config
+from mmgen.util import msg
 
 opts_data = {
 	'text': {

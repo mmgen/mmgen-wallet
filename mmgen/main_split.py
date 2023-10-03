@@ -25,7 +25,8 @@ mmgen-split: Split funds after a replayable chain fork using a timelocked transa
 
 import time
 
-from .common import *
+from .cfg import Config
+from .util import gmsg,die
 
 opts_data = {
 	'text': {
@@ -125,6 +126,7 @@ async def main():
 	gmsg(f'Creating timelocked transaction for long chain ({proto.coin})')
 	locktime = int(cfg.locktime)
 	if not locktime:
+		from .rpc import rpc_init
 		rpc = rpc_init(proto)
 		locktime = rpc.call('getblockcount')
 	tx1.create(mmids[0],locktime)

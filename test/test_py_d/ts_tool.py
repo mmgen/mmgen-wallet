@@ -10,6 +10,9 @@
 test.test_py_d.ts_tool: tool tests for the MMGen test.py test suite
 """
 
+from mmgen.util import suf
+from mmgen.color import cyan
+
 from ..include.common import *
 from .ts_base import *
 from .ts_main import TestSuiteMain

@@ -20,6 +20,9 @@
 test.test_py_d.ts_main: Basic operations tests for the test.py test suite
 """
 
+from mmgen.util import async_run,capfirst,get_extension
+from mmgen.color import green,cyan
+
 from mmgen.fileutil import get_data_from_file,write_data_to_file
 from mmgen.wallet import get_wallet_cls
 from mmgen.wallet.mmgen import wallet as MMGenWallet

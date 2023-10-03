@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-from mmgen.common import *
+import os
+
+from mmgen.cfg import Config
+from mmgen.util import msg
 
 cfg = Config(process_opts=True)
 

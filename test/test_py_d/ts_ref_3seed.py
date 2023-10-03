@@ -21,6 +21,7 @@ test.test_py_d.ts_ref_3seed: Saved and generated reference file tests for 128,
                              192 and 256-bit seeds for the test.py test suite
 """
 
+from mmgen.util import capfirst
 from mmgen.wallet import get_wallet_cls
 from ..include.common import *
 from .common import *
