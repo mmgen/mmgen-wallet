@@ -30,17 +30,10 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	from mmgen.devinit import init_dev
 	init_dev()
 
-# Import these _after_ local path's been added to sys.path
-from mmgen.common import *
-from mmgen.obj import *
-from mmgen.seedsplit import *
-from mmgen.addr import *
-from mmgen.addrlist import *
-from mmgen.addrdata import *
-from mmgen.tw.shared import *
-from mmgen.amt import *
-from mmgen.key import *
-from mmgen.rpc import IPPort
+from mmgen.cfg import Config
+from mmgen.util import msg,msg_r,gmsg,capfirst
+from mmgen.color import yellow,blue,green,orange,purple,gray,nocolor
+from mmgen.obj import get_obj
 
 opts_data = {
 	'sets': [('super_silent', True, 'silent', True)],
@@ -61,10 +54,13 @@ opts_data = {
 
 cfg = Config(opts_data=opts_data)
 
+if cfg.verbose:
+	from mmgen.objmethods import MMGenObject
+
 from test.include.common import set_globals
 set_globals(cfg)
 
-def run_test(test,arg,input_data,arg1,exc_name):
+def run_test(mod,test,arg,input_data,arg1,exc_name):
 	arg_copy = arg
 	kwargs = {}
 	ret_chk = arg
@@ -111,10 +107,10 @@ def run_test(test,arg,input_data,arg1,exc_name):
 			if cfg.test_suite_deterministic and isinstance(arg_copy,dict):
 				arg_disp = re.sub(r'object at 0x[0-9a-f]+','object at [SCRUBBED]',arg_disp)
 			msg_r((green if input_data=='good' else orange)(f'{arg_disp+":":<22}'))
-		cls = globals()[test]
+		cls = getattr(mod,test)
 
 		if cfg.getobj:
-			ret = get_obj(globals()[test],**kwargs)
+			ret = get_obj(getattr(mod,test),**kwargs)
 		else:
 			ret = cls(*args,**kwargs)
 
@@ -154,7 +150,7 @@ def run_test(test,arg,input_data,arg1,exc_name):
 
 	except Exception as e:
 		if input_data == 'good':
-			raise ValueError('Error on good input data')
+			raise ValueError(f'Error on good input data: {e}')
 		if not type(e).__name__ == exc_name:
 			msg(f'Incorrect exception: expected {exc_name} but got {type(e).__name__}')
 			raise
@@ -176,7 +172,8 @@ def run_test(test,arg,input_data,arg1,exc_name):
 def do_loop():
 	import importlib
 	modname = f'test.objtest_py_d.ot_{proto.coin.lower()}_{proto.network}'
-	test_data = importlib.import_module(modname).tests
+	mod = importlib.import_module(modname)
+	test_data = getattr(mod,'tests')
 	gmsg(f'Running data object tests for {proto.coin} {proto.network}')
 
 	clr = None
@@ -198,6 +195,7 @@ def do_loop():
 				msg(purple(capfirst(k)+' input:'))
 			for arg in test_data[test][k]:
 				run_test(
+					mod,
 					test,
 					arg,
 					input_data = k,

@@ -7,9 +7,11 @@
 test.objtest_py_d.ot_btc_testnet: BTC testnet test vectors for MMGen data objects
 """
 
-from mmgen.obj import *
-from .ot_common import *
+from .ot_common import r16,r32
 from ..include.common import cfg
+
+from mmgen.key import PrivKey,WifKey
+from mmgen.addr import CoinAddr
 
 from mmgen.protocol import init_proto
 proto = init_proto( cfg, 'btc', network='testnet', need_amt=True )

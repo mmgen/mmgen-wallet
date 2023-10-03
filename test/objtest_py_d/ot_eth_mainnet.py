@@ -9,8 +9,8 @@ test.objtest_py_d.ot_eth_mainnet: ETH mainnet test vectors for MMGen data object
 
 from decimal import Decimal
 
-from mmgen.obj import *
-from .ot_common import *
+from mmgen.obj import ETHNonce
+from mmgen.amt import ETHAmt
 
 tests = {
 	'ETHAmt': {

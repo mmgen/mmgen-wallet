@@ -9,12 +9,19 @@ test.objtest_py_d.ot_btc_mainnet: BTC mainnet test vectors for MMGen data object
 
 from decimal import Decimal
 
-from mmgen.obj import *
-from mmgen.addrlist import AddrIdxList
-from mmgen.seedsplit import *
-from mmgen.key import *
-from .ot_common import *
-from ..include.common import cfg
+from .ot_common import r16,r32
+from ..include.common import cfg,utf8_ctrl,utf8_text,utf8_combining,gr_uc_w_ctrl,text_jp,text_zh,ru_uc,gr_uc
+
+from mmgen.obj import Int,MMGenTxID,CoinTxID,MMGenWalletLabel,MMGenTxComment,MMGenPWIDString
+from mmgen.addrlist import AddrIdx,AddrIdxList,AddrListID
+from mmgen.seed import Seed,SeedID
+from mmgen.seedsplit import SeedShareIdx,SeedShareCount,SubSeedList,MasterShareIdx,SeedSplitSpecifier
+from mmgen.subseed import SubSeedList,SubSeedIdx,SubSeedIdxRange
+from mmgen.key import PrivKey,WifKey,PubKey
+from mmgen.amt import BTCAmt
+from mmgen.addr import CoinAddr,MMGenID,MMGenAddrType,MMGenPasswordType
+from mmgen.tw.shared import TwMMGenID,TwLabel,TwComment
+from mmgen.rpc import IPPort
 
 from mmgen.protocol import init_proto
 proto = init_proto( cfg, 'btc', need_amt=True )
