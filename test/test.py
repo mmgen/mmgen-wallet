@@ -88,9 +88,23 @@ else:
 	import include.test_init
 	repo_root = include.test_init.repo_root
 
-from mmgen.common import *
+from mmgen.cfg import Config,gc
+from mmgen.color import yellow,green,cyan
+from mmgen.util import Msg,bmsg,die,suf,make_timestr
 
-from test.include.common import set_globals,test_py_log_fn,test_py_error_fn
+from test.include.common import (
+	set_globals,
+	test_py_log_fn,
+	test_py_error_fn,
+	mk_tmpdir,
+	cleandir,
+	iqmsg,
+	omsg,
+	omsg_r,
+	ok,
+	start_test_daemons,
+	stop_test_daemons,
+)
 
 try:
 	os.unlink(os.path.join(repo_root,test_py_error_fn))
@@ -184,7 +198,7 @@ cfg = Config(opts_data=opts_data)
 
 set_globals(cfg)
 
-from test.test_py_d.common import * # this must be loaded after set_globals()
+from test.test_py_d.common import get_file_with_ext # this must be loaded after set_globals()
 
 type(cfg)._reset_ok += (
 	'no_daemon_autostart',
