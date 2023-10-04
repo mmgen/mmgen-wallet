@@ -20,7 +20,7 @@
 test.test_py_d.ts_misc: Miscellaneous test groups for the test.py test suite
 """
 
-import re,time
+import sys,os,re,time
 
 from mmgen.cfg import gc
 from mmgen.util import ymsg
