@@ -21,7 +21,6 @@ mmgen-passgen: Generate a series or range of passwords from an MMGen
                deterministic wallet
 """
 
-import mmgen.opts as opts
 from .cfg import gc,Config
 from .addrlist import AddrIdxList
 from .passwdlist import PasswordList
@@ -43,7 +42,7 @@ opts_data = {
 --, --longhelp        Print help message for long options (common options)
 -d, --outdir=      d  Output files to directory 'd' instead of working dir
 -e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry
--f, --passwd-fmt=  f  Generate passwords of format 'f'.  Default: {dpf}.
+-f, --passwd-fmt=  f  Generate passwords of format 'f'.  Default: {pl.dfl_pw_fmt}.
                       See PASSWORD FORMATS below
 -i, --in-fmt=      f  Input is from wallet format 'f' (see FMT CODES below)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
@@ -115,14 +114,13 @@ FMT CODES:
 	},
 	'code': {
 		'options': lambda cfg,help_notes,s: s.format(
-			pnm=gc.proj_name,
-			dsl=help_notes('dfl_seed_len'),
-			dpf=PasswordList.dfl_pw_fmt,
 			cfg=cfg,
+			dsl=help_notes('dfl_seed_len'),
+			pl=PasswordList,
 			gc=gc,
 		),
 		'notes': lambda cfg,help_notes,s: s.format(
-				o=opts,cfg=cfg,i58=pwi['b58'],i32=pwi['b32'],i39=pwi['bip39'],
+				cfg=cfg,i58=pwi['b58'],i32=pwi['b32'],i39=pwi['bip39'],
 				ml=MMGenPWIDString.max_len,
 				fs="', '".join(MMGenPWIDString.forbidden),
 				n_pw=help_notes('passwd'),

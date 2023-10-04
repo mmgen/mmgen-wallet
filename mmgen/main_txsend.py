@@ -22,7 +22,6 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 
 import sys
 
-import mmgen.opts as opts
 from .cfg import gc,Config
 from .util import async_run
 

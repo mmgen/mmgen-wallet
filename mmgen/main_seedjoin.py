@@ -21,11 +21,9 @@ mmgen-seedjoin: Regenerate an MMGen deterministic wallet from seed shares
                 created by 'mmgen-seedsplit'
 """
 
-import mmgen.opts as opts
 from .cfg import gc,Config
 from .util import msg,msg_r,die
 from .color import yellow
-from .obj import MMGenWalletLabel
 from .seed import Seed
 from .seedsplit import SeedSplitIDString,MasterShareIdx,SeedShareMasterJoining
 from .wallet import Wallet

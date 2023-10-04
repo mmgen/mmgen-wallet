@@ -23,9 +23,7 @@ mmgen-split: Split funds after a replayable chain fork using a timelocked transa
              UNMAINTAINED
 """
 
-import time
-
-from .cfg import Config
+from .cfg import Config,gc
 from .util import gmsg,die
 
 opts_data = {
@@ -95,7 +93,7 @@ die(1,'This command is disabled')
 
 # the following code is broken:
 cfg.other_coin = cfg.other_coin.upper() if cfg.other_coin else proto.forks[-1][2].upper()
-if cfg.other_coin.lower() not in [e[2] for e in proto.forks if e[3] == True]:
+if cfg.other_coin.lower() not in [e[2] for e in proto.forks if e[3] is True]:
 	die(1,f'{cfg.other_coin!r}: not a replayable fork of {proto.coin} chain')
 
 if len(cfg._args) != 2:
@@ -103,7 +101,7 @@ if len(cfg._args) != 2:
 
 from .addr import MMGenID
 try:
-	mmids = [MMGenID(a) for a in cfg._args]
+	mmids = [MMGenID(proto,a) for a in cfg._args]
 except:
 	die(1,'Command line arguments must be valid MMGen IDs')
 
@@ -117,9 +115,9 @@ if cfg.tx_fees:
 	for idx,g_coin in ((1,cfg.other_coin),(0,proto.coin)):
 		proto = init_proto( cfg, g_coin )
 		cfg.fee = cfg.tx_fees.split(',')[idx]
-		opts.opt_is_tx_fee('foo',cfg.fee,'transaction fee') # raises exception on error
+#		opts.opt_is_tx_fee('foo',cfg.fee,'transaction fee') # raises exception on error
 
-tx1 = MMGenSplitTX()
+tx1 = MMGenSplitTX(proto)
 cfg.no_blank = True
 
 async def main():
@@ -136,9 +134,9 @@ async def main():
 
 	gmsg(f'\nCreating transaction for short chain ({cfg.other_coin})')
 
-	proto = init_proto( self.cfg, cfg.other_coin )
+	proto2 = init_proto( cfg, cfg.other_coin )
 
-	tx2 = MMGenSplitTX()
+	tx2 = MMGenSplitTX(proto2)
 	tx2.inputs = tx1.inputs
 	tx2.inputs.convert_coin()
 

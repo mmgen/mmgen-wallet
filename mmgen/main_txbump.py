@@ -21,11 +21,9 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
               transaction, and optionally sign and send it
 """
 
-import mmgen.opts as opts
 from .cfg import gc,Config
 from .util import msg,msg_r,die,async_run
 from .color import green
-from .wallet import Wallet
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
@@ -118,7 +116,7 @@ seed_files = get_seed_files(cfg,cfg._args) if (cfg._args or cfg.send) else None
 from .ui import do_license_msg
 do_license_msg(cfg)
 
-silent = cfg.yes and cfg.fee != None and cfg.output_to_reduce != None
+silent = cfg.yes and cfg.fee is not None and cfg.output_to_reduce is not None
 
 async def main():
 

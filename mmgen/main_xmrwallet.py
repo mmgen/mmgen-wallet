@@ -21,11 +21,8 @@ mmgen-xmrwallet: Perform various Monero wallet and transacting operations for
                  addresses in an MMGen XMR key-address file
 """
 
-from collections import namedtuple
-
-import mmgen.opts as opts
 from .cfg import gc,Config
-from .util import ymsg,die,async_run
+from .util import die,async_run
 from .xmrwallet import (
 	MoneroWalletOps,
 	xmrwallet_uarg_info,

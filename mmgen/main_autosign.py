@@ -20,9 +20,6 @@
 autosign: Auto-sign MMGen transactions, message files and XMR wallet output files
 """
 
-import sys
-
-from .cfg import Config
 from .util import msg,die,fmt_list,exit_if_mswin,async_run
 
 exit_if_mswin('autosigning')

@@ -22,7 +22,6 @@ mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
 """
 
 import sys,os,importlib
-import mmgen.opts as opts
 from .cfg import gc,Config
 from .util import msg,Msg,die,capfirst,suf,async_run
 
@@ -202,22 +201,18 @@ def create_call_sig(cmd,cls,as_string=False):
 		get_type_from_ann = lambda x: 'str or STDIN' if ann[x] == 'sstr' else ann[x].__name__
 		return ' '.join(
 			[f'{a} [{get_type_from_ann(a)}]' for a in args[:nargs]] +
-			['{a} [{b}={c!r}]'.format(
-				a = a,
-				b = dfl_types[n].__name__,
-				c = dfls[n] )
-					for n,a in enumerate(args[nargs:])] )
+			[f'{a} [{dfl_types[n].__name__}={dfls[n]!r}]' for n,a in enumerate(args[nargs:])] )
 	else:
 		get_type_from_ann = lambda x: 'str' if ann[x] == 'sstr' else ann[x].__name__
 		return (
 			[(a,get_type_from_ann(a)) for a in args[:nargs]],            # c_args
-			dict([(a,dfls[n]) for n,a in enumerate(args[nargs:])]),      # c_kwargs
-			dict([(a,dfl_types[n]) for n,a in enumerate(args[nargs:])]), # c_kwargs_types
+			{a:dfls[n] for n,a in enumerate(args[nargs:])},              # c_kwargs
+			{a:dfl_types[n] for n,a in enumerate(args[nargs:])},         # c_kwargs_types
 			('STDIN_OK' if nargs and ann[args[0]] == 'sstr' else flag),  # flag
 			ann )                                                        # ann
 
 def process_args(cmd,cmd_args,cls):
-	c_args,c_kwargs,c_kwargs_types,flag,ann = create_call_sig(cmd,cls)
+	c_args,c_kwargs,c_kwargs_types,flag,_ = create_call_sig(cmd,cls)
 	have_stdin_input = False
 
 	def usage_die(s):
@@ -269,7 +264,7 @@ def process_args(cmd,cmd_args,cls):
 			usage_die(f'{k!r}: invalid keyword argument')
 
 	def conv_type(arg,arg_name,arg_type):
-		if arg_type == 'bytes' and type(arg) != bytes:
+		if arg_type == 'bytes' and not isinstance(arg,bytes):
 			die(1,"'Binary input data must be supplied via STDIN")
 
 		if have_stdin_input and arg_type == 'str' and isinstance(arg,bytes):
@@ -295,7 +290,7 @@ def process_args(cmd,cmd_args,cls):
 		args = [conv_type(u_args[i],c_args[0][0],c_args[0][1]) for i in range(len(u_args))]
 	else:
 		args = [conv_type(u_args[i],c_args[i][0],c_args[i][1]) for i in range(len(c_args))]
-	kwargs = {k:conv_type(u_kwargs[k],k,c_kwargs_types[k].__name__) for k in u_kwargs}
+	kwargs = {k:conv_type(v,k,c_kwargs_types[k].__name__) for k,v in u_kwargs.items()}
 
 	return ( args, kwargs )
 
@@ -317,7 +312,7 @@ def process_result(ret,pager=False,print_result=False):
 		else:
 			return o
 
-	if ret == True:
+	if ret is True:
 		return True
 	elif ret in (False,None):
 		die(2,f'tool command returned {ret!r}')
@@ -332,10 +327,7 @@ def process_result(ret,pager=False,print_result=False):
 			return triage_result(ret.decode())
 		except:
 			# don't add NL to binary data if it can't be converted to utf8
-			if print_result:
-				return os.write(1,ret)
-			else:
-				return ret
+			return os.write(1,ret) if print_result else ret
 	else:
 		die(2,f'tool.py: can’t handle return value of type {type(ret).__name__!r}')
 
@@ -343,8 +335,7 @@ def get_cmd_cls(cmd):
 	for modname,cmdlist in mods.items():
 		if cmd in cmdlist:
 			return getattr(importlib.import_module(f'mmgen.tool.{modname}'),'tool_cmd')
-	else:
-		return False
+	return False
 
 def get_mod_cls(modname):
 	return getattr(importlib.import_module(f'mmgen.tool.{modname}'),'tool_cmd')

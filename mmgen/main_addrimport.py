@@ -22,11 +22,9 @@ mmgen-addrimport: Import addresses into a MMGen coin daemon tracking wallet
 
 from collections import namedtuple
 
-import mmgen.opts as opts
 from .cfg import gc,Config
 from .util import msg,suf,die,fmt,async_run
 from .addrlist import AddrList,KeyAddrList
-from .tw.shared import TwLabel
 
 opts_data = {
 	'text': {
@@ -127,7 +125,7 @@ def check_opts(twctl):
 		from .ui import keypress_confirm
 		if not keypress_confirm(
 				cfg,
-				'\n{}\n\nContinue?'.format(addrimport_msgs['rescan']),
+				f'\n{addrimport_msgs["rescan"]}\n\nContinue?',
 				default_yes = True ):
 			die(1,'Exiting at user request')
 
@@ -171,7 +169,7 @@ async def main():
 
 	def gen_args_list(al):
 		_d = namedtuple('import_data',['addr','twmmid','comment'])
-		for num,e in enumerate(al.data,1):
+		for e in al.data:
 			yield _d(
 				addr    = e.addr,
 				twmmid  = f'{al.al_id}:{e.idx}' if e.idx else f'{proto.base_coin.lower()}:{e.addr}',

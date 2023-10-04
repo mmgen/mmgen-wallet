@@ -13,13 +13,11 @@ mmgen-msg: Message signing operations for the MMGen suite
 """
 
 import sys
-import mmgen.opts as opts
 from .cfg import Config
 from .base_obj import AsyncInit
 from .util import msg,suf,async_run,die
 from .msg import (
 	NewMsg,
-	CompletedMsg,
 	UnsignedMsg,
 	SignedMsg,
 	SignedOnlineMsg,

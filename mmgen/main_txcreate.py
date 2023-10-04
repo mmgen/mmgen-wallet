@@ -21,7 +21,6 @@ mmgen-txcreate: Create a cryptocoin transaction with MMGen- and/or non-MMGen
                 inputs and outputs
 """
 
-import mmgen.opts as opts
 from .cfg import gc,Config
 from .util import fmt_list,async_run
 

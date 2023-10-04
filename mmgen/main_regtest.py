@@ -21,7 +21,6 @@ mmgen-regtest: Coin daemon regression test mode setup and operations for the MMG
                suite
 """
 
-import mmgen.opts as opts
 from .cfg import gc,Config
 from .util import die,async_run
 

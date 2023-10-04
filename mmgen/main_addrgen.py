@@ -21,14 +21,11 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
                deterministic wallet
 """
 
-import mmgen.opts as opts
+import mmgen.addrlist
 
 from .cfg import gc,Config
 from .addr import MMGenAddrType
-from .addrfile import AddrFile
 from .wallet import Wallet
-
-import mmgen.addrlist
 
 if gc.prog_name == 'mmgen-keygen':
 	gen_what = 'keys'
@@ -46,10 +43,10 @@ else:
 opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
 	'text': {
-		'desc': """
-                 Generate a range or list of {desc} from an {pnm} wallet,
+		'desc': f"""
+                 Generate a range or list of {gen_desc} from an {gc.proj_name} wallet,
                  mnemonic, seed or brainwallet
-			  """.format(desc=gen_desc,pnm=gc.proj_name),
+			  """,
 		'usage':'[opts] [seed source] <index list or range(s)>',
 		'options': """
 -h, --help            Print this help message
