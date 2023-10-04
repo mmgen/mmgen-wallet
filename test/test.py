@@ -1038,7 +1038,8 @@ except TestSuiteSpawnedScriptException as e:
 		Msg(blue('test.py: spawned script exited with error'))
 except Exception:
 	# if test.py itself is running under exec_wrapper, re-raise so exec_wrapper can handle exception:
-	if os.getenv('MMGEN_EXEC_WRAPPER'):
+	if os.getenv('MMGEN_EXEC_WRAPPER') or not os.getenv('MMGEN_IGNORE_TEST_PY_EXCEPTION'):
 		raise
+	die(1,red('Test script exited with error'))
 except:
 	raise

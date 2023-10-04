@@ -202,6 +202,7 @@ class Config(Lockable):
 	bogus_unspent_data       = ''
 	debug_utf8               = False
 	exec_wrapper             = False
+	ignore_test_py_exception = False
 	test_suite               = False
 	test_suite_autosign_led_simulate = False
 	test_suite_xmr_autosign  = False
@@ -314,6 +315,7 @@ class Config(Lockable):
 		'MMGEN_TESTNET',
 		'MMGEN_REGTEST',
 		'MMGEN_EXEC_WRAPPER',
+		'MMGEN_IGNORE_TEST_PY_EXCEPTION',
 		'MMGEN_RPC_BACKEND',
 		'MMGEN_IGNORE_DAEMON_VERSION',
 		'MMGEN_USE_STANDALONE_SCRYPT_MODULE',
