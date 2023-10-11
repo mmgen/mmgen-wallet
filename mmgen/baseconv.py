@@ -37,7 +37,7 @@ def is_mmgen_mnemonic(s):
 	except:
 		return False
 
-class baseconv(object):
+class baseconv:
 	mn_base = 1626
 	dt = namedtuple('desc_tuple',['short','long'])
 	constants = {

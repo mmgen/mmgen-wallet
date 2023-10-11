@@ -42,7 +42,7 @@ except:
 
 _term_dimensions = namedtuple('terminal_dimensions',['width','height'])
 
-class MMGenTerm(object):
+class MMGenTerm:
 
 	@classmethod
 	def register_cleanup(cls):

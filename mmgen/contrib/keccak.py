@@ -104,7 +104,7 @@ def keccak_f(state):
 	for ir in range(nr):
 		round(state.s, RoundConstants[ir])
 
-class KeccakState(object):
+class KeccakState:
 	"""
 	A keccak state container.
 
@@ -216,7 +216,7 @@ class KeccakState(object):
 				self.s[x][y] = KeccakState.bytes2lane(bb[i:i+8])
 				i += 8
 
-class KeccakSponge(object):
+class KeccakSponge:
 	def __init__(self, bitrate, width, padfn, permfn):
 		self.state = KeccakState(bitrate, width)
 		self.padfn = padfn
@@ -254,7 +254,7 @@ class KeccakSponge(object):
 			Z += self.squeeze_once()
 		return Z[:l]
 
-class KeccakHash(object):
+class KeccakHash:
 	"""
 	The Keccak hash function, with a hashlib-compatible interface.
 	"""

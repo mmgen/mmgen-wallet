@@ -305,7 +305,7 @@ def join_shares(
 	if not hasattr(seed_list,'__next__'): # seed_list can be iterator or iterable
 		seed_list = iter(seed_list)
 
-	class d(object):
+	class d:
 		byte_len,ret,count = None,0,0
 
 	def add_share(ss):

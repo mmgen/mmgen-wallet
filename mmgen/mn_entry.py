@@ -29,7 +29,7 @@ from .color import cyan
 _return_chars = '\n\r '
 _erase_chars = '\b\x7f'
 
-class MnEntryMode(object):
+class MnEntryMode:
 	"""
 	Subclasses must implement:
 	  - pad_max:    pad character limit (None if variable)
@@ -212,7 +212,7 @@ class MnEntryModeMinimal(MnEntryMode):
 				if pad > self.pad_max:
 					return mne.idx(s,'full',lo_idx=lo,hi_idx=hi)
 
-class MnemonicEntry(object):
+class MnemonicEntry:
 
 	prompt_info = {
 		'intro': """

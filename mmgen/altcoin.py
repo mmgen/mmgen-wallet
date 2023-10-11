@@ -55,7 +55,7 @@ def test_equal(desc,a,b,*cdata):
 ce = namedtuple('CoinInfoEntry',
 	['name','symbol','wif_ver_num','p2pkh_info','p2sh_info','has_segwit','trust_level'])
 
-class CoinInfo(object):
+class CoinInfo:
 	coin_constants = {}
 	coin_constants['mainnet'] = (
 #   Trust levels: -1=disabled 0=untested 1=low 2=med 3=high 4=very high (no warn) 5=unconditional

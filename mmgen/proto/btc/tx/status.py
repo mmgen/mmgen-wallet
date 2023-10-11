@@ -23,7 +23,7 @@ class Status(TxBase.Status):
 
 		tx = self.tx
 
-		class r(object):
+		class r:
 			pass
 
 		async def is_in_wallet():

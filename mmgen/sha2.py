@@ -29,7 +29,7 @@ sha2: A non-optimized but very compact implementation of the SHA2 hash
 
 from struct import pack,unpack
 
-class Sha2(object):
+class Sha2:
 	'Implementation based on the pseudocode at https://en.wikipedia.org/wiki/SHA-2'
 	K = None
 
