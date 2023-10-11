@@ -120,7 +120,7 @@ class unit_tests:
 		print_info(name,'Bitcoin Core test vectors')
 		n = 1
 		for e in core_data:
-			if type(e[0]) == list:
+			if isinstance(e[0],list):
 				await test_tx(
 					tx_proto = init_proto( cfg, 'btc', need_amt=True ),
 					tx_hex   = e[1],

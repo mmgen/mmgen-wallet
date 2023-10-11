@@ -36,7 +36,7 @@ class unit_test:
 		def test_passwords():
 			for pw_base,res in pws:
 				for pw in (pw_base,pw_base.encode()):
-					pw_disp = "'"+pw+"'" if type(pw) == str else "b'"+pw.decode()+"'"
+					pw_disp = "'"+pw+"'" if isinstance(pw,str) else "b'"+pw.decode()+"'"
 					if cfg.quiet:
 						omsg_r('.')
 					else:

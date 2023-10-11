@@ -65,9 +65,9 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 	kwargs = {}
 	ret_chk = arg
 	ret_idx = None
-	if input_data == 'good' and type(arg) == tuple:
+	if input_data == 'good' and isinstance(arg,tuple):
 		arg,ret_chk = arg
-	if type(arg) == dict: # pass one arg + kwargs to constructor
+	if isinstance(arg,dict): # pass one arg + kwargs to constructor
 		arg_copy = arg.copy()
 		if 'arg' in arg:
 			args = [arg['arg']]
@@ -89,7 +89,7 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 			del arg['ret_idx']
 			del arg_copy['ret_idx']
 		kwargs.update(arg)
-	elif type(arg) == tuple:
+	elif isinstance(arg,tuple):
 		args = arg
 	else:
 		args = [arg]
@@ -103,7 +103,7 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 
 	try:
 		if not cfg.super_silent:
-			arg_disp = repr(arg_copy[0] if type(arg_copy) == tuple else arg_copy)
+			arg_disp = repr(arg_copy[0] if isinstance(arg_copy,tuple) else arg_copy)
 			if cfg.test_suite_deterministic and isinstance(arg_copy,dict):
 				arg_disp = re.sub(r'object at 0x[0-9a-f]+','object at [SCRUBBED]',arg_disp)
 			msg_r((green if input_data=='good' else orange)(f'{arg_disp+":":<22}'))

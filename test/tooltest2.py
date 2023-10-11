@@ -44,7 +44,7 @@ skipped_tests = ['mn2hex_interactive']
 NL = ('\n','\r\n')[gc.platform=='win']
 
 def is_str(s):
-	return type(s) == str
+	return isinstance(s,str)
 
 from mmgen.key import is_wif
 from mmgen.addr import is_coin_addr
@@ -834,7 +834,7 @@ def check_output(out,chk):
 
 	if type(chk).__name__ == 'function':
 		assert chk(outd), f'{chk.__name__}({outd}) failed!'
-	elif type(chk) == dict:
+	elif isinstance(chk,dict):
 		for k,v in chk.items():
 			if k == 'boolfunc':
 				assert v(outd), f'{v.__name__}({outd}) failed!'
@@ -876,7 +876,7 @@ async def run_test(cls,gid,cmd_name):
 	for d in data:
 		args,out,opts,mmtype = d + tuple([None] * (4-len(d)))
 		stdin_input = None
-		if args and type(args[0]) == bytes:
+		if args and isinstance(args[0],bytes):
 			stdin_input = args[0]
 			args[0] = '-'
 
@@ -898,7 +898,7 @@ async def run_test(cls,gid,cmd_name):
 		except:
 			vmsg(f'Output:\n{cmd_out!r}\n')
 
-		if type(out) == tuple and type(out[0]).__name__ == 'function':
+		if isinstance(out,tuple) and type(out[0]).__name__ == 'function':
 			func_out = out[0](cmd_out)
 			assert func_out == out[1],(
 				'{}({}) == {} failed!\nOutput: {}'.format(

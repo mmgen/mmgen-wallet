@@ -218,7 +218,7 @@ class MMGenPexpect:
 		if cfg.debug_pexpect:
 			debug_pexpect_msg(self.p)
 
-		if cfg.verbose and type(s) != str:
+		if cfg.verbose and not isinstance(s,str):
 			msg_r(f' ==> {ret} ')
 
 		if ret == -1:

@@ -293,7 +293,7 @@ def list_cmds():
 				data = dpdata[cmd]
 				yield '    {:{w}} - {}'.format(
 					cmd,
-					(data if type(data) == str else data[1]),
+					(data if isinstance(data,str) else data[1]),
 					w = cw )
 
 		w = max(map(len,utils))
@@ -454,7 +454,7 @@ class CmdGroupMgr:
 					if hasattr(cls,'skip_cmds') and k in cls.skip_cmds:
 						continue
 					sdeps = get_shared_deps(k,i)
-					if type(b) == str:
+					if isinstance(b,str):
 						cdata.append( (k, (i,f'{b} ({j}-bit)',[[[]+sdeps,i]])) )
 					else:
 						cdata.append( (k, (i,f'{b[1]} ({j}-bit)',[[b[0]+sdeps,i]])) )
@@ -954,7 +954,7 @@ class TestSuiteRunner:
 		elif ret in ('skip','silent'):
 			if ret == 'silent':
 				self.cmd_total += 1
-		elif type(ret) == tuple and ret[0] == 'skip_warn':
+		elif isinstance(ret,tuple) and ret[0] == 'skip_warn':
 			self.skipped_warnings.append(
 				'Test {!r} was skipped:\n  {}'.format(cmd,'\n  '.join(ret[1].split('\n'))))
 		else:
