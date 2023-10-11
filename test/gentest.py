@@ -165,7 +165,7 @@ class GenToolEthkey(GenTool):
 
 	def __init__(self,*args,**kwargs):
 		self.cmdname = get_ethkey()
-		return super().__init__(*args,**kwargs)
+		super().__init__(*args,**kwargs)
 
 	def run(self,sec,vcoin):
 		o = get_cmd_output([self.cmdname,'info',sec.hex()])
