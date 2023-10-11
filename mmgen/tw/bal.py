@@ -83,7 +83,7 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 
 				net_desc = self.proto.coin + ' ' + self.proto.network.upper()
 				if net_desc != 'BTC MAINNET':
-					yield 'Network: {}'.format(green(net_desc))
+					yield f'Network: {green(net_desc)}'
 
 				yield '{lbl:{w}} {cols}'.format(
 					lbl = 'Wallet',

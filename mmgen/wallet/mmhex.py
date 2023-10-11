@@ -26,9 +26,7 @@ class wallet(wallet):
 		h = self.seed.hexdata
 		self.ssdata.chksum = make_chksum_6(h)
 		self.ssdata.hexseed = h
-		self.fmt_data = '{} {}\n'.format(
-			self.ssdata.chksum,
-			split_into_cols(4,h) )
+		self.fmt_data = f'{self.ssdata.chksum} {split_into_cols(4,h)}\n'
 
 	def _deformat(self):
 		desc = self.desc

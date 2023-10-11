@@ -168,7 +168,7 @@ class coin_msg:
 					yield 'Signatures:'
 					for n,(k,v) in enumerate(self.sigs.items()):
 						yield ''
-						yield '{:>3}) {}'.format(n+1,k)
+						yield f'{n+1:>3}) {k}'
 						for res in gen_entry(v):
 							yield res
 
@@ -238,7 +238,7 @@ class coin_msg:
 						message = self.data['message'],
 						msghash_type = self.data['msghash_type'] )
 
-					mmid = '{}:{}:{}'.format( al_in.sid, al_in.mmtype, e.idx )
+					mmid = f'{al_in.sid}:{al_in.mmtype}:{e.idx}'
 					data = {
 						'addr': e.addr,
 						'sig': sig,

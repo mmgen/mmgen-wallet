@@ -54,7 +54,7 @@ async def scantxoutset(cfg,rpc,descriptor_list):
 		ret = await task1
 		await task2
 	else:
-		msg_r(f'Scanning UTXO set, this could take several minutes...')
+		msg_r('Scanning UTXO set, this could take several minutes...')
 		ret = await do_scan()
 		msg('done')
 

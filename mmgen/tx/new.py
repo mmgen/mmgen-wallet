@@ -284,7 +284,7 @@ class New(Base):
 			if not keypress_confirm(
 					self.cfg,
 					'{a} {b} {c}\n{d}'.format(
-						a = yellow(f'Requested change address'),
+						a = yellow('Requested change address'),
 						b = (chg.mmid or chg.addr).hl(),
 						c = yellow('is already used!'),
 						d = yellow('Address reuse harms your privacy and security. Continue anyway? (y/N): ')

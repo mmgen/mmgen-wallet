@@ -289,7 +289,7 @@ class MoneroMMGenTX:
 			fn = '{a}-XMR[{b!s}]{c}.{d}'.format(
 				a = self.file_id,
 				b = self.data.amount,
-				c = (lambda s: '' if s == 'mainnet' else f'.{s}')(self.data.network),
+				c = '' if self.data.network == 'mainnet' else f'.{self.data.network}',
 				d = self.ext
 			)
 
@@ -1153,7 +1153,7 @@ class MoneroWalletOps:
 					restore_height = restore_height,
 					language       = 'English' )
 
-			pp_msg(ret) if self.cfg.debug else msg('  Address: {}'.format( ret['address'] ))
+			pp_msg(ret) if self.cfg.debug else msg(f'  Address: {ret["address"]}')
 			return True
 
 	class create_offline(create):
@@ -1186,7 +1186,7 @@ class MoneroWalletOps:
 
 		def check_uopts(self):
 			if self.cfg.restore_height is not None:
-				die(1,f'--restore-height must be unset when running the ‘restore’ command')
+				die(1,'--restore-height must be unset when running the ‘restore’ command')
 
 		async def process_wallet(self,d,fn,last):
 
@@ -1239,7 +1239,7 @@ class MoneroWalletOps:
 			def check_restored_data():
 				restored_data = h.get_accts(print=False)[1]
 				if restored_data != data:
-					rmsg(f'Restored data does not match original dump!  Dumping bad data.')
+					rmsg('Restored data does not match original dump!  Dumping bad data.')
 					MoneroWalletDumpFile.New(
 						parent    = self,
 						wallet_fn = fn,
@@ -1336,9 +1336,7 @@ class MoneroWalletOps:
 			self.accts_data[fn.name] = { 'accts': a, 'addrs': b }
 
 			msg(f'  Wallet height: {wallet_height}')
-			msg('  Sync time: {:02}:{:02}'.format(
-				t_elapsed // 60,
-				t_elapsed % 60 ))
+			msg(f'  Sync time: {t_elapsed//60:02}:{t_elapsed%60:02}')
 
 			if not last:
 				self.c.call('close_wallet')
@@ -1405,9 +1403,7 @@ class MoneroWalletOps:
 						try:
 							res = self.kal.entry(idx)
 						except:
-							die(1,'Supplied key-address file does not contain address {}:{}'.format(
-								self.kal.al_id.sid,
-								idx ))
+							die(1,f'Supplied key-address file does not contain address {self.kal.al_id.sid}:{idx}')
 						else:
 							setattr(self,k,res)
 							yield res
@@ -1565,7 +1561,7 @@ class MoneroWalletOps:
 			if self.account == None:
 				acct,addr = h.create_acct(label=label)
 			else:
-				msg_r('\n    Account index: {}'.format( pink(str(self.account)) ))
+				msg_r(f'\n    Account index: {pink(str(self.account))}')
 				addr = h.create_new_addr(self.account,label=label)
 
 			accts_data = h.get_accts()[0]
@@ -1766,7 +1762,7 @@ class MoneroWalletOps:
 
 		def check_uopts(self):
 			if not self.cfg.autosign:
-				die(1,f'--autosign is required for this operation')
+				die(1,'--autosign is required for this operation')
 
 		def get_tx(self):
 			asi = get_autosign_obj(self.cfg,'xmr')
@@ -1803,7 +1799,7 @@ class MoneroWalletOps:
 			h.open_wallet('source')
 
 			if self.cfg.rescan_blockchain:
-				gmsg_r(f'\n  Rescanning blockchain...')
+				gmsg_r('\n  Rescanning blockchain...')
 				self.c.call('rescan_blockchain')
 				gmsg('done')
 
@@ -1842,7 +1838,7 @@ class MoneroWalletOps:
 				'import_outputs',
 				outputs_data_hex = m.data.outputs_data_hex )
 			idata = res['num_imported']
-			bmsg('\n  {} output{} imported'.format( idata, suf(idata) ))
+			bmsg(f'\n  {idata} output{suf(idata)} imported')
 			data = m.data._asdict()
 			data.update(self.c.call('export_key_images', all=True))
 			m = MoneroWalletOutputsFile.SignedNew(
@@ -1850,7 +1846,7 @@ class MoneroWalletOps:
 				wallet_fn = m.get_wallet_fn(fn),
 				data      = data )
 			idata = m.data.signed_key_images or []
-			bmsg('  {} key image{} signed'.format( len(idata), suf(idata) ))
+			bmsg(f'  {len(idata)} key image{suf(idata)} signed')
 			return m
 
 	class import_key_images(wallet):
@@ -1872,7 +1868,7 @@ class MoneroWalletOps:
 			self.head_msg(d.idx,h.fn)
 			m = MoneroWalletOutputsFile.Signed( parent=self, fn=keyimage_fn )
 			data = m.data.signed_key_images or []
-			bmsg('\n  {} signed key image{} to import'.format( len(data), suf(data) ))
+			bmsg(f'\n  {len(data)} signed key image{suf(data)} to import')
 			if data:
 				res = self.c.call( 'import_key_images', signed_key_images=data )
 				bmsg(f'  Success: {res}')

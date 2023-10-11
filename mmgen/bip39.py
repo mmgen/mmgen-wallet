@@ -84,7 +84,7 @@ class bip39(baseconv):
 			if w not in wl:
 				die( 'MnemonicError', f'word #{n+1} is not in the BIP39 word list' )
 
-		res = ''.join(['{:011b}'.format(wl.index(w)) for w in words])
+		res = ''.join(f'{wl.index(w):011b}' for w in words_arg)
 
 		for k,v in self.constants.items():
 			if len(words) == v.mn_len:
@@ -96,15 +96,15 @@ class bip39(baseconv):
 		seed_bin = res[:bitlen]
 		chk_bin = res[bitlen:]
 
-		seed_hex = '{:0{w}x}'.format(int(seed_bin,2),w=bitlen//4)
+		seed_hex = f'{int(seed_bin,2):0{bitlen//4}x}'
 		seed_bytes = bytes.fromhex(seed_hex)
 
 		chk_len = self.constants[bitlen].chk_len
 		chk_hex_chk = sha256(seed_bytes).hexdigest()
-		chk_bin_chk = '{:0{w}b}'.format(int(chk_hex_chk,16),w=256)[:chk_len]
+		chk_bin_chk = f'{int(chk_hex_chk,16):0256b}'[:chk_len]
 
 		if chk_bin != chk_bin_chk:
-			die( 'MnemonicError', 'invalid BIP39 seed phrase checksum' )
+			die( 'MnemonicError', f'invalid BIP39 seed phrase checksum ({chk_bin} != {chk_bin_chk})' )
 
 		return seed_hex
 
@@ -122,8 +122,8 @@ class bip39(baseconv):
 
 		chk_hex = sha256(seed_bytes).hexdigest()
 
-		seed_bin = '{:0{w}b}'.format(int(seed_hex,16),w=bitlen)
-		chk_bin = '{:0{w}b}'.format(int(chk_hex,16),w=256)[:c.chk_len]
+		seed_bin = f'{int(hexstr,16):0{bitlen}b}'
+		chk_bin  = f'{int(chk_hex,16):0256b}'
 
 		res = seed_bin + chk_bin
 

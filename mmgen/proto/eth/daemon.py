@@ -78,7 +78,7 @@ class openethereum_daemon(ethereum_daemon):
 			[f'--port={self.p2p_port}', self.p2p_port],
 			[f'--base-path={self.datadir}', self.non_dfl_datadir],
 			[f'--chain={self.proto.chain_name}', self.network!='regtest'],
-			[f'--config=dev', self.network=='regtest'], # no presets for mainnet or testnet
+			['--config=dev', self.network=='regtest'], # no presets for mainnet or testnet
 			['--mode=offline', self.test_suite or self.network=='regtest'],
 			[f'--log-file={self.logfile}', self.non_dfl_datadir],
 			['daemon', ld],

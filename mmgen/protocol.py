@@ -170,9 +170,7 @@ class CoinProtocol(MMGenObject):
 			"""
 			magic module loading and class selection
 			"""
-			modpath = 'mmgen.proto.{}.{}'.format(
-				self.base_proto_coin.lower(),
-				modname )
+			modpath = f'mmgen.proto.{self.base_proto_coin.lower()}.{modname}'
 
 			clsname = (
 				self.mod_clsname

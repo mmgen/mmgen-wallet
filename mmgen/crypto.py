@@ -326,7 +326,7 @@ class Crypto:
 				os_rand + int.to_bytes(urand['counter'],8,'big'),
 				'sha256' )
 
-			msg('Encrypting random data {} with ephemeral key #{}'.format( desc, urand['counter'] ))
+			msg(f'Encrypting random data {desc} with ephemeral key #{urand["counter"]}')
 
 			return self.encrypt_data( data=rand_bytes, key=key, desc=desc, verify=False, silent=True )
 		else:

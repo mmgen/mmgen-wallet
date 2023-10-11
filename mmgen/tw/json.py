@@ -111,7 +111,7 @@ class TwJSON:
 					if ignore_checksum:
 						ymsg(f'Warning: ignoring incorrect checksum {chksum}')
 					else:
-						die(3,'File checksum incorrect! ({} != {})'.format(chksum,d['checksum']))
+						die(3,f'File checksum incorrect! ({chksum} != {d["checksum"]})')
 
 			def verify_data(d):
 				check_network(d['data'])
@@ -214,5 +214,5 @@ class TwJSON:
 						'data': data
 					},
 					pretty = pretty ),
-				desc    = f'tracking wallet JSON data',
+				desc    = 'tracking wallet JSON data',
 				ask_overwrite = not force_overwrite )

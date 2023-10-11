@@ -397,7 +397,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				yield '{} (sort order: {}){}'.format(
 					self.hdr_lbl.upper(),
 					Blue(sort_info),
-					' ' * (self.cols - len('{} (sort order: {})'.format(self.hdr_lbl,sort_info))) )
+					' ' * (self.cols - len(f'{self.hdr_lbl} (sort order: {sort_info})')) )
 
 				if self.filters:
 					yield 'Filters: {}{}'.format(

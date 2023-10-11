@@ -613,8 +613,8 @@ class Config(Lockable):
 					'{a!r}: invalid {b} (not {c}: {d})'.format(
 						a = val,
 						b = {
-							'cmdline': 'parameter for option --{}'.format(key.replace('_','-')),
-							'cfgfile': 'value for cfg file option {!r}'.format(key)
+							'cmdline': f'parameter for option --{key.replace("_","-")}',
+							'cfgfile': f'value for cfg file option {key!r}'
 						}[src],
 						c = desc,
 						d = fmt_list(data.choices) ))
@@ -860,7 +860,7 @@ def opt_postproc_debug(cfg):
 	from .util import Msg
 	Msg('\n    Configuration opts:')
 	for e in [d for d in dir(cfg) if d[:2] != '__']:
-		Msg('        {:<20}: {}'.format(e, getattr(cfg,e)))
+		Msg(f'        {e:<20}: {getattr(cfg,e)}')
 	Msg("    Configuration opts set to 'None':")
 	Msg('        {}\n'.format('\n        '.join(b)))
 	Msg('\n=== end opts.py debug ===\n')

@@ -26,7 +26,7 @@ class New(Base,TxBase.New):
 	def relay_fee(self):
 		kb_fee = self.proto.coin_amt(self.rpc.cached['networkinfo']['relayfee'])
 		ret = kb_fee * self.estimate_size() / 1024
-		self.cfg._util.vmsg('Relay fee: {} {c}/kB, for transaction: {} {c}'.format(kb_fee,ret,c=self.coin))
+		self.cfg._util.vmsg(f'Relay fee: {kb_fee} {self.coin}/kB, for transaction: {ret} {self.coin}')
 		return ret
 
 	async def get_rel_fee_from_network(self):
@@ -133,7 +133,7 @@ class New(Base,TxBase.New):
 			msg(f'Setting nLockTime to {self.strfmt_locktime(locktime)}!')
 			assert isinstance(locktime,int), 'locktime value not an integer'
 			self.locktime = locktime
-			ret = ret[:-8] + bytes.fromhex('{:08x}'.format(locktime))[::-1].hex()
+			ret = ret[:-8] + bytes.fromhex(f'{locktime:08x}')[::-1].hex()
 
 		# TxID is set only once!
 		self.txid = MMGenTxID(make_chksum_6(bytes.fromhex(ret)).upper())

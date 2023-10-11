@@ -231,7 +231,7 @@ class TwAddresses(TwView):
 			# Hack, but OK for the foreseeable future:
 			('{:>012}'.format(1_000_000_000 - d.confs) if d.confs else '_'),
 			d.twmmid.sort_key),
-		'amt': lambda d: '{}_{}'.format(d.al_id,d.amt),
+		'amt': lambda d: f'{d.al_id}_{d.amt}',
 		'twmmid': lambda d: d.twmmid.sort_key,
 	}
 

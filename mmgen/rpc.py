@@ -41,7 +41,7 @@ def dmsg_rpc(fs,data=None,is_json=False):
 def dmsg_rpc_backend(host_url,host_path,payload):
 	msg(
 		f'\n    RPC URL: {host_url}{host_path}' +
-		f'\n    RPC PAYLOAD data (httplib) ==>' +
+		'\n    RPC PAYLOAD data (httplib) ==>' +
 		f'\n{pp_fmt(payload)}\n' )
 
 def noop(*args,**kwargs):
@@ -179,10 +179,7 @@ class RPCBackends:
 				auth_str = f'{caller.auth.user}:{caller.auth.passwd}'
 				auth_str_b64 = 'Basic ' + base64.b64encode(auth_str.encode()).decode()
 				self.http_hdrs.update({ 'Host': self.host, 'Authorization': auth_str_b64 })
-				dmsg_rpc('    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [{}]\n'.format(
-					auth_str,
-					'',
-					auth_str_b64 ))
+				dmsg_rpc(f'    RPC AUTHORIZATION data ==> raw: [{auth_str}]\n{"":>31}enc: [{auth_str_b64}]\n')
 
 		async def run(self,payload,timeout,host_path):
 			dmsg_rpc_backend(self.host_url,host_path,payload)

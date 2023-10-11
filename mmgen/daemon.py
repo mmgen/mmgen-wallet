@@ -427,8 +427,8 @@ class CoinDaemon(Daemon):
 			self.private_port = getattr(self.private_ports,self.network)
 
 		# bind_port == self.private_port or self.rpc_port
-		self.pidfile = '{}/{}-{}-daemon-{}.pid'.format(self.logdir,self.id,self.network,self.bind_port)
-		self.logfile = '{}/{}-{}-daemon-{}.log'.format(self.logdir,self.id,self.network,self.bind_port)
+		self.pidfile = f'{self.logdir}/{self.id}-{self.network}-daemon-{self.bind_port}.pid'
+		self.logfile = f'{self.logdir}/{self.id}-{self.network}-daemon-{self.bind_port}.log'
 
 		self.init_subclass()
 

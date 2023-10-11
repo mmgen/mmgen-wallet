@@ -82,9 +82,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 		if self.data['coin'] != self.proto.coin: # TODO remove?
 			die( 'WalletFileError',
-				'Tracking wallet coin ({}) does not match current coin ({})!'.format(
-					self.data['coin'],
-					self.proto.coin ))
+				f'Tracking wallet coin ({self.data["coin"]}) does not match current coin ({self.proto.coin})!')
 
 		self.conv_types(self.data[self.data_key])
 		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation

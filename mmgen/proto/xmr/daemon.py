@@ -54,7 +54,7 @@ class monero_daemon(CoinDaemon):
 			daemon = self )
 
 		self.shared_args = list_gen(
-			[f'--no-zmq'],
+			['--no-zmq'],
 			[f'--p2p-bind-port={self.p2p_port}', self.p2p_port],
 			[f'--rpc-bind-port={self.rpc_port}'],
 			['--stagenet', self.network == 'testnet'],

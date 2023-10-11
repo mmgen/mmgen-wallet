@@ -82,7 +82,7 @@ def _check_backend(cfg,backend,pubkey_type,desc='keygen backend'):
 	if not (1 <= int(backend) <= len(backends)):
 		die(1,
 			f'{backend}: {desc} out of range\n' +
-			f'Configured backends: ' +
+			'Configured backends: ' +
 			' '.join( f'{n}:{k}' for n,k in enumerate(backends,1) )
 		)
 

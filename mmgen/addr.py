@@ -129,13 +129,13 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 			ss = str(id_str).split(':')
 			assert len(ss) in (2,3),'not 2 or 3 colon-separated items'
 			t = proto.addr_type((ss[1],proto.dfl_mmtype)[len(ss)==2])
-			me = str.__new__(cls,'{}:{}:{}'.format(ss[0],t,ss[-1]))
+			me = str.__new__(cls,f'{ss[0]}:{t}:{ss[-1]}')
 			me.sid = SeedID(sid=ss[0])
 			me.idx = AddrIdx(ss[-1])
 			me.mmtype = t
 			assert t in proto.mmtypes, f'{t}: invalid address type for {proto.cls_name}'
 			me.al_id = str.__new__(AddrListID,me.sid+':'+me.mmtype) # checks already done
-			me.sort_key = '{}:{}:{:0{w}}'.format(me.sid,me.mmtype,me.idx,w=me.idx.max_digits)
+			me.sort_key = f'{me.sid}:{me.mmtype}:{me.idx:0{me.idx.max_digits}}'
 			me.proto = proto
 			return me
 		except Exception as e:

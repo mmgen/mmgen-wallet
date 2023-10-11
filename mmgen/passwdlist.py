@@ -123,9 +123,7 @@ class PasswordList(AddrList):
 			self.pw_fmt_disp = pw_fmt
 		if self.pw_fmt not in self.pw_info:
 			die( 'InvalidPasswdFormat',
-				'{!r}: invalid password format.  Valid formats: {}'.format(
-					self.pw_fmt,
-					', '.join(self.pw_info) ))
+				f'{self.pw_fmt!r}: invalid password format.  Valid formats: {", ".join(self.pw_info)}' )
 
 	def chk_pw_len(self,passwd=None):
 		if passwd is None:

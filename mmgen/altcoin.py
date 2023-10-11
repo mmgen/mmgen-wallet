@@ -50,13 +50,7 @@ def test_equal(desc,a,b,*cdata):
 		msg(f'  {desc:20}: {a!r}')
 	if a != b:
 		raise ValueError(
-			'{}s for {} {} do not match:\n  CoinInfo: {}\n  {}: {}'.format(
-				desc.capitalize(),
-				coin.upper(),
-				network,
-				a,
-				b_desc,
-				b ))
+			f'{desc.capitalize()}s for {coin.upper()} {network} do not match:\n  CoinInfo: {a}\n  {b_desc}: {b}' )
 
 ce = namedtuple('CoinInfoEntry',
 	['name','symbol','wif_ver_num','p2pkh_info','p2sh_info','has_segwit','trust_level'])
@@ -785,7 +779,7 @@ if __name__ == '__main__':
 
 	opts_data = {
 		'text': {
-			'desc': f'Check altcoin data',
+			'desc': 'Check altcoin data',
 			'usage':'[opts]',
 			'options': '-q, --quiet    Be quieter\n-v, --verbose  Be more verbose'
 		}

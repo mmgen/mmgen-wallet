@@ -43,7 +43,7 @@ class MMGenTxFile(MMGenObject):
 					ymsg('Warning: transaction data appears to be in old format')
 				import re
 				d = literal_eval(re.sub(r"[A-Za-z]+?\(('.+?')\)",r'\1',raw_data))
-			assert type(d) == list, f'{desc} data not a list!'
+			assert isinstance(d,list), f'{desc} data not a list!'
 			if not (desc == 'outputs' and tx.proto.base_coin == 'ETH'): # ETH txs can have no outputs
 				assert len(d), f'no {desc}!'
 			for e in d:
@@ -72,7 +72,7 @@ class MMGenTxFile(MMGenObject):
 
 			if len(tx_data) == 6:
 				assert len(tx_data[-1]) == 64,'invalid coin TxID length'
-				desc = f'coin TxID'
+				desc = 'coin TxID'
 				tx.coin_txid = CoinTxID(tx_data.pop(-1))
 
 			if len(tx_data) == 5:
@@ -146,7 +146,7 @@ class MMGenTxFile(MMGenObject):
 			if tx.is_replaceable():
 				yield ',{}'.format(tx.fee_abs2rel(tx.fee,to_unit=tx.fn_fee_unit))
 			if tx.get_serialized_locktime():
-				yield ',tl={}'.format(tx.get_serialized_locktime())
+				yield f',tl={tx.get_serialized_locktime()}'
 			yield ']'
 			if tx.proto.testnet:
 				yield '.' + tx.proto.network
