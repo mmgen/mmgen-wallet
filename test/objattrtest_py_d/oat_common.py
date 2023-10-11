@@ -8,8 +8,7 @@ test.objattrtest_py_d.oat_common: shared data for MMGen data objects tests
 """
 
 from decimal import Decimal
-
-from ..include.common import cfg,getrand
+from collections import namedtuple
 
 from mmgen.obj import TwComment,CoinTxID,HexStr
 from mmgen.seed import Seed,SeedID
@@ -17,7 +16,8 @@ from mmgen.subseed import SubSeedIdx,SubSeedList
 from mmgen.seedsplit import SeedShareList,SeedShareCount,SeedSplitIDString,SeedShareIdx,MasterShareIdx
 from mmgen.addr import AddrIdx
 
-from collections import namedtuple
+from ..include.common import cfg,getrand
+
 atd = namedtuple('attrtest_entry',['attrs','args','kwargs'])
 
 seed_bin = getrand(32)

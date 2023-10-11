@@ -20,7 +20,7 @@
 test/objtest.py: Test MMGen data objects
 """
 
-import sys,os,re
+import os,re
 
 import include.test_init
 

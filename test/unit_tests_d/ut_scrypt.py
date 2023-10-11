@@ -4,8 +4,9 @@
 test.unit_tests_d.ut_scrypt: password hashing unit test for the MMGen suite
 """
 
-from ..include.common import cfg,qmsg,vmsg,omsg_r,silence,end_silence
 from mmgen.util import msg,msg_r
+
+from ..include.common import cfg,qmsg,vmsg,omsg_r,silence,end_silence
 
 class unit_test:
 

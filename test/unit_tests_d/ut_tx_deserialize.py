@@ -12,7 +12,6 @@ from mmgen.protocol import init_proto
 from mmgen.tx import CompletedTX
 from mmgen.proto.btc.tx.base import DeserializeTX
 from mmgen.rpc import rpc_init
-from mmgen.daemon import CoinDaemon
 
 from ..include.common import cfg,start_test_daemons,stop_test_daemons
 

@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-# Convert MMGen 'v2' transaction file (amounts as BTCAmt())
-# to MMGen 'v3' (amounts as strings)
-# v3 tx files were introduced with MMGen version 0.9.7
 
-import sys,os
-repo_root = os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))[0]
-sys.path = [repo_root] + sys.path
+"""
+Convert an MMGen 'v2' transaction file (amounts as BTCAmt()) to 'v3' (amounts as
+strings).  Version 3 TX files were introduced with MMGen version 0.9.7
+"""
+
+import sys,os,asyncio
 
 from mmgen.cfg import Config
+from mmgen.tx import CompletedTX
+
+repo_root = os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))[0]
+sys.path = [repo_root] + sys.path
 
 opts_data = {
 	'text': {
@@ -23,9 +27,6 @@ opts_data = {
 }
 
 cfg = Config(opts_data=opts_data)
-
-import asyncio
-from mmgen.tx import CompletedTX
 
 if len(cfg._args) != 1:
 	cfg._opts.usage()

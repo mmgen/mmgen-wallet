@@ -1,6 +1,7 @@
 import os as overlay_fake_os
-from .view_orig import *
 import mmgen.tw.view_orig as overlay_fake_orig_mod
+
+from .view_orig import *
 
 overlay_fake_orig_mod.CUR_HOME  = '\n[CUR_HOME]\n'
 overlay_fake_orig_mod.CUR_UP    = lambda n: f'\n[CUR_UP({n})]\n'

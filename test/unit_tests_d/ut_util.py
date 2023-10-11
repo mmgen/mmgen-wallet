@@ -4,9 +4,10 @@
 test.unit_tests_d.ut_misc: utility unit tests for the MMGen suite
 """
 
-from ..include.common import vmsg
-from mmgen.util import fmt_list,fmt_dict,list_gen
 from mmgen.color import cyan
+from mmgen.util import fmt_list,fmt_dict,list_gen
+
+from ..include.common import vmsg
 
 class unit_tests:
 

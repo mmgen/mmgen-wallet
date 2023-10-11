@@ -9,14 +9,14 @@ test.objtest_py_d.ot_ltc_mainnet: LTC mainnet test vectors for MMGen data object
 
 from decimal import Decimal
 
-from .ot_common import r16,r32
-from ..include.common import cfg
-
 from mmgen.amt import LTCAmt
 from mmgen.addr import CoinAddr
 from mmgen.key import WifKey,PrivKey
-
 from mmgen.protocol import init_proto
+
+from .ot_common import r16,r32
+from ..include.common import cfg
+
 proto = init_proto( cfg, 'ltc', need_amt=True )
 
 tests = {

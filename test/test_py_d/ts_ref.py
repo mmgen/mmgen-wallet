@@ -30,7 +30,6 @@ from ..include.common import (
 	ok,
 	joinpath,
 	cmp_or_die,
-	ref_kafile_hash_preset,
 	ref_kafile_pass,
 	read_from_file,
 	sample_text

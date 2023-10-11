@@ -21,12 +21,12 @@ test/scrambletest.py: seed scrambling and addrlist data generation tests for all
                       supported coins + passwords
 """
 
-import sys,os,time
+import os,time
 from subprocess import run,PIPE
+from collections import namedtuple
 
 import include.test_init
 
-import mmgen.opts as opts
 from mmgen.cfg import gc,Config
 from mmgen.util import msg,msg_r,bmsg,die
 
@@ -51,11 +51,10 @@ If no command is given, the whole suite of tests is run.
 
 cfg = Config(opts_data=opts_data)
 
-from test.include.common import set_globals,end_msg,green
+from test.include.common import set_globals,init_coverage,end_msg,green
 
 set_globals(cfg)
 
-from collections import namedtuple
 td = namedtuple('scrambletest_entry',['seed','str','id_str','lbl','addr'])
 
 bitcoin_data = {

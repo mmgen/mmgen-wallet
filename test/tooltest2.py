@@ -963,7 +963,7 @@ if cfg.tool_api:
 	del tests['Wallet']
 	del tests['File']
 
-import mmgen.main_tool as main_tool
+from mmgen import main_tool
 
 if cfg.list_tests:
 	Msg('Available tests:')

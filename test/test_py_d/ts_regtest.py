@@ -24,7 +24,7 @@ import os,json,time,re
 from decimal import Decimal
 
 from mmgen.color import yellow
-from mmgen.util import msg_r,die,gmsg,capfirst,fmt_list,async_run
+from mmgen.util import msg_r,die,gmsg,capfirst,fmt_list
 from mmgen.protocol import init_proto
 from mmgen.addrlist import AddrList
 from mmgen.wallet import Wallet,get_wallet_cls

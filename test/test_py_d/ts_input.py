@@ -10,7 +10,11 @@
 test.test_py_d.ts_input: user input tests for the MMGen test.py test suite
 """
 
-import os,time
+import os
+
+from mmgen.cfg import gc
+from mmgen.util import fmt,capfirst,remove_whitespace
+from mmgen.wallet import get_wallet_cls
 
 from ..include.common import (
 	cfg,
@@ -24,11 +28,6 @@ from ..include.common import (
 from .common import Ctrl_U,ref_dir
 from .ts_base import TestSuiteBase
 from .input import stealth_mnemonic_entry,user_dieroll_entry
-
-from mmgen.cfg import gc
-from mmgen.color import set_vt100
-from mmgen.util import fmt,capfirst,remove_whitespace
-from mmgen.wallet import get_wallet_cls
 
 class TestSuiteInput(TestSuiteBase):
 	'user input'

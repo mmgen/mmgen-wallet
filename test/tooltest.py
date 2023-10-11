@@ -20,7 +20,7 @@
 test/tooltest.py: Tests for the 'mmgen-tool' utility
 """
 
-import sys,os,binascii
+import sys,os,time
 from subprocess import run,PIPE
 
 import include.test_init
@@ -66,7 +66,8 @@ from test.include.common import (
 	getrand,
 	getrandhex,
 	end_msg,
-	init_coverage
+	init_coverage,
+	get_tmpfile,
 )
 set_globals(cfg)
 
@@ -460,7 +461,6 @@ class MMGenToolTestCmds:
 		ok()
 
 # main()
-import time
 start_time = int(time.time())
 mk_tmpdir(tcfg['tmpdir'])
 

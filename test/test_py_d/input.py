@@ -10,7 +10,7 @@
 test.test_py_d.input: Shared input routines for the test.py test suite
 """
 
-import os,time
+import time
 from .common import randbool
 from ..include.common import getrand
 

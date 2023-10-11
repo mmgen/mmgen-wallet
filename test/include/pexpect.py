@@ -20,7 +20,7 @@
 test.include.pexpect: pexpect implementation for MMGen test suites
 """
 
-import sys,os,time
+import sys,time
 from mmgen.color import red,yellow,green,cyan
 from mmgen.util import msg,msg_r,rmsg,die
 from .common import cfg,vmsg,vmsg_r,getrandstr,strip_ansi_escapes

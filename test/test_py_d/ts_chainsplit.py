@@ -21,8 +21,6 @@ test.test_py_d.ts_chainsplit: Forking scenario tests for the test.py test suite
 This module is unmaintained and currently non-functional
 """
 
-import os
-
 from mmgen.util import die
 
 from .common import get_file_with_ext

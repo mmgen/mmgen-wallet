@@ -7,7 +7,7 @@
 test.misc.tool_api_test: test the MMGen suite tool API
 """
 
-import sys,os
+import sys
 from mmgen.key import PrivKey
 from mmgen.addr import CoinAddr
 

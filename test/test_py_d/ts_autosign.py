@@ -27,6 +27,8 @@ from pathlib import Path
 from mmgen.cfg import gc
 from mmgen.color import red,green,blue,purple
 from mmgen.util import msg,suf,die
+from mmgen.led import LEDControl
+from mmgen.autosign import Autosign,AutosignConfig
 
 from ..include.common import (
 	cfg,
@@ -42,9 +44,6 @@ from .common import ref_dir,dfl_words_file,dfl_bip39_file
 
 from .ts_base import TestSuiteBase
 from .input import stealth_mnemonic_entry
-
-from mmgen.led import LEDControl
-from mmgen.autosign import Autosign,AutosignConfig
 
 filedir_map = (
 	('btc',''),

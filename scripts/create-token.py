@@ -20,7 +20,7 @@
 scripts/create-token.py: Automated ERC20 token creation for the MMGen suite
 """
 
-import sys,os,json,re
+import sys,json,re
 from subprocess import run,PIPE
 from collections import namedtuple
 

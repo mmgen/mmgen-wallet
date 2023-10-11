@@ -4,13 +4,12 @@
 test.unit_tests_d.ut_daemon: unit test for the MMGen suite's Daemon class
 """
 
-from subprocess import run,DEVNULL,PIPE
+from subprocess import run,PIPE
 from collections import namedtuple
 
 from mmgen.color import orange
 from mmgen.util import fmt_list
 from mmgen.daemon import CoinDaemon
-from mmgen.protocol import init_proto
 
 from ..include.common import cfg,qmsg,qmsg_r,vmsg
 

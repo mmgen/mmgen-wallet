@@ -20,7 +20,7 @@
 test.test_py_d.ts_xmrwallet: xmrwallet tests for the test.py test suite
 """
 
-import sys,os,time,re,atexit,asyncio,shutil
+import os,time,re,atexit,asyncio,shutil
 from subprocess import run,PIPE
 from collections import namedtuple
 

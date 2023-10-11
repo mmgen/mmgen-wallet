@@ -6,11 +6,12 @@ test.unit_tests_d.ut_msg: message signing unit tests for the MMGen suite
 
 import os
 
-from ..include.common import cfg,silence,end_silence,restart_test_daemons,stop_test_daemons
 from mmgen.util import msg,bmsg,pumsg,suf
 from mmgen.protocol import CoinProtocol
 from mmgen.msg import NewMsg,UnsignedMsg,SignedMsg,SignedOnlineMsg,ExportedMsgSigs
 from mmgen.addr import MMGenID
+
+from ..include.common import cfg,silence,end_silence,restart_test_daemons,stop_test_daemons
 
 def get_obj(coin,network,msghash_type):
 

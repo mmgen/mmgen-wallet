@@ -20,8 +20,6 @@
 test.test_py_d.ts_ref_altcoin: Altcoin reference file tests for the test.py test suite
 """
 
-import os
-
 from mmgen.color import set_vt100
 
 from .common import pwfile,dfl_wpasswd,ref_dir,dfl_words_file,dfl_addr_idx_list

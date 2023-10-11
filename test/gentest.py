@@ -25,7 +25,6 @@ import sys,os,time
 import include.test_init
 
 # Import these _after_ local path's been added to sys.path
-import mmgen.opts as opts
 from mmgen.cfg import gc,Config
 from mmgen.color import green,red,purple
 from mmgen.util import msg,ymsg,capfirst,is_int,die
@@ -419,11 +418,10 @@ def speed_test(proto,kg,ag,rounds):
 	qmsg(green('Testing speed of address generator {!r} for coin {}'.format(
 		type(kg).__name__,
 		proto.coin )))
-	from struct import pack,unpack
+	from struct import pack
 	seed = getrand(28)
 	qmsg('Incrementing key with each round')
 	qmsg('Starting key: {}'.format( (seed + pack('I',0)).hex() ))
-	import time
 	start = last_t = time.time()
 
 	for i in range(rounds):

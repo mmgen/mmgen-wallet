@@ -22,7 +22,6 @@ test/objattrtest.py: Test immutable attributes of MMGen data objects
 
 # TODO: test 'typeconv' during instance creation
 
-import sys,os
 from collections import namedtuple
 
 import include.test_init
@@ -30,7 +29,7 @@ import include.test_init
 from mmgen.cfg import Config
 from mmgen.util import msg,msg_r,gmsg,die
 from mmgen.color import red,yellow,green,blue,purple,nocolor
-from mmgen.obj import ImmutableAttr,ListItemAttr
+from mmgen.obj import ListItemAttr
 
 opts_data = {
 	'sets': [
