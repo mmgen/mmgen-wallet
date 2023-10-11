@@ -21,7 +21,7 @@ class wallet(wallet):
 	def __init__(self,*args,**kwargs):
 		from mmgen.crypto import Crypto
 		self.crypto = Crypto(self.cfg)
-		return super().__init__(*args,**kwargs)
+		super().__init__(*args,**kwargs)
 
 	def _decrypt_retry(self):
 		while True:

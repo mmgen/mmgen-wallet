@@ -64,7 +64,7 @@ class File:
 class FileList(list):
 
 	def __init__(self,fns,write=False):
-		return list.__init__(
+		list.__init__(
 			self,
 			[File(fn,write) for fn in fns] )
 
@@ -105,7 +105,7 @@ class MMGenFile(File):
 class MMGenFileList(FileList):
 
 	def __init__(self,fns,base_class,proto=None,write=False):
-		return list.__init__(
+		list.__init__(
 			self,
 			[MMGenFile( fn, base_class=base_class, proto=proto, write=write ) for fn in fns] )
 

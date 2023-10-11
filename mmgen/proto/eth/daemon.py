@@ -37,7 +37,7 @@ class ethereum_daemon(CoinDaemon):
 
 		self.port_offset = daemon_idx_offset + getattr(self.network_port_offsets,self.network)
 
-		return super().__init__( *args, test_suite=test_suite, **kwargs )
+		super().__init__( *args, test_suite=test_suite, **kwargs )
 
 	def get_rpc_port(self):
 		return self.base_rpc_port + self.port_offset

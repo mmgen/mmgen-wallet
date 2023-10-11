@@ -41,7 +41,7 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 					'ge_minconf': amt0,
 					'spendable': amt0,
 				}
-				return dict.__init__(self,**data)
+				dict.__init__(self,**data)
 
 		self.minconf = NonNegativeInt(minconf)
 		self.balance_info = BalanceInfo

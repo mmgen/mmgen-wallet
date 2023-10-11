@@ -107,7 +107,7 @@ class MnEntryModeShort(MnEntryMode):
 	def __init__(self,mne):
 		if mne.wl_id == 'bip39':
 			self.prompt_info += '  ' + self.prompt_info_bip39_add.strip()
-		return super().__init__(mne)
+		super().__init__(mne)
 
 	@property
 	def ss_len(self):
@@ -150,7 +150,7 @@ class MnEntryModeFixed(MnEntryMode):
 	def __init__(self,mne):
 		self.len_diff = mne.uniq_ss_len - mne.shortest_word
 		self.prompt_info += self.prompt_info_add[self.len_diff==1].lstrip()
-		return super().__init__(mne)
+		super().__init__(mne)
 
 	@property
 	def ss_len(self):

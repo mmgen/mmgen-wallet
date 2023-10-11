@@ -59,7 +59,7 @@ class IndexedDict(dict):
 		if args or kwargs:
 			self.die('initializing values via constructor')
 		self.__keylist = []
-		return dict.__init__(self,*args,**kwargs)
+		dict.__init__(self,*args,**kwargs)
 
 	def __setitem__(self,key,value):
 		if key in self:
