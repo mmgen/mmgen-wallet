@@ -160,7 +160,7 @@ class baseconv:
 				( 'seed data' if pad == 'seed' else f'{words_arg!r}:' ) +
 				f' not in {desc} format' )
 
-		ret = sum([wl.index(words[::-1][i])*(base**i) for i in range(len(words))])
+		ret = sum(wl.index(words[::-1][i])*(base**i) for i in range(len(words)))
 		bl = ret.bit_length()
 		return ret.to_bytes(max(pad_val,bl//8+bool(bl%8)),'big')
 

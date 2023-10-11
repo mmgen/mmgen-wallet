@@ -48,7 +48,7 @@ def _get_cls_info(clsname,modname,args,kwargs):
 		if not cls:
 			die(1,f'{ext!r}: unrecognized file extension for CompletedTX')
 		clsname = cls.__name__
-		modname = cls.__module__.split('.')[-1]
+		modname = cls.__module__.rsplit('.',maxsplit=1)[-1]
 
 	kwargs['proto'] = proto
 

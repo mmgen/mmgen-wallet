@@ -182,7 +182,7 @@ class AddrFile(MMGenObject):
 						f'Key doesn’t match address!\n  {e.sec.wif}\n  {e.addr}')
 				p.cfg._util.qmsg(' - done')
 
-			if self.cfg.yes or p.ka_validity_chk == True:
+			if self.cfg.yes or p.ka_validity_chk:
 				verify_keys()
 			else:
 				from .ui import keypress_confirm

@@ -45,7 +45,7 @@ def test_equal(desc,a,b,*cdata):
 	if type(a) is int:
 		a = hex(a)
 		b = hex(b)
-	(network,coin,e,b_desc,verbose) = cdata
+	(network,coin,_,b_desc,verbose) = cdata
 	if verbose:
 		msg(f'  {desc:20}: {a!r}')
 	if a != b:

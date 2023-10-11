@@ -131,8 +131,8 @@ class TwAddressesPrune(TwAddresses):
 					dfl[desc] = auto[desc] and prune
 					skip_all_used = auto['used'] and not dfl['used']
 					if auto[desc]: # we’ve switched to auto mode, so go back and fix up all previous entries
-						for addrnum in addrnums[:n]:
-							e = parent.disp_data[addrnum-1]
+						for idx in addrnums[:n]:
+							e = parent.disp_data[idx-1]
 							if skip_all_used and e.recvd:
 								e.tag = False
 							elif desc == 'amt' and e.amt:

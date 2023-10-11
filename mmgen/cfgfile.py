@@ -90,7 +90,7 @@ class cfg_file:
 		return gen_lines()
 
 	@classmethod
-	def get_cls_by_id(self,id_str):
+	def get_cls_by_id(cls,id_str):
 		d = {
 			'usr':    CfgFileUsr,
 			'sys':    CfgFileSampleSys,

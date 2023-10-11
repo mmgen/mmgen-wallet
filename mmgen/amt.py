@@ -71,7 +71,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 		return int(ret)
 
 	@classmethod
-	def fmtc(cls):
+	def fmtc(cls,*args,**kwargs):
 		cls.method_not_implemented()
 
 	def fmt(
@@ -80,7 +80,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 			iwidth = 1,      # width of the integer part
 			prec   = None ):
 
-		s = self.__str__()
+		s = str(self)
 		prec = prec or self.max_prec
 
 		if '.' in s:
@@ -94,7 +94,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 				color = color )
 
 	def hl(self,color=True):
-		return self.colorize(self.__str__(),color=color)
+		return self.colorize(str(self),color=color)
 
 	# fancy highlighting with coin unit, enclosure, formatting
 	def hl2(self,color=True,unit=False,fs='{}',encl=''):

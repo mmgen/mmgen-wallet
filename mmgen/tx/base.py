@@ -67,7 +67,7 @@ class MMGenTxIOList(list,MMGenObject):
 		if data:
 			assert isinstance(data,list), 'MMGenTxIOList_check1'
 		else:
-			data = list()
+			data = []
 		list.__init__(self,data)
 
 class Base(MMGenObject):

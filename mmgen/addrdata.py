@@ -58,7 +58,7 @@ class AddrData(MMGenObject):
 			self.al_ids[addrlist.al_id] = addrlist
 			return True
 		else:
-			raise TypeError(f'Error: object {addrlist!r} is not of type AddrList')
+			raise TypeError(f'Error: object {addrlist!r} is not an instance of AddrList')
 
 	def make_reverse_dict(self,coinaddrs):
 		d = MMGenDict()

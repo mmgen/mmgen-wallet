@@ -368,31 +368,27 @@ class Config(Lockable):
 		"""
 		location of mmgen.cfg
 		"""
-		if hasattr(self,'_data_dir_root'):
-			return self._data_dir_root
-		else:
+		if not hasattr(self,'_data_dir_root'):
 			if self._data_dir_root_override:
 				self._data_dir_root = os.path.normpath(os.path.abspath(self._data_dir_root_override))
 			elif self.test_suite:
 				self._data_dir_root = self.test_datadir
 			else:
 				self._data_dir_root = os.path.join(gc.home_dir,'.'+gc.proj_name.lower())
-			return self._data_dir_root
+		return self._data_dir_root
 
 	@property
 	def data_dir(self):
 		"""
 		location of wallet and other data - same as data_dir_root for mainnet
 		"""
-		if hasattr(self,'_data_dir'):
-			return self._data_dir
-		else:
+		if not hasattr(self,'_data_dir'):
 			self._data_dir = os.path.normpath(os.path.join(*{
 				'regtest': (self.data_dir_root, 'regtest', self.coin.lower(), (self.regtest_user or 'none') ),
 				'testnet': (self.data_dir_root, 'testnet'),
 				'mainnet': (self.data_dir_root,),
 			}[self.network] ))
-			return self._data_dir
+		return self._data_dir
 
 	def __init__(
 			self,
@@ -855,14 +851,13 @@ def fmt_opt(o):
 	return '--' + o.replace('_','-')
 
 def opt_postproc_debug(cfg):
-	a = [k for k in dir(cfg) if k[:2] != '__' and getattr(cfg,k) != None]
-	b = [k for k in dir(cfg) if k[:2] != '__' and getattr(cfg,k) == None]
+	none_opts = [k for k in dir(cfg) if k[:2] != '__' and getattr(cfg,k) is None]
 	from .util import Msg
 	Msg('\n    Configuration opts:')
 	for e in [d for d in dir(cfg) if d[:2] != '__']:
 		Msg(f'        {e:<20}: {getattr(cfg,e)}')
 	Msg("    Configuration opts set to 'None':")
-	Msg('        {}\n'.format('\n        '.join(b)))
+	Msg('        {}\n'.format('\n        '.join(none_opts)))
 	Msg('\n=== end opts.py debug ===\n')
 
 def conv_type(

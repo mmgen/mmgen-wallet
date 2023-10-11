@@ -103,7 +103,7 @@ class Sha2:
 	def bytesToWords(self):
 		ws = self.wordSize
 		assert len(self.M) % ws == 0
-		self.M = tuple([unpack(self.word_fmt,self.M[i*ws:ws+(i*ws)])[0] for i in range(len(self.M) // ws)])
+		self.M = tuple(unpack(self.word_fmt,self.M[i*ws:ws+(i*ws)])[0] for i in range(len(self.M) // ws))
 
 	def digest(self):
 		return b''.join((pack(self.word_fmt,w) for w in self.H))

@@ -268,7 +268,7 @@ class RPCDaemon(Daemon):
 
 	@property
 	def start_cmd(self):
-		return ([self.exec_fn] + self.daemon_args + self.usr_daemon_args)
+		return [self.exec_fn] + self.daemon_args + self.usr_daemon_args
 
 class CoinDaemon(Daemon):
 	networks = ('mainnet','testnet','regtest')

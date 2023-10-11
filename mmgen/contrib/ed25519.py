@@ -55,4 +55,4 @@ def encodepoint(P):
 	x = P[0]
 	y = P[1]
 	bits = [(y >> i) & 1 for i in range(b-1)] + [x & 1]
-	return bytes([sum([bits[i * 8 + j] << j for j in range(8)]) for i in range(b//8)])
+	return bytes([sum(bits[i * 8 + j] << j for j in range(8)) for i in range(b//8)])

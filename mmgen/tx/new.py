@@ -325,8 +325,8 @@ class New(Base):
 					die(1,f'{addr!r}: not an MMGen ID or {self.coin} address')
 
 				found = False
-				for idx in range(len(unspent)):
-					if getattr(unspent[idx],attr) == addr:
+				for idx,us in enumerate(unspent):
+					if getattr(us,attr) == addr:
 						yield idx2num(idx)
 						found = True
 

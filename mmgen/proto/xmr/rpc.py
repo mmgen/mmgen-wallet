@@ -75,7 +75,7 @@ class MoneroRPCClient(RPCClient):
 				self.daemon_version = None
 
 	def call(self,method,*params,**kwargs):
-		assert params == (), f'{self.name}.call() accepts keyword arguments only'
+		assert not params, f'{self.name}.call() accepts keyword arguments only'
 		return self.process_http_resp(self.backend.run_noasync(
 			payload = {'id': 0, 'jsonrpc': '2.0', 'method': method, 'params': kwargs },
 			timeout = 3600, # allow enough time to sync ≈1,000,000 blocks
@@ -83,7 +83,7 @@ class MoneroRPCClient(RPCClient):
 		))
 
 	def call_raw(self,method,*params,**kwargs):
-		assert params == (), f'{self.name}.call() accepts keyword arguments only'
+		assert not params, f'{self.name}.call() accepts keyword arguments only'
 		return self.process_http_resp(self.backend.run_noasync(
 			payload = kwargs,
 			timeout = self.timeout,
@@ -125,7 +125,7 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		'refresh',       # start_height
 	)
 
-	def call_raw(*args,**kwargs):
+	def call_raw(self,*args,**kwargs):
 		raise NotImplementedError('call_raw() not implemented for class MoneroWalletRPCClient')
 
 	async def do_stop_daemon(self,silent=False):
@@ -139,7 +139,7 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 			from ...util import msg,msg_r,ymsg
 			from ...color import yellow
 			msg(f'{type(e).__name__}: {e}')
-			msg_r(yellow(f'Unable to shut down wallet daemon gracefully, so killing process instead...'))
+			msg_r(yellow('Unable to shut down wallet daemon gracefully, so killing process instead...'))
 			ret = self.daemon.stop(silent=True)
 			ymsg('done')
 			return ret

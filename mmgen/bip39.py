@@ -65,8 +65,8 @@ class bip39(baseconv):
 		seed_bits = seed_len * 8 if in_bytes else seed_len * 4 if in_hex else seed_len
 		try:
 			return cls.constants[seed_bits].mn_len
-		except:
-			raise ValueError(f'{seed_bits!r}: invalid seed length for BIP39 mnemonic')
+		except Exception as e:
+			raise ValueError(f'{seed_bits!r}: invalid seed length for BIP39 mnemonic') from e
 
 	def tobytes(self,*args,**kwargs):
 		raise NotImplementedError('Method not supported')
@@ -74,24 +74,24 @@ class bip39(baseconv):
 	def frombytes(self,*args,**kwargs):
 		raise NotImplementedError('Method not supported')
 
-	def tohex(self,words,pad=None):
-		assert isinstance(words,(list,tuple)),'words must be list or tuple'
+	def tohex(self,words_arg,pad=None):
+		assert isinstance(words_arg,(list,tuple)),'words_arg must be list or tuple'
 		assert pad in (None,'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
 		wl = self.digits
 
-		for n,w in enumerate(words):
+		for n,w in enumerate(words_arg):
 			if w not in wl:
 				die( 'MnemonicError', f'word #{n+1} is not in the BIP39 word list' )
 
 		res = ''.join(f'{wl.index(w):011b}' for w in words_arg)
 
 		for k,v in self.constants.items():
-			if len(words) == v.mn_len:
+			if len(words_arg) == v.mn_len:
 				bitlen = k
 				break
 		else:
-			die( 'MnemonicError', f'{len(words)}: invalid BIP39 seed phrase length' )
+			die( 'MnemonicError', f'{len(words_arg)}: invalid BIP39 seed phrase length' )
 
 		seed_bin = res[:bitlen]
 		chk_bin = res[bitlen:]
@@ -108,13 +108,13 @@ class bip39(baseconv):
 
 		return seed_hex
 
-	def fromhex(self,seed_hex,pad=None,tostr=False):
-		assert is_hex_str(seed_hex),'seed data not a hexadecimal string'
+	def fromhex(self,hexstr,pad=None,tostr=False):
+		assert is_hex_str(hexstr),'seed data not a hexadecimal string'
 		assert tostr is False,"'tostr' must be False for 'bip39'"
 		assert pad in (None,'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
 		wl = self.digits
-		seed_bytes = bytes.fromhex(seed_hex)
+		seed_bytes = bytes.fromhex(hexstr)
 		bitlen = len(seed_bytes) * 8
 
 		assert bitlen in self.constants, f'{bitlen}: invalid seed bit length'

@@ -123,7 +123,7 @@ class TwJSON:
 					desc2 = 'saved checksum' )
 
 			if not await self.check_and_create_wallet():
-				return True
+				return
 
 			from ..fileutil import get_data_from_file
 			self.data = json.loads(get_data_from_file( self.cfg, filename, quiet=True ))

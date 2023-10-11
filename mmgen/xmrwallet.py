@@ -1010,7 +1010,7 @@ class MoneroWalletOps:
 				msg('\n      Addresses of account #{} ({}):'.format(
 					account,
 					accts_data['subaddress_accounts'][account]['label']))
-				fs = '        {:6}  {:18}  {:%s}  {}' % max( [len(e['label']) for e in d], default=0 )
+				fs = '        {:6}  {:18}  {:%s}  {}' % max((len(e['label']) for e in d), default=0)
 				msg(fs.format('Index ','Address','Label','Used'))
 				for e in d:
 					msg(fs.format(
@@ -1880,8 +1880,6 @@ class MoneroWalletOps:
 		def __init__(self,cfg,uarg_tuple):
 
 			super().__init__(cfg,uarg_tuple)
-
-			check_uopts = MoneroWalletOps.submit.check_uopts
 
 			self.tx = MoneroMMGenTX.Signed( self.cfg, Path(uarg.infile) )
 

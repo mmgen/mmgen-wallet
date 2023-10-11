@@ -256,7 +256,7 @@ class coin_msg:
 			from .wallet import Wallet
 			wallet_seeds = [Wallet(cfg=self.cfg,fn=fn).seed for fn in wallet_files]
 			need_sids = remove_dups([al.sid for al in self.addrlists], quiet=True)
-			saved_seeds = list()
+			saved_seeds = []
 
 			# First try wallet seeds:
 			for sid in need_sids:
@@ -363,7 +363,7 @@ class coin_msg:
 				self.data['signatures']
 			)}
 
-def _get_obj(clsname,cfg,coin=None,network='mainnet',infile=None,data=None,*args,**kwargs):
+def _get_obj(clsname,cfg,*args,coin=None,network='mainnet',infile=None,data=None,**kwargs):
 
 	assert not args, 'msg:_get_obj(): only keyword args allowed'
 

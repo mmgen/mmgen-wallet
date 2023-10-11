@@ -208,7 +208,7 @@ class MMGenRegtest(MMGenObject):
 
 	async def send(self,addr,amt):
 		gmsg(f'Sending {amt} miner {self.d.coin} to address {addr}')
-		cp = await self.rpc_call('sendtoaddress',addr,str(amt),wallet='miner')
+		await self.rpc_call('sendtoaddress',addr,str(amt),wallet='miner')
 		await self.generate(1)
 
 	async def mempool(self):
@@ -256,7 +256,7 @@ class MMGenRegtest(MMGenObject):
 
 		create_data_dir( self.cfg, self.d.datadir )
 		os.rmdir(self.d.datadir)
-		shutil.copytree(source_data_dir,self.d.datadir,symlinks=True)
+		shutil.copytree(source_rt.d.datadir,self.d.datadir,symlinks=True)
 		await self.start_daemon(reindex=True)
 		await self.rpc_call('stop')
 

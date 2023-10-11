@@ -21,7 +21,7 @@ from . import wallet_data,get_wallet_cls
 class WalletMeta(type):
 
 	def __init__(cls,name,bases,namespace):
-		t = cls.__module__.split('.')[-1]
+		t = cls.__module__.rsplit('.',maxsplit=1)[-1]
 		if t in wallet_data:
 			for k,v in wallet_data[t]._asdict().items():
 				setattr(cls,k,v)

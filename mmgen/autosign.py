@@ -87,15 +87,15 @@ class Signable:
 			else:
 				return False
 
-		def print_summary(self,txs):
+		def print_summary(self,signables):
 
 			if self.cfg.full_summary:
 				bmsg('\nAutosign summary:\n')
-				msg_r('\n'.join(tx.info.format(terse=True) for tx in txs))
+				msg_r('\n'.join(tx.info.format(terse=True) for tx in signables))
 				return
 
 			def gen():
-				for tx in txs:
+				for tx in signables:
 					non_mmgen = [o for o in tx.outputs if not o.mmid]
 					if non_mmgen:
 						yield (tx,non_mmgen)
@@ -198,10 +198,10 @@ class Signable:
 				die('MsgFileFailedSID',f'Failed Seed IDs: {fmt_list(m.data["failed_sids"],fmt="bare")}')
 			return m
 
-		def print_summary(self,messages):
+		def print_summary(self,signables):
 			gmsg('\nSigned message files:')
-			for m in messages:
-				gmsg('  ' + m.signed_filename)
+			for message in signables:
+				gmsg('  ' + message.signed_filename)
 
 		def gen_bad_list(self,bad_files):
 			for f in bad_files:
@@ -370,7 +370,7 @@ class Autosign:
 				if e.code != 0:
 					fails += 1
 
-		return False if fails else True
+		return not fails
 
 	async def sign_all(self,target_name):
 		target = getattr(Signable,target_name)(self)

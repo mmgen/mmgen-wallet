@@ -32,7 +32,7 @@ def get_obj(objname,*args,**kwargs):
 	- If return_bool is True, return True instead of the object.
 	Only keyword args are accepted.
 	"""
-	assert args == (), 'get_obj_chk1'
+	assert not args, 'get_obj_chk1'
 
 	silent,return_bool = (False,False)
 	if 'silent' in kwargs:

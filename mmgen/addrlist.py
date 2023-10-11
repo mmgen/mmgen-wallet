@@ -107,15 +107,15 @@ class AddrListIDStr(str,Hilite):
 	def __new__(cls,addrlist,fmt_str=None):
 		idxs = [e.idx for e in addrlist.data]
 		prev = idxs[0]
-		ret = prev,
+		ret = [prev]
 		for i in idxs[1:]:
 			if i == prev + 1:
 				if i == idxs[-1]:
-					ret += '-', i
+					ret.extend(['-', i])
 			else:
 				if prev != ret[-1]:
-					ret += '-', prev
-				ret += ',', i
+					ret.extend(['-', prev])
+				ret.extend([',', i])
 			prev = i
 		s = ''.join(map(str,ret))
 

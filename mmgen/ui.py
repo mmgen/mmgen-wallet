@@ -102,10 +102,10 @@ def keypress_confirm(
 		reply = get_char(prompt,immed_chars='yYnN').strip('\n\r')
 		if not reply:
 			msg_r(nl)
-			return True if default_yes else False
+			return default_yes
 		elif reply in 'yYnN':
 			msg_r(nl)
-			return True if reply in 'yY' else False
+			return reply in 'yY'
 		else:
 			msg_r('\nInvalid reply\n' if verbose else '\r')
 

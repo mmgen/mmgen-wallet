@@ -20,7 +20,7 @@ class Completed(Base):
 	"""
 	filename_api = True
 
-	def __init__(self,cfg,filename=None,data=None,quiet_open=False,*args,**kwargs):
+	def __init__(self,cfg,*args,filename=None,data=None,quiet_open=False,**kwargs):
 
 		assert (filename or data) and not (filename and data), 'CompletedTX_chk1'
 

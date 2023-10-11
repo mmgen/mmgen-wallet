@@ -36,6 +36,7 @@ class BitcoinTwTransaction:
 		self.parent       = parent
 		self.proto        = proto
 		self.rpc          = rpc
+		self.idx          = idx
 		self.unspent_info = unspent_info
 		self.tx           = tx
 
@@ -296,7 +297,8 @@ Filters/Actions: show [u]nconfirmed, [q]uit menu, r[e]draw:
 			def do_json_dump(*data):
 				nw = f'{self.proto.coin.lower()}-{self.proto.network}'
 				for d,fn_stem in data:
-					open(f'/tmp/{fn_stem}-{nw}.json','w').write(json.dumps(d,cls=json_encoder))
+					with open(f'/tmp/{fn_stem}-{nw}.json','w') as fh:
+						fh.write(json.dumps(d,cls=json_encoder))
 
 		_mmp = namedtuple('mmap_datum',['twmmid','comment'])
 

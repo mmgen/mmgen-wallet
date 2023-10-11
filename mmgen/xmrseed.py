@@ -46,9 +46,12 @@ class xmrseed(baseconv):
 		wstr = ''.join(word[:3] for word in words)
 		return words[crc32(wstr.encode()) % len(words)]
 
-	def tobytes(self,words,pad=None):
-		assert isinstance(words,(list,tuple)),'words must be list or tuple'
+	def tobytes(self,words_arg,pad=None):
+
+		assert isinstance(words_arg,(list,tuple)),'words must be list or tuple'
 		assert pad is None, f"{pad}: invalid 'pad' argument (must be None)"
+
+		words = words_arg
 
 		desc = self.desc.short
 		wl = self.digits

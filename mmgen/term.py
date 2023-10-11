@@ -31,7 +31,7 @@ try:
 	import tty,termios
 	from select import select
 	_platform = 'linux'
-except:
+except ImportError:
 	try:
 		import msvcrt
 		_platform = 'mswin'

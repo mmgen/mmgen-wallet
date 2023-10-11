@@ -81,7 +81,7 @@ class wallet(wallet):
 		self.cfg._util.qmsg(f'Data read from file {self.infile.name!r} at offset {d.hincog_offset}')
 
 	# overrides method in Wallet
-	def write_to_file(self):
+	def write_to_file(self,**kwargs):
 		d = self.ssdata
 		self._format()
 		self.cfg._util.compare_or_die(
