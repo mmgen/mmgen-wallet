@@ -38,7 +38,7 @@ def create_data_dir(cfg,data_dir):
 				f'Delete your existing MMGen regtest setup at {data_dir!r} and create a new one?'):
 			shutil.rmtree(data_dir)
 		else:
-			die()
+			die(1,'Exiting')
 
 	try:
 		os.makedirs(data_dir)

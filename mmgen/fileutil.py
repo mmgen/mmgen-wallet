@@ -312,7 +312,7 @@ def get_data_from_file(
 
 	if len(data) == cfg.max_input_size + 1:
 		die( 'MaxInputSizeExceeded',
-			f'Too much input data!  Max input data size: {f.max_input_size} bytes' )
+			f'Too much input data!  Max input data size: {cfg.max_input_size} bytes' )
 
 	return data
 

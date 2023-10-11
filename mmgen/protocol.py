@@ -211,7 +211,7 @@ class CoinProtocol(MMGenObject):
 					die(4,'Private key == secp256k1_ge!')
 				else:
 					if not self.cfg.test_suite:
-						ymsg(f'Warning: private key is greater than secp256k1 group order!:\n  {hexpriv}')
+						ymsg(f'Warning: private key is greater than secp256k1 group order!:\n  {sec.hex()}')
 					return (pk % self.secp256k1_ge).to_bytes(self.privkey_len,'big')
 
 	class DummyWIF:

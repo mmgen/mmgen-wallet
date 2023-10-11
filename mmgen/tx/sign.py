@@ -101,8 +101,8 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 					else:
 						die(3,fmt(f"""
 							{gc.proj_name} -> {tx.proto.coin} address mappings differ!
-							{{src_desc:<23}} {{mmid}} -> {{f.addr}}
-							{{'tx file:':<23}} {{e.mmid}} -> {{e.addr}}
+							{src_desc:<23} {mmid} -> {f.addr}
+							{'tx file:':<23} {e.mmid} -> {e.addr}
 							""").strip())
 	if new_keys:
 		cfg._util.vmsg(f'Added {len(new_keys)} wif key{suf(new_keys)} from {desc}')

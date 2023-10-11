@@ -157,6 +157,7 @@ class erigon_daemon(geth_daemon):
 		)
 
 		self.rpc_d = erigon_rpcdaemon(
+			cfg          = self.cfg,
 			proto        = self.proto,
 			rpc_port     = self.rpc_port,
 			private_port = self.private_port,
@@ -185,12 +186,12 @@ class erigon_rpcdaemon(RPCDaemon):
 	use_pidfile = False
 	use_threads = True
 
-	def __init__(self,proto,rpc_port,private_port,test_suite,datadir):
+	def __init__(self,cfg,proto,rpc_port,private_port,test_suite,datadir):
 
 		self.proto = proto
 		self.test_suite = test_suite
 
-		super().__init__()
+		super().__init__(cfg)
 
 		self.network = proto.network
 		self.rpc_port = rpc_port

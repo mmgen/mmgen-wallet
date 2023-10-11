@@ -84,7 +84,7 @@ class BitcoinTwCtl(TwCtl):
 		if endless:
 			tip = await self.rpc.call('getblockcount')
 			while last_block < tip:
-				last_block = await do_scan(gen_chunks(last_block+1,tip),tip)
+				last_block = await do_scan(gen_chunks(last_block+1,tip,tip),tip)
 				tip = await self.rpc.call('getblockcount')
 
 		msg('Done')

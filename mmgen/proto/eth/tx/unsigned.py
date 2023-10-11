@@ -62,7 +62,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 
 		if o['data']:
 			if o['to']:
-				assert self.txobj['token_addr'] == TokenAddr(etx.creates.hex()),'Token address mismatch'
+				assert self.txobj['token_addr'] == TokenAddr(self.proto,etx.creates.hex()),'Token address mismatch'
 			else: # token- or contract-creating transaction
 				self.txobj['token_addr'] = TokenAddr(self.proto,etx.creates.hex())
 

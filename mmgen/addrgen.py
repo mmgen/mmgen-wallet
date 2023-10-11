@@ -40,7 +40,7 @@ class addr_generator:
 			self.proto = proto
 			self.pubkey_type = addr_type.pubkey_type
 			self.compressed = addr_type.compressed
-			desc = f'AddrGenerator {type(self).__name__!r}'
+			self.desc = f'AddrGenerator {type(self).__name__!r}'
 
 	class keccak(base):
 
@@ -71,7 +71,7 @@ def AddrGenerator(cfg,proto,addr_type):
 	elif type(addr_type) is MMGenAddrType:
 		assert addr_type in proto.mmtypes, f'{addr_type}: invalid address type for coin {proto.coin}'
 	else:
-		raise TypeError(f'{type(addr_type)}: incorrect argument type for {cls.__name__}()')
+		raise TypeError(f"{type(addr_type)}: incorrect argument type for 'addr_type' arg")
 
 	import importlib
 	return getattr(

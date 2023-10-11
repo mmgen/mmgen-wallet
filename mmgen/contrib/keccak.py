@@ -133,7 +133,7 @@ class KeccakState:
 			return '%016x' % x
 		for y in KeccakState.rangeH:
 			row = []
-			for x in rangeW:
+			for x in KeccakState.rangeW:
 				row.append(fmt(st[x][y]))
 			rows.append(' '.join(row))
 		return '\n'.join(rows)
