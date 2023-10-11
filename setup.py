@@ -8,10 +8,10 @@
 #   https://github.com/mmgen/mmgen
 #   https://gitlab.com/mmgen/mmgen
 
-import sys,os
+import os
+from subprocess import run,PIPE
 from setuptools import setup,Extension
 from setuptools.command.build_ext import build_ext
-from subprocess import run,PIPE
 
 cache_path = os.path.join(os.environ['HOME'],'.cache','mmgen')
 ext_path = os.path.join(cache_path,'secp256k1')

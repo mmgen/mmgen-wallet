@@ -25,7 +25,7 @@ from collections import namedtuple
 from pathlib import Path
 
 from .objmethods import MMGenObject,Hilite,InitErrors
-from .obj import CoinTxID,Int
+from .obj import CoinTxID
 from .color import red,yellow,green,blue,cyan,pink,orange,purple
 from .util import (
 	msg,

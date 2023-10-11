@@ -13,8 +13,7 @@ proto.zec.params: Zcash protocol
 """
 
 from ..btc.params import mainnet
-from ..btc.common import b58chk_decode
-from ...protocol import decoded_wif,decoded_addr
+from ...protocol import decoded_addr
 from ...addr import CoinAddr
 
 class ZcashViewKey(CoinAddr):

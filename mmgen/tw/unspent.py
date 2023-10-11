@@ -21,7 +21,6 @@ tw.unspent: Tracking wallet unspent outputs class for the MMGen suite
 """
 
 from ..util import msg,suf,fmt
-from ..objmethods import MMGenObject
 from ..obj import (
 	ImmutableAttr,
 	ListItemAttr,

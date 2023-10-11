@@ -20,8 +20,6 @@
 tw.bal: Tracking wallet getbalance class for the MMGen suite
 """
 
-from collections import namedtuple
-
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import NonNegativeInt

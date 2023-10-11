@@ -15,7 +15,6 @@ tw.txhistory: Tracking wallet transaction history class for the MMGen suite
 from collections import namedtuple
 
 from ..util import fmt
-from ..objmethods import MMGenObject
 from ..obj import NonNegativeInt
 from .view import TwView
 

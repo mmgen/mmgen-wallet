@@ -12,6 +12,8 @@
 proto.btc.tx.online: Bitcoin online signed transaction class
 """
 
+import sys
+
 import mmgen.tx.online as TxBase
 from .signed import Signed
 from ....util import msg,ymsg,rmsg,die

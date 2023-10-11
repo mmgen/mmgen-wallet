@@ -16,7 +16,7 @@ import os
 
 from ..util import msg,die
 from ..objmethods import MMGenObject
-from . import Wallet,wallet_data,get_wallet_cls
+from . import wallet_data,get_wallet_cls
 
 class WalletMeta(type):
 

@@ -178,7 +178,6 @@ class tool_cmd(tool_cmd_base):
 		from ..tw.ctl import TwCtl
 		ret = await (await TwCtl(self.cfg,self.proto,mode='w')).resolve_address( mmgen_or_coin_addr )
 		if ret:
-			from ..util import Msg
 			from ..addr import is_coin_addr
 			return ret.twmmid if is_coin_addr(self.proto,mmgen_or_coin_addr) else ret.coinaddr
 		else:

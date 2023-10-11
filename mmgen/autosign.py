@@ -14,8 +14,7 @@ autosign: Auto-sign MMGen transactions, message files and XMR wallet output file
 
 import sys,os,asyncio
 from pathlib import Path
-from subprocess import run,PIPE,DEVNULL
-from collections import namedtuple
+from subprocess import run,DEVNULL
 
 from .cfg import Config
 from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt,fmt_list,async_run
@@ -487,7 +486,6 @@ class Autosign:
 				cfg         = self.cfg,
 				prompt      = f"Default wallet '{wf}' found.\nUse default wallet for autosigning?",
 				default_yes = True ):
-			from .cfg import Config
 			ss_in = Wallet( Config(), wf )
 		else:
 			ss_in = Wallet( self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt] )
@@ -497,7 +495,6 @@ class Autosign:
 	@property
 	def xmrwallet_cfg(self):
 		if not hasattr(self,'_xmrwallet_cfg'):
-			from .cfg import Config
 			self._xmrwallet_cfg = Config({
 				'_clone': self.cfg,
 				'coin': 'xmr',

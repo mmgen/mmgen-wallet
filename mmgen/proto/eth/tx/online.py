@@ -47,6 +47,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 		if ret is False: # TODO: unreachable code
 			rmsg(f'Send of MMGen transaction {self.txid} failed')
 			if exit_on_fail:
+				import sys
 				sys.exit(1)
 			return False
 		else:

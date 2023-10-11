@@ -36,6 +36,7 @@ altcoin.py - Coin constants for Bitcoin-derived altcoins
 #   NBT:  150/191 c/u,  25/('B'),  26/('B')
 
 import sys
+from collections import namedtuple
 
 from .cfg import gc,Config
 from .util import msg
@@ -57,7 +58,6 @@ def test_equal(desc,a,b,*cdata):
 				b_desc,
 				b ))
 
-from collections import namedtuple
 ce = namedtuple('CoinInfoEntry',
 	['name','symbol','wif_ver_num','p2pkh_info','p2sh_info','has_segwit','trust_level'])
 

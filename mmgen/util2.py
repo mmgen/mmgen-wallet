@@ -12,7 +12,7 @@
 util2: Less frequently-used variables, classes and utility functions for the MMGen suite
 """
 
-import re,time
+import sys,re,time
 from .util import msg,suf,hexdigits,die
 
 def die_wait(delay,ev=0,s=''):

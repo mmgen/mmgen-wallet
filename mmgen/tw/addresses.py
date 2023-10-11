@@ -13,7 +13,6 @@ tw.addresses: Tracking wallet listaddresses class for the MMGen suite
 """
 
 from ..util import msg,suf,is_int
-from ..objmethods import MMGenObject
 from ..obj import MMGenListItem,ImmutableAttr,ListItemAttr,TwComment,NonNegativeInt
 from ..addr import CoinAddr,MMGenID,MMGenAddrType
 from ..color import red,green,yellow

@@ -13,8 +13,6 @@ proto.eth.tw.addresses: Ethereum base protocol tracking wallet address list clas
 """
 
 from ....tw.addresses import TwAddresses
-from ....tw.ctl import TwCtl
-from ....addr import CoinAddr
 from .view import EthereumTwView
 from .rpc import EthereumTwRPC
 

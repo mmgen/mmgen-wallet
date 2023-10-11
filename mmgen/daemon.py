@@ -27,7 +27,7 @@ from collections import namedtuple
 from .cfg import gc
 from .base_obj import Lockable
 from .color import set_vt100
-from .util import msg,Msg_r,ymsg,die,remove_dups,oneshot_warning,fmt_list
+from .util import msg,Msg_r,die,remove_dups,oneshot_warning,fmt_list
 from .flags import ClassFlags,ClassOpts
 
 _dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version

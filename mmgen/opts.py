@@ -21,9 +21,8 @@ opts: MMGen-specific command-line options processing after generic processing by
 """
 import sys,os
 
+from .share import Opts
 from .cfg import gc
-
-import mmgen.share.Opts as Opts
 
 def opt_preproc_debug(po):
 	d = (
@@ -34,7 +33,6 @@ def opt_preproc_debug(po):
 		('Opts',               po.opts,            True),
 	)
 	from .util import Msg,fmt_list
-	from pprint import pformat
 	Msg('\n=== opts.py debug ===')
 	for label,data,pretty in d:
 		Msg('    {:<20}: {}'.format(label,'\n' + fmt_list(data,fmt='col',indent=' '*8) if pretty else data))

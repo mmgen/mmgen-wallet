@@ -12,7 +12,6 @@
 proto.eth.tw.rpc: Ethereum base protocol tracking wallet RPC class
 """
 
-from ....tw.ctl import TwCtl
 from ....addr import CoinAddr
 from ....tw.shared import TwLabel
 from ....tw.rpc import TwRPC

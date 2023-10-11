@@ -73,7 +73,6 @@ class LEDControl:
 			else:
 				break
 		else:
-			from .util import die
 			die( 'NoLEDSupport', 'Control files not found!  LED control not supported on this system' )
 
 		msg(f'{board.name} board detected')
@@ -93,7 +92,6 @@ class LEDControl:
 					fp.write(f'{init_val}\n')
 				return True
 			except PermissionError:
-				from .util import die
 				die(2,'\n'+fmt(f"""
 					You do not have access to the {desc} file
 					To allow access, run the following command:

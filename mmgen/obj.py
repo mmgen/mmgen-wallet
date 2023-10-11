@@ -20,7 +20,7 @@
 obj: MMGen native classes
 """
 
-import sys,os,re,unicodedata
+import unicodedata
 
 from .objmethods import MMGenObject,Hilite,InitErrors
 

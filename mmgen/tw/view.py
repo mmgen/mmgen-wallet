@@ -24,7 +24,7 @@ import sys,time,asyncio
 from collections import namedtuple
 
 from ..cfg import gc,gv
-from ..objmethods import Hilite,InitErrors,MMGenObject
+from ..objmethods import MMGenObject
 from ..obj import get_obj,MMGenIdx,MMGenList
 from ..color import nocolor,yellow,green,red,blue
 from ..util import msg,msg_r,fmt,die,capfirst,make_timestr

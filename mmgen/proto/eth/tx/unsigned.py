@@ -17,7 +17,7 @@ import json
 import mmgen.tx.unsigned as TxBase
 from .completed import Completed,TokenCompleted
 from ..contract import Token
-from ....util import msg,msg_r,ymsg
+from ....util import msg,msg_r
 from ....obj import Str,CoinTxID,ETHNonce,Int,HexStr
 from ....addr import CoinAddr,TokenAddr
 
@@ -68,6 +68,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 
 	async def sign(self,tx_num_str,keys): # return TX object or False; don't exit or raise exception
 
+		from ....exception import TransactionChainMismatch
 		try:
 			self.check_correct_chain()
 		except TransactionChainMismatch:

@@ -54,7 +54,6 @@ class AddrData(MMGenObject):
 		return (list(d.values())[0][0]) if d else None
 
 	def add(self,addrlist):
-		from .addrlist import AddrList
 		if type(addrlist) == AddrList:
 			self.al_ids[addrlist.al_id] = addrlist
 			return True

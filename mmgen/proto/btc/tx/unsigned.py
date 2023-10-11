@@ -14,7 +14,7 @@ proto.btc.tx.unsigned: Bitcoin unsigned transaction class
 
 import mmgen.tx.unsigned as TxBase
 from .completed import Completed
-from ....obj import HexStr,CoinTxID,MMGenDict
+from ....obj import CoinTxID,MMGenDict
 from ....util import msg,msg_r,ymsg,suf,die
 
 class Unsigned(Completed,TxBase.Unsigned):
@@ -22,6 +22,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 
 	async def sign(self,tx_num_str,keys): # return signed object or False; don't exit or raise exception
 
+		from ....exception import TransactionChainMismatch
 		try:
 			self.check_correct_chain()
 		except TransactionChainMismatch:

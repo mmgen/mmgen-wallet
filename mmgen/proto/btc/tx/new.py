@@ -14,7 +14,7 @@ proto.btc.tx.new: Bitcoin new transaction class
 
 import mmgen.tx.new as TxBase
 from .base import Base
-from ....obj import HexStr,MMGenTxID
+from ....obj import MMGenTxID
 from ....util import msg,fmt,make_chksum_6,die
 
 class New(Base,TxBase.New):

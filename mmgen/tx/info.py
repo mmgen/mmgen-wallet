@@ -12,11 +12,11 @@
 tx.info: transaction info class
 """
 
+import importlib
+
 from ..cfg import gc
 from ..color import red,green,orange
 from ..util import msg,msg_r
-
-import importlib
 
 class TxInfo:
 

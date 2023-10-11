@@ -20,8 +20,9 @@
 tool.help: Help screen routines for the 'mmgen-tool' utility
 """
 
+from mmgen import main_tool
+
 from .common import tool_cmd_base
-import mmgen.main_tool as main_tool
 
 def main_help():
 

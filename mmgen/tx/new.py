@@ -58,6 +58,7 @@ def mmaddr2coinaddr(cfg,mmaddr,ad_w,ad_f,proto):
 				msg(wmsg('addr_in_addrfile_only'))
 				from ..ui import keypress_confirm
 				if not (cfg.yes or keypress_confirm( cfg, 'Continue anyway?' )):
+					import sys
 					sys.exit(1)
 			else:
 				die(2,wmsg('addr_not_found'))

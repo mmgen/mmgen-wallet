@@ -15,7 +15,7 @@ proto.btc.tx.base: Bitcoin base transaction class
 from collections import namedtuple
 
 import mmgen.tx.base as TxBase
-from ....obj import MMGenObject,MMGenList,HexStr
+from ....obj import MMGenList,HexStr
 from ....util import msg,make_chksum_6,die,pp_fmt
 
 def addr2scriptPubKey(proto,addr):

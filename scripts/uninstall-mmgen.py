@@ -18,7 +18,7 @@
 
 import sys,os
 
-import mmgen.opts as opts
+from mmgen import opts
 from mmgen.cfg import gc,Config
 from mmgen.util import msg,die
 

@@ -14,7 +14,6 @@ proto.eth.tx.signed: Ethereum signed transaction class
 
 import mmgen.tx.signed as TxBase
 from .completed import Completed,TokenCompleted
-from ..contract import Token
 from ....obj import Str,CoinTxID,ETHNonce,HexStr
 from ....addr import CoinAddr,TokenAddr
 
