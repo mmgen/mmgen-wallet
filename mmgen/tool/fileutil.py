@@ -96,7 +96,7 @@ class tool_cmd(tool_cmd_base):
 
 		from ..util2 import parse_bytespec
 
-		def encrypt_worker(wid):
+		def encrypt_worker():
 			ctr_init_val = os.urandom( Crypto.aesctr_iv_len )
 			c = Cipher( algorithms.AES(key), modes.CTR(ctr_init_val), backend=default_backend() )
 			encryptor = c.encryptor()
@@ -118,7 +118,7 @@ class tool_cmd(tool_cmd_base):
 		q1,q2 = ( Queue(), Queue() )
 
 		for i in range(max(1,threads-2)):
-			t = Thread( target=encrypt_worker, args=[i] )
+			t = Thread(target=encrypt_worker)
 			t.daemon = True
 			t.start()
 

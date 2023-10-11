@@ -155,7 +155,7 @@ def process_uopts(opts_data,short_opts,long_opts):
 
 	return uopts,uargs
 
-def parse_opts(opts_data,opt_filter=None,parse_only=False):
+def parse_opts(opts_data,opt_filter=None):
 
 	short_opts,long_opts,filtered_opts = [],[],[]
 	def parse_lines(opts_type):

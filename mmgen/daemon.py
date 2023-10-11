@@ -233,7 +233,7 @@ class Daemon(Lockable):
 			return True
 
 	def wait_for_state(self,req_state):
-		for i in range(300):
+		for _ in range(300):
 			if self.state == req_state:
 				return True
 			time.sleep(0.2)

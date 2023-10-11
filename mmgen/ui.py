@@ -123,7 +123,7 @@ def do_pager(text):
 	for pager in pagers:
 		try:
 			m = text + ('' if pager == 'less' else end_msg)
-			p = run([pager],input=m.encode(),check=True)
+			run([pager],input=m.encode(),check=True)
 			msg_r('\r')
 		except:
 			pass

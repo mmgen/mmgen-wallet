@@ -41,7 +41,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 		self.txobj = o
 		return d # 'token_addr','decimals' required by Token subclass
 
-	async def do_sign(self,wif,tx_num_str):
+	async def do_sign(self,wif):
 		o = self.txobj
 		o_conv = {
 			'to':       bytes.fromhex(o['to']),
@@ -77,7 +77,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 		msg_r(f'Signing transaction{tx_num_str}...')
 
 		try:
-			await self.do_sign(keys[0].sec.wif,tx_num_str)
+			await self.do_sign(keys[0].sec.wif)
 			msg('OK')
 			from ....tx import SignedTX
 			return await SignedTX(cfg=self.cfg,data=self.__dict__)
@@ -97,7 +97,7 @@ class TokenUnsigned(TokenCompleted,Unsigned):
 		o['data'] = t.create_data(o['to'],o['amt'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
 
-	async def do_sign(self,wif,tx_num_str):
+	async def do_sign(self,wif):
 		o = self.txobj
 		t = Token(self.cfg,self.proto,o['token_addr'],o['decimals'])
 		tx_in = t.make_tx_in(

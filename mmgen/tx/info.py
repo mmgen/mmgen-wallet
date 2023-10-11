@@ -78,7 +78,7 @@ class TxInfo:
 				C = tx.change.fmt(color=True,iwidth=iwidth),
 				s = tx.send_amt.fmt(color=True,iwidth=iwidth),
 				a = self.format_abs_fee(color=True,iwidth=iwidth),
-				r = self.format_rel_fee(terse),
+				r = self.format_rel_fee(),
 				d = tx.dcoin,
 				c = tx.coin )
 

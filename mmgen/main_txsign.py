@@ -114,7 +114,7 @@ if not cfg.info and not cfg.terse_info:
 
 from .tx.sign import txsign,get_tx_files,get_seed_files,get_keylist,get_keyaddrlist
 
-tx_files   = get_tx_files(cfg,infiles)
+tx_files   = get_tx_files(infiles)
 seed_files = get_seed_files(cfg,infiles)
 
 async def main():
@@ -149,7 +149,7 @@ async def main():
 			tx1.info.view_with_prompt(f'View data for transaction{tx_num_disp}?')
 
 		kal = get_keyaddrlist(cfg,tx1.proto)
-		kl = get_keylist(cfg,tx1.proto)
+		kl = get_keylist(cfg)
 
 		tx2 = await txsign(cfg,tx1,seed_files,kl,kal,tx_num_disp)
 		if tx2:

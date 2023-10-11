@@ -27,9 +27,7 @@ class wallet(wallet):
 
 	def __init__(self,*args,**kwargs):
 		if self.cfg.label:
-			self.label = MMGenWalletLabel(
-				self.cfg.label,
-				msg = "Error in option '--label'" )
+			self.label = MMGenWalletLabel(self.cfg.label)
 		else:
 			self.label = None
 		super().__init__(*args,**kwargs)
@@ -140,7 +138,7 @@ class wallet(wallet):
 			msg(f'Hash parameters {" ".join(hash_params)!r} don’t match hash preset {d.hash_preset!r}')
 			return False
 
-		lmin,foo,lmax = sorted(baseconv('b58').seedlen_map_rev) # 22,33,44
+		lmin,_,lmax = sorted(baseconv('b58').seedlen_map_rev) # 22,33,44
 		for i,key in (4,'salt'),(5,'enc_seed'):
 			l = lines[i].split(' ')
 			chk = l.pop(0)

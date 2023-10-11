@@ -72,7 +72,7 @@ class TokenOnlineSigned(TokenSigned,OnlineSigned):
 	def parse_txfile_serialized_data(self):
 		from ....addr import TokenAddr
 		from ..contract import Token
-		d = OnlineSigned.parse_txfile_serialized_data(self)
+		OnlineSigned.parse_txfile_serialized_data(self)
 		o = self.txobj
 		assert self.twctl.token == o['to']
 		o['token_addr'] = TokenAddr(self.proto,o['to'])

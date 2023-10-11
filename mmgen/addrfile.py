@@ -63,7 +63,7 @@ class AddrFile(MMGenObject):
 			('.' + self.parent.proto.network) if self.parent.proto.testnet else '',
 			self.ext )
 
-	def write(self,fn=None,ask_tty=True,binary=False,desc=None,ask_overwrite=True):
+	def write(self,fn=None,binary=False,desc=None,ask_overwrite=True):
 		from .fileutil import write_data_to_file
 		write_data_to_file(
 			self.cfg,

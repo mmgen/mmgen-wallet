@@ -95,28 +95,24 @@ class TokenCommon(MMGenObject):
 			self,
 			to_addr,
 			amt,
-			method_sig = 'transfer(address,uint256)',
-			from_addr  = None):
-		from_arg = from_addr.rjust(64,'0') if from_addr else ''
+			method_sig = 'transfer(address,uint256)'):
+		from_arg = ''
 		to_arg = to_addr.rjust(64,'0')
 		amt_arg = '{:064x}'.format( int(amt / self.base_unit) )
 		return self.create_method_id(method_sig) + from_arg + to_arg + amt_arg
 
 	def make_tx_in(
 			self,
-			from_addr,
 			to_addr,
 			amt,
 			start_gas,
 			gasPrice,
 			nonce,
-			method_sig = 'transfer(address,uint256)',
-			from_addr2 = None):
+			method_sig = 'transfer(address,uint256)'):
 		data = self.create_data(
 				to_addr,
 				amt,
-				method_sig = method_sig,
-				from_addr = from_addr2)
+				method_sig = method_sig)
 		return {
 			'to':       bytes.fromhex(self.addr),
 			'startgas': start_gas.toWei(),
@@ -162,18 +158,14 @@ class TokenCommon(MMGenObject):
 			key,
 			start_gas,
 			gasPrice,
-			method_sig = 'transfer(address,uint256)',
-			from_addr2=None,
-			return_data=False):
+			method_sig = 'transfer(address,uint256)'):
 		tx_in = self.make_tx_in(
-				from_addr,
 				to_addr,
 				amt,
 				start_gas,
 				gasPrice,
 				nonce = int(await self.rpc.call('eth_getTransactionCount','0x'+from_addr,'pending'),16),
-				method_sig = method_sig,
-				from_addr2 = from_addr2 )
+				method_sig = method_sig)
 		txhex,_ = await self.txsign(tx_in,key,from_addr)
 		return await self.txsend(txhex)
 

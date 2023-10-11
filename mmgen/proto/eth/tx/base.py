@@ -43,7 +43,7 @@ class Base(TxBase.Base):
 	def is_replaceable(self):
 		return True
 
-	async def get_receipt(self,txid,silent=False):
+	async def get_receipt(self,txid):
 		rx = await self.rpc.call('eth_getTransactionReceipt','0x'+txid) # -> null if pending
 		if not rx:
 			return None

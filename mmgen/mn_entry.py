@@ -76,7 +76,7 @@ class MnEntryModeFull(MnEntryMode):
 	def get_word(self,mne):
 		s,pad = ('', 0)
 		while True:
-			ch,s,foo = self.get_char(s)
+			ch,s,_ = self.get_char(s)
 			if ch in _return_chars:
 				if s:
 					break
@@ -116,7 +116,7 @@ class MnEntryModeShort(MnEntryMode):
 	def get_word(self,mne):
 		s,pad = ('', 0)
 		while True:
-			ch,s,foo = self.get_char(s)
+			ch,s,_ = self.get_char(s)
 			if ch in _return_chars:
 				if s:
 					break
@@ -159,7 +159,7 @@ class MnEntryModeFixed(MnEntryMode):
 	def get_word(self,mne):
 		s,pad = ('', 0)
 		while True:
-			ch,s,foo = self.get_char(s)
+			ch,s,_ = self.get_char(s)
 			if ch in _return_chars:
 				if s:
 					break

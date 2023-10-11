@@ -636,7 +636,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 						line_processing = 'print',
 						color           = False ),
 					desc    = f'{parent.desc} listing' )
-			except UserNonConfirmation as e:
+			except UserNonConfirmation:
 				parent.oneshot_msg = yellow(f'File {outfile!r} not overwritten by user request')
 			else:
 				parent.oneshot_msg = green(f'Data written to {outfile!r}')

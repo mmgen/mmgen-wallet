@@ -111,7 +111,7 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 def _pop_matching_fns(args,cmplist): # strips found args
 	return list(reversed([args.pop(args.index(a)) for a in reversed(args) if get_extension(a) in cmplist]))
 
-def get_tx_files(cfg,args):
+def get_tx_files(args):
 	from .unsigned import Unsigned
 	ret = _pop_matching_fns(args,[Unsigned.ext])
 	if not ret:
@@ -135,7 +135,7 @@ def get_keyaddrlist(cfg,proto):
 		return KeyAddrList( cfg, proto, cfg.mmgen_keys_from_file )
 	return None
 
-def get_keylist(cfg,proto):
+def get_keylist(cfg):
 	if cfg.keys_from_file:
 		from ..fileutil import get_lines_from_file
 		return get_lines_from_file( cfg, cfg.keys_from_file, 'key-address data', trim_comments=True )

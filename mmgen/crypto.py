@@ -86,7 +86,7 @@ class Crypto:
 
 	def sha256_rounds(self,s):
 		from hashlib import sha256
-		for i in range(self.scramble_hash_rounds):
+		for _ in range(self.scramble_hash_rounds):
 			s = sha256(s).digest()
 		return s
 
@@ -373,7 +373,7 @@ class Crypto:
 			if self.cfg.echo_passphrase:
 				pw = ' '.join(get_words_from_user( self.cfg, f'Enter {pw_desc} for {data_desc}: ' ))
 			else:
-				for i in range(gc.passwd_max_tries):
+				for _ in range(gc.passwd_max_tries):
 					pw = ' '.join(get_words_from_user( self.cfg, f'Enter {pw_desc} for {data_desc}: ' ))
 					pw_chk = ' '.join(get_words_from_user( self.cfg, f'Repeat {pw_desc}: ' ))
 					self.util.dmsg(f'Passphrases: [{pw}] [{pw_chk}]')

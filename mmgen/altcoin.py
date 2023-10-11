@@ -711,7 +711,6 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 	if usr_coin is None:
 		for network in networks:
 			data[network] = CoinInfo.get_supported_coins(network)
-		trust_level = 0
 	else:
 		if usr_coin.lower() in gc.core_coins: # core coin, so return immediately
 			from .protocol import CoinProtocol

@@ -43,7 +43,7 @@ class tool_cmd(tool_cmd_base):
 	need_proto = True
 	need_addrtype = True
 
-	def _init_generators(self,arg=None):
+	def _init_generators(self):
 		return generator_data(
 			kg = KeyGenerator( self.cfg, self.proto, self.mmtype.pubkey_type ),
 			ag = AddrGenerator( self.cfg, self.proto, self.mmtype ),

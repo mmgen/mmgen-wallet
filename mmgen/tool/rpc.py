@@ -201,7 +201,7 @@ class tool_cmd(tool_cmd_base):
 		  parameter.
 		"""
 		from ..tw.ctl import TwCtl
-		ret = await (await TwCtl(self.cfg,self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
+		await (await TwCtl(self.cfg,self.proto,mode='w')).rescan_blockchain(start_block,stop_block)
 		return True
 
 	async def twexport(self,include_amts=True,pretty=False,prune=False,warn_used=False,force=False):

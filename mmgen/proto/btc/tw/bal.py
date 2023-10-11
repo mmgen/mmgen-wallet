@@ -26,7 +26,6 @@ class BitcoinTwGetBalance(TwGetBalance):
 
 	async def create_data(self):
 		lbl_id = ('account','label')['label_api' in self.rpc.caps]
-		amt0 = self.proto.coin_amt('0')
 		for d in await self.rpc.call('listunspent',0):
 			tw_lbl = get_tw_label(self.proto,d[lbl_id])
 			if tw_lbl:

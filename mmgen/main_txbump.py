@@ -127,7 +127,7 @@ async def main():
 		msg(orig_tx.info.format(terse=True))
 
 	kal = get_keyaddrlist(cfg,orig_tx.proto)
-	kl = get_keylist(cfg,orig_tx.proto)
+	kl = get_keylist(cfg)
 	sign_and_send = bool(seed_files or kl or kal)
 
 	from .tw.ctl import TwCtl

@@ -28,7 +28,7 @@ class TxInfo(TxInfo):
 		Fee:          {a} {c}{r}
 	""")
 
-	def format_rel_fee(self,terse):
+	def format_rel_fee(self):
 		tx = self.tx
 		return ' ({} {}, {} of spend amount)'.format(
 			pink(str(tx.fee_abs2rel(tx.fee))),

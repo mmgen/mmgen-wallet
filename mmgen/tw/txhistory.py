@@ -174,7 +174,7 @@ class TwTxHistory(TwView):
 		'txid':        lambda i: i.txid,
 	}
 
-	async def set_dates(self,foo):
+	async def set_dates(self,_):
 		pass
 
 	@property

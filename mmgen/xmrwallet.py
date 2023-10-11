@@ -1216,7 +1216,7 @@ class MoneroWalletOps:
 				for acct_idx,acct_data in enumerate(data):
 					for addr_idx,addr_data in enumerate(acct_data['addresses'][1:],1):
 						msg(fs.format(acct_idx, addr_idx, addr_data['address']))
-						ret = self.c.call( 'create_address', account_index=acct_idx )
+						self.c.call( 'create_address', account_index=acct_idx )
 
 			def restore_labels():
 				bmsg('  Restoring labels:')
@@ -1246,7 +1246,7 @@ class MoneroWalletOps:
 						data      = {'wallet_metadata': restored_data} ).write(add_suf='.bad')
 					die(3,'Fatal error')
 
-			res = await super().process_wallet(d,fn,last)
+			await super().process_wallet(d,fn,last)
 
 			h = self.rpc(self,d)
 			h.open_wallet('newly created')
@@ -1559,10 +1559,10 @@ class MoneroWalletOps:
 				a = self.label or f"xmrwallet new {'account' if self.account is None else 'address'}",
 				b = make_timestr() )
 			if self.account is None:
-				acct,addr = h.create_acct(label=label)
+				h.create_acct(label=label)
 			else:
 				msg_r(f'\n    Account index: {pink(str(self.account))}')
-				addr = h.create_new_addr(self.account,label=label)
+				h.create_new_addr(self.account,label=label)
 
 			accts_data = h.get_accts()[0]
 
@@ -1781,7 +1781,7 @@ class MoneroWalletOps:
 		async def process_wallet(self,d,fn,last):
 			h = self.rpc(self,d)
 			h.open_wallet('source')
-			acct_data,addr_data = h.get_accts(print=False)
+			_,addr_data = h.get_accts(print=False)
 			msg('')
 			MoneroWalletDumpFile.New(
 				parent    = self,

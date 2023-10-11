@@ -99,7 +99,7 @@ class PasswordList(AddrList):
 				return
 			if self.hex2bip39:
 				ymsg(self.feature_warn_fs.format(pw_fmt))
-			self.set_pw_len_vs_seed_len(pw_len,seed) # sets self.bip39, self.xmrseed, self.xmrproto self.baseconv
+			self.set_pw_len_vs_seed_len(seed) # sets self.bip39, self.xmrseed, self.xmrproto self.baseconv
 			self.al_id = AddrListID( sid=seed.sid, mmtype=MMGenPasswordType(self.proto,'P') )
 			self.data = self.generate(seed,pw_idxs)
 
@@ -154,7 +154,7 @@ class PasswordList(AddrList):
 		self.pw_len = int(pw_len)
 		self.chk_pw_len()
 
-	def set_pw_len_vs_seed_len(self,pw_len,seed):
+	def set_pw_len_vs_seed_len(self,seed):
 		pf = self.pw_fmt
 		if pf == 'hex':
 			pw_bytes = self.pw_len // 2

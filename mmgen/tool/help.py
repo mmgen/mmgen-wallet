@@ -132,14 +132,14 @@ def gen_tool_usage():
 	for line in m2.rstrip().split('\n'):
 		yield line.lstrip('\t')
 
-def gen_tool_cmd_usage(cfg,mod,cmdname):
+def gen_tool_cmd_usage(mod,cmdname):
 
 	from ..cfg import gc
 	from ..util import capfirst
 
 	cls = main_tool.get_mod_cls(mod)
 	docstr = getattr(cls,cmdname).__doc__.strip()
-	args,kwargs,kwargs_types,flag,ann = main_tool.create_call_sig(cmdname,cls)
+	args,kwargs,kwargs_types,_,ann = main_tool.create_call_sig(cmdname,cls)
 	ARGS = 'ARG' if len(args) == 1 else 'ARGS' if args else ''
 	KWARGS = 'KEYWORD ARG' if len(kwargs) == 1 else 'KEYWORD ARGS' if kwargs else ''
 
@@ -183,14 +183,14 @@ def gen_tool_cmd_usage(cfg,mod,cmdname):
 		for line in docstr.split('\n')[1:]:
 			yield line.lstrip('\t')
 
-def usage(cfg,cmdname=None,exit_val=1):
+def usage(cmdname=None,exit_val=1):
 
 	from ..util import Msg,die
 
 	if cmdname:
 		for mod,cmdlist in main_tool.mods.items():
 			if cmdname in cmdlist:
-				Msg('\n'.join(gen_tool_cmd_usage(cfg,mod,cmdname)))
+				Msg('\n'.join(gen_tool_cmd_usage(mod,cmdname)))
 				break
 		else:
 			die(1,f'{cmdname!r}: no such tool command')
@@ -206,8 +206,8 @@ class tool_cmd(tool_cmd_base):
 
 	def help(self,command_name=''):
 		"display usage information for a single command or all commands"
-		usage(self.cfg,command_name,exit_val=0)
+		usage(command_name,exit_val=0)
 
 	def usage(self,command_name=''):
 		"display usage information for a single command or all commands"
-		usage(self.cfg,command_name,exit_val=0)
+		usage(command_name,exit_val=0)

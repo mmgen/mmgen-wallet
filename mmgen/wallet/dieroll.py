@@ -102,7 +102,6 @@ class wallet(wallet):
 					return ch
 				else:
 					msg_r(invalid_msg)
-					sleep = self.cfg.err_disp_timeout
 					p = clear_line + prompt_fs
 
 		dierolls,n = [],1

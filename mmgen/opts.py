@@ -105,7 +105,7 @@ class UserOpts:
 		self.usage_data = od['text'].get('usage2') or od['text']['usage']
 
 		# po: (user_opts,cmd_args,opts,filtered_opts)
-		po = parsed_opts or Opts.parse_opts(od,opt_filter=opt_filter,parse_only=parse_only)
+		po = parsed_opts or Opts.parse_opts(od,opt_filter=opt_filter)
 
 		cfg._args = po.cmd_args
 		cfg._uopts = uopts = po.user_opts

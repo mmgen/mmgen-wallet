@@ -19,7 +19,7 @@ rand_h = sha256('.'.join(sys.argv).encode())
 def fake_urandom(n):
 
 	def gen(rounds):
-		for i in range(rounds):
+		for _ in range(rounds):
 			rand_h.update(b'foo')
 			yield rand_h.digest()
 

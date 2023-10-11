@@ -66,7 +66,6 @@ class MMGenTxIOList(list,MMGenObject):
 		self.parent = parent
 		if data:
 			assert isinstance(data,list), 'MMGenTxIOList_check1'
-			data = data
 		else:
 			data = list()
 		list.__init__(self,data)
@@ -78,8 +77,6 @@ class Base(MMGenObject):
 	coin_txid    = None
 	timestamp    = None
 	blockcount   = None
-	coin         = None
-	dcoin        = None
 	locktime     = None
 	chain        = None
 	signed       = False

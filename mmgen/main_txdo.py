@@ -142,7 +142,7 @@ async def main():
 		caller   = 'txdo' )
 
 	kal = get_keyaddrlist(cfg,cfg._proto)
-	kl = get_keylist(cfg,cfg._proto)
+	kl = get_keylist(cfg)
 
 	tx3 = await txsign(cfg,tx2,seed_files,kl,kal)
 

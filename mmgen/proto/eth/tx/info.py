@@ -58,7 +58,7 @@ class TxInfo(TxInfo):
 	def format_abs_fee(self,color,iwidth):
 		return self.tx.fee.fmt(color=color,iwidth=iwidth) + (' (max)' if self.tx.txobj['data'] else '')
 
-	def format_rel_fee(self,terse):
+	def format_rel_fee(self):
 		return ' ({} of spend amount)'.format(
 			pink('{:0.6f}%'.format( self.tx.fee / self.tx.send_amt * 100 ))
 		)
@@ -73,7 +73,7 @@ class TxInfo(TxInfo):
 class TokenTxInfo(TxInfo):
 	fmt_keys = ('from','token_to','amt','nonce')
 
-	def format_rel_fee(self,terse):
+	def format_rel_fee(self):
 		return ''
 
 	def format_body(self,*args,**kwargs):
