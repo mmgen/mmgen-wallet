@@ -572,7 +572,7 @@ class TestSuiteRunner:
 			self.pre_args = ['python3'] if gc.platform == 'win' else []
 
 		if cfg.pexpect_spawn:
-			omsg(f'INFO → Using pexpect.spawn() for real terminal emulation')
+			omsg('INFO → Using pexpect.spawn() for real terminal emulation')
 
 		self.set_spawn_env()
 

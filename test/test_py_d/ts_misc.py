@@ -54,7 +54,7 @@ class TestSuiteMisc(TestSuiteBase):
 
 	def xmrwallet_txview(self,op='txview'):
 		files = get_file_with_ext('test/ref/monero','tx',no_dot=True,delete=False,return_list=True)
-		t = self.spawn( f'mmgen-xmrwallet', [op] + files )
+		t = self.spawn( 'mmgen-xmrwallet', [op] + files )
 		res = t.read(strip_color=True)
 		if op == 'txview':
 			for s in (
@@ -75,7 +75,7 @@ class TestSuiteMisc(TestSuiteBase):
 		else:
 			coins = ['btc','ltc','eth']
 			start_test_daemons('ltc','eth')
-		t = self.spawn(f'examples/coin-daemon-info.py',coins,cmd_dir='.')
+		t = self.spawn('examples/coin-daemon-info.py',coins,cmd_dir='.')
 		for coin in coins:
 			t.expect(coin.upper() + r'\s+mainnet\s+Up',regex=True)
 		if cfg.pexpect_spawn:
@@ -137,20 +137,20 @@ class TestSuiteHelp(TestSuiteBase):
 	)
 
 	def usage(self):
-		t = self.spawn(f'mmgen-walletgen',['foo'])
+		t = self.spawn('mmgen-walletgen',['foo'])
 		t.expect('MMGenSystemExit(1)')
 		t.expect('USAGE: mmgen-walletgen')
 		t.req_exit_val = 1
 		return t
 
 	def version(self):
-		t = self.spawn(f'mmgen-tool',['--version'])
+		t = self.spawn('mmgen-tool',['--version'])
 		t.expect('MMGEN-TOOL version')
 		return t
 
 	def license(self):
 		t = self.spawn(
-			f'mmgen-walletconv',
+			'mmgen-walletconv',
 			['--stdout','--in-fmt=hex','--out-fmt=hex'],
 			env = {'MMGEN_NO_LICENSE':''} )
 		t.expect('to continue: ', 'w')

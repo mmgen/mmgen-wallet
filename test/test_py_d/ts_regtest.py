@@ -598,7 +598,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			if batch:
 				t.expect(f'{num_addrs} addresses imported')
 			else:
-				t.expect(f'import completed OK')
+				t.expect('import completed OK')
 			t.ok()
 
 		t.skip_ok = True
@@ -654,11 +654,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		rt = MMGenRegtest(cfg,self.proto.coin)
 		await rt.stop()
 		from shutil import rmtree
-		imsg(f'Deleting Bob’s old tracking wallet')
+		imsg('Deleting Bob’s old tracking wallet')
 		rmtree(os.path.join(rt.d.datadir,'regtest','wallets','bob'),ignore_errors=True)
 		rt.init_daemon()
 		rt.d.start(silent=True)
-		imsg(f'Creating Bob’s new tracking wallet')
+		imsg('Creating Bob’s new tracking wallet')
 		await rt.rpc_call('createwallet','bob',True,True,None,False,False,False)
 		await rt.stop()
 		await rt.start()
@@ -1303,7 +1303,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		assert self.proto.cap('segwit')
 		if not hasattr(self,'_b_start_'):
 			t = self.spawn( 'mmgen-tool', ['--color=0','--bob','listaddresses'], no_msg=True )
-			self._b_start_ = int([e for e in t.read().split('\n') if f':B:1' in e][0].split()[0].rstrip(')'))
+			self._b_start_ = int([e for e in t.read().split('\n') if ':B:1' in e][0].split()[0].rstrip(')'))
 			t.close()
 		return self._b_start_
 
@@ -1389,14 +1389,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.spawn('mmgen-tool',['--carol','listaddresses','showempty=1'])
 
 	async def carol_delete_wallet(self):
-		imsg(f'Unloading Carol’s tracking wallet')
+		imsg('Unloading Carol’s tracking wallet')
 		t = self.spawn('mmgen-regtest',['cli','unloadwallet','carol'])
 		t.ok()
 		from mmgen.rpc import rpc_init
 		rpc = await rpc_init(cfg,self.proto)
 		wdir = joinpath(rpc.daemon.network_datadir,'wallets','carol')
 		from shutil import rmtree
-		imsg(f'Deleting Carol’s tracking wallet')
+		imsg('Deleting Carol’s tracking wallet')
 		rmtree(wdir)
 		return 'silent'
 

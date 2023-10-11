@@ -11,7 +11,7 @@ from mmgen.util import msg
 opts_data = {
 	'text': {
 		'desc':    '',
-		'usage':   f'crypto | seed',
+		'usage':   'crypto | seed',
 		'options': """
 -h, --help            Print this help message
 -P, --passwd-file=f   a
@@ -57,7 +57,7 @@ def seed():
 		w2 = Wallet(cfg,ss=w1,passchg=True)
 		msg(f'\n==> got pw,preset,lbl: [{w2.ssdata.passwd}][{w2.ssdata.hash_preset}][{w2.ssdata.label}]\n')
 
-	msg(f'------- WALLET FROM FILE -------\n')
+	msg('------- WALLET FROM FILE -------\n')
 	w3 = Wallet(cfg,fn='test/ref/FE3C6545-D782B529[128,1].mmdat') # passphrase: 'reference password'
 	msg(f'\n==> got pw,preset,lbl: [{w3.ssdata.passwd}][{w3.ssdata.hash_preset}][{w3.ssdata.label}]\n')
 

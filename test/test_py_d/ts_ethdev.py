@@ -958,7 +958,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		imsg(f'Gas used:  {res.gas_used.hl():<9} {(res.gas_used*res.gas_price).hl2(encl="()")}')
 		imsg(f'Gas price: {res.gas_price.hl()}')
 		if res.gas_used == res.gas_sent:
-			omsg(yellow(f'Warning: all gas was used!'))
+			omsg(yellow('Warning: all gas was used!'))
 		return res
 
 	async def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
@@ -1410,7 +1410,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		self.spawn('',msg_only=True)
 		from mmgen.tw.ctl import TwCtl
 		twctl = await TwCtl(cfg,self.proto)
-		imsg(f'Moving tracking wallet')
+		imsg('Moving tracking wallet')
 		bakfile = twctl.tw_fn + '.bak.json'
 		if os.path.exists(bakfile):
 			os.unlink(bakfile)
@@ -1443,7 +1443,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		from mmgen.tw.ctl import TwCtl
 		twctl = await TwCtl(cfg,self.proto)
 		fn = twctl.tw_fn
-		imsg(f'Comparing imported tracking wallet with original')
+		imsg('Comparing imported tracking wallet with original')
 		data = [json.dumps(json.loads(read_from_file(f)),sort_keys=True) for f in (fn,fn+'.bak.json')]
 		cmp_or_die(*data,'tracking wallets')
 		return 'ok'

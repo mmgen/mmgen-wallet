@@ -783,7 +783,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			t = tool_api(cfg)
 			t.init_coin('XMR','mainnet')
 			t.usr_randchars = 0
-			imsg_r(f'Sending random transactions: ')
+			imsg_r('Sending random transactions: ')
 			for i in range(random_txs):
 				await self.transfer(
 					'miner',

@@ -29,7 +29,7 @@ def overlay_setup(repo_root):
 			if (
 				fn.endswith('.py') or
 				d == f'{pkgname}.data' or
-				(d == f'mmgen.proto.secp256k1' and fn.startswith('secp256k1'))
+				(d == 'mmgen.proto.secp256k1' and fn.startswith('secp256k1'))
 			):
 				if os.path.exists(os.path.join(fakemod_dir,fn)):
 					make_link(
