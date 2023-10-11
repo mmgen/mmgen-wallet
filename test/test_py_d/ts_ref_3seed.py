@@ -192,12 +192,18 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 				fn )
 		return t
 
-	def ref_walletconv_words(self):        return self.ref_walletconv(ofmt='mn')
-	def ref_walletconv_bip39(self):        return self.ref_walletconv(ofmt='bip39')
-	def ref_walletconv_seed(self):         return self.ref_walletconv(ofmt='mmseed')
-	def ref_walletconv_hexseed(self):      return self.ref_walletconv(ofmt='mmhex')
-	def ref_walletconv_plainhexseed(self): return self.ref_walletconv(ofmt='hex')
-	def ref_walletconv_dieroll(self):      return self.ref_walletconv(ofmt='dieroll')
+	def ref_walletconv_words(self):
+		return self.ref_walletconv(ofmt='mn')
+	def ref_walletconv_bip39(self):
+		return self.ref_walletconv(ofmt='bip39')
+	def ref_walletconv_seed(self):
+		return self.ref_walletconv(ofmt='mmseed')
+	def ref_walletconv_hexseed(self):
+		return self.ref_walletconv(ofmt='mmhex')
+	def ref_walletconv_plainhexseed(self):
+		return self.ref_walletconv(ofmt='hex')
+	def ref_walletconv_dieroll(self):
+		return self.ref_walletconv(ofmt='dieroll')
 
 	def ref_walletconv_incog(self,ofmt='incog',ext='mmincog'):
 		args = ['-r0','-p1']
@@ -370,31 +376,44 @@ class TestSuiteRef3Addr(TestSuiteRef3Seed):
 		pf = joinpath(self.tmpdir,pwfile)
 		return getattr(self,pfx+'gen')(wf,pf=pf,check_ref=True,mmtype=mmtype)
 
-	def refaddrgen_legacy(self):        return self.call_addrgen('legacy')
-	def refaddrgen_compressed(self):    return self.call_addrgen('compressed')
-	def refaddrgen_segwit(self):        return self.call_addrgen('segwit')
-	def refaddrgen_bech32(self):        return self.call_addrgen('bech32')
+	def refaddrgen_legacy(self):
+		return self.call_addrgen('legacy')
+	def refaddrgen_compressed(self):
+		return self.call_addrgen('compressed')
+	def refaddrgen_segwit(self):
+		return self.call_addrgen('segwit')
+	def refaddrgen_bech32(self):
+		return self.call_addrgen('bech32')
 
-	def refkeyaddrgen_legacy(self):     return self.call_addrgen('legacy','keyaddr')
-	def refkeyaddrgen_compressed(self): return self.call_addrgen('compressed','keyaddr')
-	def refkeyaddrgen_segwit(self):     return self.call_addrgen('segwit','keyaddr')
-	def refkeyaddrgen_bech32(self):     return self.call_addrgen('bech32','keyaddr')
+	def refkeyaddrgen_legacy(self):
+		return self.call_addrgen('legacy','keyaddr')
+	def refkeyaddrgen_compressed(self):
+		return self.call_addrgen('compressed','keyaddr')
+	def refkeyaddrgen_segwit(self):
+		return self.call_addrgen('segwit','keyaddr')
+	def refkeyaddrgen_bech32(self):
+		return self.call_addrgen('bech32','keyaddr')
 
 	def pwgen(self,ftype,id_str,pwfmt=None,pwlen=None,extra_args=[],stdout=False):
 		wf = self.get_file_with_ext('mmdat')
 		pf = joinpath(self.tmpdir,pwfile)
 		pwfmt = (['--passwd-fmt='+pwfmt] if pwfmt else [])
 		pwlen = (['--passwd-len='+str(pwlen)] if pwlen else [])
-		return self.addrgen(wf, pf,
-					check_ref  = True,
-					ftype      = ftype,
-					id_str     = id_str,
-					extra_args = pwfmt + pwlen + extra_args,
-					stdout     = stdout )
+		return self.addrgen(
+				wf,
+				pf,
+				check_ref  = True,
+				ftype      = ftype,
+				id_str     = id_str,
+				extra_args = pwfmt + pwlen + extra_args,
+				stdout     = stdout)
 
-	def refpasswdgen(self):      return self.pwgen('pass','alice@crypto.org')
-	def refpasswdgen_half(self): return self.pwgen('pass','alice@crypto.org',pwlen='h')
-	def ref_b32passwdgen(self):  return self.pwgen('pass32','фубар@crypto.org','b32',17)
+	def refpasswdgen(self):
+		return self.pwgen('pass','alice@crypto.org')
+	def refpasswdgen_half(self):
+		return self.pwgen('pass','alice@crypto.org',pwlen='h')
+	def ref_b32passwdgen(self):
+		return self.pwgen('pass32','фубар@crypto.org','b32',17)
 
 	def ref_hexpasswdgen(self):
 		pwlen = {'1':32,'2':48,'3':64}[self.test_name[-1]]
@@ -411,8 +430,13 @@ class TestSuiteRef3Addr(TestSuiteRef3Seed):
 		ea = ['--accept-defaults']
 		return self.pwgen(ftype,'фубар@crypto.org',pwfmt,pwlen,ea,stdout=stdout)
 
-	def ref_bip39_12_passwdgen(self):     return self.mn_pwgen(12,'bip39',stdout=True)
-	def ref_bip39_18_passwdgen(self):     return self.mn_pwgen(18,'bip39',stdout=True)
-	def ref_bip39_24_passwdgen(self):     return self.mn_pwgen(24,'bip39')
-	def ref_hex2bip39_24_passwdgen(self): return self.mn_pwgen(24,'hex2bip39')
-	def ref_xmrseed_25_passwdgen(self):   return self.mn_pwgen(24,'xmrseed',ftype='passxmrseed')
+	def ref_bip39_12_passwdgen(self):
+		return self.mn_pwgen(12,'bip39',stdout=True)
+	def ref_bip39_18_passwdgen(self):
+		return self.mn_pwgen(18,'bip39',stdout=True)
+	def ref_bip39_24_passwdgen(self):
+		return self.mn_pwgen(24,'bip39')
+	def ref_hex2bip39_24_passwdgen(self):
+		return self.mn_pwgen(24,'hex2bip39')
+	def ref_xmrseed_25_passwdgen(self):
+		return self.mn_pwgen(24,'xmrseed',ftype='passxmrseed')

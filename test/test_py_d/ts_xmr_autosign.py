@@ -277,7 +277,15 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		get_file_with_ext(self.asi.xmr_tx_dir,'sigtx',delete_all=True)
 		return self._create_transfer_tx('0.257')
 
-	def _xmr_autosign_op(self,op,desc=None,dtype=None,ext=None,wallet_arg=None,add_opts=[],wait_signed=False):
+	def _xmr_autosign_op(
+			self,
+			op,
+			desc        = None,
+			dtype       = None,
+			ext         = None,
+			wallet_arg  = None,
+			add_opts    = [],
+			wait_signed = False):
 		if wait_signed:
 			oqmsg_r(gray(f'→ offline wallet{"s" if dtype.endswith("s") else ""} signing {dtype}'))
 			while True:
@@ -330,7 +338,10 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		return self._submit_transfer_tx( ext='sigtx' )
 
 	def resubmit_transfer_tx1(self):
-		return self._submit_transfer_tx( relay_parm=self.tx_relay_daemon_proxy_parm, op='resubmit', check_bal=False )
+		return self._submit_transfer_tx(
+				relay_parm = self.tx_relay_daemon_proxy_parm,
+				op         = 'resubmit',
+				check_bal  = False)
 
 	def submit_transfer_tx2(self):
 		return self._submit_transfer_tx( relay_parm=self.tx_relay_daemon_parm )

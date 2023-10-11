@@ -341,7 +341,10 @@ tests = {
 		],
 		'hash256': [
 			( ['deadbeef'], 'e107944e77a688feae4c2d4db5951923812dd0f72026a11168104ee1b248f8a9' ),
-			( ['000000000000000000000000000000000000000000'], 'fd5181fcd097a334ab340569e5edcd09f702fef7994abab01f4b66e86b32ebbe' ),
+			(
+				['000000000000000000000000000000000000000000'],
+				'fd5181fcd097a334ab340569e5edcd09f702fef7994abab01f4b66e86b32ebbe'
+			),
 			( [''], '5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f5d4c9456' ),
 			( ['ffffffffffffffff'], '57b2d2c3455e0f76c61c5237ff04fc9fc0f3fe691e587ea9c951949e1a5e0fed' ),
 		],
@@ -824,8 +827,10 @@ def check_output(out,chk):
 	if isinstance(out,str):
 		out = out.encode()
 	err_fs = "Output ({!r}) doesn't match expected output ({!r})"
-	try: outd = out.decode()
-	except: outd = None
+	try:
+		outd = out.decode()
+	except:
+		outd = None
 
 	if type(chk).__name__ == 'function':
 		assert chk(outd), f'{chk.__name__}({outd}) failed!'

@@ -124,8 +124,10 @@ def getrandstr(num_chars,no_space=False):
 def cleandir(d,do_msg=False):
 	d_enc = d.encode()
 
-	try:    files = os.listdir(d_enc)
-	except: return
+	try:
+		files = os.listdir(d_enc)
+	except:
+		return
 
 	from shutil import rmtree
 	if do_msg:
@@ -187,8 +189,10 @@ def cmp_or_die(s,t,desc=None):
 def init_coverage():
 	coverdir = os.path.join('test','trace')
 	acc_file = os.path.join('test','trace.acc')
-	try: os.mkdir(coverdir,0o755)
-	except: pass
+	try:
+		os.mkdir(coverdir,0o755)
+	except:
+		pass
 	return coverdir,acc_file
 
 def silence():
@@ -283,8 +287,10 @@ def check_solc_ver():
 def get_ethkey():
 	cmdnames = ('ethkey','openethereum-ethkey')
 	for cmdname in cmdnames:
-		try: run([cmdname,'--help'],stdout=PIPE)
-		except: pass
+		try:
+			run([cmdname,'--help'],stdout=PIPE)
+		except:
+			pass
 		else:
 			return cmdname
 	else:

@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+#
+# mmgen = Multi-Mode GENerator, a command-line cryptocurrency wallet
+# Copyright (C)2013-2023 The MMGen Project <mmgen@tuta.io>
+# Licensed under the GNU General Public License, Version 3:
+#   https://www.gnu.org/licenses
+# Public project repositories:
+#   https://github.com/mmgen/mmgen
+#   https://gitlab.com/mmgen/mmgen
+
+"""
+scripts/exec_wrapper.py: wrapper to launch MMGen scripts in a testing environment
+"""
 
 # Import as few modules and define as few names as possible at module level before exec'ing the
 # file, as all names will be seen by the exec'ed code.  To prevent name collisions, all names
@@ -14,7 +26,7 @@ def exec_wrapper_get_colors():
 def exec_wrapper_init():
 
 	if exec_wrapper_os.path.dirname(exec_wrapper_sys.argv[1]) == 'test':
-		'support running of test scripts under wrapper'
+		# support running of test scripts under wrapper
 		cwd = exec_wrapper_os.getcwd() # assume we’re in repo root
 		exec_wrapper_sys.path[0] = cwd
 		exec_wrapper_sys.path[1] = exec_wrapper_os.path.join(cwd,'test')

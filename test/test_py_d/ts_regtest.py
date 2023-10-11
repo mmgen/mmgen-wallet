@@ -410,14 +410,17 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_auto_chg_addrtype4', 'creating an automatic change address transaction by addrtype (single address)'),
 		('bob_add_comment_uua1',   'adding a comment for unused address in tracking wallet (C)'),
 		('bob_auto_chg5',          'creating an auto-chg-address TX, skipping unused address with label (C)'),
-		('bob_auto_chg_addrtype5', 'creating an auto-chg-address TX by addrtype, skipping unused address with label (C)'),
+		('bob_auto_chg_addrtype5', 'creating an auto-chg-address TX by addrtype, skipping unused address '
+									'with label (C)'),
 		('bob_auto_chg6',          'creating an auto-chg-address TX, using unused address with label (C)'),
-		('bob_auto_chg_addrtype6', 'creating an auto-chg-address TX by addrtype, using unused address with label (C)'),
+		('bob_auto_chg_addrtype6', 'creating an auto-chg-address TX by addrtype, using unused address with '
+									'label (C)'),
 		('bob_remove_comment_uua1', 'removing a comment for unused address in tracking wallet (C)'),
-		('bob_auto_chg_bad1', 'error handling for auto change address transaction (bad ID FFFFFFFF:C)'),
-		('bob_auto_chg_bad2', 'error handling for auto change address transaction (bad ID 00000000:C)'),
-		('bob_auto_chg_bad3', 'error handling for auto change address transaction (no unused addresses)'),
-		('bob_auto_chg_bad4', 'error handling for auto change address transaction by addrtype (no unused addresses)'),
+		('bob_auto_chg_bad1',       'error handling for auto change address transaction (bad ID FFFFFFFF:C)'),
+		('bob_auto_chg_bad2',       'error handling for auto change address transaction (bad ID 00000000:C)'),
+		('bob_auto_chg_bad3',       'error handling for auto change address transaction (no unused addresses)'),
+		('bob_auto_chg_bad4',       'error handling for auto change address transaction by addrtype '
+									'(no unused addresses)'),
 		('carol_twimport2',          'recreating Carol’s tracking wallet from JSON dump'),
 		('carol_rescan_blockchain',  'rescanning the blockchain (full rescan)'),
 		('carol_auto_chg1',          'creating an automatic change address transaction (C)'),
@@ -427,7 +430,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('carol_auto_chg_addrtype2', 'creating an automatic change address transaction by addrtype (B)'),
 		('carol_auto_chg_addrtype3', 'creating an automatic change address transaction by addrtype (S)'),
 		('carol_auto_chg_bad1',      'error handling for auto change address transaction (no unused addresses)'),
-		('carol_auto_chg_bad2',      'error handling for auto change address transaction by addrtype (no unused addresses)'),
+		('carol_auto_chg_bad2',      'error handling for auto change address transaction by addrtype '
+									'(no unused addresses)'),
 		('carol_delete_wallet',      'unloading and deleting Carol’s tracking wallet'),
 	),
 	}
@@ -467,7 +471,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			if use_comments:
 				a.set_comment(idx,get_comment())
 			else:
-				if n % 2: a.set_comment(idx,f'Test address {n}')
+				if n % 2:
+					a.set_comment(idx,f'Test address {n}')
 		a.file.format(add_comments=True)
 		from mmgen.fileutil import write_data_to_file
 		write_data_to_file(
@@ -482,8 +487,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def setup(self):
 		stop_test_daemons(self.proto.network_id,force=True,remove_datadir=True)
 		from shutil import rmtree
-		try: rmtree(joinpath(self.tr.data_dir,'regtest'))
-		except: pass
+		try:
+			rmtree(joinpath(self.tr.data_dir,'regtest'))
+		except:
+			pass
 		t = self.spawn('mmgen-regtest',['-n','setup'])
 		for s in ('Starting','Creating','Creating','Creating','Mined','Setup complete'):
 			t.expect(s)
@@ -507,8 +514,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.written_to_file(capfirst(dfl_wcls.desc))
 		return t
 
-	def walletgen_bob(self):   return self.walletgen('bob')
-	def walletgen_alice(self): return self.walletgen('alice')
+	def walletgen_bob(self):
+		return self.walletgen('bob')
+	def walletgen_alice(self):
+		return self.walletgen('alice')
 
 	def _user_dir(self,user,coin=None):
 		return joinpath(self.tr.data_dir,'regtest',coin or self.proto.coin.lower(),user)
@@ -527,27 +536,45 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		end_silence()
 		return w.seed.subseed(subseed_idx).sid
 
-	def addrgen(self,user,wf=None,addr_range='1-5',subseed_idx=None,mmtypes=[]):
+	def addrgen(
+			self,
+			user,
+			wf          = None,
+			addr_range  = '1-5',
+			subseed_idx = None,
+			mmtypes     = []):
 		from mmgen.addr import MMGenAddrType
 		for mmtype in mmtypes or self.proto.mmtypes:
-			t = self.spawn('mmgen-addrgen',
+			t = self.spawn(
+				'mmgen-addrgen',
 				['--quiet','--'+user,'--type='+mmtype,f'--outdir={self._user_dir(user)}'] +
 				([wf] if wf else []) +
 				(['--subwallet='+subseed_idx] if subseed_idx else []) +
 				[addr_range],
-				extra_desc='({})'.format( MMGenAddrType.mmtypes[mmtype].name ))
+				extra_desc = '({})'.format( MMGenAddrType.mmtypes[mmtype].name ))
 			t.passphrase(dfl_wcls.desc,rt_pw)
 			t.written_to_file('Addresses')
 			ok_msg()
 		t.skip_ok = True
 		return t
 
-	def addrgen_bob(self):   return self.addrgen('bob')
-	def addrgen_alice(self): return self.addrgen('alice')
+	def addrgen_bob(self):
+		return self.addrgen('bob')
+	def addrgen_alice(self):
+		return self.addrgen('alice')
 
-	def addrimport(self,user,sid=None,addr_range='1-5',num_addrs=5,mmtypes=[],batch=True,quiet=True):
+	def addrimport(
+			self,
+			user,
+			sid        = None,
+			addr_range = '1-5',
+			num_addrs  = 5,
+			mmtypes    = [],
+			batch      = True,
+			quiet      = True):
 		id_strs = { 'legacy':'', 'compressed':'-C', 'segwit':'-S', 'bech32':'-B' }
-		if not sid: sid = self._user_sid(user)
+		if not sid:
+			sid = self._user_sid(user)
 		from mmgen.addr import MMGenAddrType
 		for mmtype in mmtypes or self.proto.mmtypes:
 			desc = MMGenAddrType.mmtypes[mmtype].name
@@ -577,8 +604,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.skip_ok = True
 		return t
 
-	def addrimport_bob(self):   return self.addrimport('bob')
-	def addrimport_alice(self): return self.addrimport('alice',batch=False,quiet=False)
+	def addrimport_bob(self):
+		return self.addrimport('bob')
+	def addrimport_alice(self):
+		return self.addrimport('alice',batch=False,quiet=False)
 
 	def bob_import_miner_addr(self):
 		if not self.deterministic:
@@ -663,7 +692,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			t.expect(r'{}\b.*\D{}\b'.format(*chk),regex=True)
 		return t
 
-	def bob_twview1(self): return self.user_twview('bob', chk = ('1',rtAmts[0]) )
+	def bob_twview1(self):
+		return self.user_twview('bob', chk = ('1',rtAmts[0]) )
 
 	def user_bal(self,user,bal,args=['showempty=1'],skip_check=False):
 		t = self.spawn('mmgen-tool',['--'+user,'listaddresses'] + args)
@@ -723,8 +753,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		sid = self._get_user_subsid(user,subseed_idx)
 		return self.addrimport(user,sid=sid,mmtypes=['C'])
 
-	def bob_subwallet_addrimport1(self): return self.subwallet_addrimport('bob','29L')
-	def bob_subwallet_addrimport2(self): return self.subwallet_addrimport('bob','127S')
+	def bob_subwallet_addrimport1(self):
+		return self.subwallet_addrimport('bob','29L')
+	def bob_subwallet_addrimport2(self):
+		return self.subwallet_addrimport('bob','127S')
 
 	def bob_subwallet_fund(self):
 		sid1 = self._get_user_subsid('bob','29L')
@@ -840,10 +872,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			)
 		return t
 
-	def bob_0conf0_getbalance(self): return self.bob_getbalance(rtBals_gb['0conf0'],confs=0)
-	def bob_0conf1_getbalance(self): return self.bob_getbalance(rtBals_gb['0conf1'],confs=1)
-	def bob_1conf1_getbalance(self): return self.bob_getbalance(rtBals_gb['1conf1'],confs=1)
-	def bob_1conf2_getbalance(self): return self.bob_getbalance(rtBals_gb['1conf2'],confs=2)
+	def bob_0conf0_getbalance(self):
+		return self.bob_getbalance(rtBals_gb['0conf0'],confs=0)
+	def bob_0conf1_getbalance(self):
+		return self.bob_getbalance(rtBals_gb['0conf1'],confs=1)
+	def bob_1conf1_getbalance(self):
+		return self.bob_getbalance(rtBals_gb['1conf1'],confs=1)
+	def bob_1conf2_getbalance(self):
+		return self.bob_getbalance(rtBals_gb['1conf2'],confs=2)
 
 	def bob_nochg_burn(self):
 		return self.user_txdo('bob',
@@ -863,35 +899,42 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def user_txsend_status(self,user,tx_file,exp1='',exp2='',extra_args=[]):
 		t = self.spawn('mmgen-txsend',['-d',self.tmpdir,'--'+user,'--status'] + extra_args + [tx_file])
-		if exp1: t.expect(exp1,regex=True)
-		if exp2: t.expect(exp2,regex=True)
+		if exp1:
+			t.expect(exp1,regex=True)
+		if exp2:
+			t.expect(exp2,regex=True)
 		return t
 
-	def user_txdo(  self, user, fee, outputs_cl, outputs_list,
-			extra_args   = [],
-			wf           = None,
-			do_label     = False,
-			bad_locktime = False,
-			full_tx_view = False,
-			menu         = ['M'],
-			skip_passphrase = False,
-			used_chg_addr_resp = None ):
+	def user_txdo(
+			self,
+			user,
+			fee,
+			outputs_cl,
+			outputs_list,
+			extra_args         = [],
+			wf                 = None,
+			bad_locktime       = False,
+			full_tx_view       = False,
+			menu               = ['M'],
+			skip_passphrase    = False,
+			used_chg_addr_resp = None):
 
 		t = self.spawn('mmgen-txdo',
 			['-d',self.tmpdir,'-B','--'+user] +
 			(['--fee='+fee] if fee else []) +
 			extra_args + ([],[wf])[bool(wf)] + outputs_cl)
 
-		self.txcreate_ui_common(t,
-			caller          = 'txdo',
-			menu            = menu,
-			inputs          = outputs_list,
-			file_desc       = 'Signed transaction',
-			interactive_fee = (tx_fee,'')[bool(fee)],
-			add_comment     = tx_comment_jp,
-			view            = 't',
-			save            = True,
-			used_chg_addr_resp = used_chg_addr_resp )
+		self.txcreate_ui_common(
+				t,
+				caller             = 'txdo',
+				menu               = menu,
+				inputs             = outputs_list,
+				file_desc          = 'Signed transaction',
+				interactive_fee    = (tx_fee,'')[bool(fee)],
+				add_comment        = tx_comment_jp,
+				view               = 't',
+				save               = True,
+				used_chg_addr_resp = used_chg_addr_resp)
 
 		if not skip_passphrase:
 			t.passphrase(dfl_wcls.desc,rt_pw)
@@ -962,7 +1005,16 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		outputs_cl = self._create_tx_outputs('bob',(('L',1,''),)) # bob_sid:L:1
 		return self.user_txdo('alice',None,outputs_cl,'1') # fee=None
 
-	def user_txbump(self,user,outdir,txfile,fee,add_args=[],has_label=True,signed_tx=True,one_output=False):
+	def user_txbump(
+			self,
+			user,
+			outdir,
+			txfile,
+			fee,
+			add_args   = [],
+			has_label  = True,
+			signed_tx  = True,
+			one_output = False):
 		if not self.proto.cap('rbf'):
 			return 'skip'
 		t = self.spawn('mmgen-txbump',
@@ -1163,7 +1215,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			expect        = (),
 			expect2       = (),
 			warn_used     = False,
-			non_segwit_ok = False ):
+			non_segwit_ok = False):
 
 		if not (non_segwit_ok or self.proto.cap('segwit')):
 			return 'skip'
@@ -1301,7 +1353,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		self.write_to_tmpfile( fn, json.dumps(text,indent=4) )
 		return 'ok'
 
-	def carol_twimport(self,rpc_backend='http',add_parms=[],expect_str=None,expect_str2='Found 1 unspent output'):
+	def carol_twimport(
+			self,
+			rpc_backend = 'http',
+			add_parms   = [],
+			expect_str  = None,
+			expect_str2 = 'Found 1 unspent output'):
 		from mmgen.tw.json import TwJSON
 		fn = joinpath( self.tmpdir, TwJSON.Base(cfg,self.proto).dump_fn )
 		t = self.spawn(
@@ -1433,8 +1490,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		sid = self._user_sid('alice')
 		return self._user_chk_comment('alice',sid+':C:1','Replacement Label',extra_args=['age_fmt=block'])
 
-	def alice_edit_comment1(self): return self.user_edit_comment('alice','4',tw_comment_lat_cyr_gr)
-	def alice_edit_comment2(self): return self.user_edit_comment('alice','3',tw_comment_zh)
+	def alice_edit_comment1(self):
+		return self.user_edit_comment('alice','4',tw_comment_lat_cyr_gr)
+	def alice_edit_comment2(self):
+		return self.user_edit_comment('alice','3',tw_comment_zh)
 
 	def alice_chk_comment3(self):
 		sid = self._user_sid('alice')
@@ -1706,7 +1765,15 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			return 'skip'
 		return self.generate()
 
-	def _usr_auto_chg(self,user,mmtype,idx,by_mmtype=False,include_dest=True,by_addrtype=False,ignore_labels=False):
+	def _usr_auto_chg(
+			self,
+			user,
+			mmtype,
+			idx,
+			by_mmtype     = False,
+			include_dest  = True,
+			by_addrtype   = False,
+			ignore_labels = False):
 		if mmtype in ('S','B') and not self.proto.cap('segwit'):
 			return 'skip'
 		sid = self._user_sid('bob')

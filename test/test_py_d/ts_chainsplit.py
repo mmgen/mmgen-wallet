@@ -74,11 +74,20 @@ class TestSuiteChainsplit(TestSuiteRegtest):
 		t.expect('done')
 		t.ok()
 
-	def split_start_btc(self): self.regtest_start(coin='BTC')
-	def split_start_b2x(self): self.regtest_start(coin='B2X')
-	def split_gen_btc(self):   self.regtest_generate(coin='BTC')
-	def split_gen_b2x(self):   self.regtest_generate(coin='B2X',num_blocks=100)
-	def split_gen_b2x2(self):  self.regtest_generate(coin='B2X')
+	def split_start_btc(self):
+		self.regtest_start(coin='BTC')
+
+	def split_start_b2x(self):
+		self.regtest_start(coin='B2X')
+
+	def split_gen_btc(self):
+		self.regtest_generate(coin='BTC')
+
+	def split_gen_b2x(self):
+		self.regtest_generate(coin='B2X',num_blocks=100)
+
+	def split_gen_b2x2(self):
+		self.regtest_generate(coin='B2X')
 
 	def split_do_split(self):
 		self.coin = 'B2X'
@@ -92,7 +101,8 @@ class TestSuiteChainsplit(TestSuiteRegtest):
 		t.expect('outputs to spend: ','1\n')
 
 		for tx in ('timelocked','split'):
-			for q in ('fee','change'): t.expect('OK? (Y/n): ','y')
+			for q in ('fee','change'):
+				t.expect('OK? (Y/n): ','y')
 			t.do_comment(False)
 			t.view_tx('t')
 
@@ -126,9 +136,14 @@ class TestSuiteChainsplit(TestSuiteRegtest):
 	def split_txdo_timelock(self,coin,locktime,bad_locktime):
 		self.coin = coin
 		sid = self.regtest_user_sid('bob')
-		self.regtest_user_txdo( 'bob','0.0001',[sid+':S:5'],'1',pw=rt_pw,
-								extra_args=['--locktime='+str(locktime)],
-								bad_locktime=bad_locktime)
+		self.regtest_user_txdo(
+			'bob',
+			'0.0001',
+			[sid+':S:5'],
+			'1',
+			pw           = rt_pw,
+			extra_args   = ['--locktime='+str(locktime)],
+			bad_locktime = bad_locktime)
 
 	def split_txdo_timelock_bad_btc(self):
 		self.regtest_txdo_timelock('BTC',locktime=8888,bad_locktime=True)

@@ -81,7 +81,8 @@ def get_descriptor_obj(objclass,attrname):
 
 def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 
-	class SampleObjError(Exception): pass
+	class SampleObjError(Exception):
+		pass
 
 	pname = perm_name.replace('_ok','')
 	pstem = pname.rstrip('e')
@@ -168,7 +169,8 @@ def do_loop():
 
 	utests = cfg._args
 	for obj in test_data:
-		if utests and obj not in utests: continue
+		if utests and obj not in utests:
+			continue
 		msg((blue if cfg.verbose else nocolor)(f'Testing {obj}'))
 		test_object(mod,test_data,obj)
 

@@ -566,8 +566,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.expect('version')
 		return t
 
-	def wallet_upgrade1(self): return self.wallet_upgrade('tracking-wallet-v1.json')
-	def wallet_upgrade2(self): return self.wallet_upgrade('tracking-wallet-v2.json')
+	def wallet_upgrade1(self):
+		return self.wallet_upgrade('tracking-wallet-v1.json')
+	def wallet_upgrade2(self):
+		return self.wallet_upgrade('tracking-wallet-v2.json')
 
 	def addrgen(self,addrs='1-3,11-13,21-23'):
 		t = self.spawn('mmgen-addrgen', self.eth_args + [dfl_words_file,addrs])
@@ -595,7 +597,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def addrimport_burn_addr(self):
 		return self.addrimport_one_addr(addr=burn_addr)
 
-	def txcreate(self,
+	def txcreate(
+			self,
 			args            = [],
 			menu            = [],
 			acct            = '1',
@@ -603,23 +606,24 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			interactive_fee = '50G',
 			fee_info_data   = ('0.00105','50'),
 			no_read         = False,
-			tweaks          = [] ):
+			tweaks          = []):
 		fee_info_pat = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format( *fee_info_data, c=self.proto.coin )
 		t = self.spawn('mmgen-'+caller, self.eth_args + ['-B'] + args)
 		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 		t.written_to_file('Account balances listing')
-		t = self.txcreate_ui_common(t,
-			menu              = menu,
-			caller            = caller,
-			input_sels_prompt = 'to spend from',
-			inputs            = acct,
-			file_desc         = 'transaction',
-			bad_input_sels    = True,
-			interactive_fee   = interactive_fee,
-			fee_info_pat      = fee_info_pat,
-			fee_desc          = 'transaction fee or gas price',
-			add_comment       = tx_comment_jp,
-			tweaks            = tweaks )
+		t = self.txcreate_ui_common(
+				t,
+				menu              = menu,
+				caller            = caller,
+				input_sels_prompt = 'to spend from',
+				inputs            = acct,
+				file_desc         = 'transaction',
+				bad_input_sels    = True,
+				interactive_fee   = interactive_fee,
+				fee_info_pat      = fee_info_pat,
+				fee_desc          = 'transaction fee or gas price',
+				add_comment       = tx_comment_jp,
+				tweaks            = tweaks)
 		if not no_read:
 			t.read()
 		return t
@@ -628,25 +632,27 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
 		txfile = self.get_file_with_ext(ext,no_dot=True)
-		t = self.spawn('mmgen-txsign',
-			[f'--outdir={self.tmpdir}']
-			+ [f'--coin={self.proto.coin}']
-			+ ['--quiet']
-			+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
-			+ add_args
-			+ ([],['--yes'])[ni]
-			+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
-			+ [txfile, dfl_words_file] )
+		t = self.spawn(
+				'mmgen-txsign',
+				[f'--outdir={self.tmpdir}']
+				+ [f'--coin={self.proto.coin}']
+				+ ['--quiet']
+				+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
+				+ add_args
+				+ ([],['--yes'])[ni]
+				+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
+				+ [txfile, dfl_words_file])
 		return self.txsign_ui_common(t,ni=ni,has_label=True)
 
 	def txsend(self,ni=False,ext='{}.regtest.sigtx',add_args=[]):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile])
-		txid = self.txsend_ui_common(t,
-			quiet      = not cfg.debug,
-			bogus_send = False,
-			has_label  = True )
+		self.txsend_ui_common(
+				t,
+				quiet      = not cfg.debug,
+				bogus_send = False,
+				has_label  = True)
 		return t
 
 	def txview(self,ext_fs):
@@ -682,28 +688,38 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.txcreate(args=args,menu=menu,acct='1',tweaks=['confirm_non_mmgen'])
 	def txview1_raw(self):
 		return self.txview(ext_fs='{}.regtest.rawtx')
-	def txsign1(self):    return self.txsign(add_args=['--use-internal-keccak-module'],dev_send=True)
+	def txsign1(self):
+		return self.txsign(add_args=['--use-internal-keccak-module'],dev_send=True)
 	def tx_status0_bad(self):
 		return self.tx_status(ext='{}.regtest.sigtx',expect_str='neither in mempool nor blockchain',exit_val=1)
-	def txsign1_ni(self): return self.txsign(ni=True,dev_send=True)
-	def txsend1(self):    return self.txsend()
+	def txsign1_ni(self):
+		return self.txsign(ni=True,dev_send=True)
+	def txsend1(self):
+		return self.txsend()
 	def txview1_sig(self): # do after send so that TxID is displayed
 		return self.txview(ext_fs='{}.regtest.sigtx')
-	def bal1(self):       return self.bal(n='1')
+	def bal1(self):
+		return self.bal(n='1')
 
 	def txcreate2(self):
 		args = ['98831F3A:E:11,1.234']
 		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
-	def txsign2(self): return self.txsign(ni=True,ext='1.234,50000]{}.regtest.rawtx',dev_send=True)
-	def txsend2(self): return self.txsend(ext='1.234,50000]{}.regtest.sigtx')
-	def bal2(self):    return self.bal(n='2')
+	def txsign2(self):
+		return self.txsign(ni=True,ext='1.234,50000]{}.regtest.rawtx',dev_send=True)
+	def txsend2(self):
+		return self.txsend(ext='1.234,50000]{}.regtest.sigtx')
+	def bal2(self):
+		return self.bal(n='2')
 
 	def txcreate3(self):
 		args = ['98831F3A:E:21,2.345']
 		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
-	def txsign3(self): return self.txsign(ni=True,ext='2.345,50000]{}.regtest.rawtx',dev_send=True)
-	def txsend3(self): return self.txsend(ext='2.345,50000]{}.regtest.sigtx')
-	def bal3(self):    return self.bal(n='3')
+	def txsign3(self):
+		return self.txsign(ni=True,ext='2.345,50000]{}.regtest.rawtx',dev_send=True)
+	def txsend3(self):
+		return self.txsend(ext='2.345,50000]{}.regtest.sigtx')
+	def bal3(self):
+		return self.bal(n='3')
 
 	def tx_status(self,ext,expect_str,expect_str2='',add_args=[],exit_val=0):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
@@ -816,16 +832,22 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.expect('or gas price: ',fee+'\n')
 		return t
 
-	def txsign4(self): return self.txsign(ni=True,ext='.45495,50000]{}.regtest.rawtx',dev_send=True)
-	def txsend4(self): return self.txsend(ext='.45495,50000]{}.regtest.sigtx')
-	def bal4(self):    return self.bal(n='4')
+	def txsign4(self):
+		return self.txsign(ni=True,ext='.45495,50000]{}.regtest.rawtx',dev_send=True)
+	def txsend4(self):
+		return self.txsend(ext='.45495,50000]{}.regtest.sigtx')
+	def bal4(self):
+		return self.bal(n='4')
 
 	def txcreate5(self):
 		args = [burn_addr + ','+amt1]
 		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
-	def txsign5(self): return self.txsign(ni=True,ext=amt1+',50000]{}.regtest.rawtx',dev_send=True)
-	def txsend5(self): return self.txsend(ext=amt1+',50000]{}.regtest.sigtx')
-	def bal5(self):    return self.bal(n='5')
+	def txsign5(self):
+		return self.txsign(ni=True,ext=amt1+',50000]{}.regtest.rawtx',dev_send=True)
+	def txsend5(self):
+		return self.txsend(ext=amt1+',50000]{}.regtest.sigtx')
+	def bal5(self):
+		return self.bal(n='5')
 
 	#bal_corr = Decimal('0.0000032') # gas use for token sends varies between ETH and ETC!
 	bal_corr = Decimal('0.0000000') # update: OpenEthereum team seems to have corrected this
@@ -879,10 +901,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.expect(fr'{addr}\b.*{comment_pat}',regex=True)
 		return t
 
-	def add_comment1(self): return self.add_comment(comment=tw_comment_zh)
-	def chk_comment1(self): return self.chk_comment(comment_pat=tw_comment_zh[:3])
-	def add_comment2(self): return self.add_comment(comment=tw_comment_lat_cyr_gr)
-	def chk_comment2(self): return self.chk_comment(comment_pat=tw_comment_lat_cyr_gr[:3])
+	def add_comment1(self):
+		return self.add_comment(comment=tw_comment_zh)
+	def chk_comment1(self):
+		return self.chk_comment(comment_pat=tw_comment_zh[:3])
+	def add_comment2(self):
+		return self.add_comment(comment=tw_comment_lat_cyr_gr)
+	def chk_comment2(self):
+		return self.chk_comment(comment_pat=tw_comment_lat_cyr_gr[:3])
 
 	def remove_comment(self,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['remove_label',addr])
@@ -897,8 +923,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		self.spawn('',msg_only=True)
 		cmd_args = [f'--{k}={v}' for k,v in list(token_data.items())]
 		imsg("Compiling solidity token contract '{}' with 'solc'".format( token_data['symbol'] ))
-		try: os.mkdir(odir)
-		except: pass
+		try:
+			os.mkdir(odir)
+		except:
+			pass
 		cmd = [
 			'python3',
 			'scripts/exec_wrapper.py',
@@ -969,18 +997,27 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			imsg(f'\nToken MM{num} deployed!')
 		return t
 
-	async def token_deploy1a(self): return await self.token_deploy(num=1,key='SafeMath',gas=500_000)
-	async def token_deploy1b(self): return await self.token_deploy(num=1,key='Owned',   gas=1_000_000)
-	async def token_deploy1c(self): return await self.token_deploy(num=1,key='Token',   gas=4_000_000,tx_fee='7G')
+	async def token_deploy1a(self):
+		return await self.token_deploy(num=1,key='SafeMath',gas=500_000)
+	async def token_deploy1b(self):
+		return await self.token_deploy(num=1,key='Owned',   gas=1_000_000)
+	async def token_deploy1c(self):
+		return await self.token_deploy(num=1,key='Token',   gas=4_000_000,tx_fee='7G')
 
 	def tx_status2(self):
-		return self.tx_status(ext=self.proto.coin+'[0,7000]{}.regtest.sigtx',expect_str='successfully executed')
+		return self.tx_status(
+				ext        = self.proto.coin+'[0,7000]{}.regtest.sigtx',
+				expect_str = 'successfully executed')
 
-	def bal6(self): return self.bal5()
+	def bal6(self):
+		return self.bal5()
 
-	async def token_deploy2a(self): return await self.token_deploy(num=2,key='SafeMath',gas=500_000)
-	async def token_deploy2b(self): return await self.token_deploy(num=2,key='Owned',   gas=1_000_000)
-	async def token_deploy2c(self): return await self.token_deploy(num=2,key='Token',   gas=4_000_000)
+	async def token_deploy2a(self):
+		return await self.token_deploy(num=2,key='SafeMath',gas=500_000)
+	async def token_deploy2b(self):
+		return await self.token_deploy(num=2,key='Owned',   gas=1_000_000)
+	async def token_deploy2c(self):
+		return await self.token_deploy(num=2,key='Token',   gas=4_000_000)
 
 	async def contract_deploy(self): # test create,sign,send
 		return await self.token_deploy(num=2,key='SafeMath',gas=500_000,mmgen_cmd='txcreate')
@@ -1085,8 +1122,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			expect   = '3/3',
 			add_args = ['--token=MM2'] )
 
-	def bal7(self):       return self.bal5()
-	def token_bal1(self): return self.token_bal(n='1')
+	def bal7(self):
+		return self.bal5()
+	def token_bal1(self):
+		return self.token_bal(n='1')
 
 	def token_txcreate(self,args=[],token='',inputs='1',fee='50G'):
 		return self.txcreate_ui_common(
@@ -1163,8 +1202,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def txsend_noamt(self):
 		return self.txsend(ext='99.99895,50000]{}.regtest.sigtx')
 
-	def bal8(self):       return self.bal(n='8')
-	def token_bal5(self): return self.token_bal(n='5')
+	def bal8(self):
+		return self.bal(n='8')
+	def token_bal5(self):
+		return self.token_bal(n='5')
 
 	def token_txcreate_noamt(self):
 		return self.token_txcreate(args=['98831F3A:E:13'],token='mm1',inputs='2',fee='51G')
@@ -1173,8 +1214,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_txsend_noamt(self):
 		return self.token_txsend(ext='1.23456,51000]{}.regtest.sigtx',token='mm1')
 
-	def bal9(self):       return self.bal(n='9')
-	def token_bal6(self): return self.token_bal(n='6')
+	def bal9(self):
+		return self.bal(n='9')
+	def token_bal6(self):
+		return self.token_bal(n='6')
 
 	def listaddresses(self,args=[],tool_args=['all_labels=1']):
 		return self.spawn('mmgen-tool', self.eth_args + args + ['listaddresses'] + tool_args)
@@ -1209,25 +1252,27 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		args=['--cached-balances','--fee=12G','98831F3A:E:12,1.2789']
 		return self.token_txcreate(args=args,token='mm1')
 
-	def txdo_cached_balances(self,
+	def txdo_cached_balances(
+			self,
 			acct          = '2',
 			fee_info_data = ('0.00105','50'),
-			add_args      = ['98831F3A:E:3,0.4321'] ):
+			add_args      = ['98831F3A:E:3,0.4321']):
 		t = self.txcreate(
-			args          = ['--fee=20G','--cached-balances'] + add_args + [dfl_words_file],
-			acct          = acct,
-			caller        = 'txdo',
-			fee_info_data = fee_info_data,
-			no_read       = True )
+				args          = ['--fee=20G','--cached-balances'] + add_args + [dfl_words_file],
+				acct          = acct,
+				caller        = 'txdo',
+				fee_info_data = fee_info_data,
+				no_read       = True)
 		self._do_confirm_send(t,quiet=not cfg.debug,sure=False)
 		return t
 
-	def txcreate_refresh_balances(self,
+	def txcreate_refresh_balances(
+			self,
 			bals       = ['2','3'],
 			args       = ['-B','--cached-balances','-i'],
 			total      = vbal5,
 			adj_total  = True,
-			total_coin = None ):
+			total_coin = None):
 
 		if total_coin is None:
 			total_coin = self.proto.coin
@@ -1243,7 +1288,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.expect(rf'Total unspent:.*\D{total}\D.*{total_coin}',regex=True)
 		return t
 
-	def bal10(self): return self.bal(n='10')
+	def bal10(self):
+		return self.bal(n='10')
 
 	def token_txdo_cached_balances(self):
 		return self.txdo_cached_balances(
@@ -1259,7 +1305,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			adj_total  = False,
 			total_coin = 'MM1' )
 
-	def token_bal7(self): return self.token_bal(n='7')
+	def token_bal7(self):
+		return self.token_bal(n='7')
 
 	def twview1(self):
 		return self.twview()
@@ -1287,7 +1334,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_twview3(self):
 		return self.twview(args=['--token=mm1'],tool_args=['wide=1','sort=age'])
 
-	def edit_comment(self,out_num,args=[],action='l',comment_text=None,changed=False,pexpect_spawn=None):
+	def edit_comment(
+			self,
+			out_num,
+			args          = [],
+			action        = 'l',
+			comment_text  = None,
+			changed       = False,
+			pexpect_spawn = None):
 		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B','-i'],pexpect_spawn=pexpect_spawn)
 
 		menu_prompt = 'efresh balance:\b'
@@ -1321,7 +1375,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.edit_comment(out_num=del_addrs[0],comment_text=tw_comment_zh[:3])
 	def edit_comment2(self):
 		spawn = False if gc.platform == 'win' else True
-		return self.edit_comment(out_num=del_addrs[0],comment_text=tw_comment_zh[3:],changed=True,pexpect_spawn=spawn)
+		return self.edit_comment(
+				out_num       = del_addrs[0],
+				comment_text  = tw_comment_zh[3:],
+				changed       = True,
+				pexpect_spawn = spawn)
 	def edit_comment3(self):
 		return self.edit_comment(out_num=del_addrs[1],comment_text=tw_comment_lat_cyr_gr)
 	def edit_comment4(self):

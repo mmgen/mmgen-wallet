@@ -24,7 +24,9 @@ class unit_test(object):
 		ac.foo = 'new fooval'
 		ac.foo = 'new fooval2'
 
-		class MyAttrCtrlAutolock(AttrCtrl): pass
+		class MyAttrCtrlAutolock(AttrCtrl):
+			pass
+
 		aca = MyAttrCtrlAutolock()
 
 		class MyAttrCtrlClsCheck(AttrCtrl):

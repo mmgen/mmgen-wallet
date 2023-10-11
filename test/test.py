@@ -32,10 +32,13 @@ def create_shm_dir(data_dir,trash_dir):
 	from subprocess import run
 	if gc.platform == 'win':
 		for tdir in (data_dir,trash_dir):
-			try: os.listdir(tdir)
-			except: pass
+			try:
+				os.listdir(tdir)
+			except:
+				pass
 			else:
-				try: shutil.rmtree(tdir)
+				try:
+					shutil.rmtree(tdir)
 				except: # we couldn't remove data dir - perhaps regtest daemon is running
 					try:
 						run(['python3',os.path.join('cmds','mmgen-regtest'),'stop'],check=True)
@@ -191,8 +194,10 @@ data_dir = Config.test_datadir
 
 # step 1: delete data_dir symlink in ./test;
 if not po.user_opts.get('skipping_deps'):
-	try: os.unlink(data_dir)
-	except: pass
+	try:
+		os.unlink(data_dir)
+	except:
+		pass
 
 # step 2: opts.init will create new data_dir in ./test (if not cfg.skipping_deps)
 cfg = Config(opts_data=opts_data)
@@ -589,18 +594,20 @@ class TestSuiteRunner(object):
 		else:
 			self.spawn_env['MMGEN_COLUMNS'] = '120'
 
-	def spawn_wrapper(self,cmd,
-			args         = [],
-			extra_desc   = '',
-			no_output    = False,
-			msg_only     = False,
-			no_msg       = False,
-			cmd_dir      = 'cmds',
+	def spawn_wrapper(
+			self,
+			cmd,
+			args            = [],
+			extra_desc      = '',
+			no_output       = False,
+			msg_only        = False,
+			no_msg          = False,
+			cmd_dir         = 'cmds',
 			no_exec_wrapper = False,
-			timeout       = None,
-			pexpect_spawn = None,
-			direct_exec   = False,
-			env           = {} ):
+			timeout         = None,
+			pexpect_spawn   = None,
+			direct_exec     = False,
+			env             = {}):
 
 		desc = self.ts.test_name if cfg.names else self.gm.dpy_data[self.ts.test_name][1]
 		if extra_desc:
@@ -821,11 +828,13 @@ class TestSuiteRunner(object):
 
 		self.end_msg()
 
-	def check_needs_rerun(self,cmd,
+	def check_needs_rerun(
+			self,
+			cmd,
 			build        = False,
 			root         = True,
 			force_delete = False,
-			dpy          = False ):
+			dpy          = False):
 
 		self.ts.test_name = cmd
 
@@ -842,7 +851,8 @@ class TestSuiteRunner(object):
 				for ext in ret[1]:
 					fn = get_file_with_ext(cfgs[ret[0]]['tmpdir'],ext,delete=build)
 					if fn:
-						if force_delete: os.unlink(fn)
+						if force_delete:
+							os.unlink(fn)
 						else: fns.append(fn)
 					else: rerun = True
 

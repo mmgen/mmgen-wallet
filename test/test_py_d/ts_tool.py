@@ -53,9 +53,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 			t = self.spawn(
 				'mmgen-tool',
 				['-d',self.tmpdir,'-r0','rand2file','rand2file.out',nbytes],
-				extra_desc='({} byte{})'.format(
-					nbytes,
-					suf(parse_bytespec(nbytes)) )
+				extra_desc='({} byte{})'.format( nbytes, suf(parse_bytespec(nbytes)) )
 			)
 			t.expect('random data written to file')
 			t.read()

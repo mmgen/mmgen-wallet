@@ -99,79 +99,169 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	color = True
 	need_daemon = True
 	cmd_group = (
-		('walletgen_dfl_wallet', (15,'wallet generation (default wallet)',[[[],15]])),
-		('subwalletgen_dfl_wallet', (15,'subwallet generation (default wallet)',[[[pwfile],15]])),
-		('export_seed_dfl_wallet',(15,'seed export to mmseed format (default wallet)',[[[pwfile],15]])),
-		('addrgen_dfl_wallet',(15,'address generation (default wallet)',[[[pwfile],15]])),
-		('txcreate_dfl_wallet',(15,'transaction creation (default wallet)',[[['addrs'],15]])),
-		('txsign_dfl_wallet',(15,'transaction signing (default wallet)',[[['rawtx',pwfile],15]])),
-		('passchg_dfl_wallet',(16,'password, label and hash preset change (default wallet)',[[[pwfile],15]])),
-		('walletchk_newpass_dfl_wallet',(16,'wallet check with new pw, label and hash preset',[[[pwfile],16]])),
-		('delete_dfl_wallet',(15,'delete default wallet',[[[pwfile],15]])),
+		('walletgen_dfl_wallet',    (15,'wallet generation (default wallet)',            [[[],15]])),
+		('subwalletgen_dfl_wallet', (15,'subwallet generation (default wallet)',         [[[pwfile],15]])),
+		('export_seed_dfl_wallet',  (15,'seed export to mmseed format (default wallet)', [[[pwfile],15]])),
+		('addrgen_dfl_wallet',      (15,'address generation (default wallet)',           [[[pwfile],15]])),
+		('txcreate_dfl_wallet',     (15,'transaction creation (default wallet)',         [[['addrs'],15]])),
+		('txsign_dfl_wallet',       (15,'transaction signing (default wallet)',          [[['rawtx',pwfile],15]])),
+		('passchg_dfl_wallet',      (16,'password, label and hash preset change (default wallet)',[[[pwfile],15]])),
+		('walletchk_newpass_dfl_wallet', (16,'wallet check with new pw, label and hash preset',   [[[pwfile],16]])),
+		('delete_dfl_wallet',       (15,'delete default wallet',                         [[[pwfile],15]])),
 
-		('walletgen',       (1,'wallet generation',        [[['del_dw_run'],15]])),
-		('subwalletgen',    (1,'subwallet generation',     [[['mmdat'],1]])),
-		('subwalletgen_mnemonic',(1,'subwallet generation (to mnemonic format)',[[['mmdat'],1]])),
-#		('walletchk',       (1,'wallet check',             [[['mmdat'],1]])),
-		('passchg',         (5,'password, label and hash preset change',[[['mmdat',pwfile],1]])),
-		('passchg_keeplabel',(5,'password, label and hash preset change (keep label)',[[['mmdat',pwfile],1]])),
-		('passchg_usrlabel',(5,'password, label and hash preset change (interactive label)',[[['mmdat',pwfile],1]])),
-		('walletchk_newpass',(5,'wallet check with new pw, label and hash preset',[[['mmdat',pwfile],5]])),
-		('addrgen',         (1,'address generation',       [[['mmdat',pwfile],1]])),
-		('txcreate',        (1,'transaction creation',     [[['addrs'],1]])),
-		('txbump',          (1,'transaction fee bumping (no send)',[[['rawtx'],1]])),
-		('txsign',          (1,'transaction signing',      [[['mmdat','rawtx',pwfile,'txbump'],1]])),
-		('txsend',          (1,'transaction sending',      [[['sigtx'],1]])),
+		('walletgen',             (1,'wallet generation',                         [[['del_dw_run'],15]])),
+		('subwalletgen',          (1,'subwallet generation',                      [[['mmdat'],1]])),
+		('subwalletgen_mnemonic', (1,'subwallet generation (to mnemonic format)', [[['mmdat'],1]])),
+		# ('walletchk',             (1,'wallet check',                              [[['mmdat'],1]])),
+		('passchg',          (5,'password, label and hash preset change',              [[['mmdat',pwfile],1]])),
+		('passchg_keeplabel',(5,'password, label and hash preset change (keep label)', [[['mmdat',pwfile],1]])),
+		('passchg_usrlabel', (
+				5,
+				'password, label and hash preset change (interactive label)',
+				[
+					[['mmdat',pwfile],1]
+				]
+			)
+		),
+		('walletchk_newpass',(5,'wallet check with new pw, label and hash preset', [[['mmdat',pwfile],5]])),
+		('addrgen',          (1,'address generation',                [[['mmdat',pwfile],1]])),
+		('txcreate',         (1,'transaction creation',              [[['addrs'],1]])),
+		('txbump',           (1,'transaction fee bumping (no send)', [[['rawtx'],1]])),
+		('txsign',           (1,'transaction signing',               [[['mmdat','rawtx',pwfile,'txbump'],1]])),
+		('txsend',           (1,'transaction sending',               [[['sigtx'],1]])),
 		# txdo must go after txsign
-		('txdo',            (1,'online transaction',       [[['sigtx','mmdat'],1]])),
+		('txdo',             (1,'online transaction',                [[['sigtx','mmdat'],1]])),
 
-		('export_seed',     (1,'seed export to mmseed format',   [[['mmdat'],1]])),
-		('export_hex',      (1,'seed export to hexadecimal format',  [[['mmdat'],1]])),
-		('export_mnemonic', (1,'seed export to mmwords format',  [[['mmdat'],1]])),
-		('export_bip39',    (1,'seed export to bip39 format',    [[['mmdat'],1]])),
-		('export_incog',    (1,'seed export to mmincog format',  [[['mmdat'],1]])),
-		('export_incog_hex',(1,'seed export to mmincog hex format', [[['mmdat'],1]])),
+		('export_seed',     (1,'seed export to mmseed format',            [[['mmdat'],1]])),
+		('export_hex',      (1,'seed export to hexadecimal format',       [[['mmdat'],1]])),
+		('export_mnemonic', (1,'seed export to mmwords format',           [[['mmdat'],1]])),
+		('export_bip39',    (1,'seed export to bip39 format',             [[['mmdat'],1]])),
+		('export_incog',    (1,'seed export to mmincog format',           [[['mmdat'],1]])),
+		('export_incog_hex',(1,'seed export to mmincog hex format',       [[['mmdat'],1]])),
 		('export_incog_hidden',(1,'seed export to hidden mmincog format', [[['mmdat'],1]])),
 
-		('addrgen_seed',    (1,'address generation from mmseed file', [[['mmseed','addrs'],1]])),
-		('addrgen_hex',     (1,'address generation from mmhex file', [[['mmhex','addrs'],1]])),
-		('addrgen_mnemonic',(1,'address generation from mmwords file',[[['mmwords','addrs'],1]])),
-		('addrgen_incog',   (1,'address generation from mmincog file',[[['mmincog','addrs'],1]])),
-		('addrgen_incog_hex',(1,'address generation from mmincog hex file',[[['mmincox','addrs'],1]])),
+		('addrgen_seed',    (1,'address generation from mmseed file',             [[['mmseed','addrs'],1]])),
+		('addrgen_hex',     (1,'address generation from mmhex file',              [[['mmhex','addrs'],1]])),
+		('addrgen_mnemonic',(1,'address generation from mmwords file',            [[['mmwords','addrs'],1]])),
+		('addrgen_incog',   (1,'address generation from mmincog file',            [[['mmincog','addrs'],1]])),
+		('addrgen_incog_hex',(1,'address generation from mmincog hex file',       [[['mmincox','addrs'],1]])),
 		('addrgen_incog_hidden',(1,'address generation from hidden mmincog file', [[[hincog_fn,'addrs'],1]])),
 
-		('keyaddrgen',    (1,'key-address file generation', [[['mmdat',pwfile],1]])),
+		('keyaddrgen',    (1,'key-address file generation',               [[['mmdat',pwfile],1]])),
 		('txsign_keyaddr',(1,'transaction signing with key-address file', [[['akeys.mmenc','rawtx'],1]])),
 
-		('txcreate_ni',   (1,'transaction creation (non-interactive)',     [[['addrs'],1]])),
+		('txcreate_ni',   (1,'transaction creation (non-interactive)',    [[['addrs'],1]])),
 
-		('walletgen2',(2,'wallet generation (2), 128-bit seed',     [[['del_dw_run'],15]])),
-		('addrgen2',  (2,'address generation (2)',    [[['mmdat'],2]])),
-		('txcreate2', (2,'transaction creation (2)',  [[['addrs'],2]])),
-		('txsign2',   (2,'transaction signing, two transactions',[[['mmdat','rawtx'],1],[['mmdat','rawtx'],2]])),
-		('export_mnemonic2', (2,'seed export to mmwords format (2)',[[['mmdat'],2]])),
-
-		('walletgen3',(3,'wallet generation (3)',                  [[['del_dw_run'],15]])),
-		('addrgen3',  (3,'address generation (3)',                 [[['mmdat'],3]])),
-		('txcreate3', (3,'tx creation with inputs and outputs from two wallets', [[['addrs'],1],[['addrs'],3]])),
-		('txsign3',   (3,'tx signing with inputs and outputs from two wallets',[[['mmdat'],1],[['mmdat','rawtx'],3]])),
-
-		('walletgen14', (14,'wallet generation (14)',        [[['del_dw_run'],15]],14)),
-		('addrgen14',   (14,'address generation (14)',        [[['mmdat'],14]])),
+		('walletgen2',(2,'wallet generation (2), 128-bit seed', [[['del_dw_run'],15]])),
+		('addrgen2',  (2,'address generation (2)',              [[['mmdat'],2]])),
+		('txcreate2', (2,'transaction creation (2)',            [[['addrs'],2]])),
+		('txsign2', (
+				2,
+				'transaction signing, two transactions',
+				[
+					[['mmdat','rawtx'],1],
+					[['mmdat','rawtx'],2]
+				]
+			)
+		),
+		('export_mnemonic2', (
+				2,
+				'seed export to mmwords format (2)',
+				[
+					[['mmdat'],2]
+				]
+			)
+		),
+		('walletgen3',(3,'wallet generation (3)',  [[['del_dw_run'],15]])),
+		('addrgen3',  (3,'address generation (3)', [[['mmdat'],3]])),
+		('txcreate3', (
+				3,
+				'tx creation with inputs and outputs from two wallets',
+				[
+					[['addrs'],1],
+					[['addrs'],3]
+				]
+			)
+		),
+		('txsign3', (
+				3,
+				'tx signing with inputs and outputs from two wallets',
+				[
+					[['mmdat'],1],
+					[['mmdat','rawtx'],3]
+				]
+			)
+		),
+		('walletgen14', (14,'wallet generation (14)',           [[['del_dw_run'],15]],14)),
+		('addrgen14',   (14,'address generation (14)',          [[['mmdat'],14]])),
 		('keyaddrgen14',(14,'key-address file generation (14)', [[['mmdat'],14]],14)),
-		('walletgen4',(4,'wallet generation (4) (brainwallet)',    [[['del_dw_run'],15]])),
-		('addrgen4',  (4,'address generation (4)',                 [[['mmdat'],4]])),
-		('txcreate4', (4,'tx creation with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['addrs'],1],[['addrs'],2],[['addrs'],3],[['addrs'],4],[['addrs','akeys.mmenc'],14]])),
-		('txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet, brainwallet, key-address file and non-MMGen inputs and outputs', [[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','rawtx'],4],[['akeys.mmenc'],14]])),
-		('txdo4', (4,'tx creation,signing and sending with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['addrs'],1],[['addrs'],2],[['addrs'],3],[['addrs'],4],[['addrs','akeys.mmenc'],14],[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','rawtx'],4],[['akeys.mmenc'],14]])), # must go after txsign4
-		('txbump4', (4,'tx fee bump + send with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['akeys.mmenc'],14],[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['akeys.mmenc'],14],[['mmbrain','sigtx','mmdat','txdo'],4]])), # must go after txsign4
+		('walletgen4',(4,'wallet generation (4) (brainwallet)', [[['del_dw_run'],15]])),
+		('addrgen4',  (4,'address generation (4)',              [[['mmdat'],4]])),
+		('txcreate4', (
+				4,
+				'tx creation with inputs and outputs from four seed sources, key-address file '
+				'and non-MMGen inputs and outputs',
+				[
+					[['addrs'],1],
+					[['addrs'],2],
+					[['addrs'],3],
+					[['addrs'],4],
+					[['addrs','akeys.mmenc'],14]
+				]
+			)
+		),
+		('txsign4', (
+				4,
+				'tx signing with inputs and outputs from incog file, mnemonic file, wallet, '
+				'brainwallet, key-address file and non-MMGen inputs and outputs',
+				[
+					[['mmincog'],1],
+					[['mmwords'],2],
+					[['mmdat'],3],
+					[['mmbrain','rawtx'],4],
+					[['akeys.mmenc'],14]
+				]
+			)
+		),
+		('txdo4', (
+				4,
+				'tx creation,signing and sending with inputs and outputs from four seed sources, '
+				'key-address file and non-MMGen inputs and outputs',
+				[
+					[['addrs'],1],
+					[['addrs'],2],
+					[['addrs'],3],
+					[['addrs'],4],
+					[['addrs','akeys.mmenc'],14],
+					[['mmincog'],1],
+					[['mmwords'],2],
+					[['mmdat'],3],
+					[['mmbrain','rawtx'],4],
+					[['akeys.mmenc'],14]
+				]
+			)
+		), # must go after txsign4
+		('txbump4', (
+				4,
+				'tx fee bump + send with inputs and outputs from four seed sources, key-address file '
+				'and non-MMGen inputs and outputs',
+				[
+					[['akeys.mmenc'],14],
+					[['mmincog'],1],
+					[['mmwords'],2],
+					[['mmdat'],3],
+					[['akeys.mmenc'],14],
+					[['mmbrain','sigtx','mmdat','txdo'],4]
+				]
+			)
+		), # must go after txsign4
 
-		('walletgen5',(20,'wallet generation (5)',                   [[['del_dw_run'],15]],20)),
-		('addrgen5',  (20,'address generation (5)',                  [[['mmdat'],20]])),
-		('txcreate5', (20,'transaction creation with bad vsize (5)', [[['addrs'],20]])),
-		('txsign5',   (20,'transaction signing with bad vsize',      [[['mmdat','rawtx'],20]])),
-		('walletgen6',(21,'wallet generation (6)',                   [[['del_dw_run'],15]],21)),
-		('addrgen6',  (21,'address generation (6)',                  [[['mmdat'],21]])),
+		('walletgen5',(20,'wallet generation (5)',                         [[['del_dw_run'],15]],20)),
+		('addrgen5',  (20,'address generation (5)',                        [[['mmdat'],20]])),
+		('txcreate5', (20,'transaction creation with bad vsize (5)',       [[['addrs'],20]])),
+		('txsign5',   (20,'transaction signing with bad vsize',            [[['mmdat','rawtx'],20]])),
+		('walletgen6',(21,'wallet generation (6)',                         [[['del_dw_run'],15]],21)),
+		('addrgen6',  (21,'address generation (6)',                        [[['mmdat'],21]])),
 		('txcreate6', (21,'transaction creation with corrected vsize (6)', [[['addrs'],21]])),
 		('txsign6',   (21,'transaction signing with corrected vsize',      [[['mmdat','rawtx'],21]])),
 	)
@@ -275,8 +365,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def walletgen(self,del_dw_run='dummy',seed_len=None,gen_dfl_wallet=False):
 		self.write_to_tmpfile(pwfile,self.wpasswd+'\n')
 		args = ['-p1']
-		if not gen_dfl_wallet: args += ['-d',self.tmpdir]
-		if seed_len: args += ['-l',str(seed_len)]
+		if not gen_dfl_wallet:
+			args += ['-d',self.tmpdir]
+		if seed_len:
+			args += ['-l',str(seed_len)]
 		t = self.spawn('mmgen-walletgen', args + [self.usr_rand_arg])
 		t.license()
 		t.usr_rand(self.usr_rand_chars)
@@ -291,7 +383,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def subwalletgen(self,wf):
 		args = [self.usr_rand_arg,'-p1','-d',self.tr.trash_dir,'-L','Label']
-		if wf != 'default': args += [wf]
+		if wf != 'default':
+			args += [wf]
 		t = self.spawn('mmgen-subwalletgen', args + ['10s'])
 		t.license()
 		wcls = MMGenWallet
@@ -321,10 +414,11 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		silence()
 		self.write_to_tmpfile( pwfile, get_data_from_file(cfg,pf) )
 		end_silence()
-		add_args = {'cmdline': ['-d',self.tmpdir,'-L','Changed label (UTF-8) α'],
-					'keep':    ['-d',self.tr.trash_dir,'--keep-label'],
-					'user':    ['-d',self.tr.trash_dir]
-					}[label_action]
+		add_args = {
+			'cmdline': ['-d',self.tmpdir,'-L','Changed label (UTF-8) α'],
+			'keep':    ['-d',self.tr.trash_dir,'--keep-label'],
+			'user':    ['-d',self.tr.trash_dir]
+		}[label_action]
 		t = self.spawn('mmgen-passchg', add_args + [self.usr_rand_arg, '-p2'] + ([wf] if wf else []))
 		t.license()
 		wcls = MMGenWallet
@@ -371,7 +465,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		if comment:
 			comment = ' ' + comment
 		k = coinaddr.addr_fmt
-		if not segwit and k == 'p2sh': k = 'p2pkh'
+		if not segwit and k == 'p2sh':
+			k = 'p2pkh'
 		s_beg,s_end = { 'p2pkh':  ('76a914','88ac'),
 						'p2sh':   ('a914','87'),
 						'bech32': (self.proto.witness_vernum_hex + '14','') }[k]
@@ -487,17 +582,18 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 		return cmd_args + [tx_data[num]['addrfile'] for num in tx_data]
 
-	def txcreate_common(self,
-						sources                    = ['1'],
-						non_mmgen_input            = '',
-						do_label                   = False,
-						txdo_args                  = [],
-						add_args                   = [],
-						view                       = 'n',
-						addrs_per_wallet           = addrs_per_wallet,
-						non_mmgen_input_compressed = True,
-						cmdline_inputs             = False,
-						tweaks                     = [] ):
+	def txcreate_common(
+			self,
+			sources                    = ['1'],
+			non_mmgen_input            = '',
+			do_label                   = False,
+			txdo_args                  = [],
+			add_args                   = [],
+			view                       = 'n',
+			addrs_per_wallet           = addrs_per_wallet,
+			non_mmgen_input_compressed = True,
+			cmdline_inputs             = False,
+			tweaks                     = []):
 
 		if cfg.verbose or cfg.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
@@ -514,9 +610,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			from mmgen.tw.shared import TwLabel
 			cmd_args = [
 				'--inputs={},{},{},{},{},{}'.format(
-					TwLabel(self.proto,dfake[0][self.lbl_id]).mmid,dfake[1]['address'],
-					TwLabel(self.proto,dfake[2][self.lbl_id]).mmid,dfake[3]['address'],
-					TwLabel(self.proto,dfake[4][self.lbl_id]).mmid,dfake[5]['address']
+					TwLabel(self.proto,dfake[0][self.lbl_id]).mmid, dfake[1]['address'],
+					TwLabel(self.proto,dfake[2][self.lbl_id]).mmid, dfake[3]['address'],
+					TwLabel(self.proto,dfake[4][self.lbl_id]).mmid, dfake[5]['address']
 				),
 				f'--outdir={self.tr.trash_dir}'
 			] + cmd_args[1:]
@@ -570,7 +666,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def txbump(self,txfile,prepend_args=[],seed_args=[]):
 		if not self.proto.cap('rbf'):
-			msg('Skipping RBF'); return 'skip'
+			msg('Skipping RBF')
+			return 'skip'
 		args = prepend_args + ['--quiet','--outdir='+self.tmpdir,txfile] + seed_args
 		t = self.spawn('mmgen-txbump',args)
 		if seed_args:

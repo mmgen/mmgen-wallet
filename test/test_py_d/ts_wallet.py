@@ -100,13 +100,18 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 
 	def ref_mn_conv(self,ext='mmwords'):
 		wf = joinpath(ref_dir,self.seed_id+'.'+ext)
-		return self.walletconv_in(wf,oo=True)
+		return self.walletconv_in(wf)
 
-	def ref_bip39_conv(self):    return self.ref_mn_conv(ext='bip39')
-	def ref_seed_conv(self):     return self.ref_mn_conv(ext='mmseed')
-	def ref_hex_conv(self):      return self.ref_mn_conv(ext='mmhex')
-	def ref_plainhex_conv(self): return self.ref_mn_conv(ext='hex')
-	def ref_dieroll_conv(self):  return self.ref_mn_conv(ext='b6d')
+	def ref_bip39_conv(self):
+		return self.ref_mn_conv(ext='bip39')
+	def ref_seed_conv(self):
+		return self.ref_mn_conv(ext='mmseed')
+	def ref_hex_conv(self):
+		return self.ref_mn_conv(ext='mmhex')
+	def ref_plainhex_conv(self):
+		return self.ref_mn_conv(ext='hex')
+	def ref_dieroll_conv(self):
+		return self.ref_mn_conv(ext='b6d')
 
 	def ref_brain_conv(self):
 		uopts = ['-i','bw','-p','1','-l',str(self.seed_len)]
@@ -133,15 +138,24 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 	def ref_hincog_conv_old(self):
 		return self.ref_hincog_conv(wfk='hic_wallet_old',add_uopts=['-O'])
 
-	def ref_wallet_conv_out(self):   return self.walletconv_out('w')
-	def ref_mn_conv_out(self):       return self.walletconv_out('mn')
-	def ref_bip39_conv_out(self):    return self.walletconv_out('bip39')
-	def ref_seed_conv_out(self):     return self.walletconv_out('seed')
-	def ref_hex_conv_out(self):      return self.walletconv_out('hexseed')
-	def ref_plainhex_conv_out(self): return self.walletconv_out('hex')
-	def ref_dieroll_conv_out(self):  return self.walletconv_out('dieroll')
-	def ref_incog_conv_out(self):    return self.walletconv_out('i')
-	def ref_incox_conv_out(self):    return self.walletconv_out('xi')
+	def ref_wallet_conv_out(self):
+		return self.walletconv_out('w')
+	def ref_mn_conv_out(self):
+		return self.walletconv_out('mn')
+	def ref_bip39_conv_out(self):
+		return self.walletconv_out('bip39')
+	def ref_seed_conv_out(self):
+		return self.walletconv_out('seed')
+	def ref_hex_conv_out(self):
+		return self.walletconv_out('hexseed')
+	def ref_plainhex_conv_out(self):
+		return self.walletconv_out('hex')
+	def ref_dieroll_conv_out(self):
+		return self.walletconv_out('dieroll')
+	def ref_incog_conv_out(self):
+		return self.walletconv_out('i')
+	def ref_incox_conv_out(self):
+		return self.walletconv_out('xi')
 
 	def ref_hincog_conv_out(self,ic_f=None):
 		if not ic_f:
@@ -196,10 +210,11 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		t.p.wait()
 		# back check of result
 		msg('' if cfg.profile else ' OK')
-		return self.walletchk(  wf,
-								pf         = None,
-								extra_desc = '(check)',
-								sid        = self.seed_id )
+		return self.walletchk(
+				wf,
+				pf         = None,
+				extra_desc = '(check)',
+				sid        = self.seed_id)
 
 	def walletconv_out(self,out_fmt='w',uopts=[],uopts_chk=[]):
 		wcls = get_wallet_cls(fmt_code=out_fmt)
@@ -226,9 +241,10 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 			add_args += uopts_chk
 			wf = None
 		msg('' if cfg.profile else ' OK')
-		return self.walletchk(  wf,
-								pf         = pf,
-								wcls       = wcls,
-								extra_desc = '(check)',
-								sid        = self.seed_id,
-								add_args   = add_args )
+		return self.walletchk(
+				wf,
+				pf         = pf,
+				wcls       = wcls,
+				extra_desc = '(check)',
+				sid        = self.seed_id,
+				add_args   = add_args)

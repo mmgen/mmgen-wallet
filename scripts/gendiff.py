@@ -53,9 +53,7 @@ if len(fns) != 2:
 cleaned_texts = [cleanup_file(fn) for fn in fns]
 
 if len(fns) == 2:
-	"""
-	chunk headers have trailing newlines, hence the rstrip()
-	"""
+	# chunk headers have trailing newlines, hence the rstrip()
 	sys.stderr.write('Generating diff\n')
 	print(
 		f'diff a/{fns[0]} b/{fns[1]}\n' +

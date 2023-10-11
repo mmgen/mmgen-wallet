@@ -239,7 +239,8 @@ class MMGenToolTestUtils(object):
 			tool_args +
 			kwargs.split()
 		)
-		if extra_msg: extra_msg = f'({extra_msg})'
+		if extra_msg:
+			extra_msg = f'({extra_msg})'
 		full_name = ' '.join([name.lower()]+add_opts+kwargs.split()+extra_msg.split())
 		if not silent:
 			if cfg.verbose:
@@ -252,8 +253,11 @@ class MMGenToolTestUtils(object):
 		out = cp.stdout
 		err = cp.stderr
 		if cfg.debug:
-			try: dmsg(err.decode())
-			except: dmsg(repr(err))
+			from test.include.common import dmsg
+			try:
+				dmsg(err.decode())
+			except:
+				dmsg(repr(err))
 		if not binary:
 			out = out.decode()
 		if cp.returncode != 0:
@@ -272,7 +276,8 @@ class MMGenToolTestUtils(object):
 		vmsg('Out:  ' + repr(ret))
 		def cmp_equal(a,b):
 			return (a.lstrip('0') == b.lstrip('0')) if strip_hex else (a == b)
-		if cmp_equal(ret,idata): ok()
+		if cmp_equal(ret,idata):
+			ok()
 		else:
 			die(4, "Error: values don't match:\nIn:  {!r}\nOut: {!r}".format(idata,ret))
 		return ret
@@ -298,9 +303,11 @@ class MMGenToolTestUtils(object):
 			if chkdata:
 				cmp_or_die(ret,chkdata)
 				return
-			if Return: return ret
+			if Return:
+				return ret
 			else:
-				if not hush: ok()
+				if not hush:
+					ok()
 		else:
 			die(4,f'Error for command {name!r}')
 
@@ -317,10 +324,13 @@ class MMGenToolTestUtils(object):
 tu = MMGenToolTestUtils()
 
 def ok_or_die(val,chk_func,s,skip_ok=False):
-	try: ret = chk_func(val)
-	except: ret = False
+	try:
+		ret = chk_func(val)
+	except:
+		ret = False
 	if ret:
-		if not skip_ok: ok()
+		if not skip_ok:
+			ok()
 	else:
 		die(4,f'Returned value {val!r} is not a {s}')
 
@@ -367,22 +377,24 @@ class MMGenToolTestCmds(object):
 			cmp_or_die(iaddr,ret)
 			ok()
 	def hex2wif(self,name,f1,f2,f3,f4):
-		for n,fi,fo,k in ((1,f1,f2,''),(2,f3,f4,compressed)):
+		for fi,fo,k in (
+				(f1,f2,''),
+				(f3,f4,compressed)):
 			ao = ['--type='+k] if k else []
 			ret = tu.run_cmd_chk(name,fi,fo,add_opts=ao)
 	def addr2pubhash(self,name,f1,f2,f3,f4):
 		for n,f,m,ao in (
-			(1,f1,'',[]),
-			(2,f2,'from {}'.format( compressed or 'uncompressed' ),[]),
-			(4,f4,'',type_bech32_arg),
+				(1,f1,'',[]),
+				(2,f2,'from {}'.format( compressed or 'uncompressed' ),[]),
+				(4,f4,'',type_bech32_arg),
 			):
 			addr = read_from_file(f).split()[-1]
 			tu.run_cmd_out(name,addr,fn_idx=n,add_opts=ao,extra_msg=m)
 	def pubhash2addr(self,name,f1,f2,f3,f4,f5,f6,f7,f8):
 		for n,fi,fo,m,ao in (
-			(1,f1,f2,'',[]),
-			(2,f3,f4,'from {}'.format( compressed or 'uncompressed' ),[]),
-			(4,f7,f8,'',type_bech32_arg)
+				(1,f1,f2,'',[]),
+				(2,f3,f4,'from {}'.format( compressed or 'uncompressed' ),[]),
+				(4,f7,f8,'',type_bech32_arg)
 			):
 			tu.run_cmd_chk(name,fi,fo,add_opts=ao,extra_msg=m)
 	def privhex2pubhex(self,name,f1,f2,f3): # from Hex2wif
@@ -435,10 +447,14 @@ class MMGenToolTestCmds(object):
 	def mn2hex(self,name,f1,f2,f3,f4,f5,f6):
 		for f_i,f_o,m in ((f1,f2,'128-bit'),(f3,f4,'192-bit'),(f5,f6,'256-bit')):
 			tu.run_cmd_chk(name,f_i,f_o,extra_msg=m,strip_hex=True)
-	def mn_rand128(self,name): tu.run_cmd_out(name)
-	def mn_rand192(self,name): tu.run_cmd_out(name)
-	def mn_rand256(self,name): tu.run_cmd_out(name)
-	def mn_stats(self,name):   tu.run_cmd_out(name)
+	def mn_rand128(self,name):
+		tu.run_cmd_out(name)
+	def mn_rand192(self,name):
+		tu.run_cmd_out(name)
+	def mn_rand256(self,name):
+		tu.run_cmd_out(name)
+	def mn_stats(self,name):
+		tu.run_cmd_out(name)
 	def mn_printlist(self,name):
 		tu.run_cmd(name,[])
 		ok()
@@ -488,7 +504,8 @@ try:
 		for cmd in cmd_data:
 			msg('Running tests for {}:'.format( cmd_data[cmd]['desc'] ))
 			do_cmds(cmd)
-			if cmd is not list(cmd_data.keys())[-1]: msg('')
+			if cmd is not list(cmd_data.keys())[-1]:
+				msg('')
 except KeyboardInterrupt:
 	die(1,green('\nExiting at user request'))
 

@@ -70,8 +70,13 @@ class MMGenPexpect:
 			if cfg.exact_output:
 				self.p.logfile = sys.stdout
 
-	def do_decrypt_ka_data(self,hp,pw,desc='key-address data',check=True,have_yes_opt=False):
-#		self.hash_preset(desc,hp)
+	def do_decrypt_ka_data(
+			self,
+			hp,
+			pw,
+			desc         = 'key-address data',
+			check        = True,
+			have_yes_opt = False):
 		self.passphrase(desc,pw)
 		if not have_yes_opt:
 			self.expect('Check key-to-address validity? (y/N): ',('n','y')[check])
@@ -127,7 +132,8 @@ class MMGenPexpect:
 		self.expect('Repeat passphrase: ',passphrase+'\n')
 
 	def passphrase(self,desc,passphrase,pwtype=''):
-		if pwtype: pwtype += ' '
+		if pwtype:
+			pwtype += ' '
 		self.expect(f'Enter {pwtype}passphrase for {desc}.*?: ',passphrase+'\n',regex=True)
 
 	def hash_preset(self,desc,preset=''):

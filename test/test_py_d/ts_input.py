@@ -444,17 +444,29 @@ class TestSuiteInput(TestSuiteBase):
 			'wd',
 			'busy')
 		return self._user_seed_entry('words',entry_mode='minimal',mn=mn)
-	def mnemonic_entry_mmgen(self):           return self._user_seed_entry('words',entry_mode='full')
-	def mnemonic_entry_bip39(self):           return self._user_seed_entry('bip39',entry_mode='full')
-	def mnemonic_entry_bip39_short(self):     return self._user_seed_entry('bip39',entry_mode='short')
+	def mnemonic_entry_mmgen(self):
+		return self._user_seed_entry('words',entry_mode='full')
+	def mnemonic_entry_bip39(self):
+		return self._user_seed_entry('bip39',entry_mode='full')
+	def mnemonic_entry_bip39_short(self):
+		return self._user_seed_entry('bip39',entry_mode='short')
 
-	def mn2hex_interactive_mmgen(self):       return self._mn2hex('mmgen',entry_mode='full')
-	def mn2hex_interactive_mmgen_fixed(self): return self._mn2hex('mmgen',entry_mode='fixed')
-	def mn2hex_interactive_bip39(self):       return self._mn2hex('bip39',entry_mode='full')
-	def mn2hex_interactive_bip39_short(self): return self._mn2hex('bip39',entry_mode='short',pad_entry=True)
-	def mn2hex_interactive_bip39_fixed(self): return self._mn2hex('bip39',entry_mode='fixed',enter_for_dfl=True)
-	def mn2hex_interactive_xmr(self):         return self._mn2hex('xmrseed',entry_mode='full')
-	def mn2hex_interactive_xmr_short(self):   return self._mn2hex('xmrseed',entry_mode='short')
+	def mn2hex_interactive_mmgen(self):
+		return self._mn2hex('mmgen',entry_mode='full')
+	def mn2hex_interactive_mmgen_fixed(self):
+		return self._mn2hex('mmgen',entry_mode='fixed')
+	def mn2hex_interactive_bip39(self):
+		return self._mn2hex('bip39',entry_mode='full')
+	def mn2hex_interactive_bip39_short(self):
+		return self._mn2hex('bip39',entry_mode='short',pad_entry=True)
+	def mn2hex_interactive_bip39_fixed(self):
+		return self._mn2hex('bip39',entry_mode='fixed',enter_for_dfl=True)
+	def mn2hex_interactive_xmr(self):
+		return self._mn2hex('xmrseed',entry_mode='full')
+	def mn2hex_interactive_xmr_short(self):
+		return self._mn2hex('xmrseed',entry_mode='short')
 
-	def dieroll_entry(self):         return self._user_seed_entry('dieroll')
-	def dieroll_entry_usrrand(self): return self._user_seed_entry('dieroll',usr_rand=True,out_fmt='bip39')
+	def dieroll_entry(self):
+		return self._user_seed_entry('dieroll')
+	def dieroll_entry_usrrand(self):
+		return self._user_seed_entry('dieroll',usr_rand=True,out_fmt='bip39')

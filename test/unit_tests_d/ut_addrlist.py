@@ -14,7 +14,14 @@ from mmgen.passwdlist import PasswordList
 from mmgen.protocol import init_proto
 from ..include.common import cfg,qmsg,vmsg
 
-def do_test(list_type,chksum,idx_spec=None,pw_id_str=None,add_kwargs=None,coin=None,addrtype=None):
+def do_test(
+		list_type,
+		chksum,
+		idx_spec   = None,
+		pw_id_str  = None,
+		add_kwargs = None,
+		coin       = None,
+		addrtype   = None):
 
 	qmsg(blue(f'Testing {list_type.__name__}'))
 	proto = init_proto( cfg, coin or 'btc' )

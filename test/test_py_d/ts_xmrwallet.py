@@ -160,9 +160,12 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		def port_in_use(port):
 			import socket
-			try: socket.create_connection(('localhost',port)).close()
-			except: return False
-			else: return True
+			try:
+				socket.create_connection(('localhost',port)).close()
+			except:
+				return False
+			else:
+				return True
 
 		def start_proxy():
 			if external_call or not cfg.no_daemon_autostart:
@@ -355,8 +358,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		t.skip_ok = True
 		return t
 
-	def create_wallets_miner(self): return self.create_wallets('miner')
-	def create_wallets_alice(self): return self.create_wallets('alice')
+	def create_wallets_miner(self):
+		return self.create_wallets('miner')
+	def create_wallets_alice(self):
+		return self.create_wallets('alice')
 
 	def create_wallets(self,user,wallet=None,add_opts=[],op='create'):
 		assert wallet is None or is_int(wallet), 'wallet arg'
@@ -510,13 +515,17 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				assert bal_chk_func(n,*amts), f'balance check for wallet {n} failed!'
 		return t
 
-	def do_op(self, op, user, arg2,
+	def do_op(
+			self,
+			op,
+			user,
+			arg2,
 			tx_relay_parm = None,
 			no_relay      = False,
 			return_amt    = False,
 			reuse_acct    = False,
 			add_desc      = None,
-			do_ret        = False ):
+			do_ret        = False):
 
 		data = self.users[user]
 		cmd_opts = list_gen(
@@ -635,7 +644,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		min_bal = XMRAmt('0.9')
 
 		for i in range(4):
-			if i: ok()
+			if i:
+				ok()
 			get_file_with_ext(self.users['alice'].udir,'sigtx',delete_all=True)
 			send_amt = self.do_op(
 				'sweep','alice','2:1,3', # '2:1,3'
@@ -834,7 +844,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		for count in range(max_iterations):
 			bal_info = await get_balance(dest,count)
-			if h > height_threshold and (dest.test(bal_info) is True or ( chk_bal_chg and bal_info.ub != bal_info_start.ub )):
+			if h > height_threshold and (
+						dest.test(bal_info) is True or (chk_bal_chg and bal_info.ub != bal_info_start.ub)
+					):
 				imsg('')
 				oqmsg_r('+')
 				print_balance(dest,bal_info)

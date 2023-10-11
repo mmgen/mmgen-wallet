@@ -289,10 +289,14 @@ class TestSuiteOutput(TestSuiteBase):
 	def screen_output(self,lang):
 		return self.spawn('test/misc/utf8_output.py',[lang],cmd_dir='.')
 
-	def output_gr(self): return self.screen_output('gr')
-	def output_ru(self): return self.screen_output('ru')
-	def output_zh(self): return self.screen_output('zh')
-	def output_jp(self): return self.screen_output('jp')
+	def output_gr(self):
+		return self.screen_output('gr')
+	def output_ru(self):
+		return self.screen_output('ru')
+	def output_zh(self):
+		return self.screen_output('zh')
+	def output_jp(self):
+		return self.screen_output('jp')
 
 	def oneshot_warning(self,pexpect_spawn=None):
 		t = self.spawn('test/misc/oneshot_warning.py',cmd_dir='.',pexpect_spawn=pexpect_spawn)
@@ -352,17 +356,23 @@ class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 			return
 		return self.spawn('mmgen-addrgen',['--outdir='+self.tmpdir,'--type='+atype,dfl_words_file,'1-2'])
 
-	def ref_tx_addrgen1(self): return self.ref_tx_addrgen(atype='L')
-	def ref_tx_addrgen2(self): return self.ref_tx_addrgen(atype='C')
-	def ref_tx_addrgen3(self): return self.ref_tx_addrgen(atype='S')
-	def ref_tx_addrgen4(self): return self.ref_tx_addrgen(atype='B')
+	def ref_tx_addrgen1(self):
+		return self.ref_tx_addrgen(atype='L')
+	def ref_tx_addrgen2(self):
+		return self.ref_tx_addrgen(atype='C')
+	def ref_tx_addrgen3(self):
+		return self.ref_tx_addrgen(atype='S')
+	def ref_tx_addrgen4(self):
+		return self.ref_tx_addrgen(atype='B')
 
 	def ref_tx_txcreate(self,f1,f2,f3,f4):
 		sources = ['31','32']
-		if 'S' in self.proto.mmtypes: sources += ['33']
-		if 'B' in self.proto.mmtypes: sources += ['34']
+		if 'S' in self.proto.mmtypes:
+			sources += ['33']
+		if 'B' in self.proto.mmtypes:
+			sources += ['34']
 		return self.txcreate_common(
-									addrs_per_wallet = 2,
-									sources          = sources,
-									add_args         = ['--locktime=1320969600'],
-									do_label         = True )
+				addrs_per_wallet = 2,
+				sources          = sources,
+				add_args         = ['--locktime=1320969600'],
+				do_label         = True)

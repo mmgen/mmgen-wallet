@@ -29,10 +29,13 @@ test = sys.argv[1].capitalize()
 assert test in ('Sha256','Sha512','Keccak'), "Valid choices for test are 'sha256','sha512' or 'keccak'"
 random_rounds = int(sys.argv[2]) if len(sys.argv) == 3 else 500
 
-def msg(s): sys.stderr.write(s)
-def green(s): return '\033[32;1m' + s + '\033[0m'
+def msg(s):
+	sys.stderr.write(s)
 
-class TestHashFunc(object):
+def green(s):
+	return '\033[32;1m' + s + '\033[0m'
+
+class TestHashFunc:
 
 	def test_constants(self):
 		msg('Testing generated constants: ')
@@ -122,7 +125,8 @@ class TestKeccak(TestHashFunc):
 			import sha3
 			self.hashlib = sha3
 
-	def test_constants(self): pass
+	def test_constants(self):
+		pass
 
 class TestSha2(TestHashFunc):
 

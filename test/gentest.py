@@ -200,7 +200,8 @@ class GenToolPycoin(GenTool):
 		try:
 			from pycoin.networks.registry import network_for_netcode
 		except:
-			raise ImportError('Unable to import pycoin.networks.registry. Is pycoin installed on your system?')
+			raise ImportError(
+				'Unable to import pycoin.networks.registry. Is pycoin installed on your system?')
 		self.nfnc = network_for_netcode
 
 	def run(self,sec,vcoin):
@@ -233,7 +234,8 @@ class GenToolMonero_python(GenTool):
 		try:
 			from monero.seed import Seed
 		except:
-			raise ImportError('Unable to import monero-python. Is monero-python installed on your system?')
+			raise ImportError(
+				'Unable to import monero-python. Is monero-python installed on your system?')
 		self.Seed = Seed
 
 	def run(self,sec,vcoin):
@@ -393,9 +395,25 @@ def ab_test(proto,scfg):
 
 	if scfg.all_backends: # check all backends against external tool
 		for n in range(len(get_backends(addr_type.pubkey_type))):
-			do_ab_test( proto, scfg, addr_type, gen1=n+1, kg2=kg2, ag=ag, tool=tool, cache_data=scfg.rounds < 1000 and not n )
+			do_ab_test(
+					proto,
+					scfg,
+					addr_type,
+					gen1       = n+1,
+					kg2        = kg2,
+					ag         = ag,
+					tool       = tool,
+					cache_data = scfg.rounds < 1000 and not n)
 	else:                # check specific backend against external tool or another backend
-		do_ab_test( proto, scfg, addr_type, gen1=scfg.gen1, kg2=kg2, ag=ag, tool=tool, cache_data=False )
+		do_ab_test(
+				proto,
+				scfg,
+				addr_type,
+				gen1       = scfg.gen1,
+				kg2        = kg2,
+				ag         = ag,
+				tool       = tool,
+				cache_data = False)
 
 def speed_test(proto,kg,ag,rounds):
 	qmsg(green('Testing speed of address generator {!r} for coin {}'.format(

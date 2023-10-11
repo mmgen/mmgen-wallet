@@ -39,7 +39,8 @@ async def test_tx(tx_proto,tx_hex,desc,n):
 	rpc = await rpc_init( cfg, proto=tx_proto, ignore_wallet=True )
 	d = await rpc.call('decoderawtransaction',tx_hex)
 
-	if has_nonstandard_outputs(d['vout']): return False
+	if has_nonstandard_outputs(d['vout']):
+		return False
 
 	dt = DeserializeTX(tx_proto,tx_hex)
 

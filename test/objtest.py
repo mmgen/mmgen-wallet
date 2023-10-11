@@ -116,8 +116,11 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 
 		bad_ret = list() if issubclass(cls,list) else None
 
-		if isinstance(ret_chk,str): ret_chk = ret_chk.encode()
-		if isinstance(ret,str): ret = ret.encode()
+		if isinstance(ret_chk,str):
+			ret_chk = ret_chk.encode()
+
+		if isinstance(ret,str):
+			ret = ret.encode()
 
 		if cfg.getobj:
 			if input_data == 'bad':
@@ -141,8 +144,10 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 		if cfg.getobj and (not cfg.silent and input_data == 'bad'):
 			pass
 		else:
-			try: ret_disp = ret.decode()
-			except: ret_disp = ret
+			try:
+				ret_disp = ret.decode()
+			except:
+				ret_disp = ret
 			msg(f'==> {ret_disp!r}')
 
 		if cfg.verbose and issubclass(cls,MMGenObject):
@@ -180,7 +185,8 @@ def do_loop():
 	utests = cfg._args
 	for test in test_data:
 		arg1 = test_data[test].get('arg1')
-		if utests and test not in utests: continue
+		if utests and test not in utests:
+			continue
 		nl = ('\n','')[bool(cfg.super_silent) or clr == None]
 		clr = (blue,nocolor)[bool(cfg.super_silent)]
 

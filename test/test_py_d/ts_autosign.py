@@ -78,13 +78,17 @@ def check_mountpoint(asi):
 
 def do_mount(mountpoint):
 	if not os.path.ismount(mountpoint):
-		try: run(['mount',mountpoint],check=True)
-		except: pass
+		try:
+			run(['mount',mountpoint],check=True)
+		except:
+			pass
 
 def do_umount(mountpoint):
 	if os.path.ismount(mountpoint):
-		try: run(['umount',mountpoint],check=True)
-		except: pass
+		try:
+			run(['umount',mountpoint],check=True)
+		except:
+			pass
 
 class TestSuiteAutosignBase(TestSuiteBase):
 	networks     = ('btc',)
@@ -287,8 +291,10 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			self.bad_tx_count = 2
 		elif op == 'remove':
 			for fn in fns:
-				try: os.unlink(fn)
-				except: pass
+				try:
+					os.unlink(fn)
+				except:
+					pass
 			self.bad_tx_count = 0
 		return 'ok'
 

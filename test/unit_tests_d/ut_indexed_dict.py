@@ -11,12 +11,13 @@ from ..include.common import vmsg
 class unit_test(object):
 
 	def run_test(self,name,ut):
-		bad_msg = ( 'initializing values via constructor',
-					'reassignment to existing key',
-					'item deletion',
-					'item moving',
-					'clearing',
-					'updating' )
+		bad_msg = (
+			'initializing values via constructor',
+			'reassignment to existing key',
+			'item deletion',
+			'item moving',
+			'clearing',
+			'updating')
 		def bad0(): IndexedDict(arg)
 		def bad1(): d['a'] = 2
 		def bad2(): del d['a']
@@ -41,13 +42,19 @@ class unit_test(object):
 		dict(arg)
 
 		for i in range(6):
-			try: locals()['bad'+str(i)]()
-			except NotImplementedError as e: omsg(e)
-			else: odie(i)
+			try:
+				locals()['bad'+str(i)]()
+			except NotImplementedError as e:
+				omsg(e)
+			else:
+				odie(i)
 
-		try: d.key(2)
-		except Exception as e: omsg(e)
-		else: odie('list index out of range')
+		try:
+			d.key(2)
+		except Exception as e:
+			omsg(e)
+		else:
+			odie('list index out of range')
 
 		d['c'] = 3
 

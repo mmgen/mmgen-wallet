@@ -59,10 +59,7 @@ def test_network(proto,addrs):
 		return pp_fmt({k:(v.hex() if isinstance(v,bytes) else v) for k,v in addr.parsed._asdict().items()})
 
 	def print_info(addr):
-		vmsg('\n{}\n{}\n{}'.format(
-			yellow(addr.addr_fmt),
-			cyan(addr),
-			fmt_addr_data(addr)))
+		vmsg('\n{}\n{}\n{}'.format(yellow(addr.addr_fmt), cyan(addr), fmt_addr_data(addr)))
 
 	msg_r(f'Testing {proto.coin} address parsing...')
 	vmsg('')

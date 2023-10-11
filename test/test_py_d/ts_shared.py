@@ -31,22 +31,24 @@ from .common import ref_bw_file,ref_bw_hash_preset,ref_dir
 class TestSuiteShared(object):
 	'shared methods for the test.py test suite'
 
-	def txcreate_ui_common(self,t,
-			caller            = None,
-			menu              = [],
-			inputs            = '1',
-			file_desc         = 'Unsigned transaction',
-			input_sels_prompt = 'to spend',
-			bad_input_sels    = False,
-			interactive_fee   = '',
-			fee_desc          = 'transaction fee',
-			fee_info_pat      = None,
-			add_comment       = '',
-			view              = 't',
-			save              = True,
-			tweaks            = [],
+	def txcreate_ui_common(
+			self,
+			t,
+			caller             = None,
+			menu               = [],
+			inputs             = '1',
+			file_desc          = 'Unsigned transaction',
+			input_sels_prompt  = 'to spend',
+			bad_input_sels     = False,
+			interactive_fee    = '',
+			fee_desc           = 'transaction fee',
+			fee_info_pat       = None,
+			add_comment        = '',
+			view               = 't',
+			save               = True,
+			tweaks             = [],
 			used_chg_addr_resp = None,
-			auto_chg_addr     = None ):
+			auto_chg_addr      = None):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
@@ -106,7 +108,9 @@ class TestSuiteShared(object):
 
 		return t
 
-	def txsign_ui_common(self,t,
+	def txsign_ui_common(
+			self,
+			t,
 			caller      = None,
 			view        = 't',
 			add_comment = '',
@@ -114,7 +118,7 @@ class TestSuiteShared(object):
 			ni          = False,
 			save        = True,
 			do_passwd   = False,
-			has_label   = False ):
+			has_label   = False):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
@@ -130,7 +134,9 @@ class TestSuiteShared(object):
 
 		return t
 
-	def txsend_ui_common(self,t,
+	def txsend_ui_common(
+			self,
+			t,
 			caller       = None,
 			view         = 'n',
 			add_comment  = '',
@@ -138,7 +144,7 @@ class TestSuiteShared(object):
 			confirm_send = True,
 			bogus_send   = True,
 			quiet        = False,
-			has_label    = False ):
+			has_label    = False):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
@@ -167,7 +173,10 @@ class TestSuiteShared(object):
 		t.written_to_file('Signed transaction' + (' #' + tnum if tnum else ''), oo=True)
 		return t
 
-	def txsign(self,wf,txfile,
+	def txsign(
+			self,
+			wf,
+			txfile,
 			pf         = '',
 			bumpf      = '',
 			save       = True,
@@ -175,7 +184,7 @@ class TestSuiteShared(object):
 			extra_opts = [],
 			extra_desc = '',
 			view       = 'n',
-			dfl_wallet = False ):
+			dfl_wallet = False):
 		opts = extra_opts + ['-d',self.tmpdir,txfile] + ([wf] if wf else [])
 		t = self.spawn('mmgen-txsign', opts, extra_desc)
 		t.license()
@@ -197,7 +206,15 @@ class TestSuiteShared(object):
 		add_args = [f'-l{self.seed_len}', f'-p{ref_bw_hash_preset}']
 		return self.walletchk(wf,pf=None,add_args=add_args,sid=self.ref_bw_seed_id)
 
-	def walletchk(self,wf,pf,wcls=None,add_args=[],sid=None,extra_desc='',dfl_wallet=False):
+	def walletchk(
+			self,
+			wf,
+			pf,
+			wcls       = None,
+			add_args   = [],
+			sid        = None,
+			extra_desc = '',
+			dfl_wallet = False):
 		hp = self.hash_preset if hasattr(self,'hash_preset') else '1'
 		wcls = wcls or get_wallet_cls(ext=get_extension(wf))
 		t = self.spawn('mmgen-walletchk',
@@ -215,20 +232,23 @@ class TestSuiteShared(object):
 			cmp_or_die(chk,sid)
 		return t
 
-	def addrgen(self,wf,
-			pf         = None,
+	def addrgen(
+			self,
+			wf,
+			pf = None,
 			check_ref  = False,
 			ftype      = 'addr',
 			id_str     = None,
 			extra_args = [],
 			mmtype     = None,
 			stdout     = False,
-			dfl_wallet = False ):
+			dfl_wallet = False):
 		passgen = ftype[:4] == 'pass'
 		if not mmtype and not passgen:
 			mmtype = self.segwit_mmtype
 		cmd_pfx = (ftype,'pass')[passgen]
-		t = self.spawn(f'mmgen-{cmd_pfx}gen',
+		t = self.spawn(
+				f'mmgen-{cmd_pfx}gen',
 				['-d',self.tmpdir] + extra_args +
 				([],['--type='+str(mmtype)])[bool(mmtype)] +
 				([],['--stdout'])[stdout] +
@@ -246,8 +266,9 @@ class TestSuiteShared(object):
 			t.expect('Encrypt password list? (y/N): ','N')
 		t.read() if stdout else t.written_to_file(('Addresses','Password list')[passgen])
 		if check_ref:
-			chk_ref = (self.chk_data[self.test_name] if passgen else
-						self.chk_data[self.test_name][self.fork][self.proto.testnet])
+			chk_ref = (
+				self.chk_data[self.test_name] if passgen else
+				self.chk_data[self.test_name][self.fork][self.proto.testnet])
 			cmp_or_die(chk,chk_ref,desc=f'{ftype}list data checksum')
 		return t
 
