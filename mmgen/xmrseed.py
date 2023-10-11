@@ -48,7 +48,7 @@ class xmrseed(baseconv):
 
 	def tobytes(self,words,pad=None):
 		assert isinstance(words,(list,tuple)),'words must be list or tuple'
-		assert pad == None, f"{pad}: invalid 'pad' argument (must be None)"
+		assert pad is None, f"{pad}: invalid 'pad' argument (must be None)"
 
 		desc = self.desc.short
 		wl = self.digits
@@ -75,7 +75,7 @@ class xmrseed(baseconv):
 		return b''.join(gen())
 
 	def frombytes(self,bytestr,pad=None,tostr=False):
-		assert pad == None, f"{pad}: invalid 'pad' argument (must be None)"
+		assert pad is None, f"{pad}: invalid 'pad' argument (must be None)"
 
 		desc = self.desc.short
 		wl = self.digits

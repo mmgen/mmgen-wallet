@@ -170,7 +170,7 @@ def write_data_to_file(
 	if cfg.quiet:
 		ask_overwrite = False
 
-	if ask_write_default_yes == False or ask_write_prompt:
+	if ask_write_default_yes is False or ask_write_prompt:
 		ask_write = True
 
 	def do_stdout():

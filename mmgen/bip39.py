@@ -110,7 +110,7 @@ class bip39(baseconv):
 
 	def fromhex(self,seed_hex,pad=None,tostr=False):
 		assert is_hex_str(seed_hex),'seed data not a hexadecimal string'
-		assert tostr == False,"'tostr' must be False for 'bip39'"
+		assert tostr is False,"'tostr' must be False for 'bip39'"
 		assert pad in (None,'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
 		wl = self.digits

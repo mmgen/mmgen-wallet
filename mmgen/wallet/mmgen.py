@@ -155,7 +155,7 @@ class wallet(wallet):
 				return False
 
 			val = baseconv('b58').tobytes(b58_val,pad='seed')
-			if val == False:
+			if val is False:
 				msg(f'Invalid base 58 number: {b58_val}')
 				return False
 

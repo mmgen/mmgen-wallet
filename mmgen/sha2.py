@@ -74,7 +74,7 @@ class Sha2(object):
 	def __init__(self,message,preprocess=True):
 		'Use preprocess=False for Sha256Compress'
 		assert isinstance(message,(bytes,bytearray,list)),'message must be of type bytes, bytearray or list'
-		if self.K == None:
+		if self.K is None:
 			type(self).initConstants()
 		self.H = list(self.H_init)
 		self.M = message

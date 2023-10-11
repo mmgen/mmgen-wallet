@@ -137,7 +137,7 @@ def block_format(data,gw=2,cols=8,line_nums=None,data_is_hex=False):
 		gw *= 2
 	nchunks = len(data)//gw + bool(len(data)%gw)
 	return ''.join(
-		('' if (line_nums == None or i % cols) else ln_fs.format(i*bytes_per_chunk))
+		('' if (line_nums is None or i % cols) else ln_fs.format(i*bytes_per_chunk))
 		+ data[i*gw:i*gw+gw]
 		+ (' ' if (not cols or (i+1) % cols) else '\n')
 			for i in range(nchunks)

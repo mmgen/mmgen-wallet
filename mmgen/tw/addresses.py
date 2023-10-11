@@ -266,7 +266,7 @@ class TwAddresses(TwView):
 				yield (sid_save, sid_range(bot, n-1))
 
 		assert self.sort_key == 'twmmid'
-		assert self.reverse == False
+		assert self.reverse is False
 
 		if not hasattr(self,'_sid_ranges'):
 			self._sid_ranges = dict(gen_sid_ranges())
@@ -311,7 +311,7 @@ class TwAddresses(TwView):
 				n = (top + bot) >> 1
 
 		assert self.sort_key == 'twmmid'
-		assert self.reverse == False
+		assert self.reverse is False
 
 		data = self.data
 		start = get_start(

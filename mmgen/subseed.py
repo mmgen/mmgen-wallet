@@ -139,7 +139,7 @@ class SubSeedList(MMGenObject):
 					subseed.ss_idx.hl(),
 				))
 
-		if last_idx == None:
+		if last_idx is None:
 			last_idx = self.len
 
 		subseed = get_existing_subseed_by_seed_id(sid)
@@ -174,7 +174,7 @@ class SubSeedList(MMGenObject):
 
 	def _generate(self,last_idx=None,last_sid=None):
 
-		if last_idx == None:
+		if last_idx is None:
 			last_idx = self.len
 
 		first_idx = len(self) + 1
@@ -182,7 +182,7 @@ class SubSeedList(MMGenObject):
 		if first_idx > last_idx:
 			return None
 
-		if last_sid != None:
+		if last_sid is not None:
 			last_sid = SeedID(sid=last_sid)
 
 		def add_subseed(idx,length):

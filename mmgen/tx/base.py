@@ -134,7 +134,7 @@ class Base(MMGenObject):
 		return sum(e.amt for e in self.inputs)
 
 	def sum_outputs(self,exclude=None):
-		if exclude == None:
+		if exclude is None:
 			olist = self.outputs
 		else:
 			olist = self.outputs[:exclude] + self.outputs[exclude+1:]

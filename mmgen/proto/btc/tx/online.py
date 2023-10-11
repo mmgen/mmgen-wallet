@@ -50,7 +50,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 				errmsg = str(e)
 				ret = False
 
-		if ret == False: # TODO: test send errors
+		if ret is False: # TODO: test send errors
 			if errmsg.count('Signature must use SIGHASH_FORKID'):
 				m = ('The Aug. 1 2017 UAHF has activated on this chain.\n'
 					+ 'Re-run the script with the --coin=bch option.' )

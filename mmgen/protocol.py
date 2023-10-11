@@ -220,7 +220,7 @@ class CoinProtocol(MMGenObject):
 		"""
 		def encode_wif(self,privbytes,pubkey_type,compressed):
 			assert pubkey_type == self.pubkey_type, f'{pubkey_type}: invalid pubkey_type for {self.name} protocol!'
-			assert compressed == False, f'{self.name} protocol does not support compressed pubkeys!'
+			assert compressed is False, f'{self.name} protocol does not support compressed pubkeys!'
 			return privbytes.hex()
 
 		def decode_wif(self,wif):
@@ -239,8 +239,8 @@ def init_proto(
 		tokensym   = None,
 		need_amt   = False ):
 
-	assert type(testnet) == bool, 'init_proto_chk1'
-	assert type(regtest) == bool, 'init_proto_chk2'
+	assert type(testnet) is bool, 'init_proto_chk1'
+	assert type(regtest) is bool, 'init_proto_chk2'
 	assert coin or network_id, 'init_proto_chk3'
 	assert not (coin and network_id), 'init_proto_chk4'
 
@@ -248,8 +248,8 @@ def init_proto(
 		coin,network = CoinProtocol.Base.parse_network_id(network_id)
 	elif network:
 		assert network in CoinProtocol.Base.networks, f'init_proto_chk5 - {network!r}: invalid network'
-		assert testnet == False, 'init_proto_chk6'
-		assert regtest == False, 'init_proto_chk7'
+		assert testnet is False, 'init_proto_chk6'
+		assert regtest is False, 'init_proto_chk7'
 	else:
 		network = 'regtest' if regtest else 'testnet' if testnet else 'mainnet'
 

@@ -47,7 +47,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 		try:
 			if from_unit:
 				assert from_unit in cls.units, f'{from_unit!r}: unrecognized denomination for {cls.__name__}'
-				assert type(num) == int,'value is not an integer'
+				assert type(num) is int,'value is not an integer'
 				me = Decimal.__new__(cls,num * getattr(cls,from_unit))
 			elif from_decimal:
 				assert isinstance(num,Decimal), f'number must be of type Decimal, not {type(num).__name__})'

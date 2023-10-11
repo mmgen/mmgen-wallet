@@ -216,16 +216,16 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		self.fmt_data = ''
 		self.chksum = None
 
-		if self.al_id == None:
+		if self.al_id is None:
 			return
 
-		if type(self) == ViewKeyAddrList:
+		if type(self) is ViewKeyAddrList:
 			if not 'viewkey' in self.al_id.mmtype.extra_attrs:
 				die(1,f'viewkeys not supported for address type {self.al_id.mmtype.desc!r}')
 
 		self.id_str = AddrListIDStr(self)
 
-		if type(self) == KeyList:
+		if type(self) is KeyList:
 			return
 
 		if do_chksum and not skip_chksum:
@@ -288,7 +288,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 					e.viewkey = ag.to_viewkey(data)
 				if gen_wallet_passwd:
 					e.wallet_passwd = self.gen_wallet_passwd(
-						e.viewkey.encode() if type(self) == ViewKeyAddrList else e.sec )
+						e.viewkey.encode() if type(self) is ViewKeyAddrList else e.sec )
 			elif self.gen_passwds:
 				e.passwd = self.gen_passwd(e.sec) # TODO - own type
 

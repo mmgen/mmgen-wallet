@@ -131,7 +131,7 @@ class TokenCommon(MMGenObject):
 
 		if chain_id is None:
 			res = await self.rpc.call('eth_chainId')
-			chain_id = None if res == None else int(res,16)
+			chain_id = None if res is None else int(res,16)
 
 		tx = Transaction(**tx_in).sign(key,chain_id)
 

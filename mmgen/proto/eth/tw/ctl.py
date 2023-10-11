@@ -183,7 +183,7 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 			if not is_coin_addr(proto,token_addr):
 				die( 'InvalidTokenAddress', f'{token_addr!r}: invalid token address' )
 		else:
-			assert token_addr == None,'EthereumTokenTwCtl_chk1'
+			assert token_addr is None,'EthereumTokenTwCtl_chk1'
 			token_addr = await self.sym2addr(proto.tokensym) # returns None on failure
 			if not is_coin_addr(proto,token_addr):
 				die( 'UnrecognizedTokenSymbol', f'Specified token {proto.tokensym!r} could not be resolved!' )
@@ -217,7 +217,7 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 		cache = self.cur_eth_balances
 		r = self.data['accounts']
 		ret = None if force_rpc else self.get_cached_balance(addr,cache,r)
-		if ret == None:
+		if ret is None:
 			ret = await super().rpc_get_balance(addr)
 			self.cache_balance(addr,ret,cache,r)
 		return ret

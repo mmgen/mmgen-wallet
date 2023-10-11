@@ -324,11 +324,11 @@ def decode_timestamp(s):
 
 def make_timestamp(secs=None):
 	return '{:04d}{:02d}{:02d}_{:02d}{:02d}{:02d}'.format(*time.gmtime(
-		int(secs) if secs != None else time.time() )[:6])
+		int(secs) if secs is not None else time.time() )[:6])
 
 def make_timestr(secs=None):
 	return '{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}'.format(*time.gmtime(
-		int(secs) if secs != None else time.time() )[:6])
+		int(secs) if secs is not None else time.time() )[:6])
 
 def secs_to_dhms(secs):
 	hrs = secs // 3600

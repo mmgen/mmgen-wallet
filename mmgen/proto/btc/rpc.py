@@ -170,7 +170,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 				if block0 != self.proto.block0:
 					raise ValueError(f'Invalid Genesis block for {self.proto.cls_name} protocol')
 				for fork in self.proto.forks:
-					if fork.height == None or self.blockcount < fork.height:
+					if fork.height is None or self.blockcount < fork.height:
 						break
 					if fork.hash != await self.call('getblockhash',fork.height):
 						die(3,f'Bad block hash at fork block {fork.height}. Is this the {fork.name} chain?')
@@ -286,7 +286,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			d = self.cached['blockchaininfo']
 
 			try:
-				if d['softforks']['segwit']['active'] == True:
+				if d['softforks']['segwit']['active'] is True:
 					return True
 			except:
 				pass

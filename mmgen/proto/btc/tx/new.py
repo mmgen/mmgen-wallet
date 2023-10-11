@@ -69,10 +69,10 @@ class New(Base,TxBase.New):
 
 	def convert_and_check_fee(self,fee,desc):
 		abs_fee = self.feespec2abs(fee,self.estimate_size())
-		if abs_fee == None:
+		if abs_fee is None:
 			raise ValueError(f'{fee}: cannot convert {self.rel_fee_desc} to {self.coin}'
 								+ ' because transaction size is unknown')
-		if abs_fee == False:
+		if abs_fee is False:
 			err = f'{fee!r}: invalid TX fee (not a {self.coin} amount or {self.rel_fee_desc} specification)'
 		elif abs_fee > self.proto.max_tx_fee:
 			err = f'{abs_fee} {self.coin}: {desc} fee too large (maximum fee: {self.proto.max_tx_fee} {self.coin})'

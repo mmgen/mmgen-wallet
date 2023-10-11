@@ -74,7 +74,7 @@ class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 			return s
 		if wif:
 			try:
-				assert s == None,"'wif' and key hex args are mutually exclusive"
+				assert s is None,"'wif' and key hex args are mutually exclusive"
 				assert wif.isascii() and wif.isalnum(), 'not an ASCII alphanumeric string'
 				k = proto.decode_wif(wif) # raises exception on error
 				me = bytes.__new__(cls,k.sec)
@@ -100,7 +100,7 @@ class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 					me = bytes.__new__(cls,s)
 				else:
 					assert compressed is not None, "'compressed' arg missing"
-					assert type(compressed) == bool,(
+					assert type(compressed) is bool,(
 						f"'compressed' must be of type bool, not {type(compressed).__name__}" )
 					me = bytes.__new__( cls, proto.preprocess_key(s,pubkey_type) )
 					me.wif = WifKey( proto, proto.encode_wif(me,pubkey_type,compressed) )

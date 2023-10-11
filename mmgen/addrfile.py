@@ -110,7 +110,7 @@ class AddrFile(MMGenObject):
 		fs = '  {:<%s}  {:<34}{}' % len(str(p.data[-1].idx))
 		for e in p.data:
 			c = ' ' + e.comment if add_comments and e.comment else ''
-			if type(p) == KeyList:
+			if type(p) is KeyList:
 				out.append(fs.format( e.idx, f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
 			elif type(p).__name__ == 'PasswordList':
 				out.append(fs.format(e.idx,e.passwd,c))
@@ -119,7 +119,7 @@ class AddrFile(MMGenObject):
 				if p.has_keys:
 					if self.cfg.b16:
 						out.append(fs.format( '', f'orig_hex: {e.sec.orig_bytes.hex()}', c ))
-					if type(self) != ViewKeyAddrFile:
+					if type(self) is not ViewKeyAddrFile:
 						out.append(fs.format( '', f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
 					for k in ('viewkey','wallet_passwd'):
 						v = getattr(e,k)
@@ -154,7 +154,7 @@ class AddrFile(MMGenObject):
 			a = le(**{ 'proto': p.proto, 'idx':int(idx), p.main_attr:addr, 'comment':comment })
 
 			if p.has_keys: # order: wif,(orig_hex),viewkey,wallet_passwd
-				if type(self) != ViewKeyAddrFile:
+				if type(self) is not ViewKeyAddrFile:
 					d = self.get_line(lines)
 					assert d[0] == p.al_id.mmtype.wif_label+':', iifs.format(d[0],p.al_id.mmtype.wif_label)
 					a.sec = PrivKey(proto=p.proto,wif=d[1])
@@ -168,7 +168,7 @@ class AddrFile(MMGenObject):
 
 			ret.append(a)
 
-		if type(self) != ViewKeyAddrFile and p.has_keys and p.ka_validity_chk != False:
+		if type(self) is not ViewKeyAddrFile and p.has_keys and p.ka_validity_chk is not False:
 
 			def verify_keys():
 				from .addrgen import KeyGenerator,AddrGenerator
@@ -230,7 +230,7 @@ class AddrFile(MMGenObject):
 
 			proto = init_proto( p.cfg, coin=coin, network=network )
 
-			if mmtype_key == None:
+			if mmtype_key is None:
 				mmtype_key = proto.mmtypes[0]
 
 			return ( proto, proto.addr_type(mmtype_key) )

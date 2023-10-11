@@ -141,7 +141,7 @@ class BitcoinTwTransaction:
 		return self.parent.date_formatter[age_fmt](self.rpc,self.time)
 
 	def txid_disp(self,color,width=None):
-		return self.txid.hl(color=color) if width == None else self.txid.truncate(width=width,color=color)
+		return self.txid.hl(color=color) if width is None else self.txid.truncate(width=width,color=color)
 
 	def vouts_list_disp(self,src,color,indent=''):
 

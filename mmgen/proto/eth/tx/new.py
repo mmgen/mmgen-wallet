@@ -127,7 +127,7 @@ class New(Base,TxBase.New):
 
 	def convert_and_check_fee(self,fee,desc):
 		abs_fee = self.feespec2abs(fee,None)
-		if abs_fee == False:
+		if abs_fee is False:
 			return False
 		elif not self.disable_fee_check and (abs_fee > self.proto.max_tx_fee):
 			msg('{} {c}: {} fee too large (maximum fee: {} {c})'.format(

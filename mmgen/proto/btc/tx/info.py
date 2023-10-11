@@ -124,7 +124,7 @@ class TxInfo(TxInfo):
 		# format (the number of seconds elapsed since 1970-01-01T00:00 UTC). The transaction can be
 		# added to any block whose block time is greater than the locktime.
 		num = locktime or self.tx.locktime
-		if num == None:
+		if num is None:
 			return '(None)'
 		elif num >= 5 * 10**6:
 			import time

@@ -148,7 +148,7 @@ class cfg_file_sample(cfg_file):
 				if line == '':
 					in_chunk = False
 				elif line.startswith('#'):
-					if in_chunk == False:
+					if in_chunk is False:
 						if chunk:
 							yield process_chunk(chunk,last_nonblank)
 						chunk = [line]

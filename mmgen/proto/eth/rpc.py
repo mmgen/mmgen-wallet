@@ -78,7 +78,7 @@ class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
 		if self.daemon.id in ('parity','openethereum'):
 			if (await self.call('parity_nodeKind'))['capability'] == 'full':
 				self.caps += ('full_node',)
-			self.chainID = None if ci == None else Int(ci,16) # parity/oe return chainID only for dev chain
+			self.chainID = None if ci is None else Int(ci,16) # parity/oe return chainID only for dev chain
 			self.chain = (await self.call('parity_chain')).replace(' ','_').replace('_testnet','')
 		elif self.daemon.id in ('geth','erigon'):
 			if self.daemon.network == 'mainnet':

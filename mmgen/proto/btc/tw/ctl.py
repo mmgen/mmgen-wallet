@@ -52,7 +52,7 @@ class BitcoinTwCtl(TwCtl):
 	async def rescan_blockchain(self,start,stop):
 
 		start = start or 0
-		endless = stop == None
+		endless = stop is None
 		CR = '\n' if self.cfg.test_suite else '\r'
 
 		if not ( start >= 0 and (stop if stop is not None else start) >= start ):

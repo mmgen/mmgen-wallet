@@ -175,7 +175,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 	async def get_balance(self,addr,force_rpc=False):
 		ret = None if force_rpc else self.get_cached_balance(addr,self.cur_balances,self.data_root)
-		if ret == None:
+		if ret is None:
 			ret = await self.rpc_get_balance(addr)
 			self.cache_balance(addr,ret,self.cur_balances,self.data_root)
 		return ret
@@ -264,7 +264,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 		comment = get_obj(TwComment,s=comment)
 
-		if comment == False:
+		if comment is False:
 			return False
 
 		lbl = get_obj(
@@ -272,7 +272,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			proto = self.proto,
 			text = res.twmmid + (' ' + comment if comment else ''))
 
-		if lbl == False:
+		if lbl is False:
 			return False
 
 		if await self.set_label(res.coinaddr,lbl):

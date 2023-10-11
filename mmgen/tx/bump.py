@@ -59,15 +59,15 @@ class Bump(Completed,New):
 		chg_idx = self.chg_idx
 
 		while True:
-			if init_reply == None:
+			if init_reply is None:
 				from ..ui import line_input
 				m = 'Choose an output to deduct the fee from (Hit ENTER for the change output): '
 				reply = line_input( self.cfg, m ) or 'c'
 			else:
 				reply,init_reply = init_reply,None
-			if chg_idx == None and not is_int(reply):
+			if chg_idx is None and not is_int(reply):
 				msg('Output must be an integer')
-			elif chg_idx != None and not is_int(reply) and reply != 'c':
+			elif chg_idx is not None and not is_int(reply) and reply != 'c':
 				msg("Output must be an integer, or 'c' for the change output")
 			else:
 				idx = chg_idx if reply == 'c' else (int(reply) - 1)

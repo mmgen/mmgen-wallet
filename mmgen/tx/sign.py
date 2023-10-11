@@ -38,7 +38,7 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 	while True:
 		if infiles:
 			seed = Wallet(cfg,infiles.pop(0),ignore_in_fmt=True).seed
-		elif subseeds_checked == False:
+		elif subseeds_checked is False:
 			seed = saved_seeds[list(saved_seeds)[0]].subseed_by_seed_id(sid,print_msg=True)
 			subseeds_checked = True
 			if not seed:

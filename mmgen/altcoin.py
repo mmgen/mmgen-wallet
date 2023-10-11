@@ -42,7 +42,7 @@ from .cfg import gc,Config
 from .util import msg
 
 def test_equal(desc,a,b,*cdata):
-	if type(a) == int:
+	if type(a) is int:
 		a = hex(a)
 		b = hex(b)
 	(network,coin,e,b_desc,verbose) = cdata
@@ -625,7 +625,7 @@ class CoinInfo(object):
 		except:
 			pass
 		else:
-			if bl == True or coin in bl:
+			if bl is True or coin in bl:
 				if verbose:
 					msg(f'Tool {tool!r} blacklisted for coin {coin}, addr_type {addr_type!r}')
 				return None
@@ -708,7 +708,7 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 	networks = ['mainnet'] + (['testnet'] if testnet else [])
 	network = 'testnet' if testnet else 'mainnet'
 
-	if usr_coin == None:
+	if usr_coin is None:
 		for network in networks:
 			data[network] = CoinInfo.get_supported_coins(network)
 		trust_level = 0

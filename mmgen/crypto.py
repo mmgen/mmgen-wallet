@@ -306,7 +306,7 @@ class Crypto:
 			desc,
 			urand = {'data':b'', 'counter':0} ):
 
-		assert type(rand_bytes) == bytes, 'add_user_random_chk1'
+		assert type(rand_bytes) is bytes, 'add_user_random_chk1'
 
 		if self.cfg.usr_randchars:
 

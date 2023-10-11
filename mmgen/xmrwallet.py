@@ -1396,7 +1396,7 @@ class MoneroWalletOps:
 
 			def gen():
 				for i,k in self.spec_key:
-					if m[i] == None:
+					if m[i] is None:
 						setattr(self,k,None)
 					else:
 						idx = int(m[i])
@@ -1463,7 +1463,7 @@ class MoneroWalletOps:
 
 			gmsg(f'\n{self.stem.capitalize()}ing account #{self.account} of wallet {self.source.idx}' + (
 				f': {self.amount} XMR to {self.dest_addr}' if self.name == 'transfer'
-				else ' to new address' if self.dest == None
+				else ' to new address' if self.dest is None
 				else f' to new account in wallet {self.dest.idx}' ))
 
 			h = self.rpc(self,self.source)
@@ -1479,7 +1479,7 @@ class MoneroWalletOps:
 
 			if self.name == 'transfer':
 				dest_addr = self.dest_addr
-			elif self.dest == None:
+			elif self.dest is None:
 				dest_acct = self.account
 				if keypress_confirm( self.cfg, f'\nCreate new address for account #{self.account}?' ):
 					dest_addr_chk = h.create_new_addr(self.account)
@@ -1556,9 +1556,9 @@ class MoneroWalletOps:
 			h = self.rpc(self,self.source)
 			h.open_wallet('Monero')
 			label = '{a} [{b}]'.format(
-				a = self.label or f"xmrwallet new {'account' if self.account == None else 'address'}",
+				a = self.label or f"xmrwallet new {'account' if self.account is None else 'address'}",
 				b = make_timestr() )
-			if self.account == None:
+			if self.account is None:
 				acct,addr = h.create_acct(label=label)
 			else:
 				msg_r(f'\n    Account index: {pink(str(self.account))}')
@@ -1566,7 +1566,7 @@ class MoneroWalletOps:
 
 			accts_data = h.get_accts()[0]
 
-			if self.account != None:
+			if self.account is not None:
 				h.print_addrs(accts_data,self.account)
 
 			# wallet must be left open: otherwise the 'stop_wallet' RPC call used to stop the daemon will fail

@@ -690,7 +690,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 						break
 					await asyncio.sleep(0.5)
 
-			if parent.scroll and ret == False:
+			if parent.scroll and ret is False:
 				# error messages could leave screen in messy state, so do complete redraw:
 				msg_r(
 					CUR_HOME + ERASE_ALL +

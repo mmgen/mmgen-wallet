@@ -34,7 +34,7 @@ auth_data = namedtuple('rpc_auth_data',['user','passwd'])
 
 def dmsg_rpc(fs,data=None,is_json=False):
 	msg(
-		fs if data == None else
+		fs if data is None else
 		fs.format(pp_fmt(json.loads(data) if is_json else data))
 	)
 
@@ -222,7 +222,7 @@ class RPCBackends:
 						yield s
 				if caller.auth_type == 'digest':
 					yield '--digest'
-				if caller.network_proto == 'https' and caller.verify_server == False:
+				if caller.network_proto == 'https' and caller.verify_server is False:
 					yield '--insecure'
 
 			super().__init__(caller)
@@ -338,7 +338,7 @@ class RPCClient(MMGenObject):
 		  1) method = methodname, args_list = [args_tuple1, args_tuple2,...]
 		  2) method = None, args_list = [(methodname1,args_tuple1), (methodname2,args_tuple2), ...]
 		"""
-		cmd_list = args_list if method == None else tuple(zip([method] * len(args_list), args_list))
+		cmd_list = args_list if method is None else tuple(zip([method] * len(args_list), args_list))
 
 		cur_pos = 0
 		chunk_size = 1024

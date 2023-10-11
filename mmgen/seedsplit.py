@@ -199,7 +199,7 @@ class SeedShare(SeedShareBase,SubSeed):
 	@staticmethod
 	def make_subseed_bin(parent_list,idx:int,nonce:int,length:str):
 		seed = parent_list.parent_seed
-		assert parent_list.have_short == False
+		assert parent_list.have_short is False
 		assert length == 'long'
 		# field maximums: id_str: none (256 chars), count: 65535 (1024), idx: 65535 (1024), nonce: 65535 (1000)
 		scramble_key = (

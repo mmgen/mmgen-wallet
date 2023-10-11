@@ -55,7 +55,7 @@ class wallet(wallet):
 
 		ret = baseconv('b58').tobytes(b,pad='seed')
 
-		if ret == False:
+		if ret is False:
 			msg(f'Invalid base-58 encoded seed: {val}')
 			return False
 

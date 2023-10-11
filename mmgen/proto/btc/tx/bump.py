@@ -32,7 +32,7 @@ class Bump(Completed,New,TxBase.Bump):
 
 	def convert_and_check_fee(self,fee,desc):
 		ret = super().convert_and_check_fee(fee,desc)
-		if ret == False:
+		if ret is False:
 			return ret
 		if ret < self.min_fee:
 			msg('{} {c}: {} fee too small. Minimum fee: {} {c} ({} {})'.format(

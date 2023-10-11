@@ -229,7 +229,7 @@ class MMGenRegtest(MMGenObject):
 	async def fork(self,coin): # currently disabled
 
 		proto = init_proto( self.cfg, coin, False )
-		if not [f for f in proto.forks if f[2] == proto.coin.lower() and f[3] == True]:
+		if not [f for f in proto.forks if f[2] == proto.coin.lower() and f[3] is True]:
 			die(1,f'Coin {proto.coin} is not a replayable fork of coin {coin}')
 
 		gmsg(f'Creating fork from coin {coin} to coin {proto.coin}')

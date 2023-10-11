@@ -83,7 +83,7 @@ class MMGenTxFile(MMGenObject):
 					desc = 'encoded comment (not base58)'
 					from ..baseconv import baseconv
 					comment = baseconv('b58').tobytes(c).decode()
-					assert comment != False,'invalid comment'
+					assert comment is not False,'invalid comment'
 					desc = 'comment'
 					tx.comment = MMGenTxComment(comment)
 
@@ -197,7 +197,7 @@ class MMGenTxFile(MMGenObject):
 		ask_tty               = True,
 		ask_overwrite         = True ):
 
-		if ask_write == False:
+		if ask_write is False:
 			ask_write_default_yes = True
 
 		if not self.filename:

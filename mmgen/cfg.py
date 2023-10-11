@@ -675,7 +675,7 @@ class Config(Lockable):
 
 	def _die_on_incompatible_opts(self):
 		for group in self._incompatible_opts:
-			bad = [k for k in self.__dict__ if k in group and getattr(self,k) != None]
+			bad = [k for k in self.__dict__ if k in group and getattr(self,k) is not None]
 			if len(bad) > 1:
 				die(1,'Conflicting options: {}'.format(', '.join(map(fmt_opt,bad))))
 
@@ -881,7 +881,7 @@ def conv_type(
 			d = f' in {src!r}' if src else '',
 			e = type(refval).__name__ ))
 
-	if type(refval) == bool:
+	if type(refval) is bool:
 		v = str(val).lower()
 		ret = (
 			True  if v in ('true','yes','1','on') else

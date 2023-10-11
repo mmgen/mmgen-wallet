@@ -126,7 +126,7 @@ class ImmutableAttr: # Descriptor
 		else:
 			"check this attribute's type"
 			def assign_with_check(instance,value):
-				if type(value) == dtype:
+				if type(value) is dtype:
 					return value
 				raise TypeError('Attribute {!r} of {} instance must of type {}'.format(
 					self.name,
@@ -171,7 +171,7 @@ class ListItemAttr(ImmutableAttr):
 			return None
 
 	def setattr_condition(self,instance):
-		return getattr(instance,self.name) == None or self.reassign_ok
+		return getattr(instance,self.name) is None or self.reassign_ok
 
 	def __delete__(self,instance):
 		if self.delete_ok:
@@ -205,7 +205,7 @@ class MMGenListItem(MMGenObject):
 			raise ValueError(f'Non-keyword args not allowed in {type(self).__name__!r} constructor')
 
 		for k,v in kwargs.items():
-			if v != None:
+			if v is not None:
 				setattr(self,k,v)
 
 		# Require all immutables to be initialized.  Check performed only when testing.
@@ -274,11 +274,11 @@ class Int(int,Hilite,InitErrors):
 			return n
 		try:
 			me = int.__new__(cls,str(n),base)
-			if cls.min_val != None:
+			if cls.min_val is not None:
 				assert me >= cls.min_val, f'is less than cls.min_val ({cls.min_val})'
-			if cls.max_val != None:
+			if cls.max_val is not None:
 				assert me <= cls.max_val, f'is greater than cls.max_val ({cls.max_val})'
-			if cls.max_digits != None:
+			if cls.max_digits is not None:
 				assert len(str(me)) <= cls.max_digits, f'has more than {cls.max_digits} digits'
 			return me
 		except Exception as e:
@@ -314,7 +314,7 @@ class HexStr(str,Hilite,InitErrors):
 	def __new__(cls,s,case=None):
 		if isinstance(s,cls):
 			return s
-		if case == None:
+		if case is None:
 			case = cls.hexcase
 		from .util import hexdigits_lc,hexdigits_uc
 		try:
