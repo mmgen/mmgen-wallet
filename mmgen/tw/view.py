@@ -375,7 +375,13 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			min(7,max(len(str(getattr(d,k).to_integral_value())) for d in data)) + 1 + self.disp_prec
 				for k in self.amt_keys}
 
-	async def format(self,display_type,color=True,interactive=False,line_processing=None,scroll=False):
+	async def format(
+			self,
+			display_type,
+			color           = True,
+			interactive     = False,
+			line_processing = None,
+			scroll          = False):
 
 		def make_display():
 

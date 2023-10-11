@@ -219,10 +219,8 @@ class RPCBackends:
 					for s in ('--header',f'{k}: {v}'):
 						yield s
 				if caller.auth_type:
-					"""
-					Authentication with curl is insecure, as it exposes the user's credentials
-					via the command line.  Use for testing only.
-					"""
+					# Authentication with curl is insecure, as it exposes the user's credentials
+					# via the command line.  Use for testing only.
 					for s in ('--user',f'{caller.auth.user}:{caller.auth.passwd}'):
 						yield s
 				if caller.auth_type == 'digest':
@@ -237,7 +235,7 @@ class RPCBackends:
 		async def run(self,payload,timeout,host_path):
 			data = json.dumps(payload,cls=json_encoder)
 			if len(data) > self.arg_max:
-				return self.httplib(payload,timeout=timeout)
+				return self.httplib(payload,timeout=timeout) # TODO: check
 			dmsg_rpc_backend(self.host_url,host_path,payload)
 			exec_cmd = [
 				'curl',
@@ -397,8 +395,10 @@ class RPCClient(MMGenObject):
 					try:
 						m = t['error']['message']
 					except:
-						try: m = t['error']
-						except: m = t
+						try:
+							m = t['error']
+						except:
+							m = t
 					die( 'RPCFailure', m )
 		else:
 			import http
@@ -407,8 +407,10 @@ class RPCClient(MMGenObject):
 				try:
 					m = json.loads(text)['error']['message']
 				except:
-					try: m = text.decode()
-					except: m = text
+					try:
+						m = text.decode()
+					except:
+						m = text
 			die( 'RPCFailure', f'{s.value} {s.name}: {m}' )
 
 	async def stop_daemon(self,quiet=False,silent=False):

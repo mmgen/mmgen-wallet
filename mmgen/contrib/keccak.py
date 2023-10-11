@@ -129,7 +129,8 @@ class KeccakState(object):
 		Formats the given state as hex, in natural byte order.
 		"""
 		rows = []
-		def fmt(x): return '%016x' % x
+		def fmt(x):
+			return '%016x' % x
 		for y in KeccakState.rangeH:
 			row = []
 			for x in rangeW:

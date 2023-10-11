@@ -62,7 +62,15 @@ class Util:
 		else:
 			self.stdout_or_pager = Msg_r
 
-	def compare_chksums(self,chk1,desc1,chk2,desc2,hdr='',die_on_fail=False,verbose=False):
+	def compare_chksums(
+			self,
+			chk1,
+			desc1,
+			chk2,
+			desc2,
+			hdr         = '',
+			die_on_fail = False,
+			verbose     = False):
 
 		if not chk1 == chk2:
 			fs = "{} ERROR: {} checksum ({}) doesn't match {} checksum ({})"
@@ -356,9 +364,12 @@ def is_hex_str_lc(s):
 	return set(s) <= set(hexdigits_lc)
 
 def is_utf8(s):
-	try:    s.decode('utf8')
-	except: return False
-	else:   return True
+	try:
+		s.decode('utf8')
+	except:
+		return False
+	else:
+		return True
 
 def remove_whitespace(s,ws='\t\r\n '):
 	return s.translate(dict((ord(e),None) for e in ws))

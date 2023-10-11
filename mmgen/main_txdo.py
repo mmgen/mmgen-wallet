@@ -28,7 +28,7 @@ opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
 		'desc': f'Create, sign and send an {gc.proj_name} transaction',
-		'usage':    '[opts]  [<addr,amt> ...] <change addr, addrlist ID or addr type> [addr file ...] ' +
+		'usage':   '[opts]  [<addr,amt> ...] <change addr, addrlist ID or addr type> [addr file ...] ' +
 					'[seed source ...]',
 		'options': """
 -h, --help             Print this help message

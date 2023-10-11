@@ -53,7 +53,8 @@ class wallet(wallet):
 			else: # Prompt, using old value as default
 				hp = self._get_hash_preset_from_user( old_preset=old_hp, add_desc=add_desc )
 			if (not self.cfg.keep_hash_preset) and self.op == 'pwchg_new':
-				self.cfg._util.qmsg('Hash preset {}'.format( 'unchanged' if hp == old_hp else f'changed to {hp!r}' ))
+				self.cfg._util.qmsg('Hash preset {}'.format(
+					'unchanged' if hp == old_hp else f'changed to {hp!r}'))
 		elif self.cfg.hash_preset:
 			hp = self.cfg.hash_preset
 			self.cfg._util.qmsg(f'Using hash preset {hp!r} requested on command line')

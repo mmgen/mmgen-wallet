@@ -120,10 +120,8 @@ class Daemon(Lockable):
 			with open(self.pidfile) as fp:
 				return fp.read().strip()
 		elif self.platform == 'win':
-			"""
-			Assumes only one running instance of given daemon.  If multiple daemons are running,
-			the first PID in the list is returned and self.pids is set to the PID list.
-			"""
+			# Assumes only one running instance of given daemon.  If multiple daemons are running,
+			# the first PID in the list is returned and self.pids is set to the PID list.
 			ss = f'{self.exec_fn}.exe'
 			cp = self.run_cmd(['ps','-Wl'],silent=True)
 			self.pids = ()

@@ -72,7 +72,7 @@ class tool_cmd(tool_cmd_base):
 
 	async def txview(
 			self,
-			varargs_call_sig = { # hack to allow for multiple filenames
+			varargs_call_sig = { # hack to allow for multiple filenames - must be second argument!
 				'args': (
 					'mmgen_tx_file(s)',
 					'pager',

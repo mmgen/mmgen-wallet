@@ -36,4 +36,5 @@ class coin_msg(coin_msg):
 				proto = self.proto).pubhex2addr(
 					ec_recover_pubkey( self.cfg, message, sig, msghash_type )) == addr
 
-	class exported_sigs(coin_msg.exported_sigs,signed_online): pass
+	class exported_sigs(coin_msg.exported_sigs,signed_online):
+		pass

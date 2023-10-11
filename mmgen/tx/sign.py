@@ -41,7 +41,8 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 		elif subseeds_checked == False:
 			seed = saved_seeds[list(saved_seeds)[0]].subseed_by_seed_id(sid,print_msg=True)
 			subseeds_checked = True
-			if not seed: continue
+			if not seed:
+				continue
 		elif cfg.in_fmt:
 			cfg._util.qmsg(f'Need seed data for Seed ID {sid}')
 			seed = Wallet(cfg).seed

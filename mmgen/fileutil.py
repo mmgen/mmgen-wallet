@@ -185,8 +185,10 @@ def write_data_to_file(
 					message = '',
 					action  = f'output {desc} to screen' )
 		else:
-			try:    of = os.readlink(f'/proc/{os.getpid()}/fd/1') # Linux
-			except: of = None # Windows
+			try:
+				of = os.readlink(f'/proc/{os.getpid()}/fd/1') # Linux
+			except:
+				of = None # Windows
 
 			if of:
 				if of[:5] == 'pipe:':

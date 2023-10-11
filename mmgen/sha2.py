@@ -96,7 +96,8 @@ class Sha2(object):
 		"""
 		mlpack = self.pack_msglen()
 		padlen = self.blkSize - (len(self.M) % self.blkSize) - len(mlpack) - 1
-		if padlen < 0: padlen += self.blkSize
+		if padlen < 0:
+			padlen += self.blkSize
 		self.M = self.M + bytes([0x80] + [0] * padlen) + mlpack
 
 	def bytesToWords(self):
@@ -117,8 +118,11 @@ class Sha2(object):
 	def processBlock(self,offset):
 		'Process a blkSize-byte chunk of the message'
 
-		def rrotate(a,b): return ((a << self.wordBits-b) & self.wordMask) | (a >> b)
-		def addm(a,b): return (a + b) & self.wordMask
+		def rrotate(a,b):
+			return ((a << self.wordBits-b) & self.wordMask) | (a >> b)
+
+		def addm(a,b):
+			return (a + b) & self.wordMask
 
 		# Copy chunk into first 16 words of message schedule array
 		for i in range(16):

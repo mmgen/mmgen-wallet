@@ -123,7 +123,8 @@ class AddrFile(MMGenObject):
 						out.append(fs.format( '', f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
 					for k in ('viewkey','wallet_passwd'):
 						v = getattr(e,k)
-						if v: out.append(fs.format( '', f'{k}: {v}', c ))
+						if v:
+							out.append(fs.format( '', f'{k}: {v}', c ))
 
 		out.append('}')
 		self.fmt_data = '\n'.join([l.rstrip() for l in out]) + '\n'
@@ -270,12 +271,10 @@ class AddrFile(MMGenObject):
 
 			if type(p).__name__ != 'PasswordList':
 				if proto.base_coin != p.proto.base_coin or proto.network != p.proto.network:
-					"""
-					Having caller supply protocol and checking address file protocol against it here
-					allows us to catch all mismatches in one place.  This behavior differs from that of
-					transaction files, which determine the protocol independently, requiring the caller
-					to check for protocol mismatches (e.g. mmgen.tx.completed.check_correct_chain())
-					"""
+					# Having caller supply protocol and checking address file protocol against it here
+					# allows us to catch all mismatches in one place.  This behavior differs from that of
+					# transaction files, which determine the protocol independently, requiring the caller
+					# to check for protocol mismatches (e.g. mmgen.tx.completed.check_correct_chain())
 					raise ValueError(
 						f'{p.desc} file is '
 						+ f'{proto.base_coin} {proto.network} but protocol is '

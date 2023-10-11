@@ -85,4 +85,5 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 		return MoneroViewKey.__new__(MoneroViewKey,viewkey_str)
 
 class testnet(mainnet): # use stagenet for testnet
-	addr_ver_info = { '18': 'monero', '24': 'monero_sub', '19': 'monero_integrated' } # testnet is {'35','3f','36'}
+	# testnet is {'35','3f','36'}
+	addr_ver_info = { '18': 'monero', '24': 'monero_sub', '19': 'monero_integrated' }

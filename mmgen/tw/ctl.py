@@ -55,7 +55,13 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 	def __new__(cls,cfg,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.ctl'))
 
-	async def __init__(self,cfg,proto,mode='r',token_addr=None,rpc_ignore_wallet=False):
+	async def __init__(
+			self,
+			cfg,
+			proto,
+			mode              = 'r',
+			token_addr        = None,
+			rpc_ignore_wallet = False):
 
 		assert mode in ('r','w','i'), f"{mode!r}: wallet mode must be 'r','w' or 'i'"
 		if mode == 'i':
@@ -102,7 +108,8 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			self.orig_data = get_data_from_file( self.cfg, self.tw_fn, quiet=True )
 			self.data = json.loads(self.orig_data)
 		except:
-			try: os.stat(self.tw_fn)
+			try:
+				os.stat(self.tw_fn)
 			except:
 				self.orig_data = ''
 				self.init_empty()

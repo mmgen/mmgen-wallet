@@ -40,7 +40,7 @@ class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
 			proto,
 			daemon,
 			backend,
-			ignore_wallet ):
+			ignore_wallet):
 
 		self.proto = proto
 		self.daemon = daemon

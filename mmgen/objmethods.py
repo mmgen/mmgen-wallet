@@ -28,7 +28,8 @@ if 'MMGenObjectDevTools' in __builtins__: # added to builtins by devinit.init_de
 else:
 	class MMGenObject:
 		'placeholder - overridden when testing'
-		def immutable_attr_init_check(self): pass
+		def immutable_attr_init_check(self):
+			pass
 
 def truncate_str(s,width): # width = screen width
 	wide_count = 0

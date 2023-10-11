@@ -23,7 +23,8 @@ amt: MMGen CoinAmt and related classes
 from decimal import Decimal
 from .objmethods import Hilite,InitErrors
 
-class DecimalNegateResult(Decimal): pass
+class DecimalNegateResult(Decimal):
+	pass
 
 class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	"""

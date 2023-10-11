@@ -27,8 +27,10 @@ from ...rpc import rpc_init,json_encoder
 from ...objmethods import MMGenObject
 
 def create_data_dir(cfg,data_dir):
-	try: os.stat(os.path.join(data_dir,'regtest'))
-	except: pass
+	try:
+		os.stat(os.path.join(data_dir,'regtest'))
+	except:
+		pass
 	else:
 		from ...ui import keypress_confirm
 		if keypress_confirm(
@@ -38,8 +40,10 @@ def create_data_dir(cfg,data_dir):
 		else:
 			die()
 
-	try: os.makedirs(data_dir)
-	except: pass
+	try:
+		os.makedirs(data_dir)
+	except:
+		pass
 
 def cliargs_convert(args):
 	def gen():
@@ -108,8 +112,10 @@ class MMGenRegtest(MMGenObject):
 
 	async def setup(self):
 
-		try: os.makedirs(self.d.datadir)
-		except: pass
+		try:
+			os.makedirs(self.d.datadir)
+		except:
+			pass
 
 		if self.d.state != 'stopped':
 			await self.rpc_call('stop')
@@ -243,8 +249,10 @@ class MMGenRegtest(MMGenObject):
 		if self.d.state != 'stopped':
 			await self.rpc_call('stop')
 
-		try: os.makedirs(self.d.datadir)
-		except: pass
+		try:
+			os.makedirs(self.d.datadir)
+		except:
+			pass
 
 		create_data_dir( self.cfg, self.d.datadir )
 		os.rmdir(self.d.datadir)

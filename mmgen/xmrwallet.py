@@ -66,11 +66,11 @@ xmrwallet_uargs = namedtuple('xmrwallet_uargs',[
 xmrwallet_uarg_info = (
 	lambda e,hp: {
 		'daemon':          e('HOST:PORT', hp),
-		'tx_relay_daemon': e('HOST:PORT[:PROXY_HOST:PROXY_PORT]', rf'({hp})(?::({hp}))?'),
-		'newaddr_spec':    e('WALLET_NUM[:ACCOUNT][,"label text"]', rf'(\d+)(?::(\d+))?(?:,(.*))?'),
-		'transfer_spec':   e('SOURCE_WALLET_NUM:ACCOUNT:ADDRESS,AMOUNT', rf'(\d+):(\d+):([{b58a}]+),([0-9.]+)'),
+		'tx_relay_daemon': e('HOST:PORT[:PROXY_HOST:PROXY_PORT]',          rf'({hp})(?::({hp}))?'),
+		'newaddr_spec':    e('WALLET_NUM[:ACCOUNT][,"label text"]',         r'(\d+)(?::(\d+))?(?:,(.*))?'),
+		'transfer_spec':   e('SOURCE_WALLET_NUM:ACCOUNT:ADDRESS,AMOUNT',   rf'(\d+):(\d+):([{b58a}]+),([0-9.]+)'),
 		'sweep_spec':      e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
-		'label_spec':      e('WALLET_NUM:ACCOUNT:ADDRESS,"label text"', rf'(\d+):(\d+):(\d+),(.*)'),
+		'label_spec':      e('WALLET_NUM:ACCOUNT:ADDRESS,"label text"',     r'(\d+):(\d+):(\d+),(.*)'),
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),
 		r'(?:[^:]+):(?:\d+)'
@@ -744,9 +744,12 @@ class MoneroWalletOps:
 		def __init__(self,cfg,uarg_tuple):
 
 			def wallet_exists(fn):
-				try: fn.stat()
-				except: return False
-				else: return True
+				try:
+					fn.stat()
+				except:
+					return False
+				else:
+					return True
 
 			def check_wallets():
 				for d in self.addr_data:
@@ -907,7 +910,7 @@ class MoneroWalletOps:
 				processed += await self.process_wallet(
 					d,
 					fn,
-					last = n == len(self.addr_data)-1 )
+					last = n==len(self.addr_data)-1 )
 			gmsg(f'\n{processed} wallet{suf(processed)} {self.stem}ed')
 			return processed
 

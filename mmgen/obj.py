@@ -74,10 +74,17 @@ class IndexedDict(dict):
 	def key(self,idx):
 		return self.__keylist[idx]
 
-	def __delitem__(self,*args): self.die('item deletion')
-	def move_to_end(self,*args): self.die('item moving')
-	def clear(self,*args):       self.die('clearing')
-	def update(self,*args):      self.die('updating')
+	def __delitem__(self,*args):
+		self.die('item deletion')
+
+	def move_to_end(self,*args):
+		self.die('item moving')
+
+	def clear(self,*args):
+		self.die('clearing')
+
+	def update(self,*args):
+		self.die('updating')
 
 	def die(self,desc):
 		raise NotImplementedError(f'{desc} not implemented for type {type(self).__name__}')
@@ -106,10 +113,10 @@ class ImmutableAttr: # Descriptor
 			assert typeconv and type(dtype) != str, 'ImmutableAttr_check3'
 
 		if dtype is None:
-			'use instance-defined conversion function for this attribute'
+			# use instance-defined conversion function for this attribute
 			self.conv = lambda instance,value: getattr(instance.conv_funcs,self.name)(instance,value)
 		elif typeconv:
-			"convert this attribute's type"
+			# convert this attribute's type
 			if set_none_ok:
 				self.conv = lambda instance,value: None if value is None else dtype(value)
 			elif include_proto:
@@ -158,8 +165,10 @@ class ListItemAttr(ImmutableAttr):
 
 	def __get__(self,instance,owner):
 		"return None if attribute doesn't exist"
-		try: return instance.__dict__[self.name]
-		except: return None
+		try:
+			return instance.__dict__[self.name]
+		except:
+			return None
 
 	def setattr_condition(self,instance):
 		return getattr(instance,self.name) == None or self.reassign_ok

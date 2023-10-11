@@ -767,7 +767,8 @@ def check_opts(cfg): # Raises exception if any check fails
 				check_infile(fn,blkdev_ok=True)
 				key2 = 'in_fmt'
 			else:
-				try: os.stat(fn)
+				try:
+					os.stat(fn)
 				except:
 					b = os.path.dirname(fn)
 					if b:

@@ -77,7 +77,8 @@ class SubSeed(SeedBase):
 		# field maximums: idx: 4294967295 (1000000), nonce: 65535 (1000), short: 255 (1)
 		scramble_key  = idx.to_bytes(4,'big') + nonce.to_bytes(2,'big') + short.to_bytes(1,'big')
 		from .crypto import Crypto
-		return Crypto(parent_list.parent_seed.cfg).scramble_seed(seed.data,scramble_key)[:16 if short else seed.byte_len]
+		return Crypto(parent_list.parent_seed.cfg).scramble_seed(
+			seed.data,scramble_key)[:16 if short else seed.byte_len]
 
 class SubSeedList(MMGenObject):
 	have_short = True

@@ -52,8 +52,10 @@ class PasswordList(AddrList):
 	dfl_pw_fmt  = 'b58'
 	pwinfo      = namedtuple('passwd_info',['min_len','max_len','dfl_len','valid_lens','desc','chk_func'])
 	pw_info     = {
-		'b32':     pwinfo(10, 42 ,24, None,      'base32 password',          'baseconv.is_b32_str'), # 32**24 < 2**128
-		'b58':     pwinfo(8,  36 ,20, None,      'base58 password',          'baseconv.is_b58_str'), # 58**20 < 2**128
+		# 32**25 < 2**128 < 32**26
+		'b32':     pwinfo(10, 42 ,24, None,      'base32 password',          'baseconv.is_b32_str'),
+		# 58**21 < 2**128 < 58**22
+		'b58':     pwinfo(8,  36 ,20, None,      'base58 password',          'baseconv.is_b58_str'),
 		'bip39':   pwinfo(12, 24 ,24, [12,18,24],'BIP39 mnemonic',           'bip39.is_bip39_mnemonic'),
 		'xmrseed': pwinfo(25, 25, 25, [25],      'Monero new-style mnemonic','xmrseed.is_xmrseed'),
 		'hex':     pwinfo(32, 64 ,64, [32,48,64],'hexadecimal password',     'util.is_hex_str'),

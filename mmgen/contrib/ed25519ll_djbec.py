@@ -25,9 +25,11 @@
 q = 2**255 - 19
 
 def expmod(b,e,m):
-	if e == 0: return 1
+	if e == 0:
+		return 1
 	t = expmod(b,e//2,m)**2 % m
-	if e & 1: t = (t*b) % m
+	if e & 1:
+		t = (t*b) % m
 	return t
 
 # Can probably get some extra speedup here by replacing this with
@@ -81,7 +83,8 @@ def pt_unxform (pt):
 	return ((x*inv(z))%q, (y*inv(z))%q)
 
 def xpt_mult (pt, n):
-	if n==0: return pt_xform((0,1))
+	if n==0:
+		return pt_xform((0,1))
 	_ = xpt_double(xpt_mult(pt, n>>1))
 	return xpt_add(_, pt) if n&1 else _
 

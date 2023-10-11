@@ -66,9 +66,12 @@ class LEDControl:
 		for board_id,board in self.boards.items():
 			if board_id == 'dummy' and not simulate:
 				continue
-			try: os.stat(board.status)
-			except: pass
-			else: break
+			try:
+				os.stat(board.status)
+			except:
+				pass
+			else:
+				break
 		else:
 			from .util import die
 			die( 'NoLEDSupport', 'Control files not found!  LED control not supported on this system' )
@@ -119,7 +122,8 @@ class LEDControl:
 		os.unlink(db.status)
 		os.unlink(db.trigger)
 
-	def noop(self,*args,**kwargs): pass
+	def noop(self,*args,**kwargs):
+		pass
 
 	def ev_sleep(self,secs):
 		self.ev.wait(secs)

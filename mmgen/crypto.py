@@ -126,7 +126,15 @@ class Crypto:
 		self.util.dmsg(f'Decrypted seed: {dec_seed.hex()}')
 		return dec_seed
 
-	def encrypt_data(self,data,key,iv=aesctr_dfl_iv,desc='data',verify=True,silent=False):
+	def encrypt_data(
+			self,
+			data,
+			key,
+			iv = aesctr_dfl_iv,
+			desc = 'data',
+			verify = True,
+			silent = False ):
+
 		from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
 		from cryptography.hazmat.backends import default_backend
 		if not silent:
@@ -147,7 +155,13 @@ class Crypto:
 
 		return enc_data
 
-	def decrypt_data(self,enc_data,key,iv=aesctr_dfl_iv,desc='data'):
+	def decrypt_data(
+			self,
+			enc_data,
+			key,
+			iv = aesctr_dfl_iv,
+			desc = 'data' ):
+
 		from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
 		from cryptography.hazmat.backends import default_backend
 		self.util.vmsg_r(f'Decrypting {desc} with key...')
@@ -155,7 +169,12 @@ class Crypto:
 		encryptor = c.encryptor()
 		return encryptor.update(enc_data) + encryptor.finalize()
 
-	def scrypt_hash_passphrase(self,passwd,salt,hash_preset,buflen=32):
+	def scrypt_hash_passphrase(
+			self,
+			passwd,
+			salt,
+			hash_preset,
+			buflen = 32 ):
 
 		# Buflen arg is for brainwallets only, which use this function to generate
 		# the seed directly.
@@ -198,11 +217,20 @@ class Crypto:
 
 		return ret
 
-	def make_key(self,passwd,salt,hash_preset,desc='encryption key',from_what='passphrase',verbose=False):
+	def make_key(
+			self,
+			passwd,
+			salt,
+			hash_preset,
+			desc = 'encryption key',
+			from_what = 'passphrase',
+			verbose = False ):
+
 		if self.cfg.verbose or verbose:
 			msg_r(f"Generating {desc}{' from ' + from_what if from_what else ''}...")
 		key = self.scrypt_hash_passphrase(passwd,salt,hash_preset)
-		if self.cfg.verbose or verbose: msg('done')
+		if self.cfg.verbose or verbose:
+			msg('done')
 		self.util.dmsg(f'Key: {key.hex()}')
 		return key
 

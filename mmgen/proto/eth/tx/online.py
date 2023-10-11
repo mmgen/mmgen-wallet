@@ -41,10 +41,10 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 			try:
 				ret = await self.rpc.call('eth_sendRawTransaction','0x'+self.serialized)
 			except:
-				raise
-				ret = False
+				raise # TODO: raises immediately
+				ret = False # TODO: unreachable code
 
-		if ret == False:
+		if ret is False: # TODO: unreachable code
 			rmsg(f'Send of MMGen transaction {self.txid} failed')
 			if exit_on_fail:
 				sys.exit(1)

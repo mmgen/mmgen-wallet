@@ -97,7 +97,8 @@ Actions: [q]uit menu, [D]elete addr, add [l]abel, [R]efresh balance:
 		)
 
 	def do_sort(self,key=None,reverse=False):
-		if key == 'txid': return
+		if key == 'txid':
+			return
 		super().do_sort(key=key,reverse=reverse)
 
 	async def get_rpc_data(self):

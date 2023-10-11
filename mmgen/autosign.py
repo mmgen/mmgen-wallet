@@ -431,8 +431,10 @@ class Autosign:
 			return False
 
 	def wipe_existing_key(self):
-		try: self.keyfile.stat()
-		except: pass
+		try:
+			self.keyfile.stat()
+		except:
+			pass
 		else:
 			from .fileutil import shred_file
 			msg(f"\nShredding existing key '{self.keyfile}'")
@@ -462,14 +464,20 @@ class Autosign:
 		def remove_wallet_dir():
 			msg(f"Deleting '{self.wallet_dir}'")
 			import shutil
-			try: shutil.rmtree(self.wallet_dir)
-			except: pass
+			try:
+				shutil.rmtree(self.wallet_dir)
+			except:
+				pass
 
 		def create_wallet_dir():
-			try: self.wallet_dir.mkdir(parents=True)
-			except: pass
-			try: self.wallet_dir.stat()
-			except: die(2,f"Unable to create wallet directory '{self.wallet_dir}'")
+			try:
+				self.wallet_dir.mkdir(parents=True)
+			except:
+				pass
+			try:
+				self.wallet_dir.stat()
+			except:
+				die(2,f"Unable to create wallet directory '{self.wallet_dir}'")
 
 		remove_wallet_dir()
 		create_wallet_dir()
@@ -520,8 +528,10 @@ class Autosign:
 			async_run(m.stop_wallet_daemon())
 
 		import shutil
-		try: shutil.rmtree(self.xmr_outputs_dir)
-		except: pass
+		try:
+			shutil.rmtree(self.xmr_outputs_dir)
+		except:
+			pass
 
 		self.xmr_outputs_dir.mkdir(parents=True)
 
@@ -574,9 +584,12 @@ class Autosign:
 	def get_insert_status(self):
 		if self.cfg.no_insert_check:
 			return True
-		try: self.dev_disk_path.stat()
-		except: return False
-		else: return True
+		try:
+			self.dev_disk_path.stat()
+		except:
+			return False
+		else:
+			return True
 
 	async def do_loop(self):
 		if not self.cfg.stealth_led:

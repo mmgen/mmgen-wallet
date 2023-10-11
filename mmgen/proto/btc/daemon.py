@@ -55,9 +55,7 @@ class bitcoin_core_daemon(CoinDaemon):
 	def init_subclass(self):
 
 		if self.network == 'regtest':
-			"""
-			fall back on hard-coded credentials
-			"""
+			# fall back on hard-coded credentials:
 			from .regtest import MMGenRegtest
 			self.rpc_user = MMGenRegtest.rpc_user
 			self.rpc_password = MMGenRegtest.rpc_password
