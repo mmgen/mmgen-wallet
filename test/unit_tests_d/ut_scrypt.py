@@ -7,7 +7,7 @@ test.unit_tests_d.ut_scrypt: password hashing unit test for the MMGen suite
 from ..include.common import cfg,qmsg,vmsg,omsg_r,silence,end_silence
 from mmgen.util import msg,msg_r
 
-class unit_test(object):
+class unit_test:
 
 	def run_test(self,name,ut):
 		import time

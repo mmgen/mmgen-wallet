@@ -138,7 +138,7 @@ def get_cmd_output(cmd,input=None):
 
 saved_results = {}
 
-class GenTool(object):
+class GenTool:
 
 	def __init__(self,proto,addr_type):
 		self.proto = proto

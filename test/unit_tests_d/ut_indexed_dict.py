@@ -8,7 +8,7 @@ from mmgen.util import msg,msg_r,die
 
 from ..include.common import vmsg
 
-class unit_test(object):
+class unit_test:
 
 	def run_test(self,name,ut):
 		bad_msg = (

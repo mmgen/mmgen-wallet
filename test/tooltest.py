@@ -227,7 +227,7 @@ type_compressed_arg = ([],['--type=' + (cfg.type or 'compressed')])[bool(cfg.typ
 type_segwit_arg     = ([],['--type=segwit'])['S' in proto.mmtypes]
 type_bech32_arg     = ([],['--type=bech32'])['B' in proto.mmtypes]
 
-class MMGenToolTestUtils(object):
+class MMGenToolTestUtils:
 
 	def run_cmd(self,name,tool_args,kwargs='',extra_msg='',silent=False,strip=True,add_opts=[],binary=False):
 		sys_cmd = (
@@ -334,7 +334,7 @@ def ok_or_die(val,chk_func,s,skip_ok=False):
 	else:
 		die(4,f'Returned value {val!r} is not a {s}')
 
-class MMGenToolTestCmds(object):
+class MMGenToolTestCmds:
 
 	# Cryptocoin
 	def randwif(self,name):

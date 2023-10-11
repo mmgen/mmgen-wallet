@@ -8,7 +8,7 @@ from mmgen.util import msg,msg_r
 
 from ..include.common import cfg,vmsg_r
 
-class unit_test(object):
+class unit_test:
 
 	def run_test(self,name,ut):
 		from mmgen.seed import Seed

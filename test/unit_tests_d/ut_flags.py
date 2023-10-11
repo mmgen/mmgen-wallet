@@ -8,7 +8,7 @@ from mmgen.flags import ClassOpts,ClassFlags
 
 from ..include.common import qmsg,qmsg_r,vmsg
 
-class unit_test(object):
+class unit_test:
 
 	def run_test(self,name,ut):
 

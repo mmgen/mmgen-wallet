@@ -8,7 +8,7 @@ from mmgen.util import msg,msg_r
 
 from ..include.common import cfg,qmsg,vmsg
 
-class unit_test(object):
+class unit_test:
 
 	vectors = (
 		(   "00000000000000000000000000000000",

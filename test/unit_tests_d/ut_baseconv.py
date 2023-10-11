@@ -8,7 +8,7 @@ from mmgen.util import msg,msg_r
 
 from ..include.common import cfg,qmsg,qmsg_r,vmsg,vmsg_r
 
-class unit_test(object):
+class unit_test:
 
 	vectors = {
 		'b58': (

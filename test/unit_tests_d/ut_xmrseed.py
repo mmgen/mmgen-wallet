@@ -8,7 +8,7 @@ from mmgen.util import msg,msg_r,ymsg
 
 from ..include.common import cfg,qmsg,vmsg
 
-class unit_test(object):
+class unit_test:
 
 	vectors = ( # private keys are reduced
 		(   '148d78d2aba7dbca5cd8f6abcfb0b3c009ffbdbea1ff373d50ed94d78286640e', # Monero repo

@@ -367,7 +367,7 @@ def set_restore_term_at_exit():
 		termios.tcsetattr(fd, termios.TCSADRAIN, old)
 	atexit.register(at_exit)
 
-class CmdGroupMgr(object):
+class CmdGroupMgr:
 
 	from test.test_py_d.cfg import cmd_groups_dfl,cmd_groups_extra
 
@@ -538,7 +538,7 @@ class CmdGroupMgr(object):
 
 		return None
 
-class TestSuiteRunner(object):
+class TestSuiteRunner:
 	'test suite runner'
 
 	def __del__(self):
