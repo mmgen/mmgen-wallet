@@ -305,9 +305,8 @@ class MMGenToolTestUtils:
 				return
 			if Return:
 				return ret
-			else:
-				if not hush:
-					ok()
+			elif not hush:
+				ok()
 		else:
 			die(4,f'Error for command {name!r}')
 

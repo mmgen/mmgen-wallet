@@ -158,7 +158,7 @@ class TestSuiteCfgFile(TestSuiteBase):
 		write_to_file(self.path('usr'),'\n'.join(d) + '\n')
 		return self.old_sample_common(
 			old_set       = True,
-			pexpect_spawn = False if gc.platform == 'win' else True )
+			pexpect_spawn = not gc.platform == 'win')
 
 	def _autoset_opts(self,args=[],text='rpc_backend aiohttp\n'):
 		write_to_file( self.path('usr'), text )

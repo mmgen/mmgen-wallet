@@ -92,8 +92,8 @@ def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 		elif perm_name == 'reassign_ok':
 			try:
 				so = sample_objs[attrval_type.__name__]
-			except:
-				raise SampleObjError(f'unable to find sample object of type {attrval_type.__name__!r}')
+			except Exception as e:
+				raise SampleObjError(f'unable to find sample object of type {attrval_type.__name__!r}') from e
 			# ListItemAttr allows setting an attribute if its value is None
 			if type(dobj) is ListItemAttr and getattr(obj,attrname) is None:
 				setattr(obj,attrname,so)

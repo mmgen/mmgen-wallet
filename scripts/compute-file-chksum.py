@@ -26,5 +26,7 @@ start = (1,0)[bool(cfg.include_first_line)]
 a = make_chksum_6(' '.join(lines[start:]).encode())
 if start == 1:
 	b = lines[0]
-	msg(("Checksum in file ({}) doesn't match computed value!".format(b),'Checksum in file OK')[a==b])
+	msg(
+		'Checksum in file OK' if a == b else
+		f"Checksum in file ({b}) doesn't match computed value!")
 Msg(a)

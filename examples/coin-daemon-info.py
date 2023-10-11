@@ -46,7 +46,7 @@ from mmgen.util import make_timestr
 async def get_rpc(cfg):
 	try:
 		return await rpc_init( cfg, ignore_wallet=True )
-	except SocketError as e:
+	except SocketError:
 		return False
 
 async def main(coins):

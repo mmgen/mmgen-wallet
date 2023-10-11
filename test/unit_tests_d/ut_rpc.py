@@ -133,9 +133,8 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 
 	for network_id in network_ids:
 		proto = init_proto( cfg, network_id=network_id )
-		ids = (lambda x:
-			set(daemon_ids) & set(x) if daemon_ids else x
-			)(CoinDaemon.get_daemon_ids(cfg,proto.coin))
+		all_ids = CoinDaemon.get_daemon_ids(cfg,proto.coin)
+		ids = set(daemon_ids) & set(all_ids) if daemon_ids else all_ids
 		for daemon_id in ids:
 			do_test( CoinDaemon(cfg, proto=proto,test_suite=True,daemon_id=daemon_id) )
 

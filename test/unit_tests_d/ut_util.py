@@ -37,7 +37,7 @@ class unit_tests:
 
 		for name,sample in samples.items():
 			vmsg(cyan(f'Input: {sample}'))
-			for fmt,chk in list(chks.values())[0].items():
+			for fmt in list(chks.values())[0]:
 				spc = '\n' if fmt in ('col','list') else ' '
 				indent = '    + ' if fmt == 'col' else ''
 				res = fmt_list(sample,fmt=fmt,indent=indent) if fmt else fmt_list(sample,indent=indent)
@@ -86,7 +86,7 @@ class unit_tests:
 
 		for name,sample in samples.items():
 			vmsg(cyan(f'Input: {sample}'))
-			for fmt,chk in list(chks.values())[0].items():
+			for fmt in list(chks.values())[0]:
 				res = fmt_dict(sample,fmt=fmt) if fmt else fmt_dict(sample)
 				vmsg(f'  {str(fmt)+":":{col1_w}} {res}')
 				if name in chks:

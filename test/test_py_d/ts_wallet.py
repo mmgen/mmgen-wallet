@@ -226,7 +226,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 			t.passphrase_new('new '+wcls.desc,self.wpasswd)
 			t.usr_rand(self.usr_rand_chars)
 		if wcls.type.startswith('incog'):
-			for _ in (1,2,3):
+			for _ in range(3):
 				t.expect('Encrypting random data from your operating system with ephemeral key')
 		if wcls.type == 'incog_hidden':
 			t.hincog_create(hincog_bytes)

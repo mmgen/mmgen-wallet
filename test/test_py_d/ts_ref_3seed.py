@@ -366,7 +366,7 @@ class TestSuiteRef3Addr(TestSuiteRef3Seed):
 		('ref_bip39_12_passwdgen',    ([],'new refwallet passwd file chksum (BIP39, 12 words)')),
 		('ref_bip39_18_passwdgen',    ([],'new refwallet passwd file chksum (BIP39, up to 18 words)')),
 		('ref_bip39_24_passwdgen',    ([],'new refwallet passwd file chksum (BIP39, up to 24 words)')),
-		('ref_xmrseed_25_passwdgen',  ([],'new refwallet passwd file chksum (Monero new-style mnemonic, 25 words)')),
+		('ref_xmrseed_25_passwdgen',  ([],'new refwallet passwd file chksum (Monero 25-word mnemonic)')),
 		('ref_hex2bip39_24_passwdgen',([],'new refwallet passwd file chksum (hex-to-BIP39, up to 24 words)')),
 	)
 

@@ -15,8 +15,8 @@ sys.path = [repo_root] + sys.path
 
 opts_data = {
 	'text': {
-		'desc':    "Convert MMGen transaction file from v2 format to v3 format",
-		'usage':   "<tx file>",
+		'desc':    "Convert an MMGen transaction file from v2 format to v3 format",
+		'usage':   "<TX file>",
 		'options': """
 -h, --help     Print this help message
 -d, --outdir=d Output files to directory 'd' instead of working dir

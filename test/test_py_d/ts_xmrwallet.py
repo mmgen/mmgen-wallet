@@ -423,13 +423,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		return self.new_addr_alice(
 			'4:2',
 			'continue',
-			fr'Account index:\s+2\s+Creating new address' )
+			r'Account index:\s+2\s+Creating new address' )
 
 	def new_address_alice_label(self):
 		return self.new_addr_alice(
 			'4:2,Alice’s new address',
 			'stop',
-			fr'Account index:\s+2\s+Creating new address.*Alice’s new address' )
+			r'Account index:\s+2\s+Creating new address.*Alice’s new address' )
 
 	async def mine_initial_coins(self):
 		self.spawn('', msg_only=True, extra_desc='(opening wallet)')
@@ -510,7 +510,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			t.expect('Wallet height: ')
 			res = strip_ansi_escapes(t.expect_getend('Balance: '))
 			if bal_chk_func:
-				m = re.match( '(\S+) Unlocked balance: (\S+)', res, re.DOTALL )
+				m = re.match( r'(\S+) Unlocked balance: (\S+)', res, re.DOTALL )
 				amts = [XMRAmt(amt) for amt in m.groups()]
 				assert bal_chk_func(n,*amts), f'balance check for wallet {n} failed!'
 		return t

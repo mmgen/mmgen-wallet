@@ -68,8 +68,8 @@ def stealth_mnemonic_entry(t,mne,mn,entry_mode,pad_entry=False):
 		ret = t.expect((p_ok.format(wnum),p_err.format(wnum-1)))
 		if ret == 0:
 			wnum += 1
-		for j in range(len(w)):
-			t.send(w[j])
+		for char in w:
+			t.send(char)
 			time.sleep(0.005)
 
 def user_dieroll_entry(t,data):

@@ -206,13 +206,13 @@ class MMGenPexpect:
 
 		try:
 			ret = (self.p.expect_exact,self.p.expect)[bool(regex)](s) if s else 0
-		except pexpect.TIMEOUT:
+		except pexpect.TIMEOUT as e:
 			if cfg.debug_pexpect:
 				raise
 			m1 = f'\nERROR.  Expect {s!r} timed out.  Exiting\n'
 			m2 = f'before: [{self.p.before}]\n'
 			m3 = f'sent value: [{self.sent_value}]' if self.sent_value is not None else ''
-			raise pexpect.TIMEOUT(m1+m2+m3)
+			raise pexpect.TIMEOUT(m1+m2+m3) from e
 
 		if cfg.debug_pexpect:
 			debug_pexpect_msg(self.p)

@@ -779,9 +779,10 @@ def fork_cmd(cmd_name,args,opts,stdin_input):
 	return cmd_out.strip()
 
 async def call_method(cls,method,cmd_name,args,mmtype,stdin_input):
-	vmsg('{}: {}{}'.format(purple('Running'),
-			' '.join([cmd_name]+[repr(e) for e in args]),
-			' '+mmtype if mmtype else '' ))
+	vmsg('{a}: {b}{c}'.format(
+		a = purple('Running'),
+		b = ' '.join([cmd_name]+[repr(e) for e in args]),
+		c = ' '+mmtype if mmtype else '' ))
 	aargs,kwargs = main_tool.process_args(cmd_name,args,cls)
 	oq_save = bool(cfg.quiet)
 	if not cfg.verbose:

@@ -1373,7 +1373,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def edit_comment1(self):
 		return self.edit_comment(out_num=del_addrs[0],comment_text=tw_comment_zh[:3])
 	def edit_comment2(self):
-		spawn = False if gc.platform == 'win' else True
+		spawn = not gc.platform == 'win'
 		return self.edit_comment(
 				out_num       = del_addrs[0],
 				comment_text  = tw_comment_zh[3:],

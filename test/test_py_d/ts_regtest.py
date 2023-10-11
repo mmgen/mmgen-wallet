@@ -850,7 +850,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			t.expect('draw:\b','q',regex=True)
 		else:
 			txnum,idx = (8,1) if self.proto.coin == 'BCH' else (9,3)
-			t.expect(f'\s{txnum}\).*Inputs:.*:L:{idx}.*Outputs \(3\):.*:C:2.*\s10\)','q',regex=True)
+			t.expect(rf'\s{txnum}\).*Inputs:.*:L:{idx}.*Outputs \(3\):.*:C:2.*\s10\)','q',regex=True)
 		return t
 
 	def bob_getbalance(self,bals,confs=1):
@@ -1100,7 +1100,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
 			'Replacement transaction has 1 confirmation',
-			f'Replacing transactions:\s+{new_txid}' )
+			rf'Replacing transactions:\s+{new_txid}' )
 
 	def bob_rbf_status5(self):
 		if not self.proto.cap('rbf'):
@@ -1113,7 +1113,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
 			'Replacement transaction has 2 confirmations',
-			f'Replacing transactions:\s+{new_txid}' )
+			rf'Replacing transactions:\s+{new_txid}' )
 
 	def _gen_pairs(self,n):
 		from mmgen.tool.api import tool_api
@@ -1606,10 +1606,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def alice_txcreate_info(self,pexpect_spawn=False):
 		t = self.spawn('mmgen-txcreate',['--alice','-Bi'],pexpect_spawn=pexpect_spawn)
 		pats = (
-			( '\d+',    'w'),
-			( '\d+',    'D'),
-			( '\d+',    'D'),
-			( '\d+',    'D'),
+			( r'\d+',    'w'),
+			( r'\d+',    'D'),
+			( r'\d+',    'D'),
+			( r'\d+',    'D'),
 			( pat_date, 'q'),
 		)
 		for d,s in pats:

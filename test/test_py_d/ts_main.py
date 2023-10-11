@@ -991,5 +991,5 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			add_args                   = ['--vsize-adj=1.08'],
 			tweaks                     = ['confirm_non_mmgen'] )
 
-	def txsign6(self,txf,wf):
-		return self.txsign5(txf,wf,bad_vsize=False,add_args=['--vsize-adj=1.08'])
+	def txsign6(self,wf,txf):
+		return self.txsign5(wf,txf,bad_vsize=False,add_args=['--vsize-adj=1.08'])

@@ -240,7 +240,7 @@ class TestSuiteInput(TestSuiteBase):
 	def _input_func(self,func_name,arg_dfls,func_args,text,expect,term):
 		if term and gc.platform == 'win':
 			return ('skip_warn','pexpect_spawn not supported on Windows platform')
-		func_args = {k:v for k,v in zip(arg_dfls.keys(),func_args)}
+		func_args = dict(zip(arg_dfls.keys(),func_args))
 		t = self.spawn(
 			'test/misc/input_func.py',
 			[func_name,repr(func_args)],

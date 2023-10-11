@@ -114,7 +114,7 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 		else:
 			ret = cls(*args,**kwargs)
 
-		bad_ret = list() if issubclass(cls,list) else None
+		bad_ret = [] if issubclass(cls,list) else None
 
 		if isinstance(ret_chk,str):
 			ret_chk = ret_chk.encode()

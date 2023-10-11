@@ -168,13 +168,13 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		return self._new_addr_alice(
 			'2:1',
 			'continue',
-			fr'Account index:\s+1\s+Creating new address' )
+			r'Account index:\s+1\s+Creating new address' )
 
 	def new_address_alice_label(self):
 		return self._new_addr_alice(
 			'2:1,Alice’s new address',
 			'stop',
-			fr'Account index:\s+1\s+Creating new address.*Alice’s new address' )
+			r'Account index:\s+1\s+Creating new address.*Alice’s new address' )
 
 	def dump_tmp_wallets(self):
 		return self._dump_wallets(autosign=False)
