@@ -33,7 +33,7 @@ class Completed(Base,TxBase.Completed):
 			if ti['scriptSig'] == '' or ( len(ti['scriptSig']) == 46 and # native P2WPKH or P2SH-P2WPKH
 					ti['scriptSig'][:6] == '16' + self.proto.witness_vernum_hex + '14' ):
 				assert 'witness' in ti, 'missing witness'
-				assert type(ti['witness']) == list and len(ti['witness']) == 2, 'malformed witness'
+				assert isinstance(ti['witness'],list) and len(ti['witness']) == 2, 'malformed witness'
 				assert len(ti['witness'][1]) == 66, 'incorrect witness pubkey length'
 				assert mmti.mmtype == ('S','B')[ti['scriptSig']==''], fs.format('witness-type',mmti.mmtype)
 			else: # non-witness

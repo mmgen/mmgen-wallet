@@ -54,7 +54,7 @@ class IPPort(str,Hilite,InitErrors):
 	min_len = 9  # 0.0.0.0:0
 	max_len = 21 # 255.255.255.255:65535
 	def __new__(cls,s):
-		if type(s) == cls:
+		if isinstance(s,cls):
 			return s
 		try:
 			m = re.fullmatch(r'{q}\.{q}\.{q}\.{q}:(\d{{1,10}})'.format(q=r'([0-9]{1,3})'),s)

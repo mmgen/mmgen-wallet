@@ -204,7 +204,7 @@ class MnEntryModeMinimal(MnEntryMode):
 			elif ch in ascii_lowercase:
 				s += ch
 				ret = mne.idx(s,'minimal',lo_idx=lo,hi_idx=hi)
-				if type(ret) != tuple:
+				if not isinstance(ret,tuple):
 					return ret
 				lo,hi = ret
 			else:

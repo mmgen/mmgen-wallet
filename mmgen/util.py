@@ -222,7 +222,7 @@ def list_gen(*data):
 	assert type(data) in (list,tuple), f'{type(data).__name__} not in (list,tuple)'
 	def gen():
 		for d in data:
-			assert type(d) == list, f'{type(d).__name__} != list'
+			assert isinstance(d,list), f'{type(d).__name__} != list'
 			if len(d) == 1:
 				yield d[0]
 			elif d[-1]:

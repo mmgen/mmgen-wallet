@@ -176,7 +176,7 @@ class MMGenObjectMethods: # mixin class for MMGenObject
 			if isList(e) or isDict(e):
 				out.append('{:>{l}}{:<10} {:16}'.format( '', k, f'<{type(e).__name__}>', l=(lvl*8)+4 ))
 				do_list(out,e,lvl=lvl,is_dict=isDict(e))
-			elif hasattr(e,'pfmt') and callable(e.pfmt) and type(e) != type:
+			elif hasattr(e,'pfmt') and callable(e.pfmt) and not isinstance(e,type):
 				out.append('{:>{l}}{:10} {}'.format(
 					'',
 					k,

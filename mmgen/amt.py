@@ -42,7 +42,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	units    = ()     # defined unit names, e.g. ('satoshi',...)
 
 	def __new__(cls,num,from_unit=None,from_decimal=False):
-		if type(num) == cls:
+		if isinstance(num,cls):
 			return num
 		try:
 			if from_unit:
@@ -50,11 +50,11 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 				assert type(num) == int,'value is not an integer'
 				me = Decimal.__new__(cls,num * getattr(cls,from_unit))
 			elif from_decimal:
-				assert type(num) == Decimal, f'number must be of type Decimal, not {type(num).__name__})'
+				assert isinstance(num,Decimal), f'number must be of type Decimal, not {type(num).__name__})'
 				me = Decimal.__new__(cls,num.quantize(Decimal('10') ** -cls.max_prec))
 			else:
-				for t in cls.forbidden_types:
-					assert type(num) is not t, f'number is of forbidden type {t.__name__}'
+				for bad_type in cls.forbidden_types:
+					assert not isinstance(num,bad_type), f'number is of forbidden type {bad_type.__name__}'
 				me = Decimal.__new__(cls,str(num))
 			assert me.normalize().as_tuple()[-1] >= -cls.max_prec,'too many decimal places in coin amount'
 			if cls.max_amt:

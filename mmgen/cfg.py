@@ -719,7 +719,7 @@ def check_opts(cfg): # Raises exception if any check fails
 
 	def opt_is_in_list(val,tlist,desc_pfx=''):
 		if val not in tlist:
-			q,sep = (('',','),("'","','"))[type(tlist[0]) == str]
+			q,sep = (('',','),("'","','"))[isinstance(tlist[0],str)]
 			die( 'UserOptError', '{q}{v}{q}: invalid {w}\nValid choices: {q}{o}{q}'.format(
 				v = val,
 				w = get_desc(desc_pfx),

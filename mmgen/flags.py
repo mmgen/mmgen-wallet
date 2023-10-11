@@ -65,7 +65,7 @@ class ClassFlags(AttrCtrl):
 				self.not_available_error(name)
 
 			if self._name == 'flags':
-				assert type(val) is bool, f'{val!r} not boolean'
+				assert isinstance(val,bool), f'{val!r} not boolean'
 				old_val = getattr(self,name)
 				if val and old_val:
 					die( 'ClassFlagsError', f'{self._desc} {name!r} already set' )

@@ -516,7 +516,7 @@ class CoinInfo(object):
 			sym,trust = e['symbol'],e['trust_level']
 
 			fix_ver_info(e,'p2pkh_info')
-			if type(e['p2sh_info']) == tuple:
+			if isinstance(e['p2sh_info'],tuple):
 				fix_ver_info(e,'p2sh_info')
 
 			for k in e.keys():

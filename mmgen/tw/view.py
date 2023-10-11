@@ -250,7 +250,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		if key not in self.sort_funcs:
 			die(1,f'{key!r}: invalid sort key.  Valid options: {" ".join(self.sort_funcs)}')
 		self.sort_key = key
-		assert type(reverse) == bool
+		assert isinstance(reverse,bool)
 		save = self.data.copy()
 		self.data.sort(key=self.sort_funcs[key],reverse=reverse or self.reverse)
 		if self.data != save:

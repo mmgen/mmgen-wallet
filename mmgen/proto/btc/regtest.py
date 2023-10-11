@@ -216,11 +216,11 @@ class MMGenRegtest(MMGenObject):
 
 	async def cli(self,*args):
 		ret = await self.rpc_call(*cliargs_convert(args))
-		print(ret if type(ret) == str else json.dumps(ret,cls=json_encoder,indent=4))
+		print(ret if isinstance(ret,str) else json.dumps(ret,cls=json_encoder,indent=4))
 
 	async def wallet_cli(self,wallet,*args):
 		ret = await self.rpc_call(*cliargs_convert(args),wallet=wallet)
-		print(ret if type(ret) == str else json.dumps(ret,cls=json_encoder,indent=4))
+		print(ret if isinstance(ret,str) else json.dumps(ret,cls=json_encoder,indent=4))
 
 	async def cmd(self,args):
 		ret = getattr(self,args[0])(*args[1:])

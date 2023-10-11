@@ -110,7 +110,7 @@ class ImmutableAttr: # Descriptor
 		if include_proto:
 			assert typeconv, 'ImmutableAttr_check2'
 		if set_none_ok:
-			assert typeconv and type(dtype) != str, 'ImmutableAttr_check3'
+			assert typeconv and not isinstance(dtype,str), 'ImmutableAttr_check3'
 
 		if dtype is None:
 			# use instance-defined conversion function for this attribute
@@ -229,7 +229,7 @@ class MMGenRange(tuple,InitErrors,MMGenObject):
 		try:
 			if len(args) == 1:
 				s = args[0]
-				if type(s) == cls:
+				if isinstance(s,cls):
 					return s
 				assert isinstance(s,str),'not a string or string subclass'
 				ss = s.split('-',1)
@@ -270,7 +270,7 @@ class Int(int,Hilite,InitErrors):
 	color = 'red'
 
 	def __new__(cls,n,base=10):
-		if type(n) == cls:
+		if isinstance(n,cls):
 			return n
 		try:
 			me = int.__new__(cls,str(n),base)
@@ -312,7 +312,7 @@ class HexStr(str,Hilite,InitErrors):
 	hexcase = 'lower'
 	trunc_ok = False
 	def __new__(cls,s,case=None):
-		if type(s) == cls:
+		if isinstance(s,cls):
 			return s
 		if case == None:
 			case = cls.hexcase
@@ -351,13 +351,13 @@ class MMGenLabel(str,Hilite,InitErrors):
 	min_len = 0
 	max_screen_width = 0 # if != 0, overrides max_len
 	desc = 'label'
-	def __new__(cls,s,msg=None):
-		if type(s) == cls:
+	def __new__(cls,s):
+		if isinstance(s,cls):
 			return s
 		for k in ( cls.forbidden, cls.allowed ):
-			assert type(k) == list
+			assert isinstance(k,list)
 			for ch in k:
-				assert type(ch) == str and len(ch) == 1
+				assert isinstance(ch,str) and len(ch) == 1
 		try:
 			s = s.strip()
 			for ch in s:

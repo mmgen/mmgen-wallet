@@ -83,7 +83,7 @@ class XMRWalletAddrSpec(str,Hilite,InitErrors,MMGenObject):
 	min_len = 5  # 1:0:0
 	max_len = 14 # 9999:9999:9999
 	def __new__(cls,arg1,arg2=None,arg3=None):
-		if type(arg1) == cls:
+		if isinstance(arg1,cls):
 			return arg1
 
 		try:

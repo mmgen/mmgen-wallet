@@ -40,7 +40,7 @@ class MasterShareIdx(MMGenIdx):
 class SeedSplitSpecifier(str,Hilite,InitErrors,MMGenObject):
 	color = 'red'
 	def __new__(cls,s):
-		if type(s) == cls:
+		if isinstance(s,cls):
 			return s
 		try:
 			arr = s.split(':')

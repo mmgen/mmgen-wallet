@@ -29,7 +29,7 @@ class SeedID(str,Hilite,InitErrors):
 	width = 8
 	trunc_ok = False
 	def __new__(cls,seed=None,sid=None):
-		if type(sid) == cls:
+		if isinstance(sid,cls):
 			return sid
 		try:
 			if seed:

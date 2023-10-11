@@ -26,7 +26,7 @@ from collections import namedtuple
 pat = re.compile(r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)')
 
 def make_usage_str(prog_name,caller,data):
-	lines = [data.strip()] if type(data) == str else data
+	lines = [data.strip()] if isinstance(data,str) else data
 	indent,col1_w = {
 		'help': (2,len(prog_name)+1),
 		'user': (0,len('USAGE:')),

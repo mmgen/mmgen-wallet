@@ -143,7 +143,7 @@ def _open_or_die(filename,mode,silent=False):
 	except:
 		die(2,'' if silent else
 			'Unable to open file {!r} for {}'.format(
-				({0:'STDIN',1:'STDOUT',2:'STDERR'}[filename] if type(filename) == int else filename),
+				({0:'STDIN',1:'STDOUT',2:'STDERR'}[filename] if isinstance(filename,int) else filename),
 				('reading' if 'r' in mode else 'writing')
 			))
 

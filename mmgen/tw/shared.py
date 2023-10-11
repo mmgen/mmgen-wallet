@@ -21,7 +21,7 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	width = 0
 	trunc_ok = False
 	def __new__(cls,proto,id_str):
-		if type(id_str) == cls:
+		if isinstance(id_str,cls):
 			return id_str
 		try:
 			ret = addr = disp = MMGenID(proto,id_str)
@@ -54,7 +54,7 @@ class TwLabel(str,InitErrors,MMGenObject):
 	exc = 'BadTwLabel'
 	passthru_excs = ('BadTwComment',)
 	def __new__(cls,proto,text):
-		if type(text) == cls:
+		if isinstance(text,cls):
 			return text
 		try:
 			ts = text.split(None,1)

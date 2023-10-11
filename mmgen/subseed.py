@@ -34,7 +34,7 @@ class SubSeedIdx(str,Hilite,InitErrors):
 	color = 'red'
 	trunc_ok = False
 	def __new__(cls,s):
-		if type(s) == cls:
+		if isinstance(s,cls):
 			return s
 		try:
 			assert isinstance(s,str),'not a string or string subclass'

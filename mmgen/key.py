@@ -31,7 +31,7 @@ class WifKey(str,Hilite,InitErrors):
 	width = 53
 	color = 'blue'
 	def __new__(cls,proto,wif):
-		if type(wif) == cls:
+		if isinstance(wif,cls):
 			return wif
 		try:
 			assert wif.isascii() and wif.isalnum(), 'not an ASCII alphanumeric string'
@@ -70,7 +70,7 @@ class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 
 	# initialize with (priv_bin,compressed), WIF or self
 	def __new__(cls,proto,s=None,compressed=None,wif=None,pubkey_type=None):
-		if type(s) == cls:
+		if isinstance(s,cls):
 			return s
 		if wif:
 			try:
