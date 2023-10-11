@@ -244,7 +244,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		tool_cmd = ftype.replace('segwit','').replace('bech32','')+'file_chksum'
 		t = self.spawn( 'mmgen-tool', coin_arg + ['--verbose','-p1',tool_cmd,af] )
 		if ftype == 'keyaddr':
-			t.do_decrypt_ka_data(hp=ref_kafile_hash_preset,pw=ref_kafile_pass,have_yes_opt=True)
+			t.do_decrypt_ka_data(pw=ref_kafile_pass,have_yes_opt=True)
 		chksum_key = '_'.join([af_key,'chksum'] + ([coin.lower()] if coin else []) + ([mmtype] if mmtype else []))
 		rc = self.chk_data[chksum_key]
 		ref_chksum = rc if (ftype == 'passwd' or coin) else rc[self.proto.base_coin.lower()][self.proto.testnet]
@@ -303,15 +303,14 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		tf = joinpath(ref_dir,self.ref_subdir,fn)
 		wf = dfl_words_file
 		self.write_to_tmpfile(pwfile,wpasswd)
-		pf = joinpath(self.tmpdir,pwfile)
-		return self.txsign(wf,tf,pf,save=False,has_label=True,view='y')
+		return self.txsign(wf,tf,save=False,has_label=True,view='y')
 
 	def ref_brain_chk_spc3(self):
 		return self.ref_brain_chk(bw_file=ref_bw_file_spc)
 
 	def ref_dieroll_chk_seedtruncate(self):
 		wf = joinpath(ref_dir,'overflow128.b6d')
-		return self.walletchk(wf,None,sid='8EC6D4A2')
+		return self.walletchk(wf,sid='8EC6D4A2')
 
 	def ref_tool_decrypt(self):
 		f = joinpath(ref_dir,ref_enc_fn)

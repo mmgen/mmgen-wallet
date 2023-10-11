@@ -643,7 +643,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 				+ [txfile, dfl_words_file])
 		return self.txsign_ui_common(t,ni=ni,has_label=True)
 
-	def txsend(self,ni=False,ext='{}.regtest.sigtx',add_args=[]):
+	def txsend(self,ext='{}.regtest.sigtx',add_args=[]):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile])

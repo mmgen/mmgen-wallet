@@ -168,15 +168,13 @@ class TestSuiteShared:
 		t.expect('Signing transaction')
 		t.do_comment(False,has_label=has_label)
 		t.expect(r'Save signed transaction.*?\? \(Y/n\): ','y',regex=True)
-		t.written_to_file('Signed transaction' + (' #' + tnum if tnum else ''), oo=True)
+		t.written_to_file('Signed transaction' + (' #' + tnum if tnum else ''))
 		return t
 
 	def txsign(
 			self,
 			wf,
 			txfile,
-			pf         = '',
-			bumpf      = '',
 			save       = True,
 			has_label  = False,
 			extra_opts = [],
@@ -202,12 +200,11 @@ class TestSuiteShared:
 	def ref_brain_chk(self,bw_file=ref_bw_file):
 		wf = joinpath(ref_dir,bw_file)
 		add_args = [f'-l{self.seed_len}', f'-p{ref_bw_hash_preset}']
-		return self.walletchk(wf,pf=None,add_args=add_args,sid=self.ref_bw_seed_id)
+		return self.walletchk(wf,add_args=add_args,sid=self.ref_bw_seed_id)
 
 	def walletchk(
 			self,
 			wf,
-			pf,
 			wcls       = None,
 			add_args   = [],
 			sid        = None,
@@ -233,7 +230,6 @@ class TestSuiteShared:
 	def addrgen(
 			self,
 			wf,
-			pf = None,
 			check_ref  = False,
 			ftype      = 'addr',
 			id_str     = None,
@@ -270,7 +266,7 @@ class TestSuiteShared:
 			cmp_or_die(chk,chk_ref,desc=f'{ftype}list data checksum')
 		return t
 
-	def keyaddrgen(self,wf,pf=None,check_ref=False,mmtype=None):
+	def keyaddrgen(self,wf,check_ref=False,mmtype=None):
 		if not mmtype:
 			mmtype = self.segwit_mmtype
 		args = ['-d',self.tmpdir,self.usr_rand_arg,wf,self.addr_idx_list]
@@ -288,7 +284,7 @@ class TestSuiteShared:
 		t.usr_rand(self.usr_rand_chars)
 		t.hash_preset('new key-address list','1')
 		t.passphrase_new('new key-address list',self.kapasswd)
-		t.written_to_file('Encrypted secret keys',oo=True)
+		t.written_to_file('Encrypted secret keys')
 		return t
 
 	def _do_confirm_send(self,t,quiet=False,confirm_send=True,sure=True):

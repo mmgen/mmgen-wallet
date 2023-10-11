@@ -80,7 +80,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
-		for k,j in self.cmd_group:
+		for k,_ in self.cmd_group:
 			for n in (1,2,3): # 128,192,256 bits
 				setattr(self,f'{k}_{n}',getattr(self,k))
 		if cfgs:
@@ -91,13 +91,12 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 
 	def ref_wallet_chk(self):
 		wf = joinpath(ref_dir,TestSuiteWalletConv.sources[str(self.seed_len)]['ref_wallet'])
-		return self.walletchk(wf,pf=None,sid=self.seed_id)
+		return self.walletchk(wf,sid=self.seed_id)
 
 	def ref_ss_chk(self,ss_type):
 		ss = get_wallet_cls(ss_type)
 		return self.walletchk(
 			wf   = joinpath(ref_dir,f'{self.seed_id}.{ss.ext}'),
-			pf   = None,
 			wcls = ss,
 			sid  = self.seed_id )
 
@@ -373,8 +372,7 @@ class TestSuiteRef3Addr(TestSuiteRef3Seed):
 
 	def call_addrgen(self,mmtype,pfx='addr'):
 		wf = self.get_file_with_ext('mmdat')
-		pf = joinpath(self.tmpdir,pwfile)
-		return getattr(self,pfx+'gen')(wf,pf=pf,check_ref=True,mmtype=mmtype)
+		return getattr(self,pfx+'gen')(wf,check_ref=True,mmtype=mmtype)
 
 	def refaddrgen_legacy(self):
 		return self.call_addrgen('legacy')
@@ -401,7 +399,6 @@ class TestSuiteRef3Addr(TestSuiteRef3Seed):
 		pwlen = (['--passwd-len='+str(pwlen)] if pwlen else [])
 		return self.addrgen(
 				wf,
-				pf,
 				check_ref  = True,
 				ftype      = ftype,
 				id_str     = id_str,

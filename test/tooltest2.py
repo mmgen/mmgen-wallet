@@ -751,7 +751,7 @@ tests = {
 
 coin_dependent_groups = ('Coin','File')
 
-def fork_cmd(cmd_name,args,out,opts,stdin_input):
+def fork_cmd(cmd_name,args,opts,stdin_input):
 	cmd = (
 		tool_cmd_preargs +
 		tool_cmd +
@@ -778,7 +778,7 @@ def fork_cmd(cmd_name,args,out,opts,stdin_input):
 
 	return cmd_out.strip()
 
-async def call_method(cls,method,cmd_name,args,out,opts,mmtype,stdin_input):
+async def call_method(cls,method,cmd_name,args,mmtype,stdin_input):
 	vmsg('{}: {}{}'.format(purple('Running'),
 			' '.join([cmd_name]+[repr(e) for e in args]),
 			' '+mmtype if mmtype else '' ))
@@ -809,7 +809,7 @@ async def call_method(cls,method,cmd_name,args,out,opts,mmtype,stdin_input):
 		cfg.quiet = oq_save
 		return ret
 
-def tool_api(cls,cmd_name,args,out,opts):
+def tool_api(cls,cmd_name,args,opts):
 	from mmgen.tool.api import tool_api
 	tool = tool_api(cfg)
 	if opts:
@@ -883,15 +883,15 @@ async def run_test(cls,gid,cmd_name):
 		if cfg.tool_api:
 			if args and args[0 ]== '-':
 				continue
-			cmd_out = tool_api(cls,cmd_name,args,out,opts)
+			cmd_out = tool_api(cls,cmd_name,args,opts)
 		elif cfg.fork:
-			cmd_out = fork_cmd(cmd_name,args,out,opts,stdin_input)
+			cmd_out = fork_cmd(cmd_name,args,opts,stdin_input)
 		else:
 			if stdin_input and gc.platform == 'win':
 				msg('Skipping for MSWin - no os.fork()')
 				continue
 			method = getattr(cls(cfg,cmdname=cmd_name,proto=proto,mmtype=mmtype),cmd_name)
-			cmd_out = await call_method(cls,method,cmd_name,args,out,opts,mmtype,stdin_input)
+			cmd_out = await call_method(cls,method,cmd_name,args,mmtype,stdin_input)
 
 		try:
 			vmsg(f'Output:\n{cmd_out}\n')

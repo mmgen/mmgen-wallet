@@ -47,7 +47,6 @@ class unit_test:
 		from mmgen.mn_entry import mn_entry
 
 		msg_r('\nTesting computed wordlist constants...')
-		usl = {}
 		for wl_id in self.vectors:
 			for j,k in (('uniq_ss_len','usl'),('shortest_word','sw'),('longest_word','lw')):
 				a = getattr(mn_entry( cfg, wl_id ),j)

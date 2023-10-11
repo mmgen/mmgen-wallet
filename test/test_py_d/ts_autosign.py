@@ -226,7 +226,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 			t.expect('Type a number.*: ',str(mne.entry_modes.index(entry_mode)+1),regex=True)
 			stealth_mnemonic_entry(t,mne,mn,entry_mode)
 
-		wf = t.written_to_file('Autosign wallet')
+		t.written_to_file('Autosign wallet')
 		return t
 
 	def copy_tx_files(self):

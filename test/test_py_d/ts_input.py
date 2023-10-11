@@ -113,7 +113,7 @@ class TestSuiteInput(TestSuiteBase):
 		run_env['MMGEN_TEST_SUITE'] = ''
 
 		# the test can fail the first time if cfg file has changed, so run it twice if necessary:
-		for i in range(2):
+		for _ in range(2):
 			cp = run( cmd, input=mn.encode(), stdout=PIPE, stderr=PIPE, env=run_env )
 			if b'written to file' in cp.stderr:
 				break
@@ -204,7 +204,7 @@ class TestSuiteInput(TestSuiteBase):
 			'--hash-preset=1',
 			'seed' ],
 			cmd_dir = '.' )
-		for foo in range(4):
+		for _ in range(4):
 			t.expect('[reference password][1][MyLabel]')
 
 		return t

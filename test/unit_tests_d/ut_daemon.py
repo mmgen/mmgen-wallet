@@ -68,7 +68,7 @@ class unit_tests:
 		args = ['python3', f'test/{args_in[0]}-coin-daemons.py'] + list(args_in[1:]) + self.daemon_ctrl_args
 		vmsg('\n' + orange(f"Running '{' '.join(args)}':"))
 		pipe = None if cfg.verbose else PIPE
-		cp = run( args, stdout=pipe, stderr=pipe, check=True )
+		run( args, stdout=pipe, stderr=pipe, check=True )
 		qmsg('OK')
 		return True
 

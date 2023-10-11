@@ -321,7 +321,7 @@ def do_ab_test(proto,scfg,addr_type,gen1,kg2,ag,tool,cache_data):
 			for privbytes in tuple(tool.data)[len(edgecase_sks):]:
 				yield privbytes
 		else:
-			for i in range(scfg.rounds):
+			for _ in range(scfg.rounds):
 				yield getrand(32)
 
 	kg1 = KeyGenerator( cfg, proto, addr_type.pubkey_type, gen1 )

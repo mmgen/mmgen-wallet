@@ -846,7 +846,7 @@ class TestSuiteRunner:
 		fns = []
 		if force_delete or not root:
 			# does cmd produce a needed dependency(ies)?
-			ret = self.get_num_exts_for_cmd(cmd,dpy)
+			ret = self.get_num_exts_for_cmd(cmd)
 			if ret:
 				for ext in ret[1]:
 					fn = get_file_with_ext(cfgs[ret[0]]['tmpdir'],ext,delete=build)
@@ -972,7 +972,7 @@ class TestSuiteRunner:
 		if not cfg.quiet:
 			omsg(f'Checking dependencies for {cmd!r}')
 
-		self.check_needs_rerun(self.ts,cmd,build=False)
+		self.check_needs_rerun(self.ts,cmd)
 
 		w = max(map(len,self.rebuild_list)) + 1
 		for cmd in self.rebuild_list:
@@ -986,7 +986,7 @@ class TestSuiteRunner:
 	def generate_cmd_deps(self,fdeps):
 		return [cfgs[str(n)]['dep_generators'][ext] for n,ext in fdeps]
 
-	def get_num_exts_for_cmd(self,cmd,dpy=False): # dpy ignored here
+	def get_num_exts_for_cmd(self,cmd):
 		try:
 			num = str(self.gm.dpy_data[cmd][0])
 		except KeyError:

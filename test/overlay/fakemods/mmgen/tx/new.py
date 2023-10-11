@@ -5,7 +5,7 @@ if overlay_fake_os.getenv('MMGEN_BOGUS_UNSPENT_DATA'):
 
 	class overlay_fake_data:
 
-		async def warn_chg_addr_used(foo,us):
+		async def warn_chg_addr_used(_,us):
 			from ..util import ymsg
 			ymsg('Bogus unspent data: skipping change address is used check')
 

@@ -381,7 +381,7 @@ class MMGenToolTestCmds:
 				(f1,f2,''),
 				(f3,f4,compressed)):
 			ao = ['--type='+k] if k else []
-			ret = tu.run_cmd_chk(name,fi,fo,add_opts=ao)
+			tu.run_cmd_chk(name,fi,fo,add_opts=ao)
 	def addr2pubhash(self,name,f1,f2,f3,f4):
 		for n,f,m,ao in (
 				(1,f1,'',[]),
@@ -391,7 +391,7 @@ class MMGenToolTestCmds:
 			addr = read_from_file(f).split()[-1]
 			tu.run_cmd_out(name,addr,fn_idx=n,add_opts=ao,extra_msg=m)
 	def pubhash2addr(self,name,f1,f2,f3,f4,f5,f6,f7,f8):
-		for n,fi,fo,m,ao in (
+		for _,fi,fo,m,ao in (
 				(1,f1,f2,'',[]),
 				(2,f3,f4,'from {}'.format( compressed or 'uncompressed' ),[]),
 				(4,f7,f8,'',type_bech32_arg)
@@ -463,7 +463,7 @@ class MMGenToolTestCmds:
 start_time = int(time.time())
 mk_tmpdir(tcfg['tmpdir'])
 
-def gen_deps_for_cmd(cmd,cdata):
+def gen_deps_for_cmd(cdata):
 	fns = []
 	if cdata:
 		name,code = cdata
@@ -480,7 +480,7 @@ def do_cmds(cmd_group):
 	tc = MMGenToolTestCmds()
 	gdata = cmd_data[cmd_group]['cmd_data']
 	for cmd in gdata:
-		fns = gen_deps_for_cmd(cmd,gdata[cmd])
+		fns = gen_deps_for_cmd(gdata[cmd])
 		cmdline = [cmd] + [os.path.join(tcfg['tmpdir'],fn) for fn in fns]
 		getattr(tc,cmd)(*cmdline)
 

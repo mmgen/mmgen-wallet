@@ -347,7 +347,6 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		return self._submit_transfer_tx( relay_parm=self.tx_relay_daemon_parm )
 
 	def _submit_transfer_tx(self,relay_parm=None,ext=None,op='submit',check_bal=True):
-		data = self.users['alice']
 		t = self._xmr_autosign_op(
 			op       = op,
 			add_opts = [f'--tx-relay-daemon={relay_parm}'] if relay_parm else [],

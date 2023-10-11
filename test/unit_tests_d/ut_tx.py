@@ -62,7 +62,7 @@ class unit_tests:
 		d.start()
 
 		proto = init_proto( cfg, 'btc', need_amt=True )
-		tx = await NewTX( cfg=cfg, proto=proto )
+		await NewTX( cfg=cfg, proto=proto )
 
 		d.stop()
 		qmsg('  OK')

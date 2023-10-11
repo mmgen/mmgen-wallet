@@ -48,7 +48,7 @@ class TestHashFunc:
 			die(3,m.format([hex(n) for n in self.K_ref],[hex(n) for n in h.K]))
 		msg('OK\n')
 
-	def compare_hashes(self,dlen,data,chk=None):
+	def compare_hashes(self,data,chk=None):
 		if chk is None:
 			chk = getattr(self.hashlib,self.desc)(data).hexdigest()
 		res = self.t_cls(data).hexdigest()
@@ -59,7 +59,7 @@ class TestHashFunc:
 	def test_ref(self):
 		for i,data in enumerate(self.vectors):
 			msg(f'\rTesting reference input data: {i+1:4}/{len(self.vectors)} ')
-			self.compare_hashes( len(data), data.encode(), chk=self.vectors[data] )
+			self.compare_hashes(data.encode(), chk=self.vectors[data])
 		msg('OK\n')
 
 	def test_random(self,rounds):
@@ -69,7 +69,7 @@ class TestHashFunc:
 			if i+1 in (1,rounds) or not (i+1) % 10:
 				msg(f'\rTesting random input data:    {i+1:4}/{rounds} ')
 			dlen = int(getrand(4).hex(),16) >> 18
-			self.compare_hashes(dlen,getrand(dlen))
+			self.compare_hashes(getrand(dlen))
 		msg('OK\n')
 
 class TestKeccak(TestHashFunc):

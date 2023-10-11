@@ -124,10 +124,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			)
 		),
 		('walletchk_newpass',(5,'wallet check with new pw, label and hash preset', [[['mmdat',pwfile],5]])),
-		('addrgen',          (1,'address generation',                [[['mmdat',pwfile],1]])),
+		('addrgen',          (1,'address generation',                [[['mmdat'],1]])),
 		('txcreate',         (1,'transaction creation',              [[['addrs'],1]])),
 		('txbump',           (1,'transaction fee bumping (no send)', [[['rawtx'],1]])),
-		('txsign',           (1,'transaction signing',               [[['mmdat','rawtx',pwfile,'txbump'],1]])),
+		('txsign',           (1,'transaction signing',               [[['mmdat','rawtx'],1]])),
 		('txsend',           (1,'transaction sending',               [[['sigtx'],1]])),
 		# txdo must go after txsign
 		('txdo',             (1,'online transaction',                [[['sigtx','mmdat'],1]])),
@@ -147,7 +147,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		('addrgen_incog_hex',(1,'address generation from mmincog hex file',       [[['mmincox','addrs'],1]])),
 		('addrgen_incog_hidden',(1,'address generation from hidden mmincog file', [[[hincog_fn,'addrs'],1]])),
 
-		('keyaddrgen',    (1,'key-address file generation',               [[['mmdat',pwfile],1]])),
+		('keyaddrgen',    (1,'key-address file generation',               [[['mmdat'],1]])),
 		('txsign_keyaddr',(1,'transaction signing with key-address file', [[['akeys.mmenc','rawtx'],1]])),
 
 		('txcreate_ni',   (1,'transaction creation (non-interactive)',    [[['addrs'],1]])),
@@ -338,13 +338,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.export_seed(wf=None,out_fmt=out_fmt,pf=pf)
 
 	def addrgen_dfl_wallet(self,pf=None,check_ref=False):
-		return self.addrgen(wf=None,pf=pf,check_ref=check_ref,dfl_wallet=True)
+		return self.addrgen(wf=None,check_ref=check_ref,dfl_wallet=True)
 
 	def txcreate_dfl_wallet(self,addrfile):
 		return self.txcreate_common(sources=['15'])
 
 	def txsign_dfl_wallet(self,txfile,pf='',save=True,has_label=False):
-		return self.txsign(None,txfile,pf=pf,save=save,has_label=has_label,dfl_wallet=True)
+		return self.txsign(None,txfile,save=save,has_label=has_label,dfl_wallet=True)
 
 	def passchg_dfl_wallet(self,pf):
 		return self.passchg(wf=None,pf=pf,dfl_wallet=True)
@@ -452,7 +452,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.passchg(wf,pf,label_action='user')
 
 	def walletchk_newpass(self,wf,pf,wcls=None,dfl_wallet=False):
-		return self.walletchk(wf,pf,wcls=wcls,dfl_wallet=dfl_wallet)
+		return self.walletchk(wf,wcls=wcls,dfl_wallet=dfl_wallet)
 
 	def _write_fake_data_to_file(self,d):
 		write_data_to_file(cfg,self.unspent_data_file,d,'Unspent outputs',quiet=True,ignore_opt_outdir=True)
@@ -657,7 +657,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			tweaks      = tweaks )
 
 		if txdo_args and add_args: # txdo4
-			t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
+			t.do_decrypt_ka_data(pw=self.cfgs['14']['kapasswd'])
 
 		return t
 
@@ -671,7 +671,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		args = prepend_args + ['--quiet','--outdir='+self.tmpdir,txfile] + seed_args
 		t = self.spawn('mmgen-txbump',args)
 		if seed_args:
-			t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
+			t.do_decrypt_ka_data(pw=self.cfgs['14']['kapasswd'])
 		t.expect('deduct the fee from (Hit ENTER for the change output): ','1\n')
 		# Fee must be > tx_fee + network relay fee (currently 0.00001)
 		t.expect('OK? (Y/n): ','\n')
@@ -733,7 +733,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		elif ocls.type == 'mmgen':
 			t.label()
 
-		return t.written_to_file(capfirst(ocls.desc),oo=True),t
+		return t.written_to_file(capfirst(ocls.desc)), t
 
 	def export_seed(self,wf,out_fmt='seed',pf=None):
 		f,t = self._walletconv_export(wf,out_fmt=out_fmt,pf=pf)
@@ -757,7 +757,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def export_incog(self,wf,out_fmt='i',add_args=[]):
 		uargs = ['-p1',self.usr_rand_arg] + add_args
-		f,t = self._walletconv_export(wf,out_fmt=out_fmt,uargs=uargs)
+		_,t = self._walletconv_export(wf,out_fmt=out_fmt,uargs=uargs)
 		return t
 
 	def export_incog_hex(self,wf):
@@ -769,7 +769,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		add_args = ['-J',f'{rf},{hincog_offset}']
 		return self.export_incog(wf,out_fmt='hi',add_args=add_args)
 
-	def addrgen_seed(self,wf,foo,in_fmt='seed'):
+	def addrgen_seed(self,wf,_,in_fmt='seed'):
 		wcls = get_wallet_cls(fmt_code=in_fmt)
 		stdout = wcls.type == 'seed' # capture output to screen once
 		t = self.spawn(
@@ -788,13 +788,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.req_exit_val = 1
 		return t
 
-	def addrgen_hex(self,wf,foo,in_fmt='mmhex'):
-		return self.addrgen_seed(wf,foo,in_fmt=in_fmt)
+	def addrgen_hex(self,wf,_,in_fmt='mmhex'):
+		return self.addrgen_seed(wf,_,in_fmt=in_fmt)
 
-	def addrgen_mnemonic(self,wf,foo):
-		return self.addrgen_seed(wf,foo,in_fmt='words')
+	def addrgen_mnemonic(self,wf,_):
+		return self.addrgen_seed(wf,_,in_fmt='words')
 
-	def addrgen_incog(self,wf=[],foo='',in_fmt='i',args=[]):
+	def addrgen_incog(self,wf=[],_='',in_fmt='i',args=[]):
 		t = self.spawn('mmgen-addrgen', args + self.segwit_arg + ['-i'+in_fmt,'-d',self.tmpdir]+
 				([],[wf])[bool(wf)] + [self.addr_idx_list])
 		t.license()
@@ -809,10 +809,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.req_exit_val = 1
 		return t
 
-	def addrgen_incog_hex(self,wf,foo):
+	def addrgen_incog_hex(self,wf,_):
 		return self.addrgen_incog(wf,'',in_fmt='xi')
 
-	def addrgen_incog_hidden(self,wf,foo):
+	def addrgen_incog_hidden(self,wf,_):
 		rf = joinpath(self.tmpdir,hincog_fn)
 		return self.addrgen_incog([],'',in_fmt='hi',
 			args=['-H',f'{rf},{hincog_offset}','-l',str(hincog_seedlen)])
@@ -821,7 +821,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-txsign', ['-d',self.tmpdir,'-p1','-M',keyaddr_file,txfile])
 		t.license()
 		t.view_tx('n')
-		t.do_decrypt_ka_data(hp='1',pw=self.kapasswd)
+		t.do_decrypt_ka_data(pw=self.kapasswd)
 		self.txsign_end(t)
 		return t
 
@@ -832,7 +832,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.walletgen(seed_len=128)
 
 	def addrgen2(self,wf):
-		return self.addrgen(wf,pf='')
+		return self.addrgen(wf)
 
 	def txcreate2(self,addrfile):
 		return self.txcreate_common(sources=['2'])
@@ -854,7 +854,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.walletgen()
 
 	def addrgen3(self,wf):
-		return self.addrgen(wf,pf='')
+		return self.addrgen(wf)
 
 	def txcreate3(self,addrfile1,addrfile2):
 		return self.txcreate_common(sources=['1','3'])
@@ -888,7 +888,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def addrgen4(self,wf):
-		return self.addrgen(wf,pf='')
+		return self.addrgen(wf)
 
 	def txcreate4(self,f1,f2,f3,f4,f5,f6):
 		return self.txcreate_common(
@@ -911,7 +911,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-txsign',add_args)
 		t.license()
 		t.view_tx('t')
-		t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
+		t.do_decrypt_ka_data(pw=self.cfgs['14']['kapasswd'])
 
 		for cnum,wcls in (('1',IncogWallet),('3',MMGenWallet)):
 			t.passphrase(wcls.desc,self.cfgs[cnum]['wpasswd'])
@@ -950,7 +950,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.walletgen()
 
 	def addrgen5(self,wf):
-		return self.addrgen(wf,pf='')
+		return self.addrgen(wf)
 
 	def txcreate5(self,addrfile):
 		return self.txcreate_common(
@@ -981,7 +981,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.walletgen()
 
 	def addrgen6(self,wf):
-		return self.addrgen(wf,pf='')
+		return self.addrgen(wf)
 
 	def txcreate6(self,addrfile):
 		return self.txcreate_common(

@@ -19,7 +19,7 @@ def stealth_mnemonic_entry(t,mne,mn,entry_mode,pad_entry=False):
 	def pad_mnemonic(mn,ss_len):
 		def get_pad_chars(n):
 			ret = ''
-			for i in range(n):
+			for _ in range(n):
 				m = int.from_bytes(getrand(1),'big') % 32
 				ret += r'123579!@#$%^&*()_+-=[]{}"?/,.<>|'[m]
 			return ret

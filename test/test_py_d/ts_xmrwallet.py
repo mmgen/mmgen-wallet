@@ -693,7 +693,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	async def _get_height(self):
 		u = self.users['miner']
-		for i in range(20):
+		for _ in range(20):
 			try:
 				return u.md_rpc.call('get_last_block_header')['block_header']['height']
 			except Exception as e:
@@ -735,7 +735,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		data = self.users['miner']
 		addr = read_from_file(data.addrfile_fs.format(1)) # mine to wallet #1, account 0
 
-		for i in range(20):
+		for _ in range(20):
 			ret = data.md_rpc.call_raw(
 				'start_mining',
 				do_background_mining = False, # run mining in background or foreground

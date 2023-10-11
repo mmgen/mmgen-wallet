@@ -72,7 +72,6 @@ class MMGenPexpect:
 
 	def do_decrypt_ka_data(
 			self,
-			hp,
 			pw,
 			desc         = 'key-address data',
 			check        = True,
@@ -124,7 +123,7 @@ class MMGenPexpect:
 			while rand_chars:
 				ch = rand_chars.pop(0)
 				msg_r(yellow(ch)+' ' if cfg.verbose else '+')
-				ret = self.expect('left: ',ch,delay=0.005)
+				self.expect('left: ',ch,delay=0.005)
 			self.expect('ENTER to continue: ','\n')
 
 	def passphrase_new(self,desc,passphrase):
@@ -140,7 +139,7 @@ class MMGenPexpect:
 		self.expect(f'Enter hash preset for {desc}')
 		self.expect('or hit ENTER .*?:',str(preset)+'\n',regex=True)
 
-	def written_to_file(self,desc,overwrite_unlikely=False,query='Overwrite?  ',oo=False):
+	def written_to_file(self,desc,overwrite_unlikely=False,query='Overwrite?  '):
 		s1 = f'{desc} written to file '
 		s2 = query + "Type uppercase 'YES' to confirm: "
 		ret = self.expect(([s1,s2],s1)[overwrite_unlikely])
@@ -168,7 +167,7 @@ class MMGenPexpect:
 		self.expect('Exiting at user request')
 
 	def expect_getend(self,s,regex=False):
-		ret = self.expect(s,regex=regex,nonl=True)
+		self.expect(s,regex=regex,nonl=True)
 		if cfg.debug_pexpect:
 			debug_pexpect_msg(self.p)
 		# readline() of partial lines doesn't work with PopenSpawn, so do this instead:

@@ -82,13 +82,13 @@ class unit_tests:
 		from cryptography.hazmat.backends import default_backend
 		c = Cipher(algorithms.AES(b'deadbeef'*4),modes.CTR(b'deadbeef'*2),backend=default_backend())
 		encryptor = c.encryptor()
-		enc_data = encryptor.update(b'foo') + encryptor.finalize()
+		encryptor.update(b'foo') + encryptor.finalize()
 		return True
 
 	def ecdsa(self,name,ut):
 		import ecdsa
 		pko = ecdsa.SigningKey.from_secret_exponent(12345678901234,curve=ecdsa.SECP256k1)
-		pubkey = pko.get_verifying_key().to_string().hex()
+		pko.get_verifying_key().to_string().hex()
 		return True
 
 	def ripemd160(self,name,ut):
@@ -110,7 +110,7 @@ class unit_tests:
 			async with aiohttp.ClientSession(
 				headers = { 'Content-Type': 'application/json' },
 				connector = aiohttp.TCPConnector(),
-			) as session:
+			):
 				pass
 		asyncio.run(do())
 		return True

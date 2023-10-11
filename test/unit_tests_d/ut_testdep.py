@@ -34,20 +34,20 @@ class unit_tests:
 		network = nfnc('btc')
 		key = network.keys.private(secret_exponent=int(sec,16),is_compressed=True)
 		hash160_c = key.hash160(is_compressed=True)
-		addr = network.address.for_p2pkh_wit(hash160_c)
+		network.address.for_p2pkh_wit(hash160_c)
 		return True
 
 	def monero_python(self,name,ut):
 		from monero.seed import Seed
-		res = Seed('deadbeef' * 8).public_address()
+		Seed('deadbeef' * 8).public_address()
 		return True
 
 	def keyconv(self,name,ut):
-		res = run(['keyconv','-G','ltc'],stdout=PIPE,stderr=PIPE,check=True)
+		run(['keyconv','-G','ltc'],stdout=PIPE,stderr=PIPE,check=True)
 		return True
 
 	def zcash_mini(self,name,ut):
-		res = run(['zcash-mini'],stdout=PIPE,check=True)
+		run(['zcash-mini'],stdout=PIPE,check=True)
 		return True
 
 	def ethkey(self,name,ut):

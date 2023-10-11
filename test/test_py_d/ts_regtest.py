@@ -616,7 +616,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			'mmgen-addrimport',
 			[ '--bob', '--rescan', '--quiet', f'--address={self.miner_addr}' ] )
 
-	def fund_wallet_deterministic(self,user,addr,utxo_nums,skip_passphrase=False):
+	def fund_wallet_deterministic(self,addr,utxo_nums,skip_passphrase=False):
 		"""
 		the deterministic funding method using specific inputs
 		"""
@@ -639,7 +639,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		sid = self._user_sid('alice')
 		mmtype = ('L','S')[self.proto.cap('segwit')]
 		addr = self.get_addr_from_addrlist('alice',sid,mmtype,0,addr_range='1-5')
-		return self.fund_wallet_deterministic( 'alice', addr, '1-11', skip_passphrase=True )
+		return self.fund_wallet_deterministic( addr, '1-11', skip_passphrase=True )
 
 	def generate_extra_deterministic(self):
 		if not self.deterministic:
@@ -914,7 +914,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			extra_args         = [],
 			wf                 = None,
 			bad_locktime       = False,
-			full_tx_view       = False,
 			menu               = ['M'],
 			skip_passphrase    = False,
 			used_chg_addr_resp = None):
@@ -949,7 +948,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_split1(self):
 		sid = self._user_sid('bob')
 		outputs_cl = [sid+':C:1,100', sid+':L:2,200',sid+':'+rtBobOp3]
-		return self.user_txdo('bob',rtFee[0],outputs_cl,'1',do_label=True,full_tx_view=True)
+		return self.user_txdo('bob',rtFee[0],outputs_cl,'1')
 
 	def get_addr_from_addrlist(self,user,sid,mmtype,idx,addr_range='1-5'):
 		id_str = { 'L':'', 'S':'-S', 'C':'-C', 'B':'-B' }[mmtype]
@@ -1244,7 +1243,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		taddr = 35 if self.proto.cap('segwit') else 25
 		t.expect(f'Exporting {taddr-npruned} addresses')
-		fn = t.written_to_file('JSON data')
+		t.written_to_file('JSON data')
 		return t
 
 	def bob_twprune_noask(self):
@@ -1772,7 +1771,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			idx,
 			by_mmtype     = False,
 			include_dest  = True,
-			by_addrtype   = False,
 			ignore_labels = False):
 		if mmtype in ('S','B') and not self.proto.cap('segwit'):
 			return 'skip'

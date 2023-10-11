@@ -89,14 +89,14 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
-		for k,j in self.cmd_group:
+		for k,_ in self.cmd_group:
 			for n in (1,2,3):
 				setattr(self,f'{k}_{n}',getattr(self,k))
-		return TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
 
 	def ref_wallet_conv(self):
 		wf = joinpath(ref_dir,self.sources[str(self.seed_len)]['ref_wallet'])
-		return self.walletconv_in(wf,oo=True)
+		return self.walletconv_in(wf)
 
 	def ref_mn_conv(self,ext='mmwords'):
 		wf = joinpath(ref_dir,self.seed_id+'.'+ext)
@@ -115,12 +115,12 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 
 	def ref_brain_conv(self):
 		uopts = ['-i','bw','-p','1','-l',str(self.seed_len)]
-		return self.walletconv_in(None,uopts,oo=True,icls=get_wallet_cls('brain'))
+		return self.walletconv_in(None,uopts,icls=get_wallet_cls('brain'))
 
 	def ref_incog_conv(self,wfk='ic_wallet',in_fmt='i'):
 		uopts = ['-i',in_fmt,'-p','1','-l',str(self.seed_len)]
 		wf = joinpath(ref_dir,self.sources[str(self.seed_len)][wfk])
-		return self.walletconv_in(wf,uopts,oo=True)
+		return self.walletconv_in(wf,uopts)
 
 	def ref_incox_conv(self):
 		return self.ref_incog_conv(in_fmt='xi',wfk='ic_wallet_hex')
@@ -132,7 +132,6 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		return self.walletconv_in(
 			None,
 			uopts + hi_opt,
-			oo = True,
 			icls = get_wallet_cls('incog_hidden') )
 
 	def ref_hincog_conv_old(self):
@@ -190,7 +189,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		return 'ok'
 
 	# wallet conversion tests
-	def walletconv_in(self,infile,uopts=[],oo=False,icls=None):
+	def walletconv_in(self,infile,uopts=[],icls=None):
 		ocls = get_wallet_cls('words')
 		opts = ['-d',self.tmpdir,'-o',ocls.fmt_codes[0],self.usr_rand_arg]
 		if_arg = [infile] if infile else []
@@ -206,13 +205,12 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 				t.expect('Is the Seed ID correct? (Y/n): ','\n')
 			else:
 				t.expect(['Passphrase is OK',' are correct'])
-		wf = t.written_to_file(capfirst(ocls.desc),oo=oo)
+		wf = t.written_to_file(capfirst(ocls.desc))
 		t.p.wait()
 		# back check of result
 		msg('' if cfg.profile else ' OK')
 		return self.walletchk(
 				wf,
-				pf         = None,
 				extra_desc = '(check)',
 				sid        = self.seed_id)
 
@@ -228,14 +226,13 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 			t.passphrase_new('new '+wcls.desc,self.wpasswd)
 			t.usr_rand(self.usr_rand_chars)
 		if wcls.type.startswith('incog'):
-			for i in (1,2,3):
+			for _ in (1,2,3):
 				t.expect('Encrypting random data from your operating system with ephemeral key')
 		if wcls.type == 'incog_hidden':
 			t.hincog_create(hincog_bytes)
 		if out_fmt == 'w':
 			t.label()
-		wf = t.written_to_file(capfirst(wcls.desc),oo=True)
-		pf = None
+		wf = t.written_to_file(capfirst(wcls.desc))
 
 		if wcls.type == 'incog_hidden':
 			add_args += uopts_chk
@@ -243,7 +240,6 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		msg('' if cfg.profile else ' OK')
 		return self.walletchk(
 				wf,
-				pf         = pf,
 				wcls       = wcls,
 				extra_desc = '(check)',
 				sid        = self.seed_id,
