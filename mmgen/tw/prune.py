@@ -96,7 +96,9 @@ class TwAddressesPrune(TwAddresses):
 					'[p]rune anyway, [P]rune all with balance, [s]kip, [S]kip all with balance: ',
 				),
 				'used': md(
-					yellow('Address #{} ({}) is used!'.format( addrnum, e.twmmid.addr )),
+					yellow('Address #{a} ({b}) is used!'.format(
+						a = addrnum,
+						b = e.twmmid.addr )),
 					'[p]rune anyway, [P]rune all used, [s]kip, [S]kip all used: ',
 				),
 			}

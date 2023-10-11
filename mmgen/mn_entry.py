@@ -392,11 +392,11 @@ class MnemonicEntry(object):
 		for k,v in self.cfg.mnemonic_entry_modes.items():
 			cls = self.get_cls_by_wordlist(k)
 			if v not in cls.entry_modes:
-				errmsg = """
+				errmsg = f"""
 					Error in cfg file option 'mnemonic_entry_modes':
-					Entry mode {!r} not recognized for wordlist {!r}:
-					Valid choices: {}
-				""".format( v, k, fmt_list(cls.entry_modes) )
+					Entry mode {v!r} not recognized for wordlist {k!r}:
+					Valid choices: {fmt_list(cls.entry_modes)}
+				"""
 				die(2, '\n' + fmt(errmsg,indent='  '))
 			if cls == type(self):
 				self.usr_dfl_entry_mode = v

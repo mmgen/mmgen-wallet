@@ -365,8 +365,10 @@ class MMGenLabel(str,Hilite,InitErrors):
 				# Disallow: (C)ontrol,(M)combining
 				# Combining characters create width formatting issues, so disallow them for now
 				if unicodedata.category(ch)[0] in ('C','M'):
-					raise ValueError('{!a}: {} characters not allowed'.format(ch,
-						{ 'C':'control', 'M':'combining' }[unicodedata.category(ch)[0]] ))
+					raise ValueError(
+						'{!a}: {} characters not allowed'.format(
+							ch,
+							{ 'C':'control', 'M':'combining' }[unicodedata.category(ch)[0]] ))
 
 			me = str.__new__(cls,s)
 

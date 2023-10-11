@@ -122,16 +122,16 @@ class New(Base):
 			if fee:
 				abs_fee = self.convert_and_check_fee(fee,desc)
 			if abs_fee:
-				prompt = '{} TX fee{}: {}{} {} ({} {})\n'.format(
-						desc,
-						(f' (after {self.cfg.fee_adjust:.2f}X adjustment)'
+				prompt = '{a} TX fee{b}: {c}{d} {e} ({f} {g})\n'.format(
+						a = desc,
+						b = (f' (after {self.cfg.fee_adjust:.2f}X adjustment)'
 							if self.cfg.fee_adjust != 1 and desc.startswith('Network-estimated')
 								else ''),
-						('','≈')[self.fee_is_approximate],
-						abs_fee.hl(),
-						self.coin,
-						pink(str(self.fee_abs2rel(abs_fee))),
-						self.rel_fee_disp)
+						c = ('','≈')[self.fee_is_approximate],
+						d = abs_fee.hl(),
+						e = self.coin,
+						f = pink(str(self.fee_abs2rel(abs_fee))),
+						g = self.rel_fee_disp)
 				from ..ui import keypress_confirm
 				if self.cfg.yes or keypress_confirm( self.cfg, prompt+'OK?', default_yes=True ):
 					if self.cfg.yes:

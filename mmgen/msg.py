@@ -212,9 +212,7 @@ class coin_msg:
 			if req_addr:
 				return '\n'.join(gen_single())
 			else:
-				return (
-					'{}SIGNED MESSAGE DATA:\n\n  '.format('' if self.sigs else 'UN') +
-					'\n  '.join(gen_all()) )
+				return ('' if self.sigs else 'UN') + 'SIGNED MESSAGE DATA:\n\n  ' + '\n  '.join(gen_all())
 
 	class unsigned(completed):
 

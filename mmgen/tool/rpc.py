@@ -142,7 +142,7 @@ class tool_cmd(tool_cmd_base):
 			all_labels:   'show all addresses with labels' = False ):
 		"list MMGen addresses in the tracking wallet and their balances"
 
-		assert showused in (0,1,2), f"‘showused’ must have a value of 0, 1 or 2"
+		assert showused in (0,1,2), "‘showused’ must have a value of 0, 1 or 2"
 
 		from ..tw.addresses import TwAddresses
 		obj = await TwAddresses(self.cfg,self.proto,minconf=minconf,mmgen_addrs=mmgen_addrs)

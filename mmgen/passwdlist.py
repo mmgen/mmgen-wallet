@@ -185,11 +185,10 @@ class PasswordList(AddrList):
 
 		if pw_bytes > seed.byte_len:
 			die(1,
-				'Cannot generate passwords with more entropy than underlying seed! ({} bits)\n'.format(
-					len(seed.data) * 8 ) + (
-					'Re-run the command with --passwd-len={}' if pf in ('bip39','hex') else
-					'Re-run the command, specifying a password length of {} or less'
-				).format(good_pw_len) )
+				f'Cannot generate passwords with more entropy than underlying seed! ({len(seed.data)*8} bits)\n' +
+				(f'Re-run the command with --passwd-len={good_pw_len}' if pf in ('bip39','hex') else
+				'Re-run the command, specifying a password length of {} or less')
+			)
 
 		if pf in ('bip39','hex') and pw_bytes < seed.byte_len:
 			from .ui import keypress_confirm

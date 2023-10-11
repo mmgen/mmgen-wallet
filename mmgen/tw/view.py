@@ -614,12 +614,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			if not parent.disp_data:
 				return None
 
-			outfile = '{}{}-{}{}[{}].out'.format(
-				parent.dump_fn_pfx,
-				f'-{output_type}' if len(parent.print_output_types) > 1 else '',
-				parent.proto.dcoin,
-				('' if parent.proto.network == 'mainnet' else '-'+parent.proto.network.upper()),
-				','.join(parent.sort_info(include_group=False)).replace(' ','') )
+			outfile = '{a}{b}-{c}{d}[{e}].out'.format(
+				a = parent.dump_fn_pfx,
+				b = f'-{output_type}' if len(parent.print_output_types) > 1 else '',
+				c = parent.proto.dcoin,
+				d = ('' if parent.proto.network == 'mainnet' else '-'+parent.proto.network.upper()),
+				e = ','.join(parent.sort_info(include_group=False)).replace(' ','') )
 
 			print_hdr = getattr(parent.display_type,output_type).print_header.format(parent.cols)
 

@@ -901,11 +901,11 @@ class MoneroWalletOps:
 			processed = 0
 			for n,d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
 				fn = self.get_wallet_fn(d)
-				gmsg('\n{}ing wallet {}/{} ({})'.format(
-					self.stem.capitalize(),
-					n+1,
-					len(self.addr_data),
-					fn.name,
+				gmsg('\n{a}ing wallet {b}/{c} ({d})'.format(
+					a = self.stem.capitalize(),
+					b = n + 1,
+					c = len(self.addr_data),
+					d = fn.name,
 				))
 				processed += await self.process_wallet(
 					d,
@@ -964,15 +964,15 @@ class MoneroWalletOps:
 			def print_accts(self,data,addrs_data,indent='    '):
 				d = data['subaddress_accounts']
 				msg('\n' + indent + f'Accounts of wallet {self.fn.name}:')
-				fs = indent + '  {:6}  {:18}  {:<6} {:%s}  {}' % max(len(e['label']) for e in d)
-				msg(fs.format('Index ','Base Address','nAddrs','Label','Unlocked Balance'))
+				fs = indent + '  {a:6}  {b:18}  {c:<6} {d:%s}  {e}' % max(len(e['label']) for e in d)
+				msg(fs.format(a='Index ',b='Base Address',c='nAddrs',d='Label',e='Unlocked Balance'))
 				for i,e in enumerate(d):
 					msg(fs.format(
-						str(e['account_index']),
-						e['base_address'][:15] + '...',
-						len(addrs_data[i]['addresses']),
-						e['label'],
-						fmt_amt(e['unlocked_balance']),
+						a = str(e['account_index']),
+						b = e['base_address'][:15] + '...',
+						c = len(addrs_data[i]['addresses']),
+						d = e['label'],
+						e = fmt_amt(e['unlocked_balance']),
 					))
 
 			def get_accts(self,print=True):
@@ -1353,12 +1353,12 @@ class MoneroWalletOps:
 					fs = '  {:2} {} {} {}'
 					msg('\n' + green(f'Wallet {k}:'))
 					for acct_num,acct in enumerate(d[k]['addrs']):
-						msg('\n  Account #{} [{} {}]'.format(
-							acct_num,
-							self.proto.coin_amt(
+						msg('\n  Account #{a} [{b} {c}]'.format(
+							a = acct_num,
+							b = self.proto.coin_amt(
 								d[k]['accts']['subaddress_accounts'][acct_num]['unlocked_balance'],
 								from_unit='atomic').hl(),
-							self.proto.coin_amt.hlc('XMR')
+							c = self.proto.coin_amt.hlc('XMR')
 						))
 						msg(fs.format('','Address'.ljust(95),'Used ','Label'))
 						for addr in acct['addresses']:
@@ -1582,11 +1582,11 @@ class MoneroWalletOps:
 
 		async def main(self):
 
-			gmsg('\n{} label for wallet {}, account #{}, address #{}'.format(
-				'Setting' if self.label else 'Removing',
-				self.source.idx,
-				self.account,
-				self.address_idx
+			gmsg('\n{a} label for wallet {b}, account #{c}, address #{d}'.format(
+				a = 'Setting' if self.label else 'Removing',
+				b = self.source.idx,
+				c = self.account,
+				d = self.address_idx
 			))
 			h = self.rpc(self,self.source)
 
@@ -1606,13 +1606,13 @@ class MoneroWalletOps:
 
 			addr = ret['addresses'][self.address_idx]
 
-			msg('\n  {} {}\n  {} {}\n  {} {}'.format(
-					'Address:       ',
-					cyan(addr['address'][:15] + '...'),
-					'Existing label:',
-					pink(addr['label']) if addr['label'] else '[none]',
-					'New label:     ',
-					pink(self.label) if self.label else '[none]' ))
+			msg('\n  {a} {b}\n  {c} {d}\n  {e} {f}'.format(
+					a = 'Address:       ',
+					b = cyan(addr['address'][:15] + '...'),
+					c = 'Existing label:',
+					d = pink(addr['label']) if addr['label'] else '[none]',
+					e = 'New label:     ',
+					f = pink(self.label) if self.label else '[none]' ))
 
 			if addr['label'] == self.label:
 				ymsg('\nLabel is unchanged, operation cancelled')

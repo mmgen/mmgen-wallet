@@ -55,13 +55,13 @@ class wallet(wallet):
 		d = self.ssdata
 		m = ('Input','Destination')[action=='write']
 		if fn.size < d.hincog_offset + d.target_data_len:
-			die(1,'{} file {!r} has length {}, too short to {} {} bytes of data at offset {}'.format(
-				m,
-				fn.name,
-				fn.size,
-				action,
-				d.target_data_len,
-				d.hincog_offset ))
+			die(1,'{a} file {b!r} has length {c}, too short to {d} {e} bytes of data at offset {f}'.format(
+				a = m,
+				b = fn.name,
+				c = fn.size,
+				d = action,
+				e = d.target_data_len,
+				f = d.hincog_offset ))
 
 	def _get_data(self):
 		d = self.ssdata
