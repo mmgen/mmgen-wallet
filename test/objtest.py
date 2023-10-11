@@ -124,7 +124,7 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 
 		if cfg.getobj:
 			if input_data == 'bad':
-				assert ret == False, 'non-False return on bad input data'
+				assert ret is False, 'non-False return on bad input data'
 		else:
 			if (cfg.silent and input_data=='bad' and ret!=bad_ret) or (not cfg.silent and input_data=='bad'):
 				raise UserWarning(f"Non-'None' return value {ret!r} with bad input data")
@@ -187,7 +187,7 @@ def do_loop():
 		arg1 = test_data[test].get('arg1')
 		if utests and test not in utests:
 			continue
-		nl = ('\n','')[bool(cfg.super_silent) or clr == None]
+		nl = ('\n','')[bool(cfg.super_silent) or clr is None]
 		clr = (blue,nocolor)[bool(cfg.super_silent)]
 
 		if cfg.getobj and arg1 is None:

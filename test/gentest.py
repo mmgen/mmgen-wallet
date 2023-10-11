@@ -262,7 +262,7 @@ def find_or_check_tool(proto,addr_type,toolname):
 			toolname = toolname if toolname != 'ext' else None )
 		if tool and toolname in ext_progs and toolname != tool:
 			sys.exit(3)
-		if tool == None:
+		if tool is None:
 			return None
 		return tool
 
@@ -384,7 +384,7 @@ def ab_test(proto,scfg):
 		tool = None
 	else:
 		toolname = find_or_check_tool( proto, addr_type, scfg.tool )
-		if toolname == None:
+		if toolname is None:
 			ymsg(f'Warning: skipping tool {scfg.tool!r} for {proto.coin} {addr_type.name}')
 			return
 		tool = init_tool( proto, addr_type, toolname )

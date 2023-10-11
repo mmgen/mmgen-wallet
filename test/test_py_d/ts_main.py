@@ -307,7 +307,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def __init__(self,trunner,cfgs,spawn):
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
-		if trunner == None or self.proto.coin.lower() not in self.networks:
+		if trunner is None or self.proto.coin.lower() not in self.networks:
 			return
 		self.rpc = async_run(rpc_init(cfg,self.proto))
 		self.lbl_id = ('account','label')['label_api' in self.rpc.caps]

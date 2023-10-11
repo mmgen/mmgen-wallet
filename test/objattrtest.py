@@ -95,7 +95,7 @@ def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 			except:
 				raise SampleObjError(f'unable to find sample object of type {attrval_type.__name__!r}')
 			# ListItemAttr allows setting an attribute if its value is None
-			if type(dobj) == ListItemAttr and getattr(obj,attrname) == None:
+			if type(dobj) is ListItemAttr and getattr(obj,attrname) is None:
 				setattr(obj,attrname,so)
 			setattr(obj,attrname,so)
 		elif perm_name == 'delete_ok':
@@ -103,11 +103,11 @@ def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 	except SampleObjError as e:
 		die(4,f'Test script error ({e})')
 	except Exception as e:
-		if perm_value == True:
+		if perm_value is True:
 			fs = '{!r}: unable to {} attribute {!r}, though {}ing is allowed ({})'
 			die(4,fs.format(type(obj).__name__,pname,attrname,pstem,e))
 	else:
-		if perm_value == False:
+		if perm_value is False:
 			fs = '{!r}: attribute {!r} is {n}able, though {n}ing is forbidden'
 			die(4,fs.format(type(obj).__name__,attrname,n=pstem))
 

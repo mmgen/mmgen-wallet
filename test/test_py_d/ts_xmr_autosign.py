@@ -109,7 +109,7 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 		TestSuiteXMRWallet.__init__(self,trunner,cfgs,spawn)
 		TestSuiteAutosignBase.__init__(self,trunner,cfgs,spawn)
 
-		if trunner == None:
+		if trunner is None:
 			return
 
 		from mmgen.cfg import Config

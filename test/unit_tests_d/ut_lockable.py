@@ -49,8 +49,8 @@ class unit_test:
 
 		acdn = MyAttrCtrlDflNone()
 		assert acdn.foo == 'fooval', f'{acdn.foo}'
-		assert acdn.bar == None, f'{acdn.bar}'
-		assert acdn.baz == None, f'{acdn.baz}'
+		assert acdn.bar is None, f'{acdn.bar}'
+		assert acdn.baz is None, f'{acdn.baz}'
 
 		qmsg('OK')
 		qmsg_r('Testing class Lockable...')
@@ -110,9 +110,9 @@ class unit_test:
 				self.foo = True
 
 		lca = MyLockableAutolock()
-		assert lca._autolock == True
-		assert lca._locked == True
-		assert lca.foo == True
+		assert lca._autolock is True
+		assert lca._locked is True
+		assert lca.foo is True
 
 		class MyLockableAutolockDflNone(Lockable):
 			_default_to_none = True

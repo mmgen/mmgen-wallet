@@ -240,7 +240,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		af_key = f'ref_{ftype}file' + ('_' + id_key if id_key else '')
 		af_fn = TestSuiteRef.sources[af_key].format(pfx or self.altcoin_pfx,'' if coin else self.tn_ext)
 		af = joinpath(ref_dir,(subdir or self.ref_subdir,'')[ftype=='passwd'],af_fn)
-		coin_arg = [] if coin == None else ['--coin='+coin]
+		coin_arg = [] if coin is None else ['--coin='+coin]
 		tool_cmd = ftype.replace('segwit','').replace('bech32','')+'file_chksum'
 		t = self.spawn( 'mmgen-tool', coin_arg + ['--verbose','-p1',tool_cmd,af] )
 		if ftype == 'keyaddr':

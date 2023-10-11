@@ -25,7 +25,7 @@ class unit_tests:
 				vmsg(f'{desc:10} = {res:<{cls.max_prec+10}} [{type(res).__name__}]')
 				if chk is not None:
 					assert res == chk, f'{res} != {chk}'
-					assert type(res) == cls, f'{type(res).__name__} != {cls.__name__}'
+					assert type(res) is cls, f'{type(res).__name__} != {cls.__name__}'
 
 			qmsg_r(f'Testing {cls.__name__} arithmetic operations...')
 			vmsg('')

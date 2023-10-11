@@ -983,7 +983,7 @@ if cfg.fork:
 	tool_cmd = [ tool_exec, '--skip-cfg-file' ] + [
 		'--{}{}'.format(
 			k.replace('_','-'),
-			'='+getattr(cfg,k) if getattr(cfg,k) != True else '')
+			'='+getattr(cfg,k) if getattr(cfg,k) is not True else '')
 		for k in passthru_args if getattr(cfg,k) ]
 
 	if cfg.coverage:

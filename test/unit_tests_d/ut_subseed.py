@@ -125,7 +125,7 @@ class unit_test:
 			seed = Seed( cfg, seed_bin )
 			subseed = seed.subseed_by_seed_id('803B165C',last_idx=1)
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
-			assert subseed == None, subseed
+			assert subseed is None, subseed
 
 			r = SubSeedIdxRange('1-5')
 			r2 = SubSeedIdxRange(1,5)

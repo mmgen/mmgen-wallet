@@ -70,7 +70,7 @@ def test_network(proto,addrs):
 		a1 = CoinAddr(proto,addr['std'])
 		print_info(a1)
 		check_bytes(a1)
-		assert not hasattr(a1.parsed,'payment_id') or a1.parsed.payment_id == None
+		assert not hasattr(a1.parsed,'payment_id') or a1.parsed.payment_id is None
 
 		if 'int' in addr:
 			a2 = CoinAddr(proto,addr['int'])

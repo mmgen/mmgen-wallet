@@ -157,7 +157,7 @@ elif gc.platform == 'win':
 
 add_spawn_args = ['--data-dir='+tcfg['tmpdir']] + ['--{}{}'.format(
 		k.replace('_','-'),
-		'='+getattr(cfg,k) if getattr(cfg,k) != True else '')
+		'='+getattr(cfg,k) if getattr(cfg,k) is not True else '')
 			for k in ('testnet','rpc_host','regtest','coin','type') if getattr(cfg,k)]
 
 if cfg.list_cmds:

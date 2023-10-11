@@ -212,7 +212,7 @@ class MMGenPexpect:
 				raise
 			m1 = f'\nERROR.  Expect {s!r} timed out.  Exiting\n'
 			m2 = f'before: [{self.p.before}]\n'
-			m3 = f'sent value: [{self.sent_value}]' if self.sent_value != None else ''
+			m3 = f'sent value: [{self.sent_value}]' if self.sent_value is not None else ''
 			raise pexpect.TIMEOUT(m1+m2+m3)
 
 		if cfg.debug_pexpect:

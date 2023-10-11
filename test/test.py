@@ -417,7 +417,7 @@ class CmdGroupMgr:
 
 	def load_mod(self,gname,modname=None):
 		clsname,kwargs = self.cmd_groups[gname]
-		if modname == None and 'modname' in kwargs:
+		if modname is None and 'modname' in kwargs:
 			modname = kwargs['modname']
 		import importlib
 		modpath = f'test.test_py_d.ts_{modname or gname}'
@@ -881,7 +881,7 @@ class TestSuiteRunner:
 					do_between()
 		else:
 			# If prog produces multiple files:
-			if cmd not in self.rebuild_list or rerun == True:
+			if cmd not in self.rebuild_list or rerun is True:
 				self.rebuild_list[cmd] = (rerun,fns[0] if fns else '') # FIX
 
 		return rerun

@@ -101,7 +101,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 
 		super().__init__(trunner,cfgs,spawn)
 
-		if trunner == None:
+		if trunner is None:
 			return
 
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
@@ -162,7 +162,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		self.bad_msg_count = 0
 
 	def __del__(self):
-		if gc.platform == 'win' or self.tr == None:
+		if gc.platform == 'win' or self.tr is None:
 			return
 		if self.simulate or not self.live:
 			LEDControl.delete_dummy_control_files()

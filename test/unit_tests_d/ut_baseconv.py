@@ -187,10 +187,10 @@ class unit_test:
 			vmsg(f'\nBase: {base}')
 			vmsg(fs.format(h='Input',p='Pad',r='Output'))
 			for (hexstr,pad),ret_chk in data:
-				if type(pad) == int:
+				if type(pad) is int:
 					pad = len(hexstr)
 				ret = baseconv(base).tohex( ret_chk.split() if base == 'mmgen' else ret_chk, pad=pad )
-				if pad == None:
+				if pad is None:
 					assert int(ret,16) == int(hexstr,16), rerr.format(int(ret,16),int(hexstr,16))
 				else:
 					assert ret == hexstr, rerr.format(ret,hexstr)

@@ -20,7 +20,7 @@ def test_color():
 	ymsg("Terminal display:") # init_color() not called yet, so no yellow here
 
 	for desc,nc in (('pre-init',None),('auto','auto'),('8-color',8),('256-color',256),('disabled',0)):
-		if nc != None:
+		if nc is not None:
 			init_color(num_colors=nc)
 		msg('{:9}: {}'.format(
 			desc,
@@ -31,7 +31,7 @@ def test_color():
 
 	for t,c in (('rxvt',8),('xterm',8),('rxvt-unicode',88),('screen-256color',256),('xterm-256color',256)):
 		ret = get_terminfo_colors(t)
-		if ret == None:
+		if ret is None:
 			ymsg(f'Warning: unable to get info for terminal {t!r}')
 			continue
 		msg(f'{t}: {orange(str(ret))}')

@@ -385,7 +385,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def __init__(self,trunner,cfgs,spawn):
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
-		if trunner == None:
+		if trunner is None:
 			return
 
 		from mmgen.protocol import init_proto

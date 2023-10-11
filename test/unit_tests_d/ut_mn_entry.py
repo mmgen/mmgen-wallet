@@ -76,7 +76,7 @@ class unit_test:
 					if chk is False:
 						assert b is None, (b,None)
 					elif chk is None:
-						assert type(b) == tuple, (type(b),tuple)
+						assert type(b) is tuple, (type(b),tuple)
 					elif type(chk) is int:
 						assert b == chk, (b,chk)
 		msg('OK')
