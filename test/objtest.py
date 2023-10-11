@@ -153,9 +153,12 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 		if cfg.verbose and issubclass(cls,MMGenObject):
 			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
 
+	except UserWarning as e:
+		msg(f'==> {ret!r}')
+		die(2,red(str(e)))
 	except Exception as e:
 		if input_data == 'good':
-			raise ValueError(f'Error on good input data: {e}')
+			raise ValueError(f'Error on good input data: {e}') from e
 		if not type(e).__name__ == exc_name:
 			msg(f'Incorrect exception: expected {exc_name} but got {type(e).__name__}')
 			raise
@@ -167,12 +170,9 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 			msg( yellow(f' {exc_name}:') + str(e) )
 	except SystemExit as e:
 		if input_data == 'good':
-			raise ValueError('Error on good input data')
+			raise ValueError('Error on good input data') from e
 		if cfg.verbose:
 			msg(f'exitval: {e.code}')
-	except UserWarning as e:
-		msg(f'==> {ret!r}')
-		die(2,red(str(e)))
 
 def do_loop():
 	import importlib

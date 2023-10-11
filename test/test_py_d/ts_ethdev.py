@@ -1136,7 +1136,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_txsign(self,ext='',token=''):
 		return self.txsign(ni=True,ext=ext,add_args=['--token='+token])
 	def token_txsend(self,ext='',token=''):
-		return self.txsend(ext=ext,add_args=['--token=mm1'])
+		return self.txsend(ext=ext,add_args=['--token='+token])
 
 	def token_txcreate1(self):
 		return self.token_txcreate(args=['98831F3A:E:12,1.23456'],token='mm1')

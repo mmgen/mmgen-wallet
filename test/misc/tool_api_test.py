@@ -99,11 +99,11 @@ def run_test():
 
 		test_triplet(tool,'xmr','mainnet','M',1,
 			'e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f',
-			'41i7saPWA53EoHenmJVRt34dubPxsXwoWMnw8AdMyx4mTD1svf7qYzcVjxxRfteLNdYrAxWUMmiPegFW9EfoNgXx7vDMExv' ),
+			'41i7saPWA53EoHenmJVRt34dubPxsXwoWMnw8AdMyx4mTD1svf7qYzcVjxxRfteLNdYrAxWUMmiPegFW9EfoNgXx7vDMExv' )
 
 		test_triplet(tool,'etc','mainnet','E',1,
 			'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
-			'c96aaa54e2d44c299564da76e1cd3184a2386b8d' ),
+			'c96aaa54e2d44c299564da76e1cd3184a2386b8d' )
 
 		test_triplet(tool,'zec','mainnet','Z',1,
 			'SKxuS56e99jpCeD9mMQ5o63zoGPakNdM9HCvt4Vt2cypvRjCdvGJ',
