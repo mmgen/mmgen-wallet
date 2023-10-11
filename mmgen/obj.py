@@ -124,7 +124,7 @@ class ImmutableAttr: # Descriptor
 			else:
 				self.conv = lambda instance,value: dtype(value)
 		else:
-			"check this attribute's type"
+			# check this attribute's type
 			def assign_with_check(instance,value):
 				if type(value) is dtype:
 					return value

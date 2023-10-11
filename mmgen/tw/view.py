@@ -371,8 +371,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 	def set_amt_widths(self,data):
 		# width of amts column: min(7,width of integer part) + len('.') + width of fractional part
-		self.amt_widths = {k:
-			min(7,max(len(str(getattr(d,k).to_integral_value())) for d in data)) + 1 + self.disp_prec
+		self.amt_widths = {
+			k:min(7,max(len(str(getattr(d,k).to_integral_value())) for d in data)) + 1 + self.disp_prec
 				for k in self.amt_keys}
 
 	async def format(

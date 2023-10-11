@@ -112,6 +112,7 @@ class tool_cmd(tool_cmd_base):
 		nbytes = parse_bytespec(nbytes)
 		if self.cfg.outdir:
 			outfile = make_full_path( self.cfg.outdir, outfile )
+
 		f = open(outfile,'wb')
 
 		key = Crypto(self.cfg).get_random(32)
