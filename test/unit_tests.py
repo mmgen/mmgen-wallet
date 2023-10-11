@@ -127,7 +127,7 @@ class UnitTestHelpers:
 			except Exception as e:
 				exc = type(e).__name__
 				emsg = e.args[0]
-				cfg._util.vmsg(' {:{w}} [{}]'.format( exc, emsg, w=exc_w ))
+				cfg._util.vmsg(f' {exc:{exc_w}} [{emsg}]')
 				assert exc == exc_chk, m_exc.format(exc,exc_chk)
 				assert re.search(emsg_chk,emsg), m_err.format(emsg,emsg_chk)
 			else:

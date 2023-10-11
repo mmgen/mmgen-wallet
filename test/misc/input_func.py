@@ -42,4 +42,4 @@ elif cmd in ('get_char','line_input'):
 		args = ', '.join(f'{k}={v!r}' for k,v in func_args.items())
 		))
 	ret = locals()[cmd](**func_args)
-	msg('  ==> {!r}'.format(ret))
+	msg(f'  ==> {ret!r}')

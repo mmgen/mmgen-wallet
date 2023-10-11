@@ -633,7 +633,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			skip_passphrase = skip_passphrase )
 
 	def fund_bob_deterministic(self):
-		return self.fund_wallet_deterministic( 'bob', f'{self._user_sid("bob")}:C:1', '1-11' )
+		return self.fund_wallet_deterministic( f'{self._user_sid("bob")}:C:1', '1-11' )
 
 	def fund_alice_deterministic(self):
 		sid = self._user_sid('alice')
@@ -1240,10 +1240,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			t.expect(p,s,regex=True)
 
 		if npruned:
-			t.expect('Pruned {} addresses'.format(npruned))
+			t.expect(f'Pruned {npruned} addresses')
 
 		taddr = 35 if self.proto.cap('segwit') else 25
-		t.expect('Exporting {} addresses'.format(taddr-npruned))
+		t.expect(f'Exporting {taddr-npruned} addresses')
 		fn = t.written_to_file('JSON data')
 		return t
 

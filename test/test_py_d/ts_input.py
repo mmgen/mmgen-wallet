@@ -247,9 +247,9 @@ class TestSuiteInput(TestSuiteBase):
 			cmd_dir='.',
 			pexpect_spawn=term )
 		imsg('Parameters:')
-		imsg('  pexpect_spawn: {}'.format(term))
-		imsg('  sending:       {!r}'.format(text))
-		imsg('  expecting:     {!r}'.format(expect))
+		imsg(f'  pexpect_spawn: {term}')
+		imsg(f'  sending:       {text!r}')
+		imsg(f'  expecting:     {expect!r}')
 		imsg('\nFunction args:')
 		for k,v in func_args.items():
 			imsg('  {:14} {!r}'.format(k+':',v))
@@ -336,7 +336,7 @@ class TestSuiteInput(TestSuiteBase):
 		if term and gc.platform == 'win':
 			return ('skip_warn','pexpect_spawn not supported on Windows platform')
 		t = self.spawn( 'test/misc/input_func.py', opts + ['passphrase'], cmd_dir='.', pexpect_spawn=term )
-		imsg('Terminal: {}'.format(term))
+		imsg(f'Terminal: {term}')
 		pw = 'abc-α'
 		t.expect(prompt,pw+'\n')
 		ret = t.expect_getend('Entered: ')

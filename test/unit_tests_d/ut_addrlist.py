@@ -84,7 +84,7 @@ class unit_tests:
 			):
 			l = AddrIdxList(i)
 			if cfg.verbose:
-				msg('list: {}\nin:   {}\nout:  {}\n'.format(list(l),i,o))
+				msg(f'list: {list(l)}\nin:   {i}\nout:  {o}\n')
 			assert l.id_str == o, f'{l.id_str} != {o}'
 
 		return True

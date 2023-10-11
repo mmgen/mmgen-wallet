@@ -11,6 +11,6 @@ import sys
 from mmgen.util import msg,die
 
 if len(sys.argv) != 2 or not sys.argv[1] in text:
-	die(2,'argument must be one of {}'.format(list(text.keys())))
+	die(2,f'argument must be one of {list(text.keys())}')
 
 msg(text[sys.argv[1]])

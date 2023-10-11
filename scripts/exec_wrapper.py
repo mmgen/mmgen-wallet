@@ -43,7 +43,7 @@ def exec_wrapper_write_traceback(e,exit_val):
 
 	exc_line = (
 		repr(e) if type(e).__name__ in ('MMGenError','MMGenSystemExit') else
-		'{}: {}'.format( type(e).__name__, e ))
+		f'{type(e).__name__}: {e}')
 
 	c = exec_wrapper_get_colors()
 

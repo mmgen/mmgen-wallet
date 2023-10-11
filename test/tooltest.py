@@ -218,8 +218,7 @@ def is_coin_addr_loc(s):
 
 msg_w = 35
 def test_msg(m):
-	m2 = f'Testing {m}'
-	msg_r(green(m2+'\n') if cfg.verbose else '{:{w}}'.format( m2, w=msg_w+8 ))
+	msg_r(green(f'Testing {m}\n') if cfg.verbose else '{:{w}}'.format(f'Testing {m}', w=msg_w+8))
 
 compressed = cfg.type or ('','compressed')['C' in proto.mmtypes]
 segwit     = ('','segwit')['S' in proto.mmtypes]
@@ -280,7 +279,7 @@ class MMGenToolTestUtils:
 		if cmp_equal(ret,idata):
 			ok()
 		else:
-			die(4, "Error: values don't match:\nIn:  {!r}\nOut: {!r}".format(idata,ret))
+			die(4, f"Error: values don't match:\nIn:  {idata!r}\nOut: {ret!r}")
 		return ret
 
 	def run_cmd_nochk(self,name,f1,kwargs='',add_opts=[]):

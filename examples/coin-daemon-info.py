@@ -74,7 +74,7 @@ async def main(coins):
 				'Up',
 				rpc.port,
 				rpc.chain,
-				'{:<8} [{}]'.format(rpc.blockcount, make_timestr(rpc.cur_date)),
+				f'{rpc.blockcount:<8} [{make_timestr(rpc.cur_date)}]',
 				rpc.daemon.coind_name,
 				rpc.daemon_version_str,
 				rpc.daemon.datadir

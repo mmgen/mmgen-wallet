@@ -301,7 +301,7 @@ def list_cmds():
 		yield '\n'+green('AVAILABLE UTILITIES:')
 
 		for cmd in sorted(utils):
-			yield '  {:{w}} - {}'.format( cmd, utils[cmd], w=w )
+			yield f'  {cmd:{w}} - {utils[cmd]}'
 
 	from mmgen.ui import do_pager
 	do_pager('\n'.join(gen_output()))
