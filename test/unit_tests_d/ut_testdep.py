@@ -5,7 +5,7 @@ test.unit_tests_d.ut_testdep: test dependency unit tests for the MMGen suite
 """
 
 import sys,os
-from subprocess import run,PIPE
+from subprocess import run,DEVNULL
 
 from mmgen.util import ymsg
 
@@ -25,7 +25,7 @@ class unit_tests:
 
 	def losetup(self,name,ut):
 		os.stat('/dev/loop0')
-		run(['/sbin/losetup','-f'],check=True,stdout=PIPE)
+		run(['/sbin/losetup','-f'],check=True,stdout=DEVNULL)
 		return True
 
 	def pycoin(self,name,ut):
@@ -42,11 +42,11 @@ class unit_tests:
 		return True
 
 	def keyconv(self,name,ut):
-		run(['keyconv','-G','ltc'],stdout=PIPE,stderr=PIPE,check=True)
+		run(['keyconv','-G','ltc'],stdout=DEVNULL,stderr=DEVNULL,check=True)
 		return True
 
 	def zcash_mini(self,name,ut):
-		run(['zcash-mini'],stdout=PIPE,check=True)
+		run(['zcash-mini'],stdout=DEVNULL,check=True)
 		return True
 
 	def ethkey(self,name,ut):

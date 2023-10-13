@@ -23,7 +23,7 @@ This module is unmaintained and currently non-functional
 
 from mmgen.util import die
 
-from .common import get_file_with_ext
+from .common import get_file_with_ext,rt_pw
 from .ct_regtest import CmdTestRegtest
 
 class CmdTestChainsplit(CmdTestRegtest):

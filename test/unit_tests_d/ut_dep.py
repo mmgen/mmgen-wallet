@@ -35,10 +35,14 @@ class unit_tests:
 		if python_version >= '3.11':
 			ut.skip_msg(f'Python version {python_version}')
 		else:
-			from sha3 import keccak_256
+			try:
+				from sha3 import keccak_256
+			except ImportError as e:
+				ymsg(str(e))
+				return False
 		return True
 
-	def pycryptodomex(self,name,ut): # ETH,XMR
+	def pycryptodomex(self,name,ut): # ETH,XMR (keccak)
 		from mmgen.pyversion import python_version
 		if python_version >= '3.11' or sys.platform == 'win32':
 			try:

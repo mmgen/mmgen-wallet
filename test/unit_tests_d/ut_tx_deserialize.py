@@ -88,7 +88,8 @@ async def test_tx(tx_proto,tx_hex,desc,n):
 		assert A == B, fs.format(i,A,B)
 
 async def do_mmgen_ref(daemons,fns,name,desc):
-	start_test_daemons(*daemons)
+	# NB: remove_datadir is required here for some reason (seems to be Bitcoin Core version-dependent)
+	start_test_daemons(*daemons,remove_datadir=True)
 	print_info(name,desc)
 	for n,fn in enumerate(fns):
 		tx = await CompletedTX( cfg=cfg, filename=fn, quiet_open=True )

@@ -125,7 +125,7 @@ class Signable:
 			for f in bad_files:
 				yield red(f.name)
 
-	class xmr_signable(transaction): # virtual class
+	class xmr_signable(transaction): # mixin class
 
 		def need_daemon_restart(self,m,new_idx):
 			old_idx = self.parent.xmr_cur_wallet_idx

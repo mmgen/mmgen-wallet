@@ -20,7 +20,7 @@
 test.cmdtest_py_d.ct_regtest: Regtest tests for the cmdtest.py test suite
 """
 
-import os,json,time,re
+import sys,os,json,time,re
 from decimal import Decimal
 
 from mmgen.color import yellow
@@ -59,6 +59,7 @@ pat_date_time = r'\b\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d\b'
 
 dfl_wcls = get_wallet_cls('mmgen')
 
+tx_fee = rtFundAmt = rtFee = rtBals = rtBals_gb = rtBobOp3 = rtAmts = {} # pylint
 rt_pw = 'abc-α'
 rt_data = {
 	'tx_fee': {'btc':'0.0001','bch':'0.001','ltc':'0.01'},
@@ -172,6 +173,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	color = True
 	deterministic = False
 	test_rbf = False
+	proto = None # pylint
+
 	cmd_group_in = (
 		('setup',                   'regtest (Bob and Alice) mode setup'),
 		('subgroup.misc',           []),
@@ -445,9 +448,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		self.proto = init_proto( cfg, self.proto.coin, network='regtest', need_amt=True )
 		coin = self.proto.coin.lower()
 
-		import test.cmdtest_py_d.ct_regtest as rt_mod
 		for k in rt_data:
-			setattr( rt_mod, k, rt_data[k][coin] if coin in rt_data[k] else None )
+			setattr( sys.modules[__name__], k, rt_data[k][coin] if coin in rt_data[k] else None )
 
 		if self.proto.coin == 'BTC':
 			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC

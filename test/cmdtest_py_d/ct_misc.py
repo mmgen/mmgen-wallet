@@ -25,7 +25,7 @@ import sys,os,re,time
 from mmgen.util import ymsg
 
 from ..include.common import cfg,start_test_daemons,stop_test_daemons,imsg
-from .common import get_file_with_ext
+from .common import get_file_with_ext,dfl_words_file
 from .ct_base import CmdTestBase
 from .ct_main import CmdTestMain
 

@@ -37,6 +37,7 @@ class CmdTestBase:
 	color = False
 	need_daemon = False
 	win_skip = False
+	tmpdir_nums = []
 
 	def __init__(self,trunner,cfgs,spawn):
 		if hasattr(self,'name'): # init will be called multiple times for classes with multiple inheritance
@@ -64,14 +65,6 @@ class CmdTestBase:
 	@property
 	def tmpdir(self):
 		return os.path.join('test','tmp','{}{}'.format(self.tmpdir_num,'-α' if cfg.debug_utf8 else ''))
-
-	@property
-	def segwit_mmtype(self):
-		return ('segwit','bech32')[bool(cfg.bech32)] if self.segwit else None
-
-	@property
-	def segwit_arg(self):
-		return ['--type=' + self.segwit_mmtype] if self.segwit_mmtype else []
 
 	def get_file_with_ext(self,ext,**kwargs):
 		return get_file_with_ext(self.tmpdir,ext,**kwargs)

@@ -35,9 +35,13 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 
 from mmgen.cfg import Config,gc
 from mmgen.color import green,gray
-from mmgen.util import msg,gmsg,ymsg,Msg,die,async_run
+from mmgen.util import msg,gmsg,ymsg,Msg,async_run
 
 from test.include.common import set_globals,end_msg
+
+def die(ev,s):
+	msg(s)
+	sys.exit(ev)
 
 opts_data = {
 	'text': {

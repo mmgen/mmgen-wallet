@@ -23,11 +23,19 @@ test.cmdtest_py_d.ct_shared: Shared methods for the cmdtest.py test suite
 from mmgen.util import get_extension
 from mmgen.wallet import get_wallet_cls
 
-from ..include.common import cmp_or_die,strip_ansi_escapes,joinpath
+from ..include.common import cfg,cmp_or_die,strip_ansi_escapes,joinpath
 from .common import ref_bw_file,ref_bw_hash_preset,ref_dir
 
 class CmdTestShared:
 	'shared methods for the cmdtest.py test suite'
+
+	@property
+	def segwit_mmtype(self):
+		return ('segwit','bech32')[bool(cfg.bech32)] if self.segwit else None
+
+	@property
+	def segwit_arg(self):
+		return ['--type=' + self.segwit_mmtype] if self.segwit_mmtype else []
 
 	def txcreate_ui_common(
 			self,
