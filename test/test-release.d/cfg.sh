@@ -8,7 +8,7 @@
 #   https://github.com/mmgen/mmgen
 #   https://gitlab.com/mmgen/mmgen
 
-all_tests="dep obj color unit hash ref altref altgen xmr eth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt"
+all_tests="dep lint obj color unit hash ref altref altgen xmr eth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt"
 
 groups_desc="
 	default  - All tests minus the extra tests
@@ -20,10 +20,10 @@ groups_desc="
 
 init_groups() {
 	dfl_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth xmr'
-	extra_tests='dep autosign_btc autosign_live ltc_tn bch_tn'
+	extra_tests='dep lint autosign_btc autosign_live ltc_tn bch_tn'
 	noalt_tests='dep alt obj color unit hash ref tool tool2 gen autosign_btc btc btc_tn btc_rt'
 	quick_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_rt altref altgen eth xmr'
-	qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
+	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
 
 	[ "$MSYS2" ] && SKIP_LIST='autosign autosign_btc autosign_live'
 }
@@ -57,6 +57,13 @@ init_tests() {
 
 	d_dep="system and testing dependencies"
 	t_dep="- $unit_tests_py testdep dep daemon.exec"
+
+	d_lint="code errors with static code analyzer"
+	t_lint="
+		- $pylint --errors-only mmgen
+		- $pylint --errors-only test
+		- $pylint --errors-only --disable=relative-beyond-top-level test/cmdtest_py_d
+	"
 
 	d_unit="low-level subsystems"
 	t_unit="- $unit_tests_py --exclude testdep,dep,daemon"

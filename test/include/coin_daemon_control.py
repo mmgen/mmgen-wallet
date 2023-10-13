@@ -12,6 +12,11 @@
 test.include.coin_daemon_control: Start and stop daemons for the MMGen test suite
 """
 
+import sys
+from pathlib import PurePath
+
+sys.path[0] = str(PurePath(*PurePath(sys.modules[__name__].__file__).parts[:-3]))
+
 from mmgen.cfg import Config,gc
 from mmgen.util import msg,die,oneshot_warning,async_run
 from mmgen.protocol import init_proto

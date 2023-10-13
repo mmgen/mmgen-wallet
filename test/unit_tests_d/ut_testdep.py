@@ -7,7 +7,8 @@ test.unit_tests_d.ut_testdep: test dependency unit tests for the MMGen suite
 import sys,os
 from subprocess import run,DEVNULL
 
-from mmgen.util import ymsg
+from mmgen.util import ymsg,bmsg
+from ..include.common import cfg
 
 sec = 'deadbeef' * 8
 
@@ -15,6 +16,14 @@ class unit_tests:
 
 	altcoin_deps = ('pycoin','monero_python','keyconv','zcash_mini','ethkey','ssh_socks_proxy')
 	win_skip = ('losetup','zcash_mini')
+
+	def pylint(self,name,ut):
+		try:
+			return run(['pylint','--version'],stdout=None if cfg.verbose else DEVNULL).returncode == 0
+		except OSError as e:
+			ymsg('  ' + str(e))
+			bmsg("  Install pylint with 'python3 -m pip install pylint'")
+			return False
 
 	def core_repo(self,name,ut):
 		crr = os.getenv('CORE_REPO_ROOT')

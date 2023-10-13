@@ -5,3 +5,91 @@ requires = [
 	"build>=0.5.1",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.pylint.format]
+indent-string = "\t"
+indent-after-paren = 2
+max-line-length = 110
+ 
+[tool.pylint.main]
+py-version = "3.7"
+recursive = true
+jobs = 0
+ignore = [
+	"data",
+	"wordlist",
+	"pyethereum",
+	"rlp",
+	"main_split.py",
+]
+ignored-modules = [ # ignored for no-member, otherwise checked
+	"mmgen.proto.secp256k1.secp256k1",
+	"mmgen.color",
+	"mmgen.term",
+	"msvcrt",
+	"gmpy2",
+]
+ 
+[tool.pylint."messages control"]
+disable = [
+	"raw-checker-failed",
+	"bad-inline-option",
+	"locally-disabled",
+	"file-ignored",
+	"suppressed-message",
+	"useless-suppression",
+	"deprecated-pragma",
+	"use-symbolic-message-instead",
+	"use-implicit-booleaness-not-comparison-to-string",
+	"use-implicit-booleaness-not-comparison-to-zero",
+# non-default:
+	"no-method-argument",
+	"function-redefined",
+	"method-hidden",
+]
+# Disable these too for mostly quiet output without --errors-only:
+#	"missing-function-docstring",
+#	"missing-class-docstring",
+#	"import-outside-toplevel",
+#	"multiple-imports",
+#	"wrong-import-position",
+#	"protected-access",
+#	"invalid-name",
+#	"too-few-public-methods",
+#	"super-init-not-called",
+#	"unnecessary-lambda-assignment",
+#	"attribute-defined-outside-init",
+#	"fixme",
+
+[tool.pylint.miscellaneous]
+notes = ["FIXME", "TODO", "DEBUG", "WIP"]
+ 
+[tool.pylint.typecheck]
+mixin-class-rgx = """.*[Mm]ixin|\
+	^(Hilite|InitErrors|DummyWIF|\
+	cfg_file|cfg_file_sample|\
+	MoneroMMGenFile|keygen_base|xmr_signable|\
+	CmdTestShared)$"""
+
+ignored-classes = [ # ignored for no-member, otherwise checked
+	"optparse.Values", 
+	"thread._local", 
+	"_thread._local", 
+	"argparse.Namespace",
+# mmgen:
+	"baseconv",
+	"mmgen.autosign.Signable.base",
+	"Sha2",
+	"mmgen.xmrwallet.MoneroMMGenTX.Base",
+	"mmgen.xmrwallet.MoneroWalletOutputsFile.Base",
+	"mmgen.proto.eth.tx.Completed",
+	"TxInfo",
+	"TwRPC",
+	"MnemonicEntry",
+	"MMGenObjectDevTools",
+	"MnEntryMode",
+	"deserialized_tx",
+# test suite:
+	"TestHashFunc",
+	"GenTool",
+]
