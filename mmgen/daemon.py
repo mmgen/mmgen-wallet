@@ -79,18 +79,20 @@ class Daemon(Lockable):
 		p = Popen(cmd,creationflags=CREATE_NEW_CONSOLE,startupinfo=si)
 		p.wait()
 
-	def exec_cmd(self,cmd,is_daemon=False):
+	def exec_cmd(self,cmd,is_daemon=False,check_retcode=False):
 		out = (PIPE,None)[is_daemon and self.opt.no_daemonize]
 		try:
 			cp = run(cmd,check=False,stdout=out,stderr=out)
 		except OSError as e:
 			die( 'MMGenCalledProcessError', f'Error starting executable: {type(e).__name__} [Errno {e.errno}]' )
 		set_vt100()
+		if check_retcode and cp.returncode:
+			die(1,str(cp))
 		if self.debug:
 			print(cp)
 		return cp
 
-	def run_cmd(self,cmd,silent=False,is_daemon=False):
+	def run_cmd(self,cmd,silent=False,is_daemon=False,check_retcode=False):
 
 		if self.debug:
 			msg('\n\n')
@@ -104,7 +106,7 @@ class Daemon(Lockable):
 		if self.use_threads and is_daemon and not self.opt.no_daemonize:
 			ret = self.exec_cmd_thread(cmd)
 		else:
-			ret = self.exec_cmd(cmd,is_daemon)
+			ret = self.exec_cmd(cmd,is_daemon,check_retcode)
 
 		if isinstance(ret,CompletedProcess):
 			if ret.stdout and (self.debug or not silent):
@@ -192,7 +194,7 @@ class Daemon(Lockable):
 
 		if not silent:
 			msg(f'Starting {self.desc} on port {self.bind_port}')
-		ret = self.run_cmd(self.start_cmd,silent=True,is_daemon=True)
+		ret = self.run_cmd(self.start_cmd,silent=True,is_daemon=True,check_retcode=True)
 
 		if self.wait:
 			self.wait_for_state('ready')
