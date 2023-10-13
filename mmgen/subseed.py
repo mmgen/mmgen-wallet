@@ -22,7 +22,7 @@ subseed: Subseed classes and methods for the MMGen suite
 
 from .color import green
 from .util import msg_r,msg,die,make_chksum_8
-from .objmethods import MMGenObject,Hilite,InitErrors
+from .objmethods import MMGenObject,HiliteStr,InitErrors
 from .obj import MMGenRange,IndexedDict,ImmutableAttr
 from .seed import SeedBase,SeedID
 
@@ -30,7 +30,7 @@ class SubSeedIdxRange(MMGenRange):
 	min_idx = 1
 	max_idx = 1000000
 
-class SubSeedIdx(str,Hilite,InitErrors):
+class SubSeedIdx(HiliteStr,InitErrors):
 	color = 'red'
 	trunc_ok = False
 	def __new__(cls,s):

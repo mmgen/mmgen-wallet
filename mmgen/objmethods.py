@@ -48,14 +48,6 @@ class Hilite:
 	width = 0
 	trunc_ok = True
 
-	# supports single-width characters only
-	def fmt( self, width, color=False ):
-		if len(self) > width:
-			assert self.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= width of string"
-			return self.colorize( self[:width].ljust(width), color=color )
-		else:
-			return self.colorize( self.ljust(width), color=color )
-
 	# class method equivalent of fmt()
 	@classmethod
 	def fmtc( cls, s, width, color=False ):
@@ -64,6 +56,28 @@ class Hilite:
 			return cls.colorize( s[:width].ljust(width), color=color )
 		else:
 			return cls.colorize( s.ljust(width), color=color )
+
+	@classmethod
+	def hlc(cls,s,color=True):
+		return getattr( color_mod, cls.color )(s) if color else s
+
+	@classmethod
+	def colorize(cls,s,color=True):
+		return getattr( color_mod, cls.color )(s) if color else s
+
+	@classmethod
+	def colorize2(cls,s,color=True,color_override=''):
+		return getattr( color_mod, color_override or cls.color )(s) if color else s
+
+class HiliteStr(str,Hilite):
+
+	# supports single-width characters only
+	def fmt( self, width, color=False ):
+		if len(self) > width:
+			assert self.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= width of string"
+			return self.colorize( self[:width].ljust(width), color=color )
+		else:
+			return self.colorize( self.ljust(width), color=color )
 
 	# an alternative to fmt(), with double-width char support and other features
 	def fmt2(
@@ -99,20 +113,8 @@ class Hilite:
 		else:
 			return self.colorize2( s.ljust(width-s_wide_count), color=color, color_override=color_override )
 
-	@classmethod
-	def colorize(cls,s,color=True):
-		return getattr( color_mod, cls.color )(s) if color else s
-
-	@classmethod
-	def colorize2(cls,s,color=True,color_override=''):
-		return getattr( color_mod, color_override or cls.color )(s) if color else s
-
 	def hl(self,color=True):
 		return getattr( color_mod, self.color )(self) if color else self
-
-	@classmethod
-	def hlc(cls,s,color=True):
-		return getattr( color_mod, cls.color )(s) if color else s
 
 	# an alternative to hl(), with enclosure and color override
 	# can be called as an unbound method with class as first argument

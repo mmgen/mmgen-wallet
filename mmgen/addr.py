@@ -22,14 +22,14 @@ addr: MMGen address-related types
 
 from collections import namedtuple
 
-from .objmethods import Hilite,InitErrors,MMGenObject
+from .objmethods import HiliteStr,InitErrors,MMGenObject
 from .obj import ImmutableAttr,MMGenIdx,get_obj
 from .seed import SeedID
 
 ati = namedtuple('addrtype_info',
 	['name','pubkey_type','compressed','gen_method','addr_fmt','wif_label','extra_attrs','desc'])
 
-class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
+class MMGenAddrType(HiliteStr,InitErrors,MMGenObject):
 	width = 1
 	trunc_ok = False
 	color = 'blue'
@@ -93,7 +93,7 @@ class AddrIdx(MMGenIdx):
 def is_addr_idx(s):
 	return get_obj( AddrIdx, n=s, silent=True, return_bool=True )
 
-class AddrListID(str,Hilite,InitErrors,MMGenObject):
+class AddrListID(HiliteStr,InitErrors,MMGenObject):
 	width = 10
 	trunc_ok = False
 	color = 'yellow'
@@ -120,7 +120,7 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 def is_addrlist_id(proto,s):
 	return get_obj( AddrListID, proto=proto, id_str=s, silent=False, return_bool=True )
 
-class MMGenID(str,Hilite,InitErrors,MMGenObject):
+class MMGenID(HiliteStr,InitErrors,MMGenObject):
 	color = 'orange'
 	width = 0
 	trunc_ok = False
@@ -144,7 +144,7 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 def is_mmgen_id(proto,s):
 	return get_obj( MMGenID, proto=proto, id_str=s, silent=True, return_bool=True )
 
-class CoinAddr(str,Hilite,InitErrors,MMGenObject):
+class CoinAddr(HiliteStr,InitErrors,MMGenObject):
 	color = 'cyan'
 	hex_width = 40
 	width = 1

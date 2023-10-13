@@ -22,7 +22,7 @@ obj: MMGen native classes
 
 import unicodedata
 
-from .objmethods import MMGenObject,Hilite,InitErrors
+from .objmethods import MMGenObject,Hilite,HiliteStr,InitErrors
 
 def get_obj(objname,*args,**kwargs):
 	"""
@@ -303,10 +303,10 @@ class MMGenIdx(Int):
 class ETHNonce(Int):
 	min_val = 0
 
-class Str(str,Hilite):
+class Str(HiliteStr):
 	pass
 
-class HexStr(str,Hilite,InitErrors):
+class HexStr(HiliteStr,InitErrors):
 	color = 'red'
 	width = None
 	hexcase = 'lower'
@@ -343,7 +343,7 @@ class WalletPassword(HexStr):
 class MMGenTxID(HexStr):
 	color,width,hexcase = ('red',6,'upper')
 
-class MMGenLabel(str,Hilite,InitErrors):
+class MMGenLabel(HiliteStr,InitErrors):
 	color = 'pink'
 	allowed = []
 	forbidden = []

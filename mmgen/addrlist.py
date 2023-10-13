@@ -21,7 +21,7 @@ addrlist: Address list classes for the MMGen suite
 """
 
 from .util import suf,make_chksum_N,Msg,die
-from .objmethods import MMGenObject,Hilite,InitErrors
+from .objmethods import MMGenObject,HiliteStr,InitErrors
 from .obj import MMGenListItem,ListItemAttr,MMGenDict,TwComment,WalletPassword
 from .key import PrivKey
 from .addr import MMGenID,MMGenAddrType,CoinAddr,AddrIdx,AddrListID,ViewKey
@@ -88,7 +88,7 @@ class AddrListEntry(AddrListEntryBase):
 	viewkey       = ListItemAttr(ViewKey,include_proto=True)
 	wallet_passwd = ListItemAttr(WalletPassword)
 
-class AddrListChksum(str,Hilite):
+class AddrListChksum(HiliteStr):
 	color = 'pink'
 	trunc_ok = False
 
@@ -100,7 +100,7 @@ class AddrListChksum(str,Hilite):
 				) for e in addrlist.data]
 		return str.__new__(cls,make_chksum_N(' '.join(lines), nchars=16, sep=True))
 
-class AddrListIDStr(str,Hilite):
+class AddrListIDStr(HiliteStr):
 	color = 'green'
 	trunc_ok = False
 

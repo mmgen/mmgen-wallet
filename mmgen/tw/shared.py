@@ -12,11 +12,11 @@
 tw.shared: classes and functions shared by all tracking wallet classes
 """
 
-from ..objmethods import Hilite,InitErrors,MMGenObject
+from ..objmethods import HiliteStr,InitErrors,MMGenObject
 from ..obj import TwComment
 from ..addr import MMGenID
 
-class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
+class TwMMGenID(HiliteStr,InitErrors,MMGenObject):
 	color = 'orange'
 	width = 0
 	trunc_ok = False

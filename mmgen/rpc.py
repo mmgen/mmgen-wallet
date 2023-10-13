@@ -27,7 +27,7 @@ from collections import namedtuple
 from .util import msg,die,fmt,fmt_list,pp_fmt,oneshot_warning
 from .base_obj import AsyncInit
 from .obj import NonNegativeInt
-from .objmethods import Hilite,InitErrors,MMGenObject
+from .objmethods import HiliteStr,InitErrors,MMGenObject
 
 auth_data = namedtuple('rpc_auth_data',['user','passwd'])
 
@@ -46,7 +46,7 @@ def dmsg_rpc_backend(host_url,host_path,payload):
 def noop(*args,**kwargs):
 	pass
 
-class IPPort(str,Hilite,InitErrors):
+class IPPort(HiliteStr,InitErrors):
 	color = 'yellow'
 	width = 0
 	trunc_ok = False

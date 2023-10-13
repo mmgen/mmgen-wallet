@@ -21,10 +21,10 @@ seed: Seed-related classes and methods for the MMGen suite
 """
 
 from .util import make_chksum_8,hexdigits_uc,die
-from .objmethods import Hilite,InitErrors,MMGenObject
+from .objmethods import HiliteStr,InitErrors,MMGenObject
 from .obj import ImmutableAttr,get_obj
 
-class SeedID(str,Hilite,InitErrors):
+class SeedID(HiliteStr,InitErrors):
 	color = 'blue'
 	width = 8
 	trunc_ok = False

@@ -20,10 +20,10 @@
 key: MMGen public and private key objects
 """
 
-from .objmethods import Hilite,InitErrors,MMGenObject
+from .objmethods import HiliteStr,InitErrors,MMGenObject
 from .obj import ImmutableAttr,get_obj
 
-class WifKey(str,Hilite,InitErrors):
+class WifKey(HiliteStr,InitErrors):
 	"""
 	Initialize a WIF key, checking its well-formedness.
 	The numeric validity of the private key it encodes is not checked.
@@ -54,7 +54,7 @@ class PubKey(bytes,InitErrors,MMGenObject): # TODO: add some real checks
 		except Exception as e:
 			return cls.init_fail(e,s)
 
-class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
+class PrivKey(bytes,InitErrors,MMGenObject):
 	"""
 	Input:   a) raw, non-preprocessed bytes; or b) WIF key.
 	Output:  preprocessed key bytes, plus WIF key in 'wif' attribute

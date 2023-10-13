@@ -22,7 +22,7 @@ seedsplit: Seed split classes and methods for the MMGen suite
 
 from .color import yellow
 from .util import msg,die
-from .objmethods import MMGenObject,Hilite,InitErrors
+from .objmethods import MMGenObject,HiliteStr,InitErrors
 from .obj import ImmutableAttr,MMGenPWIDString,MMGenIdx,get_obj,IndexedDict
 from .seed import Seed,SeedBase
 from .subseed import SubSeedList,SubSeedIdx,SubSeed
@@ -37,7 +37,7 @@ class SeedShareCount(SeedShareIdx):
 class MasterShareIdx(MMGenIdx):
 	max_val = 1024
 
-class SeedSplitSpecifier(str,Hilite,InitErrors,MMGenObject):
+class SeedSplitSpecifier(HiliteStr,InitErrors,MMGenObject):
 	color = 'red'
 	def __new__(cls,s):
 		if isinstance(s,cls):

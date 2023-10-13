@@ -14,14 +14,14 @@ msg: base message signing classes
 
 import os,importlib,json
 from .cfg import gc
-from .objmethods import MMGenObject,Hilite,InitErrors
+from .objmethods import MMGenObject,HiliteStr,InitErrors
 from .util import msg,die,make_chksum_6,fmt_list,remove_dups
 from .color import red,orange,grnbg
 from .protocol import init_proto
 from .fileutil import get_data_from_file,write_data_to_file
 from .addr import MMGenID,CoinAddr
 
-class MMGenIDRange(str,Hilite,InitErrors,MMGenObject):
+class MMGenIDRange(HiliteStr,InitErrors,MMGenObject):
 	"""
 	closely based on MMGenID
 	"""
