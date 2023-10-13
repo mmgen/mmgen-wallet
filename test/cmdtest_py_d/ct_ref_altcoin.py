@@ -17,17 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_ref_altcoin: Altcoin reference file tests for the test.py test suite
+test.cmdtest_py_d.ct_ref_altcoin: Altcoin reference file tests for the cmdtest.py test suite
 """
 
 from mmgen.color import set_vt100
 
 from .common import pwfile,dfl_wpasswd,ref_dir,dfl_words_file,dfl_addr_idx_list
 from ..include.common import cfg,joinpath,start_test_daemons,stop_test_daemons,cmp_or_die
-from .ts_ref import TestSuiteRef
-from .ts_base import TestSuiteBase
+from .ct_ref import CmdTestRef
+from .ct_base import CmdTestBase
 
-class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
+class CmdTestRefAltcoin(CmdTestRef,CmdTestBase):
 	'saved and generated altcoin reference files'
 	tmpdir_nums = [8]
 	networks = ('btc',)
@@ -90,7 +90,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		self.write_to_tmpfile(pwfile,dfl_wpasswd)
 		passfile = joinpath(self.tmpdir,pwfile)
 		from mmgen.tx.file import MMGenTxFile
-		src = TestSuiteRef.sources['ref_tx_file']
+		src = CmdTestRef.sources['ref_tx_file']
 		for coin,files in src.items():
 			if coin == 'mm1':
 				coin = 'eth'

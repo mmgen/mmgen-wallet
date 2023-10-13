@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_xmrwallet: xmrwallet tests for the test.py test suite
+test.cmdtest_py_d.ct_xmrwallet: xmrwallet tests for the cmdtest.py test suite
 """
 
 import sys,os,time,re,atexit,asyncio,shutil
@@ -43,7 +43,7 @@ from ..include.common import (
 	strip_ansi_escapes
 )
 from .common import get_file_with_ext
-from .ts_base import TestSuiteBase
+from .ct_base import CmdTestBase
 
 # atexit functions:
 def stop_daemons(self):
@@ -62,7 +62,7 @@ def kill_proxy(cls,args):
 		cmd = [ 'pkill', '-f', ' '.join(args) ]
 		run(cmd)
 
-class TestSuiteXMRWallet(TestSuiteBase):
+class CmdTestXMRWallet(CmdTestBase):
 	"""
 	Monero wallet operations
 	"""
@@ -117,7 +117,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
-		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 		if trunner is None:
 			return
 

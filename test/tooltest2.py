@@ -20,7 +20,7 @@
 test/tooltest2.py: Simple tests for the 'mmgen-tool' utility
 """
 
-# TODO: move all non-interactive 'mmgen-tool' tests in 'test.py' here
+# TODO: move all non-interactive 'mmgen-tool' tests in 'cmdtest.py' here
 # TODO: move all(?) tests in 'tooltest.py' here (or duplicate them?)
 
 import sys,os,time,importlib
@@ -851,7 +851,7 @@ def check_output(out,chk):
 async def run_test(cls,gid,cmd_name):
 	data = tests[gid][cmd_name]
 
-	# behavior is like test.py: run coin-dependent tests only if proto.testnet or proto.coin != BTC
+	# behavior is like cmdtest.py: run coin-dependent tests only if proto.testnet or proto.coin != BTC
 	if gid in coin_dependent_groups:
 		k = '{}_{}'.format(
 			( cfg.token.lower() if proto.tokensym else proto.coin.lower() ),

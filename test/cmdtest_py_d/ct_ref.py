@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_ref: Reference file tests for the test.py test suite
+test.cmdtest_py_d.ct_ref: Reference file tests for the cmdtest.py test suite
 """
 
 import os
@@ -46,12 +46,12 @@ from .common import (
 	skip
 )
 
-from .ts_base import TestSuiteBase
-from .ts_shared import TestSuiteShared
+from .ct_base import CmdTestBase
+from .ct_shared import CmdTestShared
 
 wpasswd = 'reference password'
 
-class TestSuiteRef(TestSuiteBase,TestSuiteShared):
+class CmdTestRef(CmdTestBase,CmdTestShared):
 	'saved reference address, password and transaction files'
 	tmpdir_nums = [8]
 	networks = ('btc','btc_tn','ltc','ltc_tn')
@@ -238,7 +238,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 
 		pat = pat or f'{self.nw_desc}.*Legacy'
 		af_key = f'ref_{ftype}file' + ('_' + id_key if id_key else '')
-		af_fn = TestSuiteRef.sources[af_key].format(pfx or self.altcoin_pfx,'' if coin else self.tn_ext)
+		af_fn = CmdTestRef.sources[af_key].format(pfx or self.altcoin_pfx,'' if coin else self.tn_ext)
 		af = joinpath(ref_dir,(subdir or self.ref_subdir,'')[ftype=='passwd'],af_fn)
 		coin_arg = [] if coin is None else ['--coin='+coin]
 		tool_cmd = ftype.replace('segwit','').replace('bech32','')+'file_chksum'

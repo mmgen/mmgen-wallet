@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_shared: Shared methods for the test.py test suite
+test.cmdtest_py_d.ct_shared: Shared methods for the cmdtest.py test suite
 """
 
 from mmgen.util import get_extension
@@ -26,8 +26,8 @@ from mmgen.wallet import get_wallet_cls
 from ..include.common import cmp_or_die,strip_ansi_escapes,joinpath
 from .common import ref_bw_file,ref_bw_hash_preset,ref_dir
 
-class TestSuiteShared:
-	'shared methods for the test.py test suite'
+class CmdTestShared:
+	'shared methods for the cmdtest.py test suite'
 
 	def txcreate_ui_common(
 			self,

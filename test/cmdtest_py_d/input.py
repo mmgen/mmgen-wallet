@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.test_py_d.input: Shared input routines for the test.py test suite
+test.cmdtest_py_d.input: Shared input routines for the cmdtest.py test suite
 """
 
 import time

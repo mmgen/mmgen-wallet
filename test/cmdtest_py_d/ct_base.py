@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_base: Base class for the test.py test suite
+test.cmdtest_py_d.ct_base: Base class for the cmdtest.py test suite
 """
 
 import sys,os
@@ -27,8 +27,8 @@ from mmgen.util import msg
 from ..include.common import cfg,write_to_file,read_from_file
 from .common import get_file_with_ext
 
-class TestSuiteBase:
-	'initializer class for the test.py test suite'
+class CmdTestBase:
+	'initializer class for the cmdtest.py test suite'
 	base_passthru_opts = ('data_dir','skip_cfg_file')
 	passthru_opts = ()
 	extra_spawn_args = []

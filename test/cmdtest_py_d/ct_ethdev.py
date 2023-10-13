@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_ethdev: Ethdev tests for the test.py test suite
+test.cmdtest_py_d.ct_ethdev: Ethdev tests for the cmdtest.py test suite
 """
 
 import sys,os,re,shutil,asyncio,json
@@ -55,8 +55,8 @@ from .common import (
 	ok_msg,
 	Ctrl_U
 )
-from .ts_base import TestSuiteBase
-from .ts_shared import TestSuiteShared
+from .ct_base import CmdTestBase
+from .ct_shared import CmdTestShared
 
 del_addrs = ('4','1')
 dfl_sid = '98831F3A'
@@ -144,7 +144,7 @@ token_bals_getbalance = {
 
 coin = cfg.coin
 
-class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
+class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
 	networks = ('eth','etc')
 	passthru_opts = ('coin','daemon_id','http_timeout','rpc_backend')
@@ -383,7 +383,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	}
 
 	def __init__(self,trunner,cfgs,spawn):
-		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 		if trunner is None:
 			return
 

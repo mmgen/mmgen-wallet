@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.test_py_d.ts_tool: tool tests for the MMGen test.py test suite
+test.cmdtest_py_d.ct_tool: tool tests for the MMGen cmdtest.py test suite
 """
 
 import sys,os
@@ -25,10 +25,10 @@ from ..include.common import (
 	getrand
 )
 from .common import hincog_fn,incog_id_fn,hincog_offset,tool_enc_passwd,ref_dir
-from .ts_base import TestSuiteBase
-from .ts_main import TestSuiteMain
+from .ct_base import CmdTestBase
+from .ct_main import CmdTestMain
 
-class TestSuiteTool(TestSuiteMain,TestSuiteBase):
+class CmdTestTool(CmdTestMain,CmdTestBase):
 	"interactive 'mmgen-tool' commands"
 	networks = ('btc',)
 	segwit_opts_ok = False

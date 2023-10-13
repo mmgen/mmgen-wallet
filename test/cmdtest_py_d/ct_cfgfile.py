@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.test_py_d.ts_cfgfile: CfgFile tests for the MMGen test.py test suite
+test.cmdtest_py_d.ct_cfgfile: CfgFile tests for the MMGen cmdtest.py test suite
 """
 
 import sys,os,time,shutil
@@ -16,9 +16,9 @@ from mmgen.color import yellow
 from mmgen.cfgfile import CfgFileSampleSys,CfgFileSampleUsr,cfg_file_sample
 
 from ..include.common import cfg,read_from_file,write_to_file,imsg
-from .ts_base import TestSuiteBase
+from .ct_base import CmdTestBase
 
-class TestSuiteCfgFile(TestSuiteBase):
+class CmdTestCfgFile(CmdTestBase):
 	'CfgFile API'
 	networks = ('btc',)
 	tmpdir_nums = [40]
@@ -41,7 +41,7 @@ class TestSuiteCfgFile(TestSuiteBase):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
-		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 		self.spawn_env['MMGEN_TEST_SUITE_CFGTEST'] = '1'
 
 	def spawn_test(self,args=[],extra_desc='',pexpect_spawn=None):

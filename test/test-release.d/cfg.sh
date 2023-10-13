@@ -80,7 +80,7 @@ init_tests() {
 
 	d_altref="altcoin reference file checks"
 	t_altref="
-		- $test_py ref_altcoin # generated addrfiles verified against checksums
+		- $cmdtest_py ref_altcoin # generated addrfiles verified against checksums
 	"
 
 	d_altgen="altcoin address generation"
@@ -127,72 +127,72 @@ init_tests() {
 
 	d_xmr="Monero xmrwallet operations"
 	t_xmr="
-		- $test_py --coin=xmr
+		- $cmdtest_py --coin=xmr
 	"
 
 	d_eth="operations for Ethereum and Ethereum Classic using devnet"
 	t_eth="
-		geth   $test_py --coin=eth ethdev
-		parity $test_py --coin=etc ethdev
+		geth   $cmdtest_py --coin=eth ethdev
+		parity $cmdtest_py --coin=etc ethdev
 	"
 	[ "$ARM32" -o "$ARM64" ] && t_eth_skip+=' parity'
 
 	d_autosign="transaction and message autosigning"
-	t_autosign="- $test_py autosign"
+	t_autosign="- $cmdtest_py autosign"
 
 	d_autosign_btc="transaction and message autosigning (Bitcoin only)"
-	t_autosign_btc="- $test_py autosign_btc"
+	t_autosign_btc="- $cmdtest_py autosign_btc"
 
 	d_autosign_btc="transaction and message autosigning (interactive)"
-	t_autosign_live="- $test_py autosign_live"
+	t_autosign_live="- $cmdtest_py autosign_live"
 
 	d_btc="overall operations with emulated RPC data (Bitcoin)"
 	t_btc="
 		- $python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1
-		- $test_py --exclude regtest,autosign,ref_altcoin
-		- $test_py --segwit
-		- $test_py --segwit-random
-		- $test_py --bech32
+		- $cmdtest_py --exclude regtest,autosign,ref_altcoin
+		- $cmdtest_py --segwit
+		- $cmdtest_py --segwit-random
+		- $cmdtest_py --bech32
 	"
 
 	d_btc_tn="overall operations with emulated RPC data (Bitcoin testnet)"
 	t_btc_tn="
-		- $test_py --testnet=1
-		- $test_py --testnet=1 --segwit
-		- $test_py --testnet=1 --segwit-random
-		- $test_py --testnet=1 --bech32
+		- $cmdtest_py --testnet=1
+		- $cmdtest_py --testnet=1 --segwit
+		- $cmdtest_py --testnet=1 --segwit-random
+		- $cmdtest_py --testnet=1 --bech32
 	"
 
 	d_btc_rt="overall operations using the regtest network (Bitcoin)"
-	t_btc_rt="- $test_py regtest"
+	t_btc_rt="- $cmdtest_py regtest"
 
 	d_bch="overall operations with emulated RPC data (Bitcoin Cash Node)"
-	t_bch="- $test_py --coin=bch --exclude regtest"
+	t_bch="- $cmdtest_py --coin=bch --exclude regtest"
 
 	d_bch_tn="overall operations with emulated RPC data (Bitcoin Cash Node testnet)"
-	t_bch_tn="- $test_py --coin=bch --testnet=1 --exclude regtest"
+	t_bch_tn="- $cmdtest_py --coin=bch --testnet=1 --exclude regtest"
 
 	d_bch_rt="overall operations using the regtest network (Bitcoin Cash Node)"
-	t_bch_rt="- $test_py --coin=bch regtest"
+	t_bch_rt="- $cmdtest_py --coin=bch regtest"
 
 	d_ltc="overall operations with emulated RPC data (Litecoin)"
 	t_ltc="
-		- $test_py --coin=ltc --exclude regtest
-		- $test_py --coin=ltc --segwit
-		- $test_py --coin=ltc --segwit-random
-		- $test_py --coin=ltc --bech32
+		- $cmdtest_py --coin=ltc --exclude regtest
+		- $cmdtest_py --coin=ltc --segwit
+		- $cmdtest_py --coin=ltc --segwit-random
+		- $cmdtest_py --coin=ltc --bech32
 	"
 
 	d_ltc_tn="overall operations with emulated RPC data (Litecoin testnet)"
 	t_ltc_tn="
-		- $test_py --coin=ltc --testnet=1 --exclude regtest
-		- $test_py --coin=ltc --testnet=1 --segwit
-		- $test_py --coin=ltc --testnet=1 --segwit-random
-		- $test_py --coin=ltc --testnet=1 --bech32
+		- $cmdtest_py --coin=ltc --testnet=1 --exclude regtest
+		- $cmdtest_py --coin=ltc --testnet=1 --segwit
+		- $cmdtest_py --coin=ltc --testnet=1 --segwit-random
+		- $cmdtest_py --coin=ltc --testnet=1 --bech32
 	"
 
 	d_ltc_rt="overall operations using the regtest network (Litecoin)"
-	t_ltc_rt="- $test_py --coin=ltc regtest"
+	t_ltc_rt="- $cmdtest_py --coin=ltc regtest"
 
 	d_tool2="'mmgen-tool' utility with data check"
 	t_tool2="

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_autosign: Autosign tests for the test.py test suite
+test.cmdtest_py_d.ct_autosign: Autosign tests for the cmdtest.py test suite
 """
 
 import sys,os,shutil
@@ -41,7 +41,7 @@ from ..include.common import (
 )
 from .common import ref_dir,dfl_words_file,dfl_bip39_file
 
-from .ts_base import TestSuiteBase
+from .ct_base import CmdTestBase
 from .input import stealth_mnemonic_entry
 
 filedir_map = (
@@ -88,7 +88,7 @@ def do_umount(mountpoint):
 		except:
 			pass
 
-class TestSuiteAutosignBase(TestSuiteBase):
+class CmdTestAutosignBase(CmdTestBase):
 	networks     = ('btc',)
 	tmpdir_nums  = [18]
 	color        = True
@@ -117,7 +117,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 				),
 				'wallet_dir': None if self.live else self.wallet_dir,
 				'test_suite': True,
-				'test_suite_xmr_autosign': self.name == 'TestSuiteXMRAutosign',
+				'test_suite_xmr_autosign': self.name == 'CmdTestXMRAutosign',
 			})
 		)
 		self.mountpoint = self.asi.mountpoint
@@ -246,9 +246,9 @@ class TestSuiteAutosignBase(TestSuiteBase):
 
 		fdata = [e for e in filedir_map if e[0] in (txfile_coins or self.txfile_coins)]
 
-		from .ts_ref import TestSuiteRef
-		tfns  = [TestSuiteRef.sources['ref_tx_file'][c][1] for c,d in fdata] + \
-				[TestSuiteRef.sources['ref_tx_file'][c][0] for c,d in fdata] + \
+		from .ct_ref import CmdTestRef
+		tfns  = [CmdTestRef.sources['ref_tx_file'][c][1] for c,d in fdata] + \
+				[CmdTestRef.sources['ref_tx_file'][c][0] for c,d in fdata] + \
 				['25EFA3[2.34].testnet.rawtx'] # TX with 2 non-MMGen outputs
 		self.tx_count = len([fn for fn in tfns if fn])
 		if op == 'set_count':
@@ -367,7 +367,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		imsg('')
 		return t
 
-class TestSuiteAutosign(TestSuiteAutosignBase):
+class CmdTestAutosign(CmdTestAutosignBase):
 	'autosigning transactions for all supported coins'
 	coins        = ['btc','bch','ltc','eth']
 	daemon_coins = ['btc','bch','ltc']
@@ -429,13 +429,13 @@ class TestSuiteAutosign(TestSuiteAutosignBase):
 		self.bad_msg_count = 0
 		return self.do_sign(['--quiet','wait'],have_msg=True)
 
-class TestSuiteAutosignBTC(TestSuiteAutosign):
+class CmdTestAutosignBTC(CmdTestAutosign):
 	'autosigning BTC transactions'
 	coins        = ['btc']
 	daemon_coins = ['btc']
 	txfile_coins = ['btc']
 
-class TestSuiteAutosignLive(TestSuiteAutosignBTC):
+class CmdTestAutosignLive(CmdTestAutosignBTC):
 	'live autosigning BTC transactions'
 	live = True
 	cmd_group = (
@@ -511,6 +511,6 @@ class TestSuiteAutosignLive(TestSuiteAutosignBTC):
 			t.expect("Stopping LED")
 		return t
 
-class TestSuiteAutosignLiveSimulate(TestSuiteAutosignLive):
+class CmdTestAutosignLiveSimulate(CmdTestAutosignLive):
 	'live autosigning BTC transactions with simulated LED support'
 	simulate = True

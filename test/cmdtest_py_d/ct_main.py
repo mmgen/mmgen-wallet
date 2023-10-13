@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_main: Basic operations tests for the test.py test suite
+test.cmdtest_py_d.ct_main: Basic operations tests for the cmdtest.py test suite
 """
 
 import sys,os
@@ -54,8 +54,8 @@ from .common import (
 	incog_id_fn,
 	non_mmgen_fn
 )
-from .ts_base import TestSuiteBase
-from .ts_shared import TestSuiteShared
+from .ct_base import CmdTestBase
+from .ct_shared import CmdTestShared
 
 def make_brainwallet_file(fn):
 	# Print random words with random whitespace in between
@@ -90,7 +90,7 @@ rwords = """
 	сувенир сугроб суть сцена театр тираж толк удивить улыбка фирма читатель эстония эстрада юность
 	"""
 
-class TestSuiteMain(TestSuiteBase,TestSuiteShared):
+class CmdTestMain(CmdTestBase,CmdTestShared):
 	'basic operations with emulated tracking wallet'
 	tmpdir_nums = [1,2,3,4,5,14,15,16,20,21]
 	networks = ('btc','btc_tn','ltc','ltc_tn','bch','bch_tn')
@@ -306,7 +306,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
-		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 		if trunner is None or self.proto.coin.lower() not in self.networks:
 			return
 		self.rpc = async_run(rpc_init(cfg,self.proto))
@@ -870,8 +870,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return t
 
 	walletgen14 = walletgen
-	addrgen14 = TestSuiteShared.addrgen
-	keyaddrgen14 = TestSuiteShared.keyaddrgen
+	addrgen14 = CmdTestShared.addrgen
+	keyaddrgen14 = CmdTestShared.keyaddrgen
 
 	def walletgen4(self,del_dw_run='dummy'):
 		bwf = joinpath(self.tmpdir,self.bw_filename)

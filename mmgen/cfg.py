@@ -489,7 +489,7 @@ class Config(Lockable):
 
 		check_or_create_dir(self.data_dir)
 
-		if self.debug and gc.prog_name != 'test.py':
+		if self.debug and gc.prog_name != 'cmdtest.py':
 			self.verbose = True
 			self.quiet = False
 

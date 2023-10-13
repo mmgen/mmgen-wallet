@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.common: Shared routines and data for the test.py test suite
+test.cmdtest_py_d.common: Shared routines and data for the cmdtest.py test suite
 """
 
 import sys,os

@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_ref_3seed: Saved and generated reference file tests for 128,
-                             192 and 256-bit seeds for the test.py test suite
+test.cmdtest_py_d.ct_ref_3seed: Saved and generated reference file tests for 128,
+                             192 and 256-bit seeds for the cmdtest.py test suite
 """
 
 import os
@@ -35,11 +35,11 @@ from .common import (
 	ref_dir,
 	ok_msg
 )
-from .ts_base import TestSuiteBase
-from .ts_shared import TestSuiteShared
-from .ts_wallet import TestSuiteWalletConv
+from .ct_base import CmdTestBase
+from .ct_shared import CmdTestShared
+from .ct_wallet import CmdTestWalletConv
 
-class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
+class CmdTestRef3Seed(CmdTestBase,CmdTestShared):
 	'saved wallet files for 128-, 192- and 256-bit seeds + generated filename checks'
 	networks = ('btc',)
 	mmtypes = (None,)
@@ -65,7 +65,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('ref_mn_chk',      ([],'saved native MMGen mnemonic file')),
 		('ref_bip39_chk',   ([],'saved BIP39 mnemonic file')),
 		('ref_hincog_chk',  ([],'saved hidden incog reference wallet')),
-		('ref_brain_chk',   ([],'saved brainwallet')), # in ts_shared
+		('ref_brain_chk',   ([],'saved brainwallet')), # in ct_shared
 
 		# generating new reference ('abc' brainwallet) wallets for filename checks:
 		('ref_walletgen_brain',        ([],'generating new reference wallet + filename check (brain)')),
@@ -87,10 +87,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 			for n in self.tmpdir_nums:
 				cfgs[str(n)]['addr_idx_list'] = self.addr_idx_list_in
 				cfgs[str(n)]['pass_idx_list'] = self.pass_idx_list_in
-		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 
 	def ref_wallet_chk(self):
-		wf = joinpath(ref_dir,TestSuiteWalletConv.sources[str(self.seed_len)]['ref_wallet'])
+		wf = joinpath(ref_dir,CmdTestWalletConv.sources[str(self.seed_len)]['ref_wallet'])
 		return self.walletchk(wf,sid=self.seed_id)
 
 	def ref_ss_chk(self,ss_type):
@@ -119,7 +119,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		return self.ref_ss_chk('bip39')
 
 	def ref_hincog_chk(self,desc='hidden incognito data'):
-		source = TestSuiteWalletConv.sources[str(self.seed_len)]
+		source = CmdTestWalletConv.sources[str(self.seed_len)]
 		for wtype,edesc,of_arg in (
 				('hic_wallet',    '',            []),
 				('hic_wallet_old','(old format)',['-O']) ):
@@ -146,7 +146,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	def ref_walletgen_brain(self):
 		sl_arg = f'-l{self.seed_len}'
 		hp_arg = f'-p{ref_wallet_hash_preset}'
-		label = f'test.py ref. wallet (pw {ref_wallet_brainpass!r}, seed len {self.seed_len}) α'
+		label = f'ref. wallet (pw {ref_wallet_brainpass!r}, seed len {self.seed_len}) α'
 		bf = 'ref.mmbrain'
 		args = ['-d',self.tmpdir,hp_arg,sl_arg,'-ibw','-L',label]
 		self.write_to_tmpfile(bf,ref_wallet_brainpass)
@@ -212,7 +212,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	def ref_walletconv_hexincog(self):
 		return self.ref_walletconv_incog(ofmt='incog_hex',ext='mmincox')
 
-class TestSuiteRef3Addr(TestSuiteRef3Seed):
+class CmdTestRef3Addr(CmdTestRef3Seed):
 	'generated reference address, key and password files for 128-, 192- and 256-bit seeds'
 	networks = ('btc','btc_tn','ltc','ltc_tn')
 	passthru_opts = ('coin','testnet')

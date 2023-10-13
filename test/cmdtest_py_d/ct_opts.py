@@ -7,15 +7,15 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.test_py_d.ts_opts: options processing tests for the MMGen test.py test suite
+test.cmdtest_py_d.ct_opts: options processing tests for the MMGen cmdtest.py test suite
 """
 
 import os,time
 
 from ..include.common import cfg
-from .ts_base import TestSuiteBase
+from .ct_base import CmdTestBase
 
-class TestSuiteOpts(TestSuiteBase):
+class CmdTestOpts(CmdTestBase):
 	'options processing'
 	networks = ('btc',)
 	tmpdir_nums = [41]

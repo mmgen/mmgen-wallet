@@ -131,7 +131,7 @@ trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
 
 umask 0022
 
-test_py='test/test.py -n'
+cmdtest_py='test/cmdtest.py -n'
 objtest_py='test/objtest.py'
 objattrtest_py='test/objattrtest.py'
 unit_tests_py='test/unit_tests.py --names --quiet'
@@ -156,7 +156,7 @@ do
 		echo   "  USAGE:           $PROGNAME [options] [tests or test group]"
 		echo   "  OPTIONS: -h      Print this help message"
 		echo   "           -A      Skip tests requiring altcoin modules or daemons"
-		echo   "           -b      Buffer keypresses for all invocations of 'test/test.py'"
+		echo   "           -b      Buffer keypresses for all invocations of 'test/cmdtest.py'"
 		echo   "           -C      Run tests in coverage mode"
 		echo   "           -d      Enable Python Development Mode"
 		echo   "           -D      Run tests in deterministic mode"
@@ -164,27 +164,27 @@ do
 		echo   "           -F      Reduce rounds even further"
 		echo   "           -L      List available tests and test groups with description"
 		echo   "           -l      List the test name symbols"
-		echo   "           -N      Pass the --no-timings switch to test/test.py"
+		echo   "           -N      Pass the --no-timings switch to test/cmdtest.py"
 		echo   "           -O      Use pexpect.spawn rather than popen_spawn where applicable"
 		echo   "           -p      Pause between tests"
 		echo   "           -s LIST Skip tests in LIST (space-separated)"
 		echo   "           -S      Build SDIST distribution, unpack, and run test"
 		echo   "           -t      Print the tests without running them"
-		echo   "           -v      Run test/test.py with '--exact-output' and other commands"
+		echo   "           -v      Run test/cmdtest.py with '--exact-output' and other commands"
 		echo   "                   with '--verbose' switch"
-		echo   "           -V      Run test/test.py and other commands with '--verbose' switch"
+		echo   "           -V      Run test/cmdtest.py and other commands with '--verbose' switch"
 		echo
 		echo   "  For traceback output and error file support, set the EXEC_WRAPPER_TRACEBACK"
 		echo   "  environment var"
 		exit ;;
 	A)  SKIP_ALT_DEP=1
-		test_py+=" --no-altcoin"
+		cmdtest_py+=" --no-altcoin"
 		unit_tests_py+=" --no-altcoin-deps"
 		scrambletest_py+=" --no-altcoin" ;;
-	b)  test_py+=" --buf-keypress" ;;
+	b)  cmdtest_py+=" --buf-keypress" ;;
 	C)  mkdir -p 'test/trace'
 		touch 'test/trace.acc'
-		test_py+=" --coverage"
+		cmdtest_py+=" --coverage"
 		tooltest_py+=" --coverage"
 		tooltest2_py+=" --fork --coverage"
 		scrambletest_py+=" --coverage"
@@ -202,15 +202,15 @@ do
 	F)  rounds=3 FAST=1 fast_opt='--fast' unit_tests_py+=" --fast" ;;
 	L)  list_avail_tests; exit ;;
 	l)  list_group_symbols; exit ;;
-	N)  test_py+=" --no-timings" ;;
-	O)  test_py+=" --pexpect-spawn" ;;
+	N)  cmdtest_py+=" --no-timings" ;;
+	O)  cmdtest_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
 	s)  SKIP_LIST+=" $OPTARG" ;;
 	S)  SDIST_TEST=1 ;;
 	t)  LIST_CMDS=1 ;;
-	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
+	v)  EXACT_OUTPUT=1 cmdtest_py+=" --exact-output" ;&
 	V)  VERBOSE='--verbose'
-		[ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
+		[ "$EXACT_OUTPUT" ] || cmdtest_py+=" --verbose"
 		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
 		altcoin_mod_opts="${altcoin_mod_opts/--quiet/--verbose}"
 		tooltest2_py="${tooltest2_py/--quiet/--verbose}"
@@ -253,7 +253,7 @@ case $1 in
 	'extra')   tests=$extra_tests ;;
 	'noalt')   tests=$noalt_tests
 				SKIP_ALT_DEP=1
-				test_py+=" --no-altcoin"
+				cmdtest_py+=" --no-altcoin"
 				unit_tests_py+=" --no-altcoin-deps"
 				scrambletest_py+=" --no-altcoin" ;;
 	'quick')   tests=$quick_tests ;;
@@ -274,7 +274,7 @@ remove_skipped_tests
 
 check_tests
 
-test/test.py clean
+test/cmdtest.py clean
 
 start_time=$(date +%s)
 

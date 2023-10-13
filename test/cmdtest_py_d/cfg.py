@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-test.test_py_d.cfg: configuration data for test.py
+test.cmdtest_py_d.cfg: configuration data for cmdtest.py
 """
 
 import os
@@ -18,33 +18,33 @@ from .common import pwfile,hincog_fn,incog_id_fn,randbool
 from ..include.common import cfg
 
 cmd_groups_dfl = {
-	'misc':             ('TestSuiteMisc',{}),
-	'opts':             ('TestSuiteOpts',{'full_data':True}),
-	'cfgfile':          ('TestSuiteCfgFile',{'full_data':True}),
-	'helpscreens':      ('TestSuiteHelp',{'modname':'misc','full_data':True}),
-	'main':             ('TestSuiteMain',{'full_data':True}),
-	'conv':             ('TestSuiteWalletConv',{'is3seed':True,'modname':'wallet'}),
-	'ref':              ('TestSuiteRef',{}),
-	'ref3':             ('TestSuiteRef3Seed',{'is3seed':True,'modname':'ref_3seed'}),
-	'ref3_addr':        ('TestSuiteRef3Addr',{'is3seed':True,'modname':'ref_3seed'}),
-	'ref_altcoin':      ('TestSuiteRefAltcoin',{}),
-	'seedsplit':        ('TestSuiteSeedSplit',{}),
-	'tool':             ('TestSuiteTool',{'full_data':True}),
-	'input':            ('TestSuiteInput',{}),
-	'output':           ('TestSuiteOutput',{'modname':'misc','full_data':True}),
-	'autosign':         ('TestSuiteAutosign',{}),
-	'regtest':          ('TestSuiteRegtest',{}),
-#	'chainsplit':       ('TestSuiteChainsplit',{}),
-	'ethdev':           ('TestSuiteEthdev',{}),
-	'xmrwallet':        ('TestSuiteXMRWallet',{}),
-	'xmr_autosign':     ('TestSuiteXMRAutosign',{}),
+	'misc':             ('CmdTestMisc',{}),
+	'opts':             ('CmdTestOpts',{'full_data':True}),
+	'cfgfile':          ('CmdTestCfgFile',{'full_data':True}),
+	'helpscreens':      ('CmdTestHelp',{'modname':'misc','full_data':True}),
+	'main':             ('CmdTestMain',{'full_data':True}),
+	'conv':             ('CmdTestWalletConv',{'is3seed':True,'modname':'wallet'}),
+	'ref':              ('CmdTestRef',{}),
+	'ref3':             ('CmdTestRef3Seed',{'is3seed':True,'modname':'ref_3seed'}),
+	'ref3_addr':        ('CmdTestRef3Addr',{'is3seed':True,'modname':'ref_3seed'}),
+	'ref_altcoin':      ('CmdTestRefAltcoin',{}),
+	'seedsplit':        ('CmdTestSeedSplit',{}),
+	'tool':             ('CmdTestTool',{'full_data':True}),
+	'input':            ('CmdTestInput',{}),
+	'output':           ('CmdTestOutput',{'modname':'misc','full_data':True}),
+	'autosign':         ('CmdTestAutosign',{}),
+	'regtest':          ('CmdTestRegtest',{}),
+#	'chainsplit':       ('CmdTestChainsplit',{}),
+	'ethdev':           ('CmdTestEthdev',{}),
+	'xmrwallet':        ('CmdTestXMRWallet',{}),
+	'xmr_autosign':     ('CmdTestXMRAutosign',{}),
 }
 
 cmd_groups_extra = {
-	'autosign_btc':           ('TestSuiteAutosignBTC',{'modname':'autosign'}),
-	'autosign_live':          ('TestSuiteAutosignLive',{'modname':'autosign'}),
-	'autosign_live_simulate': ('TestSuiteAutosignLiveSimulate',{'modname':'autosign'}),
-	'create_ref_tx':          ('TestSuiteRefTX',{'modname':'misc','full_data':True}),
+	'autosign_btc':           ('CmdTestAutosignBTC',{'modname':'autosign'}),
+	'autosign_live':          ('CmdTestAutosignLive',{'modname':'autosign'}),
+	'autosign_live_simulate': ('CmdTestAutosignLiveSimulate',{'modname':'autosign'}),
+	'create_ref_tx':          ('CmdTestRefTX',{'modname':'misc','full_data':True}),
 }
 
 cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses

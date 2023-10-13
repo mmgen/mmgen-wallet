@@ -172,7 +172,7 @@ if cfg.list_cmds:
 if cfg.testing_status:
 	tested_in = {
 		'tooltest.py': [],
-		'test.py': (
+		'cmdtest.py': (
 			'encrypt','decrypt','find_incog_data',
 			'addrfile_chksum','keyaddrfile_chksum','passwdfile_chksum',
 			'add_label','remove_label','remove_address','twview',
@@ -192,7 +192,7 @@ if cfg.testing_status:
 		tested_in['tooltest.py'] += list(v['cmd_data'].keys())
 
 	Msg(green("Testing status of 'mmgen-tool' commands:"))
-	for l in ('tooltest.py','tooltest2.py','test.py'):
+	for l in ('tooltest.py','tooltest2.py','cmdtest.py'):
 		Msg('\n  ' + blue(l+':'))
 		Msg('    '+'\n    '.join(sorted(tested_in[l])))
 
@@ -203,7 +203,7 @@ if cfg.testing_status:
 		set(ignore) -
 		set(tested_in['tooltest.py']) -
 		set(tested_in['tooltest2.py']) -
-		set(tested_in['test.py'])
+		set(tested_in['cmdtest.py'])
 	)
 	if uc:
 		Msg(yellow('\n  {}\n    {}'.format('Untested commands:','\n    '.join(uc))))

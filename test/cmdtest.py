@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test/test.py: Test suite for the MMGen wallet system
+test/cmdtest.py: Command test runner for the MMGen wallet system
 """
 
 def check_segwit_opts():
@@ -97,8 +97,8 @@ from mmgen.util import Msg,bmsg,die,suf,make_timestr,async_run
 
 from test.include.common import (
 	set_globals,
-	test_py_log_fn,
-	test_py_error_fn,
+	cmdtest_py_log_fn,
+	cmdtest_py_error_fn,
 	mk_tmpdir,
 	cleandir,
 	iqmsg,
@@ -111,7 +111,7 @@ from test.include.common import (
 )
 
 try:
-	os.unlink(os.path.join(repo_root,test_py_error_fn))
+	os.unlink(os.path.join(repo_root,cmdtest_py_error_fn))
 except:
 	pass
 
@@ -182,7 +182,7 @@ environment var
 	},
 	'code': {
 		'options': lambda proto,help_notes,s: s.format(
-				lf = test_py_log_fn
+				lf = cmdtest_py_log_fn
 			)
 	}
 }
@@ -204,7 +204,7 @@ cfg = Config(opts_data=opts_data)
 
 set_globals(cfg)
 
-from test.test_py_d.common import ( # this must be loaded after set_globals()
+from test.cmdtest_py_d.common import ( # this must be loaded after set_globals()
 	get_file_with_ext,
 	confirm_continue
 )
@@ -226,7 +226,7 @@ if cfg.pexpect_spawn and sys.platform == 'win32':
 	die(1,'--pexpect-spawn option not supported on Windows platform, exiting')
 
 if cfg.daemon_id and cfg.daemon_id in cfg.blacklisted_daemons.split():
-	die(1,f'test.py: daemon {cfg.daemon_id!r} blacklisted, exiting')
+	die(1,f'cmdtest.py: daemon {cfg.daemon_id!r} blacklisted, exiting')
 
 network_id = cfg.coin.lower() + ('_tn' if cfg.testnet else '')
 
@@ -260,7 +260,7 @@ else:
 if cfg.skipping_deps:
 	cfg.no_daemon_autostart = True
 
-from test.test_py_d.cfg import cfgs,fixup_cfgs
+from test.cmdtest_py_d.cfg import cfgs,fixup_cfgs
 
 for k in cfgs:
 	cfgs[k]['tmpdir'] = os.path.join('test','tmp',str(k))
@@ -282,8 +282,8 @@ def list_cmds():
 		yield green('AVAILABLE COMMANDS:')
 
 		for gname in gm.cmd_groups:
-			ts = gm.gm_init_group(None,gname,None,None)
-			desc = ts.__doc__.strip() if ts.__doc__ else type(ts).__name__
+			tg = gm.gm_init_group(None,gname,None,None)
+			desc = tg.__doc__.strip() if tg.__doc__ else type(tg).__name__
 			d.append( (gname,desc,gm.cmd_list,gm.dpy_data) )
 			cw = max(max(len(k) for k in gm.dpy_data),cw)
 
@@ -371,7 +371,7 @@ class CmdGroupMgr:
 
 	dpy_data = None
 
-	from test.test_py_d.cfg import cmd_groups_dfl,cmd_groups_extra
+	from test.cmdtest_py_d.cfg import cmd_groups_dfl,cmd_groups_extra
 
 	cmd_groups = cmd_groups_dfl.copy()
 	cmd_groups.update(cmd_groups_extra)
@@ -422,7 +422,7 @@ class CmdGroupMgr:
 		if modname is None and 'modname' in kwargs:
 			modname = kwargs['modname']
 		import importlib
-		modpath = f'test.test_py_d.ts_{modname or gname}'
+		modpath = f'test.cmdtest_py_d.ct_{modname or gname}'
 		return getattr(importlib.import_module(modpath),clsname)
 
 	def create_group(self,gname,sg_name,full_data=False,modname=None,is3seed=False,add_dpy=False):
@@ -540,8 +540,8 @@ class CmdGroupMgr:
 
 		return None
 
-class TestSuiteRunner:
-	'test suite runner'
+class CmdTestRunner:
+	'cmdtest.py test runner'
 
 	def __del__(self):
 		if cfg.log:
@@ -560,9 +560,9 @@ class TestSuiteRunner:
 		self.deps_only = None
 
 		if cfg.log:
-			self.log_fd = open(test_py_log_fn,'a')
+			self.log_fd = open(cmdtest_py_log_fn,'a')
 			self.log_fd.write(f'\nLog started: {make_timestr()} UTC\n')
-			omsg(f'INFO → Logging to file {test_py_log_fn!r}')
+			omsg(f'INFO → Logging to file {cmdtest_py_log_fn!r}')
 		else:
 			self.log_fd = None
 
@@ -586,7 +586,7 @@ class TestSuiteRunner:
 			'MMGEN_BOGUS_SEND': '1',
 			'MMGEN_TEST_SUITE_PEXPECT': '1',
 			'EXEC_WRAPPER_SPAWN':'1',
-			# if test.py itself is running under exec_wrapper, disable writing of traceback file for spawned script
+			# if cmdtest.py itself is running under exec_wrapper, disable writing of traceback file for spawned script
 			'EXEC_WRAPPER_TRACEBACK': '' if os.getenv('MMGEN_EXEC_WRAPPER') else '1',
 		})
 
@@ -611,7 +611,7 @@ class TestSuiteRunner:
 			direct_exec     = False,
 			env             = {}):
 
-		desc = self.ts.test_name if cfg.names else self.gm.dpy_data[self.ts.test_name][1]
+		desc = self.tg.test_name if cfg.names else self.gm.dpy_data[self.tg.test_name][1]
 		if extra_desc:
 			desc += ' ' + extra_desc
 
@@ -624,7 +624,7 @@ class TestSuiteRunner:
 			([] if no_exec_wrapper else ['scripts/exec_wrapper.py']) +
 			[cmd_path] +
 			self.passthru_opts +
-			self.ts.extra_spawn_args +
+			self.tg.extra_spawn_args +
 			args )
 
 		qargs = ['{q}{}{q}'.format( a, q = "'" if ' ' in a else '' ) for a in args]
@@ -633,14 +633,14 @@ class TestSuiteRunner:
 		if cfg.log:
 			self.log_fd.write('[{}][{}:{}] {}\n'.format(
 				proto.coin.lower(),
-				self.ts.group_name,
-				self.ts.test_name,
+				self.tg.group_name,
+				self.tg.test_name,
 				cmd_disp))
 
 		for i in args: # die only after writing log entry
 			if not isinstance(i,str):
 				die(2,'Error: missing input files in cmd line?:\nName: {}\nCmdline: {!r}'.format(
-					self.ts.test_name,
+					self.tg.test_name,
 					args ))
 
 		if not no_msg:
@@ -668,7 +668,7 @@ class TestSuiteRunner:
 		send_delay = 0.4 if pexpect_spawn is True or cfg.buf_keypress else None
 		pexpect_spawn = pexpect_spawn if pexpect_spawn is not None else bool(cfg.pexpect_spawn)
 
-		spawn_env = dict(self.ts.spawn_env)
+		spawn_env = dict(self.tg.spawn_env)
 		spawn_env.update({
 			'MMGEN_HOLD_PROTECT_DISABLE': '' if send_delay else '1',
 			'MMGEN_TEST_SUITE_POPEN_SPAWN': '' if pexpect_spawn else '1',
@@ -694,9 +694,9 @@ class TestSuiteRunner:
 
 	def init_group(self,gname,sg_name=None,cmd=None,quiet=False,do_clean=True):
 
-		ts_cls = CmdGroupMgr().load_mod(gname)
+		ct_cls = CmdGroupMgr().load_mod(gname)
 
-		if sys.platform == 'win32' and ts_cls.win_skip:
+		if sys.platform == 'win32' and ct_cls.win_skip:
 			omsg(f'Skipping test {gname!r} for Windows platform')
 			return False
 
@@ -709,19 +709,19 @@ class TestSuiteRunner:
 
 		def gen_msg():
 			yield ('{g}:{c}' if cmd else 'test group {g!r}').format(g=gname,c=cmd)
-			if len(ts_cls.networks) != 1:
+			if len(ct_cls.networks) != 1:
 				yield f' for {proto.coin} {proto.network}'
 			if segwit_opt:
 				yield ' (--{})'.format( segwit_opt.replace('_','-') )
 
 		m = ''.join(gen_msg())
 
-		if segwit_opt and not ts_cls.segwit_opts_ok:
+		if segwit_opt and not ct_cls.segwit_opts_ok:
 			iqmsg('INFO → skipping ' + m)
 			return False
 
 		# 'networks = ()' means all networks allowed
-		nws = [(e.split('_')[0],'testnet') if '_' in e else (e,'mainnet') for e in ts_cls.networks]
+		nws = [(e.split('_')[0],'testnet') if '_' in e else (e,'mainnet') for e in ct_cls.networks]
 		if nws:
 			coin = proto.coin.lower()
 			nw = ('mainnet','testnet')[proto.testnet]
@@ -733,7 +733,7 @@ class TestSuiteRunner:
 				return False
 
 		if do_clean:
-			clean(ts_cls.tmpdir_nums,clean_overlay=False)
+			clean(ct_cls.tmpdir_nums,clean_overlay=False)
 
 		if not quiet:
 			bmsg('Executing ' + m)
@@ -742,14 +742,14 @@ class TestSuiteRunner:
 			start_test_daemons(network_id,remove_datadir=True)
 			self.daemon_started = True
 
-		self.ts = self.gm.gm_init_group(self,gname,sg_name,self.spawn_wrapper)
-		self.ts_clsname = type(self.ts).__name__
+		self.tg = self.gm.gm_init_group(self,gname,sg_name,self.spawn_wrapper)
+		self.ct_clsname = type(self.tg).__name__
 
 		# pass through opts from cmdline (po.user_opts)
 		self.passthru_opts = ['--{}{}'.format(
 				k.replace('_','-'),
 				'' if cfg._uopts[k] is True else '=' + cfg._uopts[k]
-			) for k in cfg._uopts if k in self.ts.base_passthru_opts + self.ts.passthru_opts]
+			) for k in cfg._uopts if k in self.tg.base_passthru_opts + self.tg.passthru_opts]
 
 		if cfg.resuming:
 			rc = cfg.resume or cfg.resume_after
@@ -800,7 +800,7 @@ class TestSuiteRunner:
 								self.check_needs_rerun(cmdname,build=True)
 							except Exception as e: # allow calling of functions not in cmd_group
 								if isinstance(e,KeyError) and e.args[0] == cmdname:
-									ret = getattr(self.ts,cmdname)()
+									ret = getattr(self.tg,cmdname)()
 									if type(ret).__name__ == 'coroutine':
 										async_run(ret)
 								else:
@@ -838,9 +838,9 @@ class TestSuiteRunner:
 			force_delete = False,
 			dpy          = False):
 
-		self.ts.test_name = cmd
+		self.tg.test_name = cmd
 
-		if self.ts_clsname == 'TestSuiteMain' and testing_segwit and cmd not in self.ts.segwit_do:
+		if self.ct_clsname == 'CmdTestMain' and testing_segwit and cmd not in self.tg.segwit_do:
 			return False
 
 		rerun = root # force_delete is not passed to recursive call
@@ -899,8 +899,8 @@ class TestSuiteRunner:
 		arg_list = [get_file_with_ext(cfgs[num]['tmpdir'],ext) for num,ext in d]
 
 		# remove shared_deps from arg list
-		if hasattr(self.ts,'shared_deps'):
-			arg_list = arg_list[:-len(self.ts.shared_deps)]
+		if hasattr(self.tg,'shared_deps'):
+			arg_list = arg_list[:-len(self.tg.shared_deps)]
 
 		if self.resume_cmd:
 			if cmd != self.resume_cmd:
@@ -913,11 +913,11 @@ class TestSuiteRunner:
 		if cfg.profile:
 			start = time.time()
 
-		self.ts.test_name = cmd # NB: Do not remove, this needs to be set twice
+		self.tg.test_name = cmd # NB: Do not remove, this needs to be set twice
 		cdata = self.gm.dpy_data[cmd]
-#		self.ts.test_dpydata = cdata
-		self.ts.tmpdir_num = cdata[0]
-#		self.ts.cfg = cfgs[str(cdata[0])] # will remove this eventually
+#		self.tg.test_dpydata = cdata
+		self.tg.tmpdir_num = cdata[0]
+#		self.tg.cfg = cfgs[str(cdata[0])] # will remove this eventually
 		test_cfg = cfgs[str(cdata[0])]
 		for k in (  'seed_len', 'seed_id',
 					'wpasswd', 'kapasswd',
@@ -925,9 +925,9 @@ class TestSuiteRunner:
 					'bw_filename', 'bw_params', 'ref_bw_seed_id',
 					'addr_idx_list', 'pass_idx_list' ):
 			if k in test_cfg:
-				setattr(self.ts,k,test_cfg[k])
+				setattr(self.tg,k,test_cfg[k])
 
-		ret = getattr(self.ts,cmd)(*arg_list) # run the test
+		ret = getattr(self.tg,cmd)(*arg_list) # run the test
 		if type(ret).__name__ == 'coroutine':
 			ret = async_run(ret)
 		self.process_retval(cmd,ret)
@@ -952,7 +952,7 @@ class TestSuiteRunner:
 			ok()
 			self.cmd_total += 1
 		elif ret == 'error':
-			die(2,red(f'\nTest {self.ts.test_name!r} failed'))
+			die(2,red(f'\nTest {self.tg.test_name!r} failed'))
 		elif ret in ('skip','silent'):
 			if ret == 'silent':
 				self.cmd_total += 1
@@ -974,7 +974,7 @@ class TestSuiteRunner:
 		if not cfg.quiet:
 			omsg(f'Checking dependencies for {cmd!r}')
 
-		self.check_needs_rerun(self.ts,cmd)
+		self.check_needs_rerun(self.tg,cmd)
 
 		w = max(map(len,self.rebuild_list)) + 1
 		for cmd in self.rebuild_list:
@@ -1029,7 +1029,7 @@ if cfg.pause:
 from mmgen.exception import TestSuiteException,TestSuiteFatalException,TestSuiteSpawnedScriptException
 
 try:
-	tr = TestSuiteRunner(data_dir,trash_dir)
+	tr = CmdTestRunner(data_dir,trash_dir)
 	tr.run_tests(cmd_args)
 	tr.warn_skipped()
 	if tr.daemon_started:
@@ -1047,9 +1047,9 @@ except TestSuiteSpawnedScriptException as e:
 	# if spawned script is not running under exec_wrapper, output brief error msg:
 	if os.getenv('MMGEN_EXEC_WRAPPER'):
 		Msg(red(str(e)))
-		Msg(blue('test.py: spawned script exited with error'))
+		Msg(blue('cmdtest.py: spawned script exited with error'))
 except Exception:
-	# if test.py itself is running under exec_wrapper, re-raise so exec_wrapper can handle exception:
+	# if cmdtest.py itself is running under exec_wrapper, re-raise so exec_wrapper can handle exception:
 	if os.getenv('MMGEN_EXEC_WRAPPER') or not os.getenv('MMGEN_IGNORE_TEST_PY_EXCEPTION'):
 		raise
 	die(1,red('Test script exited with error'))

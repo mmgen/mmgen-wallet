@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_wallet: Wallet conversion tests for the test.py test suite
+test.cmdtest_py_d.ct_wallet: Wallet conversion tests for the cmdtest.py test suite
 """
 
 import os
@@ -27,10 +27,10 @@ from mmgen.wallet import get_wallet_cls
 
 from ..include.common import cfg,joinpath,imsg
 from .common import ref_dir,ref_wallet_brainpass,ref_wallet_incog_offset,hincog_fn,hincog_bytes
-from .ts_base import TestSuiteBase
-from .ts_shared import TestSuiteShared
+from .ct_base import CmdTestBase
+from .ct_shared import CmdTestShared
 
-class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
+class CmdTestWalletConv(CmdTestBase,CmdTestShared):
 	'wallet conversion to and from reference data'
 	networks = ('btc',)
 	tmpdir_nums = [11,12,13]
@@ -92,7 +92,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		for k,_ in self.cmd_group:
 			for n in (1,2,3):
 				setattr(self,f'{k}_{n}',getattr(self,k))
-		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 
 	def ref_wallet_conv(self):
 		wf = joinpath(ref_dir,self.sources[str(self.seed_len)]['ref_wallet'])

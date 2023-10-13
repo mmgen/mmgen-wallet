@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_misc: Miscellaneous test groups for the test.py test suite
+test.cmdtest_py_d.ct_misc: Miscellaneous test groups for the cmdtest.py test suite
 """
 
 import sys,os,re,time
@@ -26,10 +26,10 @@ from mmgen.util import ymsg
 
 from ..include.common import cfg,start_test_daemons,stop_test_daemons,imsg
 from .common import get_file_with_ext
-from .ts_base import TestSuiteBase
-from .ts_main import TestSuiteMain
+from .ct_base import CmdTestBase
+from .ct_main import CmdTestMain
 
-class TestSuiteMisc(TestSuiteBase):
+class CmdTestMisc(CmdTestBase):
 	'miscellaneous tests (RPC backends, xmrwallet_txview, term)'
 	networks = ('btc',)
 	tmpdir_nums = [99]
@@ -117,7 +117,7 @@ class TestSuiteMisc(TestSuiteBase):
 			return 'skip'
 		return self.spawn('test/misc/term_ni.py',['cleanup'],cmd_dir='.',pexpect_spawn=True)
 
-class TestSuiteHelp(TestSuiteBase):
+class CmdTestHelp(CmdTestBase):
 	'help, info and usage screens'
 	networks = ('btc','ltc','bch','eth','xmr')
 	tmpdir_nums = []
@@ -131,7 +131,7 @@ class TestSuiteHelp(TestSuiteBase):
 		('show_hash_presets',     (1,'info screen (--show-hash-presets)',[])),
 		('tool_help',             (1,"'mmgen-tool' usage screen",[])),
 		('tool_cmd_usage',        (1,"'mmgen-tool' usage screen",[])),
-		('test_help',             (1,"'test.py' help screens",[])),
+		('test_help',             (1,"'cmdtest.py' help screens",[])),
 		('tooltest_help',         (1,"'tooltest.py' help screens",[])),
 	)
 
@@ -251,10 +251,10 @@ class TestSuiteHelp(TestSuiteBase):
 			('--list-cmd-groups','AVAILABLE COMMAND GROUPS')
 		):
 			t = self.spawn_chk_expect(
-				'test.py',
+				'cmdtest.py',
 				[arg],
 				cmd_dir = 'test',
-				extra_desc = f'(test.py {arg})',
+				extra_desc = f'(cmdtest.py {arg})',
 				expect = expect )
 		return t
 
@@ -271,7 +271,7 @@ class TestSuiteHelp(TestSuiteBase):
 				expect = expect )
 		return t
 
-class TestSuiteOutput(TestSuiteBase):
+class CmdTestOutput(CmdTestBase):
 	'screen output'
 	networks = ('btc',)
 	tmpdir_nums = []
@@ -327,7 +327,7 @@ class TestSuiteOutput(TestSuiteBase):
 			return 'skip'
 		return self.oneshot_warning(pexpect_spawn=True)
 
-class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
+class CmdTestRefTX(CmdTestMain,CmdTestBase):
 	'create a reference transaction file (administrative command)'
 	segwit_opts_ok = False
 	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
@@ -348,7 +348,7 @@ class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 				cfgs[str(n)].update({   'addr_idx_list': '1-2',
 										'segwit': n in (33,34),
 										'dep_generators': { 'addrs':'ref_tx_addrgen'+str(n)[-1] }})
-		TestSuiteMain.__init__(self,trunner,cfgs,spawn)
+		CmdTestMain.__init__(self,trunner,cfgs,spawn)
 
 	def ref_tx_addrgen(self,atype):
 		if atype not in self.proto.mmtypes:

@@ -10,7 +10,7 @@
 
 
 """
-test.test_py_d.ts_xmr_autosign: xmr autosigning tests for the test.py test suite
+test.cmdtest_py_d.ct_xmr_autosign: xmr autosigning tests for the cmdtest.py test suite
 """
 
 import os,time,re,shutil
@@ -29,8 +29,8 @@ from ..include.common import (
 )
 from .common import get_file_with_ext
 
-from .ts_xmrwallet import TestSuiteXMRWallet
-from .ts_autosign import TestSuiteAutosignBase
+from .ct_xmrwallet import CmdTestXMRWallet
+from .ct_autosign import CmdTestAutosignBase
 
 def make_burn_addr():
 	from mmgen.tool.coin import tool_cmd
@@ -40,20 +40,20 @@ def make_burn_addr():
 		proto   = cfg._proto,
 		mmtype  = 'monero' ).privhex2addr('beadcafe'*8)
 
-class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
+class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 	"""
 	Monero autosigning operations
 	"""
 
 	tmpdir_nums = [39]
 
-	# ts_xmrwallet attrs:
+	# ct_xmrwallet attrs:
 	user_data = (
 		('miner', '98831F3A', False, 130, '1', []),
 		('alice', 'FE3C6545', True,  150, '1-2', []),
 	)
 
-	# ts_autosign attrs:
+	# ct_autosign attrs:
 	coins        = ['xmr']
 	daemon_coins = []
 	txfile_coins = []
@@ -106,8 +106,8 @@ class TestSuiteXMRAutosign(TestSuiteXMRWallet,TestSuiteAutosignBase):
 
 	def __init__(self,trunner,cfgs,spawn):
 
-		TestSuiteXMRWallet.__init__(self,trunner,cfgs,spawn)
-		TestSuiteAutosignBase.__init__(self,trunner,cfgs,spawn)
+		CmdTestXMRWallet.__init__(self,trunner,cfgs,spawn)
+		CmdTestAutosignBase.__init__(self,trunner,cfgs,spawn)
 
 		if trunner is None:
 			return

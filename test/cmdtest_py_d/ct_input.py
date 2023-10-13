@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.test_py_d.ts_input: user input tests for the MMGen test.py test suite
+test.cmdtest_py_d.ct_input: user input tests for the MMGen cmdtest.py test suite
 """
 
 import sys,os
@@ -26,10 +26,10 @@ from ..include.common import (
 	strip_ansi_escapes
 )
 from .common import Ctrl_U,ref_dir
-from .ts_base import TestSuiteBase
+from .ct_base import CmdTestBase
 from .input import stealth_mnemonic_entry,user_dieroll_entry
 
-class TestSuiteInput(TestSuiteBase):
+class CmdTestInput(CmdTestBase):
 	'user input'
 	networks = ('btc',)
 	tmpdir_nums = [1]

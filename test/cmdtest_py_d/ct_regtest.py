@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.test_py_d.ts_regtest: Regtest tests for the test.py test suite
+test.cmdtest_py_d.ct_regtest: Regtest tests for the cmdtest.py test suite
 """
 
 import os,json,time,re
@@ -51,8 +51,8 @@ from .common import (
 	tx_comment_jp,
 	get_env_without_debug_vars
 )
-from .ts_base import TestSuiteBase
-from .ts_shared import TestSuiteShared
+from .ct_base import CmdTestBase
+from .ct_shared import CmdTestShared
 
 pat_date = r'\b\d\d-\d\d-\d\d\b'
 pat_date_time = r'\b\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d\b'
@@ -163,7 +163,7 @@ def make_burn_addr(proto):
 		proto   = proto,
 		mmtype  = 'compressed' ).pubhash2addr('00'*20)
 
-class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
+class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	'transacting and tracking wallet operations via regtest mode'
 	networks = ('btc','ltc','bch')
 	passthru_opts = ('coin','rpc_backend')
@@ -437,7 +437,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	}
 
 	def __init__(self,trunner,cfgs,spawn):
-		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 		if trunner == None:
 			return
 		if self.proto.testnet:
@@ -445,7 +445,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		self.proto = init_proto( cfg, self.proto.coin, network='regtest', need_amt=True )
 		coin = self.proto.coin.lower()
 
-		import test.test_py_d.ts_regtest as rt_mod
+		import test.cmdtest_py_d.ct_regtest as rt_mod
 		for k in rt_data:
 			setattr( rt_mod, k, rt_data[k][coin] if coin in rt_data[k] else None )
 

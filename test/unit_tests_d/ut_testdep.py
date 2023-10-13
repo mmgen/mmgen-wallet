@@ -60,5 +60,5 @@ class unit_tests:
 		return True
 
 	def ssh_socks_proxy(self,name,ut):
-		from test.test_py_d.ts_xmrwallet import TestSuiteXMRWallet
-		return TestSuiteXMRWallet.init_proxy(external_call=True)
+		from test.cmdtest_py_d.ct_xmrwallet import CmdTestXMRWallet
+		return CmdTestXMRWallet.init_proxy(external_call=True)

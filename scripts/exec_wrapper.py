@@ -78,8 +78,8 @@ def exec_wrapper_write_traceback(e,exit_val):
 
 		sys.stdout.write('{}\n{}\n'.format( c.yellow( '\n'.join(tb_lines) ), c.red(exc_line) ))
 
-		from test.include.common import test_py_error_fn
-		with open(test_py_error_fn,'w') as fp:
+		from test.include.common import cmdtest_py_error_fn
+		with open(cmdtest_py_error_fn,'w') as fp:
 			fp.write('\n'.join(tb_lines + [exc_line]))
 
 		print(c.blue('{} script exited with error').format(
