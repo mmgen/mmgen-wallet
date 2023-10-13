@@ -27,7 +27,10 @@ import sys,os,time,importlib
 from subprocess import run,PIPE
 from decimal import Decimal
 
-import include.test_init
+try:
+	from include import test_init
+except ImportError:
+	from test.include import test_init
 
 from test.include.common import set_globals,end_msg,sample_text,init_coverage
 

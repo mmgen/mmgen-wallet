@@ -22,7 +22,10 @@ test/objtest.py: Test MMGen data objects
 
 import os,re
 
-import include.test_init
+try:
+	from include import test_init
+except ImportError:
+	from test.include import test_init
 
 # for objtest, violate MMGen Project best practices and allow use of the dev tools
 # in production code:

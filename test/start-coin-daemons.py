@@ -4,4 +4,7 @@
 test/start-coin-daemons.py: Start daemons for the MMGen test suite
 """
 
-import include.coin_daemon_control
+try:
+	import include.coin_daemon_control
+except ImportError:
+	import test.include.coin_daemon_control

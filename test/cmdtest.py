@@ -88,8 +88,10 @@ if sys.argv[-1] == 'clean':
 	print(f'Removed {os.path.relpath(overlay_tree_dir)!r}')
 else:
 	# overlay must be set up before importing mmgen mods!
-	import include.test_init
-	repo_root = include.test_init.repo_root
+	try:
+		from include.test_init import repo_root
+	except ImportError:
+		from test.include.test_init import repo_root
 
 from mmgen.cfg import Config,gc
 from mmgen.color import red,yellow,green,blue,cyan,nocolor,init_color

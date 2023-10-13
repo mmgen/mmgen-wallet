@@ -25,7 +25,10 @@ import sys,os,time
 from subprocess import run,PIPE
 from collections import namedtuple
 
-import include.test_init
+try:
+	from include import test_init
+except ImportError:
+	from test.include import test_init
 
 from mmgen.cfg import Config
 from mmgen.util import msg,msg_r,bmsg,die

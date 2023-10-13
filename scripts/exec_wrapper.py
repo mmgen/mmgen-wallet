@@ -27,11 +27,7 @@ def exec_wrapper_init():
 
 	if exec_wrapper_os.path.dirname(exec_wrapper_sys.argv[1]) == 'test':
 		# support running of test scripts under wrapper
-		cwd = exec_wrapper_os.getcwd() # assume we’re in repo root
-		exec_wrapper_sys.path[0] = cwd
-		exec_wrapper_sys.path[1] = exec_wrapper_os.path.join(cwd,'test')
-		from test.overlay import get_overlay_tree_dir
-		exec_wrapper_sys.path.insert(0, get_overlay_tree_dir(cwd))
+		exec_wrapper_sys.path[0] = exec_wrapper_os.getcwd() # assume we’re in repo root
 	else:
 		exec_wrapper_sys.path.pop(0)
 

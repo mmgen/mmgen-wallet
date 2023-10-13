@@ -22,7 +22,10 @@ test/gentest.py: Cryptocoin key/address generation tests for the MMGen suite
 
 import sys,os,time
 
-import include.test_init
+try:
+	from include import test_init
+except ImportError:
+	from test.include import test_init
 
 # Import these _after_ local path's been added to sys.path
 from mmgen.cfg import gc,Config

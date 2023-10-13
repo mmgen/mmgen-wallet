@@ -22,7 +22,10 @@ test/unit_tests.py: Unit tests for the MMGen suite
 
 import sys,os,time,importlib,platform
 
-import include.test_init
+try:
+	from include.test_init import repo_root
+except ImportError:
+	from test.include.test_init import repo_root
 
 # for the unit tests, violate MMGen Project best practices and allow use of the dev tools
 # in production code:
@@ -72,7 +75,7 @@ set_globals(cfg)
 
 file_pfx = 'ut_'
 
-tests_d = os.path.join(include.test_init.repo_root,'test','unit_tests_d')
+tests_d = os.path.join(repo_root,'test','unit_tests_d')
 
 all_tests = sorted(fn[len(file_pfx):-len('.py')] for fn in os.listdir(tests_d) if fn.startswith(file_pfx))
 

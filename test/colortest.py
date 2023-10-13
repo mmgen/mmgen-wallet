@@ -9,7 +9,10 @@ test/colortest.py: test color handling for the MMGen suite
 
 import os
 
-import include.test_init
+try:
+	from include import test_init
+except ImportError:
+	from test.include import test_init
 
 from mmgen.color import *
 from mmgen.util import msg,ymsg,gmsg

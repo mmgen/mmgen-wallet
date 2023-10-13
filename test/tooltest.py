@@ -23,7 +23,10 @@ test/tooltest.py: Tests for the 'mmgen-tool' utility
 import sys,os,time
 from subprocess import run,PIPE
 
-import include.test_init
+try:
+	from include.test_init import repo_root
+except ImportError:
+	from test.include.test_init import repo_root
 
 from mmgen.cfg import Config
 from mmgen.color import red,yellow,green,blue,cyan
@@ -147,7 +150,7 @@ tn_ext = ('','.testnet')[proto.testnet]
 
 spawn_cmd = [
 	'scripts/exec_wrapper.py',
-	os.path.relpath(os.path.join(include.test_init.repo_root,'cmds','mmgen-tool')) ]
+	os.path.relpath(os.path.join(repo_root,'cmds','mmgen-tool')) ]
 
 if cfg.coverage:
 	d,f = init_coverage()

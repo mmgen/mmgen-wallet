@@ -13,8 +13,9 @@ test.include.test_init: Initialization module for test scripts
 """
 
 import sys,os
+from pathlib import PurePath
 os.environ['MMGEN_TEST_SUITE'] = '1'
-repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
+repo_root = str(PurePath(*PurePath(sys.modules[__name__].__file__).parts[:-3]))
 os.chdir(repo_root)
 sys.path[0] = repo_root
 
