@@ -76,6 +76,13 @@ xmrwallet_uarg_info = (
 		r'(?:[^:]+):(?:\d+)'
 	)
 
+# required to squelch pylint:
+def fmt_amt(amt):
+	return str(amt)
+
+def hl_amt(amt):
+	return str(amt)
+
 class XMRWalletAddrSpec(HiliteStr,InitErrors,MMGenObject):
 	color = 'cyan'
 	width = 0

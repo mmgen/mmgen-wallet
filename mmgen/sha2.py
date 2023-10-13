@@ -31,7 +31,7 @@ from struct import pack,unpack
 
 class Sha2:
 	'Implementation based on the pseudocode at https://en.wikipedia.org/wiki/SHA-2'
-	K = None
+	K = ()
 
 	@classmethod
 	def initConstants(cls):
@@ -71,7 +71,7 @@ class Sha2:
 	def __init__(self,message,preprocess=True):
 		'Use preprocess=False for Sha256Compress'
 		assert isinstance(message,(bytes,bytearray,list)),'message must be of type bytes, bytearray or list'
-		if self.K is None:
+		if not self.K:
 			type(self).initConstants()
 		self.H = list(self.H_init)
 		self.M = message

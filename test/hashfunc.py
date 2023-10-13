@@ -129,6 +129,7 @@ class TestKeccak(TestHashFunc):
 		pass
 
 class TestSha2(TestHashFunc):
+	desc = 'sha2'
 
 	def __init__(self):
 		from mmgen.sha2 import Sha256,Sha512

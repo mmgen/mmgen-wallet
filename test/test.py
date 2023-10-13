@@ -369,6 +369,8 @@ def set_restore_term_at_exit():
 
 class CmdGroupMgr:
 
+	dpy_data = None
+
 	from test.test_py_d.cfg import cmd_groups_dfl,cmd_groups_extra
 
 	cmd_groups = cmd_groups_dfl.copy()

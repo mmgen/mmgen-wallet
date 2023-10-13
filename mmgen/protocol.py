@@ -52,6 +52,7 @@ class CoinProtocol(MMGenObject):
 		base_proto_coin  = None
 		base_coin  = None
 		is_fork_of = None
+		chain_names = None
 		networks   = ('mainnet','testnet','regtest')
 
 		def __init__(self,cfg,coin,name,network,tokensym=None,need_amt=False):
@@ -86,11 +87,11 @@ class CoinProtocol(MMGenObject):
 				from .util import die
 				die(2,f'Command {gc.prog_name!r} not supported for coin {self.coin}')
 
-			if hasattr(self,'chain_names'):
+			if self.chain_names:
 				self.chain_name = self.chain_names[0] # first chain name is default
 			else:
-				self.chain_name = self.network
 				self.chain_names = [self.network]
+				self.chain_name = self.network
 
 			if self.tokensym:
 				assert self.name.startswith('Ethereum'), 'CoinProtocol.Base_chk1'

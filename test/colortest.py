@@ -29,6 +29,7 @@ def test_color():
 	init_color()
 	gmsg("\nParsed terminfo 'colors' values:")
 
+	from mmgen.color import orange
 	for t,c in (('rxvt',8),('xterm',8),('rxvt-unicode',88),('screen-256color',256),('xterm-256color',256)):
 		ret = get_terminfo_colors(t)
 		if ret is None:

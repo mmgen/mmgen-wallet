@@ -243,14 +243,14 @@ def write_data_to_file(
 		# not atomic, but better than nothing
 		# if cmp_data is empty, file can be either empty or non-existent
 		if check_data:
+			d = ''
 			try:
 				with open(outfile,('r','rb')[bool(binary)]) as fp:
 					d = fp.read()
 			except:
-				d = ''
-			finally:
-				if d != cmp_data:
-					die(3,f'{desc} in file {outfile!r} has been altered by some other program! Aborting file write')
+				pass
+			if d != cmp_data:
+				die(3,f'{desc} in file {outfile!r} has been altered by some other program! Aborting file write')
 
 		# To maintain portability, always open files in binary mode
 		# If 'binary' option not set, encode/decode data before writing and after reading

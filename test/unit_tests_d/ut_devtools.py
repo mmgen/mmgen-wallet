@@ -6,6 +6,7 @@ test.unit_tests_d.ut_devtools: devtools unit tests for the MMGen suite
 
 import os,json
 from mmgen.util import msg
+from mmgen.devtools import print_diff,get_ndiff,print_stack_trace,pmsg_r,pmsg,Pmsg
 from . import unit_tests_base
 
 textA = """

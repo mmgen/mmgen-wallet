@@ -14,6 +14,9 @@ pyversion: Python version string operations
 
 class PythonVersion(str):
 
+	major = 0
+	minor = 0
+
 	def __new__(cls,arg=None):
 		if isinstance(arg,PythonVersion):
 			return arg

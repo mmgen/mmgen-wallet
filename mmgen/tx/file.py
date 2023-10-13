@@ -60,8 +60,8 @@ class MMGenTxFile(MMGenObject):
 		from ..fileutil import get_data_from_file
 		tx_data = get_data_from_file( tx.cfg, infile, tx.desc+' data', quiet=quiet_open )
 
+		desc = 'data'
 		try:
-			desc = 'data'
 			if len(tx_data) > tx.cfg.max_tx_file_size:
 				die('MaxFileSizeExceeded',
 					f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)')

@@ -26,6 +26,7 @@ import include.test_init
 
 # for objtest, violate MMGen Project best practices and allow use of the dev tools
 # in production code:
+from mmgen.devtools import pmsg
 if not os.getenv('MMGEN_DEVTOOLS'):
 	from mmgen.devinit import init_dev
 	init_dev()

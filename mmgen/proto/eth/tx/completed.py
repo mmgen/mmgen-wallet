@@ -20,6 +20,8 @@ class Completed(Base,TxBase.Completed):
 
 	def __init__(self,*args,**kwargs):
 
+		self.txobj = {}
+
 		super().__init__(*args,**kwargs)
 
 		self.gas = self.proto.coin_amt(self.dfl_gas,'wei')

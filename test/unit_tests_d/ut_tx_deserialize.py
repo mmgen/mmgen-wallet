@@ -8,6 +8,7 @@ import os,json
 
 from mmgen.color import purple,cyan
 from mmgen.util import msg,Msg,Msg_r
+from mmgen.devtools import Pmsg
 from mmgen.protocol import init_proto
 from mmgen.tx import CompletedTX
 from mmgen.proto.btc.tx.base import DeserializeTX

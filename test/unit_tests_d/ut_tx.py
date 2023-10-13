@@ -6,6 +6,7 @@ test.unit_tests_d.ut_tx: TX unit tests for the MMGen suite
 
 import os,re
 
+from mmgen.devtools import get_diff,get_ndiff
 from mmgen.tx import NewTX,CompletedTX
 from mmgen.tx.file import MMGenTxFile
 from mmgen.daemon import CoinDaemon
