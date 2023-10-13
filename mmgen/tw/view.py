@@ -76,6 +76,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	class line_processing:
 
 		class print:
+			@staticmethod
 			def do(method,data,cw,fs,color,fmt_method):
 				return [l.rstrip() for l in method(data,cw,fs,color,fmt_method)]
 

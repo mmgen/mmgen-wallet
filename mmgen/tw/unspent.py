@@ -70,10 +70,12 @@ class TwUnspentOutputs(TwView):
 			MMGenListItem.__init__(self,**kwargs)
 
 		class conv_funcs:
-			def amt(self,value):
-				return self.proto.coin_amt(value)
-			def amt2(self,value):
-				return self.proto.coin_amt(value)
+			@staticmethod
+			def amt(instance,value):
+				return instance.proto.coin_amt(value)
+			@staticmethod
+			def amt2(instance,value):
+				return instance.proto.coin_amt(value)
 
 	async def __init__(self,cfg,proto,minconf=1,addrs=[]):
 		await super().__init__(cfg,proto)

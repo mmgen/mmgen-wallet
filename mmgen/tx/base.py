@@ -57,8 +57,9 @@ class MMGenTxIO(MMGenListItem):
 			None )
 
 	class conv_funcs:
-		def amt(self,value):
-			return self.proto.coin_amt(value)
+		@staticmethod
+		def amt(instance,value):
+			return instance.proto.coin_amt(value)
 
 class MMGenTxIOList(list,MMGenObject):
 

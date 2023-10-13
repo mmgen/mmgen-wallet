@@ -28,6 +28,7 @@ from .addrlist import AddrIdxList
 from .passwdlist import PasswordList
 from .wallet import Wallet
 from .obj import MMGenPWIDString
+from .ui import keypress_confirm
 
 pwi = PasswordList.pw_info
 
@@ -178,7 +179,6 @@ af = al.file
 
 af.format()
 
-from .ui import keypress_confirm
 if keypress_confirm( cfg, 'Encrypt password list?' ):
 	af.encrypt()
 	af.write(binary=True,desc='encrypted password list')

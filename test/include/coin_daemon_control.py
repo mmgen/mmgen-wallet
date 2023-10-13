@@ -12,7 +12,6 @@
 test.include.coin_daemon_control: Start and stop daemons for the MMGen test suite
 """
 
-import include.test_init
 from mmgen.cfg import Config,gc
 from mmgen.util import msg,die,oneshot_warning,async_run
 from mmgen.protocol import init_proto

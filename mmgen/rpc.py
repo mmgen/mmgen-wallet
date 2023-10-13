@@ -24,7 +24,7 @@ import sys,re,base64,json,asyncio,importlib
 from decimal import Decimal
 from collections import namedtuple
 
-from .util import msg,die,fmt,fmt_list,pp_fmt,oneshot_warning
+from .util import msg,ymsg,die,fmt,fmt_list,pp_fmt,oneshot_warning
 from .base_obj import AsyncInit
 from .obj import NonNegativeInt
 from .objmethods import HiliteStr,InitErrors,MMGenObject
@@ -93,6 +93,7 @@ class RPCBackends:
 			self.timeout        = caller.timeout
 			self.http_hdrs      = caller.http_hdrs
 			self.name           = type(self).__name__
+			self.caller         = caller
 
 	class aiohttp(base,metaclass=AsyncInit):
 		"""
@@ -231,7 +232,8 @@ class RPCBackends:
 		async def run(self,payload,timeout,host_path):
 			data = json.dumps(payload,cls=json_encoder)
 			if len(data) > self.arg_max:
-				return self.httplib(payload,timeout=timeout) # TODO: check
+				ymsg('Warning: Curl data payload length exceeded - falling back on httplib')
+				return RPCBackends.httplib(self.caller).run(payload,timeout,host_path)
 			dmsg_rpc_backend(self.host_url,host_path,payload)
 			exec_cmd = [
 				'curl',

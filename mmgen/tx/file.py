@@ -63,7 +63,8 @@ class MMGenTxFile(MMGenObject):
 		try:
 			desc = 'data'
 			if len(tx_data) > tx.cfg.max_tx_file_size:
-				die( 'MaxFileSizeExceeded', f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)' )
+				die('MaxFileSizeExceeded',
+					f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)')
 			tx_data = tx_data.splitlines()
 			assert len(tx_data) >= 5,'number of lines less than 5'
 			assert len(tx_data[0]) == 6,'invalid length of first line'

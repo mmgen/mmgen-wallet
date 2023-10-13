@@ -80,6 +80,7 @@ def do_msg(rpc,backend):
 
 class init_test:
 
+	@staticmethod
 	async def btc(proto,backend,daemon):
 		rpc = await rpc_init(cfg,proto,backend,daemon)
 		do_msg(rpc,backend)
@@ -89,6 +90,7 @@ class init_test:
 		await rpc.gathered_call(None,(('getblock',(bh,)),('getblock',(bh,1))),timeout=300)
 		return rpc
 
+	@staticmethod
 	async def bch(proto,backend,daemon):
 		rpc = await rpc_init(cfg,proto,backend,daemon)
 		do_msg(rpc,backend)
@@ -96,6 +98,7 @@ class init_test:
 
 	ltc = bch
 
+	@staticmethod
 	async def eth(proto,backend,daemon):
 		rpc = await rpc_init(cfg,proto,backend,daemon)
 		do_msg(rpc,backend)

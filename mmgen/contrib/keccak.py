@@ -200,9 +200,9 @@ class KeccakState:
 		i = 0
 		for y in self.rangeH:
 			for x in self.rangeW:
-					v = KeccakState.lane2bytes(self.s[x][y], self.lanew)
-					out[i:i+8] = v
-					i += 8
+				v = KeccakState.lane2bytes(self.s[x][y], self.lanew)
+				out[i:i+8] = v
+				i += 8
 		return out
 
 	def set_bytes(self, bb):

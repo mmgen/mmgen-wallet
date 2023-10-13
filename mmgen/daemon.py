@@ -83,7 +83,7 @@ class Daemon(Lockable):
 		out = (PIPE,None)[is_daemon and self.opt.no_daemonize]
 		try:
 			cp = run(cmd,check=False,stdout=out,stderr=out)
-		except Exception as e:
+		except OSError as e:
 			die( 'MMGenCalledProcessError', f'Error starting executable: {type(e).__name__} [Errno {e.errno}]' )
 		set_vt100()
 		if self.debug:

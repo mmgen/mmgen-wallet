@@ -63,13 +63,10 @@ class Sha2:
 			cbrt = lambda n: pow(n, 1 / 3)
 
 		# First wordBits bits of the fractional parts of the square roots of the first 8 primes
-		H = (getFractionalBits(sqrt(n)) for n in primes[:8])
+		cls.H_init = tuple(getFractionalBits(sqrt(n)) for n in primes[:8])
 
 		# First wordBits bits of the fractional parts of the cube roots of the first nRounds primes
-		K = (getFractionalBits(cbrt(n)) for n in primes)
-
-		cls.H_init = tuple(H)
-		cls.K      = tuple(K)
+		cls.K = tuple(getFractionalBits(cbrt(n)) for n in primes)
 
 	def __init__(self,message,preprocess=True):
 		'Use preprocess=False for Sha256Compress'

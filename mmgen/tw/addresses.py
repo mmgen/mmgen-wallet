@@ -64,10 +64,12 @@ class TwAddresses(TwView):
 			MMGenListItem.__init__(self,**kwargs)
 
 		class conv_funcs:
-			def amt(self,value):
-				return self.proto.coin_amt(value)
-			def recvd(self,value):
-				return self.proto.coin_amt(value)
+			@staticmethod
+			def amt(instance,value):
+				return instance.proto.coin_amt(value)
+			@staticmethod
+			def recvd(instance,value):
+				return instance.proto.coin_amt(value)
 
 	@property
 	def coinaddr_list(self):
