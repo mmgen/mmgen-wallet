@@ -7,9 +7,9 @@ test.unit_tests_d.ut_dep: dependency unit tests for the MMGen suite
   No data verification is performed.
 """
 
+import sys
 from subprocess import run,PIPE
 
-from mmgen.cfg import gc
 from mmgen.util import msg,ymsg,gmsg
 from mmgen.exception import NoLEDSupport
 
@@ -40,15 +40,15 @@ class unit_tests:
 
 	def pycryptodomex(self,name,ut): # ETH,XMR
 		from mmgen.pyversion import python_version
-		if python_version >= '3.11' or gc.platform == 'win':
+		if python_version >= '3.11' or sys.platform == 'win32':
 			try:
 				from mmgen.util import load_cryptodomex
 			except Exception as e:
 				msg(str(e))
 				ymsg('Please install the ‘pycryptodome’ or ‘pycryptodomex’ package on your system')
 				return False
-		elif gc.platform != 'win':
-			ut.skip_msg(f'platform {gc.platform!r}')
+		elif sys.platform != 'win32':
+			ut.skip_msg(f'platform {sys.platform!r}')
 		else:
 			ut.skip_msg(f'Python version {python_version}')
 		return True

@@ -31,7 +31,7 @@ import include.test_init
 
 from test.include.common import set_globals,end_msg,sample_text,init_coverage
 
-from mmgen.cfg import Config,gc
+from mmgen.cfg import Config
 from mmgen.color import green,blue,purple,cyan
 from mmgen.util import msg,msg_r,Msg,is_hex_str,async_run,die
 
@@ -41,7 +41,7 @@ from mmgen.xmrseed import is_xmrseed
 
 skipped_tests = ['mn2hex_interactive']
 
-NL = ('\n','\r\n')[gc.platform=='win']
+NL = ('\n','\r\n')[sys.platform=='win32']
 
 def is_str(s):
 	return isinstance(s,str)
@@ -888,7 +888,7 @@ async def run_test(cls,gid,cmd_name):
 		elif cfg.fork:
 			cmd_out = fork_cmd(cmd_name,args,opts,stdin_input)
 		else:
-			if stdin_input and gc.platform == 'win':
+			if stdin_input and sys.platform == 'win32':
 				msg('Skipping for MSWin - no os.fork()')
 				continue
 			method = getattr(cls(cfg,cmdname=cmd_name,proto=proto,mmtype=mmtype),cmd_name)

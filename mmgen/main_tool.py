@@ -268,7 +268,7 @@ def process_args(cmd,cmd_args,cls):
 			die(1,"'Binary input data must be supplied via STDIN")
 
 		if have_stdin_input and arg_type == 'str' and isinstance(arg,bytes):
-			NL = '\r\n' if gc.platform == 'win' else '\n'
+			NL = '\r\n' if sys.platform == 'win32' else '\n'
 			arg = arg.decode()
 			if arg[-len(NL):] == NL: # rstrip one newline
 				arg = arg[:-len(NL)]

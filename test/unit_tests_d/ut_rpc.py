@@ -4,9 +4,8 @@
 test.unit_tests_d.ut_rpc: RPC unit test for the MMGen suite
 """
 
-import os,time
+import sys,os,time
 
-from mmgen.cfg import gc
 from mmgen.color import yellow,cyan
 from mmgen.util import msg,gmsg,async_run,make_timestr,pp_fmt,die
 from mmgen.protocol import init_proto
@@ -125,7 +124,7 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 		if not cfg.no_daemon_stop:
 			d.stop()
 
-		if test_cf_auth and gc.platform != 'win':
+		if test_cf_auth and sys.platform != 'win32':
 			cfg_file_auth_test(d.proto,d)
 			cfg_file_auth_test(d.proto,d,bad_auth=True)
 
@@ -211,7 +210,7 @@ class unit_tests:
 					password = 'foo',
 					seed     = xmrseed().fromhex('beadface'*8,tostr=True) )
 
-				if gc.platform == 'win':
+				if sys.platform == 'win32':
 					wd.stop()
 					wd.start()
 

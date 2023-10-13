@@ -22,7 +22,6 @@ fileutil: Routines that read, write, execute or stat files
 
 import sys,os
 
-from .cfg import gc
 from .color import set_vt100
 from .util import (
 	msg,
@@ -41,7 +40,7 @@ def check_or_create_dir(path):
 		if os.getenv('MMGEN_TEST_SUITE'):
 			from subprocess import run
 			run([
-				('rm' if gc.platform == 'win' else '/bin/rm'),
+				('rm' if sys.platform == 'win32' else '/bin/rm'),
 				'-rf',
 				path ])
 			set_vt100()
@@ -206,9 +205,10 @@ def write_data_to_file(
 			else:
 				msg('Redirecting output to file')
 
-		if binary and gc.platform == 'win':
-			import msvcrt
-			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
+		if binary:
+			if sys.platform == 'win32': # condition on separate line for pylint
+				import msvcrt
+				msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 
 		# MSWin workaround. See msg_r()
 		try:

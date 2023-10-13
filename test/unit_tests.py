@@ -186,7 +186,7 @@ def run_test(test,subtest=None):
 			if cfg.no_altcoin_deps and subtest in altcoin_deps:
 				cfg._util.qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping subtest {subtest_disp!r}'))
 				continue
-			if gc.platform == 'win' and subtest in win_skip:
+			if sys.platform == 'win32' and subtest in win_skip:
 				cfg._util.qmsg(gray(f'Skipping subtest {subtest_disp!r} for Windows platform'))
 				continue
 			elif platform.machine() == 'aarch64' and subtest in arm_skip:

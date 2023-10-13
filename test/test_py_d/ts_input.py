@@ -10,7 +10,7 @@
 test.test_py_d.ts_input: user input tests for the MMGen test.py test suite
 """
 
-import os
+import sys,os
 
 from mmgen.cfg import gc
 from mmgen.util import fmt,capfirst,remove_whitespace
@@ -238,7 +238,7 @@ class TestSuiteInput(TestSuiteBase):
 		return t
 
 	def _input_func(self,func_name,arg_dfls,func_args,text,expect,term):
-		if term and gc.platform == 'win':
+		if term and sys.platform == 'win32':
 			return ('skip_warn','pexpect_spawn not supported on Windows platform')
 		func_args = dict(zip(arg_dfls.keys(),func_args))
 		t = self.spawn(
@@ -287,7 +287,7 @@ class TestSuiteInput(TestSuiteBase):
 		return self._get_char(['prompt> ','',True,5],'x','x',False)
 
 	def get_char2(self):
-		expect = 'x' if gc.platform == 'win' else 'xxxxx'
+		expect = 'x' if sys.platform == 'win32' else 'xxxxx'
 		return self._get_char(['prompt> ','',True,5],'xxxxx',expect,False)
 
 	def get_char3(self):
@@ -333,7 +333,7 @@ class TestSuiteInput(TestSuiteBase):
 		return self._line_input(['prompt> ',True,'foobarbaz',True],Ctrl_U+'foobar','foobar',True)
 
 	def _password_entry(self,prompt,opts=[],term=False):
-		if term and gc.platform == 'win':
+		if term and sys.platform == 'win32':
 			return ('skip_warn','pexpect_spawn not supported on Windows platform')
 		t = self.spawn( 'test/misc/input_func.py', opts + ['passphrase'], cmd_dir='.', pexpect_spawn=term )
 		imsg(f'Terminal: {term}')

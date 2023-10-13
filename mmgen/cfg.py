@@ -55,16 +55,12 @@ class GlobalConstants(Lockable):
 	prog_name = os.path.basename(sys.argv[0])
 	is_txprog = prog_name == 'mmgen-regtest' or prog_name.startswith('mmgen-tx')
 
-	for k in ('linux','win','msys'):
-		if sys.platform.startswith(k):
-			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
-			break
-	else:
+	if sys.platform not in ('linux','win32'):
 		die2(1,f'{sys.platform!r}: platform not supported by {proj_name}')
 
 	if os.getenv('HOME'):   # Linux or MSYS2
 		home_dir = os.getenv('HOME')
-	elif platform == 'win': # Windows without MSYS2 - not supported
+	elif sys.platform == 'win32': # Windows without MSYS2 - not supported
 		die2(1,f'$HOME not set!  {proj_name} for Windows must be run in MSYS2 environment')
 	else:
 		die2(2,'$HOME is not set!  Unable to determine home directory')

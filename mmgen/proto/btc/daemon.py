@@ -29,7 +29,7 @@ class bitcoin_core_daemon(CoinDaemon):
 	nonstd_datadir = False
 	datadirs = {
 		'linux': [gc.home_dir,'.bitcoin'],
-		'win':   [os.getenv('APPDATA'),'Bitcoin']
+		'win32': [os.getenv('APPDATA'),'Bitcoin']
 	}
 
 	def init_datadir(self):
@@ -130,7 +130,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	nonstd_datadir = True
 	datadirs = {
 		'linux': [gc.home_dir,'.bitcoin-bchn'],
-		'win':   [os.getenv('APPDATA'),'Bitcoin_ABC']
+		'win32': [os.getenv('APPDATA'),'Bitcoin_ABC']
 	}
 
 	def set_comment_args(self,rpc,coinaddr,lbl):
@@ -159,5 +159,5 @@ class litecoin_core_daemon(bitcoin_core_daemon):
 	cfg_file_hdr = '# Litecoin Core config file\n'
 	datadirs = {
 		'linux': [gc.home_dir,'.litecoin'],
-		'win':   [os.getenv('APPDATA'),'Litecoin']
+		'win32': [os.getenv('APPDATA'),'Litecoin']
 	}

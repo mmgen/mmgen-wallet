@@ -4,10 +4,9 @@
 test.unit_tests_d.ut_testdep: test dependency unit tests for the MMGen suite
 """
 
-import os
+import sys,os
 from subprocess import run,PIPE
 
-from mmgen.cfg import gc
 from mmgen.util import ymsg
 
 sec = 'deadbeef' * 8
@@ -51,7 +50,7 @@ class unit_tests:
 		return True
 
 	def ethkey(self,name,ut):
-		if gc.platform == 'linux' and os.uname().machine != 'x86_64':
+		if sys.platform == 'linux' and os.uname().machine != 'x86_64':
 			distro = [l for l in open('/etc/os-release').read().split('\n') if l.startswith('ID=')][0][3:]
 			if distro != 'archarm':
 				ut.skip_msg(f'distro {distro!r} on architecture {os.uname().machine!r}')

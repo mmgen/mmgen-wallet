@@ -112,7 +112,7 @@ class TestKeccak(TestHashFunc):
 		from mmgen.contrib.keccak import keccak_256
 		self.t_cls = keccak_256
 		from mmgen.pyversion import python_version
-		if python_version >= '3.11' or gc.platform == 'win':
+		if python_version >= '3.11' or sys.platform == 'win32':
 			class hashlib:
 				@staticmethod
 				def keccak_256(data):
@@ -175,7 +175,7 @@ class TestSha512(TestSha2):
 		0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817 )
 
 from test.include.common import getrand,set_globals
-from mmgen.cfg import Config,gc
+from mmgen.cfg import Config
 
 set_globals(Config())
 

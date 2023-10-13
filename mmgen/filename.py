@@ -20,7 +20,7 @@
 filename: File and MMGenFile classes and methods for the MMGen suite
 """
 
-import os
+import sys,os
 from .util import die,get_extension
 
 class File:
@@ -43,8 +43,7 @@ class File:
 		import stat
 		if stat.S_ISBLK(st.st_mode):
 			mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]
-			from .cfg import gc
-			if gc.platform == 'win':
+			if sys.platform == 'win32':
 				mode |= os.O_BINARY
 			try:
 				fd = os.open(fn, mode)

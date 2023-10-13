@@ -28,7 +28,7 @@ class monero_daemon(CoinDaemon):
 	cfg_file = 'bitmonero.conf'
 	datadirs = {
 		'linux': [gc.home_dir,'.bitmonero'],
-		'win':   ['/','c','ProgramData','bitmonero']
+		'win32': ['/','c','ProgramData','bitmonero']
 	}
 
 	def init_datadir(self):
@@ -65,13 +65,13 @@ class monero_daemon(CoinDaemon):
 			['--no-igd'],
 			[f'--data-dir={self.datadir}', self.non_dfl_datadir],
 			[f'--pidfile={self.pidfile}', self.platform == 'linux'],
-			['--detach',                  not (self.opt.no_daemonize or self.platform=='win')],
+			['--detach',                  not (self.opt.no_daemonize or self.platform=='win32')],
 			['--offline',                 not self.opt.online],
 		)
 
 	@property
 	def stop_cmd(self):
-		if self.platform == 'win':
+		if self.platform == 'win32':
 			return ['kill','-Wf',self.pid]
 		elif contains_any( self.start_cmd, ['--restricted-rpc','--public-node'] ):
 			return ['kill',self.pid]
@@ -164,7 +164,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			[f'--daemon-port={self.monerod_port}',    not self.monerod_addr],
 			[f'--proxy={self.proxy}',                self.proxy],
 			[f'--pidfile={self.pidfile}',            self.platform == 'linux'],
-			['--detach',                             not (self.opt.no_daemonize or self.platform=='win')],
+			['--detach',                             not (self.opt.no_daemonize or self.platform=='win32')],
 			['--stagenet',                           self.network == 'testnet'],
 			['--allow-mismatched-daemon-version',    test_suite],
 		)

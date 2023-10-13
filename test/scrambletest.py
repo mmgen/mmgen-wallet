@@ -21,13 +21,13 @@ test/scrambletest.py: seed scrambling and addrlist data generation tests for all
                       supported coins + passwords
 """
 
-import os,time
+import sys,os,time
 from subprocess import run,PIPE
 from collections import namedtuple
 
 import include.test_init
 
-from mmgen.cfg import gc,Config
+from mmgen.cfg import Config
 from mmgen.util import msg,msg_r,bmsg,die
 
 opts_data = {
@@ -129,7 +129,7 @@ def do_coin_tests():
 	for tname,tdata in (
 			tuple(bitcoin_data.items()) +
 			tuple(altcoin_data.items() if not cfg.no_altcoin else []) ):
-		if tname == 'zec_zcash_z' and gc.platform == 'win':
+		if tname == 'zec_zcash_z' and sys.platform == 'win32':
 			msg("Skipping 'zec_zcash_z' test for Windows platform")
 			continue
 		coin,mmtype = tname.split('_',1) if '_' in tname else (tname,None)

@@ -10,9 +10,8 @@
 test.test_py_d.ts_cfgfile: CfgFile tests for the MMGen test.py test suite
 """
 
-import os,time,shutil
+import sys,os,time,shutil
 
-from mmgen.cfg import gc
 from mmgen.color import yellow
 from mmgen.cfgfile import CfgFileSampleSys,CfgFileSampleUsr,cfg_file_sample
 
@@ -158,7 +157,7 @@ class TestSuiteCfgFile(TestSuiteBase):
 		write_to_file(self.path('usr'),'\n'.join(d) + '\n')
 		return self.old_sample_common(
 			old_set       = True,
-			pexpect_spawn = not gc.platform == 'win')
+			pexpect_spawn = not sys.platform == 'win32')
 
 	def _autoset_opts(self,args=[],text='rpc_backend aiohttp\n'):
 		write_to_file( self.path('usr'), text )

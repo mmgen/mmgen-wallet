@@ -20,12 +20,11 @@
 test.test_py_d.ts_ethdev: Ethdev tests for the test.py test suite
 """
 
-import os,re,shutil,asyncio,json
+import sys,os,re,shutil,asyncio,json
 from decimal import Decimal
 from collections import namedtuple
 from subprocess import run,PIPE,DEVNULL
 
-from mmgen.cfg import gc
 from mmgen.color import yellow,blue,cyan,set_vt100
 from mmgen.util import msg,rmsg,die
 
@@ -1373,7 +1372,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def edit_comment1(self):
 		return self.edit_comment(out_num=del_addrs[0],comment_text=tw_comment_zh[:3])
 	def edit_comment2(self):
-		spawn = not gc.platform == 'win'
+		spawn = not sys.platform == 'win32'
 		return self.edit_comment(
 				out_num       = del_addrs[0],
 				comment_text  = tw_comment_zh[3:],

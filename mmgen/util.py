@@ -94,7 +94,7 @@ class Util:
 			msg(f'{capfirst(desc2)} OK ({val2})')
 		return True
 
-if gc.platform == 'win':
+if sys.platform == 'win32':
 	def msg_r(s):
 		try:
 			gv.stderr.write(s)
@@ -457,5 +457,5 @@ def wrap_ripemd160(called=[]):
 		called.append(True)
 
 def exit_if_mswin(feature):
-	if gc.platform == 'win':
+	if sys.platform == 'win32':
 		die(2, capfirst(feature) + ' not supported on the MSWin / MSYS2 platform' )

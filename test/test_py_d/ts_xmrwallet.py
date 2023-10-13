@@ -20,11 +20,10 @@
 test.test_py_d.ts_xmrwallet: xmrwallet tests for the test.py test suite
 """
 
-import os,time,re,atexit,asyncio,shutil
+import sys,os,time,re,atexit,asyncio,shutil
 from subprocess import run,PIPE
 from collections import namedtuple
 
-from mmgen.cfg import gc
 from mmgen.util import msg,fmt,async_run,capfirst,is_int,die,list_gen
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
@@ -58,7 +57,7 @@ def stop_miner_wallet_daemon(self):
 	async_run(self.users['miner'].wd_rpc.stop_daemon())
 
 def kill_proxy(cls,args):
-	if gc.platform == 'linux':
+	if sys.platform == 'linux':
 		omsg(f'Killing SSH SOCKS server at localhost:{cls.socks_port}')
 		cmd = [ 'pkill', '-f', ' '.join(args) ]
 		run(cmd)
@@ -840,7 +839,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		h = await self._get_height()
 		imsg_r(f'Chain height: {h} ')
 
-		max_iterations,height_threshold = (300,80) if gc.platform == 'win' else (50,300)
+		max_iterations,height_threshold = (300,80) if sys.platform == 'win32' else (50,300)
 
 		for count in range(max_iterations):
 			bal_info = await get_balance(dest,count)

@@ -10,9 +10,8 @@
 test.test_py_d.ts_tool: tool tests for the MMGen test.py test suite
 """
 
-import os
+import sys,os
 
-from mmgen.cfg import gc
 from mmgen.util import suf
 from mmgen.color import cyan
 
@@ -86,7 +85,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		vmsg(f'Incog ID: {cyan(i_id)}')
 		t = self.spawn('mmgen-tool',['-d',self.tmpdir,'find_incog_data',f1,i_id])
 		o = t.expect_getend(f'Incog data for ID {i_id} found at offset ')
-		if not gc.platform == 'win':
+		if not sys.platform == 'win32':
 			os.unlink(f1) # causes problems with MSYS2
 		cmp_or_die(hincog_offset,int(o))
 		return t

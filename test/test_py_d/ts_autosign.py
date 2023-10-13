@@ -20,11 +20,10 @@
 test.test_py_d.ts_autosign: Autosign tests for the test.py test suite
 """
 
-import os,shutil
+import sys,os,shutil
 from subprocess import run
 from pathlib import Path
 
-from mmgen.cfg import gc
 from mmgen.color import red,green,blue,purple
 from mmgen.util import msg,suf,die
 from mmgen.led import LEDControl
@@ -162,7 +161,7 @@ class TestSuiteAutosignBase(TestSuiteBase):
 		self.bad_msg_count = 0
 
 	def __del__(self):
-		if gc.platform == 'win' or self.tr is None:
+		if sys.platform == 'win32' or self.tr is None:
 			return
 		if self.simulate or not self.live:
 			LEDControl.delete_dummy_control_files()

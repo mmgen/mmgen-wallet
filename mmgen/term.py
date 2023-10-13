@@ -27,18 +27,18 @@ from collections import namedtuple
 
 from .util import msg,msg_r,die
 
-try:
+if sys.platform == 'linux':
 	import tty,termios
 	from select import select
-	_platform = 'linux'
-except ImportError:
+elif sys.platform == 'win32':
 	try:
 		import msvcrt
-		_platform = 'mswin'
 	except:
 		die(2,'Unable to set terminal mode')
 	if not sys.stdin.isatty():
 		msvcrt.setmode(sys.stdin.fileno(),os.O_BINARY)
+else:
+	die(2,f'{sys.platform!r}: unsupported platform')
 
 _term_dimensions = namedtuple('terminal_dimensions',['width','height'])
 
@@ -285,8 +285,8 @@ class MMGenTermMSWinStub(MMGenTermMSWin):
 def get_term():
 	return {
 		'linux': (MMGenTermLinux if sys.stdin.isatty() else MMGenTermLinuxStub),
-		'mswin': (MMGenTermMSWin if sys.stdin.isatty() else MMGenTermMSWinStub),
-	}[_platform]
+		'win32': (MMGenTermMSWin if sys.stdin.isatty() else MMGenTermMSWinStub),
+	}[sys.platform]
 
 def init_term(cfg,noecho=False):
 

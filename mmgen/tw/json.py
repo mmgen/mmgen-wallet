@@ -12,7 +12,7 @@
 tw.json: export and import tracking wallet to JSON format
 """
 
-import os,json
+import sys,os,json
 from collections import namedtuple
 
 from ..util import msg,ymsg,fmt,suf,die,make_timestamp,make_chksum_8
@@ -54,8 +54,7 @@ class TwJSON:
 				from ..addrlist import AddrIdxList
 				prune_id = AddrIdxList(idx_list=self.pruned).id_str
 				fn = get_fn(prune_id)
-				from ..cfg import gc
-				mf = 255 if gc.platform == 'win' else os.statvfs(self.cfg.outdir or os.curdir).f_namemax
+				mf = 255 if sys.platform == 'win32' else os.statvfs(self.cfg.outdir or os.curdir).f_namemax
 				if len(fn) > mf:
 					fn = get_fn(f'idhash={make_chksum_8(prune_id.encode()).lower()}')
 			else:

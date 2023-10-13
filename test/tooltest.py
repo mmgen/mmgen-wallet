@@ -25,7 +25,7 @@ from subprocess import run,PIPE
 
 import include.test_init
 
-from mmgen.cfg import Config,gc
+from mmgen.cfg import Config
 from mmgen.color import red,yellow,green,blue,cyan
 from mmgen.util import msg,msg_r,Msg,die
 
@@ -152,7 +152,7 @@ spawn_cmd = [
 if cfg.coverage:
 	d,f = init_coverage()
 	spawn_cmd = ['python3','-m','trace','--count','--coverdir='+d,'--file='+f] + spawn_cmd
-elif gc.platform == 'win':
+elif sys.platform == 'win32':
 	spawn_cmd = ['python3'] + spawn_cmd
 
 add_spawn_args = ['--data-dir='+tcfg['tmpdir']] + ['--{}{}'.format(

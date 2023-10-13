@@ -12,9 +12,8 @@
 wallet.incog_hidden: hidden incognito wallet class
 """
 
-import os
+import sys,os
 
-from ..cfg import gc
 from ..seed import Seed
 from ..util import msg,die,capfirst
 from ..util2 import parse_bytespec
@@ -73,7 +72,7 @@ class wallet(wallet):
 		d.target_data_len = self._get_incog_data_len(self.cfg.seed_len or Seed.dfl_len)
 		self._check_valid_offset(self.infile,'read')
 
-		flgs = os.O_RDONLY|os.O_BINARY if gc.platform == 'win' else os.O_RDONLY
+		flgs = os.O_RDONLY|os.O_BINARY if sys.platform == 'win32' else os.O_RDONLY
 		fh = os.open(self.infile.name,flgs)
 		os.lseek(fh,int(d.hincog_offset),os.SEEK_SET)
 		self.fmt_data = os.read(fh,d.target_data_len)
@@ -136,7 +135,7 @@ class wallet(wallet):
 					message = '',
 					action  = f'alter file {f.name!r}' )
 
-		flgs = os.O_RDWR|os.O_BINARY if gc.platform == 'win' else os.O_RDWR
+		flgs = os.O_RDWR|os.O_BINARY if sys.platform == 'win32' else os.O_RDWR
 		fh = os.open(f.name,flgs)
 		os.lseek(fh, int(d.hincog_offset), os.SEEK_SET)
 		os.write(fh, self.fmt_data)

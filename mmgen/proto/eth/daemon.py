@@ -63,7 +63,7 @@ class openethereum_daemon(ethereum_daemon):
 	cfg_file = 'parity.conf'
 	datadirs = {
 		'linux': [gc.home_dir,'.local','share','io.parity.ethereum'],
-		'win':   [os.getenv('LOCALAPPDATA'),'Parity','Ethereum']
+		'win32': [os.getenv('LOCALAPPDATA'),'Parity','Ethereum']
 	}
 
 	def init_subclass(self):
@@ -100,7 +100,7 @@ class geth_daemon(ethereum_daemon):
 	version_info_arg = 'version'
 	datadirs = {
 		'linux': [gc.home_dir,'.ethereum','geth'],
-		'win':   [os.getenv('LOCALAPPDATA'),'Geth'] # FIXME
+		'win32': [os.getenv('LOCALAPPDATA'),'Geth'] # FIXME
 	}
 
 	def init_subclass(self):
@@ -136,7 +136,7 @@ class erigon_daemon(geth_daemon):
 	version_info_arg = '--version'
 	datadirs = {
 		'linux': [gc.home_dir,'.local','share','erigon'],
-		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
+		'win32': [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
 	}
 
 	def init_subclass(self):

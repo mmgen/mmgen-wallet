@@ -20,11 +20,10 @@
 rpc: Cryptocoin RPC library for the MMGen suite
 """
 
-import re,base64,json,asyncio,importlib
+import sys,re,base64,json,asyncio,importlib
 from decimal import Decimal
 from collections import namedtuple
 
-from .cfg import gc
 from .util import msg,die,fmt,fmt_list,pp_fmt,oneshot_warning
 from .base_obj import AsyncInit
 from .obj import NonNegativeInt
@@ -264,7 +263,7 @@ class RPCClient(MMGenObject):
 		self.name = type(self).__name__
 
 		# aiohttp workaround, and may speed up RPC performance overall on some systems:
-		if gc.platform == 'win' and host == 'localhost':
+		if sys.platform == 'win32' and host == 'localhost':
 			host = '127.0.0.1'
 
 		global dmsg_rpc,dmsg_rpc_backend
@@ -291,7 +290,7 @@ class RPCClient(MMGenObject):
 	def _get_backend(self,backend):
 		backend_id = backend or self.cfg.rpc_backend
 		if backend_id == 'auto':
-			return {'linux':RPCBackends.httplib,'win':RPCBackends.requests}[gc.platform](self)
+			return {'linux':RPCBackends.httplib,'win32':RPCBackends.requests}[sys.platform](self)
 		else:
 			return getattr(RPCBackends,backend_id)(self)
 

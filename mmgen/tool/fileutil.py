@@ -20,10 +20,9 @@
 tool.fileutil: File routines for the 'mmgen-tool' utility
 """
 
-import os
+import sys,os
 
 from .common import tool_cmd_base
-from ..cfg import gc
 from ..util import msg,msg_r,die,suf,make_full_path
 from ..crypto import Crypto
 
@@ -40,7 +39,7 @@ class tool_cmd(tool_cmd_base):
 
 		ivsize,bsize,mod = ( Crypto.aesctr_iv_len, 4096, 4096*8 )
 		n,carry = 0,b' '*ivsize
-		flgs = os.O_RDONLY|os.O_BINARY if gc.platform == 'win' else os.O_RDONLY
+		flgs = os.O_RDONLY|os.O_BINARY if sys.platform == 'win32' else os.O_RDONLY
 		f = os.open(filename,flgs)
 		for ch in incog_id:
 			if ch not in '0123456789ABCDEF':
@@ -56,7 +55,6 @@ class tool_cmd(tool_cmd_base):
 						continue
 					msg(f'\rIncog data for ID {incog_id} found at offset {n+i-ivsize}')
 					if not keep_searching:
-						import sys
 						sys.exit(0)
 			carry = d[len(d)-ivsize:]
 			n += bsize

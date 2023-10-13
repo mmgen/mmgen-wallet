@@ -20,9 +20,8 @@
 test.test_py_d.ts_base: Base class for the test.py test suite
 """
 
-import os
+import sys,os
 
-from mmgen.cfg import gc
 from mmgen.util import msg
 
 from ..include.common import cfg,write_to_file,read_from_file
@@ -91,7 +90,7 @@ class TestSuiteBase:
 			msg(f'{fn}: file does not exist or could not be deleted')
 
 	def skip_for_win(self):
-		if gc.platform == 'win':
+		if sys.platform == 'win32':
 			msg(f'Skipping test {self.test_name!r}: not supported on MSys2 platform')
 			return True
 		else:

@@ -21,13 +21,13 @@ commands = [
 	'get_char_one',
 	'get_char_one_raw',
 ]
-if gc.platform == 'linux':
+if sys.platform == 'linux':
 	commands.extend([
 		'get_char',
 		'get_char_immed_chars',
 		'get_char_raw',
 	])
-elif gc.platform == 'win':
+elif sys.platform == 'win32':
 	commands.extend([
 		'get_char_one_char_immed_chars',
 	])
@@ -40,7 +40,7 @@ opts_data = {
 -h, --help     Print this help message
 """,
 	'notes': f"""
-available commands for platform {gc.platform!r}:
+available commands for platform {sys.platform!r}:
 {fmt_list(commands,fmt='col',indent='    ')}
 """
 	}
@@ -120,7 +120,7 @@ def _tt_get_char(raw=False,one_char=False,immed_chars=''):
 			if one_char else
 		'echoed as a FULL CONTROL SEQUENCE.'
 	)
-	if gc.platform == 'win':
+	if sys.platform == 'win32':
 		if raw:
 			m3 = 'The Escape and F1-F12 keys will be returned as two-character strings.'
 		else:

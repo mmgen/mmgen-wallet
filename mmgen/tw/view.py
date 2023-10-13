@@ -171,7 +171,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			'\x1b[7~': 'm_top',
 			'\x1b[8~': 'm_bot',
 		},
-		'win': {
+		'win32': {
 			'\xe0H': 'm_cursor_up',
 			'\xe0P': 'm_cursor_down',
 			'\xe0I': 'm_pg_up',
@@ -526,7 +526,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				for k in self.scroll_keys['vi']:
 					assert k not in self.key_mappings, f'{k!r} is in key_mappings'
 				self.key_mappings.update(self.scroll_keys['vi'])
-				self.key_mappings.update(self.scroll_keys[gc.platform])
+				self.key_mappings.update(self.scroll_keys[sys.platform])
 			return self.key_mappings
 
 		scroll = self.scroll = self.cfg.scroll
