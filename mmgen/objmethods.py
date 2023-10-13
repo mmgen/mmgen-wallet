@@ -129,26 +129,20 @@ class InitErrors:
 	@classmethod
 	def init_fail(cls,e,m,e2=None,m2=None,objname=None,preformat=False):
 
-		if preformat:
-			errmsg = m
-		else:
-			errmsg = '{!r}: value cannot be converted to {} {}({!s})'.format(
-				m,
-				(objname or cls.__name__),
-				(f'({e2!s}) ' if e2 else ''),
-				e )
-
-		if m2:
-			errmsg = repr(m2) + '\n' + errmsg
-
-		from .util import die
+		def get_errmsg():
+			ret = m if preformat else (
+				'{!r}: value cannot be converted to {} {}({!s})'.format(
+					m,
+					(objname or cls.__name__),
+					(f'({e2!s}) ' if e2 else ''),
+					e ))
+			return f'{m2!r}\n{ret}' if m2 else ret
 
 		if hasattr(cls,'passthru_excs') and type(e).__name__ in cls.passthru_excs:
-			raise
-		elif hasattr(cls,'exc'):
-			die( cls.exc, errmsg )
-		else:
-			die( 'ObjectInitError', errmsg )
+			raise e
+
+		from .util import die
+		die(getattr(cls,'exc','ObjectInitError'), get_errmsg())
 
 	@classmethod
 	def method_not_implemented(cls):
