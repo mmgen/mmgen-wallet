@@ -1012,46 +1012,46 @@ class CmdTestRunner:
 		else:
 			return None
 
-# main()
+if __name__ == '__main__':
 
-if not cfg.skipping_deps: # do this before list cmds exit, so we stay in sync with shm_dir
-	create_tmp_dirs(shm_dir)
+	if not cfg.skipping_deps: # do this before list cmds exit, so we stay in sync with shm_dir
+		create_tmp_dirs(shm_dir)
 
-if cfg.list_cmd_groups:
-	CmdGroupMgr().list_cmd_groups()
-elif cfg.list_cmds:
-	list_cmds()
-elif cmd_args and cmd_args[0] in utils:
-	globals()[cmd_args[0]](*cmd_args[1:])
-	sys.exit(0)
+	if cfg.list_cmd_groups:
+		CmdGroupMgr().list_cmd_groups()
+	elif cfg.list_cmds:
+		list_cmds()
+	elif cmd_args and cmd_args[0] in utils:
+		globals()[cmd_args[0]](*cmd_args[1:])
+		sys.exit(0)
 
-if cfg.pause:
-	set_restore_term_at_exit()
+	if cfg.pause:
+		set_restore_term_at_exit()
 
-from mmgen.exception import TestSuiteException,TestSuiteFatalException,TestSuiteSpawnedScriptException
+	from mmgen.exception import TestSuiteException,TestSuiteFatalException,TestSuiteSpawnedScriptException
 
-try:
-	tr = CmdTestRunner(data_dir,trash_dir)
-	tr.run_tests(cmd_args)
-	tr.warn_skipped()
-	if tr.daemon_started:
-		stop_test_daemons(network_id)
-except KeyboardInterrupt:
-	if tr.daemon_started:
-		stop_test_daemons(network_id)
-	tr.warn_skipped()
-	die(1,'\ntest.py exiting at user request')
-except TestSuiteException as e:
-	die(2,e.args[0])
-except TestSuiteFatalException as e:
-	die(4,e.args[0])
-except TestSuiteSpawnedScriptException as e:
-	# if spawned script is not running under exec_wrapper, output brief error msg:
-	if os.getenv('MMGEN_EXEC_WRAPPER'):
-		Msg(red(str(e)))
-		Msg(blue('cmdtest.py: spawned script exited with error'))
-except Exception:
-	# if cmdtest.py itself is running under exec_wrapper, re-raise so exec_wrapper can handle exception:
-	if os.getenv('MMGEN_EXEC_WRAPPER') or not os.getenv('MMGEN_IGNORE_TEST_PY_EXCEPTION'):
-		raise
-	die(1,red('Test script exited with error'))
+	try:
+		tr = CmdTestRunner(data_dir,trash_dir)
+		tr.run_tests(cmd_args)
+		tr.warn_skipped()
+		if tr.daemon_started:
+			stop_test_daemons(network_id)
+	except KeyboardInterrupt:
+		if tr.daemon_started:
+			stop_test_daemons(network_id)
+		tr.warn_skipped()
+		die(1,'\ntest.py exiting at user request')
+	except TestSuiteException as e:
+		die(2,e.args[0])
+	except TestSuiteFatalException as e:
+		die(4,e.args[0])
+	except TestSuiteSpawnedScriptException as e:
+		# if spawned script is not running under exec_wrapper, output brief error msg:
+		if os.getenv('MMGEN_EXEC_WRAPPER'):
+			Msg(red(str(e)))
+			Msg(blue('cmdtest.py: spawned script exited with error'))
+	except Exception:
+		# if cmdtest.py itself is running under exec_wrapper, re-raise so exec_wrapper can handle exception:
+		if os.getenv('MMGEN_EXEC_WRAPPER') or not os.getenv('MMGEN_IGNORE_TEST_PY_EXCEPTION'):
+			raise
+		die(1,red('Test script exited with error'))

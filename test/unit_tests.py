@@ -203,16 +203,17 @@ def run_test(test,subtest=None):
 		if not mod.unit_test().run_test(test,UnitTestHelpers(test)):
 			die(4,'Unit test {test!r} failed')
 
-try:
-	for test in (cfg._args or all_tests):
-		if '.' in test:
-			test,subtest = test.split('.')
-		else:
-			subtest = None
-		if test not in all_tests:
-			die(1,f'{test!r}: test not recognized')
-		if test not in exclude:
-			run_test(test,subtest=subtest)
-	end_msg(int(time.time()) - start_time)
-except KeyboardInterrupt:
-	die(1,green('\nExiting at user request'))
+if __name__ == '__main__':
+	try:
+		for test in (cfg._args or all_tests):
+			if '.' in test:
+				test,subtest = test.split('.')
+			else:
+				subtest = None
+			if test not in all_tests:
+				die(1,f'{test!r}: test not recognized')
+			if test not in exclude:
+				run_test(test,subtest=subtest)
+		end_msg(int(time.time()) - start_time)
+	except KeyboardInterrupt:
+		die(1,green('\nExiting at user request'))

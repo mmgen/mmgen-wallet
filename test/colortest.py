@@ -44,4 +44,5 @@ def test_color():
 	ret = get_terminfo_colors()
 	msg(f'{os.getenv("TERM")} (this terminal): {orange(str(ret))}')
 
-test_color()
+if __name__ == '__main__':
+	test_color()

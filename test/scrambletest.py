@@ -151,10 +151,11 @@ def do_passwd_tests():
 		s = fs.format('','')
 		do_test(cmd,tdata,s+' '*(40-len(s)),'password')
 
-start_time = int(time.time())
+if __name__ == '__main__':
+	start_time = int(time.time())
 
-cmds = cfg._args or ('coin','pw')
-for cmd in cmds:
-	{'coin': do_coin_tests, 'pw': do_passwd_tests }[cmd]()
+	cmds = cfg._args or ('coin','pw')
+	for cmd in cmds:
+		{'coin': do_coin_tests, 'pw': do_passwd_tests }[cmd]()
 
-end_msg(int(time.time()) - start_time)
+	end_msg(int(time.time()) - start_time)

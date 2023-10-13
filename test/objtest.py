@@ -215,4 +215,5 @@ def do_loop():
 
 proto = cfg._proto
 
-do_loop()
+if __name__ == '__main__':
+	do_loop()

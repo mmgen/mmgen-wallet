@@ -1013,6 +1013,6 @@ async def main():
 	except KeyboardInterrupt:
 		die(1,green('\nExiting at user request'))
 
-async_run(main())
-
-end_msg(int(time.time()) - start_time)
+if __name__ == '__main__':
+	async_run(main())
+	end_msg(int(time.time()) - start_time)

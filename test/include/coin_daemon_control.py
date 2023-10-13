@@ -15,6 +15,7 @@ test.include.coin_daemon_control: Start and stop daemons for the MMGen test suit
 from mmgen.cfg import Config,gc
 from mmgen.util import msg,die,oneshot_warning,async_run
 from mmgen.protocol import init_proto
+from mmgen.daemon import CoinDaemon
 
 xmr_wallet_network_ids = {
 	'xmrw':    'mainnet',
@@ -57,10 +58,6 @@ Valid network IDs: {nid}, {xmrw_nid}, all, no_xmr
 		)
 	}
 }
-
-cfg = Config(opts_data=opts_data)
-
-from mmgen.daemon import CoinDaemon
 
 class warn_missing_exec(oneshot_warning):
 	color = 'nocolor'
@@ -118,27 +115,31 @@ def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=False):
 		else:
 			d.cmd(action,quiet=cfg.quiet)
 
-if cfg.daemon_ids:
-	print('\n'.join(CoinDaemon.all_daemon_ids()))
-elif 'all' in cfg._args or 'no_xmr' in cfg._args:
-	if len(cfg._args) != 1:
-		die(1,"'all' or 'no_xmr' must be the sole argument")
-	for coin in CoinDaemon.coins:
-		if coin == 'XMR' and cfg._args[0] == 'no_xmr':
-			continue
-		for daemon_id in CoinDaemon.get_daemon_ids(cfg,coin):
-			for network in CoinDaemon.get_daemon(cfg,coin,daemon_id).networks:
-				run(
-					proto           = init_proto( cfg, coin=coin, network=network ),
-					daemon_id       = daemon_id,
-					missing_exec_ok = True )
-else:
-	ids = cfg._args
-	network_ids = CoinDaemon.get_network_ids(cfg)
-	if not ids:
-		cfg._opts.usage()
-	for i in ids:
-		if i not in network_ids + list(xmr_wallet_network_ids):
-			die(1,f'{i!r}: invalid network ID')
-	for network_id in ids:
-		run(network_id=network_id.lower())
+def main():
+
+	if cfg.daemon_ids:
+		print('\n'.join(CoinDaemon.all_daemon_ids()))
+	elif 'all' in cfg._args or 'no_xmr' in cfg._args:
+		if len(cfg._args) != 1:
+			die(1,"'all' or 'no_xmr' must be the sole argument")
+		for coin in CoinDaemon.coins:
+			if coin == 'XMR' and cfg._args[0] == 'no_xmr':
+				continue
+			for daemon_id in CoinDaemon.get_daemon_ids(cfg,coin):
+				for network in CoinDaemon.get_daemon(cfg,coin,daemon_id).networks:
+					run(
+						proto           = init_proto( cfg, coin=coin, network=network ),
+						daemon_id       = daemon_id,
+						missing_exec_ok = True )
+	else:
+		ids = cfg._args
+		network_ids = CoinDaemon.get_network_ids(cfg)
+		if not ids:
+			cfg._opts.usage()
+		for i in ids:
+			if i not in network_ids + list(xmr_wallet_network_ids):
+				die(1,f'{i!r}: invalid network ID')
+		for network_id in ids:
+			run(network_id=network_id.lower())
+
+cfg = Config(opts_data=opts_data)

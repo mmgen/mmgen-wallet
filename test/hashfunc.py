@@ -27,15 +27,7 @@ try:
 except ImportError:
 	from test.include import test_init
 
-from mmgen.util import die
-
-assert len(sys.argv) in (2,3),"Test takes 1 or 2 arguments: test name, plus optional rounds count"
-test = sys.argv[1].capitalize()
-assert test in ('Sha256','Sha512','Keccak'), "Valid choices for test are 'sha256','sha512' or 'keccak'"
-random_rounds = int(sys.argv[2]) if len(sys.argv) == 3 else 500
-
-def msg(s):
-	sys.stderr.write(s)
+from mmgen.util import msg,msg_r,die
 
 def green(s):
 	return '\033[32;1m' + s + '\033[0m'
@@ -43,7 +35,7 @@ def green(s):
 class TestHashFunc:
 
 	def test_constants(self):
-		msg('Testing generated constants: ')
+		msg_r('Testing generated constants: ')
 		h = self.t_cls(b'foo')
 		if h.H_init != self.H_ref:
 			m = 'Generated constants H[] differ from reference value:\nReference:\n{}\nGenerated:\n{}'
@@ -51,7 +43,7 @@ class TestHashFunc:
 		if h.K != self.K_ref:
 			m = 'Generated constants K[] differ from reference value:\nReference:\n{}\nGenerated:\n{}'
 			die(3,m.format([hex(n) for n in self.K_ref],[hex(n) for n in h.K]))
-		msg('OK\n')
+		msg('OK')
 
 	def compare_hashes(self,data,chk=None):
 		if chk is None:
@@ -63,19 +55,19 @@ class TestHashFunc:
 
 	def test_ref(self):
 		for i,data in enumerate(self.vectors):
-			msg(f'\rTesting reference input data: {i+1:4}/{len(self.vectors)} ')
+			msg_r(f'\rTesting reference input data: {i+1:4}/{len(self.vectors)} ')
 			self.compare_hashes(data.encode(), chk=self.vectors[data])
-		msg('OK\n')
+		msg('OK')
 
 	def test_random(self,rounds):
 		if not self.hashlib:
 			return
 		for i in range(rounds):
 			if i+1 in (1,rounds) or not (i+1) % 10:
-				msg(f'\rTesting random input data:    {i+1:4}/{rounds} ')
+				msg_r(f'\rTesting random input data:    {i+1:4}/{rounds} ')
 			dlen = int(getrand(4).hex(),16) >> 18
 			self.compare_hashes(getrand(dlen))
-		msg('OK\n')
+		msg('OK')
 
 class TestKeccak(TestHashFunc):
 	desc = 'keccak_256'
@@ -180,13 +172,18 @@ class TestSha512(TestSha2):
 		0x113f9804bef90dae, 0x1b710b35131c471b, 0x28db77f523047d84, 0x32caab7b40c72493, 0x3c9ebe0a15c9bebc,
 		0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817 )
 
-from test.include.common import getrand,set_globals
-from mmgen.cfg import Config
+if __name__ == '__main__':
+	from test.include.common import getrand,set_globals
+	from mmgen.cfg import Config
 
-set_globals(Config())
+	assert len(sys.argv) in (2,3),"Test takes 1 or 2 arguments: test name, plus optional rounds count"
+	test = sys.argv[1].capitalize()
+	assert test in ('Sha256','Sha512','Keccak'), "Valid choices for test are 'sha256','sha512' or 'keccak'"
+	random_rounds = int(sys.argv[2]) if len(sys.argv) == 3 else 500
 
-t = globals()['Test'+test]()
-msg(f'Testing internal implementation of {t.desc}\n')
-t.test_constants()
-t.test_ref()
-t.test_random(random_rounds)
+	set_globals(Config())
+	t = globals()['Test'+test]()
+	msg(f'Testing internal implementation of {t.desc}')
+	t.test_constants()
+	t.test_ref()
+	t.test_random(random_rounds)

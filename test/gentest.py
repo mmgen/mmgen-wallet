@@ -582,4 +582,5 @@ vmsg = cfg._util.vmsg
 
 proto = cfg._proto
 
-main()
+if __name__ == '__main__':
+	main()
