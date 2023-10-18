@@ -51,9 +51,6 @@ class coin_msg:
 
 	class base(MMGenObject):
 
-		def __init__(self,cfg):
-			self.cfg = cfg
-
 		ext = 'rawmsg.json'
 		signed = False
 		chksum_keys = ('addrlists','message','msghash_type','network')
@@ -87,11 +84,12 @@ class coin_msg:
 		def signed_filename(self):
 			return f'{self.filename_stem}.{coin_msg.signed.ext}'
 
-		def get_proto_from_file(self,filename):
-			data = json.loads(get_data_from_file( self.cfg, filename ))
+		@staticmethod
+		def get_proto_from_file(cfg,filename):
+			data = json.loads(get_data_from_file(cfg, filename))
 			network_id = data['metadata']['network'] if 'metadata' in data else data['network'].lower()
 			coin,network = network_id.split('_')
-			return init_proto( cfg=self.cfg, coin=coin, network=network )
+			return init_proto(cfg=cfg, coin=coin, network=network)
 
 		def write_to_file(self,outdir=None,ask_overwrite=False):
 			data = {
@@ -109,9 +107,7 @@ class coin_msg:
 
 	class new(base):
 
-		def __init__(self,cfg,message,addrlists,msghash_type,*args,**kwargs):
-
-			self.cfg = cfg
+		def __init__(self,message,addrlists,msghash_type,*args,**kwargs):
 
 			msghash_type = msghash_type or self.msg_cls.msghash_types[0]
 
@@ -128,9 +124,7 @@ class coin_msg:
 
 	class completed(base):
 
-		def __init__(self,cfg,data,infile,*args,**kwargs):
-
-			self.cfg = cfg
+		def __init__(self,data,infile,*args,**kwargs):
 
 			if data:
 				self.__dict__ = data
@@ -345,9 +339,7 @@ class coin_msg:
 
 	class exported_sigs(signed_online):
 
-		def __init__(self,cfg,infile,*args,**kwargs):
-
-			self.cfg = cfg
+		def __init__(self,infile,*args,**kwargs):
 
 			self.data = json.loads(
 				get_data_from_file(
@@ -375,7 +367,7 @@ def _get_obj(clsname,cfg,*args,coin=None,network='mainnet',infile=None,data=None
 	proto = (
 		data['proto'] if data else
 		init_proto( cfg=cfg, coin=coin, network=network ) if coin else
-		coin_msg.base(cfg=cfg).get_proto_from_file(infile) )
+		coin_msg.base.get_proto_from_file(cfg,infile) )
 
 	try:
 		msg_cls = getattr(
@@ -386,9 +378,10 @@ def _get_obj(clsname,cfg,*args,coin=None,network='mainnet',infile=None,data=None
 
 	me = MMGenObject.__new__(getattr( msg_cls, clsname, getattr(coin_msg,clsname) ))
 	me.msg_cls = msg_cls
+	me.cfg = cfg
 	me.proto = proto
 
-	me.__init__(cfg,infile=infile,data=data,*args,**kwargs)
+	me.__init__(infile=infile,data=data,*args,**kwargs)
 
 	return me
 
