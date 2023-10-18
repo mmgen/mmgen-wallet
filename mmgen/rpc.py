@@ -146,7 +146,7 @@ class RPCBackends:
 			if caller.auth_type:
 				auth = 'HTTP' + caller.auth_type.capitalize() + 'Auth'
 				self.session.auth = getattr(requests.auth,auth)(*caller.auth)
-			if self.proxy:
+			if self.proxy: # used only by XMR for now: requires pysocks package
 				self.session.proxies.update({
 					'http':  f'socks5h://{self.proxy}',
 					'https': f'socks5h://{self.proxy}'
