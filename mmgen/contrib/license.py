@@ -20,9 +20,7 @@
 contrib.license: Copyright notice and text of GPLv3
 """
 
-from ..cfg import gc
-
-warning = f"""
+warning = """
   {gc.proj_name} Copyright (C) {gc.Cdates} by {gc.author} {gc.email}.  This
   program comes with ABSOLUTELY NO WARRANTY.  This is free software, and
   you are welcome to redistribute it under certain conditions.

@@ -139,7 +139,8 @@ def do_license_msg(cfg,immed=False):
 		return
 
 	import mmgen.contrib.license as gpl
-	msg(gpl.warning)
+	from mmgen.cfg import gc
+	msg(gpl.warning.format(gc=gc))
 
 	from .term import get_char
 	prompt = "Press 'w' for conditions and warranty info, or 'c' to continue: "

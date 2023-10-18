@@ -46,19 +46,6 @@ disable = [
 	"function-redefined",
 	"method-hidden",
 ]
-# Disable these too for mostly quiet output without --errors-only:
-#	"missing-function-docstring",
-#	"missing-class-docstring",
-#	"import-outside-toplevel",
-#	"multiple-imports",
-#	"wrong-import-position",
-#	"protected-access",
-#	"invalid-name",
-#	"too-few-public-methods",
-#	"super-init-not-called",
-#	"unnecessary-lambda-assignment",
-#	"attribute-defined-outside-init",
-#	"fixme",
 
 [tool.pylint.miscellaneous]
 notes = ["FIXME", "TODO", "DEBUG", "WIP"]

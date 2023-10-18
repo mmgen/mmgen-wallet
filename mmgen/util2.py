@@ -130,7 +130,7 @@ def format_elapsed_hr(t,now=None,cached={}):
 	if not e in cached:
 		abs_e = abs(e)
 		cached[e] = ' '.join(
-			'{} {}{}'.format(n,desc,suf(n)) for desc,n in (
+			f'{n} {desc}{suf(n)}' for desc,n in (
 				('day',    abs_e // 86400),
 				('hour',   abs_e // 3600 % 24),
 				('minute', abs_e // 60 % 60),

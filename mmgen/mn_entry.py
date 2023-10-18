@@ -20,7 +20,7 @@
 mn_entry.py - Mnemonic user entry methods for the MMGen suite
 """
 
-import time
+import sys,time
 
 from .util import msg,msg_r,fmt,fmt_list,capfirst,die,ascii_lowercase
 from .term import get_char,get_char_raw
@@ -297,8 +297,7 @@ class MnemonicEntry:
 				lo = idx + 1
 
 	def get_cls_by_entry_mode(self,entry_mode):
-		import mmgen.mn_entry
-		return getattr( mmgen.mn_entry, 'MnEntryMode'+capfirst(entry_mode) )
+		return getattr(sys.modules[__name__], 'MnEntryMode' + capfirst(entry_mode))
 
 	def choose_entry_mode(self):
 		msg('Choose an entry mode:\n')
@@ -430,6 +429,5 @@ def mn_entry(cfg,wl_id,entry_mode=None):
 	me.bconv = getattr(importlib.import_module(f'mmgen.{me.modname}'),me.modname)(wl_id)
 	me.wl = me.bconv.digits
 	if entry_mode:
-		import mmgen.mn_entry
-		me.em = getattr( mmgen.mn_entry, 'MnEntryMode'+capfirst(entry_mode) )(me)
+		me.em = getattr(sys.modules[__name__], 'MnEntryMode' + capfirst(entry_mode))(me)
 	return me

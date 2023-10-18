@@ -19,7 +19,7 @@ examples/coin-daemon-info.py:
 #  Testing mode:
 #
 #   1) From the MMGen repository root, start the mainnet test suite daemons as follows
-#      (note that openethereum is the default testing daemon for ETH):
+#      (note that Geth is the default testing daemon for ETH):
 #
 #       test/start-coin-daemons.py btc ltc eth
 #

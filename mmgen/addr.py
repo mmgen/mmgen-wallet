@@ -172,13 +172,13 @@ class CoinAddr(HiliteStr,InitErrors,MMGenObject):
 		return self._parsed
 
 	@classmethod
-	def fmtc(cls,s,width,**kwargs):
-		return super().fmtc( s=s[:width-2]+'..' if len(s) > width else s, width=width, **kwargs )
+	def fmtc(cls,s,width,color=False):
+		return super().fmtc( s=s[:width-2]+'..' if len(s) > width else s, width=width, color=color )
 
-	def fmt(self,width,**kwargs):
+	def fmt(self,width,color=False):
 		return (
-			super().fmtc( s=self[:width-2]+'..', width=width, **kwargs ) if len(self) > width else
-			super().fmt( width=width, **kwargs )
+			super().fmtc( s=self[:width-2]+'..', width=width, color=color ) if len(self) > width else
+			super().fmt( width=width, color=color )
 		)
 
 def is_coin_addr(proto,s):

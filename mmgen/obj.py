@@ -284,15 +284,15 @@ class Int(int,Hilite,InitErrors):
 		except Exception as e:
 			return cls.init_fail(e,n)
 
-	def fmt(self,**kwargs):
-		return super().fmtc(self.__str__(),**kwargs)
-
 	@classmethod
-	def fmtc(cls,s,**kwargs):
-		return super().fmtc(s.__str__(),**kwargs)
+	def fmtc(cls,s,width,color=False):
+		return super().fmtc(str(s), width=width, color=color)
+
+	def fmt(self,width,color=False):
+		return super().fmtc(str(self), width=width, color=color)
 
 	def hl(self,**kwargs):
-		return super().colorize(self.__str__(),**kwargs)
+		return super().colorize(str(self), **kwargs)
 
 class NonNegativeInt(Int):
 	min_val = 0

@@ -186,7 +186,7 @@ class coin_msg:
 						yield res
 
 			hdr_data = {
-				'message':      ('Message:',           lambda v: grnbg(v) ),
+				'message':      ('Message:',           grnbg ),
 				'network':      ('Network:',           lambda v: v.replace('_',' ').upper() ),
 				'msghash_type': ('Message Hash Type:', lambda v: v ),
 				'addrlists':    ('Address Ranges:',    lambda v: fmt_list(v,fmt='bare') ),
