@@ -231,8 +231,6 @@ class GenToolMonero_python(GenTool):
 
 	def __init__(self,*args,**kwargs):
 		super().__init__(*args,**kwargs)
-		from mmgen.util import load_cryptodomex
-		load_cryptodomex()
 		try:
 			from monero.seed import Seed
 		except Exception as e:

@@ -45,9 +45,16 @@ def get_keccak(cfg=None,cached_ret=[]):
 			from .contrib.keccak import keccak_256
 		else:
 			try:
-				from sha3 import keccak_256
-			except:
-				from .contrib.keccak import keccak_256
+				from Cryptodome.Hash import keccak
+			except ImportError as e:
+				try:
+					from Crypto.Hash import keccak
+				except ImportError as e2:
+					msg(f'{e2} and {e}')
+					die('MMGenImportError',
+						'Please install the ‘pycryptodome’ or ‘pycryptodomex’ package on your system')
+			def keccak_256(data):
+				return keccak.new(data=data,digest_bytes=32)
 		cached_ret.append(keccak_256)
 
 	return cached_ret[0]

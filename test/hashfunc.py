@@ -107,23 +107,11 @@ class TestKeccak(TestHashFunc):
 
 	def __init__(self):
 		from mmgen.contrib.keccak import keccak_256
+		from mmgen.util2 import get_keccak
 		self.t_cls = keccak_256
-		from mmgen.pyversion import python_version
-		if python_version >= '3.11' or sys.platform == 'win32':
-			class hashlib:
-				@staticmethod
-				def keccak_256(data):
-					return keccak.new(data=data,digest_bytes=32)
-			from mmgen.util import load_cryptodomex
-			load_cryptodomex()
-			from Cryptodome.Hash import keccak
-			self.hashlib = hashlib
-		else:
-			try:
-				import sha3
-			except ImportError as e:
-				die(2,str(e))
-			self.hashlib = sha3
+		class hashlib:
+			keccak_256 = get_keccak()
+		self.hashlib = hashlib
 
 	def test_constants(self):
 		pass

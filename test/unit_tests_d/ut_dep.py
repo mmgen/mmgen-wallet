@@ -10,15 +10,15 @@ test.unit_tests_d.ut_dep: dependency unit tests for the MMGen suite
 import sys
 from subprocess import run,PIPE
 
-from mmgen.util import msg,ymsg,gmsg
+from mmgen.util import msg,rmsg,ymsg,gmsg
 from mmgen.exception import NoLEDSupport
 
 from ..include.common import cfg,vmsg,check_solc_ver
 
 class unit_tests:
 
-	altcoin_deps = ('pysha3','py_ecc','solc','pycryptodomex')
-	win_skip = ('pysha3','led')
+	altcoin_deps = ('py_ecc','solc','keccak','pysocks')
+	win_skip = ('led',)
 
 	def led(self,name,ut):
 		from mmgen.led import LEDControl
@@ -30,32 +30,15 @@ class unit_tests:
 			gmsg('LED support found!')
 		return True
 
-	def pysha3(self,name,ut): # ETH,XMR
-		from mmgen.pyversion import python_version
-		if python_version >= '3.11':
-			ut.skip_msg(f'Python version {python_version}')
+	def keccak(self,name,ut): # used by ETH, XMR
+		from mmgen.util2 import get_keccak
+		try:
+			get_keccak()
+		except Exception as e:
+			rmsg(str(e))
+			return False
 		else:
-			try:
-				from sha3 import keccak_256
-			except ImportError as e:
-				ymsg(str(e))
-				return False
-		return True
-
-	def pycryptodomex(self,name,ut): # ETH,XMR (keccak)
-		from mmgen.pyversion import python_version
-		if python_version >= '3.11' or sys.platform == 'win32':
-			try:
-				from mmgen.util import load_cryptodomex
-			except Exception as e:
-				msg(str(e))
-				ymsg('Please install the ‘pycryptodome’ or ‘pycryptodomex’ package on your system')
-				return False
-		elif sys.platform != 'win32':
-			ut.skip_msg(f'platform {sys.platform!r}')
-		else:
-			ut.skip_msg(f'Python version {python_version}')
-		return True
+			return True
 
 	def py_ecc(self,name,ut): # ETH
 		from py_ecc.secp256k1 import privtopub
