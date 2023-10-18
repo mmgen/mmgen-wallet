@@ -118,6 +118,13 @@ def parse_bytespec(nbytes):
 
 	die(1,f'{nbytes!r}: invalid byte specifier')
 
+def format_elapsed_days_hr(t,now=None,cached={}):
+	e = int((now or time.time()) - t)
+	if not e in cached:
+		days = abs(e) // 86400
+		cached[e] = f'{days} day{suf(days)} ' + ('ago' if e > 0 else 'in the future')
+	return cached[e]
+
 def format_elapsed_hr(t,now=None,cached={}):
 	e = int((now or time.time()) - t)
 	if not e in cached:
