@@ -19,7 +19,7 @@ from ...util import list_gen,die,contains_any
 from ...daemon import CoinDaemon,RPCDaemon,_nw,_dd
 
 class monero_daemon(CoinDaemon):
-	daemon_data = _dd('Monero', 18002002, '0.18.2.2-release')
+	daemon_data = _dd('Monero', 18003001, '0.18.3.1-release')
 	networks = ('mainnet','testnet')
 	exec_fn = 'monerod'
 	testnet_dir = 'stagenet'
@@ -89,6 +89,13 @@ class MoneroWalletDaemon(RPCDaemon):
 	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
 	_reset_ok = ('debug','wait','pids','force_kill')
 	test_suite_datadir = os.path.join('test','daemons','xmrtest','wallet_rpc')
+
+	def start(self,*args,**kwargs):
+		try: # NB: required due to bug in v18.3.1: PID file not deleted on shutdown
+			os.unlink(self.pidfile)
+		except FileNotFoundError:
+			pass
+		super().start(*args,**kwargs)
 
 	def __init__(
 			self,
