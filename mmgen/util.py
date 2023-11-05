@@ -189,6 +189,7 @@ def fmt_list(iterable,fmt='dfl',indent='',conv=None):
 		'utf8':      ( str,  ", ", "“",  "”"),
 		'bare':      ( repr, " ",  "",   ""),
 		'no_quotes': ( str,  ", ", "",   ""),
+		'compact':   ( str,  ",",  "",   ""),
 		'no_spc':    ( str,  ",",  "'",  "'"),
 		'min':       ( str,  ",",  "",   ""),
 		'repr':      ( repr, ", ", "",   ""),
@@ -205,6 +206,7 @@ def fmt_dict(mapping,fmt='dfl',kconv=None,vconv=None):
 		'square':        ( str, str,  ", ",  "'{}' [{}]" ),
 		'equal':         ( str, str,  ", ",  "'{}'={}" ),
 		'equal_spaced':  ( str, str,  ", ",  "'{}' = {}" ),
+		'equal_compact': ( str, str,  ",",   "'{}'={}" ),
 		'kwargs':        ( str, repr, ", ",  "{}={}" ),
 		'colon':         ( str, repr, ", ",  "{}:{}" ),
 	}[fmt]
