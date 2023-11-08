@@ -12,10 +12,10 @@
 proto.eth.tx.online: Ethereum online signed transaction class
 """
 
-import mmgen.tx.online as TxBase
-from .signed import Signed,TokenSigned
-from .. import erigon_sleep
 from ....util import msg,rmsg,die
+from ....tx import online as TxBase
+from .. import erigon_sleep
+from .signed import Signed,TokenSigned
 
 class OnlineSigned(Signed,TxBase.OnlineSigned):
 

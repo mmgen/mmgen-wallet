@@ -14,12 +14,12 @@ proto.eth.tx.unsigned: Ethereum unsigned transaction class
 
 import json
 
-import mmgen.tx.unsigned as TxBase
-from .completed import Completed,TokenCompleted
-from ..contract import Token
+from ....tx import unsigned as TxBase
 from ....util import msg,msg_r
 from ....obj import Str,CoinTxID,ETHNonce,Int,HexStr
 from ....addr import CoinAddr,TokenAddr
+from ..contract import Token
+from .completed import Completed,TokenCompleted
 
 class Unsigned(Completed,TxBase.Unsigned):
 	desc = 'unsigned transaction'

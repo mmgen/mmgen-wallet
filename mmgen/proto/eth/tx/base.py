@@ -14,7 +14,7 @@ proto.eth.tx.base: Ethereum base transaction class
 
 from collections import namedtuple
 
-import mmgen.tx.base as TxBase
+from ....tx import base as TxBase
 from ....obj import HexStr,Int
 
 class Base(TxBase.Base):

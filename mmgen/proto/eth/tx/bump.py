@@ -14,7 +14,7 @@ proto.eth.tx.bump: Ethereum transaction bump class
 
 from decimal import Decimal
 
-import mmgen.tx.bump as TxBase
+from ....tx import bump as TxBase
 from .completed import Completed,TokenCompleted
 from .new import New,TokenNew
 

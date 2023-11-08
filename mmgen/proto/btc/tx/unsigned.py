@@ -12,10 +12,10 @@
 proto.btc.tx.unsigned: Bitcoin unsigned transaction class
 """
 
-import mmgen.tx.unsigned as TxBase
-from .completed import Completed
+from ....tx import unsigned as TxBase
 from ....obj import CoinTxID,MMGenDict
 from ....util import msg,msg_r,ymsg,suf,die
+from .completed import Completed
 
 class Unsigned(Completed,TxBase.Unsigned):
 	desc = 'unsigned transaction'

@@ -12,10 +12,10 @@
 proto.btc.tx.bump: Bitcoin transaction bump class
 """
 
-import mmgen.tx.bump as TxBase
+from ....tx import bump as TxBase
+from ....util import msg
 from .new import New
 from .completed import Completed
-from ....util import msg
 
 class Bump(Completed,New,TxBase.Bump):
 	desc = 'fee-bumped transaction'

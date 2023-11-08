@@ -138,8 +138,8 @@ def do_license_msg(cfg,immed=False):
 	if cfg.quiet or cfg.no_license or cfg.yes or not cfg.stdin_tty:
 		return
 
-	import mmgen.contrib.license as gpl
-	from mmgen.cfg import gc
+	from .contrib import license as gpl
+	from .cfg import gc
 	msg(gpl.warning.format(gc=gc))
 
 	from .term import get_char

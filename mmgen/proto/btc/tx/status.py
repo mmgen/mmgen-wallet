@@ -14,7 +14,7 @@ proto.btc.tx.status: Bitcoin transaction status class
 
 import time
 
-import mmgen.tx.status as TxBase
+from ....tx import status as TxBase
 from ....util import msg,suf,die,secs_to_dhms
 
 class Status(TxBase.Status):

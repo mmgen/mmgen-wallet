@@ -21,7 +21,7 @@ objmethods: Mixin classes for MMGen data objects
 """
 
 import unicodedata
-import mmgen.color as color_mod
+from . import color as color_mod
 
 if 'MMGenObjectDevTools' in __builtins__: # added to builtins by devinit.init_dev()
 	MMGenObject = __builtins__['MMGenObjectDevTools']

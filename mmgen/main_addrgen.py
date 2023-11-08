@@ -21,8 +21,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
                deterministic wallet
 """
 
-import mmgen.addrlist
-
+from . import addrlist
 from .cfg import gc,Config
 from .addr import MMGenAddrType
 from .wallet import Wallet
@@ -141,7 +140,7 @@ if cfg.keygen_backend:
 	from .keygen import check_backend
 	check_backend( cfg, proto, cfg.keygen_backend, cfg.type )
 
-idxs = mmgen.addrlist.AddrIdxList( fmt_str=cfg._args.pop() )
+idxs = addrlist.AddrIdxList( fmt_str=cfg._args.pop() )
 
 from .fileutil import get_seed_file
 sf = get_seed_file(cfg,1)
@@ -158,7 +157,7 @@ if cfg.no_addresses:
 elif cfg.viewkeys:
 	gen_clsname = 'ViewKeyAddrList'
 
-al = getattr( mmgen.addrlist, gen_clsname )(
+al = getattr( addrlist, gen_clsname )(
 	cfg       = cfg,
 	proto     = proto,
 	seed      = ss_seed,

@@ -12,10 +12,10 @@
 proto.btc.tx.new: Bitcoin new transaction class
 """
 
-import mmgen.tx.new as TxBase
-from .base import Base
+from ....tx import new as TxBase
 from ....obj import MMGenTxID
 from ....util import msg,fmt,make_chksum_6,die
+from .base import Base
 
 class New(Base,TxBase.New):
 	usr_fee_prompt = 'Enter transaction fee: '

@@ -19,7 +19,7 @@ from .base import wallet
 class wallet(wallet):
 
 	def __init__(self,*args,**kwargs):
-		from mmgen.crypto import Crypto
+		from ..crypto import Crypto
 		self.crypto = Crypto(self.cfg)
 		super().__init__(*args,**kwargs)
 

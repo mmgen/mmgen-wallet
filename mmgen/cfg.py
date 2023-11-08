@@ -406,7 +406,7 @@ class Config(Lockable):
 			assert cfg is None, (
 				'Config(): ‘cfg’ cannot be used simultaneously with ' +
 				'‘opts_data’, ‘parsed_opts’ or ‘process_opts’' )
-			from mmgen.opts import UserOpts
+			from .opts import UserOpts
 			UserOpts(
 				cfg          = self,
 				opts_data    = opts_data,

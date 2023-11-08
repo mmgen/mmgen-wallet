@@ -12,7 +12,7 @@
 proto.eth.tx.status: Ethereum transaction status class
 """
 
-import mmgen.tx.status as TxBase
+from ....tx import status as TxBase
 from ....util import msg,die,suf,capfirst
 
 class Status(TxBase.Status):

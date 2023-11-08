@@ -20,7 +20,7 @@
 tool.help: Help screen routines for the 'mmgen-tool' utility
 """
 
-from mmgen import main_tool
+from .. import main_tool
 
 from .common import tool_cmd_base
 

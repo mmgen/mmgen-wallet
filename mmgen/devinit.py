@@ -29,8 +29,8 @@ devtools_funcs = {
 }
 
 def devtools_call(funcname,*args,**kwargs):
-	import mmgen.devtools
-	return getattr(mmgen.devtools,funcname)(*args,**kwargs)
+	from . import devtools
+	return getattr(devtools,funcname)(*args,**kwargs)
 
 def MMGenObject_call(methodname,*args,**kwargs):
 	from .devtools import MMGenObjectMethods

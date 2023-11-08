@@ -12,10 +12,10 @@
 proto.btc.tx.completed: Bitcoin completed transaction class
 """
 
-import mmgen.tx.completed as TxBase
-from .base import Base,scriptPubKey2addr
+from ....tx import completed as TxBase
 from ....obj import HexStr
 from ....util import msg,die
+from .base import Base,scriptPubKey2addr
 
 class Completed(Base,TxBase.Completed):
 	fn_fee_unit = 'satoshi'

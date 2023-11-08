@@ -12,9 +12,9 @@
 proto.btc.tx.signed: Bitcoin signed transaction class
 """
 
-import mmgen.tx.signed as TxBase
-from .completed import Completed
+from ....tx import signed as TxBase
 from ....util import fmt,die
+from .completed import Completed
 
 class Signed(Completed,TxBase.Signed):
 

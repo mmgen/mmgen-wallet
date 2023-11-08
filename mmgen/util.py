@@ -163,8 +163,8 @@ def die(ev,s='',stdout=False):
 		else:
 			raise MMGenError(ev,s,stdout)
 	elif isinstance(ev,str):
-		import mmgen.exception
-		raise getattr(mmgen.exception,ev)(s)
+		from . import exception
+		raise getattr(exception,ev)(s)
 	else:
 		raise ValueError(f'{ev}: exit value must be string or int instance')
 
@@ -396,10 +396,8 @@ class oneshot_warning:
 	def do(self,wcls,div,fmt_args,reverse):
 
 		def do_warning():
-			import mmgen.color
-			message = getattr(wcls,'message')
-			color = getattr( mmgen.color, getattr(wcls,'color') )
-			msg(color('WARNING: ' + message.format(*fmt_args)))
+			from . import color
+			msg(getattr(color, getattr(wcls,'color'))('WARNING: ' + getattr(wcls,'message').format(*fmt_args)))
 
 		if not hasattr(wcls,'data'):
 			setattr(wcls,'data',[])

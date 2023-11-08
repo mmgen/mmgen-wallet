@@ -14,7 +14,7 @@ proto.btc.tx.base: Bitcoin base transaction class
 
 from collections import namedtuple
 
-import mmgen.tx.base as TxBase
+from ....tx import base as TxBase
 from ....obj import MMGenList,HexStr
 from ....util import msg,make_chksum_6,die,pp_fmt
 

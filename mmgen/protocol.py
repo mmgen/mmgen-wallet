@@ -101,8 +101,8 @@ class CoinProtocol(MMGenObject):
 				self.keccak_256 = get_keccak(cfg)
 
 			if need_amt:
-				import mmgen.amt
-				self.coin_amt = getattr(mmgen.amt,self.coin_amt)
+				from . import amt
+				self.coin_amt = getattr(amt,self.coin_amt)
 				self.max_tx_fee = self.coin_amt(self.max_tx_fee) if hasattr(self,'max_tx_fee') else None
 			else:
 				self.coin_amt = None

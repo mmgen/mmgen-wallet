@@ -12,10 +12,10 @@
 proto.eth.tx.signed: Ethereum signed transaction class
 """
 
-import mmgen.tx.signed as TxBase
-from .completed import Completed,TokenCompleted
+from ....tx import signed as TxBase
 from ....obj import Str,CoinTxID,ETHNonce,HexStr
 from ....addr import CoinAddr,TokenAddr
+from .completed import Completed,TokenCompleted
 
 class Signed(Completed,TxBase.Signed):
 

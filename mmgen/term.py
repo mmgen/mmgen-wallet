@@ -294,7 +294,7 @@ def init_term(cfg,noecho=False):
 
 	term.init(noecho=noecho)
 
-	import mmgen.term as self
+	from . import term as self
 	for var in ('get_char','get_char_raw','kb_hold_protect','get_terminal_size'):
 		setattr( self, var, getattr(term,var) )
 

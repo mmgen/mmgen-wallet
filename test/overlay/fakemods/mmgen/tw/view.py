@@ -1,5 +1,5 @@
 import os as overlay_fake_os
-import mmgen.tw.view_orig as overlay_fake_orig_mod
+from . import view_orig as overlay_fake_orig_mod
 
 from .view_orig import *
 

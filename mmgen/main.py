@@ -54,7 +54,7 @@ def launch(mod,package='mmgen'):
 			errmsg = repr(e.args[0])
 
 		from collections import namedtuple
-		from mmgen.color import nocolor,yellow,red
+		from .color import nocolor,yellow,red
 
 		_o = namedtuple('exit_data',['color','exit_val','fs'])
 		d = {
@@ -76,6 +76,6 @@ def launch(mod,package='mmgen'):
 
 	except SystemExit as e:
 		if os.getenv('MMGEN_EXEC_WRAPPER') and e.code != 0:
-			from mmgen.color import red
+			from .color import red
 			sys.stdout.write(red(f'{type(e).__name__}: {e}\n'))
 		raise

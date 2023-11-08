@@ -12,7 +12,7 @@
 proto.eth.tx.completed: Ethereum completed transaction class
 """
 
-import mmgen.tx.completed as TxBase
+from ....tx import completed as TxBase
 from .base import Base,TokenBase
 
 class Completed(Base,TxBase.Completed):

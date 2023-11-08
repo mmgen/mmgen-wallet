@@ -405,8 +405,8 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 	@property
 	def file(self):
 		if not hasattr(self,'_file'):
-			import mmgen.addrfile as mod
-			self._file = getattr( mod, type(self).__name__.replace('List','File') )(self)
+			from . import addrfile
+			self._file = getattr( addrfile, type(self).__name__.replace('List','File') )(self)
 		return self._file
 
 class KeyAddrList(AddrList):
