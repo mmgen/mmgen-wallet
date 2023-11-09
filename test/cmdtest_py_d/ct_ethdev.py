@@ -73,16 +73,28 @@ amt2 = '888.111122223333444455'
 
 parity_devkey_fn = 'parity.devkey'
 
-vbal1 = '1.2288409'
-vbal9 = '1.22626295'
-vbal2 = '99.997088755'
-vbal3 = '1.23142525'
-vbal4 = '127.0287909'
-vbal5 = '1000126.14828654512345678'
-vbal6 = '1000126.14933654512345678'
-vbal7 = '1000124.91944564512345678'
+def set_vbals(daemon_id):
+	global vbal1, vbal2, vbal3, vbal4, vbal5, vbal6, vbal7, vbal9
+	if daemon_id == 'geth':
+		vbal1 = '1.2288347'
+		vbal2 = '99.996561415'
+		vbal3 = '1.23141825'
+		vbal4 = '127.0287847'
+		vbal5 = '1000126.14775300512345678'
+		vbal6 = '1000126.14880300512345678'
+		vbal7 = '1000124.91891830512345678'
+		vbal9 = '1.22625235'
+	else:
+		vbal1 = '1.2288409'
+		vbal2 = '99.997088755'
+		vbal3 = '1.23142525'
+		vbal4 = '127.0287909'
+		vbal5 = '1000126.14828654512345678'
+		vbal6 = '1000126.14933654512345678'
+		vbal7 = '1000124.91944564512345678'
+		vbal9 = '1.22626295'
 
-bals = {
+bals = lambda k: {
 	'1': [  ('98831F3A:E:1','123.456')],
 	'2': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234')],
 	'3': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234'),('98831F3A:E:21','2.345')],
@@ -114,9 +126,9 @@ bals = {
 			('98831F3A:E:12',vbal2),
 			('98831F3A:E:21','2.345'),
 			(burn_addr + r'\s+non-MMGen',amt1)]
-}
+}[k]
 
-token_bals = {
+token_bals = lambda k: {
 	'1': [  ('98831F3A:E:11','1000','1.234')],
 	'2': [  ('98831F3A:E:11','998.76544',vbal3,'a1'),
 			('98831F3A:E:12','1.23456','0')],
@@ -136,11 +148,12 @@ token_bals = {
 			('98831F3A:E:12','43.21',vbal2),
 			('98831F3A:E:13','1.23456','0'),
 			(burn_addr + r'\s+non-MMGen',amt2,amt1)]
-}
-token_bals_getbalance = {
+}[k]
+
+token_bals_getbalance = lambda k: {
 	'1': (vbal4,'999999.12345689012345678'),
 	'2': ('111.888877776666555545','888.111122223333444455')
-}
+}[k]
 
 coin = cfg.coin
 
@@ -393,6 +406,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		from mmgen.daemon import CoinDaemon
 		self.daemon = CoinDaemon( cfg, self.proto.coin+'_rt', test_suite=True )
 
+		set_vbals(self.daemon.id)
+
 		self.using_solc = check_solc_ver()
 		if not self.using_solc:
 			omsg(yellow('Using precompiled contract data'))
@@ -503,16 +518,32 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 					'byzantiumBlock': 0,
 					'constantinopleBlock': 0,
 					'petersburgBlock': 0,
-					'clique': {
-						'period': 0,
-						'epoch': 30000
-					}
+					'istanbulBlock': 0,
+					'muirGlacierBlock': 0,
+					'berlinBlock': 0,
+					'londonBlock': 0,
+					'arrowGlacierBlock': 0,
+					'grayGlacierBlock': 0,
+					'shanghaiTime': 0,
+					'terminalTotalDifficulty': 0,
+					'terminalTotalDifficultyPassed': True,
+					'isDev': True
 				},
-				'difficulty': '1',
-				'gasLimit': '8000000',
-				'extradata': '0x' + 64*'0' + signer_addr + 130*'0',
+				'nonce': '0x0',
+				'timestamp': '0x0',
+				'extraData': '0x',
+				'gasLimit': '0xaf79e0',
+				'difficulty': '0x0',
+				'mixHash': '0x0000000000000000000000000000000000000000000000000000000000000000',
+				'coinbase': '0x0000000000000000000000000000000000000000',
+				'number': '0x0',
+				'gasUsed': '0x0',
+				'parentHash': '0x0000000000000000000000000000000000000000000000000000000000000000',
+				'baseFeePerGas': '0x3b9aca00',
+				'excessBlobGas': None,
+				'blobGasUsed': None,
 				'alloc': {
-					prealloc_addr: { 'balance': str(prealloc_amt.toWei()) }
+					prealloc_addr: { 'balance': hex(prealloc_amt.toWei()) }
 				}
 			}
 
@@ -853,7 +884,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def bal(self,n):
 		t = self.spawn('mmgen-tool', self.eth_args + ['twview','wide=1'])
 		text = t.read(strip_color=True)
-		for b in bals[n]:
+		for b in bals(n):
 			addr,amt,adj = b if len(b) == 3 else b + (False,)
 			if adj and self.proto.coin == 'ETC':
 				amt = str(Decimal(amt) + Decimal(adj[1]) * self.bal_corr)
@@ -866,7 +897,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def token_bal(self,n=None):
 		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1','twview','wide=1'])
 		text = t.read(strip_color=True)
-		for b in token_bals[n]:
+		for b in token_bals(n):
 			addr,_amt1,_amt2,adj = b if len(b) == 4 else b + (False,)
 			if adj and self.proto.coin == 'ETC':
 				_amt2 = str(Decimal(_amt2) + Decimal(adj[1]) * self.bal_corr)
@@ -877,8 +908,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		return t
 
 	def bal_getbalance(self,sid,idx,etc_adj=False,extra_args=[]):
-		bal1 = token_bals_getbalance[idx][0]
-		bal2 = token_bals_getbalance[idx][1]
+		bal1 = token_bals_getbalance(idx)[0]
+		bal2 = token_bals_getbalance(idx)[1]
 		bal1 = Decimal(bal1)
 		if etc_adj and self.proto.coin == 'ETC':
 			bal1 += self.bal_corr
@@ -1264,13 +1295,15 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		self._do_confirm_send(t,quiet=not cfg.debug,sure=False)
 		return t
 
-	def txcreate_refresh_balances(
-			self,
+	def txcreate_refresh_balances(self):
+		return self._txcreate_refresh_balances(
 			bals       = ['2','3'],
 			args       = ['-B','--cached-balances','-i'],
 			total      = vbal5,
 			adj_total  = True,
-			total_coin = None):
+			total_coin = None)
+
+	def _txcreate_refresh_balances(self,bals,args,total,adj_total,total_coin):
 
 		if total_coin is None:
 			total_coin = self.proto.coin
@@ -1296,7 +1329,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			add_args      = ['--token=mm1','98831F3A:E:12,43.21'] )
 
 	def token_txcreate_refresh_balances(self):
-		return self.txcreate_refresh_balances(
+		return self._txcreate_refresh_balances(
 			bals       = ['1','2'],
 			args       = ['--token=mm1','-B','--cached-balances','-i'],
 			total      = '1000',
