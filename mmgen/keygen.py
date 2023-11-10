@@ -44,7 +44,7 @@ class keygen_base:
 		return None
 
 	@classmethod
-	def test_avail(cls,cfg,silent=False):
+	def get_clsname(cls,cfg,silent=False):
 		return cls.__name__
 
 backend_data = {
@@ -119,6 +119,6 @@ def KeyGenerator(cfg,proto,pubkey_type,backend=None,silent=False):
 	backend_clsname = getattr(
 		pubkey_type_cls,
 		backend_id.replace('-','_')
-			).test_avail(cfg,silent=silent)
+			).get_clsname(cfg,silent=silent)
 
 	return getattr(pubkey_type_cls,backend_clsname)(cfg)
