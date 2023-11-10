@@ -2,6 +2,8 @@
 
 ##### An online/offline cryptocurrency wallet for the command line
 
+![Pylint](https://github.com/mmgen/mmgen/workflows/Pylint/badge.svg)
+
 ### Description
 
 MMGen is a wallet and cold storage solution for Bitcoin (and selected altcoins)
