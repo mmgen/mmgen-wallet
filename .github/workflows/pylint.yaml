@@ -1,6 +1,10 @@
-name: Pylint
+name: pylint
 
-on: push
+on:
+  push:
+    paths:
+      - '.github/workflows/pylint.yaml'
+      - '**.py'
 
 jobs:
   test:
@@ -11,12 +15,18 @@ jobs:
         python-version: ["3.9","3.10","3.11"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          setup.cfg
+          eth-requirements.txt
+          xmr-requirements.txt
+          test-requirements.txt
 
     - name: Install Python dependencies
       run: |
@@ -24,9 +34,10 @@ jobs:
         python3 -m pip install pycryptodomex pysocks pycoin ipaddress varint pylint
         python3 -m pip install --no-deps py_ecc==1.6.0 mypy_extensions==0.4.1 monero
 
-    - name: Check the code with pylint static code analyzer
+    - name: Check the code with Pylint static code analyzer
+      env:
+        PYTHONPATH: .
       run: |
-        export PYTHONPATH=.
         pylint --errors-only mmgen
         pylint --errors-only test
         pylint --errors-only --disable=relative-beyond-top-level test/cmdtest_py_d

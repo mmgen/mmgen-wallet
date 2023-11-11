@@ -1,0 +1,42 @@
+name: build
+
+on:
+  push:
+    paths:
+      - '.github/workflows/build.yaml'
+      - '**.py'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.9","3.10","3.11"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache libsecp256k1 repository
+      id: cache-libsecp256k1
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-libsecp256k1
+      with:
+        path: ~/.cache/mmgen/secp256k1
+        key: ${{ runner.os }}-build-${{ env.cache-name }}
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          .github/build-requirements.txt
+          setup.cfg
+
+    - name: Build and install MMGen Wallet
+      run: |
+        python3 -m pip install build wheel
+        python3 -m build --no-isolation
+        python3 -m pip install --user --break-system-packages dist/*.whl

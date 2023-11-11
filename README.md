@@ -2,7 +2,8 @@
 
 ##### An online/offline cryptocurrency wallet for the command line
 
-![Pylint](https://github.com/mmgen/mmgen/workflows/Pylint/badge.svg)
+![build](https://github.com/mmgen/mmgen/workflows/build/badge.svg)
+![pylint](https://github.com/mmgen/mmgen/workflows/pylint/badge.svg)
 
 ### Description
 
