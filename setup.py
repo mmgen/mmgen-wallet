@@ -8,6 +8,10 @@
 #   https://github.com/mmgen/mmgen
 #   https://gitlab.com/mmgen/mmgen
 
+# MSYS2 Note (2023-10-26):
+#   mingw-w64-ucrt-x86_64-python package is missing static lib, so we must build dynamic extmod
+#   linked to installed libsecp256k1
+
 import os,platform
 from pathlib import Path
 from subprocess import run,PIPE
@@ -22,9 +26,18 @@ home = Path(os.environ['HOME'])
 cache_path = home.joinpath('.cache','mmgen')
 src_path   = home.joinpath('.cache','mmgen','secp256k1')
 
-lib_file = src_path.joinpath('.libs', 'libsecp256k1.a')
+if have_msys2:
+	root = Path().resolve().anchor
+	installed_lib_file = Path(root, 'msys64', 'ucrt64', 'lib', 'libsecp256k1.dll.a')
+	lib_file = src_path.joinpath('.libs', 'libsecp256k1.dll.a')
+else:
+	installed_lib_file = None
+	lib_file = src_path.joinpath('.libs', 'libsecp256k1.a')
 
 def build_libsecp256k1():
+
+	if installed_lib_file and installed_lib_file.exists(): # see ‘MSYS2 Note’ above
+		return
 
 	def fix_broken_aclocal_path():
 		os.environ['ACLOCAL_PATH'] = '/C/msys64/ucrt64/share/aclocal:/C/msys64/usr/share/aclocal'
@@ -57,6 +70,9 @@ def build_libsecp256k1():
 			print('Executing {}'.format(' '.join(cmd)))
 			run(cmd,check=True,cwd=src_path)
 
+	if installed_lib_file and not installed_lib_file.exists(): # see ‘MSYS2 Note’ above
+		run(['mingw32-make','install','MAKE=mingw32-make'],check=True,cwd=src_path)
+
 class my_build_ext(build_ext):
 	def build_extension(self,ext):
 		build_libsecp256k1()
@@ -70,5 +86,7 @@ setup(
 		libraries          = ['gmp'] if have_msys2 else [],
 		include_dirs       = [str(src_path.joinpath('include'))],
 		extra_objects      = [str(lib_file)],
+		extra_compile_args = ['-shared'] if have_msys2 else [],
+		extra_link_args    = ['-shared'] if have_msys2 else [],
 	)]
 )
