@@ -17,14 +17,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Cache libsecp256k1 repository
-      id: cache-libsecp256k1
-      uses: actions/cache@v3
-      env:
-        cache-name: cache-libsecp256k1
-      with:
-        path: ~/.cache/mmgen/secp256k1
-        key: ${{ runner.os }}-build-${{ env.cache-name }}
+    - name: Install Ubuntu package dependencies
+      run: |
+        sudo apt-get install libsecp256k1-dev
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
