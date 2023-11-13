@@ -8,13 +8,21 @@
 #   https://github.com/mmgen/mmgen
 #   https://gitlab.com/mmgen/mmgen
 
-import os
+import os,platform
+from pathlib import Path
 from subprocess import run,PIPE
 from setuptools import setup,Extension
 from setuptools.command.build_ext import build_ext
 
-cache_path = os.path.join(os.environ['HOME'],'.cache','mmgen')
-ext_path = os.path.join(cache_path,'secp256k1')
+have_arm   = platform.uname().machine in ('aarch64','armv7l') # x86_64 (linux), AMD64 (win), aarch64, armv7l
+have_msys2 = platform.system() == 'Windows'
+
+home = Path(os.environ['HOME'])
+
+cache_path = home.joinpath('.cache','mmgen')
+src_path   = home.joinpath('.cache','mmgen','secp256k1')
+
+lib_file = src_path.joinpath('.libs', 'libsecp256k1.a')
 
 def build_libsecp256k1():
 
@@ -31,21 +39,19 @@ def build_libsecp256k1():
 	def fix_broken_aclocal_path():
 		os.environ['ACLOCAL_PATH'] = '/ucrt64/share/aclocal:/usr/share/aclocal'
 
-	import platform
-	if platform.system() == 'Windows':
+	if have_msys2:
 		fix_broken_libpython_fn()
-		if os.getenv('MSYSTEM') == 'UCRT64':
-			fix_broken_aclocal_path()
+		fix_broken_aclocal_path()
 
-	if not os.path.exists(cache_path):
-		os.makedirs(cache_path)
+	if not cache_path.exists():
+		cache_path.mkdir(parents=True)
 
-	if not os.path.exists(ext_path):
+	if not src_path.exists():
 		print('\nCloning libsecp256k1')
 		run(['git','clone','https://github.com/bitcoin-core/secp256k1.git'],check=True,cwd=cache_path)
 
-	if not os.path.exists(os.path.join(ext_path,'.libs/libsecp256k1.a')):
-		print('\nBuilding libsecp256k1')
+	if not lib_file.exists():
+		print(f'\nBuilding libsecp256k1 (cwd={str(src_path)})')
 		cmds = {
 			'Windows': (
 				['sh','./autogen.sh'],
@@ -60,12 +66,7 @@ def build_libsecp256k1():
 		}[platform.system()]
 		for cmd in cmds:
 			print('Executing {}'.format(' '.join(cmd)))
-			run(cmd,check=True,cwd=ext_path)
-
-uname = {k:run(['uname',f'-{k}'],stdout=PIPE,check=True).stdout.strip().decode() for k in ('m','s')}
-
-have_arm   = uname['m'] in ('aarch64','armv7l') # x86_64, aarch64, armv7l
-have_msys2 = uname['s'].startswith('MSYS_NT')   # Linux, MSYS_NT.*
+			run(cmd,check=True,cwd=src_path)
 
 class my_build_ext(build_ext):
 	def build_extension(self,ext):
@@ -75,10 +76,10 @@ class my_build_ext(build_ext):
 setup(
 	cmdclass = { 'build_ext': my_build_ext },
 	ext_modules = [Extension(
-		name          = 'mmgen.proto.secp256k1.secp256k1',
-		sources       = ['extmod/secp256k1mod.c'],
-		libraries     = ([],['gmp'])[have_msys2],
-		extra_objects = [os.path.join(ext_path,'.libs/libsecp256k1.a')],
-		include_dirs  = [os.path.join(ext_path,'include')],
+		name               = 'mmgen.proto.secp256k1.secp256k1',
+		sources            = ['extmod/secp256k1mod.c'],
+		libraries          = ['gmp'] if have_msys2 else [],
+		include_dirs       = [str(src_path.joinpath('include'))],
+		extra_objects      = [str(lib_file)],
 	)]
 )
