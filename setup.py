@@ -26,21 +26,10 @@ lib_file = src_path.joinpath('.libs', 'libsecp256k1.a')
 
 def build_libsecp256k1():
 
-	def fix_broken_libpython_fn():
-		from pathlib import Path
-		path = Path(Path().resolve().anchor) / 'msys64/mingw64/lib'
-		old = path / 'libpython3.10.dll.a'
-		new = path / 'libpython310.dll.a'
-		if old.exists() and not new.exists():
-			import shutil
-			print(f'Fixing broken library filename: {old.name!r} -> {new.name!r}')
-			shutil.copy2(old,new)
-
 	def fix_broken_aclocal_path():
-		os.environ['ACLOCAL_PATH'] = '/ucrt64/share/aclocal:/usr/share/aclocal'
+		os.environ['ACLOCAL_PATH'] = '/C/msys64/ucrt64/share/aclocal:/C/msys64/usr/share/aclocal'
 
 	if have_msys2:
-		fix_broken_libpython_fn()
 		fix_broken_aclocal_path()
 
 	if not cache_path.exists():
