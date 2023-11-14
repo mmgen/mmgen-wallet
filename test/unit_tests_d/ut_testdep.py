@@ -46,6 +46,8 @@ class unit_tests:
 		return True
 
 	def monero_python(self,name,ut):
+		from mmgen.util2 import load_cryptodomex
+		load_cryptodomex()
 		from monero.seed import Seed
 		Seed('deadbeef' * 8).public_address()
 		return True

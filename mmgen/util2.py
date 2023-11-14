@@ -36,6 +36,19 @@ def removeprefix(s,pfx): # workaround for pre-Python 3.9
 def removesuffix(s,sfx): # workaround for pre-Python 3.9
 	return s[:-len(sfx)] if s.endswith(sfx) else s
 
+# monkey-patch function for monero-python: permits its use with pycryptodome (e.g. MSYS2)
+# instead of the expected pycryptodomex
+def load_cryptodomex():
+	try:
+		import Cryptodome # cryptodomex
+	except ImportError:
+		try:
+			import Crypto # cryptodome
+		except ImportError:
+			die(2,'Unable to import either the ‘pycryptodomex’ or ‘pycryptodome’ package')
+		else:
+			sys.modules['Cryptodome'] = Crypto
+
 # called with no arguments by pyethereum.utils:
 def get_keccak(cfg=None,cached_ret=[]):
 
