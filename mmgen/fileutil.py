@@ -38,12 +38,13 @@ def check_or_create_dir(path):
 		os.listdir(path)
 	except:
 		if os.getenv('MMGEN_TEST_SUITE'):
-			from subprocess import run
-			run([
-				('rm' if sys.platform == 'win32' else '/bin/rm'),
-				'-rf',
-				path ])
-			set_vt100()
+			if os.path.exists(path): # path is a link or regular file
+				from subprocess import run
+				run([
+					('rm' if sys.platform == 'win32' else '/bin/rm'),
+					'-rf',
+					path ])
+				set_vt100()
 		try:
 			os.makedirs(path,0o700)
 		except:

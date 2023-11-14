@@ -84,8 +84,15 @@ def init_color(num_colors='auto'):
 
 	if num_colors == 'auto':
 		import os
-		t = os.getenv('TERM')
-		num_colors = 256 if (t and t.endswith('256color')) or get_terminfo_colors() == 256 else 16
+		if sys.platform == 'win32':
+			# Force 256-color for MSYS2: terminal supports it, however infocmp reports 8-color.
+			# We also avoid spawning a subprocess, leading to a subsequent OSError 22 when testing
+			# with pexpect spawn.
+			num_colors = 256
+		elif (t := os.getenv('TERM')) and t.endswith('256color'):
+			num_colors = 256
+		else:
+			num_colors = get_terminfo_colors() or 16
 
 	reset = '\033[0m'
 	if num_colors == 0:

@@ -309,14 +309,19 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 		if trunner is None or self.proto.coin.lower() not in self.networks:
 			return
-		self.rpc = async_run(rpc_init(cfg,self.proto))
-		self.lbl_id = ('account','label')['label_api' in self.rpc.caps]
 		if self.proto.coin in ('BTC','BCH','LTC'):
 			self.tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[self.proto.coin.lower()]
 			self.txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[self.proto.coin.lower()]
 
 		self.unspent_data_file = joinpath('test','trash','unspent.json')
 		self.spawn_env['MMGEN_BOGUS_UNSPENT_DATA'] = self.unspent_data_file
+
+	@property
+	def lbl_id(self):
+		if not hasattr(self,'_lbl_id'):
+			rpc = async_run(rpc_init(cfg,self.proto))
+			self._lbl_id = ('account','label')['label_api' in rpc.caps]
+		return self._lbl_id
 
 	def _get_addrfile_checksum(self,display=False):
 		addrfile = self.get_file_with_ext('addrs')
