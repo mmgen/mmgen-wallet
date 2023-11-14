@@ -60,7 +60,12 @@ if platform.system() == 'Windows':
 else:
 	libraries     = []
 	include_dirs  = []
-	extra_objects = []
+	out = run(['/sbin/ldconfig','-p'],stdout=PIPE,text=True,check=True).stdout.splitlines()
+	import sys,re
+	extra_objects = [s.split()[-1] for s in out if re.search(r'libsecp256k1.*\.so$',s)]
+	if not extra_objects:
+		print('setup.py: unable to find shared libsecp256k1 library. Is it installed on your system?')
+		sys.exit(1)
 
 setup(
 	cmdclass = { 'build_ext': my_build_ext },
