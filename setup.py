@@ -16,6 +16,10 @@ from setuptools.command.build_ext import build_ext
 
 def build_libsecp256k1():
 
+	home          = Path(os.environ['HOME'])
+	cache_path    = home.joinpath('.cache','mmgen')
+	src_path      = home.joinpath('.cache','mmgen','secp256k1')
+	lib_file      = src_path.joinpath('.libs', 'libsecp256k1.dll.a')
 	root = Path().resolve().anchor
 	installed_lib_file = Path(root, 'msys64', 'ucrt64', 'lib', 'libsecp256k1.dll.a')
 
@@ -49,31 +53,11 @@ class my_build_ext(build_ext):
 			build_libsecp256k1()
 		build_ext.build_extension(self,ext)
 
-if platform.system() == 'Windows':
-	home          = Path(os.environ['HOME'])
-	cache_path    = home.joinpath('.cache','mmgen')
-	src_path      = home.joinpath('.cache','mmgen','secp256k1')
-	lib_file      = src_path.joinpath('.libs', 'libsecp256k1.dll.a')
-	libraries     = ['gmp']
-	include_dirs  = [str(src_path.joinpath('include'))]
-	extra_objects = [str(lib_file)]
-else:
-	libraries     = []
-	include_dirs  = []
-	out = run(['/sbin/ldconfig','-p'],stdout=PIPE,text=True,check=True).stdout.splitlines()
-	import sys,re
-	extra_objects = [s.split()[-1] for s in out if re.search(r'libsecp256k1.*\.so$',s)]
-	if not extra_objects:
-		print('setup.py: unable to find shared libsecp256k1 library. Is it installed on your system?')
-		sys.exit(1)
-
 setup(
 	cmdclass = { 'build_ext': my_build_ext },
 	ext_modules = [Extension(
-		name           = 'mmgen.proto.secp256k1.secp256k1',
-		sources        = ['extmod/secp256k1mod.c'],
-		libraries      = libraries,
-		include_dirs   = include_dirs,
-		extra_objects  = extra_objects,
+		name      = 'mmgen.proto.secp256k1.secp256k1',
+		sources   = ['extmod/secp256k1mod.c'],
+		libraries = ['gmp','secp256k1'] if platform.system() == 'Windows' else ['secp256k1']
 	)]
 )
