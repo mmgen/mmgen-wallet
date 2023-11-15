@@ -434,7 +434,8 @@ class CmdTestXMRWallet(CmdTestBase):
 		self.spawn('', msg_only=True, extra_desc='(opening wallet)')
 		await self.open_wallet_user('miner',1)
 		ok()
-		return await self.mine_chk('miner',1,0,lambda x: x.ub > 20,'unlocked balance > 20')
+		# NB: a large balance is required to avoid ‘insufficient outputs’ error
+		return await self.mine_chk('miner',1,0,lambda x: x.ub > 2000,'unlocked balance > 2000')
 
 	async def fund_alice(self,wallet=1,check_bal=True):
 		self.spawn('', msg_only=True, extra_desc='(transferring funds from Miner wallet)')
@@ -735,12 +736,13 @@ class CmdTestXMRWallet(CmdTestBase):
 		addr = read_from_file(data.addrfile_fs.format(1)) # mine to wallet #1, account 0
 
 		for _ in range(20):
+			# NB: threads_count > 1 provides no benefit and leads to connection errors with MSWin/MSYS2
 			ret = data.md_rpc.call_raw(
 				'start_mining',
 				do_background_mining = False, # run mining in background or foreground
 				ignore_battery       = True,  # ignore battery state (on laptop)
 				miner_address        = addr,  # account address to mine to
-				threads_count        = 3 )    # number of mining threads to run
+				threads_count        = 1 )    # number of mining threads to run
 			status = self.get_status(ret)
 			if status == 'OK':
 				return True
@@ -839,24 +841,27 @@ class CmdTestXMRWallet(CmdTestBase):
 		h = await self._get_height()
 		imsg_r(f'Chain height: {h} ')
 
-		max_iterations,height_threshold = (300,80) if sys.platform == 'win32' else (50,300)
+		max_iterations,min_height = (300,64) if sys.platform == 'win32' else (50,300)
+		verbose = False
 
 		for count in range(max_iterations):
 			bal_info = await get_balance(dest,count)
-			if h > height_threshold and (
-						dest.test(bal_info) is True or (chk_bal_chg and bal_info.ub != bal_info_start.ub)
-					):
-				imsg('')
-				oqmsg_r('+')
-				print_balance(dest,bal_info)
-				if dest.test2:
-					assert dest.test2(bal_info) is True, f'test failed: {dest.test2_desc} ({bal_info})'
-				break
+			if h > min_height:
+				if dest.test(bal_info) is True or (chk_bal_chg and bal_info.ub != bal_info_start.ub):
+					imsg('')
+					oqmsg_r('+')
+					print_balance(dest,bal_info)
+					if dest.test2:
+						assert dest.test2(bal_info) is True, f'test failed: {dest.test2_desc} ({bal_info})'
+					break
 			await asyncio.sleep(2)
 			h = await self._get_height()
 			if count > 12: # something might have gone wrong, so be more verbose
-				imsg(f'Height: {h} ')
+				if not verbose:
+					imsg('')
+				imsg_r(f'Height: {h}, ')
 				print_balance(dest,bal_info)
+				verbose = True
 			else:
 				imsg_r(f'{h} ')
 				oqmsg_r('+')
