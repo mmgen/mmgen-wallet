@@ -2,16 +2,16 @@
 
 In addition to low-level subsystems, the suite tests the overall operation of
 MMGen’s commands by running them interactively as a user would.  Thus the test
-suite is useful not only for ensuring the MMGen system is correctly installed
-and working on your platform but also for learning how it works.
+suite is useful not only for ensuring the MMGen Wallet system is correctly
+installed and working on your platform but also for demonstrating how it works.
 
-BTC-only testing requires only Bitcoin Core to be installed.  Altcoin testing
-requires various helper programs and libraries.  Installation instructions for
-these are provided below.  Non-standard RPC ports and data directories are
-always used, so there’s no need to stop your running node or nodes.
+BTC-only testing requires installation of Bitcoin Core and pycoin only, while
+altcoin testing requires additional helper programs and libraries, installation
+instructions for which are provided below.  Non-standard RPC ports and data
+directories are always used, so there’s no need to stop any running nodes.
 
 On Linux/x86\_64 with a reasonably fast processor, the full suite should run in
-under 15 minutes when invoked with the `-F` option.  Execution times on other
+under 20 minutes when invoked with the `-F` option.  Execution times on other
 platforms may be much slower.
 
 ## Quick start
@@ -63,7 +63,13 @@ $ python3 -m pip download pycoin # online
 $ python3 -m pip install --user --no-build-isolation pycoin-*.tar.gz # offline
 ```
 
-CD to the MMGen repository root and build without installing:
+Install Pylint:
+
+```text
+$ python3 -m pip install --user pylint
+```
+
+CD to the MMGen Wallet repository root and build without installing:
 
 ```text
 $ cd path/to/mmgen/repo
@@ -73,7 +79,7 @@ $ python3 setup.py build_ext --inplace
 Run the following if upgrading from a previous version of MMGen:
 
 ```text
-$ test/test.py clean
+$ test/cmdtest.py clean
 ```
 
 Run the test suite in fast mode, skipping altcoin tests:
@@ -89,9 +95,9 @@ Complete the BTC-only installation steps above, without running the test.
 Make sure the [Bitcoin Cash Node][cnd], [Litecoin][ld] and [Monero][md]
 daemons are installed on your system.
 
-Install [OpenEthereum, Parity, Geth, the Ethereum dependencies][oe] and
-optionally the [Solidity compiler][sc] as described on the
-Altcoin-and-Forkcoin-Support page.
+Install [Parity, Geth and the ETH Python requirements][oe], optionally the
+[Solidity compiler][sc], and [the XMR Python requirements][xr] as described on
+the Altcoin-and-Forkcoin-Support page.
 
 In addition, you must install the following helper programs and libraries (MSYS2
 users can omit Zcash-Mini and leave out `sudo` in commands):
@@ -110,8 +116,8 @@ system32> net user administrator /active:yes
 system32> C:\\msys64\usr\bin\bash.exe --login
 ```
 
-Now, at the MSYS2 prompt, cd to the MMGen repository root and run the setup
-script:
+Now, at the MSYS2 prompt, cd to the MMGen Wallet repository root and run the
+setup script:
 
 ```text
 $ scripts/msys2-sshd-setup.sh
@@ -196,10 +202,10 @@ The test scripts themselves are all located in the `test/` directory and bear
 the `.py` extension.  They may be run individually if desired.  Options and
 arguments required by the tests are described in detail on their help screens.
 
-High-level testing of the MMGen system is performed by `test/test.py`, which
-uses the `pexpect` library to simulate interactive operation of MMGen user
-commands.  Running `test/test.py` with the `-e` option will display the
-commands’ output on the screen as they’re being run.
+High-level testing of the MMGen Wallet system is performed by `test/cmdtest.py`,
+which uses the `pexpect` library to simulate interactive operation of MMGen
+Wallet’s user commands.  Running `test/cmdtest.py` with the `-e` option will
+display the commands’ output on the screen as they’re being run.
 
 | Test                  | What it tests                                        |
 |:----------------------|:-----------------------------------------------------|
@@ -209,17 +215,18 @@ commands’ output on the screen as they’re being run.
 | `test/objtest.py`     | MMGen data objects - creation and error handling     |
 | `test/objattrtest.py` | MMGen data objects - immutable attributes            |
 | `test/scrambletest.py`| HMAC scramble strings used in key/password derivation|
-| `test/test.py`        | overall operation of MMGen commands                  |
+| `test/cmdtest.py`     | overall operation of MMGen Wallet commands           |
 | `test/tooltest.py`    | the `mmgen-tool` utility - overall operation         |
 | `test/tooltest2.py`   | the `mmgen-tool` utility - data validity             |
 | `test/unit_tests.py`  | low-level subsystems                                 |
 
-[sd]: Install-Bitcoind-from-Source-on-Debian-or-Ubuntu-Linux
+[sd]: Install-Bitcoind-from-Source-on-Linux
 [bd]: Install-Bitcoind
 [md]: https://getmonero.org/downloads/#linux
 [ad]: https://download.bitcoinabc.org/
 [cnd]: https://bitcoincashnode.org/
 [ld]: https://download.litecoin.org/litecoin-0.17.1/
-[oe]: Altcoin-and-Forkcoin-Support#a_oe
+[oe]: Altcoin-and-Forkcoin-Support#a_ed
 [sc]: Altcoin-and-Forkcoin-Support#a_dt
+[xr]: Altcoin-and-Forkcoin-Support#a_xmr_req
 [oz]: https://github.com/openethereum/openethereum/releases/tag/v3.1.0

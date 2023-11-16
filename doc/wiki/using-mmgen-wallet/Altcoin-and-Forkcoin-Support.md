@@ -20,27 +20,28 @@
 
 Depending on your setup, the instructions on this page may apply to your
 offline machine, your online machine, or both.  If you’re confused as to
-which, please familiarize yourself with the basics of MMGen by reading the
-[**Getting Started**][gs] guide.
+which, please familiarize yourself with the basics of MMGen Wallet by
+reading the [**Getting Started**][gs] guide.
 
 ### <a id="a_eth">Ethereum (ETH), Ethereum Classic (ETC) and ERC20 Tokens</a>
 
-MMGen supports all operations for Ethereum, Ethereum Classic and ERC20 tokens.
-In addition, ERC20 token creation and deployment are supported via the
+MMGen Wallet supports all operations for Ethereum, Ethereum Classic and ERC20
+tokens.  In addition, ERC20 token creation and deployment are supported via the
 `create-token.py` script.
 
 #### <a id="a_ed">Install the Ethereum dependencies</a>
 
-From the MMGen repository root, type:
+From the MMGen Wallet repository root, type:
 
 ```text
-$ python3 -m pip install --no-deps --user -r eth-requirements.txt
+$ python3 -m pip install -r alt-requirements.txt # skip this for MSYS2
+$ python3 -m pip install --no-deps -r eth-requirements.txt
 ```
 
 #### <a id="a_geth">Install and run Geth or Parity</a>
 
-MMGen uses Go-Ethereum (Geth) to communicate with the Ethereum network.  For
-information on installing Geth on your system, visit the the Geth [Github
+MMGen Wallet uses Go-Ethereum (Geth) to communicate with the Ethereum network.
+For information on installing Geth on your system, visit the the Geth [Github
 repo][ge].  On Arch Linux systems, Go-Ethereum is a package and may be installed
 with `pacman`.
 
@@ -53,12 +54,12 @@ For Geth, the following command-line options are required:
 --http --http.api=eth,web3,txpool --http.port=8745
 ```
 
-Geth has dropped support for Ethereum Classic, but MMGen supports transacting
-ETC via the legacy [Parity][pd] daemon.  Invoke Parity with `--chain=classic
---jsonrpc-port=8645`.
+Geth has dropped support for Ethereum Classic, however transacting ETC is
+still supported by the legacy [Parity][pd] daemon.  Invoke Parity with
+`--chain=classic --jsonrpc-port=8645`.
 
-If you’re running Parity on a different machine from MMGen, add the following
-options to the command line:
+If you’re running Parity on a different machine from MMGen Wallet, add the
+following options to the command line:
 
 ```text
 --jsonrpc-hosts=all --jsonrpc-interface=<daemon IP address>
@@ -66,10 +67,9 @@ options to the command line:
 
 To run Parity offline, use `--mode=offline`, otherwise `--mode=active`.
 
-MMGen can also be used with Parity’s light client mode, which queries other
-nodes on the network for blockchain data.  Add the `--light` option to the
-Parity command line and read the applicable note in the [Transacting](#a_tx)
-section below.
+Parity’s light client mode, which queries other nodes on the network for
+blockchain data, is supported.  Add the `--light` option to the Parity command
+line and read the applicable note in the [Transacting](#a_tx) section below.
 
 You may require other options as well.  Invoke your daemon with the `--help`
 option for more complete information.
@@ -111,8 +111,8 @@ $ mmgen-addrimport --coin=eth --token-addr=86fa049857e0209aa7d9e616f7eb3b3b78ecf
 ```
 
 *Unlike the case with BTC and derivatives, ETH and ETC tracking wallets are
-created and managed by MMGen itself and located under the MMGen data directory.
-Token tracking wallets are located inside their underlying coin’s
+created and managed by MMGen Wallet itself and located under the MMGen data
+directory.  Token tracking wallets are located inside their underlying coin’s
 `tracking-wallet.json` file.  Address (account) balances are retrieved directly
 from the blockchain.  Tracking wallet views are separate for each token.*
 
@@ -150,8 +150,8 @@ To transact ETH instead of EOS, omit the `--token` and `--token-addr` arguments.
 
 ##### Install the Solidity compiler
 
-To deploy Ethereum contracts with MMGen, you need version **0.8.7** of the
-Solidity compiler (`solc`) installed on your system.  Although binary builds
+To deploy Ethereum contracts with MMGen Wallet, you need version **0.8.7** of
+the Solidity compiler (`solc`) installed on your system.  Although binary builds
 may be available for some distributions, the best way to ensure you have the
 correct version is to compile it from source.
 
@@ -177,7 +177,7 @@ must replace them with real ones.*
 Create a token 'MFT' with default parameters, owned by `ddeeff...` (`ABCDABCD:E:1`):
 
 ```text
-# Do this in the MMGen repository root:
+# Do this in the MMGen Wallet repository root:
 $ scripts/create-token.py --coin=ETH --symbol=MFT --name='My First Token' ddEEFFDdEEFfddEeffDDEefFdDeeFFDDEeFFddEe
 ```
 
@@ -212,29 +212,38 @@ for details.
 
 ### <a id="a_bch">Bitcoin Cash Node (BCH) and Litecoin (LTC)</a>
 
-Bitcoin Cash Node (BCH) and Litecoin are fully supported by MMGen, on the same
-level as Bitcoin.
+Bitcoin Cash Node (BCH) and Litecoin are fully supported by MMGen Wallet.
 
-To use MMGen with BCH or Litecoin, first make sure the Bitcoin Cash Node or
-Litecoin daemons are properly installed ([source][si])([binaries][bi]),
-[running][p8] and synced.
+To transact BCH or Litecoin, first make sure the Bitcoin Cash Node or Litecoin
+daemons are properly installed ([source][si])([binaries][bi]), [running][p8] and
+synced.
 
-MMGen requires that the bitcoin-bchn daemon be listening on non-standard
-[RPC port 8442][p8].  If your daemon version is >= 0.16.2, you must use the
+MMGen Wallet requires that the bitcoin-bchn daemon be listening on non-standard
+[RPC port 8432][p8].  If your daemon version is >= 0.16.2, you must use the
 `--usecashaddr=0` option.
 
-Then just add the `--coin=bch` or `--coin=ltc` option to all your MMGen
+Then just add the `--coin=bch` or `--coin=ltc` option to all your MMGen Wallet
 commands.  It’s that simple!
 
 ### <a id="a_xmr">Monero (XMR)</a>
 
-MMGen’s Monero support includes automated wallet creation/syncing and
+MMGen Wallet’s Monero support includes automated wallet creation/syncing and
 transacting via the [`mmgen-xmrwallet`][mx] command.  Make sure that
 [Monerod][M] is installed and running and that `monero-wallet-rpc` is located
 in your executable path.
 
+<a id="a_xmr_req">Install the Python XMR requirements:</a>
+
+(Note that this step is not required for MSYS2, as these requirements were
+already installed by pacman.)
+
+```text
+$ python3 -m pip install -r alt-requirements.txt
+$ python3 -m pip install -r xmr-requirements.txt
+```
+
 *The following instructions are applicable for a hot wallet setup.  To learn
-how to cold sign transactions using MMGen’s autosign feature, first
+how to cold sign transactions using MMGen Wallet’s autosign feature, first
 familiarize yourself with the basic concepts here and then consult the OFFLINE
 AUTOSIGNING tutorial on the [`mmgen-xmrwallet`][mx] help screen.*
 
@@ -280,7 +289,7 @@ To learn how to transact using your wallets, continue on to the
 
 ### <a id="a_zec">Key/address generation for Zcash (ZEC)</a>
 
-MMGen’s enhanced support for Zcash includes generation of **z-addresses.**
+MMGen Wallet supports generation of Zcash **z-addresses.**
 
 Generate ten Zcash z-address key/address pairs from your default wallet:
 
@@ -352,9 +361,9 @@ the MMGen Project.
 [P]: https://pypi.org/project/pip
 [M]: https://getmonero.org/downloads/#linux
 [X]: command-help-autosign
-[gs]: Getting-Started-with-MMGen
-[bo]: Getting-Started-with-MMGen#a_bo
-[si]: Install-Bitcoind-from-Source-on-Debian-or-Ubuntu-Linux
+[gs]: Getting-Started-with-MMGen-Wallet
+[bo]: Getting-Started-with-MMGen-Wallet#a_bo
+[si]: Install-Bitcoind-from-Source-on-Linux
 [bi]: Install-Bitcoind#a_d
 [p8]: Install-Bitcoind#a_r
 [ge]: https://github.com/ethereum/go-ethereum

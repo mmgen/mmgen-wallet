@@ -12,10 +12,10 @@
 
 #### <a id="a_i">Introduction</a>
 
-If you’re considering using MMGen and are a Bitcoiner with a normal, healthy
-degree of paranoia, then the following question will probably come to mind:
-“What if I have funds in an MMGen wallet and I lose the software?  How do I
-recover my coins?”
+If you’re considering using MMGen Wallet and are a Bitcoiner with a normal,
+healthy degree of paranoia, then the following question will probably come to
+mind: “What if I have funds in MMGen Wallet and I lose the software?  How do
+I recover my coins?”
 
 Let’s take this scenario to its logical extreme and assume you’ve lost all
 backup copies of the software, MMGen’s project page has disappeared from both
@@ -32,8 +32,8 @@ generated with the `mmgen-passgen` command.
 To keep things simple, we’ll assume you have a copy of your seed in hexadecimal
 (mmhex) format.  If your backup’s in mnemonic format, skip to the section
 [Converting an MMGen mnemonic to hexadecimal format](#a_mh) below and return
-here when you’ve finished.  If your backup is an MMGen wallet, it will need to
-be decrypted.  That case will be covered in a future tutorial.
+here when you’ve finished.  If your backup is in default wallet format, it will
+need to be decrypted.  That case will be covered in a future tutorial.
 
 Okay, so let’s say you have a 128-bit seed with Seed ID `FE3C6545` and funds in
 the first three legacy uncompressed (`L`) addresses of this seed.  Here are the
@@ -156,9 +156,9 @@ $ mv scrambled-round10.bin myseed.bin
 
 #### <a id="a_gk">Generating the keys</a>
 
-The MMGen key-generating algorithm uses a chain of SHA-512 hashes with double
-SHA-256 branches to generate the keys from which each address is derived.  To
-obtain the chain’s first link, we make a single SHA-512 hash of the seed and
+MMGen Wallet’s key-generating algorithm uses a chain of SHA-512 hashes with
+double SHA-256 branches to generate the keys from which each address is derived.
+To obtain the chain’s first link, we make a single SHA-512 hash of the seed and
 save it in binary form:
 
 ```bash
@@ -414,9 +414,9 @@ Or in exponential notation:
 1 x 10³
 ```
 
-An MMGen seed mnemonic is a number too, only the “digits” it’s comprised of come
-from an alphabetically sorted series of 1626 words, the [Electrum wordlist][03],
-which begins like this:
+An MMGen Wallet seed phrase is a number too, only the “digits” it’s comprised of
+come from an alphabetically sorted series of 1626 words, the [Electrum
+wordlist][03], which begins like this:
 
 ```text
 able (0), about (1), above (2), abuse (3), accept (4) ...

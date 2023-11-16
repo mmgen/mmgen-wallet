@@ -237,12 +237,11 @@ unique, and differ from their non-master-share counterparts.
 
 ### <a id="a_ss">Seed Splitting with MMGen</a>
 
-The MMGen wallet implements the seed splitting and joining functionality
-described above via the commands [`mmgen-seedsplit`][SS] and
-[`mmgen-seedjoin`][SJ].  Usage examples can be found on the `mmgen-seedsplit`
-help screen.
+MMGen Wallet implements the seed splitting and joining functionality described
+above via the commands [`mmgen-seedsplit`][SS] and [`mmgen-seedjoin`][SJ].
+Usage examples can be found on the `mmgen-seedsplit` help screen.
 
-Shares can be made from and exported to all supported MMGen wallet formats.
+Shares can be made from and exported to all supported MMGen Wallet formats.
 This means you can split a BIP39 seed phrase, for example, and output the share
 back to BIP39 in one easy command:
 
@@ -311,8 +310,8 @@ Unfortunately, rejoining master-share splits is considerably harder to do at
 the Python command prompt.  This is because converting the master share into the
 temporary share used to make the split involves an additional step, as you’ll
 recall from the above discussion.  In addition, this step is implemented by
-MMGen somewhat differently than as described above.  For advanced users, an
-example will be provided in a future version of this document.
+MMGen Wallet somewhat differently than as described above.  For advanced users,
+an example will be provided in a future version of this document.
 
 [⊕]: https://mmgen.github.io/images/ss/o_xor.svg "⊕"
 ["a: 1 0 0 1 0 1 0 0"]: https://mmgen.github.io/images/ss/byte_a.svg "a: 1 0 0 1 0 1 0 0"

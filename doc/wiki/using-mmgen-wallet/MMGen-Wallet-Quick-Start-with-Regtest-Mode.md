@@ -3,21 +3,21 @@ daemon’s regression test feature to create a virtual network of two users who
 transact on a private blockchain.
 
 All of MMGen’s functionality is available in regtest mode, making it an ideal
-way to learn to use the MMGen wallet without risking real coins.
+way to learn to use MMGen Wallet without risking real coins.
 
 To send a transaction or perform any other operation as Bob or Alice, just add
-the `--bob` or `--alice` option to the applicable MMGen command.
+the `--bob` or `--alice` option to the applicable MMGen Wallet command.
 
 This tutorial provides a quick, hands-on introduction.
 
-1. Initialize MMGen regtest mode and start the regtest daemon:
+1. Initialize regtest mode and start the regtest daemon:
 
 ```text
 $ mmgen-regtest setup
 $ mmgen-regtest start
 ```
 
-2. Generate Bob’s MMGen wallet:
+2. Generate Bob’s wallet:
 
 ```text
 $ mmgen-walletgen --bob
@@ -25,7 +25,7 @@ $ mmgen-walletgen --bob
 Make this wallet your default and move it to the data directory? (Y/n): y
 ```
 
-3. Generate three type `C` (compressed) addresses with Bob’s MMGen wallet:
+3. Generate three type `C` (compressed) addresses with Bob’s wallet:
 
 ```text
 $ mmgen-addrgen --bob --type=compressed 1-3
@@ -84,7 +84,7 @@ TOTAL: 500 BTC
 $ mmgen-tool --bob getbalance
 ```
 
-9. Generate Alice’s MMGen wallet:
+9. Generate Alice’s wallet:
 
 ```text
 $ mmgen-walletgen --alice
@@ -92,7 +92,7 @@ $ mmgen-walletgen --alice
 Make this wallet your default and move it to the data directory? (Y/n): y
 ```
 
-10. Generate three type `S` (segwit) addresses with Alice’s MMGen wallet:
+10. Generate three type `S` (segwit) addresses with Alice’s wallet:
 
 ```text
 $ mmgen-addrgen --alice --type=segwit 1-3
@@ -224,4 +224,4 @@ TOTAL: 510 BTC
 $ mmgen-regtest stop
 ```
 
-[G]: Getting-Started-with-MMGen#a_ct
+[G]: Getting-Started-with-MMGen-Wallet#a_ct

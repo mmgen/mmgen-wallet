@@ -134,7 +134,7 @@ data from a multi-line file with free spacing and indentation.
 			return """
 BRAINWALLET NOTE:
 
-To thwart dictionary attacks, it's recommended to use a strong hash preset
+To thwart dictionary attacks, it’s recommended to use a strong hash preset
 with brainwallets.  For a brainwallet passphrase to generate the correct
 seed, the same seed length and hash preset parameters must always be used.
 """.strip()
@@ -213,21 +213,21 @@ as described above for the change output.
 Transactions may contain both {pnm} or non-{pnm} input addresses.
 
 To sign non-{pnm} inputs, a {wd}flat key list is used
-as the key source ('--keys-from-file' option).
+as the key source (--keys-from-file option).
 
 To sign {pnm} inputs, key data is generated from a seed as with the
 {pnl}-addrgen and {pnl}-keygen commands.  Alternatively, a key-address file
 may be used (--mmgen-keys-from-file option).
 
 Multiple wallets or other seed files can be listed on the command line in
-any order.  If the seeds required to sign the transaction's inputs are not
+any order.  If the seeds required to sign the transaction’s inputs are not
 found in these files (or in the default wallet), the user will be prompted
 for seed data interactively.
 
 To prevent an attacker from crafting transactions with bogus {pnm}-to-{pnu}
 address mappings, all outputs to {pnm} addresses are verified with a seed
 source.  Therefore, seed files or a key-address file for all {pnm} outputs
-must also be supplied on the command line if the data can't be found in the
+must also be supplied on the command line if the data can’t be found in the
 default wallet.
 """.format(
 	wd  = (f'{coind_exec()} wallet dump or ' if isinstance(proto,mainnet) else ''),
@@ -240,21 +240,21 @@ default wallet.
 			return f"""
 SUBWALLETS:
 
-Subwallets (subseeds) are specified by a "Subseed Index" consisting of:
+Subwallets (subseeds) are specified by a ‘Subseed Index’ consisting of:
 
   a) an integer in the range 1-{SubSeedIdxRange.max_idx}, plus
-  b) an optional single letter, 'L' or 'S'
+  b) an optional single letter, ‘L’ or ‘S’
 
-The letter designates the length of the subseed.  If omitted, 'L' is assumed.
+The letter designates the length of the subseed.  If omitted, ‘L’ is assumed.
 
-Long ('L') subseeds are the same length as their parent wallet's seed
-(typically 256 bits), while short ('S') subseeds are always 128-bit.
+Long (‘L’) subseeds are the same length as their parent wallet’s seed
+(typically 256 bits), while short (‘S’) subseeds are always 128-bit.
 The long and short subseeds for a given index are derived independently,
 so both may be used.
 
-MMGen has no notion of "depth", and to an outside observer subwallets are
-identical to ordinary wallets.  This is a feature rather than a bug, as it
-denies an attacker any way of knowing whether a given wallet has a parent.
+MMGen Wallet has no notion of ‘depth’, and to an outside observer subwallets
+are identical to ordinary wallets.  This is a feature rather than a bug, as
+it denies an attacker any way of knowing whether a given wallet has a parent.
 
 Since subwallets are just wallets, they may be used to generate other
 subwallets, leading to hierarchies of arbitrary depth.  However, this is
@@ -267,7 +267,7 @@ MMGen checks and avoids ID collisions only among sibling subseeds.
 An exception to this caveat would be a multi-user setup where sibling
 subwallets are distributed to different users as their default wallets.
 Since the subseeds derived from these subwallets are private to each user,
-Seed ID collisions among them doesn't present a problem.
+Seed ID collisions among them doesn’t present a problem.
 
 A safe rule of thumb, therefore, is for *each user* to derive all of his/her
 subwallets from a single parent.  This leaves each user with a total of two

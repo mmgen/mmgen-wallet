@@ -154,8 +154,8 @@ class UserOpts:
 		from .util import Die,fmt
 		Die(0,fmt(f"""
 			{gc.prog_name.upper()} version {gc.version}
-			Part of the {gc.proj_name} suite, an online/offline cryptocurrency wallet for the
-			command line.  Copyright (C){gc.Cdates} {gc.author} {gc.email}
+			Part of {gc.proj_name} Wallet, an online/offline cryptocurrency wallet for the
+			command line. Copyright (C){gc.Cdates} {gc.author} {gc.email}
 		""",indent='  ').rstrip())
 
 	def print_help(self,cfg):

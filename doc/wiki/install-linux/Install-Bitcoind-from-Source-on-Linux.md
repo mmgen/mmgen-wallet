@@ -5,17 +5,18 @@ binaries are available for Bitcoin Core, Bitcoin ABC and Litecoin.  See the
 
 ### Install dependencies:
 
-> Make sure the required boost library development packages are installed:
+> Make sure the required development packages are installed:
+
+Debian/Ubuntu:
 
 ```text
-sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
+sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libdb-dev libdb++-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
 ```
 
-> You’ll also need the following standard dependencies, if they’re not already on
-> your system:
+ArchLinux:
 
 ```text
-sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libdb-dev libdb++-dev libevent-dev
+pacman --sync --needed autoconf automake boost gcc git libevent libtool make pkgconf python sqlite
 ```
 
 ### Compile and install Bitcoin Core:

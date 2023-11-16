@@ -7,11 +7,11 @@
 
 ### Description
 
-MMGen is a wallet and cold storage solution for Bitcoin (and selected altcoins)
-implemented as a suite of lightweight Python scripts.  The scripts work in
-tandem with a reference Bitcoin or altcoin daemon running on both online and
-offline computers to provide a robust solution for securely storing, tracking,
-sending and receiving your crypto assets.
+MMGen Wallet is a wallet and cold storage solution for Bitcoin (and selected
+altcoins) implemented as a suite of lightweight Python scripts.  The scripts
+work in tandem with a reference Bitcoin or altcoin daemon running on both online
+and offline computers to provide a robust solution for securely storing,
+tracking, sending and receiving your crypto assets.
 
 The online computer is used for tracking balances and creating and sending
 transactions, while the offline machine (typically an air-gapped, low-power
@@ -20,17 +20,17 @@ and transaction signing.  All operations involving secret data are handled
 offline: **your seed and private keys never come into contact with a
 network-connected device.**
 
-MMGen is designed for reliability by having the reference Bitcoin or altcoin
-daemon, rather than less-tested third-party software, do all the “heavy lifting”
-of tracking and signing transactions.  It’s also designed with privacy in mind:
-unlike some other online/offline wallets, MMGen is a completely self-contained
-system that makes **no connections to the Internet** apart from the coin network
-itself: no information about which addresses you’re tracking is ever leaked to
-the outside world.
+MMGen Wallet is designed for reliability by having the reference Bitcoin or
+altcoin daemon, rather than less-tested third-party software, do all the “heavy
+lifting” of tracking and signing transactions.  It’s also designed with privacy
+in mind: unlike some other online/offline wallets, MMGen Wallet is a completely
+self-contained system that makes **no connections to the Internet** apart from
+the coin network itself: no information about which addresses you’re tracking is
+ever leaked to the outside world.
 
-Like all deterministic wallets, MMGen can generate a virtually unlimited number
-of address/key pairs from a single seed.  Your wallet never changes, so you need
-back it up only once.
+Like all deterministic wallets, MMGen Wallet can generate a virtually unlimited
+number of address/key pairs from a single seed.  Your wallet never changes, so
+you need back it up only once.
 
 At the heart of the MMGen system is the seed, the “master key” providing access
 to all your crypto assets.  The seed can be stored in many different formats:
@@ -45,18 +45,18 @@ all formats is supported.
 
 #### Simplified key derivation and seed-phrase generation
 
-To deterministically derive its keys, MMGen uses a non-hierarchical scheme
-differing from the BIP32 protocol on which most of today’s popular wallets are
-based.  One advantage of this simple, hash-based scheme is that you can easily
-[recover your private keys from your seed without the MMGen program itself][K]
-using standard command-line utilities.
+To deterministically derive its keys, MMGen Wallet uses a non-hierarchical
+scheme differing from the BIP32 protocol on which most of today’s popular
+wallets are based.  One advantage of this simple, hash-based scheme is that you
+can easily [recover your private keys from your seed without the MMGen Wallet
+software][K] using standard command-line utilities.
 
-MMGen also differs from most cryptocurrency wallets today in its use of the
-original 1626-word [Electrum wordlist][ew] for mnemonic seed phrases.  Seed
+MMGen Wallet also differs from most cryptocurrency wallets today in its use of
+the original 1626-word [Electrum wordlist][ew] for mnemonic seed phrases.  Seed
 phrases are derived using ordinary base conversion, similarly allowing you to
-regenerate your seed from your seed phrase without MMGen program itself should
-the need arise.  An example of how to do this at the Python prompt is provided
-[here.][S]
+regenerate your seed from your seed phrase without the MMGen Wallet software
+should the need arise.  An example of how to do this at the Python prompt is
+provided [here.][S]
 
 The original Electrum wordlist was derived from a [frequency list][fl] of words
 found in contemporary English poetry.  The high emotional impact of these words
@@ -64,10 +64,10 @@ makes seed phrases easy to memorize.  Curiously, only 861 of them are shared by
 the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
 
 Beginning with version 0.12.0, the BIP39 mnemonic format is also supported,
-allowing you to use MMGen as a master wallet for other wallets supporting that
-widespread standard.
+allowing you to use MMGen Wallet as a master wallet for other wallets supporting
+that widespread standard.
 
-#### A brief overview of MMGen’s unique feature set:
+#### A brief overview of MMGen Wallet’s unique feature set:
 
 - **[Full transaction and address tracking support][T]** for Bitcoin, [Bcash][bx],
   [Litecoin][bx], [Ethereum][E], Ethereum Classic and [ERC20 tokens][E].
@@ -106,10 +106,10 @@ widespread standard.
   machine into “hands-off” mode, allowing you to transact directly from cold
   storage securely and conveniently.  Additional LED signaling support is
   provided for Raspbian and Armbian platforms.
-- **[Password generation][G]:** MMGen can be used to generate and manage your
-  online passwords.  Password lists are identified by arbitrarily chosen strings
-  like “alice@github” or “bob@reddit”.  Passwords of different lengths and
-  formats, including BIP39, are supported.
+- **[Password generation][G]:** MMGen Wallet can be used to generate and manage
+  your online passwords.  Password lists are identified by arbitrarily chosen
+  strings like “alice@github” or “bob@reddit”.  Passwords of different lengths
+  and formats, including BIP39, are supported.
 - **[Message signing][MS]** for BTC, BCH, LTC, ETH and ETC.  Signing for
   multiple addresses and autosigning are supported.
 - **Selectable seed lengths** of 128, 192 or 256 bits.  Subwallets may have
@@ -120,19 +120,20 @@ widespread standard.
 - **Wallet-free operation:** All wallet operations can be performed directly
   from your seed phrase at the prompt, allowing you to dispense with a
   physically stored wallet entirely if you wish.
-- Word-completing **mnemonic entry modes** customized for each of MMGen’s
+- Word-completing **mnemonic entry modes** customized for each of MMGen Wallet’s
   supported wordlists minimize keystrokes required during seed phrase entry.
 - **Stealth mnemonic entry:** This feature allows you to obfuscate your seed
   phrase with “dead” keystrokes to guard against acoustic side-channel attacks.
-- **Network privacy:** MMGen never “calls home” or checks for upgrades over the
-  network.  No information about your wallet installation or crypto assets is
-  ever leaked to third parties.
-- **Human-readable wallet files:** All of MMGen’s wallet formats, with the
-  exception of incognito wallets, can be printed or copied by hand.
-- **Terminal-based:** MMGen can be run in a screen or tmux session on your local
-  network.
-- **Scriptability:** Most MMGen commands can be made non-interactive, allowing
-  you to automate repetitive tasks using shell scripts.
+- **Network privacy:** MMGen Wallet never “calls home” or checks for upgrades
+  over the network.  No information about your wallet installation or crypto
+  assets is ever leaked to third parties.
+- **Human-readable wallet files:** All of MMGen Wallet’s wallet formats, with
+  the exception of incognito wallets, can be printed or copied by hand.
+- **Terminal-based:** MMGen Wallet can be run in a screen or tmux session on
+  your local network.
+- **Scriptability:** Most of MMGen Wallet’s commands can be made
+  non-interactive, allowing you to automate repetitive tasks using shell
+  scripts.
 - The project also includes the [`mmgen-tool`][L] utility, a handy “pocket
   knife” for cryptocurrency developers, along with an easy-to-use [**tool API
   interface**][ta] providing access to a subset of its commands from within
@@ -149,15 +150,15 @@ Linux, Armbian, Raspbian, Windows/MSYS2
 > #### [Install from source on Debian, Ubuntu, Raspbian, Armbian or Arch Linux][2]
 
 
-### Using MMGen
+### Using MMGen Wallet
 
-> #### [Getting Started with MMGen][3]
+> #### [Getting Started with MMGen Wallet][3]
 
-> #### [MMGen Quick Start with Regtest Mode][Q]
+> #### [MMGen Wallet Quick Start with Regtest Mode][Q]
 
-> #### [MMGen command help][6]
+> #### [MMGen Wallet command help][6]
 
-> #### [Recovering your keys without the MMGen software][K]
+> #### [Recovering your keys without the MMGen Wallet software][K]
 
 > #### [Altcoin and Forkcoin support (ETH,ETC,XMR,ZEC,LTC,BCH and 144 Bitcoin-derived alts)][F]
 
@@ -192,15 +193,15 @@ Donate:
 &nbsp;⊙&nbsp;BCH:&nbsp;*15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w*    
 &nbsp;⊙&nbsp;XMR:&nbsp;*8B14zb8wgLuKDdse5p8f3aKpFqRdB4i4xj83b7BHYABHMvHifWxiDXeKRELnaxL5FySfeRRS5girgUvgy8fQKsYMEzPUJ8h*
 
-[1]:  ../../wiki/Install-MMGen-on-Microsoft-Windows
-[2]:  ../../wiki/Install-MMGen-on-Linux
-[3]:  ../../wiki/Getting-Started-with-MMGen
+[1]:  ../../wiki/Install-MMGen-Wallet-on-Microsoft-Windows
+[2]:  ../../wiki/Install-MMGen-Wallet-on-Linux
+[3]:  ../../wiki/Getting-Started-with-MMGen-Wallet
 [5]:  ../../wiki/MMGen-Signing-Keys
 [6]:  ../../wiki/MMGen-command-help
 [7]:  http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
 [8]:  https://github.com/mmgen/MMGenLive
 [9]:  https://mmgen.org/images/rxvt-txcreate.jpg
-[Q]:  ../../wiki/MMGen-Quick-Start-with-Regtest-Mode
+[Q]:  ../../wiki/MMGen-Wallet-Quick-Start-with-Regtest-Mode
 [K]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Software
 [S]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Software#a_mh
 [F]:  ../../wiki/Altcoin-and-Forkcoin-Support
@@ -213,15 +214,15 @@ Donate:
 [xm]: ../../wiki/xmrwallet-[MMGen-command-help]
 [G]:  ../../wiki/passgen-[MMGen-command-help]
 [MS]: ../../wiki/msg-[MMGen-command-help]
-[T]:  ../../wiki/Getting-Started-with-MMGen#a_ct
+[T]:  ../../wiki/Getting-Started-with-MMGen-Wallet#a_ct
 [E]:  ../../wiki/Altcoin-and-Forkcoin-Support#a_tx
 [ag]: ../../wiki/addrgen-[MMGen-command-help]
 [bx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_bch
 [mx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_xmr
 [zx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_zec
 [ax]: ../../wiki/Altcoin-and-Forkcoin-Support#a_kg
-[M]:  ../../wiki/Getting-Started-with-MMGen#a_fee
-[R]:  ../../wiki/Getting-Started-with-MMGen#a_rbf
+[M]:  ../../wiki/Getting-Started-with-MMGen-Wallet#a_fee
+[R]:  ../../wiki/Getting-Started-with-MMGen-Wallet#a_rbf
 [B]:  ../../wiki/txbump-[MMGen-command-help]
 [69]: https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
 [O]:  ../../wiki/XOR-Seed-Splitting:-Theory-and-Practice

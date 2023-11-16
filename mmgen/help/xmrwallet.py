@@ -242,10 +242,10 @@ removable device on it.  And this is the whole point of autosigning: to make
 cold signing as convenient as possible, almost like transacting with a hot
 wallet.
 
-If your signing machine is an SoC with MMGen LED support (see ‘mmgen-autosign
---help’), a quickly flashing LED will indicate that signing is in progress, a
-slowly flashing LED an error condition, and no LED that the program is idle
-and waiting for device insertion.
+If your signing machine is an SoC with MMGen Wallet LED support (see
+‘mmgen-autosign --help’), a quickly flashing LED will indicate that signing
+is in progress, a slowly flashing LED an error condition, and no LED that the
+program is idle and waiting for device insertion.
 
 On your online machine, start monerod, wait until it’s fully synced with the
 network, insert the removable device and execute:
