@@ -145,9 +145,9 @@ Linux, Armbian, Raspbian, Windows/MSYS2
 
 ### Download/Install
 
-> #### [Install from source on Microsoft Windows][1]
+> #### [Install on Microsoft Windows][1]
 
-> #### [Install from source on Debian, Ubuntu, Raspbian, Armbian or Arch Linux][2]
+> #### [Install on Debian, Ubuntu, Raspbian, Armbian or Arch Linux][2]
 
 
 ### Using MMGen Wallet
