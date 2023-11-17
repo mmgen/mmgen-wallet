@@ -2,8 +2,8 @@
 
 ##### An online/offline cryptocurrency wallet for the command line
 
-![build](https://github.com/mmgen/mmgen/workflows/build/badge.svg)
-![pylint](https://github.com/mmgen/mmgen/workflows/pylint/badge.svg)
+![build](https://github.com/mmgen/mmgen-wallet/workflows/build/badge.svg)
+![pylint](https://github.com/mmgen/mmgen-wallet/workflows/pylint/badge.svg)
 
 ### Description
 
@@ -177,13 +177,13 @@ Homepage:
 [I2P](http://mmgen-wallet.i2p) |
 [Onion](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion)    
 Code repository:
-[Clearnet](https://mmgen.org/project/mmgen/mmgen) |
-[I2P](http://mmgen-wallet.i2p/project/mmgen/mmgen) |
-[Onion](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion/project/mmgen/mmgen)    
+[Clearnet](https://mmgen.org/project/mmgen/mmgen-wallet) |
+[I2P](http://mmgen-wallet.i2p/project/mmgen/mmgen-wallet) |
+[Onion](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion/project/mmgen/mmgen-wallet)    
 Code repository mirrors:
-[Github](https://github.com/mmgen/mmgen) |
-[Gitlab](https://gitlab.com/mmgen/mmgen) |
-[Gitflic](https://gitflic.ru/project/mmgen/mmgen)     
+[Github](https://github.com/mmgen/mmgen-wallet) |
+[Gitlab](https://gitlab.com/mmgen/mmgen-wallet) |
+[Gitflic](https://gitflic.ru/project/mmgen/mmgen-wallet)     
 [Keybase](https://keybase.io/mmgen) |
 [Reddit](https://www.reddit.com/user/mmgen-py) |
 [Bitcointalk](https://bitcointalk.org/index.php?topic=567069.new#new)   

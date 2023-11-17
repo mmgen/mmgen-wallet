@@ -43,9 +43,9 @@ class tool_cmd(tool_cmd_base):
 
 	Supported seed phrase formats: 'mmgen' (default), 'bip39', 'xmrseed'
 
-	IMPORTANT NOTE: MMGen’s default seed phrase format uses the Electrum
-	wordlist, however seed phrases are computed using a different algorithm
-	and are NOT Electrum-compatible!
+	IMPORTANT NOTE: MMGen Wallet’s default seed phrase format uses the
+	Electrum wordlist, however seed phrases are computed using a different
+	algorithm and are NOT Electrum-compatible!
 
 	BIP39 support is fully compatible with the standard, allowing users to
 	import and export seed entropy from BIP39-compatible wallets.  However,

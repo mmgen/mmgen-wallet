@@ -40,7 +40,7 @@ class GlobalConstants(Lockable):
 	_autolock = True
 
 	proj_name          = 'MMGen'
-	proj_url           = 'https://github.com/mmgen/mmgen'
+	proj_url           = 'https://github.com/mmgen/mmgen-wallet'
 	author             = 'The MMGen Project'
 	email              = '<mmgen@tuta.io>'
 	Cdates             = '2013-2023'

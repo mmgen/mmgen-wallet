@@ -64,7 +64,7 @@ def confirm(m):
 
 def tt_start():
 	m = fmt("""
-		We will now test MMGen’s terminal capabilities.
+		We will now test MMGen Wallet’s terminal capabilities.
 		This is a non-automated test and requires user interaction.
 		Continue?
 	""")
