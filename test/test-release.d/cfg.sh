@@ -5,8 +5,8 @@
 # Licensed under the GNU General Public License, Version 3:
 #   https://www.gnu.org/licenses
 # Public project repositories:
-#   https://github.com/mmgen/mmgen
-#   https://gitlab.com/mmgen/mmgen
+#   https://github.com/mmgen/mmgen-wallet
+#   https://gitlab.com/mmgen/mmgen-wallet
 
 all_tests="dep lint obj color unit hash ref altref altgen xmr eth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt"
 

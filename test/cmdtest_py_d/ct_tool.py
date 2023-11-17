@@ -3,7 +3,7 @@
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C)2013-2023 The MMGen Project <mmgen@tuta.io>
 #
-# Project source code repository: https://github.com/mmgen/mmgen
+# Project source code repository: https://github.com/mmgen/mmgen-wallet
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """

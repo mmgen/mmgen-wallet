@@ -5,8 +5,8 @@
 # Licensed under the GNU General Public License, Version 3:
 #   https://www.gnu.org/licenses
 # Public project repositories:
-#   https://github.com/mmgen/mmgen
-#   https://gitlab.com/mmgen/mmgen
+#   https://github.com/mmgen/mmgen-wallet
+#   https://gitlab.com/mmgen/mmgen-wallet
 
 """
 wallet.incog_base: incognito wallet base class
