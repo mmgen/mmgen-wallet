@@ -572,7 +572,8 @@ class Config(Lockable):
 						(ns[2:],ns[1]=='testnet') if len(ns) > 2 and ns[1] in ('mainnet','testnet') else
 						(ns[1:],False)
 					)
-					cls = type(init_proto( self, ns[0], tn, need_amt=True )) # no instance yet, so override _class_ attr
+					# no instance yet, so override _class_ attr:
+					cls = init_proto(self, ns[0], tn, need_amt=True, return_cls=True)
 					attr = '_'.join(nse)
 				else:
 					cls = self

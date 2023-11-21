@@ -12,8 +12,6 @@
 test.cmdtest_py_d.cfg: configuration data for cmdtest.py
 """
 
-import os
-
 from .common import pwfile,hincog_fn,incog_id_fn,randbool
 from ..include.common import cfg
 
@@ -222,6 +220,7 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 }
 
 def fixup_cfgs():
+	import os
 	for src,target in (
 			('6','11'),
 			('7','12'),

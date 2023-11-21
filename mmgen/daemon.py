@@ -319,11 +319,13 @@ class CoinDaemon(Daemon):
 
 	@classmethod
 	def get_daemon(cls,cfg,coin,daemon_id,proto=None):
-		if not proto:
+		if proto:
+			proto_cls = type(proto)
+		else:
 			from .protocol import init_proto
-			proto = init_proto( cfg, coin )
+			proto_cls = init_proto(cfg, coin, return_cls=True)
 		return getattr(
-			importlib.import_module(f'mmgen.proto.{proto.base_proto_coin.lower()}.daemon'),
+			importlib.import_module(f'mmgen.proto.{proto_cls.base_proto_coin.lower()}.daemon'),
 			daemon_id+'_daemon' )
 
 	@classmethod

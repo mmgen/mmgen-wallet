@@ -238,7 +238,8 @@ def init_proto(
 		network    = None,
 		network_id = None,
 		tokensym   = None,
-		need_amt   = False ):
+		need_amt   = False,
+		return_cls = False):
 
 	assert type(testnet) is bool, 'init_proto_chk1'
 	assert type(regtest) is bool, 'init_proto_chk2'
@@ -270,6 +271,9 @@ def init_proto(
 			proto_name,
 			getattr(importlib.import_module(f'mmgen.proto.{coin}.params'),network)
 		)
+
+	if return_cls:
+		return getattr(CoinProtocol,proto_name)
 
 	return getattr(CoinProtocol,proto_name)(
 		cfg       = cfg,

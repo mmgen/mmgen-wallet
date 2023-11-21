@@ -94,7 +94,7 @@ else:
 		from test.include.test_init import repo_root
 
 from mmgen.cfg import Config,gc
-from mmgen.color import red,yellow,green,blue,cyan,nocolor,init_color
+from mmgen.color import red,yellow,green,blue,cyan,gray,nocolor,init_color
 from mmgen.util import Msg,bmsg,die,suf,make_timestr,async_run
 
 from test.include.common import (
@@ -699,7 +699,7 @@ class CmdTestRunner:
 		ct_cls = CmdGroupMgr().load_mod(gname)
 
 		if sys.platform == 'win32' and ct_cls.win_skip:
-			omsg(f'Skipping test {gname!r} for Windows platform')
+			omsg(gray(f'INFO → skipping test {gname!r} (platform=win32)'))
 			return False
 
 		for k in ('segwit','segwit_random','bech32'):
@@ -719,7 +719,7 @@ class CmdTestRunner:
 		m = ''.join(gen_msg())
 
 		if segwit_opt and not ct_cls.segwit_opts_ok:
-			iqmsg('INFO → skipping ' + m)
+			iqmsg(gray(f'INFO → skipping {m}'))
 			return False
 
 		# 'networks = ()' means all networks allowed
@@ -731,7 +731,7 @@ class CmdTestRunner:
 				if a == coin and b == nw:
 					break
 			else:
-				iqmsg('INFO → skipping ' + m)
+				iqmsg(gray(f'INFO → skipping {m} (network={nw})'))
 				return False
 
 		if do_clean:
