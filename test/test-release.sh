@@ -181,7 +181,8 @@ do
 	A)  SKIP_ALT_DEP=1
 		cmdtest_py+=" --no-altcoin"
 		unit_tests_py+=" --no-altcoin-deps"
-		scrambletest_py+=" --no-altcoin" ;;
+		scrambletest_py+=" --no-altcoin"
+		tooltest2_py+=" --no-altcoin" ;;
 	b)  cmdtest_py+=" --buf-keypress" ;;
 	C)  mkdir -p 'test/trace'
 		touch 'test/trace.acc'

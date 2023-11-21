@@ -423,6 +423,8 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 	def mn_pwgen(self,req_pw_len,pwfmt,ftype='passbip39',stdout=False):
 		pwlen = min(req_pw_len,{'1':12,'2':18,'3':24}[self.test_name[-1]])
 		if pwfmt == 'xmrseed':
+			if cfg.no_altcoin:
+				return 'skip'
 			pwlen += 1
 		ea = ['--accept-defaults']
 		return self.pwgen(ftype,'фубар@crypto.org',pwfmt,pwlen,ea,stdout=stdout)

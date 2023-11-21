@@ -41,11 +41,12 @@ init_tests() {
 		- $objtest_py --coin=btc
 		- $objtest_py --getobj --coin=btc
 		- $objtest_py --coin=btc --testnet=1
-		- $objtest_py --coin=ltc
-		- $objtest_py --coin=ltc --testnet=1
-		- $objtest_py --coin=eth
+		a $objtest_py --coin=ltc
+		a $objtest_py --coin=ltc --testnet=1
+		a $objtest_py --coin=eth
 		- $objattrtest_py
 	"
+	[ "$SKIP_ALT_DEP" ] && t_obj_skip='a'
 
 	[ "$PYTHONOPTIMIZE" ] && {
 		echo -e "${YELLOW}PYTHONOPTIMIZE set, skipping object tests$RESET"

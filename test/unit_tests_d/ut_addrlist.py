@@ -65,6 +65,8 @@ def do_test(
 
 class unit_tests:
 
+	altcoin_deps = ('keyaddr_xmr','viewkeyaddr')
+
 	def idxlist(self,name,ut):
 		for i,o in (
 				('99,88-102,1-3,4,9,818,444-445,816',        '1-4,9,88-102,444-445,816,818'),

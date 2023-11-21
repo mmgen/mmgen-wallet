@@ -143,6 +143,8 @@ def do_coin_tests():
 def do_passwd_tests():
 	bmsg('Testing password scramble strings and list IDs')
 	for tname,tdata in passwd_data.items():
+		if tname.startswith('xmrseed') and cfg.no_altcoin:
+			continue
 		a,b,pwid = tname.split('_')
 		fmt_arg = '' if a == 'dfl' else f'--passwd-fmt={a} '
 		len_arg = '' if b == 'dfl' else f'--passwd-len={b} '

@@ -52,6 +52,8 @@ class CmdTestMisc(CmdTestBase):
 		return t
 
 	def xmrwallet_txview(self,op='txview'):
+		if cfg.no_altcoin:
+			return 'skip'
 		files = get_file_with_ext('test/ref/monero','tx',no_dot=True,delete=False,return_list=True)
 		t = self.spawn( 'mmgen-xmrwallet', [op] + files )
 		res = t.read(strip_color=True)

@@ -15,6 +15,8 @@ test.cmdtest_py_d.cfg: configuration data for cmdtest.py
 from .common import pwfile,hincog_fn,incog_id_fn,randbool
 from ..include.common import cfg
 
+cmd_groups_altcoin = ['ref_altcoin','autosign','ethdev','xmrwallet','xmr_autosign']
+
 cmd_groups_dfl = {
 	'misc':             ('CmdTestMisc',{}),
 	'opts':             ('CmdTestOpts',{'full_data':True}),

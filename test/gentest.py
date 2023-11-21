@@ -567,9 +567,6 @@ from mmgen.keygen import get_backends
 from mmgen.util2 import load_cryptodomex
 from test.include.common import getrand,get_ethkey,set_globals
 
-# This must be done at top level, not in monero tool __init__
-load_cryptodomex()
-
 gtr = namedtuple('gen_tool_result',['wif','addr','viewkey'])
 sd = namedtuple('saved_data_item',['reduced','wif','addr','viewkey'])
 
@@ -583,6 +580,10 @@ qmsg_r = cfg._util.qmsg_r
 vmsg = cfg._util.vmsg
 
 proto = cfg._proto
+
+if proto.coin == 'XMR':
+	# This must be done at top level, not in monero tool __init__
+	load_cryptodomex()
 
 if __name__ == '__main__':
 	main()

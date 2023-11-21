@@ -91,6 +91,8 @@ class unit_test:
 
 		for net_id,addrs in vectors.items():
 			coin,network = net_id.split('_')
+			if cfg.no_altcoin_deps and coin != 'btc':
+				continue
 			test_network(
 				init_proto( cfg, coin, network=network ),
 				addrs )

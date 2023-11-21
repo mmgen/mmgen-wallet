@@ -35,7 +35,7 @@ except ImportError:
 from test.include.common import set_globals,end_msg,sample_text,init_coverage
 
 from mmgen.cfg import Config
-from mmgen.color import green,blue,purple,cyan
+from mmgen.color import green,blue,purple,cyan,gray
 from mmgen.util import msg,msg_r,Msg,is_hex_str,async_run,die
 
 from mmgen.bip39 import is_bip39_mnemonic
@@ -72,6 +72,7 @@ opts_data = {
 		'usage':'[options] [command]...',
 		'options': """
 -h, --help           Print this help message
+-a, --no-altcoin     Skip altcoin tests
 -A, --tool-api       Test the tool_api subsystem
 -C, --coverage       Produce code coverage info using trace module
 -d, --die-on-missing Abort if no test data found for given command
@@ -876,9 +877,18 @@ async def run_test(cls,gid,cmd_name):
 		m2 )
 
 	msg_r(green(m)+'\n' if cfg.verbose else m)
+	skipping = False
 
-	for d in data:
+	for n,d in enumerate(data):
 		args,out,opts,mmtype = d + tuple([None] * (4-len(d)))
+		if 'fmt=xmrseed' in args and cfg.no_altcoin:
+			if not skipping:
+				qmsg('')
+			qmsg(('' if n else '\n') + gray(f'Skipping altcoin test {cmd_name} {args}'))
+			skipping = True
+			continue
+		else:
+			skipping = False
 		stdin_input = None
 		if args and isinstance(args[0],bytes):
 			stdin_input = args[0]

@@ -204,6 +204,9 @@ if not po.user_opts.get('skipping_deps'):
 # step 2: opts.init will create new data_dir in ./test (if not cfg.skipping_deps)
 cfg = Config(opts_data=opts_data)
 
+if cfg.no_altcoin and cfg.coin != 'BTC':
+	die(1,f'--no-altcoin incompatible with --coin={cfg.coin}')
+
 set_globals(cfg)
 
 from test.cmdtest_py_d.common import ( # this must be loaded after set_globals()
@@ -695,6 +698,11 @@ class CmdTestRunner:
 		))
 
 	def init_group(self,gname,sg_name=None,cmd=None,quiet=False,do_clean=True):
+
+		from test.cmdtest_py_d.cfg import cmd_groups_altcoin
+		if cfg.no_altcoin and gname in cmd_groups_altcoin:
+			omsg(gray(f'INFO → skipping test group {gname!r} (--no-altcoin)'))
+			return None
 
 		ct_cls = CmdGroupMgr().load_mod(gname)
 
