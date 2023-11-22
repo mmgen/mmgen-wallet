@@ -1,9 +1,9 @@
-MMGen’s regtest mode, also known as Bob and Alice mode, uses the Bitcoin
+MMGen Wallet’s regtest mode, also known as Bob and Alice mode, uses the Bitcoin
 daemon’s regression test feature to create a virtual network of two users who
 transact on a private blockchain.
 
-All of MMGen’s functionality is available in regtest mode, making it an ideal
-way to learn to use MMGen Wallet without risking real coins.
+All of MMGen Wallet’s functionality is available in regtest mode, making it an
+ideal way to learn to use MMGen Wallet without risking real coins.
 
 To send a transaction or perform any other operation as Bob or Alice, just add
 the `--bob` or `--alice` option to the applicable MMGen Wallet command.

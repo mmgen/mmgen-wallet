@@ -202,8 +202,8 @@ Donate:
 [8]:  https://github.com/mmgen/MMGenLive
 [9]:  https://mmgen.org/images/rxvt-txcreate.jpg
 [Q]:  ../../wiki/MMGen-Wallet-Quick-Start-with-Regtest-Mode
-[K]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Software
-[S]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Software#a_mh
+[K]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Wallet-Software
+[S]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Wallet-Software#a_mh
 [F]:  ../../wiki/Altcoin-and-Forkcoin-Support
 [W]:  https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 [ew]: https://github.com/spesmilo/electrum/blob/1.9.5/lib/mnemonic.py

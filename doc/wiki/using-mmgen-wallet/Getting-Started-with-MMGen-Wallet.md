@@ -1114,16 +1114,16 @@ If you’ve deleted or lost your local copy of the MMGen Wallet repository, clon
 it again from Github, Gitlab or mmgen.org:
 
 ```text
-$ git clone https://github.com/mmgen/mmgen.git
-$ git clone https://gitlab.com/mmgen/mmgen.git
-$ git clone https://mmgen.org/project/mmgen/mmgen.git
+$ git clone https://github.com/mmgen/mmgen-wallet.git
+$ git clone https://gitlab.com/mmgen/mmgen-wallet.git
+$ git clone https://mmgen.org/project/mmgen/mmgen-wallet.git
 ```
 
 Enter the repository and check out the master branch.  Pull the latest changes
 from the remote repository:
 
 ```text
-$ cd mmgen
+$ cd mmgen-wallet
 $ git checkout master
 $ git pull
 ```
@@ -1142,7 +1142,7 @@ $ python3 -m pip install user --upgrade dist/*.whl
 
 [01]: Tracking-and-spending-ordinary-Bitcoin-addresses
 [02]: https://tpfaucet.appspot.com
-[03]: Recovering-Your-Keys-Without-the-MMGen-Software
+[03]: Recovering-Your-Keys-Without-the-MMGen-Wallet-Software
 [04]: MMGen-Wallet-Quick-Start-with-Regtest-Mode
 [05]: Key-address-files
 [06]: Subwallets

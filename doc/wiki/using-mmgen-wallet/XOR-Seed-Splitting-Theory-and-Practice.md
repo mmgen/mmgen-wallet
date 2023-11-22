@@ -4,7 +4,7 @@
    - [Deterministic Shares](#a_ds)
    - [Named Splits](#a_ns)
    - [Master Shares](#a_ms)
-+ [Seed Splitting with MMGen](#a_ss)
++ [Seed Splitting with MMGen Wallet](#a_ss)
 
 ### <a id="a_xor">XOR Seed Splitting: A Theoretical Introduction</a>
 
@@ -235,7 +235,7 @@ Also note that an additional field, `master<n>`, has been appended to the share
 identifiers.  This is to ensure that the shares of each master share split are
 unique, and differ from their non-master-share counterparts.
 
-### <a id="a_ss">Seed Splitting with MMGen</a>
+### <a id="a_ss">Seed Splitting with MMGen Wallet</a>
 
 MMGen Wallet implements the seed splitting and joining functionality described
 above via the commands [`mmgen-seedsplit`][SS] and [`mmgen-seedjoin`][SJ].

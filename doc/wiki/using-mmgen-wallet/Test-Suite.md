@@ -1,9 +1,10 @@
 ## Introduction
 
 In addition to low-level subsystems, the suite tests the overall operation of
-MMGen’s commands by running them interactively as a user would.  Thus the test
-suite is useful not only for ensuring the MMGen Wallet system is correctly
-installed and working on your platform but also for demonstrating how it works.
+the MMGen Wallet’s commands by running them interactively as a user would.  Thus
+the test suite is useful not only for ensuring the MMGen Wallet system is
+correctly installed and working on your platform but also for demonstrating how
+it works.
 
 BTC-only testing requires installation of Bitcoin Core and pycoin only, while
 altcoin testing requires additional helper programs and libraries, installation
@@ -56,17 +57,17 @@ Install Pycoin:
 
 ```text
 # online install:
-$ python3 -m pip install --user pycoin
+$ python3 -m pip install pycoin
 
 # offline install:
 $ python3 -m pip download pycoin # online
-$ python3 -m pip install --user --no-build-isolation pycoin-*.tar.gz # offline
+$ python3 -m pip install --no-build-isolation pycoin-*.tar.gz # offline
 ```
 
 Install Pylint:
 
 ```text
-$ python3 -m pip install --user pylint
+$ python3 -m pip install pylint
 ```
 
 CD to the MMGen Wallet repository root and build without installing:
@@ -135,8 +136,8 @@ may also be started and stopped manually at the DOS or MSYS2 prompt as follows
 #### Monero-Python
 
 ```text
-$ python3 -m pip install --user pycryptodomex ipaddress varint
-$ python3 -m pip install --user --no-deps monero
+$ python3 -m pip install pycryptodomex ipaddress varint
+$ python3 -m pip install --no-deps monero
 ```
 
 #### Vanitygen PlusPlus (forked from Vanitygen Plus)
@@ -195,8 +196,8 @@ $ test/test-release.sh -F
 
 `test/test-release.sh` is just a simple shell script that invokes the test
 scripts with various options and arguments to ensure complete coverage of
-MMGen’s functionality.  Launch the script with the `-t` option to view the
-invocations without running them.
+MMGen Wallet’s functionality.  Launch the script with the `-t` option to view
+the invocations without running them.
 
 The test scripts themselves are all located in the `test/` directory and bear
 the `.py` extension.  They may be run individually if desired.  Options and

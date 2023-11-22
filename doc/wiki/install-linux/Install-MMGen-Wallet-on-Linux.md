@@ -54,8 +54,8 @@ If not running in a virtual environment, make sure that `~/.local/bin` is in
 `/usr` or `/usr/local`.
 
 ```text
-$ git clone https://github.com/mmgen/mmgen.git
-$ cd mmgen
+$ git clone https://github.com/mmgen/mmgen-wallet.git
+$ cd mmgen-wallet
 $ python3 -m build --no-isolation
 $ python3 -m pip install --upgrade dist/*.whl # see 'Install Note' below
 $ cd ..
@@ -93,7 +93,7 @@ following steps:
 > -i` and the Python packages with `python3 -m pip install`.
 
 Congratulations, your installation is now complete!  You can now proceed to
-[**Getting Started with MMGen**][gs].
+[**Getting Started with MMGen Wallet**][gs].
 
 [01]: Install-Bitcoind
 [02]: Install-Bitcoind-from-Source-on-Linux

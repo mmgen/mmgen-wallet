@@ -18,11 +18,12 @@ mind: “What if I have funds in MMGen Wallet and I lose the software?  How do
 I recover my coins?”
 
 Let’s take this scenario to its logical extreme and assume you’ve lost all
-backup copies of the software, MMGen’s project page has disappeared from both
-[Github][04] and [Gitlab][05] (or been hacked) and no other repositories or
-copies are available on the Internet.  The following tutorial will show you how
-to recover the private keys for your coin addresses in the event this unlikely
-combination of circumstances ever occurs.
+backup copies of the software, the MMGen Wallet project page has disappeared
+from all of [Github][04], [Gitlab][05], [Gitflic][06] and [mmgen.org][07] (or
+been hacked), and no other verifiable repositories or copies are available on
+the Internet.  The following tutorial will show you how to recover the private
+keys for your coin addresses in the event this very unlikely combination of
+circumstances ever occurs.
 
 In addition to private keys, this tutorial can also be used to recover passwords
 generated with the `mmgen-passgen` command.
@@ -503,5 +504,7 @@ False
 [01]: https://github.com/casascius/Bitcoin-Address-Utility
 [02]: https://github.com/matja/bitcoin-tool
 [03]: https://github.com/spesmilo/electrum/blob/1.9.5/lib/mnemonic.py
-[04]: https://github.com/mmgen/mmgen
-[05]: https://gitlab.com/mmgen/mmgen
+[04]: https://github.com/mmgen/mmgen-wallet
+[05]: https://gitlab.com/mmgen/mmgen-wallet
+[06]: https://gitflic.ru/project/mmgen/mmgen-wallet
+[07]: https://mmgen.org/project/mmgen/mmgen-wallet
