@@ -20,13 +20,14 @@ $ sudo apt-get install curl git gcc libtool make autoconf libgmp-dev libssl-dev 
 $ sudo pacman -S curl git gcc libtool make autoconf automake autogen pcre python-pip libsecp256k1
 ```
 
-To keep your MMGen Wallet installation isolated from the rest of your Python
-packages, you may wish to use a [virtual environment][ve].  If you choose not to
-do this, you may get an ‘externally-managed-environment’ error when installing
-packages with `pip`.  In this case, you must add `--break-system-packages`
-to the `pip` command line.  Note that this will not in fact break any system
-packages, as pip installs all packages under the user’s home directory when
-invoked as user.
+You may wish to use a [virtual environment][vv] to keep your MMGen Wallet
+installation isolated from the rest of your Python packages.
+
+If you choose not to use a virtual environment, then you may need to add
+`--break-system-packages` to the `pip install` command line, depending on your
+Python version and Linux distribution.  Note that this will not in fact break
+any system packages, as pip installs all packages under the user’s home
+directory when invoked as user.
 
 ### Upgrade the Python build tools:
 
@@ -102,4 +103,4 @@ Congratulations, your installation is now complete!  You can now proceed to
 [pi]: https://pypi.org
 [af]: Altcoin-and-Forkcoin-Support
 [ec]: https://github.com/bitcoin-core/secp256k1.git
-[ve]: https://docs.python.org/3/library/venv.html
+[vv]: https://docs.python.org/3/library/venv.html

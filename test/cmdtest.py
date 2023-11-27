@@ -127,7 +127,7 @@ opts_data = {
 		('demo',True,'pexpect_spawn',True),
 	],
 	'text': {
-		'desc': 'Test suite for the MMGen suite',
+		'desc': 'High-level tests for the MMGen Wallet suite',
 		'usage':'[options] [command [..command]] | [command_group[.command_subgroup][:command]]',
 		'options': """
 -h, --help           Print this help message

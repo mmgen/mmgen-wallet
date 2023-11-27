@@ -1,10 +1,9 @@
 ## Introduction
 
 In addition to low-level subsystems, the suite tests the overall operation of
-the MMGen Wallet’s commands by running them interactively as a user would.  Thus
-the test suite is useful not only for ensuring the MMGen Wallet system is
-correctly installed and working on your platform but also for demonstrating how
-it works.
+MMGen Wallet’s commands by running them interactively as a user would.  Thus the
+test suite is useful not only for ensuring the MMGen Wallet system is correctly
+installed and working on your platform but also for demonstrating how it works.
 
 BTC-only testing requires installation of Bitcoin Core and pycoin only, while
 altcoin testing requires additional helper programs and libraries, installation

@@ -57,7 +57,7 @@ opts_data = {
                                OPERATIONS
 
 gen_key - generate the wallet encryption key and copy it to the mountpoint
-          {asi.mountpoint!r} (as currently configured)
+          ‘{asi.mountpoint}’ (as currently configured)
 setup   - generate both wallet encryption key and temporary signing wallet
 wait    - start in loop mode: wait-mount-sign-unmount-wait
 
