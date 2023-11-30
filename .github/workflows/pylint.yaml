@@ -27,6 +27,7 @@ jobs:
           eth-requirements.txt
           xmr-requirements.txt
           test-requirements.txt
+          alt-requirements.txt
 
     - name: Install Python dependencies
       run: |
