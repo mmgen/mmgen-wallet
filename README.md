@@ -185,6 +185,7 @@ Code repository mirrors:
 [Gitlab](https://gitlab.com/mmgen/mmgen-wallet) |
 [Gitflic](https://gitflic.ru/project/mmgen/mmgen-wallet)     
 [Keybase](https://keybase.io/mmgen) |
+[Twitter](https://twitter.com/TheMMGenProject) |
 [Reddit](https://www.reddit.com/user/mmgen-py) |
 [Bitcointalk](https://bitcointalk.org/index.php?topic=567069.new#new)   
 [PGP Signing Key][5]: 5C84 CB45 AEE2 250F 31A6 A570 3F8B 1861 E32B 7DA2    
