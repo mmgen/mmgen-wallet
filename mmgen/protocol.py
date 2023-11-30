@@ -34,7 +34,7 @@ _nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
 
 class CoinProtocol(MMGenObject):
 
-	proto_info = namedtuple('proto_info',['name','trust_level']) # trust levels: see altcoin.py
+	proto_info = namedtuple('proto_info',['name','trust_level']) # trust levels: see altcoin/params.py
 
 	# keys are mirrored in gc.core_coins:
 	coins = {
@@ -258,7 +258,7 @@ def init_proto(
 	coin = coin.lower()
 
 	if coin not in CoinProtocol.coins:
-		from .altcoin import init_genonly_altcoins
+		from .altcoin.params import init_genonly_altcoins
 		init_genonly_altcoins( coin, testnet=testnet ) # raises exception on failure
 
 	name = CoinProtocol.coins[coin].name
@@ -298,7 +298,7 @@ def warn_trustlevel(cfg):
 	if coinsym.lower() in CoinProtocol.coins:
 		trust_level = CoinProtocol.coins[coinsym.lower()].trust_level
 	else:
-		from .altcoin import CoinInfo
+		from .altcoin.params import CoinInfo
 		e = CoinInfo.get_entry(coinsym,'mainnet')
 		trust_level = e.trust_level if e else None
 		if trust_level in (None,-1):

@@ -33,7 +33,7 @@ init_tests() {
 
 	d_alt="altcoin module"
 	t_alt="
-		- python3 -m mmgen.altcoin $altcoin_mod_opts
+		- python3 -m test.altcointest $altcoin_mod_opts
 	"
 
 	d_obj="data objects"
