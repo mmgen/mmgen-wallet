@@ -40,7 +40,8 @@ class CmdTestTool(CmdTestMain,CmdTestBase):
 		('tool_encrypt',         (9,"'mmgen-tool encrypt' (random data)",     [])),
 		('tool_decrypt',         (9,"'mmgen-tool decrypt' (random data)", [[[enc_infn+'.mmenc'],9]])),
 		('tool_twview_bad_comment',(9,"'mmgen-tool twview' (with bad comment)", [])),
-		('tool_extract_key_from_geth_wallet',(9,"'mmgen-tool extract_key_from_geth_wallet'", [])),
+		('tool_decrypt_keystore',(9,"'mmgen-tool decrypt_keystore'", [])),
+		('tool_decrypt_geth_keystore',(9,"'mmgen-tool decrypt_geth_keystore'", [])),
 		('tool_api',             (9,'tool API (initialization, config methods, wif2addr)',[])),
 		# ('tool_encrypt_ref', (9,"'mmgen-tool encrypt' (reference text)",  [])),
 	)
@@ -99,15 +100,27 @@ class CmdTestTool(CmdTestMain,CmdTestBase):
 		t.req_exit_val = 2
 		return t
 
-	def tool_extract_key_from_geth_wallet(self):
+	def _decrypt_keystore(self,cmd,fn,pw,chk):
 		if cfg.no_altcoin:
 			return 'skip'
-		fn = 'test/ref/ethereum/geth-wallet.json'
-		key = '9627ddb68354f5e0ff45fb2da49d7a20a013b7257a83ef4adbbbd87aeaccc75e'
-		t = self.spawn('mmgen-tool',['-d',self.tmpdir,'extract_key_from_geth_wallet',fn])
-		t.expect('Enter passphrase: ','\n')
-		t.expect(key)
+		t = self.spawn('mmgen-tool',['-d',self.tmpdir,cmd,fn])
+		t.expect('Enter passphrase: ',pw+'\n')
+		t.expect(chk)
 		return t
+
+	def tool_decrypt_keystore(self):
+		return self._decrypt_keystore(
+			cmd = 'decrypt_keystore',
+			fn  = 'test/ref/altcoin/98831F3A-keystore-wallet.json',
+			pw = 'abc',
+			chk = read_from_file('test/ref/98831F3A.bip39') )
+
+	def tool_decrypt_geth_keystore(self):
+		return self._decrypt_keystore(
+			cmd = 'decrypt_geth_keystore',
+			fn  = 'test/ref/ethereum/geth-wallet.json',
+			pw  = '',
+			chk = '9627ddb68354f5e0ff45fb2da49d7a20a013b7257a83ef4adbbbd87aeaccc75e')
 
 	def tool_api(self):
 		t = self.spawn(

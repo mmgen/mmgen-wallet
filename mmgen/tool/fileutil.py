@@ -148,9 +148,20 @@ class tool_cmd(tool_cmd_base):
 
 		return True
 
-	def extract_key_from_geth_wallet( self, wallet_file:str, check_addr=True ):
-		"decrypt the encrypted private key in a Geth keystore wallet, returning the decrypted key"
+	def decrypt_keystore(self, wallet_file:str, output_hex=False):
+		"decrypt the data in a keystore wallet, returning the decrypted data in binary format"
 		from ..ui import line_input
-		from ..proto.eth.misc import extract_key_from_geth_keystore_wallet
-		passwd = line_input( self.cfg, 'Enter passphrase: ', echo=self.cfg.echo_passphrase ).strip().encode()
-		return extract_key_from_geth_keystore_wallet( self.cfg, wallet_file, passwd, check_addr ).hex()
+		passwd = line_input(self.cfg, 'Enter passphrase: ', echo=self.cfg.echo_passphrase).strip().encode()
+		import json
+		with open(wallet_file) as fh:
+			data = json.loads(fh.read())
+		from ..altcoin.util import decrypt_keystore
+		ret = decrypt_keystore(data[0]['keystore'], passwd)
+		return ret.hex() if output_hex else ret
+
+	def decrypt_geth_keystore(self, wallet_file:str, check_addr=True):
+		"decrypt the private key in a Geth keystore wallet, returning the decrypted key in hex format"
+		from ..ui import line_input
+		passwd = line_input(self.cfg, 'Enter passphrase: ', echo=self.cfg.echo_passphrase).strip().encode()
+		from ..proto.eth.misc import decrypt_geth_keystore
+		return decrypt_geth_keystore(self.cfg, wallet_file, passwd, check_addr).hex()

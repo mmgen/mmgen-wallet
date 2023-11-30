@@ -12,10 +12,9 @@
 proto.eth.misc: miscellaneous utilities for Ethereum base protocol
 """
 
-from ...util import die
 from ...util2 import get_keccak
 
-def extract_key_from_geth_keystore_wallet(cfg,wallet_fn,passwd,check_addr=True):
+def decrypt_geth_keystore(cfg,wallet_fn,passwd,check_addr=True):
 	"""
 	Decrypt the encrypted private key in a Geth keystore wallet, returning the decrypted key
 	"""
@@ -24,37 +23,11 @@ def extract_key_from_geth_keystore_wallet(cfg,wallet_fn,passwd,check_addr=True):
 	with open(wallet_fn) as fp:
 		wallet_data = json.loads(fp.read())
 
-	cdata = wallet_data['crypto']
-
-	assert cdata['cipher'] == 'aes-128-ctr', f'incorrect cipher: "{cdata["cipher"]}" != "aes-128-ctr"'
-	assert cdata['kdf'] == 'scrypt', f'incorrect KDF: "{cdata["kdf"]}" != "scrypt"'
-
-	# Derive encryption key from password
-	from hashlib import scrypt
-	sp = cdata['kdfparams']
-	hashed_pw = scrypt(
-		password = passwd,
-		salt     = bytes.fromhex( sp['salt'] ),
-		n        = sp['n'],
-		r        = sp['r'],
-		p        = sp['p'],
-		maxmem   = 0,
-		dklen    = sp['dklen'] )
-
-	# Check password by comparing generated MAC to stored MAC
-	mac_chk = get_keccak(cfg)(hashed_pw[16:32] + bytes.fromhex( cdata['ciphertext'] )).digest().hex()
-	if mac_chk != cdata['mac']:
-		die(1,'Incorrect passphrase')
-
-	# Decrypt Ethereum private key
-	from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
-	from cryptography.hazmat.backends import default_backend
-	c = Cipher(
-		algorithms.AES(hashed_pw[:16]),
-		modes.CTR(bytes.fromhex( cdata['cipherparams']['iv'] )),
-		backend = default_backend() )
-	encryptor = c.encryptor()
-	key = encryptor.update( bytes.fromhex(cdata['ciphertext']) ) + encryptor.finalize()
+	from ...altcoin.util import decrypt_keystore
+	key = decrypt_keystore(
+		wallet_data,
+		passwd,
+		mac_algo = get_keccak())
 
 	# Optionally check that Ethereum private key produces correct address
 	if check_addr:

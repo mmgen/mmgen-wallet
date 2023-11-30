@@ -482,8 +482,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 			wallet_fn = os.path.join( self.keystore_dir, os.listdir(self.keystore_dir)[0] )
 
-			from mmgen.proto.eth.misc import extract_key_from_geth_keystore_wallet
-			key = extract_key_from_geth_keystore_wallet(
+			from mmgen.proto.eth.misc import decrypt_geth_keystore
+			key = decrypt_geth_keystore(
 				cfg       = cfg,
 				wallet_fn = wallet_fn,
 				passwd = b'' )

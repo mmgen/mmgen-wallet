@@ -145,7 +145,8 @@ mods = {
 		'encrypt',
 	),
 	'fileutil': (
-		'extract_key_from_geth_wallet',
+		'decrypt_keystore',
+		'decrypt_geth_keystore',
 		'find_incog_data',
 		'rand2file',
 	),
