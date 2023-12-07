@@ -265,7 +265,8 @@ init_tests() {
 		a $gentest_py --coin=ltc --type=bech32 1 $REFDIR/litecoin/ltcwallet-bech32.dump
 		a $gentest_py --coin=ltc --type=compressed --testnet=1 1 $REFDIR/litecoin/ltcwallet-testnet.dump
 		- # libsecp256k1 vs python-ecdsa:
-		- $gentest_py 1:2 $rounds100x
+		- $gentest_py --type=legacy 1:2 $rounds100x
+		- $gentest_py --type=compressed 1:2 $rounds100x
 		- $gentest_py --type=segwit 1:2 $rounds100x
 		- $gentest_py --type=bech32 1:2 $rounds100x
 		- $gentest_py --testnet=1 1:2 $rounds100x

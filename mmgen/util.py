@@ -27,6 +27,7 @@ from .cfg import gv,gc
 
 ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
 
+digits = '0123456789'
 hexdigits = '0123456789abcdefABCDEF'
 hexdigits_uc = '0123456789ABCDEF'
 hexdigits_lc = '0123456789abcdef'
@@ -347,12 +348,8 @@ def secs_to_hms(secs):
 def secs_to_ms(secs):
 	return '{:02d}:{:02d}'.format(secs//60, secs % 60)
 
-def is_int(s):
-	try:
-		int(str(s))
-		return True
-	except:
-		return False
+def is_int(s): # actually is_nonnegative_int()
+	return set(str(s)) <= set(digits)
 
 def check_int_between(val,imin,imax,desc):
 	if not imin <= int(val) <= imax:

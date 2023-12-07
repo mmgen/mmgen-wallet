@@ -34,7 +34,7 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	init_dev()
 
 from mmgen.cfg import Config,gc
-from mmgen.color import green,gray
+from mmgen.color import green,gray,brown
 from mmgen.util import msg,gmsg,ymsg,Msg,async_run
 
 from test.include.common import set_globals,end_msg
@@ -147,7 +147,7 @@ def run_test(test,subtest=None):
 
 	def run_subtest(t,subtest):
 		subtest_disp = subtest.replace('_','-')
-		msg(f'Running unit subtest {test}.{subtest_disp}')
+		msg(brown(f'Running unit subtest {test}.{subtest_disp}'))
 
 		if getattr(t,'silence_output',False):
 			t._silence()

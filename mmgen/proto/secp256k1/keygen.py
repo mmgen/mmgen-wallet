@@ -62,14 +62,14 @@ class backend:
 			0x02 depending on whether they're greater or less than the midpoint of the curve.
 			"""
 			def privnum2pubkey(numpriv,compressed=False):
-				pko = self.ecdsa.SigningKey.from_secret_exponent(numpriv,curve=self.ecdsa.SECP256k1)
-				# pubkey = x (32 bytes) + y (32 bytes) (unsigned big-endian)
-				pubkey = pko.get_verifying_key().to_string()
+				pk = self.ecdsa.SigningKey.from_secret_exponent(numpriv,curve=self.ecdsa.SECP256k1)
+				# vk_bytes = x (32 bytes) + y (32 bytes) (unsigned big-endian)
+				vk_bytes = pk.verifying_key.to_string()
 				if compressed: # discard Y coord, replace with appropriate version byte
 					# even y: <0, odd y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
-					return (b'\x02',b'\x03')[pubkey[-1] & 1] + pubkey[:32]
+					return (b'\x03' if vk_bytes[-1] & 1 else b'\x02') + vk_bytes[:32]
 				else:
-					return b'\x04' + pubkey
+					return b'\x04' + vk_bytes
 
 			return PubKey(
 				s = privnum2pubkey( int.from_bytes(privkey,'big'), compressed=privkey.compressed ),

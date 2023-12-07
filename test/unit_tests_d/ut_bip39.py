@@ -5,10 +5,12 @@ test/unit_tests_d/ut_bip39: BIP39 unit test for the MMGen suite
 """
 
 from mmgen.util import msg,msg_r
+from mmgen.color import blue,orange,purple
+from mmgen.bip39 import bip39
 
-from ..include.common import cfg,qmsg,vmsg
+from ..include.common import cfg,qmsg,vmsg,vmsg_r
 
-class unit_test:
+class unit_tests:
 
 	vectors = (
 		(   "00000000000000000000000000000000",
@@ -85,12 +87,10 @@ class unit_test:
 		)
 	)
 
-	def run_test(self,name,ut):
+	def conversion(self,name,ut):
 
-		msg_r('Testing BIP39 conversion routines...')
-		qmsg('')
-
-		from mmgen.bip39 import bip39
+		vmsg('')
+		qmsg(blue('Testing BIP39 conversion routines'))
 
 		b = bip39()
 		b.check_wordlist(cfg)
@@ -111,8 +111,15 @@ class unit_test:
 			res = b.tohex( v[1].split() )
 			assert res == chk, f'mismatch:\nres: {res}\nchk: {chk}'
 
+		qmsg('OK')
 		vmsg('')
-		qmsg('Checking error handling:')
+
+		return True
+
+	def errors(self,name,ut):
+
+		vmsg('')
+		qmsg(blue('Testing error handling'))
 
 		good_mn = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong".split()
 		bad_len_mn = "zoo zoo zoo".split()
@@ -121,6 +128,7 @@ class unit_test:
 		bad_seed = 'deadbeef'
 		good_seed = 'deadbeef' * 4
 
+		b = bip39()
 		th = b.tohex
 		fh = b.fromhex
 		bad_data = (
@@ -137,7 +145,7 @@ class unit_test:
 
 		ut.process_bad_data(bad_data)
 
+		qmsg('OK')
 		vmsg('')
-		msg('OK')
 
 		return True

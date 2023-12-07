@@ -114,7 +114,7 @@ sample_text_hexdump = (
 kafile_opts = ['-p1','-Ptest/ref/keyaddrfile_password']
 
 from test.unit_tests_d.ut_baseconv import unit_test as ut_baseconv
-from test.unit_tests_d.ut_bip39 import unit_test as ut_bip39
+from test.unit_tests_d.ut_bip39 import unit_tests as ut_bip39
 from test.unit_tests_d.ut_xmrseed import unit_test as ut_xmrseed
 
 btc_wif1 = '5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'
