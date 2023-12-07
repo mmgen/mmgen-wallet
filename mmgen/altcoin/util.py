@@ -48,13 +48,14 @@ def decrypt_keystore(data,passwd,mac_algo=None,mac_params={}):
 	elif kdf == 'pbkdf2':
 		if (prf := parms.get('prf')) != 'hmac-sha256':
 			die(1, f"unsupported hash function {prf!r} (must be 'hmac-sha256')")
-		from pbkdf2 import PBKDF2
-		hashed_pw = PBKDF2(
-			passphrase   = passwd,
-			salt         = bytes.fromhex(parms['salt']),
-			iterations   = parms['c'],
-			digestmodule = 'sha256',
-		).read(parms['dklen'])
+		from cryptography.hazmat.primitives import hashes
+		from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+		hashed_pw = PBKDF2HMAC(
+			algorithm  = hashes.SHA256(),
+			length     = parms['dklen'],
+			salt       = bytes.fromhex(parms['salt']),
+			iterations = parms['c']
+		).derive(passwd)
 		# see:
 		#   https://github.com/xchainjs/xchainjs-lib.git
 		#   https://github.com/xchainjs/foundry-primitives-js.git
