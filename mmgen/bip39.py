@@ -128,3 +128,16 @@ class bip39(baseconv):
 		res = seed_bin + chk_bin
 
 		return tuple(wl[int(res[i*11:(i+1)*11],2)] for i in range(c.mn_len))
+
+	def generate_seed(self,words_arg,passwd=''):
+
+		self.tohex(words_arg) # validate
+
+		from cryptography.hazmat.primitives import hashes
+		from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+		return PBKDF2HMAC(
+			algorithm  = hashes.SHA512(),
+			length     = 64,
+			salt       = b'mnemonic' + passwd.encode(),
+			iterations = 2048
+		).derive(' '.join(words_arg).encode())
