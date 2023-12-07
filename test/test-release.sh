@@ -236,16 +236,18 @@ done
 
 shift $((OPTIND-1))
 
-[ "$SDIST_TEST" -a -z "$MMGEN_TEST_RELEASE_IN_SDIST" ] && {
+set -e
+
+[ "$SDIST_TEST" -a -z "$TEST_RELEASE_IN_SDIST" ] && {
 	test_dir='.sdist-test'
-	rm -rf build dist MMGen.egg-info $test_dir
+	rm -rf build dist *.egg-info $test_dir
 	python3 -m build --no-isolation --sdist
 	mkdir $test_dir
 	tar -C $test_dir -axf dist/*.tar.gz
-	cd $test_dir/MMGen-*
+	cd $test_dir/mmgen-*
 	python3 setup.py build_ext --inplace
 	echo -e "\n${BLUE}Running 'test/test-release $ORIG_ARGS'$RESET $YELLOW[PWD=$PWD]$RESET\n"
-	export MMGEN_TEST_RELEASE_IN_SDIST=1
+	export TEST_RELEASE_IN_SDIST=1
 	test/test-release.sh $ORIG_ARGS
 	exit
 }
@@ -263,8 +265,6 @@ case $1 in
 	'qskip')   tests=$qskip_tests ;;
 	*)         tests="$*" ;;
 esac
-
-set -e
 
 rounds_min=$((rounds / 2))
 for n in 2 5 10 20 50 100 200 500 1000; do
