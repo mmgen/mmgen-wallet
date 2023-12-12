@@ -29,6 +29,23 @@ from .common import get_file_with_ext,dfl_words_file
 from .ct_base import CmdTestBase
 from .ct_main import CmdTestMain
 
+class CmdTestDev(CmdTestBase):
+	'developer scripts'
+	networks = ('btc',)
+	cmd_group = (
+		('compute_file_chksum', 'scripts/compute-file-chksum.py'),
+	)
+	tmpdir_nums = [99]
+	color = True
+
+	def _spawn(self,script,args):
+		return self.spawn(script,args,cmd_dir='.',no_exec_wrapper=True)
+
+	def compute_file_chksum(self):
+		t = self._spawn('scripts/compute-file-chksum.py', ['test/ref/25EFA3[2.34].testnet.rawtx'])
+		t.expect('3df942')
+		return t
+
 class CmdTestMisc(CmdTestBase):
 	'miscellaneous tests (RPC backends, xmrwallet_txview, term)'
 	networks = ('btc',)

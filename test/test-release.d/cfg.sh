@@ -8,7 +8,7 @@
 #   https://github.com/mmgen/mmgen-wallet
 #   https://gitlab.com/mmgen/mmgen-wallet
 
-all_tests="dep lint obj color unit hash ref altref altgen xmr eth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt"
+all_tests="dep dev lint obj color unit hash ref altref altgen xmr eth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt"
 
 groups_desc="
 	default  - All tests minus the extra tests
@@ -20,7 +20,7 @@ groups_desc="
 
 init_groups() {
 	dfl_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth xmr'
-	extra_tests='dep lint autosign_btc autosign_live ltc_tn bch_tn'
+	extra_tests='dep dev lint autosign_btc autosign_live ltc_tn bch_tn'
 	noalt_tests='dep alt obj color unit hash ref tool tool2 gen autosign_btc btc btc_tn btc_rt'
 	quick_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_rt altref altgen eth xmr'
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
@@ -58,6 +58,11 @@ init_tests() {
 
 	d_dep="system and testing dependencies"
 	t_dep="- $unit_tests_py testdep dep daemon.exec"
+
+	d_dev="developer scripts ${YELLOW}(additional dependencies required)$RESET"
+	t_dev="
+		- $cmdtest_py dev
+	"
 
 	d_lint="code errors with static code analyzer"
 	t_lint="
@@ -156,7 +161,6 @@ init_tests() {
 
 	d_btc="overall operations with emulated RPC data (Bitcoin)"
 	t_btc="
-		- $python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1
 		- $cmdtest_py --exclude regtest,autosign,ref_altcoin
 		- $cmdtest_py --segwit
 		- $cmdtest_py --segwit-random

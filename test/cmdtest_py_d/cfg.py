@@ -41,6 +41,7 @@ cmd_groups_dfl = {
 }
 
 cmd_groups_extra = {
+	'dev':                    ('CmdTestDev',{'modname':'misc'}),
 	'autosign_btc':           ('CmdTestAutosignBTC',{'modname':'autosign'}),
 	'autosign_live':          ('CmdTestAutosignLive',{'modname':'autosign'}),
 	'autosign_live_simulate': ('CmdTestAutosignLiveSimulate',{'modname':'autosign'}),
