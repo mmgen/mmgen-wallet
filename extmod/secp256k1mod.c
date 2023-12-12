@@ -41,6 +41,38 @@ int privkey_check(
 	return 1;
 }
 
+int pubkey_parse_with_check(
+		const secp256k1_context * ctx,
+		secp256k1_pubkey *        pubkey_ptr,
+		const unsigned char *     pubkey_bytes,
+		const Py_ssize_t          pubkey_bytes_len
+	) {
+	if (ctx == NULL) {
+		PyErr_SetString(PyExc_RuntimeError, "Context initialization failed");
+		return 0;
+	}
+	if (pubkey_bytes_len == 33) {
+		if (pubkey_bytes[0] != 3 && pubkey_bytes[0] != 2) {
+			PyErr_SetString(PyExc_ValueError, "Invalid first byte for serialized compressed public key");
+			return 0;
+		}
+	} else if (pubkey_bytes_len == 65) {
+		if (pubkey_bytes[0] != 4) {
+			PyErr_SetString(PyExc_ValueError, "Invalid first byte for serialized uncompressed public key");
+			return 0;
+		}
+	} else {
+		PyErr_SetString(PyExc_ValueError, "Serialized public key length not 33 or 65 bytes");
+		return 0;
+	}
+	/* checks for point-at-infinity (via secp256k1_pubkey_save) */
+	if (secp256k1_ec_pubkey_parse(ctx, pubkey_ptr, pubkey_bytes, pubkey_bytes_len) != 1) {
+		PyErr_SetString(PyExc_ValueError, "Public key could not be parsed or encodes point-at-infinity");
+		return 0;
+	}
+	return 1;
+}
+
 static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
 	const unsigned char * privkey_bytes;
 	const Py_ssize_t privkey_bytes_len;
@@ -72,6 +104,56 @@ static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
 	return Py_BuildValue("y#", pubkey_bytes, pubkey_bytes_len);
 }
 
+static PyObject * pubkey_tweak_add(PyObject *self, PyObject *args) {
+	const unsigned char * pubkey_bytes;
+	const unsigned char * tweak_bytes;
+	const Py_ssize_t pubkey_bytes_len;
+	const Py_ssize_t tweak_bytes_len;
+	if (!PyArg_ParseTuple(args, "y#y#", &pubkey_bytes, &pubkey_bytes_len, &tweak_bytes, &tweak_bytes_len)) {
+		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
+		return NULL;
+	}
+	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+	secp256k1_pubkey pubkey;
+	if (!pubkey_parse_with_check(ctx, &pubkey, pubkey_bytes, pubkey_bytes_len)) {
+		return NULL;
+	}
+	if (!privkey_check(ctx, tweak_bytes, tweak_bytes_len, "Tweak")) {
+		return NULL;
+	}
+	/* checks for point-at-infinity (via secp256k1_pubkey_save) */
+	if (secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, tweak_bytes) != 1) {
+		PyErr_SetString(PyExc_RuntimeError, "Adding public key points failed or result was point-at-infinity");
+		return NULL;
+	}
+	unsigned char new_pubkey_bytes[pubkey_bytes_len];
+	if (secp256k1_ec_pubkey_serialize(
+			ctx,
+			new_pubkey_bytes,
+			(size_t*) &pubkey_bytes_len,
+			&pubkey,
+			pubkey_bytes_len == 33 ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED) != 1) {
+		PyErr_SetString(PyExc_RuntimeError, "Public key serialization failed");
+		return NULL;
+	}
+	return Py_BuildValue("y#", new_pubkey_bytes, pubkey_bytes_len);
+}
+
+static PyObject * pubkey_check(PyObject *self, PyObject *args) {
+	const unsigned char * pubkey_bytes;
+	const Py_ssize_t pubkey_bytes_len;
+	if (!PyArg_ParseTuple(args, "y#", &pubkey_bytes, &pubkey_bytes_len)) {
+		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
+		return NULL;
+	}
+	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+	secp256k1_pubkey pubkey;
+	if (!pubkey_parse_with_check(ctx, &pubkey, pubkey_bytes, pubkey_bytes_len)) {
+		return NULL;
+	}
+	return Py_BuildValue("I", 1);
+}
+
 /* https://docs.python.org/3/howto/cporting.html */
 
 struct module_state {
@@ -86,6 +168,18 @@ static PyMethodDef secp256k1_methods[] = {
 		pubkey_gen,
 		METH_VARARGS,
 		"Generate a serialized pubkey from privkey bytes"
+	},
+	{
+		"pubkey_tweak_add",
+		pubkey_tweak_add,
+		METH_VARARGS,
+		"Add scalar bytes to a serialized pubkey, returning a serialized pubkey"
+	},
+	{
+		"pubkey_check",
+		pubkey_check,
+		METH_VARARGS,
+		"Check a serialized pubkey, ensuring the encoded point is not point-at-infinity"
 	},
     {NULL, NULL}
 };
