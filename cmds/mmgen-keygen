@@ -22,4 +22,4 @@ mmgen-keygen: Generate a series or range of keys from an MMGen deterministic
 """
 
 from mmgen.main import launch
-launch("keygen")
+launch(mod='addrgen')

@@ -22,4 +22,4 @@ mmgen-walletconv: Convert an MMGen deterministic wallet from one format
 """
 
 from mmgen.main import launch
-launch("walletconv")
+launch(mod='wallet')

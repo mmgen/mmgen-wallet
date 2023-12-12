@@ -21,4 +21,4 @@ mmgen-autosign: Auto-sign MMGen transactions
 """
 
 from mmgen.main import launch
-launch("autosign")
+launch(mod='autosign')

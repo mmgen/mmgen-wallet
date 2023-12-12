@@ -21,4 +21,4 @@ mmgen-seedjoin: Recreate an MMGen deterministic wallet from its component shares
 """
 
 from mmgen.main import launch
-launch("seedjoin")
+launch(mod='seedjoin')

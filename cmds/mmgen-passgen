@@ -22,4 +22,4 @@ mmgen-passgen: Generate a range or series of passwords from an MMGen
 """
 
 from mmgen.main import launch
-launch("passgen")
+launch(mod='passgen')

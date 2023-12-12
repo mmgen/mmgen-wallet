@@ -22,4 +22,4 @@ mmgen-txcreate: Create a Bitcoin transaction from MMGen- or non-MMGen inputs
 """
 
 from mmgen.main import launch
-launch("txcreate")
+launch(mod='txcreate')

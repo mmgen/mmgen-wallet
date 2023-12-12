@@ -21,4 +21,4 @@ mmgen-addrimport: Import addresses into a MMGen bitcoind watching wallet
 """
 
 from mmgen.main import launch
-launch("addrimport")
+launch(mod='addrimport')

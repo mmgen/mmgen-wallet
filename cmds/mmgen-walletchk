@@ -21,4 +21,4 @@ mmgen-walletchk: Check integrity of an MMGen deterministic wallet
 """
 
 from mmgen.main import launch
-launch("walletchk")
+launch(mod='wallet')

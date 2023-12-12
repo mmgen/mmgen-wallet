@@ -22,4 +22,4 @@ mmgen-passchg: Change an MMGen deterministic wallet's passphrase, label or
 """
 
 from mmgen.main import launch
-launch("passchg")
+launch(mod='wallet')

@@ -21,4 +21,4 @@ mmgen-subwalletgen: Generate a subwallet from an MMGen deterministic wallet
 """
 
 from mmgen.main import launch
-launch("subwalletgen")
+launch(mod='wallet')

@@ -21,4 +21,4 @@ mmgen-seedsplit: Generate a seed split from an MMGen deterministic wallet
 """
 
 from mmgen.main import launch
-launch("seedsplit")
+launch(mod='wallet')

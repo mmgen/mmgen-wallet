@@ -22,4 +22,4 @@ mmgen-regtest: Bitcoind regression test mode setup and operations for the MMGen
 """
 
 from mmgen.main import launch
-launch("regtest")
+launch(mod='regtest')

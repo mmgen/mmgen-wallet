@@ -22,13 +22,7 @@ main: Script launcher for the MMGen Project
 
 import sys,os
 
-def launch(mod,package='mmgen'):
-
-	if mod in ('walletgen','walletchk','walletconv','passchg','subwalletgen','seedsplit'):
-		mod = 'wallet'
-
-	if mod == 'keygen':
-		mod = 'addrgen'
+def launch(*, mod=None, package='mmgen'):
 
 	if sys.platform == 'linux' and sys.stdin.isatty():
 		import termios,atexit

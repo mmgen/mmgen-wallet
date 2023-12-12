@@ -22,4 +22,4 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 """
 
 from mmgen.main import launch
-launch("addrgen")
+launch(mod='addrgen')

@@ -21,4 +21,4 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
 from mmgen.main import launch
-launch("txdo")
+launch(mod='txdo')

@@ -22,4 +22,4 @@ optionally sign and send it.
 """
 
 from mmgen.main import launch
-launch("txbump")
+launch(mod='txbump')

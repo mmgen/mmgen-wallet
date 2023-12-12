@@ -21,4 +21,4 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 """
 
 from mmgen.main import launch
-launch("txsend")
+launch(mod='txsend')

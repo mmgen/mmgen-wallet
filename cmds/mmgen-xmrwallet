@@ -21,4 +21,4 @@ mmgen-xmrwallet: Monero wallet ops for the MMGen suite
 """
 
 from mmgen.main import launch
-launch("xmrwallet")
+launch(mod='xmrwallet')

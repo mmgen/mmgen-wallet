@@ -13,4 +13,4 @@ mmgen-msg: Message signing operations for the MMGen suite
 """
 
 from mmgen.main import launch
-launch("msg")
+launch(mod='msg')
