@@ -33,10 +33,12 @@ def launch(*, mod=None, func=None, package='mmgen'):
 	try:
 		__import__(f'{package}.main_{mod}') if mod else func()
 	except KeyboardInterrupt:
-		sys.stderr.write('\nUser interrupt\n')
+		from .color import yellow
+		sys.stderr.write(yellow('\nUser interrupt\n'))
 		sys.exit(1)
 	except EOFError:
-		sys.stderr.write('\nEnd of file\n')
+		from .color import yellow
+		sys.stderr.write(yellow('\nEnd of file\n'))
 		sys.exit(1)
 	except Exception as e:
 

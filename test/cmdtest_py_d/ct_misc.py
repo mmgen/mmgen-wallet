@@ -122,7 +122,6 @@ class CmdTestMisc(CmdTestBase):
 class CmdTestHelp(CmdTestBase):
 	'help, info and usage screens'
 	networks = ('btc','ltc','bch','eth','xmr')
-	tmpdir_nums = []
 	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
 	cmd_group = (
 		('usage',                 (1,'usage message',[])),
@@ -276,7 +275,6 @@ class CmdTestHelp(CmdTestBase):
 class CmdTestOutput(CmdTestBase):
 	'screen output'
 	networks = ('btc',)
-	tmpdir_nums = []
 	cmd_group = (
 		('output_gr', (1,"Greek text", [])),
 		('output_ru', (1,"Russian text", [])),

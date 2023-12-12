@@ -168,9 +168,14 @@ from mmgen.cfg import Config
 
 if __name__ == '__main__':
 
-	assert len(sys.argv) in (2,3),"Test takes 1 or 2 arguments: test name, plus optional rounds count"
+	if len(sys.argv) not in (2,3):
+		die(1,'Test takes 1 or 2 arguments: test name, plus optional rounds count')
+
 	test = sys.argv[1].capitalize()
-	assert test in ('Sha256','Sha512','Keccak'), "Valid choices for test are 'sha256','sha512' or 'keccak'"
+
+	if test not in ('Sha256','Sha512','Keccak'):
+		die(1, "Valid choices for test are 'sha256','sha512' or 'keccak'")
+
 	random_rounds = int(sys.argv[2]) if len(sys.argv) == 3 else 500
 
 	set_globals(Config())

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test/tooltest2.py: Simple tests for the 'mmgen-tool' utility
+test/tooltest2.py: Test the 'mmgen-tool' utility
 """
 
 # TODO: move all non-interactive 'mmgen-tool' tests in 'cmdtest.py' here
@@ -34,6 +34,7 @@ except ImportError:
 
 from test.include.common import set_globals,end_msg,sample_text,init_coverage
 
+from mmgen import main_tool
 from mmgen.cfg import Config
 from mmgen.color import green,blue,purple,cyan,gray
 from mmgen.util import msg,msg_r,Msg,is_hex_str,async_run,die
@@ -968,6 +969,18 @@ def list_tested_cmds():
 	for gid in tests:
 		Msg('\n'.join(tests[gid]))
 
+async def main():
+	if cfg._args:
+		for cmd in cfg._args:
+			if cmd in tests:
+				await do_group(cmd)
+			else:
+				if not await do_cmd_in_group(cmd):
+					die(1,f'{cmd!r}: not a recognized test or test group')
+	else:
+		for garg in tests:
+			await do_group(garg)
+
 qmsg = cfg._util.qmsg
 vmsg = cfg._util.vmsg
 
@@ -976,8 +989,6 @@ proto = cfg._proto
 if cfg.tool_api:
 	del tests['Wallet']
 	del tests['File']
-
-from mmgen import main_tool
 
 if cfg.list_tests:
 	Msg('Available tests:')
@@ -1007,21 +1018,6 @@ if cfg.fork:
 		tool_cmd_preargs = ['python3','scripts/exec_wrapper.py']
 
 start_time = int(time.time())
-
-async def main():
-	try:
-		if cfg._args:
-			for cmd in cfg._args:
-				if cmd in tests:
-					await do_group(cmd)
-				else:
-					if not await do_cmd_in_group(cmd):
-						die(1,f'{cmd!r}: not a recognized test or test group')
-		else:
-			for garg in tests:
-				await do_group(garg)
-	except KeyboardInterrupt:
-		die(1,green('\nExiting at user request'))
 
 if __name__ == '__main__':
 	async_run(main())
