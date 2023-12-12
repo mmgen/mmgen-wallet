@@ -57,7 +57,9 @@ opts_data = {
 -c, --check-solc-version Check the installed solc version
 """,
 	'notes': """
-The owner address must be in checksummed format
+The owner address must be in checksummed format.
+
+Use ‘mmgen-tool eth_checksummed_addr’ to create it if necessary.
 """
 	}
 }

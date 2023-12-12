@@ -26,7 +26,7 @@ color_funcs = {
 
 def pfmt(*args,color=None):
 	import pprint
-	ret = pprint.PrettyPrinter(indent=4).pformat(
+	ret = pprint.PrettyPrinter(indent=4,width=116).pformat(
 		args if len(args) > 1 else '' if not args else args[0] )
 	return color_funcs[color](ret) if color else ret
 
@@ -47,7 +47,7 @@ def Pmsg(*args,color=None):
 	sys.stdout.write(pfmt(*args,color=color) + '\n')
 
 def Pdie(*args,exit_val=1):
-	Pmsg(*args,color='red')
+	Pmsg(*args,color=('yellow' if exit_val == 1 else 'red' if exit_val else None))
 	sys.exit(exit_val)
 
 def Pexit(*args):

@@ -34,7 +34,7 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	init_dev()
 
 from mmgen.cfg import Config,gc
-from mmgen.color import green,gray,brown
+from mmgen.color import green,gray,brown,orange
 from mmgen.util import msg,gmsg,ymsg,Msg,async_run
 
 from test.include.common import set_globals,end_msg
@@ -117,7 +117,7 @@ class UnitTestHelpers:
 	def skip_msg(self,desc):
 		cfg._util.qmsg(gray(f'Skipping subtest {self.subtest_name.replace("_","-")!r} for {desc}'))
 
-	def process_bad_data(self,data):
+	def process_bad_data(self,data,pfx='bad '):
 		if os.getenv('PYTHONOPTIMIZE'):
 			ymsg('PYTHONOPTIMIZE set, skipping error handling tests')
 			return
@@ -129,7 +129,7 @@ class UnitTestHelpers:
 		m_noraise = "\nillegal action 'bad {}' failed to raise an exception (expected {!r})"
 		for (desc,exc_chk,emsg_chk,func) in data:
 			try:
-				cfg._util.vmsg_r('  bad {:{w}}'.format( desc+':', w=desc_w+1 ))
+				cfg._util.vmsg_r('  {}{:{w}}'.format(pfx, desc+':', w=desc_w+1))
 				func()
 			except Exception as e:
 				exc = type(e).__name__
@@ -147,7 +147,7 @@ def run_test(test,subtest=None):
 
 	def run_subtest(t,subtest):
 		subtest_disp = subtest.replace('_','-')
-		msg(brown(f'Running unit subtest {test}.{subtest_disp}'))
+		msg(brown('Running unit subtest ') + orange(f'{test}.{subtest_disp}'))
 
 		if getattr(t,'silence_output',False):
 			t._silence()

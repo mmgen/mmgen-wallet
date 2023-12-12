@@ -17,8 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-main: Script launcher for the MMGen project
+main: Script launcher for the MMGen Project
 """
+
+import sys,os
 
 def launch(mod,package='mmgen'):
 
@@ -27,8 +29,6 @@ def launch(mod,package='mmgen'):
 
 	if mod == 'keygen':
 		mod = 'addrgen'
-
-	import sys,os
 
 	if sys.platform == 'linux' and sys.stdin.isatty():
 		import termios,atexit
@@ -40,9 +40,10 @@ def launch(mod,package='mmgen'):
 		__import__(f'{package}.main_{mod}')
 	except KeyboardInterrupt:
 		sys.stderr.write('\nUser interrupt\n')
-		sys.exit(1) # must exit normally so exit handlers will be called
+		sys.exit(1)
 	except EOFError:
 		sys.stderr.write('\nEnd of file\n')
+		sys.exit(1)
 	except Exception as e:
 
 		if os.getenv('MMGEN_EXEC_WRAPPER'):
