@@ -70,6 +70,7 @@ Use ‘mmgen-tool eth_checksummed_addr’ to create it if necessary.
 # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
 
 solidity_code_template = """
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 pragma solidity %s;
 
@@ -110,7 +111,7 @@ contract Owned {
 
     event OwnershipTransferred(address indexed _from, address indexed _to);
 
-    constructor() public {
+    constructor() {
         owner = msg.sender;
     }
 
@@ -143,7 +144,7 @@ contract Token is ERC20Interface, Owned, SafeMath {
     mapping(address => uint) balances;
     mapping(address => mapping(address => uint)) allowed;
 
-    constructor() public {
+    constructor() {
         symbol = "$symbol";
         name = "$name";
         decimals = $decimals;
@@ -151,10 +152,10 @@ contract Token is ERC20Interface, Owned, SafeMath {
         balances[$owner_addr] = _totalSupply;
         emit Transfer(address(0), $owner_addr, _totalSupply);
     }
-    function totalSupply() public override returns (uint) {
+    function totalSupply() public view override returns (uint) {
         return _totalSupply  - balances[address(0)];
     }
-    function balanceOf(address tokenOwner) public override returns (uint balance) {
+    function balanceOf(address tokenOwner) public view override returns (uint balance) {
         return balances[tokenOwner];
     }
     function transfer(address to, uint tokens) public override returns (bool success) {
@@ -175,7 +176,7 @@ contract Token is ERC20Interface, Owned, SafeMath {
         emit Transfer(from, to, tokens);
         return true;
     }
-    function allowance(address tokenOwner, address spender) public override returns (uint remaining) {
+    function allowance(address tokenOwner, address spender) public view override returns (uint remaining) {
         return allowed[tokenOwner][spender];
     }
     // Owner can transfer out any accidentally sent ERC20 tokens
