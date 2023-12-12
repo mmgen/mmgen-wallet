@@ -32,6 +32,13 @@ keygen_public_data = namedtuple(
 
 class keygen_base:
 
+	def __init__(self,cfg):
+		if not (self.production_safe or cfg.test_suite):
+			from .util import die
+			die(2,
+				f'Public key generator {type(self).__name__!r} is not safe from timing attacks '
+				'and may only be used in a testing environment')
+
 	def gen_data(self,privkey):
 		assert isinstance(privkey,PrivKey)
 		return keygen_public_data(

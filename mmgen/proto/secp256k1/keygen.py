@@ -19,7 +19,10 @@ class backend:
 
 	class libsecp256k1(keygen_base):
 
+		production_safe = True
+
 		def __init__(self,cfg):
+			super().__init__(cfg)
 			# catch ImportError to satisfy pylint when testing repo with unbuilt secp256k1 extension mod:
 			try:
 				from .secp256k1 import priv2pub
@@ -51,7 +54,10 @@ class backend:
 
 	class python_ecdsa(keygen_base):
 
+		production_safe = False
+
 		def __init__(self,cfg):
+			super().__init__(cfg)
 			import ecdsa
 			self.ecdsa = ecdsa
 

@@ -20,10 +20,9 @@ class backend:
 	class base(keygen_base):
 
 		def __init__(self,cfg):
-
+			super().__init__(cfg)
 			from ...proto.xmr.params import mainnet
 			self.proto_cls = mainnet
-
 			from ...util2 import get_keccak
 			self.keccak_256 = get_keccak(cfg)
 
@@ -34,6 +33,8 @@ class backend:
 				None )
 
 	class nacl(base):
+
+		production_safe = True
 
 		def __init__(self,cfg):
 			super().__init__(cfg)
@@ -48,6 +49,8 @@ class backend:
 			)
 
 	class ed25519(base):
+
+		production_safe = False
 
 		def __init__(self,cfg):
 			super().__init__(cfg)
