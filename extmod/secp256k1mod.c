@@ -20,40 +20,56 @@
 #include <Python.h>
 #include <secp256k1.h>
 
+int privkey_check(
+		const secp256k1_context * ctx,
+		const unsigned char *     privkey_bytes,
+		const Py_ssize_t          privkey_bytes_len,
+		const char *              desc
+	) {
+	if (privkey_bytes_len != 32) {
+		char buf[64 + strlen(desc)];
+		sprintf(buf, "%s length not 32 bytes", desc);
+		PyErr_SetString(PyExc_ValueError, buf);
+		return 0;
+	}
+	if (secp256k1_ec_seckey_verify(ctx, privkey_bytes) != 1) {
+		char buf[64 + strlen(desc)];
+		sprintf(buf, "%s not in allowable range", desc);
+		PyErr_SetString(PyExc_ValueError, buf);
+		return 0;
+	}
+	return 1;
+}
+
 static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
-	const unsigned char * privkey;
-	const int klen;
+	const unsigned char * privkey_bytes;
+	const Py_ssize_t privkey_bytes_len;
 	const int compressed;
-	if (!PyArg_ParseTuple(args, "y#I", &privkey, &klen, &compressed)) {
+	if (!PyArg_ParseTuple(args, "y#I", &privkey_bytes, &privkey_bytes_len, &compressed)) {
 		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
 		return NULL;
 	}
-	if (klen != 32) {
-		PyErr_SetString(PyExc_ValueError, "Private key length not 32 bytes");
-		return NULL;
-	}
+	size_t pubkey_bytes_len = compressed == 1 ? 33 : 65;
+	unsigned char pubkey_bytes[pubkey_bytes_len];
 	secp256k1_pubkey pubkey;
-	size_t pubkeyclen = compressed == 1 ? 33 : 65;
-	unsigned char pubkeyc[pubkeyclen];
-	static secp256k1_context *ctx = NULL;
-	if (ctx == NULL) {
-	/*	puts ("Initializing context"); */
-		ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
-	}
+	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
 	if (ctx == NULL) {
 		PyErr_SetString(PyExc_RuntimeError, "Context initialization failed");
 		return NULL;
 	}
-	if (secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) != 1) {
+	if (!privkey_check(ctx, privkey_bytes, privkey_bytes_len, "Private key")) {
+		return NULL;
+	}
+	if (secp256k1_ec_pubkey_create(ctx, &pubkey, privkey_bytes) != 1) {
 		PyErr_SetString(PyExc_RuntimeError, "Public key creation failed");
 		return NULL;
 	}
-	if (secp256k1_ec_pubkey_serialize(ctx, pubkeyc, &pubkeyclen, &pubkey,
+	if (secp256k1_ec_pubkey_serialize(ctx, pubkey_bytes, &pubkey_bytes_len, &pubkey,
 			compressed == 1 ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED) != 1) {
 		PyErr_SetString(PyExc_RuntimeError, "Public key serialization failed");
 		return NULL;
 	}
-	return Py_BuildValue("y#", pubkeyc,pubkeyclen);
+	return Py_BuildValue("y#", pubkey_bytes, pubkey_bytes_len);
 }
 
 /* https://docs.python.org/3/howto/cporting.html */
