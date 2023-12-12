@@ -25,25 +25,25 @@ class backend:
 			super().__init__(cfg)
 			# catch ImportError to satisfy pylint when testing repo with unbuilt secp256k1 extension mod:
 			try:
-				from .secp256k1 import priv2pub
-				self.priv2pub = priv2pub
+				from .secp256k1 import pubkey_gen
+				self.pubkey_gen = pubkey_gen
 			except ImportError:
 				from ...util import die
 				die(3,'libsecp256k1.keygen.backend: you shouldn’t be seeing this')
 
 		def to_pubkey(self,privkey):
 			return PubKey(
-				s = self.priv2pub( privkey, int(privkey.compressed) ),
+				s = self.pubkey_gen( privkey, int(privkey.compressed) ),
 				compressed = privkey.compressed )
 
 		@classmethod
 		def get_clsname(cls,cfg,silent=False):
 			try:
-				from .secp256k1 import priv2pub
-				if not priv2pub(bytes.fromhex('deadbeef'*8),1):
+				from .secp256k1 import pubkey_gen
+				if not pubkey_gen(bytes.fromhex('deadbeef'*8),1):
 					from ...util import die
 					die( 'ExtensionModuleError',
-						'Unable to execute priv2pub() from secp256k1 extension module' )
+						'Unable to execute pubkey_gen() from secp256k1 extension module' )
 				return cls.__name__
 			except ImportError as e:
 				if not silent:

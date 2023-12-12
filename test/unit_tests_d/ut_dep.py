@@ -60,8 +60,8 @@ class unit_tests:
 		return False
 
 	def secp256k1(self,name,ut):
-		from mmgen.proto.secp256k1.secp256k1 import priv2pub
-		priv2pub(bytes.fromhex('deadbeef'*8),1)
+		from mmgen.proto.secp256k1.secp256k1 import pubkey_gen
+		pubkey_gen(bytes.fromhex('deadbeef'*8),1)
 		return True
 
 	def cryptography(self,name,ut):

@@ -20,7 +20,7 @@
 #include <Python.h>
 #include <secp256k1.h>
 
-static PyObject * priv2pub(PyObject *self, PyObject *args) {
+static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
 	const unsigned char * privkey;
 	const int klen;
 	const int compressed;
@@ -65,7 +65,12 @@ struct module_state {
 #define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
 
 static PyMethodDef secp256k1_methods[] = {
-	{"priv2pub", priv2pub, METH_VARARGS, "Generate pubkey from privkey using libsecp256k1"},
+	{
+		"pubkey_gen",
+		pubkey_gen,
+		METH_VARARGS,
+		"Generate a serialized pubkey from privkey bytes"
+	},
     {NULL, NULL}
 };
 
