@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import sys,os
-repo_root = os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))[0]
-sys.path = [repo_root] + sys.path
 
+import script_init
 from mmgen.cfg import Config
 from mmgen.util import msg,Msg,make_chksum_6
 from mmgen.fileutil import get_lines_from_file

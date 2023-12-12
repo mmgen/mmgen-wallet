@@ -24,6 +24,7 @@ import sys,json,re
 from subprocess import run,PIPE
 from collections import namedtuple
 
+import script_init
 from mmgen.cfg import Config
 from mmgen.util import Msg,msg,rmsg,ymsg,die
 
