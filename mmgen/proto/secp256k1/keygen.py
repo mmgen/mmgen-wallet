@@ -15,6 +15,11 @@ proto.secp256k1.keygen: secp256k1 public key generation backends for the MMGen s
 from ...key import PubKey
 from ...keygen import keygen_base
 
+def pubkey_format(vk_bytes,compressed):
+	# if compressed, discard Y coord, replace with appropriate version byte
+	# even y: <0, odd y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
+	return (b'\x02',b'\x03')[vk_bytes[-1] & 1] + vk_bytes[:32] if compressed else b'\x04' + vk_bytes
+
 class backend:
 
 	class libsecp256k1(keygen_base):
@@ -70,12 +75,7 @@ class backend:
 			def privnum2pubkey(numpriv,compressed=False):
 				pk = self.ecdsa.SigningKey.from_secret_exponent(numpriv,curve=self.ecdsa.SECP256k1)
 				# vk_bytes = x (32 bytes) + y (32 bytes) (unsigned big-endian)
-				vk_bytes = pk.verifying_key.to_string()
-				if compressed: # discard Y coord, replace with appropriate version byte
-					# even y: <0, odd y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
-					return (b'\x03' if vk_bytes[-1] & 1 else b'\x02') + vk_bytes[:32]
-				else:
-					return b'\x04' + vk_bytes
+				return pubkey_format(pk.verifying_key.to_string(),compressed)
 
 			return PubKey(
 				s = privnum2pubkey( int.from_bytes(privkey,'big'), compressed=privkey.compressed ),
