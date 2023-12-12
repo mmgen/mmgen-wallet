@@ -25,6 +25,7 @@ from subprocess import run,PIPE
 from collections import namedtuple
 
 import script_init
+from mmgen.main import launch
 from mmgen.cfg import Config
 from mmgen.util import Msg,msg,rmsg,ymsg,die
 
@@ -263,8 +264,7 @@ def compile_code(cfg,code):
 	else:
 		cfg._util.vmsg(out)
 
-if __name__ == '__main__':
-
+def main():
 	cfg = Config(opts_data=opts_data)
 
 	if cfg.check_solc_version:
@@ -288,3 +288,7 @@ if __name__ == '__main__':
 		print(json.dumps(out))
 
 	msg('Contract successfully compiled')
+
+if __name__ == '__main__':
+
+	launch(func=main)

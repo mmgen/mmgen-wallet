@@ -342,8 +342,7 @@ if cfg.fork:
 	else:
 		tool_cmd_preargs = ['python3','scripts/exec_wrapper.py']
 
+from mmgen.main import launch
 start_time = int(time.time())
-
-if __name__ == '__main__':
-	async_run(main())
-	end_msg(int(time.time()) - start_time)
+launch(func = lambda: async_run(main()))
+end_msg(int(time.time()) - start_time)

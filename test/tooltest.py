@@ -486,7 +486,7 @@ def do_cmds(cmd_group):
 		cmdline = [cmd] + [os.path.join(tcfg['tmpdir'],fn) for fn in fns]
 		getattr(tc,cmd)(*cmdline)
 
-try:
+def main():
 	if cfg._args:
 		if len(cfg._args) != 1:
 			die(1,'Only one command may be specified')
@@ -507,7 +507,7 @@ try:
 			do_cmds(cmd)
 			if cmd is not list(cmd_data.keys())[-1]:
 				msg('')
-except KeyboardInterrupt:
-	die(1,green('\nExiting at user request'))
+	end_msg(int(time.time()) - start_time)
 
-end_msg(int(time.time()) - start_time)
+from mmgen.main import launch
+launch(func=main)

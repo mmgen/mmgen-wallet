@@ -958,7 +958,6 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			pass
 		cmd = [
 			'python3',
-			'scripts/exec_wrapper.py',
 			'scripts/create-token.py',
 			'--coin=' + self.proto.coin,
 			'--outdir=' + odir

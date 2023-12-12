@@ -165,8 +165,9 @@ class TestSha512(TestSha2):
 
 from test.include.common import getrand,set_globals
 from mmgen.cfg import Config
+from mmgen.main import launch
 
-if __name__ == '__main__':
+def main():
 
 	if len(sys.argv) not in (2,3):
 		die(1,'Test takes 1 or 2 arguments: test name, plus optional rounds count')
@@ -184,3 +185,5 @@ if __name__ == '__main__':
 	t.test_constants()
 	t.test_ref()
 	t.test_random(random_rounds)
+
+launch(func=main)

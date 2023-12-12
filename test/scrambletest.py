@@ -153,7 +153,7 @@ def do_passwd_tests():
 		s = fs.format('','')
 		do_test(cmd,tdata,s+' '*(40-len(s)),'password')
 
-if __name__ == '__main__':
+def main():
 	start_time = int(time.time())
 
 	cmds = cfg._args or ('coin','pw')
@@ -161,3 +161,6 @@ if __name__ == '__main__':
 		{'coin': do_coin_tests, 'pw': do_passwd_tests }[cmd]()
 
 	end_msg(int(time.time()) - start_time)
+
+from mmgen.main import launch
+launch(func=main)

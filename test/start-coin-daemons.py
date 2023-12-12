@@ -9,4 +9,5 @@ try:
 except ImportError:
 	from test.include.coin_daemon_control import main
 
-main()
+from mmgen.main import launch
+launch(func=main)

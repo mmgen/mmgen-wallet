@@ -586,4 +586,5 @@ if proto.coin == 'XMR':
 	load_cryptodomex()
 
 if __name__ == '__main__':
-	main()
+	from mmgen.main import launch
+	launch(func=main)
