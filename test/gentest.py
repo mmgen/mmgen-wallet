@@ -348,15 +348,15 @@ def do_ab_test(proto,scfg,addr_type,gen1,kg2,ag,tool,cache_data):
 		('\nviewkey:  {v}' if 'viewkey' in addr_type.extra_attrs else '') +
 		'\naddr:     {a}\n' )
 
-	ge = CoinProtocol.Secp256k1.secp256k1_ge
+	group_order = CoinProtocol.Secp256k1.secp256k1_group_order
 
 	# test some important private key edge cases:
 	edgecase_sks = (
 		bytes([0x00]*31 + [0x01]), # min
 		bytes([0xff]*32),          # max
 		bytes([0x0f] + [0xff]*31), # produces same key as above for zcash-z
-		int.to_bytes(ge + 1, 32, 'big'), # bitcoin will reduce
-		int.to_bytes(ge - 1, 32, 'big'), # bitcoin will not reduce
+		int.to_bytes(group_order + 1, 32, 'big'), # bitcoin will reduce
+		int.to_bytes(group_order - 1, 32, 'big'), # bitcoin will not reduce
 		bytes([0x00]*31 + [0xff]), # monero will reduce
 		bytes([0xff]*31 + [0x0f]), # monero will not reduce
 		bytes.fromhex('deadbeef'*8),

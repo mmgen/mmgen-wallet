@@ -189,7 +189,7 @@ class CoinProtocol(MMGenObject):
 		"""
 		Bitcoin and Ethereum protocols inherit from this class
 		"""
-		secp256k1_ge = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+		secp256k1_group_order = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 		privkey_len  = 32
 		pubkey_types = ('std',)
 
@@ -201,19 +201,19 @@ class CoinProtocol(MMGenObject):
 
 		def preprocess_key(self,sec,pubkey_type):
 			# Key must be non-zero and less than group order of secp256k1 curve
-			if 0 < int.from_bytes(sec,'big') < self.secp256k1_ge:
+			if 0 < int.from_bytes(sec,'big') < self.secp256k1_group_order:
 				return sec
 			else: # chance of this is less than 1 in 2^127
 				from .util import die,ymsg
 				pk = int.from_bytes(sec,'big')
 				if pk == 0: # chance of this is 1 in 2^256
 					die(4,'Private key is zero!')
-				elif pk == self.secp256k1_ge: # ditto
-					die(4,'Private key == secp256k1_ge!')
-				else:
+				elif pk == self.secp256k1_group_order: # ditto
+					die(4,'Private key == secp256k1_group_order!')
+				else: # return key mod group order as the key
 					if not self.cfg.test_suite:
 						ymsg(f'Warning: private key is greater than secp256k1 group order!:\n  {sec.hex()}')
-					return (pk % self.secp256k1_ge).to_bytes(self.privkey_len,'big')
+					return (pk % self.secp256k1_group_order).to_bytes(self.privkey_len,'big')
 
 	class DummyWIF:
 		"""
