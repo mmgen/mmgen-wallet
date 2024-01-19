@@ -156,11 +156,65 @@ install_package() {
 	fi
 }
 
+do_reexec() {
+	if [ "$sdist_dir" ]; then
+		target_dir=$sdist_dir
+	elif [ "$clone_dir" ]; then
+		target_dir="$orig_cwd/.clone-test"
+		clone_dir=$target_dir
+	fi
+
+	rm -rf $target_dir
+	mkdir $target_dir
+
+	if [ "$repo" != 'mmgen-wallet' ]; then
+		echo -e "${BLUE}Cloning repo $MAGENTA'mmgen-wallet'$RESET ${BLUE}to $YELLOW$target_dir/mmgen-wallet$RESET"
+		mkdir -p "$target_dir/mmgen-wallet"
+		eval "git clone $orig_cwd/../mmgen-wallet $target_dir/mmgen-wallet $STDOUT_DEVNULL $STDERR_DEVNULL"
+	fi
+
+	if [ "$clone_dir" ]; then
+		[ "$(git status --porcelain)" ] && VIM_GIT_COMMIT=1 git commit -a
+		dest="$clone_dir/$repo"
+		rm -rf $dest
+		mkdir -p $dest
+		echo -e "${BLUE}Cloning repo $MAGENTA'$repo'$BLUE to $YELLOW$dest$RESET"
+		eval "git clone . $dest $STDOUT_DEVNULL $STDERR_DEVNULL"
+		cd $dest
+		echo -e "${BLUE}cd -> $YELLOW$PWD$RESET"
+	fi
+
+	if [ "$sdist_dir" ]; then
+		rm -rf build dist *.egg-info
+		echo -n 'Building sdist...'
+		eval "python3 -m build --no-isolation --sdist --config-setting=quiet $STDOUT_DEVNULL"
+		echo -e "done\n${BLUE}Unpacking sdist archive to $YELLOW$target_dir$RESET"
+		tar -C $target_dir -axf dist/*.tar.gz
+		cd $(echo $target_dir/$repo-*)
+		echo -e "${BLUE}cd -> $YELLOW$PWD$RESET"
+		if [ "$clone_dir" ]; then rm -rf $clone_dir; fi
+	fi
+
+	[ -e 'test/init.sh' ] && test/init.sh $VERBOSE_SHORTOPT
+
+	[ "$repo" == 'mmgen-wallet' ] && eval "python3 setup.py build_ext --inplace $STDOUT_DEVNULL"
+
+	echo -e "\n${BLUE}Executing test runner: ${CYAN}test/test-release $ORIG_ARGS$RESET\n"
+	test/test-release.sh -X $ORIG_ARGS
+}
+
 # start execution
+
+set -e
+set -o functrace
+set -o errtrace
 
 trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
 
 umask 0022
+
+orig_cwd=$(pwd)
+repo=$(basename $orig_cwd)
 
 if [ "$(uname -m)" == 'armv7l' ]; then
 	ARM32=1
@@ -190,13 +244,16 @@ mmgen_tool='cmds/mmgen-tool'
 pylint='PYTHONPATH=. pylint' # PYTHONPATH required by older Pythons (e.g. v3.9)
 python='python3'
 rounds=10
+STDOUT_DEVNULL='>/dev/null'
+STDERR_DEVNULL='2>/dev/null'
+QUIET='--quiet'
 
 ORIG_ARGS=$@
 PROGNAME=$(basename $0)
 
 init_groups
 
-while getopts hAbcdDfFILlNOps:StvV OPT
+while getopts hAbcCdDfFILlNOps:StvVX OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -205,6 +262,7 @@ do
 		echo   "           -A      Skip tests requiring altcoin modules or daemons"
 		echo   "           -b      Buffer keypresses for all invocations of 'test/cmdtest.py'"
 		echo   "           -c      Run tests in coverage mode"
+		echo   "           -C      Test from cloned repo (can be combined with -S)"
 		echo   "           -d      Enable Python Development Mode"
 		echo   "           -D      Run tests in deterministic mode"
 		echo   "           -f      Speed up the tests by using fewer rounds"
@@ -243,6 +301,7 @@ do
 		objattrtest_py="$python $objattrtest_py"
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool" ;&
+	C)  REEXEC=1 clone_dir="$orig_cwd/.cloned-repo" ;;
 	d)  export PYTHONDEVMODE=1
 		export PYTHONWARNINGS='error' ;;
 	D)  export MMGEN_TEST_SUITE_DETERMINISTIC=1
@@ -256,11 +315,12 @@ do
 	O)  cmdtest_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
 	s)  SKIP_LIST+=" $OPTARG" ;;
-	S)  SDIST_TEST=1 ;;
+	S)  REEXEC=1 sdist_dir="$orig_cwd/.sdist-test" ;;
 	t)  LIST_CMDS=1 ;;
 	v)  EXACT_OUTPUT=1 cmdtest_py+=" --exact-output" ;&
-	V)  VERBOSE='--verbose'
+	V)  VERBOSE='--verbose' VERBOSE_SHORTOPT='-v' QUIET=''
 		[ "$EXACT_OUTPUT" ] || cmdtest_py+=" --verbose"
+		STDOUT_DEVNULL='' STDERR_DEVNULL=''
 		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
 		altcoin_mod_opts="${altcoin_mod_opts/--quiet/--verbose}"
 		tooltest2_py="${tooltest2_py/--quiet/--verbose}"
@@ -270,6 +330,7 @@ do
 		objattrtest_py+=" --verbose"
 		scrambletest_py+=" --verbose"
 		pylint+=" --verbose" ;;
+	X)  IN_REEXEC=1 ;;
 	*)  exit ;;
 	esac
 done
@@ -279,28 +340,13 @@ done
 	RESET="\e[0m"
 }
 
+[ "$REEXEC" -a -z "$IN_REEXEC" ] && { do_reexec; exit; }
 [ "$INSTALL_PACKAGE" ] && { install_package; exit; }
 
 [ "$MSYS2" -a ! "$FAST" ] && tooltest2_py+=' --fork'
 [ "$EXACT_OUTPUT" -o "$VERBOSE" ] || objtest_py+=" -S"
 
 shift $((OPTIND-1))
-
-set -e
-
-[ "$SDIST_TEST" -a -z "$TEST_RELEASE_IN_SDIST" ] && {
-	test_dir='.sdist-test'
-	rm -rf build dist *.egg-info $test_dir
-	python3 -m build --no-isolation --sdist
-	mkdir $test_dir
-	tar -C $test_dir -axf dist/*.tar.gz
-	cd $test_dir/mmgen-*
-	python3 setup.py build_ext --inplace
-	echo -e "\n${BLUE}Running 'test/test-release $ORIG_ARGS'$RESET $YELLOW[PWD=$PWD]$RESET\n"
-	export TEST_RELEASE_IN_SDIST=1
-	test/test-release.sh $ORIG_ARGS
-	exit
-}
 
 case $1 in
 	'')        tests=$dfl_tests ;;
