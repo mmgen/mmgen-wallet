@@ -200,7 +200,11 @@ do_reexec() {
 	[ "$repo" == 'mmgen-wallet' ] && eval "python3 setup.py build_ext --inplace $STDOUT_DEVNULL"
 
 	echo -e "\n${BLUE}Executing test runner: ${CYAN}test/test-release $ORIG_ARGS$RESET\n"
-	test/test-release.sh -X $ORIG_ARGS
+	if [ "$TYPESCRIPT" ]; then
+		script -O "$orig_cwd/$typescript_file" -c "test/test-release.sh -X $ORIG_ARGS"
+	else
+		test/test-release.sh -X $ORIG_ARGS
+	fi
 }
 
 # start execution
@@ -244,6 +248,7 @@ mmgen_tool='cmds/mmgen-tool'
 pylint='PYTHONPATH=. pylint' # PYTHONPATH required by older Pythons (e.g. v3.9)
 python='python3'
 rounds=10
+typescript_file='test-release.out'
 STDOUT_DEVNULL='>/dev/null'
 STDERR_DEVNULL='2>/dev/null'
 QUIET='--quiet'
@@ -253,7 +258,7 @@ PROGNAME=$(basename $0)
 
 init_groups
 
-while getopts hAbcCdDfFILlNOps:StvVX OPT
+while getopts hAbcCdDfFILlNOps:StTvVX OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -276,6 +281,8 @@ do
 		echo   "           -s LIST Skip tests in LIST (space-separated)"
 		echo   "           -S      Build sdist distribution, unpack, and run test"
 		echo   "           -t      Print the tests without running them"
+		echo   "           -T      With -C or -S, record a typescript of the screen output in"
+		echo   "                   '$typescript_file'"
 		echo   "           -v      Run test/cmdtest.py with '--exact-output' and other commands"
 		echo   "                   with '--verbose' switch"
 		echo   "           -V      Run test/cmdtest.py and other commands with '--verbose' switch"
@@ -317,6 +324,7 @@ do
 	s)  SKIP_LIST+=" $OPTARG" ;;
 	S)  REEXEC=1 sdist_dir="$orig_cwd/.sdist-test" ;;
 	t)  LIST_CMDS=1 ;;
+	T)  TYPESCRIPT=1 ;;
 	v)  EXACT_OUTPUT=1 cmdtest_py+=" --exact-output" ;&
 	V)  VERBOSE='--verbose' VERBOSE_SHORTOPT='-v' QUIET=''
 		[ "$EXACT_OUTPUT" ] || cmdtest_py+=" --verbose"
