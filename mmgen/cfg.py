@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2023 The MMGen Project <mmgen@tuta.io>
+# Copyright (C)2013-2024 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ class GlobalConstants(Lockable):
 	proj_url           = 'https://github.com/mmgen/mmgen-wallet'
 	author             = 'The MMGen Project'
 	email              = '<mmgen@tuta.io>'
-	Cdates             = '2013-2023'
+	Cdates             = '2013-2024'
 	dfl_hash_preset    = '3'
 	passwd_max_tries   = 5
 	min_screen_width   = 80

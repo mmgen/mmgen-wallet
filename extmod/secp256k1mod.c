@@ -1,6 +1,6 @@
 /*
   mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-  Copyright (C)2013-2023 The MMGen Project <mmgen@tuta.io>
+  Copyright (C)2013-2024 The MMGen Project <mmgen@tuta.io>
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
