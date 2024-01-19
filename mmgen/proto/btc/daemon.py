@@ -19,7 +19,7 @@ from ...util import list_gen
 from ...daemon import CoinDaemon,_nw,_dd
 
 class bitcoin_core_daemon(CoinDaemon):
-	daemon_data = _dd('Bitcoin Core', 250100, '25.1.0')
+	daemon_data = _dd('Bitcoin Core', 260000, '26.0.0')
 	exec_fn = 'bitcoind'
 	cli_fn = 'bitcoin-cli'
 	testnet_dir = 'testnet3'
@@ -78,6 +78,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--daemon',               self.platform == 'linux' and not self.opt.no_daemonize],
 			['--fallbackfee=0.0002',   self.coin == 'BTC' and self.network == 'regtest'],
 			['--usecashaddr=0',        self.coin == 'BCH'],
+			['--deprecatedrpc=create_bdb', self.coin == 'BTC'],
 			['--mempoolreplacement=1', self.coin == 'LTC'],
 			['--txindex=1',            self.coin == 'LTC' or self.network == 'regtest'],
 			['--addresstype=bech32',   self.coin == 'LTC' and self.network == 'regtest'],
