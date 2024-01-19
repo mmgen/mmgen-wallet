@@ -10,13 +10,13 @@
 
 # Tested on Linux, Armbian, Raspbian, MSYS2
 
-# data.sh must implement:
+# cfg.sh must implement:
 #   list_avail_tests()
 #   init_groups()
 #   init_tests()
 . 'test/test-release.d/cfg.sh'
 
-do_test() {
+run_test() {
 	set +x
 	tests="t_$1"
 	skips="t_$1_skip"
@@ -82,7 +82,7 @@ run_tests() {
 		fi
 		[ "$PAUSE" ] && prompt_skip && continue
 		CUR_TEST=$t
-		do_test $t
+		run_test $t
 		[ "$LIST_CMDS" ] || echo -e "${BLUE}Finished testing:$RESET $GREEN$desc$RESET"
 	done
 }
@@ -112,12 +112,18 @@ list_group_symbols() {
 	echo -e "'qskip' test group:\n  $qskip_tests"
 }
 
+# start execution
+
+trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
+
+umask 0022
+
 if [ "$(uname -m)" == 'armv7l' ]; then
 	ARM32=1
 elif [ "$(uname -m)" == 'aarch64' ]; then
 	ARM64=1
 elif [ "$MSYSTEM" ] && uname -a | grep -qi 'msys'; then
-	MSYS2=1;
+	MSYS2=1
 fi
 
 if [ "$MSYS2" ]; then
@@ -126,10 +132,6 @@ else
 	DISTRO=$(grep '^ID=' '/etc/os-release' | cut -c 4-)
 	[ "$DISTRO" ] || { echo 'Unable to determine distro.  Aborting'; exit 1; }
 fi
-
-trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
-
-umask 0022
 
 cmdtest_py='test/cmdtest.py -n'
 objtest_py='test/objtest.py'
@@ -150,7 +152,7 @@ PROGNAME=$(basename $0)
 
 init_groups
 
-while getopts hAbCdDfFLlNOps:StvV OPT
+while getopts hAbcdDfFLlNOps:StvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -158,7 +160,7 @@ do
 		echo   "  OPTIONS: -h      Print this help message"
 		echo   "           -A      Skip tests requiring altcoin modules or daemons"
 		echo   "           -b      Buffer keypresses for all invocations of 'test/cmdtest.py'"
-		echo   "           -C      Run tests in coverage mode"
+		echo   "           -c      Run tests in coverage mode"
 		echo   "           -d      Enable Python Development Mode"
 		echo   "           -D      Run tests in deterministic mode"
 		echo   "           -f      Speed up the tests by using fewer rounds"
@@ -169,14 +171,14 @@ do
 		echo   "           -O      Use pexpect.spawn rather than popen_spawn where applicable"
 		echo   "           -p      Pause between tests"
 		echo   "           -s LIST Skip tests in LIST (space-separated)"
-		echo   "           -S      Build SDIST distribution, unpack, and run test"
+		echo   "           -S      Build sdist distribution, unpack, and run test"
 		echo   "           -t      Print the tests without running them"
 		echo   "           -v      Run test/cmdtest.py with '--exact-output' and other commands"
 		echo   "                   with '--verbose' switch"
 		echo   "           -V      Run test/cmdtest.py and other commands with '--verbose' switch"
 		echo
 		echo   "  For traceback output and error file support, set the EXEC_WRAPPER_TRACEBACK"
-		echo   "  environment var"
+		echo   "  environment variable"
 		exit ;;
 	A)  SKIP_ALT_DEP=1
 		cmdtest_py+=" --no-altcoin"
@@ -184,7 +186,7 @@ do
 		scrambletest_py+=" --no-altcoin"
 		tooltest2_py+=" --no-altcoin" ;;
 	b)  cmdtest_py+=" --buf-keypress" ;;
-	C)  mkdir -p 'test/trace'
+	c)  mkdir -p 'test/trace'
 		touch 'test/trace.acc'
 		cmdtest_py+=" --coverage"
 		tooltest_py+=" --coverage"

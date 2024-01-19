@@ -26,6 +26,7 @@ init_groups() {
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
 
 	[ "$MSYS2" ] && SKIP_LIST='autosign autosign_btc autosign_live'
+	true
 }
 
 init_tests() {
