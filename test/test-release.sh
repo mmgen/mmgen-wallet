@@ -112,6 +112,50 @@ list_group_symbols() {
 	echo -e "'qskip' test group:\n  $qskip_tests"
 }
 
+print_ver_hash() {
+	python3 -m pip freeze | grep "^$repo\>" | sed 's/.*sha256=//' | cut -c 1-12
+}
+
+install_package() {
+	echo -e "${BLUE}Installing package$YELLOW $repo$RESET"
+	rm -rf build dist *.egg-info
+
+	ver=$(print_ver_hash)
+	echo -e "${BLUE}Currently installed version is$MAGENTA $ver$RESET"
+
+	cmd="python3 -m build --no-isolation --wheel --config-setting=quiet $STDOUT_DEVNULL"
+	echo -e "${BLUE}Executing:$CYAN $cmd$RESET"
+	eval $cmd
+
+	cmd="python3 -m pip $QUIET install --break-system-packages dist/*.whl"
+	echo -e "${BLUE}Executing:$CYAN $cmd$RESET"
+	eval $cmd
+
+	new_ver=$(print_ver_hash)
+	if [ "$ver" == "$new_ver" ]; then
+		echo -ne "${YELLOW}Version hash is unchanged. Force install? (y/N):$RESET "
+		read -n1
+		if [ "$REPLY" == 'y' ]; then
+			echo
+			cmd="python3 -m pip $QUIET install --break-system-packages --force --no-deps dist/*.whl"
+			echo -e "${BLUE}Executing:$CYAN $cmd$RESET"
+			eval $cmd
+		elif [ "$REPLY" ]; then
+			echo; return
+		else
+			return
+		fi
+	fi
+
+	new_ver=$(print_ver_hash)
+	if [ "$ver" == "$new_ver" ]; then
+		echo -e "${RED}ERROR: version hash is unchanged$RESET"
+		exit 1
+	else
+		echo -e "${GREEN}OK$RESET"
+	fi
+}
+
 # start execution
 
 trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
@@ -152,7 +196,7 @@ PROGNAME=$(basename $0)
 
 init_groups
 
-while getopts hAbcdDfFLlNOps:StvV OPT
+while getopts hAbcdDfFILlNOps:StvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -165,6 +209,7 @@ do
 		echo   "           -D      Run tests in deterministic mode"
 		echo   "           -f      Speed up the tests by using fewer rounds"
 		echo   "           -F      Reduce rounds even further"
+		echo   "           -I      Install the package"
 		echo   "           -L      List available tests and test groups with description"
 		echo   "           -l      List the test name symbols"
 		echo   "           -N      Pass the --no-timings switch to test/cmdtest.py"
@@ -204,6 +249,7 @@ do
 		export MMGEN_DISABLE_COLOR=1 ;;
 	f)  rounds=6 FAST=1 fast_opt='--fast' unit_tests_py+=" --fast" ;;
 	F)  rounds=3 FAST=1 fast_opt='--fast' unit_tests_py+=" --fast" ;;
+	I)  INSTALL_PACKAGE=1 ;;
 	L)  list_avail_tests; exit ;;
 	l)  list_group_symbols; exit ;;
 	N)  cmdtest_py+=" --no-timings" ;;
@@ -232,6 +278,8 @@ done
 	RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" BLUE="\e[34;1m" MAGENTA="\e[35;1m" CYAN="\e[36;1m"
 	RESET="\e[0m"
 }
+
+[ "$INSTALL_PACKAGE" ] && { install_package; exit; }
 
 [ "$MSYS2" -a ! "$FAST" ] && tooltest2_py+=' --fork'
 [ "$EXACT_OUTPUT" -o "$VERBOSE" ] || objtest_py+=" -S"
