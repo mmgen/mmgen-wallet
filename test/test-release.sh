@@ -157,11 +157,16 @@ install_package() {
 }
 
 do_reexec() {
+	[ -z "$exec_prog" ] && exec_prog="test/test-release.sh -X $ORIG_ARGS"
+
 	if [ "$sdist_dir" ]; then
 		target_dir=$sdist_dir
 	elif [ "$clone_dir" ]; then
 		target_dir="$orig_cwd/.clone-test"
 		clone_dir=$target_dir
+	else # TYPESCRIPT=1
+		script -O "$orig_cwd/$typescript_file" -c "$exec_prog"
+		return
 	fi
 
 	rm -rf $target_dir
@@ -200,10 +205,11 @@ do_reexec() {
 	[ "$repo" == 'mmgen-wallet' ] && eval "python3 setup.py build_ext --inplace $STDOUT_DEVNULL"
 
 	echo -e "\n${BLUE}Executing test runner: ${CYAN}test/test-release $ORIG_ARGS$RESET\n"
+
 	if [ "$TYPESCRIPT" ]; then
-		script -O "$orig_cwd/$typescript_file" -c "test/test-release.sh -X $ORIG_ARGS"
+		script -O "$orig_cwd/$typescript_file" -c "$exec_prog"
 	else
-		test/test-release.sh -X $ORIG_ARGS
+		eval $exec_prog
 	fi
 }
 
@@ -258,7 +264,7 @@ PROGNAME=$(basename $0)
 
 init_groups
 
-while getopts hAbcCdDfFILlNOps:StTvVX OPT
+while getopts hAbcCdDe:fFILlNOps:StTvVX OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -270,6 +276,7 @@ do
 		echo   "           -C      Test from cloned repo (can be combined with -S)"
 		echo   "           -d      Enable Python Development Mode"
 		echo   "           -D      Run tests in deterministic mode"
+		echo   "           -e PROG With -C, -S or -T, execute PROG instead of this script"
 		echo   "           -f      Speed up the tests by using fewer rounds"
 		echo   "           -F      Reduce rounds even further"
 		echo   "           -I      Install the package"
@@ -281,8 +288,7 @@ do
 		echo   "           -s LIST Skip tests in LIST (space-separated)"
 		echo   "           -S      Build sdist distribution, unpack, and run test"
 		echo   "           -t      Print the tests without running them"
-		echo   "           -T      With -C or -S, record a typescript of the screen output in"
-		echo   "                   '$typescript_file'"
+		echo   "           -T      Record a typescript of the screen output in '$typescript_file'"
 		echo   "           -v      Run test/cmdtest.py with '--exact-output' and other commands"
 		echo   "                   with '--verbose' switch"
 		echo   "           -V      Run test/cmdtest.py and other commands with '--verbose' switch"
@@ -313,6 +319,7 @@ do
 		export PYTHONWARNINGS='error' ;;
 	D)  export MMGEN_TEST_SUITE_DETERMINISTIC=1
 		export MMGEN_DISABLE_COLOR=1 ;;
+	e)  exec_prog=$(realpath $OPTARG) ;;
 	f)  rounds=6 FAST=1 fast_opt='--fast' unit_tests_py+=" --fast" ;;
 	F)  rounds=3 FAST=1 fast_opt='--fast' unit_tests_py+=" --fast" ;;
 	I)  INSTALL_PACKAGE=1 ;;
@@ -324,7 +331,7 @@ do
 	s)  SKIP_LIST+=" $OPTARG" ;;
 	S)  REEXEC=1 sdist_dir="$orig_cwd/.sdist-test" ;;
 	t)  LIST_CMDS=1 ;;
-	T)  TYPESCRIPT=1 ;;
+	T)  REEXEC=1 TYPESCRIPT=1 ;;
 	v)  EXACT_OUTPUT=1 cmdtest_py+=" --exact-output" ;&
 	V)  VERBOSE='--verbose' VERBOSE_SHORTOPT='-v' QUIET=''
 		[ "$EXACT_OUTPUT" ] || cmdtest_py+=" --verbose"
@@ -349,6 +356,9 @@ done
 }
 
 [ "$REEXEC" -a -z "$IN_REEXEC" ] && { do_reexec; exit; }
+
+[ "$exec_prog" ] && { echo "option -e makes no sense without -C, -S, or -T" ; exit; }
+
 [ "$INSTALL_PACKAGE" ] && { install_package; exit; }
 
 [ "$MSYS2" -a ! "$FAST" ] && tooltest2_py+=' --fork'
