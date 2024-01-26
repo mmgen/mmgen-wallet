@@ -28,13 +28,8 @@ class backend:
 
 		def __init__(self,cfg):
 			super().__init__(cfg)
-			# catch ImportError to satisfy pylint when testing repo with unbuilt secp256k1 extension mod:
-			try:
-				from .secp256k1 import pubkey_gen
-				self.pubkey_gen = pubkey_gen
-			except ImportError:
-				from ...util import die
-				die(3,'libsecp256k1.keygen.backend: you shouldn’t be seeing this')
+			from .secp256k1 import pubkey_gen
+			self.pubkey_gen = pubkey_gen
 
 		def to_pubkey(self,privkey):
 			return PubKey(

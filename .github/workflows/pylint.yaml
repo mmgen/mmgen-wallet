@@ -17,6 +17,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install Ubuntu package dependencies
+      run: |
+        sudo apt-get install libsecp256k1-dev
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
@@ -30,6 +34,7 @@ jobs:
         python3 -m pip install gmpy2 cryptography pynacl ecdsa aiohttp requests pexpect scrypt semantic-version
         python3 -m pip install pycryptodomex pysocks pycoin ipaddress varint pylint
         python3 -m pip install --no-deps py_ecc==1.6.0 mypy_extensions==0.4.1 monero
+        python3 setup.py build_ext --inplace
 
     - name: Check the code with Pylint static code analyzer
       env:

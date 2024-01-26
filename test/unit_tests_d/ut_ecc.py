@@ -17,7 +17,7 @@ class unit_tests:
 
 	def pubkey_ops(self,name,ut):
 		vmsg(f'  Generating pubkey, adding scalar 123456789 to pubkey:')
-		pk_addend_bytes = int.to_bytes(123456789,length=32)
+		pk_addend_bytes = int.to_bytes(123456789,length=32,byteorder='big')
 
 		for privkey in (
 				'beadcafe' * 8,
@@ -46,15 +46,15 @@ class unit_tests:
 	def pubkey_errors(self,name,ut):
 
 		def gen1(): pubkey_gen(bytes(32),1)
-		def gen2(): pubkey_gen(secp256k1_group_order.to_bytes(length=32),1)
-		def gen3(): pubkey_gen((secp256k1_group_order+1).to_bytes(length=32),1)
+		def gen2(): pubkey_gen(secp256k1_group_order.to_bytes(length=32,byteorder='big'),1)
+		def gen3(): pubkey_gen((secp256k1_group_order+1).to_bytes(length=32,byteorder='big'),1)
 		def gen4(): pubkey_gen(bytes.fromhex('ff'*32),1)
 		def gen5(): pubkey_gen(bytes.fromhex('ab'*31),1)
 		def gen6(): pubkey_gen(bytes.fromhex('ab'*33),1)
 
 		pubkey_bytes = pubkey_gen(bytes.fromhex('beadcafe'*8), 1)
 		def tweak1(): pubkey_tweak_add(pubkey_bytes,bytes(32))
-		def tweak2(): pubkey_tweak_add(bytes.fromhex('03'*64),int.to_bytes(1,length=32))
+		def tweak2(): pubkey_tweak_add(bytes.fromhex('03'*64),int.to_bytes(1,length=32,byteorder='big'))
 
 		def check1(): pubkey_check(bytes.fromhex('04'*33))
 		def check2(): pubkey_check(bytes.fromhex('03'*65))
