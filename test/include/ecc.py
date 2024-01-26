@@ -28,10 +28,10 @@ def _check_pub_point(pub_point,vk_bytes,addend_bytes=None):
 				vk_bytes.hex(),
 				'' if addend_bytes is None else f' + {addend_bytes.hex()}'))
 
-def pubkey_check_py_ecdsa(vk_bytes):
+def pubkey_check_pyecdsa(vk_bytes):
 	_check_pub_point(_pubkey_to_pub_point(vk_bytes), vk_bytes)
 
-def pubkey_tweak_add_py_ecdsa(vk_bytes,pk_addend_bytes):
+def pubkey_tweak_add_pyecdsa(vk_bytes,pk_addend_bytes):
 	pk_addend = int.from_bytes(pk_addend_bytes)
 	point_sum = (
 		_pubkey_to_pub_point(vk_bytes) +

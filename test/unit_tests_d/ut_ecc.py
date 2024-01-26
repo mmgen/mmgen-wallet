@@ -8,7 +8,7 @@ from mmgen.color import gray,pink,blue
 from mmgen.proto.secp256k1.secp256k1 import pubkey_gen,pubkey_tweak_add,pubkey_check
 
 from ..include.common import cfg,qmsg,vmsg
-from ..include.ecc import pubkey_tweak_add_py_ecdsa
+from ..include.ecc import pubkey_tweak_add_pyecdsa
 from mmgen.protocol import CoinProtocol
 
 secp256k1_group_order = CoinProtocol.Secp256k1.secp256k1_group_order
@@ -35,7 +35,7 @@ class unit_tests:
 				pubkey_check(res1)
 				vmsg(f'      tweaked: {res1.hex()}')
 
-				res2 = pubkey_tweak_add_py_ecdsa(pubkey_bytes,pk_addend_bytes)
+				res2 = pubkey_tweak_add_pyecdsa(pubkey_bytes,pk_addend_bytes)
 				pubkey_check(res2)
 
 				assert len(res1) == length
