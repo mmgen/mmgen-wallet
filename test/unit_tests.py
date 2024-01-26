@@ -126,7 +126,7 @@ class UnitTestHelpers:
 		exc_w = max(len(e[1]) for e in data)
 		m_exc = '{!r}: incorrect exception type (expected {!r})'
 		m_err = '{!r}: incorrect error msg (should match {!r}'
-		m_noraise = "\nillegal action 'bad {}' failed to raise an exception (expected {!r})"
+		m_noraise = "\nillegal action '{}{}' failed to raise an exception (expected {!r})"
 		for (desc,exc_chk,emsg_chk,func) in data:
 			try:
 				cfg._util.vmsg_r('  {}{:{w}}'.format(pfx, desc+':', w=desc_w+1))
@@ -138,7 +138,7 @@ class UnitTestHelpers:
 				assert exc == exc_chk, m_exc.format(exc,exc_chk)
 				assert re.search(emsg_chk,emsg), m_err.format(emsg,emsg_chk)
 			else:
-				die(4,m_noraise.format(desc,exc_chk))
+				die(4,m_noraise.format(pfx,desc,exc_chk))
 
 tests_seen = []
 

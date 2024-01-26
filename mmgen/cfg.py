@@ -399,8 +399,10 @@ class Config(Lockable):
 			do_post_init = False,
 			process_opts = False ):
 
-		# Step 1: get user-supplied configuration data from a) command line, or b) first argument
-		#         to constructor; save to self._uopts:
+		# Step 1: get user-supplied configuration data from
+		#           a) command line, or
+		#           b) first argument to constructor;
+		#         save to self._uopts:
 		self._cloned = {}
 		if opts_data or parsed_opts or process_opts:
 			assert cfg is None, (

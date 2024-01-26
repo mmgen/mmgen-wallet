@@ -69,6 +69,7 @@ init_tests() {
 	t_lint="
 		- $pylint --errors-only mmgen
 		- $pylint --errors-only test
+		- $pylint --errors-only examples
 		- $pylint --errors-only --disable=relative-beyond-top-level test/cmdtest_py_d
 	"
 
