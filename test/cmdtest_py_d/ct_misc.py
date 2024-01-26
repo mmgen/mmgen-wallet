@@ -34,6 +34,7 @@ class CmdTestDev(CmdTestBase):
 	networks = ('btc',)
 	cmd_group = (
 		('compute_file_chksum', 'scripts/compute-file-chksum.py'),
+		('create_bip_hd_chain_params', 'scripts/create-bip-hd-chain-params.py'),
 	)
 	tmpdir_nums = [99]
 	color = True
@@ -46,6 +47,15 @@ class CmdTestDev(CmdTestBase):
 		t.expect('3df942')
 		return t
 
+	def create_bip_hd_chain_params(self):
+		t = self._spawn('scripts/create-bip-hd-chain-params.py', ['test/ref/altcoin/slip44-mini.json'])
+		t.expect('[defaults]')
+		t.expect(r"secp.*0488ade4.*0488b21e.*0'\/0\/0",regex=True)
+		t.expect('[bip-44]')
+		t.expect('[bip-49]')
+		t.match_expect_list(['0','BTC','x','m','P2SH','049d7878','049d7cb2','80','05','x','Bitcoin','1'])
+		return t
+
 class CmdTestMisc(CmdTestBase):
 	'miscellaneous tests (RPC backends, xmrwallet_txview, term)'
 	networks = ('btc',)
@@ -56,6 +66,7 @@ class CmdTestMisc(CmdTestBase):
 		('xmrwallet_txview', "'mmgen-xmrwallet' txview"),
 		('xmrwallet_txlist', "'mmgen-xmrwallet' txlist"),
 		('coin_daemon_info', "'examples/coin-daemon-info.py'"),
+		('examples_bip_hd',  "'examples/bip_hd.py'"),
 		('term_echo',        "term.set('echo')"),
 		('term_cleanup',     'term.register_cleanup()'),
 	)
@@ -86,6 +97,9 @@ class CmdTestMisc(CmdTestBase):
 
 	def xmrwallet_txlist(self):
 		return self.xmrwallet_txview(op='txlist')
+
+	def examples_bip_hd(self):
+		return self.spawn('examples/bip_hd.py',cmd_dir='.')
 
 	def coin_daemon_info(self):
 		if cfg.no_altcoin:
