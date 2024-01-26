@@ -445,10 +445,17 @@ class Config(Lockable):
 			assert key.isascii() and key.isidentifier() and key[0] != '_', '{key!r}: malformed configuration option'
 			assert key not in self._forbidden_opts, '{key!r}: forbidden configuration option'
 			if key not in auto_opts:
-				setattr(
-					self,
-					key,
-					conv_type(key, val, getattr(self,key), self._uopt_desc ) if hasattr(self,key) else val )
+				if hasattr(type(self), key):
+					setattr(
+						self,
+						key,
+						getattr(type(self), key) if val is None else
+							conv_type(key, val, getattr(type(self), key), self._uopt_desc))
+				elif val is None:
+					if hasattr(self, key):
+						delattr(self, key)
+				else:
+					setattr(self, key, val)
 
 		# Step 3: set cfg from environment, skipping already-set opts; save names set from environment:
 		self._envopts = tuple(self._set_cfg_from_env()) if self._use_env else ()
