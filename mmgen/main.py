@@ -60,13 +60,14 @@ def launch(*, mod=None, func=None, package='mmgen'):
 			2:   _o(yellow,  2, '{message}'),
 			3:   _o(yellow,  3, '\nMMGen Error ({name}):\n{message}'),
 			4:   _o(red,     4, '\nMMGen Fatal Error ({name}):\n{message}'),
-			'x': _o(yellow,  5, '\nMMGen Unhandled Exception ({name}):\n{message}'),
+			'x': _o(yellow,  5, '\nMMGen Unhandled Exception ({name}): {e}'),
 		}[getattr(e,'mmcode','x')]
 
 		(sys.stdout if getattr(e,'stdout',None) else sys.stderr).write(
 			d.color(d.fs.format(
 				name = type(e).__name__,
-				message = errmsg ))
+				message = errmsg,
+				e = e))
 			+ '\n' )
 
 		sys.exit(d.exit_val)

@@ -4,7 +4,12 @@ on:
   push:
     paths:
       - '.github/workflows/pylint.yaml'
+      - 'pyproject.toml'
+      - 'setup.cfg'
+      - 'test/ref/**'
+      - 'cmds/**'
       - '**.py'
+      - '**.c'
 
 jobs:
   test:
