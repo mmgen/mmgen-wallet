@@ -16,6 +16,12 @@
   this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+   NOTE: deprecated context flags SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY
+   must be used for now instead of SECP256K1_CONTEXT_NONE (see libsecp256k1 CHANGELOG)
+   for backward compatibility with libsecp256k1 <v0.2.0 (i.e. pre-bookworm distros).
+*/
+
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <secp256k1.h>
@@ -84,9 +90,8 @@ static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
 	size_t pubkey_bytes_len = compressed == 1 ? 33 : 65;
 	unsigned char pubkey_bytes[pubkey_bytes_len];
 	secp256k1_pubkey pubkey;
-	/* use deprecated context flags (see libsecp256k1 CHANGELOG) for backward compatibility (pre-bookworm) */
+	/* see NOTE */
 	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
-	/* secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE); */ /* for bookworm and later */
 	if (ctx == NULL) {
 		PyErr_SetString(PyExc_RuntimeError, "Context initialization failed");
 		return NULL;
@@ -115,7 +120,8 @@ static PyObject * pubkey_tweak_add(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
 		return NULL;
 	}
-	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+	/* see NOTE */
+	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 	secp256k1_pubkey pubkey;
 	if (!pubkey_parse_with_check(ctx, &pubkey, pubkey_bytes, pubkey_bytes_len)) {
 		return NULL;
@@ -148,7 +154,8 @@ static PyObject * pubkey_check(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
 		return NULL;
 	}
-	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+	/* see NOTE */
+	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 	secp256k1_pubkey pubkey;
 	if (!pubkey_parse_with_check(ctx, &pubkey, pubkey_bytes, pubkey_bytes_len)) {
 		return NULL;

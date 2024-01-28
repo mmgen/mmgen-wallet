@@ -80,7 +80,7 @@ class Bip32ExtendedKey(Lockable):
 		bipnum, cp_entry = parse_version_bytes(ver_hex)
 
 		public = ver_hex == cp_entry.vb_pub
-		idx_raw = int.from_bytes(key[9:13])
+		idx_raw = int.from_bytes(key[9:13], byteorder='big')
 
 		self.base58    = key_b58
 		self.ver_bytes = key[:4]
@@ -182,7 +182,7 @@ class MasterNode(Lockable):
 		self.public    = False
 		self.base_cfg  = base_cfg
 
-		check_privkey(int.from_bytes(self.key))
+		check_privkey(int.from_bytes(self.key, byteorder='big'))
 
 	def init_cfg(self, coin=None, network=None, addr_type=None, from_path=False, no_path_checks=False):
 
@@ -295,9 +295,12 @@ class BipHDNode(Lockable):
 			raise ValueError('cannot create extended private key for public node!')
 		ret = b58chk_encode(
 			bytes.fromhex(get_version_bytes(self.cfg.bip_proto, self.cfg.base_cfg.coin, public))
-			+ int.to_bytes(self.depth, length=1)
+			+ int.to_bytes(self.depth, length=1, byteorder='big')
 			+ self.par_print
-			+ int.to_bytes(self.idx + (hardened_idx0 if self.hardened and self.depth else 0), length=4)
+			+ int.to_bytes(
+				self.idx + (hardened_idx0 if self.hardened and self.depth else 0),
+				length    = 4,
+				byteorder = 'big')
 			+ self.chaincode
 			+ (self.pubkey_bytes if public else b'\x00' + self.key)
 		)
@@ -333,7 +336,7 @@ class BipHDNode(Lockable):
 
 		I = hmac.digest(
 			self.chaincode,
-			key_in + ((hardened_idx0 if new.hardened else 0) + new.idx).to_bytes(length=4),
+			key_in + ((hardened_idx0 if new.hardened else 0) + new.idx).to_bytes(length=4, byteorder='big'),
 			'sha512')
 
 		pk_addend_bytes = I[:32]
@@ -342,11 +345,11 @@ class BipHDNode(Lockable):
 		if new.public:
 			new.key = pubkey_tweak_add(key_in, pk_addend_bytes) # checks range of pk_addend
 		else:
-			pk_addend = int.from_bytes(pk_addend_bytes)
+			pk_addend = int.from_bytes(pk_addend_bytes, byteorder='big')
 			check_privkey(pk_addend)
-			key_int = (int.from_bytes(self.key) + pk_addend) % secp256k1_order
+			key_int = (int.from_bytes(self.key, byteorder='big') + pk_addend) % secp256k1_order
 			check_privkey(key_int)
-			new.key = int.to_bytes(key_int, length=32)
+			new.key = int.to_bytes(key_int, length=32, byteorder='big')
 
 		new._lock()
 		return new
@@ -396,7 +399,7 @@ class BipHDNode(Lockable):
 		if xk.public:
 			pubkey_check(xk.key)
 		else:
-			check_privkey(int.from_bytes(xk.key))
+			check_privkey(int.from_bytes(xk.key, byteorder='big'))
 
 		addr_types = {
 			84: 'bech32',
