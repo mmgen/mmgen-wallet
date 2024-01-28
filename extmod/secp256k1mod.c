@@ -84,7 +84,9 @@ static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
 	size_t pubkey_bytes_len = compressed == 1 ? 33 : 65;
 	unsigned char pubkey_bytes[pubkey_bytes_len];
 	secp256k1_pubkey pubkey;
-	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+	/* use deprecated context flags (see libsecp256k1 CHANGELOG) for backward compatibility (pre-bookworm) */
+	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+	/* secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE); */ /* for bookworm and later */
 	if (ctx == NULL) {
 		PyErr_SetString(PyExc_RuntimeError, "Context initialization failed");
 		return NULL;
