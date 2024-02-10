@@ -92,7 +92,7 @@ class EthereumTwJSON(TwJSON):
 			def gen_data(data):
 				for d in data:
 					if hasattr(d,'address'):
-						if d.amount is None: # Python 3.9: {} | {}
+						if d.amount is None:
 							yield (d.address, {'mmid':d.mmgen_id,'comment':TwComment(d.comment)})
 						else:
 							yield (d.address, {'mmid':d.mmgen_id,'comment':TwComment(d.comment),'balance':d.amount})

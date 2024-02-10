@@ -31,12 +31,11 @@ def overlay_setup(repo_root):
 				d == f'{pkgname}.data' or
 				(d == 'mmgen.proto.secp256k1' and fn.startswith('secp256k1'))
 			):
-				if os.path.exists(os.path.join(fakemod_dir,fn)):
+				if fn.endswith('.py') and os.path.exists(os.path.join(fakemod_dir,fn)):
 					make_link(
 						os.path.join(fakemod_dir,fn),
 						os.path.join(destdir,fn) )
-#					link_fn = fn.removesuffix('.py') + '_orig.py' # Python 3.9
-					link_fn = fn[:-3] + '_orig.py'
+					link_fn = fn.removesuffix('.py') + '_orig.py'
 				else:
 					link_fn = fn
 				make_link(
@@ -47,7 +46,7 @@ def overlay_setup(repo_root):
 	fakemod_root = os.path.join(repo_root,'test','overlay','fakemods')
 	common_path = os.path.join(os.path.sep,'test','overlay','fakemods')
 	pkgdata = ((
-			os.path.realpath(e.path)[:-len(os.path.join(common_path,e.name))], # Python 3.9: removesuffix()
+			os.path.realpath(e.path).removesuffix(os.path.join(common_path,e.name)),
 			e.name
 		) for e in os.scandir(fakemod_root) if e.is_dir() )
 

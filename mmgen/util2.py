@@ -30,12 +30,6 @@ def die_pause(ev=0,s=''):
 	input('Press ENTER to exit')
 	sys.exit(ev)
 
-def removeprefix(s,pfx): # workaround for pre-Python 3.9
-	return s[len(pfx):] if s.startswith(pfx) else s
-
-def removesuffix(s,sfx): # workaround for pre-Python 3.9
-	return s[:-len(sfx)] if s.endswith(sfx) else s
-
 # monkey-patch function for monero-python: permits its use with pycryptodome (e.g. MSYS2)
 # instead of the expected pycryptodomex
 def load_cryptodomex():

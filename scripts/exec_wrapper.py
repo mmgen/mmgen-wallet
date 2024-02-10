@@ -51,12 +51,8 @@ def exec_wrapper_write_traceback(e,exit_val):
 		overlay_path_pfx = os.path.relpath(get_overlay_tree_dir(cwd)) + '/'
 
 		def fixup_fn(fn_in):
-			from mmgen.util2 import removeprefix,removesuffix
-			fn = removeprefix(removeprefix(fn_in,cwd+'/'),overlay_path_pfx)
-			return removesuffix(fn,'_orig.py') + '.py' if fn.endswith('_orig.py') else fn
-			# Python 3.9:
-			# fn = fn_in.removeprefix(cwd+'/').removeprefix('test/overlay/tree/')
-			# return fn.removesuffix('_orig.py') + '.py' if fn.endswith('_orig.py') else fn
+			fn = fn_in.removeprefix(cwd+'/').removeprefix(overlay_path_pfx)
+			return fn.removesuffix('_orig.py') + '.py' if fn.endswith('_orig.py') else fn
 
 		def gen_output():
 			yield 'Traceback (most recent call last):'

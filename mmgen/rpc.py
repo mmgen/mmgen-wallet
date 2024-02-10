@@ -247,9 +247,8 @@ class RPCBackends:
 
 			from subprocess import run,PIPE
 			from .color import set_vt100
-			res = run(exec_cmd,stdout=PIPE,check=True).stdout.decode()
+			res = run(exec_cmd,stdout=PIPE,check=True,text=True).stdout
 			set_vt100()
-			# res = run(exec_cmd,stdout=PIPE,check=True,text='UTF-8').stdout # Python 3.7+
 			return (res[:-3],int(res[-3:]))
 
 class RPCClient(MMGenObject):
