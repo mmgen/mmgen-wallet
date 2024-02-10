@@ -66,7 +66,7 @@ def launch(*, mod=None, func=None, package='mmgen'):
 		(sys.stdout if getattr(e,'stdout',None) else sys.stderr).write(
 			d.color(d.fs.format(
 				name = type(e).__name__,
-				message = errmsg,
+				message = errmsg.strip() or e,
 				e = e))
 			+ '\n' )
 

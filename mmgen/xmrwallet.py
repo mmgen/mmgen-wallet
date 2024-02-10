@@ -26,7 +26,7 @@ from pathlib import Path
 
 from .objmethods import MMGenObject,HiliteStr,InitErrors
 from .obj import CoinTxID
-from .color import red,yellow,green,blue,cyan,pink,orange,purple
+from .color import red,yellow,green,blue,cyan,pink,orange,purple,gray
 from .util import (
 	msg,
 	msg_r,
@@ -779,7 +779,10 @@ class MoneroWalletOps:
 				test_monerod = self.test_monerod,
 			)
 
-			if self.offline or (self.name in ('create','restore') and self.cfg.restore_height is None):
+			if (
+					self.offline or
+					(self.name in ('create','restore') and self.cfg.restore_height is None)
+				):
 				self.wd.usr_daemon_args = ['--offline']
 
 			self.c = MoneroWalletRPCClient(
@@ -1480,7 +1483,7 @@ class MoneroWalletOps:
 
 			max_acct = len(accts_data['subaddress_accounts']) - 1
 			if self.account > max_acct:
-				die(1,f'{self.account}: requested account index out of bounds (>{max_acct})')
+				die(2, f'{self.account}: requested account index out of bounds (>{max_acct})')
 
 			h.print_addrs(accts_data,self.account)
 
@@ -1602,13 +1605,13 @@ class MoneroWalletOps:
 
 			max_acct = len(accts_data['subaddress_accounts']) - 1
 			if self.account > max_acct:
-				die(1,f'{self.account}: requested account index out of bounds (>{max_acct})')
+				die(2, f'{self.account}: requested account index out of bounds (>{max_acct})')
 
 			ret = h.print_addrs(accts_data,self.account)
 
 			if self.address_idx > len(ret['addresses']) - 1:
-				die(1,'{}: requested address index out of bounds (>{})'.format(
-					self.account,
+				die(2, '{}: requested address index out of bounds (>{})'.format(
+					self.address_idx,
 					len(ret['addresses']) - 1 ))
 
 			addr = ret['addresses'][self.address_idx]
@@ -1617,9 +1620,9 @@ class MoneroWalletOps:
 					a = 'Address:       ',
 					b = cyan(addr['address'][:15] + '...'),
 					c = 'Existing label:',
-					d = pink(addr['label']) if addr['label'] else '[none]',
+					d = pink(addr['label']) if addr['label'] else gray('[none]'),
 					e = 'New label:     ',
-					f = pink(self.label) if self.label else '[none]' ))
+					f = pink(new_label) if new_label else gray('[none]') ))
 
 			if addr['label'] == self.label:
 				ymsg('\nLabel is unchanged, operation cancelled')
@@ -1708,8 +1711,6 @@ class MoneroWalletOps:
 				wallet_dir  = self.cfg.wallet_dir or '.',
 				test_suite  = self.cfg.test_suite,
 				monerod_addr = relay_opt[1],
-				trust_monerod = False,
-				test_monerod = False,
 			)
 
 			u = wd.usr_daemon_args = []
@@ -1863,7 +1864,7 @@ class MoneroWalletOps:
 
 		def post_main_failure(self):
 			rw_msg = ' for requested wallets' if uarg.wallets else ''
-			die(1,yellow(f'No signed key image files found{rw_msg}!'))
+			die(2, f'No signed key image files found{rw_msg}!')
 
 		async def process_wallet(self,d,fn,last):
 			keyimage_fn = MoneroWalletOutputsFile.Signed.find_fn_from_wallet_fn( self.cfg, fn, ret_on_no_match=True )
@@ -1948,13 +1949,16 @@ class MoneroWalletOps:
 				files = [f for f in asi.xmr_tx_dir.iterdir() if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]
 			else:
 				files = uarg.infile
+
 			txs = sorted(
 				(MoneroMMGenTX.View( self.cfg, Path(fn) ) for fn in files),
 					# old TX files have no ‘submit_time’ field:
 					key = lambda x: getattr(x.data,'submit_time',None) or x.data.create_time
 			)
+
 			if self.cfg.autosign:
 				asi.do_umount()
+
 			self.cfg._util.stdout_or_pager(
 				(self.hdr if len(files) > 1 else '')
 				+ self.col_hdr
