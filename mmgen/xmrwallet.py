@@ -1615,6 +1615,7 @@ class MoneroWalletOps:
 					len(ret['addresses']) - 1 ))
 
 			addr = ret['addresses'][self.address_idx]
+			new_label = f'{self.label} [{make_timestr()}]' if self.label else ''
 
 			msg('\n  {a} {b}\n  {c} {d}\n  {e} {f}'.format(
 					a = 'Address:       ',
@@ -1624,18 +1625,20 @@ class MoneroWalletOps:
 					e = 'New label:     ',
 					f = pink(new_label) if new_label else gray('[none]') ))
 
-			if addr['label'] == self.label:
+			op = 'remove' if not new_label else 'update' if addr['label'] else 'set'
+
+			if addr['label'] == new_label:
 				ymsg('\nLabel is unchanged, operation cancelled')
-			elif keypress_confirm( self.cfg, '  {} label?'.format('Set' if self.label else 'Remove') ):
-				h.set_label( self.account, self.address_idx, self.label )
+			elif keypress_confirm(self.cfg, f'  {op.capitalize()} label?'):
+				h.set_label(self.account, self.address_idx, new_label)
 				accts_data = h.get_accts(print=False)[0]
 				ret = h.print_addrs(accts_data,self.account)
-				new_label = ret['addresses'][self.address_idx]['label']
-				if new_label != self.label:
-					ymsg(f'Warning: new label {new_label!r} does not match requested value!')
+				label_chk = ret['addresses'][self.address_idx]['label']
+				if label_chk != new_label:
+					ymsg(f'Warning: new label {label_chk!r} does not match requested value!')
 					return False
 				else:
-					msg(cyan('\nLabel successfully {}'.format('set' if self.label else 'removed')))
+					msg(cyan('\nLabel successfully {}'.format('set' if op == 'set' else op+'d')))
 			else:
 				ymsg('\nOperation cancelled by user request')
 
