@@ -162,19 +162,19 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		return self._new_addr_alice(
 			'2',
 			'start',
-			fr'Creating new account.*Index:\s+{self.na_idx}\s')
+			r'Creating new account for wallet .*2.* with label .*‘xmrwallet new account .*y/N\): ')
 
 	def new_address_alice(self):
 		return self._new_addr_alice(
 			'2:1',
 			'continue',
-			r'Account index:\s+1\s+Creating new address' )
+			r'Creating new address for wallet .*2.*, account .*#1.* with label .*‘xmrwallet new address .*y/N\): ')
 
 	def new_address_alice_label(self):
 		return self._new_addr_alice(
 			'2:1,Alice’s new address',
 			'stop',
-			r'Account index:\s+1\s+Creating new address.*Alice’s new address' )
+			r'Creating new address for wallet .*2.*, account .*#1.* with label .*‘Alice’s new address .*y/N\): ')
 
 	def dump_tmp_wallets(self):
 		return self._dump_wallets(autosign=False)

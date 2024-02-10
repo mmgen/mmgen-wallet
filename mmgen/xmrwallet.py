@@ -997,12 +997,7 @@ class MoneroWalletOps:
 
 			def create_acct(self,label=None):
 				msg('\n    Creating new account...')
-				ret = self.c.call(
-					'create_account',
-					label = label or 'Sweep from {}:{} [{}]'.format(
-						self.parent.source.idx,
-						self.parent.account,
-						make_timestr() ))
+				ret = self.c.call('create_account', label=label)
 				msg('      Index:   {}'.format( pink(str(ret['account_index'])) ))
 				msg('      Address: {}'.format( cyan(ret['address']) ))
 				return (ret['account_index'], ret['address'])
@@ -1508,7 +1503,8 @@ class MoneroWalletOps:
 				accts_data = h2.get_accts()[0]
 
 				if keypress_confirm( self.cfg, f'\nCreate new account for wallet {wf.name!r}?' ):
-					dest_acct,dest_addr = h2.create_acct()
+					dest_acct,dest_addr = h2.create_acct(
+						label = f'Sweep from {self.source.idx}:{self.account} [{make_timestr()}]')
 					dest_addr_idx = 0
 					h2.get_accts()
 				elif keypress_confirm( self.cfg, f'Sweep to last existing account of wallet {wf.name!r}?' ):
@@ -1565,19 +1561,35 @@ class MoneroWalletOps:
 		async def main(self):
 			h = self.rpc(self,self.source)
 			h.open_wallet('Monero')
-			label = '{a} [{b}]'.format(
-				a = self.label or f"xmrwallet new {'account' if self.account is None else 'address'}",
-				b = make_timestr() )
-			if self.account is None:
-				h.create_acct(label=label)
-			else:
-				msg_r(f'\n    Account index: {pink(str(self.account))}')
-				h.create_new_addr(self.account,label=label)
+
+			desc = 'account' if self.account is None else 'address'
+			label = (
+				None if self.label == '' else
+				'{} [{}]'.format(self.label or f'xmrwallet new {desc}', make_timestr()))
 
 			accts_data = h.get_accts()[0]
-
-			if self.account is not None:
+			if desc == 'address':
 				h.print_addrs(accts_data,self.account)
+
+			if keypress_confirm(
+					self.cfg,
+					'\nCreating new {a} for wallet {b}{c} with {d}\nOK?'.format(
+						a = desc,
+						b = red(str(self.source.idx)),
+						c = '' if desc == 'account' else f', account {red("#"+str(self.account))}',
+						d = 'label ' + pink('‘'+label+'’') if label else 'empty label')
+					):
+
+				if desc == 'address':
+					h.create_new_addr(self.account,label=label)
+				else:
+					h.create_acct(label=label)
+
+				accts_data = h.get_accts()[0]
+				if desc == 'address':
+					h.print_addrs(accts_data,self.account)
+			else:
+				ymsg('\nOperation cancelled by user request')
 
 			# wallet must be left open: otherwise the 'stop_wallet' RPC call used to stop the daemon will fail
 			if self.cfg.no_stop_wallet_daemon:

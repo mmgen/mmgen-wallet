@@ -400,8 +400,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			(['--no-start-wallet-daemon'] if cfg in ('continue','stop') else []) +
 			(['--no-stop-wallet-daemon'] if cfg in ('start','continue') else []) +
 			['new', (kafile or data.kafile), spec] )
-		m = re.search( expect, t.read(strip_color=True), re.DOTALL )
-		assert m, f'no match found for {expect!r}'
+		t.expect(expect, 'y', regex=True)
 		return t
 
 	na_idx = 1
@@ -410,25 +409,25 @@ class CmdTestXMRWallet(CmdTestBase):
 		return self.new_addr_alice(
 			'4',
 			'start',
-			fr'Creating new account.*Index:\s+{self.na_idx}\s')
+			r'Creating new account for wallet .*4.* with label .*‘xmrwallet new account .*y/N\): ')
 
 	def new_account_alice_label(self):
 		return self.new_addr_alice(
 			'4,Alice’s new account',
 			'continue',
-			fr'Creating new account.*Index:\s+{self.na_idx+1}\s.*Alice’s new account')
+			r'Creating new account for wallet .*4.* with label .*‘Alice’s new account .*y/N\): ')
 
 	def new_address_alice(self):
 		return self.new_addr_alice(
 			'4:2',
 			'continue',
-			r'Account index:\s+2\s+Creating new address' )
+			r'Creating new address for wallet .*4.*, account .*#2.* with label .*‘xmrwallet new address .*y/N\): ')
 
 	def new_address_alice_label(self):
 		return self.new_addr_alice(
 			'4:2,Alice’s new address',
 			'stop',
-			r'Account index:\s+2\s+Creating new address.*Alice’s new address' )
+			r'Creating new address for wallet .*4.*, account .*#2.* with label .*‘Alice’s new address .*y/N\): ')
 
 	async def mine_initial_coins(self):
 		self.spawn('', msg_only=True, extra_desc='(opening wallet)')
