@@ -742,11 +742,11 @@ class MoneroWalletOps:
 			'autosign',
 			'watch_only',
 		)
+		offline = False
+		wallet_offline = False
 		wallet_exists = True
 		start_daemon = True
-		offline = False
 		skip_wallet_check = False # for debugging
-		test_monerod = False
 
 		def __init__(self,cfg,uarg_tuple):
 
@@ -769,6 +769,9 @@ class MoneroWalletOps:
 
 			super().__init__(cfg,uarg_tuple)
 
+			if self.offline or (self.name == 'create' and self.cfg.restore_height is None):
+				self.wallet_offline = True
+
 			self.wd = MoneroWalletDaemon(
 				cfg         = self.cfg,
 				proto       = self.proto,
@@ -776,13 +779,10 @@ class MoneroWalletOps:
 				test_suite  = self.cfg.test_suite,
 				monerod_addr = self.cfg.daemon or None,
 				trust_monerod = self.trust_monerod,
-				test_monerod = self.test_monerod,
+				test_monerod = not self.wallet_offline,
 			)
 
-			if (
-					self.offline or
-					(self.name in ('create','restore') and self.cfg.restore_height is None)
-				):
+			if self.wallet_offline:
 				self.wd.usr_daemon_args = ['--offline']
 
 			self.c = MoneroWalletRPCClient(
@@ -1188,6 +1188,7 @@ class MoneroWalletOps:
 			vkf.write() # write file to self.cfg.outdir
 
 	class restore(create):
+		wallet_offline = True
 
 		def check_uopts(self):
 			if self.cfg.restore_height is not None:
@@ -1272,7 +1273,6 @@ class MoneroWalletOps:
 
 	class sync(wallet):
 		opts = ('rescan_blockchain',)
-		test_monerod = True
 
 		def check_uopts(self):
 			if self.cfg.rescan_blockchain and self.cfg.watch_only:
@@ -1437,7 +1437,6 @@ class MoneroWalletOps:
 		spec_id  = 'sweep_spec'
 		spec_key = ( (1,'source'), (3,'dest') )
 		opts     = ('no_relay','tx_relay_daemon','watch_only')
-		test_monerod = True
 
 		def check_uopts(self):
 			if self.cfg.tx_relay_daemon and (self.cfg.no_relay or self.cfg.autosign):
@@ -1557,6 +1556,7 @@ class MoneroWalletOps:
 	class new(spec):
 		spec_id = 'newaddr_spec'
 		spec_key = ( (1,'source'), )
+		wallet_offline = True
 
 		async def main(self):
 			h = self.rpc(self,self.source)
@@ -1601,6 +1601,7 @@ class MoneroWalletOps:
 		spec_id  = 'label_spec'
 		spec_key = ( (1,'source'), )
 		opts     = ()
+		wallet_offline = True
 
 		async def main(self):
 
@@ -1685,7 +1686,6 @@ class MoneroWalletOps:
 	class submit(wallet):
 		action = 'submitting transaction with'
 		opts = ('tx_relay_daemon',)
-		test_monerod = True
 
 		def check_uopts(self):
 			self.tx # trigger an exit if no suitable transaction present
@@ -1800,6 +1800,7 @@ class MoneroWalletOps:
 				self.die_no_tx( 'submitted', 0, asi.xmr_tx_dir )
 
 	class dump(wallet):
+		wallet_offline = True
 
 		async def process_wallet(self,d,fn,last):
 			h = self.rpc(self,d)
