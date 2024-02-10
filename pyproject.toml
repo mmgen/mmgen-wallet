@@ -12,7 +12,6 @@ indent-after-paren = 2
 max-line-length = 110
  
 [tool.pylint.main]
-py-version = "3.7"
 recursive = true
 jobs = 0
 ignore = [

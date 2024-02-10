@@ -731,6 +731,21 @@ class MoneroWalletOps:
 		async def stop_wallet_daemon(self):
 			pass
 
+		def post_mount_action(self):
+			pass
+
+		def mount_removable_device(self):
+			if self.cfg.autosign and not self.cfg.test_suite:
+				from .autosign import get_autosign_obj
+				asi = get_autosign_obj(self.cfg,'xmr')
+				if not asi.get_insert_status():
+					die(1,'Removable device not present!')
+				if self.do_umount:
+					import atexit
+					atexit.register(lambda: asi.do_umount())
+				asi.do_mount()
+				self.post_mount_action()
+
 	class wallet(base):
 
 		opts = (
@@ -806,6 +821,7 @@ class MoneroWalletOps:
 					addr_idxs = uarg.wallets,
 					skip_chksum_msg = True )
 			else:
+				self.mount_removable_device()
 				# with watch_only, make a second attempt to open the file as KeyAddrList:
 				for first_try in (True,False):
 					try:
@@ -1687,7 +1703,7 @@ class MoneroWalletOps:
 		action = 'submitting transaction with'
 		opts = ('tx_relay_daemon',)
 
-		def check_uopts(self):
+		def post_mount_action(self):
 			self.tx # trigger an exit if no suitable transaction present
 
 		def die_no_tx(self,desc,num_txs,tx_dir):
@@ -1905,6 +1921,8 @@ class MoneroWalletOps:
 
 			super().__init__(cfg,uarg_tuple)
 
+			self.mount_removable_device()
+
 			self.tx = MoneroMMGenTX.Signed( self.cfg, Path(uarg.infile) )
 
 			if self.cfg.tx_relay_daemon:
@@ -1960,6 +1978,9 @@ class MoneroWalletOps:
 		do_umount = False
 
 		async def main(self,cols=None):
+
+			self.mount_removable_device()
+
 			if self.cfg.autosign:
 				asi = get_autosign_obj(self.cfg,'xmr')
 				files = [f for f in asi.xmr_tx_dir.iterdir() if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]

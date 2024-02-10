@@ -145,16 +145,6 @@ else:
 
 op_cls = getattr(MoneroWalletOps,op.replace('-','_'))
 
-if cfg.autosign and not cfg.test_suite:
-	from .autosign import get_autosign_obj
-	asi = get_autosign_obj(cfg,'xmr')
-	if not asi.get_insert_status():
-		die(1,'Removable device not present!')
-	if op_cls.do_umount:
-		import atexit
-		atexit.register(lambda: asi.do_umount())
-	asi.do_mount()
-
 m = op_cls(cfg, xmrwallet_uargs(infile, wallets, spec))
 
 if async_run(m.main()):
