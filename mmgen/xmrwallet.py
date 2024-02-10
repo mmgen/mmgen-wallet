@@ -769,6 +769,25 @@ class MoneroWalletOps:
 
 			super().__init__(cfg,uarg_tuple)
 
+			self.wd = MoneroWalletDaemon(
+				cfg         = self.cfg,
+				proto       = self.proto,
+				wallet_dir  = self.cfg.wallet_dir or '.',
+				test_suite  = self.cfg.test_suite,
+				monerod_addr = self.cfg.daemon or None,
+				trust_monerod = self.trust_monerod,
+				test_monerod = self.test_monerod,
+			)
+
+			if self.offline or (self.name in ('create','restore') and self.cfg.restore_height is None):
+				self.wd.usr_daemon_args = ['--offline']
+
+			self.c = MoneroWalletRPCClient(
+				cfg             = self.cfg,
+				daemon          = self.wd,
+				test_connection = False,
+			)
+
 			if self.offline:
 				from .wallet import Wallet
 				self.seed_src = Wallet(
@@ -804,25 +823,6 @@ class MoneroWalletOps:
 
 			if not self.skip_wallet_check:
 				check_wallets()
-
-			self.wd = MoneroWalletDaemon(
-				cfg         = self.cfg,
-				proto       = self.proto,
-				wallet_dir  = self.cfg.wallet_dir or '.',
-				test_suite  = self.cfg.test_suite,
-				monerod_addr = self.cfg.daemon or None,
-				trust_monerod = self.trust_monerod,
-				test_monerod = self.test_monerod,
-			)
-
-			if self.offline or (self.name in ('create','restore') and self.cfg.restore_height is None):
-				self.wd.usr_daemon_args = ['--offline']
-
-			self.c = MoneroWalletRPCClient(
-				cfg             = self.cfg,
-				daemon          = self.wd,
-				test_connection = False,
-			)
 
 			if self.start_daemon and not self.cfg.no_start_wallet_daemon:
 				async_run(self.restart_wallet_daemon())
