@@ -605,6 +605,8 @@ class MoneroWalletOps:
 		'create_offline',
 		'sync',
 		'list',
+		'view',
+		'listview',
 		'new',
 		'transfer',
 		'sweep',
@@ -624,6 +626,8 @@ class MoneroWalletOps:
 		'create',
 		'sync',
 		'list',
+		'view',
+		'listview',
 		'label',
 		'new',
 		'transfer',
@@ -686,6 +690,8 @@ class MoneroWalletOps:
 
 			self.proto = init_proto( cfg, 'xmr', network=self.cfg.network, need_amt=True )
 
+			self.pre_init_action()
+
 		def check_uopts(self):
 
 			def check_pat_opt(name):
@@ -721,6 +727,9 @@ class MoneroWalletOps:
 				  Host:  {blue(m[1])}
 				  Proxy: {blue(m[2] or 'None')}
 				""",strip_char='\t',indent=indent))
+
+		def pre_init_action(self):
+			pass
 
 		def post_main_success(self):
 			pass
@@ -1298,7 +1307,8 @@ class MoneroWalletOps:
 
 			super().__init__(cfg,uarg_tuple)
 
-			self.dc = self.get_coin_daemon_rpc()
+			if not self.wallet_offline:
+				self.dc = self.get_coin_daemon_rpc()
 
 			self.accts_data = {}
 
@@ -1368,9 +1378,9 @@ class MoneroWalletOps:
 			d = self.accts_data
 
 			for wnum,k in enumerate(d):
-				if self.name == 'sync':
+				if self.name in ('sync','view'):
 					self.rpc(self,self.addr_data[wnum]).print_accts( d[k]['accts'], d[k]['addrs'], indent='')
-				elif self.name == 'list':
+				elif self.name in ('list','listview'):
 					fs = '  {:2} {} {} {}'
 					msg('\n' + green(f'Wallet {k}:'))
 					for acct_num,acct in enumerate(d[k]['addrs']):
@@ -1406,6 +1416,34 @@ class MoneroWalletOps:
 
 	class list(sync):
 		stem = 'sync'
+
+	class view(sync):
+		stem = 'open'
+		opts = ()
+		wallet_offline = True
+
+		def pre_init_action(self):
+			ymsg('WARNING: Running in offline mode. Balances and other info may be out of date!')
+
+		async def process_wallet(self,d,fn,last):
+
+			self.c.call(
+				'open_wallet',
+				filename = fn.name,
+				password = d.wallet_passwd)
+
+			wallet_height = self.c.call('get_height')['height']
+			msg(f'  Wallet height: {wallet_height}')
+			a,b = self.rpc(self, d).get_accts(print=False)
+			self.accts_data[fn.name] = {'accts': a, 'addrs': b}
+
+			if not last:
+				self.c.call('close_wallet')
+
+			return True
+
+	class listview(view):
+		pass
 
 	class spec(wallet): # virtual class
 

@@ -102,6 +102,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		('check_tx_dirs',            'cleaning and checking signable file directories'),
 		('autosign_kill_thread',     'stopping autosign wait loop'),
 		('stop_daemons',             'stopping all wallet and coin daemons'),
+		('view',                     'viewing Alice’s wallet in offline mode (wallet #1)'),
+		('listview',                 'list-viewing Alice’s wallet in offline mode (wallet #2)'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -488,3 +490,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		pat = r'xmr/tx: \s*\S+\.subtx \S+\.subtx\s+xmr/outputs:\s*$'
 		assert re.search( pat, after, re.DOTALL ), f'regex search for {pat} failed'
 		return t
+
+	def view(self):
+		return self.sync_wallets('alice', op='view', wallets='1')
+
+	def listview(self):
+		return self.sync_wallets('alice', op='listview', wallets='2')

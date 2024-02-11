@@ -37,7 +37,11 @@ plain HTTP is not supported.
 
 create    - create wallets for all or specified addresses in key-address file
 sync      - sync wallets for all or specified addresses in key-address file
+            and display a summary of accounts and balances
 list      - same as ‘sync’, but also list detailed address info for accounts
+view      - display a summary of accounts and balances in offline mode.  May
+            be invoked without a running monerod
+listview  - same as ‘view’, but also list detailed address info for accounts
 label     - set a label for an address
 new       - create a new account in a wallet, or a new address in an account
 transfer  - transfer specified XMR amount from specified wallet:account to

@@ -500,18 +500,21 @@ class CmdTestXMRWallet(CmdTestBase):
 		)
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
 		for n,wnum in enumerate(wlist,1):
-			t.expect('Syncing wallet {}/{} ({})'.format(
+			t.expect('ing wallet {}/{} ({})'.format(
 				n,
 				len(wlist),
 				os.path.basename(data.walletfile_fs.format(wnum)),
 			))
-			t.expect('Chain height: ')
-			t.expect('Wallet height: ')
-			res = strip_ansi_escapes(t.expect_getend('Balance: '))
-			if bal_chk_func:
-				m = re.match( r'(\S+) Unlocked balance: (\S+)', res, re.DOTALL )
-				amts = [XMRAmt(amt) for amt in m.groups()]
-				assert bal_chk_func(n,*amts), f'balance check for wallet {n} failed!'
+			if op in ('view','listview'):
+				t.expect('Wallet height: ')
+			else:
+				t.expect('Chain height: ')
+				t.expect('Wallet height: ')
+				res = strip_ansi_escapes(t.expect_getend('Balance: '))
+				if bal_chk_func:
+					m = re.match( r'(\S+) Unlocked balance: (\S+)', res, re.DOTALL )
+					amts = [XMRAmt(amt) for amt in m.groups()]
+					assert bal_chk_func(n,*amts), f'balance check for wallet {n} failed!'
 		return t
 
 	def do_op(
