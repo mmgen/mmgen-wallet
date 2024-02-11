@@ -690,6 +690,9 @@ class MoneroWalletOps:
 
 			self.proto = init_proto( cfg, 'xmr', network=self.cfg.network, need_amt=True )
 
+			if cfg.autosign:
+				self.asi = get_autosign_obj(cfg, 'xmr')
+
 			self.pre_init_action()
 
 		def check_uopts(self):
@@ -745,14 +748,12 @@ class MoneroWalletOps:
 
 		def mount_removable_device(self):
 			if self.cfg.autosign and not self.cfg.test_suite:
-				from .autosign import get_autosign_obj
-				asi = get_autosign_obj(self.cfg,'xmr')
-				if not asi.get_insert_status():
+				if not self.asi.get_insert_status():
 					die(1,'Removable device not present!')
 				if self.do_umount:
 					import atexit
-					atexit.register(lambda: asi.do_umount())
-				asi.do_mount()
+					atexit.register(lambda: self.asi.do_umount())
+				self.asi.do_mount()
 				self.post_mount_action()
 
 	class wallet(base):
@@ -1842,8 +1843,8 @@ class MoneroWalletOps:
 				die(1,'--autosign is required for this operation')
 
 		def get_tx(self):
-			asi = get_autosign_obj(self.cfg,'xmr')
-			files = [f for f in asi.xmr_tx_dir.iterdir() if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]
+			files = [f for f in self.asi.xmr_tx_dir.iterdir()
+						if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]
 			txs = sorted(
 				(MoneroMMGenTX.Submitted( self.cfg, Path(fn) ) for fn in files),
 					key = lambda x: getattr(x.data,'submit_time',None) or x.data.create_time
@@ -1851,7 +1852,7 @@ class MoneroWalletOps:
 			if txs:
 				return txs[-1]
 			else:
-				self.die_no_tx( 'submitted', 0, asi.xmr_tx_dir )
+				self.die_no_tx('submitted', 0, self.asi.xmr_tx_dir)
 
 	class dump(wallet):
 		wallet_offline = True
@@ -2020,8 +2021,8 @@ class MoneroWalletOps:
 			self.mount_removable_device()
 
 			if self.cfg.autosign:
-				asi = get_autosign_obj(self.cfg,'xmr')
-				files = [f for f in asi.xmr_tx_dir.iterdir() if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]
+				files = [f for f in self.asi.xmr_tx_dir.iterdir()
+							if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]
 			else:
 				files = uarg.infile
 
@@ -2032,7 +2033,7 @@ class MoneroWalletOps:
 			)
 
 			if self.cfg.autosign:
-				asi.do_umount()
+				self.asi.do_umount()
 
 			self.cfg._util.stdout_or_pager(
 				(self.hdr if len(files) > 1 else '')
