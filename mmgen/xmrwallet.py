@@ -947,7 +947,7 @@ class MoneroWalletOps:
 					d,
 					fn,
 					last = n==len(self.addr_data)-1 )
-			gmsg(f'\n{processed} wallet{suf(processed)} {self.stem}ed')
+			gmsg(f'\n{processed} wallet{suf(processed)} {self.stem}ed\n')
 			return processed
 
 		def head_msg(self,wallet_idx,fn):
@@ -997,19 +997,18 @@ class MoneroWalletOps:
 				await self.c.stop_daemon(quiet=True) # closes wallet
 				gmsg_r('done')
 
-			def print_accts(self,data,addrs_data,indent='    '):
+			def gen_accts_info(self, data, addrs_data, indent='    '):
 				d = data['subaddress_accounts']
-				msg('\n' + indent + f'Accounts of wallet {self.fn.name}:')
+				yield indent + f'Accounts of wallet {self.fn.name}:'
 				fs = indent + '  {a:6}  {b:18}  {c:<6} {d:%s}  {e}' % max(len(e['label']) for e in d)
-				msg(fs.format(a='Index ',b='Base Address',c='nAddrs',d='Label',e='Unlocked Balance'))
+				yield fs.format(a='Index ', b='Base Address', c='nAddrs', d='Label', e='Unlocked Balance')
 				for i,e in enumerate(d):
-					msg(fs.format(
+					yield fs.format(
 						a = str(e['account_index']),
 						b = e['base_address'][:15] + '...',
 						c = len(addrs_data[i]['addresses']),
 						d = e['label'],
-						e = fmt_amt(e['unlocked_balance']),
-					))
+						e = fmt_amt(e['unlocked_balance']))
 
 			def get_accts(self,print=True):
 				data = self.c.call('get_accounts')
@@ -1018,7 +1017,7 @@ class MoneroWalletOps:
 						for i in range(len(data['subaddress_accounts']))
 				]
 				if print:
-					self.print_accts(data,addrs_data)
+					msg('\n' + '\n'.join(self.gen_accts_info(data, addrs_data)))
 				return ( data, addrs_data )
 
 			def create_acct(self,label=None):
@@ -1378,42 +1377,51 @@ class MoneroWalletOps:
 		def post_main_success(self):
 			d = self.accts_data
 
-			for wnum,k in enumerate(d):
-				if self.name in ('sync','view'):
-					self.rpc(self,self.addr_data[wnum]).print_accts( d[k]['accts'], d[k]['addrs'], indent='')
-				elif self.name in ('list','listview'):
-					fs = '  {:2} {} {} {}'
-					msg('\n' + green(f'Wallet {k}:'))
-					for acct_num,acct in enumerate(d[k]['addrs']):
-						msg('\n  Account #{a} [{b} {c}]'.format(
-							a = acct_num,
-							b = self.proto.coin_amt(
-								d[k]['accts']['subaddress_accounts'][acct_num]['unlocked_balance'],
-								from_unit='atomic').hl(),
-							c = self.proto.coin_amt.hlc('XMR')
-						))
-						msg(fs.format('','Address'.ljust(95),'Used ','Label'))
-						for addr in acct['addresses']:
-							msg(fs.format(
-								addr['address_index'],
-								CoinAddr(self.proto,addr['address']).hl(),
-								( yellow('True ') if addr['used'] else green('False') ),
-								pink(addr['label']) ))
+			def gen_info():
+				for wnum,k in enumerate(d):
+					if self.name in ('sync', 'view'):
+						yield from self.rpc(self, self.addr_data[wnum]).gen_accts_info(
+							d[k]['accts'],
+							d[k]['addrs'],
+							indent = '')
+						yield ''
+					elif self.name in ('list', 'listview'):
+						fs = '  {:2} {} {} {}'
+						yield green(f'Wallet {k}:')
+						for acct_num,acct in enumerate(d[k]['addrs']):
+							yield ''
+							yield '  Account #{a} [{b} {c}]'.format(
+								a = acct_num,
+								b = self.proto.coin_amt(
+									d[k]['accts']['subaddress_accounts'][acct_num]['unlocked_balance'],
+									from_unit='atomic').hl(),
+								c = self.proto.coin_amt.hlc('XMR')
+							)
+							yield fs.format('', 'Address'.ljust(95), 'Used ', 'Label')
+							for addr in acct['addresses']:
+								yield fs.format(
+									addr['address_index'],
+									CoinAddr(self.proto, addr['address']).hl(),
+									(yellow('True ') if addr['used'] else green('False')),
+									pink(addr['label']))
+						yield ''
 
-			col1_w = max(map(len,d)) + 1
-			fs = '{:%s} {} {}' % col1_w
-			tbals = [0,0]
-			msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance'))
+				col1_w = max(map(len, d)) + 1
+				fs = '{:%s} {} {}' % col1_w
+				tbals = [0, 0]
+				yield fs.format('Wallet', 'Balance           ', 'Unlocked Balance')
 
-			for k in d:
-				b  = d[k]['accts']['total_balance']
-				ub = d[k]['accts']['total_unlocked_balance']
-				msg(fs.format( k + ':', fmt_amt(b), fmt_amt(ub) ))
-				tbals[0] += b
-				tbals[1] += ub
+				for k in d:
+					b  = d[k]['accts']['total_balance']
+					ub = d[k]['accts']['total_unlocked_balance']
+					yield fs.format(k + ':', fmt_amt(b), fmt_amt(ub))
+					tbals[0] += b
+					tbals[1] += ub
 
-			msg(fs.format( '-'*col1_w, '-'*18, '-'*18 ))
-			msg(fs.format( 'TOTAL:', fmt_amt(tbals[0]), fmt_amt(tbals[1]) ))
+				yield fs.format('-'*col1_w, '-'*18, '-'*18)
+				yield fs.format('TOTAL:', fmt_amt(tbals[0]), fmt_amt(tbals[1]))
+
+			self.cfg._util.stdout_or_pager('\n'.join(gen_info()) + '\n')
 
 	class list(sync):
 		stem = 'sync'
