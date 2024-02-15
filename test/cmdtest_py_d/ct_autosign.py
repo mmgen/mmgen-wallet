@@ -63,31 +63,6 @@ def init_led(simulate):
 		if fn:
 			run(['sudo','chmod','0666',fn],check=True)
 
-def check_mountpoint(asi):
-	if not asi.mountpoint.is_mount():
-		try:
-			run(['mount',asi.mountpoint],check=True)
-			imsg(f'Mounted {asi.mountpoint}')
-		except:
-			die(2,f'Could not mount {asi.mountpoint}!  Exiting')
-
-	if not asi.tx_dir.is_dir():
-		die(2,f'Directory {asi.tx_dir} does not exist!  Exiting')
-
-def do_mount(mountpoint):
-	if not os.path.ismount(mountpoint):
-		try:
-			run(['mount',mountpoint],check=True)
-		except:
-			pass
-
-def do_umount(mountpoint):
-	if os.path.ismount(mountpoint):
-		try:
-			run(['umount',mountpoint],check=True)
-		except:
-			pass
-
 class CmdTestAutosignBase(CmdTestBase):
 	networks     = ('btc',)
 	tmpdir_nums  = [18]
@@ -103,6 +78,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		if trunner is None:
 			return
 
+		self.silent = self.live or not (cfg.exact_output or cfg.verbose)
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
 		if not self.live:
@@ -132,7 +108,6 @@ class CmdTestAutosignBase(CmdTestBase):
 		self.opts = ['--coins='+','.join(self.coins)]
 
 		if self.live:
-			check_mountpoint(self.asi)
 			init_led(self.simulate_led)
 		else:
 			self.asi.tx_dir.mkdir(parents=True,exist_ok=True) # creates mountpoint
@@ -286,7 +261,7 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	def bad_txfiles(self,op):
 		if self.live:
-			do_mount(self.mountpoint)
+			self.asi.do_mount(self.silent)
 		# create or delete 2 bad tx files
 		self.spawn('',msg_only=True)
 		fns = [joinpath(self.mountpoint,'tx',f'bad{n}.rawtx') for n in (1,2)]
@@ -501,7 +476,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 
 		omsg(purple(f'Running autosign test with {opts_msg}'))
 
-		do_umount(self.mountpoint)
+		self.asi.do_umount(self.silent)
 		prompt_remove()
 		omsg(green(info_msg))
 		t = self.spawn(
@@ -511,9 +486,9 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 			omsg('')
 		prompt_insert_sign(t)
 
-		do_mount(self.mountpoint) # race condition due to device insertion detection
+		self.asi.do_mount(self.silent) # race condition due to device insertion detection
 		self.remove_signed_txfiles()
-		do_umount(self.mountpoint)
+		self.asi_ts.do_umount(self.silent)
 
 		imsg(purple('\nKilling wait loop!'))
 		t.kill(2) # 2 = SIGINT
