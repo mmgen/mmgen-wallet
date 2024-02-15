@@ -125,8 +125,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 		self.burn_addr = make_burn_addr()
 
-		self.opts.append('--xmrwallets={}'.format( self.users['alice'].kal_range )) # mmgen-autosign opts
-		self.autosign_opts = [f'--autosign-mountpoint={self.mountpoint}']           # mmgen-xmrwallet opts
+		self.opts.append('--xmrwallets={}'.format(self.users['alice'].kal_range))     # mmgen-autosign opts
+		self.autosign_opts = ['--autosign']                                           # mmgen-xmrwallet opts
 		self.tx_count = 1
 		self.spawn_env['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = '1'
 
@@ -223,8 +223,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 	def autosign_setup(self):
 		self.insert_device()
-		Path(self.autosign_xmr_dir).mkdir(parents=True,exist_ok=True)
-		Path(self.autosign_xmr_dir,'old.vkeys').touch()
+		Path(self.asi_ts.xmr_dir).mkdir(parents=True,exist_ok=True)
+		Path(self.asi_ts.xmr_dir,'old.vkeys').touch()
 		t = self.run_setup(
 			mn_type        = 'mmgen',
 			mn_file        = self.users['alice'].mmwords,
@@ -234,8 +234,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		return t
 
 	def autosign_start_thread(self):
-		if self.asi.dev_disk_path.exists():
-			self.asi.dev_disk_path.unlink()
+		if self.asi.dev_label_path.exists():
+			self.asi.dev_label_path.unlink()
 		def run():
 			t = self.spawn('mmgen-autosign', self.opts + ['wait'], direct_exec=True)
 			self.write_to_tmpfile('autosign_thread_pid',str(t.ep.pid))
@@ -272,15 +272,15 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		return self._create_transfer_tx('0.124')
 
 	def create_transfer_tx2(self):
-		get_file_with_ext(self.asi.xmr_tx_dir,'rawtx',delete_all=True)
-		get_file_with_ext(self.asi.xmr_tx_dir,'sigtx',delete_all=True)
+		get_file_with_ext(self.asi_ts.xmr_tx_dir,'rawtx',delete_all=True)
+		get_file_with_ext(self.asi_ts.xmr_tx_dir,'sigtx',delete_all=True)
 		return self._create_transfer_tx('0.257')
 
 	def _wait_signed(self,dtype):
 		oqmsg_r(gray(f'→ offline wallet{"s" if dtype.endswith("s") else ""} signing {dtype}'))
 		while True:
 			oqmsg_r(gray('.'))
-			if not self.asi.dev_disk_path.exists():
+			if not self.asi.dev_label_path.exists():
 				break
 			time.sleep(0.5)
 		oqmsg(gray('done'))
@@ -337,7 +337,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 			f'{desc} balance 0 < 1.234567891234' )
 
 	def submit_transfer_tx1(self):
-		return self._submit_transfer_tx( ext='sigtx' )
+		return self._submit_transfer_tx()
 
 	def resubmit_transfer_tx1(self):
 		return self._submit_transfer_tx(
@@ -396,10 +396,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 	def create_fake_tx_files(self):
 		imsg('Creating fake transaction files')
 
-		self.asi.msg_dir.mkdir(exist_ok=True)
-		self.asi.xmr_dir.mkdir(exist_ok=True)
-		self.asi.xmr_tx_dir.mkdir(exist_ok=True)
-		self.asi.xmr_outputs_dir.mkdir(exist_ok=True)
+		self.asi_ts.msg_dir.mkdir(exist_ok=True)
+		self.asi_ts.xmr_dir.mkdir(exist_ok=True)
+		self.asi_ts.xmr_tx_dir.mkdir(exist_ok=True)
+		self.asi_ts.xmr_outputs_dir.mkdir(exist_ok=True)
 
 		for fn in (
 			'a.rawtx', 'a.sigtx',
@@ -407,7 +407,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 			'c.rawtx',
 			'd.sigtx',
 		):
-			(self.asi.tx_dir / fn).touch()
+			(self.asi_ts.tx_dir / fn).touch()
 
 		for fn in (
 			'a.rawmsg.json', 'a.sigmsg.json',
@@ -415,7 +415,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 			'c.sigmsg.json',
 			'd.rawmsg.json', 'd.sigmsg.json',
 		):
-			(self.asi.msg_dir / fn).touch()
+			(self.asi_ts.msg_dir / fn).touch()
 
 		for fn in (
 			'a.rawtx', 'a.sigtx', 'a.subtx',
@@ -425,23 +425,23 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 			'e.rawtx',
 			'f.sigtx','f.subtx',
 		):
-			(self.asi.xmr_tx_dir / fn).touch()
+			(self.asi_ts.xmr_tx_dir / fn).touch()
 
 		for fn in (
 			'a.raw', 'a.sig',
 			'b.raw',
 			'c.sig',
 		):
-			(self.asi.xmr_outputs_dir / fn).touch()
+			(self.asi_ts.xmr_outputs_dir / fn).touch()
 
 		return 'ok'
 
 	def _gen_listing(self):
 		for k in ('tx_dir','msg_dir','xmr_tx_dir','xmr_outputs_dir'):
-			d = getattr(self.asi,k)
+			d = getattr(self.asi_ts,k)
 			if d.is_dir():
 				yield '{:12} {}'.format(
-					str(Path(*d.parts[4:])) + ':',
+					str(Path(*d.parts[6:])) + ':',
 					' '.join(sorted(i.name for i in d.iterdir()))).strip()
 
 	def autosign_clean(self):
@@ -460,8 +460,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 			xmr/outputs:
 		"""
 
-		shutil.rmtree(self.asi.mountpoint)
-		self.asi.tx_dir.mkdir(parents=True)
+		shutil.rmtree(self.asi_ts.mountpoint)
+		self.asi_ts.tx_dir.mkdir(parents=True)
 
 		imsg(f'\nBefore cleaning:\n{before}')
 		imsg(f'\nAfter cleaning:\n{after}')

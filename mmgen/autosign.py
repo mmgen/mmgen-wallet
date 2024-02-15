@@ -213,9 +213,8 @@ class Autosign:
 	dfl_mountpoint     = '/mnt/mmgen_autosign'
 	dfl_wallet_dir     = '/dev/shm/autosign'
 	old_dfl_mountpoint = '/mnt/tx'
-
-	dfl_dev_disk_path = '/dev/disk/by-label/MMGEN_TX'
-	fake_dev_disk_path = '/tmp/mmgen-test-suite-dev.disk.by-label.MMGEN_TX'
+	dfl_dev_label_dir  = '/dev/disk/by-label'
+	dev_label          = 'MMGEN_TX'
 
 	old_dfl_mountpoint_errmsg = f"""
 		Mountpoint '{old_dfl_mountpoint}' is no longer supported!
@@ -246,11 +245,20 @@ class Autosign:
 					cfg.mnemonic_fmt,
 					fmt_list( self.mn_fmts, fmt='no_spc' ) ))
 
-		self.dev_disk_path = Path(
-			self.fake_dev_disk_path if cfg.test_suite_xmr_autosign else
-			self.dfl_dev_disk_path )
-		self.mountpoint = Path(cfg.mountpoint or self.dfl_mountpoint)
-		self.wallet_dir = Path(cfg.wallet_dir or self.dfl_wallet_dir)
+		if pfx := cfg.test_suite_root_pfx:
+			subdir = 'online'
+			self.mountpoint     = Path(f'{pfx}/{subdir}/{self.dfl_mountpoint}')
+			self.wallet_dir     = Path(f'{pfx}/{subdir}/{self.dfl_wallet_dir}')
+			self.dev_label_path = Path(f'{pfx}/{subdir}/{self.dfl_dev_label_dir}') / self.dev_label
+			# mount --type=fuse-ext2 --options=rw+ ### current fuse-ext2 (0.4 29) is buggy - can’t use
+			self.mount_cmd      = f'sudo mount {pfx}/removable_device'
+			self.umount_cmd     = 'sudo umount'
+		else:
+			self.mountpoint     = Path(cfg.mountpoint or self.dfl_mountpoint)
+			self.wallet_dir     = Path(cfg.wallet_dir or self.dfl_wallet_dir)
+			self.dev_label_path = Path(self.dfl_dev_label_dir) / self.dev_label
+			self.mount_cmd      = 'mount'
+			self.umount_cmd     = 'umount'
 
 		self.tx_dir  = self.mountpoint / 'tx'
 		self.msg_dir = self.mountpoint / 'msg'
@@ -332,7 +340,10 @@ class Autosign:
 				do_die(self.mountpoint_errmsg_fs.format(self.mountpoint))
 
 		if not self.mountpoint.is_mount():
-			if run( ['mount',self.mountpoint], stderr=DEVNULL, stdout=DEVNULL ).returncode == 0:
+			if run(
+					self.mount_cmd.split() + [str(self.mountpoint)],
+					stderr = DEVNULL,
+					stdout = DEVNULL).returncode == 0:
 				if not silent:
 					msg(f"Mounting '{self.mountpoint}'")
 			elif not self.cfg.test_suite:
@@ -353,7 +364,7 @@ class Autosign:
 			run( ['sync'], check=True )
 			if not silent:
 				msg(f"Unmounting '{self.mountpoint}'")
-			run( ['umount',self.mountpoint], check=True )
+			run(self.umount_cmd.split() + [str(self.mountpoint)], check=True)
 		if not silent:
 			bmsg('It is now safe to extract the removable device')
 
@@ -512,6 +523,7 @@ class Autosign:
 				'autosign': True,
 				'autosign_mountpoint': str(self.mountpoint),
 				'outdir': str(self.xmr_dir), # required by vkal.write()
+				'offline': False,
 			})
 		return self._xmrwallet_cfg
 
@@ -587,7 +599,7 @@ class Autosign:
 		bmsg(f'{count} file{suf(count)} shredded')
 
 	def get_insert_status(self):
-		return self.cfg.no_insert_check or self.dev_disk_path.exists()
+		return self.cfg.no_insert_check or self.dev_label_path.exists()
 
 	async def main_loop(self):
 		if not self.cfg.stealth_led:
@@ -603,8 +615,8 @@ class Autosign:
 				msg('Device insertion detected')
 				await self.do_sign()
 				if testing_xmr:
-					if self.dev_disk_path.exists():
-						self.dev_disk_path.unlink()
+					if self.dev_label_path.exists():
+						self.dev_label_path.unlink()
 			prev_status = status
 			if not n % 10:
 				msg_r(f"\r{' '*17}\rWaiting")

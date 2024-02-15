@@ -68,7 +68,6 @@ class CmdTestAutosignBase(CmdTestBase):
 	networks     = ('btc',)
 	tmpdir_nums  = [18]
 	color        = True
-	mountpoint_basename = 'mmgen_autosign'
 	no_insert_check = True
 	win_skip = True
 
@@ -82,22 +81,9 @@ class CmdTestAutosignBase(CmdTestBase):
 		self.silent = self.live or not (cfg.exact_output or cfg.verbose)
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
-		if not self.live:
-			self.wallet_dir = Path( self.tmpdir, 'dev.shm.autosign' )
+		self._create_autosign_instances(create_dirs=not cfg.skipping_deps)
 
-		self.asi = Autosign(
-			Config({
-				'coins': ','.join(self.coins),
-				'mountpoint': (
-					None if self.live else
-					os.path.join(self.tmpdir,self.mountpoint_basename)
-				),
-				'wallet_dir': None if self.live else self.wallet_dir,
-				'test_suite': True,
-				'test_suite_xmr_autosign': self.name == 'CmdTestXMRAutosign',
-			})
-		)
-		self.mountpoint = self.asi.mountpoint
+		(self.asi_ts.mountpoint / 'tx').mkdir()
 
 		if self.simulate_led and not cfg.exact_output:
 			die(1,red('This command must be run with --exact-output enabled!'))
@@ -110,15 +96,8 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		if self.live:
 			init_led(self.simulate_led)
-		else:
-			self.asi.tx_dir.mkdir(parents=True,exist_ok=True) # creates mountpoint
-			self.wallet_dir.mkdir(parents=True,exist_ok=True)
-			self.opts.extend([
-				f'--mountpoint={self.mountpoint}',
-				f'--wallet-dir={self.wallet_dir}',
-			])
-			if self.no_insert_check:
-				self.opts.append('--no-insert-check')
+		elif self.no_insert_check:
+			self.opts.append('--no-insert-check')
 
 		self.tx_file_ops('set_count') # initialize tx_count here so we can resume anywhere
 
@@ -135,6 +114,30 @@ class CmdTestAutosignBase(CmdTestBase):
 		self.ref_msgfiles = tuple(gen_msg_fns())
 		self.good_msg_count = 0
 		self.bad_msg_count = 0
+
+		if not self.live:
+			self.spawn_env['MMGEN_TEST_SUITE_ROOT_PFX'] = self.tmpdir
+
+	def _create_autosign_instances(self,create_dirs):
+		d = {
+			'offline': {'name':'asi'},
+			'online':  {'name':'asi_ts'}
+		}
+		for subdir,data in d.items():
+			if create_dirs and not self.live:
+				for k in ('mountpoint','wallet_dir','dev_label_dir'):
+					if k == 'wallet_dir' and subdir == 'online':
+						continue
+					(Path(self.tmpdir) / (subdir + getattr(Autosign,'dfl_'+k))).mkdir(parents=True,exist_ok=True)
+			setattr(self,data['name'],
+				Autosign(
+					Config({
+						'coins': ','.join(self.coins),
+						'test_suite': True,
+						'test_suite_xmr_autosign': self.name == 'CmdTestXMRAutosign',
+						'test_suite_root_pfx': None if self.live else self.tmpdir,
+						'online': True,
+					})))
 
 	def __del__(self):
 		if sys.platform == 'win32' or self.tr is None:
@@ -241,7 +244,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			if cfg.debug_utf8:
 				ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
 				fn = fn[:-len(ext)] + '-α' + ext
-			target = joinpath(self.asi.mountpoint,'tx',fn)
+			target = joinpath(self.asi_ts.mountpoint,'tx',fn)
 			if not op == 'remove_signed':
 				shutil.copyfile(src,target)
 			try:
@@ -265,7 +268,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			self.asi.do_mount(self.silent)
 		# create or delete 2 bad tx files
 		self.spawn('',msg_only=True)
-		fns = [joinpath(self.mountpoint,'tx',f'bad{n}.rawtx') for n in (1,2)]
+		fns = [joinpath(self.asi_ts.mountpoint,'tx',f'bad{n}.rawtx') for n in (1,2)]
 		if op == 'create':
 			for fn in fns:
 				with open(fn,'w') as fp:
@@ -294,7 +297,7 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	def msgfile_ops(self,op):
 		self.spawn('',msg_only=True)
-		destdir = joinpath(self.mountpoint,'msg')
+		destdir = joinpath(self.asi_ts.mountpoint,'msg')
 		os.makedirs(destdir,exist_ok=True)
 		if op.endswith('_invalid'):
 			fn = os.path.join(destdir,'DEADBE[BTC].rawmsg.json')
@@ -352,7 +355,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		return t
 
 	def insert_device(self):
-		self.asi.dev_disk_path.touch()
+		self.asi.dev_label_path.touch()
 
 class CmdTestAutosign(CmdTestAutosignBase):
 	'autosigning transactions for all supported coins'
@@ -477,7 +480,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 
 		omsg(purple(f'Running autosign test with {opts_msg}'))
 
-		self.asi.do_umount(self.silent)
+		self.asi_ts.do_umount(self.silent)
 		prompt_remove()
 		omsg(green(info_msg))
 		t = self.spawn(
@@ -487,7 +490,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 			omsg('')
 		prompt_insert_sign(t)
 
-		self.asi.do_mount(self.silent) # race condition due to device insertion detection
+		self.asi_ts.do_mount(self.silent) # race condition due to device insertion detection
 		self.remove_signed_txfiles()
 		self.asi_ts.do_umount(self.silent)
 

@@ -124,7 +124,6 @@ class CmdTestXMRWallet(CmdTestBase):
 		from mmgen.protocol import init_proto
 		self.proto = init_proto( cfg, 'XMR', network='mainnet' )
 		self.extra_opts = ['--wallet-rpc-password=passw0rd']
-		self.autosign_xmr_dir = os.path.join(self.tmpdir,'mmgen_autosign','xmr')
 		self.init_users()
 		self.init_daemon_args()
 
@@ -298,7 +297,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			if autosign:
 				kafile_suf = 'vkeys'
 				fn_stem    = 'MoneroWatchOnlyWallet'
-				kafile_dir = self.autosign_xmr_dir
+				kafile_dir = self.asi_ts.xmr_dir
 			else:
 				kafile_suf = 'akeys'
 				fn_stem    = 'MoneroWallet'

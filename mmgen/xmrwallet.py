@@ -82,7 +82,9 @@ def get_autosign_obj(cfg):
 		Config({
 			'mountpoint': cfg.autosign_mountpoint,
 			'test_suite': cfg.test_suite,
+			'test_suite_root_pfx': cfg.test_suite_root_pfx,
 			'coins': 'xmr',
+			'online': True,
 		})
 	)
 

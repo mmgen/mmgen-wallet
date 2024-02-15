@@ -208,6 +208,7 @@ class Config(Lockable):
 	test_suite_deterministic = False
 	test_suite_pexpect       = False
 	test_suite_popen_spawn   = False
+	test_suite_root_pfx      = ''
 	hold_protect_disable     = False
 	no_daemon_autostart      = False
 	names                    = False
@@ -292,6 +293,7 @@ class Config(Lockable):
 		'MMGEN_TEST_SUITE_ENABLE_COLOR',
 		'MMGEN_TEST_SUITE_PEXPECT',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
+		'MMGEN_TEST_SUITE_ROOT_PFX',
 		'MMGEN_BLACKLIST_DAEMONS',
 		'MMGEN_BOGUS_SEND',
 		'MMGEN_BOGUS_UNSPENT_DATA',
