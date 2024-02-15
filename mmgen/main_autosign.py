@@ -156,9 +156,10 @@ def main(do_loop):
 
 	async_run(do())
 
-from .autosign import Autosign,AutosignConfig
+from .cfg import Config
+from .autosign import Autosign
 
-cfg = AutosignConfig(
+cfg = Config(
 	opts_data = opts_data,
 	init_opts = {
 		'quiet': True,

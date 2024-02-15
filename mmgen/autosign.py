@@ -23,9 +23,6 @@ from .wallet import Wallet,get_wallet_cls
 from .filename import find_file_in_dir
 from .ui import keypress_confirm
 
-class AutosignConfig(Config):
-	_set_ok = ('usr_randchars','_proto','outdir','passwd_file')
-
 class Signable:
 
 	signables = ('transaction','message','xmr_transaction','xmr_wallet_outputs_file')
@@ -259,9 +256,6 @@ class Autosign:
 		self.msg_dir = self.mountpoint / 'msg'
 		self.keyfile = self.mountpoint / 'autosign.key'
 
-		cfg.outdir = str(self.tx_dir)
-		cfg.passwd_file = str(self.keyfile)
-
 		if any(k in cfg._uopts for k in ('help','longhelp')):
 			return
 
@@ -408,10 +402,20 @@ class Autosign:
 			await asyncio.sleep(0.5)
 			return True
 
+	def update_cfg(self):
+		if not hasattr(self,'_cfg_updated'):
+			self.cfg = Config({
+				'_clone': self.cfg,
+				'outdir': str(self.tx_dir),
+				'passwd_file': str(self.keyfile),
+			})
+			self._cfg_updated = True
+
 	async def do_sign(self):
 		if not self.cfg.stealth_led:
 			self.led.set('busy')
 		self.do_mount()
+		self.update_cfg()
 		key_ok = self.decrypt_wallets()
 		if key_ok:
 			if self.cfg.stealth_led:
@@ -492,7 +496,7 @@ class Autosign:
 			ss_in = Wallet( Config(), wf )
 		else:
 			ss_in = Wallet( self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt] )
-		ss_out = Wallet( self.cfg, ss=ss_in )
+		ss_out = Wallet( self.cfg, ss=ss_in, passwd_file=str(self.keyfile) )
 		ss_out.write_to_file( desc='autosign wallet', outdir=self.wallet_dir )
 
 	@property
@@ -532,6 +536,8 @@ class Autosign:
 			shutil.rmtree(self.xmr_outputs_dir)
 		except:
 			pass
+
+		self.update_cfg()
 
 		self.xmr_outputs_dir.mkdir(parents=True)
 
@@ -632,7 +638,7 @@ class Autosign:
 
 def get_autosign_obj(cfg,coins=None):
 	return Autosign(
-		AutosignConfig({
+		Config({
 			'mountpoint': cfg.autosign_mountpoint or cfg.mountpoint,
 			'test_suite': cfg.test_suite,
 			'coins': coins if isinstance(coins,str) else ','.join(coins) if coins else 'btc',

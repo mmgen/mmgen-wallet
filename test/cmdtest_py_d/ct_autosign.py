@@ -24,10 +24,11 @@ import sys,os,shutil
 from subprocess import run
 from pathlib import Path
 
+from mmgen.cfg import Config
 from mmgen.color import red,green,blue,purple
 from mmgen.util import msg,suf,die
 from mmgen.led import LEDControl
-from mmgen.autosign import Autosign,AutosignConfig
+from mmgen.autosign import Autosign
 
 from ..include.common import (
 	cfg,
@@ -85,7 +86,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			self.wallet_dir = Path( self.tmpdir, 'dev.shm.autosign' )
 
 		self.asi = Autosign(
-			AutosignConfig({
+			Config({
 				'coins': ','.join(self.coins),
 				'mountpoint': (
 					None if self.live else
