@@ -75,7 +75,12 @@ class GlobalConstants(Lockable):
 		#        Resource Access without the performance overhead of that package.
 		#    https://importlib-resources.readthedocs.io/en/latest/migration.html
 		#    https://setuptools.readthedocs.io/en/latest/pkg_resources.html
-		from importlib.resources import files
+
+		# TODO: remove try..except (workaround for Python 3.9 pylint bug)
+		try:
+			from importlib.resources import files # Python 3.9 and above
+		except ImportError:
+			from importlib_resources import files
 		return files(package).joinpath('data',filename).read_text()
 
 	@property
