@@ -122,10 +122,10 @@ class CmdTestAutosignBase(CmdTestBase):
 		)
 		self.mountpoint = self.asi.mountpoint
 
-		if self.simulate and not cfg.exact_output:
+		if self.simulate_led and not cfg.exact_output:
 			die(1,red('This command must be run with --exact-output enabled!'))
 
-		if self.simulate or not self.live:
+		if self.simulate_led or not self.live:
 			LEDControl.create_dummy_control_files()
 			self.spawn_env['MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE'] = '1'
 
@@ -133,7 +133,7 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		if self.live:
 			check_mountpoint(self.asi)
-			init_led(self.simulate)
+			init_led(self.simulate_led)
 		else:
 			self.asi.tx_dir.mkdir(parents=True,exist_ok=True) # creates mountpoint
 			self.wallet_dir.mkdir(parents=True,exist_ok=True)
@@ -163,7 +163,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	def __del__(self):
 		if sys.platform == 'win32' or self.tr is None:
 			return
-		if self.simulate or not self.live:
+		if self.simulate_led or not self.live:
 			LEDControl.delete_dummy_control_files()
 
 	def start_daemons(self):
@@ -244,29 +244,34 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		assert op in ('copy','set_count','remove_signed')
 
-		fdata = [e for e in filedir_map if e[0] in (txfile_coins or self.txfile_coins)]
-
 		from .ct_ref import CmdTestRef
-		tfns  = [CmdTestRef.sources['ref_tx_file'][c][1] for c,d in fdata] + \
-				[CmdTestRef.sources['ref_tx_file'][c][0] for c,d in fdata] + \
-				['25EFA3[2.34].testnet.rawtx'] # TX with 2 non-MMGen outputs
-		self.tx_count = len([fn for fn in tfns if fn])
+		def gen():
+			d = CmdTestRef.sources['ref_tx_file']
+			dirmap = [e for e in filedir_map if e[0] in (txfile_coins or self.txfile_coins)]
+			for coin,coindir in dirmap:
+				for network in (0,1):
+					fn = d[coin][network]
+					if fn:
+						yield (coindir,fn)
+
+		data = list(gen()) + [('','25EFA3[2.34].testnet.rawtx')] # TX with 2 non-MMGen outputs
+
+		self.tx_count = len(data)
 		if op == 'set_count':
 			return
-		tfs = [joinpath(ref_dir,d[1],fn) for d,fn in zip(fdata+fdata+[('btc','')],tfns)]
 
-		for f,fn in zip(tfs,tfns):
-			if fn: # use empty fn to skip file
-				if cfg.debug_utf8:
-					ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
-					fn = fn[:-len(ext)] + '-α' + ext
-				target = joinpath(self.mountpoint,'tx',fn)
-				if not op == 'remove_signed':
-					shutil.copyfile(f,target)
-				try:
-					os.unlink(target.replace('.rawtx','.sigtx'))
-				except:
-					pass
+		for coindir,fn in data:
+			src = joinpath(ref_dir,coindir,fn)
+			if cfg.debug_utf8:
+				ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
+				fn = fn[:-len(ext)] + '-α' + ext
+			target = joinpath(self.asi.mountpoint,'tx',fn)
+			if not op == 'remove_signed':
+				shutil.copyfile(src,target)
+			try:
+				os.unlink(target.replace('.rawtx','.sigtx'))
+			except:
+				pass
 
 		return 'ok'
 
@@ -275,6 +280,9 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	def remove_bad_txfiles(self):
 		return self.bad_txfiles('remove')
+
+	create_bad_txfiles2 = create_bad_txfiles
+	remove_bad_txfiles2 = remove_bad_txfiles
 
 	def bad_txfiles(self,op):
 		if self.live:
@@ -367,13 +375,16 @@ class CmdTestAutosignBase(CmdTestBase):
 		imsg('')
 		return t
 
+	def insert_device(self):
+		self.asi.dev_disk_path.touch()
+
 class CmdTestAutosign(CmdTestAutosignBase):
 	'autosigning transactions for all supported coins'
 	coins        = ['btc','bch','ltc','eth']
 	daemon_coins = ['btc','bch','ltc']
 	txfile_coins = ['btc','bch','ltc','eth','mm1','etc']
 	live         = False
-	simulate     = False
+	simulate_led = False
 	bad_tx_count = 0
 	cmd_group = (
 		('start_daemons',            'starting daemons'),
@@ -395,12 +406,12 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		('copy_msgfiles',            'copying message files'),
 		('sign_quiet_msg',           'signing transactions and messages (--quiet)'),
 		('remove_signed_txfiles',    'removing signed transaction files'),
-		('create_bad_txfiles',       'creating bad transaction files'),
+		('create_bad_txfiles2',      'creating bad transaction files'),
 		('remove_signed_msgfiles',   'removing signed message files'),
 		('create_invalid_msgfile',   'creating invalid message file'),
 		('sign_full_summary_msg',    'signing transactions and messages (--full-summary)'),
 		('remove_invalid_msgfile',   'removing invalid message file'),
-		('remove_bad_txfiles',       'removing bad transaction files'),
+		('remove_bad_txfiles2',      'removing bad transaction files'),
 		('sign_no_unsigned_msg',     'signing transactions and messages (nothing to sign)'),
 		('stop_daemons',             'stopping daemons'),
 	)
@@ -507,10 +518,10 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		imsg(purple('\nKilling wait loop!'))
 		t.kill(2) # 2 = SIGINT
 		t.req_exit_val = 1
-		if self.simulate and led_opts:
+		if self.simulate_led and led_opts:
 			t.expect("Stopping LED")
 		return t
 
 class CmdTestAutosignLiveSimulate(CmdTestAutosignLive):
 	'live autosigning BTC transactions with simulated LED support'
-	simulate = True
+	simulate_led = True

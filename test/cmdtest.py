@@ -95,7 +95,7 @@ else:
 
 from mmgen.cfg import Config,gc
 from mmgen.color import red,yellow,green,blue,cyan,gray,nocolor,init_color
-from mmgen.util import Msg,bmsg,die,suf,make_timestr,async_run
+from mmgen.util import msg,Msg,bmsg,die,suf,make_timestr,async_run
 
 from test.include.common import (
 	set_globals,
@@ -221,6 +221,8 @@ type(cfg)._reset_ok += (
 	'exit_after',
 	'resuming',
 	'skipping_deps' )
+
+logging = cfg.log or os.getenv('MMGEN_EXEC_WRAPPER')
 
 cfg.resuming = any(k in po.user_opts for k in ('resume','resume_after'))
 cfg.skipping_deps = cfg.resuming or 'skip_deps' in po.user_opts
@@ -547,7 +549,7 @@ class CmdTestRunner:
 	'cmdtest.py test runner'
 
 	def __del__(self):
-		if cfg.log:
+		if logging:
 			self.log_fd.close()
 
 	def __init__(self,data_dir,trash_dir):
@@ -562,7 +564,7 @@ class CmdTestRunner:
 		self.resume_cmd = None
 		self.deps_only = None
 
-		if cfg.log:
+		if logging:
 			self.log_fd = open(cmdtest_py_log_fn,'a')
 			self.log_fd.write(f'\nLog started: {make_timestr()} UTC\n')
 			omsg(f'INFO → Logging to file {cmdtest_py_log_fn!r}')
@@ -630,10 +632,15 @@ class CmdTestRunner:
 			self.tg.extra_spawn_args +
 			args )
 
-		qargs = ['{q}{}{q}'.format( a, q = "'" if ' ' in a else '' ) for a in args]
+		try:
+			qargs = ['{q}{}{q}'.format( a, q = "'" if ' ' in a else '' ) for a in args]
+		except:
+			msg(f'args: {args}')
+			raise
+
 		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw
 
-		if cfg.log:
+		if logging:
 			self.log_fd.write('[{}][{}:{}] {}\n'.format(
 				proto.coin.lower(),
 				self.tg.group_name,

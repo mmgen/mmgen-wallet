@@ -66,11 +66,11 @@ opts_data = {
 -d, --outdir=D                   Save transaction files to directory 'D'
                                  instead of the working directory
 -D, --daemon=H:P                 Connect to the monerod at {D}
--R, --tx-relay-daemon=H:P[:H:P]  Relay transactions via a monerod specified by
-                                 {R}
 -k, --use-internal-keccak-module Force use of the internal keccak module
 -p, --hash-preset=P              Use scrypt hash preset 'P' for password
                                  hashing (default: '{gc.dfl_hash_preset}')
+-R, --tx-relay-daemon=H:P[:H:P]  Relay transactions via a monerod specified by
+                                 {R}
 -r, --restore-height=H           Scan from height 'H' when creating wallets.
                                  Use special value ‘current’ to create empty
                                  wallet at current blockchain height.

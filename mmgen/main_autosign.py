@@ -149,7 +149,7 @@ def main(do_loop):
 	async def do():
 		await asi.check_daemons_running()
 		if do_loop:
-			await asi.do_loop()
+			await asi.main_loop()
 		else:
 			ret = await asi.do_sign()
 			asi.at_exit(not ret)
@@ -188,6 +188,7 @@ if cmd_args:
 		if cfg.xmrwallets and keypress_confirm( cfg, '\nContinue with Monero setup?', default_yes=True ):
 			msg('')
 			asi.xmr_setup()
+		asi.do_umount()
 	elif cmd == 'wait':
 		main(do_loop=True)
 	elif cmd == 'clean':

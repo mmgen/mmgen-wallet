@@ -39,6 +39,9 @@ class Signable:
 			self.parent = parent
 			self.cfg = parent.cfg
 			self.dir = getattr(parent,self.dir_name)
+			self.long_desc = (
+				'non-Monero transaction' if self.desc == 'transaction' and 'XMR' in self.parent.coins else
+				self.desc)
 
 		@property
 		def unsigned(self):
@@ -267,9 +270,6 @@ class Autosign:
 
 		self.coins = cfg.coins.upper().split(',') if cfg.coins else []
 
-		if cfg._args and cfg._args[0] == 'clean':
-			return
-
 		if cfg.xmrwallets and not 'XMR' in self.coins:
 			self.coins.append('XMR')
 
@@ -401,7 +401,7 @@ class Autosign:
 				target.print_bad_list(bad)
 			return not bad
 		else:
-			msg(f'No unsigned {target.desc}s')
+			msg(f'No unsigned {target.long_desc}s')
 			await asyncio.sleep(0.5)
 			return True
 
@@ -579,16 +579,9 @@ class Autosign:
 		bmsg(f'{count} file{suf(count)} shredded')
 
 	def get_insert_status(self):
-		if self.cfg.no_insert_check:
-			return True
-		try:
-			self.dev_disk_path.stat()
-		except:
-			return False
-		else:
-			return True
+		return self.cfg.no_insert_check or self.dev_disk_path.exists()
 
-	async def do_loop(self):
+	async def main_loop(self):
 		if not self.cfg.stealth_led:
 			self.led.set('standby')
 		testing_xmr = self.cfg.test_suite_xmr_autosign

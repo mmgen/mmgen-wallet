@@ -117,8 +117,11 @@ class LEDControl:
 	@classmethod
 	def delete_dummy_control_files(cls):
 		db = cls.boards['dummy']
-		os.unlink(db.status)
-		os.unlink(db.trigger)
+		for fn in (db.status, db.trigger):
+			try:
+				os.unlink(fn)
+			except Exception as e:
+				msg(str(e))
 
 	def noop(self,*args,**kwargs):
 		pass

@@ -124,11 +124,9 @@ class CmdTestXMRWallet(CmdTestBase):
 		from mmgen.protocol import init_proto
 		self.proto = init_proto( cfg, 'XMR', network='mainnet' )
 		self.extra_opts = ['--wallet-rpc-password=passw0rd']
-		self.autosign_mountpoint = os.path.join(self.tmpdir,'mmgen_autosign')
 		self.autosign_xmr_dir = os.path.join(self.tmpdir,'mmgen_autosign','xmr')
 		self.init_users()
 		self.init_daemon_args()
-		self.autosign_opts = []
 
 		for v in self.users.values():
 			run(['mkdir','-p',v.udir])
@@ -340,9 +338,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	def gen_kafiles(self):
 		for user,data in self.users.items():
-			if not data.kal_range:
-				continue
-			if data.autosign:
+			if data.autosign or not data.kal_range:
 				continue
 			run(['mkdir','-p',data.udir])
 			run(f'rm -f {data.kafile}',shell=True)
@@ -394,12 +390,12 @@ class CmdTestXMRWallet(CmdTestBase):
 		data = self.users['alice']
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.extra_opts +
-			[f'--wallet-dir={data.udir}'] +
-			[f'--daemon=localhost:{data.md.rpc_port}'] +
-			(['--no-start-wallet-daemon'] if cfg in ('continue','stop') else []) +
-			(['--no-stop-wallet-daemon'] if cfg in ('start','continue') else []) +
-			['new', (kafile or data.kafile), spec] )
+			self.extra_opts
+			+ [f'--wallet-dir={data.udir}']
+			+ [f'--daemon=localhost:{data.md.rpc_port}']
+			+ (['--no-start-wallet-daemon'] if cfg in ('continue','stop') else [])
+			+ (['--no-stop-wallet-daemon'] if cfg in ('start','continue') else [])
+			+ ['new', (kafile or data.kafile), spec])
 		t.expect(expect, 'y', regex=True)
 		return t
 
@@ -467,7 +463,9 @@ class CmdTestXMRWallet(CmdTestBase):
 		cmd_opts = [f'--wallet-dir={data.udir}', f'--daemon=localhost:{data.md.rpc_port}']
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.extra_opts + cmd_opts + ['label', data.kafile, label_spec]
+			self.extra_opts
+			+ cmd_opts
+			+ ['label', data.kafile, label_spec]
 		)
 		t.expect('(y/N): ','y')
 		t.expect(f'Label successfully {expect}')
@@ -492,7 +490,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			'mmgen-xmrwallet',
 			self.extra_opts
 			+ cmd_opts
-			+ self.autosign_opts
+			+ (self.autosign_opts if data.autosign else [])
 			+ add_opts
 			+ [op]
 			+ ([] if data.autosign else [data.kafile])
@@ -536,7 +534,6 @@ class CmdTestXMRWallet(CmdTestBase):
 			[f'--daemon=localhost:{data.md.rpc_port}'],
 			[f'--tx-relay-daemon={tx_relay_parm}', tx_relay_parm],
 			['--no-relay', no_relay and not data.autosign],
-			[f'--autosign-mountpoint={self.autosign_mountpoint}', data.autosign],
 		)
 		add_desc = (', ' + add_desc) if add_desc else ''
 
@@ -544,6 +541,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			'mmgen-xmrwallet',
 			self.extra_opts
 			+ cmd_opts
+			+ (self.autosign_opts if data.autosign else [])
 			+ [op]
 			+ ([] if data.autosign else [data.kafile])
 			+ [arg2],
