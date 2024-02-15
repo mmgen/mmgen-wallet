@@ -481,6 +481,8 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	def sync_wallets(self,user,op='sync',wallets=None,add_opts=[],bal_chk_func=None):
 		data = self.users[user]
+		if data.autosign:
+			self.insert_device_ts()
 		cmd_opts = list_gen(
 			[f'--wallet-dir={data.udir}'],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
@@ -512,6 +514,9 @@ class CmdTestXMRWallet(CmdTestBase):
 					m = re.match( r'(\S+) Unlocked balance: (\S+)', res, re.DOTALL )
 					amts = [XMRAmt(amt) for amt in m.groups()]
 					assert bal_chk_func(n,*amts), f'balance check for wallet {n} failed!'
+		if data.autosign:
+			t.read()
+			self.remove_device_ts()
 		return t
 
 	def do_op(
@@ -667,6 +672,8 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	async def open_wallet_user(self,user,wnum):
 		data = self.users[user]
+		if data.autosign:
+			self.asi_ts.do_mount(self.silent)
 		silence()
 		kal = (ViewKeyAddrList if data.autosign else KeyAddrList)(
 			cfg      = cfg,
@@ -675,6 +682,8 @@ class CmdTestXMRWallet(CmdTestBase):
 			skip_chksum_msg = True,
 			key_address_validity_check = False )
 		end_silence()
+		if data.autosign:
+			self.asi_ts.do_umount(self.silent)
 		self.users[user].wd.start(silent=not (cfg.exact_output or cfg.verbose))
 		return data.wd_rpc.call(
 			'open_wallet',

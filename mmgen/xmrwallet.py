@@ -84,7 +84,7 @@ def get_autosign_obj(cfg):
 			'test_suite': cfg.test_suite,
 			'test_suite_root_pfx': cfg.test_suite_root_pfx,
 			'coins': 'xmr',
-			'online': True,
+			'online': not cfg.offline,
 		})
 	)
 
@@ -759,7 +759,7 @@ class MoneroWalletOps:
 			pass
 
 		def mount_removable_device(self):
-			if self.cfg.autosign and not self.cfg.test_suite:
+			if self.cfg.autosign:
 				if not self.asi.get_insert_status():
 					die(1,'Removable device not present!')
 				if self.do_umount:

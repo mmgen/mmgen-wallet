@@ -246,12 +246,13 @@ class Autosign:
 					fmt_list( self.mn_fmts, fmt='no_spc' ) ))
 
 		if pfx := cfg.test_suite_root_pfx:
-			subdir = 'online'
+			subdir = 'online' if cfg.online else 'offline'
 			self.mountpoint     = Path(f'{pfx}/{subdir}/{self.dfl_mountpoint}')
 			self.wallet_dir     = Path(f'{pfx}/{subdir}/{self.dfl_wallet_dir}')
 			self.dev_label_path = Path(f'{pfx}/{subdir}/{self.dfl_dev_label_dir}') / self.dev_label
 			# mount --type=fuse-ext2 --options=rw+ ### current fuse-ext2 (0.4 29) is buggy - can’t use
-			self.mount_cmd      = f'sudo mount {pfx}/removable_device'
+			self.fs_image_path  = Path(f'{pfx}/removable_device_image')
+			self.mount_cmd      = f'sudo mount {self.fs_image_path}'
 			self.umount_cmd     = 'sudo umount'
 		else:
 			self.mountpoint     = Path(cfg.mountpoint or self.dfl_mountpoint)
@@ -346,7 +347,7 @@ class Autosign:
 					stdout = DEVNULL).returncode == 0:
 				if not silent:
 					msg(f"Mounting '{self.mountpoint}'")
-			elif not self.cfg.test_suite:
+			else:
 				die(1,f"Unable to mount device at '{self.mountpoint}'")
 
 		self.have_msg_dir = self.msg_dir.is_dir()
@@ -523,7 +524,7 @@ class Autosign:
 				'autosign': True,
 				'autosign_mountpoint': str(self.mountpoint),
 				'outdir': str(self.xmr_dir), # required by vkal.write()
-				'offline': False,
+				'offline': True,
 			})
 		return self._xmrwallet_cfg
 
@@ -604,24 +605,19 @@ class Autosign:
 	async def main_loop(self):
 		if not self.cfg.stealth_led:
 			self.led.set('standby')
-		testing_xmr = self.cfg.test_suite_xmr_autosign
-		if testing_xmr:
-			msg('Waiting for fake device insertion')
-		n = 1 if testing_xmr else 0
+		silent = self.cfg.test_suite_xmr_autosign
+		n = 1 if silent else 0
 		prev_status = False
 		while True:
 			status = self.get_insert_status()
 			if status and not prev_status:
 				msg('Device insertion detected')
 				await self.do_sign()
-				if testing_xmr:
-					if self.dev_label_path.exists():
-						self.dev_label_path.unlink()
 			prev_status = status
 			if not n % 10:
 				msg_r(f"\r{' '*17}\rWaiting")
 			await asyncio.sleep(1)
-			if not testing_xmr:
+			if not silent:
 				msg_r('.')
 				n += 1
 

@@ -21,7 +21,7 @@ test.cmdtest_py_d.ct_autosign: Autosign tests for the cmdtest.py test suite
 """
 
 import sys,os,shutil
-from subprocess import run
+from subprocess import run,DEVNULL
 from pathlib import Path
 
 from mmgen.cfg import Config
@@ -83,7 +83,8 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		self._create_autosign_instances(create_dirs=not cfg.skipping_deps)
 
-		(self.asi_ts.mountpoint / 'tx').mkdir()
+		if not (cfg.skipping_deps or self.live):
+			self._create_removable_device()
 
 		if self.simulate_led and not cfg.exact_output:
 			die(1,red('This command must be run with --exact-output enabled!'))
@@ -136,8 +137,18 @@ class CmdTestAutosignBase(CmdTestBase):
 						'test_suite': True,
 						'test_suite_xmr_autosign': self.name == 'CmdTestXMRAutosign',
 						'test_suite_root_pfx': None if self.live else self.tmpdir,
-						'online': True,
+						'online': subdir == 'online',
 					})))
+
+	def _create_removable_device(self):
+		redir = DEVNULL
+		img_file = str(self.asi_ts.fs_image_path)
+		run(['truncate', '--size=10M', img_file], check=True)
+		run(['/sbin/mkfs.ext2', '-E', f'root_owner={os.getuid()}:{os.getgid()}', img_file],
+			stdout=redir, stderr=redir, check=True)
+		run(self.asi_ts.mount_cmd.split() + [str(self.asi_ts.mountpoint)], stdout=redir, check=True)
+		(self.asi_ts.mountpoint / 'tx').mkdir()
+		run(self.asi_ts.umount_cmd.split() + [str(self.asi_ts.mountpoint)], check=True)
 
 	def __del__(self):
 		if sys.platform == 'win32' or self.tr is None:
@@ -239,6 +250,8 @@ class CmdTestAutosignBase(CmdTestBase):
 		if op == 'set_count':
 			return
 
+		self.asi_ts.do_mount(self.silent)
+
 		for coindir,fn in data:
 			src = joinpath(ref_dir,coindir,fn)
 			if cfg.debug_utf8:
@@ -252,6 +265,8 @@ class CmdTestAutosignBase(CmdTestBase):
 			except:
 				pass
 
+		self.asi_ts.do_umount(self.silent)
+
 		return 'ok'
 
 	def create_bad_txfiles(self):
@@ -264,8 +279,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	remove_bad_txfiles2 = remove_bad_txfiles
 
 	def bad_txfiles(self,op):
-		if self.live:
-			self.asi.do_mount(self.silent)
+		self.asi_ts.do_mount(self.silent)
 		# create or delete 2 bad tx files
 		self.spawn('',msg_only=True)
 		fns = [joinpath(self.asi_ts.mountpoint,'tx',f'bad{n}.rawtx') for n in (1,2)]
@@ -281,6 +295,7 @@ class CmdTestAutosignBase(CmdTestBase):
 				except:
 					pass
 			self.bad_tx_count = 0
+		self.asi_ts.do_umount(self.silent)
 		return 'ok'
 
 	def copy_msgfiles(self):
@@ -298,6 +313,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	def msgfile_ops(self,op):
 		self.spawn('',msg_only=True)
 		destdir = joinpath(self.asi_ts.mountpoint,'msg')
+		self.asi_ts.do_mount(self.silent)
 		os.makedirs(destdir,exist_ok=True)
 		if op.endswith('_invalid'):
 			fn = os.path.join(destdir,'DEADBE[BTC].rawmsg.json')
@@ -319,6 +335,7 @@ class CmdTestAutosignBase(CmdTestBase):
 					shutil.copy2(fn,destdir)
 				elif op == 'remove_signed':
 					os.unlink(os.path.join( destdir, os.path.basename(fn).replace('rawmsg','sigmsg') ))
+		self.asi_ts.do_umount(self.silent)
 		return 'ok'
 
 	def do_sign(self,args,have_msg=False,tx_name='transaction'):
@@ -354,8 +371,27 @@ class CmdTestAutosignBase(CmdTestBase):
 		imsg('')
 		return t
 
+	@property
+	def device_inserted(self):
+		return self.asi.dev_label_path.exists()
+
+	@property
+	def device_inserted_ts(self):
+		return self.asi_ts.dev_label_path.exists()
+
 	def insert_device(self):
 		self.asi.dev_label_path.touch()
+
+	def insert_device_ts(self):
+		self.asi_ts.dev_label_path.touch()
+
+	def remove_device(self):
+		if self.asi.dev_label_path.exists():
+			self.asi.dev_label_path.unlink()
+
+	def remove_device_ts(self):
+		if self.asi_ts.dev_label_path.exists():
+			self.asi_ts.dev_label_path.unlink()
 
 class CmdTestAutosign(CmdTestAutosignBase):
 	'autosigning transactions for all supported coins'
