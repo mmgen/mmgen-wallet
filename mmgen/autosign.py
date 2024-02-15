@@ -317,7 +317,7 @@ class Autosign:
 
 		return self._wallet_files
 
-	def do_mount(self,no_xmr_chk=False):
+	def do_mount(self,silent=False,no_xmr_chk=False):
 
 		from stat import S_ISDIR,S_IWUSR,S_IRUSR
 
@@ -339,7 +339,8 @@ class Autosign:
 
 		if not self.mountpoint.is_mount():
 			if run( ['mount',self.mountpoint], stderr=DEVNULL, stdout=DEVNULL ).returncode == 0:
-				msg(f"Mounting '{self.mountpoint}'")
+				if not silent:
+					msg(f"Mounting '{self.mountpoint}'")
 			elif not self.cfg.test_suite:
 				die(1,f"Unable to mount device at '{self.mountpoint}'")
 
@@ -353,12 +354,14 @@ class Autosign:
 		if 'XMR' in self.coins and not no_xmr_chk:
 			check_dir(self.xmr_tx_dir)
 
-	def do_umount(self):
+	def do_umount(self,silent=False):
 		if self.mountpoint.is_mount():
 			run( ['sync'], check=True )
-			msg(f"Unmounting '{self.mountpoint}'")
+			if not silent:
+				msg(f"Unmounting '{self.mountpoint}'")
 			run( ['umount',self.mountpoint], check=True )
-		bmsg('It is now safe to extract the removable device')
+		if not silent:
+			bmsg('It is now safe to extract the removable device')
 
 	def decrypt_wallets(self):
 		msg(f"Unlocking wallet{suf(self.wallet_files)} with key from '{self.cfg.passwd_file}'")
