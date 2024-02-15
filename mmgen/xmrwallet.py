@@ -55,7 +55,7 @@ from .rpc import json_encoder
 from .proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
 from .proto.xmr.daemon import MoneroWalletDaemon
 from .ui import keypress_confirm
-from .autosign import get_autosign_obj
+from .autosign import Autosign
 
 xmrwallet_uargs = namedtuple('xmrwallet_uargs',[
 	'infile',
@@ -74,6 +74,16 @@ xmrwallet_uarg_info = (
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),
 		r'(?:[^:]+):(?:\d+)'
+	)
+
+def get_autosign_obj(cfg):
+	from .cfg import Config
+	return Autosign(
+		Config({
+			'mountpoint': cfg.autosign_mountpoint,
+			'test_suite': cfg.test_suite,
+			'coins': 'xmr',
+		})
 	)
 
 # required to squelch pylint:
@@ -301,7 +311,7 @@ class MoneroMMGenTX:
 			)
 
 			if self.cfg.autosign:
-				fn = get_autosign_obj(self.cfg,'xmr').xmr_tx_dir / fn
+				fn = get_autosign_obj(self.cfg).xmr_tx_dir / fn
 
 			from .fileutil import write_data_to_file
 			write_data_to_file(
@@ -492,7 +502,7 @@ class MoneroWalletOutputsFile:
 
 		def get_outfile(self,cfg,wallet_fn):
 			return (
-				get_autosign_obj(cfg,'xmr').xmr_outputs_dir if cfg.autosign else
+				get_autosign_obj(cfg).xmr_outputs_dir if cfg.autosign else
 				wallet_fn.parent ) / self.fn_fs.format(
 					a = wallet_fn.name,
 					b = self.base_chksum,
@@ -548,7 +558,7 @@ class MoneroWalletOutputsFile:
 
 		@classmethod
 		def find_fn_from_wallet_fn(cls,cfg,wallet_fn,ret_on_no_match=False):
-			path = get_autosign_obj(cfg,'xmr').xmr_outputs_dir or Path()
+			path = get_autosign_obj(cfg).xmr_outputs_dir or Path()
 			pat = cls.fn_fs.format(
 				a = wallet_fn.name,
 				b = f'[0-9a-f]{{{cls.chksum_nchars}}}\\',
@@ -691,7 +701,7 @@ class MoneroWalletOps:
 			self.proto = init_proto( cfg, 'xmr', network=self.cfg.network, need_amt=True )
 
 			if cfg.autosign:
-				self.asi = get_autosign_obj(cfg, 'xmr')
+				self.asi = get_autosign_obj(cfg)
 
 			self.pre_init_action()
 
@@ -877,13 +887,12 @@ class MoneroWalletOps:
 		@property
 		def autosign_viewkey_addr_file(self):
 			from .addrfile import ViewKeyAddrFile
-			mpdir = get_autosign_obj(self.cfg,'xmr').xmr_dir
-			flist = [f for f in mpdir.iterdir() if f.name.endswith(ViewKeyAddrFile.ext)]
+			flist = [f for f in self.asi.xmr_dir.iterdir() if f.name.endswith(ViewKeyAddrFile.ext)]
 			if len(flist) != 1:
 				die(2,
 					"{a} viewkey-address files found in autosign mountpoint directory '{b}'!\n".format(
 						a = 'Multiple' if flist else 'No',
-						b = mpdir
+						b = self.asi.xmr_dir
 					)
 					+ 'Have you run ‘mmgen-autosign setup’ on your offline machine with the --xmrwallets option?'
 				)
@@ -1772,7 +1781,7 @@ class MoneroWalletOps:
 				fn = Path(uarg.infile)
 			else:
 				from .autosign import Signable
-				t = Signable.xmr_transaction( get_autosign_obj(self.cfg,'xmr') )
+				t = Signable.xmr_transaction(self.asi)
 				if len(t.unsubmitted) == 1:
 					fn = t.unsubmitted[0]
 				else:

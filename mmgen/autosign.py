@@ -567,7 +567,7 @@ class Autosign:
 						if raw.is_file():
 							do_shred(raw)
 
-			s = getattr(Signable,s_name)(asi)
+			s = getattr(Signable,s_name)(self)
 
 			msg_r(f"Cleaning directory '{s.dir}'..")
 
@@ -579,7 +579,6 @@ class Autosign:
 
 			msg('done' if s.dir.is_dir() else 'skipped (no dir)')
 
-		asi = get_autosign_obj( self.cfg, 'btc,xmr' )
 		count = 0
 
 		for s_name in Signable.signables:
@@ -635,12 +634,3 @@ class Autosign:
 			enabled = self.cfg.led,
 			simulate = self.cfg.test_suite_autosign_led_simulate )
 		self.led.set('off')
-
-def get_autosign_obj(cfg,coins=None):
-	return Autosign(
-		Config({
-			'mountpoint': cfg.autosign_mountpoint or cfg.mountpoint,
-			'test_suite': cfg.test_suite,
-			'coins': coins if isinstance(coins,str) else ','.join(coins) if coins else 'btc',
-		})
-	)
