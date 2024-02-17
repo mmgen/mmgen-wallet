@@ -20,12 +20,12 @@
 test.cmdtest_py_d.ct_autosign: Autosign tests for the cmdtest.py test suite
 """
 
-import sys,os,shutil
+import sys,os,time,shutil
 from subprocess import run,DEVNULL
 from pathlib import Path
 
 from mmgen.cfg import Config
-from mmgen.color import red,green,blue,purple
+from mmgen.color import red,green,blue,yellow,purple,gray
 from mmgen.util import msg,suf,die
 from mmgen.led import LEDControl
 from mmgen.autosign import Autosign
@@ -34,6 +34,8 @@ from ..include.common import (
 	cfg,
 	omsg,
 	omsg_r,
+	oqmsg,
+	oqmsg_r,
 	start_test_daemons,
 	stop_test_daemons,
 	joinpath,
@@ -45,32 +47,12 @@ from .common import ref_dir,dfl_words_file,dfl_bip39_file
 from .ct_base import CmdTestBase
 from .input import stealth_mnemonic_entry
 
-filedir_map = (
-	('btc',''),
-	('bch',''),
-	('ltc','litecoin'),
-	('eth','ethereum'),
-	('mm1','ethereum'),
-	('etc','ethereum_classic'),
-)
-
-def init_led(simulate):
-	try:
-		cf = LEDControl(enabled=True,simulate=simulate)
-	except Exception as e:
-		msg(str(e))
-		die(2,'LEDControl initialization failed')
-	for fn in (cf.board.status,cf.board.trigger):
-		if fn:
-			run(['sudo','chmod','0666',fn],check=True)
-
 class CmdTestAutosignBase(CmdTestBase):
 	networks     = ('btc',)
 	tmpdir_nums  = [18]
 	color        = True
 	win_skip     = True
-	no_insert_check = True
-	have_online = False
+	daemon_coins = []
 
 	def __init__(self,trunner,cfgs,spawn):
 
@@ -87,35 +69,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		if not (cfg.skipping_deps or self.live):
 			self._create_removable_device()
 
-		if self.simulate_led and not cfg.exact_output:
-			die(1,red('This command must be run with --exact-output enabled!'))
-
-		if self.simulate_led or not self.live:
-			LEDControl.create_dummy_control_files()
-			self.spawn_env['MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE'] = '1'
-
 		self.opts = ['--coins='+','.join(self.coins)]
-
-		if self.live:
-			init_led(self.simulate_led)
-		elif self.no_insert_check:
-			self.opts.append('--no-insert-check')
-
-		self.tx_file_ops('set_count') # initialize tx_count here so we can resume anywhere
-
-		def gen_msg_fns():
-			fmap = dict(filedir_map)
-			for coin in self.coins:
-				if coin == 'xmr':
-					continue
-				sdir = os.path.join('test','ref',fmap[coin])
-				for fn in os.listdir(sdir):
-					if fn.endswith(f'[{coin.upper()}].rawmsg.json'):
-						yield os.path.join(sdir,fn)
-
-		self.ref_msgfiles = tuple(gen_msg_fns())
-		self.good_msg_count = 0
-		self.bad_msg_count = 0
 
 		if not self.live:
 			self.spawn_env['MMGEN_TEST_SUITE_ROOT_PFX'] = self.tmpdir
@@ -150,12 +104,6 @@ class CmdTestAutosignBase(CmdTestBase):
 		(self.asi.mountpoint / 'tx').mkdir()
 		self.do_umount()
 
-	def __del__(self):
-		if sys.platform == 'win32' or self.tr is None:
-			return
-		if self.simulate_led or not self.live:
-			LEDControl.delete_dummy_control_files()
-
 	def start_daemons(self):
 		self.spawn('',msg_only=True)
 		start_test_daemons(*self.network_ids)
@@ -165,28 +113,6 @@ class CmdTestAutosignBase(CmdTestBase):
 		self.spawn('',msg_only=True)
 		stop_test_daemons(*self.network_ids)
 		return 'ok'
-
-	def gen_key(self):
-		t = self.spawn( 'mmgen-autosign', self.opts + ['gen_key'] )
-		t.expect_getend('Wrote key file ')
-		return t
-
-	def create_dfl_wallet(self):
-		t = self.spawn( 'mmgen-walletconv', [
-				f'--outdir={cfg.data_dir}',
-				'--usr-randchars=0', '--quiet', '--hash-preset=1', '--label=foo',
-				'test/ref/98831F3A.hex'
-			]
-		)
-		t.passphrase_new('new MMGen wallet','abc')
-		t.written_to_file('MMGen wallet')
-		return t
-
-	def run_setup_dfl_wallet(self):
-		return self.run_setup(mn_type='default',use_dfl_wallet=True)
-
-	def run_setup_bip39(self):
-		return self.run_setup(mn_type='bip39')
 
 	def run_setup(self,mn_type=None,mn_file=None,use_dfl_wallet=False):
 		mn_desc = mn_type or 'default'
@@ -218,6 +144,198 @@ class CmdTestAutosignBase(CmdTestBase):
 		t.written_to_file('Autosign wallet')
 		return t
 
+	def _mount_ops(self, loc, cmd, *args, **kwargs):
+		return getattr(getattr(self,loc),cmd)(*args, silent=self.silent_mount, **kwargs)
+
+	def do_mount(self, *args, **kwargs):
+		return self._mount_ops('asi', 'do_mount', *args, **kwargs)
+
+	def do_umount(self, *args, **kwargs):
+		return self._mount_ops('asi', 'do_umount', *args, **kwargs)
+
+	def do_mount_online(self, *args, **kwargs):
+		return self._mount_ops('asi_online', 'do_mount', *args, **kwargs)
+
+	def do_umount_online(self, *args, **kwargs):
+		return self._mount_ops('asi_online', 'do_umount', *args, **kwargs)
+
+class CmdTestAutosignThreaded(CmdTestAutosignBase):
+	have_online     = True
+	live            = False
+	no_insert_check = False
+
+	def autosign_start_thread(self):
+		def run():
+			t = self.spawn('mmgen-autosign', self.opts + ['wait'], direct_exec=True)
+			self.write_to_tmpfile('autosign_thread_pid',str(t.ep.pid))
+		import threading
+		threading.Thread(target=run, name='Autosign wait loop').start()
+		time.sleep(0.2)
+		return 'silent'
+
+	def autosign_kill_thread(self):
+		self.spawn('',msg_only=True)
+		pid = int(self.read_from_tmpfile('autosign_thread_pid'))
+		self.delete_tmpfile('autosign_thread_pid')
+		from signal import SIGTERM
+		imsg(purple(f'Killing autosign wait loop [PID {pid}]'))
+		try:
+			os.kill(pid,SIGTERM)
+		except:
+			imsg(yellow(f'{pid}: no such process'))
+		return 'ok'
+
+	def _wait_signed(self,desc):
+		oqmsg_r(gray(f'→ offline wallet{"s" if desc.endswith("s") else ""} signing {desc}'))
+		assert not self.device_inserted, f'‘{self.asi.dev_label_path}’ is inserted!'
+		assert not self.asi.mountpoint.is_mount(), f'‘{self.asi.mountpoint}’ is mounted!'
+		self.insert_device()
+		while True:
+			oqmsg_r(gray('.'))
+			if self.asi.mountpoint.is_mount():
+				oqmsg_r(gray('..working..'))
+				break
+			time.sleep(0.5)
+		while True:
+			oqmsg_r(gray('.'))
+			if not self.asi.mountpoint.is_mount():
+				oqmsg(gray('..done'))
+				break
+			time.sleep(0.5)
+		self.remove_device()
+
+	@property
+	def device_inserted(self):
+		return self.asi.dev_label_path.exists()
+
+	def insert_device(self):
+		self.asi.dev_label_path.touch()
+
+	def remove_device(self):
+		if self.asi.dev_label_path.exists():
+			self.asi.dev_label_path.unlink()
+
+	@property
+	def device_inserted_online(self):
+		return self.asi_online.dev_label_path.exists()
+
+	def insert_device_online(self):
+		self.asi_online.dev_label_path.touch()
+
+	def remove_device_online(self):
+		if self.asi_online.dev_label_path.exists():
+			self.asi_online.dev_label_path.unlink()
+
+class CmdTestAutosign(CmdTestAutosignBase):
+	'autosigning transactions for all supported coins'
+	coins           = ['btc','bch','ltc','eth']
+	daemon_coins    = ['btc','bch','ltc']
+	txfile_coins    = ['btc','bch','ltc','eth','mm1','etc']
+	have_online     = False
+	live            = False
+	simulate_led    = True
+	no_insert_check = True
+
+	filedir_map = (
+		('btc',''),
+		('bch',''),
+		('ltc','litecoin'),
+		('eth','ethereum'),
+		('mm1','ethereum'),
+		('etc','ethereum_classic'),
+	)
+
+	cmd_group = (
+		('start_daemons',            'starting daemons'),
+		('copy_tx_files',            'copying transaction files'),
+		('gen_key',                  'generating key'),
+		('create_dfl_wallet',        'creating default MMGen wallet'),
+		('run_setup_dfl_wallet',     'running ‘autosign setup’ (with default wallet)'),
+		('sign_quiet',               'signing transactions (--quiet)'),
+		('remove_signed_txfiles',    'removing signed transaction files'),
+		('run_setup_bip39',          'running ‘autosign setup’ (BIP39 mnemonic)'),
+		('create_bad_txfiles',       'creating bad transaction files'),
+		('sign_full_summary',        'signing transactions (--full-summary)'),
+		('remove_signed_txfiles_btc','removing transaction files (BTC only)'),
+		('remove_bad_txfiles',       'removing bad transaction files'),
+		('sign_led',                 'signing transactions (--led - BTC files only)'),
+		('remove_signed_txfiles',    'removing signed transaction files'),
+		('sign_stealth_led',         'signing transactions (--stealth-led)'),
+		('remove_signed_txfiles',    'removing signed transaction files'),
+		('copy_msgfiles',            'copying message files'),
+		('sign_quiet_msg',           'signing transactions and messages (--quiet)'),
+		('remove_signed_txfiles',    'removing signed transaction files'),
+		('create_bad_txfiles2',      'creating bad transaction files'),
+		('remove_signed_msgfiles',   'removing signed message files'),
+		('create_invalid_msgfile',   'creating invalid message file'),
+		('sign_full_summary_msg',    'signing transactions and messages (--full-summary)'),
+		('remove_invalid_msgfile',   'removing invalid message file'),
+		('remove_bad_txfiles2',      'removing bad transaction files'),
+		('sign_no_unsigned_msg',     'signing transactions and messages (nothing to sign)'),
+		('stop_daemons',             'stopping daemons'),
+	)
+
+	def __init__(self,trunner,cfgs,spawn):
+
+		super().__init__(trunner,cfgs,spawn)
+
+		if trunner is None:
+			return
+
+		if self.live and not cfg.exact_output:
+			die(1,red('autosign_live tests must be run with --exact-output enabled!'))
+
+		if self.no_insert_check:
+			self.opts.append('--no-insert-check')
+
+		self.tx_file_ops('set_count') # initialize self.tx_count here so we can resume anywhere
+		self.bad_tx_count = 0
+
+		def gen_msg_fns():
+			fmap = dict(self.filedir_map)
+			for coin in self.coins:
+				if coin == 'xmr':
+					continue
+				sdir = os.path.join('test','ref',fmap[coin])
+				for fn in os.listdir(sdir):
+					if fn.endswith(f'[{coin.upper()}].rawmsg.json'):
+						yield os.path.join(sdir,fn)
+
+		self.ref_msgfiles = tuple(gen_msg_fns())
+		self.good_msg_count = 0
+		self.bad_msg_count = 0
+
+		if self.simulate_led:
+			LEDControl.create_dummy_control_files()
+			self.have_dummy_control_files = True
+			self.spawn_env['MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE'] = '1'
+
+	def __del__(self):
+		if hasattr(self,'have_dummy_control_files'):
+			LEDControl.delete_dummy_control_files()
+
+	def gen_key(self):
+		t = self.spawn( 'mmgen-autosign', self.opts + ['gen_key'] )
+		t.expect_getend('Wrote key file ')
+		return t
+
+	def create_dfl_wallet(self):
+		t = self.spawn( 'mmgen-walletconv', [
+				f'--outdir={cfg.data_dir}',
+				'--usr-randchars=0', '--quiet', '--hash-preset=1', '--label=foo',
+				'test/ref/98831F3A.hex'
+			]
+		)
+		t.passphrase_new('new MMGen wallet','abc')
+		t.written_to_file('MMGen wallet')
+		return t
+
+	def run_setup_dfl_wallet(self):
+		return self.run_setup(mn_type='default',use_dfl_wallet=True)
+
+	def run_setup_bip39(self):
+		return self.run_setup(mn_type='bip39')
+
 	def copy_tx_files(self):
 		self.spawn('',msg_only=True)
 		return self.tx_file_ops('copy')
@@ -237,7 +355,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		from .ct_ref import CmdTestRef
 		def gen():
 			d = CmdTestRef.sources['ref_tx_file']
-			dirmap = [e for e in filedir_map if e[0] in (txfile_coins or self.txfile_coins)]
+			dirmap = [e for e in self.filedir_map if e[0] in (txfile_coins or self.txfile_coins)]
 			for coin,coindir in dirmap:
 				for network in (0,1):
 					fn = d[coin][network]
@@ -371,81 +489,6 @@ class CmdTestAutosignBase(CmdTestBase):
 		imsg('')
 		return t
 
-	@property
-	def device_inserted(self):
-		return self.asi.dev_label_path.exists()
-
-	@property
-	def device_inserted_online(self):
-		return self.asi_online.dev_label_path.exists()
-
-	def insert_device(self):
-		self.asi.dev_label_path.touch()
-
-	def insert_device_online(self):
-		self.asi_online.dev_label_path.touch()
-
-	def remove_device(self):
-		if self.asi.dev_label_path.exists():
-			self.asi.dev_label_path.unlink()
-
-	def remove_device_online(self):
-		if self.asi_online.dev_label_path.exists():
-			self.asi_online.dev_label_path.unlink()
-
-	def _mount_ops(self, loc, cmd, *args, **kwargs):
-		return getattr(getattr(self,loc),cmd)(*args, silent=self.silent_mount, **kwargs)
-
-	def do_mount(self, *args, **kwargs):
-		return self._mount_ops('asi', 'do_mount', *args, **kwargs)
-
-	def do_umount(self, *args, **kwargs):
-		return self._mount_ops('asi', 'do_umount', *args, **kwargs)
-
-	def do_mount_online(self, *args, **kwargs):
-		return self._mount_ops('asi_online', 'do_mount', *args, **kwargs)
-
-	def do_umount_online(self, *args, **kwargs):
-		return self._mount_ops('asi_online', 'do_umount', *args, **kwargs)
-
-class CmdTestAutosign(CmdTestAutosignBase):
-	'autosigning transactions for all supported coins'
-	coins        = ['btc','bch','ltc','eth']
-	daemon_coins = ['btc','bch','ltc']
-	txfile_coins = ['btc','bch','ltc','eth','mm1','etc']
-	live         = False
-	simulate_led = False
-	bad_tx_count = 0
-	cmd_group = (
-		('start_daemons',            'starting daemons'),
-		('copy_tx_files',            'copying transaction files'),
-		('gen_key',                  'generating key'),
-		('create_dfl_wallet',        'creating default MMGen wallet'),
-		('run_setup_dfl_wallet',     'running ‘autosign setup’ (with default wallet)'),
-		('sign_quiet',               'signing transactions (--quiet)'),
-		('remove_signed_txfiles',    'removing signed transaction files'),
-		('run_setup_bip39',          'running ‘autosign setup’ (BIP39 mnemonic)'),
-		('create_bad_txfiles',       'creating bad transaction files'),
-		('sign_full_summary',        'signing transactions (--full-summary)'),
-		('remove_signed_txfiles_btc','removing transaction files (BTC only)'),
-		('remove_bad_txfiles',       'removing bad transaction files'),
-		('sign_led',                 'signing transactions (--led - BTC files only)'),
-		('remove_signed_txfiles',    'removing signed transaction files'),
-		('sign_stealth_led',         'signing transactions (--stealth-led)'),
-		('remove_signed_txfiles',    'removing signed transaction files'),
-		('copy_msgfiles',            'copying message files'),
-		('sign_quiet_msg',           'signing transactions and messages (--quiet)'),
-		('remove_signed_txfiles',    'removing signed transaction files'),
-		('create_bad_txfiles2',      'creating bad transaction files'),
-		('remove_signed_msgfiles',   'removing signed message files'),
-		('create_invalid_msgfile',   'creating invalid message file'),
-		('sign_full_summary_msg',    'signing transactions and messages (--full-summary)'),
-		('remove_invalid_msgfile',   'removing invalid message file'),
-		('remove_bad_txfiles2',      'removing bad transaction files'),
-		('sign_no_unsigned_msg',     'signing transactions and messages (nothing to sign)'),
-		('stop_daemons',             'stopping daemons'),
-	)
-
 	def sign_quiet(self):
 		return self.do_sign(['--quiet','wait'])
 
@@ -478,7 +521,10 @@ class CmdTestAutosignBTC(CmdTestAutosign):
 
 class CmdTestAutosignLive(CmdTestAutosignBTC):
 	'live autosigning BTC transactions'
-	live = True
+	live            = True
+	simulate_led    = False
+	no_insert_check = False
+
 	cmd_group = (
 		('start_daemons',        'starting daemons'),
 		('copy_tx_files',        'copying transaction files'),
@@ -491,6 +537,22 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		('sign_live_stealth_led','signing transactions (--stealth-led)'),
 		('stop_daemons',         'stopping daemons'),
 	)
+
+	def __init__(self,trunner,cfgs,spawn):
+
+		super().__init__(trunner,cfgs,spawn)
+
+		if trunner is None:
+			return
+
+		try:
+			cf = LEDControl(enabled=True,simulate=self.simulate_led)
+		except Exception as e:
+			msg(str(e))
+			die(2,'LEDControl initialization failed')
+		for path in (cf.board.status,cf.board.trigger):
+			if path:
+				run(['sudo','chmod','0666',path],check=True)
 
 	def run_setup_mmgen(self):
 		return self.run_setup(mn_type='mmgen',use_dfl_wallet=None)

@@ -16,21 +16,14 @@ test.cmdtest_py_d.ct_xmr_autosign: xmr autosigning tests for the cmdtest.py test
 import os,time,re,shutil
 from pathlib import Path
 
-from mmgen.color import yellow,purple,gray
+from mmgen.color import purple,gray
 from mmgen.util import fmt,async_run
 
-from ..include.common import (
-	cfg,
-	oqmsg,
-	oqmsg_r,
-	imsg,
-	silence,
-	end_silence
-)
+from ..include.common import cfg,imsg,silence,end_silence
 from .common import get_file_with_ext
 
 from .ct_xmrwallet import CmdTestXMRWallet
-from .ct_autosign import CmdTestAutosignBase
+from .ct_autosign import CmdTestAutosignThreaded
 
 def make_burn_addr():
 	from mmgen.tool.coin import tool_cmd
@@ -40,7 +33,7 @@ def make_burn_addr():
 		proto   = cfg._proto,
 		mmtype  = 'monero' ).privhex2addr('beadcafe'*8)
 
-class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
+class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 	"""
 	Monero autosigning operations
 	"""
@@ -54,15 +47,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 	)
 
 	# ct_autosign attrs:
-	coins        = ['xmr']
-	daemon_coins = []
-	txfile_coins = []
-	live         = False
-	simulate_led = False
-	bad_tx_count = 0
-	no_insert_check = False
-	win_skip = True
-	have_online = True
+	coins = ['xmr']
 
 	cmd_group = (
 		('daemon_version',           'checking daemon version'),
@@ -108,7 +93,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 	def __init__(self,trunner,cfgs,spawn):
 
-		CmdTestAutosignBase.__init__(self,trunner,cfgs,spawn)
+		CmdTestAutosignThreaded.__init__(self,trunner,cfgs,spawn)
 		CmdTestXMRWallet.__init__(self,trunner,cfgs,spawn)
 
 		if trunner is None:
@@ -127,7 +112,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 		self.opts.append('--xmrwallets={}'.format(self.users['alice'].kal_range)) # mmgen-autosign opts
 		self.autosign_opts = ['--autosign']                                       # mmgen-xmrwallet opts
-		self.tx_count = 1
 		self.spawn_env['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = '1'
 
 	def create_tmp_wallets(self):
@@ -245,27 +229,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 		return t
 
-	def autosign_start_thread(self):
-		def run():
-			t = self.spawn('mmgen-autosign', self.opts + ['wait'], direct_exec=True)
-			self.write_to_tmpfile('autosign_thread_pid',str(t.ep.pid))
-		import threading
-		threading.Thread( target=run, name='Autosign wait loop' ).start()
-		time.sleep(0.2)
-		return 'silent'
-
-	def autosign_kill_thread(self):
-		self.spawn('',msg_only=True)
-		pid = int(self.read_from_tmpfile('autosign_thread_pid'))
-		self.delete_tmpfile('autosign_thread_pid')
-		from signal import SIGTERM
-		imsg(purple(f'Killing autosign wait loop [PID {pid}]'))
-		try:
-			os.kill(pid,SIGTERM)
-		except:
-			imsg(yellow(f'{pid}: no such process'))
-		return 'ok'
-
 	def create_watchonly_wallets(self):
 		self.insert_device_online()
 		t = self.create_wallets('alice', op='restore')
@@ -292,25 +255,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		get_file_with_ext(self.asi_online.xmr_tx_dir,'sigtx',delete_all=True)
 		self.do_umount_online()
 		return self._create_transfer_tx('0.257')
-
-	def _wait_signed(self,desc):
-		oqmsg_r(gray(f'→ offline wallet{"s" if desc.endswith("s") else ""} signing {desc}'))
-		assert not self.device_inserted, f'‘{self.asi.dev_label_path}’ is inserted!'
-		assert not self.asi.mountpoint.is_mount(), f'‘{self.asi.mountpoint}’ is mounted!'
-		self.insert_device()
-		while True:
-			oqmsg_r(gray('.'))
-			if self.asi.mountpoint.is_mount():
-				oqmsg_r(gray('..working..'))
-				break
-			time.sleep(0.5)
-		while True:
-			oqmsg_r(gray('.'))
-			if not self.asi.mountpoint.is_mount():
-				oqmsg(gray('..done'))
-				break
-			time.sleep(0.5)
-		self.remove_device()
 
 	def _xmr_autosign_op(
 			self,
