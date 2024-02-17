@@ -123,7 +123,7 @@ class bitcoin_core_daemon(CoinDaemon):
 		return e.args[0]
 
 class bitcoin_cash_node_daemon(bitcoin_core_daemon):
-	daemon_data = _dd('Bitcoin Cash Node', 26010000, '26.1.0')
+	daemon_data = _dd('Bitcoin Cash Node', 27000000, '27.0.0')
 	exec_fn = 'bitcoind-bchn'
 	cli_fn = 'bitcoin-cli-bchn'
 	rpc_ports = _nw(8432, 18432, 18543) # use non-standard ports (core+100)
