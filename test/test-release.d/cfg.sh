@@ -19,13 +19,15 @@ groups_desc="
 "
 
 init_groups() {
-	dfl_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth xmr'
+	dfl_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc xmr'
 	extra_tests='dep dev lint autosign_btc autosign_live ltc_tn bch_tn'
 	noalt_tests='dep alt obj color unit hash ref tool tool2 gen autosign_btc btc btc_tn btc_rt'
-	quick_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_rt altref altgen eth xmr'
+	quick_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_rt altref altgen eth etc xmr'
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
 
 	[ "$MSYS2" ] && SKIP_LIST='autosign autosign_btc autosign_live'
+	[ "$ARM32" -o "$ARM64" ] && SKIP_LIST+=' etc'
+
 	true
 }
 
@@ -145,12 +147,11 @@ init_tests() {
 		- $cmdtest_py --coin=xmr
 	"
 
-	d_eth="operations for Ethereum and Ethereum Classic using devnet"
-	t_eth="
-		geth   $cmdtest_py --coin=eth ethdev
-		parity $cmdtest_py --coin=etc ethdev
-	"
-	[ "$ARM32" -o "$ARM64" ] && t_eth_skip+=' parity'
+	d_eth="operations for Ethereum using devnet"
+	t_eth="geth $cmdtest_py --coin=eth ethdev"
+
+	d_etc="operations for Ethereum Classic using devnet"
+	t_etc="parity $cmdtest_py --coin=etc ethdev"
 
 	d_autosign="transaction and message autosigning"
 	t_autosign="- $cmdtest_py autosign"
