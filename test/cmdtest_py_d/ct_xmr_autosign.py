@@ -44,10 +44,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 	"""
 	Monero autosigning operations
 	"""
-
 	tmpdir_nums = [39]
 
 	# ct_xmrwallet attrs:
+	tx_relay_user = 'miner'
 	user_data = (
 		('miner', '98831F3A', False, 130, '1', []),
 		('alice', 'FE3C6545', True,  150, '1-2', []),
@@ -60,7 +60,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 	live         = False
 	simulate_led = False
 	bad_tx_count = 0
-	tx_relay_user = 'miner'
 	no_insert_check = False
 	win_skip = True
 	have_online = True
@@ -126,8 +125,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 		self.burn_addr = make_burn_addr()
 
-		self.opts.append('--xmrwallets={}'.format(self.users['alice'].kal_range))     # mmgen-autosign opts
-		self.autosign_opts = ['--autosign']                                           # mmgen-xmrwallet opts
+		self.opts.append('--xmrwallets={}'.format(self.users['alice'].kal_range)) # mmgen-autosign opts
+		self.autosign_opts = ['--autosign']                                       # mmgen-xmrwallet opts
 		self.tx_count = 1
 		self.spawn_env['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = '1'
 
@@ -294,8 +293,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		self.do_umount_online()
 		return self._create_transfer_tx('0.257')
 
-	def _wait_signed(self,dtype):
-		oqmsg_r(gray(f'→ offline wallet{"s" if dtype.endswith("s") else ""} signing {dtype}'))
+	def _wait_signed(self,desc):
+		oqmsg_r(gray(f'→ offline wallet{"s" if desc.endswith("s") else ""} signing {desc}'))
 		assert not self.device_inserted, f'‘{self.asi.dev_label_path}’ is inserted!'
 		assert not self.asi.mountpoint.is_mount(), f'‘{self.asi.mountpoint}’ is mounted!'
 		self.insert_device()
@@ -316,14 +315,14 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 	def _xmr_autosign_op(
 			self,
 			op,
-			desc        = None,
-			dtype       = None,
-			ext         = None,
-			wallet_arg  = None,
-			add_opts    = [],
-			wait_signed = False):
+			desc          = None,
+			signable_desc = None,
+			ext           = None,
+			wallet_arg    = None,
+			add_opts      = [],
+			wait_signed   = False):
 		if wait_signed:
-			self._wait_signed(dtype)
+			self._wait_signed(signable_desc)
 		data = self.users['alice']
 		args = (
 			self.extra_opts
@@ -379,11 +378,11 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 	def _submit_transfer_tx(self,relay_parm=None,ext=None,op='submit',check_bal=True):
 		self.insert_device_online()
 		t = self._xmr_autosign_op(
-			op       = op,
-			add_opts = [f'--tx-relay-daemon={relay_parm}'] if relay_parm else [],
-			ext      = ext,
-			dtype    = 'transaction',
-			wait_signed = op == 'submit' )
+			op            = op,
+			add_opts      = [f'--tx-relay-daemon={relay_parm}'] if relay_parm else [],
+			ext           = ext,
+			signable_desc = 'transaction',
+			wait_signed   = op == 'submit')
 		t.expect( f'{op.capitalize()} transaction? (y/N): ', 'y' )
 		t.written_to_file('Submitted transaction')
 		self.remove_device_online()
@@ -412,10 +411,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 	def _import_key_images(self,wallet_arg):
 		self.insert_device_online()
 		t = self._xmr_autosign_op(
-			op    = 'import-key-images',
-			wallet_arg = wallet_arg,
-			dtype = 'wallet outputs',
-			wait_signed = True )
+			op            = 'import-key-images',
+			wallet_arg    = wallet_arg,
+			signable_desc = 'wallet outputs',
+			wait_signed   = True)
 		t.read()
 		self.remove_device_online()
 		return t

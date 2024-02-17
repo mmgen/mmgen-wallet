@@ -68,8 +68,8 @@ class CmdTestAutosignBase(CmdTestBase):
 	networks     = ('btc',)
 	tmpdir_nums  = [18]
 	color        = True
+	win_skip     = True
 	no_insert_check = True
-	win_skip = True
 	have_online = False
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -531,7 +531,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 
 		omsg(purple(f'Running autosign test with {opts_msg}'))
 
-		self.do_umount_online()
+		self.do_umount()
 		prompt_remove()
 		omsg(green(info_msg))
 		t = self.spawn(
@@ -541,9 +541,9 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 			omsg('')
 		prompt_insert_sign(t)
 
-		self.do_mount_online() # race condition due to device insertion detection
+		self.do_mount() # race condition due to device insertion detection
 		self.remove_signed_txfiles()
-		self.do_umount_online()
+		self.do_umount()
 
 		imsg(purple('\nKilling wait loop!'))
 		t.kill(2) # 2 = SIGINT
