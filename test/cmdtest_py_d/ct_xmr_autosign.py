@@ -187,7 +187,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 	def _dump_wallets(self,autosign):
 		data = self.users['alice']
-		self.insert_device_ts()
+		self.insert_device_online()
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
@@ -196,7 +196,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 			+ ['dump']
 			+ ([] if autosign else [get_file_with_ext(data.udir,'akeys')]) )
 		t.expect('2 wallets dumped')
-		self.remove_device_ts()
+		self.remove_device_online()
 		return t
 
 	def _delete_files(self,*ext_list):
@@ -268,20 +268,20 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		return 'ok'
 
 	def create_watchonly_wallets(self):
-		self.insert_device_ts()
+		self.insert_device_online()
 		t = self.create_wallets('alice', op='restore')
 		t.read() # required!
-		self.remove_device_ts()
+		self.remove_device_online()
 		return t
 
 	def restore_wallets(self):
 		return self.create_watchonly_wallets()
 
 	def _create_transfer_tx(self,amt):
-		self.insert_device_ts()
+		self.insert_device_online()
 		t = self.do_op('transfer','alice',f'1:0:{self.burn_addr},{amt}',no_relay=True,do_ret=True)
 		t.read() # required!
-		self.remove_device_ts()
+		self.remove_device_online()
 		return t
 
 	def create_transfer_tx1(self):
@@ -377,7 +377,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		return self._submit_transfer_tx( relay_parm=self.tx_relay_daemon_parm )
 
 	def _submit_transfer_tx(self,relay_parm=None,ext=None,op='submit',check_bal=True):
-		self.insert_device_ts()
+		self.insert_device_online()
 		t = self._xmr_autosign_op(
 			op       = op,
 			add_opts = [f'--tx-relay-daemon={relay_parm}'] if relay_parm else [],
@@ -386,7 +386,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 			wait_signed = op == 'submit' )
 		t.expect( f'{op.capitalize()} transaction? (y/N): ', 'y' )
 		t.written_to_file('Submitted transaction')
-		self.remove_device_ts()
+		self.remove_device_online()
 		if check_bal:
 			t.ok()
 			return self._mine_chk('unlocked')
@@ -394,13 +394,13 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 			return t
 
 	def _export_outputs(self,wallet_arg,add_opts=[]):
-		self.insert_device_ts()
+		self.insert_device_online()
 		t = self._xmr_autosign_op(
 			op    = 'export-outputs',
 			wallet_arg = wallet_arg,
 			add_opts = add_opts )
 		t.written_to_file('Wallet outputs')
-		self.remove_device_ts()
+		self.remove_device_online()
 		return t
 
 	def export_outputs1(self):
@@ -410,14 +410,14 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		return self._export_outputs('1-2')
 
 	def _import_key_images(self,wallet_arg):
-		self.insert_device_ts()
+		self.insert_device_online()
 		t = self._xmr_autosign_op(
 			op    = 'import-key-images',
 			wallet_arg = wallet_arg,
 			dtype = 'wallet outputs',
 			wait_signed = True )
 		t.read()
-		self.remove_device_ts()
+		self.remove_device_online()
 		return t
 
 	def import_key_images1(self):
@@ -514,7 +514,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		return t
 
 	def txlist(self):
-		self.insert_device_ts()
+		self.insert_device_online()
 		t = self.spawn( 'mmgen-xmrwallet', self.autosign_opts + ['txlist'] )
 		t.match_expect_list([
 			'SUBMITTED',
@@ -522,7 +522,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 			'Transfer 1:0','-> ext',
 			'Transfer 1:0','-> ext'
 		])
-		self.remove_device_ts()
+		self.remove_device_online()
 		return t
 
 	def check_tx_dirs(self):

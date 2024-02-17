@@ -482,7 +482,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	def sync_wallets(self,user,op='sync',wallets=None,add_opts=[],bal_chk_func=None):
 		data = self.users[user]
 		if data.autosign:
-			self.insert_device_ts()
+			self.insert_device_online()
 		cmd_opts = list_gen(
 			[f'--wallet-dir={data.udir}'],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
@@ -516,7 +516,7 @@ class CmdTestXMRWallet(CmdTestBase):
 					assert bal_chk_func(n,*amts), f'balance check for wallet {n} failed!'
 		if data.autosign:
 			t.read()
-			self.remove_device_ts()
+			self.remove_device_online()
 		return t
 
 	def do_op(

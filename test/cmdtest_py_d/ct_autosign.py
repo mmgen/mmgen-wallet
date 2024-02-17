@@ -376,20 +376,20 @@ class CmdTestAutosignBase(CmdTestBase):
 		return self.asi.dev_label_path.exists()
 
 	@property
-	def device_inserted_ts(self):
+	def device_inserted_online(self):
 		return self.asi_online.dev_label_path.exists()
 
 	def insert_device(self):
 		self.asi.dev_label_path.touch()
 
-	def insert_device_ts(self):
+	def insert_device_online(self):
 		self.asi_online.dev_label_path.touch()
 
 	def remove_device(self):
 		if self.asi.dev_label_path.exists():
 			self.asi.dev_label_path.unlink()
 
-	def remove_device_ts(self):
+	def remove_device_online(self):
 		if self.asi_online.dev_label_path.exists():
 			self.asi_online.dev_label_path.unlink()
 
