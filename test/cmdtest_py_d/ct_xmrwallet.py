@@ -673,7 +673,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	async def open_wallet_user(self,user,wnum):
 		data = self.users[user]
 		if data.autosign:
-			self.asi_ts.do_mount(self.silent)
+			self.do_mount_online()
 		silence()
 		kal = (ViewKeyAddrList if data.autosign else KeyAddrList)(
 			cfg      = cfg,
@@ -683,7 +683,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			key_address_validity_check = False )
 		end_silence()
 		if data.autosign:
-			self.asi_ts.do_umount(self.silent)
+			self.do_umount_online()
 		self.users[user].wd.start(silent=not (cfg.exact_output or cfg.verbose))
 		return data.wd_rpc.call(
 			'open_wallet',

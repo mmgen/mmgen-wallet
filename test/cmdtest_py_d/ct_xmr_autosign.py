@@ -63,6 +63,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 	tx_relay_user = 'miner'
 	no_insert_check = False
 	win_skip = True
+	have_online = True
 
 	cmd_group = (
 		('daemon_version',           'checking daemon version'),
@@ -225,12 +226,12 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 	def autosign_setup(self):
 
-		self.asi_ts.do_mount(self.silent,no_xmr_chk=True)
+		self.do_mount_online(no_xmr_chk=True)
 
 		self.asi_ts.xmr_dir.mkdir(exist_ok=True)
 		(self.asi_ts.xmr_dir / 'old.vkeys').touch()
 
-		self.asi_ts.do_umount(self.silent)
+		self.do_umount_online()
 
 		self.insert_device()
 
@@ -287,10 +288,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		return self._create_transfer_tx('0.124')
 
 	def create_transfer_tx2(self):
-		self.asi_ts.do_mount(self.silent)
+		self.do_mount_online()
 		get_file_with_ext(self.asi_ts.xmr_tx_dir,'rawtx',delete_all=True)
 		get_file_with_ext(self.asi_ts.xmr_tx_dir,'sigtx',delete_all=True)
-		self.asi_ts.do_umount(self.silent)
+		self.do_umount_online()
 		return self._create_transfer_tx('0.257')
 
 	def _wait_signed(self,dtype):
@@ -478,7 +479,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 	def autosign_clean(self):
 
-		self.asi_ts.do_mount(self.silent,no_xmr_chk=True)
+		self.do_mount_online(no_xmr_chk=True)
 
 		self.create_fake_tx_files()
 		before = '\n'.join(self._gen_listing())
@@ -486,7 +487,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 		t = self.spawn('mmgen-autosign', self.opts + ['clean'])
 		out = t.read()
 
-		self.asi_ts.do_mount(self.silent,no_xmr_chk=True)
+		self.do_mount_online(no_xmr_chk=True)
 
 		after = '\n'.join(self._gen_listing())
 
@@ -495,7 +496,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 		self.asi_ts.tx_dir.mkdir()
 
-		self.asi_ts.do_umount(self.silent)
+		self.do_umount_online()
 
 		chk = """
 			tx:          a.sigtx b.sigtx c.rawtx d.sigtx
@@ -526,16 +527,16 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignBase):
 
 	def check_tx_dirs(self):
 
-		self.asi_ts.do_mount(self.silent)
+		self.do_mount_online()
 		before = '\n'.join(self._gen_listing())
-		self.asi_ts.do_umount(self.silent)
+		self.do_umount_online()
 
 		t = self.spawn('mmgen-autosign', self.opts + ['clean'])
 		t.read()
 
-		self.asi_ts.do_mount(self.silent)
+		self.do_mount_online()
 		after = '\n'.join(self._gen_listing())
-		self.asi_ts.do_umount(self.silent)
+		self.do_umount_online()
 
 		imsg(f'\nBefore cleaning:\n{before}')
 		imsg(f'\nAfter cleaning:\n{after}')

@@ -320,7 +320,7 @@ class Autosign:
 
 		return self._wallet_files
 
-	def do_mount(self,silent=False,no_xmr_chk=False):
+	def do_mount(self,silent=False,no_dir_chk=False,no_xmr_chk=False):
 
 		from stat import S_ISDIR,S_IWUSR,S_IRUSR
 
@@ -351,6 +351,9 @@ class Autosign:
 				die(1,f"Unable to mount device at '{self.mountpoint}'")
 
 		self.have_msg_dir = self.msg_dir.is_dir()
+
+		if no_dir_chk:
+			return
 
 		check_dir(self.tx_dir)
 
