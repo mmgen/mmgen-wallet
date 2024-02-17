@@ -297,7 +297,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			if autosign:
 				kafile_suf = 'vkeys'
 				fn_stem    = 'MoneroWatchOnlyWallet'
-				kafile_dir = self.asi_ts.xmr_dir
+				kafile_dir = self.asi_online.xmr_dir
 			else:
 				kafile_suf = 'akeys'
 				fn_stem    = 'MoneroWallet'

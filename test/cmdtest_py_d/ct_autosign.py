@@ -123,7 +123,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	def _create_autosign_instances(self,create_dirs):
 		d = {'offline': {'name':'asi'}}
 		if self.have_online:
-			d['online'] =  {'name':'asi_ts'}
+			d['online'] =  {'name':'asi_online'}
 		for subdir,data in d.items():
 			if create_dirs and not self.live:
 				for k in ('mountpoint','wallet_dir','dev_label_dir'):
@@ -377,21 +377,21 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	@property
 	def device_inserted_ts(self):
-		return self.asi_ts.dev_label_path.exists()
+		return self.asi_online.dev_label_path.exists()
 
 	def insert_device(self):
 		self.asi.dev_label_path.touch()
 
 	def insert_device_ts(self):
-		self.asi_ts.dev_label_path.touch()
+		self.asi_online.dev_label_path.touch()
 
 	def remove_device(self):
 		if self.asi.dev_label_path.exists():
 			self.asi.dev_label_path.unlink()
 
 	def remove_device_ts(self):
-		if self.asi_ts.dev_label_path.exists():
-			self.asi_ts.dev_label_path.unlink()
+		if self.asi_online.dev_label_path.exists():
+			self.asi_online.dev_label_path.unlink()
 
 	def _mount_ops(self, loc, cmd, *args, **kwargs):
 		return getattr(getattr(self,loc),cmd)(*args, silent=self.silent_mount, **kwargs)
@@ -403,10 +403,10 @@ class CmdTestAutosignBase(CmdTestBase):
 		return self._mount_ops('asi', 'do_umount', *args, **kwargs)
 
 	def do_mount_online(self, *args, **kwargs):
-		return self._mount_ops('asi_ts', 'do_mount', *args, **kwargs)
+		return self._mount_ops('asi_online', 'do_mount', *args, **kwargs)
 
 	def do_umount_online(self, *args, **kwargs):
-		return self._mount_ops('asi_ts', 'do_umount', *args, **kwargs)
+		return self._mount_ops('asi_online', 'do_umount', *args, **kwargs)
 
 class CmdTestAutosign(CmdTestAutosignBase):
 	'autosigning transactions for all supported coins'
