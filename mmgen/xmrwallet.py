@@ -779,7 +779,6 @@ class MoneroWalletOps:
 			'autosign',
 			'watch_only',
 		)
-		offline = False
 		wallet_offline = False
 		wallet_exists = True
 		start_daemon = True
@@ -806,7 +805,7 @@ class MoneroWalletOps:
 
 			super().__init__(cfg,uarg_tuple)
 
-			if self.offline or (self.name == 'create' and self.cfg.restore_height is None):
+			if self.cfg.offline or (self.name == 'create' and self.cfg.restore_height is None):
 				self.wallet_offline = True
 
 			self.wd = MoneroWalletDaemon(
@@ -828,7 +827,7 @@ class MoneroWalletOps:
 				test_connection = False,
 			)
 
-			if self.offline:
+			if self.cfg.offline:
 				from .wallet import Wallet
 				self.seed_src = Wallet(
 					cfg           = cfg,
@@ -937,7 +936,7 @@ class MoneroWalletOps:
 
 		@property
 		def add_wallet_desc(self):
-			return 'offline signing ' if self.offline else 'watch-only ' if self.cfg.watch_only else ''
+			return 'offline signing ' if self.cfg.offline else 'watch-only ' if self.cfg.watch_only else ''
 
 		async def main(self):
 			gmsg('\n{a}ing {b} {c}wallet{d}'.format(
@@ -1198,7 +1197,6 @@ class MoneroWalletOps:
 			return True
 
 	class create_offline(create):
-		offline = True
 
 		def __init__(self,cfg,uarg_tuple):
 
@@ -1732,7 +1730,6 @@ class MoneroWalletOps:
 	class sign(wallet):
 		action = 'signing transaction with'
 		start_daemon = False
-		offline = True
 
 		async def main(self,fn,restart_daemon=True):
 			if restart_daemon:
@@ -1920,7 +1917,6 @@ class MoneroWalletOps:
 	class export_key_images(wallet):
 		action = 'signing wallet outputs file with'
 		start_daemon = False
-		offline = True
 
 		async def main(self,fn,wallet_idx,restart_daemon=True):
 			if restart_daemon:
