@@ -19,8 +19,8 @@ from ....addr import MMGenID
 from ....obj import Str
 
 class TxInfo(TxInfo):
-	txinfo_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) UTC={t} Sig={s} Locktime={l}\n'
-	txinfo_hdr_fs_short = 'TX {i} ({a} {c}) UTC={t} Sig={s} Locktime={l}\n'
+	txinfo_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) Sig={s} Locktime={l}\n'
+	txinfo_hdr_fs_short = 'TX {i} ({a} {c}) Sig={s} Locktime={l}\n'
 	txinfo_ftr_fs = fmt("""
 		Total in account:  {i} {d}
 		Total to spend:    {o} {d}

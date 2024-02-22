@@ -19,8 +19,8 @@ from ....addr import MMGenID
 
 class TxInfo(TxInfo):
 	sort_orders = ('addr','raw')
-	txinfo_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) UTC={t} RBF={r} Sig={s} Locktime={l}\n'
-	txinfo_hdr_fs_short = 'TX {i} ({a} {c}) UTC={t} RBF={r} Sig={s} Locktime={l}\n'
+	txinfo_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) RBF={r} Sig={s} Locktime={l}\n'
+	txinfo_hdr_fs_short = 'TX {i} ({a} {c}) RBF={r} Sig={s} Locktime={l}\n'
 	txinfo_ftr_fs = fmt("""
 		Input amount: {i} {d}
 		Spend amount: {s} {d}

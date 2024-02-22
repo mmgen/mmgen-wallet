@@ -16,7 +16,8 @@ import importlib
 
 from ..cfg import gc
 from ..color import red,green,orange
-from ..util import msg,msg_r
+from ..util import msg,msg_r,decode_timestamp,make_timestr
+from ..util2 import format_elapsed_hr
 
 class TxInfo:
 
@@ -49,12 +50,19 @@ class TxInfo:
 				i = tx.txid.hl(),
 				a = tx.send_amt.hl(),
 				c = tx.dcoin,
-				t = tx.timestamp,
 				r = green('True') if tx.is_replaceable() else red('False'),
 				s = green('True') if tx.signed else red('False'),
 				l = (
 					orange(self.strfmt_locktime(terse=True)) if tx.locktime else
 					green('None') ))
+
+			for attr,label in [('timestamp','Created:')]:
+				if (val := getattr(tx,attr)) is not None:
+					_ = decode_timestamp(val)
+					yield f'{label:8} {make_timestr(_)} ({format_elapsed_hr(_)})\n'
+
+			if not terse:
+				yield '\n'
 
 			if tx.chain != 'mainnet': # if mainnet has a coin-specific name, display it
 				yield green(f'Chain: {tx.chain.upper()}') + '\n'
