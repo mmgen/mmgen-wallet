@@ -52,6 +52,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	tmpdir_nums  = [18]
 	color        = True
 	win_skip     = True
+	threaded     = False
 	daemon_coins = []
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -74,6 +75,9 @@ class CmdTestAutosignBase(CmdTestBase):
 		if not self.live:
 			self.spawn_env['MMGEN_TEST_SUITE_ROOT_PFX'] = self.tmpdir
 
+		if self.threaded:
+			self.spawn_env['MMGEN_TEST_SUITE_AUTOSIGN_THREADED'] = '1'
+
 	def _create_autosign_instances(self,create_dirs):
 		d = {'offline': {'name':'asi'}}
 		if self.have_online:
@@ -90,6 +94,7 @@ class CmdTestAutosignBase(CmdTestBase):
 						'coins': ','.join(self.coins),
 						'test_suite': True,
 						'test_suite_xmr_autosign': self.name == 'CmdTestXMRAutosign',
+						'test_suite_autosign_threaded': self.threaded,
 						'test_suite_root_pfx': None if self.live else self.tmpdir,
 						'online': subdir == 'online',
 					})))
@@ -168,6 +173,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 	have_online     = True
 	live            = False
 	no_insert_check = False
+	threaded        = True
 
 	def autosign_start_thread(self):
 		def run():

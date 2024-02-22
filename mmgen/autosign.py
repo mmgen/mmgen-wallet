@@ -608,7 +608,7 @@ class Autosign:
 	async def main_loop(self):
 		if not self.cfg.stealth_led:
 			self.led.set('standby')
-		silent = self.cfg.test_suite_xmr_autosign
+		silent = self.cfg.test_suite_autosign_threaded
 		n = 1 if silent else 0
 		prev_status = False
 		while True:
@@ -628,7 +628,7 @@ class Autosign:
 		if message:
 			msg(message)
 		self.led.stop()
-		sys.exit(0 if self.cfg.test_suite_xmr_autosign else int(exit_val))
+		sys.exit(0 if self.cfg.test_suite_autosign_threaded else int(exit_val))
 
 	def init_exit_handler(self):
 
