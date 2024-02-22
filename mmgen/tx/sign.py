@@ -37,7 +37,7 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 	subseeds_checked = False
 	while True:
 		if infiles:
-			seed = Wallet(cfg,infiles.pop(0),ignore_in_fmt=True).seed
+			seed = Wallet(cfg, infiles.pop(0), ignore_in_fmt=True, passwd_file=global_passwd_file).seed
 		elif subseeds_checked is False:
 			seed = saved_seeds[list(saved_seeds)[0]].subseed_by_seed_id(sid,print_msg=True)
 			subseeds_checked = True
@@ -45,7 +45,7 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 				continue
 		elif cfg.in_fmt:
 			cfg._util.qmsg(f'Need seed data for Seed ID {sid}')
-			seed = Wallet(cfg).seed
+			seed = Wallet(cfg, passwd_file=global_passwd_file).seed
 			msg(f'User input produced Seed ID {seed.sid}')
 			if not seed.sid == sid: # TODO: add test
 				seed = seed.subseed_by_seed_id(sid,print_msg=True)
@@ -141,13 +141,14 @@ def get_keylist(cfg):
 		return get_lines_from_file( cfg, cfg.keys_from_file, 'key-address data', trim_comments=True )
 	return None
 
-async def txsign(cfg_parm,tx,seed_files,kl,kal,tx_num_str=''):
+async def txsign(cfg_parm, tx, seed_files, kl, kal, tx_num_str='', passwd_file=None):
 
 	keys = MMGenList() # list of AddrListEntry objects
 	non_mmaddrs = tx.get_non_mmaddrs('inputs')
 
-	global cfg
+	global cfg, global_passwd_file
 	cfg = cfg_parm
+	global_passwd_file = passwd_file
 
 	if non_mmaddrs:
 		tx.check_non_mmgen_inputs(caller='txsign',non_mmaddrs=non_mmaddrs)

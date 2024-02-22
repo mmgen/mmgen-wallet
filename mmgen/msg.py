@@ -210,7 +210,7 @@ class coin_msg:
 
 	class unsigned(completed):
 
-		async def sign(self,wallet_files):
+		async def sign(self, wallet_files, passwd_file=None):
 
 			from .addrlist import KeyAddrList
 
@@ -248,7 +248,7 @@ class coin_msg:
 				self.rpc = await rpc_init( self.cfg, self.proto, ignore_wallet=True )
 
 			from .wallet import Wallet
-			wallet_seeds = [Wallet(cfg=self.cfg,fn=fn).seed for fn in wallet_files]
+			wallet_seeds = [Wallet(cfg=self.cfg, fn=fn, passwd_file=passwd_file).seed for fn in wallet_files]
 			need_sids = remove_dups([al.sid for al in self.addrlists], quiet=True)
 			saved_seeds = []
 

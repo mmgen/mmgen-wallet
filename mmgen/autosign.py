@@ -112,9 +112,15 @@ class Signable:
 				from .rpc import rpc_init
 				tx1.rpc = await rpc_init( self.cfg, tx1.proto, ignore_wallet=True )
 			from .tx.sign import txsign
-			tx2 = await txsign( self.cfg, tx1, self.parent.wallet_files[:], None, None )
+			tx2 = await txsign(
+					cfg_parm    = self.cfg,
+					tx          = tx1,
+					seed_files  = self.parent.wallet_files[:],
+					kl          = None,
+					kal         = None,
+					passwd_file = str(self.parent.keyfile))
 			if tx2:
-				tx2.file.write(ask_write=False)
+				tx2.file.write(ask_write=False, outdir=self.dir)
 				return tx2
 			else:
 				return False
@@ -221,7 +227,7 @@ class Signable:
 		async def sign(self,f):
 			from .msg import UnsignedMsg,SignedMsg
 			m = UnsignedMsg( self.cfg, infile=f )
-			await m.sign( wallet_files=self.parent.wallet_files[:] )
+			await m.sign(wallet_files=self.parent.wallet_files[:], passwd_file=str(self.parent.keyfile))
 			m = SignedMsg( self.cfg, data=m.__dict__ )
 			m.write_to_file(
 				outdir = self.dir.resolve(),
@@ -405,11 +411,11 @@ class Autosign:
 			bmsg('It is now safe to extract the removable device')
 
 	def decrypt_wallets(self):
-		msg(f"Unlocking wallet{suf(self.wallet_files)} with key from '{self.cfg.passwd_file}'")
+		msg(f"Unlocking wallet{suf(self.wallet_files)} with key from ‘{self.keyfile}’")
 		fails = 0
 		for wf in self.wallet_files:
 			try:
-				Wallet( self.cfg, wf, ignore_in_fmt=True )
+				Wallet(self.cfg, wf, ignore_in_fmt=True, passwd_file=str(self.keyfile))
 			except SystemExit as e:
 				if e.code != 0:
 					fails += 1
@@ -449,20 +455,10 @@ class Autosign:
 			await asyncio.sleep(0.5)
 			return True
 
-	def update_cfg(self):
-		if not hasattr(self,'_cfg_updated'):
-			self.cfg = Config({
-				'_clone': self.cfg,
-				'outdir': str(self.tx_dir),
-				'passwd_file': str(self.keyfile),
-			})
-			self._cfg_updated = True
-
 	async def do_sign(self):
 		if not self.cfg.stealth_led:
 			self.led.set('busy')
 		self.do_mount()
-		self.update_cfg()
 		key_ok = self.decrypt_wallets()
 		if key_ok:
 			if self.cfg.stealth_led:
@@ -491,7 +487,7 @@ class Autosign:
 		else:
 			from .fileutil import shred_file
 			msg(f"\nShredding existing key '{self.keyfile}'")
-			shred_file( self.keyfile, verbose=self.cfg.verbose )
+			shred_file(str(self.keyfile), verbose=self.cfg.verbose)
 
 	def create_key(self):
 		desc = f"key file '{self.keyfile}'"
@@ -560,6 +556,7 @@ class Autosign:
 				'autosign_mountpoint': str(self.mountpoint),
 				'outdir': str(self.xmr_dir), # required by vkal.write()
 				'offline': True,
+				'passwd_file': str(self.keyfile),
 			})
 		return self._xmrwallet_cfg
 
@@ -584,8 +581,6 @@ class Autosign:
 			shutil.rmtree(self.xmr_outputs_dir)
 		except:
 			pass
-
-		self.update_cfg()
 
 		self.xmr_outputs_dir.mkdir(parents=True)
 
