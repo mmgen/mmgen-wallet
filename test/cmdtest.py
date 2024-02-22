@@ -715,7 +715,7 @@ class CmdTestRunner:
 
 		if sys.platform == 'win32' and ct_cls.win_skip:
 			omsg(gray(f'INFO → skipping test {gname!r} (platform=win32)'))
-			return False
+			return None
 
 		for k in ('segwit','segwit_random','bech32'):
 			if getattr(cfg,k):
@@ -735,7 +735,7 @@ class CmdTestRunner:
 
 		if segwit_opt and not ct_cls.segwit_opts_ok:
 			iqmsg(gray(f'INFO → skipping {m}'))
-			return False
+			return None
 
 		# 'networks = ()' means all networks allowed
 		nws = [(e.split('_')[0],'testnet') if '_' in e else (e,'mainnet') for e in ct_cls.networks]
@@ -747,7 +747,7 @@ class CmdTestRunner:
 					break
 			else:
 				iqmsg(gray(f'INFO → skipping {m} (network={nw})'))
-				return False
+				return None
 
 		if do_clean:
 			clean(ct_cls.tmpdir_nums,clean_overlay=False)
@@ -758,6 +758,9 @@ class CmdTestRunner:
 		if (not self.daemon_started) and self.gm.get_cls_by_gname(gname).need_daemon:
 			start_test_daemons(network_id,remove_datadir=True)
 			self.daemon_started = True
+
+		if hasattr(self,'tg'):
+			del self.tg
 
 		self.tg = self.gm.gm_init_group(self,gname,sg_name,self.spawn_wrapper)
 		self.ct_clsname = type(self.tg).__name__
@@ -779,55 +782,53 @@ class CmdTestRunner:
 		if cfg.exit_after and cfg.exit_after not in self.gm.cmd_list:
 			die(1,f'{cfg.exit_after!r}: command not recognized')
 
-		return True
+		return self.tg
 
 	def run_tests(self,cmd_args):
 		self.start_time = time.time()
 		self.daemon_started = False
 		gname_save = None
+
+		def parse_arg(arg):
+			if '.' in arg:
+				a,b = arg.split('.')
+				return [a] + b.split(':') if ':' in b else [a,b,None]
+			elif ':' in arg:
+				a,b = arg.split(':')
+				return [a,None,b]
+			else:
+				return [self.gm.find_cmd_in_groups(arg),None,arg]
+
 		if cmd_args:
 			for arg in cmd_args:
 				if arg in self.gm.cmd_groups:
-					if not self.init_group(arg):
-						continue
-					for cmd in self.gm.cmd_list:
-						self.check_needs_rerun(cmd,build=True)
-						do_between()
+					if self.init_group(arg):
+						for cmd in self.gm.cmd_list:
+							self.check_needs_rerun(cmd,build=True)
+							do_between()
 				else:
-					def parse_arg(arg):
-						if '.' in arg:
-							a,b = arg.split('.')
-							return [a] + b.split(':') if ':' in b else [a,b,None]
-						elif ':' in arg:
-							a,b = arg.split(':')
-							return [a,None,b]
-						else:
-							return [self.gm.find_cmd_in_groups(arg),None,arg]
-
 					gname,sg_name,cmdname = parse_arg(arg)
-
 					if gname:
 						same_grp = gname == gname_save # same group as previous cmd: don't clean, suppress blue msg
-						if not self.init_group(gname,sg_name,cmdname,quiet=same_grp,do_clean=not same_grp):
-							continue
-						if cmdname:
-							if cfg.deps_only:
-								self.deps_only = cmdname
-							try:
-								self.check_needs_rerun(cmdname,build=True)
-							except Exception as e: # allow calling of functions not in cmd_group
-								if isinstance(e,KeyError) and e.args[0] == cmdname:
-									ret = getattr(self.tg,cmdname)()
-									if type(ret).__name__ == 'coroutine':
-										async_run(ret)
-								else:
-									raise
-							do_between()
-						else:
-							for cmd in self.gm.cmd_list:
-								self.check_needs_rerun(cmd,build=True)
+						if self.init_group(gname,sg_name,cmdname,quiet=same_grp,do_clean=not same_grp):
+							if cmdname:
+								if cfg.deps_only:
+									self.deps_only = cmdname
+								try:
+									self.check_needs_rerun(cmdname,build=True)
+								except Exception as e: # allow calling of functions not in cmd_group
+									if isinstance(e,KeyError) and e.args[0] == cmdname:
+										ret = getattr(self.tg,cmdname)()
+										if type(ret).__name__ == 'coroutine':
+											async_run(ret)
+									else:
+										raise
 								do_between()
-						gname_save = gname
+							else:
+								for cmd in self.gm.cmd_list:
+									self.check_needs_rerun(cmd,build=True)
+									do_between()
+							gname_save = gname
 					else:
 						die(1,f'{arg!r}: command not recognized')
 		else:
@@ -839,11 +840,10 @@ class CmdTestRunner:
 			for gname in self.gm.cmd_groups_dfl:
 				if cfg.exclude_groups and gname in exclude:
 					continue
-				if not self.init_group(gname):
-					continue
-				for cmd in self.gm.cmd_list:
-					self.check_needs_rerun(cmd,build=True)
-					do_between()
+				if self.init_group(gname):
+					for cmd in self.gm.cmd_list:
+						self.check_needs_rerun(cmd,build=True)
+						do_between()
 
 		self.end_msg()
 
