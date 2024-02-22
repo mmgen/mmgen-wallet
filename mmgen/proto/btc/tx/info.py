@@ -128,7 +128,9 @@ class TxInfo(TxInfo):
 		num = locktime or self.tx.locktime
 		if num is None:
 			return '(None)'
-		elif num >= 5 * 10**6:
+		elif num.bit_length() > 32:
+			die(2,f'{num!r}: invalid nLockTime value (integer size greater than 4 bytes)!')
+		elif num >= 500_000_000:
 			import time
 			return ' '.join(time.strftime('%c',time.gmtime(num)).split()[1:])
 		elif num > 0:

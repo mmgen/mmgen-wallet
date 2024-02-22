@@ -52,6 +52,7 @@ class CmdTestShared:
 			add_comment        = '',
 			view               = 't',
 			save               = True,
+			return_early       = False,
 			tweaks             = [],
 			used_chg_addr_resp = None,
 			auto_chg_addr      = None):
@@ -107,6 +108,10 @@ class CmdTestShared:
 			t.expect('Continue? (Y/n)','\n')
 
 		t.do_comment(add_comment)
+
+		if return_early:
+			return t
+
 		t.view_tx(view)
 		if not txdo:
 			t.expect('(y/N): ',('n','y')[save])

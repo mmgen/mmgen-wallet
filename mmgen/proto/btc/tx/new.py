@@ -130,7 +130,7 @@ class New(Base,TxBase.New):
 		ret = await self.rpc.call( 'createrawtransaction', inputs_list, outputs_dict )
 
 		if locktime and not bump:
-			msg(f'Setting nLockTime to {self.strfmt_locktime(locktime)}!')
+			msg(f'Setting nLockTime to {self.info.strfmt_locktime(locktime)}!')
 			assert isinstance(locktime,int), 'locktime value not an integer'
 			self.locktime = locktime
 			ret = ret[:-8] + bytes.fromhex(f'{locktime:08x}')[::-1].hex()

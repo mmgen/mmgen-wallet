@@ -48,8 +48,6 @@ def DeserializeTX(proto,txhex):
 	"""
 
 	def bytes2int(bytes_le):
-		if bytes_le[-1] & 0x80: # sign bit is set
-			die(3,"{}: Negative values not permitted in transaction!".format(bytes_le[::-1].hex()))
 		return int(bytes_le[::-1].hex(),16)
 
 	def bytes2coin_amt(bytes_le):
@@ -94,6 +92,9 @@ def DeserializeTX(proto,txhex):
 	idx = 0
 
 	d = { 'version': bytes2int(bshift(4)) }
+
+	if d['version'] > 0x7fffffff: # version is signed integer
+		die(3,f"{d['version']}: transaction version greater than maximum allowed value (int32_t)!")
 
 	has_witness = tx[idx] == 0
 	if has_witness:

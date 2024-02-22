@@ -57,9 +57,9 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 					m  = (
 						'The Aug. 1 2017 UAHF is not yet active on this chain.\n'
 						'Re-run the script without the --coin=bch option.')
-				elif errmsg.count('64: non-final'):
-					m = "Transaction with nLockTime {!r} can't be included in this block!".format(
-						self.strfmt_locktime(self.get_serialized_locktime()))
+				elif errmsg.count('non-final'):
+					m = "Transaction with nLockTime {!r} can’t be included in this block!".format(
+						self.info.strfmt_locktime(self.get_serialized_locktime()))
 				else:
 					m,nl = ('','')
 				msg(orange('\n'+errmsg))

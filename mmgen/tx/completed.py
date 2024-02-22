@@ -43,11 +43,6 @@ class Completed(Base):
 				die(1,'Transaction is {}signed!'.format('not ' if self.signed else ''))
 
 	@property
-	def info(self):
-		from .info import init_info
-		return init_info(self)
-
-	@property
 	def file(self):
 		from .file import MMGenTxFile
 		return MMGenTxFile(self)

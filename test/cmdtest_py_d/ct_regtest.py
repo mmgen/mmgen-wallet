@@ -184,6 +184,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		('subgroup.msg',            ['init_bob']),
 		('subgroup.twexport',       ['fund_users']),
 		('subgroup.rescan',         ['fund_users']),
+		('subgroup.errors',         ['fund_users']),
 		('subgroup.main',           ['fund_users']),
 		('subgroup.twprune',        ['main']),
 		('subgroup.txhist',         ['main']),
@@ -264,6 +265,12 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		('bob_rescan_blockchain_gb',  'rescanning the blockchain (Genesis block)'),
 		('bob_rescan_blockchain_one', 'rescanning the blockchain (single block)'),
 		('bob_rescan_blockchain_ss',  'rescanning the blockchain (range of blocks)'),
+	),
+	'errors': (
+		'various error conditions',
+		('bob_bad_locktime1',         'broadcast of transaction with bad locktime (block)'),
+		('bob_bad_locktime2',         'broadcast of transaction with bad locktime (integer size)'),
+		('bob_bad_locktime3',         'broadcast of transaction with bad locktime (time)'),
 	),
 	'main': (
 		'creating, signing, sending and bumping transactions',
@@ -911,15 +918,16 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			t.expect(exp2,regex=True)
 		return t
 
-	def user_txdo(
-			self,
+	def user_txdo( self,
 			user,
 			fee,
 			outputs_cl,
 			outputs_list,
 			extra_args         = [],
 			wf                 = None,
-			bad_locktime       = False,
+			add_comment        = tx_comment_jp,
+			return_early       = False,
+			return_after_send  = False,
 			menu               = ['M'],
 			skip_passphrase    = False,
 			used_chg_addr_resp = None):
@@ -936,25 +944,29 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 				inputs             = outputs_list,
 				file_desc          = 'Signed transaction',
 				interactive_fee    = (tx_fee,'')[bool(fee)],
-				add_comment        = tx_comment_jp,
+				add_comment        = add_comment,
+				return_early       = return_early,
 				view               = 't',
 				save               = True,
 				used_chg_addr_resp = used_chg_addr_resp)
+
+		if return_early:
+			return t
 
 		if not skip_passphrase:
 			t.passphrase(dfl_wcls.desc,rt_pw)
 
 		t.written_to_file('Signed transaction')
 		self._do_confirm_send(t)
-		s,exit_val = (('Transaction sent',0),("can't be included",1))[bad_locktime]
-		t.expect(s)
-		t.req_exit_val = exit_val
+		if return_after_send:
+			return t
+		t.expect('Transaction sent')
 		return t
 
 	def bob_split1(self):
 		sid = self._user_sid('bob')
 		outputs_cl = [sid+':C:1,100', sid+':L:2,200',sid+':'+rtBobOp3]
-		return self.user_txdo('bob',rtFee[0],outputs_cl,'1')
+		return self.user_txdo('bob',rtFee[0],outputs_cl,'1',extra_args=['--locktime=500000001'])
 
 	def get_addr_from_addrlist(self,user,sid,mmtype,idx,addr_range='1-5'):
 		id_str = { 'L':'', 'S':'-S', 'C':'-C', 'B':'-B' }[mmtype]
@@ -1425,6 +1437,31 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def user_remove_comment(self,user,addr):
 		t = self.spawn('mmgen-tool',['--'+user,'remove_label',addr])
 		t.expect('Removed label.*in tracking wallet',regex=True)
+		return t
+
+	def bob_bad_locktime1(self):
+		return self._bob_bad_locktime(123456789, 'non-final', 2) # > current block height
+
+	def bob_bad_locktime2(self):
+		return self._bob_bad_locktime(7_000_000_000, 'invalid', 2, return_early=True) # > 4 bytes
+
+	def bob_bad_locktime3(self):
+		return self._bob_bad_locktime(0xffffffff, 'non-final', 2, return_early=False) # > cur time
+
+	def _bob_bad_locktime(self,locktime,expect,exit_val,return_early=False):
+		sid = self._user_sid('bob')
+		t = self.user_txdo(
+				user              = 'bob',
+				fee               = '20s',
+				outputs_cl        = [self.burn_addr+',0.1', sid+':C:5'],
+				outputs_list      = '1',
+				extra_args        = [f'--locktime={locktime}'],
+				return_early      = return_early,
+				add_comment       = False,
+				return_after_send = True)
+		t.req_exit_val = exit_val
+		if expect:
+			t.expect(expect)
 		return t
 
 	def bob_add_comment1(self):

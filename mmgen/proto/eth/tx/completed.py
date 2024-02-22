@@ -51,9 +51,6 @@ class Completed(Base,TxBase.Completed):
 	def check_pubkey_scripts(self):
 		pass
 
-	def strfmt_locktime(self,locktime=None,terse=False):
-		pass
-
 	def get_serialized_locktime(self):
 		return None # TODO
 

@@ -123,6 +123,11 @@ class Base(MMGenObject):
 	def dcoin(self):
 		return self.proto.dcoin
 
+	@property
+	def info(self):
+		from .info import init_info
+		return init_info(self)
+
 	def check_correct_chain(self):
 		if hasattr(self,'rpc'):
 			if self.chain != self.rpc.chain:
