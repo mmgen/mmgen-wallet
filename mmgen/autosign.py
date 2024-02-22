@@ -40,6 +40,15 @@ class Signable:
 			self.name = type(self).__name__
 
 		@property
+		def submitted(self):
+			return self._processed('_submitted', self.subext)
+
+		def _processed(self, attrname, ext):
+			if not hasattr(self, attrname):
+				setattr(self, attrname, tuple(f for f in sorted(self.dir.iterdir()) if f.name.endswith('.'+ext)))
+			return getattr(self, attrname)
+
+		@property
 		def unsigned(self):
 			return self._unprocessed( '_unsigned', self.rawext, self.sigext )
 
@@ -64,6 +73,29 @@ class Signable:
 				a = red(f'Failed {self.desc}s:'),
 				b = '  {}\n'.format('\n  '.join(self.gen_bad_list(sorted(bad_files,key=lambda f: f.name))))
 			))
+
+		def die_wrong_num_txs(self, desc, msg=None, show_dir=False):
+			num_txs = len(getattr(self, desc))
+			die('AutosignTXError', "{m}{a} {b} transaction{c} {d} {e}!".format(
+				m = msg + '\n' if msg else '',
+				a = 'One' if num_txs == 1 else 'More than one' if num_txs else 'No',
+				b = desc,
+				c = suf(num_txs),
+				d = 'already present' if num_txs else 'present',
+				e = f'in ‘{getattr(self.parent, self.dir_name)}’' if show_dir else 'on removable device',
+			))
+
+		def get_unsubmitted(self, desc='unsubmitted'):
+			if len(self.unsubmitted) == 1:
+				return self.unsubmitted[0]
+			else:
+				self.die_wrong_num_txs(desc)
+
+		def get_submitted(self):
+			if len(self.submitted) == 0:
+				self.die_wrong_num_txs('submitted')
+			else:
+				return self.submitted
 
 	class transaction(base):
 		desc = 'transaction'

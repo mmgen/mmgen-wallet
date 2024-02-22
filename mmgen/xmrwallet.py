@@ -1761,14 +1761,6 @@ class MoneroWalletOps:
 		def post_mount_action(self):
 			self.tx # trigger an exit if no suitable transaction present
 
-		def die_no_tx(self,desc,num_txs,tx_dir):
-			die('AutosignTXError', "{a} {b} transaction{c} in '{d}'!".format(
-				a = 'More than one' if num_txs else 'No',
-				b = desc,
-				c = suf(num_txs),
-				d = tx_dir,
-			))
-
 		@property
 		def tx(self):
 			if not hasattr(self,'_tx'):
@@ -1780,12 +1772,8 @@ class MoneroWalletOps:
 				fn = Path(uarg.infile)
 			else:
 				from .autosign import Signable
-				t = Signable.xmr_transaction(self.asi)
-				if len(t.unsubmitted) == 1:
-					fn = t.unsubmitted[0]
-				else:
-					self.die_no_tx( 'unsubmitted', len(t.unsubmitted), t.parent.xmr_tx_dir )
-			return MoneroMMGenTX.ColdSigned( cfg=self.cfg, fn=fn )
+				fn = Signable.xmr_transaction(self.asi).get_unsubmitted()
+			return MoneroMMGenTX.ColdSigned(cfg=self.cfg, fn=fn)
 
 		def get_relay_rpc(self):
 
@@ -1859,16 +1847,12 @@ class MoneroWalletOps:
 				die(1,'--autosign is required for this operation')
 
 		def get_tx(self):
-			files = [f for f in self.asi.xmr_tx_dir.iterdir()
-						if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]
-			txs = sorted(
-				(MoneroMMGenTX.Submitted( self.cfg, Path(fn) ) for fn in files),
+			from .autosign import Signable
+			fns = Signable.xmr_transaction(self.asi).get_submitted()
+			return sorted(
+				(MoneroMMGenTX.Submitted(self.cfg, Path(fn)) for fn in fns),
 					key = lambda x: getattr(x.data,'submit_time',None) or x.data.create_time
-			)
-			if txs:
-				return txs[-1]
-			else:
-				self.die_no_tx('submitted', 0, self.asi.xmr_tx_dir)
+			)[-1]
 
 	class dump(wallet):
 		wallet_offline = True
