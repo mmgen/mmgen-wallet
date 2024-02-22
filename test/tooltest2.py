@@ -100,9 +100,9 @@ def fork_cmd(cmd_name,args,opts,stdin_input):
 		vmsg(cp.stderr.strip().decode())
 	if cp.returncode != 0:
 		import re
-		m = re.search(b'tool command returned (None|False)',cp.stdout)
+		m = re.search(b'tool command returned (None|False)',cp.stderr)
 		if m:
-			return { b'None': None, b'False': False }[m.group(1)]
+			return eval(m.group(1))
 		else:
 			die(2,f'Spawned program exited with error: {cp.stderr}')
 

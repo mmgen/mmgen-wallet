@@ -41,10 +41,6 @@ def launch(*, mod=None, func=None, package='mmgen'):
 		sys.stderr.write(yellow('\nEnd of file\n'))
 		sys.exit(1)
 	except Exception as e:
-
-		if os.getenv('MMGEN_EXEC_WRAPPER'):
-			raise
-
 		try:
 			errmsg = str(e.args[0])
 		except:
@@ -69,6 +65,9 @@ def launch(*, mod=None, func=None, package='mmgen'):
 				message = errmsg.strip() or e,
 				e = e))
 			+ '\n' )
+
+		if os.getenv('MMGEN_EXEC_WRAPPER'):
+			raise
 
 		sys.exit(d.exit_val)
 

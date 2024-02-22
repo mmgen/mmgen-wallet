@@ -38,7 +38,7 @@ def exec_wrapper_write_traceback(e,exit_val):
 	import sys,os
 
 	exc_line = (
-		repr(e) if type(e).__name__ in ('MMGenError','MMGenSystemExit') else
+		f'{type(e).__name__}({e.mmcode})' if type(e).__name__ in ('MMGenError','MMGenSystemExit') else
 		f'{type(e).__name__}: {e}')
 
 	c = exec_wrapper_get_colors()
@@ -68,13 +68,17 @@ def exec_wrapper_write_traceback(e,exit_val):
 		if 'SystemExit' in exc_line:
 			tb_lines.pop()
 
-		sys.stdout.write('{}\n{}\n'.format( c.yellow( '\n'.join(tb_lines) ), c.red(exc_line) ))
+		if os.getenv('EXEC_WRAPPER_EXIT_OK'):
+			sys.stdout.write(c.red(exc_line))
+		else:
+			sys.stdout.write('{}\n{}\n'.format(
+				c.yellow('\n'.join(tb_lines)),
+				c.red(exc_line)))
+			print(c.blue('{} script exited with error').format(
+				'Test' if os.path.dirname(sys.argv[0]) == 'test' else 'Spawned' ))
 
 		with open('test.err','w') as fp:
 			fp.write('\n'.join(tb_lines + [exc_line]))
-
-		print(c.blue('{} script exited with error').format(
-			'Test' if os.path.dirname(sys.argv[0]) == 'test' else 'Spawned' ))
 
 	else:
 		sys.stdout.write( c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n' )

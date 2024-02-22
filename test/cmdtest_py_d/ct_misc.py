@@ -169,7 +169,6 @@ class CmdTestHelp(CmdTestBase):
 
 	def usage(self):
 		t = self.spawn('mmgen-walletgen',['foo'])
-		t.expect('MMGenSystemExit(1)')
 		t.expect('USAGE: mmgen-walletgen')
 		t.req_exit_val = 1
 		return t
