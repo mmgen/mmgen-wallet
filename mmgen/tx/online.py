@@ -30,3 +30,7 @@ class OnlineSigned(Signed):
 			action  = f'broadcast this transaction to the {self.proto.coin} {self.proto.network.upper()} network',
 			expect  = 'YES' if self.cfg.quiet or self.cfg.yes else 'YES, I REALLY WANT TO DO THIS' )
 		msg('Sending transaction')
+
+class Sent(OnlineSigned):
+	desc = 'sent transaction'
+	ext = 'subtx'

@@ -58,8 +58,10 @@ class Completed(Base):
 		see twctl:import_token()
 		"""
 		from .unsigned import Unsigned
-		if ext == Unsigned.ext:
-			return Unsigned
+		from .online import Sent
+		for cls in (Unsigned, Sent):
+			if ext == getattr(cls, 'ext'):
+				return cls
 
 		if proto.tokensym:
 			from .online import OnlineSigned as Signed

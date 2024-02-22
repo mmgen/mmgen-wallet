@@ -175,8 +175,8 @@ async def main():
 		if tx3:
 			tx4 = await OnlineSignedTX(cfg=cfg,data=tx3.__dict__)
 			tx4.file.write(ask_write=False)
-			await tx4.send(exit_on_fail=True)
-			tx4.file.write(ask_write=False)
+			if await tx4.send():
+				tx4.file.write(ask_write=False)
 		else:
 			die(2,'Transaction could not be signed')
 	else:

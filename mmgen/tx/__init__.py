@@ -73,7 +73,8 @@ async def _get_obj_async( _clsname, _modname, *args, **kwargs ):
 	# signing.
 	if proto and proto.tokensym and clsname in (
 			'New',
-			'OnlineSigned'):
+			'OnlineSigned',
+			'Sent'):
 		from ..tw.ctl import TwCtl
 		kwargs['twctl'] = await TwCtl(cfg,proto)
 
@@ -92,4 +93,5 @@ NewTX          = _get_async('New',          'new')
 CompletedTX    = _get_async('Completed',    'completed')
 SignedTX       = _get_async('Signed',       'signed')
 OnlineSignedTX = _get_async('OnlineSigned', 'online')
+SentTX         = _get_async('Sent',         'online')
 BumpTX         = _get_async('Bump',         'bump')

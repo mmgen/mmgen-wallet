@@ -77,6 +77,7 @@ class Base(MMGenObject):
 	txid         = None
 	coin_txid    = None
 	timestamp    = None
+	sent_timestamp = None
 	blockcount   = None
 	locktime     = None
 	chain        = None
@@ -161,6 +162,9 @@ class Base(MMGenObject):
 
 	def add_timestamp(self):
 		self.timestamp = make_timestamp()
+
+	def add_sent_timestamp(self):
+		self.sent_timestamp = make_timestamp()
 
 	def add_blockcount(self):
 		self.blockcount = self.rpc.blockcount

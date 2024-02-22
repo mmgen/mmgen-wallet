@@ -56,7 +56,7 @@ if not cfg.status:
 
 async def main():
 
-	from .tx import OnlineSignedTX
+	from .tx import OnlineSignedTX, SentTX
 
 	tx = await OnlineSignedTX(
 		cfg        = cfg,
@@ -79,10 +79,11 @@ async def main():
 		if tx.add_comment(): # edits an existing comment, returns true if changed
 			tx.file.write(ask_write_default_yes=True)
 
-	await tx.send(exit_on_fail=True)
-	tx.file.write(
-		ask_overwrite = False,
-		ask_write     = False)
-	tx.print_contract_addr()
+	if await tx.send():
+		tx2 = await SentTX(cfg=cfg, data=tx.__dict__)
+		tx2.file.write(
+			ask_overwrite = False,
+			ask_write     = False)
+		tx2.print_contract_addr()
 
 async_run(main())

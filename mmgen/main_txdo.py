@@ -124,7 +124,7 @@ FMT CODES:
 
 cfg = Config(opts_data=opts_data)
 
-from .tx import NewTX,OnlineSignedTX
+from .tx import NewTX, SentTX
 from .tx.sign import txsign,get_seed_files,get_keyaddrlist,get_keylist
 
 seed_files = get_seed_files(cfg,cfg._args)
@@ -147,11 +147,11 @@ async def main():
 	tx3 = await txsign(cfg,tx2,seed_files,kl,kal)
 
 	if tx3:
-		tx4 = await OnlineSignedTX(cfg=cfg,data=tx3.__dict__)
-		tx4.file.write(ask_write=False)
-		await tx4.send(exit_on_fail=True)
-		tx4.file.write(ask_overwrite=False,ask_write=False)
-		tx4.print_contract_addr()
+		tx3.file.write(ask_write=False)
+		tx4 = await SentTX(cfg=cfg, data=tx3.__dict__)
+		if await tx4.send():
+			tx4.file.write(ask_overwrite=False,ask_write=False)
+			tx4.print_contract_addr()
 	else:
 		die(2,'Transaction could not be signed')
 

@@ -56,7 +56,7 @@ class TxInfo:
 					orange(self.strfmt_locktime(terse=True)) if tx.locktime else
 					green('None') ))
 
-			for attr,label in [('timestamp','Created:')]:
+			for attr,label in [('timestamp','Created:'),('sent_timestamp','Sent:')]:
 				if (val := getattr(tx,attr)) is not None:
 					_ = decode_timestamp(val)
 					yield f'{label:8} {make_timestr(_)} ({format_elapsed_hr(_)})\n'

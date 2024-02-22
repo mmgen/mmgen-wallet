@@ -72,6 +72,11 @@ class MMGenTxFile(MMGenObject):
 			self.chksum = HexStr(tx_data.pop(0))
 			assert self.chksum == make_chksum_6(' '.join(tx_data)),'file data does not match checksum'
 
+			if len(tx_data) == 7:
+				desc = 'sent timestamp'
+				(_, tx.sent_timestamp) = tx_data.pop(-1).split()
+				assert _ == 'Sent', 'invalid sent timestamp line'
+
 			if len(tx_data) == 6:
 				assert len(tx_data[-1]) == 64,'invalid coin TxID length'
 				desc = 'coin TxID'
@@ -185,6 +190,9 @@ class MMGenTxFile(MMGenObject):
 			if not tx.comment:
 				lines.append('-') # keep old tx files backwards compatible
 			lines.append(tx.coin_txid)
+
+		if tx.sent_timestamp:
+			lines.append(f'Sent {tx.sent_timestamp}')
 
 		self.chksum = make_chksum_6(' '.join(lines))
 		fmt_data = '\n'.join([self.chksum] + lines) + '\n'

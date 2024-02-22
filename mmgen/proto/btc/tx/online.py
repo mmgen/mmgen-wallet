@@ -12,15 +12,14 @@
 proto.btc.tx.online: Bitcoin online signed transaction class
 """
 
-import sys
-
 from ....tx import online as TxBase
-from ....util import msg,ymsg,rmsg,die
+from ....util import msg,die
+from ....color import orange
 from .signed import Signed
 
 class OnlineSigned(Signed,TxBase.OnlineSigned):
 
-	async def send(self,prompt_user=True,exit_on_fail=False):
+	async def send(self,prompt_user=True):
 
 		self.check_correct_chain()
 
@@ -49,6 +48,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 				ret = await self.rpc.call('sendrawtransaction',self.serialized)
 			except Exception as e:
 				errmsg = str(e)
+				nl = '\n'
 				if errmsg.count('Signature must use SIGHASH_FORKID'):
 					m = (
 						'The Aug. 1 2017 UAHF has activated on this chain.\n'
@@ -61,20 +61,19 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 					m = "Transaction with nLockTime {!r} can't be included in this block!".format(
 						self.strfmt_locktime(self.get_serialized_locktime()))
 				else:
-					m = errmsg
-				ymsg(m)
-				rmsg(f'Send of MMGen transaction {self.txid} failed')
-				if exit_on_fail:
-					sys.exit(1)
-				return False
+					m,nl = ('','')
+				msg(orange('\n'+errmsg))
+				die(2, f'{m}{nl}Send of MMGen transaction {self.txid} failed')
 			else:
 				assert ret == self.coin_txid, 'txid mismatch (after sending)'
 
 		msg(m.format(self.coin_txid.hl()))
-		self.add_timestamp()
+		self.add_sent_timestamp()
 		self.add_blockcount()
-		self.desc = 'sent transaction'
 		return True
 
 	def print_contract_addr(self):
 		pass
+
+class Sent(TxBase.Sent, OnlineSigned):
+	pass

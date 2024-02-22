@@ -12,14 +12,15 @@
 proto.eth.tx.online: Ethereum online signed transaction class
 """
 
-from ....util import msg,rmsg,die
+from ....util import msg,die
+from ....color import orange
 from ....tx import online as TxBase
 from .. import erigon_sleep
 from .signed import Signed,TokenSigned
 
 class OnlineSigned(Signed,TxBase.OnlineSigned):
 
-	async def send(self,prompt_user=True,exit_on_fail=False):
+	async def send(self,prompt_user=True):
 
 		self.check_correct_chain()
 
@@ -36,32 +37,22 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 			self.confirm_send()
 
 		if self.cfg.bogus_send:
-			ret = None
+			m = 'BOGUS transaction NOT sent: {}'
 		else:
 			try:
 				ret = await self.rpc.call('eth_sendRawTransaction','0x'+self.serialized)
-			except:
-				raise # TODO: raises immediately
-				ret = False # TODO: unreachable code
+			except Exception as e:
+				msg(orange('\n'+str(e)))
+				die(2, f'Send of MMGen transaction {self.txid} failed')
+			m = 'Transaction sent: {}'
+			assert ret == '0x'+self.coin_txid,'txid mismatch (after sending)'
+			await erigon_sleep(self)
 
-		if ret is False: # TODO: unreachable code
-			rmsg(f'Send of MMGen transaction {self.txid} failed')
-			if exit_on_fail:
-				import sys
-				sys.exit(1)
-			return False
-		else:
-			if self.cfg.bogus_send:
-				m = 'BOGUS transaction NOT sent: {}'
-			else:
-				m = 'Transaction sent: {}'
-				assert ret == '0x'+self.coin_txid,'txid mismatch (after sending)'
-				await erigon_sleep(self)
-			self.desc = 'sent transaction'
-			msg(m.format(self.coin_txid.hl()))
-			self.add_timestamp()
-			self.add_blockcount()
-			return True
+		msg(m.format(self.coin_txid.hl()))
+		self.add_sent_timestamp()
+		self.add_blockcount()
+
+		return True
 
 	def print_contract_addr(self):
 		if 'token_addr' in self.txobj:
@@ -80,3 +71,9 @@ class TokenOnlineSigned(TokenSigned,OnlineSigned):
 		t = Token(self.cfg,self.proto,o['token_addr'],o['decimals'])
 		o['amt'] = t.transferdata2amt(o['data'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
+
+class Sent(TxBase.Sent, OnlineSigned):
+	pass
+
+class TokenSent(TxBase.Sent, TokenOnlineSigned):
+	pass
