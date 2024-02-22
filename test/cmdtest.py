@@ -614,6 +614,7 @@ class CmdTestRunner:
 			timeout         = None,
 			pexpect_spawn   = None,
 			direct_exec     = False,
+			no_passthru_opts = False,
 			env             = {}):
 
 		desc = self.tg.test_name if cfg.names else self.gm.dpy_data[self.tg.test_name][1]
@@ -628,7 +629,7 @@ class CmdTestRunner:
 			self.pre_args +
 			([] if no_exec_wrapper else ['scripts/exec_wrapper.py']) +
 			[cmd_path] +
-			self.passthru_opts +
+			([] if no_passthru_opts else self.passthru_opts) +
 			self.tg.extra_spawn_args +
 			args )
 
@@ -968,9 +969,11 @@ class CmdTestRunner:
 			self.cmd_total += 1
 		elif ret == 'error':
 			die(2,red(f'\nTest {self.tg.test_name!r} failed'))
-		elif ret in ('skip','silent'):
+		elif ret in ('skip','skip_msg','silent'):
 			if ret == 'silent':
 				self.cmd_total += 1
+			elif ret == 'skip_msg':
+				ok('SKIP')
 		elif isinstance(ret,tuple) and ret[0] == 'skip_warn':
 			self.skipped_warnings.append(
 				'Test {!r} was skipped:\n  {}'.format(cmd,'\n  '.join(ret[1].split('\n'))))

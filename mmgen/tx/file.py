@@ -19,6 +19,7 @@
 """
 tx.file: Transaction file operations for the MMGen suite
 """
+import os
 
 from ..util import ymsg,make_chksum_6,die
 from ..obj import MMGenObject,HexStr,MMGenTxID,CoinTxID,MMGenTxComment
@@ -113,7 +114,7 @@ class MMGenTxFile(MMGenObject):
 				tx.proto.tokensym = tokensym
 
 			desc = 'metadata (4 items)'
-			txid,send_amt,tx.timestamp,blockcount = metadata
+			(txid, send_amt, tx.timestamp, blockcount) = metadata
 
 			desc = 'TxID in metadata'
 			tx.txid = MMGenTxID(txid)
@@ -193,6 +194,7 @@ class MMGenTxFile(MMGenObject):
 
 	def write(self,
 		add_desc              = '',
+		outdir                = None,
 		ask_write             = True,
 		ask_write_default_yes = False,
 		ask_tty               = True,
@@ -210,13 +212,14 @@ class MMGenTxFile(MMGenObject):
 		from ..fileutil import write_data_to_file
 		write_data_to_file(
 			cfg                   = self.tx.cfg,
-			outfile               = self.filename,
+			outfile               = os.path.join((outdir or ''), self.filename),
 			data                  = self.fmt_data,
 			desc                  = self.tx.desc + add_desc,
 			ask_overwrite         = ask_overwrite,
 			ask_write             = ask_write,
 			ask_tty               = ask_tty,
-			ask_write_default_yes = ask_write_default_yes )
+			ask_write_default_yes = ask_write_default_yes,
+			ignore_opt_outdir     = outdir)
 
 	@classmethod
 	def get_proto(cls,cfg,filename,quiet_open=False):

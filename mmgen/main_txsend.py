@@ -80,7 +80,9 @@ async def main():
 			tx.file.write(ask_write_default_yes=True)
 
 	await tx.send(exit_on_fail=True)
-	tx.file.write(ask_overwrite=False,ask_write=False)
+	tx.file.write(
+		ask_overwrite = False,
+		ask_write     = False)
 	tx.print_contract_addr()
 
 async_run(main())

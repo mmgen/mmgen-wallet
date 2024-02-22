@@ -69,7 +69,7 @@ def make_help(cfg,proto,opts_data,opt_filter):
 
 	pn = opts_data['prog_name']
 
-	from mmgen.help import help_notes_func
+	from ..help import help_notes_func
 	def help_notes(k):
 		return help_notes_func(proto,cfg,k)
 

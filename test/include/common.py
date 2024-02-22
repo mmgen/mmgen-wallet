@@ -171,13 +171,13 @@ def read_from_tmpfile(cfg,fn,binary=False):
 def joinpath(*args,**kwargs):
 	return os.path.join(*args,**kwargs)
 
-def ok():
+def ok(text='OK'):
 	if cfg.profile:
 		return
 	if cfg.verbose or cfg.exact_output:
-		gmsg('OK')
+		gmsg(text)
 	else:
-		msg(' OK')
+		msg(f' {text}')
 
 def cmp_or_die(s,t,desc=None):
 	if s != t:

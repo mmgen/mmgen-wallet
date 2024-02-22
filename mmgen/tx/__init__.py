@@ -71,7 +71,9 @@ async def _get_obj_async( _clsname, _modname, *args, **kwargs ):
 	# (see twctl:import_token()).
 	# No twctl required for the Unsigned and Signed(data=unsigned.__dict__) classes used during
 	# signing.
-	if proto and proto.tokensym and clsname in ('New','OnlineSigned'):
+	if proto and proto.tokensym and clsname in (
+			'New',
+			'OnlineSigned'):
 		from ..tw.ctl import TwCtl
 		kwargs['twctl'] = await TwCtl(cfg,proto)
 

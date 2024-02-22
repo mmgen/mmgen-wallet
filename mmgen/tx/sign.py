@@ -111,7 +111,7 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 def _pop_matching_fns(args,cmplist): # strips found args
 	return list(reversed([args.pop(args.index(a)) for a in reversed(args) if get_extension(a) in cmplist]))
 
-def get_tx_files(args):
+def get_tx_files(cfg, args):
 	from .unsigned import Unsigned
 	ret = _pop_matching_fns(args,[Unsigned.ext])
 	if not ret:

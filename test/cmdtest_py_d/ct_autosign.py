@@ -130,9 +130,10 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		t = self.spawn(
 			'mmgen-autosign',
-			self.opts +
-			([] if mn_desc == 'default' else [f'--mnemonic-fmt={mn_type}']) +
-			['setup'] )
+			self.opts
+			+ ([] if mn_desc == 'default' else [f'--mnemonic-fmt={mn_type}'])
+			+ ['setup'],
+			no_passthru_opts = True)
 
 		if use_dfl_wallet:
 			t.expect( 'Use default wallet for autosigning? (Y/n): ', 'y' )
@@ -177,7 +178,11 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 	def autosign_start_thread(self):
 		def run():
-			t = self.spawn('mmgen-autosign', self.opts + ['--full-summary','wait'], direct_exec=True)
+			t = self.spawn(
+				'mmgen-autosign',
+				self.opts + ['--full-summary','wait'],
+				direct_exec      = True,
+				no_passthru_opts = True)
 			self.write_to_tmpfile('autosign_thread_pid',str(t.ep.pid))
 		import threading
 		threading.Thread(target=run, name='Autosign wait loop').start()
@@ -213,6 +218,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 				oqmsg(gray('..done'))
 				break
 			time.sleep(0.5)
+		imsg('')
 		self.remove_device()
 
 	@property

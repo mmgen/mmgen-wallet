@@ -185,7 +185,7 @@ init_tests() {
 	t_bch="- $cmdtest_py --coin=bch --exclude regtest"
 
 	d_bch_tn="overall operations with emulated RPC data (Bitcoin Cash Node testnet)"
-	t_bch_tn="- $cmdtest_py --coin=bch --testnet=1 --exclude regtest"
+	t_bch_tn="- $cmdtest_py --coin=bch --testnet=1"
 
 	d_bch_rt="overall operations using the regtest network (Bitcoin Cash Node)"
 	t_bch_rt="- $cmdtest_py --coin=bch regtest"
@@ -200,7 +200,7 @@ init_tests() {
 
 	d_ltc_tn="overall operations with emulated RPC data (Litecoin testnet)"
 	t_ltc_tn="
-		- $cmdtest_py --coin=ltc --testnet=1 --exclude regtest
+		- $cmdtest_py --coin=ltc --testnet=1
 		- $cmdtest_py --coin=ltc --testnet=1 --segwit
 		- $cmdtest_py --coin=ltc --testnet=1 --segwit-random
 		- $cmdtest_py --coin=ltc --testnet=1 --bech32

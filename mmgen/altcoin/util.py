@@ -12,7 +12,7 @@
 altcoin.util: various altcoin-related utilities
 """
 
-from mmgen.util import die
+from ..util import die
 
 def decrypt_keystore(data,passwd,mac_algo=None,mac_params={}):
 	"""
