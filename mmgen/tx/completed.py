@@ -27,8 +27,7 @@ class Completed(Base):
 		super().__init__(cfg=cfg,*args,**kwargs)
 
 		if data:
-			data['twctl'] = self.twctl
-			self.__dict__ = data
+			self.__dict__ = data | {'twctl': self.twctl}
 			self.name = type(self).__name__
 		else:
 			from .file import MMGenTxFile

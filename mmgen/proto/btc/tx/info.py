@@ -69,6 +69,8 @@ class TxInfo(TxInfo):
 			}[sort]
 			if terse:
 				iwidth = max(len(str(int(e.amt))) for e in io)
+			else:
+				col1_w = len(str(len(io))) + 1
 			for n,e in enumerate(io_sorted()):
 				if is_input and blockcount:
 					confs = e.confs + blockcount - tx.blockcount
@@ -103,7 +105,7 @@ class TxInfo(TxInfo):
 							yield ('',  'confirmations:', f'{confs} (around {days} days)')
 						if not is_input and e.is_chg:
 							yield ('',  'change:',  green('True'))
-					yield '\n'.join('{:>3} {:<8} {}'.format(*d) for d in gen()) + '\n\n'
+					yield '\n'.join('{:>{w}} {:<8} {}'.format(*d,w=col1_w) for d in gen()) + '\n\n'
 
 		addr_w = max(len(e.addr) for f in (tx.inputs,tx.outputs) for e in f)
 

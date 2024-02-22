@@ -1155,13 +1155,14 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def token_bal1(self):
 		return self.token_bal(n='1')
 
-	def token_txcreate(self,args=[],token='',inputs='1',fee='50G'):
+	def token_txcreate(self,args=[],token='',inputs='1',fee='50G',file_desc='Unsigned transaction'):
 		return self.txcreate_ui_common(
 			self.spawn('mmgen-txcreate', self.eth_args + ['--token='+token,'-B','--fee='+fee] + args),
 			menu              = [],
 			inputs            = inputs,
 			input_sels_prompt = 'to spend from',
-			add_comment       = tx_comment_lat_cyr_gr )
+			add_comment       = tx_comment_lat_cyr_gr,
+			file_desc         = file_desc)
 	def token_txsign(self,ext='',token=''):
 		return self.txsign(ni=True,ext=ext,add_args=['--token='+token])
 	def token_txsend(self,ext='',token=''):

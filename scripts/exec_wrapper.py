@@ -81,7 +81,7 @@ def exec_wrapper_write_traceback(e,exit_val):
 
 def exec_wrapper_end_msg():
 	if (
-		exec_wrapper_os.getenv('EXEC_WRAPPER_SPAWN')
+		exec_wrapper_os.getenv('EXEC_WRAPPER_DO_RUNTIME_MSG')
 		and not exec_wrapper_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') ):
 		c = exec_wrapper_get_colors()
 		# write to stdout to ensure script output gets to terminal first

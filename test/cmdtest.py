@@ -590,7 +590,7 @@ class CmdTestRunner:
 			'MMGEN_NO_LICENSE': '1',
 			'MMGEN_BOGUS_SEND': '1',
 			'MMGEN_TEST_SUITE_PEXPECT': '1',
-			'EXEC_WRAPPER_SPAWN':'1',
+			'EXEC_WRAPPER_DO_RUNTIME_MSG':'1',
 			# if cmdtest.py itself is running under exec_wrapper, disable writing of traceback file for spawned script
 			'EXEC_WRAPPER_TRACEBACK': '' if os.getenv('MMGEN_EXEC_WRAPPER') else '1',
 		})
@@ -615,6 +615,7 @@ class CmdTestRunner:
 			pexpect_spawn   = None,
 			direct_exec     = False,
 			no_passthru_opts = False,
+			spawn_env_override = None,
 			env             = {}):
 
 		desc = self.tg.test_name if cfg.names else self.gm.dpy_data[self.tg.test_name][1]
@@ -679,7 +680,7 @@ class CmdTestRunner:
 		send_delay = 0.4 if pexpect_spawn is True or cfg.buf_keypress else None
 		pexpect_spawn = pexpect_spawn if pexpect_spawn is not None else bool(cfg.pexpect_spawn)
 
-		spawn_env = dict(self.tg.spawn_env)
+		spawn_env = dict(spawn_env_override or self.tg.spawn_env)
 		spawn_env.update({
 			'MMGEN_HOLD_PROTECT_DISABLE': '' if send_delay else '1',
 			'MMGEN_TEST_SUITE_POPEN_SPAWN': '' if pexpect_spawn else '1',
