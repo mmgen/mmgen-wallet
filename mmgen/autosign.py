@@ -273,9 +273,14 @@ class Autosign:
 
 	have_msg_dir = False
 
-	def __init__(self,cfg):
+	def init_cfg(self): # see test/overlay/fakemods/mmgen/autosign.py
+		self.mountpoint     = Path(self.cfg.mountpoint or self.dfl_mountpoint)
+		self.wallet_dir     = Path(self.cfg.wallet_dir or self.dfl_wallet_dir)
+		self.dev_label_path = Path(self.dfl_dev_label_dir) / self.dev_label
+		self.mount_cmd      = 'mount'
+		self.umount_cmd     = 'umount'
 
-		self.cfg = cfg
+	def __init__(self,cfg):
 
 		if cfg.mnemonic_fmt:
 			if cfg.mnemonic_fmt not in self.mn_fmts:
@@ -283,21 +288,8 @@ class Autosign:
 					cfg.mnemonic_fmt,
 					fmt_list( self.mn_fmts, fmt='no_spc' ) ))
 
-		if pfx := cfg.test_suite_root_pfx:
-			subdir = 'online' if cfg.online else 'offline'
-			self.mountpoint     = Path(f'{pfx}/{subdir}/{self.dfl_mountpoint}')
-			self.wallet_dir     = Path(f'{pfx}/{subdir}/{self.dfl_wallet_dir}')
-			self.dev_label_path = Path(f'{pfx}/{subdir}/{self.dfl_dev_label_dir}') / self.dev_label
-			# mount --type=fuse-ext2 --options=rw+ ### current fuse-ext2 (0.4 29) is buggy - can’t use
-			self.fs_image_path  = Path(f'{pfx}/removable_device_image')
-			self.mount_cmd      = f'sudo mount {self.fs_image_path}'
-			self.umount_cmd     = 'sudo umount'
-		else:
-			self.mountpoint     = Path(cfg.mountpoint or self.dfl_mountpoint)
-			self.wallet_dir     = Path(cfg.wallet_dir or self.dfl_wallet_dir)
-			self.dev_label_path = Path(self.dfl_dev_label_dir) / self.dev_label
-			self.mount_cmd      = 'mount'
-			self.umount_cmd     = 'umount'
+		self.cfg = cfg
+		self.init_cfg()
 
 		self.tx_dir  = self.mountpoint / 'tx'
 		self.msg_dir = self.mountpoint / 'msg'
