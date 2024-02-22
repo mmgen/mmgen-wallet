@@ -25,8 +25,8 @@ from subprocess import run,DEVNULL
 from pathlib import Path
 
 from mmgen.cfg import Config
-from mmgen.color import red,green,blue,yellow,purple,gray
-from mmgen.util import msg,suf,die
+from mmgen.color import red,green,blue,yellow,cyan,orange,purple,gray
+from mmgen.util import msg,suf,die,indent
 from mmgen.led import LEDControl
 from mmgen.autosign import Autosign, Signable
 
@@ -577,47 +577,45 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		return self.run_setup(mn_type='mmgen',use_dfl_wallet=None)
 
 	def sign_live(self):
-		return self.do_sign_live([])
+		return self.do_sign_live()
 
 	def sign_live_led(self):
-		return self.do_sign_live(['--led'])
+		return self.do_sign_live(['--led'], 'The LED should start blinking slowly now')
 
 	def sign_live_stealth_led(self):
-		return self.do_sign_live(['--stealth-led'])
+		return self.do_sign_live(['--stealth-led'], 'You should see no LED activity now')
 
-	def do_sign_live(self,led_opts):
+	def do_sign_live(self,led_opts=None,led_msg=None):
 
 		def prompt_remove():
-			omsg_r(blue('\nRemove removable device and then hit ENTER '))
+			omsg_r(orange('\nExtract removable device and then hit ENTER '))
 			input()
 
 		def prompt_insert_sign(t):
-			omsg(blue(insert_msg))
+			omsg(orange(insert_msg))
 			t.expect(f'{self.tx_count} transactions signed')
 			if self.bad_tx_count:
 				t.expect(f'{self.bad_tx_count} transactions failed to sign')
 			t.expect('Waiting')
 
 		if led_opts:
-			opts_msg = "'" + ' '.join(led_opts) + "'"
-			info_msg = f"Running 'mmgen-autosign wait' with {led_opts[0]}. " + {
-						'--led':         "The LED should start blinking slowly now",
-						'--stealth-led': "You should see no LED activity now"
-					}[led_opts[0]]
+			opts_msg = '‘' + ' '.join(led_opts) + '’'
+			info_msg = 'Running ‘mmgen-autosign wait’ with {}. {}'.format(opts_msg, led_msg)
 			insert_msg = 'Insert removable device and watch for fast LED activity during signing'
 		else:
 			opts_msg = 'no LED'
-			info_msg = "Running 'mmgen-autosign wait'"
+			info_msg = 'Running ‘mmgen-autosign wait’'
 			insert_msg = 'Insert removable device '
 
-		omsg(purple(f'Running autosign test with {opts_msg}'))
+		self.spawn('', msg_only=True)
 
 		self.do_umount()
 		prompt_remove()
-		omsg(green(info_msg))
+		omsg('\n' + cyan(indent(info_msg)))
 		t = self.spawn(
 			'mmgen-autosign',
-			self.opts + led_opts + ['--quiet','--no-summary','wait'])
+			self.opts + (led_opts or []) + ['--quiet', '--no-summary', 'wait'],
+			no_msg = True)
 		if not cfg.exact_output:
 			omsg('')
 		prompt_insert_sign(t)
@@ -630,7 +628,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		t.kill(2) # 2 = SIGINT
 		t.req_exit_val = 1
 		if self.simulate_led and led_opts:
-			t.expect("Stopping LED")
+			t.expect('Stopping LED')
 		return t
 
 class CmdTestAutosignLiveSimulate(CmdTestAutosignLive):
