@@ -32,7 +32,7 @@ opts_data = {
 		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
--a, --fee-adjust=  f  Adjust transaction fee by factor 'f' (see below)
+-A, --fee-adjust=  f  Adjust transaction fee by factor 'f' (see below)
 -B, --no-blank        Don't blank screen before displaying unspent outputs
 -c, --comment-file=f  Source the transaction's comment from file 'f'
 -C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
@@ -96,6 +96,6 @@ async def main():
 	tx2.file.write(
 		ask_write             = not cfg.yes,
 		ask_overwrite         = not cfg.yes,
-		ask_write_default_yes = False )
+		ask_write_default_yes = False)
 
 async_run(main())

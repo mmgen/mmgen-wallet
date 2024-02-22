@@ -28,7 +28,7 @@ from mmgen.cfg import Config
 from mmgen.color import red,green,blue,yellow,purple,gray
 from mmgen.util import msg,suf,die
 from mmgen.led import LEDControl
-from mmgen.autosign import Autosign
+from mmgen.autosign import Autosign, Signable
 
 from ..include.common import (
 	cfg,
@@ -56,7 +56,7 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	def __init__(self,trunner,cfgs,spawn):
 
-		super().__init__(trunner,cfgs,spawn)
+		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 
 		if trunner is None:
 			return
@@ -114,7 +114,12 @@ class CmdTestAutosignBase(CmdTestBase):
 		stop_test_daemons(*self.network_ids)
 		return 'ok'
 
-	def run_setup(self,mn_type=None,mn_file=None,use_dfl_wallet=False):
+	def run_setup(
+			self,
+			mn_type        = None,
+			mn_file        = None,
+			use_dfl_wallet = False,
+			passwd         = 'abc'):
 		mn_desc = mn_type or 'default'
 		mn_type = mn_type or 'mmgen'
 
@@ -126,7 +131,7 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		if use_dfl_wallet:
 			t.expect( 'Use default wallet for autosigning? (Y/n): ', 'y' )
-			t.passphrase( 'MMGen wallet', 'abc' )
+			t.passphrase('MMGen wallet', passwd)
 		else:
 			if use_dfl_wallet is not None: # None => no dfl wallet present
 				t.expect( 'Use default wallet for autosigning? (Y/n): ', 'n' )
@@ -166,7 +171,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 	def autosign_start_thread(self):
 		def run():
-			t = self.spawn('mmgen-autosign', self.opts + ['wait'], direct_exec=True)
+			t = self.spawn('mmgen-autosign', self.opts + ['--full-summary','wait'], direct_exec=True)
 			self.write_to_tmpfile('autosign_thread_pid',str(t.ep.pid))
 		import threading
 		threading.Thread(target=run, name='Autosign wait loop').start()
@@ -456,26 +461,27 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.do_umount()
 		return 'ok'
 
-	def do_sign(self,args,have_msg=False,tx_name='transaction'):
-		t = self.spawn('mmgen-autosign', self.opts + args )
+	def do_sign(self, args, have_msg=False):
+		tx_desc = Signable.transaction.desc
+		t = self.spawn('mmgen-autosign', self.opts + args)
 		t.expect(
-			f'{self.tx_count} {tx_name}{suf(self.tx_count)} signed' if self.tx_count else
-			'No unsigned transactions' )
+			f'{self.tx_count} {tx_desc}{suf(self.tx_count)} signed' if self.tx_count else
+			f'No unsigned {tx_desc}s')
 
 		if self.bad_tx_count:
-			t.expect(f'{self.bad_tx_count} {tx_name}{suf(self.bad_tx_count)} failed to sign')
+			t.expect(f'{self.bad_tx_count} {tx_desc}{suf(self.bad_tx_count)} failed to sign')
 			t.req_exit_val = 1
 
 		if have_msg:
 			t.expect(
 				f'{self.good_msg_count} message file{suf(self.good_msg_count)}{{0,1}} signed'
 					if self.good_msg_count else
-				'No unsigned message files', regex=True )
+				'No unsigned message files', regex=True)
 
 			if self.bad_msg_count:
 				t.expect(
 					f'{self.bad_msg_count} message file{suf(self.bad_msg_count)}{{0,1}} failed to sign',
-					regex = True )
+					regex = True)
 				t.req_exit_val = 1
 
 		if 'wait' in args:

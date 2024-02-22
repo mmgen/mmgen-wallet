@@ -61,7 +61,7 @@ async def main():
 	tx = await OnlineSignedTX(
 		cfg        = cfg,
 		filename   = infile,
-		quiet_open = True )
+		quiet_open = True)
 
 	from .rpc import rpc_init
 	tx.rpc = await rpc_init(cfg,tx.proto)

@@ -152,9 +152,9 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 				'tool_encrypt.in.mmenc': 'tool_encrypt',
 			},
 	},
-	'11': {},
-	'12': {},
-	'13': {},
+	'11': {}, # wallet
+	'12': {}, # wallet
+	'13': {}, # wallet
 	'14': { 'kapasswd':      'Maxwell',
 			'wpasswd':       'The Halving',
 			'addr_idx_list': '61,998,502-504,7-9',
@@ -183,8 +183,8 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 				pwfile: 'passchg_dfl_wallet',
 			},
 	},
-	'17': {},
-	'18': {},
+	'17': {}, # regtest
+	'18': {}, # autosign
 	'19': { 'wpasswd':'abc' },
 	'20': { 'wpasswd':       'Vsize it',
 			'addr_idx_list': '1-8',
@@ -206,19 +206,19 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 				'sigtx': 'txsign6',
 		},
 	},
-	'22': {},
-	'23': {},
-	'26': {},
-	'27': {},
-	'28': {},
+	'22': {}, # ethdev
+	'23': {}, # seedsplit
+	'26': {}, # ref_3seed
+	'27': {}, # ref_3seed
+	'28': {}, # ref_3seed
 	'29': {}, # xmrwallet
-	'31': {},
-	'32': {},
-	'33': {},
-	'34': {},
-	'39': {},
-	'40': {},
-	'41': {},
+	'31': {}, # ref_tx
+	'32': {}, # ref_tx
+	'33': {}, # ref_tx
+	'34': {}, # ref_tx
+	'39': {}, # xmr_autosign
+	'40': {}, # cfgfile
+	'41': {}, # opts
 	'99': {}, # dummy
 }
 

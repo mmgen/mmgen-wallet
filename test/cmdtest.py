@@ -195,13 +195,13 @@ po = Config(opts_data=opts_data,parse_only=True)._parsed_opts
 data_dir = Config.test_datadir
 
 # step 1: delete data_dir symlink in ./test;
-if not po.user_opts.get('skipping_deps'):
+if not po.user_opts.get('skip_deps'):
 	try:
 		os.unlink(data_dir)
 	except:
 		pass
 
-# step 2: opts.init will create new data_dir in ./test (if not cfg.skipping_deps)
+# step 2: opts.init will create new data_dir in ./test (if not po.user_opts['skip_deps'])
 cfg = Config(opts_data=opts_data)
 
 if cfg.no_altcoin and cfg.coin != 'BTC':

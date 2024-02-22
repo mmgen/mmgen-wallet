@@ -36,9 +36,8 @@ class Signable:
 			self.parent = parent
 			self.cfg = parent.cfg
 			self.dir = getattr(parent,self.dir_name)
-			self.long_desc = (
-				'non-Monero transaction' if self.desc == 'transaction' and 'XMR' in self.parent.coins else
-				self.desc)
+			self.long_desc = getattr(self, 'xmr_desc', self.desc) if 'XMR' in self.parent.coins else self.desc
+			self.name = type(self).__name__
 
 		@property
 		def unsigned(self):
@@ -68,6 +67,7 @@ class Signable:
 
 	class transaction(base):
 		desc = 'transaction'
+		xmr_desc = 'non-Monero transaction'
 		rawext = 'rawtx'
 		sigext = 'sigtx'
 		dir_name = 'tx_dir'
@@ -289,7 +289,7 @@ class Autosign:
 	async def check_daemons_running(self):
 		from .protocol import init_proto
 		for coin in self.coins:
-			proto = init_proto( self.cfg,  coin, testnet=self.cfg.network=='testnet', need_amt=True )
+			proto = init_proto(self.cfg,  coin, network=self.cfg.network, need_amt=True)
 			if proto.sign_mode == 'daemon':
 				self.cfg._util.vmsg(f'Checking {coin} daemon')
 				from .rpc import rpc_init
