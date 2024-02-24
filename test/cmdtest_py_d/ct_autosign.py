@@ -40,7 +40,9 @@ from ..include.common import (
 	stop_test_daemons,
 	joinpath,
 	imsg,
-	read_from_file
+	read_from_file,
+	silence,
+	end_silence,
 )
 from .common import ref_dir,dfl_words_file,dfl_bip39_file
 
@@ -156,6 +158,17 @@ class CmdTestAutosignBase(CmdTestBase):
 		t.written_to_file('Autosign wallet')
 		return t
 
+	@property
+	def device_inserted(self):
+		return self.asi.dev_label_path.exists()
+
+	def insert_device(self):
+		self.asi.dev_label_path.touch()
+
+	def remove_device(self):
+		if self.asi.dev_label_path.exists():
+			self.asi.dev_label_path.unlink()
+
 	def _mount_ops(self, loc, cmd, *args, **kwargs):
 		return getattr(getattr(self,loc),cmd)(*args, silent=self.silent_mount, **kwargs)
 
@@ -222,17 +235,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			time.sleep(0.5)
 		imsg('')
 		self.remove_device()
-
-	@property
-	def device_inserted(self):
-		return self.asi.dev_label_path.exists()
-
-	def insert_device(self):
-		self.asi.dev_label_path.touch()
-
-	def remove_device(self):
-		if self.asi.dev_label_path.exists():
-			self.asi.dev_label_path.unlink()
+		return 'ok'
 
 	@property
 	def device_inserted_online(self):
@@ -387,14 +390,16 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		if op == 'set_count':
 			return
 
+		silence()
 		self.do_mount()
+		end_silence()
 
 		for coindir,fn in data:
 			src = joinpath(ref_dir,coindir,fn)
 			if cfg.debug_utf8:
 				ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
 				fn = fn[:-len(ext)] + '-α' + ext
-			target = joinpath(self.asi.mountpoint,'tx',fn)
+			target = joinpath(self.asi.tx_dir, fn)
 			if not op == 'remove_signed':
 				shutil.copyfile(src,target)
 			try:
@@ -419,7 +424,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.do_mount()
 		# create or delete 2 bad tx files
 		self.spawn('',msg_only=True)
-		fns = [joinpath(self.asi.mountpoint,'tx',f'bad{n}.rawtx') for n in (1,2)]
+		fns = [joinpath(self.asi.tx_dir, f'bad{n}.rawtx') for n in (1,2)]
 		if op == 'create':
 			for fn in fns:
 				with open(fn,'w') as fp:

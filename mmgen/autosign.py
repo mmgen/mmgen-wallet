@@ -13,6 +13,7 @@ autosign: Auto-sign MMGen transactions, message files and XMR wallet output file
 """
 
 import sys,os,asyncio
+from stat import S_ISDIR,S_IWUSR,S_IRUSR
 from pathlib import Path
 from subprocess import run,DEVNULL
 
@@ -369,8 +370,6 @@ class Autosign:
 		return self._wallet_files
 
 	def do_mount(self,silent=False,no_dir_chk=False,no_xmr_chk=False):
-
-		from stat import S_ISDIR,S_IWUSR,S_IRUSR
 
 		def check_dir(cdir):
 			try:
