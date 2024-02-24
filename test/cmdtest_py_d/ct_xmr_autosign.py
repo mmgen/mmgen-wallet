@@ -83,9 +83,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		('import_key_images2',       'importing signed key images into Alice’s online wallets'),
 		('sync_chkbal3',             'syncing Alice’s wallets and checking balance'),
 		('txlist',                   'listing Alice’s submitted transactions'),
-		('check_tx_dirs',            'cleaning and checking signable file directories'),
 		('autosign_kill_thread',     'stopping autosign wait loop'),
 		('stop_daemons',             'stopping all wallet and coin daemons'),
+		('check_tx_dirs',            'cleaning and checking signable file directories'),
 		('view',                     'viewing Alice’s wallet in offline mode (wallet #1)'),
 		('listview',                 'list-viewing Alice’s wallet in offline mode (wallet #2)'),
 	)
@@ -382,16 +382,18 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 
 	def check_tx_dirs(self):
 
-		self.do_mount_online()
+		self.insert_device()
+		self.do_mount()
 		before = '\n'.join(self._gen_listing())
-		self.do_umount_online()
+		self.do_umount()
 
 		t = self.spawn('mmgen-autosign', self.opts + ['clean'])
 		t.read()
 
-		self.do_mount_online()
+		self.do_mount()
 		after = '\n'.join(self._gen_listing())
-		self.do_umount_online()
+		self.do_umount()
+		self.remove_device()
 
 		imsg(f'\nBefore cleaning:\n{before}')
 		imsg(f'\nAfter cleaning:\n{after}')

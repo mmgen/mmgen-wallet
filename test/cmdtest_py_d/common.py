@@ -124,9 +124,9 @@ def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete
 		if delete or delete_all:
 			if (cfg.exact_output or cfg.verbose) and not cfg.quiet:
 				if delete_all:
-					msg(f'Deleting all *{dot}{ext} files in {tdir!r}')
+					msg(f'Deleting all *{dot}{ext} files in ‘{tdir}’')
 				else:
-					msg(f'Multiple *{dot}{ext} files in {tdir!r} - deleting')
+					msg(f'Multiple *{dot}{ext} files in ‘{tdir}’ - deleting')
 			for f in flist:
 				os.unlink(f)
 		return False

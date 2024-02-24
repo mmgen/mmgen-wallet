@@ -80,22 +80,22 @@ class Signable:
 				b = '  {}\n'.format('\n  '.join(self.gen_bad_list(sorted(bad_files,key=lambda f: f.name))))
 			))
 
-		def die_wrong_num_txs(self, desc, msg=None, show_dir=False):
-			num_txs = len(getattr(self, desc))
+		def die_wrong_num_txs(self, tx_type, msg=None, desc=None, show_dir=False):
+			num_txs = len(getattr(self, tx_type))
 			die('AutosignTXError', "{m}{a} {b} transaction{c} {d} {e}!".format(
 				m = msg + '\n' if msg else '',
 				a = 'One' if num_txs == 1 else 'More than one' if num_txs else 'No',
-				b = desc,
+				b = desc or tx_type,
 				c = suf(num_txs),
 				d = 'already present' if num_txs else 'present',
 				e = f'in ‘{getattr(self.parent, self.dir_name)}’' if show_dir else 'on removable device',
 			))
 
-		def get_unsubmitted(self, desc='unsubmitted'):
+		def get_unsubmitted(self, tx_type='unsubmitted'):
 			if len(self.unsubmitted) == 1:
 				return self.unsubmitted[0]
 			else:
-				self.die_wrong_num_txs(desc)
+				self.die_wrong_num_txs(tx_type)
 
 		def get_submitted(self):
 			if len(self.submitted) == 0:
@@ -474,6 +474,8 @@ class Autosign:
 			for val in ret:
 				if isinstance(val,str):
 					msg(val)
+			if self.cfg.test_suite_autosign_threaded:
+				await asyncio.sleep(1)
 			self.do_umount()
 			self.led.set(('standby','off','error')[(not ret)*2 or bool(self.cfg.stealth_led)])
 			return all(ret)
@@ -641,8 +643,8 @@ class Autosign:
 	async def main_loop(self):
 		if not self.cfg.stealth_led:
 			self.led.set('standby')
-		silent = self.cfg.test_suite_autosign_threaded
-		n = 1 if silent else 0
+		threaded = self.cfg.test_suite_autosign_threaded
+		n = 1 if threaded else 0
 		prev_status = False
 		while True:
 			status = self.get_insert_status()
@@ -652,8 +654,8 @@ class Autosign:
 			prev_status = status
 			if not n % 10:
 				msg_r(f"\r{' '*17}\rWaiting")
-			await asyncio.sleep(1)
-			if not silent:
+			await asyncio.sleep(0.2 if threaded else 1)
+			if not threaded:
 				msg_r('.')
 				n += 1
 

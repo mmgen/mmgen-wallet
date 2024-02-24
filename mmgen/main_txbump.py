@@ -134,7 +134,7 @@ async def main():
 	tx = await BumpTX(
 		cfg  = cfg,
 		data = orig_tx.__dict__,
-		send = sign_and_send,
+		check_sent = cfg.autosign or sign_and_send,
 		twctl = await TwCtl(cfg,orig_tx.proto) if orig_tx.proto.tokensym else None )
 
 	from .rpc import rpc_init
@@ -180,6 +180,9 @@ async def main():
 		else:
 			die(2,'Transaction could not be signed')
 	else:
-		tx.file.write(ask_write=not cfg.yes,ask_write_default_yes=False,ask_overwrite=not cfg.yes)
+		tx.file.write(
+			ask_write             = not cfg.yes,
+			ask_write_default_yes = False,
+			ask_overwrite         = not cfg.yes)
 
 async_run(main())

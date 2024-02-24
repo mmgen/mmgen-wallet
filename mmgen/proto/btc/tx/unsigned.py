@@ -64,10 +64,9 @@ class Unsigned(Completed,TxBase.Unsigned):
 			ymsg(self.rpc.daemon.sigfail_errmsg(e))
 			return False
 
-		from ....tx import SignedTX
-
 		try:
 			self.update_serialized(ret['hex'])
+			from ....tx import SignedTX
 			new = await SignedTX(cfg=self.cfg,data=self.__dict__)
 			tx_decoded = await self.rpc.call( 'decoderawtransaction', ret['hex'] )
 			new.compare_size_and_estimated_size(tx_decoded)

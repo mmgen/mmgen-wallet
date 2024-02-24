@@ -334,22 +334,22 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		return 'ok'
 
 	def _wait_signed(self,desc):
-		oqmsg_r(gray(f'→ offline wallet{"s" if desc.endswith("s") else ""} signing {desc}'))
+		oqmsg_r(gray(f'→ offline wallet{"s" if desc.endswith("s") else ""} waiting for {desc}'))
 		assert not self.device_inserted, f'‘{self.asi.dev_label_path}’ is inserted!'
 		assert not self.asi.mountpoint.is_mount(), f'‘{self.asi.mountpoint}’ is mounted!'
 		self.insert_device()
 		while True:
 			oqmsg_r(gray('.'))
 			if self.asi.mountpoint.is_mount():
-				oqmsg_r(gray('..working..'))
+				oqmsg_r(gray(' signing '))
 				break
-			time.sleep(0.5)
+			time.sleep(0.2)
 		while True:
-			oqmsg_r(gray('.'))
+			oqmsg_r(gray('>'))
 			if not self.asi.mountpoint.is_mount():
-				oqmsg(gray('..done'))
+				oqmsg(gray(' done'))
 				break
-			time.sleep(0.5)
+			time.sleep(0.2)
 		imsg('')
 		self.remove_device()
 		return 'ok'
@@ -364,6 +364,12 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 	def remove_device_online(self):
 		if self.asi_online.dev_label_path.exists():
 			self.asi_online.dev_label_path.unlink()
+
+	def do_mount_online(self, *args, **kwargs):
+		return self._mount_ops('asi_online', 'do_mount', *args, **kwargs)
+
+	def do_umount_online(self, *args, **kwargs):
+		return self._mount_ops('asi_online', 'do_umount', *args, **kwargs)
 
 class CmdTestAutosign(CmdTestAutosignBase):
 	'autosigning transactions for all supported coins'

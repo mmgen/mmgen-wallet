@@ -31,7 +31,7 @@ class Completed(Base):
 			self.name = type(self).__name__
 		else:
 			from .file import MMGenTxFile
-			MMGenTxFile(self).parse(filename,quiet_open=quiet_open)
+			MMGenTxFile(self).parse(str(filename), quiet_open=quiet_open)
 
 			self.check_serialized_integrity()
 
@@ -41,6 +41,8 @@ class Completed(Base):
 			if self.check_sigs() != self.signed:
 				from ..util import die
 				die(1,'Transaction is {}signed!'.format('not ' if self.signed else ''))
+
+			self.infile = filename
 
 	@property
 	def file(self):

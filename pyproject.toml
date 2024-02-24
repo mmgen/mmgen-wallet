@@ -23,6 +23,7 @@ ignore = [
 ]
 ignored-modules = [ # ignored for no-member, otherwise checked
 	"mmgen.proto.secp256k1.secp256k1",
+	"mmgen.autosign", # tx_dir, etc. created dynamically
 	"mmgen.term",
 	"msvcrt",
 	"gmpy2",

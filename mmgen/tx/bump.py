@@ -21,7 +21,7 @@ class Bump(Completed,New):
 	ext  = 'rawtx'
 	bump_output_idx = None
 
-	def __init__(self,send,*args,**kwargs):
+	def __init__(self,check_sent,*args,**kwargs):
 
 		super().__init__(*args,**kwargs)
 
@@ -29,10 +29,11 @@ class Bump(Completed,New):
 			die(1,f'Transaction {self.txid} is not replaceable')
 
 		# If sending, require original tx to be sent
-		if send and not self.coin_txid:
+		if check_sent and not self.coin_txid:
 			die(1,'Transaction {self.txid!r} was not broadcast to the network')
 
 		self.coin_txid = ''
+		self.sent_timestamp = None
 
 	def check_sufficient_funds_for_bump(self):
 		if not [o.amt for o in self.outputs if o.amt >= self.min_fee]:
