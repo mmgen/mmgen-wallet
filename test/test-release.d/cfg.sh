@@ -154,7 +154,7 @@ init_tests() {
 	t_etc="parity $cmdtest_py --coin=etc ethdev"
 
 	d_autosign="transaction and message autosigning"
-	t_autosign="- $cmdtest_py autosign"
+	t_autosign="- $cmdtest_py autosign autosign_clean"
 
 	d_autosign_btc="transaction and message autosigning (Bitcoin only)"
 	t_autosign_btc="- $cmdtest_py autosign_btc"
@@ -164,7 +164,7 @@ init_tests() {
 
 	d_btc="overall operations with emulated RPC data (Bitcoin)"
 	t_btc="
-		- $cmdtest_py --exclude regtest,autosign,ref_altcoin
+		- $cmdtest_py --exclude regtest,autosign,autosign_clean,ref_altcoin
 		- $cmdtest_py --segwit
 		- $cmdtest_py --segwit-random
 		- $cmdtest_py --bech32

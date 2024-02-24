@@ -32,6 +32,7 @@ cmd_groups_dfl = {
 	'tool':             ('CmdTestTool',{'full_data':True}),
 	'input':            ('CmdTestInput',{}),
 	'output':           ('CmdTestOutput',{'modname':'misc','full_data':True}),
+	'autosign_clean':   ('CmdTestAutosignClean', {'modname':'autosign'}),
 	'autosign':         ('CmdTestAutosign',{}),
 	'regtest':          ('CmdTestRegtest',{}),
 #	'chainsplit':       ('CmdTestChainsplit',{}),
@@ -216,6 +217,7 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 	'32': {}, # ref_tx
 	'33': {}, # ref_tx
 	'34': {}, # ref_tx
+	'38': {}, # autosign_clean
 	'39': {}, # xmr_autosign
 	'40': {}, # cfgfile
 	'41': {}, # opts

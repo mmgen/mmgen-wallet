@@ -26,7 +26,7 @@ from pathlib import Path
 
 from mmgen.cfg import Config
 from mmgen.color import red,green,blue,yellow,cyan,orange,purple,gray
-from mmgen.util import msg,suf,die,indent
+from mmgen.util import msg,suf,die,indent,fmt
 from mmgen.led import LEDControl
 from mmgen.autosign import Autosign, Signable
 
@@ -107,10 +107,6 @@ class CmdTestAutosignBase(CmdTestBase):
 		run(['truncate', '--size=10M', img_file], check=True)
 		run(['/sbin/mkfs.ext2', '-E', f'root_owner={os.getuid()}:{os.getgid()}', img_file],
 			stdout=redir, stderr=redir, check=True)
-		self.do_mount(no_dir_chk=True)
-		self.asi.tx_dir.mkdir()
-		self.asi.msg_dir.mkdir()
-		self.do_umount()
 
 	def start_daemons(self):
 		self.spawn('',msg_only=True)
@@ -178,11 +174,132 @@ class CmdTestAutosignBase(CmdTestBase):
 	def do_umount(self, *args, **kwargs):
 		return self._mount_ops('asi', 'do_umount', *args, **kwargs)
 
-	def do_mount_online(self, *args, **kwargs):
-		return self._mount_ops('asi_online', 'do_mount', *args, **kwargs)
+	def _gen_listing(self):
+		for k in self.asi.dirs:
+			d = getattr(self.asi,k)
+			if d.is_dir():
+				yield '{:12} {}'.format(
+					str(Path(*d.parts[6:])) + ':',
+					' '.join(sorted(i.name for i in d.iterdir()))).strip()
 
-	def do_umount_online(self, *args, **kwargs):
-		return self._mount_ops('asi_online', 'do_umount', *args, **kwargs)
+class CmdTestAutosignClean(CmdTestAutosignBase):
+	have_online     = False
+	live            = False
+	simulate_led    = True
+	no_insert_check = False
+	coins           = ['btc']
+
+	tmpdir_nums = [38]
+
+	cmd_group = (
+		('clean_no_xmr',   'cleaning signable file directories (no XMR)'),
+		('clean_xmr_only', 'cleaning signable file directories (XMR-only)'),
+		('clean_all',      'cleaning signable file directories (with XMR)'),
+	)
+
+	def create_fake_tx_files(self):
+		imsg('Creating fake transaction files')
+
+		if not self.asi.xmr_only:
+			for fn in (
+				'a.rawtx', 'a.sigtx',
+				'b.rawtx', 'b.sigtx',
+				'c.rawtx',
+				'd.sigtx',
+			):
+				(self.asi.tx_dir / fn).touch()
+
+			for fn in (
+				'a.rawmsg.json', 'a.sigmsg.json',
+				'b.rawmsg.json',
+				'c.sigmsg.json',
+				'd.rawmsg.json', 'd.sigmsg.json',
+			):
+				(self.asi.msg_dir / fn).touch()
+
+		if self.asi.have_xmr:
+			for fn in (
+				'a.rawtx', 'a.sigtx', 'a.subtx',
+				'b.rawtx', 'b.sigtx',
+				'c.subtx',
+				'd.rawtx', 'd.subtx',
+				'e.rawtx',
+				'f.sigtx', 'f.subtx',
+			):
+				(self.asi.xmr_tx_dir / fn).touch()
+
+			for fn in (
+				'a.raw', 'a.sig',
+				'b.raw',
+				'c.sig',
+			):
+				(self.asi.xmr_outputs_dir / fn).touch()
+
+		return 'ok'
+
+	def clean_no_xmr(self):
+		return self._clean('btc,ltc,eth')
+
+	def clean_xmr_only(self):
+		self.asi = Autosign(Config({'_clone': self.asi.cfg, 'coins': 'xmr'}))
+		return self._clean('xmr')
+
+	def clean_all(self):
+		self.asi = Autosign(Config({'_clone': self.asi.cfg, 'coins': 'xmr,btc,bch,eth'}))
+		return self._clean('xmr,btc,bch,eth')
+
+	def _clean(self,coins):
+
+		self.spawn('', msg_only=True)
+
+		self.insert_device()
+		silence()
+		self.do_mount()
+		end_silence()
+
+		self.create_fake_tx_files()
+		before = '\n'.join(self._gen_listing())
+
+		t = self.spawn('mmgen-autosign', [f'--coins={coins}','clean'], no_msg=True)
+		out = t.read()
+
+		self.do_mount()
+		self.remove_device()
+
+		after = '\n'.join(self._gen_listing())
+
+		chk_non_xmr = """
+			tx:          a.sigtx b.sigtx c.rawtx d.sigtx
+			msg:         a.sigmsg.json b.rawmsg.json c.sigmsg.json d.sigmsg.json
+		"""
+		chk_xmr = """
+			xmr:         outputs tx
+			xmr/tx:      a.subtx b.sigtx c.subtx d.subtx e.rawtx f.subtx
+			xmr/outputs:
+		"""
+		chk = ''
+		shred_count = 0
+
+		if not self.asi.xmr_only:
+			for k in ('tx_dir','msg_dir'):
+				shutil.rmtree(getattr(self.asi, k))
+			chk += chk_non_xmr.rstrip()
+			shred_count += 4
+
+		if self.asi.have_xmr:
+			shutil.rmtree(self.asi.xmr_dir)
+			chk += chk_xmr.rstrip()
+			shred_count += 9
+
+		self.do_umount()
+
+		imsg(f'\nBefore cleaning:\n{before}')
+		imsg(f'\nAfter cleaning:\n{after}')
+
+		assert f'{shred_count} files shredded' in out
+		assert after + '\n' == fmt(chk), f'\n{after}\n!=\n{fmt(chk)}'
+
+		return t
 
 class CmdTestAutosignThreaded(CmdTestAutosignBase):
 	have_online     = True
@@ -294,6 +411,8 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		('remove_invalid_msgfile',   'removing invalid message file'),
 		('remove_bad_txfiles2',      'removing bad transaction files'),
 		('sign_no_unsigned',         'signing transactions and messages (nothing to sign)'),
+		('sign_no_unsigned_xmr',     'signing transactions and messages (nothing to sign, with XMR)'),
+		('sign_no_unsigned_xmronly', 'signing transactions and messages (nothing to sign, XMR-only)'),
 		('stop_daemons',             'stopping daemons'),
 	)
 
@@ -538,17 +657,28 @@ class CmdTestAutosign(CmdTestAutosignBase):
 			present = ['non_xmr_signables'],
 			absent  = ['xmr_signables'])
 
+	def sign_no_unsigned_xmr(self):
+		return self._sign_no_unsigned(
+			coins = 'XMR,BTC',
+			present = ['xmr_signables','non_xmr_signables'])
+
+	def sign_no_unsigned_xmronly(self):
+		return self._sign_no_unsigned(
+			coins   = 'XMR',
+			present = ['xmr_signables'],
+			absent  = ['non_xmr_signables'])
+
 	def _sign_no_unsigned(self,coins,present=[],absent=[]):
 		t = self.spawn('mmgen-autosign', ['--quiet', '--no-insert-check', f'--coins={coins}'])
 		res = t.read()
 		for signable_list in present:
 			for signable_clsname in getattr(Signable,signable_list):
 				desc = getattr(Signable, signable_clsname).desc
-				assert f'No unsigned {desc}' in res, f'{desc!r} missing in output'
+				assert f'No unsigned {desc}s' in res, f'‘No unsigned {desc}s’ missing in output'
 		for signable_list in absent:
 			for signable_clsname in getattr(Signable,signable_list):
 				desc = getattr(Signable, signable_clsname).desc
-				assert desc not in res, f'{desc!r} should be absent in output'
+				assert not f'No unsigned {desc}s' in res, f'‘No unsigned {desc}s’ should be absent in output'
 		return t
 
 class CmdTestAutosignBTC(CmdTestAutosign):

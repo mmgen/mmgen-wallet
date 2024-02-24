@@ -57,7 +57,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		('new_address_alice_label',  'adding an address to Alice’s tmp wallet (with label)'),
 		('dump_tmp_wallets',         'dumping Alice’s tmp wallets'),
 		('delete_tmp_wallets',       'deleting Alice’s tmp wallets'),
-		('autosign_clean',           'cleaning signable file directories'),
 		('autosign_setup',           'autosign setup with Alice’s seed'),
 		('create_watchonly_wallets', 'creating online (watch-only) wallets for Alice'),
 		('delete_tmp_dump_files',    'deleting Alice’s dump files'),
@@ -209,7 +208,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 
 	def autosign_setup(self):
 
-		self.do_mount_online(no_xmr_chk=True)
+		self.do_mount_online()
 
 		self.asi_online.xmr_dir.mkdir(exist_ok=True)
 		(self.asi_online.xmr_dir / 'old.vkeys').touch()
@@ -368,93 +367,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 
 	def import_key_images2(self):
 		return self._import_key_images(None)
-
-	def create_fake_tx_files(self):
-		imsg('Creating fake transaction files')
-
-		self.asi_online.msg_dir.mkdir(exist_ok=True)
-		self.asi_online.xmr_dir.mkdir(exist_ok=True)
-		self.asi_online.xmr_tx_dir.mkdir(exist_ok=True)
-		self.asi_online.xmr_outputs_dir.mkdir(exist_ok=True)
-
-		for fn in (
-			'a.rawtx', 'a.sigtx',
-			'b.rawtx', 'b.sigtx',
-			'c.rawtx',
-			'd.sigtx',
-		):
-			(self.asi_online.tx_dir / fn).touch()
-
-		for fn in (
-			'a.rawmsg.json', 'a.sigmsg.json',
-			'b.rawmsg.json',
-			'c.sigmsg.json',
-			'd.rawmsg.json', 'd.sigmsg.json',
-		):
-			(self.asi_online.msg_dir / fn).touch()
-
-		for fn in (
-			'a.rawtx', 'a.sigtx', 'a.subtx',
-			'b.rawtx', 'b.sigtx',
-			'c.subtx',
-			'd.rawtx', 'd.subtx',
-			'e.rawtx',
-			'f.sigtx','f.subtx',
-		):
-			(self.asi_online.xmr_tx_dir / fn).touch()
-
-		for fn in (
-			'a.raw', 'a.sig',
-			'b.raw',
-			'c.sig',
-		):
-			(self.asi_online.xmr_outputs_dir / fn).touch()
-
-		return 'ok'
-
-	def _gen_listing(self):
-		for k in ('tx_dir','msg_dir','xmr_tx_dir','xmr_outputs_dir'):
-			d = getattr(self.asi_online,k)
-			if d.is_dir():
-				yield '{:12} {}'.format(
-					str(Path(*d.parts[6:])) + ':',
-					' '.join(sorted(i.name for i in d.iterdir()))).strip()
-
-	def autosign_clean(self):
-
-		self.do_mount_online(no_xmr_chk=True)
-
-		self.create_fake_tx_files()
-		before = '\n'.join(self._gen_listing())
-
-		t = self.spawn('mmgen-autosign', self.opts + ['clean'])
-		out = t.read()
-
-		self.do_mount_online(no_xmr_chk=True)
-
-		after = '\n'.join(self._gen_listing())
-
-		for k in ('tx','msg','xmr'):
-			shutil.rmtree(self.asi_online.mountpoint / k)
-
-		self.asi_online.tx_dir.mkdir()
-
-		self.do_umount_online()
-
-		chk = """
-			tx:          a.sigtx b.sigtx c.rawtx d.sigtx
-			msg:         a.sigmsg.json b.rawmsg.json c.sigmsg.json d.sigmsg.json
-			xmr/tx:      a.subtx b.sigtx c.subtx d.subtx e.rawtx f.subtx
-			xmr/outputs:
-		"""
-
-		imsg(f'\nBefore cleaning:\n{before}')
-		imsg(f'\nAfter cleaning:\n{after}')
-
-		assert '13 files shredded' in out
-		assert after + '\n' == fmt(chk), f'\n{after}\n!=\n{fmt(chk)}'
-
-		return t
 
 	def txlist(self):
 		self.insert_device_online()

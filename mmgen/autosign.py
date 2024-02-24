@@ -276,8 +276,15 @@ class Autosign:
 	}
 	dfl_mn_fmt = 'mmgen'
 
-	have_msg_dir = False
-
+	non_xmr_dirs = {
+		'tx_dir':     'tx',
+		'msg_dir':    'msg',
+	}
+	xmr_dirs = {
+		'xmr_dir':         'xmr',
+		'xmr_tx_dir':      'xmr/tx',
+		'xmr_outputs_dir': 'xmr/outputs',
+	}
 	have_xmr = False
 	xmr_only = False
 
@@ -299,12 +306,7 @@ class Autosign:
 		self.cfg = cfg
 		self.init_cfg()
 
-		self.tx_dir  = self.mountpoint / 'tx'
-		self.msg_dir = self.mountpoint / 'msg'
 		self.keyfile = self.mountpoint / 'autosign.key'
-
-		if any(k in cfg._uopts for k in ('help','longhelp')):
-			return
 
 		if 'coin' in cfg._uopts:
 			die(1,'--coin option not supported with this command.  Use --coins instead')
@@ -322,18 +324,21 @@ class Autosign:
 			self.have_xmr = True
 			if len(self.coins) == 1:
 				self.xmr_only = True
-			self.xmr_dir = self.mountpoint / 'xmr'
-			self.xmr_tx_dir = self.mountpoint / 'xmr' / 'tx'
-			self.xmr_outputs_dir = self.mountpoint / 'xmr' / 'outputs'
 			self.xmr_cur_wallet_idx = None
 
+		self.dirs = {}
 		self.to_sign = ()
 
 		if not self.xmr_only:
+			self.dirs |= self.non_xmr_dirs
 			self.to_sign += Signable.non_xmr_signables
 
 		if self.have_xmr:
+			self.dirs |= self.xmr_dirs
 			self.to_sign += Signable.xmr_signables
+
+		for name,path in self.dirs.items():
+			setattr(self, name, self.mountpoint / path)
 
 	async def check_daemons_running(self):
 		from .protocol import init_proto
@@ -369,15 +374,20 @@ class Autosign:
 
 		return self._wallet_files
 
-	def do_mount(self,silent=False,no_dir_chk=False,no_xmr_chk=False):
+	def do_mount(self, silent=False):
 
-		def check_dir(cdir):
-			try:
-				ds = cdir.stat()
-				assert S_ISDIR(ds.st_mode), f"'{cdir}' is not a directory!"
-				assert ds.st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR, f"'{cdir}' is not read/write for this user!"
-			except:
-				die(1,f"'{cdir}' missing or not read/writable by user!")
+		def check_or_create(dirname):
+			path = getattr(self, dirname)
+			if path.is_dir():
+				if not path.stat().st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR:
+					die(1, f'‘{path}’ is not read/write for this user!')
+			elif path.exists():
+				die(1, f'‘{path}’ is not a directory!')
+			elif path.is_symlink():
+				die(1, f'‘{path}’ is a symlink not pointing to a directory!')
+			else:
+				msg(f'Creating ‘{path}’')
+				path.mkdir(parents=True)
 
 		if not self.mountpoint.is_dir():
 			def do_die(m):
@@ -397,18 +407,8 @@ class Autosign:
 			else:
 				die(1,f"Unable to mount device at '{self.mountpoint}'")
 
-		self.have_msg_dir = self.msg_dir.is_dir()
-
-		if no_dir_chk:
-			return
-
-		check_dir(self.tx_dir)
-
-		if self.have_msg_dir:
-			check_dir(self.msg_dir)
-
-		if 'XMR' in self.coins and not no_xmr_chk:
-			check_dir(self.xmr_tx_dir)
+		for dirname in self.dirs:
+			check_or_create(dirname)
 
 	def do_umount(self,silent=False):
 		if self.mountpoint.is_mount():
@@ -507,7 +507,7 @@ class Autosign:
 	def gen_key(self,no_unmount=False):
 		if not self.get_insert_status():
 			die(1,'Removable device not present!')
-		self.do_mount(no_xmr_chk=True)
+		self.do_mount()
 		self.wipe_existing_key()
 		self.create_key()
 		if not no_unmount:
@@ -586,10 +586,6 @@ class Autosign:
 			shutil.rmtree(self.xmr_outputs_dir)
 		except:
 			pass
-
-		self.xmr_outputs_dir.mkdir(parents=True)
-
-		self.xmr_tx_dir.mkdir(exist_ok=True)
 
 		self.clean_old_files()
 
