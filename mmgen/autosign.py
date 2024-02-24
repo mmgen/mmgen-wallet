@@ -25,7 +25,13 @@ from .ui import keypress_confirm
 
 class Signable:
 
-	signables = ('transaction','message','xmr_transaction','xmr_wallet_outputs_file')
+	non_xmr_signables = (
+		'transaction',
+		'message')
+
+	xmr_signables = (              # order is important!
+		'xmr_wallet_outputs_file', # import XMR wallet outputs BEFORE signing transactions
+		'xmr_transaction')
 
 	class base:
 
@@ -36,7 +42,6 @@ class Signable:
 			self.parent = parent
 			self.cfg = parent.cfg
 			self.dir = getattr(parent,self.dir_name)
-			self.long_desc = getattr(self, 'xmr_desc', self.desc) if 'XMR' in self.parent.coins else self.desc
 			self.name = type(self).__name__
 
 		@property
@@ -99,7 +104,6 @@ class Signable:
 
 	class transaction(base):
 		desc = 'transaction'
-		xmr_desc = 'non-Monero transaction'
 		rawext = 'rawtx'
 		sigext = 'sigtx'
 		dir_name = 'tx_dir'
@@ -273,6 +277,9 @@ class Autosign:
 
 	have_msg_dir = False
 
+	have_xmr = False
+	xmr_only = False
+
 	def init_cfg(self): # see test/overlay/fakemods/mmgen/autosign.py
 		self.mountpoint     = Path(self.cfg.mountpoint or self.dfl_mountpoint)
 		self.wallet_dir     = Path(self.cfg.wallet_dir or self.dfl_wallet_dir)
@@ -311,10 +318,21 @@ class Autosign:
 			self.coins = ['BTC']
 
 		if 'XMR' in self.coins:
+			self.have_xmr = True
+			if len(self.coins) == 1:
+				self.xmr_only = True
 			self.xmr_dir = self.mountpoint / 'xmr'
 			self.xmr_tx_dir = self.mountpoint / 'xmr' / 'tx'
 			self.xmr_outputs_dir = self.mountpoint / 'xmr' / 'outputs'
 			self.xmr_cur_wallet_idx = None
+
+		self.to_sign = ()
+
+		if not self.xmr_only:
+			self.to_sign += Signable.non_xmr_signables
+
+		if self.have_xmr:
+			self.to_sign += Signable.xmr_signables
 
 	async def check_daemons_running(self):
 		from .protocol import init_proto
@@ -443,9 +461,7 @@ class Autosign:
 				target.print_bad_list(bad)
 			return not bad
 		else:
-			msg(f'No unsigned {target.long_desc}s')
-			await asyncio.sleep(0.5)
-			return True
+			return f'No unsigned {target.desc}s'
 
 	async def do_sign(self):
 		if not self.cfg.stealth_led:
@@ -455,15 +471,13 @@ class Autosign:
 		if key_ok:
 			if self.cfg.stealth_led:
 				self.led.set('busy')
-			ret1 = await self.sign_all('transaction')
-			ret2 = await self.sign_all('message') if self.have_msg_dir else True
-			# import XMR wallet outputs BEFORE signing transactions:
-			ret3 = await self.sign_all('xmr_wallet_outputs_file') if 'XMR' in self.coins else True
-			ret4 = await self.sign_all('xmr_transaction') if 'XMR' in self.coins else True
-			ret = ret1 and ret2 and ret3 and ret4
+			ret = [await self.sign_all(signable) for signable in self.to_sign]
+			for val in ret:
+				if isinstance(val,str):
+					msg(val)
 			self.do_umount()
 			self.led.set(('standby','off','error')[(not ret)*2 or bool(self.cfg.stealth_led)])
-			return ret
+			return all(ret)
 		else:
 			msg('Password is incorrect!')
 			self.do_umount()
@@ -616,8 +630,13 @@ class Autosign:
 
 		count = 0
 
-		for s_name in Signable.signables:
-			clean_dir(s_name)
+		if not self.xmr_only:
+			for s_name in Signable.non_xmr_signables:
+				clean_dir(s_name)
+
+		if self.have_xmr:
+			for s_name in Signable.xmr_signables:
+				clean_dir(s_name)
 
 		bmsg(f'{count} file{suf(count)} shredded')
 

@@ -106,7 +106,8 @@ class CmdTestAutosignBase(CmdTestBase):
 		run(['/sbin/mkfs.ext2', '-E', f'root_owner={os.getuid()}:{os.getgid()}', img_file],
 			stdout=redir, stderr=redir, check=True)
 		self.do_mount(no_dir_chk=True)
-		(self.asi.mountpoint / 'tx').mkdir()
+		self.asi.tx_dir.mkdir()
+		self.asi.msg_dir.mkdir()
 		self.do_umount()
 
 	def start_daemons(self):
@@ -289,7 +290,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		('sign_full_summary_msg',    'signing transactions and messages (--full-summary)'),
 		('remove_invalid_msgfile',   'removing invalid message file'),
 		('remove_bad_txfiles2',      'removing bad transaction files'),
-		('sign_no_unsigned_msg',     'signing transactions and messages (nothing to sign)'),
+		('sign_no_unsigned',         'signing transactions and messages (nothing to sign)'),
 		('stop_daemons',             'stopping daemons'),
 	)
 
@@ -526,11 +527,24 @@ class CmdTestAutosign(CmdTestAutosignBase):
 	def sign_full_summary_msg(self):
 		return self.do_sign(['--full-summary','wait'],have_msg=True)
 
-	def sign_no_unsigned_msg(self):
-		self.tx_count = 0
-		self.good_msg_count = 0
-		self.bad_msg_count = 0
-		return self.do_sign(['--quiet','wait'],have_msg=True)
+	def sign_no_unsigned(self):
+		return self._sign_no_unsigned(
+			coins   = 'BTC',
+			present = ['non_xmr_signables'],
+			absent  = ['xmr_signables'])
+
+	def _sign_no_unsigned(self,coins,present=[],absent=[]):
+		t = self.spawn('mmgen-autosign', ['--quiet', '--no-insert-check', f'--coins={coins}'])
+		res = t.read()
+		for signable_list in present:
+			for signable_clsname in getattr(Signable,signable_list):
+				desc = getattr(Signable, signable_clsname).desc
+				assert f'No unsigned {desc}' in res, f'{desc!r} missing in output'
+		for signable_list in absent:
+			for signable_clsname in getattr(Signable,signable_list):
+				desc = getattr(Signable, signable_clsname).desc
+				assert desc not in res, f'{desc!r} should be absent in output'
+		return t
 
 class CmdTestAutosignBTC(CmdTestAutosign):
 	'autosigning BTC transactions'
