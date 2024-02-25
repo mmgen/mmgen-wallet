@@ -295,7 +295,7 @@ class Autosign:
 		self.mount_cmd      = 'mount'
 		self.umount_cmd     = 'umount'
 
-	def __init__(self,cfg):
+	def __init__(self,cfg,cmd=None):
 
 		if cfg.mnemonic_fmt:
 			if cfg.mnemonic_fmt not in self.mn_fmts:
@@ -308,6 +308,9 @@ class Autosign:
 
 		self.keyfile = self.mountpoint / 'autosign.key'
 
+		if any(k in cfg._uopts for k in ('help','longhelp')):
+			return
+
 		if 'coin' in cfg._uopts:
 			die(1,'--coin option not supported with this command.  Use --coins instead')
 
@@ -316,7 +319,7 @@ class Autosign:
 		if cfg.xmrwallets and not 'XMR' in self.coins:
 			self.coins.append('XMR')
 
-		if not self.coins:
+		if not self.coins and cmd not in ('gen_key',):
 			ymsg('Warning: no coins specified, defaulting to BTC')
 			self.coins = ['BTC']
 
@@ -327,15 +330,15 @@ class Autosign:
 			self.xmr_cur_wallet_idx = None
 
 		self.dirs = {}
-		self.to_sign = ()
+		self.signables = ()
 
 		if not self.xmr_only:
 			self.dirs |= self.non_xmr_dirs
-			self.to_sign += Signable.non_xmr_signables
+			self.signables += Signable.non_xmr_signables
 
 		if self.have_xmr:
 			self.dirs |= self.xmr_dirs
-			self.to_sign += Signable.xmr_signables
+			self.signables += Signable.xmr_signables
 
 		for name,path in self.dirs.items():
 			setattr(self, name, self.mountpoint / path)
@@ -470,7 +473,7 @@ class Autosign:
 		if key_ok:
 			if self.cfg.stealth_led:
 				self.led.set('busy')
-			ret = [await self.sign_all(signable) for signable in self.to_sign]
+			ret = [await self.sign_all(signable) for signable in self.signables]
 			for val in ret:
 				if isinstance(val,str):
 					msg(val)
@@ -486,15 +489,13 @@ class Autosign:
 				self.led.set('error')
 			return False
 
-	def wipe_existing_key(self):
-		try:
-			self.keyfile.stat()
-		except:
-			pass
-		else:
+	def wipe_encryption_key(self):
+		if self.keyfile.exists():
 			from .fileutil import shred_file
-			msg(f"\nShredding existing key '{self.keyfile}'")
+			ymsg(f'Shredding wallet encryption key ‘{self.keyfile}’')
 			shred_file(str(self.keyfile), verbose=self.cfg.verbose)
+		else:
+			gmsg('No wallet encryption key on removable device')
 
 	def create_key(self):
 		desc = f"key file '{self.keyfile}'"
@@ -510,7 +511,7 @@ class Autosign:
 		if not self.get_insert_status():
 			die(1,'Removable device not present!')
 		self.do_mount()
-		self.wipe_existing_key()
+		self.wipe_encryption_key()
 		self.create_key()
 		if not no_unmount:
 			self.do_umount()
@@ -583,12 +584,6 @@ class Autosign:
 			async_run(m.main())
 			async_run(m.stop_wallet_daemon())
 
-		import shutil
-		try:
-			shutil.rmtree(self.xmr_outputs_dir)
-		except:
-			pass
-
 		self.clean_old_files()
 
 		create_signing_wallets()
@@ -627,13 +622,8 @@ class Autosign:
 
 		count = 0
 
-		if not self.xmr_only:
-			for s_name in Signable.non_xmr_signables:
-				clean_dir(s_name)
-
-		if self.have_xmr:
-			for s_name in Signable.xmr_signables:
-				clean_dir(s_name)
+		for s_name in self.signables:
+			clean_dir(s_name)
 
 		bmsg(f'{count} file{suf(count)} shredded')
 

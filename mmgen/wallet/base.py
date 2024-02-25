@@ -15,6 +15,7 @@ wallet.base: wallet base class
 import os
 
 from ..util import msg,die
+from ..color import yellow,orange
 from ..objmethods import MMGenObject
 from . import wallet_data,get_wallet_cls
 
@@ -64,10 +65,12 @@ class wallet(MMGenObject,metaclass=WalletMeta):
 			self._deformat_retry()
 			self._decrypt_retry()
 
-		self.cfg._util.qmsg('Valid {} for Seed ID {}{}'.format(
-			self.desc,
-			self.seed.sid.hl(),
-			(f', seed length {self.seed.bitlen}' if self.seed.bitlen != 256 else '')
+		msg('Valid {a} for Seed ID {b}{c}{d}'.format(
+			a = self.desc,
+			b = self.seed.sid.hl(),
+			c = f' (seed length {self.seed.bitlen})' if self.seed.bitlen != 256 else '',
+			d = '' if not hasattr(self,'mnemonic') or self.mnemonic.has_chksum else
+				orange(' [mnemonic format has no checksum]')
 		))
 
 	def _get_data(self):

@@ -33,7 +33,6 @@ opts_data = {
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
 -c, --coins=c         Coins to sign for (comma-separated list)
--C, --clean           Remove unneeded files on the removable device
 -I, --no-insert-check Don’t check for device insertion
 -l, --led             Use status LED to signal standby, busy and error
 -m, --mountpoint=M    Specify an alternate mountpoint 'M'
@@ -56,10 +55,13 @@ opts_data = {
 
                                OPERATIONS
 
-gen_key - generate the wallet encryption key and copy it to the mountpoint
-          ‘{asi.mountpoint}’ (as currently configured)
-setup   - generate both wallet encryption key and temporary signing wallet
-wait    - start in loop mode: wait-mount-sign-unmount-wait
+clean     - clean the removable device of unneeded files, removing only non-
+            essential data
+gen_key   - generate the wallet encryption key and copy it to the removable
+            device mounted at mountpoint ‘{asi.mountpoint}’ (as currently
+            configured)
+setup     - generate both wallet encryption key and temporary signing wallet
+wait      - start in loop mode: wait-mount-sign-unmount-wait
 
 
                                USAGE NOTES
@@ -170,17 +172,13 @@ cfg = Config(
 	},
 	do_post_init = True )
 
-cmd_args = cfg._args
+cmd = cfg._args[0] if len(cfg._args) == 1 else None if not cfg._args else cfg._opts.usage()
 
-asi = Autosign(cfg)
+asi = Autosign(cfg,cmd)
 
 cfg._post_init()
 
-if len(cmd_args) not in (0,1):
-	cfg._opts.usage()
-
-if cmd_args:
-	cmd = cmd_args[0]
+if cmd:
 	if cmd == 'gen_key':
 		asi.gen_key()
 	elif cmd == 'setup':

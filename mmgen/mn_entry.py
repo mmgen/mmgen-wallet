@@ -365,9 +365,6 @@ class MnemonicEntry:
 
 		if validate:
 			self.bconv.tohex(words)
-			self.cfg._util.qmsg(
-				'Mnemonic is valid' if self.has_chksum else
-				'Mnemonic is well-formed (mnemonic format has no checksum to validate)' )
 
 		return ' '.join(words)
 

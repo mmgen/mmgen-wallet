@@ -400,6 +400,9 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		if trunner is None:
 			return
 
+		self.eth_args         = [f'--outdir={self.tmpdir}', '--quiet']
+		self.eth_args_noquiet = [f'--outdir={self.tmpdir}']
+
 		from mmgen.protocol import init_proto
 		self.proto = init_proto( cfg, cfg.coin, network='regtest', need_amt=True )
 
@@ -423,19 +426,6 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 		self.message = 'attack at dawn'
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
-
-	@property
-	def eth_args(self):
-		return [
-			f'--outdir={self.tmpdir}',
-			f'--coin={self.proto.coin}',
-			f'--rpc-port={self.daemon.rpc_port}',
-			'--quiet'
-		]
-
-	@property
-	def eth_args_noquiet(self):
-		return self.eth_args[:-1]
 
 	@property
 	async def rpc(self):
@@ -1050,15 +1040,15 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	async def contract_deploy(self): # test create,sign,send
 		return await self.token_deploy(num=2,key='SafeMath',gas=500_000,mmgen_cmd='txcreate')
 
-	async def token_transfer_ops(self,op,amt=1000):
+	async def token_transfer_ops(self,op,amt=1000,num_tokens=2):
 		self.spawn('',msg_only=True)
 		sid = dfl_sid
 		from mmgen.tool.wallet import tool_cmd
-		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11,21)]
+		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11,21)][:num_tokens]
 
 		from mmgen.proto.eth.contract import ResolvedToken
 		async def do_transfer(rpc):
-			for i in range(2):
+			for i in range(num_tokens):
 				tk = await ResolvedToken(
 					cfg,
 					self.proto,
@@ -1080,7 +1070,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 					die(2,'Transfer of token funds failed. Aborting')
 
 		async def show_bals(rpc):
-			for i in range(2):
+			for i in range(num_tokens):
 				tk = await ResolvedToken(
 					cfg,
 					self.proto,
@@ -1111,8 +1101,10 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def token_user_bals(self):
 		return self.token_transfer_ops(op='show_bals')
 
-	def token_addrgen(self):
-		self.addrgen(addrs='11-13')
+	def token_addrgen(self,num_tokens=2):
+		t = self.addrgen(addrs='11-13')
+		if num_tokens == 1:
+			return t
 		ok_msg()
 		return self.addrgen(addrs='21-23')
 

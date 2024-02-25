@@ -415,9 +415,9 @@ class CmdTestInput(CmdTestBase):
 				t.expect(wcls.user_entropy_prompt,'n')
 		if not usr_rand:
 			sid_chk = 'FE3C6545'
-			sid = t.expect_getend(f'Valid {wcls.desc} for Seed ID ')
+			sid = t.expect_getend(f'Valid {wcls.desc} for Seed ID')
 			sid = strip_ansi_escapes(sid.split(',')[0])
-			assert sid == sid_chk, f'Seed ID mismatch! {sid} != {sid_chk}'
+			assert sid_chk in sid, f'Seed ID mismatch! {sid_chk} not found in {sid}'
 		t.expect('to confirm: ','YES\n')
 		return t
 

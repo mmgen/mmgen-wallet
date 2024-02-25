@@ -108,7 +108,7 @@ tx_file = cfg._args.pop(0)
 from .fileutil import check_infile
 check_infile(tx_file)
 
-from .tx import CompletedTX,BumpTX,UnsignedTX,OnlineSignedTX
+from .tx import CompletedTX, BumpTX, UnsignedTX, OnlineSignedTX
 from .tx.sign import txsign,get_seed_files,get_keyaddrlist,get_keylist
 
 seed_files = get_seed_files(cfg,cfg._args) if (cfg._args or cfg.send) else None

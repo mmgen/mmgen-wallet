@@ -34,10 +34,12 @@ class wallet(wallet):
 			from ..ui import get_data_from_user
 			return get_data_from_user( self.cfg, desc )
 
-		mn_len = self._choose_seedlen( self.mn_lens )
+		mn_len = self._choose_seedlen(self.mn_lens)
 
 		from ..mn_entry import mn_entry
-		return mn_entry( self.cfg, self.wl_id ).get_mnemonic_from_user(mn_len)
+		self.mnemonic = mn_entry(self.cfg, self.wl_id)
+
+		return self.mnemonic.get_mnemonic_from_user(mn_len)
 
 	def _format(self):
 
