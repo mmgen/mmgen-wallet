@@ -58,6 +58,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		('dump_tmp_wallets',         'dumping Alice’s tmp wallets'),
 		('delete_tmp_wallets',       'deleting Alice’s tmp wallets'),
 		('autosign_setup',           'autosign setup with Alice’s seed'),
+		('autosign_xmr_setup',       'autosign setup (creation of Monero signing wallets)'),
 		('create_watchonly_wallets', 'creating online (watch-only) wallets for Alice'),
 		('delete_tmp_dump_files',    'deleting Alice’s dump files'),
 		('gen_kafiles',              'generating key-address files for Miner'),
@@ -207,25 +208,23 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		return self.fund_alice(wallet=2)
 
 	def autosign_setup(self):
-
-		self.do_mount_online()
-
-		self.asi_online.xmr_dir.mkdir(exist_ok=True)
-		(self.asi_online.xmr_dir / 'old.vkeys').touch()
-
-		self.do_umount_online()
-
 		self.insert_device()
-
 		t = self.run_setup(
 			mn_type        = 'mmgen',
 			mn_file        = self.users['alice'].mmwords,
 			use_dfl_wallet = None )
-		t.expect('Continue with Monero setup? (Y/n): ','y')
-		t.written_to_file('View keys')
-
+		t.expect('Continue with Monero setup? (Y/n): ','n')
 		self.remove_device()
+		return t
 
+	def autosign_xmr_setup(self):
+		self.do_mount_online()
+		self.asi_online.xmr_dir.mkdir(exist_ok=True)
+		(self.asi_online.xmr_dir / 'old.vkeys').touch()
+		self.do_umount_online()
+
+		t = self.spawn('mmgen-autosign', self.opts + ['xmr_setup'], no_passthru_opts=True)
+		t.written_to_file('View keys')
 		return t
 
 	def create_watchonly_wallets(self):

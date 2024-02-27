@@ -61,6 +61,9 @@ gen_key   - generate the wallet encryption key and copy it to the removable
             device mounted at mountpoint ‘{asi.mountpoint}’ (as currently
             configured)
 setup     - generate both wallet encryption key and temporary signing wallet
+xmr_setup - set up temporary Monero signing wallets.  This operation needn’t
+            be performed by the user directly in most cases, as Monero setup
+            is done by the ‘setup’ command when --xmrwallets is specified
 wait      - start in loop mode: wait-mount-sign-unmount-wait
 
 
@@ -187,6 +190,12 @@ if cmd:
 		if cfg.xmrwallets and keypress_confirm( cfg, '\nContinue with Monero setup?', default_yes=True ):
 			msg('')
 			asi.xmr_setup()
+		asi.do_umount()
+	elif cmd == 'xmr_setup':
+		if not cfg.xmrwallets:
+			die(1,'Please specify a wallet or range of wallets with the --xmrwallets option')
+		asi.do_mount()
+		asi.xmr_setup()
 		asi.do_umount()
 	elif cmd == 'wait':
 		main(do_loop=True)
