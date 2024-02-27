@@ -113,7 +113,8 @@ class New(Base,TxBase.New):
 		if not bump:
 			self.inputs.sort_bip69()
 			# Set all sequence numbers to the same value, in conformity with the behavior of most modern wallets:
-			seqnum_val = self.proto.max_int - (2 if self.cfg.rbf else 1 if locktime else 0)
+			do_rbf = self.proto.cap('rbf') and not self.cfg.no_rbf
+			seqnum_val = self.proto.max_int - (2 if do_rbf else 1 if locktime else 0)
 			for i in self.inputs:
 				i.sequence = seqnum_val
 

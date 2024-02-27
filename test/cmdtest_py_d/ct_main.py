@@ -629,7 +629,7 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 
 		t = self.spawn(
 			'mmgen-'+('txcreate','txdo')[bool(txdo_args)],
-			([],['--rbf'])[self.proto.cap('rbf')] +
+			(['--no-rbf'],[])[self.proto.cap('rbf')] +
 			['-f',self.tx_fee,'-B'] + add_args + cmd_args + txdo_args)
 
 		if t.expect([('Get','Unsigned transac')[cmdline_inputs],r'Unable to connect to \S+'],regex=True) == 1:

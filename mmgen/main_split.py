@@ -43,7 +43,8 @@ opts_data = {
 -m, --minconf=     n Minimum number of confirmations required to spend
                      outputs (default: 1)
 -q, --quiet          Suppress warnings; overwrite files without prompting
--r, --rbf            Make transaction BIP 125 replaceable (replace-by-fee)
+-R, --no-rbf         Make transaction non-replaceable (non-replace-by-fee
+                     according to BIP 125)
 -v, --verbose        Produce more verbose output
 -y, --yes            Answer 'yes' to prompts, suppress non-essential output
 -R, --rpc-host2=   h Host the other coin daemon is running on (default: none)

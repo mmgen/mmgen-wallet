@@ -986,7 +986,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		if not self.test_rbf:
 			return 'skip'
 		out_addr = self._create_tx_outputs('alice',(('B',5,''),))
-		t = self.spawn('mmgen-txcreate',['-d',self.tr.trash_dir,'-B','--bob','--rbf'] + out_addr)
+		t = self.spawn('mmgen-txcreate',['-d',self.tr.trash_dir,'-B','--bob'] + out_addr)
 		return self.txcreate_ui_common(t,menu=[],inputs='3',interactive_fee='3s') # out amt: 199.99999343
 
 	def bob_rbf_1output_bump(self):
@@ -1006,7 +1006,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		outputs_cl = self._create_tx_outputs('alice',(('L',1,',60'),('C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
 		outputs_cl += [self._user_sid('bob')+':'+rtBobOp3]
 		return self.user_txdo('bob',rtFee[1],outputs_cl,'3',
-					extra_args = ([],['--rbf'])[self.proto.cap('rbf')],
+					extra_args = (['--no-rbf'],[])[self.proto.cap('rbf')],
 					used_chg_addr_resp = 'y' )
 
 	def bob_send_non_mmgen(self):

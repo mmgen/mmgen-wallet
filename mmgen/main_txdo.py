@@ -75,7 +75,8 @@ opts_data = {
 -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
                        for password hashing (default: '{gc.dfl_hash_preset}')
 -P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
--r, --rbf              Make transaction BIP 125 (replace-by-fee) replaceable
+-R, --no-rbf           Make transaction non-replaceable (non-replace-by-fee
+                       according to BIP 125)
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -u, --subseeds=      n The number of subseed pairs to scan for (default: {ss},
                        maximum: {ss_max}). Only the default or first supplied
