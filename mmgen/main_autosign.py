@@ -65,6 +65,10 @@ xmr_setup - set up temporary Monero signing wallets.  This operation needn’t
             be performed by the user directly in most cases, as Monero setup
             is done by the ‘setup’ command when --xmrwallets is specified
 wait      - start in loop mode: wait-mount-sign-unmount-wait
+wipe_key  - wipe the wallet encryption key on the removable device, making
+            signing transactions or stealing the user’s seed impossible.
+            The operation is intended as a ‘kill switch’ and thus performed
+            without prompting
 
 
                                USAGE NOTES
@@ -202,6 +206,10 @@ if cmd:
 	elif cmd == 'clean':
 		asi.do_mount()
 		asi.clean_old_files()
+		asi.do_umount()
+	elif cmd == 'wipe_key':
+		asi.do_mount()
+		asi.wipe_encryption_key()
 		asi.do_umount()
 	else:
 		die(1,f'{cmd!r}: unrecognized command')

@@ -419,6 +419,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		('sign_no_unsigned',         'signing transactions and messages (nothing to sign)'),
 		('sign_no_unsigned_xmr',     'signing transactions and messages (nothing to sign, with XMR)'),
 		('sign_no_unsigned_xmronly', 'signing transactions and messages (nothing to sign, XMR-only)'),
+		('wipe_key',                 'wiping the wallet encryption key'),
 		('stop_daemons',             'stopping daemons'),
 	)
 
@@ -685,6 +686,11 @@ class CmdTestAutosign(CmdTestAutosignBase):
 			for signable_clsname in getattr(Signable,signable_list):
 				desc = getattr(Signable, signable_clsname).desc
 				assert not f'No unsigned {desc}s' in res, f'‘No unsigned {desc}s’ should be absent in output'
+		return t
+
+	def wipe_key(self):
+		t = self.spawn('mmgen-autosign', ['--quiet', '--no-insert-check', 'wipe_key'])
+		t.expect('Shredding')
 		return t
 
 class CmdTestAutosignBTC(CmdTestAutosign):

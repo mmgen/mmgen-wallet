@@ -319,7 +319,7 @@ class Autosign:
 		if cfg.xmrwallets and not 'XMR' in self.coins:
 			self.coins.append('XMR')
 
-		if not self.coins and cmd not in ('gen_key',):
+		if not self.coins and cmd not in ('gen_key','wipe_key'):
 			ymsg('Warning: no coins specified, defaulting to BTC')
 			self.coins = ['BTC']
 
