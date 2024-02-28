@@ -36,6 +36,7 @@ opts_data = {
 -d, --outdir= d Specify an alternate directory 'd' for output
 -q, --quiet     Suppress warnings; overwrite files without prompting
 -s, --status    Get status of a sent transaction
+-v, --verbose   Be more verbose
 -y, --yes       Answer 'yes' to prompts, suppress non-essential output
 """
 	}
@@ -66,7 +67,7 @@ async def main():
 	from .rpc import rpc_init
 	tx.rpc = await rpc_init(cfg,tx.proto)
 
-	cfg._util.vmsg(f'Signed transaction file {infile!r} is valid')
+	cfg._util.vmsg(f'Getting {tx.desc} ‘{tx.infile}’')
 
 	if cfg.status:
 		if tx.coin_txid:
