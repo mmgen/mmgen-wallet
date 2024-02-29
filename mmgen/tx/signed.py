@@ -18,3 +18,7 @@ class Signed(Completed):
 	desc = 'signed transaction'
 	ext  = 'sigtx'
 	signed = True
+
+class AutomountSigned(Signed):
+	desc = 'signed automount transaction'
+	ext  = 'asigtx'

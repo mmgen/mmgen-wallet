@@ -32,6 +32,9 @@ opts_data = {
 		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
+-a, --autosign        Create a transaction for offline autosigning (see
+                      ‘mmgen-autosign’). The removable device is mounted and
+                      unmounted automatically
 -A, --fee-adjust=  f  Adjust transaction fee by factor 'f' (see below)
 -B, --no-blank        Don't blank screen before displaying unspent outputs
 -c, --comment-file=f  Source the transaction's comment from file 'f'
@@ -83,6 +86,13 @@ cfg = Config(opts_data=opts_data)
 
 async def main():
 
+	if cfg.autosign:
+		from .tx.util import init_removable_device
+		from .autosign import Signable
+		asi = init_removable_device(cfg)
+		asi.do_mount()
+		Signable.automount_transaction(asi).check_create_ok()
+
 	from .tx import NewTX
 	tx1 = await NewTX(cfg=cfg,proto=cfg._proto)
 
@@ -95,6 +105,7 @@ async def main():
 		do_info  = cfg.info )
 
 	tx2.file.write(
+		outdir                = asi.txauto_dir if cfg.autosign else None,
 		ask_write             = not cfg.yes,
 		ask_overwrite         = not cfg.yes,
 		ask_write_default_yes = False)

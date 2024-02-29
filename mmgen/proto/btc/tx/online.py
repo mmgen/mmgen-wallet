@@ -77,3 +77,9 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 
 class Sent(TxBase.Sent, OnlineSigned):
 	pass
+
+class AutomountOnlineSigned(TxBase.AutomountOnlineSigned, OnlineSigned):
+	pass
+
+class AutomountSent(TxBase.AutomountSent, AutomountOnlineSigned):
+	pass

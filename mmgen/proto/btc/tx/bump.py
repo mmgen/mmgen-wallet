@@ -16,6 +16,7 @@ from ....tx import bump as TxBase
 from ....util import msg
 from .new import New
 from .completed import Completed
+from .unsigned import AutomountUnsigned
 
 class Bump(Completed,New,TxBase.Bump):
 	desc = 'fee-bumped transaction'
@@ -52,3 +53,8 @@ class Bump(Completed,New,TxBase.Bump):
 				c = self.coin ))
 			return False
 		return ret
+
+class AutomountBump(Bump):
+	desc      = 'unsigned fee-bumped automount transaction'
+	ext       = AutomountUnsigned.ext
+	automount = AutomountUnsigned.automount

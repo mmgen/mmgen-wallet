@@ -112,8 +112,8 @@ def _pop_matching_fns(args,cmplist): # strips found args
 	return list(reversed([args.pop(args.index(a)) for a in reversed(args) if get_extension(a) in cmplist]))
 
 def get_tx_files(cfg, args):
-	from .unsigned import Unsigned
-	ret = _pop_matching_fns(args,[Unsigned.ext])
+	from .unsigned import Unsigned, AutomountUnsigned
+	ret = _pop_matching_fns(args, [(AutomountUnsigned if cfg.autosign else Unsigned).ext])
 	if not ret:
 		die(1,'You must specify a raw transaction file!')
 	return ret

@@ -87,9 +87,7 @@ the status LED indicates whether the program is busy or in standby mode, i.e.
 ready for device insertion or removal.
 
 The removable device must have a partition labeled MMGEN_TX with a user-
-writable root directory and a directory named ‘/tx’, where unsigned MMGen
-transactions are placed.  Optionally, the directory ‘/msg’ may be created
-and unsigned message files produced by ‘mmgen-msg’ placed there.
+writable root directory.
 
 On both the signing and online machines the mountpoint ‘{asi.mountpoint}’
 (as currently configured) must exist and ‘/etc/fstab’ must contain the

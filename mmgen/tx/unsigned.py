@@ -18,6 +18,7 @@ from ..util import remove_dups
 class Unsigned(Completed):
 	desc = 'unsigned transaction'
 	ext  = 'rawtx'
+	automount = False
 
 	def delete_attrs(self,desc,attr):
 		for e in getattr(self,desc):
@@ -28,3 +29,8 @@ class Unsigned(Completed):
 		return remove_dups(
 			(e.mmid.sid for e in getattr(self,desc) if e.mmid),
 			quiet = True )
+
+class AutomountUnsigned(Unsigned):
+	desc = 'unsigned automount transaction'
+	ext  = 'arawtx'
+	automount = True

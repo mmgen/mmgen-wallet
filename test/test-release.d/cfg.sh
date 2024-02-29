@@ -153,8 +153,15 @@ init_tests() {
 	d_etc="operations for Ethereum Classic using devnet"
 	t_etc="parity $cmdtest_py --coin=etc ethdev"
 
-	d_autosign="transaction and message autosigning"
-	t_autosign="- $cmdtest_py autosign autosign_clean"
+	d_autosign="transaction autosigning with automount"
+	t_autosign="
+		- $cmdtest_py autosign autosign_clean autosign_automount
+		- $cmdtest_py --coin=bch autosign_automount
+		s $cmdtest_py --coin=ltc autosign_automount
+		- $cmdtest_py --coin=eth autosign_eth
+		s $cmdtest_py --coin=etc autosign_eth
+	"
+	[ "$FAST" ]  && t_autosign_skip='s'
 
 	d_autosign_btc="transaction and message autosigning (Bitcoin only)"
 	t_autosign_btc="- $cmdtest_py autosign_btc"
@@ -164,7 +171,7 @@ init_tests() {
 
 	d_btc="overall operations with emulated RPC data (Bitcoin)"
 	t_btc="
-		- $cmdtest_py --exclude regtest,autosign,autosign_clean,ref_altcoin
+		- $cmdtest_py --exclude regtest,autosign,autosign_clean,autosign_automount,ref_altcoin
 		- $cmdtest_py --segwit
 		- $cmdtest_py --segwit-random
 		- $cmdtest_py --bech32

@@ -33,10 +33,17 @@ opts_data = {
                 creating a new transaction, and optionally sign and send the
                 new transaction
 		 """,
-		'usage':   f'[opts] <{gc.proj_name} TX file> [seed source] ...',
+		'usage':   f'[opts] [{gc.proj_name} TX file] [seed source] ...',
 		'options': """
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
+-a, --autosign         Bump the most recent transaction created and sent with
+                       the --autosign option. The removable device is mounted
+                       and unmounted automatically.  The transaction file
+                       argument must be omitted.  Note that only sent trans-
+                       actions may be bumped with this option.  To redo an
+                       unsent --autosign transaction, first delete it using
+                       ‘mmgen-txsend --abort’ and then create a new one
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
                        brainwallet input
 -c, --comment-file=  f Source the transaction's comment from file 'f'
@@ -103,10 +110,10 @@ FMT CODES:
 
 cfg = Config(opts_data=opts_data)
 
-tx_file = cfg._args.pop(0)
-
-from .fileutil import check_infile
-check_infile(tx_file)
+if not cfg.autosign:
+	tx_file = cfg._args.pop(0)
+	from .fileutil import check_infile
+	check_infile(tx_file)
 
 from .tx import CompletedTX, BumpTX, UnsignedTX, OnlineSignedTX
 from .tx.sign import txsign,get_seed_files,get_keyaddrlist,get_keylist
@@ -120,20 +127,37 @@ silent = cfg.yes and cfg.fee is not None and cfg.output_to_reduce is not None
 
 async def main():
 
-	orig_tx = await CompletedTX(cfg=cfg,filename=tx_file)
+	if cfg.autosign:
+		from .tx.util import init_removable_device
+		from .autosign import Signable
+		asi = init_removable_device(cfg)
+		asi.do_mount()
+		si = Signable.automount_transaction(asi)
+		if si.unsigned or si.unsent:
+			state = 'unsigned' if si.unsigned else 'unsent'
+			die(1,
+				'Only sent transactions can be bumped with --autosign.  Instead of bumping\n'
+				f'your {state} transaction, abort it with ‘mmgen-txsend --abort’ and create\n'
+				'a new one.')
+		orig_tx = await si.get_last_created()
+		kal = kl = sign_and_send = None
+	else:
+		orig_tx = await CompletedTX(cfg=cfg, filename=tx_file)
 
 	if not silent:
 		msg(green('ORIGINAL TRANSACTION'))
 		msg(orig_tx.info.format(terse=True))
 
-	kal = get_keyaddrlist(cfg,orig_tx.proto)
-	kl = get_keylist(cfg)
-	sign_and_send = bool(seed_files or kl or kal)
+	if not cfg.autosign:
+		kal = get_keyaddrlist(cfg, orig_tx.proto)
+		kl = get_keylist(cfg)
+		sign_and_send = any([seed_files, kl, kal])
 
 	from .tw.ctl import TwCtl
 	tx = await BumpTX(
 		cfg  = cfg,
 		data = orig_tx.__dict__,
+		automount = cfg.autosign,
 		check_sent = cfg.autosign or sign_and_send,
 		twctl = await TwCtl(cfg,orig_tx.proto) if orig_tx.proto.tokensym else None )
 
@@ -181,6 +205,7 @@ async def main():
 			die(2,'Transaction could not be signed')
 	else:
 		tx.file.write(
+			outdir                = asi.txauto_dir if cfg.autosign else None,
 			ask_write             = not cfg.yes,
 			ask_write_default_yes = False,
 			ask_overwrite         = not cfg.yes)

@@ -54,3 +54,9 @@ class TokenSigned(TokenCompleted,Signed):
 	def parse_txfile_serialized_data(self):
 		raise NotImplementedError(
 			'Signed transaction files cannot be parsed offline, because tracking wallet is required!')
+
+class AutomountSigned(TxBase.AutomountSigned, Signed):
+	pass
+
+class TokenAutomountSigned(TxBase.AutomountSigned, TokenSigned):
+	pass

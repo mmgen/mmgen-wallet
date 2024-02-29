@@ -28,6 +28,7 @@ class Signable:
 
 	non_xmr_signables = (
 		'transaction',
+		'automount_transaction',
 		'message')
 
 	xmr_signables = (              # order is important!
@@ -62,6 +63,13 @@ class Signable:
 		def unsubmitted(self):
 			return self._unprocessed( '_unsubmitted', self.sigext, self.subext )
 
+		@property
+		def unsubmitted_raw(self):
+			return self._unprocessed( '_unsubmitted_raw', self.rawext, self.subext )
+
+		unsent = unsubmitted
+		unsent_raw = unsubmitted_raw
+
 		def _unprocessed(self,attrname,rawext,sigext):
 			if not hasattr(self,attrname):
 				dirlist = sorted(self.dir.iterdir())
@@ -91,11 +99,18 @@ class Signable:
 				e = f'in ‘{getattr(self.parent, self.dir_name)}’' if show_dir else 'on removable device',
 			))
 
+		def check_create_ok(self):
+			if len(self.unsigned):
+				self.die_wrong_num_txs('unsigned', msg='Cannot create transaction')
+
 		def get_unsubmitted(self, tx_type='unsubmitted'):
 			if len(self.unsubmitted) == 1:
 				return self.unsubmitted[0]
 			else:
 				self.die_wrong_num_txs(tx_type)
+
+		def get_unsent(self):
+			return self.get_unsubmitted('unsent')
 
 		def get_submitted(self):
 			if len(self.submitted) == 0:
@@ -103,8 +118,26 @@ class Signable:
 			else:
 				return self.submitted
 
+		def get_abortable(self):
+			if len(self.unsent_raw) != 1:
+				self.die_wrong_num_txs('unsent_raw', desc='unsent')
+			if len(self.unsent) > 1:
+				self.die_wrong_num_txs('unsent')
+			if self.unsent:
+				if self.unsent[0].stem != self.unsent_raw[0].stem:
+					die(1, f'{self.unsent[0]}, {self.unsent_raw[0]}: file mismatch')
+			return self.unsent_raw + self.unsent
+
+		async def get_last_created(self):
+			from .tx import CompletedTX
+			ext = '.' + Signable.automount_transaction.subext
+			files = [f for f in self.dir.iterdir() if f.name.endswith(ext)]
+			return sorted(
+				[await CompletedTX(cfg=self.cfg, filename=str(txfile), quiet_open=True) for txfile in files],
+				key = lambda x: x.timestamp)[-1]
+
 	class transaction(base):
-		desc = 'transaction'
+		desc = 'non-automount transaction'
 		rawext = 'rawtx'
 		sigext = 'sigtx'
 		dir_name = 'tx_dir'
@@ -112,7 +145,10 @@ class Signable:
 
 		async def sign(self,f):
 			from .tx import UnsignedTX
-			tx1 = UnsignedTX( cfg=self.cfg, filename=f )
+			tx1 = UnsignedTX(
+					cfg       = self.cfg,
+					filename  = f,
+					automount = self.name=='automount_transaction')
 			if tx1.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
 				tx1.rpc = await rpc_init( self.cfg, tx1.proto, ignore_wallet=True )
@@ -167,6 +203,14 @@ class Signable:
 		def gen_bad_list(self,bad_files):
 			for f in bad_files:
 				yield red(f.name)
+
+	class automount_transaction(transaction):
+		desc   = 'automount transaction'
+		dir_name = 'txauto_dir'
+		rawext = 'arawtx'
+		sigext = 'asigtx'
+		subext = 'asubtx'
+		multiple_ok = False
 
 	class xmr_signable(transaction): # mixin class
 
@@ -278,6 +322,7 @@ class Autosign:
 
 	non_xmr_dirs = {
 		'tx_dir':     'tx',
+		'txauto_dir': 'txauto',
 		'msg_dir':    'msg',
 	}
 	xmr_dirs = {

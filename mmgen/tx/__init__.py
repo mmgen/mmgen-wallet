@@ -52,6 +52,11 @@ def _get_cls_info(clsname,modname,args,kwargs):
 
 	kwargs['proto'] = proto
 
+	if 'automount' in kwargs:
+		if kwargs['automount']:
+			clsname = 'Automount' + clsname
+		del kwargs['automount']
+
 	return ( kwargs['cfg'], proto, clsname, modname, kwargs )
 
 
@@ -74,7 +79,9 @@ async def _get_obj_async( _clsname, _modname, *args, **kwargs ):
 	if proto and proto.tokensym and clsname in (
 			'New',
 			'OnlineSigned',
-			'Sent'):
+			'AutomountOnlineSigned',
+			'Sent',
+			'AutomountSent'):
 		from ..tw.ctl import TwCtl
 		kwargs['twctl'] = await TwCtl(cfg,proto)
 

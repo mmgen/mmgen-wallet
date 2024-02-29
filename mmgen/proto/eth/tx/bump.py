@@ -33,3 +33,9 @@ class Bump(Completed,New,TxBase.Bump):
 
 class TokenBump(TokenCompleted,TokenNew,Bump):
 	desc = 'fee-bumped transaction'
+
+class AutomountBump(Bump):
+	pass
+
+class TokenAutomountBump(TokenBump):
+	pass

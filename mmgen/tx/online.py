@@ -12,7 +12,7 @@
 tx.online: online signed transaction class
 """
 
-from .signed import Signed
+from .signed import Signed, AutomountSigned
 
 class OnlineSigned(Signed):
 
@@ -31,6 +31,13 @@ class OnlineSigned(Signed):
 			expect  = 'YES' if self.cfg.quiet or self.cfg.yes else 'YES, I REALLY WANT TO DO THIS' )
 		msg('Sending transaction')
 
+class AutomountOnlineSigned(AutomountSigned, OnlineSigned):
+	pass
+
 class Sent(OnlineSigned):
 	desc = 'sent transaction'
 	ext = 'subtx'
+
+class AutomountSent(AutomountOnlineSigned):
+	desc = 'sent automount transaction'
+	ext = 'asubtx'

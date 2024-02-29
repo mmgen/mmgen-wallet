@@ -210,6 +210,16 @@ class CmdTestAutosignClean(CmdTestAutosignBase):
 				(self.asi.tx_dir / fn).touch()
 
 			for fn in (
+				'a.arawtx', 'a.asigtx', 'a.asubtx',
+				'b.arawtx', 'b.asigtx',
+				'c.asubtx',
+				'd.arawtx', 'd.asubtx',
+				'e.arawtx',
+				'f.asigtx', 'f.asubtx',
+			):
+				(self.asi.txauto_dir / fn).touch()
+
+			for fn in (
 				'a.rawmsg.json', 'a.sigmsg.json',
 				'b.rawmsg.json',
 				'c.sigmsg.json',
@@ -270,6 +280,7 @@ class CmdTestAutosignClean(CmdTestAutosignBase):
 
 		chk_non_xmr = """
 			tx:          a.sigtx b.sigtx c.rawtx d.sigtx
+			txauto:      a.asubtx b.asigtx c.asubtx d.asubtx e.arawtx f.asubtx
 			msg:         a.sigmsg.json b.rawmsg.json c.sigmsg.json d.sigmsg.json
 		"""
 		chk_xmr = """
@@ -281,10 +292,10 @@ class CmdTestAutosignClean(CmdTestAutosignBase):
 		shred_count = 0
 
 		if not self.asi.xmr_only:
-			for k in ('tx_dir','msg_dir'):
+			for k in ('tx_dir', 'txauto_dir', 'msg_dir'):
 				shutil.rmtree(getattr(self.asi, k))
 			chk += chk_non_xmr.rstrip()
-			shred_count += 4
+			shred_count += 9
 
 		if self.asi.have_xmr:
 			shutil.rmtree(self.asi.xmr_dir)
@@ -370,6 +381,21 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 	def do_umount_online(self, *args, **kwargs):
 		return self._mount_ops('asi_online', 'do_umount', *args, **kwargs)
+
+	async def txview(self):
+		self.spawn('', msg_only=True)
+		self.do_mount()
+		src = Path(self.asi.txauto_dir)
+		from mmgen.tx import CompletedTX
+		txs = sorted(
+			[await CompletedTX(cfg=cfg, filename=path, quiet_open=True) for path in sorted(src.iterdir())],
+			key = lambda x: x.timestamp)
+		for tx in txs:
+			imsg(blue(f'\nViewing ‘{tx.infile.name}’:'))
+			out = tx.info.format(terse=True)
+			imsg(indent(out, indent='  '))
+		self.do_umount()
+		return 'ok'
 
 class CmdTestAutosign(CmdTestAutosignBase):
 	'autosigning transactions for all supported coins'
@@ -754,9 +780,9 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 
 		def prompt_insert_sign(t):
 			omsg(orange(insert_msg))
-			t.expect(f'{self.tx_count} transactions signed')
+			t.expect(f'{self.tx_count} non-automount transactions signed')
 			if self.bad_tx_count:
-				t.expect(f'{self.bad_tx_count} transactions failed to sign')
+				t.expect(f'{self.bad_tx_count} non-automount transactions failed to sign')
 			t.expect('Waiting')
 
 		if led_opts:

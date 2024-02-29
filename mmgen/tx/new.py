@@ -436,7 +436,7 @@ class New(Base):
 		self.cfg._util.qmsg('Transaction successfully created')
 
 		from . import UnsignedTX
-		new = UnsignedTX(cfg=self.cfg,data=self.__dict__)
+		new = UnsignedTX(cfg=self.cfg, data=self.__dict__, automount=self.cfg.autosign)
 
 		if not self.cfg.yes:
 			new.info.view_with_prompt('View transaction details?')

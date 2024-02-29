@@ -54,15 +54,17 @@ class Completed(Base):
 		"""
 		see twctl:import_token()
 		"""
-		from .unsigned import Unsigned
-		from .online import Sent
-		for cls in (Unsigned, Sent):
+		from .unsigned import Unsigned, AutomountUnsigned
+		from .online import Sent, AutomountSent
+		for cls in (Unsigned, AutomountUnsigned, Sent, AutomountSent):
 			if ext == getattr(cls, 'ext'):
 				return cls
 
 		if proto.tokensym:
 			from .online import OnlineSigned as Signed
+			from .online import AutomountOnlineSigned as AutomountSigned
 		else:
-			from .signed import Signed
-		if ext == Signed.ext:
-			return Signed
+			from .signed import Signed, AutomountSigned
+		for cls in (Signed, AutomountSigned):
+			if ext == getattr(cls, 'ext'):
+				return cls

@@ -80,7 +80,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 			await self.do_sign(keys[0].sec.wif)
 			msg('OK')
 			from ....tx import SignedTX
-			return await SignedTX(cfg=self.cfg,data=self.__dict__)
+			return await SignedTX(cfg=self.cfg, data=self.__dict__, automount=self.automount)
 		except Exception as e:
 			msg(f'{e}: transaction signing failed!')
 			return False
@@ -107,3 +107,9 @@ class TokenUnsigned(TokenCompleted,Unsigned):
 				gasPrice  = o['gasPrice'],
 				nonce     = o['nonce'])
 		(self.serialized,self.coin_txid) = await t.txsign(tx_in,wif,o['from'],chain_id=o['chainId'])
+
+class AutomountUnsigned(TxBase.AutomountUnsigned, Unsigned):
+	pass
+
+class TokenAutomountUnsigned(TxBase.AutomountUnsigned, TokenUnsigned):
+	pass

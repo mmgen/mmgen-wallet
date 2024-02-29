@@ -67,7 +67,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 		try:
 			self.update_serialized(ret['hex'])
 			from ....tx import SignedTX
-			new = await SignedTX(cfg=self.cfg,data=self.__dict__)
+			new = await SignedTX(cfg=self.cfg, data=self.__dict__, automount=self.automount)
 			tx_decoded = await self.rpc.call( 'decoderawtransaction', ret['hex'] )
 			new.compare_size_and_estimated_size(tx_decoded)
 			new.coin_txid = CoinTxID(self.deserialized.txid)
@@ -81,3 +81,6 @@ class Unsigned(Completed,TxBase.Unsigned):
 				import sys,traceback
 				ymsg( '\n' + ''.join(traceback.format_exception(*sys.exc_info())) )
 			return False
+
+class AutomountUnsigned(TxBase.AutomountUnsigned, Unsigned):
+	pass

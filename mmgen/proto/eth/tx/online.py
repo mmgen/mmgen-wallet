@@ -77,3 +77,15 @@ class Sent(TxBase.Sent, OnlineSigned):
 
 class TokenSent(TxBase.Sent, TokenOnlineSigned):
 	pass
+
+class AutomountOnlineSigned(TxBase.AutomountOnlineSigned, OnlineSigned):
+	pass
+
+class AutomountSent(TxBase.AutomountSent, AutomountOnlineSigned):
+	pass
+
+class TokenAutomountOnlineSigned(TxBase.AutomountOnlineSigned, TokenOnlineSigned):
+	pass
+
+class TokenAutomountSent(TxBase.AutomountSent, TokenAutomountOnlineSigned):
+	pass

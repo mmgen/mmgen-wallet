@@ -30,3 +30,6 @@ class Signed(Completed,TxBase.Signed):
 				Your transaction fee estimates will be inaccurate
 				Please re-create and re-sign the transaction using the option --vsize-adj={1/ratio:1.2f}
 			""").strip())
+
+class AutomountSigned(TxBase.AutomountSigned, Signed):
+	pass
