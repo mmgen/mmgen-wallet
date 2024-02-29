@@ -49,7 +49,8 @@ class Status(TxBase.Status):
 
 		async def is_in_mempool():
 			try:
-				return 'height' in await tx.rpc.call('getmempoolentry',tx.coin_txid)
+				await tx.rpc.call('getmempoolentry',tx.coin_txid)
+				return True
 			except:
 				return False
 
