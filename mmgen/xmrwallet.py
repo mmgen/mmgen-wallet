@@ -629,6 +629,7 @@ class MoneroWalletOps:
 		'sign',
 		'submit',
 		'resubmit',
+		'abort',
 		'dump',
 		'restore',
 		'export_outputs',
@@ -1853,6 +1854,15 @@ class MoneroWalletOps:
 				(MoneroMMGenTX.Submitted(self.cfg, Path(fn)) for fn in fns),
 					key = lambda x: getattr(x.data,'submit_time',None) or x.data.create_time
 			)[-1]
+
+	class abort(base):
+		opts = ('watch_only','autosign')
+
+		def __init__(self, cfg, uarg_tuple):
+			super().__init__(cfg,uarg_tuple)
+			self.mount_removable_device()
+			from .autosign import Signable
+			Signable.xmr_transaction(self.asi).shred_abortable() # prompts user, then raises exception or exits
 
 	class dump(wallet):
 		wallet_offline = True

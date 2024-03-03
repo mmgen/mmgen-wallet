@@ -73,7 +73,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		('export_outputs1',          'exporting outputs from Alice’s watch-only wallet #1'),
 		('import_key_images1',       'importing signed key images into Alice’s online wallets'),
 		('sync_chkbal1',             'syncing Alice’s wallet #1'),
+		('abort_tx1',                'aborting the current transaction (error)'),
 		('create_transfer_tx2',      'creating a transfer TX (for relaying via proxy)'),
+		('abort_tx2',                'aborting the current transaction (OK, unsigned)'),
+		('create_transfer_tx2a',     'creating the transfer TX again'),
 		('submit_transfer_tx2',      'submitting the transfer TX (relaying via proxy)'),
 		('sync_chkbal2',             'syncing Alice’s wallets and checking balance'),
 		('dump_wallets',             'dumping Alice’s wallets'),
@@ -248,11 +251,27 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		return self._create_transfer_tx('0.124')
 
 	def create_transfer_tx2(self):
-		self.do_mount_online()
-		get_file_with_ext(self.asi_online.xmr_tx_dir,'rawtx',delete_all=True)
-		get_file_with_ext(self.asi_online.xmr_tx_dir,'sigtx',delete_all=True)
-		self.do_umount_online()
 		return self._create_transfer_tx('0.257')
+
+	create_transfer_tx2a = create_transfer_tx2
+
+	def _abort_tx(self,expect,send=None,exit_val=None):
+		self.insert_device_online()
+		t = self.spawn('mmgen-xmrwallet', ['--autosign', 'abort'])
+		t.expect(expect)
+		if send:
+			t.send(send)
+		t.read() # required!
+		self.remove_device_online()
+		if exit_val:
+			t.req_exit_val = exit_val
+		return t
+
+	def abort_tx1(self):
+		return self._abort_tx('No unsent transactions present', exit_val=2)
+
+	def abort_tx2(self):
+		return self._abort_tx('(y/N): ', 'y')
 
 	def _xmr_autosign_op(
 			self,

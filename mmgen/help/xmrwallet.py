@@ -53,6 +53,8 @@ relay     - relay a transaction from a transaction file created using â€˜sweepâ€
 submit    - submit an autosigned transaction to a wallet and the network
 resubmit  - resubmit most recently submitted autosigned transaction (other
             actions are required: see Exporting Outputs below)
+abort     - abort the current transaction created with --autosign.  The
+            transaction may be signed or unsigned
 txview    - display detailed information about a transaction file or files
 txlist    - same as above, but display terse information in tabular format
 dump      - produce JSON dumps of wallet metadata (accounts, addresses and
