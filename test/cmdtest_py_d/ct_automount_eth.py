@@ -59,16 +59,13 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		CmdTestAutosignThreaded.__init__(self, trunner, cfgs, spawn)
 		CmdTestEthdev.__init__(self, trunner, cfgs, spawn)
 
-		if trunner == None:
-			return
-
-		self.opts.append('--alice')
+		self.txcreate_args = ['--quiet']
 
 	def fund_mmgen_address(self):
 		keyfile = os.path.join(self.tmpdir, parity_devkey_fn)
 		t = self.spawn(
 			'mmgen-txdo',
-			['--quiet']
+			self.eth_args
 			+ [f'--keys-from-file={keyfile}']
 			+ ['--fee=40G', '98831F3A:E:1,123.456', dfl_words_file],
 		)

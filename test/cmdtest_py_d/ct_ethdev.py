@@ -400,6 +400,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		if trunner is None:
 			return
 
+		self.txcreate_args    = [f'--outdir={self.tmpdir}', '--quiet']
 		self.eth_args         = [f'--outdir={self.tmpdir}', '--quiet']
 		self.eth_args_noquiet = [f'--outdir={self.tmpdir}']
 
@@ -627,7 +628,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			no_read         = False,
 			tweaks          = []):
 		fee_info_pat = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format( *fee_info_data, c=self.proto.coin )
-		t = self.spawn('mmgen-'+caller, self.eth_args + ['-B'] + args)
+		t = self.spawn('mmgen-'+caller, self.txcreate_args + ['-B'] + args)
 		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 		t.written_to_file('Account balances listing')
 		t = self.txcreate_ui_common(
@@ -653,9 +654,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn(
 				'mmgen-txsign',
-				[f'--outdir={self.tmpdir}']
+				self.eth_args
 				+ [f'--coin={self.proto.coin}']
-				+ ['--quiet']
 				+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
 				+ add_args
 				+ ([],['--yes'])[ni]
@@ -1149,7 +1149,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 	def token_txcreate(self,args=[],token='',inputs='1',fee='50G',file_desc='Unsigned transaction'):
 		return self.txcreate_ui_common(
-			self.spawn('mmgen-txcreate', self.eth_args + ['--token='+token,'-B','--fee='+fee] + args),
+			self.spawn('mmgen-txcreate', self.txcreate_args + ['--token='+token,'-B','--fee='+fee] + args),
 			menu              = [],
 			inputs            = inputs,
 			input_sels_prompt = 'to spend from',
@@ -1302,7 +1302,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 		if self.proto.coin == 'ETC' and adj_total:
 			total = str(Decimal(total) + self.bal_corr)
-		t = self.spawn('mmgen-txcreate', self.eth_args + args)
+		t = self.spawn('mmgen-txcreate', self.txcreate_args + args)
 		for n in bals:
 			t.expect('[R]efresh balance:\b','R')
 			t.expect(' main menu): ',n+'\n')
@@ -1365,7 +1365,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			comment_text  = None,
 			changed       = False,
 			pexpect_spawn = None):
-		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B','-i'],pexpect_spawn=pexpect_spawn)
+		t = self.spawn('mmgen-txcreate', self.txcreate_args + args + ['-B','-i'],pexpect_spawn=pexpect_spawn)
 
 		menu_prompt = 'efresh balance:\b'
 

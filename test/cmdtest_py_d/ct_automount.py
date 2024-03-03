@@ -24,6 +24,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 
 	networks = ('btc', 'bch', 'ltc')
 	tmpdir_nums = [49]
+	extra_spawn_args = []
 
 	rtFundAmt = None # pylint
 	rt_data = {
@@ -210,7 +211,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		if not no_wait:
 			self._wait_signed('transaction')
 		self.insert_device_online()
-		t = self.spawn('mmgen-txsend', ['--quiet', '--autosign'])
+		t = self.spawn('mmgen-txsend', ['--alice', '--quiet', '--autosign'])
 		t.view_tx('t')
 		t.do_comment(comment)
 		self._do_confirm_send(t, quiet=True)
@@ -232,7 +233,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		if cfg.coin == 'BCH':
 			return 'skip'
 		self.insert_device_online()
-		t = self.spawn('mmgen-txbump', ['--autosign'])
+		t = self.spawn('mmgen-txbump', ['--alice', '--autosign'])
 		if bad_tx_desc:
 			t.expect('Only sent transactions')
 			t.expect(bad_tx_desc)
