@@ -63,16 +63,21 @@ class AddrFile(MMGenObject):
 			('.' + self.parent.proto.network) if self.parent.proto.testnet else '',
 			self.ext )
 
-	def write(self,fn=None,binary=False,desc=None,ask_overwrite=True):
+	def write(
+			self,
+			fn            = None,
+			binary        = False,
+			desc          = None,
+			ask_overwrite = True):
 		from .fileutil import write_data_to_file
 		write_data_to_file(
-			self.cfg,
-			fn or self.filename,
-			self.fmt_data or self.format(),
-			desc or self.desc,
-			ask_tty = self.parent.has_keys and not self.cfg.quiet,
-			binary = binary,
-			ask_overwrite = ask_overwrite )
+			cfg           = self.cfg,
+			outfile       = fn or self.filename,
+			data          = self.fmt_data or self.format(),
+			desc          = desc or self.desc,
+			ask_tty       = self.parent.has_keys and not self.cfg.quiet,
+			binary        = binary,
+			ask_overwrite = ask_overwrite)
 
 	def make_label(self):
 		p = self.parent
