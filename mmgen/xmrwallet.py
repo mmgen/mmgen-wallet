@@ -1908,8 +1908,8 @@ class MoneroWalletOps:
 			m.write()
 			return True
 
-	class export_key_images(wallet):
-		action = 'signing wallet outputs file with'
+	class import_outputs(wallet):
+		action = 'importing wallet outputs into'
 		start_daemon = False
 
 		async def main(self,fn,wallet_idx,restart_daemon=True):

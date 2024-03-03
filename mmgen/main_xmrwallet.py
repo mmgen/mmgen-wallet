@@ -48,8 +48,7 @@ opts_data = {
 			'[opts] relay    <TX_file>',
 			'[opts] resubmit | abort (for use with --autosign only)',
 			'[opts] txview | txlist [TX_file] ...',
-			'[opts] export-outputs    [wallets]',
-			'[opts] import-key-images [wallets]',
+			'[opts] export-outputs | import-key-images [wallets]',
 		],
 		'options': """
 -h, --help                       Print this help message

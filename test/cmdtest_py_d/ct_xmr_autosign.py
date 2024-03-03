@@ -356,9 +356,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 	def _export_outputs(self,wallet_arg,add_opts=[]):
 		self.insert_device_online()
 		t = self._xmr_autosign_op(
-			op    = 'export-outputs',
+			op         = 'export-outputs',
 			wallet_arg = wallet_arg,
-			add_opts = add_opts )
+			add_opts   = add_opts)
 		t.written_to_file('Wallet outputs')
 		self.remove_device_online()
 		return t

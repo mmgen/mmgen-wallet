@@ -61,10 +61,10 @@ dump      - produce JSON dumps of wallet metadata (accounts, addresses and
             labels) for a list or range of wallets
 restore   - same as ‘create’, but additionally restore wallet metadata from
             the corresponding JSON dump files created with ‘dump’
-export-outputs    - export outputs of watch-only wallets for later import
-                    into their corresponding offline wallets
-import-key-images - import key images signed by offline wallets into their
-                    corresponding watch-only wallets
+export-outputs      - export outputs of watch-only wallets for import into
+                      their corresponding offline wallets
+import-key-images   - import key images signed by offline wallets into their
+                      corresponding watch-only wallets
 
 
                            ‘LABEL’ OPERATION NOTES
@@ -344,23 +344,25 @@ three cases:
 You might also need to do it, however, if an offline wallet is unable to sign
 a transaction due to missing outputs.
 
-Export outputs from a wallet as follows (note that the --rescan-blockchain
-option is required only after a ‘resubmit’ – otherwise it should be omitted):
-
-$ mmgen-xmrwallet --autosign --rescan-blockchain export-outputs <wallet index>
-
 At the start of a new signing session, you must export outputs from ALL
 wallets you intend to transact with.  This is necessary because the offline
 signing wallets have just been created and know nothing about the state of
-their watch-only counterparts.
+their online counterparts.
 
-Then insert the removable device on the offline machine to import the outputs
-into the corresponding signing wallet(s) (and optionally redo any failed
-transaction signing operation).  The signing wallet(s) will also create
-signed key images.
+Export outputs from a wallet as follows (for all wallets, omit the index):
 
-Following a ‘resubmit’, you must then import the signed key images into your
-online wallet as follows:
+$ mmgen-xmrwallet --autosign export-outputs <wallet index>
+
+Then insert the removable device on the offline machine.  This will import
+the outputs into the corresponding signing wallet(s) (and optionally redo any
+failed transaction signing operation).
+
+Following a ‘resubmit’, add the --rescan-blockchain option:
+
+$ mmgen-xmrwallet --autosign --rescan-blockchain export-outputs <wallet index>
+
+Insert the removable device on your online machine and import the signed key
+images into your online wallet as follows:
 
 $ mmgen-xmrwallet --autosign import-key-images
 

@@ -19,7 +19,7 @@ from subprocess import run,DEVNULL
 
 from .cfg import Config
 from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt,fmt_list,async_run
-from .color import yellow,red,orange
+from .color import yellow,red,orange,brown
 from .wallet import Wallet,get_wallet_cls
 from .filename import find_file_in_dir
 from .ui import keypress_confirm
@@ -266,11 +266,12 @@ class Signable:
 		dir_name = 'xmr_outputs_dir'
 		clean_all = True
 		summary_footer = '\n'
+		action_desc = 'imported and signed'
 
 		async def sign(self,f):
 			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
 			wallet_idx = MoneroWalletOps.wallet.get_idx_from_fn(f)
-			m = MoneroWalletOps.export_key_images(
+			m = MoneroWalletOps.import_outputs(
 				self.parent.xmrwallet_cfg,
 				xmrwallet_uargs(
 					infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
@@ -514,7 +515,7 @@ class Autosign:
 				good.append(ret) if ret else bad.append(f)
 				self.cfg._util.qmsg('')
 			await asyncio.sleep(0.3)
-			msg(f'{len(good)} {target.desc}{suf(good)} signed')
+			msg(brown(f'{len(good)} {target.desc}{suf(good)} {target.action_desc}'))
 			if bad:
 				rmsg(f'{len(bad)} {target.desc}{suf(bad)} {target.fail_msg}')
 			if good and not self.cfg.no_summary:
