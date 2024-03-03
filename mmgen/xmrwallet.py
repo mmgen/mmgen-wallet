@@ -486,6 +486,7 @@ class MoneroWalletOutputsFile:
 			'wallet_index',
 			'outputs_data_hex',
 			'signed_key_images',
+			'sign',
 		])
 
 		def __init__(self,cfg):
@@ -527,7 +528,7 @@ class MoneroWalletOutputsFile:
 	class New(Base):
 		ext = 'raw'
 
-		def __init__( self, parent, wallet_fn, data, wallet_idx=None ):
+		def __init__(self, parent, wallet_fn, data, wallet_idx=None, sign=False):
 			super().__init__(parent.cfg)
 			self.wallet_fn = wallet_fn
 			init_data = dict.fromkeys(self.data_tuple._fields)
@@ -535,6 +536,8 @@ class MoneroWalletOutputsFile:
 				'seed_id':      parent.kal.al_id.sid,
 				'wallet_index': wallet_idx or parent.get_idx_from_fn(wallet_fn),
 			})
+			if sign:
+				init_data['sign'] = sign
 			init_data.update({k:v for k,v in data.items() if k in init_data})
 			self.data = self.data_tuple(**init_data)
 
@@ -1882,6 +1885,7 @@ class MoneroWalletOps:
 		action = 'exporting outputs from'
 		stem = 'process'
 		opts = ('rescan_blockchain',)
+		sign = False
 
 		async def process_wallet(self,d,fn,last):
 			h = self.rpc(self,d)
@@ -1904,9 +1908,13 @@ class MoneroWalletOps:
 				parent    = self,
 				wallet_fn = fn,
 				data      = self.c.call('export_outputs', all=True),
+				sign      = self.sign,
 			)
 			m.write()
 			return True
+
+	class export_outputs_sign(export_outputs):
+		sign = True
 
 	class import_outputs(wallet):
 		action = 'importing wallet outputs into'
@@ -1927,14 +1935,15 @@ class MoneroWalletOps:
 				outputs_data_hex = m.data.outputs_data_hex )
 			idata = res['num_imported']
 			bmsg(f'\n  {idata} output{suf(idata)} imported')
-			data = m.data._asdict()
-			data.update(self.c.call('export_key_images', all=True))
-			m = MoneroWalletOutputsFile.SignedNew(
-				parent    = self,
-				wallet_fn = m.get_wallet_fn(fn),
-				data      = data )
-			idata = m.data.signed_key_images or []
-			bmsg(f'  {len(idata)} key image{suf(idata)} signed')
+			if m.data.sign:
+				data = m.data._asdict()
+				data.update(self.c.call('export_key_images', all=True))
+				m = MoneroWalletOutputsFile.SignedNew(
+					parent    = self,
+					wallet_fn = m.get_wallet_fn(fn),
+					data      = data)
+				idata = m.data.signed_key_images or []
+				bmsg(f'  {len(idata)} key image{suf(idata)} signed')
 			return m
 
 	class import_key_images(wallet):

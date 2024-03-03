@@ -39,6 +39,7 @@ class Signable:
 
 		clean_all = False
 		multiple_ok = True
+		action_desc = 'signed'
 
 		def __init__(self,parent):
 			self.parent = parent
@@ -266,7 +267,6 @@ class Signable:
 		dir_name = 'xmr_outputs_dir'
 		clean_all = True
 		summary_footer = '\n'
-		action_desc = 'imported and signed'
 
 		async def sign(self,f):
 			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
@@ -278,8 +278,12 @@ class Signable:
 					wallets = str(wallet_idx),
 					spec    = None ),
 			)
-			obj = await m.main( f, wallet_idx, restart_daemon=self.need_daemon_restart(m,wallet_idx) )
-			obj.write()
+			obj = await m.main(f, wallet_idx, restart_daemon=self.need_daemon_restart(m,wallet_idx))
+			if obj.data.sign:
+				obj.write()
+				self.action_desc = 'imported and signed'
+			else:
+				self.action_desc = 'imported'
 			return obj
 
 	class message(base):

@@ -48,7 +48,7 @@ opts_data = {
 			'[opts] relay    <TX_file>',
 			'[opts] resubmit | abort (for use with --autosign only)',
 			'[opts] txview | txlist [TX_file] ...',
-			'[opts] export-outputs | import-key-images [wallets]',
+			'[opts] export-outputs | export-outputs-sign | import-key-images [wallets]',
 		],
 		'options': """
 -h, --help                       Print this help message
@@ -107,7 +107,7 @@ cmd_args = cfg._args
 if cmd_args and cfg.autosign and (
 		cmd_args[0] in (
 			MoneroWalletOps.kafile_arg_ops
-			+ ('export-outputs','import-key-images','txview','txlist')
+			+ ('export-outputs', 'export-outputs-sign', 'import-key-images', 'txview', 'txlist')
 		)
 		or len(cmd_args) == 1 and cmd_args[0] in ('submit', 'resubmit', 'abort')
 	):
@@ -133,7 +133,7 @@ elif op in ('new','transfer','sweep','label'):
 	if len(cmd_args) != 1:
 		cfg._opts.usage()
 	spec = cmd_args[0]
-elif op in ('export-outputs','import-key-images'):
+elif op in ('export-outputs', 'export-outputs-sign', 'import-key-images'):
 	if not cfg.autosign: # --autosign only for now - TODO
 		die(f'--autosign must be used with command {op!r}')
 	if len(cmd_args) > 1:

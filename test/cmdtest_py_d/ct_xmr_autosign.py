@@ -67,10 +67,11 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		('fund_alice1',              'sending funds to Alice (wallet #1)'),
 		('fund_alice2',              'sending funds to Alice (wallet #2)'),
 		('autosign_start_thread',    'starting autosign wait loop'),
+		('export_outputs1',          'exporting outputs from Alice’s watch-only wallet #1'),
 		('create_transfer_tx1',      'creating a transfer TX'),
 		('submit_transfer_tx1',      'submitting the transfer TX'),
 		('resubmit_transfer_tx1',    'resubmitting the transfer TX'),
-		('export_outputs1',          'exporting outputs from Alice’s watch-only wallet #1'),
+		('export_outputs2',          'exporting outputs from Alice’s watch-only wallet #1'),
 		('import_key_images1',       'importing signed key images into Alice’s online wallets'),
 		('sync_chkbal1',             'syncing Alice’s wallet #1'),
 		('abort_tx1',                'aborting the current transaction (error)'),
@@ -83,7 +84,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		('delete_wallets',           'deleting Alice’s wallets'),
 		('restore_wallets',          'creating online (watch-only) wallets for Alice'),
 		('delete_dump_files',        'deleting Alice’s dump files'),
-		('export_outputs2',          'exporting outputs from Alice’s watch-only wallets'),
+		('export_outputs3',          'exporting outputs from Alice’s watch-only wallets'),
 		('import_key_images2',       'importing signed key images into Alice’s online wallets'),
 		('sync_chkbal3',             'syncing Alice’s wallets and checking balance'),
 		('txlist',                   'listing Alice’s submitted transactions'),
@@ -353,10 +354,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		else:
 			return t
 
-	def _export_outputs(self,wallet_arg,add_opts=[]):
+	def _export_outputs(self, wallet_arg, op, add_opts=[]):
 		self.insert_device_online()
 		t = self._xmr_autosign_op(
-			op         = 'export-outputs',
+			op         = op,
 			wallet_arg = wallet_arg,
 			add_opts   = add_opts)
 		t.written_to_file('Wallet outputs')
@@ -364,10 +365,13 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		return t
 
 	def export_outputs1(self):
-		return self._export_outputs('1',['--rescan-blockchain'])
+		return self._export_outputs('1', op='export-outputs')
 
 	def export_outputs2(self):
-		return self._export_outputs('1-2')
+		return self._export_outputs('1', op='export-outputs-sign', add_opts=['--rescan-blockchain'])
+
+	def export_outputs3(self):
+		return self._export_outputs('1-2', op='export-outputs-sign')
 
 	def _import_key_images(self,wallet_arg):
 		self.insert_device_online()
