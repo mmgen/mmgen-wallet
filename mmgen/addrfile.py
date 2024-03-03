@@ -68,7 +68,8 @@ class AddrFile(MMGenObject):
 			fn            = None,
 			binary        = False,
 			desc          = None,
-			ask_overwrite = True):
+			ask_overwrite = True,
+			outdir        = None):
 		from .fileutil import write_data_to_file
 		write_data_to_file(
 			cfg           = self.cfg,
@@ -77,7 +78,8 @@ class AddrFile(MMGenObject):
 			desc          = desc or self.desc,
 			ask_tty       = self.parent.has_keys and not self.cfg.quiet,
 			binary        = binary,
-			ask_overwrite = ask_overwrite)
+			ask_overwrite = ask_overwrite,
+			outdir        = outdir)
 
 	def make_label(self):
 		p = self.parent

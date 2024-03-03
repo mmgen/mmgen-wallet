@@ -161,6 +161,7 @@ def write_data_to_file(
 		quiet                 = False,
 		binary                = False,
 		ignore_opt_outdir     = False,
+		outdir                = None,
 		check_data            = False,
 		cmp_data              = None):
 
@@ -218,8 +219,8 @@ def write_data_to_file(
 			os.write(1,data if isinstance(data,bytes) else data.encode())
 
 	def do_file(outfile,ask_write_prompt):
-		if cfg.outdir and not ignore_opt_outdir and not os.path.isabs(outfile):
-			outfile = make_full_path(cfg.outdir,outfile)
+		if (outdir or (cfg.outdir and not ignore_opt_outdir)) and not os.path.isabs(outfile):
+			outfile = make_full_path(outdir or cfg.outdir, outfile)
 
 		if ask_write:
 			if not ask_write_prompt:

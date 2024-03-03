@@ -627,7 +627,6 @@ class Autosign:
 				'wallet_dir': str(self.wallet_dir),
 				'autosign': True,
 				'autosign_mountpoint': str(self.mountpoint),
-				'outdir': str(self.xmr_dir), # required by vkal.write()
 				'offline': True,
 				'passwd_file': str(self.keyfile),
 			})

@@ -1217,13 +1217,13 @@ class MoneroWalletOps:
 			vkf = vkal.file
 
 			# before writing viewkey-address file, shred any old ones in the directory:
-			for f in Path(self.cfg.outdir or '.').iterdir():
+			for f in Path(self.asi.xmr_dir).iterdir():
 				if f.name.endswith(vkf.ext):
 					from .fileutil import shred_file
 					msg(f"\nShredding old viewkey-address file '{f}'")
 					shred_file( f, verbose=self.cfg.verbose )
 
-			vkf.write() # write file to self.cfg.outdir
+			vkf.write(outdir=self.asi.xmr_dir)
 
 	class restore(create):
 		wallet_offline = True
