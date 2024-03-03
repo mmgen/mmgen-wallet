@@ -23,8 +23,7 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 import sys
 
 from .cfg import gc,Config
-from .util import async_run, msg, suf, die, fmt_list
-from .fileutil import shred_file
+from .util import async_run, die
 
 opts_data = {
 	'sets': [
@@ -70,19 +69,7 @@ elif not cfg._args and cfg.autosign:
 	asi.do_mount()
 	si = Signable.automount_transaction(asi)
 	if cfg.abort:
-		files = si.get_abortable() # raises AutosignTXError if no unsent TXs available
-		from .ui import keypress_confirm
-		if keypress_confirm(
-				cfg,
-				'The following file{} will be securely deleted:\n{}\nOK?'.format(
-					suf(files),
-					fmt_list(map(str, files), fmt='col', indent='  '))):
-			for f in files:
-				msg(f'Shredding file ‘{f}’')
-				shred_file(f)
-			sys.exit(0)
-		else:
-			die(1, 'Exiting at user request')
+		si.shred_abortable() # prompts user, then raises exception or exits
 	elif cfg.status:
 		if si.unsent:
 			die(1, 'Transaction is unsent')

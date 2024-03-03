@@ -128,6 +128,21 @@ class Signable:
 					die(1, f'{self.unsent[0]}, {self.unsent_raw[0]}: file mismatch')
 			return self.unsent_raw + self.unsent
 
+		def shred_abortable(self):
+			files = self.get_abortable() # raises AutosignTXError if no unsent TXs available
+			if keypress_confirm(
+					self.cfg,
+					'The following file{} will be securely deleted:\n{}\nOK?'.format(
+						suf(files),
+						fmt_list(map(str, files), fmt='col', indent='  '))):
+				for f in files:
+					msg(f'Shredding file ‘{f}’')
+					from .fileutil import shred_file
+					shred_file(f)
+				sys.exit(0)
+			else:
+				die(1, 'Exiting at user request')
+
 		async def get_last_created(self):
 			from .tx import CompletedTX
 			ext = '.' + Signable.automount_transaction.subext
