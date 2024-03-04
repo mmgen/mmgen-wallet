@@ -23,9 +23,7 @@ def _base_proto_subclass(clsname,modname,proto):
 	import importlib
 	return getattr( importlib.import_module(modname), clsname )
 
-def _get_cls_info(clsname,modname,args,kwargs):
-
-	assert args == (), f'{clsname}.chk1: only keyword args allowed in {clsname} initializer'
+def _get_cls_info(clsname, modname, kwargs):
 
 	if 'proto' in kwargs:
 		proto = kwargs['proto']
@@ -57,20 +55,21 @@ def _get_cls_info(clsname,modname,args,kwargs):
 			clsname = 'Automount' + clsname
 		del kwargs['automount']
 
-	return ( kwargs['cfg'], proto, clsname, modname, kwargs )
+	return (clsname, modname, kwargs)
 
 
-def _get_obj( _clsname, _modname, *args, **kwargs ):
+def _get_obj(_clsname, _modname, **kwargs):
 	"""
 	determine cls/mod/proto and pass them to _base_proto_subclass() to get a transaction instance
 	"""
-	cfg,proto,clsname,modname,kwargs = _get_cls_info(_clsname,_modname,args,kwargs)
+	clsname, modname, kwargs = _get_cls_info(_clsname, _modname, kwargs)
 
-	return _base_proto_subclass( clsname, modname, proto )(*args,**kwargs)
+	return _base_proto_subclass(clsname, modname, kwargs['proto'])(**kwargs)
 
-async def _get_obj_async( _clsname, _modname, *args, **kwargs ):
+async def _get_obj_async(_clsname, _modname, **kwargs):
 
-	cfg,proto,clsname,modname,kwargs = _get_cls_info(_clsname,_modname,args,kwargs)
+	clsname, modname, kwargs = _get_cls_info(_clsname, _modname, kwargs)
+	proto = kwargs['proto']
 
 	# NB: tracking wallet needed to retrieve the 'symbol' and 'decimals' parameters of token addr
 	# (see twctl:import_token()).
@@ -83,15 +82,15 @@ async def _get_obj_async( _clsname, _modname, *args, **kwargs ):
 			'Sent',
 			'AutomountSent'):
 		from ..tw.ctl import TwCtl
-		kwargs['twctl'] = await TwCtl(cfg,proto)
+		kwargs['twctl'] = await TwCtl(kwargs['cfg'], proto)
 
-	return _base_proto_subclass( clsname, modname, proto )(*args,**kwargs)
+	return _base_proto_subclass(clsname, modname, proto)(**kwargs)
 
 def _get(clsname,modname):
-	return lambda *args,**kwargs: _get_obj(clsname,modname,*args,**kwargs)
+	return lambda **kwargs: _get_obj(clsname, modname, **kwargs)
 
 def _get_async(clsname,modname):
-	return lambda *args,**kwargs: _get_obj_async(clsname,modname,*args,**kwargs)
+	return lambda **kwargs: _get_obj_async(clsname, modname, **kwargs)
 
 BaseTX         = _get('Base',     'base')
 UnsignedTX     = _get('Unsigned', 'unsigned')

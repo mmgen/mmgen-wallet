@@ -7,7 +7,7 @@ test.unit_tests_d.ut_tx: TX unit tests for the MMGen suite
 import os,re
 
 from mmgen.devtools import get_diff,get_ndiff
-from mmgen.tx import NewTX,CompletedTX
+from mmgen.tx import NewTX,CompletedTX,UnsignedTX
 from mmgen.tx.file import MMGenTxFile
 from mmgen.daemon import CoinDaemon
 from mmgen.protocol import init_proto
@@ -94,3 +94,15 @@ class unit_tests:
 				'litecoin/AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx',
 			)
 		)
+
+	def errors(self,name,ut):
+		async def bad1():
+			await CompletedTX(cfg, filename='foo')
+		def bad2():
+			UnsignedTX(cfg, filename='foo')
+		bad_data = (
+			('forbidden positional args', 'TypeError', 'positional arguments', bad1),
+			('forbidden positional args', 'TypeError', 'positional arguments', bad2),
+		)
+		ut.process_bad_data(bad_data)
+		return True
