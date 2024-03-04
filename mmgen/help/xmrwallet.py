@@ -26,8 +26,8 @@ Unless --daemon is specified, the daemon is assumed to be listening on
 localhost at the default RPC port.
 
 If --tx-relay-daemon is specified, the monerod at HOST:PORT will be used to
-relay any created transactions.  PROXY_HOST:PROXY_PORT, if specified, may
-point to a SOCKS proxy, in which case HOST may be a Tor onion address.
+relay any created transactions.  PROXY_IP:PROXY_PORT, if specified, may point
+to a SOCKS proxy, in which case HOST may be a Tor onion address.
 
 All communications use the RPC protocol via SSL (HTTPS) or Tor.  RPC over
 plain HTTP is not supported.

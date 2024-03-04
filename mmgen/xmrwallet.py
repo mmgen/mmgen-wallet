@@ -66,7 +66,7 @@ xmrwallet_uargs = namedtuple('xmrwallet_uargs',[
 xmrwallet_uarg_info = (
 	lambda e,hp: {
 		'daemon':          e('HOST:PORT', hp),
-		'tx_relay_daemon': e('HOST:PORT[:PROXY_HOST:PROXY_PORT]',          rf'({hp})(?::({hp}))?'),
+		'tx_relay_daemon': e('HOST:PORT[:PROXY_IP:PROXY_PORT]',            rf'({hp})(?::({hp}))?'),
 		'newaddr_spec':    e('WALLET_NUM[:ACCOUNT][,"label text"]',         r'(\d+)(?::(\d+))?(?:,(.*))?'),
 		'transfer_spec':   e('SOURCE_WALLET_NUM:ACCOUNT:ADDRESS,AMOUNT',   rf'(\d+):(\d+):([{b58a}]+),([0-9.]+)'),
 		'sweep_spec':      e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
