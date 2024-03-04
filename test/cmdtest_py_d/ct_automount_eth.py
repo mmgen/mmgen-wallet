@@ -48,8 +48,8 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		('send_token_tx',          'sending a token transaction'),
 		('token_bal2',             f'the {cfg.coin} balance and token balance'),
 		('autosign_kill_thread',   'stopping autosign wait loop'),
-		('txview',                 'viewing transactions'),
 		('stop',                   'stopping daemon'),
+		('txview',                 'viewing transactions'),
 	)
 
 	def __init__(self, trunner, cfgs, spawn):

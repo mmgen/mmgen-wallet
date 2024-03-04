@@ -149,13 +149,10 @@ async def main():
 	if cfg.token or cfg.token_addr:
 		msg(f'Importing for token {twctl.token.hl()} ({twctl.token.hlc(proto.tokensym)})')
 
-	from .rpc import rpc_init
-	twctl.rpc = await rpc_init(cfg,proto)
-
 	for k,v in addrimport_msgs.items():
 		addrimport_msgs[k] = fmt(v,indent='  ',strip_char='\t').rstrip()
 
-	al,infile = parse_cmd_args(twctl.rpc,cfg._args)
+	al, infile = parse_cmd_args(twctl.rpc, cfg._args)
 
 	cfg._util.qmsg(
 		f'OK. {al.num_addrs} addresses'

@@ -61,6 +61,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			proto,
 			mode              = 'r',
 			token_addr        = None,
+			no_rpc            = False,
 			rpc_ignore_wallet = False):
 
 		assert mode in ('r','w','i'), f"{mode!r}: wallet mode must be 'r','w' or 'i'"
@@ -68,9 +69,9 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			self.importing = True
 			mode = 'w'
 
-		# TODO: create on demand - only certain ops require RPC
 		self.cfg = cfg
-		self.rpc = await rpc_init( cfg, proto, ignore_wallet=rpc_ignore_wallet )
+		if not no_rpc:
+			self.rpc = await rpc_init(cfg, proto, ignore_wallet=rpc_ignore_wallet)
 		self.proto = proto
 		self.mode = mode
 		self.desc = self.base_desc = f'{self.proto.name} tracking wallet'
@@ -226,8 +227,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			msg(f'{addrspec!r}: invalid address for this network')
 			return None
 
-		from .rpc import TwRPC
-		pairs = await TwRPC(proto=self.proto,rpc=self.rpc,twctl=self).get_addr_label_pairs(twmmid)
+		pairs = await self.get_addr_label_pairs(twmmid)
 
 		if not pairs:
 			msg(f'MMGen address {twmmid!r} not found in tracking wallet')
@@ -277,8 +277,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 		if await self.set_label(res.coinaddr,lbl):
 			# redundant paranoia step:
-			from .rpc import TwRPC
-			pairs = await TwRPC(proto=self.proto,rpc=self.rpc,twctl=self).get_addr_label_pairs(res.twmmid)
+			pairs = await self.get_addr_label_pairs(res.twmmid)
 			assert pairs[0][0].comment == comment, f'{pairs[0][0].comment!r} != {comment!r}'
 			if not silent:
 				desc = '{} address {} in tracking wallet'.format(

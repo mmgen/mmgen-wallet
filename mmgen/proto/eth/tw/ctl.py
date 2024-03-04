@@ -22,7 +22,8 @@ proto.eth.tw.ctl: Ethereum tracking wallet control class
 
 from ....util import msg,ymsg,die
 from ....tw.ctl import TwCtl,write_mode
-from ....addr import is_coin_addr,is_mmgen_id
+from ....tw.shared import TwLabel
+from ....addr import is_coin_addr,is_mmgen_id,CoinAddr
 from ..contract import Token,ResolvedToken
 
 class EthereumTwCtl(TwCtl):
@@ -165,6 +166,13 @@ class EthereumTwCtl(TwCtl):
 	def mmid_ordered_dict(self):
 		return dict((x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list)
 
+	async def get_addr_label_pairs(self,twmmid):
+		ret = [(
+				TwLabel(self.proto, mmid + ' ' + d['comment']),
+				CoinAddr(self.proto, d['addr'])
+			) for mmid, d in self.mmid_ordered_dict.items()]
+		return [e for e in ret if e[0].mmid == twmmid] or None
+
 class EthereumTokenTwCtl(EthereumTwCtl):
 
 	desc = 'Ethereum token tracking wallet'
@@ -172,9 +180,9 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 	symbol = None
 	cur_eth_balances = {}
 
-	async def __init__(self,cfg,proto,mode='r',token_addr=None):
+	async def __init__(self, cfg, proto, mode='r', token_addr=None, no_rpc=False):
 
-		await super().__init__(cfg,proto,mode=mode)
+		await super().__init__(cfg, proto, mode=mode, no_rpc=no_rpc)
 
 		for v in self.data['tokens'].values():
 			self.conv_types(v)

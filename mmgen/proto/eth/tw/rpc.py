@@ -18,17 +18,11 @@ from ....tw.rpc import TwRPC
 
 class EthereumTwRPC(TwRPC):
 
-	async def get_addr_label_pairs(self,twmmid=None):
-
-		ret = [(
-				TwLabel( self.proto, mmid + ' ' + d['comment'] ),
-				CoinAddr( self.proto, d['addr'] )
-			) for mmid,d in self.twctl.mmid_ordered_dict.items() ]
-
-		if twmmid:
-			ret = [e for e in ret if e[0].mmid == twmmid]
-
-		return ret or None
+	async def get_addr_label_pairs(self):
+		return [(
+				TwLabel(self.proto, mmid + ' ' + d['comment']),
+				CoinAddr(self.proto, d['addr'])
+			) for mmid, d in self.twctl.mmid_ordered_dict.items()] or None
 
 class EthereumTokenTwRPC(EthereumTwRPC):
 	pass

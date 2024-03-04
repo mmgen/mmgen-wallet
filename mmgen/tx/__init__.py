@@ -82,7 +82,7 @@ async def _get_obj_async(_clsname, _modname, **kwargs):
 			'Sent',
 			'AutomountSent'):
 		from ..tw.ctl import TwCtl
-		kwargs['twctl'] = await TwCtl(kwargs['cfg'], proto)
+		kwargs['twctl'] = await TwCtl(kwargs['cfg'], proto, no_rpc=True)
 
 	return _base_proto_subclass(clsname, modname, proto)(**kwargs)
 
