@@ -16,10 +16,11 @@ from ....addr import CoinAddr
 from ....util import die,msg,rmsg
 from ....tw.shared import get_tw_label
 from ....tw.rpc import TwRPC
+from ....tw.ctl import label_addr_pair
 
 class BitcoinTwRPC(TwRPC):
 
-	async def get_label_addr_pairs(self, twmmid=None):
+	async def get_label_addr_pairs(self):
 		"""
 		Get all the accounts in the tracking wallet and their associated addresses.
 		Returns list of (label,address) tuples.
@@ -49,9 +50,6 @@ class BitcoinTwRPC(TwRPC):
 
 		acct_labels = [get_tw_label(self.proto,a) for a in await get_acct_list()]
 
-		if twmmid:
-			acct_labels = [lbl for lbl in acct_labels if lbl.mmid == twmmid]
-
 		if not acct_labels:
 			return None
 
@@ -63,10 +61,8 @@ class BitcoinTwRPC(TwRPC):
 			if len(a) != 1:
 				raise ValueError(f'{a}: label {acct_labels[n]!r} has != 1 associated address!')
 
-		return [(
-			label,
-			CoinAddr(self.proto,addrs[0])
-		) for label,addrs in zip(acct_labels,acct_addrs)]
+		return [label_addr_pair(label, CoinAddr(self.proto,addrs[0]))
+			for label, addrs in zip(acct_labels, acct_addrs)]
 
 	async def get_unspent_by_mmid(self,minconf=1,mmid_filter=[]):
 		"""

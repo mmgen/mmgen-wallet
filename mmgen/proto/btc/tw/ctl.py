@@ -125,6 +125,6 @@ class BitcoinTwCtl(TwCtl):
 				'Addresses have no balances' )
 			return True
 
-	async def get_label_addr_pairs(self, twmmid):
+	async def get_label_addr_pairs(self):
 		from .rpc import TwRPC
-		return await TwRPC(proto=self.proto, rpc=self.rpc, twctl=self).get_label_addr_pairs(twmmid)
+		return await TwRPC(proto=self.proto, rpc=self.rpc, twctl=self).get_label_addr_pairs()

@@ -1173,9 +1173,9 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def bob_resolve_addr(self):
 		mmaddr = '{}:C:1'.format(self._user_sid('bob'))
 		t = self.spawn('mmgen-tool',['--bob','resolve_address',mmaddr])
-		coinaddr = t.read().split()[0].strip()
+		coinaddr = re.search(r'[0-9A-Za-z]{30,}', t.read())[0]
 		t = self.spawn('mmgen-tool',['--bob','resolve_address',coinaddr],no_msg=True)
-		mmaddr_res = t.read().split()[0].strip()
+		mmaddr_res = re.search(r'[0-9A-F]{8}:C:1', t.read())[0]
 		assert mmaddr == mmaddr_res, f'{mmaddr} != {mmaddr_res}'
 		return t
 

@@ -53,20 +53,15 @@ Actions: [q]uit menu, r[e]draw, add [l]abel:
 		self.total = sum((v['amt'] for v in addrs.values()), start=amt0)
 
 		msg_r('Getting labels and associated addresses...')
-		pairs = await self.get_label_addr_pairs()
-
-		if pairs:
-			for label,addr in pairs:
-				if label and label.mmid not in addrs:
-					addrs[label.mmid] = {
-						'addr':   addr,
-						'amt':    amt0,
-						'recvd':  amt0,
-						'confs':  0,
-						'lbl':    label }
-			msg('done')
-		else:
-			msg('[none]')
+		for e in await self.get_label_addr_pairs():
+			if e.label and e.label.mmid not in addrs:
+				addrs[e.label.mmid] = {
+					'addr':   e.coinaddr,
+					'amt':    amt0,
+					'recvd':  amt0,
+					'confs':  0,
+					'lbl':    e.label}
+		msg('done')
 
 		msg_r('Getting received funds data...')
 		# args: 1:minconf, 2:include_empty, 3:include_watchonly, 4:include_immature_coinbase (>=v23.0.0)

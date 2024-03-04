@@ -31,7 +31,8 @@ from ..addr import CoinAddr,is_mmgen_id,is_coin_addr
 from ..rpc import rpc_init
 from .shared import TwMMGenID,TwLabel
 
-addr_info = namedtuple('addr_info',['twmmid','coinaddr'])
+twmmid_addr_pair = namedtuple('addr_info',['twmmid','coinaddr'])
+label_addr_pair = namedtuple('label_addr_pair',['label','coinaddr'])
 
 # decorator for TwCtl
 def write_mode(orig_func):
@@ -219,45 +220,38 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 		twmmid,coinaddr = (None,None)
 
+		pairs = await self.get_label_addr_pairs()
+
 		if is_coin_addr(self.proto,addrspec):
 			coinaddr = get_obj(CoinAddr,proto=self.proto,addr=addrspec)
+			pair_data = [e for e in pairs if e.coinaddr == coinaddr]
 		elif is_mmgen_id(self.proto,addrspec):
 			twmmid = TwMMGenID(self.proto,addrspec)
+			pair_data = [e for e in pairs if e.label.mmid == twmmid]
 		else:
 			msg(f'{addrspec!r}: invalid address for this network')
 			return None
 
-		pairs = await self.get_label_addr_pairs(twmmid)
-
-		if not pairs:
-			msg(f'MMGen address {twmmid!r} not found in tracking wallet')
+		if not pair_data:
+			msg('{a} address {b!r} not found in tracking wallet'.format(
+				a = 'MMGen' if twmmid else 'Coin',
+				b = twmmid or coinaddr))
 			return None
 
-		pairs_data = dict((label.mmid,addr) for label,addr in pairs)
-
-		if twmmid and not coinaddr:
-			coinaddr = pairs_data[twmmid]
-
-		# Allow for the possibility that BTC addr of MMGen addr was entered.
-		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
-		if not twmmid:
-			for mmid,addr in pairs_data.items():
-				if coinaddr == addr:
-					twmmid = mmid
-					break
-			else:
-				msg(f'Coin address {addrspec!r} not found in tracking wallet')
-				return None
-
-		return addr_info(twmmid,coinaddr)
+		return twmmid_addr_pair(
+			twmmid or pair_data[0].label.mmid,
+			coinaddr or pair_data[0].coinaddr)
 
 	# returns on failure
 	@write_mode
-	async def set_comment(self,addrspec,comment='',trusted_coinaddr=None,silent=False):
+	async def set_comment(
+			self,
+			addrspec,
+			comment      = '',
+			trusted_pair = None,
+			silent       = False):
 
-		res = (
-			addr_info(addrspec,trusted_coinaddr) if trusted_coinaddr
-			else await self.resolve_address(addrspec) )
+		res = twmmid_addr_pair(*trusted_pair) if trusted_pair else await self.resolve_address(addrspec)
 
 		if not res:
 			return False
@@ -276,9 +270,6 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			return False
 
 		if await self.set_label(res.coinaddr,lbl):
-			# redundant paranoia step:
-			pairs = await self.get_label_addr_pairs(res.twmmid)
-			assert pairs[0][0].comment == comment, f'{pairs[0][0].comment!r} != {comment!r}'
 			if not silent:
 				desc = '{} address {} in tracking wallet'.format(
 					res.twmmid.type.replace('mmgen','MMGen'),

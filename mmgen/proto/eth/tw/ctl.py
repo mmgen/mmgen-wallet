@@ -21,7 +21,7 @@ proto.eth.tw.ctl: Ethereum tracking wallet control class
 """
 
 from ....util import msg,ymsg,die
-from ....tw.ctl import TwCtl,write_mode
+from ....tw.ctl import TwCtl, write_mode, label_addr_pair
 from ....tw.shared import TwLabel
 from ....addr import is_coin_addr,is_mmgen_id,CoinAddr
 from ..contract import Token,ResolvedToken
@@ -166,12 +166,11 @@ class EthereumTwCtl(TwCtl):
 	def mmid_ordered_dict(self):
 		return dict((x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list)
 
-	async def get_label_addr_pairs(self, twmmid):
-		ret = [(
-				TwLabel(self.proto, mmid + ' ' + d['comment']),
+	async def get_label_addr_pairs(self):
+		return [label_addr_pair(
+				TwLabel(self.proto, f"{mmid} {d['comment']}"),
 				CoinAddr(self.proto, d['addr'])
 			) for mmid, d in self.mmid_ordered_dict.items()]
-		return [e for e in ret if e[0].mmid == twmmid] or None
 
 class EthereumTokenTwCtl(EthereumTwCtl):
 
