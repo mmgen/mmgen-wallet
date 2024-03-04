@@ -53,7 +53,7 @@ Actions: [q]uit menu, r[e]draw, add [l]abel:
 		self.total = sum((v['amt'] for v in addrs.values()), start=amt0)
 
 		msg_r('Getting labels and associated addresses...')
-		pairs = await self.get_addr_label_pairs()
+		pairs = await self.get_label_addr_pairs()
 
 		if pairs:
 			for label,addr in pairs:

@@ -18,7 +18,7 @@ from ....tw.rpc import TwRPC
 
 class EthereumTwRPC(TwRPC):
 
-	async def get_addr_label_pairs(self):
+	async def get_label_addr_pairs(self):
 		return [(
 				TwLabel(self.proto, mmid + ' ' + d['comment']),
 				CoinAddr(self.proto, d['addr'])

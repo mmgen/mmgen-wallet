@@ -166,7 +166,7 @@ class EthereumTwCtl(TwCtl):
 	def mmid_ordered_dict(self):
 		return dict((x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list)
 
-	async def get_addr_label_pairs(self,twmmid):
+	async def get_label_addr_pairs(self, twmmid):
 		ret = [(
 				TwLabel(self.proto, mmid + ' ' + d['comment']),
 				CoinAddr(self.proto, d['addr'])

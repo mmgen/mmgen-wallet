@@ -312,7 +312,7 @@ Filters/Actions: show [u]nconfirmed, [q]uit menu, r[e]draw:
 		if self.sinceblock: # mapping data may be incomplete for inputs, so update from 'listlabels'
 			mm_map.update(
 				{ addr: _mmp(label.mmid, label.comment) if label else _mmp(None,None)
-					for label,addr in await self.get_addr_label_pairs() }
+					for label, addr in await self.get_label_addr_pairs() }
 			)
 
 		msg_r('Getting wallet transactions...')

@@ -71,7 +71,7 @@ Actions: [q]uit menu, r[e]draw, [D]elete addr, add [l]abel:
 		self.minconf = None
 		addrs = {}
 
-		for label,addr in await self.get_addr_label_pairs():
+		for label, addr in await self.get_label_addr_pairs():
 			bal = await self.twctl.get_balance(addr)
 			addrs[label.mmid] = {
 				'addr':  addr,

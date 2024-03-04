@@ -227,7 +227,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			msg(f'{addrspec!r}: invalid address for this network')
 			return None
 
-		pairs = await self.get_addr_label_pairs(twmmid)
+		pairs = await self.get_label_addr_pairs(twmmid)
 
 		if not pairs:
 			msg(f'MMGen address {twmmid!r} not found in tracking wallet')
@@ -277,7 +277,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 		if await self.set_label(res.coinaddr,lbl):
 			# redundant paranoia step:
-			pairs = await self.get_addr_label_pairs(res.twmmid)
+			pairs = await self.get_label_addr_pairs(res.twmmid)
 			assert pairs[0][0].comment == comment, f'{pairs[0][0].comment!r} != {comment!r}'
 			if not silent:
 				desc = '{} address {} in tracking wallet'.format(

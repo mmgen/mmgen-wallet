@@ -19,7 +19,7 @@ from ....tw.rpc import TwRPC
 
 class BitcoinTwRPC(TwRPC):
 
-	async def get_addr_label_pairs(self,twmmid=None):
+	async def get_label_addr_pairs(self, twmmid=None):
 		"""
 		Get all the accounts in the tracking wallet and their associated addresses.
 		Returns list of (label,address) tuples.
