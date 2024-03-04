@@ -20,7 +20,7 @@
 test/unit_tests.py: Unit tests for the MMGen suite
 """
 
-import sys,os,time,importlib,platform
+import sys,os,time,importlib,platform,asyncio
 
 try:
 	from include.test_init import repo_root
@@ -35,7 +35,7 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 
 from mmgen.cfg import Config,gc
 from mmgen.color import green,gray,brown,orange
-from mmgen.util import msg,gmsg,ymsg,Msg,async_run
+from mmgen.util import msg,gmsg,ymsg,Msg
 
 from test.include.common import set_globals,end_msg
 
@@ -130,7 +130,9 @@ class UnitTestHelpers:
 		for (desc,exc_chk,emsg_chk,func) in data:
 			try:
 				cfg._util.vmsg_r('  {}{:{w}}'.format(pfx, desc+':', w=desc_w+1))
-				func()
+				ret = func()
+				if type(ret).__name__ == 'coroutine':
+					asyncio.run(ret)
 			except Exception as e:
 				exc = type(e).__name__
 				emsg = e.args[0]
@@ -158,7 +160,7 @@ def run_test(test,subtest=None):
 		try:
 			ret = getattr(t,subtest.replace('-','_'))(test,UnitTestHelpers(subtest))
 			if type(ret).__name__ == 'coroutine':
-				ret = async_run(ret)
+				ret = asyncio.run(ret)
 		except:
 			if getattr(t,'silence_output',False):
 				t._end_silence()
