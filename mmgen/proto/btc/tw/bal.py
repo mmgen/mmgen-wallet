@@ -14,8 +14,13 @@ proto.btc.tw.bal: Bitcoin base protocol tracking wallet balance class
 
 from ....tw.bal import TwGetBalance
 from ....tw.shared import get_tw_label
+from ....rpc import rpc_init
 
 class BitcoinTwGetBalance(TwGetBalance):
+
+	async def __init__(self, cfg, proto, minconf, quiet):
+		self.rpc = await rpc_init(cfg, proto)
+		await super().__init__(cfg, proto, minconf, quiet)
 
 	start_labels = ('TOTAL','Non-MMGen','Non-wallet')
 	conf_cols = {
@@ -50,3 +55,19 @@ class BitcoinTwGetBalance(TwGetBalance):
 
 			if d['spendable']:
 				self.data[label]['spendable'] += amt
+
+	def format(self, color):
+
+		def gen_spendable_warning():
+			for k,v in self.data.items():
+				if v['spendable']:
+					yield red(f'Warning: this wallet contains PRIVATE KEYS for {k} outputs!')
+
+		if color:
+			from ....color import red
+		else:
+			from ....color import nocolor as red
+
+		warning = '\n'.join(gen_spendable_warning())
+
+		return super().format(color) + ('\n' if warning else '') + warning

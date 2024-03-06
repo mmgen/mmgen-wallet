@@ -23,7 +23,6 @@ tw.bal: Tracking wallet getbalance class for the MMGen suite
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import NonNegativeInt
-from ..rpc import rpc_init
 
 class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 
@@ -48,7 +47,6 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 		self.quiet = quiet
 		self.proto = proto
 		self.data = {k:self.balance_info() for k in self.start_labels}
-		self.rpc = await rpc_init(cfg,proto)
 
 		if minconf < 2 and 'lt_minconf' in self.conf_cols:
 			del self.conf_cols['lt_minconf']
@@ -70,10 +68,10 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 					return self.data[label][col].fmt( iwidth=iwidths[col], color=color )
 
 				if color:
-					from ..color import red,green,yellow
+					from ..color import green,yellow
 				else:
 					from ..color import nocolor
-					red = green = yellow = nocolor
+					green = yellow = nocolor
 
 				add_w = self.proto.coin_amt.max_prec + 1 # 1 = len('.')
 				iwidth_adj = 1 # so that min iwidth (1) + add_w + iwidth_adj >= len('Unconfirmed')
@@ -98,11 +96,5 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 							else MMGenID.hlc( (label+':').ljust(col1_w), color=color ),
 						cols = ' '.join(make_col(label,col) for col in self.conf_cols)
 					).rstrip()
-
-			for k,v in self.data.items():
-				if k == 'TOTAL':
-					continue
-				if v['spendable']:
-					yield red(f'Warning: this wallet contains PRIVATE KEYS for {k} outputs!')
 
 		return '\n'.join(gen_output())
