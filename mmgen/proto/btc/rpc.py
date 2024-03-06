@@ -117,7 +117,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 		super().__init__(
 			cfg  = cfg,
-			host = 'localhost' if cfg.test_suite else (cfg.rpc_host or 'localhost'),
+			host = 'localhost' if cfg.test_suite or cfg.network == 'regtest' else (cfg.rpc_host or 'localhost'),
 			port = daemon.rpc_port )
 
 		self.set_auth()
@@ -194,7 +194,10 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		"""
 		MMGen's credentials override coin daemon's
 		"""
-		if self.cfg.rpc_user:
+		if self.cfg.network == 'regtest':
+			from .regtest import MMGenRegtest
+			user,passwd = (MMGenRegtest.rpc_user, MMGenRegtest.rpc_password)
+		elif self.cfg.rpc_user:
 			user,passwd = (self.cfg.rpc_user,self.cfg.rpc_password)
 		else:
 			user,passwd = self.get_daemon_cfg_options(('rpcuser','rpcpassword')).values()
