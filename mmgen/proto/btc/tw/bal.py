@@ -20,6 +20,7 @@ class BitcoinTwGetBalance(TwGetBalance):
 
 	async def __init__(self, cfg, proto, minconf, quiet):
 		self.rpc = await rpc_init(cfg, proto)
+		self.walletinfo = await self.rpc.walletinfo
 		await super().__init__(cfg, proto, minconf, quiet)
 
 	start_labels = ('TOTAL','Non-MMGen','Non-wallet')
@@ -53,20 +54,24 @@ class BitcoinTwGetBalance(TwGetBalance):
 			self.data['TOTAL'][col_key] += amt
 			self.data[label][col_key] += amt
 
-			if d['spendable']:
+			if d['spendable']: # TODO: use 'solvable' for descriptor wallets?
 				self.data[label]['spendable'] += amt
 
 	def format(self, color):
 
 		def gen_spendable_warning():
-			for k,v in self.data.items():
-				if v['spendable']:
-					yield red(f'Warning: this wallet contains PRIVATE KEYS for {k} outputs!')
+			if check_spendable:
+				for k,v in self.data.items():
+					if v['spendable']:
+						yield red(f'Warning: this wallet contains PRIVATE KEYS for {k} outputs!')
 
 		if color:
 			from ....color import red
 		else:
 			from ....color import nocolor as red
+
+		desc_wallet = self.walletinfo.get('descriptors')
+		check_spendable = not desc_wallet or (desc_wallet and self.walletinfo['private_keys_enabled'])
 
 		warning = '\n'.join(gen_spendable_warning())
 

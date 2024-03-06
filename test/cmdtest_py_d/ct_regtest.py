@@ -175,6 +175,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	deterministic = False
 	test_rbf = False
 	proto = None # pylint
+	bdb_wallet = False
 
 	cmd_group_in = (
 		('setup',                   'regtest (Bob and Alice) mode setup'),
@@ -468,7 +469,9 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		for k in rt_data:
 			gldict[k] = rt_data[k][coin] if coin in rt_data[k] else None
 
-		self.rt = MMGenRegtest(cfg, self.proto.coin)
+		self.use_bdb_wallet = self.bdb_wallet or self.proto.coin != 'BTC'
+
+		self.rt = MMGenRegtest(cfg, self.proto.coin, bdb_wallet=self.use_bdb_wallet)
 
 		if self.proto.coin == 'BTC':
 			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC
@@ -512,7 +515,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			pass
 		t = self.spawn(
 			'mmgen-regtest',
-			['--setup-no-stop-daemon', 'setup'])
+			(['--bdb-wallet'] if self.use_bdb_wallet else [])
+			+ ['--setup-no-stop-daemon', 'setup'])
 		for s in ('Starting','Creating','Creating','Creating','Mined','Setup complete'):
 			t.expect(s)
 		return t
@@ -1980,3 +1984,6 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			return 'ok'
 		else:
 			return self.spawn('mmgen-regtest',['stop'])
+
+class CmdTestRegtestBDBWallet(CmdTestRegtest):
+	bdb_wallet = True

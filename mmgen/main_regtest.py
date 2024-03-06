@@ -32,6 +32,7 @@ opts_data = {
 		'options': """
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
+-b, --bdb-wallet    Create and use a legacy Berkeley DB coin daemon wallet
 -e, --empty         Don't fund Bob and Alice's wallets on setup
 -n, --setup-no-stop-daemon  Don't stop daemon after setup is finished
 -q, --quiet         Produce quieter output
@@ -83,6 +84,6 @@ elif cmd_args[0] not in ('cli','wallet_cli','balances'):
 	check_num_args()
 
 async def main():
-	await MMGenRegtest(cfg,cfg.coin).cmd(cmd_args)
+	await MMGenRegtest(cfg, cfg.coin, bdb_wallet=cfg.bdb_wallet).cmd(cmd_args)
 
 async_run(main())

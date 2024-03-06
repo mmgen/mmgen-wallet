@@ -73,16 +73,19 @@ class MMGenRegtest(MMGenObject):
 		'bch': 'n2fxhNx27GhHAWQhyuZ5REcBNrJqCJsJ12',
 	}
 
-	def __init__(self,cfg,coin):
+	def __init__(self, cfg, coin, bdb_wallet=False):
 		self.cfg = cfg
 		self.coin = coin.lower()
+		self.bdb_wallet = bdb_wallet
+
 		assert self.coin in self.coins, f'{coin!r}: invalid coin for regtest'
 
 		self.proto = init_proto(cfg, self.coin, regtest=True, need_amt=True)
 		self.d = CoinDaemon(
 			cfg,
 			self.coin + '_rt',
-			test_suite = cfg.test_suite)
+			test_suite = cfg.test_suite,
+			opts       = ['bdb_wallet'] if bdb_wallet else None)
 
 	# Caching creates problems (broken pipe) when recreating + loading wallets,
 	# so reinstantiate with every call:
@@ -93,13 +96,17 @@ class MMGenRegtest(MMGenObject):
 	@property
 	async def miner_addr(self):
 		if not hasattr(self,'_miner_addr'):
-			self._miner_addr = self.bdb_miner_addrs[self.coin]
+			self._miner_addr = (
+				self.bdb_miner_addrs[self.coin] if self.bdb_wallet else
+				await self.rpc_call('getnewaddress', wallet='miner'))
 		return self._miner_addr
 
 	@property
 	async def miner_wif(self):
 		if not hasattr(self,'_miner_wif'):
-			self._miner_wif = self.bdb_miner_wif
+			self._miner_wif = (
+				self.bdb_miner_wif if self.bdb_wallet else
+				await self.rpc_call('dumpprivkey', (await self.miner_addr), wallet='miner'))
 		return self._miner_wif
 
 	def create_hdseed_wif(self):
@@ -118,6 +125,7 @@ class MMGenRegtest(MMGenObject):
 
 		self.d.wait_for_state('ready')
 
+		# very slow with descriptor wallet and large block count - 'generatetodescriptor' no better
 		out = await self.rpc_call(
 			'generatetoaddress',
 			blocks,
@@ -134,8 +142,9 @@ class MMGenRegtest(MMGenObject):
 		return await (await self.rpc).icall(
 			'createwallet',
 			wallet_name     = user,
-			blank           = True,
+			blank           = user != 'miner' or self.bdb_wallet,
 			no_keys         = user != 'miner',
+			descriptors     = not self.bdb_wallet,
 			load_on_startup = False)
 
 	async def setup(self):
@@ -165,11 +174,12 @@ class MMGenRegtest(MMGenObject):
 		# Unfortunately, we don’t get deterministic output with BCH and LTC even with fixed
 		# hdseed, as their 'sendtoaddress' calls produce non-deterministic TXIDs due to random
 		# input ordering and fee estimation.
-		await (await self.rpc).call(
-			'sethdseed',
-			True,
-			self.create_hdseed_wif(),
-			wallet = 'miner')
+		if self.bdb_wallet:
+			await (await self.rpc).call(
+				'sethdseed',
+				True,
+				self.create_hdseed_wif(),
+				wallet = 'miner')
 
 		# Broken litecoind can only mine 431 blocks in regtest mode, so generate just enough
 		# blocks to fund the test suite
@@ -255,7 +265,7 @@ class MMGenRegtest(MMGenObject):
 
 		gmsg(f'Creating fork from coin {coin} to coin {proto.coin}')
 
-		source_rt = MMGenRegtest( self.cfg, coin )
+		source_rt = MMGenRegtest(self.cfg, coin, bdb_wallet=self.bdb_wallet)
 
 		try:
 			os.stat(source_rt.d.datadir)

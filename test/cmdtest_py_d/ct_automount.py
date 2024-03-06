@@ -15,11 +15,11 @@ import os, time
 from pathlib import Path
 
 from .ct_autosign import CmdTestAutosignThreaded
-from .ct_regtest import CmdTestRegtest, rt_pw
+from .ct_regtest import CmdTestRegtestBDBWallet, rt_pw
 from .common import get_file_with_ext
 from ..include.common import cfg
 
-class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
+class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet):
 	'automounted transacting operations via regtest mode'
 
 	networks = ('btc', 'bch', 'ltc')
@@ -75,7 +75,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		self.coins = [cfg.coin.lower()]
 
 		CmdTestAutosignThreaded.__init__(self, trunner, cfgs, spawn)
-		CmdTestRegtest.__init__(self, trunner, cfgs, spawn)
+		CmdTestRegtestBDBWallet.__init__(self, trunner, cfgs, spawn)
 
 		if trunner == None:
 			return

@@ -186,7 +186,10 @@ init_tests() {
 	"
 
 	d_btc_rt="overall operations using the regtest network (Bitcoin)"
-	t_btc_rt="- $cmdtest_py regtest"
+	t_btc_rt="
+		- $cmdtest_py regtest
+		- $cmdtest_py regtest_legacy
+	"
 
 	d_bch="overall operations with emulated RPC data (Bitcoin Cash Node)"
 	t_bch="- $cmdtest_py --coin=bch --exclude regtest"

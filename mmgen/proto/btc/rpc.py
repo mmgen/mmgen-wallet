@@ -56,6 +56,7 @@ class CallSigs:
 				no_keys         = True,
 				blank           = True,
 				passphrase      = '',
+				descriptors     = True,
 				load_on_startup = True):
 			"""
 			Quirk: when --datadir is specified (even if standard), wallet is created directly in
@@ -68,7 +69,7 @@ class CallSigs:
 				blank,          # 3. blank (no keys or seed)
 				passphrase,     # 4. passphrase (empty string for non-encrypted)
 				False,          # 5. avoid_reuse (track address reuse)
-				False,          # 6. descriptors (native descriptor wallet)
+				descriptors,    # 6. descriptors (native descriptor wallet)
 				load_on_startup # 7. load_on_startup
 			)
 
@@ -89,6 +90,7 @@ class CallSigs:
 				no_keys         = True,
 				blank           = True,
 				passphrase      = '',
+				descriptors     = True,
 				load_on_startup = True):
 			return (
 				'createwallet',
@@ -200,6 +202,12 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 				self.wallet_path = f'/wallet/{cfg.regtest_user}'
 		else:
 			self.wallet_path = f'/wallet/{self.twname}'
+
+	@property
+	async def walletinfo(self):
+		if not hasattr(self,'_walletinfo'):
+			self._walletinfo = await self.call('getwalletinfo')
+		return self._walletinfo
 
 	def set_auth(self):
 		"""
@@ -343,6 +351,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		'getrawtransaction',
 		'gettransaction',
 		'importaddress', # address (address or script) label rescan p2sh (Add P2SH version of the script)
+		'importdescriptors', # like above, but for descriptor wallets
 		'listaccounts',
 		'listlabels',
 		'listunspent',

@@ -28,11 +28,24 @@ class BitcoinTwCtl(TwCtl):
 
 	@write_mode
 	async def import_address(self, addr, label, rescan=False): # rescan is True by default, so set to False
-		return await self.rpc.call('importaddress', addr, label, rescan)
+		if (await self.rpc.walletinfo).get('descriptors'):
+			return await self.batch_import_address([(addr, label, rescan)])
+		else:
+			return await self.rpc.call('importaddress', addr, label, rescan)
 
 	@write_mode
 	async def batch_import_address(self,arg_list):
-		return await self.rpc.batch_call('importaddress', arg_list)
+		if (await self.rpc.walletinfo).get('descriptors'):
+			from ....contrib.descriptors import descsum_create
+			return await self.rpc.call(
+				'importdescriptors',
+				[{
+					'desc': descsum_create(f'addr({addr})'),
+					'label': label,
+					'timestamp': 0 if rescan else 'now',
+				} for addr, label, rescan in arg_list])
+		else:
+			return await self.rpc.batch_call('importaddress', arg_list)
 
 	@write_mode
 	async def remove_address(self,addr):

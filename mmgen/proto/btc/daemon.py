@@ -31,6 +31,7 @@ class bitcoin_core_daemon(CoinDaemon):
 		'linux': [gc.home_dir,'.bitcoin'],
 		'win32': [os.getenv('APPDATA'),'Bitcoin']
 	}
+	avail_opts = ('no_daemonize', 'online', 'bdb_wallet')
 
 	def init_datadir(self):
 		if self.network == 'regtest' and not self.test_suite:
@@ -78,7 +79,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--daemon',               self.platform == 'linux' and not self.opt.no_daemonize],
 			['--fallbackfee=0.0002',   self.coin == 'BTC' and self.network == 'regtest'],
 			['--usecashaddr=0',        self.coin == 'BCH'],
-			['--deprecatedrpc=create_bdb', self.coin == 'BTC'],
+			['--deprecatedrpc=create_bdb', self.coin == 'BTC' and self.opt.bdb_wallet],
 			['--mempoolreplacement=1', self.coin == 'LTC'],
 			['--txindex=1',            self.coin == 'LTC' or self.network == 'regtest'],
 			['--addresstype=bech32',   self.coin == 'LTC' and self.network == 'regtest'],
