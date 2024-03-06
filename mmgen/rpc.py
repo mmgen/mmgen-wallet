@@ -379,24 +379,32 @@ class RPCClient(MMGenObject):
 		text,status = run_ret
 		if status == 200:
 			dmsg_rpc('    RPC RESPONSE data ==>\n{}\n',text,is_json=True)
+			m = None
 			if batch:
 				return [r['result'] for r in json.loads(text,parse_float=Decimal)]
 			else:
 				try:
 					if json_rpc:
-						return json.loads(text,parse_float=Decimal)['result']
+						ret = json.loads(text,parse_float=Decimal)['result']
+						if isinstance(ret,list) and ret and type(ret[0]) == dict and 'success' in ret[0]:
+							for res in ret:
+								if not res['success']:
+									m = str(res['error'])
+									assert False
+						return ret
 					else:
 						return json.loads(text,parse_float=Decimal)
 				except:
-					t = json.loads(text)
-					try:
-						m = t['error']['message']
-					except:
+					if not m:
+						t = json.loads(text)
 						try:
-							m = t['error']
+							m = t['error']['message']
 						except:
-							m = t
-					die( 'RPCFailure', m )
+							try:
+								m = t['error']
+							except:
+								m = t
+					die('RPCFailure', m)
 		else:
 			import http
 			m,s = ( '', http.HTTPStatus(status) )
