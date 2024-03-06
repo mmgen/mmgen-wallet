@@ -23,6 +23,7 @@ test.cmdtest_py_d.ct_regtest: Regtest tests for the cmdtest.py test suite
 import sys,os,json,time,re
 from decimal import Decimal
 
+from mmgen.proto.btc.regtest import MMGenRegtest
 from mmgen.color import yellow
 from mmgen.util import msg_r,die,gmsg,capfirst,fmt_list
 from mmgen.protocol import init_proto
@@ -463,15 +464,16 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		self.proto = init_proto( cfg, self.proto.coin, network='regtest', need_amt=True )
 		coin = self.proto.coin.lower()
 
+		gldict = globals()
 		for k in rt_data:
-			setattr( sys.modules[__name__], k, rt_data[k][coin] if coin in rt_data[k] else None )
+			gldict[k] = rt_data[k][coin] if coin in rt_data[k] else None
+
+		self.rt = MMGenRegtest(cfg, self.proto.coin)
 
 		if self.proto.coin == 'BTC':
 			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC
 			if cfg.test_suite_deterministic:
 				self.deterministic = True
-				self.miner_addr = 'bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd' # regtest.create_hdseed()
-				self.miner_wif = 'cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp'
 
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
 		self.write_to_tmpfile('wallet_password',rt_pw)
@@ -508,7 +510,9 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			rmtree(joinpath(self.tr.data_dir,'regtest'))
 		except:
 			pass
-		t = self.spawn('mmgen-regtest',['-n','setup'])
+		t = self.spawn(
+			'mmgen-regtest',
+			['--setup-no-stop-daemon', 'setup'])
 		for s in ('Starting','Creating','Creating','Creating','Mined','Setup complete'):
 			t.expect(s)
 		return t
@@ -626,20 +630,20 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def addrimport_alice(self):
 		return self.addrimport('alice',batch=False,quiet=False)
 
-	def bob_import_miner_addr(self):
+	async def bob_import_miner_addr(self):
 		if not self.deterministic:
 			return 'skip'
 		return self.spawn(
 			'mmgen-addrimport',
-			[ '--bob', '--rescan', '--quiet', f'--address={self.miner_addr}' ] )
+			[ '--bob', '--rescan', '--quiet', f'--address={await self.rt.miner_addr}' ] )
 
-	def fund_wallet_deterministic(self,addr,utxo_nums,skip_passphrase=False):
+	async def fund_wallet_deterministic(self, addr, utxo_nums, skip_passphrase=False):
 		"""
 		the deterministic funding method using specific inputs
 		"""
 		if not self.deterministic:
 			return 'skip'
-		self.write_to_tmpfile('miner.key',f'{self.miner_wif}\n')
+		self.write_to_tmpfile('miner.key',f'{await self.rt.miner_wif}\n')
 		keyfile = joinpath(self.tmpdir,'miner.key')
 
 		return self.user_txdo(
@@ -667,18 +671,16 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		if not self.deterministic:
 			return 'skip'
 		self.spawn('',msg_only=True)
-		from mmgen.proto.btc.regtest import MMGenRegtest
-		rt = MMGenRegtest(cfg,self.proto.coin)
-		await rt.stop()
+		await self.rt.stop()
 		from shutil import rmtree
 		imsg('Deleting Bob’s old tracking wallet')
-		rmtree(os.path.join(rt.d.datadir,'regtest','wallets','bob'),ignore_errors=True)
-		rt.init_daemon()
-		rt.d.start(silent=True)
+		rmtree(os.path.join(self.rt.d.datadir, 'regtest', 'wallets', 'bob'), ignore_errors=True)
+		self.rt.init_daemon()
+		self.rt.d.start(silent=True)
 		imsg('Creating Bob’s new tracking wallet')
-		await rt.rpc_call('createwallet','bob',True,True,None,False,False,False)
-		await rt.stop()
-		await rt.start()
+		await self.rt.create_wallet('bob')
+		await self.rt.stop()
+		await self.rt.start()
 		return 'ok'
 
 	def addrimport_bob2(self):
@@ -1429,9 +1431,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		imsg('Unloading Carol’s tracking wallet')
 		t = self.spawn('mmgen-regtest',['cli','unloadwallet','carol'])
 		t.ok()
-		from mmgen.rpc import rpc_init
-		rpc = await rpc_init(cfg,self.proto)
-		wdir = joinpath(rpc.daemon.network_datadir,'wallets','carol')
+		wdir = joinpath((await self.rt.rpc).daemon.network_datadir, 'wallets', 'carol')
 		from shutil import rmtree
 		imsg('Deleting Carol’s tracking wallet')
 		rmtree(wdir)

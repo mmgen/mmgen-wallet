@@ -25,6 +25,7 @@ from ...util import msg,gmsg,die,capfirst,suf
 from ...protocol import init_proto
 from ...rpc import rpc_init,json_encoder
 from ...objmethods import MMGenObject
+from ...daemon import CoinDaemon
 
 def create_data_dir(cfg,data_dir):
 	try:
@@ -63,9 +64,9 @@ class MMGenRegtest(MMGenObject):
 	coins        = ('btc','bch','ltc')
 	usr_cmds     = ('setup','generate','send','start','stop', 'state', 'balances','mempool','cli','wallet_cli')
 
-	hdseed = 'beadcafe' * 8
-	miner_wif = 'cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp'
-	miner_addrs = {
+	bdb_hdseed = 'beadcafe' * 8
+	bdb_miner_wif = 'cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp'
+	bdb_miner_addrs = {
 		# cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp hdseed=1
 		'btc': 'bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd',
 		'ltc': 'rltc1qaq8t3pakcftpk095tnqfv5cmmczysls05c8zyn',
@@ -77,17 +78,36 @@ class MMGenRegtest(MMGenObject):
 		self.coin = coin.lower()
 		assert self.coin in self.coins, f'{coin!r}: invalid coin for regtest'
 
-		from ...daemon import CoinDaemon
-		self.proto = init_proto( cfg, self.coin, regtest=True, need_amt=True )
-		self.d = CoinDaemon(cfg,self.coin+'_rt',test_suite=cfg.test_suite)
-		self.miner_addr = self.miner_addrs[self.coin]
+		self.proto = init_proto(cfg, self.coin, regtest=True, need_amt=True)
+		self.d = CoinDaemon(
+			cfg,
+			self.coin + '_rt',
+			test_suite = cfg.test_suite)
+
+	# Caching creates problems (broken pipe) when recreating + loading wallets,
+	# so reinstantiate with every call:
+	@property
+	async def rpc(self):
+		return await rpc_init(self.cfg, self.proto, backend=None, daemon=self.d)
+
+	@property
+	async def miner_addr(self):
+		if not hasattr(self,'_miner_addr'):
+			self._miner_addr = self.bdb_miner_addrs[self.coin]
+		return self._miner_addr
+
+	@property
+	async def miner_wif(self):
+		if not hasattr(self,'_miner_wif'):
+			self._miner_wif = self.bdb_miner_wif
+		return self._miner_wif
 
 	def create_hdseed_wif(self):
 		from ...tool.api import tool_api
 		t = tool_api(self.cfg)
 		t.init_coin(self.proto.coin,self.proto.network)
 		t.addrtype = 'compressed' if self.proto.coin == 'BCH' else 'bech32'
-		return t.hex2wif(self.hdseed)
+		return t.hex2wif(self.bdb_hdseed)
 
 	async def generate(self,blocks=1,silent=False):
 
@@ -101,7 +121,7 @@ class MMGenRegtest(MMGenObject):
 		out = await self.rpc_call(
 			'generatetoaddress',
 			blocks,
-			self.miner_addr,
+			await self.miner_addr,
 			wallet = 'miner' )
 
 		if len(out) != blocks:
@@ -109,6 +129,14 @@ class MMGenRegtest(MMGenObject):
 
 		if not silent:
 			gmsg(f'Mined {blocks} block{suf(blocks)}')
+
+	async def create_wallet(self,user):
+		return await (await self.rpc).icall(
+			'createwallet',
+			wallet_name     = user,
+			blank           = True,
+			no_keys         = user != 'miner',
+			load_on_startup = False)
 
 	async def setup(self):
 
@@ -126,15 +154,9 @@ class MMGenRegtest(MMGenObject):
 
 		self.d.start(silent=True)
 
-		rpc = await rpc_init(self.cfg,self.proto,backend=None,daemon=self.d)
 		for user in ('miner','bob','alice'):
 			gmsg(f'Creating {capfirst(user)}’s tracking wallet')
-			await rpc.icall(
-				'createwallet',
-				wallet_name     = user,
-				blank           = True,
-				no_keys         = user != 'miner',
-				load_on_startup = False )
+			await self.create_wallet(user)
 
 		# BCH and LTC daemons refuse to set HD seed with empty blockchain ("in IBD" error),
 		# so generate a block:
@@ -143,11 +165,11 @@ class MMGenRegtest(MMGenObject):
 		# Unfortunately, we don’t get deterministic output with BCH and LTC even with fixed
 		# hdseed, as their 'sendtoaddress' calls produce non-deterministic TXIDs due to random
 		# input ordering and fee estimation.
-		await rpc.call(
+		await (await self.rpc).call(
 			'sethdseed',
 			True,
 			self.create_hdseed_wif(),
-			wallet = 'miner' )
+			wallet = 'miner')
 
 		# Broken litecoind can only mine 431 blocks in regtest mode, so generate just enough
 		# blocks to fund the test suite
@@ -175,8 +197,7 @@ class MMGenRegtest(MMGenObject):
 	async def rpc_call(self,*args,wallet=None,start_daemon=True):
 		if start_daemon and self.d.state == 'stopped':
 			await self.start_daemon()
-		rpc = await rpc_init(self.cfg,self.proto,backend=None,daemon=self.d)
-		return await rpc.call(*args,wallet=wallet)
+		return await (await self.rpc).call(*args, wallet=wallet)
 
 	async def start(self):
 		if self.d.state == 'stopped':

@@ -92,7 +92,7 @@ class EthereumTwCtl(TwCtl):
 		pass
 
 	@write_mode
-	async def import_address(self,addr,label):
+	async def import_address(self,addr,label,rescan=False):
 		r = self.data_root
 		if addr in r:
 			if not r[addr]['mmid'] and label.mmid:

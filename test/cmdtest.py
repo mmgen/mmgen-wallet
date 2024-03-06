@@ -73,7 +73,7 @@ def create_shm_dir(data_dir,trash_dir):
 
 	return shm_dir
 
-import sys,os,time
+import sys, os, time, asyncio
 
 if sys.argv[-1] == 'clean':
 	os.environ['MMGEN_TEST_SUITE'] = '1'
@@ -95,7 +95,7 @@ else:
 
 from mmgen.cfg import Config,gc
 from mmgen.color import red,yellow,green,blue,cyan,gray,nocolor,init_color
-from mmgen.util import msg,Msg,bmsg,die,suf,make_timestr,async_run
+from mmgen.util import msg, Msg, bmsg, die, suf, make_timestr
 
 from test.include.common import (
 	set_globals,
@@ -820,7 +820,7 @@ class CmdTestRunner:
 									if isinstance(e,KeyError) and e.args[0] == cmdname:
 										ret = getattr(self.tg,cmdname)()
 										if type(ret).__name__ == 'coroutine':
-											async_run(ret)
+											asyncio.run(ret)
 									else:
 										raise
 								do_between()
@@ -946,7 +946,7 @@ class CmdTestRunner:
 
 		ret = getattr(self.tg,cmd)(*arg_list) # run the test
 		if type(ret).__name__ == 'coroutine':
-			ret = async_run(ret)
+			ret = asyncio.run(ret)
 		self.process_retval(cmd,ret)
 
 		if cfg.profile:

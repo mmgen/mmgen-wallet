@@ -316,7 +316,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 		if batch:
 			msg_r(f'Batch importing {len(out)} address{suf(data,"es")}...')
-			ret = await self.batch_import_address((a,b) for a,b,c in out)
+			ret = await self.batch_import_address((a, b, False) for a, b, c in out)
 			msg(f'done\n{len(ret)} addresses imported')
 		else:
 			if gather: # this seems to provide little performance benefit

@@ -47,8 +47,16 @@ class CallSigs:
 
 	class bitcoin_core:
 
-		@classmethod
-		def createwallet(cls,wallet_name,no_keys=True,blank=True,passphrase='',load_on_startup=True):
+		def __init__(self, cfg):
+			self.cfg = cfg
+
+		def createwallet(
+				self,
+				wallet_name,
+				no_keys         = True,
+				blank           = True,
+				passphrase      = '',
+				load_on_startup = True):
 			"""
 			Quirk: when --datadir is specified (even if standard), wallet is created directly in
 			datadir, otherwise in datadir/wallets
@@ -64,8 +72,7 @@ class CallSigs:
 				load_on_startup # 7. load_on_startup
 			)
 
-		@classmethod
-		def gettransaction(cls,txid,include_watchonly,verbose):
+		def gettransaction(self, txid, include_watchonly, verbose):
 			return (
 				'gettransaction',
 				txid,               # 1. transaction id
@@ -76,8 +83,13 @@ class CallSigs:
 
 	class litecoin_core(bitcoin_core):
 
-		@classmethod
-		def createwallet(cls,wallet_name,no_keys=True,blank=True,passphrase='',load_on_startup=True):
+		def createwallet(
+				self,
+				wallet_name,
+				no_keys         = True,
+				blank           = True,
+				passphrase      = '',
+				load_on_startup = True):
 			return (
 				'createwallet',
 				wallet_name,    # 1. wallet_name
@@ -85,8 +97,7 @@ class CallSigs:
 				blank,          # 3. blank (no keys or seed)
 			)
 
-		@classmethod
-		def gettransaction(cls,txid,include_watchonly,verbose):
+		def gettransaction(self, txid, include_watchonly, verbose):
 			return (
 				'gettransaction',
 				txid,               # 1. transaction id
@@ -113,7 +124,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 		self.proto = proto
 		self.daemon = daemon
-		self.call_sigs = getattr(CallSigs,daemon.id,None)
+		self.call_sigs = getattr(CallSigs,daemon.id)(cfg)
 
 		super().__init__(
 			cfg  = cfg,
