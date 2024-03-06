@@ -262,7 +262,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 		rpc_data = await self.get_rpc_data()
 
 		if not rpc_data:
-			die(0,fmt(self.no_rpcdata_errmsg).strip())
+			die(1,fmt(self.no_rpcdata_errmsg).strip())
 
 		lbl_id = ('account','label')['label_api' in self.rpc.caps]
 

@@ -202,9 +202,13 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	),
 	'init_bob': (
 		'creating Bob’s MMGen wallet and tracking wallet',
-		('walletgen_bob',  'wallet generation (Bob)'),
-		('addrgen_bob',    'address generation (Bob)'),
-		('addrimport_bob', "importing Bob's addresses"),
+		('bob_twview_noaddrs',    'viewing Bob’s unspent outputs (error, no addrs)'),
+		('bob_listaddrs_noaddrs', 'viewing Bob’s addresses (error, no addrs)'),
+		('walletgen_bob',         'wallet generation (Bob)'),
+		('addrgen_bob',           'address generation (Bob)'),
+		('addrimport_bob',        "importing Bob's addresses"),
+		('bob_twview_nobal',      'viewing Bob’s unspent outputs (error, no balance)'),
+		('bob_listaddrs_nobal',   'viewing Bob’s addresses (OK, no balance)'),
 	),
 	'init_alice': (
 		'creating Alice’s MMGen wallet and tracking wallet',
@@ -699,11 +703,27 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def fund_alice(self):
 		return self.fund_wallet('alice',('L','S')[self.proto.cap('segwit')],rtFundAmt)
 
-	def user_twview(self,user,chk,sort='age'):
-		t = self.spawn('mmgen-tool',['--'+user,'twview','sort='+sort])
+	def user_twview(self, user, chk=None, expect=None, cmdline=['twview'], sort='age', exit_val=None):
+		t = self.spawn('mmgen-tool',[f'--{user}'] + cmdline + ['sort='+sort])
 		if chk:
 			t.expect(r'{}\b.*\D{}\b'.format(*chk),regex=True)
+		if expect:
+			t.expect(expect)
+		if exit_val:
+			t.req_exit_val = exit_val
 		return t
+
+	def bob_twview_noaddrs(self):
+		return self.user_twview('bob', expect='No spendable', exit_val=1)
+
+	def bob_listaddrs_noaddrs(self):
+		return self.user_twview('bob', cmdline=['listaddresses'], expect='No addresses', exit_val=1)
+
+	def bob_twview_nobal(self):
+		return self.user_twview('bob', expect='No spendable', exit_val=1)
+
+	def bob_listaddrs_nobal(self):
+		return self.user_twview('bob', cmdline=['listaddresses'], expect='TOTAL:')
 
 	def bob_twview1(self):
 		return self.user_twview('bob', chk = ('1',rtAmts[0]) )

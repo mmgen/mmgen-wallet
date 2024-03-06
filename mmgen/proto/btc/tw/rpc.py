@@ -51,7 +51,7 @@ class BitcoinTwRPC(TwRPC):
 		acct_labels = [get_tw_label(self.proto,a) for a in await get_acct_list()]
 
 		if not acct_labels:
-			return None
+			return []
 
 		check_dup_mmid(acct_labels)
 
