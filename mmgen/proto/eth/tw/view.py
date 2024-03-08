@@ -16,6 +16,14 @@ from ....tw.view import TwView
 
 class EthereumTwView(TwView):
 
+	sort_funcs = {
+		'addr':   lambda i: i.addr,
+		'age':    lambda i: 0 - i.confs,
+		'amt':    lambda i: i.amt,
+		'txid':   lambda i: f'{i.txid} {i.vout:04}',
+		'twmmid': lambda i: i.twmmid.sort_key
+	}
+
 	def age_disp(self,o,age_fmt): # TODO
 		pass
 

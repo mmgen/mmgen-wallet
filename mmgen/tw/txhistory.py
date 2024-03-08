@@ -167,7 +167,7 @@ class TwTxHistory(TwView):
 	}
 
 	sort_funcs = {
-		'age':         lambda i: i.time,
+		'age':         lambda i: '{:010}.{:010}'.format(0xffffffff - abs(i.confirmations), i.time_received or 0),
 		'blockheight': lambda i: 0 - abs(i.confirmations), # old/altcoin daemons return no 'blockheight' field
 		'amt':         lambda i: i.wallet_outputs_total,
 		'total_amt':   lambda i: i.outputs_total,

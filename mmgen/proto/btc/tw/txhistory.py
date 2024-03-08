@@ -120,6 +120,7 @@ class BitcoinTwTransaction:
 		# unconfirmed transactions, e.g. replaced transactions, and the 'blocktime' field is missing
 		# for these, so use 'time' as a fallback.
 		self.time = self.tx.get('blocktime') or self.tx['time']
+		self.time_received = self.tx.get('timereceived')
 
 	def blockheight_disp(self,color):
 		return (
