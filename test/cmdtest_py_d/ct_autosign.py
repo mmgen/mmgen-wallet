@@ -636,14 +636,17 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		tx_desc = Signable.transaction.desc
 		t = self.spawn(
 				'mmgen-autosign',
-				self.opts + args)
+				self.opts + args,
+				exit_val = 1
+					if 'wait' in args
+					or self.bad_tx_count
+					or (have_msg and self.bad_msg_count) else None)
 		t.expect(
 			f'{self.tx_count} {tx_desc}{suf(self.tx_count)} signed' if self.tx_count else
 			f'No unsigned {tx_desc}s')
 
 		if self.bad_tx_count:
 			t.expect(f'{self.bad_tx_count} {tx_desc}{suf(self.bad_tx_count)} failed to sign')
-			t.req_exit_val = 1
 
 		if have_msg:
 			t.expect(
@@ -655,13 +658,11 @@ class CmdTestAutosign(CmdTestAutosignBase):
 				t.expect(
 					f'{self.bad_msg_count} message file{suf(self.bad_msg_count)}{{0,1}} failed to sign',
 					regex = True)
-				t.req_exit_val = 1
 
 		if 'wait' in args:
 			t.expect('Waiting')
 			imsg(purple('\nKilling wait loop!'))
 			t.kill(2)
-			t.req_exit_val = 1
 		else:
 			t.read()
 
@@ -805,7 +806,8 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		t = self.spawn(
 			'mmgen-autosign',
 			self.opts + (led_opts or []) + ['--quiet', '--no-summary', 'wait'],
-			no_msg = True)
+			no_msg   = True,
+			exit_val = 1)
 
 		if not cfg.exact_output:
 			omsg('')
@@ -818,7 +820,6 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 
 		imsg(purple('\nKilling wait loop!'))
 		t.kill(2) # 2 = SIGINT
-		t.req_exit_val = 1
 
 		if self.simulate_led and led_opts:
 			t.expect('Stopping LED')

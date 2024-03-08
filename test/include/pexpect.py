@@ -51,7 +51,6 @@ class MMGenPexpect:
 
 		self.pexpect_spawn = pexpect_spawn
 		self.send_delay = send_delay
-		self.req_exit_val = 0
 		self.skip_ok = False
 		self.sent_value = None
 		self.spawn_env = spawn_env
@@ -91,12 +90,12 @@ class MMGenPexpect:
 		if add_comment:
 			self.expect('Comment: ',add_comment+'\n')
 
-	def ok(self):
+	def ok(self, exit_val=None):
 		if not self.pexpect_spawn:
 			self.p.sendeof()
 		self.p.read()
 		ret = self.p.wait()
-		if ret != self.req_exit_val and not cfg.coverage:
+		if ret != (exit_val or 0) and not cfg.coverage:
 			die( 'TestSuiteSpawnedScriptException', f'Spawned script exited with value {ret}' )
 		if cfg.profile:
 			return

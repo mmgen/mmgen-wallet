@@ -44,13 +44,14 @@ class CmdTestCfgFile(CmdTestBase):
 		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 		self.spawn_env['MMGEN_TEST_SUITE_CFGTEST'] = '1'
 
-	def spawn_test(self,args=[],extra_desc='',pexpect_spawn=None):
+	def spawn_test(self,args=[],extra_desc='',pexpect_spawn=None, exit_val=None):
 		return self.spawn(
 			'test/misc/cfg.py',
 			[f'--data-dir={self.path("data_dir")}'] + args,
 			cmd_dir       = '.',
 			extra_desc    = extra_desc,
-			pexpect_spawn = pexpect_spawn)
+			pexpect_spawn = pexpect_spawn,
+			exit_val      = exit_val)
 
 	def path(self,id_str):
 		return {
@@ -111,7 +112,7 @@ class CmdTestCfgFile(CmdTestBase):
 		chk = cfg_file_sample.cls_make_metadata(d)
 		write_to_file(self.path('sample'),'\n'.join(d+chk) + '\n')
 
-		t = self.spawn_test(args=args,pexpect_spawn=pexpect_spawn)
+		t = self.spawn_test(args=args, pexpect_spawn=pexpect_spawn, exit_val=1 if old_set else None)
 
 		t.expect('options have changed')
 		for s in ('have been added','monero_','have been removed','zcash_','foo','bar'):
@@ -136,7 +137,6 @@ class CmdTestCfgFile(CmdTestBase):
 
 		if old_set:
 			t.expect('unrecognized option')
-			t.req_exit_val = 1
 
 		if args == ['parse_test']:
 			t.expect('parsed chunks: 29')
@@ -159,10 +159,10 @@ class CmdTestCfgFile(CmdTestBase):
 			old_set       = True,
 			pexpect_spawn = not sys.platform == 'win32')
 
-	def _autoset_opts(self,args=[],text='rpc_backend aiohttp\n'):
+	def _autoset_opts(self, args=[], text='rpc_backend aiohttp\n', exit_val=None):
 		write_to_file( self.path('usr'), text )
 		imsg(yellow(f'Wrote cfg file:\n  {text}'))
-		return self.spawn_test(args=args)
+		return self.spawn_test(args=args, exit_val=exit_val)
 
 	def autoset_opts(self):
 		return self._autoset_opts(args=['autoset_opts'])
@@ -171,9 +171,7 @@ class CmdTestCfgFile(CmdTestBase):
 		return self._autoset_opts(args=['--rpc-backend=curl','autoset_opts_cmdline'])
 
 	def _autoset_opts_bad(self,kwargs):
-		t = self._autoset_opts(**kwargs)
-		t.req_exit_val = 1
-		return t
+		return self._autoset_opts(exit_val=1, **kwargs)
 
 	def autoset_opts_bad(self):
 		return self._autoset_opts_bad({'text':'rpc_backend foo\n'})

@@ -132,7 +132,7 @@ class CmdTestSeedSplit(CmdTestBase):
 			in_exts,
 			add_args = [],
 			sid      = None,
-			bad_invocation = False,
+			exit_val = None,
 			master   = None,
 			id_str   = None):
 		td = self.get_tmp_subdir(tdir)
@@ -145,8 +145,9 @@ class CmdTestSeedSplit(CmdTestBase):
 				+ ([f'--id-str={id_str}'] if id_str else [])
 				+ ['-d',td,'-o',ofmt]
 				+ (['--label','Joined Wallet Label','-r0'] if ofmt == 'w' else [])
-				+ shares)
-		if bad_invocation:
+				+ shares,
+				exit_val = exit_val)
+		if exit_val:
 			return t
 		icls = ( dfl_wcls if 'mmdat' in in_exts
 			else get_wallet_cls('incog') if 'mmincog' in in_exts
@@ -241,8 +242,7 @@ class CmdTestSeedSplit(CmdTestBase):
 							['-H',self.get_hincog_arg(self.tdir2,'-master7')],master=7,id_str='φυβαρ')
 
 	def ss_bad_invocation(self,cmd,args,exit_val,errmsg):
-		t = self.spawn(cmd,args)
-		t.req_exit_val = exit_val
+		t = self.spawn(cmd, args, exit_val=exit_val)
 		t.expect(errmsg)
 		return t
 
@@ -250,7 +250,7 @@ class CmdTestSeedSplit(CmdTestBase):
 		t = self.ss_join('3way_dfl','mmhex',
 			['mmwords','mmincox','bip39'],
 			id_str   = 'foo',
-			bad_invocation = True)
+			exit_val = 1)
 		t.expect('option meaningless')
 		return t
 

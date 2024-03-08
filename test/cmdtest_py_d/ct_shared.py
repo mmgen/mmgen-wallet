@@ -195,13 +195,14 @@ class CmdTestShared:
 			view       = 'n',
 			dfl_wallet = False):
 		opts = extra_opts + ['-d',self.tmpdir,txfile] + ([wf] if wf else [])
+		wcls = get_wallet_cls(ext = 'mmdat' if dfl_wallet else get_extension(wf))
 		t = self.spawn(
 			'mmgen-txsign',
 			opts,
-			extra_desc)
+			extra_desc,
+			exit_val = None if save or (wcls.enc and wcls.type != 'brain') else 1)
 		t.license()
 		t.view_tx(view)
-		wcls = get_wallet_cls( ext = 'mmdat' if dfl_wallet else get_extension(wf) )
 		if wcls.enc and wcls.type != 'brain':
 			t.passphrase(wcls.desc,self.wpasswd)
 		if save:
@@ -210,7 +211,6 @@ class CmdTestShared:
 			t.do_comment(False,has_label=has_label)
 			t.expect('Save signed transaction? (Y/n): ','n')
 			t.expect('not saved')
-			t.req_exit_val = 1
 		return t
 
 	def ref_brain_chk(self,bw_file=ref_bw_file):

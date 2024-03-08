@@ -95,9 +95,9 @@ class CmdTestTool(CmdTestMain,CmdTestBase):
 		t = self.spawn(
 			'mmgen-tool',
 			['twview'],
-			env = { 'MMGEN_BOGUS_UNSPENT_DATA': joinpath(ref_dir,'bad-comment-unspent.json') })
+			env = { 'MMGEN_BOGUS_UNSPENT_DATA': joinpath(ref_dir,'bad-comment-unspent.json') },
+			exit_val = 2)
 		t.expect('cannot be converted to TwComment')
-		t.req_exit_val = 2
 		return t
 
 	def _decrypt_keystore(self,cmd,fn,pw,chk):

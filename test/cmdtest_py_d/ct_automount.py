@@ -89,11 +89,11 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 			'mmgen-txcreate',
 			opts
 			+ ['--alice', '--autosign']
-			+ [f'{self.burn_addr},1.23456', f'{sid}:{chg_addr}'])
+			+ [f'{self.burn_addr},1.23456', f'{sid}:{chg_addr}'],
+			exit_val = exit_val or None)
 		if exit_val:
 			t.read()
 			self.remove_device_online()
-			t.req_exit_val = exit_val
 			return t
 		t = self.txcreate_ui_common(
 			t,
@@ -121,15 +121,14 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		self.insert_device_online()
 		t = self.spawn(
 				'mmgen-txsend',
-				['--quiet', '--abort'])
+				['--quiet', '--abort'],
+				exit_val = 2 if err else 1 if user_exit else None)
 		if err:
 			t.expect('No unsent transactions')
-			t.req_exit_val = 2
 		else:
 			t.expect('(y/N): ', 'n' if user_exit else 'y')
 			if user_exit:
 				t.expect('Exiting at user request')
-				t.req_exit_val = 1
 			else:
 				for pat in del_expect:
 					t.expect(pat, regex=True)
@@ -191,11 +190,10 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		self.insert_device_online()
 		t = self.spawn(
 				'mmgen-txsend',
-				['--alice', '--autosign', '--status', '--verbose'])
+				['--alice', '--autosign', '--status', '--verbose'],
+				exit_val = exit_val)
 		t.expect(expect)
 		self.remove_device_online()
-		if exit_val:
-			t.req_exit_val = exit_val
 		return t
 
 	def alice_txstatus1(self):
@@ -209,7 +207,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		return self._alice_txstatus('in mempool')
 
 	def alice_txstatus4(self):
-		return self._alice_txstatus('1 confirmation')
+		return self._alice_txstatus('1 confirmation', 0)
 
 	def _alice_txsend(self, comment=None, no_wait=False):
 		if not no_wait:
@@ -226,10 +224,9 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 
 	def alice_txsend_bad_no_unsent(self):
 		self.insert_device_online()
-		t = self.spawn('mmgen-txsend', ['--quiet', '--autosign'])
+		t = self.spawn('mmgen-txsend', ['--quiet', '--autosign'], exit_val=2)
 		t.expect('No unsent transactions')
 		t.read()
-		t.req_exit_val = 2
 		self.remove_device_online()
 		return t
 
@@ -239,11 +236,11 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		self.insert_device_online()
 		t = self.spawn(
 				'mmgen-txbump',
-				['--alice', '--autosign'])
+				['--alice', '--autosign'],
+				exit_val = 1 if bad_tx_desc else None)
 		if bad_tx_desc:
 			t.expect('Only sent transactions')
 			t.expect(bad_tx_desc)
-			t.req_exit_val = 1
 		else:
 			t.expect(f'to deduct the fee from .* change output\): ', '\n', regex=True)
 			t.expect(r'(Y/n): ', 'y')  # output OK?

@@ -29,8 +29,8 @@ class CmdTestOpts(CmdTestBase):
 		('opt_bad_autoset',      (41,"invalid autoset value", [])),
 	)
 
-	def spawn_prog(self,args):
-		return self.spawn('test/misc/opts.py',args,cmd_dir='.')
+	def spawn_prog(self, args, exit_val=None):
+		return self.spawn('test/misc/opts.py', args, cmd_dir='.', exit_val=exit_val)
 
 	def check_vals(self,args,vals):
 		t = self.spawn_prog(args)
@@ -39,9 +39,8 @@ class CmdTestOpts(CmdTestBase):
 		return t
 
 	def do_run(self,args,expect,exit_val,regex=False):
-		t = self.spawn_prog(args)
+		t = self.spawn_prog(args, exit_val=exit_val or None)
 		t.expect(expect,regex=regex)
-		t.req_exit_val = exit_val
 		return t
 
 	def opt_helpscreen(self):

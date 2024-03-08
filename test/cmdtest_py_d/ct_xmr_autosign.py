@@ -258,14 +258,12 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 
 	def _abort_tx(self,expect,send=None,exit_val=None):
 		self.insert_device_online()
-		t = self.spawn('mmgen-xmrwallet', ['--autosign', 'abort'])
+		t = self.spawn('mmgen-xmrwallet', ['--autosign', 'abort'], exit_val=exit_val)
 		t.expect(expect)
 		if send:
 			t.send(send)
 		t.read() # required!
 		self.remove_device_online()
-		if exit_val:
-			t.req_exit_val = exit_val
 		return t
 
 	def abort_tx1(self):

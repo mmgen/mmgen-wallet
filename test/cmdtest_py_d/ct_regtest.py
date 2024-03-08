@@ -711,13 +711,11 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		return self.fund_wallet('alice',('L','S')[self.proto.cap('segwit')],rtFundAmt)
 
 	def user_twview(self, user, chk=None, expect=None, cmdline=['twview'], sort='age', exit_val=None):
-		t = self.spawn('mmgen-tool',[f'--{user}'] + cmdline + ['sort='+sort])
+		t = self.spawn('mmgen-tool',[f'--{user}'] + cmdline + ['sort='+sort], exit_val=exit_val)
 		if chk:
 			t.expect(r'{}\b.*\D{}\b'.format(*chk),regex=True)
 		if expect:
 			t.expect(expect)
-		if exit_val:
-			t.req_exit_val = exit_val
 		return t
 
 	def bob_twview_noaddrs(self):
@@ -949,10 +947,12 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			tx_file,
 			exp1       = '',
 			exp2       = '',
-			extra_args = []):
+			extra_args = [],
+			exit_val   = None):
 		t = self.spawn(
 				'mmgen-txsend',
-				['-d', self.tmpdir, '--'+user, '--status'] + extra_args + [tx_file])
+				['-d', self.tmpdir, '--'+user, '--status'] + extra_args + [tx_file],
+				exit_val = exit_val)
 		if exp1:
 			t.expect(exp1,regex=True)
 		if exp2:
@@ -977,7 +977,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			return_after_send  = False,
 			menu               = ['M'],
 			skip_passphrase    = False,
-			used_chg_addr_resp = None):
+			used_chg_addr_resp = None,
+			exit_val           = None):
 
 		t = self.spawn(
 			'mmgen-txdo',
@@ -985,7 +986,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			+ (['--fee='+fee] if fee else [])
 			+ extra_args
 			+ ([],[wf])[bool(wf)]
-			+ outputs_cl)
+			+ outputs_cl,
+			exit_val = exit_val)
 
 		self.txcreate_ui_common(
 				t,
@@ -1132,12 +1134,12 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		self.write_to_tmpfile('rbf_txid',mp[0]+'\n')
 		return 'ok'
 
-	def bob_rbf_status(self, fee, exp1, exp2=''):
+	def bob_rbf_status(self, fee, exp1, exp2='', exit_val=None):
 		if not self.proto.cap('rbf'):
 			return 'skip'
 		ext = ',{}]{x}.regtest.sigtx'.format(fee[:-1],x='-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
-		return self.user_txsend_status('bob', txfile, exp1, exp2)
+		return self.user_txsend_status('bob', txfile, exp1, exp2, exit_val=exit_val)
 
 	def bob_rbf_status1(self):
 		if not self.proto.cap('rbf'):
@@ -1163,7 +1165,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		return self.bob_rbf_status(
 			rtFee[1],
 			'Transaction has been replaced',
-			f'{new_txid} in mempool')
+			f'{new_txid} in mempool',
+			exit_val = 0)
 
 	def bob_rbf_status3(self):
 		if not self.proto.cap('rbf'):
@@ -1514,8 +1517,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 				extra_args        = [f'--locktime={locktime}'],
 				return_early      = return_early,
 				add_comment       = False,
-				return_after_send = True)
-		t.req_exit_val = exit_val
+				return_after_send = True,
+				exit_val          = exit_val)
 		if expect:
 			t.expect(expect)
 		return t
@@ -1556,9 +1559,9 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			return 'skip'
 		t = self.spawn(
 				'mmgen-tool',
-				['--alice','add_label',addr,'(none)'])
+				['--alice','add_label',addr,'(none)'],
+				exit_val = exit_val)
 		t.expect(reply,regex=True)
-		t.req_exit_val = exit_val
 		return t
 
 	def alice_add_comment_badaddr1(self):
@@ -1809,19 +1812,21 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			addr     = None,
 			ext      = 'sigmsg.json',
 			cmd      = 'verify',
-			msgfile  = None):
+			msgfile  = None,
+			exit_val = None):
 		return self.spawn(
 			'mmgen-msg', [
 				'--bob',
 				f'--outdir={self.tmpdir}',
 				cmd,
 				msgfile or get_file_with_ext(self.tmpdir,ext),
-			] + ([addr] if addr else []) )
+			]
+			+ ([addr] if addr else []),
+			exit_val = exit_val)
 
 	def bob_msgverify_raw(self):
-		t = self.bob_msgverify(ext='rawmsg.json')
+		t = self.bob_msgverify(ext='rawmsg.json', exit_val=1)
 		t.expect('No signatures')
-		t.req_exit_val = 1
 		return t
 
 	def bob_msgverify_single(self):
@@ -1947,8 +1952,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def _usr_auto_chg_bad(self,user,al_id,expect):
 		t = self.spawn(
 			'mmgen-txcreate',
-			['-d', self.tr.trash_dir, '-B', f'--{user}', self.burn_addr+', 0.01', al_id])
-		t.req_exit_val = 2
+			['-d', self.tr.trash_dir, '-B', f'--{user}', self.burn_addr+', 0.01', al_id],
+			exit_val = 2)
 		t.expect(expect)
 		return t
 

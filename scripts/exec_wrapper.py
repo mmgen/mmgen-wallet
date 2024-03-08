@@ -69,8 +69,8 @@ def exec_wrapper_write_traceback(e,exit_val):
 		if 'SystemExit' in exc_line:
 			tb_lines.pop()
 
-		if os.getenv('EXEC_WRAPPER_EXIT_OK'):
-			sys.stdout.write(c.red(exc_line))
+		if os.getenv('EXEC_WRAPPER_EXIT_VAL') == str(exit_val):
+			sys.stdout.write(c.yellow(exc_line) + '\n')
 		else:
 			sys.stdout.write('{}\n{}\n'.format(
 				c.yellow('\n'.join(tb_lines)),

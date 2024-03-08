@@ -781,7 +781,8 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 			'mmgen-addrgen',
 			(['-S'] if stdout else []) +
 			self.segwit_arg +
-			['-i' + in_fmt, '-d', self.tmpdir, wf, self.addr_idx_list])
+			['-i' + in_fmt, '-d', self.tmpdir, wf, self.addr_idx_list],
+			exit_val = None if stdout else 1)
 		t.license()
 		t.expect_getend(f'Valid {wcls.desc} for Seed ID ')
 		vmsg('Comparing generated checksum with checksum from previous address file')
@@ -790,7 +791,6 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 			t.expect_getend(r'Checksum for address data .*?: ',regex=True) )
 		if not stdout:
 			t.no_overwrite()
-			t.req_exit_val = 1
 		return t
 
 	def addrgen_hex(self,wf,_,in_fmt='mmhex'):
@@ -806,7 +806,8 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 			+ self.segwit_arg
 			+ ['-i'+in_fmt, '-d', self.tmpdir]
 			+ ([wf] if wf else [])
-			+ [self.addr_idx_list])
+			+ [self.addr_idx_list],
+			exit_val = 1)
 		t.license()
 		t.expect_getend('Incog Wallet ID: ')
 		wcls = get_wallet_cls(fmt_code=in_fmt)
@@ -816,7 +817,6 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
 		verify_checksum_or_exit(self._get_addrfile_checksum(),chk)
 		t.no_overwrite()
-		t.req_exit_val = 1
 		return t
 
 	def addrgen_incog_hex(self,wf,_):
@@ -973,7 +973,8 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		non_mm_file = joinpath(self.tmpdir,non_mmgen_fn)
 		t = self.spawn(
 			'mmgen-txsign',
-			add_args + ['-d', self.tmpdir, '-k', non_mm_file, txf, wf])
+			add_args + ['-d', self.tmpdir, '-k', non_mm_file, txf, wf],
+			exit_val = 2 if bad_vsize else None)
 		t.license()
 		t.view_tx('n')
 		wcls = get_wallet_cls(ext=get_extension(wf))
@@ -981,12 +982,9 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		if bad_vsize:
 			t.expect('Estimated transaction vsize')
 			t.expect('1 transaction could not be signed')
-			exit_val = 2
 		else:
 			t.do_comment(False)
 			t.expect('Save signed transaction? (Y/n): ','y')
-			exit_val = 0
-		t.req_exit_val = exit_val
 		return t
 
 	def walletgen6(self,del_dw_run='dummy'):

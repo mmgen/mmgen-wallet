@@ -616,7 +616,10 @@ class CmdTestRunner:
 			direct_exec     = False,
 			no_passthru_opts = False,
 			spawn_env_override = None,
+			exit_val        = None,
 			env             = {}):
+
+		self.exit_val = exit_val
 
 		desc = self.tg.test_name if cfg.names else self.gm.dpy_data[self.tg.test_name][1]
 		if extra_desc:
@@ -684,6 +687,7 @@ class CmdTestRunner:
 		spawn_env.update({
 			'MMGEN_HOLD_PROTECT_DISABLE': '' if send_delay else '1',
 			'MMGEN_TEST_SUITE_POPEN_SPAWN': '' if pexpect_spawn else '1',
+			'EXEC_WRAPPER_EXIT_VAL': '' if exit_val is None else str(exit_val),
 		})
 		spawn_env.update(env)
 
@@ -963,7 +967,7 @@ class CmdTestRunner:
 
 	def process_retval(self,cmd,ret):
 		if type(ret).__name__ == 'MMGenPexpect':
-			ret.ok()
+			ret.ok(exit_val=self.exit_val)
 			self.cmd_total += 1
 		elif ret == 'ok':
 			ok()

@@ -601,10 +601,11 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			ext       = '21-23]{}.regtest.addrs',
 			expect    = '9/9',
 			add_args  = [],
-			bad_input = False):
+			bad_input = False,
+			exit_val  = None):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		fn = self.get_file_with_ext(ext,no_dot=True,delete=False)
-		t = self.spawn('mmgen-addrimport', self.eth_args[1:-1] + add_args + [fn])
+		t = self.spawn('mmgen-addrimport', self.eth_args[1:-1] + add_args + [fn], exit_val=exit_val)
 		if bad_input:
 			return t
 		t.expect('Importing')
@@ -750,11 +751,11 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn(
 				'mmgen-txsend',
-				self.eth_args + add_args + ['--status', txfile])
+				self.eth_args + add_args + ['--status', txfile],
+				exit_val = exit_val)
 		t.expect(expect_str)
 		if expect_str2:
 			t.expect(expect_str2)
-		t.req_exit_val = exit_val
 		return t
 
 	def tx_status1(self):
@@ -1119,18 +1120,18 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		t = self.addrimport(
 			ext       = '[11-13]{}.regtest.addrs',
 			add_args  = ['--token=abc'],
-			bad_input = True)
+			bad_input = True,
+			exit_val  = 2)
 		t.expect('could not be resolved')
-		t.req_exit_val = 2
 		return t
 
 	def token_addrimport_badaddr2(self):
 		t = self.addrimport(
 			ext       = '[11-13]{}.regtest.addrs',
 			add_args  = ['--token='+'00deadbeef'*4],
-			bad_input = True)
+			bad_input = True,
+			exit_val  = 2)
 		t.expect('could not be resolved')
-		t.req_exit_val = 2
 		return t
 
 	def token_addrimport(self,addr_file,addr_range,expect,extra_args=[]):
