@@ -634,7 +634,9 @@ class CmdTestAutosign(CmdTestAutosignBase):
 
 	def do_sign(self, args, have_msg=False):
 		tx_desc = Signable.transaction.desc
-		t = self.spawn('mmgen-autosign', self.opts + args)
+		t = self.spawn(
+				'mmgen-autosign',
+				self.opts + args)
 		t.expect(
 			f'{self.tx_count} {tx_desc}{suf(self.tx_count)} signed' if self.tx_count else
 			f'No unsigned {tx_desc}s')
@@ -799,12 +801,15 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		self.do_umount()
 		prompt_remove()
 		omsg('\n' + cyan(indent(info_msg)))
+
 		t = self.spawn(
 			'mmgen-autosign',
 			self.opts + (led_opts or []) + ['--quiet', '--no-summary', 'wait'],
 			no_msg = True)
+
 		if not cfg.exact_output:
 			omsg('')
+
 		prompt_insert_sign(t)
 
 		self.do_mount() # race condition due to device insertion detection
@@ -814,6 +819,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		imsg(purple('\nKilling wait loop!'))
 		t.kill(2) # 2 = SIGINT
 		t.req_exit_val = 1
+
 		if self.simulate_led and led_opts:
 			t.expect('Stopping LED')
 		return t

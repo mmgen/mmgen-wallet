@@ -195,7 +195,10 @@ class CmdTestShared:
 			view       = 'n',
 			dfl_wallet = False):
 		opts = extra_opts + ['-d',self.tmpdir,txfile] + ([wf] if wf else [])
-		t = self.spawn('mmgen-txsign', opts, extra_desc)
+		t = self.spawn(
+			'mmgen-txsign',
+			opts,
+			extra_desc)
 		t.license()
 		t.view_tx(view)
 		wcls = get_wallet_cls( ext = 'mmdat' if dfl_wallet else get_extension(wf) )

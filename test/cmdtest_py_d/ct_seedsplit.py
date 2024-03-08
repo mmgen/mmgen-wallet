@@ -130,11 +130,11 @@ class CmdTestSeedSplit(CmdTestBase):
 			tdir,
 			ofmt,
 			in_exts,
-			add_args       = [],
-			sid            = None,
+			add_args = [],
+			sid      = None,
 			bad_invocation = False,
-			master         = None,
-			id_str         = None):
+			master   = None,
+			id_str   = None):
 		td = self.get_tmp_subdir(tdir)
 		shares = [get_file_with_ext(td,f) for f in in_exts]
 		if not sid:
@@ -248,13 +248,11 @@ class CmdTestSeedSplit(CmdTestBase):
 
 	def ss_3way_join_dfl_bad_invocation(self):
 		t = self.ss_join('3way_dfl','mmhex',
-				['mmwords','mmincox','bip39'],
-				id_str='foo',
-				bad_invocation=True)
+			['mmwords','mmincox','bip39'],
+			id_str   = 'foo',
+			bad_invocation = True)
 		t.expect('option meaningless')
-		t.req_exit_val = 1
 		return t
-
 
 	def ss_bad_invocation1(self):
 		return self.ss_bad_invocation(

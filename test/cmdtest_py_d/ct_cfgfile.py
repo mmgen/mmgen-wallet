@@ -48,9 +48,9 @@ class CmdTestCfgFile(CmdTestBase):
 		return self.spawn(
 			'test/misc/cfg.py',
 			[f'--data-dir={self.path("data_dir")}'] + args,
-			cmd_dir = '.',
-			extra_desc = extra_desc,
-			pexpect_spawn = pexpect_spawn )
+			cmd_dir       = '.',
+			extra_desc    = extra_desc,
+			pexpect_spawn = pexpect_spawn)
 
 	def path(self,id_str):
 		return {

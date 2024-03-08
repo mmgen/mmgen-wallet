@@ -781,7 +781,7 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 			'mmgen-addrgen',
 			(['-S'] if stdout else []) +
 			self.segwit_arg +
-			[ '-i' + in_fmt, '-d', self.tmpdir, wf, self.addr_idx_list ] )
+			['-i' + in_fmt, '-d', self.tmpdir, wf, self.addr_idx_list])
 		t.license()
 		t.expect_getend(f'Valid {wcls.desc} for Seed ID ')
 		vmsg('Comparing generated checksum with checksum from previous address file')
@@ -800,8 +800,13 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		return self.addrgen_seed(wf,_,in_fmt='words')
 
 	def addrgen_incog(self,wf=[],_='',in_fmt='i',args=[]):
-		t = self.spawn('mmgen-addrgen', args + self.segwit_arg + ['-i'+in_fmt,'-d',self.tmpdir]+
-				([],[wf])[bool(wf)] + [self.addr_idx_list])
+		t = self.spawn(
+			'mmgen-addrgen',
+			args
+			+ self.segwit_arg
+			+ ['-i'+in_fmt, '-d', self.tmpdir]
+			+ ([wf] if wf else [])
+			+ [self.addr_idx_list])
 		t.license()
 		t.expect_getend('Incog Wallet ID: ')
 		wcls = get_wallet_cls(fmt_code=in_fmt)
@@ -966,7 +971,9 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 
 	def txsign5(self,wf,txf,bad_vsize=True,add_args=[]):
 		non_mm_file = joinpath(self.tmpdir,non_mmgen_fn)
-		t = self.spawn('mmgen-txsign', add_args + ['-d',self.tmpdir,'-k',non_mm_file,txf,wf])
+		t = self.spawn(
+			'mmgen-txsign',
+			add_args + ['-d', self.tmpdir, '-k', non_mm_file, txf, wf])
 		t.license()
 		t.view_tx('n')
 		wcls = get_wallet_cls(ext=get_extension(wf))

@@ -943,8 +943,16 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		cmp_or_die(rtBals[6],ret)
 		return t
 
-	def user_txsend_status(self,user,tx_file,exp1='',exp2='',extra_args=[]):
-		t = self.spawn('mmgen-txsend',['-d',self.tmpdir,'--'+user,'--status'] + extra_args + [tx_file])
+	def user_txsend_status(
+			self,
+			user,
+			tx_file,
+			exp1       = '',
+			exp2       = '',
+			extra_args = []):
+		t = self.spawn(
+				'mmgen-txsend',
+				['-d', self.tmpdir, '--'+user, '--status'] + extra_args + [tx_file])
 		if exp1:
 			t.expect(exp1,regex=True)
 		if exp2:
@@ -956,7 +964,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 				'gettransaction’s ‘timereceived’ field')
 		return t
 
-	def user_txdo( self,
+	def user_txdo(
+			self,
 			user,
 			fee,
 			outputs_cl,
@@ -970,10 +979,13 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			skip_passphrase    = False,
 			used_chg_addr_resp = None):
 
-		t = self.spawn('mmgen-txdo',
-			['-d',self.tmpdir,'-B','--'+user] +
-			(['--fee='+fee] if fee else []) +
-			extra_args + ([],[wf])[bool(wf)] + outputs_cl)
+		t = self.spawn(
+			'mmgen-txdo',
+			['-d',self.tmpdir,'-B','--'+user]
+			+ (['--fee='+fee] if fee else [])
+			+ extra_args
+			+ ([],[wf])[bool(wf)]
+			+ outputs_cl)
 
 		self.txcreate_ui_common(
 				t,
@@ -1120,12 +1132,12 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		self.write_to_tmpfile('rbf_txid',mp[0]+'\n')
 		return 'ok'
 
-	def bob_rbf_status(self,fee,exp1,exp2=''):
+	def bob_rbf_status(self, fee, exp1, exp2=''):
 		if not self.proto.cap('rbf'):
 			return 'skip'
 		ext = ',{}]{x}.regtest.sigtx'.format(fee[:-1],x='-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
-		return self.user_txsend_status('bob',txfile,exp1,exp2)
+		return self.user_txsend_status('bob', txfile, exp1, exp2)
 
 	def bob_rbf_status1(self):
 		if not self.proto.cap('rbf'):
@@ -1148,8 +1160,10 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		if not self.proto.cap('rbf'):
 			return 'skip'
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
-		return self.bob_rbf_status(rtFee[1],
-			'Transaction has been replaced',f'{new_txid} in mempool')
+		return self.bob_rbf_status(
+			rtFee[1],
+			'Transaction has been replaced',
+			f'{new_txid} in mempool')
 
 	def bob_rbf_status3(self):
 		if not self.proto.cap('rbf'):
@@ -1540,7 +1554,9 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		if os.getenv('PYTHONOPTIMIZE'):
 			omsg(yellow(f'PYTHONOPTIMIZE set, skipping test {self.test_name!r}'))
 			return 'skip'
-		t = self.spawn('mmgen-tool',['--alice','add_label',addr,'(none)'])
+		t = self.spawn(
+				'mmgen-tool',
+				['--alice','add_label',addr,'(none)'])
 		t.expect(reply,regex=True)
 		t.req_exit_val = exit_val
 		return t
@@ -1788,7 +1804,12 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		fn2 = get_file_with_ext(self.tmpdir,'bip39')
 		return self.bob_msgsign([fn2,fn1])
 
-	def bob_msgverify(self,addr=None,ext='sigmsg.json',cmd='verify',msgfile=None):
+	def bob_msgverify(
+			self,
+			addr     = None,
+			ext      = 'sigmsg.json',
+			cmd      = 'verify',
+			msgfile  = None):
 		return self.spawn(
 			'mmgen-msg', [
 				'--bob',
@@ -1926,7 +1947,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def _usr_auto_chg_bad(self,user,al_id,expect):
 		t = self.spawn(
 			'mmgen-txcreate',
-			['-d',self.tr.trash_dir,'-B',f'--{user}', self.burn_addr+',0.01', al_id] )
+			['-d', self.tr.trash_dir, '-B', f'--{user}', self.burn_addr+', 0.01', al_id])
 		t.req_exit_val = 2
 		t.expect(expect)
 		return t
