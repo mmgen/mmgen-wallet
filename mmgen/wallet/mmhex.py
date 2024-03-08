@@ -25,7 +25,6 @@ class wallet(wallet):
 	def _format(self):
 		h = self.seed.hexdata
 		self.ssdata.chksum = make_chksum_6(h)
-		self.ssdata.hexseed = h
 		self.fmt_data = f'{self.ssdata.chksum} {split_into_cols(4,h)}\n'
 
 	def _deformat(self):
@@ -57,7 +56,6 @@ class wallet(wallet):
 
 		self.seed = Seed( self.cfg, bytes.fromhex(hstr) )
 		self.ssdata.chksum = chk
-		self.ssdata.hexseed = hstr
 
 		self.check_usr_seed_len()
 

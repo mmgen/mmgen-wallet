@@ -61,7 +61,6 @@ class wallet(wallet):
 				self.desc += ' plus user-supplied entropy'
 
 		self.seed = Seed( self.cfg, seed_bytes )
-		self.ssdata.hexseed = seed_bytes.hex()
 
 		self.check_usr_seed_len()
 		return True

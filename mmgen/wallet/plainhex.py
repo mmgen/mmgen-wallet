@@ -37,7 +37,6 @@ class wallet(wallet):
 			return False
 
 		self.seed = Seed( self.cfg, bytes.fromhex(d) )
-		self.ssdata.hexseed = d
 
 		self.check_usr_seed_len()
 
