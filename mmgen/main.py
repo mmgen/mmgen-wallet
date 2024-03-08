@@ -22,7 +22,7 @@ main: Script launcher for the MMGen Project
 
 import sys,os
 
-def launch(*, mod=None, func=None, package='mmgen'):
+def launch(*, mod=None, func=None, fqmod=None, package='mmgen'):
 
 	if sys.platform == 'linux' and sys.stdin.isatty():
 		import termios,atexit
@@ -31,7 +31,7 @@ def launch(*, mod=None, func=None, package='mmgen'):
 		atexit.register(lambda: termios.tcsetattr(fd,termios.TCSADRAIN,old))
 
 	try:
-		__import__(f'{package}.main_{mod}') if mod else func()
+		__import__(f'{package}.main_{mod}') if mod else func() if func else __import__(fqmod)
 	except KeyboardInterrupt:
 		from .color import yellow
 		sys.stderr.write(yellow('\nUser interrupt\n'))
