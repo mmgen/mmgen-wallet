@@ -15,7 +15,8 @@ proto.btc.tx.status: Bitcoin transaction status class
 import time
 
 from ....tx import status as TxBase
-from ....util import msg,suf,die,secs_to_dhms
+from ....util import msg,suf,die
+from ....util2 import format_elapsed_hr
 
 class Status(TxBase.Status):
 
@@ -86,9 +87,7 @@ class Status(TxBase.Status):
 					msg('Transaction is in mempool')
 				else:
 					msg(f'TX status: in mempool, {rep}')
-					msg('Sent {} ({} ago)'.format(
-						time.strftime('%c',time.gmtime(t)),
-						secs_to_dhms(int(time.time()-t))) )
+					msg('Sent {} ({})'.format(time.strftime('%c',time.gmtime(t)), format_elapsed_hr(t)))
 			else:
 				msg('Warning: transaction is in mempool!')
 		elif await is_in_wallet():

@@ -367,7 +367,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		('bob_txhist1',            "viewing Bob's transaction history (sort=age)"),
 		('bob_txhist2',            "viewing Bob's transaction history (sort=blockheight reverse=1)"),
 		('bob_txhist3',            "viewing Bob's transaction history (sort=blockheight sinceblock=-7)"),
-		('bob_txhist4',            "viewing Bob's transaction history (sinceblock=399 detail=1)"),
+		('bob_txhist4',            "viewing Bob's transaction history (detail=1)"),
+		('bob_txhist5',            "viewing Bob's transaction history (sinceblock=399 detail=1)"),
 		('bob_txhist_interactive', "viewing Bob's transaction history (age_fmt=date_time interactive=true)"),
 	),
 	'label': (
@@ -870,6 +871,12 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 
 	def bob_txhist4(self):
 		return self.user_txhist('bob',
+			args = ['sort=blockheight','age_fmt=block','detail=1'],
+			expect = fr'Block:.*406.*Value:.*{rtBals[10]}'
+		)
+
+	def bob_txhist5(self):
+		return self.user_txhist('bob',
 			args = ['sort=blockheight','sinceblock=399','age_fmt=block','detail=1'],
 			expect = fr'Displaying transactions since block 399.*\s7\).*Block:.*406.*Value:.*{rtBals[10]}'
 		)
@@ -942,6 +949,11 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			t.expect(exp1,regex=True)
 		if exp2:
 			t.expect(exp2,regex=True)
+		if self.deterministic:
+			imsg(
+				'DETERMINISTIC TESTING NOTE:\n  '
+				'output of mmgen-txsend --status cannot be made deterministic, as it uses '
+				'gettransaction’s ‘timereceived’ field')
 		return t
 
 	def user_txdo( self,
@@ -1029,20 +1041,26 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			one_output = True )
 
 	def bob_send_maybe_rbf(self):
-		outputs_cl = self._create_tx_outputs('alice',(('L',1,',60'),('C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
+		outputs_cl = self._create_tx_outputs('alice',(('L',1,',60'),('C',1,',40')))
 		outputs_cl += [self._user_sid('bob')+':'+rtBobOp3]
-		return self.user_txdo('bob',rtFee[1],outputs_cl,'3',
-					extra_args = (['--no-rbf'],[])[self.proto.cap('rbf')],
-					used_chg_addr_resp = 'y' )
+		return self.user_txdo(
+			user               = 'bob',
+			fee                = rtFee[1],
+			outputs_cl         = outputs_cl, # alice_sid:L:1,60, alice_sid:C:1,40
+			outputs_list       = '3',
+			extra_args         = [] if self.proto.cap('rbf') else ['--no-rbf'],
+			used_chg_addr_resp = 'y')
 
 	def bob_send_non_mmgen(self):
-		outputs_cl = self._create_tx_outputs('alice',(
-			(('L','S')[self.proto.cap('segwit')],2,',10'),
-			(('L','S')[self.proto.cap('segwit')],3,'')
-		)) # alice_sid:S:2, alice_sid:S:3
 		keyfile = joinpath(self.tmpdir,'non-mmgen.keys')
-		return self.user_txdo('bob',rtFee[3],outputs_cl,'1,4-10',
-			extra_args=['--keys-from-file='+keyfile,'--vsize-adj=1.02'])
+		atype = 'S' if self.proto.cap('segwit') else 'L'
+		outputs_cl = self._create_tx_outputs('alice',((atype, 2, ', 10'), (atype, 3, '')))
+		return self.user_txdo(
+			user         = 'bob',
+			fee          = rtFee[3],
+			outputs_cl   = outputs_cl, # alice_sid:S:2,10, alice_sid:S:3
+			outputs_list = '1,4-10',
+			extra_args   = [f'--keys-from-file={keyfile}', '--vsize-adj=1.02'])
 
 	def alice_send_estimatefee(self):
 		outputs_cl = self._create_tx_outputs('bob',(('L',1,''),)) # bob_sid:L:1
@@ -1695,13 +1713,13 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			return 'skip'
 		return self.alice_txcreate_info(pexpect_spawn=True)
 
-	# send one TX to 2 addrs in Alice’s wallet - required for alice_twview_grouped()
+	# send one TX to 2 addrs in Alice’s wallet - required for alice_twview_grouped() (group by TxID)
 	def bob_send_to_alice_2addr(self):
 		outputs_cl = self._create_tx_outputs('alice',[('C',1,',0.02'),('C',2,',0.2')])
 		outputs_cl += [self._user_sid('bob')+':C:5']
 		return self.user_txdo('bob','25s',outputs_cl,'1')
 
-	# send to a used addr in Alice’s wallet - required for alice_twview_grouped()
+	# send to a used addr in Alice’s wallet - required for alice_twview_grouped() (group by address)
 	def bob_send_to_alice_reuse(self):
 		outputs_cl = self._create_tx_outputs('alice',[('C',1,',0.0111')])
 		outputs_cl += [self._user_sid('bob')+':C:5']
@@ -1710,15 +1728,15 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def alice_twview_grouped(self):
 		t = self.spawn('mmgen-tool',['--alice','twview','interactive=1'])
 		prompt = 'abel:\b'
-		for s,dots in (
-				('o',False),
-				('M',False),
-				('t',True),
-				('q',True),
+		for grouped, send in (
+				(False, 'o'), # 'o' = group display
+				(False, 'M'), # grouped address
+				(True,  't'), # grouped TxID
+				(True,  'q'),
 			):
-			if dots:
+			if grouped:
 				t.expect('........')
-			t.expect(prompt,s)
+			t.expect(prompt, send)
 		return t
 
 	def bob_msgcreate(self):
