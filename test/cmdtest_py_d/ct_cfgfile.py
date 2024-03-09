@@ -155,9 +155,11 @@ class CmdTestCfgFile(CmdTestBase):
 	def old_sample_bad_var(self):
 		d = ['foo true','bar false']
 		write_to_file(self.path('usr'),'\n'.join(d) + '\n')
-		return self.old_sample_common(
+		t = self.old_sample_common(
 			old_set       = True,
 			pexpect_spawn = not sys.platform == 'win32')
+		t.expect('unrecognized option')
+		return t
 
 	def _autoset_opts(self, args=[], text='rpc_backend aiohttp\n', exit_val=None):
 		write_to_file( self.path('usr'), text )
@@ -170,14 +172,16 @@ class CmdTestCfgFile(CmdTestBase):
 	def autoset_opts_cmdline(self):
 		return self._autoset_opts(args=['--rpc-backend=curl','autoset_opts_cmdline'])
 
-	def _autoset_opts_bad(self,kwargs):
-		return self._autoset_opts(exit_val=1, **kwargs)
+	def _autoset_opts_bad(self, expect, kwargs):
+		t = self._autoset_opts(exit_val=1, **kwargs)
+		t.expect(expect)
+		return t
 
 	def autoset_opts_bad(self):
-		return self._autoset_opts_bad({'text':'rpc_backend foo\n'})
+		return self._autoset_opts_bad('not unique substring', {'text':'rpc_backend foo\n'})
 
 	def autoset_opts_bad_cmdline(self):
-		return self._autoset_opts_bad({'args':['--rpc-backend=foo']})
+		return self._autoset_opts_bad('not unique substring', {'args':['--rpc-backend=foo']})
 
 	def coin_specific_vars(self):
 		"""

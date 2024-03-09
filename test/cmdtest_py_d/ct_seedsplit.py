@@ -243,7 +243,7 @@ class CmdTestSeedSplit(CmdTestBase):
 
 	def ss_bad_invocation(self,cmd,args,exit_val,errmsg):
 		t = self.spawn(cmd, args, exit_val=exit_val)
-		t.expect(errmsg)
+		t.expect(errmsg, regex=True)
 		return t
 
 	def ss_3way_join_dfl_bad_invocation(self):
@@ -256,44 +256,44 @@ class CmdTestSeedSplit(CmdTestBase):
 
 	def ss_bad_invocation1(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',[],1,'MMGenSystemExit(1)')
+			'mmgen-seedsplit', [], 1, 'USAGE:')
 
 	def ss_bad_invocation2(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',['-M1','1:9'],1,'MMGenSystemExit(1)')
+			'mmgen-seedsplit', ['-M1', '1:9'], 1, 'meaningless in master share context')
 
 	def ss_bad_invocation3(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',[self.tmpdir+'/no.mmdat','1:9'],1,'FileNotFound')
+			'mmgen-seedsplit', [self.tmpdir+'/no.mmdat', '1:9'], 1, 'input file .* not found')
 
 	def ss_bad_invocation4(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:9'],1,'BadFileExtension')
+			'mmgen-seedsplit', [self.tmpdir+'/dfl.sid', '1:9'], 1, 'unrecognized .* extension')
 
 	def ss_bad_invocation5(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedjoin',[],1,'MMGenSystemExit(1)')
+			'mmgen-seedjoin', [], 1, 'USAGE:')
 
 	def ss_bad_invocation6(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedjoin',[self.tmpdir+'/a'],1,'MMGenSystemExit(1)')
+			'mmgen-seedjoin', [self.tmpdir+'/a'], 1, 'USAGE:')
 
 	def ss_bad_invocation7(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedjoin',[self.tmpdir+'/a',self.tmpdir+'/b'],1,'BadFileExtension')
+			'mmgen-seedjoin', [self.tmpdir+'/a', self.tmpdir+'/b'], 1, 'unrecognized .* extension')
 
 	def ss_bad_invocation8(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedjoin',[self.tmpdir+'/a.mmdat',self.tmpdir+'/b.mmdat'],1,'FileNotFound')
+			'mmgen-seedjoin', [self.tmpdir+'/a.mmdat', self.tmpdir+'/b.mmdat'], 1, 'input file .* not found')
 
 	def ss_bad_invocation9(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',['x'],1,'MMGenSystemExit(1)')
+			'mmgen-seedsplit', ['x'], 1, 'USAGE:')
 
 	def ss_bad_invocation10(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',[self.tmpdir+'/a.mmdat','1:2'],1,'FileNotFound')
+			'mmgen-seedsplit', [self.tmpdir+'/a.mmdat', '1:2'], 1, 'input file .* not found')
 
 	def ss_bad_invocation11(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:2'],1,'BadFileExtension')
+			'mmgen-seedsplit', [self.tmpdir+'/dfl.sid', '1:2'], 1, 'unrecognized .* extension')

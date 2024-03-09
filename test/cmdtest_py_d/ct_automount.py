@@ -82,7 +82,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 
 		self.opts.append('--alice')
 
-	def _alice_txcreate(self, chg_addr, opts=[], exit_val=0):
+	def _alice_txcreate(self, chg_addr, opts=[], exit_val=0, expect=None):
 		self.insert_device_online()
 		sid = self._user_sid('alice')
 		t = self.spawn(
@@ -100,6 +100,8 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 			inputs          = '1',
 			interactive_fee = '32s',
 			file_desc       = 'Unsigned automount transaction')
+		if expect:
+			t.expect(expect)
 		t.read()
 		self.remove_device_online()
 		return t
@@ -117,41 +119,40 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 			return 'skip'
 		return self._alice_txcreate(chg_addr='L:4')
 
-	def _alice_txsend_abort(self, err=False, user_exit=False, del_expect=[]):
+	def _alice_txsend_abort(self, err=False, send_resp='y', expect=None, shred_expect=[]):
 		self.insert_device_online()
 		t = self.spawn(
 				'mmgen-txsend',
 				['--quiet', '--abort'],
-				exit_val = 2 if err else 1 if user_exit else None)
+				exit_val = 2 if err else 1 if send_resp == 'n' else None)
 		if err:
-			t.expect('No unsent transactions')
+			t.expect(expect)
 		else:
-			t.expect('(y/N): ', 'n' if user_exit else 'y')
-			if user_exit:
-				t.expect('Exiting at user request')
-			else:
-				for pat in del_expect:
-					t.expect(pat, regex=True)
+			t.expect('(y/N): ', send_resp)
+			if expect:
+				t.expect(expect)
+			for pat in shred_expect:
+				t.expect(pat, regex=True)
 		self.remove_device_online()
 		return t
 
 	def alice_txsend_abort1(self):
-		return self._alice_txsend_abort(del_expect=['Shredding .*arawtx'])
+		return self._alice_txsend_abort(shred_expect=['Shredding .*arawtx'])
 
 	def alice_txsend_abort2(self):
-		return self._alice_txsend_abort(err=True)
+		return self._alice_txsend_abort(err=True, expect='No unsent transactions')
 
 	def alice_txsend_abort3(self):
-		return self._alice_txsend_abort(user_exit=True)
+		return self._alice_txsend_abort(send_resp='n', expect='Exiting at user request')
 
 	def alice_txsend_abort4(self):
 		self._wait_signed('transaction')
-		return self._alice_txsend_abort(del_expect=[r'Shredding .*arawtx', r'Shredding .*asigtx'])
+		return self._alice_txsend_abort(shred_expect=[r'Shredding .*arawtx', r'Shredding .*asigtx'])
 
 	alice_txsend_abort5 = alice_txsend_abort2
 
 	def alice_txcreate_bad_have_unsigned(self):
-		return self._alice_txcreate(chg_addr='C:5', exit_val=2)
+		return self._alice_txcreate(chg_addr='C:5', exit_val=2, expect='already present')
 
 	def copy_wallet(self):
 		self.spawn('', msg_only=True)
