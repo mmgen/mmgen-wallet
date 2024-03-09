@@ -322,7 +322,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		def run():
 			t = self.spawn(
 				'mmgen-autosign',
-				self.opts + ['--full-summary','wait'],
+				self.opts + ['--full-summary', 'wait'],
 				direct_exec      = True,
 				no_passthru_opts = True,
 				spawn_env_override = self.spawn_env | {'EXEC_WRAPPER_DO_RUNTIME_MSG': ''})
@@ -637,10 +637,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		t = self.spawn(
 				'mmgen-autosign',
 				self.opts + args,
-				exit_val = 1
-					if 'wait' in args
-					or self.bad_tx_count
-					or (have_msg and self.bad_msg_count) else None)
+				exit_val = 1 if self.bad_tx_count or (have_msg and self.bad_msg_count) else None)
 		t.expect(
 			f'{self.tx_count} {tx_desc}{suf(self.tx_count)} signed' if self.tx_count else
 			f'No unsigned {tx_desc}s')
@@ -659,33 +656,28 @@ class CmdTestAutosign(CmdTestAutosignBase):
 					f'{self.bad_msg_count} message file{suf(self.bad_msg_count)}{{0,1}} failed to sign',
 					regex = True)
 
-		if 'wait' in args:
-			t.expect('Waiting')
-			imsg(purple('\nKilling wait loop!'))
-			t.kill(2)
-		else:
-			t.read()
+		t.read()
 
 		imsg('')
 		return t
 
 	def sign_quiet(self):
-		return self.do_sign(['--quiet','wait'])
+		return self.do_sign(['--quiet'])
 
 	def sign_full_summary(self):
-		return self.do_sign(['--full-summary','wait'])
+		return self.do_sign(['--full-summary'])
 
 	def sign_led(self):
-		return self.do_sign(['--quiet','--led'])
+		return self.do_sign(['--quiet', '--led'])
 
 	def sign_stealth_led(self):
-		return self.do_sign(['--quiet','--stealth-led','wait'])
+		return self.do_sign(['--quiet', '--stealth-led'])
 
 	def sign_quiet_msg(self):
-		return self.do_sign(['--quiet','wait'],have_msg=True)
+		return self.do_sign(['--quiet'], have_msg=True)
 
 	def sign_full_summary_msg(self):
-		return self.do_sign(['--full-summary','wait'],have_msg=True)
+		return self.do_sign(['--full-summary'], have_msg=True)
 
 	def sign_no_unsigned(self):
 		return self._sign_no_unsigned(
