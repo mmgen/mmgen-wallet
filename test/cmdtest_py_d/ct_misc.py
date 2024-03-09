@@ -173,7 +173,7 @@ class CmdTestHelp(CmdTestBase):
 		return t
 
 	def version(self):
-		t = self.spawn('mmgen-tool',['--version'])
+		t = self.spawn('mmgen-tool', ['--version'], exit_val=0)
 		t.expect('MMGEN-TOOL version')
 		return t
 

@@ -48,7 +48,7 @@ def check_or_create_dir(path):
 		try:
 			os.makedirs(path,0o700)
 		except:
-			die(2,f'ERROR: unable to read or create path {path!r}')
+			die(2, f'ERROR: unable to read or create path ‘{path}’')
 
 def check_binary(args):
 	from subprocess import run,DEVNULL
@@ -89,17 +89,17 @@ def _check_file_type_and_access(fname,ftype,blkdev_ok=False):
 	try:
 		mode = os.stat(fname).st_mode
 	except:
-		die( 'FileNotFound', f'Requested {ftype} {fname!r} not found' )
+		die('FileNotFound', f'Requested {ftype} ‘{fname}’ not found')
 
 	for t in ok_types:
 		if t[0](mode):
 			break
 	else:
 		ok_list = ' or '.join( t[1] for t in ok_types )
-		die(1,f'Requested {ftype} {fname!r} is not a {ok_list}')
+		die(1, f'Requested {ftype} ‘{fname}’ is not a {ok_list}')
 
 	if not os.access(fname,access):
-		die(1,f'Requested {ftype} {fname!r} is not {op_desc}able by you')
+		die(1, f'Requested {ftype} ‘{fname}’ is not {op_desc}able by you')
 
 	return True
 
@@ -141,11 +141,12 @@ def _open_or_die(filename,mode,silent=False):
 	try:
 		return open(filename,mode)
 	except:
-		die(2,'' if silent else
-			'Unable to open file {!r} for {}'.format(
-				({0:'STDIN',1:'STDOUT',2:'STDERR'}[filename] if isinstance(filename,int) else filename),
-				('reading' if 'r' in mode else 'writing')
-			))
+		if silent:
+			die(2,'')
+		else:
+			fn = {0:'STDIN',1:'STDOUT',2:'STDERR'}[filename] if isinstance(filename,int) else f'‘{filename}’'
+			desc = 'reading' if 'r' in mode else 'writing'
+			die(2, f'Unable to open file {fn} for {desc}')
 
 def write_data_to_file(
 		cfg,
@@ -277,7 +278,7 @@ def write_data_to_file(
 def get_words_from_file(cfg,infile,desc,quiet=False):
 
 	if not quiet:
-		cfg._util.qmsg(f'Getting {desc} from file {infile!r}')
+		cfg._util.qmsg(f'Getting {desc} from file ‘{infile}’')
 
 	with _open_or_die(infile, 'rb') as fp:
 		data = fp.read()
@@ -301,7 +302,7 @@ def get_data_from_file(
 		quiet  = False ):
 
 	if not (cfg.quiet or silent or quiet):
-		cfg._util.qmsg(f'Getting {desc} from file {infile!r}')
+		cfg._util.qmsg(f'Getting {desc} from file ‘{infile}’')
 
 	with _open_or_die(
 			(0 if dash and infile == '-' else infile),
@@ -332,12 +333,12 @@ def get_lines_from_file(
 		have_enc_ext = get_extension(fn) == Crypto.mmenc_ext
 		if have_enc_ext or not is_utf8(data):
 			m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
-			cfg._util.qmsg(f'{m} {desc} {fn!r}')
+			cfg._util.qmsg(f'{m} {desc} ‘{fn}’')
 			data = Crypto(cfg).mmgen_decrypt_retry(data,desc)
 		return data
 
 	lines = decrypt_file_maybe().decode().splitlines()
 	if trim_comments:
 		lines = strip_comments(lines)
-	cfg._util.dmsg(f'Got {len(lines)} lines from file {fn!r}')
+	cfg._util.dmsg(f'Got {len(lines)} lines from file ‘{fn}’')
 	return lines

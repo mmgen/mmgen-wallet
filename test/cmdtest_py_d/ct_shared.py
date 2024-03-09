@@ -234,7 +234,7 @@ class CmdTestShared:
 				+ ([wf] if wf else []),
 				extra_desc=extra_desc)
 		if wcls.type != 'incog_hidden':
-			t.expect(f"Getting {wcls.desc} from file '")
+			t.expect(f"Getting {wcls.desc} from file ‘")
 		if wcls.enc and wcls.type != 'brain':
 			t.passphrase(wcls.desc,self.wpasswd)
 			t.expect(['Passphrase is OK', 'Passphrase.* are correct'],regex=True)

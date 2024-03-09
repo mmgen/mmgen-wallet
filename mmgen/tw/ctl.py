@@ -70,12 +70,14 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			self.importing = True
 			mode = 'w'
 
-		self.cfg = cfg
 		if not no_rpc:
 			self.rpc = await rpc_init(cfg, proto, ignore_wallet=rpc_ignore_wallet)
+
+		self.cfg = cfg
 		self.proto = proto
 		self.mode = mode
 		self.desc = self.base_desc = f'{self.proto.name} tracking wallet'
+		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation
 
 		if self.use_tw_file:
 			self.init_from_wallet_file()
@@ -87,7 +89,6 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 				f'Tracking wallet coin ({self.data["coin"]}) does not match current coin ({self.proto.coin})!')
 
 		self.conv_types(self.data[self.data_key])
-		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation
 
 	def init_from_wallet_file(self):
 		import os

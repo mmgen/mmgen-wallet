@@ -77,9 +77,6 @@ class Unsigned(Completed,TxBase.Unsigned):
 			return new
 		except Exception as e:
 			ymsg(f'\n{e.args[0]}')
-			if self.cfg.exec_wrapper:
-				import sys,traceback
-				ymsg( '\n' + ''.join(traceback.format_exception(*sys.exc_info())) )
 			return False
 
 class AutomountUnsigned(TxBase.AutomountUnsigned, Unsigned):
