@@ -24,6 +24,7 @@ import sys,os,re,shutil,asyncio,json
 from decimal import Decimal
 from collections import namedtuple
 from subprocess import run,PIPE,DEVNULL
+from pathlib import Path
 
 from mmgen.color import yellow,blue,cyan,set_vt100
 from mmgen.util import msg,rmsg,die
@@ -565,20 +566,23 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		write_to_file( self.genesis_fn, json.dumps(genesis_data,indent='  ')+'\n' )
 		init_genesis(self.genesis_fn)
 
-	def wallet_upgrade(self,src_file):
+	async def _wallet_upgrade(self, src_fn, expect1, expect2=None):
 		if self.proto.coin == 'ETC':
 			msg(f'skipping test {self.test_name!r} for ETC')
 			return 'skip'
-		src_dir = joinpath(ref_dir,'ethereum')
-		dest_dir = joinpath(self.tr.data_dir,'altcoins',self.proto.coin.lower())
-		w_from = joinpath(src_dir,src_file)
-		w_to = joinpath(dest_dir,'tracking-wallet.json')
-		os.makedirs(dest_dir,mode=0o750,exist_ok=True)
-		dest = shutil.copy2(w_from,w_to)
-		assert dest == w_to, dest
+		from mmgen.tw.ctl import TwCtl
+		twctl = await TwCtl(cfg, self.proto, no_wallet_init=True)
+		from_fn = Path(ref_dir) / 'ethereum' / src_fn
+		bak_fn = twctl.tw_dir / f'upgraded-{src_fn}'
+		twctl.tw_dir.mkdir(mode=0o750, parents=True, exist_ok=True)
+		dest = shutil.copy2(from_fn, twctl.tw_path)
+		assert dest == twctl.tw_path, f'{dest} != {twctl.tw_path}'
 		t = self.spawn('mmgen-tool', self.eth_args + ['twview'])
+		t.expect(expect1)
+		if expect2:
+			t.expect(expect2)
 		t.read()
-		os.unlink(w_to)
+		twctl.tw_path.rename(bak_fn)
 		return t
 
 	def daemon_version(self):
@@ -586,10 +590,11 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		t.expect('version')
 		return t
 
-	def wallet_upgrade1(self):
-		return self.wallet_upgrade('tracking-wallet-v1.json')
-	def wallet_upgrade2(self):
-		return self.wallet_upgrade('tracking-wallet-v2.json')
+	async def wallet_upgrade1(self):
+		return await self._wallet_upgrade('tracking-wallet-v1.json', 'accounts field', 'network field')
+
+	async def wallet_upgrade2(self):
+		return await self._wallet_upgrade('tracking-wallet-v2.json', 'token params field', 'network field')
 
 	def addrgen(self,addrs='1-3,11-13,21-23'):
 		t = self.spawn('mmgen-addrgen', self.eth_args + [dfl_words_file,addrs])
@@ -1447,12 +1452,11 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	async def twmove(self):
 		self.spawn('',msg_only=True)
 		from mmgen.tw.ctl import TwCtl
-		twctl = await TwCtl(cfg,self.proto)
+		twctl = await TwCtl(cfg, self.proto, no_wallet_init=True)
 		imsg('Moving tracking wallet')
-		bakfile = twctl.tw_fn + '.bak.json'
-		if os.path.exists(bakfile):
-			os.unlink(bakfile)
-		os.rename( twctl.tw_fn, bakfile )
+		fn_bak = twctl.tw_path.with_suffix('.bak.json')
+		fn_bak.unlink(missing_ok=True)
+		twctl.tw_path.rename(fn_bak)
 		return 'ok'
 
 	def twimport(self,add_args=[],expect_str=None):
@@ -1479,10 +1483,11 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	async def twcompare(self):
 		self.spawn('',msg_only=True)
 		from mmgen.tw.ctl import TwCtl
-		twctl = await TwCtl(cfg,self.proto)
-		fn = twctl.tw_fn
+		twctl = await TwCtl(cfg, self.proto, no_wallet_init=True)
+		fn = twctl.tw_path
+		fn_bak = fn.with_suffix('.bak.json')
 		imsg('Comparing imported tracking wallet with original')
-		data = [json.dumps(json.loads(read_from_file(f)),sort_keys=True) for f in (fn,fn+'.bak.json')]
+		data = [json.dumps(json.loads(f.read_text()), sort_keys=True) for f in (fn, fn_bak)]
 		cmp_or_die(*data,'tracking wallets')
 		return 'ok'
 

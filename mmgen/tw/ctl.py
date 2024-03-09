@@ -22,6 +22,7 @@ tw.ctl: Tracking wallet control class for the MMGen suite
 
 import json
 from collections import namedtuple
+from pathlib import Path
 
 from ..util import msg,msg_r,suf,die
 from ..base_obj import AsyncInit
@@ -52,6 +53,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 	use_tw_file = False
 	aggressive_sync = False
 	importing = False
+	tw_fn = 'tracking-wallet.json'
 
 	def __new__(cls,cfg,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.ctl'))
@@ -63,6 +65,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			mode              = 'r',
 			token_addr        = None,
 			no_rpc            = False,
+			no_wallet_init    = False,
 			rpc_ignore_wallet = False):
 
 		assert mode in ('r','w','i'), f"{mode!r}: wallet mode must be 'r','w' or 'i'"
@@ -80,6 +83,21 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation
 
 		if self.use_tw_file:
+			if self.proto.coin == 'BTC':
+				self.tw_dir = Path(self.cfg.data_dir)
+			else:
+				self.tw_dir = Path(
+					self.cfg.data_dir_root,
+					'altcoins',
+					self.proto.coin.lower(),
+					('' if self.proto.network == 'mainnet' else self.proto.network)
+				)
+			self.tw_path = self.tw_dir / self.tw_fn
+
+		if no_wallet_init:
+			return
+
+		if self.use_tw_file:
 			self.init_from_wallet_file()
 		else:
 			self.init_empty()
@@ -91,32 +109,20 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		self.conv_types(self.data[self.data_key])
 
 	def init_from_wallet_file(self):
-		import os
-		tw_dir = (
-			os.path.join(self.cfg.data_dir) if self.proto.coin == 'BTC' else
-			os.path.join(
-				self.cfg.data_dir_root,
-				'altcoins',
-				self.proto.coin.lower(),
-				('' if self.proto.network == 'mainnet' else 'testnet')
-			))
-		self.tw_fn = os.path.join(tw_dir,'tracking-wallet.json')
-
 		from ..fileutil import check_or_create_dir,get_data_from_file
-		check_or_create_dir(tw_dir)
-
+		check_or_create_dir(self.tw_dir)
 		try:
-			self.orig_data = get_data_from_file( self.cfg, self.tw_fn, quiet=True )
+			self.orig_data = get_data_from_file(self.cfg, self.tw_path, quiet=True)
 			self.data = json.loads(self.orig_data)
 		except:
 			try:
-				os.stat(self.tw_fn)
+				self.tw_path.stat()
 			except:
 				self.orig_data = ''
 				self.init_empty()
 				self.force_write()
 			else:
-				die( 'WalletFileError', f'File {self.tw_fn!r} exists but does not contain valid json data' )
+				die('WalletFileError', f'File ‘{self.tw_path}’ exists but does not contain valid JSON data')
 		else:
 			self.upgrade_wallet_maybe()
 
@@ -194,7 +200,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		from ..fileutil import write_data_to_file
 		write_data_to_file(
 			self.cfg,
-			self.tw_fn,
+			self.tw_path,
 			data,
 			desc              = f'{self.base_desc} data',
 			ask_overwrite     = False,
