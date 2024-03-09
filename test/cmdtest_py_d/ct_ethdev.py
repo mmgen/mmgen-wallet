@@ -566,6 +566,11 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		write_to_file( self.genesis_fn, json.dumps(genesis_data,indent='  ')+'\n' )
 		init_genesis(self.genesis_fn)
 
+	def daemon_version(self):
+		t = self.spawn('mmgen-tool', self.eth_args + ['daemon_version'])
+		t.expect('version')
+		return t
+
 	async def _wallet_upgrade(self, src_fn, expect1, expect2=None):
 		if self.proto.coin == 'ETC':
 			msg(f'skipping test {self.test_name!r} for ETC')
@@ -583,11 +588,6 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			t.expect(expect2)
 		t.read()
 		twctl.tw_path.rename(bak_fn)
-		return t
-
-	def daemon_version(self):
-		t = self.spawn('mmgen-tool', self.eth_args + ['daemon_version'])
-		t.expect('version')
 		return t
 
 	async def wallet_upgrade1(self):

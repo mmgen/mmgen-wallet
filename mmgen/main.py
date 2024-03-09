@@ -70,9 +70,3 @@ def launch(*, mod=None, func=None, fqmod=None, package='mmgen'):
 			raise
 
 		sys.exit(d.exit_val)
-
-	except SystemExit as e:
-		if os.getenv('MMGEN_EXEC_WRAPPER') and e.code != 0:
-			from .color import red
-			sys.stdout.write(red(f'{type(e).__name__}: {e}\n'))
-		raise
