@@ -558,7 +558,7 @@ class Autosign:
 		if self.keyfile.exists():
 			from .fileutil import shred_file
 			ymsg(f'Shredding wallet encryption key ‘{self.keyfile}’')
-			shred_file(str(self.keyfile), verbose=self.cfg.verbose)
+			shred_file(self.keyfile, verbose=self.cfg.verbose)
 		else:
 			gmsg('No wallet encryption key on removable device')
 

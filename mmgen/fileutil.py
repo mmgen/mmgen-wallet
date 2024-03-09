@@ -20,6 +20,8 @@
 fileutil: Routines that read, write, execute or stat files
 """
 
+# 09 Mar 2024: make all utils accept Path instances as arguments
+
 import sys,os
 
 from .color import set_vt100
@@ -43,7 +45,7 @@ def check_or_create_dir(path):
 				run([
 					('rm' if sys.platform == 'win32' else '/bin/rm'),
 					'-rf',
-					path ])
+					str(path)])
 				set_vt100()
 		try:
 			os.makedirs(path,0o700)
@@ -64,7 +66,7 @@ def shred_file(fn,verbose=False):
 	run(
 		['shred','--force','--iterations=30','--zero','--remove=wipesync']
 		+ (['--verbose'] if verbose else [])
-		+ [fn],
+		+ [str(fn)],
 		check=True )
 	set_vt100()
 
@@ -135,7 +137,7 @@ def get_seed_file(cfg,nargs,wallets=None,invoked_as=None):
 	if wallets or wf:
 		check_infile(wallets[0] if wallets else wf)
 
-	return wallets[0] if wallets else (wf,None)[wd_from_opt]
+	return str(wallets[0]) if wallets else (wf,None)[wd_from_opt] # could be a Path instance
 
 def _open_or_die(filename,mode,silent=False):
 	try:
@@ -165,6 +167,8 @@ def write_data_to_file(
 		outdir                = None,
 		check_data            = False,
 		cmp_data              = None):
+
+	outfile = str(outfile) # could be a Path instance
 
 	if quiet:
 		ask_tty = ask_overwrite = False
@@ -221,7 +225,7 @@ def write_data_to_file(
 
 	def do_file(outfile,ask_write_prompt):
 		if (outdir or (cfg.outdir and not ignore_opt_outdir)) and not os.path.isabs(outfile):
-			outfile = make_full_path(outdir or cfg.outdir, outfile)
+			outfile = make_full_path(str(outdir or cfg.outdir), outfile) # outdir could be Path instance
 
 		if ask_write:
 			if not ask_write_prompt:
