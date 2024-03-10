@@ -1049,7 +1049,7 @@ if __name__ == '__main__':
 	if cfg.pause:
 		set_restore_term_at_exit()
 
-	from mmgen.exception import TestSuiteException,TestSuiteFatalException,TestSuiteSpawnedScriptException
+	from mmgen.exception import TestSuiteSpawnedScriptException
 
 	try:
 		tr = CmdTestRunner(data_dir,trash_dir)
@@ -1061,7 +1061,7 @@ if __name__ == '__main__':
 		if tr.daemon_started:
 			stop_test_daemons(network_id)
 		tr.warn_skipped()
-		die(1,'\ntest.py exiting at user request')
+		die(1,yellow('\ntest.py exiting at user request'))
 	except TestSuiteSpawnedScriptException as e:
 		# if spawned script is not running under exec_wrapper, output brief error msg:
 		if os.getenv('MMGEN_EXEC_WRAPPER'):

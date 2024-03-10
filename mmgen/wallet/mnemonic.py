@@ -34,6 +34,8 @@ class wallet(wallet):
 			from ..ui import get_data_from_user
 			return get_data_from_user( self.cfg, desc )
 
+		self._print_seed_type()
+
 		mn_len = self._choose_seedlen(self.mn_lens)
 
 		from ..mn_entry import mn_entry

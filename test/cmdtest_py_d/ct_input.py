@@ -376,7 +376,7 @@ class CmdTestInput(CmdTestBase):
 			'Type a number.*: ',
 			('\n' if enter_for_dfl else str(mne.entry_modes.index(entry_mode)+1)),
 			regex = True )
-		t.expect('Using (.+) entry mode',regex=True)
+		t.expect('Using entry mode (\S+)',regex=True)
 		mode = strip_ansi_escapes(t.p.match.group(1)).lower()
 		assert mode == mne.em.name.lower(), f'{mode} != {mne.em.name.lower()}'
 		stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode,pad_entry=pad_entry)
@@ -402,7 +402,7 @@ class CmdTestInput(CmdTestBase):
 			from mmgen.mn_entry import mn_entry
 			mne = mn_entry( cfg, fmt, entry_mode )
 			t.expect('Type a number.*: ',str(mne.entry_modes.index(entry_mode)+1),regex=True)
-			t.expect('Using (.+) entry mode',regex=True)
+			t.expect('Using entry mode (\S+)',regex=True)
 			mode = strip_ansi_escapes(t.p.match.group(1)).lower()
 			assert mode == mne.em.name.lower(), f'{mode} != {mne.em.name.lower()}'
 			stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode)

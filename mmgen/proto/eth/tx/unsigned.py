@@ -23,7 +23,6 @@ from .completed import Completed,TokenCompleted
 
 class Unsigned(Completed,TxBase.Unsigned):
 	desc = 'unsigned transaction'
-	hexdata_type = 'json'
 
 	def parse_txfile_serialized_data(self):
 		d = json.loads(self.serialized)

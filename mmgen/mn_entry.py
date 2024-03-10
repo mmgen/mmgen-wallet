@@ -332,9 +332,9 @@ class MnemonicEntry:
 			i_add = ' (user-configured)'
 		else:
 			em = self.choose_entry_mode()
-			i_add = '.'
+			i_add = ''
 
-		msg('\r' + f'Using {cyan(em.name.upper())} entry mode{i_add}')
+		msg('\r' + f'Using entry mode {cyan(em.name.upper())}{i_add}')
 		self.em = em
 
 		if not self.usr_dfl_entry_mode:

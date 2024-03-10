@@ -73,7 +73,10 @@ class wallet(wallet):
 
 		bc = baseconv('b6d')
 
+		self._print_seed_type()
+
 		seed_bitlen = self._choose_seedlen([ n*8 for n in sorted(bc.seedlen_map) ])
+
 		nDierolls = bc.seedlen_map[seed_bitlen // 8]
 
 		message = """

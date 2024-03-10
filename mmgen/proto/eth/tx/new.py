@@ -27,7 +27,6 @@ class New(Base,TxBase.New):
 	fee_fail_fs = 'Network fee estimation failed'
 	no_chg_msg = 'Warning: Transaction leaves account with zero balance'
 	usr_fee_prompt = 'Enter transaction fee or gas price: '
-	hexdata_type = 'hex'
 
 	def __init__(self,*args,**kwargs):
 

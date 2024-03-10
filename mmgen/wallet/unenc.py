@@ -31,6 +31,12 @@ class wallet(wallet):
 			s.bitlen,
 			self.ext )
 
+	def _print_seed_type(self):
+		msg('{} {}'.format(
+			blue(f'{capfirst(self.base_type or self.type)} type:'),
+			yellow(self.mn_type)
+		))
+
 	def _choose_seedlen(self,ok_lens):
 
 		from ..term import get_char
@@ -42,11 +48,6 @@ class wallet(wallet):
 					break
 			msg_r(('\r','\n')[self.cfg.test_suite] + ' '*len(prompt) + '\r')
 			return ok_lens[int(r)-1]
-
-		msg('{} {}'.format(
-			blue(f'{capfirst(self.base_type or self.type)} type:'),
-			yellow(self.mn_type)
-		))
 
 		while True:
 			usr_len = choose_len()
