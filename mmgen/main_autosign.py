@@ -177,39 +177,51 @@ cfg = Config(
 	},
 	do_post_init = True )
 
-cmd = cfg._args[0] if len(cfg._args) == 1 else None if not cfg._args else cfg._opts.usage()
+cmd = cfg._args[0] if len(cfg._args) == 1 else 'sign' if not cfg._args else cfg._opts.usage()
+
+valid_cmds = ('gen_key', 'setup', 'xmr_setup', 'sign', 'wait', 'clean', 'wipe_key')
+
+if cmd not in valid_cmds:
+	die(1,f'‘{cmd}’: unrecognized command')
+
+if cmd != 'setup':
+	for opt in ('seed_len', 'mnemonic_fmt'):
+		if getattr(cfg,opt):
+			die(1, f'--{opt.replace("_","-")} makes sense only for the ‘setup’ operation')
+
+if cmd not in ('sign', 'wait'):
+	for opt in ('no_summary', 'led', 'stealth_led', 'full_summary'):
+		if getattr(cfg,opt):
+			die(1, f'--{opt.replace("_","-")} makes no sense for the ‘{cmd}’ operation')
 
 asi = Autosign(cfg,cmd)
 
 cfg._post_init()
 
-if cmd:
-	if cmd == 'gen_key':
-		asi.gen_key()
-	elif cmd == 'setup':
-		asi.setup()
-		from .ui import keypress_confirm
-		if cfg.xmrwallets and keypress_confirm( cfg, '\nContinue with Monero setup?', default_yes=True ):
-			msg('')
-			asi.xmr_setup()
-		asi.do_umount()
-	elif cmd == 'xmr_setup':
-		if not cfg.xmrwallets:
-			die(1,'Please specify a wallet or range of wallets with the --xmrwallets option')
-		asi.do_mount()
+if cmd == 'gen_key':
+	asi.gen_key()
+elif cmd == 'setup':
+	asi.setup()
+	from .ui import keypress_confirm
+	if cfg.xmrwallets and keypress_confirm( cfg, '\nContinue with Monero setup?', default_yes=True ):
+		msg('')
 		asi.xmr_setup()
-		asi.do_umount()
-	elif cmd == 'wait':
-		main(do_loop=True)
-	elif cmd == 'clean':
-		asi.do_mount()
-		asi.clean_old_files()
-		asi.do_umount()
-	elif cmd == 'wipe_key':
-		asi.do_mount()
-		asi.wipe_encryption_key()
-		asi.do_umount()
-	else:
-		die(1,f'{cmd!r}: unrecognized command')
-else:
+	asi.do_umount()
+elif cmd == 'xmr_setup':
+	if not cfg.xmrwallets:
+		die(1,'Please specify a wallet or range of wallets with the --xmrwallets option')
+	asi.do_mount()
+	asi.xmr_setup()
+	asi.do_umount()
+elif cmd == 'sign':
 	main(do_loop=False)
+elif cmd == 'wait':
+	main(do_loop=True)
+elif cmd == 'clean':
+	asi.do_mount()
+	asi.clean_old_files()
+	asi.do_umount()
+elif cmd == 'wipe_key':
+	asi.do_mount()
+	asi.wipe_encryption_key()
+	asi.do_umount()

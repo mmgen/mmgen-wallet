@@ -428,6 +428,9 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		('copy_tx_files',            'copying transaction files'),
 		('gen_key',                  'generating key'),
 		('create_dfl_wallet',        'creating default MMGen wallet'),
+		('bad_opt1',                 'running ‘mmgen-autosign’ with --seed-len in invalid context'),
+		('bad_opt2',                 'running ‘mmgen-autosign’ with --mnemonic-fmt in invalid context'),
+		('bad_opt3',                 'running ‘mmgen-autosign’ with --led in invalid context'),
 		('run_setup_dfl_wallet',     'running ‘autosign setup’ (with default wallet)'),
 		('sign_quiet',               'signing transactions (--quiet)'),
 		('remove_signed_txfiles',    'removing signed transaction files'),
@@ -510,6 +513,20 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		t.passphrase_new('new MMGen wallet','abc')
 		t.written_to_file('MMGen wallet')
 		return t
+
+	def _bad_opt(self, cmdline, expect):
+		t = self.spawn('mmgen-autosign', ['--coins=btc'] + cmdline, exit_val=1)
+		t.expect(expect)
+		return t
+
+	def bad_opt1(self):
+		return self._bad_opt(['--seed-len=128'], 'makes sense')
+
+	def bad_opt2(self):
+		return self._bad_opt(['--mnemonic-fmt=bip39', 'wait'], 'makes sense')
+
+	def bad_opt3(self):
+		return self._bad_opt(['--led', 'gen_key'], 'makes no sense')
 
 	def run_setup_dfl_wallet(self):
 		return self.run_setup(mn_type='default',use_dfl_wallet=True)
