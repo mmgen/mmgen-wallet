@@ -54,6 +54,7 @@ class MMGenPexpect:
 		self.skip_ok = False
 		self.sent_value = None
 		self.spawn_env = spawn_env
+		self.exit_val = None
 
 		if direct_exec or cfg.direct_exec:
 			from subprocess import Popen,DEVNULL
@@ -95,7 +96,7 @@ class MMGenPexpect:
 			self.p.sendeof()
 		self.p.read()
 		ret = self.p.wait()
-		if ret != (exit_val or 0) and not cfg.coverage:
+		if ret != (self.exit_val or exit_val or 0) and not cfg.coverage:
 			die( 'TestSuiteSpawnedScriptException', f'Spawned script exited with value {ret}' )
 		if cfg.profile:
 			return
