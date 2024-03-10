@@ -22,7 +22,7 @@ class wallet(wallet):
 	desc = 'plain hexadecimal seed data'
 
 	def _format(self):
-		self.fmt_data = self.seed.hexdata + '\n'
+		self.fmt_data = self.seed.data.hex() + '\n'
 
 	def _deformat(self):
 		desc = self.desc

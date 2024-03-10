@@ -43,14 +43,14 @@ class wallet(wallet):
 
 	def _format(self):
 
-		hexseed = self.seed.hexdata
+		seed = self.seed.data
 
 		bc = self.conv_cls(self.wl_id)
-		mn  = bc.fromhex( hexseed, 'seed' )
-		rev = bc.tohex( mn, 'seed' )
+		mn  = bc.frombytes(seed, 'seed')
+		rev = bc.tobytes(mn, 'seed')
 
 		# Internal error, so just die on fail
-		self.cfg._util.compare_or_die( rev, 'recomputed seed', hexseed, 'original', e='Internal error' )
+		self.cfg._util.compare_or_die(rev, 'recomputed seed', seed, 'original seed', e='Internal error')
 
 		self.ssdata.mnemonic = mn
 		self.fmt_data = ' '.join(mn) + '\n'
@@ -71,10 +71,10 @@ class wallet(wallet):
 				msg(f'Invalid mnemonic: word #{n} is not in the {self.wl_id.upper()} wordlist')
 				return False
 
-		hexseed = bc.tohex( mn, 'seed' )
-		rev     = bc.fromhex( hexseed, 'seed' )
+		seed = bc.tobytes(mn, 'seed')
+		rev  = bc.frombytes(seed, 'seed')
 
-		if len(hexseed) * 4 not in Seed.lens:
+		if len(seed) * 8 not in Seed.lens:
 			msg('Invalid mnemonic (produces too large a number)')
 			return False
 
@@ -86,7 +86,7 @@ class wallet(wallet):
 			desc2 = 'original mnemonic',
 			e     = 'Internal error' )
 
-		self.seed = Seed( self.cfg, bytes.fromhex(hexseed) )
+		self.seed = Seed(self.cfg, seed)
 		self.ssdata.mnemonic = mn
 
 		self.check_usr_seed_len()

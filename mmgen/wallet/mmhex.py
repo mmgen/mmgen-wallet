@@ -23,7 +23,7 @@ class wallet(wallet):
 	desc = 'hexadecimal seed data with checksum'
 
 	def _format(self):
-		h = self.seed.hexdata
+		h = self.seed.data.hex()
 		self.ssdata.chksum = make_chksum_6(h)
 		self.fmt_data = f'{self.ssdata.chksum} {split_into_cols(4,h)}\n'
 

@@ -68,13 +68,10 @@ class bip39(baseconv):
 		except Exception as e:
 			raise ValueError(f'{seed_bits!r}: invalid seed length for BIP39 mnemonic') from e
 
-	def tobytes(self,*args,**kwargs):
-		raise NotImplementedError('Method not supported')
+	def tohex(self, words_arg, pad=None):
+		return self.tobytes(words_arg, pad=pad).hex()
 
-	def frombytes(self,*args,**kwargs):
-		raise NotImplementedError('Method not supported')
-
-	def tohex(self,words_arg,pad=None):
+	def tobytes(self,words_arg,pad=None):
 		assert isinstance(words_arg,(list,tuple)),'words_arg must be list or tuple'
 		assert pad in (None,'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
@@ -106,15 +103,17 @@ class bip39(baseconv):
 		if chk_bin != chk_bin_chk:
 			die( 'MnemonicError', f'invalid BIP39 seed phrase checksum ({chk_bin} != {chk_bin_chk})' )
 
-		return seed_hex
+		return seed_bytes
 
-	def fromhex(self,hexstr,pad=None,tostr=False):
+	def fromhex(self, hexstr, pad=None, tostr=False):
 		assert is_hex_str(hexstr),'seed data not a hexadecimal string'
+		return self.frombytes(bytes.fromhex(hexstr), pad=pad, tostr=tostr)
+
+	def frombytes(self, seed_bytes, pad=None, tostr=False):
 		assert tostr is False,"'tostr' must be False for 'bip39'"
 		assert pad in (None,'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
 		wl = self.digits
-		seed_bytes = bytes.fromhex(hexstr)
 		bitlen = len(seed_bytes) * 8
 
 		assert bitlen in self.constants, f'{bitlen}: invalid seed bit length'
@@ -122,7 +121,7 @@ class bip39(baseconv):
 
 		chk_hex = sha256(seed_bytes).hexdigest()
 
-		seed_bin = f'{int(hexstr,16):0{bitlen}b}'
+		seed_bin = f'{int(seed_bytes.hex(),16):0{bitlen}b}'
 		chk_bin  = f'{int(chk_hex,16):0256b}'
 
 		res = seed_bin + chk_bin

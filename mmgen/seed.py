@@ -78,10 +78,6 @@ class SeedBase(MMGenObject):
 		return len(self.data)
 
 	@property
-	def hexdata(self):
-		return self.data.hex()
-
-	@property
 	def fn_stem(self):
 		return self.sid
 
