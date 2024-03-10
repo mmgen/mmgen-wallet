@@ -34,7 +34,8 @@ opts_data = {
 --, --longhelp        Print help message for long options (common options)
 -c, --coins=c         Coins to sign for (comma-separated list)
 -I, --no-insert-check Don’t check for device insertion
--l, --led             Use status LED to signal standby, busy and error
+-l, --seed-len=N      Specify wallet seed length of ‘N’ bits (for setup only)
+-L, --led             Use status LED to signal standby, busy and error
 -m, --mountpoint=M    Specify an alternate mountpoint 'M'
                       (default: {asi.dfl_mountpoint!r})
 -M, --mnemonic-fmt=F  During setup, prompt for mnemonic seed phrase of format

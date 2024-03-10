@@ -123,6 +123,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			mn_type        = None,
 			mn_file        = None,
 			use_dfl_wallet = False,
+			seed_len       = None,
 			usr_entry_modes = False,
 			passwd         = 'abc'):
 
@@ -133,6 +134,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			'mmgen-autosign',
 			self.opts
 			+ ([] if mn_desc == 'default' else [f'--mnemonic-fmt={mn_type}'])
+			+ ([f'--seed-len={seed_len}'] if seed_len else [])
 			+ ['setup'],
 			no_passthru_opts = True)
 
@@ -144,8 +146,9 @@ class CmdTestAutosignBase(CmdTestBase):
 				t.expect( 'Use default wallet for autosigning? (Y/n): ', 'n' )
 			mn_file = mn_file or { 'mmgen': dfl_words_file, 'bip39': dfl_bip39_file }[mn_type]
 			mn = read_from_file(mn_file).strip().split()
-			t.expect('words: ',{ 12:'1', 18:'2', 24:'3' }[len(mn)])
-			t.expect('OK? (Y/n): ','\n')
+			if not seed_len:
+				t.expect('words: ',{ 12:'1', 18:'2', 24:'3' }[len(mn)])
+				t.expect('OK? (Y/n): ','\n')
 			from mmgen.mn_entry import mn_entry
 			entry_mode = 'full'
 			mne = mn_entry(cfg, mn_type, entry_mode)
@@ -541,6 +544,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 			fh.write('\n'.join(new_data) + '\n')
 		t = self.run_setup(
 			mn_type  = 'bip39',
+			seed_len = 256,
 			usr_entry_modes = True)
 		with open(fn, 'w') as fh:
 			fh.write('\n'.join(old_data) + '\n')

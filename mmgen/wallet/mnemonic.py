@@ -36,7 +36,12 @@ class wallet(wallet):
 
 		self._print_seed_type()
 
-		mn_len = self._choose_seedlen(self.mn_lens)
+		if self.cfg.seed_len:
+			from ..obj import Int
+			msg('Using seed length {} (user-configured)'.format(Int(self.cfg.seed_len).hl()))
+			mn_len = self.conv_cls(self.wl_id).seedlen_map[self.cfg.seed_len // 8]
+		else:
+			mn_len = self._choose_seedlen(self.mn_lens)
 
 		from ..mn_entry import mn_entry
 		self.mnemonic = mn_entry(self.cfg, self.wl_id)
