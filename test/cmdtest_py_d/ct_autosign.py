@@ -123,7 +123,9 @@ class CmdTestAutosignBase(CmdTestBase):
 			mn_type        = None,
 			mn_file        = None,
 			use_dfl_wallet = False,
+			usr_entry_modes = False,
 			passwd         = 'abc'):
+
 		mn_desc = mn_type or 'default'
 		mn_type = mn_type or 'mmgen'
 
@@ -142,13 +144,18 @@ class CmdTestAutosignBase(CmdTestBase):
 				t.expect( 'Use default wallet for autosigning? (Y/n): ', 'n' )
 			mn_file = mn_file or { 'mmgen': dfl_words_file, 'bip39': dfl_bip39_file }[mn_type]
 			mn = read_from_file(mn_file).strip().split()
-			from mmgen.mn_entry import mn_entry
-			entry_mode = 'full'
-			mne = mn_entry( cfg, mn_type, entry_mode )
-
 			t.expect('words: ',{ 12:'1', 18:'2', 24:'3' }[len(mn)])
 			t.expect('OK? (Y/n): ','\n')
-			t.expect('Type a number.*: ',str(mne.entry_modes.index(entry_mode)+1),regex=True)
+			from mmgen.mn_entry import mn_entry
+			entry_mode = 'full'
+			mne = mn_entry(cfg, mn_type, entry_mode)
+			if usr_entry_modes:
+				t.expect('user-configured')
+			else:
+				t.expect(
+					'Type a number.*: ',
+					str(mne.entry_modes.index(entry_mode) + 1),
+					regex = True)
 			stealth_mnemonic_entry(t,mne,mn,entry_mode)
 
 		t.written_to_file('Autosign wallet')
@@ -508,7 +515,19 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		return self.run_setup(mn_type='default',use_dfl_wallet=True)
 
 	def run_setup_bip39(self):
-		return self.run_setup(mn_type='bip39')
+		from mmgen.cfgfile import mmgen_cfg_file
+		fn = mmgen_cfg_file(cfg,'usr').fn
+		old_data = mmgen_cfg_file(cfg,'usr').get_data(fn)
+		new_data = [d.replace('bip39:fixed','bip39:full')[2:]
+			if d.startswith('# mnemonic_entry_modes') else d for d in old_data]
+		with open(fn, 'w') as fh:
+			fh.write('\n'.join(new_data) + '\n')
+		t = self.run_setup(
+			mn_type  = 'bip39',
+			usr_entry_modes = True)
+		with open(fn, 'w') as fh:
+			fh.write('\n'.join(old_data) + '\n')
+		return t
 
 	def copy_tx_files(self):
 		self.spawn('',msg_only=True)
