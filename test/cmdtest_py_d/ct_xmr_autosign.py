@@ -16,7 +16,7 @@ test.cmdtest_py_d.ct_xmr_autosign: xmr autosigning tests for the cmdtest.py test
 import os,time,re,shutil
 from pathlib import Path
 
-from mmgen.color import purple,gray
+from mmgen.color import purple,gray,blue,cyan,brown
 from mmgen.util import fmt,async_run
 
 from ..include.common import cfg,imsg,silence,end_silence
@@ -92,6 +92,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		('view',                     'viewing Alice’s wallet in offline mode (wallet #1)'),
 		('listview',                 'list-viewing Alice’s wallet in offline mode (wallet #2)'),
 		('txlist',                   'listing Alice’s submitted transactions'),
+		('txview',                   'viewing Alice’s submitted transactions'),
+		('txview_all',               'viewing all raw, signed and submitted transactions'),
 		('check_tx_dirs',            'cleaning and checking signable file directories'),
 	)
 
@@ -404,6 +406,24 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		])
 		self.remove_device_online()
 		return t
+
+	def txview(self):
+		self.insert_device_online()
+		t = self.spawn('mmgen-xmrwallet', self.autosign_opts + ['txview'])
+		t.read()
+		self.remove_device_online()
+		return t
+
+	def txview_all(self):
+		t = self.spawn('', msg_only=True)
+		self.do_mount()
+		imsg(blue('Opening transaction directory: ') + cyan(f'{self.asi.xmr_tx_dir}'))
+		for fn in self.asi.xmr_tx_dir.iterdir():
+			imsg('\n' + brown(f'Viewing ‘{fn.name}’'))
+			self.spawn('mmgen-xmrwallet', ['txview', str(fn)], no_msg=True).read()
+		imsg('')
+		self.do_umount()
+		return 'ok'
 
 	def check_tx_dirs(self):
 
