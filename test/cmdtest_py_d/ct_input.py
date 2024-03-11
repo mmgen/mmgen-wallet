@@ -389,7 +389,8 @@ class CmdTestInput(CmdTestBase):
 			usr_rand    = False,
 			out_fmt     = None,
 			entry_mode  = 'full',
-			mn          = None):
+			mn          = None,
+			seedlen_opt = False):
 
 		wcls = get_wallet_cls(fmt_code=fmt)
 		wf = os.path.join(ref_dir,f'FE3C6545.{wcls.ext}')
@@ -402,11 +403,13 @@ class CmdTestInput(CmdTestBase):
 		t = self.spawn(
 			'mmgen-walletconv',
 			['--usr-randchars=10', '--stdout']
+			+ (['--seed-len=128'] if seedlen_opt else [])
 			+ [f'--in-fmt={fmt}', f'--out-fmt={out_fmt or fmt}']
 		)
 		t.expect(f'{capfirst(wcls.base_type or wcls.type)} type:.*{wcls.mn_type}',regex=True)
-		t.expect(wcls.choose_seedlen_prompt,'1')
-		t.expect('(Y/n): ','y')
+		if not seedlen_opt:
+			t.expect(wcls.choose_seedlen_prompt,'1')
+			t.expect('(Y/n): ','y')
 		if wcls.base_type == 'mnemonic':
 			t.expect('Type a number.*: ','6',regex=True)
 			t.expect('invalid')
@@ -477,6 +480,6 @@ class CmdTestInput(CmdTestBase):
 		return self._mn2hex('xmrseed',entry_mode='short')
 
 	def dieroll_entry(self):
-		return self._user_seed_entry('dieroll')
+		return self._user_seed_entry('dieroll', seedlen_opt=True)
 	def dieroll_entry_usrrand(self):
 		return self._user_seed_entry('dieroll',usr_rand=True,out_fmt='bip39')

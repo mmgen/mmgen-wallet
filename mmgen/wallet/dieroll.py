@@ -75,7 +75,13 @@ class wallet(wallet):
 
 		self._print_seed_type()
 
-		seed_bitlen = self._choose_seedlen([ n*8 for n in sorted(bc.seedlen_map) ])
+		if self.cfg.seed_len:
+			from ..obj import Int
+			msg('Using seed length {} (user-configured)'.format(Int(self.cfg.seed_len).hl()))
+			assert self.cfg.seed_len // 8 in bc.seedlen_map, f'{self.cfg.seed_len}: invalid seed length'
+			seed_bitlen = self.cfg.seed_len
+		else:
+			seed_bitlen = self._choose_seedlen([n*8 for n in sorted(bc.seedlen_map)])
 
 		nDierolls = bc.seedlen_map[seed_bitlen // 8]
 
