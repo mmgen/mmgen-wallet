@@ -383,7 +383,14 @@ class CmdTestInput(CmdTestBase):
 		t.expect(sample_mn[fmt]['hex'])
 		return t
 
-	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None,entry_mode='full',mn=None):
+	def _user_seed_entry(
+			self,
+			fmt,
+			usr_rand    = False,
+			out_fmt     = None,
+			entry_mode  = 'full',
+			mn          = None):
+
 		wcls = get_wallet_cls(fmt_code=fmt)
 		wf = os.path.join(ref_dir,f'FE3C6545.{wcls.ext}')
 		if wcls.base_type == 'mnemonic':
@@ -392,7 +399,11 @@ class CmdTestInput(CmdTestBase):
 			mn = mn or list(remove_whitespace(read_from_file(wf)))
 			for idx,val in ((5,'x'),(18,'0'),(30,'7'),(44,'9')):
 				mn.insert(idx,val)
-		t = self.spawn('mmgen-walletconv',['-r10','-S','-i',fmt,'-o',out_fmt or fmt])
+		t = self.spawn(
+			'mmgen-walletconv',
+			['--usr-randchars=10', '--stdout']
+			+ [f'--in-fmt={fmt}', f'--out-fmt={out_fmt or fmt}']
+		)
 		t.expect(f'{capfirst(wcls.base_type or wcls.type)} type:.*{wcls.mn_type}',regex=True)
 		t.expect(wcls.choose_seedlen_prompt,'1')
 		t.expect('(Y/n): ','y')

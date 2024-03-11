@@ -157,14 +157,12 @@ class Config(Lockable):
 	devtools             = False
 
 	# rpc:
-	rpc_host                   = ''
-	rpc_port                   = 0
-	rpc_user                   = ''
-	rpc_password               = ''
-	monero_wallet_rpc_user     = 'monero'
-	monero_wallet_rpc_password = ''
-	aiohttp_rpc_queue_len      = 16
-	cached_balances            = False
+	rpc_host              = ''
+	rpc_port              = 0
+	rpc_user              = ''
+	rpc_password          = ''
+	aiohttp_rpc_queue_len = 16
+	cached_balances       = False
 
 	# daemons
 	daemon_data_dir       = '' # set by user
@@ -194,6 +192,10 @@ class Config(Lockable):
 	alice        = False
 	carol        = False
 	regtest_user = ''
+
+	# Monero:
+	monero_wallet_rpc_user     = 'monero'
+	monero_wallet_rpc_password = ''
 
 	# test suite:
 	bogus_send               = False

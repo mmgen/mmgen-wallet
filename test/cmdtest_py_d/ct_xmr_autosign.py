@@ -87,12 +87,12 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		('export_outputs3',          'exporting outputs from Alice’s watch-only wallets'),
 		('import_key_images2',       'importing signed key images into Alice’s online wallets'),
 		('sync_chkbal3',             'syncing Alice’s wallets and checking balance'),
-		('txlist',                   'listing Alice’s submitted transactions'),
 		('autosign_kill_thread',     'stopping autosign wait loop'),
 		('stop_daemons',             'stopping all wallet and coin daemons'),
-		('check_tx_dirs',            'cleaning and checking signable file directories'),
 		('view',                     'viewing Alice’s wallet in offline mode (wallet #1)'),
 		('listview',                 'list-viewing Alice’s wallet in offline mode (wallet #2)'),
+		('txlist',                   'listing Alice’s submitted transactions'),
+		('check_tx_dirs',            'cleaning and checking signable file directories'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -243,7 +243,12 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 
 	def _create_transfer_tx(self,amt):
 		self.insert_device_online()
-		t = self.do_op('transfer','alice',f'1:0:{self.burn_addr},{amt}',no_relay=True,do_ret=True)
+		t = self.do_op(
+			'transfer',
+			'alice',
+			f'1:0:{self.burn_addr},{amt}',
+			no_relay = True,
+			do_ret   = True)
 		t.read() # required!
 		self.remove_device_online()
 		return t

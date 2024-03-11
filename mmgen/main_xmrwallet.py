@@ -20,9 +20,10 @@
 mmgen-xmrwallet: Perform various Monero wallet and transacting operations for
                  addresses in an MMGen XMR key-address file
 """
+import asyncio
 
 from .cfg import gc,Config
-from .util import die,async_run
+from .util import die
 from .xmrwallet import (
 	MoneroWalletOps,
 	xmrwallet_uarg_info,
@@ -146,7 +147,7 @@ op_cls = getattr(MoneroWalletOps,op.replace('-','_'))
 
 m = op_cls(cfg, xmrwallet_uargs(infile, wallets, spec))
 
-if async_run(m.main()):
+if asyncio.run(m.main()):
 	m.post_main_success()
 else:
 	m.post_main_failure()

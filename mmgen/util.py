@@ -208,12 +208,15 @@ def fmt_dict(mapping,fmt='dfl',kconv=None,vconv=None):
 	"pretty-format a dict"
 	kc,vc,sep,fs = {
 		'dfl':           ( str, str,  ", ",  "'{}' ({})" ),
+		'dfl_compact':   ( str, str,  " ",   "{} ({})" ),
 		'square':        ( str, str,  ", ",  "'{}' [{}]" ),
+		'square_compact':( str, str,  " ",   "{} [{}]" ),
 		'equal':         ( str, str,  ", ",  "'{}'={}" ),
 		'equal_spaced':  ( str, str,  ", ",  "'{}' = {}" ),
-		'equal_compact': ( str, str,  ",",   "'{}'={}" ),
+		'equal_compact': ( str, str,  " ",   "{}={}" ),
 		'kwargs':        ( str, repr, ", ",  "{}={}" ),
 		'colon':         ( str, repr, ", ",  "{}:{}" ),
+		'colon_compact': ( str, str,  " ",   "{}:{}" ),
 	}[fmt]
 	kconv = kconv or kc
 	vconv = vconv or vc
