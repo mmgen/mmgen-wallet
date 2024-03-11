@@ -23,11 +23,12 @@ mmgen-xmrwallet: Perform various Monero wallet and transacting operations for
 import asyncio
 
 from .cfg import gc,Config
-from .util import die
+from .util import die,fmt_dict
 from .xmrwallet import (
 	MoneroWalletOps,
 	xmrwallet_uarg_info,
 	xmrwallet_uargs,
+	tx_priorities
 )
 
 opts_data = {
@@ -60,6 +61,11 @@ opts_data = {
                                  When this option is in effect, filename argu-
                                  ments must be omitted, as files are located
                                  automatically.
+-f, --priority=N                 Specify an integer priority ‘N’ for inclusion
+                                 of a transaction in the blockchain (higher
+                                 number means higher fee).  Valid parameters:
+                                 {tp}.  If option
+                                 is omitted, the default priority will be used
 -m, --autosign-mountpoint=P      Specify the autosign mountpoint (defaults to
                                  ‘/mnt/mmgen_autosign’, implies --autosign)
 -b, --rescan-blockchain          Rescan the blockchain if wallet fails to sync
@@ -94,6 +100,7 @@ opts_data = {
 			R=xmrwallet_uarg_info['tx_relay_daemon'].annot,
 			cfg=cfg,
 			gc=gc,
+			tp=fmt_dict(tx_priorities,fmt='equal_compact')
 		),
 		'notes': lambda help_mod,s: s.format(
 			xmrwallet_help = help_mod('xmrwallet')

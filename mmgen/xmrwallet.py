@@ -25,7 +25,7 @@ from collections import namedtuple
 from pathlib import Path
 
 from .objmethods import MMGenObject,HiliteStr,InitErrors
-from .obj import CoinTxID
+from .obj import CoinTxID,Int
 from .color import red,yellow,green,blue,cyan,pink,orange,purple,gray
 from .util import (
 	msg,
@@ -44,6 +44,7 @@ from .util import (
 	make_chksum_N,
 	capfirst,
 	list_gen,
+	fmt_dict
 )
 from .fileutil import get_data_from_file
 from .seed import SeedID
@@ -94,6 +95,13 @@ def fmt_amt(amt):
 
 def hl_amt(amt):
 	return str(amt)
+
+tx_priorities = {
+	1: 'low',
+	2: 'normal',
+	3: 'high',
+	4: 'highest'
+}
 
 class XMRWalletAddrSpec(HiliteStr,InitErrors,MMGenObject):
 	color = 'cyan'
@@ -223,6 +231,7 @@ class MoneroMMGenTX:
 			'dest_address',
 			'txid',
 			'amount',
+			'priority',
 			'fee',
 			'blob',
 			'metadata',
@@ -266,6 +275,7 @@ class MoneroMMGenTX:
 				['  From:      Wallet {j}, account {k}'],
 				['  To:        Wallet {x}, account {y}, address {z}', d.dest],
 				['  Amount:    {m} XMR'],
+				['  Priority:  {F}', d.priority],
 				['  Fee:       {n} XMR'],
 				['  Dest:      {o}'],
 				['  Payment ID: {P}', pmt_id],
@@ -285,6 +295,7 @@ class MoneroMMGenTX:
 					j = d.source.wallet.hl(),
 					k = red(f'#{d.source.account}'),
 					m = d.amount.hl(),
+					F = (Int(d.priority).hl() + f' [{tx_priorities[d.priority]}]') if d.priority else None,
 					n = d.fee.hl(),
 					o = d.dest_address.hl(),
 					P = pink(pmt_id.hex()) if pmt_id else None,
@@ -359,6 +370,7 @@ class MoneroMMGenTX:
 				dest_address   = CoinAddr(proto,d.dest_address),
 				txid           = CoinTxID(d.txid),
 				amount         = proto.coin_amt(d.amount,from_unit='atomic'),
+				priority       = self.cfg.priority if self.name in ('NewSigned','NewUnsigned') else d.priority,
 				fee            = proto.coin_amt(d.fee,from_unit='atomic'),
 				blob           = d.blob,
 				metadata       = d.metadata,
@@ -434,6 +446,7 @@ class MoneroMMGenTX:
 				dest_address   = CoinAddr(proto,d.dest_address),
 				txid           = CoinTxID(d.txid),
 				amount         = proto.coin_amt(d.amount),
+				priority       = d.priority,
 				fee            = proto.coin_amt(d.fee),
 				blob           = d.blob,
 				metadata       = d.metadata,
@@ -1102,6 +1115,7 @@ class MoneroWalletOps:
 						'amount':  amt.to_unit('atomic'),
 						'address': addr
 					}],
+					priority = self.cfg.priority or None,
 					do_not_relay = True,
 					get_tx_hex = True,
 					get_tx_metadata = True
@@ -1127,6 +1141,7 @@ class MoneroWalletOps:
 					'sweep_all',
 					address = addr,
 					account_index = account,
+					priority = self.cfg.priority or None,
 					do_not_relay = True,
 					get_tx_hex = True,
 					get_tx_metadata = True
@@ -1512,11 +1527,16 @@ class MoneroWalletOps:
 	class sweep(spec):
 		spec_id  = 'sweep_spec'
 		spec_key = ( (1,'source'), (3,'dest') )
-		opts     = ('no_relay','tx_relay_daemon','watch_only')
+		opts     = ('no_relay','tx_relay_daemon','watch_only','priority')
 
 		def check_uopts(self):
 			if self.cfg.tx_relay_daemon and (self.cfg.no_relay or self.cfg.autosign):
 				die(1,'--tx-relay-daemon makes no sense in this context!')
+
+			if self.cfg.priority and self.cfg.priority not in list(tx_priorities):
+				die(1, '{}: invalid parameter for --priority (valid params: {})'.format(
+					self.cfg.priority,
+					fmt_dict(tx_priorities, fmt='square_compact')))
 
 		def init_tx_relay_daemon(self):
 

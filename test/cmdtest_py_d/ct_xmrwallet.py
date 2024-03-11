@@ -528,6 +528,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			no_relay      = False,
 			return_amt    = False,
 			reuse_acct    = False,
+			add_opts      = [],
 			add_desc      = None,
 			do_ret        = False):
 
@@ -545,6 +546,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			'mmgen-xmrwallet',
 			self.extra_opts
 			+ cmd_opts
+			+ add_opts
 			+ (self.autosign_opts if data.autosign else [])
 			+ [op]
 			+ ([] if data.autosign else [data.kafile])
@@ -578,7 +580,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		return t if do_ret else amt if return_amt else t.ok()
 
 	def sweep_to_address_proxy(self):
-		self.do_op('sweep','alice','1:0',self.tx_relay_daemon_proxy_parm)
+		self.do_op('sweep', 'alice', '1:0', self.tx_relay_daemon_proxy_parm, add_opts=['--priority=3'])
 		return self.mine_chk('alice',1,0,lambda x: x.ub > 1,'unlocked balance > 1')
 
 	def sweep_to_account(self):

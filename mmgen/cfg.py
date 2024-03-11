@@ -196,6 +196,7 @@ class Config(Lockable):
 	# Monero:
 	monero_wallet_rpc_user     = 'monero'
 	monero_wallet_rpc_password = ''
+	priority                   = 0
 
 	# test suite:
 	bogus_send               = False

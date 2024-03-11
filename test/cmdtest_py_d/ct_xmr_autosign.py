@@ -243,20 +243,21 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 	def restore_wallets(self):
 		return self.create_watchonly_wallets()
 
-	def _create_transfer_tx(self,amt):
+	def _create_transfer_tx(self, amt, add_opts=[]):
 		self.insert_device_online()
 		t = self.do_op(
 			'transfer',
 			'alice',
 			f'1:0:{self.burn_addr},{amt}',
 			no_relay = True,
-			do_ret   = True)
+			do_ret   = True,
+			add_opts = add_opts)
 		t.read() # required!
 		self.remove_device_online()
 		return t
 
 	def create_transfer_tx1(self):
-		return self._create_transfer_tx('0.124')
+		return self._create_transfer_tx('0.124', add_opts=['--priority=2'])
 
 	def create_transfer_tx2(self):
 		return self._create_transfer_tx('0.257')
