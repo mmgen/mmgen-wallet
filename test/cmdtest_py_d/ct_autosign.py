@@ -460,6 +460,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		('sign_no_unsigned_xmronly', 'signing transactions and messages (nothing to sign, XMR-only)'),
 		('wipe_key',                 'wiping the wallet encryption key'),
 		('stop_daemons',             'stopping daemons'),
+		('sign_bad_no_daemon',       'signing transactions (error, no daemons running)'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -672,12 +673,16 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.do_umount()
 		return 'ok'
 
-	def do_sign(self, args, have_msg=False):
+	def do_sign(self, args=[], have_msg=False, exc_exit_val=None):
 		tx_desc = Signable.transaction.desc
 		t = self.spawn(
 				'mmgen-autosign',
 				self.opts + args,
-				exit_val = 1 if self.bad_tx_count or (have_msg and self.bad_msg_count) else None)
+				exit_val = exc_exit_val or (1 if self.bad_tx_count or (have_msg and self.bad_msg_count) else None))
+
+		if exc_exit_val:
+			return t
+
 		t.expect(
 			f'{self.tx_count} {tx_desc}{suf(self.tx_count)} signed' if self.tx_count else
 			f'No unsigned {tx_desc}s')
@@ -718,6 +723,11 @@ class CmdTestAutosign(CmdTestAutosignBase):
 
 	def sign_full_summary_msg(self):
 		return self.do_sign(['--full-summary'], have_msg=True)
+
+	def sign_bad_no_daemon(self):
+		t = self.do_sign(exc_exit_val=2)
+		t.expect('listening on the correct port')
+		return t
 
 	def sign_no_unsigned(self):
 		return self._sign_no_unsigned(
