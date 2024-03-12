@@ -47,7 +47,7 @@ class tool_cmd(tool_cmd_base):
 				ignore_daemon_version = True )
 		else:
 			from ..rpc import rpc_init
-			r = await rpc_init( self.cfg, self.proto, ignore_daemon_version=True )
+			r = await rpc_init(self.cfg, self.proto, ignore_daemon_version=True, ignore_wallet=True)
 		return f'{d.coind_name} version {r.daemon_version} ({r.daemon_version_str})'
 
 	async def getbalance(self,

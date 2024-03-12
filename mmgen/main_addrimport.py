@@ -156,7 +156,7 @@ async def main():
 
 	cfg._util.qmsg(
 		f'OK. {al.num_addrs} addresses'
-		+ (f' from Seed ID {al.al_id.sid}' if hasattr(al.al_id,'sid') else '') )
+		+ (f' from Seed ID {al.al_id.sid.hl()}' if hasattr(al.al_id,'sid') else '') )
 
 	msg(
 		f'Importing {len(al.data)} address{suf(al.data,"es")} from {infile}'
