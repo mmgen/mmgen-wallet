@@ -114,7 +114,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 	auth_type = 'basic'
 	has_auth_cookie = True
 	wallet_path = '/'
-	twname = 'mmgen-tracking-wallet'
+	dfl_twname = 'mmgen-tracking-wallet'
 
 	async def __init__(
 			self,
@@ -127,6 +127,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		self.proto = proto
 		self.daemon = daemon
 		self.call_sigs = getattr(CallSigs,daemon.id)(cfg)
+		self.twname = cfg.regtest_user or self.dfl_twname
 
 		super().__init__(
 			cfg  = cfg,
@@ -196,11 +197,8 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		if not ignore_wallet:
 			await self.check_or_create_daemon_wallet()
 
-		# for regtest, wallet path must remain '/' until Carol’s user wallet has been created
-		if self.chain == 'regtest':
-			if cfg.regtest_user:
-				self.wallet_path = f'/wallet/{cfg.regtest_user}'
-		else:
+		# for regtest, wallet_path must remain '/' until Carol’s user wallet has been created
+		if self.chain != 'regtest' or cfg.regtest_user:
 			self.wallet_path = f'/wallet/{self.twname}'
 
 	@property
@@ -244,25 +242,22 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 	@property
 	async def tracking_wallet_exists(self):
-		twname = self.cfg.regtest_user or self.twname
-		wnames = [i['name'] for i in (await self.call('listwalletdir'))['wallets']]
-		return twname in wnames
+		return self.twname in [i['name'] for i in (await self.call('listwalletdir'))['wallets']]
 
 	async def check_or_create_daemon_wallet(self):
 
 		if self.chain == 'regtest' and self.cfg.regtest_user != 'carol':
 			return
 
-		twname = self.cfg.regtest_user or self.twname
 		loaded_wnames = await self.call('listwallets')
 
-		if twname not in loaded_wnames:
+		if self.twname not in loaded_wnames:
 			wnames = [i['name'] for i in (await self.call('listwalletdir'))['wallets']]
-			if twname in wnames:
-				await self.call('loadwallet',twname)
+			if self.twname in wnames:
+				await self.call('loadwallet', self.twname)
 			else:
-				await self.icall('createwallet',wallet_name=twname)
-				ymsg(f'Created {self.daemon.coind_name} wallet {twname!r}')
+				await self.icall('createwallet', wallet_name=self.twname)
+				ymsg(f'Created {self.daemon.coind_name} wallet {self.twname!r}')
 
 	def get_daemon_cfg_fn(self):
 		# Use dirname() to remove 'bob' or 'alice' component
