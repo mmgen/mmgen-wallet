@@ -127,7 +127,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		self.proto = proto
 		self.daemon = daemon
 		self.call_sigs = getattr(CallSigs,daemon.id)(cfg)
-		self.twname = cfg.regtest_user or self.dfl_twname
+		self.twname = cfg.regtest_user or cfg.tw_name or self.dfl_twname
 
 		super().__init__(
 			cfg  = cfg,

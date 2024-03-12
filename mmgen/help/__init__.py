@@ -40,6 +40,10 @@ def help_notes_func(proto,cfg,k):
 
 	class help_notes:
 
+		def dfl_twname():
+			from ..proto.btc.rpc import BitcoinRPCClient
+			return BitcoinRPCClient.dfl_twname
+
 		def MasterShareIdx():
 			from ..seedsplit import MasterShareIdx
 			return MasterShareIdx

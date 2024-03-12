@@ -62,15 +62,18 @@ long_opts_data = {
 --, --aiohttp-rpc-queue-len=N Use N simultaneous RPC connections with aiohttp
 --, --regtest=0|1          Disable or enable regtest mode
 --, --testnet=0|1          Disable or enable testnet
+--, --tw-name=NAME         Specify alternate name for the BTC/LTC/BCH tracking
+                         wallet (default: ‘{tw_name}’)
 --, --skip-cfg-file        Skip reading the configuration file
 --, --version              Print version information and exit
 --, --bob                  Specify user “Bob” in MMGen regtest mode
 --, --alice                Specify user “Alice” in MMGen regtest mode
 --, --carol                Specify user “Carol” in MMGen regtest mode
 	""",
-	'code': lambda proto,s: s.format(
+	'code': lambda proto,help_notes,s: s.format(
 			pnm    = gc.proj_name,
 			cu_dfl = proto.coin,
+			tw_name = help_notes('dfl_twname')
 		)
 }
 

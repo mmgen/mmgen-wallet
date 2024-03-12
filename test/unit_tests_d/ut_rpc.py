@@ -6,6 +6,7 @@ test.unit_tests_d.ut_rpc: RPC unit test for the MMGen suite
 
 import sys,os,time
 
+from mmgen.cfg import Config
 from mmgen.color import yellow,cyan
 from mmgen.util import msg,gmsg,make_timestr,pp_fmt,die
 from mmgen.protocol import init_proto
@@ -70,6 +71,7 @@ async def print_daemon_info(rpc):
     NETWORKINFO:    {fmt_dict(rpc.cached["networkinfo"])}
     BLOCKCHAININFO: {fmt_dict(rpc.cached["blockchaininfo"])}
     DEPLOYMENTINFO: {fmt_dict(rpc.cached["deploymentinfo"])}
+    WALLETINFO:     {fmt_dict(await rpc.walletinfo)}
 		""".rstrip())
 
 	msg('')
@@ -84,6 +86,10 @@ class init_test:
 	async def btc(cfg, daemon, backend):
 		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
 		do_msg(rpc,backend)
+
+		if cfg.tw_name:
+			wi = await rpc.walletinfo
+			assert wi['walletname'] == rpc.cfg.tw_name, f'{wi["walletname"]!r} != {rpc.cfg.tw_name!r}'
 
 		bh = (await rpc.call('getblockchaininfo',timeout=300))['bestblockhash']
 		await rpc.gathered_call('getblock',((bh,),(bh,1)),timeout=300)
@@ -150,7 +156,10 @@ class unit_tests:
 	arm_skip = ('parity',) # no prebuilt binaries for ARM
 
 	async def btc(self, name, ut):
-		return await run_test(['btc','btc_tn'], test_cf_auth=True)
+		return await run_test(
+			['btc','btc_tn'],
+			test_cf_auth = True,
+			cfg_in = Config({'_clone': cfg, 'tw_name': 'alternate-tracking-wallet'}))
 
 	async def ltc(self, name, ut):
 		return await run_test(['ltc','ltc_tn'], test_cf_auth=True)
