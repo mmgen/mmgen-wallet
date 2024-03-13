@@ -430,6 +430,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		('bob_auto_chg_addrtype5', 'creating an auto-chg-address TX by addrtype, skipping unused address '
 									'with label (C)'),
 		('bob_auto_chg6',          'creating an auto-chg-address TX, using unused address with label (C)'),
+		('bob_auto_chg7',          'creating an automatic change address transaction (exclude cmdline output)'),
 		('bob_auto_chg_addrtype6', 'creating an auto-chg-address TX by addrtype, using unused address with '
 									'label (C)'),
 		('bob_remove_comment_uua1', 'removing a comment for unused address in tracking wallet (C)'),
@@ -451,6 +452,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		('carol_auto_chg_addrtype1', 'creating an automatic change address transaction by addrtype (C)'),
 		('carol_auto_chg_addrtype2', 'creating an automatic change address transaction by addrtype (B)'),
 		('carol_auto_chg_addrtype3', 'creating an automatic change address transaction by addrtype (S)'),
+		('carol_auto_chg_addrtype4', 'creating an automatic change address transaction by addrtype (C) (exclude cmdline output)'),
 		('carol_auto_chg_bad1',      'error handling for auto change address transaction (no unused addresses)'),
 		('carol_auto_chg_bad2',      'error handling for auto change address transaction by addrtype '
 									'(no unused addresses)'),
@@ -1947,6 +1949,10 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def bob_auto_chg6(self):
 		return self._usr_auto_chg( 'bob', 'C', '3', ignore_labels=True )
 
+	def bob_auto_chg7(self):
+		sid = self._user_sid('bob')
+		return self._usr_auto_chg( 'bob', 'S', '3', add_args=[f'{sid}:S:1,0.00345'] )
+
 	def bob_auto_chg_addrtype6(self):
 		return self._usr_auto_chg( 'bob', 'C', '3', True, ignore_labels=True )
 
@@ -2042,6 +2048,10 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 
 	def carol_auto_chg_addrtype3(self):
 		return self._usr_auto_chg( 'carol', 'S', '1', True )
+
+	def carol_auto_chg_addrtype4(self):
+		sid = self._user_sid('bob')
+		return self._usr_auto_chg('carol', 'S', '3', True, add_args=[f'{sid}:S:1,0.00345'])
 
 	def carol_auto_chg_bad1(self):
 		return self._usr_auto_chg_bad(

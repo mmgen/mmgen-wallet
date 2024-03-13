@@ -282,7 +282,7 @@ class TwAddresses(TwView):
 		else: # addr not in tracking wallet
 			return None
 
-	def get_change_address(self,al_id,bot=None,top=None):
+	def get_change_address(self, al_id, bot=None, top=None, exclude=None):
 		"""
 		Get lowest-indexed unused address in tracking wallet for requested AddrListID.
 		Return values on failure:
@@ -325,6 +325,7 @@ class TwAddresses(TwView):
 				if d.al_id == al_id:
 					if (
 							not d.recvd
+							and not d.twmmid in exclude
 							and (self.cfg.autochg_ignore_labels or not d.comment)
 						):
 						if d.comment:
@@ -340,7 +341,7 @@ class TwAddresses(TwView):
 					break
 			return False
 
-	def get_change_address_by_addrtype(self,mmtype):
+	def get_change_address_by_addrtype(self, mmtype, exclude=None):
 		"""
 		Find the lowest-indexed change addresses in tracking wallet of given address type,
 		present them in a menu and return a single change address chosen by the user.
@@ -372,7 +373,7 @@ class TwAddresses(TwView):
 
 		assert isinstance(mmtype,MMGenAddrType)
 
-		res = [self.get_change_address(f'{sid}:{mmtype}', r.bot, r.top)
+		res = [self.get_change_address(f'{sid}:{mmtype}', r.bot, r.top, exclude)
 				for sid,r in self.sid_ranges.items()]
 
 		if any(res):

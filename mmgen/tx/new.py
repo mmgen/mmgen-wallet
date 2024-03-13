@@ -22,6 +22,7 @@ from ..util import msg,fmt,die,suf,remove_dups,get_extension
 from ..addr import (
 	is_mmgen_id,
 	MMGenAddrType,
+	MMGenID,
 	CoinAddr,
 	is_mmgen_addrtype,
 	is_coin_addr,
@@ -179,11 +180,11 @@ class New(Base):
 
 	def parse_cmd_arg(self, arg_in, ad_f, ad_w):
 
-		_pa = namedtuple('parsed_txcreate_cmdline_arg', ['arg', 'coin_addr', 'amt'])
+		_pa = namedtuple('parsed_txcreate_cmdline_arg', ['arg', 'mmid', 'coin_addr', 'amt'])
 
 		arg, amt = arg_in.split(',', 1) if ',' in arg_in else (arg_in, None)
 
-		if is_mmgen_id(self.proto, arg):
+		if mmid := get_obj(MMGenID, proto=self.proto, id_str=arg, silent=True):
 			coin_addr = mmaddr2coinaddr(self.cfg, arg, ad_w, ad_f, self.proto)
 		elif is_coin_addr(self.proto, arg):
 			coin_addr = CoinAddr(self.proto, arg)
@@ -195,19 +196,20 @@ class New(Base):
 		else:
 			die(2, f'{arg_in}: invalid command-line argument')
 
-		return _pa(arg, coin_addr, amt)
+		return _pa(arg, mmid, coin_addr, amt)
 
 	async def process_cmd_args(self,cmd_args,ad_f,ad_w):
 
-		async def get_autochg_addr(arg):
+		async def get_autochg_addr(arg, parsed_args):
 			from ..tw.addresses import TwAddresses
 			al = await TwAddresses(self.cfg, self.proto, get_data=True)
+			exclude = [a.mmid for a in parsed_args if a.mmid]
 
 			if is_mmgen_addrtype(self.proto, arg):
-				res = al.get_change_address_by_addrtype(MMGenAddrType(self.proto, arg))
+				res = al.get_change_address_by_addrtype(MMGenAddrType(self.proto, arg), exclude=exclude)
 				desc = 'of address type'
 			else:
-				res = al.get_change_address(arg)
+				res = al.get_change_address(arg, exclude=exclude)
 				desc = 'from address list'
 
 			if res:
@@ -228,7 +230,7 @@ class New(Base):
 
 		for a in parsed_args:
 			self.add_output(
-				coinaddr = a.coin_addr or (await get_autochg_addr(a.arg)).addr,
+				coinaddr = a.coin_addr or (await get_autochg_addr(a.arg, parsed_args)).addr,
 				amt      = self.proto.coin_amt(a.amt or '0'),
 				is_chg   = not a.amt)
 
