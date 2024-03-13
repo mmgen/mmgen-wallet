@@ -9,7 +9,7 @@ test.objtest_py_d.ot_btc_mainnet: BTC mainnet test vectors for MMGen data object
 
 from decimal import Decimal
 
-from mmgen.obj import Int,MMGenTxID,CoinTxID,MMGenWalletLabel,MMGenTxComment,MMGenPWIDString
+from mmgen.obj import Int,MMGenTxID,CoinTxID,MMGenWalletLabel,MMGenTxComment,MMGenPWIDString,TrackingWalletName
 from mmgen.addrlist import AddrIdx,AddrIdxList,AddrListID
 from mmgen.seed import Seed,SeedID
 from mmgen.subseed import SubSeedList,SubSeedIdx,SubSeedIdxRange
@@ -179,6 +179,11 @@ tests = {
 			{'id_str':'F00BAA12:L:99',      'proto':proto},
 			{'id_str':'F00BAA12:S:9999999', 'proto':proto},
 		),
+	},
+	'TrackingWalletName': {
+		'arg1': 's',
+		'bad':  ('-abcdefg', 'a' * 50, 'abc-α-ω'),
+		'good': ('ab-cd-def_ghi-', '321-abcd')
 	},
 	'TwLabel': {
 		'arg1': 'proto',

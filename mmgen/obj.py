@@ -395,6 +395,12 @@ class MMGenWalletLabel(MMGenLabel):
 	max_len = 48
 	desc = 'wallet label'
 
+class TrackingWalletName(MMGenLabel):
+	max_len = 40
+	desc = 'tracking wallet name'
+	allowed = 'abcdefghijklmnopqrstuvwxyz0123456789-_'
+	first_char = 'abcdefghijklmnopqrstuvwxyz0123456789'
+
 class TwComment(MMGenLabel):
 	max_screen_width = 80
 	desc = 'tracking wallet comment'

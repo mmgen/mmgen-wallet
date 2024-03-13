@@ -15,6 +15,7 @@ proto.btc.rpc: Bitcoin base protocol RPC client class
 import os
 
 from ...base_obj import AsyncInit
+from ...obj import TrackingWalletName
 from ...util import ymsg,die,fmt
 from ...fileutil import get_lines_from_file
 from ...rpc import RPCClient,auth_data
@@ -127,7 +128,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 		self.proto = proto
 		self.daemon = daemon
 		self.call_sigs = getattr(CallSigs,daemon.id)(cfg)
-		self.twname = cfg.regtest_user or cfg.tw_name or self.dfl_twname
+		self.twname = TrackingWalletName(cfg.regtest_user or cfg.tw_name or self.dfl_twname)
 
 		super().__init__(
 			cfg  = cfg,
