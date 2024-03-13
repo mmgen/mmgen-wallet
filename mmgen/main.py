@@ -44,7 +44,7 @@ def launch(*, mod=None, func=None, fqmod=None, package='mmgen'):
 		try:
 			errmsg = str(e.args[0])
 		except:
-			errmsg = repr(e.args[0])
+			errmsg = repr(e.args[0]) if e.args else repr(e)
 
 		from collections import namedtuple
 		from .color import nocolor,yellow,red

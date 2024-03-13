@@ -79,14 +79,16 @@ class New(Base,TxBase.New):
 		self.txid = MMGenTxID(make_chksum_6(self.serialized).upper())
 
 	async def process_cmd_args(self,cmd_args,ad_f,ad_w):
+
 		lc = len(cmd_args)
+
 		if lc == 0 and self.usr_contract_data and 'Token' not in self.name:
 			return
-		if lc != 1:
-			die(1,f'{lc} output{suf(lc)} specified, but Ethereum transactions must have exactly one')
 
-		for a in cmd_args:
-			await self.process_cmd_arg(a,ad_f,ad_w)
+		if lc != 1:
+			die(1, f'{lc} output{suf(lc)} specified, but Ethereum transactions must have exactly one')
+
+		await self.process_cmd_arg(cmd_args[0],ad_f,ad_w)
 
 	def select_unspent(self,unspent):
 		from ....ui import line_input

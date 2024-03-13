@@ -221,17 +221,18 @@ class New(Base):
 			await self.process_cmd_arg(a,ad_f,ad_w)
 
 		if self.chg_idx is None:
-			die(2,(
-				fmt( self.msg_no_change_output.format(self.dcoin) ).strip()
+			die(2,
+				fmt(self.msg_no_change_output.format(self.dcoin)).strip()
 					if len(self.outputs) == 1 else
-				'ERROR: No change output specified' ))
+				'ERROR: No change output specified')
 
 		if self.has_segwit_outputs() and not self.rpc.info('segwit_is_active'):
-			die(2,f'{gc.proj_name} Segwit address requested on the command line, '
-					+ 'but Segwit is not active on this chain')
+			die(2,
+				f'{gc.proj_name} Segwit address requested on the command line, '
+				'but Segwit is not active on this chain')
 
 		if not self.outputs:
-			die(2,'At least one output must be specified on the command line')
+			die(2, 'At least one output must be specified on the command line')
 
 	async def get_outputs_from_cmdline(self,cmd_args):
 		from ..addrdata import AddrData,TwAddrData

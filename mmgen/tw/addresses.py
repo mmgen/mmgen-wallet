@@ -323,7 +323,10 @@ class TwAddresses(TwView):
 		if start is not None:
 			for d in data[start:]:
 				if d.al_id == al_id:
-					if not d.recvd and (self.cfg.autochg_ignore_labels or not d.comment):
+					if (
+							not d.recvd
+							and (self.cfg.autochg_ignore_labels or not d.comment)
+						):
 						if d.comment:
 							msg('{} {} {} {}{}'.format(
 								yellow('WARNING: address'),
@@ -369,7 +372,8 @@ class TwAddresses(TwView):
 
 		assert isinstance(mmtype,MMGenAddrType)
 
-		res = [self.get_change_address( f'{sid}:{mmtype}', r.bot, r.top ) for sid,r in self.sid_ranges.items()]
+		res = [self.get_change_address(f'{sid}:{mmtype}', r.bot, r.top)
+				for sid,r in self.sid_ranges.items()]
 
 		if any(res):
 			res = list(filter(None,res))

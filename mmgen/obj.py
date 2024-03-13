@@ -347,6 +347,7 @@ class MMGenLabel(HiliteStr,InitErrors):
 	color = 'pink'
 	allowed = []
 	forbidden = []
+	first_char = []
 	max_len = 0
 	min_len = 0
 	max_screen_width = 0 # if != 0, overrides max_len
@@ -354,21 +355,18 @@ class MMGenLabel(HiliteStr,InitErrors):
 	def __new__(cls,s):
 		if isinstance(s,cls):
 			return s
-		for k in ( cls.forbidden, cls.allowed ):
-			assert isinstance(k,list)
-			for ch in k:
-				assert isinstance(ch,str) and len(ch) == 1
 		try:
 			s = s.strip()
-			for ch in s:
-				# Allow:    (L)etter,(N)umber,(P)unctuation,(S)ymbol,(Z)space
-				# Disallow: (C)ontrol,(M)combining
-				# Combining characters create width formatting issues, so disallow them for now
-				if unicodedata.category(ch)[0] in ('C','M'):
-					raise ValueError(
-						'{!a}: {} characters not allowed'.format(
-							ch,
-							{ 'C':'control', 'M':'combining' }[unicodedata.category(ch)[0]] ))
+			if not cls.allowed:
+				for ch in s:
+					# Allow:    (L)etter,(N)umber,(P)unctuation,(S)ymbol,(Z)space
+					# Disallow: (C)ontrol,(M)combining
+					# Combining characters create width formatting issues, so disallow them for now
+					if unicodedata.category(ch)[0] in ('C','M'):
+						raise ValueError(
+							'{!a}: {} characters not allowed'.format(
+								ch,
+								{ 'C':'control', 'M':'combining' }[unicodedata.category(ch)[0]] ))
 
 			me = str.__new__(cls,s)
 
@@ -380,11 +378,14 @@ class MMGenLabel(HiliteStr,InitErrors):
 
 			assert len(s) >= cls.min_len, f'too short (<{cls.min_len} symbols)'
 
+			if cls.first_char and s and not s[0] in cls.first_char:
+				raise ValueError('first character not in set ' + ' '.join(cls.first_char))
+
 			if cls.allowed and not set(list(s)).issubset(set(cls.allowed)):
-				raise ValueError('contains non-allowed symbols: ' + ' '.join(set(list(s)) - set(cls.allowed)) )
+				raise ValueError('contains symbols not in set: ' + ' '.join(cls.allowed))
 
 			if cls.forbidden and any(ch in s for ch in cls.forbidden):
-				raise ValueError('contains one of these forbidden symbols: ' + ' '.join(cls.forbidden) )
+				raise ValueError('contains one of these forbidden symbols: ' + ' '.join(cls.forbidden))
 
 			return me
 		except Exception as e:

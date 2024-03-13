@@ -438,6 +438,11 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		('bob_auto_chg_bad3',       'error handling for auto change address transaction (no unused addresses)'),
 		('bob_auto_chg_bad4',       'error handling for auto change address transaction by addrtype '
 									'(no unused addresses)'),
+		('bob_auto_chg_bad5',       'error handling (more than one chg address listed)'),
+		('bob_auto_chg_bad6',       'error handling for auto change address transaction '
+									'(more than one chg address, mixed)'),
+		('bob_auto_chg_bad7',       'error handling for auto change address transaction '
+									'(more than one chg address requested)'),
 		('carol_twimport2',          'recreating Carol’s tracking wallet from JSON dump'),
 		('carol_rescan_blockchain',  'rescanning the blockchain (full rescan)'),
 		('carol_auto_chg1',          'creating an automatic change address transaction (C)'),
@@ -1882,16 +1887,19 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			idx,
 			by_mmtype     = False,
 			include_dest  = True,
-			ignore_labels = False):
+			ignore_labels = False,
+			add_args      = []):
+
 		if mmtype in ('S','B') and not self.proto.cap('segwit'):
 			return 'skip'
 		sid = self._user_sid('bob')
 		t = self.spawn(
 			'mmgen-txcreate',
-				[f'--outdir={self.tr.trash_dir}', '--no-blank', f'--{user}'] +
-				(['--autochg-ignore-labels'] if ignore_labels else []) +
-				[mmtype if by_mmtype else f'{sid}:{mmtype}'] +
-				([self.burn_addr+',0.01'] if include_dest else [])
+				[f'--outdir={self.tr.trash_dir}', '--no-blank', f'--{user}']
+				+ (['--autochg-ignore-labels'] if ignore_labels else [])
+				+ [mmtype if by_mmtype else f'{sid}:{mmtype}']
+				+ ([self.burn_addr+',0.01'] if include_dest else [])
+				+ add_args
 			)
 		return self.txcreate_ui_common(t,
 			menu            = [],
@@ -1949,10 +1957,13 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def bob_remove_comment_uua1(self):
 		return self._bob_remove_comment_uua(':C:3')
 
-	def _usr_auto_chg_bad(self,user,al_id,expect):
+	def _usr_auto_chg_bad(self, user, al_id, expect, add_args=[]):
 		t = self.spawn(
 			'mmgen-txcreate',
-			['-d', self.tr.trash_dir, '-B', f'--{user}', self.burn_addr+', 0.01', al_id],
+			['-d', self.tr.trash_dir, '-B', f'--{user}']
+			+ [f'{self.burn_addr},0.01']
+			+ ([al_id] if al_id else [])
+			+ add_args,
 			exit_val = 2)
 		t.expect(expect)
 		return t
@@ -1980,6 +1991,29 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			'bob',
 			'L',
 			'contains no unused addresses of address type' )
+
+	def bob_auto_chg_bad5(self):
+		sid = self._user_sid('bob')
+		return self._usr_auto_chg_bad(
+			'bob',
+			None,
+			'More than one change address listed',
+			add_args = [f'{sid}:C:4', f'{sid}:C:5'])
+
+	def bob_auto_chg_bad6(self):
+		sid = self._user_sid('bob')
+		return self._usr_auto_chg_bad(
+			'bob',
+			'L',
+			'More than one',
+			add_args = [f'{sid}:C:4'])
+
+	def bob_auto_chg_bad7(self):
+		return self._usr_auto_chg_bad(
+			'bob',
+			'L',
+			'More than one change address requested',
+			add_args = ['B'])
 
 	def carol_twimport2(self):
 		u,b = (4,3) if self.proto.cap('segwit') else (3,2)
