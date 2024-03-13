@@ -12,6 +12,8 @@
 tx.new: new transaction class
 """
 
+from collections import namedtuple
+
 from .base import Base
 from ..cfg import gc
 from ..color import pink,yellow
@@ -175,50 +177,60 @@ class New(Base):
 	def add_output(self,coinaddr,amt,is_chg=None):
 		self.outputs.append(self.Output(self.proto,addr=coinaddr,amt=amt,is_chg=is_chg))
 
-	async def process_cmd_arg(self,arg_in,ad_f,ad_w):
+	def parse_cmd_arg(self, arg_in, ad_f, ad_w):
 
-		arg,amt = arg_in.split(',',1) if ',' in arg_in else (arg_in,None)
+		_pa = namedtuple('parsed_txcreate_cmdline_arg', ['arg', 'coin_addr', 'amt'])
 
-		if is_mmgen_id(self.proto,arg):
-			coin_addr = mmaddr2coinaddr(self.cfg,arg,ad_w,ad_f,self.proto)
-		elif is_coin_addr(self.proto,arg):
-			coin_addr = CoinAddr(self.proto,arg)
-		elif is_mmgen_addrtype(self.proto,arg) or is_addrlist_id(self.proto,arg):
+		arg, amt = arg_in.split(',', 1) if ',' in arg_in else (arg_in, None)
+
+		if is_mmgen_id(self.proto, arg):
+			coin_addr = mmaddr2coinaddr(self.cfg, arg, ad_w, ad_f, self.proto)
+		elif is_coin_addr(self.proto, arg):
+			coin_addr = CoinAddr(self.proto, arg)
+		elif is_mmgen_addrtype(self.proto, arg) or is_addrlist_id(self.proto, arg):
 			if self.proto.base_proto_coin != 'BTC':
-				die(2,f'Change addresses not supported for {self.proto.name} protocol')
+				die(2, f'Change addresses not supported for {self.proto.name} protocol')
+			self.chg_autoselected = True
+			coin_addr = None
+		else:
+			die(2, f'{arg_in}: invalid command-line argument')
 
+		return _pa(arg, coin_addr, amt)
+
+	async def process_cmd_args(self,cmd_args,ad_f,ad_w):
+
+		async def get_autochg_addr(arg):
 			from ..tw.addresses import TwAddresses
-			al = await TwAddresses(self.cfg,self.proto,get_data=True)
+			al = await TwAddresses(self.cfg, self.proto, get_data=True)
 
-			if is_mmgen_addrtype(self.proto,arg):
-				arg = MMGenAddrType(self.proto,arg)
-				res = al.get_change_address_by_addrtype(arg)
+			if is_mmgen_addrtype(self.proto, arg):
+				res = al.get_change_address_by_addrtype(MMGenAddrType(self.proto, arg))
 				desc = 'of address type'
 			else:
 				res = al.get_change_address(arg)
 				desc = 'from address list'
 
 			if res:
-				coin_addr = res.addr
-				self.chg_autoselected = True
-			else:
-				die(2,'Tracking wallet contains no {t}addresses {d} {a!r}'.format(
-					t = ('unused ','')[res is None],
-					d = desc,
-					a = arg ))
-		else:
-			die(2,f'{arg_in}: invalid command-line argument')
+				return res
 
-		if not (amt or self.chg_idx is None):
-			die(2,'ERROR: More than one change address {} on command line'.format(
-				'requested' if self.chg_autoselected else 'listed'))
+			die(2,'Tracking wallet contains no {t}addresses {d} {a!r}'.format(
+				t = '' if res is None else 'unused ',
+				d = desc,
+				a = arg))
 
-		self.add_output(coin_addr,self.proto.coin_amt(amt or '0'),is_chg=not amt)
+		parsed_args = [self.parse_cmd_arg(a, ad_f, ad_w) for a in cmd_args]
 
-	async def process_cmd_args(self,cmd_args,ad_f,ad_w):
+		chg_args = [a for a in parsed_args if not (a.amt and a.coin_addr)]
 
-		for a in cmd_args:
-			await self.process_cmd_arg(a,ad_f,ad_w)
+		if len(chg_args) > 1:
+			desc = 'requested' if self.chg_autoselected else 'listed'
+			die(2, f'ERROR: More than one change address {desc} on command line')
+
+		for a in parsed_args:
+			self.add_output(
+				coinaddr = a.coin_addr or (await get_autochg_addr(a.arg)).addr,
+				amt      = self.proto.coin_amt(a.amt or '0'),
+				is_chg   = not a.amt)
 
 		if self.chg_idx is None:
 			die(2,

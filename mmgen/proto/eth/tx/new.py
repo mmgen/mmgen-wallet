@@ -88,7 +88,12 @@ class New(Base,TxBase.New):
 		if lc != 1:
 			die(1, f'{lc} output{suf(lc)} specified, but Ethereum transactions must have exactly one')
 
-		await self.process_cmd_arg(cmd_args[0],ad_f,ad_w)
+		arg = self.parse_cmd_arg(cmd_args[0], ad_f, ad_w)
+
+		self.add_output(
+			coinaddr = arg.coin_addr,
+			amt      = self.proto.coin_amt(arg.amt or '0'),
+			is_chg   = not arg.amt)
 
 	def select_unspent(self,unspent):
 		from ....ui import line_input
