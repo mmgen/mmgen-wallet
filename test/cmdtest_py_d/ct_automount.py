@@ -46,6 +46,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		('autosign_start_thread',            'starting autosign wait loop'),
 		('alice_txstatus1',                  'getting transaction status (unsigned)'),
 		('alice_txstatus2',                  'getting transaction status (unsent)'),
+		('alice_txcreate_bad_have_unsent',   'creating the transaction again (error)'),
 		('alice_txsend1',                    'sending a transaction, editing comment'),
 		('alice_txstatus3',                  'getting transaction status (in mempool)'),
 		('alice_txsend_bad_no_unsent',       'sending the transaction again (error)'),
@@ -154,6 +155,9 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 
 	def alice_txcreate_bad_have_unsigned(self):
 		return self._alice_txcreate(chg_addr='C:5', exit_val=2, expect='already present')
+
+	def alice_txcreate_bad_have_unsent(self):
+		return self._alice_txcreate(chg_addr='C:5', exit_val=2, expect='unsent transaction')
 
 	def copy_wallet(self):
 		self.spawn('', msg_only=True)

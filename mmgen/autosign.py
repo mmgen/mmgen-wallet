@@ -103,6 +103,8 @@ class Signable:
 		def check_create_ok(self):
 			if len(self.unsigned):
 				self.die_wrong_num_txs('unsigned', msg='Cannot create transaction')
+			if len(self.unsent):
+				die('AutosignTXError', 'Cannot create transaction: you have an unsent transaction')
 
 		def get_unsubmitted(self, tx_type='unsubmitted'):
 			if len(self.unsubmitted) == 1:
