@@ -341,7 +341,7 @@ def get_cmd_cls(cmd):
 def get_mod_cls(modname):
 	return getattr(importlib.import_module(f'mmgen.tool.{modname}'),'tool_cmd')
 
-if gc.prog_name == 'mmgen-tool':
+if gc.prog_name.endswith('-tool'):
 
 	cfg = Config( opts_data=opts_data, parse_only=True )
 	po = cfg._parsed_opts

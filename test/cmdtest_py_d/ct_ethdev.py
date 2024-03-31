@@ -637,11 +637,13 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			interactive_fee = '50G',
 			fee_info_data   = ('0.00105','50'),
 			no_read         = False,
+			print_listing   = True,
 			tweaks          = []):
 		fee_info_pat = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format( *fee_info_data, c=self.proto.coin )
 		t = self.spawn('mmgen-'+caller, self.txcreate_args + ['-B'] + args)
-		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
-		t.written_to_file('Account balances listing')
+		if print_listing:
+			t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
+			t.written_to_file('Account balances listing')
 		t = self.txcreate_ui_common(
 				t,
 				menu              = menu,
@@ -698,7 +700,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		dt = namedtuple('data',['devkey_fn','dest','amt'])
 		d = dt( parity_devkey_fn, burn_addr2, '1' )
 		t = self.txcreate(
-			args    = [
+			args    = self.eth_args_noquiet + [
 				f'--keys-from-file={joinpath(self.tmpdir,d.devkey_fn)}',
 				f'{d.dest},{d.amt}',
 			],

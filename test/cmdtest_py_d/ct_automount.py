@@ -92,6 +92,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 			+ [f'{self.burn_addr},1.23456', f'{sid}:{chg_addr}'],
 			exit_val = exit_val or None)
 		if exit_val:
+			t.expect(expect)
 			t.read()
 			self.remove_device_online()
 			return t

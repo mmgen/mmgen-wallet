@@ -83,6 +83,7 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		t = self.txcreate(
 			args = ['--autosign', '98831F3A:E:11,54.321'],
 			menu = [],
+			print_listing = False,
 			acct = '1')
 		t.read()
 		self.remove_device_online()
