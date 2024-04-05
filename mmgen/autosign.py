@@ -270,6 +270,17 @@ class Signable:
 		clean_all = True
 		summary_footer = '\n'
 
+		@property
+		def unsigned(self):
+			import json
+			unsigned = super().unsigned
+			def gen():
+				for f in unsigned:
+					with open(f) as fh:
+						if not json.load(fh)['MoneroMMGenWalletOutputsFile']['data']['imported']:
+							yield f
+			return tuple(gen())
+
 		async def sign(self,f):
 			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
 			wallet_idx = MoneroWalletOps.wallet.get_idx_from_fn(f)
@@ -281,11 +292,8 @@ class Signable:
 					spec    = None ),
 			)
 			obj = await m.main(f, wallet_idx, restart_daemon=self.need_daemon_restart(m,wallet_idx))
-			if obj.data.sign:
-				obj.write()
-				self.action_desc = 'imported and signed'
-			else:
-				self.action_desc = 'imported'
+			obj.write()
+			self.action_desc = 'imported and signed' if obj.data.sign else 'imported'
 			return obj
 
 	class message(base):

@@ -500,6 +500,7 @@ class MoneroWalletOutputsFile:
 			'outputs_data_hex',
 			'signed_key_images',
 			'sign',
+			'imported',
 		])
 
 		def __init__(self,cfg):
@@ -1964,6 +1965,8 @@ class MoneroWalletOps:
 					data      = data)
 				idata = m.data.signed_key_images or []
 				bmsg(f'  {len(idata)} key image{suf(idata)} signed')
+			else:
+				m.data = m.data._replace(imported=True)
 			return m
 
 	class import_key_images(wallet):
