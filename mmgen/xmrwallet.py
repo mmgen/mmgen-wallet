@@ -1560,27 +1560,8 @@ class MoneroWalletOps:
 				cfg    = self.cfg,
 				daemon = wd2 )
 
-		async def main(self):
-
-			gmsg(f'\n{self.stem.capitalize()}ing account #{self.account} of wallet {self.source.idx}' + (
-				f': {self.amount} XMR to {self.dest_addr}' if self.name == 'transfer'
-				else ' to new address' if self.dest is None
-				else f' to new account in wallet {self.dest.idx}' ))
-
-			h = self.rpc(self,self.source)
-
-			h.open_wallet('source')
-			accts_data = h.get_accts()[0]
-
-			max_acct = len(accts_data['subaddress_accounts']) - 1
-			if self.account > max_acct:
-				die(2, f'{self.account}: requested account index out of bounds (>{max_acct})')
-
-			h.print_addrs(accts_data,self.account)
-
-			if self.name == 'transfer':
-				dest_addr = self.dest_addr
-			elif self.dest is None:
+		def create_tx(self, h, accts_data):
+			if self.dest is None:
 				dest_acct = self.account
 				if keypress_confirm(self.cfg, f'\nCreate new address for account #{self.account}?'):
 					dest_addr_chk = h.create_new_addr(self.account)
@@ -1614,11 +1595,33 @@ class MoneroWalletOps:
 				h.open_wallet('source', refresh=False)
 
 			msg(f'\n    Creating {self.name} transaction...')
+			return (h, h.make_sweep_tx(self.account, dest_acct, dest_addr_idx, dest_addr))
 
-			if self.name == 'transfer':
-				new_tx = h.make_transfer_tx(self.account,dest_addr,self.amount)
-			elif self.name == 'sweep':
-				new_tx = h.make_sweep_tx(self.account,dest_acct,dest_addr_idx,dest_addr)
+		@property
+		def add_desc(self):
+			if self.dest is None:
+				return ' to new address'
+			else:
+				return f' to new account in wallet {self.dest.idx}'
+
+		async def main(self):
+
+			gmsg(
+				f'\n{self.stem.capitalize()}ing account #{self.account} of wallet {self.source.idx}'
+				+ self.add_desc)
+
+			h = self.rpc(self,self.source)
+
+			h.open_wallet('source')
+			accts_data = h.get_accts()[0]
+
+			max_acct = len(accts_data['subaddress_accounts']) - 1
+			if self.account > max_acct:
+				die(2, f'{self.account}: requested account index out of bounds (>{max_acct})')
+
+			h.print_addrs(accts_data,self.account)
+
+			h, new_tx = self.create_tx(h, accts_data)
 
 			msg('\n' + new_tx.get_info(indent='    '))
 
@@ -1649,6 +1652,14 @@ class MoneroWalletOps:
 		stem    = 'transferr'
 		spec_id = 'transfer_spec'
 		spec_key = ( (1,'source'), )
+
+		@property
+		def add_desc(self):
+			return f': {self.amount} XMR to {self.dest_addr}'
+
+		def create_tx(self, h, accts_data):
+			msg(f'\n    Creating {self.name} transaction...')
+			return (h, h.make_transfer_tx(self.account, self.dest_addr, self.amount))
 
 	class new(spec):
 		spec_id = 'newaddr_spec'
