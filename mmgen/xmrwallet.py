@@ -1574,18 +1574,17 @@ class MoneroWalletOps:
 				h.print_addrs(accts_data, self.account)
 			else:
 				h.close_wallet('source')
-				wf = self.get_wallet_fn(self.dest)
 				h2 = self.rpc(self, self.dest)
 				h2.open_wallet('destination')
-				accts_data = h2.get_accts()[0]
 
+				wf = self.get_wallet_fn(self.dest)
 				if keypress_confirm(self.cfg, f'\nCreate new account for wallet {wf.name!r}?'):
 					dest_acct, dest_addr = h2.create_acct(
 						label = f'Sweep from {self.source.idx}:{self.account} [{make_timestr()}]')
 					dest_addr_idx = 0
 					h2.get_accts()
 				elif keypress_confirm(self.cfg, f'Sweep to last existing account of wallet {wf.name!r}?'):
-					dest_acct, dest_addr_chk = h2.get_last_acct(accts_data)
+					dest_acct, dest_addr_chk = h2.get_last_acct(h2.get_accts()[0])
 					dest_addr, dest_addr_idx = h2.get_last_addr(dest_acct, display=False)
 					assert dest_addr_chk == dest_addr, 'dest_addr_chk2'
 				else:
