@@ -273,13 +273,9 @@ class Signable:
 		@property
 		def unsigned(self):
 			import json
-			unsigned = super().unsigned
-			def gen():
-				for f in unsigned:
-					with open(f) as fh:
-						if not json.load(fh)['MoneroMMGenWalletOutputsFile']['data']['imported']:
-							yield f
-			return tuple(gen())
+			return tuple(
+				f for f in super().unsigned
+					if not json.loads(f.read_text())['MoneroMMGenWalletOutputsFile']['data']['imported'])
 
 		async def sign(self,f):
 			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
