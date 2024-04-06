@@ -1582,36 +1582,36 @@ class MoneroWalletOps:
 				dest_addr = self.dest_addr
 			elif self.dest is None:
 				dest_acct = self.account
-				if keypress_confirm( self.cfg, f'\nCreate new address for account #{self.account}?' ):
+				if keypress_confirm(self.cfg, f'\nCreate new address for account #{self.account}?'):
 					dest_addr_chk = h.create_new_addr(self.account)
-				elif keypress_confirm( self.cfg, f'Sweep to last existing address of account #{self.account}?' ):
+				elif keypress_confirm(self.cfg, f'Sweep to last existing address of account #{self.account}?'):
 					dest_addr_chk = None
 				else:
 					die(1,'Exiting at user request')
-				dest_addr,dest_addr_idx = h.get_last_addr(self.account,display=not dest_addr_chk)
-				assert dest_addr_chk in (None,dest_addr), 'dest_addr_chk1'
-				h.print_addrs(accts_data,self.account)
+				dest_addr, dest_addr_idx = h.get_last_addr(self.account, display=not dest_addr_chk)
+				assert dest_addr_chk in (None, dest_addr), 'dest_addr_chk1'
+				h.print_addrs(accts_data, self.account)
 			else:
 				h.close_wallet('source')
 				wf = self.get_wallet_fn(self.dest)
-				h2 = self.rpc(self,self.dest)
+				h2 = self.rpc(self, self.dest)
 				h2.open_wallet('destination')
 				accts_data = h2.get_accts()[0]
 
-				if keypress_confirm( self.cfg, f'\nCreate new account for wallet {wf.name!r}?' ):
-					dest_acct,dest_addr = h2.create_acct(
+				if keypress_confirm(self.cfg, f'\nCreate new account for wallet {wf.name!r}?'):
+					dest_acct, dest_addr = h2.create_acct(
 						label = f'Sweep from {self.source.idx}:{self.account} [{make_timestr()}]')
 					dest_addr_idx = 0
 					h2.get_accts()
-				elif keypress_confirm( self.cfg, f'Sweep to last existing account of wallet {wf.name!r}?' ):
-					dest_acct,dest_addr_chk = h2.get_last_acct(accts_data)
-					dest_addr,dest_addr_idx = h2.get_last_addr(dest_acct,display=False)
+				elif keypress_confirm(self.cfg, f'Sweep to last existing account of wallet {wf.name!r}?'):
+					dest_acct, dest_addr_chk = h2.get_last_acct(accts_data)
+					dest_addr, dest_addr_idx = h2.get_last_addr(dest_acct, display=False)
 					assert dest_addr_chk == dest_addr, 'dest_addr_chk2'
 				else:
-					die(1,'Exiting at user request')
+					die(1, 'Exiting at user request')
 
 				h2.close_wallet('destination')
-				h.open_wallet('source',refresh=False)
+				h.open_wallet('source', refresh=False)
 
 			msg(f'\n    Creating {self.name} transaction...')
 
