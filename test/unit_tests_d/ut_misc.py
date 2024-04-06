@@ -4,10 +4,47 @@
 test.unit_tests_d.ut_misc: miscellaneous unit tests for the MMGen suite
 """
 
+import re
+from collections import namedtuple
+
+from mmgen.color import yellow, blue
+from ..include.common import vmsg
+
 class unit_tests:
 
+	def xmrwallet_uarg_info(self,name,ut): # WIP
+		from mmgen.xmrwallet import xmrwallet_uarg_info as uarg_info
+		vs = namedtuple('vector_data', ['text', 'groups'])
+		fs = '{:16} {}'
+
+		vmsg(blue('  ' + fs.format('ID','ANNOT')))
+		for k,v in uarg_info.items():
+			vmsg('  ' + fs.format(k, v[0]))
+
+		vectors = {
+			'sweep_spec': (
+				vs('1:2',     "('1', '2', None, None)"),
+				vs('1:2,3',   "('1', '2', '3', None)"),
+				vs('1:2,3:4', "('1', '2', '3', '4')"),
+			),
+		}
+		
+		vmsg('')
+		for k,v in uarg_info.items():
+			vmsg(f'  {k}')
+			if k in vectors:
+				vmsg(f'    pat: {v.pat}')
+				vmsg(f'    vectors:')
+				for vec in vectors[k]:
+					m = re.match(v.pat, vec.text)
+					vmsg(f'      {vec.text:10} ==> {m.groups()}')
+					assert str(m.groups()) == vec.groups
+			else:
+				vmsg(yellow('    TBD'))
+
+		return True
+
 	def pyversion(self,name,ut):
-		from ..include.common import vmsg
 		from mmgen.pyversion import PythonVersion,python_version
 
 		ver = {}
