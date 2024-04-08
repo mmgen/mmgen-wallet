@@ -288,7 +288,7 @@ class Signable:
 					spec    = None ),
 			)
 			obj = await m.main(f, wallet_idx, restart_daemon=self.need_daemon_restart(m,wallet_idx))
-			obj.write()
+			obj.write(quiet=not obj.data.sign)
 			self.action_desc = 'imported and signed' if obj.data.sign else 'imported'
 			return obj
 

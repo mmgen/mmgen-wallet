@@ -527,7 +527,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			tx_relay_parm = None,
 			no_relay      = False,
 			return_amt    = False,
-			reuse_acct    = False,
+			use_existing  = False,
 			add_opts      = [],
 			add_desc      = None,
 			do_ret        = False):
@@ -557,12 +557,13 @@ class CmdTestXMRWallet(CmdTestBase):
 			return t
 
 		if op == 'sweep':
+			desc = 'address' if re.match(r'.*:\d+$', arg2) else 'account'
 			t.expect(
-				r'Create new {} .* \(y/N\): '.format(('address','account')[',' in arg2]),
-				('y','n')[reuse_acct],
+				rf'Create new {desc} .* \(y/N\): ',
+				('y','n')[use_existing],
 				regex=True )
-			if reuse_acct:
-				t.expect( r'to last existing account .* \(y/N\): ','y', regex=True )
+			if use_existing:
+				t.expect(rf'to last existing {desc} .* \(y/N\): ', 'y', regex=True)
 
 		if return_amt:
 			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amount: ')).replace('XMR','').strip())
@@ -656,7 +657,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			send_amt = self.do_op(
 				'sweep','alice','2:1,3', # '2:1,3'
 				no_relay     = True,
-				reuse_acct   = True,
+				use_existing = True,
 				add_desc     = f'TX #{i+1}',
 				return_amt   = True )
 			ok()

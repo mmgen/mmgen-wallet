@@ -67,11 +67,11 @@ xmrwallet_uargs = namedtuple('xmrwallet_uargs',[
 xmrwallet_uarg_info = (
 	lambda e,hp: {
 		'daemon':          e('HOST:PORT', hp),
-		'tx_relay_daemon': e('HOST:PORT[:PROXY_IP:PROXY_PORT]',            rf'({hp})(?::({hp}))?'),
-		'newaddr_spec':    e('WALLET_NUM[:ACCOUNT][,"label text"]',         r'(\d+)(?::(\d+))?(?:,(.*))?'),
-		'transfer_spec':   e('SOURCE_WALLET_NUM:ACCOUNT:ADDRESS,AMOUNT',   rf'(\d+):(\d+):([{b58a}]+),([0-9.]+)'),
-		'sweep_spec':      e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
-		'label_spec':      e('WALLET_NUM:ACCOUNT:ADDRESS,"label text"',     r'(\d+):(\d+):(\d+),(.*)'),
+		'tx_relay_daemon': e('HOST:PORT[:PROXY_IP:PROXY_PORT]',     rf'({hp})(?::({hp}))?'),
+		'newaddr_spec':    e('WALLET[:ACCOUNT][,"label text"]',     r'(\d+)(?::(\d+))?(?:,(.*))?'),
+		'transfer_spec':   e('SOURCE:ACCOUNT:ADDRESS,AMOUNT',       rf'(\d+):(\d+):([{b58a}]+),([0-9.]+)'),
+		'sweep_spec':      e('SOURCE:ACCOUNT[,DEST]',               r'(\d+):(\d+)(?:,(\d+))?'),
+		'label_spec':      e('WALLET:ACCOUNT:ADDRESS,"label text"', r'(\d+):(\d+):(\d+),(.*)'),
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),
 		r'(?:[^:]+):(?:\d+)'
@@ -507,7 +507,7 @@ class MoneroWalletOutputsFile:
 			self.name = type(self).__name__
 			self.cfg = cfg
 
-		def write(self,add_suf=''):
+		def write(self, add_suf='', quiet=False):
 			from .fileutil import write_data_to_file
 			write_data_to_file(
 				cfg               = self.cfg,
@@ -515,7 +515,8 @@ class MoneroWalletOutputsFile:
 				data              = self.make_wrapped_data(self.data._asdict()),
 				desc              = self.desc,
 				ask_overwrite     = False,
-				ignore_opt_outdir = True )
+				quiet             = quiet,
+				ignore_opt_outdir = True)
 
 		def get_outfile(self,cfg,wallet_fn):
 			return (
@@ -1561,21 +1562,26 @@ class MoneroWalletOps:
 				daemon = wd2 )
 
 		def create_tx(self, h, accts_data):
-			if self.dest is None:
-				dest_acct = self.account
-				if keypress_confirm(self.cfg, f'\nCreate new address for account #{self.account}?'):
-					dest_addr_chk = h.create_new_addr(self.account)
-				elif keypress_confirm(self.cfg, f'Sweep to last existing address of account #{self.account}?'):
-					dest_addr_chk = None
-				else:
+
+			def create_new_addr_maybe(h, account, label=None):
+				if keypress_confirm(self.cfg, f'\nCreate new address for account #{account}?'):
+					return h.create_new_addr(account, label)
+				elif not keypress_confirm(self.cfg, f'Sweep to last existing address of account #{account}?'):
 					die(1,'Exiting at user request')
+				return None
+
+			dest_addr_chk = None
+
+			if self.dest is None: # sweep to same account
+				dest_acct = self.account
+				dest_addr_chk = create_new_addr_maybe(h, self.account)
 				dest_addr, dest_addr_idx = h.get_last_addr(self.account, display=not dest_addr_chk)
-				assert dest_addr_chk in (None, dest_addr), 'dest_addr_chk1'
 				h.print_addrs(accts_data, self.account)
-			else:
+			else:                 # sweep to wallet
 				h.close_wallet('source')
 				h2 = self.rpc(self, self.dest)
 				h2.open_wallet('destination')
+				h2.get_accts()
 
 				wf = self.get_wallet_fn(self.dest)
 				if keypress_confirm(self.cfg, f'\nCreate new account for wallet {wf.name!r}?'):
@@ -1586,12 +1592,13 @@ class MoneroWalletOps:
 				elif keypress_confirm(self.cfg, f'Sweep to last existing account of wallet {wf.name!r}?'):
 					dest_acct, dest_addr_chk = h2.get_last_acct(h2.get_accts()[0])
 					dest_addr, dest_addr_idx = h2.get_last_addr(dest_acct, display=False)
-					assert dest_addr_chk == dest_addr, 'dest_addr_chk2'
 				else:
 					die(1, 'Exiting at user request')
 
 				h2.close_wallet('destination')
 				h.open_wallet('source', refresh=False)
+
+			assert dest_addr_chk in (None, dest_addr), 'dest_addr_chk'
 
 			msg(f'\n    Creating {self.name} transaction...')
 			return (h, h.make_sweep_tx(self.account, dest_acct, dest_addr_idx, dest_addr))
@@ -1602,6 +1609,11 @@ class MoneroWalletOps:
 				return ' to new address'
 			else:
 				return f' to new account in wallet {self.dest.idx}'
+
+		def check_account_exists(self, accts_data, idx):
+			max_acct = len(accts_data['subaddress_accounts']) - 1
+			if self.account > max_acct:
+				die(2, f'{self.account}: requested account index out of bounds (>{max_acct})')
 
 		async def main(self):
 
@@ -1614,9 +1626,7 @@ class MoneroWalletOps:
 			h.open_wallet('source')
 			accts_data = h.get_accts()[0]
 
-			max_acct = len(accts_data['subaddress_accounts']) - 1
-			if self.account > max_acct:
-				die(2, f'{self.account}: requested account index out of bounds (>{max_acct})')
+			self.check_account_exists(accts_data, self.account)
 
 			h.print_addrs(accts_data,self.account)
 

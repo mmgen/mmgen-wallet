@@ -28,7 +28,7 @@ class unit_tests:
 				vs('1:2,3:4', "('1', '2', '3', '4')"),
 			),
 		}
-		
+
 		vmsg('')
 		for k,v in uarg_info.items():
 			vmsg(f'  {k}')

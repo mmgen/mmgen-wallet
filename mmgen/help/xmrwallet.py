@@ -13,6 +13,7 @@ help.xmrwallet: xmrwallet help notes for MMGen suite
 """
 
 def help(proto,cfg):
+	from ..xmrwallet import xmrwallet_uarg_info as uai
 
 	return """
 Many operations take an optional ‘wallets’ argument: one or more address
@@ -73,7 +74,7 @@ import-key-images   - import key images signed by offline wallets into their
 
 This operation takes a LABEL_SPEC arg with the following format:
 
-    WALLET:ACCOUNT:ADDRESS,"label text"
+    {label_spec}
 
 where WALLET is a wallet number, ACCOUNT an account index, and ADDRESS an
 address index.
@@ -83,40 +84,40 @@ address index.
 
 This operation takes a NEW_ADDRESS_SPEC arg with the following format:
 
-    WALLET[:ACCOUNT][,"label text"]
+    {newaddr_spec}
 
-where WALLET is a wallet number and ACCOUNT an account index.  If ACCOUNT is
-omitted, a new account will be created in the wallet, otherwise a new address
-will be created in the specified account.  An optional label text may be
-appended to the spec following a comma.
+where WALLET is a wallet number and ACCOUNT an account index.  If ACCOUNT
+is omitted, a new account will be created in the wallet.  Otherwise a new
+address will be created in the specified account.  An optional label text
+may be appended to the spec following a comma.
 
 
                          ‘TRANSFER’ OPERATION NOTES
 
 The transfer operation takes a TRANSFER_SPEC arg with the following format:
 
-    SOURCE:ACCOUNT:ADDRESS,AMOUNT
+    {transfer_spec}
 
-where SOURCE is a wallet number; ACCOUNT the source account index; and ADDRESS
-and AMOUNT the destination Monero address and XMR amount, respectively.
+where SOURCE is a wallet number, ACCOUNT the source account index, ADDRESS
+the destination Monero address and AMOUNT the XMR amount to be sent.
 
 
                            ‘SWEEP’ OPERATION NOTES
 
 The sweep operation takes a SWEEP_SPEC arg with the following format:
 
-    SOURCE:ACCOUNT[,DEST]
+    {sweep_spec}
 
 where SOURCE and DEST are wallet numbers and ACCOUNT an account index.
 
-If DEST is omitted, a new address will be created in ACCOUNT of SOURCE and
-all funds from ACCOUNT of SOURCE will be swept into it.
+If DEST is omitted, a new address will be created in ACCOUNT of SOURCE, and
+funds from ACCOUNT of SOURCE will be swept into it.
 
 If DEST is included, all funds from ACCOUNT of SOURCE will be swept into a
 newly created account in DEST, or the last existing account, if requested
 by the user.
 
-The user is prompted before addresses are created or funds are transferred.
+The user is prompted before addresses are created or funds transferred.
 
 Note that multiple sweep operations may be required to sweep all the funds
 in an account.
@@ -386,7 +387,7 @@ Start the cloning process by making dump files of your hot wallets’ metadata
 (accounts, subaddresses and labels).  ‘cd’ to the wallet directory (or use
 --wallet-dir) and execute:
 
-$ mmgen-xmrwallet dump /path/to/key-address-file.akeys{.mmenc}
+$ mmgen-xmrwallet dump /path/to/key-address-file.akeys{{.mmenc}}
 
 If you’ve been transacting with the wallets, you know where their key-address
 file is along with its encryption password, if any.  Supply an additional
@@ -397,7 +398,7 @@ to ignore.
 Do a directory listing to verify that the dump files are present alongside
 their source wallet files ending with ‘MoneroWallet’.  Then execute:
 
-$ mmgen-xmrwallet --watch-only restore /path/to/key-address-file.akeys{.mmenc}
+$ mmgen-xmrwallet --watch-only restore /path/to/key-address-file.akeys{{.mmenc}}
 
 This will create watch-only wallets that “mirror” the old hot wallets and
 populate them with the metadata saved in the dump files.
@@ -445,4 +446,9 @@ Tutorial above.
 Once you’ve gained proficiency with the autosigning process and feel ready
 to delete your old hot wallets, make sure to do so securely using ‘shred’,
 ‘wipe’ or some other secure deletion utility.
-""".strip()
+""".strip().format(
+	newaddr_spec  = uai['newaddr_spec'].annot,
+	label_spec    = uai['label_spec'].annot,
+	transfer_spec = uai['transfer_spec'].annot,
+	sweep_spec    = uai['sweep_spec'].annot,
+)
