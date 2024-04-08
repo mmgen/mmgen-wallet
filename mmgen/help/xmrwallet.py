@@ -108,14 +108,18 @@ The sweep operation takes a SWEEP_SPEC arg with the following format:
 
     {sweep_spec}
 
-where SOURCE and DEST are wallet numbers and ACCOUNT an account index.
+where SOURCE and DEST are wallet numbers and ACCOUNT account indices for the
+respective wallets.
 
 If DEST is omitted, a new address will be created in ACCOUNT of SOURCE, and
 funds from ACCOUNT of SOURCE will be swept into it.
 
-If DEST is included, all funds from ACCOUNT of SOURCE will be swept into a
-newly created account in DEST, or the last existing account, if requested
-by the user.
+If DEST is included without its related ACCOUNT, funds from ACCOUNT of SOURCE
+will be swept into a newly created account in DEST, or the last existing
+account of DEST, if requested by the user.
+
+If both account indices are included, funds from ACCOUNT of SOURCE will be
+swept into ACCOUNT of DEST.
 
 The user is prompted before addresses are created or funds transferred.
 

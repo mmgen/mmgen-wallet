@@ -70,7 +70,7 @@ xmrwallet_uarg_info = (
 		'tx_relay_daemon': e('HOST:PORT[:PROXY_IP:PROXY_PORT]',     rf'({hp})(?::({hp}))?'),
 		'newaddr_spec':    e('WALLET[:ACCOUNT][,"label text"]',     r'(\d+)(?::(\d+))?(?:,(.*))?'),
 		'transfer_spec':   e('SOURCE:ACCOUNT:ADDRESS,AMOUNT',       rf'(\d+):(\d+):([{b58a}]+),([0-9.]+)'),
-		'sweep_spec':      e('SOURCE:ACCOUNT[,DEST]',               r'(\d+):(\d+)(?:,(\d+))?'),
+		'sweep_spec':      e('SOURCE:ACCOUNT[,DEST[:ACCOUNT]]',     r'(\d+):(\d+)(?:,(\d+)(?::(\d+))?)?'),
 		'label_spec':      e('WALLET:ACCOUNT:ADDRESS,"label text"', r'(\d+):(\d+):(\d+),(.*)'),
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),
@@ -1517,7 +1517,9 @@ class MoneroWalletOps:
 				else:
 					return s # None or empty string
 
-			if self.name == 'transfer':
+			if self.name == 'sweep':
+				self.dest_acct = None if m[4] is None else int(m[4])
+			elif self.name == 'transfer':
 				self.dest_addr = CoinAddr(self.proto,m[3])
 				self.amount = self.proto.coin_amt(m[4])
 			elif self.name == 'new':
@@ -1577,7 +1579,7 @@ class MoneroWalletOps:
 				dest_addr_chk = create_new_addr_maybe(h, self.account)
 				dest_addr, dest_addr_idx = h.get_last_addr(self.account, display=not dest_addr_chk)
 				h.print_addrs(accts_data, self.account)
-			else:                 # sweep to wallet
+			elif self.dest_acct is None: # sweep to wallet
 				h.close_wallet('source')
 				h2 = self.rpc(self, self.dest)
 				h2.open_wallet('destination')
@@ -1597,6 +1599,31 @@ class MoneroWalletOps:
 
 				h2.close_wallet('destination')
 				h.open_wallet('source', refresh=False)
+			else: # sweep to specific account of wallet
+
+				def get_dest_addr_params(h, accts_data, dest_acct, label):
+					self.check_account_exists(accts_data, dest_acct)
+					h.print_addrs(accts_data, dest_acct)
+					dest_addr_chk = create_new_addr_maybe(h, dest_acct, label)
+					dest_addr, dest_addr_idx = h.get_last_addr(dest_acct, display=not dest_addr_chk)
+					h.print_addrs(accts_data, dest_acct)
+					return dest_addr, dest_addr_idx, dest_addr_chk
+
+				dest_acct = self.dest_acct
+
+				if self.dest == self.source:
+					dest_addr, dest_addr_idx, dest_addr_chk = get_dest_addr_params(
+						h, accts_data, dest_acct,
+						f'Sweep from account #{self.account} [{make_timestr()}]')
+				else:
+					h.close_wallet('source')
+					h2 = self.rpc(self, self.dest)
+					h2.open_wallet('destination')
+					dest_addr, dest_addr_idx, dest_addr_chk = get_dest_addr_params(
+						h2, h2.get_accts()[0], dest_acct,
+						f'Sweep from {self.source.idx}:{self.account} [{make_timestr()}]')
+					h2.close_wallet('destination')
+					h.open_wallet('source', refresh=False)
 
 			assert dest_addr_chk in (None, dest_addr), 'dest_addr_chk'
 
@@ -1607,8 +1634,10 @@ class MoneroWalletOps:
 		def add_desc(self):
 			if self.dest is None:
 				return ' to new address'
-			else:
+			elif self.dest_acct is None:
 				return f' to new account in wallet {self.dest.idx}'
+			else:
+				return f' to account #{self.dest_acct} of wallet {self.dest.idx}'
 
 		def check_account_exists(self, accts_data, idx):
 			max_acct = len(accts_data['subaddress_accounts']) - 1
