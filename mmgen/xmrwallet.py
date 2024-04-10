@@ -1404,37 +1404,19 @@ class MoneroWalletOps:
 
 			return wallet_height >= chain_height
 
+		def gen_body(self, d):
+			for wnum, (_, wallet_data) in enumerate(d.items()):
+				yield from self.rpc(self, self.addr_data[wnum]).gen_accts_info(
+					wallet_data['accts'],
+					wallet_data['addrs'],
+					indent = '')
+				yield ''
+
 		def post_main_success(self):
 			d = self.accts_data
 
 			def gen_info():
-				for wnum,k in enumerate(d):
-					if self.name in ('sync', 'view'):
-						yield from self.rpc(self, self.addr_data[wnum]).gen_accts_info(
-							d[k]['accts'],
-							d[k]['addrs'],
-							indent = '')
-						yield ''
-					elif self.name in ('list', 'listview'):
-						fs = '  {:2} {} {} {}'
-						yield green(f'Wallet {k}:')
-						for acct_num,acct in enumerate(d[k]['addrs']):
-							yield ''
-							yield '  Account #{a} [{b} {c}]'.format(
-								a = acct_num,
-								b = self.proto.coin_amt(
-									d[k]['accts']['subaddress_accounts'][acct_num]['unlocked_balance'],
-									from_unit='atomic').hl(),
-								c = self.proto.coin_amt.hlc('XMR')
-							)
-							yield fs.format('', 'Address'.ljust(95), 'Used ', 'Label')
-							for addr in acct['addresses']:
-								yield fs.format(
-									addr['address_index'],
-									CoinAddr(self.proto, addr['address']).hl(),
-									(yellow('True ') if addr['used'] else green('False')),
-									pink(addr['label']))
-						yield ''
+				yield from self.gen_body(d)
 
 				col1_w = max(map(len, d)) + 1
 				fs = '{:%s} {} {}' % col1_w
@@ -1455,6 +1437,36 @@ class MoneroWalletOps:
 
 	class list(sync):
 		stem = 'sync'
+		opts = ('full_output',)
+
+		def gen_body(self, d):
+			addr_width = 95 if self.cfg.full_output else 17
+			for wnum, (wallet, wallet_data) in enumerate(d.items()):
+					fs = '  {I:2} {A} {U} {L}'
+					yield green(f'Wallet {wallet}:')
+					for acct_num, acct in enumerate(wallet_data['addrs']):
+						yield ''
+						yield '  Account #{a} [{b} {c}]'.format(
+							a = acct_num,
+							b = self.proto.coin_amt(
+									wallet_data['accts']['subaddress_accounts'][acct_num]['unlocked_balance'],
+									from_unit='atomic').hl(),
+							c = self.proto.coin_amt.hlc('XMR')
+						)
+						yield fs.format(
+							I = '',
+							A = 'Address'.ljust(addr_width),
+							U = 'Used'.ljust(5),
+							L = 'Label')
+						for addr in acct['addresses']:
+							ca = CoinAddr(self.proto, addr['address'])
+							yield fs.format(
+								I = addr['address_index'],
+								A = ca.hl() if self.cfg.full_output else ca.fmt(
+										color=True, width=addr_width),
+								U = (red('True ') if addr['used'] else green('False')),
+								L = pink(addr['label']))
+					yield ''
 
 	class view(sync):
 		stem = 'open'
@@ -1481,7 +1493,7 @@ class MoneroWalletOps:
 
 			return True
 
-	class listview(view):
+	class listview(view, list):
 		pass
 
 	class spec(wallet): # virtual class
