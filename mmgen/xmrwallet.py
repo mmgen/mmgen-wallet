@@ -1399,6 +1399,9 @@ class MoneroWalletOps:
 			msg(f'  Wallet height: {wallet_height}')
 			msg(f'  Sync time: {t_elapsed//60:02}:{t_elapsed%60:02}')
 
+			if self.name == 'list':
+				self.accts_data[fn.name]['balances'] = self.c.call('get_balance', all_accounts=True)
+
 			if not last:
 				self.c.call('close_wallet')
 
@@ -1442,9 +1445,17 @@ class MoneroWalletOps:
 		def gen_body(self, d):
 			addr_width = 95 if self.cfg.full_output else 17
 			for wnum, (wallet, wallet_data) in enumerate(d.items()):
-					fs = '  {I:2} {A} {U} {L}'
+					for acct in wallet_data['addrs']:
+						acct['balances'] = []
+					for e in wallet_data['balances'].get('per_subaddress',[]):
+						wallet_data['addrs'][e['account_index']]['balances'].append(e)
+					fs = '  {I:2} {A} {U} {B} {L}'
 					yield green(f'Wallet {wallet}:')
 					for acct_num, acct in enumerate(wallet_data['addrs']):
+						for addr in acct['addresses']:
+							addr['balance'] = 0
+						for e in acct['balances']:
+							acct['addresses'][e['address_index']]['balance'] = e['balance']
 						yield ''
 						yield '  Account #{a} [{b} {c}]'.format(
 							a = acct_num,
@@ -1457,6 +1468,7 @@ class MoneroWalletOps:
 							I = '',
 							A = 'Address'.ljust(addr_width),
 							U = 'Used'.ljust(5),
+							B = '  Balance'.ljust(19),
 							L = 'Label')
 						for addr in acct['addresses']:
 							ca = CoinAddr(self.proto, addr['address'])
@@ -1465,6 +1477,8 @@ class MoneroWalletOps:
 								A = ca.hl() if self.cfg.full_output else ca.fmt(
 										color=True, width=addr_width),
 								U = (red('True ') if addr['used'] else green('False')),
+								B = self.proto.coin_amt(addr['balance'], from_unit='atomic').fmt(
+										color=True, iwidth=6),
 								L = pink(addr['label']))
 					yield ''
 
@@ -1487,6 +1501,9 @@ class MoneroWalletOps:
 			msg(f'  Wallet height: {wallet_height}')
 			a,b = self.rpc(self, d).get_accts(print=False)
 			self.accts_data[fn.name] = {'accts': a, 'addrs': b}
+
+			if self.name == 'listview':
+				self.accts_data[fn.name]['balances'] = self.c.call('get_balance', all_accounts=True)
 
 			if not last:
 				self.c.call('close_wallet')
