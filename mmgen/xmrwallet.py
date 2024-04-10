@@ -217,7 +217,7 @@ class MoneroMMGenTX:
 			'amount',
 			'fee',
 			'blob' }
-		oneline_fs = '{a:7} {b:8} {c:19} {d:13} {e:8} {f:6} {x:2} {g:6} {h:17} {j}'
+		oneline_fs = '{a:7} {b:8} {c:19} {d:13} {e:9} {f:6} {x:2} {g:6} {h:17} {j}'
 		chksum_nchars = 6
 		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
 			'op',
@@ -254,7 +254,7 @@ class MoneroMMGenTX:
 					b = d.seed_id.hl(),
 					c = make_timestr(d.submit_time if d.submit_time is not None else d.create_time),
 					d = orange(self.file_id),
-					e = purple(capfirst(d.op.ljust(8))),
+					e = purple(d.op.replace('_', ' ').title().ljust(9)),
 					f = red('{}:{}'.format(d.source.wallet,d.source.account).ljust(6)),
 					g = red('{}:{}'.format(d.dest.wallet,d.dest.account).ljust(6)) if d.dest else cyan('ext   '),
 					h = d.amount.fmt( color=True, iwidth=4, prec=12 ),
@@ -640,6 +640,7 @@ class MoneroWalletOps:
 		'new',
 		'transfer',
 		'sweep',
+		'sweep_all',
 		'relay',
 		'txview',
 		'txlist',
@@ -663,6 +664,7 @@ class MoneroWalletOps:
 		'new',
 		'transfer',
 		'sweep',
+		'sweep_all',
 		'dump',
 		'restore' )
 
@@ -1138,11 +1140,13 @@ class MoneroWalletOps:
 					unsigned_txset = res['unsigned_txset'] if self.cfg.watch_only else None,
 				)
 
-			def make_sweep_tx(self,account,dest_acct,dest_addr_idx,addr):
+			def make_sweep_tx(self, account, dest_acct, dest_addr_idx, addr, addrs_data):
 				res = self.c.call(
 					'sweep_all',
 					address = addr,
 					account_index = account,
+					subaddr_indices = list(range(len(addrs_data[account]['addresses'])))
+						if self.parent.name == 'sweep_all' else [],
 					priority = self.cfg.priority or None,
 					do_not_relay = True,
 					get_tx_hex = True,
@@ -1546,7 +1550,7 @@ class MoneroWalletOps:
 				else:
 					return s # None or empty string
 
-			if self.name == 'sweep':
+			if self.name in ('sweep', 'sweep_all'):
 				self.dest_acct = None if m[4] is None else int(m[4])
 			elif self.name == 'transfer':
 				self.dest_addr = CoinAddr(self.proto,m[3])
@@ -1592,7 +1596,7 @@ class MoneroWalletOps:
 				cfg    = self.cfg,
 				daemon = wd2 )
 
-		def create_tx(self, h, accts_data):
+		def create_tx(self, h, accts_data, addrs_data):
 
 			def create_new_addr_maybe(h, account, label=None):
 				if keypress_confirm(self.cfg, f'\nCreate new address for account #{account}?'):
@@ -1657,7 +1661,7 @@ class MoneroWalletOps:
 			assert dest_addr_chk in (None, dest_addr), 'dest_addr_chk'
 
 			msg(f'\n    Creating {self.name} transaction...')
-			return (h, h.make_sweep_tx(self.account, dest_acct, dest_addr_idx, dest_addr))
+			return (h, h.make_sweep_tx(self.account, dest_acct, dest_addr_idx, dest_addr, addrs_data))
 
 		@property
 		def add_desc(self):
@@ -1682,13 +1686,13 @@ class MoneroWalletOps:
 			h = self.rpc(self,self.source)
 
 			h.open_wallet('source')
-			accts_data = h.get_accts()[0]
+			accts_data, addrs_data = h.get_accts()
 
 			self.check_account_exists(accts_data, self.account)
 
 			h.print_addrs(accts_data,self.account)
 
-			h, new_tx = self.create_tx(h, accts_data)
+			h, new_tx = self.create_tx(h, accts_data, addrs_data)
 
 			msg('\n' + new_tx.get_info(indent='    '))
 
@@ -1715,6 +1719,9 @@ class MoneroWalletOps:
 			else:
 				die(1,'\nExiting at user request')
 
+	class sweep_all(sweep):
+		stem = 'sweep'
+
 	class transfer(sweep):
 		stem    = 'transferr'
 		spec_id = 'transfer_spec'
@@ -1724,7 +1731,7 @@ class MoneroWalletOps:
 		def add_desc(self):
 			return f': {self.amount} XMR to {self.dest_addr}'
 
-		def create_tx(self, h, accts_data):
+		def create_tx(self, h, accts_data, addrs_data):
 			msg(f'\n    Creating {self.name} transaction...')
 			return (h, h.make_transfer_tx(self.account, self.dest_addr, self.amount))
 

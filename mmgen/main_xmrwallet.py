@@ -45,7 +45,7 @@ opts_data = {
 			'[opts] label    [xmr_keyaddrfile] LABEL_SPEC',
 			'[opts] new      [xmr_keyaddrfile] NEW_ADDRESS_SPEC',
 			'[opts] transfer [xmr_keyaddrfile] TRANSFER_SPEC',
-			'[opts] sweep    [xmr_keyaddrfile] SWEEP_SPEC',
+			'[opts] sweep | sweep_all [xmr_keyaddrfile] SWEEP_SPEC',
 			'[opts] submit   [TX_file]',
 			'[opts] relay    <TX_file>',
 			'[opts] resubmit | abort (for use with --autosign only)',
@@ -139,7 +139,7 @@ elif op in ('create','sync','list','view','listview','dump','restore'): # kafile
 	if len(cmd_args) > 1:
 		cfg._opts.usage()
 	wallets = cmd_args.pop(0) if cmd_args else None
-elif op in ('new','transfer','sweep','label'):
+elif op in ('new', 'transfer', 'sweep', 'sweep_all', 'label'):
 	if len(cmd_args) != 1:
 		cfg._opts.usage()
 	spec = cmd_args[0]

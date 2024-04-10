@@ -528,7 +528,6 @@ class CmdTestXMRWallet(CmdTestBase):
 			arg2,
 			tx_relay_parm = None,
 			no_relay      = False,
-			return_amt    = False,
 			use_existing  = False,
 			add_opts      = [],
 			add_desc      = None,
@@ -558,7 +557,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		if op == 'sign':
 			return t
 
-		if op == 'sweep':
+		if op in ('sweep', 'sweep_all'):
 			desc = 'address' if re.match(r'.*:\d+$', arg2) else 'account'
 			t.expect(
 				rf'Create new {desc} .* \(y/N\): ',
@@ -566,9 +565,6 @@ class CmdTestXMRWallet(CmdTestBase):
 				regex=True )
 			if use_existing:
 				t.expect(rf'to last existing {desc} .* \(y/N\): ', 'y', regex=True)
-
-		if return_amt:
-			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amount: ')).replace('XMR','').strip())
 
 		dtype = 'unsigned' if data.autosign else 'signed'
 		t.expect(f'Save {dtype} transaction? (y/N): ','y')
@@ -580,7 +576,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 		t.read()
 
-		return t if do_ret else amt if return_amt else t.ok()
+		return t if do_ret else t.ok()
 
 	def sweep_to_wallet(self):
 		self.do_op('sweep', 'alice', '1:0,2')
@@ -657,29 +653,15 @@ class CmdTestXMRWallet(CmdTestBase):
 		return await self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')
 
 	async def sweep_create_and_send(self):
-		bal = XMRAmt('0')
+		get_file_with_ext(self.users['alice'].udir, 'sigtx', delete_all=True)
+
+		self.do_op('sweep_all', 'alice', '2:1,3', no_relay=True, use_existing=True)
+		ok()
+
+		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}')
+
 		min_bal = XMRAmt('0.9')
-
-		for i in range(4):
-			if i:
-				ok()
-			get_file_with_ext(self.users['alice'].udir,'sigtx',delete_all=True)
-			send_amt = self.do_op(
-				'sweep','alice','2:1,3', # '2:1,3'
-				no_relay     = True,
-				use_existing = True,
-				add_desc     = f'TX #{i+1}',
-				return_amt   = True )
-			ok()
-			self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}',add_desc=f'send amt: {send_amt} XMR')
-			await self.mine_chk('alice',2,1,lambda x: 'chk_bal_chg','balance has changed')
-			ok()
-			bal_info = await self.mine_chk('alice',3,0,lambda x,y=bal: x.ub > y, f'bal > {bal}',return_bal=True)
-			bal += bal_info.ub
-			if bal >= min_bal:
-				return 'ok'
-
-		return False
+		return await self.mine_chk('alice', 3, 0, lambda x: x.ub > min_bal, f'bal > {min_bal}')
 
 	# wallet methods
 

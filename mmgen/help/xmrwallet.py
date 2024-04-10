@@ -48,7 +48,8 @@ new       - create a new account in a wallet, or a new address in an account
 transfer  - transfer specified XMR amount from specified wallet:account to
             specified address
 sweep     - sweep funds in specified wallet:account to new address in same
-            account or new account in another wallet
+            account, or new or specified account in another wallet
+sweep_all - same as above, but sweep balances of all addresses in the account
 relay     - relay a transaction from a transaction file created using ‘sweep’
             or ‘transfer’ with the --no-relay option
 submit    - submit an autosigned transaction to a wallet and the network
@@ -102,9 +103,10 @@ where SOURCE is a wallet number, ACCOUNT the source account index, ADDRESS
 the destination Monero address and AMOUNT the XMR amount to be sent.
 
 
-                           ‘SWEEP’ OPERATION NOTES
+                    ‘SWEEP’ AND ‘SWEEP_ALL’ OPERATION NOTES
 
-The sweep operation takes a SWEEP_SPEC arg with the following format:
+The sweep and sweep_all operations take a SWEEP_SPEC arg with the following
+format:
 
     {sweep_spec}
 
@@ -123,8 +125,9 @@ swept into ACCOUNT of DEST.
 
 The user is prompted before addresses are created or funds transferred.
 
-Note that multiple sweep operations may be required to sweep all the funds
-in an account.
+With ‘sweep’, if the source account has more than one address with a balance,
+the balance of a single randomly chosen address will be swept.  To sweep the
+balances of all addresses in an account, use ‘sweep_all’.
 
 
                     ‘SUBMIT’ AND ‘RELAY’ OPERATION NOTES
