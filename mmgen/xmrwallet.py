@@ -1340,7 +1340,7 @@ class MoneroWalletOps:
 			if not self.wallet_offline:
 				self.dc = self.get_coin_daemon_rpc()
 
-			self.accts_data = {}
+			self.wallets_data = {}
 
 		async def process_wallet(self,d,fn,last):
 
@@ -1394,21 +1394,21 @@ class MoneroWalletOps:
 				hl_amt(a['total_unlocked_balance']),
 			))
 
-			self.accts_data[fn.name] = { 'accts': a, 'addrs': b }
+			self.wallets_data[fn.name] = {'accts': a, 'addrs': b}
 
 			msg(f'  Wallet height: {wallet_height}')
 			msg(f'  Sync time: {t_elapsed//60:02}:{t_elapsed%60:02}')
 
 			if self.name == 'list':
-				self.accts_data[fn.name]['balances'] = self.c.call('get_balance', all_accounts=True)
+				self.wallets_data[fn.name]['balances'] = self.c.call('get_balance', all_accounts=True)
 
 			if not last:
 				self.c.call('close_wallet')
 
 			return wallet_height >= chain_height
 
-		def gen_body(self, d):
-			for wnum, (_, wallet_data) in enumerate(d.items()):
+		def gen_body(self, data):
+			for wnum, (_, wallet_data) in enumerate(data.items()):
 				yield from self.rpc(self, self.addr_data[wnum]).gen_accts_info(
 					wallet_data['accts'],
 					wallet_data['addrs'],
@@ -1416,19 +1416,18 @@ class MoneroWalletOps:
 				yield ''
 
 		def post_main_success(self):
-			d = self.accts_data
 
-			def gen_info():
-				yield from self.gen_body(d)
+			def gen_info(data):
+				yield from self.gen_body(data)
 
-				col1_w = max(map(len, d)) + 1
+				col1_w = max(map(len, data)) + 1
 				fs = '{:%s} {} {}' % col1_w
 				tbals = [0, 0]
 				yield fs.format('Wallet', 'Balance           ', 'Unlocked Balance')
 
-				for k in d:
-					b  = d[k]['accts']['total_balance']
-					ub = d[k]['accts']['total_unlocked_balance']
+				for k in data:
+					b  = data[k]['accts']['total_balance']
+					ub = data[k]['accts']['total_unlocked_balance']
 					yield fs.format(k + ':', fmt_amt(b), fmt_amt(ub))
 					tbals[0] += b
 					tbals[1] += ub
@@ -1436,15 +1435,15 @@ class MoneroWalletOps:
 				yield fs.format('-'*col1_w, '-'*18, '-'*18)
 				yield fs.format('TOTAL:', fmt_amt(tbals[0]), fmt_amt(tbals[1]))
 
-			self.cfg._util.stdout_or_pager('\n'.join(gen_info()) + '\n')
+			self.cfg._util.stdout_or_pager('\n'.join(gen_info(self.wallets_data)) + '\n')
 
 	class list(sync):
 		stem = 'sync'
 		opts = ('full_output',)
 
-		def gen_body(self, d):
+		def gen_body(self, data):
 			addr_width = 95 if self.cfg.full_output else 17
-			for wnum, (wallet, wallet_data) in enumerate(d.items()):
+			for wnum, (wallet, wallet_data) in enumerate(data.items()):
 					for acct in wallet_data['addrs']:
 						acct['balances'] = []
 					for e in wallet_data['balances'].get('per_subaddress',[]):
@@ -1500,10 +1499,10 @@ class MoneroWalletOps:
 			wallet_height = self.c.call('get_height')['height']
 			msg(f'  Wallet height: {wallet_height}')
 			a,b = self.rpc(self, d).get_accts(print=False)
-			self.accts_data[fn.name] = {'accts': a, 'addrs': b}
+			self.wallets_data[fn.name] = {'accts': a, 'addrs': b}
 
 			if self.name == 'listview':
-				self.accts_data[fn.name]['balances'] = self.c.call('get_balance', all_accounts=True)
+				self.wallets_data[fn.name]['balances'] = self.c.call('get_balance', all_accounts=True)
 
 			if not last:
 				self.c.call('close_wallet')
