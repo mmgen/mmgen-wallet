@@ -994,6 +994,7 @@ class MoneroWalletOps:
 			def __init__(self,parent,d):
 				self.parent = parent
 				self.cfg = parent.cfg
+				self.proto = parent.proto
 				self.c = parent.c
 				self.d = d
 				self.fn = parent.get_wallet_fn(d)
@@ -1029,17 +1030,21 @@ class MoneroWalletOps:
 				gmsg_r('done')
 
 			def gen_accts_info(self, accts_data, addrs_data, indent='    '):
-				d = accts_data['subaddress_accounts']
+				fs = indent + '  {I:<3} {A} {N} {B} {L}'
 				yield indent + f'Accounts of wallet {self.fn.name}:'
-				fs = indent + '  {a:6}  {b:18}  {c:<6} {d:%s}  {e}' % max(len(e['label']) for e in d)
-				yield fs.format(a='Index ', b='Base Address', c='nAddrs', d='Label', e='Unlocked Balance')
-				for i,e in enumerate(d):
+				yield fs.format(
+					I = '',
+					A = 'Base Address'.ljust(17),
+					N = 'nAddrs',
+					B = '  Unlocked Balance',
+					L = 'Label')
+				for i,e in enumerate(accts_data['subaddress_accounts']):
 					yield fs.format(
-						a = str(e['account_index']),
-						b = e['base_address'][:15] + '...',
-						c = len(addrs_data[i]['addresses']),
-						d = e['label'],
-						e = fmt_amt(e['unlocked_balance']))
+						I = str(e['account_index']),
+						A = e['base_address'][:14] + '...',
+						N = str(len(addrs_data[i]['addresses'])).ljust(6),
+						B = fmt_amt(e['unlocked_balance']),
+						L = e['label'])
 
 			def get_wallet_data(self, print=True):
 				accts_data = self.c.call('get_accounts')
@@ -1122,7 +1127,7 @@ class MoneroWalletOps:
 				return self.new_tx_cls(
 					cfg            = self.cfg,
 					op             = self.parent.name,
-					network        = self.parent.proto.network,
+					network        = self.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
 					source         = XMRWalletAddrSpec(self.parent.source.idx,self.parent.account,None),
 					dest           = None,
@@ -1154,7 +1159,7 @@ class MoneroWalletOps:
 				return self.new_tx_cls(
 					cfg            = self.cfg,
 					op             = self.parent.name,
-					network        = self.parent.proto.network,
+					network        = self.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
 					source         = XMRWalletAddrSpec(self.parent.source.idx,self.parent.account,None),
 					dest           = XMRWalletAddrSpec(
@@ -1404,8 +1409,8 @@ class MoneroWalletOps:
 
 			return wallet_height >= chain_height
 
-		def gen_body(self, data):
-			for wnum, (_, wallet_data) in enumerate(data.items()):
+		def gen_body(self, wallets_data):
+			for wnum, (_, wallet_data) in enumerate(wallets_data.items()):
 				yield from self.rpc(self, self.addr_data[wnum]).gen_accts_info(
 					wallet_data.accts_data,
 					wallet_data.addrs_data,
@@ -1438,15 +1443,15 @@ class MoneroWalletOps:
 		stem = 'sync'
 		opts = ('full_output',)
 
-		def gen_body(self, data):
+		def gen_body(self, wallets_data):
 			addr_width = 95 if self.cfg.full_output else 17
-			for wnum, (wallet, wallet_data) in enumerate(data.items()):
+			for (wallet_fn, wallet_data) in wallets_data.items():
 					for acct in wallet_data.addrs_data:
 						acct['balances'] = []
 					for e in wallet_data.bals_data.get('per_subaddress',[]):
 						wallet_data.addrs_data[e['account_index']]['balances'].append(e)
 					fs = '  {I:2} {A} {U} {B} {L}'
-					yield green(f'Wallet {wallet}:')
+					yield green(f'Wallet {wallet_fn}:')
 					for acct_num, acct in enumerate(wallet_data.addrs_data):
 						for addr in acct['addresses']:
 							addr['balance'] = 0
@@ -1652,19 +1657,18 @@ class MoneroWalletOps:
 					h2.close_wallet('destination')
 					h.open_wallet('source', refresh=False)
 
-			assert dest_addr_chk in (None, dest_addr), 'dest_addr_chk'
+			assert dest_addr_chk in (None, dest_addr), (
+				f'dest_addr: ({dest_addr}) != dest_addr_chk: ({dest_addr_chk})')
 
 			msg(f'\n    Creating {self.name} transaction...')
 			return (h, h.make_sweep_tx(self.account, dest_acct, dest_addr_idx, dest_addr, wallet_data.addrs_data))
 
 		@property
 		def add_desc(self):
-			if self.dest is None:
-				return ' to new address'
-			elif self.dest_acct is None:
-				return f' to new account in wallet {self.dest.idx}'
-			else:
-				return f' to account #{self.dest_acct} of wallet {self.dest.idx}'
+			return (
+				r' to new address' if self.dest is None else
+				f' to new account in wallet {self.dest.idx}' if self.dest_acct is None else
+				f' to account #{self.dest_acct} of wallet {self.dest.idx}')
 
 		def check_account_exists(self, accts_data, idx):
 			max_acct = len(accts_data['subaddress_accounts']) - 1
@@ -1674,8 +1678,8 @@ class MoneroWalletOps:
 		async def main(self):
 
 			gmsg(
-				f'\n{self.stem.capitalize()}ing account #{self.account} of wallet {self.source.idx}'
-				+ self.add_desc)
+				f'\n{self.stem.capitalize()}ing account #{self.account}'
+				f' of wallet {self.source.idx}{self.add_desc}')
 
 			h = self.rpc(self,self.source)
 
