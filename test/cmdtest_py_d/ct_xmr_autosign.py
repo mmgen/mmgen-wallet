@@ -402,8 +402,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		t.match_expect_list([
 			'SUBMITTED',
 			'Network','Submitted',
-			'Transfer 1:0','-> ext',
-			'Transfer 1:0','-> ext'
+			'transfer 1:0','-> ext',
+			'transfer 1:0','-> ext'
 		])
 		self.remove_device_online()
 		return t

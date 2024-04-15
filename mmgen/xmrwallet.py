@@ -254,7 +254,7 @@ class MoneroMMGenTX:
 					b = d.seed_id.hl(),
 					c = make_timestr(d.submit_time if d.submit_time is not None else d.create_time),
 					d = orange(self.file_id),
-					e = purple(d.op.replace('_', ' ').title().ljust(9)),
+					e = purple(d.op.ljust(9)),
 					f = red('{}:{}'.format(d.source.wallet,d.source.account).ljust(6)),
 					g = red('{}:{}'.format(d.dest.wallet,d.dest.account).ljust(6)) if d.dest else cyan('ext   '),
 					h = d.amount.fmt( color=True, iwidth=4, prec=12 ),
@@ -272,8 +272,8 @@ class MoneroMMGenTX:
 				['  Signed:    {g:19} [{h}]', d.sign_time],
 				['  Submitted: {s:19} [{t}]', d.submit_time],
 				['  Type:      {i}{S}'],
-				['  From:      Wallet {j}, account {k}'],
-				['  To:        Wallet {x}, account {y}, address {z}', d.dest],
+				['  From:      wallet {j}, account {k}'],
+				['  To:        wallet {x}, account {y}, address {z}', d.dest],
 				['  Amount:    {m} XMR'],
 				['  Priority:  {F}', d.priority],
 				['  Fee:       {n} XMR'],
@@ -291,7 +291,7 @@ class MoneroMMGenTX:
 					f = format_elapsed_hr(d.create_time),
 					g = make_timestr(d.sign_time) if d.sign_time else None,
 					h = format_elapsed_hr(d.sign_time) if d.sign_time else None,
-					i = blue(capfirst(d.op)),
+					i = blue(d.op),
 					j = d.source.wallet.hl(),
 					k = red(f'#{d.source.account}'),
 					m = d.amount.hl(),
@@ -820,9 +820,9 @@ class MoneroWalletOps:
 					fn = self.get_wallet_fn(d)
 					exists = wallet_exists(fn)
 					if exists and not self.wallet_exists:
-						die(1,f"Wallet '{fn}' already exists!")
+						die(1, f'Wallet ‘{fn}’ already exists!')
 					elif not exists and self.wallet_exists:
-						die(1,f"Wallet '{fn}' not found!")
+						die(1, f'Wallet ‘{fn}’ not found!')
 
 			super().__init__(cfg,uarg_tuple)
 
@@ -1082,13 +1082,9 @@ class MoneroWalletOps:
 					))
 				return ret
 
-			def create_new_addr(self,account,label=None):
+			def create_new_addr(self, account, label):
 				msg_r('\n    Creating new address: ')
-				ret = self.c.call(
-					'create_address',
-					account_index = account,
-					label         = label or f'Sweep from this account [{make_timestr()}]',
-				)
+				ret = self.c.call('create_address', account_index=account, label=label or '')
 				msg(cyan(ret['address']))
 				return ret['address']
 
@@ -1598,7 +1594,7 @@ class MoneroWalletOps:
 
 		def create_tx(self, h, accts_data, addrs_data):
 
-			def create_new_addr_maybe(h, account, label=None):
+			def create_new_addr_maybe(h, account, label):
 				if keypress_confirm(self.cfg, f'\nCreate new address for account #{account}?'):
 					return h.create_new_addr(account, label)
 				elif not keypress_confirm(self.cfg, f'Sweep to last existing address of account #{account}?'):
@@ -1609,7 +1605,8 @@ class MoneroWalletOps:
 
 			if self.dest is None: # sweep to same account
 				dest_acct = self.account
-				dest_addr_chk = create_new_addr_maybe(h, self.account)
+				dest_addr_chk = create_new_addr_maybe(
+					h, self.account, f'{self.name} from this account [{make_timestr()}]')
 				dest_addr, dest_addr_idx = h.get_last_addr(self.account, display=not dest_addr_chk)
 				h.print_addrs(accts_data, self.account)
 			elif self.dest_acct is None: # sweep to wallet
@@ -1621,7 +1618,7 @@ class MoneroWalletOps:
 				wf = self.get_wallet_fn(self.dest)
 				if keypress_confirm(self.cfg, f'\nCreate new account for wallet {wf.name!r}?'):
 					dest_acct, dest_addr = h2.create_acct(
-						label = f'Sweep from {self.source.idx}:{self.account} [{make_timestr()}]')
+						label = f'{self.name} from {self.source.idx}:{self.account} [{make_timestr()}]')
 					dest_addr_idx = 0
 					h2.get_accts()
 				elif keypress_confirm(self.cfg, f'Sweep to last existing account of wallet {wf.name!r}?'):
@@ -1647,14 +1644,14 @@ class MoneroWalletOps:
 				if self.dest == self.source:
 					dest_addr, dest_addr_idx, dest_addr_chk = get_dest_addr_params(
 						h, accts_data, dest_acct,
-						f'Sweep from account #{self.account} [{make_timestr()}]')
+						f'{self.name} from account #{self.account} [{make_timestr()}]')
 				else:
 					h.close_wallet('source')
 					h2 = self.rpc(self, self.dest)
 					h2.open_wallet('destination')
 					dest_addr, dest_addr_idx, dest_addr_chk = get_dest_addr_params(
 						h2, h2.get_accts()[0], dest_acct,
-						f'Sweep from {self.source.idx}:{self.account} [{make_timestr()}]')
+						f'{self.name} from {self.source.idx}:{self.account} [{make_timestr()}]')
 					h2.close_wallet('destination')
 					h.open_wallet('source', refresh=False)
 
