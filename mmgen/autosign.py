@@ -551,7 +551,7 @@ class Autosign:
 			if self.cfg.test_suite_autosign_threaded:
 				await asyncio.sleep(1)
 			self.do_umount()
-			self.led.set(('standby','off','error')[(not ret)*2 or bool(self.cfg.stealth_led)])
+			self.led.set('error' if not all(ret) else 'off' if self.cfg.stealth_led else 'standby')
 			return all(ret)
 		else:
 			msg('Password is incorrect!')

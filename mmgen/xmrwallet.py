@@ -111,8 +111,9 @@ def gen_acct_addr_info(self, wallet_data, account, indent=''):
 		d['unlocked_balance'] = 0
 
 	if 'per_subaddress' in wallet_data.bals_data:
-		for d in [e for e in wallet_data.bals_data['per_subaddress'] if e['account_index'] == account]:
-			addrs_data[d['address_index']]['unlocked_balance'] = d['unlocked_balance']
+		for d in wallet_data.bals_data['per_subaddress']:
+			if d['account_index'] == account:
+				addrs_data[d['address_index']]['unlocked_balance'] = d['unlocked_balance']
 
 	yield fs.format(
 		I = '',
@@ -123,11 +124,12 @@ def gen_acct_addr_info(self, wallet_data, account, indent=''):
 
 	for addr in addrs_data:
 		ca = CoinAddr(self.proto, addr['address'])
+		bal = addr['unlocked_balance']
 		yield fs.format(
 			I = addr['address_index'],
 			A = ca.hl() if self.cfg.full_address else ca.fmt(color=True, width=addr_width),
 			U = (red('True ') if addr['used'] else green('False')),
-			B = fmt_amt(addr['unlocked_balance']),
+			B = fmt_amt(bal),
 			L = pink(addr['label']))
 
 class XMRWalletAddrSpec(HiliteStr,InitErrors,MMGenObject):
@@ -746,18 +748,22 @@ class MoneroWalletOps:
 
 			addr_width = 95 if self.cfg.full_address else 17
 
+			self.proto = init_proto(cfg, 'xmr', network=self.cfg.network, need_amt=True)
+
 			id_cur = None
 			for cls in classes:
 				if id(cls.check_uopts) != id_cur:
 					cls.check_uopts(self)
 					id_cur = id(cls.check_uopts)
 
-			self.proto = init_proto( cfg, 'xmr', network=self.cfg.network, need_amt=True )
+			id_cur = None
+			for cls in classes:
+				if id(cls.pre_init_action) != id_cur:
+					cls.pre_init_action(self)
+					id_cur = id(cls.pre_init_action)
 
 			if cfg.autosign:
 				self.asi = get_autosign_obj(cfg)
-
-			self.pre_init_action()
 
 		def check_uopts(self):
 
@@ -1469,10 +1475,11 @@ class MoneroWalletOps:
 					ad = wallet_data.accts_data['subaddress_accounts']
 					yield green(f'Wallet {wallet_fn}:')
 					for account in range(len(wallet_data.addrs_data)):
+						bal = ad[account]['unlocked_balance']
 						yield ''
 						yield '  Account #{a} [{b} {c}]'.format(
 							a = account,
-							b = self.proto.coin_amt(ad[account]['unlocked_balance'], from_unit='atomic').hl(),
+							b = self.proto.coin_amt(bal, from_unit='atomic').hl(),
 							c = self.proto.coin_amt.hlc('XMR'))
 						yield from gen_acct_addr_info(self, wallet_data, account, indent='  ')
 
@@ -1484,7 +1491,7 @@ class MoneroWalletOps:
 		wallet_offline = True
 
 		def pre_init_action(self):
-			ymsg('WARNING: Running in offline mode. Balances and other info may be out of date!')
+			ymsg('Running in offline mode. Balances may be out of date!')
 
 		async def process_wallet(self,d,fn,last):
 
@@ -1553,7 +1560,11 @@ class MoneroWalletOps:
 	class sweep(spec):
 		spec_id  = 'sweep_spec'
 		spec_key = ( (1,'source'), (3,'dest') )
-		opts     = ('no_relay','tx_relay_daemon','watch_only','priority')
+		opts = (
+			'no_relay',
+			'tx_relay_daemon',
+			'watch_only',
+			'priority')
 		sweep_type = 'single-address'
 
 		def check_uopts(self):
