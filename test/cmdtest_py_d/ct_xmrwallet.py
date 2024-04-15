@@ -474,13 +474,13 @@ class CmdTestXMRWallet(CmdTestBase):
 		return t
 
 	def sync_wallets_all(self):
-		return self.sync_wallets('alice',add_opts=['--rescan-blockchain'])
+		return self.sync_wallets('alice', add_opts=['--rescan-blockchain', '-Ee'])
 
 	def sync_wallets_selected(self):
 		return self.sync_wallets('alice', wallets='1-2,4', add_opts=['--full-address'])
 
 	def list_wallets_all(self):
-		return self.sync_wallets('alice', op='list', add_opts=['--full-address'])
+		return self.sync_wallets('alice', op='list', add_opts=['-Ee', '--full-address'])
 
 	def sync_wallets(self,user,op='sync',wallets=None,add_opts=[],bal_chk_func=None):
 		data = self.users[user]
@@ -588,11 +588,11 @@ class CmdTestXMRWallet(CmdTestBase):
 		return self.mine_chk('alice', 2, 0, lambda x: x.ub > 1, 'unlocked balance > 1')
 
 	def sweep_to_wallet_account(self):
-		self.do_op('sweep', 'alice', '2:0,3:0', use_existing=True, add_opts=['--full-address'])
+		self.do_op('sweep', 'alice', '2:0,3:0', use_existing=True, add_opts=['-Ee', '--full-address'])
 		return self.mine_chk('alice', 3, 0, lambda x: x.ub > 1, 'unlocked balance > 1')
 
 	def sweep_to_wallet_account_proxy(self):
-		self.do_op('sweep', 'alice', '3:0,2:1', self.tx_relay_daemon_proxy_parm, add_opts=['--priority=3'])
+		self.do_op('sweep', 'alice', '3:0,2:1', self.tx_relay_daemon_proxy_parm, add_opts=['--priority=3', '-Ee'])
 		return self.mine_chk('alice', 2, 1, lambda x: x.ub > 1, 'unlocked balance > 1')
 
 	def sweep_to_same_account_noproxy(self):
@@ -619,7 +619,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	def transfer_to_miner_create(self,amt):
 		get_file_with_ext(self.users['alice'].udir,'sigtx',delete_all=True)
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
-		return self.do_op('transfer','alice',f'2:1:{addr},{amt}',no_relay=True,do_ret=True)
+		return self.do_op('transfer', 'alice', f'2:1:{addr},{amt}', no_relay=True, do_ret=True, add_opts=['-Ee'])
 
 	def transfer_to_miner_create1(self):
 		return self.transfer_to_miner_create('0.0111')

@@ -125,6 +125,8 @@ def gen_acct_addr_info(self, wallet_data, account, indent=''):
 	for addr in addrs_data:
 		ca = CoinAddr(self.proto, addr['address'])
 		bal = addr['unlocked_balance']
+		if self.cfg.skip_empty_addresses and addr['used'] and not bal:
+			continue
 		yield fs.format(
 			I = addr['address_index'],
 			A = ca.hl() if self.cfg.full_address else ca.fmt(color=True, width=addr_width),
@@ -710,7 +712,9 @@ class MoneroWalletOps:
 		'no_stop_wallet_daemon',
 		'no_relay',
 		'watch_only',
-		'autosign' )
+		'autosign',
+		'skip_empty_accounts',
+		'skip_empty_addresses')
 
 	pat_opts = ('daemon','tx_relay_daemon')
 
@@ -929,6 +933,12 @@ class MoneroWalletOps:
 		def get_idx_from_fn(cls,fn):
 			return int( re.match(r'[0-9a-fA-F]{8}-(\d+)-Monero(WatchOnly)?Wallet.*',fn.name)[1] )
 
+		def pre_init_action(self):
+			if self.cfg.skip_empty_accounts:
+				msg(orange('Skipping display of empty accounts where applicable'))
+			if self.cfg.skip_empty_addresses:
+				msg(orange('Skipping display of empty used addresses where applicable'))
+
 		def get_coin_daemon_rpc(self):
 
 			host,port = self.cfg.daemon.split(':') if self.cfg.daemon else ('localhost',self.wd.monerod_port)
@@ -1066,7 +1076,7 @@ class MoneroWalletOps:
 				await self.c.stop_daemon(quiet=True) # closes wallet
 				gmsg_r('done')
 
-			def gen_accts_info(self, accts_data, addrs_data, indent='    '):
+			def gen_accts_info(self, accts_data, addrs_data, indent='    ', skip_empty_ok=False):
 				fs = indent + '  {I:<3} {A} {N} {B} {L}'
 				yield indent + f'Accounts of wallet {self.fn.name}:'
 				yield fs.format(
@@ -1076,6 +1086,8 @@ class MoneroWalletOps:
 					B = '  Unlocked Balance',
 					L = 'Label')
 				for i,e in enumerate(accts_data['subaddress_accounts']):
+					if skip_empty_ok and self.cfg.skip_empty_accounts and not e['unlocked_balance']:
+						continue
 					ca = CoinAddr(self.proto, e['base_address'])
 					yield fs.format(
 						I = str(e['account_index']),
@@ -1084,14 +1096,14 @@ class MoneroWalletOps:
 						B = fmt_amt(e['unlocked_balance']),
 						L = pink(e['label']))
 
-			def get_wallet_data(self, print=True):
+			def get_wallet_data(self, print=True, skip_empty_ok=False):
 				accts_data = self.c.call('get_accounts')
 				addrs_data = [
 					self.c.call('get_address',account_index=i)
 						for i in range(len(accts_data['subaddress_accounts']))
 				]
 				if print:
-					msg('\n' + '\n'.join(self.gen_accts_info(accts_data, addrs_data)))
+					msg('\n' + '\n'.join(self.gen_accts_info(accts_data, addrs_data, skip_empty_ok=skip_empty_ok)))
 				bals_data = self.c.call('get_balance', all_accounts=True)
 				return namedtuple('wallet_data', ['accts_data', 'addrs_data', 'bals_data'])(
 					accts_data, addrs_data, bals_data)
@@ -1360,7 +1372,7 @@ class MoneroWalletOps:
 			return True
 
 	class sync(wallet):
-		opts = ('rescan_blockchain',)
+		opts = ('rescan_blockchain', 'skip_empty_accounts', 'skip_empty_addresses')
 
 		def check_uopts(self):
 			if self.cfg.rescan_blockchain and self.cfg.watch_only:
@@ -1420,7 +1432,7 @@ class MoneroWalletOps:
 
 			t_elapsed = int(time.time() - t_start)
 
-			wd = self.rpc(self, d).get_wallet_data(print=False)
+			wd = self.rpc(self, d).get_wallet_data(print=False, skip_empty_ok=True)
 
 			msg('  Balance: {} Unlocked balance: {}'.format(
 				hl_amt(wd.accts_data['total_balance']),
@@ -1442,7 +1454,8 @@ class MoneroWalletOps:
 				yield from self.rpc(self, self.addr_data[wnum]).gen_accts_info(
 					wallet_data.accts_data,
 					wallet_data.addrs_data,
-					indent = '')
+					indent = '',
+					skip_empty_ok = True)
 				yield ''
 
 		def post_main_success(self):
@@ -1476,6 +1489,8 @@ class MoneroWalletOps:
 					yield green(f'Wallet {wallet_fn}:')
 					for account in range(len(wallet_data.addrs_data)):
 						bal = ad[account]['unlocked_balance']
+						if self.cfg.skip_empty_accounts and not bal:
+							continue
 						yield ''
 						yield '  Account #{a} [{b} {c}]'.format(
 							a = account,
@@ -1503,7 +1518,7 @@ class MoneroWalletOps:
 			wallet_height = self.c.call('get_height')['height']
 			msg(f'  Wallet height: {wallet_height}')
 
-			self.wallets_data[fn.name] = self.rpc(self, d).get_wallet_data(print=False)
+			self.wallets_data[fn.name] = self.rpc(self, d).get_wallet_data(print=False, skip_empty_ok=True)
 
 			if not last:
 				self.c.call('close_wallet')
@@ -1564,7 +1579,9 @@ class MoneroWalletOps:
 			'no_relay',
 			'tx_relay_daemon',
 			'watch_only',
-			'priority')
+			'priority',
+			'skip_empty_accounts',
+			'skip_empty_addresses')
 		sweep_type = 'single-address'
 
 		def check_uopts(self):
@@ -1694,7 +1711,7 @@ class MoneroWalletOps:
 
 			h.open_wallet('source')
 
-			wallet_data = h.get_wallet_data()
+			wallet_data = h.get_wallet_data(skip_empty_ok=True)
 
 			self.check_account_exists(wallet_data.accts_data, self.account)
 

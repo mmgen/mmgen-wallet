@@ -73,6 +73,10 @@ opts_data = {
 -d, --outdir=D                   Save transaction files to directory 'D'
                                  instead of the working directory
 -D, --daemon=H:P                 Connect to the monerod at {D}
+-e, --skip-empty-accounts        Skip display of empty accounts in wallets
+                                 where applicable
+-E, --skip-empty-addresses       Skip display of used empty addresses in
+                                 wallets where applicable
 -k, --use-internal-keccak-module Force use of the internal keccak module
 -p, --hash-preset=P              Use scrypt hash preset 'P' for password
                                  hashing (default: '{gc.dfl_hash_preset}')
