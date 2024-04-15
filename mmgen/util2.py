@@ -132,18 +132,30 @@ def format_elapsed_days_hr(t,now=None,cached={}):
 		cached[e] = f'{days} day{suf(days)} ' + ('ago' if e > 0 else 'in the future')
 	return cached[e]
 
-def format_elapsed_hr(t,now=None,cached={}):
+def format_elapsed_hr(t, now=None, cached={}, rel_now=True, show_secs=False):
 	e = int((now or time.time()) - t)
-	if not e in cached:
+	key = f'{e}:{rel_now}:{show_secs}'
+	if not key in cached:
+		def add_suffix():
+			return (
+				((' ago'           if rel_now else '') if e > 0 else
+				(' in the future' if rel_now else ' (negative elapsed)'))
+					if (abs_e if show_secs else abs_e // 60) else
+				('just now' if rel_now else ('0 ' + ('seconds' if show_secs else 'minutes')))
+			)
 		abs_e = abs(e)
-		cached[e] = ' '.join(
-			f'{n} {desc}{suf(n)}' for desc,n in (
-				('day',    abs_e // 86400),
-				('hour',   abs_e // 3600 % 24),
-				('minute', abs_e // 60 % 60),
-			) if n
-		) + (' ago' if e > 0 else ' in the future') if abs_e // 60 else 'just now'
-	return cached[e]
+		data = (
+			('day',    abs_e // 86400),
+			('hour',   abs_e // 3600 % 24),
+			('minute', abs_e // 60 % 60),
+			('second', abs_e % 60),
+		) if show_secs else (
+			('day',    abs_e // 86400),
+			('hour',   abs_e // 3600 % 24),
+			('minute', abs_e // 60 % 60),
+		)
+		cached[key] = ' '.join(f'{n} {desc}{suf(n)}' for desc, n in data if n) + add_suffix()
+	return cached[key]
 
 def pretty_format(s,width=80,pfx=''):
 	out = []
