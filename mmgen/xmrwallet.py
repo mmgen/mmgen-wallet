@@ -1090,17 +1090,14 @@ class MoneroWalletOps:
 				msg(cyan(ret['address']))
 				return ret['address']
 
-			def get_last_addr(self,account,display=True):
+			def get_last_addr(self, account, wallet_data, display=True):
 				if display:
 					msg('\n    Getting last address:')
-				ret = self.c.call(
-					'get_address',
-					account_index = account,
-				)['addresses']
-				addr = ret[-1]['address']
+				acct_addrs = wallet_data.addrs_data[account]['addresses']
+				addr = acct_addrs[-1]['address']
 				if display:
 					msg('      ' + cyan(addr))
-				return ( addr, len(ret) - 1 )
+				return (addr, len(acct_addrs) - 1)
 
 			def set_label(self,account,address_idx,label):
 				return self.c.call(
@@ -1605,13 +1602,13 @@ class MoneroWalletOps:
 					h, self.account, f'{self.name} from this account [{make_timestr()}]')
 				if dest_addr_chk:
 					wallet_data = h.get_wallet_data(print=False)
-				dest_addr, dest_addr_idx = h.get_last_addr(self.account, display=not dest_addr_chk)
+				dest_addr, dest_addr_idx = h.get_last_addr(self.account, wallet_data, display=not dest_addr_chk)
 				h.print_acct_addrs(wallet_data, self.account)
 			elif self.dest_acct is None: # sweep to wallet
 				h.close_wallet('source')
 				h2 = self.rpc(self, self.dest)
 				h2.open_wallet('destination')
-				h2.get_wallet_data()
+				wallet_data2 = h2.get_wallet_data()
 
 				wf = self.get_wallet_fn(self.dest)
 				if keypress_confirm(self.cfg, f'\nCreate new account for wallet {wf.name!r}?'):
@@ -1620,8 +1617,8 @@ class MoneroWalletOps:
 					dest_addr_idx = 0
 					h2.get_wallet_data()
 				elif keypress_confirm(self.cfg, f'Sweep to last existing account of wallet {wf.name!r}?'):
-					dest_acct, dest_addr_chk = h2.get_last_acct(h2.get_wallet_data().accts_data)
-					dest_addr, dest_addr_idx = h2.get_last_addr(dest_acct, display=False)
+					dest_acct, dest_addr_chk = h2.get_last_acct(wallet_data2.accts_data)
+					dest_addr, dest_addr_idx = h2.get_last_addr(dest_acct, wallet_data2, display=False)
 				else:
 					die(1, 'Exiting at user request')
 
@@ -1635,7 +1632,7 @@ class MoneroWalletOps:
 					dest_addr_chk = create_new_addr_maybe(h, dest_acct, label)
 					if dest_addr_chk:
 						wallet_data = h.get_wallet_data(print=False)
-					dest_addr, dest_addr_idx = h.get_last_addr(dest_acct, display=not dest_addr_chk)
+					dest_addr, dest_addr_idx = h.get_last_addr(dest_acct, wallet_data, display=not dest_addr_chk)
 					h.print_acct_addrs(wallet_data, dest_acct)
 					return dest_addr, dest_addr_idx, dest_addr_chk
 
