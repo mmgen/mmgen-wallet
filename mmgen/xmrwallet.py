@@ -103,6 +103,34 @@ tx_priorities = {
 	4: 'highest'
 }
 
+def gen_acct_addr_info(self, wallet_data, account, indent=''):
+	fs = indent + '{I:<3} {A} {U} {B} {L}'
+	addr_width = 95 if self.cfg.full_output else 17
+	addrs_data = wallet_data.addrs_data[account]['addresses']
+
+	for d in addrs_data:
+		d['unlocked_balance'] = 0
+
+	if 'per_subaddress' in wallet_data.bals_data:
+		for d in [e for e in wallet_data.bals_data['per_subaddress'] if e['account_index'] == account]:
+			addrs_data[d['address_index']]['unlocked_balance'] = d['unlocked_balance']
+
+	yield fs.format(
+		I = '',
+		A = 'Address'.ljust(addr_width),
+		U = 'Used'.ljust(5),
+		B = '  Unlocked Balance',
+		L = 'Label')
+
+	for addr in addrs_data:
+		ca = CoinAddr(self.proto, addr['address'])
+		yield fs.format(
+			I = addr['address_index'],
+			A = ca.hl() if self.cfg.full_output else ca.fmt(color=True, width=addr_width),
+			U = (red('True ') if addr['used'] else green('False')),
+			B = fmt_amt(addr['unlocked_balance']),
+			L = pink(addr['label']))
+
 class XMRWalletAddrSpec(HiliteStr,InitErrors,MMGenObject):
 	color = 'cyan'
 	width = 0
@@ -278,6 +306,7 @@ class MoneroMMGenTX:
 				['  Priority:  {F}', d.priority],
 				['  Fee:       {n} XMR'],
 				['  Dest:      {o}'],
+				['  Size:      {Z} bytes', d.signed_txset],
 				['  Payment ID: {P}', pmt_id],
 			))
 
@@ -305,6 +334,7 @@ class MoneroMMGenTX:
 					x = d.dest.wallet.hl() if d.dest else None,
 					y = red(f'#{d.dest.account}') if d.dest else None,
 					z = red(f'#{d.dest.account_address}') if d.dest else None,
+					Z = Int(len(d.signed_txset) // 2).hl() if d.signed_txset else None,
 				)
 
 		@property
@@ -1030,21 +1060,23 @@ class MoneroWalletOps:
 				gmsg_r('done')
 
 			def gen_accts_info(self, accts_data, addrs_data, indent='    '):
+				addr_width = 95 if self.cfg.full_output else 17
 				fs = indent + '  {I:<3} {A} {N} {B} {L}'
 				yield indent + f'Accounts of wallet {self.fn.name}:'
 				yield fs.format(
 					I = '',
-					A = 'Base Address'.ljust(17),
+					A = 'Base Address'.ljust(addr_width),
 					N = 'nAddrs',
 					B = '  Unlocked Balance',
 					L = 'Label')
 				for i,e in enumerate(accts_data['subaddress_accounts']):
+					ca = CoinAddr(self.proto, e['base_address'])
 					yield fs.format(
 						I = str(e['account_index']),
-						A = e['base_address'][:14] + '...',
-						N = str(len(addrs_data[i]['addresses'])).ljust(6),
+						A = ca.hl() if self.cfg.full_output else ca.fmt(color=True, width=addr_width),
+						N = red(str(len(addrs_data[i]['addresses'])).ljust(6)),
 						B = fmt_amt(e['unlocked_balance']),
-						L = e['label'])
+						L = pink(e['label']))
 
 			def get_wallet_data(self, print=True):
 				accts_data = self.c.call('get_accounts')
@@ -1073,21 +1105,11 @@ class MoneroWalletOps:
 				return (ret['account_index'], ret['base_address'])
 
 			def print_acct_addrs(self, wallet_data, account):
-				ret = wallet_data.addrs_data[account]
-				data = ret['addresses']
 				msg('\n      Addresses of account #{} ({}):'.format(
 					account,
 					wallet_data.accts_data['subaddress_accounts'][account]['label']))
-				fs = '        {:6}  {:18}  {:%s}  {}' % max((len(e['label']) for e in data), default=0)
-				msg(fs.format('Index ','Address','Label','Used'))
-				for e in data:
-					msg(fs.format(
-						str(e['address_index']),
-						e['address'][:15] + '...',
-						e['label'],
-						e['used']
-					))
-				return data
+				msg('\n'.join(gen_acct_addr_info(self, wallet_data, account, indent='        ')))
+				return wallet_data.addrs_data[account]['addresses']
 
 			def create_new_addr(self, account, label):
 				msg_r('\n    Creating new address: ')
@@ -1444,43 +1466,17 @@ class MoneroWalletOps:
 		opts = ('full_output',)
 
 		def gen_body(self, wallets_data):
-			addr_width = 95 if self.cfg.full_output else 17
 			for (wallet_fn, wallet_data) in wallets_data.items():
-					for acct in wallet_data.addrs_data:
-						acct['balances'] = []
-					for e in wallet_data.bals_data.get('per_subaddress',[]):
-						wallet_data.addrs_data[e['account_index']]['balances'].append(e)
-					fs = '  {I:2} {A} {U} {B} {L}'
+					ad = wallet_data.accts_data['subaddress_accounts']
 					yield green(f'Wallet {wallet_fn}:')
-					for acct_num, acct in enumerate(wallet_data.addrs_data):
-						for addr in acct['addresses']:
-							addr['balance'] = 0
-						for e in acct['balances']:
-							acct['addresses'][e['address_index']]['balance'] = e['balance']
+					for account in range(len(wallet_data.addrs_data)):
 						yield ''
 						yield '  Account #{a} [{b} {c}]'.format(
-							a = acct_num,
-							b = self.proto.coin_amt(
-									wallet_data.accts_data['subaddress_accounts'][acct_num]['unlocked_balance'],
-									from_unit='atomic').hl(),
-							c = self.proto.coin_amt.hlc('XMR')
-						)
-						yield fs.format(
-							I = '',
-							A = 'Address'.ljust(addr_width),
-							U = 'Used'.ljust(5),
-							B = '  Balance'.ljust(19),
-							L = 'Label')
-						for addr in acct['addresses']:
-							ca = CoinAddr(self.proto, addr['address'])
-							yield fs.format(
-								I = addr['address_index'],
-								A = ca.hl() if self.cfg.full_output else ca.fmt(
-										color=True, width=addr_width),
-								U = (red('True ') if addr['used'] else green('False')),
-								B = self.proto.coin_amt(addr['balance'], from_unit='atomic').fmt(
-										color=True, iwidth=6),
-								L = pink(addr['label']))
+							a = account,
+							b = self.proto.coin_amt(ad[account]['unlocked_balance'], from_unit='atomic').hl(),
+							c = self.proto.coin_amt.hlc('XMR'))
+						yield from gen_acct_addr_info(self, wallet_data, account, indent='  ')
+
 					yield ''
 
 	class view(sync):
@@ -1559,6 +1555,7 @@ class MoneroWalletOps:
 		spec_id  = 'sweep_spec'
 		spec_key = ( (1,'source'), (3,'dest') )
 		opts     = ('no_relay','tx_relay_daemon','watch_only','priority')
+		sweep_type = 'single-address'
 
 		def check_uopts(self):
 			if self.cfg.tx_relay_daemon and (self.cfg.no_relay or self.cfg.autosign):
@@ -1608,7 +1605,8 @@ class MoneroWalletOps:
 				if dest_addr_chk:
 					wallet_data = h.get_wallet_data(print=False)
 				dest_addr, dest_addr_idx = h.get_last_addr(self.account, wallet_data, display=not dest_addr_chk)
-				h.print_acct_addrs(wallet_data, self.account)
+				if dest_addr_chk:
+					h.print_acct_addrs(wallet_data, self.account)
 			elif self.dest_acct is None: # sweep to wallet
 				h.close_wallet('source')
 				h2 = self.rpc(self, self.dest)
@@ -1638,7 +1636,8 @@ class MoneroWalletOps:
 					if dest_addr_chk:
 						wallet_data = h.get_wallet_data(print=False)
 					dest_addr, dest_addr_idx = h.get_last_addr(dest_acct, wallet_data, display=not dest_addr_chk)
-					h.print_acct_addrs(wallet_data, dest_acct)
+					if dest_addr_chk:
+						h.print_acct_addrs(wallet_data, dest_acct)
 					return dest_addr, dest_addr_idx, dest_addr_chk
 
 				dest_acct = self.dest_acct
@@ -1668,7 +1667,7 @@ class MoneroWalletOps:
 			return (
 				r' to new address' if self.dest is None else
 				f' to new account in wallet {self.dest.idx}' if self.dest_acct is None else
-				f' to account #{self.dest_acct} of wallet {self.dest.idx}')
+				f' to account #{self.dest_acct} of wallet {self.dest.idx}') + f' ({self.sweep_type} sweep)'
 
 		def check_account_exists(self, accts_data, idx):
 			max_acct = len(accts_data['subaddress_accounts']) - 1
@@ -1720,6 +1719,7 @@ class MoneroWalletOps:
 
 	class sweep_all(sweep):
 		stem = 'sweep'
+		sweep_type = 'all-address'
 
 	class transfer(sweep):
 		stem    = 'transferr'
@@ -1748,8 +1748,10 @@ class MoneroWalletOps:
 				None if self.label == '' else
 				'{} [{}]'.format(self.label or f'xmrwallet new {desc}', make_timestr()))
 
+			wallet_data = h.get_wallet_data()
+
 			if desc == 'address':
-				h.print_acct_addrs(h.get_wallet_data(), self.account)
+				h.print_acct_addrs(wallet_data, self.account)
 
 			if keypress_confirm(
 					self.cfg,
@@ -1765,8 +1767,10 @@ class MoneroWalletOps:
 				else:
 					h.create_acct(label=label)
 
+				wallet_data = h.get_wallet_data(print=desc=='account')
+
 				if desc == 'address':
-					h.print_acct_addrs(h.get_wallet_data(), self.account)
+					h.print_acct_addrs(wallet_data, self.account)
 			else:
 				ymsg('\nOperation cancelled by user request')
 
