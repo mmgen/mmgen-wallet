@@ -1958,12 +1958,14 @@ class MoneroWalletOps:
 			if keypress_confirm( self.cfg, f'{self.name.capitalize()} transaction?' ):
 				if self.cfg.tx_relay_daemon:
 					msg_r('Relaying transaction to remote daemon, please be patient...')
+					t_start = time.time()
 				res = self.c.call(
 					'submit_transfer',
 					tx_data_hex = tx.data.signed_txset )
 				assert res['tx_hash_list'][0] == tx.data.txid, 'TxID mismatch in ‘submit_transfer’ result!'
 				if self.cfg.tx_relay_daemon:
-					msg('success')
+					from .util2 import format_elapsed_hr
+					msg(f'success\nRelay time: {format_elapsed_hr(t_start, rel_now=False, show_secs=True)}')
 			else:
 				die(1,'Exiting at user request')
 
@@ -2148,14 +2150,23 @@ class MoneroWalletOps:
 				self.display_tx_relay_info(indent='    ')
 
 			if keypress_confirm( self.cfg, 'Relay transaction?' ):
+				if self.cfg.tx_relay_daemon:
+					msg_r('Relaying transaction to remote daemon, please be patient...')
+					t_start = time.time()
 				res = self.dc.call_raw(
 					'send_raw_transaction',
 					tx_as_hex = self.tx.data.blob
 				)
 				if res['status'] == 'OK':
-					msg('Status: ' + green('OK'))
 					if res['not_relayed']:
+						msg('not relayed')
 						ymsg('Transaction not relayed')
+					else:
+						msg('success')
+					if self.cfg.tx_relay_daemon:
+						from .util2 import format_elapsed_hr
+						msg(f'Relay time: {format_elapsed_hr(t_start, rel_now=False, show_secs=True)}')
+					gmsg('OK')
 					return True
 				else:
 					die( 'RPCFailure', repr(res) )
