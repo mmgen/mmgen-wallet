@@ -454,17 +454,18 @@ class CmdTestXMRWallet(CmdTestBase):
 		return self.set_label_user('miner', '1:0:0,"Miner’s new primary account label [1:0:0]"', 'updated')
 
 	def remove_label_alice(self):
-		return self.set_label_user('alice', '4:2:2,""', 'removed')
+		return self.set_label_user('alice', '4:2:2,""', 'removed', add_opts=['--full-address'])
 
 	def set_label_alice(self):
 		return self.set_label_user('alice', '4:2:2,"Alice’s new subaddress label [4:2:2]"', 'set')
 
-	def set_label_user(self,user,label_spec,expect):
+	def set_label_user(self, user, label_spec, expect, add_opts=[]):
 		data = self.users[user]
 		cmd_opts = [f'--wallet-dir={data.udir}', f'--daemon=localhost:{data.md.rpc_port}']
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
+			+ add_opts
 			+ cmd_opts
 			+ ['label', data.kafile, label_spec]
 		)
@@ -476,10 +477,10 @@ class CmdTestXMRWallet(CmdTestBase):
 		return self.sync_wallets('alice',add_opts=['--rescan-blockchain'])
 
 	def sync_wallets_selected(self):
-		return self.sync_wallets('alice',wallets='1-2,4')
+		return self.sync_wallets('alice', wallets='1-2,4', add_opts=['--full-address'])
 
 	def list_wallets_all(self):
-		return self.sync_wallets('alice',op='list')
+		return self.sync_wallets('alice', op='list', add_opts=['--full-address'])
 
 	def sync_wallets(self,user,op='sync',wallets=None,add_opts=[],bal_chk_func=None):
 		data = self.users[user]
@@ -587,7 +588,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		return self.mine_chk('alice', 2, 0, lambda x: x.ub > 1, 'unlocked balance > 1')
 
 	def sweep_to_wallet_account(self):
-		self.do_op('sweep', 'alice', '2:0,3:0', use_existing=True)
+		self.do_op('sweep', 'alice', '2:0,3:0', use_existing=True, add_opts=['--full-address'])
 		return self.mine_chk('alice', 3, 0, lambda x: x.ub > 1, 'unlocked balance > 1')
 
 	def sweep_to_wallet_account_proxy(self):
@@ -610,7 +611,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	async def transfer_to_miner_noproxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
-		self.do_op('transfer','alice',f'2:1:{addr},0.0995',self.tx_relay_daemon_parm)
+		self.do_op('transfer', 'alice', f'2:1:{addr},0.0995', self.tx_relay_daemon_parm, add_opts=['--full-address'])
 		await self.mine_chk('miner',2,0,lambda x: str(x.ub) == '0.2345','unlocked balance == 0.2345')
 		ok()
 		return await self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')

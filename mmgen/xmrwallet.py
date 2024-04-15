@@ -105,7 +105,6 @@ tx_priorities = {
 
 def gen_acct_addr_info(self, wallet_data, account, indent=''):
 	fs = indent + '{I:<3} {A} {U} {B} {L}'
-	addr_width = 95 if self.cfg.full_output else 17
 	addrs_data = wallet_data.addrs_data[account]['addresses']
 
 	for d in addrs_data:
@@ -126,7 +125,7 @@ def gen_acct_addr_info(self, wallet_data, account, indent=''):
 		ca = CoinAddr(self.proto, addr['address'])
 		yield fs.format(
 			I = addr['address_index'],
-			A = ca.hl() if self.cfg.full_output else ca.fmt(color=True, width=addr_width),
+			A = ca.hl() if self.cfg.full_address else ca.fmt(color=True, width=addr_width),
 			U = (red('True ') if addr['used'] else green('False')),
 			B = fmt_amt(addr['unlocked_balance']),
 			L = pink(addr['label']))
@@ -735,7 +734,7 @@ class MoneroWalletOps:
 			if not hasattr(self,'stem'):
 				self.stem = self.name
 
-			global uarg, uarg_info, fmt_amt, hl_amt
+			global uarg, uarg_info, fmt_amt, hl_amt, addr_width
 
 			uarg = uarg_tuple
 			uarg_info = xmrwallet_uarg_info
@@ -744,6 +743,8 @@ class MoneroWalletOps:
 				return self.proto.coin_amt(amt,from_unit='atomic').fmt( iwidth=5, prec=12, color=True )
 			def hl_amt(amt):
 				return self.proto.coin_amt(amt,from_unit='atomic').hl()
+
+			addr_width = 95 if self.cfg.full_address else 17
 
 			id_cur = None
 			for cls in classes:
@@ -1060,7 +1061,6 @@ class MoneroWalletOps:
 				gmsg_r('done')
 
 			def gen_accts_info(self, accts_data, addrs_data, indent='    '):
-				addr_width = 95 if self.cfg.full_output else 17
 				fs = indent + '  {I:<3} {A} {N} {B} {L}'
 				yield indent + f'Accounts of wallet {self.fn.name}:'
 				yield fs.format(
@@ -1073,7 +1073,7 @@ class MoneroWalletOps:
 					ca = CoinAddr(self.proto, e['base_address'])
 					yield fs.format(
 						I = str(e['account_index']),
-						A = ca.hl() if self.cfg.full_output else ca.fmt(color=True, width=addr_width),
+						A = ca.hl() if self.cfg.full_address else ca.fmt(color=True, width=addr_width),
 						N = red(str(len(addrs_data[i]['addresses'])).ljust(6)),
 						B = fmt_amt(e['unlocked_balance']),
 						L = pink(e['label']))
@@ -1463,7 +1463,6 @@ class MoneroWalletOps:
 
 	class list(sync):
 		stem = 'sync'
-		opts = ('full_output',)
 
 		def gen_body(self, wallets_data):
 			for (wallet_fn, wallet_data) in wallets_data.items():
@@ -1813,9 +1812,10 @@ class MoneroWalletOps:
 			addr = ret[self.address_idx]
 			new_label = f'{self.label} [{make_timestr()}]' if self.label else ''
 
+			ca = CoinAddr(self.proto, addr['address'])
 			msg('\n  {a} {b}\n  {c} {d}\n  {e} {f}'.format(
 					a = 'Address:       ',
-					b = cyan(addr['address'][:15] + '...'),
+					b = ca.hl() if self.cfg.full_address else ca.fmt(color=True, width=addr_width),
 					c = 'Existing label:',
 					d = pink(addr['label']) if addr['label'] else gray('[none]'),
 					e = 'New label:     ',

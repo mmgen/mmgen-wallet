@@ -66,8 +66,7 @@ opts_data = {
                                  number means higher fee).  Valid parameters:
                                  {tp}.  If option
                                  is omitted, the default priority will be used
--F, --full-output                For ‘list’ and ‘listview’ operations, print
-                                 addresses in full instead of truncating them
+-F, --full-address               Print addresses in full instead of truncating
 -m, --autosign-mountpoint=P      Specify the autosign mountpoint (defaults to
                                  ‘/mnt/mmgen_autosign’, implies --autosign)
 -b, --rescan-blockchain          Rescan the blockchain if wallet fails to sync
