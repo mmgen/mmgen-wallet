@@ -249,6 +249,7 @@ class MoneroMMGenTX:
 			'fee',
 			'blob' }
 		oneline_fs = '{a:7} {b:8} {c:19} {d:13} {e:9} {f:6} {x:2} {g:6} {h:17} {j}'
+		oneline_fixed_cols_w = 96 # width of all columns except the last (coin address)
 		chksum_nchars = 6
 		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
 			'op',
@@ -278,7 +279,7 @@ class MoneroMMGenTX:
 		def src_wallet_idx(self):
 			return int(self.data.source.split(':')[0])
 
-		def get_info_oneline(self,indent='',cols=None):
+		def get_info_oneline(self, indent='', addr_w=None):
 			d = self.data
 			return self.oneline_fs.format(
 					a = yellow(d.network),
@@ -289,11 +290,11 @@ class MoneroMMGenTX:
 					f = red('{}:{}'.format(d.source.wallet,d.source.account).ljust(6)),
 					g = red('{}:{}'.format(d.dest.wallet,d.dest.account).ljust(6)) if d.dest else cyan('ext   '),
 					h = d.amount.fmt( color=True, iwidth=4, prec=12 ),
-					j = d.dest_address.fmt(width=cols-95,color=True) if cols else d.dest_address.hl(),
+					j = d.dest_address.fmt(width=addr_w, color=True) if addr_w else d.dest_address.hl(),
 					x = '->'
 				)
 
-		def get_info(self,indent='',cols=None):
+		def get_info(self, indent='', addr_w=None):
 			d = self.data
 			pmt_id = d.dest_address.parsed.payment_id
 			fs = '\n'.join(list_gen(
@@ -329,7 +330,8 @@ class MoneroMMGenTX:
 					m = d.amount.hl(),
 					F = (Int(d.priority).hl() + f' [{tx_priorities[d.priority]}]') if d.priority else None,
 					n = d.fee.hl(),
-					o = d.dest_address.hl(),
+					o = d.dest_address.hl() if self.cfg.full_address
+						else d.dest_address.fmt(width=addr_width, color=True),
 					P = pink(pmt_id.hex()) if pmt_id else None,
 					s = make_timestr(d.submit_time) if d.submit_time else None,
 					S = pink(f" [cold signed{', submitted' if d.complete else ''}]") if d.signed_txset else '',
@@ -2179,10 +2181,9 @@ class MoneroWalletOps:
 		hdr = ''
 		col_hdr = ''
 		footer = ''
-		cols = None
 		do_umount = False
 
-		async def main(self,cols=None):
+		async def main(self, cols=None):
 
 			self.mount_removable_device()
 
@@ -2201,10 +2202,12 @@ class MoneroWalletOps:
 			if self.cfg.autosign:
 				self.asi.do_umount()
 
+			addr_w = None if self.cfg.full_address or cols is None else cols - self.fixed_cols_w
+
 			self.cfg._util.stdout_or_pager(
 				(self.hdr if len(files) > 1 else '')
 				+ self.col_hdr
-				+ '\n'.join(getattr(tx,self.view_method)(cols=cols) for tx in txs)
+				+ '\n'.join(getattr(tx, self.view_method)(addr_w=addr_w) for tx in txs)
 				+ self.footer
 			)
 
@@ -2212,6 +2215,8 @@ class MoneroWalletOps:
 		view_method = 'get_info_oneline'
 		add_nl = True
 		footer = '\n'
+		fixed_cols_w = MoneroMMGenTX.Base.oneline_fixed_cols_w
+		min_addr_w = 10
 
 		@property
 		def hdr(self):
@@ -2238,7 +2243,7 @@ class MoneroWalletOps:
 			else:
 				from .term import get_terminal_size
 				cols = self.cfg.columns or get_terminal_size().width
-				if cols < 106:
-					die(1, 'A terminal at least 106 columns wide is required to display this output'
-						+ ' (or use --columns or --pager)' )
+				if cols < self.fixed_cols_w + self.min_addr_w:
+					die(1, f'A terminal at least {self.fixed_cols_w + self.min_addr_w} columns wide is required '
+							'to display this output (or use --columns or --pager)' )
 			await super().main(cols=cols)
