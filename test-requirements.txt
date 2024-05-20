@@ -1,3 +1,4 @@
 pycoin
 monero
-pylint
+pylint==3.1.1
+# pylint 3.2.0 fails with import errors for mmgen.term and mmgen.proto.secp256k1.secp256k1

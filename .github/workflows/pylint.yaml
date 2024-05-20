@@ -37,7 +37,7 @@ jobs:
     - name: Install Python dependencies
       run: |
         python3 -m pip install gmpy2 cryptography pynacl ecdsa aiohttp requests pexpect scrypt semantic-version
-        python3 -m pip install pycryptodomex pysocks pycoin ipaddress varint pylint
+        python3 -m pip install pycryptodomex pysocks pycoin ipaddress varint pylint==3.1.1
         python3 -m pip install --no-deps py_ecc==1.6.0 mypy_extensions==0.4.1 monero
         python3 setup.py build_ext --inplace
 
