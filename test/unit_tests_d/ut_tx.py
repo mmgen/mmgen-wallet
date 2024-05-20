@@ -66,6 +66,7 @@ class unit_tests:
 		await NewTX( cfg=cfg, proto=proto )
 
 		d.stop()
+		d.remove_datadir()
 		qmsg('  OK')
 		return True
 

@@ -19,7 +19,7 @@ from ...util import list_gen
 from ...daemon import CoinDaemon,_nw,_dd
 
 class bitcoin_core_daemon(CoinDaemon):
-	daemon_data = _dd('Bitcoin Core', 260000, '26.0.0')
+	daemon_data = _dd('Bitcoin Core', 270000, '27.0.0')
 	exec_fn = 'bitcoind'
 	cli_fn = 'bitcoin-cli'
 	testnet_dir = 'testnet3'
