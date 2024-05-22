@@ -245,6 +245,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 				['--alice', '--autosign'],
 				exit_val = 1 if bad_tx_desc else None)
 		if bad_tx_desc:
+			time.sleep(0.5)
 			t.expect('Only sent transactions')
 			t.expect(bad_tx_desc)
 		else:

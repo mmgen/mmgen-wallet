@@ -2019,7 +2019,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			'bob',
 			'L',
 			'More than one change address requested',
-			add_args = ['B'])
+			add_args = ['B' if self.proto.cap('segwit') else 'C'])
 
 	def carol_twimport2(self):
 		u,b = (4,3) if self.proto.cap('segwit') else (3,2)

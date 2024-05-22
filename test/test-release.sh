@@ -195,7 +195,7 @@ do_reexec() {
 		eval "python3 -m build --no-isolation --sdist --config-setting=quiet $STDOUT_DEVNULL"
 		echo -e "done\n${BLUE}Unpacking sdist archive to $YELLOW$target_dir$RESET"
 		tar -C $target_dir -axf dist/*.tar.gz
-		cd $(echo $target_dir/$repo-*)
+		cd $target_dir/${repo//-/[-_]}-*
 		echo -e "${BLUE}cd -> $YELLOW$PWD$RESET"
 		if [ "$clone_dir" ]; then rm -rf $clone_dir; fi
 	fi

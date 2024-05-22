@@ -984,6 +984,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		return self.token_compile(token_data)
 
 	async def get_tx_receipt(self,txid):
+		if self.daemon.id == 'geth': # yet another Geth bug
+			await asyncio.sleep(0.5)
 		from mmgen.tx import NewTX
 		tx = await NewTX(cfg=cfg,proto=self.proto)
 		tx.rpc = await self.rpc
@@ -1079,8 +1081,6 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 					dfl_devkey,
 					start_gas = self.proto.coin_amt(60000,'wei'),
 					gasPrice  = self.proto.coin_amt(8,'Gwei') )
-				if self.daemon.id == 'geth': # yet another Geth bug
-					await asyncio.sleep(0.5)
 				if (await self.get_tx_receipt(txid)).status == 0:
 					die(2,'Transfer of token funds failed. Aborting')
 
