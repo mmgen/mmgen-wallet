@@ -14,7 +14,8 @@ proto.btc.tx.new: Bitcoin new transaction class
 
 from ....tx import new as TxBase
 from ....obj import MMGenTxID
-from ....util import msg,fmt,make_chksum_6,die
+from ....util import msg, fmt, make_chksum_6, die, suf
+from ....color import pink
 from .base import Base
 
 class New(Base,TxBase.New):
@@ -28,6 +29,13 @@ class New(Base,TxBase.New):
 		ret = kb_fee * self.estimate_size() / 1024
 		self.cfg._util.vmsg(f'Relay fee: {kb_fee} {self.coin}/kB, for transaction: {ret} {self.coin}')
 		return ret
+
+	@property
+	def network_estimated_fee_label(self):
+		return 'Network-estimated ({}, {} conf{})'.format(
+			self.cfg.fee_estimate_mode.upper(),
+			pink(str(self.cfg.fee_estimate_confs)),
+			suf(self.cfg.fee_estimate_confs))
 
 	async def get_rel_fee_from_network(self):
 		try:

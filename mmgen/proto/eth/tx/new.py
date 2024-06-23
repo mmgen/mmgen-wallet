@@ -109,6 +109,10 @@ class New(Base,TxBase.New):
 				else:
 					return [int(reply)]
 
+	@property
+	def network_estimated_fee_label(self):
+		return 'Network-estimated'
+
 	# get rel_fee (gas price) from network, return in native wei
 	async def get_rel_fee_from_network(self):
 		return Int(await self.rpc.call('eth_gasPrice'),16),'eth_gasPrice' # ==> rel_fee,fe_type

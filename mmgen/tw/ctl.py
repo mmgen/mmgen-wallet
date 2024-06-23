@@ -73,14 +73,14 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			self.importing = True
 			mode = 'w'
 
-		if not no_rpc:
-			self.rpc = await rpc_init(cfg, proto, ignore_wallet=rpc_ignore_wallet)
-
 		self.cfg = cfg
 		self.proto = proto
 		self.mode = mode
 		self.desc = self.base_desc = f'{self.proto.name} tracking wallet'
 		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation
+
+		if not no_rpc:
+			self.rpc = await rpc_init(cfg, proto, ignore_wallet=rpc_ignore_wallet)
 
 		if self.use_tw_file:
 			if self.proto.coin == 'BTC':

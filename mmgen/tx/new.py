@@ -159,10 +159,7 @@ class New(Base):
 			desc = 'User-selected'
 			start_fee = self.cfg.fee
 		else:
-			desc = 'Network-estimated ({}, {} conf{})'.format(
-				self.cfg.fee_estimate_mode.upper(),
-				pink(str(self.cfg.fee_estimate_confs)),
-				suf(self.cfg.fee_estimate_confs) )
+			desc = self.network_estimated_fee_label
 			fee_per_kb,fe_type = await self.get_rel_fee_from_network()
 
 			if fee_per_kb < 0:
