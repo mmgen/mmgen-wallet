@@ -373,7 +373,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 	def export_outputs1(self):
 		return self._export_outputs('1', op='export-outputs')
 
-	def export_outputs2(self):
+	def export_outputs2(self): # NB: --rescan-spent does not work with testnet/stagenet
 		return self._export_outputs('1', op='export-outputs-sign', add_opts=['--rescan-blockchain'])
 
 	def export_outputs3(self):

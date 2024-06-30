@@ -368,15 +368,21 @@ the outputs into the corresponding signing wallet(s) (and optionally redo any
 failed transaction signing operation).
 
 Following a ‘resubmit’, use the ‘export-outputs-sign’ operation instead, and
-add the --rescan-blockchain option:
+add the --rescan-spent option:
 
-$ mmgen-xmrwallet --autosign --rescan-blockchain export-outputs-sign <wallet index>
+$ mmgen-xmrwallet --autosign --rescan-spent export-outputs-sign <wallet index>
 
 Here the offline signing wallet(s) will also create signed key images. Insert
 the removable device on your online machine and import the signed key images
 into your online wallet as follows:
 
 $ mmgen-xmrwallet --autosign import-key-images
+
+Usually, this is all that is required.  However, if your wallet continues to
+show an incorrect balance after the import operation, you’ll need to re-run
+‘export-outputs-sign’ with the --rescan-blockchain option, followed by another
+offline signing and online key image import.  Note that blockchain rescans can
+take a long time, so patience is required here.
 
 
            Replacing Existing Hot Wallets with Watch-Only Wallets

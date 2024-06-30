@@ -2023,7 +2023,6 @@ class MoneroWalletOps:
 	class export_outputs(wallet):
 		action = 'exporting outputs from'
 		stem = 'process'
-		opts = ('rescan_blockchain',)
 		sign = False
 
 		async def process_wallet(self,d,fn,last):
@@ -2033,6 +2032,11 @@ class MoneroWalletOps:
 			if self.cfg.rescan_blockchain:
 				gmsg_r('\n  Rescanning blockchain...')
 				self.c.call('rescan_blockchain')
+				gmsg('done')
+
+			if self.cfg.rescan_spent:
+				gmsg_r('\n  Rescanning spent outputs...')
+				self.c.call('rescan_spent')
 				gmsg('done')
 
 			self.head_msg(d.idx,h.fn)
@@ -2053,6 +2057,7 @@ class MoneroWalletOps:
 			return True
 
 	class export_outputs_sign(export_outputs):
+		opts = ('rescan_spent','rescan_blockchain')
 		sign = True
 
 	class import_outputs(wallet):

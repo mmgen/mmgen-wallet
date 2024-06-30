@@ -80,6 +80,8 @@ opts_data = {
 -k, --use-internal-keccak-module Force use of the internal keccak module
 -p, --hash-preset=P              Use scrypt hash preset 'P' for password
                                  hashing (default: '{gc.dfl_hash_preset}')
+-P, --rescan-spent               Perform a rescan of spent outputs.  Used only
+                                 with the ‘export-outputs-sign’ operation
 -R, --tx-relay-daemon=H:P[:H:P]  Relay transactions via a monerod specified by
                                  {R}
 -r, --restore-height=H           Scan from height 'H' when creating wallets.
