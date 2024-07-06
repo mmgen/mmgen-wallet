@@ -19,7 +19,7 @@ from ...util import list_gen
 from ...daemon import CoinDaemon,_nw,_dd
 
 class bitcoin_core_daemon(CoinDaemon):
-	daemon_data = _dd('Bitcoin Core', 270000, '27.0.0')
+	daemon_data = _dd('Bitcoin Core', 270100, '27.1.0')
 	exec_fn = 'bitcoind'
 	cli_fn = 'bitcoin-cli'
 	testnet_dir = 'testnet3'
@@ -152,7 +152,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 class litecoin_core_daemon(bitcoin_core_daemon):
 	# v0.21.2rc5 crashes when mining more than 431 blocks in regtest mode:
 	#   CreateNewBlock: TestBlockValidity failed: bad-txns-vin-empty, Transaction check failed
-	daemon_data = _dd('Litecoin Core', 210202, '0.21.2.2')
+	daemon_data = _dd('Litecoin Core', 210300, '0.21.3')
 	exec_fn = 'litecoind'
 	cli_fn = 'litecoin-cli'
 	testnet_dir = 'testnet4'
