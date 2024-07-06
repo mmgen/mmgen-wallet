@@ -201,9 +201,9 @@ class GenToolPycoin(GenTool):
 		super().__init__(*args,**kwargs)
 		try:
 			from pycoin.networks.registry import network_for_netcode
-		except Exception as e:
+		except ImportError as e:
 			raise ImportError(
-				'Unable to import pycoin.networks.registry. Is pycoin installed on your system?') from e
+				f'{e}\nUnable to import pycoin.networks.registry. Is pycoin installed on your system?') from e
 		self.nfnc = network_for_netcode
 
 	def run(self,sec,vcoin):
@@ -233,9 +233,9 @@ class GenToolMonero_python(GenTool):
 		super().__init__(*args,**kwargs)
 		try:
 			from monero.seed import Seed
-		except Exception as e:
+		except ImportError as e:
 			raise ImportError(
-				'Unable to import monero-python. Is monero-python installed on your system?') from e
+				f'{e}\nUnable to import monero-python. Is monero-python installed on your system?') from e
 		self.Seed = Seed
 
 	def run(self,sec,vcoin):

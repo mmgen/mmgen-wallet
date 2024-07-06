@@ -180,7 +180,7 @@ if cfg.testing_status:
 			'addrfile_chksum','keyaddrfile_chksum','passwdfile_chksum',
 			'add_label','remove_label','remove_address','twview',
 			'getbalance','listaddresses','listaddress',
-			'daemon_version','decrypt_geth_keystore',
+			'daemon_version','decrypt_keystore','decrypt_geth_keystore',
 			'mn2hex_interactive','rand2file',
 			'rescan_address','rescan_blockchain','resolve_address',
 			'twexport','twimport','txhist'
