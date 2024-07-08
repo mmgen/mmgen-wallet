@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/build.yaml'
+      - '.github/build-requirements.txt'
       - 'pyproject.toml'
       - 'setup.cfg'
       - 'test/ref/**'
@@ -17,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.9","3.10","3.11"]
+        python-version: ["3.9","3.10","3.11","3.12"]
 
     steps:
     - uses: actions/checkout@v4
@@ -37,6 +38,6 @@ jobs:
 
     - name: Build and install MMGen Wallet
       run: |
-        python3 -m pip install build wheel
+        python3 -m pip install setuptools build wheel
         python3 -m build --no-isolation
         python3 -m pip install --user --break-system-packages dist/*.whl
