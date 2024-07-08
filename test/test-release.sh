@@ -69,7 +69,7 @@ run_tests() {
 	for t in $1; do
 		desc_id="d_$t" desc=${!desc_id}
 		if [ "$SKIP_ALT_DEP" ]; then
-			ok=$(for a in $noalt_tests; do if [ $t == $a ]; then echo 'ok'; fi; done)
+			ok=$(for a in $noalt_tests $noalt_ok_tests; do if [ $t == $a ]; then echo 'ok'; fi; done)
 			if [ ! "$ok" ]; then
 				echo -e "${BLUE}Skipping altcoin test '$t'$RESET"
 				continue

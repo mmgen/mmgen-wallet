@@ -179,6 +179,10 @@ def run_test(test,subtest=None):
 		gmsg(f'Running unit test {test}')
 		tests_seen.append(test)
 
+	if cfg.no_altcoin_deps and getattr(mod,'altcoin_dep',None):
+		cfg._util.qmsg(gray(f'Skipping unit test {test!r} [--no-altcoin-deps]'))
+		return
+
 	if hasattr(mod,'unit_tests'): # new class-based API
 		t = getattr(mod,'unit_tests')()
 		altcoin_deps = getattr(t,'altcoin_deps',())
@@ -193,13 +197,13 @@ def run_test(test,subtest=None):
 		for subtest in subtests:
 			subtest_disp = subtest.replace('_','-')
 			if cfg.no_altcoin_deps and subtest in altcoin_deps:
-				cfg._util.qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping subtest {subtest_disp!r}'))
+				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} [--no-altcoin-deps]'))
 				continue
 			if sys.platform == 'win32' and subtest in win_skip:
-				cfg._util.qmsg(gray(f'Skipping subtest {subtest_disp!r} for Windows platform'))
+				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for Windows platform'))
 				continue
 			elif platform.machine() == 'aarch64' and subtest in arm_skip:
-				cfg._util.qmsg(gray(f'Skipping subtest {subtest_disp!r} for ARM platform'))
+				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for ARM platform'))
 				continue
 			run_subtest(t,subtest)
 		if hasattr(t,'_post'):

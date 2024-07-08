@@ -99,6 +99,8 @@ class CmdTestMisc(CmdTestBase):
 		return self.xmrwallet_txview(op='txlist')
 
 	def examples_bip_hd(self):
+		if cfg.no_altcoin:
+			return 'skip'
 		return self.spawn('examples/bip_hd.py',cmd_dir='.')
 
 	def coin_daemon_info(self):
