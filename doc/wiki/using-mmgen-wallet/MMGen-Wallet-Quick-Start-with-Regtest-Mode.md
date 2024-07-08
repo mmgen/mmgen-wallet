@@ -49,7 +49,7 @@ Type uppercase 'YES' to confirm: YES
 just imported:
 
 ```text
-$ mmgen-tool --bob listaddresses showempty=1
+$ mmgen-tool --bob listaddresses
 MMGenID        ADDRESS                             COMMENT BALANCE
 1163DDF1:C:1   mw42oJ94yRA6ZUNSzmMpjZDR74JNyvqzzZ     -      0
 1163DDF1:C:2   n1oszhfAyRrHi7qJupyzaWXTcpMQGsGJEf     -      0
@@ -70,7 +70,7 @@ $ mmgen-regtest send mw42oJ94yRA6ZUNSzmMpjZDR74JNyvqzzZ 500
 7. Make sure the funds reached their destination:
 
 ```text
-$ mmgen-tool --bob listaddresses showempty=1
+$ mmgen-tool --bob listaddresses
 MMGenID        ADDRESS                             COMMENT BALANCE
 1163DDF1:C:1   mw42oJ94yRA6ZUNSzmMpjZDR74JNyvqzzZ     -    500
 1163DDF1:C:2   n1oszhfAyRrHi7qJupyzaWXTcpMQGsGJEf     -      0
@@ -116,7 +116,7 @@ TOTAL: 500 BTC
 `S:3`.  Specify a fee of 20 satoshis/byte and make the output quieter:
 
 ```text
-$ mmgen-txdo --alice --tx-fee=20s --quiet 9304C211:S:2,300 9304C211:S:3
+$ mmgen-txdo --alice --fee=20s --quiet 9304C211:S:2,300 9304C211:S:3
 ...
 Type uppercase 'YES' to confirm: YES
 Transaction sent: 78ca853816b55527b42ca8784c887a5f482c752522f914d2f17d6afcd8a3b076
@@ -153,7 +153,7 @@ $ mmgen-regtest mempool
 16. List Alice’s addresses.  Note that Alice has lost a bit to transaction fees:
 
 ```text
-$ mmgen-tool --alice listaddresses showempty=1
+$ mmgen-tool --alice listaddresses
 MMGenID        ADDRESS                             COMMENT BALANCE
 9304C211:S:1   2N3HhxasbRvrJyHg72JNVCCPi9EUGrEbFnu    -      0
 9304C211:S:2   2N8w8qTupvd9L9wLFbrn6UhdfF1gadDAmFD    -    300
@@ -165,7 +165,7 @@ TOTAL: 499.999967 BTC
 `S:1` address.  This time Alice specifies an absolute fee in BTC.
 
 ```text
-$ mmgen-txdo --alice --tx-fee=0.0001 --quiet 9304C211:S:1 n1oszhfAyRrHi7qJupyzaWXTcpMQGsGJEf,10
+$ mmgen-txdo --alice --fee=0.0001 --quiet 9304C211:S:1 n1oszhfAyRrHi7qJupyzaWXTcpMQGsGJEf,10
 ...
 Enter a range or space-separated list of outputs to spend: 1
 ...

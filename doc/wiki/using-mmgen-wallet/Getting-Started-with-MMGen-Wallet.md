@@ -954,7 +954,7 @@ MMGen Wallet gives you several options for dealing with transaction fees.
 
 Firstly, and most simply, you may do nothing, in which case the fee will be
 calculated automatically using bitcoind’s `estimatesmartfee` RPC call.  You can
-adjust the estimated fee by any factor using the `--tx-fee-adj` option, a handy
+adjust the estimated fee by any factor using the `--fee-adj` option, a handy
 feature when you need transactions to confirm a bit more quickly.  If network
 fee estimation fails for any reason, you’ll be prompted to enter the fee
 manually.
@@ -999,7 +999,7 @@ Create, sign and send a BIP 125 replaceable transaction with a fee of 50
 satoshis per byte:
 
 ```text
-$ mmgen-txdo --rbf --tx-fee 50s 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,0.1 0FDE89AB:S:5
+$ mmgen-txdo --rbf --fee 50s 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,0.1 0FDE89AB:S:5
 ...
 Signed transaction written to file 'FEDCBB[0.1,50].sigtx'
 ...
@@ -1016,7 +1016,7 @@ If the transaction fails to confirm in your desired timeframe, then create, sign
 and send a replacement transaction with a higher fee, say 100 satoshis per byte:
 
 ```text
-$ mmgen-txbump --send --tx-fee 100s --output-to-reduce c 'FEDCBB[0.1,50].sigtx'
+$ mmgen-txbump --send --fee 100s --output-to-reduce c 'FEDCBB[0.1,50].sigtx'
 ...
 Signed transaction written to file 'DAE123[0.1,100].sigtx'
 ...
@@ -1032,7 +1032,7 @@ has a different identifier, since it’s a new transaction.
 
 If this transaction also fails to confirm, then repeat the above step as many
 times as necessary to get a confirmation, increasing the fee each time.  The
-only thing you have to modify with each iteration is the argument to `--tx-fee`.
+only thing you have to modify with each iteration is the argument to `--fee`.
 To reduce your typing even further, use the `--yes` switch to skip all
 non-essential prompts.
 
@@ -1042,7 +1042,7 @@ To achieve the same result as in the above example using a cold wallet, just
 create the initial transaction with `mmgen-txcreate` instead of `mmgen-txdo`:
 
 ```text
-$ mmgen-txcreate --rbf --tx-fee 50s 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,0.1 89ABCDEF:S:5
+$ mmgen-txcreate --rbf --fee 50s 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,0.1 89ABCDEF:S:5
 ...
 Transaction written to file 'FEDCBC[0.1,50].rawtx'
 ```
@@ -1051,9 +1051,9 @@ Now create a series of transactions with incrementally increasing fees for
 offline signing:
 
 ```text
-$ mmgen-txbump --tx-fee 100s --output-to-reduce c 'FEDCBC[0.1,50].rawtx'
-$ mmgen-txbump --tx-fee 150s --output-to-reduce c 'FEDCBC[0.1,50].rawtx'
-$ mmgen-txbump --tx-fee 200s --output-to-reduce c 'FEDCBC[0.1,50].rawtx'
+$ mmgen-txbump --fee 100s --output-to-reduce c 'FEDCBC[0.1,50].rawtx'
+$ mmgen-txbump --fee 150s --output-to-reduce c 'FEDCBC[0.1,50].rawtx'
+$ mmgen-txbump --fee 200s --output-to-reduce c 'FEDCBC[0.1,50].rawtx'
 ```
 
 To speed things up, add the `--yes` switch to make `mmgen-txbump` completely

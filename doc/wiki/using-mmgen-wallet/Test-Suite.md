@@ -146,7 +146,8 @@ $ git clone https://github.com/10gic/vanitygen-plusplus
 $ cd vanitygen-plusplus
 $ git checkout -b vanitygen-plus e7858035d092  # rewind to fork commit
 $ make keyconv # ‘mingw32-make.exe keyconv’ for MSYS2
-$ sudo install --strip keyconv /usr/local/bin  # ‘keyconv.exe’ for MSYS2
+$ sudo install --strip keyconv /usr/local/bin  # Linux
+$ install --strip keyconv.exe /usr/local/bin   # MSYS2
 $ cd ..
 ```
 

@@ -150,24 +150,10 @@ To transact ETH instead of EOS, omit the `--token` and `--token-addr` arguments.
 
 ##### Install the Solidity compiler
 
-To deploy Ethereum contracts with MMGen Wallet, you need version **0.8.7** of
-the Solidity compiler (`solc`) installed on your system.  Although binary builds
-may be available for some distributions, the best way to ensure you have the
-correct version is to compile it from source.
-
-Clone the repository and build:
-
-```text
-$ git clone --recursive https://github.com/ethereum/solidity.git
-$ cd solidity
-$ git checkout v0.8.7
-$ ./scripts/install_deps.sh
-$ mkdir build
-$ cd build
-$ cmake -DUSE_CVC4=OFF -DUSE_Z3=OFF ..
-$ make -j4 solc
-$ sudo install -v --strip solc/solc /usr/local/bin
-```
+To deploy Ethereum contracts with MMGen Wallet, you need version **0.8.26** or
+newer of the Solidity compiler (`solc`) installed on your system.  Static binary
+builds are available from the Solidity [Github repository][sb].  For other ways
+to install solc on your platform, refer to the [Solidity documentation][sd].
 
 ##### Create and deploy a token
 
@@ -368,3 +354,5 @@ the MMGen Project.
 [p8]: Install-Bitcoind#a_r
 [ge]: https://github.com/ethereum/go-ethereum
 [mx]: command-help-xmrwallet
+[sb]: https://github.com/ethereum/solidity/releases
+[sd]: https://docs.soliditylang.org
