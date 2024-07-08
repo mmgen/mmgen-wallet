@@ -91,7 +91,7 @@ class parity_daemon(openethereum_daemon):
 	exec_fn = 'parity'
 
 class geth_daemon(ethereum_daemon):
-	# upgrade to 1.14.0/1.14.3 fails:
+	# upgrade to 1.14.0/1.14.6 fails:
 	#   mempool deadlock in dev mode: "transaction indexing is in progress"
 	#   https://github.com/ethereum/go-ethereum/issues/29475
 	#   offending commit (via git bisect): 0a2f33946b95989e8ce36e72a88138adceab6a23

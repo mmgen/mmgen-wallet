@@ -34,6 +34,7 @@ from ..include.common import (
 	cfg,
 	imsg,
 	omsg,
+	ok,
 	stop_test_daemons,
 	joinpath,
 	silence,
@@ -2066,12 +2067,14 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			'contains no unused addresses of address type' )
 
 	def stop(self):
+		self.spawn('', msg_only=True)
 		if cfg.no_daemon_stop:
-			self.spawn('',msg_only=True)
-			msg_r('(leaving daemon running by user request)')
-			return 'ok'
+			msg_r('(leaving regtest daemon running by user request)')
+			imsg('')
 		else:
-			return self.spawn('mmgen-regtest',['stop'])
+			stop_test_daemons(self.proto.network_id, remove_datadir=True)
+		ok()
+		return 'ok'
 
 class CmdTestRegtestBDBWallet(CmdTestRegtest):
 	bdb_wallet = True
