@@ -264,7 +264,7 @@ def test_daemons_ops(*network_ids,op,remove_datadir=False):
 			ret = d.cmd(op,silent=silent)
 		return ret
 
-tested_solc_ver = '0.8.7'
+tested_solc_ver = '0.8.26'
 
 def check_solc_ver():
 	cmd = 'python3 scripts/create-token.py --check-solc-version'

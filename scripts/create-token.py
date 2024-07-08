@@ -40,7 +40,7 @@ class TokenData:
 
 token_data = TokenData()
 
-req_solc_ver_pat = '^0.8.6'
+req_solc_ver_pat = '^0.8.25'
 
 opts_data = {
 	'text': {
@@ -244,7 +244,7 @@ def check_solc_version():
 		return False
 
 def compile_code(cfg,code):
-	cmd = ['solc','--optimize','--bin','--overwrite']
+	cmd = ['solc', '--optimize', '--bin', '--overwrite', '--evm-version=constantinople']
 	if not cfg.stdout:
 		cmd += ['--output-dir', cfg.outdir or '.']
 	cmd += ['-']
