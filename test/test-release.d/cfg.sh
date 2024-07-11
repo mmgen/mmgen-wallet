@@ -149,10 +149,9 @@ init_tests() {
 	# ARM ethkey available only on Arch Linux:
 	[ \( "$ARM32" -o "$ARM64" \) -a "$DISTRO" != 'archarm' ] && t_altgen_skip+=' e'
 
-
 	d_xmr="Monero xmrwallet operations"
 	t_xmr="
-		- $cmdtest_py --coin=xmr
+		- $HTTP_LONG_TIMEOUT$cmdtest_py$PEXPECT_LONG_TIMEOUT --coin=xmr
 	"
 
 	d_eth="operations for Ethereum using devnet"

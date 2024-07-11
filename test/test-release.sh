@@ -234,6 +234,11 @@ elif [ "$MSYSTEM" ] && uname -a | grep -qi 'msys'; then
 	MSYS2=1
 fi
 
+[ "$ARM32" -o "$ARM64" ] && {
+	PEXPECT_LONG_TIMEOUT=' --pexpect-timeout=300'
+	HTTP_LONG_TIMEOUT='MMGEN_HTTP_TIMEOUT=300 '
+}
+
 if [ "$MSYS2" ]; then
 	DISTRO='MSYS2'
 else

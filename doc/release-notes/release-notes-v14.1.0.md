@@ -24,18 +24,18 @@
  - f39da52b: mmgen-xmrwallet: support sweeping to specific account of wallet
  - 4c431500: mmgen-xmrwallet: support fee-prioritizing of transactions
  - 42a5821e: mmgen-xmrwallet: new `--rescan-spent` option
- - a5a24269: mmgen-xmrwallet submit, relay: display relay time
+ - a5a24269: mmgen-xmrwallet `submit`, `relay`: display relay time
  - b6acf879: mmgen-xmrwallet: new `--skip-empty-accounts`,
              `--skip-empty-addresses` options
- - ea0f32e3: mmgen-xmrwallet list, listview: display per-address balances
- - 4f216ea9: mmgen-xmrwallet sync, list, view, listview: display addresses
+ - ea0f32e3: mmgen-xmrwallet `list`, `listview`: display per-address balances
+ - 4f216ea9: mmgen-xmrwallet `sync`, `list`, `view`, `listview`: display addresses
              in truncated form (override with `--full-address`)
  - 0de5e47c: mmgen-xmrwallet: new `view` and `listview` operations
 
 #### Security / bugfix:
 
  - a49aa2ba: keygen.py: forbid use of non-safe public key generation backends
- - 72a93dfc: proto.btc.tx: fix nLocktime functionality
+ - 72a93dfc: proto.btc.tx: fix `nLocktime` functionality
 
 Python requirement: >= 3.9 (tested on 3.9, 3.11 and 3.12)
 
@@ -46,9 +46,8 @@ This release has been tested on the following platforms:
     Ubuntu 22.04 (Jammy) / x86_64
     Ubuntu 24.04 (Noble) / x86_64
     Arch Linux 2024-07-08 (Python 3.12.4) / x86_64
-    TBD ~~ArchLinuxArm 2024-XX-XX [userspace] (Python 3.11) / Rock Pi 4 (armv8)~~
-    TBD ~~Debian 11 (Bullseye) [Armbian] / Rock Pi 4 (armv8)~~
-    TBD ~~Debian 11 (Bullseye) [Armbian] / Orange Pi PC2 (armv8) [BTC + XMR autosign]~~
+    Debian 12 (Bookworm) [Armbian] / Rock Pi 4 [arm64]
+    Ubuntu 24.04 (Noble) [Armbian] / Rock Pi 4 [arm64]
     Windows 10 Enterprise / MSYS2 2024-05-07 / x86_64 [qemu]
 
 and with the following coin daemon versions:
