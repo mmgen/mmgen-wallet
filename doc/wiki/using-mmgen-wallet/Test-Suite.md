@@ -11,7 +11,7 @@ instructions for which are provided below.  Non-standard RPC ports and data
 directories are always used, so there’s no need to stop any running nodes.
 
 On Linux/x86\_64 with a reasonably fast processor, the full suite should run in
-under 20 minutes when invoked with the `-F` option.  Execution times on other
+under 30 minutes when invoked with the `-F` option.  Execution times on other
 platforms may be much slower.
 
 ## Quick start
