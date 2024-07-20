@@ -86,14 +86,15 @@ def set_vbals(daemon_id):
 		vbal7 = '1000124.91891764212345678'
 		vbal9 = '1.2262504'
 	else:
-		vbal1 = '1.2288409'
-		vbal2 = '99.997088755'
+		vbal1 = '1.2288396'
+		vbal2 = '99.997088092'
 		vbal3 = '1.23142525'
-		vbal4 = '127.0287909'
-		vbal5 = '1000126.14828654512345678'
-		vbal6 = '1000126.14933654512345678'
-		vbal7 = '1000124.91944564512345678'
-		vbal9 = '1.22626295'
+		vbal3 = '1.2314246'
+		vbal4 = '127.0287896'
+		vbal5 = '1000126.14828458212345678'
+		vbal6 = '1000126.14933458212345678'
+		vbal7 = '1000124.91944498212345678'
+		vbal9 = '1.226261'
 
 bals = lambda k: {
 	'1': [  ('98831F3A:E:1','123.456')],
@@ -110,20 +111,20 @@ bals = lambda k: {
 			(burn_addr + r'\s+non-MMGen',amt1)],
 	'8': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11',vbal1,'a1'),
+			('98831F3A:E:11',vbal1),
 			('98831F3A:E:12','99.99895'),
 			('98831F3A:E:21','2.345'),
 			(burn_addr + r'\s+non-MMGen',amt1)],
 	'9': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11',vbal1,'a1'),
+			('98831F3A:E:11',vbal1),
 			('98831F3A:E:12',vbal2),
 			('98831F3A:E:21','2.345'),
 			(burn_addr + r'\s+non-MMGen',amt1)],
 	'10': [ ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.0218'),
 			('98831F3A:E:3','0.4321'),
-			('98831F3A:E:11',vbal1,'a1'),
+			('98831F3A:E:11',vbal1),
 			('98831F3A:E:12',vbal2),
 			('98831F3A:E:21','2.345'),
 			(burn_addr + r'\s+non-MMGen',amt1)]
@@ -131,21 +132,21 @@ bals = lambda k: {
 
 token_bals = lambda k: {
 	'1': [  ('98831F3A:E:11','1000','1.234')],
-	'2': [  ('98831F3A:E:11','998.76544',vbal3,'a1'),
+	'2': [  ('98831F3A:E:11','998.76544',vbal3),
 			('98831F3A:E:12','1.23456','0')],
-	'3': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
+	'3': [  ('98831F3A:E:11','110.654317776666555545',vbal1),
 			('98831F3A:E:12','1.23456','0')],
-	'4': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
+	'4': [  ('98831F3A:E:11','110.654317776666555545',vbal1),
 			('98831F3A:E:12','1.23456','0'),
 			(burn_addr + r'\s+non-MMGen',amt2,amt1)],
-	'5': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
+	'5': [  ('98831F3A:E:11','110.654317776666555545',vbal1),
 			('98831F3A:E:12','1.23456','99.99895'),
 			(burn_addr + r'\s+non-MMGen',amt2,amt1)],
-	'6': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
+	'6': [  ('98831F3A:E:11','110.654317776666555545',vbal1),
 			('98831F3A:E:12','0',vbal2),
 			('98831F3A:E:13','1.23456','0'),
 			(burn_addr + r'\s+non-MMGen',amt2,amt1)],
-	'7': [  ('98831F3A:E:11','67.444317776666555545',vbal9,'a2'),
+	'7': [  ('98831F3A:E:11','67.444317776666555545',vbal9),
 			('98831F3A:E:12','43.21',vbal2),
 			('98831F3A:E:13','1.23456','0'),
 			(burn_addr + r'\s+non-MMGen',amt2,amt1)]
@@ -883,16 +884,10 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def bal5(self):
 		return self.bal(n='5')
 
-	#bal_corr = Decimal('0.0000032') # gas use for token sends varies between ETH and ETC!
-	bal_corr = Decimal('0.0000000') # update: OpenEthereum team seems to have corrected this
-
 	def bal(self,n):
 		t = self.spawn('mmgen-tool', self.eth_args + ['twview','wide=1'])
 		text = t.read(strip_color=True)
-		for b in bals(n):
-			addr,amt,adj = b if len(b) == 3 else b + (False,)
-			if adj and self.proto.coin == 'ETC':
-				amt = str(Decimal(amt) + Decimal(adj[1]) * self.bal_corr)
+		for addr,amt in bals(n):
 			pat = r'\D{}\D.*\D{}\D'.format( addr, amt.replace('.',r'\.') )
 			assert re.search(pat,text), pat
 		ss = f'Total {self.proto.coin}:'
@@ -902,10 +897,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def token_bal(self,n=None):
 		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1','twview','wide=1'])
 		text = t.read(strip_color=True)
-		for b in token_bals(n):
-			addr,_amt1,_amt2,adj = b if len(b) == 4 else b + (False,)
-			if adj and self.proto.coin == 'ETC':
-				_amt2 = str(Decimal(_amt2) + Decimal(adj[1]) * self.bal_corr)
+		for addr,_amt1,_amt2 in token_bals(n):
 			pat = fr'{addr}\b.*\D{_amt1}\D.*\b{_amt2}\D'
 			assert re.search(pat,text), pat
 		ss = 'Total MM1:'
@@ -916,8 +908,6 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		bal1 = token_bals_getbalance(idx)[0]
 		bal2 = token_bals_getbalance(idx)[1]
 		bal1 = Decimal(bal1)
-		if etc_adj and self.proto.coin == 'ETC':
-			bal1 += self.bal_corr
 		t = self.spawn('mmgen-tool', self.eth_args + extra_args + ['getbalance'])
 		t.expect(rf'{sid}:.*'+str(bal1),regex=True)
 		t.expect(r'Non-MMGen:.*'+bal2,regex=True)
@@ -1321,8 +1311,6 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		if total_coin is None:
 			total_coin = self.proto.coin
 
-		if self.proto.coin == 'ETC' and adj_total:
-			total = str(Decimal(total) + self.bal_corr)
 		t = self.spawn('mmgen-txcreate', self.txcreate_args + args)
 		for n in bals:
 			t.expect('[R]efresh balance:\b','R')
