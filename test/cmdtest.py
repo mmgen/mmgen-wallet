@@ -75,23 +75,11 @@ def create_shm_dir(data_dir,trash_dir):
 
 import sys, os, time, asyncio
 
-if sys.argv[-1] == 'clean':
-	os.environ['MMGEN_TEST_SUITE'] = '1'
-	repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
-	os.chdir(repo_root)
-	sys.path[0] = repo_root
-
-	from shutil import rmtree
-	from test.overlay import get_overlay_tree_dir
-	overlay_tree_dir = get_overlay_tree_dir(repo_root)
-	rmtree(overlay_tree_dir,ignore_errors=True)
-	print(f'Removed {os.path.relpath(overlay_tree_dir)!r}')
-else:
-	# overlay must be set up before importing mmgen mods!
-	try:
-		from include.test_init import repo_root
-	except ImportError:
-		from test.include.test_init import repo_root
+# overlay must be set up before importing mmgen mods!
+try:
+	from include.test_init import repo_root
+except ImportError:
+	from test.include.test_init import repo_root
 
 from mmgen.cfg import Config,gc
 from mmgen.color import red,yellow,green,blue,cyan,gray,nocolor,init_color
@@ -102,7 +90,6 @@ from test.include.common import (
 	cmdtest_py_log_fn,
 	cmdtest_py_error_fn,
 	mk_tmpdir,
-	cleandir,
 	iqmsg,
 	omsg,
 	omsg_r,
@@ -110,6 +97,7 @@ from test.include.common import (
 	start_test_daemons,
 	stop_test_daemons,
 	init_coverage,
+	clean,
 )
 
 try:
@@ -267,17 +255,7 @@ else:
 if cfg.skipping_deps:
 	cfg.no_daemon_autostart = True
 
-from test.cmdtest_py_d.cfg import cfgs,fixup_cfgs
-
-for k in cfgs:
-	cfgs[k]['tmpdir'] = os.path.join('test','tmp',str(k))
-
-fixup_cfgs()
-
-utils = {
-#	'check_deps': 'check dependencies for specified command (WIP)', # TODO
-	'clean':      'clean specified tmp dir(s) (specify by integer, no arg = all dirs)',
-}
+from test.cmdtest_py_d.cfg import cfgs
 
 def list_cmds():
 
@@ -303,13 +281,6 @@ def list_cmds():
 					(data if isinstance(data,str) else data[1]),
 					w = cw )
 
-		w = max(map(len,utils))
-
-		yield '\n'+green('AVAILABLE UTILITIES:')
-
-		for cmd in sorted(utils):
-			yield f'  {cmd:{w}} - {utils[cmd]}'
-
 	from mmgen.ui import do_pager
 	do_pager('\n'.join(gen_output()))
 
@@ -320,34 +291,6 @@ def do_between():
 		confirm_continue()
 	elif (cfg.verbose or cfg.exact_output) and not cfg.skipping_deps:
 		sys.stderr.write('\n')
-
-def list_tmpdirs():
-	return {k:cfgs[k]['tmpdir'] for k in cfgs}
-
-def clean(usr_dirs=None,clean_overlay=True):
-	if cfg.skipping_deps:
-		return
-	all_dirs = list_tmpdirs()
-	dirnums = map(int,(usr_dirs if usr_dirs is not None else all_dirs))
-	dirlist = list(map(str,sorted(dirnums)))
-	for d in dirlist:
-		if d in all_dirs:
-			cleandir(all_dirs[d])
-		else:
-			die(1,f'{d}: invalid directory number')
-	if dirlist:
-		iqmsg(green('Cleaned tmp director{} {}'.format(
-			suf(dirlist,'ies'),
-			' '.join(dirlist))
-		))
-	cleandir(data_dir)
-	cleandir(trash_dir)
-	cleandir(trash_dir2)
-	iqmsg(green(f'Cleaned directories {data_dir!r} {trash_dir!r} {trash_dir2!r}'))
-
-	if clean_overlay:
-		cleandir(overlay_tree_dir)
-		iqmsg(green(f'Cleaned directory {os.path.relpath(overlay_tree_dir)!r}'))
 
 def create_tmp_dirs(shm_dir):
 	if sys.platform == 'win32':
@@ -753,8 +696,8 @@ class CmdTestRunner:
 				iqmsg(gray(f'INFO → skipping {m} (network={nw})'))
 				return None
 
-		if do_clean:
-			clean(ct_cls.tmpdir_nums,clean_overlay=False)
+		if do_clean and not cfg.skipping_deps:
+			clean(cfgs, tmpdir_ids=ct_cls.tmpdir_nums, extra_dirs=[data_dir, trash_dir, trash_dir2])
 
 		if not quiet:
 			bmsg('Executing ' + m)
@@ -1042,9 +985,6 @@ if __name__ == '__main__':
 		CmdGroupMgr().list_cmd_groups()
 	elif cfg.list_cmds:
 		list_cmds()
-	elif cmd_args and cmd_args[0] in utils:
-		globals()[cmd_args[0]](*cmd_args[1:])
-		sys.exit(0)
 
 	if cfg.pause:
 		set_restore_term_at_exit()

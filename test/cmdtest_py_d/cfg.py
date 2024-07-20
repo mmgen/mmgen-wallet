@@ -231,6 +231,10 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 
 def fixup_cfgs():
 	import os
+
+	for k in cfgs:
+		cfgs[k]['tmpdir'] = os.path.join('test', 'tmp', str(k))
+
 	for src,target in (
 			('6','11'),
 			('7','12'),
@@ -248,3 +252,5 @@ def fixup_cfgs():
 	if cfg.debug_utf8:
 		for k in cfgs:
 			cfgs[k]['tmpdir'] += '-α'
+
+fixup_cfgs()

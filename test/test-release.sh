@@ -396,7 +396,7 @@ remove_skipped_tests
 
 check_tests
 
-test/cmdtest.py clean
+test/clean.py
 
 start_time=$(date +%s)
 

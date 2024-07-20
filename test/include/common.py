@@ -25,7 +25,7 @@ from subprocess import run,PIPE
 
 from mmgen.cfg import gv
 from mmgen.color import yellow,green,orange
-from mmgen.util import msg,msg_r,Msg,Msg_r,gmsg,die
+from mmgen.util import msg, msg_r, Msg, Msg_r, gmsg, die, suf, fmt_list
 from mmgen.fileutil import write_data_to_file,get_data_from_file
 
 def noop(*args,**kwargs):
@@ -127,16 +127,19 @@ def cleandir(d,do_msg=False):
 	try:
 		files = os.listdir(d_enc)
 	except:
-		return
+		return None
 
-	from shutil import rmtree
-	if do_msg:
-		gmsg(f'Cleaning directory {d!r}')
-	for f in files:
-		try:
-			os.unlink(os.path.join(d_enc,f))
-		except:
-			rmtree(os.path.join(d_enc,f),ignore_errors=True)
+	if files:
+		from shutil import rmtree
+		if do_msg:
+			gmsg(f'Cleaning directory {d!r}')
+		for f in files:
+			try:
+				os.unlink(os.path.join(d_enc, f))
+			except:
+				rmtree(os.path.join(d_enc,f), ignore_errors=True)
+
+	return files
 
 def mk_tmpdir(d):
 	try:
@@ -146,6 +149,34 @@ def mk_tmpdir(d):
 			raise
 	else:
 		vmsg(f'Created directory {d!r}')
+
+def clean(cfgs, tmpdir_ids=None, extra_dirs=[]):
+
+	def clean_tmpdirs():
+		cfg_tmpdirs = {k:cfgs[k]['tmpdir'] for k in cfgs}
+		for d in map(str, sorted(map(int, (tmpdir_ids or cfg_tmpdirs)))):
+			if d in cfg_tmpdirs:
+				if cleandir(cfg_tmpdirs[d]):
+					yield d
+			else:
+				die(1, f'{d}: invalid directory number')
+
+	def clean_extra_dirs():
+		for d in extra_dirs:
+			if os.path.exists(d):
+				if cleandir(d):
+					yield os.path.relpath(d)
+
+	for clean_func, list_fmt in (
+				(clean_tmpdirs, 'no_quotes'),
+				(clean_extra_dirs, 'dfl')
+			):
+		if cleaned := list(clean_func()):
+			iqmsg(green('Cleaned director{} {}'.format(
+				suf(cleaned, 'ies'),
+				fmt_list(cleaned, fmt=list_fmt)
+			)))
+
 
 def get_tmpfile(cfg,fn):
 	return os.path.join(cfg['tmpdir'],fn)
