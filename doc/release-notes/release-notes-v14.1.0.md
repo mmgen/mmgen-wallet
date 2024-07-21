@@ -49,6 +49,7 @@ This release has been tested on the following platforms:
     Debian 12 (Bookworm) [Armbian] / Rock Pi 4 [arm64]
     Ubuntu 24.04 (Noble) [Armbian] / Rock Pi 4 [arm64]
     Windows 10 Enterprise / MSYS2 2024-05-07 / x86_64 [qemu]
+    Windows 11 Enterprise / MSYS2 2024-05-07 / x86_64 [qemu]
 
 and with the following coin daemon versions:
 

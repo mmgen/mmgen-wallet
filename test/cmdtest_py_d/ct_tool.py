@@ -113,7 +113,7 @@ class CmdTestTool(CmdTestMain,CmdTestBase):
 			cmd = 'decrypt_keystore',
 			fn  = 'test/ref/altcoin/98831F3A-keystore-wallet.json',
 			pw = 'abc',
-			chk = read_from_file('test/ref/98831F3A.bip39') )
+			chk = read_from_file('test/ref/98831F3A.bip39').strip() )
 
 	def tool_decrypt_geth_keystore(self):
 		return self._decrypt_keystore(

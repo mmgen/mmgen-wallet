@@ -59,4 +59,5 @@ fi
 
 # Finally, register service with cygrunsrv and start it
 cygrunsrv -R msys2_sshd || true
+sleep 1
 cygrunsrv -I msys2_sshd -d "MSYS2 sshd" -p /usr/bin/sshd.exe -a "-D -e" -y tcpip

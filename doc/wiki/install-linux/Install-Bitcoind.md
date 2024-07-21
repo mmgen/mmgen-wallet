@@ -98,7 +98,7 @@ $ litecoind
 
 ```text
 # Bitcoin Core:
-$ bitcoind --daemon --deprecatedrpc=create_bdb
+$ bitcoind --daemon
 
 # Bitcoin Cash Node:
 $ mkdir ~/.bitcoin-bchn
