@@ -326,3 +326,32 @@ def get_ethkey():
 			return cmdname
 	else:
 		die(1,f'ethkey executable not found (tried {cmdnames})')
+
+def do_run(cmd):
+	from subprocess import run,PIPE,DEVNULL
+	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=True)
+
+class VirtBlockDevice:
+
+	def __init__(self, tmpdir, blksize, blkcount):
+		self.tmpdir = tmpdir
+		self.blksize = blksize
+		self.blkcount = blkcount
+
+	def setup(self):
+		imsg('Creating block device image file')
+		blkdev_img = joinpath(self.tmpdir, 'hincog_blkdev_img')
+		do_run(['dd', 'if=/dev/zero', f'of={blkdev_img}', f'bs={self.blksize}', f'count={self.blkcount}'])
+		self.dev = do_run(['sudo', '/sbin/losetup', '-f']).stdout.strip().decode()
+		self.dev_mode_orig = '{:o}'.format(os.stat(self.dev).st_mode & 0xfff)
+		dev_mode = '0666'
+		imsg(f'Changing permissions on loop device to {dev_mode!r}')
+		do_run(['sudo', 'chmod', dev_mode, self.dev])
+		imsg(f'Attaching loop device {self.dev!r}')
+		do_run(['sudo', '/sbin/losetup', self.dev, blkdev_img])
+
+	def destroy(self):
+		imsg(f'Detaching loop device {self.dev!r}')
+		do_run(['sudo', '/sbin/losetup', '-d', self.dev])
+		imsg(f'Resetting permissions on loop device to {self.dev_mode_orig!r}')
+		do_run(['sudo', 'chmod', self.dev_mode_orig, self.dev])

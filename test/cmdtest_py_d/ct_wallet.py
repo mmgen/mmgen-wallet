@@ -25,7 +25,7 @@ import os
 from mmgen.util import msg,capfirst,get_extension
 from mmgen.wallet import get_wallet_cls
 
-from ..include.common import cfg,joinpath,imsg
+from ..include.common import cfg, joinpath, imsg, VirtBlockDevice
 from .common import ref_dir,ref_wallet_brainpass,ref_wallet_incog_offset,hincog_fn,hincog_bytes
 from .ct_base import CmdTestBase
 from .ct_shared import CmdTestShared
@@ -166,26 +166,15 @@ class CmdTestWalletConv(CmdTestBase,CmdTestShared):
 									uopts_chk = ['-H',hi_parms,sl_parm] )
 
 	def ref_hincog_blkdev_conv_out(self):
-		def do_run(cmd):
-			from subprocess import run,PIPE,DEVNULL
-			return run(cmd,stdout=PIPE,stderr=DEVNULL,check=True)
-		if self.skip_for_win():
+
+		if self.skip_for_win('no loop device') or self.skip_for_mac('no loop device'):
 			return 'skip'
-		imsg('Creating block device image file')
-		ic_img = joinpath(self.tmpdir,'hincog_blkdev_img')
-		do_run(['dd','if=/dev/zero','of='+ic_img,'bs=1K','count=1'])
-		ic_dev = do_run(['sudo','/sbin/losetup','-f']).stdout.strip().decode()
-		ic_dev_mode_orig = '{:o}'.format( os.stat(ic_dev).st_mode & 0xfff )
-		ic_dev_mode = '0666'
-		imsg(f'Changing permissions on loop device to {ic_dev_mode!r}')
-		do_run(['sudo','chmod',ic_dev_mode,ic_dev])
-		imsg(f'Attaching loop device {ic_dev!r}')
-		do_run(['sudo','/sbin/losetup',ic_dev,ic_img])
-		self.ref_hincog_conv_out(ic_f=ic_dev)
-		imsg(f'Detaching loop device {ic_dev!r}')
-		do_run(['sudo','/sbin/losetup','-d',ic_dev])
-		imsg(f'Resetting permissions on loop device to {ic_dev_mode_orig!r}')
-		do_run(['sudo','chmod',ic_dev_mode_orig,ic_dev])
+
+		b = VirtBlockDevice(self.tmpdir, '1K', 1)
+		b.setup()
+		self.ref_hincog_conv_out(ic_f=b.dev)
+		b.destroy()
+
 		return 'ok'
 
 	# wallet conversion tests
