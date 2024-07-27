@@ -22,7 +22,7 @@ test.cmdtest_py_d.common: Shared routines and data for the cmdtest.py test suite
 
 import sys,os
 
-from mmgen.color import green,blue
+from mmgen.color import green, blue, gray
 from mmgen.util import msg
 
 from ..include.common import cfg,getrand,text_jp,text_zh,ascii_cyr_gr,lat_cyr_gr
@@ -76,7 +76,7 @@ def ok_msg():
 	sys.stderr.write(green('\nOK\n') if cfg.exact_output or cfg.verbose else ' OK\n')
 
 def skip(name,reason=None):
-	msg('Skipping {}{}'.format( name, f' ({reason})' if reason else '' ))
+	msg(gray('Skipping {}{}'.format( name, f' ({reason})' if reason else '' )))
 	return 'skip'
 
 def confirm_continue():

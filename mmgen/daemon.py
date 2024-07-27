@@ -215,6 +215,7 @@ class Daemon(Lockable):
 				))
 			if self.wait:
 				self.wait_for_state('stopped')
+				time.sleep(0.3) # race condition
 			return ret
 		else:
 			if not (quiet or silent):

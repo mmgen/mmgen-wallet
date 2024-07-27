@@ -14,6 +14,10 @@ test/clean.py: Clean the test directory
 
 import sys, os
 
+repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), os.pardir)))
+os.chdir(repo_root)
+sys.path[0] = repo_root
+
 from mmgen.cfg import Config
 
 opts_data = {
@@ -29,10 +33,6 @@ opts_data = {
 
 cfg = Config(opts_data=opts_data)
 
-repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), os.pardir)))
-os.chdir(repo_root)
-sys.path[0] = repo_root
-
 from test.overlay import get_overlay_tree_dir
 overlay_tree_dir = get_overlay_tree_dir(repo_root)
 if os.path.exists(overlay_tree_dir):
@@ -46,8 +46,15 @@ set_globals(cfg)
 
 from test.include.cfg import clean_cfgs
 
-data_dir = Config.test_datadir
-trash_dir = os.path.join('test', 'trash')
-trash_dir2 = os.path.join('test', 'trash2')
+extra_dirs = [
+	Config.test_datadir,
+	os.path.join('test', 'trash'),
+	os.path.join('test', 'trash2')
+]
 
-clean(clean_cfgs, extra_dirs=[data_dir, trash_dir, trash_dir2])
+clean(clean_cfgs, extra_dirs=extra_dirs)
+
+for d in extra_dirs:
+	if os.path.exists(d) and not os.path.isdir(d):
+		print(f'Removing non-directory ‘{d}’')
+		os.unlink(d)

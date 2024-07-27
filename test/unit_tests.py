@@ -34,13 +34,13 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	init_dev()
 
 from mmgen.cfg import Config,gc
-from mmgen.color import green,gray,brown,orange
+from mmgen.color import green, gray, brown, orange, yellow, red
 from mmgen.util import msg,gmsg,ymsg,Msg
 
 from test.include.common import set_globals,end_msg
 
 def die(ev,s):
-	msg(s)
+	msg((red if ev > 1 else yellow)(s))
 	sys.exit(ev)
 
 opts_data = {

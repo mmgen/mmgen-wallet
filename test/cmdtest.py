@@ -83,7 +83,7 @@ except ImportError:
 
 from mmgen.cfg import Config,gc
 from mmgen.color import red,yellow,green,blue,cyan,gray,nocolor,init_color
-from mmgen.util import msg, Msg, bmsg, die, suf, make_timestr
+from mmgen.util import msg, Msg, rmsg, bmsg, die, suf, make_timestr
 
 from test.include.common import (
 	set_globals,
@@ -1008,7 +1008,9 @@ if __name__ == '__main__':
 			Msg(red(str(e)))
 			Msg(blue('cmdtest.py: spawned script exited with error'))
 		raise
-	except Exception:
+	except Exception as e:
+		if type(e).__name__ == 'TestSuiteException':
+			rmsg('TEST ERROR: ' + str(e))
 		# if cmdtest.py itself is running under exec_wrapper, re-raise so exec_wrapper can handle exception:
 		if os.getenv('MMGEN_EXEC_WRAPPER') or not os.getenv('MMGEN_IGNORE_TEST_PY_EXCEPTION'):
 			raise

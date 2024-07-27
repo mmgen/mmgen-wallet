@@ -7,11 +7,11 @@ test.unit_tests_d.ut_daemon: unit test for the MMGen suite's Daemon class
 from subprocess import run,PIPE
 from collections import namedtuple
 
-from mmgen.color import orange
+from mmgen.color import orange, red
 from mmgen.util import fmt_list
 from mmgen.daemon import CoinDaemon
 
-from ..include.common import cfg,qmsg,qmsg_r,vmsg
+from ..include.common import cfg, qmsg, qmsg_r, vmsg, msg
 
 def test_flags():
 	d = CoinDaemon(cfg,'eth')
@@ -67,8 +67,13 @@ class unit_tests:
 		qmsg_r(message)
 		args = ['python3', f'test/{args_in[0]}-coin-daemons.py'] + list(args_in[1:]) + self.daemon_ctrl_args
 		vmsg('\n' + orange(f"Running '{' '.join(args)}':"))
-		pipe = None if cfg.verbose else PIPE
-		run( args, stdout=pipe, stderr=pipe, check=True )
+		cp = run(args, stdout=PIPE, stderr=PIPE, text=True)
+		if cp.returncode != 0:
+			if cp.stdout:
+				msg(cp.stdout)
+			if cp.stderr:
+				msg(red(cp.stderr))
+			return False
 		qmsg('OK')
 		return True
 

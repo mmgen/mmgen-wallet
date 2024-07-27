@@ -32,6 +32,7 @@ except ImportError:
 
 from mmgen.cfg import Config
 from mmgen.util import msg,msg_r,bmsg,die
+from mmgen.color import gray
 
 opts_data = {
 	'text': {
@@ -133,7 +134,7 @@ def do_coin_tests():
 			tuple(bitcoin_data.items()) +
 			tuple(altcoin_data.items() if not cfg.no_altcoin else []) ):
 		if tname == 'zec_zcash_z' and sys.platform == 'win32':
-			msg("Skipping 'zec_zcash_z' test for Windows platform")
+			msg(gray("Skipping 'zec_zcash_z' test for Windows platform"))
 			continue
 		coin,mmtype = tname.split('_',1) if '_' in tname else (tname,None)
 		type_arg = ' --type='+mmtype if mmtype else ''

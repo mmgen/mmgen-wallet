@@ -63,7 +63,8 @@ class CmdTestInput(CmdTestBase):
 		('line_input_insert',             'line_input() [inserted text]'),
 		('line_input_insert_term1',       'line_input() [inserted text, term]'),
 		('line_input_insert_term2',       'line_input() [inserted text, term, no hold protect]'),
-		('line_input_edit_term',          'line_input() [inserted + edited text, term, utf8]'),
+		('line_input_edit_term',          'line_input() [edited text, term, utf8]'),
+		('line_input_edit_term_insert',   'line_input() [inserted + edited text, term, utf8]'),
 		('line_input_erase_term',         'line_input() [inserted + erased text, term]'),
 	),
 	'password': (
@@ -352,6 +353,15 @@ class CmdTestInput(CmdTestBase):
 
 	def line_input_edit_term(self):
 		return self._line_input(
+			['prompt> ', True, '', True],
+			'\b\bφυφυ\b\bβαρ',
+			'φυβαρ',
+			True)
+
+	def line_input_edit_term_insert(self):
+		if self.skip_for_mac('readline text buffer issues'):
+			return 'skip'
+		return self._line_input(
 			['prompt> ', True, 'φυφυ', True],
 			'\b\bβαρ',
 			'φυβαρ',
@@ -408,7 +418,7 @@ class CmdTestInput(CmdTestBase):
 			'Type a number.*: ',
 			('\n' if enter_for_dfl else str(mne.entry_modes.index(entry_mode)+1)),
 			regex = True )
-		t.expect('Using entry mode (\S+)',regex=True)
+		t.expect(r'Using entry mode (\S+)', regex=True)
 		mode = strip_ansi_escapes(t.p.match.group(1)).lower()
 		assert mode == mne.em.name.lower(), f'{mode} != {mne.em.name.lower()}'
 		stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode,pad_entry=pad_entry)

@@ -98,7 +98,7 @@ async def do_mmgen_ref(daemons,fns,name,desc):
 			tx_hex   = tx.serialized,
 			desc     = fn,
 			n        = n+1 )
-	stop_test_daemons(*daemons)
+	stop_test_daemons(*daemons, remove_datadir=True)
 	Msg('OK')
 	return True
 
@@ -133,7 +133,7 @@ class unit_tests:
 				desc = e[0]
 
 		Msg('OK')
-		stop_test_daemons('btc')
+		stop_test_daemons('btc', remove_datadir=True)
 		return True
 
 	async def mmgen_ref(self,name,ut):

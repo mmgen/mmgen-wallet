@@ -20,7 +20,7 @@ from ..include.common import cfg,qmsg,vmsg
 async def cfg_file_auth_test(cfg, d, bad_auth=False):
 	m = 'missing credentials' if bad_auth else f'credentials from {d.cfg_file}'
 	qmsg(cyan(f'\n  Testing authentication with {m}:'))
-	time.sleep(0.1) # race condition
+	d.stop()
 	d.remove_datadir() # removes cookie file to force authentication from cfg file
 	os.makedirs(d.network_datadir)
 
@@ -45,7 +45,9 @@ async def cfg_file_auth_test(cfg, d, bad_auth=False):
 		rpc = await rpc_init(cfg, d.proto)
 		assert rpc.auth.user == 'ut_rpc', f'{rpc.auth.user}: user is not ut_rpc!'
 
-	d.stop()
+	if not cfg.no_daemon_stop:
+		d.stop()
+		d.remove_datadir()
 
 async def print_daemon_info(rpc):
 
@@ -117,8 +119,11 @@ async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_in=None
 
 	async def do_test(d, cfg):
 
+		d.wait = True
+
 		if not cfg.no_daemon_stop:
 			d.stop()
+			d.remove_datadir()
 
 		if not cfg.no_daemon_autostart:
 			d.remove_datadir()
@@ -132,6 +137,7 @@ async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_in=None
 
 		if not cfg.no_daemon_stop:
 			d.stop()
+			d.remove_datadir()
 
 		if test_cf_auth and sys.platform != 'win32':
 			await cfg_file_auth_test(cfg, d)

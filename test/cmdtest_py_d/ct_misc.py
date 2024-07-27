@@ -22,7 +22,7 @@ test.cmdtest_py_d.ct_misc: Miscellaneous test groups for the cmdtest.py test sui
 
 import sys,os,re,time
 
-from mmgen.util import ymsg
+from mmgen.util import ymsg, die
 
 from ..include.common import cfg,start_test_daemons,stop_test_daemons,imsg
 from .common import get_file_with_ext,dfl_words_file
@@ -131,6 +131,8 @@ class CmdTestMisc(CmdTestBase):
 				t.expect('foo')
 			except pexpect.TIMEOUT:
 				imsg('[input not echoed - OK]')
+			else:
+				die('TestSuiteException', 'Terminal echoed in noecho mode!')
 			t.send('x')
 
 		if self.skip_for_win('no termios support'):

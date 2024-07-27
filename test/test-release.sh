@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # mmgen = Multi-Mode GENerator, a command-line cryptocurrency wallet
 # Copyright (C)2013-2024 The MMGen Project <mmgen@tuta.io>
@@ -116,6 +116,10 @@ print_ver_hash() {
 	python3 -m pip freeze | grep "^$repo\>" | sed 's/.*sha256=//' | cut -c 1-12
 }
 
+do_typescript() {
+	script -O "$1" -c "$2"
+}
+
 install_package() {
 	echo -e "${BLUE}Installing package$YELLOW $repo$RESET"
 	rm -rf build dist *.egg-info
@@ -165,7 +169,7 @@ do_reexec() {
 		target_dir="$orig_cwd/.clone-test"
 		clone_dir=$target_dir
 	else # TYPESCRIPT=1
-		script -O "$orig_cwd/$typescript_file" -c "$exec_prog"
+		do_typescript "$orig_cwd/$typescript_file" "$exec_prog"
 		return
 	fi
 
@@ -194,7 +198,7 @@ do_reexec() {
 		echo -n 'Building sdist...'
 		eval "python3 -m build --no-isolation --sdist --config-setting=quiet $STDOUT_DEVNULL"
 		echo -e "done\n${BLUE}Unpacking sdist archive to $YELLOW$target_dir$RESET"
-		tar -C $target_dir -axf dist/*.tar.gz
+		tar -C $target_dir -zxf dist/*.tar.gz
 		cd $target_dir/${repo//-/[-_]}-*
 		echo -e "${BLUE}cd -> $YELLOW$PWD$RESET"
 		if [ "$clone_dir" ]; then rm -rf $clone_dir; fi
@@ -207,7 +211,7 @@ do_reexec() {
 	echo -e "\n${BLUE}Executing test runner: ${CYAN}test/test-release $ORIG_ARGS$RESET\n"
 
 	if [ "$TYPESCRIPT" ]; then
-		script -O "$orig_cwd/$typescript_file" -c "$exec_prog"
+		do_typescript "$orig_cwd/$typescript_file" "$exec_prog"
 	else
 		eval $exec_prog
 	fi
@@ -232,6 +236,7 @@ elif [ "$(uname -m)" == 'aarch64' ]; then
 	ARM64=1
 elif [ "$MSYSTEM" ] && uname -a | grep -qi 'msys'; then
 	MSYS2=1
+	DISTRO='MSYS2'
 fi
 
 [ "$ARM32" -o "$ARM64" ] && {
@@ -239,9 +244,7 @@ fi
 	HTTP_LONG_TIMEOUT='MMGEN_HTTP_TIMEOUT=300 '
 }
 
-if [ "$MSYS2" ]; then
-	DISTRO='MSYS2'
-else
+if [ -e '/etc/os-release' ]; then
 	DISTRO=$(grep '^ID=' '/etc/os-release' | cut -c 4-)
 	[ "$DISTRO" ] || {
 		echo 'Unable to determine distro from /etc/os-release. Aborting'

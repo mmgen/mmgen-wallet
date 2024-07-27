@@ -65,7 +65,7 @@ class wallet(MMGenObject,metaclass=WalletMeta):
 			self._deformat_retry()
 			self._decrypt_retry()
 
-		msg('Valid {a} for Seed ID {b}{c}{d}'.format(
+		self.cfg._util.qmsg('Valid {a} for Seed ID {b}{c}{d}'.format(
 			a = self.desc,
 			b = self.seed.sid.hl(),
 			c = f' (seed length {self.seed.bitlen})' if self.seed.bitlen != 256 else '',

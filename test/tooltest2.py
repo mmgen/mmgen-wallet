@@ -210,7 +210,8 @@ def run_test(cls, gid, cmd_name):
 		if 'fmt=xmrseed' in args and cfg.no_altcoin:
 			if not skipping:
 				qmsg('')
-			qmsg(('' if n else '\n') + gray(f'Skipping altcoin test {cmd_name} {args}'))
+			skip_msg = f'Skipping altcoin test {cmd_name} {args}'
+			qmsg(('' if n else '\n') + gray(skip_msg if len(skip_msg) <= 100 else skip_msg[:97] + '...'))
 			skipping = True
 			continue
 		else:
@@ -228,7 +229,7 @@ def run_test(cls, gid, cmd_name):
 			cmd_out = fork_cmd(cmd_name,args,opts,stdin_input)
 		else:
 			if stdin_input and sys.platform == 'win32':
-				msg('Skipping for MSWin - no os.fork()')
+				msg(gray('Skipping for MSWin - no os.fork()'))
 				continue
 			method = getattr(cls(cfg,cmdname=cmd_name,proto=proto,mmtype=mmtype),cmd_name)
 			cmd_out = call_method(cls, method, cmd_name, args, mmtype, stdin_input)

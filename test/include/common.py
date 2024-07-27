@@ -290,6 +290,7 @@ def test_daemons_ops(*network_ids,op,remove_datadir=False):
 		for network_id in network_ids:
 			d = CoinDaemon(cfg,network_id,test_suite=True)
 			if remove_datadir:
+				d.wait = True
 				d.stop(silent=True)
 				d.remove_datadir()
 			ret = d.cmd(op,silent=silent)

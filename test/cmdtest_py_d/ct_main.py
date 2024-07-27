@@ -23,7 +23,7 @@ test.cmdtest_py_d.ct_main: Basic operations tests for the cmdtest.py test suite
 import sys,os
 
 from mmgen.util import msg,msg_r,async_run,capfirst,get_extension,die
-from mmgen.color import green,cyan
+from mmgen.color import green, cyan, gray
 from mmgen.fileutil import get_data_from_file,write_data_to_file
 from mmgen.wallet import get_wallet_cls
 from mmgen.wallet.mmgen import wallet as MMGenWallet
@@ -671,7 +671,7 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 
 	def txbump(self,txfile,prepend_args=[],seed_args=[]):
 		if not self.proto.cap('rbf'):
-			msg('Skipping RBF')
+			msg(gray('Skipping RBF'))
 			return 'skip'
 		args = prepend_args + ['--quiet','--outdir='+self.tmpdir,txfile] + seed_args
 		t = self.spawn('mmgen-txbump',args)
