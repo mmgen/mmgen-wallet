@@ -81,8 +81,8 @@ int pubkey_parse_with_check(
 
 static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
 	const unsigned char * privkey_bytes;
-	const Py_ssize_t privkey_bytes_len;
-	const int compressed;
+	Py_ssize_t privkey_bytes_len;
+	int compressed;
 	if (!PyArg_ParseTuple(args, "y#I", &privkey_bytes, &privkey_bytes_len, &compressed)) {
 		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
 		return NULL;
@@ -114,8 +114,8 @@ static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
 static PyObject * pubkey_tweak_add(PyObject *self, PyObject *args) {
 	const unsigned char * pubkey_bytes;
 	const unsigned char * tweak_bytes;
-	const Py_ssize_t pubkey_bytes_len;
-	const Py_ssize_t tweak_bytes_len;
+	Py_ssize_t pubkey_bytes_len;
+	Py_ssize_t tweak_bytes_len;
 	if (!PyArg_ParseTuple(args, "y#y#", &pubkey_bytes, &pubkey_bytes_len, &tweak_bytes, &tweak_bytes_len)) {
 		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
 		return NULL;
@@ -149,7 +149,7 @@ static PyObject * pubkey_tweak_add(PyObject *self, PyObject *args) {
 
 static PyObject * pubkey_check(PyObject *self, PyObject *args) {
 	const unsigned char * pubkey_bytes;
-	const Py_ssize_t pubkey_bytes_len;
+	Py_ssize_t pubkey_bytes_len;
 	if (!PyArg_ParseTuple(args, "y#", &pubkey_bytes, &pubkey_bytes_len)) {
 		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
 		return NULL;
