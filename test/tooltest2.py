@@ -116,7 +116,7 @@ async def call_method(cls,method,cmd_name,args,mmtype,stdin_input):
 	aargs,kwargs = main_tool.process_args(cmd_name,args,cls)
 	oq_save = bool(cfg.quiet)
 	if not cfg.verbose:
-		cfg.quiet = True
+		cfg._set_quiet(True)
 	if stdin_input:
 		fd0,fd1 = os.pipe()
 		if os.fork(): # parent
@@ -126,7 +126,7 @@ async def call_method(cls,method,cmd_name,args,mmtype,stdin_input):
 			cmd_out = method(*aargs,**kwargs)
 			os.dup2(stdin_save,0)
 			os.wait()
-			cfg.quiet = oq_save
+			cfg._set_quiet(oq_save)
 			return cmd_out
 		else: # child
 			os.close(fd0)
@@ -137,7 +137,7 @@ async def call_method(cls,method,cmd_name,args,mmtype,stdin_input):
 		ret = method(*aargs,**kwargs)
 		if type(ret).__name__ == 'coroutine':
 			ret = await ret
-		cfg.quiet = oq_save
+		cfg._set_quiet(oq_save)
 		return ret
 
 def tool_api(cls,cmd_name,args,opts):

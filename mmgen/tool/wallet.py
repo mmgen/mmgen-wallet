@@ -42,18 +42,18 @@ class tool_cmd(tool_cmd_base):
 
 	def get_subseed(self,subseed_idx:str,wallet=''):
 		"get the Seed ID of a single subseed by Subseed Index for default or specified wallet"
-		self.cfg.quiet = True
+		self.cfg._set_quiet(True)
 		return Wallet(self.cfg,self._get_seed_file(wallet)).seed.subseed(subseed_idx).sid
 
 	def get_subseed_by_seed_id(self,seed_id:str,wallet='',last_idx=SubSeedList.dfl_len):
 		"get the Subseed Index of a single subseed by Seed ID for default or specified wallet"
-		self.cfg.quiet = True
+		self.cfg._set_quiet(True)
 		ret = Wallet(self.cfg,self._get_seed_file(wallet)).seed.subseed_by_seed_id( seed_id, last_idx )
 		return ret.ss_idx if ret else None
 
 	def list_subseeds(self,subseed_idx_range:str,wallet=''):
 		"list a range of subseed Seed IDs for default or specified wallet"
-		self.cfg.quiet = True
+		self.cfg._set_quiet(True)
 		from ..subseed import SubSeedIdxRange
 		return Wallet(self.cfg,self._get_seed_file(wallet)).seed.subseeds.format(
 			*SubSeedIdxRange(subseed_idx_range) )
@@ -64,7 +64,7 @@ class tool_cmd(tool_cmd_base):
 			master_share: f'(min:1, max:{MasterShareIdx.max_val}, 0=no master share)' = 0,
 			wallet = '' ):
 		"list the Seed IDs of the shares resulting from a split of default or specified wallet"
-		self.cfg.quiet = True
+		self.cfg._set_quiet(True)
 		return Wallet(self.cfg,self._get_seed_file(wallet)).seed.split(
 			share_count, id_str, master_share ).format()
 
@@ -81,7 +81,7 @@ class tool_cmd(tool_cmd_base):
 		from ..addrlist import AddrList,AddrIdxList
 
 		addr = MMGenID( self.proto, mmgen_addr )
-		self.cfg.quiet = True
+		self.cfg._set_quiet(True)
 		ss = Wallet(self.cfg,self._get_seed_file(wallet))
 
 		if ss.seed.sid != addr.sid:

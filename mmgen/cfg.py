@@ -115,7 +115,7 @@ class Config(Lockable):
 	"""
 	_autolock = False
 	_set_ok = ('usr_randchars','_proto')
-	_reset_ok = ('accept_defaults','quiet','verbose','yes')
+	_reset_ok = ('accept_defaults',)
 	_use_class_attr = True
 	_default_to_none = True
 
@@ -691,6 +691,11 @@ class Config(Lockable):
 			bad = [k for k in self.__dict__ if k in group and getattr(self,k) is not None]
 			if len(bad) > 1:
 				die(1,'Conflicting options: {}'.format(', '.join(map(fmt_opt,bad))))
+
+	def _set_quiet(self,val):
+		from .util import Util
+		self.__dict__['quiet'] = val
+		self.__dict__['_util'] = Util(self) # qmsg, qmsg_r
 
 def check_opts(cfg): # Raises exception if any check fails
 
