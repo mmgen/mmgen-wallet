@@ -243,7 +243,10 @@ if [ "$MSYS2" ]; then
 	DISTRO='MSYS2'
 else
 	DISTRO=$(grep '^ID=' '/etc/os-release' | cut -c 4-)
-	[ "$DISTRO" ] || { echo 'Unable to determine distro.  Aborting'; exit 1; }
+	[ "$DISTRO" ] || {
+		echo 'Unable to determine distro from /etc/os-release. Aborting'
+		exit 1
+	}
 fi
 
 cmdtest_py='test/cmdtest.py -n'

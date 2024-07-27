@@ -291,7 +291,10 @@ class RPCClient(MMGenObject):
 	def _get_backend(self,backend):
 		backend_id = backend or self.cfg.rpc_backend
 		if backend_id == 'auto':
-			return {'linux':RPCBackends.httplib,'win32':RPCBackends.requests}[sys.platform](self)
+			return {
+				'linux': RPCBackends.httplib,
+				'win32': RPCBackends.requests
+			}[sys.platform](self)
 		else:
 			return getattr(RPCBackends,backend_id)(self)
 

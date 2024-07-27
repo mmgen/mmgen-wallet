@@ -186,8 +186,8 @@ def run_test(test,subtest=None):
 	if hasattr(mod,'unit_tests'): # new class-based API
 		t = getattr(mod,'unit_tests')()
 		altcoin_deps = getattr(t,'altcoin_deps',())
-		win_skip = getattr(t,'win_skip',())
-		arm_skip = getattr(t,'arm_skip',())
+		win_skip = getattr(t, 'win_skip', ())
+		arm_skip = getattr(t, 'arm_skip', ())
 		subtests = (
 			[subtest] if subtest else
 			[k for k,v in type(t).__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']

@@ -309,28 +309,60 @@ class CmdTestInput(CmdTestBase):
 		return self._get_char(['prompt> ','xyz',False,5],'x','x',True)
 
 	def line_input(self):
-		return self._line_input(['prompt> ',True,'',True],'foo','foo',False)
+		return self._line_input(
+			['prompt> ', True, '', True],
+			'foo',
+			'foo',
+			False)
 
 	def line_input_term1(self):
-		return self._line_input(['prompt> ',True,'',True],'foo','foo',True)
+		return self._line_input(
+			['prompt> ', True, '', True],
+			'foo',
+			'foo',
+			True)
 
 	def line_input_term2(self):
-		return self._line_input(['prompt> ',True,'',False],'foo','foo',True)
+		return self._line_input(
+			['prompt> ', True, '', False],
+			'foo',
+			'foo',
+			True)
 
 	def line_input_insert(self):
-		return self._line_input(['prompt> ',True,'inserted text',True],'foo','foo',False)
+		return self._line_input(
+			['prompt> ', True, 'inserted text', True],
+			'foo',
+			'foo',
+			False)
 
 	def line_input_insert_term1(self):
-		return self._line_input(['prompt> ',True,'foo',True],'bar','foobar',True)
+		return self._line_input(
+			['prompt> ', True, 'foo', True],
+			'bar',
+			'foobar',
+			True)
 
 	def line_input_insert_term2(self):
-		return self._line_input(['prompt> ',True,'foo',False],'bar','foobar',True)
+		return self._line_input(
+			['prompt> ', True, 'foo', False],
+			'bar',
+			'foobar',
+			True)
 
 	def line_input_edit_term(self):
-		return self._line_input(['prompt> ',True,'φυφυ',True],'\b\bβαρ','φυβαρ',True)
+		return self._line_input(
+			['prompt> ', True, 'φυφυ', True],
+			'\b\bβαρ',
+			'φυβαρ',
+			True)
 
 	def line_input_erase_term(self):
-		return self._line_input(['prompt> ',True,'foobarbaz',True],Ctrl_U+'foobar','foobar',True)
+		return self._line_input(
+			['prompt> ', True, 'foobarbaz', True],
+			Ctrl_U + 'foobar',
+			'foobar',
+			True)
 
 	def _password_entry(self,prompt,opts=[],term=False):
 		if term and sys.platform == 'win32':
