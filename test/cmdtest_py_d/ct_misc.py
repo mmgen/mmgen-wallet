@@ -133,7 +133,7 @@ class CmdTestMisc(CmdTestBase):
 				imsg('[input not echoed - OK]')
 			t.send('x')
 
-		if self.skip_for_win():
+		if self.skip_for_win('no termios support'):
 			return 'skip'
 
 		t = self.spawn('test/misc/term_ni.py',['echo'],cmd_dir='.',pexpect_spawn=True,timeout=1)
@@ -148,7 +148,7 @@ class CmdTestMisc(CmdTestBase):
 		return t
 
 	def term_cleanup(self):
-		if self.skip_for_win():
+		if self.skip_for_win('no termios support'):
 			return 'skip'
 		return self.spawn('test/misc/term_ni.py',['cleanup'],cmd_dir='.',pexpect_spawn=True)
 
@@ -354,7 +354,7 @@ class CmdTestOutput(CmdTestBase):
 		return t
 
 	def oneshot_warning_term(self):
-		if self.skip_for_win():
+		if self.skip_for_win('no pexpect_spawn'):
 			return 'skip'
 		return self.oneshot_warning(pexpect_spawn=True)
 

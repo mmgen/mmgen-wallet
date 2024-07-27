@@ -1736,7 +1736,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		return t
 
 	def alice_txcreate_info_term(self):
-		if self.skip_for_win():
+		if self.skip_for_win('no pexpect_spawn'):
 			return 'skip'
 		return self.alice_txcreate_info(pexpect_spawn=True)
 

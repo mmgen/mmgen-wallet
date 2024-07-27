@@ -387,7 +387,7 @@ class CmdTestInput(CmdTestBase):
 		return self._password_entry('Enter passphrase: ',term=term)
 
 	def password_entry_noecho_term(self):
-		if self.skip_for_win():
+		if self.skip_for_win('no pexpect_spawn'):
 			return ('skip_warn','\n' + fmt(self.winskip_msg.format(''),strip_char='\t'))
 		return self.password_entry_noecho(term=True)
 
@@ -395,7 +395,7 @@ class CmdTestInput(CmdTestBase):
 		return self._password_entry('Enter passphrase (echoed): ',['--echo-passphrase'],term=term)
 
 	def password_entry_echo_term(self):
-		if self.skip_for_win():
+		if self.skip_for_win('no pexpect_spawn'):
 			return ('skip_warn','\n' + fmt(self.winskip_msg.format(' --echo-passphrase'),strip_char='\t'))
 		return self.password_entry_echo(term=True)
 

@@ -23,6 +23,7 @@ test.cmdtest_py_d.ct_base: Base class for the cmdtest.py test suite
 import sys,os
 
 from mmgen.util import msg
+from mmgen.color import gray
 
 from ..include.common import cfg,write_to_file,read_from_file
 from .common import get_file_with_ext
@@ -38,6 +39,7 @@ class CmdTestBase:
 	need_daemon = False
 	win_skip = False
 	tmpdir_nums = []
+	test_name = None
 
 	def __init__(self,trunner,cfgs,spawn):
 		if hasattr(self,'name'): # init will be called multiple times for classes with multiple inheritance
@@ -82,12 +84,18 @@ class CmdTestBase:
 		except:
 			msg(f'{fn}: file does not exist or could not be deleted')
 
-	def skip_for_win(self):
-		if sys.platform == 'win32':
-			msg(f'Skipping test {self.test_name!r}: not supported on MSys2 platform')
+	def skip_for_platform(self, name, extra_msg=None):
+		if sys.platform == name:
+			msg(gray('Skipping test {!r} for {} platform{}'.format(
+				self.test_name,
+				name,
+				f' ({extra_msg})' if extra_msg else "")))
 			return True
 		else:
 			return False
+
+	def skip_for_win(self, extra_msg=None):
+		return self.skip_for_platform('win32', extra_msg)
 
 	def spawn_chk(self,*args,**kwargs):
 		"""

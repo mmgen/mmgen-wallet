@@ -1415,7 +1415,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def edit_comment3(self):
 		return self.edit_comment(out_num=del_addrs[1],comment_text=tw_comment_lat_cyr_gr)
 	def edit_comment4(self):
-		if self.skip_for_win():
+		if self.skip_for_win('no pexpect_spawn'):
 			return 'skip'
 		return self.edit_comment(out_num=del_addrs[0],comment_text=Ctrl_U,pexpect_spawn=True)
 
