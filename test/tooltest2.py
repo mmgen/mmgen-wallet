@@ -23,7 +23,7 @@ test/tooltest2.py: Test the 'mmgen-tool' utility
 # TODO: move all non-interactive 'mmgen-tool' tests in 'cmdtest.py' here
 # TODO: move all(?) tests in 'tooltest.py' here (or duplicate them?)
 
-import sys,os,time,importlib
+import sys, os, time, importlib, asyncio
 from subprocess import run,PIPE
 
 try:
@@ -36,7 +36,7 @@ from test.include.common import set_globals,end_msg,init_coverage
 from mmgen import main_tool
 from mmgen.cfg import Config
 from mmgen.color import green,blue,purple,cyan,gray
-from mmgen.util import msg,msg_r,Msg,async_run,die
+from mmgen.util import msg, msg_r, Msg, die
 
 skipped_tests = ['mn2hex_interactive']
 coin_dependent_groups = ('Coin','File')
@@ -108,7 +108,7 @@ def fork_cmd(cmd_name,args,opts,stdin_input):
 
 	return cmd_out.strip()
 
-async def call_method(cls,method,cmd_name,args,mmtype,stdin_input):
+def call_method(cls, method, cmd_name, args, mmtype, stdin_input):
 	vmsg('{a}: {b}{c}'.format(
 		a = purple('Running'),
 		b = ' '.join([cmd_name]+[repr(e) for e in args]),
@@ -136,7 +136,7 @@ async def call_method(cls,method,cmd_name,args,mmtype,stdin_input):
 	else:
 		ret = method(*aargs,**kwargs)
 		if type(ret).__name__ == 'coroutine':
-			ret = await ret
+			ret = asyncio.run(ret)
 		cfg._set_quiet(oq_save)
 		return ret
 
@@ -178,7 +178,7 @@ def check_output(out,chk):
 	elif chk is not None:
 		assert out == chk, err_fs.format(out,chk)
 
-async def run_test(cls,gid,cmd_name):
+def run_test(cls, gid, cmd_name):
 	data = tests[gid][cmd_name]
 
 	# behavior is like cmdtest.py: run coin-dependent tests only if proto.testnet or proto.coin != BTC
@@ -231,7 +231,7 @@ async def run_test(cls,gid,cmd_name):
 				msg('Skipping for MSWin - no os.fork()')
 				continue
 			method = getattr(cls(cfg,cmdname=cmd_name,proto=proto,mmtype=mmtype),cmd_name)
-			cmd_out = await call_method(cls,method,cmd_name,args,mmtype,stdin_input)
+			cmd_out = call_method(cls, method, cmd_name, args, mmtype, stdin_input)
 
 		try:
 			vmsg(f'Output:\n{cmd_out}\n')
@@ -261,7 +261,7 @@ async def run_test(cls,gid,cmd_name):
 def docstring_head(obj):
 	return obj.__doc__.strip().split('\n')[0] if obj.__doc__ else None
 
-async def do_group(gid):
+def do_group(gid):
 	desc = f'command group {gid!r}'
 	cls = main_tool.get_mod_cls(gid.lower())
 	qmsg(blue('Testing ' +
@@ -279,14 +279,14 @@ async def do_group(gid):
 			else:
 				msg(m)
 				continue
-		await run_test(cls,gid,cmdname)
+		run_test(cls,gid,cmdname)
 
-async def do_cmd_in_group(cmdname):
+def do_cmd_in_group(cmdname):
 	cls = main_tool.get_cmd_cls(cmdname)
 	for gid,cmds in tests.items():
 		for cmd in cmds:
 			if cmd == cmdname:
-				await run_test(cls,gid,cmdname)
+				run_test(cls,gid,cmdname)
 				return True
 	return False
 
@@ -294,17 +294,17 @@ def list_tested_cmds():
 	for gid in tests:
 		Msg('\n'.join(tests[gid]))
 
-async def main():
+def main():
 	if cfg._args:
 		for cmd in cfg._args:
 			if cmd in tests:
-				await do_group(cmd)
+				do_group(cmd)
 			else:
-				if not await do_cmd_in_group(cmd):
+				if not do_cmd_in_group(cmd):
 					die(1,f'{cmd!r}: not a recognized test or test group')
 	else:
 		for garg in tests:
-			await do_group(garg)
+			do_group(garg)
 
 qmsg = cfg._util.qmsg
 vmsg = cfg._util.vmsg
@@ -344,5 +344,5 @@ if cfg.fork:
 
 from mmgen.main import launch
 start_time = int(time.time())
-launch(func = lambda: async_run(main()))
+launch(func=lambda: main())
 end_msg(int(time.time()) - start_time)
