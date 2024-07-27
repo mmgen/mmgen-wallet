@@ -55,7 +55,7 @@ class GlobalConstants(Lockable):
 	prog_name = os.path.basename(sys.argv[0])
 	is_txprog = prog_name == 'mmgen-regtest' or prog_name.startswith('mmgen-tx')
 
-	if sys.platform not in ('linux','win32'):
+	if sys.platform not in ('linux', 'win32', 'darwin'):
 		die2(1,f'{sys.platform!r}: platform not supported by {proj_name}')
 
 	if os.getenv('HOME'):   # Linux or MSYS2

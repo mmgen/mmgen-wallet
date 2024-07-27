@@ -16,6 +16,7 @@ class unit_tests:
 
 	altcoin_deps = ('pycoin','monero_python','keyconv','zcash_mini','ethkey','ssh_socks_proxy')
 	win_skip = ('losetup','zcash_mini')
+	mac_skip = ('losetup',)
 
 	def pylint(self,name,ut):
 		try:

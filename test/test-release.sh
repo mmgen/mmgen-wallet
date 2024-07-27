@@ -117,7 +117,7 @@ print_ver_hash() {
 }
 
 do_typescript() {
-	script -O "$1" -c "$2"
+	if [ "$DARWIN" ]; then script "$1" $2; else script -O "$1" -c "$2"; fi
 }
 
 install_package() {
@@ -234,6 +234,9 @@ if [ "$(uname -m)" == 'armv7l' ]; then
 	ARM32=1
 elif [ "$(uname -m)" == 'aarch64' ]; then
 	ARM64=1
+elif [ "$(uname -s)" == 'Darwin' ]; then
+	DARWIN=1
+	DISTRO='DARWIN'
 elif [ "$MSYSTEM" ] && uname -a | grep -qi 'msys'; then
 	MSYS2=1
 	DISTRO='MSYS2'

@@ -38,6 +38,7 @@ class CmdTestBase:
 	color = False
 	need_daemon = False
 	win_skip = False
+	mac_skip = False
 	tmpdir_nums = []
 	test_name = None
 
@@ -93,6 +94,9 @@ class CmdTestBase:
 			return True
 		else:
 			return False
+
+	def skip_for_mac(self, extra_msg=None):
+		return self.skip_for_platform('darwin', extra_msg)
 
 	def skip_for_win(self, extra_msg=None):
 		return self.skip_for_platform('win32', extra_msg)

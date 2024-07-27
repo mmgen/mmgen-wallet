@@ -27,9 +27,10 @@ from collections import namedtuple
 
 from .util import msg,msg_r,die
 
-if sys.platform == 'linux':
+if sys.platform in ('linux', 'darwin'):
 	import tty,termios
 	from select import select
+	hold_protect_timeout = 2 if sys.platform == 'darwin' else 0.3
 elif sys.platform == 'win32':
 	try:
 		import msvcrt
@@ -118,9 +119,8 @@ class MMGenTermLinux(MMGenTerm):
 		if cls.cfg.hold_protect_disable:
 			return
 		tty.setcbreak(cls.stdin_fd)
-		timeout = 0.3
 		while True:
-			key = select([sys.stdin], [], [], timeout)[0]
+			key = select([sys.stdin], [], [], hold_protect_timeout)[0]
 			if key:
 				sys.stdin.read(1)
 			else:
@@ -285,6 +285,7 @@ class MMGenTermMSWinStub(MMGenTermMSWin):
 def get_term():
 	return {
 		'linux': (MMGenTermLinux if sys.stdin.isatty() else MMGenTermLinuxStub),
+		'darwin': (MMGenTermLinux if sys.stdin.isatty() else MMGenTermLinuxStub),
 		'win32': (MMGenTermMSWin if sys.stdin.isatty() else MMGenTermMSWinStub),
 	}[sys.platform]
 

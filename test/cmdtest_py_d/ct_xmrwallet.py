@@ -57,7 +57,7 @@ def stop_miner_wallet_daemon(self):
 	async_run(self.users['miner'].wd_rpc.stop_daemon())
 
 def kill_proxy(cls,args):
-	if sys.platform == 'linux':
+	if sys.platform in ('linux', 'darwin'):
 		omsg(f'Killing SSH SOCKS server at localhost:{cls.socks_port}')
 		cmd = [ 'pkill', '-f', ' '.join(args) ]
 		run(cmd)

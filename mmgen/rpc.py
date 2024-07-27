@@ -293,6 +293,7 @@ class RPCClient(MMGenObject):
 		if backend_id == 'auto':
 			return {
 				'linux': RPCBackends.httplib,
+				'darwin': RPCBackends.httplib,
 				'win32': RPCBackends.requests
 			}[sys.platform](self)
 		else:

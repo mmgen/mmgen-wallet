@@ -54,6 +54,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	tmpdir_nums  = [18]
 	color        = True
 	win_skip     = True
+	mac_skip     = True
 	threaded     = False
 	daemon_coins = []
 

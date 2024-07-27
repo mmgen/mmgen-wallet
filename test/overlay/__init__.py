@@ -55,7 +55,7 @@ def overlay_setup(repo_root):
 
 			sys.stderr.write(f'Setting up overlay tree: {pkgname}\n')
 
-			make_link = os.symlink if sys.platform == 'linux' else shutil.copy2
+			make_link = os.symlink if sys.platform in ('linux', 'darwin') else shutil.copy2
 			shutil.rmtree(os.path.join(overlay_tree_dir,pkgname),ignore_errors=True)
 
 			import configparser

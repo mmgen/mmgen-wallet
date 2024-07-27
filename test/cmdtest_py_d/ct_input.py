@@ -29,6 +29,8 @@ from .common import Ctrl_U,ref_dir
 from .ct_base import CmdTestBase
 from .input import stealth_mnemonic_entry,user_dieroll_entry
 
+hold_protect_delay = 2 if sys.platform == 'darwin' else None
+
 class CmdTestInput(CmdTestBase):
 	'user input'
 	networks = ('btc',)
@@ -238,7 +240,7 @@ class CmdTestInput(CmdTestBase):
 
 		return t
 
-	def _input_func(self,func_name,arg_dfls,func_args,text,expect,term):
+	def _input_func(self, func_name, arg_dfls, func_args, text, expect, term, delay=None):
 		if term and sys.platform == 'win32':
 			return ('skip_warn','pexpect_spawn not supported on Windows platform')
 		func_args = dict(zip(arg_dfls.keys(),func_args))
@@ -259,9 +261,9 @@ class CmdTestInput(CmdTestBase):
 		prompt = func_args['prompt'] + prompt_add
 		t.expect('Calling ')
 		if prompt:
-			t.expect(prompt,text)
+			t.expect(prompt, text, delay=delay)
 		else:
-			t.send(text)
+			t.send(text, delay=delay)
 		ret = t.expect_getend('  ==> ')
 		assert ret == repr(expect), f'Text mismatch! {ret} != {repr(expect)}'
 		return t
@@ -275,14 +277,14 @@ class CmdTestInput(CmdTestBase):
 		}
 		return self._input_func('get_char',arg_dfls,func_args,text,expect,term)
 
-	def _line_input(self,func_args,text,expect,term):
+	def _line_input(self, func_args, text, expect, term, delay=None):
 		arg_dfls = {
 			'prompt': '', # positional
 			'echo': True,
 			'insert_txt': '',
 			'hold_protect': True,
 		}
-		return self._input_func('line_input',arg_dfls,func_args,text+'\n',expect,term)
+		return self._input_func('line_input', arg_dfls, func_args, text+'\n', expect, term, delay=delay)
 
 	def get_char1(self):
 		return self._get_char(['prompt> ','',True,5],'x','x',False)
@@ -321,7 +323,8 @@ class CmdTestInput(CmdTestBase):
 			['prompt> ', True, '', True],
 			'foo',
 			'foo',
-			True)
+			True,
+			hold_protect_delay)
 
 	def line_input_term2(self):
 		return self._line_input(
@@ -338,13 +341,18 @@ class CmdTestInput(CmdTestBase):
 			False)
 
 	def line_input_insert_term1(self):
+		if self.skip_for_mac('readline text buffer issues'):
+			return 'skip'
 		return self._line_input(
 			['prompt> ', True, 'foo', True],
 			'bar',
 			'foobar',
-			True)
+			True,
+			hold_protect_delay)
 
 	def line_input_insert_term2(self):
+		if self.skip_for_mac('readline text buffer issues'):
+			return 'skip'
 		return self._line_input(
 			['prompt> ', True, 'foo', False],
 			'bar',
@@ -356,7 +364,8 @@ class CmdTestInput(CmdTestBase):
 			['prompt> ', True, '', True],
 			'\b\bφυφυ\b\bβαρ',
 			'φυβαρ',
-			True)
+			True,
+			hold_protect_delay)
 
 	def line_input_edit_term_insert(self):
 		if self.skip_for_mac('readline text buffer issues'):
@@ -365,14 +374,18 @@ class CmdTestInput(CmdTestBase):
 			['prompt> ', True, 'φυφυ', True],
 			'\b\bβαρ',
 			'φυβαρ',
-			True)
+			True,
+			hold_protect_delay)
 
 	def line_input_erase_term(self):
+		if self.skip_for_mac('readline text buffer issues'):
+			return 'skip'
 		return self._line_input(
 			['prompt> ', True, 'foobarbaz', True],
 			Ctrl_U + 'foobar',
 			'foobar',
-			True)
+			True,
+			hold_protect_delay)
 
 	def _password_entry(self,prompt,opts=[],term=False):
 		if term and sys.platform == 'win32':

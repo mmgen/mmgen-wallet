@@ -24,7 +24,7 @@ import sys,os
 
 def launch(*, mod=None, func=None, fqmod=None, package='mmgen'):
 
-	if sys.platform == 'linux' and sys.stdin.isatty():
+	if sys.platform in ('linux', 'darwin') and sys.stdin.isatty():
 		import termios,atexit
 		fd = sys.stdin.fileno()
 		old = termios.tcgetattr(fd)

@@ -133,7 +133,7 @@ class Daemon(Lockable):
 				if len(pids) > 1:
 					self.pids = pids
 				return pids[0]
-		elif self.platform == 'linux':
+		elif self.platform in ('linux', 'darwin'):
 			ss = ' '.join(self.start_cmd)
 			cp = self.run_cmd(['pgrep','-f',ss],silent=True)
 			if cp.stdout:

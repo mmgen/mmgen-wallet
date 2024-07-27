@@ -135,7 +135,7 @@ class CmdTestMisc(CmdTestBase):
 				die('TestSuiteException', 'Terminal echoed in noecho mode!')
 			t.send('x')
 
-		if self.skip_for_win('no termios support'):
+		if self.skip_for_win('no termios support') or self.skip_for_mac('termios.ECHO issues'):
 			return 'skip'
 
 		t = self.spawn('test/misc/term_ni.py',['echo'],cmd_dir='.',pexpect_spawn=True,timeout=1)

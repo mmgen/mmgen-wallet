@@ -21,7 +21,7 @@ commands = [
 	'get_char_one',
 	'get_char_one_raw',
 ]
-if sys.platform == 'linux':
+if sys.platform in ('linux', 'darwin'):
 	commands.extend([
 		'get_char',
 		'get_char_immed_chars',

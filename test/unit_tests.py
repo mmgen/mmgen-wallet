@@ -187,6 +187,7 @@ def run_test(test,subtest=None):
 		t = getattr(mod,'unit_tests')()
 		altcoin_deps = getattr(t,'altcoin_deps',())
 		win_skip = getattr(t, 'win_skip', ())
+		mac_skip = getattr(t, 'mac_skip', ())
 		arm_skip = getattr(t, 'arm_skip', ())
 		subtests = (
 			[subtest] if subtest else
@@ -201,6 +202,9 @@ def run_test(test,subtest=None):
 				continue
 			if sys.platform == 'win32' and subtest in win_skip:
 				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for Windows platform'))
+				continue
+			elif sys.platform == 'darwin' and subtest in mac_skip:
+				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for macOS platform'))
 				continue
 			elif platform.machine() == 'aarch64' and subtest in arm_skip:
 				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for ARM platform'))

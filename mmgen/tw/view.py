@@ -181,6 +181,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			'\xe0O': 'm_bot',
 		}
 	}
+	scroll_keys['darwin'] = scroll_keys['linux']
 
 	def __new__(cls,cfg,proto,*args,**kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls,cls.mod_subpath))

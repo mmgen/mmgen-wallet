@@ -30,7 +30,7 @@ def create_shm_dir(data_dir,trash_dir):
 	# under '/dev/shm' and put datadir and tmpdirs here.
 	import shutil
 	from subprocess import run
-	if sys.platform == 'win32':
+	if sys.platform in ('win32', 'darwin'):
 		for tdir in (data_dir,trash_dir):
 			try:
 				os.listdir(tdir)
@@ -293,7 +293,7 @@ def do_between():
 		sys.stderr.write('\n')
 
 def create_tmp_dirs(shm_dir):
-	if sys.platform == 'win32':
+	if sys.platform in ('win32', 'darwin'):
 		for cfg in sorted(cfgs):
 			mk_tmpdir(cfgs[cfg]['tmpdir'])
 	else:
@@ -662,6 +662,10 @@ class CmdTestRunner:
 
 		if sys.platform == 'win32' and ct_cls.win_skip:
 			omsg(gray(f'INFO → skipping test {gname!r} (platform=win32)'))
+			return None
+
+		if sys.platform == 'darwin' and ct_cls.mac_skip:
+			omsg(gray(f'INFO → skipping test {gname!r} (platform=darwin)'))
 			return None
 
 		for k in ('segwit','segwit_random','bech32'):

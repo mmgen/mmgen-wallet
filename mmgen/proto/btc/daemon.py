@@ -29,6 +29,7 @@ class bitcoin_core_daemon(CoinDaemon):
 	nonstd_datadir = False
 	datadirs = {
 		'linux': [gc.home_dir,'.bitcoin'],
+		'darwin': [gc.home_dir, '.bitcoin'],
 		'win32': [os.getenv('APPDATA'),'Bitcoin']
 	}
 	avail_opts = ('no_daemonize', 'online', 'bdb_wallet')
@@ -76,7 +77,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--rpcallowip=127.0.0.1'],
 			[f'--rpcbind=127.0.0.1:{self.rpc_port}'],
 			['--pid='+self.pidfile,    self.use_pidfile],
-			['--daemon',               self.platform == 'linux' and not self.opt.no_daemonize],
+			['--daemon',               self.platform in ('linux', 'darwin') and not self.opt.no_daemonize],
 			['--fallbackfee=0.0002',   self.coin == 'BTC' and self.network == 'regtest'],
 			['--usecashaddr=0',        self.coin == 'BCH'],
 			['--deprecatedrpc=create_bdb', self.coin == 'BTC' and self.opt.bdb_wallet],
