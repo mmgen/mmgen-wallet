@@ -29,7 +29,7 @@ class bitcoin_core_daemon(CoinDaemon):
 	nonstd_datadir = False
 	datadirs = {
 		'linux': [gc.home_dir,'.bitcoin'],
-		'darwin': [gc.home_dir, '.bitcoin'],
+		'darwin': [gc.home_dir, 'Library', 'Application Support', 'Bitcoin'],
 		'win32': [os.getenv('APPDATA'),'Bitcoin']
 	}
 	avail_opts = ('no_daemonize', 'online', 'bdb_wallet')
