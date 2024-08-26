@@ -323,22 +323,9 @@ class Signable:
 
 class Autosign:
 
-	dfl_mountpoint     = '/mnt/mmgen_autosign'
-	dfl_wallet_dir     = '/dev/shm/autosign'
-	old_dfl_mountpoint = '/mnt/tx'
-	dfl_dev_label_dir  = '/dev/disk/by-label'
-	dev_label          = 'MMGEN_TX'
-
-	old_dfl_mountpoint_errmsg = f"""
-		Mountpoint '{old_dfl_mountpoint}' is no longer supported!
-		Please rename '{old_dfl_mountpoint}' to '{dfl_mountpoint}'
-		and update your fstab accordingly.
-	"""
-	mountpoint_errmsg_fs = """
-		Mountpoint '{}' does not exist or does not point
-		to a directory!  Please create the mountpoint and add an entry
-		to your fstab as described in this script’s help text.
-	"""
+	dev_label = 'MMGEN_TX'
+	linux_mount_subdir = 'mmgen_autosign'
+	wallet_subdir = 'autosign'
 
 	mn_fmts = {
 		'mmgen': 'words',
@@ -359,12 +346,8 @@ class Autosign:
 	have_xmr = False
 	xmr_only = False
 
-	def init_cfg(self): # see test/overlay/fakemods/mmgen/autosign.py
-		self.mountpoint     = Path(self.cfg.mountpoint or self.dfl_mountpoint)
-		self.wallet_dir     = Path(self.cfg.wallet_dir or self.dfl_wallet_dir)
-		self.dev_label_path = Path(self.dfl_dev_label_dir) / self.dev_label
-		self.mount_cmd      = 'mount'
-		self.umount_cmd     = 'umount'
+	def init_fixup(self): # see test/overlay/fakemods/mmgen/autosign.py
+		pass
 
 	def __init__(self,cfg,cmd=None):
 
@@ -374,8 +357,40 @@ class Autosign:
 					cfg.mnemonic_fmt,
 					fmt_list( self.mn_fmts, fmt='no_spc' ) ))
 
+		if sys.platform == 'linux':
+			self.dfl_mountpoint = f'/mnt/{self.linux_mount_subdir}'
+			self.dfl_shm_dir    = '/dev/shm'
+
+			# linux-only attrs:
+			self.dev_label_dir = Path('/dev/disk/by-label')
+			self.old_dfl_mountpoint = '/mnt/tx'
+			self.old_dfl_mountpoint_errmsg = f"""
+				Mountpoint ‘{self.old_dfl_mountpoint}’ is no longer supported!
+				Please rename ‘{self.old_dfl_mountpoint}’ to ‘{self.dfl_mountpoint}’
+				and update your fstab accordingly.
+			"""
+			self.mountpoint_errmsg_fs = """
+				Mountpoint ‘{}’ does not exist or does not point
+				to a directory!  Please create the mountpoint and add an entry
+				to your fstab as described in this script’s help text.
+			"""
+
 		self.cfg = cfg
-		self.init_cfg()
+
+		self.dfl_wallet_dir = f'{self.dfl_shm_dir}/{self.wallet_subdir}'
+		self.mountpoint = Path(cfg.mountpoint or self.dfl_mountpoint)
+		self.shm_dir    = Path(self.dfl_shm_dir)
+		self.wallet_dir = Path(cfg.wallet_dir or self.dfl_wallet_dir)
+
+		if sys.platform == 'linux':
+			self.mount_cmd  = f'mount {self.mountpoint}'
+			self.umount_cmd = f'umount {self.mountpoint}'
+
+		self.init_fixup()
+
+		# these use the ‘fixed-up’ values:
+		if sys.platform == 'linux':
+			self.dev_label_path = self.dev_label_dir / self.dev_label
 
 		self.keyfile = self.mountpoint / 'autosign.key'
 
@@ -448,7 +463,7 @@ class Autosign:
 
 		return self._wallet_files
 
-	def do_mount(self, silent=False):
+	def do_mount(self, silent=False, verbose=False):
 
 		def check_or_create(dirname):
 			path = getattr(self, dirname)
@@ -463,7 +478,7 @@ class Autosign:
 				msg(f'Creating ‘{path}’')
 				path.mkdir(parents=True)
 
-		if not self.mountpoint.is_dir():
+		if sys.platform == 'linux' and not self.mountpoint.is_dir():
 			def do_die(m):
 				die(1,'\n' + yellow(fmt(m.strip(),indent='  ')))
 			if Path(self.old_dfl_mountpoint).is_dir():
@@ -472,10 +487,8 @@ class Autosign:
 				do_die(self.mountpoint_errmsg_fs.format(self.mountpoint))
 
 		if not self.mountpoint.is_mount():
-			if run(
-					self.mount_cmd.split() + [str(self.mountpoint)],
-					stderr = DEVNULL,
-					stdout = DEVNULL).returncode == 0:
+			redir = None if verbose else DEVNULL
+			if run(self.mount_cmd.split(), stderr=redir, stdout=redir).returncode == 0:
 				if not silent:
 					msg(f"Mounting '{self.mountpoint}'")
 			else:
@@ -484,12 +497,13 @@ class Autosign:
 		for dirname in self.dirs:
 			check_or_create(dirname)
 
-	def do_umount(self,silent=False):
+	def do_umount(self, silent=False, verbose=False):
 		if self.mountpoint.is_mount():
 			run( ['sync'], check=True )
 			if not silent:
 				msg(f"Unmounting '{self.mountpoint}'")
-			run(self.umount_cmd.split() + [str(self.mountpoint)], check=True)
+			redir = None if verbose else DEVNULL
+			run(self.umount_cmd.split(), stdout=redir, check=True)
 		if not silent:
 			bmsg('It is now safe to extract the removable device')
 
@@ -701,7 +715,8 @@ class Autosign:
 	def device_inserted(self):
 		if self.cfg.no_insert_check:
 			return True
-		return self.dev_label_path.exists()
+		if sys.platform == 'linux':
+			return self.dev_label_path.exists()
 
 	async def main_loop(self):
 		if not self.cfg.stealth_led:

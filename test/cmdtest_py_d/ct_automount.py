@@ -135,6 +135,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 				t.expect(expect)
 			for pat in shred_expect:
 				t.expect(pat, regex=True)
+		t.read()
 		self.remove_device_online()
 		return t
 
@@ -173,11 +174,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		return 'ok'
 
 	def alice_run_autosign_setup(self):
-		self.insert_device()
-		t = self.run_setup(mn_type='default', use_dfl_wallet=True, passwd=rt_pw)
-		t.read()
-		self.remove_device()
-		return t
+		return self.run_setup(mn_type='default', use_dfl_wallet=True, passwd=rt_pw)
 
 	def alice_txsend1(self):
 		return self._alice_txsend('This one’s worth a comment', no_wait=True)
@@ -199,6 +196,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 				['--alice', '--autosign', '--status', '--verbose'],
 				exit_val = exit_val)
 		t.expect(expect)
+		t.read()
 		self.remove_device_online()
 		return t
 

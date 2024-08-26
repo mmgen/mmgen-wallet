@@ -214,14 +214,11 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		return self.fund_alice(wallet=2)
 
 	def autosign_setup(self):
-		self.insert_device()
-		t = self.run_setup(
+		return self.run_setup(
 			mn_type        = 'mmgen',
 			mn_file        = self.users['alice'].mmwords,
-			use_dfl_wallet = None )
-		t.expect('Continue with Monero setup? (Y/n): ','n')
-		self.remove_device()
-		return t
+			use_dfl_wallet = None,
+			expect_args    = ['Continue with Monero setup? (Y/n): ', 'n'])
 
 	def autosign_xmr_setup(self):
 		self.do_mount_online()

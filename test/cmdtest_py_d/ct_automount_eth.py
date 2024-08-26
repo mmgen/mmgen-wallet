@@ -90,11 +90,7 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		return t
 
 	def run_autosign_setup(self):
-		self.insert_device()
-		t = self.run_setup(mn_type='bip39', mn_file='test/ref/98831F3A.bip39', use_dfl_wallet=None)
-		t.read()
-		self.remove_device()
-		return t
+		return self.run_setup(mn_type='bip39', mn_file='test/ref/98831F3A.bip39', use_dfl_wallet=None)
 
 	def send_tx(self, add_args=[]):
 		self._wait_signed('transaction')

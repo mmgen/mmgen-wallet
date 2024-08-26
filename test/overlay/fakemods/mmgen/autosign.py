@@ -2,18 +2,20 @@ from .autosign_orig import *
 
 class overlay_fake_Autosign:
 
-	def init_cfg(self):
+	def init_fixup(self):
 		if pfx := self.cfg.test_suite_root_pfx:
-			subdir = 'online' if self.cfg.online else 'offline'
-			self.mountpoint     = Path(f'{pfx}/{subdir}/{self.dfl_mountpoint}')
-			self.wallet_dir     = Path(f'{pfx}/{subdir}/{self.dfl_wallet_dir}')
-			self.dev_label_path = Path(f'{pfx}/{subdir}/{self.dfl_dev_label_dir}') / self.dev_label
+			subdir = pfx + '/' + ('online' if self.cfg.online else 'offline')
+			for k in ('mountpoint', 'shm_dir', 'wallet_dir', 'dev_label_dir'):
+				if hasattr(self, k):
+					orig_path = str(getattr(self, k))
+					setattr(self, k, Path(subdir + orig_path.removeprefix(subdir)))
 			# mount --type=fuse-ext2 --options=rw+ ### current fuse-ext2 (0.4 29) is buggy - can’t use
-			self.fs_image_path  = Path(f'{pfx}/removable_device_image')
-			self.mount_cmd      = f'sudo mount {self.fs_image_path}'
-			self.umount_cmd     = 'sudo umount'
-		else:
-			self.init_cfg_orig()
+			self.fs_image_path = Path(f'{pfx}/removable_device_image').absolute()
+			import sys
+			if sys.platform == 'linux':
+				self.mount_cmd  = f'sudo mount {self.fs_image_path} {self.mountpoint}'
+				self.umount_cmd = f'sudo umount {self.mountpoint}'
 
-Autosign.init_cfg_orig = Autosign.init_cfg
-Autosign.init_cfg      = overlay_fake_Autosign.init_cfg
+Autosign.dev_label          = 'MMGEN_TS_TX'
+Autosign.linux_mount_subdir = 'mmgen_ts_autosign'
+Autosign.init_fixup         = overlay_fake_Autosign.init_fixup

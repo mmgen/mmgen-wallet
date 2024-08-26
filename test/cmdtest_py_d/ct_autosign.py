@@ -20,7 +20,7 @@
 test.cmdtest_py_d.ct_autosign: Autosign tests for the cmdtest.py test suite
 """
 
-import sys,os,time,shutil
+import sys, os, time, shutil
 from subprocess import run,DEVNULL
 from pathlib import Path
 
@@ -80,6 +80,10 @@ class CmdTestAutosignBase(CmdTestBase):
 		if self.threaded:
 			self.spawn_env['MMGEN_TEST_SUITE_AUTOSIGN_THREADED'] = '1'
 
+	def __del__(self):
+		if hasattr(self,'have_dummy_control_files'):
+			LEDControl.delete_dummy_control_files()
+
 	def _create_autosign_instances(self,create_dirs):
 		d = {'offline': {'name':'asi'}}
 
@@ -98,19 +102,20 @@ class CmdTestAutosignBase(CmdTestBase):
 				}))
 
 			if create_dirs and not self.live:
-				for k in ('mountpoint', 'wallet_dir', 'dev_label_dir'):
-					if k == 'wallet_dir' and subdir == 'online':
+				for k in ('mountpoint', 'shm_dir', 'wallet_dir', 'dev_label_dir'):
+					if subdir == 'online' and k in ('shm_dir', 'wallet_dir'):
 						continue
-					(Path(self.tmpdir) / (subdir + getattr(Autosign,'dfl_'+k))).mkdir(parents=True,exist_ok=True)
+					getattr(asi, k).mkdir(parents=True, exist_ok=True)
 
 			setattr(self, data['name'], asi)
 
 	def _create_removable_device(self):
-		redir = DEVNULL
-		img_file = str(self.asi.fs_image_path)
-		run(['truncate', '--size=10M', img_file], check=True)
-		run(['/sbin/mkfs.ext2', '-E', f'root_owner={os.getuid()}:{os.getgid()}', img_file],
-			stdout=redir, stderr=redir, check=True)
+		img = self.asi.fs_image_path
+		if sys.platform == 'linux':
+			redir = DEVNULL
+			run(f'truncate --size=10M {img}'.split(), check=True)
+			run(f'/sbin/mkfs.ext2 -E root_owner={os.getuid()}:{os.getgid()} {img}'.split(),
+				stdout=redir, stderr=redir, check=True)
 
 	def start_daemons(self):
 		self.spawn('',msg_only=True)
@@ -129,10 +134,13 @@ class CmdTestAutosignBase(CmdTestBase):
 			use_dfl_wallet = False,
 			seed_len       = None,
 			usr_entry_modes = False,
-			passwd         = 'abc'):
+			passwd         = 'abc',
+			expect_args    = []):
 
 		mn_desc = mn_type or 'default'
 		mn_type = mn_type or 'mmgen'
+
+		self.insert_device()
 
 		t = self.spawn(
 			'mmgen-autosign',
@@ -166,14 +174,29 @@ class CmdTestAutosignBase(CmdTestBase):
 			stealth_mnemonic_entry(t,mne,mn,entry_mode)
 
 		t.written_to_file('Autosign wallet')
+
+		if expect_args:
+			t.expect(*expect_args)
+
+		t.read()
+		self.remove_device()
+
 		return t
 
-	def insert_device(self):
-		self.asi.dev_label_path.touch()
+	def insert_device(self, asi='asi'):
+		if self.live:
+			return
+		loc = getattr(self, asi)
+		if sys.platform == 'linux':
+			loc.dev_label_path.touch()
 
-	def remove_device(self):
-		if self.asi.dev_label_path.exists():
-			self.asi.dev_label_path.unlink()
+	def remove_device(self, asi='asi'):
+		if self.live:
+			return
+		loc = getattr(self, asi)
+		if sys.platform == 'linux':
+			if loc.dev_label_path.exists():
+				loc.dev_label_path.unlink()
 
 	def _mount_ops(self, loc, cmd, *args, **kwargs):
 		return getattr(getattr(self,loc),cmd)(*args, silent=self.silent_mount, **kwargs)
@@ -283,8 +306,10 @@ class CmdTestAutosignClean(CmdTestAutosignBase):
 		t = self.spawn('mmgen-autosign', [f'--coins={coins}','clean'], no_msg=True)
 		out = t.read()
 
+		self.insert_device()
+		silence()
 		self.do_mount()
-		self.remove_device()
+		end_silence()
 
 		after = '\n'.join(self._gen_listing())
 
@@ -313,6 +338,7 @@ class CmdTestAutosignClean(CmdTestAutosignBase):
 			shred_count += 9
 
 		self.do_umount()
+		self.remove_device()
 
 		imsg(f'\nBefore cleaning:\n{before}')
 		imsg(f'\nAfter cleaning:\n{after}')
@@ -340,6 +366,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		import threading
 		threading.Thread(target=run, name='Autosign wait loop').start()
 		time.sleep(0.2)
+
 		return 'silent'
 
 	def autosign_kill_thread(self):
@@ -376,11 +403,10 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		return 'ok'
 
 	def insert_device_online(self):
-		self.asi_online.dev_label_path.touch()
+		return self.insert_device(asi='asi_online')
 
 	def remove_device_online(self):
-		if self.asi_online.dev_label_path.exists():
-			self.asi_online.dev_label_path.unlink()
+		return self.remove_device(asi='asi_online')
 
 	def do_mount_online(self, *args, **kwargs):
 		return self._mount_ops('asi_online', 'do_mount', *args, **kwargs)
@@ -390,6 +416,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 	async def txview(self):
 		self.spawn('', msg_only=True)
+		self.insert_device()
 		self.do_mount()
 		src = Path(self.asi.txauto_dir)
 		from mmgen.tx import CompletedTX
@@ -401,6 +428,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			out = tx.info.format(terse=True)
 			imsg(indent(out, indent='  '))
 		self.do_umount()
+		self.remove_device()
 		return 'ok'
 
 class CmdTestAutosign(CmdTestAutosignBase):
@@ -494,13 +522,12 @@ class CmdTestAutosign(CmdTestAutosignBase):
 			self.have_dummy_control_files = True
 			self.spawn_env['MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE'] = '1'
 
-	def __del__(self):
-		if hasattr(self,'have_dummy_control_files'):
-			LEDControl.delete_dummy_control_files()
-
 	def gen_key(self):
+		self.insert_device()
 		t = self.spawn( 'mmgen-autosign', self.opts + ['gen_key'] )
 		t.expect_getend('Wrote key file ')
+		t.read()
+		self.remove_device()
 		return t
 
 	def create_dfl_wallet(self):
@@ -579,8 +606,10 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		if op == 'set_count':
 			return
 
+		self.insert_device()
+
 		silence()
-		self.do_mount()
+		self.do_mount(verbose=cfg.verbose or cfg.exact_output)
 		end_silence()
 
 		for coindir,fn in data:
@@ -597,6 +626,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 				pass
 
 		self.do_umount()
+		self.remove_device()
 
 		return 'ok'
 
@@ -610,6 +640,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 	remove_bad_txfiles2 = remove_bad_txfiles
 
 	def bad_txfiles(self,op):
+		self.insert_device()
 		self.do_mount()
 		# create or delete 2 bad tx files
 		self.spawn('',msg_only=True)
@@ -627,6 +658,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 					pass
 			self.bad_tx_count = 0
 		self.do_umount()
+		self.remove_device()
 		return 'ok'
 
 	def copy_msgfiles(self):
@@ -644,6 +676,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 	def msgfile_ops(self,op):
 		self.spawn('',msg_only=True)
 		destdir = joinpath(self.asi.mountpoint,'msg')
+		self.insert_device()
 		self.do_mount()
 		os.makedirs(destdir,exist_ok=True)
 		if op.endswith('_invalid'):
@@ -667,10 +700,14 @@ class CmdTestAutosign(CmdTestAutosignBase):
 				elif op == 'remove_signed':
 					os.unlink(os.path.join( destdir, os.path.basename(fn).replace('rawmsg','sigmsg') ))
 		self.do_umount()
+		self.remove_device()
 		return 'ok'
 
 	def do_sign(self, args=[], have_msg=False, exc_exit_val=None):
+
 		tx_desc = Signable.transaction.desc
+		self.insert_device()
+
 		t = self.spawn(
 				'mmgen-autosign',
 				self.opts + args,
@@ -698,6 +735,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 					regex = True)
 
 		t.read()
+		self.remove_device()
 
 		imsg('')
 		return t
@@ -732,19 +770,25 @@ class CmdTestAutosign(CmdTestAutosignBase):
 			absent  = ['xmr_signables'])
 
 	def sign_no_unsigned_xmr(self):
+		if self.coins == ['btc']:
+			return 'skip'
 		return self._sign_no_unsigned(
 			coins = 'XMR,BTC',
 			present = ['xmr_signables','non_xmr_signables'])
 
 	def sign_no_unsigned_xmronly(self):
+		if self.coins == ['btc']:
+			return 'skip'
 		return self._sign_no_unsigned(
 			coins   = 'XMR',
 			present = ['xmr_signables'],
 			absent  = ['non_xmr_signables'])
 
 	def _sign_no_unsigned(self,coins,present=[],absent=[]):
+		self.insert_device()
 		t = self.spawn('mmgen-autosign', ['--quiet', '--no-insert-check', f'--coins={coins}'])
 		res = t.read()
+		self.remove_device()
 		for signable_list in present:
 			for signable_clsname in getattr(Signable,signable_list):
 				desc = getattr(Signable, signable_clsname).desc
@@ -756,8 +800,11 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		return t
 
 	def wipe_key(self):
+		self.insert_device()
 		t = self.spawn('mmgen-autosign', ['--quiet', '--no-insert-check', 'wipe_key'])
 		t.expect('Shredding')
+		t.read()
+		self.remove_device()
 		return t
 
 class CmdTestAutosignBTC(CmdTestAutosign):

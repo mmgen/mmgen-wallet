@@ -20,13 +20,13 @@ groups_desc="
 
 init_groups() {
 	dfl_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc xmr'
-	extra_tests='dep dev lint autosign_btc autosign_live ltc_tn bch_tn'
-	noalt_tests='dep alt obj color unit hash ref tool tool2 gen autosign_btc btc btc_tn btc_rt'
+	extra_tests='dep dev lint autosign_live ltc_tn bch_tn'
+	noalt_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_tn btc_rt'
 	quick_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_rt altref altgen eth etc xmr'
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
 	noalt_ok_tests='lint'
 
-	[ "$MSYS2" ] && SKIP_LIST='autosign autosign_btc autosign_live'
+	[ "$MSYS2" ] && SKIP_LIST='autosign autosign_live'
 	[ "$ARM32" -o "$ARM64" ] && SKIP_LIST+=' etc'
 
 	true
@@ -162,18 +162,17 @@ init_tests() {
 
 	d_autosign="transaction autosigning with automount"
 	t_autosign="
-		- $cmdtest_py autosign autosign_clean autosign_automount
+		- $cmdtest_py autosign_clean autosign_automount autosign
+		b $cmdtest_py autosign_clean autosign_automount autosign_btc
 		- $cmdtest_py --coin=bch autosign_automount
 		s $cmdtest_py --coin=ltc autosign_automount
 		- $cmdtest_py --coin=eth autosign_eth
 		s $cmdtest_py --coin=etc autosign_eth
 	"
-	[ "$FAST" ]  && t_autosign_skip='s'
+	if [ "$SKIP_ALT_DEP" ]; then t_autosign_skip='- s'; else t_autosign_skip='b'; fi
+	[ "$FAST" ] && t_autosign_skip+=' s'
 
-	d_autosign_btc="transaction and message autosigning (Bitcoin only)"
-	t_autosign_btc="- $cmdtest_py autosign_btc"
-
-	d_autosign_btc="transaction and message autosigning (interactive)"
+	d_autosign_live="transaction and message autosigning (interactive)"
 	t_autosign_live="- $cmdtest_py autosign_live"
 
 	d_btc="overall operations with emulated RPC data (Bitcoin)"
