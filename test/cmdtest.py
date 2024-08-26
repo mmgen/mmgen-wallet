@@ -997,6 +997,9 @@ if __name__ == '__main__':
 		tr.warn_skipped()
 		if tr.daemon_started:
 			stop_test_daemons(network_id)
+		if hasattr(tr, 'tg'):
+			del tr.tg
+		del tr
 	except KeyboardInterrupt:
 		if tr.daemon_started:
 			stop_test_daemons(network_id)

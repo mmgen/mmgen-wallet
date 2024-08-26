@@ -58,7 +58,7 @@ class GlobalConstants(Lockable):
 	if sys.platform not in ('linux', 'win32', 'darwin'):
 		die2(1,f'{sys.platform!r}: platform not supported by {proj_name}')
 
-	if os.getenv('HOME'):   # Linux or MSYS2
+	if os.getenv('HOME'):   # Linux, MSYS2, or macOS
 		home_dir = os.getenv('HOME')
 	elif sys.platform == 'win32': # Windows without MSYS2 - not supported
 		die2(1,f'$HOME not set!  {proj_name} for Windows must be run in MSYS2 environment')

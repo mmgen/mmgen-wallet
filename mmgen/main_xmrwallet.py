@@ -115,7 +115,7 @@ opts_data = {
 	}
 }
 
-cfg = Config(opts_data=opts_data)
+cfg = Config(opts_data=opts_data, init_opts={'coin':'xmr'})
 
 cmd_args = cfg._args
 

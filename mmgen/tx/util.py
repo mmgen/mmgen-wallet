@@ -21,7 +21,7 @@ def get_autosign_obj(cfg):
 			'test_suite': cfg.test_suite,
 			'test_suite_root_pfx': cfg.test_suite_root_pfx,
 			'coins': cfg.coin,
-			'online': True, # used only in online environment (txcreate, txsend)
+			'online': not cfg.offline, # used only in online environment (xmrwallet, txcreate, txsend, txbump)
 		})
 	)
 

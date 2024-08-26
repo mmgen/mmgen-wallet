@@ -340,7 +340,7 @@ class Autosign:
 		to your fstab as described in this script’s help text.
 	"""
 
-	mn_fmts    = {
+	mn_fmts = {
 		'mmgen': 'words',
 		'bip39': 'bip39',
 	}

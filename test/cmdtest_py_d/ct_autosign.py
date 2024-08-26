@@ -82,24 +82,28 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	def _create_autosign_instances(self,create_dirs):
 		d = {'offline': {'name':'asi'}}
+
 		if self.have_online:
 			d['online'] =  {'name':'asi_online'}
+
 		for subdir,data in d.items():
+			asi = Autosign(
+				Config({
+					'coins': ','.join(self.coins),
+					'test_suite': True,
+					'test_suite_xmr_autosign': self.name == 'CmdTestXMRAutosign',
+					'test_suite_autosign_threaded': self.threaded,
+					'test_suite_root_pfx': None if self.live else self.tmpdir,
+					'online': subdir == 'online',
+				}))
+
 			if create_dirs and not self.live:
-				for k in ('mountpoint','wallet_dir','dev_label_dir'):
+				for k in ('mountpoint', 'wallet_dir', 'dev_label_dir'):
 					if k == 'wallet_dir' and subdir == 'online':
 						continue
 					(Path(self.tmpdir) / (subdir + getattr(Autosign,'dfl_'+k))).mkdir(parents=True,exist_ok=True)
-			setattr(self,data['name'],
-				Autosign(
-					Config({
-						'coins': ','.join(self.coins),
-						'test_suite': True,
-						'test_suite_xmr_autosign': self.name == 'CmdTestXMRAutosign',
-						'test_suite_autosign_threaded': self.threaded,
-						'test_suite_root_pfx': None if self.live else self.tmpdir,
-						'online': subdir == 'online',
-					})))
+
+			setattr(self, data['name'], asi)
 
 	def _create_removable_device(self):
 		redir = DEVNULL

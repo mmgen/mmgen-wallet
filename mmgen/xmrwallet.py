@@ -57,6 +57,7 @@ from .proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
 from .proto.xmr.daemon import MoneroWalletDaemon
 from .ui import keypress_confirm
 from .autosign import Autosign
+from .tx.util import get_autosign_obj
 
 xmrwallet_uargs = namedtuple('xmrwallet_uargs',[
 	'infile',
@@ -75,18 +76,6 @@ xmrwallet_uarg_info = (
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),
 		r'(?:[^:]+):(?:\d+)'
-	)
-
-def get_autosign_obj(cfg):
-	from .cfg import Config
-	return Autosign(
-		Config({
-			'mountpoint': cfg.autosign_mountpoint,
-			'test_suite': cfg.test_suite,
-			'test_suite_root_pfx': cfg.test_suite_root_pfx,
-			'coins': 'xmr',
-			'online': not cfg.offline,
-		})
 	)
 
 # required to squelch pylint:

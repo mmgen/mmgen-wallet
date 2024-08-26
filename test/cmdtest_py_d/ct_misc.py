@@ -217,10 +217,10 @@ class CmdTestHelp(CmdTestBase):
 		if 'tx' not in self.proto.mmcaps:
 			scripts = [s for s in scripts if not (s == 'regtest' or s.startswith('tx'))]
 
-		if self.proto.coin not in ('BTC','XMR') and 'xmrwallet' in scripts:
+		if 'xmrwallet' in scripts and (cfg.no_altcoin or not self.proto.coin in ('BTC','XMR')):
 			scripts.remove('xmrwallet')
 
-		if sys.platform == 'win32' and 'autosign' in scripts:
+		if 'autosign' in scripts and sys.platform == 'win32':
 			scripts.remove('autosign')
 
 		for s in sorted(scripts):

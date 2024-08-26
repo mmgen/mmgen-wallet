@@ -249,7 +249,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 			t.expect('Only sent transactions')
 			t.expect(bad_tx_desc)
 		else:
-			t.expect(f'to deduct the fee from .* change output\): ', '\n', regex=True)
+			t.expect(r'to deduct the fee from .* change output\): ', '\n', regex=True)
 			t.expect(r'(Y/n): ', 'y')  # output OK?
 			t.expect('transaction fee: ', '200s\n')
 			t.expect(r'(Y/n): ', 'y')  # fee OK?
