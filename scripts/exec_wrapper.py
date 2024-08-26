@@ -27,8 +27,11 @@ def exec_wrapper_init():
 
 	if exec_wrapper_os.path.dirname(exec_wrapper_sys.argv[1]) == 'test':
 		# support running of test scripts under wrapper
-		exec_wrapper_sys.path[0] = exec_wrapper_os.getcwd() # assume we’re in repo root
-		exec_wrapper_sys.path.insert(0,exec_wrapper_os.path.join('test', 'overlay', 'tree'))
+		repo_root = exec_wrapper_os.getcwd() # assume we’re in repo root
+		exec_wrapper_sys.path[0] = repo_root
+		# ensure loading of mmgen mods from overlay tree, not repo root:
+		from test.overlay import overlay_setup
+		overlay_setup(repo_root)
 	else:
 		exec_wrapper_sys.path.pop(0)
 
