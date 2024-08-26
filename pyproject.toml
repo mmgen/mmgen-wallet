@@ -41,6 +41,7 @@ disable = [
 	"use-symbolic-message-instead",
 	"use-implicit-booleaness-not-comparison-to-string",
 	"use-implicit-booleaness-not-comparison-to-zero",
+	"not-async-context-manager",
 # non-default:
 	"no-method-argument",
 	"function-redefined",
