@@ -53,8 +53,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	networks     = ('btc',)
 	tmpdir_nums  = [18]
 	color        = True
-	win_skip     = True
-	mac_skip     = True
+	platform_skip = ('win32', 'darwin')
 	threaded     = False
 	daemon_coins = []
 

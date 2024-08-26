@@ -660,12 +660,8 @@ class CmdTestRunner:
 
 		ct_cls = CmdGroupMgr().load_mod(gname)
 
-		if sys.platform == 'win32' and ct_cls.win_skip:
-			omsg(gray(f'INFO → skipping test {gname!r} (platform=win32)'))
-			return None
-
-		if sys.platform == 'darwin' and ct_cls.mac_skip:
-			omsg(gray(f'INFO → skipping test {gname!r} (platform=darwin)'))
+		if sys.platform in ct_cls.platform_skip:
+			omsg(gray(f'INFO → skipping test {gname!r} for platform {sys.platform!r}'))
 			return None
 
 		for k in ('segwit','segwit_random','bech32'):

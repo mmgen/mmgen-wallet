@@ -37,8 +37,7 @@ class CmdTestBase:
 	segwit_opts_ok = False
 	color = False
 	need_daemon = False
-	win_skip = False
-	mac_skip = False
+	platform_skip = ()
 	tmpdir_nums = []
 	test_name = None
 
