@@ -164,10 +164,6 @@ class CmdTestAutosignBase(CmdTestBase):
 		t.written_to_file('Autosign wallet')
 		return t
 
-	@property
-	def device_inserted(self):
-		return self.asi.dev_label_path.exists()
-
 	def insert_device(self):
 		self.asi.dev_label_path.touch()
 
@@ -356,7 +352,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 	def _wait_signed(self,desc):
 		oqmsg_r(gray(f'→ offline wallet{"s" if desc.endswith("s") else ""} waiting for {desc}'))
-		assert not self.device_inserted, f'‘{self.asi.dev_label_path}’ is inserted!'
+		assert not self.asi.device_inserted, f'‘{self.asi.dev_label_path}’ is inserted!'
 		assert not self.asi.mountpoint.is_mount(), f'‘{self.asi.mountpoint}’ is mounted!'
 		self.insert_device()
 		while True:
@@ -374,10 +370,6 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		imsg('')
 		self.remove_device()
 		return 'ok'
-
-	@property
-	def device_inserted_online(self):
-		return self.asi_online.dev_label_path.exists()
 
 	def insert_device_online(self):
 		self.asi_online.dev_label_path.touch()

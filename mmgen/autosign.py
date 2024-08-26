@@ -579,7 +579,7 @@ class Autosign:
 		msg('Wrote ' + desc)
 
 	def gen_key(self,no_unmount=False):
-		if not self.get_insert_status():
+		if not self.device_inserted:
 			die(1,'Removable device not present!')
 		self.do_mount()
 		self.wipe_encryption_key()
@@ -697,8 +697,11 @@ class Autosign:
 
 		bmsg(f'{count} file{suf(count)} shredded')
 
-	def get_insert_status(self):
-		return self.cfg.no_insert_check or self.dev_label_path.exists()
+	@property
+	def device_inserted(self):
+		if self.cfg.no_insert_check:
+			return True
+		return self.dev_label_path.exists()
 
 	async def main_loop(self):
 		if not self.cfg.stealth_led:
@@ -707,7 +710,7 @@ class Autosign:
 		n = 1 if threaded else 0
 		prev_status = False
 		while True:
-			status = self.get_insert_status()
+			status = self.device_inserted
 			if status and not prev_status:
 				msg('Device insertion detected')
 				await self.do_sign()

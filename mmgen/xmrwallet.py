@@ -824,7 +824,7 @@ class MoneroWalletOps:
 
 		def mount_removable_device(self):
 			if self.cfg.autosign:
-				if not self.asi.get_insert_status():
+				if not self.asi.device_inserted:
 					die(1,'Removable device not present!')
 				if self.do_umount:
 					import atexit

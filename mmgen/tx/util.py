@@ -27,7 +27,7 @@ def get_autosign_obj(cfg):
 
 def init_removable_device(cfg):
 	asi = get_autosign_obj(cfg)
-	if not asi.get_insert_status():
+	if not asi.device_inserted:
 		from ..util import die
 		die(1, 'Removable device not present!')
 	import atexit
