@@ -86,7 +86,8 @@ def _check_file_type_and_access(fname,ftype,blkdev_ok=False):
 			(stat.S_ISLNK,'symbolic link')
 		]
 		if blkdev_ok:
-			ok_types.append((stat.S_ISBLK,'block device'))
+			if not sys.platform in ('win32',):
+				ok_types.append((stat.S_ISBLK, 'block device'))
 
 	try:
 		mode = os.stat(fname).st_mode

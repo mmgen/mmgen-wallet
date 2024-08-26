@@ -345,5 +345,5 @@ if cfg.fork:
 
 from mmgen.main import launch
 start_time = int(time.time())
-launch(func=lambda: main())
+launch(func=main)
 end_msg(int(time.time()) - start_time)
