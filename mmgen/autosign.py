@@ -325,6 +325,7 @@ class Autosign:
 
 	dev_label = 'MMGEN_TX'
 	linux_mount_subdir = 'mmgen_autosign'
+	macOS_ramdisk_name = 'AutosignRamDisk'
 	wallet_subdir = 'autosign'
 
 	mn_fmts = {
@@ -374,6 +375,9 @@ class Autosign:
 				to a directory!  Please create the mountpoint and add an entry
 				to your fstab as described in this script’s help text.
 			"""
+		elif sys.platform == 'darwin':
+			self.dfl_mountpoint = f'/Volumes/{self.dev_label}'
+			self.dfl_shm_dir    = f'/Volumes/{self.macOS_ramdisk_name}'
 
 		self.cfg = cfg
 
@@ -385,12 +389,18 @@ class Autosign:
 		if sys.platform == 'linux':
 			self.mount_cmd  = f'mount {self.mountpoint}'
 			self.umount_cmd = f'umount {self.mountpoint}'
+		elif sys.platform == 'darwin':
+			self.mount_cmd  = f'diskutil mount {self.dev_label}'
+			self.umount_cmd = f'diskutil eject {self.dev_label}'
 
 		self.init_fixup()
 
 		# these use the ‘fixed-up’ values:
 		if sys.platform == 'linux':
 			self.dev_label_path = self.dev_label_dir / self.dev_label
+		elif sys.platform == 'darwin':
+			from .platform.darwin.util import MacOSRamDisk
+			self.ramdisk = MacOSRamDisk(cfg, self.macOS_ramdisk_name, 10, path=self.shm_dir)
 
 		self.keyfile = self.mountpoint / 'autosign.key'
 
@@ -621,6 +631,9 @@ class Autosign:
 			except:
 				die(2,f"Unable to create wallet directory '{self.wallet_dir}'")
 
+		if sys.platform == 'darwin':
+			self.ramdisk.create()
+
 		remove_wallet_dir()
 		create_wallet_dir()
 		self.gen_key(no_unmount=True)
@@ -717,6 +730,8 @@ class Autosign:
 			return True
 		if sys.platform == 'linux':
 			return self.dev_label_path.exists()
+		elif sys.platform == 'darwin':
+			return self.mountpoint.exists()
 
 	async def main_loop(self):
 		if not self.cfg.stealth_led:

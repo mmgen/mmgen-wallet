@@ -18,4 +18,5 @@ class overlay_fake_Autosign:
 
 Autosign.dev_label          = 'MMGEN_TS_TX'
 Autosign.linux_mount_subdir = 'mmgen_ts_autosign'
+Autosign.macOS_ramdisk_name = 'TestAutosignRamDisk'
 Autosign.init_fixup         = overlay_fake_Autosign.init_fixup

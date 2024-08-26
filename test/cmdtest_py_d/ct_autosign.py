@@ -20,7 +20,7 @@
 test.cmdtest_py_d.ct_autosign: Autosign tests for the cmdtest.py test suite
 """
 
-import sys, os, time, shutil
+import sys, os, time, shutil, atexit
 from subprocess import run,DEVNULL
 from pathlib import Path
 
@@ -53,7 +53,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	networks     = ('btc',)
 	tmpdir_nums  = [18]
 	color        = True
-	platform_skip = ('win32', 'darwin')
+	platform_skip = ('win32',)
 	threaded     = False
 	daemon_coins = []
 
@@ -72,6 +72,9 @@ class CmdTestAutosignBase(CmdTestBase):
 		if not (cfg.skipping_deps or self.live):
 			self._create_removable_device()
 
+		if sys.platform == 'darwin' and not cfg.no_daemon_stop:
+			atexit.register(self._macOS_eject_disk, self.asi.dev_label)
+
 		self.opts = ['--coins='+','.join(self.coins)]
 
 		if not self.live:
@@ -83,6 +86,9 @@ class CmdTestAutosignBase(CmdTestBase):
 	def __del__(self):
 		if hasattr(self,'have_dummy_control_files'):
 			LEDControl.delete_dummy_control_files()
+		if sys.platform == 'darwin' and not cfg.no_daemon_stop:
+			for label in (self.asi.dev_label, self.asi.ramdisk.label):
+				self._macOS_eject_disk(label)
 
 	def _create_autosign_instances(self,create_dirs):
 		d = {'offline': {'name':'asi'}}
@@ -105,7 +111,12 @@ class CmdTestAutosignBase(CmdTestBase):
 				for k in ('mountpoint', 'shm_dir', 'wallet_dir', 'dev_label_dir'):
 					if subdir == 'online' and k in ('shm_dir', 'wallet_dir'):
 						continue
+					if sys.platform == 'darwin' and k != 'mountpoint':
+						continue
 					getattr(asi, k).mkdir(parents=True, exist_ok=True)
+					if sys.platform == 'darwin' and k == 'mountpoint':
+						asi.mountpoint.rmdir()
+						continue
 
 			setattr(self, data['name'], asi)
 
@@ -116,6 +127,20 @@ class CmdTestAutosignBase(CmdTestBase):
 			run(f'truncate --size=10M {img}'.split(), check=True)
 			run(f'/sbin/mkfs.ext2 -E root_owner={os.getuid()}:{os.getgid()} {img}'.split(),
 				stdout=redir, stderr=redir, check=True)
+		elif sys.platform == 'darwin':
+			redir = None if cfg.exact_output or cfg.verbose else DEVNULL
+			run(f'hdiutil create -size 10M -fs exFAT -volname {self.asi.dev_label} {img}'.split(),
+				stdout=redir, check=True)
+
+	def _macOS_mount_fs_image(self, loc):
+		time.sleep(0.2)
+		run(f'hdiutil attach -mountpoint {loc.mountpoint} {loc.fs_image_path}.dmg'.split(), stdout=DEVNULL, check=True)
+
+	def _macOS_eject_disk(self, label):
+		try:
+			run(['diskutil' ,'eject', label], stdout=DEVNULL, stderr=DEVNULL)
+		except:
+			pass
 
 	def start_daemons(self):
 		self.spawn('',msg_only=True)
@@ -139,6 +164,9 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		mn_desc = mn_type or 'default'
 		mn_type = mn_type or 'mmgen'
+
+		if sys.platform == 'darwin' and not cfg.no_daemon_stop:
+			self._macOS_eject_disk(self.asi.ramdisk.label)
 
 		self.insert_device()
 
@@ -181,6 +209,9 @@ class CmdTestAutosignBase(CmdTestBase):
 		t.read()
 		self.remove_device()
 
+		if sys.platform == 'darwin' and not cfg.no_daemon_stop:
+			atexit.register(self._macOS_eject_disk, self.asi.ramdisk.label)
+
 		return t
 
 	def insert_device(self, asi='asi'):
@@ -189,6 +220,8 @@ class CmdTestAutosignBase(CmdTestBase):
 		loc = getattr(self, asi)
 		if sys.platform == 'linux':
 			loc.dev_label_path.touch()
+		elif sys.platform == 'darwin':
+			self._macOS_mount_fs_image(loc)
 
 	def remove_device(self, asi='asi'):
 		if self.live:
@@ -197,6 +230,8 @@ class CmdTestAutosignBase(CmdTestBase):
 		if sys.platform == 'linux':
 			if loc.dev_label_path.exists():
 				loc.dev_label_path.unlink()
+		elif sys.platform == 'darwin':
+			loc.do_umount(silent=True)
 
 	def _mount_ops(self, loc, cmd, *args, **kwargs):
 		return getattr(getattr(self,loc),cmd)(*args, silent=self.silent_mount, **kwargs)

@@ -87,12 +87,13 @@ On supported platforms (currently Orange Pi, Rock Pi and Raspberry Pi boards),
 the status LED indicates whether the program is busy or in standby mode, i.e.
 ready for device insertion or removal.
 
-The removable device must have a partition labeled MMGEN_TX with a user-
-writable root directory.
+The removable device must have a partition with a filesystem labeled MMGEN_TX
+and a user-writable root directory.  For interoperability between OS-es, it’s
+recommended to use the exFAT file system.
 
 On both the signing and online machines the mountpoint ‘{asi.mountpoint}’
-(as currently configured) must exist and ‘/etc/fstab’ must contain the
-following entry:
+(as currently configured) must exist.  Linux (not macOS) machines must have
+an ‘/etc/fstab’ with the following entry:
 
     LABEL=MMGEN_TX {asi.mountpoint} auto noauto,user 0 0
 
@@ -118,7 +119,7 @@ file path to the end of the command line.  Multiple temporary wallets may
 be created in this way and used for signing (note, however, that for XMR
 operations only one wallet is supported).
 
-Autosigning is currently available only on Linux-based platforms.
+Autosigning is currently supported on Linux and macOS only.
 
 
                                SECURITY NOTE
