@@ -133,7 +133,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	nonstd_datadir = True
 	datadirs = {
 		'linux': [gc.home_dir,'.bitcoin-bchn'],
-		'win32': [os.getenv('APPDATA'),'Bitcoin_ABC']
+		'win32': [os.getenv('APPDATA'),'Bitcoin-Cash-Node']
 	}
 
 	def set_comment_args(self,rpc,coinaddr,lbl):
