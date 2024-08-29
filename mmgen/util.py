@@ -193,6 +193,8 @@ def fmt_list(iterable,fmt='dfl',indent='',conv=None):
 		'dfl':       ( str,  ", ", "'",  "'"),
 		'utf8':      ( str,  ", ", "“",  "”"),
 		'bare':      ( repr, " ",  "",   ""),
+		'barest':    ( str,  " ",  "",   ""),
+		'fancy':     ( str,  " ",  "‘",  "’"),
 		'no_quotes': ( str,  ", ", "",   ""),
 		'compact':   ( str,  ",",  "",   ""),
 		'no_spc':    ( str,  ",",  "'",  "'"),

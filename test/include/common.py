@@ -20,8 +20,9 @@
 test.include.common: Shared routines and data for the MMGen test suites
 """
 
-import sys,os
+import sys, os, re, atexit
 from subprocess import run,PIPE
+from pathlib import Path
 
 from mmgen.cfg import gv
 from mmgen.color import yellow,green,orange
@@ -336,27 +337,87 @@ def do_run(cmd, check=True):
 	from subprocess import run,PIPE,DEVNULL
 	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=check)
 
-class VirtBlockDevice:
+def VirtBlockDevice(img_path, size):
+	if sys.platform == 'linux':
+		return VirtBlockDeviceLinux(img_path, size)
+	elif sys.platform == 'darwin':
+		return VirtBlockDeviceMacOS(img_path, size)
 
-	def __init__(self, tmpdir, blksize, blkcount):
-		self.tmpdir = tmpdir
-		self.blksize = blksize
-		self.blkcount = blkcount
+class VirtBlockDeviceBase:
 
-	def setup(self):
-		imsg('Creating block device image file')
-		blkdev_img = joinpath(self.tmpdir, 'hincog_blkdev_img')
-		do_run(['dd', 'if=/dev/zero', f'of={blkdev_img}', f'bs={self.blksize}', f'count={self.blkcount}'])
-		self.dev = do_run(['sudo', '/sbin/losetup', '-f']).stdout.strip().decode()
-		self.dev_mode_orig = '{:o}'.format(os.stat(self.dev).st_mode & 0xfff)
-		dev_mode = '0666'
-		imsg(f'Changing permissions on loop device to {dev_mode!r}')
-		do_run(['sudo', 'chmod', dev_mode, self.dev])
-		imsg(f'Attaching loop device {self.dev!r}')
-		do_run(['sudo', '/sbin/losetup', self.dev, blkdev_img])
+	@property
+	def dev(self):
+		res = self._get_associations()
+		if len(res) < 1:
+			die(2, f'No device associated with {self.img_path}')
+		elif len(res) > 1:
+			die(2, f'More than one device associated with {self.img_path}')
+		return res[0]
 
-	def destroy(self):
-		imsg(f'Detaching loop device {self.dev!r}')
-		do_run(['sudo', '/sbin/losetup', '-d', self.dev])
-		imsg(f'Resetting permissions on loop device to {self.dev_mode_orig!r}')
-		do_run(['sudo', 'chmod', self.dev_mode_orig, self.dev])
+	def try_detach(self):
+		try:
+			dev = self.dev
+		except:
+			pass
+		else:
+			self.do_detach(dev, check=False)
+
+	def create(self, silent=False):
+		for dev in self._get_associations():
+			if not silent:
+				imsg(f'Detaching associated device {dev}')
+			self.do_detach(dev)
+		self.img_path.unlink(missing_ok=True)
+		if not silent:
+			imsg(f'Creating block device image file {self.img_path}')
+		self.do_create(self.size, self.img_path)
+		atexit.register(self.try_detach)
+
+	def attach(self, dev_mode=None, silent=False):
+		if res := self._get_associations():
+			die(2, f'Device{suf(res)} {fmt_list(res,fmt="barest")} already associated with {self.img_path}')
+		dev = self.get_new_dev()
+		if dev_mode:
+			self.dev_mode_orig = '0{:o}'.format(os.stat(dev).st_mode & 0xfff)
+			if not silent:
+				imsg(f'Changing permissions on device {dev} to {dev_mode!r}')
+			do_run(['sudo', 'chmod', dev_mode, dev])
+		if not silent:
+			imsg(f'Attaching {dev or self.img_path!r}')
+		self.do_attach(self.img_path, dev)
+
+	def detach(self, silent=False):
+		dev = self.dev
+		if not silent:
+			imsg(f'Detaching device {dev!r}')
+		self.do_detach(dev)
+		if hasattr(self, 'dev_mode_orig'):
+			if not silent:
+				imsg(f'Resetting permissions on device {dev} to {self.dev_mode_orig!r}')
+			do_run(['sudo', 'chmod', self.dev_mode_orig, dev])
+			delattr(self, 'dev_mode_orig')
+
+	def __del__(self):
+		self.try_detach()
+
+class VirtBlockDeviceLinux(VirtBlockDeviceBase):
+
+	def __init__(self, img_path, size):
+		self.img_path = Path(img_path).resolve()
+		self.size = size
+
+	def _get_associations(self):
+		cmd = ['/sbin/losetup', '-n', '-O', 'NAME', '-j', str(self.img_path)]
+		return do_run(cmd).stdout.decode().splitlines()
+
+	def get_new_dev(self):
+		return do_run(['sudo', '/sbin/losetup', '-f']).stdout.decode().strip()
+
+	def do_create(self, size, path):
+		do_run(['truncate', f'--size={size}', str(path)])
+
+	def do_attach(self, path, dev):
+		do_run(['sudo', '/sbin/losetup', dev, str(path)])
+
+	def do_detach(self, dev, check=True):
+		do_run(['/sbin/losetup', '-d', dev], check=check)

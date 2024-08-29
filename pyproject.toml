@@ -80,4 +80,5 @@ ignored-classes = [ # ignored for no-member, otherwise checked
 # test suite:
 	"TestHashFunc",
 	"GenTool",
+	"VirtBlockDeviceBase",
 ]

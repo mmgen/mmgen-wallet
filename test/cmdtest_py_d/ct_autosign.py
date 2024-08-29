@@ -43,6 +43,7 @@ from ..include.common import (
 	read_from_file,
 	silence,
 	end_silence,
+	VirtBlockDevice,
 )
 from .common import ref_dir,dfl_words_file,dfl_bip39_file
 
@@ -69,6 +70,9 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		self._create_autosign_instances(create_dirs=not cfg.skipping_deps)
 
+		if sys.platform == 'linux':
+			self.txdev = VirtBlockDevice(self.asi.fs_image_path, '10M')
+
 		if not (cfg.skipping_deps or self.live):
 			self._create_removable_device()
 
@@ -86,6 +90,8 @@ class CmdTestAutosignBase(CmdTestBase):
 	def __del__(self):
 		if hasattr(self,'have_dummy_control_files'):
 			LEDControl.delete_dummy_control_files()
+		if hasattr(self, 'txdev'):
+			del self.txdev
 		if not cfg.no_daemon_stop:
 			if sys.platform == 'darwin':
 				for label in (self.asi.dev_label, self.asi.ramdisk.label):
@@ -123,14 +129,16 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	def _create_removable_device(self):
 		if sys.platform == 'linux':
-			run(['truncate', '--size=10M', str(self.asi.fs_image_path)], check=True)
+			self.txdev.create()
+			self.txdev.attach(silent=True)
 			cmd = [
 				'/sbin/mkfs.ext2',
 				'-E', 'root_owner={}:{}'.format(os.getuid(), os.getgid()),
 				'-L', self.asi.dev_label,
-				str(self.asi.fs_image_path)]
+				str(self.txdev.img_path)]
 			redir = DEVNULL
 			run(cmd, stdout=redir, stderr=redir, check=True)
+			self.txdev.detach(silent=True)
 		elif sys.platform == 'darwin':
 			cmd = [
 				'hdiutil', 'create', '-size', '10M', '-fs', 'exFAT',
@@ -227,6 +235,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		loc = getattr(self, asi)
 		if sys.platform == 'linux':
 			loc.dev_label_path.touch()
+			# self.txdev.attach() # WIP
 		elif sys.platform == 'darwin':
 			self._macOS_mount_fs_image(loc)
 
@@ -237,6 +246,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		if sys.platform == 'linux':
 			if loc.dev_label_path.exists():
 				loc.dev_label_path.unlink()
+			# self.txdev.detach() # WIP
 		elif sys.platform == 'darwin':
 			self._macOS_eject_disk(loc.dev_label)
 

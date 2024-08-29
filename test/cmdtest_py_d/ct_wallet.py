@@ -20,7 +20,7 @@
 test.cmdtest_py_d.ct_wallet: Wallet conversion tests for the cmdtest.py test suite
 """
 
-import os
+import sys, os
 
 from mmgen.util import msg,capfirst,get_extension
 from mmgen.wallet import get_wallet_cls
@@ -167,13 +167,14 @@ class CmdTestWalletConv(CmdTestBase,CmdTestShared):
 
 	def ref_hincog_blkdev_conv_out(self):
 
-		if self.skip_for_win('no loop device') or self.skip_for_mac('no loop device'):
+		if self.skip_for_win('no loop device'):
 			return 'skip'
 
-		b = VirtBlockDevice(self.tmpdir, '1K', 1)
-		b.setup()
+		b = VirtBlockDevice(os.path.join(self.tmpdir, 'hincog_blkdev_img'), '1K')
+		b.create()
+		b.attach(dev_mode='0666')
 		self.ref_hincog_conv_out(ic_f=b.dev)
-		b.destroy()
+		b.detach()
 
 		return 'ok'
 
