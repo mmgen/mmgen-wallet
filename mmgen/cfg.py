@@ -155,6 +155,7 @@ class Config(Lockable):
 	debug_subseed        = False
 	debug_tw             = False
 	devtools             = False
+	traceback            = False
 
 	# rpc:
 	rpc_host              = ''
@@ -300,6 +301,7 @@ class Config(Lockable):
 		'MMGEN_TEST_SUITE_PEXPECT',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
 		'MMGEN_TEST_SUITE_ROOT_PFX',
+		'MMGEN_TRACEBACK',
 		'MMGEN_BLACKLIST_DAEMONS',
 		'MMGEN_BOGUS_SEND',
 		'MMGEN_BOGUS_UNSPENT_DATA',
