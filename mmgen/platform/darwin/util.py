@@ -18,6 +18,16 @@ from subprocess import run, PIPE, DEVNULL
 from ...color import cyan
 from ...obj import MMGenLabel
 
+def get_device_size(fn):
+	import re
+	cp = run(['diskutil', 'info', fn], text=True, stdout=PIPE, check=True)
+	res = [e for e in cp.stdout.splitlines() if 'Disk Size' in e]
+	errmsg = '‘diskutil info’ output could not be parsed for device size'
+	assert len(res) == 1, f'{errmsg}:\n{cp.stdout}'
+	m = re.search(r'\((\d+) Bytes\)', res[0])
+	assert m, f'{errmsg}:\n{res[0]}'
+	return int(m[1])
+
 class RamDiskLabel(MMGenLabel):
 	max_len = 24
 	desc = 'ramdisk label'

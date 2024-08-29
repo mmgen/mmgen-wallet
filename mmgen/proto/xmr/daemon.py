@@ -12,7 +12,7 @@
 proto.xmr.daemon: Monero base protocol daemon classes
 """
 
-import os
+import sys, os
 
 from ...cfg import gc
 from ...util import list_gen,die,contains_any
@@ -28,6 +28,7 @@ class monero_daemon(CoinDaemon):
 	cfg_file = 'bitmonero.conf'
 	datadirs = {
 		'linux': [gc.home_dir,'.bitmonero'],
+		'darwin': [gc.home_dir,'.bitmonero'],
 		'win32': ['/','c','ProgramData','bitmonero']
 	}
 
@@ -53,6 +54,8 @@ class monero_daemon(CoinDaemon):
 			test_connection = False,
 			daemon = self )
 
+		self.use_pidfile = sys.platform == 'linux'
+
 		self.shared_args = list_gen(
 			['--no-zmq'],
 			[f'--p2p-bind-port={self.p2p_port}', self.p2p_port],
@@ -64,7 +67,7 @@ class monero_daemon(CoinDaemon):
 			['--hide-my-port'],
 			['--no-igd'],
 			[f'--data-dir={self.datadir}', self.non_dfl_datadir],
-			[f'--pidfile={self.pidfile}', self.platform == 'linux'],
+			[f'--pidfile={self.pidfile}', self.use_pidfile],
 			['--detach',                  not (self.opt.no_daemonize or self.platform=='win32')],
 			['--offline',                 not self.opt.online],
 		)
@@ -131,6 +134,8 @@ class MoneroWalletDaemon(RPCDaemon):
 		self.datadir = datadir or (self.test_suite_datadir if test_suite else self.exec_fn + '.d')
 		self.pidfile = os.path.join(self.datadir,id_str+'.pid')
 		self.logfile = os.path.join(self.datadir,id_str+'.log')
+
+		self.use_pidfile = sys.platform == 'linux'
 
 		self.proxy = proxy
 		self.monerod_addr = monerod_addr

@@ -42,7 +42,7 @@ class File:
 
 		import stat
 		if stat.S_ISBLK(st.st_mode):
-			if sys.platform in ('win32', 'darwin'):
+			if sys.platform in ('win32',):
 				die(2, 'Access to raw block devices not supported on platform {sys.platform!r}')
 			mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]
 			try:
@@ -52,7 +52,11 @@ class File:
 					die(2,f'{fn!r}: permission denied')
 #				if e.errno != 17: raise
 			else:
-				self.size = os.lseek(fd, 0, os.SEEK_END)
+				if sys.platform == 'linux':
+					self.size = os.lseek(fd, 0, os.SEEK_END)
+				elif sys.platform == 'darwin':
+					from .platform.darwin.util import get_device_size
+					self.size = get_device_size(fn)
 				os.close(fd)
 		else:
 			self.size  = st.st_size

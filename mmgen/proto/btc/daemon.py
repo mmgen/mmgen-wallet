@@ -133,6 +133,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	nonstd_datadir = True
 	datadirs = {
 		'linux': [gc.home_dir,'.bitcoin-bchn'],
+		'darwin': [gc.home_dir, 'Library', 'Application Support', 'Bitcoin-Cash-Node'],
 		'win32': [os.getenv('APPDATA'),'Bitcoin-Cash-Node']
 	}
 
@@ -162,5 +163,6 @@ class litecoin_core_daemon(bitcoin_core_daemon):
 	cfg_file_hdr = '# Litecoin Core config file\n'
 	datadirs = {
 		'linux': [gc.home_dir,'.litecoin'],
+		'darwin': [gc.home_dir, 'Library', 'Application Support', 'Litecoin'],
 		'win32': [os.getenv('APPDATA'),'Litecoin']
 	}

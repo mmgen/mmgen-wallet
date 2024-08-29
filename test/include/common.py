@@ -421,3 +421,33 @@ class VirtBlockDeviceLinux(VirtBlockDeviceBase):
 
 	def do_detach(self, dev, check=True):
 		do_run(['/sbin/losetup', '-d', dev], check=check)
+
+class VirtBlockDeviceMacOS(VirtBlockDeviceBase):
+
+	def __init__(self, img_path, size):
+		self.img_path = Path(img_path + '.dmg').resolve()
+		self.size = size
+
+	def _get_associations(self):
+		cp = run(['hdiutil', 'info'], stdout=PIPE, stderr=PIPE, text=True, check=False)
+		if cp.returncode == 0:
+			lines = cp.stdout.splitlines()
+			out = [re.sub('.* ', '', s.strip()) for s in lines if re.match(r'image-path|/dev/', s)]
+			def gen_pairs():
+				for n in range(len(out) // 2):
+					yield(out[n*2], out[(n*2)+1])
+			return [dev for path, dev in gen_pairs() if path == str(self.img_path)]
+		else:
+			return []
+
+	def get_new_dev(self):
+		return None
+
+	def do_create(self, size, path):
+		do_run(['hdiutil', 'create', '-size', size, '-layout', 'NONE', str(path)])
+
+	def do_attach(self, path, dev=None):
+		do_run(['hdiutil', 'attach', '-mount', 'suppressed', str(path)])
+
+	def do_detach(self, dev, check=True):
+		do_run(['hdiutil', 'detach', dev], check=check)

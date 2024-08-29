@@ -172,7 +172,7 @@ class CmdTestWalletConv(CmdTestBase,CmdTestShared):
 
 		b = VirtBlockDevice(os.path.join(self.tmpdir, 'hincog_blkdev_img'), '1K')
 		b.create()
-		b.attach(dev_mode='0666')
+		b.attach(dev_mode='0666' if sys.platform == 'linux' else None)
 		self.ref_hincog_conv_out(ic_f=b.dev)
 		b.detach()
 

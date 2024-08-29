@@ -86,7 +86,7 @@ def _check_file_type_and_access(fname,ftype,blkdev_ok=False):
 			(stat.S_ISLNK,'symbolic link')
 		]
 		if blkdev_ok:
-			if not sys.platform in ('win32', 'darwin'):
+			if not sys.platform in ('win32',):
 				ok_types.append((stat.S_ISBLK, 'block device'))
 
 	try:

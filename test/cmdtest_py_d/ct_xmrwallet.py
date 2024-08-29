@@ -48,7 +48,7 @@ from .ct_base import CmdTestBase
 # atexit functions:
 def stop_daemons(self):
 	for v in self.users.values():
-		if '--restricted-rpc' in v.md.start_cmd:
+		if sys.platform == 'darwin' or '--restricted-rpc' in v.md.start_cmd:
 			v.md.stop()
 		else:
 			async_run(v.md_rpc.stop_daemon())

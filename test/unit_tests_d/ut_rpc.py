@@ -240,7 +240,10 @@ class unit_tests:
 				await c.stop_daemon()
 
 				if not cfg.no_daemon_stop:
-					await md.rpc.stop_daemon()
+					if sys.platform == 'darwin':
+						md.stop()
+					else:
+						await md.rpc.stop_daemon()
 
 			gmsg('OK')
 

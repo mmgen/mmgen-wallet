@@ -91,7 +91,7 @@ class MoneroRPCClient(RPCClient):
 		),json_rpc=False)
 
 	async def do_stop_daemon(self,silent=False):
-		return self.call_raw('stop_daemon')
+		return self.call_raw('stop_daemon') # unreliable on macOS (daemon stops, but closes connection)
 
 	rpcmethods = ( 'get_info', )
 	rpcmethods_raw = ( 'get_height', 'send_raw_transaction', 'stop_daemon' )

@@ -63,12 +63,14 @@ class openethereum_daemon(ethereum_daemon):
 	cfg_file = 'parity.conf'
 	datadirs = {
 		'linux': [gc.home_dir,'.local','share','io.parity.ethereum'],
+		'darwin': [gc.home_dir, 'Library', 'Application Support', 'io.parity.ethereum'],
 		'win32': [os.getenv('LOCALAPPDATA'),'Parity','Ethereum']
 	}
 
 	def init_subclass(self):
 
-		ld = self.platform == 'linux' and not self.opt.no_daemonize
+		self.use_pidfile = self.platform == 'linux' and not self.opt.no_daemonize
+		self.use_threads = self.platform in ('win32', 'darwin')
 
 		self.coind_args = list_gen(
 			['--no-ws'],
@@ -81,8 +83,8 @@ class openethereum_daemon(ethereum_daemon):
 			['--config=dev', self.network=='regtest'], # no presets for mainnet or testnet
 			['--mode=offline', self.test_suite or self.network=='regtest'],
 			[f'--log-file={self.logfile}', self.non_dfl_datadir],
-			['daemon', ld],
-			[self.pidfile, ld],
+			['daemon', self.use_pidfile],
+			[self.pidfile, self.use_pidfile],
 		)
 
 class parity_daemon(openethereum_daemon):
@@ -104,6 +106,7 @@ class geth_daemon(ethereum_daemon):
 	version_info_arg = 'version'
 	datadirs = {
 		'linux': [gc.home_dir,'.ethereum','geth'],
+		'darwin': [gc.home_dir, 'Library', 'Ethereum', 'geth'],
 		'win32': [os.getenv('LOCALAPPDATA'),'Geth'] # FIXME
 	}
 
