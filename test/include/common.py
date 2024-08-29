@@ -332,9 +332,9 @@ def get_ethkey():
 	else:
 		die(1,f'ethkey executable not found (tried {cmdnames})')
 
-def do_run(cmd):
+def do_run(cmd, check=True):
 	from subprocess import run,PIPE,DEVNULL
-	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=True)
+	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=check)
 
 class VirtBlockDevice:
 

@@ -74,6 +74,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	color = True
 	socks_port = 49237
 	# Bob’s daemon is stopped via process kill, not RPC, so put Bob last in list:
+	#    user     sid      autosign  shift kal_range add_coind_args
 	user_data = (
 		('miner', '98831F3A', False, 130, '1-2', []),
 		('alice', 'FE3C6545', False, 150, '1-4', []),
@@ -84,12 +85,13 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	cmd_group = (
 		('daemon_version',            'checking daemon version'),
-		('gen_kafiles',               'generating key-address files'),
+		('gen_kafiles_miner_alice',   'generating key-address files for Miner and Alice'),
 		('create_wallets_miner',      'creating Monero wallets (Miner)'),
 		('set_label_miner',           'setting an address label (Miner, primary account)'),
 		('mine_initial_coins',        'mining initial coins'),
 		('create_wallets_alice',      'creating Monero wallets (Alice)'),
 		('fund_alice',                'sending funds'),
+		('check_bal_alice',           'mining, checking balance'),
 
 		('sync_wallets_all',          'syncing all wallets'),
 		('new_account_alice',         'creating a new account (Alice)'),
@@ -337,9 +339,12 @@ class CmdTestXMRWallet(CmdTestBase):
 		rpc_port = self.users['miner'].md.rpc_port
 		return self.spawn( 'mmgen-tool', ['--coin=xmr', f'--rpc-port={rpc_port}', 'daemon_version'] )
 
-	def gen_kafiles(self):
+	def gen_kafiles_miner_alice(self):
+		return self.gen_kafiles(['miner', 'alice'])
+
+	def gen_kafiles(self, users):
 		for user,data in self.users.items():
-			if data.autosign or not data.kal_range:
+			if not user in users:
 				continue
 			run(['mkdir','-p',data.udir])
 			run(f'rm -f {data.kafile}',shell=True)
@@ -356,6 +361,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	def create_wallets_miner(self):
 		return self.create_wallets('miner')
+
 	def create_wallets_alice(self):
 		return self.create_wallets('alice')
 
@@ -433,19 +439,18 @@ class CmdTestXMRWallet(CmdTestBase):
 		# NB: a large balance is required to avoid ‘insufficient outputs’ error
 		return await self.mine_chk('miner',1,0,lambda x: x.ub > 2000,'unlocked balance > 2000')
 
-	async def fund_alice(self,wallet=1,check_bal=True):
+	async def fund_alice(self, wallet=1, amt=1234567891234):
 		self.spawn('', msg_only=True, extra_desc='(transferring funds from Miner wallet)')
 		await self.transfer(
 			'miner',
-			1234567891234,
+			amt,
 			read_from_file(self.users['alice'].addrfile_fs.format(wallet)),
 		)
-		if not check_bal:
-			return 'ok'
-		ok()
-		bal = '1.234567891234'
+		return 'ok'
+
+	async def check_bal_alice(self, wallet=1, bal='1.234567891234'):
 		return await self.mine_chk(
-			'alice',wallet,0,
+			'alice', wallet, 0,
 			lambda x: str(x.ub) == bal,f'unlocked balance == {bal}',
 			random_txs = self.dfl_random_txs
 		)
@@ -481,6 +486,15 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	def list_wallets_all(self):
 		return self.sync_wallets('alice', op='list', add_opts=['-Ee', '--full-address'])
+
+	def sync_wallets_alice(self):
+		return self.sync_wallets('alice')
+
+	def sync_wallets_bob(self):
+		return self.sync_wallets('bob')
+
+	def sync_wallets_miner(self):
+		return self.sync_wallets('miner')
 
 	def sync_wallets(self,user,op='sync',wallets=None,add_opts=[],bal_chk_func=None):
 		data = self.users[user]
@@ -669,6 +683,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	async def open_wallet_user(self,user,wnum):
 		data = self.users[user]
 		if data.autosign:
+			self.insert_device_online()
 			self.do_mount_online()
 		silence()
 		kal = (ViewKeyAddrList if data.autosign else KeyAddrList)(
@@ -680,6 +695,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		end_silence()
 		if data.autosign:
 			self.do_umount_online()
+			self.remove_device_online()
 		self.users[user].wd.start(silent=not (cfg.exact_output or cfg.verbose))
 		return data.wd_rpc.call(
 			'open_wallet',

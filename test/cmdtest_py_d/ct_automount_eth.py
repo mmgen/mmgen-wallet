@@ -100,6 +100,7 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		t.expect('(y/N): ', 'n')
 		self._do_confirm_send(t, quiet=True)
 		t.written_to_file('Sent automount transaction')
+		t.read()
 		self.remove_device_online()
 		return t
 

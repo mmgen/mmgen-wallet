@@ -111,3 +111,6 @@ class CmdTestBase:
 		t.ok()
 		t.skip_ok = True
 		return t
+
+	def noop(self):
+		return 'ok'

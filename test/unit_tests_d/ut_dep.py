@@ -51,12 +51,13 @@ class unit_tests:
 		session.trust_env = False
 		session.proxies.update({'https':'socks5h://127.243.172.8:20677'})
 		try:
-			session.get('https://127.188.29.17')
+			session.get('https://127.188.29.17', timeout=1)
 		except Exception as e:
-			if type(e).__name__ == 'ConnectionError':
+			if type(e).__name__ in ('ConnectionError', 'ConnectTimeout'):
 				return True
 			else:
-				print(e)
+				ymsg('{}: {}'.format(type(e).__name__, e))
+				msg('Is the ‘pysocks’ package installed?')
 		return False
 
 	def secp256k1(self,name,ut):

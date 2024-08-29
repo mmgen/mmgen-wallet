@@ -41,6 +41,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 
 	# ct_xmrwallet attrs:
 	tx_relay_user = 'miner'
+	#    user     sid      autosign  shift kal_range add_coind_args
 	user_data = (
 		('miner', '98831F3A', False, 130, '1', []),
 		('alice', 'FE3C6545', True,  150, '1-2', []),
@@ -51,6 +52,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 
 	cmd_group = (
 		('daemon_version',           'checking daemon version'),
+		('gen_kafile_miner',         'generating key-address file for Miner'),
+		('create_wallet_miner',      'creating Monero wallet for Miner'),
+		('mine_initial_coins',       'mining initial coins'),
 		('create_tmp_wallets',       'creating temporary online wallets for Alice'),
 		('new_account_alice',        'adding an account to Alice’s tmp wallet'),
 		('new_address_alice',        'adding an address to Alice’s tmp wallet'),
@@ -59,13 +63,12 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		('delete_tmp_wallets',       'deleting Alice’s tmp wallets'),
 		('autosign_setup',           'autosign setup with Alice’s seed'),
 		('autosign_xmr_setup',       'autosign setup (creation of Monero signing wallets)'),
-		('create_watchonly_wallets', 'creating online (watch-only) wallets for Alice'),
+		('create_watchonly_wallets', 'creating watch-only wallets from Alice’s wallet dumps'),
 		('delete_tmp_dump_files',    'deleting Alice’s dump files'),
-		('gen_kafiles',              'generating key-address files for Miner'),
-		('create_wallets_miner',     'creating Monero wallets for Miner'),
-		('mine_initial_coins',       'mining initial coins'),
 		('fund_alice1',              'sending funds to Alice (wallet #1)'),
+		('check_bal_alice1',         'mining, checking balance (wallet #1)'),
 		('fund_alice2',              'sending funds to Alice (wallet #2)'),
+		('check_bal_alice2',         'mining, checking balance (wallet #2)'),
 		('autosign_start_thread',    'starting autosign wait loop'),
 		('export_outputs1',          'exporting outputs from Alice’s watch-only wallet #1'),
 		('create_transfer_tx1',      'creating a transfer TX'),
@@ -185,6 +188,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 			+ ['dump']
 			+ ([] if autosign else [get_file_with_ext(data.udir,'akeys')]) )
 		t.expect('2 wallets dumped')
+		t.read()
 		self.remove_device_online()
 		return t
 
@@ -204,14 +208,26 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 	def delete_tmp_dump_files(self):
 		return self._delete_files( '.dump' )
 
+	def gen_kafile_miner(self):
+		return self.gen_kafiles(['miner'])
+
+	def create_wallet_miner(self):
+		return self.create_wallets_miner()
+
 	def delete_dump_files(self):
 		return self._delete_files( '.dump' )
 
 	def fund_alice1(self):
-		return self.fund_alice(wallet=1,check_bal=False)
+		return self.fund_alice(wallet=1)
+
+	def check_bal_alice1(self):
+		return self.check_bal_alice(wallet=1)
 
 	def fund_alice2(self):
 		return self.fund_alice(wallet=2)
+
+	def check_bal_alice2(self):
+		return self.check_bal_alice(wallet=2)
 
 	def autosign_setup(self):
 		return self.run_setup(
@@ -221,24 +237,29 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 			expect_args    = ['Continue with Monero setup? (Y/n): ', 'n'])
 
 	def autosign_xmr_setup(self):
+		self.insert_device_online()
 		self.do_mount_online()
 		self.asi_online.xmr_dir.mkdir(exist_ok=True)
 		(self.asi_online.xmr_dir / 'old.vkeys').touch()
 		self.do_umount_online()
+		self.remove_device_online()
 
+		self.insert_device()
 		t = self.spawn('mmgen-autosign', self.opts + ['xmr_setup'], no_passthru_opts=True)
 		t.written_to_file('View keys')
+		t.read()
+		self.remove_device()
 		return t
 
 	def create_watchonly_wallets(self):
+		return self.restore_wallets()
+
+	def restore_wallets(self):
 		self.insert_device_online()
 		t = self.create_wallets('alice', op='restore')
 		t.read() # required!
 		self.remove_device_online()
 		return t
-
-	def restore_wallets(self):
-		return self.create_watchonly_wallets()
 
 	def _create_transfer_tx(self, amt, add_opts=[]):
 		self.insert_device_online()
@@ -299,6 +320,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 			+ ([wallet_arg] if wallet_arg else [])
 		)
 		desc_pfx = f'{desc}, ' if desc else ''
+		self.insert_device_online() # device must be removed by calling method
 		return self.spawn( 'mmgen-xmrwallet', args, extra_desc=f'({desc_pfx}Alice)' )
 
 	def _sync_chkbal(self,wallet_arg,bal_chk_func):
@@ -341,7 +363,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		return self._submit_transfer_tx( relay_parm=self.tx_relay_daemon_parm )
 
 	def _submit_transfer_tx(self,relay_parm=None,ext=None,op='submit',check_bal=True):
-		self.insert_device_online()
 		t = self._xmr_autosign_op(
 			op            = op,
 			add_opts      = [f'--tx-relay-daemon={relay_parm}'] if relay_parm else [],
@@ -350,7 +371,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 			wait_signed   = op == 'submit')
 		t.expect( f'{op.capitalize()} transaction? (y/N): ', 'y' )
 		t.written_to_file('Submitted transaction')
-		self.remove_device_online()
+		t.read()
+		self.remove_device_online() # device was inserted by _xmr_autosign_op()
 		if check_bal:
 			t.ok()
 			return self._mine_chk('unlocked')
@@ -358,13 +380,13 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 			return t
 
 	def _export_outputs(self, wallet_arg, op, add_opts=[]):
-		self.insert_device_online()
 		t = self._xmr_autosign_op(
 			op         = op,
 			wallet_arg = wallet_arg,
 			add_opts   = add_opts)
 		t.written_to_file('Wallet outputs')
-		self.remove_device_online()
+		t.read()
+		self.remove_device_online() # device was inserted by _xmr_autosign_op()
 		return t
 
 	def export_outputs1(self):
@@ -377,14 +399,13 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		return self._export_outputs('1-2', op='export-outputs-sign')
 
 	def _import_key_images(self,wallet_arg):
-		self.insert_device_online()
 		t = self._xmr_autosign_op(
 			op            = 'import-key-images',
 			wallet_arg    = wallet_arg,
 			signable_desc = 'wallet outputs',
 			wait_signed   = True)
 		t.read()
-		self.remove_device_online()
+		self.remove_device_online() # device was inserted by _xmr_autosign_op()
 		return t
 
 	def import_key_images1(self):
@@ -402,6 +423,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 			'transfer 1:0','-> ext',
 			'transfer 1:0','-> ext'
 		])
+		t.read()
 		self.remove_device_online()
 		return t
 
@@ -414,6 +436,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 
 	def txview_all(self):
 		t = self.spawn('', msg_only=True)
+		self.insert_device()
 		self.do_mount()
 		imsg(blue('Opening transaction directory: ') + cyan(f'{self.asi.xmr_tx_dir}'))
 		for fn in self.asi.xmr_tx_dir.iterdir():
@@ -421,6 +444,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 			self.spawn('mmgen-xmrwallet', ['txview', str(fn)], no_msg=True).read()
 		imsg('')
 		self.do_umount()
+		self.remove_device()
 		return 'ok'
 
 	def check_tx_dirs(self):
@@ -429,10 +453,14 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		self.do_mount()
 		before = '\n'.join(self._gen_listing())
 		self.do_umount()
+		self.remove_device()
 
+		self.insert_device()
 		t = self.spawn('mmgen-autosign', self.opts + ['clean'])
 		t.read()
+		self.remove_device()
 
+		self.insert_device()
 		self.do_mount()
 		after = '\n'.join(self._gen_listing())
 		self.do_umount()

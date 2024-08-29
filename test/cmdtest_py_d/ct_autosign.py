@@ -86,9 +86,10 @@ class CmdTestAutosignBase(CmdTestBase):
 	def __del__(self):
 		if hasattr(self,'have_dummy_control_files'):
 			LEDControl.delete_dummy_control_files()
-		if sys.platform == 'darwin' and not cfg.no_daemon_stop:
-			for label in (self.asi.dev_label, self.asi.ramdisk.label):
-				self._macOS_eject_disk(label)
+		if not cfg.no_daemon_stop:
+			if sys.platform == 'darwin':
+				for label in (self.asi.dev_label, self.asi.ramdisk.label):
+					self._macOS_eject_disk(label)
 
 	def _create_autosign_instances(self,create_dirs):
 		d = {'offline': {'name':'asi'}}
@@ -121,16 +122,22 @@ class CmdTestAutosignBase(CmdTestBase):
 			setattr(self, data['name'], asi)
 
 	def _create_removable_device(self):
-		img = self.asi.fs_image_path
 		if sys.platform == 'linux':
+			run(['truncate', '--size=10M', str(self.asi.fs_image_path)], check=True)
+			cmd = [
+				'/sbin/mkfs.ext2',
+				'-E', 'root_owner={}:{}'.format(os.getuid(), os.getgid()),
+				'-L', self.asi.dev_label,
+				str(self.asi.fs_image_path)]
 			redir = DEVNULL
-			run(f'truncate --size=10M {img}'.split(), check=True)
-			run(f'/sbin/mkfs.ext2 -E root_owner={os.getuid()}:{os.getgid()} {img}'.split(),
-				stdout=redir, stderr=redir, check=True)
+			run(cmd, stdout=redir, stderr=redir, check=True)
 		elif sys.platform == 'darwin':
+			cmd = [
+				'hdiutil', 'create', '-size', '10M', '-fs', 'exFAT',
+				'-volname', self.asi.dev_label,
+				str(self.asi.fs_image_path)]
 			redir = None if cfg.exact_output or cfg.verbose else DEVNULL
-			run(f'hdiutil create -size 10M -fs exFAT -volname {self.asi.dev_label} {img}'.split(),
-				stdout=redir, check=True)
+			run(cmd, stdout=redir, check=True)
 
 	def _macOS_mount_fs_image(self, loc):
 		time.sleep(0.2)
@@ -231,7 +238,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			if loc.dev_label_path.exists():
 				loc.dev_label_path.unlink()
 		elif sys.platform == 'darwin':
-			loc.do_umount(silent=True)
+			self._macOS_eject_disk(loc.dev_label)
 
 	def _mount_ops(self, loc, cmd, *args, **kwargs):
 		return getattr(getattr(self,loc),cmd)(*args, silent=self.silent_mount, **kwargs)
@@ -418,7 +425,8 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 	def _wait_signed(self,desc):
 		oqmsg_r(gray(f'→ offline wallet{"s" if desc.endswith("s") else ""} waiting for {desc}'))
-		assert not self.asi.device_inserted, f'‘{self.asi.dev_label_path}’ is inserted!'
+		assert not self.asi.device_inserted, (
+				f'‘{getattr(self.asi, "dev_label_path", self.asi.dev_label)}’ is inserted!')
 		assert not self.asi.mountpoint.is_mount(), f'‘{self.asi.mountpoint}’ is mounted!'
 		self.insert_device()
 		while True:
