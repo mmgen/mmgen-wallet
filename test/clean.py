@@ -53,8 +53,3 @@ extra_dirs = [
 ]
 
 clean(clean_cfgs, extra_dirs=extra_dirs)
-
-for d in extra_dirs:
-	if os.path.exists(d) and not os.path.isdir(d):
-		print(f'Removing non-directory ‘{d}’')
-		os.unlink(d)

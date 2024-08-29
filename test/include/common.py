@@ -177,6 +177,10 @@ def clean(cfgs, tmpdir_ids=None, extra_dirs=[]):
 				fmt_list(cleaned, fmt=list_fmt)
 			)))
 
+	for d in extra_dirs:
+		if (os.path.exists(d) or os.path.islink(d)) and not os.path.isdir(d):
+			print(f'Removing non-directory ‘{d}’')
+			os.unlink(d)
 
 def get_tmpfile(cfg,fn):
 	return os.path.join(cfg['tmpdir'],fn)
