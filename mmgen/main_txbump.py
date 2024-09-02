@@ -128,10 +128,9 @@ silent = cfg.yes and cfg.fee is not None and cfg.output_to_reduce is not None
 async def main():
 
 	if cfg.autosign:
-		from .tx.util import init_removable_device
+		from .tx.util import mount_removable_device
 		from .autosign import Signable
-		asi = init_removable_device(cfg)
-		asi.do_mount()
+		asi = mount_removable_device(cfg)
 		si = Signable.automount_transaction(asi)
 		if si.unsigned or si.unsent:
 			state = 'unsigned' if si.unsigned else 'unsent'

@@ -87,10 +87,9 @@ cfg = Config(opts_data=opts_data)
 async def main():
 
 	if cfg.autosign:
-		from .tx.util import init_removable_device
+		from .tx.util import mount_removable_device
 		from .autosign import Signable
-		asi = init_removable_device(cfg)
-		asi.do_mount()
+		asi = mount_removable_device(cfg)
 		Signable.automount_transaction(asi).check_create_ok()
 
 	from .tx import NewTX

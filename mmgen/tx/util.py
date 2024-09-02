@@ -25,11 +25,12 @@ def get_autosign_obj(cfg):
 		})
 	)
 
-def init_removable_device(cfg):
+def mount_removable_device(cfg):
 	asi = get_autosign_obj(cfg)
 	if not asi.device_inserted:
 		from ..util import die
 		die(1, 'Removable device not present!')
 	import atexit
 	atexit.register(lambda: asi.do_umount())
+	asi.do_mount()
 	return asi

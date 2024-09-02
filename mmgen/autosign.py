@@ -731,7 +731,10 @@ class Autosign:
 		if sys.platform == 'linux':
 			return self.dev_label_path.exists()
 		elif sys.platform == 'darwin':
-			return self.mountpoint.exists()
+			if self.cfg.test_suite_root_pfx:
+				return self.mountpoint.exists()
+			else:
+				return run(['diskutil', 'info', self.dev_label], stdout=DEVNULL, stderr=DEVNULL).returncode == 0
 
 	async def main_loop(self):
 		if not self.cfg.stealth_led:

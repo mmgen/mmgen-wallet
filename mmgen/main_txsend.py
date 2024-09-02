@@ -63,10 +63,9 @@ if len(cfg._args) == 1:
 	from .fileutil import check_infile
 	check_infile(infile)
 elif not cfg._args and cfg.autosign:
-	from .tx.util import init_removable_device
+	from .tx.util import mount_removable_device
 	from .autosign import Signable
-	asi = init_removable_device(cfg)
-	asi.do_mount()
+	asi = mount_removable_device(cfg)
 	si = Signable.automount_transaction(asi)
 	if cfg.abort:
 		si.shred_abortable() # prompts user, then raises exception or exits
