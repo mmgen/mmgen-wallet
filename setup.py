@@ -8,7 +8,7 @@
 #   https://github.com/mmgen/mmgen-wallet
 #   https://gitlab.com/mmgen/mmgen-wallet
 
-import os,platform
+import sys, os
 from pathlib import Path
 from subprocess import run,PIPE
 from setuptools import setup,Extension
@@ -49,7 +49,7 @@ def build_libsecp256k1():
 
 class my_build_ext(build_ext):
 	def build_extension(self,ext):
-		if platform.system() == 'Windows':
+		if sys.platform == 'win32':
 			build_libsecp256k1()
 		build_ext.build_extension(self,ext)
 
@@ -58,6 +58,8 @@ setup(
 	ext_modules = [Extension(
 		name      = 'mmgen.proto.secp256k1.secp256k1',
 		sources   = ['extmod/secp256k1mod.c'],
-		libraries = ['gmp','secp256k1'] if platform.system() == 'Windows' else ['secp256k1']
+		libraries = ['gmp', 'secp256k1'] if sys.platform == 'win32' else ['secp256k1'],
+		include_dirs = ['/usr/local/include'] if sys.platform == 'darwin' else [],
+		library_dirs = ['/usr/local/lib'] if sys.platform == 'darwin' else [],
 	)]
 )
