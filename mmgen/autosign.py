@@ -12,10 +12,10 @@
 autosign: Auto-sign MMGen transactions, message files and XMR wallet output files
 """
 
-import sys,os,asyncio
+import sys, os, asyncio
 from stat import S_ISDIR,S_IWUSR,S_IRUSR
 from pathlib import Path
-from subprocess import run,DEVNULL
+from subprocess import run, PIPE, DEVNULL
 
 from .cfg import Config
 from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt,fmt_list,async_run
@@ -363,7 +363,6 @@ class Autosign:
 			self.dfl_shm_dir    = '/dev/shm'
 
 			# linux-only attrs:
-			self.dev_label_dir = Path('/dev/disk/by-label')
 			self.old_dfl_mountpoint = '/mnt/tx'
 			self.old_dfl_mountpoint_errmsg = f"""
 				Mountpoint ‘{self.old_dfl_mountpoint}’ is no longer supported!
@@ -395,10 +394,7 @@ class Autosign:
 
 		self.init_fixup()
 
-		# these use the ‘fixed-up’ values:
-		if sys.platform == 'linux':
-			self.dev_label_path = self.dev_label_dir / self.dev_label
-		elif sys.platform == 'darwin':
+		if sys.platform == 'darwin': # test suite uses ‘fixed-up’ dir for ramdisk
 			from .platform.darwin.util import MacOSRamDisk
 			self.ramdisk = MacOSRamDisk(cfg, self.macOS_ramdisk_name, 10, path=self.shm_dir)
 
@@ -729,7 +725,10 @@ class Autosign:
 		if self.cfg.no_insert_check:
 			return True
 		if sys.platform == 'linux':
-			return self.dev_label_path.exists()
+			cp = run('sudo blkid -s LABEL -o value'.split(), stdout=PIPE, text=True)
+			if cp.returncode not in (0, 2):
+				die(2, f'blkid exited with error code {cp.returncode}')
+			return self.dev_label in cp.stdout.splitlines()
 		elif sys.platform == 'darwin':
 			if self.cfg.test_suite_root_pfx:
 				return self.mountpoint.exists()

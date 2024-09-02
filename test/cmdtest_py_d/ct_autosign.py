@@ -69,9 +69,10 @@ class CmdTestAutosignBase(CmdTestBase):
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
 		self._create_autosign_instances(create_dirs=not cfg.skipping_deps)
+		self.fs_image_path = Path(self.tmpdir).absolute() / 'removable_device_image'
 
 		if sys.platform == 'linux':
-			self.txdev = VirtBlockDevice(self.asi.fs_image_path, '10M')
+			self.txdev = VirtBlockDevice(self.fs_image_path, '10M')
 
 		if not (cfg.skipping_deps or self.live):
 			self._create_removable_device()
@@ -115,7 +116,7 @@ class CmdTestAutosignBase(CmdTestBase):
 				}))
 
 			if create_dirs and not self.live:
-				for k in ('mountpoint', 'shm_dir', 'wallet_dir', 'dev_label_dir'):
+				for k in ('mountpoint', 'shm_dir', 'wallet_dir'):
 					if subdir == 'online' and k in ('shm_dir', 'wallet_dir'):
 						continue
 					if sys.platform == 'darwin' and k != 'mountpoint':
@@ -126,6 +127,10 @@ class CmdTestAutosignBase(CmdTestBase):
 						continue
 
 			setattr(self, data['name'], asi)
+
+	def _set_e2label(self, label):
+		imsg(f'Setting label to {label}')
+		run(['/sbin/e2label', str(self.txdev.img_path), label], check=True)
 
 	def _create_removable_device(self):
 		if sys.platform == 'linux':
@@ -143,14 +148,14 @@ class CmdTestAutosignBase(CmdTestBase):
 			cmd = [
 				'hdiutil', 'create', '-size', '10M', '-fs', 'exFAT',
 				'-volname', self.asi.dev_label,
-				str(self.asi.fs_image_path)]
+				str(self.fs_image_path)]
 			redir = None if cfg.exact_output or cfg.verbose else DEVNULL
 			run(cmd, stdout=redir, check=True)
 
 	def _macOS_mount_fs_image(self, loc):
 		time.sleep(0.2)
 		run(
-			['hdiutil', 'attach', '-mountpoint', str(loc.mountpoint), f'{loc.fs_image_path}.dmg'],
+			['hdiutil', 'attach', '-mountpoint', str(loc.mountpoint), f'{self.fs_image_path}.dmg'],
 			stdout=DEVNULL, check=True)
 
 	def _macOS_eject_disk(self, label):
@@ -236,8 +241,14 @@ class CmdTestAutosignBase(CmdTestBase):
 			return
 		loc = getattr(self, asi)
 		if sys.platform == 'linux':
-			loc.dev_label_path.touch()
-			# self.txdev.attach() # WIP
+			self._set_e2label(loc.dev_label)
+			self.txdev.attach()
+			for _ in range(20):
+				if loc.device_inserted:
+					break
+				time.sleep(0.1)
+			else:
+				die(2, f'device insert timeout exceeded {loc.dev_label}')
 		elif sys.platform == 'darwin':
 			self._macOS_mount_fs_image(loc)
 
@@ -246,9 +257,13 @@ class CmdTestAutosignBase(CmdTestBase):
 			return
 		loc = getattr(self, asi)
 		if sys.platform == 'linux':
-			if loc.dev_label_path.exists():
-				loc.dev_label_path.unlink()
-			# self.txdev.detach() # WIP
+			self.txdev.detach()
+			for _ in range(20):
+				if not loc.device_inserted:
+					break
+				time.sleep(0.1)
+			else:
+				die(2, f'device remove timeout exceeded {loc.dev_label}')
 		elif sys.platform == 'darwin':
 			self._macOS_eject_disk(loc.dev_label)
 
