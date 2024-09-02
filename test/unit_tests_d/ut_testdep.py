@@ -15,8 +15,8 @@ sec = 'deadbeef' * 8
 class unit_tests:
 
 	altcoin_deps = ('pycoin','monero_python','keyconv','zcash_mini','ethkey','ssh_socks_proxy')
-	win_skip = ('losetup','zcash_mini')
-	mac_skip = ('losetup',)
+	win_skip = ('losetup', 'zcash_mini', 'sudo')
+	mac_skip = ('losetup', 'sudo')
 
 	def pylint(self,name,ut):
 		try:
@@ -74,3 +74,11 @@ class unit_tests:
 	def ssh_socks_proxy(self,name,ut):
 		from test.cmdtest_py_d.ct_xmrwallet import CmdTestXMRWallet
 		return CmdTestXMRWallet.init_proxy(external_call=True)
+
+	def sudo(self,name,ut):
+		try:
+			run(['sudo', '--non-interactive', 'true'], check=True)
+			return True
+		except:
+			ymsg(f'To run the test suite, please enable sudo without password for user ‘{os.getenv("USER")}’')
+			return False
