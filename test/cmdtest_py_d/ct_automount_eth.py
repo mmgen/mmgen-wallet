@@ -33,7 +33,7 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		('fund_mmgen_address',     'funding an MMGen address'),
 		('create_tx',              'creating a transaction'),
 		('run_autosign_setup',     'running ‘autosign setup’'),
-		('autosign_start_thread',  'starting autosign wait loop'),
+		('wait_loop_start',        'starting autosign wait loop'),
 		('send_tx',                'sending the transaction'),
 		('token_compile1',         'compiling ERC20 token #1'),
 		('token_deploy1a',         'deploying ERC20 token #1 (SafeMath)'),
@@ -47,7 +47,7 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		('create_token_tx',        'creating a token transaction'),
 		('send_token_tx',          'sending a token transaction'),
 		('token_bal2',             f'the {cfg.coin} balance and token balance'),
-		('autosign_kill_thread',   'stopping autosign wait loop'),
+		('wait_loop_kill',         'stopping autosign wait loop'),
 		('stop',                   'stopping daemon'),
 		('txview',                 'viewing transactions'),
 	)

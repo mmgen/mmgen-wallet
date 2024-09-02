@@ -406,22 +406,23 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 	no_insert_check = False
 	threaded        = True
 
-	def autosign_start_thread(self):
-		def run():
-			t = self.spawn(
-				'mmgen-autosign',
-				self.opts + ['--full-summary', 'wait'],
-				direct_exec      = True,
-				no_passthru_opts = True,
-				spawn_env_override = self.spawn_env | {'EXEC_WRAPPER_DO_RUNTIME_MSG': ''})
-			self.write_to_tmpfile('autosign_thread_pid',str(t.ep.pid))
-		import threading
-		threading.Thread(target=run, name='Autosign wait loop').start()
-		time.sleep(0.2)
+	def _wait_loop_start(self):
+		t = self.spawn(
+			'mmgen-autosign',
+			self.opts + ['--full-summary', 'wait'],
+			direct_exec      = True,
+			no_passthru_opts = True,
+			spawn_env_override = self.spawn_env | {'EXEC_WRAPPER_DO_RUNTIME_MSG': ''})
+		self.write_to_tmpfile('autosign_thread_pid', str(t.ep.pid))
+		return t
 
+	def wait_loop_start(self):
+		import threading
+		threading.Thread(target=self._wait_loop_start, name='Autosign wait loop').start()
+		time.sleep(0.1) # try to ensure test output is displayed before next test starts
 		return 'silent'
 
-	def autosign_kill_thread(self):
+	def wait_loop_kill(self):
 		self.spawn('',msg_only=True)
 		pid = int(self.read_from_tmpfile('autosign_thread_pid'))
 		self.delete_tmpfile('autosign_thread_pid')

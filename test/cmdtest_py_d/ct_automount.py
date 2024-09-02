@@ -43,7 +43,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		('alice_txcreate_bad_have_unsigned', 'creating the transaction again (error)'),
 		('copy_wallet',                      'copying Alice’s wallet'),
 		('alice_run_autosign_setup',         'running ‘autosign setup’ (with default wallet)'),
-		('autosign_start_thread',            'starting autosign wait loop'),
+		('wait_loop_start',                  'starting autosign wait loop'),
 		('alice_txstatus1',                  'getting transaction status (unsigned)'),
 		('alice_txstatus2',                  'getting transaction status (unsent)'),
 		('alice_txcreate_bad_have_unsent',   'creating the transaction again (error)'),
@@ -66,7 +66,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		('alice_txsend2',                    'sending the transaction'),
 		('alice_txbump3',                    'bumping the transaction'),
 		('alice_txsend3',                    'sending the bumped transaction'),
-		('autosign_kill_thread',             'stopping autosign wait loop'),
+		('wait_loop_kill',                   'stopping autosign wait loop'),
 		('stop',                             'stopping regtest daemon'),
 		('txview',                           'viewing transactions'),
 	)
