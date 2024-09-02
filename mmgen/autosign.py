@@ -502,7 +502,7 @@ class Autosign:
 				if not silent:
 					msg(f"Mounting '{self.mountpoint}'")
 			else:
-				die(1,f"Unable to mount device at '{self.mountpoint}'")
+				die(1,f'Unable to mount device {self.dev_label} at {self.mountpoint}')
 
 		for dirname in self.dirs:
 			check_or_create(dirname)

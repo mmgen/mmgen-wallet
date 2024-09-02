@@ -995,14 +995,14 @@ if __name__ == '__main__':
 		tr = CmdTestRunner(data_dir,trash_dir)
 		tr.run_tests(cmd_args)
 		tr.warn_skipped()
-		if tr.daemon_started:
-			stop_test_daemons(network_id)
+		if tr.daemon_started and not cfg.no_daemon_stop:
+			stop_test_daemons(network_id, remove_datadir=True)
 		if hasattr(tr, 'tg'):
 			del tr.tg
 		del tr
 	except KeyboardInterrupt:
-		if tr.daemon_started:
-			stop_test_daemons(network_id)
+		if tr.daemon_started and not cfg.no_daemon_stop:
+			stop_test_daemons(network_id, remove_datadir=True)
 		tr.warn_skipped()
 		die(1,yellow('\ntest.py exiting at user request'))
 	except TestSuiteSpawnedScriptException as e:

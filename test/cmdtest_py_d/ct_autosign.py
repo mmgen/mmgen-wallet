@@ -149,7 +149,9 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	def _macOS_mount_fs_image(self, loc):
 		time.sleep(0.2)
-		run(f'hdiutil attach -mountpoint {loc.mountpoint} {loc.fs_image_path}.dmg'.split(), stdout=DEVNULL, check=True)
+		run(
+			['hdiutil', 'attach', '-mountpoint', str(loc.mountpoint), f'{loc.fs_image_path}.dmg'],
+			stdout=DEVNULL, check=True)
 
 	def _macOS_eject_disk(self, label):
 		try:
@@ -348,6 +350,7 @@ class CmdTestAutosignClean(CmdTestAutosignBase):
 		self.spawn('', msg_only=True)
 
 		self.insert_device()
+
 		silence()
 		self.do_mount()
 		end_silence()
@@ -358,7 +361,9 @@ class CmdTestAutosignClean(CmdTestAutosignBase):
 		t = self.spawn('mmgen-autosign', [f'--coins={coins}','clean'], no_msg=True)
 		out = t.read()
 
-		self.insert_device()
+		if sys.platform == 'darwin':
+			self.insert_device()
+
 		silence()
 		self.do_mount()
 		end_silence()
@@ -436,8 +441,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 	def _wait_signed(self,desc):
 		oqmsg_r(gray(f'→ offline wallet{"s" if desc.endswith("s") else ""} waiting for {desc}'))
-		assert not self.asi.device_inserted, (
-				f'‘{getattr(self.asi, "dev_label_path", self.asi.dev_label)}’ is inserted!')
+		assert not self.asi.device_inserted, f'‘{self.asi.dev_label}’ is inserted!'
 		assert not self.asi.mountpoint.is_mount(), f'‘{self.asi.mountpoint}’ is mounted!'
 		self.insert_device()
 		while True:

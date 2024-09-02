@@ -420,7 +420,7 @@ class VirtBlockDeviceLinux(VirtBlockDeviceBase):
 		do_run(['sudo', '/sbin/losetup', dev, str(path)])
 
 	def do_detach(self, dev, check=True):
-		do_run(['/sbin/losetup', '-d', dev], check=check)
+		do_run(['sudo', '/sbin/losetup', '-d', dev], check=check)
 
 class VirtBlockDeviceMacOS(VirtBlockDeviceBase):
 
