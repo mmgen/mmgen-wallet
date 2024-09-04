@@ -464,13 +464,13 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			if self.asi.mountpoint.is_mount():
 				oqmsg_r(gray(' signing '))
 				break
-			time.sleep(0.2)
+			time.sleep(0.1)
 		while True:
 			oqmsg_r(gray('>'))
 			if not self.asi.mountpoint.is_mount():
 				oqmsg(gray(' done'))
 				break
-			time.sleep(0.2)
+			time.sleep(0.1)
 		imsg('')
 		self.remove_device()
 		return 'ok'

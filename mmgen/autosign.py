@@ -569,7 +569,7 @@ class Autosign:
 				if isinstance(val,str):
 					msg(val)
 			if self.cfg.test_suite_autosign_threaded:
-				await asyncio.sleep(1)
+				await asyncio.sleep(0.3)
 			self.do_umount()
 			self.led.set('error' if not all(ret) else 'off' if self.cfg.stealth_led else 'standby')
 			return all(ret)
