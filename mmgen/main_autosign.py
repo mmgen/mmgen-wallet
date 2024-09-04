@@ -20,6 +20,8 @@
 autosign: Auto-sign MMGen transactions, message files and XMR wallet output files
 """
 
+import sys
+
 from .util import msg,die,fmt_list,exit_if_mswin,async_run
 
 exit_if_mswin('autosigning')
@@ -70,6 +72,10 @@ setup     - full setup: run ‘gen_key’ and create temporary signing wallet(s)
             for all configured coins
 xmr_setup - set up Monero temporary signing wallet(s).  Not required in normal
             operation: use ‘setup’ with --xmrwallets instead
+macos_ramdisk_setup - set up the ramdisk used for storing the temporary signing
+            wallet(s) (macOS only).  Required only when creating the wallet(s)
+            manually, without ‘setup’
+macos_ramdisk_delete - delete the macOS ramdisk
 wait      - start in loop mode: wait-mount-sign-unmount-wait
 wipe_key  - wipe the wallet encryption key on the removable device, making
             signing transactions or stealing the user’s seed impossible.
@@ -189,6 +195,8 @@ valid_cmds = (
 	'gen_key',
 	'setup',
 	'xmr_setup',
+	'macos_ramdisk_setup',
+	'macos_ramdisk_delete',
 	'sign',
 	'wait',
 	'clean',
@@ -214,6 +222,8 @@ cfg._post_init()
 if cmd == 'gen_key':
 	asi.gen_key()
 elif cmd == 'setup':
+	if sys.platform == 'darwin':
+		asi.macos_ramdisk_setup()
 	asi.setup()
 	from .ui import keypress_confirm
 	if cfg.xmrwallets and keypress_confirm( cfg, '\nContinue with Monero setup?', default_yes=True ):
@@ -226,6 +236,10 @@ elif cmd == 'xmr_setup':
 	asi.do_mount()
 	asi.xmr_setup()
 	asi.do_umount()
+elif cmd.startswith('macos_ramdisk'):
+	if sys.platform != 'darwin':
+		die(1, f'The ‘{cmd}’ operation is for the macOS platform only')
+	getattr(asi, cmd)()
 elif cmd == 'sign':
 	main(do_loop=False)
 elif cmd == 'wait':

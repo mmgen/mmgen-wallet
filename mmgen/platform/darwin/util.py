@@ -82,6 +82,9 @@ class MacOSRamDisk:
 			run(['diskutil', 'mount', '-mountPoint', str(self.path.absolute()), self.label], stdout=redir, check=True)
 
 	def destroy(self, quiet=False):
+		if not self.exists():
+			self.cfg._util.qmsg(f'{self.desc.capitalize()} {self.label.hl()} at path {self.path} not found')
+			return
 		redir = DEVNULL if quiet else None
 		run(['diskutil', 'eject', self.label], stdout=redir, check=True)
 		if not quiet:

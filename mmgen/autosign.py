@@ -612,6 +612,12 @@ class Autosign:
 		if not no_unmount:
 			self.do_umount()
 
+	def macos_ramdisk_setup(self):
+		self.ramdisk.create()
+
+	def macos_ramdisk_delete(self):
+		self.ramdisk.destroy()
+
 	def _get_macOS_ramdisk_size(self):
 		from .platform.darwin.util import MacOSRamDisk, warn_ramdisk_too_small
 		# allow 1MB for each Monero wallet
@@ -647,9 +653,6 @@ class Autosign:
 				self.wallet_dir.stat()
 			except:
 				die(2,f"Unable to create wallet directory '{self.wallet_dir}'")
-
-		if sys.platform == 'darwin':
-			self.ramdisk.create()
 
 		remove_wallet_dir()
 		create_wallet_dir()
