@@ -389,7 +389,7 @@ class VirtBlockDeviceBase:
 	def detach(self, silent=False):
 		dev = self.dev
 		if not silent:
-			imsg(f'Detaching device {dev!r}')
+			imsg(f'Detaching {dev!r}')
 		self.do_detach(dev)
 		if hasattr(self, 'dev_mode_orig'):
 			if not silent:
@@ -447,7 +447,7 @@ class VirtBlockDeviceMacOS(VirtBlockDeviceBase):
 		do_run(['hdiutil', 'create', '-size', size, '-layout', 'NONE', str(path)])
 
 	def do_attach(self, path, dev=None):
-		do_run(['hdiutil', 'attach', '-mount', 'suppressed', str(path)])
+		do_run(['hdiutil', 'attach', '-nomount', str(path)])
 
 	def do_detach(self, dev, check=True):
 		do_run(['hdiutil', 'detach', dev], check=check)

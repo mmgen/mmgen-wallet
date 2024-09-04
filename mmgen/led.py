@@ -169,7 +169,11 @@ class LEDControl:
 		if self.debug:
 			msg(f'Setting LED state to {state!r}')
 
-		self.led_thread = threading.Thread(target=self.led_loop,name='LED loop',args=timings[state])
+		self.led_thread = threading.Thread(
+				target = self.led_loop,
+				name   = 'LED loop',
+				args   = timings[state])
+
 		self.led_thread.start()
 
 	def stop(self):

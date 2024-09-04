@@ -15,12 +15,11 @@ platform.darwin.util: utilities for the macOS platform
 from pathlib import Path
 from subprocess import run, PIPE, DEVNULL
 
-from ...color import cyan
 from ...obj import MMGenLabel
 
-def get_device_size(fn):
+def get_device_size(path_or_label):
 	import re
-	cp = run(['diskutil', 'info', fn], text=True, stdout=PIPE, check=True)
+	cp = run(['diskutil', 'info', path_or_label], text=True, stdout=PIPE, check=True)
 	res = [e for e in cp.stdout.splitlines() if 'Disk Size' in e]
 	errmsg = '‘diskutil info’ output could not be parsed for device size'
 	assert len(res) == 1, f'{errmsg}:\n{cp.stdout}'
@@ -34,23 +33,27 @@ class RamDiskLabel(MMGenLabel):
 
 class MacOSRamDisk:
 
-	desc = 'macOS ramdisk'
+	desc = 'ramdisk'
 
-	def __init__(self, cfg, label, size_in_MB, path=None):
+	def __init__(self, cfg, label, size, path=None):
 		self.cfg = cfg
 		self.label = RamDiskLabel(label)
-		self.size_in_MB  = size_in_MB
+		self.size = size # size in MiB
 		self.dfl_path = Path('/Volumes') / self.label
 		self.path = Path(path) if path else self.dfl_path
 
+	def exists(self):
+		return self.path.is_mount()
+
 	def create(self, quiet=False):
 		redir = DEVNULL if quiet else None
-		if self.path.exists():
+		if self.exists():
 			self.cfg._util.qmsg('{} {} [{}] already exists'.format(self.desc, self.label.hl(), self.path))
 			return
-		cp = run(['hdiutil', 'attach', '-nomount', f'ram://{2048 * self.size_in_MB}'], stdout=PIPE, check=True)
+		self.cfg._util.qmsg(f'Creating {self.desc} {self.label.hl()} of size {self.size}MB')
+		cp = run(['hdiutil', 'attach', '-nomount', f'ram://{2048 * self.size}'], stdout=PIPE, check=True)
 		self.dev_name = cp.stdout.decode().strip()
-		self.cfg._util.qmsg('{} {} [{}]'.format(cyan(f'Created {self.desc}'), self.label.hl(), self.dev_name))
+		self.cfg._util.qmsg(f'Created {self.desc} {self.label.hl()} [{self.dev_name}]')
 		run(['diskutil', 'eraseVolume', 'APFS', self.label, self.dev_name], stdout=redir, check=True)
 		if self.path != self.dfl_path:
 			run(['diskutil', 'umount', self.label], stdout=redir, check=True)
@@ -61,4 +64,4 @@ class MacOSRamDisk:
 		redir = DEVNULL if quiet else None
 		run(['diskutil', 'eject', self.label], stdout=redir, check=True)
 		if not quiet:
-			self.cfg._util.qmsg('{} {} [{}]'.format(cyan(f'Destroyed {self.desc}'), self.label.hl(), self.path))
+			self.cfg._util.qmsg(f'Destroyed {self.desc} {self.label.hl()} at {self.path}')

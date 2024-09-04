@@ -61,10 +61,10 @@ clean     - clean the removable device of unneeded files, removing only non-
 gen_key   - generate the wallet encryption key and copy it to the removable
             device mounted at mountpoint ‘{asi.mountpoint}’ (as currently
             configured)
-setup     - generate both wallet encryption key and temporary signing wallet
-xmr_setup - set up temporary Monero signing wallets.  This operation needn’t
-            be performed by the user directly in most cases, as Monero setup
-            is done by the ‘setup’ command when --xmrwallets is specified
+setup     - full setup: run ‘gen_key’ and create temporary signing wallet(s)
+            for all configured coins
+xmr_setup - set up Monero temporary signing wallet(s).  Not required in normal
+            operation: use ‘setup’ with --xmrwallets instead
 wait      - start in loop mode: wait-mount-sign-unmount-wait
 wipe_key  - wipe the wallet encryption key on the removable device, making
             signing transactions or stealing the user’s seed impossible.
@@ -171,7 +171,6 @@ from .autosign import Autosign
 cfg = Config(
 	opts_data = opts_data,
 	init_opts = {
-		'quiet': True,
 		'out_fmt': 'wallet',
 		'usr_randchars': 0,
 		'hash_preset': '1',
@@ -181,7 +180,14 @@ cfg = Config(
 
 cmd = cfg._args[0] if len(cfg._args) == 1 else 'sign' if not cfg._args else cfg._opts.usage()
 
-valid_cmds = ('gen_key', 'setup', 'xmr_setup', 'sign', 'wait', 'clean', 'wipe_key')
+valid_cmds = (
+	'gen_key',
+	'setup',
+	'xmr_setup',
+	'sign',
+	'wait',
+	'clean',
+	'wipe_key')
 
 if cmd not in valid_cmds:
 	die(1,f'‘{cmd}’: unrecognized command')

@@ -776,10 +776,18 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.remove_device()
 		return 'ok'
 
-	def do_sign(self, args=[], have_msg=False, exc_exit_val=None):
+	def do_sign(self, args=[], have_msg=False, exc_exit_val=None, expect_str=None):
 
 		tx_desc = Signable.transaction.desc
 		self.insert_device()
+
+		def do_exit():
+			if expect_str:
+				t.expect(expect_str)
+			t.read()
+			self.remove_device()
+			imsg('')
+			return t
 
 		t = self.spawn(
 				'mmgen-autosign',
@@ -787,7 +795,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 				exit_val = exc_exit_val or (1 if self.bad_tx_count or (have_msg and self.bad_msg_count) else None))
 
 		if exc_exit_val:
-			return t
+			return do_exit()
 
 		t.expect(
 			f'{self.tx_count} {tx_desc}{suf(self.tx_count)} signed' if self.tx_count else
@@ -807,11 +815,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 					f'{self.bad_msg_count} message file{suf(self.bad_msg_count)}{{0,1}} failed to sign',
 					regex = True)
 
-		t.read()
-		self.remove_device()
-
-		imsg('')
-		return t
+		return do_exit()
 
 	def sign_quiet(self):
 		return self.do_sign(['--quiet'])
@@ -832,9 +836,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		return self.do_sign(['--full-summary'], have_msg=True)
 
 	def sign_bad_no_daemon(self):
-		t = self.do_sign(exc_exit_val=2)
-		t.expect('listening on the correct port')
-		return t
+		return self.do_sign(exc_exit_val=2, expect_str='listening on the correct port')
 
 	def sign_no_unsigned(self):
 		return self._sign_no_unsigned(

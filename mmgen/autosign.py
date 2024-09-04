@@ -18,7 +18,7 @@ from pathlib import Path
 from subprocess import run, PIPE, DEVNULL
 
 from .cfg import Config
-from .util import msg,msg_r,ymsg,rmsg,gmsg,bmsg,die,suf,fmt,fmt_list,async_run
+from .util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list
 from .color import yellow,red,orange,brown
 from .wallet import Wallet,get_wallet_cls
 from .filename import find_file_in_dir
@@ -394,9 +394,13 @@ class Autosign:
 
 		self.init_fixup()
 
-		if sys.platform == 'darwin': # test suite uses ‘fixed-up’ dir for ramdisk
+		if sys.platform == 'darwin': # test suite uses ‘fixed-up’ shm_dir
 			from .platform.darwin.util import MacOSRamDisk
-			self.ramdisk = MacOSRamDisk(cfg, self.macOS_ramdisk_name, 10, path=self.shm_dir)
+			self.ramdisk = MacOSRamDisk(
+					cfg,
+					self.macOS_ramdisk_name,
+					10,
+					path = self.shm_dir)
 
 		self.keyfile = self.mountpoint / 'autosign.key'
 
@@ -674,8 +678,8 @@ class Autosign:
 					wallets = self.cfg.xmrwallets,  # XMR wallet idxs
 					spec    = None ),
 			)
-			async_run(m.main())
-			async_run(m.stop_wallet_daemon())
+			asyncio.run(m.main())
+			asyncio.run(m.stop_wallet_daemon())
 
 		self.clean_old_files()
 
