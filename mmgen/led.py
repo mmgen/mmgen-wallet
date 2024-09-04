@@ -172,7 +172,8 @@ class LEDControl:
 		self.led_thread = threading.Thread(
 				target = self.led_loop,
 				name   = 'LED loop',
-				args   = timings[state])
+				args   = timings[state],
+				daemon = True)
 
 		self.led_thread.start()
 
