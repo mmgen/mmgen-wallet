@@ -41,6 +41,11 @@ opts_data = {
 -M, --mnemonic-fmt=F  During setup, prompt for mnemonic seed phrase of format
                       'F' (choices: {mn_fmts}; default: {asi.dfl_mn_fmt!r})
 -n, --no-summary      Don’t print a transaction summary
+-r, --macos-ramdisk-size=S  Set the size (in MB) of the ramdisk used to store
+                      the offline signing wallet(s) on macOS machines.  By
+                      default, a runtime-calculated value will be used. This
+                      option is of interest only for setups with unusually
+                      large Monero wallets
 -s, --stealth-led     Stealth LED mode - signal busy and error only, and only
                       after successful authorization.
 -S, --full-summary    Print a full summary of each signed transaction after

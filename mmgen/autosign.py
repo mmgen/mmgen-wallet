@@ -18,9 +18,10 @@ from pathlib import Path
 from subprocess import run, PIPE, DEVNULL
 
 from .cfg import Config
-from .util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list
+from .util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list, is_int
 from .color import yellow,red,orange,brown
 from .wallet import Wallet,get_wallet_cls
+from .addrlist import AddrIdxList
 from .filename import find_file_in_dir
 from .ui import keypress_confirm
 
@@ -399,7 +400,7 @@ class Autosign:
 			self.ramdisk = MacOSRamDisk(
 					cfg,
 					self.macOS_ramdisk_name,
-					10,
+					self._get_macOS_ramdisk_size(),
 					path = self.shm_dir)
 
 		self.keyfile = self.mountpoint / 'autosign.key'
@@ -610,6 +611,22 @@ class Autosign:
 		self.create_key()
 		if not no_unmount:
 			self.do_umount()
+
+	def _get_macOS_ramdisk_size(self):
+		from .platform.darwin.util import MacOSRamDisk, warn_ramdisk_too_small
+		# allow 1MB for each Monero wallet
+		xmr_size = len(AddrIdxList(self.cfg.xmrwallets)) if self.cfg.xmrwallets else 0
+		calc_size = xmr_size + 1
+		usr_size = self.cfg.macos_ramdisk_size or self.cfg.macos_autosign_ramdisk_size
+		if is_int(usr_size):
+			usr_size = int(usr_size)
+		else:
+			die(1, f'{usr_size}: invalid user-specified macOS ramdisk size (not an integer)')
+		min_size = MacOSRamDisk.min_size
+		size = max(usr_size, calc_size, min_size)
+		if usr_size and usr_size < min_size:
+			warn_ramdisk_too_small(usr_size, min_size)
+		return size
 
 	def setup(self):
 

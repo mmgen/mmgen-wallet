@@ -16,6 +16,7 @@ from pathlib import Path
 from subprocess import run, PIPE, DEVNULL
 
 from ...obj import MMGenLabel
+from ...util import oneshot_warning
 
 def get_device_size(path_or_label):
 	import re
@@ -27,6 +28,12 @@ def get_device_size(path_or_label):
 	assert m, f'{errmsg}:\n{res[0]}'
 	return int(m[1])
 
+class warn_ramdisk_too_small(oneshot_warning):
+	message = 'requested ramdisk size ({}MB) too small, using {}MB instead'
+	color = 'yellow'
+	def __init__(self, usr_size, min_size):
+		oneshot_warning.__init__(self, div=usr_size, fmt_args=[usr_size, min_size])
+
 class RamDiskLabel(MMGenLabel):
 	max_len = 24
 	desc = 'ramdisk label'
@@ -34,8 +41,12 @@ class RamDiskLabel(MMGenLabel):
 class MacOSRamDisk:
 
 	desc = 'ramdisk'
+	min_size = 10 # 10MB is the minimum supported by hdiutil
 
 	def __init__(self, cfg, label, size, path=None):
+		if size < self.min_size:
+			warn_ramdisk_too_small(size, self.min_size)
+			size = self.min_size
 		self.cfg = cfg
 		self.label = RamDiskLabel(label)
 		self.size = size # size in MiB
@@ -45,16 +56,26 @@ class MacOSRamDisk:
 	def exists(self):
 		return self.path.is_mount()
 
+	def get_diskutil_size(self):
+		return get_device_size(self.label) // (2**20)
+
 	def create(self, quiet=False):
 		redir = DEVNULL if quiet else None
 		if self.exists():
-			self.cfg._util.qmsg('{} {} [{}] already exists'.format(self.desc, self.label.hl(), self.path))
-			return
+			diskutil_size = self.get_diskutil_size()
+			if diskutil_size != self.size:
+				self.cfg._util.qmsg(f'Existing ramdisk has incorrect size {diskutil_size}MB, deleting')
+				self.destroy()
+			else:
+				self.cfg._util.qmsg(f'{self.desc.capitalize()} {self.label.hl()} at path {self.path} already exists')
+				return
 		self.cfg._util.qmsg(f'Creating {self.desc} {self.label.hl()} of size {self.size}MB')
 		cp = run(['hdiutil', 'attach', '-nomount', f'ram://{2048 * self.size}'], stdout=PIPE, check=True)
 		self.dev_name = cp.stdout.decode().strip()
 		self.cfg._util.qmsg(f'Created {self.desc} {self.label.hl()} [{self.dev_name}]')
 		run(['diskutil', 'eraseVolume', 'APFS', self.label, self.dev_name], stdout=redir, check=True)
+		diskutil_size = self.get_diskutil_size()
+		assert diskutil_size == self.size, 'Reported ramdisk size {diskutil_size}MB is incorrect!'
 		if self.path != self.dfl_path:
 			run(['diskutil', 'umount', self.label], stdout=redir, check=True)
 			self.path.mkdir(parents=True, exist_ok=True)

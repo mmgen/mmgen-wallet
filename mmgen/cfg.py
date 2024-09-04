@@ -145,6 +145,7 @@ class Config(Lockable):
 	max_input_size     = 1024 * 1024
 	min_urandchars     = 10
 	max_urandchars     = 80
+	macos_autosign_ramdisk_size = 10 # see MacOSRamDisk
 
 	# debug
 	debug                = False
@@ -255,6 +256,7 @@ class Config(Lockable):
 		'force_256_color',
 		'hash_preset',
 		'http_timeout',
+		'macos_autosign_ramdisk_size',
 		'max_input_size',
 		'max_tx_file_size',
 		'mnemonic_entry_modes',
