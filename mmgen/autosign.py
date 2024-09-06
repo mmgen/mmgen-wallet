@@ -664,9 +664,14 @@ class Autosign:
 			except:
 				die(2,f"Unable to create wallet directory '{self.wallet_dir}'")
 
+		self.gen_key(no_unmount=True)
+
+		if sys.platform == 'darwin':
+			self.macos_ramdisk_setup()
+
 		remove_wallet_dir()
 		create_wallet_dir()
-		self.gen_key(no_unmount=True)
+
 		wf = find_file_in_dir( get_wallet_cls('mmgen'), self.cfg.data_dir )
 		if wf and keypress_confirm(
 				cfg         = self.cfg,

@@ -211,8 +211,6 @@ cfg._post_init()
 if cmd == 'gen_key':
 	asi.gen_key()
 elif cmd == 'setup':
-	if sys.platform == 'darwin':
-		asi.macos_ramdisk_setup()
 	asi.setup()
 	from .ui import keypress_confirm
 	if cfg.xmrwallets and keypress_confirm( cfg, '\nContinue with Monero setup?', default_yes=True ):
