@@ -22,8 +22,10 @@ led: Control the LED on a single-board computer
 
 import os,threading
 from collections import namedtuple
+from subprocess import run
 
-from .util import msg,msg_r,fmt,die
+from .util import msg, msg_r, fmt, die, have_sudo
+from .color import orange
 
 class LEDControl:
 
@@ -81,20 +83,26 @@ class LEDControl:
 			msg(f'\n  Status file:  {board.status}\n  Trigger file: {board.trigger}')
 
 		def check_access(fn,desc,init_val=None):
-			try:
+
+			def write_init_val(init_val):
 				if not init_val:
 					with open(fn) as fp:
 						init_val = fp.read().strip()
 				with open(fn,'w') as fp:
 					fp.write(f'{init_val}\n')
-				return True
-			except PermissionError:
-				die(2,'\n'+fmt(f"""
-					You do not have access to the {desc} file
-					To allow access, run the following command:
 
-					    sudo chmod 0666 {fn}
-				""",indent='  ',strip_char='\t'))
+			try:
+				write_init_val(init_val)
+			except PermissionError:
+				cmd = f'sudo chmod 0666 {fn}'
+				if have_sudo():
+					msg(orange(f'Running ‘{cmd}’'))
+					run(cmd.split(), check=True)
+					write_init_val(init_val)
+				else:
+					die(2,
+						f'\nYou do not have access to the {desc} file\n'
+						f'To allow access, run the following command:\n\n    {cmd}')
 
 		check_access(board.status,desc='status LED control')
 

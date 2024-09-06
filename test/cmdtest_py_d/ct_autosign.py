@@ -595,6 +595,11 @@ class CmdTestAutosign(CmdTestAutosignBase):
 
 		if self.simulate_led:
 			LEDControl.create_dummy_control_files()
+			db = LEDControl.boards['dummy']
+			usrgrp = {'linux': 'root:root', 'darwin': 'root:wheel'}[sys.platform]
+			for fn in (db.status, db.trigger): # trigger the auto-chmod feature
+				run(f'sudo chmod 644 {fn}'.split(), check=True)
+				run(f'sudo chown {usrgrp} {fn}'.split(), check=True)
 			self.have_dummy_control_files = True
 			self.spawn_env['MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE'] = '1'
 
@@ -922,9 +927,6 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		except Exception as e:
 			msg(str(e))
 			die(2,'LEDControl initialization failed')
-		for path in (cf.board.status,cf.board.trigger):
-			if path:
-				run(['sudo','chmod','0666',path],check=True)
 
 	def run_setup_mmgen(self):
 		return self.run_setup(mn_type='mmgen',use_dfl_wallet=None)
