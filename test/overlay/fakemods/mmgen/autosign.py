@@ -14,6 +14,7 @@ class overlay_fake_Autosign:
 				self.dev_label = 'MMGEN_TS_ONLINE' if self.cfg.online else 'MMGEN_TS_OFFLINE'
 				self.mount_cmd  = f'sudo mount LABEL={self.dev_label} {self.mountpoint}'
 				self.umount_cmd = f'sudo umount {self.mountpoint}'
+				self.linux_blkid_cmd = 'sudo blkid -s LABEL -o value'
 
 Autosign.dev_label          = 'MMGEN_TS_TX' # autosign_live only (Linux)
 Autosign.linux_mount_subdir = 'mmgen_ts_autosign'

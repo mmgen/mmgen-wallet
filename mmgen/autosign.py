@@ -328,6 +328,7 @@ class Autosign:
 	linux_mount_subdir = 'mmgen_autosign'
 	macOS_ramdisk_name = 'AutosignRamDisk'
 	wallet_subdir = 'autosign'
+	linux_blkid_cmd = '/sbin/blkid -s LABEL -o value'
 
 	cmds = ('setup', 'xmr_setup', 'sign', 'wait')
 
@@ -758,7 +759,7 @@ class Autosign:
 		if self.cfg.no_insert_check:
 			return True
 		if sys.platform == 'linux':
-			cp = run('sudo blkid -s LABEL -o value'.split(), stdout=PIPE, text=True)
+			cp = run(self.linux_blkid_cmd.split(), stdout=PIPE, text=True)
 			if cp.returncode not in (0, 2):
 				die(2, f'blkid exited with error code {cp.returncode}')
 			return self.dev_label in cp.stdout.splitlines()
