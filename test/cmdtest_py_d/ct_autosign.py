@@ -90,7 +90,10 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	def __del__(self):
 		if hasattr(self,'have_dummy_control_files'):
-			LEDControl.delete_dummy_control_files()
+			db = LEDControl.boards['dummy']
+			for fn in (db.status, db.trigger):
+				run('sudo rm -f {fn}'.split(), check=True)
+
 		if hasattr(self, 'txdev'):
 			del self.txdev
 		if not cfg.no_daemon_stop:
@@ -781,7 +784,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		tx_desc = Signable.transaction.desc
 		self.insert_device()
 
-		def do_exit():
+		def do_return():
 			if expect_str:
 				t.expect(expect_str)
 			t.read()
@@ -795,7 +798,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 				exit_val = exc_exit_val or (1 if self.bad_tx_count or (have_msg and self.bad_msg_count) else None))
 
 		if exc_exit_val:
-			return do_exit()
+			return do_return()
 
 		t.expect(
 			f'{self.tx_count} {tx_desc}{suf(self.tx_count)} signed' if self.tx_count else
@@ -815,7 +818,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 					f'{self.bad_msg_count} message file{suf(self.bad_msg_count)}{{0,1}} failed to sign',
 					regex = True)
 
-		return do_exit()
+		return do_return()
 
 	def sign_quiet(self):
 		return self.do_sign(['--quiet'])

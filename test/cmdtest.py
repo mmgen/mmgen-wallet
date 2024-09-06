@@ -1004,6 +1004,9 @@ if __name__ == '__main__':
 		if tr.daemon_started and not cfg.no_daemon_stop:
 			stop_test_daemons(network_id, remove_datadir=True)
 		tr.warn_skipped()
+		if hasattr(tr, 'tg'):
+			del tr.tg
+		del tr
 		die(1,yellow('\ntest.py exiting at user request'))
 	except TestSuiteSpawnedScriptException as e:
 		# if spawned script is not running under exec_wrapper, output brief error msg:

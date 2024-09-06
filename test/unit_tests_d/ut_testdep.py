@@ -16,7 +16,7 @@ class unit_tests:
 
 	altcoin_deps = ('pycoin','monero_python','keyconv','zcash_mini','ethkey','ssh_socks_proxy')
 	win_skip = ('losetup', 'zcash_mini', 'sudo')
-	mac_skip = ('losetup', 'sudo')
+	mac_skip = ('losetup',)
 
 	def pylint(self,name,ut):
 		try:
@@ -76,9 +76,9 @@ class unit_tests:
 		return CmdTestXMRWallet.init_proxy(external_call=True)
 
 	def sudo(self,name,ut):
-		try:
-			run(['sudo', '--non-interactive', 'true'], check=True)
+		from mmgen.util import have_sudo
+		if have_sudo():
 			return True
-		except:
+		else:
 			ymsg(f'To run the test suite, please enable sudo without password for user ‘{os.getenv("USER")}’')
 			return False

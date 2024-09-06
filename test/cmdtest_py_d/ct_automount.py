@@ -83,8 +83,17 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 
 		self.opts.append('--alice')
 
-	def _alice_txcreate(self, chg_addr, opts=[], exit_val=0, expect=None):
+	def _alice_txcreate(self, chg_addr, opts=[], exit_val=0, expect_str=None):
+
+		def do_return():
+			if expect_str:
+				t.expect(expect_str)
+			t.read()
+			self.remove_device_online()
+			return t
+
 		self.insert_device_online()
+
 		sid = self._user_sid('alice')
 		t = self.spawn(
 			'mmgen-txcreate',
@@ -92,21 +101,17 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 			+ ['--alice', '--autosign']
 			+ [f'{self.burn_addr},1.23456', f'{sid}:{chg_addr}'],
 			exit_val = exit_val or None)
+
 		if exit_val:
-			t.expect(expect)
-			t.read()
-			self.remove_device_online()
-			return t
+			return do_return()
+
 		t = self.txcreate_ui_common(
 			t,
 			inputs          = '1',
 			interactive_fee = '32s',
 			file_desc       = 'Unsigned automount transaction')
-		if expect:
-			t.expect(expect)
-		t.read()
-		self.remove_device_online()
-		return t
+
+		return do_return()
 
 	def alice_txcreate1(self):
 		return self._alice_txcreate(chg_addr='C:5')
@@ -155,10 +160,10 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 	alice_txsend_abort5 = alice_txsend_abort2
 
 	def alice_txcreate_bad_have_unsigned(self):
-		return self._alice_txcreate(chg_addr='C:5', exit_val=2, expect='already present')
+		return self._alice_txcreate(chg_addr='C:5', exit_val=2, expect_str='already present')
 
 	def alice_txcreate_bad_have_unsent(self):
-		return self._alice_txcreate(chg_addr='C:5', exit_val=2, expect='unsent transaction')
+		return self._alice_txcreate(chg_addr='C:5', exit_val=2, expect_str='unsent transaction')
 
 	def copy_wallet(self):
 		self.spawn('', msg_only=True)

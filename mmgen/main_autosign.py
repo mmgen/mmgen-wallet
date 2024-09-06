@@ -70,8 +70,8 @@ gen_key   - generate the wallet encryption key and copy it to the removable
             configured)
 setup     - full setup: run ‘gen_key’ and create temporary signing wallet(s)
             for all configured coins
-xmr_setup - set up Monero temporary signing wallet(s).  Not required in normal
-            operation: use ‘setup’ with --xmrwallets instead
+xmr_setup - set up Monero temporary signing wallet(s).  Not required during
+            normal operation: use ‘setup’ with --xmrwallets instead
 macos_ramdisk_setup - set up the ramdisk used for storing the temporary signing
             wallet(s) (macOS only).  Required only when creating the wallet(s)
             manually, without ‘setup’
@@ -191,18 +191,7 @@ cfg = Config(
 
 cmd = cfg._args[0] if len(cfg._args) == 1 else 'sign' if not cfg._args else cfg._opts.usage()
 
-valid_cmds = (
-	'gen_key',
-	'setup',
-	'xmr_setup',
-	'macos_ramdisk_setup',
-	'macos_ramdisk_delete',
-	'sign',
-	'wait',
-	'clean',
-	'wipe_key')
-
-if cmd not in valid_cmds:
+if cmd not in Autosign.cmds + Autosign.util_cmds:
 	die(1,f'‘{cmd}’: unrecognized command')
 
 if cmd != 'setup':

@@ -329,6 +329,15 @@ class Autosign:
 	macOS_ramdisk_name = 'AutosignRamDisk'
 	wallet_subdir = 'autosign'
 
+	cmds = ('setup', 'xmr_setup', 'sign', 'wait')
+
+	util_cmds = (
+		'gen_key',
+		'macos_ramdisk_setup',
+		'macos_ramdisk_delete',
+		'clean',
+		'wipe_key')
+
 	mn_fmts = {
 		'mmgen': 'words',
 		'bip39': 'bip39',
@@ -416,7 +425,7 @@ class Autosign:
 		if cfg.xmrwallets and not 'XMR' in self.coins:
 			self.coins.append('XMR')
 
-		if not self.coins and cmd not in ('gen_key','wipe_key'):
+		if not self.coins and cmd in self.cmds:
 			ymsg('Warning: no coins specified, defaulting to BTC')
 			self.coins = ['BTC']
 

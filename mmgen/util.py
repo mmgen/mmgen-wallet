@@ -456,3 +456,12 @@ def wrap_ripemd160(called=[]):
 def exit_if_mswin(feature):
 	if sys.platform == 'win32':
 		die(2, capfirst(feature) + ' not supported on the MSWin / MSYS2 platform' )
+
+def have_sudo(silent=False):
+	from subprocess import run, DEVNULL
+	redir = DEVNULL if silent else None
+	try:
+		run(['sudo', '--non-interactive', 'true'], stdout=redir, stderr=redir, check=True)
+		return True
+	except:
+		return False

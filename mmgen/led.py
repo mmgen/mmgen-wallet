@@ -78,10 +78,7 @@ class LEDControl:
 		msg(f'{board.name} board detected')
 
 		if self.debug:
-			msg(fmt(f"""
-			Status file:  {board.status}
-			Trigger file: {board.trigger}
-			""",indent='  ',strip_char='\t'))
+			msg(f'\n  Status file:  {board.status}\n  Trigger file: {board.trigger}')
 
 		def check_access(fn,desc,init_val=None):
 			try:
@@ -113,15 +110,6 @@ class LEDControl:
 			fp.write('0\n')
 		with open(db.trigger,'w') as fp:
 			fp.write(db.trigger_states[1]+'\n')
-
-	@classmethod
-	def delete_dummy_control_files(cls):
-		db = cls.boards['dummy']
-		for fn in (db.status, db.trigger):
-			try:
-				os.unlink(fn)
-			except Exception as e:
-				msg(str(e))
 
 	def noop(self,*args,**kwargs):
 		pass
