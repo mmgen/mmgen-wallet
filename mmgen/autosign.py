@@ -18,12 +18,104 @@ from pathlib import Path
 from subprocess import run, PIPE, DEVNULL
 
 from .cfg import Config
-from .util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list, is_int
-from .color import yellow,red,orange,brown
+from .util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list, is_int, have_sudo, capfirst
+from .color import yellow, red, orange, brown, blue
 from .wallet import Wallet,get_wallet_cls
 from .addrlist import AddrIdxList
 from .filename import find_file_in_dir
 from .ui import keypress_confirm
+
+def SwapMgr(*args, **kwargs):
+	if sys.platform == 'linux':
+		return SwapMgrLinux(*args, **kwargs)
+	elif sys.platform == 'darwin':
+		return SwapMgrMacOS(*args, **kwargs)
+
+class SwapMgrBase:
+
+	def __init__(self, cfg, ignore_zram=False):
+		self.cfg = cfg
+		self.ignore_zram = ignore_zram
+		self.desc = 'disk swap' if ignore_zram else 'swap'
+
+	def enable(self, quiet=False):
+		ret = self.do_enable()
+		if not quiet:
+			self.cfg._util.qmsg(
+				f'{capfirst(self.desc)} successfully enabled' if ret else
+				f'{capfirst(self.desc)} is already enabled' if ret is None else
+				f'Could not enable {self.desc}')
+		return ret
+
+	def disable(self, quiet=False):
+		self.cfg._util.qmsg_r(f'Disabling {self.desc}...')
+		ret = self.do_disable()
+		self.cfg._util.qmsg('done')
+		if not quiet:
+			self.cfg._util.qmsg(
+				f'{capfirst(self.desc)} successfully disabled ({fmt_list(ret, fmt="no_quotes")})'
+					if ret and isinstance(ret, list) else
+				f'{capfirst(self.desc)} successfully disabled' if ret else
+				f'No active {self.desc}')
+		return ret
+
+	def process_cmds(self, op, cmds):
+		if not cmds:
+			return
+		if have_sudo(silent=True) and not self.cfg.test_suite:
+			for cmd in cmds:
+				run(cmd.split(), check=True)
+		else:
+			nl = '\n' if op == 'disable' else ''
+			fs = blue('{a} {b} by executing the following command{c}:\n{d}')
+			m = nl + fs.format(
+				a = 'Before continuing, please disable' if op == 'disable' else 'Enable',
+				b = self.desc,
+				c = suf(cmds),
+				d = fmt_list(cmds, indent='  ', fmt='col'))
+			msg(m)
+			if not self.cfg.test_suite:
+				sys.exit(1)
+
+class SwapMgrLinux(SwapMgrBase):
+
+	def get_active(self):
+		cp = run(['/sbin/swapon', '--show=NAME', '--noheadings'], stdout=PIPE, text=True, check=True)
+		res = cp.stdout.splitlines()
+		return [e for e in res if not e.startswith('/dev/zram')] if self.ignore_zram else res
+
+	def do_enable(self):
+		if ret := self.get_active():
+			ymsg(f'Warning: {self.desc} is already enabled: ({fmt_list(ret, fmt="no_quotes")})')
+		self.process_cmds('enable', ['sudo swapon --all'])
+		return True
+
+	def do_disable(self):
+		swapdevs = self.get_active()
+		if not swapdevs:
+			return None
+		self.process_cmds('disable', [f'sudo swapoff {swapdev}' for swapdev in swapdevs])
+		return swapdevs
+
+class SwapMgrMacOS(SwapMgrBase):
+
+	def get_active(self):
+		cmd = 'launchctl print system/com.apple.dynamic_pager'
+		return run(cmd.split(), stdout=DEVNULL, stderr=DEVNULL).returncode == 0
+
+	def _do_action(self, active, op, cmd):
+		if self.get_active() is active:
+			return None
+		else:
+			cmd = f'sudo launchctl {cmd} -w /System/Library/LaunchDaemons/com.apple.dynamic_pager.plist'
+			self.process_cmds(op, [cmd])
+			return True
+
+	def do_enable(self):
+		return self._do_action(active=True, op='enable', cmd='load')
+
+	def do_disable(self):
+		return self._do_action(active=False, op='disable', cmd='unload')
 
 class Signable:
 
@@ -336,6 +428,8 @@ class Autosign:
 		'gen_key',
 		'macos_ramdisk_setup',
 		'macos_ramdisk_delete',
+		'enable_swap',
+		'disable_swap',
 		'clean',
 		'wipe_key')
 
@@ -449,6 +543,8 @@ class Autosign:
 
 		for name,path in self.dirs.items():
 			setattr(self, name, self.mountpoint / path)
+
+		self.swap = SwapMgr(self.cfg, ignore_zram=True)
 
 	async def check_daemons_running(self):
 		from .protocol import init_proto
@@ -665,6 +761,8 @@ class Autosign:
 				die(2,f"Unable to create wallet directory '{self.wallet_dir}'")
 
 		self.gen_key(no_unmount=True)
+
+		self.swap.disable()
 
 		if sys.platform == 'darwin':
 			self.macos_ramdisk_setup()

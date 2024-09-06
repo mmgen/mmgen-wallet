@@ -76,6 +76,11 @@ macos_ramdisk_setup - set up the ramdisk used for storing the temporary signing
             wallet(s) (macOS only).  Required only when creating the wallet(s)
             manually, without ‘setup’
 macos_ramdisk_delete - delete the macOS ramdisk
+disable_swap - disable disk swap to prevent potentially sensitive data in
+            volatile memory from being swapped to disk.  Applicable only when
+            creating temporary signing wallet(s) manually, without ‘setup’
+enable_swap - reenable disk swap.  For testing only, should not be invoked in
+            a production environment
 wait      - start in loop mode: wait-mount-sign-unmount-wait
 wipe_key  - wipe the wallet encryption key on the removable device, making
             signing transactions or stealing the user’s seed impossible.
@@ -227,6 +232,10 @@ elif cmd.startswith('macos_ramdisk'):
 	if sys.platform != 'darwin':
 		die(1, f'The ‘{cmd}’ operation is for the macOS platform only')
 	getattr(asi, cmd)()
+elif cmd == 'enable_swap':
+	asi.swap.enable()
+elif cmd == 'disable_swap':
+	asi.swap.disable()
 elif cmd == 'sign':
 	main(do_loop=False)
 elif cmd == 'wait':

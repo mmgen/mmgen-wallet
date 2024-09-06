@@ -81,4 +81,5 @@ ignored-classes = [ # ignored for no-member, otherwise checked
 	"TestHashFunc",
 	"GenTool",
 	"VirtBlockDeviceBase",
+	"SwapMgrBase",
 ]
