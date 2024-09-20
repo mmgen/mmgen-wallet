@@ -429,8 +429,7 @@ def get_subclasses(cls,names=False):
 	def gen(cls):
 		for i in cls.__subclasses__():
 			yield i
-			for j in gen(i):
-				yield j
+			yield from gen(i)
 	return tuple((c.__name__ for c in gen(cls)) if names else gen(cls))
 
 def async_run(coro):

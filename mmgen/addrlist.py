@@ -41,8 +41,7 @@ class AddrIdxList(tuple,InitErrors,MMGenObject):
 						elif len(j) == 2:
 							if j[0] > j[1]:
 								raise ValueError(f'{i}: invalid range')
-							for k in range(j[0], j[1] + 1):
-								yield k
+							yield from range(j[0], j[1] + 1)
 						else:
 							raise ValueError(f'{i}: invalid range')
 				idx_list = tuple(gen())

@@ -213,13 +213,11 @@ class RPCBackends:
 
 			def gen_opts():
 				for k,v in caller.http_hdrs.items():
-					for s in ('--header',f'{k}: {v}'):
-						yield s
+					yield from ('--header', f'{k}: {v}')
 				if caller.auth_type:
 					# Authentication with curl is insecure, as it exposes the user's credentials
 					# via the command line.  Use for testing only.
-					for s in ('--user',f'{caller.auth.user}:{caller.auth.passwd}'):
-						yield s
+					yield from ('--user', f'{caller.auth.user}:{caller.auth.passwd}')
 				if caller.auth_type == 'digest':
 					yield '--digest'
 				if caller.network_proto == 'https' and caller.verify_server is False:

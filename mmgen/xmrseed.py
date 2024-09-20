@@ -95,8 +95,7 @@ class xmrseed(baseconv):
 
 		def gen():
 			for i in range(len(bytestr)//4):
-				for e in num2base_monero( int.from_bytes( bytestr[i*4:i*4+4][::-1], 'big' ) ):
-					yield e
+				yield from num2base_monero(int.from_bytes( bytestr[i*4:i*4+4][::-1], 'big' ))
 
 		o = list(gen())
 		o.append( self.monero_mn_checksum(o) )

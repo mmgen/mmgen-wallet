@@ -163,8 +163,7 @@ class coin_msg:
 					for n,(k,v) in enumerate(self.sigs.items()):
 						yield ''
 						yield f'{n+1:>3}) {k}'
-						for res in gen_entry(v):
-							yield res
+						yield from gen_entry(v)
 
 			def gen_single():
 				for k,v in hdr_data.items():
@@ -176,8 +175,7 @@ class coin_msg:
 						MMGenID(self.proto,req_addr) )
 					if k not in self.sigs:
 						die(1,f'{k}: address not found in signature data')
-					for res in gen_entry(self.sigs[k]):
-						yield res
+					yield from gen_entry(self.sigs[k])
 
 			hdr_data = {
 				'message':      ('Message:',           grnbg ),

@@ -106,8 +106,7 @@ def make_help(cfg,proto,opts_data,opt_filter):
 			if 'notes' in c:
 				arg_tuple = tuple(gen_arg_tuple(c['notes'],notes_text))
 				notes_text = c['notes'](*arg_tuple)
-			for line in notes_text.splitlines():
-				yield line
+			yield from notes_text.splitlines()
 
 	return nl.join(gen_text()) + '\n'
 
