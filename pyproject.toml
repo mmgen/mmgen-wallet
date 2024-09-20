@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 [tool.pylint.format]
 indent-string = "\t"
 indent-after-paren = 2
-max-line-length = 110
+max-line-length = 116
  
 [tool.pylint.main]
 recursive = true
