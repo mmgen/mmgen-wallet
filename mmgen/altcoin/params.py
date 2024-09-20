@@ -27,7 +27,6 @@ altcoin.py - Constants for Bitcoin-derived altcoins
 #   NSR:  149/191 c/u,  63/('S'),  64/('S'|'T')
 #   NBT:  150/191 c/u,  25/('B'),  26/('B')
 
-import sys
 from collections import namedtuple
 
 from ..cfg import gc

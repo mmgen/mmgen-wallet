@@ -23,7 +23,7 @@ tw.view: base class for tracking wallet view classes
 import sys,time,asyncio
 from collections import namedtuple
 
-from ..cfg import gc,gv
+from ..cfg import gv
 from ..objmethods import MMGenObject
 from ..obj import get_obj,MMGenIdx,MMGenList
 from ..color import nocolor,yellow,green,red,blue

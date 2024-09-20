@@ -42,7 +42,6 @@ from .util import (
 	async_run,
 	make_timestr,
 	make_chksum_N,
-	capfirst,
 	list_gen,
 	fmt_dict
 )
@@ -56,7 +55,6 @@ from .rpc import json_encoder
 from .proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
 from .proto.xmr.daemon import MoneroWalletDaemon
 from .ui import keypress_confirm
-from .autosign import Autosign
 from .tx.util import get_autosign_obj
 
 xmrwallet_uargs = namedtuple('xmrwallet_uargs',[
@@ -816,7 +814,6 @@ class MoneroWalletOps:
 				if not self.asi.device_inserted:
 					die(1,'Removable device not present!')
 				if self.do_umount:
-					import atexit
 					atexit.register(lambda: self.asi.do_umount())
 				self.asi.do_mount()
 				self.post_mount_action()

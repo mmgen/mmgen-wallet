@@ -24,7 +24,7 @@ import sys, os, threading
 from collections import namedtuple
 from subprocess import run
 
-from .util import msg, msg_r, fmt, die, have_sudo
+from .util import msg, msg_r, die, have_sudo
 from .color import blue, orange
 
 class LEDControl:

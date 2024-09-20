@@ -54,8 +54,8 @@ def Pexit(*args):
 	Pdie(*args,exit_val=0)
 
 def print_stack_trace(message=None,fh_list=[],nl='\n',sep='\n  ',trim=4):
-	import os
 	if not fh_list:
+		import os
 		fh_list.append(open(f'devtools.trace.{os.getpid()}','w'))
 		nl = ''
 	res = get_stack_trace(message,nl,sep,trim)

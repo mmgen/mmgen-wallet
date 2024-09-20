@@ -15,7 +15,7 @@ wallet.base: wallet base class
 import os
 
 from ..util import msg,die
-from ..color import yellow,orange
+from ..color import orange
 from ..objmethods import MMGenObject
 from . import wallet_data,get_wallet_cls
 

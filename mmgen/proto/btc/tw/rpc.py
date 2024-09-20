@@ -13,7 +13,7 @@ proto.btc.tw.rpc: Bitcoin base protocol tracking wallet RPC classes
 """
 
 from ....addr import CoinAddr
-from ....util import die,msg,rmsg
+from ....util import die, msg
 from ....tw.shared import get_tw_label
 from ....tw.rpc import TwRPC
 from ....tw.ctl import label_addr_pair

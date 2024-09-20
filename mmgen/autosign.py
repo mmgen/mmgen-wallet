@@ -13,7 +13,7 @@ autosign: Auto-sign MMGen transactions, message files and XMR wallet output file
 """
 
 import sys, os, asyncio
-from stat import S_ISDIR,S_IWUSR,S_IRUSR
+from stat import S_IWUSR, S_IRUSR
 from pathlib import Path
 from subprocess import run, PIPE, DEVNULL
 
