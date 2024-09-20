@@ -102,8 +102,8 @@ class wallet(MMGenObject,metaclass=WalletMeta):
 				break
 			msg('Trying again...')
 
-	@classmethod
-	def ext_to_cls(cls,ext,proto):
+	@staticmethod
+	def ext_to_cls(ext, proto):
 		return get_wallet_cls(ext=ext)
 
 	def get_fmt_data(self):

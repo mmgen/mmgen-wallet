@@ -28,8 +28,8 @@ class Completed(Base,TxBase.Completed):
 		if not (has_ss or has_witness):
 			return False
 		fs = "Hex TX has {} scriptSig but input is of type '{}'!"
-		for n in range(len(txins)):
-			ti,mmti = txins[n],self.inputs[n]
+		for n, ti in enumerate(txins):
+			mmti = self.inputs[n]
 			if ti['scriptSig'] == '' or ( len(ti['scriptSig']) == 46 and # native P2WPKH or P2SH-P2WPKH
 					ti['scriptSig'][:6] == '16' + self.proto.witness_vernum_hex + '14' ):
 				assert 'witness' in ti, 'missing witness'

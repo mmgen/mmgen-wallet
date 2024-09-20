@@ -49,8 +49,8 @@ class Completed(Base):
 		from .file import MMGenTxFile
 		return MMGenTxFile(self)
 
-	@classmethod
-	def ext_to_cls(cls,ext,proto):
+	@staticmethod
+	def ext_to_cls(ext, proto):
 		"""
 		see twctl:import_token()
 		"""

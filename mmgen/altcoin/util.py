@@ -35,7 +35,7 @@ def decrypt_keystore(data,passwd,mac_algo=None,mac_params={}):
 	# Derive encryption key from password:
 	if kdf == 'scrypt':
 		if not mac_algo:
-			die(1,f'the ‘mac_algo’ parameter is required for scrypt kdf')
+			die(1, 'the ‘mac_algo’ parameter is required for scrypt kdf')
 		from hashlib import scrypt
 		hashed_pw = scrypt(
 			password = passwd,

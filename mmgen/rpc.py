@@ -74,11 +74,11 @@ class IPPort(HiliteStr,InitErrors):
 			return cls.init_fail(e,s)
 
 class json_encoder(json.JSONEncoder):
-	def default(self,obj):
-		if isinstance(obj,Decimal):
-			return str(obj)
+	def default(self, o):
+		if isinstance(o, Decimal):
+			return str(o)
 		else:
-			return json.JSONEncoder.default(self,obj)
+			return json.JSONEncoder.default(self, o)
 
 class RPCBackends:
 
