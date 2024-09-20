@@ -4,10 +4,9 @@
 test.unit_tests_d.ut_ecc: elliptic curve unit test for the MMGen suite
 """
 
-from mmgen.color import gray,pink,blue
 from mmgen.proto.secp256k1.secp256k1 import pubkey_gen,pubkey_tweak_add,pubkey_check
 
-from ..include.common import cfg,qmsg,vmsg
+from ..include.common import vmsg
 from ..include.ecc import pubkey_tweak_add_pyecdsa
 from mmgen.protocol import CoinProtocol
 
@@ -16,7 +15,7 @@ secp256k1_group_order = CoinProtocol.Secp256k1.secp256k1_group_order
 class unit_tests:
 
 	def pubkey_ops(self,name,ut):
-		vmsg(f'  Generating pubkey, adding scalar 123456789 to pubkey:')
+		vmsg('  Generating pubkey, adding scalar 123456789 to pubkey:')
 		pk_addend_bytes = int.to_bytes(123456789,length=32,byteorder='big')
 
 		for privkey in (

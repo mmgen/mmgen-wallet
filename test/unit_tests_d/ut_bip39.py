@@ -4,11 +4,10 @@
 test/unit_tests_d/ut_bip39: BIP39 unit test for the MMGen suite
 """
 
-from mmgen.util import msg,msg_r
-from mmgen.color import blue,orange,purple
+from mmgen.color import blue, orange, purple
 from mmgen.bip39 import bip39
 
-from ..include.common import cfg,qmsg,vmsg,vmsg_r
+from ..include.common import cfg, qmsg, vmsg
 
 class unit_tests:
 

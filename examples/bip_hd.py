@@ -31,7 +31,7 @@ m = MasterNode(cfg, seed)
 dfl_pub_chain = m.to_chain(idx=0, coin='ltc', addr_type='bech32')
 dfl_chg_chain = m.to_chain(idx=1, coin='ltc', addr_type='bech32')
 
-print(f'Default path (LTC, bech32):\n')
+print('Default path (LTC, bech32):\n')
 print(f'  public chain xpub:\n    {dfl_pub_chain.xpub}\n')
 print(f'  internal chain xpub:\n    {dfl_chg_chain.xpub}\n')
 print(f'  public chain addr 0:\n    {dfl_pub_chain.derive_public(0).address}\n')
@@ -77,7 +77,7 @@ nonstd_path = BipHDNode.from_path(
 	addr_type = 'E',
 	no_path_checks = True)
 
-print(f'Non-standard path (ETH):\n')
+print('Non-standard path (ETH):\n')
 print(f'  xpub:\n    {nonstd_path.xpub}\n')
 print(f'  WIF key:\n    {nonstd_path.privkey.wif}\n')
 print(f'  address:\n    {nonstd_path.address}\n')

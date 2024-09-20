@@ -394,7 +394,6 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 
 	def pwgen(self,ftype,id_str,pwfmt=None,pwlen=None,extra_args=[],stdout=False):
 		wf = self.get_file_with_ext('mmdat')
-		pf = joinpath(self.tmpdir,pwfile)
 		pwfmt = (['--passwd-fmt='+pwfmt] if pwfmt else [])
 		pwlen = (['--passwd-len='+str(pwlen)] if pwlen else [])
 		return self.addrgen(

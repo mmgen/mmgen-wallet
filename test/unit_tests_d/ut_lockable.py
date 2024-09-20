@@ -120,7 +120,7 @@ class unit_test:
 
 		lcdn = MyLockableAutolockDflNone()
 		assert lcdn.foo == 0
-		assert lcdn.bar == None
+		assert lcdn.bar is None
 
 		class MyLockableBad(Lockable):
 			_set_ok = ('foo','bar')
@@ -148,7 +148,7 @@ class unit_test:
 		def bad15(): lc.epsilon = [0]
 
 		def bad16(): lca.foo = None
-		def bad17(): lb = MyLockableBad()
+		def bad17(): MyLockableBad()
 		def bad18(): aca._lock()
 
 		def bad19(): acdn.baz = None

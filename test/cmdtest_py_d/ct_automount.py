@@ -11,7 +11,7 @@
 """
 test.cmdtest_py_d.ct_automount: autosigning with automount tests for the cmdtest.py test suite
 """
-import os, time
+import time
 from pathlib import Path
 
 from .ct_autosign import CmdTestAutosignThreaded
@@ -78,7 +78,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		CmdTestAutosignThreaded.__init__(self, trunner, cfgs, spawn)
 		CmdTestRegtestBDBWallet.__init__(self, trunner, cfgs, spawn)
 
-		if trunner == None:
+		if trunner is None:
 			return
 
 		self.opts.append('--alice')

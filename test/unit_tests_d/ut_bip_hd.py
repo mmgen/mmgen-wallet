@@ -287,10 +287,9 @@ class unit_tests:
 		vmsg('Parsing and validating extended keys:\n')
 
 		for vec in vectors_bip32:
-			seed = bytes.fromhex(vec['seed'])
 			vmsg(f'  Seed: {vec["seed"]}')
 
-			for n,path_str in enumerate(vec):
+			for path_str in vec:
 				if path_str in ('seed','comment'):
 					continue
 

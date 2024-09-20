@@ -34,7 +34,7 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	init_dev()
 
 from mmgen.cfg import Config,gc
-from mmgen.color import green, gray, brown, orange, yellow, red
+from mmgen.color import gray, brown, orange, yellow, red
 from mmgen.util import msg,gmsg,ymsg,Msg
 
 from test.include.common import set_globals,end_msg
@@ -195,21 +195,21 @@ def run_test(test,subtest=None):
 		)
 		if hasattr(t,'_pre'):
 			t._pre()
-		for subtest in subtests:
-			subtest_disp = subtest.replace('_','-')
-			if cfg.no_altcoin_deps and subtest in altcoin_deps:
+		for _subtest in subtests:
+			subtest_disp = _subtest.replace('_','-')
+			if cfg.no_altcoin_deps and _subtest in altcoin_deps:
 				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} [--no-altcoin-deps]'))
 				continue
-			if sys.platform == 'win32' and subtest in win_skip:
+			if sys.platform == 'win32' and _subtest in win_skip:
 				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for Windows platform'))
 				continue
-			elif sys.platform == 'darwin' and subtest in mac_skip:
+			if sys.platform == 'darwin' and _subtest in mac_skip:
 				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for macOS platform'))
 				continue
-			elif platform.machine() == 'aarch64' and subtest in arm_skip:
+			if platform.machine() == 'aarch64' and _subtest in arm_skip:
 				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for ARM platform'))
 				continue
-			run_subtest(t,subtest)
+			run_subtest(t, _subtest)
 		if hasattr(t,'_post'):
 			t._post()
 	else:

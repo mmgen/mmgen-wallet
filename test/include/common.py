@@ -21,7 +21,7 @@ test.include.common: Shared routines and data for the MMGen test suites
 """
 
 import sys, os, re, atexit
-from subprocess import run,PIPE
+from subprocess import run, PIPE, DEVNULL
 from pathlib import Path
 
 from mmgen.cfg import gv
@@ -57,7 +57,6 @@ def set_globals(cfg):
 	this.dmsg = msg if cfg.debug else noop
 
 def strip_ansi_escapes(s):
-	import re
 	return re.sub('\x1b' + r'\[[;0-9]+?m','',s)
 
 cmdtest_py_log_fn = 'cmdtest.py.log'
@@ -330,11 +329,9 @@ def get_ethkey():
 			pass
 		else:
 			return cmdname
-	else:
-		die(1,f'ethkey executable not found (tried {cmdnames})')
+	die(1,f'ethkey executable not found (tried {cmdnames})')
 
 def do_run(cmd, check=True):
-	from subprocess import run,PIPE,DEVNULL
 	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=check)
 
 def VirtBlockDevice(img_path, size):

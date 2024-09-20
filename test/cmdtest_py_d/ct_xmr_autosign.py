@@ -13,13 +13,12 @@
 test.cmdtest_py_d.ct_xmr_autosign: xmr autosigning tests for the cmdtest.py test suite
 """
 
-import os,time,re,shutil
-from pathlib import Path
+import re
 
-from mmgen.color import purple,gray,blue,cyan,brown
-from mmgen.util import fmt,async_run
+from mmgen.color import blue, cyan, brown
+from mmgen.util import async_run
 
-from ..include.common import cfg,imsg,silence,end_silence
+from ..include.common import cfg, imsg, silence, end_silence
 from .common import get_file_with_ext
 
 from .ct_xmrwallet import CmdTestXMRWallet
@@ -435,7 +434,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		return t
 
 	def txview_all(self):
-		t = self.spawn('', msg_only=True)
+		self.spawn('', msg_only=True)
 		self.insert_device()
 		self.do_mount()
 		imsg(blue('Opening transaction directory: ') + cyan(f'{self.asi.xmr_tx_dir}'))

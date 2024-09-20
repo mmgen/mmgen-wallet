@@ -725,8 +725,7 @@ class CmdTestXMRWallet(CmdTestBase):
 					await self.start_mining()
 				else:
 					raise
-		else:
-			die(2,'Restart attempt limit exceeded')
+		die(2,'Restart attempt limit exceeded')
 
 	async def mine10(self):
 		return await self.mine(10)
@@ -771,8 +770,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				omsg('Daemon busy.  Attempting to start mining...')
 			else:
 				die(2,f'Monerod returned status {status}')
-		else:
-			die(2,'Max retries exceeded')
+		die(2,'Max retries exceeded')
 
 	async def stop_mining(self):
 		ret = self.users['miner'].md_rpc.call_raw('stop_mining')

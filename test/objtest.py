@@ -197,8 +197,8 @@ def do_loop():
 		if cfg.getobj and arg1 is None:
 			msg(gray(f'{nl}Skipping {test}'))
 			continue
-		else:
-			msg(clr(f'{nl}Testing {test}'))
+
+		msg(clr(f'{nl}Testing {test}'))
 
 		for k in ('bad','good'):
 			if not cfg.super_silent:

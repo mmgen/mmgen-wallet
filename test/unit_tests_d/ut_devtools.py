@@ -23,7 +23,8 @@ def main():
 	c = 3
 """.lstrip()
 
-jsonA = open('test/ref/ethereum/tracking-wallet-v1.json').read()
+with open('test/ref/ethereum/tracking-wallet-v1.json') as fh:
+	jsonA = fh.read()
 dataB = json.loads(jsonA)
 dataB['coin'] = 'ETC'
 jsonB = json.dumps(dataB)

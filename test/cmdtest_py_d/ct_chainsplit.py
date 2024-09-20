@@ -98,8 +98,8 @@ class CmdTestChainsplit(CmdTestRegtest):
 		t.expect(r'\[q\]uit menu, .*?:.','q', regex=True)
 		t.expect('outputs to spend: ','1\n')
 
-		for tx in ('timelocked','split'):
-			for q in ('fee','change'):
+		for _ in ('timelocked', 'split'):
+			for _ in ('fee', 'change'):
 				t.expect('OK? (Y/n): ','y')
 			t.do_comment(False)
 			t.view_tx('t')

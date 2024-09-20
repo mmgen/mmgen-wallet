@@ -25,8 +25,8 @@ from subprocess import run,DEVNULL
 from pathlib import Path
 
 from mmgen.cfg import Config
-from mmgen.color import red,green,blue,yellow,cyan,orange,purple,gray
-from mmgen.util import msg,suf,die,indent,fmt
+from mmgen.color import red, blue, yellow, cyan, orange, purple, gray
+from mmgen.util import msg, suf, die, indent, fmt
 from mmgen.led import LEDControl
 from mmgen.autosign import Autosign, Signable
 
@@ -924,7 +924,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 			return
 
 		try:
-			cf = LEDControl(enabled=True,simulate=self.simulate_led)
+			LEDControl(enabled=True,simulate=self.simulate_led)
 		except Exception as e:
 			msg(str(e))
 			die(2,'LEDControl initialization failed')

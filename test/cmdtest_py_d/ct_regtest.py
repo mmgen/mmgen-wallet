@@ -20,7 +20,7 @@
 test.cmdtest_py_d.ct_regtest: Regtest tests for the cmdtest.py test suite
 """
 
-import sys,os,json,time,re
+import os, json, time, re
 from decimal import Decimal
 
 from mmgen.proto.btc.regtest import MMGenRegtest
@@ -465,7 +465,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 
 		CmdTestBase.__init__(self,trunner,cfgs,spawn)
 
-		if trunner == None:
+		if trunner is None:
 			return
 
 		if self.proto.testnet:

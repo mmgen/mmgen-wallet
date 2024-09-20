@@ -25,7 +25,7 @@ import sys, os
 from mmgen.util import msg,capfirst,get_extension
 from mmgen.wallet import get_wallet_cls
 
-from ..include.common import cfg, joinpath, imsg, VirtBlockDevice
+from ..include.common import cfg, joinpath, VirtBlockDevice
 from .common import ref_dir,ref_wallet_brainpass,ref_wallet_incog_offset,hincog_fn,hincog_bytes
 from .ct_base import CmdTestBase
 from .ct_shared import CmdTestShared

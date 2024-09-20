@@ -7,7 +7,6 @@ test.unit_tests_d.ut_dep: dependency unit tests for the MMGen suite
   No data verification is performed.
 """
 
-import sys
 from subprocess import run,PIPE
 
 from mmgen.util import msg,rmsg,ymsg,gmsg

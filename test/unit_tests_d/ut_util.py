@@ -35,15 +35,15 @@ class unit_tests:
 
 		col1_w = max(len(str(e)) for e in list(chks.values())[0]) + 1
 
-		for name,sample in samples.items():
+		for _name, sample in samples.items():
 			vmsg(cyan(f'Input: {sample}'))
 			for fmt in list(chks.values())[0]:
 				spc = '\n' if fmt in ('col','list') else ' '
 				indent = '    + ' if fmt == 'col' else ''
 				res = fmt_list(sample,fmt=fmt,indent=indent) if fmt else fmt_list(sample,indent=indent)
 				vmsg(f'  {str(fmt)+":":{col1_w}}{spc}{res}')
-				if name in chks:
-					assert res == chks[name][fmt], f'{res} != {chks[name][fmt]}'
+				if _name in chks:
+					assert res == chks[_name][fmt], f'{res} != {chks[_name][fmt]}'
 
 		vmsg('')
 		return True
@@ -84,13 +84,13 @@ class unit_tests:
 
 		col1_w = max(len(str(e)) for e in list(chks.values())[0]) + 1
 
-		for name,sample in samples.items():
+		for _name, sample in samples.items():
 			vmsg(cyan(f'Input: {sample}'))
 			for fmt in list(chks.values())[0]:
 				res = fmt_dict(sample,fmt=fmt) if fmt else fmt_dict(sample)
 				vmsg(f'  {str(fmt)+":":{col1_w}} {res}')
-				if name in chks:
-					assert res == chks[name][fmt], f'{res} != {chks[name][fmt]}'
+				if _name in chks:
+					assert res == chks[_name][fmt], f'{res} != {chks[_name][fmt]}'
 
 		vmsg('')
 		return True
@@ -98,7 +98,7 @@ class unit_tests:
 	def list_gen(self,name,ut):
 		res = list_gen(
 			['a'],
-			['b', 1==2],
+			['b', False],
 			['c', 'x'],
 			['d', int],
 			['e', None, 1, 'f', isinstance(7,int)],

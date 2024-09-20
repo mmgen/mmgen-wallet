@@ -319,8 +319,7 @@ def do_ab_test(proto,scfg,addr_type,gen1,kg2,ag,tool,cache_data):
 
 	def get_randbytes():
 		if tool and len(tool.data) > len(edgecase_sks):
-			for privbytes in tuple(tool.data)[len(edgecase_sks):]:
-				yield privbytes
+			yield from tuple(tool.data)[len(edgecase_sks):]
 		else:
 			for _ in range(scfg.rounds):
 				yield getrand(32)

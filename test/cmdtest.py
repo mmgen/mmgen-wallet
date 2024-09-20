@@ -338,14 +338,12 @@ class CmdGroupMgr:
 
 			if add_deps:
 				for dep in cmd_group_in['subgroup.'+key]:
-					for e in add_entries(dep):
-						yield e
+					yield from add_entries(dep)
 
 			assert isinstance(cls.cmd_subgroups[key][0],str), f'header for subgroup {key!r} missing!'
 
 			if not key in added_subgroups:
-				for e in cls.cmd_subgroups[key][1:]:
-					yield e
+				yield from cls.cmd_subgroups[key][1:]
 				added_subgroups.append(key)
 
 		def gen():
@@ -353,11 +351,10 @@ class CmdGroupMgr:
 				if name.startswith('subgroup.'):
 					sg_key = name.removeprefix('subgroup.')
 					if sg_name in (None,sg_key):
-						for e in add_entries(
+						yield from add_entries(
 								sg_key,
 								add_deps = sg_name and not cfg.skipping_deps,
-								added_subgroups = [sg_name] if cfg.deps_only else [] ):
-							yield e
+								added_subgroups = [sg_name] if cfg.deps_only else [])
 					if cfg.deps_only and sg_key == sg_name:
 						return
 				elif not cfg.skipping_deps:

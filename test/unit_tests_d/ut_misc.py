@@ -85,7 +85,7 @@ class unit_tests:
 			vmsg(f'  {k}')
 			if k in vectors:
 				vmsg(f'    pat: {v.pat}')
-				vmsg(f'    vectors:')
+				vmsg( '    vectors:')
 				for vec in vectors[k]:
 					m = re.match(v.pat, vec.text)
 					vmsg(f'      {vec.text:10} ==> {m.groups()}')

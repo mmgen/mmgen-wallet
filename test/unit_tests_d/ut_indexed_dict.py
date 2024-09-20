@@ -41,13 +41,13 @@ class unit_test:
 		arg = [('a',1),('b',2)]
 		dict(arg)
 
-		for i in range(6):
+		for n, func in enumerate([bad0, bad1, bad2, bad3, bad4, bad5]):
 			try:
-				locals()['bad'+str(i)]()
+				func()
 			except NotImplementedError as e:
 				omsg(e)
 			else:
-				odie(i)
+				odie(n)
 
 		try:
 			d.key(2)

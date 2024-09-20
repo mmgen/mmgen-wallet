@@ -4,7 +4,7 @@
 test.unit_tests_d.ut_rpc: RPC unit test for the MMGen suite
 """
 
-import sys,os,time
+import sys, os
 
 from mmgen.cfg import Config
 from mmgen.color import yellow,cyan
@@ -174,7 +174,8 @@ class unit_tests:
 		return await run_test(['bch','bch_tn'], test_cf_auth=True)
 
 	async def geth(self, name, ut):
-		return await run_test(['eth_tn','eth_rt'], daemon_ids=['geth']) # mainnet returns EIP-155 error on empty blockchain
+		# mainnet returns EIP-155 error on empty blockchain:
+		return await run_test(['eth_tn','eth_rt'], daemon_ids=['geth'])
 
 	async def erigon(self, name, ut):
 		return await run_test(['eth','eth_tn','eth_rt'], daemon_ids=['erigon'])

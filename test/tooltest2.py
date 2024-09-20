@@ -214,8 +214,7 @@ def run_test(cls, gid, cmd_name):
 			qmsg(('' if n else '\n') + gray(skip_msg if len(skip_msg) <= 100 else skip_msg[:97] + '...'))
 			skipping = True
 			continue
-		else:
-			skipping = False
+		skipping = False
 		stdin_input = None
 		if args and isinstance(args[0],bytes):
 			stdin_input = args[0]
