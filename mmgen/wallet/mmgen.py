@@ -58,14 +58,14 @@ class wallet(wallet):
 				self.cfg._util.qmsg('Reusing label {} at user request'.format( lbl.hl2(encl='‘’') ))
 			elif self.label:
 				lbl = self.label
-				self.cfg._util.qmsg('Using label {} requested on command line'.format( lbl.hl2(encl='‘’') ))
+				self.cfg._util.qmsg('Using user-configured label {}'.format(lbl.hl2(encl='‘’')))
 			else: # Prompt, using old value as default
 				lbl = self._get_label_from_user(old_lbl)
 			if (not self.cfg.keep_label) and self.op == 'pwchg_new':
 				self.cfg._util.qmsg('Label {}'.format( 'unchanged' if lbl == old_lbl else f'changed to {lbl!r}' ))
 		elif self.label:
 			lbl = self.label
-			self.cfg._util.qmsg('Using label {} requested on command line'.format( lbl.hl2(encl='‘’') ))
+			self.cfg._util.qmsg('Using user-configured label {}'.format(lbl.hl2(encl='‘’')))
 		else:
 			lbl = self._get_label_from_user()
 		self.ssdata.label = lbl
