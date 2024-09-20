@@ -68,17 +68,16 @@ init_tests() {
 		- $cmdtest_py dev
 	"
 
+	PYLINT_OPTS='--errors-only --jobs=0'
 	d_lint="code errors with static code analyzer"
 	t_lint="
-		b $pylint --errors-only mmgen
-		b $pylint --errors-only test
-		b $pylint --errors-only --disable=relative-beyond-top-level test/cmdtest_py_d
-
-		a $pylint --errors-only --ignore-paths '.*/eth/.*' mmgen
-		a $pylint --errors-only --ignore-paths '.*/ut_dep.py,.*/ut_testdep.py' test
-		a $pylint --errors-only --ignore-paths '.*/ct_ethdev.py' --disable=relative-beyond-top-level test/cmdtest_py_d
-
-		- $pylint --errors-only examples
+		b $pylint $PYLINT_OPTS mmgen
+		b $pylint $PYLINT_OPTS test
+		b $pylint $PYLINT_OPTS --disable=relative-beyond-top-level test/cmdtest_py_d
+		a $pylint $PYLINT_OPTS --ignore-paths '.*/eth/.*' mmgen
+		a $pylint $PYLINT_OPTS --ignore-paths '.*/ut_dep.py,.*/ut_testdep.py' test
+		a $pylint $PYLINT_OPTS --ignore-paths '.*/ct_ethdev.py' --disable=relative-beyond-top-level test/cmdtest_py_d
+		- $pylint $PYLINT_OPTS examples
 	"
 
 	if [ "$SKIP_ALT_DEP" ]; then t_lint_skip='b'; else t_lint_skip='a'; fi

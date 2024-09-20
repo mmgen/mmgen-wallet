@@ -92,10 +92,11 @@ class CmdTestAutosignBase(CmdTestBase):
 		if hasattr(self,'have_dummy_control_files'):
 			db = LEDControl.boards['dummy']
 			for fn in (db.status, db.trigger):
-				run('sudo rm -f {fn}'.split(), check=True)
+				run(f'sudo rm -f {fn}'.split(), check=True)
 
 		if hasattr(self, 'txdev'):
 			del self.txdev
+
 		if not cfg.no_daemon_stop:
 			if sys.platform == 'darwin':
 				for label in (self.asi.dev_label, self.asi.ramdisk.label):
