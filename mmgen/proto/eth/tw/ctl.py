@@ -119,9 +119,8 @@ class EthereumTwCtl(TwCtl):
 				del r[k]
 				self.write()
 				return ret
-		else:
-			msg(f'Address {addr!r} not found in {self.data_root_desc!r} section of tracking wallet')
-			return None
+		msg(f'Address {addr!r} not found in {self.data_root_desc!r} section of tracking wallet')
+		return None
 
 	@write_mode
 	async def set_label(self,coinaddr,lbl):
@@ -130,28 +129,22 @@ class EthereumTwCtl(TwCtl):
 				d['comment'] = lbl.comment
 				self.write()
 				return True
-		else:
-			msg(f'Address {coinaddr!r} not found in {self.data_root_desc!r} section of tracking wallet')
-			return False
+		msg(f'Address {coinaddr!r} not found in {self.data_root_desc!r} section of tracking wallet')
+		return False
 
 	async def addr2sym(self,req_addr):
 		for addr in self.data['tokens']:
 			if addr == req_addr:
 				return self.data['tokens'][addr]['params']['symbol']
-		else:
-			return None
 
 	async def sym2addr(self,sym):
 		for addr in self.data['tokens']:
 			if self.data['tokens'][addr]['params']['symbol'] == sym.upper():
 				return addr
-		else:
-			return None
 
 	def get_token_param(self,token,param):
 		if token in self.data['tokens']:
 			return self.data['tokens'][token]['params'].get(param)
-		return None
 
 	@property
 	def sorted_list(self):

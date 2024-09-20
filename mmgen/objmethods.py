@@ -39,8 +39,7 @@ def truncate_str(s,width): # width = screen width
 			return s[:n-1] + ('',' ')[
 				unicodedata.east_asian_width(ch) in ('F','W')
 				and n + wide_count == width + 1]
-	else:
-		raise ValueError('string requires no truncating')
+	raise ValueError('string requires no truncating')
 
 class Hilite:
 

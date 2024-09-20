@@ -194,8 +194,8 @@ class SubSeedList(MMGenObject):
 				else:
 					self.data[length][sid] = (idx,nonce)
 					return last_sid == sid
-			else: # must exit here, as this could leave self.data in inconsistent state
-				die( 'SubSeedNonceRangeExceeded', 'add_subseed(): nonce range exceeded' )
+			# must exit here, as this could leave self.data in inconsistent state
+			die('SubSeedNonceRangeExceeded', 'add_subseed(): nonce range exceeded')
 
 		for idx in SubSeedIdxRange(first_idx,last_idx).iterate():
 			match1 = add_subseed(idx,'long')

@@ -51,8 +51,7 @@ def parse_version_bytes(vb_hex):
 		for e in chainparams_data[f'bip-{bipnum}'].values():
 			if vb_hex in (e.vb_pub, e.vb_prv):
 				return (bipnum, e)
-	else:
-		raise ValueError(f'0x{vb_hex}: unrecognized extended key version bytes')
+	raise ValueError(f'0x{vb_hex}: unrecognized extended key version bytes')
 
 def compress_pubkey(pubkey_bytes):
 	# see: proto.secp256k1.keygen.pubkey_format()

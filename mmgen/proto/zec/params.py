@@ -40,8 +40,7 @@ class mainnet(mainnet):
 		for v in self.wif_ver_bytes.values():
 			if key_data[:len(v)] == v:
 				return len(v)
-		else:
-			raise ValueError('Invalid WIF version number')
+		raise ValueError('Invalid WIF version number')
 
 	def get_addr_len(self,addr_fmt):
 		return (20,64)[addr_fmt in ('zcash_z','viewkey')]

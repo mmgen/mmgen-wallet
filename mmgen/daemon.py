@@ -239,8 +239,7 @@ class Daemon(Lockable):
 			if self.state == req_state:
 				return True
 			time.sleep(0.2)
-		else:
-			die(2,f'Wait for state {req_state!r} timeout exceeded for {self.desc} (port {self.bind_port})')
+		die(2,f'Wait for state {req_state!r} timeout exceeded for {self.desc} (port {self.bind_port})')
 
 	@classmethod
 	def get_exec_version_str(cls):

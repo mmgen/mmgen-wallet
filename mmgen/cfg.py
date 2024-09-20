@@ -543,13 +543,13 @@ class Config(Lockable):
 		for name,val in ((k,v) for k,v in os.environ.items() if k.startswith('MMGEN_')):
 			if name == 'MMGEN_DEBUG_ALL':
 				continue
-			elif name in self._env_opts:
+			if name in self._env_opts:
 				if val: # ignore empty string values; string value of '0' or 'false' sets variable to False
 					disable = name.startswith('MMGEN_DISABLE_')
 					gname = name[(6,14)[disable]:].lower()
 					if gname in self._uopts: # don’t touch attr if already set by user
 						continue
-					elif hasattr(self,gname):
+					if hasattr(self,gname):
 						setattr(
 							self,
 							gname,

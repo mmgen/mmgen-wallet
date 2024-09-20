@@ -279,8 +279,7 @@ class TwAddresses(TwView):
 		for e in self.data:
 			if e.addr == coinaddr:
 				return bool(e.recvd)
-		else: # addr not in tracking wallet
-			return None
+		return None # addr not in tracking wallet
 
 	def get_change_address(self, al_id, bot=None, top=None, exclude=None):
 		"""

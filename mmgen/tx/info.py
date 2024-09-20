@@ -103,14 +103,13 @@ class TxInfo:
 			msg('')
 			if reply == '' or reply in 'Nn':
 				break
-			elif reply in 'YyVvTt':
+			if reply in 'YyVvTt':
 				self.view(
 					pager = reply in 'Vv',
 					pause = pause,
 					terse = reply in 'Tt' )
 				break
-			else:
-				msg('Invalid reply')
+			msg('Invalid reply')
 
 	def view(self,pager=False,pause=True,terse=False):
 		o = self.format(terse=terse)

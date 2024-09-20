@@ -93,8 +93,7 @@ def int2bytespec(n,spec,fmt,print_sym=True,strip=False,add_space=False):
 		for k,v in bytespec_map:
 			if k == spec:
 				return v
-		else:
-			die(1,f'{spec!r}: unrecognized bytespec')
+		die(1,f'{spec!r}: unrecognized bytespec')
 
 	ret = f'{n/spec2int(spec):{fmt}f}'
 	if strip:
@@ -116,8 +115,7 @@ def parse_bytespec(nbytes):
 				if k == m.group(2):
 					from decimal import Decimal
 					return int(Decimal(m.group(1)) * v)
-			else:
-				msg("Valid byte specifiers: '{}'".format("' '".join([i[0] for i in bytespec_map])))
+			msg("Valid byte specifiers: '{}'".format("' '".join([i[0] for i in bytespec_map])))
 		elif '.' in nbytes:
 			raise ValueError('fractional bytes not allowed')
 		else:

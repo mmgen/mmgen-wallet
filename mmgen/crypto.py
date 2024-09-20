@@ -380,8 +380,7 @@ class Crypto:
 					if pw == pw_chk:
 						self.util.vmsg('Passphrases match')
 						break
-					else:
-						msg('Passphrases do not match.  Try again.')
+					msg('Passphrases do not match.  Try again.')
 				else:
 					die(2,f'User failed to duplicate passphrase in {gc.passwd_max_tries} attempts')
 
