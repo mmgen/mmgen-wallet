@@ -20,12 +20,12 @@
 led: Control the LED on a single-board computer
 """
 
-import os,threading
+import sys, os, threading
 from collections import namedtuple
 from subprocess import run
 
 from .util import msg, msg_r, fmt, die, have_sudo
-from .color import orange
+from .color import blue, orange
 
 class LEDControl:
 
@@ -100,9 +100,12 @@ class LEDControl:
 					run(cmd.split(), check=True)
 					write_init_val(init_val)
 				else:
-					die(2,
-						f'\nYou do not have access to the {desc} file\n'
-						f'To allow access, run the following command:\n\n    {cmd}')
+					msg('\n{}\n{}\n{}'.format(
+						blue(f'You do not have access to the {desc} file'),
+						blue(f'To allow access, run the following command:\n\n    {cmd}'),
+						orange('[To prevent this message in the future, enable sudo without a password]')
+					))
+					sys.exit(1)
 
 		check_access(board.status,desc='status LED control')
 

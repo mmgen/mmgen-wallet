@@ -48,9 +48,9 @@ class SwapMgrBase:
 		return ret
 
 	def disable(self, quiet=False):
-		self.cfg._util.qmsg_r(f'Disabling {self.desc}...')
+		self.cfg._util.qmsg_r(f'Attempting to disable {self.desc}...')
 		ret = self.do_disable()
-		self.cfg._util.qmsg('done')
+		self.cfg._util.qmsg('success')
 		if not quiet:
 			self.cfg._util.qmsg(
 				f'{capfirst(self.desc)} successfully disabled ({fmt_list(ret, fmt="no_quotes")})'
@@ -66,13 +66,14 @@ class SwapMgrBase:
 			for cmd in cmds:
 				run(cmd.split(), check=True)
 		else:
-			nl = '\n' if op == 'disable' else ''
-			fs = blue('{a} {b} by executing the following command{c}:\n{d}')
-			m = nl + fs.format(
-				a = 'Before continuing, please disable' if op == 'disable' else 'Enable',
+			pre = 'failure\n' if op == 'disable' else ''
+			fs = blue('{a} {b} manually by executing the following command{c}:\n{d}')
+			post = orange('[To prevent this message in the future, enable sudo without a password]')
+			m = pre + fs.format(
+				a = 'Please disable' if op == 'disable' else 'Enable',
 				b = self.desc,
 				c = suf(cmds),
-				d = fmt_list(cmds, indent='  ', fmt='col'))
+				d = fmt_list(cmds, indent='  ', fmt='col')) + '\n' + post
 			msg(m)
 			if not self.cfg.test_suite:
 				sys.exit(1)
