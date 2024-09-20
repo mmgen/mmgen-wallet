@@ -1476,20 +1476,20 @@ class MoneroWalletOps:
 
 		def gen_body(self, wallets_data):
 			for (wallet_fn, wallet_data) in wallets_data.items():
-					ad = wallet_data.accts_data['subaddress_accounts']
-					yield green(f'Wallet {wallet_fn}:')
-					for account in range(len(wallet_data.addrs_data)):
-						bal = ad[account]['unlocked_balance']
-						if self.cfg.skip_empty_accounts and not bal:
-							continue
-						yield ''
-						yield '  Account #{a} [{b} {c}]'.format(
-							a = account,
-							b = self.proto.coin_amt(bal, from_unit='atomic').hl(),
-							c = self.proto.coin_amt.hlc('XMR'))
-						yield from gen_acct_addr_info(self, wallet_data, account, indent='  ')
-
+				ad = wallet_data.accts_data['subaddress_accounts']
+				yield green(f'Wallet {wallet_fn}:')
+				for account in range(len(wallet_data.addrs_data)):
+					bal = ad[account]['unlocked_balance']
+					if self.cfg.skip_empty_accounts and not bal:
+						continue
 					yield ''
+					yield '  Account #{a} [{b} {c}]'.format(
+						a = account,
+						b = self.proto.coin_amt(bal, from_unit='atomic').hl(),
+						c = self.proto.coin_amt.hlc('XMR'))
+					yield from gen_acct_addr_info(self, wallet_data, account, indent='  ')
+
+				yield ''
 
 	class view(sync):
 		stem = 'open'
