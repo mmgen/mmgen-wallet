@@ -6,7 +6,7 @@ altcoin support, additional installation steps are required.  See*
 
 For computers with no Internet connection, see **Note for offline machines** below.
 
-### Install required packages from your Linux distribution:
+### Install required packages from your distribution:
 
 #### Debian/Ubuntu:
 
@@ -20,14 +20,20 @@ $ sudo apt-get install curl git gcc libtool make autoconf libgmp-dev libssl-dev 
 $ sudo pacman -S curl git gcc libtool make autoconf automake autogen pcre python-pip libsecp256k1
 ```
 
+#### macOS:
+
+```text
+$ brew install python bash autoconf coreutils gcc libmpc libtool readline secp256k1
+```
+
 You may wish to use a [virtual environment][vv] to keep your MMGen Wallet
 installation isolated from the rest of your Python packages.
 
 If you choose not to use a virtual environment, then you may need to add
 `--break-system-packages` to the `pip install` command line, depending on your
-Python version and Linux distribution.  Note that this will not in fact break
-any system packages, as pip installs all packages under the user’s home
-directory when invoked as user.
+Python and OS versions.  Note that this will not in fact break any system
+packages, as pip installs all packages under the user’s home directory when
+invoked as user.
 
 ### Upgrade the Python build tools:
 

@@ -141,13 +141,13 @@ that widespread standard.
 
 #### Supported platforms:
 
-Linux, Armbian, Raspbian, Windows/MSYS2
+Linux, macOS, Windows/MSYS2
 
 ### Download/Install
 
 > #### [Install on Microsoft Windows][1]
 
-> #### [Install on Debian, Ubuntu, Raspbian, Armbian or Arch Linux][2]
+> #### [Install on Linux or macOS][2]
 
 
 ### Using MMGen Wallet
@@ -195,7 +195,7 @@ Donate:
 &nbsp;⊙&nbsp;XMR:&nbsp;*8B14zb8wgLuKDdse5p8f3aKpFqRdB4i4xj83b7BHYABHMvHifWxiDXeKRELnaxL5FySfeRRS5girgUvgy8fQKsYMEzPUJ8h*
 
 [1]:  ../../wiki/Install-MMGen-Wallet-on-Microsoft-Windows
-[2]:  ../../wiki/Install-MMGen-Wallet-on-Linux
+[2]:  ../../wiki/Install-MMGen-Wallet-on-Linux-or-macOS
 [3]:  ../../wiki/Getting-Started-with-MMGen-Wallet
 [5]:  ../../wiki/MMGen-Signing-Keys
 [6]:  ../../wiki/MMGen-command-help

@@ -16,7 +16,7 @@ platforms may be much slower.
 
 ## Quick start
 
-### Container setup (if applicable)
+### LXC container setup (if applicable)
 
 The test suite requires the `/dev/loopX` devices to exist and be enabled.  If
 you’re running in an LXC container, note that only privileged containers allow
@@ -146,7 +146,7 @@ $ git clone https://github.com/10gic/vanitygen-plusplus
 $ cd vanitygen-plusplus
 $ git checkout -b vanitygen-plus e7858035d092  # rewind to fork commit
 $ make keyconv # ‘mingw32-make.exe keyconv’ for MSYS2
-$ sudo install --strip keyconv /usr/local/bin  # Linux
+$ sudo install --strip keyconv /usr/local/bin  # Linux, macOS
 $ install --strip keyconv.exe /usr/local/bin   # MSYS2
 $ cd ..
 ```
@@ -173,8 +173,8 @@ OpenEthereum package:
 $ pacman -S openethereum
 ```
 
-For 64-bit Windows and Linux systems, ‘ethkey’ can be found in the zip archives
-distributed with [this release][oz].
+For 64-bit Windows, Linux and macOS systems, ‘ethkey’ can be found in the zip
+archives distributed with [this release][oz].
 
 For other systems (i.e. Debian/Ubuntu ARM), tests involving ‘ethkey’ are skipped.
 

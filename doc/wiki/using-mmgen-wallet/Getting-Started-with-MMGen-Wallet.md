@@ -873,11 +873,11 @@ Signed transaction written to file 'ABCDEF[0.1].sigtx'
 
 *Instead of using a hot wallet, you should consider setting up [transaction
 autosigning][07] on your offline machine.  Autosigning makes it possible to
-transact directly from cold storage in a secure and convenient way.  Autosigning
-is available for Linux-based systems and is tailored for use with Raspberry Pi
-and other single-board computers, for which LED support is provided.  Old
-laptops with their network interfaces disabled also make acceptable signing
-devices.*
+transact directly from cold storage in a secure and convenient way.  Ideally,
+your autosigning device should be a Raspberry Pi or other single-board computer
+for which MMGen Wallet provides LED support.  However, an old laptop running
+Linux or macOS would also suffice, provided its network interfaces are removed
+or disabled.*
 
 To use MMGen Wallet for not only cold storage but also day-to-day transacting,
 it’s possible to place a portion of your funds in a “hot wallet” on your online
@@ -1106,7 +1106,7 @@ install it with `pip install --no-isolation`.
 Note that additional dependencies may appear from version to version, causing
 an offline installation to fail.  Consult the latest release notes in
 `doc/release-notes` or your platform’s installation page in the wiki
-([Linux][li], [Windows][wi]) for more information.
+([Linux, macOS][li], [Windows][wi]) for more information.
 
 ##### <a id="a_udd">Development version:</a>
 
@@ -1152,5 +1152,5 @@ $ python3 -m pip install user --upgrade dist/*.whl
 [ax]: Altcoin-and-Forkcoin-Support#a_xmr
 [cp]: ../commits/master
 [mx]: command-help-xmrwallet
-[li]: Install-MMGen-Wallet-on-Linux
+[li]: Install-MMGen-Wallet-on-Linux-or-macOS
 [wi]: Install-MMGen-Wallet-on-Microsoft-Windows
