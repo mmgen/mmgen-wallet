@@ -21,8 +21,8 @@ test/scrambletest.py: seed scrambling and addrlist data generation tests for all
                       supported coins + passwords
 """
 
-import sys,os,time
-from subprocess import run,PIPE
+import sys, os, time
+from subprocess import run, PIPE
 from collections import namedtuple
 
 try:
@@ -30,9 +30,11 @@ try:
 except ImportError:
 	from test.include import test_init
 
+from mmgen.main import launch
 from mmgen.cfg import Config
-from mmgen.util import msg,msg_r,bmsg,die
-from mmgen.color import gray
+from mmgen.util import msg, msg_r, bmsg, die, list_gen
+from mmgen.color import gray, green
+from test.include.common import set_globals, init_coverage, end_msg
 
 opts_data = {
 	'text': {
@@ -54,8 +56,6 @@ If no command is given, the whole suite of tests is run.
 }
 
 cfg = Config(opts_data=opts_data)
-
-from test.include.common import set_globals,init_coverage,end_msg,green
 
 set_globals(cfg)
 
@@ -98,70 +98,77 @@ passwd_data = {
 'xmrseed_dfl_αω':td('62f5b72a5ca89cab', 'xmrseed:25:αω','-αω-xmrseed-25','αω xmrseed:25','tequila eden skulls giving jester hospital dreams bakery adjust nanny cactus inwardly films amply nanny soggy vials muppet yellow woken ashtray organs exhale foes eden'),
 }
 
-cvr_opts = ' -m trace --count --coverdir={} --file={}'.format( *init_coverage() ) if cfg.coverage else ''
-cmd_base = f'python3{cvr_opts} cmds/mmgen-{{}}gen -qS'
-
 run_env = dict(os.environ)
 run_env['MMGEN_DEBUG_ADDRLIST'] = '1'
+words_file = 'test/ref/98831F3A.mmwords'
+cvrg_opts = '-m trace --count --coverdir={} --file={}'.format(*init_coverage()).split() if cfg.coverage else []
 
-def get_cmd_output(cmd):
-	cp = run( cmd.split(), stdout=PIPE, stderr=PIPE, env=run_env )
+def make_cmd(progname, opts, add_opts, args):
+	return ['python3'] + cvrg_opts + [f'cmds/{progname}', '-qS'] + opts + add_opts + [words_file] + args + ['1']
+
+def run_cmd(cmd):
+	cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True, env=run_env)
 	if cp.returncode != 0:
-		die(2,f'\nSpawned program exited with error code {cp.returncode}:\n{cp.stderr.decode()}')
-	return cp.stdout.decode().splitlines()
+		die(2,f'\nSpawned program exited with error code {cp.returncode}:\n{cp.stderr}')
+	return cp.stdout.splitlines()
 
-def do_test(cmd,tdata,msg_str,addr_desc):
-	cfg._util.vmsg(green(f'Executing: {cmd}'))
-	msg_r('Testing: ' + msg_str)
+def run_test(progname, opts, add_opts, args, test_data, addr_desc, opts_w):
+	cmd = make_cmd(progname, opts, add_opts, args)
+	if cfg.verbose:
+		msg(green(f'Executing: {" ".join(cmd)}'))
+	else:
+		msg_r('Testing: {} {:{w}} '.format(progname, ' '.join(opts), w=opts_w))
 
-	lines = get_cmd_output(cmd)
+	lines = run_cmd(cmd)
 	cmd_out = dict([e[9:].split(': ') for e in lines if e.startswith('sc_debug_')])
 	cmd_out['addr'] = lines[-2].split(None,1)[-1]
 
-	ref_data = tdata._asdict()
-	cfg._util.vmsg('')
+	ref_data = test_data._asdict()
 	for k in ref_data:
 		if cmd_out[k] == ref_data[k]:
 			s = k.replace('seed','seed[:8]').replace('addr',addr_desc)
 			cfg._util.vmsg(f'  {s:9}: {cmd_out[k]}')
 		else:
 			die(4,f'\nError: sc_{k} value {cmd_out[k]} does not match reference value {ref_data[k]}')
-	msg('OK')
+	msg(green('OK') if cfg.verbose else 'OK')
 
-def do_coin_tests():
+def make_coin_test_data():
 	bmsg('Testing address scramble strings and list IDs')
-	for tname,tdata in (
-			tuple(bitcoin_data.items()) +
-			tuple(altcoin_data.items() if not cfg.no_altcoin else []) ):
-		if tname == 'zec_zcash_z' and sys.platform == 'win32':
+	coin_data = bitcoin_data | ({} if cfg.no_altcoin else altcoin_data)
+	for id_str, test_data in coin_data.items():
+		if id_str == 'zec_zcash_z' and sys.platform == 'win32':
 			msg(gray("Skipping 'zec_zcash_z' test for Windows platform"))
 			continue
-		coin,mmtype = tname.split('_',1) if '_' in tname else (tname,None)
-		type_arg = ' --type='+mmtype if mmtype else ''
-		cmd = cmd_base.format('addr') + f' --coin={coin}{type_arg} test/ref/98831F3A.mmwords 1'
-		do_test(cmd,tdata,f'--coin {coin.upper():4} {type_arg:22}','address')
+		coin, mmtype = id_str.split('_', 1) if '_' in id_str else (id_str, None)
+		opts = list_gen(
+			[f'--coin={coin}'],
+			[f'--type={mmtype}', mmtype]
+		)
+		yield ('mmgen-addrgen', opts, [], [], test_data, 'address')
 
-def do_passwd_tests():
+def make_passwd_test_data():
 	bmsg('Testing password scramble strings and list IDs')
-	for tname,tdata in passwd_data.items():
-		if tname.startswith('xmrseed') and cfg.no_altcoin:
+	for id_str, test_data in passwd_data.items():
+		if id_str.startswith('xmrseed') and cfg.no_altcoin:
 			continue
-		a,b,pwid = tname.split('_')
-		fmt_arg = '' if a == 'dfl' else f'--passwd-fmt={a} '
-		len_arg = '' if b == 'dfl' else f'--passwd-len={b} '
-		fs = '{}' + fmt_arg + len_arg + '{}' + pwid + ' 1'
-		cmd = cmd_base.format('pass') + ' ' + fs.format('--accept-defaults ','test/ref/98831F3A.mmwords ')
-		s = fs.format('','')
-		do_test(cmd,tdata,s+' '*(40-len(s)),'password')
+		pw_fmt, pw_len, pw_id = id_str.split('_')
+		opts = list_gen(
+			[f'--passwd-fmt={pw_fmt}', pw_fmt != 'dfl'],
+			[f'--passwd-len={pw_len}', pw_len != 'dfl'],
+		)
+		yield ('mmgen-passgen', opts, ['--accept-defaults'], [pw_id], test_data, 'password')
 
 def main():
 	start_time = int(time.time())
 
-	cmds = cfg._args or ('coin','pw')
+	cmds = cfg._args or ('coin', 'pw')
+	funcs = {'coin': make_coin_test_data, 'pw': make_passwd_test_data}
 	for cmd in cmds:
-		{'coin': do_coin_tests, 'pw': do_passwd_tests }[cmd]()
+		data = tuple(funcs[cmd]())
+		opts_w = max(len(' '.join(e[1])) for e in data)
+		for d in data:
+			run_test(*d, opts_w)
 
 	end_msg(int(time.time()) - start_time)
 
-from mmgen.main import launch
 launch(func=main)
