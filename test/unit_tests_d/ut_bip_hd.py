@@ -151,7 +151,7 @@ vectors_multicoin = {
 	'doge':         'DFX88RXpi4S4W24YVvuMgbdUcCAYNeEYGd',
 	'avax-c':       '0x373731f4d885Fc7Da05498F9f0804a87A14F891b',
 	'ltc_bech32':   'ltc1q3uh5ga5cp9kkdfx6a52uymxj9keq4tpzep7er0',
-	'bch_cashaddr': 'bitcoincash:qpqpcllprftg4s0chdgkpxhxv23wfymq3gj7n0a9vw',
+	'bch_compressed': 'bitcoincash:qpqpcllprftg4s0chdgkpxhxv23wfymq3gj7n0a9vw',
 	'bsc_smart':    '0x373731f4d885Fc7Da05498F9f0804a87A14F891b',
 	'bnb_beacon':   'bnb179c3ymltqm4utlp089zxqeta5dvn48a305rhe5',
 }

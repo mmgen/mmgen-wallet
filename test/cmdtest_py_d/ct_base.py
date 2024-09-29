@@ -54,8 +54,7 @@ class CmdTestBase:
 		self.usr_rand_arg = f'-r{self.usr_rand_chars}'
 		self.tn_ext = ('','.testnet')[self.proto.testnet]
 		self.coin = self.proto.coin.lower()
-		self.bch_legacy = self.coin == 'bch'
-		self.fork = 'btc' if self.bch_legacy else self.coin
+		self.fork = 'btc' if self.coin == 'bch' and not cfg.cashaddr else self.coin
 		self.altcoin_pfx = '' if self.fork == 'btc' else f'-{self.proto.coin}'
 		if len(self.tmpdir_nums) == 1:
 			self.tmpdir_num = self.tmpdir_nums[0]
@@ -115,3 +114,6 @@ class CmdTestBase:
 
 	def noop(self):
 		return 'ok'
+
+	def _cashaddr_opt(self, val):
+		return [f'--cashaddr={val}'] if self.proto.coin == 'BCH' else []

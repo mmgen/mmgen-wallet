@@ -86,7 +86,7 @@ class AddrFile(MMGenObject):
 		coin = proto.coin
 		mmtype = self.parent.al_id.mmtype
 		lbl_p2 = ':'.join(
-			([] if coin in ('BTC', 'BCH') else [coin])
+			([] if coin == 'BTC' or (coin == 'BCH' and not self.cfg.cashaddr) else [coin])
 			+ ([] if mmtype == 'E' or (mmtype == 'L' and not proto.testnet) else [mmtype.name.upper()])
 			+ ([proto.network.upper()] if proto.testnet else [])
 		)
@@ -206,6 +206,8 @@ class AddrFile(MMGenObject):
 			"""
 			label examples:
 			- Bitcoin legacy mainnet:           no label
+			- BCH legacy mainnet (no cashaddr): no label
+			- BCH legacy mainnet (cashaddr):    'BCH'
 			- Bitcoin legacy testnet:           'LEGACY:TESTNET'
 			- Bitcoin Segwit:                   'SEGWIT'
 			- Bitcoin Segwit testnet:           'SEGWIT:TESTNET'

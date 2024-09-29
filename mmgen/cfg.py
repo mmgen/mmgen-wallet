@@ -195,6 +195,9 @@ class Config(Lockable):
 	carol        = False
 	regtest_user = ''
 
+	# altcoin:
+	cashaddr = True
+
 	# Monero:
 	monero_wallet_rpc_user     = 'monero'
 	monero_wallet_rpc_password = ''
@@ -273,6 +276,7 @@ class Config(Lockable):
 		'subseeds',
 		'testnet',
 		'usr_randchars',
+		'bch_cashaddr',
 		'bch_max_tx_fee',
 		'btc_max_tx_fee',
 		'eth_max_tx_fee',

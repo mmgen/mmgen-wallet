@@ -294,7 +294,7 @@ def do_ab_test(proto,scfg,addr_type,gen1,kg2,ag,tool,cache_data):
 		sec = PrivKey(proto,in_bytes,compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
 		data = kg1.gen_data(sec)
 		addr1 = ag.to_addr(data)
-		view_pref = 0
+		view_pref = 1 if proto.coin == 'BCH' else 0
 		tinfo = ( in_bytes, sec, sec.wif, type(kg1).__name__, type(kg2).__name__ if kg2 else tool.desc )
 
 		def do_msg():

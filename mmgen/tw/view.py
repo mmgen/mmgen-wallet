@@ -90,6 +90,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	sort_key    = 'age'
 	display_hdr = ()
 	display_body = ()
+	prompt_fs_repl = {}
 	nodata_msg = '[no data for requested parameters]'
 	cols = 0
 	term_height = 0
@@ -121,6 +122,8 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	age_fmts = ('confs','block','days','date','date_time')
 	age_fmts_date_dependent = ('days','date','date_time')
 	_age_fmt = 'confs'
+
+	bch_addr_fmts = ('cashaddr', 'legacy')
 
 	age_col_params = {
 		'confs':     (7,  'Confs'),
@@ -195,7 +198,12 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			from .ctl import TwCtl
 			self.twctl = await TwCtl(cfg,proto,mode='w')
 		self.amt_keys = {'amt':'iwidth','amt2':'iwidth2'} if self.has_amt2 else {'amt':'iwidth'}
+		if repl := self.prompt_fs_repl.get(self.proto.coin):
+			self.prompt_fs_in[repl[0]] = repl[1]
 		self.prompt_fs = '\n'.join(self.prompt_fs_in)
+		if self.proto.coin == 'BCH':
+			self.key_mappings.update({'h': 'd_addr_view_pref'})
+			self.addr_view_pref = 1 if not self.cfg.cashaddr else not self.proto.cashaddr
 
 	@property
 	def age_w(self):

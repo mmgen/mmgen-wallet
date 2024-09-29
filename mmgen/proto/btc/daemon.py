@@ -79,7 +79,6 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--pid='+self.pidfile,    self.use_pidfile],
 			['--daemon',               self.platform in ('linux', 'darwin') and not self.opt.no_daemonize],
 			['--fallbackfee=0.0002',   self.coin == 'BTC' and self.network == 'regtest'],
-			['--usecashaddr=0',        self.coin == 'BCH'],
 			['--deprecatedrpc=create_bdb', self.coin == 'BTC' and self.opt.bdb_wallet],
 			['--mempoolreplacement=1', self.coin == 'LTC'],
 			['--txindex=1',            self.coin == 'LTC' or self.network == 'regtest'],

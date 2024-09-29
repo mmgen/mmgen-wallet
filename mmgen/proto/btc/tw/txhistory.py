@@ -240,6 +240,9 @@ class BitcoinTwTxHistory(TwTxHistory,BitcoinTwRPC):
 		'Column options: toggle [D]ays/date/confs/block, tx[i]d, [T]otal amt',
 		'View/Print: pager [v]iew, full pager [V]iew, [p]rint, full [P]rint{s}',
 		'Filters/Actions: show [u]nconfirmed, [q]uit menu, r[e]draw:']
+	prompt_fs_repl = {
+		'BCH': (1, 'Column options: toggle [D]ate/confs, cas[h]addr, tx[i]d, [T]otal amt')
+	}
 	key_mappings = {
 		'A':'s_age',
 		'n':'s_blockheight',

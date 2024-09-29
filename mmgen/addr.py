@@ -157,9 +157,14 @@ class CoinAddr(HiliteStr, InitErrors, MMGenObject):
 		try:
 			ap = proto.decode_addr(addr)
 			assert ap, f'coin address {addr!r} could not be parsed'
-			me = str.__new__(cls, addr)
-			me.views = [addr]
-			me.view_pref = 0
+			if hasattr(ap, 'addr'):
+				me = str.__new__(cls, ap.addr)
+				me.views = ap.views
+				me.view_pref = ap.view_pref
+			else:
+				me = str.__new__(cls, addr)
+				me.views = [addr]
+				me.view_pref = 0
 			me.addr_fmt = ap.fmt
 			me.bytes = ap.bytes
 			me.ver_bytes = ap.ver_bytes

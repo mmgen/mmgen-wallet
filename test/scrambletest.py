@@ -142,7 +142,8 @@ def make_coin_test_data():
 		coin, mmtype = id_str.split('_', 1) if '_' in id_str else (id_str, None)
 		opts = list_gen(
 			[f'--coin={coin}'],
-			[f'--type={mmtype}', mmtype]
+			[f'--type={mmtype}', mmtype],
+			[ '--cashaddr=0', coin == 'bch']
 		)
 		yield ('mmgen-addrgen', opts, [], [], test_data, 'address')
 

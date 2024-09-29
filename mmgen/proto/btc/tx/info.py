@@ -89,6 +89,8 @@ class TxInfo(TxInfo):
 						get_mmid_fmt(e, is_input),
 						e.amt.fmt(iwidth=iwidth,color=True),
 						tx.dcoin )
+					if have_bch:
+						yield '{:3} [{}]\n'.format('', e.addr.hl(vp2, color=False))
 			else:
 				col1_w = len(str(len(io))) + 1
 				for n,e in enumerate(io_sorted()):
@@ -100,8 +102,12 @@ class TxInfo(TxInfo):
 						if is_input:
 							yield (n+1, 'tx,vout:', f'{e.txid.hl()},{red(str(e.vout))}')
 							yield ('',  'address:', f'{e.addr.hl(vp1)} {mmid_fmt}')
+							if have_bch:
+								yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
 						else:
 							yield (n+1, 'address:', f'{e.addr.hl(vp1)} {mmid_fmt}')
+							if have_bch:
+								yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
 						if e.comment:
 							yield ('',  'comment:', e.comment.hl())
 						yield     ('',  'amount:',  f'{e.amt.hl()} {tx.dcoin}')
@@ -112,7 +118,14 @@ class TxInfo(TxInfo):
 					yield '\n'.join('{:>{w}} {:<8} {}'.format(*d,w=col1_w) for d in gen()) + '\n\n'
 
 		tx = self.tx
-		vp1 = 0
+
+		if self.cfg._proto.coin == 'BCH':
+			have_bch = True
+			vp1 = 1 if not self.cfg.cashaddr else not self.cfg._proto.cashaddr
+			vp2 = (vp1 + 1) % 2
+		else:
+			have_bch = False
+			vp1 = 0
 
 		return (
 			'Displaying inputs and outputs in {} sort order'.format({'raw':'raw','addr':'address'}[sort])

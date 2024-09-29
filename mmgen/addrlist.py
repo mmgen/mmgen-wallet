@@ -122,7 +122,7 @@ class AddrListIDStr(HiliteStr):
 			ret = fmt_str.format(s)
 		else:
 			proto = addrlist.proto
-			coin = 'BTC' if proto.coin == 'BCH' else proto.coin
+			coin = 'BTC' if proto.coin == 'BCH' and not addrlist.cfg.cashaddr else proto.coin
 			mmtype = addrlist.al_id.mmtype
 			ret = '{}{}{}[{}]'.format(
 				addrlist.al_id.sid,

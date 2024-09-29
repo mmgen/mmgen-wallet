@@ -63,6 +63,10 @@ class CmdTestMisc(CmdTestBase):
 	passthru_opts = ('daemon_data_dir','rpc_port')
 	cmd_group = (
 		('rpc_backends',         'RPC backends'),
+		('bch_txview_legacy1',   "'mmgen-tool --coin=bch --cashaddr=0 txview terse=0'"),
+		('bch_txview_legacy2',   "'mmgen-tool --coin=bch --cashaddr=0 txview terse=1'"),
+		('bch_txview_cashaddr1', "'mmgen-tool --coin=bch --cashaddr=1 txview terse=0'"),
+		('bch_txview_cashaddr2', "'mmgen-tool --coin=bch --cashaddr=1 txview terse=1'"),
 		('xmrwallet_txview',     "'mmgen-xmrwallet' txview"),
 		('xmrwallet_txlist',     "'mmgen-xmrwallet' txlist"),
 		('coin_daemon_info',     "'examples/coin-daemon-info.py'"),
@@ -78,6 +82,27 @@ class CmdTestMisc(CmdTestBase):
 		for b in backends:
 			t = self.spawn_chk('mmgen-tool',[f'--rpc-backend={b}','daemon_version'],extra_desc=f'({b})')
 		return t
+
+	def _bch_txview(self, view_pref, terse, expect):
+		if cfg.no_altcoin:
+			return 'skip'
+		tx = 'test/ref/bitcoin_cash/895108-BCH[2.65913].rawtx'
+		t = self.spawn('mmgen-tool', ['--coin=bch', f'--cashaddr={view_pref}', 'txview', tx, f'terse={terse}'])
+		#t = self.spawn('mmgen-tool', ['--coin=bch', '--longhelp'])
+		t.expect(expect)
+		return t
+
+	def bch_txview_legacy1(self):
+		return self._bch_txview(0, 0, '[qzuffa536e0eqfwz3smapckhlw9wge4p5spvx5j7h7]')
+
+	def bch_txview_legacy2(self):
+		return self._bch_txview(0, 1, '[qzuffa536e0eqfwz3smapckhlw9wge4p5spvx5j7h7]')
+
+	def bch_txview_cashaddr1(self):
+		return self._bch_txview(1, 0, '[1HpynST7vkLn8yNtdrqPfeghexZk4sdB3W]')
+
+	def bch_txview_cashaddr2(self):
+		return self._bch_txview(1, 1, '[1HpynST7vkLn8yNtdrqPfeghexZk4sdB3W]')
 
 	def xmrwallet_txview(self,op='txview'):
 		if cfg.no_altcoin:

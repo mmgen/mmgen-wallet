@@ -24,6 +24,8 @@ import os, json, time, re
 from decimal import Decimal
 
 from mmgen.proto.btc.regtest import MMGenRegtest
+from mmgen.proto.bch.cashaddr import b32a
+from mmgen.proto.btc.common import b58a
 from mmgen.color import yellow
 from mmgen.util import msg_r,die,gmsg,capfirst,fmt_list
 from mmgen.protocol import init_proto
@@ -394,6 +396,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	'view': (
 		'viewing addresses and unspent outputs',
 		('alice_listaddresses_scroll',    'listaddresses (--scroll, interactive=1)'),
+		('alice_listaddresses_cashaddr',  'listaddresses (BCH cashaddr)'),
 		('alice_listaddresses_empty',     'listaddresses (no data)'),
 		('alice_listaddresses_menu',      'listaddresses (menu items)'),
 		('alice_listaddresses1',          'listaddresses'),
@@ -404,6 +407,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		('alice_twview_days',             'twview (age_fmt=days)'),
 		('alice_twview_date',             'twview (age_fmt=date)'),
 		('alice_twview_date_time',        'twview (age_fmt=date_time)'),
+		('alice_twview_interactive_cashaddr', 'twview (interactive=1, BCH cashaddr)'),
 		('alice_txcreate_info',           'txcreate -i'),
 		('alice_txcreate_info_term',      'txcreate -i (pexpect_spawn)'),
 		('bob_send_to_alice_2addr',       'sending a TX to 2 addresses in Alice’s wallet'),
@@ -763,10 +767,10 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		return self.user_bal('alice',rtBals[8])
 
 	def bob_bal1(self):
-		return self.user_bal('bob',rtFundAmt)
+		return self.user_bal('bob', rtFundAmt, self._cashaddr_opt(0))
 
 	def bob_bal2(self):
-		return self.user_bal('bob',rtBals[0])
+		return self.user_bal('bob', rtBals[0], self._cashaddr_opt(1))
 
 	def bob_bal2a(self):
 		return self.user_bal('bob',rtBals[0],args=['showempty=1','age_fmt=confs'])
@@ -827,11 +831,21 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 
 	def bob_twview2(self):
 		sid1 = self._get_user_subsid('bob','29L')
-		return self.user_twview('bob',chk=(sid1+':C:2','0.29'),sort='twmmid')
+		return self.user_twview(
+			'bob',
+			opts = self._cashaddr_opt(0),
+			chk  = (f'{sid1}:C:2', '0.29'),
+			sort = 'twmmid',
+			expect = rf'[{b58a}]{{8}}' if self.proto.coin == 'BCH' else None)
 
 	def bob_twview3(self):
 		sid2 = self._get_user_subsid('bob','127S')
-		return self.user_twview('bob',chk=(sid2+':C:3','0.127'),sort='amt')
+		return self.user_twview(
+			'bob',
+			opts = self._cashaddr_opt(1),
+			chk  = (f'{sid2}:C:3', '0.127'),
+			sort = 'amt',
+			expect = rf'[{b32a}]{{8}}' if self.proto.coin == 'BCH' else None)
 
 	def bob_subwallet_txcreate(self):
 		sid1 = self._get_user_subsid('bob','29L')
@@ -873,13 +887,17 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 
 	def bob_txhist1(self):
 		return self.user_txhist('bob',
+			opts = self._cashaddr_opt(1),
 			args = ['sort=age'],
-			expect = fr'\s1\).*\s{rtFundAmt}\s' )
+			expect = fr'\s1\).*\s{rtFundAmt}\s',
+			expect2 = rf'[{b32a}]{{8}}' if self.proto.coin == 'BCH' else None)
 
 	def bob_txhist2(self):
 		return self.user_txhist('bob',
+			opts = self._cashaddr_opt(0),
 			args = ['sort=blockheight','reverse=1','age_fmt=block'],
-			expect = fr'\s1\).*:{self.dfl_mmtype}:1\s' )
+			expect = fr'\s1\).*:{self.dfl_mmtype}:1\s',
+			expect2 = rf'[{b58a}]{{8}}' if self.proto.coin == 'BCH' else None)
 
 	def bob_txhist3(self):
 		return self.user_txhist('bob',
@@ -903,6 +921,13 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		self.get_file_with_ext('out',delete_all=True)
 		t = self.spawn('mmgen-tool',
 			['--bob',f'--outdir={self.tmpdir}','txhist','age_fmt=date_time','interactive=true'] )
+		if self.proto.coin == 'BCH':
+			for expect, resp in (
+					(rf'[{b32a}]{{8}}', 'h'),
+					(rf'[{b58a}]{{8}}', 'h')
+				):
+				t.expect(expect, regex=True)
+				t.expect('draw:\b', resp, regex=True)
 		for resp in ('u','i','t','a','m','T','A','r','r','D','D','D','D','p','P','n','V'):
 			t.expect('draw:\b',resp,regex=True)
 		if t.pexpect_spawn:
@@ -1673,6 +1698,18 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			t.expect(prompt, s)
 		return t
 
+	def alice_listaddresses_cashaddr(self):
+		if self.proto.coin != 'BCH':
+			return 'skip'
+		prompt = 'abel:\b'
+		expect = (
+			[rf'[{b32a}]{{8}}'],
+			[prompt, 'h'],
+			[rf'[{b58a}]{{8}}'],
+			[prompt, 'q']
+		)
+		return self._alice_listaddresses_interactive(expect=expect)
+
 	def alice_listaddresses_empty(self):
 		return self._alice_listaddresses_interactive(expect_menu='uuEq')
 
@@ -1730,6 +1767,17 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		return self.alice_twview(
 			args = ['age_fmt=date_time'],
 			expect = (rtAmts[0],pat_date_time) )
+
+	def alice_twview_interactive_cashaddr(self):
+		if self.proto.coin != 'BCH':
+			return 'skip'
+		t = self.spawn('mmgen-tool', ['--alice', 'twview', 'interactive=true'])
+		prompt = 'abel:\b'
+		t.expect(rf'[{b32a}]{{8}}', regex=True)
+		t.expect(prompt, 'h')
+		t.expect(rf'[{b58a}]{{8}}', regex=True)
+		t.expect(prompt, 'q')
+		return t
 
 	def alice_txcreate_info(self,pexpect_spawn=False):
 		t = self.spawn('mmgen-txcreate',['--alice','-Bi'],pexpect_spawn=pexpect_spawn)

@@ -9,10 +9,23 @@ altcoin_dep = True
 from collections import namedtuple
 
 from mmgen.proto.bch.cashaddr import cashaddr_parse_addr, cashaddr_decode_addr, cashaddr_encode_addr
+from mmgen.addr import CoinAddr
 
-from ..include.common import vmsg
+from ..include.common import cfg, vmsg
+
+from mmgen.protocol import init_proto
+proto = init_proto(cfg, 'bch')
 
 # Source: https://upgradespecs.bitcoincashnode.org/cashaddr
+alias_data = """
+1BpEi6DfDAUFd7GtittLSdBeYJvcoaVggu  bitcoincash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a
+1KXrWXciRDZUpQwQmuM1DbwsKDLYAYsVLR  bitcoincash:qr95sy3j9xwd2ap32xkykttr4cvcu7as4y0qverfuy
+16w1D5WRVKJuZUsSRzdLp9w3YGcgoxDXb   bitcoincash:qqq3728yw0y47sqn6l2na30mcw6zm78dzqre909m2r
+3CWFddi6m4ndiGyKqzYvsFYagqDLPVMTzC  bitcoincash:ppm2qsznhks23z7629mms6s4cwef74vcwvn0h829pq
+3LDsS579y7sruadqu11beEJoTjdFiFCdX4  bitcoincash:pr95sy3j9xwd2ap32xkykttr4cvcu7as4yc93ky28e
+31nwvkZwyPdgzjBJZXfDmSWsC4ZLKpYyUw  bitcoincash:pqq3728yw0y47sqn6l2na30mcw6zm78dzq5ucqzc37
+"""
+
 vec_data = """
 F5BF48B397DAE70BE82B3CCA4793F8EB2B6CDAC9
 20 0  bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2
@@ -78,6 +91,11 @@ class unit_tests:
 						yield t(int(d[0]), int(d[1]), d[2], data)
 		return list(gen())
 
+	@property
+	def aliases(self):
+		t = namedtuple('aliases', ['legacy', 'cashaddr'])
+		return [t(*a.split()) for a in alias_data.splitlines() if a]
+
 	def encode(self, name, ut, desc='low-level address encoding'):
 		data = None
 		for v in self.vectors:
@@ -98,4 +116,36 @@ class unit_tests:
 			vmsg(f'    {v.addr}')
 			ret = cashaddr_decode_addr(v.addr)
 			assert ret.bytes.hex() == v.data
+		return True
+
+	def coinaddr(self, name, ut, desc='CoinAddr class'):
+		for e in self.aliases:
+			for addr in (
+					e.cashaddr.upper(),
+					e.cashaddr,
+					e.cashaddr.split(':')[1],
+					e.legacy,
+				):
+				a = CoinAddr(proto, addr)
+				vmsg(addr)
+				assert e.legacy == a.views[1]
+				assert e.cashaddr == a.proto.cashaddr_pfx + ':' + a.views[0]
+			vmsg('')
+		return True
+
+	def errors(self, name, ut, desc='error handling'):
+		# could do these in objtest.py:
+		def bad1(): a = CoinAddr(proto, self.aliases[0].cashaddr.replace('g','G'))
+		def bad2(): a = CoinAddr(proto, 'x' + self.aliases[0].cashaddr)
+		def bad3(): a = CoinAddr(proto, self.aliases[0].cashaddr[:-1])
+		def bad4(): a = CoinAddr(proto, self.aliases[0].cashaddr[:-1]+'i')
+		def bad5(): a = CoinAddr(proto, self.aliases[0].cashaddr[:-1]+'x')
+
+		ut.process_bad_data((
+			('case',     'ObjectInitError', 'mixed case',     bad1),
+			('prefix',   'ObjectInitError', 'invalid prefix', bad2),
+			('data',     'ObjectInitError', 'too short',      bad3),
+			('b32 char', 'ObjectInitError', 'substring',      bad4),
+			('chksum',   'ObjectInitError', 'checksum',       bad5),
+		))
 		return True

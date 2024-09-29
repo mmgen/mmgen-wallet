@@ -197,10 +197,16 @@ init_tests() {
 	"
 
 	d_bch="overall operations with emulated RPC data (Bitcoin Cash Node)"
-	t_bch="- $cmdtest_py --coin=bch --exclude regtest"
+	t_bch="
+		- $cmdtest_py --coin=bch --exclude regtest
+		- $cmdtest_py --coin=bch --cashaddr=0 ref3_addr
+	"
 
 	d_bch_tn="overall operations with emulated RPC data (Bitcoin Cash Node testnet)"
-	t_bch_tn="- $cmdtest_py --coin=bch --testnet=1"
+	t_bch_tn="
+		- $cmdtest_py --coin=bch --testnet=1
+		- $cmdtest_py --coin=bch --testnet=1 --cashaddr=0 ref3_addr
+	"
 
 	d_bch_rt="overall operations using the regtest network (Bitcoin Cash Node)"
 	t_bch_rt="- $cmdtest_py --coin=bch regtest"
@@ -286,6 +292,9 @@ init_tests() {
 		a $gentest_py --coin=ltc --type=segwit 1 $REFDIR/litecoin/ltcwallet-segwit.dump
 		a $gentest_py --coin=ltc --type=bech32 1 $REFDIR/litecoin/ltcwallet-bech32.dump
 		a $gentest_py --coin=ltc --type=compressed --testnet=1 1 $REFDIR/litecoin/ltcwallet-testnet.dump
+		a $gentest_py --coin=bch --type=compressed --cashaddr=0 1 $REFDIR/bitcoin_cash/bchwallet.dump
+		a $gentest_py --coin=bch --type=compressed --cashaddr=1 1 $REFDIR/bitcoin_cash/bchwallet.dump
+		a $gentest_py --coin=bch --type=compressed --testnet=1 1 $REFDIR/bitcoin_cash/bchwallet-testnet.dump
 		- # libsecp256k1 vs python-ecdsa:
 		- $gentest_py --type=legacy 1:2 $rounds100x
 		- $gentest_py --type=compressed 1:2 $rounds100x

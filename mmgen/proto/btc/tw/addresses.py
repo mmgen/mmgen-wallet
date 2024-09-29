@@ -27,6 +27,9 @@ class BitcoinTwAddresses(TwAddresses,BitcoinTwRPC):
 		'Filters: show [E]mpty addrs, [u]sed addrs, all [L]abels',
 		'View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}',
 		'Actions: [q]uit menu, r[e]draw, add [l]abel:']
+	prompt_fs_repl = {
+		'BCH': (1, 'Column options: toggle [D]ays/date/confs/block, cas[h]addr')
+	}
 	key_mappings = {
 		'a':'s_amt',
 		'A':'s_age',

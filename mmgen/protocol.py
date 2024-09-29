@@ -27,6 +27,7 @@ from .objmethods import MMGenObject
 
 decoded_wif = namedtuple('decoded_wif',['sec','pubkey_type','compressed'])
 decoded_addr = namedtuple('decoded_addr', ['bytes', 'ver_bytes', 'fmt'])
+decoded_addr_multiview = namedtuple('mv_decoded_addr', ['bytes', 'ver_bytes', 'fmt', 'addr', 'views', 'view_pref'])
 parsed_addr = namedtuple('parsed_addr',['ver_bytes','data'])
 
 _finfo = namedtuple('fork_info',['height','hash','name','replayable'])

@@ -33,6 +33,9 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 		'Column options: toggle [D]ays/date/confs/block, gr[o]up, show [m]mgen addr',
 		'View options: pager [v]iew, [w]ide pager view{s}',
 		'Actions: [q]uit menu, [p]rint, r[e]draw, add [l]abel:']
+	prompt_fs_repl = {
+		'BCH': (1, 'Column options: toggle [D]ate/confs, cas[h]addr, gr[o]up, show [m]mgen addr')
+	}
 	key_mappings = {
 		't':'s_txid',
 		'a':'s_amt',

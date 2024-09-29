@@ -214,8 +214,8 @@ class CmdTestRef3Seed(CmdTestBase,CmdTestShared):
 
 class CmdTestRef3Addr(CmdTestRef3Seed):
 	'generated reference address, key and password files for 128-, 192- and 256-bit seeds'
-	networks = ('btc', 'btc_tn', 'ltc', 'ltc_tn')
-	passthru_opts = ('coin', 'testnet')
+	networks = ('btc', 'btc_tn', 'ltc', 'ltc_tn', 'bch', 'bch_tn')
+	passthru_opts = ('coin', 'testnet', 'cashaddr')
 	tmpdir_nums = [26, 27, 28]
 	shared_deps = ['mmdat', pwfile]
 
@@ -224,6 +224,7 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		'sids': ('FE3C6545', '1378FC64', '98831F3A'),
 		'refaddrgen_legacy_1': {
 			'btc': ('B230 7526 638F 38CB','A9DC 5A13 12CB 1317'),
+			'bch': ('026D AFE0 8C60 6CFF','B406 4937 D884 6E48'),
 			'ltc': ('2B23 5E97 848A B961','AEC3 E774 0B21 0202'),
 		},
 		'refaddrgen_segwit_1': {
@@ -236,14 +237,17 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		},
 		'refaddrgen_compressed_1': {
 			'btc': ('95EB 8CC0 7B3B 7856','16E6 6170 154D 2202'),
+			'bch': ('C560 A343 CEAB 118E','3F56 8DC5 0383 CD78'),
 			'ltc': ('35D5 8ECA 9A42 46C3','15B3 5492 D3D3 6854'),
 		},
 		'refkeyaddrgen_legacy_1': {
 			'btc': ('CF83 32FB 8A8B 08E2','1F67 B73A FF8C 5D15'),
+			'bch': ('6909 4C64 119A 7681','7E48 5071 5E41 D1AE'),
 			'ltc': ('1896 A26C 7F14 2D01','FA0E CD4E ADAF DBF4'),
 		},
 		'refkeyaddrgen_compressed_1': {
 			'btc': ('E43A FA46 5751 720A','FDEE 8E45 1C0A 02AD'),
+			'bch': ('7068 9B37 8ABF 3E31','C688 29A5 BA4C 21B2'),
 			'ltc': ('7603 2FE3 2145 FFAD','3FE0 5A8E 5FBE FF3E'),
 		},
 		'refkeyaddrgen_segwit_1': {
@@ -265,10 +269,12 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		'ref_hex2bip39_24_passwdgen_1': '91AF E735 A31D 72A0',
 		'refaddrgen_legacy_2': {
 			'btc': ('8C17 A5FA 0470 6E89','764C 66F9 7502 AAEA'),
+			'bch': ('8117 24B6 3FDA 6B40','E58C A8A4 C371 66AE'),
 			'ltc': ('2B77 A009 D5D0 22AD','51D1 979D 0A35 F24B'),
 		},
 		'refaddrgen_compressed_2': {
 			'btc': ('2615 8401 2E98 7ECA','A386 EE07 A356 906D'),
+			'bch': ('3364 0F9D 8355 2A53','3451 F741 0A8A FA56'),
 			'ltc': ('197C C48C 3C37 AB0F','8DDC 5FE3 BFF9 1226'),
 		},
 		'refaddrgen_segwit_2': {
@@ -281,10 +287,12 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		},
 		'refkeyaddrgen_legacy_2': {
 			'btc': ('9648 5132 B98E 3AD9','1BD3 5A36 D51C 256D'),
+			'bch': ('C4D8 7C36 DC77 F8C2','953D 245C 8CFF AC72'),
 			'ltc': ('DBD4 FAB6 7E46 CD07','8822 3FDF FEC0 6A8C'),
 		},
 		'refkeyaddrgen_compressed_2': {
 			'btc': ('6D6D 3D35 04FD B9C3','94BF 4BCF 10B2 394B'),
+			'bch': ('3E7F C369 2AB9 BD58','0C99 14CD 5ADE 6782'),
 			'ltc': ('F5DA 9D60 6798 C4E9','7918 88DE 9096 DD7A'),
 		},
 		'refkeyaddrgen_segwit_2': {
@@ -306,10 +314,12 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		'ref_hex2bip39_24_passwdgen_2': '0E8E 23C9 923F 7C2D',
 		'refaddrgen_legacy_3': {
 			'btc': ('6FEF 6FB9 7B13 5D91','424E 4326 CFFE 5F51'),
+			'bch': ('E580 43BB 0F96 AA93','630E 174A 8DDE 1BCE'),
 			'ltc': ('AD52 C3FE 8924 AAF0','4EBE 2E85 E969 1B30'),
 		},
 		'refaddrgen_compressed_3': {
 			'btc': ('A33C 4FDE F515 F5BC','6C48 AA57 2056 C8C8'),
+			'bch': ('E37B AF41 7997 A28C','0D5D 9A58 D6E9 92EE'),
 			'ltc': ('3FC0 8F03 C2D6 BD19','4C0A 49B6 2DD1 1BE0'),
 		},
 		'refaddrgen_segwit_3': {
@@ -322,10 +332,12 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		},
 		'refkeyaddrgen_legacy_3': {
 			'btc': ('9F2D D781 1812 8BAD','88CC 5120 9A91 22C2'),
+			'bch': ('A0EE B039 48F4 24AE','B014 E0AB 5F87 EC64'),
 			'ltc': ('B804 978A 8796 3ED4','98B5 AC35 F334 0398'),
 		},
 		'refkeyaddrgen_compressed_3': {
 			'btc': ('420A 8EB5 A9E2 7814','F43A CB4A 81F3 F735'),
+			'bch': ('33E7 5C06 88CF 2792','6E09 FF73 B7C8 00D4'),
 			'ltc': ('8D1C 781F EB7F 44BC','05F3 5C68 FD31 FCEF'),
 		},
 		'refkeyaddrgen_segwit_3': {
@@ -379,8 +391,12 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 	def refaddrgen_compressed(self):
 		return self.call_addrgen('compressed')
 	def refaddrgen_segwit(self):
+		if cfg.coin == 'BCH':
+			return 'skip'
 		return self.call_addrgen('segwit')
 	def refaddrgen_bech32(self):
+		if cfg.coin == 'BCH':
+			return 'skip'
 		return self.call_addrgen('bech32')
 
 	def refkeyaddrgen_legacy(self):
@@ -388,8 +404,12 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 	def refkeyaddrgen_compressed(self):
 		return self.call_addrgen('compressed', 'keyaddrgen')
 	def refkeyaddrgen_segwit(self):
+		if cfg.coin == 'BCH':
+			return 'skip'
 		return self.call_addrgen('segwit', 'keyaddrgen')
 	def refkeyaddrgen_bech32(self):
+		if cfg.coin == 'BCH':
+			return 'skip'
 		return self.call_addrgen('bech32', 'keyaddrgen')
 
 	def pwgen(self, ftype, id_str, pwfmt=None, pwlen=None, extra_opts=[], stdout=False):
