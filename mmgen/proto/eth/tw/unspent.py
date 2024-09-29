@@ -45,12 +45,11 @@ class EthereumTwUnspentOutputs(EthereumTwView,TwUnspentOutputs):
 	desc    = 'account balances'
 	item_desc = 'account'
 	dump_fn_pfx = 'balances'
-	prompt_fs = """
-Sort options: [a]mount, a[d]dr, [M]mgen addr, [r]everse
-Display options: show [m]mgen addr, r[e]draw screen
-View/Print: pager [v]iew, [w]ide pager view, [p]rint to file{s}
-Actions: [q]uit menu, [D]elete addr, add [l]abel, [R]efresh balance:
-"""
+	prompt_fs_in = [
+		'Sort options: [a]mount, a[d]dr, [M]mgen addr, [r]everse',
+		'Display options: show [m]mgen addr, r[e]draw screen',
+		'View/Print: pager [v]iew, [w]ide pager view, [p]rint to file{s}',
+		'Actions: [q]uit menu, [D]elete addr, add [l]abel, [R]efresh balance:']
 	key_mappings = {
 		'a':'s_amt',
 		'd':'s_addr',

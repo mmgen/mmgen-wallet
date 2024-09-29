@@ -17,13 +17,12 @@ from .addresses import BitcoinTwAddresses
 
 class BitcoinTwAddressesPrune(BitcoinTwAddresses,TwAddressesPrune):
 
-	prompt_fs = """
-Sort options: [a]mt, [A]ge, [M]mgen addr, [r]everse
-Column options: toggle [D]ays/date/confs/block
-Filters: show [E]mpty addrs, [U]sed addrs, all [L]abels
-View/Actions: pager [v]iew, [w]ide view, r[e]draw{s}
-Pruning: [q]uit pruning, [p]rune, [u]nprune, [c]lear prune list:
-"""
+	prompt_fs_in = [
+		'Sort options: [a]mt, [A]ge, [M]mgen addr, [r]everse',
+		'Column options: toggle [D]ays/date/confs/block',
+		'Filters: show [E]mpty addrs, [U]sed addrs, all [L]abels',
+		'View/Actions: pager [v]iew, [w]ide view, r[e]draw{s}',
+		'Pruning: [q]uit pruning, [p]rune, [u]nprune, [c]lear prune list:']
 	key_mappings = {
 		'a':'s_amt',
 		'A':'s_age',

@@ -15,12 +15,12 @@ proto.eth.tx.new: Ethereum new transaction class
 import json
 
 from ....tx import new as TxBase
-from ....obj import Int,ETHNonce,MMGenTxID,Str,HexStr
-from ....util import msg,is_int,is_hex_str,make_chksum_6,suf,die
+from ....obj import Int, ETHNonce, MMGenTxID, HexStr
+from ....util import msg, is_int, is_hex_str, make_chksum_6, suf, die
 from ....tw.ctl import TwCtl
-from ....addr import is_mmgen_id,is_coin_addr
+from ....addr import is_mmgen_id, is_coin_addr
 from ..contract import Token
-from .base import Base,TokenBase
+from .base import Base, TokenBase
 
 class New(Base,TxBase.New):
 	desc = 'transaction'
@@ -51,7 +51,7 @@ class New(Base,TxBase.New):
 	async def make_txobj(self): # called by create_serialized()
 		self.txobj = {
 			'from': self.inputs[0].addr,
-			'to':   self.outputs[0].addr if self.outputs else Str(''),
+			'to':   self.outputs[0].addr if self.outputs else None,
 			'amt':  self.outputs[0].amt if self.outputs else self.proto.coin_amt('0'),
 			'gasPrice': self.fee_abs2rel(self.usr_fee,to_unit='eth'),
 			'startGas': self.start_gas,
@@ -69,7 +69,7 @@ class New(Base,TxBase.New):
 		o_ok = 0 if self.usr_contract_data else 1
 		assert o_num == o_ok, f'Transaction has {o_num} output{suf(o_num)} (should have {o_ok})'
 		await self.make_txobj()
-		odict = { k: str(v) for k,v in self.txobj.items() if k != 'token_to' }
+		odict = {k:v if v is None else str(v) for k,v in self.txobj.items() if k != 'token_to'}
 		self.serialized = json.dumps(odict)
 		self.update_txid()
 

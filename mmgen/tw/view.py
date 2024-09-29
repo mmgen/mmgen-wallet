@@ -194,6 +194,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 			from .ctl import TwCtl
 			self.twctl = await TwCtl(cfg,proto,mode='w')
 		self.amt_keys = {'amt':'iwidth','amt2':'iwidth2'} if self.has_amt2 else {'amt':'iwidth'}
+		self.prompt_fs = '\n'.join(self.prompt_fs_in)
 
 	@property
 	def age_w(self):

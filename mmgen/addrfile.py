@@ -82,13 +82,15 @@ class AddrFile(MMGenObject):
 			outdir        = outdir)
 
 	def make_label(self):
-		p = self.parent
-		bc,mt = p.proto.base_coin,p.al_id.mmtype
-		l_coin = [] if bc == 'BTC' else [p.proto.coin] if bc == 'ETH' else [bc]
-		l_type = [] if mt == 'E' or (mt == 'L' and not p.proto.testnet) else [mt.name.upper()]
-		l_tn   = [] if not p.proto.testnet else [p.proto.network.upper()]
-		lbl_p2 = ':'.join(l_coin+l_type+l_tn)
-		return p.al_id.sid + ('',' ')[bool(lbl_p2)] + lbl_p2
+		proto = self.parent.proto
+		coin = proto.coin
+		mmtype = self.parent.al_id.mmtype
+		lbl_p2 = ':'.join(
+			([] if coin in ('BTC', 'BCH') else [coin])
+			+ ([] if mmtype == 'E' or (mmtype == 'L' and not proto.testnet) else [mmtype.name.upper()])
+			+ ([proto.network.upper()] if proto.testnet else [])
+		)
+		return self.parent.al_id.sid + (' ' if lbl_p2 else '') + lbl_p2
 
 	def format(self,add_comments=False):
 		p = self.parent

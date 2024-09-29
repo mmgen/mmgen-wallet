@@ -15,11 +15,11 @@ proto.eth.tx.unsigned: Ethereum unsigned transaction class
 import json
 
 from ....tx import unsigned as TxBase
-from ....util import msg,msg_r
-from ....obj import Str,CoinTxID,ETHNonce,Int,HexStr
-from ....addr import CoinAddr,TokenAddr
+from ....util import msg, msg_r
+from ....obj import CoinTxID, ETHNonce, Int, HexStr
+from ....addr import CoinAddr, TokenAddr
 from ..contract import Token
-from .completed import Completed,TokenCompleted
+from .completed import Completed, TokenCompleted
 
 class Unsigned(Completed,TxBase.Unsigned):
 	desc = 'unsigned transaction'
@@ -29,7 +29,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 		o = {
 			'from':     CoinAddr(self.proto,d['from']),
 			# NB: for token, 'to' is sendto address
-			'to':       CoinAddr(self.proto,d['to']) if d['to'] else Str(''),
+			'to':       CoinAddr(self.proto,d['to']) if d['to'] else None,
 			'amt':      self.proto.coin_amt(d['amt']),
 			'gasPrice': self.proto.coin_amt(d['gasPrice']),
 			'startGas': self.proto.coin_amt(d['startGas']),
@@ -43,7 +43,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 	async def do_sign(self,wif):
 		o = self.txobj
 		o_conv = {
-			'to':       bytes.fromhex(o['to']),
+			'to':       bytes.fromhex(o['to'] or ''),
 			'startgas': o['startGas'].toWei(),
 			'gasprice': o['gasPrice'].toWei(),
 			'value':    o['amt'].toWei() if o['amt'] else 0,

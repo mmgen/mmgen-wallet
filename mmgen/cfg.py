@@ -528,10 +528,10 @@ class Config(Lockable):
 		self._lock()
 
 		if need_proto:
-			from .protocol import warn_trustlevel,init_proto_from_cfg
-			warn_trustlevel(self)
+			from .protocol import init_proto_from_cfg, warn_trustlevel
 			# requires the default-to-none behavior, so do after the lock:
 			self._proto = init_proto_from_cfg(self,need_amt=need_amt)
+			warn_trustlevel(self) # do this after initializing proto
 
 		if self._opts and not do_post_init:
 			self._opts.init_bottom(self)

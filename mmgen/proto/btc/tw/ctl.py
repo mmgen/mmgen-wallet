@@ -68,7 +68,7 @@ class BitcoinTwCtl(TwCtl):
 		endless = stop is None
 		CR = '\n' if self.cfg.test_suite else '\r'
 
-		if not ( start >= 0 and (stop if stop is not None else start) >= start ):
+		if not (start >= 0 and (stop if stop is not None else start) >= start):
 			die(1,f'{start} {stop}: invalid range')
 
 		async def do_scan(chunks,tip):

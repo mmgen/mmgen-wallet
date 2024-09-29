@@ -19,12 +19,11 @@ from .rpc import EthereumTwRPC
 class EthereumTwAddresses(TwAddresses,EthereumTwView,EthereumTwRPC):
 
 	has_age = False
-	prompt_fs = """
-Sort options: [a]mt, [M]mgen addr, [r]everse
-Filters: show [E]mpty addrs, show all [L]abels
-View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}
-Actions: [q]uit menu, r[e]draw, [D]elete addr, add [l]abel:
-"""
+	prompt_fs_in = [
+		'Sort options: [a]mt, [M]mgen addr, [r]everse',
+		'Filters: show [E]mpty addrs, show all [L]abels',
+		'View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}',
+		'Actions: [q]uit menu, r[e]draw, [D]elete addr, add [l]abel:']
 	key_mappings = {
 		'a':'s_amt',
 		'M':'s_twmmid',

@@ -121,13 +121,14 @@ class AddrListIDStr(HiliteStr):
 		if fmt_str:
 			ret = fmt_str.format(s)
 		else:
-			bc = (addrlist.proto.base_coin,addrlist.proto.coin)[addrlist.proto.base_coin=='ETH']
-			mt = addrlist.al_id.mmtype
+			proto = addrlist.proto
+			coin = 'BTC' if proto.coin == 'BCH' else proto.coin
+			mmtype = addrlist.al_id.mmtype
 			ret = '{}{}{}[{}]'.format(
 				addrlist.al_id.sid,
-				('-'+bc,'')[bc == 'BTC'],
-				('-'+mt,'')[mt in ('L','E')],
-				s )
+				(f'-{coin}', '')[coin == 'BTC'],
+				(f'-{mmtype}', '')[mmtype in ('L','E')],
+				s)
 
 		addrlist.dmsg_sc('id_str',ret[8:].split('[')[0])
 

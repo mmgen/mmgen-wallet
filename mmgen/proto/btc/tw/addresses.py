@@ -21,13 +21,12 @@ from .rpc import BitcoinTwRPC
 class BitcoinTwAddresses(TwAddresses,BitcoinTwRPC):
 
 	has_age = True
-	prompt_fs = """
-Sort options: [a]mt, [A]ge, [M]mgen addr, [r]everse
-Column options: toggle [D]ays/date/confs/block
-Filters: show [E]mpty addrs, [u]sed addrs, all [L]abels
-View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}
-Actions: [q]uit menu, r[e]draw, add [l]abel:
-"""
+	prompt_fs_in = [
+		'Sort options: [a]mt, [A]ge, [M]mgen addr, [r]everse',
+		'Column options: toggle [D]ays/date/confs/block',
+		'Filters: show [E]mpty addrs, [u]sed addrs, all [L]abels',
+		'View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}',
+		'Actions: [q]uit menu, r[e]draw, add [l]abel:']
 	key_mappings = {
 		'a':'s_amt',
 		'A':'s_age',

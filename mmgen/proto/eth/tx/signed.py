@@ -13,9 +13,9 @@ proto.eth.tx.signed: Ethereum signed transaction class
 """
 
 from ....tx import signed as TxBase
-from ....obj import Str,CoinTxID,ETHNonce,HexStr
-from ....addr import CoinAddr,TokenAddr
-from .completed import Completed,TokenCompleted
+from ....obj import CoinTxID, ETHNonce, HexStr
+from ....addr import CoinAddr, TokenAddr
+from .completed import Completed, TokenCompleted
 
 class Signed(Completed,TxBase.Signed):
 
@@ -32,7 +32,7 @@ class Signed(Completed,TxBase.Signed):
 		o = {
 			'from':     CoinAddr(self.proto,d['sender']),
 			# NB: for token, 'to' is token address
-			'to':       CoinAddr(self.proto,d['to']) if d['to'] else Str(''),
+			'to':       CoinAddr(self.proto,d['to']) if d['to'] else None,
 			'amt':      self.proto.coin_amt(d['value'],'wei'),
 			'gasPrice': self.proto.coin_amt(d['gasprice'],'wei'),
 			'startGas': self.proto.coin_amt(d['startgas'],'wei'),

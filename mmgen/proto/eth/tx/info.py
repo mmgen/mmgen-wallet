@@ -13,10 +13,9 @@ proto.eth.tx.info: Ethereum transaction info class
 """
 
 from ....tx.info import TxInfo
-from ....util import fmt,pp_fmt
-from ....color import pink,yellow,blue
+from ....util import fmt, pp_fmt
+from ....color import pink, yellow, blue
 from ....addr import MMGenID
-from ....obj import Str
 
 class TxInfo(TxInfo):
 	txinfo_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) Sig={s} Locktime={l}\n'
@@ -27,7 +26,7 @@ class TxInfo(TxInfo):
 		Remaining balance: {C} {d}
 		TX fee:            {a} {c}{r}
 	""")
-	fmt_keys = ('from','to','amt','nonce')
+	to_addr_key = 'to'
 
 	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, terse, sort):
 		tx = self.tx
@@ -47,9 +46,13 @@ class TxInfo(TxInfo):
 		""".strip().replace('\t','')
 		t = tx.txobj
 		td = t['data']
+		to_addr = t[self.to_addr_key]
 		return fs.format(
-			*((t[k] if t[k] != '' else Str('None')).hl() for k in self.fmt_keys),
-			d      = '{}... ({} bytes)'.format(td[:40],len(td)//2) if len(td) else Str('None'),
+			f      = t['from'].hl(),
+			t      = to_addr.hl() if to_addr else blue('None'),
+			a      = t['amt'].hl(),
+			n      = t['nonce'].hl(),
+			d      = '{}... ({} bytes)'.format(td[:40],len(td)//2) if len(td) else blue('None'),
 			c      = tx.proto.dcoin if len(tx.outputs) else '',
 			g      = yellow(str(t['gasPrice'].to_unit('Gwei',show_decimal=True))),
 			G      = yellow(str(t['startGas'].to_unit('Kwei'))),
@@ -72,7 +75,7 @@ class TxInfo(TxInfo):
 			return ''
 
 class TokenTxInfo(TxInfo):
-	fmt_keys = ('from','token_to','amt','nonce')
+	to_addr_key = 'token_to'
 
 	def format_rel_fee(self):
 		return ''

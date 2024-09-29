@@ -316,6 +316,7 @@ class unit_tests:
 			if coin not in BipHDConfig.supported_coins:
 				vmsg(gray(fs.format(coin.upper(), (addr_type or ''), '[not supported yet]')))
 				continue
+			vmsg(fs.format(coin.upper(), (addr_type or 'auto'), addr_chk))
 			node = m.to_chain(idx=0,coin=coin,addr_type=addr_type).derive_private(0)
 			xpub_parsed = node.key_extended(public=True)
 			xprv_parsed = node.key_extended(public=False)
@@ -332,7 +333,6 @@ class unit_tests:
 			if proto.base_proto == 'Ethereum':
 				addr = proto.checksummed_addr(node.address)
 				addr_from_wif = proto.checksummed_addr(addr_from_wif)
-			vmsg(fs.format(coin.upper(), (addr_type or 'auto'), addr))
 			assert addr == addr_chk, f'{addr} != {addr_chk}'
 			assert addr == addr_from_wif, f'{addr} != {addr_from_wif}'
 

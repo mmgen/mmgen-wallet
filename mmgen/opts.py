@@ -42,7 +42,7 @@ long_opts_data = {
 --, --accept-defaults      Accept defaults at all prompts
 --, --coin=c               Choose coin unit. Default: BTC. Current choice: {cu_dfl}
 --, --token=t              Specify an ERC20 token by address or symbol
---, --color=0|1            Disable or enable color output (enabled by default)
+--, --color=0|1            Disable or enable color output (default: 1)
 --, --columns=N            Force N columns of output with certain commands
 --, --scroll               Use the curses-like scrolling interface for
                          tracking wallet views

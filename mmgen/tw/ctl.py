@@ -278,9 +278,9 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 		if await self.set_label(res.coinaddr,lbl):
 			if not silent:
-				desc = '{} address {} in tracking wallet'.format(
-					res.twmmid.type.replace('mmgen','MMGen'),
-					res.twmmid.addr.hl() )
+				desc = '{t} address {a} in tracking wallet'.format(
+					t = res.twmmid.type.replace('mmgen','MMGen'),
+					a = res.twmmid.addr.hl())
 				msg(
 					'Added label {} to {}'.format(comment.hl2(encl='‘’'),desc) if comment else
 					'Removed label from {}'.format(desc) )

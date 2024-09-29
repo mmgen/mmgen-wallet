@@ -12,7 +12,7 @@
 proto.bch.params: Bitcoin Cash protocol
 """
 
-from ..btc.params import mainnet,_finfo
+from ..btc.params import mainnet, _finfo
 
 class mainnet(mainnet):
 	is_fork_of      = 'Bitcoin'
