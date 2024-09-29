@@ -31,7 +31,6 @@ class TwMMGenID(HiliteStr,InitErrors,MMGenObject):
 				coin,addr = id_str.split(':',1)
 				assert coin == proto.base_coin.lower(),(
 					f'not a string beginning with the prefix {proto.base_coin.lower()!r}:' )
-				assert addr.isascii() and addr.isalnum(), 'not an ASCII alphanumeric string'
 				ret,sort_key,idtype,disp = (id_str,'z_'+id_str,'non-mmgen','non-MMGen')
 				addr = proto.coin_addr(addr)
 			except Exception as e2:

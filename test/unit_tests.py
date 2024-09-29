@@ -35,7 +35,7 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 
 from mmgen.cfg import Config,gc
 from mmgen.color import gray, brown, orange, yellow, red
-from mmgen.util import msg,gmsg,ymsg,Msg
+from mmgen.util import msg, msg_r, gmsg, ymsg, Msg
 
 from test.include.common import set_globals,end_msg
 

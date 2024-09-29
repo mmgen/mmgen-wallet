@@ -45,7 +45,7 @@ class mainnet(mainnet):
 	def get_addr_len(self,addr_fmt):
 		return (20,64)[addr_fmt in ('zcash_z','viewkey')]
 
-	def decode_addr_bytes(self,addr_bytes):
+	def decode_addr_bytes(self, addr_bytes):
 		"""
 		vlen must be set dynamically since Zcash has variable-length version bytes
 		"""
@@ -53,7 +53,7 @@ class mainnet(mainnet):
 			vlen = len(ver_bytes)
 			if addr_bytes[:vlen] == ver_bytes:
 				if len(addr_bytes[vlen:]) == self.get_addr_len(addr_fmt):
-					return decoded_addr( addr_bytes[vlen:], ver_bytes, addr_fmt )
+					return decoded_addr(addr_bytes[vlen:], ver_bytes, addr_fmt)
 
 		return False
 

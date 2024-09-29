@@ -54,9 +54,9 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 	def dcoin(self):
 		return self.tokensym or self.coin
 
-	def decode_addr(self,addr):
+	def decode_addr(self, addr):
 		if is_hex_str_lc(addr) and len(addr) == self.addr_len * 2:
-			return decoded_addr( bytes.fromhex(addr), None, 'ethereum' )
+			return decoded_addr(bytes.fromhex(addr), None, 'ethereum')
 		if self.cfg.debug:
 			Msg(f'Invalid address: {addr}')
 		return False

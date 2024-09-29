@@ -26,7 +26,7 @@ from .cfg import gc
 from .objmethods import MMGenObject
 
 decoded_wif = namedtuple('decoded_wif',['sec','pubkey_type','compressed'])
-decoded_addr = namedtuple('decoded_addr',['bytes','ver_bytes','fmt'])
+decoded_addr = namedtuple('decoded_addr', ['bytes', 'ver_bytes', 'fmt'])
 parsed_addr = namedtuple('parsed_addr',['ver_bytes','data'])
 
 _finfo = namedtuple('fork_info',['height','hash','name','replayable'])
@@ -149,12 +149,12 @@ class CoinProtocol(MMGenObject):
 		def get_addr_len(self,addr_fmt):
 			return self.addr_len
 
-		def decode_addr_bytes(self,addr_bytes):
+		def decode_addr_bytes(self, addr_bytes):
 			vlen = self.addr_ver_bytes_len
 			return decoded_addr(
 				addr_bytes[vlen:],
 				addr_bytes[:vlen],
-				self.addr_ver_bytes[addr_bytes[:vlen]] )
+				self.addr_ver_bytes[addr_bytes[:vlen]])
 
 		def coin_addr(self,addr):
 			from .addr import CoinAddr

@@ -48,8 +48,7 @@ class TxInfo(TxInfo):
 			out += f', Base {tsize-wsize}, Witness {wsize}'
 		return out + '\n'
 
-	def format_body(self,blockcount,nonmm_str,max_mmwid,enl,terse,sort):
-		tx = self.tx
+	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, terse, sort):
 
 		if sort not in self.sort_orders:
 			die(1,'{!r}: invalid transaction view sort order. Valid options: {}'.format(
@@ -61,12 +60,14 @@ class TxInfo(TxInfo):
 			is_input = desc == 'inputs'
 			yield desc.capitalize() + ':\n' + enl
 			confs_per_day = 60*60*24 // tx.proto.avg_bdi
+
 			io_sorted = {
 				'addr': lambda: sorted(
 					io, # prepend '+' (sorts before '0') to ensure non-MMGen addrs are displayed first
 					key = lambda o: (o.mmid.sort_key if o.mmid else f'+{o.addr}') + f'{o.amt:040.20f}' ),
 				'raw':  lambda: io
 			}[sort]
+
 			if terse:
 				iwidth = max(len(str(int(e.amt))) for e in io)
 			else:
@@ -107,6 +108,7 @@ class TxInfo(TxInfo):
 							yield ('',  'change:',  green('True'))
 					yield '\n'.join('{:>{w}} {:<8} {}'.format(*d,w=col1_w) for d in gen()) + '\n\n'
 
+		tx = self.tx
 		addr_w = max(len(e.addr) for f in (tx.inputs,tx.outputs) for e in f)
 
 		return (

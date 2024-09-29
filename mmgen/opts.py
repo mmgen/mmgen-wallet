@@ -93,11 +93,11 @@ class UserOpts:
 	def __init__(
 			self,
 			cfg,
-			opts_data   = None,
-			init_opts   = None, # dict containing opts to pre-initialize
-			opt_filter  = None, # whitelist of opt letters; all others are skipped
-			parse_only  = False,
-			parsed_opts = None ):
+			opts_data,
+			init_opts,    # dict containing opts to pre-initialize
+			opt_filter,   # whitelist of opt letters; all others are skipped
+			parse_only,
+			parsed_opts):
 
 		self.opts_data = od = opts_data or opts_data_dfl
 		self.opt_filter = opt_filter

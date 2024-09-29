@@ -25,6 +25,7 @@ from collections import namedtuple
 from .objmethods import HiliteStr,InitErrors,MMGenObject
 from .obj import ImmutableAttr,MMGenIdx,get_obj
 from .seed import SeedID
+from . import color as color_mod
 
 ati = namedtuple('addrtype_info',
 	['name','pubkey_type','compressed','gen_method','addr_fmt','wif_label','extra_attrs','desc'])
@@ -144,19 +145,19 @@ class MMGenID(HiliteStr,InitErrors,MMGenObject):
 def is_mmgen_id(proto,s):
 	return get_obj( MMGenID, proto=proto, id_str=s, silent=True, return_bool=True )
 
-class CoinAddr(HiliteStr,InitErrors,MMGenObject):
+class CoinAddr(HiliteStr, InitErrors, MMGenObject):
 	color = 'cyan'
 	hex_width = 40
 	width = 1
 	trunc_ok = False
+
 	def __new__(cls,proto,addr):
 		if isinstance(addr,cls):
 			return addr
 		try:
-			assert addr.isascii() and addr.isalnum(), 'not an ASCII alphanumeric string'
-			me = str.__new__(cls,addr)
 			ap = proto.decode_addr(addr)
 			assert ap, f'coin address {addr!r} could not be parsed'
+			me = str.__new__(cls, addr)
 			me.addr_fmt = ap.fmt
 			me.bytes = ap.bytes
 			me.ver_bytes = ap.ver_bytes
@@ -171,15 +172,14 @@ class CoinAddr(HiliteStr,InitErrors,MMGenObject):
 			self._parsed = self.proto.parse_addr(self.ver_bytes,self.bytes,self.addr_fmt)
 		return self._parsed
 
+	# reimplement some HiliteStr methods:
 	@classmethod
 	def fmtc(cls,s,width,color=False):
 		return super().fmtc( s=s[:width-2]+'..' if len(s) > width else s, width=width, color=color )
 
-	def fmt(self,width,color=False):
-		return (
-			super().fmtc( s=self[:width-2]+'..', width=width, color=color ) if len(self) > width else
-			super().fmt( width=width, color=color )
-		)
+	def fmt(self, width, color=False):
+		s = self
+		return super().fmtc(f'{s[:width-2]}..' if len(s) > width else s, width=width, color=color)
 
 def is_coin_addr(proto,s):
 	return get_obj( CoinAddr, proto=proto, addr=s, silent=True, return_bool=True )

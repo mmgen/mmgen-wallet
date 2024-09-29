@@ -418,7 +418,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 				yield from getattr(self,dt.subhdr_fmt_method)(cw,color)
 
-				yield ''
+				yield ' ' * self.term_width
 
 				if data and dt.colhdr_fmt_method:
 					col_hdr = getattr(self,dt.colhdr_fmt_method)(cw,hdr_fs,color)
@@ -580,7 +580,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 				msg('')
 				if self.scroll:
 					self.term.set('echo')
-				return self.disp_data
+				return
 			else:
 				if not scroll:
 					msg_r('\ninvalid keypress ')

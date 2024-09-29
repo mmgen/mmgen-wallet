@@ -21,10 +21,11 @@ from ..util2 import format_elapsed_hr
 
 class TxInfo:
 
-	def __init__(self,tx):
+	def __init__(self, cfg, tx):
+		self.cfg = cfg
 		self.tx = tx
 
-	def format(self,terse=False,sort='addr'):
+	def format(self, terse=False, sort='addr'):
 
 		tx = self.tx
 
@@ -61,9 +62,6 @@ class TxInfo:
 					_ = decode_timestamp(val)
 					yield f'{label:8} {make_timestr(_)} ({format_elapsed_hr(_)})\n'
 
-			if not terse:
-				yield '\n'
-
 			if tx.chain != 'mainnet': # if mainnet has a coin-specific name, display it
 				yield green(f'Chain: {tx.chain.upper()}') + '\n'
 
@@ -76,7 +74,13 @@ class TxInfo:
 			if tx.comment:
 				yield f'Comment: {tx.comment.hl()}\n{enl}'
 
-			yield self.format_body(blockcount,nonmm_str,max_mmwid,enl,terse=terse,sort=sort)
+			yield self.format_body(
+				blockcount,
+				nonmm_str,
+				max_mmwid,
+				enl,
+				terse = terse,
+				sort  = sort)
 
 			iwidth = len(str(int(tx.sum_inputs())))
 
@@ -123,7 +127,7 @@ class TxInfo:
 				get_char('Press any key to continue: ')
 				msg('')
 
-def init_info(tx):
+def init_info(cfg, tx):
 	return getattr(
 		importlib.import_module(f'mmgen.proto.{tx.proto.base_proto_coin.lower()}.tx.info'),
-		('Token' if tx.proto.tokensym else '') + 'TxInfo' )(tx)
+		('Token' if tx.proto.tokensym else '') + 'TxInfo' )(cfg, tx)

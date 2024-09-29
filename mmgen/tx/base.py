@@ -126,7 +126,7 @@ class Base(MMGenObject):
 	@property
 	def info(self):
 		from .info import init_info
-		return init_info(self)
+		return init_info(self.cfg, self)
 
 	def check_correct_chain(self):
 		if hasattr(self,'rpc'):

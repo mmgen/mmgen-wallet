@@ -75,7 +75,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 			pubkey_type = self.wif_ver_bytes_to_pubkey_type[key_data[:vlen]],
 			compressed  = len(key) == self.privkey_len + 1 )
 
-	def decode_addr(self,addr):
+	def decode_addr(self, addr):
 
 		if 'B' in self.mmtypes and addr[:len(self.bech32_hrp)] == self.bech32_hrp:
 			from ...contrib import bech32
@@ -86,12 +86,12 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 				msg(f'{ret[0]}: Invalid witness version number')
 				return False
 
-			return decoded_addr( bytes(ret[1]), None, 'bech32' ) if ret[1] else False
+			return decoded_addr(bytes(ret[1]), None, 'bech32') if ret[1] else False
 
 		return self.decode_addr_bytes(b58chk_decode(addr))
 
 	def pubhash2addr(self,pubhash,p2sh):
-		assert len(pubhash) == 20, f'{len(pubhash)}: invalid length for pubkey hash'
+		assert len(pubhash) == self.addr_len, f'{len(pubhash)}: invalid length for pubkey hash'
 		return b58chk_encode(
 			self.addr_fmt_to_ver_bytes[('p2pkh','p2sh')[p2sh]] + pubhash
 		)

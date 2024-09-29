@@ -29,7 +29,7 @@ class TxInfo(TxInfo):
 	""")
 	fmt_keys = ('from','to','amt','nonce')
 
-	def format_body(self,blockcount,nonmm_str,max_mmwid,enl,terse,sort):
+	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, terse, sort):
 		tx = self.tx
 		m = {}
 		for k in ('inputs','outputs'):
