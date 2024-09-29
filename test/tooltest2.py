@@ -184,8 +184,8 @@ def run_test(cls, gid, cmd_name):
 	# behavior is like cmdtest.py: run coin-dependent tests only if proto.testnet or proto.coin != BTC
 	if gid in coin_dependent_groups:
 		k = '{}_{}'.format(
-			( cfg.token.lower() if proto.tokensym else proto.coin.lower() ),
-			('mainnet','testnet')[proto.testnet] )
+			(cfg.token.lower() if proto.tokensym else proto.coin.lower()),
+			proto.network)
 		if k in data:
 			data = data[k]
 			m2 = f' ({k})'

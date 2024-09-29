@@ -297,7 +297,7 @@ class CmdTestRef(CmdTestBase,CmdTestShared):
 		return self.ref_passwdfile_chk(key='hex2bip39_12',pat=r'BIP39.*len.* 12\b')
 
 	def ref_tx_chk(self):
-		fn = self.sources['ref_tx_file'][self.proto.coin.lower()][bool(self.tn_ext)]
+		fn = self.sources['ref_tx_file'][self.coin][bool(self.tn_ext)]
 		if not fn:
 			return
 		tf = joinpath(ref_dir,self.ref_subdir,fn)

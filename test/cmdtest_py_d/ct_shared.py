@@ -22,8 +22,10 @@ test.cmdtest_py_d.ct_shared: Shared methods for the cmdtest.py test suite
 
 from mmgen.util import get_extension
 from mmgen.wallet import get_wallet_cls
+from mmgen.addrlist import AddrList
+from mmgen.passwdlist import PasswordList
 
-from ..include.common import cfg,cmp_or_die,strip_ansi_escapes,joinpath
+from ..include.common import cfg, cmp_or_die, strip_ansi_escapes, joinpath, silence, end_silence
 from .common import ref_bw_file,ref_bw_hash_preset,ref_dir
 
 class CmdTestShared:
@@ -238,9 +240,9 @@ class CmdTestShared:
 		if wcls.enc and wcls.type != 'brain':
 			t.passphrase(wcls.desc,self.wpasswd)
 			t.expect(['Passphrase is OK', 'Passphrase.* are correct'],regex=True)
-		chk = t.expect_getend(f'Valid {wcls.desc} for Seed ID ')[:8]
+		chksum = t.expect_getend(f'Valid {wcls.desc} for Seed ID ')[:8]
 		if sid:
-			cmp_or_die(chk, sid)
+			cmp_or_die(chksum, sid)
 		return t
 
 	def addrgen(
@@ -249,53 +251,61 @@ class CmdTestShared:
 			check_ref  = False,
 			ftype      = 'addr',
 			id_str     = None,
-			extra_args = [],
+			extra_opts = [],
 			mmtype     = None,
 			stdout     = False,
 			dfl_wallet = False):
-		passgen = ftype[:4] == 'pass'
+		list_type = ftype[:4]
+		passgen = list_type == 'pass'
 		if not mmtype and not passgen:
 			mmtype = self.segwit_mmtype
-		cmd_pfx = (ftype,'pass')[passgen]
 		t = self.spawn(
-				f'mmgen-{cmd_pfx}gen',
-				['-d',self.tmpdir] + extra_args +
+				f'mmgen-{list_type}gen',
+				['-d',self.tmpdir] + extra_opts +
 				([],['--type='+str(mmtype)])[bool(mmtype)] +
 				([],['--stdout'])[stdout] +
 				([],[wf])[bool(wf)] +
 				([],[id_str])[bool(id_str)] +
-				[getattr(self,f'{cmd_pfx}_idx_list')],
+				[getattr(self,f'{list_type}_idx_list')],
 				extra_desc=f'({mmtype})' if mmtype in ('segwit','bech32') else '')
 		t.license()
 		wcls = get_wallet_cls( ext = 'mmdat' if dfl_wallet else get_extension(wf) )
 		t.passphrase(wcls.desc,self.wpasswd)
 		t.expect('Passphrase is OK')
 		desc = ('address','password')[passgen]
-		chk = t.expect_getend(rf'Checksum for {desc} data .*?: ',regex=True)
-		if passgen:
-			t.expect('Encrypt password list? (y/N): ','N')
-		t.read() if stdout else t.written_to_file(('Addresses','Password list')[passgen])
+		chksum = strip_ansi_escapes(t.expect_getend(rf'Checksum for {desc} data .*?: ', regex=True))
 		if check_ref:
-			chk_ref = (
+			chksum_chk = (
 				self.chk_data[self.test_name] if passgen else
 				self.chk_data[self.test_name][self.fork][self.proto.testnet])
-			cmp_or_die(chk,chk_ref,desc=f'{ftype}list data checksum')
+			cmp_or_die(chksum, chksum_chk, desc=f'{ftype}list data checksum')
+		if passgen:
+			t.expect('Encrypt password list? (y/N): ','N')
+		if stdout:
+			t.read()
+		else:
+			fn = t.written_to_file('Password list' if passgen else 'Addresses')
+			cls = PasswordList if passgen else AddrList
+			silence()
+			al = cls(cfg, self.proto, fn, skip_chksum_msg=True) # read back the file we’ve written
+			end_silence()
+			cmp_or_die(al.chksum, chksum, desc=f'{ftype}list data checksum from file')
 		return t
 
-	def keyaddrgen(self,wf,check_ref=False,mmtype=None):
+	def keyaddrgen(self, wf, check_ref=False, extra_opts=[], mmtype=None):
 		if not mmtype:
 			mmtype = self.segwit_mmtype
 		args = ['-d', self.tmpdir, self.usr_rand_arg, wf, self.addr_idx_list]
 		t = self.spawn('mmgen-keygen',
-				([],['--type='+str(mmtype)])[bool(mmtype)] + args,
-				extra_desc=f'({mmtype})' if mmtype in ('segwit','bech32') else '')
+				([f'--type={mmtype}'] if mmtype else []) + extra_opts + args,
+				extra_desc = f'({mmtype})' if mmtype in ('segwit', 'bech32') else '')
 		t.license()
 		wcls = get_wallet_cls(ext=get_extension(wf))
 		t.passphrase(wcls.desc,self.wpasswd)
-		chk = t.expect_getend(r'Checksum for key-address data .*?: ',regex=True)
+		chksum = t.expect_getend(r'Checksum for key-address data .*?: ',regex=True)
 		if check_ref:
-			chk_ref = self.chk_data[self.test_name][self.fork][self.proto.testnet]
-			cmp_or_die(chk,chk_ref,desc='key-address list data checksum')
+			chksum_chk = self.chk_data[self.test_name][self.fork][self.proto.testnet]
+			cmp_or_die(chksum, chksum_chk, desc='key-address list data checksum')
 		t.expect('Encrypt key list? (y/N): ','y')
 		t.usr_rand(self.usr_rand_chars)
 		t.hash_preset('new key-address list','1')

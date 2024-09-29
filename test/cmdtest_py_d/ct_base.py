@@ -52,10 +52,11 @@ class CmdTestBase:
 		self.have_dfl_wallet = False
 		self.usr_rand_chars = (5,30)[bool(cfg.usr_random)]
 		self.usr_rand_arg = f'-r{self.usr_rand_chars}'
-		self.altcoin_pfx = '' if self.proto.base_coin == 'BTC' else '-'+self.proto.base_coin
 		self.tn_ext = ('','.testnet')[self.proto.testnet]
-		d = {'bch':'btc','btc':'btc','ltc':'ltc'}
-		self.fork = d[self.proto.coin.lower()] if self.proto.coin.lower() in d else None
+		self.coin = self.proto.coin.lower()
+		self.bch_legacy = self.coin == 'bch'
+		self.fork = 'btc' if self.bch_legacy else self.coin
+		self.altcoin_pfx = '' if self.fork == 'btc' else f'-{self.proto.coin}'
 		if len(self.tmpdir_nums) == 1:
 			self.tmpdir_num = self.tmpdir_nums[0]
 		if self.tr:

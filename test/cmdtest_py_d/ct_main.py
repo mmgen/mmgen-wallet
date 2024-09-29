@@ -307,11 +307,11 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 
 	def __init__(self,trunner,cfgs,spawn):
 		CmdTestBase.__init__(self,trunner,cfgs,spawn)
-		if trunner is None or self.proto.coin.lower() not in self.networks:
+		if trunner is None or self.coin not in self.networks:
 			return
-		if self.proto.coin in ('BTC','BCH','LTC'):
-			self.tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[self.proto.coin.lower()]
-			self.txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[self.proto.coin.lower()]
+		if self.coin in ('btc','bch','ltc'):
+			self.tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[self.coin]
+			self.txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[self.coin]
 
 		self.unspent_data_file = joinpath('test','trash','unspent.json')
 		self.spawn_env['MMGEN_BOGUS_UNSPENT_DATA'] = self.unspent_data_file
@@ -342,8 +342,8 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 	def export_seed_dfl_wallet(self,pf,out_fmt='seed'):
 		return self.export_seed(wf=None,out_fmt=out_fmt,pf=pf)
 
-	def addrgen_dfl_wallet(self,pf=None,check_ref=False):
-		return self.addrgen(wf=None,check_ref=check_ref,dfl_wallet=True)
+	def addrgen_dfl_wallet(self, pf):
+		return self.addrgen(wf=None, dfl_wallet=True)
 
 	def txcreate_dfl_wallet(self,addrfile):
 		return self.txcreate_common(sources=['15'])
@@ -475,7 +475,7 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		s_beg,s_end = { 'p2pkh':  ('76a914','88ac'),
 						'p2sh':   ('a914','87'),
 						'bech32': (self.proto.witness_vernum_hex + '14','') }[k]
-		amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[self.proto.coin.lower()]
+		amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[self.coin]
 		ret = {
 			self.lbl_id: (
 				f'{self.proto.base_coin.lower()}:{coinaddr}' if non_mmgen
@@ -558,7 +558,7 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		)
 
 		# total of two outputs must be < 10 BTC (<1000 LTC)
-		mods = {'btc':(6,4),'bch':(6,4),'ltc':(600,400)}[self.proto.coin.lower()]
+		mods = {'btc':(6,4),'bch':(6,4),'ltc':(600,400)}[self.coin]
 		for k in self.cfgs:
 			self.cfgs[k]['amts'] = [None,None]
 			for idx,mod in enumerate(mods):

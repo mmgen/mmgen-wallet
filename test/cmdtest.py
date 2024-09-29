@@ -685,12 +685,11 @@ class CmdTestRunner:
 		nws = [(e.split('_')[0],'testnet') if '_' in e else (e,'mainnet') for e in ct_cls.networks]
 		if nws:
 			coin = proto.coin.lower()
-			nw = ('mainnet','testnet')[proto.testnet]
 			for a,b in nws:
-				if a == coin and b == nw:
+				if a == coin and b == proto.network:
 					break
 			else:
-				iqmsg(gray(f'INFO → skipping {m} (network={nw})'))
+				iqmsg(gray(f'INFO → skipping {m} for {proto.coin} {proto.network}'))
 				return None
 
 		if do_clean and not cfg.skipping_deps:

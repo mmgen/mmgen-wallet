@@ -471,18 +471,19 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		if self.proto.testnet:
 			die(2,'--testnet and --regtest options incompatible with regtest test suite')
 
-		self.proto = init_proto( cfg, self.proto.coin, network='regtest', need_amt=True )
-		coin = self.proto.coin.lower()
+		coin = self.coin
+
+		self.proto = init_proto(cfg, coin, network='regtest', need_amt=True)
 
 		gldict = globals()
 		for k in rt_data:
 			gldict[k] = rt_data[k][coin] if coin in rt_data[k] else None
 
-		self.use_bdb_wallet = self.bdb_wallet or self.proto.coin != 'BTC'
+		self.use_bdb_wallet = self.bdb_wallet or coin != 'btc'
 
-		self.rt = MMGenRegtest(cfg, self.proto.coin, bdb_wallet=self.use_bdb_wallet)
+		self.rt = MMGenRegtest(cfg, coin, bdb_wallet=self.use_bdb_wallet)
 
-		if self.proto.coin == 'BTC':
+		if coin == 'btc':
 			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC
 			if cfg.test_suite_deterministic:
 				self.deterministic = True
@@ -490,7 +491,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
 		self.write_to_tmpfile('wallet_password',rt_pw)
 
-		self.dfl_mmtype = 'C' if self.proto.coin == 'BCH' else 'B'
+		self.dfl_mmtype = 'C' if coin == 'bch' else 'B'
 		self.burn_addr = make_burn_addr(self.proto)
 		self.user_sids = {}
 
@@ -553,8 +554,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def walletgen_alice(self):
 		return self.walletgen('alice')
 
-	def _user_dir(self,user,coin=None):
-		return joinpath(self.tr.data_dir,'regtest',coin or self.proto.coin.lower(),user)
+	def _user_dir(self, user, coin=None):
+		return joinpath(self.tr.data_dir, 'regtest', coin or self.coin, user)
 
 	def _user_sid(self,user):
 		if user in self.user_sids:
@@ -723,33 +724,34 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			user,
 			chk      = None,
 			expect   = None,
-			cmdline  = ['twview'],
+			cmd      = 'twview',
+			opts     = [],
 			sort     = 'age',
 			exit_val = None):
-		t = self.spawn('mmgen-tool',[f'--{user}'] + cmdline + ['sort='+sort], exit_val=exit_val)
+		t = self.spawn('mmgen-tool', [f'--{user}'] + opts + [cmd] + [f'sort={sort}'], exit_val=exit_val)
 		if chk:
 			t.expect(r'{}\b.*\D{}\b'.format(*chk),regex=True)
 		if expect:
-			t.expect(expect)
+			t.expect(expect, regex=True)
 		return t
 
 	def bob_twview_noaddrs(self):
 		return self.user_twview('bob', expect='No spendable', exit_val=1)
 
 	def bob_listaddrs_noaddrs(self):
-		return self.user_twview('bob', cmdline=['listaddresses'], expect='No addresses', exit_val=1)
+		return self.user_twview('bob', cmd='listaddresses', expect='No addresses', exit_val=1)
 
 	def bob_twview_nobal(self):
 		return self.user_twview('bob', expect='No spendable', exit_val=1)
 
 	def bob_listaddrs_nobal(self):
-		return self.user_twview('bob', cmdline=['listaddresses'], expect='TOTAL:')
+		return self.user_twview('bob', cmd='listaddresses', expect='TOTAL:')
 
 	def bob_twview1(self):
 		return self.user_twview('bob', chk=('1', rtAmts[0]))
 
-	def user_bal(self,user,bal,args=['showempty=1'],skip_check=False):
-		t = self.spawn('mmgen-tool',['--'+user,'listaddresses'] + args)
+	def user_bal(self, user, bal, opts=[], args=['showempty=1'], skip_check=False):
+		t = self.spawn('mmgen-tool', opts + [f'--{user}', 'listaddresses'] + args)
 		if not skip_check:
 			cmp_or_die(f'{bal} {self.proto.coin}',strip_ansi_escapes(t.expect_getend('TOTAL: ')))
 		return t
@@ -860,10 +862,13 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		sid = self._user_sid('bob')
 		return self.user_twview('bob',chk=(sid+':L:5',rtBals[9]),sort='twmmid')
 
-	def user_txhist(self,user,args,expect):
-		t = self.spawn('mmgen-tool',['--'+user,'txhist'] + args)
-		m = re.search( expect, t.read(strip_color=True), re.DOTALL )
-		assert m, f'Expected: {expect}'
+	def user_txhist(self, user, args, expect, opts=[], expect2=None):
+		t = self.spawn('mmgen-tool', opts + [f'--{user}', 'txhist'] + args)
+		text = t.read(strip_color=True)
+		for s in (expect, expect2):
+			if s:
+				m = re.search(s, text, re.DOTALL)
+				assert m, f'Expected: {s}'
 		return t
 
 	def bob_txhist1(self):
@@ -1483,6 +1488,8 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 
 	async def carol_delete_wallet(self):
 		imsg('Unloading Carol’s tracking wallet')
+		if self.proto.coin == 'BCH':
+			time.sleep(0.2)
 		t = self.spawn('mmgen-regtest',['cli','unloadwallet','carol'])
 		t.ok()
 		wdir = joinpath((await self.rt.rpc).daemon.network_datadir, 'wallets', 'carol')
@@ -1642,26 +1649,28 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 				'interactive=1',
 			]
 		)
-		t.expect('abel:\b','p')
-		ret = t.expect([ 'abel:\b', 'to confirm: ' ])
+		prompt = 'abel:\b'
+		t.expect(prompt, 'p')
+		ret = t.expect([prompt, 'to confirm: '])
 		if ret == 1:
 			t.send('YES\n')
-			t.expect('abel:\b')
+			t.expect(prompt)
 		t.send('l')
 		t.expect(
 			'main menu): ',
 			'{}\n'.format(2 if self.proto.coin == 'BCH' else 1) )
 		t.expect('for address.*: ','\n',regex=True)
 		t.expect('unchanged')
-		t.expect('abel:\b','q')
+		t.expect(prompt, 'q')
 		return t
 
 	def _alice_listaddresses_interactive(self,expect=(),expect_menu=()):
 		t = self.spawn('mmgen-tool',['--alice','listaddresses','interactive=1'])
+		prompt = 'abel:\b'
+		for e in expect:
+			t.expect(*e, regex=True)
 		for s in expect_menu:
-			t.expect('abel:\b',s)
-		for p,s in expect:
-			t.expect(p,s)
+			t.expect(prompt, s)
 		return t
 
 	def alice_listaddresses_empty(self):
