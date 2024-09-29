@@ -145,7 +145,7 @@ class BitcoinTwTransaction:
 	def txid_disp(self,color,width=None):
 		return self.txid.hl(color=color) if width is None else self.txid.truncate(width=width,color=color)
 
-	def vouts_list_disp(self,src,color,indent=''):
+	def vouts_list_disp(self, src, color, indent, addr_view_pref):
 
 		fs1,fs2 = {
 			'inputs':  ('{i},{n} {a} {A}', '{i},{n} {a} {A} {l}'),
@@ -160,7 +160,7 @@ class BitcoinTwTransaction:
 						i = CoinTxID(e.txid).hl(color=color),
 						n = (nocolor,red)[color](str(e.data['n']).ljust(3)),
 						a = CoinAddr(self.proto, e.coin_addr).fmt(
-							width=self.max_addrlen[src], color=color),
+							addr_view_pref, width=self.max_addrlen[src], color=color),
 						A = self.proto.coin_amt( e.data['value'] ).fmt(color=color)
 					).rstrip()
 				else:
@@ -180,7 +180,7 @@ class BitcoinTwTransaction:
 
 		return f'\n{indent}'.join( gen_output() ).strip()
 
-	def vouts_disp(self,src,width,color):
+	def vouts_disp(self, src, width, color, addr_view_pref):
 
 		def gen_output():
 
@@ -192,7 +192,7 @@ class BitcoinTwTransaction:
 				if not mmid:
 					if width and space_left < addr_w:
 						break
-					yield CoinAddr(self.proto, e.coin_addr).fmt(width=addr_w, color=color)
+					yield CoinAddr(self.proto, e.coin_addr).fmt(addr_view_pref, width=addr_w, color=color)
 					space_left -= addr_w
 				elif mmid.type == 'mmgen':
 					mmid_disp = mmid + bal_star

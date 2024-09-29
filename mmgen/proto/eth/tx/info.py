@@ -48,8 +48,8 @@ class TxInfo(TxInfo):
 		td = t['data']
 		to_addr = t[self.to_addr_key]
 		return fs.format(
-			f      = t['from'].hl(),
-			t      = to_addr.hl() if to_addr else blue('None'),
+			f      = t['from'].hl(0),
+			t      = to_addr.hl(0) if to_addr else blue('None'),
 			a      = t['amt'].hl(),
 			n      = t['nonce'].hl(),
 			d      = '{}... ({} bytes)'.format(td[:40],len(td)//2) if len(td) else blue('None'),
@@ -82,6 +82,6 @@ class TokenTxInfo(TxInfo):
 
 	def format_body(self,*args,**kwargs):
 		return 'Token:     {d} {c}\n{r}'.format(
-			d = self.tx.txobj['token_addr'].hl(),
+			d = self.tx.txobj['token_addr'].hl(0),
 			c = blue('(' + self.tx.proto.dcoin + ')'),
 			r = super().format_body(*args,**kwargs ))

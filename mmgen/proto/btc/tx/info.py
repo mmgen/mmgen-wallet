@@ -81,11 +81,11 @@ class TxInfo(TxInfo):
 
 			if terse:
 				iwidth = max(len(str(int(e.amt))) for e in io)
-				addr_w = max(len(e.addr) for f in (tx.inputs,tx.outputs) for e in f)
+				addr_w = max(len(e.addr.views[vp1]) for f in (tx.inputs,tx.outputs) for e in f)
 				for n,e in enumerate(io_sorted()):
 					yield '{:3} {} {} {} {}\n'.format(
 						n+1,
-						e.addr.fmt(width=addr_w, color=True),
+						e.addr.fmt(vp1, width=addr_w, color=True),
 						get_mmid_fmt(e, is_input),
 						e.amt.fmt(iwidth=iwidth,color=True),
 						tx.dcoin )
@@ -99,9 +99,9 @@ class TxInfo(TxInfo):
 					def gen():
 						if is_input:
 							yield (n+1, 'tx,vout:', f'{e.txid.hl()},{red(str(e.vout))}')
-							yield ('',  'address:', f'{e.addr.hl()} {mmid_fmt}')
+							yield ('',  'address:', f'{e.addr.hl(vp1)} {mmid_fmt}')
 						else:
-							yield (n+1, 'address:', f'{e.addr.hl()} {mmid_fmt}')
+							yield (n+1, 'address:', f'{e.addr.hl(vp1)} {mmid_fmt}')
 						if e.comment:
 							yield ('',  'comment:', e.comment.hl())
 						yield     ('',  'amount:',  f'{e.amt.hl()} {tx.dcoin}')
@@ -112,6 +112,7 @@ class TxInfo(TxInfo):
 					yield '\n'.join('{:>{w}} {:<8} {}'.format(*d,w=col1_w) for d in gen()) + '\n\n'
 
 		tx = self.tx
+		vp1 = 0
 
 		return (
 			'Displaying inputs and outputs in {} sort order'.format({'raw':'raw','addr':'address'}[sort])

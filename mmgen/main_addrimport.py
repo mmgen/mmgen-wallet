@@ -147,7 +147,7 @@ async def main():
 		mode       = 'i' )
 
 	if cfg.token or cfg.token_addr:
-		msg(f'Importing for token {twctl.token.hl()} ({twctl.token.hlc(proto.tokensym)})')
+		msg(f'Importing for token {twctl.token.hl(0)} ({twctl.token.hlc(proto.tokensym)})')
 
 	for k,v in addrimport_msgs.items():
 		addrimport_msgs[k] = fmt(v,indent='  ',strip_char='\t').rstrip()

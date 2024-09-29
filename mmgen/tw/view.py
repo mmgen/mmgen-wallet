@@ -96,6 +96,7 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 	term_width = 0
 	scrollable_height = 0
 	min_scrollable_height = 5
+	addr_view_pref = 0
 	pos = 0
 	filters = ()
 
@@ -827,3 +828,6 @@ class TwView(MMGenObject,metaclass=AsyncInit):
 
 		def d_redraw(self,parent):
 			msg_r(CUR_HOME + ERASE_ALL)
+
+		def d_addr_view_pref(self,parent):
+			parent.addr_view_pref = (parent.addr_view_pref + 1) % len(parent.bch_addr_fmts)

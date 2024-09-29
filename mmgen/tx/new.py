@@ -297,7 +297,7 @@ class New(Base):
 					self.cfg,
 					'{a} {b} {c}\n{d}'.format(
 						a = yellow('Requested change address'),
-						b = (chg.mmid or chg.addr).hl(),
+						b = chg.mmid.hl() if chg.mmid else chg.addr.hl(chg.addr.view_pref),
 						c = yellow('is already used!'),
 						d = yellow('Address reuse harms your privacy and security. Continue anyway? (y/N): ')
 					),

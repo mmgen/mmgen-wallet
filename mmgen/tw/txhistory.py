@@ -62,8 +62,10 @@ class TwTxHistory(TwView):
 		# var cols: inputs outputs comment [txid]
 		if not hasattr(self,'varcol_maxwidths'):
 			self.varcol_maxwidths = {
-				'inputs': max(len(d.vouts_disp('inputs',width=None,color=False)) for d in data),
-				'outputs': max(len(d.vouts_disp('outputs',width=None,color=False)) for d in data),
+				'inputs': max(len(d.vouts_disp(
+					'inputs', width=None, color=False, addr_view_pref=self.addr_view_pref)) for d in data),
+				'outputs': max(len(d.vouts_disp(
+					'outputs', width=None, color=False, addr_view_pref=self.addr_view_pref)) for d in data),
 				'comment': max(len(d.comment) for d in data),
 			}
 
@@ -123,9 +125,9 @@ class TwTxHistory(TwView):
 				n = str(n) + ')',
 				t = d.txid_disp( width=cw.txid, color=color ) if hasattr(cw,'txid') else None,
 				d = d.age_disp( self.age_fmt, width=self.age_w, color=color ),
-				i = d.vouts_disp( 'inputs', width=cw.inputs, color=color ),
+				i = d.vouts_disp('inputs', width=cw.inputs, color=color, addr_view_pref=self.addr_view_pref),
 				A = d.amt_disp(self.show_total_amt).fmt( iwidth=cw.iwidth, prec=self.disp_prec, color=color ),
-				o = d.vouts_disp( 'outputs', width=cw.outputs, color=color ),
+				o = d.vouts_disp('outputs', width=cw.outputs, color=color, addr_view_pref=self.addr_view_pref),
 				c = d.comment.fmt2( width=cw.comment, color=color, nullrepl='-' ) )
 
 	def gen_detail_display(self,data,cw,fs,color,fmt_method):
@@ -153,9 +155,9 @@ class TwTxHistory(TwView):
 				A = d.amt_disp(show_total_amt=True).hl( color=color ),
 				B = d.amt_disp(show_total_amt=False).hl( color=color ),
 				f = d.fee_disp( color=color ),
-				i = d.vouts_list_disp( 'inputs', color=color, indent=' '*8 ),
+				i = d.vouts_list_disp('inputs', color=color, indent=' '*8, addr_view_pref=self.addr_view_pref),
 				N = d.nOutputs,
-				o = d.vouts_list_disp( 'outputs', color=color, indent=' '*8 ),
+				o = d.vouts_list_disp('outputs', color=color, indent=' '*8, addr_view_pref=self.addr_view_pref),
 			)
 
 	sort_disp = {

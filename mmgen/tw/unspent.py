@@ -187,7 +187,7 @@ class TwUnspentOutputs(TwView):
 					else d.txid.truncate( width=cw.txid, color=color )) if cw.txid else None,
 				v = ' ' + d.vout.fmt( width=cw.vout-1, color=color ) if cw.vout else None,
 				a = d.addr.fmtc( '|' + '.'*(cw.addr-1), width=cw.addr, color=color ) if d.skip == 'addr'
-					else d.addr.fmt( width=cw.addr, color=color ),
+					else d.addr.fmt(self.addr_view_pref, width=cw.addr, color=color),
 				m = (d.twmmid.fmtc( '.'*cw.mmid, width=cw.mmid, color=color ) if d.skip == 'addr'
 					else d.twmmid.fmt( width=cw.mmid, color=color )) if cw.mmid else None,
 				c = d.comment.fmt2( width=cw.comment, color=color, nullrepl='-' ) if cw.comment else None,
@@ -203,7 +203,7 @@ class TwUnspentOutputs(TwView):
 				n = str(n+1) + ')',
 				t = d.txid.fmt( width=cw.txid, color=color ) if cw.txid else None,
 				v = ' ' + d.vout.fmt( width=cw.vout-1, color=color ) if cw.vout else None,
-				a = d.addr.fmt( width=cw.addr, color=color ),
+				a = d.addr.fmt(self.addr_view_pref, width=cw.addr, color=color),
 				m = d.twmmid.fmt( width=cw.mmid, color=color ),
 				A = d.amt.fmt( color=color, iwidth=cw.iwidth, prec=self.disp_prec ),
 				B = d.amt2.fmt( color=color, iwidth=cw.iwidth2, prec=self.disp_prec ) if cw.amt2 else None,

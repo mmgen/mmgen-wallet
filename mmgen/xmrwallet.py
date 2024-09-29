@@ -116,7 +116,7 @@ def gen_acct_addr_info(self, wallet_data, account, indent=''):
 			continue
 		yield fs.format(
 			I = addr['address_index'],
-			A = ca.hl() if self.cfg.full_address else ca.fmt(color=True, width=addr_width),
+			A = ca.hl(0) if self.cfg.full_address else ca.fmt(0, color=True, width=addr_width),
 			U = (red('True ') if addr['used'] else green('False')),
 			B = fmt_amt(bal),
 			L = pink(addr['label']))
@@ -277,7 +277,7 @@ class MoneroMMGenTX:
 					f = red('{}:{}'.format(d.source.wallet,d.source.account).ljust(6)),
 					g = red('{}:{}'.format(d.dest.wallet,d.dest.account).ljust(6)) if d.dest else cyan('ext   '),
 					h = d.amount.fmt( color=True, iwidth=4, prec=12 ),
-					j = d.dest_address.fmt(width=addr_w, color=True) if addr_w else d.dest_address.hl(),
+					j = d.dest_address.fmt(0, width=addr_w, color=True) if addr_w else d.dest_address.hl(0),
 					x = '->'
 				)
 
@@ -317,8 +317,8 @@ class MoneroMMGenTX:
 					m = d.amount.hl(),
 					F = (Int(d.priority).hl() + f' [{tx_priorities[d.priority]}]') if d.priority else None,
 					n = d.fee.hl(),
-					o = d.dest_address.hl() if self.cfg.full_address
-						else d.dest_address.fmt(width=addr_width, color=True),
+					o = d.dest_address.hl(0) if self.cfg.full_address
+						else d.dest_address.fmt(0, width=addr_width, color=True),
 					P = pink(pmt_id.hex()) if pmt_id else None,
 					s = make_timestr(d.submit_time) if d.submit_time else None,
 					S = pink(f" [cold signed{', submitted' if d.complete else ''}]") if d.signed_txset else '',
@@ -1079,7 +1079,7 @@ class MoneroWalletOps:
 					ca = CoinAddr(self.proto, e['base_address'])
 					yield fs.format(
 						I = str(e['account_index']),
-						A = ca.hl() if self.cfg.full_address else ca.fmt(color=True, width=addr_width),
+						A = ca.hl(0) if self.cfg.full_address else ca.fmt(0, color=True, width=addr_width),
 						N = red(str(len(addrs_data[i]['addresses'])).ljust(6)),
 						B = fmt_amt(e['unlocked_balance']),
 						L = pink(e['label']))
@@ -1831,7 +1831,7 @@ class MoneroWalletOps:
 			ca = CoinAddr(self.proto, addr['address'])
 			msg('\n  {a} {b}\n  {c} {d}\n  {e} {f}'.format(
 					a = 'Address:       ',
-					b = ca.hl() if self.cfg.full_address else ca.fmt(color=True, width=addr_width),
+					b = ca.hl(0) if self.cfg.full_address else ca.fmt(0, color=True, width=addr_width),
 					c = 'Existing label:',
 					d = pink(addr['label']) if addr['label'] else gray('[none]'),
 					e = 'New label:     ',

@@ -124,7 +124,7 @@ class AddrFile(MMGenObject):
 			elif type(p).__name__ == 'PasswordList':
 				out.append(fs.format(e.idx,e.passwd,c))
 			else: # First line with idx
-				out.append(fs.format(e.idx,e.addr,c))
+				out.append(fs.format(e.idx, e.addr.views[e.addr.view_pref], c))
 				if p.has_keys:
 					if self.cfg.b16:
 						out.append(fs.format( '', f'orig_hex: {e.sec.orig_bytes.hex()}', c ))

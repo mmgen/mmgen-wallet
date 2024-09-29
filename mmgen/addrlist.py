@@ -147,7 +147,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 	gen_passwds  = False
 	gen_keys     = False
 	has_keys     = False
-	chksum_rec_f = lambda foo, e: (str(e.idx), e.addr)
+	chksum_rec_f = lambda foo, e: (str(e.idx), e.addr.views[e.addr.view_pref])
 
 	def dmsg_sc(self,desc,data):
 		Msg(f'sc_debug_{desc}: {data}')
@@ -415,7 +415,7 @@ class KeyAddrList(AddrList):
 	gen_desc_pl  = 's'
 	gen_keys     = True
 	has_keys     = True
-	chksum_rec_f = lambda foo, e: (str(e.idx), e.addr, e.sec.wif)
+	chksum_rec_f = lambda foo, e: (str(e.idx), e.addr.views[e.addr.view_pref], e.sec.wif)
 
 class ViewKeyAddrList(KeyAddrList):
 	desc         = 'viewkey-address'

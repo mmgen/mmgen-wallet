@@ -158,6 +158,8 @@ class CoinAddr(HiliteStr, InitErrors, MMGenObject):
 			ap = proto.decode_addr(addr)
 			assert ap, f'coin address {addr!r} could not be parsed'
 			me = str.__new__(cls, addr)
+			me.views = [addr]
+			me.view_pref = 0
 			me.addr_fmt = ap.fmt
 			me.bytes = ap.bytes
 			me.ver_bytes = ap.ver_bytes
@@ -177,9 +179,12 @@ class CoinAddr(HiliteStr, InitErrors, MMGenObject):
 	def fmtc(cls,s,width,color=False):
 		return super().fmtc( s=s[:width-2]+'..' if len(s) > width else s, width=width, color=color )
 
-	def fmt(self, width, color=False):
-		s = self
+	def fmt(self, view_pref, width, color=False):
+		s = self.views[view_pref]
 		return super().fmtc(f'{s[:width-2]}..' if len(s) > width else s, width=width, color=color)
+
+	def hl(self, view_pref, color=True):
+		return getattr(color_mod, self.color)(self.views[view_pref]) if color else self.views[view_pref]
 
 def is_coin_addr(proto,s):
 	return get_obj( CoinAddr, proto=proto, addr=s, silent=True, return_bool=True )
