@@ -148,7 +148,7 @@ class tool_cmd(tool_cmd_base):
 		"convert a hexadecimal pubkey to a Segwit P2SH-P2WPKH redeem script"
 		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
 		from ..proto.btc.common import hash160
-		return self.proto.pubhash2redeem_script( hash160(bytes.fromhex(pubkeyhex)) ).hex()
+		return self.proto.pubhash2redeem_script(hash160(bytes.fromhex(pubkeyhex))).hex()
 
 	def redeem_script2addr(self,redeem_script_hex:'sstr'): # new
 		"convert a Segwit P2SH-P2WPKH redeem script to an address"
@@ -156,19 +156,17 @@ class tool_cmd(tool_cmd_base):
 		assert redeem_script_hex[:4] == '0014', f'{redeem_script_hex!r}: invalid redeem script'
 		assert len(redeem_script_hex) == 44, f'{len(redeem_script_hex)//2} bytes: invalid redeem script length'
 		from ..proto.btc.common import hash160
-		return self.proto.pubhash2addr(
-			hash160( bytes.fromhex(redeem_script_hex) ),
-			p2sh = True )
+		return self.proto.pubhash2addr(hash160(bytes.fromhex(redeem_script_hex)), p2sh=True)
 
 	def pubhash2addr(self,pubhashhex:'sstr'):
 		"convert public key hash to address"
 		pubhash = bytes.fromhex(pubhashhex)
 		if self.mmtype.name == 'segwit':
-			return self.proto.pubhash2segwitaddr( pubhash )
+			return self.proto.pubhash2segwitaddr(pubhash)
 		elif self.mmtype.name == 'bech32':
-			return self.proto.pubhash2bech32addr( pubhash )
+			return self.proto.pubhash2bech32addr(pubhash)
 		else:
-			return self.proto.pubhash2addr( pubhash, self.mmtype.addr_fmt=='p2sh' )
+			return self.proto.pubhash2addr(pubhash, self.mmtype.addr_fmt=='p2sh')
 
 	def addr2pubhash(self,addr:'sstr'):
 		"convert coin address to public key hash"

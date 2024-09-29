@@ -36,14 +36,15 @@ class TxInfo(TxInfo):
 			if len(getattr(tx,k)):
 				m[k] = getattr(tx,k)[0].mmid if len(getattr(tx,k)) else ''
 				m[k] = ' ' + m[k].hl() if m[k] else ' ' + MMGenID.hlc(nonmm_str)
-		fs = """From:      {}{f_mmid}
-				To:        {}{t_mmid}
-				Amount:    {} {c}
-				Gas price: {g} Gwei
-				Start gas: {G} Kwei
-				Nonce:     {}
-				Data:      {d}
-				\n""".replace('\t','')
+		fs = """
+			From:      {f}{f_mmid}
+			To:        {t}{t_mmid}
+			Amount:    {a} {c}
+			Gas price: {g} Gwei
+			Start gas: {G} Kwei
+			Nonce:     {n}
+			Data:      {d}
+		""".strip().replace('\t','')
 		t = tx.txobj
 		td = t['data']
 		return fs.format(
@@ -53,7 +54,7 @@ class TxInfo(TxInfo):
 			g      = yellow(str(t['gasPrice'].to_unit('Gwei',show_decimal=True))),
 			G      = yellow(str(t['startGas'].to_unit('Kwei'))),
 			t_mmid = m['outputs'] if len(tx.outputs) else '',
-			f_mmid = m['inputs'] )
+			f_mmid = m['inputs']) + '\n\n'
 
 	def format_abs_fee(self,color,iwidth):
 		return self.tx.fee.fmt(color=color,iwidth=iwidth) + (' (max)' if self.tx.txobj['data'] else '')

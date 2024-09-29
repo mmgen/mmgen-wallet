@@ -48,11 +48,11 @@ class Unsigned(Completed,TxBase.Unsigned):
 			'gasprice': o['gasPrice'].toWei(),
 			'value':    o['amt'].toWei() if o['amt'] else 0,
 			'nonce':    o['nonce'],
-			'data':     bytes.fromhex(o['data']) }
+			'data':     bytes.fromhex(o['data'])}
 
 		from ..pyethereum.transactions import Transaction
-		etx = Transaction(**o_conv).sign(wif,o['chainId'])
-		assert etx.sender.hex() == o['from'],(
+		etx = Transaction(**o_conv).sign(wif, o['chainId'])
+		assert etx.sender.hex() == o['from'], (
 			'Sender address recovered from signature does not match true sender')
 
 		from .. import rlp

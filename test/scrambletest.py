@@ -59,14 +59,14 @@ from test.include.common import set_globals,init_coverage,end_msg,green
 
 set_globals(cfg)
 
-td = namedtuple('scrambletest_entry',['seed','str','id_str','lbl','addr'])
+td = namedtuple('scrambletest_entry', ['seed', 'str', 'id_str', 'lbl', 'addr'])
 
 bitcoin_data = {
-#                   SCRAMBLED_SEED[:8] SCRAMBLE_KEY     ID_STR   LBL              FIRST ADDR
-'btc':           td('456d7f5f1c4bfe3b','(none)',        '',      '',              '1MU7EdgqYy9JX35L25hR6CmXXcSEBDAwyv'),
-'btc_compressed':td('bf98a4af5464a4ef','compressed',    '-C',    'COMPRESSED',    '1F97Jd89wwmu4ELadesAdGDzg3d8Y6j5iP'),
-'btc_segwit':    td('b56962d829ffc678','segwit',        '-S',    'SEGWIT',        '36TvVzU5mxSjJ3D9qKAmYzCV7iUqtTDezF'),
-'btc_bech32':    td('d09eea818f9ad17f','bech32',        '-B',    'BECH32',        'bc1q8snv94j6959y3gkqv4gku0cm5mersnpucsvw5z'),
+#                   SCRAMBLED_SEED[:8] SCRAMBLE_KEY     ID_STR   LBL          FIRST ADDR
+'btc':           td('456d7f5f1c4bfe3b','(none)',        '',      '',          '1MU7EdgqYy9JX35L25hR6CmXXcSEBDAwyv'),
+'btc_compressed':td('bf98a4af5464a4ef','compressed',    '-C',    'COMPRESSED','1F97Jd89wwmu4ELadesAdGDzg3d8Y6j5iP'),
+'btc_segwit':    td('b56962d829ffc678','segwit',        '-S',    'SEGWIT',    '36TvVzU5mxSjJ3D9qKAmYzCV7iUqtTDezF'),
+'btc_bech32':    td('d09eea818f9ad17f','bech32',        '-B',    'BECH32',    'bc1q8snv94j6959y3gkqv4gku0cm5mersnpucsvw5z'),
 }
 
 altcoin_data = {

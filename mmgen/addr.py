@@ -151,7 +151,7 @@ class CoinAddr(HiliteStr, InitErrors, MMGenObject):
 	width = 1
 	trunc_ok = False
 
-	def __new__(cls,proto,addr):
+	def __new__(cls, proto, addr):
 		if isinstance(addr,cls):
 			return addr
 		try:

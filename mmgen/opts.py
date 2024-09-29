@@ -45,7 +45,7 @@ long_opts_data = {
 --, --color=0|1            Disable or enable color output (enabled by default)
 --, --columns=N            Force N columns of output with certain commands
 --, --scroll               Use the curses-like scrolling interface for
-                           tracking wallet views
+                         tracking wallet views
 --, --force-256-color      Force 256-color output when color is enabled
 --, --pager                Pipe output of certain commands to pager (WIP)
 --, --data-dir=path        Specify {pnm} data directory location

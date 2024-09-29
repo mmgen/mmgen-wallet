@@ -159,7 +159,8 @@ class BitcoinTwTransaction:
 					yield fs1.format(
 						i = CoinTxID(e.txid).hl(color=color),
 						n = (nocolor,red)[color](str(e.data['n']).ljust(3)),
-						a = CoinAddr(self.proto,e.coin_addr).fmt( width=self.max_addrlen[src], color=color ),
+						a = CoinAddr(self.proto, e.coin_addr).fmt(
+							width=self.max_addrlen[src], color=color),
 						A = self.proto.coin_amt( e.data['value'] ).fmt(color=color)
 					).rstrip()
 				else:
@@ -191,7 +192,7 @@ class BitcoinTwTransaction:
 				if not mmid:
 					if width and space_left < addr_w:
 						break
-					yield CoinAddr( self.proto, e.coin_addr ).fmt(width=addr_w,color=color)
+					yield CoinAddr(self.proto, e.coin_addr).fmt(width=addr_w, color=color)
 					space_left -= addr_w
 				elif mmid.type == 'mmgen':
 					mmid_disp = mmid + bal_star

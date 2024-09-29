@@ -240,7 +240,7 @@ class CmdTestShared:
 			t.expect(['Passphrase is OK', 'Passphrase.* are correct'],regex=True)
 		chk = t.expect_getend(f'Valid {wcls.desc} for Seed ID ')[:8]
 		if sid:
-			cmp_or_die(chk,sid)
+			cmp_or_die(chk, sid)
 		return t
 
 	def addrgen(
@@ -285,7 +285,7 @@ class CmdTestShared:
 	def keyaddrgen(self,wf,check_ref=False,mmtype=None):
 		if not mmtype:
 			mmtype = self.segwit_mmtype
-		args = ['-d',self.tmpdir,self.usr_rand_arg,wf,self.addr_idx_list]
+		args = ['-d', self.tmpdir, self.usr_rand_arg, wf, self.addr_idx_list]
 		t = self.spawn('mmgen-keygen',
 				([],['--type='+str(mmtype)])[bool(mmtype)] + args,
 				extra_desc=f'({mmtype})' if mmtype in ('segwit','bech32') else '')

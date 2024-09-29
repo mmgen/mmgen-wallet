@@ -392,17 +392,17 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 	def refkeyaddrgen_bech32(self):
 		return self.call_addrgen('bech32','keyaddr')
 
-	def pwgen(self,ftype,id_str,pwfmt=None,pwlen=None,extra_args=[],stdout=False):
+	def pwgen(self, ftype, id_str, pwfmt=None, pwlen=None, extra_args=[], stdout=False):
 		wf = self.get_file_with_ext('mmdat')
 		pwfmt = (['--passwd-fmt='+pwfmt] if pwfmt else [])
 		pwlen = (['--passwd-len='+str(pwlen)] if pwlen else [])
 		return self.addrgen(
-				wf,
-				check_ref  = True,
-				ftype      = ftype,
-				id_str     = id_str,
-				extra_args = pwfmt + pwlen + extra_args,
-				stdout     = stdout)
+			wf,
+			check_ref  = True,
+			ftype      = ftype,
+			id_str     = id_str,
+			extra_args = pwfmt + pwlen + extra_args,
+			stdout     = stdout)
 
 	def refpasswdgen(self):
 		return self.pwgen('pass','alice@crypto.org')

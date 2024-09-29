@@ -62,13 +62,13 @@ class CmdTestMisc(CmdTestBase):
 	tmpdir_nums = [99]
 	passthru_opts = ('daemon_data_dir','rpc_port')
 	cmd_group = (
-		('rpc_backends',     'RPC backends'),
-		('xmrwallet_txview', "'mmgen-xmrwallet' txview"),
-		('xmrwallet_txlist', "'mmgen-xmrwallet' txlist"),
-		('coin_daemon_info', "'examples/coin-daemon-info.py'"),
-		('examples_bip_hd',  "'examples/bip_hd.py'"),
-		('term_echo',        "term.set('echo')"),
-		('term_cleanup',     'term.register_cleanup()'),
+		('rpc_backends',         'RPC backends'),
+		('xmrwallet_txview',     "'mmgen-xmrwallet' txview"),
+		('xmrwallet_txlist',     "'mmgen-xmrwallet' txlist"),
+		('coin_daemon_info',     "'examples/coin-daemon-info.py'"),
+		('examples_bip_hd',      "'examples/bip_hd.py'"),
+		('term_echo',            "term.set('echo')"),
+		('term_cleanup',         'term.register_cleanup()'),
 	)
 	need_daemon = True
 	color = True

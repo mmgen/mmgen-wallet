@@ -203,17 +203,17 @@ class AddrFile(MMGenObject):
 		def parse_addrfile_label(lbl):
 			"""
 			label examples:
-			- Bitcoin legacy mainnet:   no label
-			- Bitcoin legacy testnet:   'LEGACY:TESTNET'
-			- Bitcoin Segwit:           'SEGWIT'
-			- Bitcoin Segwit testnet:   'SEGWIT:TESTNET'
-			- Bitcoin Bech32 regtest:   'BECH32:REGTEST'
-			- Litecoin legacy mainnet:  'LTC'
-			- Litecoin Bech32 mainnet:  'LTC:BECH32'
-			- Litecoin legacy testnet:  'LTC:LEGACY:TESTNET'
-			- Ethereum mainnet:         'ETH'
-			- Ethereum Classic mainnet: 'ETC'
-			- Ethereum regtest:         'ETH:REGTEST'
+			- Bitcoin legacy mainnet:           no label
+			- Bitcoin legacy testnet:           'LEGACY:TESTNET'
+			- Bitcoin Segwit:                   'SEGWIT'
+			- Bitcoin Segwit testnet:           'SEGWIT:TESTNET'
+			- Bitcoin Bech32 regtest:           'BECH32:REGTEST'
+			- Litecoin legacy mainnet:          'LTC'
+			- Litecoin Bech32 mainnet:          'LTC:BECH32'
+			- Litecoin legacy testnet:          'LTC:LEGACY:TESTNET'
+			- Ethereum mainnet:                 'ETH'
+			- Ethereum Classic mainnet:         'ETC'
+			- Ethereum regtest:                 'ETH:REGTEST'
 			"""
 			lbl = lbl.lower()
 
@@ -229,18 +229,18 @@ class AddrFile(MMGenObject):
 
 			from .proto.btc.params import mainnet
 			if lbl in [MMGenAddrType(mainnet,key).name for key in mainnet.mmtypes]:
-				coin,mmtype_key = ( 'BTC', lbl )
+				coin, mmtype_key = ('BTC', lbl)
 			elif ':' in lbl: # first component is coin, second is mmtype_key
-				coin,mmtype_key = lbl.split(':')
+				coin, mmtype_key = lbl.split(':')
 			else:            # only component is coin
-				coin,mmtype_key = ( lbl, None )
+				coin, mmtype_key = (lbl, None)
 
-			proto = init_proto( p.cfg, coin=coin, network=network )
+			proto = init_proto(p.cfg, coin=coin, network=network)
 
 			if mmtype_key is None:
 				mmtype_key = proto.mmtypes[0]
 
-			return ( proto, proto.addr_type(mmtype_key) )
+			return (proto, proto.addr_type(mmtype_key))
 
 		p = self.parent
 

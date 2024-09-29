@@ -33,11 +33,11 @@ def addr2scriptPubKey(proto,addr):
 
 def scriptPubKey2addr(proto,s):
 	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
-		return proto.pubhash2addr(bytes.fromhex(s[6:-4]),p2sh=False),'p2pkh'
+		return proto.pubhash2addr(bytes.fromhex(s[6:-4]), p2sh=False), 'p2pkh'
 	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':
-		return proto.pubhash2addr(bytes.fromhex(s[4:-2]),p2sh=True),'p2sh'
+		return proto.pubhash2addr(bytes.fromhex(s[4:-2]), p2sh=True), 'p2sh'
 	elif len(s) == 44 and s[:4] == proto.witness_vernum_hex + '14':
-		return proto.pubhash2bech32addr(bytes.fromhex(s[4:])),'bech32'
+		return proto.pubhash2bech32addr(bytes.fromhex(s[4:])), 'bech32'
 	else:
 		raise NotImplementedError(f'Unknown scriptPubKey ({s})')
 
@@ -284,17 +284,17 @@ class Base(TxBase.Base):
 		"""
 
 		def do_error(errmsg):
-			die( 'TxHexMismatch', errmsg+'\n'+hdr )
+			die('TxHexMismatch', errmsg+'\n'+hdr)
 
 		def check_equal(desc,hexio,mmio):
 			if mmio != hexio:
 				msg('\nMMGen {d}:\n{m}\nSerialized {d}:\n{h}'.format(
 					d = desc,
 					m = pp_fmt(mmio),
-					h = pp_fmt(hexio) ))
+					h = pp_fmt(hexio)))
 				do_error(
 					f'{desc.capitalize()} in serialized transaction data from coin daemon ' +
-					'do not match those in MMGen transaction!' )
+					'do not match those in MMGen transaction!')
 
 		hdr = 'A malicious or malfunctioning coin daemon or other program may have altered your data!'
 
@@ -303,23 +303,22 @@ class Base(TxBase.Base):
 		if dtx.locktime != int(self.locktime or 0):
 			do_error(
 				f'Transaction hex nLockTime ({dtx.locktime}) ' +
-				f'does not match MMGen transaction nLockTime ({self.locktime})' )
+				f'does not match MMGen transaction nLockTime ({self.locktime})')
 
 		check_equal(
 			'sequence numbers',
 			[i['nSeq'] for i in dtx.txins],
-			['{:08x}'.format(i.sequence or self.proto.max_int) for i in self.inputs] )
+			['{:08x}'.format(i.sequence or self.proto.max_int) for i in self.inputs])
 
 		check_equal(
 			'inputs',
-			sorted((i['txid'],i['vout']) for i in dtx.txins),
-			sorted((i.txid,i.vout) for i in self.inputs) )
+			sorted((i['txid'], i['vout']) for i in dtx.txins),
+			sorted((i.txid, i.vout) for i in self.inputs))
 
 		check_equal(
 			'outputs',
-			sorted((o['address'],self.proto.coin_amt(o['amount'])) for o in dtx.txouts),
-			sorted((o.addr,o.amt) for o in self.outputs) )
+			sorted((o['address'], self.proto.coin_amt(o['amount'])) for o in dtx.txouts),
+			sorted((o.addr, o.amt) for o in self.outputs))
 
 		if str(self.txid) != make_chksum_6(bytes.fromhex(dtx.unsigned_hex)).upper():
-			do_error(
-				f'MMGen TxID ({self.txid}) does not match serialized transaction data!')
+			do_error(f'MMGen TxID ({self.txid}) does not match serialized transaction data!')

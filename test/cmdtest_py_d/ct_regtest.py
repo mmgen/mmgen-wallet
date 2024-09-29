@@ -164,7 +164,7 @@ def make_burn_addr(proto):
 		cfg     = cfg,
 		cmdname = 'pubhash2addr',
 		proto   = proto,
-		mmtype  = 'compressed' ).pubhash2addr('00'*20)
+		mmtype  = 'compressed').pubhash2addr('00'*20)
 
 class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	'transacting and tracking wallet operations via regtest mode'
@@ -718,7 +718,14 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	def fund_alice(self):
 		return self.fund_wallet('alice',('L','S')[self.proto.cap('segwit')],rtFundAmt)
 
-	def user_twview(self, user, chk=None, expect=None, cmdline=['twview'], sort='age', exit_val=None):
+	def user_twview(
+			self,
+			user,
+			chk      = None,
+			expect   = None,
+			cmdline  = ['twview'],
+			sort     = 'age',
+			exit_val = None):
 		t = self.spawn('mmgen-tool',[f'--{user}'] + cmdline + ['sort='+sort], exit_val=exit_val)
 		if chk:
 			t.expect(r'{}\b.*\D{}\b'.format(*chk),regex=True)
@@ -739,7 +746,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		return self.user_twview('bob', cmdline=['listaddresses'], expect='TOTAL:')
 
 	def bob_twview1(self):
-		return self.user_twview('bob', chk = ('1',rtAmts[0]) )
+		return self.user_twview('bob', chk=('1', rtAmts[0]))
 
 	def user_bal(self,user,bal,args=['showempty=1'],skip_check=False):
 		t = self.spawn('mmgen-tool',['--'+user,'listaddresses'] + args)
