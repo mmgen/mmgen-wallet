@@ -6,11 +6,11 @@ test.unit_tests_d.ut_obj: data object unit tests for the MMGen suite
 
 from decimal import Decimal
 
-from ..include.common import qmsg,qmsg_r,vmsg
+from ..include.common import vmsg
 
 class unit_tests:
 
-	def coinamt(self,name,ut):
+	def coinamt(self, name, ut, desc='BTCAmt, LTCAmt, XMRAmt and ETHAmt classes'):
 
 		from mmgen.amt import BTCAmt,LTCAmt,XMRAmt,ETHAmt
 
@@ -27,8 +27,7 @@ class unit_tests:
 					assert res == chk, f'{res} != {chk}'
 					assert type(res) is cls, f'{type(res).__name__} != {cls.__name__}'
 
-			qmsg_r(f'Testing {cls.__name__} arithmetic operations...')
-			vmsg('')
+			vmsg(f'\nTesting {cls.__name__} arithmetic operations...')
 
 			A,B   = ( Decimal(aa), Decimal(bb) )
 			a,b   = ( cls(aa),  cls(bb) )
@@ -51,9 +50,7 @@ class unit_tests:
 			do('a * b / a', a * b / a, A * B / A)
 			do('a * b / b', a * b / b, A * B / B)
 
-			qmsg('OK')
-			qmsg_r(f'Checking {cls.__name__} error handling...')
-			vmsg('')
+			vmsg(f'\nChecking {cls.__name__} error handling...')
 
 			bad_data = (
 				('negation',          'NotImplementedError', 'not implemented',    lambda: -a ),
@@ -72,5 +69,6 @@ class unit_tests:
 
 			ut.process_bad_data(bad_data)
 
-			qmsg('OK')
+			vmsg('OK')
+
 		return True

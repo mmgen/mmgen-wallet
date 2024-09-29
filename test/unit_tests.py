@@ -158,9 +158,20 @@ def run_test(test,subtest=None):
 			getattr(t,'_pre_subtest')(test,subtest,UnitTestHelpers(subtest))
 
 		try:
-			ret = getattr(t,subtest.replace('-','_'))(test,UnitTestHelpers(subtest))
+			func = getattr(t,subtest.replace('-','_'))
+			c = func.__code__
+			do_desc = c.co_varnames[c.co_argcount-1] == 'desc'
+			if do_desc:
+				if cfg.verbose:
+					msg(f'Testing {func.__defaults__[0]}')
+				elif not cfg.quiet:
+					msg_r(f'Testing {func.__defaults__[0]}...')
+
+			ret = func(test, UnitTestHelpers(subtest))
 			if type(ret).__name__ == 'coroutine':
 				ret = asyncio.run(ret)
+			if do_desc and not cfg.quiet:
+				msg('OK\n' if cfg.verbose else 'OK')
 		except:
 			if getattr(t,'silence_output',False):
 				t._end_silence()

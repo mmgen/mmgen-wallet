@@ -6,11 +6,11 @@ test/unit_tests_d/ut_xmrseed: Monero mnemonic unit test for the MMGen suite
 
 altcoin_dep = True
 
-from mmgen.util import msg,msg_r,ymsg
+from mmgen.util import ymsg
+from mmgen.xmrseed import xmrseed
+from ..include.common import cfg, vmsg
 
-from ..include.common import cfg,qmsg,vmsg
-
-class unit_test:
+class unit_tests:
 
 	vectors = ( # private keys are reduced
 		(   '148d78d2aba7dbca5cd8f6abcfb0b3c009ffbdbea1ff373d50ed94d78286640e', # Monero repo
@@ -55,53 +55,49 @@ class unit_test:
 		),
 	)
 
-	def run_test(self,name,ut):
+	@property
+	def _use_monero_python(self):
+		if not hasattr(self,'_use_monero_python_'):
+			try:
+				from monero.wordlists.english import English
+				self.wl = English()
+			except ImportError:
+				self._use_monero_python_ = False
+				ymsg('Warning: unable to import monero-python, skipping external library checks')
+			else:
+				self._use_monero_python_ = True
+		return self._use_monero_python_
 
-		def test_fromhex(b):
-			vmsg('')
-			qmsg('Checking seed to mnemonic conversion:')
-			for privhex,chk in self.vectors:
-				vmsg(f'    {chk}')
-				chk = tuple(chk.split())
-				res = b.fromhex(privhex)
-				if use_monero_python:
-					mp_chk = tuple( wl.encode(privhex).split() )
-					assert res == mp_chk, f'check failed:\nres: {res}\nchk: {chk}'
-				assert res == chk, f'check failed:\nres: {res}\nchk: {chk}'
+	def wordlist(self, name, ut, desc='Monero wordlist'):
+		xmrseed().check_wordlist(cfg)
+		return True
 
-		def test_tohex(b):
-			vmsg('')
-			qmsg('Checking mnemonic to seed conversion:')
-			for chk,words in self.vectors:
-				vmsg(f'    {chk}')
-				res = b.tohex( words.split() )
-				if use_monero_python:
-					mp_chk = wl.decode( words )
-					assert res == mp_chk, f'check failed:\nres: {res}\nchk: {mp_chk}'
-				assert res == chk, f'check failed:\nres: {res}\nchk: {chk}'
-
-		msg_r('Testing xmrseed conversion routines...')
-		qmsg('')
-
-		from mmgen.xmrseed import xmrseed
-
+	def fromhex(self, name, ut, desc='fromhex() method'):
 		b = xmrseed()
-		b.check_wordlist(cfg)
+		vmsg('Checking seed to mnemonic conversion:')
+		for privhex, chk in self.vectors:
+			vmsg(f'    {chk}')
+			chk = tuple(chk.split())
+			res = b.fromhex(privhex)
+			if self._use_monero_python:
+				mp_chk = tuple( self.wl.encode(privhex).split() )
+				assert res == mp_chk, f'check failed:\nres: {res}\nchk: {chk}'
+			assert res == chk, f'check failed:\nres: {res}\nchk: {chk}'
+		return True
 
-		try:
-			from monero.wordlists.english import English
-			wl = English()
-		except ImportError:
-			use_monero_python = False
-			ymsg('Warning: unable to import monero-python, skipping external library checks')
-		else:
-			use_monero_python = True
+	def tohex(self, name, ut, desc='tohex() method'):
+		b = xmrseed()
+		vmsg('Checking mnemonic to seed conversion:')
+		for chk, words in self.vectors:
+			vmsg(f'    {chk}')
+			res = b.tohex( words.split() )
+			if self._use_monero_python:
+				mp_chk = self.wl.decode( words )
+				assert res == mp_chk, f'check failed:\nres: {res}\nchk: {mp_chk}'
+			assert res == chk, f'check failed:\nres: {res}\nchk: {chk}'
+		return True
 
-		test_fromhex(b)
-		test_tohex(b)
-
-		vmsg('')
-		qmsg('Checking error handling:')
+	def errors(self, name, ut, desc='error handling'):
 
 		bad_chksum_mn = ('abbey ' * 21 + 'bamboo jaws jerseys donuts').split()
 		bad_word_mn = "admire zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo".split()
@@ -110,6 +106,7 @@ class unit_test:
 		good_hex = self.vectors[0][0]
 		bad_len_mn = good_mn[:22]
 
+		b = xmrseed()
 		th = b.tohex
 		fh = b.fromhex
 
@@ -118,20 +115,15 @@ class unit_test:
 		ase = 'AssertionError'
 		mne = 'MnemonicError'
 
-		bad_data = (
-			('hex',               hse, 'not a hexadecimal',     lambda:fh('xx')),
-			('seed len',          sle, 'invalid seed byte len', lambda:fh(bad_seed)),
-			('mnemonic type',     ase, 'must be list',          lambda:th('string')),
-			('pad arg (fromhex)', ase, "invalid 'pad' arg",     lambda:fh(good_hex,pad=23)),
-			('pad arg (tohex)',   ase, "invalid 'pad' arg",     lambda:th(good_mn,pad=23)),
-			('word',              mne, "not in Monero",         lambda:th(bad_word_mn)),
-			('checksum',          mne, "checksum",              lambda:th(bad_chksum_mn)),
-			('seed phrase len',   mne, "phrase len",            lambda:th(bad_len_mn)),
-		)
-
-		ut.process_bad_data(bad_data)
-
-		vmsg('')
-		msg('OK')
+		ut.process_bad_data((
+			('hex',               hse, 'not a hexadecimal',     lambda: fh('xx')),
+			('seed len',          sle, 'invalid seed byte len', lambda: fh(bad_seed)),
+			('mnemonic type',     ase, 'must be list',          lambda: th('string')),
+			('pad arg (fromhex)', ase, "invalid 'pad' arg",     lambda: fh(good_hex,pad=23)),
+			('pad arg (tohex)',   ase, "invalid 'pad' arg",     lambda: th(good_mn,pad=23)),
+			('word',              mne, "not in Monero",         lambda: th(bad_word_mn)),
+			('checksum',          mne, "checksum",              lambda: th(bad_chksum_mn)),
+			('seed phrase len',   mne, "phrase len",            lambda: th(bad_len_mn)),
+		))
 
 		return True

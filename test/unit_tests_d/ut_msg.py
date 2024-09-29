@@ -6,7 +6,7 @@ test.unit_tests_d.ut_msg: message signing unit tests for the MMGen suite
 
 import os
 
-from mmgen.util import msg,bmsg,pumsg,suf
+from mmgen.util import msg, pumsg, suf
 from mmgen.protocol import CoinProtocol
 from mmgen.msg import NewMsg,UnsignedMsg,SignedMsg,SignedOnlineMsg,ExportedMsgSigs
 from mmgen.addr import MMGenID
@@ -40,8 +40,6 @@ async def run_test(network_id,chksum,msghash_type='raw'):
 
 	if not cfg.verbose:
 		silence()
-
-	bmsg(f'\nTesting {coin.upper()} {network.upper()}:\n')
 
 	m = get_obj(coin,network,msghash_type)
 
@@ -131,23 +129,23 @@ class unit_tests:
 
 	altcoin_deps = ('ltc','bch','eth','eth_raw')
 
-	def btc(self,name,ut):
+	def btc(self, name, ut, desc='Bitcoin mainnet'):
 		return run_test('btc','AA0DB5')
 
-	def btc_tn(self,name,ut):
+	def btc_tn(self, name, ut, desc='Bitcoin testnet'):
 		return run_test('btc_tn','A88E1D')
 
-	def btc_rt(self,name,ut):
+	def btc_rt(self, name, ut, desc='Bitcoin regtest'):
 		return run_test('btc_rt','578018')
 
-	def ltc(self,name,ut):
+	def ltc(self, name, ut, desc='Litecoin mainnet'):
 		return run_test('ltc','BA7549')
 
-	def bch(self,name,ut):
+	def bch(self, name, ut, desc='Bitcoin Cash mainnet'):
 		return run_test('bch','1B8065')
 
-	def eth(self,name,ut):
+	def eth(self, name, ut, desc='Ethereum mainnet'):
 		return run_test('eth','35BAD9',msghash_type='eth_sign')
 
-	def eth_raw(self,name,ut):
+	def eth_raw(self, name, ut, desc='Ethereum mainnet (raw message)'):
 		return run_test('eth','9D900C')

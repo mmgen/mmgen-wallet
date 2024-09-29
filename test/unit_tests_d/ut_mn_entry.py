@@ -4,10 +4,10 @@
 test.unit_tests_d.ut_mn_entry: Mnemonic user entry unit test for the MMGen suite
 """
 
-from mmgen.util import msg,msg_r
-from ..include.common import cfg,qmsg
+from mmgen.mn_entry import mn_entry
+from ..include.common import cfg, vmsg
 
-class unit_test:
+class unit_tests:
 
 	vectors = {
 		'mmgen':   {
@@ -40,26 +40,19 @@ class unit_test:
 		'bip39':   { 'usl': 4, 'sw': 3, 'lw': 8 },
 	}
 
-	def run_test(self,name,ut):
-
-		msg_r('Testing MnemonicEntry methods...')
-
-		from mmgen.mn_entry import mn_entry
-
-		msg_r('\nTesting computed wordlist constants...')
+	def wl(self, name, ut, desc='MnemonicEntry - computed wordlist constants'):
 		for wl_id in self.vectors:
 			for j,k in (('uniq_ss_len','usl'),('shortest_word','sw'),('longest_word','lw')):
 				a = getattr(mn_entry( cfg, wl_id ),j)
 				b = self.vectors[wl_id][k]
 				assert a == b, f'{wl_id}:{j} {a} != {b}'
-		msg('OK')
+		return True
 
-		msg_r('Testing idx()...')
-		qmsg('')
+	def idx(self, name, ut, desc='MnemonicEntry - idx()'):
 		junk = 'a g z aa gg zz aaa ggg zzz aaaa gggg zzzz aaaaaaaaaaaaaa gggggggggggggg zzzzzzzzzzzzzz'
 		for wl_id in self.vectors:
 			m = mn_entry( cfg, wl_id )
-			qmsg('Wordlist: '+wl_id)
+			vmsg('Wordlist: '+wl_id)
 			for entry_mode in ('full','short'):
 				for a,word in enumerate(m.wl):
 					b = m.idx(word,entry_mode)
@@ -78,6 +71,4 @@ class unit_test:
 						assert type(b) is tuple, (type(b),tuple)
 					elif type(chk) is int:
 						assert b == chk, (b,chk)
-		msg('OK')
-
 		return True

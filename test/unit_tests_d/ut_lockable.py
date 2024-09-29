@@ -4,16 +4,12 @@
 test.unit_tests_d.ut_lockable: unit test for the MMGen suite's Lockable class
 """
 
-from ..include.common import qmsg,qmsg_r,vmsg
+from decimal import Decimal
+from mmgen.base_obj import AttrCtrl, Lockable
 
-class unit_test:
+class unit_tests:
 
-	def run_test(self,name,ut):
-
-		from mmgen.base_obj import AttrCtrl,Lockable
-		from decimal import Decimal
-
-		qmsg_r('Testing class AttrCtrl...')
+	def attrctl(self, name, ut, desc='AttrCtrl class'):
 
 		class MyAttrCtrl(AttrCtrl):
 			_autolock = False
@@ -52,8 +48,21 @@ class unit_test:
 		assert acdn.bar is None, f'{acdn.bar}'
 		assert acdn.baz is None, f'{acdn.baz}'
 
-		qmsg('OK')
-		qmsg_r('Testing class Lockable...')
+		def bad1(): ac.x = 1
+		def bad2(): acc.foo = 1
+		def bad3(): aca._lock()
+		def bad4(): acdn.baz = None
+
+		ut.process_bad_data((
+			('attr',            'AttributeError', 'has no attr', bad1),
+			('attr type',       'AttributeError', 'type',        bad2),
+			('call to _lock()', 'AssertionError', 'only once',   bad3),
+			('attr',            'AttributeError', 'has no attr', bad4),
+		))
+
+		return True
+
+	def base(self, name, ut, desc='Lockable class'):
 
 		class MyLockable(Lockable): # class without attrs
 			_autolock = False
@@ -83,6 +92,32 @@ class unit_test:
 
 		lc.epsilon = [0]
 
+		def bad1(): lc.foo = 'fooval3'
+		def bad2(): lc.baz = 'str'
+		def bad3(): lc.qux  = 2
+		def bad4(): lc.x = 1
+		def bad5(): lc.alpha = 0
+		def bad6(): lc.beta = False
+		def bad7(): lc.gamma = Decimal('0')
+		def bad8(): lc.delta = float(0)
+		def bad9(): lc.epsilon = [0]
+
+		ut.process_bad_data((
+			('attr (can’t reset)', 'AttributeError', 'reset',       bad1),
+			('attr type (2)',      'AttributeError', 'type',        bad2),
+			('attr (can’t set)',   'AttributeError', 'read-only',   bad3),
+			('attr (2)',           'AttributeError', 'has no attr', bad4),
+			('attr (can’t reset)', 'AttributeError', 'reset',       bad5),
+			('attr (can’t reset)', 'AttributeError', 'reset',       bad6),
+			('attr (can’t reset)', 'AttributeError', 'reset',       bad7),
+			('attr (can’t reset)', 'AttributeError', 'reset',       bad8),
+			('attr (can’t reset)', 'AttributeError', 'reset',       bad9),
+		))
+
+		return True
+
+	def classattr(self, name, ut, desc='Lockable class with class attrs'):
+
 		class MyLockableClsCheck(Lockable): # class with attrs
 			_autolock = False
 			_use_class_attr = True
@@ -102,8 +137,21 @@ class unit_test:
 		lcc.baz = 3.2
 		lcc.baz = 3.1 # baz is in both lists
 
-		qmsg('OK')
-		qmsg_r('Testing class Lockable with autolock...')
+		def bad1(): lcc.bar = 'str'
+		def bad2(): lcc.qux = 'quxval2'
+		def bad3(): lcc.foo = 'fooval3'
+		def bad4(): lcc.x = 1
+
+		ut.process_bad_data((
+			('attr type (3)',      'AttributeError', 'type',        bad1),
+			('attr (can’t set)',   'AttributeError', 'read-only',   bad2),
+			('attr (can’t reset)', 'AttributeError', 'reset',       bad3),
+			('attr (3)',           'AttributeError', 'has no attr', bad4),
+		))
+
+		return True
+
+	def autolock(self, name, ut, desc='Lockable class with autolock'):
 
 		class MyLockableAutolock(Lockable):
 			def __init__(self):
@@ -126,60 +174,18 @@ class unit_test:
 			_set_ok = ('foo','bar')
 			foo = 1
 
-		qmsg('OK')
-		qmsg_r('Checking error handling...')
-		vmsg('')
-
-		def bad1(): ac.x = 1
-		def bad2(): acc.foo = 1
-		def bad3(): lc.foo = 'fooval3'
-		def bad4(): lc.baz = 'str'
-		def bad5(): lcc.bar = 'str'
-		def bad6(): lc.qux  = 2
-		def bad7(): lcc.qux = 'quxval2'
-		def bad8(): lcc.foo = 'fooval3'
-		def bad9(): lc.x = 1
-		def bad10(): lcc.x = 1
-
-		def bad11(): lc.alpha = 0
-		def bad12(): lc.beta = False
-		def bad13(): lc.gamma = Decimal('0')
-		def bad14(): lc.delta = float(0)
-		def bad15(): lc.epsilon = [0]
-
-		def bad16(): lca.foo = None
-		def bad17(): MyLockableBad()
-		def bad18(): aca._lock()
-
-		def bad19(): acdn.baz = None
-		def bad20(): lcdn.foo = 1
-		def bad21(): lcdn.bar = None
-		def bad22(): del lcdn.foo
+		def bad1(): lca.foo = None
+		def bad2(): MyLockableBad()
+		def bad3(): lcdn.foo = 1
+		def bad4(): lcdn.bar = None
+		def bad5(): del lcdn.foo
 
 		ut.process_bad_data((
-			('attr (1)',           'AttributeError', 'has no attr', bad1 ),
-			('attr (2)',           'AttributeError', 'has no attr', bad9 ),
-			('attr (3)',           'AttributeError', 'has no attr', bad10 ),
-			('attr (4)',           'AttributeError', 'has no attr', bad19 ),
-			('attr (5)',           'AttributeError', 'has no attr', bad21 ),
-			('attr type (1)',      'AttributeError', 'type',        bad2 ),
-			("attr type (2)",      'AttributeError', 'type',        bad4 ),
-			("attr type (3)",      'AttributeError', 'type',        bad5 ),
-			("attr (can't set)",   'AttributeError', 'read-only',   bad6 ),
-			("attr (can't set)",   'AttributeError', 'read-only',   bad7 ),
-			("attr (can't set)",   'AttributeError', 'read-only',   bad20 ),
-			("attr (can't reset)", 'AttributeError', 'reset',       bad3 ),
-			("attr (can't reset)", 'AttributeError', 'reset',       bad8 ),
-			("attr (can't reset)", 'AttributeError', 'reset',       bad11 ),
-			("attr (can't reset)", 'AttributeError', 'reset',       bad12 ),
-			("attr (can't reset)", 'AttributeError', 'reset',       bad13 ),
-			("attr (can't reset)", 'AttributeError', 'reset',       bad14 ),
-			("attr (can't reset)", 'AttributeError', 'reset',       bad15 ),
-			("attr (can't set)",   'AttributeError', 'read-only',   bad16 ),
-			("attr (bad _set_ok)", 'AssertionError', 'not found in',bad17 ),
-			("attr (can’t delete)",'AttributeError', 'not be delet',bad22 ),
-			("call to _lock()",    'AssertionError', 'only once',   bad18 ),
+			('attr (can’t set)',    'AttributeError', 'read-only',    bad1),
+			('attr (bad _set_ok)',  'AssertionError', 'not found in', bad2),
+			('attr (can’t set)',    'AttributeError', 'read-only',    bad3),
+			('attr (5)',            'AttributeError', 'has no attr',  bad4),
+			('attr (can’t delete)', 'AttributeError', 'not be delet', bad5),
 		))
 
-		qmsg('OK')
 		return True

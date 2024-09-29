@@ -12,7 +12,7 @@ from ..include.common import vmsg
 
 class unit_tests:
 
-	def format_elapsed_hr(self, name, ut):
+	def format_elapsed_hr(self, name, ut, desc='function util.format_elapsed_hr()'):
 		from mmgen.util2 import format_elapsed_hr
 
 		vectors = (
@@ -63,7 +63,7 @@ class unit_tests:
 
 		return True
 
-	def xmrwallet_uarg_info(self,name,ut): # WIP
+	def xmrwallet_uarg_info(self, name, ut, desc='dict xmrwallet.xmrwallet_uarg_info'): # WIP
 		from mmgen.xmrwallet import xmrwallet_uarg_info as uarg_info
 		vs = namedtuple('vector_data', ['text', 'groups'])
 		fs = '{:16} {}'
@@ -95,7 +95,7 @@ class unit_tests:
 
 		return True
 
-	def pyversion(self,name,ut):
+	def pyversion(self, name, ut, desc='class pyversion.PythonVersion'):
 		from mmgen.pyversion import PythonVersion,python_version
 
 		ver = {}
