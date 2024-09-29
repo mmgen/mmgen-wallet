@@ -55,6 +55,17 @@ class TxInfo(TxInfo):
 				sort,
 				','.join(self.sort_orders) ))
 
+		def get_mmid_fmt(e, is_input):
+			if e.mmid:
+				return e.mmid.fmt2(
+					width=max_mmwid,
+					encl='()',
+					color=True,
+					append_chars=('',' (chg)')[bool(not is_input and e.is_chg and terse)],
+					append_color='green')
+			else:
+				return MMGenID.fmtc( nonmm_str, width=max_mmwid, color=True )
+
 		def format_io(desc):
 			io = getattr(tx,desc)
 			is_input = desc == 'inputs'
@@ -70,29 +81,21 @@ class TxInfo(TxInfo):
 
 			if terse:
 				iwidth = max(len(str(int(e.amt))) for e in io)
-			else:
-				col1_w = len(str(len(io))) + 1
-			for n,e in enumerate(io_sorted()):
-				if is_input and blockcount:
-					confs = e.confs + blockcount - tx.blockcount
-					days = int(confs // confs_per_day)
-				if e.mmid:
-					mmid_fmt = e.mmid.fmt2(
-						width=max_mmwid,
-						encl='()',
-						color=True,
-						append_chars=('',' (chg)')[bool(not is_input and e.is_chg and terse)],
-						append_color='green')
-				else:
-					mmid_fmt = MMGenID.fmtc( nonmm_str, width=max_mmwid, color=True )
-				if terse:
+				addr_w = max(len(e.addr) for f in (tx.inputs,tx.outputs) for e in f)
+				for n,e in enumerate(io_sorted()):
 					yield '{:3} {} {} {} {}\n'.format(
 						n+1,
-						e.addr.fmt(color=True,width=addr_w),
-						mmid_fmt,
+						e.addr.fmt(width=addr_w, color=True),
+						get_mmid_fmt(e, is_input),
 						e.amt.fmt(iwidth=iwidth,color=True),
 						tx.dcoin )
-				else:
+			else:
+				col1_w = len(str(len(io))) + 1
+				for n,e in enumerate(io_sorted()):
+					mmid_fmt = get_mmid_fmt(e, is_input)
+					if is_input and blockcount:
+						confs = e.confs + blockcount - tx.blockcount
+						days = int(confs // confs_per_day)
 					def gen():
 						if is_input:
 							yield (n+1, 'tx,vout:', f'{e.txid.hl()},{red(str(e.vout))}')
@@ -109,7 +112,6 @@ class TxInfo(TxInfo):
 					yield '\n'.join('{:>{w}} {:<8} {}'.format(*d,w=col1_w) for d in gen()) + '\n\n'
 
 		tx = self.tx
-		addr_w = max(len(e.addr) for f in (tx.inputs,tx.outputs) for e in f)
 
 		return (
 			'Displaying inputs and outputs in {} sort order'.format({'raw':'raw','addr':'address'}[sort])
