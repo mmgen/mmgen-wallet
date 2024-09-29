@@ -1591,7 +1591,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 
 	def alice_add_comment_badaddr2(self):
 		# mainnet zero address:
-		addr = init_proto( cfg, self.proto.coin, network='mainnet' ).pubhash2addr(bytes(20),False)
+		addr = init_proto(cfg, self.proto.coin, network='mainnet').pubhash2addr(bytes(20), 'p2pkh')
 		return self.alice_add_comment_badaddr( addr, 'invalid address', 2 )
 
 	def alice_add_comment_badaddr3(self):
@@ -1599,7 +1599,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		return self.alice_add_comment_badaddr( addr, f'MMGen address {addr!r} not found in tracking wallet', 2 )
 
 	def alice_add_comment_badaddr4(self):
-		addr = self.proto.pubhash2addr(bytes(20),False) # regtest (testnet) zero address
+		addr = self.proto.pubhash2addr(bytes(20), 'p2pkh') # regtest (testnet) zero address
 		return self.alice_add_comment_badaddr( addr, f'Coin address {addr!r} not found in tracking wallet', 2 )
 
 	def alice_remove_comment1(self):

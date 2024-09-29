@@ -63,10 +63,10 @@ class mainnet(mainnet):
 		else:
 			return super().preprocess_key(sec,pubkey_type)
 
-	def pubhash2addr(self,pubhash,p2sh):
+	def pubhash2addr(self,pubhash, addr_type):
 		hash_len = len(pubhash)
 		if hash_len == 20:
-			return super().pubhash2addr(pubhash,p2sh)
+			return super().pubhash2addr(pubhash, addr_type)
 		elif hash_len == 64:
 			raise NotImplementedError('Zcash z-addresses do not support pubhash2addr()')
 		else:

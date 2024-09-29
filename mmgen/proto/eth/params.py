@@ -13,6 +13,7 @@ proto.eth.params: Ethereum protocol
 """
 
 from ...protocol import CoinProtocol,_nw,decoded_addr
+from ...addr import CoinAddr
 from ...util import is_hex_str_lc,Msg
 
 class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
@@ -56,7 +57,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 
 	def decode_addr(self, addr):
 		if is_hex_str_lc(addr) and len(addr) == self.addr_len * 2:
-			return decoded_addr(bytes.fromhex(addr), None, 'ethereum')
+			return decoded_addr(bytes.fromhex(addr), None, 'p2pkh')
 		if self.cfg.debug:
 			Msg(f'Invalid address: {addr}')
 		return False
@@ -65,10 +66,11 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 		h = self.keccak_256(addr.encode()).digest().hex()
 		return ''.join(addr[i].upper() if int(h[i],16) > 7 else addr[i] for i in range(len(addr)))
 
-	def pubhash2addr(self,pubhash,p2sh):
+	def pubhash2addr(self, pubhash, addr_type):
 		assert len(pubhash) == 20, f'{len(pubhash)}: invalid length for {self.name} pubkey hash'
-		assert not p2sh, f'{self.name} protocol has no P2SH address format'
-		return pubhash.hex()
+		assert addr_type == 'p2pkh', (
+				f'{addr_type}: bad addr type - {self.name} protocol supports P2PKH address format only')
+		return CoinAddr(self, pubhash.hex())
 
 class testnet(mainnet):
 	chain_names = ['kovan','goerli','rinkeby']

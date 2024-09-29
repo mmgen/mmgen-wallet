@@ -156,7 +156,7 @@ class tool_cmd(tool_cmd_base):
 		assert redeem_script_hex[:4] == '0014', f'{redeem_script_hex!r}: invalid redeem script'
 		assert len(redeem_script_hex) == 44, f'{len(redeem_script_hex)//2} bytes: invalid redeem script length'
 		from ..proto.btc.common import hash160
-		return self.proto.pubhash2addr(hash160(bytes.fromhex(redeem_script_hex)), p2sh=True)
+		return self.proto.pubhash2addr(hash160(bytes.fromhex(redeem_script_hex)), 'p2sh')
 
 	def pubhash2addr(self,pubhashhex:'sstr'):
 		"convert public key hash to address"
@@ -166,7 +166,7 @@ class tool_cmd(tool_cmd_base):
 		elif self.mmtype.name == 'bech32':
 			return self.proto.pubhash2bech32addr(pubhash)
 		else:
-			return self.proto.pubhash2addr(pubhash, self.mmtype.addr_fmt=='p2sh')
+			return self.proto.pubhash2addr(pubhash, self.mmtype.addr_fmt)
 
 	def addr2pubhash(self,addr:'sstr'):
 		"convert coin address to public key hash"

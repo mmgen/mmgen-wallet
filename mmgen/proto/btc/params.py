@@ -13,6 +13,7 @@ proto.btc.params: Bitcoin protocol
 """
 
 from ...protocol import CoinProtocol, decoded_wif, decoded_addr, _finfo, _nw
+from ...addr import CoinAddr
 from .common import b58chk_decode, b58chk_encode, hash160
 
 class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
@@ -90,11 +91,11 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 
 		return self.decode_addr_bytes(b58chk_decode(addr))
 
-	def pubhash2addr(self, pubhash, p2sh):
+	def pubhash2addr(self, pubhash, addr_type):
 		assert len(pubhash) == self.addr_len, f'{len(pubhash)}: invalid length for pubkey hash'
-		return b58chk_encode(
-			self.addr_fmt_to_ver_bytes[('p2pkh','p2sh')[p2sh]] + pubhash
-		)
+		return CoinAddr(
+			self,
+			b58chk_encode(self.addr_fmt_to_ver_bytes[addr_type] + pubhash))
 
 	# Segwit:
 	def pubhash2redeem_script(self, pubhash):
@@ -104,15 +105,17 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 		return bytes.fromhex(self.witness_vernum_hex + '14') + pubhash
 
 	def pubhash2segwitaddr(self, pubhash):
-		return self.pubhash2addr(
-			hash160( self.pubhash2redeem_script(pubhash) ),
-			p2sh = True )
+		return CoinAddr(
+			self,
+			self.pubhash2addr(hash160(self.pubhash2redeem_script(pubhash)), 'p2sh'))
 
 	def pubhash2bech32addr(self, pubhash):
 		from ...contrib import bech32
-		return bech32.bech32_encode(
-			hrp  = self.bech32_hrp,
-			data = [self.witness_vernum] + bech32.convertbits(list(pubhash),8,5) )
+		return CoinAddr(
+			self,
+			bech32.bech32_encode(
+				hrp  = self.bech32_hrp,
+				data = [self.witness_vernum] + bech32.convertbits(list(pubhash),8,5)))
 
 class testnet(mainnet):
 	addr_ver_info       = { '6f': 'p2pkh', 'c4': 'p2sh' }
