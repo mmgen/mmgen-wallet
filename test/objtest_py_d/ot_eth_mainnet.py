@@ -11,8 +11,25 @@ from decimal import Decimal
 
 from mmgen.obj import ETHNonce
 from mmgen.amt import ETHAmt
+from mmgen.protocol import init_proto
+from mmgen.addr import CoinAddr
+
+from ..include.common import cfg
+
+proto = init_proto(cfg, 'eth', need_amt=True)
 
 tests = {
+	'CoinAddr': {
+		'arg1': 'addr',
+		'good':  (
+			{'addr':'beadcafe' * 5, 'proto':proto},
+		),
+		'bad':  (
+			{'addr':'aaaaxxxx' * 5, 'proto':proto},
+			{'addr':'beadcafe' * 2, 'proto':proto},
+			{'addr':'beadcafe' * 6, 'proto':proto},
+		),
+	},
 	'ETHAmt': {
 		'bad':  ('-3.2','0.1234567891234567891',123,'123L',
 					{'num':'1','from_decimal':True},
