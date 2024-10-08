@@ -59,7 +59,7 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		CmdTestAutosignThreaded.__init__(self, trunner, cfgs, spawn)
 		CmdTestEthdev.__init__(self, trunner, cfgs, spawn)
 
-		self.txcreate_args = ['--quiet']
+		self.txop_opts = ['--autosign', '--regtest=1', '--quiet']
 
 	def fund_mmgen_address(self):
 		keyfile = os.path.join(self.tmpdir, parity_devkey_fn)
@@ -80,11 +80,15 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 
 	def create_tx(self):
 		self.insert_device_online()
-		t = self.txcreate(
-			args = ['--autosign', '98831F3A:E:11,54.321'],
-			menu = [],
-			print_listing = False,
-			acct = '1')
+		t = self.spawn('mmgen-txcreate', self.txop_opts + ['-B', '98831F3A:E:11,54.321'])
+		t = self.txcreate_ui_common(
+			t,
+			caller            = 'txcreate',
+			input_sels_prompt = 'to spend from',
+			inputs            = '1',
+			file_desc         = 'transaction',
+			interactive_fee   = '50G',
+			fee_desc          = 'transaction fee or gas price')
 		t.read()
 		self.remove_device_online()
 		return t
@@ -95,7 +99,7 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 	def send_tx(self, add_args=[]):
 		self._wait_signed('transaction')
 		self.insert_device_online()
-		t = self.spawn('mmgen-txsend', ['--quiet', '--autosign'] + add_args)
+		t = self.spawn('mmgen-txsend', self.txop_opts + add_args)
 		t.view_tx('t')
 		t.expect('(y/N): ', 'n')
 		self._do_confirm_send(t, quiet=True)
@@ -117,17 +121,20 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		return self.token_bal(pat=r':E:11\s+998.76544\s+54.318\d+\s+.*:E:12\s+1\.23456\s+')
 
 	def token_bal(self, pat):
-		t = self.spawn('mmgen-tool', ['--quiet', '--token=mm1', 'twview', 'wide=1'])
+		t = self.spawn('mmgen-tool', ['--regtest=1', '--token=mm1', 'twview', 'wide=1'])
 		text = t.read(strip_color=True)
 		assert re.search(pat, text, re.DOTALL), f'output failed to match regex {pat}'
 		return t
 
 	def create_token_tx(self):
 		self.insert_device_online()
-		t = self.token_txcreate(
-			args      = ['--autosign', '98831F3A:E:12,1.23456'],
-			token     = 'MM1',
-			file_desc = 'Unsigned automount transaction')
+		t = self.txcreate_ui_common(
+			self.spawn(
+				'mmgen-txcreate',
+				self.txop_opts + ['--token=MM1', '-B', '--fee=50G', '98831F3A:E:12,1.23456']),
+			inputs            = '1',
+			input_sels_prompt = 'to spend from',
+			file_desc         = 'Unsigned automount transaction')
 		t.read()
 		self.remove_device_online()
 		return t

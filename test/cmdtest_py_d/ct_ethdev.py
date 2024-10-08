@@ -402,9 +402,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		if trunner is None:
 			return
 
-		self.txcreate_args    = [f'--outdir={self.tmpdir}', '--quiet']
-		self.eth_args         = [f'--outdir={self.tmpdir}', '--quiet']
-		self.eth_args_noquiet = [f'--outdir={self.tmpdir}']
+		self.eth_args         = [f'--outdir={self.tmpdir}', '--regtest=1', '--quiet']
+		self.eth_args_noquiet = [f'--outdir={self.tmpdir}', '--regtest=1']
 
 		from mmgen.protocol import init_proto
 		self.proto = init_proto( cfg, cfg.coin, network='regtest', need_amt=True )
@@ -611,7 +610,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			exit_val  = None):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		fn = self.get_file_with_ext(ext,no_dot=True,delete=False)
-		t = self.spawn('mmgen-addrimport', self.eth_args[1:-1] + add_args + [fn], exit_val=exit_val)
+		t = self.spawn('mmgen-addrimport', ['--regtest=1'] + add_args + [fn], exit_val=exit_val)
 		if bad_input:
 			return t
 		t.expect('Importing')
@@ -619,7 +618,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		return t
 
 	def addrimport_one_addr(self,addr=None,extra_args=[]):
-		t = self.spawn('mmgen-addrimport', self.eth_args[1:] + extra_args + ['--address='+addr])
+		t = self.spawn('mmgen-addrimport', ['--regtest=1', '--quiet', f'--address={addr}'] + extra_args)
 		t.expect('OK')
 		return t
 
@@ -641,7 +640,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			print_listing   = True,
 			tweaks          = []):
 		fee_info_pat = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format( *fee_info_data, c=self.proto.coin )
-		t = self.spawn('mmgen-'+caller, self.txcreate_args + ['-B'] + args)
+		t = self.spawn(f'mmgen-{caller}', self.eth_args + ['-B'] + args)
 		if print_listing:
 			t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 			t.written_to_file('Account balances listing')
@@ -1160,7 +1159,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 	def token_txcreate(self,args=[],token='',inputs='1',fee='50G',file_desc='Unsigned transaction'):
 		return self.txcreate_ui_common(
-			self.spawn('mmgen-txcreate', self.txcreate_args + [f'--token={token}', '-B', f'--fee={fee}'] + args),
+			self.spawn('mmgen-txcreate', self.eth_args + [f'--token={token}', '-B', f'--fee={fee}'] + args),
 			menu              = [],
 			inputs            = inputs,
 			input_sels_prompt = 'to spend from',
@@ -1311,7 +1310,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		if total_coin is None:
 			total_coin = self.proto.coin
 
-		t = self.spawn('mmgen-txcreate', self.txcreate_args + args)
+		t = self.spawn('mmgen-txcreate', self.eth_args + args)
 		for n in bals:
 			t.expect('[R]efresh balance:\b','R')
 			t.expect(' main menu): ',n+'\n')
@@ -1375,7 +1374,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			changed       = False,
 			pexpect_spawn = None):
 
-		t = self.spawn('mmgen-txcreate', self.txcreate_args + args + ['-B', '-i'], pexpect_spawn=pexpect_spawn)
+		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B', '-i'], pexpect_spawn=pexpect_spawn)
 
 		menu_prompt = 'efresh balance:\b'
 
