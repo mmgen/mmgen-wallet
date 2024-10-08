@@ -41,7 +41,6 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		('alice_bal1',                       'checking Alice’s balance'),
 		('alice_txcreate1',                  'creating a transaction'),
 		('alice_txcreate_bad_have_unsigned', 'creating the transaction again (error)'),
-		('copy_wallet',                      'copying Alice’s wallet'),
 		('alice_run_autosign_setup',         'running ‘autosign setup’ (with default wallet)'),
 		('wait_loop_start',                  'starting autosign wait loop'),
 		('alice_txstatus1',                  'getting transaction status (unsigned)'),
@@ -164,19 +163,6 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 
 	def alice_txcreate_bad_have_unsent(self):
 		return self._alice_txcreate(chg_addr='C:5', exit_val=2, expect_str='unsent transaction')
-
-	def copy_wallet(self):
-		self.spawn('', msg_only=True)
-		if cfg.coin == 'BTC':
-			return 'skip_msg'
-		src  = Path(self.tr.data_dir, 'regtest', cfg.coin.lower(), 'alice')
-		dest = Path(self.tr.data_dir, 'regtest', 'btc', 'alice')
-		dest.mkdir(parents=True, exist_ok=True)
-		wf = Path(get_file_with_ext(src, 'mmdat')).absolute()
-		link_path = dest / wf.name
-		if not link_path.exists():
-			link_path.symlink_to(wf)
-		return 'ok'
 
 	def alice_run_autosign_setup(self):
 		return self.run_setup(mn_type='default', use_dfl_wallet=True, passwd=rt_pw)

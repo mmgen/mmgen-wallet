@@ -399,7 +399,7 @@ class Config(Lockable):
 		"""
 		if not hasattr(self,'_data_dir'):
 			self._data_dir = os.path.normpath(os.path.join(*{
-				'regtest': (self.data_dir_root, 'regtest', self.coin.lower(), (self.regtest_user or 'none') ),
+				'regtest': (self.data_dir_root, 'regtest', (self.regtest_user or 'none')),
 				'testnet': (self.data_dir_root, 'testnet'),
 				'mainnet': (self.data_dir_root,),
 			}[self.network] ))

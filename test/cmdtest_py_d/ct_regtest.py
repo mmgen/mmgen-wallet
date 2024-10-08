@@ -559,7 +559,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		return self.walletgen('alice')
 
 	def _user_dir(self, user, coin=None):
-		return joinpath(self.tr.data_dir, 'regtest', coin or self.coin, user)
+		return joinpath(self.tr.data_dir, 'regtest', user)
 
 	def _user_sid(self,user):
 		if user in self.user_sids:
