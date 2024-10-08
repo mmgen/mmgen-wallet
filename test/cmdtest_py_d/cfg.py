@@ -21,7 +21,7 @@ cmd_groups_dfl = {
 	'misc':             ('CmdTestMisc',{}),
 	'opts':             ('CmdTestOpts',{'full_data':True}),
 	'cfgfile':          ('CmdTestCfgFile',{'full_data':True}),
-	'helpscreens':      ('CmdTestHelp',{'modname':'misc','full_data':True}),
+	'help':             ('CmdTestHelp',{'full_data':True}),
 	'main':             ('CmdTestMain',{'full_data':True}),
 	'conv':             ('CmdTestWalletConv',{'is3seed':True,'modname':'wallet'}),
 	'ref':              ('CmdTestRef',{}),

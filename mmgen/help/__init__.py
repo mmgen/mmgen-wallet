@@ -145,10 +145,11 @@ seed, the same seed length and hash preset parameters must always be used.
 
 		def txcreate_examples():
 
-			mmtype = 'S' if 'segwit' in proto.caps else 'C'
+			mmtype = 'B' if 'B' in proto.mmtypes else proto.mmtypes[0]
 			from ..tool.coin import tool_cmd
-			t = tool_cmd(cfg,mmtype=mmtype)
-			sample_addr = t.privhex2addr('bead'*16)
+			t = tool_cmd(cfg, mmtype=mmtype)
+			addr = t.privhex2addr('bead' * 16)
+			sample_addr = addr.views[addr.view_pref]
 
 			return f"""
 EXAMPLES:

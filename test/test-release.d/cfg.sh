@@ -8,7 +8,7 @@
 #   https://github.com/mmgen/mmgen-wallet
 #   https://gitlab.com/mmgen/mmgen-wallet
 
-all_tests="dep dev lint obj color unit hash ref altref altgen xmr eth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt"
+all_tests="dep dev lint obj color unit hash ref altref altgen xmr eth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
 
 groups_desc="
 	default  - All tests minus the extra tests
@@ -19,10 +19,10 @@ groups_desc="
 "
 
 init_groups() {
-	dfl_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc xmr'
+	dfl_tests='dep alt obj color unit hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc xmr'
 	extra_tests='dep dev lint autosign_live ltc_tn bch_tn'
-	noalt_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_tn btc_rt'
-	quick_tests='dep alt obj color unit hash ref tool tool2 gen autosign btc btc_rt altref altgen eth etc xmr'
+	noalt_tests='dep alt obj color unit hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
+	quick_tests='dep alt obj color unit hash ref tool tool2 gen help autosign btc btc_rt altref altgen eth etc xmr'
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
 	noalt_ok_tests='lint'
 
@@ -141,12 +141,21 @@ init_tests() {
 		z #   zcash-mini
 		z $gentest_py --coin=zec --type=zcash_z all:zcash-mini $rounds50x
 	"
-
 	[ "$MSYS2" ] && t_altgen_skip='z'    # no zcash-mini (golang)
 	[ "$ARM32" ] && t_altgen_skip='z e'
 	[ "$FAST" ]  && t_altgen_skip+=' M'
 	# ARM ethkey available only on Arch Linux:
 	[ \( "$ARM32" -o "$ARM64" \) -a "$DISTRO" != 'archarm' ] && t_altgen_skip+=' e'
+
+	d_help="helpscreens for selected coins"
+	t_help="
+		- $cmdtest_py --coin=btc help
+		a $cmdtest_py --coin=bch help
+		a $cmdtest_py --coin=eth help
+		a $cmdtest_py --coin=xmr help
+		a $cmdtest_py --coin=doge help:helpscreens help:longhelpscreens
+	"
+	[ "$SKIP_ALT_DEP" ] && t_help_skip='a'
 
 	d_autosign="transaction autosigning with automount"
 	t_autosign="
@@ -165,7 +174,7 @@ init_tests() {
 
 	d_btc="overall operations with emulated RPC data (Bitcoin)"
 	t_btc="
-		- $cmdtest_py --exclude regtest,autosign,autosign_clean,autosign_automount,ref_altcoin
+		- $cmdtest_py --exclude regtest,autosign,autosign_clean,autosign_automount,ref_altcoin,help
 		- $cmdtest_py --segwit
 		- $cmdtest_py --segwit-random
 		- $cmdtest_py --bech32
@@ -188,7 +197,7 @@ init_tests() {
 
 	d_bch="overall operations with emulated RPC data (Bitcoin Cash Node)"
 	t_bch="
-		- $cmdtest_py --coin=bch --exclude regtest,autosign_automount
+		- $cmdtest_py --coin=bch --exclude regtest,autosign_automount,help
 		- $cmdtest_py --coin=bch --cashaddr=0 ref3_addr
 	"
 
@@ -203,7 +212,7 @@ init_tests() {
 
 	d_ltc="overall operations with emulated RPC data (Litecoin)"
 	t_ltc="
-		- $cmdtest_py --coin=ltc --exclude regtest,autosign_automount
+		- $cmdtest_py --coin=ltc --exclude regtest,autosign_automount,help
 		- $cmdtest_py --coin=ltc --segwit
 		- $cmdtest_py --coin=ltc --segwit-random
 		- $cmdtest_py --coin=ltc --bech32
