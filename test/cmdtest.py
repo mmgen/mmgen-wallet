@@ -574,7 +574,6 @@ class CmdTestRunner:
 			([] if no_exec_wrapper else ['scripts/exec_wrapper.py']) +
 			[cmd_path] +
 			([] if no_passthru_opts else self.passthru_opts) +
-			self.tg.extra_spawn_args +
 			args )
 
 		try:

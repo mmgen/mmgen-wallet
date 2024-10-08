@@ -97,6 +97,20 @@ sample_mn = {
 ref_kafile_pass = 'kafile password'
 ref_kafile_hash_preset = '1'
 
+proto_cmds = (
+	'addrimport',
+	'autosign',
+	'msg',
+	'regtest',
+	'tool',
+	'txbump',
+	'txcreate',
+	'txdo',
+	'txsend',
+	'txsign',
+	'xmrwallet',
+)
+
 def getrand(n):
 	if cfg.test_suite_deterministic:
 		from mmgen.test import fake_urandom

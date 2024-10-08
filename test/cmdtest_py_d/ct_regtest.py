@@ -172,7 +172,6 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 	'transacting and tracking wallet operations via regtest mode'
 	networks = ('btc','ltc','bch')
 	passthru_opts = ('coin','rpc_backend')
-	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [17]
 	color = True
 	deterministic = False
@@ -548,7 +547,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		return t
 
 	def walletgen(self,user):
-		t = self.spawn('mmgen-walletgen', ['-q', '-r0', '-p1', f'--{user}'])
+		t = self.spawn('mmgen-walletgen', ['-q', '-r0', '-p1', f'--{user}'], no_passthru_opts=True)
 		t.passphrase_new(f'new {dfl_wcls.desc}', rt_pw)
 		t.label()
 		t.expect('move it to the data directory? (Y/n): ', 'y')
@@ -1860,14 +1859,18 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 
 	def bob_walletconv_words(self):
 		t = self.spawn(
-			'mmgen-walletconv', [ '--bob', f'--outdir={self.tmpdir}', '--out-fmt=words' ] )
+			'mmgen-walletconv',
+			['--bob', f'--outdir={self.tmpdir}', '--out-fmt=words'],
+			no_passthru_opts = True)
 		t.passphrase(dfl_wcls.desc,rt_pw)
 		t.written_to_file('data')
 		return t
 
 	def bob_subwalletgen_bip39(self):
 		t = self.spawn(
-			'mmgen-subwalletgen', [ '--bob', f'--outdir={self.tmpdir}', '--out-fmt=bip39', '29L' ] )
+			'mmgen-subwalletgen',
+			['--bob', f'--outdir={self.tmpdir}', '--out-fmt=bip39', '29L'],
+			no_passthru_opts = True)
 		t.passphrase(dfl_wcls.desc,rt_pw)
 		t.written_to_file('data')
 		return t

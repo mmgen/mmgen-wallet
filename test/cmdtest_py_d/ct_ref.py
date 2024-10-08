@@ -188,14 +188,22 @@ class CmdTestRef(CmdTestBase,CmdTestShared):
 		ocls = get_wallet_cls('words')
 		args = ['-d',self.tr.trash_dir,'-o',ocls.fmt_codes[-1],wf,ss_idx]
 
-		t = self.spawn('mmgen-subwalletgen',args,extra_desc='(generate subwallet)')
+		t = self.spawn(
+			'mmgen-subwalletgen',
+			self.testnet_opt + args,
+			extra_desc       = '(generate subwallet)',
+			no_passthru_opts = True)
 		t.expect(f'Generating subseed {ss_idx}')
 		chk_sid = self.chk_data['ref_subwallet_sid'][f'98831F3A:{ss_idx}']
 		fn = t.written_to_file(capfirst(ocls.desc))
 		assert chk_sid in fn,f'incorrect filename: {fn} (does not contain {chk_sid})'
 		ok()
 
-		t = self.spawn('mmgen-walletchk',[fn],extra_desc='(check subwallet)')
+		t = self.spawn(
+			'mmgen-walletchk',
+			self.testnet_opt + [fn],
+			extra_desc       = '(check subwallet)',
+			no_passthru_opts = True)
 		t.expect(r'Valid MMGen native mnemonic data for Seed ID ([0-9A-F]*)\b',regex=True)
 		sid = t.p.match.group(1)
 		assert sid == chk_sid,f'subseed ID {sid} does not match expected value {chk_sid}'

@@ -151,7 +151,7 @@ class CmdTestRef3Seed(CmdTestBase,CmdTestShared):
 		args = ['-d',self.tmpdir,hp_arg,sl_arg,'-ibw','-L',label]
 		self.write_to_tmpfile(bf,ref_wallet_brainpass)
 		self.write_to_tmpfile(pwfile,self.wpasswd)
-		t = self.spawn('mmgen-walletconv', args + [self.usr_rand_arg])
+		t = self.spawn('mmgen-walletconv', self.testnet_opt + args + [self.usr_rand_arg], no_passthru_opts=True)
 		t.license()
 		t.expect('Enter brainwallet: ', ref_wallet_brainpass+'\n')
 		ocls = get_wallet_cls('mmgen')

@@ -163,7 +163,6 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
 	networks = ('eth','etc')
 	passthru_opts = ('coin','daemon_id','http_timeout','rpc_backend')
-	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [22]
 	color = True
 	cmd_group_in = (

@@ -24,7 +24,6 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 
 	networks = ('btc', 'bch', 'ltc')
 	tmpdir_nums = [49]
-	extra_spawn_args = []
 
 	rtFundAmt = None # pylint
 	rt_data = {

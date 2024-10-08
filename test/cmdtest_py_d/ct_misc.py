@@ -24,7 +24,7 @@ import sys, os, re, time
 
 from mmgen.util import ymsg, die
 
-from ..include.common import cfg, start_test_daemons, stop_test_daemons, imsg
+from ..include.common import cfg, start_test_daemons, stop_test_daemons, imsg, proto_cmds
 from .common import get_file_with_ext, dfl_words_file
 from .ct_base import CmdTestBase
 from .ct_main import CmdTestMain
@@ -197,7 +197,7 @@ class CmdTestHelp(CmdTestBase):
 	)
 
 	def usage(self):
-		t = self.spawn('mmgen-walletgen', ['foo'], exit_val=1)
+		t = self.spawn('mmgen-walletgen', ['foo'], exit_val=1, no_passthru_opts=True)
 		t.expect('USAGE: mmgen-walletgen')
 		return t
 
@@ -210,7 +210,8 @@ class CmdTestHelp(CmdTestBase):
 		t = self.spawn(
 			'mmgen-walletconv',
 			['--stdout', '--in-fmt=hex', '--out-fmt=hex'],
-			env = {'MMGEN_NO_LICENSE':''} )
+			env = {'MMGEN_NO_LICENSE':''},
+			no_passthru_opts = True)
 		t.expect('to continue: ', 'w')
 		t.expect('TERMS AND CONDITIONS') # start of GPL text
 		if cfg.pexpect_spawn:
@@ -252,7 +253,8 @@ class CmdTestHelp(CmdTestBase):
 			t = self.spawn(
 				f'mmgen-{cmdname}',
 				[arg],
-				extra_desc = f'(mmgen-{cmdname})')
+				extra_desc       = f'(mmgen-{cmdname})',
+				no_passthru_opts = not cmdname in proto_cmds)
 			t.expect(expect,regex=True)
 			if pager and t.pexpect_spawn:
 				time.sleep(0.2)

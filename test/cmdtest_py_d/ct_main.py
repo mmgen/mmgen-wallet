@@ -374,7 +374,7 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 			args += ['-d',self.tmpdir]
 		if seed_len:
 			args += ['-l',str(seed_len)]
-		t = self.spawn('mmgen-walletgen', args + [self.usr_rand_arg])
+		t = self.spawn('mmgen-walletgen', self.testnet_opt + args + [self.usr_rand_arg], no_passthru_opts=True)
 		t.license()
 		t.usr_rand(self.usr_rand_chars)
 		wcls = MMGenWallet
@@ -390,7 +390,7 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		args = [self.usr_rand_arg,'-p1','-d',self.tr.trash_dir,'-L','Label']
 		if wf != 'default':
 			args += [wf]
-		t = self.spawn('mmgen-subwalletgen', args + ['10s'])
+		t = self.spawn('mmgen-subwalletgen', self.testnet_opt + args + ['10s'], no_passthru_opts=True)
 		t.license()
 		wcls = MMGenWallet
 		t.passphrase(wcls.desc,self.cfgs['1']['wpasswd'])
@@ -406,7 +406,7 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		icls = get_wallet_cls(ext=get_extension(wf))
 		ocls = get_wallet_cls('words')
 		args = [self.usr_rand_arg,'-p1','-d',self.tr.trash_dir,'-o',ocls.fmt_codes[0],wf,'3L']
-		t = self.spawn('mmgen-subwalletgen', args)
+		t = self.spawn('mmgen-subwalletgen', self.testnet_opt + args, no_passthru_opts=True)
 		t.license()
 		t.passphrase(icls.desc,self.cfgs['1']['wpasswd'])
 		t.expect(r'Generating subseed.*\D3L',regex=True)
@@ -424,7 +424,10 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 			'keep':    ['-d',self.tr.trash_dir,'--keep-label'],
 			'user':    ['-d',self.tr.trash_dir]
 		}[label_action]
-		t = self.spawn('mmgen-passchg', add_args + [self.usr_rand_arg, '-p2'] + ([wf] if wf else []))
+		t = self.spawn(
+			'mmgen-passchg',
+			self.testnet_opt + add_args + [self.usr_rand_arg, '-p2'] + ([wf] if wf else []),
+			no_passthru_opts = True)
 		t.license()
 		wcls = MMGenWallet
 		t.passphrase(wcls.desc,self.cfgs['1']['wpasswd'],pwtype='old')
@@ -712,7 +715,7 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 	def _walletconv_export(self,wf,uargs=[],out_fmt='w',pf=None):
 		opts = ['-d',self.tmpdir,'-o',out_fmt] + uargs + \
 			([],[wf])[bool(wf)] + ([],['-P',pf])[bool(pf)]
-		t = self.spawn('mmgen-walletconv',opts)
+		t = self.spawn('mmgen-walletconv', self.testnet_opt + opts, no_passthru_opts=True)
 		t.license()
 
 		if not pf:
@@ -888,7 +891,7 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		make_brainwallet_file(bwf)
 		seed_len = str(self.seed_len)
 		args = ['-d',self.tmpdir,'-p1',self.usr_rand_arg,'-l'+seed_len,'-ibw']
-		t = self.spawn('mmgen-walletconv', args + [bwf])
+		t = self.spawn('mmgen-walletconv', self.testnet_opt + args + [bwf], no_passthru_opts=True)
 		t.license()
 		wcls = MMGenWallet
 		t.passphrase_new('new ' +wcls.desc,self.wpasswd)

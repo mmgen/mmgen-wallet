@@ -233,9 +233,11 @@ class CmdTestShared:
 		t = self.spawn(
 				'mmgen-walletchk',
 				([] if dfl_wallet else ['-i',wcls.fmt_codes[0]])
+				+ self.testnet_opt
 				+ add_args + ['-p',hp]
 				+ ([wf] if wf else []),
-				extra_desc=extra_desc)
+				extra_desc       = extra_desc,
+				no_passthru_opts = True)
 		if wcls.type != 'incog_hidden':
 			t.expect(f"Getting {wcls.desc} from file ‘")
 		if wcls.enc and wcls.type != 'brain':
