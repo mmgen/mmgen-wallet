@@ -49,7 +49,7 @@ def process_uopts(opts_data, opts):
 				if len(arg) == 2:
 					uargs = sys.argv[idx+1:]
 					return
-				opt, parm = arg[2:].split('=') if '=' in arg else (arg[2:], None)
+				opt, parm = arg[2:].split('=', 1) if '=' in arg else (arg[2:], None)
 				if len(opt) < 2:
 					die('CmdlineOptError', f'--{opt}: option name must be at least two characters long')
 				if opt in opts or (opt := get_opt_by_substring(opt, opts)):
@@ -66,7 +66,7 @@ def process_uopts(opts_data, opts):
 							die('CmdlineOptError', f'option --{opt} requires no parameter')
 						yield (opts[opt].name, True)
 				else:
-					opt, parm = arg[2:].split('=') if '=' in arg else (arg[2:], None)
+					opt, parm = arg[2:].split('=', 1) if '=' in arg else (arg[2:], None)
 					die('CmdlineOptError', f'--{opt}: unrecognized option')
 			elif arg[0] == '-' and len(arg) > 1:
 				for j, sopt in enumerate(arg[1:]):
