@@ -531,8 +531,10 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 			'mmgen-regtest',
 			(['--bdb-wallet'] if self.use_bdb_wallet else [])
 			+ ['--setup-no-stop-daemon', 'setup'])
-		for s in ('Starting','Creating','Creating','Creating','Mined','Setup complete'):
-			t.expect(s)
+		t.expect('Starting')
+		for _ in range(3): t.expect('Creating')
+		for _ in range(5): t.expect('Mined')
+		t.expect('Setup complete')
 		return t
 
 	def daemon_version(self):

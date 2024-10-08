@@ -198,7 +198,7 @@ init_tests() {
 
 	d_bch="overall operations with emulated RPC data (Bitcoin Cash Node)"
 	t_bch="
-		- $cmdtest_py --coin=bch --exclude regtest
+		- $cmdtest_py --coin=bch --exclude regtest,autosign_automount
 		- $cmdtest_py --coin=bch --cashaddr=0 ref3_addr
 	"
 
@@ -213,7 +213,7 @@ init_tests() {
 
 	d_ltc="overall operations with emulated RPC data (Litecoin)"
 	t_ltc="
-		- $cmdtest_py --coin=ltc --exclude regtest
+		- $cmdtest_py --coin=ltc --exclude regtest,autosign_automount
 		- $cmdtest_py --coin=ltc --segwit
 		- $cmdtest_py --coin=ltc --segwit-random
 		- $cmdtest_py --coin=ltc --bech32

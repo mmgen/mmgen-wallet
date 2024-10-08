@@ -169,7 +169,7 @@ class MMGenRegtest(MMGenObject):
 
 		# BCH and LTC daemons refuse to set HD seed with empty blockchain ("in IBD" error),
 		# so generate a block:
-		await self.generate(1,silent=False)
+		await self.generate(1)
 
 		# Unfortunately, we don’t get deterministic output with BCH and LTC even with fixed
 		# hdseed, as their 'sendtoaddress' calls produce non-deterministic TXIDs due to random
@@ -182,8 +182,9 @@ class MMGenRegtest(MMGenObject):
 				wallet = 'miner')
 
 		# Broken litecoind can only mine 431 blocks in regtest mode, so generate just enough
-		# blocks to fund the test suite
-		await self.generate(392,silent=True)
+		# blocks to fund the test suite.  Generation is slow, so divide into chunks:
+		for n in (100, 100, 100, 92): # 392 blocks
+			await self.generate(n)
 
 		gmsg('Setup complete')
 
