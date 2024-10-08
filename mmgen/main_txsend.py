@@ -78,7 +78,7 @@ elif not cfg._args and cfg.autosign:
 		infile = si.get_unsent()
 		cfg._util.qmsg(f'Got signed transaction file ‘{infile}’')
 else:
-	cfg._opts.usage()
+	cfg._usage()
 
 if not cfg.status:
 	from .ui import do_license_msg

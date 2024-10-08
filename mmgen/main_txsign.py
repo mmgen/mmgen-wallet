@@ -102,7 +102,7 @@ cfg = Config(opts_data=opts_data)
 infiles = cfg._args
 
 if not infiles:
-	cfg._opts.usage()
+	cfg._usage()
 
 from .fileutil import check_infile
 for i in infiles:

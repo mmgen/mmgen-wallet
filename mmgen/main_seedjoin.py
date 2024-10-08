@@ -111,7 +111,7 @@ def print_shares_info():
 cfg = Config(opts_data=opts_data)
 
 if len(cfg._args) + bool(cfg.hidden_incog_input_params) < 2:
-	cfg._opts.usage()
+	cfg._usage()
 
 if cfg.master_share:
 	master_idx = MasterShareIdx(cfg.master_share)

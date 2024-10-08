@@ -140,7 +140,7 @@ def main():
 		ids = cfg._args
 		network_ids = CoinDaemon.get_network_ids(cfg)
 		if not ids:
-			cfg._opts.usage()
+			cfg._usage()
 		for i in ids:
 			if i not in network_ids + list(xmr_wallet_network_ids):
 				die(1,f'{i!r}: invalid network ID')

@@ -166,17 +166,17 @@ elif invoked_as == 'seedsplit':
 				m2 = 'To generate a master share, omit the seed split specifier.'
 				die(1,m1+'  '+m2)
 		elif not sss:
-			cfg._opts.usage()
+			cfg._usage()
 	elif master_share:
 		sss = SeedSplitSpecifier('1:2')
 	else:
-		cfg._opts.usage()
+		cfg._usage()
 
 from .fileutil import check_infile,get_seed_file
 
 if cmd_args:
 	if invoked_as == 'gen' or len(cmd_args) > 1:
-		cfg._opts.usage()
+		cfg._usage()
 	check_infile(cmd_args[0])
 
 sf = get_seed_file(cfg,nargs,invoked_as=invoked_as)

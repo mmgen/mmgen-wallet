@@ -66,6 +66,7 @@ long_opts_data = {
 --, --tw-name=NAME         Specify alternate name for the BTC/LTC/BCH tracking
                          wallet (default: ‘{tw_name}’)
 --, --skip-cfg-file        Skip reading the configuration file
+--, --usage                Print usage information and exit
 --, --version              Print version information and exit
 --, --bob                  Specify user “Bob” in MMGen regtest mode
 --, --alice                Specify user “Alice” in MMGen regtest mode
@@ -105,9 +106,6 @@ class UserOpts:
 
 		od['text']['long_options'] = long_opts_data['text']
 
-		# Make this available to usage()
-		self.usage_data = od['text'].get('usage2') or od['text']['usage']
-
 		# po: (user_opts,cmd_args,opts,filtered_opts)
 		po = parsed_opts or Opts.parse_opts(od,opt_filter=opt_filter)
 
@@ -123,15 +121,16 @@ class UserOpts:
 		cfg._parsed_opts = po
 		cfg._use_env = True
 		cfg._use_cfg_file = not 'skip_cfg_file' in uopts
+		# Make this available to usage()
+		cfg._usage_data = opts_data['text'].get('usage2') or opts_data['text']['usage']
 
 		if os.getenv('MMGEN_DEBUG_OPTS'):
 			opt_preproc_debug(po)
 
-		if 'version' in uopts:
-			self.version() # exits
-
-		if 'show_hash_presets' in uopts:
-			self.show_hash_presets() # exits
+		for funcname in ('usage', 'version', 'show_hash_presets'):
+			if funcname in uopts:
+				import importlib
+				getattr(importlib.import_module('mmgen.help'), funcname)(cfg) # exits
 
 		if parse_only:
 			return

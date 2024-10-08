@@ -359,7 +359,7 @@ if gc.prog_name.endswith('-tool'):
 		sys.exit(0)
 
 	if len(po.cmd_args) < 1:
-		cfg._opts.usage()
+		cfg._usage()
 
 	cmd = po.cmd_args[0]
 

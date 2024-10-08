@@ -194,7 +194,7 @@ cfg = Config(
 	},
 	do_post_init = True )
 
-cmd = cfg._args[0] if len(cfg._args) == 1 else 'sign' if not cfg._args else cfg._opts.usage()
+cmd = cfg._args[0] if len(cfg._args) == 1 else 'sign' if not cfg._args else cfg._usage()
 
 if cmd not in Autosign.cmds + Autosign.util_cmds:
 	die(1,f'‘{cmd}’: unrecognized command')

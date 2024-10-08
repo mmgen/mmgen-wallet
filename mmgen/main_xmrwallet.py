@@ -128,7 +128,7 @@ if cmd_args and cfg.autosign and (
 	cmd_args.insert(1,None)
 
 if len(cmd_args) < 2:
-	cfg._opts.usage()
+	cfg._usage()
 
 op     = cmd_args.pop(0)
 infile = cmd_args.pop(0)
@@ -136,22 +136,22 @@ wallets = spec = None
 
 if op in ('relay', 'submit', 'resubmit', 'abort'):
 	if len(cmd_args) != 0:
-		cfg._opts.usage()
+		cfg._usage()
 elif op in ('txview','txlist'):
 	infile = [infile] + cmd_args
 elif op in ('create','sync','list','view','listview','dump','restore'): # kafile_arg_ops
 	if len(cmd_args) > 1:
-		cfg._opts.usage()
+		cfg._usage()
 	wallets = cmd_args.pop(0) if cmd_args else None
 elif op in ('new', 'transfer', 'sweep', 'sweep_all', 'label'):
 	if len(cmd_args) != 1:
-		cfg._opts.usage()
+		cfg._usage()
 	spec = cmd_args[0]
 elif op in ('export-outputs', 'export-outputs-sign', 'import-key-images'):
 	if not cfg.autosign: # --autosign only for now - TODO
 		die(f'--autosign must be used with command {op!r}')
 	if len(cmd_args) > 1:
-		cfg._opts.usage()
+		cfg._usage()
 	wallets = cmd_args.pop(0) if cmd_args else None
 else:
 	die(1,f'{op!r}: unrecognized operation')

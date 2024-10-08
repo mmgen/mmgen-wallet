@@ -29,7 +29,7 @@ opts_data = {
 cfg = Config(opts_data=opts_data)
 
 if len(cfg._args) != 1:
-	cfg._opts.usage()
+	cfg._usage()
 
 tx = asyncio.run(CompletedTX(cfg._args[0],quiet_open=True))
 tx.file.write(ask_tty=False,ask_overwrite=not cfg.quiet,ask_write=not cfg.quiet)

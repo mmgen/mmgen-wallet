@@ -275,7 +275,7 @@ def main():
 		die(1,'--coin option must be ETH or ETC')
 
 	if not len(cfg._args) == 1:
-		cfg._opts.usage()
+		cfg._usage()
 
 	code = create_src( cfg, solidity_code_template, token_data )
 

@@ -129,9 +129,9 @@ def get_seed_file(cfg,nargs,wallets=None,invoked_as=None):
 	if len(wallets) + (wd_from_opt or bool(wf)) < nargs:
 		if not wf:
 			msg('No default wallet found, and no other seed source was specified')
-		cfg._opts.usage()
+		cfg._usage()
 	elif len(wallets) > nargs:
-		cfg._opts.usage()
+		cfg._usage()
 	elif len(wallets) == nargs and wf and invoked_as != 'gen':
 		cfg._util.qmsg('Warning: overriding default wallet with user-supplied wallet')
 

@@ -20,7 +20,45 @@
 help: help notes for MMGen suite commands
 """
 
+import sys
+
 from ..cfg import gc
+
+def version(cfg):
+	from ..util import fmt
+	print(fmt(f"""
+		{gc.prog_name.upper()} version {gc.version}
+		Part of {gc.proj_name} Wallet, an online/offline cryptocurrency wallet for the
+		command line. Copyright (C){gc.Cdates} {gc.author} {gc.email}
+	""", indent='  ').rstrip())
+	sys.exit(0)
+
+def show_hash_presets(cfg):
+	fs = '      {:<6} {:<3} {:<2} {}'
+	from ..util import msg
+	from ..crypto import Crypto
+	msg('  Available parameters for scrypt.hash():')
+	msg(fs.format('Preset', 'N', 'r', 'p'))
+	for i in sorted(Crypto.hash_presets.keys()):
+		msg(fs.format(i, *Crypto.hash_presets[i]))
+	msg('  N = memory usage (power of two)\n  p = iterations (rounds)')
+	sys.exit(0)
+
+def make_usage_str(cfg, caller):
+	indent, col1_w = {
+		'help': (2, len(gc.prog_name) + 1),
+		'user': (0, len('USAGE:')),
+	}[caller]
+	def gen():
+		ulbl = 'USAGE:'
+		for line in [cfg._usage_data.strip()] if isinstance(cfg._usage_data, str) else cfg._usage_data:
+			yield f'{ulbl:{col1_w}} {gc.prog_name} {line}'
+			ulbl = ''
+	return ('\n' + (' ' * indent)).join(gen())
+
+def usage(cfg):
+	print(make_usage_str(cfg, caller='user'))
+	sys.exit(0)
 
 def help_notes_func(proto,cfg,k):
 

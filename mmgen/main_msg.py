@@ -207,7 +207,7 @@ cfg = Config( opts_data=opts_data, need_amt=False )
 cmd_args = cfg._args
 
 if len(cmd_args) < 2:
-	cfg._opts.usage()
+	cfg._usage()
 
 op = cmd_args.pop(0)
 
@@ -217,15 +217,15 @@ if cfg.msghash_type and op != 'create':
 async def main():
 	if op == 'create':
 		if len(cmd_args) < 2:
-			cfg._opts.usage()
+			cfg._usage()
 		MsgOps.create( cmd_args[0], ' '.join(cmd_args[1:]) )
 	elif op == 'sign':
 		if len(cmd_args) < 1:
-			cfg._opts.usage()
+			cfg._usage()
 		await MsgOps.sign( cmd_args[0], cmd_args[1:] )
 	elif op in ('verify','export'):
 		if len(cmd_args) not in (1,2):
-			cfg._opts.usage()
+			cfg._usage()
 		await getattr(MsgOps,op)( cmd_args[0], cmd_args[1] if len(cmd_args) == 2 else None )
 	else:
 		die(1,f'{op!r}: unrecognized operation')

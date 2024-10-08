@@ -25,7 +25,8 @@ class CmdTestHelp(CmdTestBase):
 	networks = ('btc', 'ltc', 'bch', 'eth', 'xmr', 'doge')
 	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
 	cmd_group = (
-		('usage',                (1,'usage message (via bad invocation)',[])),
+		('usage1',                (1,'usage message (via --usage)',[])),
+		('usage2',                (1,'usage message (via bad invocation)',[])),
 		('version',               (1,'version message',[])),
 		('license',               (1,'license message',[])),
 		('helpscreens',           (1,'help screens',             [])),
@@ -37,7 +38,12 @@ class CmdTestHelp(CmdTestBase):
 		('tooltest_help',         (1,"'tooltest.py' help screens",[])),
 	)
 
-	def usage(self):
+	def usage1(self):
+		t = self.spawn('mmgen-txsend', ['--usage'], no_passthru_opts=True)
+		t.expect('USAGE: mmgen-txsend')
+		return t
+
+	def usage2(self):
 		t = self.spawn('mmgen-walletgen', ['foo'], exit_val=1, no_passthru_opts=True)
 		t.expect('USAGE: mmgen-walletgen')
 		return t

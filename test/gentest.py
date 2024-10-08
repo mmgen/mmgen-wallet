@@ -479,7 +479,7 @@ def get_protos(proto,addr_type,toolname):
 def parse_args():
 
 	if len(cfg._args) != 2:
-		cfg._opts.usage()
+		cfg._usage()
 
 	arg1,arg2 = cfg._args
 	gen1,gen2,rounds = (0,0,0)

@@ -543,6 +543,11 @@ class Config(Lockable):
 		# Check user-set opts without modifying them
 		check_opts(self)
 
+	def _usage(self):
+		from .help import make_usage_str
+		print(make_usage_str(self, caller='user'))
+		sys.exit(1) # called only on bad invocation
+
 	def _set_cfg_from_env(self):
 		for name,val in ((k,v) for k,v in os.environ.items() if k.startswith('MMGEN_')):
 			if name == 'MMGEN_DEBUG_ALL':

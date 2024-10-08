@@ -100,7 +100,7 @@ def main():
 	global slip44_data, bip_utils_data
 
 	if len(cfg._args) != 1:
-		cfg._opts.usage()
+		cfg._usage()
 
 	with open(cfg._args[0]) as fh:
 		slip44_data = json.loads(fh.read())

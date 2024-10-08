@@ -134,7 +134,7 @@ addr_type = MMGenAddrType(
 	errmsg = f'{cfg.type!r}: invalid parameter for --type option' )
 
 if len(cfg._args) < 1:
-	cfg._opts.usage()
+	cfg._usage()
 
 if cfg.keygen_backend:
 	from .keygen import check_backend
