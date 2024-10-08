@@ -691,7 +691,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def txview(self,ext_fs):
 		ext = ext_fs.format('-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
-		return self.spawn( 'mmgen-tool',['--verbose','txview',txfile] )
+		return self.spawn('mmgen-tool', ['--verbose', 'txview', txfile])
 
 	def fund_dev_address(self):
 		"""
@@ -806,26 +806,26 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		return 'ok'
 
 	def msgcreate(self,add_args=[]):
-		t = self.spawn('mmgen-msg', self.eth_args_noquiet + add_args + [ 'create', self.message, '98831F3A:E:1' ])
+		t = self.spawn('mmgen-msg', self.eth_args_noquiet + add_args + ['create', self.message, '98831F3A:E:1'])
 		t.written_to_file('Unsigned message data')
 		return t
 
 	def msgsign(self):
 		fn = get_file_with_ext(self.tmpdir,'rawmsg.json')
-		t = self.spawn('mmgen-msg', self.eth_args_noquiet + [ 'sign', fn, dfl_words_file ])
+		t = self.spawn('mmgen-msg', self.eth_args_noquiet + ['sign', fn, dfl_words_file])
 		t.written_to_file('Signed message data')
 		return t
 
 	def msgverify(self,fn=None,msghash_type='eth_sign'):
 		fn = fn or get_file_with_ext(self.tmpdir,'sigmsg.json')
-		t = self.spawn('mmgen-msg', self.eth_args_noquiet + [ 'verify', fn ])
+		t = self.spawn('mmgen-msg', self.eth_args_noquiet + ['verify', fn])
 		t.expect(msghash_type)
 		t.expect('1 signature verified')
 		return t
 
 	def msgexport(self):
 		fn = get_file_with_ext(self.tmpdir,'sigmsg.json')
-		t = self.spawn('mmgen-msg', self.eth_args_noquiet + [ 'export', fn ])
+		t = self.spawn('mmgen-msg', self.eth_args_noquiet + ['export', fn])
 		t.written_to_file('Signature data')
 		return t
 
@@ -1160,7 +1160,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 	def token_txcreate(self,args=[],token='',inputs='1',fee='50G',file_desc='Unsigned transaction'):
 		return self.txcreate_ui_common(
-			self.spawn('mmgen-txcreate', self.txcreate_args + ['--token='+token,'-B','--fee='+fee] + args),
+			self.spawn('mmgen-txcreate', self.txcreate_args + [f'--token={token}', '-B', f'--fee={fee}'] + args),
 			menu              = [],
 			inputs            = inputs,
 			input_sels_prompt = 'to spend from',
@@ -1374,7 +1374,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			comment_text  = None,
 			changed       = False,
 			pexpect_spawn = None):
-		t = self.spawn('mmgen-txcreate', self.txcreate_args + args + ['-B','-i'],pexpect_spawn=pexpect_spawn)
+
+		t = self.spawn('mmgen-txcreate', self.txcreate_args + args + ['-B', '-i'], pexpect_spawn=pexpect_spawn)
 
 		menu_prompt = 'efresh balance:\b'
 
@@ -1451,9 +1452,9 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 	def twimport(self,add_args=[],expect_str=None):
 		from mmgen.tw.json import TwJSON
-		fn = joinpath( self.tmpdir, TwJSON.Base(cfg,self.proto).dump_fn )
-		t = self.spawn('mmgen-tool',self.eth_args_noquiet + ['twimport',fn] + add_args)
-		t.expect('(y/N): ','y')
+		fn = joinpath(self.tmpdir, TwJSON.Base(cfg,self.proto).dump_fn)
+		t = self.spawn('mmgen-tool', self.eth_args_noquiet + ['twimport', fn] + add_args)
+		t.expect('(y/N): ', 'y')
 		if expect_str:
 			t.expect(expect_str)
 		t.written_to_file('tracking wallet data')

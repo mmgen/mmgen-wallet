@@ -20,12 +20,12 @@
 test.cmdtest_py_d.ct_misc: Miscellaneous test groups for the cmdtest.py test suite
 """
 
-import sys,os,re,time
+import sys, os, re, time
 
 from mmgen.util import ymsg, die
 
-from ..include.common import cfg,start_test_daemons,stop_test_daemons,imsg
-from .common import get_file_with_ext,dfl_words_file
+from ..include.common import cfg, start_test_daemons, stop_test_daemons, imsg
+from .common import get_file_with_ext, dfl_words_file
 from .ct_base import CmdTestBase
 from .ct_main import CmdTestMain
 
@@ -209,7 +209,7 @@ class CmdTestHelp(CmdTestBase):
 	def license(self):
 		t = self.spawn(
 			'mmgen-walletconv',
-			['--stdout','--in-fmt=hex','--out-fmt=hex'],
+			['--stdout', '--in-fmt=hex', '--out-fmt=hex'],
 			env = {'MMGEN_NO_LICENSE':''} )
 		t.expect('to continue: ', 'w')
 		t.expect('TERMS AND CONDITIONS') # start of GPL text
@@ -248,8 +248,11 @@ class CmdTestHelp(CmdTestBase):
 		if 'autosign' in scripts and sys.platform == 'win32':
 			scripts.remove('autosign')
 
-		for s in sorted(scripts):
-			t = self.spawn(f'mmgen-{s}',[arg],extra_desc=f'(mmgen-{s})')
+		for cmdname in sorted(scripts):
+			t = self.spawn(
+				f'mmgen-{cmdname}',
+				[arg],
+				extra_desc = f'(mmgen-{cmdname})')
 			t.expect(expect,regex=True)
 			if pager and t.pexpect_spawn:
 				time.sleep(0.2)

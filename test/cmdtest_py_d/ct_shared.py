@@ -230,7 +230,8 @@ class CmdTestShared:
 			dfl_wallet = False):
 		hp = self.hash_preset if hasattr(self,'hash_preset') else '1'
 		wcls = wcls or get_wallet_cls(ext=get_extension(wf))
-		t = self.spawn('mmgen-walletchk',
+		t = self.spawn(
+				'mmgen-walletchk',
 				([] if dfl_wallet else ['-i',wcls.fmt_codes[0]])
 				+ add_args + ['-p',hp]
 				+ ([wf] if wf else []),

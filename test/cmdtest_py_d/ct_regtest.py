@@ -546,10 +546,10 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		return t
 
 	def walletgen(self,user):
-		t = self.spawn('mmgen-walletgen',['-q','-r0','-p1','--'+user])
-		t.passphrase_new('new '+dfl_wcls.desc,rt_pw)
+		t = self.spawn('mmgen-walletgen', ['-q', '-r0', '-p1', f'--{user}'])
+		t.passphrase_new(f'new {dfl_wcls.desc}', rt_pw)
 		t.label()
-		t.expect('move it to the data directory? (Y/n): ','y')
+		t.expect('move it to the data directory? (Y/n): ', 'y')
 		t.written_to_file(capfirst(dfl_wcls.desc))
 		return t
 
@@ -586,11 +586,11 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 		for mmtype in mmtypes or self.proto.mmtypes:
 			t = self.spawn(
 				'mmgen-addrgen',
-				['--quiet','--'+user,'--type='+mmtype,f'--outdir={self._user_dir(user)}'] +
-				([wf] if wf else []) +
-				(['--subwallet='+subseed_idx] if subseed_idx else []) +
-				[addr_range],
-				extra_desc = '({})'.format( MMGenAddrType.mmtypes[mmtype].name ))
+				['--quiet', f'--{user}', f'--type={mmtype}', f'--outdir={self._user_dir(user)}']
+				+ ([wf] if wf else [])
+				+ ([f'--subwallet={subseed_idx}'] if subseed_idx else [])
+				+ [addr_range],
+				extra_desc = '({})'.format(MMGenAddrType.mmtypes[mmtype].name))
 			t.passphrase(dfl_wcls.desc,rt_pw)
 			t.written_to_file('Addresses')
 			ok_msg()

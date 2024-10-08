@@ -779,9 +779,9 @@ class CmdTestMain(CmdTestBase,CmdTestShared):
 		stdout = wcls.type == 'seed' # capture output to screen once
 		t = self.spawn(
 			'mmgen-addrgen',
-			(['-S'] if stdout else []) +
-			self.segwit_arg +
-			['-i' + in_fmt, '-d', self.tmpdir, wf, self.addr_idx_list],
+			(['-S'] if stdout else [])
+			+ self.segwit_arg
+			+ ['-i' + in_fmt, '-d', self.tmpdir, wf, self.addr_idx_list],
 			exit_val = None if stdout else 1)
 		t.license()
 		t.expect_getend(f'Valid {wcls.desc} for Seed ID ')
