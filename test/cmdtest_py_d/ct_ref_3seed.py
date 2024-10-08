@@ -213,7 +213,7 @@ class CmdTestRef3Seed(CmdTestBase,CmdTestShared):
 		return self.ref_walletconv_incog(ofmt='incog_hex',ext='mmincox')
 
 class CmdTestRef3Addr(CmdTestRef3Seed):
-	'generated reference address, key and password files for 128-, 192- and 256-bit seeds'
+	'generated reference address and key-address files for 128-, 192- and 256-bit seeds'
 	networks = ('btc', 'btc_tn', 'ltc', 'ltc_tn', 'bch', 'bch_tn')
 	passthru_opts = ('coin', 'testnet', 'cashaddr')
 	tmpdir_nums = [26, 27, 28]
@@ -258,15 +258,6 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 			'btc': ('934F 1C33 6C06 B18C','A283 5BAB 7AF3 3EA4'),
 			'ltc': ('A6AD DF53 5968 7B6A','9572 43E0 A4DC 0B2E'),
 		},
-		'refpasswdgen_1':     'EB29 DC4F 924B 289F',
-		'refpasswdgen_half_1':'D310 2593 B5D9 2E88',
-		'ref_b32passwdgen_1': '37B6 C218 2ABC 7508',
-		'ref_hexpasswdgen_1': '8E99 E696 84CE E7D5',
-		'ref_hexpasswdgen_half_1': '8E99 E696 84CE E7D5',
-		'ref_bip39_12_passwdgen_1': '834F CF45 0B33 8AF0',
-		'ref_bip39_18_passwdgen_1': '834F CF45 0B33 8AF0',
-		'ref_bip39_24_passwdgen_1': '834F CF45 0B33 8AF0',
-		'ref_hex2bip39_24_passwdgen_1': '91AF E735 A31D 72A0',
 		'refaddrgen_legacy_2': {
 			'btc': ('8C17 A5FA 0470 6E89','764C 66F9 7502 AAEA'),
 			'bch': ('8117 24B6 3FDA 6B40','E58C A8A4 C371 66AE'),
@@ -303,15 +294,6 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 			'btc': ('4A6B 3762 DF30 9368','12DD 1888 36BA 85F7'),
 			'ltc': ('5C12 FDD4 17AB F179','E195 B28C 59C4 C5EC'),
 		},
-		'refpasswdgen_2':     'ADEA 0083 094D 489A',
-		'refpasswdgen_half_2':'12B3 4929 9506 76E0',
-		'ref_b32passwdgen_2': '2A28 C5C7 36EC 217A',
-		'ref_hexpasswdgen_2': '88F9 0D48 3A7E 7CC2',
-		'ref_hexpasswdgen_half_2': '59F3 8F48 861E 1186',
-		'ref_bip39_12_passwdgen_2': 'D32D B8D7 A840 250B',
-		'ref_bip39_18_passwdgen_2': '0FAA 78DD A6BA 31AD',
-		'ref_bip39_24_passwdgen_2': '0FAA 78DD A6BA 31AD',
-		'ref_hex2bip39_24_passwdgen_2': '0E8E 23C9 923F 7C2D',
 		'refaddrgen_legacy_3': {
 			'btc': ('6FEF 6FB9 7B13 5D91','424E 4326 CFFE 5F51'),
 			'bch': ('E580 43BB 0F96 AA93','630E 174A 8DDE 1BCE'),
@@ -348,38 +330,18 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 			'btc': ('D0DD BDE3 87BE 15AE','7552 D70C AAB8 DEAA'),
 			'ltc': ('74A0 7DD5 963B 6326','2CDA A007 4B9F E9A5'),
 		},
-		'refpasswdgen_3':     '2D6D 8FBA 422E 1315',
-		'refpasswdgen_half_3':'272C B770 0176 D7EA',
-		'ref_b32passwdgen_3': 'F6C1 CDFB 97D9 FCAE',
-		'ref_hexpasswdgen_3': 'BD4F A0AC 8628 4BE4',
-		'ref_hexpasswdgen_half_3': 'FBDD F733 FFB9 21C1',
-		'ref_bip39_12_passwdgen_3': 'A86E EA14 974A 1B0E',
-		'ref_bip39_18_passwdgen_3': 'EF87 9904 88E2 5884',
-		'ref_bip39_24_passwdgen_3': 'EBE8 2A8F 8F8C 7DBD',
-		'ref_hex2bip39_24_passwdgen_3': '93FA 5EFD 33F3 760E',
-		'ref_xmrseed_25_passwdgen_3': '91AE E76A 2827 C8CC',
 	}
 
 	cmd_group = (
-		('ref_walletgen_brain',       ([],'generating new reference wallet + filename check (brain)')),
-		('refaddrgen_legacy',         ([],'new refwallet addr chksum (uncompressed)')),
-		('refaddrgen_compressed',     ([],'new refwallet addr chksum (compressed)')),
-		('refaddrgen_segwit',         ([],'new refwallet addr chksum (segwit)')),
-		('refaddrgen_bech32',         ([],'new refwallet addr chksum (bech32)')),
-		('refkeyaddrgen_legacy',      ([],'new refwallet key-addr chksum (uncompressed)')),
-		('refkeyaddrgen_compressed',  ([],'new refwallet key-addr chksum (compressed)')),
-		('refkeyaddrgen_segwit',      ([],'new refwallet key-addr chksum (segwit)')),
-		('refkeyaddrgen_bech32',      ([],'new refwallet key-addr chksum (bech32)')),
-		('refpasswdgen',              ([],'new refwallet passwd file chksum')),
-		('refpasswdgen_half',         ([],'new refwallet passwd file chksum (half-length)')),
-		('ref_b32passwdgen',          ([],'new refwallet passwd file chksum (base32)')),
-		('ref_hexpasswdgen',          ([],'new refwallet passwd file chksum (hex)')),
-		('ref_hexpasswdgen_half',     ([],'new refwallet passwd file chksum (hex, half-length)')),
-		('ref_bip39_12_passwdgen',    ([],'new refwallet passwd file chksum (BIP39, 12 words)')),
-		('ref_bip39_18_passwdgen',    ([],'new refwallet passwd file chksum (BIP39, up to 18 words)')),
-		('ref_bip39_24_passwdgen',    ([],'new refwallet passwd file chksum (BIP39, up to 24 words)')),
-		('ref_xmrseed_25_passwdgen',  ([],'new refwallet passwd file chksum (Monero 25-word mnemonic)')),
-		('ref_hex2bip39_24_passwdgen',([],'new refwallet passwd file chksum (hex-to-BIP39, up to 24 words)')),
+		('ref_walletgen_brain',       ([], 'generating new reference wallet + filename check (brain)')),
+		('refaddrgen_legacy',         ([], 'new refwallet addr chksum (uncompressed)')),
+		('refaddrgen_compressed',     ([], 'new refwallet addr chksum (compressed)')),
+		('refaddrgen_segwit',         ([], 'new refwallet addr chksum (segwit)')),
+		('refaddrgen_bech32',         ([], 'new refwallet addr chksum (bech32)')),
+		('refkeyaddrgen_legacy',      ([], 'new refwallet key-addr chksum (uncompressed)')),
+		('refkeyaddrgen_compressed',  ([], 'new refwallet key-addr chksum (compressed)')),
+		('refkeyaddrgen_segwit',      ([], 'new refwallet key-addr chksum (segwit)')),
+		('refkeyaddrgen_bech32',      ([], 'new refwallet key-addr chksum (bech32)')),
 	)
 
 	def call_addrgen(self, mmtype, name='addrgen'):
@@ -418,9 +380,59 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 			return self.call_addrgen('bech32', 'keyaddrgen')
 		return 'skip'
 
+class CmdTestRef3Passwd(CmdTestRef3Seed):
+	'generated reference password files for 128-, 192- and 256-bit seeds'
+	tmpdir_nums = [26, 27, 28]
+	shared_deps = ['mmdat', pwfile]
+
+	chk_data = {
+		'lens': (128, 192, 256),
+		'sids': ('FE3C6545', '1378FC64', '98831F3A'),
+		'refpasswdgen_1':               'EB29 DC4F 924B 289F',
+		'refpasswdgen_half_1':          'D310 2593 B5D9 2E88',
+		'ref_b32passwdgen_1':           '37B6 C218 2ABC 7508',
+		'ref_hexpasswdgen_1':           '8E99 E696 84CE E7D5',
+		'ref_hexpasswdgen_half_1':      '8E99 E696 84CE E7D5',
+		'ref_bip39_12_passwdgen_1':     '834F CF45 0B33 8AF0',
+		'ref_bip39_18_passwdgen_1':     '834F CF45 0B33 8AF0',
+		'ref_bip39_24_passwdgen_1':     '834F CF45 0B33 8AF0',
+		'ref_hex2bip39_24_passwdgen_1': '91AF E735 A31D 72A0',
+		'refpasswdgen_2':               'ADEA 0083 094D 489A',
+		'refpasswdgen_half_2':          '12B3 4929 9506 76E0',
+		'ref_b32passwdgen_2':           '2A28 C5C7 36EC 217A',
+		'ref_hexpasswdgen_2':           '88F9 0D48 3A7E 7CC2',
+		'ref_hexpasswdgen_half_2':      '59F3 8F48 861E 1186',
+		'ref_bip39_12_passwdgen_2':     'D32D B8D7 A840 250B',
+		'ref_bip39_18_passwdgen_2':     '0FAA 78DD A6BA 31AD',
+		'ref_bip39_24_passwdgen_2':     '0FAA 78DD A6BA 31AD',
+		'ref_hex2bip39_24_passwdgen_2': '0E8E 23C9 923F 7C2D',
+		'refpasswdgen_3':               '2D6D 8FBA 422E 1315',
+		'refpasswdgen_half_3':          '272C B770 0176 D7EA',
+		'ref_b32passwdgen_3':           'F6C1 CDFB 97D9 FCAE',
+		'ref_hexpasswdgen_3':           'BD4F A0AC 8628 4BE4',
+		'ref_hexpasswdgen_half_3':      'FBDD F733 FFB9 21C1',
+		'ref_bip39_12_passwdgen_3':     'A86E EA14 974A 1B0E',
+		'ref_bip39_18_passwdgen_3':     'EF87 9904 88E2 5884',
+		'ref_bip39_24_passwdgen_3':     'EBE8 2A8F 8F8C 7DBD',
+		'ref_hex2bip39_24_passwdgen_3': '93FA 5EFD 33F3 760E',
+		'ref_xmrseed_25_passwdgen_3':   '91AE E76A 2827 C8CC',
+	}
+
+	cmd_group = (
+		('ref_walletgen_brain',        ([], 'generating new reference wallet + filename check (brain)')),
+		('refpasswdgen',               ([], 'new refwallet passwd file chksum')),
+		('refpasswdgen_half',          ([], 'new refwallet passwd file chksum (half-length)')),
+		('ref_b32passwdgen',           ([], 'new refwallet passwd file chksum (base32)')),
+		('ref_hexpasswdgen',           ([], 'new refwallet passwd file chksum (hex)')),
+		('ref_hexpasswdgen_half',      ([], 'new refwallet passwd file chksum (hex, half-length)')),
+		('ref_bip39_12_passwdgen',     ([], 'new refwallet passwd file chksum (BIP39, 12 words)')),
+		('ref_bip39_18_passwdgen',     ([], 'new refwallet passwd file chksum (BIP39, up to 18 words)')),
+		('ref_bip39_24_passwdgen',     ([], 'new refwallet passwd file chksum (BIP39, up to 24 words)')),
+		('ref_xmrseed_25_passwdgen',   ([], 'new refwallet passwd file chksum (Monero 25-word mnemonic)')),
+		('ref_hex2bip39_24_passwdgen', ([], 'new refwallet passwd file chksum (hex-to-BIP39, up to 24 words)')),
+	)
+
 	def pwgen(self, ftype, id_str, pwfmt=None, pwlen=None, extra_opts=[], stdout=False):
-		if self.coin != 'btc' or self.proto.testnet:
-			return 'skip'
 		wf = self.get_file_with_ext('mmdat')
 		pwfmt = ([f'--passwd-fmt={pwfmt}'] if pwfmt else [])
 		pwlen = ([f'--passwd-len={pwlen}'] if pwlen else [])

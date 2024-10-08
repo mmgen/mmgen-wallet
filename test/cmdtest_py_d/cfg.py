@@ -27,6 +27,7 @@ cmd_groups_dfl = {
 	'ref':              ('CmdTestRef',{}),
 	'ref3':             ('CmdTestRef3Seed',{'is3seed':True,'modname':'ref_3seed'}),
 	'ref3_addr':        ('CmdTestRef3Addr',{'is3seed':True,'modname':'ref_3seed'}),
+	'ref3_pw':          ('CmdTestRef3Passwd',{'is3seed':True,'modname':'ref_3seed'}),
 	'ref_altcoin':      ('CmdTestRefAltcoin',{}),
 	'seedsplit':        ('CmdTestSeedSplit',{}),
 	'tool':             ('CmdTestTool',{'full_data':True}),
