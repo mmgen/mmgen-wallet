@@ -388,31 +388,39 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 
 	def refaddrgen_legacy(self):
 		return self.call_addrgen('legacy')
+
 	def refaddrgen_compressed(self):
 		return self.call_addrgen('compressed')
+
 	def refaddrgen_segwit(self):
-		if cfg.coin == 'BCH':
-			return 'skip'
-		return self.call_addrgen('segwit')
+		if self.proto.cap('segwit'):
+			return self.call_addrgen('segwit')
+		return 'skip'
+
 	def refaddrgen_bech32(self):
-		if cfg.coin == 'BCH':
-			return 'skip'
-		return self.call_addrgen('bech32')
+		if self.proto.cap('segwit'):
+			return self.call_addrgen('bech32')
+		return 'skip'
 
 	def refkeyaddrgen_legacy(self):
 		return self.call_addrgen('legacy', 'keyaddrgen')
+
 	def refkeyaddrgen_compressed(self):
 		return self.call_addrgen('compressed', 'keyaddrgen')
+
 	def refkeyaddrgen_segwit(self):
-		if cfg.coin == 'BCH':
-			return 'skip'
-		return self.call_addrgen('segwit', 'keyaddrgen')
+		if self.proto.cap('segwit'):
+			return self.call_addrgen('segwit', 'keyaddrgen')
+		return 'skip'
+
 	def refkeyaddrgen_bech32(self):
-		if cfg.coin == 'BCH':
-			return 'skip'
-		return self.call_addrgen('bech32', 'keyaddrgen')
+		if self.proto.cap('segwit'):
+			return self.call_addrgen('bech32', 'keyaddrgen')
+		return 'skip'
 
 	def pwgen(self, ftype, id_str, pwfmt=None, pwlen=None, extra_opts=[], stdout=False):
+		if self.coin != 'btc' or self.proto.testnet:
+			return 'skip'
 		wf = self.get_file_with_ext('mmdat')
 		pwfmt = ([f'--passwd-fmt={pwfmt}'] if pwfmt else [])
 		pwlen = ([f'--passwd-len={pwlen}'] if pwlen else [])
@@ -422,18 +430,21 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 			ftype      = ftype,
 			id_str     = id_str,
 			extra_opts = pwfmt + pwlen + extra_opts,
-			stdout     = stdout)
+			stdout     = stdout,
+			no_passthru_opts = True)
 
 	def refpasswdgen(self):
 		return self.pwgen('pass','alice@crypto.org')
+
 	def refpasswdgen_half(self):
-		return self.pwgen('pass','alice@crypto.org',pwlen='h')
+		return self.pwgen('pass', 'alice@crypto.org', pwlen='h')
+
 	def ref_b32passwdgen(self):
-		return self.pwgen('pass32','фубар@crypto.org','b32',17)
+		return self.pwgen('pass32', 'фубар@crypto.org', 'b32', 17)
 
 	def ref_hexpasswdgen(self):
-		pwlen = {'1':32,'2':48,'3':64}[self.test_name[-1]]
-		return self.pwgen('passhex','фубар@crypto.org','hex',pwlen)
+		pwlen = {'1':32, '2':48, '3':64}[self.test_name[-1]]
+		return self.pwgen('passhex', 'фубар@crypto.org', 'hex', pwlen)
 
 	def ref_hexpasswdgen_half(self):
 		return self.pwgen('passhex', 'фубар@crypto.org', 'hex', 'h', ['--accept-defaults'], stdout=True)
@@ -448,12 +459,16 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		return self.pwgen(ftype, 'фубар@crypto.org', pwfmt, pwlen, ['--accept-defaults'])
 
 	def ref_bip39_12_passwdgen(self):
-		return self.mn_pwgen(12,'bip39')
+		return self.mn_pwgen(12, 'bip39')
+
 	def ref_bip39_18_passwdgen(self):
-		return self.mn_pwgen(18,'bip39')
+		return self.mn_pwgen(18, 'bip39')
+
 	def ref_bip39_24_passwdgen(self):
-		return self.mn_pwgen(24,'bip39')
+		return self.mn_pwgen(24, 'bip39')
+
 	def ref_hex2bip39_24_passwdgen(self):
-		return self.mn_pwgen(24,'hex2bip39')
+		return self.mn_pwgen(24, 'hex2bip39')
+
 	def ref_xmrseed_25_passwdgen(self):
-		return self.mn_pwgen(24,'xmrseed',ftype='passxmrseed')
+		return self.mn_pwgen(24, 'xmrseed', ftype='passxmrseed')

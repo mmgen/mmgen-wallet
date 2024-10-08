@@ -66,8 +66,7 @@ class CmdTestOpts(CmdTestBase):
 					('cfg.cached_balances',     'False'),
 					('cfg.minconf',             '1'),
 					('cfg.fee_estimate_mode',   'conservative'), # _autoset_opts
-				)
-			)
+				))
 
 	def opt_good(self):
 		pf_base = 'testfile'
@@ -81,8 +80,7 @@ class CmdTestOpts(CmdTestBase):
 					'--outdir='+self.tmpdir,
 					'--cached-balances',
 					f'--hidden-incog-input-params={pf},123',
-				],
-				(
+				], (
 					('cfg.print_checksum',           'True'),
 					('cfg.quiet',                    'True'), # set by print_checksum
 					('cfg.passwd_file',              pf),
@@ -90,8 +88,7 @@ class CmdTestOpts(CmdTestBase):
 					('cfg.cached_balances',          'True'),
 					('cfg.hidden_incog_input_params', pf+',123'),
 					('cfg.fee_estimate_mode',         'economical'),
-				)
-			)
+				))
 
 	def opt_bad_infile(self):
 		pf = os.path.join(self.tmpdir,'fubar')

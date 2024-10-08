@@ -148,17 +148,6 @@ init_tests() {
 	# ARM ethkey available only on Arch Linux:
 	[ \( "$ARM32" -o "$ARM64" \) -a "$DISTRO" != 'archarm' ] && t_altgen_skip+=' e'
 
-	d_xmr="Monero xmrwallet operations"
-	t_xmr="
-		- $HTTP_LONG_TIMEOUT$cmdtest_py$PEXPECT_LONG_TIMEOUT --coin=xmr
-	"
-
-	d_eth="operations for Ethereum using devnet"
-	t_eth="geth $cmdtest_py --coin=eth ethdev"
-
-	d_etc="operations for Ethereum Classic using devnet"
-	t_etc="parity $cmdtest_py --coin=etc ethdev"
-
 	d_autosign="transaction autosigning with automount"
 	t_autosign="
 		- $cmdtest_py autosign_clean autosign_automount autosign
@@ -193,8 +182,9 @@ init_tests() {
 	d_btc_rt="overall operations using the regtest network (Bitcoin)"
 	t_btc_rt="
 		- $cmdtest_py regtest
-		- $cmdtest_py regtest_legacy
+		x $cmdtest_py regtest_legacy
 	"
+	[ "$FAST" ]  && t_btc_skip='x'
 
 	d_bch="overall operations with emulated RPC data (Bitcoin Cash Node)"
 	t_bch="
@@ -229,6 +219,17 @@ init_tests() {
 
 	d_ltc_rt="overall operations using the regtest network (Litecoin)"
 	t_ltc_rt="- $cmdtest_py --coin=ltc regtest"
+
+	d_eth="operations for Ethereum using devnet"
+	t_eth="geth $cmdtest_py --coin=eth ethdev"
+
+	d_etc="operations for Ethereum Classic using devnet"
+	t_etc="parity $cmdtest_py --coin=etc ethdev"
+
+	d_xmr="Monero xmrwallet operations"
+	t_xmr="
+		- $HTTP_LONG_TIMEOUT$cmdtest_py$PEXPECT_LONG_TIMEOUT --coin=xmr --exclude help
+	"
 
 	d_tool2="'mmgen-tool' utility with data check"
 	t_tool2="

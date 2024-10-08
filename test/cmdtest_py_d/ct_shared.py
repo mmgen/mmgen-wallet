@@ -257,7 +257,8 @@ class CmdTestShared:
 			extra_opts = [],
 			mmtype     = None,
 			stdout     = False,
-			dfl_wallet = False):
+			dfl_wallet = False,
+			no_passthru_opts = False):
 		list_type = ftype[:4]
 		passgen = list_type == 'pass'
 		if not mmtype and not passgen:
@@ -270,7 +271,8 @@ class CmdTestShared:
 				([],[wf])[bool(wf)] +
 				([],[id_str])[bool(id_str)] +
 				[getattr(self,f'{list_type}_idx_list')],
-				extra_desc=f'({mmtype})' if mmtype in ('segwit','bech32') else '')
+				extra_desc       = f'({mmtype})' if mmtype in ('segwit','bech32') else '',
+				no_passthru_opts = no_passthru_opts)
 		t.license()
 		wcls = get_wallet_cls( ext = 'mmdat' if dfl_wallet else get_extension(wf) )
 		t.passphrase(wcls.desc,self.wpasswd)
