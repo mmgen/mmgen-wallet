@@ -117,7 +117,7 @@ class CmdTestHelp(CmdTestBase):
 		return t
 
 	def longhelpscreens(self):
-		return self.helpscreens(arg='--longhelp',expect='USAGE:.*LONG OPTIONS:')
+		return self.helpscreens(arg='--longhelp',expect='USAGE:.*GLOBAL OPTIONS:')
 
 	def show_hash_presets(self):
 		return self.helpscreens(

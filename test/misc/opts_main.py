@@ -25,6 +25,8 @@ opts_data = {
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Be quieter
+-t, --min-temp=    t  Minimum temperature (in degrees Celsius)
+-T, --max-temp=    t  Maximum temperature (in degrees Celsius)
 -X, --cached-balances Use cached balances (Ethereum only)
 -v, --verbose         Be more verbose
                       sample help_note: {kgs}
@@ -57,6 +59,14 @@ for k in (
 	'cached_balances',   # opt_sets_global
 	'minconf',           # global_sets_opt
 	'hidden_incog_input_params',
+	'keep_label',
+	'seed_len',
+	'hash_preset',
+	'label',
+	'min_temp',
+	'max_temp',
+	'coin',
+	'pager',
 	):
 	msg('{:30} {}'.format( f'cfg.{k}:', getattr(cfg,k) ))
 
@@ -72,3 +82,7 @@ for k in (
 	'fee_estimate_mode', # _autoset_opts
 	):
 	msg('{:30} {}'.format( f'cfg.{k}:', getattr(cfg,k) ))
+
+msg('')
+for n, k in enumerate(cfg._args, 1):
+	msg(f'arg{n}: {k}')

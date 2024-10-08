@@ -48,6 +48,7 @@ class FileNotFound(Exception):            mmcode = 1
 class InvalidPasswdFormat(Exception):     mmcode = 1
 class CfgFileParseError(Exception):       mmcode = 1
 class UserOptError(Exception):            mmcode = 1
+class CmdlineOptError(Exception):         mmcode = 1
 class NoLEDSupport(Exception):            mmcode = 1
 class MsgFileFailedSID(Exception):        mmcode = 1
 class TestSuiteException(Exception):      mmcode = 1

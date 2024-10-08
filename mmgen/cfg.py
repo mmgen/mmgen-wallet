@@ -51,7 +51,10 @@ class GlobalConstants(Lockable):
 	min_time_precision = 18
 
 	# must match CoinProtocol.coins
-	core_coins = ('btc','bch','ltc','eth','etc','zec','xmr')
+	core_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'zec', 'xmr')
+	rpc_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'xmr')
+	btc_fork_rpc_coins = ('btc', 'bch', 'ltc')
+	eth_fork_coins = ('eth', 'etc')
 
 	_cc = namedtuple('cmd_cap', ['proto', 'rpc', 'coin', 'caps', 'platforms'])
 	cmd_caps_data = {
@@ -461,8 +464,8 @@ class Config(Lockable):
 				opts_data    = opts_data,
 				init_opts    = init_opts,
 				opt_filter   = opt_filter,
-				parse_only   = parse_only,
-				parsed_opts  = parsed_opts )
+				parsed_opts  = parsed_opts,
+				need_proto   = need_proto)
 			self._uopt_desc = 'command-line option'
 		else:
 			if cfg is None:
@@ -575,7 +578,8 @@ class Config(Lockable):
 
 	def _post_init(self):
 		if self.help or self.longhelp:
-			self._opts.init_bottom(self) # exits
+			from .help import print_help
+			print_help(self, self._opts) # exits
 		del self._opts
 
 	def _usage(self):
