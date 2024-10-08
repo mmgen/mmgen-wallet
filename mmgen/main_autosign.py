@@ -192,7 +192,7 @@ cfg = Config(
 		'hash_preset': '1',
 		'label': 'Autosign Wallet',
 	},
-	do_post_init = True )
+	caller_post_init = True)
 
 cmd = cfg._args[0] if len(cfg._args) == 1 else 'sign' if not cfg._args else cfg._usage()
 

@@ -50,6 +50,7 @@ class AttrCtrl(metaclass=AttrCtrlMeta):
 	_use_class_attr = False
 	_default_to_none = False
 	_skip_type_check = ()
+	_delete_ok = ()
 
 	def _lock(self):
 		self._locked = True
@@ -88,7 +89,7 @@ class AttrCtrl(metaclass=AttrCtrlMeta):
 		return object.__setattr__(self,name,value)
 
 	def __delattr__(self,name):
-		if self._locked:
+		if self._locked and not name in self._delete_ok:
 			raise AttributeError('attribute cannot be deleted')
 		return object.__delattr__(self,name)
 

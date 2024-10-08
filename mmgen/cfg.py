@@ -143,6 +143,7 @@ class Config(Lockable):
 	_autolock = False
 	_set_ok = ('usr_randchars','_proto')
 	_reset_ok = ('accept_defaults',)
+	_delete_ok = ('_opts',)
 	_use_class_attr = True
 	_default_to_none = True
 
@@ -442,8 +443,8 @@ class Config(Lockable):
 			parsed_opts  = None,
 			need_proto   = True,
 			need_amt     = True,
-			do_post_init = False,
-			process_opts = False ):
+			caller_post_init = False,
+			process_opts = False):
 
 		# Step 1: get user-supplied configuration data from
 		#           a) command line, or
@@ -564,11 +565,16 @@ class Config(Lockable):
 			self._proto = init_proto_from_cfg(self,need_amt=need_amt)
 			warn_trustlevel(self) # do this after initializing proto
 
-		if self._opts and not do_post_init:
-			self._opts.init_bottom(self)
+		if self._opts and not caller_post_init:
+			self._post_init()
 
 		# Check user-set opts without modifying them
 		check_opts(self)
+
+	def _post_init(self):
+		if self.help or self.longhelp:
+			self._opts.init_bottom(self) # exits
+		del self._opts
 
 	def _usage(self):
 		from .help import make_usage_str
@@ -722,9 +728,6 @@ class Config(Lockable):
 				do_set(key, self._uopts[key], ref_type)
 			elif key in cfgfile_auto_typeset_opts:
 				do_set(key, cfgfile_auto_typeset_opts[key], ref_type)
-
-	def _post_init(self):
-		return self._opts.init_bottom(self)
 
 	def _die_on_incompatible_opts(self):
 		for group in self._incompatible_opts:

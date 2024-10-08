@@ -136,18 +136,9 @@ class UserOpts:
 			return
 
 	def init_bottom(self,cfg):
-
 		# print help screen only after globals initialized and locked:
 		if cfg.help or cfg.longhelp:
 			self.print_help(cfg) # exits
-
-		# delete unneeded data:
-		for k in ('text','notes','code'):
-			if k in self.opts_data:
-				del self.opts_data[k]
-		del Opts.make_help
-		del Opts.process_uopts
-		del Opts.parse_opts
 
 	def usage(self):
 		from .util import Die
