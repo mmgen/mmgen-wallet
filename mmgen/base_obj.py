@@ -88,10 +88,10 @@ class AttrCtrl(metaclass=AttrCtrlMeta):
 
 		return object.__setattr__(self,name,value)
 
-	def __delattr__(self,name):
+	def __delattr__(self, name):
 		if self._locked and not name in self._delete_ok:
 			raise AttributeError('attribute cannot be deleted')
-		return object.__delattr__(self,name)
+		return object.__delattr__(self, name)
 
 class Lockable(AttrCtrl):
 	"""

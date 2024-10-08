@@ -34,7 +34,7 @@ def die2(exit_val,s):
 
 class GlobalConstants(Lockable):
 	"""
-	These values are non-configurable.  They’re constant for a given machine,
+	These values are non-runtime-configurable.  They’re constant for a given machine,
 	user, executable and MMGen release.
 	"""
 	_autolock = True
@@ -527,7 +527,7 @@ class Config(Lockable):
 		# Step 6: set auto typeset opts from user-supplied data or cfgfile data, in that order:
 		self._set_auto_typeset_opts( self._cfgfile_opts.auto_typeset )
 
-		if self.regtest or self.bob or self.alice or self.carol or gc.prog_name == 'mmgen-regtest':
+		if self.regtest or self.bob or self.alice or self.carol or gc.prog_name == f'{gc.proj_id}-regtest':
 			self.network = 'regtest'
 			self.regtest_user = 'bob' if self.bob else 'alice' if self.alice else 'carol' if self.carol else None
 		else:
@@ -563,13 +563,15 @@ class Config(Lockable):
 			from .protocol import init_proto_from_cfg, warn_trustlevel
 			# requires the default-to-none behavior, so do after the lock:
 			self._proto = init_proto_from_cfg(self,need_amt=need_amt)
-			warn_trustlevel(self) # do this after initializing proto
 
 		if self._opts and not caller_post_init:
 			self._post_init()
 
 		# Check user-set opts without modifying them
 		check_opts(self)
+
+		if need_proto:
+			warn_trustlevel(self) # do this only after proto is initialized
 
 	def _post_init(self):
 		if self.help or self.longhelp:
