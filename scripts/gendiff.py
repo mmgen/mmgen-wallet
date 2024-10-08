@@ -18,7 +18,8 @@ The cleaned source files are saved with the .clean extension.
 import sys,re
 from difflib import unified_diff
 
-fns = sys.argv[1:]
+fns = sys.argv[1:3]
+diff_opts = sys.argv[4:] if sys.argv[3:4] == ['--'] else None
 
 translate = {
 	'\r': None,
@@ -55,7 +56,11 @@ cleaned_texts = [cleanup_file(fn) for fn in fns]
 if len(fns) == 2:
 	# chunk headers have trailing newlines, hence the rstrip()
 	sys.stderr.write('Generating diff\n')
-	print(
-		f'diff a/{fns[0]} b/{fns[1]}\n' +
-		'\n'.join(a.rstrip() for a in unified_diff(*cleaned_texts,fromfile=f'a/{fns[0]}',tofile=f'b/{fns[1]}'))
-	)
+	if diff_opts:
+		from subprocess import run
+		run(['diff', '-u'] + [f'{fn}.clean' for fn in fns])
+	else:
+		print(
+			f'diff a/{fns[0]} b/{fns[1]}\n' +
+			'\n'.join(a.rstrip() for a in unified_diff(*cleaned_texts,fromfile=f'a/{fns[0]}',tofile=f'b/{fns[1]}'))
+		)
