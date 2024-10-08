@@ -35,7 +35,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 		_finfo(478559,'00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148','BCH',False),
 	]
 	caps            = ('rbf','segwit')
-	mmcaps          = ('key','addr','rpc_init','tx')
+	mmcaps          = ('rpc', 'rpc_init', 'tw', 'msg')
 	base_proto      = 'Bitcoin'
 	base_proto_coin = 'BTC'
 	base_coin       = 'BTC'

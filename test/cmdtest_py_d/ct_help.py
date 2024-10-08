@@ -17,7 +17,7 @@ import sys, os, time
 from mmgen.util import ymsg
 from mmgen.cfg import gc
 
-from ..include.common import cfg, proto_cmds
+from ..include.common import cfg
 from .ct_base import CmdTestBase
 
 class CmdTestHelp(CmdTestBase):
@@ -83,25 +83,29 @@ class CmdTestHelp(CmdTestBase):
 		t.skip_ok = True
 		return t
 
-	def helpscreens(self,arg='--help',scripts=(),expect='USAGE:.*OPTIONS:',pager=True):
+	def helpscreens(self, arg='--help', scripts=(), expect='USAGE:.*OPTIONS:', pager=True):
 
-		scripts = list(scripts) or [s.replace('mmgen-','') for s in os.listdir('cmds')]
+		scripts = list(scripts or gc.cmd_caps_data)
 
-		if 'tx' not in self.proto.mmcaps:
-			scripts = [s for s in scripts if not (s == 'regtest' or s.startswith('tx'))]
+		def gen_skiplist():
+			for script in scripts:
+				d = gc.cmd_caps_data[script]
+				for cap in d.caps:
+					if cap not in self.proto.mmcaps:
+						yield script
+						break
+				else:
+					if sys.platform == 'win32' and 'w' not in d.platforms:
+						yield script
+					elif d.coin and len(d.coin) > 1 and self.proto.coin.lower() not in (d.coin, 'btc'):
+						yield script
 
-		if 'xmrwallet' in scripts and (cfg.no_altcoin or not self.proto.coin in ('BTC','XMR')):
-			scripts.remove('xmrwallet')
-
-		if 'autosign' in scripts and sys.platform == 'win32':
-			scripts.remove('autosign')
-
-		for cmdname in sorted(scripts):
+		for cmdname in sorted(set(scripts) - set(list(gen_skiplist()))):
 			t = self.spawn(
 				f'mmgen-{cmdname}',
 				[arg],
 				extra_desc       = f'(mmgen-{cmdname})',
-				no_passthru_opts = not cmdname in proto_cmds)
+				no_passthru_opts = not gc.cmd_caps_data[cmdname].proto)
 			t.expect(expect,regex=True)
 			if pager and t.pexpect_spawn:
 				time.sleep(0.2)

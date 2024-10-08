@@ -25,7 +25,7 @@ class mainnet(mainnet):
 	wif_ver_num    = { 'std': '80', 'zcash_z': 'ab36' }
 	pubkey_types   = ('std','zcash_z')
 	mmtypes        = ('L','C','Z')
-	mmcaps         = ('key','addr')
+	mmcaps         = ()
 	dfl_mmtype     = 'L'
 	avg_bdi        = 75
 

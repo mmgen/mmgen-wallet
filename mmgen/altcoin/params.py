@@ -292,7 +292,7 @@ def make_proto(e,testnet=False):
 				'wif_ver_num': { 'std': num2hexstr(e.wif_ver_num) },
 				'mmtypes':    ('L','C','S') if e.has_segwit else ('L','C'),
 				'dfl_mmtype': 'L',
-				'mmcaps':     ('key','addr'),
+				'mmcaps':     (),
 			},
 		)
 	)

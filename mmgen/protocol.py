@@ -84,9 +84,11 @@ class CoinProtocol(MMGenObject):
 				self.addr_fmt_to_ver_bytes = {v:k for k,v in self.addr_ver_bytes.items()}
 				self.addr_ver_bytes_len = len(list(self.addr_ver_bytes)[0])
 
-			if 'tx' not in self.mmcaps and gc.is_txprog:
-				from .util import die
-				die(2,f'Command {gc.prog_name!r} not supported for coin {self.coin}')
+			if gc.cmd_caps:
+				for cap in gc.cmd_caps.caps:
+					if cap not in self.mmcaps:
+						from .util import die
+						die(2, f'Command {gc.prog_name!r} not supported for coin {self.coin}')
 
 			if self.chain_names:
 				self.chain_name = self.chain_names[0] # first chain name is default

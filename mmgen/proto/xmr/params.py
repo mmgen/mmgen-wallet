@@ -36,7 +36,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 	pubkey_type    = 'monero' # required by DummyWIF
 	avg_bdi        = 120
 	privkey_len    = 32
-	mmcaps         = ('key','addr')
+	mmcaps         = ('rpc',)
 	ignore_daemon_version = False
 	coin_amt       = 'XMRAmt'
 	sign_mode      = 'standalone'

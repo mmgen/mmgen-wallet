@@ -40,6 +40,7 @@ class GlobalConstants(Lockable):
 	_autolock = True
 
 	proj_name          = 'MMGen'
+	proj_id            = 'mmgen'
 	proj_url           = 'https://github.com/mmgen/mmgen-wallet'
 	author             = 'The MMGen Project'
 	email              = '<mmgen@tuta.io>'
@@ -52,8 +53,34 @@ class GlobalConstants(Lockable):
 	# must match CoinProtocol.coins
 	core_coins = ('btc','bch','ltc','eth','etc','zec','xmr')
 
+	_cc = namedtuple('cmd_cap', ['proto', 'rpc', 'coin', 'caps', 'platforms'])
+	cmd_caps_data = {
+		'addrgen':      _cc(True,  False, None,  [],      'lmw'),
+		'addrimport':   _cc(True,  True,  'R',   ['tw'],  'lmw'),
+		'autosign':     _cc(True,  True,  'r',   ['rpc'], 'lm'),
+		'keygen':       _cc(True,  False, None,  [],      'lmw'),
+		'msg':          _cc(True,  True,  'R',   ['msg'], 'lmw'),
+		'passchg':      _cc(False, False, None,  [],      'lmw'),
+		'passgen':      _cc(False, False, None,  [],      'lmw'),
+		'regtest':      _cc(True,  True,  'b',   ['tw'],  'lmw'),
+		'seedjoin':     _cc(False, False, None,  [],      'lmw'),
+		'seedsplit':    _cc(False, False, None,  [],      'lmw'),
+		'subwalletgen': _cc(False, False, None,  [],      'lmw'),
+		'tool':         _cc(True,  True,  None,  [],      'lmw'),
+		'txbump':       _cc(True,  True,  'R',   ['tw'],  'lmw'),
+		'txcreate':     _cc(True,  True,  'R',   ['tw'],  'lmw'),
+		'txdo':         _cc(True,  True,  'R',   ['tw'],  'lmw'),
+		'txsend':       _cc(True,  True,  'R',   ['tw'],  'lmw'),
+		'txsign':       _cc(True,  True,  'R',   ['tw'],  'lmw'),
+		'walletchk':    _cc(False, False, None,  [],      'lmw'),
+		'walletconv':   _cc(False, False, None,  [],      'lmw'),
+		'walletgen':    _cc(False, False, None,  [],      'lmw'),
+		'xmrwallet':    _cc(True,  True,  'xmr', ['rpc'], 'lmw'),
+	}
+
 	prog_name = os.path.basename(sys.argv[0])
-	is_txprog = prog_name == 'mmgen-regtest' or prog_name.startswith('mmgen-tx')
+	prog_id = prog_name.removeprefix(f'{proj_id}-')
+	cmd_caps = cmd_caps_data.get(prog_id)
 
 	if sys.platform not in ('linux', 'win32', 'darwin'):
 		die2(1,f'{sys.platform!r}: platform not supported by {proj_name}')

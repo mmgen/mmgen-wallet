@@ -30,7 +30,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 	chain_names   = ['ethereum','foundation']
 	sign_mode     = 'standalone'
 	caps          = ('token',)
-	mmcaps        = ('key','addr','rpc_init','tx')
+	mmcaps        = ('rpc', 'rpc_init', 'tw', 'msg')
 	base_proto    = 'Ethereum'
 	base_proto_coin = 'ETH'
 	base_coin     = 'ETH'
