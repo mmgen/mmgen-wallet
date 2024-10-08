@@ -32,7 +32,7 @@ opts_data = {
 		'usage':'[opts] [MMGen address file]',
 		'options': """
 -h, --help         Print this help message
---, --longhelp     Print help message for long options (common options)
+--, --longhelp     Print help message for long (global) options
 -a, --address=a    Import the single coin address 'a'
 -b, --batch        Import all addresses in one RPC call
 -l, --addrlist     Address source is a flat list of non-MMGen coin addresses

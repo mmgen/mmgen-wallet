@@ -35,7 +35,7 @@ opts_data = {
 		'usage': '[options] share1 share2 [...shareN]',
 		'options': """
 -h, --help            Print this help message
---, --longhelp        Print help message for long options (common options)
+--, --longhelp        Print help message for long (global) options
 -d, --outdir=      d  Output file to directory 'd' instead of working dir
 -e, --echo-passphrase Echo passphrases and other user input to screen
 -i, --id-str=      s  ID String of split (required for master share join only)

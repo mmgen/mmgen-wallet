@@ -51,7 +51,7 @@ opts_data = {
 -A, --tool-api       Test the tool_api subsystem
 -C, --coverage       Produce code coverage info using trace module
 -d, --die-on-missing Abort if no test data found for given command
---, --longhelp       Print help message for long options (common options)
+--, --longhelp       Print help message for long (global) options
 -l, --list-tests     List the test groups in this test suite
 -L, --list-tested-cmds Output the 'mmgen-tool' commands that are tested by this test suite
 -n, --names          Print command names instead of descriptions

@@ -102,7 +102,7 @@ opts_data = {
 		],
 		'options': """
 -h, --help           Print this help message
---, --longhelp       Print help message for long options (common options)
+--, --longhelp       Print help message for long (global) options
 -d, --outdir=d       Output file to directory 'd' instead of working dir
 -t, --msghash-type=T Specify the message hash type.  Supported values:
                      'eth_sign' (ETH default), 'raw' (non-ETH default)

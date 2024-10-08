@@ -31,7 +31,7 @@ opts_data = {
 		'usage':   '[opts] <command>',
 		'options': """
 -h, --help          Print this help message
---, --longhelp      Print help message for long options (common options)
+--, --longhelp      Print help message for long (global) options
 -b, --bdb-wallet    Create and use a legacy Berkeley DB coin daemon wallet
 -e, --empty         Don't fund Bob and Alice's wallets on setup
 -n, --setup-no-stop-daemon  Don't stop daemon after setup is finished

@@ -49,7 +49,7 @@ opts_data = {
 		'usage':'[opts] [seed source] <index list or range(s)>',
 		'options': """
 -h, --help            Print this help message
---, --longhelp        Print help message for long options (common options)
+--, --longhelp        Print help message for long (global) options
 -A, --no-addresses    Print only secret keys, no addresses
 -c, --print-checksum  Print address list checksum and exit
 -d, --outdir=      d  Output files to directory 'd' instead of working dir

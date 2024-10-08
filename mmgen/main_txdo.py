@@ -32,7 +32,7 @@ opts_data = {
 					'[seed source ...]',
 		'options': """
 -h, --help             Print this help message
---, --longhelp         Print help message for long options (common options)
+--, --longhelp         Print help message for long (global) options
 -A, --fee-adjust=    f Adjust transaction fee by factor 'f' (see below)
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
                        brainwallet input

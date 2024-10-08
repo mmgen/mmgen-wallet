@@ -42,7 +42,7 @@ opts_data = {
 		'usage':'[opts] [seed source] <ID string> <index list or range(s)>',
 		'options': """
 -h, --help            Print this help message
---, --longhelp        Print help message for long options (common options)
+--, --longhelp        Print help message for long (global) options
 -d, --outdir=      d  Output files to directory 'd' instead of working dir
 -e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry
 -f, --passwd-fmt=  f  Generate passwords of format 'f'.  Default: {pl.dfl_pw_fmt}.

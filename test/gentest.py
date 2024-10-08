@@ -41,7 +41,7 @@ opts_data = {
 		'usage':'[options] <spec> <rounds | dump file>',
 		'options': """
 -h, --help         Print this help message
---, --longhelp     Print help message for long options (common options)
+--, --longhelp     Print help message for long (global) options
 -a, --all-coins    Test all coins supported by specified external tool
 -k, --use-internal-keccak-module Force use of the internal keccak module
 -q, --quiet        Produce quieter output

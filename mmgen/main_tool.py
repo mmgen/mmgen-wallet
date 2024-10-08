@@ -32,7 +32,7 @@ opts_data = {
 		'options': """
 -d, --outdir=       d  Specify an alternate directory 'd' for output
 -h, --help             Print this help message
---, --longhelp         Print help message for long options (common options)
+--, --longhelp         Print help message for long (global) options
 -e, --echo-passphrase  Echo passphrase or mnemonic to screen upon entry
 -k, --use-internal-keccak-module Force use of the internal keccak module
 -K, --keygen-backend=n Use backend 'n' for public key generation.  Options

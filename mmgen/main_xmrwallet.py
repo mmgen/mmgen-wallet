@@ -54,8 +54,7 @@ opts_data = {
 		],
 		'options': """
 -h, --help                       Print this help message
---, --longhelp                   Print help message for long options (common
-                                 options)
+--, --longhelp                   Print help message for long (global) options
 -a, --autosign                   Use appropriate outdir and other params for
                                  autosigning operations (implies --watch-only).
                                  When this option is in effect, filename argu-

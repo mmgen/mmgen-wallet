@@ -23,7 +23,7 @@ opts_data = {
 		'usage':'[opts]',
 		'options': """
 -h, --help          Print this help message
---, --longhelp      Print help message for long options (common options)
+--, --longhelp      Print help message for long (global) options
 -s, --sample-size=N Specify sample block range for block discovery time
                     estimate
 """,

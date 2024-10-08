@@ -119,7 +119,7 @@ opts_data = {
 		'usage':'[options] [command [..command]] | [command_group[.command_subgroup][:command]]',
 		'options': """
 -h, --help           Print this help message
---, --longhelp       Print help message for long options (common options)
+--, --longhelp       Print help message for long (global) options
 -a, --no-altcoin     Skip altcoin tests (WIP)
 -A, --no-daemon-autostart Don't start and stop daemons automatically
 -B, --bech32         Generate and use Bech32 addresses

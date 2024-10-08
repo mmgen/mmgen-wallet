@@ -36,7 +36,7 @@ opts_data = {
 		'usage':'[opts] <network IDs>',
 		'options': """
 -h, --help           Print this help message
---, --longhelp       Print help message for long options (common options)
+--, --longhelp       Print help message for long (global) options
 -D, --debug          Produce debugging output (implies --verbose)
 -d, --datadir=       Override the default datadir
 -i, --daemon-ids     Print all known daemon IDs

@@ -46,7 +46,7 @@ opts_data = {
 		'usage':'[options] [object]',
 		'options': """
 -h, --help         Print this help message
---, --longhelp     Print help message for long options (common options)
+--, --longhelp     Print help message for long (global) options
 -g, --getobj       Instantiate objects with get_obj() wrapper
 -q, --quiet        Produce quieter output
 -s, --silent       Silence output of tested objects

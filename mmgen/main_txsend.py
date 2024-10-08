@@ -35,7 +35,7 @@ opts_data = {
 		'usage':   '[opts] [signed transaction file]',
 		'options': """
 -h, --help      Print this help message
---, --longhelp  Print help message for long options (common options)
+--, --longhelp  Print help message for long (global) options
 -a, --autosign  Send an autosigned transaction created by ‘mmgen-txcreate
                 --autosign’.  The removable device is mounted and unmounted
                 automatically. The transaction file argument must be omitted

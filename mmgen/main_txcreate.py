@@ -31,7 +31,7 @@ opts_data = {
 		'usage':   '[opts]  [<addr,amt> ...] <change addr, addrlist ID or addr type> [addr file ...]',
 		'options': """
 -h, --help            Print this help message
---, --longhelp        Print help message for long options (common options)
+--, --longhelp        Print help message for long (global) options
 -a, --autosign        Create a transaction for offline autosigning (see
                       ‘mmgen-autosign’). The removable device is mounted and
                       unmounted automatically

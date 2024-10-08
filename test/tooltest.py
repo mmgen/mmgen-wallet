@@ -40,7 +40,7 @@ opts_data = {
 -h, --help          Print this help message
 -C, --coverage      Produce code coverage info using trace module
 -d, --debug         Produce debugging output (stderr from spawned script)
---, --longhelp      Print help message for long options (common options)
+--, --longhelp      Print help message for long (global) options
 -l, --list-cmds     List and describe the tests and commands in this test suite
 -s, --testing-status  List the testing status of all 'mmgen-tool' commands
 -t, --type=t        Specify address type (valid choices: 'zcash_z')

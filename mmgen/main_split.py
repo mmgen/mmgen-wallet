@@ -35,7 +35,7 @@ opts_data = {
 		'usage':'[opts] [output addr1] [output addr2]',
 		'options': """
 -h, --help           Print this help message
---, --longhelp       Print help message for long options (common options)
+--, --longhelp       Print help message for long (global) options
 -f, --tx-fees=     f The transaction fees for each chain (comma-separated)
 -c, --other-coin=  c The coin symbol of the other chain (default: {oc})
 -B, --no-blank       Don't blank screen before displaying unspent outputs

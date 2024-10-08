@@ -10,7 +10,7 @@ opts_data = {
 		'usage':'[args] [opts]',
 		'options': """
 -h, --help            Print this help message
---, --longhelp        Print help message for long options (common options)
+--, --longhelp        Print help message for long (global) options
 -i, --in-fmt=      f  Input is from wallet format 'f'
 -d, --outdir=      d  Use outdir 'd'
 -C, --print-checksum  Print a checksum

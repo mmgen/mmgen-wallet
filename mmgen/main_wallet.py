@@ -85,7 +85,7 @@ opts_data = {
 		'usage': usage,
 		'options': """
 -h, --help            Print this help message
---, --longhelp        Print help message for long options (common options)
+--, --longhelp        Print help message for long (global) options
 -d, --outdir=      d  Output files to directory 'd' instead of working dir
 -e, --echo-passphrase Echo passphrases and other user input to screen
 -f, --force-update    Force update of wallet even if nothing has changed

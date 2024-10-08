@@ -26,7 +26,7 @@ opts_data = {
 		'usage':'[options]',
 		'options': """
 -h, --help           Print this help message
---, --longhelp       Print help message for long options (common options)
+--, --longhelp       Print help message for long (global) options
 """,
 	},
 }

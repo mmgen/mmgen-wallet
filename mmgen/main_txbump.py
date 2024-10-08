@@ -36,7 +36,7 @@ opts_data = {
 		'usage':   f'[opts] [{gc.proj_name} TX file] [seed source] ...',
 		'options': """
 -h, --help             Print this help message
---, --longhelp         Print help message for long options (common options)
+--, --longhelp         Print help message for long (global) options
 -a, --autosign         Bump the most recent transaction created and sent with
                        the --autosign option. The removable device is mounted
                        and unmounted automatically.  The transaction file
