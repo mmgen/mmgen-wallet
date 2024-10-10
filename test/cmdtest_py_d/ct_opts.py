@@ -33,6 +33,14 @@ class CmdTestOpts(CmdTestBase):
 		('opt_good9',            (41, 'good cmdline arg ‘-’', [])),
 		('opt_good10',           (41, 'good cmdline arg ‘-’ with arg', [])),
 		('opt_good11',           (41, 'good cmdline arg ‘-’ with option', [])),
+		('opt_good12',           (41, 'good cmdline opt (short opt with option)', [])),
+		('opt_good13',           (41, 'good cmdline opt (short opt with option)', [])),
+		('opt_good14',           (41, 'good cmdline opt (combined short opt with option)', [])),
+		('opt_good15',           (41, 'good cmdline opt (combined short opt with option)', [])),
+		('opt_good16',           (41, 'good cmdline opt (param with equals signs)', [])),
+		('opt_good17',           (41, 'good cmdline opt (param with equals signs)', [])),
+		('opt_good18',           (41, 'good cmdline opt (param with equals signs)', [])),
+		('opt_good19',           (41, 'good cmdline opt (param with equals signs)', [])),
 		('opt_bad_param',        (41, 'bad global opt (--pager=1)', [])),
 		('opt_bad_infile',       (41, 'bad infile parameter', [])),
 		('opt_bad_outdir',       (41, 'bad outdir parameter', [])),
@@ -40,8 +48,6 @@ class CmdTestOpts(CmdTestBase):
 		('opt_bad_autoset',      (41, 'invalid autoset value', [])),
 		('opt_invalid_1',     (41, 'invalid cmdline opt ‘--x’', [])),
 		('opt_invalid_2',     (41, 'invalid cmdline opt ‘---’', [])),
-		('opt_invalid_3',     (41, 'invalid cmdline opt (combined short opt with param)', [])),
-		('opt_invalid_4',     (41, 'invalid cmdline opt (combined short opt with param)', [])),
 		('opt_invalid_5',     (41, 'invalid cmdline opt (missing parameter)', [])),
 		('opt_invalid_6',     (41, 'invalid cmdline opt (missing parameter)', [])),
 		('opt_invalid_7',     (41, 'invalid cmdline opt (parameter not required)', [])),
@@ -178,6 +184,30 @@ class CmdTestOpts(CmdTestBase):
 	def opt_good11(self):
 		return self.check_vals(['-q', '-', '-x'], (('arg1', '-'), ('arg2', '-x')))
 
+	def opt_good12(self):
+		return self.check_vals(['-l128'], (('cfg.seed_len', '128'),))
+
+	def opt_good13(self):
+		return self.check_vals(['-l', '128'], (('cfg.seed_len', '128'),))
+
+	def opt_good14(self):
+		return self.check_vals(['-kl128'], (('cfg.keep_label', 'True'), ('cfg.seed_len', '128')))
+
+	def opt_good15(self):
+		return self.check_vals(['-kl', '128'], (('cfg.keep_label', 'True'), ('cfg.seed_len', '128')))
+
+	def opt_good16(self):
+		return self.check_vals(['--point=x=1,y=2,z=3'], (('cfg.point', 'x=1,y=2,z=3'),))
+
+	def opt_good17(self):
+		return self.check_vals(['--point', 'x=1,y=2,z=3'], (('cfg.point', 'x=1,y=2,z=3'),))
+
+	def opt_good18(self):
+		return self.check_vals(['-xx=1,y=2,z=3'], (('cfg.point', 'x=1,y=2,z=3'),))
+
+	def opt_good19(self):
+		return self.check_vals(['-x', 'x=1,y=2,z=3'], (('cfg.point', 'x=1,y=2,z=3'),))
+
 	def opt_bad_param(self):
 		return self.do_run(['--pager=1'], 'no parameter', 1)
 
@@ -206,12 +236,6 @@ class CmdTestOpts(CmdTestBase):
 	def opt_invalid_2(self):
 		return self.opt_invalid(['---'], 'must be at least', 1)
 
-	def opt_invalid_3(self):
-		return self.opt_invalid(['-kl3'], 'short option with parameters', 1)
-
-	def opt_invalid_4(self):
-		return self.opt_invalid(['-kl 3'], 'short option with parameters', 1)
-
 	def opt_invalid_5(self):
 		return self.opt_invalid(['-l'], 'missing parameter', 1)
 
@@ -222,7 +246,7 @@ class CmdTestOpts(CmdTestBase):
 		return self.opt_invalid(['--quiet=1'], 'requires no parameter', 1)
 
 	def opt_invalid_8(self):
-		return self.opt_invalid(['-x'], 'unrecognized option', 1)
+		return self.opt_invalid(['-w'], 'unrecognized option', 1)
 
 	def opt_invalid_9(self):
 		return self.opt_invalid(['--frobnicate'], 'unrecognized option', 1)

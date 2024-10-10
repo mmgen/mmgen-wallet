@@ -69,13 +69,11 @@ def process_uopts(opts_data, opts):
 					opt, parm = arg[2:].split('=', 1) if '=' in arg else (arg[2:], None)
 					die('CmdlineOptError', f'--{opt}: unrecognized option')
 			elif arg[0] == '-' and len(arg) > 1:
-				for j, sopt in enumerate(arg[1:]):
+				for j, sopt in enumerate(arg[1:], 2):
 					if sopt in opts:
 						if opts[sopt].has_parm:
-							if j > 0:
-								die('CmdlineOptError', f'{arg}: short option with parameters cannot be combined')
-							if arg[2:]:
-								yield (opts[sopt].name, arg[2:])
+							if arg[j:]:
+								yield (opts[sopt].name, arg[j:])
 							else:
 								idx += 1
 								if idx == argv_len or (parm := sys.argv[idx]).startswith('-'):

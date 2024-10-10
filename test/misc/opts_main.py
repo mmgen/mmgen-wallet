@@ -27,6 +27,7 @@ opts_data = {
 -q, --quiet           Be quieter
 -t, --min-temp=    t  Minimum temperature (in degrees Celsius)
 -T, --max-temp=    t  Maximum temperature (in degrees Celsius)
+-x, --point=       P  Point in Euclidean space
 -X, --cached-balances Use cached balances (Ethereum only)
 -v, --verbose         Be more verbose
                       sample help_note: {kgs}
@@ -67,6 +68,7 @@ for k in (
 	'max_temp',
 	'coin',
 	'pager',
+	'point',
 	):
 	msg('{:30} {}'.format( f'cfg.{k}:', getattr(cfg,k) ))
 
