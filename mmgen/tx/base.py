@@ -92,6 +92,7 @@ class Base(MMGenObject):
 		Non-{gc.proj_name} addresses found in inputs:
 		    {{}}
 	"""
+	file_format = 'json'
 
 	class Input(MMGenTxIO):
 		scriptPubKey = ListItemAttr(HexStr)

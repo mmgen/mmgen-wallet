@@ -11,10 +11,11 @@ from mmgen.tx import NewTX,CompletedTX,UnsignedTX
 from mmgen.tx.file import MMGenTxFile
 from mmgen.daemon import CoinDaemon
 from mmgen.protocol import init_proto
+from mmgen.cfg import Config
 
 from ..include.common import cfg, qmsg, vmsg
 
-async def do_txfile_test(desc,fns):
+async def do_txfile_test(desc, fns, cfg=cfg, check=False):
 	qmsg(f'  Testing CompletedTX initializer ({desc})')
 	for fn in fns:
 		qmsg(f'     parsing: {os.path.basename(fn)}')
@@ -31,14 +32,18 @@ async def do_txfile_test(desc,fns):
 
 		assert fn_gen == os.path.basename(fn), f'{fn_gen} != {fn}'
 
-		text = f.format()
+		if check:
+			text = f.format()
+			with open(fpath) as fh:
+				text_chk = fh.read()
+			assert text == text_chk, f'\nformatted text:\n{text}\n  !=\noriginal file:\n{text_chk}'
 
 	qmsg('  OK')
 	return True
 
 class unit_tests:
 
-	altcoin_deps = ('txfile_alt',)
+	altcoin_deps = ('txfile_alt', 'txfile_alt_legacy')
 
 	async def tx(self,name,ut):
 		qmsg('  Testing NewTX initializer')
@@ -53,9 +58,33 @@ class unit_tests:
 		qmsg('  OK')
 		return True
 
-	async def txfile(self,name,ut):
+	async def txfile(self, name, ut):
 		return await do_txfile_test(
 			'Bitcoin',
+			(
+				'tx/7A8157[6.65227,34].rawtx',
+				'tx/BB3FD2[7.57134314,123].sigtx',
+				'tx/0A869F[1.23456,32].regtest.asubtx',
+			),
+			check = True
+		)
+
+	async def txfile_alt(self, name, ut):
+		return await do_txfile_test(
+			'altcoins',
+			(
+				'tx/C09D73-LTC[981.73747,2000].testnet.rawtx',
+				'tx/91060A-BCH[1.23456].regtest.arawtx',
+				'tx/D850C6-MM1[43.21,50000].subtx', # token tx
+			),
+			# token resolved by tracking wallet under data_dir:
+			cfg = Config({'data_dir': 'test/ref/data_dir'}),
+			check = True
+		)
+
+	async def txfile_legacy(self, name, ut):
+		return await do_txfile_test(
+			'Bitcoin - legacy file format',
 			(
 				'0B8D5A[15.31789,14,tl=1320969600].rawtx',
 				'542169[5.68152,34].sigtx',
@@ -64,9 +93,9 @@ class unit_tests:
 			)
 		)
 
-	async def txfile_alt(self,name,ut):
+	async def txfile_alt_legacy(self, name, ut):
 		return await do_txfile_test(
-			'altcoins',
+			'altcoins - legacy file format',
 			(
 				'460D4D-BCH[10.19764,tl=1320969600].rawtx',
 				'ethereum/5881D2-MM1[1.23456,50000].rawtx',

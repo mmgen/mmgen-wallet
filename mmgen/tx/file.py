@@ -19,10 +19,15 @@
 """
 tx.file: Transaction file operations for the MMGen suite
 """
-import os
+
+import os, json
 
 from ..util import ymsg,make_chksum_6,die
 from ..obj import MMGenObject,HexStr,MMGenTxID,CoinTxID,MMGenTxComment
+from ..rpc import json_encoder
+
+def json_dumps(data):
+	return json.dumps(data, separators = (',', ':'), cls=json_encoder)
 
 def get_proto_from_coin_id(tx, coin_id, chain):
 	coin, tokensym = coin_id.split(':') if ':' in coin_id else (coin_id, None)
@@ -49,6 +54,21 @@ def eval_io_data(tx, data, desc):
 	return io_list(parent=tx, data=[io(tx.proto,**d) for d in data])
 
 class MMGenTxFile(MMGenObject):
+	data_label = 'MMGenTransaction'
+	attrs = {
+		'chain': None,
+		'txid': MMGenTxID,
+		'send_amt': 'skip',
+		'timestamp': None,
+		'blockcount': None,
+		'serialized': None,
+	}
+	extra_attrs = {
+		'locktime': None,
+		'comment': MMGenTxComment,
+		'coin_txid': CoinTxID,
+		'sent_timestamp': None,
+	}
 
 	def __init__(self,tx):
 		self.tx       = tx
@@ -62,7 +82,38 @@ class MMGenTxFile(MMGenObject):
 		if len(data) > tx.cfg.max_tx_file_size:
 			die('MaxFileSizeExceeded',
 				f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)')
-		return self.parse_data_legacy(data, metadata_only)
+		return (self.parse_data_json if data[0] == '{' else self.parse_data_legacy)(data, metadata_only)
+
+	def parse_data_json(self, data, metadata_only):
+		tx = self.tx
+		tx.file_format = 'json'
+		outer_data = json.loads(data)
+		data = outer_data[self.data_label]
+		if outer_data['chksum'] != make_chksum_6(json_dumps(data)):
+			chk = make_chksum_6(json_dumps(data))
+			die(3, f'{self.data_label}: invalid checksum for TxID {data["txid"]} ({chk} != {outer_data["chksum"]})')
+
+		tx.proto = get_proto_from_coin_id(tx, data['coin_id'], data['chain'])
+
+		for k, v in self.attrs.items():
+			if v != 'skip':
+				setattr(tx, k, v(data[k]) if v else data[k])
+
+		if metadata_only:
+			return
+
+		for k, v in self.extra_attrs.items():
+			if k in data:
+				setattr(tx, k, v(data[k]) if v else data[k])
+
+		for k in ('inputs', 'outputs'):
+			setattr(tx, k, eval_io_data(tx, data[k], k))
+
+		tx.check_txfile_hex_data()
+
+		tx.parse_txfile_serialized_data() # Ethereum RLP or JSON data
+
+		assert tx.proto.coin_amt(data['send_amt']) == tx.send_amt, f'{data["send_amt"]} != {tx.send_amt}'
 
 	def parse_data_legacy(self, data, metadata_only):
 		tx = self.tx
@@ -209,7 +260,20 @@ class MMGenTxFile(MMGenObject):
 
 			return '\n'.join([make_chksum_6(' '.join(lines))] + lines) + '\n'
 
-		fmt_data = format_data_legacy()
+		def format_data_json():
+			data = json_dumps({
+					'coin_id': coin_id
+				} | {
+					k: getattr(tx, k) for k in self.attrs
+				} | {
+					'inputs':  [e._asdict() for e in tx.inputs],
+					'outputs': [e._asdict() for e in tx.outputs]
+				} | {
+					k: getattr(tx, k) for k in self.extra_attrs if getattr(tx, k)
+				})
+			return '{{"{}":{},"chksum":"{}"}}'.format(self.data_label, data, make_chksum_6(data))
+
+		fmt_data = {'json': format_data_json, 'legacy': format_data_legacy}[tx.file_format]()
 
 		if len(fmt_data) > tx.cfg.max_tx_file_size:
 			die( 'MaxFileSizeExceeded', f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)' )
