@@ -12,16 +12,16 @@ from mmgen.tx.file import MMGenTxFile
 from mmgen.daemon import CoinDaemon
 from mmgen.protocol import init_proto
 
-from ..include.common import cfg,qmsg,vmsg
+from ..include.common import cfg, qmsg, vmsg
 
 async def do_txfile_test(desc,fns):
 	qmsg(f'  Testing CompletedTX initializer ({desc})')
 	for fn in fns:
 		qmsg(f'     parsing: {os.path.basename(fn)}')
 		fpath = os.path.join('test','ref',fn)
-		tx = await CompletedTX( cfg=cfg, filename=fpath, quiet_open=True )
+		tx = await CompletedTX(cfg=cfg, filename=fpath, quiet_open=True)
 
-		vmsg(tx.info.format())
+		vmsg('\n' + tx.info.format())
 
 		f = MMGenTxFile(tx)
 		fn_gen = f.make_filename()
@@ -32,23 +32,6 @@ async def do_txfile_test(desc,fns):
 		assert fn_gen == os.path.basename(fn), f'{fn_gen} != {fn}'
 
 		text = f.format()
-
-		continue # TODO: check disabled after label -> comment patch
-
-		with open(fpath) as fp:
-			chk = fp.read()
-
-		# remove Python2 'u' string prefixes from ref files:
-		#   New in version 3.3: Support for the unicode legacy literal (u'value') was
-		#   reintroduced to simplify the maintenance of dual Python 2.x and 3.x codebases.
-		#   See PEP 414 for more information.
-		chk = chk.replace("'label':","'comment':") # TODO
-		chk = re.subn( r"\bu(['\"])", r'\1', chk )[0]
-
-		diff = get_ndiff(chk,text)
-		print(get_diff(chk,text,from_json=False))
-		nLines = len([i for i in diff if i.startswith('-')])
-		assert nLines in (0,1), f'{nLines} lines differ: only checksum line may differ'
 
 	qmsg('  OK')
 	return True

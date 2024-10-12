@@ -492,8 +492,10 @@ class Config(Lockable):
 		#         class attribute, if it exists:
 		auto_opts = tuple(self._autoset_opts) + tuple(self._auto_typeset_opts)
 		for key,val in self._uopts.items():
-			assert key.isascii() and key.isidentifier() and key[0] != '_', '{key!r}: malformed configuration option'
-			assert key not in self._forbidden_opts, '{key!r}: forbidden configuration option'
+			assert key.isascii() and key.isidentifier() and key[0] != '_', (
+				f'{key!r}: malformed configuration option')
+			assert key not in self._forbidden_opts, (
+				f'{key!r}: forbidden configuration option')
 			if key not in auto_opts:
 				if hasattr(type(self), key):
 					setattr(
