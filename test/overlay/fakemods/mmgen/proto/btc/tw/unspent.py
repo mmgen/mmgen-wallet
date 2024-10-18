@@ -12,6 +12,6 @@ if overlay_fake_os.getenv('MMGEN_BOGUS_UNSPENT_DATA'):
 			return json.loads(get_data_from_file(
 				self.cfg,
 				overlay_fake_os.getenv('MMGEN_BOGUS_UNSPENT_DATA')
-			), parse_float=Decimal)
+			))
 
 	BitcoinTwUnspentOutputs.get_rpc_data = overlay_fake_BitcoinTwUnspentOutputs.get_rpc_data

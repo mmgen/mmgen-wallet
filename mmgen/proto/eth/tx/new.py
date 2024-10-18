@@ -124,9 +124,7 @@ class New(Base,TxBase.New):
 
 	# given rel fee and units, return absolute fee using self.gas
 	def fee_rel2abs(self, tx_size, units, amt_in_units, unit):
-		return self.proto.coin_amt(
-			self.proto.coin_amt(amt_in_units, units[unit]).toWei() * self.gas.toWei(),
-			from_unit = 'wei')
+		return self.proto.coin_amt(amt_in_units, from_unit=units[unit]) * self.gas.toWei()
 
 	# given fee estimate (gas price) in wei, return absolute fee, adjusting by self.cfg.fee_adjust
 	def fee_est2abs(self,rel_fee,fe_type=None):
@@ -151,7 +149,7 @@ class New(Base,TxBase.New):
 
 	def update_change_output(self,funds_left):
 		if self.outputs and self.outputs[0].is_chg:
-			self.update_output_amt(0,self.proto.coin_amt(funds_left))
+			self.update_output_amt(0, funds_left)
 
 	async def get_input_addrs_from_cmdline(self):
 		ret = []
@@ -175,11 +173,8 @@ class New(Base,TxBase.New):
 		return ret
 
 	def final_inputs_ok_msg(self, funds_left):
-		chg = '0' if (self.outputs and self.outputs[0].is_chg) else funds_left
-		return 'Transaction leaves {} {} in the sender’s account'.format(
-			self.proto.coin_amt(chg).hl(),
-			self.proto.coin
-		)
+		chg = self.proto.coin_amt('0') if (self.outputs and self.outputs[0].is_chg) else funds_left
+		return 'Transaction leaves {} {} in the sender’s account'.format(chg.hl(), self.proto.coin)
 
 class TokenNew(TokenBase,New):
 	desc = 'transaction'

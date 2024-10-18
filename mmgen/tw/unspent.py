@@ -30,6 +30,7 @@ from ..obj import (
 	CoinTxID,
 	NonNegativeInt )
 from ..addr import CoinAddr
+from ..amt import CoinAmtChk
 from .shared import TwMMGenID,get_tw_label
 from .view import TwView
 
@@ -55,8 +56,8 @@ class TwUnspentOutputs(TwView):
 	class MMGenTwUnspentOutput(MMGenListItem):
 		txid         = ListItemAttr(CoinTxID)
 		vout         = ListItemAttr(NonNegativeInt)
-		amt          = ImmutableAttr(None)
-		amt2         = ListItemAttr(None) # the ETH balance for token account
+		amt          = ImmutableAttr(CoinAmtChk, include_proto=True)
+		amt2         = ListItemAttr(CoinAmtChk, include_proto=True) # the ETH balance for token account
 		comment      = ListItemAttr(TwComment,reassign_ok=True)
 		twmmid       = ImmutableAttr(TwMMGenID,include_proto=True)
 		addr         = ImmutableAttr(CoinAddr,include_proto=True)
@@ -68,14 +69,6 @@ class TwUnspentOutputs(TwView):
 		def __init__(self,proto,**kwargs):
 			self.__dict__['proto'] = proto
 			MMGenListItem.__init__(self,**kwargs)
-
-		class conv_funcs:
-			@staticmethod
-			def amt(instance,value):
-				return instance.proto.coin_amt(value)
-			@staticmethod
-			def amt2(instance,value):
-				return instance.proto.coin_amt(value)
 
 	async def __init__(self,cfg,proto,minconf=1,addrs=[]):
 		await super().__init__(cfg,proto)
@@ -94,10 +87,11 @@ class TwUnspentOutputs(TwView):
 				continue # coinbase outputs have no account field
 			l = get_tw_label(self.proto,o[lbl_id])
 			if l:
+				if not 'amt' in o:
+					o['amt'] = self.proto.coin_amt(o['amount'])
 				o.update({
 					'twmmid':  l.mmid,
 					'comment': l.comment or '',
-					'amt':     self.proto.coin_amt(o['amount']),
 					'addr':    CoinAddr(self.proto,o['address']),
 					'confs':   o['confirmations']
 				})

@@ -51,7 +51,7 @@ def DeserializeTX(proto, txhex):
 		return int(bytes_le[::-1].hex(), 16)
 
 	def bytes2coin_amt(bytes_le):
-		return proto.coin_amt(bytes2int(bytes_le) * proto.coin_amt.satoshi)
+		return proto.coin_amt(bytes2int(bytes_le), from_unit='satoshi')
 
 	def bshift(n, skip=False, sub_null=False):
 		nonlocal idx, raw_tx
@@ -114,7 +114,7 @@ def DeserializeTX(proto, txhex):
 	d['num_txouts'] = readVInt()
 
 	d['txouts'] = MMGenList([{
-		'amount':       bytes2coin_amt(bshift(8)),
+		'amt':          bytes2coin_amt(bshift(8)),
 		'scriptPubKey': bshift(readVInt()).hex()
 	} for i in range(d['num_txouts'])])
 
@@ -317,7 +317,7 @@ class Base(TxBase.Base):
 
 		check_equal(
 			'outputs',
-			sorted((o['address'], self.proto.coin_amt(o['amount'])) for o in dtx.txouts),
+			sorted((o['address'], o['amt']) for o in dtx.txouts),
 			sorted((o.addr, o.amt) for o in self.outputs))
 
 		if str(self.txid) != make_chksum_6(bytes.fromhex(dtx.unsigned_hex)).upper():

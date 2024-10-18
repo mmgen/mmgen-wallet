@@ -36,6 +36,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 	base_coin     = 'ETH'
 	avg_bdi       = 15
 	ignore_daemon_version = False
+	decimal_prec  = 36
 
 	chain_ids = {
 		1:    'ethereum',         # ethereum mainnet

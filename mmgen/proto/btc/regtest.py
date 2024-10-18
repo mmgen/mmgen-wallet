@@ -231,7 +231,7 @@ class MMGenRegtest(MMGenObject):
 		users = ('bob','alice')
 		for user in users:
 			out = await self.rpc_call('listunspent',0,wallet=user)
-			bal[user] = sum(e['amount'] for e in out)
+			bal[user] = sum(self.proto.coin_amt(e['amount']) for e in out)
 
 		fs = '{:<16} {:18.8f}'
 		for user in users:

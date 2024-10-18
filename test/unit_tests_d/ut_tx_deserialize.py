@@ -77,8 +77,8 @@ async def test_tx(tx_proto,tx_hex,desc,n):
 			fs = 'address of output {} does not match\nA: {}\nB: {}'
 			assert A == B, fs.format(i,A,B)
 
-		A = a[i]['value']
-		B = b[i]['amount']
+		A = tx_proto.coin_amt(a[i]['value'])
+		B = b[i]['amt']
 		fs = 'value of output {} does not match\nA: {}\nB: {}'
 		assert A == B, fs.format(i,A,B)
 

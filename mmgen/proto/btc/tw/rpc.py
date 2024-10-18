@@ -102,7 +102,7 @@ class BitcoinTwRPC(TwRPC):
 						'amt': amt0,
 						'lbl': label,
 						'addr': CoinAddr(self.proto,d['address']) }
-				amt = self.proto.coin_amt(d['amount'])
-				data[lm]['amt'] += amt
+
+				data[lm]['amt'] += self.proto.coin_amt(d['amount'])
 
 		return data

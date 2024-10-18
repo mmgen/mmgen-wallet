@@ -107,7 +107,7 @@ class EthereumTwUnspentOutputs(EthereumTwView,TwUnspentOutputs):
 		return [{
 				'account': TwLabel(self.proto,d['mmid']+' '+d['comment']),
 				'address': d['addr'],
-				'amount': await self.twctl.get_balance(d['addr']),
+				'amt': await self.twctl.get_balance(d['addr']),
 				'confirmations': 0, # TODO
 				} for d in wl]
 

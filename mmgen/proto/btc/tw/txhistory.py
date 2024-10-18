@@ -86,7 +86,7 @@ class BitcoinTwTransaction:
 					yield e.coin_addr
 
 		def total(data):
-			return self.proto.coin_amt( sum(d.data['value'] for d in data) )
+			return sum(coin_amt(d.data['value']) for d in data)
 
 		def get_best_comment():
 			"""
@@ -97,6 +97,7 @@ class BitcoinTwTransaction:
 			ret = vouts_labels('outputs') or vouts_labels('inputs')
 			return ret[0] if ret else TwComment('')
 
+		coin_amt = self.proto.coin_amt
 		# 'outputs' refers to wallet-related outputs only
 		self.vouts_info = {
 			'inputs':  gen_vouts_info( gen_prevouts_data() ),
@@ -107,7 +108,7 @@ class BitcoinTwTransaction:
 			'outputs': max(len(addr) for addr in gen_all_addrs('outputs'))
 		}
 		self.inputs_total = total(self.vouts_info['inputs'])
-		self.outputs_total = self.proto.coin_amt(sum(i['value'] for i in self.tx['decoded']['vout']))
+		self.outputs_total = sum(coin_amt(i['value']) for i in self.tx['decoded']['vout'])
 		self.wallet_outputs_total = total(self.vouts_info['outputs'])
 		self.fee = self.inputs_total - self.outputs_total
 		self.nOutputs = len(self.tx['decoded']['vout'])

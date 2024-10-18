@@ -23,7 +23,7 @@ class Bump(Completed,New,TxBase.Bump):
 
 	@property
 	def min_fee(self):
-		return self.proto.coin_amt(self.fee * Decimal('1.101'))
+		return self.fee * Decimal('1.101')
 
 	def bump_fee(self,idx,fee):
 		self.txobj['gasPrice'] = self.fee_abs2gas(fee)

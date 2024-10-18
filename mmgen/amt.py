@@ -23,19 +23,17 @@ amt: MMGen CoinAmt and related classes
 from decimal import Decimal
 from .objmethods import Hilite, InitErrors
 
-class DecimalNegateResult(Decimal):
-	pass
-
 class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 	"""
 	Instantiating with 'from_decimal' rounds value down to 'max_prec' precision.
 	For addition and subtraction, operand types must match.
 	For multiplication and division, operand types may differ.
 	Negative amounts, floor division and modulus operation are unimplemented.
+
+	Decimal precision is set in init_proto()
 	"""
 	coin = 'Coin'
 	color = 'yellow'
-	forbidden_types = (float,int)
 
 	max_prec = 0      # number of decimal places for this coin
 	max_amt  = None   # coin supply if known, otherwise None
@@ -43,8 +41,8 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 
 	def __new__(cls, num, from_unit=None, from_decimal=False):
 
-		if isinstance(num, cls):
-			return num
+		if isinstance(num, CoinAmt):
+			raise TypeError(f'CoinAmt: {num} is instance of {cls.__name__}')
 
 		try:
 			if from_unit:
@@ -55,9 +53,8 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 				assert isinstance(num, Decimal), f'number must be of type Decimal, not {type(num).__name__})'
 				me = Decimal.__new__(cls, num.quantize(Decimal('10') ** -cls.max_prec))
 			else:
-				for bad_type in cls.forbidden_types:
-					assert not isinstance(num, bad_type), f'number is of forbidden type {bad_type.__name__}'
-				me = Decimal.__new__(cls, str(num))
+				assert isinstance(num, str), f'non-string passed to {cls.__name__} initializer'
+				me = Decimal.__new__(cls, num)
 			assert me.normalize().as_tuple()[-1] >= -cls.max_prec, 'too many decimal places in coin amount'
 			if cls.max_amt:
 				assert me <= cls.max_amt, f'{me}: coin amount too large (>{cls.max_amt})'
@@ -74,11 +71,8 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 		cls.method_not_implemented()
 
 	def fmt(self, color=False, iwidth=1, prec=None): # iwidth: width of the integer part
-
-		s = str(self)
 		prec = prec or self.max_prec
-
-		if '.' in s:
+		if '.' in (s := str(self)):
 			a, b = s.split('.', 1)
 			return self.colorize(
 				a.rjust(iwidth) + '.' + b.ljust(prec)[:prec], # truncation, not rounding!
@@ -113,28 +107,24 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 		"""
 		we must allow other to be int(0) to use the sum() builtin
 		"""
-		if type(other) not in ( type(self), DecimalNegateResult ) and other != 0:
-			raise ValueError(
-				f'operand {other} of incorrect type ({type(other).__name__} != {type(self).__name__})')
-		return type(self)(Decimal.__add__(self, other, *args, **kwargs))
+		if type(other) is type(self) or (other == 0 and isinstance(other, int)):
+			return type(self)(Decimal.__add__(self, other, *args, **kwargs),  from_decimal=True)
+		raise TypeError(
+			f'operand {other} is of incorrect type ({type(other).__name__} != {type(self).__name__})')
 
 	__radd__ = __add__
 
 	def __sub__(self, other, *args, **kwargs):
-		if type(other) is not type(self):
-			raise ValueError(
-				f'operand {other} of incorrect type ({type(other).__name__} != {type(self).__name__})')
-		return type(self)(Decimal.__sub__(self, other, *args, **kwargs))
+		if type(other) is type(self):
+			return type(self)(Decimal.__sub__(self, other, *args, **kwargs),  from_decimal=True)
+		raise TypeError(
+			f'operand {other} is of incorrect type ({type(other).__name__} != {type(self).__name__})')
 
-	def copy_negate(self, *args, **kwargs):
-		"""
-		We implement this so that __add__() can check type, because:
-			class Decimal:
-				def __sub__(self, other, ...):
-					...
-					return self.__add__(other.copy_negate(), ...)
-		"""
-		return DecimalNegateResult(Decimal.copy_negate(self, *args, **kwargs))
+	def __rsub__(self, other, *args, **kwargs):
+		if type(other) is type(self):
+			return type(self)(Decimal.__rsub__(self, other, *args, **kwargs),  from_decimal=True)
+		raise TypeError(
+			f'operand {other} is of incorrect type ({type(other).__name__} != {type(self).__name__})')
 
 	def __mul__(self, other, *args, **kwargs):
 		return type(self)('{:0.{p}f}'.format(
@@ -147,6 +137,12 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 	def __truediv__(self, other, *args, **kwargs):
 		return type(self)('{:0.{p}f}'.format(
 			Decimal.__truediv__(self, Decimal(other), *args, **kwargs),
+			p = self.max_prec
+		))
+
+	def __rtruediv__(self, other, *args, **kwargs):
+		return type(self)('{:0.{p}f}'.format(
+			Decimal.__rtruediv__(self, Decimal(other), *args, **kwargs),
 			p = self.max_prec
 		))
 
@@ -196,3 +192,7 @@ class ETHAmt(CoinAmt):
 
 class ETCAmt(ETHAmt):
 	coin = 'ETC'
+
+def CoinAmtChk(proto, num):
+	assert type(num) is proto.coin_amt, f'CoinAmtChk: {type(num)} != {proto.coin_amt}'
+	return num

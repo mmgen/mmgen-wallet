@@ -111,6 +111,9 @@ class New(Base):
 	# relative fee is N+<first letter of unit name>
 	def feespec2abs(self, fee_arg, tx_size):
 
+		if type(fee_arg) is self.proto.coin_amt:
+			return fee_arg
+
 		if fee := get_obj(self.proto.coin_amt, num=fee_arg, silent=True):
 			return fee
 

@@ -55,6 +55,7 @@ class CoinProtocol(MMGenObject):
 		is_fork_of = None
 		chain_names = None
 		networks   = ('mainnet','testnet','regtest')
+		decimal_prec = 28
 
 		def __init__(self,cfg,coin,name,network,tokensym=None,need_amt=False):
 			self.cfg        = cfg
@@ -105,8 +106,10 @@ class CoinProtocol(MMGenObject):
 
 			if need_amt:
 				from . import amt
+				from decimal import getcontext
 				self.coin_amt = getattr(amt,self.coin_amt)
 				self.max_tx_fee = self.coin_amt(self.max_tx_fee) if hasattr(self,'max_tx_fee') else None
+				getcontext().prec = self.decimal_prec
 			else:
 				self.coin_amt = None
 				self.max_tx_fee = None

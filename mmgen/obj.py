@@ -112,10 +112,7 @@ class ImmutableAttr: # Descriptor
 		if set_none_ok:
 			assert typeconv and not isinstance(dtype,str), 'ImmutableAttr_check3'
 
-		if dtype is None:
-			# use instance-defined conversion function for this attribute
-			self.conv = lambda instance,value: getattr(instance.conv_funcs,self.name)(instance,value)
-		elif typeconv:
+		if typeconv:
 			# convert this attribute's type
 			if set_none_ok:
 				self.conv = lambda instance,value: None if value is None else dtype(value)
@@ -190,7 +187,6 @@ class MMGenListItem(MMGenObject):
 		'valid_attrs',
 		'invalid_attrs',
 		'immutable_attr_init_check',
-		'conv_funcs',
 	}
 
 	def __init__(self,*args,**kwargs):

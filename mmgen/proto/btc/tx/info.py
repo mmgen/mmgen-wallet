@@ -37,7 +37,7 @@ class TxInfo(TxInfo):
 		)
 
 	def format_abs_fee(self,color,iwidth):
-		return self.tx.proto.coin_amt(self.tx.fee).fmt(color=color,iwidth=iwidth)
+		return self.tx.fee.fmt(color=color, iwidth=iwidth)
 
 	def format_verbose_footer(self):
 		tx = self.tx

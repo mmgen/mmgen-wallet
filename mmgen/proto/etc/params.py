@@ -25,3 +25,4 @@ class testnet(mainnet):
 
 class regtest(testnet):
 	chain_names = ['developmentchain']
+	decimal_prec = 64

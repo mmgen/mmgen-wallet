@@ -379,17 +379,20 @@ class RPCClient(MMGenObject):
 
 	def process_http_resp(self,run_ret,batch=False,json_rpc=True):
 
+		def float_parser(n):
+			return n
+
 		text, status = run_ret
 
 		if status == 200:
 			dmsg_rpc('    RPC RESPONSE data ==>\n{}\n',text,is_json=True)
 			m = None
 			if batch:
-				return [r['result'] for r in json.loads(text,parse_float=Decimal)]
+				return [r['result'] for r in json.loads(text,parse_float=float_parser)]
 			else:
 				try:
 					if json_rpc:
-						ret = json.loads(text,parse_float=Decimal)['result']
+						ret = json.loads(text,parse_float=float_parser)['result']
 						if isinstance(ret,list) and ret and type(ret[0]) == dict and 'success' in ret[0]:
 							for res in ret:
 								if not res['success']:
@@ -397,7 +400,7 @@ class RPCClient(MMGenObject):
 									assert False
 						return ret
 					else:
-						return json.loads(text,parse_float=Decimal)
+						return json.loads(text,parse_float=float_parser)
 				except:
 					if not m:
 						t = json.loads(text)

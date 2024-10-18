@@ -15,6 +15,7 @@ tw.addresses: Tracking wallet listaddresses class for the MMGen suite
 from ..util import msg,suf,is_int
 from ..obj import MMGenListItem,ImmutableAttr,ListItemAttr,TwComment,NonNegativeInt
 from ..addr import CoinAddr,MMGenID,MMGenAddrType
+from ..amt import CoinAmtChk
 from ..color import red,green,yellow
 from .view import TwView
 from .shared import TwMMGenID
@@ -54,22 +55,14 @@ class TwAddresses(TwView):
 		al_id   = ImmutableAttr(str)                          # set to '_' for non-MMGen addresses
 		confs   = ImmutableAttr(int,typeconv=False)
 		comment = ListItemAttr(TwComment,reassign_ok=True)
-		amt     = ImmutableAttr(None)
-		recvd   = ImmutableAttr(None)
+		amt     = ImmutableAttr(CoinAmtChk, include_proto=True)
+		recvd   = ImmutableAttr(CoinAmtChk, include_proto=True)
 		date    = ListItemAttr(int,typeconv=False,reassign_ok=True)
 		skip    = ListItemAttr(str,typeconv=False,reassign_ok=True)
 
 		def __init__(self,proto,**kwargs):
 			self.__dict__['proto'] = proto
 			MMGenListItem.__init__(self,**kwargs)
-
-		class conv_funcs:
-			@staticmethod
-			def amt(instance,value):
-				return instance.proto.coin_amt(value)
-			@staticmethod
-			def recvd(instance,value):
-				return instance.proto.coin_amt(value)
 
 	@property
 	def coinaddr_list(self):

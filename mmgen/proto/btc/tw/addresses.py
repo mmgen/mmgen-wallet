@@ -51,7 +51,8 @@ class BitcoinTwAddresses(TwAddresses,BitcoinTwRPC):
 		addrs = await self.get_unspent_by_mmid(self.minconf)
 		msg('done')
 
-		amt0 = self.proto.coin_amt('0')
+		coin_amt = self.proto.coin_amt
+		amt0 = coin_amt('0')
 		self.total = sum((v['amt'] for v in addrs.values()), start=amt0)
 
 		msg_r('Getting labels and associated addresses...')
@@ -71,7 +72,7 @@ class BitcoinTwAddresses(TwAddresses,BitcoinTwRPC):
 			label = get_obj( TwLabel, proto=self.proto, text=d['label'] )
 			if label:
 				assert label.mmid in addrs, f'{label.mmid!r} not found in addrlist!'
-				addrs[label.mmid]['recvd'] = d['amount']
+				addrs[label.mmid]['recvd'] = coin_amt(d['amount'])
 				addrs[label.mmid]['confs'] = d['confirmations']
 		msg('done')
 

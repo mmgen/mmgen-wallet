@@ -61,7 +61,7 @@ def strip_ansi_escapes(s):
 
 cmdtest_py_log_fn = 'cmdtest.py.log'
 cmdtest_py_error_fn = 'cmdtest.py.err'
-
+parity_dev_amt = 1606938044258990275541962092341162602522202993782792835301376
 ascii_uc   = ''.join(map(chr,list(range(65,91))))   # 26 chars
 ascii_lc   = ''.join(map(chr,list(range(97,123))))  # 26 chars
 lat_accent = ''.join(map(chr,list(range(192,383)))) # 191 chars, L,S

@@ -24,12 +24,13 @@ from ..obj import (
 	HexStr,
 	NonNegativeInt
 )
+from ..amt import CoinAmtChk
 from ..addr import MMGenID,CoinAddr
 from ..util import msg,ymsg,fmt,remove_dups,make_timestamp,die
 
 class MMGenTxIO(MMGenListItem):
 	vout     = ListItemAttr(NonNegativeInt)
-	amt      = ImmutableAttr(None)
+	amt      = ImmutableAttr(CoinAmtChk, include_proto=True)
 	comment  = ListItemAttr(TwComment,reassign_ok=True)
 	mmid     = ListItemAttr(MMGenID,include_proto=True)
 	addr     = ImmutableAttr(CoinAddr,include_proto=True)
@@ -55,11 +56,6 @@ class MMGenTxIO(MMGenListItem):
 			'B' if self.addr.addr_fmt == 'bech32' else
 			'S' if self.addr.addr_fmt == 'p2sh' else
 			None )
-
-	class conv_funcs:
-		@staticmethod
-		def amt(instance,value):
-			return instance.proto.coin_amt(value)
 
 class MMGenTxIOList(list,MMGenObject):
 
@@ -145,7 +141,7 @@ class Base(MMGenObject):
 			olist = self.outputs[:exclude] + self.outputs[exclude+1:]
 		if not olist:
 			return self.proto.coin_amt('0')
-		return self.proto.coin_amt(sum(e.amt for e in olist))
+		return sum(e.amt for e in olist)
 
 	def _chg_output_ops(self,op):
 		is_chgs = [x.is_chg for x in self.outputs]

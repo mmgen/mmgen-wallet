@@ -66,8 +66,7 @@ class New(Base,TxBase.New):
 	# given tx size, rel fee and units, return absolute fee
 	def fee_rel2abs(self, tx_size, units, amt_in_units, unit):
 		if tx_size:
-			return self.proto.coin_amt(
-				amt_in_units * tx_size * getattr(self.proto.coin_amt, units[unit]))
+			return self.proto.coin_amt(amt_in_units * tx_size, from_unit=units[unit])
 		else:
 			return None
 
@@ -110,7 +109,7 @@ class New(Base,TxBase.New):
 			msg(self.no_chg_msg)
 			self.outputs.pop(self.chg_idx)
 		else:
-			self.update_output_amt(self.chg_idx, self.proto.coin_amt(funds_left))
+			self.update_output_amt(self.chg_idx, funds_left)
 
 	def check_fee(self):
 		fee = self.sum_inputs() - self.sum_outputs()
@@ -119,7 +118,7 @@ class New(Base,TxBase.New):
 			die( 'MaxFeeExceeded', f'Transaction fee of {fee} {c} too high! (> {self.proto.max_tx_fee} {c})' )
 
 	def final_inputs_ok_msg(self,funds_left):
-		return 'Transaction produces {} {} in change'.format(self.proto.coin_amt(funds_left).hl(), self.coin)
+		return 'Transaction produces {} {} in change'.format(funds_left.hl(), self.coin)
 
 	async def create_serialized(self,locktime=None,bump=None):
 

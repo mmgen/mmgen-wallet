@@ -42,7 +42,8 @@ class TokenCommon(MMGenObject):
 
 	def transferdata2amt(self,data): # online
 		return self.proto.coin_amt(
-			int(parse_abi(data)[-1], 16) * self.base_unit)
+			int(parse_abi(data)[-1], 16) * self.base_unit,
+			from_decimal = True)
 
 	async def do_call(self,method_sig,method_args='',toUnit=False):
 		data = self.create_method_id(method_sig) + method_args
@@ -59,7 +60,8 @@ class TokenCommon(MMGenObject):
 
 	async def get_balance(self,acct_addr):
 		return self.proto.coin_amt(
-			await self.do_call('balanceOf(address)', acct_addr.rjust(64, '0'), toUnit=True))
+			await self.do_call('balanceOf(address)', acct_addr.rjust(64, '0'), toUnit=True),
+			from_decimal = True)
 
 	def strip(self,s):
 		return ''.join([chr(b) for b in s if 32 <= b <= 127]).strip()

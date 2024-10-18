@@ -74,7 +74,7 @@ async def main():
 
 	bdr = (cur['time'] - old['time']) / sample_size
 	t_rem = remaining * int(bdr)
-	sub = cur['subsidy'] * proto.coin_amt.satoshi
+	sub = proto.coin_amt(cur['subsidy'], from_unit='satoshi' if isinstance(cur['subsidy'], int) else None)
 
 	print(
 		f'Current block:      {tip}\n'
