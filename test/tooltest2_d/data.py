@@ -20,22 +20,22 @@ from mmgen.addr import is_coin_addr
 from mmgen.util import is_hex_str
 
 from mmgen.bip39 import is_bip39_mnemonic
-from mmgen.baseconv import is_mmgen_mnemonic,is_b58_str
+from mmgen.baseconv import is_mmgen_mnemonic, is_b58_str
 from mmgen.xmrseed import is_xmrseed
 
 from ..unit_tests_d.ut_baseconv import unit_test as ut_baseconv
 from ..unit_tests_d.ut_bip39 import unit_tests as ut_bip39
 from ..unit_tests_d.ut_xmrseed import unit_tests as ut_xmrseed
 
-from ..include.common import cfg,sample_text
+from ..include.common import cfg, sample_text
 proto = cfg._proto
 
 def is_str(s):
-	return isinstance(s,str)
+	return isinstance(s, str)
 def is_wif_loc(s):
-	return is_wif(proto,s)
+	return is_wif(proto, s)
 def is_coin_addr_loc(s):
-	return is_coin_addr(proto,s)
+	return is_coin_addr(proto, s)
 
 def md5_hash(s):
 	from hashlib import md5
@@ -43,11 +43,11 @@ def md5_hash(s):
 
 def md5_hash_strip(s):
 	import re
-	s = re.sub('\x1b' + r'\[[;0-9]+?m','',s) # strip ANSI color sequences
-	s = s.replace(NL,'\n')             # fix DOS newlines
+	s = re.sub('\x1b' + r'\[[;0-9]+?m', '', s) # strip ANSI color sequences
+	s = s.replace(NL, '\n')             # fix DOS newlines
 	return md5_hash(s.strip())
 
-NL = ('\n','\r\n')[sys.platform=='win32']
+NL = ('\n', '\r\n')[sys.platform=='win32']
 
 sample_text_hexdump = (
 	'000000: 5468 6520 5469 6d65 7320 3033 2f4a 616e{n}' +
@@ -56,7 +56,7 @@ sample_text_hexdump = (
 	'000030: 6f6e 6420 6261 696c 6f75 7420 666f 7220{n}' +
 	'000040: 6261 6e6b 73').format(n=NL)
 
-kafile_opts = ['-p1','-Ptest/ref/keyaddrfile_password']
+kafile_opts = ['-p1', '-Ptest/ref/keyaddrfile_password']
 
 btc_wif1 = '5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'
 btc_wif2 = 'KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'
@@ -110,586 +110,647 @@ zec_pubhex1 = 'e6a4edbff547f21bcc2a825b6cf70f06e266a452d2da9d6dc5c1da3d99d7e996f
 tests = {
 	'Mnemonic': {
 		'hex2mn': (
-			[([a[0]],b) for a,b in ut_baseconv.vectors['mmgen']] +
-			[([a,'fmt=bip39'],b) for a,b in ut_bip39.vectors] +
-			[([a,'fmt=xmrseed'],b) for a,b in ut_xmrseed.vectors]
+			[([a[0]], b) for a, b in ut_baseconv.vectors['mmgen']] +
+			[([a, 'fmt=bip39'], b) for a, b in ut_bip39.vectors] +
+			[([a, 'fmt=xmrseed'], b) for a, b in ut_xmrseed.vectors]
 		),
 		'mn2hex': (
-			[([b,'fmt=mmgen'],a[0]) for a,b in ut_baseconv.vectors['mmgen']] +
-			[([b,'fmt=bip39'],a) for a,b in ut_bip39.vectors] +
-			[([b,'fmt=xmrseed'],a) for a,b in ut_xmrseed.vectors]
+			[([b, 'fmt=mmgen'], a[0]) for a, b in ut_baseconv.vectors['mmgen']] +
+			[([b, 'fmt=bip39'], a) for a, b in ut_bip39.vectors] +
+			[([b, 'fmt=xmrseed'], a) for a, b in ut_xmrseed.vectors]
 		),
 		'mn_rand128': [
-			( [], is_mmgen_mnemonic, ['-r0']),
-			( ['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),
-			( ['fmt=bip39'], is_bip39_mnemonic, ['-r0']),
+			([], is_mmgen_mnemonic, ['-r0']),
+			(['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),
+			(['fmt=bip39'], is_bip39_mnemonic, ['-r0']),
 		],
 		'mn_rand192': [
-			( ['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),
-			( ['fmt=bip39'], is_bip39_mnemonic, ['-r0']),
+			(['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),
+			(['fmt=bip39'], is_bip39_mnemonic, ['-r0']),
 		],
 		'mn_rand256': [
-			( ['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),
-			( ['fmt=bip39'], is_bip39_mnemonic, ['-r0']),
-			( ['fmt=xmrseed'], is_xmrseed, ['-r0']),
+			(['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),
+			(['fmt=bip39'], is_bip39_mnemonic, ['-r0']),
+			(['fmt=xmrseed'], is_xmrseed, ['-r0']),
 		],
 		'mn_stats': [
-			( [], is_str ),
-			( ['fmt=mmgen'], is_str ),
-			( ['fmt=bip39'], is_str ),
-			( ['fmt=xmrseed'], is_str ),
+			([], is_str),
+			(['fmt=mmgen'], is_str),
+			(['fmt=bip39'], is_str),
+			(['fmt=xmrseed'], is_str),
 		],
 		'mn_printlist': [
-			( [], is_str ),
-			( ['fmt=mmgen'], is_str ),
-			( ['fmt=bip39'], is_str ),
-			( ['fmt=xmrseed','enum=true'], is_str ),
+			([], is_str),
+			(['fmt=mmgen'], is_str),
+			(['fmt=bip39'], is_str),
+			(['fmt=xmrseed', 'enum=true'], is_str),
 		],
 	},
 	'Util': {
 		'hextob32': [
-			( ['deadbeef'], 'DPK3PXP' ),
-			( ['deadbeefdeadbeef'], 'N5LN657PK3PXP' ),
-			( ['ffffffffffffffff'], 'P777777777777' ),
-			( ['0000000000000000'], 'A' ),
-			( ['0000000000000000','pad=10'], 'AAAAAAAAAA' ),
-			( ['ff','pad=10'], 'AAAAAAAAH7' ),
+			(['deadbeef'], 'DPK3PXP'),
+			(['deadbeefdeadbeef'], 'N5LN657PK3PXP'),
+			(['ffffffffffffffff'], 'P777777777777'),
+			(['0000000000000000'], 'A'),
+			(['0000000000000000', 'pad=10'], 'AAAAAAAAAA'),
+			(['ff', 'pad=10'], 'AAAAAAAAH7'),
 		],
 		'b32tohex': [
-			( ['DPK3PXP'], 'deadbeef' ),
-			( ['N5LN657PK3PXP'], 'deadbeefdeadbeef' ),
-			( ['P777777777777'], 'ffffffffffffffff' ),
-			( ['A','pad=16'], '0000000000000000' ),
-			( ['AAAAAAAAAA','pad=16'], '0000000000000000' ),
-			( ['AAAAAAAAH7','pad=2'], 'ff' ),
+			(['DPK3PXP'], 'deadbeef'),
+			(['N5LN657PK3PXP'], 'deadbeefdeadbeef'),
+			(['P777777777777'], 'ffffffffffffffff'),
+			(['A', 'pad=16'], '0000000000000000'),
+			(['AAAAAAAAAA', 'pad=16'], '0000000000000000'),
+			(['AAAAAAAAH7', 'pad=2'], 'ff'),
 		],
 		'hextob6d': [
-			( ['deadbeef'], '25255 24636 426' ),
-			( ['deadbeefdeadbeef'], '43263 51255 35545 36422 42642' ),
-			( ['ffffffffffffffff'], '46316 33121 21321 15553 55534' ),
-			( ['0000000000000000'], '1' ),
-			( ['0000000000000000','pad=10'], '11111 11111' ),
-			( ['ff','pad=10'], '11111 12214' ),
-			( ['ff'*16],
-				'34164 46464 12666 61652 46515 46546 53354 43666 45555 21414' ),
-			( ['ff'*24],
+			(['deadbeef'], '25255 24636 426'),
+			(['deadbeefdeadbeef'], '43263 51255 35545 36422 42642'),
+			(['ffffffffffffffff'], '46316 33121 21321 15553 55534'),
+			(['0000000000000000'], '1'),
+			(['0000000000000000', 'pad=10'], '11111 11111'),
+			(['ff', 'pad=10'], '11111 12214'),
+			(
+				['ff'*16],
+				'34164 46464 12666 61652 46515 46546 53354 43666 45555 21414'
+			), (
+				['ff'*24],
 				'24611 14114 33323 36422 24655 66552 32465 25661 21541 62342 '
-				'61351 63525 45161 35543 13654' ),
-			( ['ff'*32],
+				'61351 63525 45161 35543 13654'
+			), (
+				['ff'*32],
 				'21325 21653 31261 31341 45131 42346 54146 36252 11413 12253 '
-				'24246 31114 16424 56513 41632 24121 46151 43214 22425 65134' ),
+				'24246 31114 16424 56513 41632 24121 46151 43214 22425 65134'
+			),
 		],
 		'b6dtohex': [
-			( ['25255 24636 426'], 'deadbeef' ),
-			( ['43263 51255 35545 36422 42642'], 'deadbeefdeadbeef' ),
-			( ['46316 33121 21321 15553 55534'], 'ffffffffffffffff' ),
-			( ['1','pad=16'], '0000000000000000' ),
-			( ['11111 11111','pad=16'], '0000000000000000' ),
-			( ['11111 12214','pad=2'], 'ff' ),
-			( ['22222 22222'], 'b88733' ),
-			( ['66666 66666'], '039aa3ff' ),
-			( ['6'*50], {
+			(['25255 24636 426'], 'deadbeef'),
+			(['43263 51255 35545 36422 42642'], 'deadbeefdeadbeef'),
+			(['46316 33121 21321 15553 55534'], 'ffffffffffffffff'),
+			(['1', 'pad=16'], '0000000000000000'),
+			(['11111 11111', 'pad=16'], '0000000000000000'),
+			(['11111 12214', 'pad=2'], 'ff'),
+			(['22222 22222'], 'b88733'),
+			(['66666 66666'], '039aa3ff'),
+			(['6'*50], {
 				'len': 34,
 				'value':'0260154fc36cbf42778f23ffffffffffff' # 130 bits
-				} ),
-			( ['6'*75], {
+				}),
+			(['6'*75], {
 				'len': 50,
 				'value':'03a92ef1c3432e71a7679561bb6817d7ffffffffffffffffff' # 194 bits
-				} ),
-			( ['6'*100], {
+				}),
+			(['6'*100], {
 				'len': 66,
 				'value':'05a4653ca673768565b41f775d6947d55cf3813d0fffffffffffffffffffffffff' # 259 bits
-				} ),
+				}),
 		],
 		'hextob58chk': [
-			( ['deadbeef'], 'eFGDJPketnz' ),
-			( ['deadbeefdeadbeef'], '5CizhNNRPYpBjrbYX' ),
-			( ['ffffffffffffffff'], '5qCHTcgbQwprzjWrb' ),
-			( ['0000000000000000'], '111111114FCKVB' ),
-			( ['00'], '1Wh4bh' ),
-			( ['000000000000000000000000000000000000000000'], '1111111111111111111114oLvT2' ),
+			(['deadbeef'], 'eFGDJPketnz'),
+			(['deadbeefdeadbeef'], '5CizhNNRPYpBjrbYX'),
+			(['ffffffffffffffff'], '5qCHTcgbQwprzjWrb'),
+			(['0000000000000000'], '111111114FCKVB'),
+			(['00'], '1Wh4bh'),
+			(['000000000000000000000000000000000000000000'], '1111111111111111111114oLvT2'),
 		],
 		'b58chktohex': [
-			( ['eFGDJPketnz'], 'deadbeef' ),
-			( ['5CizhNNRPYpBjrbYX'], 'deadbeefdeadbeef' ),
-			( ['5qCHTcgbQwprzjWrb'], 'ffffffffffffffff' ),
-			( ['111111114FCKVB'], '0000000000000000' ),
-			( ['3QJmnh'], '' ),
-			( ['1111111111111111111114oLvT2'], '000000000000000000000000000000000000000000' ),
+			(['eFGDJPketnz'], 'deadbeef'),
+			(['5CizhNNRPYpBjrbYX'], 'deadbeefdeadbeef'),
+			(['5qCHTcgbQwprzjWrb'], 'ffffffffffffffff'),
+			(['111111114FCKVB'], '0000000000000000'),
+			(['3QJmnh'], ''),
+			(['1111111111111111111114oLvT2'], '000000000000000000000000000000000000000000'),
 		],
 		'bytestob58': [
-			( [b'\xde\xad\xbe\xef'], '6h8cQN' ),
-			( [b'\xde\xad\xbe\xef\xde\xad\xbe\xef'], 'eFGDJURJykA' ),
-			( [b'\xff\xff\xff\xff\xff\xff\xff\xff'], 'jpXCZedGfVQ' ),
-			( [b'\x00\x00\x00\x00\x00\x00\x00\x00'], '1' ),
-			( [b'\x00\x00\x00\x00\x00\x00\x00\x00','pad=10'], '1111111111' ),
-			( [b'\xff','pad=10'], '111111115Q' ),
+			([b'\xde\xad\xbe\xef'], '6h8cQN'),
+			([b'\xde\xad\xbe\xef\xde\xad\xbe\xef'], 'eFGDJURJykA'),
+			([b'\xff\xff\xff\xff\xff\xff\xff\xff'], 'jpXCZedGfVQ'),
+			([b'\x00\x00\x00\x00\x00\x00\x00\x00'], '1'),
+			([b'\x00\x00\x00\x00\x00\x00\x00\x00', 'pad=10'], '1111111111'),
+			([b'\xff', 'pad=10'], '111111115Q'),
 		],
 		'b58tobytes': [
-			( ['6h8cQN'], b'\xde\xad\xbe\xef' ),
-			( ['eFGDJURJykA'], b'\xde\xad\xbe\xef\xde\xad\xbe\xef' ),
-			( ['jpXCZedGfVQ'], b'\xff\xff\xff\xff\xff\xff\xff\xff' ),
-			( ['1','pad=8'], b'\x00\x00\x00\x00\x00\x00\x00\x00' ),
-			( ['1111111111','pad=8'], b'\x00\x00\x00\x00\x00\x00\x00\x00' ),
-			( ['111111115Q','pad=1'], b'\xff' ),
+			(['6h8cQN'], b'\xde\xad\xbe\xef'),
+			(['eFGDJURJykA'], b'\xde\xad\xbe\xef\xde\xad\xbe\xef'),
+			(['jpXCZedGfVQ'], b'\xff\xff\xff\xff\xff\xff\xff\xff'),
+			(['1', 'pad=8'], b'\x00\x00\x00\x00\x00\x00\x00\x00'),
+			(['1111111111', 'pad=8'], b'\x00\x00\x00\x00\x00\x00\x00\x00'),
+			(['111111115Q', 'pad=1'], b'\xff'),
 		],
 		'hextob58': [
-			( ['deadbeef'], '6h8cQN' ),
-			( ['deadbeefdeadbeef'], 'eFGDJURJykA' ),
-			( ['ffffffffffffffff'], 'jpXCZedGfVQ' ),
-			( ['0000000000000000'], '1' ),
-			( ['0000000000000000','pad=10'], '1111111111' ),
-			( ['ff','pad=10'], '111111115Q' ),
+			(['deadbeef'], '6h8cQN'),
+			(['deadbeefdeadbeef'], 'eFGDJURJykA'),
+			(['ffffffffffffffff'], 'jpXCZedGfVQ'),
+			(['0000000000000000'], '1'),
+			(['0000000000000000', 'pad=10'], '1111111111'),
+			(['ff', 'pad=10'], '111111115Q'),
 		],
 		'b58tohex': [
-			( ['6h8cQN'], 'deadbeef' ),
-			( ['eFGDJURJykA'], 'deadbeefdeadbeef' ),
-			( ['jpXCZedGfVQ'], 'ffffffffffffffff' ),
-			( ['1','pad=16'], '0000000000000000' ),
-			( ['1111111111','pad=16'], '0000000000000000' ),
-			( ['111111115Q','pad=2'], 'ff' ),
+			(['6h8cQN'], 'deadbeef'),
+			(['eFGDJURJykA'], 'deadbeefdeadbeef'),
+			(['jpXCZedGfVQ'], 'ffffffffffffffff'),
+			(['1', 'pad=16'], '0000000000000000'),
+			(['1111111111', 'pad=16'], '0000000000000000'),
+			(['111111115Q', 'pad=2'], 'ff'),
 		],
 		'bytespec': [
-			( ['1G'],        str(1024*1024*1024) ),
-			( ['1GB'],       str(1000*1000*1000) ),
-			( ['1234GB'],    str(1234*1000*1000*1000) ),
-			( ['1234G'],     str(1234*1024*1024*1024) ),
-			( ['1234TB'],    str(1234*1000*1000*1000*1000) ),
-			( ['1234T'],     str(1234*1024*1024*1024*1024) ),
-			( ['1234PB'],    str(1234*1000*1000*1000*1000*1000) ),
-			( ['1234P'],     str(1234*1024*1024*1024*1024*1024) ),
-			( ['1234EB'],    str(1234*1000*1000*1000*1000*1000*1000) ),
-			( ['1234E'],     str(1234*1024*1024*1024*1024*1024*1024) ),
-			( ['1.234MB'],   str(1234*1000) ),
-			( ['1.234567M'], str(int(Decimal('1.234567')*1024*1024)) ),
-			( ['1234'],      str(1234) ),
+			(['1G'],        str(1024*1024*1024)),
+			(['1GB'],       str(1000*1000*1000)),
+			(['1234GB'],    str(1234*1000*1000*1000)),
+			(['1234G'],     str(1234*1024*1024*1024)),
+			(['1234TB'],    str(1234*1000*1000*1000*1000)),
+			(['1234T'],     str(1234*1024*1024*1024*1024)),
+			(['1234PB'],    str(1234*1000*1000*1000*1000*1000)),
+			(['1234P'],     str(1234*1024*1024*1024*1024*1024)),
+			(['1234EB'],    str(1234*1000*1000*1000*1000*1000*1000)),
+			(['1234E'],     str(1234*1024*1024*1024*1024*1024*1024)),
+			(['1.234MB'],   str(1234*1000)),
+			(['1.234567M'], str(int(Decimal('1.234567')*1024*1024))),
+			(['1234'],      str(1234)),
 		],
 		'to_bytespec': [
-			( [str(1024*1024*1024),'G'],                               '1.00G' ),
-			( [str(1024*1024*1024),'G','fmt=0.0'],                     '1G' ),
-			( [str(1024*1024*1024),'G','fmt=08.5'],                    '01.00000G' ),
-			( [str(1234*1000*1000*1000),'GB'],                         '1234.00GB' ),
-			( [str(1234*1000*1000*1000),'GB','strip=True'],            '1234.0GB' ),
-			( [str(1234*1000*1000*1000),'GB','add_space=True'],        '1234.00 GB' ),
-			( [str(1234*1024*1024*1024),'G'],                          '1234.00G', ),
-			( [str(1000*1000*1000*1000*1000),'PB'],                    '1.00PB' ),
-			( [str(1024*1024*1024*1024*1024),'P'],                     '1.00P' ),
-			( [str(1024*1024*1024*1024*1024*1024),'E'],                '1.00E' ),
-			( [str(int(Decimal('1.234567')*1024*1024)),'M','fmt=0.6'], '1.234567M' ),
-			( ['1234','c','fmt=0.0','print_sym=false'],                '1234' ),
+			([str(1024*1024*1024), 'G'],                                '1.00G'),
+			([str(1024*1024*1024), 'G', 'fmt=0.0'],                     '1G'),
+			([str(1024*1024*1024), 'G', 'fmt=08.5'],                    '01.00000G'),
+			([str(1234*1000*1000*1000), 'GB'],                          '1234.00GB'),
+			([str(1234*1000*1000*1000), 'GB', 'strip=True'],            '1234.0GB'),
+			([str(1234*1000*1000*1000), 'GB', 'add_space=True'],        '1234.00 GB'),
+			([str(1234*1024*1024*1024), 'G'],                           '1234.00G',),
+			([str(1000*1000*1000*1000*1000), 'PB'],                     '1.00PB'),
+			([str(1024*1024*1024*1024*1024), 'P'],                      '1.00P'),
+			([str(1024*1024*1024*1024*1024*1024), 'E'],                 '1.00E'),
+			([str(int(Decimal('1.234567')*1024*1024)), 'M', 'fmt=0.6'], '1.234567M'),
+			(['1234', 'c', 'fmt=0.0', 'print_sym=false'],               '1234'),
 		],
 		'hash160': [ # TODO: check that hextob58chk(hash160) = pubhex2addr
-			( ['deadbeef'], 'f04df4c4b30d2b7ac6e1ed2445aeb12a9cb4d2ec' ),
-			( ['000000000000000000000000000000000000000000'], '2db95e704e2d9b0474acf76182f3f985b7064a8a' ),
-			( [''], 'b472a266d0bd89c13706a4132ccfb16f7c3b9fcb' ),
-			( ['ffffffffffffffff'], 'f86221f5a1fca059a865c0b7d374dfa9d5f3aeb4' ),
+			(['deadbeef'], 'f04df4c4b30d2b7ac6e1ed2445aeb12a9cb4d2ec'),
+			(['000000000000000000000000000000000000000000'], '2db95e704e2d9b0474acf76182f3f985b7064a8a'),
+			([''], 'b472a266d0bd89c13706a4132ccfb16f7c3b9fcb'),
+			(['ffffffffffffffff'], 'f86221f5a1fca059a865c0b7d374dfa9d5f3aeb4'),
 		],
 		'hash256': [
-			( ['deadbeef'], 'e107944e77a688feae4c2d4db5951923812dd0f72026a11168104ee1b248f8a9' ),
+			(['deadbeef'], 'e107944e77a688feae4c2d4db5951923812dd0f72026a11168104ee1b248f8a9'),
 			(
 				['000000000000000000000000000000000000000000'],
 				'fd5181fcd097a334ab340569e5edcd09f702fef7994abab01f4b66e86b32ebbe'
 			),
-			( [''], '5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f5d4c9456' ),
-			( ['ffffffffffffffff'], '57b2d2c3455e0f76c61c5237ff04fc9fc0f3fe691e587ea9c951949e1a5e0fed' ),
+			([''], '5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f5d4c9456'),
+			(['ffffffffffffffff'], '57b2d2c3455e0f76c61c5237ff04fc9fc0f3fe691e587ea9c951949e1a5e0fed'),
 		],
 		'hexdump': [
-			( [sample_text.encode()], sample_text_hexdump ),
+			([sample_text.encode()], sample_text_hexdump),
 		],
 		'unhexdump': [
-			( [sample_text_hexdump.encode()], sample_text.encode() ),
+			([sample_text_hexdump.encode()], sample_text.encode()),
 		],
 		'hexlify': [
-			( [b'foobar'], '666f6f626172' ),
+			([b'foobar'], '666f6f626172'),
 		],
 		'unhexlify': [
-			( ['666f6f626172'], 'foobar' ),
+			(['666f6f626172'], 'foobar'),
 		],
 		'hexreverse': [
-			( ['deadbeefcafe'], 'fecaefbeadde' ),
+			(['deadbeefcafe'], 'fecaefbeadde'),
 		],
 		'id6': [
-			( [sample_text.encode()], 'a6d72b' ),
+			([sample_text.encode()], 'a6d72b'),
 		],
 		'id8': [
-			( [sample_text.encode()], '687C09C2' ),
+			([sample_text.encode()], '687C09C2'),
 		],
 		'str2id6': [
-			( ['74ev zjeq Zw2g DspF RKpE 7H'], '70413d' ), # checked
+			(['74ev zjeq Zw2g DspF RKpE 7H'], '70413d'), # checked
 		],
 		'randhex': [
-			( [], {'boolfunc':is_hex_str,'len':64}, ['-r0'] ),
-			( ['nbytes=16'], {'boolfunc':is_hex_str,'len':32}, ['-r0'] ),
-			( ['nbytes=6'], {'boolfunc':is_hex_str,'len':12}, ['-r0'] ),
+			([], {'boolfunc':is_hex_str, 'len':64}, ['-r0']),
+			(['nbytes=16'], {'boolfunc':is_hex_str, 'len':32}, ['-r0']),
+			(['nbytes=6'], {'boolfunc':is_hex_str, 'len':12}, ['-r0']),
 		],
 		'randb58': [
-			( [], {'boolfunc':is_b58_str}, ['-r0'] ),
-			( ['nbytes=16'], {'boolfunc':is_b58_str}, ['-r0'] ),
-			( ['nbytes=12','pad=0'], is_b58_str, ['-r0'] ),
+			([], {'boolfunc':is_b58_str}, ['-r0']),
+			(['nbytes=16'], {'boolfunc':is_b58_str}, ['-r0']),
+			(['nbytes=12', 'pad=0'], is_b58_str, ['-r0']),
 		],
 	},
 	'Wallet': {
 		'gen_key': [
-			(   ['98831F3A:11','wallet=test/ref/98831F3A.mmwords'],
+			(
+				['98831F3A:11', 'wallet=test/ref/98831F3A.mmwords'],
 				'5JKLcdYbhP6QQ4BXc9HtjfqJ79FFRXP2SZTKUyEuyXJo9QSFUkv'
-			),
-			(   ['98831F3A:C:11','wallet=test/ref/98831F3A.mmwords'],
+			), (
+				['98831F3A:C:11', 'wallet=test/ref/98831F3A.mmwords'],
 				'L2LwXv94XTU2HjCbJPXCFuaHjrjucGipWPWUi1hkM5EykgektyqR'
-			),
-			(   ['98831F3A:B:11','wallet=test/ref/98831F3A.mmwords'],
+			), (
+				['98831F3A:B:11', 'wallet=test/ref/98831F3A.mmwords'],
 				'L2K4Y9MWb5oUfKKZtwdgCm6FLZdUiWJDHjh9BYxpEvtfcXt4iM5g'
-			),
-			(   ['98831F3A:S:11','wallet=test/ref/98831F3A.mmwords'],
+			), (
+				['98831F3A:S:11', 'wallet=test/ref/98831F3A.mmwords'],
 				'KwmkkfC9GghnJhnKoRXRn5KwGCgXrCmDw6Uv83NzE4kJS5axCR9A'
 			),
 		],
 		'gen_addr': [
-			(   ['98831F3A:11','wallet=test/ref/98831F3A.mmwords'], btc_addr5 ),
-			(   ['98831F3A:L:11','wallet=test/ref/98831F3A.mmwords'], btc_addr5 ),
-			(   ['98831F3A:C:11','wallet=test/ref/98831F3A.mmwords'],
+			(['98831F3A:11', 'wallet=test/ref/98831F3A.mmwords'], btc_addr5),
+			(['98831F3A:L:11', 'wallet=test/ref/98831F3A.mmwords'], btc_addr5),
+			(
+				['98831F3A:C:11', 'wallet=test/ref/98831F3A.mmwords'],
 				'1MPsZ7BY9qikqfPxqmrovE8gLDX2rYArZk'
 			),
-			(   ['98831F3A:B:11','wallet=test/ref/98831F3A.mmwords'], btc_addr6 ),
-			(   ['98831F3A:S:11','wallet=test/ref/98831F3A.mmwords'], btc_addr7 ),
+			(['98831F3A:B:11', 'wallet=test/ref/98831F3A.mmwords'], btc_addr6),
+			(['98831F3A:S:11', 'wallet=test/ref/98831F3A.mmwords'], btc_addr7),
 		],
 		'get_subseed': [
-			(   ['3s','wallet=test/ref/98831F3A.mmwords'], '4018EB17' ),
-			(   ['200','wallet=test/ref/98831F3A.mmwords'], '2B05AE73' ),
+			(['3s', 'wallet=test/ref/98831F3A.mmwords'], '4018EB17'),
+			(['200', 'wallet=test/ref/98831F3A.mmwords'], '2B05AE73'),
 		],
 		'get_subseed_by_seed_id': [
-			(   ['4018EB17','wallet=test/ref/98831F3A.mmwords'], '3S' ),
-			(   ['2B05AE73','wallet=test/ref/98831F3A.mmwords'], None ),
-			(   ['2B05AE73','wallet=test/ref/98831F3A.mmwords','last_idx=200'], '200L' ),
+			(['4018EB17', 'wallet=test/ref/98831F3A.mmwords'], '3S'),
+			(['2B05AE73', 'wallet=test/ref/98831F3A.mmwords'], None),
+			(['2B05AE73', 'wallet=test/ref/98831F3A.mmwords', 'last_idx=200'], '200L'),
 		],
 		'list_subseeds': [
-			(   ['1-5','wallet=test/ref/98831F3A.mmwords'],
-				(md5_hash_strip,'996c047e8543d5dde6f82efc3214a6a1')
+			(
+				['1-5', 'wallet=test/ref/98831F3A.mmwords'],
+				(md5_hash_strip, '996c047e8543d5dde6f82efc3214a6a1')
 			),
 		],
 		'list_shares': [
-			(   ['3','wallet=test/ref/98831F3A.bip39'],
-				(md5_hash_strip,'84e8bdaebf9c816a8a3bd2ebec5a2e12')
-			),
-			(   ['3','id_str=default','wallet=test/ref/98831F3A.mmwords'],
-				(md5_hash_strip,'84e8bdaebf9c816a8a3bd2ebec5a2e12')
-			),
-			(   ['3','id_str=foo','wallet=test/ref/98831F3A.bip39'],
-				(md5_hash_strip,'d2ac20823c4ea26f15234b5ca8df5d6f')
-			),
-			(   ['3','id_str=foo','master_share=0','wallet=test/ref/98831F3A.mmwords'],
-				(md5_hash_strip,'d2ac20823c4ea26f15234b5ca8df5d6f')
-			),
-			(   ['3','id_str=foo','master_share=5','wallet=test/ref/98831F3A.mmwords'],
-				(md5_hash_strip,'c4feedce40bb5959011ee4a996710832')
-			),
-			(   ['3','id_str=βαρ','master_share=5','wallet=test/ref/98831F3A.mmwords'],
-				(md5_hash_strip,'f7d254798fe2e34b94b5f4ff312998db')
-			),
-			(   ['4','id_str=βαρ','master_share=5','wallet=test/ref/98831F3A.bip39'],
-				(md5_hash_strip,'d3e479f55792181372a9f32a569c04e5')
+			(
+				['3', 'wallet=test/ref/98831F3A.bip39'],
+				(md5_hash_strip, '84e8bdaebf9c816a8a3bd2ebec5a2e12')
+			), (
+				['3', 'id_str=default', 'wallet=test/ref/98831F3A.mmwords'],
+				(md5_hash_strip, '84e8bdaebf9c816a8a3bd2ebec5a2e12')
+			), (
+				['3', 'id_str=foo', 'wallet=test/ref/98831F3A.bip39'],
+				(md5_hash_strip, 'd2ac20823c4ea26f15234b5ca8df5d6f')
+			), (
+				['3', 'id_str=foo', 'master_share=0', 'wallet=test/ref/98831F3A.mmwords'],
+				(md5_hash_strip, 'd2ac20823c4ea26f15234b5ca8df5d6f')
+			), (
+				['3', 'id_str=foo', 'master_share=5', 'wallet=test/ref/98831F3A.mmwords'],
+				(md5_hash_strip, 'c4feedce40bb5959011ee4a996710832')
+			), (
+				['3', 'id_str=βαρ', 'master_share=5', 'wallet=test/ref/98831F3A.mmwords'],
+				(md5_hash_strip, 'f7d254798fe2e34b94b5f4ff312998db')
+			), (
+				['4', 'id_str=βαρ', 'master_share=5', 'wallet=test/ref/98831F3A.bip39'],
+				(md5_hash_strip, 'd3e479f55792181372a9f32a569c04e5')
 			),
 		],
 	},
 	'Coin': {
 		'addr2pubhash': {
 			'btc_mainnet': [
-				( [ btc_addr5 ], '118089d66b4a5853765e94923abdd5de4616c6e5' ),
-				( [ btc_addr6 ], '3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178' ),
+				([ btc_addr5], '118089d66b4a5853765e94923abdd5de4616c6e5'),
+				([ btc_addr6], '3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'),
 			],
 		},
 		'eth_checksummed_addr': {
 			'eth_mainnet': [
-				( ['00a329c0648769a73afac7f9381e08fb43dbea72'], '00a329c0648769A73afAc7F9381E08FB43dBEA72' ),
-				( ['deadbeef'*5], 'DeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF' ),
-				( ['ffffffff'*5], 'FFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF' ),
-				( ['0'*39 + '1'], '0'*39 + '1' ),
+				(['00a329c0648769a73afac7f9381e08fb43dbea72'], '00a329c0648769A73afAc7F9381E08FB43dBEA72'),
+				(['deadbeef'*5], 'DeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF'),
+				(['ffffffff'*5], 'FFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF'),
+				(['0'*39 + '1'], '0'*39 + '1'),
 			],
 		},
 		'pubhash2addr': {
 			'btc_mainnet': [
-				( ['118089d66b4a5853765e94923abdd5de4616c6e5'], btc_addr5, None, 'legacy' ),
-				( ['8e34586186551f6320fa3eb2d238a9c61ab8264b'], '37ZBgCBjjz9WSEzp1Zjv8sqdgmNie3Kd5s',
-					['--type=segwit'], 'segwit' ),
-				( ['3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], btc_addr6, ['--type=bech32'], 'bech32' ),
+				(['118089d66b4a5853765e94923abdd5de4616c6e5'], btc_addr5, None, 'legacy'),
+				(['8e34586186551f6320fa3eb2d238a9c61ab8264b'], '37ZBgCBjjz9WSEzp1Zjv8sqdgmNie3Kd5s',
+					['--type=segwit'], 'segwit'),
+				(['3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], btc_addr6, ['--type=bech32'], 'bech32'),
 			],
 		},
 		'addr2scriptpubkey': {
 			'btc_mainnet': [
-				( [ btc_addr5 ], '76a914118089d66b4a5853765e94923abdd5de4616c6e588ac' ),
-				( [ btc_addr7 ], 'a9148e34586186551f6320fa3eb2d238a9c61ab8264b87' ),
-				( [ btc_addr6 ], '00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178' ),
+				([ btc_addr5], '76a914118089d66b4a5853765e94923abdd5de4616c6e588ac'),
+				([ btc_addr7], 'a9148e34586186551f6320fa3eb2d238a9c61ab8264b87'),
+				([ btc_addr6], '00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'),
 			],
 		},
 		'scriptpubkey2addr': {
 			'btc_mainnet': [
-				( ['76a914118089d66b4a5853765e94923abdd5de4616c6e588ac'], btc_addr5 ),
-				( ['a9148e34586186551f6320fa3eb2d238a9c61ab8264b87'], btc_addr7 ),
-				( ['00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], btc_addr6 ),
+				(['76a914118089d66b4a5853765e94923abdd5de4616c6e588ac'], btc_addr5),
+				(['a9148e34586186551f6320fa3eb2d238a9c61ab8264b87'], btc_addr7),
+				(['00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], btc_addr6),
 			],
 		},
 		'hex2wif': {
 			'btc_mainnet': [
-				( [ privhex7 ], btc_wif1, None, 'legacy' ),
-				( [ privhex7 ], btc_wif2, ['--type=compressed'], 'compressed' ),
-				( [ privhex7 ], btc_wif2, ['--type=segwit'], 'segwit' ),
-				( [ privhex7 ], btc_wif2, ['--type=bech32'], 'bech32' ),
+				([privhex7], btc_wif1, None, 'legacy'),
+				([privhex7], btc_wif2, ['--type=compressed'], 'compressed'),
+				([privhex7], btc_wif2, ['--type=segwit'], 'segwit'),
+				([privhex7], btc_wif2, ['--type=bech32'], 'bech32'),
 			],
 		},
 		'privhex2addr': {
 			'btc_mainnet': [
-				( [ privhex7 ], btc_addr1, None, 'legacy' ),
-				( [ privhex7 ], btc_addr2, ['--type=compressed'], 'compressed' ),
-				( [ privhex7 ], btc_addr3, ['--type=segwit'], 'segwit' ),
-				( [ privhex7 ], btc_addr4, ['--type=bech32'], 'bech32' ),
+				([privhex7], btc_addr1, None, 'legacy'),
+				([privhex7], btc_addr2, ['--type=compressed'], 'compressed'),
+				([privhex7], btc_addr3, ['--type=segwit'], 'segwit'),
+				([privhex7], btc_addr4, ['--type=bech32'], 'bech32'),
 			],
 			'eth_mainnet': [
-				( [ privhex1 ], eth_addr1 ),
-				( [ privhex2 ], eth_addr2 ),
-				( [ privhex3 ], eth_addr3 ),
-				( [ privhex4 ], eth_addr4 ),
-				( [ privhex5 ], eth_addr5 ),
-				( [ privhex6 ], eth_addr6 ),
+				([privhex1], eth_addr1),
+				([privhex2], eth_addr2),
+				([privhex3], eth_addr3),
+				([privhex4], eth_addr4),
+				([privhex5], eth_addr5),
+				([privhex6], eth_addr6),
 			],
 			'xmr_mainnet': [
-				( [ privhex1 ], xmr_addr1 ),
-				( [ privhex2 ], xmr_addr2 ),
-				( [ privhex3 ], xmr_addr3 ),
-				( [ privhex4 ], xmr_addr4 ),
-				( [ privhex5 ], xmr_addr5 ),
-				( [ privhex6 ], xmr_addr6 ),
+				([privhex1], xmr_addr1),
+				([privhex2], xmr_addr2),
+				([privhex3], xmr_addr3),
+				([privhex4], xmr_addr4),
+				([privhex5], xmr_addr5),
+				([privhex6], xmr_addr6),
 			],
 			'zec_mainnet': [
-				( [ privhex1 ], zec_addr1, ['--type=zcash_z'], 'zcash_z' ),
-				( [ privhex2 ], zec_addr2, ['--type=zcash_z'], 'zcash_z' ),
-				( [ privhex3 ], zec_addr2, ['--type=zcash_z'], 'zcash_z' ),
-				( [ privhex4 ], zec_addr4, ['--type=zcash_z'], 'zcash_z' ),
-				( [ privhex5 ], zec_addr5, ['--type=zcash_z'], 'zcash_z' ),
-				( [ privhex6 ], zec_addr6, ['--type=zcash_z'], 'zcash_z' ),
+				([privhex1], zec_addr1, ['--type=zcash_z'], 'zcash_z'),
+				([privhex2], zec_addr2, ['--type=zcash_z'], 'zcash_z'),
+				([privhex3], zec_addr2, ['--type=zcash_z'], 'zcash_z'),
+				([privhex4], zec_addr4, ['--type=zcash_z'], 'zcash_z'),
+				([privhex5], zec_addr5, ['--type=zcash_z'], 'zcash_z'),
+				([privhex6], zec_addr6, ['--type=zcash_z'], 'zcash_z'),
 			],
 		},
 		'privhex2pubhex': {
 			'btc_mainnet': [
-				( [ privhex7 ], btc_pubhex2, None, 'legacy' ),
-				( [ privhex7 ], btc_pubhex1, ['--type=compressed'], 'compressed' ),
-				( [ privhex7 ], btc_pubhex1, ['--type=segwit'], 'segwit' ),
-				( [ privhex7 ], btc_pubhex1, ['--type=bech32'], 'bech32' ),
+				([privhex7], btc_pubhex2, None, 'legacy'),
+				([privhex7], btc_pubhex1, ['--type=compressed'], 'compressed'),
+				([privhex7], btc_pubhex1, ['--type=segwit'], 'segwit'),
+				([privhex7], btc_pubhex1, ['--type=bech32'], 'bech32'),
 			],
 			'eth_mainnet': [
-				( [ privhex1 ], eth_pubhex1 ),
+				([privhex1], eth_pubhex1),
 			],
 			'xmr_mainnet': [
-				( [ privhex1 ], xmr_pubhex1 ),
+				([privhex1], xmr_pubhex1),
 			],
 			'zec_mainnet': [
-				( [ privhex1 ], zec_pubhex1, ['--type=zcash_z'], 'zcash_z' ),
+				([privhex1], zec_pubhex1, ['--type=zcash_z'], 'zcash_z'),
 			],
 		},
 		'pubhex2addr': {
 			'btc_mainnet': [
-				( [ btc_pubhex2 ], btc_addr1, None, 'legacy' ),
-				( [ btc_pubhex1 ], btc_addr2, ['--type=compressed'], 'compressed' ),
-				( [ btc_pubhex1 ], btc_addr3, ['--type=segwit'], 'segwit' ),
-				( [ btc_pubhex1 ], btc_addr4, ['--type=bech32'], 'bech32' ),
+				([btc_pubhex2], btc_addr1, None, 'legacy'),
+				([btc_pubhex1], btc_addr2, ['--type=compressed'], 'compressed'),
+				([btc_pubhex1], btc_addr3, ['--type=segwit'], 'segwit'),
+				([btc_pubhex1], btc_addr4, ['--type=bech32'], 'bech32'),
 			],
 			'eth_mainnet': [
-				( [ eth_pubhex1 ], eth_addr1 ),
-				( [ eth_pubhex2 ], eth_addr2 ),
+				([eth_pubhex1], eth_addr1),
+				([eth_pubhex2], eth_addr2),
 			],
 			'xmr_mainnet': [
-				( [ xmr_pubhex1 ], xmr_addr1 ),
+				([xmr_pubhex1], xmr_addr1),
 			],
 			'zec_mainnet': [
-				( [ zec_pubhex1 ], zec_addr1, ['--type=zcash_z'], 'zcash_z' ),
+				([zec_pubhex1], zec_addr1, ['--type=zcash_z'], 'zcash_z'),
 			],
 		},
 		'pubhex2redeem_script': {
 			'btc_mainnet': [
-				( [ btc_pubhex1 ], redeem_script1, ['--type=segwit'], 'segwit' ),
+				([btc_pubhex1], redeem_script1, ['--type=segwit'], 'segwit'),
 			],
 		},
 		'redeem_script2addr': {
 			'btc_mainnet': [
-				( [ redeem_script1 ], btc_addr3, ['--type=segwit'], 'segwit' ),
+				([redeem_script1], btc_addr3, ['--type=segwit'], 'segwit'),
 			],
 		},
 		'randpair': {
-			'btc_mainnet': [ ( [], [is_wif_loc,is_coin_addr_loc], ['-r0'] ) ],
-			'btc_testnet': [ ( [], [is_wif_loc,is_coin_addr_loc], ['-r0'] ) ],
+			'btc_mainnet': [([], [is_wif_loc, is_coin_addr_loc], ['-r0'])],
+			'btc_testnet': [([], [is_wif_loc, is_coin_addr_loc], ['-r0'])],
 		},
 		'randwif': {
-			'btc_mainnet': [ ( [], is_wif_loc, ['-r0'] ) ],
-			'btc_testnet': [ ( [], is_wif_loc, ['-r0'] ) ],
+			'btc_mainnet': [([], is_wif_loc, ['-r0'])],
+			'btc_testnet': [([], is_wif_loc, ['-r0'])],
 		},
 		'wif2addr': {
 			'btc_mainnet': [
-				( [ btc_wif1 ], btc_addr1, ['--type=legacy'], 'legacy' ),
-				( [ btc_wif2 ], btc_addr2, ['--type=compressed'], 'compressed' ),
-				( [ btc_wif2 ], btc_addr3, ['--type=segwit'], 'segwit' ),
-				( [ btc_wif2 ], btc_addr4, ['--type=bech32'], 'bech32' ),
+				([btc_wif1], btc_addr1, ['--type=legacy'], 'legacy'),
+				([btc_wif2], btc_addr2, ['--type=compressed'], 'compressed'),
+				([btc_wif2], btc_addr3, ['--type=segwit'], 'segwit'),
+				([btc_wif2], btc_addr4, ['--type=bech32'], 'bech32'),
 			],
 			'eth_mainnet': [
-				( [ privhex1 ], eth_addr1 ),
-				( ['000000000000000000000000000000014551231950b75fc4402da1732fc9bebe'], eth_addr2 ),
-				( [ privhex3 ], eth_addr3 ),
-				( [ privhex4 ], eth_addr4 ),
-				( ['000000000000000000000000000000014551231950b75fc4402da1732fc9bdce'], eth_addr5 ),
-				( [ privhex6 ], eth_addr6 ),
+				([privhex1], eth_addr1),
+				(['000000000000000000000000000000014551231950b75fc4402da1732fc9bebe'], eth_addr2),
+				([privhex3], eth_addr3),
+				([privhex4], eth_addr4),
+				(['000000000000000000000000000000014551231950b75fc4402da1732fc9bdce'], eth_addr5),
+				([privhex6], eth_addr6),
 			],
 			'xmr_mainnet': [
-				( [ privhex1 ], xmr_addr1 ),
-				( ['1c95988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0f'], xmr_addr2 ),
-				( ['2c94988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0f'], xmr_addr3 ),
-				( ['1d95988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0e'], xmr_addr4 ),
-				( [ privhex5 ], xmr_addr5 ),
-				( ['e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f'], xmr_addr6 ),
+				([privhex1], xmr_addr1),
+				(['1c95988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0f'], xmr_addr2),
+				(['2c94988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0f'], xmr_addr3),
+				(['1d95988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0e'], xmr_addr4),
+				([privhex5], xmr_addr5),
+				(['e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f'], xmr_addr6),
 			],
 			'zec_mainnet': [
-				( ['SKxny894fJe2rmZjeuoE6GVfNkWoXfPp8337VrLLNWG56FjqVUYR'],
-					zec_addr1, ['--type=zcash_z'], 'zcash_z' ),
-				( ['SKxv1peuQvMT4TvqPLqKy1px3oqLm98Evi948VU8N8VKcf7C2umc'],
-					zec_addr2, ['--type=zcash_z'], 'zcash_z' ),
-				( ['SKxny894fJe2rmZjeuoE6GVfNkWoXfPp8337VrLLNWG56kQw4qjm'],
-					zec_addr4, ['--type=zcash_z'], 'zcash_z' ),
-				( ['SKxv1peuQvMT4TvqPLqKy1px3oqLm98Evi948VU8N8VKcBwrLwiu'],
-					zec_addr5, ['--type=zcash_z'], 'zcash_z' ),
-				( ['SKxuS56e99jpCeD9mMQ5o63zoGPakNdM9HCvt4Vt2cypvRjCdvGJ'],
-					zec_addr6, ['--type=zcash_z'], 'zcash_z' ),
+				(
+					['SKxny894fJe2rmZjeuoE6GVfNkWoXfPp8337VrLLNWG56FjqVUYR'],
+					zec_addr1, ['--type=zcash_z'], 'zcash_z'
+				), (
+					['SKxv1peuQvMT4TvqPLqKy1px3oqLm98Evi948VU8N8VKcf7C2umc'],
+					zec_addr2, ['--type=zcash_z'], 'zcash_z'
+				), (
+					['SKxny894fJe2rmZjeuoE6GVfNkWoXfPp8337VrLLNWG56kQw4qjm'],
+					zec_addr4, ['--type=zcash_z'], 'zcash_z'
+				), (
+					['SKxv1peuQvMT4TvqPLqKy1px3oqLm98Evi948VU8N8VKcBwrLwiu'],
+					zec_addr5, ['--type=zcash_z'], 'zcash_z'
+				), (
+					['SKxuS56e99jpCeD9mMQ5o63zoGPakNdM9HCvt4Vt2cypvRjCdvGJ'],
+					zec_addr6, ['--type=zcash_z'], 'zcash_z'
+				),
 			],
 		},
 		'wif2hex': {
 			'btc_mainnet': [
-				( [ btc_wif1 ], privhex7, None, 'legacy' ),
-				( [ btc_wif2 ], privhex7, ['--type=compressed'], 'compressed' ),
-				( [ btc_wif2 ], privhex7, ['--type=segwit'], 'segwit' ),
-				( [ btc_wif2 ], privhex7, ['--type=bech32'], 'bech32' ),
+				([btc_wif1], privhex7, None, 'legacy'),
+				([btc_wif2], privhex7, ['--type=compressed'], 'compressed'),
+				([btc_wif2], privhex7, ['--type=segwit'], 'segwit'),
+				([btc_wif2], privhex7, ['--type=bech32'], 'bech32'),
 			],
 		},
 		'wif2redeem_script': {
 			'btc_mainnet': [
-				( [ btc_wif2 ], redeem_script1, ['--type=segwit'], 'segwit' ),
+				([btc_wif2], redeem_script1, ['--type=segwit'], 'segwit'),
 			],
 		},
 		'wif2segwit_pair': {
 			'btc_mainnet': [
-				( [ btc_wif2 ], (redeem_script1, btc_addr3), ['--type=segwit'], 'segwit' ),
+				([btc_wif2], (redeem_script1, btc_addr3), ['--type=segwit'], 'segwit'),
 			],
 		},
 	},
 	# TODO: compressed address files are missing
 	#		'addrfile_compressed_chk':
-	#			'btc': ('A33C 4FDE F515 F5BC','6C48 AA57 2056 C8C8'),
-	#			'ltc': ('3FC0 8F03 C2D6 BD19','4C0A 49B6 2DD1 1BE0'),
+	#			'btc': ('A33C 4FDE F515 F5BC', '6C48 AA57 2056 C8C8'),
+	#			'ltc': ('3FC0 8F03 C2D6 BD19', '4C0A 49B6 2DD1 1BE0'),
 	'File': {
 		'addrfile_chksum': {
 			'btc_mainnet': [
-				( ['test/ref/98831F3A[1,31-33,500-501,1010-1011].addrs'],
-					'6FEF 6FB9 7B13 5D91'),
-				( ['test/ref/98831F3A-S[1,31-33,500-501,1010-1011].addrs'],
-					'06C1 9C87 F25C 4EE6'),
-				( ['test/ref/98831F3A-B[1,31-33,500-501,1010-1011].addrs'],
-					'9D2A D4B6 5117 F02E'),
+				(
+					['test/ref/98831F3A[1,31-33,500-501,1010-1011].addrs'],
+					'6FEF 6FB9 7B13 5D91'
+				), (
+					['test/ref/98831F3A-S[1,31-33,500-501,1010-1011].addrs'],
+					'06C1 9C87 F25C 4EE6'
+				), (
+					['test/ref/98831F3A-B[1,31-33,500-501,1010-1011].addrs'],
+					'9D2A D4B6 5117 F02E'
+				),
 			],
 			'btc_testnet': [
-				( ['test/ref/98831F3A[1,31-33,500-501,1010-1011].testnet.addrs'],
-					'424E 4326 CFFE 5F51'),
-				( ['test/ref/98831F3A-S[1,31-33,500-501,1010-1011].testnet.addrs'],
-					'072C 8B07 2730 CB7A'),
-				( ['test/ref/98831F3A-B[1,31-33,500-501,1010-1011].testnet.addrs'],
-					'0527 9C39 6C1B E39A'),
+				(
+					['test/ref/98831F3A[1,31-33,500-501,1010-1011].testnet.addrs'],
+					'424E 4326 CFFE 5F51'
+				), (
+					['test/ref/98831F3A-S[1,31-33,500-501,1010-1011].testnet.addrs'],
+					'072C 8B07 2730 CB7A'
+				), (
+					['test/ref/98831F3A-B[1,31-33,500-501,1010-1011].testnet.addrs'],
+					'0527 9C39 6C1B E39A'
+				),
 			],
 			'ltc_mainnet': [
-				( ['test/ref/litecoin/98831F3A-LTC[1,31-33,500-501,1010-1011].addrs'],
-					'AD52 C3FE 8924 AAF0'),
-				( ['test/ref/litecoin/98831F3A-LTC-S[1,31-33,500-501,1010-1011].addrs'],
-					'63DF E42A 0827 21C3'),
-				( ['test/ref/litecoin/98831F3A-LTC-B[1,31-33,500-501,1010-1011].addrs'],
-					'FF1C 7939 5967 AB82'),
+				(
+					['test/ref/litecoin/98831F3A-LTC[1,31-33,500-501,1010-1011].addrs'],
+					'AD52 C3FE 8924 AAF0'
+				), (
+					['test/ref/litecoin/98831F3A-LTC-S[1,31-33,500-501,1010-1011].addrs'],
+					'63DF E42A 0827 21C3'
+				), (
+					['test/ref/litecoin/98831F3A-LTC-B[1,31-33,500-501,1010-1011].addrs'],
+					'FF1C 7939 5967 AB82'
+				),
 			],
 			'ltc_testnet': [
-				( ['test/ref/litecoin/98831F3A-LTC[1,31-33,500-501,1010-1011].testnet.addrs'],
-					'4EBE 2E85 E969 1B30'),
-				( ['test/ref/litecoin/98831F3A-LTC-S[1,31-33,500-501,1010-1011].testnet.addrs'],
-					'5DD1 D186 DBE1 59F2'),
-				( ['test/ref/litecoin/98831F3A-LTC-B[1,31-33,500-501,1010-1011].testnet.addrs'],
-					'ED3D 8AA4 BED4 0B40'),
+				(
+					['test/ref/litecoin/98831F3A-LTC[1,31-33,500-501,1010-1011].testnet.addrs'],
+					'4EBE 2E85 E969 1B30'
+				), (
+					['test/ref/litecoin/98831F3A-LTC-S[1,31-33,500-501,1010-1011].testnet.addrs'],
+					'5DD1 D186 DBE1 59F2'
+				), (
+					['test/ref/litecoin/98831F3A-LTC-B[1,31-33,500-501,1010-1011].testnet.addrs'],
+					'ED3D 8AA4 BED4 0B40'
+				),
 			],
 			'zec_mainnet': [
-				( ['test/ref/zcash/98831F3A-ZEC-C[1,31-33,500-501,1010-1011].addrs'],'903E 7225 DD86 6E01'),
-				( ['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].addrs'], '9C7A 72DC 3D4A B3AF',
-					['--type=zcash_z'], 'zcash_z' ),
+				(['test/ref/zcash/98831F3A-ZEC-C[1,31-33,500-501,1010-1011].addrs'], '903E 7225 DD86 6E01'),
+				(
+					['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].addrs'],
+					'9C7A 72DC 3D4A B3AF', ['--type=zcash_z'], 'zcash_z'
+				),
 			],
 			'xmr_mainnet': [
-				( ['test/ref/monero/98831F3A-XMR-M[1,31-33,500-501,1010-1011].addrs'],'4369 0253 AC2C 0E38'), ],
+				(['test/ref/monero/98831F3A-XMR-M[1,31-33,500-501,1010-1011].addrs'], '4369 0253 AC2C 0E38'),],
 			'dash_mainnet': [
-				( ['test/ref/dash/98831F3A-DASH-C[1,31-33,500-501,1010-1011].addrs'],'FBC1 6B6A 0988 4403'), ],
+				(['test/ref/dash/98831F3A-DASH-C[1,31-33,500-501,1010-1011].addrs'], 'FBC1 6B6A 0988 4403'),],
 			'eth_mainnet': [
-				( ['test/ref/ethereum/98831F3A-ETH[1,31-33,500-501,1010-1011].addrs'],'E554 076E 7AF6 66A3'), ],
+				(['test/ref/ethereum/98831F3A-ETH[1,31-33,500-501,1010-1011].addrs'],'E554 076E 7AF6 66A3'),],
 			'etc_mainnet': [
-				( ['test/ref/ethereum_classic/98831F3A-ETC[1,31-33,500-501,1010-1011].addrs'],
-					'E97A D796 B495 E8BC'), ],
+				(
+					['test/ref/ethereum_classic/98831F3A-ETC[1,31-33,500-501,1010-1011].addrs'],
+					'E97A D796 B495 E8BC'
+				),
+			],
 		},
 		'viewkeyaddrfile_chksum': {
 			'xmr_mainnet': [
-				( ['test/ref/monero/98831F3A-XMR-M[1-3].vkeys'], '40C9 0E61 B743 229C' ),
+				(['test/ref/monero/98831F3A-XMR-M[1-3].vkeys'], '40C9 0E61 B743 229C'),
 			],
 		},
 		'keyaddrfile_chksum': {
 			'btc_mainnet': [
-				( ['test/ref/98831F3A[1,31-33,500-501,1010-1011].akeys.mmenc'],
-					'9F2D D781 1812 8BAD', kafile_opts ),
+				(
+					['test/ref/98831F3A[1,31-33,500-501,1010-1011].akeys.mmenc'],
+					'9F2D D781 1812 8BAD', kafile_opts
+				),
 			],
 			'btc_testnet': [
-				( ['test/ref/98831F3A[1,31-33,500-501,1010-1011].testnet.akeys.mmenc'],
-					'88CC 5120 9A91 22C2', kafile_opts ),
+				(
+					['test/ref/98831F3A[1,31-33,500-501,1010-1011].testnet.akeys.mmenc'],
+					'88CC 5120 9A91 22C2', kafile_opts
+				),
 			],
 			'ltc_mainnet': [
-				( ['test/ref/litecoin/98831F3A-LTC[1,31-33,500-501,1010-1011].akeys.mmenc'],
-					'B804 978A 8796 3ED4', kafile_opts ),
+				(
+					['test/ref/litecoin/98831F3A-LTC[1,31-33,500-501,1010-1011].akeys.mmenc'],
+					'B804 978A 8796 3ED4', kafile_opts
+				),
 			],
 			'ltc_testnet': [
-				( ['test/ref/litecoin/98831F3A-LTC[1,31-33,500-501,1010-1011].testnet.akeys.mmenc'],
-					'98B5 AC35 F334 0398', kafile_opts ),
+				(
+					['test/ref/litecoin/98831F3A-LTC[1,31-33,500-501,1010-1011].testnet.akeys.mmenc'],
+					'98B5 AC35 F334 0398', kafile_opts
+				),
 			],
 			'zec_mainnet': [
-				( ['test/ref/zcash/98831F3A-ZEC-C[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'F05A 5A5C 0C8E 2617', kafile_opts ),
-				( ['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].akeys.mmenc'], '6B87 9B2D 0D8D 8D1E',
-					kafile_opts + ['--type=zcash_z'], 'zcash_z' ),
+				(
+					['test/ref/zcash/98831F3A-ZEC-C[1,31-33,500-501,1010-1011].akeys.mmenc'],
+					'F05A 5A5C 0C8E 2617', kafile_opts
+				), (
+					['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].akeys.mmenc'],
+					'6B87 9B2D 0D8D 8D1E', kafile_opts + ['--type=zcash_z'], 'zcash_z'
+				),
 			],
 			'xmr_mainnet': [
-				( ['test/ref/monero/98831F3A-XMR-M[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'E0D7 9612 3D67 404A', kafile_opts ), ],
+				(
+					['test/ref/monero/98831F3A-XMR-M[1,31-33,500-501,1010-1011].akeys.mmenc'],
+					'E0D7 9612 3D67 404A', kafile_opts
+				),
+			],
 			'dash_mainnet': [
-				( ['test/ref/dash/98831F3A-DASH-C[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'E83D 2C63 FEA2 4142', kafile_opts ), ],
+				(
+					['test/ref/dash/98831F3A-DASH-C[1,31-33,500-501,1010-1011].akeys.mmenc'],
+					'E83D 2C63 FEA2 4142', kafile_opts
+				),
+			],
 			'eth_mainnet': [
-				( ['test/ref/ethereum/98831F3A-ETH[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'E400 70D9 0AE3 C7C2', kafile_opts ), ],
+				(
+					['test/ref/ethereum/98831F3A-ETH[1,31-33,500-501,1010-1011].akeys.mmenc'],
+					'E400 70D9 0AE3 C7C2', kafile_opts
+				),
+			],
 			'etc_mainnet': [
-				( ['test/ref/ethereum_classic/98831F3A-ETC[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'EF49 967D BD6C FE45', kafile_opts ), ],
+				(
+					['test/ref/ethereum_classic/98831F3A-ETC[1,31-33,500-501,1010-1011].akeys.mmenc'],
+					'EF49 967D BD6C FE45', kafile_opts
+				),
+			],
 		},
 		'passwdfile_chksum': {
 			'btc_mainnet': [
-				( ['test/ref/98831F3A-фубар@crypto.org-b58-20[1,4,1100].pws'],
-					'DDD9 44B0 CA28 183F', kafile_opts ), ],
+				(
+					['test/ref/98831F3A-фубар@crypto.org-b58-20[1,4,1100].pws'],
+					'DDD9 44B0 CA28 183F', kafile_opts
+				),
+			],
 		},
 		'txview': {
-			'btc_mainnet': [ ( ['test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx'], None ), ],
-			'btc_testnet': [ ( ['test/ref/0C7115[15.86255,14,tl=1320969600].testnet.rawtx'], None ), ],
-			'bch_mainnet': [ ( ['test/ref/460D4D-BCH[10.19764,tl=1320969600].rawtx'], None ), ],
-			'bch_testnet': [ ( ['test/ref/359FD5-BCH[6.68868,tl=1320969600].testnet.rawtx'], None ), ],
-			'ltc_mainnet': [ ( ['test/ref/litecoin/AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx'], None ), ],
-			'ltc_testnet': [ ( ['test/ref/litecoin/A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx'],
-									None ), ],
-			'eth_mainnet': [ ( ['test/ref/ethereum/88FEFD-ETH[23.45495,40000].rawtx'], None ), ],
-			'eth_testnet': [ ( [
+			'btc_mainnet': [(['test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx'], None),],
+			'btc_testnet': [(['test/ref/0C7115[15.86255,14,tl=1320969600].testnet.rawtx'], None),],
+			'bch_mainnet': [(['test/ref/460D4D-BCH[10.19764,tl=1320969600].rawtx'], None),],
+			'bch_testnet': [(['test/ref/359FD5-BCH[6.68868,tl=1320969600].testnet.rawtx'], None),],
+			'ltc_mainnet': [(['test/ref/litecoin/AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx'], None),],
+			'ltc_testnet': [(['test/ref/litecoin/A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx'],
+									None),],
+			'eth_mainnet': [(['test/ref/ethereum/88FEFD-ETH[23.45495,40000].rawtx'], None),],
+			'eth_testnet': [([
 				'test/ref/ethereum/B472BD-ETH[23.45495,40000].testnet.rawtx',
 				'test/ref/ethereum/B472BD-ETH[23.45495,40000].testnet.sigtx'
-				], None ), ],
-			'mm1_mainnet': [ ( ['test/ref/ethereum/5881D2-MM1[1.23456,50000].rawtx'], None ), ],
-			'mm1_testnet': [ ( ['test/ref/ethereum/6BDB25-MM1[1.23456,50000].testnet.rawtx'], None ), ],
-			'etc_mainnet': [ ( ['test/ref/ethereum_classic/ED3848-ETC[1.2345,40000].rawtx'], None ), ],
+				], None),],
+			'mm1_mainnet': [(['test/ref/ethereum/5881D2-MM1[1.23456,50000].rawtx'], None),],
+			'mm1_testnet': [(['test/ref/ethereum/6BDB25-MM1[1.23456,50000].testnet.rawtx'], None),],
+			'etc_mainnet': [(['test/ref/ethereum_classic/ED3848-ETC[1.2345,40000].rawtx'], None),],
 		},
 	},
 }
