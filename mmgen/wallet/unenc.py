@@ -12,8 +12,8 @@
 wallet.unenc: unencrypted wallet base class
 """
 
-from ..color import blue,yellow
-from ..util import msg,msg_r,capfirst,is_int
+from ..color import blue, yellow
+from ..util import msg, msg_r, capfirst, is_int
 from .base import wallet
 
 class wallet(wallet):
@@ -26,10 +26,7 @@ class wallet(wallet):
 
 	def _filename(self):
 		s = self.seed
-		return '{}[{}].{}'.format(
-			s.fn_stem,
-			s.bitlen,
-			self.ext )
+		return '{}[{}].{}'.format(s.fn_stem, s.bitlen, self.ext)
 
 	def _print_seed_type(self):
 		msg('{} {}'.format(
@@ -37,7 +34,7 @@ class wallet(wallet):
 			yellow(self.mn_type)
 		))
 
-	def _choose_seedlen(self,ok_lens):
+	def _choose_seedlen(self, ok_lens):
 
 		from ..term import get_char
 		def choose_len():
@@ -46,7 +43,7 @@ class wallet(wallet):
 				r = get_char('\r'+prompt)
 				if is_int(r) and 1 <= int(r) <= len(ok_lens):
 					break
-			msg_r(('\r','\n')[self.cfg.test_suite] + ' '*len(prompt) + '\r')
+			msg_r(('\r', '\n')[self.cfg.test_suite] + ' '*len(prompt) + '\r')
 			return ok_lens[int(r)-1]
 
 		while True:
@@ -57,5 +54,5 @@ class wallet(wallet):
 					self.cfg,
 					prompt,
 					default_yes = True,
-					no_nl       = not self.cfg.test_suite ):
+					no_nl       = not self.cfg.test_suite):
 				return usr_len

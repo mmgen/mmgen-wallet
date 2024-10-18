@@ -13,7 +13,7 @@ wallet.dieroll: dieroll wallet class
 """
 
 import time
-from ..util import msg,msg_r,die,fmt,remove_whitespace
+from ..util import msg, msg_r, die, fmt, remove_whitespace
 from ..util2 import block_format
 from ..seed import Seed
 from ..baseconv import baseconv
@@ -32,8 +32,8 @@ class wallet(wallet):
 	interactive_input = False
 
 	def _format(self):
-		d = baseconv('b6d').frombytes(self.seed.data,pad='seed',tostr=True) + '\n'
-		self.fmt_data = block_format(d,gw=5,cols=5)
+		d = baseconv('b6d').frombytes(self.seed.data, pad='seed', tostr=True) + '\n'
+		self.fmt_data = block_format(d, gw=5, cols=5)
 
 	def _deformat(self):
 
@@ -42,34 +42,34 @@ class wallet(wallet):
 		rmap = bc.seedlen_map_rev
 
 		if not len(d) in rmap:
-			die( 'SeedLengthError', '{!r}: invalid length for {} (must be one of {})'.format(
+			die('SeedLengthError', '{!r}: invalid length for {} (must be one of {})'.format(
 				len(d),
 				self.desc,
-				list(rmap) ))
+				list(rmap)))
 
 		# truncate seed to correct length, discarding high bits
 		seed_len = rmap[len(d)]
-		seed_bytes = bc.tobytes( d, pad='seed' )[-seed_len:]
+		seed_bytes = bc.tobytes(d, pad='seed')[-seed_len:]
 
 		if self.interactive_input and self.cfg.usr_randchars:
 			from ..ui import keypress_confirm
-			if keypress_confirm( self.cfg, self.user_entropy_prompt ):
+			if keypress_confirm(self.cfg, self.user_entropy_prompt):
 				from ..crypto import Crypto
 				seed_bytes = Crypto(self.cfg).add_user_random(
 					rand_bytes = seed_bytes,
-					desc       = 'gathered from your die rolls' )
+					desc       = 'gathered from your die rolls')
 				self.desc += ' plus user-supplied entropy'
 
-		self.seed = Seed( self.cfg, seed_bytes )
+		self.seed = Seed(self.cfg, seed_bytes)
 
 		self.check_usr_seed_len()
 		return True
 
-	def _get_data_from_user(self,desc):
+	def _get_data_from_user(self, desc):
 
 		if not self.cfg.stdin_tty:
 			from ..ui import get_data_from_user
-			return get_data_from_user( self.cfg, desc )
+			return get_data_from_user(self.cfg, desc)
 
 		bc = baseconv('b6d')
 
@@ -90,7 +90,7 @@ class wallet(wallet):
 			enter the result on the keyboard as a digit.  If you make an invalid entry,
 			you'll be prompted to re-enter it.
 		"""
-		msg('\n'+fmt(message.strip()).format(sb=seed_bitlen,nd=nDierolls)+'\n')
+		msg('\n'+fmt(message.strip()).format(sb=seed_bitlen, nd=nDierolls)+'\n')
 
 		CUR_HIDE = '\033[?25l'
 		CUR_SHOW = '\033[?25h'
@@ -104,7 +104,7 @@ class wallet(wallet):
 			p = prompt_fs
 			while True:
 				time.sleep(self.cfg.short_disp_timeout)
-				ch = get_char(p.format(n),num_bytes=1)
+				ch = get_char(p.format(n), num_bytes=1)
 				if ch in bc.digits:
 					msg_r(CUR_HIDE + ' OK')
 					return ch
@@ -112,7 +112,7 @@ class wallet(wallet):
 					msg_r(invalid_msg)
 					p = clear_line + prompt_fs
 
-		dierolls,n = [],1
+		dierolls, n = [], 1
 		while len(dierolls) < nDierolls:
 			dierolls.append(get_digit(n))
 			n += 1

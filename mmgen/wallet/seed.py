@@ -12,8 +12,8 @@
 wallet.seed: seed file wallet class
 """
 
-from ..util import msg,make_chksum_6,split_into_cols,is_chksum_6
-from ..baseconv import baseconv,is_b58_str
+from ..util import msg, make_chksum_6, split_into_cols, is_chksum_6
+from ..baseconv import baseconv, is_b58_str
 from ..seed import Seed
 from .unenc import wallet
 
@@ -23,12 +23,12 @@ class wallet(wallet):
 	desc = 'seed data'
 
 	def _format(self):
-		b58seed = baseconv('b58').frombytes(self.seed.data,pad='seed',tostr=True)
+		b58seed = baseconv('b58').frombytes(self.seed.data, pad='seed', tostr=True)
 		self.ssdata.chksum = make_chksum_6(b58seed)
 		self.ssdata.b58seed = b58seed
 		self.fmt_data = '{} {}\n'.format(
 			self.ssdata.chksum,
-			split_into_cols(4,b58seed) )
+			split_into_cols(4, b58seed))
 
 	def _deformat(self):
 		desc = self.desc
@@ -38,7 +38,7 @@ class wallet(wallet):
 			msg(f'Invalid data length ({len(ld)}) in {desc}')
 			return False
 
-		a,b = ld[0],''.join(ld[1:])
+		a, b = ld[0], ''.join(ld[1:])
 
 		if not is_chksum_6(a):
 			msg(f'{a!r}: invalid checksum format in {desc}')
@@ -50,16 +50,16 @@ class wallet(wallet):
 
 		self.cfg._util.vmsg_r(f'Validating {desc} checksum...')
 
-		if not self.cfg._util.compare_chksums(a,'file',make_chksum_6(b),'computed',verbose=True):
+		if not self.cfg._util.compare_chksums(a, 'file', make_chksum_6(b), 'computed', verbose=True):
 			return False
 
-		ret = baseconv('b58').tobytes(b,pad='seed')
+		ret = baseconv('b58').tobytes(b, pad='seed')
 
 		if ret is False:
 			msg(f'Invalid base-58 encoded seed: {b}')
 			return False
 
-		self.seed = Seed( self.cfg, ret )
+		self.seed = Seed(self.cfg, ret)
 		self.ssdata.chksum = a
 		self.ssdata.b58seed = b
 

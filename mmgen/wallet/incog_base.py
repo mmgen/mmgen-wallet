@@ -13,7 +13,7 @@ wallet.incog_base: incognito wallet base class
 """
 
 from ..seed import Seed
-from ..util import msg,make_chksum_8,die
+from ..util import msg, make_chksum_8, die
 from .enc import wallet
 
 class wallet(wallet):
@@ -30,16 +30,16 @@ class wallet(wallet):
 		'decrypt_params': " {} hash preset"
 	}
 
-	def _make_iv_chksum(self,s):
+	def _make_iv_chksum(self, s):
 		from hashlib import sha256
 		return sha256(s).hexdigest()[:8].upper()
 
-	def _get_incog_data_len(self,seed_len):
+	def _get_incog_data_len(self, seed_len):
 		return (
 			self.crypto.aesctr_iv_len
 			+ self.crypto.salt_len
 			+ (0 if self.cfg.old_incog_fmt else self.crypto.hincog_chk_len)
-			+ seed_len//8 )
+			+ seed_len//8)
 
 	def _incog_data_size_chk(self):
 		# valid sizes: 56, 64, 72
@@ -55,42 +55,42 @@ class wallet(wallet):
 			msg(f'Valid data size for this seed length: {valid_dlen} bytes')
 			for sl in Seed.lens:
 				if dlen == self._get_incog_data_len(sl):
-					die(1,f'Valid seed length for this data size: {sl} bits')
+					die(1, f'Valid seed length for this data size: {sl} bits')
 			msg(f'This data size ({dlen} bytes) is invalid for all available seed lengths')
 			return False
 
 	def _encrypt (self):
 		self._get_first_pw_and_hp_and_encrypt_seed()
 		if self.cfg.old_incog_fmt:
-			die(1,'Writing old-format incognito wallets is unsupported')
+			die(1, 'Writing old-format incognito wallets is unsupported')
 		d = self.ssdata
 		crypto = self.crypto
 
-		d.iv = crypto.get_random( crypto.aesctr_iv_len )
+		d.iv = crypto.get_random(crypto.aesctr_iv_len)
 		d.iv_id = self._make_iv_chksum(d.iv)
 		msg(f'New Incog Wallet ID: {d.iv_id}')
 		self.cfg._util.qmsg('Make a record of this value')
 		self.cfg._util.vmsg('\n  ' + self.msg['record_incog_id'].strip()+'\n')
 
-		d.salt = crypto.get_random( crypto.salt_len )
+		d.salt = crypto.get_random(crypto.salt_len)
 		seed_key = crypto.make_key(
 			passwd      = d.passwd,
 			salt        = d.salt,
 			hash_preset = d.hash_preset,
-			desc        = 'incog wallet key' )
+			desc        = 'incog wallet key')
 
 		from hashlib import sha256
 		chk = sha256(self.seed.data).digest()[:8]
 		d.enc_seed = crypto.encrypt_seed(
 			data = chk + self.seed.data,
-			key  = seed_key )
+			key  = seed_key)
 
 		# IV is used BOTH to initialize counter and to salt password!
 		d.wrapper_key = crypto.make_key(
 			passwd      = d.passwd,
 			salt        = d.iv,
 			hash_preset = d.hash_preset,
-			desc        = 'incog wrapper key' )
+			desc        = 'incog wrapper key')
 
 		d.key_id = make_chksum_8(d.wrapper_key)
 		self.cfg._util.vmsg(f'Key ID: {d.key_id}')
@@ -103,7 +103,7 @@ class wallet(wallet):
 			data = d.salt + d.enc_seed,
 			key  = d.wrapper_key,
 			iv   = d.iv,
-			desc = self.desc )
+			desc = self.desc)
 
 	def _filename(self):
 		s = self.seed
@@ -114,7 +114,7 @@ class wallet(wallet):
 			d.iv_id,
 			s.bitlen,
 			d.hash_preset,
-			self.ext )
+			self.ext)
 
 	def _deformat(self):
 
@@ -131,20 +131,20 @@ class wallet(wallet):
 
 		return True
 
-	def _verify_seed_newfmt(self,data):
-		chk,seed = data[:8],data[8:]
+	def _verify_seed_newfmt(self, data):
+		chk, seed = data[:8], data[8:]
 		from hashlib import sha256
 		if sha256(seed).digest()[:8] == chk:
-			self.cfg._util.qmsg('Passphrase{} are correct'.format( self.msg['decrypt_params'].format('and') ))
+			self.cfg._util.qmsg('Passphrase{} are correct'.format(self.msg['decrypt_params'].format('and')))
 			return seed
 		else:
-			msg('Incorrect passphrase{}'.format( self.msg['decrypt_params'].format('or') ))
+			msg('Incorrect passphrase{}'.format(self.msg['decrypt_params'].format('or')))
 			return False
 
-	def _verify_seed_oldfmt(self,seed):
+	def _verify_seed_oldfmt(self, seed):
 		m = f'Seed ID: {make_chksum_8(seed)}.  Is the Seed ID correct?'
 		from ..ui import keypress_confirm
-		if keypress_confirm( self.cfg, m, True ):
+		if keypress_confirm(self.cfg, m, True):
 			return seed
 		else:
 			return False
@@ -160,13 +160,13 @@ class wallet(wallet):
 			passwd      = d.passwd,
 			salt        = d.iv,
 			hash_preset = d.hash_preset,
-			desc        = 'wrapper key' )
+			desc        = 'wrapper key')
 
 		dd = crypto.decrypt_data(
 			enc_data = d.enc_incog_data,
 			key      = wrapper_key,
 			iv       = d.iv,
-			desc     = 'incog data' )
+			desc     = 'incog data')
 
 		d.salt     = dd[0:crypto.salt_len]
 		d.enc_seed = dd[crypto.salt_len:]
@@ -175,21 +175,21 @@ class wallet(wallet):
 			passwd      = d.passwd,
 			salt        = d.salt,
 			hash_preset = d.hash_preset,
-			desc        = 'main key' )
+			desc        = 'main key')
 
 		self.cfg._util.qmsg(f'Key ID: {make_chksum_8(seed_key)}')
 
-		verify_seed_func = getattr( self, '_verify_seed_'+ ('oldfmt' if self.cfg.old_incog_fmt else 'newfmt') )
+		verify_seed_func = getattr(self, '_verify_seed_'+ ('oldfmt' if self.cfg.old_incog_fmt else 'newfmt'))
 
 		seed = verify_seed_func(
 			crypto.decrypt_seed(
 				enc_seed = d.enc_seed,
 				key      = seed_key,
 				seed_id  = '',
-				key_id   = '' ))
+				key_id   = ''))
 
 		if seed:
-			self.seed = Seed( self.cfg, seed )
+			self.seed = Seed(self.cfg, seed)
 			msg(f'Seed ID: {self.seed.sid}')
 			return True
 		else:

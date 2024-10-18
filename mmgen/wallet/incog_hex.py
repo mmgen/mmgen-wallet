@@ -12,7 +12,7 @@
 wallet.incog_hex: hexadecimal incognito wallet class
 """
 
-from ..util2 import pretty_hexdump,decode_pretty_hexdump
+from ..util2 import pretty_hexdump, decode_pretty_hexdump
 from .incog_base import wallet
 
 class wallet(wallet):

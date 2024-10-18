@@ -28,11 +28,11 @@ class wallet(wallet):
 	def mn_lens(self):
 		return sorted(self.conv_cls(self.wl_id).seedlen_map_rev)
 
-	def _get_data_from_user(self,desc):
+	def _get_data_from_user(self, desc):
 
 		if not self.cfg.stdin_tty:
 			from ..ui import get_data_from_user
-			return get_data_from_user( self.cfg, desc )
+			return get_data_from_user(self.cfg, desc)
 
 		self._print_seed_type()
 
@@ -70,10 +70,10 @@ class wallet(wallet):
 		if len(mn) not in self.mn_lens:
 			msg('Invalid mnemonic ({} words).  Valid numbers of words: {}'.format(
 				len(mn),
-				', '.join(map(str,self.mn_lens)) ))
+				', '.join(map(str, self.mn_lens))))
 			return False
 
-		for n,w in enumerate(mn,1):
+		for n, w in enumerate(mn, 1):
 			if w not in bc.digits:
 				msg(f'Invalid mnemonic: word #{n} is not in the {self.wl_id.upper()} wordlist')
 				return False
@@ -91,7 +91,7 @@ class wallet(wallet):
 			val2  = ' '.join(mn),
 			desc1 = 'recomputed mnemonic',
 			desc2 = 'original mnemonic',
-			e     = 'Internal error' )
+			e     = 'Internal error')
 
 		self.seed = Seed(self.cfg, seed)
 		self.ssdata.mnemonic = mn

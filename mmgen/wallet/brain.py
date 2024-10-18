@@ -26,7 +26,7 @@ class wallet(wallet):
 	def get_bw_params(self):
 		# already checked
 		a = self.cfg.brain_params.split(',')
-		return int(a[0]),a[1]
+		return int(a[0]), a[1]
 
 	def _deformat(self):
 		self.brainpasswd = ' '.join(self.fmt_data.split())
@@ -35,11 +35,11 @@ class wallet(wallet):
 	def _decrypt(self):
 		d = self.ssdata
 		if self.cfg.brain_params:
-			bw_seed_len,d.hash_preset = self.get_bw_params()
+			bw_seed_len, d.hash_preset = self.get_bw_params()
 		else:
 			if not self.cfg.seed_len:
 				self.cfg._util.qmsg(f'Using default seed length of {yellow(str(Seed.dfl_len))} bits\n'
-					+ 'If this is not what you want, use the --seed-len option' )
+					+ 'If this is not what you want, use the --seed-len option')
 			self._get_hash_preset()
 			bw_seed_len = self.cfg.seed_len or Seed.dfl_len
 		self.cfg._util.qmsg_r('Hashing brainwallet data.  Please wait...')
@@ -48,9 +48,9 @@ class wallet(wallet):
 			self.brainpasswd.encode(),
 			b'',
 			d.hash_preset,
-			buflen = bw_seed_len // 8 )
+			buflen = bw_seed_len // 8)
 		self.cfg._util.qmsg('Done')
-		self.seed = Seed( self.cfg, seed )
+		self.seed = Seed(self.cfg, seed)
 		msg(f'Seed ID: {self.seed.sid}')
 		self.cfg._util.qmsg('Check this value against your records')
 		return True

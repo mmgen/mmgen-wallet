@@ -20,7 +20,7 @@ class wallet(wallet):
 	mn_type = 'BIP39'
 	wl_id = 'bip39'
 
-	def __init__(self,*args,**kwargs):
+	def __init__(self, *args, **kwargs):
 		from ..bip39 import bip39
 		self.conv_cls = bip39
-		super().__init__(*args,**kwargs)
+		super().__init__(*args, **kwargs)
