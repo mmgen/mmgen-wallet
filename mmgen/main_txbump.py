@@ -201,7 +201,7 @@ async def main():
 			if await tx4.send():
 				tx4.file.write(ask_write=False)
 		else:
-			die(2,'Transaction could not be signed')
+			die(2, 'Transaction could not be signed')
 	else:
 		tx.file.write(
 			outdir                = asi.txauto_dir if cfg.autosign else None,

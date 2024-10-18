@@ -15,7 +15,7 @@ command.
 The cleaned source files are saved with the .clean extension.
 """
 
-import sys,re
+import sys, re
 from difflib import unified_diff
 
 fns = sys.argv[1:3]
@@ -30,20 +30,20 @@ translate = {
 def cleanup_file(fn):
 
 	# must use binary mode to prevent conversion of DOS CR into newline
-	with open(fn,'rb') as fp:
+	with open(fn, 'rb') as fp:
 		data = fp.read().decode()
 
 	def gen_text():
 		for line in data.split('\n'): # do not use splitlines()
-			line = line.translate({ord(a):b for a,b in translate.items()})
-			line = re.sub(r'\s+$','',line)  # trailing whitespace
+			line = line.translate({ord(a):b for a, b in translate.items()})
+			line = re.sub(r'\s+$', '', line)  # trailing whitespace
 			yield line
 
 	ret = list(gen_text())
 
 	sys.stderr.write(f'Saving cleaned file to {fn}.clean\n')
 
-	with open(f'{fn}.clean','w') as fp:
+	with open(f'{fn}.clean', 'w') as fp:
 		fp.write('\n'.join(ret))
 
 	return ret
@@ -62,5 +62,8 @@ if len(fns) == 2:
 	else:
 		print(
 			f'diff a/{fns[0]} b/{fns[1]}\n' +
-			'\n'.join(a.rstrip() for a in unified_diff(*cleaned_texts,fromfile=f'a/{fns[0]}',tofile=f'b/{fns[1]}'))
+			'\n'.join(a.rstrip() for a in unified_diff(
+				*cleaned_texts,
+				fromfile = f'a/{fns[0]}',
+				tofile   = f'b/{fns[1]}'))
 		)

@@ -18,10 +18,10 @@ scripts/exec_wrapper.py: wrapper to launch MMGen scripts in a testing environmen
 
 def exec_wrapper_get_colors():
 	from collections import namedtuple
-	return namedtuple('colors',['red','green','yellow','blue','purple'])(*[
+	return namedtuple('colors', ['red', 'green', 'yellow', 'blue', 'purple'])(*[
 			(lambda s:s) if exec_wrapper_os.getenv('MMGEN_DISABLE_COLOR') else
-			(lambda s,n=n:f'\033[{n};1m{s}\033[0m' )
-		for n in (31,32,33,34,35) ])
+			(lambda s, n=n:f'\033[{n};1m{s}\033[0m')
+		for n in (31, 32, 33, 34, 35)])
 
 def exec_wrapper_init():
 
@@ -37,12 +37,12 @@ def exec_wrapper_init():
 
 	exec_wrapper_os.environ['MMGEN_EXEC_WRAPPER'] = '1'
 
-def exec_wrapper_write_traceback(e,exit_val):
+def exec_wrapper_write_traceback(e, exit_val):
 
-	import sys,os
+	import sys, os
 
 	exc_line = (
-		f'{type(e).__name__}({e.mmcode}) {e}' if type(e).__name__ in ('MMGenError','MMGenSystemExit') else
+		f'{type(e).__name__}({e.mmcode}) {e}' if type(e).__name__ in ('MMGenError', 'MMGenSystemExit') else
 		f'{type(e).__name__}: {e}')
 
 	c = exec_wrapper_get_colors()
@@ -50,7 +50,7 @@ def exec_wrapper_write_traceback(e,exit_val):
 	if os.getenv('EXEC_WRAPPER_TRACEBACK'):
 		import traceback
 		cwd = os.getcwd()
-		sys.path.insert(0,cwd)
+		sys.path.insert(0, cwd)
 		from test.overlay import get_overlay_tree_dir
 		overlay_path_pfx = os.path.relpath(get_overlay_tree_dir(cwd)) + '/'
 
@@ -65,9 +65,9 @@ def exec_wrapper_write_traceback(e,exit_val):
 					f = exec_wrapper_execed_file if e.filename == '<string>' else fixup_fn(e.filename),
 					l = '(scrubbed)' if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') else e.lineno,
 					n = e.name,
-					L = e.line or 'N/A' )
+					L = e.line or 'N/A')
 
-		tb_lines = list( gen_output() )
+		tb_lines = list(gen_output())
 
 		if 'SystemExit' in exc_line:
 			tb_lines.pop()
@@ -79,22 +79,22 @@ def exec_wrapper_write_traceback(e,exit_val):
 				c.yellow('\n'.join(tb_lines)),
 				c.red(exc_line)))
 			print(c.blue('{} script exited with error').format(
-				'Test' if os.path.dirname(sys.argv[0]) == 'test' else 'Spawned' ))
+				'Test' if os.path.dirname(sys.argv[0]) == 'test' else 'Spawned'))
 
-		with open('test.err','w') as fp:
+		with open('test.err', 'w') as fp:
 			fp.write('\n'.join(tb_lines + [exc_line]))
 
 	else:
-		sys.stdout.write( c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n' )
+		sys.stdout.write(c.purple((f'NONZERO_EXIT[{exit_val}]: ' if exit_val else '') + exc_line) + '\n')
 
 def exec_wrapper_end_msg():
 	if (
 		exec_wrapper_os.getenv('EXEC_WRAPPER_DO_RUNTIME_MSG')
-		and not exec_wrapper_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') ):
+		and not exec_wrapper_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC')):
 		c = exec_wrapper_get_colors()
 		# write to stdout to ensure script output gets to terminal first
 		exec_wrapper_sys.stdout.write(c.blue('Runtime: {:0.5f} secs\n'.format(
-			exec_wrapper_time.time() - exec_wrapper_tstart )))
+			exec_wrapper_time.time() - exec_wrapper_tstart)))
 
 def exec_wrapper_tracemalloc_setup():
 	exec_wrapper_os.environ['PYTHONTRACEMALLOC'] = '1'
@@ -103,25 +103,25 @@ def exec_wrapper_tracemalloc_setup():
 	exec_wrapper_sys.stderr.write("INFO → Appending memory allocation stats to 'tracemalloc.log'\n")
 
 def exec_wrapper_tracemalloc_log():
-	import tracemalloc,re
+	import tracemalloc, re
 	snapshot = tracemalloc.take_snapshot()
 	stats = snapshot.statistics('lineno')
 	depth = 100
 	col1w = 100
-	with open('tracemalloc.log','a') as fp:
-		fp.write('##### TOP {} {} #####\n'.format(depth,' '.join(exec_wrapper_sys.argv)))
+	with open('tracemalloc.log', 'a') as fp:
+		fp.write('##### TOP {} {} #####\n'.format(depth, ' '.join(exec_wrapper_sys.argv)))
 		for stat in stats[:depth]:
 			frame = stat.traceback[0]
-			fn = re.sub(r'.*\/site-packages\/|.*\/mmgen\/test\/overlay\/tree\/','',frame.filename)
-			fn = re.sub(r'.*\/mmgen\/test\/','test/',fn)
+			fn = re.sub(r'.*\/site-packages\/|.*\/mmgen\/test\/overlay\/tree\/', '', frame.filename)
+			fn = re.sub(r'.*\/mmgen\/test\/', 'test/', fn)
 			fp.write('{f:{w}} {s:>8.2f} KiB\n'.format(
 				f = f'{fn}:{frame.lineno}:',
 				s = stat.size/1024,
-				w = col1w ))
+				w = col1w))
 		fp.write('{f:{w}} {s:8.2f} KiB\n\n'.format(
 			f = 'TOTAL {}:'.format(' '.join(exec_wrapper_sys.argv))[:col1w],
 			s = sum(stat.size for stat in stats) / 1024,
-			w = col1w ))
+			w = col1w))
 
 import sys as exec_wrapper_sys
 import os as exec_wrapper_os
@@ -146,15 +146,15 @@ try:
 		exec(fp.read())
 except SystemExit as e:
 	if e.code != 0:
-		exec_wrapper_write_traceback(e,e.code)
+		exec_wrapper_write_traceback(e, e.code)
 	else:
 		if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
 			exec_wrapper_tracemalloc_log()
 		exec_wrapper_end_msg()
 	exec_wrapper_sys.exit(e.code)
 except Exception as e:
-	exit_val = e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1
-	exec_wrapper_write_traceback(e,exit_val)
+	exit_val = e.mmcode if hasattr(e, 'mmcode') else e.code if hasattr(e, 'code') else 1
+	exec_wrapper_write_traceback(e, exit_val)
 	exec_wrapper_sys.exit(exit_val)
 
 if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):

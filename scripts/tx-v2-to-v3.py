@@ -5,7 +5,7 @@ Convert an MMGen 'v2' transaction file (amounts as BTCAmt()) to 'v3' (amounts as
 strings).  Version 3 TX files were introduced with MMGen version 0.9.7
 """
 
-import sys,os,asyncio
+import sys, os, asyncio
 
 from mmgen.cfg import Config
 from mmgen.tx import CompletedTX
@@ -31,5 +31,5 @@ cfg = Config(opts_data=opts_data)
 if len(cfg._args) != 1:
 	cfg._usage()
 
-tx = asyncio.run(CompletedTX(cfg._args[0],quiet_open=True))
-tx.file.write(ask_tty=False,ask_overwrite=not cfg.quiet,ask_write=not cfg.quiet)
+tx = asyncio.run(CompletedTX(cfg._args[0], quiet_open=True))
+tx.file.write(ask_tty=False, ask_overwrite=not cfg.quiet, ask_write=not cfg.quiet)
