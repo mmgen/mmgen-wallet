@@ -15,14 +15,14 @@ if overlay_fake_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 		time_iter = (1862651471 + (i*60) for i in range(1000000))
 
 	TwView.date_formatter = {
-		'days':      lambda rpc,secs: (next(overlay_fake_data.time_iter) - secs) // 86400,
-		'date':      lambda rpc,secs: '{}-{:02}-{:02}'.format(
+		'days':      lambda rpc, secs: (next(overlay_fake_data.time_iter) - secs) // 86400,
+		'date':      lambda rpc, secs: '{}-{:02}-{:02}'.format(
 			*time.gmtime(next(overlay_fake_data.time_iter))[:3])[2:],
-		'date_time': lambda rpc,secs: '{}-{:02}-{:02} {:02}:{:02}'.format(
+		'date_time': lambda rpc, secs: '{}-{:02}-{:02} {:02}:{:02}'.format(
 			*time.gmtime(next(overlay_fake_data.time_iter))[:5]),
 	}
 
 if overlay_fake_os.getenv('MMGEN_BOGUS_UNSPENT_DATA'):
 
 	# 1831006505 (09 Jan 2028) = projected time of block 1000000
-	TwView.date_formatter['days'] = lambda rpc,secs: (2178144000 - secs) // 86400 # 9 Jan 2039 00:00:00
+	TwView.date_formatter['days'] = lambda rpc, secs: (2178144000 - secs) // 86400 # 9 Jan 2039 00:00:00
