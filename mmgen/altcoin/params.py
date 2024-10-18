@@ -17,7 +17,7 @@ altcoin.py - Constants for Bitcoin-derived altcoins
 #   pc: https://github.com/richardkiss/pycoin/blob/master/pycoin/networks/legacy_networks.py
 #   vg: https://github.com/exploitagency/vanitygen-plus/blob/master/keyconv.c
 #   wn: https://walletgenerator.net
-#   cc: https://www.cryptocompare.com/api/data/coinlist/ (names,symbols only)
+#   cc: https://www.cryptocompare.com/api/data/coinlist/ (names, symbols only)
 
 # BIP44
 # https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
@@ -34,7 +34,7 @@ from ..protocol import CoinProtocol
 from ..proto.btc.params import mainnet
 
 ce = namedtuple('CoinInfoEntry',
-	['name','symbol','wif_ver_num','p2pkh_info','p2sh_info','has_segwit','trust_level'])
+	['name', 'symbol', 'wif_ver_num', 'p2pkh_info', 'p2sh_info', 'has_segwit', 'trust_level'])
 
 class CoinInfo:
 	coin_constants = {}
@@ -256,26 +256,26 @@ class CoinInfo:
 	)
 
 	@classmethod
-	def get_supported_coins(cls,network):
+	def get_supported_coins(cls, network):
 		return [e for e in cls.coin_constants[network] if e.trust_level != -1]
 
 	@classmethod
-	def get_entry(cls,coin,network):
+	def get_entry(cls, coin, network):
 		try:
 			idx = [e.symbol for e in cls.coin_constants[network]].index(coin.upper())
 		except:
 			return None
 		return cls.coin_constants[network][idx]
 
-def make_proto(e,testnet=False):
+def make_proto(e, testnet=False):
 
 	proto = ('X_' if e.name[0] in '0123456789' else '') + e.name + ('Testnet' if testnet else '')
 
-	if hasattr(CoinProtocol,proto):
+	if hasattr(CoinProtocol, proto):
 		return
 
 	def num2hexstr(n):
-		return '{:0{}x}'.format(n,(4,2)[n < 256])
+		return '{:0{}x}'.format(n, (4, 2)[n < 256])
 
 	setattr(
 		CoinProtocol,
@@ -286,18 +286,18 @@ def make_proto(e,testnet=False):
 			{
 				'base_coin': e.symbol,
 				'addr_ver_info': dict(
-					[( num2hexstr(e.p2pkh_info[0]), 'p2pkh' )] +
-					([( num2hexstr(e.p2sh_info[0]), 'p2sh' )] if e.p2sh_info else [])
+					[(num2hexstr(e.p2pkh_info[0]), 'p2pkh')] +
+					([(num2hexstr(e.p2sh_info[0]), 'p2sh')] if e.p2sh_info else [])
 				),
-				'wif_ver_num': { 'std': num2hexstr(e.wif_ver_num) },
-				'mmtypes':    ('L','C','S') if e.has_segwit else ('L','C'),
+				'wif_ver_num': {'std': num2hexstr(e.wif_ver_num)},
+				'mmtypes':    ('L', 'C', 'S') if e.has_segwit else ('L', 'C'),
 				'dfl_mmtype': 'L',
 				'mmcaps':     (),
 			},
 		)
 	)
 
-def init_genonly_altcoins(usr_coin=None,testnet=False):
+def init_genonly_altcoins(usr_coin=None, testnet=False):
 	"""
 	Initialize altcoin protocol class or classes for current network.
 	If usr_coin is a core coin, initialization is skipped.
@@ -306,7 +306,7 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 	Returns trust_level of usr_coin, or 0 (untrusted) if usr_coin is None.
 	"""
 
-	data = { 'mainnet': (), 'testnet': () }
+	data = {'mainnet': (), 'testnet': ()}
 	networks = ['mainnet'] + (['testnet'] if testnet else [])
 	network = 'testnet' if testnet else 'mainnet'
 
@@ -317,7 +317,7 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 		if usr_coin.lower() in gc.core_coins: # core coin, so return immediately
 			return CoinProtocol.coins[usr_coin.lower()].trust_level
 		for network in networks:
-			data[network] = (CoinInfo.get_entry(usr_coin,network),)
+			data[network] = (CoinInfo.get_entry(usr_coin, network),)
 
 		cinfo = data[network][0]
 		if not cinfo:
@@ -329,11 +329,11 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 		make_proto(e)
 
 	for e in data['testnet']:
-		make_proto(e,testnet=True)
+		make_proto(e, testnet=True)
 
 	for e in data['mainnet']:
 		if e.symbol.lower() in CoinProtocol.coins:
 			continue
 		CoinProtocol.coins[e.symbol.lower()] = CoinProtocol.proto_info(
 			name        = 'X_'+e.name if e.name[0] in '0123456789' else e.name,
-			trust_level = e.trust_level )
+			trust_level = e.trust_level)

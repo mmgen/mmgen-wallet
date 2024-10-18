@@ -12,8 +12,8 @@
 help.seedsplit: seedsplit help notes for MMGen suite
 """
 
-def help(proto,cfg):
-	from ..seedsplit import SeedShareIdx,SeedShareCount,MasterShareIdx
+def help(proto, cfg):
+	from ..seedsplit import SeedShareIdx, SeedShareCount, MasterShareIdx
 	return """
 COMMAND NOTES:
 
@@ -102,4 +102,4 @@ EXAMPLES:
 """.strip().format(
 	si = SeedShareIdx,
 	sc = SeedShareCount,
-	mi = MasterShareIdx )
+	mi = MasterShareIdx)

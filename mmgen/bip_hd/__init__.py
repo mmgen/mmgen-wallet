@@ -55,7 +55,7 @@ def parse_version_bytes(vb_hex):
 
 def compress_pubkey(pubkey_bytes):
 	# see: proto.secp256k1.keygen.pubkey_format()
-	return (b'\x02',b'\x03')[pubkey_bytes[-1] & 1] + pubkey_bytes[1:33]
+	return (b'\x02', b'\x03')[pubkey_bytes[-1] & 1] + pubkey_bytes[1:33]
 
 def decompress_pubkey(pubkey_bytes):
 	import ecdsa

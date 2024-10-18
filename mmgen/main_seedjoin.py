@@ -105,7 +105,7 @@ def print_shares_info():
 				id_str.hl2(encl='‘’'),
 				len(shares))
 		si = 1
-	for n, s in enumerate(shares[si:],si+1):
+	for n, s in enumerate(shares[si:], si+1):
 		out += f'{n:3}: {s.sid}\n'
 	cfg._util.qmsg(out)
 

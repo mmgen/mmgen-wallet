@@ -58,7 +58,7 @@ class help_notes:
 		from ..passwdlist import PasswordList
 		pwi_fs = '{:8} {:1} {:26} {:<7}  {:<7}  {}'
 		return '\n  '.join(
-			[pwi_fs.format('Code', '','Description', 'Min Len', 'Max Len', 'Default Len')] +
+			[pwi_fs.format('Code', '', 'Description', 'Min Len', 'Max Len', 'Default Len')] +
 			[pwi_fs.format(k, '-', v.desc, v.min_len, v.max_len, v.dfl_len)
 				for k, v in PasswordList.pw_info.items()]
 		)
