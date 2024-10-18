@@ -2,19 +2,11 @@
 #
 # MMGen Wallet, a terminal-based cryptocurrency wallet
 # Copyright (C)2013-2024 The MMGen Project <mmgen@tuta.io>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Licensed under the GNU General Public License, Version 3:
+#   https://www.gnu.org/licenses
+# Public project repositories:
+#   https://github.com/mmgen/mmgen-wallet
+#   https://gitlab.com/mmgen/mmgen-wallet
 
 """
 mmgen-xmrwallet: Perform various Monero wallet and transacting operations for
@@ -22,8 +14,8 @@ mmgen-xmrwallet: Perform various Monero wallet and transacting operations for
 """
 import asyncio
 
-from .cfg import gc,Config
-from .util import die,fmt_dict
+from .cfg import gc, Config
+from .util import die, fmt_dict
 from .xmrwallet import (
 	MoneroWalletOps,
 	xmrwallet_uarg_info,
@@ -33,9 +25,9 @@ from .xmrwallet import (
 
 opts_data = {
 	'sets': [
-		('autosign',True,'watch_only',True),
-		('autosign_mountpoint',bool,'autosign',True),
-		('autosign_mountpoint',bool,'watch_only',True),
+		('autosign', True, 'watch_only', True),
+		('autosign_mountpoint', bool, 'autosign', True),
+		('autosign_mountpoint', bool, 'watch_only', True),
 	],
 	'text': {
 		'desc': """Perform various Monero wallet and transacting operations for
@@ -101,14 +93,14 @@ opts_data = {
 """
 	},
 	'code': {
-		'options': lambda cfg,s: s.format(
+		'options': lambda cfg, s: s.format(
 			D=xmrwallet_uarg_info['daemon'].annot,
 			R=xmrwallet_uarg_info['tx_relay_daemon'].annot,
 			cfg=cfg,
 			gc=gc,
 			tp=fmt_dict(tx_priorities,fmt='equal_compact')
 		),
-		'notes': lambda help_mod,s: s.format(
+		'notes': lambda help_mod, s: s.format(
 			xmrwallet_help = help_mod('xmrwallet')
 		)
 	}
@@ -125,7 +117,7 @@ if cmd_args and cfg.autosign and (
 		)
 		or len(cmd_args) == 1 and cmd_args[0] in ('submit', 'resubmit', 'abort')
 	):
-	cmd_args.insert(1,None)
+	cmd_args.insert(1, None)
 
 if len(cmd_args) < 2:
 	cfg._usage()
@@ -137,9 +129,9 @@ wallets = spec = None
 if op in ('relay', 'submit', 'resubmit', 'abort'):
 	if len(cmd_args) != 0:
 		cfg._usage()
-elif op in ('txview','txlist'):
+elif op in ('txview', 'txlist'):
 	infile = [infile] + cmd_args
-elif op in ('create','sync','list','view','listview','dump','restore'): # kafile_arg_ops
+elif op in ('create', 'sync', 'list', 'view', 'listview', 'dump', 'restore'): # kafile_arg_ops
 	if len(cmd_args) > 1:
 		cfg._usage()
 	wallets = cmd_args.pop(0) if cmd_args else None
@@ -148,13 +140,13 @@ elif op in ('new', 'transfer', 'sweep', 'sweep_all', 'label'):
 		cfg._usage()
 	spec = cmd_args[0]
 elif op in ('export-outputs', 'export-outputs-sign', 'import-key-images'):
-	if not cfg.autosign: # --autosign only for now - TODO
-		die(f'--autosign must be used with command {op!r}')
+	if not cfg.autosign:
+		die(1, f'--autosign must be used with command {op!r}')
 	if len(cmd_args) > 1:
 		cfg._usage()
 	wallets = cmd_args.pop(0) if cmd_args else None
 else:
-	die(1,f'{op!r}: unrecognized operation')
+	die(1, f'{op!r}: unrecognized operation')
 
 op_cls = getattr(MoneroWalletOps,op.replace('-','_'))
 

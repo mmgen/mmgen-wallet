@@ -12,8 +12,8 @@
 help.xmrwallet: xmrwallet help notes for MMGen suite
 """
 
-def help(proto,cfg):
-	from ..xmrwallet import xmrwallet_uarg_info as uai
+def help(proto, cfg):
+	from ..xmrwallet import xmrwallet_uarg_info as uarg_info
 
 	return """
 Many operations take an optional ‘wallets’ argument: one or more address
@@ -460,8 +460,8 @@ Once you’ve gained proficiency with the autosigning process and feel ready
 to delete your old hot wallets, make sure to do so securely using ‘shred’,
 ‘wipe’ or some other secure deletion utility.
 """.strip().format(
-	newaddr_spec  = uai['newaddr_spec'].annot,
-	label_spec    = uai['label_spec'].annot,
-	transfer_spec = uai['transfer_spec'].annot,
-	sweep_spec    = uai['sweep_spec'].annot,
+	newaddr_spec  = uarg_info['newaddr_spec'].annot,
+	label_spec    = uarg_info['label_spec'].annot,
+	transfer_spec = uarg_info['transfer_spec'].annot,
+	sweep_spec    = uarg_info['sweep_spec'].annot,
 )
