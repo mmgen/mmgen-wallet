@@ -31,13 +31,13 @@ else:
 		def immutable_attr_init_check(self):
 			pass
 
-def truncate_str(s,width): # width = screen width
+def truncate_str(s, width): # width = screen width
 	wide_count = 0
-	for n,ch in enumerate(s,1):
-		wide_count += unicodedata.east_asian_width(ch) in ('F','W')
+	for n, ch in enumerate(s, 1):
+		wide_count += unicodedata.east_asian_width(ch) in ('F', 'W')
 		if n + wide_count > width:
-			return s[:n-1] + ('',' ')[
-				unicodedata.east_asian_width(ch) in ('F','W')
+			return s[:n-1] + ('', ' ')[
+				unicodedata.east_asian_width(ch) in ('F', 'W')
 				and n + wide_count == width + 1]
 	raise ValueError('string requires no truncating')
 
@@ -49,34 +49,34 @@ class Hilite:
 
 	# class method equivalent of fmt()
 	@classmethod
-	def fmtc( cls, s, width, color=False ):
+	def fmtc(cls, s, width, color=False):
 		if len(s) > width:
 			assert cls.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= width of string"
-			return cls.colorize( s[:width].ljust(width), color=color )
+			return cls.colorize(s[:width].ljust(width), color=color)
 		else:
-			return cls.colorize( s.ljust(width), color=color )
+			return cls.colorize(s.ljust(width), color=color)
 
 	@classmethod
-	def hlc(cls,s,color=True):
-		return getattr( color_mod, cls.color )(s) if color else s
+	def hlc(cls, s, color=True):
+		return getattr(color_mod, cls.color)(s) if color else s
 
 	@classmethod
-	def colorize(cls,s,color=True):
-		return getattr( color_mod, cls.color )(s) if color else s
+	def colorize(cls, s, color=True):
+		return getattr(color_mod, cls.color)(s) if color else s
 
 	@classmethod
-	def colorize2(cls,s,color=True,color_override=''):
-		return getattr( color_mod, color_override or cls.color )(s) if color else s
+	def colorize2(cls, s, color=True, color_override=''):
+		return getattr(color_mod, color_override or cls.color)(s) if color else s
 
-class HiliteStr(str,Hilite):
+class HiliteStr(str, Hilite):
 
 	# supports single-width characters only
-	def fmt( self, width, color=False ):
+	def fmt(self, width, color=False):
 		if len(self) > width:
 			assert self.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= width of string"
-			return self.colorize( self[:width].ljust(width), color=color )
+			return self.colorize(self[:width].ljust(width), color=color)
 		else:
-			return self.colorize( self.ljust(width), color=color )
+			return self.colorize(self.ljust(width), color=color)
 
 	# an alternative to fmt(), with double-width char support and other features
 	def fmt2(
@@ -87,46 +87,46 @@ class HiliteStr(str,Hilite):
 			nullrepl       = '',
 			append_chars   = '',    # single-width chars only
 			append_color   = False,
-			color_override = '' ):
+			color_override = ''):
 
 		if self == '':
-			return getattr( color_mod, self.color )(nullrepl.ljust(width)) if color else nullrepl.ljust(width)
+			return getattr(color_mod, self.color)(nullrepl.ljust(width)) if color else nullrepl.ljust(width)
 
-		s_wide_count = len(['' for ch in self if unicodedata.east_asian_width(ch) in ('F','W')])
+		s_wide_count = len(['' for ch in self if unicodedata.east_asian_width(ch) in ('F', 'W')])
 
-		a,b = encl or ('','')
+		a, b = encl or ('', '')
 		add_len = len(append_chars) + len(encl)
 
 		if len(self) + s_wide_count + add_len > width:
 			assert self.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= screen width of string"
-			s = a + (truncate_str(self,width-add_len) if s_wide_count else self[:width-add_len]) + b
+			s = a + (truncate_str(self, width-add_len) if s_wide_count else self[:width-add_len]) + b
 		else:
 			s = a + self + b
 
 		if append_chars:
 			return (
-				self.colorize(s,color=color)
+				self.colorize(s, color=color)
 				+ self.colorize2(
 					append_chars.ljust(width-len(s)-s_wide_count),
-					color_override = append_color ))
+					color_override = append_color))
 		else:
-			return self.colorize2( s.ljust(width-s_wide_count), color=color, color_override=color_override )
+			return self.colorize2(s.ljust(width-s_wide_count), color=color, color_override=color_override)
 
-	def hl(self,color=True):
-		return getattr( color_mod, self.color )(self) if color else self
+	def hl(self, color=True):
+		return getattr(color_mod, self.color)(self) if color else self
 
 	# an alternative to hl(), with enclosure and color override
 	# can be called as an unbound method with class as first argument
-	def hl2(self,s=None,color=True,encl='',color_override=''):
+	def hl2(self, s=None, color=True, encl='', color_override=''):
 		if encl:
-			return self.colorize2( encl[0]+(s or self)+encl[1], color=color, color_override=color_override )
+			return self.colorize2(encl[0]+(s or self)+encl[1], color=color, color_override=color_override)
 		else:
-			return self.colorize2( (s or self), color=color, color_override=color_override )
+			return self.colorize2((s or self), color=color, color_override=color_override)
 
 class InitErrors:
 
 	@classmethod
-	def init_fail(cls,e,m,e2=None,m2=None,objname=None,preformat=False):
+	def init_fail(cls, e, m, e2=None, m2=None, objname=None, preformat=False):
 
 		def get_errmsg():
 			ret = m if preformat else (
@@ -134,18 +134,18 @@ class InitErrors:
 					m,
 					(objname or cls.__name__),
 					(f'({e2!s}) ' if e2 else ''),
-					e ))
+					e))
 			return f'{m2!r}\n{ret}' if m2 else ret
 
-		if hasattr(cls,'passthru_excs') and type(e).__name__ in cls.passthru_excs:
+		if hasattr(cls, 'passthru_excs') and type(e).__name__ in cls.passthru_excs:
 			raise e
 
 		from .util import die
-		die(getattr(cls,'exc','ObjectInitError'), get_errmsg())
+		die(getattr(cls, 'exc', 'ObjectInitError'), get_errmsg())
 
 	@classmethod
 	def method_not_implemented(cls):
 		import traceback
 		raise NotImplementedError(
 			'method {}() not implemented for class {!r}'.format(
-				traceback.extract_stack()[-2].name, cls.__name__) )
+				traceback.extract_stack()[-2].name, cls.__name__))

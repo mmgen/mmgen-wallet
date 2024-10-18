@@ -22,7 +22,7 @@ fileutil: Routines that read, write, execute or stat files
 
 # 09 Mar 2024: make all utils accept Path instances as arguments
 
-import sys,os
+import sys, os
 
 from .color import set_vt100
 from .util import (
@@ -48,42 +48,42 @@ def check_or_create_dir(path):
 					str(path)])
 				set_vt100()
 		try:
-			os.makedirs(path,0o700)
+			os.makedirs(path, 0o700)
 		except:
 			die(2, f'ERROR: unable to read or create path ‘{path}’')
 
 def check_binary(args):
-	from subprocess import run,DEVNULL
+	from subprocess import run, DEVNULL
 	try:
-		run(args,stdout=DEVNULL,stderr=DEVNULL,check=True)
+		run(args, stdout=DEVNULL, stderr=DEVNULL, check=True)
 	except:
-		die(2,f'{args[0]!r} binary missing, not in path, or not executable')
+		die(2, f'{args[0]!r} binary missing, not in path, or not executable')
 	set_vt100()
 
-def shred_file(fn,verbose=False):
-	check_binary(['shred','--version'])
+def shred_file(fn, verbose=False):
+	check_binary(['shred', '--version'])
 	from subprocess import run
 	run(
-		['shred','--force','--iterations=30','--zero','--remove=wipesync']
+		['shred', '--force', '--iterations=30', '--zero', '--remove=wipesync']
 		+ (['--verbose'] if verbose else [])
 		+ [str(fn)],
-		check=True )
+		check=True)
 	set_vt100()
 
-def _check_file_type_and_access(fname,ftype,blkdev_ok=False):
+def _check_file_type_and_access(fname, ftype, blkdev_ok=False):
 
 	import stat
 
-	access,op_desc = (
-		(os.W_OK,'writ') if ftype in ('output file','output directory') else
-		(os.R_OK,'read') )
+	access, op_desc = (
+		(os.W_OK, 'writ') if ftype in ('output file', 'output directory') else
+		(os.R_OK, 'read'))
 
 	if ftype == 'output directory':
 		ok_types = [(stat.S_ISDIR, 'output directory')]
 	else:
 		ok_types = [
-			(stat.S_ISREG,'regular file'),
-			(stat.S_ISLNK,'symbolic link')
+			(stat.S_ISREG, 'regular file'),
+			(stat.S_ISLNK, 'symbolic link')
 		]
 		if blkdev_ok:
 			if not sys.platform in ('win32',):
@@ -98,31 +98,31 @@ def _check_file_type_and_access(fname,ftype,blkdev_ok=False):
 		if t[0](mode):
 			break
 	else:
-		ok_list = ' or '.join( t[1] for t in ok_types )
+		ok_list = ' or '.join(t[1] for t in ok_types)
 		die(1, f'Requested {ftype} ‘{fname}’ is not a {ok_list}')
 
-	if not os.access(fname,access):
+	if not os.access(fname, access):
 		die(1, f'Requested {ftype} ‘{fname}’ is not {op_desc}able by you')
 
 	return True
 
-def check_infile(f,blkdev_ok=False):
-	return _check_file_type_and_access(f,'input file',blkdev_ok=blkdev_ok)
+def check_infile(f, blkdev_ok=False):
+	return _check_file_type_and_access(f, 'input file', blkdev_ok=blkdev_ok)
 
-def check_outfile(f,blkdev_ok=False):
-	return _check_file_type_and_access(f,'output file',blkdev_ok=blkdev_ok)
+def check_outfile(f, blkdev_ok=False):
+	return _check_file_type_and_access(f, 'output file', blkdev_ok=blkdev_ok)
 
 def check_outdir(f):
-	return _check_file_type_and_access(f,'output directory')
+	return _check_file_type_and_access(f, 'output directory')
 
-def get_seed_file(cfg,nargs,wallets=None,invoked_as=None):
+def get_seed_file(cfg, nargs, wallets=None, invoked_as=None):
 
 	wallets = wallets or cfg._args
 
 	from .filename import find_file_in_dir
 	from .wallet.mmgen import wallet
 
-	wf = find_file_in_dir(wallet,cfg.data_dir)
+	wf = find_file_in_dir(wallet, cfg.data_dir)
 
 	wd_from_opt = bool(cfg.hidden_incog_input_params or cfg.in_fmt) # have wallet data from opt?
 
@@ -138,16 +138,16 @@ def get_seed_file(cfg,nargs,wallets=None,invoked_as=None):
 	if wallets or wf:
 		check_infile(wallets[0] if wallets else wf)
 
-	return str(wallets[0]) if wallets else (wf,None)[wd_from_opt] # could be a Path instance
+	return str(wallets[0]) if wallets else (wf, None)[wd_from_opt] # could be a Path instance
 
-def _open_or_die(filename,mode,silent=False):
+def _open_or_die(filename, mode, silent=False):
 	try:
-		return open(filename,mode)
+		return open(filename, mode)
 	except:
 		if silent:
-			die(2,'')
+			die(2, '')
 		else:
-			fn = {0:'STDIN',1:'STDOUT',2:'STDERR'}[filename] if isinstance(filename,int) else f'‘{filename}’'
+			fn = {0:'STDIN', 1:'STDOUT', 2:'STDERR'}[filename] if isinstance(filename, int) else f'‘{filename}’'
 			desc = 'reading' if 'r' in mode else 'writing'
 			die(2, f'Unable to open file {fn} for {desc}')
 
@@ -184,13 +184,13 @@ def write_data_to_file(
 		cfg._util.qmsg('Output to STDOUT requested')
 		if cfg.stdin_tty:
 			if no_tty:
-				die(2,f'Printing {desc} to screen is not allowed')
+				die(2, f'Printing {desc} to screen is not allowed')
 			if (ask_tty and not cfg.quiet) or binary:
 				from .ui import confirm_or_raise
 				confirm_or_raise(
 					cfg,
 					message = '',
-					action  = f'output {desc} to screen' )
+					action  = f'output {desc} to screen')
 		else:
 			try:
 				of = os.readlink(f'/proc/{os.getpid()}/fd/1') # Linux
@@ -200,15 +200,15 @@ def write_data_to_file(
 			if of:
 				if of[:5] == 'pipe:':
 					if no_tty:
-						die(2,f'Writing {desc} to pipe is not allowed')
+						die(2, f'Writing {desc} to pipe is not allowed')
 					if ask_tty and not cfg.quiet:
 						from .ui import confirm_or_raise
 						confirm_or_raise(
 							cfg,
 							message = '',
-							action  = f'output {desc} to pipe' )
+							action  = f'output {desc} to pipe')
 						msg('')
-				of2,pd = os.path.relpath(of),os.path.pardir
+				of2, pd = os.path.relpath(of), os.path.pardir
 				msg('Redirecting output to file {!r}'.format(of if of2[:len(pd)] == pd else of2))
 			else:
 				msg('Redirecting output to file')
@@ -216,15 +216,15 @@ def write_data_to_file(
 		if binary:
 			if sys.platform == 'win32': # condition on separate line for pylint
 				import msvcrt
-				msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
+				msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 
 		# MSWin workaround. See msg_r()
 		try:
-			sys.stdout.write(data.decode() if isinstance(data,bytes) else data)
+			sys.stdout.write(data.decode() if isinstance(data, bytes) else data)
 		except:
-			os.write(1,data if isinstance(data,bytes) else data.encode())
+			os.write(1, data if isinstance(data, bytes) else data.encode())
 
-	def do_file(outfile,ask_write_prompt):
+	def do_file(outfile, ask_write_prompt):
 		if (outdir or (cfg.outdir and not ignore_opt_outdir)) and not os.path.isabs(outfile):
 			outfile = make_full_path(str(outdir or cfg.outdir), outfile) # outdir could be Path instance
 
@@ -235,8 +235,8 @@ def write_data_to_file(
 			if not keypress_confirm(
 					cfg,
 					ask_write_prompt,
-					default_yes = ask_write_default_yes ):
-				die(1,f'{capfirst(desc)} not saved')
+					default_yes = ask_write_default_yes):
+				die(1, f'{capfirst(desc)} not saved')
 
 		hush = False
 		if os.path.lexists(outfile) and ask_overwrite:
@@ -244,7 +244,7 @@ def write_data_to_file(
 			confirm_or_raise(
 				cfg,
 				message = '',
-				action  = f'File {outfile!r} already exists\nOverwrite?' )
+				action  = f'File {outfile!r} already exists\nOverwrite?')
 			msg(f'Overwriting file {outfile!r}')
 			hush = True
 
@@ -253,34 +253,34 @@ def write_data_to_file(
 		if check_data:
 			d = ''
 			try:
-				with open(outfile,('r','rb')[bool(binary)]) as fp:
+				with open(outfile, ('r', 'rb')[bool(binary)]) as fp:
 					d = fp.read()
 			except:
 				pass
 			if d != cmp_data:
-				die(3,f'{desc} in file {outfile!r} has been altered by some other program! Aborting file write')
+				die(3, f'{desc} in file {outfile!r} has been altered by some other program! Aborting file write')
 
 		# To maintain portability, always open files in binary mode
 		# If 'binary' option not set, encode/decode data before writing and after reading
 		try:
-			with _open_or_die(outfile,'wb') as fp:
+			with _open_or_die(outfile, 'wb') as fp:
 				fp.write(data if binary else data.encode())
 		except:
-			die(2,f'Failed to write {desc} to file {outfile!r}')
+			die(2, f'Failed to write {desc} to file {outfile!r}')
 
 		if not (hush or quiet):
 			msg(f'{capfirst(desc)} written to file {outfile!r}')
 
 		return True
 
-	if cfg.stdout or outfile in ('','-'):
+	if cfg.stdout or outfile in ('', '-'):
 		do_stdout()
 	elif sys.stdin.isatty() and not sys.stdout.isatty():
 		do_stdout()
 	else:
-		do_file(outfile,ask_write_prompt)
+		do_file(outfile, ask_write_prompt)
 
-def get_words_from_file(cfg,infile,desc,quiet=False):
+def get_words_from_file(cfg, infile, desc, quiet=False):
 
 	if not quiet:
 		cfg._util.qmsg(f'Getting {desc} from file ‘{infile}’')
@@ -291,7 +291,7 @@ def get_words_from_file(cfg,infile,desc,quiet=False):
 	try:
 		words = data.decode().split()
 	except:
-		die(1,f'{capfirst(desc)} data must be UTF-8 encoded.')
+		die(1, f'{capfirst(desc)} data must be UTF-8 encoded.')
 
 	cfg._util.dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 
@@ -304,7 +304,7 @@ def get_data_from_file(
 		dash   = False,
 		silent = False,
 		binary = False,
-		quiet  = False ):
+		quiet  = False):
 
 	if not (cfg.quiet or silent or quiet):
 		cfg._util.qmsg(f'Getting {desc} from file ‘{infile}’')
@@ -319,8 +319,8 @@ def get_data_from_file(
 		data = data.decode()
 
 	if len(data) == cfg.max_input_size + 1:
-		die( 'MaxInputSizeExceeded',
-			f'Too much input data!  Max input data size: {cfg.max_input_size} bytes' )
+		die('MaxInputSizeExceeded',
+			f'Too much input data!  Max input data size: {cfg.max_input_size} bytes')
 
 	return data
 
@@ -330,16 +330,16 @@ def get_lines_from_file(
 		desc          = 'data',
 		trim_comments = False,
 		quiet         = False,
-		silent        = False ):
+		silent        = False):
 
 	def decrypt_file_maybe():
-		data = get_data_from_file( cfg, fn, desc=desc, binary=True, quiet=quiet, silent=silent )
+		data = get_data_from_file(cfg, fn, desc=desc, binary=True, quiet=quiet, silent=silent)
 		from .crypto import Crypto
 		have_enc_ext = get_extension(fn) == Crypto.mmenc_ext
 		if have_enc_ext or not is_utf8(data):
-			m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
+			m = ('Attempting to decrypt', 'Decrypting')[have_enc_ext]
 			cfg._util.qmsg(f'{m} {desc} ‘{fn}’')
-			data = Crypto(cfg).mmgen_decrypt_retry(data,desc)
+			data = Crypto(cfg).mmgen_decrypt_retry(data, desc)
 		return data
 
 	lines = decrypt_file_maybe().decode().splitlines()

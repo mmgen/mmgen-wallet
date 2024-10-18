@@ -20,15 +20,15 @@
 main: Script launcher for the MMGen Project
 """
 
-import sys,os
+import sys, os
 
 def launch(*, mod=None, func=None, fqmod=None, package='mmgen'):
 
 	if sys.platform in ('linux', 'darwin') and sys.stdin.isatty():
-		import termios,atexit
+		import termios, atexit
 		fd = sys.stdin.fileno()
 		old = termios.tcgetattr(fd)
-		atexit.register(lambda: termios.tcsetattr(fd,termios.TCSADRAIN,old))
+		atexit.register(lambda: termios.tcsetattr(fd, termios.TCSADRAIN, old))
 
 	try:
 		__import__(f'{package}.main_{mod}') if mod else func() if func else __import__(fqmod)
@@ -47,9 +47,9 @@ def launch(*, mod=None, func=None, fqmod=None, package='mmgen'):
 			errmsg = repr(e.args[0]) if e.args else repr(e)
 
 		from collections import namedtuple
-		from .color import nocolor,yellow,red
+		from .color import nocolor, yellow, red
 
-		_o = namedtuple('exit_data',['color','exit_val','fs'])
+		_o = namedtuple('exit_data', ['color', 'exit_val', 'fs'])
 		d = {
 			0:   _o(nocolor, 0, '{message}'),
 			1:   _o(nocolor, 1, '{message}'),
@@ -57,14 +57,14 @@ def launch(*, mod=None, func=None, fqmod=None, package='mmgen'):
 			3:   _o(yellow,  3, '\nMMGen Error ({name}):\n{message}'),
 			4:   _o(red,     4, '\nMMGen Fatal Error ({name}):\n{message}'),
 			'x': _o(yellow,  5, '\nMMGen Unhandled Exception ({name}): {e}'),
-		}[getattr(e,'mmcode','x')]
+		}[getattr(e, 'mmcode', 'x')]
 
-		(sys.stdout if getattr(e,'stdout',None) else sys.stderr).write(
+		(sys.stdout if getattr(e, 'stdout', None) else sys.stderr).write(
 			d.color(d.fs.format(
 				name = type(e).__name__,
 				message = errmsg.strip() or e,
 				e = e))
-			+ '\n' )
+			+ '\n')
 
 		if os.getenv('MMGEN_EXEC_WRAPPER') or os.getenv('MMGEN_TRACEBACK'):
 			raise

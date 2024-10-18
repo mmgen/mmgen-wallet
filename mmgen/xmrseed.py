@@ -24,17 +24,17 @@ from .baseconv import baseconv
 from .util import die
 
 def is_xmrseed(s):
-	return bool( xmrseed().tobytes(s.split()) )
+	return bool(xmrseed().tobytes(s.split()))
 
 # implements a subset of the baseconv API
 class xmrseed(baseconv):
 
 	desc            = baseconv.dt('Monero mnemonic', 'Monero new-style mnemonic seed phrase')
 	wl_chksum       = '3c381ebb'
-	seedlen_map     = { 32:25 }
-	seedlen_map_rev = { 25:32 }
+	seedlen_map     = {32: 25}
+	seedlen_map_rev = {25: 32}
 
-	def __init__(self,wl_id='xmrseed'):
+	def __init__(self, wl_id='xmrseed'):
 		assert wl_id == 'xmrseed', "initialize with 'xmrseed' for compatibility with baseconv API"
 		from .wordlist.monero import words
 		self.digits = words
@@ -46,9 +46,9 @@ class xmrseed(baseconv):
 		wstr = ''.join(word[:3] for word in words)
 		return words[crc32(wstr.encode()) % len(words)]
 
-	def tobytes(self,words_arg,pad=None):
+	def tobytes(self, words_arg, pad=None):
 
-		assert isinstance(words_arg,(list,tuple)),'words must be list or tuple'
+		assert isinstance(words_arg, (list, tuple)), 'words must be list or tuple'
 		assert pad is None, f"{pad}: invalid 'pad' argument (must be None)"
 
 		words = words_arg
@@ -58,26 +58,26 @@ class xmrseed(baseconv):
 		base = len(wl)
 
 		if not set(words) <= set(wl):
-			die( 'MnemonicError',  f'{words!r}: not in {desc} format'  )
+			die('MnemonicError',  f'{words!r}: not in {desc} format')
 
 		if len(words) not in self.seedlen_map_rev:
-			die( 'MnemonicError',  f'{len(words)}: invalid seed phrase length for {desc}' )
+			die('MnemonicError',  f'{len(words)}: invalid seed phrase length for {desc}')
 
 		z = self.monero_mn_checksum(words[:-1])
 		if z != words[-1]:
-			die( 'MnemonicError', f'invalid {desc} checksum' )
+			die('MnemonicError', f'invalid {desc} checksum')
 
 		words = tuple(words[:-1])
 
 		def gen():
 			for i in range(len(words)//3):
-				w1,w2,w3 = [wl.index(w) for w in words[3*i:3*i+3]]
+				w1, w2, w3 = [wl.index(w) for w in words[3*i:3*i+3]]
 				x = w1 + base*((w2-w1)%base) + base*base*((w3-w2)%base)
-				yield x.to_bytes(4,'big')[::-1]
+				yield x.to_bytes(4, 'big')[::-1]
 
 		return b''.join(gen())
 
-	def frombytes(self,bytestr,pad=None,tostr=False):
+	def frombytes(self, bytestr, pad=None, tostr=False):
 		assert pad is None, f"{pad}: invalid 'pad' argument (must be None)"
 
 		desc = self.desc.short
@@ -85,19 +85,19 @@ class xmrseed(baseconv):
 		base = len(wl)
 
 		if len(bytestr) not in self.seedlen_map:
-			die( 'SeedLengthError', f'{len(bytestr)}: invalid seed byte length for {desc}' )
+			die('SeedLengthError', f'{len(bytestr)}: invalid seed byte length for {desc}')
 
 		def num2base_monero(num):
 			w1 = num % base
 			w2 = (num//base + w1) % base
 			w3 = (num//base//base + w2) % base
-			return ( wl[w1], wl[w2], wl[w3] )
+			return (wl[w1], wl[w2], wl[w3])
 
 		def gen():
 			for i in range(len(bytestr)//4):
-				yield from num2base_monero(int.from_bytes( bytestr[i*4:i*4+4][::-1], 'big' ))
+				yield from num2base_monero(int.from_bytes(bytestr[i*4:i*4+4][::-1], 'big'))
 
 		o = list(gen())
-		o.append( self.monero_mn_checksum(o) )
+		o.append(self.monero_mn_checksum(o))
 
 		return ' '.join(o) if tostr else tuple(o)

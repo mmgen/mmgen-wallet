@@ -21,14 +21,14 @@ base_obj: base objects with no internal imports for the MMGen suite
 """
 
 class AsyncInit(type):
-	async def __call__(cls,*args,**kwargs):
-		instance = cls.__new__(cls,*args,**kwargs)
-		await type(instance).__init__(instance,*args,**kwargs)
+	async def __call__(cls, *args, **kwargs):
+		instance = cls.__new__(cls, *args, **kwargs)
+		await type(instance).__init__(instance, *args, **kwargs)
 		return instance
 
 class AttrCtrlMeta(type):
-	def __call__(cls,*args,**kwargs):
-		instance = super().__call__(*args,**kwargs)
+	def __call__(cls, *args, **kwargs):
+		instance = super().__call__(*args, **kwargs)
 		if instance._autolock:
 			instance._lock()
 		return instance
@@ -55,38 +55,38 @@ class AttrCtrl(metaclass=AttrCtrlMeta):
 	def _lock(self):
 		self._locked = True
 
-	def __getattr__(self,name):
+	def __getattr__(self, name):
 		if self._locked and self._default_to_none:
 			return None
 		else:
 			raise AttributeError(f'{type(self).__name__} object has no attribute {name!r}')
 
-	def __setattr__(self,name,value):
+	def __setattr__(self, name, value):
 
 		if self._locked:
 			assert name != '_locked', 'lock can be set only once'
 
-			def do_error(name,value,ref_val):
+			def do_error(name, value, ref_val):
 				raise AttributeError(
 					f'{value!r}: invalid value for attribute {name!r}'
 					+ ' of {} object (must be of type {}, not {})'.format(
 						type(self).__name__,
 						type(ref_val).__name__,
-						type(value).__name__ ) )
+						type(value).__name__))
 
-			if not (name in self.__dict__ or hasattr(type(self),name)):
+			if not (name in self.__dict__ or hasattr(type(self), name)):
 				raise AttributeError(f'{type(self).__name__} object has no attribute {name!r}')
 
-			ref_val = getattr(type(self),name) if self._use_class_attr else getattr(self,name)
+			ref_val = getattr(type(self), name) if self._use_class_attr else getattr(self, name)
 
 			if (
 				(name not in self._skip_type_check)
 				and (ref_val is not None)
-				and not isinstance(value,type(ref_val))
+				and not isinstance(value, type(ref_val))
 			):
-				do_error(name,value,ref_val)
+				do_error(name, value, ref_val)
 
-		return object.__setattr__(self,name,value)
+		return object.__setattr__(self, name, value)
 
 	def __delattr__(self, name):
 		if self._locked and not name in self._delete_ok:
@@ -107,25 +107,23 @@ class Lockable(AttrCtrl):
 	_reset_ok = ()
 
 	def _lock(self):
-		for name in ('_set_ok','_reset_ok'):
-			for attr in getattr(self,name):
-				assert hasattr(self,attr), (
-					f'attribute {attr!r} in {name!r} not found in {type(self).__name__} object {id(self)}' )
+		for name in ('_set_ok', '_reset_ok'):
+			for attr in getattr(self, name):
+				assert hasattr(self, attr), (
+					f'attribute {attr!r} in {name!r} not found in {type(self).__name__} object {id(self)}')
 		super()._lock()
 
-	def __setattr__(self,name,value):
-		if self._locked and (name in self.__dict__ or hasattr(type(self),name)):
-			val = getattr(self,name)
+	def __setattr__(self, name, value):
+		if self._locked and (name in self.__dict__ or hasattr(type(self), name)):
+			val = getattr(self, name)
 			if name not in (self._set_ok + self._reset_ok):
 				raise AttributeError(f'attribute {name!r} of {type(self).__name__} object is read-only')
 			elif name not in self._reset_ok:
-				#print(self.__dict__)
 				if not (
 					(val != 0 and not val) or
-					(self._use_class_attr and name not in self.__dict__) ):
+					(self._use_class_attr and name not in self.__dict__)):
 					raise AttributeError(
 						f'attribute {name!r} of {type(self).__name__} object is already set,'
-						+ ' and resetting is forbidden' )
-			# else name is in (_set_ok + _reset_ok) -- allow name to be in both lists
+						+ ' and resetting is forbidden')
 
-		return AttrCtrl.__setattr__(self,name,value)
+		return AttrCtrl.__setattr__(self, name, value)

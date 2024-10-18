@@ -20,41 +20,41 @@
 key: MMGen public and private key objects
 """
 
-from .objmethods import HiliteStr,InitErrors,MMGenObject
-from .obj import ImmutableAttr,get_obj
+from .objmethods import HiliteStr, InitErrors, MMGenObject
+from .obj import ImmutableAttr, get_obj
 
-class WifKey(HiliteStr,InitErrors):
+class WifKey(HiliteStr, InitErrors):
 	"""
 	Initialize a WIF key, checking its well-formedness.
 	The numeric validity of the private key it encodes is not checked.
 	"""
 	width = 53
 	color = 'blue'
-	def __new__(cls,proto,wif):
-		if isinstance(wif,cls):
+	def __new__(cls, proto, wif):
+		if isinstance(wif, cls):
 			return wif
 		try:
 			assert wif.isascii() and wif.isalnum(), 'not an ASCII alphanumeric string'
 			proto.decode_wif(wif) # raises exception on error
-			return str.__new__(cls,wif)
+			return str.__new__(cls, wif)
 		except Exception as e:
-			return cls.init_fail(e,wif)
+			return cls.init_fail(e, wif)
 
-def is_wif(proto,s):
-	return get_obj( WifKey, proto=proto, wif=s, silent=True, return_bool=True )
+def is_wif(proto, s):
+	return get_obj(WifKey, proto=proto, wif=s, silent=True, return_bool=True)
 
-class PubKey(bytes,InitErrors,MMGenObject): # TODO: add some real checks
+class PubKey(bytes, InitErrors, MMGenObject): # TODO: add some real checks
 
-	def __new__(cls,s,compressed):
+	def __new__(cls, s, compressed):
 		try:
-			assert isinstance(s,bytes)
-			me = bytes.__new__(cls,s)
+			assert isinstance(s, bytes)
+			me = bytes.__new__(cls, s)
 			me.compressed = compressed
 			return me
 		except Exception as e:
-			return cls.init_fail(e,s)
+			return cls.init_fail(e, s)
 
-class PrivKey(bytes,InitErrors,MMGenObject):
+class PrivKey(bytes, InitErrors, MMGenObject):
 	"""
 	Input:   a) raw, non-preprocessed bytes; or b) WIF key.
 	Output:  preprocessed key bytes, plus WIF key in 'wif' attribute
@@ -65,49 +65,49 @@ class PrivKey(bytes,InitErrors,MMGenObject):
 	width = 32
 	trunc_ok = False
 
-	compressed = ImmutableAttr(bool,typeconv=False)
-	wif        = ImmutableAttr(WifKey,typeconv=False)
+	compressed = ImmutableAttr(bool, typeconv=False)
+	wif        = ImmutableAttr(WifKey, typeconv=False)
 
-	# initialize with (priv_bin,compressed), WIF or self
-	def __new__(cls,proto,s=None,compressed=None,wif=None,pubkey_type=None):
-		if isinstance(s,cls):
+	# initialize with (priv_bin, compressed), WIF or self
+	def __new__(cls, proto, s=None, compressed=None, wif=None, pubkey_type=None):
+		if isinstance(s, cls):
 			return s
 		if wif:
 			try:
-				assert s is None,"'wif' and key hex args are mutually exclusive"
+				assert s is None, "'wif' and key hex args are mutually exclusive"
 				assert wif.isascii() and wif.isalnum(), 'not an ASCII alphanumeric string'
 				k = proto.decode_wif(wif) # raises exception on error
-				me = bytes.__new__(cls,k.sec)
+				me = bytes.__new__(cls, k.sec)
 				me.compressed = k.compressed
 				me.pubkey_type = k.pubkey_type
-				me.wif = str.__new__(WifKey,wif) # check has been done
+				me.wif = str.__new__(WifKey, wif) # check has been done
 				me.orig_bytes = None
-				if k.sec != proto.preprocess_key(k.sec,k.pubkey_type):
+				if k.sec != proto.preprocess_key(k.sec, k.pubkey_type):
 					from .util import die
-					die( 'PrivateKeyError',
-						f'{proto.cls_name} WIF key {me.wif!r} encodes private key with invalid value {me}' )
+					die('PrivateKeyError',
+						f'{proto.cls_name} WIF key {me.wif!r} encodes private key with invalid value {me}')
 				me.proto = proto
 				return me
 			except Exception as e:
-				return cls.init_fail(e,s,objname=f'{proto.coin} WIF key')
+				return cls.init_fail(e, s, objname=f'{proto.coin} WIF key')
 		else:
 			try:
-				assert s,'private key bytes data missing'
-				assert isinstance(s,bytes),'input is not bytes'
-				assert pubkey_type is not None,"'pubkey_type' arg missing"
+				assert s, 'private key bytes data missing'
+				assert isinstance(s, bytes), 'input is not bytes'
+				assert pubkey_type is not None, "'pubkey_type' arg missing"
 				assert len(s) == cls.width, f'key length must be {cls.width} bytes'
 				if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
-					me = bytes.__new__(cls,s)
+					me = bytes.__new__(cls, s)
 				else:
 					assert compressed is not None, "'compressed' arg missing"
-					assert type(compressed) is bool,(
-						f"'compressed' must be of type bool, not {type(compressed).__name__}" )
-					me = bytes.__new__( cls, proto.preprocess_key(s,pubkey_type) )
-					me.wif = WifKey( proto, proto.encode_wif(me,pubkey_type,compressed) )
+					assert type(compressed) is bool, (
+						f"'compressed' must be of type bool, not {type(compressed).__name__}")
+					me = bytes.__new__(cls, proto.preprocess_key(s, pubkey_type))
+					me.wif = WifKey(proto, proto.encode_wif(me, pubkey_type, compressed))
 					me.compressed = compressed
 				me.pubkey_type = pubkey_type
 				me.orig_bytes = s # save the non-preprocessed key
 				me.proto = proto
 				return me
 			except Exception as e:
-				return cls.init_fail(e,s)
+				return cls.init_fail(e, s)

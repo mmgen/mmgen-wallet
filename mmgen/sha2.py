@@ -27,7 +27,7 @@ sha2: A non-optimized but very compact implementation of the SHA2 hash
 # implementation must not be used for anything but testing and study.  Test with
 # the test/hashfunc.py script in the MMGen repository.
 
-from struct import pack,unpack
+from struct import pack, unpack
 
 class Sha2:
 	'Implementation based on the pseudocode at https://en.wikipedia.org/wiki/SHA-2'
@@ -40,7 +40,7 @@ class Sha2:
 
 		def nextPrime(n=2):
 			while True:
-				for factor in range(2,int(sqrt(n))+1):
+				for factor in range(2, int(sqrt(n))+1):
 					if n % factor == 0:
 						break
 				else:
@@ -56,9 +56,9 @@ class Sha2:
 			return int((n - int(n)) * fb_mul)
 
 		if cls.use_gmp:
-			from gmpy2 import context,set_context,sqrt,cbrt
+			from gmpy2 import context, set_context, sqrt, cbrt
 			# context() parameters are platform-dependent!
-			set_context(context(precision=75,round=1)) # OK for gmp 6.1.2 / gmpy 2.1.0
+			set_context(context(precision=75, round=1)) # OK for gmp 6.1.2 / gmpy 2.1.0
 		else:
 			cbrt = lambda n: pow(n, 1 / 3)
 
@@ -68,9 +68,9 @@ class Sha2:
 		# First wordBits bits of the fractional parts of the cube roots of the first nRounds primes
 		cls.K = tuple(getFractionalBits(cbrt(n)) for n in primes)
 
-	def __init__(self,message,preprocess=True):
+	def __init__(self, message, preprocess=True):
 		'Use preprocess=False for Sha256Compress'
-		assert isinstance(message,(bytes,bytearray,list)),'message must be of type bytes, bytearray or list'
+		assert isinstance(message, (bytes, bytearray, list)), 'message must be of type bytes, bytearray or list'
 		if not self.K:
 			type(self).initConstants()
 		self.H = list(self.H_init)
@@ -100,25 +100,25 @@ class Sha2:
 	def bytesToWords(self):
 		ws = self.wordSize
 		assert len(self.M) % ws == 0
-		self.M = tuple(unpack(self.word_fmt,self.M[i*ws:ws+(i*ws)])[0] for i in range(len(self.M) // ws))
+		self.M = tuple(unpack(self.word_fmt, self.M[i*ws:ws+(i*ws)])[0] for i in range(len(self.M) // ws))
 
 	def digest(self):
-		return b''.join((pack(self.word_fmt,w) for w in self.H))
+		return b''.join((pack(self.word_fmt, w) for w in self.H))
 
 	def hexdigest(self):
 		return self.digest().hex()
 
 	def compute(self):
-		for i in range(0,len(self.M),16):
+		for i in range(0, len(self.M), 16):
 			self.processBlock(i)
 
-	def processBlock(self,offset):
+	def processBlock(self, offset):
 		'Process a blkSize-byte chunk of the message'
 
-		def rrotate(a,b):
+		def rrotate(a, b):
 			return ((a << self.wordBits-b) & self.wordMask) | (a >> b)
 
-		def addm(a,b):
+		def addm(a, b):
 			return (a + b) & self.wordMask
 
 		# Copy chunk into first 16 words of message schedule array
@@ -126,46 +126,46 @@ class Sha2:
 			self.W[i] = self.M[offset + i]
 
 		# Extend the first 16 words into the remaining nRounds words of message schedule array
-		for i in range(16,self.nRounds):
+		for i in range(16, self.nRounds):
 			g0 = self.W[i-15]
-			gamma0 = rrotate(g0,self.g0r1) ^ rrotate(g0,self.g0r2) ^ (g0 >> self.g0r3)
+			gamma0 = rrotate(g0, self.g0r1) ^ rrotate(g0, self.g0r2) ^ (g0 >> self.g0r3)
 			g1 = self.W[i-2]
-			gamma1 = rrotate(g1,self.g1r1) ^ rrotate(g1,self.g1r2) ^ (g1 >> self.g1r3)
-			self.W[i] = addm(addm(addm(gamma0,self.W[i-7]),gamma1),self.W[i-16])
+			gamma1 = rrotate(g1, self.g1r1) ^ rrotate(g1, self.g1r2) ^ (g1 >> self.g1r3)
+			self.W[i] = addm(addm(addm(gamma0, self.W[i-7]), gamma1), self.W[i-16])
 
 		# Initialize working variables from current hash state
-		a,b,c,d,e,f,g,h = self.H
+		a, b, c, d, e, f, g, h = self.H
 
 		# Compression function main loop
 		for i in range(self.nRounds):
 			ch = (e & f) ^ (~e & g)
 			maj = (a & b) ^ (a & c) ^ (b & c)
 
-			sigma0 = rrotate(a,self.s0r1) ^ rrotate(a,self.s0r2) ^ rrotate(a,self.s0r3)
-			sigma1 = rrotate(e,self.s1r1) ^ rrotate(e,self.s1r2) ^ rrotate(e,self.s1r3)
+			sigma0 = rrotate(a, self.s0r1) ^ rrotate(a, self.s0r2) ^ rrotate(a, self.s0r3)
+			sigma1 = rrotate(e, self.s1r1) ^ rrotate(e, self.s1r2) ^ rrotate(e, self.s1r3)
 
-			t1 = addm(addm(addm(addm(h,sigma1),ch),self.K[i]),self.W[i])
-			t2 = addm(sigma0,maj)
+			t1 = addm(addm(addm(addm(h, sigma1), ch), self.K[i]), self.W[i])
+			t2 = addm(sigma0, maj)
 
 			h = g
 			g = f
 			f = e
-			e = addm(d,t1)
+			e = addm(d, t1)
 			d = c
 			c = b
 			b = a
-			a = addm(t1,t2)
+			a = addm(t1, t2)
 
 		# Save hash state
-		for n,v in enumerate((a,b,c,d,e,f,g,h)):
-			self.H[n] = addm(self.H[n],v)
+		for n, v in enumerate((a, b, c, d, e, f, g, h)):
+			self.H[n] = addm(self.H[n], v)
 
 class Sha256(Sha2):
 	use_gmp = False
-	g0r1,g0r2,g0r3 = (7,18,3)
-	g1r1,g1r2,g1r3 = (17,19,10)
-	s0r1,s0r2,s0r3 = (2,13,22)
-	s1r1,s1r2,s1r3 = (6,11,25)
+	g0r1, g0r2, g0r3 = (7, 18, 3)
+	g1r1, g1r2, g1r3 = (17, 19, 10)
+	s0r1, s0r2, s0r3 = (2, 13, 22)
+	s1r1, s1r2, s1r3 = (6, 11, 25)
 	blkSize = 64
 	nRounds = 64
 	wordSize = 4
@@ -174,7 +174,7 @@ class Sha256(Sha2):
 	word_fmt = '>I'
 
 	def pack_msglen(self):
-		return pack('>Q',len(self.M)*8)
+		return pack('>Q', len(self.M)*8)
 
 class Sha512(Sha2):
 	"""
@@ -190,10 +190,10 @@ class Sha512(Sha2):
 	- the shift and rotate amounts used are different.
 	"""
 	use_gmp = True
-	g0r1,g0r2,g0r3 = (1,8,7)
-	g1r1,g1r2,g1r3 = (19,61,6)
-	s0r1,s0r2,s0r3 = (28,34,39)
-	s1r1,s1r2,s1r3 = (14,18,41)
+	g0r1, g0r2, g0r3 = (1, 8, 7)
+	g1r1, g1r2, g1r3 = (19, 61, 6)
+	s0r1, s0r2, s0r3 = (28, 34, 39)
+	s1r1, s1r2, s1r3 = (14, 18, 41)
 	blkSize = 128
 	nRounds = 80
 	wordSize = 8

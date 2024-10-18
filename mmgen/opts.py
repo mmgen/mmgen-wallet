@@ -134,7 +134,7 @@ def parse_opts(opts_data, opt_filter, global_opts_data, global_opts_filter):
 	return namedtuple('parsed_cmd_opts', ['user_opts', 'cmd_args', 'opts'])(
 		uopts, # dict
 		uargs, # list, callers can pop
-		tuple(v.name for k,v in opts if len(k) > 1)
+		tuple(v.name for k, v in opts if len(k) > 1)
 	)
 
 def opt_preproc_debug(po):
@@ -145,10 +145,10 @@ def opt_preproc_debug(po):
 		('Cmd args',           po.cmd_args,        False),
 		('Opts',               po.opts,            True),
 	)
-	from .util import Msg,fmt_list
+	from .util import Msg, fmt_list
 	Msg('\n=== opts.py debug ===')
-	for label,data,pretty in d:
-		Msg('    {:<20}: {}'.format(label,'\n' + fmt_list(data,fmt='col',indent=' '*8) if pretty else data))
+	for label, data, pretty in d:
+		Msg('    {:<20}: {}'.format(label, '\n' + fmt_list(data, fmt='col', indent=' '*8) if pretty else data))
 
 opts_data_dfl = {
 	'text': {
@@ -202,7 +202,7 @@ class Opts:
 		cfg._uopts = uopts = po.user_opts
 
 		if init_opts: # initialize user opts to given value
-			for uopt,val in init_opts.items():
+			for uopt, val in init_opts.items():
 				if uopt not in uopts:
 					uopts[uopt] = val
 

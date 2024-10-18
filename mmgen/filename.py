@@ -20,12 +20,12 @@
 filename: File and MMGenFile classes and methods for the MMGen suite
 """
 
-import sys,os
-from .util import die,get_extension
+import sys, os
+from .util import die, get_extension
 
 class File:
 
-	def __init__(self,fn,write=False):
+	def __init__(self, fn, write=False):
 
 		self.name     = fn
 		self.dirname  = os.path.dirname(fn)
@@ -38,18 +38,18 @@ class File:
 		try:
 			st = os.stat(fn)
 		except:
-			die( 'FileNotFound', f'{fn!r}: file not found' )
+			die('FileNotFound', f'{fn!r}: file not found')
 
 		import stat
 		if stat.S_ISBLK(st.st_mode):
 			if sys.platform in ('win32',):
 				die(2, 'Access to raw block devices not supported on platform {sys.platform!r}')
-			mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]
+			mode = (os.O_RDONLY, os.O_RDWR)[bool(write)]
 			try:
 				fd = os.open(fn, mode)
 			except OSError as e:
 				if e.errno == 13:
-					die(2,f'{fn!r}: permission denied')
+					die(2, f'{fn!r}: permission denied')
 #				if e.errno != 17: raise
 			else:
 				if sys.platform == 'linux':
@@ -66,21 +66,21 @@ class File:
 
 class FileList(list):
 
-	def __init__(self,fns,write=False):
+	def __init__(self, fns, write=False):
 		list.__init__(
 			self,
-			[File(fn,write) for fn in fns] )
+			[File(fn, write) for fn in fns])
 
 	def names(self):
 		return [f.name for f in self]
 
-	def sort_by_age(self,key='mtime',reverse=False):
-		assert key in ('atime','ctime','mtime'), f'{key!r}: invalid sort key'
-		self.sort( key=lambda a: getattr(a,key), reverse=reverse )
+	def sort_by_age(self, key='mtime', reverse=False):
+		assert key in ('atime', 'ctime', 'mtime'), f'{key!r}: invalid sort key'
+		self.sort(key=lambda a: getattr(a, key), reverse=reverse)
 
 class MMGenFile(File):
 
-	def __init__(self,fn,base_class=None,subclass=None,proto=None,write=False):
+	def __init__(self, fn, base_class=None, subclass=None, proto=None, write=False):
 		"""
 		'base_class' - a base class with an 'ext_to_cls' method
 		'subclass'   - a subclass with an 'ext' attribute
@@ -91,45 +91,45 @@ class MMGenFile(File):
 		attribute to True.
 		"""
 
-		super().__init__(fn,write)
+		super().__init__(fn, write)
 
 		assert (subclass or base_class) and not (subclass and base_class), 'MMGenFile chk1'
 
-		if not getattr(subclass or base_class,'filename_api',False):
-			die(3,f'Class {(subclass or base_class).__name__!r} does not support the MMGenFile API')
+		if not getattr(subclass or base_class, 'filename_api', False):
+			die(3, f'Class {(subclass or base_class).__name__!r} does not support the MMGenFile API')
 
 		if base_class:
-			subclass = base_class.ext_to_cls( self.ext, proto )
+			subclass = base_class.ext_to_cls(self.ext, proto)
 			if not subclass:
-				die( 'BadFileExtension', f'{self.ext!r}: not a recognized file extension for {base_class}' )
+				die('BadFileExtension', f'{self.ext!r}: not a recognized file extension for {base_class}')
 
 		self.subclass = subclass
 
 class MMGenFileList(FileList):
 
-	def __init__(self,fns,base_class,proto=None,write=False):
+	def __init__(self, fns, base_class, proto=None, write=False):
 		list.__init__(
 			self,
-			[MMGenFile( fn, base_class=base_class, proto=proto, write=write ) for fn in fns] )
+			[MMGenFile(fn, base_class=base_class, proto=proto, write=write) for fn in fns])
 
-def find_files_in_dir(subclass,fdir,no_dups=False):
+def find_files_in_dir(subclass, fdir, no_dups=False):
 
-	assert isinstance(subclass,type), f'{subclass}: not a class'
+	assert isinstance(subclass, type), f'{subclass}: not a class'
 
-	if not getattr(subclass,'filename_api',False):
-		die(3,f'Class {subclass.__name__!r} does not support the MMGenFile API')
+	if not getattr(subclass, 'filename_api', False):
+		die(3, f'Class {subclass.__name__!r} does not support the MMGenFile API')
 
 	matches = [l for l in os.listdir(fdir) if l.endswith('.'+subclass.ext)]
 
 	if no_dups:
 		if len(matches) == 1:
-			return os.path.join(fdir,matches[0])
+			return os.path.join(fdir, matches[0])
 		elif matches:
-			die(1,f'ERROR: more than one {subclass.__name__} file in directory {fdir!r}')
+			die(1, f'ERROR: more than one {subclass.__name__} file in directory {fdir!r}')
 		else:
 			return None
 	else:
-		return [os.path.join(fdir,m) for m in matches]
+		return [os.path.join(fdir, m) for m in matches]
 
-def find_file_in_dir(subclass,fdir):
-	return find_files_in_dir(subclass,fdir,no_dups=True)
+def find_file_in_dir(subclass, fdir):
+	return find_files_in_dir(subclass, fdir, no_dups=True)

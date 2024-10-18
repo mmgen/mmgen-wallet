@@ -21,19 +21,19 @@ derive: coin private key secret derivation for the MMGen suite
 """
 
 from collections import namedtuple
-from hashlib import sha512,sha256
+from hashlib import sha512, sha256
 from .addrlist import AddrIdxList
 
-pk_bytes = namedtuple('coin_privkey_bytes',['idx','pos','data'])
+pk_bytes = namedtuple('coin_privkey_bytes', ['idx', 'pos', 'data'])
 
-def derive_coin_privkey_bytes(seed,idxs):
+def derive_coin_privkey_bytes(seed, idxs):
 
-	assert isinstance(idxs,AddrIdxList), f'{type(idxs)}: idx list not of type AddrIdxList'
+	assert isinstance(idxs, AddrIdxList), f'{type(idxs)}: idx list not of type AddrIdxList'
 
 	t_keys = len(idxs)
 	pos = 0
 
-	for idx in range( 1, AddrIdxList.max_len+1 ): # key/addr indexes begin from one
+	for idx in range(1, AddrIdxList.max_len + 1): # key/addr indexes begin from one
 
 		seed = sha512(seed).digest()
 
@@ -42,7 +42,7 @@ def derive_coin_privkey_bytes(seed,idxs):
 			pos += 1
 
 			# secret is double sha256 of seed hash round /idx/
-			yield pk_bytes( idx, pos, sha256(sha256(seed).digest()).digest() )
+			yield pk_bytes(idx, pos, sha256(sha256(seed).digest()).digest())
 
 			if pos == t_keys:
 				break

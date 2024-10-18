@@ -20,13 +20,13 @@
 cfgfile: API for the MMGen runtime configuration file and related files
 """
 
-import os,re
+import os, re
 from collections import namedtuple
 
 from .cfg import gc
-from .util import msg,ymsg,suf,fmt,fmt_list,oneshot_warning,strip_comment,capfirst,die
+from .util import msg, ymsg, suf, fmt, fmt_list, oneshot_warning, strip_comment, capfirst, die
 
-def mmgen_cfg_file(cfg,id_str):
+def mmgen_cfg_file(cfg, id_str):
 	return cfg_file.get_cls_by_id(id_str)(cfg)
 
 class cfg_file:
@@ -35,62 +35,62 @@ class cfg_file:
 	write_ok = False
 	warn_missing = True
 	write_metadata = False
-	line_data = namedtuple('cfgfile_line',['name','value','lineno','chunk'])
+	line_data = namedtuple('cfgfile_line', ['name', 'value', 'lineno', 'chunk'])
 	fn_base = 'mmgen.cfg'
 
 	class warn_missing_file(oneshot_warning):
 		color = 'yellow' # has no effect, as color not initialized yet
 		message = '{} not found at {!r}'
 
-	def get_data(self,fn):
+	def get_data(self, fn):
 		try:
 			with open(fn) as fp:
 				return fp.read().splitlines()
 		except:
 			if self.warn_missing:
-				self.warn_missing_file( div=fn, fmt_args=(self.desc,fn) )
+				self.warn_missing_file(div=fn, fmt_args=(self.desc, fn))
 			return ''
 
-	def copy_system_data(self,fn):
+	def copy_system_data(self, fn):
 		assert self.write_ok, f'writing to file {fn!r} not allowed!'
-		src = mmgen_cfg_file(self.cfg,'sys')
+		src = mmgen_cfg_file(self.cfg, 'sys')
 		if src.data:
 			data = src.data + src.make_metadata() if self.write_metadata else src.data
 			try:
-				with open(fn,'w') as fp:
+				with open(fn, 'w') as fp:
 					fp.write('\n'.join(data)+'\n')
-				os.chmod(fn,0o600)
+				os.chmod(fn, 0o600)
 			except:
-				die(2,f'ERROR: unable to write to {fn!r}')
+				die(2, f'ERROR: unable to write to {fn!r}')
 
-	def parse_value(self,value,refval):
-		if isinstance(refval,dict):
-			m = re.fullmatch(r'((\s+\w+:\S+)+)',' '+value) # expect one or more colon-separated values
+	def parse_value(self, value, refval):
+		if isinstance(refval, dict):
+			m = re.fullmatch(r'((\s+\w+:\S+)+)', ' '+value) # expect one or more colon-separated values
 			if m:
 				return dict([i.split(':') for i in m[1].split()])
-		elif isinstance(refval,(list,tuple)):
-			m = re.fullmatch(r'((\s+\S+)+)',' '+value)     # expect single value or list
+		elif isinstance(refval, (list, tuple)):
+			m = re.fullmatch(r'((\s+\S+)+)', ' '+value)     # expect single value or list
 			if m:
 				ret = m[1].split()
-				return ret if isinstance(refval,list) else tuple(ret)
+				return ret if isinstance(refval, list) else tuple(ret)
 		else:
 			return value
 
 	def get_lines(self):
 		def gen_lines():
-			for lineno,line in enumerate(self.data,1):
+			for lineno, line in enumerate(self.data, 1):
 				line = strip_comment(line)
 				if line == '':
 					continue
-				m = re.fullmatch(r'(\w+)(\s+)(.*)',line)
+				m = re.fullmatch(r'(\w+)(\s+)(.*)', line)
 				if m:
-					yield self.line_data(m[1],m[3],lineno,None)
+					yield self.line_data(m[1], m[3], lineno, None)
 				else:
-					die( 'CfgFileParseError', f'Parse error in file {self.fn!r}, line {lineno}' )
+					die('CfgFileParseError', f'Parse error in file {self.fn!r}, line {lineno}')
 		return gen_lines()
 
 	@classmethod
-	def get_cls_by_id(cls,id_str):
+	def get_cls_by_id(cls, id_str):
 		d = {
 			'usr':    CfgFileUsr,
 			'sys':    CfgFileSampleSys,
@@ -101,13 +101,13 @@ class cfg_file:
 class cfg_file_sample(cfg_file):
 
 	@classmethod
-	def cls_make_metadata(cls,data):
+	def cls_make_metadata(cls, data):
 		return [f'# Version {cls.cur_ver} {cls.compute_chksum(data)}']
 
 	@staticmethod
 	def compute_chksum(data):
 		import hashlib
-		return hashlib.new('ripemd160','\n'.join(data).encode()).hexdigest()
+		return hashlib.new('ripemd160', '\n'.join(data).encode()).hexdigest()
 
 	@property
 	def computed_chksum(self):
@@ -124,19 +124,19 @@ class cfg_file_sample(cfg_file):
 		- last line is metadata line of the form '# Version VER_NUM HASH'
 		"""
 
-		def process_chunk(chunk,lineno):
-			m = re.fullmatch(r'(#\s*)(\w+)(\s+)(.*)',chunk[-1])
+		def process_chunk(chunk, lineno):
+			m = re.fullmatch(r'(#\s*)(\w+)(\s+)(.*)', chunk[-1])
 			if m:
-				return self.line_data(m[2],m[4],lineno,chunk)
+				return self.line_data(m[2], m[4], lineno, chunk)
 			else:
-				die( 'CfgFileParseError', f'Parse error in file {self.fn!r}, line {lineno}' )
+				die('CfgFileParseError', f'Parse error in file {self.fn!r}, line {lineno}')
 
 		def gen_chunks(lines):
 			hdr = True
 			chunk = []
 			in_chunk = False
 
-			for lineno,line in enumerate(lines,1):
+			for lineno, line in enumerate(lines, 1):
 
 				if line.startswith('##'):
 					hdr = False
@@ -150,17 +150,17 @@ class cfg_file_sample(cfg_file):
 				elif line.startswith('#'):
 					if in_chunk is False:
 						if chunk:
-							yield process_chunk(chunk,last_nonblank)
+							yield process_chunk(chunk, last_nonblank)
 						chunk = [line]
 						in_chunk = True
 					else:
 						chunk.append(line)
 					last_nonblank = lineno
 				else:
-					die( 'CfgFileParseError', f'Parse error in file {self.fn!r}, line {lineno}' )
+					die('CfgFileParseError', f'Parse error in file {self.fn!r}, line {lineno}')
 
 			if chunk:
-				yield process_chunk(chunk,last_nonblank)
+				yield process_chunk(chunk, last_nonblank)
 
 		return list(gen_chunks(self.data))
 
@@ -169,9 +169,9 @@ class CfgFileUsr(cfg_file):
 	warn_missing = False
 	write_ok = True
 
-	def __init__(self,cfg):
+	def __init__(self, cfg):
 		self.cfg = cfg
-		self.fn = os.path.join(cfg.data_dir_root,self.fn_base)
+		self.fn = os.path.join(cfg.data_dir_root, self.fn_base)
 		self.data = self.get_data(self.fn)
 		if not self.data:
 			self.copy_system_data(self.fn)
@@ -180,15 +180,15 @@ class CfgFileSampleSys(cfg_file_sample):
 	desc = 'system sample configuration file'
 	test_fn_subdir = 'usr.local.share'
 
-	def __init__(self,cfg):
+	def __init__(self, cfg):
 		self.cfg = cfg
 		if self.cfg.test_suite_cfgtest:
-			self.fn = os.path.join(cfg.data_dir_root,self.test_fn_subdir,self.fn_base)
+			self.fn = os.path.join(cfg.data_dir_root, self.test_fn_subdir, self.fn_base)
 			with open(self.fn) as fp:
 				self.data = fp.read().splitlines()
 		else:
 			# self.fn is used for error msgs only, so file need not exist on filesystem
-			self.fn = os.path.join(os.path.dirname(__file__),'data',self.fn_base)
+			self.fn = os.path.join(os.path.dirname(__file__), 'data', self.fn_base)
 			self.data = gc.get_mmgen_data_file(self.fn_base).splitlines()
 
 	def make_metadata(self):
@@ -204,12 +204,12 @@ class CfgFileSampleUsr(cfg_file_sample):
 	out_of_date_fs = 'File {!r} is out of date - replacing'
 	altered_by_user_fs = 'File {!r} was altered by user - replacing'
 
-	def __init__(self,cfg):
+	def __init__(self, cfg):
 		self.cfg = cfg
-		self.fn = os.path.join(cfg.data_dir_root,f'{self.fn_base}.sample')
+		self.fn = os.path.join(cfg.data_dir_root, f'{self.fn_base}.sample')
 		self.data = self.get_data(self.fn)
 
-		src = mmgen_cfg_file(cfg,'sys')
+		src = mmgen_cfg_file(cfg, 'sys')
 
 		if not src.data:
 			return
@@ -217,7 +217,7 @@ class CfgFileSampleUsr(cfg_file_sample):
 		if self.data:
 			if self.parse_metadata():
 				if self.chksum == self.computed_chksum:
-					diff = self.diff(self.get_lines(),src.get_lines())
+					diff = self.diff(self.get_lines(), src.get_lines())
 					if not diff:
 						return
 					self.show_changes(diff)
@@ -230,14 +230,14 @@ class CfgFileSampleUsr(cfg_file_sample):
 
 	def parse_metadata(self):
 		if self.data:
-			m = re.match(r'# Version (\d+) ([a-f0-9]{40})$',self.data[-1])
+			m = re.match(r'# Version (\d+) ([a-f0-9]{40})$', self.data[-1])
 			if m:
 				self.ver = m[1]
 				self.chksum = m[2]
 				self.data = self.data[:-1] # remove metadata line
 				return True
 
-	def diff(self,a_tup,b_tup): # a=user, b=system
+	def diff(self, a_tup, b_tup): # a=user, b=system
 		a = [i.name for i in a_tup]#[3:] # Debug
 		b = [i.name for i in b_tup]#[:-2] # Debug
 		removed = set(a) - set(b)
@@ -250,34 +250,34 @@ class CfgFileSampleUsr(cfg_file_sample):
 		else:
 			return None
 
-	def show_changes(self,diff):
+	def show_changes(self, diff):
 		ymsg('Warning: configuration file options have changed!\n')
-		for desc in ('added','removed'):
+		for desc in ('added', 'removed'):
 			data = diff[desc]
 			if data:
-				opts = fmt_list([i.name for i in data],fmt='bare')
-				msg(f'  The following option{suf(data,verb="has")} been {desc}:\n    {opts}\n')
+				opts = fmt_list([i.name for i in data], fmt='bare')
+				msg(f'  The following option{suf(data, verb="has")} been {desc}:\n    {opts}\n')
 				if desc == 'removed' and data:
-					uc = mmgen_cfg_file(self.cfg,'usr')
+					uc = mmgen_cfg_file(self.cfg, 'usr')
 					usr_names = [i.name for i in uc.get_lines()]
 					rm_names = [i.name for i in data]
 					bad = sorted(set(usr_names).intersection(rm_names))
 					if bad:
 						m = f"""
-							The following removed option{suf(bad,verb='is')} set in {uc.fn!r}
+							The following removed option{suf(bad, verb='is')} set in {uc.fn!r}
 							and must be deleted or commented out:
-							{'  ' + fmt_list(bad,fmt='bare')}
+							{'  ' + fmt_list(bad, fmt='bare')}
 						"""
-						ymsg(fmt(m,indent='  ',strip_char='\t'))
+						ymsg(fmt(m, indent='  ', strip_char='\t'))
 
-		from .ui import keypress_confirm,do_pager
+		from .ui import keypress_confirm, do_pager
 		while True:
-			if not keypress_confirm( self.cfg, self.details_confirm_prompt, no_nl=True ):
+			if not keypress_confirm(self.cfg, self.details_confirm_prompt, no_nl=True):
 				return
 
 			def get_details():
-				for desc,data in diff.items():
-					sep,sep2 = ('\n  ','\n\n  ')
+				for desc, data in diff.items():
+					sep, sep2 = ('\n  ', '\n\n  ')
 					if data:
 						yield (
 							f'{capfirst(desc)} section{suf(data)}:'

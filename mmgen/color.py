@@ -21,27 +21,27 @@ color: color handling for the MMGen suite
 """
 
 _colors = {
-	'black':       (  232,      (30,0) ),
-	'red':         (  210,      (31,1) ),
-	'green':       (  121,      (32,1) ),
-	'yellow':      (  229,      (33,1) ),
-	'blue':        (  75,       (34,1) ),
-	'magenta':     (  205,      (35,1) ),
-	'cyan':        (  122,      (36,1) ),
+	'black':   (232,        (30, 0)),
+	'red':     (210,        (31, 1)),
+	'green':   (121,        (32, 1)),
+	'yellow':  (229,        (33, 1)),
+	'blue':    (75,         (34, 1)),
+	'magenta': (205,        (35, 1)),
+	'cyan':    (122,        (36, 1)),
 
-	'gray':        (  246,      (30,1) ),
-	'orange':      (  216,      (31,1) ),
-	'purple':      (  141,      (35,1) ),
-	'pink':        (  218,      (35,1) ),
+	'gray':    (246,        (30, 1)),
+	'orange':  (216,        (31, 1)),
+	'purple':  (141,        (35, 1)),
+	'pink':    (218,        (35, 1)),
 
-	'melon':       (  222,      (33,1) ),
-	'brown':       (  173,      (33,0) ),
-	'grndim':      (  108,      (32,0) ),
+	'melon':   (222,        (33, 1)),
+	'brown':   (173,        (33, 0)),
+	'grndim':  (108,        (32, 0)),
 
-	'redbg':       ( (232,210), (30,101) ),
-	'grnbg':       ( (232,121), (30,102) ),
-	'yelbg':       ( (232,229), (30,103) ),
-	'blubg':       ( (232,75),  (30,104) ),
+	'redbg':   ((232, 210), (30, 101)),
+	'grnbg':   ((232, 121), (30, 102)),
+	'yelbg':   ((232, 229), (30, 103)),
+	'blubg':   ((232, 75),  (30, 104)),
 }
 
 def nocolor(s):
@@ -52,16 +52,16 @@ def set_vt100():
 	import sys
 	if sys.platform == 'win32':
 		from subprocess import run
-		run([],shell=True)
+		run([], shell=True)
 
 def get_terminfo_colors(term=None):
-	from subprocess import run,PIPE
-	cmd = ['infocmp','-0']
+	from subprocess import run, PIPE
+	cmd = ['infocmp', '-0']
 	if term:
 		cmd.append(term)
 
 	try:
-		cmdout = run(cmd,stdout=PIPE,check=True).stdout.decode()
+		cmdout = run(cmd, stdout=PIPE, check=True).stdout.decode()
 	except:
 		set_vt100()
 		return None
@@ -72,12 +72,12 @@ def get_terminfo_colors(term=None):
 		if s.isdecimal():
 			return int(s)
 		elif s.startswith('0x') and is_hex_str(s[2:]):
-			return int(s[2:],16)
+			return int(s[2:], 16)
 		else:
 			return None
 
 def init_color(num_colors='auto'):
-	assert num_colors in ('auto',8,16,256,0)
+	assert num_colors in ('auto', 8, 16, 256, 0)
 
 	import sys
 	self = sys.modules[__name__]
@@ -98,19 +98,19 @@ def init_color(num_colors='auto'):
 	if num_colors == 0:
 		ncc = (lambda s: s).__code__
 		for c in _colors:
-			getattr(self,c).__code__ = ncc
+			getattr(self, c).__code__ = ncc
 	elif num_colors == 256:
-		for c,e in _colors.items():
+		for c, e in _colors.items():
 			start = (
 				'\033[38;5;{};1m'.format(e[0]) if type(e[0]) == int else
-				'\033[38;5;{};48;5;{};1m'.format(*e[0]) )
-			getattr(self,c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
-	elif num_colors in (8,16):
-		for c,e in _colors.items():
+				'\033[38;5;{};48;5;{};1m'.format(*e[0]))
+			getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
+	elif num_colors in (8, 16):
+		for c, e in _colors.items():
 			start = (
 				'\033[{}m'.format(e[1][0]) if e[1][1] == 0 else
-				'\033[{};{}m'.format(*e[1]) )
-			getattr(self,c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
+				'\033[{};{}m'.format(*e[1]))
+			getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
 
 	set_vt100()
 

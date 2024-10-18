@@ -20,7 +20,7 @@ from subprocess import run, PIPE, DEVNULL
 from .cfg import Config
 from .util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list, is_int, have_sudo, capfirst
 from .color import yellow, red, orange, brown, blue
-from .wallet import Wallet,get_wallet_cls
+from .wallet import Wallet, get_wallet_cls
 from .addrlist import AddrIdxList
 from .filename import find_file_in_dir
 from .ui import keypress_confirm
@@ -135,10 +135,10 @@ class Signable:
 		multiple_ok = True
 		action_desc = 'signed'
 
-		def __init__(self,parent):
+		def __init__(self, parent):
 			self.parent = parent
 			self.cfg = parent.cfg
-			self.dir = getattr(parent,self.dir_name)
+			self.dir = getattr(parent, self.dir_name)
 			self.name = type(self).__name__
 
 		@property
@@ -152,21 +152,21 @@ class Signable:
 
 		@property
 		def unsigned(self):
-			return self._unprocessed( '_unsigned', self.rawext, self.sigext )
+			return self._unprocessed('_unsigned', self.rawext, self.sigext)
 
 		@property
 		def unsubmitted(self):
-			return self._unprocessed( '_unsubmitted', self.sigext, self.subext )
+			return self._unprocessed('_unsubmitted', self.sigext, self.subext)
 
 		@property
 		def unsubmitted_raw(self):
-			return self._unprocessed( '_unsubmitted_raw', self.rawext, self.subext )
+			return self._unprocessed('_unsubmitted_raw', self.rawext, self.subext)
 
 		unsent = unsubmitted
 		unsent_raw = unsubmitted_raw
 
-		def _unprocessed(self,attrname,rawext,sigext):
-			if not hasattr(self,attrname):
+		def _unprocessed(self, attrname, rawext, sigext):
+			if not hasattr(self, attrname):
 				dirlist = sorted(self.dir.iterdir())
 				names = {f.name for f in dirlist}
 				setattr(
@@ -174,13 +174,13 @@ class Signable:
 					attrname,
 					tuple(f for f in dirlist
 						if f.name.endswith('.' + rawext)
-							and f.name[:-len(rawext)] + sigext not in names) )
-			return getattr(self,attrname)
+							and f.name[:-len(rawext)] + sigext not in names))
+			return getattr(self, attrname)
 
-		def print_bad_list(self,bad_files):
+		def print_bad_list(self, bad_files):
 			msg('\n{a}\n{b}'.format(
 				a = red(f'Failed {self.desc}s:'),
-				b = '  {}\n'.format('\n  '.join(self.gen_bad_list(sorted(bad_files,key=lambda f: f.name))))
+				b = '  {}\n'.format('\n  '.join(self.gen_bad_list(sorted(bad_files, key=lambda f: f.name))))
 			))
 
 		def die_wrong_num_txs(self, tx_type, msg=None, desc=None, show_dir=False):
@@ -255,7 +255,7 @@ class Signable:
 		dir_name = 'tx_dir'
 		fail_msg = 'failed to sign'
 
-		async def sign(self,f):
+		async def sign(self, f):
 			from .tx import UnsignedTX
 			tx1 = UnsignedTX(
 					cfg       = self.cfg,
@@ -263,7 +263,7 @@ class Signable:
 					automount = self.name=='automount_transaction')
 			if tx1.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
-				tx1.rpc = await rpc_init( self.cfg, tx1.proto, ignore_wallet=True )
+				tx1.rpc = await rpc_init(self.cfg, tx1.proto, ignore_wallet=True)
 			from .tx.sign import txsign
 			tx2 = await txsign(
 					cfg_parm    = self.cfg,
@@ -278,7 +278,7 @@ class Signable:
 			else:
 				return False
 
-		def print_summary(self,signables):
+		def print_summary(self, signables):
 
 			if self.cfg.full_summary:
 				bmsg('\nAutosign summary:\n')
@@ -289,22 +289,22 @@ class Signable:
 				for tx in signables:
 					non_mmgen = [o for o in tx.outputs if not o.mmid]
 					if non_mmgen:
-						yield (tx,non_mmgen)
+						yield (tx, non_mmgen)
 
 			body = list(gen())
 
 			if body:
 				bmsg('\nAutosign summary:')
 				fs = '{}  {} {}'
-				t_wid,a_wid = 6,44
+				t_wid, a_wid = 6, 44
 
 				def gen():
-					yield fs.format('TX ID ','Non-MMGen outputs'+' '*(a_wid-17),'Amount')
+					yield fs.format('TX ID ', 'Non-MMGen outputs'+' '*(a_wid-17), 'Amount')
 					yield fs.format('-'*t_wid, '-'*a_wid, '-'*7)
-					for tx,non_mmgen in body:
+					for tx, non_mmgen in body:
 						for nm in non_mmgen:
 							yield fs.format(
-								tx.txid.fmt( width=t_wid, color=True ) if nm is non_mmgen[0] else ' '*t_wid,
+								tx.txid.fmt(width=t_wid, color=True) if nm is non_mmgen[0] else ' '*t_wid,
 								nm.addr.fmt(nm.addr.view_pref, width=a_wid, color=True),
 								nm.amt.hl() + ' ' + yellow(tx.coin))
 
@@ -312,7 +312,7 @@ class Signable:
 			else:
 				msg('\nNo non-MMGen outputs')
 
-		def gen_bad_list(self,bad_files):
+		def gen_bad_list(self, bad_files):
 			for f in bad_files:
 				yield red(f.name)
 
@@ -326,12 +326,12 @@ class Signable:
 
 	class xmr_signable(transaction): # mixin class
 
-		def need_daemon_restart(self,m,new_idx):
+		def need_daemon_restart(self, m, new_idx):
 			old_idx = self.parent.xmr_cur_wallet_idx
 			self.parent.xmr_cur_wallet_idx = new_idx
 			return old_idx != new_idx or m.wd.state != 'ready'
 
-		def print_summary(self,signables):
+		def print_summary(self, signables):
 			bmsg('\nAutosign summary:')
 			msg('\n'.join(s.get_info(indent='  ') for s in signables) + self.summary_footer)
 
@@ -342,7 +342,7 @@ class Signable:
 		multiple_ok = False
 		summary_footer = ''
 
-		async def sign(self,f):
+		async def sign(self, f):
 			from . import xmrwallet
 			from .xmrwallet.file.tx import MoneroMMGenTX
 			tx1 = MoneroMMGenTX.Completed(self.parent.xmrwallet_cfg, f)
@@ -351,7 +351,7 @@ class Signable:
 				self.parent.xmrwallet_cfg,
 				infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
 				wallets = str(tx1.src_wallet_idx))
-			tx2 = await m.main( f, restart_daemon=self.need_daemon_restart(m,tx1.src_wallet_idx) )
+			tx2 = await m.main(f, restart_daemon=self.need_daemon_restart(m, tx1.src_wallet_idx))
 			tx2.write(ask_write=False)
 			return tx2
 
@@ -370,7 +370,7 @@ class Signable:
 				f for f in super().unsigned
 					if not json.loads(f.read_text())['MoneroMMGenWalletOutputsFile']['data']['imported'])
 
-		async def sign(self,f):
+		async def sign(self, f):
 			from . import xmrwallet
 			wallet_idx = xmrwallet.op_cls('wallet').get_idx_from_fn(f)
 			m = xmrwallet.op(
@@ -378,7 +378,7 @@ class Signable:
 				self.parent.xmrwallet_cfg,
 				infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
 				wallets = str(wallet_idx))
-			obj = await m.main(f, wallet_idx, restart_daemon=self.need_daemon_restart(m,wallet_idx))
+			obj = await m.main(f, wallet_idx, restart_daemon=self.need_daemon_restart(m, wallet_idx))
 			obj.write(quiet=not obj.data.sign)
 			self.action_desc = 'imported and signed' if obj.data.sign else 'imported'
 			return obj
@@ -390,26 +390,26 @@ class Signable:
 		dir_name = 'msg_dir'
 		fail_msg = 'failed to sign or signed incompletely'
 
-		async def sign(self,f):
-			from .msg import UnsignedMsg,SignedMsg
-			m = UnsignedMsg( self.cfg, infile=f )
+		async def sign(self, f):
+			from .msg import UnsignedMsg, SignedMsg
+			m = UnsignedMsg(self.cfg, infile=f)
 			await m.sign(wallet_files=self.parent.wallet_files[:], passwd_file=str(self.parent.keyfile))
-			m = SignedMsg( self.cfg, data=m.__dict__ )
+			m = SignedMsg(self.cfg, data=m.__dict__)
 			m.write_to_file(
 				outdir = self.dir.resolve(),
-				ask_overwrite = False )
+				ask_overwrite = False)
 			if m.data.get('failed_sids'):
-				die('MsgFileFailedSID',f'Failed Seed IDs: {fmt_list(m.data["failed_sids"],fmt="bare")}')
+				die('MsgFileFailedSID', f'Failed Seed IDs: {fmt_list(m.data["failed_sids"], fmt="bare")}')
 			return m
 
-		def print_summary(self,signables):
+		def print_summary(self, signables):
 			gmsg('\nSigned message files:')
 			for message in signables:
 				gmsg('  ' + message.signed_filename)
 
-		def gen_bad_list(self,bad_files):
+		def gen_bad_list(self, bad_files):
 			for f in bad_files:
-				sigfile = f.parent / ( f.name[:-len(self.rawext)] + self.sigext )
+				sigfile = f.parent / (f.name[:-len(self.rawext)] + self.sigext)
 				yield orange(sigfile.name) if sigfile.exists() else red(f.name)
 
 class Autosign:
@@ -453,13 +453,13 @@ class Autosign:
 	def init_fixup(self): # see test/overlay/fakemods/mmgen/autosign.py
 		pass
 
-	def __init__(self,cfg,cmd=None):
+	def __init__(self, cfg, cmd=None):
 
 		if cfg.mnemonic_fmt:
 			if cfg.mnemonic_fmt not in self.mn_fmts:
-				die(1,'{!r}: invalid mnemonic format (must be one of: {})'.format(
+				die(1, '{!r}: invalid mnemonic format (must be one of: {})'.format(
 					cfg.mnemonic_fmt,
-					fmt_list( self.mn_fmts, fmt='no_spc' ) ))
+					fmt_list(self.mn_fmts, fmt='no_spc')))
 
 		if sys.platform == 'linux':
 			self.dfl_mountpoint = f'/mnt/{self.linux_mount_subdir}'
@@ -507,11 +507,11 @@ class Autosign:
 
 		self.keyfile = self.mountpoint / 'autosign.key'
 
-		if any(k in cfg._uopts for k in ('help','longhelp')):
+		if any(k in cfg._uopts for k in ('help', 'longhelp')):
 			return
 
 		if 'coin' in cfg._uopts:
-			die(1,'--coin option not supported with this command.  Use --coins instead')
+			die(1, '--coin option not supported with this command.  Use --coins instead')
 
 		self.coins = cfg.coins.upper().split(',') if cfg.coins else []
 
@@ -539,7 +539,7 @@ class Autosign:
 			self.dirs |= self.xmr_dirs
 			self.signables += Signable.xmr_signables
 
-		for name,path in self.dirs.items():
+		for name, path in self.dirs.items():
 			setattr(self, name, self.mountpoint / path)
 
 		self.swap = SwapMgr(self.cfg, ignore_zram=True)
@@ -553,28 +553,28 @@ class Autosign:
 				from .rpc import rpc_init
 				from .exception import SocketError
 				try:
-					await rpc_init( self.cfg, proto, ignore_wallet=True )
+					await rpc_init(self.cfg, proto, ignore_wallet=True)
 				except SocketError as e:
 					from .daemon import CoinDaemon
-					d = CoinDaemon( self.cfg, proto=proto, test_suite=self.cfg.test_suite )
+					d = CoinDaemon(self.cfg, proto=proto, test_suite=self.cfg.test_suite)
 					die(2,
 						f'\n{e}\nIs the {d.coind_name} daemon ({d.exec_fn}) running '
-						+ 'and listening on the correct port?' )
+						+ 'and listening on the correct port?')
 
 	@property
 	def wallet_files(self):
 
-		if not hasattr(self,'_wallet_files'):
+		if not hasattr(self, '_wallet_files'):
 
 			try:
 				dirlist = self.wallet_dir.iterdir()
 			except:
-				die(1,f"Cannot open wallet directory '{self.wallet_dir}'. Did you run ‘mmgen-autosign setup’?")
+				die(1, f"Cannot open wallet directory '{self.wallet_dir}'. Did you run ‘mmgen-autosign setup’?")
 
 			self._wallet_files = [f for f in dirlist if f.suffix == '.mmdat']
 
 			if not self._wallet_files:
-				die(1,'No wallet files present!')
+				die(1, 'No wallet files present!')
 
 		return self._wallet_files
 
@@ -595,7 +595,7 @@ class Autosign:
 
 		if sys.platform == 'linux' and not self.mountpoint.is_dir():
 			def do_die(m):
-				die(1,'\n' + yellow(fmt(m.strip(),indent='  ')))
+				die(1, '\n' + yellow(fmt(m.strip(), indent='  ')))
 			if Path(self.old_dfl_mountpoint).is_dir():
 				do_die(self.old_dfl_mountpoint_errmsg)
 			else:
@@ -607,14 +607,14 @@ class Autosign:
 				if not silent:
 					msg(f"Mounting '{self.mountpoint}'")
 			else:
-				die(1,f'Unable to mount device {self.dev_label} at {self.mountpoint}')
+				die(1, f'Unable to mount device {self.dev_label} at {self.mountpoint}')
 
 		for dirname in self.dirs:
 			check_or_create(dirname)
 
 	def do_umount(self, silent=False, verbose=False):
 		if self.mountpoint.is_mount():
-			run( ['sync'], check=True )
+			run(['sync'], check=True)
 			if not silent:
 				msg(f"Unmounting '{self.mountpoint}'")
 			redir = None if verbose else DEVNULL
@@ -634,8 +634,8 @@ class Autosign:
 
 		return not fails
 
-	async def sign_all(self,target_name):
-		target = getattr(Signable,target_name)(self)
+	async def sign_all(self, target_name):
+		target = getattr(Signable, target_name)(self)
 		if target.unsigned:
 			good = []
 			bad = []
@@ -675,7 +675,7 @@ class Autosign:
 				self.led.set('busy')
 			ret = [await self.sign_all(signable) for signable in self.signables]
 			for val in ret:
-				if isinstance(val,str):
+				if isinstance(val, str):
 					msg(val)
 			if self.cfg.test_suite_autosign_threaded:
 				await asyncio.sleep(0.3)
@@ -701,15 +701,15 @@ class Autosign:
 		desc = f"key file '{self.keyfile}'"
 		msg('Creating ' + desc)
 		try:
-			self.keyfile.write_text( os.urandom(32).hex() )
+			self.keyfile.write_text(os.urandom(32).hex())
 			self.keyfile.chmod(0o400)
 		except:
-			die(2,'Unable to write ' + desc)
+			die(2, 'Unable to write ' + desc)
 		msg('Wrote ' + desc)
 
-	def gen_key(self,no_unmount=False):
+	def gen_key(self, no_unmount=False):
 		if not self.device_inserted:
-			die(1,'Removable device not present!')
+			die(1, 'Removable device not present!')
 		self.do_mount()
 		self.wipe_encryption_key()
 		self.create_key()
@@ -756,7 +756,7 @@ class Autosign:
 			try:
 				self.wallet_dir.stat()
 			except:
-				die(2,f"Unable to create wallet directory '{self.wallet_dir}'")
+				die(2, f"Unable to create wallet directory '{self.wallet_dir}'")
 
 		self.gen_key(no_unmount=True)
 
@@ -768,20 +768,20 @@ class Autosign:
 		remove_wallet_dir()
 		create_wallet_dir()
 
-		wf = find_file_in_dir( get_wallet_cls('mmgen'), self.cfg.data_dir )
+		wf = find_file_in_dir(get_wallet_cls('mmgen'), self.cfg.data_dir)
 		if wf and keypress_confirm(
 				cfg         = self.cfg,
 				prompt      = f"Default wallet '{wf}' found.\nUse default wallet for autosigning?",
-				default_yes = True ):
-			ss_in = Wallet( Config(), wf )
+				default_yes = True):
+			ss_in = Wallet(Config(), wf)
 		else:
-			ss_in = Wallet( self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt] )
-		ss_out = Wallet( self.cfg, ss=ss_in, passwd_file=str(self.keyfile) )
-		ss_out.write_to_file( desc='autosign wallet', outdir=self.wallet_dir )
+			ss_in = Wallet(self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt])
+		ss_out = Wallet(self.cfg, ss=ss_in, passwd_file=str(self.keyfile))
+		ss_out.write_to_file(desc='autosign wallet', outdir=self.wallet_dir)
 
 	@property
 	def xmrwallet_cfg(self):
-		if not hasattr(self,'_xmrwallet_cfg'):
+		if not hasattr(self, '_xmrwallet_cfg'):
 			self._xmrwallet_cfg = Config({
 				'_clone': self.cfg,
 				'coin': 'xmr',
@@ -820,29 +820,29 @@ class Autosign:
 			nonlocal count
 			msg_r('.')
 			from .fileutil import shred_file
-			shred_file( f, verbose=self.cfg.verbose )
+			shred_file(f, verbose=self.cfg.verbose)
 			count += 1
 
 		def clean_dir(s_name):
 
-			def clean_files(rawext,sigext):
+			def clean_files(rawext, sigext):
 				for f in s.dir.iterdir():
 					if s.clean_all and (f.name.endswith(f'.{rawext}') or f.name.endswith(f'.{sigext}')):
 						do_shred(f)
 					elif f.name.endswith(f'.{sigext}'):
-						raw = f.parent / ( f.name[:-len(sigext)] + rawext )
+						raw = f.parent / (f.name[:-len(sigext)] + rawext)
 						if raw.is_file():
 							do_shred(raw)
 
-			s = getattr(Signable,s_name)(self)
+			s = getattr(Signable, s_name)(self)
 
 			msg_r(f"Cleaning directory '{s.dir}'..")
 
 			if s.dir.is_dir():
-				clean_files( s.rawext, s.sigext )
-				if hasattr(s,'subext'):
-					clean_files( s.rawext, s.subext )
-					clean_files( s.sigext, s.subext )
+				clean_files(s.rawext, s.sigext)
+				if hasattr(s, 'subext'):
+					clean_files(s.rawext, s.subext)
+					clean_files(s.sigext, s.subext)
 
 			msg('done' if s.dir.is_dir() else 'skipped (no dir)')
 
@@ -887,7 +887,7 @@ class Autosign:
 				msg_r('.')
 				n += 1
 
-	def at_exit(self,exit_val,message=None):
+	def at_exit(self, exit_val, message=None):
 		if message:
 			msg(message)
 		self.led.stop()
@@ -895,16 +895,16 @@ class Autosign:
 
 	def init_exit_handler(self):
 
-		def handler(arg1,arg2):
-			self.at_exit(1,'\nCleaning up...')
+		def handler(arg1, arg2):
+			self.at_exit(1, '\nCleaning up...')
 
 		import signal
-		signal.signal( signal.SIGTERM, handler )
-		signal.signal( signal.SIGINT, handler )
+		signal.signal(signal.SIGTERM, handler)
+		signal.signal(signal.SIGINT, handler)
 
 	def init_led(self):
 		from .led import LEDControl
 		self.led = LEDControl(
 			enabled = self.cfg.led,
-			simulate = self.cfg.test_suite_autosign_led_simulate )
+			simulate = self.cfg.test_suite_autosign_led_simulate)
 		self.led.set('off')

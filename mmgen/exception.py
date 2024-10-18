@@ -22,7 +22,7 @@ exception: Exception classes for the MMGen suite
 
 class MMGenError(Exception):
 
-	def __init__(self,errno,strerror,stdout):
+	def __init__(self, errno, strerror, stdout):
 		self.mmcode = errno
 		self.stdout = stdout
 		super().__init__(strerror)

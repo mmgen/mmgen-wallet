@@ -24,19 +24,19 @@ from .keygen import KeyGenerator # convenience import
 
 # decorator for to_addr() and to_viewkey()
 def check_data(orig_func):
-	def f(self,data):
+	def f(self, data):
 		assert data.pubkey_type == self.pubkey_type, 'addrgen.py:check_data() pubkey_type mismatch'
-		assert data.compressed == self.compressed,(
+		assert data.compressed == self.compressed, (
 	f'addrgen.py:check_data() expected compressed={self.compressed} but got compressed={data.compressed}'
 		)
-		return orig_func(self,data)
+		return orig_func(self, data)
 	return f
 
 class addr_generator:
 
 	class base:
 
-		def __init__(self,cfg,proto,addr_type):
+		def __init__(self, cfg, proto, addr_type):
 			self.proto = proto
 			self.pubkey_type = addr_type.pubkey_type
 			self.compressed = addr_type.compressed
@@ -44,12 +44,12 @@ class addr_generator:
 
 	class keccak(base):
 
-		def __init__(self,cfg,proto,addr_type):
-			super().__init__(cfg,proto,addr_type)
+		def __init__(self, cfg, proto, addr_type):
+			super().__init__(cfg, proto, addr_type)
 			from .util2 import get_keccak
 			self.keccak_256 = get_keccak(cfg)
 
-def AddrGenerator(cfg,proto,addr_type):
+def AddrGenerator(cfg, proto, addr_type):
 	"""
 	factory function returning an address generator for the specified address type
 	"""
@@ -67,7 +67,7 @@ def AddrGenerator(cfg,proto,addr_type):
 	from .addr import MMGenAddrType
 
 	if type(addr_type) is str:
-		addr_type = MMGenAddrType(proto=proto,id_str=addr_type)
+		addr_type = MMGenAddrType(proto=proto, id_str=addr_type)
 	elif type(addr_type) is MMGenAddrType:
 		assert addr_type in proto.mmtypes, f'{addr_type}: invalid address type for coin {proto.coin}'
 	else:
@@ -76,4 +76,4 @@ def AddrGenerator(cfg,proto,addr_type):
 	import importlib
 	return getattr(
 		importlib.import_module(f'mmgen.proto.{package_map[addr_type.name]}.addrgen'),
-		addr_type.name )(cfg,proto,addr_type)
+		addr_type.name)(cfg, proto, addr_type)

@@ -12,11 +12,11 @@
 ui: Interactive user interface functions for the MMGen suite
 """
 
-import sys,os
+import sys, os
 
-from .util import msg,msg_r,Msg,die
+from .util import msg, msg_r, Msg, die
 
-def confirm_or_raise(cfg,message,action,expect='YES',exit_msg='Exiting at user request'):
+def confirm_or_raise(cfg, message, action, expect='YES', exit_msg='Exiting at user request'):
 	if message:
 		msg(message)
 	if line_input(
@@ -24,27 +24,27 @@ def confirm_or_raise(cfg,message,action,expect='YES',exit_msg='Exiting at user r
 			(f'{action}  ' if action[0].isupper() else f'Are you sure you want to {action}?\n') +
 			f'Type uppercase {expect!r} to confirm: '
 		).strip() != expect:
-		die( 'UserNonConfirmation', exit_msg )
+		die('UserNonConfirmation', exit_msg)
 
-def get_words_from_user(cfg,prompt):
-	words = line_input( cfg, prompt, echo=cfg.echo_passphrase ).split()
+def get_words_from_user(cfg, prompt):
+	words = line_input(cfg, prompt, echo=cfg.echo_passphrase).split()
 	if cfg.debug:
 		msg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
-def get_data_from_user(cfg,desc='data'): # user input MUST be UTF-8
-	data = line_input( cfg, f'Enter {desc}: ', echo=cfg.echo_passphrase )
+def get_data_from_user(cfg, desc='data'): # user input MUST be UTF-8
+	data = line_input(cfg, f'Enter {desc}: ', echo=cfg.echo_passphrase)
 	if cfg.debug:
 		msg(f'User input: [{data}]')
 	return data
 
-def line_input(cfg,prompt,echo=True,insert_txt='',hold_protect=True):
+def line_input(cfg, prompt, echo=True, insert_txt='', hold_protect=True):
 	"""
 	multi-line prompts OK
 	one-line prompts must begin at beginning of line
 	empty prompts forbidden due to interactions with readline
 	"""
-	assert prompt,'calling line_input() with an empty prompt forbidden'
+	assert prompt, 'calling line_input() with an empty prompt forbidden'
 
 	def get_readline():
 		try:
@@ -60,7 +60,7 @@ def line_input(cfg,prompt,echo=True,insert_txt='',hold_protect=True):
 	if cfg.test_suite_popen_spawn:
 		msg(prompt)
 		sys.stderr.flush() # required by older Pythons (e.g. v3.7)
-		reply = os.read(0,4096).decode().rstrip('\n') # strip NL to mimic behavior of input()
+		reply = os.read(0, 4096).decode().rstrip('\n') # strip NL to mimic behavior of input()
 	elif not sys.stdin.isatty():
 		msg_r(prompt)
 		reply = input('')
@@ -86,10 +86,10 @@ def keypress_confirm(
 	default_yes     = False,
 	verbose         = False,
 	no_nl           = False,
-	complete_prompt = False ):
+	complete_prompt = False):
 
 	if not complete_prompt:
-		prompt = '{} {}: '.format( prompt, '(Y/n)' if default_yes else '(y/N)' )
+		prompt = '{} {}: '.format(prompt, '(Y/n)' if default_yes else '(y/N)')
 
 	nl = f'\r{" "*len(prompt)}\r' if no_nl else '\n'
 
@@ -99,7 +99,7 @@ def keypress_confirm(
 
 	from .term import get_char
 	while True:
-		reply = get_char(prompt,immed_chars='yYnN').strip('\n\r')
+		reply = get_char(prompt, immed_chars='yYnN').strip('\n\r')
 		if not reply:
 			msg_r(nl)
 			return default_yes
@@ -111,7 +111,7 @@ def keypress_confirm(
 
 def do_pager(text):
 
-	pagers = ['less','more']
+	pagers = ['less', 'more']
 	end_msg = '\n(end of text)\n\n'
 	os.environ['LESS'] = '--jump-target=2 --shift=4 --tabs=4 --RAW-CONTROL-CHARS --chop-long-lines'
 
@@ -123,7 +123,7 @@ def do_pager(text):
 	for pager in pagers:
 		try:
 			m = text + ('' if pager == 'less' else end_msg)
-			run([pager],input=m.encode(),check=True)
+			run([pager], input=m.encode(), check=True)
 			msg_r('\r')
 		except:
 			pass
@@ -133,7 +133,7 @@ def do_pager(text):
 		Msg(text+end_msg)
 	set_vt100()
 
-def do_license_msg(cfg,immed=False):
+def do_license_msg(cfg, immed=False):
 
 	if cfg.quiet or cfg.no_license or cfg.yes or not cfg.stdin_tty:
 		return
@@ -145,7 +145,7 @@ def do_license_msg(cfg,immed=False):
 	from .term import get_char
 	prompt = "Press 'w' for conditions and warranty info, or 'c' to continue: "
 	while True:
-		reply = get_char(prompt, immed_chars=('','wc')[bool(immed)])
+		reply = get_char(prompt, immed_chars=('', 'wc')[bool(immed)])
 		if reply == 'w':
 			do_pager(gpl.conditions)
 		elif reply == 'c':

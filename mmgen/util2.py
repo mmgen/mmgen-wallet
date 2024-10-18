@@ -12,19 +12,19 @@
 util2: Less frequently-used variables, classes and utility functions for the MMGen suite
 """
 
-import sys,re,time
-from .util import msg,suf,hexdigits,die
+import sys, re, time
+from .util import msg, suf, hexdigits, die
 
-def die_wait(delay,ev=0,s=''):
-	assert isinstance(delay,int)
-	assert isinstance(ev,int)
+def die_wait(delay, ev=0, s=''):
+	assert isinstance(delay, int)
+	assert isinstance(ev, int)
 	if s:
 		msg(s)
 	time.sleep(delay)
 	sys.exit(ev)
 
-def die_pause(ev=0,s=''):
-	assert isinstance(ev,int)
+def die_pause(ev=0, s=''):
+	assert isinstance(ev, int)
 	if s:
 		msg(s)
 	input('Press ENTER to exit')
@@ -39,12 +39,12 @@ def load_cryptodomex():
 		try:
 			import Crypto # cryptodome
 		except ImportError:
-			die(2,'Unable to import either the ‘pycryptodomex’ or ‘pycryptodome’ package')
+			die(2, 'Unable to import either the ‘pycryptodomex’ or ‘pycryptodome’ package')
 		else:
 			sys.modules['Cryptodome'] = Crypto
 
 # called with no arguments by pyethereum.utils:
-def get_keccak(cfg=None,cached_ret=[]):
+def get_keccak(cfg=None, cached_ret=[]):
 
 	if not cached_ret:
 		if cfg and cfg.use_internal_keccak_module:
@@ -61,7 +61,7 @@ def get_keccak(cfg=None,cached_ret=[]):
 					die('MMGenImportError',
 						'Please install the ‘pycryptodome’ or ‘pycryptodomex’ package on your system')
 			def keccak_256(data):
-				return keccak.new(data=data,digest_bytes=32)
+				return keccak.new(data=data, digest_bytes=32)
 		cached_ret.append(keccak_256)
 
 	return cached_ret[0]
@@ -87,13 +87,13 @@ bytespec_map = (
 	('E',  1152921504606846976),
 )
 
-def int2bytespec(n,spec,fmt,print_sym=True,strip=False,add_space=False):
+def int2bytespec(n, spec, fmt, print_sym=True, strip=False, add_space=False):
 
 	def spec2int(spec):
-		for k,v in bytespec_map:
+		for k, v in bytespec_map:
 			if k == spec:
 				return v
-		die(1,f'{spec!r}: unrecognized bytespec')
+		die(1, f'{spec!r}: unrecognized bytespec')
 
 	ret = f'{n/spec2int(spec):{fmt}f}'
 	if strip:
@@ -101,17 +101,17 @@ def int2bytespec(n,spec,fmt,print_sym=True,strip=False,add_space=False):
 		return (
 			ret
 			+ ('0' if ret.endswith('.') else '')
-			+ ((' ' if add_space else '') + spec if print_sym else '') )
+			+ ((' ' if add_space else '') + spec if print_sym else ''))
 	else:
 		return (
 			ret
-			+ ((' ' if add_space else '') + spec if print_sym else '') )
+			+ ((' ' if add_space else '') + spec if print_sym else ''))
 
 def parse_bytespec(nbytes):
-	m = re.match(r'([0123456789.]+)(.*)',nbytes)
+	m = re.match(r'([0123456789.]+)(.*)', nbytes)
 	if m:
 		if m.group(2):
-			for k,v in bytespec_map:
+			for k, v in bytespec_map:
 				if k == m.group(2):
 					from decimal import Decimal
 					return int(Decimal(m.group(1)) * v)
@@ -121,9 +121,9 @@ def parse_bytespec(nbytes):
 		else:
 			return int(nbytes)
 
-	die(1,f'{nbytes!r}: invalid byte specifier')
+	die(1, f'{nbytes!r}: invalid byte specifier')
 
-def format_elapsed_days_hr(t,now=None,cached={}):
+def format_elapsed_days_hr(t, now=None, cached={}):
 	e = int((now or time.time()) - t)
 	if not e in cached:
 		days = abs(e) // 86400
@@ -155,7 +155,7 @@ def format_elapsed_hr(t, now=None, cached={}, rel_now=True, show_secs=False):
 		cached[key] = ' '.join(f'{n} {desc}{suf(n)}' for desc, n in data if n) + add_suffix()
 	return cached[key]
 
-def pretty_format(s,width=80,pfx=''):
+def pretty_format(s, width=80, pfx=''):
 	out = []
 	while s:
 		if len(s) <= width:
@@ -166,8 +166,8 @@ def pretty_format(s,width=80,pfx=''):
 		s = s[i+1:]
 	return pfx + ('\n'+pfx).join(out)
 
-def block_format(data,gw=2,cols=8,line_nums=None,data_is_hex=False):
-	assert line_nums in (None,'hex','dec'),"'line_nums' must be one of None, 'hex' or 'dec'"
+def block_format(data, gw=2, cols=8, line_nums=None, data_is_hex=False):
+	assert line_nums in (None, 'hex', 'dec'), "'line_nums' must be one of None, 'hex' or 'dec'"
 	ln_fs = '{:06x}: ' if line_nums == 'hex' else '{:06}: '
 	bytes_per_chunk = gw
 	if data_is_hex:
@@ -180,12 +180,12 @@ def block_format(data,gw=2,cols=8,line_nums=None,data_is_hex=False):
 			for i in range(nchunks)
 	).rstrip() + '\n'
 
-def pretty_hexdump(data,gw=2,cols=8,line_nums=None):
-	return block_format(data.hex(),gw,cols,line_nums,data_is_hex=True)
+def pretty_hexdump(data, gw=2, cols=8, line_nums=None):
+	return block_format(data.hex(), gw, cols, line_nums, data_is_hex=True)
 
 def decode_pretty_hexdump(data):
 	pat = re.compile(fr'^[{hexdigits}]+:\s+')
-	lines = [pat.sub('',line) for line in data.splitlines()]
+	lines = [pat.sub('', line) for line in data.splitlines()]
 	try:
 		return bytes.fromhex(''.join((''.join(lines).split())))
 	except:

@@ -20,17 +20,17 @@
 daemon: Daemon control interface for the MMGen suite
 """
 
-import sys,os,time,importlib
-from subprocess import run,PIPE,CompletedProcess
+import sys, os, time, importlib
+from subprocess import run, PIPE, CompletedProcess
 from collections import namedtuple
 
 from .base_obj import Lockable
 from .color import set_vt100
-from .util import msg,Msg_r,die,remove_dups,oneshot_warning,fmt_list
-from .flags import ClassFlags,ClassOpts
+from .util import msg, Msg_r, die, remove_dups, oneshot_warning, fmt_list
+from .flags import ClassFlags, ClassOpts
 
-_dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version
-_nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
+_dd = namedtuple('daemon_data', ['coind_name', 'coind_version', 'coind_version_str']) # latest tested version
+_nw = namedtuple('coin_networks', ['mainnet', 'testnet', 'regtest'])
 
 class Daemon(Lockable):
 
@@ -47,10 +47,10 @@ class Daemon(Lockable):
 	private_port = None
 	avail_opts = ()
 	avail_flags = () # like opts, but can be set or unset after instantiation
-	_reset_ok = ('debug','wait','pids')
+	_reset_ok = ('debug', 'wait', 'pids')
 	version_info_arg = '--version'
 
-	def __init__(self,cfg,opts=None,flags=None):
+	def __init__(self, cfg, opts=None, flags=None):
 
 		self.cfg = cfg
 		self.platform = sys.platform
@@ -58,40 +58,40 @@ class Daemon(Lockable):
 			self.use_pidfile = False
 			self.use_threads = True
 
-		self.opt = ClassOpts(self,opts)
-		self.flag = ClassFlags(self,flags)
+		self.opt = ClassOpts(self, opts)
+		self.flag = ClassFlags(self, flags)
 		self.debug = self.debug or cfg.debug_daemon
 
-	def exec_cmd_thread(self,cmd):
+	def exec_cmd_thread(self, cmd):
 		import threading
-		tname = ('exec_cmd','exec_cmd_win_console')[self.platform == 'win32' and self.new_console_mswin]
-		t = threading.Thread(target=getattr(self,tname),args=(cmd,))
+		tname = ('exec_cmd', 'exec_cmd_win_console')[self.platform == 'win32' and self.new_console_mswin]
+		t = threading.Thread(target=getattr(self, tname), args=(cmd,))
 		t.daemon = True
 		t.start()
 		if self.platform == 'win32':
 			Msg_r(' \b') # blocks w/o this...crazy
 		return True
 
-	def exec_cmd_win_console(self,cmd):
-		from subprocess import Popen,CREATE_NEW_CONSOLE,STARTUPINFO,STARTF_USESHOWWINDOW,SW_HIDE
-		si = STARTUPINFO(dwFlags=STARTF_USESHOWWINDOW,wShowWindow=SW_HIDE)
-		p = Popen(cmd,creationflags=CREATE_NEW_CONSOLE,startupinfo=si)
+	def exec_cmd_win_console(self, cmd):
+		from subprocess import Popen, CREATE_NEW_CONSOLE, STARTUPINFO, STARTF_USESHOWWINDOW, SW_HIDE
+		si = STARTUPINFO(dwFlags=STARTF_USESHOWWINDOW, wShowWindow=SW_HIDE)
+		p = Popen(cmd, creationflags=CREATE_NEW_CONSOLE, startupinfo=si)
 		p.wait()
 
-	def exec_cmd(self,cmd,is_daemon=False,check_retcode=False):
-		out = (PIPE,None)[is_daemon and self.opt.no_daemonize]
+	def exec_cmd(self, cmd, is_daemon=False, check_retcode=False):
+		out = (PIPE, None)[is_daemon and self.opt.no_daemonize]
 		try:
-			cp = run(cmd,check=False,stdout=out,stderr=out)
+			cp = run(cmd, check=False, stdout=out, stderr=out)
 		except OSError as e:
-			die( 'MMGenCalledProcessError', f'Error starting executable: {type(e).__name__} [Errno {e.errno}]' )
+			die('MMGenCalledProcessError', f'Error starting executable: {type(e).__name__} [Errno {e.errno}]')
 		set_vt100()
 		if check_retcode and cp.returncode:
-			die(1,str(cp))
+			die(1, str(cp))
 		if self.debug:
 			print(cp)
 		return cp
 
-	def run_cmd(self,cmd,silent=False,is_daemon=False,check_retcode=False):
+	def run_cmd(self, cmd, silent=False, is_daemon=False, check_retcode=False):
 
 		if self.debug:
 			msg('\n\n')
@@ -100,14 +100,14 @@ class Daemon(Lockable):
 			msg(f'Starting {self.desc} on port {self.bind_port}')
 
 		if self.debug:
-			msg(f'\nExecuting:\n{fmt_list(cmd,fmt="col",indent="  ")}\n')
+			msg(f'\nExecuting:\n{fmt_list(cmd, fmt="col", indent="  ")}\n')
 
 		if self.use_threads and is_daemon and not self.opt.no_daemonize:
 			ret = self.exec_cmd_thread(cmd)
 		else:
-			ret = self.exec_cmd(cmd,is_daemon,check_retcode)
+			ret = self.exec_cmd(cmd, is_daemon, check_retcode)
 
-		if isinstance(ret,CompletedProcess):
+		if isinstance(ret, CompletedProcess):
 			if ret.stdout and (self.debug or not silent):
 				msg(ret.stdout.decode().rstrip())
 			if ret.stderr and (self.debug or (ret.returncode and not silent)):
@@ -124,7 +124,7 @@ class Daemon(Lockable):
 			# Assumes only one running instance of given daemon.  If multiple daemons are running,
 			# the first PID in the list is returned and self.pids is set to the PID list.
 			ss = f'{self.exec_fn}.exe'
-			cp = self.run_cmd(['ps','-Wl'],silent=True)
+			cp = self.run_cmd(['ps', '-Wl'], silent=True)
 			self.pids = ()
 			# use Windows, not Cygwin, PID
 			pids = tuple(line.split()[3] for line in cp.stdout.decode().splitlines() if ss in line)
@@ -134,10 +134,10 @@ class Daemon(Lockable):
 				return pids[0]
 		elif self.platform in ('linux', 'darwin'):
 			ss = ' '.join(self.start_cmd)
-			cp = self.run_cmd(['pgrep','-f',ss],silent=True)
+			cp = self.run_cmd(['pgrep', '-f', ss], silent=True)
 			if cp.stdout:
 				return cp.stdout.strip().decode()
-		die(2,f'{ss!r} not found in process list, cannot determine PID')
+		die(2, f'{ss!r} not found in process list, cannot determine PID')
 
 	@property
 	def bind_port(self):
@@ -147,7 +147,7 @@ class Daemon(Lockable):
 	def state(self):
 		if self.debug:
 			msg(f'Testing port {self.bind_port}')
-		return 'ready' if self.test_socket('localhost',self.bind_port) else 'stopped'
+		return 'ready' if self.test_socket('localhost', self.bind_port) else 'stopped'
 
 	@property
 	def start_cmds(self):
@@ -156,17 +156,17 @@ class Daemon(Lockable):
 	@property
 	def stop_cmd(self):
 		return (
-			['kill','-Wf',self.pid] if self.platform == 'win32' else
-			['kill','-9',self.pid] if self.force_kill else
-			['kill',self.pid] )
+			['kill', '-Wf', self.pid] if self.platform == 'win32' else
+			['kill', '-9', self.pid] if self.force_kill else
+			['kill', self.pid])
 
-	def cmd(self,action,*args,**kwargs):
-		return getattr(self,action)(*args,**kwargs)
+	def cmd(self, action, *args, **kwargs):
+		return getattr(self, action)(*args, **kwargs)
 
-	def cli(self,*cmds,silent=False):
-		return self.run_cmd(self.cli_cmd(*cmds),silent=silent)
+	def cli(self, *cmds, silent=False):
+		return self.run_cmd(self.cli_cmd(*cmds), silent=silent)
 
-	def state_msg(self,extra_text=None):
+	def state_msg(self, extra_text=None):
 		try:
 			pid = self.pid
 		except:
@@ -176,12 +176,12 @@ class Daemon(Lockable):
 			f'{self.desc} {extra_text}running',
 			'pid N/A' if pid is None or self.pids or self.state == 'stopped' else f'pid {pid}',
 			f'port {self.bind_port}',
-			w = 60 )
+			w = 60)
 
 	def pre_start(self):
 		pass
 
-	def start(self,quiet=False,silent=False):
+	def start(self, quiet=False, silent=False):
 		if self.state == 'ready':
 			if not (quiet or silent):
 				msg(self.state_msg(extra_text='already'))
@@ -193,24 +193,24 @@ class Daemon(Lockable):
 
 		if not silent:
 			msg(f'Starting {self.desc} on port {self.bind_port}')
-		ret = self.run_cmd(self.start_cmd,silent=True,is_daemon=True,check_retcode=True)
+		ret = self.run_cmd(self.start_cmd, silent=True, is_daemon=True, check_retcode=True)
 
 		if self.wait:
 			self.wait_for_state('ready')
 
 		return ret
 
-	def stop(self,quiet=False,silent=False):
+	def stop(self, quiet=False, silent=False):
 		if self.state == 'ready':
 			if not silent:
 				msg(f'Stopping {self.desc} on port {self.bind_port}')
 			if self.force_kill:
 				run(['sync'])
-			ret = self.run_cmd(self.stop_cmd,silent=True)
+			ret = self.run_cmd(self.stop_cmd, silent=True)
 
 			if self.pids:
 				msg('Warning: multiple PIDs [{}] -- we may be stopping the wrong instance'.format(
-					fmt_list(self.pids,fmt='bare')
+					fmt_list(self.pids, fmt='bare')
 				))
 			if self.wait:
 				self.wait_for_state('stopped')
@@ -221,49 +221,49 @@ class Daemon(Lockable):
 				msg(f'{self.desc} on port {self.bind_port} not running')
 			return True
 
-	def restart(self,silent=False):
+	def restart(self, silent=False):
 		self.stop(silent=silent)
 		return self.start(silent=silent)
 
-	def test_socket(self,host,port,timeout=10):
+	def test_socket(self, host, port, timeout=10):
 		import socket
 		try:
-			socket.create_connection((host,port),timeout=timeout).close()
+			socket.create_connection((host, port), timeout=timeout).close()
 		except:
 			return False
 		else:
 			return True
 
-	def wait_for_state(self,req_state):
+	def wait_for_state(self, req_state):
 		for _ in range(300):
 			if self.state == req_state:
 				return True
 			time.sleep(0.2)
-		die(2,f'Wait for state {req_state!r} timeout exceeded for {self.desc} (port {self.bind_port})')
+		die(2, f'Wait for state {req_state!r} timeout exceeded for {self.desc} (port {self.bind_port})')
 
 	@classmethod
 	def get_exec_version_str(cls):
 		try:
-			cp = run([cls.exec_fn,cls.version_info_arg],stdout=PIPE,stderr=PIPE,check=True)
+			cp = run([cls.exec_fn, cls.version_info_arg], stdout=PIPE, stderr=PIPE, check=True)
 		except Exception as e:
-			die(2,f'{e}\nUnable to execute {cls.exec_fn}')
+			die(2, f'{e}\nUnable to execute {cls.exec_fn}')
 
 		if cp.returncode:
-			die(2,f'Unable to execute {cls.exec_fn}')
+			die(2, f'Unable to execute {cls.exec_fn}')
 		else:
 			res = cp.stdout.decode().splitlines()
-			return ( res[0] if len(res) == 1 else [s for s in res if 'ersion' in s][0] ).strip()
+			return (res[0] if len(res) == 1 else [s for s in res if 'ersion' in s][0]).strip()
 
 class RPCDaemon(Daemon):
 
 	avail_opts = ('no_daemonize',)
 
-	def __init__(self,cfg,opts=None,flags=None):
-		super().__init__(cfg,opts=opts,flags=flags)
+	def __init__(self, cfg, opts=None, flags=None):
+		super().__init__(cfg, opts=opts, flags=flags)
 		self.desc = '{} {} {}RPC daemon'.format(
 			self.rpc_type,
-			getattr(self.proto.network_names,self.proto.network),
-			'test suite ' if self.test_suite else '' )
+			getattr(self.proto.network_names, self.proto.network),
+			'test suite ' if self.test_suite else '')
 		self._set_ok += ('usr_daemon_args',)
 		self.usr_daemon_args = []
 
@@ -272,22 +272,22 @@ class RPCDaemon(Daemon):
 		return [self.exec_fn] + self.daemon_args + self.usr_daemon_args
 
 class CoinDaemon(Daemon):
-	networks = ('mainnet','testnet','regtest')
+	networks = ('mainnet', 'testnet', 'regtest')
 	cfg_file_hdr = ''
 	avail_flags = ('keep_cfg_file',)
-	avail_opts = ('no_daemonize','online')
+	avail_opts = ('no_daemonize', 'online')
 	testnet_dir = None
 	test_suite_port_shift = 1237
 	rpc_user = None
 	rpc_password = None
 
-	_cd = namedtuple('coins_data',['daemon_ids'])
+	_cd = namedtuple('coins_data', ['daemon_ids'])
 	coins = {
 		'BTC': _cd(['bitcoin_core']),
 		'BCH': _cd(['bitcoin_cash_node']),
 		'LTC': _cd(['litecoin_core']),
 		'XMR': _cd(['monero']),
-		'ETH': _cd(['geth','erigon','openethereum']),
+		'ETH': _cd(['geth', 'erigon', 'openethereum']),
 		'ETC': _cd(['parity']),
 	}
 
@@ -300,7 +300,7 @@ class CoinDaemon(Daemon):
 		message = 'blacklisted daemon: {!r}'
 
 	@classmethod
-	def get_daemon_ids(cls,cfg,coin):
+	def get_daemon_ids(cls, cfg, coin):
 
 		ret = cls.coins[coin].daemon_ids
 		if 'erigon' in ret and not cfg.enable_erigon:
@@ -310,14 +310,14 @@ class CoinDaemon(Daemon):
 			def gen():
 				for daemon_id in ret:
 					if daemon_id in blacklist:
-						cls.warn_blacklisted(div=daemon_id,fmt_args=[daemon_id])
+						cls.warn_blacklisted(div=daemon_id, fmt_args=[daemon_id])
 					else:
 						yield daemon_id
 			ret = list(gen())
 		return ret
 
 	@classmethod
-	def get_daemon(cls,cfg,coin,daemon_id,proto=None):
+	def get_daemon(cls, cfg, coin, daemon_id, proto=None):
 		if proto:
 			proto_cls = type(proto)
 		else:
@@ -325,17 +325,17 @@ class CoinDaemon(Daemon):
 			proto_cls = init_proto(cfg, coin, return_cls=True)
 		return getattr(
 			importlib.import_module(f'mmgen.proto.{proto_cls.base_proto_coin.lower()}.daemon'),
-			daemon_id+'_daemon' )
+			daemon_id+'_daemon')
 
 	@classmethod
-	def get_network_ids(cls,cfg):
+	def get_network_ids(cls, cfg):
 		from .protocol import CoinProtocol
 		def gen():
 			for coin in cls.coins:
-				for daemon_id in cls.get_daemon_ids(cfg,coin):
-					for network in cls.get_daemon( cfg, coin, daemon_id ).networks:
-						yield CoinProtocol.Base.create_network_id(coin,network)
-		return remove_dups(list(gen()),quiet=True)
+				for daemon_id in cls.get_daemon_ids(cfg, coin):
+					for network in cls.get_daemon(cfg, coin, daemon_id).networks:
+						yield CoinProtocol.Base.create_network_id(coin, network)
+		return remove_dups(list(gen()), quiet=True)
 
 	def __new__(cls,
 			cfg,
@@ -347,7 +347,7 @@ class CoinDaemon(Daemon):
 			port_shift = None,
 			p2p_port   = None,
 			datadir    = None,
-			daemon_id  = None ):
+			daemon_id  = None):
 
 		assert network_id or proto,        'CoinDaemon_chk1'
 		assert not (network_id and proto), 'CoinDaemon_chk2'
@@ -358,20 +358,20 @@ class CoinDaemon(Daemon):
 			coin       = proto.coin
 		else:
 			network_id = network_id.lower()
-			from .protocol import CoinProtocol,init_proto
-			proto = init_proto( cfg, network_id=network_id )
-			coin,network = CoinProtocol.Base.parse_network_id(network_id)
+			from .protocol import CoinProtocol, init_proto
+			proto = init_proto(cfg, network_id=network_id)
+			coin, network = CoinProtocol.Base.parse_network_id(network_id)
 			coin = coin.upper()
 
-		daemon_ids = cls.get_daemon_ids(cfg,coin)
+		daemon_ids = cls.get_daemon_ids(cfg, coin)
 		if not daemon_ids:
-			die(1,f'No configured daemons for coin {coin}!')
+			die(1, f'No configured daemons for coin {coin}!')
 		daemon_id = daemon_id or cfg.daemon_id or daemon_ids[0]
 
 		if daemon_id not in daemon_ids:
-			die(1,f'{daemon_id!r}: invalid daemon_id - valid choices: {fmt_list(daemon_ids)}')
+			die(1, f'{daemon_id!r}: invalid daemon_id - valid choices: {fmt_list(daemon_ids)}')
 
-		me = Daemon.__new__(cls.get_daemon( cfg, None, daemon_id, proto=proto ))
+		me = Daemon.__new__(cls.get_daemon(cfg, None, daemon_id, proto=proto))
 
 		assert network in me.networks, f'{network!r}: unsupported network for daemon {daemon_id}'
 		me.network_id = network_id
@@ -392,30 +392,30 @@ class CoinDaemon(Daemon):
 			port_shift = None,
 			p2p_port   = None,
 			datadir    = None,
-			daemon_id  = None ):
+			daemon_id  = None):
 
 		self.test_suite = test_suite
 
-		super().__init__(cfg=cfg,opts=opts,flags=flags)
+		super().__init__(cfg=cfg, opts=opts, flags=flags)
 
-		self._set_ok += ('shared_args','usr_coind_args')
+		self._set_ok += ('shared_args', 'usr_coind_args')
 		self.shared_args = []
 		self.usr_coind_args = []
 
-		for k,v in self.daemon_data._asdict().items():
-			setattr(self,k,v)
+		for k, v in self.daemon_data._asdict().items():
+			setattr(self, k, v)
 
 		self.desc = '{} {} {}daemon'.format(
 			self.coind_name,
-			getattr(self.proto.network_names,self.network),
-			'test suite ' if test_suite else '' )
+			getattr(self.proto.network_names, self.network),
+			'test suite ' if test_suite else '')
 
 		# user-set values take precedence
 		self.datadir = os.path.abspath(datadir or cfg.daemon_data_dir or self.init_datadir())
 		self.non_dfl_datadir = bool(datadir or cfg.daemon_data_dir or test_suite or self.network == 'regtest')
 
 		# init_datadir() may have already initialized logdir
-		self.logdir = os.path.abspath(getattr(self,'logdir',self.datadir))
+		self.logdir = os.path.abspath(getattr(self, 'logdir', self.datadir))
 
 		ps_adj = (port_shift or 0) + (self.test_suite_port_shift if test_suite else 0)
 
@@ -424,10 +424,10 @@ class CoinDaemon(Daemon):
 		self.p2p_port = (
 			p2p_port or (
 				self.get_p2p_port() + ps_adj if self.get_p2p_port() and (test_suite or ps_adj) else None
-			) if self.network != 'regtest' else None )
+			) if self.network != 'regtest' else None)
 
-		if hasattr(self,'private_ports'):
-			self.private_port = getattr(self.private_ports,self.network)
+		if hasattr(self, 'private_ports'):
+			self.private_port = getattr(self.private_ports, self.network)
 
 		# bind_port == self.private_port or self.rpc_port
 		self.pidfile = f'{self.logdir}/{self.id}-{self.network}-daemon-{self.bind_port}.pid'
@@ -437,7 +437,7 @@ class CoinDaemon(Daemon):
 
 	def init_datadir(self):
 		if self.test_suite:
-			return os.path.join('test','daemons',self.network_id)
+			return os.path.join('test', 'daemons', self.network_id)
 		else:
 			return os.path.join(*self.datadirs[self.platform])
 
@@ -446,7 +446,7 @@ class CoinDaemon(Daemon):
 		return self.datadir
 
 	def get_rpc_port(self):
-		return getattr(self.rpc_ports,self.network)
+		return getattr(self.rpc_ports, self.network)
 
 	def get_p2p_port(self):
 		return None
@@ -456,27 +456,27 @@ class CoinDaemon(Daemon):
 		return ([self.exec_fn]
 				+ self.coind_args
 				+ self.shared_args
-				+ self.usr_coind_args )
+				+ self.usr_coind_args)
 
-	def cli_cmd(self,*cmds):
+	def cli_cmd(self, *cmds):
 		return ([self.cli_fn]
 				+ self.shared_args
-				+ list(cmds) )
+				+ list(cmds))
 
-	def start(self,*args,**kwargs):
+	def start(self, *args, **kwargs):
 		assert self.test_suite or self.network == 'regtest', 'start() restricted to test suite and regtest'
-		return super().start(*args,**kwargs)
+		return super().start(*args, **kwargs)
 
-	def stop(self,*args,**kwargs):
+	def stop(self, *args, **kwargs):
 		assert self.test_suite or self.network == 'regtest', 'stop() restricted to test suite and regtest'
-		return super().stop(*args,**kwargs)
+		return super().stop(*args, **kwargs)
 
 	def pre_start(self):
-		os.makedirs(self.datadir,exist_ok=True)
+		os.makedirs(self.datadir, exist_ok=True)
 
 		if self.test_suite or self.network == 'regtest':
 			if self.cfg_file and not self.flag.keep_cfg_file:
-				with open(f'{self.datadir}/{self.cfg_file}','w') as fp:
+				with open(f'{self.datadir}/{self.cfg_file}', 'w') as fp:
 					fp.write(self.cfg_file_hdr)
 
 		if self.use_pidfile and os.path.exists(self.pidfile):
@@ -491,7 +491,7 @@ class CoinDaemon(Daemon):
 			run([
 				('rm' if self.platform == 'win32' else '/bin/rm'),
 				'-rf',
-				self.datadir ])
+				self.datadir])
 			set_vt100()
 		else:
 			msg(f'Cannot remove {self.network_datadir!r} - daemon is not stopped')

@@ -20,10 +20,10 @@
 mn_entry.py - Mnemonic user entry methods for the MMGen suite
 """
 
-import sys,time
+import sys, time
 
-from .util import msg,msg_r,fmt,fmt_list,capfirst,die,ascii_lowercase
-from .term import get_char,get_char_raw
+from .util import msg, msg_r, fmt, fmt_list, capfirst, die, ascii_lowercase
+from .term import get_char, get_char_raw
 from .color import cyan
 
 _return_chars = '\n\r '
@@ -43,19 +43,19 @@ class MnEntryMode:
 		pad characters per word are permitted.
 	"""
 
-	def __init__(self,mne):
+	def __init__(self, mne):
 		self.pad_max_info = '  ' + self.pad_max_info.lstrip() if self.pad_max else '\n'
 		self.mne = mne
 
-	def get_char(self,s):
+	def get_char(self, s):
 		did_erase = False
 		while True:
-			ch = get_char_raw('',num_bytes=1)
+			ch = get_char_raw('', num_bytes=1)
 			if s and ch in _erase_chars:
 				s = s[:-1]
 				did_erase = True
 			else:
-				return (ch,s,did_erase)
+				return (ch, s, did_erase)
 
 class MnEntryModeFull(MnEntryMode):
 	name = 'Full'
@@ -73,10 +73,10 @@ class MnEntryModeFull(MnEntryMode):
 	def ss_len(self):
 		return self.mne.longest_word
 
-	def get_word(self,mne):
-		s,pad = ('', 0)
+	def get_word(self, mne):
+		s, pad = ('', 0)
 		while True:
-			ch,s,_ = self.get_char(s)
+			ch, s, _ = self.get_char(s)
 			if ch in _return_chars:
 				if s:
 					break
@@ -87,7 +87,7 @@ class MnEntryModeFull(MnEntryMode):
 				if pad + len(s) > self.ss_len:
 					break
 
-		return mne.idx(s,'full')
+		return mne.idx(s, 'full')
 
 class MnEntryModeShort(MnEntryMode):
 	name = 'Short'
@@ -104,7 +104,7 @@ class MnEntryModeShort(MnEntryMode):
 	"""
 	pad_max = 16
 
-	def __init__(self,mne):
+	def __init__(self, mne):
 		if mne.wl_id == 'bip39':
 			self.prompt_info += '  ' + self.prompt_info_bip39_add.strip()
 		super().__init__(mne)
@@ -113,10 +113,10 @@ class MnEntryModeShort(MnEntryMode):
 	def ss_len(self):
 		return self.mne.uniq_ss_len
 
-	def get_word(self,mne):
-		s,pad = ('', 0)
+	def get_word(self, mne):
+		s, pad = ('', 0)
 		while True:
-			ch,s,_ = self.get_char(s)
+			ch, s, _ = self.get_char(s)
 			if ch in _return_chars:
 				if s:
 					break
@@ -129,7 +129,7 @@ class MnEntryModeShort(MnEntryMode):
 				if pad > self.pad_max:
 					break
 
-		return mne.idx(s,'short')
+		return mne.idx(s, 'short')
 
 class MnEntryModeFixed(MnEntryMode):
 	name = 'Fixed'
@@ -140,14 +140,14 @@ class MnEntryModeFixed(MnEntryMode):
 	prompt_info = """
 		Each word is entered automatically once exactly {ssl} characters are typed.
 	"""
-	prompt_info_add = ( """
+	prompt_info_add = ("""
 		Words shorter than {ssl} letters must be padded to fit.
 		""", """
 		{sw}-letter words must be padded with one pad character.
-		""" )
+		""")
 	pad_max = None
 
-	def __init__(self,mne):
+	def __init__(self, mne):
 		self.len_diff = mne.uniq_ss_len - mne.shortest_word
 		self.prompt_info += self.prompt_info_add[self.len_diff==1].lstrip()
 		super().__init__(mne)
@@ -156,23 +156,23 @@ class MnEntryModeFixed(MnEntryMode):
 	def ss_len(self):
 		return self.mne.uniq_ss_len
 
-	def get_word(self,mne):
-		s,pad = ('', 0)
+	def get_word(self, mne):
+		s, pad = ('', 0)
 		while True:
-			ch,s,_ = self.get_char(s)
+			ch, s, _ = self.get_char(s)
 			if ch in _return_chars:
 				if s:
 					break
 			elif ch in ascii_lowercase:
 				s += ch
 				if len(s) + pad == self.ss_len:
-					return mne.idx(s,'short')
+					return mne.idx(s, 'short')
 			else:
 				pad += 1
 				if pad > self.len_diff:
 					return None
 				if len(s) + pad == self.ss_len:
-					return mne.idx(s,'short')
+					return mne.idx(s, 'short')
 
 class MnEntryModeMinimal(MnEntryMode):
 	name = 'Minimal'
@@ -191,26 +191,26 @@ class MnEntryModeMinimal(MnEntryMode):
 	pad_max = 16
 	ss_len = None
 
-	def get_word(self,mne):
-		s,pad = ('', 0)
-		lo,hi = (0, len(mne.wl) - 1)
+	def get_word(self, mne):
+		s, pad = ('', 0)
+		lo, hi = (0, len(mne.wl) - 1)
 		while True:
-			ch,s,did_erase = self.get_char(s)
+			ch, s, did_erase = self.get_char(s)
 			if did_erase:
-				lo,hi = (0, len(mne.wl) - 1)
+				lo, hi = (0, len(mne.wl) - 1)
 			if ch in _return_chars:
 				if s:
-					return mne.idx(s,'full',lo_idx=lo,hi_idx=hi)
+					return mne.idx(s, 'full', lo_idx=lo, hi_idx=hi)
 			elif ch in ascii_lowercase:
 				s += ch
-				ret = mne.idx(s,'minimal',lo_idx=lo,hi_idx=hi)
-				if not isinstance(ret,tuple):
+				ret = mne.idx(s, 'minimal', lo_idx=lo, hi_idx=hi)
+				if not isinstance(ret, tuple):
 					return ret
-				lo,hi = ret
+				lo, hi = ret
 			else:
 				pad += 1
 				if pad > self.pad_max:
-					return mne.idx(s,'full',lo_idx=lo,hi_idx=hi)
+					return mne.idx(s, 'full', lo_idx=lo, hi_idx=hi)
 
 class MnemonicEntry:
 
@@ -225,13 +225,13 @@ class MnemonicEntry:
 			acters may be typed before, after, or in the middle of words.
 		""",
 	}
-	word_prompt = ('Enter word #{}: ','Incorrect entry. Repeat word #{}: ')
+	word_prompt = ('Enter word #{}: ', 'Incorrect entry. Repeat word #{}: ')
 	usr_dfl_entry_mode = None
 	_lw = None
 	_sw = None
 	_usl = None
 
-	def __init__(self,cfg):
+	def __init__(self, cfg):
 		self.cfg = cfg
 		self.set_dfl_entry_mode()
 
@@ -252,7 +252,7 @@ class MnemonicEntry:
 		if not self._usl:
 			usl = 0
 			for i in range(len(self.wl)-1):
-				w1,w2 = self.wl[i],self.wl[i+1]
+				w1, w2 = self.wl[i], self.wl[i+1]
 				while True:
 					if w1[:usl] == w2[:usl]:
 						usl += 1
@@ -261,7 +261,7 @@ class MnemonicEntry:
 			self._usl = usl
 		return self._usl
 
-	def idx(self,w,entry_mode,lo_idx=None,hi_idx=None):
+	def idx(self, w, entry_mode, lo_idx=None, hi_idx=None):
 		"""
 		Return values:
 		  - all modes:
@@ -285,9 +285,9 @@ class MnemonicEntry:
 			if cur_w == w:
 				if entry_mode == 'minimal':
 					if idx > 0 and self.wl[idx-1][:len(w)] == w:
-						return (lo,hi)
+						return (lo, hi)
 					elif idx < last_idx and self.wl[idx+1][:len(w)] == w:
-						return (lo,hi)
+						return (lo, hi)
 				return idx
 			elif hi <= lo:
 				return None
@@ -296,17 +296,17 @@ class MnemonicEntry:
 			else:
 				lo = idx + 1
 
-	def get_cls_by_entry_mode(self,entry_mode):
+	def get_cls_by_entry_mode(self, entry_mode):
 		return getattr(sys.modules[__name__], 'MnEntryMode' + capfirst(entry_mode))
 
 	def choose_entry_mode(self):
 		msg('Choose an entry mode:\n')
 		em_objs = [self.get_cls_by_entry_mode(entry_mode)(self) for entry_mode in self.entry_modes]
-		for n,mode in enumerate(em_objs,1):
+		for n, mode in enumerate(em_objs, 1):
 			msg('  {}) {:8} {}'.format(
 				n,
 				mode.name + ':',
-				fmt(mode.choose_info,' '*14).lstrip().format(usl=self.uniq_ss_len),
+				fmt(mode.choose_info, ' '*14).lstrip().format(usl=self.uniq_ss_len),
 			))
 		prompt = f'Type a number, or hit ENTER for the default ({capfirst(self.dfl_entry_mode)}): '
 		erase = '\r' + ' ' * (len(prompt)+19) + '\r'
@@ -315,7 +315,7 @@ class MnemonicEntry:
 			if uret == '':
 				msg_r(erase)
 				return self.get_cls_by_entry_mode(self.dfl_entry_mode)(self)
-			elif uret in [str(i) for i in range(1,len(em_objs)+1)]:
+			elif uret in [str(i) for i in range(1, len(em_objs)+1)]:
 				msg_r(erase)
 				return em_objs[int(uret)-1]
 			else:
@@ -323,7 +323,7 @@ class MnemonicEntry:
 				time.sleep(self.cfg.err_disp_timeout)
 				msg_r(erase)
 
-	def get_mnemonic_from_user(self,mn_len,validate=True):
+	def get_mnemonic_from_user(self, mn_len, validate=True):
 		mll = list(self.bconv.seedlen_map_rev)
 		assert mn_len in mll, f'{mn_len}: invalid mnemonic length (must be one of {mll})'
 
@@ -349,8 +349,8 @@ class MnemonicEntry:
 					sw       = self.shortest_word,
 			))
 
-		clear_line = '\n' if self.cfg.test_suite else '{r}{s}{r}'.format(r='\r',s=' '*40)
-		idx,idxs = 1,[] # initialize idx to a non-None value
+		clear_line = '\n' if self.cfg.test_suite else '{r}{s}{r}'.format(r='\r', s=' '*40)
+		idx, idxs = 1, [] # initialize idx to a non-None value
 
 		while len(idxs) < mn_len:
 			msg_r(self.word_prompt[idx is None].format(len(idxs)+1))
@@ -369,7 +369,7 @@ class MnemonicEntry:
 		return ' '.join(words)
 
 	@classmethod
-	def get_cls_by_wordlist(cls,wl):
+	def get_cls_by_wordlist(cls, wl):
 		d = {
 			'mmgen': MnemonicEntryMMGen,
 			'bip39': MnemonicEntryBIP39,
@@ -385,7 +385,7 @@ class MnemonicEntry:
 		In addition to setting the default entry mode for the current wordlist, checks validity
 		of all user-configured entry modes
 		"""
-		for k,v in self.cfg.mnemonic_entry_modes.items():
+		for k, v in self.cfg.mnemonic_entry_modes.items():
 			cls = self.get_cls_by_wordlist(k)
 			if v not in cls.entry_modes:
 				errmsg = f"""
@@ -393,37 +393,37 @@ class MnemonicEntry:
 					Entry mode {v!r} not recognized for wordlist {k!r}:
 					Valid choices: {fmt_list(cls.entry_modes)}
 				"""
-				die(2, '\n' + fmt(errmsg,indent='  '))
+				die(2, '\n' + fmt(errmsg, indent='  '))
 			if cls == type(self):
 				self.usr_dfl_entry_mode = v
 
 class MnemonicEntryMMGen(MnemonicEntry):
 	wl_id = 'mmgen'
 	modname = 'baseconv'
-	entry_modes = ('full','minimal','fixed')
+	entry_modes = ('full', 'minimal', 'fixed')
 	dfl_entry_mode = 'minimal'
 	has_chksum = False
 
 class MnemonicEntryBIP39(MnemonicEntry):
 	wl_id = 'bip39'
 	modname = 'bip39'
-	entry_modes = ('full','short','fixed')
+	entry_modes = ('full', 'short', 'fixed')
 	dfl_entry_mode = 'fixed'
 	has_chksum = True
 
 class MnemonicEntryMonero(MnemonicEntry):
 	wl_id = 'xmrseed'
 	modname = 'xmrseed'
-	entry_modes = ('full','short')
+	entry_modes = ('full', 'short')
 	dfl_entry_mode = 'short'
 	has_chksum = True
 
-def mn_entry(cfg,wl_id,entry_mode=None):
+def mn_entry(cfg, wl_id, entry_mode=None):
 	if wl_id == 'words':
 		wl_id = 'mmgen'
 	me = MnemonicEntry.get_cls_by_wordlist(wl_id)(cfg)
 	import importlib
-	me.bconv = getattr(importlib.import_module(f'mmgen.{me.modname}'),me.modname)(wl_id)
+	me.bconv = getattr(importlib.import_module(f'mmgen.{me.modname}'), me.modname)(wl_id)
 	me.wl = me.bconv.digits
 	if entry_mode:
 		me.em = getattr(sys.modules[__name__], 'MnEntryMode' + capfirst(entry_mode))(me)
