@@ -4,9 +4,9 @@
 test.unit_tests_d.ut_devtools: devtools unit tests for the MMGen suite
 """
 
-import os,json
+import os, json
 from mmgen.util import msg
-from mmgen.devtools import print_diff,get_ndiff,print_stack_trace,pmsg_r,pmsg,Pmsg
+from mmgen.devtools import print_diff, get_ndiff, print_stack_trace, pmsg_r, pmsg, Pmsg
 from . import unit_tests_base
 
 textA = """
@@ -47,34 +47,34 @@ def print_hdr(hdr):
 	print('{a} {b} {c}'.format(
 		a = '-' * ((78 - len(hdr))//2),
 		b = hdr,
-		c = '-' * ((78 - len(hdr))//2 + (len(hdr) % 2)) ))
+		c = '-' * ((78 - len(hdr))//2 + (len(hdr) % 2))))
 
 # TODO: add data checks
 class unit_tests(unit_tests_base):
 
 	silence_output = True
 
-	def _post_subtest(self,name,subname,ut):
+	def _post_subtest(self, name, subname, ut):
 		print('-' * 80 + '\n')
 
-	def diff(self,name,ut):
+	def diff(self, name, ut):
 		for data in text_data + json_data:
 			print_hdr(data[-1])
 			print_diff(*data[:-1])
 		return True
 
-	def ndiff(self,name,ut):
+	def ndiff(self, name, ut):
 		for data in text_data:
 			print_hdr(data[-1])
 			print('\n'.join(get_ndiff(*data[:2])))
 		return True
 
-	def stack_trace(self,name,ut):
+	def stack_trace(self, name, ut):
 		print_hdr('stack trace')
-		print_stack_trace('Test',fh_list=[open(os.devnull,'w')],trim=0)
+		print_stack_trace('Test', fh_list=[open(os.devnull, 'w')], trim=0)
 		return True
 
-	def obj_pmsg(self,name,ut):
+	def obj_pmsg(self, name, ut):
 		from mmgen.protocol import init_proto
 		from mmgen.seed import Seed
 		from mmgen.addrlist import AddrList
@@ -82,26 +82,26 @@ class unit_tests(unit_tests_base):
 		print_hdr('MMGenObject.pmsg()')
 		AddrList(
 			cfg         = cfg,
-			proto       = init_proto( cfg, 'btc' ),
-			seed        = Seed(cfg,seed_bin=bytes.fromhex('bead'*16)),
+			proto       = init_proto(cfg, 'btc'),
+			seed        = Seed(cfg, seed_bin=bytes.fromhex('bead'*16)),
 			addr_idxs   = '1',
 			mmtype      = 'B',
-			skip_chksum = True ).pmsg(color='green')
+			skip_chksum = True).pmsg(color='green')
 		return True
 
-	def pmsg(self,name,ut):
-		colors = (None,'red','green','yellow','blue','purple')
+	def pmsg(self, name, ut):
+		colors = (None, 'red', 'green', 'yellow', 'blue', 'purple')
 
 		msg('\npmsg_r():')
 		for color in colors:
-			pmsg_r({'color':color},color=color)
+			pmsg_r({'color':color}, color=color)
 
 		msg('\n\npmsg():')
 		for color in colors:
-			pmsg({'color':color},color=color)
+			pmsg({'color':color}, color=color)
 
 		msg('\nPmsg():')
 		for color in colors:
-			Pmsg({'color':color},color=color)
+			Pmsg({'color':color}, color=color)
 
 		return True

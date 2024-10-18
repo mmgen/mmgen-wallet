@@ -4,10 +4,10 @@
 test.unit_tests_d.ut_tx: TX unit tests for the MMGen suite
 """
 
-import os,re
+import os, re
 
-from mmgen.devtools import get_diff,get_ndiff
-from mmgen.tx import NewTX,CompletedTX,UnsignedTX
+from mmgen.devtools import get_diff, get_ndiff
+from mmgen.tx import NewTX, CompletedTX, UnsignedTX
 from mmgen.tx.file import MMGenTxFile
 from mmgen.daemon import CoinDaemon
 from mmgen.protocol import init_proto
@@ -19,7 +19,7 @@ async def do_txfile_test(desc, fns, cfg=cfg, check=False):
 	qmsg(f'  Testing CompletedTX initializer ({desc})')
 	for fn in fns:
 		qmsg(f'     parsing: {os.path.basename(fn)}')
-		fpath = os.path.join('test','ref',fn)
+		fpath = os.path.join('test', 'ref', fn)
 		tx = await CompletedTX(cfg=cfg, filename=fpath, quiet_open=True)
 
 		vmsg('\n' + tx.info.format())
@@ -28,7 +28,7 @@ async def do_txfile_test(desc, fns, cfg=cfg, check=False):
 		fn_gen = f.make_filename()
 
 		if cfg.debug_utf8:
-			fn_gen = fn_gen.replace('-α','')
+			fn_gen = fn_gen.replace('-α', '')
 
 		assert fn_gen == os.path.basename(fn), f'{fn_gen} != {fn}'
 
@@ -45,13 +45,13 @@ class unit_tests:
 
 	altcoin_deps = ('txfile_alt', 'txfile_alt_legacy')
 
-	async def tx(self,name,ut):
+	async def tx(self, name, ut):
 		qmsg('  Testing NewTX initializer')
-		d = CoinDaemon( cfg, 'btc', test_suite=True )
+		d = CoinDaemon(cfg, 'btc', test_suite=True)
 		d.start()
 
-		proto = init_proto( cfg, 'btc', need_amt=True )
-		await NewTX( cfg=cfg, proto=proto )
+		proto = init_proto(cfg, 'btc', need_amt=True)
+		await NewTX(cfg=cfg, proto=proto)
 
 		d.stop()
 		d.remove_datadir()
@@ -108,7 +108,7 @@ class unit_tests:
 			)
 		)
 
-	def errors(self,name,ut):
+	def errors(self, name, ut):
 		async def bad1():
 			await CompletedTX(cfg, filename='foo')
 		def bad2():

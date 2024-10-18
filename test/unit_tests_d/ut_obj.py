@@ -34,7 +34,7 @@ def coinamt_test(cls, aa, bb, ut):
 	do('a', a, A)
 	do('b', b, B)
 	do('b + a', b + a, B + A)
-	do('sum([b,a])', sum([b,a]), B + A)
+	do('sum([b,a])', sum([b, a]), B + A)
 	do('b - a', b - a, B - A)
 	do('b * a', b * a, B * A)
 	do('b * A', b * A, B * A)

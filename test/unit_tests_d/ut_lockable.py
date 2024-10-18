@@ -66,8 +66,8 @@ class unit_tests:
 
 		class MyLockable(Lockable): # class without attrs
 			_autolock = False
-			_set_ok = ('foo','baz','alpha','beta','gamma','delta','epsilon')
-			_reset_ok = ('bar','baz')
+			_set_ok = ('foo', 'baz', 'alpha', 'beta', 'gamma', 'delta', 'epsilon')
+			_reset_ok = ('bar', 'baz')
 
 		lc = MyLockable()
 		lc.foo = None
@@ -121,8 +121,8 @@ class unit_tests:
 		class MyLockableClsCheck(Lockable): # class with attrs
 			_autolock = False
 			_use_class_attr = True
-			_set_ok = ('foo','baz')
-			_reset_ok = ('bar','baz')
+			_set_ok = ('foo', 'baz')
+			_reset_ok = ('bar', 'baz')
 			foo = None
 			bar = 1
 			baz = 3.5
@@ -171,7 +171,7 @@ class unit_tests:
 		assert lcdn.bar is None
 
 		class MyLockableBad(Lockable):
-			_set_ok = ('foo','bar')
+			_set_ok = ('foo', 'bar')
 			foo = 1
 
 		def bad1(): lca.foo = None

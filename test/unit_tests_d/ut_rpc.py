@@ -7,15 +7,15 @@ test.unit_tests_d.ut_rpc: RPC unit test for the MMGen suite
 import sys, os
 
 from mmgen.cfg import Config
-from mmgen.color import yellow,cyan
-from mmgen.util import msg,gmsg,make_timestr,pp_fmt,die
+from mmgen.color import yellow, cyan
+from mmgen.util import msg, gmsg, make_timestr, pp_fmt, die
 from mmgen.protocol import init_proto
 from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
-from mmgen.proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
+from mmgen.proto.xmr.rpc import MoneroRPCClient, MoneroWalletRPCClient
 from mmgen.proto.xmr.daemon import MoneroWalletDaemon
 
-from ..include.common import cfg,qmsg,vmsg
+from ..include.common import cfg, qmsg, vmsg
 
 async def cfg_file_auth_test(cfg, d, bad_auth=False):
 	m = 'missing credentials' if bad_auth else f'credentials from {d.cfg_file}'
@@ -25,22 +25,22 @@ async def cfg_file_auth_test(cfg, d, bad_auth=False):
 	os.makedirs(d.network_datadir)
 
 	if not bad_auth:
-		cf = os.path.join(d.datadir,d.cfg_file)
-		with open(cf,'a') as fp:
+		cf = os.path.join(d.datadir, d.cfg_file)
+		with open(cf, 'a') as fp:
 			fp.write('\nrpcuser = ut_rpc\nrpcpassword = ut_rpc_passw0rd\n')
 		d.flag.keep_cfg_file = True
 
 	d.start()
 
 	if bad_auth:
-		os.rename(d.auth_cookie_fn,d.auth_cookie_fn+'.bak')
+		os.rename(d.auth_cookie_fn, d.auth_cookie_fn+'.bak')
 		try:
 			await rpc_init(cfg, d.proto)
 		except Exception as e:
 			vmsg(yellow(str(e)))
 		else:
-			die(3,'No error on missing credentials!')
-		os.rename(d.auth_cookie_fn+'.bak',d.auth_cookie_fn)
+			die(3, 'No error on missing credentials!')
+		os.rename(d.auth_cookie_fn+'.bak', d.auth_cookie_fn)
 	else:
 		rpc = await rpc_init(cfg, d.proto)
 		assert rpc.auth.user == 'ut_rpc', f'{rpc.auth.user}: user is not ut_rpc!'
@@ -68,7 +68,7 @@ async def print_daemon_info(rpc):
 
 	if rpc.proto.base_proto == 'Bitcoin':
 		def fmt_dict(d):
-			return '\n        ' + '\n        '.join( pp_fmt(d).split('\n') ) + '\n'
+			return '\n        ' + '\n        '.join(pp_fmt(d).split('\n')) + '\n'
 		msg(f"""
     NETWORKINFO:    {fmt_dict(rpc.cached["networkinfo"])}
     BLOCKCHAININFO: {fmt_dict(rpc.cached["blockchaininfo"])}
@@ -78,30 +78,30 @@ async def print_daemon_info(rpc):
 
 	msg('')
 
-def do_msg(rpc,backend):
+def do_msg(rpc, backend):
 	bname = type(rpc.backend).__name__
-	qmsg('  Testing backend {!r}{}'.format( bname, '' if backend == bname else f' [{backend}]' ))
+	qmsg('  Testing backend {!r}{}'.format(bname, '' if backend == bname else f' [{backend}]'))
 
 class init_test:
 
 	@staticmethod
 	async def btc(cfg, daemon, backend):
 		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
-		do_msg(rpc,backend)
+		do_msg(rpc, backend)
 
 		if cfg.tw_name:
 			wi = await rpc.walletinfo
 			assert wi['walletname'] == rpc.cfg.tw_name, f'{wi["walletname"]!r} != {rpc.cfg.tw_name!r}'
 
-		bh = (await rpc.call('getblockchaininfo',timeout=300))['bestblockhash']
-		await rpc.gathered_call('getblock',((bh,),(bh,1)),timeout=300)
-		await rpc.gathered_call(None,(('getblock',(bh,)),('getblock',(bh,1))),timeout=300)
+		bh = (await rpc.call('getblockchaininfo', timeout=300))['bestblockhash']
+		await rpc.gathered_call('getblock', ((bh,), (bh, 1)), timeout=300)
+		await rpc.gathered_call(None, (('getblock', (bh,)), ('getblock', (bh, 1))), timeout=300)
 		return rpc
 
 	@staticmethod
 	async def bch(cfg, daemon, backend):
 		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
-		do_msg(rpc,backend)
+		do_msg(rpc, backend)
 		return rpc
 
 	ltc = bch
@@ -109,8 +109,8 @@ class init_test:
 	@staticmethod
 	async def eth(cfg, daemon, backend):
 		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
-		do_msg(rpc,backend)
-		await rpc.call('eth_blockNumber',timeout=300)
+		do_msg(rpc, backend)
+		await rpc.call('eth_blockNumber', timeout=300)
 		return rpc
 
 	etc = eth
@@ -152,33 +152,33 @@ async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_in=None
 		all_ids = CoinDaemon.get_daemon_ids(cfg_arg, proto.coin)
 		ids = set(daemon_ids) & set(all_ids) if daemon_ids else all_ids
 		for daemon_id in ids:
-			await do_test(CoinDaemon(cfg_arg, proto=proto,test_suite=True,daemon_id=daemon_id), cfg_arg)
+			await do_test(CoinDaemon(cfg_arg, proto=proto, test_suite=True, daemon_id=daemon_id), cfg_arg)
 
 	return True
 
 class unit_tests:
 
-	altcoin_deps = ('ltc','bch','geth','erigon','parity','xmrwallet')
+	altcoin_deps = ('ltc', 'bch', 'geth', 'erigon', 'parity', 'xmrwallet')
 	arm_skip = ('parity',) # no prebuilt binaries for ARM
 
 	async def btc(self, name, ut):
 		return await run_test(
-			['btc','btc_tn'],
+			['btc', 'btc_tn'],
 			test_cf_auth = True,
 			cfg_in = Config({'_clone': cfg, 'tw_name': 'alternate-tracking-wallet'}))
 
 	async def ltc(self, name, ut):
-		return await run_test(['ltc','ltc_tn'], test_cf_auth=True)
+		return await run_test(['ltc', 'ltc_tn'], test_cf_auth=True)
 
 	async def bch(self, name, ut):
-		return await run_test(['bch','bch_tn'], test_cf_auth=True)
+		return await run_test(['bch', 'bch_tn'], test_cf_auth=True)
 
 	async def geth(self, name, ut):
 		# mainnet returns EIP-155 error on empty blockchain:
-		return await run_test(['eth_tn','eth_rt'], daemon_ids=['geth'])
+		return await run_test(['eth_tn', 'eth_rt'], daemon_ids=['geth'])
 
 	async def erigon(self, name, ut):
-		return await run_test(['eth','eth_tn','eth_rt'], daemon_ids=['erigon'])
+		return await run_test(['eth', 'eth_tn', 'eth_rt'], daemon_ids=['erigon'])
 
 	async def parity(self, name, ut):
 		return await run_test(['etc'])
@@ -203,40 +203,40 @@ class unit_tests:
 		from mmgen.xmrseed import xmrseed
 
 		async def run():
-			networks = init_proto( cfg, 'xmr' ).networks
+			networks = init_proto(cfg, 'xmr').networks
 			daemons = [(
-					CoinDaemon( cfg, proto=proto, test_suite=True ),
+					CoinDaemon(cfg, proto=proto, test_suite=True),
 					MoneroWalletDaemon(
 						cfg        = cfg,
 						proto      = proto,
 						test_suite = True,
-						wallet_dir = os.path.join('test','trash2'),
-						datadir    = os.path.join('test','trash2','wallet_rpc'),
-						passwd     = 'ut_rpc_passw0rd' )
-				) for proto in (init_proto( cfg, 'xmr', network=network ) for network in networks) ]
+						wallet_dir = os.path.join('test', 'trash2'),
+						datadir    = os.path.join('test', 'trash2', 'wallet_rpc'),
+						passwd     = 'ut_rpc_passw0rd')
+				) for proto in (init_proto(cfg, 'xmr', network=network) for network in networks)]
 
-			for md,wd in daemons:
+			for md, wd in daemons:
 				if not cfg.no_daemon_autostart:
 					md.start()
 				wd.start()
 
 				await test_monerod_rpc(md)
 
-				c = MoneroWalletRPCClient( cfg=cfg, daemon=wd )
+				c = MoneroWalletRPCClient(cfg=cfg, daemon=wd)
 				fn = f'monero-{wd.network}-junk-wallet'
 				qmsg(f'Creating {wd.network} wallet')
 				c.call(
 					'restore_deterministic_wallet',
 					filename = fn,
 					password = 'foo',
-					seed     = xmrseed().fromhex('beadface'*8,tostr=True) )
+					seed     = xmrseed().fromhex('beadface'*8, tostr=True))
 
 				if sys.platform == 'win32':
 					wd.stop()
 					wd.start()
 
 				qmsg(f'Opening {wd.network} wallet')
-				c.call( 'open_wallet', filename=fn, password='foo' )
+				c.call('open_wallet', filename=fn, password='foo')
 
 				await c.stop_daemon()
 
@@ -249,7 +249,7 @@ class unit_tests:
 			gmsg('OK')
 
 		import shutil
-		shutil.rmtree('test/trash2',ignore_errors=True)
+		shutil.rmtree('test/trash2', ignore_errors=True)
 		os.makedirs('test/trash2/wallet_rpc')
 		await run()
 		return True

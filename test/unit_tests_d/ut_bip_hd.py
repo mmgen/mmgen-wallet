@@ -12,11 +12,11 @@
 test.unit_tests_d.ut_bip_hd: bip_hd unit test for the MMGen suite
 """
 
-from mmgen.color import gray,pink,blue
+from mmgen.color import gray, pink, blue
 from mmgen.util import fmt
-from mmgen.bip_hd import Bip32ExtendedKey,BipHDConfig,BipHDNode,MasterNode,get_chain_params
+from mmgen.bip_hd import Bip32ExtendedKey, BipHDConfig, BipHDNode, MasterNode, get_chain_params
 
-from ..include.common import cfg,vmsg
+from ..include.common import cfg, vmsg
 
 # Source: BIP-32
 vectors_bip32 = [
@@ -46,7 +46,7 @@ vectors_bip32 = [
 		'xpub': 'xpub6H1LXWLaKsWFhvm6RVpEL9P4KfRZSW7abD2ttkWP3SSQvnyA8FSVqNTEcYFgJS2UaFcxupHiYkro49S8yGasTvXEYBVPamhGW6cFJodrTHy',
 		'xprv': 'xprvA41z7zogVVwxVSgdKUHDy1SKmdb533PjDz7J6N6mV6uS3ze1ai8FHa8kmHScGpWmj4WggLyQjgPie1rFSruoUihUZREPSL39UNdE3BBDu76',
 	},
-},{
+}, {
 	'seed': 'fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542',
 	'm': {
 		'xpub': 'xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB',
@@ -72,7 +72,7 @@ vectors_bip32 = [
 		'xpub': 'xpub6FnCn6nSzZAw5Tw7cgR9bi15UV96gLZhjDstkXXxvCLsUXBGXPdSnLFbdpq8p9HmGsApME5hQTZ3emM2rnY5agb9rXpVGyy3bdW6EEgAtqt',
 		'xprv': 'xprvA2nrNbFZABcdryreWet9Ea4LvTJcGsqrMzxHx98MMrotbir7yrKCEXw7nadnHM8Dq38EGfSh6dqA9QWTyefMLEcBYJUuekgW4BYPJcr9E7j',
 	},
-},{
+}, {
 	'comment': 'These vectors test for the retention of leading zeros. See bitpay/bitcore-lib#47 and iancoleman/bip39#58 for more information.',
 	'seed': '4b381541583be4423346c643850da4b320e46a87ae3d2a4e6da11eba819cd4acba45d239319ac14f863b8d5ab5a0d0c64d2e8a1e7d1457df2e5a3c51c73235be',
 	'm': {
@@ -83,7 +83,7 @@ vectors_bip32 = [
 		'xpub': 'xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y',
 		'xprv': 'xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L',
 	},
-},{
+}, {
 	'comment': 'These vectors test for the retention of leading zeros. See btcsuite/btcutil#172 for more information.',
 	'seed': '3ddd5602285899a946114506157c7997e5444528f3003f6134712147db19b678',
 	"m": {
@@ -156,7 +156,7 @@ vectors_multicoin = {
 	'bnb_beacon':   'bnb179c3ymltqm4utlp089zxqeta5dvn48a305rhe5',
 }
 
-def wif2addr(cfg,wif):
+def wif2addr(cfg, wif):
 	from mmgen.tool.coin import tool_cmd
 	return tool_cmd(
 		cfg     = cfg.base_cfg,
@@ -170,15 +170,15 @@ class unit_tests:
 
 	@property
 	def _seed(self):
-		if not hasattr(self,'__seed'):
+		if not hasattr(self, '__seed'):
 			with open('test/ref/98831F3A.bip39') as fh:
 				mnemonic = fh.read().strip()
 			from mmgen.bip39 import bip39
 			self.__seed = bip39().generate_seed(mnemonic.split())
 		return self.__seed
 
-	def chainparams(self,name,ut):
-		for bipnum,idx,chain,addr_cls in (
+	def chainparams(self, name, ut):
+		for bipnum, idx, chain, addr_cls in (
 				(44, 0,  'btc',  'P2PKH'),
 				(49, 0,  'btc',  'P2SH'),
 				(84, 0,  'btc',  'P2WPKH'),
@@ -187,7 +187,7 @@ class unit_tests:
 				(44, 2,  'ltc',  'P2PKH'),
 				(44, 3,  'doge', 'P2PKH'),
 			):
-			res = get_chain_params(bipnum,chain)
+			res = get_chain_params(bipnum, chain)
 			assert res.idx == idx, res.idx
 			assert res.chain == chain.upper()
 			assert res.addr_cls == addr_cls
@@ -195,35 +195,35 @@ class unit_tests:
 		vmsg('')
 		return True
 
-	def derive(self,name,ut):
+	def derive(self, name, ut):
 		vmsg('seed: 98831F3A (default derivation)')
 
-		m = MasterNode(cfg,self._seed)
+		m = MasterNode(cfg, self._seed)
 
-		purpose = m.init_cfg(coin='btc',addr_type='bech32').derive_private()
+		purpose = m.init_cfg(coin='btc', addr_type='bech32').derive_private()
 		vmsg(f'  {purpose.address=}')
 
 		coin_type1 = purpose.derive_private()
 
-		coin_type2 = m.to_coin_type('btc',addr_type='bech32')
+		coin_type2 = m.to_coin_type('btc', addr_type='bech32')
 		assert coin_type1.address == coin_type2.address
 		vmsg(f'  {coin_type1.address=}')
 
 		acct = coin_type2.derive_private(idx=0)
-		chain1 = acct.derive_private(idx=0,hardened=False)
+		chain1 = acct.derive_private(idx=0, hardened=False)
 
-		chain2 = m.to_chain(idx=0,coin='btc',addr_type='bech32',public=False)
+		chain2 = m.to_chain(idx=0, coin='btc', addr_type='bech32', public=False)
 		assert chain2.address == chain1.address
 
-		chain3 = m.to_coin_type(coin='btc',addr_type='bech32').to_chain(0,public=True)
+		chain3 = m.to_coin_type(coin='btc', addr_type='bech32').to_chain(0, public=True)
 		assert chain3.address == chain1.address
 		vmsg(f'  {chain1.address=}')
 
-		a = BipHDNode.from_extended_key(cfg,'btc',chain2.xpub)
-		b = BipHDNode.from_extended_key(cfg,'btc',chain2.xprv)
+		a = BipHDNode.from_extended_key(cfg, 'btc', chain2.xpub)
+		b = BipHDNode.from_extended_key(cfg, 'btc', chain2.xprv)
 		vmsg(
 			'\n  xpub:\n' +
-			fmt(str(Bip32ExtendedKey(b.xpub)),indent='    ')
+			fmt(str(Bip32ExtendedKey(b.xpub)), indent='    ')
 		)
 		assert a.xpub == b.xpub
 
@@ -238,20 +238,20 @@ class unit_tests:
 		vmsg('')
 		return True
 
-	def derive_addrfmt(self,name,ut):
+	def derive_addrfmt(self, name, ut):
 		vmsg('seed: 98831F3A (default derivation)')
 
-		m = MasterNode(cfg,self._seed)
+		m = MasterNode(cfg, self._seed)
 
-		for addr_type in ('compressed','segwit','bech32'):
+		for addr_type in ('compressed', 'segwit', 'bech32'):
 			chk_xpub = vectors_addrfmt['pub'][addr_type]
 			chk_xprv = vectors_addrfmt['prv'][addr_type]
 
-			res1 = m.to_chain(idx=0,coin='btc',addr_type=addr_type).derive_public(0)
+			res1 = m.to_chain(idx=0, coin='btc', addr_type=addr_type).derive_public(0)
 			vmsg(f'  {addr_type}: {res1.xpub}')
 			assert res1.xpub == chk_xpub
 
-			res2 = m.to_chain(idx=0,coin='btc',addr_type=addr_type).derive_private(0,False)
+			res2 = m.to_chain(idx=0, coin='btc', addr_type=addr_type).derive_private(0, False)
 			vmsg(f'  {addr_type}: {res2.xprv}')
 			assert res2.xprv == chk_xprv
 			assert res2.xpub == chk_xpub
@@ -261,55 +261,55 @@ class unit_tests:
 		vmsg('')
 		return True
 
-	def path(self,name,ut):
+	def path(self, name, ut):
 
 		for vec in vectors_bip32:
 			seed = bytes.fromhex(vec['seed'])
 			vmsg(f'Seed: {vec["seed"]}')
 
-			for n,path_str in enumerate(vec):
-				if path_str in ('seed','comment'):
+			for n, path_str in enumerate(vec):
+				if path_str in ('seed', 'comment'):
 					continue
 
-				path_arg = path_str.replace("'",'H') if n % 2 else path_str
-				node = BipHDNode.from_path(cfg,seed,path_arg,no_path_checks=True)
-				vmsg('  Path {} {}'.format(pink(path_str),blue('('+node.desc+')')))
+				path_arg = path_str.replace("'", 'H') if n % 2 else path_str
+				node = BipHDNode.from_path(cfg, seed, path_arg, no_path_checks=True)
+				vmsg('  Path {} {}'.format(pink(path_str), blue('('+node.desc+')')))
 
-				for xkey_type in ('xpub','xprv'):
-					vmsg(f'    {getattr(node,xkey_type)}')
-					assert getattr(node,xkey_type) == vec[path_str][xkey_type]
+				for xkey_type in ('xpub', 'xprv'):
+					vmsg(f'    {getattr(node, xkey_type)}')
+					assert getattr(node, xkey_type) == vec[path_str][xkey_type]
 
 			vmsg('')
 
 		return True
 
-	def parse_extended(self,name,ut):
+	def parse_extended(self, name, ut):
 		vmsg('Parsing and validating extended keys:\n')
 
 		for vec in vectors_bip32:
 			vmsg(f'  Seed: {vec["seed"]}')
 
 			for path_str in vec:
-				if path_str in ('seed','comment'):
+				if path_str in ('seed', 'comment'):
 					continue
 
 				vmsg('    Path {}'.format(pink(path_str)))
-				for xkey_type in ('xpub','xprv'):
+				for xkey_type in ('xpub', 'xprv'):
 					xkey = vec[path_str][xkey_type]
 					vmsg(f'      {xkey}')
-					node = BipHDNode.from_extended_key(cfg,'btc',xkey)
-					assert getattr(node,xkey_type) == xkey
+					node = BipHDNode.from_extended_key(cfg, 'btc', xkey)
+					assert getattr(node, xkey_type) == xkey
 
 			vmsg('')
 
 		return True
 
-	def multicoin(self,name,ut):
-		m = MasterNode(cfg,self._seed)
+	def multicoin(self, name, ut):
+		m = MasterNode(cfg, self._seed)
 
 		fs = '  {:6} {:10} {}'
-		vmsg(fs.format('COIN','ADDR_TYPE','ADDR'))
-		for id_str,addr_chk in vectors_multicoin.items():
+		vmsg(fs.format('COIN', 'ADDR_TYPE', 'ADDR'))
+		for id_str, addr_chk in vectors_multicoin.items():
 			ss = id_str.split('_')
 			coin = ss[0]
 			addr_type = ss[1] if len(ss) == 2 else None
@@ -317,7 +317,7 @@ class unit_tests:
 				vmsg(gray(fs.format(coin.upper(), (addr_type or ''), '[not supported yet]')))
 				continue
 			vmsg(fs.format(coin.upper(), (addr_type or 'auto'), addr_chk))
-			node = m.to_chain(idx=0,coin=coin,addr_type=addr_type).derive_private(0)
+			node = m.to_chain(idx=0, coin=coin, addr_type=addr_type).derive_private(0)
 			xpub_parsed = node.key_extended(public=True)
 			xprv_parsed = node.key_extended(public=False)
 			addr = node.address
@@ -339,19 +339,19 @@ class unit_tests:
 		vmsg('')
 		return True
 
-	def errors(self,name,ut):
+	def errors(self, name, ut):
 		vmsg('Checking error handling:')
 
-		m = MasterNode(cfg,self._seed)
-		m_btc = m.init_cfg(coin='btc',addr_type='bech32')
+		m = MasterNode(cfg, self._seed)
+		m_btc = m.init_cfg(coin='btc', addr_type='bech32')
 
 		purpose = m_btc.derive_private()
 		coin_type = purpose.derive_private()
 		acct = coin_type.derive_private(idx=0)
-		chain = acct.derive_private(idx=0,hardened=False)
+		chain = acct.derive_private(idx=0, hardened=False)
 
 		def bad01():
-			m.to_chain(idx=0,coin='erq',addr_type='C')
+			m.to_chain(idx=0, coin='erq', addr_type='C')
 		def bad02():
 			m_btc.derive_private(idx=0)
 		def bad03():
@@ -365,13 +365,13 @@ class unit_tests:
 		def bad08():
 			m_btc.derive_public() # must be private
 		def bad09():
-			coin_type.derive_private(idx=8,hardened=False)
+			coin_type.derive_private(idx=8, hardened=False)
 		def bad10():
 			acct.derive_private()
 		def bad11():
 			chain.derive_private()
 		def bad12():
-			chain.derive_private(hardened=True,idx=3)
+			chain.derive_private(hardened=True, idx=3)
 
 		bad_data = (
 			('unsupported coin',                       'ValueError', 'not supported',        bad01),
@@ -387,14 +387,14 @@ class unit_tests:
 			('depth 5 (leaf node): hardened True',     'ValueError', 'must be None',         bad12),
 		)
 
-		ut.process_bad_data(bad_data,pfx='')
+		ut.process_bad_data(bad_data, pfx='')
 		vmsg('')
 		return True
 
-	def parse_extended_errors(self,name,ut):
+	def parse_extended_errors(self, name, ut):
 		vmsg('Parsing and validating invalid extended keys:')
 		vec = vectors_bip32_invalid
-		func = [lambda m=n: BipHDNode.from_extended_key(cfg,'btc',vec[m][0]) for n in range(len(vec))]
+		func = [lambda m=n: BipHDNode.from_extended_key(cfg, 'btc', vec[m][0]) for n in range(len(vec))]
 		exc = (
 			'first byte for public',
 			'first byte for private',
@@ -413,6 +413,6 @@ class unit_tests:
 			'Public key could not be parsed', # extmod
 			'incorrect checksum',
 		)
-		ut.process_bad_data([(vec[n][1], 'ValueError', exc[n], func[n]) for n in range(len(vec))],pfx='')
+		ut.process_bad_data([(vec[n][1], 'ValueError', exc[n], func[n]) for n in range(len(vec))], pfx='')
 		vmsg('')
 		return True

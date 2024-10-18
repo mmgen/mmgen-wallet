@@ -68,8 +68,8 @@ class unit_tests:
 		vs = namedtuple('vector_data', ['text', 'groups'])
 		fs = '{:16} {}'
 
-		vmsg(blue('  ' + fs.format('ID','ANNOT')))
-		for k,v in uarg_info.items():
+		vmsg(blue('  ' + fs.format('ID', 'ANNOT')))
+		for k, v in uarg_info.items():
 			vmsg('  ' + fs.format(k, v[0]))
 
 		vectors = {
@@ -81,7 +81,7 @@ class unit_tests:
 		}
 
 		vmsg('')
-		for k,v in uarg_info.items():
+		for k, v in uarg_info.items():
 			vmsg(f'  {k}')
 			if k in vectors:
 				vmsg(f'    pat: {v.pat}')
@@ -96,17 +96,17 @@ class unit_tests:
 		return True
 
 	def pyversion(self, name, ut, desc='class pyversion.PythonVersion'):
-		from mmgen.pyversion import PythonVersion,python_version
+		from mmgen.pyversion import PythonVersion, python_version
 
 		ver = {}
 		fs = '{:<7} {:<9} {:<5} {}'
-		vmsg('\n' + fs.format('Version','PyVersion','Major','Minor'))
+		vmsg('\n' + fs.format('Version', 'PyVersion', 'Major', 'Minor'))
 
-		for k in ('current','3.3','3.12','4.3','7.0'):
+		for k in ('current', '3.3', '3.12', '4.3', '7.0'):
 			obj = python_version if k == 'current' else PythonVersion(k)
-			major,minor = [int(s) for s in obj.split('.')]
+			major, minor = [int(s) for s in obj.split('.')]
 			assert obj.major == major and obj.minor == minor
-			vmsg(fs.format(k.upper(),obj,major,minor))
+			vmsg(fs.format(k.upper(), obj, major, minor))
 			ver[k] = obj
 
 		vmsg('\nPerforming comparison tests:')

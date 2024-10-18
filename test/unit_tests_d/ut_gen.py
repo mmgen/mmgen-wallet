@@ -8,14 +8,14 @@ from mmgen.color import blue
 from mmgen.protocol import init_proto
 from mmgen.key import PrivKey
 from mmgen.addr import MMGenAddrType
-from mmgen.addrgen import KeyGenerator,AddrGenerator
+from mmgen.addrgen import KeyGenerator, AddrGenerator
 from mmgen.keygen import get_backends
 
-from ..include.common import cfg,qmsg
+from ..include.common import cfg, qmsg
 
 # TODO: add viewkey checks
 vectors = { # from tooltest2
-	'btc': ( (
+	'btc': ((
 		'5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX',
 		'1C5VPtgq9xQ6AcTgMAR3J6GDrs72HC4pS1',
 		'legacy'
@@ -30,26 +30,26 @@ vectors = { # from tooltest2
 	), (
 		'KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm',
 		'bc1q6pqnfwwakuuejpm9w52ds342f9d5u36v0qnz7c',
-		'bech32' ),
+		'bech32'),
 	),
-	'eth': ( (
+	'eth': ((
 		'0000000000000000000000000000000000000000000000000000000000000001',
 		'7e5f4552091a69125d5dfcb7b8c2659029395bdf',
 		'ethereum',
-		), ),
-	'xmr': ( (
+		),),
+	'xmr': ((
 		'0000000000000000000000000000000000000000000000000000000000000001',
 		'42nsXK8WbVGTNayQ6Kjw5UdgqbQY5KCCufdxdCgF7NgTfjC69Mna7DJSYyie77hZTQ8H92G2HwgFhgEUYnDzrnLnQdF28r3',
 		'monero',
-		), ),
-	'zec': ( (
+		),),
+	'zec': ((
 		'SKxny894fJe2rmZjeuoE6GVfNkWoXfPp8337VrLLNWG56FjqVUYR',
 		'zceQDpyNwek7dKqF5ZuFGj7YrNVxh7X1aPkrVxDLVxWSiZAFDEuy5C7XNV8VhyZ3ghTPQ61xjCGiyLT3wqpiN1Yi6mdmaCq',
 		'zcash_z',
-		), ),
+		),),
 }
 
-def do_test(proto,wif,addr_chk,addr_type,internal_keccak):
+def do_test(proto, wif, addr_chk, addr_type, internal_keccak):
 
 	if internal_keccak:
 		cfg.use_internal_keccak_module = True
@@ -57,21 +57,21 @@ def do_test(proto,wif,addr_chk,addr_type,internal_keccak):
 	else:
 		add_msg = ''
 
-	at = MMGenAddrType(proto,addr_type)
-	privkey = PrivKey(proto,wif=wif)
+	at = MMGenAddrType(proto, addr_type)
+	privkey = PrivKey(proto, wif=wif)
 
-	for n,backend in enumerate(get_backends(at.pubkey_type)):
+	for n, backend in enumerate(get_backends(at.pubkey_type)):
 
-		kg = KeyGenerator( cfg, proto, at.pubkey_type, n+1 )
+		kg = KeyGenerator( cfg, proto, at.pubkey_type, n+1)
 		qmsg(blue(f'  Testing backend {backend!r} for addr type {addr_type!r}{add_msg}'))
 
 		data = kg.gen_data(privkey)
 
-		for k,v in data._asdict().items():
-			if v and k in ('pubkey','viewkey_bytes'):
+		for k, v in data._asdict().items():
+			if v and k in ('pubkey', 'viewkey_bytes'):
 				qmsg(f'    {k+":":19} {v.hex()}')
 
-		ag = AddrGenerator( cfg, proto, addr_type )
+		ag = AddrGenerator( cfg, proto, addr_type)
 		addr = ag.to_addr(data)
 		qmsg(f'    addr:               {addr}\n')
 
@@ -79,27 +79,27 @@ def do_test(proto,wif,addr_chk,addr_type,internal_keccak):
 
 	cfg.use_internal_keccak_module = False
 
-def do_tests(coin,internal_keccak=False):
-	proto = init_proto( cfg, coin )
-	for wif,addr,addr_type in vectors[coin]:
-		do_test(proto,wif,addr,addr_type,internal_keccak)
+def do_tests(coin, internal_keccak=False):
+	proto = init_proto( cfg, coin)
+	for wif, addr, addr_type in vectors[coin]:
+		do_test(proto, wif, addr, addr_type, internal_keccak)
 	return True
 
 class unit_tests:
 
-	altcoin_deps = ('eth','xmr','zec')
+	altcoin_deps = ('eth', 'xmr', 'zec')
 
-	def btc(self,name,ut):
+	def btc(self, name, ut):
 		return do_tests('btc')
 
-	def eth(self,name,ut):
+	def eth(self, name, ut):
 		do_tests('eth')
-		return do_tests('eth',internal_keccak=True)
+		return do_tests('eth', internal_keccak=True)
 
-	def xmr(self,name,ut):
+	def xmr(self, name, ut):
 		if not cfg.fast:
 			do_tests('xmr')
-		return do_tests('xmr',internal_keccak=True)
+		return do_tests('xmr', internal_keccak=True)
 
-	def zec(self,name,ut):
+	def zec(self, name, ut):
 		return do_tests('zec')

@@ -135,7 +135,7 @@ class unit_tests:
 
 	def errors(self, name, ut, desc='error handling'):
 		# could do these in objtest.py:
-		def bad1(): a = CoinAddr(proto, self.aliases[0].cashaddr.replace('g','G'))
+		def bad1(): a = CoinAddr(proto, self.aliases[0].cashaddr.replace('g', 'G'))
 		def bad2(): a = CoinAddr(proto, 'x' + self.aliases[0].cashaddr)
 		def bad3(): a = CoinAddr(proto, self.aliases[0].cashaddr[:-1])
 		def bad4(): a = CoinAddr(proto, self.aliases[0].cashaddr[:-1]+'i')
