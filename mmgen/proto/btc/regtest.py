@@ -20,16 +20,16 @@
 proto.btc.regtest: Coin daemon regression test mode setup and operations
 """
 
-import os,shutil,json
-from ...util import msg,gmsg,die,capfirst,suf
+import os, shutil, json
+from ...util import msg, gmsg, die, capfirst, suf
 from ...protocol import init_proto
-from ...rpc import rpc_init,json_encoder
+from ...rpc import rpc_init, json_encoder
 from ...objmethods import MMGenObject
 from ...daemon import CoinDaemon
 
-def create_data_dir(cfg,data_dir):
+def create_data_dir(cfg, data_dir):
 	try:
-		os.stat(os.path.join(data_dir,'regtest'))
+		os.stat(os.path.join(data_dir, 'regtest'))
 	except:
 		pass
 	else:
@@ -39,7 +39,7 @@ def create_data_dir(cfg,data_dir):
 				f'Delete your existing MMGen regtest setup at {data_dir!r} and create a new one?'):
 			shutil.rmtree(data_dir)
 		else:
-			die(1,'Exiting')
+			die(1, 'Exiting')
 
 	try:
 		os.makedirs(data_dir)
@@ -60,10 +60,19 @@ class MMGenRegtest(MMGenObject):
 
 	rpc_user     = 'bobandalice'
 	rpc_password = 'hodltothemoon'
-	users        = ('bob','alice','carol','miner')
-	coins        = ('btc','bch','ltc')
-	usr_cmds     = ('setup','generate','send','start','stop', 'state', 'balances','mempool','cli','wallet_cli')
-
+	users        = ('bob', 'alice', 'carol', 'miner')
+	coins        = ('btc', 'bch', 'ltc')
+	usr_cmds     = (
+		'setup',
+		'generate',
+		'send',
+		'start',
+		'stop',
+		'state',
+		'balances',
+		'mempool',
+		'cli',
+		'wallet_cli')
 	bdb_hdseed = 'beadcafe' * 8
 	bdb_miner_wif = 'cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp'
 	bdb_miner_addrs = {
@@ -95,7 +104,7 @@ class MMGenRegtest(MMGenObject):
 
 	@property
 	async def miner_addr(self):
-		if not hasattr(self,'_miner_addr'):
+		if not hasattr(self, '_miner_addr'):
 			self._miner_addr = (
 				self.bdb_miner_addrs[self.coin] if self.bdb_wallet else
 				await self.rpc_call('getnewaddress', wallet='miner'))
@@ -103,7 +112,7 @@ class MMGenRegtest(MMGenObject):
 
 	@property
 	async def miner_wif(self):
-		if not hasattr(self,'_miner_wif'):
+		if not hasattr(self, '_miner_wif'):
 			self._miner_wif = (
 				self.bdb_miner_wif if self.bdb_wallet else
 				await self.rpc_call('dumpprivkey', (await self.miner_addr), wallet='miner'))
@@ -112,16 +121,16 @@ class MMGenRegtest(MMGenObject):
 	def create_hdseed_wif(self):
 		from ...tool.api import tool_api
 		t = tool_api(self.cfg)
-		t.init_coin(self.proto.coin,self.proto.network)
+		t.init_coin(self.proto.coin, self.proto.network)
 		t.addrtype = 'compressed' if self.proto.coin == 'BCH' else 'bech32'
 		return t.hex2wif(self.bdb_hdseed)
 
-	async def generate(self,blocks=1,silent=False):
+	async def generate(self, blocks=1, silent=False):
 
 		blocks = int(blocks)
 
 		if self.d.state == 'stopped':
-			die(1,'Regtest daemon is not running')
+			die(1, 'Regtest daemon is not running')
 
 		self.d.wait_for_state('ready')
 
@@ -130,15 +139,15 @@ class MMGenRegtest(MMGenObject):
 			'generatetoaddress',
 			blocks,
 			await self.miner_addr,
-			wallet = 'miner' )
+			wallet = 'miner')
 
 		if len(out) != blocks:
-			die(4,'Error generating blocks')
+			die(4, 'Error generating blocks')
 
 		if not silent:
 			gmsg(f'Mined {blocks} block{suf(blocks)}')
 
-	async def create_wallet(self,user):
+	async def create_wallet(self, user):
 		return await (await self.rpc).icall(
 			'createwallet',
 			wallet_name     = user,
@@ -157,13 +166,13 @@ class MMGenRegtest(MMGenObject):
 		if self.d.state != 'stopped':
 			await self.rpc_call('stop')
 
-		create_data_dir( self.cfg, self.d.datadir )
+		create_data_dir(self.cfg, self.d.datadir)
 
 		gmsg(f'Starting {self.coin.upper()} regtest setup')
 
 		self.d.start(silent=True)
 
-		for user in ('miner','bob','alice'):
+		for user in ('miner', 'bob', 'alice'):
 			gmsg(f'Creating {capfirst(user)}’s tracking wallet')
 			await self.create_wallet(user)
 
@@ -194,18 +203,18 @@ class MMGenRegtest(MMGenObject):
 			msg('Stopping regtest daemon')
 			await self.rpc_call('stop')
 
-	def init_daemon(self,reindex=False):
+	def init_daemon(self, reindex=False):
 		if reindex:
 			self.d.usr_coind_args.append('--reindex')
 
-	async def start_daemon(self,reindex=False,silent=True):
+	async def start_daemon(self, reindex=False, silent=True):
 		self.init_daemon(reindex=reindex)
 		self.d.start(silent=silent)
-		for user in ('miner','bob','alice'):
+		for user in ('miner', 'bob', 'alice'):
 			msg(f'Loading {capfirst(user)}’s wallet')
-			await self.rpc_call('loadwallet',user,start_daemon=False)
+			await self.rpc_call('loadwallet', user, start_daemon=False)
 
-	async def rpc_call(self,*args,wallet=None,start_daemon=True):
+	async def rpc_call(self, *args, wallet=None, start_daemon=True):
 		if start_daemon and self.d.state == 'stopped':
 			await self.start_daemon()
 		return await (await self.rpc).call(*args, wallet=wallet)
@@ -228,41 +237,41 @@ class MMGenRegtest(MMGenObject):
 
 	async def balances(self):
 		bal = {}
-		users = ('bob','alice')
+		users = ('bob', 'alice')
 		for user in users:
-			out = await self.rpc_call('listunspent',0,wallet=user)
+			out = await self.rpc_call('listunspent', 0, wallet=user)
 			bal[user] = sum(self.proto.coin_amt(e['amount']) for e in out)
 
 		fs = '{:<16} {:18.8f}'
 		for user in users:
-			msg(fs.format(user.capitalize()+"'s balance:",bal[user]))
-		msg(fs.format('Total balance:',sum(v for k,v in bal.items())))
+			msg(fs.format(user.capitalize()+"'s balance:", bal[user]))
+		msg(fs.format('Total balance:', sum(v for k, v in bal.items())))
 
-	async def send(self,addr,amt):
+	async def send(self, addr, amt):
 		gmsg(f'Sending {amt} miner {self.d.coin} to address {addr}')
-		await self.rpc_call('sendtoaddress',addr,str(amt),wallet='miner')
+		await self.rpc_call('sendtoaddress', addr, str(amt), wallet='miner')
 		await self.generate(1)
 
 	async def mempool(self):
 		await self.cli('getrawmempool')
 
-	async def cli(self,*args):
+	async def cli(self, *args):
 		ret = await self.rpc_call(*cliargs_convert(args))
-		print(ret if isinstance(ret,str) else json.dumps(ret,cls=json_encoder,indent=4))
+		print(ret if isinstance(ret, str) else json.dumps(ret, cls=json_encoder, indent=4))
 
-	async def wallet_cli(self,wallet,*args):
-		ret = await self.rpc_call(*cliargs_convert(args),wallet=wallet)
-		print(ret if isinstance(ret,str) else json.dumps(ret,cls=json_encoder,indent=4))
+	async def wallet_cli(self, wallet, *args):
+		ret = await self.rpc_call(*cliargs_convert(args), wallet=wallet)
+		print(ret if isinstance(ret, str) else json.dumps(ret, cls=json_encoder, indent=4))
 
-	async def cmd(self,args):
-		ret = getattr(self,args[0])(*args[1:])
+	async def cmd(self, args):
+		ret = getattr(self, args[0])(*args[1:])
 		return (await ret) if type(ret).__name__ == 'coroutine' else ret
 
-	async def fork(self,coin): # currently disabled
+	async def fork(self, coin): # currently disabled
 
-		proto = init_proto( self.cfg, coin, False )
+		proto = init_proto(self.cfg, coin, False)
 		if not [f for f in proto.forks if f[2] == proto.coin.lower() and f[3] is True]:
-			die(1,f'Coin {proto.coin} is not a replayable fork of coin {coin}')
+			die(1, f'Coin {proto.coin} is not a replayable fork of coin {coin}')
 
 		gmsg(f'Creating fork from coin {coin} to coin {proto.coin}')
 
@@ -271,7 +280,7 @@ class MMGenRegtest(MMGenObject):
 		try:
 			os.stat(source_rt.d.datadir)
 		except:
-			die(1,f'Source directory {source_rt.d.datadir!r} does not exist!')
+			die(1, f'Source directory {source_rt.d.datadir!r} does not exist!')
 
 		# stop the source daemon
 		if source_rt.d.state != 'stopped':
@@ -286,9 +295,9 @@ class MMGenRegtest(MMGenObject):
 		except:
 			pass
 
-		create_data_dir( self.cfg, self.d.datadir )
+		create_data_dir(self.cfg, self.d.datadir)
 		os.rmdir(self.d.datadir)
-		shutil.copytree(source_rt.d.datadir,self.d.datadir,symlinks=True)
+		shutil.copytree(source_rt.d.datadir, self.d.datadir, symlinks=True)
 		await self.start_daemon(reindex=True)
 		await self.rpc_call('stop')
 

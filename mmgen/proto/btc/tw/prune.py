@@ -15,7 +15,7 @@ proto.btc.tw.prune: Bitcoin base protocol tracking wallet address list prune cla
 from ....tw.prune import TwAddressesPrune
 from .addresses import BitcoinTwAddresses
 
-class BitcoinTwAddressesPrune(BitcoinTwAddresses,TwAddressesPrune):
+class BitcoinTwAddressesPrune(BitcoinTwAddresses, TwAddressesPrune):
 
 	prompt_fs_in = [
 		'Sort options: [a]mt, [A]ge, [M]mgen addr, [r]everse',
@@ -40,4 +40,4 @@ class BitcoinTwAddressesPrune(BitcoinTwAddresses,TwAddressesPrune):
 		'w':'a_view_detail',
 		'p':'a_prune',
 		'u':'a_unprune',
-		'c':'a_clear_prune_list' }
+		'c':'a_clear_prune_list'}

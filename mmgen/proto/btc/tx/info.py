@@ -13,12 +13,12 @@ proto.btc.tx.info: Bitcoin transaction info class
 """
 
 from ....tx.info import TxInfo
-from ....util import fmt,die
-from ....color import red,green,pink
+from ....util import fmt, die
+from ....color import red, green, pink
 from ....addr import MMGenID
 
 class TxInfo(TxInfo):
-	sort_orders = ('addr','raw')
+	sort_orders = ('addr', 'raw')
 	txinfo_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) RBF={r} Sig={s} Locktime={l}\n'
 	txinfo_hdr_fs_short = 'TX {i} ({a} {c}) RBF={r} Sig={s} Locktime={l}\n'
 	txinfo_ftr_fs = fmt("""
@@ -33,17 +33,17 @@ class TxInfo(TxInfo):
 		return ' ({} {}, {} of spend amount)'.format(
 			pink(tx.fee_abs2rel(tx.fee)),
 			tx.rel_fee_disp,
-			pink('{:0.6f}%'.format( tx.fee / tx.send_amt * 100 ))
+			pink('{:0.6f}%'.format(tx.fee / tx.send_amt * 100))
 		)
 
-	def format_abs_fee(self,color,iwidth):
+	def format_abs_fee(self, color, iwidth):
 		return self.tx.fee.fmt(color=color, iwidth=iwidth)
 
 	def format_verbose_footer(self):
 		tx = self.tx
 		tsize = len(tx.serialized) // 2 if tx.serialized else 'unknown'
 		out = f'Transaction size: Vsize {tx.estimate_size()} (estimated), Total {tsize}'
-		if tx.name in ('Signed','OnlineSigned'):
+		if tx.name in ('Signed', 'OnlineSigned'):
 			wsize = tx.deserialized.witness_size
 			out += f', Base {tsize-wsize}, Witness {wsize}'
 		return out + '\n'
@@ -51,9 +51,9 @@ class TxInfo(TxInfo):
 	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, terse, sort):
 
 		if sort not in self.sort_orders:
-			die(1,'{!r}: invalid transaction view sort order. Valid options: {}'.format(
+			die(1, '{!r}: invalid transaction view sort order. Valid options: {}'.format(
 				sort,
-				','.join(self.sort_orders) ))
+				','.join(self.sort_orders)))
 
 		def get_mmid_fmt(e, is_input):
 			if e.mmid:
@@ -61,13 +61,13 @@ class TxInfo(TxInfo):
 					width=max_mmwid,
 					encl='()',
 					color=True,
-					append_chars=('',' (chg)')[bool(not is_input and e.is_chg and terse)],
+					append_chars=('', ' (chg)')[bool(not is_input and e.is_chg and terse)],
 					append_color='green')
 			else:
-				return MMGenID.fmtc( nonmm_str, width=max_mmwid, color=True )
+				return MMGenID.fmtc(nonmm_str, width=max_mmwid, color=True)
 
 		def format_io(desc):
-			io = getattr(tx,desc)
+			io = getattr(tx, desc)
 			is_input = desc == 'inputs'
 			yield desc.capitalize() + ':\n' + enl
 			confs_per_day = 60*60*24 // tx.proto.avg_bdi
@@ -75,25 +75,25 @@ class TxInfo(TxInfo):
 			io_sorted = {
 				'addr': lambda: sorted(
 					io, # prepend '+' (sorts before '0') to ensure non-MMGen addrs are displayed first
-					key = lambda o: (o.mmid.sort_key if o.mmid else f'+{o.addr}') + f'{o.amt:040.20f}' ),
+					key = lambda o: (o.mmid.sort_key if o.mmid else f'+{o.addr}') + f'{o.amt:040.20f}'),
 				'raw':  lambda: io
 			}[sort]
 
 			if terse:
 				iwidth = max(len(str(int(e.amt))) for e in io)
-				addr_w = max(len(e.addr.views[vp1]) for f in (tx.inputs,tx.outputs) for e in f)
-				for n,e in enumerate(io_sorted()):
+				addr_w = max(len(e.addr.views[vp1]) for f in (tx.inputs, tx.outputs) for e in f)
+				for n, e in enumerate(io_sorted()):
 					yield '{:3} {} {} {} {}\n'.format(
 						n+1,
 						e.addr.fmt(vp1, width=addr_w, color=True),
 						get_mmid_fmt(e, is_input),
-						e.amt.fmt(iwidth=iwidth,color=True),
-						tx.dcoin )
+						e.amt.fmt(iwidth=iwidth, color=True),
+						tx.dcoin)
 					if have_bch:
 						yield '{:3} [{}]\n'.format('', e.addr.hl(vp2, color=False))
 			else:
 				col1_w = len(str(len(io))) + 1
-				for n,e in enumerate(io_sorted()):
+				for n, e in enumerate(io_sorted()):
 					mmid_fmt = get_mmid_fmt(e, is_input)
 					if is_input and blockcount:
 						confs = e.confs + blockcount - tx.blockcount
@@ -115,7 +115,7 @@ class TxInfo(TxInfo):
 							yield ('',  'confirmations:', f'{confs} (around {days} days)')
 						if not is_input and e.is_chg:
 							yield ('',  'change:',  green('True'))
-					yield '\n'.join('{:>{w}} {:<8} {}'.format(*d,w=col1_w) for d in gen()) + '\n\n'
+					yield '\n'.join('{:>{w}} {:<8} {}'.format(*d, w=col1_w) for d in gen()) + '\n\n'
 
 		tx = self.tx
 
@@ -128,12 +128,12 @@ class TxInfo(TxInfo):
 			vp1 = 0
 
 		return (
-			'Displaying inputs and outputs in {} sort order'.format({'raw':'raw','addr':'address'}[sort])
-			+ ('\n\n','\n')[terse]
+			'Displaying inputs and outputs in {} sort order'.format({'raw':'raw', 'addr':'address'}[sort])
+			+ ('\n\n', '\n')[terse]
 			+ ''.join(format_io('inputs'))
-			+ ''.join(format_io('outputs')) )
+			+ ''.join(format_io('outputs')))
 
-	def strfmt_locktime(self,locktime=None,terse=False):
+	def strfmt_locktime(self, locktime=None, terse=False):
 		# Locktime itself is an unsigned 4-byte integer which can be parsed two ways:
 		#
 		# If less than 500 million, locktime is parsed as a block height. The transaction can be
@@ -147,11 +147,11 @@ class TxInfo(TxInfo):
 		if num is None:
 			return '(None)'
 		elif num.bit_length() > 32:
-			die(2,f'{num!r}: invalid nLockTime value (integer size greater than 4 bytes)!')
+			die(2, f'{num!r}: invalid nLockTime value (integer size greater than 4 bytes)!')
 		elif num >= 500_000_000:
 			import time
-			return ' '.join(time.strftime('%c',time.gmtime(num)).split()[1:])
+			return ' '.join(time.strftime('%c', time.gmtime(num)).split()[1:])
 		elif num > 0:
-			return '{}{}'.format(('block height ','')[terse],num)
+			return '{}{}'.format(('block height ', '')[terse], num)
 		else:
-			die(2,f'{num!r}: invalid nLockTime value!')
+			die(2, f'{num!r}: invalid nLockTime value!')

@@ -18,7 +18,18 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 
 	class MMGenTwUnspentOutput(TwUnspentOutputs.MMGenTwUnspentOutput):
 		# required by gen_unspent(); setting valid_attrs explicitly is also more efficient
-		valid_attrs = {'txid','vout','amt','amt2','comment','twmmid','addr','confs','date','scriptPubKey','skip'}
+		valid_attrs = {
+			'txid',
+			'vout',
+			'amt',
+			'amt2',
+			'comment',
+			'twmmid',
+			'addr',
+			'confs',
+			'date',
+			'scriptPubKey',
+			'skip'}
 		invalid_attrs = {'proto'}
 
 	has_age = True
@@ -50,7 +61,7 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 		'p':'a_print_detail',
 		'v':'a_view',
 		'w':'a_view_detail',
-		'l':'i_comment_add' }
+		'l':'i_comment_add'}
 
 	async def get_rpc_data(self):
 		# bitcoin-cli help listunspent:
@@ -62,5 +73,5 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 		# 5. query_options  (json object, optional) JSON with query options
 
 		# for now, self.addrs is just an empty list for Bitcoin and friends
-		add_args = (9999999,self.addrs) if self.addrs else ()
-		return await self.rpc.call('listunspent',self.minconf,*add_args)
+		add_args = (9999999, self.addrs) if self.addrs else ()
+		return await self.rpc.call('listunspent', self.minconf, *add_args)

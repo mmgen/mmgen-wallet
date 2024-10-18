@@ -24,13 +24,13 @@ class BitcoinTwJSON(TwJSON):
 
 		@property
 		def mappings_json(self):
-			return self.json_dump([(e.mmgen_id,e.address) for e in self.entries])
+			return self.json_dump([(e.mmgen_id, e.address) for e in self.entries])
 
 		@property
 		def num_entries(self):
 			return len(self.entries)
 
-	class Import(TwJSON.Import,Base):
+	class Import(TwJSON.Import, Base):
 
 		info_msg = """
 			This utility will create a new tracking wallet, import the addresses from
@@ -63,48 +63,48 @@ class BitcoinTwJSON(TwJSON):
 			entries_in = [self.entry_tuple_in(*e) for e in self.data['data']['entries']]
 			return sorted(
 				[self.entry_tuple(
-					TwMMGenID(self.proto,d.mmgen_id),
+					TwMMGenID(self.proto, d.mmgen_id),
 					d.address,
-					getattr(d,'amount',None),
+					getattr(d, 'amount', None),
 					d.comment)
 						for d in entries_in],
-				key = lambda x: x.mmgen_id.sort_key )
+				key = lambda x: x.mmgen_id.sort_key)
 
-		async def do_import(self,batch):
-			import_tuple = namedtuple('import_data',['addr','twmmid','comment'])
+		async def do_import(self, batch):
+			import_tuple = namedtuple('import_data', ['addr', 'twmmid', 'comment'])
 			await self.twctl.import_address_common(
 				[import_tuple(e.address, e.mmgen_id, e.comment) for e in self.entries],
-				batch = batch )
+				batch = batch)
 			return [e.address for e in self.entries]
 
-	class Export(TwJSON.Export,Base):
+	class Export(TwJSON.Export, Base):
 
 		@property
 		async def addrlist(self):
-			if not hasattr(self,'_addrlist'):
+			if not hasattr(self, '_addrlist'):
 				if self.prune:
 					from .prune import TwAddressesPrune
 					self._addrlist = al = await TwAddressesPrune(
 						self.cfg,
 						self.proto,
 						get_data  = True,
-						warn_used = self.warn_used )
+						warn_used = self.warn_used)
 					await al.view_filter_and_sort()
 					self.pruned = al.do_prune()
 				else:
 					from .addresses import TwAddresses
-					self._addrlist = await TwAddresses(self.cfg,self.proto,get_data=True)
+					self._addrlist = await TwAddresses(self.cfg, self.proto, get_data=True)
 			return self._addrlist
 
 		async def get_entries(self): # TODO: include 'received' field
 			return sorted(
 				[self.entry_tuple(d.twmmid, d.addr, d.amt, d.comment)
 					for d in (await self.addrlist).data],
-				key = lambda x: x.mmgen_id.sort_key )
+				key = lambda x: x.mmgen_id.sort_key)
 
 		@property
 		async def entries_out(self):
-			return [[getattr(d,k) for k in self.keys] for d in self.entries]
+			return [[getattr(d, k) for k in self.keys] for d in self.entries]
 
 		@property
 		async def total(self):

@@ -25,14 +25,14 @@ class BitcoinTwAddrData(TwAddrData):
 		"""
 	}
 
-	async def get_tw_data(self,twctl=None):
+	async def get_tw_data(self, twctl=None):
 		self.cfg._util.vmsg('Getting address data from tracking wallet')
 		c = self.rpc
 		if 'label_api' in c.caps:
 			accts = await c.call('listlabels')
-			ll = await c.batch_call('getaddressesbylabel',[(k,) for k in accts])
+			ll = await c.batch_call('getaddressesbylabel', [(k,) for k in accts])
 			alists = [list(a.keys()) for a in ll]
 		else:
-			accts = await c.call('listaccounts',0,True)
-			alists = await c.batch_call('getaddressesbyaccount',[(k,) for k in accts])
-		return list(zip(accts,alists))
+			accts = await c.call('listaccounts', 0, True)
+			alists = await c.batch_call('getaddressesbyaccount', [(k,) for k in accts])
+		return list(zip(accts, alists))

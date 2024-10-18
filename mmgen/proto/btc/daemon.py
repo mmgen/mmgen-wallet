@@ -16,7 +16,7 @@ import os
 
 from ...cfg import gc
 from ...util import list_gen
-from ...daemon import CoinDaemon,_nw,_dd
+from ...daemon import CoinDaemon, _nw, _dd
 
 class bitcoin_core_daemon(CoinDaemon):
 	daemon_data = _dd('Bitcoin Core', 270100, '27.1.0')
@@ -28,15 +28,15 @@ class bitcoin_core_daemon(CoinDaemon):
 	cfg_file = 'bitcoin.conf'
 	nonstd_datadir = False
 	datadirs = {
-		'linux': [gc.home_dir,'.bitcoin'],
+		'linux': [gc.home_dir, '.bitcoin'],
 		'darwin': [gc.home_dir, 'Library', 'Application Support', 'Bitcoin'],
-		'win32': [os.getenv('APPDATA'),'Bitcoin']
+		'win32': [os.getenv('APPDATA'), 'Bitcoin']
 	}
 	avail_opts = ('no_daemonize', 'online', 'bdb_wallet')
 
 	def init_datadir(self):
 		if self.network == 'regtest' and not self.test_suite:
-			return os.path.join( self.cfg.data_dir_root, 'regtest', self.cfg.coin.lower() )
+			return os.path.join(self.cfg.data_dir_root, 'regtest', self.cfg.coin.lower())
 		else:
 			return super().init_datadir()
 
@@ -48,11 +48,11 @@ class bitcoin_core_daemon(CoinDaemon):
 				'mainnet': '',
 				'testnet': self.testnet_dir,
 				'regtest': 'regtest',
-			}[self.network] )
+			}[self.network])
 
 	@property
 	def auth_cookie_fn(self):
-		return os.path.join(self.network_datadir,'.cookie')
+		return os.path.join(self.network_datadir, '.cookie')
 
 	def init_subclass(self):
 
@@ -85,15 +85,15 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--addresstype=bech32',   self.coin == 'LTC' and self.network == 'regtest'],
 		)
 
-		self.lockfile = os.path.join(self.network_datadir,'.cookie')
+		self.lockfile = os.path.join(self.network_datadir, '.cookie')
 
 	@property
 	def state(self):
-		cp = self.cli('getblockcount',silent=True)
+		cp = self.cli('getblockcount', silent=True)
 		err = cp.stderr.decode()
 		if ("error: couldn't connect" in err
 			or "error: Could not connect" in err
-			or "does not exist" in err ):
+			or "does not exist" in err):
 			# regtest has no cookie file, so test will always fail
 			ret = 'busy' if (self.lockfile and os.path.exists(self.lockfile)) else 'stopped'
 		elif cp.returncode == 0:
@@ -108,19 +108,19 @@ class bitcoin_core_daemon(CoinDaemon):
 	def stop_cmd(self):
 		return self.cli_cmd('stop')
 
-	def set_comment_args(self,rpc,coinaddr,lbl):
+	def set_comment_args(self, rpc, coinaddr, lbl):
 		if 'label_api' in rpc.caps:
-			return ('setlabel',coinaddr,lbl)
+			return ('setlabel', coinaddr, lbl)
 		else:
 			# NOTE: this works because importaddress() removes the old account before
 			# associating the new account with the address.
-			# RPC args: addr,label,rescan[=true],p2sh[=none]
-			return ('importaddress',coinaddr,lbl,False)
+			# RPC args: addr, label, rescan[=true], p2sh[=none]
+			return ('importaddress', coinaddr, lbl, False)
 
-	def estimatefee_args(self,rpc):
+	def estimatefee_args(self, rpc):
 		return (self.cfg.fee_estimate_confs,)
 
-	def sigfail_errmsg(self,e):
+	def sigfail_errmsg(self, e):
 		return e.args[0]
 
 class bitcoin_cash_node_daemon(bitcoin_core_daemon):
@@ -131,24 +131,24 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	cfg_file_hdr = '# Bitcoin Cash Node config file\n'
 	nonstd_datadir = True
 	datadirs = {
-		'linux': [gc.home_dir,'.bitcoin-bchn'],
+		'linux': [gc.home_dir, '.bitcoin-bchn'],
 		'darwin': [gc.home_dir, 'Library', 'Application Support', 'Bitcoin-Cash-Node'],
-		'win32': [os.getenv('APPDATA'),'Bitcoin-Cash-Node']
+		'win32': [os.getenv('APPDATA'), 'Bitcoin-Cash-Node']
 	}
 
-	def set_comment_args(self,rpc,coinaddr,lbl):
-		# bitcoin-{abc,bchn} 'setlabel' RPC is broken, so use old 'importaddress' method to set label
+	def set_comment_args(self, rpc, coinaddr, lbl):
+		# bitcoin-{abc, bchn} 'setlabel' RPC is broken, so use old 'importaddress' method to set label
 		# Broken behavior: new label is set OK, but old label gets attached to another address
-		return ('importaddress',coinaddr,lbl,False)
+		return ('importaddress', coinaddr, lbl, False)
 
-	def estimatefee_args(self,rpc):
+	def estimatefee_args(self, rpc):
 		return () if rpc.daemon_version >= 190100 else (self.cfg.fee_estimate_confs,)
 
-	def sigfail_errmsg(self,e):
+	def sigfail_errmsg(self, e):
 		return (
 			'This is not the BCH chain.\nRe-run the script without the --coin=bch option.'
 				if 'Invalid sighash param' in e.args[0] else
-			e.args[0] )
+			e.args[0])
 
 class litecoin_core_daemon(bitcoin_core_daemon):
 	# v0.21.2rc5 crashes when mining more than 431 blocks in regtest mode:
@@ -161,7 +161,7 @@ class litecoin_core_daemon(bitcoin_core_daemon):
 	cfg_file = 'litecoin.conf'
 	cfg_file_hdr = '# Litecoin Core config file\n'
 	datadirs = {
-		'linux': [gc.home_dir,'.litecoin'],
+		'linux': [gc.home_dir, '.litecoin'],
 		'darwin': [gc.home_dir, 'Library', 'Application Support', 'Litecoin'],
-		'win32': [os.getenv('APPDATA'),'Litecoin']
+		'win32': [os.getenv('APPDATA'), 'Litecoin']
 	}

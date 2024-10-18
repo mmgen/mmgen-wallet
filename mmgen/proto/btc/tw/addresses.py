@@ -14,11 +14,11 @@ proto.btc.tw.addresses: Bitcoin base protocol tracking wallet address list class
 
 from ....tw.addresses import TwAddresses
 from ....tw.shared import TwLabel
-from ....util import msg,msg_r
+from ....util import msg, msg_r
 from ....obj import get_obj
 from .rpc import BitcoinTwRPC
 
-class BitcoinTwAddresses(TwAddresses,BitcoinTwRPC):
+class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
 
 	has_age = True
 	prompt_fs_in = [
@@ -43,7 +43,7 @@ class BitcoinTwAddresses(TwAddresses,BitcoinTwRPC):
 		'v':'a_view',
 		'w':'a_view_detail',
 		'p':'a_print_detail',
-		'l':'i_comment_add' }
+		'l':'i_comment_add'}
 
 	async def get_rpc_data(self):
 
@@ -68,8 +68,8 @@ class BitcoinTwAddresses(TwAddresses,BitcoinTwRPC):
 
 		msg_r('Getting received funds data...')
 		# args: 1:minconf, 2:include_empty, 3:include_watchonly, 4:include_immature_coinbase (>=v23.0.0)
-		for d in await self.rpc.call( 'listreceivedbylabel', 1, True, True ):
-			label = get_obj( TwLabel, proto=self.proto, text=d['label'] )
+		for d in await self.rpc.call('listreceivedbylabel', 1, True, True):
+			label = get_obj(TwLabel, proto=self.proto, text=d['label'])
 			if label:
 				assert label.mmid in addrs, f'{label.mmid!r} not found in addrlist!'
 				addrs[label.mmid]['recvd'] = coin_amt(d['amount'])

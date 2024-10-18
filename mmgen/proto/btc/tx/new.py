@@ -18,7 +18,7 @@ from ....util import msg, fmt, make_chksum_6, die, suf
 from ....color import pink
 from .base import Base
 
-class New(Base,TxBase.New):
+class New(Base, TxBase.New):
 	usr_fee_prompt = 'Enter transaction fee: '
 	fee_fail_fs = 'Network fee estimation for {c} confirmations failed ({t})'
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
@@ -68,7 +68,7 @@ class New(Base,TxBase.New):
 		return self.proto.coin_amt(amt_in_units * tx_size, from_unit=units[unit])
 
 	# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
-	def fee_est2abs(self,fee_per_kb,fe_type=None):
+	def fee_est2abs(self, fee_per_kb, fe_type=None):
 		from decimal import Decimal
 		tx_size = self.estimate_size()
 		ret = self.proto.coin_amt('1') * (fee_per_kb * self.cfg.fee_adjust * tx_size / 1024)
@@ -81,8 +81,8 @@ class New(Base,TxBase.New):
 			""").strip())
 		return ret
 
-	def convert_and_check_fee(self,fee,desc):
-		abs_fee = self.feespec2abs(fee,self.estimate_size())
+	def convert_and_check_fee(self, fee, desc):
+		abs_fee = self.feespec2abs(fee, self.estimate_size())
 		if abs_fee is None:
 			raise ValueError(f'{fee}: cannot convert {self.rel_fee_desc} to {self.coin}'
 								+ ' because transaction size is unknown')
@@ -101,7 +101,7 @@ class New(Base,TxBase.New):
 		# Bitcoin full node, call doesn't go to the network, so just call listunspent with addrs=[]
 		return []
 
-	def update_change_output(self,funds_left):
+	def update_change_output(self, funds_left):
 		if funds_left == 0: # TODO: test
 			msg(self.no_chg_msg)
 			self.outputs.pop(self.chg_idx)
@@ -112,12 +112,12 @@ class New(Base,TxBase.New):
 		fee = self.sum_inputs() - self.sum_outputs()
 		if fee > self.proto.max_tx_fee:
 			c = self.proto.coin
-			die( 'MaxFeeExceeded', f'Transaction fee of {fee} {c} too high! (> {self.proto.max_tx_fee} {c})' )
+			die('MaxFeeExceeded', f'Transaction fee of {fee} {c} too high! (> {self.proto.max_tx_fee} {c})')
 
-	def final_inputs_ok_msg(self,funds_left):
+	def final_inputs_ok_msg(self, funds_left):
 		return 'Transaction produces {} {} in change'.format(funds_left.hl(), self.coin)
 
-	async def create_serialized(self,locktime=None,bump=None):
+	async def create_serialized(self, locktime=None, bump=None):
 
 		if not bump:
 			self.inputs.sort_bip69()
@@ -133,15 +133,15 @@ class New(Base,TxBase.New):
 				'txid':     e.txid,
 				'vout':     e.vout,
 				'sequence': e.sequence
-			} for e in self.inputs ]
+			} for e in self.inputs]
 
 		outputs_dict = {e.addr:e.amt for e in self.outputs}
 
-		ret = await self.rpc.call( 'createrawtransaction', inputs_list, outputs_dict )
+		ret = await self.rpc.call('createrawtransaction', inputs_list, outputs_dict)
 
 		if locktime and not bump:
 			msg(f'Setting nLockTime to {self.info.strfmt_locktime(locktime)}!')
-			assert isinstance(locktime,int), 'locktime value not an integer'
+			assert isinstance(locktime, int), 'locktime value not an integer'
 			self.locktime = locktime
 			ret = ret[:-8] + bytes.fromhex(f'{locktime:08x}')[::-1].hex()
 

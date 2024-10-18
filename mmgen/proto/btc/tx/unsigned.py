@@ -13,14 +13,14 @@ proto.btc.tx.unsigned: Bitcoin unsigned transaction class
 """
 
 from ....tx import unsigned as TxBase
-from ....obj import CoinTxID,MMGenDict
-from ....util import msg,msg_r,ymsg,suf,die
+from ....obj import CoinTxID, MMGenDict
+from ....util import msg, msg_r, ymsg, suf, die
 from .completed import Completed
 
-class Unsigned(Completed,TxBase.Unsigned):
+class Unsigned(Completed, TxBase.Unsigned):
 	desc = 'unsigned transaction'
 
-	async def sign(self,tx_num_str,keys): # return signed object or False; don't exit or raise exception
+	async def sign(self, tx_num_str, keys): # return signed object or False; don't exit or raise exception
 
 		from ....exception import TransactionChainMismatch
 		try:
@@ -37,14 +37,14 @@ class Unsigned(Completed,TxBase.Unsigned):
 		self.cfg._util.qmsg(f'Passing {len(keys)} key{suf(keys)} to {self.rpc.daemon.exec_fn}')
 
 		if self.has_segwit_inputs():
-			from ....addrgen import KeyGenerator,AddrGenerator
-			kg = KeyGenerator( self.cfg, self.proto, 'std' )
-			ag = AddrGenerator( self.cfg, self.proto, 'segwit' )
-			keydict = MMGenDict([(d.addr,d.sec) for d in keys])
+			from ....addrgen import KeyGenerator, AddrGenerator
+			kg = KeyGenerator(self.cfg, self.proto, 'std')
+			ag = AddrGenerator(self.cfg, self.proto, 'segwit')
+			keydict = MMGenDict([(d.addr, d.sec) for d in keys])
 
 		sig_data = []
 		for d in self.inputs:
-			e = {k:getattr(d,k) for k in ('txid','vout','scriptPubKey','amt')}
+			e = {k:getattr(d, k) for k in ('txid', 'vout', 'scriptPubKey', 'amt')}
 			e['amount'] = e['amt']
 			del e['amt']
 			if d.mmtype == 'S':
@@ -56,8 +56,8 @@ class Unsigned(Completed,TxBase.Unsigned):
 
 		try:
 			args = (
-				('signrawtransaction',       self.serialized,sig_data,wifs,self.proto.sighash_type),
-				('signrawtransactionwithkey',self.serialized,wifs,sig_data,self.proto.sighash_type)
+				('signrawtransaction',       self.serialized, sig_data, wifs, self.proto.sighash_type),
+				('signrawtransactionwithkey', self.serialized, wifs, sig_data, self.proto.sighash_type)
 			)['sign_with_key' in self.rpc.caps]
 			ret = await self.rpc.call(*args)
 		except Exception as e:
@@ -68,11 +68,11 @@ class Unsigned(Completed,TxBase.Unsigned):
 			self.update_serialized(ret['hex'])
 			from ....tx import SignedTX
 			new = await SignedTX(cfg=self.cfg, data=self.__dict__, automount=self.automount)
-			tx_decoded = await self.rpc.call( 'decoderawtransaction', ret['hex'] )
+			tx_decoded = await self.rpc.call('decoderawtransaction', ret['hex'])
 			new.compare_size_and_estimated_size(tx_decoded)
 			new.coin_txid = CoinTxID(self.deserialized.txid)
 			if not new.coin_txid == tx_decoded['txid']:
-				die( 'BadMMGenTxID', 'txid mismatch (after signing)' )
+				die('BadMMGenTxID', 'txid mismatch (after signing)')
 			msg('OK')
 			return new
 		except Exception as e:

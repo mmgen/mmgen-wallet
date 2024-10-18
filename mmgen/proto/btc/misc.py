@@ -12,9 +12,9 @@
 proto.btc.misc: miscellaneous functions for Bitcoin base protocol
 """
 
-from ...util import msg,msg_r
+from ...util import msg, msg_r
 
-async def scantxoutset(cfg,rpc,descriptor_list):
+async def scantxoutset(cfg, rpc, descriptor_list):
 
 	import asyncio
 
@@ -23,7 +23,7 @@ async def scantxoutset(cfg,rpc,descriptor_list):
 			'scantxoutset',
 			'start',
 			descriptor_list,
-			timeout = 720 ) # call may take several minutes to complete
+			timeout = 720) # call may take several minutes to complete
 
 	async def do_status():
 
@@ -34,23 +34,23 @@ async def scantxoutset(cfg,rpc,descriptor_list):
 
 		while True:
 			await asyncio.sleep(sleep_secs)
-			res = await rpc.call('scantxoutset','status')
+			res = await rpc.call('scantxoutset', 'status')
 			if res:
 				msg_r(m + f'{res["progress"]}% completed ')
 			if task1.done():
 				msg(m + '100% completed')
 				return
 
-	res = await rpc.call('scantxoutset','status')
+	res = await rpc.call('scantxoutset', 'status')
 	if res and res.get('progress'):
 		msg_r('Aborting scan in progress...')
-		await rpc.call('scantxoutset','abort')
+		await rpc.call('scantxoutset', 'abort')
 		await asyncio.sleep(1)
 		msg('done')
 
 	if rpc.backend.name == 'aiohttp':
-		task1 = asyncio.create_task( do_scan() )
-		task2 = asyncio.create_task( do_status() )
+		task1 = asyncio.create_task(do_scan())
+		task2 = asyncio.create_task(do_status())
 		ret = await task1
 		await task2
 	else:

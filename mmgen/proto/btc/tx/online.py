@@ -13,27 +13,27 @@ proto.btc.tx.online: Bitcoin online signed transaction class
 """
 
 from ....tx import online as TxBase
-from ....util import msg,die
+from ....util import msg, die
 from ....color import orange
 from .signed import Signed
 
-class OnlineSigned(Signed,TxBase.OnlineSigned):
+class OnlineSigned(Signed, TxBase.OnlineSigned):
 
-	async def send(self,prompt_user=True):
+	async def send(self, prompt_user=True):
 
 		self.check_correct_chain()
 
 		if not self.cfg.bogus_send:
 			if self.has_segwit_outputs() and not self.rpc.info('segwit_is_active'):
-				die(2,'Transaction has Segwit outputs, but this blockchain does not support Segwit'
+				die(2, 'Transaction has Segwit outputs, but this blockchain does not support Segwit'
 						+ ' at the current height')
 
 		if self.fee > self.proto.max_tx_fee:
-			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
+			die(2, 'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
 				self.fee,
 				self.proto.name,
 				self.proto.max_tx_fee,
-				self.proto.coin ))
+				self.proto.coin))
 
 		await self.status.display()
 
@@ -45,7 +45,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 		else:
 			m = 'Transaction sent: {}'
 			try:
-				ret = await self.rpc.call('sendrawtransaction',self.serialized)
+				ret = await self.rpc.call('sendrawtransaction', self.serialized)
 			except Exception as e:
 				errmsg = str(e)
 				nl = '\n'
@@ -61,7 +61,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 					m = "Transaction with nLockTime {!r} can’t be included in this block!".format(
 						self.info.strfmt_locktime(self.get_serialized_locktime()))
 				else:
-					m,nl = ('','')
+					m, nl = ('', '')
 				msg(orange('\n'+errmsg))
 				die(2, f'{m}{nl}Send of MMGen transaction {self.txid} failed')
 			else:

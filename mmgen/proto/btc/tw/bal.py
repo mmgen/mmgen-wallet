@@ -23,7 +23,7 @@ class BitcoinTwGetBalance(TwGetBalance):
 		self.walletinfo = await self.rpc.walletinfo
 		await super().__init__(cfg, proto, minconf, quiet)
 
-	start_labels = ('TOTAL','Non-MMGen','Non-wallet')
+	start_labels = ('TOTAL', 'Non-MMGen', 'Non-wallet')
 	conf_cols = {
 		'unconfirmed': 'Unconfirmed',
 		'lt_minconf':  '<{minconf} confs',
@@ -31,9 +31,9 @@ class BitcoinTwGetBalance(TwGetBalance):
 	}
 
 	async def create_data(self):
-		lbl_id = ('account','label')['label_api' in self.rpc.caps]
-		for d in await self.rpc.call('listunspent',0):
-			tw_lbl = get_tw_label(self.proto,d[lbl_id])
+		lbl_id = ('account', 'label')['label_api' in self.rpc.caps]
+		for d in await self.rpc.call('listunspent', 0):
+			tw_lbl = get_tw_label(self.proto, d[lbl_id])
 			if tw_lbl:
 				if tw_lbl.mmid.type == 'mmgen':
 					label = tw_lbl.mmid.obj.sid
@@ -50,7 +50,7 @@ class BitcoinTwGetBalance(TwGetBalance):
 				self.data['TOTAL']['unconfirmed'] += amt
 				self.data[label]['unconfirmed'] += amt
 
-			col_key = ('lt_minconf','ge_minconf')[d['confirmations'] >= self.minconf]
+			col_key = ('lt_minconf', 'ge_minconf')[d['confirmations'] >= self.minconf]
 			self.data['TOTAL'][col_key] += amt
 			self.data[label][col_key] += amt
 
@@ -61,7 +61,7 @@ class BitcoinTwGetBalance(TwGetBalance):
 
 		def gen_spendable_warning():
 			if check_spendable:
-				for k,v in self.data.items():
+				for k, v in self.data.items():
 					if v['spendable']:
 						yield red(f'Warning: this wallet contains PRIVATE KEYS for {k} outputs!')
 

@@ -15,12 +15,12 @@ proto.btc.tx.status: Bitcoin transaction status class
 import time
 
 from ....tx import status as TxBase
-from ....util import msg,suf,die
+from ....util import msg, suf, die
 from ....util2 import format_elapsed_hr
 
 class Status(TxBase.Status):
 
-	async def display(self,usr_req=False):
+	async def display(self, usr_req=False):
 
 		tx = self.tx
 
@@ -33,10 +33,10 @@ class Status(TxBase.Status):
 					'gettransaction',
 					txid              = tx.coin_txid,
 					include_watchonly = True,
-					verbose           = False )
+					verbose           = False)
 			except:
 				return False
-			if ret.get('confirmations',0) > 0:
+			if ret.get('confirmations', 0) > 0:
 				r.confs = ret['confirmations']
 				return True
 			else:
@@ -44,13 +44,13 @@ class Status(TxBase.Status):
 
 		async def is_in_utxos():
 			try:
-				return 'txid' in await tx.rpc.call('getrawtransaction',tx.coin_txid,True)
+				return 'txid' in await tx.rpc.call('getrawtransaction', tx.coin_txid, True)
 			except:
 				return False
 
 		async def is_in_mempool():
 			try:
-				await tx.rpc.call('getmempoolentry',tx.coin_txid)
+				await tx.rpc.call('getmempoolentry', tx.coin_txid)
 				return True
 			except:
 				return False
@@ -63,11 +63,11 @@ class Status(TxBase.Status):
 					'gettransaction',
 					txid              = tx.coin_txid,
 					include_watchonly = True,
-					verbose           = False )
+					verbose           = False)
 			except:
 				return False
 			else:
-				if 'bip125-replaceable' in ret and ret.get('confirmations',1) <= 0:
+				if 'bip125-replaceable' in ret and ret.get('confirmations', 1) <= 0:
 					r.replacing_confs = -ret['confirmations']
 					r.replacing_txs = ret['walletconflicts']
 					return True
@@ -80,34 +80,34 @@ class Status(TxBase.Status):
 					'gettransaction',
 					txid              = tx.coin_txid,
 					include_watchonly = True,
-					verbose           = False )
+					verbose           = False)
 				rep = ('' if d.get('bip125-replaceable') == 'yes' else 'NOT ') + 'replaceable'
 				t = d['timereceived']
 				if tx.cfg.quiet:
 					msg('Transaction is in mempool')
 				else:
 					msg(f'TX status: in mempool, {rep}')
-					msg('Sent {} ({})'.format(time.strftime('%c',time.gmtime(t)), format_elapsed_hr(t)))
+					msg('Sent {} ({})'.format(time.strftime('%c', time.gmtime(t)), format_elapsed_hr(t)))
 			else:
 				msg('Warning: transaction is in mempool!')
 		elif await is_in_wallet():
-			die(0,f'Transaction has {r.confs} confirmation{suf(r.confs)}')
+			die(0, f'Transaction has {r.confs} confirmation{suf(r.confs)}')
 		elif await is_in_utxos():
-			die(4,'ERROR: transaction is in the blockchain (but not in the tracking wallet)!')
+			die(4, 'ERROR: transaction is in the blockchain (but not in the tracking wallet)!')
 		elif await is_replaced():
 			msg('Transaction has been replaced')
 			msg('Replacement transaction ' + (
 					f'has {r.replacing_confs} confirmation{suf(r.replacing_confs)}'
 				if r.replacing_confs else
-					'is in mempool' ) )
+					'is in mempool'))
 			if not tx.cfg.quiet:
 				msg('Replacing transactions:')
 				d = []
 				for txid in r.replacing_txs:
 					try:
-						d.append(await tx.rpc.call('getmempoolentry',txid))
+						d.append(await tx.rpc.call('getmempoolentry', txid))
 					except:
 						d.append({})
-				for txid,mp_entry in zip(r.replacing_txs,d):
-					msg(f'  {txid}' + (' in mempool' if 'height' in mp_entry else '') )
-			die(0,'')
+				for txid, mp_entry in zip(r.replacing_txs, d):
+					msg(f'  {txid}' + (' in mempool' if 'height' in mp_entry else ''))
+			die(0, '')

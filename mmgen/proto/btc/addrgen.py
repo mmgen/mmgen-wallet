@@ -30,14 +30,14 @@ class compressed(p2pkh):
 class segwit(addr_generator.base):
 
 	@check_data
-	def to_addr(self,data):
+	def to_addr(self, data):
 		return self.proto.pubhash2segwitaddr(hash160(data.pubkey))
 
-	def to_segwit_redeem_script(self,data): # NB: returns hex
+	def to_segwit_redeem_script(self, data): # NB: returns hex
 		return self.proto.pubhash2redeem_script(hash160(data.pubkey)).hex()
 
 class bech32(addr_generator.base):
 
 	@check_data
-	def to_addr(self,data):
+	def to_addr(self, data):
 		return self.proto.pubhash2bech32addr(hash160(data.pubkey))

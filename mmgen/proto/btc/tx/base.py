@@ -91,7 +91,7 @@ def DeserializeTX(proto, txhex):
 	raw_tx = bytearray()
 	idx = 0
 
-	d = { 'version': bytes2int(bshift(4)) }
+	d = {'version': bytes2int(bshift(4))}
 
 	if d['version'] > 0x7fffffff: # version is signed integer
 		die(3, f"{d['version']}: transaction version greater than maximum allowed value (int32_t)!")
@@ -134,7 +134,7 @@ def DeserializeTX(proto, txhex):
 				bshift(1, skip=True)
 				continue
 			txin['witness'] = [
-				bshift(readVInt(skip=True), skip=True).hex() for item in range(readVInt(skip=True)) ]
+				bshift(readVInt(skip=True), skip=True).hex() for item in range(readVInt(skip=True))]
 	else:
 		d['txid'] = make_txid(tx)
 		d['witness_size'] = 0
