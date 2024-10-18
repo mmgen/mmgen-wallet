@@ -126,7 +126,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 		self.spawn('',msg_only=True)
 		data = self.users['alice']
 		from mmgen.wallet import Wallet
-		from mmgen.xmrwallet import MoneroWalletOps,xmrwallet_uargs
+		from mmgen.xmrwallet import op
 		from mmgen.addrlist import KeyAddrList
 		silence()
 		kal = KeyAddrList(
@@ -138,9 +138,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet,CmdTestAutosignThreaded):
 			key_address_validity_check = False )
 		kal.file.write(ask_overwrite=False)
 		fn = get_file_with_ext(data.udir,'akeys')
-		m = MoneroWalletOps.create(
-			self.cfg,
-			xmrwallet_uargs(fn, '1-2', None))
+		m = op('create', self.cfg, fn, '1-2')
 		async_run(m.main())
 		async_run(m.stop_wallet_daemon())
 		end_silence()

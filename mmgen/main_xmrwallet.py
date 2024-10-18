@@ -16,12 +16,7 @@ import asyncio
 
 from .cfg import gc, Config
 from .util import die, fmt_dict
-from .xmrwallet import (
-	MoneroWalletOps,
-	xmrwallet_uarg_info,
-	xmrwallet_uargs,
-	tx_priorities
-)
+from . import xmrwallet
 
 opts_data = {
 	'sets': [
@@ -94,11 +89,11 @@ opts_data = {
 	},
 	'code': {
 		'options': lambda cfg, s: s.format(
-			D=xmrwallet_uarg_info['daemon'].annot,
-			R=xmrwallet_uarg_info['tx_relay_daemon'].annot,
+			D=xmrwallet.uarg_info['daemon'].annot,
+			R=xmrwallet.uarg_info['tx_relay_daemon'].annot,
 			cfg=cfg,
 			gc=gc,
-			tp=fmt_dict(tx_priorities,fmt='equal_compact')
+			tp=fmt_dict(xmrwallet.tx_priorities, fmt='equal_compact')
 		),
 		'notes': lambda help_mod, s: s.format(
 			xmrwallet_help = help_mod('xmrwallet')
@@ -112,7 +107,7 @@ cmd_args = cfg._args
 
 if cmd_args and cfg.autosign and (
 		cmd_args[0] in (
-			MoneroWalletOps.kafile_arg_ops
+			xmrwallet.kafile_arg_ops
 			+ ('export-outputs', 'export-outputs-sign', 'import-key-images', 'txview', 'txlist')
 		)
 		or len(cmd_args) == 1 and cmd_args[0] in ('submit', 'resubmit', 'abort')
@@ -148,9 +143,7 @@ elif op in ('export-outputs', 'export-outputs-sign', 'import-key-images'):
 else:
 	die(1, f'{op!r}: unrecognized operation')
 
-op_cls = getattr(MoneroWalletOps,op.replace('-','_'))
-
-m = op_cls(cfg, xmrwallet_uargs(infile, wallets, spec))
+m = xmrwallet.op(op, cfg, infile, wallets, spec)
 
 if asyncio.run(m.main()):
 	m.post_main_success()

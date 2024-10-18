@@ -13,7 +13,7 @@ help.xmrwallet: xmrwallet help notes for MMGen suite
 """
 
 def help(proto, cfg):
-	from ..xmrwallet import xmrwallet_uarg_info as uarg_info
+	from ..xmrwallet import uarg_info
 
 	return """
 Many operations take an optional ‘wallets’ argument: one or more address

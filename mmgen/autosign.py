@@ -343,15 +343,14 @@ class Signable:
 		summary_footer = ''
 
 		async def sign(self,f):
-			from .xmrwallet import MoneroMMGenTX,MoneroWalletOps,xmrwallet_uargs
-			tx1 = MoneroMMGenTX.Completed( self.parent.xmrwallet_cfg, f )
-			m = MoneroWalletOps.sign(
+			from . import xmrwallet
+			from .xmrwallet.file.tx import MoneroMMGenTX
+			tx1 = MoneroMMGenTX.Completed(self.parent.xmrwallet_cfg, f)
+			m = xmrwallet.op(
+				'sign',
 				self.parent.xmrwallet_cfg,
-				xmrwallet_uargs(
-					infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
-					wallets = str(tx1.src_wallet_idx),
-					spec    = None ),
-			)
+				infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
+				wallets = str(tx1.src_wallet_idx))
 			tx2 = await m.main( f, restart_daemon=self.need_daemon_restart(m,tx1.src_wallet_idx) )
 			tx2.write(ask_write=False)
 			return tx2
@@ -372,15 +371,13 @@ class Signable:
 					if not json.loads(f.read_text())['MoneroMMGenWalletOutputsFile']['data']['imported'])
 
 		async def sign(self,f):
-			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
-			wallet_idx = MoneroWalletOps.wallet.get_idx_from_fn(f)
-			m = MoneroWalletOps.import_outputs(
+			from . import xmrwallet
+			wallet_idx = xmrwallet.op_cls('wallet').get_idx_from_fn(f)
+			m = xmrwallet.op(
+				'import_outputs',
 				self.parent.xmrwallet_cfg,
-				xmrwallet_uargs(
-					infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
-					wallets = str(wallet_idx),
-					spec    = None ),
-			)
+				infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
+				wallets = str(wallet_idx))
 			obj = await m.main(f, wallet_idx, restart_daemon=self.need_daemon_restart(m,wallet_idx))
 			obj.write(quiet=not obj.data.sign)
 			self.action_desc = 'imported and signed' if obj.data.sign else 'imported'
@@ -802,16 +799,14 @@ class Autosign:
 	def xmr_setup(self):
 
 		def create_signing_wallets():
-			from .xmrwallet import MoneroWalletOps,xmrwallet_uargs
+			from . import xmrwallet
 			if len(self.wallet_files) > 1:
 				ymsg(f'Warning: more than one wallet file, using the first ({self.wallet_files[0]}) for xmrwallet generation')
-			m = MoneroWalletOps.create_offline(
+			m = xmrwallet.op(
+				'create_offline',
 				self.xmrwallet_cfg,
-				xmrwallet_uargs(
-					infile  = str(self.wallet_files[0]), # MMGen wallet file
-					wallets = self.cfg.xmrwallets,  # XMR wallet idxs
-					spec    = None ),
-			)
+				infile  = str(self.wallet_files[0]), # MMGen wallet file
+				wallets = self.cfg.xmrwallets)       # XMR wallet idxs
 			asyncio.run(m.main())
 			asyncio.run(m.stop_wallet_daemon())
 

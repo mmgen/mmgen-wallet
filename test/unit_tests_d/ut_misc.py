@@ -64,7 +64,7 @@ class unit_tests:
 		return True
 
 	def xmrwallet_uarg_info(self, name, ut, desc='dict xmrwallet.xmrwallet_uarg_info'): # WIP
-		from mmgen.xmrwallet import xmrwallet_uarg_info as uarg_info
+		from mmgen.xmrwallet import uarg_info
 		vs = namedtuple('vector_data', ['text', 'groups'])
 		fs = '{:16} {}'
 
