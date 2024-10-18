@@ -31,7 +31,7 @@ class TxInfo(TxInfo):
 	def format_rel_fee(self):
 		tx = self.tx
 		return ' ({} {}, {} of spend amount)'.format(
-			pink(str(tx.fee_abs2rel(tx.fee))),
+			pink(tx.fee_abs2rel(tx.fee)),
 			tx.rel_fee_disp,
 			pink('{:0.6f}%'.format( tx.fee / tx.send_amt * 100 ))
 		)

@@ -137,7 +137,7 @@ class New(Base):
 					c = ('', '≈')[self.fee_is_approximate],
 					d = abs_fee.hl(),
 					e = self.coin,
-					f = pink(str(self.fee_abs2rel(abs_fee))),
+					f = pink(self.fee_abs2rel(abs_fee)),
 					g = self.rel_fee_disp)
 				from ..ui import keypress_confirm
 				if self.cfg.yes or keypress_confirm(self.cfg, prompt+'OK?', default_yes=True):
