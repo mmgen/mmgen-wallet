@@ -21,7 +21,7 @@ def _pubkey_to_pub_point(vk_bytes):
 	except Exception as e:
 		raise ValueError(f'invalid pubkey {vk_bytes.hex()}\n    {type(e).__name__}: {e}')
 
-def _check_pub_point(pub_point,vk_bytes,addend_bytes=None):
+def _check_pub_point(pub_point, vk_bytes, addend_bytes=None):
 	if pub_point is ecdsa.ellipticcurve.INFINITY:
 		raise ValueError(
 			'pubkey {}{} produced key with point at infinity!'.format(
@@ -31,7 +31,7 @@ def _check_pub_point(pub_point,vk_bytes,addend_bytes=None):
 def pubkey_check_pyecdsa(vk_bytes):
 	_check_pub_point(_pubkey_to_pub_point(vk_bytes), vk_bytes)
 
-def pubkey_tweak_add_pyecdsa(vk_bytes,pk_addend_bytes):
+def pubkey_tweak_add_pyecdsa(vk_bytes, pk_addend_bytes):
 	pk_addend = int.from_bytes(pk_addend_bytes, byteorder='big')
 	point_sum = (
 		_pubkey_to_pub_point(vk_bytes) +

@@ -25,11 +25,11 @@ from subprocess import run, PIPE, DEVNULL
 from pathlib import Path
 
 from mmgen.cfg import gv
-from mmgen.color import yellow,green,orange
+from mmgen.color import yellow, green, orange
 from mmgen.util import msg, msg_r, Msg, Msg_r, gmsg, die, suf, fmt_list
-from mmgen.fileutil import write_data_to_file,get_data_from_file
+from mmgen.fileutil import write_data_to_file, get_data_from_file
 
-def noop(*args,**kwargs):
+def noop(*args, **kwargs):
 	pass
 
 def set_globals(cfg):
@@ -57,23 +57,23 @@ def set_globals(cfg):
 	this.dmsg = msg if cfg.debug else noop
 
 def strip_ansi_escapes(s):
-	return re.sub('\x1b' + r'\[[;0-9]+?m','',s)
+	return re.sub('\x1b' + r'\[[;0-9]+?m', '', s)
 
 cmdtest_py_log_fn = 'cmdtest.py.log'
 cmdtest_py_error_fn = 'cmdtest.py.err'
 parity_dev_amt = 1606938044258990275541962092341162602522202993782792835301376
-ascii_uc   = ''.join(map(chr,list(range(65,91))))   # 26 chars
-ascii_lc   = ''.join(map(chr,list(range(97,123))))  # 26 chars
-lat_accent = ''.join(map(chr,list(range(192,383)))) # 191 chars, L,S
-ru_uc = ''.join(map(chr,list(range(1040,1072)))) # 32 chars
-gr_uc = ''.join(map(chr,list(range(913,930)) + list(range(931,940)))) # 26 chars (930 is ctrl char)
-gr_uc_w_ctrl = ''.join(map(chr,list(range(913,940)))) # 27 chars, L,C
+ascii_uc   = ''.join(map(chr, list(range(65, 91))))   # 26 chars
+ascii_lc   = ''.join(map(chr, list(range(97, 123))))  # 26 chars
+lat_accent = ''.join(map(chr, list(range(192, 383)))) # 191 chars, L, S
+ru_uc = ''.join(map(chr, list(range(1040, 1072)))) # 32 chars
+gr_uc = ''.join(map(chr, list(range(913, 930)) + list(range(931, 940)))) # 26 chars (930 is ctrl char)
+gr_uc_w_ctrl = ''.join(map(chr, list(range(913, 940)))) # 27 chars, L, C
 lat_cyr_gr = lat_accent[:130:5] + ru_uc + gr_uc # 84 chars
 ascii_cyr_gr = ascii_uc + ru_uc + gr_uc # 84 chars
 
-utf8_text      = '[α-$ample UTF-8 text-ω]' * 10   # 230 chars, L,N,P,S,Z
-utf8_combining = '[α-$ámple UTF-8 téxt-ω]' * 10   # L,N,P,S,Z,M
-utf8_ctrl      = '[α-$ample\nUTF-8\ntext-ω]' * 10 # L,N,P,S,Z,C
+utf8_text      = '[α-$ample UTF-8 text-ω]' * 10   # 230 chars, L, N, P, S, Z
+utf8_combining = '[α-$ámple UTF-8 téxt-ω]' * 10   # L, N, P, S, Z, M
+utf8_ctrl      = '[α-$ample\nUTF-8\ntext-ω]' * 10 # L, N, P, S, Z, C
 
 text_jp = '必要なのは、信用ではなく暗号化された証明に基づく電子取引システムであり、これにより希望する二者が信用できる第三者機関を介さずに直接取引できるよう' # 72 chars ('W'ide)
 text_zh = '所以，我們非常需要這樣一種電子支付系統，它基於密碼學原理而不基於信用，使得任何達成一致的雙方，能夠直接進行支付，從而不需要協力廠商仲介的參與。。' # 72 chars ('F'ull + 'W'ide)
@@ -119,23 +119,23 @@ def getrand(n):
 		return os.urandom(n)
 
 def getrandnum(n):
-	return int(getrand(n).hex(),16)
+	return int(getrand(n).hex(), 16)
 
 def getrandhex(n):
 	return getrand(n).hex()
 
-def getrandnum_range(nbytes,rn_max):
+def getrandnum_range(nbytes, rn_max):
 	while True:
-		rn = int(getrand(nbytes).hex(),16)
+		rn = int(getrand(nbytes).hex(), 16)
 		if rn < rn_max:
 			return rn
 
-def getrandstr(num_chars,no_space=False):
-	n,m = (94,33) if no_space else (95,32)
-	return ''.join( chr(i % n + m) for i in list(getrand(num_chars)) )
+def getrandstr(num_chars, no_space=False):
+	n, m = (94, 33) if no_space else (95, 32)
+	return ''.join(chr(i % n + m) for i in list(getrand(num_chars)))
 
 # Windows uses non-UTF8 encodings in filesystem, so use raw bytes here
-def cleandir(d,do_msg=False):
+def cleandir(d, do_msg=False):
 	d_enc = d.encode()
 
 	try:
@@ -151,13 +151,13 @@ def cleandir(d,do_msg=False):
 			try:
 				os.unlink(os.path.join(d_enc, f))
 			except:
-				rmtree(os.path.join(d_enc,f), ignore_errors=True)
+				rmtree(os.path.join(d_enc, f), ignore_errors=True)
 
 	return files
 
 def mk_tmpdir(d):
 	try:
-		os.makedirs( d, mode=0o755, exist_ok=True )
+		os.makedirs(d, mode=0o755, exist_ok=True)
 	except OSError as e:
 		if e.errno != 17:
 			raise
@@ -196,29 +196,29 @@ def clean(cfgs, tmpdir_ids=None, extra_dirs=[]):
 			print(f'Removing non-directory ‘{d}’')
 			os.unlink(d)
 
-def get_tmpfile(cfg,fn):
-	return os.path.join(cfg['tmpdir'],fn)
+def get_tmpfile(cfg, fn):
+	return os.path.join(cfg['tmpdir'], fn)
 
-def write_to_file(fn,data,binary=False):
+def write_to_file(fn, data, binary=False):
 	write_data_to_file(
 		cfg,
 		fn,
 		data,
 		quiet = True,
 		binary = binary,
-		ignore_opt_outdir = True )
+		ignore_opt_outdir = True)
 
-def write_to_tmpfile(cfg,fn,data,binary=False):
-	write_to_file(  os.path.join(cfg['tmpdir'],fn), data=data, binary=binary )
+def write_to_tmpfile(cfg, fn, data, binary=False):
+	write_to_file(os.path.join(cfg['tmpdir'], fn), data=data, binary=binary)
 
-def read_from_file(fn,binary=False):
-	return get_data_from_file( cfg, fn, quiet=True, binary=binary )
+def read_from_file(fn, binary=False):
+	return get_data_from_file(cfg, fn, quiet=True, binary=binary)
 
-def read_from_tmpfile(cfg,fn,binary=False):
-	return read_from_file(os.path.join(cfg['tmpdir'],fn),binary=binary)
+def read_from_tmpfile(cfg, fn, binary=False):
+	return read_from_file(os.path.join(cfg['tmpdir'], fn), binary=binary)
 
-def joinpath(*args,**kwargs):
-	return os.path.join(*args,**kwargs)
+def joinpath(*args, **kwargs):
+	return os.path.join(*args, **kwargs)
 
 def ok(text='OK'):
 	if cfg.profile:
@@ -228,25 +228,25 @@ def ok(text='OK'):
 	else:
 		msg(f' {text}')
 
-def cmp_or_die(s,t,desc=None):
+def cmp_or_die(s, t, desc=None):
 	if s != t:
-		die( 'TestSuiteFatalException',
+		die('TestSuiteFatalException',
 			(f'For {desc}:\n' if desc else '') +
 			f'ERROR: recoded data:\n{t!r}\ndiffers from original data:\n{s!r}'
 		)
 
 def init_coverage():
-	coverdir = os.path.join('test','trace')
-	acc_file = os.path.join('test','trace.acc')
+	coverdir = os.path.join('test', 'trace')
+	acc_file = os.path.join('test', 'trace.acc')
 	try:
-		os.mkdir(coverdir,0o755)
+		os.mkdir(coverdir, 0o755)
 	except:
 		pass
-	return coverdir,acc_file
+	return coverdir, acc_file
 
 def silence():
 	if not (cfg.verbose or cfg.exact_output):
-		gv.stdout = gv.stderr = open(os.devnull,'w')
+		gv.stdout = gv.stderr = open(os.devnull, 'w')
 
 def end_silence():
 	if not (cfg.verbose or cfg.exact_output):
@@ -287,31 +287,31 @@ def end_msg(t):
 		('' if cfg.test_suite_deterministic else f', elapsed time: {t//60:02d}:{t%60:02d}')
 	))
 
-def start_test_daemons(*network_ids,remove_datadir=False):
+def start_test_daemons(*network_ids, remove_datadir=False):
 	if not cfg.no_daemon_autostart:
-		return test_daemons_ops(*network_ids,op='start',remove_datadir=remove_datadir)
+		return test_daemons_ops(*network_ids, op='start', remove_datadir=remove_datadir)
 
-def stop_test_daemons(*network_ids,force=False,remove_datadir=False):
+def stop_test_daemons(*network_ids, force=False, remove_datadir=False):
 	if force or not cfg.no_daemon_stop:
-		return test_daemons_ops(*network_ids,op='stop',remove_datadir=remove_datadir)
+		return test_daemons_ops(*network_ids, op='stop', remove_datadir=remove_datadir)
 
-def restart_test_daemons(*network_ids,remove_datadir=False):
+def restart_test_daemons(*network_ids, remove_datadir=False):
 	if not stop_test_daemons(*network_ids):
 		return False
-	return start_test_daemons(*network_ids,remove_datadir=remove_datadir)
+	return start_test_daemons(*network_ids, remove_datadir=remove_datadir)
 
-def test_daemons_ops(*network_ids,op,remove_datadir=False):
+def test_daemons_ops(*network_ids, op, remove_datadir=False):
 	if not cfg.no_daemon_autostart:
 		from mmgen.daemon import CoinDaemon
 		silent = not (cfg.verbose or cfg.exact_output)
 		ret = False
 		for network_id in network_ids:
-			d = CoinDaemon(cfg,network_id,test_suite=True)
+			d = CoinDaemon(cfg, network_id, test_suite=True)
 			if remove_datadir:
 				d.wait = True
 				d.stop(silent=True)
 				d.remove_datadir()
-			ret = d.cmd(op,silent=silent)
+			ret = d.cmd(op, silent=silent)
 		return ret
 
 tested_solc_ver = '0.8.26'
@@ -319,9 +319,9 @@ tested_solc_ver = '0.8.26'
 def check_solc_ver():
 	cmd = 'python3 scripts/create-token.py --check-solc-version'
 	try:
-		cp = run(cmd.split(),check=False,stdout=PIPE)
+		cp = run(cmd.split(), check=False, stdout=PIPE)
 	except Exception as e:
-		die(4,f'Unable to execute {cmd!r}: {e}')
+		die(4, f'Unable to execute {cmd!r}: {e}')
 	res = cp.stdout.decode().strip()
 	if cp.returncode == 0:
 		omsg(
@@ -335,15 +335,15 @@ def check_solc_ver():
 		return False
 
 def get_ethkey():
-	cmdnames = ('ethkey','openethereum-ethkey')
+	cmdnames = ('ethkey', 'openethereum-ethkey')
 	for cmdname in cmdnames:
 		try:
-			run([cmdname,'--help'],stdout=PIPE)
+			run([cmdname, '--help'], stdout=PIPE)
 		except:
 			pass
 		else:
 			return cmdname
-	die(1,f'ethkey executable not found (tried {cmdnames})')
+	die(1, f'ethkey executable not found (tried {cmdnames})')
 
 def do_run(cmd, check=True):
 	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=check)
@@ -386,7 +386,7 @@ class VirtBlockDeviceBase:
 
 	def attach(self, dev_mode=None, silent=False):
 		if res := self._get_associations():
-			die(2, f'Device{suf(res)} {fmt_list(res,fmt="barest")} already associated with {self.img_path}')
+			die(2, f'Device{suf(res)} {fmt_list(res, fmt="barest")} already associated with {self.img_path}')
 		dev = self.get_new_dev()
 		if dev_mode:
 			self.dev_mode_orig = '0{:o}'.format(os.stat(dev).st_mode & 0xfff)

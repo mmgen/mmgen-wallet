@@ -17,8 +17,8 @@ from pathlib import PurePath
 
 sys.path[0] = str(PurePath(*PurePath(__file__).parts[:-3]))
 
-from mmgen.cfg import Config,gc
-from mmgen.util import msg,die,oneshot_warning,async_run
+from mmgen.cfg import Config, gc
+from mmgen.util import msg, die, oneshot_warning, async_run
 from mmgen.protocol import init_proto
 from mmgen.daemon import CoinDaemon
 
@@ -30,7 +30,7 @@ xmr_wallet_network_ids = {
 action = gc.prog_name.split('-')[0]
 
 opts_data = {
-	'sets': [('debug',True,'verbose',True)],
+	'sets': [('debug', True, 'verbose', True)],
 	'text': {
 		'desc': f'{action.capitalize()} coin or wallet daemons for the MMGen test suite',
 		'usage':'[opts] <network IDs>',
@@ -56,8 +56,10 @@ Valid network IDs: {nid}, {xmrw_nid}, all, no_xmr
 """
 	},
 	'code': {
-		'options': lambda s: s.format(a=action.capitalize(),pn=gc.prog_name),
-		'notes': lambda s,help_notes: s.format(
+		'options': lambda s: s.format(
+			a  = action.capitalize(),
+			pn = gc.prog_name),
+		'notes': lambda s, help_notes: s.format(
 			nid = help_notes('coin_daemon_network_ids'),
 			xmrw_nid = ', '.join(xmr_wallet_network_ids),
 		)
@@ -68,20 +70,20 @@ class warn_missing_exec(oneshot_warning):
 	color = 'nocolor'
 	message = 'daemon executable {!r} not found on this system!'
 
-def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=False):
+def run(network_id=None, proto=None, daemon_id=None, missing_exec_ok=False):
 
 	if network_id in xmr_wallet_network_ids:
 		from mmgen.proto.xmr.daemon import MoneroWalletDaemon
 		d = MoneroWalletDaemon(
 			cfg           = cfg,
-			proto         = init_proto( cfg, coin='XMR', network=xmr_wallet_network_ids[network_id] ),
+			proto         = init_proto(cfg, coin='XMR', network=xmr_wallet_network_ids[network_id]),
 			user          = 'test',
 			passwd        = 'test passwd',
 			test_suite    = True,
 			monerod_addr  = None,
 			trust_monerod = True,
 			test_monerod  = False,
-			opts          = ['no_daemonize'] if cfg.no_daemonize else None )
+			opts          = ['no_daemonize'] if cfg.no_daemonize else None)
 	else:
 		d = CoinDaemon(
 			cfg,
@@ -91,7 +93,7 @@ def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=False):
 			opts       = ['no_daemonize'] if cfg.no_daemonize else None,
 			port_shift = int(cfg.port_shift or 0),
 			datadir    = cfg.datadir,
-			daemon_id  = daemon_id )
+			daemon_id  = daemon_id)
 
 	if cfg.mainnet_only and d.network != 'mainnet':
 		return
@@ -105,20 +107,20 @@ def run(network_id=None,proto=None,daemon_id=None,missing_exec_ok=False):
 		except Exception as e:
 			if not cfg.quiet:
 				msg(str(e))
-				warn_missing_exec( div=d.exec_fn, fmt_args=(d.exec_fn,) )
+				warn_missing_exec(div=d.exec_fn, fmt_args=(d.exec_fn,))
 			return
 	if cfg.print_version:
-		msg('{:16} {}'.format( d.exec_fn+':', d.get_exec_version_str() ))
+		msg('{:16} {}'.format(d.exec_fn+':', d.get_exec_version_str()))
 	elif cfg.get_state:
 		print(d.state_msg())
 	elif cfg.testing:
 		for cmd in d.start_cmds if action == 'start' else [d.stop_cmd]:
 			print(' '.join(cmd))
 	else:
-		if action == 'stop' and hasattr(d,'rpc'):
+		if action == 'stop' and hasattr(d, 'rpc'):
 			async_run(d.rpc.stop_daemon(quiet=cfg.quiet))
 		else:
-			d.cmd(action,quiet=cfg.quiet)
+			d.cmd(action, quiet=cfg.quiet)
 
 def main():
 
@@ -126,16 +128,16 @@ def main():
 		print('\n'.join(CoinDaemon.all_daemon_ids()))
 	elif 'all' in cfg._args or 'no_xmr' in cfg._args:
 		if len(cfg._args) != 1:
-			die(1,"'all' or 'no_xmr' must be the sole argument")
+			die(1, "'all' or 'no_xmr' must be the sole argument")
 		for coin in CoinDaemon.coins:
 			if coin == 'XMR' and cfg._args[0] == 'no_xmr':
 				continue
-			for daemon_id in CoinDaemon.get_daemon_ids(cfg,coin):
-				for network in CoinDaemon.get_daemon(cfg,coin,daemon_id).networks:
+			for daemon_id in CoinDaemon.get_daemon_ids(cfg, coin):
+				for network in CoinDaemon.get_daemon(cfg, coin, daemon_id).networks:
 					run(
-						proto           = init_proto( cfg, coin=coin, network=network ),
+						proto           = init_proto(cfg, coin=coin, network=network),
 						daemon_id       = daemon_id,
-						missing_exec_ok = True )
+						missing_exec_ok = True)
 	else:
 		ids = cfg._args
 		network_ids = CoinDaemon.get_network_ids(cfg)
@@ -143,7 +145,7 @@ def main():
 			cfg._usage()
 		for i in ids:
 			if i not in network_ids + list(xmr_wallet_network_ids):
-				die(1,f'{i!r}: invalid network ID')
+				die(1, f'{i!r}: invalid network ID')
 		for network_id in ids:
 			run(network_id=network_id.lower())
 

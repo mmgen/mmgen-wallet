@@ -20,20 +20,20 @@
 test.include.pexpect: pexpect implementation for MMGen test suites
 """
 
-import sys,time
-from mmgen.color import red,yellow,green,cyan
-from mmgen.util import msg,msg_r,rmsg,die
-from .common import cfg,vmsg,vmsg_r,getrandstr,strip_ansi_escapes
+import sys, time
+from mmgen.color import red, yellow, green, cyan
+from mmgen.util import msg, msg_r, rmsg, die
+from .common import cfg, vmsg, vmsg_r, getrandstr, strip_ansi_escapes
 
 try:
 	import pexpect
 	from pexpect.popen_spawn import PopenSpawn
 except ImportError as e:
-	die(2,red(f'Pexpect module is missing.  Cannnot run test suite ({e!r})'))
+	die(2, red(f'Pexpect module is missing.  Cannnot run test suite ({e!r})'))
 
 def debug_pexpect_msg(p):
-	msg('\n{}{}{}'.format( red('BEFORE ['), p.before, red(']') ))
-	msg('{}{}{}'.format( red('MATCH ['), p.after, red(']') ))
+	msg('\n{}{}{}'.format(red('BEFORE ['), p.before, red(']')))
+	msg('{}{}{}'.format(red('MATCH ['), p.after, red(']')))
 
 NL = '\n'
 
@@ -47,7 +47,7 @@ class MMGenPexpect:
 			pexpect_spawn = False,
 			send_delay    = None,
 			timeout       = None,
-			direct_exec   = False ):
+			direct_exec   = False):
 
 		self.pexpect_spawn = pexpect_spawn
 		self.send_delay = send_delay
@@ -57,15 +57,15 @@ class MMGenPexpect:
 		self.exit_val = None
 
 		if direct_exec or cfg.direct_exec:
-			from subprocess import Popen,DEVNULL
+			from subprocess import Popen, DEVNULL
 			redir = DEVNULL if (no_output or not cfg.exact_output) else None
-			self.ep = Popen([args[0]] + args[1:], stderr=redir, env=spawn_env )
+			self.ep = Popen([args[0]] + args[1:], stderr=redir, env=spawn_env)
 		else:
-			timeout = int(timeout or cfg.pexpect_timeout or 0) or (60,5)[bool(cfg.debug_pexpect)]
+			timeout = int(timeout or cfg.pexpect_timeout or 0) or (60, 5)[bool(cfg.debug_pexpect)]
 			if pexpect_spawn:
-				self.p = pexpect.spawn(args[0],args[1:],encoding='utf8',timeout=timeout,env=spawn_env)
+				self.p = pexpect.spawn(args[0], args[1:], encoding='utf8', timeout=timeout, env=spawn_env)
 			else:
-				self.p = PopenSpawn(args,encoding='utf8',timeout=timeout,env=spawn_env)
+				self.p = PopenSpawn(args, encoding='utf8', timeout=timeout, env=spawn_env)
 
 			if cfg.exact_output:
 				self.p.logfile = sys.stdout
@@ -76,20 +76,20 @@ class MMGenPexpect:
 			desc         = 'key-address data',
 			check        = True,
 			have_yes_opt = False):
-		self.passphrase(desc,pw)
+		self.passphrase(desc, pw)
 		if not have_yes_opt:
-			self.expect('Check key-to-address validity? (y/N): ',('n','y')[check])
+			self.expect('Check key-to-address validity? (y/N): ', ('n', 'y')[check])
 
-	def view_tx(self,view):
-		self.expect(r'View.* transaction.*\? .*: ',view,regex=True)
+	def view_tx(self, view):
+		self.expect(r'View.* transaction.*\? .*: ', view, regex=True)
 		if view not in 'n\n':
-			self.expect('to continue: ','\n')
+			self.expect('to continue: ', '\n')
 
-	def do_comment(self,add_comment,has_label=False):
-		p = ('Add a comment to transaction','Edit transaction comment')[has_label]
-		self.expect(f'{p}? (y/N): ',('n','y')[bool(add_comment)])
+	def do_comment(self, add_comment, has_label=False):
+		p = ('Add a comment to transaction', 'Edit transaction comment')[has_label]
+		self.expect(f'{p}? (y/N): ', ('n', 'y')[bool(add_comment)])
 		if add_comment:
-			self.expect('Comment: ',add_comment+'\n')
+			self.expect('Comment: ', add_comment+'\n')
 
 	def ok(self, exit_val=None):
 		if not self.pexpect_spawn:
@@ -97,81 +97,81 @@ class MMGenPexpect:
 		self.p.read()
 		ret = self.p.wait()
 		if ret != (self.exit_val or exit_val or 0) and not cfg.coverage:
-			die( 'TestSuiteSpawnedScriptException', f'Spawned script exited with value {ret}' )
+			die('TestSuiteSpawnedScriptException', f'Spawned script exited with value {ret}')
 		if cfg.profile:
 			return
 		if not self.skip_ok:
 			m = 'OK\n' if ret == 0 else f'OK[{ret}]\n'
-			sys.stderr.write( green(m) if cfg.exact_output or cfg.verbose else ' '+m )
+			sys.stderr.write(green(m) if cfg.exact_output or cfg.verbose else ' '+m)
 		return self
 
 	def license(self):
 		if self.spawn_env.get('MMGEN_NO_LICENSE'):
 			return
-		self.expect("'w' for conditions and warranty info, or 'c' to continue: ",'c')
+		self.expect("'w' for conditions and warranty info, or 'c' to continue: ", 'c')
 
-	def label(self,label='Test Label (UTF-8) α'):
-		self.expect('Enter a wallet label, or hit ENTER for no label: ',label+'\n')
+	def label(self, label='Test Label (UTF-8) α'):
+		self.expect('Enter a wallet label, or hit ENTER for no label: ', label+'\n')
 
-	def usr_rand(self,num_chars):
+	def usr_rand(self, num_chars):
 		if cfg.usr_random:
 			self.interactive()
 			self.send('\n')
 		else:
-			rand_chars = list(getrandstr(num_chars,no_space=True))
+			rand_chars = list(getrandstr(num_chars, no_space=True))
 			vmsg_r('SEND ')
 			while rand_chars:
 				ch = rand_chars.pop(0)
 				msg_r(yellow(ch)+' ' if cfg.verbose else '+')
-				self.expect('left: ',ch,delay=0.005)
-			self.expect('ENTER to continue: ','\n')
+				self.expect('left: ', ch, delay=0.005)
+			self.expect('ENTER to continue: ', '\n')
 
-	def passphrase_new(self,desc,passphrase):
-		self.expect(f'Enter passphrase for {desc}: ',passphrase+'\n')
-		self.expect('Repeat passphrase: ',passphrase+'\n')
+	def passphrase_new(self, desc, passphrase):
+		self.expect(f'Enter passphrase for {desc}: ', passphrase+'\n')
+		self.expect('Repeat passphrase: ', passphrase+'\n')
 
-	def passphrase(self,desc,passphrase,pwtype=''):
+	def passphrase(self, desc, passphrase, pwtype=''):
 		if pwtype:
 			pwtype += ' '
-		self.expect(f'Enter {pwtype}passphrase for {desc}.*?: ',passphrase+'\n',regex=True)
+		self.expect(f'Enter {pwtype}passphrase for {desc}.*?: ', passphrase+'\n', regex=True)
 
-	def hash_preset(self,desc,preset=''):
+	def hash_preset(self, desc, preset=''):
 		self.expect(f'Enter hash preset for {desc}')
-		self.expect('or hit ENTER .*?:',str(preset)+'\n',regex=True)
+		self.expect('or hit ENTER .*?:', str(preset)+'\n', regex=True)
 
-	def written_to_file(self,desc,overwrite_unlikely=False,query='Overwrite?  '):
+	def written_to_file(self, desc, overwrite_unlikely=False, query='Overwrite?  '):
 		s1 = f'{desc} written to file '
 		s2 = query + "Type uppercase 'YES' to confirm: "
-		ret = self.expect(([s1,s2],s1)[overwrite_unlikely])
+		ret = self.expect(([s1, s2], s1)[overwrite_unlikely])
 		if ret == 1:
 			self.send('YES\n')
 			return self.expect_getend("Overwriting file '").rstrip("'")
-		self.expect(NL,nonl=True)
+		self.expect(NL, nonl=True)
 		outfile = self.p.before.strip().strip("'")
 		if cfg.debug_pexpect:
 			rmsg(f'Outfile [{outfile}]')
-		vmsg('{} file: {}'.format( desc, cyan(outfile.replace('"',"")) ))
+		vmsg('{} file: {}'.format(desc, cyan(outfile.replace('"', ""))))
 		return outfile
 
-	def hincog_create(self,hincog_bytes):
-		ret = self.expect(['Create? (Y/n): ',"'YES' to confirm: "])
+	def hincog_create(self, hincog_bytes):
+		ret = self.expect(['Create? (Y/n): ', "'YES' to confirm: "])
 		if ret == 0:
 			self.send('\n')
-			self.expect('Enter file size: ',str(hincog_bytes)+'\n')
+			self.expect('Enter file size: ', str(hincog_bytes)+'\n')
 		else:
 			self.send('YES\n')
 		return ret
 
 	def no_overwrite(self):
-		self.expect("Overwrite?  Type uppercase 'YES' to confirm: ",'\n')
+		self.expect("Overwrite?  Type uppercase 'YES' to confirm: ", '\n')
 		self.expect('Exiting at user request')
 
-	def expect_getend(self,s,regex=False):
-		self.expect(s,regex=regex,nonl=True)
+	def expect_getend(self, s, regex=False):
+		self.expect(s, regex=regex, nonl=True)
 		if cfg.debug_pexpect:
 			debug_pexpect_msg(self.p)
 		# readline() of partial lines doesn't work with PopenSpawn, so do this instead:
-		self.expect(NL,nonl=True,silent=True)
+		self.expect(NL, nonl=True, silent=True)
 		if cfg.debug_pexpect:
 			debug_pexpect_msg(self.p)
 		end = self.p.before.rstrip()
@@ -182,21 +182,21 @@ class MMGenPexpect:
 	def interactive(self):
 		return self.p.interact() # interact() not available with popen_spawn
 
-	def kill(self,signal):
+	def kill(self, signal):
 		return self.p.kill(signal)
 
-	def match_expect_list(self,expect_list,greedy=False):
+	def match_expect_list(self, expect_list, greedy=False):
 		allrep = '.*' if greedy else '.*?'
 		expect = (
 			r'(\b|\s)' +
-			fr'\s{allrep}\s'.join(s.replace(r'.',r'\.').replace(' ',r'\s+') for s in expect_list) +
-			r'(\b|\s)' )
+			fr'\s{allrep}\s'.join(s.replace(r'.', r'\.').replace(' ', r'\s+') for s in expect_list) +
+			r'(\b|\s)')
 		import re
-		m = re.search( expect, self.read(strip_color=True), re.DOTALL )
+		m = re.search(expect, self.read(strip_color=True), re.DOTALL)
 		assert m, f'No match found for regular expression {expect!r}'
 		return m
 
-	def expect(self,s,t='',delay=None,regex=False,nonl=False,silent=False):
+	def expect(self, s, t='', delay=None, regex=False, nonl=False, silent=False):
 
 		if not silent:
 			if cfg.verbose:
@@ -205,7 +205,7 @@ class MMGenPexpect:
 				msg_r('+')
 
 		try:
-			ret = (self.p.expect_exact,self.p.expect)[bool(regex)](s) if s else 0
+			ret = (self.p.expect_exact, self.p.expect)[bool(regex)](s) if s else 0
 		except pexpect.TIMEOUT as e:
 			if cfg.debug_pexpect:
 				raise
@@ -217,20 +217,20 @@ class MMGenPexpect:
 		if cfg.debug_pexpect:
 			debug_pexpect_msg(self.p)
 
-		if cfg.verbose and not isinstance(s,str):
+		if cfg.verbose and not isinstance(s, str):
 			msg_r(f' ==> {ret} ')
 
 		if ret == -1:
-			die(4,f'Error.  Expect returned {ret}')
+			die(4, f'Error.  Expect returned {ret}')
 		else:
 			if t:
-				self.send(t,delay,s)
+				self.send(t, delay, s)
 			else:
 				if not nonl and not silent:
 					vmsg('')
 			return ret
 
-	def send(self,t,delay=None,s=False):
+	def send(self, t, delay=None, s=False):
 		delay = delay or self.send_delay
 		if delay:
 			time.sleep(delay)
@@ -241,12 +241,12 @@ class MMGenPexpect:
 		if cfg.verbose:
 			ls = '' if cfg.debug or not s else ' '
 			es = '' if s else '  '
-			yt = yellow('{!r}'.format( t.replace('\n',r'\n') ))
+			yt = yellow('{!r}'.format(t.replace('\n', r'\n')))
 			msg(f'{ls}SEND {es}{yt}')
 		return ret
 
-	def read(self,n=-1,strip_color=False):
-		return strip_ansi_escapes(self.p.read(n)).replace('\r','') if strip_color else self.p.read(n)
+	def read(self, n=-1, strip_color=False):
+		return strip_ansi_escapes(self.p.read(n)).replace('\r', '') if strip_color else self.p.read(n)
 
 	def close(self):
 		if self.pexpect_spawn:

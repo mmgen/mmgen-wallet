@@ -12,7 +12,7 @@
 test.include.test_init: Initialization module for test scripts
 """
 
-import sys,os
+import sys, os
 from pathlib import PurePath
 os.environ['MMGEN_TEST_SUITE'] = '1'
 repo_root = str(PurePath(*PurePath(__file__).parts[:-3]))
