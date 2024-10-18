@@ -22,7 +22,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 """
 
 from . import addrlist
-from .cfg import gc,Config
+from .cfg import gc, Config
 from .addr import MMGenAddrType
 from .wallet import Wallet
 
@@ -40,7 +40,7 @@ else:
 	note_addrkey = ''
 
 opts_data = {
-	'sets': [('print_checksum',True,'quiet',True)],
+	'sets': [('print_checksum', True, 'quiet', True)],
 	'text': {
 		'desc': f"""
                  Generate a range or list of {gen_desc} from an {gc.proj_name} wallet,
@@ -103,66 +103,66 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda proto,help_notes,cfg,s: s.format(
-			dmat=help_notes('dfl_mmtype'),
-			kgs=help_notes('keygen_backends'),
-			coin_id=help_notes('coin_id'),
-			dsl=help_notes('dfl_seed_len'),
-			pnm=gc.proj_name,
-			what=gen_what,
-			cfg=cfg,
-			gc=gc,
+		'options': lambda proto, help_notes, cfg, s: s.format(
+			dmat      = help_notes('dfl_mmtype'),
+			kgs       = help_notes('keygen_backends'),
+			coin_id   = help_notes('coin_id'),
+			dsl       = help_notes('dfl_seed_len'),
+			pnm       = gc.proj_name,
+			what      = gen_what,
+			cfg       = cfg,
+			gc        = gc,
 		),
-		'notes': lambda help_notes,s: s.format(
-			n_addrkey=note_addrkey,
-			n_sw=help_notes('subwallet')+'\n\n',
-			n_pw=help_notes('passwd')+'\n\n',
-			n_bw=help_notes('brainwallet'),
-			n_fmt=help_notes('fmt_codes'),
-			n_at=help_notes('address_types'),
+		'notes': lambda help_notes, s: s.format(
+			n_addrkey = note_addrkey,
+			n_sw      = help_notes('subwallet')+'\n\n',
+			n_pw      = help_notes('passwd')+'\n\n',
+			n_bw      = help_notes('brainwallet'),
+			n_fmt     = help_notes('fmt_codes'),
+			n_at      = help_notes('address_types'),
 		)
 	}
 }
 
-cfg = Config( opts_data=opts_data, opt_filter=opt_filter, need_amt=False )
+cfg = Config(opts_data=opts_data, opt_filter=opt_filter, need_amt=False)
 
 proto = cfg._proto
 
 addr_type = MMGenAddrType(
 	proto = proto,
 	id_str = cfg.type or proto.dfl_mmtype,
-	errmsg = f'{cfg.type!r}: invalid parameter for --type option' )
+	errmsg = f'{cfg.type!r}: invalid parameter for --type option')
 
 if len(cfg._args) < 1:
 	cfg._usage()
 
 if cfg.keygen_backend:
 	from .keygen import check_backend
-	check_backend( cfg, proto, cfg.keygen_backend, cfg.type )
+	check_backend(cfg, proto, cfg.keygen_backend, cfg.type)
 
-idxs = addrlist.AddrIdxList( fmt_str=cfg._args.pop() )
+idxs = addrlist.AddrIdxList(fmt_str=cfg._args.pop())
 
 from .fileutil import get_seed_file
-sf = get_seed_file(cfg,1)
+sf = get_seed_file(cfg, 1)
 
 from .ui import do_license_msg
 do_license_msg(cfg)
 
-ss = Wallet(cfg,sf)
+ss = Wallet(cfg, sf)
 
-ss_seed = ss.seed if cfg.subwallet is None else ss.seed.subseed(cfg.subwallet,print_msg=True)
+ss_seed = ss.seed if cfg.subwallet is None else ss.seed.subseed(cfg.subwallet, print_msg=True)
 
 if cfg.no_addresses:
 	gen_clsname = 'KeyList'
 elif cfg.viewkeys:
 	gen_clsname = 'ViewKeyAddrList'
 
-al = getattr( addrlist, gen_clsname )(
+al = getattr(addrlist, gen_clsname)(
 	cfg       = cfg,
 	proto     = proto,
 	seed      = ss_seed,
 	addr_idxs = idxs,
-	mmtype    = addr_type )
+	mmtype    = addr_type)
 
 af = al.file
 
@@ -170,13 +170,13 @@ af.format()
 
 if al.gen_addrs and cfg.print_checksum:
 	from .util import Die
-	Die(0,al.checksum)
+	Die(0, al.checksum)
 
 from .ui import keypress_confirm
-if al.gen_keys and keypress_confirm( cfg, 'Encrypt key list?' ):
+if al.gen_keys and keypress_confirm(cfg, 'Encrypt key list?'):
 	af.encrypt()
 	af.write(
 		binary = True,
-		desc = f'encrypted {af.desc}' )
+		desc = f'encrypted {af.desc}')
 else:
 	af.write()

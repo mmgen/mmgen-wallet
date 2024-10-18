@@ -22,7 +22,7 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 
 import sys
 
-from .cfg import gc,Config
+from .cfg import gc, Config
 from .util import async_run, die
 
 opts_data = {
@@ -98,7 +98,7 @@ async def main():
 			quiet_open = True)
 
 	from .rpc import rpc_init
-	tx.rpc = await rpc_init(cfg,tx.proto)
+	tx.rpc = await rpc_init(cfg, tx.proto)
 
 	cfg._util.vmsg(f'Getting {tx.desc} ‘{tx.infile}’')
 

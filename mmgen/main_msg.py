@@ -15,7 +15,7 @@ mmgen-msg: Message signing operations for the MMGen suite
 import sys
 from .cfg import Config
 from .base_obj import AsyncInit
-from .util import msg,suf,async_run,die
+from .util import msg, suf, async_run, die
 from .msg import (
 	NewMsg,
 	UnsignedMsg,
@@ -25,11 +25,11 @@ from .msg import (
 )
 
 class MsgOps:
-	ops = ('create','sign','verify')
+	ops = ('create', 'sign', 'verify')
 
 	class create:
 
-		def __init__(self,msg,addr_specs):
+		def __init__(self, msg, addr_specs):
 			NewMsg(
 				cfg       = cfg,
 				coin      = cfg._proto.coin,
@@ -37,35 +37,35 @@ class MsgOps:
 				message   = msg,
 				addrlists = addr_specs,
 				msghash_type = cfg.msghash_type
-			).write_to_file( ask_overwrite=False )
+			).write_to_file(ask_overwrite=False)
 
 	class sign(metaclass=AsyncInit):
 
-		async def __init__(self,msgfile,wallet_files):
+		async def __init__(self, msgfile, wallet_files):
 
-			m = UnsignedMsg( cfg, infile=msgfile )
+			m = UnsignedMsg(cfg, infile=msgfile)
 
 			if not wallet_files:
 				from .filename import find_file_in_dir
 				from .wallet import get_wallet_cls
-				wallet_files = [find_file_in_dir( get_wallet_cls('mmgen'), cfg.data_dir )]
+				wallet_files = [find_file_in_dir(get_wallet_cls('mmgen'), cfg.data_dir)]
 
 			await m.sign(wallet_files)
 
-			m = SignedMsg( cfg, data=m.__dict__ )
+			m = SignedMsg(cfg, data=m.__dict__)
 
-			m.write_to_file( ask_overwrite=False )
+			m.write_to_file(ask_overwrite=False)
 
 			if m.data.get('failed_sids'):
 				sys.exit(1)
 
 	class verify(sign):
 
-		async def __init__(self,msgfile,addr=None):
+		async def __init__(self, msgfile, addr=None):
 			try:
-				m = SignedOnlineMsg( cfg, infile=msgfile )
+				m = SignedOnlineMsg(cfg, infile=msgfile)
 			except:
-				m = ExportedMsgSigs( cfg, infile=msgfile )
+				m = ExportedMsgSigs(cfg, infile=msgfile)
 
 			nSigs = await m.verify(addr)
 
@@ -81,14 +81,14 @@ class MsgOps:
 
 	class export(sign):
 
-		async def __init__(self,msgfile,addr=None):
+		async def __init__(self, msgfile, addr=None):
 
 			from .fileutil import write_data_to_file
 			write_data_to_file(
 				cfg     = cfg,
 				outfile = 'signatures.json',
-				data    = SignedOnlineMsg( cfg, infile=msgfile ).get_json_for_export( addr ),
-				desc    = 'signature data' )
+				data    = SignedOnlineMsg(cfg, infile=msgfile).get_json_for_export(addr),
+				desc    = 'signature data')
 
 opts_data = {
 	'text': {
@@ -196,13 +196,13 @@ $ mmgen-msg verify signatures.json
 """
 	},
 	'code': {
-		'notes': lambda help_notes,s: s.format(
-			n_at=help_notes('address_types'),
+		'notes': lambda help_notes, s: s.format(
+			n_at = help_notes('address_types'),
 		)
 	}
 }
 
-cfg = Config( opts_data=opts_data, need_amt=False )
+cfg = Config(opts_data=opts_data, need_amt=False)
 
 cmd_args = cfg._args
 
@@ -212,22 +212,22 @@ if len(cmd_args) < 2:
 op = cmd_args.pop(0)
 
 if cfg.msghash_type and op != 'create':
-	die(1,'--msghash-type option may only be used with the "create" command')
+	die(1, '--msghash-type option may only be used with the "create" command')
 
 async def main():
 	if op == 'create':
 		if len(cmd_args) < 2:
 			cfg._usage()
-		MsgOps.create( cmd_args[0], ' '.join(cmd_args[1:]) )
+		MsgOps.create(cmd_args[0], ' '.join(cmd_args[1:]))
 	elif op == 'sign':
 		if len(cmd_args) < 1:
 			cfg._usage()
-		await MsgOps.sign( cmd_args[0], cmd_args[1:] )
-	elif op in ('verify','export'):
-		if len(cmd_args) not in (1,2):
+		await MsgOps.sign(cmd_args[0], cmd_args[1:])
+	elif op in ('verify', 'export'):
+		if len(cmd_args) not in (1, 2):
 			cfg._usage()
-		await getattr(MsgOps,op)( cmd_args[0], cmd_args[1] if len(cmd_args) == 2 else None )
+		await getattr(MsgOps, op)(cmd_args[0], cmd_args[1] if len(cmd_args) == 2 else None)
 	else:
-		die(1,f'{op!r}: unrecognized operation')
+		die(1, f'{op!r}: unrecognized operation')
 
 async_run(main())

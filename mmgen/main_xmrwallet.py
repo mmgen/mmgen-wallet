@@ -89,11 +89,11 @@ opts_data = {
 	},
 	'code': {
 		'options': lambda cfg, s: s.format(
-			D=xmrwallet.uarg_info['daemon'].annot,
-			R=xmrwallet.uarg_info['tx_relay_daemon'].annot,
-			cfg=cfg,
-			gc=gc,
-			tp=fmt_dict(xmrwallet.tx_priorities, fmt='equal_compact')
+			D   = xmrwallet.uarg_info['daemon'].annot,
+			R   = xmrwallet.uarg_info['tx_relay_daemon'].annot,
+			cfg = cfg,
+			gc  = gc,
+			tp  = fmt_dict(xmrwallet.tx_priorities, fmt='equal_compact')
 		),
 		'notes': lambda help_mod, s: s.format(
 			xmrwallet_help = help_mod('xmrwallet')

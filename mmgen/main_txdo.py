@@ -20,8 +20,8 @@
 mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
-from .cfg import gc,Config
-from .util import die,fmt_list,async_run
+from .cfg import gc, Config
+from .util import die, fmt_list, async_run
 from .subseed import SubSeedIdxRange
 
 opts_data = {
@@ -102,37 +102,40 @@ FMT CODES:
 {x}"""
 	},
 	'code': {
-		'options': lambda cfg,proto,help_notes,s: s.format(
-			gc=gc,cfg=cfg,pnm=gc.proj_name,pnl=gc.proj_name.lower(),
-			kgs=help_notes('keygen_backends'),
-			coin_id=help_notes('coin_id'),
-			fu=help_notes('rel_fee_desc'),
-			fl=help_notes('fee_spec_letters'),
-			ss=help_notes('dfl_subseeds'),
-			ss_max=SubSeedIdxRange.max_idx,
-			fe_all=fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
-			fe_dfl=cfg._autoset_opts['fee_estimate_mode'].choices[0],
-			dsl=help_notes('dfl_seed_len'),
-			cu=proto.coin),
-		'notes': lambda cfg,help_notes,s: s.format(
-			c = help_notes('txcreate'),
-			F = help_notes('fee'),
-			s = help_notes('txsign'),
-			f = help_notes('fmt_codes'),
-			x = help_notes('txcreate_examples') ),
+		'options': lambda cfg, proto, help_notes, s: s.format(
+			gc      = gc,
+			cfg     = cfg,
+			pnm     = gc.proj_name,
+			pnl     = gc.proj_name.lower(),
+			kgs     = help_notes('keygen_backends'),
+			coin_id = help_notes('coin_id'),
+			fu      = help_notes('rel_fee_desc'),
+			fl      = help_notes('fee_spec_letters'),
+			ss      = help_notes('dfl_subseeds'),
+			ss_max  = SubSeedIdxRange.max_idx,
+			fe_all  = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),
+			fe_dfl  = cfg._autoset_opts['fee_estimate_mode'].choices[0],
+			dsl     = help_notes('dfl_seed_len'),
+			cu      = proto.coin),
+		'notes': lambda cfg, help_notes, s: s.format(
+			c       = help_notes('txcreate'),
+			F       = help_notes('fee'),
+			s       = help_notes('txsign'),
+			f       = help_notes('fmt_codes'),
+			x       = help_notes('txcreate_examples')),
 	}
 }
 
 cfg = Config(opts_data=opts_data)
 
 from .tx import NewTX, SentTX
-from .tx.sign import txsign,get_seed_files,get_keyaddrlist,get_keylist
+from .tx.sign import txsign, get_seed_files, get_keyaddrlist, get_keylist
 
-seed_files = get_seed_files(cfg,cfg._args)
+seed_files = get_seed_files(cfg, cfg._args)
 
 async def main():
 
-	tx1 = await NewTX(cfg=cfg,proto=cfg._proto)
+	tx1 = await NewTX(cfg=cfg, proto=cfg._proto)
 
 	from .rpc import rpc_init
 	tx1.rpc = await rpc_init(cfg)
@@ -140,20 +143,20 @@ async def main():
 	tx2 = await tx1.create(
 		cmd_args = cfg._args,
 		locktime = int(cfg.locktime or 0),
-		caller   = 'txdo' )
+		caller   = 'txdo')
 
-	kal = get_keyaddrlist(cfg,cfg._proto)
+	kal = get_keyaddrlist(cfg, cfg._proto)
 	kl = get_keylist(cfg)
 
-	tx3 = await txsign(cfg,tx2,seed_files,kl,kal)
+	tx3 = await txsign(cfg, tx2, seed_files, kl, kal)
 
 	if tx3:
 		tx3.file.write(ask_write=False)
 		tx4 = await SentTX(cfg=cfg, data=tx3.__dict__)
 		if await tx4.send():
-			tx4.file.write(ask_overwrite=False,ask_write=False)
+			tx4.file.write(ask_overwrite=False, ask_write=False)
 			tx4.print_contract_addr()
 	else:
-		die(2,'Transaction could not be signed')
+		die(2, 'Transaction could not be signed')
 
 async_run(main())

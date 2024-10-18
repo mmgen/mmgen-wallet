@@ -21,11 +21,11 @@ mmgen-seedjoin: Regenerate an MMGen deterministic wallet from seed shares
                 created by 'mmgen-seedsplit'
 """
 
-from .cfg import gc,Config
-from .util import msg,msg_r,die
+from .cfg import gc, Config
+from .util import msg, msg_r, die
 from .color import yellow
 from .seed import Seed
-from .seedsplit import SeedSplitIDString,MasterShareIdx,SeedShareMasterJoining
+from .seedsplit import SeedSplitIDString, MasterShareIdx, SeedShareMasterJoining
 from .wallet import Wallet
 
 opts_data = {
@@ -79,21 +79,22 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda cfg,s: s.format(
-			ms_min=MasterShareIdx.min_val,
-			ms_max=MasterShareIdx.max_val,
-			cfg=cfg,
-			gc=gc,
+		'options': lambda cfg, s: s.format(
+			ms_min = MasterShareIdx.min_val,
+			ms_max = MasterShareIdx.max_val,
+			cfg    = cfg,
+			gc     = gc,
 		),
-		'notes': lambda cfg,help_notes,s: s.format(
-			f=help_notes('fmt_codes'),
-			n_pw=help_notes('passwd'),
+		'notes': lambda cfg, help_notes, s: s.format(
+			f      = help_notes('fmt_codes'),
+			n_pw   = help_notes('passwd'),
 		)
 	}
 }
 
 def print_shares_info():
-	si,out = 0,'\nComputed shares:\n'
+	si = 0
+	out = '\nComputed shares:\n'
 	if cfg.master_share:
 		fs = '{:3}: {}->{} ' + yellow('(master share #{}, split id ') + '{}' + yellow(', share count {})\n')
 		out += fs.format(
@@ -102,9 +103,9 @@ def print_shares_info():
 				share1.sid,
 				master_idx,
 				id_str.hl2(encl='‘’'),
-				len(shares) )
+				len(shares))
 		si = 1
-	for n,s in enumerate(shares[si:],si+1):
+	for n, s in enumerate(shares[si:],si+1):
 		out += f'{n:3}: {s.sid}\n'
 	cfg._util.qmsg(out)
 
@@ -135,7 +136,7 @@ shares = [Wallet(cfg).seed] if cfg.hidden_incog_input_params else []
 shares += [Wallet(cfg,fn).seed for fn in cfg._args]
 
 if cfg.master_share:
-	share1 = SeedShareMasterJoining( cfg, master_idx, shares[0], id_str, len(shares) ).derived_seed
+	share1 = SeedShareMasterJoining(cfg, master_idx, shares[0], id_str, len(shares)).derived_seed
 else:
 	share1 = shares[0]
 
@@ -143,7 +144,7 @@ print_shares_info()
 
 msg_r('Joining {n}-of-{n} XOR split...'.format(n=len(shares)))
 
-seed_out = Seed.join_shares( cfg, [share1] + shares[1:] )
+seed_out = Seed.join_shares(cfg, [share1] + shares[1:])
 
 msg(f'OK\nJoined Seed ID: {seed_out.sid.hl()}')
 

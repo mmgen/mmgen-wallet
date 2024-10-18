@@ -21,8 +21,8 @@ mmgen-regtest: Coin daemon regression test mode setup and operations for the MMG
                suite
 """
 
-from .cfg import gc,Config
-from .util import die,async_run
+from .cfg import gc, Config
+from .util import die, async_run
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
@@ -64,7 +64,7 @@ cmd_args = cfg._args
 from .proto.btc.regtest import MMGenRegtest
 
 def check_num_args():
-	m = getattr(MMGenRegtest,cmd_args[0])
+	m = getattr(MMGenRegtest, cmd_args[0])
 	margs = m.__code__.co_varnames[1:m.__code__.co_argcount]
 	mdfls = m.__defaults__ or ()
 	amin = len(margs) - len(mdfls)
@@ -72,15 +72,15 @@ def check_num_args():
 	args = cmd_args[1:]
 	m = "{}: too {} arguments for command '%s' (must have no {} than {})" % cmd_args[0]
 	if len(args) < amin:
-		die(1,m.format(args,'few','less',amin))
+		die(1, m.format(args, 'few', 'less', amin))
 	elif len(cmd_args[1:]) > amax:
-		die(1,m.format(args,'many','more',amax))
+		die(1, m.format(args, 'many', 'more', amax))
 
 if not cmd_args:
 	cfg._usage()
 elif cmd_args[0] not in MMGenRegtest.usr_cmds:
-	die(1,f'{cmd_args[0]!r}: invalid command')
-elif cmd_args[0] not in ('cli','wallet_cli','balances'):
+	die(1, f'{cmd_args[0]!r}: invalid command')
+elif cmd_args[0] not in ('cli', 'wallet_cli', 'balances'):
 	check_num_args()
 
 async def main():

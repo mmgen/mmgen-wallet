@@ -20,11 +20,11 @@
 main_wallet: Entry point for MMGen wallet-related scripts
 """
 
-import sys,os
-from .cfg import gc,Config
-from .color import green,yellow
-from .util import msg,gmsg_r,ymsg,bmsg,die,capfirst
-from .wallet import Wallet,get_wallet_cls
+import sys, os
+from .cfg import gc, Config
+from .color import green, yellow
+from .util import msg, gmsg_r, ymsg, bmsg, die, capfirst
+from .wallet import Wallet, get_wallet_cls
 
 usage = '[opts] [infile]'
 nargs = 1
@@ -126,26 +126,26 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda cfg,help_notes,s: s.format(
-			iaction=capfirst(iaction),
-			oaction=capfirst(oaction),
-			ms_min=help_notes('MasterShareIdx').min_val,
-			ms_max=help_notes('MasterShareIdx').max_val,
-			dsl=help_notes('dfl_seed_len'),
-			cfg=cfg,
-			gc=gc,
+		'options': lambda cfg, help_notes, s: s.format(
+			iaction = capfirst(iaction),
+			oaction = capfirst(oaction),
+			ms_min  = help_notes('MasterShareIdx').min_val,
+			ms_max  = help_notes('MasterShareIdx').max_val,
+			dsl     = help_notes('dfl_seed_len'),
+			cfg     = cfg,
+			gc      = gc,
 		),
-		'notes': lambda cfg,help_mod,help_notes,s: s.format(
-			f=help_notes('fmt_codes'),
-			n_ss=('',help_mod('seedsplit')+'\n\n')[do_ss_note],
-			n_sw=('',help_notes('subwallet')+'\n\n')[do_sw_note],
-			n_pw=help_notes('passwd'),
-			n_bw=('','\n\n'+help_notes('brainwallet'))[do_bw_note]
+		'notes': lambda cfg, help_mod, help_notes, s: s.format(
+			f       = help_notes('fmt_codes'),
+			n_ss    = ('', help_mod('seedsplit')+'\n\n')[do_ss_note],
+			n_sw    = ('', help_notes('subwallet')+'\n\n')[do_sw_note],
+			n_pw    = help_notes('passwd'),
+			n_bw    = ('', '\n\n'+help_notes('brainwallet'))[do_bw_note]
 		)
 	}
 }
 
-cfg = Config( opts_data=opts_data, opt_filter=opt_filter, need_proto=False )
+cfg = Config(opts_data=opts_data, opt_filter=opt_filter, need_proto=False)
 
 cmd_args = cfg._args
 
@@ -154,17 +154,17 @@ if invoked_as == 'subgen':
 	ss_idx = SubSeedIdx(cmd_args.pop())
 elif invoked_as == 'seedsplit':
 	from .obj import get_obj
-	from .seedsplit import SeedSplitSpecifier,MasterShareIdx
+	from .seedsplit import SeedSplitSpecifier, MasterShareIdx
 	master_share = MasterShareIdx(cfg.master_share) if cfg.master_share else None
 	if cmd_args:
-		sss = get_obj(SeedSplitSpecifier,s=cmd_args.pop(),silent=True)
+		sss = get_obj(SeedSplitSpecifier, s=cmd_args.pop(), silent=True)
 		if master_share:
 			if not sss:
 				sss = SeedSplitSpecifier('1:2')
 			elif sss.idx == 1:
 				m1 = 'Share index of 1 meaningless in master share context.'
 				m2 = 'To generate a master share, omit the seed split specifier.'
-				die(1,m1+'  '+m2)
+				die(1, m1+'  '+m2)
 		elif not sss:
 			cfg._usage()
 	elif master_share:
@@ -172,14 +172,14 @@ elif invoked_as == 'seedsplit':
 	else:
 		cfg._usage()
 
-from .fileutil import check_infile,get_seed_file
+from .fileutil import check_infile, get_seed_file
 
 if cmd_args:
 	if invoked_as == 'gen' or len(cmd_args) > 1:
 		cfg._usage()
 	check_infile(cmd_args[0])
 
-sf = get_seed_file(cfg,nargs,invoked_as=invoked_as)
+sf = get_seed_file(cfg, nargs, invoked_as=invoked_as)
 
 if invoked_as != 'chk':
 	from .ui import do_license_msg
@@ -192,37 +192,37 @@ else:
 		cfg     = cfg,
 		fn      = sf,
 		passchg = invoked_as == 'passchg',
-		passwd_file = False if cfg.passwd_file_new_only else None )
+		passwd_file = False if cfg.passwd_file_new_only else None)
 	m1 = green('Processing input wallet ')
 	m2 = ss_in.seed.sid.hl()
 	m3 = yellow(' (default wallet)') if sf and os.path.dirname(sf) == cfg.data_dir else ''
 	msg(m1+m2+m3)
 
 if invoked_as == 'chk':
-	lbl = ss_in.ssdata.label.hl() if hasattr(ss_in.ssdata,'label') else 'NONE'
+	lbl = ss_in.ssdata.label.hl() if hasattr(ss_in.ssdata, 'label') else 'NONE'
 	cfg._util.vmsg(f'Wallet label: {lbl}')
 	# TODO: display creation date
 	sys.exit(0)
 
 if invoked_as != 'gen':
-	gmsg_r('Processing output wallet' + ('\n',' ')[invoked_as == 'seedsplit'])
+	gmsg_r('Processing output wallet' + ('\n', ' ')[invoked_as == 'seedsplit'])
 
 if invoked_as == 'subgen':
 	ss_out = Wallet(
 		cfg      = cfg,
-		seed_bin = ss_in.seed.subseed(ss_idx,print_msg=True).data )
+		seed_bin = ss_in.seed.subseed(ss_idx, print_msg=True).data)
 elif invoked_as == 'seedsplit':
-	shares = ss_in.seed.split(sss.count,sss.id,master_share)
-	seed_out = shares.get_share_by_idx(sss.idx,base_seed=True)
+	shares = ss_in.seed.split(sss.count, sss.id, master_share)
+	seed_out = shares.get_share_by_idx(sss.idx, base_seed=True)
 	msg(seed_out.get_desc(ui=True))
 	ss_out = Wallet(
 		cfg  = cfg,
-		seed = seed_out )
+		seed = seed_out)
 else:
 	ss_out = Wallet(
 		cfg     = cfg,
 		ss      = ss_in,
-		passchg = invoked_as == 'passchg' )
+		passchg = invoked_as == 'passchg')
 
 if invoked_as == 'gen':
 	cfg._util.qmsg(f"This wallet's Seed ID: {ss_out.seed.sid.hl()}")
@@ -230,18 +230,18 @@ if invoked_as == 'gen':
 if invoked_as == 'passchg':
 	def data_changed(attrs):
 		for attr in attrs:
-			if getattr(ss_out.ssdata,attr) != getattr(ss_in.ssdata,attr):
+			if getattr(ss_out.ssdata, attr) != getattr(ss_in.ssdata, attr):
 				return True
 		return False
-	if not ( cfg.force_update or data_changed(('passwd','hash_preset','label')) ):
-		die(1,'Password, hash preset and label are unchanged.  Taking no action')
+	if not (cfg.force_update or data_changed(('passwd', 'hash_preset', 'label'))):
+		die(1, 'Password, hash preset and label are unchanged.  Taking no action')
 
 if invoked_as == 'passchg':
 
 	def secure_delete(fn):
 		bmsg('Securely deleting old wallet')
 		from .fileutil import shred_file
-		shred_file( fn, verbose = cfg.verbose )
+		shred_file(fn, verbose = cfg.verbose)
 
 	def rename_old_wallet_maybe(silent):
 		# though very unlikely, old and new wallets could have same Key ID and thus same filename.
@@ -251,8 +251,8 @@ if invoked_as == 'passchg':
 			if not silent:
 				ymsg(
 					'Warning: diverting old wallet {old_fn!r} due to Key ID collision.  ' +
-					'Please securely delete or move the diverted file!' )
-			os.rename( old_fn, old_fn+'.divert' )
+					'Please securely delete or move the diverted file!')
+			os.rename(old_fn, old_fn+'.divert')
 			return old_fn+'.divert'
 		else:
 			return old_fn
@@ -263,26 +263,26 @@ if invoked_as == 'passchg':
 			cfg      = cfg,
 			message  = yellow('Confirmation of default wallet update'),
 			action   = 'update the default wallet',
-			exit_msg = 'Password not changed' )
+			exit_msg = 'Password not changed')
 		old_wallet = rename_old_wallet_maybe(silent=True)
-		ss_out.write_to_file( desc='New wallet', outdir=cfg.data_dir )
-		secure_delete( old_wallet )
+		ss_out.write_to_file(desc='New wallet', outdir=cfg.data_dir)
+		secure_delete(old_wallet)
 	else:
 		old_wallet = rename_old_wallet_maybe(silent=False)
 		ss_out.write_to_file()
 		from .ui import keypress_confirm
-		if keypress_confirm( cfg, f'Securely delete old wallet {old_wallet!r}?' ):
-			secure_delete( old_wallet )
+		if keypress_confirm(cfg, f'Securely delete old wallet {old_wallet!r}?'):
+			secure_delete(old_wallet)
 elif invoked_as == 'gen' and not cfg.outdir and not cfg.stdout:
 	from .filename import find_file_in_dir
-	if find_file_in_dir( get_wallet_cls('mmgen'), cfg.data_dir ):
+	if find_file_in_dir(get_wallet_cls('mmgen'), cfg.data_dir):
 		ss_out.write_to_file()
 	else:
 		from .ui import keypress_confirm
 		if keypress_confirm(
 				cfg,
 				'Make this wallet your default and move it to the data directory?',
-				default_yes = True ):
+				default_yes = True):
 			ss_out.write_to_file(outdir=cfg.data_dir)
 		else:
 			ss_out.write_to_file()

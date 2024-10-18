@@ -22,9 +22,9 @@ mmgen-addrimport: Import addresses into a MMGen coin daemon tracking wallet
 
 from collections import namedtuple
 
-from .cfg import gc,Config
-from .util import msg,suf,die,fmt,async_run
-from .addrlist import AddrList,KeyAddrList
+from .cfg import gc, Config
+from .util import msg, suf, die, fmt, async_run
+from .addrlist import AddrList, KeyAddrList
 
 opts_data = {
 	'text': {
@@ -81,18 +81,18 @@ addrimport_msgs = {
 	"""
 }
 
-def parse_cmd_args(rpc,cmd_args):
+def parse_cmd_args(rpc, cmd_args):
 
 	def import_mmgen_list(infile):
-		al = (AddrList,KeyAddrList)[bool(cfg.keyaddr_file)](cfg,proto,infile)
-		if al.al_id.mmtype in ('S','B'):
+		al = (AddrList, KeyAddrList)[bool(cfg.keyaddr_file)](cfg, proto, infile)
+		if al.al_id.mmtype in ('S', 'B'):
 			if not rpc.info('segwit_is_active'):
-				die(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
+				die(2, 'Segwit is not active on this chain. Cannot import Segwit addresses')
 		return al
 
 	if len(cmd_args) == 1:
 		infile = cmd_args[0]
-		from .fileutil import check_infile,get_lines_from_file
+		from .fileutil import check_infile, get_lines_from_file
 		check_infile(infile)
 		if cfg.addrlist:
 			al = AddrList(
@@ -102,16 +102,16 @@ def parse_cmd_args(rpc,cmd_args):
 					cfg,
 					infile,
 					f'non-{gc.proj_name} addresses',
-					trim_comments = True ) )
+					trim_comments = True))
 		else:
 			al = import_mmgen_list(infile)
 	elif len(cmd_args) == 0 and cfg.address:
-		al = AddrList( cfg, proto=proto, addrlist=[cfg.address] )
+		al = AddrList(cfg, proto=proto, addrlist=[cfg.address])
 		infile = 'command line'
 	else:
-		die(1,addrimport_msgs['bad_args'])
+		die(1, addrimport_msgs['bad_args'])
 
-	return al,infile
+	return al, infile
 
 def check_opts(twctl):
 	batch = bool(cfg.batch)
@@ -126,14 +126,14 @@ def check_opts(twctl):
 		if not keypress_confirm(
 				cfg,
 				f'\n{addrimport_msgs["rescan"]}\n\nContinue?',
-				default_yes = True ):
-			die(1,'Exiting at user request')
+				default_yes = True):
+			die(1, 'Exiting at user request')
 
 	if batch and not 'batch' in twctl.caps:
 		msg(f"‘--batch’ ignored: not supported by {type(twctl).__name__}")
 		batch = False
 
-	return batch,rescan
+	return batch, rescan
 
 async def main():
 	from .tw.ctl import TwCtl
@@ -144,44 +144,44 @@ async def main():
 		cfg        = cfg,
 		proto      = proto,
 		token_addr = cfg.token_addr,
-		mode       = 'i' )
+		mode       = 'i')
 
 	if cfg.token or cfg.token_addr:
 		msg(f'Importing for token {twctl.token.hl(0)} ({twctl.token.hlc(proto.tokensym)})')
 
-	for k,v in addrimport_msgs.items():
-		addrimport_msgs[k] = fmt(v,indent='  ',strip_char='\t').rstrip()
+	for k, v in addrimport_msgs.items():
+		addrimport_msgs[k] = fmt(v, indent='  ', strip_char='\t').rstrip()
 
 	al, infile = parse_cmd_args(twctl.rpc, cfg._args)
 
 	cfg._util.qmsg(
 		f'OK. {al.num_addrs} addresses'
-		+ (f' from Seed ID {al.al_id.sid.hl()}' if hasattr(al.al_id,'sid') else '') )
+		+ (f' from Seed ID {al.al_id.sid.hl()}' if hasattr(al.al_id, 'sid') else ''))
 
 	msg(
-		f'Importing {len(al.data)} address{suf(al.data,"es")} from {infile}'
-		+ (' (batch mode)' if cfg.batch else '') )
+		f'Importing {len(al.data)} address{suf(al.data, "es")} from {infile}'
+		+ (' (batch mode)' if cfg.batch else ''))
 
-	batch,rescan = check_opts(twctl)
+	batch, rescan = check_opts(twctl)
 
 	def gen_args_list(al):
-		_d = namedtuple('import_data',['addr','twmmid','comment'])
+		_d = namedtuple('import_data', ['addr', 'twmmid', 'comment'])
 		for e in al.data:
 			yield _d(
 				addr    = e.addr,
 				twmmid  = f'{al.al_id}:{e.idx}' if e.idx else f'{proto.base_coin.lower()}:{e.addr}',
-				comment = e.comment )
+				comment = e.comment)
 
 	args_list = list(gen_args_list(al))
 
-	await twctl.import_address_common( args_list, batch=batch )
+	await twctl.import_address_common(args_list, batch=batch)
 
 	if rescan:
 		await twctl.rescan_addresses({a.addr for a in args_list})
 
 	del twctl
 
-cfg = Config( opts_data=opts_data, need_amt=False )
+cfg = Config(opts_data=opts_data, need_amt=False)
 
 proto = cfg._proto
 

@@ -23,8 +23,8 @@ mmgen-split: Split funds after a replayable chain fork using a timelocked transa
              UNMAINTAINED
 """
 
-from .cfg import Config,gc
-from .util import gmsg,die
+from .cfg import Config, gc
+from .util import gmsg, die
 
 opts_data = {
 	'text': {
@@ -80,43 +80,43 @@ transaction reconfirmed before the timelock expires. Use at your own risk.
 """
 	},
 	'code': {
-		'options': lambda proto,s: s.format(
-			oc=proto.forks[-1][2].upper(),
-			bh='current block height'),
+		'options': lambda proto, s: s.format(
+			oc = proto.forks[-1][2].upper(),
+			bh = 'current block height'),
 	}
 }
 
-cfg = Config( opts_data=opts_data, need_amt=False )
+cfg = Config(opts_data=opts_data, need_amt=False)
 
 proto = cfg._proto
 
-die(1,'This command is disabled')
+die(1, 'This command is disabled')
 
 # the following code is broken:
 cfg.other_coin = cfg.other_coin.upper() if cfg.other_coin else proto.forks[-1][2].upper()
 if cfg.other_coin.lower() not in [e[2] for e in proto.forks if e[3] is True]:
-	die(1,f'{cfg.other_coin!r}: not a replayable fork of {proto.coin} chain')
+	die(1, f'{cfg.other_coin!r}: not a replayable fork of {proto.coin} chain')
 
 if len(cfg._args) != 2:
-	die(1,f'This command requires exactly two {gc.proj_name} addresses as arguments')
+	die(1, f'This command requires exactly two {gc.proj_name} addresses as arguments')
 
 from .addr import MMGenID
 try:
-	mmids = [MMGenID(proto,a) for a in cfg._args]
+	mmids = [MMGenID(proto, a) for a in cfg._args]
 except:
-	die(1,'Command line arguments must be valid MMGen IDs')
+	die(1, 'Command line arguments must be valid MMGen IDs')
 
 if mmids[0] == mmids[1]:
-	die(2,f'Both transactions have the same output! ({mmids[0]})')
+	die(2, f'Both transactions have the same output! ({mmids[0]})')
 
 from .tx import MMGenSplitTX
 from .protocol import init_proto
 
 if cfg.tx_fees:
-	for idx,g_coin in ((1,cfg.other_coin),(0,proto.coin)):
-		proto = init_proto( cfg, g_coin )
+	for idx, g_coin in ((1, cfg.other_coin), (0, proto.coin)):
+		proto = init_proto(cfg, g_coin)
 		cfg.fee = cfg.tx_fees.split(',')[idx]
-#		opts.opt_is_tx_fee('foo',cfg.fee,'transaction fee') # raises exception on error
+#		opts.opt_is_tx_fee('foo', cfg.fee, 'transaction fee') # raises exception on error
 
 tx1 = MMGenSplitTX(proto)
 cfg.no_blank = True
@@ -128,14 +128,14 @@ async def main():
 		from .rpc import rpc_init
 		rpc = rpc_init(proto)
 		locktime = rpc.call('getblockcount')
-	tx1.create(mmids[0],locktime)
+	tx1.create(mmids[0], locktime)
 
 	tx1.format()
 	tx1.create_fn()
 
 	gmsg(f'\nCreating transaction for short chain ({cfg.other_coin})')
 
-	proto2 = init_proto( cfg, cfg.other_coin )
+	proto2 = init_proto(cfg, cfg.other_coin)
 
 	tx2 = MMGenSplitTX(proto2)
 	tx2.inputs = tx1.inputs
@@ -143,6 +143,6 @@ async def main():
 
 	tx2.create_split(mmids[1])
 
-	for tx,desc in ((tx1,'Long chain (timelocked)'),(tx2,'Short chain')):
+	for tx, desc in ((tx1, 'Long chain (timelocked)'), (tx2, 'Short chain')):
 		tx.desc = desc + ' transaction'
-		tx.file.write(ask_write=False,ask_overwrite=not cfg.yes,ask_write_default_yes=False)
+		tx.file.write(ask_write=False, ask_overwrite=not cfg.yes, ask_write_default_yes=False)
