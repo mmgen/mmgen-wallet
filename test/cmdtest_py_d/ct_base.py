@@ -20,17 +20,17 @@
 test.cmdtest_py_d.ct_base: Base class for the cmdtest.py test suite
 """
 
-import sys,os
+import sys, os
 
 from mmgen.util import msg
 from mmgen.color import gray
 
-from ..include.common import cfg,write_to_file,read_from_file
+from ..include.common import cfg, write_to_file, read_from_file
 from .common import get_file_with_ext
 
 class CmdTestBase:
 	'initializer class for the cmdtest.py test suite'
-	base_passthru_opts = ('data_dir','skip_cfg_file')
+	base_passthru_opts = ('data_dir', 'skip_cfg_file')
 	passthru_opts = ()
 	networks = ()
 	segwit_opts_ok = False
@@ -40,8 +40,8 @@ class CmdTestBase:
 	tmpdir_nums = []
 	test_name = None
 
-	def __init__(self,trunner,cfgs,spawn):
-		if hasattr(self,'name'): # init will be called multiple times for classes with multiple inheritance
+	def __init__(self, trunner, cfgs, spawn):
+		if hasattr(self, 'name'): # init will be called multiple times for classes with multiple inheritance
 			return
 		self.name = type(self).__name__
 		self.proto = cfg._proto
@@ -49,9 +49,9 @@ class CmdTestBase:
 		self.cfgs = cfgs
 		self.spawn = spawn
 		self.have_dfl_wallet = False
-		self.usr_rand_chars = (5,30)[bool(cfg.usr_random)]
+		self.usr_rand_chars = (5, 30)[bool(cfg.usr_random)]
 		self.usr_rand_arg = f'-r{self.usr_rand_chars}'
-		self.tn_ext = ('','.testnet')[self.proto.testnet]
+		self.tn_ext = ('', '.testnet')[self.proto.testnet]
 		self.coin = self.proto.coin.lower()
 		self.fork = 'btc' if self.coin == 'bch' and not cfg.cashaddr else self.coin
 		self.altcoin_pfx = '' if self.fork == 'btc' else f'-{self.proto.coin}'
@@ -66,19 +66,19 @@ class CmdTestBase:
 
 	@property
 	def tmpdir(self):
-		return os.path.join('test','tmp','{}{}'.format(self.tmpdir_num,'-α' if cfg.debug_utf8 else ''))
+		return os.path.join('test', 'tmp', '{}{}'.format(self.tmpdir_num, '-α' if cfg.debug_utf8 else ''))
 
-	def get_file_with_ext(self,ext,**kwargs):
-		return get_file_with_ext(self.tmpdir,ext,**kwargs)
+	def get_file_with_ext(self, ext, **kwargs):
+		return get_file_with_ext(self.tmpdir, ext, **kwargs)
 
-	def read_from_tmpfile(self,fn,binary=False):
-		return read_from_file(os.path.join(self.tmpdir,fn),binary=binary)
+	def read_from_tmpfile(self, fn, binary=False):
+		return read_from_file(os.path.join(self.tmpdir, fn), binary=binary)
 
-	def write_to_tmpfile(self,fn,data,binary=False):
-		return write_to_file(os.path.join(self.tmpdir,fn),data,binary=binary)
+	def write_to_tmpfile(self, fn, data, binary=False):
+		return write_to_file(os.path.join(self.tmpdir, fn), data, binary=binary)
 
-	def delete_tmpfile(self,fn):
-		fn = os.path.join(self.tmpdir,fn)
+	def delete_tmpfile(self, fn):
+		fn = os.path.join(self.tmpdir, fn)
 		try:
 			return os.unlink(fn)
 		except:
@@ -100,13 +100,13 @@ class CmdTestBase:
 	def skip_for_win(self, extra_msg=None):
 		return self.skip_for_platform('win32', extra_msg)
 
-	def spawn_chk(self,*args,**kwargs):
+	def spawn_chk(self, *args, **kwargs):
 		"""
 		Drop-in replacement for spawn() + t.read() for tests that spawn more than one process.
 		Ensures that test script execution stops when a spawned process fails.
 
 		"""
-		t = self.spawn(*args,**kwargs)
+		t = self.spawn(*args, **kwargs)
 		t.read()
 		t.ok()
 		t.skip_ok = True

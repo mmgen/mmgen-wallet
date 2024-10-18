@@ -20,12 +20,12 @@
 test.cmdtest_py_d.common: Shared routines and data for the cmdtest.py test suite
 """
 
-import sys,os
+import sys, os
 
 from mmgen.color import green, blue, gray
 from mmgen.util import msg
 
-from ..include.common import cfg,getrand,text_jp,text_zh,ascii_cyr_gr,lat_cyr_gr
+from ..include.common import cfg, getrand, text_jp, text_zh, ascii_cyr_gr, lat_cyr_gr
 
 rt_pw = 'abc-α'
 ref_wallet_brainpass = 'abc'
@@ -45,11 +45,11 @@ hincog_seedlen = 256
 incog_id_fn = 'incog_id'
 non_mmgen_fn = 'coinkey'
 
-ref_dir = os.path.join('test','ref')
-dfl_words_file = os.path.join(ref_dir,'98831F3A.mmwords')
-dfl_bip39_file = os.path.join(ref_dir,'98831F3A.bip39')
+ref_dir = os.path.join('test', 'ref')
+dfl_words_file = os.path.join(ref_dir, '98831F3A.mmwords')
+dfl_bip39_file = os.path.join(ref_dir, '98831F3A.bip39')
 
-from mmgen.obj import MMGenTxComment,TwComment
+from mmgen.obj import MMGenTxComment, TwComment
 
 tx_comment_jp = text_jp
 tx_comment_zh = text_zh
@@ -75,8 +75,8 @@ def ok_msg():
 		return
 	sys.stderr.write(green('\nOK\n') if cfg.exact_output or cfg.verbose else ' OK\n')
 
-def skip(name,reason=None):
-	msg(gray('Skipping {}{}'.format( name, f' ({reason})' if reason else '' )))
+def skip(name, reason=None):
+	msg(gray('Skipping {}{}'.format(name, f' ({reason})' if reason else '')))
 	return 'skip'
 
 def confirm_continue():
@@ -85,7 +85,7 @@ def confirm_continue():
 			cfg,
 			blue('Continue? (Y/n): '),
 			default_yes     = True,
-			complete_prompt = True ):
+			complete_prompt = True):
 		if cfg.verbose or cfg.exact_output:
 			sys.stderr.write('\n')
 	else:
@@ -101,18 +101,25 @@ def get_env_without_debug_vars():
 			del ret[k]
 	return ret
 
-def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete_all=False,substr=False):
+def get_file_with_ext(
+		tdir,
+		ext,
+		delete      = True,
+		no_dot      = False,
+		return_list = False,
+		delete_all  = False,
+		substr      = False):
 
 	dot = '' if no_dot else '.'
 
 	def have_match(fn):
 		return (
 			fn == ext
-			or fn.endswith( dot + ext )
-			or (substr and ext in fn) )
+			or fn.endswith(dot + ext)
+			or (substr and ext in fn))
 
 	# Don’t use os.scandir here - it returns broken paths under Windows/MSYS2
-	flist = [os.path.join(tdir,name) for name in os.listdir(tdir) if have_match(name)]
+	flist = [os.path.join(tdir, name) for name in os.listdir(tdir) if have_match(name)]
 
 	if not flist:
 		return False
@@ -135,26 +142,26 @@ def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete
 
 def get_comment(do_shuffle=False):
 	labels = [
-		"Automotive",
-		"Travel expenses",
-		"Healthcare",
+		'Automotive',
+		'Travel expenses',
+		'Healthcare',
 		tx_comment_jp[:40],
 		tx_comment_zh[:40],
-		"Alice’s allowance",
-		"Bob’s bequest",
-		"House purchase",
-		"Real estate fund",
-		"Job 1",
-		"XYZ Corp.",
-		"Eddie’s endowment",
-		"Emergency fund",
-		"Real estate fund",
-		"Ian’s inheritance",
-		"",
-		"Rainy day",
-		"Fred’s funds",
-		"Job 2",
-		"Carl’s capital",
+		'Alice’s allowance',
+		'Bob’s bequest',
+		'House purchase',
+		'Real estate fund',
+		'Job 1',
+		'XYZ Corp.',
+		'Eddie’s endowment',
+		'Emergency fund',
+		'Real estate fund',
+		'Ian’s inheritance',
+		'',
+		'Rainy day',
+		'Fred’s funds',
+		'Job 2',
+		'Carl’s capital',
 	]
 	from random import shuffle
 	global label_iter

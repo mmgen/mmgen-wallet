@@ -23,51 +23,51 @@ This module is unmaintained and currently non-functional
 
 from mmgen.util import die
 
-from .common import get_file_with_ext,rt_pw
+from .common import get_file_with_ext, rt_pw
 from .ct_regtest import CmdTestRegtest
 
 class CmdTestChainsplit(CmdTestRegtest):
 	'forking scenario tests for the cmdtest.py test suite'
 	cmd_group = (
-		('split_setup',        'regtest forking scenario setup'),
-		('walletgen_bob',      "generating Bob's wallet"),
-		('addrgen_bob',        "generating Bob's addresses"),
-		('addrimport_bob',     "importing Bob's addresses"),
-		('fund_bob',           "funding Bob's wallet"),
-		('split_fork',         'regtest split fork'),
-		('split_start_btc',    'start regtest daemon (BTC)'),
-		('split_start_b2x',    'start regtest daemon (B2X)'),
-		('split_gen_btc',      'mining a block (BTC)'),
-		('split_gen_b2x',      'mining 100 blocks (B2X)'),
-		('split_do_split',     'creating coin splitting transactions'),
-		('split_sign_b2x',     'signing B2X split transaction'),
-		('split_sign_btc',     'signing BTC split transaction'),
-		('split_send_b2x',     'sending B2X split transaction'),
-		('split_send_btc',     'sending BTC split transaction'),
-		('split_gen_btc',      'mining a block (BTC)'),
-		('split_gen_b2x2',     'mining a block (B2X)'),
-		('split_txdo_timelock_bad_btc', 'sending transaction with bad locktime (BTC)'),
-		('split_txdo_timelock_good_btc','sending transaction with good locktime (BTC)'),
-		('split_txdo_timelock_bad_b2x', 'sending transaction with bad locktime (B2X)'),
-		('split_txdo_timelock_good_b2x','sending transaction with good locktime (B2X)'),
+		('split_setup',                  'regtest forking scenario setup'),
+		('walletgen_bob',                'generating Bob’s wallet'),
+		('addrgen_bob',                  'generating Bob’s addresses'),
+		('addrimport_bob',               'importing Bob’s addresses'),
+		('fund_bob',                     'funding Bob’s wallet'),
+		('split_fork',                   'regtest split fork'),
+		('split_start_btc',              'start regtest daemon (BTC)'),
+		('split_start_b2x',              'start regtest daemon (B2X)'),
+		('split_gen_btc',                'mining a block (BTC)'),
+		('split_gen_b2x',                'mining 100 blocks (B2X)'),
+		('split_do_split',               'creating coin splitting transactions'),
+		('split_sign_b2x',               'signing B2X split transaction'),
+		('split_sign_btc',               'signing BTC split transaction'),
+		('split_send_b2x',               'sending B2X split transaction'),
+		('split_send_btc',               'sending BTC split transaction'),
+		('split_gen_btc',                'mining a block (BTC)'),
+		('split_gen_b2x2',               'mining a block (B2X)'),
+		('split_txdo_timelock_bad_btc',  'sending transaction with bad locktime (BTC)'),
+		('split_txdo_timelock_good_btc', 'sending transaction with good locktime (BTC)'),
+		('split_txdo_timelock_bad_b2x',  'sending transaction with bad locktime (B2X)'),
+		('split_txdo_timelock_good_b2x', 'sending transaction with good locktime (B2X)'),
 	)
 
 	def split_setup(self):
 		if self.proto.coin != 'BTC':
-			die(1,'Test valid only for coin BTC')
+			die(1, 'Test valid only for coin BTC')
 		self.coin = 'BTC'
 		return self.setup()
 
 	def split_fork(self):
 		self.coin = 'B2X'
-		t = self.spawn('mmgen-regtest',['fork','btc'])
+		t = self.spawn('mmgen-regtest', ['fork', 'btc'])
 		t.expect('Creating fork from coin')
 		t.expect('successfully created')
 		t.ok()
 
-	def split_start(self,coin):
+	def split_start(self, coin):
 		self.coin = coin
-		t = self.spawn('mmgen-regtest',['bob'])
+		t = self.spawn('mmgen-regtest', ['bob'])
 		t.expect('Starting')
 		t.expect('done')
 		t.ok()
@@ -82,7 +82,7 @@ class CmdTestChainsplit(CmdTestRegtest):
 		self.regtest_generate(coin='BTC')
 
 	def split_gen_b2x(self):
-		self.regtest_generate(coin='B2X',num_blocks=100)
+		self.regtest_generate(coin='B2X', num_blocks=100)
 
 	def split_gen_b2x2(self):
 		self.regtest_generate(coin='B2X')
@@ -90,17 +90,17 @@ class CmdTestChainsplit(CmdTestRegtest):
 	def split_do_split(self):
 		self.coin = 'B2X'
 		sid = self.regtest_user_sid('bob')
-		t = self.spawn('mmgen-split',[
+		t = self.spawn('mmgen-split', [
 			'--bob',
 			'--outdir='+self.tmpdir,
 			'--tx-fees=0.0001,0.0003',
-			sid+':S:1',sid+':S:2'])
-		t.expect(r'\[q\]uit menu, .*?:.','q', regex=True)
-		t.expect('outputs to spend: ','1\n')
+			sid+':S:1', sid+':S:2'])
+		t.expect(r'\[q\]uit menu, .*?:.', 'q', regex=True)
+		t.expect('outputs to spend: ', '1\n')
 
 		for _ in ('timelocked', 'split'):
 			for _ in ('fee', 'change'):
-				t.expect('OK? (Y/n): ','y')
+				t.expect('OK? (Y/n): ', 'y')
 			t.do_comment(False)
 			t.view_tx('t')
 
@@ -108,30 +108,30 @@ class CmdTestChainsplit(CmdTestRegtest):
 		t.written_to_file('Short chain transaction')
 		t.ok()
 
-	def split_sign(self,coin,ext):
-		wf = get_file_with_ext(self.regtest_user_dir('bob',coin=coin.lower()),'mmdat')
-		txfile = self.get_file_with_ext(ext,no_dot=True)
+	def split_sign(self, coin, ext):
+		wf = get_file_with_ext(self.regtest_user_dir('bob', coin=coin.lower()), 'mmdat')
+		txfile = self.get_file_with_ext(ext, no_dot=True)
 		self.coin = coin
-		self.txsign(txfile,wf,extra_opts=['--bob'])
+		self.txsign(txfile, wf, extra_opts=['--bob'])
 
 	def split_sign_b2x(self):
-		return self.regtest_sign(coin='B2X',ext='533].rawtx')
+		return self.regtest_sign(coin='B2X', ext='533].rawtx')
 
 	def split_sign_btc(self):
-		return self.regtest_sign(coin='BTC',ext='9997].rawtx')
+		return self.regtest_sign(coin='BTC', ext='9997].rawtx')
 
-	def split_send(self,coin,ext):
+	def split_send(self, coin, ext):
 		self.coin = coin
-		txfile = self.get_file_with_ext(ext,no_dot=True)
-		self.txsend(txfile,bogus_send=False,extra_opts=['--bob'])
+		txfile = self.get_file_with_ext(ext, no_dot=True)
+		self.txsend(txfile, bogus_send=False, extra_opts=['--bob'])
 
 	def split_send_b2x(self):
-		return self.regtest_send(coin='B2X',ext='533].sigtx')
+		return self.regtest_send(coin='B2X', ext='533].sigtx')
 
 	def split_send_btc(self):
-		return self.regtest_send(coin='BTC',ext='9997].sigtx')
+		return self.regtest_send(coin='BTC', ext='9997].sigtx')
 
-	def split_txdo_timelock(self,coin,locktime,bad_locktime):
+	def split_txdo_timelock(self, coin, locktime, bad_locktime):
 		self.coin = coin
 		sid = self.regtest_user_sid('bob')
 		self.regtest_user_txdo(
@@ -144,10 +144,10 @@ class CmdTestChainsplit(CmdTestRegtest):
 			bad_locktime = bad_locktime)
 
 	def split_txdo_timelock_bad_btc(self):
-		self.regtest_txdo_timelock('BTC',locktime=8888,bad_locktime=True)
+		self.regtest_txdo_timelock('BTC', locktime=8888, bad_locktime=True)
 	def split_txdo_timelock_good_btc(self):
-		self.regtest_txdo_timelock('BTC',locktime=1321009871,bad_locktime=False)
+		self.regtest_txdo_timelock('BTC', locktime=1321009871, bad_locktime=False)
 	def split_txdo_timelock_bad_b2x(self):
-		self.regtest_txdo_timelock('B2X',locktime=8888,bad_locktime=True)
+		self.regtest_txdo_timelock('B2X', locktime=8888, bad_locktime=True)
 	def split_txdo_timelock_good_b2x(self):
-		self.regtest_txdo_timelock('B2X',locktime=1321009871,bad_locktime=False)
+		self.regtest_txdo_timelock('B2X', locktime=1321009871, bad_locktime=False)

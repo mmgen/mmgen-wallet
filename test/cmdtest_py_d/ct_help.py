@@ -23,19 +23,19 @@ from .ct_base import CmdTestBase
 class CmdTestHelp(CmdTestBase):
 	'help, info and usage screens'
 	networks = ('btc', 'ltc', 'bch', 'eth', 'xmr', 'doge')
-	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
+	passthru_opts = ('daemon_data_dir', 'rpc_port', 'coin', 'testnet')
 	cmd_group = (
-		('usage1',                (1,'usage message (via --usage)',[])),
-		('usage2',                (1,'usage message (via bad invocation)',[])),
-		('version',               (1,'version message',[])),
-		('license',               (1,'license message',[])),
-		('helpscreens',           (1,'help screens',             [])),
-		('longhelpscreens',       (1,'help screens (--longhelp)',[])),
-		('show_hash_presets',     (1,'info screen (--show-hash-presets)',[])),
-		('tool_help',             (1,"'mmgen-tool' usage screen",[])),
-		('tool_cmd_usage',        (1,"'mmgen-tool' usage screen",[])),
-		('test_help',             (1,"'cmdtest.py' help screens",[])),
-		('tooltest_help',         (1,"'tooltest.py' help screens",[])),
+		('usage1',            (1, 'usage message (via --usage)', [])),
+		('usage2',            (1, 'usage message (via bad invocation)', [])),
+		('version',           (1, 'version message', [])),
+		('license',           (1, 'license message', [])),
+		('helpscreens',       (1, 'help screens',             [])),
+		('longhelpscreens',   (1, 'help screens (--longhelp)', [])),
+		('show_hash_presets', (1, 'info screen (--show-hash-presets)', [])),
+		('tool_help',         (1, '‘mmgen-tool’ usage screen', [])),
+		('tool_cmd_usage',    (1, '‘mmgen-tool’ usage screen', [])),
+		('test_help',         (1, '‘cmdtest.py’ help screens', [])),
+		('tooltest_help',     (1, '‘tooltest.py’ help screens', [])),
 	)
 
 	def usage1(self):
@@ -67,13 +67,13 @@ class CmdTestHelp(CmdTestBase):
 		if cfg.pexpect_spawn:
 			t.send('q')
 		t.expect('to continue: ', 'c')
-		t.expect('data: ','beadcafe'*4 + '\n')
+		t.expect('data: ', 'beadcafe'*4 + '\n')
 		t.expect('to confirm: ', 'YES\n')
 		return t
 
-	def spawn_chk_expect(self,*args,**kwargs):
+	def spawn_chk_expect(self, *args, **kwargs):
 		expect = kwargs.pop('expect')
-		t = self.spawn(*args,**kwargs)
+		t = self.spawn(*args, **kwargs)
 		t.expect(expect)
 		if t.pexpect_spawn:
 			time.sleep(0.4)
@@ -106,7 +106,7 @@ class CmdTestHelp(CmdTestBase):
 				[arg],
 				extra_desc       = f'(mmgen-{cmdname})',
 				no_passthru_opts = not gc.cmd_caps_data[cmdname].proto)
-			t.expect(expect,regex=True)
+			t.expect(expect, regex=True)
 			if pager and t.pexpect_spawn:
 				time.sleep(0.2)
 				t.send('q')
@@ -117,17 +117,17 @@ class CmdTestHelp(CmdTestBase):
 		return t
 
 	def longhelpscreens(self):
-		return self.helpscreens(arg='--longhelp',expect='USAGE:.*GLOBAL OPTIONS:')
+		return self.helpscreens(arg='--longhelp', expect='USAGE:.*GLOBAL OPTIONS:')
 
 	def show_hash_presets(self):
 		return self.helpscreens(
 			arg = '--show-hash-presets',
 			scripts = (
-					'walletgen','walletconv','walletchk','passchg','subwalletgen',
-					'addrgen','keygen','passgen',
-					'txsign','txdo','txbump'),
+				'walletgen', 'walletconv', 'walletchk', 'passchg', 'subwalletgen',
+				'addrgen', 'keygen', 'passgen',
+				'txsign', 'txdo', 'txbump'),
 			expect = 'Available parameters.*Preset',
-			pager  = False )
+			pager  = False)
 
 	def tool_help(self):
 
@@ -143,7 +143,7 @@ class CmdTestHelp(CmdTestBase):
 				'mmgen-tool',
 				[arg],
 				extra_desc = f'(mmgen-tool {arg})',
-				expect = 'GENERAL USAGE' )
+				expect = 'GENERAL USAGE')
 		return t
 
 	def tool_cmd_usage(self):
@@ -156,32 +156,32 @@ class CmdTestHelp(CmdTestBase):
 
 		for cmdlist in mods.values():
 			for cmd in cmdlist:
-				t = self.spawn_chk( 'mmgen-tool', ['help',cmd], extra_desc=f'({cmd})' )
+				t = self.spawn_chk('mmgen-tool', ['help', cmd], extra_desc=f'({cmd})')
 		return t
 
 	def test_help(self):
-		for arg,expect in (
-			('--help','USAGE'),
-			('--list-cmds','AVAILABLE COMMANDS'),
-			('--list-cmd-groups','AVAILABLE COMMAND GROUPS')
+		for arg, expect in (
+			('--help', 'USAGE'),
+			('--list-cmds', 'AVAILABLE COMMANDS'),
+			('--list-cmd-groups', 'AVAILABLE COMMAND GROUPS')
 		):
 			t = self.spawn_chk_expect(
 				'cmdtest.py',
 				[arg],
 				cmd_dir = 'test',
 				extra_desc = f'(cmdtest.py {arg})',
-				expect = expect )
+				expect = expect)
 		return t
 
 	def tooltest_help(self):
-		for arg,expect in (
-			('--list-cmds','Available commands'),
-			('--testing-status','Testing status')
+		for arg, expect in (
+			('--list-cmds', 'Available commands'),
+			('--testing-status', 'Testing status')
 		):
 			t = self.spawn_chk_expect(
 				'tooltest.py',
 				[arg],
 				cmd_dir = 'test',
 				extra_desc = f'(tooltest.py {arg})',
-				expect = expect )
+				expect = expect)
 		return t

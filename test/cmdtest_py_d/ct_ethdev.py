@@ -20,14 +20,14 @@
 test.cmdtest_py_d.ct_ethdev: Ethdev tests for the cmdtest.py test suite
 """
 
-import sys,os,re,shutil,asyncio,json
+import sys, os, re, shutil, asyncio, json
 from decimal import Decimal
 from collections import namedtuple
-from subprocess import run,PIPE,DEVNULL
+from subprocess import run, PIPE, DEVNULL
 from pathlib import Path
 
-from mmgen.color import yellow,blue,cyan,set_vt100
-from mmgen.util import msg,rmsg,die
+from mmgen.color import yellow, blue, cyan, set_vt100
+from mmgen.util import msg, rmsg, die
 
 from ..include.common import (
 	cfg,
@@ -59,7 +59,7 @@ from .common import (
 from .ct_base import CmdTestBase
 from .ct_shared import CmdTestShared
 
-del_addrs = ('4','1')
+del_addrs = ('4', '1')
 dfl_sid = '98831F3A'
 
 # The OpenEthereum dev address with lots of coins.  Create with "ethkey -b info ''":
@@ -97,72 +97,72 @@ def set_vbals(daemon_id):
 		vbal9 = '1.226261'
 
 bals = lambda k: {
-	'1': [  ('98831F3A:E:1','123.456')],
-	'2': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234')],
-	'3': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234'),('98831F3A:E:21','2.345')],
-	'4': [  ('98831F3A:E:1','100'),
-			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11','1.234'),
-			('98831F3A:E:21','2.345')],
-	'5': [  ('98831F3A:E:1','100'),
-			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11','1.234'),
-			('98831F3A:E:21','2.345'),
-			(burn_addr + r'\s+non-MMGen',amt1)],
-	'8': [  ('98831F3A:E:1','0'),
-			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11',vbal1),
-			('98831F3A:E:12','99.99895'),
-			('98831F3A:E:21','2.345'),
-			(burn_addr + r'\s+non-MMGen',amt1)],
-	'9': [  ('98831F3A:E:1','0'),
-			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11',vbal1),
-			('98831F3A:E:12',vbal2),
-			('98831F3A:E:21','2.345'),
-			(burn_addr + r'\s+non-MMGen',amt1)],
-	'10': [ ('98831F3A:E:1','0'),
-			('98831F3A:E:2','23.0218'),
-			('98831F3A:E:3','0.4321'),
-			('98831F3A:E:11',vbal1),
-			('98831F3A:E:12',vbal2),
-			('98831F3A:E:21','2.345'),
-			(burn_addr + r'\s+non-MMGen',amt1)]
+	'1': [  ('98831F3A:E:1', '123.456')],
+	'2': [  ('98831F3A:E:1', '123.456'), ('98831F3A:E:11', '1.234')],
+	'3': [  ('98831F3A:E:1', '123.456'), ('98831F3A:E:11', '1.234'), ('98831F3A:E:21', '2.345')],
+	'4': [  ('98831F3A:E:1', '100'),
+			('98831F3A:E:2', '23.45495'),
+			('98831F3A:E:11', '1.234'),
+			('98831F3A:E:21', '2.345')],
+	'5': [  ('98831F3A:E:1', '100'),
+			('98831F3A:E:2', '23.45495'),
+			('98831F3A:E:11', '1.234'),
+			('98831F3A:E:21', '2.345'),
+			(burn_addr + r'\s+non-MMGen', amt1)],
+	'8': [  ('98831F3A:E:1', '0'),
+			('98831F3A:E:2', '23.45495'),
+			('98831F3A:E:11', vbal1),
+			('98831F3A:E:12', '99.99895'),
+			('98831F3A:E:21', '2.345'),
+			(burn_addr + r'\s+non-MMGen', amt1)],
+	'9': [  ('98831F3A:E:1', '0'),
+			('98831F3A:E:2', '23.45495'),
+			('98831F3A:E:11', vbal1),
+			('98831F3A:E:12', vbal2),
+			('98831F3A:E:21', '2.345'),
+			(burn_addr + r'\s+non-MMGen', amt1)],
+	'10': [ ('98831F3A:E:1', '0'),
+			('98831F3A:E:2', '23.0218'),
+			('98831F3A:E:3', '0.4321'),
+			('98831F3A:E:11', vbal1),
+			('98831F3A:E:12', vbal2),
+			('98831F3A:E:21', '2.345'),
+			(burn_addr + r'\s+non-MMGen', amt1)]
 }[k]
 
 token_bals = lambda k: {
-	'1': [  ('98831F3A:E:11','1000','1.234')],
-	'2': [  ('98831F3A:E:11','998.76544',vbal3),
-			('98831F3A:E:12','1.23456','0')],
-	'3': [  ('98831F3A:E:11','110.654317776666555545',vbal1),
-			('98831F3A:E:12','1.23456','0')],
-	'4': [  ('98831F3A:E:11','110.654317776666555545',vbal1),
-			('98831F3A:E:12','1.23456','0'),
-			(burn_addr + r'\s+non-MMGen',amt2,amt1)],
-	'5': [  ('98831F3A:E:11','110.654317776666555545',vbal1),
-			('98831F3A:E:12','1.23456','99.99895'),
-			(burn_addr + r'\s+non-MMGen',amt2,amt1)],
-	'6': [  ('98831F3A:E:11','110.654317776666555545',vbal1),
-			('98831F3A:E:12','0',vbal2),
-			('98831F3A:E:13','1.23456','0'),
-			(burn_addr + r'\s+non-MMGen',amt2,amt1)],
-	'7': [  ('98831F3A:E:11','67.444317776666555545',vbal9),
-			('98831F3A:E:12','43.21',vbal2),
-			('98831F3A:E:13','1.23456','0'),
-			(burn_addr + r'\s+non-MMGen',amt2,amt1)]
+	'1': [  ('98831F3A:E:11', '1000', '1.234')],
+	'2': [  ('98831F3A:E:11', '998.76544', vbal3),
+			('98831F3A:E:12', '1.23456', '0')],
+	'3': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
+			('98831F3A:E:12', '1.23456', '0')],
+	'4': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
+			('98831F3A:E:12', '1.23456', '0'),
+			(burn_addr + r'\s+non-MMGen', amt2, amt1)],
+	'5': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
+			('98831F3A:E:12', '1.23456', '99.99895'),
+			(burn_addr + r'\s+non-MMGen', amt2, amt1)],
+	'6': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
+			('98831F3A:E:12', '0', vbal2),
+			('98831F3A:E:13', '1.23456', '0'),
+			(burn_addr + r'\s+non-MMGen', amt2, amt1)],
+	'7': [  ('98831F3A:E:11', '67.444317776666555545', vbal9),
+			('98831F3A:E:12', '43.21', vbal2),
+			('98831F3A:E:13', '1.23456', '0'),
+			(burn_addr + r'\s+non-MMGen', amt2, amt1)]
 }[k]
 
 token_bals_getbalance = lambda k: {
-	'1': (vbal4,'999999.12345689012345678'),
-	'2': ('111.888877776666555545','888.111122223333444455')
+	'1': (vbal4, '999999.12345689012345678'),
+	'2': ('111.888877776666555545', '888.111122223333444455')
 }[k]
 
 coin = cfg.coin
 
-class CmdTestEthdev(CmdTestBase,CmdTestShared):
+class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
-	networks = ('eth','etc')
-	passthru_opts = ('coin','daemon_id','http_timeout','rpc_backend')
+	networks = ('eth', 'etc')
+	passthru_opts = ('coin', 'daemon_id', 'http_timeout', 'rpc_backend')
 	tmpdir_nums = [22]
 	color = True
 	cmd_group_in = (
@@ -268,7 +268,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		('token_deploy2b',  'deploying ERC20 token #2 (Owned)'),
 		('token_deploy2c',  'deploying ERC20 token #2 (Token)'),
 
-		('contract_deploy', 'deploying contract (create,sign,send)'),
+		('contract_deploy', 'deploying contract (create, sign, send)'),
 	),
 	'token': (
 		'creating, signing, sending and bumping ERC20 token transactions',
@@ -396,8 +396,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	),
 	}
 
-	def __init__(self,trunner,cfgs,spawn):
-		CmdTestBase.__init__(self,trunner,cfgs,spawn)
+	def __init__(self, trunner, cfgs, spawn):
+		CmdTestBase.__init__(self, trunner, cfgs, spawn)
 		if trunner is None:
 			return
 
@@ -405,10 +405,10 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		self.eth_args_noquiet = [f'--outdir={self.tmpdir}', '--regtest=1']
 
 		from mmgen.protocol import init_proto
-		self.proto = init_proto( cfg, cfg.coin, network='regtest', need_amt=True )
+		self.proto = init_proto( cfg, cfg.coin, network='regtest', need_amt=True)
 
 		from mmgen.daemon import CoinDaemon
-		self.daemon = CoinDaemon( cfg, self.proto.coin+'_rt', test_suite=True )
+		self.daemon = CoinDaemon( cfg, self.proto.coin+'_rt', test_suite=True)
 
 		set_vbals(self.daemon.id)
 
@@ -418,12 +418,12 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 		omsg(blue(f'Coin daemon {self.daemon.id!r} selected'))
 
-		self.genesis_fn = joinpath(self.tmpdir,'genesis.json')
-		self.keystore_dir = os.path.relpath(joinpath(self.daemon.datadir,'keystore'))
+		self.genesis_fn = joinpath(self.tmpdir, 'genesis.json')
+		self.keystore_dir = os.path.relpath(joinpath(self.daemon.datadir, 'keystore'))
 
 		write_to_file(
-			joinpath(self.tmpdir,parity_devkey_fn),
-			dfl_devkey+'\n' )
+			joinpath(self.tmpdir, parity_devkey_fn),
+			dfl_devkey+'\n')
 
 		self.message = 'attack at dawn'
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
@@ -431,37 +431,37 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	@property
 	async def rpc(self):
 		from mmgen.rpc import rpc_init
-		return await rpc_init(cfg,self.proto)
+		return await rpc_init(cfg, self.proto)
 
 	async def setup(self):
-		self.spawn('',msg_only=True)
+		self.spawn('', msg_only=True)
 
 		if not self.using_solc:
-			srcdir = os.path.join(self.tr.repo_root,'test','ref','ethereum','bin')
+			srcdir = os.path.join(self.tr.repo_root, 'test', 'ref', 'ethereum', 'bin')
 			from shutil import copytree
-			for d in ('mm1','mm2'):
-				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
+			for d in ('mm1', 'mm2'):
+				copytree(os.path.join(srcdir, d), os.path.join(self.tmpdir, d))
 
 		d = self.daemon
 
-		if d.id in ('geth','erigon'):
+		if d.id in ('geth', 'erigon'):
 			self.genesis_setup(d)
 			set_vt100()
 
 		if d.id == 'erigon':
-			self.write_to_tmpfile('signer_key',self.keystore_data['key']+'\n')
+			self.write_to_tmpfile('signer_key', self.keystore_data['key']+'\n')
 			d.usr_coind_args = [
-				'--miner.sigfile={}'.format(os.path.join(self.tmpdir,'signer_key')),
-				'--miner.etherbase={}'.format(self.keystore_data['address']) ]
+				'--miner.sigfile={}'.format(os.path.join(self.tmpdir, 'signer_key')),
+				'--miner.etherbase={}'.format(self.keystore_data['address'])]
 
-		if d.id in ('geth','erigon'):
-			imsg('  {:19} {}'.format('Cmdline:',' '.join(e for e in d.start_cmd if not 'verbosity' in e)))
+		if d.id in ('geth', 'erigon'):
+			imsg('  {:19} {}'.format('Cmdline:', ' '.join(e for e in d.start_cmd if not 'verbosity' in e)))
 
 		if not cfg.no_daemon_autostart:
-			if not d.id in ('geth','erigon'):
+			if not d.id in ('geth', 'erigon'):
 				d.stop(silent=True)
 				d.remove_datadir()
-			d.start( silent = not (cfg.verbose or cfg.exact_output) )
+			d.start( silent = not (cfg.verbose or cfg.exact_output))
 			rpc = await self.rpc
 			imsg(f'Daemon: {rpc.daemon.coind_name} v{rpc.daemon_version_str}')
 
@@ -469,36 +469,36 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 	@property
 	def keystore_data(self):
-		if not hasattr(self,'_keystore_data'):
+		if not hasattr(self, '_keystore_data'):
 
-			wallet_fn = os.path.join( self.keystore_dir, os.listdir(self.keystore_dir)[0] )
+			wallet_fn = os.path.join( self.keystore_dir, os.listdir(self.keystore_dir)[0])
 
 			from mmgen.proto.eth.misc import decrypt_geth_keystore
 			key = decrypt_geth_keystore(
 				cfg       = cfg,
 				wallet_fn = wallet_fn,
-				passwd = b'' )
+				passwd = b'')
 
 			with open(wallet_fn) as fh:
 				res = json.loads(fh.read())
 
-			res.update( { 'key': key.hex() } )
+			res.update( { 'key': key.hex()})
 			self._keystore_data = res
 
 		return self._keystore_data
 
-	def genesis_setup(self,d):
+	def genesis_setup(self, d):
 
 		def make_key():
-			pwfile = joinpath(self.tmpdir,'account_passwd')
-			write_to_file(pwfile,'')
-			run(['rm','-rf',self.keystore_dir])
+			pwfile = joinpath(self.tmpdir, 'account_passwd')
+			write_to_file(pwfile, '')
+			run(['rm', '-rf', self.keystore_dir])
 			cmd = f'geth account new --password={pwfile} --lightkdf --keystore {self.keystore_dir}'
-			cp = run(cmd.split(),stdout=PIPE,stderr=PIPE)
+			cp = run(cmd.split(), stdout=PIPE, stderr=PIPE)
 			if cp.returncode:
-				die(1,cp.stderr.decode())
+				die(1, cp.stderr.decode())
 
-		def make_genesis(signer_addr,prealloc_addr):
+		def make_genesis(signer_addr, prealloc_addr):
 			return {
 				'config': {
 					'chainId': 1337, # TODO: replace constant with var
@@ -534,15 +534,15 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 				'excessBlobGas': None,
 				'blobGasUsed': None,
 				'alloc': {
-					prealloc_addr: { 'balance': hex(prealloc_amt.toWei()) }
+					prealloc_addr: { 'balance': hex(prealloc_amt.toWei())}
 				}
 			}
 
 		def init_genesis(fn):
 			cmd = f'{d.exec_fn} init --datadir {d.datadir} {fn}'
-			cp = run( cmd.split(), stdout=PIPE, stderr=PIPE )
+			cp = run( cmd.split(), stdout=PIPE, stderr=PIPE)
 			if cp.returncode:
-				die(1,cp.stderr.decode())
+				die(1, cp.stderr.decode())
 
 		d.stop(quiet=True)
 		d.remove_datadir()
@@ -553,7 +553,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 		make_key()
 		signer_addr = self.keystore_data['address']
-		self.write_to_tmpfile( 'signer_addr', signer_addr + '\n' )
+		self.write_to_tmpfile( 'signer_addr', signer_addr + '\n')
 
 		imsg(f'  Keystore:           {self.keystore_dir}')
 		imsg(f'  Signer key:         {self.keystore_data["key"]}')
@@ -561,8 +561,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		imsg(f'  Faucet:             {dfl_devaddr} ({prealloc_amt} ETH)')
 		imsg(f'  Genesis block data: {self.genesis_fn}')
 
-		genesis_data = make_genesis(signer_addr,dfl_devaddr)
-		write_to_file( self.genesis_fn, json.dumps(genesis_data,indent='  ')+'\n' )
+		genesis_data = make_genesis(signer_addr, dfl_devaddr)
+		write_to_file( self.genesis_fn, json.dumps(genesis_data, indent='  ')+'\n')
 		init_genesis(self.genesis_fn)
 
 	def daemon_version(self):
@@ -595,8 +595,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	async def wallet_upgrade2(self):
 		return await self._wallet_upgrade('tracking-wallet-v2.json', 'token params field', 'network field')
 
-	def addrgen(self,addrs='1-3,11-13,21-23'):
-		t = self.spawn('mmgen-addrgen', self.eth_args + [dfl_words_file,addrs])
+	def addrgen(self, addrs='1-3,11-13,21-23'):
+		t = self.spawn('mmgen-addrgen', self.eth_args + [dfl_words_file, addrs])
 		t.written_to_file('Addresses')
 		return t
 
@@ -608,7 +608,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			bad_input = False,
 			exit_val  = None):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
-		fn = self.get_file_with_ext(ext,no_dot=True,delete=False)
+		fn = self.get_file_with_ext(ext, no_dot=True, delete=False)
 		t = self.spawn('mmgen-addrimport', ['--regtest=1'] + add_args + [fn], exit_val=exit_val)
 		if bad_input:
 			return t
@@ -616,7 +616,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		t.expect(expect)
 		return t
 
-	def addrimport_one_addr(self,addr=None,extra_args=[]):
+	def addrimport_one_addr(self, addr=None, extra_args=[]):
 		t = self.spawn('mmgen-addrimport', ['--regtest=1', '--quiet', f'--address={addr}'] + extra_args)
 		t.expect('OK')
 		return t
@@ -634,61 +634,61 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			acct            = '1',
 			caller          = 'txcreate',
 			interactive_fee = '50G',
-			fee_info_data   = ('0.00105','50'),
+			fee_info_data   = ('0.00105', '50'),
 			no_read         = False,
 			print_listing   = True,
 			tweaks          = []):
-		fee_info_pat = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format( *fee_info_data, c=self.proto.coin )
+		fee_info_pat = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format(*fee_info_data, c=self.proto.coin)
 		t = self.spawn(f'mmgen-{caller}', self.eth_args + ['-B'] + args)
 		if print_listing:
-			t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
+			t.expect(r'add \[l\]abel, .*?:.', 'p', regex=True)
 			t.written_to_file('Account balances listing')
 		t = self.txcreate_ui_common(
-				t,
-				menu              = menu,
-				caller            = caller,
-				input_sels_prompt = 'to spend from',
-				inputs            = acct,
-				file_desc         = 'transaction',
-				bad_input_sels    = True,
-				interactive_fee   = interactive_fee,
-				fee_info_pat      = fee_info_pat,
-				fee_desc          = 'transaction fee or gas price',
-				add_comment       = tx_comment_jp,
-				tweaks            = tweaks)
+			t,
+			menu              = menu,
+			caller            = caller,
+			input_sels_prompt = 'to spend from',
+			inputs            = acct,
+			file_desc         = 'transaction',
+			bad_input_sels    = True,
+			interactive_fee   = interactive_fee,
+			fee_info_pat      = fee_info_pat,
+			fee_desc          = 'transaction fee or gas price',
+			add_comment       = tx_comment_jp,
+			tweaks            = tweaks)
 		if not no_read:
 			t.read()
 		return t
 
-	def txsign(self,ni=False,ext='{}.regtest.rawtx',add_args=[],dev_send=False):
+	def txsign(self, ni=False, ext='{}.regtest.rawtx', add_args=[], dev_send=False):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
-		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
-		txfile = self.get_file_with_ext(ext,no_dot=True)
+		keyfile = joinpath(self.tmpdir, parity_devkey_fn)
+		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
-				'mmgen-txsign',
-				self.eth_args
-				+ [f'--coin={self.proto.coin}']
-				+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
-				+ add_args
-				+ ([],['--yes'])[ni]
-				+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
-				+ [txfile, dfl_words_file])
-		return self.txsign_ui_common(t,ni=ni,has_label=True)
+			'mmgen-txsign',
+			self.eth_args
+			+ [f'--coin={self.proto.coin}']
+			+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
+			+ add_args
+			+ ([], ['--yes'])[ni]
+			+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
+			+ [txfile, dfl_words_file])
+		return self.txsign_ui_common(t, ni=ni, has_label=True)
 
-	def txsend(self,ext='{}.regtest.sigtx',add_args=[]):
+	def txsend(self, ext='{}.regtest.sigtx', add_args=[]):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
-		txfile = self.get_file_with_ext(ext,no_dot=True)
+		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile])
 		self.txsend_ui_common(
-				t,
-				quiet      = not cfg.debug,
-				bogus_send = False,
-				has_label  = True)
+			t,
+			quiet      = not cfg.debug,
+			bogus_send = False,
+			has_label  = True)
 		return t
 
-	def txview(self,ext_fs):
+	def txview(self, ext_fs):
 		ext = ext_fs.format('-α' if cfg.debug_utf8 else '')
-		txfile = self.get_file_with_ext(ext,no_dot=True)
+		txfile = self.get_file_with_ext(ext, no_dot=True)
 		return self.spawn('mmgen-tool', ['--verbose', 'txview', txfile])
 
 	def fund_dev_address(self):
@@ -696,35 +696,35 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		For Erigon, fund the default (Parity) dev address from the Erigon dev address
 		For the others, send a junk TX to keep block counts equal for all daemons
 		"""
-		dt = namedtuple('data',['devkey_fn','dest','amt'])
-		d = dt( parity_devkey_fn, burn_addr2, '1' )
+		dt = namedtuple('data', ['devkey_fn', 'dest', 'amt'])
+		d = dt(parity_devkey_fn, burn_addr2, '1')
 		t = self.txcreate(
 			args    = self.eth_args_noquiet + [
-				f'--keys-from-file={joinpath(self.tmpdir,d.devkey_fn)}',
+				f'--keys-from-file={joinpath(self.tmpdir, d.devkey_fn)}',
 				f'{d.dest},{d.amt}',
 			],
-			menu    = ['a','r'],
+			menu    = ['a', 'r'],
 			caller  = 'txdo',
 			acct    = '1',
-			no_read = True )
-		self._do_confirm_send(t,quiet=not cfg.debug,sure=False)
+			no_read = True)
+		self._do_confirm_send(t, quiet=not cfg.debug, sure=False)
 		t.read()
-		self.get_file_with_ext('sigtx',delete_all=True)
+		self.get_file_with_ext('sigtx', delete_all=True)
 		return t
 
 	def txcreate1(self):
 		# include one invalid keypress 'X' -- see EthereumTwUnspentOutputs.key_mappings
-		menu = ['a','d','r','M','X','e','m','m']
+		menu = ['a', 'd', 'r', 'M', 'X', 'e', 'm', 'm']
 		args = ['98831F3A:E:1,123.456']
-		return self.txcreate(args=args,menu=menu,acct='1',tweaks=['confirm_non_mmgen'])
+		return self.txcreate(args=args, menu=menu, acct='1', tweaks=['confirm_non_mmgen'])
 	def txview1_raw(self):
 		return self.txview(ext_fs='{}.regtest.rawtx')
 	def txsign1(self):
-		return self.txsign(add_args=['--use-internal-keccak-module'],dev_send=True)
+		return self.txsign(add_args=['--use-internal-keccak-module'], dev_send=True)
 	def tx_status0_bad(self):
-		return self.tx_status(ext='{}.regtest.sigtx',expect_str='neither in mempool nor blockchain',exit_val=1)
+		return self.tx_status(ext='{}.regtest.sigtx', expect_str='neither in mempool nor blockchain', exit_val=1)
 	def txsign1_ni(self):
-		return self.txsign(ni=True,dev_send=True)
+		return self.txsign(ni=True, dev_send=True)
 	def txsend1(self):
 		return self.txsend()
 	def txview1_sig(self): # do after send so that TxID is displayed
@@ -734,9 +734,9 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 	def txcreate2(self):
 		args = ['98831F3A:E:11,1.234']
-		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
+		return self.txcreate(args=args, acct='10', tweaks=['confirm_non_mmgen'])
 	def txsign2(self):
-		return self.txsign(ni=True,ext='1.234,50000]{}.regtest.rawtx',dev_send=True)
+		return self.txsign(ni=True, ext='1.234,50000]{}.regtest.rawtx', dev_send=True)
 	def txsend2(self):
 		return self.txsend(ext='1.234,50000]{}.regtest.sigtx')
 	def bal2(self):
@@ -744,31 +744,31 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 	def txcreate3(self):
 		args = ['98831F3A:E:21,2.345']
-		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
+		return self.txcreate(args=args, acct='10', tweaks=['confirm_non_mmgen'])
 	def txsign3(self):
-		return self.txsign(ni=True,ext='2.345,50000]{}.regtest.rawtx',dev_send=True)
+		return self.txsign(ni=True, ext='2.345,50000]{}.regtest.rawtx', dev_send=True)
 	def txsend3(self):
 		return self.txsend(ext='2.345,50000]{}.regtest.sigtx')
 	def bal3(self):
 		return self.bal(n='3')
 
-	def tx_status(self,ext,expect_str,expect_str2='',add_args=[],exit_val=0):
+	def tx_status(self, ext, expect_str, expect_str2='', add_args=[], exit_val=0):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
-		txfile = self.get_file_with_ext(ext,no_dot=True)
+		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
-				'mmgen-txsend',
-				self.eth_args + add_args + ['--status', txfile],
-				exit_val = exit_val)
+			'mmgen-txsend',
+			self.eth_args + add_args + ['--status', txfile],
+			exit_val = exit_val)
 		t.expect(expect_str)
 		if expect_str2:
 			t.expect(expect_str2)
 		return t
 
 	def tx_status1(self):
-		return self.tx_status(ext='2.345,50000]{}.regtest.sigtx',expect_str='has 1 confirmation')
+		return self.tx_status(ext='2.345,50000]{}.regtest.sigtx', expect_str='has 1 confirmation')
 
 	def tx_status1a(self):
-		return self.tx_status(ext='2.345,50000]{}.regtest.sigtx',expect_str='has 2 confirmations')
+		return self.tx_status(ext='2.345,50000]{}.regtest.sigtx', expect_str='has 2 confirmations')
 
 	async def msgsign_chk(self): # NB: Geth only!
 
@@ -776,7 +776,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			key = self.keystore_data['key']
 			imsg(f'Key:       {key}')
 			from mmgen.proto.eth.misc import ec_sign_message_with_privkey
-			return ec_sign_message_with_privkey(cfg,self.message,bytes.fromhex(key),'eth_sign')
+			return ec_sign_message_with_privkey(cfg, self.message, bytes.fromhex(key), 'eth_sign')
 
 		async def create_signature_rpc():
 			addr = self.read_from_tmpfile('signer_addr').strip()
@@ -785,12 +785,12 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			return await rpc.call(
 				'eth_sign',
 				'0x' + addr,
-				'0x' + self.message.encode().hex() )
+				'0x' + self.message.encode().hex())
 
 		if not self.daemon.id == 'geth':
 			return 'skip'
 
-		self.spawn('',msg_only=True)
+		self.spawn('', msg_only=True)
 
 		sig = '0x' + create_signature_mmgen()
 		sig_chk = await create_signature_rpc()
@@ -798,75 +798,75 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		# Compare signatures
 		imsg(f'Message:   {self.message}')
 		imsg(f'Signature: {sig}')
-		cmp_or_die(sig,sig_chk,'message signatures')
+		cmp_or_die(sig, sig_chk, 'message signatures')
 		imsg('Geth and MMGen signatures match')
 
 		return 'ok'
 
-	def msgcreate(self,add_args=[]):
+	def msgcreate(self, add_args=[]):
 		t = self.spawn('mmgen-msg', self.eth_args_noquiet + add_args + ['create', self.message, '98831F3A:E:1'])
 		t.written_to_file('Unsigned message data')
 		return t
 
 	def msgsign(self):
-		fn = get_file_with_ext(self.tmpdir,'rawmsg.json')
+		fn = get_file_with_ext(self.tmpdir, 'rawmsg.json')
 		t = self.spawn('mmgen-msg', self.eth_args_noquiet + ['sign', fn, dfl_words_file])
 		t.written_to_file('Signed message data')
 		return t
 
-	def msgverify(self,fn=None,msghash_type='eth_sign'):
-		fn = fn or get_file_with_ext(self.tmpdir,'sigmsg.json')
+	def msgverify(self, fn=None, msghash_type='eth_sign'):
+		fn = fn or get_file_with_ext(self.tmpdir, 'sigmsg.json')
 		t = self.spawn('mmgen-msg', self.eth_args_noquiet + ['verify', fn])
 		t.expect(msghash_type)
 		t.expect('1 signature verified')
 		return t
 
 	def msgexport(self):
-		fn = get_file_with_ext(self.tmpdir,'sigmsg.json')
+		fn = get_file_with_ext(self.tmpdir, 'sigmsg.json')
 		t = self.spawn('mmgen-msg', self.eth_args_noquiet + ['export', fn])
 		t.written_to_file('Signature data')
 		return t
 
 	def msgverify_export(self):
 		return self.msgverify(
-			fn = os.path.join(self.tmpdir,'signatures.json') )
+			fn = os.path.join(self.tmpdir, 'signatures.json'))
 
 	def msgcreate_raw(self):
-		get_file_with_ext(self.tmpdir,'rawmsg.json',delete_all=True)
+		get_file_with_ext(self.tmpdir, 'rawmsg.json', delete_all=True)
 		return self.msgcreate(add_args=['--msghash-type=raw'])
 
 	def msgsign_raw(self):
-		get_file_with_ext(self.tmpdir,'sigmsg.json',delete_all=True)
+		get_file_with_ext(self.tmpdir, 'sigmsg.json', delete_all=True)
 		return self.msgsign()
 
 	def msgverify_raw(self):
 		return self.msgverify(msghash_type='raw')
 
 	def msgexport_raw(self):
-		get_file_with_ext(self.tmpdir,'signatures.json',no_dot=True,delete_all=True)
+		get_file_with_ext(self.tmpdir, 'signatures.json', no_dot=True, delete_all=True)
 		return self.msgexport()
 
 	def msgverify_export_raw(self):
 		return self.msgverify(
-			fn = os.path.join(self.tmpdir,'signatures.json'),
-			msghash_type = 'raw' )
+			fn = os.path.join(self.tmpdir, 'signatures.json'),
+			msghash_type = 'raw')
 
 	def txcreate4(self):
 		return self.txcreate(
 			args             = ['98831F3A:E:2,23.45495'],
 			acct             = '1',
 			interactive_fee  = '40G',
-			fee_info_data    = ('0.00084','40') )
+			fee_info_data    = ('0.00084', '40'))
 
-	def txbump(self,ext=',40000]{}.regtest.rawtx',fee='50G',add_args=[]):
+	def txbump(self, ext=',40000]{}.regtest.rawtx', fee='50G', add_args=[]):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
-		txfile = self.get_file_with_ext(ext,no_dot=True)
-		t = self.spawn('mmgen-txbump', self.eth_args + add_args + ['--yes',txfile])
-		t.expect('or gas price: ',fee+'\n')
+		txfile = self.get_file_with_ext(ext, no_dot=True)
+		t = self.spawn('mmgen-txbump', self.eth_args + add_args + ['--yes', txfile])
+		t.expect('or gas price: ', fee+'\n')
 		return t
 
 	def txsign4(self):
-		return self.txsign(ni=True,ext='.45495,50000]{}.regtest.rawtx',dev_send=True)
+		return self.txsign(ni=True, ext='.45495,50000]{}.regtest.rawtx', dev_send=True)
 	def txsend4(self):
 		return self.txsend(ext='.45495,50000]{}.regtest.sigtx')
 	def bal4(self):
@@ -874,53 +874,53 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 	def txcreate5(self):
 		args = [burn_addr + ','+amt1]
-		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
+		return self.txcreate(args=args, acct='10', tweaks=['confirm_non_mmgen'])
 	def txsign5(self):
-		return self.txsign(ni=True,ext=amt1+',50000]{}.regtest.rawtx',dev_send=True)
+		return self.txsign(ni=True, ext=amt1+',50000]{}.regtest.rawtx', dev_send=True)
 	def txsend5(self):
 		return self.txsend(ext=amt1+',50000]{}.regtest.sigtx')
 	def bal5(self):
 		return self.bal(n='5')
 
-	def bal(self,n):
-		t = self.spawn('mmgen-tool', self.eth_args + ['twview','wide=1'])
+	def bal(self, n):
+		t = self.spawn('mmgen-tool', self.eth_args + ['twview', 'wide=1'])
 		text = t.read(strip_color=True)
-		for addr,amt in bals(n):
-			pat = r'\D{}\D.*\D{}\D'.format( addr, amt.replace('.',r'\.') )
-			assert re.search(pat,text), pat
+		for addr, amt in bals(n):
+			pat = r'\D{}\D.*\D{}\D'.format(addr, amt.replace('.', r'\.'))
+			assert re.search(pat, text), pat
 		ss = f'Total {self.proto.coin}:'
-		assert re.search(ss,text),ss
+		assert re.search(ss, text), ss
 		return t
 
-	def token_bal(self,n=None):
-		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1','twview','wide=1'])
+	def token_bal(self, n=None):
+		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1', 'twview', 'wide=1'])
 		text = t.read(strip_color=True)
-		for addr,_amt1,_amt2 in token_bals(n):
+		for addr, _amt1, _amt2 in token_bals(n):
 			pat = fr'{addr}\b.*\D{_amt1}\D.*\b{_amt2}\D'
-			assert re.search(pat,text), pat
+			assert re.search(pat, text), pat
 		ss = 'Total MM1:'
-		assert re.search(ss,text),ss
+		assert re.search(ss, text), ss
 		return t
 
-	def bal_getbalance(self,sid,idx,etc_adj=False,extra_args=[]):
+	def bal_getbalance(self, sid, idx, etc_adj=False, extra_args=[]):
 		bal1 = token_bals_getbalance(idx)[0]
 		bal2 = token_bals_getbalance(idx)[1]
 		bal1 = Decimal(bal1)
 		t = self.spawn('mmgen-tool', self.eth_args + extra_args + ['getbalance'])
-		t.expect(rf'{sid}:.*'+str(bal1),regex=True)
-		t.expect(r'Non-MMGen:.*'+bal2,regex=True)
+		t.expect(rf'{sid}:.*'+str(bal1), regex=True)
+		t.expect(r'Non-MMGen:.*'+bal2, regex=True)
 		total = strip_ansi_escapes(t.expect_getend(rf'TOTAL {self.proto.coin}')).split()[0]
 		assert Decimal(bal1) + Decimal(bal2) == Decimal(total)
 		return t
 
-	def add_comment(self,comment,addr='98831F3A:E:3'):
-		t = self.spawn('mmgen-tool', self.eth_args + ['add_label',addr,comment])
-		t.expect('Added label.*in tracking wallet',regex=True)
+	def add_comment(self, comment, addr='98831F3A:E:3'):
+		t = self.spawn('mmgen-tool', self.eth_args + ['add_label', addr, comment])
+		t.expect('Added label.*in tracking wallet', regex=True)
 		return t
 
-	def chk_comment(self,comment_pat,addr='98831F3A:E:3'):
-		t = self.spawn('mmgen-tool', self.eth_args + ['listaddresses','all_labels=1'])
-		t.expect(fr'{addr}\b.*{comment_pat}',regex=True)
+	def chk_comment(self, comment_pat, addr='98831F3A:E:3'):
+		t = self.spawn('mmgen-tool', self.eth_args + ['listaddresses', 'all_labels=1'])
+		t.expect(fr'{addr}\b.*{comment_pat}', regex=True)
 		return t
 
 	def add_comment1(self):
@@ -932,19 +932,19 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def chk_comment2(self):
 		return self.chk_comment(comment_pat=tw_comment_lat_cyr_gr[:3])
 
-	def remove_comment(self,addr='98831F3A:E:3'):
-		t = self.spawn('mmgen-tool', self.eth_args + ['remove_label',addr])
-		t.expect('Removed label.*in tracking wallet',regex=True)
+	def remove_comment(self, addr='98831F3A:E:3'):
+		t = self.spawn('mmgen-tool', self.eth_args + ['remove_label', addr])
+		t.expect('Removed label.*in tracking wallet', regex=True)
 		return t
 
-	def token_compile(self,token_data={}):
-		odir = joinpath(self.tmpdir,token_data['symbol'].lower())
+	def token_compile(self, token_data={}):
+		odir = joinpath(self.tmpdir, token_data['symbol'].lower())
 		if not self.using_solc:
 			imsg(f'Using precompiled contract data in {odir}')
 			return 'skip' if os.path.exists(odir) else False
-		self.spawn('',msg_only=True)
-		cmd_args = [f'--{k}={v}' for k,v in list(token_data.items())]
-		imsg("Compiling solidity token contract '{}' with 'solc'".format( token_data['symbol'] ))
+		self.spawn('', msg_only=True)
+		cmd_args = [f'--{k}={v}' for k, v in list(token_data.items())]
+		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
 		try:
 			os.mkdir(odir)
 		except:
@@ -955,27 +955,27 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			'--coin=' + self.proto.coin,
 			'--outdir=' + odir
 		] + cmd_args + [self.proto.checksummed_addr(dfl_devaddr)]
-		imsg('Executing: {}'.format( ' '.join(cmd) ))
-		cp = run(cmd,stdout=DEVNULL,stderr=PIPE)
+		imsg('Executing: {}'.format(' '.join(cmd)))
+		cp = run(cmd, stdout=DEVNULL, stderr=PIPE)
 		if cp.returncode != 0:
 			rmsg('solc failed with the following output:')
-			die(2,cp.stderr.decode())
-		imsg('ERC20 token {!r} compiled'.format( token_data['symbol'] ))
+			die(2, cp.stderr.decode())
+		imsg('ERC20 token {!r} compiled'.format(token_data['symbol']))
 		return 'ok'
 
 	def token_compile1(self):
-		token_data = { 'name':'MMGen Token 1', 'symbol':'MM1', 'supply':10**26, 'decimals':18 }
+		token_data = {'name':'MMGen Token 1', 'symbol':'MM1', 'supply':10**26, 'decimals':18}
 		return self.token_compile(token_data)
 
 	def token_compile2(self):
-		token_data = { 'name':'MMGen Token 2', 'symbol':'MM2', 'supply':10**18, 'decimals':10 }
+		token_data = {'name':'MMGen Token 2', 'symbol':'MM2', 'supply':10**18, 'decimals':10}
 		return self.token_compile(token_data)
 
-	async def get_tx_receipt(self,txid):
+	async def get_tx_receipt(self, txid):
 		if self.daemon.id == 'geth': # yet another Geth bug
 			await asyncio.sleep(0.5)
 		from mmgen.tx import NewTX
-		tx = await NewTX(cfg=cfg,proto=self.proto)
+		tx = await NewTX(cfg=cfg, proto=self.proto)
 		tx.rpc = await self.rpc
 		res = await tx.get_receipt(txid)
 		imsg(f'Gas sent:  {res.gas_sent.hl():<9} {(res.gas_sent*res.gas_price).hl2(encl="()")}')
@@ -985,9 +985,9 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			omsg(yellow('Warning: all gas was used!'))
 		return res
 
-	async def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
-		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
-		fn = joinpath(self.tmpdir,'mm'+str(num),key+'.bin')
+	async def token_deploy(self, num, key, gas, mmgen_cmd='txdo', tx_fee='8G'):
+		keyfile = joinpath(self.tmpdir, parity_devkey_fn)
+		fn = joinpath(self.tmpdir, 'mm'+str(num), key+'.bin')
 		args = [
 			'-B',
 			f'--fee={tx_fee}',
@@ -997,35 +997,35 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			'--yes',
 		]
 		if mmgen_cmd == 'txdo':
-			args += ['-k',keyfile]
-		t = self.spawn( 'mmgen-'+mmgen_cmd, self.eth_args + args)
+			args += ['-k', keyfile]
+		t = self.spawn('mmgen-'+mmgen_cmd, self.eth_args + args)
 		if mmgen_cmd == 'txcreate':
 			t.written_to_file('transaction')
 			ext = '[0,8000]{}.regtest.rawtx'.format('-α' if cfg.debug_utf8 else '')
-			txfile = self.get_file_with_ext(ext,no_dot=True)
-			t = self.spawn('mmgen-txsign', self.eth_args + ['--yes','-k',keyfile,txfile],no_msg=True)
-			self.txsign_ui_common(t,ni=True)
-			txfile = txfile.replace('.rawtx','.sigtx')
-			t = self.spawn('mmgen-txsend', self.eth_args + [txfile],no_msg=True)
+			txfile = self.get_file_with_ext(ext, no_dot=True)
+			t = self.spawn('mmgen-txsign', self.eth_args + ['--yes', '-k', keyfile, txfile], no_msg=True)
+			self.txsign_ui_common(t, ni=True)
+			txfile = txfile.replace('.rawtx', '.sigtx')
+			t = self.spawn('mmgen-txsend', self.eth_args + [txfile], no_msg=True)
 
 		txid = self.txsend_ui_common(t,
 			caller = mmgen_cmd,
 			quiet  = mmgen_cmd == 'txdo' or not cfg.debug,
-			bogus_send = False )
+			bogus_send = False)
 		addr = strip_ansi_escapes(t.expect_getend('Contract address: '))
 		if (await self.get_tx_receipt(txid)).status == 0:
-			die(2,f'Contract {num}:{key} failed to execute. Aborting')
+			die(2, f'Contract {num}:{key} failed to execute. Aborting')
 		if key == 'Token':
-			self.write_to_tmpfile( f'token_addr{num}', addr+'\n' )
+			self.write_to_tmpfile(f'token_addr{num}', addr+'\n')
 			imsg(f'\nToken MM{num} deployed!')
 		return t
 
 	async def token_deploy1a(self):
-		return await self.token_deploy(num=1,key='SafeMath',gas=500_000)
+		return await self.token_deploy(num=1, key='SafeMath', gas=500_000)
 	async def token_deploy1b(self):
-		return await self.token_deploy(num=1,key='Owned',   gas=1_000_000)
+		return await self.token_deploy(num=1, key='Owned',    gas=1_000_000)
 	async def token_deploy1c(self):
-		return await self.token_deploy(num=1,key='Token',   gas=4_000_000,tx_fee='7G')
+		return await self.token_deploy(num=1, key='Token',    gas=4_000_000, tx_fee='7G')
 
 	def tx_status2(self):
 		return self.tx_status(
@@ -1036,20 +1036,20 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		return self.bal5()
 
 	async def token_deploy2a(self):
-		return await self.token_deploy(num=2,key='SafeMath',gas=500_000)
+		return await self.token_deploy(num=2, key='SafeMath', gas=500_000)
 	async def token_deploy2b(self):
-		return await self.token_deploy(num=2,key='Owned',   gas=1_000_000)
+		return await self.token_deploy(num=2, key='Owned',   gas=1_000_000)
 	async def token_deploy2c(self):
-		return await self.token_deploy(num=2,key='Token',   gas=4_000_000)
+		return await self.token_deploy(num=2, key='Token',   gas=4_000_000)
 
-	async def contract_deploy(self): # test create,sign,send
-		return await self.token_deploy(num=2,key='SafeMath',gas=500_000,mmgen_cmd='txcreate')
+	async def contract_deploy(self): # test create, sign, send
+		return await self.token_deploy(num=2, key='SafeMath', gas=500_000, mmgen_cmd='txcreate')
 
-	async def token_transfer_ops(self,op,amt=1000,num_tokens=2):
-		self.spawn('',msg_only=True)
+	async def token_transfer_ops(self, op, amt=1000, num_tokens=2):
+		self.spawn('', msg_only=True)
 		sid = dfl_sid
 		from mmgen.tool.wallet import tool_cmd
-		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11,21)][:num_tokens]
+		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11, 21)][:num_tokens]
 
 		from mmgen.proto.eth.contract import ResolvedToken
 		async def do_transfer(rpc):
@@ -1058,9 +1058,9 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 					cfg,
 					self.proto,
 					rpc,
-					self.read_from_tmpfile(f'token_addr{i+1}').strip() )
-				imsg_r( '\n' + await tk.info() )
-				imsg('dev token balance (pre-send): {}'.format( await tk.get_balance(dfl_devaddr) ))
+					self.read_from_tmpfile(f'token_addr{i+1}').strip())
+				imsg_r('\n' + await tk.info())
+				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_devaddr)))
 				imsg(f'Sending {amt} {self.proto.dcoin} to address {usr_addrs[i]} ({usr_mmaddrs[i]})')
 				txid = await tk.transfer(
 					dfl_devaddr,
@@ -1070,7 +1070,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 					start_gas = self.proto.coin_amt(60000, from_unit='wei'),
 					gasPrice  = self.proto.coin_amt(8, from_unit='Gwei'))
 				if (await self.get_tx_receipt(txid)).status == 0:
-					die(2,'Transfer of token funds failed. Aborting')
+					die(2, 'Transfer of token funds failed. Aborting')
 
 		async def show_bals(rpc):
 			for i in range(num_tokens):
@@ -1078,19 +1078,19 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 					cfg,
 					self.proto,
 					rpc,
-					self.read_from_tmpfile(f'token_addr{i+1}').strip() )
-				imsg('Token: {}'.format( await tk.get_symbol() ))
+					self.read_from_tmpfile(f'token_addr{i+1}').strip())
+				imsg('Token: {}'.format(await tk.get_symbol()))
 				imsg(f'dev token balance: {await tk.get_balance(dfl_devaddr)}')
 				imsg('usr token balance: {} ({} {})'.format(
 					await tk.get_balance(usr_addrs[i]),
 					usr_mmaddrs[i],
-					usr_addrs[i] ))
+					usr_addrs[i]))
 
 		def gen_addr(addr):
-			return tool_cmd(cfg,cmdname='gen_addr',proto=self.proto).gen_addr(addr,dfl_words_file)
+			return tool_cmd(cfg, cmdname='gen_addr', proto=self.proto).gen_addr(addr, dfl_words_file)
 
 		silence()
-		usr_addrs = list(map(gen_addr,usr_mmaddrs))
+		usr_addrs = list(map(gen_addr, usr_mmaddrs))
 		if op == 'show_bals':
 			await show_bals(await self.rpc)
 		elif op == 'do_transfer':
@@ -1104,7 +1104,7 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def token_user_bals(self):
 		return self.token_transfer_ops(op='show_bals')
 
-	def token_addrgen(self,num_tokens=2):
+	def token_addrgen(self, num_tokens=2):
 		t = self.addrgen(addrs='11-13')
 		if num_tokens == 1:
 			return t
@@ -1129,34 +1129,34 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		t.expect('could not be resolved')
 		return t
 
-	def token_addrimport(self,addr_file,addr_range,expect,extra_args=[]):
+	def token_addrimport(self, addr_file, addr_range, expect, extra_args=[]):
 		token_addr = self.read_from_tmpfile(addr_file).strip()
 		return self.addrimport(
 			ext      = f'[{addr_range}]{{}}.regtest.addrs',
 			expect   = expect,
-			add_args = ['--token-addr='+token_addr]+extra_args )
+			add_args = ['--token-addr='+token_addr]+extra_args)
 
 	def token_addrimport_addr1(self):
-		return self.token_addrimport('token_addr1','11-13',expect='3/3')
+		return self.token_addrimport('token_addr1', '11-13', expect='3/3')
 
 	def token_addrimport_addr2(self):
-		return self.token_addrimport('token_addr2','21-23',expect='3/3')
+		return self.token_addrimport('token_addr2', '21-23', expect='3/3')
 
 	def token_addrimport_batch(self):
-		return self.token_addrimport('token_addr1','11-13',expect='3 addresses',extra_args=['--batch'])
+		return self.token_addrimport('token_addr1', '11-13', expect='3 addresses', extra_args=['--batch'])
 
 	def token_addrimport_sym(self):
 		return self.addrimport(
 			ext      = '[21-23]{}.regtest.addrs',
 			expect   = '3/3',
-			add_args = ['--token=MM2'] )
+			add_args = ['--token=MM2'])
 
 	def bal7(self):
 		return self.bal5()
 	def token_bal1(self):
 		return self.token_bal(n='1')
 
-	def token_txcreate(self,args=[],token='',inputs='1',fee='50G',file_desc='Unsigned transaction'):
+	def token_txcreate(self, args=[], token='', inputs='1', fee='50G', file_desc='Unsigned transaction'):
 		return self.txcreate_ui_common(
 			self.spawn('mmgen-txcreate', self.eth_args + [f'--token={token}', '-B', f'--fee={fee}'] + args),
 			menu              = [],
@@ -1164,19 +1164,19 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			input_sels_prompt = 'to spend from',
 			add_comment       = tx_comment_lat_cyr_gr,
 			file_desc         = file_desc)
-	def token_txsign(self,ext='',token=''):
-		return self.txsign(ni=True,ext=ext,add_args=['--token='+token])
-	def token_txsend(self,ext='',token=''):
-		return self.txsend(ext=ext,add_args=['--token='+token])
+	def token_txsign(self, ext='', token=''):
+		return self.txsign(ni=True, ext=ext, add_args=['--token='+token])
+	def token_txsend(self, ext='', token=''):
+		return self.txsend(ext=ext, add_args=['--token='+token])
 
 	def token_txcreate1(self):
-		return self.token_txcreate(args=['98831F3A:E:12,1.23456'],token='mm1')
+		return self.token_txcreate(args=['98831F3A:E:12,1.23456'], token='mm1')
 	def token_txview1_raw(self):
 		return self.txview(ext_fs='1.23456,50000]{}.regtest.rawtx')
 	def token_txsign1(self):
-		return self.token_txsign(ext='1.23456,50000]{}.regtest.rawtx',token='mm1')
+		return self.token_txsign(ext='1.23456,50000]{}.regtest.rawtx', token='mm1')
 	def token_txsend1(self):
-		return self.token_txsend(ext='1.23456,50000]{}.regtest.sigtx',token='mm1')
+		return self.token_txsend(ext='1.23456,50000]{}.regtest.sigtx', token='mm1')
 	def token_txview1_sig(self):
 		return self.txview(ext_fs='1.23456,50000]{}.regtest.sigtx')
 
@@ -1185,25 +1185,25 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 			ext         = '1.23456,50000]{}.regtest.sigtx',
 			add_args    = ['--token=mm1'],
 			expect_str  = 'successfully executed',
-			expect_str2 = 'has 1 confirmation' )
+			expect_str2 = 'has 1 confirmation')
 
 	def token_bal2(self):
 		return self.token_bal(n='2')
 
-	def twview(self,args=[],expect_str='',tool_args=[]):
+	def twview(self, args=[], expect_str='', tool_args=[]):
 		t = self.spawn('mmgen-tool', self.eth_args + args + ['twview'] + tool_args)
 		if expect_str:
-			t.expect(expect_str,regex=True)
+			t.expect(expect_str, regex=True)
 		return t
 
 	def token_txcreate2(self):
-		return self.token_txcreate(args=[burn_addr+','+amt2],token='mm1')
+		return self.token_txcreate(args=[burn_addr+', '+amt2], token='mm1')
 	def token_txbump(self):
-		return self.txbump(ext=amt2+',50000]{}.regtest.rawtx',fee='56G',add_args=['--token=mm1'])
+		return self.txbump(ext=amt2+',50000]{}.regtest.rawtx', fee='56G', add_args=['--token=mm1'])
 	def token_txsign2(self):
-		return self.token_txsign(ext=amt2+',50000]{}.regtest.rawtx',token='mm1')
+		return self.token_txsign(ext=amt2+',50000]{}.regtest.rawtx', token='mm1')
 	def token_txsend2(self):
-		return self.token_txsend(ext=amt2+',50000]{}.regtest.sigtx',token='mm1')
+		return self.token_txsend(ext=amt2+',50000]{}.regtest.sigtx', token='mm1')
 
 	def token_bal3(self):
 		return self.token_bal(n='3')
@@ -1214,16 +1214,16 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		return t
 
 	def bal1_getbalance(self):
-		return self.bal_getbalance(dfl_sid,'1',etc_adj=True)
+		return self.bal_getbalance(dfl_sid, '1', etc_adj=True)
 
 	def addrimport_token_burn_addr(self):
-		return self.addrimport_one_addr(addr=burn_addr,extra_args=['--token=mm1'])
+		return self.addrimport_one_addr(addr=burn_addr, extra_args=['--token=mm1'])
 
 	def token_bal4(self):
 		return self.token_bal(n='4')
 
 	def token_bal_getbalance(self):
-		return self.bal_getbalance(dfl_sid,'2',extra_args=['--token=mm1'])
+		return self.bal_getbalance(dfl_sid, '2', extra_args=['--token=mm1'])
 
 	def txcreate_noamt(self):
 		return self.txcreate(args=['98831F3A:E:12'])
@@ -1238,18 +1238,18 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		return self.token_bal(n='5')
 
 	def token_txcreate_noamt(self):
-		return self.token_txcreate(args=['98831F3A:E:13'],token='mm1',inputs='2',fee='51G')
+		return self.token_txcreate(args=['98831F3A:E:13'], token='mm1', inputs='2', fee='51G')
 	def token_txsign_noamt(self):
-		return self.token_txsign(ext='1.23456,51000]{}.regtest.rawtx',token='mm1')
+		return self.token_txsign(ext='1.23456,51000]{}.regtest.rawtx', token='mm1')
 	def token_txsend_noamt(self):
-		return self.token_txsend(ext='1.23456,51000]{}.regtest.sigtx',token='mm1')
+		return self.token_txsend(ext='1.23456,51000]{}.regtest.sigtx', token='mm1')
 
 	def bal9(self):
 		return self.bal(n='9')
 	def token_bal6(self):
 		return self.token_bal(n='6')
 
-	def listaddresses(self,args=[],tool_args=['all_labels=1']):
+	def listaddresses(self, args=[], tool_args=['all_labels=1']):
 		return self.spawn('mmgen-tool', self.eth_args + args + ['listaddresses'] + tool_args)
 
 	def listaddresses1(self):
@@ -1257,65 +1257,65 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def listaddresses2(self):
 		return self.listaddresses(tool_args=['minconf=999999999'])
 	def listaddresses3(self):
-		return self.listaddresses(tool_args=['sort=amt','reverse=1'])
+		return self.listaddresses(tool_args=['sort=amt', 'reverse=1'])
 	def listaddresses4(self):
-		return self.listaddresses(tool_args=['sort=age','showempty=0'])
+		return self.listaddresses(tool_args=['sort=age', 'showempty=0'])
 
 	def token_listaddresses1(self):
 		return self.listaddresses(args=['--token=mm1'])
 	def token_listaddresses2(self):
-		return self.listaddresses(args=['--token=mm1'],tool_args=['showempty=1'])
+		return self.listaddresses(args=['--token=mm1'], tool_args=['showempty=1'])
 	def token_listaddresses3(self):
-		return self.listaddresses(args=['--token=mm1'],tool_args=['showempty=0'])
+		return self.listaddresses(args=['--token=mm1'], tool_args=['showempty=0'])
 	def token_listaddresses4(self):
-		return self.listaddresses(args=['--token=mm2'],tool_args=['sort=age','reverse=1'])
+		return self.listaddresses(args=['--token=mm2'], tool_args=['sort=age', 'reverse=1'])
 
 	def twview_cached_balances(self):
 		return self.twview(args=['--cached-balances'])
 	def token_twview_cached_balances(self):
-		return self.twview(args=['--token=mm1','--cached-balances'])
+		return self.twview(args=['--token=mm1', '--cached-balances'])
 
 	def txcreate_cached_balances(self):
-		args = ['--fee=20G','--cached-balances','98831F3A:E:3,0.1276']
-		return self.txcreate(args=args,acct='2')
+		args = ['--fee=20G', '--cached-balances', '98831F3A:E:3, 0.1276']
+		return self.txcreate(args=args, acct='2')
 	def token_txcreate_cached_balances(self):
-		args=['--cached-balances','--fee=12G','98831F3A:E:12,1.2789']
-		return self.token_txcreate(args=args,token='mm1')
+		args=['--cached-balances', '--fee=12G', '98831F3A:E:12, 1.2789']
+		return self.token_txcreate(args=args, token='mm1')
 
 	def txdo_cached_balances(
 			self,
 			acct          = '2',
-			fee_info_data = ('0.00105','50'),
+			fee_info_data = ('0.00105', '50'),
 			add_args      = ['98831F3A:E:3,0.4321']):
 		t = self.txcreate(
-				args          = ['--fee=20G','--cached-balances'] + add_args + [dfl_words_file],
-				acct          = acct,
-				caller        = 'txdo',
-				fee_info_data = fee_info_data,
-				no_read       = True)
-		self._do_confirm_send(t,quiet=not cfg.debug,sure=False)
+			args          = ['--fee=20G', '--cached-balances'] + add_args + [dfl_words_file],
+			acct          = acct,
+			caller        = 'txdo',
+			fee_info_data = fee_info_data,
+			no_read       = True)
+		self._do_confirm_send(t, quiet=not cfg.debug, sure=False)
 		return t
 
 	def txcreate_refresh_balances(self):
 		return self._txcreate_refresh_balances(
-			bals       = ['2','3'],
-			args       = ['-B','--cached-balances','-i'],
+			bals       = ['2', '3'],
+			args       = ['-B', '--cached-balances', '-i'],
 			total      = vbal5,
 			adj_total  = True,
 			total_coin = None)
 
-	def _txcreate_refresh_balances(self,bals,args,total,adj_total,total_coin):
+	def _txcreate_refresh_balances(self, bals, args, total, adj_total, total_coin):
 
 		if total_coin is None:
 			total_coin = self.proto.coin
 
 		t = self.spawn('mmgen-txcreate', self.eth_args + args)
 		for n in bals:
-			t.expect('[R]efresh balance:\b','R')
-			t.expect(' main menu): ',n+'\n')
-			t.expect('Is this what you want? (y/N): ','y')
-		t.expect('[R]efresh balance:\b','q')
-		t.expect(rf'Total unspent:.*\D{total}\D.*{total_coin}',regex=True)
+			t.expect('[R]efresh balance:\b', 'R')
+			t.expect(' main menu): ', n+'\n')
+			t.expect('Is this what you want? (y/N): ', 'y')
+		t.expect('[R]efresh balance:\b', 'q')
+		t.expect(rf'Total unspent:.*\D{total}\D.*{total_coin}', regex=True)
 		return t
 
 	def bal10(self):
@@ -1324,16 +1324,16 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def token_txdo_cached_balances(self):
 		return self.txdo_cached_balances(
 			acct          = '1',
-			fee_info_data = ('0.0026','50'),
-			add_args      = ['--token=mm1','98831F3A:E:12,43.21'] )
+			fee_info_data = ('0.0026', '50'),
+			add_args      = ['--token=mm1', '98831F3A:E:12,43.21'])
 
 	def token_txcreate_refresh_balances(self):
 		return self._txcreate_refresh_balances(
-			bals       = ['1','2'],
-			args       = ['--token=mm1','-B','--cached-balances','-i'],
+			bals       = ['1', '2'],
+			args       = ['--token=mm1', '-B', '--cached-balances', '-i'],
 			total      = '1000',
 			adj_total  = False,
-			total_coin = 'MM1' )
+			total_coin = 'MM1')
 
 	def token_bal7(self):
 		return self.token_bal(n='7')
@@ -1343,11 +1343,11 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def twview2(self):
 		return self.twview(tool_args=['wide=1'])
 	def twview3(self):
-		return self.twview(tool_args=['wide=1','sort=age'])
+		return self.twview(tool_args=['wide=1', 'sort=age'])
 	def twview4(self):
-		return self.twview(tool_args=['wide=1','minconf=999999999'])
+		return self.twview(tool_args=['wide=1', 'minconf=999999999'])
 	def twview5(self):
-		return self.twview(tool_args=['wide=1','minconf=0'])
+		return self.twview(tool_args=['wide=1', 'minconf=0'])
 	def twview6(self):
 		return self.twview(expect_str=vbal7)
 	def twview7(self):
@@ -1355,14 +1355,14 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 	def twview8(self):
 		return self.twview()
 	def twview9(self):
-		return self.twview(args=['--cached-balances'],expect_str=vbal6)
+		return self.twview(args=['--cached-balances'], expect_str=vbal6)
 
 	def token_twview1(self):
 		return self.twview(args=['--token=mm1'])
 	def token_twview2(self):
-		return self.twview(args=['--token=mm1'],tool_args=['wide=1'])
+		return self.twview(args=['--token=mm1'], tool_args=['wide=1'])
 	def token_twview3(self):
-		return self.twview(args=['--token=mm1'],tool_args=['wide=1','sort=age'])
+		return self.twview(args=['--token=mm1'], tool_args=['wide=1', 'sort=age'])
 
 	def edit_comment(
 			self,
@@ -1377,69 +1377,69 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 
 		menu_prompt = 'efresh balance:\b'
 
-		t.expect(menu_prompt,'M')
-		t.expect(menu_prompt,action)
-		t.expect(r'return to main menu): ',out_num+'\n')
+		t.expect(menu_prompt, 'M')
+		t.expect(menu_prompt, action)
+		t.expect(r'return to main menu): ', out_num+'\n')
 
-		for p,r in (
-			('Enter label text.*: ',comment_text+'\n') if comment_text is not None else (r'\(y/N\): ','y'),
-			(r'\(y/N\): ','y') if comment_text == Ctrl_U else (None,None),
+		for p, r in (
+			('Enter label text.*: ', comment_text+'\n') if comment_text is not None else (r'\(y/N\): ', 'y'),
+			(r'\(y/N\): ', 'y') if comment_text == Ctrl_U else (None, None),
 		):
 			if p:
-				t.expect(p,r,regex=True)
+				t.expect(p, r, regex=True)
 
 		m = (
 			'Label for account #{} edited' if changed else
 			'Account #{} removed' if action == 'D' else
 			'Label added to account #{}' if comment_text and comment_text != Ctrl_U else
-			'Label removed from account #{}' )
+			'Label removed from account #{}')
 
 		t.expect(m.format(out_num))
-		t.expect(menu_prompt,'M')
-		t.expect(menu_prompt,'q')
+		t.expect(menu_prompt, 'M')
+		t.expect(menu_prompt, 'q')
 
 		t.expect('Total unspent:')
 
 		return t
 
 	def edit_comment1(self):
-		return self.edit_comment(out_num=del_addrs[0],comment_text=tw_comment_zh[:3])
+		return self.edit_comment(out_num=del_addrs[0], comment_text=tw_comment_zh[:3])
 	def edit_comment2(self):
 		spawn = not sys.platform == 'win32'
 		return self.edit_comment(
-				out_num       = del_addrs[0],
-				comment_text  = tw_comment_zh[3:],
-				changed       = True,
-				pexpect_spawn = spawn)
+			out_num       = del_addrs[0],
+			comment_text  = tw_comment_zh[3:],
+			changed       = True,
+			pexpect_spawn = spawn)
 	def edit_comment3(self):
-		return self.edit_comment(out_num=del_addrs[1],comment_text=tw_comment_lat_cyr_gr)
+		return self.edit_comment(out_num=del_addrs[1], comment_text=tw_comment_lat_cyr_gr)
 	def edit_comment4(self):
 		if self.skip_for_win('no pexpect_spawn'):
 			return 'skip'
-		return self.edit_comment(out_num=del_addrs[0],comment_text=Ctrl_U,pexpect_spawn=True)
+		return self.edit_comment(out_num=del_addrs[0], comment_text=Ctrl_U, pexpect_spawn=True)
 
 	def token_edit_comment1(self):
-		return self.edit_comment(out_num='1',comment_text='Token label #1',args=['--token=mm1'])
+		return self.edit_comment(out_num='1', comment_text='Token label #1', args=['--token=mm1'])
 
 	def remove_addr1(self):
-		return self.edit_comment(out_num=del_addrs[0],action='D')
+		return self.edit_comment(out_num=del_addrs[0], action='D')
 	def remove_addr2(self):
-		return self.edit_comment(out_num=del_addrs[1],action='D')
+		return self.edit_comment(out_num=del_addrs[1], action='D')
 	def token_remove_addr1(self):
-		return self.edit_comment(out_num=del_addrs[0],args=['--token=mm1'],action='D')
+		return self.edit_comment(out_num=del_addrs[0], args=['--token=mm1'], action='D')
 	def token_remove_addr2(self):
-		return self.edit_comment(out_num=del_addrs[1],args=['--token=mm1'],action='D')
+		return self.edit_comment(out_num=del_addrs[1], args=['--token=mm1'], action='D')
 
 	def twexport_noamt(self):
 		return self.twexport(add_args=['include_amts=0'])
 
-	def twexport(self,add_args=[]):
+	def twexport(self, add_args=[]):
 		t = self.spawn('mmgen-tool', self.eth_args + ['twexport'] + add_args)
 		t.written_to_file('JSON data')
 		return t
 
 	async def twmove(self):
-		self.spawn('',msg_only=True)
+		self.spawn('', msg_only=True)
 		from mmgen.tw.ctl import TwCtl
 		twctl = await TwCtl(cfg, self.proto, no_wallet_init=True)
 		imsg('Moving tracking wallet')
@@ -1448,9 +1448,9 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		twctl.tw_path.rename(fn_bak)
 		return 'ok'
 
-	def twimport(self,add_args=[],expect_str=None):
+	def twimport(self, add_args=[], expect_str=None):
 		from mmgen.tw.json import TwJSON
-		fn = joinpath(self.tmpdir, TwJSON.Base(cfg,self.proto).dump_fn)
+		fn = joinpath(self.tmpdir, TwJSON.Base(cfg, self.proto).dump_fn)
 		t = self.spawn('mmgen-tool', self.eth_args_noquiet + ['twimport', fn] + add_args)
 		t.expect('(y/N): ', 'y')
 		if expect_str:
@@ -1459,39 +1459,39 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 		return t
 
 	def twimport_nochksum(self):
-		return self.twimport(add_args=['ignore_checksum=true'],expect_str='ignoring incorrect checksum')
+		return self.twimport(add_args=['ignore_checksum=true'], expect_str='ignoring incorrect checksum')
 
 	def tw_chktotal(self):
-		self.spawn('',msg_only=True)
+		self.spawn('', msg_only=True)
 		from mmgen.tw.json import TwJSON
-		fn = joinpath( self.tmpdir, TwJSON.Base(cfg,self.proto).dump_fn )
+		fn = joinpath(self.tmpdir, TwJSON.Base(cfg, self.proto).dump_fn)
 		res = json.loads(read_from_file(fn))
-		cmp_or_die( res['data']['value'], vbal6, 'value in tracking wallet JSON dump' )
+		cmp_or_die(res['data']['value'], vbal6, 'value in tracking wallet JSON dump')
 		return 'ok'
 
 	async def twcompare(self):
-		self.spawn('',msg_only=True)
+		self.spawn('', msg_only=True)
 		from mmgen.tw.ctl import TwCtl
 		twctl = await TwCtl(cfg, self.proto, no_wallet_init=True)
 		fn = twctl.tw_path
 		fn_bak = fn.with_suffix('.bak.json')
 		imsg('Comparing imported tracking wallet with original')
 		data = [json.dumps(json.loads(f.read_text()), sort_keys=True) for f in (fn, fn_bak)]
-		cmp_or_die(*data,'tracking wallets')
+		cmp_or_die(*data, 'tracking wallets')
 		return 'ok'
 
 	def edit_json_twdump(self):
-		self.spawn('',msg_only=True)
+		self.spawn('', msg_only=True)
 		from mmgen.tw.json import TwJSON
-		fn = TwJSON.Base(cfg,self.proto).dump_fn
+		fn = TwJSON.Base(cfg, self.proto).dump_fn
 		text = json.loads(self.read_from_tmpfile(fn))
 		token_addr = self.read_from_tmpfile('token_addr2').strip()
 		text['data']['entries']['tokens'][token_addr][2][3] = f'edited comment [фубар] [{gr_uc}]'
-		self.write_to_tmpfile( fn, json.dumps(text,indent=4) )
+		self.write_to_tmpfile(fn, json.dumps(text, indent=4))
 		return 'ok'
 
 	def stop(self):
-		self.spawn('',msg_only=True)
+		self.spawn('', msg_only=True)
 		if not cfg.no_daemon_stop:
 			if not stop_test_daemons(self.proto.coin+'_rt'):
 				return False

@@ -20,14 +20,14 @@
 test.cmdtest_py_d.ct_xmrwallet: xmrwallet tests for the cmdtest.py test suite
 """
 
-import sys,os,time,re,atexit,asyncio,shutil
-from subprocess import run,PIPE
+import sys, os, time, re, atexit, asyncio, shutil
+from subprocess import run, PIPE
 from collections import namedtuple
 
-from mmgen.util import msg,fmt,async_run,capfirst,is_int,die,list_gen
+from mmgen.util import msg, fmt, async_run, capfirst, is_int, die, list_gen
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
-from mmgen.addrlist import ViewKeyAddrList,KeyAddrList,AddrIdxList
+from mmgen.addrlist import ViewKeyAddrList, KeyAddrList, AddrIdxList
 
 from ..include.common import (
 	cfg,
@@ -56,10 +56,10 @@ def stop_daemons(self):
 def stop_miner_wallet_daemon(self):
 	async_run(self.users['miner'].wd_rpc.stop_daemon())
 
-def kill_proxy(cls,args):
+def kill_proxy(cls, args):
 	if sys.platform in ('linux', 'darwin'):
 		omsg(f'Killing SSH SOCKS server at localhost:{cls.socks_port}')
-		cmd = [ 'pkill', '-f', ' '.join(args) ]
+		cmd = ['pkill', '-f', ' '.join(args)]
 		run(cmd)
 
 class CmdTestXMRWallet(CmdTestBase):
@@ -81,66 +81,66 @@ class CmdTestXMRWallet(CmdTestBase):
 		('bob',   '1378FC64', False, 140, None,  ['--restricted-rpc']),
 	)
 	tx_relay_user = 'bob'
-	datadir_base = os.path.join('test','daemons','xmrtest')
+	datadir_base = os.path.join('test', 'daemons', 'xmrtest')
 
 	cmd_group = (
-		('daemon_version',            'checking daemon version'),
-		('gen_kafiles_miner_alice',   'generating key-address files for Miner and Alice'),
-		('create_wallets_miner',      'creating Monero wallets (Miner)'),
-		('set_label_miner',           'setting an address label (Miner, primary account)'),
-		('mine_initial_coins',        'mining initial coins'),
-		('create_wallets_alice',      'creating Monero wallets (Alice)'),
-		('fund_alice',                'sending funds'),
-		('check_bal_alice',           'mining, checking balance'),
+		('daemon_version',                'checking daemon version'),
+		('gen_kafiles_miner_alice',       'generating key-address files for Miner and Alice'),
+		('create_wallets_miner',          'creating Monero wallets (Miner)'),
+		('set_label_miner',               'setting an address label (Miner, primary account)'),
+		('mine_initial_coins',            'mining initial coins'),
+		('create_wallets_alice',          'creating Monero wallets (Alice)'),
+		('fund_alice',                    'sending funds'),
+		('check_bal_alice',               'mining, checking balance'),
 
-		('sync_wallets_all',          'syncing all wallets'),
-		('new_account_alice',         'creating a new account (Alice)'),
-		('new_account_alice_label',   'creating a new account (Alice, with label)'),
-		('new_address_alice',         'creating a new address (Alice)'),
-		('new_address_alice_label',   'creating a new address (Alice, with label)'),
-		('remove_label_alice',        'removing an address label (Alice, subaddress)'),
-		('set_label_alice',           'setting an address label (Alice, subaddress)'),
-		('sync_wallets_selected',     'syncing selected wallets'),
+		('sync_wallets_all',              'syncing all wallets'),
+		('new_account_alice',             'creating a new account (Alice)'),
+		('new_account_alice_label',       'creating a new account (Alice, with label)'),
+		('new_address_alice',             'creating a new address (Alice)'),
+		('new_address_alice_label',       'creating a new address (Alice, with label)'),
+		('remove_label_alice',            'removing an address label (Alice, subaddress)'),
+		('set_label_alice',               'setting an address label (Alice, subaddress)'),
+		('sync_wallets_selected',         'syncing selected wallets'),
 
-		('sweep_to_wallet',           'sweeping to new account in another wallet'),
-		('sweep_to_account',          'sweeping to specific account in same wallet'),
-		('sweep_to_wallet_account',   'sweeping to specific account in another wallet'),
+		('sweep_to_wallet',               'sweeping to new account in another wallet'),
+		('sweep_to_account',              'sweeping to specific account in same wallet'),
+		('sweep_to_wallet_account',       'sweeping to specific account in another wallet'),
 		('sweep_to_wallet_account_proxy', 'sweeping to specific account in another wallet (via TX relay + proxy)'),
 		('sweep_to_same_account_noproxy', 'sweeping to same account (via TX relay, no proxy)'),
-		('transfer_to_miner_proxy',   'transferring funds to Miner (via TX relay + proxy)'),
-		('transfer_to_miner_noproxy', 'transferring funds to Miner (via TX relay, no proxy)'),
+		('transfer_to_miner_proxy',       'transferring funds to Miner (via TX relay + proxy)'),
+		('transfer_to_miner_noproxy',     'transferring funds to Miner (via TX relay, no proxy)'),
 
-		('transfer_to_miner_create1', 'transferring funds to Miner (create TX)'),
-		('transfer_to_miner_send1',   'transferring funds to Miner (send TX via proxy)'),
-		('transfer_to_miner_create2', 'transferring funds to Miner (create TX)'),
-		('transfer_to_miner_send2',   'transferring funds to Miner (send TX, no proxy)'),
+		('transfer_to_miner_create1',     'transferring funds to Miner (create TX)'),
+		('transfer_to_miner_send1',       'transferring funds to Miner (send TX via proxy)'),
+		('transfer_to_miner_create2',     'transferring funds to Miner (create TX)'),
+		('transfer_to_miner_send2',       'transferring funds to Miner (send TX, no proxy)'),
 
-		('sweep_create_and_send',     'sweeping to new account (create TX + send TX, in stages)'),
-		('list_wallets_all',          'listing wallets'),
-		('stop_daemons',              'stopping all wallet and coin daemons'),
+		('sweep_create_and_send',         'sweeping to new account (create TX + send TX, in stages)'),
+		('list_wallets_all',              'listing wallets'),
+		('stop_daemons',                  'stopping all wallet and coin daemons'),
 	)
 
-	def __init__(self,trunner,cfgs,spawn):
-		CmdTestBase.__init__(self,trunner,cfgs,spawn)
+	def __init__(self, trunner, cfgs, spawn):
+		CmdTestBase.__init__(self, trunner, cfgs, spawn)
 		if trunner is None:
 			return
 
 		from mmgen.protocol import init_proto
-		self.proto = init_proto( cfg, 'XMR', network='mainnet' )
+		self.proto = init_proto(cfg, 'XMR', network='mainnet')
 		self.extra_opts = ['--wallet-rpc-password=passw0rd']
 		self.init_users()
 		self.init_daemon_args()
 
 		for v in self.users.values():
-			run(['mkdir','-p',v.udir])
+			run(['mkdir', '-p', v.udir])
 
-		self.tx_relay_daemon_parm = 'localhost:{}'.format( self.users[self.tx_relay_user].md.rpc_port )
+		self.tx_relay_daemon_parm = 'localhost:{}'.format(self.users[self.tx_relay_user].md.rpc_port)
 		self.tx_relay_daemon_proxy_parm = (
-			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}' ) # must be IP, not 'localhost'
+			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}') # must be IP, not 'localhost'
 
 		if not cfg.no_daemon_stop:
-			atexit.register(stop_daemons,self)
-			atexit.register(stop_miner_wallet_daemon,self)
+			atexit.register(stop_daemons, self)
+			atexit.register(stop_miner_wallet_daemon, self)
 
 		if not cfg.no_daemon_autostart:
 			stop_daemons(self)
@@ -156,12 +156,12 @@ class CmdTestXMRWallet(CmdTestBase):
 	# init methods
 
 	@classmethod
-	def init_proxy(cls,external_call=False):
+	def init_proxy(cls, external_call=False):
 
 		def port_in_use(port):
 			import socket
 			try:
-				socket.create_connection(('localhost',port)).close()
+				socket.create_connection(('localhost', port)).close()
 			except:
 				return False
 			else:
@@ -172,16 +172,16 @@ class CmdTestXMRWallet(CmdTestBase):
 				run(a+b2)
 				omsg(f'SSH SOCKS server started, listening at localhost:{cls.socks_port}')
 
-		debug_file = os.path.join('' if external_call else cls.datadir_base,'txrelay-proxy.debug')
-		a = ['ssh','-x','-o','ExitOnForwardFailure=True','-D',f'localhost:{cls.socks_port}']
-		b0 = ['-o','PasswordAuthentication=False']
-		b1 = ['localhost','true']
-		b2 = ['-fN','-E', debug_file, 'localhost']
+		debug_file = os.path.join('' if external_call else cls.datadir_base, 'txrelay-proxy.debug')
+		a = ['ssh', '-x', '-o', 'ExitOnForwardFailure=True', '-D', f'localhost:{cls.socks_port}']
+		b0 = ['-o', 'PasswordAuthentication=False']
+		b1 = ['localhost', 'true']
+		b2 = ['-fN', '-E', debug_file, 'localhost']
 
 		if port_in_use(cls.socks_port):
 			omsg(f'Port {cls.socks_port} already in use.  Assuming SSH SOCKS server is running')
 		else:
-			cp = run(a+b0+b1,stdout=PIPE,stderr=PIPE)
+			cp = run(a+b0+b1, stdout=PIPE, stderr=PIPE)
 			err = cp.stderr.decode()
 			if err:
 				omsg(err)
@@ -189,12 +189,12 @@ class CmdTestXMRWallet(CmdTestBase):
 			if cp.returncode == 0:
 				start_proxy()
 			elif 'onnection refused' in err:
-				die(2,fmt("""
+				die(2, fmt("""
 					The SSH daemon must be running and listening on localhost in order to test
 					XMR TX relaying via SOCKS proxy.  If sshd is not running, please start it.
 					Otherwise, add the line 'ListenAddress 127.0.0.1' to your sshd_config, and
 					then restart the daemon.
-				""",indent='    '))
+				""", indent='    '))
 			elif 'ermission denied' in err:
 				msg(fmt(f"""
 					In order to test XMR TX relaying via SOCKS proxy, it’s desirable to enable
@@ -211,21 +211,21 @@ class CmdTestXMRWallet(CmdTestBase):
 					   following command, and restart the test:
 
 					      {' '.join(a+b2)}
-				""",indent='    ',strip_char='\t'))
+				""", indent='    ', strip_char='\t'))
 
 				from mmgen.ui import keypress_confirm
-				if keypress_confirm(cfg,'Continue?'):
+				if keypress_confirm(cfg, 'Continue?'):
 					start_proxy()
 				else:
-					die(1,'Exiting at user request')
+					die(1, 'Exiting at user request')
 			else:
-				die(2,fmt(f"""
+				die(2, fmt(f"""
 					Please start the SSH SOCKS proxy by entering the following command:
 
 						{' '.join(a+b2)}
 
 					Then restart the test.
-				""",indent='    '))
+				""", indent='    '))
 
 		if not (external_call or cfg.no_daemon_stop):
 			atexit.unregister(kill_proxy)
@@ -236,10 +236,10 @@ class CmdTestXMRWallet(CmdTestBase):
 	def init_users(self):
 		from mmgen.daemon import CoinDaemon
 		from mmgen.proto.xmr.daemon import MoneroWalletDaemon
-		from mmgen.proto.xmr.rpc import MoneroRPCClient,MoneroWalletRPCClient
+		from mmgen.proto.xmr.rpc import MoneroRPCClient, MoneroWalletRPCClient
 		self.users = {}
 		tmpdir_num = self.tmpdir_nums[0]
-		ud = namedtuple('user_data',[
+		ud = namedtuple('user_data', [
 			'sid',
 			'mmwords',
 			'autosign',
@@ -256,15 +256,16 @@ class CmdTestXMRWallet(CmdTestBase):
 			'add_coind_args',
 		])
 		# kal_range must be None, a single digit, or a single hyphenated range
-		for (   user,
+		for (
+				user,
 				sid,
 				autosign,
 				shift,
 				kal_range,
-				add_coind_args ) in self.user_data:
-			tmpdir = os.path.join('test','tmp',str(tmpdir_num))
-			udir = os.path.join(tmpdir,user)
-			datadir = os.path.join(self.datadir_base,user)
+				add_coind_args) in self.user_data:
+			tmpdir = os.path.join('test', 'tmp', str(tmpdir_num))
+			udir = os.path.join(tmpdir, user)
+			datadir = os.path.join(self.datadir_base, user)
 			md = CoinDaemon(
 				cfg        = cfg,
 				proto      = self.proto,
@@ -284,13 +285,13 @@ class CmdTestXMRWallet(CmdTestBase):
 				daemon = md,
 			)
 			wd = MoneroWalletDaemon(
-				cfg        = cfg,
-				proto      = self.proto,
-				test_suite = True,
-				wallet_dir = udir,
-				user       = 'foo',
-				passwd     = 'bar',
-				port_shift = shift,
+				cfg          = cfg,
+				proto        = self.proto,
+				test_suite   = True,
+				wallet_dir   = udir,
+				user         = 'foo',
+				passwd       = 'bar',
+				port_shift   = shift,
 				monerod_addr = f'127.0.0.1:{md.rpc_port}',
 			)
 			wd_rpc = MoneroWalletRPCClient(
@@ -307,53 +308,53 @@ class CmdTestXMRWallet(CmdTestBase):
 				fn_stem    = 'MoneroWallet'
 				kafile_dir = udir
 			self.users[user] = ud(
-				sid           = sid,
-				mmwords       = f'test/ref/{sid}.mmwords',
-				autosign      = autosign,
-				udir          = udir,
-				datadir       = datadir,
-				kal_range     = kal_range,
-				kafile        = f'{kafile_dir}/{sid}-XMR-M[{kal_range}].{kafile_suf}',
-				walletfile_fs = f'{udir}/{sid}-{{}}-{fn_stem}',
-				addrfile_fs   = f'{udir}/{sid}-{{}}-{fn_stem}.address.txt',
-				md            = md,
-				md_rpc        = md_rpc,
-				wd            = wd,
-				wd_rpc        = wd_rpc,
+				sid            = sid,
+				mmwords        = f'test/ref/{sid}.mmwords',
+				autosign       = autosign,
+				udir           = udir,
+				datadir        = datadir,
+				kal_range      = kal_range,
+				kafile         = f'{kafile_dir}/{sid}-XMR-M[{kal_range}].{kafile_suf}',
+				walletfile_fs  = f'{udir}/{sid}-{{}}-{fn_stem}',
+				addrfile_fs    = f'{udir}/{sid}-{{}}-{fn_stem}.address.txt',
+				md             = md,
+				md_rpc         = md_rpc,
+				wd             = wd,
+				wd_rpc         = wd_rpc,
 				add_coind_args = add_coind_args,
 			)
 
 	def init_daemon_args(self):
-		common_args = ['--p2p-bind-ip=127.0.0.1','--fixed-difficulty=1','--regtest'] # ,'--rpc-ssl-allow-any-cert']
+		common_args = ['--p2p-bind-ip=127.0.0.1', '--fixed-difficulty=1', '--regtest'] # --rpc-ssl-allow-any-cert
 		for u in self.users:
 			other_ports = [self.users[u2].md.p2p_port for u2 in self.users if u2 != u]
 			node_args = [f'--add-exclusive-node=127.0.0.1:{p}' for p in other_ports]
 			self.users[u].md.usr_coind_args = (
-				common_args +
-				node_args +
-				self.users[u].add_coind_args )
+				common_args
+				+ node_args
+				+ self.users[u].add_coind_args)
 
 	# cmd_group methods
 
 	def daemon_version(self):
 		rpc_port = self.users['miner'].md.rpc_port
-		return self.spawn( 'mmgen-tool', ['--coin=xmr', f'--rpc-port={rpc_port}', 'daemon_version'] )
+		return self.spawn('mmgen-tool', ['--coin=xmr', f'--rpc-port={rpc_port}', 'daemon_version'])
 
 	def gen_kafiles_miner_alice(self):
 		return self.gen_kafiles(['miner', 'alice'])
 
 	def gen_kafiles(self, users):
-		for user,data in self.users.items():
+		for user, data in self.users.items():
 			if not user in users:
 				continue
-			run(['mkdir','-p',data.udir])
-			run(f'rm -f {data.kafile}',shell=True)
+			run(['mkdir', '-p', data.udir])
+			run(f'rm -f {data.kafile}', shell=True)
 			t = self.spawn(
 				'mmgen-keygen', [
 					'-q', '--accept-defaults', '--coin=xmr',
 					f'--outdir={data.udir}', data.mmwords, data.kal_range
 				],
-				extra_desc = f'({capfirst(user)})' )
+				extra_desc = f'({capfirst(user)})')
 			t.read()
 			t.ok()
 		t.skip_ok = True
@@ -365,15 +366,15 @@ class CmdTestXMRWallet(CmdTestBase):
 	def create_wallets_alice(self):
 		return self.create_wallets('alice')
 
-	def create_wallets(self,user,wallet=None,add_opts=[],op='create'):
+	def create_wallets(self, user, wallet=None, add_opts=[], op='create'):
 		assert wallet is None or is_int(wallet), 'wallet arg'
 		data = self.users[user]
 		stem_glob = data.walletfile_fs.format(wallet or '*')
 		for glob in (
 				stem_glob,
 				stem_glob + '.keys',
-				stem_glob + '.address.txt' ):
-			run( f'rm -f {glob}', shell=True )
+				stem_glob + '.address.txt'):
+			run(f'rm -f {glob}', shell=True)
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			[f'--wallet-dir={data.udir}']
@@ -393,15 +394,15 @@ class CmdTestXMRWallet(CmdTestBase):
 			)
 		return t
 
-	def new_addr_alice(self,spec,cfg,expect,kafile=None):
+	def new_addr_alice(self, spec, cfg, expect, kafile=None):
 		data = self.users['alice']
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
 			+ [f'--wallet-dir={data.udir}']
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
-			+ (['--no-start-wallet-daemon'] if cfg in ('continue','stop') else [])
-			+ (['--no-stop-wallet-daemon'] if cfg in ('start','continue') else [])
+			+ (['--no-start-wallet-daemon'] if cfg in ('continue', 'stop') else [])
+			+ (['--no-stop-wallet-daemon'] if cfg in ('start', 'continue') else [])
 			+ ['new', (kafile or data.kafile), spec])
 		t.expect(expect, 'y', regex=True)
 		return t
@@ -434,10 +435,10 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	async def mine_initial_coins(self):
 		self.spawn('', msg_only=True, extra_desc='(opening wallet)')
-		await self.open_wallet_user('miner',1)
+		await self.open_wallet_user('miner', 1)
 		ok()
 		# NB: a large balance is required to avoid ‘insufficient outputs’ error
-		return await self.mine_chk('miner',1,0,lambda x: x.ub > 2000,'unlocked balance > 2000')
+		return await self.mine_chk('miner', 1, 0, lambda x: x.ub > 2000, 'unlocked balance > 2000')
 
 	async def fund_alice(self, wallet=1, amt=1234567891234):
 		self.spawn('', msg_only=True, extra_desc='(transferring funds from Miner wallet)')
@@ -451,7 +452,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	async def check_bal_alice(self, wallet=1, bal='1.234567891234'):
 		return await self.mine_chk(
 			'alice', wallet, 0,
-			lambda x: str(x.ub) == bal,f'unlocked balance == {bal}',
+			lambda x: str(x.ub) == bal, f'unlocked balance == {bal}',
 			random_txs = self.dfl_random_txs
 		)
 
@@ -474,7 +475,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ cmd_opts
 			+ ['label', data.kafile, label_spec]
 		)
-		t.expect('(y/N): ','y')
+		t.expect('(y/N): ', 'y')
 		t.expect(f'Label successfully {expect}')
 		return t
 
@@ -496,7 +497,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	def sync_wallets_miner(self):
 		return self.sync_wallets('miner')
 
-	def sync_wallets(self,user,op='sync',wallets=None,add_opts=[],bal_chk_func=None):
+	def sync_wallets(self, user, op='sync', wallets=None, add_opts=[], bal_chk_func=None):
 		data = self.users[user]
 		if data.autosign:
 			self.insert_device_online()
@@ -515,22 +516,22 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ ([wallets] if wallets else [])
 		)
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
-		for n,wnum in enumerate(wlist,1):
+		for n, wnum in enumerate(wlist, 1):
 			t.expect('ing wallet {}/{} ({})'.format(
 				n,
 				len(wlist),
 				os.path.basename(data.walletfile_fs.format(wnum)),
 			))
-			if op in ('view','listview'):
+			if op in ('view', 'listview'):
 				t.expect('Wallet height: ')
 			else:
 				t.expect('Chain height: ')
 				t.expect('Wallet height: ')
 				res = strip_ansi_escapes(t.expect_getend('Balance: '))
 				if bal_chk_func:
-					m = re.match( r'(\S+) Unlocked balance: (\S+)', res, re.DOTALL )
+					m = re.match(r'(\S+) Unlocked balance: (\S+)', res, re.DOTALL)
 					amts = [XMRAmt(amt) for amt in m.groups()]
-					assert bal_chk_func(n,*amts), f'balance check for wallet {n} failed!'
+					assert bal_chk_func(n, *amts), f'balance check for wallet {n} failed!'
 		if data.autosign:
 			t.read()
 			self.remove_device_online()
@@ -567,27 +568,24 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ [op]
 			+ ([] if data.autosign else [data.kafile])
 			+ [arg2],
-			extra_desc = f'({capfirst(user)}{add_desc})' )
+			extra_desc = f'({capfirst(user)}{add_desc})')
 
 		if op == 'sign':
 			return t
 
 		if op in ('sweep', 'sweep_all'):
 			desc = 'address' if re.match(r'.*:\d+$', arg2) else 'account'
-			t.expect(
-				rf'Create new {desc} .* \(y/N\): ',
-				('y','n')[use_existing],
-				regex=True )
+			t.expect(rf'Create new {desc} .* \(y/N\): ', ('y', 'n')[use_existing], regex=True)
 			if use_existing:
 				t.expect(rf'to last existing {desc} .* \(y/N\): ', 'y', regex=True)
 
 		dtype = 'unsigned' if data.autosign else 'signed'
-		t.expect(f'Save {dtype} transaction? (y/N): ','y')
+		t.expect(f'Save {dtype} transaction? (y/N): ', 'y')
 		t.written_to_file(f'{dtype.capitalize()} transaction')
 
 		if not no_relay:
-			t.expect(f'Relay {op} transaction? (y/N): ','y')
-			get_file_with_ext(self.users[user].udir,'sigtx',delete_all=True)
+			t.expect(f'Relay {op} transaction? (y/N): ', 'y')
+			get_file_with_ext(self.users[user].udir, 'sigtx', delete_all=True)
 
 		t.read()
 
@@ -616,22 +614,22 @@ class CmdTestXMRWallet(CmdTestBase):
 	async def transfer_to_miner_proxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
 		amt = '0.135'
-		self.do_op('transfer','alice',f'2:1:{addr},{amt}',self.tx_relay_daemon_proxy_parm)
+		self.do_op('transfer', 'alice', f'2:1:{addr},{amt}', self.tx_relay_daemon_proxy_parm)
 		await self.stop_wallet_user('miner')
-		await self.open_wallet_user('miner',2)
-		await self.mine_chk('miner',2,0,lambda x: str(x.ub) == amt,f'unlocked balance == {amt}')
+		await self.open_wallet_user('miner', 2)
+		await self.mine_chk('miner', 2, 0, lambda x: str(x.ub) == amt, f'unlocked balance == {amt}')
 		ok()
-		return await self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')
+		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 0.9, 'unlocked balance > 0.9')
 
 	async def transfer_to_miner_noproxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
 		self.do_op('transfer', 'alice', f'2:1:{addr},0.0995', self.tx_relay_daemon_parm, add_opts=['--full-address'])
-		await self.mine_chk('miner',2,0,lambda x: str(x.ub) == '0.2345','unlocked balance == 0.2345')
+		await self.mine_chk('miner', 2, 0, lambda x: str(x.ub) == '0.2345', 'unlocked balance == 0.2345')
 		ok()
-		return await self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')
+		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 0.9, 'unlocked balance > 0.9')
 
-	def transfer_to_miner_create(self,amt):
-		get_file_with_ext(self.users['alice'].udir,'sigtx',delete_all=True)
+	def transfer_to_miner_create(self, amt):
+		get_file_with_ext(self.users['alice'].udir, 'sigtx', delete_all=True)
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
 		return self.do_op('transfer', 'alice', f'2:1:{addr},{amt}', no_relay=True, do_ret=True, add_opts=['-Ee'])
 
@@ -641,31 +639,31 @@ class CmdTestXMRWallet(CmdTestBase):
 	def transfer_to_miner_create2(self):
 		return self.transfer_to_miner_create('0.0012')
 
-	def relay_tx(self,relay_opt,add_desc=None):
+	def relay_tx(self, relay_opt, add_desc=None):
 		user = 'alice'
 		data = self.users[user]
 		add_desc = (', ' + add_desc) if add_desc else ''
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ [ relay_opt, 'relay', get_file_with_ext(data.udir,'sigtx') ],
-			extra_desc = f'(relaying TX, {capfirst(user)}{add_desc})' )
-		t.expect('Relay transaction? ','y')
+			+ [relay_opt, 'relay', get_file_with_ext(data.udir, 'sigtx')],
+			extra_desc = f'(relaying TX, {capfirst(user)}{add_desc})')
+		t.expect('Relay transaction? ', 'y')
 		t.read()
 		t.ok()
 		return t
 
 	async def transfer_to_miner_send1(self):
-		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_proxy_parm}',add_desc='via proxy')
-		await self.mine_chk('miner',2,0,lambda x: str(x.ub) == '0.2456','unlocked balance == 0.2456')
+		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_proxy_parm}', add_desc='via proxy')
+		await self.mine_chk('miner', 2, 0, lambda x: str(x.ub) == '0.2456', 'unlocked balance == 0.2456')
 		ok()
-		return await self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')
+		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 0.9, 'unlocked balance > 0.9')
 
 	async def transfer_to_miner_send2(self):
-		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}',add_desc='no proxy')
-		await self.mine_chk('miner',2,0,lambda x: str(x.ub) == '0.2468','unlocked balance == 0.2468')
+		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}', add_desc='no proxy')
+		await self.mine_chk('miner', 2, 0, lambda x: str(x.ub) == '0.2468', 'unlocked balance == 0.2468')
 		ok()
-		return await self.mine_chk('alice',2,1,lambda x: x.ub > 0.9,'unlocked balance > 0.9')
+		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 0.9, 'unlocked balance > 0.9')
 
 	async def sweep_create_and_send(self):
 		get_file_with_ext(self.users['alice'].udir, 'sigtx', delete_all=True)
@@ -680,7 +678,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	# wallet methods
 
-	async def open_wallet_user(self,user,wnum):
+	async def open_wallet_user(self, user, wnum):
 		data = self.users[user]
 		if data.autosign:
 			self.insert_device_online()
@@ -691,7 +689,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			proto    = self.proto,
 			addrfile = data.kafile,
 			skip_chksum_msg = True,
-			key_address_validity_check = False )
+			key_address_validity_check = False)
 		end_silence()
 		if data.autosign:
 			self.do_umount_online()
@@ -700,9 +698,9 @@ class CmdTestXMRWallet(CmdTestBase):
 		return data.wd_rpc.call(
 			'open_wallet',
 			filename = os.path.basename(data.walletfile_fs.format(wnum)),
-			password = kal.entry(wnum).wallet_passwd )
+			password = kal.entry(wnum).wallet_passwd)
 
-	async def stop_wallet_user(self,user):
+	async def stop_wallet_user(self, user):
 		await self.users[user].wd_rpc.stop_daemon(silent=not (cfg.exact_output or cfg.verbose))
 		return 'ok'
 
@@ -725,7 +723,7 @@ class CmdTestXMRWallet(CmdTestBase):
 					await self.start_mining()
 				else:
 					raise
-		die(2,'Restart attempt limit exceeded')
+		die(2, 'Restart attempt limit exceeded')
 
 	async def mine10(self):
 		return await self.mine(10)
@@ -736,7 +734,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	async def mine100(self):
 		return await self.mine(100)
 
-	async def mine(self,nblks):
+	async def mine(self, nblks):
 		start_height = height = await self._get_height()
 		imsg(f'Height: {height}')
 		imsg_r(f'Mining {nblks} blocks...')
@@ -761,7 +759,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				do_background_mining = False, # run mining in background or foreground
 				ignore_battery       = True,  # ignore battery state (on laptop)
 				miner_address        = addr,  # account address to mine to
-				threads_count        = 1 )    # number of mining threads to run
+				threads_count        = 1)    # number of mining threads to run
 			status = self.get_status(ret)
 			if status == 'OK':
 				return True
@@ -769,8 +767,8 @@ class CmdTestXMRWallet(CmdTestBase):
 				await asyncio.sleep(5)
 				omsg('Daemon busy.  Attempting to start mining...')
 			else:
-				die(2,f'Monerod returned status {status}')
-		die(2,'Max retries exceeded')
+				die(2, f'Monerod returned status {status}')
+		die(2, 'Max retries exceeded')
 
 	async def stop_mining(self):
 		ret = self.users['miner'].md_rpc.call_raw('stop_mining')
@@ -786,7 +784,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			test2      = None,
 			test2_desc = None,
 			random_txs = None,
-			return_bal = False ):
+			return_bal = False):
 
 		"""
 		- open destination wallet
@@ -800,7 +798,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		async def send_random_txs():
 			from mmgen.tool.api import tool_api
 			t = tool_api(cfg)
-			t.init_coin('XMR','mainnet')
+			t.init_coin('XMR', 'mainnet')
 			t.usr_randchars = 0
 			imsg_r('Sending random transactions: ')
 			for i in range(random_txs):
@@ -814,7 +812,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				await asyncio.sleep(0.5)
 			imsg('')
 
-		def print_balance(dest,bal_info):
+		def print_balance(dest, bal_info):
 			imsg('Total balances in {}’s wallet {}, account #{}: {} (total), {} (unlocked)'.format(
 				capfirst(dest.user),
 				dest.wnum,
@@ -823,32 +821,31 @@ class CmdTestXMRWallet(CmdTestBase):
 				bal_info.ub.hl(),
 			))
 
-		async def get_balance(dest,count):
+		async def get_balance(dest, count):
 			data = self.users[dest.user]
 			data.wd_rpc.call('refresh')
 			if count and not count % 20:
 				data.wd_rpc.call('rescan_blockchain')
 			ret = data.wd_rpc.call('get_accounts')['subaddress_accounts'][dest.account]
-			d_tup = namedtuple('bal_info',['b','ub'])
+			d_tup = namedtuple('bal_info', ['b', 'ub'])
 			return d_tup(
-				b  = XMRAmt(ret['balance'],from_unit='atomic'),
-				ub = XMRAmt(ret['unlocked_balance'],from_unit='atomic')
-			)
+				b  = XMRAmt(ret['balance'], from_unit='atomic'),
+				ub = XMRAmt(ret['unlocked_balance'], from_unit='atomic'))
 
 		# start execution:
 
 		self.do_msg(extra_desc =
 			(f'sending {random_txs} random TXs, ' if random_txs else '') +
-			f'mining, checking wallet {user}:{wnum}:{account}' )
+			f'mining, checking wallet {user}:{wnum}:{account}')
 
 		dest = namedtuple(
-			'dest_info',['user','wnum','account','test','test_desc','test2','test2_desc'])(
-				user,wnum,account,test,test_desc,test2,test2_desc)
+			'dest_info', ['user', 'wnum', 'account', 'test', 'test_desc', 'test2', 'test2_desc'])(
+				user, wnum, account, test, test_desc, test2, test2_desc)
 
 		if dest.user != 'miner':
-			await self.open_wallet_user(dest.user,dest.wnum)
+			await self.open_wallet_user(dest.user, dest.wnum)
 
-		bal_info_start = await get_balance(dest,0)
+		bal_info_start = await get_balance(dest, 0)
 		chk_bal_chg = dest.test(bal_info_start) == 'chk_bal_chg'
 
 		if random_txs:
@@ -859,16 +856,16 @@ class CmdTestXMRWallet(CmdTestBase):
 		h = await self._get_height()
 		imsg_r(f'Chain height: {h} ')
 
-		max_iterations,min_height = (300,64) if sys.platform == 'win32' else (50,300)
+		max_iterations, min_height = (300, 64) if sys.platform == 'win32' else (50, 300)
 		verbose = False
 
 		for count in range(max_iterations):
-			bal_info = await get_balance(dest,count)
+			bal_info = await get_balance(dest, count)
 			if h > min_height:
 				if dest.test(bal_info) is True or (chk_bal_chg and bal_info.ub != bal_info_start.ub):
 					imsg('')
 					oqmsg_r('+')
-					print_balance(dest,bal_info)
+					print_balance(dest, bal_info)
 					if dest.test2:
 						assert dest.test2(bal_info) is True, f'test failed: {dest.test2_desc} ({bal_info})'
 					break
@@ -878,13 +875,13 @@ class CmdTestXMRWallet(CmdTestBase):
 				if not verbose:
 					imsg('')
 				imsg_r(f'Height: {h}, ')
-				print_balance(dest,bal_info)
+				print_balance(dest, bal_info)
 				verbose = True
 			else:
 				imsg_r(f'{h} ')
 				oqmsg_r('+')
 		else:
-			die(2,f'Timeout exceeded, balance {bal_info.ub!r}')
+			die(2, f'Timeout exceeded, balance {bal_info.ub!r}')
 
 		await self.stop_mining()
 
@@ -895,26 +892,26 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	# util methods
 
-	def get_status(self,ret):
+	def get_status(self, ret):
 		if ret['status'] != 'OK':
-			imsg( 'RPC status: {}'.format( ret['status'] ))
+			imsg('RPC status: {}'.format(ret['status']))
 		return ret['status']
 
-	def do_msg(self,extra_desc=None):
+	def do_msg(self, extra_desc=None):
 		self.spawn(
 			'',
 			msg_only = True,
 			extra_desc = f'({extra_desc})' if extra_desc else None
 		)
 
-	async def transfer(self,user,amt,addr):
-		return self.users[user].wd_rpc.call('transfer',destinations=[{'amount':amt,'address':addr}])
+	async def transfer(self, user, amt, addr):
+		return self.users[user].wd_rpc.call('transfer', destinations=[{'amount':amt, 'address':addr}])
 
 	# daemon start/stop methods
 
 	def start_daemons(self):
 		for v in self.users.values():
-			run(['mkdir','-p',v.datadir])
+			run(['mkdir', '-p', v.datadir])
 			v.md.start()
 
 	def stop_daemons(self):

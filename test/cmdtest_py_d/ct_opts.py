@@ -10,7 +10,7 @@
 test.cmdtest_py_d.ct_opts: options processing tests for the MMGen cmdtest.py test suite
 """
 
-import os,time
+import os, time
 
 from ..include.common import cfg
 from .ct_base import CmdTestBase
@@ -46,41 +46,41 @@ class CmdTestOpts(CmdTestBase):
 		('opt_bad_outdir',       (41, 'bad outdir parameter', [])),
 		('opt_bad_incompatible', (41, 'incompatible opts', [])),
 		('opt_bad_autoset',      (41, 'invalid autoset value', [])),
-		('opt_invalid_1',     (41, 'invalid cmdline opt ‘--x’', [])),
-		('opt_invalid_2',     (41, 'invalid cmdline opt ‘---’', [])),
-		('opt_invalid_5',     (41, 'invalid cmdline opt (missing parameter)', [])),
-		('opt_invalid_6',     (41, 'invalid cmdline opt (missing parameter)', [])),
-		('opt_invalid_7',     (41, 'invalid cmdline opt (parameter not required)', [])),
-		('opt_invalid_8',     (41, 'invalid cmdline opt (non-existent option)', [])),
-		('opt_invalid_9',     (41, 'invalid cmdline opt (non-existent option)', [])),
-		('opt_invalid_10',    (41, 'invalid cmdline opt (missing parameter)', [])),
-		('opt_invalid_11',    (41, 'invalid cmdline opt (missing parameter)', [])),
-		('opt_invalid_12',    (41, 'invalid cmdline opt (non-existent option)', [])),
-		('opt_invalid_13',    (41, 'invalid cmdline opt (ambiguous long opt substring)', [])),
-		('opt_invalid_14',    (41, 'invalid cmdline opt (long opt substring too short)', [])),
-		('opt_invalid_15',    (41, 'invalid cmdline (too many args)', [])),
-		('opt_invalid_16',    (41, 'invalid cmdline (overlong arg)', [])),
+		('opt_invalid_1',        (41, 'invalid cmdline opt ‘--x’', [])),
+		('opt_invalid_2',        (41, 'invalid cmdline opt ‘---’', [])),
+		('opt_invalid_5',        (41, 'invalid cmdline opt (missing parameter)', [])),
+		('opt_invalid_6',        (41, 'invalid cmdline opt (missing parameter)', [])),
+		('opt_invalid_7',        (41, 'invalid cmdline opt (parameter not required)', [])),
+		('opt_invalid_8',        (41, 'invalid cmdline opt (non-existent option)', [])),
+		('opt_invalid_9',        (41, 'invalid cmdline opt (non-existent option)', [])),
+		('opt_invalid_10',       (41, 'invalid cmdline opt (missing parameter)', [])),
+		('opt_invalid_11',       (41, 'invalid cmdline opt (missing parameter)', [])),
+		('opt_invalid_12',       (41, 'invalid cmdline opt (non-existent option)', [])),
+		('opt_invalid_13',       (41, 'invalid cmdline opt (ambiguous long opt substring)', [])),
+		('opt_invalid_14',       (41, 'invalid cmdline opt (long opt substring too short)', [])),
+		('opt_invalid_15',       (41, 'invalid cmdline (too many args)', [])),
+		('opt_invalid_16',       (41, 'invalid cmdline (overlong arg)', [])),
 	)
 
 	def spawn_prog(self, args, exit_val=None):
 		return self.spawn('test/misc/opts.py', args, cmd_dir='.', exit_val=exit_val)
 
-	def check_vals(self,args,vals):
+	def check_vals(self, args, vals):
 		t = self.spawn_prog(args)
-		for k,v in vals:
-			t.expect(rf'{k}:\s+{v}',regex=True)
+		for k, v in vals:
+			t.expect(rf'{k}:\s+{v}', regex=True)
 		return t
 
-	def do_run(self,args,expect,exit_val,regex=False):
+	def do_run(self, args, expect, exit_val, regex=False):
 		t = self.spawn_prog(args, exit_val=exit_val or None)
-		t.expect(expect,regex=regex)
+		t.expect(expect, regex=regex)
 		return t
 
 	def opt_helpscreen(self):
 		expect = r'OPTS.PY: Opts test.*USAGE:\s+opts.py'
 		if not cfg.pexpect_spawn:
 			expect += r'.*--minconf.*NOTES FOR THIS.*a note'
-		t = self.do_run( ['--help'], expect, 0, regex=True )
+		t = self.do_run(['--help'], expect, 0, regex=True)
 		if t.pexpect_spawn:
 			time.sleep(0.4)
 			t.send('q')
@@ -88,74 +88,74 @@ class CmdTestOpts(CmdTestBase):
 
 	def opt_noargs(self):
 		return self.check_vals(
-				[],
-				(
-					('cfg.foo',                 'None'),         # added opt
-					('cfg.print_checksum',      'None'),         # sets 'quiet'
-					('cfg.quiet',               'False'),        # _incompatible_opts
-					('cfg.verbose',             'False'),        # _incompatible_opts
-					('cfg.passwd_file',         ''),             # _infile_opts - check_infile()
-					('cfg.outdir',              ''),             # check_outdir()
-					('cfg.cached_balances',     'False'),
-					('cfg.minconf',             '1'),
-					('cfg.coin',                'BTC'),
-					('cfg.pager',               'False'),
-					('cfg.fee_estimate_mode',   'conservative'), # _autoset_opts
-				))
+			[],
+			(
+				('cfg.foo',                 'None'),         # added opt
+				('cfg.print_checksum',      'None'),         # sets 'quiet'
+				('cfg.quiet',               'False'),        # _incompatible_opts
+				('cfg.verbose',             'False'),        # _incompatible_opts
+				('cfg.passwd_file',         ''),             # _infile_opts - check_infile()
+				('cfg.outdir',              ''),             # check_outdir()
+				('cfg.cached_balances',     'False'),
+				('cfg.minconf',             '1'),
+				('cfg.coin',                'BTC'),
+				('cfg.pager',               'False'),
+				('cfg.fee_estimate_mode',   'conservative'), # _autoset_opts
+			))
 
 	def opt_good1(self):
 		pf_base = 'testfile'
-		pf = os.path.join(self.tmpdir,pf_base)
-		self.write_to_tmpfile(pf_base,'')
+		pf = os.path.join(self.tmpdir, pf_base)
+		self.write_to_tmpfile(pf_base, '')
 		return self.check_vals(
-				[
-					'--print-checksum',
-					'--fee-estimate-mode=E',
-					'--passwd-file='+pf,
-					'--outdir='+self.tmpdir,
-					'--cached-balances',
-					f'--hidden-incog-input-params={pf},123',
-				], (
-					('cfg.print_checksum',           'True'),
-					('cfg.quiet',                    'True'), # set by print_checksum
-					('cfg.passwd_file',              pf),
-					('cfg.outdir',                   self.tmpdir),
-					('cfg.cached_balances',          'True'),
-					('cfg.hidden_incog_input_params', pf+',123'),
-					('cfg.fee_estimate_mode',         'economical'),
-				))
+			[
+				'--print-checksum',
+				'--fee-estimate-mode=E',
+				'--passwd-file='+pf,
+				'--outdir='+self.tmpdir,
+				'--cached-balances',
+				f'--hidden-incog-input-params={pf},123',
+			], (
+				('cfg.print_checksum',           'True'),
+				('cfg.quiet',                    'True'), # set by print_checksum
+				('cfg.passwd_file',              pf),
+				('cfg.outdir',                   self.tmpdir),
+				('cfg.cached_balances',          'True'),
+				('cfg.hidden_incog_input_params', pf+',123'),
+				('cfg.fee_estimate_mode',         'economical'),
+			))
 
 	def opt_good2(self):
 		return self.check_vals(
-				[
-					'--print-checksum',
-					'-qX',
-					f'--outdir={self.tmpdir}',
-					'-p5',
-					'-m', '0',
-					'--seed-len=256',
-					'-L--my-label',
-					'--seed-len', '128',
-					'--min-temp=-30',
-					'-T-10',
-					'--',
-					'x', 'y', '12345'
-				], (
-					('cfg.print_checksum',  'True'),
-					('cfg.quiet',           'True'),
-					('cfg.outdir',          self.tmpdir),
-					('cfg.cached_balances', 'True'),
-					('cfg.minconf',         '0'),
-					('cfg.keep_label',      'None'),
-					('cfg.seed_len',        '128'),
-					('cfg.hash_preset',     '5'),
-					('cfg.label',           '--my-label'),
-					('cfg.min_temp',     '-30'),
-					('cfg.max_temp',     '-10'),
-					('arg1',           'x'),
-					('arg2',           'y'),
-					('arg3',           '12345'),
-				))
+			[
+				'--print-checksum',
+				'-qX',
+				f'--outdir={self.tmpdir}',
+				'-p5',
+				'-m', '0',
+				'--seed-len=256',
+				'-L--my-label',
+				'--seed-len', '128',
+				'--min-temp=-30',
+				'-T-10',
+				'--',
+				'x', 'y', '12345'
+			], (
+				('cfg.print_checksum',  'True'),
+				('cfg.quiet',           'True'),
+				('cfg.outdir',          self.tmpdir),
+				('cfg.cached_balances', 'True'),
+				('cfg.minconf',         '0'),
+				('cfg.keep_label',      'None'),
+				('cfg.seed_len',        '128'),
+				('cfg.hash_preset',     '5'),
+				('cfg.label',           '--my-label'),
+				('cfg.min_temp',        '-30'),
+				('cfg.max_temp',        '-10'),
+				('arg1',                'x'),
+				('arg2',                'y'),
+				('arg3',                '12345'),
+			))
 
 	def opt_good3(self):
 		return self.check_vals(['m'] * 256, (('arg256', 'm'),))
@@ -212,18 +212,18 @@ class CmdTestOpts(CmdTestBase):
 		return self.do_run(['--pager=1'], 'no parameter', 1)
 
 	def opt_bad_infile(self):
-		pf = os.path.join(self.tmpdir,'fubar')
-		return self.do_run(['--passwd-file='+pf],'not found',1)
+		pf = os.path.join(self.tmpdir, 'fubar')
+		return self.do_run(['--passwd-file='+pf], 'not found', 1)
 
 	def opt_bad_outdir(self):
 		bo = self.tmpdir+'_fubar'
-		return self.do_run(['--outdir='+bo],'not found',1)
+		return self.do_run(['--outdir='+bo], 'not found', 1)
 
 	def opt_bad_incompatible(self):
-		return self.do_run(['--label=Label','--keep-label'],'Conflicting options',1)
+		return self.do_run(['--label=Label', '--keep-label'], 'Conflicting options', 1)
 
 	def opt_bad_autoset(self):
-		return self.do_run(['--fee-estimate-mode=Fubar'],'not unique substring',1)
+		return self.do_run(['--fee-estimate-mode=Fubar'], 'not unique substring', 1)
 
 	def opt_invalid(self, args, expect, exit_val):
 		t = self.spawn_prog(args, exit_val=exit_val)
