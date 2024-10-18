@@ -12,10 +12,10 @@
 tw.json: export and import tracking wallet to JSON format
 """
 
-import sys,os,json
+import sys, os, json
 from collections import namedtuple
 
-from ..util import msg,ymsg,fmt,suf,die,make_timestamp,make_chksum_8
+from ..util import msg, ymsg, fmt, suf, die, make_timestamp, make_chksum_8
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..rpc import json_encoder
@@ -29,16 +29,16 @@ class TwJSON:
 		pruned = None
 		fn_pfx = 'mmgen-tracking-wallet-dump'
 
-		def __new__(cls,cfg,proto,*args,**kwargs):
-			return MMGenObject.__new__(proto.base_proto_subclass(TwJSON,'tw.json',cls.__name__))
+		def __new__(cls, cfg, proto, *args, **kwargs):
+			return MMGenObject.__new__(proto.base_proto_subclass(TwJSON, 'tw.json', cls.__name__))
 
-		def __init__(self,cfg,proto):
+		def __init__(self, cfg, proto):
 			self.cfg = cfg
 			self.proto = proto
 			self.coin = proto.coin_id.lower()
 			self.network = proto.network
-			self.keys = ['mmgen_id','address','amount','comment']
-			self.entry_tuple = namedtuple('tw_entry',self.keys)
+			self.keys = ['mmgen_id', 'address', 'amount', 'comment']
+			self.entry_tuple = namedtuple('tw_entry', self.keys)
 
 		@property
 		def dump_fn(self):
@@ -48,7 +48,7 @@ class TwJSON:
 					a = self.fn_pfx,
 					b = f'-pruned[{prune_id}]' if prune_id else '',
 					c = self.coin,
-					d = self.network )
+					d = self.network)
 
 			if self.pruned:
 				from ..addrlist import AddrIdxList
@@ -62,16 +62,16 @@ class TwJSON:
 
 			return fn
 
-		def json_dump(self,data,pretty=False):
+		def json_dump(self, data, pretty=False):
 			return json.dumps(
 				data,
 				cls        = json_encoder,
 				sort_keys  = True,
 				separators = None if pretty else (',', ':'),
-				indent     = 4 if pretty else None ) + ('\n' if pretty else '')
+				indent     = 4 if pretty else None) + ('\n' if pretty else '')
 
-		def make_chksum(self,data):
-			return make_chksum_8( self.json_dump(data).encode() ).lower()
+		def make_chksum(self, data):
+			return make_chksum_8(self.json_dump(data).encode()).lower()
 
 		@property
 		def mappings_chksum(self):
@@ -79,9 +79,9 @@ class TwJSON:
 
 		@property
 		def entry_tuple_in(self):
-			return namedtuple('entry_tuple_in',self.keys)
+			return namedtuple('entry_tuple_in', self.keys)
 
-	class Import(Base,metaclass=AsyncInit):
+	class Import(Base, metaclass=AsyncInit):
 
 		blockchain_rescan_warning = None
 
@@ -91,18 +91,18 @@ class TwJSON:
 				proto,
 				filename,
 				ignore_checksum = False,
-				batch           = False ):
+				batch           = False):
 
-			super().__init__(cfg,proto)
+			super().__init__(cfg, proto)
 
-			self.twctl = await TwCtl( cfg, proto, mode='i', rpc_ignore_wallet=True )
+			self.twctl = await TwCtl(cfg, proto, mode='i', rpc_ignore_wallet=True)
 
 			def check_network(data):
-				coin,network = data['network'].split('_')
+				coin, network = data['network'].split('_')
 				if coin != self.coin:
-					die(2,f'Coin in wallet dump is {coin.upper()}, but configured coin is {self.coin.upper()}')
+					die(2, f'Coin in wallet dump is {coin.upper()}, but configured coin is {self.coin.upper()}')
 				if network != self.network:
-					die(2,f'Network in wallet dump is {network}, but configured network is {self.network}')
+					die(2, f'Network in wallet dump is {network}, but configured network is {self.network}')
 
 			def check_chksum(d):
 				chksum = self.make_chksum(d['data'])
@@ -110,7 +110,7 @@ class TwJSON:
 					if ignore_checksum:
 						ymsg(f'Warning: ignoring incorrect checksum {chksum}')
 					else:
-						die(3,f'File checksum incorrect! ({chksum} != {d["checksum"]})')
+						die(3, f'File checksum incorrect! ({chksum} != {d["checksum"]})')
 
 			def verify_data(d):
 				check_network(d['data'])
@@ -119,13 +119,13 @@ class TwJSON:
 					val1  = self.mappings_chksum,
 					val2  = d['data']['mappings_checksum'],
 					desc1 = 'computed mappings checksum',
-					desc2 = 'saved checksum' )
+					desc2 = 'saved checksum')
 
 			if not await self.check_and_create_wallet():
 				return
 
 			from ..fileutil import get_data_from_file
-			self.data = json.loads(get_data_from_file( self.cfg, filename, quiet=True ))
+			self.data = json.loads(get_data_from_file(self.cfg, filename, quiet=True))
 			self.keys = self.data['data']['entries_keys']
 			self.entries = await self.get_entries()
 
@@ -136,28 +136,28 @@ class TwJSON:
 			await self.twctl.rescan_addresses(addrs)
 
 			if self.blockchain_rescan_warning:
-				ymsg('\n' + fmt(self.blockchain_rescan_warning.strip(),indent='  '))
+				ymsg('\n' + fmt(self.blockchain_rescan_warning.strip(), indent='  '))
 
 		async def check_and_create_wallet(self):
 
 			if await self.tracking_wallet_exists:
 				die(3,
 					f'Existing {self.twctl.rpc.daemon.desc} wallet detected!\n' +
-					'It must be moved, or backed up and securely deleted, before running this command' )
+					'It must be moved, or backed up and securely deleted, before running this command')
 
-			msg('\n'+fmt(self.info_msg.strip(),indent='  '))
+			msg('\n'+fmt(self.info_msg.strip(), indent='  '))
 
 			from ..ui import keypress_confirm
-			if not keypress_confirm( self.cfg, 'Continue?' ):
+			if not keypress_confirm(self.cfg, 'Continue?'):
 				msg('Exiting at user request')
 				return False
 
 			if not await self.create_tracking_wallet():
-				die(3,'Wallet could not be created')
+				die(3, 'Wallet could not be created')
 
 			return True
 
-	class Export(Base,metaclass=AsyncInit):
+	class Export(Base, metaclass=AsyncInit):
 
 		async def __init__(
 				self,
@@ -167,27 +167,27 @@ class TwJSON:
 				pretty          = False,
 				prune           = False,
 				warn_used       = False,
-				force_overwrite = False ):
+				force_overwrite = False):
 
 			if prune and not self.can_prune:
-				die(1,f'Pruning not supported for {proto.name} protocol')
+				die(1, f'Pruning not supported for {proto.name} protocol')
 
 			self.prune = prune
 			self.warn_used = warn_used
 
-			super().__init__(cfg,proto)
+			super().__init__(cfg, proto)
 
 			if not include_amts:
 				self.keys.remove('amount')
 
-			self.twctl = await TwCtl( cfg, proto )
+			self.twctl = await TwCtl(cfg, proto)
 
 			self.entries = await self.get_entries()
 
 			if self.prune:
-				msg('Pruned {} address{}'.format( len(self.pruned), suf(self.pruned,'es') ))
+				msg('Pruned {} address{}'.format(len(self.pruned), suf(self.pruned, 'es')))
 
-			msg('Exporting {} address{}'.format( self.num_entries, suf(self.num_entries,'es') ))
+			msg('Exporting {} address{}'.format(self.num_entries, suf(self.num_entries, 'es')))
 
 			data = {
 				'id': 'mmgen_tracking_wallet',
@@ -212,6 +212,6 @@ class TwJSON:
 						'checksum': self.make_chksum(data),
 						'data': data
 					},
-					pretty = pretty ),
+					pretty = pretty),
 				desc    = 'tracking wallet JSON data',
-				ask_overwrite = not force_overwrite )
+				ask_overwrite = not force_overwrite)

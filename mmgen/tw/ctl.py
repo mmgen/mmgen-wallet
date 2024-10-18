@@ -24,39 +24,39 @@ import json
 from collections import namedtuple
 from pathlib import Path
 
-from ..util import msg,msg_r,suf,die
+from ..util import msg, msg_r, suf, die
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
-from ..obj import TwComment,get_obj
-from ..addr import CoinAddr,is_mmgen_id,is_coin_addr
+from ..obj import TwComment, get_obj
+from ..addr import CoinAddr, is_mmgen_id, is_coin_addr
 from ..rpc import rpc_init
-from .shared import TwMMGenID,TwLabel
+from .shared import TwMMGenID, TwLabel
 
-twmmid_addr_pair = namedtuple('addr_info',['twmmid','coinaddr'])
-label_addr_pair = namedtuple('label_addr_pair',['label','coinaddr'])
+twmmid_addr_pair = namedtuple('addr_info', ['twmmid', 'coinaddr'])
+label_addr_pair = namedtuple('label_addr_pair', ['label', 'coinaddr'])
 
 # decorator for TwCtl
 def write_mode(orig_func):
-	def f(self,*args,**kwargs):
+	def f(self, *args, **kwargs):
 		if self.mode != 'w':
-			die(1,'{} opened in read-only mode: cannot execute method {}()'.format(
+			die(1, '{} opened in read-only mode: cannot execute method {}()'.format(
 				type(self).__name__,
 				locals()['orig_func'].__name__
 			))
-		return orig_func(self,*args,**kwargs)
+		return orig_func(self, *args, **kwargs)
 	return f
 
-class TwCtl(MMGenObject,metaclass=AsyncInit):
+class TwCtl(MMGenObject, metaclass=AsyncInit):
 
-	caps = ('rescan','batch')
+	caps = ('rescan', 'batch')
 	data_key = 'addresses'
 	use_tw_file = False
 	aggressive_sync = False
 	importing = False
 	tw_fn = 'tracking-wallet.json'
 
-	def __new__(cls,cfg,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.ctl'))
+	def __new__(cls, cfg, proto, *args, **kwargs):
+		return MMGenObject.__new__(proto.base_proto_subclass(cls, 'tw.ctl'))
 
 	async def __init__(
 			self,
@@ -68,7 +68,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			no_wallet_init    = False,
 			rpc_ignore_wallet = False):
 
-		assert mode in ('r','w','i'), f"{mode!r}: wallet mode must be 'r','w' or 'i'"
+		assert mode in ('r', 'w', 'i'), f"{mode!r}: wallet mode must be 'r', 'w' or 'i'"
 		if mode == 'i':
 			self.importing = True
 			mode = 'w'
@@ -103,13 +103,13 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			self.init_empty()
 
 		if self.data['coin'] != self.proto.coin: # TODO remove?
-			die( 'WalletFileError',
+			die('WalletFileError',
 				f'Tracking wallet coin ({self.data["coin"]}) does not match current coin ({self.proto.coin})!')
 
 		self.conv_types(self.data[self.data_key])
 
 	def init_from_wallet_file(self):
-		from ..fileutil import check_or_create_dir,get_data_from_file
+		from ..fileutil import check_or_create_dir, get_data_from_file
 		check_or_create_dir(self.tw_dir)
 		try:
 			self.orig_data = get_data_from_file(self.cfg, self.tw_path, quiet=True)
@@ -132,7 +132,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			def del_twctl(twctl):
 				self.cfg._util.dmsg(f'Running exit handler del_twctl() for {twctl!r}')
 				del twctl
-			atexit.register(del_twctl,self)
+			atexit.register(del_twctl, self)
 
 	def __del__(self):
 		"""
@@ -147,15 +147,15 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 		Since no exceptions are raised, errors will not be caught by the test suite.
 		"""
-		if getattr(self,'mode',None) == 'w': # mode attr might not exist in this state
+		if getattr(self, 'mode', None) == 'w': # mode attr might not exist in this state
 			self.write()
 		elif self.cfg.debug:
 			msg('read-only wallet, doing nothing')
 
-	def conv_types(self,ad):
-		for k,v in ad.items():
-			if k not in ('params','coin'):
-				v['mmid'] = TwMMGenID(self.proto,v['mmid'])
+	def conv_types(self, ad):
+		for k, v in ad.items():
+			if k not in ('params', 'coin'):
+				v['mmid'] = TwMMGenID(self.proto, v['mmid'])
 				v['comment'] = TwComment(v['comment'])
 
 	@property
@@ -166,7 +166,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 	def data_root_desc(self):
 		return self.data_key
 
-	def cache_balance(self,addr,bal,session_cache,data_root,force=False):
+	def cache_balance(self, addr, bal, session_cache, data_root, force=False):
 		if force or addr not in session_cache:
 			session_cache[addr] = str(bal)
 			if addr in data_root:
@@ -174,7 +174,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 				if self.aggressive_sync:
 					self.write()
 
-	def get_cached_balance(self,addr,session_cache,data_root):
+	def get_cached_balance(self, addr, session_cache, data_root):
 		if addr in session_cache:
 			return self.proto.coin_amt(session_cache[addr])
 		if not self.cfg.cached_balances:
@@ -182,11 +182,11 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		if addr in data_root and 'balance' in data_root[addr]:
 			return self.proto.coin_amt(data_root[addr]['balance'])
 
-	async def get_balance(self,addr,force_rpc=False):
-		ret = None if force_rpc else self.get_cached_balance(addr,self.cur_balances,self.data_root)
+	async def get_balance(self, addr, force_rpc=False):
+		ret = None if force_rpc else self.get_cached_balance(addr, self.cur_balances, self.data_root)
 		if ret is None:
 			ret = await self.rpc_get_balance(addr)
-			self.cache_balance(addr,ret,self.cur_balances,self.data_root)
+			self.cache_balance(addr, ret, self.cur_balances, self.data_root)
 		return ret
 
 	def force_write(self):
@@ -196,7 +196,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		self.mode = mode_save
 
 	@write_mode
-	def write_changed(self,data,quiet):
+	def write_changed(self, data, quiet):
 		from ..fileutil import write_data_to_file
 		write_data_to_file(
 			self.cfg,
@@ -207,11 +207,11 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 			ignore_opt_outdir = True,
 			quiet             = quiet,
 			check_data        = True, # die if wallet has been altered by another program
-			cmp_data          = self.orig_data )
+			cmp_data          = self.orig_data)
 
 		self.orig_data = data
 
-	def write(self,quiet=True):
+	def write(self, quiet=True):
 		if not self.use_tw_file:
 			self.cfg._util.dmsg("'use_tw_file' is False, doing nothing")
 			return
@@ -219,21 +219,21 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 		wdata = json.dumps(self.data)
 		if self.orig_data != wdata:
-			self.write_changed(wdata,quiet=quiet)
+			self.write_changed(wdata, quiet=quiet)
 		elif self.cfg.debug:
 			msg('Data is unchanged\n')
 
-	async def resolve_address(self,addrspec):
+	async def resolve_address(self, addrspec):
 
-		twmmid,coinaddr = (None,None)
+		twmmid, coinaddr = (None, None)
 
 		pairs = await self.get_label_addr_pairs()
 
-		if is_coin_addr(self.proto,addrspec):
-			coinaddr = get_obj(CoinAddr,proto=self.proto,addr=addrspec)
+		if is_coin_addr(self.proto, addrspec):
+			coinaddr = get_obj(CoinAddr, proto=self.proto, addr=addrspec)
 			pair_data = [e for e in pairs if e.coinaddr == coinaddr]
-		elif is_mmgen_id(self.proto,addrspec):
-			twmmid = TwMMGenID(self.proto,addrspec)
+		elif is_mmgen_id(self.proto, addrspec):
+			twmmid = TwMMGenID(self.proto, addrspec)
 			pair_data = [e for e in pairs if e.label.mmid == twmmid]
 		else:
 			msg(f'{addrspec!r}: invalid address for this network')
@@ -263,7 +263,7 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		if not res:
 			return False
 
-		comment = get_obj(TwComment,s=comment)
+		comment = get_obj(TwComment, s=comment)
 
 		if comment is False:
 			return False
@@ -276,38 +276,38 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 		if lbl is False:
 			return False
 
-		if await self.set_label(res.coinaddr,lbl):
+		if await self.set_label(res.coinaddr, lbl):
 			if not silent:
 				desc = '{t} address {a} in tracking wallet'.format(
-					t = res.twmmid.type.replace('mmgen','MMGen'),
+					t = res.twmmid.type.replace('mmgen', 'MMGen'),
 					a = res.twmmid.addr.hl() if res.twmmid.type == 'mmgen' else
 						res.twmmid.addr.hl(res.twmmid.addr.view_pref))
 				msg(
-					'Added label {} to {}'.format(comment.hl2(encl='‘’'),desc) if comment else
-					'Removed label from {}'.format(desc) )
+					'Added label {} to {}'.format(comment.hl2(encl='‘’'), desc) if comment else
+					'Removed label from {}'.format(desc))
 			return True
 		else:
 			if not silent:
-				msg( 'Label could not be {}'.format('added' if comment else 'removed') )
+				msg('Label could not be {}'.format('added' if comment else 'removed'))
 			return False
 
 	@write_mode
-	async def remove_comment(self,mmaddr):
-		await self.set_comment(mmaddr,'')
+	async def remove_comment(self, mmaddr):
+		await self.set_comment(mmaddr, '')
 
-	async def import_address_common(self,data,batch=False,gather=False):
+	async def import_address_common(self, data, batch=False, gather=False):
 
-		async def do_import(address,comment,message):
+		async def do_import(address, comment, message):
 			try:
-				res = await self.import_address( address, comment )
+				res = await self.import_address(address, comment)
 				self.cfg._util.qmsg(message)
 				return res
 			except Exception as e:
-				die(2,f'\nImport of address {address!r} failed: {e.args[0]!r}')
+				die(2, f'\nImport of address {address!r} failed: {e.args[0]!r}')
 
-		_d = namedtuple( 'formatted_import_data', data[0]._fields + ('mmid_disp',))
+		_d = namedtuple('formatted_import_data', data[0]._fields + ('mmid_disp',))
 		pfx = self.proto.base_coin.lower() + ':'
-		fdata = [ _d(*d, 'non-MMGen' if d.twmmid.startswith(pfx) else d.twmmid ) for d in data ]
+		fdata = [_d(*d, 'non-MMGen' if d.twmmid.startswith(pfx) else d.twmmid) for d in data]
 
 		fs = '{:%s}: {:%s} {:%s} - OK' % (
 			len(str(len(fdata))) * 2 + 1,
@@ -317,13 +317,13 @@ class TwCtl(MMGenObject,metaclass=AsyncInit):
 
 		nAddrs = len(data)
 		out = [( # create list, not generator, so we know data is valid before starting import
-				CoinAddr( self.proto, d.addr ),
-				TwLabel( self.proto, d.twmmid + (f' {d.comment}' if d.comment else '') ),
-				fs.format( f'{n}/{nAddrs}', d.addr, f'({d.mmid_disp})' )
-			) for n,d in enumerate(fdata,1)]
+				CoinAddr(self.proto, d.addr),
+				TwLabel(self.proto, d.twmmid + (f' {d.comment}' if d.comment else '')),
+				fs.format(f'{n}/{nAddrs}', d.addr, f'({d.mmid_disp})')
+			) for n, d in enumerate(fdata, 1)]
 
 		if batch:
-			msg_r(f'Batch importing {len(out)} address{suf(data,"es")}...')
+			msg_r(f'Batch importing {len(out)} address{suf(data, "es")}...')
 			ret = await self.batch_import_address((a, b, False) for a, b, c in out)
 			msg(f'done\n{len(ret)} addresses imported')
 		else:

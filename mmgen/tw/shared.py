@@ -12,31 +12,31 @@
 tw.shared: classes and functions shared by all tracking wallet classes
 """
 
-from ..objmethods import HiliteStr,InitErrors,MMGenObject
+from ..objmethods import HiliteStr, InitErrors, MMGenObject
 from ..obj import TwComment
 from ..addr import MMGenID
 
-class TwMMGenID(HiliteStr,InitErrors,MMGenObject):
+class TwMMGenID(HiliteStr, InitErrors, MMGenObject):
 	color = 'orange'
 	width = 0
 	trunc_ok = False
-	def __new__(cls,proto,id_str):
-		if isinstance(id_str,cls):
+	def __new__(cls, proto, id_str):
+		if isinstance(id_str, cls):
 			return id_str
 		try:
-			ret = addr = disp = MMGenID(proto,id_str)
-			sort_key,idtype = (ret.sort_key,'mmgen')
+			ret = addr = disp = MMGenID(proto, id_str)
+			sort_key, idtype = (ret.sort_key, 'mmgen')
 		except Exception as e:
 			try:
-				coin,addr = id_str.split(':',1)
-				assert coin == proto.base_coin.lower(),(
-					f'not a string beginning with the prefix {proto.base_coin.lower()!r}:' )
-				ret,sort_key,idtype,disp = (id_str,'z_'+id_str,'non-mmgen','non-MMGen')
+				coin, addr = id_str.split(':', 1)
+				assert coin == proto.base_coin.lower(), (
+					f'not a string beginning with the prefix {proto.base_coin.lower()!r}:')
+				ret, sort_key, idtype, disp = (id_str, 'z_'+id_str, 'non-mmgen', 'non-MMGen')
 				addr = proto.coin_addr(addr)
 			except Exception as e2:
-				return cls.init_fail(e,id_str,e2=e2)
+				return cls.init_fail(e, id_str, e2=e2)
 
-		me = str.__new__(cls,ret)
+		me = str.__new__(cls, ret)
 		me.obj = ret
 		me.disp = disp
 		me.addr = addr
@@ -45,34 +45,34 @@ class TwMMGenID(HiliteStr,InitErrors,MMGenObject):
 		me.proto = proto
 		return me
 
-	def fmt(self,**kwargs):
-		return super().fmtc(self.disp,**kwargs)
+	def fmt(self, **kwargs):
+		return super().fmtc(self.disp, **kwargs)
 
-# non-displaying container for TwMMGenID,TwComment
-class TwLabel(str,InitErrors,MMGenObject):
+# non-displaying container for TwMMGenID, TwComment
+class TwLabel(str, InitErrors, MMGenObject):
 	exc = 'BadTwLabel'
 	passthru_excs = ('BadTwComment',)
-	def __new__(cls,proto,text):
-		if isinstance(text,cls):
+	def __new__(cls, proto, text):
+		if isinstance(text, cls):
 			return text
 		try:
-			ts = text.split(None,1)
-			mmid = TwMMGenID(proto,ts[0])
+			ts = text.split(None, 1)
+			mmid = TwMMGenID(proto, ts[0])
 			comment = TwComment(ts[1] if len(ts) == 2 else '')
-			me = str.__new__( cls, mmid + (' ' + comment if comment else '') )
+			me = str.__new__(cls, mmid + (' ' + comment if comment else ''))
 			me.mmid = mmid
 			me.comment = comment
 			me.proto = proto
 			return me
 		except Exception as e:
-			return cls.init_fail(e,text)
+			return cls.init_fail(e, text)
 
-def get_tw_label(proto,s):
+def get_tw_label(proto, s):
 	"""
 	raise an exception on a malformed comment, return None on an empty or invalid label
 	"""
 	try:
-		return TwLabel(proto,s)
+		return TwLabel(proto, s)
 	except Exception as e:
 		if type(e).__name__ == 'BadTwComment': # do it this way to avoid importing .exception
 			raise

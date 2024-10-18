@@ -24,12 +24,12 @@ from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
 from ..obj import NonNegativeInt
 
-class TwGetBalance(MMGenObject,metaclass=AsyncInit):
+class TwGetBalance(MMGenObject, metaclass=AsyncInit):
 
-	def __new__(cls,cfg,proto,*args,**kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls,'tw.bal'))
+	def __new__(cls, cfg, proto, *args, **kwargs):
+		return MMGenObject.__new__(proto.base_proto_subclass(cls, 'tw.bal'))
 
-	async def __init__(self,cfg,proto,minconf,quiet):
+	async def __init__(self, cfg, proto, minconf, quiet):
 
 		class BalanceInfo(dict):
 			def __init__(self):
@@ -40,7 +40,7 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 					'ge_minconf': amt0,
 					'spendable': amt0,
 				}
-				dict.__init__(self,**data)
+				dict.__init__(self, **data)
 
 		self.minconf = NonNegativeInt(minconf)
 		self.balance_info = BalanceInfo
@@ -53,7 +53,7 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 
 		await self.create_data()
 
-	def format(self,color):
+	def format(self, color):
 
 		def gen_output():
 
@@ -64,11 +64,11 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 				def get_col_iwidth(colname):
 					return len(str(int(max(v[colname] for v in self.data.values())))) + iwidth_adj
 
-				def make_col(label,col):
-					return self.data[label][col].fmt( iwidth=iwidths[col], color=color )
+				def make_col(label, col):
+					return self.data[label][col].fmt(iwidth=iwidths[col], color=color)
 
 				if color:
-					from ..color import green,yellow
+					from ..color import green, yellow
 				else:
 					from ..color import nocolor
 					green = yellow = nocolor
@@ -87,14 +87,14 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 					lbl = 'Wallet',
 					w = col1_w + iwidth_adj,
 					cols = ' '.join(v.format(minconf=self.minconf).ljust(iwidths[k]+add_w)
-						for k,v in self.conf_cols.items()) ).rstrip()
+						for k, v in self.conf_cols.items())).rstrip()
 
 				from ..addr import MMGenID
 				for label in sorted(self.data.keys()):
 					yield '{lbl} {cols}'.format(
 						lbl = yellow((label + ' ' + self.proto.coin).ljust(col1_w)) if label == 'TOTAL'
-							else MMGenID.hlc( (label+':').ljust(col1_w), color=color ),
-						cols = ' '.join(make_col(label,col) for col in self.conf_cols)
+							else MMGenID.hlc((label+':').ljust(col1_w), color=color),
+						cols = ' '.join(make_col(label, col) for col in self.conf_cols)
 					).rstrip()
 
 		return '\n'.join(gen_output())
