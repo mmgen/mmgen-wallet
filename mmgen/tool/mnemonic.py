@@ -22,18 +22,18 @@ tool.mnemonic: Mnemonic routines for the 'mmgen-tool' utility
 
 from collections import namedtuple
 
-from .common import tool_cmd_base,options_annot_str
+from .common import tool_cmd_base, options_annot_str
 
 from ..baseconv import baseconv
 from ..xmrseed import xmrseed
 from ..bip39 import bip39
 
 dfl_mnemonic_fmt = 'mmgen'
-mft = namedtuple('mnemonic_format',['fmt','pad','conv_cls'])
+mft = namedtuple('mnemonic_format', ['fmt', 'pad', 'conv_cls'])
 mnemonic_fmts = {
-	'mmgen':   mft( 'words',  'seed', baseconv ),
-	'bip39':   mft( 'bip39',   None,  bip39 ),
-	'xmrseed': mft( 'xmrseed', None,  xmrseed ),
+	'mmgen':   mft('words',  'seed', baseconv),
+	'bip39':   mft('bip39',   None,  bip39),
+	'xmrseed': mft('xmrseed', None,  xmrseed),
 }
 mn_opts_disp = 'seed phrase format ' + options_annot_str(mnemonic_fmts)
 
@@ -60,18 +60,18 @@ class tool_cmd(tool_cmd_base):
 	use the ‘hex2wif’ command.
 	"""
 
-	def _xmr_reduce(self,bytestr):
+	def _xmr_reduce(self, bytestr):
 		from ..protocol import init_proto
-		proto = init_proto( self.cfg, 'xmr' )
+		proto = init_proto(self.cfg, 'xmr')
 		if len(bytestr) != proto.privkey_len:
 			from ..util import die
-			die(1,'{!r}: invalid bit length for Monero private key (must be {})'.format(
+			die(1, '{!r}: invalid bit length for Monero private key (must be {})'.format(
 				len(bytestr*8),
-				proto.privkey_len*8 ))
-		return proto.preprocess_key(bytestr,None)
+				proto.privkey_len*8))
+		return proto.preprocess_key(bytestr, None)
 
-	def _do_random_mn(self,nbytes:int,fmt:str):
-		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
+	def _do_random_mn(self, nbytes: int, fmt: str):
+		assert nbytes in (16, 24, 32), 'nbytes must be 16, 24 or 32'
 		from ..crypto import Crypto
 		randbytes = Crypto(self.cfg).get_random(nbytes)
 		if fmt == 'xmrseed':
@@ -79,54 +79,54 @@ class tool_cmd(tool_cmd_base):
 		if self.cfg.verbose:
 			from ..util import msg
 			msg(f'Seed: {randbytes.hex()}')
-		return self.hex2mn(randbytes.hex(),fmt=fmt)
+		return self.hex2mn(randbytes.hex(), fmt=fmt)
 
-	def mn_rand128(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+	def mn_rand128(self, fmt:mn_opts_disp = dfl_mnemonic_fmt):
 		"generate a random 128-bit mnemonic seed phrase"
-		return self._do_random_mn(16,fmt)
+		return self._do_random_mn(16, fmt)
 
-	def mn_rand192(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+	def mn_rand192(self, fmt:mn_opts_disp = dfl_mnemonic_fmt):
 		"generate a random 192-bit mnemonic seed phrase"
-		return self._do_random_mn(24,fmt)
+		return self._do_random_mn(24, fmt)
 
-	def mn_rand256(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+	def mn_rand256(self, fmt:mn_opts_disp = dfl_mnemonic_fmt):
 		"generate a random 256-bit mnemonic seed phrase"
-		return self._do_random_mn(32,fmt)
+		return self._do_random_mn(32, fmt)
 
-	def hex2mn( self, hexstr:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+	def hex2mn(self, hexstr: 'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt):
 		"convert a 16, 24 or 32-byte hexadecimal string to a mnemonic seed phrase"
 		if fmt == 'xmrseed':
 			hexstr = self._xmr_reduce(bytes.fromhex(hexstr)).hex()
 		f = mnemonic_fmts[fmt]
-		return ' '.join( f.conv_cls(fmt).fromhex(hexstr,f.pad) )
+		return ' '.join(f.conv_cls(fmt).fromhex(hexstr, f.pad))
 
-	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+	def mn2hex(self, seed_mnemonic: 'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt):
 		"convert a mnemonic seed phrase to a hexadecimal string"
 		f = mnemonic_fmts[fmt]
-		return f.conv_cls(fmt).tohex( seed_mnemonic.split(), f.pad )
+		return f.conv_cls(fmt).tohex(seed_mnemonic.split(), f.pad)
 
-	def mn2hex_interactive( self,
+	def mn2hex_interactive(self,
 			fmt: mn_opts_disp = dfl_mnemonic_fmt,
 			mn_len: 'length of seed phrase in words' = 24,
-			print_mn: 'print the seed phrase after entry' = False ):
+			print_mn: 'print the seed phrase after entry' = False):
 		"convert an interactively supplied mnemonic seed phrase to a hexadecimal string"
 		from ..mn_entry import mn_entry
-		mn = mn_entry( self.cfg, fmt ).get_mnemonic_from_user(25 if fmt == 'xmrseed' else mn_len,validate=False)
+		mn = mn_entry(self.cfg, fmt).get_mnemonic_from_user(25 if fmt == 'xmrseed' else mn_len, validate=False)
 		if print_mn:
 			from ..util import msg
 			msg(mn)
-		return self.mn2hex(seed_mnemonic=mn,fmt=fmt)
+		return self.mn2hex(seed_mnemonic=mn, fmt=fmt)
 
-	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt):
 		"show stats for a mnemonic wordlist"
 		return mnemonic_fmts[fmt].conv_cls(fmt).check_wordlist(self.cfg)
 
 	def mn_printlist(self,
 			fmt: mn_opts_disp = dfl_mnemonic_fmt,
 			enum: 'enumerate the list' = False,
-			pager: 'send output to pager' = False ):
+			pager: 'send output to pager' = False):
 		"print a mnemonic wordlist"
 		ret = mnemonic_fmts[fmt].conv_cls(fmt).get_wordlist()
 		if enum:
-			ret = [f'{n:>4} {e}' for n,e in enumerate(ret)]
+			ret = [f'{n:>4} {e}' for n, e in enumerate(ret)]
 		return '\n'.join(ret)

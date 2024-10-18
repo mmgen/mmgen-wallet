@@ -30,7 +30,7 @@ def main_help():
 	from ..util2 import pretty_format
 
 	def do():
-		for clsname,cmdlist in main_tool.mods.items():
+		for clsname, cmdlist in main_tool.mods.items():
 			cls = main_tool.get_mod_cls(clsname)
 			cls_docstr = cls.__doc__.strip()
 			yield capfirst(cls_docstr.split('\n')[0].strip()) + ':'
@@ -41,10 +41,10 @@ def main_help():
 					yield '  ' + line.lstrip('\t')
 				yield ''
 
-			max_w = max(map(len,cmdlist))
+			max_w = max(map(len, cmdlist))
 
 			for cmdname in cmdlist:
-				code = getattr(cls,cmdname)
+				code = getattr(cls, cmdname)
 				if code.__doc__:
 					yield '  {:{}} - {}'.format(
 						cmdname,
@@ -109,11 +109,11 @@ def gen_tool_usage():
 	for line in m1.lstrip().split('\n'):
 		yield line.lstrip('\t')
 
-	for clsname,cmdlist in main_tool.mods.items():
+	for clsname, cmdlist in main_tool.mods.items():
 		cls = main_tool.get_mod_cls(clsname)
 		cls_docstr = cls.__doc__.strip()
 		yield ''
-		yield '  {}:'.format( capfirst(cls_docstr.split('\n')[0].strip()) )
+		yield '  {}:'.format(capfirst(cls_docstr.split('\n')[0].strip()))
 		yield ''
 
 		if '\n' in cls_docstr:
@@ -121,49 +121,49 @@ def gen_tool_usage():
 				yield '    ' + line.lstrip('\t')
 			yield ''
 
-		max_w = max(map(len,cmdlist))
+		max_w = max(map(len, cmdlist))
 		for cmdname in cmdlist:
 			yield '    {a:{w}} {b}'.format(
 				a = cmdname,
-				b = main_tool.create_call_sig(cmdname,cls,as_string=True),
-				w = max_w )
+				b = main_tool.create_call_sig(cmdname, cls, as_string=True),
+				w = max_w)
 		yield ''
 
 	for line in m2.rstrip().split('\n'):
 		yield line.lstrip('\t')
 
-def gen_tool_cmd_usage(mod,cmdname):
+def gen_tool_cmd_usage(mod, cmdname):
 
 	from ..cfg import gc
 	from ..util import capfirst
 
 	cls = main_tool.get_mod_cls(mod)
-	docstr = getattr(cls,cmdname).__doc__.strip()
-	args,kwargs,kwargs_types,_,ann = main_tool.create_call_sig(cmdname,cls)
+	docstr = getattr(cls, cmdname).__doc__.strip()
+	args, kwargs, kwargs_types, _, ann = main_tool.create_call_sig(cmdname, cls)
 	ARGS = 'ARG' if len(args) == 1 else 'ARGS' if args else ''
 	KWARGS = 'KEYWORD ARG' if len(kwargs) == 1 else 'KEYWORD ARGS' if kwargs else ''
 
-	yield capfirst( docstr.split('\n')[0].strip() )
+	yield capfirst(docstr.split('\n')[0].strip())
 	yield ''
 	yield 'USAGE: {b} [OPTS] {c}{d}{e}'.format(
 		b = gc.prog_name,
 		c = cmdname,
 		d = f' {ARGS}' if ARGS else '',
-		e = f' [{KWARGS}]' if KWARGS else '' )
+		e = f' [{KWARGS}]' if KWARGS else '')
 
 	if args:
 		max_w = max(len(k[0]) for k in args)
 		yield ''
 		yield f'Required {ARGS} (type shown in square brackets):'
 		yield ''
-		for argname,argtype in args:
+		for argname, argtype in args:
 			have_sstr = ann.get(argname) == 'sstr'
 			yield '  {a:{w}} [{b}]{c}{d}'.format(
 				a = argname,
 				b = argtype,
 				c = " (use '-' to read from STDIN)" if have_sstr else '',
-				d = ' ' + ann[argname] if isinstance(ann.get(argname),str) and not have_sstr else '',
-				w = max_w )
+				d = ' ' + ann[argname] if isinstance(ann.get(argname), str) and not have_sstr else '',
+				w = max_w)
 
 	if kwargs:
 		max_w = max(len(k) for k in kwargs)
@@ -174,26 +174,26 @@ def gen_tool_cmd_usage(mod,cmdname):
 		for argname in kwargs:
 			yield '  {a:{w}} {b:{w2}} {c}'.format(
 				a = argname,
-				b = '[{}={}]'.format( kwargs_types[argname].__name__, repr(kwargs[argname]) ),
-				c = capfirst(ann[argname]) if isinstance(ann.get(argname),str) else '',
+				b = '[{}={}]'.format(kwargs_types[argname].__name__, repr(kwargs[argname])),
+				c = capfirst(ann[argname]) if isinstance(ann.get(argname), str) else '',
 				w = max_w,
-				w2 = max_w2 ).rstrip()
+				w2 = max_w2).rstrip()
 
 	if '\n' in docstr:
 		for line in docstr.split('\n')[1:]:
 			yield line.lstrip('\t')
 
-def usage(cmdname=None,exit_val=1):
+def usage(cmdname=None, exit_val=1):
 
-	from ..util import Msg,die
+	from ..util import Msg, die
 
 	if cmdname:
-		for mod,cmdlist in main_tool.mods.items():
+		for mod, cmdlist in main_tool.mods.items():
 			if cmdname in cmdlist:
-				Msg('\n'.join(gen_tool_cmd_usage(mod,cmdname)))
+				Msg('\n'.join(gen_tool_cmd_usage(mod, cmdname)))
 				break
 		else:
-			die(1,f'{cmdname!r}: no such tool command')
+			die(1, f'{cmdname!r}: no such tool command')
 	else:
 		from ..ui import do_pager
 		do_pager('\n'.join(gen_tool_usage()) + '\n')
@@ -204,10 +204,10 @@ def usage(cmdname=None,exit_val=1):
 class tool_cmd(tool_cmd_base):
 	"help/usage commands"
 
-	def help(self,command_name=''):
+	def help(self, command_name=''):
 		"display usage information for a single command or all commands"
-		usage(command_name,exit_val=0)
+		usage(command_name, exit_val=0)
 
-	def usage(self,command_name=''):
+	def usage(self, command_name=''):
 		"display usage information for a single command or all commands"
-		usage(command_name,exit_val=0)
+		usage(command_name, exit_val=0)

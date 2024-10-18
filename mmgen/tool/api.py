@@ -29,7 +29,7 @@ class tool_api(
 		util_cmds,
 		coin_cmds,
 		mnemonic_cmds,
-		tool_cmd_base ):
+		tool_cmd_base):
 	"""
 	API providing access to a subset of methods from the mmgen.tool module
 
@@ -41,7 +41,7 @@ class tool_api(
 		tool = tool_api(Config())
 
 		# Set the coin and network:
-		tool.init_coin('btc','mainnet')
+		tool.init_coin('btc', 'mainnet')
 
 		# Print available address types:
 		tool.print_addrtypes()
@@ -53,38 +53,38 @@ class tool_api(
 		tool.usr_randchars = 0
 
 		# Generate a random BTC segwit keypair:
-		wif,addr = tool.randpair()
+		wif, addr = tool.randpair()
 
 		# Set coin, network and address type:
-		tool.init_coin('ltc','testnet')
+		tool.init_coin('ltc', 'testnet')
 		tool.addrtype = 'bech32'
 
 		# Generate a random LTC testnet Bech32 keypair:
-		wif,addr = tool.randpair()
+		wif, addr = tool.randpair()
 
-		print('wif: ',wif)
-		print('addr:',addr)
+		print('wif: ', wif)
+		print('addr:', addr)
 	"""
 
 	need_proto = True
 	need_addrtype = True
 
-	def __init__(self,cfg):
+	def __init__(self, cfg):
 		"""
 		Initializer - takes no arguments
 		"""
 		type(cfg)._reset_ok += ('usr_randchars',)
 		super().__init__(cfg=cfg)
 
-	def init_coin(self,coinsym,network):
+	def init_coin(self, coinsym, network):
 		"""
 		Initialize a coin/network pair
 		Valid choices for coins: one of the symbols returned by the 'coins' attribute
-		Valid choices for network: 'mainnet','testnet','regtest'
+		Valid choices for network: 'mainnet', 'testnet', 'regtest'
 		"""
-		from ..protocol import init_proto,warn_trustlevel
+		from ..protocol import init_proto, warn_trustlevel
 		warn_trustlevel(self.cfg)
-		self.proto = init_proto( self.cfg, coinsym, network=network, need_amt=True )
+		self.proto = init_proto(self.cfg, coinsym, network=network, need_amt=True)
 		return self.proto
 
 	@property
@@ -114,7 +114,7 @@ class tool_api(
 		first-listed is the default
 		"""
 		from ..addr import MMGenAddrType
-		return [MMGenAddrType(proto=self.proto,id_str=id_str).name for id_str in self.proto.mmtypes]
+		return [MMGenAddrType(proto=self.proto, id_str=id_str).name for id_str in self.proto.mmtypes]
 
 	def print_addrtypes(self):
 		"""
@@ -122,7 +122,7 @@ class tool_api(
 		a description.  The first-listed is the default
 		"""
 		from ..addr import MMGenAddrType
-		for t in [MMGenAddrType(proto=self.proto,id_str=id_str) for id_str in self.proto.mmtypes]:
+		for t in [MMGenAddrType(proto=self.proto, id_str=id_str) for id_str in self.proto.mmtypes]:
 			print(f'{t.name:<12} - {t.desc}')
 
 	@property
@@ -131,9 +131,9 @@ class tool_api(
 		return self.mmtype
 
 	@addrtype.setter
-	def addrtype(self,val):
+	def addrtype(self, val):
 		from ..addr import MMGenAddrType
-		self.mmtype = MMGenAddrType(self.proto,val)
+		self.mmtype = MMGenAddrType(self.proto, val)
 
 	@property
 	def usr_randchars(self):
@@ -144,5 +144,5 @@ class tool_api(
 		return self.cfg.usr_randchars
 
 	@usr_randchars.setter
-	def usr_randchars(self,val):
+	def usr_randchars(self, val):
 		self.cfg.usr_randchars = val

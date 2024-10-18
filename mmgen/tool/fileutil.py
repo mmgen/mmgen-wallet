@@ -20,10 +20,10 @@
 tool.fileutil: File routines for the 'mmgen-tool' utility
 """
 
-import sys,os
+import sys, os
 
 from .common import tool_cmd_base
-from ..util import msg,msg_r,die,suf,make_full_path
+from ..util import msg, msg_r, die, suf, make_full_path
 from ..crypto import Crypto
 
 class tool_cmd(tool_cmd_base):
@@ -37,15 +37,15 @@ class tool_cmd(tool_cmd_base):
 
 		from hashlib import sha256
 
-		ivsize,bsize,mod = ( Crypto.aesctr_iv_len, 4096, 4096*8 )
-		n,carry = 0,b' '*ivsize
+		ivsize, bsize, mod = (Crypto.aesctr_iv_len, 4096, 4096*8)
+		n, carry = 0, b' '*ivsize
 		flgs = os.O_RDONLY|os.O_BINARY if sys.platform == 'win32' else os.O_RDONLY
-		f = os.open(filename,flgs)
+		f = os.open(filename, flgs)
 		for ch in incog_id:
 			if ch not in '0123456789ABCDEF':
-				die(2,f'{incog_id!r}: invalid Incog ID')
+				die(2, f'{incog_id!r}: invalid Incog ID')
 		while True:
-			d = os.read(f,bsize)
+			d = os.read(f, bsize)
 			if not d:
 				break
 			d = carry + d
@@ -65,7 +65,7 @@ class tool_cmd(tool_cmd_base):
 		os.close(f)
 		return True
 
-	def rand2file(self,outfile:str,nbytes:str,threads=4,silent=False):
+	def rand2file(self, outfile: str, nbytes: str, threads=4, silent=False):
 		"""
 		write ‘nbytes’ bytes of random data to specified file (dd-style byte specifiers supported)
 
@@ -89,39 +89,39 @@ class tool_cmd(tool_cmd_base):
 		"""
 		from threading import Thread
 		from queue import Queue
-		from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
+		from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 		from cryptography.hazmat.backends import default_backend
 
 		from ..util2 import parse_bytespec
 
 		def encrypt_worker():
-			ctr_init_val = os.urandom( Crypto.aesctr_iv_len )
-			c = Cipher( algorithms.AES(key), modes.CTR(ctr_init_val), backend=default_backend() )
+			ctr_init_val = os.urandom(Crypto.aesctr_iv_len)
+			c = Cipher(algorithms.AES(key), modes.CTR(ctr_init_val), backend=default_backend())
 			encryptor = c.encryptor()
 			while True:
-				q2.put( encryptor.update(q1.get()) )
+				q2.put(encryptor.update(q1.get()))
 				q1.task_done()
 
 		def output_worker():
 			while True:
-				f.write( q2.get() )
+				f.write(q2.get())
 				q2.task_done()
 
 		nbytes = parse_bytespec(nbytes)
 		if self.cfg.outdir:
-			outfile = make_full_path( self.cfg.outdir, outfile )
+			outfile = make_full_path(self.cfg.outdir, outfile)
 
-		f = open(outfile,'wb')
+		f = open(outfile, 'wb')
 
 		key = Crypto(self.cfg).get_random(32)
-		q1,q2 = ( Queue(), Queue() )
+		q1, q2 = (Queue(), Queue())
 
-		for i in range(max(1,threads-2)):
+		for i in range(max(1, threads-2)):
 			t = Thread(target=encrypt_worker)
 			t.daemon = True
 			t.start()
 
-		t = Thread( target=output_worker )
+		t = Thread(target=output_worker)
 		t.daemon = True
 		t.start()
 
@@ -129,10 +129,10 @@ class tool_cmd(tool_cmd_base):
 		for i in range(nbytes // blk_size):
 			if not i % 4:
 				msg_r(f'\rRead: {i * blk_size} bytes')
-			q1.put( os.urandom(blk_size) )
+			q1.put(os.urandom(blk_size))
 
 		if nbytes % blk_size:
-			q1.put( os.urandom(nbytes % blk_size) )
+			q1.put(os.urandom(nbytes % blk_size))
 
 		q1.join()
 		q2.join()
@@ -140,7 +140,7 @@ class tool_cmd(tool_cmd_base):
 
 		fsize = os.stat(outfile).st_size
 		if fsize != nbytes:
-			die(3,f'{fsize}: incorrect random file size (should be {nbytes})')
+			die(3, f'{fsize}: incorrect random file size (should be {nbytes})')
 
 		if not silent:
 			msg(f'\rRead: {nbytes} bytes')
@@ -148,7 +148,7 @@ class tool_cmd(tool_cmd_base):
 
 		return True
 
-	def decrypt_keystore(self, wallet_file:str, output_hex=False):
+	def decrypt_keystore(self, wallet_file: str, output_hex=False):
 		"decrypt the data in a keystore wallet, returning the decrypted data in binary format"
 		from ..ui import line_input
 		passwd = line_input(self.cfg, 'Enter passphrase: ', echo=self.cfg.echo_passphrase).strip().encode()
@@ -159,7 +159,7 @@ class tool_cmd(tool_cmd_base):
 		ret = decrypt_keystore(data[0]['keystore'], passwd)
 		return ret.hex() if output_hex else ret
 
-	def decrypt_geth_keystore(self, wallet_file:str, check_addr=True):
+	def decrypt_geth_keystore(self, wallet_file: str, check_addr=True):
 		"decrypt the private key in a Geth keystore wallet, returning the decrypted key in hex format"
 		from ..ui import line_input
 		passwd = line_input(self.cfg, 'Enter passphrase: ', echo=self.cfg.echo_passphrase).strip().encode()

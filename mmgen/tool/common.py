@@ -23,7 +23,7 @@ tool.common: Base class and shared routines for the 'mmgen-tool' utility
 from ..objmethods import MMGenObject
 
 def options_annot_str(l):
-	return "(valid choices: '{}')".format( "','".join(l) )
+	return "(valid choices: '{}')".format("','".join(l))
 
 class tool_cmd_base(MMGenObject):
 
@@ -31,13 +31,13 @@ class tool_cmd_base(MMGenObject):
 	need_addrtype = False
 	need_amt = False
 
-	def __init__(self,cfg,cmdname=None,proto=None,mmtype=None):
+	def __init__(self, cfg, cmdname=None, proto=None, mmtype=None):
 
 		self.cfg = cfg
 
 		if self.need_proto:
 			from ..protocol import init_proto_from_cfg
-			self.proto = proto or cfg._proto or init_proto_from_cfg(cfg,need_amt=True)
+			self.proto = proto or cfg._proto or init_proto_from_cfg(cfg, need_amt=True)
 			if cfg.token:
 				self.proto.tokensym = cfg.token.upper()
 
@@ -45,8 +45,8 @@ class tool_cmd_base(MMGenObject):
 			from ..addr import MMGenAddrType
 			self.mmtype = MMGenAddrType(
 				self.proto,
-				mmtype or cfg.type or self.proto.dfl_mmtype )
+				mmtype or cfg.type or self.proto.dfl_mmtype)
 
 	@property
 	def user_commands(self):
-		return {k:v for k,v in type(self).__dict__.items() if callable(v) and not k.startswith('_')}
+		return {k:v for k, v in type(self).__dict__.items() if callable(v) and not k.startswith('_')}
