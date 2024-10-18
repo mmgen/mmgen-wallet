@@ -14,5 +14,5 @@ tx.status: transaction status class
 
 class Status:
 
-	def __init__(self,parent_tx):
+	def __init__(self, parent_tx):
 		self.tx = parent_tx

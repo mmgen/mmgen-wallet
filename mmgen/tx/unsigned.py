@@ -20,15 +20,15 @@ class Unsigned(Completed):
 	ext  = 'rawtx'
 	automount = False
 
-	def delete_attrs(self,desc,attr):
-		for e in getattr(self,desc):
-			if hasattr(e,attr):
-				delattr(e,attr)
+	def delete_attrs(self, desc, attr):
+		for e in getattr(self, desc):
+			if hasattr(e, attr):
+				delattr(e, attr)
 
-	def get_sids(self,desc):
+	def get_sids(self, desc):
 		return remove_dups(
-			(e.mmid.sid for e in getattr(self,desc) if e.mmid),
-			quiet = True )
+			(e.mmid.sid for e in getattr(self, desc) if e.mmid),
+			quiet = True)
 
 class AutomountUnsigned(Unsigned):
 	desc = 'unsigned automount transaction'

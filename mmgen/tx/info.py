@@ -15,8 +15,8 @@ tx.info: transaction info class
 import importlib
 
 from ..cfg import gc
-from ..color import red,green,orange
-from ..util import msg,msg_r,decode_timestamp,make_timestr
+from ..color import red, green, orange
+from ..util import msg, msg_r, decode_timestamp, make_timestr
 from ..util2 import format_elapsed_hr
 
 class TxInfo:
@@ -40,11 +40,11 @@ class TxInfo:
 		def get_max_mmwid(io):
 			sel_f = (
 				(lambda o: len(o.mmid) + 2) if io == tx.inputs else  # 2 = len('()')
-				(lambda o: len(o.mmid) + (2,8)[bool(o.is_chg)]) )    # 6 = len(' (chg)')
-			return max(max([sel_f(o) for o in io if o.mmid] or [0]),len(nonmm_str))
+				(lambda o: len(o.mmid) + (2, 8)[bool(o.is_chg)]))    # 6 = len(' (chg)')
+			return max(max([sel_f(o) for o in io if o.mmid] or [0]), len(nonmm_str))
 
 		nonmm_str = f'(non-{gc.proj_name} address)'
-		max_mmwid = max(get_max_mmwid(tx.inputs),get_max_mmwid(tx.outputs))
+		max_mmwid = max(get_max_mmwid(tx.inputs), get_max_mmwid(tx.outputs))
 
 		def gen_view():
 			yield (self.txinfo_hdr_fs_short if terse else self.txinfo_hdr_fs).format(
@@ -55,10 +55,10 @@ class TxInfo:
 				s = green('True') if tx.signed else red('False'),
 				l = (
 					orange(self.strfmt_locktime(terse=True)) if tx.locktime else
-					green('None') ))
+					green('None')))
 
-			for attr,label in [('timestamp','Created:'),('sent_timestamp','Sent:')]:
-				if (val := getattr(tx,attr)) is not None:
+			for attr, label in [('timestamp', 'Created:'), ('sent_timestamp', 'Sent:')]:
+				if (val := getattr(tx, attr)) is not None:
 					_ = decode_timestamp(val)
 					yield f'{label:8} {make_timestr(_)} ({format_elapsed_hr(_)})\n'
 
@@ -68,7 +68,7 @@ class TxInfo:
 			if tx.coin_txid:
 				yield f'{tx.coin} TxID: {tx.coin_txid.hl()}\n'
 
-			enl = ('\n','')[bool(terse)]
+			enl = ('\n', '')[bool(terse)]
 			yield enl
 
 			if tx.comment:
@@ -85,25 +85,25 @@ class TxInfo:
 			iwidth = len(str(int(tx.sum_inputs())))
 
 			yield self.txinfo_ftr_fs.format(
-				i = tx.sum_inputs().fmt(color=True,iwidth=iwidth),
-				o = tx.sum_outputs().fmt(color=True,iwidth=iwidth),
-				C = tx.change.fmt(color=True,iwidth=iwidth),
-				s = tx.send_amt.fmt(color=True,iwidth=iwidth),
-				a = self.format_abs_fee(color=True,iwidth=iwidth),
+				i = tx.sum_inputs().fmt(color=True, iwidth=iwidth),
+				o = tx.sum_outputs().fmt(color=True, iwidth=iwidth),
+				C = tx.change.fmt(color=True, iwidth=iwidth),
+				s = tx.send_amt.fmt(color=True, iwidth=iwidth),
+				a = self.format_abs_fee(color=True, iwidth=iwidth),
 				r = self.format_rel_fee(),
 				d = tx.dcoin,
-				c = tx.coin )
+				c = tx.coin)
 
 			if tx.cfg.verbose:
 				yield self.format_verbose_footer()
 
-		return ''.join(gen_view()) # TX label might contain non-ascii chars
+		return ''.join(gen_view())
 
-	def view_with_prompt(self,prompt,pause=True):
+	def view_with_prompt(self, prompt, pause=True):
 		prompt += ' (y)es, (N)o, pager (v)iew, (t)erse view: '
 		from ..term import get_char
 		while True:
-			reply = get_char( prompt, immed_chars='YyNnVvTt' ).strip('\n\r')
+			reply = get_char(prompt, immed_chars='YyNnVvTt').strip('\n\r')
 			msg('')
 			if reply == '' or reply in 'Nn':
 				break
@@ -111,11 +111,11 @@ class TxInfo:
 				self.view(
 					pager = reply in 'Vv',
 					pause = pause,
-					terse = reply in 'Tt' )
+					terse = reply in 'Tt')
 				break
 			msg('Invalid reply')
 
-	def view(self,pager=False,pause=True,terse=False):
+	def view(self, pager=False, pause=True, terse=False):
 		o = self.format(terse=terse)
 		if pager:
 			from ..ui import do_pager
@@ -130,4 +130,4 @@ class TxInfo:
 def init_info(cfg, tx):
 	return getattr(
 		importlib.import_module(f'mmgen.proto.{tx.proto.base_proto_coin.lower()}.tx.info'),
-		('Token' if tx.proto.tokensym else '') + 'TxInfo' )(cfg, tx)
+		('Token' if tx.proto.tokensym else '') + 'TxInfo')(cfg, tx)
