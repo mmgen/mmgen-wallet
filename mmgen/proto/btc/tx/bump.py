@@ -40,7 +40,7 @@ class Bump(Completed,New,TxBase.Bump):
 				ret.hl(),
 				desc,
 				self.min_fee,
-				self.fee_abs2rel(self.min_fee.hl()),
+				self.fee_abs2rel(self.min_fee),
 				self.rel_fee_desc,
 				c = self.coin ))
 			return False

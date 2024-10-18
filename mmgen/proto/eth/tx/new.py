@@ -33,10 +33,10 @@ class New(Base,TxBase.New):
 		super().__init__(*args,**kwargs)
 
 		if self.cfg.gas:
-			self.gas = self.start_gas = self.proto.coin_amt(int(self.cfg.gas),'wei')
+			self.gas = self.start_gas = self.proto.coin_amt(int(self.cfg.gas), from_unit='wei')
 		else:
-			self.gas = self.proto.coin_amt(self.dfl_gas,'wei')
-			self.start_gas = self.proto.coin_amt(self.dfl_start_gas,'wei')
+			self.gas = self.proto.coin_amt(self.dfl_gas, from_unit='wei')
+			self.start_gas = self.proto.coin_amt(self.dfl_start_gas, from_unit='wei')
 
 		if self.cfg.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
@@ -115,18 +115,17 @@ class New(Base,TxBase.New):
 
 	# get rel_fee (gas price) from network, return in native wei
 	async def get_rel_fee_from_network(self):
-		return Int(await self.rpc.call('eth_gasPrice'),16),'eth_gasPrice' # ==> rel_fee,fe_type
+		return Int(await self.rpc.call('eth_gasPrice'),16), 'eth_gasPrice'
 
 	def check_fee(self):
 		if not self.disable_fee_check:
 			assert self.usr_fee <= self.proto.max_tx_fee
 
 	# given rel fee and units, return absolute fee using self.gas
-	def fee_rel2abs(self,tx_size,units,amt,unit):
+	def fee_rel2abs(self, tx_size, units, amt_in_units, unit):
 		return self.proto.coin_amt(
-			self.proto.coin_amt(amt,units[unit]).toWei() * self.gas.toWei(),
-			from_unit='wei'
-		)
+			self.proto.coin_amt(amt_in_units, units[unit]).toWei() * self.gas.toWei(),
+			from_unit = 'wei')
 
 	# given fee estimate (gas price) in wei, return absolute fee, adjusting by self.cfg.fee_adjust
 	def fee_est2abs(self,rel_fee,fe_type=None):
@@ -174,7 +173,7 @@ class New(Base,TxBase.New):
 					die(1,f'{addr!r}: not an MMGen ID or coin address')
 		return ret
 
-	def final_inputs_ok_msg(self,funds_left):
+	def final_inputs_ok_msg(self, funds_left):
 		chg = '0' if (self.outputs and self.outputs[0].is_chg) else funds_left
 		return 'Transaction leaves {} {} in the sender’s account'.format(
 			self.proto.coin_amt(chg).hl(),
@@ -207,8 +206,8 @@ class TokenNew(TokenBase,New):
 			return False
 		return await super().precheck_sufficient_funds(inputs_sum,sel_unspent,outputs_sum)
 
-	async def get_funds_left(self,fee,outputs_sum):
-		return ( await self.twctl.get_eth_balance(self.inputs[0].addr) ) - fee
+	async def get_funds_available(self, fee, outputs_sum):
+		return (await self.twctl.get_eth_balance(self.inputs[0].addr)) - fee
 
 	def final_inputs_ok_msg(self,funds_left):
 		token_bal = (

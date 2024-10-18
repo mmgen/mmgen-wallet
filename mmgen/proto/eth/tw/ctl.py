@@ -82,7 +82,9 @@ class EthereumTwCtl(TwCtl):
 			msg(f'{self.desc} upgraded successfully!')
 
 	async def rpc_get_balance(self,addr):
-		return self.proto.coin_amt(int(await self.rpc.call('eth_getBalance','0x'+addr,'latest'),16),'wei')
+		return self.proto.coin_amt(
+			int(await self.rpc.call('eth_getBalance', '0x' + addr, 'latest'), 16),
+			from_unit = 'wei')
 
 	@write_mode
 	async def batch_import_address(self,args_list):

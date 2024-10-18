@@ -15,23 +15,23 @@ proto.btc.tx.base: Bitcoin base transaction class
 from collections import namedtuple
 
 from ....tx import base as TxBase
-from ....obj import MMGenList,HexStr
-from ....util import msg,make_chksum_6,die,pp_fmt
+from ....obj import MMGenList, HexStr
+from ....util import msg, make_chksum_6, die, pp_fmt
 
-def addr2scriptPubKey(proto,addr):
+def addr2scriptPubKey(proto, addr):
 
-	def decode_addr(proto,addr):
+	def decode_addr(proto, addr):
 		ap = proto.decode_addr(addr)
 		assert ap, f'coin address {addr!r} could not be parsed'
 		return ap.bytes.hex()
 
 	return {
-		'p2pkh': '76a914' + decode_addr(proto,addr) + '88ac',
-		'p2sh':  'a914' + decode_addr(proto,addr) + '87',
-		'bech32': proto.witness_vernum_hex + '14' + decode_addr(proto,addr)
+		'p2pkh': '76a914' + decode_addr(proto, addr) + '88ac',
+		'p2sh':  'a914' + decode_addr(proto, addr) + '87',
+		'bech32': proto.witness_vernum_hex + '14' + decode_addr(proto, addr)
 	}[addr.addr_fmt]
 
-def scriptPubKey2addr(proto,s):
+def scriptPubKey2addr(proto, s):
 	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
 		return proto.pubhash2addr(bytes.fromhex(s[6:-4]), 'p2pkh'), 'p2pkh'
 	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':
@@ -41,19 +41,19 @@ def scriptPubKey2addr(proto,s):
 	else:
 		raise NotImplementedError(f'Unknown scriptPubKey ({s})')
 
-def DeserializeTX(proto,txhex):
+def DeserializeTX(proto, txhex):
 	"""
 	Parse a serialized Bitcoin transaction
 	For checking purposes, additionally reconstructs the serialized TX without signature
 	"""
 
 	def bytes2int(bytes_le):
-		return int(bytes_le[::-1].hex(),16)
+		return int(bytes_le[::-1].hex(), 16)
 
 	def bytes2coin_amt(bytes_le):
 		return proto.coin_amt(bytes2int(bytes_le) * proto.coin_amt.satoshi)
 
-	def bshift(n,skip=False,sub_null=False):
+	def bshift(n, skip=False, sub_null=False):
 		nonlocal idx, raw_tx
 		ret = tx[idx:idx+n]
 		idx += n
@@ -81,7 +81,7 @@ def DeserializeTX(proto,txhex):
 			idx += vbytes_len
 			if not skip:
 				raw_tx += vbytes
-			return int(vbytes[::-1].hex(),16)
+			return int(vbytes[::-1].hex(), 16)
 
 	def make_txid(tx_bytes):
 		from hashlib import sha256
@@ -94,20 +94,20 @@ def DeserializeTX(proto,txhex):
 	d = { 'version': bytes2int(bshift(4)) }
 
 	if d['version'] > 0x7fffffff: # version is signed integer
-		die(3,f"{d['version']}: transaction version greater than maximum allowed value (int32_t)!")
+		die(3, f"{d['version']}: transaction version greater than maximum allowed value (int32_t)!")
 
 	has_witness = tx[idx] == 0
 	if has_witness:
-		u = bshift(2,skip=True).hex()
+		u = bshift(2, skip=True).hex()
 		if u != '0001':
-			die( 'IllegalWitnessFlagValue', f'{u!r}: Illegal value for flag in transaction!' )
+			die('IllegalWitnessFlagValue', f'{u!r}: Illegal value for flag in transaction!')
 
 	d['num_txins'] = readVInt()
 
 	d['txins'] = MMGenList([{
 		'txid':      bshift(32)[::-1].hex(),
 		'vout':      bytes2int(bshift(4)),
-		'scriptSig': bshift(readVInt(skip=True),sub_null=True).hex(),
+		'scriptSig': bshift(readVInt(skip=True), sub_null=True).hex(),
 		'nSeq':      bshift(4)[::-1].hex()
 	} for i in range(d['num_txins'])])
 
@@ -119,7 +119,7 @@ def DeserializeTX(proto,txhex):
 	} for i in range(d['num_txouts'])])
 
 	for o in d['txouts']:
-		o['address'] = scriptPubKey2addr(proto,o['scriptPubKey'])[0]
+		o['address'] = scriptPubKey2addr(proto, o['scriptPubKey'])[0]
 
 	if has_witness:
 		# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
@@ -131,21 +131,21 @@ def DeserializeTX(proto,txhex):
 
 		for txin in d['txins']:
 			if tx[idx] == 0:
-				bshift(1,skip=True)
+				bshift(1, skip=True)
 				continue
 			txin['witness'] = [
-				bshift(readVInt(skip=True),skip=True).hex() for item in range(readVInt(skip=True)) ]
+				bshift(readVInt(skip=True), skip=True).hex() for item in range(readVInt(skip=True)) ]
 	else:
 		d['txid'] = make_txid(tx)
 		d['witness_size'] = 0
 
 	if len(tx) - idx != 4:
-		die( 'TxHexParseError', 'TX hex has invalid length: {} extra bytes'.format(len(tx)-idx-4) )
+		die('TxHexParseError', 'TX hex has invalid length: {} extra bytes'.format(len(tx)-idx-4))
 
 	d['locktime'] = bytes2int(bshift(4))
 	d['unsigned_hex'] = raw_tx.hex()
 
-	return namedtuple('deserialized_tx',list(d.keys()))(**d)
+	return namedtuple('deserialized_tx', list(d.keys()))(**d)
 
 class Base(TxBase.Base):
 	rel_fee_desc = 'satoshis per byte'
@@ -160,7 +160,7 @@ class Base(TxBase.Base):
 			def sort_func(a):
 				return (
 					bytes.fromhex(a.txid)
-					+ int.to_bytes(a.vout,4,'big') )
+					+ int.to_bytes(a.vout, 4, 'big'))
 			self.sort(key=sort_func)
 
 	class OutputList(TxBase.Base.OutputList):
@@ -168,15 +168,15 @@ class Base(TxBase.Base):
 		def sort_bip69(self):
 			def sort_func(a):
 				return (
-					int.to_bytes(a.amt.to_unit('satoshi'),8,'big')
-					+ bytes.fromhex(addr2scriptPubKey(self.parent.proto,a.addr)) )
+					int.to_bytes(a.amt.to_unit('satoshi'), 8, 'big')
+					+ bytes.fromhex(addr2scriptPubKey(self.parent.proto, a.addr)))
 			self.sort(key=sort_func)
 
 	def has_segwit_inputs(self):
-		return any(i.mmtype in ('S','B') for i in self.inputs)
+		return any(i.mmtype in ('S', 'B') for i in self.inputs)
 
 	def has_segwit_outputs(self):
-		return any(o.mmtype in ('S','B') for o in self.outputs)
+		return any(o.mmtype in ('S', 'B') for o in self.outputs)
 
 	# https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 	# 180: uncompressed, 148: compressed
@@ -217,7 +217,7 @@ class Base(TxBase.Base):
 		def get_outputs_size():
 			# output bytes = amt: 8, byte_count: 1+, pk_script
 			# pk_script bytes: p2pkh: 25, p2sh: 23, bech32: 22
-			return sum({'p2pkh':34,'p2sh':32,'bech32':31}[o.addr.addr_fmt] for o in self.outputs)
+			return sum({'p2pkh':34, 'p2sh':32, 'bech32':31}[o.addr.addr_fmt] for o in self.outputs)
 
 		# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
 		# The witness is a serialization of all witness data of the transaction. Each txin is
@@ -231,7 +231,7 @@ class Base(TxBase.Base):
 			if not self.has_segwit_inputs():
 				return 0
 			wf_size = 1 + 1 + sig_size + 1 + pubkey_size_compressed # vInt vInt sig vInt pubkey = 108
-			return sum((1,wf_size)[i.mmtype in ('S','B')] for i in self.inputs)
+			return sum((1, wf_size)[i.mmtype in ('S', 'B')] for i in self.inputs)
 
 		isize = get_inputs_size()
 		osize = get_outputs_size()
@@ -250,24 +250,24 @@ class Base(TxBase.Base):
 		self.cfg._util.dmsg(
 			'\nData from estimate_size():\n' +
 			f'  inputs size: {isize}, outputs size: {osize}, witness size: {wsize}\n' +
-			f'  size: {new_size}, vsize: {ret}, old_size: {old_size}' )
+			f'  size: {new_size}, vsize: {ret}, old_size: {old_size}')
 
 		return int(ret * (self.cfg.vsize_adj or 1))
 
 	# convert absolute CoinAmt fee to sat/byte using estimated size
-	def fee_abs2rel(self,abs_fee,to_unit='satoshi'):
+	def fee_abs2rel(self, abs_fee, to_unit='satoshi'):
 		return int(
 			abs_fee /
-			getattr( self.proto.coin_amt, to_unit ) /
-			self.estimate_size() )
+			getattr(self.proto.coin_amt, to_unit) /
+			self.estimate_size())
 
 	@property
 	def deserialized(self):
 		if not self._deserialized:
-			self._deserialized = DeserializeTX(self.proto,self.serialized)
+			self._deserialized = DeserializeTX(self.proto, self.serialized)
 		return self._deserialized
 
-	def update_serialized(self,data):
+	def update_serialized(self, data):
 		self.serialized = HexStr(data)
 		self._deserialized = None
 		self.check_serialized_integrity()
@@ -286,7 +286,7 @@ class Base(TxBase.Base):
 		def do_error(errmsg):
 			die('TxHexMismatch', errmsg+'\n'+hdr)
 
-		def check_equal(desc,hexio,mmio):
+		def check_equal(desc, hexio, mmio):
 			if mmio != hexio:
 				msg('\nMMGen {d}:\n{m}\nSerialized {d}:\n{h}'.format(
 					d = desc,

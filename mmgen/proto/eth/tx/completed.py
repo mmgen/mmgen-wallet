@@ -24,8 +24,8 @@ class Completed(Base,TxBase.Completed):
 
 		super().__init__(*args,**kwargs)
 
-		self.gas = self.proto.coin_amt(self.dfl_gas,'wei')
-		self.start_gas = self.proto.coin_amt(self.dfl_start_gas,'wei')
+		self.gas = self.proto.coin_amt(self.dfl_gas, from_unit='wei')
+		self.start_gas = self.proto.coin_amt(self.dfl_start_gas, from_unit='wei')
 
 	@property
 	def send_amt(self):

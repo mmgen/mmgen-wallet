@@ -378,7 +378,9 @@ class RPCClient(MMGenObject):
 			wallet = wallet )
 
 	def process_http_resp(self,run_ret,batch=False,json_rpc=True):
-		text,status = run_ret
+
+		text, status = run_ret
+
 		if status == 200:
 			dmsg_rpc('    RPC RESPONSE data ==>\n{}\n',text,is_json=True)
 			m = None

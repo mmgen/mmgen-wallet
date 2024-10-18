@@ -30,15 +30,15 @@ class Base(TxBase.Base):
 	disable_fee_check = False
 
 	# given absolute fee in ETH, return gas price in Gwei using self.gas
-	def fee_abs2rel(self,abs_fee,to_unit='Gwei'):
-		ret = self.proto.coin_amt(int(abs_fee.toWei() // self.gas.toWei()),'wei')
+	def fee_abs2rel(self, abs_fee, to_unit='Gwei'):
+		ret = self.proto.coin_amt(int(abs_fee.toWei() // self.gas.toWei()), from_unit='wei')
 		self.cfg._util.dmsg(f'fee_abs2rel() ==> {ret} ETH')
-		return ret if to_unit == 'eth' else ret.to_unit(to_unit,show_decimal=True)
+		return ret if to_unit == 'eth' else ret.to_unit(to_unit, show_decimal=True)
 
 	# given rel fee (gasPrice) in wei, return absolute fee using self.gas (Ethereum-only method)
-	def fee_gasPrice2abs(self,rel_fee):
-		assert isinstance(rel_fee,int), f'{rel_fee!r}: incorrect type for fee estimate (not an integer)'
-		return self.proto.coin_amt(rel_fee * self.gas.toWei(),'wei')
+	def fee_gasPrice2abs(self, rel_fee):
+		assert isinstance(rel_fee, int), f'{rel_fee!r}: incorrect type for fee estimate (not an integer)'
+		return self.proto.coin_amt(rel_fee * self.gas.toWei(), from_unit='wei')
 
 	def is_replaceable(self):
 		return True

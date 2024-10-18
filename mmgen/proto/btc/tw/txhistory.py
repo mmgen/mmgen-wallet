@@ -106,9 +106,9 @@ class BitcoinTwTransaction:
 			'inputs':  max(len(addr) for addr in gen_all_addrs('inputs')),
 			'outputs': max(len(addr) for addr in gen_all_addrs('outputs'))
 		}
-		self.inputs_total = total( self.vouts_info['inputs'] )
-		self.outputs_total = self.proto.coin_amt( sum(i['value'] for i in self.tx['decoded']['vout']) )
-		self.wallet_outputs_total = total( self.vouts_info['outputs'] )
+		self.inputs_total = total(self.vouts_info['inputs'])
+		self.outputs_total = self.proto.coin_amt(sum(i['value'] for i in self.tx['decoded']['vout']))
+		self.wallet_outputs_total = total(self.vouts_info['outputs'])
 		self.fee = self.inputs_total - self.outputs_total
 		self.nOutputs = len(self.tx['decoded']['vout'])
 		self.confirmations = self.tx['confirmations']

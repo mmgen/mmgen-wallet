@@ -1067,8 +1067,8 @@ class CmdTestEthdev(CmdTestBase,CmdTestShared):
 					usr_addrs[i],
 					amt,
 					dfl_devkey,
-					start_gas = self.proto.coin_amt(60000,'wei'),
-					gasPrice  = self.proto.coin_amt(8,'Gwei') )
+					start_gas = self.proto.coin_amt(60000, from_unit='wei'),
+					gasPrice  = self.proto.coin_amt(8, from_unit='Gwei'))
 				if (await self.get_tx_receipt(txid)).status == 0:
 					die(2,'Transfer of token funds failed. Aborting')
 

@@ -21,12 +21,12 @@ amt: MMGen CoinAmt and related classes
 """
 
 from decimal import Decimal
-from .objmethods import Hilite,InitErrors
+from .objmethods import Hilite, InitErrors
 
 class DecimalNegateResult(Decimal):
 	pass
 
-class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
+class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 	"""
 	Instantiating with 'from_decimal' rounds value down to 'max_prec' precision.
 	For addition and subtraction, operand types must match.
@@ -41,28 +41,30 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	max_amt  = None   # coin supply if known, otherwise None
 	units    = ()     # defined unit names, e.g. ('satoshi',...)
 
-	def __new__(cls,num,from_unit=None,from_decimal=False):
-		if isinstance(num,cls):
+	def __new__(cls, num, from_unit=None, from_decimal=False):
+
+		if isinstance(num, cls):
 			return num
+
 		try:
 			if from_unit:
-				assert from_unit in cls.units, f'{from_unit!r}: unrecognized denomination for {cls.__name__}'
-				assert type(num) is int,'value is not an integer'
-				me = Decimal.__new__(cls,num * getattr(cls,from_unit))
+				assert from_unit in cls.units, f'{from_unit!r}: unrecognized coin unit for {cls.__name__}'
+				assert type(num) is int, 'value is not an integer'
+				me = Decimal.__new__(cls, num * getattr(cls, from_unit))
 			elif from_decimal:
-				assert isinstance(num,Decimal), f'number must be of type Decimal, not {type(num).__name__})'
-				me = Decimal.__new__(cls,num.quantize(Decimal('10') ** -cls.max_prec))
+				assert isinstance(num, Decimal), f'number must be of type Decimal, not {type(num).__name__})'
+				me = Decimal.__new__(cls, num.quantize(Decimal('10') ** -cls.max_prec))
 			else:
 				for bad_type in cls.forbidden_types:
-					assert not isinstance(num,bad_type), f'number is of forbidden type {bad_type.__name__}'
-				me = Decimal.__new__(cls,str(num))
-			assert me.normalize().as_tuple()[-1] >= -cls.max_prec,'too many decimal places in coin amount'
+					assert not isinstance(num, bad_type), f'number is of forbidden type {bad_type.__name__}'
+				me = Decimal.__new__(cls, str(num))
+			assert me.normalize().as_tuple()[-1] >= -cls.max_prec, 'too many decimal places in coin amount'
 			if cls.max_amt:
 				assert me <= cls.max_amt, f'{me}: coin amount too large (>{cls.max_amt})'
-			assert me >= 0,'coin amount cannot be negative'
+			assert me >= 0, 'coin amount cannot be negative'
 			return me
 		except Exception as e:
-			return cls.init_fail(e,num)
+			return cls.init_fail(e, num)
 
 	def to_unit(self,unit,show_decimal=False):
 		ret = Decimal(self) // getattr(self,unit)
@@ -72,40 +74,36 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 		return int(ret)
 
 	@classmethod
-	def fmtc(cls,*args,**kwargs):
+	def fmtc(cls, *args, **kwargs):
 		cls.method_not_implemented()
 
-	def fmt(
-			self,
-			color  = False,
-			iwidth = 1,      # width of the integer part
-			prec   = None ):
+	def fmt(self, color=False, iwidth=1, prec=None): # iwidth: width of the integer part
 
 		s = str(self)
 		prec = prec or self.max_prec
 
 		if '.' in s:
-			a,b = s.split('.',1)
+			a, b = s.split('.', 1)
 			return self.colorize(
 				a.rjust(iwidth) + '.' + b.ljust(prec)[:prec], # truncation, not rounding!
-				color = color )
+				color = color)
 		else:
 			return self.colorize(
 				s.rjust(iwidth).ljust(iwidth+prec+1),
-				color = color )
+				color = color)
 
-	def hl(self,color=True):
-		return self.colorize(str(self),color=color)
+	def hl(self, color=True):
+		return self.colorize(str(self), color=color)
 
 	# fancy highlighting with coin unit, enclosure, formatting
-	def hl2(self,color=True,unit=False,fs='{}',encl=''):
+	def hl2(self, color=True, unit=False, fs='{}', encl=''):
 		res = fs.format(self)
 		return (
 			encl[:-1]
 			+ self.colorize(
 				(res.rstrip('0').rstrip('.') if '.' in res else res) +
 				(' ' + self.coin if unit else ''),
-				color = color )
+				color = color)
 			+ encl[1:]
 		)
 
@@ -113,26 +111,26 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 		return str(int(self)) if int(self) == self else self.normalize().__format__('f')
 
 	def __repr__(self):
-		return "{}('{}')".format(type(self).__name__,self.__str__())
+		return "{}('{}')".format(type(self).__name__, self.__str__())
 
-	def __add__(self,other,*args,**kwargs):
+	def __add__(self, other, *args, **kwargs):
 		"""
 		we must allow other to be int(0) to use the sum() builtin
 		"""
 		if type(other) not in ( type(self), DecimalNegateResult ) and other != 0:
 			raise ValueError(
 				f'operand {other} of incorrect type ({type(other).__name__} != {type(self).__name__})')
-		return type(self)(Decimal.__add__(self,other,*args,**kwargs))
+		return type(self)(Decimal.__add__(self, other, *args, **kwargs))
 
 	__radd__ = __add__
 
-	def __sub__(self,other,*args,**kwargs):
+	def __sub__(self, other, *args, **kwargs):
 		if type(other) is not type(self):
 			raise ValueError(
 				f'operand {other} of incorrect type ({type(other).__name__} != {type(self).__name__})')
-		return type(self)(Decimal.__sub__(self,other,*args,**kwargs))
+		return type(self)(Decimal.__sub__(self, other, *args, **kwargs))
 
-	def copy_negate(self,*args,**kwargs):
+	def copy_negate(self, *args, **kwargs):
 		"""
 		We implement this so that __add__() can check type, because:
 			class Decimal:
@@ -140,29 +138,29 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 					...
 					return self.__add__(other.copy_negate(), ...)
 		"""
-		return DecimalNegateResult(Decimal.copy_negate(self,*args,**kwargs))
+		return DecimalNegateResult(Decimal.copy_negate(self, *args, **kwargs))
 
-	def __mul__(self,other,*args,**kwargs):
+	def __mul__(self, other, *args, **kwargs):
 		return type(self)('{:0.{p}f}'.format(
-			Decimal.__mul__(self,Decimal(other),*args,**kwargs),
+			Decimal.__mul__(self, Decimal(other), *args, **kwargs),
 			p = self.max_prec
 		))
 
 	__rmul__ = __mul__
 
-	def __truediv__(self,other,*args,**kwargs):
+	def __truediv__(self, other, *args, **kwargs):
 		return type(self)('{:0.{p}f}'.format(
-			Decimal.__truediv__(self,Decimal(other),*args,**kwargs),
+			Decimal.__truediv__(self, Decimal(other), *args, **kwargs),
 			p = self.max_prec
 		))
 
-	def __neg__(self,*args,**kwargs):
+	def __neg__(self, *args, **kwargs):
 		self.method_not_implemented()
 
-	def __floordiv__(self,*args,**kwargs):
+	def __floordiv__(self, *args, **kwargs):
 		self.method_not_implemented()
 
-	def __mod__(self,*args,**kwargs):
+	def __mod__(self, *args, **kwargs):
 		self.method_not_implemented()
 
 class BTCAmt(CoinAmt):
@@ -195,7 +193,7 @@ class ETHAmt(CoinAmt):
 	Gwei    = Decimal('0.000000001')
 	szabo   = Decimal('0.000001')
 	finney  = Decimal('0.001')
-	units   = ('wei','Kwei','Mwei','Gwei','szabo','finney')
+	units   = ('wei', 'Kwei', 'Mwei', 'Gwei', 'szabo', 'finney')
 
 	def toWei(self):
 		return int(Decimal(self) // self.wei)

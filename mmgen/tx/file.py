@@ -22,8 +22,8 @@ tx.file: Transaction file operations for the MMGen suite
 
 import os, json
 
-from ..util import ymsg,make_chksum_6,die
-from ..obj import MMGenObject,HexStr,MMGenTxID,CoinTxID,MMGenTxComment
+from ..util import ymsg, make_chksum_6, die
+from ..obj import MMGenObject, HexStr, MMGenTxID, CoinTxID, MMGenTxComment
 from ..rpc import json_encoder
 
 def json_dumps(data):
@@ -51,7 +51,7 @@ def eval_io_data(tx, data, desc):
 		'inputs':  (tx.Input, tx.InputList),
 		'outputs': (tx.Output, tx.OutputList),
 	}[desc]
-	return io_list(parent=tx, data=[io(tx.proto,**d) for d in data])
+	return io_list(parent=tx, data=[io(tx.proto, **d) for d in data])
 
 class MMGenTxFile(MMGenObject):
 	data_label = 'MMGenTransaction'
@@ -70,7 +70,7 @@ class MMGenTxFile(MMGenObject):
 		'sent_timestamp': None,
 	}
 
-	def __init__(self,tx):
+	def __init__(self, tx):
 		self.tx       = tx
 		self.fmt_data = None
 		self.filename = None
@@ -127,13 +127,13 @@ class MMGenTxFile(MMGenObject):
 				if desc == 'inputs':
 					ymsg('Warning: transaction data appears to be in old format')
 				import re
-				return literal_eval(re.sub(r"[A-Za-z]+?\(('.+?')\)",r'\1', raw_data))
+				return literal_eval(re.sub(r"[A-Za-z]+?\(('.+?')\)", r'\1', raw_data))
 
 		desc = 'data'
 		try:
 			tx_data = data.splitlines()
-			assert len(tx_data) >= 5,'number of lines less than 5'
-			assert len(tx_data[0]) == 6,'invalid length of first line'
+			assert len(tx_data) >= 5, 'number of lines less than 5'
+			assert len(tx_data[0]) == 6, 'invalid length of first line'
 			assert HexStr(tx_data.pop(0)) == make_chksum_6(' '.join(tx_data)), 'file data does not match checksum'
 
 			if len(tx_data) == 7:
@@ -142,26 +142,26 @@ class MMGenTxFile(MMGenObject):
 				assert _ == 'Sent', 'invalid sent timestamp line'
 
 			if len(tx_data) == 6:
-				assert len(tx_data[-1]) == 64,'invalid coin TxID length'
+				assert len(tx_data[-1]) == 64, 'invalid coin TxID length'
 				desc = 'coin TxID'
 				tx.coin_txid = CoinTxID(tx_data.pop(-1))
 
 			if len(tx_data) == 5:
 				# rough check: allow for 4-byte utf8 characters + base58 (4 * 11 / 8 = 6 (rounded up))
-				assert len(tx_data[-1]) < MMGenTxComment.max_len*6,'invalid comment length'
+				assert len(tx_data[-1]) < MMGenTxComment.max_len*6, 'invalid comment length'
 				c = tx_data.pop(-1)
 				if c != '-':
 					desc = 'encoded comment (not base58)'
 					from ..baseconv import baseconv
 					comment = baseconv('b58').tobytes(c).decode()
-					assert comment is not False,'invalid comment'
+					assert comment is not False, 'invalid comment'
 					desc = 'comment'
 					tx.comment = MMGenTxComment(comment)
 
 			desc = 'number of lines' # four required lines
 			io_data = {}
 			(metadata, tx.serialized, io_data['inputs'], io_data['outputs']) = tx_data
-			assert len(metadata) < 100,'invalid metadata length' # rough check
+			assert len(metadata) < 100, 'invalid metadata length' # rough check
 			metadata = metadata.split()
 
 			if metadata[-1].startswith('LT='):
@@ -203,7 +203,7 @@ class MMGenTxFile(MMGenObject):
 			desc = 'send amount in metadata'
 			assert tx.proto.coin_amt(send_amt) == tx.send_amt, f'{send_amt} != {tx.send_amt}'
 		except Exception as e:
-			die(2,f'Invalid {desc} in transaction file: {e!s}')
+			die(2, f'Invalid {desc} in transaction file: {e!s}')
 
 	def make_filename(self):
 		tx = self.tx
@@ -213,7 +213,7 @@ class MMGenTxFile(MMGenObject):
 				yield '-' + tx.dcoin
 			yield f'[{tx.send_amt!s}'
 			if tx.is_replaceable():
-				yield ',{}'.format(tx.fee_abs2rel(tx.fee,to_unit=tx.fn_fee_unit))
+				yield ',{}'.format(tx.fee_abs2rel(tx.fee, to_unit=tx.fn_fee_unit))
 			if tx.get_serialized_locktime():
 				yield f',tl={tx.get_serialized_locktime()}'
 			yield ']'
@@ -248,7 +248,7 @@ class MMGenTxFile(MMGenObject):
 
 			if tx.comment:
 				from ..baseconv import baseconv
-				lines.append(baseconv('b58').frombytes(tx.comment.encode(),tostr=True))
+				lines.append(baseconv('b58').frombytes(tx.comment.encode(), tostr=True))
 
 			if tx.coin_txid:
 				if not tx.comment:
@@ -276,7 +276,7 @@ class MMGenTxFile(MMGenObject):
 		fmt_data = {'json': format_data_json, 'legacy': format_data_legacy}[tx.file_format]()
 
 		if len(fmt_data) > tx.cfg.max_tx_file_size:
-			die( 'MaxFileSizeExceeded', f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)' )
+			die('MaxFileSizeExceeded', f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)')
 
 		return fmt_data
 
@@ -286,7 +286,7 @@ class MMGenTxFile(MMGenObject):
 		ask_write             = True,
 		ask_write_default_yes = False,
 		ask_tty               = True,
-		ask_overwrite         = True ):
+		ask_overwrite         = True):
 
 		if ask_write is False:
 			ask_write_default_yes = True
@@ -310,8 +310,8 @@ class MMGenTxFile(MMGenObject):
 			ignore_opt_outdir     = outdir)
 
 	@classmethod
-	def get_proto(cls,cfg,filename,quiet_open=False):
+	def get_proto(cls, cfg, filename, quiet_open=False):
 		from . import BaseTX
 		tmp_tx = BaseTX(cfg=cfg)
-		cls(tmp_tx).parse(filename,metadata_only=True,quiet_open=quiet_open)
+		cls(tmp_tx).parse(filename, metadata_only=True, quiet_open=quiet_open)
 		return tmp_tx.proto
