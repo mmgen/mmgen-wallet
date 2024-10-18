@@ -110,16 +110,17 @@ class New(Base):
 	# given tx size and absolute fee or fee spec, return absolute fee
 	# relative fee is N+<first letter of unit name>
 	def feespec2abs(self, fee_arg, tx_size):
-		fee = get_obj(self.proto.coin_amt, num=fee_arg, silent=True)
-		if fee:
+
+		if fee := get_obj(self.proto.coin_amt, num=fee_arg, silent=True):
 			return fee
-		else:
-			import re
-			units = {u[0]:u for u in self.proto.coin_amt.units}
-			pat = re.compile(r'([1-9][0-9]*)({})'.format('|'.join(units)))
-			if pat.match(fee_arg):
-				amt, unit = pat.match(fee_arg).groups()
-				return self.fee_rel2abs(tx_size, units, int(amt), unit)
+
+		import re
+		units = {u[0]:u for u in self.proto.coin_amt.units}
+		pat = re.compile(r'([1-9][0-9]*)({})'.format('|'.join(units)))
+		if pat.match(fee_arg):
+			amt, unit = pat.match(fee_arg).groups()
+			return self.fee_rel2abs(tx_size, units, int(amt), unit)
+
 		return False
 
 	def get_usr_fee_interactive(self, fee=None, desc='Starting'):
