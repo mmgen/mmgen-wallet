@@ -73,10 +73,10 @@ init_tests() {
 	t_lint="
 		b $pylint $PYLINT_OPTS mmgen
 		b $pylint $PYLINT_OPTS test
-		b $pylint $PYLINT_OPTS --disable=relative-beyond-top-level test/cmdtest_py_d
+		b $pylint $PYLINT_OPTS --disable=relative-beyond-top-level test/cmdtest_d
 		a $pylint $PYLINT_OPTS --ignore-paths '.*/eth/.*' mmgen
 		a $pylint $PYLINT_OPTS --ignore-paths '.*/ut_dep.py,.*/ut_testdep.py' test
-		a $pylint $PYLINT_OPTS --ignore-paths '.*/ct_ethdev.py' --disable=relative-beyond-top-level test/cmdtest_py_d
+		a $pylint $PYLINT_OPTS --ignore-paths '.*/ct_ethdev.py' --disable=relative-beyond-top-level test/cmdtest_d
 		- $pylint $PYLINT_OPTS examples
 	"
 

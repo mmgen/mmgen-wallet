@@ -180,7 +180,7 @@ def run_test(mod, test, arg, input_data, arg1, exc_name):
 
 def do_loop():
 	import importlib
-	modname = f'test.objtest_py_d.ot_{proto.coin.lower()}_{proto.network}'
+	modname = f'test.objtest_d.ot_{proto.coin.lower()}_{proto.network}'
 	mod = importlib.import_module(modname)
 	test_data = getattr(mod, 'tests')
 	gmsg(f'Running data object tests for {proto.coin} {proto.network}')

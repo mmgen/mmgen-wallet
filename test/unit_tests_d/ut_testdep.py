@@ -72,7 +72,7 @@ class unit_tests:
 		return True
 
 	def ssh_socks_proxy(self, name, ut):
-		from test.cmdtest_py_d.ct_xmrwallet import CmdTestXMRWallet
+		from test.cmdtest_d.ct_xmrwallet import CmdTestXMRWallet
 		return CmdTestXMRWallet.init_proxy(external_call=True)
 
 	def sudo(self, name, ut):

@@ -197,7 +197,7 @@ if cfg.no_altcoin and cfg.coin != 'BTC':
 
 set_globals(cfg)
 
-from test.cmdtest_py_d.common import ( # this must be loaded after set_globals()
+from test.cmdtest_d.common import ( # this must be loaded after set_globals()
 	get_file_with_ext,
 	confirm_continue
 )
@@ -255,7 +255,7 @@ else:
 if cfg.skipping_deps:
 	cfg.no_daemon_autostart = True
 
-from test.cmdtest_py_d.cfg import cfgs
+from test.cmdtest_d.cfg import cfgs
 
 def list_cmds():
 
@@ -321,7 +321,7 @@ class CmdGroupMgr:
 
 	dpy_data = None
 
-	from test.cmdtest_py_d.cfg import cmd_groups_dfl, cmd_groups_extra
+	from test.cmdtest_d.cfg import cmd_groups_dfl, cmd_groups_extra
 
 	cmd_groups = cmd_groups_dfl.copy()
 	cmd_groups.update(cmd_groups_extra)
@@ -367,7 +367,7 @@ class CmdGroupMgr:
 		if modname is None and 'modname' in kwargs:
 			modname = kwargs['modname']
 		import importlib
-		modpath = f'test.cmdtest_py_d.ct_{modname or gname}'
+		modpath = f'test.cmdtest_d.ct_{modname or gname}'
 		return getattr(importlib.import_module(modpath), clsname)
 
 	def create_group(self, gname, sg_name, full_data=False, modname=None, is3seed=False, add_dpy=False):
@@ -649,7 +649,7 @@ class CmdTestRunner:
 
 	def init_group(self, gname, sg_name=None, cmd=None, quiet=False, do_clean=True):
 
-		from test.cmdtest_py_d.cfg import cmd_groups_altcoin
+		from test.cmdtest_d.cfg import cmd_groups_altcoin
 		if cfg.no_altcoin and gname in cmd_groups_altcoin:
 			omsg(gray(f'INFO → skipping test group {gname!r} (--no-altcoin)'))
 			return None

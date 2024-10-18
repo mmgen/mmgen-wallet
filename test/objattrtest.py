@@ -55,7 +55,7 @@ cfg = Config(opts_data=opts_data)
 from test.include.common import set_globals
 set_globals(cfg)
 
-from test.objattrtest_py_d.oat_common import sample_objs
+from test.objattrtest_d.oat_common import sample_objs
 
 pd = namedtuple('attr_bits', ['read_ok', 'delete_ok', 'reassign_ok', 'typeconv', 'set_none_ok'])
 perm_bits = ('read_ok', 'delete_ok', 'reassign_ok')
@@ -164,7 +164,7 @@ def test_object(mod, test_data, objname):
 
 def do_loop():
 	import importlib
-	modname = f'test.objattrtest_py_d.oat_{proto.coin.lower()}_{proto.network}'
+	modname = f'test.objattrtest_d.oat_{proto.coin.lower()}_{proto.network}'
 	mod = importlib.import_module(modname)
 	test_data = getattr(mod, 'tests')
 	gmsg(f'Running immutable attribute tests for {proto.coin} {proto.network}')
