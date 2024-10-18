@@ -29,11 +29,20 @@ class Base(TxBase.Base):
 	usr_contract_data = HexStr('')
 	disable_fee_check = False
 
-	# given absolute fee in ETH, return gas price in Gwei using self.gas
+	def pretty_fmt_fee(self, fee):
+		if fee < 1:
+			ret = f'{fee:.8f}'.rstrip('0')
+			return ret + '0' if ret.endswith('.') else ret
+		return str(int(fee))
+
+	# given absolute fee in ETH, return gas price for display in selected unit
 	def fee_abs2rel(self, abs_fee, to_unit='Gwei'):
-		ret = self.proto.coin_amt(int(abs_fee.toWei() // self.gas.toWei()), from_unit='wei')
-		self.cfg._util.dmsg(f'fee_abs2rel() ==> {ret} ETH')
-		return ret if to_unit == 'eth' else ret.to_unit(to_unit, show_decimal=True)
+		return self.pretty_fmt_fee(
+			self.fee_abs2gas(abs_fee).to_unit(to_unit))
+
+	# given absolute fee in ETH, return gas price in ETH
+	def fee_abs2gas(self, abs_fee):
+		return self.proto.coin_amt(int(abs_fee.toWei() // self.gas.toWei()), from_unit='wei')
 
 	# given rel fee (gasPrice) in wei, return absolute fee using self.gas (Ethereum-only method)
 	def fee_gasPrice2abs(self, rel_fee):

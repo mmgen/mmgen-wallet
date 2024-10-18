@@ -54,7 +54,7 @@ class New(Base,TxBase.New):
 			'from': self.inputs[0].addr,
 			'to':   self.outputs[0].addr if self.outputs else None,
 			'amt':  self.outputs[0].amt if self.outputs else self.proto.coin_amt('0'),
-			'gasPrice': self.fee_abs2rel(self.usr_fee,to_unit='eth'),
+			'gasPrice': self.fee_abs2gas(self.usr_fee),
 			'startGas': self.start_gas,
 			'nonce': await self.get_nonce(),
 			'chainId': self.rpc.chainID,

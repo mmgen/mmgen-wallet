@@ -54,8 +54,8 @@ class TxInfo(TxInfo):
 			n      = t['nonce'].hl(),
 			d      = '{}... ({} bytes)'.format(td[:40],len(td)//2) if len(td) else blue('None'),
 			c      = tx.proto.dcoin if len(tx.outputs) else '',
-			g      = yellow(str(t['gasPrice'].to_unit('Gwei',show_decimal=True))),
-			G      = yellow(str(t['startGas'].to_unit('Kwei'))),
+			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
+			G      = yellow(tx.pretty_fmt_fee(t['startGas'].to_unit('Kwei'))),
 			t_mmid = m['outputs'] if len(tx.outputs) else '',
 			f_mmid = m['inputs']) + '\n\n'
 

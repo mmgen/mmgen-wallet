@@ -66,12 +66,8 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 		except Exception as e:
 			return cls.init_fail(e, num)
 
-	def to_unit(self,unit,show_decimal=False):
-		ret = Decimal(self) // getattr(self,unit)
-		if show_decimal and ret < 1:
-			ret = f'{ret:.8f}'.rstrip('0')
-			return ret + '0' if ret.endswith('.') else ret
-		return int(ret)
+	def to_unit(self, unit):
+		return int(Decimal(self) // getattr(self, unit))
 
 	@classmethod
 	def fmtc(cls, *args, **kwargs):

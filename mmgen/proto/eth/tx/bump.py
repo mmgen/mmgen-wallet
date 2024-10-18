@@ -26,7 +26,7 @@ class Bump(Completed,New,TxBase.Bump):
 		return self.proto.coin_amt(self.fee * Decimal('1.101'))
 
 	def bump_fee(self,idx,fee):
-		self.txobj['gasPrice'] = self.fee_abs2rel(fee,to_unit='eth')
+		self.txobj['gasPrice'] = self.fee_abs2gas(fee)
 
 	async def get_nonce(self):
 		return self.txobj['nonce']
