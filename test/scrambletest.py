@@ -49,7 +49,7 @@ opts_data = {
 -v, --verbose       Produce more verbose output
 """,
 	'notes': """
-Valid commands: 'coin','pw'
+Valid commands: 'coin', 'pw'
 If no command is given, the whole suite of tests is run.
 """
 	}
@@ -109,7 +109,7 @@ def make_cmd(progname, opts, add_opts, args):
 def run_cmd(cmd):
 	cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True, env=run_env)
 	if cp.returncode != 0:
-		die(2,f'\nSpawned program exited with error code {cp.returncode}:\n{cp.stderr}')
+		die(2, f'\nSpawned program exited with error code {cp.returncode}:\n{cp.stderr}')
 	return cp.stdout.splitlines()
 
 def run_test(progname, opts, add_opts, args, test_data, addr_desc, opts_w):
@@ -121,15 +121,15 @@ def run_test(progname, opts, add_opts, args, test_data, addr_desc, opts_w):
 
 	lines = run_cmd(cmd)
 	cmd_out = dict([e[9:].split(': ') for e in lines if e.startswith('sc_debug_')])
-	cmd_out['addr'] = lines[-2].split(None,1)[-1]
+	cmd_out['addr'] = lines[-2].split(None, 1)[-1]
 
 	ref_data = test_data._asdict()
 	for k in ref_data:
 		if cmd_out[k] == ref_data[k]:
-			s = k.replace('seed','seed[:8]').replace('addr',addr_desc)
+			s = k.replace('seed', 'seed[:8]').replace('addr', addr_desc)
 			cfg._util.vmsg(f'  {s:9}: {cmd_out[k]}')
 		else:
-			die(4,f'\nError: sc_{k} value {cmd_out[k]} does not match reference value {ref_data[k]}')
+			die(4, f'\nError: sc_{k} value {cmd_out[k]} does not match reference value {ref_data[k]}')
 	msg(green('OK') if cfg.verbose else 'OK')
 
 def make_coin_test_data():
@@ -143,7 +143,7 @@ def make_coin_test_data():
 		opts = list_gen(
 			[f'--coin={coin}'],
 			[f'--type={mmtype}', mmtype],
-			[ '--cashaddr=0', coin == 'bch']
+			['--cashaddr=0', coin == 'bch']
 		)
 		yield ('mmgen-addrgen', opts, [], [], test_data, 'address')
 

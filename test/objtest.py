@@ -20,7 +20,7 @@
 test/objtest.py: Test MMGen data objects
 """
 
-import os,re
+import os, re
 
 try:
 	from include import test_init
@@ -35,8 +35,8 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	init_dev()
 
 from mmgen.cfg import Config
-from mmgen.util import msg,msg_r,gmsg,capfirst,die
-from mmgen.color import red,yellow,blue,green,orange,purple,gray,nocolor
+from mmgen.util import msg, msg_r, gmsg, capfirst, die
+from mmgen.color import red, yellow, blue, green, orange, purple, gray, nocolor
 from mmgen.obj import get_obj
 
 opts_data = {
@@ -64,14 +64,14 @@ if cfg.verbose:
 from test.include.common import set_globals
 set_globals(cfg)
 
-def run_test(mod,test,arg,input_data,arg1,exc_name):
+def run_test(mod, test, arg, input_data, arg1, exc_name):
 	arg_copy = arg
 	kwargs = {}
 	ret_chk = arg
 	ret_idx = None
-	if input_data == 'good' and isinstance(arg,tuple):
-		arg,ret_chk = arg
-	if isinstance(arg,dict): # pass one arg + kwargs to constructor
+	if input_data == 'good' and isinstance(arg, tuple):
+		arg, ret_chk = arg
+	if isinstance(arg, dict): # pass one arg + kwargs to constructor
 		arg_copy = arg.copy()
 		if 'arg' in arg:
 			args = [arg['arg']]
@@ -93,7 +93,7 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 			del arg['ret_idx']
 			del arg_copy['ret_idx']
 		kwargs.update(arg)
-	elif isinstance(arg,tuple):
+	elif isinstance(arg, tuple):
 		args = arg
 	else:
 		args = [arg]
@@ -107,23 +107,23 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 
 	try:
 		if not cfg.super_silent:
-			arg_disp = repr(arg_copy[0] if isinstance(arg_copy,tuple) else arg_copy)
-			if cfg.test_suite_deterministic and isinstance(arg_copy,dict):
-				arg_disp = re.sub(r'object at 0x[0-9a-f]+','object at [SCRUBBED]',arg_disp)
+			arg_disp = repr(arg_copy[0] if isinstance(arg_copy, tuple) else arg_copy)
+			if cfg.test_suite_deterministic and isinstance(arg_copy, dict):
+				arg_disp = re.sub(r'object at 0x[0-9a-f]+', 'object at [SCRUBBED]', arg_disp)
 			msg_r((green if input_data=='good' else orange)(f'{arg_disp+":":<22}'))
-		cls = getattr(mod,test)
+		cls = getattr(mod, test)
 
 		if cfg.getobj:
-			ret = get_obj(getattr(mod,test),**kwargs)
+			ret = get_obj(getattr(mod, test), **kwargs)
 		else:
-			ret = cls(*args,**kwargs)
+			ret = cls(*args, **kwargs)
 
-		bad_ret = [] if issubclass(cls,list) else None
+		bad_ret = [] if issubclass(cls, list) else None
 
-		if isinstance(ret_chk,str):
+		if isinstance(ret_chk, str):
 			ret_chk = ret_chk.encode()
 
-		if isinstance(ret,str):
+		if isinstance(ret, str):
 			ret = ret.encode()
 
 		if cfg.getobj:
@@ -154,12 +154,12 @@ def run_test(mod,test,arg,input_data,arg1,exc_name):
 				ret_disp = ret
 			msg(f'==> {ret_disp!r}')
 
-		if cfg.verbose and issubclass(cls,MMGenObject):
-			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
+		if cfg.verbose and issubclass(cls, MMGenObject):
+			ret.pmsg() if hasattr(ret, 'pmsg') else pmsg(ret)
 
 	except UserWarning as e:
 		msg(f'==> {ret!r}')
-		die(2,red(str(e)))
+		die(2, red(str(e)))
 	except Exception as e:
 		if input_data == 'good':
 			raise ValueError(f'Error on good input data: {e}') from e
@@ -182,7 +182,7 @@ def do_loop():
 	import importlib
 	modname = f'test.objtest_py_d.ot_{proto.coin.lower()}_{proto.network}'
 	mod = importlib.import_module(modname)
-	test_data = getattr(mod,'tests')
+	test_data = getattr(mod, 'tests')
 	gmsg(f'Running data object tests for {proto.coin} {proto.network}')
 
 	clr = None
@@ -191,8 +191,8 @@ def do_loop():
 		arg1 = test_data[test].get('arg1')
 		if utests and test not in utests:
 			continue
-		nl = ('\n','')[bool(cfg.super_silent) or clr is None]
-		clr = (blue,nocolor)[bool(cfg.super_silent)]
+		nl = ('\n', '')[bool(cfg.super_silent) or clr is None]
+		clr = (blue, nocolor)[bool(cfg.super_silent)]
 
 		if cfg.getobj and arg1 is None:
 			msg(gray(f'{nl}Skipping {test}'))
@@ -200,7 +200,7 @@ def do_loop():
 
 		msg(clr(f'{nl}Testing {test}'))
 
-		for k in ('bad','good'):
+		for k in ('bad', 'good'):
 			if not cfg.super_silent:
 				msg(purple(capfirst(k)+' input:'))
 			for arg in test_data[test][k]:
@@ -210,8 +210,7 @@ def do_loop():
 					arg,
 					input_data = k,
 					arg1       = arg1,
-					exc_name   = test_data[test].get('exc_name') or ('ObjectInitError','None')[k=='good'],
-				)
+					exc_name   = test_data[test].get('exc_name') or ('ObjectInitError', 'None')[k=='good'])
 
 proto = cfg._proto
 

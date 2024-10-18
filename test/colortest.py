@@ -15,25 +15,35 @@ except ImportError:
 	from test.include import test_init
 
 from mmgen.color import *
-from mmgen.util import msg,ymsg,gmsg
+from mmgen.util import msg, ymsg, gmsg
 import mmgen.color as color_mod
 
 def test_color():
 
 	ymsg("Terminal display:") # init_color() not called yet, so no yellow here
 
-	for desc,nc in (('pre-init',None),('auto','auto'),('8-color',8),('256-color',256),('disabled',0)):
+	for desc, nc in (
+			('pre-init', None),
+			('auto', 'auto'),
+			('8-color', 8),
+			('256-color', 256),
+			('disabled', 0)):
 		if nc is not None:
 			init_color(num_colors=nc)
 		msg('{:9}: {}'.format(
 			desc,
-			' '.join( getattr(color_mod,c)(c) for c in sorted(color_mod._colors) ) ))
+			' '.join(getattr(color_mod, c)(c) for c in sorted(color_mod._colors))))
 
 	init_color()
 	gmsg("\nParsed terminfo 'colors' values:")
 
 	from mmgen.color import orange
-	for t,c in (('rxvt',8),('xterm',8),('rxvt-unicode',88),('screen-256color',256),('xterm-256color',256)):
+	for t, c in (
+			('rxvt', 8),
+			('xterm', 8),
+			('rxvt-unicode', 88),
+			('screen-256color', 256),
+			('xterm-256color', 256)):
 		ret = get_terminfo_colors(t)
 		if ret is None:
 			ymsg(f'Warning: unable to get info for terminal {t!r}')

@@ -21,17 +21,17 @@ test/cmdtest.py: Command test runner for the MMGen wallet system
 """
 
 def check_segwit_opts():
-	for k,m in (('segwit','S'),('segwit_random','S'),('bech32','B')):
-		if getattr(cfg,k) and m not in proto.mmtypes:
-			die(1,f'--{k.replace("_","-")} option incompatible with {proto.cls_name}')
+	for k, m in (('segwit', 'S'), ('segwit_random', 'S'), ('bech32', 'B')):
+		if getattr(cfg, k) and m not in proto.mmtypes:
+			die(1, f'--{k.replace("_", "-")} option incompatible with {proto.cls_name}')
 
-def create_shm_dir(data_dir,trash_dir):
+def create_shm_dir(data_dir, trash_dir):
 	# Laggy flash media can cause pexpect to fail, so create a temporary directory
 	# under '/dev/shm' and put datadir and tmpdirs here.
 	import shutil
 	from subprocess import run
 	if sys.platform in ('win32', 'darwin'):
-		for tdir in (data_dir,trash_dir):
+		for tdir in (data_dir, trash_dir):
 			try:
 				os.listdir(tdir)
 			except:
@@ -41,35 +41,35 @@ def create_shm_dir(data_dir,trash_dir):
 					shutil.rmtree(tdir)
 				except: # we couldn't remove data dir - perhaps regtest daemon is running
 					try:
-						run(['python3',os.path.join('cmds','mmgen-regtest'),'stop'],check=True)
+						run(['python3', os.path.join('cmds', 'mmgen-regtest'), 'stop'], check=True)
 					except:
-						die(4,f'Unable to remove {tdir!r}!')
+						die(4, f'Unable to remove {tdir!r}!')
 					else:
 						time.sleep(2)
 						shutil.rmtree(tdir)
-			os.mkdir(tdir,0o755)
+			os.mkdir(tdir, 0o755)
 		shm_dir = 'test'
 	else:
-		tdir,pfx = '/dev/shm','mmgen-test-'
+		tdir, pfx = '/dev/shm', 'mmgen-test-'
 		try:
-			run(f'rm -rf {tdir}/{pfx}*',shell=True,check=True)
+			run(f'rm -rf {tdir}/{pfx}*', shell=True, check=True)
 		except Exception as e:
-			die(2,f'Unable to delete directory tree {tdir}/{pfx}* ({e.args[0]})')
+			die(2, f'Unable to delete directory tree {tdir}/{pfx}* ({e.args[0]})')
 		try:
 			import tempfile
-			shm_dir = str(tempfile.mkdtemp('',pfx,tdir))
+			shm_dir = str(tempfile.mkdtemp('', pfx, tdir))
 		except Exception as e:
-			die(2,f'Unable to create temporary directory in {tdir} ({e.args[0]})')
+			die(2, f'Unable to create temporary directory in {tdir} ({e.args[0]})')
 
-		dest = os.path.join(shm_dir,os.path.basename(trash_dir))
-		os.mkdir(dest,0o755)
+		dest = os.path.join(shm_dir, os.path.basename(trash_dir))
+		os.mkdir(dest, 0o755)
 
-		run(f'rm -rf {trash_dir}',shell=True,check=True)
-		os.symlink(dest,trash_dir)
+		run(f'rm -rf {trash_dir}', shell=True, check=True)
+		os.symlink(dest, trash_dir)
 
-		dest = os.path.join(shm_dir,os.path.basename(data_dir))
-		shutil.move(data_dir,dest) # data_dir was created by Config()
-		os.symlink(dest,data_dir)
+		dest = os.path.join(shm_dir, os.path.basename(data_dir))
+		shutil.move(data_dir, dest) # data_dir was created by Config()
+		os.symlink(dest, data_dir)
 
 	return shm_dir
 
@@ -81,8 +81,8 @@ try:
 except ImportError:
 	from test.include.test_init import repo_root
 
-from mmgen.cfg import Config,gc
-from mmgen.color import red,yellow,green,blue,cyan,gray,nocolor,init_color
+from mmgen.cfg import Config, gc
+from mmgen.color import red, yellow, green, blue, cyan, gray, nocolor, init_color
 from mmgen.util import msg, Msg, rmsg, bmsg, die, suf, make_timestr
 
 from test.include.common import (
@@ -101,7 +101,7 @@ from test.include.common import (
 )
 
 try:
-	os.unlink(os.path.join(repo_root,cmdtest_py_error_fn))
+	os.unlink(os.path.join(repo_root, cmdtest_py_error_fn))
 except:
 	pass
 
@@ -109,10 +109,10 @@ os.environ['MMGEN_QUIET'] = '0' # for this script and spawned scripts
 
 opts_data = {
 	'sets': [
-		('list_current_cmd_groups',True,'list_cmd_groups',True),
-		('demo',True,'exact_output',True),
-		('demo',True,'buf_keypress',True),
-		('demo',True,'pexpect_spawn',True),
+		('list_current_cmd_groups', True, 'list_cmd_groups', True),
+		('demo', True, 'exact_output', True),
+		('demo', True, 'buf_keypress', True),
+		('demo', True, 'pexpect_spawn', True),
 	],
 	'text': {
 		'desc': 'High-level tests for the MMGen Wallet suite',
@@ -171,14 +171,14 @@ environment var
 """
 	},
 	'code': {
-		'options': lambda proto,help_notes,s: s.format(
+		'options': lambda proto, help_notes, s: s.format(
 				lf = cmdtest_py_log_fn
 			)
 	}
 }
 
 # we need some opt values before running opts.init, so parse without initializing:
-po = Config(opts_data=opts_data,parse_only=True)._parsed_opts
+po = Config(opts_data=opts_data, parse_only=True)._parsed_opts
 
 data_dir = Config.test_datadir
 
@@ -193,7 +193,7 @@ if not po.user_opts.get('skip_deps'):
 cfg = Config(opts_data=opts_data)
 
 if cfg.no_altcoin and cfg.coin != 'BTC':
-	die(1,f'--no-altcoin incompatible with --coin={cfg.coin}')
+	die(1, f'--no-altcoin incompatible with --coin={cfg.coin}')
 
 set_globals(cfg)
 
@@ -208,31 +208,31 @@ type(cfg)._reset_ok += (
 	'no_timings',
 	'exit_after',
 	'resuming',
-	'skipping_deps' )
+	'skipping_deps')
 
 logging = cfg.log or os.getenv('MMGEN_EXEC_WRAPPER')
 
-cfg.resuming = any(k in po.user_opts for k in ('resume','resume_after'))
+cfg.resuming = any(k in po.user_opts for k in ('resume', 'resume_after'))
 cfg.skipping_deps = cfg.resuming or 'skip_deps' in po.user_opts
 
 cmd_args = cfg._args
 
 if cfg.pexpect_spawn and sys.platform == 'win32':
-	die(1,'--pexpect-spawn option not supported on Windows platform, exiting')
+	die(1, '--pexpect-spawn option not supported on Windows platform, exiting')
 
 if cfg.daemon_id and cfg.daemon_id in cfg.blacklisted_daemons.split():
-	die(1,f'cmdtest.py: daemon {cfg.daemon_id!r} blacklisted, exiting')
+	die(1, f'cmdtest.py: daemon {cfg.daemon_id!r} blacklisted, exiting')
 
 network_id = cfg.coin.lower() + ('_tn' if cfg.testnet else '')
 
 proto = cfg._proto
 
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
-trash_dir = os.path.join('test','trash')
-trash_dir2 = os.path.join('test','trash2')
+trash_dir = os.path.join('test', 'trash')
+trash_dir2 = os.path.join('test', 'trash2')
 
 if not cfg.skipping_deps:
-	shm_dir = create_shm_dir(data_dir,trash_dir)
+	shm_dir = create_shm_dir(data_dir, trash_dir)
 
 check_segwit_opts()
 
@@ -262,24 +262,24 @@ def list_cmds():
 	def gen_output():
 
 		gm = CmdGroupMgr()
-		cw,d = 0,[]
+		cw, d = 0, []
 
 		yield green('AVAILABLE COMMANDS:')
 
 		for gname in gm.cmd_groups:
-			tg = gm.gm_init_group(None,gname,None,None)
+			tg = gm.gm_init_group(None, gname, None, None)
 			desc = tg.__doc__.strip() if tg.__doc__ else type(tg).__name__
-			d.append( (gname,desc,gm.cmd_list,gm.dpy_data) )
-			cw = max(max(len(k) for k in gm.dpy_data),cw)
+			d.append((gname, desc, gm.cmd_list, gm.dpy_data))
+			cw = max(max(len(k) for k in gm.dpy_data), cw)
 
-		for gname,gdesc,clist,dpdata in d:
+		for gname, gdesc, clist, dpdata in d:
 			yield '\n'+green(f'{gname!r} - {gdesc}:')
 			for cmd in clist:
 				data = dpdata[cmd]
 				yield '    {:{w}} - {}'.format(
 					cmd,
-					(data if isinstance(data,str) else data[1]),
-					w = cw )
+					(data if isinstance(data, str) else data[1]),
+					w = cw)
 
 	from mmgen.ui import do_pager
 	do_pager('\n'.join(gen_output()))
@@ -297,9 +297,9 @@ def create_tmp_dirs(shm_dir):
 		for cfg in sorted(cfgs):
 			mk_tmpdir(cfgs[cfg]['tmpdir'])
 	else:
-		os.makedirs( os.path.join('test','tmp'), mode=0o755, exist_ok=True )
+		os.makedirs(os.path.join('test', 'tmp'), mode=0o755, exist_ok=True)
 		for cfg in sorted(cfgs):
-			src = os.path.join(shm_dir,cfgs[cfg]['tmpdir'].split('/')[-1])
+			src = os.path.join(shm_dir, cfgs[cfg]['tmpdir'].split('/')[-1])
 			mk_tmpdir(src)
 			try:
 				os.unlink(cfgs[cfg]['tmpdir'])
@@ -307,10 +307,10 @@ def create_tmp_dirs(shm_dir):
 				if e.errno != 2:
 					raise
 			finally:
-				os.symlink(src,cfgs[cfg]['tmpdir'])
+				os.symlink(src, cfgs[cfg]['tmpdir'])
 
 def set_restore_term_at_exit():
-	import termios,atexit
+	import termios, atexit
 	fd = sys.stdin.fileno()
 	old = termios.tcgetattr(fd)
 	def at_exit():
@@ -321,36 +321,36 @@ class CmdGroupMgr:
 
 	dpy_data = None
 
-	from test.cmdtest_py_d.cfg import cmd_groups_dfl,cmd_groups_extra
+	from test.cmdtest_py_d.cfg import cmd_groups_dfl, cmd_groups_extra
 
 	cmd_groups = cmd_groups_dfl.copy()
 	cmd_groups.update(cmd_groups_extra)
 
 	@staticmethod
-	def create_cmd_group(cls,sg_name=None):
+	def create_cmd_group(cls, sg_name=None):
 
 		cmd_group_in = dict(cls.cmd_group_in)
 
 		if sg_name and 'subgroup.' + sg_name not in cmd_group_in:
-			die(1,f'{sg_name!r}: no such subgroup in test group {cls.__name__}')
+			die(1, f'{sg_name!r}: no such subgroup in test group {cls.__name__}')
 
-		def add_entries(key,add_deps=True,added_subgroups=[]):
+		def add_entries(key, add_deps=True, added_subgroups=[]):
 
 			if add_deps:
 				for dep in cmd_group_in['subgroup.'+key]:
 					yield from add_entries(dep)
 
-			assert isinstance(cls.cmd_subgroups[key][0],str), f'header for subgroup {key!r} missing!'
+			assert isinstance(cls.cmd_subgroups[key][0], str), f'header for subgroup {key!r} missing!'
 
 			if not key in added_subgroups:
 				yield from cls.cmd_subgroups[key][1:]
 				added_subgroups.append(key)
 
 		def gen():
-			for name,data in cls.cmd_group_in:
+			for name, data in cls.cmd_group_in:
 				if name.startswith('subgroup.'):
 					sg_key = name.removeprefix('subgroup.')
-					if sg_name in (None,sg_key):
+					if sg_name in (None, sg_key):
 						yield from add_entries(
 								sg_key,
 								add_deps = sg_name and not cfg.skipping_deps,
@@ -358,55 +358,55 @@ class CmdGroupMgr:
 					if cfg.deps_only and sg_key == sg_name:
 						return
 				elif not cfg.skipping_deps:
-					yield (name,data)
+					yield (name, data)
 
 		return tuple(gen())
 
-	def load_mod(self,gname,modname=None):
-		clsname,kwargs = self.cmd_groups[gname]
+	def load_mod(self, gname, modname=None):
+		clsname, kwargs = self.cmd_groups[gname]
 		if modname is None and 'modname' in kwargs:
 			modname = kwargs['modname']
 		import importlib
 		modpath = f'test.cmdtest_py_d.ct_{modname or gname}'
-		return getattr(importlib.import_module(modpath),clsname)
+		return getattr(importlib.import_module(modpath), clsname)
 
-	def create_group(self,gname,sg_name,full_data=False,modname=None,is3seed=False,add_dpy=False):
+	def create_group(self, gname, sg_name, full_data=False, modname=None, is3seed=False, add_dpy=False):
 		"""
 		Initializes the list 'cmd_list' and dict 'dpy_data' from module's cmd_group data.
 		Alternatively, if called with 'add_dpy=True', updates 'dpy_data' from module data
 		without touching 'cmd_list'
 		"""
 
-		cls = self.load_mod(gname,modname)
+		cls = self.load_mod(gname, modname)
 		cdata = []
 
-		def get_shared_deps(cmdname,tmpdir_idx):
+		def get_shared_deps(cmdname, tmpdir_idx):
 			"""
 			shared_deps are "implied" dependencies for all cmds in cmd_group that don't appear in
 			the cmd_group data or cmds' argument lists.  Supported only for 3seed tests at present.
 			"""
-			if not hasattr(cls,'shared_deps'):
+			if not hasattr(cls, 'shared_deps'):
 				return []
 
-			return [k for k,v in cfgs[str(tmpdir_idx)]['dep_generators'].items()
+			return [k for k, v in cfgs[str(tmpdir_idx)]['dep_generators'].items()
 						if k in cls.shared_deps and v != cmdname]
 
-		if not hasattr(cls,'cmd_group'):
-			cls.cmd_group = self.create_cmd_group(cls,sg_name)
+		if not hasattr(cls, 'cmd_group'):
+			cls.cmd_group = self.create_cmd_group(cls, sg_name)
 
-		for a,b in cls.cmd_group:
+		for a, b in cls.cmd_group:
 			if is3seed:
-				for n,(i,j) in enumerate(zip(cls.tmpdir_nums,(128,192,256))):
+				for n, (i, j) in enumerate(zip(cls.tmpdir_nums, (128, 192, 256))):
 					k = f'{a}_{n+1}'
-					if hasattr(cls,'skip_cmds') and k in cls.skip_cmds:
+					if hasattr(cls, 'skip_cmds') and k in cls.skip_cmds:
 						continue
-					sdeps = get_shared_deps(k,i)
-					if isinstance(b,str):
-						cdata.append( (k, (i,f'{b} ({j}-bit)',[[[]+sdeps,i]])) )
+					sdeps = get_shared_deps(k, i)
+					if isinstance(b, str):
+						cdata.append((k, (i, f'{b} ({j}-bit)', [[[]+sdeps, i]])))
 					else:
-						cdata.append( (k, (i,f'{b[1]} ({j}-bit)',[[b[0]+sdeps,i]])) )
+						cdata.append((k, (i, f'{b[1]} ({j}-bit)', [[b[0]+sdeps, i]])))
 			else:
-				cdata.append( (a, b if full_data else (cls.tmpdir_nums[0],b,[[[],cls.tmpdir_nums[0]]])) )
+				cdata.append((a, b if full_data else (cls.tmpdir_nums[0], b, [[[], cls.tmpdir_nums[0]]])))
 
 		if add_dpy:
 			self.dpy_data.update(dict(cdata))
@@ -416,26 +416,26 @@ class CmdGroupMgr:
 
 		return cls
 
-	def gm_init_group(self,trunner,gname,sg_name,spawn_prog):
+	def gm_init_group(self, trunner, gname, sg_name, spawn_prog):
 		kwargs = self.cmd_groups[gname][1]
-		cls = self.create_group(gname,sg_name,**kwargs)
+		cls = self.create_group(gname, sg_name, **kwargs)
 		cls.group_name = gname
-		return cls(trunner,cfgs,spawn_prog)
+		return cls(trunner, cfgs, spawn_prog)
 
-	def get_cls_by_gname(self,gname):
-		return self.load_mod( gname, self.cmd_groups[gname][1].get('modname') )
+	def get_cls_by_gname(self, gname):
+		return self.load_mod(gname, self.cmd_groups[gname][1].get('modname'))
 
 	def list_cmd_groups(self):
 		ginfo = []
 		for gname in self.cmd_groups:
-			ginfo.append(( gname, self.get_cls_by_gname(gname) ))
+			ginfo.append((gname, self.get_cls_by_gname(gname)))
 
 		if cfg.list_current_cmd_groups:
 			exclude = (cfg.exclude_groups or '').split(',')
 			ginfo = [g for g in ginfo
 						if network_id in g[1].networks
 							and not g[0] in exclude
-							and g[0] in tuple(self.cmd_groups_dfl) + tuple(cmd_args) ]
+							and g[0] in tuple(self.cmd_groups_dfl) + tuple(cmd_args)]
 			desc = 'CONFIGURED'
 		else:
 			desc = 'AVAILABLE'
@@ -443,30 +443,30 @@ class CmdGroupMgr:
 		def gen_output():
 			yield green(f'{desc} COMMAND GROUPS AND SUBGROUPS:')
 			yield ''
-			for name,cls in ginfo:
+			for name, cls in ginfo:
 				yield '  {} - {}'.format(
 					yellow(name.ljust(13)),
-					(cls.__doc__.strip() if cls.__doc__ else cls.__name__) )
-				if hasattr(cls,'cmd_subgroups'):
-					subgroups = {k:v for k,v in cls.cmd_subgroups.items() if not k.startswith('_')}
+					(cls.__doc__.strip() if cls.__doc__ else cls.__name__))
+				if hasattr(cls, 'cmd_subgroups'):
+					subgroups = {k:v for k, v in cls.cmd_subgroups.items() if not k.startswith('_')}
 					max_w = max(len(k) for k in subgroups)
-					for k,v in subgroups.items():
-						yield '    + {} · {}'.format( cyan(k.ljust(max_w+1)), v[0] )
+					for k, v in subgroups.items():
+						yield '    + {} · {}'.format(cyan(k.ljust(max_w+1)), v[0])
 
 		from mmgen.ui import do_pager
 		do_pager('\n'.join(gen_output()))
 
-		Msg( '\n' + ' '.join(e[0] for e in ginfo) )
+		Msg('\n' + ' '.join(e[0] for e in ginfo))
 		sys.exit(0)
 
-	def find_cmd_in_groups(self,cmd,group=None):
+	def find_cmd_in_groups(self, cmd, group=None):
 		"""
 		Search for a test command in specified group or all configured command groups
 		and return it as a string.  Loads modules but alters no global variables.
 		"""
 		if group:
 			if not group in [e[0] for e in self.cmd_groups]:
-				die(1,f'{group!r}: unrecognized group')
+				die(1, f'{group!r}: unrecognized group')
 			groups = [self.cmd_groups[group]]
 		else:
 			groups = self.cmd_groups
@@ -474,13 +474,13 @@ class CmdGroupMgr:
 		for gname in groups:
 			cls = self.get_cls_by_gname(gname)
 
-			if not hasattr(cls,'cmd_group'):
+			if not hasattr(cls, 'cmd_group'):
 				cls.cmd_group = self.create_cmd_group(cls)
 
 			if cmd in cls.cmd_group:             # first search the class
 				return gname
 
-			if cmd in dir(cls(None,None,None)):  # then a throwaway instance
+			if cmd in dir(cls(None, None, None)):  # then a throwaway instance
 				return gname # cmd might exist in more than one group - we'll go with the first
 
 		return None
@@ -492,7 +492,7 @@ class CmdTestRunner:
 		if logging:
 			self.log_fd.close()
 
-	def __init__(self,data_dir,trash_dir):
+	def __init__(self, data_dir, trash_dir):
 
 		self.data_dir = data_dir
 		self.trash_dir = trash_dir
@@ -505,16 +505,16 @@ class CmdTestRunner:
 		self.deps_only = None
 
 		if logging:
-			self.log_fd = open(cmdtest_py_log_fn,'a')
+			self.log_fd = open(cmdtest_py_log_fn, 'a')
 			self.log_fd.write(f'\nLog started: {make_timestr()} UTC\n')
 			omsg(f'INFO → Logging to file {cmdtest_py_log_fn!r}')
 		else:
 			self.log_fd = None
 
 		if cfg.coverage:
-			coverdir,accfile = init_coverage()
+			coverdir, accfile = init_coverage()
 			omsg(f'INFO → Writing coverage files to {coverdir!r}')
-			self.pre_args = ['python3','-m','trace','--count','--coverdir='+coverdir,'--file='+accfile]
+			self.pre_args = ['python3', '-m', 'trace', '--count', '--coverdir='+coverdir, '--file='+accfile]
 		else:
 			self.pre_args = ['python3'] if sys.platform == 'win32' else []
 
@@ -567,22 +567,22 @@ class CmdTestRunner:
 
 		cmd_path = (
 			cmd if cfg.system # cfg.system is broken for main test group with overlay tree
-			else os.path.relpath(os.path.join(repo_root,cmd_dir,cmd)) )
+			else os.path.relpath(os.path.join(repo_root, cmd_dir, cmd)))
 
 		args = (
 			self.pre_args +
 			([] if no_exec_wrapper else ['scripts/exec_wrapper.py']) +
 			[cmd_path] +
 			([] if no_passthru_opts else self.passthru_opts) +
-			args )
+			args)
 
 		try:
-			qargs = ['{q}{}{q}'.format( a, q = "'" if ' ' in a else '' ) for a in args]
+			qargs = ['{q}{}{q}'.format(a, q = "'" if ' ' in a else '') for a in args]
 		except:
 			msg(f'args: {args}')
 			raise
 
-		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw
+		cmd_disp = ' '.join(qargs).replace('\\', '/') # for mingw
 
 		if logging:
 			self.log_fd.write('[{}][{}:{}] {}\n'.format(
@@ -592,17 +592,17 @@ class CmdTestRunner:
 				cmd_disp))
 
 		for i in args: # die only after writing log entry
-			if not isinstance(i,str):
-				die(2,'Error: missing input files in cmd line?:\nName: {}\nCmdline: {!r}'.format(
+			if not isinstance(i, str):
+				die(2, 'Error: missing input files in cmd line?:\nName: {}\nCmdline: {!r}'.format(
 					self.tg.test_name,
-					args ))
+					args))
 
 		if not no_msg:
 			t_pfx = '' if cfg.no_timings else f'[{time.time() - self.start_time:08.2f}] '
 			if cfg.verbose or cfg.print_cmdline or cfg.exact_output:
 				omsg(green(f'{t_pfx}Testing: {desc}'))
 				if not msg_only:
-					clr1,clr2 = (nocolor,nocolor) if cfg.print_cmdline else (green,cyan)
+					clr1, clr2 = (nocolor, nocolor) if cfg.print_cmdline else (green, cyan)
 					omsg(
 						clr1('Executing: ') +
 						clr2(repr(cmd_disp) if sys.platform == 'win32' else cmd_disp)
@@ -638,7 +638,7 @@ class CmdTestRunner:
 			pexpect_spawn = pexpect_spawn,
 			timeout       = timeout,
 			send_delay    = send_delay,
-			direct_exec   = direct_exec )
+			direct_exec   = direct_exec)
 
 	def end_msg(self):
 		t = int(time.time() - self.start_time)
@@ -647,7 +647,7 @@ class CmdTestRunner:
 			('\n' if cfg.no_timings else f'.  Elapsed time: {t//60:02d}:{t%60:02d}\n')
 		))
 
-	def init_group(self,gname,sg_name=None,cmd=None,quiet=False,do_clean=True):
+	def init_group(self, gname, sg_name=None, cmd=None, quiet=False, do_clean=True):
 
 		from test.cmdtest_py_d.cfg import cmd_groups_altcoin
 		if cfg.no_altcoin and gname in cmd_groups_altcoin:
@@ -660,19 +660,19 @@ class CmdTestRunner:
 			omsg(gray(f'INFO → skipping test {gname!r} for platform {sys.platform!r}'))
 			return None
 
-		for k in ('segwit','segwit_random','bech32'):
-			if getattr(cfg,k):
+		for k in ('segwit', 'segwit_random', 'bech32'):
+			if getattr(cfg, k):
 				segwit_opt = k
 				break
 		else:
 			segwit_opt = None
 
 		def gen_msg():
-			yield ('{g}:{c}' if cmd else 'test group {g!r}').format(g=gname,c=cmd)
+			yield ('{g}:{c}' if cmd else 'test group {g!r}').format(g=gname, c=cmd)
 			if len(ct_cls.networks) != 1:
 				yield f' for {proto.coin} {proto.network}'
 			if segwit_opt:
-				yield ' (--{})'.format( segwit_opt.replace('_','-') )
+				yield ' (--{})'.format(segwit_opt.replace('_', '-'))
 
 		m = ''.join(gen_msg())
 
@@ -681,10 +681,10 @@ class CmdTestRunner:
 			return None
 
 		# 'networks = ()' means all networks allowed
-		nws = [(e.split('_')[0],'testnet') if '_' in e else (e,'mainnet') for e in ct_cls.networks]
+		nws = [(e.split('_')[0], 'testnet') if '_' in e else (e, 'mainnet') for e in ct_cls.networks]
 		if nws:
 			coin = proto.coin.lower()
-			for a,b in nws:
+			for a, b in nws:
 				if a == coin and b == proto.network:
 					break
 			else:
@@ -698,18 +698,18 @@ class CmdTestRunner:
 			bmsg('Executing ' + m)
 
 		if (not self.daemon_started) and self.gm.get_cls_by_gname(gname).need_daemon:
-			start_test_daemons(network_id,remove_datadir=True)
+			start_test_daemons(network_id, remove_datadir=True)
 			self.daemon_started = True
 
-		if hasattr(self,'tg'):
+		if hasattr(self, 'tg'):
 			del self.tg
 
-		self.tg = self.gm.gm_init_group(self,gname,sg_name,self.spawn_wrapper)
+		self.tg = self.gm.gm_init_group(self, gname, sg_name, self.spawn_wrapper)
 		self.ct_clsname = type(self.tg).__name__
 
 		# pass through opts from cmdline (po.user_opts)
 		self.passthru_opts = ['--{}{}'.format(
-				k.replace('_','-'),
+				k.replace('_', '-'),
 				'' if cfg._uopts[k] is True else '=' + cfg._uopts[k]
 			) for k in cfg._uopts if k in self.tg.base_passthru_opts + self.tg.passthru_opts]
 
@@ -722,45 +722,45 @@ class CmdTestRunner:
 				cfg.exit_after = self.resume_cmd
 
 		if cfg.exit_after and cfg.exit_after not in self.gm.cmd_list:
-			die(1,f'{cfg.exit_after!r}: command not recognized')
+			die(1, f'{cfg.exit_after!r}: command not recognized')
 
 		return self.tg
 
-	def run_tests(self,cmd_args):
+	def run_tests(self, cmd_args):
 		self.start_time = time.time()
 		self.daemon_started = False
 		gname_save = None
 
 		def parse_arg(arg):
 			if '.' in arg:
-				a,b = arg.split('.')
-				return [a] + b.split(':') if ':' in b else [a,b,None]
+				a, b = arg.split('.')
+				return [a] + b.split(':') if ':' in b else [a, b, None]
 			elif ':' in arg:
-				a,b = arg.split(':')
-				return [a,None,b]
+				a, b = arg.split(':')
+				return [a, None, b]
 			else:
-				return [self.gm.find_cmd_in_groups(arg),None,arg]
+				return [self.gm.find_cmd_in_groups(arg), None, arg]
 
 		if cmd_args:
 			for arg in cmd_args:
 				if arg in self.gm.cmd_groups:
 					if self.init_group(arg):
 						for cmd in self.gm.cmd_list:
-							self.check_needs_rerun(cmd,build=True)
+							self.check_needs_rerun(cmd, build=True)
 							do_between()
 				else:
-					gname,sg_name,cmdname = parse_arg(arg)
+					gname, sg_name, cmdname = parse_arg(arg)
 					if gname:
 						same_grp = gname == gname_save # same group as previous cmd: don't clean, suppress blue msg
-						if self.init_group(gname,sg_name,cmdname,quiet=same_grp,do_clean=not same_grp):
+						if self.init_group(gname, sg_name, cmdname, quiet=same_grp, do_clean=not same_grp):
 							if cmdname:
 								if cfg.deps_only:
 									self.deps_only = cmdname
 								try:
-									self.check_needs_rerun(cmdname,build=True)
+									self.check_needs_rerun(cmdname, build=True)
 								except Exception as e: # allow calling of functions not in cmd_group
-									if isinstance(e,KeyError) and e.args[0] == cmdname:
-										ret = getattr(self.tg,cmdname)()
+									if isinstance(e, KeyError) and e.args[0] == cmdname:
+										ret = getattr(self.tg, cmdname)()
 										if type(ret).__name__ == 'coroutine':
 											asyncio.run(ret)
 									else:
@@ -768,23 +768,23 @@ class CmdTestRunner:
 								do_between()
 							else:
 								for cmd in self.gm.cmd_list:
-									self.check_needs_rerun(cmd,build=True)
+									self.check_needs_rerun(cmd, build=True)
 									do_between()
 							gname_save = gname
 					else:
-						die(1,f'{arg!r}: command not recognized')
+						die(1, f'{arg!r}: command not recognized')
 		else:
 			if cfg.exclude_groups:
 				exclude = cfg.exclude_groups.split(',')
 				for e in exclude:
 					if e not in self.gm.cmd_groups_dfl:
-						die(1,f'{e!r}: group not recognized')
+						die(1, f'{e!r}: group not recognized')
 			for gname in self.gm.cmd_groups_dfl:
 				if cfg.exclude_groups and gname in exclude:
 					continue
 				if self.init_group(gname):
 					for cmd in self.gm.cmd_list:
-						self.check_needs_rerun(cmd,build=True)
+						self.check_needs_rerun(cmd, build=True)
 						do_between()
 
 		self.end_msg()
@@ -810,7 +810,7 @@ class CmdTestRunner:
 			ret = self.get_num_exts_for_cmd(cmd)
 			if ret:
 				for ext in ret[1]:
-					fn = get_file_with_ext(cfgs[ret[0]]['tmpdir'],ext,delete=build)
+					fn = get_file_with_ext(cfgs[ret[0]]['tmpdir'], ext, delete=build)
 					if fn:
 						if force_delete:
 							os.unlink(fn)
@@ -822,13 +822,13 @@ class CmdTestRunner:
 
 		for fn in fns:
 			my_age = os.stat(fn).st_mtime
-			for num,ext in fdeps:
-				f = get_file_with_ext(cfgs[num]['tmpdir'],ext,delete=build)
+			for num, ext in fdeps:
+				f = get_file_with_ext(cfgs[num]['tmpdir'], ext, delete=build)
 				if f and os.stat(f).st_mtime > my_age:
 					rerun = True
 
 		for cdep in cdeps:
-			if self.check_needs_rerun(cdep,build=build,root=False,dpy=cmd):
+			if self.check_needs_rerun(cdep, build=build, root=False, dpy=cmd):
 				rerun = True
 
 		if build:
@@ -843,22 +843,22 @@ class CmdTestRunner:
 		else:
 			# If prog produces multiple files:
 			if cmd not in self.rebuild_list or rerun is True:
-				self.rebuild_list[cmd] = (rerun,fns[0] if fns else '') # FIX
+				self.rebuild_list[cmd] = (rerun, fns[0] if fns else '') # FIX
 
 		return rerun
 
-	def run_test(self,cmd):
+	def run_test(self, cmd):
 
 		if self.deps_only and cmd == self.deps_only:
 			sys.exit(0)
 
-		d = [(str(num),ext) for exts,num in self.gm.dpy_data[cmd][2] for ext in exts]
+		d = [(str(num), ext) for exts, num in self.gm.dpy_data[cmd][2] for ext in exts]
 
 		# delete files depended on by this cmd
-		arg_list = [get_file_with_ext(cfgs[num]['tmpdir'],ext) for num,ext in d]
+		arg_list = [get_file_with_ext(cfgs[num]['tmpdir'], ext) for num, ext in d]
 
 		# remove shared_deps from arg list
-		if hasattr(self.tg,'shared_deps'):
+		if hasattr(self.tg, 'shared_deps'):
 			arg_list = arg_list[:-len(self.tg.shared_deps)]
 
 		if self.resume_cmd:
@@ -878,21 +878,19 @@ class CmdTestRunner:
 		self.tg.tmpdir_num = cdata[0]
 #		self.tg.cfg = cfgs[str(cdata[0])] # will remove this eventually
 		test_cfg = cfgs[str(cdata[0])]
-		for k in (  'seed_len', 'seed_id',
-					'wpasswd', 'kapasswd',
-					'segwit', 'hash_preset',
-					'bw_filename', 'bw_params', 'ref_bw_seed_id',
-					'addr_idx_list', 'pass_idx_list' ):
+		for k in (
+				'seed_len', 'seed_id', 'wpasswd', 'kapasswd', 'segwit', 'hash_preset', 'bw_filename',
+				'bw_params', 'ref_bw_seed_id', 'addr_idx_list', 'pass_idx_list'):
 			if k in test_cfg:
-				setattr(self.tg,k,test_cfg[k])
+				setattr(self.tg, k, test_cfg[k])
 
-		ret = getattr(self.tg,cmd)(*arg_list) # run the test
+		ret = getattr(self.tg, cmd)(*arg_list) # run the test
 		if type(ret).__name__ == 'coroutine':
 			ret = asyncio.run(ret)
-		self.process_retval(cmd,ret)
+		self.process_retval(cmd, ret)
 
 		if cfg.profile:
-			omsg('\r\033[50C{:.4f}'.format( time.time() - start ))
+			omsg('\r\033[50C{:.4f}'.format(time.time() - start))
 
 		if cmd == cfg.exit_after:
 			sys.exit(0)
@@ -903,7 +901,7 @@ class CmdTestRunner:
 			r = '-' * 72 + '\n'
 			print(r+('\n'+r).join(self.skipped_warnings))
 
-	def process_retval(self,cmd,ret):
+	def process_retval(self, cmd, ret):
 		if type(ret).__name__ == 'MMGenPexpect':
 			ret.ok(exit_val=self.exit_val)
 			self.cmd_total += 1
@@ -911,45 +909,45 @@ class CmdTestRunner:
 			ok()
 			self.cmd_total += 1
 		elif ret == 'error':
-			die(2,red(f'\nTest {self.tg.test_name!r} failed'))
-		elif ret in ('skip','skip_msg','silent'):
+			die(2, red(f'\nTest {self.tg.test_name!r} failed'))
+		elif ret in ('skip', 'skip_msg', 'silent'):
 			if ret == 'silent':
 				self.cmd_total += 1
 			elif ret == 'skip_msg':
 				ok('SKIP')
-		elif isinstance(ret,tuple) and ret[0] == 'skip_warn':
+		elif isinstance(ret, tuple) and ret[0] == 'skip_warn':
 			self.skipped_warnings.append(
-				'Test {!r} was skipped:\n  {}'.format(cmd,'\n  '.join(ret[1].split('\n'))))
+				'Test {!r} was skipped:\n  {}'.format(cmd, '\n  '.join(ret[1].split('\n'))))
 		else:
-			die(2,f'{cmd!r} returned {ret}')
+			die(2, f'{cmd!r} returned {ret}')
 
-	def check_deps(self,cmds): # TODO: broken
+	def check_deps(self, cmds): # TODO: broken
 		if len(cmds) != 1:
-			die(1,f'Usage: {gc.prog_name} check_deps <command>')
+			die(1, f'Usage: {gc.prog_name} check_deps <command>')
 
 		cmd = cmds[0]
 
 		if cmd not in self.gm.cmd_list:
-			die(1,f'{cmd!r}: unrecognized command')
+			die(1, f'{cmd!r}: unrecognized command')
 
 		if not cfg.quiet:
 			omsg(f'Checking dependencies for {cmd!r}')
 
-		self.check_needs_rerun(self.tg,cmd)
+		self.check_needs_rerun(self.tg, cmd)
 
-		w = max(map(len,self.rebuild_list)) + 1
+		w = max(map(len, self.rebuild_list)) + 1
 		for cmd in self.rebuild_list:
 			c = self.rebuild_list[cmd]
 			m = 'Rebuild' if (c[0] and c[1]) else 'Build' if c[0] else 'OK'
-			omsg('cmd {:<{w}} {}'.format( cmd+':', m, w=w ))
+			omsg('cmd {:<{w}} {}'.format(cmd+':', m, w=w))
 
-	def generate_file_deps(self,cmd):
-		return [(str(n),e) for exts,n in self.gm.dpy_data[cmd][2] for e in exts]
+	def generate_file_deps(self, cmd):
+		return [(str(n), e) for exts, n in self.gm.dpy_data[cmd][2] for e in exts]
 
-	def generate_cmd_deps(self,fdeps):
-		return [cfgs[str(n)]['dep_generators'][ext] for n,ext in fdeps]
+	def generate_cmd_deps(self, fdeps):
+		return [cfgs[str(n)]['dep_generators'][ext] for n, ext in fdeps]
 
-	def get_num_exts_for_cmd(self,cmd):
+	def get_num_exts_for_cmd(self, cmd):
 		try:
 			num = str(self.gm.dpy_data[cmd][0])
 		except KeyError:
@@ -958,7 +956,7 @@ class CmdTestRunner:
 			if gname:
 				kwargs = self.gm.cmd_groups[gname][1]
 				kwargs.update({'add_dpy':True})
-				self.gm.create_group(gname,None,**kwargs)
+				self.gm.create_group(gname, None, **kwargs)
 				num = str(self.gm.dpy_data[cmd][0])
 				qmsg(f' found in group {gname!r}')
 			else:
@@ -967,7 +965,7 @@ class CmdTestRunner:
 		dgl = cfgs[num]['dep_generators']
 		if cmd in dgl.values():
 			exts = [k for k in dgl if dgl[k] == cmd]
-			return (num,exts)
+			return (num, exts)
 		else:
 			return None
 
@@ -987,7 +985,7 @@ if __name__ == '__main__':
 	from mmgen.exception import TestSuiteSpawnedScriptException
 
 	try:
-		tr = CmdTestRunner(data_dir,trash_dir)
+		tr = CmdTestRunner(data_dir, trash_dir)
 		tr.run_tests(cmd_args)
 		tr.warn_skipped()
 		if tr.daemon_started and not cfg.no_daemon_stop:
@@ -1002,7 +1000,7 @@ if __name__ == '__main__':
 		if hasattr(tr, 'tg'):
 			del tr.tg
 		del tr
-		die(1,yellow('\ntest.py exiting at user request'))
+		die(1, yellow('\ntest.py exiting at user request'))
 	except TestSuiteSpawnedScriptException as e:
 		# if spawned script is not running under exec_wrapper, output brief error msg:
 		if os.getenv('MMGEN_EXEC_WRAPPER'):
@@ -1021,4 +1019,4 @@ if __name__ == '__main__':
 		# if cmdtest.py itself is running under exec_wrapper, re-raise so exec_wrapper can handle exception:
 		if os.getenv('MMGEN_EXEC_WRAPPER') or not os.getenv('MMGEN_IGNORE_TEST_PY_EXCEPTION'):
 			raise
-		die(1,red('Test script exited with error'))
+		die(1, red('Test script exited with error'))

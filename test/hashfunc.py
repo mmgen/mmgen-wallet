@@ -27,7 +27,7 @@ try:
 except ImportError:
 	from test.include import test_init
 
-from mmgen.util import msg,msg_r,die
+from mmgen.util import msg, msg_r, die
 
 def green(s):
 	return '\033[32;1m' + s + '\033[0m'
@@ -39,33 +39,33 @@ class TestHashFunc:
 		h = self.t_cls(b'foo')
 		if h.H_init != self.H_ref:
 			m = 'Generated constants H[] differ from reference value:\nReference:\n{}\nGenerated:\n{}'
-			die(3,m.format([hex(n) for n in self.H_ref],[hex(n) for n in h.H_init]))
+			die(3, m.format([hex(n) for n in self.H_ref], [hex(n) for n in h.H_init]))
 		if h.K != self.K_ref:
 			m = 'Generated constants K[] differ from reference value:\nReference:\n{}\nGenerated:\n{}'
-			die(3,m.format([hex(n) for n in self.K_ref],[hex(n) for n in h.K]))
+			die(3, m.format([hex(n) for n in self.K_ref], [hex(n) for n in h.K]))
 		msg('OK')
 
-	def compare_hashes(self,data,chk=None):
+	def compare_hashes(self, data, chk=None):
 		if chk is None:
-			chk = getattr(self.hashlib,self.desc)(data).hexdigest()
+			chk = getattr(self.hashlib, self.desc)(data).hexdigest()
 		res = self.t_cls(data).hexdigest()
 		if res != chk:
 			m ='\nHashes do not match!\nReference {d}: {}\nMMGen {d}:     {}'
-			die(3,m.format(chk,res,d=self.desc.upper()))
+			die(3, m.format(chk, res, d=self.desc.upper()))
 
 	def test_ref(self):
-		for i,data in enumerate(self.vectors):
+		for i, data in enumerate(self.vectors):
 			msg_r(f'\rTesting reference input data: {i+1:4}/{len(self.vectors)} ')
 			self.compare_hashes(data.encode(), chk=self.vectors[data])
 		msg('OK')
 
-	def test_random(self,rounds):
+	def test_random(self, rounds):
 		if not self.hashlib:
 			return
 		for i in range(rounds):
-			if i+1 in (1,rounds) or not (i+1) % 10:
+			if i+1 in (1, rounds) or not (i+1) % 10:
 				msg_r(f'\rTesting random input data:    {i+1:4}/{rounds} ')
-			dlen = int(getrand(4).hex(),16) >> 18
+			dlen = int(getrand(4).hex(), 16) >> 18
 			self.compare_hashes(getrand(dlen))
 		msg('OK')
 
@@ -120,16 +120,16 @@ class TestSha2(TestHashFunc):
 	desc = 'sha2'
 
 	def __init__(self):
-		from mmgen.sha2 import Sha256,Sha512
+		from mmgen.sha2 import Sha256, Sha512
 		import hashlib
-		self.t_cls = { 'sha256':Sha256, 'sha512':Sha512 }[self.desc]
+		self.t_cls = {'sha256':Sha256, 'sha512':Sha512}[self.desc]
 		self.hashlib = hashlib
 		self.vectors = {k:None for k in TestKeccak.vectors}
 
 class TestSha256(TestSha2):
 	desc = 'sha256'
 	H_ref = (
-		0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 )
+		0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19)
 	K_ref = (
 		0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
 		0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
@@ -138,13 +138,13 @@ class TestSha256(TestSha2):
 		0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
 		0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
 		0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-		0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2 )
+		0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2)
 
 class TestSha512(TestSha2):
 	desc = 'sha512'
 	H_ref = (
 		0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
-		0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 )
+		0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179)
 	K_ref = (
 		0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc, 0x3956c25bf348b538,
 		0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118, 0xd807aa98a3030242, 0x12835b0145706fbe,
@@ -161,21 +161,21 @@ class TestSha512(TestSha2):
 		0x90befffa23631e28, 0xa4506cebde82bde9, 0xbef9a3f7b2c67915, 0xc67178f2e372532b, 0xca273eceea26619c,
 		0xd186b8c721c0c207, 0xeada7dd6cde0eb1e, 0xf57d4f7fee6ed178, 0x06f067aa72176fba, 0x0a637dc5a2c898a6,
 		0x113f9804bef90dae, 0x1b710b35131c471b, 0x28db77f523047d84, 0x32caab7b40c72493, 0x3c9ebe0a15c9bebc,
-		0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817 )
+		0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817)
 
-from test.include.common import getrand,set_globals
+from test.include.common import getrand, set_globals
 from mmgen.cfg import Config
 from mmgen.main import launch
 
 def main():
 
-	if len(sys.argv) not in (2,3):
-		die(1,'Test takes 1 or 2 arguments: test name, plus optional rounds count')
+	if len(sys.argv) not in (2, 3):
+		die(1, 'Test takes 1 or 2 arguments: test name, plus optional rounds count')
 
 	test = sys.argv[1].capitalize()
 
-	if test not in ('Sha256','Sha512','Keccak'):
-		die(1, "Valid choices for test are 'sha256','sha512' or 'keccak'")
+	if test not in ('Sha256', 'Sha512', 'Keccak'):
+		die(1, "Valid choices for test are 'sha256', 'sha512' or 'keccak'")
 
 	random_rounds = int(sys.argv[2]) if len(sys.argv) == 3 else 500
 

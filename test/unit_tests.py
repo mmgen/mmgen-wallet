@@ -20,7 +20,7 @@
 test/unit_tests.py: Unit tests for the MMGen suite
 """
 
-import sys,os,time,importlib,platform,asyncio
+import sys, os, time, importlib, platform, asyncio
 
 try:
 	from include.test_init import repo_root
@@ -33,13 +33,13 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	from mmgen.devinit import init_dev
 	init_dev()
 
-from mmgen.cfg import Config,gc
+from mmgen.cfg import Config, gc
 from mmgen.color import gray, brown, orange, yellow, red
 from mmgen.util import msg, msg_r, gmsg, ymsg, Msg
 
-from test.include.common import set_globals,end_msg
+from test.include.common import set_globals, end_msg
 
-def die(ev,s):
+def die(ev, s):
 	msg((red if ev > 1 else yellow)(s))
 	sys.exit(ev)
 
@@ -69,20 +69,20 @@ If no test is specified, all available tests are run
 if os.path.islink(Config.test_datadir):
 	os.unlink(Config.test_datadir)
 
-sys.argv.insert(1,'--skip-cfg-file')
+sys.argv.insert(1, '--skip-cfg-file')
 
 cfg = Config(opts_data=opts_data)
 
 if cfg.no_altcoin_deps:
 	ymsg(f'{gc.prog_name}: skipping altcoin tests by user request')
 
-type(cfg)._reset_ok += ('use_internal_keccak_module','debug_addrlist')
+type(cfg)._reset_ok += ('use_internal_keccak_module', 'debug_addrlist')
 
 set_globals(cfg)
 
 file_pfx = 'ut_'
 
-tests_d = os.path.join(repo_root,'test','unit_tests_d')
+tests_d = os.path.join(repo_root, 'test', 'unit_tests_d')
 
 all_tests = sorted(fn[len(file_pfx):-len('.py')] for fn in os.listdir(tests_d) if fn.startswith(file_pfx))
 
@@ -90,7 +90,7 @@ exclude = cfg.exclude.split(',') if cfg.exclude else []
 
 for e in exclude:
 	if e not in all_tests:
-		die(1,f'{e!r}: invalid parameter for --exclude (no such test)')
+		die(1, f'{e!r}: invalid parameter for --exclude (no such test)')
 
 start_time = int(time.time())
 
@@ -102,25 +102,25 @@ if cfg.list_subtests:
 	def gen():
 		for test in all_tests:
 			mod = importlib.import_module(f'test.unit_tests_d.{file_pfx}{test}')
-			if hasattr(mod,'unit_tests'):
-				t = getattr(mod,'unit_tests')
-				subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
-				yield fs.format( test, ' '.join(f'{subtest}' for subtest in subtests) )
+			if hasattr(mod, 'unit_tests'):
+				t = getattr(mod, 'unit_tests')
+				subtests = [k for k, v in t.__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
+				yield fs.format(test, ' '.join(f'{subtest}' for subtest in subtests))
 			else:
 				yield test
 	fs = '{:%s} {}' % max(len(t) for t in all_tests)
-	Msg( fs.format('TEST','SUBTESTS') + '\n' + '\n'.join(gen()) )
+	Msg(fs.format('TEST', 'SUBTESTS') + '\n' + '\n'.join(gen()))
 	sys.exit(0)
 
 class UnitTestHelpers:
 
-	def __init__(self,subtest_name):
+	def __init__(self, subtest_name):
 		self.subtest_name = subtest_name
 
-	def skip_msg(self,desc):
-		cfg._util.qmsg(gray(f'Skipping subtest {self.subtest_name.replace("_","-")!r} for {desc}'))
+	def skip_msg(self, desc):
+		cfg._util.qmsg(gray(f'Skipping subtest {self.subtest_name.replace("_", "-")!r} for {desc}'))
 
-	def process_bad_data(self,data,pfx='bad '):
+	def process_bad_data(self, data, pfx='bad '):
 		if os.getenv('PYTHONOPTIMIZE'):
 			ymsg('PYTHONOPTIMIZE set, skipping error handling tests')
 			return
@@ -130,7 +130,7 @@ class UnitTestHelpers:
 		m_exc = '{!r}: incorrect exception type (expected {!r})'
 		m_err = '{!r}: incorrect error msg (should match {!r}'
 		m_noraise = "\nillegal action '{}{}' failed to raise an exception (expected {!r})"
-		for (desc,exc_chk,emsg_chk,func) in data:
+		for (desc, exc_chk, emsg_chk, func) in data:
 			try:
 				cfg._util.vmsg_r('  {}{:{w}}'.format(pfx, desc+':', w=desc_w+1))
 				ret = func()
@@ -140,28 +140,28 @@ class UnitTestHelpers:
 				exc = type(e).__name__
 				emsg = e.args[0]
 				cfg._util.vmsg(f' {exc:{exc_w}} [{emsg}]')
-				assert exc == exc_chk, m_exc.format(exc,exc_chk)
-				assert re.search(emsg_chk,emsg), m_err.format(emsg,emsg_chk)
+				assert exc == exc_chk, m_exc.format(exc, exc_chk)
+				assert re.search(emsg_chk, emsg), m_err.format(emsg, emsg_chk)
 			else:
-				die(4,m_noraise.format(pfx,desc,exc_chk))
+				die(4, m_noraise.format(pfx, desc, exc_chk))
 
 tests_seen = []
 
-def run_test(test,subtest=None):
+def run_test(test, subtest=None):
 	mod = importlib.import_module(f'test.unit_tests_d.{file_pfx}{test}')
 
-	def run_subtest(t,subtest):
-		subtest_disp = subtest.replace('_','-')
+	def run_subtest(t, subtest):
+		subtest_disp = subtest.replace('_', '-')
 		msg(brown('Running unit subtest ') + orange(f'{test}.{subtest_disp}'))
 
-		if getattr(t,'silence_output',False):
+		if getattr(t, 'silence_output', False):
 			t._silence()
 
-		if hasattr(t,'_pre_subtest'):
-			getattr(t,'_pre_subtest')(test,subtest,UnitTestHelpers(subtest))
+		if hasattr(t, '_pre_subtest'):
+			getattr(t, '_pre_subtest')(test, subtest, UnitTestHelpers(subtest))
 
 		try:
-			func = getattr(t,subtest.replace('-','_'))
+			func = getattr(t, subtest.replace('-', '_'))
 			c = func.__code__
 			do_desc = c.co_varnames[c.co_argcount-1] == 'desc'
 			if do_desc:
@@ -176,41 +176,41 @@ def run_test(test,subtest=None):
 			if do_desc and not cfg.quiet:
 				msg('OK\n' if cfg.verbose else 'OK')
 		except:
-			if getattr(t,'silence_output',False):
+			if getattr(t, 'silence_output', False):
 				t._end_silence()
 			raise
 
-		if hasattr(t,'_post_subtest'):
-			getattr(t,'_post_subtest')(test,subtest,UnitTestHelpers(subtest))
+		if hasattr(t, '_post_subtest'):
+			getattr(t, '_post_subtest')(test, subtest, UnitTestHelpers(subtest))
 
-		if getattr(t,'silence_output',False):
+		if getattr(t, 'silence_output', False):
 			t._end_silence()
 
 		if not ret:
-			die(4,f'Unit subtest {subtest_disp!r} failed')
+			die(4, f'Unit subtest {subtest_disp!r} failed')
 
 	if test not in tests_seen:
 		gmsg(f'Running unit test {test}')
 		tests_seen.append(test)
 
-	if cfg.no_altcoin_deps and getattr(mod,'altcoin_dep',None):
+	if cfg.no_altcoin_deps and getattr(mod, 'altcoin_dep', None):
 		cfg._util.qmsg(gray(f'Skipping unit test {test!r} [--no-altcoin-deps]'))
 		return
 
-	if hasattr(mod,'unit_tests'): # new class-based API
-		t = getattr(mod,'unit_tests')()
-		altcoin_deps = getattr(t,'altcoin_deps',())
+	if hasattr(mod, 'unit_tests'): # new class-based API
+		t = getattr(mod, 'unit_tests')()
+		altcoin_deps = getattr(t, 'altcoin_deps', ())
 		win_skip = getattr(t, 'win_skip', ())
 		mac_skip = getattr(t, 'mac_skip', ())
 		arm_skip = getattr(t, 'arm_skip', ())
 		subtests = (
 			[subtest] if subtest else
-			[k for k,v in type(t).__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
+			[k for k, v in type(t).__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
 		)
-		if hasattr(t,'_pre'):
+		if hasattr(t, '_pre'):
 			t._pre()
 		for _subtest in subtests:
-			subtest_disp = _subtest.replace('_','-')
+			subtest_disp = _subtest.replace('_', '-')
 			if cfg.no_altcoin_deps and _subtest in altcoin_deps:
 				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} [--no-altcoin-deps]'))
 				continue
@@ -224,23 +224,23 @@ def run_test(test,subtest=None):
 				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for ARM platform'))
 				continue
 			run_subtest(t, _subtest)
-		if hasattr(t,'_post'):
+		if hasattr(t, '_post'):
 			t._post()
 	else:
 		assert not subtest, f'{subtest!r}: subtests not supported for this unit test'
-		if not mod.unit_test().run_test(test,UnitTestHelpers(test)):
-			die(4,'Unit test {test!r} failed')
+		if not mod.unit_test().run_test(test, UnitTestHelpers(test)):
+			die(4, 'Unit test {test!r} failed')
 
 def main():
 	for test in (cfg._args or all_tests):
 		if '.' in test:
-			test,subtest = test.split('.')
+			test, subtest = test.split('.')
 		else:
 			subtest = None
 		if test not in all_tests:
-			die(1,f'{test!r}: test not recognized')
+			die(1, f'{test!r}: test not recognized')
 		if test not in exclude:
-			run_test(test,subtest=subtest)
+			run_test(test, subtest=subtest)
 	end_msg(int(time.time()) - start_time)
 
 from mmgen.main import launch
