@@ -66,6 +66,9 @@ If no test is specified, all available tests are run
 	}
 }
 
+if os.path.islink(Config.test_datadir):
+	os.unlink(Config.test_datadir)
+
 sys.argv.insert(1,'--skip-cfg-file')
 
 cfg = Config(opts_data=opts_data)
