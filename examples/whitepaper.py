@@ -25,14 +25,14 @@ async def main():
 
 	assert cfg.coin == 'BTC' and cfg.network == 'mainnet', 'This script works only on BTC mainnet!'
 
-	c = await rpc_init( cfg, ignore_wallet=True )
+	c = await rpc_init(cfg, ignore_wallet=True)
 
-	tx = await c.call('getrawtransaction',txid,True)
+	tx = await c.call('getrawtransaction', txid, True)
 
-	chunks = [''.join( d['scriptPubKey']['asm'].split()[1:4] ) for d in tx['vout']]
+	chunks = [''.join(d['scriptPubKey']['asm'].split()[1:4]) for d in tx['vout']]
 
-	with open(fn,'wb') as f:
-		f.write(bytes.fromhex( ''.join(chunks)[16:368600] ))
+	with open(fn, 'wb') as f:
+		f.write(bytes.fromhex(''.join(chunks)[16:368600]))
 
 	print(f'Wrote {fn}')
 

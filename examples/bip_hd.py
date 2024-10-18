@@ -15,7 +15,7 @@ examples/bip_hd.py: Usage examples for the MMGen BIP-32/-44 hierarchical/determi
 from mmgen.cfg import Config
 from mmgen.util import fmt
 from mmgen.bip39 import bip39
-from mmgen.bip_hd import MasterNode,BipHDNode
+from mmgen.bip_hd import MasterNode, BipHDNode
 
 cfg = Config()
 

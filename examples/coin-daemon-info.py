@@ -36,7 +36,7 @@ examples/coin-daemon-info.py:
 #
 #       PYTHONPATH=. examples/coin-daemon-info.py btc ltc eth
 
-import sys,os,asyncio
+import sys, os, asyncio
 
 from mmgen.exception import SocketError
 from mmgen.cfg import Config
@@ -45,7 +45,7 @@ from mmgen.util import make_timestr
 
 async def get_rpc(cfg):
 	try:
-		return await rpc_init( cfg, ignore_wallet=True )
+		return await rpc_init(cfg, ignore_wallet=True)
 	except SocketError:
 		return False
 
@@ -68,9 +68,18 @@ async def main(coins):
 
 	def gen_output():
 		fs = '{:4} {:7} {:6} {:<5} {:<8} {:30} {:13} {:23} {}'
-		yield fs.format('Coin','Network','Status','Port','Chain','Latest Block','Daemon','Version','Datadir')
-		for coin,rpc in rpcs.items():
-			info = ('Down','-','-','-','-','-','-') if rpc is False else (
+		yield fs.format(
+			'Coin',
+			'Network',
+			'Status',
+			'Port',
+			'Chain',
+			'Latest Block',
+			'Daemon',
+			'Version',
+			'Datadir')
+		for coin, rpc in rpcs.items():
+			info = ('Down', '-', '-', '-', '-', '-', '-') if rpc is False else (
 				'Up',
 				rpc.port,
 				rpc.chain,
@@ -79,7 +88,7 @@ async def main(coins):
 				rpc.daemon_version_str,
 				rpc.daemon.datadir
 			)
-			yield fs.format( coin.upper(), cfgs[coin].network, *info )
+			yield fs.format(coin.upper(), cfgs[coin].network, *info)
 
 	base_cfg._util.stdout_or_pager('\n'.join(gen_output()))
 
