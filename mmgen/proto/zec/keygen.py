@@ -21,28 +21,28 @@ class backend:
 
 		production_safe = True
 
-		def __init__(self,cfg):
+		def __init__(self, cfg):
 			super().__init__(cfg)
 			from nacl.bindings import crypto_scalarmult_base
 			self.crypto_scalarmult_base = crypto_scalarmult_base
 			from ...sha2 import Sha256
 			self.Sha256 = Sha256
 
-		def zhash256(self,s,t):
+		def zhash256(self, s, t):
 			s = bytearray(s + bytes(32))
 			s[0] |= 0xc0
 			s[32] = t
-			return self.Sha256(s,preprocess=False).digest()
+			return self.Sha256(s, preprocess=False).digest()
 
-		def to_pubkey(self,privkey):
+		def to_pubkey(self, privkey):
 			return PubKey(
-				self.zhash256(privkey,0)
-				+ self.crypto_scalarmult_base(self.zhash256(privkey,1)),
+				self.zhash256(privkey, 0)
+				+ self.crypto_scalarmult_base(self.zhash256(privkey, 1)),
 				compressed = privkey.compressed
 			)
 
-		def to_viewkey(self,privkey):
-			vk = bytearray( self.zhash256(privkey,0) + self.zhash256(privkey,1) )
+		def to_viewkey(self, privkey):
+			vk = bytearray(self.zhash256(privkey, 0) + self.zhash256(privkey, 1))
 			vk[32] &= 0xf8
 			vk[63] &= 0x7f
 			vk[63] |= 0x40

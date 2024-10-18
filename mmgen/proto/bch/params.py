@@ -20,10 +20,10 @@ from .cashaddr import cashaddr_decode_addr, cashaddr_encode_addr, cashaddr_addr_
 
 class mainnet(mainnet):
 	is_fork_of      = 'Bitcoin'
-	mmtypes         = ('L','C')
+	mmtypes         = ('L', 'C')
 	sighash_type    = 'ALL|FORKID'
 	forks = [
-		_finfo(478559,'000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec','BTC',False)
+		_finfo(478559, '000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec', 'BTC', False)
 	]
 	caps = ()
 	coin_amt        = 'BCHAmt'
@@ -74,15 +74,15 @@ class mainnet(mainnet):
 				if self.cfg.cashaddr else
 			b58chk_encode(self.addr_fmt_to_ver_bytes[addr_type] + pubhash))
 
-	def pubhash2redeem_script(self,pubhash):
+	def pubhash2redeem_script(self, pubhash):
 		raise NotImplementedError
 
-	def pubhash2segwitaddr(self,pubhash):
+	def pubhash2segwitaddr(self, pubhash):
 		raise NotImplementedError
 
 class testnet(mainnet):
-	addr_ver_info  = { '6f': 'p2pkh', 'c4': 'p2sh' }
-	wif_ver_num    = { 'std': 'ef' }
+	addr_ver_info  = {'6f': 'p2pkh', 'c4': 'p2sh'}
+	wif_ver_num    = {'std': 'ef'}
 	cashaddr_pfx   = 'bchtest'
 
 class regtest(testnet):

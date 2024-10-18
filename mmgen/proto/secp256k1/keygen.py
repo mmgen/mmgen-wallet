@@ -15,10 +15,10 @@ proto.secp256k1.keygen: secp256k1 public key generation backends for the MMGen s
 from ...key import PubKey
 from ...keygen import keygen_base
 
-def pubkey_format(vk_bytes,compressed):
+def pubkey_format(vk_bytes, compressed):
 	# if compressed, discard Y coord, replace with appropriate version byte
 	# even y: <0, odd y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
-	return (b'\x02',b'\x03')[vk_bytes[-1] & 1] + vk_bytes[:32] if compressed else b'\x04' + vk_bytes
+	return (b'\x02', b'\x03')[vk_bytes[-1] & 1] + vk_bytes[:32] if compressed else b'\x04' + vk_bytes
 
 class backend:
 
@@ -26,24 +26,24 @@ class backend:
 
 		production_safe = True
 
-		def __init__(self,cfg):
+		def __init__(self, cfg):
 			super().__init__(cfg)
 			from .secp256k1 import pubkey_gen
 			self.pubkey_gen = pubkey_gen
 
-		def to_pubkey(self,privkey):
+		def to_pubkey(self, privkey):
 			return PubKey(
-				s = self.pubkey_gen( privkey, int(privkey.compressed) ),
-				compressed = privkey.compressed )
+				s = self.pubkey_gen(privkey, int(privkey.compressed)),
+				compressed = privkey.compressed)
 
 		@classmethod
-		def get_clsname(cls,cfg,silent=False):
+		def get_clsname(cls, cfg, silent=False):
 			try:
 				from .secp256k1 import pubkey_gen
-				if not pubkey_gen(bytes.fromhex('deadbeef'*8),1):
+				if not pubkey_gen(bytes.fromhex('deadbeef'*8), 1):
 					from ...util import die
-					die( 'ExtensionModuleError',
-						'Unable to execute pubkey_gen() from secp256k1 extension module' )
+					die('ExtensionModuleError',
+						'Unable to execute pubkey_gen() from secp256k1 extension module')
 				return cls.__name__
 			except ImportError as e:
 				if not silent:
@@ -56,22 +56,22 @@ class backend:
 
 		production_safe = False
 
-		def __init__(self,cfg):
+		def __init__(self, cfg):
 			super().__init__(cfg)
 			import ecdsa
 			self.ecdsa = ecdsa
 
-		def to_pubkey(self,privkey):
+		def to_pubkey(self, privkey):
 			"""
 			devdoc/guide_wallets.md:
 			Uncompressed public keys start with 0x04; compressed public keys begin with 0x03 or
 			0x02 depending on whether they're greater or less than the midpoint of the curve.
 			"""
-			def privnum2pubkey(numpriv,compressed=False):
-				pk = self.ecdsa.SigningKey.from_secret_exponent(numpriv,curve=self.ecdsa.SECP256k1)
+			def privnum2pubkey(numpriv, compressed=False):
+				pk = self.ecdsa.SigningKey.from_secret_exponent(numpriv, curve=self.ecdsa.SECP256k1)
 				# vk_bytes = x (32 bytes) + y (32 bytes) (unsigned big-endian)
-				return pubkey_format(pk.verifying_key.to_string(),compressed)
+				return pubkey_format(pk.verifying_key.to_string(), compressed)
 
 			return PubKey(
-				s = privnum2pubkey( int.from_bytes(privkey,'big'), compressed=privkey.compressed ),
-				compressed = privkey.compressed )
+				s = privnum2pubkey(int.from_bytes(privkey, 'big'), compressed=privkey.compressed),
+				compressed = privkey.compressed)

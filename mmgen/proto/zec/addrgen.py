@@ -12,22 +12,22 @@
 proto.zec.addrgen: Zcash-Z address generation class for the MMGen suite
 """
 
-from ...addrgen import addr_generator,check_data
+from ...addrgen import addr_generator, check_data
 from ...addr import CoinAddr
 from ..btc.common import b58chk_encode
 
 class zcash_z(addr_generator.base):
 
 	@check_data
-	def to_addr(self,data):
+	def to_addr(self, data):
 		ret = b58chk_encode(
 			self.proto.addr_fmt_to_ver_bytes['zcash_z']
-			+ data.pubkey )
-		return CoinAddr( self.proto, ret )
+			+ data.pubkey)
+		return CoinAddr(self.proto, ret)
 
 	@check_data
-	def to_viewkey(self,data):
+	def to_viewkey(self, data):
 		return self.proto.viewkey(
 			b58chk_encode(
 				self.proto.addr_fmt_to_ver_bytes['viewkey']
-				+ data.viewkey_bytes ) )
+				+ data.viewkey_bytes))

@@ -21,19 +21,19 @@ class ZcashViewKey(CoinAddr):
 
 class mainnet(mainnet):
 	base_coin      = 'ZEC'
-	addr_ver_info  = { '1cb8': 'p2pkh', '1cbd': 'p2sh', '169a': 'zcash_z', 'a8abd3': 'viewkey' }
-	wif_ver_num    = { 'std': '80', 'zcash_z': 'ab36' }
-	pubkey_types   = ('std','zcash_z')
-	mmtypes        = ('L','C','Z')
+	addr_ver_info  = {'1cb8': 'p2pkh', '1cbd': 'p2sh', '169a': 'zcash_z', 'a8abd3': 'viewkey'}
+	wif_ver_num    = {'std': '80', 'zcash_z': 'ab36'}
+	pubkey_types   = ('std', 'zcash_z')
+	mmtypes        = ('L', 'C', 'Z')
 	mmcaps         = ()
 	dfl_mmtype     = 'L'
 	avg_bdi        = 75
 
-	def __init__(self,*args,**kwargs):
-		super().__init__(*args,**kwargs)
-		self.coin_id = 'ZEC-Z' if self.cfg.type in ('zcash_z','Z') else 'ZEC-T'
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.coin_id = 'ZEC-Z' if self.cfg.type in ('zcash_z', 'Z') else 'ZEC-T'
 
-	def get_wif_ver_bytes_len(self,key_data):
+	def get_wif_ver_bytes_len(self, key_data):
 		"""
 		vlen must be set dynamically since Zcash has variable-length version bytes
 		"""
@@ -42,14 +42,14 @@ class mainnet(mainnet):
 				return len(v)
 		raise ValueError('Invalid WIF version number')
 
-	def get_addr_len(self,addr_fmt):
-		return (20,64)[addr_fmt in ('zcash_z','viewkey')]
+	def get_addr_len(self, addr_fmt):
+		return (20, 64)[addr_fmt in ('zcash_z', 'viewkey')]
 
 	def decode_addr_bytes(self, addr_bytes):
 		"""
 		vlen must be set dynamically since Zcash has variable-length version bytes
 		"""
-		for ver_bytes,addr_fmt in self.addr_ver_bytes.items():
+		for ver_bytes, addr_fmt in self.addr_ver_bytes.items():
 			vlen = len(ver_bytes)
 			if addr_bytes[:vlen] == ver_bytes:
 				if len(addr_bytes[vlen:]) == self.get_addr_len(addr_fmt):
@@ -57,13 +57,13 @@ class mainnet(mainnet):
 
 		return False
 
-	def preprocess_key(self,sec,pubkey_type):
+	def preprocess_key(self, sec, pubkey_type):
 		if pubkey_type == 'zcash_z': # zero the first four bits
 			return bytes([sec[0] & 0x0f]) + sec[1:]
 		else:
-			return super().preprocess_key(sec,pubkey_type)
+			return super().preprocess_key(sec, pubkey_type)
 
-	def pubhash2addr(self,pubhash, addr_type):
+	def pubhash2addr(self, pubhash, addr_type):
 		hash_len = len(pubhash)
 		if hash_len == 20:
 			return super().pubhash2addr(pubhash, addr_type)
@@ -72,9 +72,9 @@ class mainnet(mainnet):
 		else:
 			raise ValueError(f'{hash_len}: incorrect pubkey hash length')
 
-	def viewkey(self,viewkey_str):
-		return ZcashViewKey.__new__(ZcashViewKey,self,viewkey_str)
+	def viewkey(self, viewkey_str):
+		return ZcashViewKey.__new__(ZcashViewKey, self, viewkey_str)
 
 class testnet(mainnet):
-	wif_ver_num  = { 'std': 'ef', 'zcash_z': 'ac08' }
-	addr_ver_info = { '1d25': 'p2pkh', '1cba': 'p2sh', '16b6': 'zcash_z', 'a8ac0c': 'viewkey' }
+	wif_ver_num  = {'std': 'ef', 'zcash_z': 'ac08'}
+	addr_ver_info = {'1d25': 'p2pkh', '1cba': 'p2sh', '16b6': 'zcash_z', 'a8ac0c': 'viewkey'}
