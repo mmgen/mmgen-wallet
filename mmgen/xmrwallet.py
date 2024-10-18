@@ -154,15 +154,6 @@ class XMRWalletAddrSpec(HiliteStr,InitErrors,MMGenObject):
 		except Exception as e:
 			return cls.init_fail(e,me)
 
-def is_xmr_tx_file(cfg,fn):
-	try:
-		MoneroMMGenTX.Completed(cfg,fn)
-		return True
-	except Exception as e:
-		if not 'MoneroMMGenTXFileParseError' in type(e).__name__:
-			ymsg(f'\n{type(e).__name__}: {e}')
-		return False
-
 class MoneroMMGenFile:
 
 	silent_load = False

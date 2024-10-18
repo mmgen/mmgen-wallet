@@ -1124,7 +1124,7 @@ class CmdTestRegtest(CmdTestBase,CmdTestShared):
 
 	def alice_send_estimatefee(self):
 		outputs_cl = self._create_tx_outputs('bob',(('L',1,''),)) # bob_sid:L:1
-		return self.user_txdo('alice',None,outputs_cl,'1') # fee=None
+		return self.user_txdo('alice', None, outputs_cl, '1', extra_args=['--verbose']) # fee=None
 
 	def user_txbump(
 			self,

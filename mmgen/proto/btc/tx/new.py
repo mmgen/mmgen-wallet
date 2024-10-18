@@ -65,10 +65,7 @@ class New(Base,TxBase.New):
 
 	# given tx size, rel fee and units, return absolute fee
 	def fee_rel2abs(self, tx_size, units, amt_in_units, unit):
-		if tx_size:
-			return self.proto.coin_amt(amt_in_units * tx_size, from_unit=units[unit])
-		else:
-			return None
+		return self.proto.coin_amt(amt_in_units * tx_size, from_unit=units[unit])
 
 	# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
 	def fee_est2abs(self,fee_per_kb,fe_type=None):
