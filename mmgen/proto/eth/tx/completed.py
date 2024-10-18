@@ -13,16 +13,16 @@ proto.eth.tx.completed: Ethereum completed transaction class
 """
 
 from ....tx import completed as TxBase
-from .base import Base,TokenBase
+from .base import Base, TokenBase
 
-class Completed(Base,TxBase.Completed):
+class Completed(Base, TxBase.Completed):
 	fn_fee_unit = 'Mwei'
 
-	def __init__(self,*args,**kwargs):
+	def __init__(self, *args, **kwargs):
 
 		self.txobj = {}
 
-		super().__init__(*args,**kwargs)
+		super().__init__(*args, **kwargs)
 
 		self.gas = self.proto.coin_amt(self.dfl_gas, from_unit='wei')
 		self.start_gas = self.proto.coin_amt(self.dfl_start_gas, from_unit='wei')
@@ -54,7 +54,7 @@ class Completed(Base,TxBase.Completed):
 	def get_serialized_locktime(self):
 		return None # TODO
 
-class TokenCompleted(TokenBase,Completed):
+class TokenCompleted(TokenBase, Completed):
 
 	@property
 	def change(self):

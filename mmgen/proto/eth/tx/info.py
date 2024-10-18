@@ -31,9 +31,9 @@ class TxInfo(TxInfo):
 	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, terse, sort):
 		tx = self.tx
 		m = {}
-		for k in ('inputs','outputs'):
-			if len(getattr(tx,k)):
-				m[k] = getattr(tx,k)[0].mmid if len(getattr(tx,k)) else ''
+		for k in ('inputs', 'outputs'):
+			if len(getattr(tx, k)):
+				m[k] = getattr(tx, k)[0].mmid if len(getattr(tx, k)) else ''
 				m[k] = ' ' + m[k].hl() if m[k] else ' ' + MMGenID.hlc(nonmm_str)
 		fs = """
 			From:      {f}{f_mmid}
@@ -43,7 +43,7 @@ class TxInfo(TxInfo):
 			Start gas: {G} Kwei
 			Nonce:     {n}
 			Data:      {d}
-		""".strip().replace('\t','')
+		""".strip().replace('\t', '')
 		t = tx.txobj
 		td = t['data']
 		to_addr = t[self.to_addr_key]
@@ -52,19 +52,19 @@ class TxInfo(TxInfo):
 			t      = to_addr.hl(0) if to_addr else blue('None'),
 			a      = t['amt'].hl(),
 			n      = t['nonce'].hl(),
-			d      = '{}... ({} bytes)'.format(td[:40],len(td)//2) if len(td) else blue('None'),
+			d      = '{}... ({} bytes)'.format(td[:40], len(td)//2) if len(td) else blue('None'),
 			c      = tx.proto.dcoin if len(tx.outputs) else '',
 			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
 			G      = yellow(tx.pretty_fmt_fee(t['startGas'].to_unit('Kwei'))),
 			t_mmid = m['outputs'] if len(tx.outputs) else '',
 			f_mmid = m['inputs']) + '\n\n'
 
-	def format_abs_fee(self,color,iwidth):
-		return self.tx.fee.fmt(color=color,iwidth=iwidth) + (' (max)' if self.tx.txobj['data'] else '')
+	def format_abs_fee(self, color, iwidth):
+		return self.tx.fee.fmt(color=color, iwidth=iwidth) + (' (max)' if self.tx.txobj['data'] else '')
 
 	def format_rel_fee(self):
 		return ' ({} of spend amount)'.format(
-			pink('{:0.6f}%'.format( self.tx.fee / self.tx.send_amt * 100 ))
+			pink('{:0.6f}%'.format(self.tx.fee / self.tx.send_amt * 100))
 		)
 
 	def format_verbose_footer(self):
@@ -80,8 +80,8 @@ class TokenTxInfo(TxInfo):
 	def format_rel_fee(self):
 		return ''
 
-	def format_body(self,*args,**kwargs):
+	def format_body(self, *args, **kwargs):
 		return 'Token:     {d} {c}\n{r}'.format(
 			d = self.tx.txobj['token_addr'].hl(0),
 			c = blue('(' + self.tx.proto.dcoin + ')'),
-			r = super().format_body(*args,**kwargs ))
+			r = super().format_body(*args, **kwargs))

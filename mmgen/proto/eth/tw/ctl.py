@@ -20,11 +20,11 @@
 proto.eth.tw.ctl: Ethereum tracking wallet control class
 """
 
-from ....util import msg,ymsg,die
+from ....util import msg, ymsg, die
 from ....tw.ctl import TwCtl, write_mode, label_addr_pair
 from ....tw.shared import TwLabel
-from ....addr import is_coin_addr,is_mmgen_id,CoinAddr
-from ..contract import Token,ResolvedToken
+from ....addr import is_coin_addr, is_mmgen_id, CoinAddr
+from ..contract import Token, ResolvedToken
 
 class EthereumTwCtl(TwCtl):
 
@@ -81,43 +81,43 @@ class EthereumTwCtl(TwCtl):
 			self.force_write()
 			msg(f'{self.desc} upgraded successfully!')
 
-	async def rpc_get_balance(self,addr):
+	async def rpc_get_balance(self, addr):
 		return self.proto.coin_amt(
 			int(await self.rpc.call('eth_getBalance', '0x' + addr, 'latest'), 16),
 			from_unit = 'wei')
 
 	@write_mode
-	async def batch_import_address(self,args_list):
+	async def batch_import_address(self, args_list):
 		return [await self.import_address(*a) for a in args_list]
 
-	async def rescan_addresses(self,coin_addrs):
+	async def rescan_addresses(self, coin_addrs):
 		pass
 
 	@write_mode
-	async def import_address(self,addr,label,rescan=False):
+	async def import_address(self, addr, label, rescan=False):
 		r = self.data_root
 		if addr in r:
 			if not r[addr]['mmid'] and label.mmid:
 				msg(f'Warning: MMGen ID {label.mmid!r} was missing in tracking wallet!')
 			elif r[addr]['mmid'] != label.mmid:
-				die(3,'MMGen ID {label.mmid!r} does not match tracking wallet!')
-		r[addr] = { 'mmid': label.mmid, 'comment': label.comment }
+				die(3, 'MMGen ID {label.mmid!r} does not match tracking wallet!')
+		r[addr] = {'mmid': label.mmid, 'comment': label.comment}
 
 	@write_mode
-	async def remove_address(self,addr):
+	async def remove_address(self, addr):
 		r = self.data_root
 
-		if is_coin_addr(self.proto,addr):
+		if is_coin_addr(self.proto, addr):
 			have_match = lambda k: k == addr
-		elif is_mmgen_id(self.proto,addr):
+		elif is_mmgen_id(self.proto, addr):
 			have_match = lambda k: r[k]['mmid'] == addr
 		else:
-			die(1,f'{addr!r} is not an Ethereum address or MMGen ID')
+			die(1, f'{addr!r} is not an Ethereum address or MMGen ID')
 
 		for k in r:
 			if have_match(k):
 				# return the addr resolved to mmid if possible
-				ret = r[k]['mmid'] if is_mmgen_id(self.proto,r[k]['mmid']) else addr
+				ret = r[k]['mmid'] if is_mmgen_id(self.proto, r[k]['mmid']) else addr
 				del r[k]
 				self.write()
 				return ret
@@ -125,8 +125,8 @@ class EthereumTwCtl(TwCtl):
 		return None
 
 	@write_mode
-	async def set_label(self,coinaddr,lbl):
-		for addr,d in list(self.data_root.items()):
+	async def set_label(self, coinaddr, lbl):
+		for addr, d in list(self.data_root.items()):
 			if addr == coinaddr:
 				d['comment'] = lbl.comment
 				self.write()
@@ -134,32 +134,32 @@ class EthereumTwCtl(TwCtl):
 		msg(f'Address {coinaddr!r} not found in {self.data_root_desc!r} section of tracking wallet')
 		return False
 
-	async def addr2sym(self,req_addr):
+	async def addr2sym(self, req_addr):
 		for addr in self.data['tokens']:
 			if addr == req_addr:
 				return self.data['tokens'][addr]['params']['symbol']
 
-	async def sym2addr(self,sym):
+	async def sym2addr(self, sym):
 		for addr in self.data['tokens']:
 			if self.data['tokens'][addr]['params']['symbol'] == sym.upper():
 				return addr
 
-	def get_token_param(self,token,param):
+	def get_token_param(self, token, param):
 		if token in self.data['tokens']:
 			return self.data['tokens'][token]['params'].get(param)
 
 	@property
 	def sorted_list(self):
-		return sorted(
-			[ { 'addr':x[0],
-				'mmid':x[1]['mmid'],
-				'comment':x[1]['comment'] }
-					for x in self.data_root.items() if x[0] not in ('params','coin') ],
-			key=lambda x: x['mmid'].sort_key+x['addr'] )
+		return sorted([{
+				'addr':    x[0],
+				'mmid':    x[1]['mmid'],
+				'comment': x[1]['comment']
+			} for x in self.data_root.items() if x[0] not in ('params', 'coin')],
+			key = lambda x: x['mmid'].sort_key + x['addr'])
 
 	@property
 	def mmid_ordered_dict(self):
-		return dict((x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list)
+		return dict((x['mmid'], {'addr': x['addr'], 'comment': x['comment']}) for x in self.sorted_list)
 
 	async def get_label_addr_pairs(self):
 		return [label_addr_pair(
@@ -182,22 +182,22 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 			self.conv_types(v)
 
 		if self.importing and token_addr:
-			if not is_coin_addr(proto,token_addr):
-				die( 'InvalidTokenAddress', f'{token_addr!r}: invalid token address' )
+			if not is_coin_addr(proto, token_addr):
+				die('InvalidTokenAddress', f'{token_addr!r}: invalid token address')
 		else:
-			assert token_addr is None,'EthereumTokenTwCtl_chk1'
+			assert token_addr is None, 'EthereumTokenTwCtl_chk1'
 			token_addr = await self.sym2addr(proto.tokensym) # returns None on failure
-			if not is_coin_addr(proto,token_addr):
-				die( 'UnrecognizedTokenSymbol', f'Specified token {proto.tokensym!r} could not be resolved!' )
+			if not is_coin_addr(proto, token_addr):
+				die('UnrecognizedTokenSymbol', f'Specified token {proto.tokensym!r} could not be resolved!')
 
 		from ....addr import TokenAddr
-		self.token = TokenAddr(proto,token_addr)
+		self.token = TokenAddr(proto, token_addr)
 
 		if self.token not in self.data['tokens']:
 			if self.importing:
 				await self.import_token(self.token)
 			else:
-				die( 'TokenNotInWallet', f'Specified token {self.token!r} not in wallet!' )
+				die('TokenNotInWallet', f'Specified token {self.token!r} not in wallet!')
 
 		self.decimals = self.get_param('decimals')
 		self.symbol   = self.get_param('symbol')
@@ -212,29 +212,29 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 	def data_root_desc(self):
 		return 'token ' + self.get_param('symbol')
 
-	async def rpc_get_balance(self,addr):
-		return await Token(self.cfg,self.proto,self.token,self.decimals,self.rpc).get_balance(addr)
+	async def rpc_get_balance(self, addr):
+		return await Token(self.cfg, self.proto, self.token, self.decimals, self.rpc).get_balance(addr)
 
-	async def get_eth_balance(self,addr,force_rpc=False):
+	async def get_eth_balance(self, addr, force_rpc=False):
 		cache = self.cur_eth_balances
 		r = self.data['accounts']
-		ret = None if force_rpc else self.get_cached_balance(addr,cache,r)
+		ret = None if force_rpc else self.get_cached_balance(addr, cache, r)
 		if ret is None:
 			ret = await super().rpc_get_balance(addr)
-			self.cache_balance(addr,ret,cache,r)
+			self.cache_balance(addr, ret, cache, r)
 		return ret
 
-	def get_param(self,param):
+	def get_param(self, param):
 		return self.data['tokens'][self.token]['params'][param]
 
 	@write_mode
-	async def import_token(self,tokenaddr):
+	async def import_token(self, tokenaddr):
 		"""
 		Token 'symbol' and 'decimals' values are resolved from the network by the system just
 		once, upon token import.  Thereafter, token address, symbol and decimals are resolved
 		either from the tracking wallet (online operations) or transaction file (when signing).
 		"""
-		t = await ResolvedToken(self.cfg,self.proto,self.rpc,tokenaddr)
+		t = await ResolvedToken(self.cfg, self.proto, self.rpc, tokenaddr)
 		self.data['tokens'][tokenaddr] = {
 			'params': {
 				'symbol': await t.get_symbol(),

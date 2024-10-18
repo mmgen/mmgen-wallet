@@ -15,7 +15,7 @@ proto.eth.tx.base: Ethereum base transaction class
 from collections import namedtuple
 
 from ....tx import base as TxBase
-from ....obj import HexStr,Int
+from ....obj import HexStr, Int
 
 class Base(TxBase.Base):
 
@@ -52,16 +52,17 @@ class Base(TxBase.Base):
 	def is_replaceable(self):
 		return True
 
-	async def get_receipt(self,txid):
-		rx = await self.rpc.call('eth_getTransactionReceipt','0x'+txid) # -> null if pending
+	async def get_receipt(self, txid):
+		rx = await self.rpc.call('eth_getTransactionReceipt', '0x'+txid) # -> null if pending
 		if not rx:
 			return None
-		tx = await self.rpc.call('eth_getTransactionByHash','0x'+txid)
-		return namedtuple('exec_status',['status','gas_sent','gas_used','gas_price','contract_addr','tx','rx'])(
-			status        = Int(rx['status'],16), # zero is failure, non-zero success
-			gas_sent      = Int(tx['gas'],16),
-			gas_used      = Int(rx['gasUsed'],16),
-			gas_price     = self.proto.coin_amt(int(tx['gasPrice'],16),from_unit='wei'),
+		tx = await self.rpc.call('eth_getTransactionByHash', '0x'+txid)
+		return namedtuple('exec_status',
+				['status', 'gas_sent', 'gas_used', 'gas_price', 'contract_addr', 'tx', 'rx'])(
+			status        = Int(rx['status'], 16), # zero is failure, non-zero success
+			gas_sent      = Int(tx['gas'], 16),
+			gas_used      = Int(rx['gasUsed'], 16),
+			gas_price     = self.proto.coin_amt(int(tx['gasPrice'], 16), from_unit='wei'),
 			contract_addr = self.proto.coin_addr(rx['contractAddress'][2:]) if rx['contractAddress'] else None,
 			tx            = tx,
 			rx            = rx,

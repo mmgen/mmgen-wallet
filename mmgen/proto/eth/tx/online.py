@@ -12,24 +12,24 @@
 proto.eth.tx.online: Ethereum online signed transaction class
 """
 
-from ....util import msg,die
+from ....util import msg, die
 from ....color import orange
 from ....tx import online as TxBase
 from .. import erigon_sleep
-from .signed import Signed,TokenSigned
+from .signed import Signed, TokenSigned
 
-class OnlineSigned(Signed,TxBase.OnlineSigned):
+class OnlineSigned(Signed, TxBase.OnlineSigned):
 
-	async def send(self,prompt_user=True):
+	async def send(self, prompt_user=True):
 
 		self.check_correct_chain()
 
 		if not self.disable_fee_check and (self.fee > self.proto.max_tx_fee):
-			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
+			die(2, 'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
 				self.fee,
 				self.proto.name,
 				self.proto.max_tx_fee,
-				self.proto.coin ))
+				self.proto.coin))
 
 		await self.status.display()
 
@@ -40,12 +40,12 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 			m = 'BOGUS transaction NOT sent: {}'
 		else:
 			try:
-				ret = await self.rpc.call('eth_sendRawTransaction','0x'+self.serialized)
+				ret = await self.rpc.call('eth_sendRawTransaction', '0x'+self.serialized)
 			except Exception as e:
 				msg(orange('\n'+str(e)))
 				die(2, f'Send of MMGen transaction {self.txid} failed')
 			m = 'Transaction sent: {}'
-			assert ret == '0x'+self.coin_txid,'txid mismatch (after sending)'
+			assert ret == '0x'+self.coin_txid, 'txid mismatch (after sending)'
 			await erigon_sleep(self)
 
 		msg(m.format(self.coin_txid.hl()))
@@ -58,7 +58,7 @@ class OnlineSigned(Signed,TxBase.OnlineSigned):
 		if 'token_addr' in self.txobj:
 			msg('Contract address: {}'.format(self.txobj['token_addr'].hl(0)))
 
-class TokenOnlineSigned(TokenSigned,OnlineSigned):
+class TokenOnlineSigned(TokenSigned, OnlineSigned):
 
 	def parse_txfile_serialized_data(self):
 		from ....addr import TokenAddr
@@ -66,9 +66,9 @@ class TokenOnlineSigned(TokenSigned,OnlineSigned):
 		OnlineSigned.parse_txfile_serialized_data(self)
 		o = self.txobj
 		assert self.twctl.token == o['to']
-		o['token_addr'] = TokenAddr(self.proto,o['to'])
+		o['token_addr'] = TokenAddr(self.proto, o['to'])
 		o['decimals']   = self.twctl.decimals
-		t = Token(self.cfg,self.proto,o['token_addr'],o['decimals'])
+		t = Token(self.cfg, self.proto, o['token_addr'], o['decimals'])
 		o['amt'] = t.transferdata2amt(o['data'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
 

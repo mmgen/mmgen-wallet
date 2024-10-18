@@ -16,7 +16,7 @@ from ....tw.addresses import TwAddresses
 from .view import EthereumTwView
 from .rpc import EthereumTwRPC
 
-class EthereumTwAddresses(TwAddresses,EthereumTwView,EthereumTwRPC):
+class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
 
 	has_age = False
 	prompt_fs_in = [
@@ -35,13 +35,13 @@ class EthereumTwAddresses(TwAddresses,EthereumTwView,EthereumTwRPC):
 		'D':'i_addr_delete',
 		'v':'a_view',
 		'w':'a_view_detail',
-		'p':'a_print_detail' }
+		'p':'a_print_detail'}
 
-	def get_column_widths(self,data,wide,interactive):
+	def get_column_widths(self, data, wide, interactive):
 
 		return self.compute_column_widths(
 			widths = { # fixed cols
-				'num':  max(2,len(str(len(data)))+1),
+				'num':  max(2, len(str(len(data)))+1),
 				'mmid': max(len(d.twmmid.disp) for d in data),
 				'used': 0,
 				'amt':  self.amt_widths['amt'],

@@ -25,14 +25,14 @@ from ....tw.bal import TwGetBalance
 
 class EthereumTwGetBalance(TwGetBalance):
 
-	start_labels = ('TOTAL','Non-MMGen')
+	start_labels = ('TOTAL', 'Non-MMGen')
 	conf_cols = {
 		'ge_minconf': 'Balance',
 	}
 
-	async def __init__(self,cfg,proto,*args,**kwargs):
-		self.twctl = await TwCtl(cfg,proto,mode='w')
-		await super().__init__(cfg,proto,*args,**kwargs)
+	async def __init__(self, cfg, proto, *args, **kwargs):
+		self.twctl = await TwCtl(cfg, proto, mode='w')
+		await super().__init__(cfg, proto, *args, **kwargs)
 
 	async def create_data(self):
 		in_data = self.twctl.mmid_ordered_dict

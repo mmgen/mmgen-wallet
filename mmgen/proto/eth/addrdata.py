@@ -31,12 +31,12 @@ class EthereumTwAddrData(TwAddrData):
 		"""
 	}
 
-	async def get_tw_data(self,twctl=None):
+	async def get_tw_data(self, twctl=None):
 		from ...tw.ctl import TwCtl
 		self.cfg._util.vmsg('Getting address data from tracking wallet')
-		twctl = (twctl or await TwCtl(self.cfg,self.proto)).mmid_ordered_dict
+		twctl = (twctl or await TwCtl(self.cfg, self.proto)).mmid_ordered_dict
 		# emulate the output of RPC 'listaccounts' and 'getaddressesbyaccount'
-		return [(mmid+' '+d['comment'],[d['addr']]) for mmid,d in list(twctl.items())]
+		return [(mmid+' '+d['comment'], [d['addr']]) for mmid, d in list(twctl.items())]
 
 class EthereumTokenTwAddrData(EthereumTwAddrData):
 	pass

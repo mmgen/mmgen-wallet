@@ -15,23 +15,23 @@ proto.eth.tx.bump: Ethereum transaction bump class
 from decimal import Decimal
 
 from ....tx import bump as TxBase
-from .completed import Completed,TokenCompleted
-from .new import New,TokenNew
+from .completed import Completed, TokenCompleted
+from .new import New, TokenNew
 
-class Bump(Completed,New,TxBase.Bump):
+class Bump(Completed, New, TxBase.Bump):
 	desc = 'fee-bumped transaction'
 
 	@property
 	def min_fee(self):
 		return self.fee * Decimal('1.101')
 
-	def bump_fee(self,idx,fee):
+	def bump_fee(self, idx, fee):
 		self.txobj['gasPrice'] = self.fee_abs2gas(fee)
 
 	async def get_nonce(self):
 		return self.txobj['nonce']
 
-class TokenBump(TokenCompleted,TokenNew,Bump):
+class TokenBump(TokenCompleted, TokenNew, Bump):
 	desc = 'fee-bumped transaction'
 
 class AutomountBump(Bump):

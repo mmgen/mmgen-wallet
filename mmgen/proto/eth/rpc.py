@@ -16,7 +16,7 @@ import re
 
 from ...base_obj import AsyncInit
 from ...obj import Int
-from ...util import die,fmt,oneshot_warning_group
+from ...util import die, fmt, oneshot_warning_group
 from ...rpc import RPCClient
 
 class daemon_warning(oneshot_warning_group):
@@ -32,7 +32,7 @@ class daemon_warning(oneshot_warning_group):
 class CallSigs:
 	pass
 
-class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
+class EthereumRPCClient(RPCClient, metaclass=AsyncInit):
 
 	async def __init__(
 			self,
@@ -44,50 +44,50 @@ class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
 
 		self.proto = proto
 		self.daemon = daemon
-		self.call_sigs = getattr(CallSigs,daemon.id,None)
+		self.call_sigs = getattr(CallSigs, daemon.id, None)
 
 		super().__init__(
 			cfg  = cfg,
 			host = 'localhost' if cfg.test_suite else (cfg.rpc_host or 'localhost'),
-			port = daemon.rpc_port )
+			port = daemon.rpc_port)
 
 		await self.set_backend_async(backend)
 
-		vi,bh,ci = await self.gathered_call(None, (
-				('web3_clientVersion',()),
-				('eth_getBlockByNumber',('latest',False)),
-				('eth_chainId',()),
+		vi, bh, ci = await self.gathered_call(None, (
+				('web3_clientVersion', ()),
+				('eth_getBlockByNumber', ('latest', False)),
+				('eth_chainId', ()),
 			))
 
-		vip = re.match(self.daemon.version_pat,vi,re.ASCII)
+		vip = re.match(self.daemon.version_pat, vi, re.ASCII)
 		if not vip:
-			die(2,fmt(f"""
+			die(2, fmt(f"""
 			Aborting on daemon mismatch:
 			  Requested daemon: {self.daemon.id}
 			  Running daemon:   {vi}
-			""",strip_char='\t').rstrip())
+			""", strip_char='\t').rstrip())
 
 		self.daemon_version = int('{:d}{:03d}{:03d}'.format(*[int(e) for e in vip.groups()]))
 		self.daemon_version_str = '{}.{}.{}'.format(*vip.groups())
 		self.daemon_version_info = vi
 
-		self.blockcount = int(bh['number'],16)
-		self.cur_date = int(bh['timestamp'],16)
+		self.blockcount = int(bh['number'], 16)
+		self.cur_date = int(bh['timestamp'], 16)
 
 		self.caps = ()
-		if self.daemon.id in ('parity','openethereum'):
+		if self.daemon.id in ('parity', 'openethereum'):
 			if (await self.call('parity_nodeKind'))['capability'] == 'full':
 				self.caps += ('full_node',)
-			self.chainID = None if ci is None else Int(ci,16) # parity/oe return chainID only for dev chain
-			self.chain = (await self.call('parity_chain')).replace(' ','_').replace('_testnet','')
-		elif self.daemon.id in ('geth','erigon'):
+			self.chainID = None if ci is None else Int(ci, 16) # parity/oe return chainID only for dev chain
+			self.chain = (await self.call('parity_chain')).replace(' ', '_').replace('_testnet', '')
+		elif self.daemon.id in ('geth', 'erigon'):
 			if self.daemon.network == 'mainnet':
 				daemon_warning(self.daemon.id)
 			self.caps += ('full_node',)
-			self.chainID = Int(ci,16)
+			self.chainID = Int(ci, 16)
 			self.chain = self.proto.chain_ids[self.chainID]
 
-	def make_host_path(self,wallet):
+	def make_host_path(self, wallet):
 		return ''
 
 	rpcmethods = (

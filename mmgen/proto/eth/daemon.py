@@ -15,29 +15,29 @@ proto.eth.daemon: Ethereum base protocol daemon classes
 import os
 
 from ...cfg import gc
-from ...util import list_gen,get_subclasses
-from ...daemon import CoinDaemon,RPCDaemon,_nw,_dd
+from ...util import list_gen, get_subclasses
+from ...daemon import CoinDaemon, RPCDaemon, _nw, _dd
 
 class ethereum_daemon(CoinDaemon):
-	chain_subdirs = _nw('ethereum','goerli','DevelopmentChain')
+	chain_subdirs = _nw('ethereum', 'goerli', 'DevelopmentChain')
 	base_rpc_port = 8545  # same for all networks!
 	base_authrpc_port = 8551 # same for all networks!
 	base_p2p_port = 30303 # same for all networks!
 	daemon_port_offset = 100
-	network_port_offsets = _nw(0,10,20)
+	network_port_offsets = _nw(0, 10, 20)
 
-	def __init__(self,*args,test_suite=False,**kwargs):
+	def __init__(self, *args, test_suite=False, **kwargs):
 
-		if not hasattr(self,'all_daemons'):
-			ethereum_daemon.all_daemons = get_subclasses(ethereum_daemon,names=True)
+		if not hasattr(self, 'all_daemons'):
+			ethereum_daemon.all_daemons = get_subclasses(ethereum_daemon, names=True)
 
 		daemon_idx_offset = (
 			self.all_daemons.index(self.id+'_daemon') * self.daemon_port_offset
-			if test_suite else 0 )
+			if test_suite else 0)
 
-		self.port_offset = daemon_idx_offset + getattr(self.network_port_offsets,self.network)
+		self.port_offset = daemon_idx_offset + getattr(self.network_port_offsets, self.network)
 
-		super().__init__( *args, test_suite=test_suite, **kwargs )
+		super().__init__(*args, test_suite=test_suite, **kwargs)
 
 	def get_rpc_port(self):
 		return self.base_rpc_port + self.port_offset
@@ -54,7 +54,7 @@ class ethereum_daemon(CoinDaemon):
 		return os.path.join(
 			self.logdir,
 			self.id,
-			getattr(self.chain_subdirs,self.network) )
+			getattr(self.chain_subdirs, self.network))
 
 class openethereum_daemon(ethereum_daemon):
 	daemon_data = _dd('OpenEthereum', 3003005, '3.3.5')
@@ -62,9 +62,9 @@ class openethereum_daemon(ethereum_daemon):
 	exec_fn = 'openethereum'
 	cfg_file = 'parity.conf'
 	datadirs = {
-		'linux': [gc.home_dir,'.local','share','io.parity.ethereum'],
+		'linux': [gc.home_dir, '.local', 'share', 'io.parity.ethereum'],
 		'darwin': [gc.home_dir, 'Library', 'Application Support', 'io.parity.ethereum'],
-		'win32': [os.getenv('LOCALAPPDATA'),'Parity','Ethereum']
+		'win32': [os.getenv('LOCALAPPDATA'), 'Parity', 'Ethereum']
 	}
 
 	def init_subclass(self):
@@ -102,20 +102,20 @@ class geth_daemon(ethereum_daemon):
 	exec_fn = 'geth'
 	use_pidfile = False
 	use_threads = True
-	avail_opts = ('no_daemonize','online')
+	avail_opts = ('no_daemonize', 'online')
 	version_info_arg = 'version'
 	datadirs = {
-		'linux': [gc.home_dir,'.ethereum','geth'],
+		'linux': [gc.home_dir, '.ethereum', 'geth'],
 		'darwin': [gc.home_dir, 'Library', 'Ethereum', 'geth'],
-		'win32': [os.getenv('LOCALAPPDATA'),'Geth'] # FIXME
+		'win32': [os.getenv('LOCALAPPDATA'), 'Geth'] # FIXME
 	}
 
 	def init_subclass(self):
 
 		def have_authrpc():
-			from subprocess import run,PIPE
+			from subprocess import run, PIPE
 			try:
-				return b'authrpc' in run(['geth','help'],check=True,stdout=PIPE).stdout
+				return b'authrpc' in run(['geth', 'help'], check=True, stdout=PIPE).stdout
 			except:
 				return False
 
@@ -138,12 +138,12 @@ class erigon_daemon(geth_daemon):
 	daemon_data = _dd('Erigon', 2022099099, '2022.99.99')
 	version_pat = r'erigon/(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'erigon'
-	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
-	torrent_ports = _nw(42069,42070,None) # testnet is non-standard
+	private_ports = _nw(9090, 9091, 9092) # testnet and regtest are non-standard
+	torrent_ports = _nw(42069, 42070, None) # testnet is non-standard
 	version_info_arg = '--version'
 	datadirs = {
-		'linux': [gc.home_dir,'.local','share','erigon'],
-		'win32': [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
+		'linux': [gc.home_dir, '.local', 'share', 'erigon'],
+		'win32': [os.getenv('LOCALAPPDATA'), 'Erigon'] # FIXME
 	}
 
 	def init_subclass(self):
@@ -169,21 +169,21 @@ class erigon_daemon(geth_daemon):
 			rpc_port     = self.rpc_port,
 			private_port = self.private_port,
 			test_suite   = self.test_suite,
-			datadir      = self.datadir )
+			datadir      = self.datadir)
 
-	def start(self,quiet=False,silent=False):
-		super().start(quiet=quiet,silent=silent)
+	def start(self, quiet=False, silent=False):
+		super().start(quiet=quiet, silent=silent)
 		self.rpc_d.debug = self.debug
-		return self.rpc_d.start(quiet=quiet,silent=silent)
+		return self.rpc_d.start(quiet=quiet, silent=silent)
 
-	def stop(self,quiet=False,silent=False):
+	def stop(self, quiet=False, silent=False):
 		self.rpc_d.debug = self.debug
-		self.rpc_d.stop(quiet=quiet,silent=silent)
-		return super().stop(quiet=quiet,silent=silent)
+		self.rpc_d.stop(quiet=quiet, silent=silent)
+		return super().stop(quiet=quiet, silent=silent)
 
 	@property
 	def start_cmds(self):
-		return [self.start_cmd,self.rpc_d.start_cmd]
+		return [self.start_cmd, self.rpc_d.start_cmd]
 
 class erigon_rpcdaemon(RPCDaemon):
 
@@ -193,7 +193,7 @@ class erigon_rpcdaemon(RPCDaemon):
 	use_pidfile = False
 	use_threads = True
 
-	def __init__(self,cfg,proto,rpc_port,private_port,test_suite,datadir):
+	def __init__(self, cfg, proto, rpc_port, private_port, test_suite, datadir):
 
 		self.proto = proto
 		self.test_suite = test_suite

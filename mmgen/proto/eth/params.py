@@ -12,13 +12,13 @@
 proto.eth.params: Ethereum protocol
 """
 
-from ...protocol import CoinProtocol,_nw,decoded_addr
+from ...protocol import CoinProtocol, _nw, decoded_addr
 from ...addr import CoinAddr
-from ...util import is_hex_str_lc,Msg
+from ...util import is_hex_str_lc, Msg
 
-class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
+class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 
-	network_names = _nw('mainnet','testnet','devnet')
+	network_names = _nw('mainnet', 'testnet', 'devnet')
 	addr_len      = 20
 	mmtypes       = ('E',)
 	dfl_mmtype    = 'E'
@@ -27,7 +27,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 
 	coin_amt      = 'ETHAmt'
 	max_tx_fee    = '0.005'
-	chain_names   = ['ethereum','foundation']
+	chain_names   = ['ethereum', 'foundation']
 	sign_mode     = 'standalone'
 	caps          = ('token',)
 	mmcaps        = ('rpc', 'rpc_init', 'tw', 'msg')
@@ -63,9 +63,9 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 			Msg(f'Invalid address: {addr}')
 		return False
 
-	def checksummed_addr(self,addr):
+	def checksummed_addr(self, addr):
 		h = self.keccak_256(addr.encode()).digest().hex()
-		return ''.join(addr[i].upper() if int(h[i],16) > 7 else addr[i] for i in range(len(addr)))
+		return ''.join(addr[i].upper() if int(h[i], 16) > 7 else addr[i] for i in range(len(addr)))
 
 	def pubhash2addr(self, pubhash, addr_type):
 		assert len(pubhash) == 20, f'{len(pubhash)}: invalid length for {self.name} pubkey hash'
@@ -74,7 +74,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Secp256k1):
 		return CoinAddr(self, pubhash.hex())
 
 class testnet(mainnet):
-	chain_names = ['kovan','goerli','rinkeby']
+	chain_names = ['kovan', 'goerli', 'rinkeby']
 
 class regtest(testnet):
 	chain_names = ['developmentchain']

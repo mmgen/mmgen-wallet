@@ -21,26 +21,26 @@ from ....addr import CoinAddr, TokenAddr
 from ..contract import Token
 from .completed import Completed, TokenCompleted
 
-class Unsigned(Completed,TxBase.Unsigned):
+class Unsigned(Completed, TxBase.Unsigned):
 	desc = 'unsigned transaction'
 
 	def parse_txfile_serialized_data(self):
 		d = json.loads(self.serialized)
 		o = {
-			'from':     CoinAddr(self.proto,d['from']),
+			'from':     CoinAddr(self.proto, d['from']),
 			# NB: for token, 'to' is sendto address
-			'to':       CoinAddr(self.proto,d['to']) if d['to'] else None,
+			'to':       CoinAddr(self.proto, d['to']) if d['to'] else None,
 			'amt':      self.proto.coin_amt(d['amt']),
 			'gasPrice': self.proto.coin_amt(d['gasPrice']),
 			'startGas': self.proto.coin_amt(d['startGas']),
 			'nonce':    ETHNonce(d['nonce']),
 			'chainId':  None if d['chainId'] == 'None' else Int(d['chainId']),
-			'data':     HexStr(d['data']) }
+			'data':     HexStr(d['data'])}
 		self.gas = o['startGas'] # approximate, but better than nothing
 		self.txobj = o
-		return d # 'token_addr','decimals' required by Token subclass
+		return d # 'token_addr', 'decimals' required by Token subclass
 
-	async def do_sign(self,wif):
+	async def do_sign(self, wif):
 		o = self.txobj
 		o_conv = {
 			'to':       bytes.fromhex(o['to'] or ''),
@@ -61,11 +61,11 @@ class Unsigned(Completed,TxBase.Unsigned):
 
 		if o['data']:
 			if o['to']:
-				assert self.txobj['token_addr'] == TokenAddr(self.proto,etx.creates.hex()),'Token address mismatch'
+				assert self.txobj['token_addr'] == TokenAddr(self.proto, etx.creates.hex()), 'Token address mismatch'
 			else: # token- or contract-creating transaction
-				self.txobj['token_addr'] = TokenAddr(self.proto,etx.creates.hex())
+				self.txobj['token_addr'] = TokenAddr(self.proto, etx.creates.hex())
 
-	async def sign(self,tx_num_str,keys): # return TX object or False; don't exit or raise exception
+	async def sign(self, tx_num_str, keys): # return TX object or False; don't exit or raise exception
 
 		from ....exception import TransactionChainMismatch
 		try:
@@ -84,28 +84,28 @@ class Unsigned(Completed,TxBase.Unsigned):
 			msg(f'{e}: transaction signing failed!')
 			return False
 
-class TokenUnsigned(TokenCompleted,Unsigned):
+class TokenUnsigned(TokenCompleted, Unsigned):
 	desc = 'unsigned transaction'
 
 	def parse_txfile_serialized_data(self):
 		d = Unsigned.parse_txfile_serialized_data(self)
 		o = self.txobj
-		o['token_addr'] = TokenAddr(self.proto,d['token_addr'])
+		o['token_addr'] = TokenAddr(self.proto, d['token_addr'])
 		o['decimals'] = Int(d['decimals'])
-		t = Token(self.cfg,self.proto,o['token_addr'],o['decimals'])
-		o['data'] = t.create_data(o['to'],o['amt'])
+		t = Token(self.cfg, self.proto, o['token_addr'], o['decimals'])
+		o['data'] = t.create_data(o['to'], o['amt'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
 
-	async def do_sign(self,wif):
+	async def do_sign(self, wif):
 		o = self.txobj
-		t = Token(self.cfg,self.proto,o['token_addr'],o['decimals'])
+		t = Token(self.cfg, self.proto, o['token_addr'], o['decimals'])
 		tx_in = t.make_tx_in(
 				to_addr   = o['to'],
 				amt       = o['amt'],
 				start_gas = self.start_gas,
 				gasPrice  = o['gasPrice'],
 				nonce     = o['nonce'])
-		(self.serialized,self.coin_txid) = await t.txsign(tx_in,wif,o['from'],chain_id=o['chainId'])
+		(self.serialized, self.coin_txid) = await t.txsign(tx_in, wif, o['from'], chain_id=o['chainId'])
 
 class AutomountUnsigned(TxBase.AutomountUnsigned, Unsigned):
 	pass
