@@ -4,7 +4,7 @@ from mmgen.cfg import Config
 from mmgen.util import msg
 
 opts_data = {
-	'sets': [('print_checksum',True,'quiet',True)],
+	'sets': [('print_checksum', True, 'quiet', True)],
 	'text': {
 		'desc': 'Opts test',
 		'usage':'[args] [opts]',
@@ -41,7 +41,7 @@ sample note: {nn}
 """
 	},
 	'code': {
-		'options': lambda cfg,help_notes,s: s.format(
+		'options': lambda cfg, help_notes, s: s.format(
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
 		),
@@ -52,38 +52,34 @@ sample note: {nn}
 cfg = Config(opts_data=opts_data)
 
 for k in (
-	'foo',               # added opt
-	'print_checksum',    # sets 'quiet'
-	'quiet','verbose',   # _incompatible_opts
-	'passwd_file',       # _infile_opts - check_infile()
-	'outdir',            # check_outdir()
-	'cached_balances',   # opt_sets_global
-	'minconf',           # global_sets_opt
-	'hidden_incog_input_params',
-	'keep_label',
-	'seed_len',
-	'hash_preset',
-	'label',
-	'min_temp',
-	'max_temp',
-	'coin',
-	'pager',
-	'point',
-	):
-	msg('{:30} {}'.format( f'cfg.{k}:', getattr(cfg,k) ))
+		'foo',               # added opt
+		'print_checksum',    # sets 'quiet'
+		'quiet', 'verbose',  # _incompatible_opts
+		'passwd_file',       # _infile_opts - check_infile()
+		'outdir',            # check_outdir()
+		'cached_balances',   # opt_sets_global
+		'minconf',           # global_sets_opt
+		'hidden_incog_input_params',
+		'keep_label',
+		'seed_len',
+		'hash_preset',
+		'label',
+		'min_temp',
+		'max_temp',
+		'coin',
+		'pager',
+		'point'):
+	msg('{:30} {}'.format(f'cfg.{k}:', getattr(cfg, k)))
 
 msg('')
 for k in (
-	'cached_balances',   # opt_sets_global
-	'minconf',           # global_sets_opt
-	):
-	msg('{:30} {}'.format( f'cfg.{k}:', getattr(cfg,k) ))
+		'cached_balances',   # opt_sets_global
+		'minconf'):          # global_sets_opt
+	msg('{:30} {}'.format(f'cfg.{k}:', getattr(cfg, k)))
 
 msg('')
-for k in (
-	'fee_estimate_mode', # _autoset_opts
-	):
-	msg('{:30} {}'.format( f'cfg.{k}:', getattr(cfg,k) ))
+for k in ('fee_estimate_mode',): # _autoset_opts
+	msg('{:30} {}'.format(f'cfg.{k}:', getattr(cfg, k)))
 
 msg('')
 for n, k in enumerate(cfg._args, 1):

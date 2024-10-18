@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys,os
+import sys, os
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(sys.argv[0])))))
 sys.path[0] = os.curdir
 
@@ -8,7 +8,7 @@ from mmgen.cfg import Config
 cfg = Config()
 
 from mmgen.util import msg
-from mmgen.term import init_term,get_term
+from mmgen.term import init_term, get_term
 init_term(cfg)
 term = get_term()
 
