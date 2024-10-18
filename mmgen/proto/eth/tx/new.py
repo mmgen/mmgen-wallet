@@ -27,6 +27,7 @@ class New(Base,TxBase.New):
 	fee_fail_fs = 'Network fee estimation failed'
 	no_chg_msg = 'Warning: Transaction leaves account with zero balance'
 	usr_fee_prompt = 'Enter transaction fee or gas price: '
+	msg_insufficient_funds = 'Account balance insufficient to fund this transaction ({} {} needed)'
 
 	def __init__(self,*args,**kwargs):
 
@@ -207,7 +208,8 @@ class TokenNew(TokenBase,New):
 		return await super().precheck_sufficient_funds(inputs_sum,sel_unspent,outputs_sum)
 
 	async def get_funds_available(self, fee, outputs_sum):
-		return (await self.twctl.get_eth_balance(self.inputs[0].addr)) - fee
+		bal = await self.twctl.get_eth_balance(self.inputs[0].addr)
+		return self._funds_available(bal >= fee, bal - fee if bal >= fee else fee - bal)
 
 	def final_inputs_ok_msg(self,funds_left):
 		token_bal = (

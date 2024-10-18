@@ -37,18 +37,29 @@ class New(Base,TxBase.New):
 			pink(str(self.cfg.fee_estimate_confs)),
 			suf(self.cfg.fee_estimate_confs))
 
+	def warn_fee_estimate_fail(self, fe_type):
+		if not hasattr(self, '_fee_estimate_fail_warning_shown'):
+			msg(self.fee_fail_fs.format(
+				c = self.cfg.fee_estimate_confs,
+				t = fe_type))
+			self._fee_estimate_fail_warning_shown = True
+
 	async def get_rel_fee_from_network(self):
 		try:
 			ret = await self.rpc.call(
 				'estimatesmartfee',
 				self.cfg.fee_estimate_confs,
-				self.cfg.fee_estimate_mode.upper() )
-			fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
+				self.cfg.fee_estimate_mode.upper())
+			fee_per_kb = self.proto.coin_amt(ret['feerate']) if 'feerate' in ret else None
 			fe_type = 'estimatesmartfee'
 		except:
 			args = self.rpc.daemon.estimatefee_args(self.rpc)
-			fee_per_kb = await self.rpc.call('estimatefee', *args)
+			ret = await self.rpc.call('estimatefee', *args)
+			fee_per_kb = self.proto.coin_amt(ret)
 			fe_type = 'estimatefee'
+
+		if fee_per_kb is None:
+			self.warn_fee_estimate_fail(fe_type)
 
 		return fee_per_kb, fe_type
 
@@ -64,9 +75,7 @@ class New(Base,TxBase.New):
 	def fee_est2abs(self,fee_per_kb,fe_type=None):
 		from decimal import Decimal
 		tx_size = self.estimate_size()
-		ret = self.proto.coin_amt(
-			fee_per_kb * Decimal(self.cfg.fee_adjust) * tx_size / 1024,
-			from_decimal = True)
+		ret = self.proto.coin_amt('1') * (fee_per_kb * self.cfg.fee_adjust * tx_size / 1024)
 		if self.cfg.verbose:
 			msg(fmt(f"""
 				{fe_type.upper()} fee for {self.cfg.fee_estimate_confs} confirmations: {fee_per_kb} {self.coin}/kB

@@ -73,13 +73,17 @@ def mmaddr2coinaddr(cfg, mmaddr, ad_w, ad_f, proto):
 class New(Base):
 
 	fee_is_approximate = False
-	msg_low_coin = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
 	msg_wallet_low_coin = 'Wallet has insufficient funds for this transaction ({} {} needed)'
 	msg_no_change_output = """
 		ERROR: No change address specified.  If you wish to create a transaction with
 		only one output, specify a single output address with no {} amount
 	"""
+	msg_insufficient_funds = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
 	chg_autoselected = False
+	_funds_available = namedtuple('funds_available', ['is_positive', 'amt'])
+
+	def warn_insufficient_funds(self, amt, coin):
+		msg(self.msg_insufficient_funds.format(amt.hl(), coin))
 
 	def update_output_amt(self, idx, amt):
 		o = self.outputs[idx]._asdict()
@@ -149,28 +153,9 @@ class New(Base):
 			msg(self.msg_wallet_low_coin.format(outputs_sum-inputs_sum, self.dcoin))
 			return False
 		if inputs_sum < outputs_sum:
-			msg(self.msg_low_coin.format(outputs_sum-inputs_sum, self.dcoin))
+			self.warn_insufficient_funds(outputs_sum - inputs_sum, self.dcoin)
 			return False
 		return True
-
-	async def get_fee_from_user(self, have_estimate_fail=[]):
-
-		if self.cfg.fee:
-			desc = 'User-selected'
-			start_fee = self.cfg.fee
-		else:
-			desc = self.network_estimated_fee_label
-			fee_per_kb, fe_type = await self.get_rel_fee_from_network()
-
-			if fee_per_kb < 0:
-				if not have_estimate_fail:
-					msg(self.fee_fail_fs.format(c=self.cfg.fee_estimate_confs, t=fe_type))
-					have_estimate_fail.append(True)
-				start_fee = None
-			else:
-				start_fee = self.fee_est2abs(fee_per_kb, fe_type)
-
-		return self.get_usr_fee_interactive(start_fee, desc=desc)
 
 	def add_output(self, coinaddr, amt, is_chg=None):
 		self.outputs.append(self.Output(self.proto, addr=coinaddr, amt=amt, is_chg=is_chg))
@@ -358,11 +343,10 @@ class New(Base):
 				yield i
 		self.inputs = type(self.inputs)(self, list(gen_inputs()))
 
-	def warn_insufficient_funds(self, funds_left):
-		msg(self.msg_low_coin.format(self.proto.coin_amt(-funds_left).hl(), self.coin))
-
 	async def get_funds_available(self, fee, outputs_sum):
-		return self.sum_inputs() - outputs_sum - fee
+		in_ = self.sum_inputs()
+		out = outputs_sum + fee
+		return self._funds_available(in_ >= out, in_ - out if in_ >= out else out - in_)
 
 	async def get_inputs_from_user(self, outputs_sum):
 
@@ -379,19 +363,25 @@ class New(Base):
 
 			self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
 
-			self.usr_fee = await self.get_fee_from_user()
+			if self.cfg.fee:
+				self.usr_fee = self.get_usr_fee_interactive(self.cfg.fee, 'User-selected')
+			else:
+				fee_per_kb, fe_type = await self.get_rel_fee_from_network()
+				self.usr_fee = self.get_usr_fee_interactive(
+					None if fee_per_kb is None else self.fee_est2abs(fee_per_kb, fe_type),
+					self.network_estimated_fee_label)
 
-			funds_left = await self.get_funds_available(self.usr_fee,outputs_sum)
+			funds = await self.get_funds_available(self.usr_fee, outputs_sum)
 
-			if funds_left >= 0:
-				p = self.final_inputs_ok_msg(funds_left)
+			if funds.is_positive:
+				p = self.final_inputs_ok_msg(funds.amt)
 				from ..ui import keypress_confirm
 				if self.cfg.yes or keypress_confirm(self.cfg, p+'. OK?', default_yes=True):
 					if self.cfg.yes:
 						msg(p)
-					return funds_left
+					return funds.amt
 			else:
-				self.warn_insufficient_funds(funds_left)
+				self.warn_insufficient_funds(funds.amt, self.coin)
 
 	async def create(self, cmd_args, locktime=None, do_info=False, caller='txcreate'):
 
