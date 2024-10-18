@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.unit_tests_d.ut_rpc: RPC unit test for the MMGen suite
+test.daemontest_d.ut_rpc: RPC unit test for the MMGen suite
 """
 
 import sys, os

@@ -400,7 +400,7 @@ class Config(Lockable):
 		short_disp_timeout = 0.1
 		if os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'):
 			stdin_tty = True
-		if gc.prog_name == 'unit_tests.py':
+		if gc.prog_name == 'modtest.py':
 			_set_ok += ('debug_subseed',)
 			_reset_ok += ('force_standalone_scrypt_module',)
 

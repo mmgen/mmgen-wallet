@@ -17,15 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test/unit_tests.py: Unit tests for the MMGen suite
+test.include.unit_test: Unit test framework for the MMGen suite
 """
 
 import sys, os, time, importlib, platform, asyncio
 
-try:
-	from include.test_init import repo_root
-except ImportError:
-	from test.include.test_init import repo_root
+from .test_init import repo_root
 
 # for the unit tests, violate MMGen Project best practices and allow use of the dev tools
 # in production code:
@@ -82,9 +79,16 @@ set_globals(cfg)
 
 file_pfx = 'ut_'
 
-tests_d = os.path.join(repo_root, 'test', 'unit_tests_d')
+test_type = {
+	'modtest.py':    'unit',
+	'daemontest.py': 'daemon',
+}[gc.prog_name]
 
-all_tests = sorted(fn[len(file_pfx):-len('.py')] for fn in os.listdir(tests_d) if fn.startswith(file_pfx))
+test_subdir = gc.prog_name.removesuffix('.py') + '_d'
+
+test_dir = os.path.join(repo_root, 'test', test_subdir)
+
+all_tests = sorted(fn[len(file_pfx):-len('.py')] for fn in os.listdir(test_dir) if fn.startswith(file_pfx))
 
 exclude = cfg.exclude.split(',') if cfg.exclude else []
 
@@ -101,7 +105,7 @@ if cfg.list:
 if cfg.list_subtests:
 	def gen():
 		for test in all_tests:
-			mod = importlib.import_module(f'test.unit_tests_d.{file_pfx}{test}')
+			mod = importlib.import_module(f'test.{test_subdir}.{file_pfx}{test}')
 			if hasattr(mod, 'unit_tests'):
 				t = getattr(mod, 'unit_tests')
 				subtests = [k for k, v in t.__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
@@ -148,11 +152,11 @@ class UnitTestHelpers:
 tests_seen = []
 
 def run_test(test, subtest=None):
-	mod = importlib.import_module(f'test.unit_tests_d.{file_pfx}{test}')
+	mod = importlib.import_module(f'test.{test_subdir}.{file_pfx}{test}')
 
 	def run_subtest(t, subtest):
 		subtest_disp = subtest.replace('_', '-')
-		msg(brown('Running unit subtest ') + orange(f'{test}.{subtest_disp}'))
+		msg(brown(f'Running {test_type} subtest ') + orange(f'{test}.{subtest_disp}'))
 
 		if getattr(t, 'silence_output', False):
 			t._silence()
@@ -190,11 +194,11 @@ def run_test(test, subtest=None):
 			die(4, f'Unit subtest {subtest_disp!r} failed')
 
 	if test not in tests_seen:
-		gmsg(f'Running unit test {test}')
+		gmsg(f'Running {test_type} test {test}')
 		tests_seen.append(test)
 
 	if cfg.no_altcoin_deps and getattr(mod, 'altcoin_dep', None):
-		cfg._util.qmsg(gray(f'Skipping unit test {test!r} [--no-altcoin-deps]'))
+		cfg._util.qmsg(gray(f'Skipping {test_type} test {test!r} [--no-altcoin-deps]'))
 		return
 
 	if hasattr(mod, 'unit_tests'): # new class-based API
@@ -212,22 +216,22 @@ def run_test(test, subtest=None):
 		for _subtest in subtests:
 			subtest_disp = _subtest.replace('_', '-')
 			if cfg.no_altcoin_deps and _subtest in altcoin_deps:
-				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} [--no-altcoin-deps]'))
+				cfg._util.qmsg(gray(f'Skipping {test_type} subtest {subtest_disp!r} [--no-altcoin-deps]'))
 				continue
 			if sys.platform == 'win32' and _subtest in win_skip:
-				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for Windows platform'))
+				cfg._util.qmsg(gray(f'Skipping {test_type} subtest {subtest_disp!r} for Windows platform'))
 				continue
 			if sys.platform == 'darwin' and _subtest in mac_skip:
-				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for macOS platform'))
+				cfg._util.qmsg(gray(f'Skipping {test_type} subtest {subtest_disp!r} for macOS platform'))
 				continue
 			if platform.machine() == 'aarch64' and _subtest in arm_skip:
-				cfg._util.qmsg(gray(f'Skipping unit subtest {subtest_disp!r} for ARM platform'))
+				cfg._util.qmsg(gray(f'Skipping {test_type} subtest {subtest_disp!r} for ARM platform'))
 				continue
 			run_subtest(t, _subtest)
 		if hasattr(t, '_post'):
 			t._post()
 	else:
-		assert not subtest, f'{subtest!r}: subtests not supported for this unit test'
+		assert not subtest, f'{subtest!r}: subtests not supported for this {test_type} test'
 		if not mod.unit_test().run_test(test, UnitTestHelpers(test)):
 			die(4, 'Unit test {test!r} failed')
 

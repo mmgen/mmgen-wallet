@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.unit_tests_d.ut_cashaddr: unit test for the BCH cashaddr module
+test.modtest_d.ut_cashaddr: unit test for the BCH cashaddr module
 """
 
 altcoin_dep = True

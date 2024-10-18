@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test/unit_tests_d/ut_tx_deserialize: TX deserialization unit tests for the MMGen suite
+test.daemontest_d.ut_tx: TX daemon tests for the MMGen suite
 """
 
 import os, json
@@ -13,8 +13,10 @@ from mmgen.protocol import init_proto
 from mmgen.tx import CompletedTX
 from mmgen.proto.btc.tx.base import DeserializeTX
 from mmgen.rpc import rpc_init
+from mmgen.daemon import CoinDaemon
+from mmgen.tx import NewTX
 
-from ..include.common import cfg, start_test_daemons, stop_test_daemons
+from ..include.common import cfg, start_test_daemons, stop_test_daemons, qmsg
 
 def print_info(name, extra_desc):
 	if cfg.names:
@@ -105,6 +107,19 @@ async def do_mmgen_ref(daemons, fns, name, desc):
 class unit_tests:
 
 	altcoin_deps = ('mmgen_ref_alt',)
+
+	async def newtx(self, name, ut):
+		qmsg('  Testing NewTX initializer')
+		d = CoinDaemon(cfg, 'btc', test_suite=True)
+		d.start()
+
+		proto = init_proto(cfg, 'btc', need_amt=True)
+		await NewTX(cfg=cfg, proto=proto)
+
+		d.stop()
+		d.remove_datadir()
+		qmsg('  OK')
+		return True
 
 	async def core_vectors(self, name, ut):
 

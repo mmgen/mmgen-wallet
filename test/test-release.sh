@@ -258,7 +258,8 @@ fi
 cmdtest_py='test/cmdtest.py -n'
 objtest_py='test/objtest.py'
 objattrtest_py='test/objattrtest.py'
-unit_tests_py='test/unit_tests.py --names --quiet'
+modtest_py='test/modtest.py --names --quiet'
+daemontest_py='test/daemontest.py --names --quiet'
 tooltest_py='test/tooltest.py'
 tooltest2_py='test/tooltest2.py --names --quiet'
 gentest_py='test/gentest.py --quiet'
@@ -312,7 +313,8 @@ do
 		exit ;;
 	A)  SKIP_ALT_DEP=1
 		cmdtest_py+=" --no-altcoin"
-		unit_tests_py+=" --no-altcoin-deps"
+		modtest_py+=" --no-altcoin-deps"
+		daemontest_py+=" --no-altcoin-deps"
 		scrambletest_py+=" --no-altcoin"
 		tooltest2_py+=" --no-altcoin" ;;
 	b)  cmdtest_py+=" --buf-keypress" ;;
@@ -323,7 +325,8 @@ do
 		tooltest2_py+=" --fork --coverage"
 		scrambletest_py+=" --coverage"
 		python="python3 -m trace --count --file=test/trace.acc --coverdir=test/trace"
-		unit_tests_py="$python $unit_tests_py"
+		modtest_py="$python $modtest_py"
+		daemontest_py="$python $daemontest_py"
 		objtest_py="$python $objtest_py"
 		objattrtest_py="$python $objattrtest_py"
 		gentest_py="$python $gentest_py"
@@ -334,8 +337,8 @@ do
 	D)  export MMGEN_TEST_SUITE_DETERMINISTIC=1
 		export MMGEN_DISABLE_COLOR=1 ;;
 	e)  exec_prog=$(realpath $OPTARG) ;;
-	f)  rounds=6 FAST=1 fast_opt='--fast' unit_tests_py+=" --fast" ;;
-	F)  rounds=3 FAST=1 fast_opt='--fast' unit_tests_py+=" --fast" ;;
+	f)  rounds=6 FAST=1 fast_opt='--fast' modtest_py+=" --fast" daemontest_py+=" --fast" ;;
+	F)  rounds=3 FAST=1 fast_opt='--fast' modtest_py+=" --fast" daemontest_py+=" --fast" ;;
 	I)  INSTALL_PACKAGE=1 ;;
 	L)  list_avail_tests; exit ;;
 	l)  list_group_symbols; exit ;;
@@ -350,7 +353,8 @@ do
 	V)  VERBOSE='--verbose' VERBOSE_SHORTOPT='-v' QUIET=''
 		[ "$EXACT_OUTPUT" ] || cmdtest_py+=" --verbose"
 		STDOUT_DEVNULL='' STDERR_DEVNULL=''
-		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
+		modtest_py="${modtest_py/--quiet/--verbose}"
+		daemontest_py="${daemontest_py/--quiet/--verbose}"
 		altcoin_mod_opts="${altcoin_mod_opts/--quiet/--verbose}"
 		tooltest2_py="${tooltest2_py/--quiet/--verbose}"
 		gentest_py="${gentest_py/--quiet/--verbose}"
@@ -387,7 +391,8 @@ case $1 in
 	'noalt')   tests=$noalt_tests
 				SKIP_ALT_DEP=1
 				cmdtest_py+=" --no-altcoin"
-				unit_tests_py+=" --no-altcoin-deps"
+				modtest_py+=" --no-altcoin-deps"
+				daemontest_py+=" --no-altcoin-deps"
 				scrambletest_py+=" --no-altcoin" ;;
 	'quick')   tests=$quick_tests ;;
 	'qskip')   tests=$qskip_tests ;;

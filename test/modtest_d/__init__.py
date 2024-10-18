@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.unit_tests_d.__init__: shared data for unit tests for the MMGen suite
+test.modtest_d.__init__: shared data for unit tests for the MMGen suite
 """
 
 import sys, os

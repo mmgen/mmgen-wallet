@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.unit_tests_d.ut_obj: data object unit tests for the MMGen suite
+test.modtest_d.ut_obj: data object unit tests for the MMGen suite
 """
 
 from decimal import Decimal, getcontext

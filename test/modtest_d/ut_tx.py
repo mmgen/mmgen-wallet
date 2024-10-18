@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 """
-test.unit_tests_d.ut_tx: TX unit tests for the MMGen suite
+test.modtest_d.ut_tx: TX unit tests for the MMGen suite
 """
 
 import os, re
 
 from mmgen.devtools import get_diff, get_ndiff
-from mmgen.tx import NewTX, CompletedTX, UnsignedTX
+from mmgen.tx import CompletedTX, UnsignedTX
 from mmgen.tx.file import MMGenTxFile
-from mmgen.daemon import CoinDaemon
 from mmgen.protocol import init_proto
 from mmgen.cfg import Config
 
@@ -44,19 +43,6 @@ async def do_txfile_test(desc, fns, cfg=cfg, check=False):
 class unit_tests:
 
 	altcoin_deps = ('txfile_alt', 'txfile_alt_legacy')
-
-	async def tx(self, name, ut):
-		qmsg('  Testing NewTX initializer')
-		d = CoinDaemon(cfg, 'btc', test_suite=True)
-		d.start()
-
-		proto = init_proto(cfg, 'btc', need_amt=True)
-		await NewTX(cfg=cfg, proto=proto)
-
-		d.stop()
-		d.remove_datadir()
-		qmsg('  OK')
-		return True
 
 	async def txfile(self, name, ut):
 		return await do_txfile_test(

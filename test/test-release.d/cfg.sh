@@ -8,7 +8,7 @@
 #   https://github.com/mmgen/mmgen-wallet
 #   https://gitlab.com/mmgen/mmgen-wallet
 
-all_tests="dep dev lint obj color unit hash ref altref altgen xmr eth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
+all_tests="dep dev lint obj color daemon mod hash ref altref altgen xmr eth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
 
 groups_desc="
 	default  - All tests minus the extra tests
@@ -19,10 +19,10 @@ groups_desc="
 "
 
 init_groups() {
-	dfl_tests='dep alt obj color unit hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc xmr'
+	dfl_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc xmr'
 	extra_tests='dep dev lint autosign_live ltc_tn bch_tn'
-	noalt_tests='dep alt obj color unit hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
-	quick_tests='dep alt obj color unit hash ref tool tool2 gen help autosign btc btc_rt altref altgen eth etc xmr'
+	noalt_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
+	quick_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen eth etc xmr'
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
 	noalt_ok_tests='lint'
 
@@ -61,7 +61,10 @@ init_tests() {
 	t_color='- test/colortest.py'
 
 	d_dep="system and testing dependencies"
-	t_dep="- $unit_tests_py testdep dep daemon.exec"
+	t_dep="
+		- $modtest_py testdep dep
+		- $daemontest_py exec
+	"
 
 	d_dev="developer scripts ${YELLOW}(additional dependencies required)$RESET"
 	t_dev="
@@ -82,8 +85,11 @@ init_tests() {
 
 	if [ "$SKIP_ALT_DEP" ]; then t_lint_skip='b'; else t_lint_skip='a'; fi
 
-	d_unit="low-level subsystems"
-	t_unit="- $unit_tests_py --exclude testdep,dep,daemon"
+	d_daemon="low-level subsystems involving coin daemons"
+	t_daemon="- $daemontest_py --exclude exec"
+
+	d_mod="low-level subsystems"
+	t_mod="- $modtest_py --exclude testdep,dep"
 
 	d_hash="internal hash function implementations"
 	t_hash="

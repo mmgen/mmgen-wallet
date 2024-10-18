@@ -23,9 +23,9 @@ from mmgen.bip39 import is_bip39_mnemonic
 from mmgen.baseconv import is_mmgen_mnemonic, is_b58_str
 from mmgen.xmrseed import is_xmrseed
 
-from ..unit_tests_d.ut_baseconv import unit_test as ut_baseconv
-from ..unit_tests_d.ut_bip39 import unit_tests as ut_bip39
-from ..unit_tests_d.ut_xmrseed import unit_tests as ut_xmrseed
+from ..modtest_d.ut_baseconv import unit_test as ut_baseconv
+from ..modtest_d.ut_bip39 import unit_tests as ut_bip39
+from ..modtest_d.ut_xmrseed import unit_tests as ut_xmrseed
 
 from ..include.common import cfg, sample_text
 proto = cfg._proto

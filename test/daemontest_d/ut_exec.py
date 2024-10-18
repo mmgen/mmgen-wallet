@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.unit_tests_d.ut_daemon: unit test for the MMGen suite's Daemon class
+test.daemontest_d.ut_exec: unit test for the MMGen suite's Daemon class
 """
 
 from subprocess import run, PIPE
@@ -91,7 +91,7 @@ class unit_tests:
 
 		return True
 
-	def exec(self, name, ut):
+	def avail(self, name, ut):
 		return self._test_cmd(['start', '-Vm'], 'Testing availability of coin daemons...')
 
 	def cmds(self, name, ut):
