@@ -19,32 +19,32 @@ class backend:
 
 	class base(keygen_base):
 
-		def __init__(self,cfg):
+		def __init__(self, cfg):
 			super().__init__(cfg)
 			from ...proto.xmr.params import mainnet
 			self.proto_cls = mainnet
 			from ...util2 import get_keccak
 			self.keccak_256 = get_keccak(cfg)
 
-		def to_viewkey(self,privkey):
+		def to_viewkey(self, privkey):
 			return self.proto_cls.preprocess_key(
 				self.proto_cls,
 				self.keccak_256(privkey).digest(),
-				None )
+				None)
 
 	class nacl(base):
 
 		production_safe = True
 
-		def __init__(self,cfg):
+		def __init__(self, cfg):
 			super().__init__(cfg)
 			from nacl.bindings import crypto_scalarmult_ed25519_base_noclamp
 			self.scalarmultbase = crypto_scalarmult_ed25519_base_noclamp
 
-		def to_pubkey(self,privkey):
+		def to_pubkey(self, privkey):
 			return PubKey(
-				self.scalarmultbase( privkey ) +
-				self.scalarmultbase( self.to_viewkey(privkey) ),
+				self.scalarmultbase(privkey) +
+				self.scalarmultbase(self.to_viewkey(privkey)),
 				compressed = privkey.compressed
 			)
 
@@ -52,15 +52,15 @@ class backend:
 
 		production_safe = False
 
-		def __init__(self,cfg):
+		def __init__(self, cfg):
 			super().__init__(cfg)
-			from ...contrib.ed25519 import edwards,encodepoint,B,scalarmult
+			from ...contrib.ed25519 import edwards, encodepoint, B, scalarmult
 			self.edwards     = edwards
 			self.encodepoint = encodepoint
 			self.B           = B
 			self.scalarmult  = scalarmult
 
-		def scalarmultbase(self,privnum):
+		def scalarmultbase(self, privnum):
 			"""
 			Source and license for scalarmultbase function:
 			  https://github.com/bigreddmachine/MoneroPy/blob/master/moneropy/crypto/ed25519.py
@@ -77,18 +77,18 @@ class backend:
 
 		@staticmethod
 		def rev_bytes2int(in_bytes):
-			return int.from_bytes( in_bytes[::-1], 'big' )
+			return int.from_bytes(in_bytes[::-1], 'big')
 
-		def to_pubkey(self,privkey):
+		def to_pubkey(self, privkey):
 			return PubKey(
-				self.encodepoint( self.scalarmultbase( self.rev_bytes2int(privkey) )) +
-				self.encodepoint( self.scalarmultbase( self.rev_bytes2int(self.to_viewkey(privkey)) )),
+				self.encodepoint(self.scalarmultbase(self.rev_bytes2int(privkey))) +
+				self.encodepoint(self.scalarmultbase(self.rev_bytes2int(self.to_viewkey(privkey)))),
 				compressed = privkey.compressed
 			)
 
 	class ed25519ll_djbec(ed25519):
 
-		def __init__(self,cfg):
+		def __init__(self, cfg):
 			super().__init__(cfg)
 			from ...contrib.ed25519ll_djbec import scalarmult
 			self.scalarmult = scalarmult

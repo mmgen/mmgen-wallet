@@ -13,7 +13,7 @@ proto.xmr.rpc: Monero base protocol RPC client class
 """
 
 import re
-from ...rpc import RPCClient,IPPort,auth_data
+from ...rpc import RPCClient, IPPort, auth_data
 
 class MoneroRPCClient(RPCClient):
 
@@ -32,7 +32,7 @@ class MoneroRPCClient(RPCClient):
 			test_connection       = True,
 			proxy                 = None,
 			daemon                = None,
-			ignore_daemon_version = False ):
+			ignore_daemon_version = False):
 
 		self.proto = proto
 
@@ -42,10 +42,10 @@ class MoneroRPCClient(RPCClient):
 			if host.endswith('.onion'):
 				self.network_proto = 'http'
 
-		super().__init__(cfg,host,port,test_connection)
+		super().__init__(cfg, host, port, test_connection)
 
 		if self.auth_type:
-			self.auth = auth_data(user,passwd)
+			self.auth = auth_data(user, passwd)
 
 		if True:
 			self.set_backend('requests')
@@ -63,54 +63,54 @@ class MoneroRPCClient(RPCClient):
 			if ver_str:
 				self.daemon_version_str = ver_str
 				self.daemon_version = sum(
-					int(m) * (1000 ** n) for n,m in
-						enumerate(reversed(re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)',ver_str).groups()))
+					int(m) * (1000 ** n) for n, m in
+						enumerate(reversed(re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)', ver_str).groups()))
 				)
 				if self.daemon and self.daemon_version > self.daemon.coind_version:
 					self.handle_unsupported_daemon_version(
 						proto.name,
-						ignore_daemon_version or proto.ignore_daemon_version or self.cfg.ignore_daemon_version )
+						ignore_daemon_version or proto.ignore_daemon_version or self.cfg.ignore_daemon_version)
 			else: # restricted (public) node:
 				self.daemon_version_str = None
 				self.daemon_version = None
 
-	def call(self,method,*params,**kwargs):
+	def call(self, method, *params, **kwargs):
 		assert not params, f'{self.name}.call() accepts keyword arguments only'
 		return self.process_http_resp(self.backend.run_noasync(
-			payload = {'id': 0, 'jsonrpc': '2.0', 'method': method, 'params': kwargs },
+			payload = {'id': 0, 'jsonrpc': '2.0', 'method': method, 'params': kwargs},
 			timeout = 3600, # allow enough time to sync ≈1,000,000 blocks
 			host_path = '/json_rpc'
 		))
 
-	def call_raw(self,method,*params,**kwargs):
+	def call_raw(self, method, *params, **kwargs):
 		assert not params, f'{self.name}.call() accepts keyword arguments only'
 		return self.process_http_resp(self.backend.run_noasync(
 			payload = kwargs,
 			timeout = self.timeout,
 			host_path = f'/{method}'
-		),json_rpc=False)
+		), json_rpc=False)
 
-	async def do_stop_daemon(self,silent=False):
+	async def do_stop_daemon(self, silent=False):
 		return self.call_raw('stop_daemon') # unreliable on macOS (daemon stops, but closes connection)
 
-	rpcmethods = ( 'get_info', )
-	rpcmethods_raw = ( 'get_height', 'send_raw_transaction', 'stop_daemon' )
+	rpcmethods = ('get_info',)
+	rpcmethods_raw = ('get_height', 'send_raw_transaction', 'stop_daemon')
 
 class MoneroWalletRPCClient(MoneroRPCClient):
 
 	auth_type = 'digest'
 
-	def __init__(self,cfg,daemon,test_connection=True):
+	def __init__(self, cfg, daemon, test_connection=True):
 
 		RPCClient.__init__(
 			self            = self,
 			cfg             = cfg,
 			host            = 'localhost',
 			port            = daemon.rpc_port,
-			test_connection = test_connection )
+			test_connection = test_connection)
 
 		self.daemon = daemon
-		self.auth = auth_data(daemon.user,daemon.passwd)
+		self.auth = auth_data(daemon.user, daemon.passwd)
 		self.set_backend('requests')
 
 	rpcmethods = (
@@ -125,10 +125,10 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		'refresh',       # start_height
 	)
 
-	def call_raw(self,*args,**kwargs):
+	def call_raw(self, *args, **kwargs):
 		raise NotImplementedError('call_raw() not implemented for class MoneroWalletRPCClient')
 
-	async def do_stop_daemon(self,silent=False):
+	async def do_stop_daemon(self, silent=False):
 		"""
 		NB: the 'stop_wallet' RPC call closes the open wallet before shutting down the daemon,
 		returning an error if no wallet is open
@@ -136,7 +136,7 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		try:
 			return self.call('stop_wallet')
 		except Exception as e:
-			from ...util import msg,msg_r,ymsg
+			from ...util import msg, msg_r, ymsg
 			from ...color import yellow
 			msg(f'{type(e).__name__}: {e}')
 			msg_r(yellow('Unable to shut down wallet daemon gracefully, so killing process instead...'))
