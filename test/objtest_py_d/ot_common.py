@@ -9,4 +9,4 @@ test.objtest_py_d.ot_common: shared data for MMGen data objects tests
 
 from ..include.common import getrand
 
-r16,r32 = getrand(16),getrand(32)
+r16, r32 = getrand(16), getrand(32)

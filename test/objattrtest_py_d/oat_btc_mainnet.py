@@ -7,31 +7,31 @@
 test.objattrtest_py_d.oat_btc_mainnet: BTC mainnet test vectors for MMGen data objects
 """
 
-from .oat_common import sample_objs,seed_bin,atd
+from .oat_common import sample_objs, seed_bin, atd
 from ..include.common import cfg
 from mmgen.protocol import init_proto
 
-proto = init_proto( cfg, 'btc', need_amt=True )
+proto = init_proto(cfg, 'btc', need_amt=True)
 
-from mmgen.key import PrivKey,WifKey
-from mmgen.addr import CoinAddr,MMGenID,AddrIdx,MMGenAddrType,MMGenPasswordType
+from mmgen.key import PrivKey, WifKey
+from mmgen.addr import CoinAddr, MMGenID, AddrIdx, MMGenAddrType, MMGenPasswordType
 from mmgen.amt import BTCAmt
 from mmgen.tw.shared import TwMMGenID
 
 sample_objs.update({
-	'PrivKey':   PrivKey(proto,seed_bin,compressed=True,pubkey_type='std'),
-	'WifKey':    WifKey(proto,'5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'),
-	'CoinAddr':  CoinAddr(proto,'1111111111111111111114oLvT2'),
+	'PrivKey':   PrivKey(proto, seed_bin, compressed=True, pubkey_type='std'),
+	'WifKey':    WifKey(proto, '5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'),
+	'CoinAddr':  CoinAddr(proto, '1111111111111111111114oLvT2'),
 	'BTCAmt':    BTCAmt('0.01'),
-	'MMGenID':   MMGenID(proto,'F00F00BB:B:1'),
-	'TwMMGenID': TwMMGenID(proto,'F00F00BB:S:23'),
+	'MMGenID':   MMGenID(proto, 'F00F00BB:B:1'),
+	'TwMMGenID': TwMMGenID(proto, 'F00F00BB:S:23'),
 })
 
 from mmgen.addrlist import AddrListEntry
 from mmgen.passwdlist import PasswordListEntry
-from mmgen.obj import TwComment,CoinTxID,HexStr
-from mmgen.seed import SeedID,SeedBase
-from mmgen.subseed import SubSeed,SubSeedIdx
+from mmgen.obj import TwComment, CoinTxID, HexStr
+from mmgen.seed import SeedID, SeedBase
+from mmgen.subseed import SubSeed, SubSeedIdx
 from mmgen.seedsplit import (
 	SeedShareCount,
 	SeedSplitIDString,
@@ -59,21 +59,21 @@ tests = {
 		{}
 	),
 	'PasswordListEntry': atd({
-		'passwd': (0b00001, str),
-		'idx':    (0b01001, AddrIdx),
-		'comment':(0b01101, TwComment),
-		'sec':    (0b01001, PrivKey),
+		'passwd':  (0b00001, str),
+		'idx':     (0b01001, AddrIdx),
+		'comment': (0b01101, TwComment),
+		'sec':     (0b01001, PrivKey),
 		},
 		(proto,),
-		{'passwd':'ΑlphaΩmega', 'idx':1 },
+		{'passwd': 'ΑlphaΩmega', 'idx': 1},
 	),
 	# obj.py
 	'PrivKey': atd({
 		'compressed': (0b00001, bool),
 		'wif':        (0b00001, WifKey),
 		},
-		(proto,seed_bin),
-		{'compressed':True, 'pubkey_type':'std'},
+		(proto, seed_bin),
+		{'compressed': True, 'pubkey_type': 'std'},
 	),
 	'MMGenAddrType': atd({
 		'name':        (0b01001, str),
@@ -85,7 +85,7 @@ tests = {
 		'extra_attrs': (0b11001, tuple),
 		'desc':        (0b01001, str),
 		},
-		(proto,'S'),
+		(proto, 'S'),
 		{},
 	),
 	# seed.py
@@ -93,7 +93,7 @@ tests = {
 		'data': (0b00001, bytes),
 		'sid':  (0b00001, SeedID),
 		},
-		[cfg,seed_bin],
+		[cfg, seed_bin],
 		{},
 	),
 	'SubSeed': atd({
@@ -101,14 +101,14 @@ tests = {
 		'nonce':  (0b00001, int),
 		'ss_idx': (0b01001, SubSeedIdx),
 		},
-		[sample_objs['SubSeedList'],1,1,'short'],
+		[sample_objs['SubSeedList'], 1, 1, 'short'],
 		{},
 	),
 	'SeedShareList': atd({
 		'count':  (0b01001, SeedShareCount),
 		'id_str': (0b01001, SeedSplitIDString),
 		},
-		[sample_objs['Seed'],sample_objs['SeedShareCount']],
+		[sample_objs['Seed'], sample_objs['SeedShareCount']],
 		{},
 	),
 	'SeedShareLast': atd({
@@ -121,14 +121,14 @@ tests = {
 		'idx':   (0b01001, MasterShareIdx),
 		'nonce': (0b00001, int),
 		},
-		[sample_objs['SeedShareList'],7,0],
+		[sample_objs['SeedShareList'], 7, 0],
 		{},
 	),
 	'SeedShareMasterJoining': atd({
 		'id_str': (0b01001, SeedSplitIDString),
 		'count':  (0b01001, SeedShareCount),
 		},
-		[cfg,sample_objs['MasterShareIdx'], sample_objs['Seed'], 'foo', 2],
+		[cfg, sample_objs['MasterShareIdx'], sample_objs['Seed'], 'foo', 2],
 		{},
 	),
 	# twuo.py
@@ -146,11 +146,11 @@ tests = {
 		},
 		(proto,),
 		{
-			'amt':BTCAmt('0.01'),
-			'twmmid':'F00F00BB:B:17',
-			'addr':'1111111111111111111114oLvT2',
+			'amt': BTCAmt('0.01'),
+			'twmmid': 'F00F00BB:B:17',
+			'addr': '1111111111111111111114oLvT2',
 			'confs': 100000,
-			'scriptPubKey':'ff',
+			'scriptPubKey': 'ff',
 		},
 	),
 	# tx.py
@@ -167,7 +167,7 @@ tests = {
 		'sequence':     (0b00001, int),
 		},
 		(proto,),
-		{ 'amt':BTCAmt('0.01'), 'addr':sample_objs['CoinAddr'] },
+		{'amt': BTCAmt('0.01'), 'addr': sample_objs['CoinAddr']},
 	),
 	'Base.Output': atd({
 		'vout':         (0b01001, int),
@@ -181,8 +181,8 @@ tests = {
 		'is_chg':       (0b00001, bool),
 		},
 		(proto,),
-		{ 'amt':BTCAmt('0.01'), 'addr':sample_objs['CoinAddr'] },
+		{'amt': BTCAmt('0.01'), 'addr': sample_objs['CoinAddr']},
 	),
 }
 
-tests['MMGenPasswordType'] = atd(tests['MMGenAddrType'].attrs, [proto,'P'], {})
+tests['MMGenPasswordType'] = atd(tests['MMGenAddrType'].attrs, [proto, 'P'], {})
