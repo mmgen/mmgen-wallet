@@ -52,21 +52,22 @@ def process_uopts(opts_data, opts):
 				opt, parm = arg[2:].split('=', 1) if '=' in arg else (arg[2:], None)
 				if len(opt) < 2:
 					die('CmdlineOptError', f'--{opt}: option name must be at least two characters long')
-				if opt in opts or (opt := get_opt_by_substring(opt, opts)):
-					if opts[opt].has_parm:
+				if (
+						(_opt := opt) in opts
+						or (_opt := get_opt_by_substring(_opt, opts))):
+					if opts[_opt].has_parm:
 						if parm:
-							yield (opts[opt].name, parm)
+							yield (opts[_opt].name, parm)
 						else:
 							idx += 1
 							if idx == argv_len or (parm := sys.argv[idx]).startswith('-'):
-								die('CmdlineOptError', f'missing parameter for option --{opt}')
-							yield (opts[opt].name, parm)
+								die('CmdlineOptError', f'missing parameter for option --{_opt}')
+							yield (opts[_opt].name, parm)
 					else:
 						if parm:
-							die('CmdlineOptError', f'option --{opt} requires no parameter')
-						yield (opts[opt].name, True)
+							die('CmdlineOptError', f'option --{_opt} requires no parameter')
+						yield (opts[_opt].name, True)
 				else:
-					opt, parm = arg[2:].split('=', 1) if '=' in arg else (arg[2:], None)
 					die('CmdlineOptError', f'--{opt}: unrecognized option')
 			elif arg[0] == '-' and len(arg) > 1:
 				for j, sopt in enumerate(arg[1:], 2):
@@ -109,7 +110,7 @@ def process_uopts(opts_data, opts):
 
 cmd_opts_pat = re.compile(r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)')
 global_opts_pat = re.compile(r'^\t\t\t(.)(.) --([a-zA-Z0-9-]{2,64})(=| )(.+)')
-ao = namedtuple('opt', ['name', 'has_parm'])
+opt_tuple = namedtuple('cmdline_option', ['name', 'has_parm'])
 
 def parse_opts(opts_data, opt_filter, global_opts_data, global_opts_filter):
 
@@ -117,7 +118,7 @@ def parse_opts(opts_data, opt_filter, global_opts_data, global_opts_filter):
 		for line in opts_data['text']['options'].strip().splitlines():
 			m = cmd_opts_pat.match(line)
 			if m and (not opt_filter or m[1] in opt_filter):
-				ret = ao(m[2].replace('-', '_'), m[3] == '=')
+				ret = opt_tuple(m[2].replace('-', '_'), m[3] == '=')
 				yield (m[1], ret)
 				yield (m[2], ret)
 
@@ -125,7 +126,7 @@ def parse_opts(opts_data, opt_filter, global_opts_data, global_opts_filter):
 		for line in global_opts_data['text'].splitlines():
 			m = global_opts_pat.match(line)
 			if m and m[1] in global_opts_filter.coin and m[2] in global_opts_filter.cmd:
-				yield (m[3], ao(m[3].replace('-', '_'), m[4] == '='))
+				yield (m[3], opt_tuple(m[3].replace('-', '_'), m[4] == '='))
 
 	opts = tuple(parse_cmd_opts_text()) + tuple(parse_global_opts_text())
 
