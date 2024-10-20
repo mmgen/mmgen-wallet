@@ -44,10 +44,18 @@ class CmdTestCfgFile(CmdTestBase):
 		CmdTestBase.__init__(self, trunner, cfgs, spawn)
 		self.spawn_env['MMGEN_TEST_SUITE_CFGTEST'] = '1'
 
-	def spawn_test(self, args=[], extra_desc='', pexpect_spawn=None, exit_val=None):
+	def read_from_cfgfile(self, loc):
+		return read_from_file(self.path(loc))
+
+	def write_to_cfgfile(self, loc, data, verbose=False):
+		write_to_file(self.path(loc), '\n'.join(data) + '\n')
+		if verbose:
+			imsg(yellow(f'Wrote cfg file: {data!r}'))
+
+	def spawn_test(self, opts=[], args=[], extra_desc='', pexpect_spawn=None, exit_val=None):
 		return self.spawn(
 			'test/misc/cfg.py',
-			[f'--data-dir={self.path("data_dir")}'] + args,
+			[f'--data-dir={self.path("data_dir")}'] + opts + args,
 			cmd_dir       = '.',
 			extra_desc    = extra_desc,
 			pexpect_spawn = pexpect_spawn,
@@ -71,16 +79,16 @@ class CmdTestCfgFile(CmdTestBase):
 		self.copy_sys_sample()
 		t = self.spawn_test()
 		t.read()
-		u = read_from_file(self.path('usr'))
-		S = read_from_file(self.path('sys'))
+		u = self.read_from_cfgfile('usr')
+		S = self.read_from_cfgfile('sys')
 		assert u[-1] == '\n', u
 		assert u.replace('\r\n', '\n') == S, 'u != S'
 		self.check_replaced_sample()
 		return t
 
 	def check_replaced_sample(self):
-		S = read_from_file(self.path('sys'))
-		s = read_from_file(self.path('sample'))
+		s = self.read_from_cfgfile('sample')
+		S = self.read_from_cfgfile('sys')
 		assert s[-1] == '\n', s
 		assert S.splitlines() == s.splitlines()[:-1], 'sys != sample[:-1]'
 
@@ -94,23 +102,22 @@ class CmdTestCfgFile(CmdTestBase):
 
 	def no_metadata_sample(self):
 		self.copy_sys_sample()
-		s = read_from_file(self.path('sys'))
+		S = self.read_from_cfgfile('sys')
 		e = CfgFileSampleUsr.out_of_date_fs.format(self.path('sample'))
-		return self.bad_sample(s, e)
+		return self.bad_sample(S, e)
 
 	def altered_sample(self):
-		s = '\n'.join(read_from_file(self.path('sample')).splitlines()[1:]) + '\n'
+		s = '\n'.join(self.read_from_cfgfile('sample').splitlines()[1:]) + '\n'
 		e = CfgFileSampleUsr.altered_by_user_fs.format(self.path('sample'))
 		return self.bad_sample(s, e)
 
 	def old_sample_common(self, old_set=False, args=[], pexpect_spawn=False):
-		s = read_from_file(self.path('sys'))
-		d = s.replace('monero_', 'zcash_').splitlines()
-		a1 = ['', '# Uncomment to make foo true:', '# foo true']
-		a2 = ['', '# Uncomment to make bar false:', '# bar false']
-		d = d + a1 + a2
-		chk = cfg_file_sample.cls_make_metadata(d)
-		write_to_file(self.path('sample'), '\n'.join(d+chk) + '\n')
+		d = (
+			self.read_from_cfgfile('sys').replace('monero_', 'zcash_').splitlines()
+			+ ['', '# Uncomment to make foo true:', '# foo true']
+			+ ['', '# Uncomment to make bar false:', '# bar false']
+		)
+		self.write_to_cfgfile('sample', d + cfg_file_sample.cls_make_metadata(d))
 
 		t = self.spawn_test(args=args, pexpect_spawn=pexpect_spawn, exit_val=1 if old_set else None)
 
@@ -148,22 +155,19 @@ class CmdTestCfgFile(CmdTestBase):
 		return t
 
 	def old_sample(self):
-		d = ['testnet true', 'rpc_password passwOrd']
-		write_to_file(self.path('usr'), '\n'.join(d) + '\n')
+		self.write_to_cfgfile('usr', ['testnet true', 'rpc_password passwOrd'])
 		return self.old_sample_common(args=['parse_test'])
 
 	def old_sample_bad_var(self):
-		d = ['foo true', 'bar false']
-		write_to_file(self.path('usr'), '\n'.join(d) + '\n')
+		self.write_to_cfgfile('usr', ['foo true', 'bar false'])
 		t = self.old_sample_common(
 			old_set       = True,
 			pexpect_spawn = not sys.platform == 'win32')
 		t.expect('unrecognized option')
 		return t
 
-	def _autoset_opts(self, args=[], text='rpc_backend aiohttp\n', exit_val=None):
-		write_to_file(self.path('usr'), text)
-		imsg(yellow(f'Wrote cfg file:\n  {text}'))
+	def _autoset_opts(self, args=[], text='rpc_backend aiohttp', exit_val=None):
+		self.write_to_cfgfile('usr', [text], verbose=True)
 		return self.spawn_test(args=args, exit_val=exit_val)
 
 	def autoset_opts(self):
@@ -178,7 +182,7 @@ class CmdTestCfgFile(CmdTestBase):
 		return t
 
 	def autoset_opts_bad(self):
-		return self._autoset_opts_bad('not unique substring', {'text':'rpc_backend foo\n'})
+		return self._autoset_opts_bad('not unique substring', {'text':'rpc_backend foo'})
 
 	def autoset_opts_bad_cmdline(self):
 		return self._autoset_opts_bad('not unique substring', {'args':['--rpc-backend=foo']})
@@ -193,8 +197,7 @@ class CmdTestCfgFile(CmdTestBase):
 			'btc_ignore_daemon_version true',
 			'eth_ignore_daemon_version true'
 		]
-		write_to_file(self.path('usr'), '\n'.join(d) + '\n')
-		imsg(yellow('Wrote cfg file:\n  {}'.format('\n  '.join(d))))
+		self.write_to_cfgfile('usr', d, verbose=True)
 
 		for coin, res1_chk, res2_chk, res2_chk_eq in (
 			('BTC', 'True',  '1.2345', True),
@@ -234,9 +237,8 @@ class CmdTestCfgFile(CmdTestBase):
 			assert modes_chk == modes, f'{modes_chk} != {modes}'
 			return t
 
-		txt = 'mnemonic_entry_modes mmgen:full bip39:short'
-		write_to_file(self.path('usr'), txt+'\n')
-		imsg(yellow(f'Wrote cfg file: {txt!r}'))
+		self.write_to_cfgfile('usr', ['mnemonic_entry_modes mmgen:full bip39:short'], verbose=True)
+
 		t = run("{'mmgen': 'full', 'bip39': 'short'}")
 		# check that set_dfl_entry_mode() set the mode correctly:
 		t.expect('mmgen: full')
@@ -262,15 +264,13 @@ class CmdTestCfgFile(CmdTestBase):
 				t.ok()
 			return t
 
-		txt = 'eth_mainnet_chain_names istanbul constantinople'
-		write_to_file(self.path('usr'), txt+'\n')
-		imsg(yellow(f'Wrote cfg file: {txt!r}'))
+		self.write_to_cfgfile('usr', ['eth_mainnet_chain_names istanbul constantinople'], verbose=True)
+
 		t = run("['istanbul', 'constantinople']", False)
 		t = run(None, True)
 
-		txt = 'eth_testnet_chain_names rinkeby'
-		write_to_file(self.path('usr'), txt+'\n')
-		imsg(yellow(f'Wrote cfg file: {txt!r}'))
+		self.write_to_cfgfile('usr', ['eth_testnet_chain_names rinkeby'], verbose=True)
+
 		t = run(None, False)
 		t = run("['rinkeby']", True)
 
