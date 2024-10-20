@@ -21,7 +21,10 @@ msg(f'Sys cfg file:    {os.path.relpath(cf_sys.fn)}')
 msg(f'Sample cfg file: {os.path.relpath(cf_sample.fn)}')
 
 if op:
-	if op == 'parse_test':
+	if op == 'print_cfg':
+		for name in args:
+			msg('{} {}'.format(name+':', getattr(cfg, name)))
+	elif op == 'parse_test':
 		ps = cf_sample.get_lines()
 		msg(f'parsed chunks: {len(ps)}')
 		pu = cf_usr.get_lines()

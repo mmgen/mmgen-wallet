@@ -41,6 +41,11 @@ class CmdTestOpts(CmdTestBase):
 		('opt_good17',           (41, 'good cmdline opt (param with equals signs)', [])),
 		('opt_good18',           (41, 'good cmdline opt (param with equals signs)', [])),
 		('opt_good19',           (41, 'good cmdline opt (param with equals signs)', [])),
+		('opt_good20',           (41, 'good cmdline opt (opt + negated opt)', [])),
+		('opt_good21',           (41, 'good cmdline opt (negated negative opt)', [])),
+		('opt_good22',           (41, 'good cmdline opt (opt + negated opt [substring])', [])),
+		('opt_good23',           (41, 'good cmdline opt (negated negative opt [substring])', [])),
+		('opt_good24',           (41, 'good cmdline opt (negated opt + opt [substring])', [])),
 		('opt_bad_param',        (41, 'bad global opt (--pager=1)', [])),
 		('opt_bad_infile',       (41, 'bad infile parameter', [])),
 		('opt_bad_outdir',       (41, 'bad outdir parameter', [])),
@@ -207,6 +212,21 @@ class CmdTestOpts(CmdTestBase):
 
 	def opt_good19(self):
 		return self.check_vals(['-x', 'x=1,y=2,z=3'], (('cfg.point', 'x=1,y=2,z=3'),))
+
+	def opt_good20(self):
+		return self.check_vals(['--pager', '--no-pager'], (('cfg.pager', 'False'),))
+
+	def opt_good21(self):
+		return self.check_vals(['--foobleize'], (('cfg.no_foobleize', 'False'),))
+
+	def opt_good22(self):
+		return self.check_vals(['--quiet', '--no-q'], (('cfg.quiet', 'False'),))
+
+	def opt_good23(self):
+		return self.check_vals(['--foobl'], (('cfg.no_foobleize', 'False'),))
+
+	def opt_good24(self):
+		return self.check_vals(['--no-pag', '--pag'], (('cfg.pager', 'True'),))
 
 	def opt_bad_param(self):
 		return self.do_run(['--pager=1'], 'no parameter', 1)

@@ -25,6 +25,16 @@ from collections import namedtuple
 
 from .cfg import gc
 
+def negated_opts(opts, data={}):
+	if data:
+		return data
+	else:
+		data.update(dict(
+			((k[3:] if k.startswith('no-') else f'no-{k}'), v)
+				for k, v in opts.items()
+					if len(k) > 1 and not v.has_parm))
+		return data
+
 def get_opt_by_substring(opt, opts):
 	matches = [o for o in opts if o.startswith(opt)]
 	if len(matches) == 1:
@@ -67,6 +77,12 @@ def process_uopts(opts_data, opts):
 						if parm:
 							die('CmdlineOptError', f'option --{_opt} requires no parameter')
 						yield (opts[_opt].name, True)
+				elif (
+						(_opt := opt) in negated_opts(opts)
+						or (_opt := get_opt_by_substring(_opt, negated_opts(opts)))):
+					if parm:
+						die('CmdlineOptError', f'option --{_opt} requires no parameter')
+					yield (negated_opts(opts)[_opt].name, False)
 				else:
 					die('CmdlineOptError', f'--{opt}: unrecognized option')
 			elif arg[0] == '-' and len(arg) > 1:

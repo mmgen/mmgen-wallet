@@ -38,6 +38,8 @@ class CmdTestCfgFile(CmdTestBase):
 		('coin_specific_vars',       (40, 'setting coin-specific vars', [])),
 		('chain_names',              (40, 'setting chain names', [])),
 		('mnemonic_entry_modes',     (40, 'setting mnemonic entry modes', [])),
+		('opt_override1',            (40, 'cfg file opts not overridden', [])),
+		('opt_override2',            (40, 'negative cmdline opts overriding cfg file opts', [])),
 	)
 
 	def __init__(self, trunner, cfgs, spawn):
@@ -275,4 +277,21 @@ class CmdTestCfgFile(CmdTestBase):
 		t = run("['rinkeby']", True)
 
 		t.skip_ok = True
+		return t
+
+	def opt_override1(self):
+		self.write_to_cfgfile('usr', ['no_license true', 'scroll true'])
+		t = self.spawn_test(
+			args = ['print_cfg', 'scroll', 'no_license'])
+		t.expect('scroll: True')
+		t.expect('no_license: True')
+		return t
+
+	def opt_override2(self):
+		self.write_to_cfgfile('usr', ['no_license true', 'scroll true'])
+		t = self.spawn_test(
+			args = ['print_cfg', 'scroll', 'no_license'],
+			opts = ['--no-scrol', '--lic'])
+		t.expect('scroll: False')
+		t.expect('no_license: False')
 		return t

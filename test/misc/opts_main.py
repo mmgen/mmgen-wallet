@@ -15,6 +15,7 @@ opts_data = {
 -d, --outdir=      d  Use outdir 'd'
 -C, --print-checksum  Print a checksum
 -E, --fee-estimate-mode=M Specify the network fee estimate mode.
+-F, --no-foobleize    Do not foobleize the output, even on user request
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
 -k, --keep-label      Reuse label of input wallet for output wallet
@@ -68,7 +69,8 @@ for k in (
 		'max_temp',
 		'coin',
 		'pager',
-		'point'):
+		'point',
+		'no_foobleize'):
 	msg('{:30} {}'.format(f'cfg.{k}:', getattr(cfg, k)))
 
 msg('')
