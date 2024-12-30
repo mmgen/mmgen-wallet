@@ -7,7 +7,7 @@ test.modtest_d.ut_dep: dependency unit tests for the MMGen suite
   No data verification is performed.
 """
 
-import sys, time
+import sys
 
 from subprocess import run, PIPE
 
@@ -57,6 +57,7 @@ class unit_tests:
 
 	def py_ecc(self, name, ut): # ETH
 		from py_ecc.secp256k1 import privtopub
+		privtopub(b'f' * 32)
 		return True
 
 	def pysocks(self, name, ut):

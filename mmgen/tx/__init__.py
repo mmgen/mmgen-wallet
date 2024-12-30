@@ -12,8 +12,6 @@
 tx.__init__: transaction class initializer
 """
 
-from ..objmethods import MMGenObject
-
 def _base_proto_subclass(clsname, modname, proto):
 	if proto:
 		clsname = ('Token' if proto.tokensym else '') + clsname

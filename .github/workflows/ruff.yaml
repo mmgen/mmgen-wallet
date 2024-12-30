@@ -1,9 +1,9 @@
-name: pylint
+name: ruff
 
 on:
   push:
     paths:
-      - '.github/workflows/pylint.yaml'
+      - '.github/workflows/ruff.yaml'
       - '.github/build-requirements.txt'
       - 'pyproject.toml'
       - 'setup.cfg'
@@ -19,13 +19,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9", "3.11", "3.12"]
-        include:
-          - python-version: "3.9"
-            pylint_ver: "3.1.1"
-          - python-version: "3.11"
-            pylint_ver: "3.1.1"
-          - python-version: "3.12"
-            pylint_ver: "3.1.1"
 
     steps:
     - uses: actions/checkout@v4
@@ -47,15 +40,13 @@ jobs:
       run: |
         python3 -m pip install pip setuptools build wheel
         python3 -m pip install gmpy2 cryptography pynacl ecdsa aiohttp requests pexpect scrypt semantic-version
-        python3 -m pip install pycryptodomex pysocks pycoin ipaddress varint pylint==${{ matrix.pylint_ver }}
-        python3 -m pip install --no-deps py_ecc==1.6.0 mypy_extensions==0.4.1 monero
+        python3 -m pip install pycryptodomex pysocks pycoin ipaddress varint ruff
+        python3 -m pip install py_ecc mypy_extensions monero eth-keys
         python3 setup.py build_ext --inplace
 
-    - name: Check the code with Pylint static code analyzer
+    - name: Check the code with Ruff static code analyzer
       env:
         PYTHONPATH: .
       run: |
-        pylint --errors-only --jobs=0 mmgen
-        pylint --errors-only --jobs=0 test
-        pylint --errors-only --jobs=0 examples
-        pylint --errors-only --jobs=0 --disable=relative-beyond-top-level test/cmdtest_d
+        ruff check --output-format=github mmgen
+        ruff check --output-format=github test

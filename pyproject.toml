@@ -6,11 +6,44 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.ruff.lint]
+ignore = [
+	"E401", # multiple imports per line
+	"E701", # multiple statements per line
+	"E721", # use isinstance()
+	"E731", # lambda instead of def
+	"E402", # module import not top of file
+	"E722", # bare except
+	"E713", # membership 'not in'
+	"E741", # ambiguous variable name
+]
+
+[tool.ruff.lint.per-file-ignores]
+"mmgen/proto/eth/pyethereum/*"  = [ "F401" ]         # imported but unused
+"mmgen/proto/eth/rlp/sedes/*"   = [ "F401" ]         # imported but unused
+"mmgen/addrgen.py"              = [ "F401" ]         # imported but unused
+"mmgen/tool/*"                  = [
+	"F722", # Syntax error in forward annotation
+	"F821"  # Undefined name `sstr`
+]
+"test/include/common.py"        = [ "F821" ]         # undefined name 'cfg'
+"test/misc/input_func.py"       = [ "F401" ]         # imported but unused
+"test/modtest_d/ut_cashaddr.py" = [ "F841" ]         # assigned to but never used
+"test/modtest_d/ut_dep.py"      = [ "F401" ]         # imported but unused
+"test/modtest_d/ut_testdep.py"  = [ "F401" ]         # imported but unused
+"test/modtest_d/ut_obj.py"      = [ "F841" ]         # assigned to but never used
+"test/objtest_d/*"              = [ "F401" ]         # imported but unused
+"test/objattrtest_d/*"          = [ "F401" ]         # imported but unused
+"test/overlay/fakemods/*"       = [ "F403", "F405" ] # `import *` used
+"test/*.py"                     = [ "F401" ]         # imported but unused
+"test/colortest.py"             = [ "F403", "F405" ] # `import *` used
+"test/tooltest2.py"             = [ "F403", "F405" ] # `import *` used
+
 [tool.pylint.format]
 indent-string = "\t"
 indent-after-paren = 2
 max-line-length = 116
- 
+
 [tool.pylint.main]
 recursive = true
 jobs = 0
@@ -28,7 +61,7 @@ ignored-modules = [ # ignored for no-member, otherwise checked
 	"msvcrt",
 	"gmpy2",
 ]
- 
+
 [tool.pylint."messages control"]
 disable = [
 	"raw-checker-failed",
@@ -50,7 +83,7 @@ disable = [
 
 [tool.pylint.miscellaneous]
 notes = ["FIXME", "TODO", "DEBUG", "WIP"]
- 
+
 [tool.pylint.typecheck]
 mixin-class-rgx = """.*[Mm]ixin|\
 	^(Hilite|InitErrors|DummyWIF|\
@@ -59,9 +92,9 @@ mixin-class-rgx = """.*[Mm]ixin|\
 	CmdTestShared)$"""
 
 ignored-classes = [ # ignored for no-member, otherwise checked
-	"optparse.Values", 
-	"thread._local", 
-	"_thread._local", 
+	"optparse.Values",
+	"thread._local",
+	"_thread._local",
 	"argparse.Namespace",
 # mmgen:
 	"baseconv",

@@ -16,7 +16,7 @@ from collections import namedtuple
 
 from ..obj import CoinTxID
 from ..color import red, cyan, pink
-from ..util import msg, msg_r, gmsg, gmsg_r, die, fmt
+from ..util import msg, msg_r, gmsg, gmsg_r, die
 from ..addr import CoinAddr
 
 from .include import gen_acct_addr_info, XMRWalletAddrSpec

@@ -55,7 +55,7 @@ class CmdTestBase:
 		self.coin = self.proto.coin.lower()
 		self.fork = 'btc' if self.coin == 'bch' and not cfg.cashaddr else self.coin
 		self.altcoin_pfx = '' if self.fork == 'btc' else f'-{self.proto.coin}'
-		self.testnet_opt = [f'--testnet=1'] if cfg.testnet else []
+		self.testnet_opt = ['--testnet=1'] if cfg.testnet else []
 		if len(self.tmpdir_nums) == 1:
 			self.tmpdir_num = self.tmpdir_nums[0]
 		if self.tr:

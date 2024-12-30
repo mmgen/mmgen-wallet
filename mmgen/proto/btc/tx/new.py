@@ -69,7 +69,6 @@ class New(Base, TxBase.New):
 
 	# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
 	def fee_est2abs(self, fee_per_kb, fe_type=None):
-		from decimal import Decimal
 		tx_size = self.estimate_size()
 		ret = self.proto.coin_amt('1') * (fee_per_kb * self.cfg.fee_adjust * tx_size / 1024)
 		if self.cfg.verbose:

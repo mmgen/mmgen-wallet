@@ -4,12 +4,10 @@
 test.modtest_d.ut_tx: TX unit tests for the MMGen suite
 """
 
-import os, re
+import os
 
-from mmgen.devtools import get_diff, get_ndiff
 from mmgen.tx import CompletedTX, UnsignedTX
 from mmgen.tx.file import MMGenTxFile
-from mmgen.protocol import init_proto
 from mmgen.cfg import Config
 
 from ..include.common import cfg, qmsg, vmsg

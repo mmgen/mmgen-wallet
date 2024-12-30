@@ -4,10 +4,10 @@
 test.daemontest_d.ut_tx: TX daemon tests for the MMGen suite
 """
 
-import os, json
+import json
 
 from mmgen.color import purple, cyan
-from mmgen.util import msg, Msg, Msg_r
+from mmgen.util import Msg, Msg_r
 from mmgen.devtools import Pmsg
 from mmgen.protocol import init_proto
 from mmgen.tx import CompletedTX
@@ -131,6 +131,7 @@ class unit_tests:
 		print_info(name, 'Bitcoin Core test vectors')
 
 		n = 1
+		desc = '(no description)'
 		for e in core_data:
 			if isinstance(e[0], list):
 				await test_tx(

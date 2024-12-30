@@ -12,11 +12,9 @@
 test.cmdtest_d.ct_automount: autosigning with automount tests for the cmdtest.py test suite
 """
 import time
-from pathlib import Path
 
 from .ct_autosign import CmdTestAutosignThreaded
 from .ct_regtest import CmdTestRegtestBDBWallet, rt_pw
-from .common import get_file_with_ext
 from ..include.common import cfg
 
 class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet):

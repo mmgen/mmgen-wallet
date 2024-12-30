@@ -16,7 +16,6 @@ bip_hd: BIP-44/49/84, SLIP-44 hierarchical-deterministic key derivation library
 #   https://blog.unit410.com/bitcoin/bip32/bip39/kdf/2021/05/17/inconsistent-bip32-derivations.html
 
 import hmac
-from collections import namedtuple
 
 from ..cfg import Config
 from ..util import is_int, fmt

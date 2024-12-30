@@ -4,7 +4,7 @@
 test.modtest_d.ut_testdep: test dependency unit tests for the MMGen suite
 """
 
-import sys, os
+import os
 from subprocess import run, DEVNULL
 
 from mmgen.util import ymsg, bmsg

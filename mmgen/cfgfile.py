@@ -135,6 +135,7 @@ class cfg_file_sample(cfg_file):
 			hdr = True
 			chunk = []
 			in_chunk = False
+			last_nonblank = 0
 
 			for lineno, line in enumerate(lines, 1):
 

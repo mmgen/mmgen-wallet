@@ -48,7 +48,7 @@ available commands for platform {sys.platform!r}:
 
 cfg = Config(opts_data=opts_data)
 
-from mmgen.term import get_char, get_char_raw, get_terminal_size, get_term
+from mmgen.term import get_char_raw, get_terminal_size, get_term
 from mmgen.ui import line_input, keypress_confirm, do_license_msg
 import mmgen.term as term_mod
 

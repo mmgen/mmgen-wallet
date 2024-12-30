@@ -20,7 +20,7 @@
 help: help notes for MMGen suite commands
 """
 
-import sys, re
+import sys
 
 from ..cfg import gc
 

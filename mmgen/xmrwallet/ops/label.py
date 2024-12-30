@@ -12,7 +12,7 @@
 xmrwallet.ops.label: Monero wallet ops for the MMGen Suite
 """
 
-from ...color import red, pink, cyan, gray
+from ...color import pink, cyan, gray
 from ...util import msg, ymsg, gmsg, die, make_timestr
 from ...ui import keypress_confirm
 from ...addr import CoinAddr
