@@ -84,11 +84,7 @@ addrimport_msgs = {
 def parse_cmd_args(rpc, cmd_args):
 
 	def import_mmgen_list(infile):
-		al = (AddrList, KeyAddrList)[bool(cfg.keyaddr_file)](cfg, proto, infile)
-		if al.al_id.mmtype in ('S', 'B'):
-			if not rpc.info('segwit_is_active'):
-				die(2, 'Segwit is not active on this chain. Cannot import Segwit addresses')
-		return al
+		return (AddrList, KeyAddrList)[bool(cfg.keyaddr_file)](cfg, proto, infile)
 
 	if len(cmd_args) == 1:
 		infile = cmd_args[0]

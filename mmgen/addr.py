@@ -172,7 +172,7 @@ class CoinAddr(HiliteStr, InitErrors, MMGenObject):
 			me.proto = proto
 			return me
 		except Exception as e:
-			return cls.init_fail(e, addr, objname=f'{proto.cls_name} address')
+			return cls.init_fail(e, addr, objname=f'{proto.name} {proto.cls_name} address')
 
 	@property
 	def parsed(self):
