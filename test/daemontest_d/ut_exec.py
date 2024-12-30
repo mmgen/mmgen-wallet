@@ -101,10 +101,11 @@ class unit_tests:
 		return True
 
 	def avail(self, name, ut):
-		return self._test_cmd(['start', '-Vm'], 'Testing availability of coin daemons...')
+		return self._test_cmd(
+			['start', '--print-version', '--mainnet-only'], 'Testing availability of coin daemons...')
 
 	def cmds(self, name, ut):
-		return self._test_cmd(['start', '-t'], 'Testing start commands for coin daemons...')
+		return self._test_cmd(['start', '--testing'], 'Testing start commands for coin daemons...')
 
 	def start(self, name, ut):
 		return self._test_cmd(['start'], 'Starting coin daemons...')

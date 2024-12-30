@@ -7,7 +7,7 @@ test.modtest_d.ut_dep: dependency unit tests for the MMGen suite
   No data verification is performed.
 """
 
-import time
+import sys, time
 
 from subprocess import run, PIPE
 
@@ -18,8 +18,21 @@ from ..include.common import cfg, vmsg, check_solc_ver
 
 class unit_tests:
 
-	altcoin_deps = ('py_ecc', 'solc', 'keccak', 'pysocks')
-	win_skip = ('led',)
+	altcoin_deps = ('py_ecc', 'solc', 'keccak', 'pysocks', 'semantic_version')
+	win_skip = ('led', 'semantic_version')
+
+	def secp256k1(self, name, ut):
+		try:
+			from mmgen.proto.secp256k1.secp256k1 import pubkey_gen
+			pubkey_gen(bytes.fromhex('deadbeef'*8), 1)
+			return True
+		except ModuleNotFoundError as e:
+			ymsg(f'{type(e).__name__}: {e}')
+			msg('Installing secp256k1 module locally...')
+			run(['python3', './setup.py', 'build_ext', '--inplace'], stdout=PIPE, stderr=PIPE, check=True)
+			ymsg('The module has been installed.  Try re-running the test')
+			sys.exit(1)
+		return False
 
 	def led(self, name, ut):
 		from mmgen.led import LEDControl
@@ -61,15 +74,6 @@ class unit_tests:
 				ymsg('{}: {}'.format(type(e).__name__, e))
 				msg('Is the ‘pysocks’ package installed?')
 		return False
-
-	def secp256k1(self, name, ut):
-		cp = run(['python3', './setup.py', 'build_ext', '--inplace'], stdout=PIPE, stderr=PIPE)
-		if cp.stderr:
-			vmsg(cp.stderr.decode())
-		time.sleep(0.5)
-		from mmgen.proto.secp256k1.secp256k1 import pubkey_gen
-		pubkey_gen(bytes.fromhex('deadbeef'*8), 1)
-		return True
 
 	def cryptography(self, name, ut):
 		from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -127,6 +131,10 @@ class unit_tests:
 		import scrypt
 		scrypt.hash(passwd, salt, N=2**N, r=r, p=p, buflen=buflen)
 
+		return True
+
+	def semantic_version(self, name, ut):
+		from semantic_version import Version, NpmSpec
 		return True
 
 	def solc(self, name, ut):

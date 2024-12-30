@@ -18,12 +18,12 @@ class unit_tests:
 	win_skip = ('losetup', 'zcash_mini', 'sudo')
 	mac_skip = ('losetup',)
 
-	def pylint(self, name, ut):
-		try:
-			return run(['pylint', '--version'], stdout=None if cfg.verbose else DEVNULL).returncode == 0
-		except OSError as e:
-			ymsg('  ' + str(e))
-			bmsg("  Install pylint with 'python3 -m pip install pylint'")
+	def sudo(self, name, ut):
+		from mmgen.util import have_sudo
+		if have_sudo():
+			return True
+		else:
+			ymsg(f'To run the test suite, please enable sudo without password for user ‘{os.getenv("USER")}’')
 			return False
 
 	def losetup(self, name, ut):
@@ -36,6 +36,14 @@ class unit_tests:
 				if cmd == 'losetup':
 					raise
 		return True
+
+	def pylint(self, name, ut):
+		try:
+			return run(['pylint', '--version'], stdout=None if cfg.verbose else DEVNULL).returncode == 0
+		except OSError as e:
+			ymsg('  ' + str(e))
+			bmsg("  Install pylint with 'python3 -m pip install pylint'")
+			return False
 
 	def pycoin(self, name, ut):
 		from pycoin.networks.registry import network_for_netcode as nfnc
@@ -67,11 +75,3 @@ class unit_tests:
 	def ssh_socks_proxy(self, name, ut):
 		from test.cmdtest_d.ct_xmrwallet import CmdTestXMRWallet
 		return CmdTestXMRWallet.init_proxy(external_call=True)
-
-	def sudo(self, name, ut):
-		from mmgen.util import have_sudo
-		if have_sudo():
-			return True
-		else:
-			ymsg(f'To run the test suite, please enable sudo without password for user ‘{os.getenv("USER")}’')
-			return False

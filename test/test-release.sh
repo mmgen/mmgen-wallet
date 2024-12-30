@@ -206,14 +206,20 @@ do_reexec() {
 
 	[ -e 'test/init.sh' ] && test/init.sh $VERBOSE_SHORTOPT
 
-	[ "$repo" == 'mmgen-wallet' ] && eval "python3 setup.py build_ext --inplace $STDOUT_DEVNULL"
-
 	echo -e "\n${BLUE}Executing test runner: ${CYAN}test/test-release $ORIG_ARGS$RESET\n"
 
 	if [ "$TYPESCRIPT" ]; then
 		do_typescript "$orig_cwd/$typescript_file" "$exec_prog"
 	else
 		eval $exec_prog
+	fi
+}
+
+install_secp256k1_mod_maybe() {
+	if [[ "$repo" =~ ^mmgen[-_]wallet ]]; then
+		[ -e mmgen/proto/secp256k1/secp256k1*$(python3 --version | sed 's/.* //;s/\.//;s/\..*//')* ] || {
+			eval "python3 setup.py build_ext --inplace $STDOUT_DEVNULL"
+		}
 	fi
 }
 
@@ -419,6 +425,8 @@ remove_skipped_tests
 check_tests
 
 test/clean.py
+
+install_secp256k1_mod_maybe
 
 start_time=$(date +%s)
 
