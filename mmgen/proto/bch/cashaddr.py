@@ -73,7 +73,7 @@ def cashaddr_encode_addr(addr_type, size, pfx, data):
 	t = namedtuple('encoded_cashaddr', ['addr', 'pfx', 'payload'])
 	payload_bin = (
 		'{:08b}'.format(make_ver_byte(addr_type, size * 8)) +
-		'{:0{w}b}'.format(int.from_bytes(data), w=len(data) * 8)
+		'{:0{w}b}'.format(int.from_bytes(data, 'big'), w=len(data) * 8)
 	)
 	payload_vec = bin2vec(payload_bin + '0' * (-len(payload_bin) % 5))
 	chksum_vec = bin2vec('{:040b}'.format(PolyMod(make_polymod_vec(pfx, payload_vec + [0] * 8))))
@@ -86,8 +86,8 @@ def cashaddr_decode_addr(addr):
 	data_bin = ''.join(f'{b32a.index(c):05b}' for c in a.payload)
 	vi = parse_ver_byte(int(data_bin[:8], 2))
 	assert len(data_bin) >= vi.bitlen + 48, 'cashaddr data length too short!'
-	data    = int(data_bin[8:8+vi.bitlen], 2).to_bytes(vi.bitlen // 8)
-	chksum  = int(data_bin[-40:], 2).to_bytes(5)
+	data    = int(data_bin[8:8+vi.bitlen], 2).to_bytes(vi.bitlen // 8, 'big')
+	chksum  = int(data_bin[-40:], 2).to_bytes(5, 'big')
 	pad_bin = data_bin[8+vi.bitlen:-40]
 	assert not pad_bin or pad_bin in '0000', f'{pad_bin}: invalid cashaddr data'
 	if chksum_chk := PolyMod(make_polymod_vec(a.pfx, [b32a.index(c) for c in a.payload])) != 0:
