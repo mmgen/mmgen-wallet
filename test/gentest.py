@@ -565,7 +565,6 @@ from mmgen.key import PrivKey
 from mmgen.addr import MMGenAddrType
 from mmgen.addrgen import KeyGenerator, AddrGenerator
 from mmgen.keygen import get_backends
-from mmgen.util2 import load_cryptodomex
 from test.include.common import getrand, get_ethkey, set_globals
 
 gtr = namedtuple('gen_tool_result', ['wif', 'addr', 'viewkey'])
@@ -582,9 +581,9 @@ vmsg = cfg._util.vmsg
 
 proto = cfg._proto
 
-if proto.coin == 'XMR':
-	# This must be done at top level, not in monero tool __init__
-	load_cryptodomex()
+if proto.coin in ('XMR', 'ETH', 'ETC'):
+	from mmgen.util2 import load_cryptodome
+	load_cryptodome()
 
 if __name__ == '__main__':
 	from mmgen.main import launch

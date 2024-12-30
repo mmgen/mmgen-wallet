@@ -30,18 +30,30 @@ def die_pause(ev=0, s=''):
 	input('Press ENTER to exit')
 	sys.exit(ev)
 
-# monkey-patch function for monero-python: permits its use with pycryptodome (e.g. MSYS2)
-# instead of the expected pycryptodomex
-def load_cryptodomex():
-	try:
-		import Cryptodome # cryptodomex
-	except ImportError:
+def cffi_override_fixup():
+	from cffi import FFI
+	class FFI_override:
+		def cdef(self, csource, override=False, packed=False, pack=None):
+			self._cdef(csource, override=True, packed=packed, pack=pack)
+	FFI.cdef = FFI_override.cdef
+
+# monkey-patch function: makes modules pycryptodome and pycryptodomex available to packages that
+# expect them (monero-python, eth-keys), regardless of which one is installed on system
+def load_cryptodome(called=[]):
+	if not called:
+		cffi_override_fixup()
 		try:
-			import Crypto # cryptodome
+			import Crypto # Crypto == pycryptodome
 		except ImportError:
-			die(2, 'Unable to import either the ‘pycryptodomex’ or ‘pycryptodome’ package')
+			try:
+				import Cryptodome # Crypto == pycryptodome
+			except ImportError:
+				die(2, 'Unable to import the ‘pycryptodome’ or ‘pycryptodomex’ package')
+			else:
+				sys.modules['Crypto'] = Cryptodome # Crypto == pycryptodome
 		else:
-			sys.modules['Cryptodome'] = Crypto
+			sys.modules['Cryptodome'] = Crypto # Cryptodome == pycryptodomex
+		called.append(True)
 
 # called with no arguments by pyethereum.utils:
 def get_keccak(cfg=None, cached_ret=[]):
@@ -51,15 +63,8 @@ def get_keccak(cfg=None, cached_ret=[]):
 			cfg._util.qmsg('Using internal keccak module by user request')
 			from .contrib.keccak import keccak_256
 		else:
-			try:
-				from Cryptodome.Hash import keccak
-			except ImportError as e:
-				try:
-					from Crypto.Hash import keccak
-				except ImportError as e2:
-					msg(f'{e2} and {e}')
-					die('MMGenImportError',
-						'Please install the ‘pycryptodome’ or ‘pycryptodomex’ package on your system')
+			load_cryptodome()
+			from Crypto.Hash import keccak
 			def keccak_256(data):
 				return keccak.new(data=data, digest_bytes=32)
 		cached_ret.append(keccak_256)

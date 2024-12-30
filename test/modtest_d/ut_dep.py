@@ -32,7 +32,8 @@ class unit_tests:
 	def keccak(self, name, ut): # used by ETH, XMR
 		from mmgen.util2 import get_keccak
 		try:
-			get_keccak()
+			keccak_256 = get_keccak()
+			keccak_256(b'abc')
 		except Exception as e:
 			rmsg(str(e))
 			return False

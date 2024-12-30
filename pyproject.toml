@@ -91,4 +91,5 @@ ignored-classes = [ # ignored for no-member, otherwise checked
 	"SwapMgrBase",
 	"Opts",
 	"Help",
+	"FFI_override",
 ]
