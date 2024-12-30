@@ -26,13 +26,6 @@ class unit_tests:
 			bmsg("  Install pylint with 'python3 -m pip install pylint'")
 			return False
 
-	def core_repo(self, name, ut):
-		crr = os.getenv('CORE_REPO_ROOT')
-		if not crr or not os.path.exists(os.path.join(crr, 'src/test/data/tx_valid.json')):
-			ymsg('CORE_REPO_ROOT not set, or does not point to Bitcoin Core repository')
-			return False
-		return True
-
 	def losetup(self, name, ut):
 		os.stat('/dev/loop0')
 		run(['/sbin/losetup', '-f'], check=True, stdout=DEVNULL)

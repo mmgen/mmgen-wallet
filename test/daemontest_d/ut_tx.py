@@ -123,18 +123,13 @@ class unit_tests:
 
 	async def core_vectors(self, name, ut):
 
-		core_repo_root = os.getenv('CORE_REPO_ROOT')
-		if not core_repo_root:
-			msg('The environmental variable CORE_REPO_ROOT must be set before running this test')
-			return False
-
 		start_test_daemons('btc')
 
-		fn_b = 'src/test/data/tx_valid.json'
-		fn = os.path.join(core_repo_root, fn_b)
-		with open(fn) as fp:
+		with open('test/ref/tx_valid.json') as fp:
 			core_data = json.loads(fp.read())
+
 		print_info(name, 'Bitcoin Core test vectors')
+
 		n = 1
 		for e in core_data:
 			if isinstance(e[0], list):
