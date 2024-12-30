@@ -115,10 +115,6 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	has_amt2 = True
 
-	async def __init__(self, proto, *args, **kwargs):
-		await super().__init__(proto, *args, **kwargs)
-		self.proto.tokensym = self.twctl.symbol
-
 	async def get_data(self, *args, **kwargs):
 		await super().get_data(*args, **kwargs)
 		for e in self.data:

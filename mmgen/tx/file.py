@@ -35,12 +35,7 @@ def get_proto_from_coin_id(tx, coin_id, chain):
 	from ..protocol import CoinProtocol, init_proto
 	network = CoinProtocol.Base.chain_name_to_network(tx.cfg, coin, chain)
 
-	proto = init_proto(tx.cfg, coin, network=network, need_amt=True)
-
-	if tokensym:
-		proto.tokensym = tokensym
-
-	return proto
+	return init_proto(tx.cfg, coin, network=network, need_amt=True, tokensym=tokensym)
 
 def eval_io_data(tx, data, desc):
 	if not (desc == 'outputs' and tx.proto.base_coin == 'ETH'): # ETH txs can have no outputs

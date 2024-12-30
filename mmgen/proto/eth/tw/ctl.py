@@ -201,8 +201,8 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 
 		self.decimals = self.get_param('decimals')
 		self.symbol   = self.get_param('symbol')
-
-		proto.tokensym = self.symbol
+		if mode == 'i' and not proto.tokensym:
+			proto.tokensym = self.symbol
 
 	@property
 	def data_root(self):

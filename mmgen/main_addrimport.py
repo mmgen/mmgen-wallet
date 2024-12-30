@@ -137,8 +137,6 @@ def check_opts(twctl):
 
 async def main():
 	from .tw.ctl import TwCtl
-	if cfg.token_addr:
-		proto.tokensym = 'foo' # hack to trigger 'Token' in proto.base_proto_subclass()
 
 	twctl = await TwCtl(
 		cfg        = cfg,

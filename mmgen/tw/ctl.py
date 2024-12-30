@@ -56,7 +56,8 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 	tw_fn = 'tracking-wallet.json'
 
 	def __new__(cls, cfg, proto, *args, **kwargs):
-		return MMGenObject.__new__(proto.base_proto_subclass(cls, 'tw.ctl'))
+		return MMGenObject.__new__(
+			proto.base_proto_subclass(cls, 'tw.ctl', is_token=kwargs.get('token_addr')))
 
 	async def __init__(
 			self,

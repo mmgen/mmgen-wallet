@@ -38,8 +38,6 @@ class tool_cmd_base(MMGenObject):
 		if self.need_proto:
 			from ..protocol import init_proto_from_cfg
 			self.proto = proto or cfg._proto or init_proto_from_cfg(cfg, need_amt=True)
-			if cfg.token:
-				self.proto.tokensym = cfg.token.upper()
 
 		if self.need_addrtype:
 			from ..addr import MMGenAddrType

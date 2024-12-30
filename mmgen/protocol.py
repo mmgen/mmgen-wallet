@@ -23,6 +23,7 @@ protocol: Coin protocol base classes and initializer
 from collections import namedtuple
 
 from .cfg import gc
+from .base_obj import Lockable
 from .objmethods import MMGenObject
 
 decoded_wif = namedtuple('decoded_wif', ['sec', 'pubkey_type', 'compressed'])
@@ -48,7 +49,7 @@ class CoinProtocol(MMGenObject):
 		'xmr': proto_info('Monero',          4)
 	}
 
-	class Base(MMGenObject):
+	class Base(Lockable):
 		base_proto = None
 		base_proto_coin  = None
 		base_coin  = None
@@ -56,6 +57,7 @@ class CoinProtocol(MMGenObject):
 		chain_names = None
 		networks   = ('mainnet', 'testnet', 'regtest')
 		decimal_prec = 28
+		_set_ok = ('tokensym',)
 
 		def __init__(self, cfg, coin, name, network, tokensym=None, need_amt=False):
 			self.cfg        = cfg
@@ -173,7 +175,7 @@ class CoinProtocol(MMGenObject):
 		def viewkey(self, viewkey_str):
 			raise NotImplementedError(f'{self.name} protocol does not support view keys')
 
-		def base_proto_subclass(self, cls, modname, sub_clsname=None):
+		def base_proto_subclass(self, cls, modname, sub_clsname=None, is_token=False):
 			"""
 			magic module loading and class selection
 			"""
@@ -181,7 +183,7 @@ class CoinProtocol(MMGenObject):
 
 			clsname = (
 				self.mod_clsname
-				+ ('Token' if self.tokensym else '')
+				+ ('Token' if self.tokensym or is_token else '')
 				+ cls.__name__)
 
 			import importlib
