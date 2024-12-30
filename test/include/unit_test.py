@@ -122,7 +122,9 @@ class UnitTestHelpers:
 		self.subtest_name = subtest_name
 
 	def skip_msg(self, desc):
-		cfg._util.qmsg(gray(f'Skipping subtest {self.subtest_name.replace("_", "-")!r} for {desc}'))
+		cfg._util.qmsg(gray(
+			f'Skipping {test_type} subtest {self.subtest_name.replace("_", "-")!r} for {desc}'
+		))
 
 	def process_bad_data(self, data, pfx='bad '):
 		if os.getenv('PYTHONOPTIMIZE'):
@@ -213,19 +215,24 @@ def run_test(test, subtest=None):
 		)
 		if hasattr(t, '_pre'):
 			t._pre()
+
+		def subtest_skip_msg(name, add_msg):
+			cfg._util.qmsg(gray(
+				'Skipping {} subtest {!r} {}'.format(test_type, name.replace('_', '-'), add_msg)
+			))
+
 		for _subtest in subtests:
-			subtest_disp = _subtest.replace('_', '-')
 			if cfg.no_altcoin_deps and _subtest in altcoin_deps:
-				cfg._util.qmsg(gray(f'Skipping {test_type} subtest {subtest_disp!r} [--no-altcoin-deps]'))
+				subtest_skip_msg(_subtest, '[--no-altcoin-deps]')
 				continue
 			if sys.platform == 'win32' and _subtest in win_skip:
-				cfg._util.qmsg(gray(f'Skipping {test_type} subtest {subtest_disp!r} for Windows platform'))
+				subtest_skip_msg(_subtest, 'for Windows platform')
 				continue
 			if sys.platform == 'darwin' and _subtest in mac_skip:
-				cfg._util.qmsg(gray(f'Skipping {test_type} subtest {subtest_disp!r} for macOS platform'))
+				subtest_skip_msg(_subtest, 'for macOS platform')
 				continue
 			if platform.machine() == 'aarch64' and _subtest in arm_skip:
-				cfg._util.qmsg(gray(f'Skipping {test_type} subtest {subtest_disp!r} for ARM platform'))
+				subtest_skip_msg(_subtest, 'for ARM platform')
 				continue
 			run_subtest(t, _subtest)
 		if hasattr(t, '_post'):

@@ -163,15 +163,16 @@ init_tests() {
 
 	d_autosign="transaction autosigning with automount"
 	t_autosign="
-		- $cmdtest_py autosign_clean autosign_automount autosign
-		b $cmdtest_py autosign_clean autosign_automount autosign_btc
-		- $cmdtest_py --coin=bch autosign_automount
-		s $cmdtest_py --coin=ltc autosign_automount
-		- $cmdtest_py --coin=eth autosign_eth
-		s $cmdtest_py --coin=etc autosign_eth
+		-   $cmdtest_py autosign_clean autosign_automount autosign
+		btc $cmdtest_py autosign_clean autosign_automount autosign_btc
+		-   $cmdtest_py --coin=bch autosign_automount
+		ltc $cmdtest_py --coin=ltc autosign_automount
+		-   $cmdtest_py --coin=eth autosign_eth
+		etc $cmdtest_py --coin=etc autosign_eth
 	"
-	if [ "$SKIP_ALT_DEP" ]; then t_autosign_skip='- s'; else t_autosign_skip='b'; fi
-	[ "$FAST" ] && t_autosign_skip+=' s'
+	if [ "$SKIP_ALT_DEP" ]; then t_autosign_skip='- ltc etc'; else t_autosign_skip='btc'; fi
+	[ "$FAST" ] && t_autosign_skip+=' ltc etc'
+	[ "$SKIP_PARITY" ] && t_autosign_skip+=' etc'
 
 	d_autosign_live="transaction and message autosigning (interactive)"
 	t_autosign_live="- $cmdtest_py autosign_live"

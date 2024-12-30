@@ -7,6 +7,8 @@ test.modtest_d.ut_dep: dependency unit tests for the MMGen suite
   No data verification is performed.
 """
 
+import time
+
 from subprocess import run, PIPE
 
 from mmgen.util import msg, rmsg, ymsg, gmsg
@@ -61,6 +63,10 @@ class unit_tests:
 		return False
 
 	def secp256k1(self, name, ut):
+		cp = run(['python3', './setup.py', 'build_ext', '--inplace'], stdout=PIPE, stderr=PIPE)
+		if cp.stderr:
+			vmsg(cp.stderr.decode())
+		time.sleep(0.5)
 		from mmgen.proto.secp256k1.secp256k1 import pubkey_gen
 		pubkey_gen(bytes.fromhex('deadbeef'*8), 1)
 		return True

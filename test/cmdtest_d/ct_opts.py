@@ -172,9 +172,13 @@ class CmdTestOpts(CmdTestBase):
 		return self.check_vals(['--minc=7'], (('cfg.minconf', '7'),))
 
 	def opt_good6(self):
+		if cfg.no_altcoin:
+			return 'skip'
 		return self.check_vals(['--coin=xmr'], (('cfg.coin', 'XMR'),))
 
 	def opt_good7(self):
+		if cfg.no_altcoin:
+			return 'skip'
 		return self.check_vals(['--coin', 'xmr'], (('cfg.coin', 'XMR'),))
 
 	def opt_good8(self):

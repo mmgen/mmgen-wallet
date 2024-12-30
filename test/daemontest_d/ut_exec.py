@@ -13,8 +13,8 @@ from mmgen.daemon import CoinDaemon
 
 from ..include.common import cfg, qmsg, qmsg_r, vmsg, msg
 
-def test_flags():
-	d = CoinDaemon(cfg, 'eth')
+def test_flags(coin):
+	d = CoinDaemon(cfg, coin)
 	vmsg(f'Available opts:  {fmt_list(d.avail_opts, fmt="bare")}')
 	vmsg(f'Available flags: {fmt_list(d.avail_flags, fmt="bare")}')
 	vals = namedtuple('vals', ['online', 'no_daemonize', 'keep_cfg_file'])
@@ -26,7 +26,7 @@ def test_flags():
 				(['online'],                 ['keep_cfg_file'], vals(True, False, True)),
 				(['online', 'no_daemonize'], ['keep_cfg_file'], vals(True, True, True)),
 			):
-			d = CoinDaemon(cfg, 'eth', opts=opts, flags=flags)
+			d = CoinDaemon(cfg, coin, opts=opts, flags=flags)
 			assert d.flag.keep_cfg_file == val.keep_cfg_file
 			assert d.opt.online == val.online
 			assert d.opt.no_daemonize == val.no_daemonize
@@ -59,6 +59,7 @@ def test_flags_err(ut, d):
 class unit_tests:
 
 	win_skip = ('start', 'status', 'stop')
+	altcoin_deps = ('flags_eth',)
 
 	def _pre(self):
 		self.daemon_ctrl_args = ['btc', 'btc_tn', 'btc_rt'] if cfg.no_altcoin_deps else ['all']
@@ -78,17 +79,25 @@ class unit_tests:
 		return True
 
 	def flags(self, name, ut):
-
-		qmsg_r('Testing flags and opts...')
+		qmsg_r('Testing flags and opts (BTC)...')
 		vmsg('')
-		daemons = test_flags()
+		daemons = test_flags(coin='btc')
 		qmsg('OK')
-
 		qmsg_r('Testing error handling for flags and opts...')
 		vmsg('')
 		test_flags_err(ut, daemons)
 		qmsg('OK')
+		return True
 
+	def flags_eth(self, name, ut):
+		qmsg_r('Testing flags and opts (ETH)...')
+		vmsg('')
+		daemons = test_flags(coin='eth')
+		qmsg('OK')
+		qmsg_r('Testing error handling for flags and opts...')
+		vmsg('')
+		test_flags_err(ut, daemons)
+		qmsg('OK')
 		return True
 
 	def avail(self, name, ut):

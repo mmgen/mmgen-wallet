@@ -39,9 +39,10 @@ def test_color():
 
 	from mmgen.color import orange
 	for t, c in (
-			('rxvt', 8),
 			('xterm', 8),
-			('rxvt-unicode', 88),
+			('rxvt', 8),
+			('rxvt-88color', 88),
+			('rxvt-256color', 256),
 			('screen-256color', 256),
 			('xterm-256color', 256)):
 		ret = get_terminfo_colors(t)
