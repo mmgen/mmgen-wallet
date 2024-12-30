@@ -28,7 +28,13 @@ class unit_tests:
 
 	def losetup(self, name, ut):
 		os.stat('/dev/loop0')
-		run(['/sbin/losetup', '-f'], check=True, stdout=DEVNULL)
+		for cmd in ('/sbin/losetup', '/usr/sbin/losetup', 'losetup'):
+			try:
+				run([cmd, '-f'], check=True, stdout=DEVNULL)
+				break
+			except:
+				if cmd == 'losetup':
+					raise
 		return True
 
 	def pycoin(self, name, ut):

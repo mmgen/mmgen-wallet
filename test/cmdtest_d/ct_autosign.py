@@ -134,19 +134,30 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	def _set_e2label(self, label):
 		imsg(f'Setting label to {label}')
-		run(['/sbin/e2label', str(self.txdev.img_path), label], check=True)
+		for cmd in ('/sbin/e2label', 'e2label'):
+			try:
+				run([cmd, str(self.txdev.img_path), label], check=True)
+				break
+			except:
+				if cmd == 'e2label':
+					raise
 
 	def _create_removable_device(self):
 		if sys.platform == 'linux':
 			self.txdev.create()
 			self.txdev.attach(silent=True)
-			cmd = [
-				'/sbin/mkfs.ext2',
+			args = [
 				'-E', 'root_owner={}:{}'.format(os.getuid(), os.getgid()),
 				'-L', self.asi.dev_label,
 				str(self.txdev.img_path)]
 			redir = DEVNULL
-			run(cmd, stdout=redir, stderr=redir, check=True)
+			for cmd in ('/sbin/mkfs.ext2', 'mkfs.ext2'):
+				try:
+					run([cmd] + args, stdout=redir, stderr=redir, check=True)
+					break
+				except:
+					if cmd == 'mkfs.ext2':
+						raise
 			self.txdev.detach(silent=True)
 		elif sys.platform == 'darwin':
 			cmd = [

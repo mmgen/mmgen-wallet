@@ -337,6 +337,19 @@ def check_solc_ver():
 def do_run(cmd, check=True):
 	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=check)
 
+def test_exec(cmd):
+	try:
+		do_run(cmd.split())
+		return True
+	except Exception:
+		return False
+
+def in_nix_environment():
+	for path in os.getenv('PATH').split(':'):
+		if os.path.realpath(path).startswith('/nix/store'):
+			return True
+	return False
+
 def VirtBlockDevice(img_path, size):
 	if sys.platform == 'linux':
 		return VirtBlockDeviceLinux(img_path, size)
@@ -407,20 +420,20 @@ class VirtBlockDeviceLinux(VirtBlockDeviceBase):
 		self.size = size
 
 	def _get_associations(self):
-		cmd = ['/sbin/losetup', '-n', '-O', 'NAME', '-j', str(self.img_path)]
+		cmd = ['sudo', 'losetup', '-n', '-O', 'NAME', '-j', str(self.img_path)]
 		return do_run(cmd).stdout.decode().splitlines()
 
 	def get_new_dev(self):
-		return do_run(['sudo', '/sbin/losetup', '-f']).stdout.decode().strip()
+		return do_run(['sudo', 'losetup', '-f']).stdout.decode().strip()
 
 	def do_create(self, size, path):
 		do_run(['truncate', f'--size={size}', str(path)])
 
 	def do_attach(self, path, dev):
-		do_run(['sudo', '/sbin/losetup', dev, str(path)])
+		do_run(['sudo', 'losetup', dev, str(path)])
 
 	def do_detach(self, dev, check=True):
-		do_run(['sudo', '/sbin/losetup', '-d', dev], check=check)
+		do_run(['sudo', 'losetup', '-d', dev], check=check)
 
 class VirtBlockDeviceMacOS(VirtBlockDeviceBase):
 

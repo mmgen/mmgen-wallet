@@ -488,10 +488,7 @@ class CoinDaemon(Daemon):
 		"remove the network's datadir"
 		assert self.test_suite, 'datadir removal restricted to test suite'
 		if self.state == 'stopped':
-			run([
-				('rm' if self.platform == 'win32' else '/bin/rm'),
-				'-rf',
-				self.datadir])
+			run(['rm', '-rf', self.datadir])
 			set_vt100()
 		else:
 			msg(f'Cannot remove {self.network_datadir!r} - daemon is not stopped')

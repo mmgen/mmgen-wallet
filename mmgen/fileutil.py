@@ -42,10 +42,7 @@ def check_or_create_dir(path):
 		if os.getenv('MMGEN_TEST_SUITE'):
 			if os.path.exists(path): # path is a link or regular file
 				from subprocess import run
-				run([
-					('rm' if sys.platform == 'win32' else '/bin/rm'),
-					'-rf',
-					str(path)])
+				run(['rm', '-rf', str(path)])
 				set_vt100()
 		try:
 			os.makedirs(path, 0o700)

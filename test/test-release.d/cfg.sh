@@ -27,7 +27,7 @@ init_groups() {
 	noalt_ok_tests='lint'
 
 	[ "$MSYS2" ] && SKIP_LIST='autosign autosign_live'
-	[ "$ARM32" -o "$ARM64" ] && SKIP_LIST+=' etc'
+	[ "$ARM32" -o "$ARM64" -o "$SKIP_PARITY" ] && SKIP_LIST+=' etc'
 
 	true
 }
@@ -239,6 +239,7 @@ init_tests() {
 
 	d_etc="operations for Ethereum Classic using devnet"
 	t_etc="parity $cmdtest_py --coin=etc ethdev"
+	[ "$SKIP_PARITY" ] && t_etc_skip='parity'
 
 	d_xmr="Monero xmrwallet operations"
 	t_xmr="

@@ -81,7 +81,13 @@ class SwapMgrBase:
 class SwapMgrLinux(SwapMgrBase):
 
 	def get_active(self):
-		cp = run(['/sbin/swapon', '--show=NAME', '--noheadings'], stdout=PIPE, text=True, check=True)
+		for cmd in ('/sbin/swapon', 'swapon'):
+			try:
+				cp = run([cmd, '--show=NAME', '--noheadings'], stdout=PIPE, text=True, check=True)
+				break
+			except Exception:
+				if cmd == 'swapon':
+					raise
 		res = cp.stdout.splitlines()
 		return [e for e in res if not e.startswith('/dev/zram')] if self.ignore_zram else res
 
@@ -418,7 +424,7 @@ class Autosign:
 	linux_mount_subdir = 'mmgen_autosign'
 	macOS_ramdisk_name = 'AutosignRamDisk'
 	wallet_subdir = 'autosign'
-	linux_blkid_cmd = '/sbin/blkid -s LABEL -o value'
+	linux_blkid_cmd = 'sudo blkid -s LABEL -o value'
 
 	cmds = ('setup', 'xmr_setup', 'sign', 'wait')
 

@@ -15,7 +15,7 @@ from mmgen.daemon import CoinDaemon
 from mmgen.proto.xmr.rpc import MoneroRPCClient, MoneroWalletRPCClient
 from mmgen.proto.xmr.daemon import MoneroWalletDaemon
 
-from ..include.common import cfg, qmsg, vmsg
+from ..include.common import cfg, qmsg, vmsg, in_nix_environment, test_exec
 
 async def cfg_file_auth_test(cfg, d, bad_auth=False):
 	m = 'missing credentials' if bad_auth else f'credentials from {d.cfg_file}'
@@ -181,6 +181,9 @@ class unit_tests:
 		return await run_test(['eth', 'eth_tn', 'eth_rt'], daemon_ids=['erigon'])
 
 	async def parity(self, name, ut):
+		if in_nix_environment() and not test_exec('parity --help'):
+			ut.skip_msg('Nix environment')
+			return True
 		return await run_test(['etc'])
 
 	async def xmrwallet(self, name, ut):
