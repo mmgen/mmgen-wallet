@@ -1493,7 +1493,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	def stop(self):
 		self.spawn('', msg_only=True)
 		if not cfg.no_daemon_stop:
-			if not stop_test_daemons(self.proto.coin+'_rt'):
+			if not stop_test_daemons(self.proto.coin+'_rt', remove_datadir=True):
 				return False
 		set_vt100()
 		return 'ok'

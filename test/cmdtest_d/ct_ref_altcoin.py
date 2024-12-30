@@ -113,7 +113,7 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 				t.read()
 				t.ok()
 				if proto.sign_mode == 'daemon' and not proto.network_id == 'btc':
-					stop_test_daemons(proto.network_id)
+					stop_test_daemons(proto.network_id, remove_datadir=True)
 		return 'ok'
 
 	def ref_altcoin_addrgen(

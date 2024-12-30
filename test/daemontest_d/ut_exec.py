@@ -113,4 +113,4 @@ class unit_tests:
 		return self._test_cmd(['start'], 'Checking status of coin daemons...')
 
 	def stop(self, name, ut):
-		return self._test_cmd(['stop'], 'Stopping coin daemons...')
+		return self._test_cmd(['stop', '--remove-datadir'], 'Stopping coin daemons...')

@@ -116,7 +116,7 @@ async def run_test(network_id, chksum, msghash_type='raw'):
 	msg(m.format(single_addr_coin))
 
 	if m.proto.sign_mode == 'daemon':
-		stop_test_daemons(network_id)
+		stop_test_daemons(network_id, remove_datadir=True)
 
 	msg('\n')
 

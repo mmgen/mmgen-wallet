@@ -43,6 +43,7 @@ opts_data = {
 -m, --mainnet-only   Perform operations for mainnet daemons only
 -n, --no-daemonize   Don't fork daemon to background
 -p, --port-shift=    Shift the RPC port by this number
+-r, --remove-datadir Remove the datadir(s) after stopping the daemon(s)
 -s, --get-state      Get the state of the daemon(s) and exit
 -t, --testing        Testing mode.  Print commands but don't execute them
 -q, --quiet          Produce quieter output
@@ -99,7 +100,7 @@ def run(network_id=None, proto=None, daemon_id=None, missing_exec_ok=False):
 		return
 
 	d.debug = d.debug or cfg.debug
-	d.wait = not cfg.no_wait
+	d.wait = cfg.remove_datadir or not cfg.no_wait
 
 	if missing_exec_ok:
 		try:
@@ -121,6 +122,9 @@ def run(network_id=None, proto=None, daemon_id=None, missing_exec_ok=False):
 			async_run(d.rpc.stop_daemon(quiet=cfg.quiet))
 		else:
 			d.cmd(action, quiet=cfg.quiet)
+			if action == 'stop' and cfg.remove_datadir:
+				cfg._util.vmsg(f'Removing ‘{d.datadir}’')
+				d.remove_datadir()
 
 def main():
 

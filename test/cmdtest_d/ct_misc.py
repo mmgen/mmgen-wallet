@@ -141,7 +141,7 @@ class CmdTestMisc(CmdTestBase):
 		if cfg.pexpect_spawn:
 			t.send('q')
 		if not cfg.no_altcoin:
-			stop_test_daemons('ltc', 'eth')
+			stop_test_daemons('ltc', 'eth', remove_datadir=True)
 		return t
 
 	def term_echo(self):

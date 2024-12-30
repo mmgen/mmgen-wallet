@@ -296,7 +296,7 @@ def stop_test_daemons(*network_ids, force=False, remove_datadir=False):
 		return test_daemons_ops(*network_ids, op='stop', remove_datadir=remove_datadir)
 
 def restart_test_daemons(*network_ids, remove_datadir=False):
-	if not stop_test_daemons(*network_ids):
+	if not stop_test_daemons(*network_ids, remove_datadir=remove_datadir):
 		return False
 	return start_test_daemons(*network_ids, remove_datadir=remove_datadir)
 

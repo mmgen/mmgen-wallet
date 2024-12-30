@@ -186,7 +186,7 @@ class CmdTestAutosignBase(CmdTestBase):
 
 	def stop_daemons(self):
 		self.spawn('', msg_only=True)
-		stop_test_daemons(*self.network_ids)
+		stop_test_daemons(*self.network_ids, remove_datadir=True)
 		return 'ok'
 
 	def run_setup(
