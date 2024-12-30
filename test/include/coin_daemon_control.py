@@ -118,13 +118,10 @@ def run(network_id=None, proto=None, daemon_id=None, missing_exec_ok=False):
 		for cmd in d.start_cmds if action == 'start' else [d.stop_cmd]:
 			print(' '.join(cmd))
 	else:
-		if action == 'stop' and hasattr(d, 'rpc'):
-			async_run(d.rpc.stop_daemon(quiet=cfg.quiet))
-		else:
-			d.cmd(action, quiet=cfg.quiet)
-			if action == 'stop' and cfg.remove_datadir:
-				cfg._util.vmsg(f'Removing ‘{d.datadir}’')
-				d.remove_datadir()
+		d.cmd(action, quiet=cfg.quiet)
+		if action == 'stop' and cfg.remove_datadir:
+			cfg._util.vmsg(f'Removing ‘{d.datadir}’')
+			d.remove_datadir()
 
 def main():
 

@@ -48,10 +48,7 @@ from .ct_base import CmdTestBase
 # atexit functions:
 def stop_daemons(self):
 	for v in self.users.values():
-		if sys.platform == 'darwin' or '--restricted-rpc' in v.md.start_cmd:
-			v.md.stop()
-		else:
-			async_run(v.md_rpc.stop_daemon())
+		v.md.stop()
 
 def stop_miner_wallet_daemon(self):
 	async_run(self.users['miner'].wd_rpc.stop_daemon())
