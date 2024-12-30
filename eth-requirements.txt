@@ -1,5 +1,5 @@
 # Install with --no-deps.   Otherwise, many unneeded dependencies will be
 # installed.
 
-py_ecc==1.6.0
-mypy_extensions==0.4.1
+py_ecc
+mypy_extensions
