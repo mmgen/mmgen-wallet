@@ -14,7 +14,7 @@ sec = 'deadbeef' * 8
 
 class unit_tests:
 
-	altcoin_deps = ('pycoin', 'monero_python', 'keyconv', 'zcash_mini', 'ethkey', 'ssh_socks_proxy')
+	altcoin_deps = ('pycoin', 'monero_python', 'keyconv', 'zcash_mini', 'eth_keys', 'ssh_socks_proxy')
 	win_skip = ('losetup', 'zcash_mini', 'sudo')
 	mac_skip = ('losetup',)
 
@@ -61,14 +61,8 @@ class unit_tests:
 		run(['zcash-mini'], stdout=DEVNULL, check=True)
 		return True
 
-	def ethkey(self, name, ut):
-		if sys.platform == 'linux' and os.uname().machine != 'x86_64':
-			distro = [l for l in open('/etc/os-release').read().split('\n') if l.startswith('ID=')][0][3:]
-			if distro != 'archarm':
-				ut.skip_msg(f'distro {distro!r} on architecture {os.uname().machine!r}')
-				return True
-		from test.include.common import get_ethkey
-		get_ethkey()
+	def eth_keys(self, name, ut):
+		from eth_keys import keys
 		return True
 
 	def ssh_socks_proxy(self, name, ut):

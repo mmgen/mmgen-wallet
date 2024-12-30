@@ -414,7 +414,7 @@ class TestCoinInfo(CoinInfo):
 				'OMC', 'PIGGY', 'PINK', 'PKB', 'PND', 'POT', 'PPC', 'PTC', 'PTS', 'QTUM', 'RBY', 'RDD',
 				'RIC', 'SCA', 'SDC', 'SKC', 'SPR', 'START', 'SXC', 'TPC', 'UIS', 'UNO', 'VIA', 'VPN',
 				'VTC', 'WDC', 'WKC', 'WUBS', 'XC', 'XPM', 'YAC', 'ZOOM', 'ZRC'),
-			'ethkey': ('ETH', 'ETC'),
+			'eth-keys': ('ETH', 'ETC'),
 			'zcash-mini': ('ZEC',),
 			'monero-python': ('XMR',),
 		},
@@ -424,7 +424,7 @@ class TestCoinInfo(CoinInfo):
 				'BCH':'XTN',
 				'BTC':'XTN', 'LTC':'XLT', 'VIA':'TVI', 'FTC':'FTX', 'DOGE':'XDT', 'DCR':'DCRT'
 				},
-			'ethkey': {},
+			'eth-keys': {},
 			'keyconv': {}
 		}
 	}

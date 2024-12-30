@@ -138,9 +138,9 @@ init_tests() {
 		- #   keyconv
 		- $gentest_py --all-coins --type=legacy 1:keyconv $rounds_min
 		- $gentest_py --all-coins --type=compressed 1:keyconv $rounds_min
-		e #   ethkey
-		e $gentest_py --coin=eth 1:ethkey $rounds10x
-		e $gentest_py --coin=eth --use-internal-keccak-module 2:ethkey $rounds5x
+		e #   eth-keys
+		e $gentest_py --coin=eth 1:eth-keys $rounds10x
+		e $gentest_py --coin=eth --use-internal-keccak-module 2:eth-keys $rounds5x
 		m #   monero-python
 		m $gentest_py --coin=xmr 1:monero-python $rounds100x
 		M $gentest_py --coin=xmr all:monero-python $rounds_min # very slow, please be patient!
@@ -150,8 +150,6 @@ init_tests() {
 	[ "$MSYS2" ] && t_altgen_skip='z'    # no zcash-mini (golang)
 	[ "$ARM32" ] && t_altgen_skip='z e'
 	[ "$FAST" ]  && t_altgen_skip+=' M'
-	# ARM ethkey available only on Arch Linux:
-	[ \( "$ARM32" -o "$ARM64" \) -a "$DISTRO" != 'archarm' ] && t_altgen_skip+=' e'
 
 	d_help="helpscreens for selected coins"
 	t_help="

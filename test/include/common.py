@@ -334,17 +334,6 @@ def check_solc_ver():
 		omsg(res)
 		return False
 
-def get_ethkey():
-	cmdnames = ('ethkey', 'openethereum-ethkey')
-	for cmdname in cmdnames:
-		try:
-			run([cmdname, '--help'], stdout=PIPE)
-		except:
-			pass
-		else:
-			return cmdname
-	die(1, f'ethkey executable not found (tried {cmdnames})')
-
 def do_run(cmd, check=True):
 	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=check)
 

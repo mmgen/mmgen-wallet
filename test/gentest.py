@@ -106,9 +106,8 @@ EXAMPLES:
 
 SUPPORTED EXTERNAL TOOLS:
 
-  + ethkey (for ETH, ETC)
-    https://github.com/openethereum/openethereum
-    (build with 'cargo build -p ethkey-cli --release')
+  + eth-keys (for ETH, ETC)
+	https://github.com/ethereum/eth-keys
 
   + zcash-mini (for Zcash-Z addresses and view keys)
     https://github.com/FiloSottile/zcash-mini
@@ -163,19 +162,17 @@ class GenTool:
 				self.data[key] = sd(**{'reduced':sec.hex()}, **ret._asdict())
 			return ret
 
-class GenToolEthkey(GenTool):
-	desc = 'ethkey'
+class GenToolEth_keys(GenTool):
+	desc = 'eth-keys'
 
 	def __init__(self, *args, **kwargs):
-		self.cmdname = get_ethkey()
+		from eth_keys import keys
+		self.keys = keys
 		super().__init__(*args, **kwargs)
 
 	def run(self, sec, vcoin):
-		o = get_cmd_output([self.cmdname, 'info', sec.hex()])
-		return gtr(
-			o[0].split()[1],
-			o[-1].split()[1],
-			None)
+		sk = self.keys.PrivateKey(sec)
+		return gtr(str(sk)[2:], sk.public_key.to_address()[2:], None)
 
 class GenToolKeyconv(GenTool):
 	desc = 'keyconv'
@@ -565,7 +562,7 @@ from mmgen.key import PrivKey
 from mmgen.addr import MMGenAddrType
 from mmgen.addrgen import KeyGenerator, AddrGenerator
 from mmgen.keygen import get_backends
-from test.include.common import getrand, get_ethkey, set_globals
+from test.include.common import getrand, set_globals
 
 gtr = namedtuple('gen_tool_result', ['wif', 'addr', 'viewkey'])
 sd = namedtuple('saved_data_item', ['reduced', 'wif', 'addr', 'viewkey'])
