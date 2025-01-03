@@ -210,10 +210,9 @@ def write_data_to_file(
 			else:
 				msg('Redirecting output to file')
 
-		if binary:
-			if sys.platform == 'win32': # condition on separate line for pylint
-				import msvcrt
-				msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
+		if binary and sys.platform == 'win32':
+			import msvcrt
+			msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 
 		# MSWin workaround. See msg_r()
 		try:

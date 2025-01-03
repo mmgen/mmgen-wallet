@@ -106,7 +106,6 @@ class GlobalConstants(Lockable):
 		#    https://importlib-resources.readthedocs.io/en/latest/migration.html
 		#    https://setuptools.readthedocs.io/en/latest/pkg_resources.html
 
-		# TODO: remove try..except (workaround for Python 3.9 pylint bug)
 		try:
 			from importlib.resources import files # Python 3.9 and above
 		except ImportError:

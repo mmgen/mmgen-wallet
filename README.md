@@ -3,7 +3,7 @@
 ##### An online/offline cryptocurrency wallet for the command line
 
 ![build](https://github.com/mmgen/mmgen-wallet/workflows/build/badge.svg)
-![pylint](https://github.com/mmgen/mmgen-wallet/workflows/pylint/badge.svg)
+![ruff](https://github.com/mmgen/mmgen-wallet/workflows/ruff/badge.svg)
 
 ### Description
 

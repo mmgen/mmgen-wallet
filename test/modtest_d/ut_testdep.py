@@ -37,14 +37,6 @@ class unit_tests:
 					raise
 		return True
 
-	def pylint(self, name, ut):
-		try:
-			return run(['pylint', '--version'], stdout=None if cfg.verbose else DEVNULL).returncode == 0
-		except OSError as e:
-			ymsg('  ' + str(e))
-			bmsg("  Install pylint with 'python3 -m pip install pylint'")
-			return False
-
 	def pycoin(self, name, ut):
 		from pycoin.networks.registry import network_for_netcode as nfnc
 		network = nfnc('btc')

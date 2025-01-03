@@ -23,7 +23,6 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 	networks = ('btc', 'bch', 'ltc')
 	tmpdir_nums = [49]
 
-	rtFundAmt = None # pylint
 	rt_data = {
 		'rtFundAmt': {'btc':'500', 'bch':'500', 'ltc':'5500'},
 	}

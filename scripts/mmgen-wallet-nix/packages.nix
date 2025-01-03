@@ -70,7 +70,6 @@ let
         # pysocks         # XMR
         pexpect         # test suite
         pycoin          # test suite
-        pylint          # test suite (requires ==3.1.1)
         # monero          # XMR (test suite)
         # eth-keys        # ETH, ETC (test suite)
     ]);
@@ -103,6 +102,7 @@ in
     secp256k1    = pkgs.secp256k1;
     less         = pkgs.less;   # test suite (cmdtest.py regtest)
     procps       = pkgs.procps; # test suite (pgrep)
+    ruff         = pkgs.ruff;
 
     ## For development with --pure (add/remove packages for your setup):
     neovim-qt    = pkgs.neovim-qt;

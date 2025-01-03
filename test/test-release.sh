@@ -278,7 +278,6 @@ gentest_py='test/gentest.py --quiet'
 scrambletest_py='test/scrambletest.py'
 altcoin_mod_opts='--quiet'
 mmgen_tool='cmds/mmgen-tool'
-pylint='PYTHONPATH=. pylint' # PYTHONPATH required by older Pythons (e.g. v3.9)
 python='python3'
 rounds=10
 typescript_file='test-release.out'
@@ -373,8 +372,7 @@ do
 		tooltest_py+=" --verbose"
 		mmgen_tool+=" --verbose"
 		objattrtest_py+=" --verbose"
-		scrambletest_py+=" --verbose"
-		pylint+=" --verbose" ;;
+		scrambletest_py+=" --verbose" ;;
 	X)  IN_REEXEC=1 ;;
 	*)  exit ;;
 	esac

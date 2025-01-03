@@ -23,13 +23,6 @@ from ... import xmrwallet
 
 from .. import uarg_info
 
-# required to squelch pylint:
-def fmt_amt(amt):
-	return str(amt)
-
-def hl_amt(amt):
-	return str(amt)
-
 class OpBase:
 
 	opts = ('wallet_dir',)
