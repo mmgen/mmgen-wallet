@@ -1,0 +1,54 @@
+Nix configuration directory for the MMGen Wallet suite
+
+Only BTC and a bare minimum of packages are enabled by default.
+
+For altcoin and additional package support, copy the file ‘user-packages.nix’ to
+your MMGen datadir (~/.mmgen) and edit, uncommenting the relevant lines.  For an
+XMR-enabled setup, for example, you’d uncomment the system package ‘monero-cli’
+and Python packages ‘monero’, ‘pycryptodome’ and ‘pysocks’.
+
+From the mmgen-wallet repo root, you may build individual system packages in the
+MMGen Wallet environment as follows (we’ll use the curl package in this example):
+
+   $ nix-build nix --attr curl
+
+To build all configured packages in one go, run ‘nix-build nix’ without
+additional arguments.
+
+The last lines of nix-build’s output are store paths in ‘/nix/store/’, which
+you may optionally install into your default environment as follows:
+
+   $ nix-env --install <store path>
+
+Note that use of MMGen Wallet from the default environment is discouraged in
+favor of the custom shell environment, which we’ll now describe.
+
+From the mmgen-wallet repo root, execute:
+
+   $ nix-shell nix
+
+This will build any unbuilt configured packages and drop you to the custom shell
+environment.  At this point you may run the test suite:
+
+   [nix-shell:... $] test/test-release -FA
+
+or proceed to use MMGen Wallet as with any conventional installation.
+
+For greater isolation, you can invoke nix-shell with the ‘--pure’ option. This
+will make executables from your native environment inaccessible within the
+shell, so you may need to add some additional tools to your environment such as
+a text editor.  For examples, refer to ‘user-packages.nix’
+
+NixOS:
+
+  To install the MMGen Wallet environment under NixOS, copy the contents of the ‘nix’
+  directory to ‘/etc/nixos/mmgen-project’ and add ‘./mmgen-project/nixos-packages.nix’
+  to your imports list in ‘configuration.nix’.  If altcoin support or additional
+  packages are required, edit ‘user-packages.nix’ in ‘/etc/nixos/mmgen-project’ as
+  described above for the copy of that file in the MMGen datadir.  Rebuild NixOS.
+  From the mmgen-wallet repo root, execute:
+
+      export PYTHONPATH=$(pwd)
+      export PATH=$(pwd)/cmds:$PATH
+
+  You can now test and use MMGen Wallet in your native shell environment.

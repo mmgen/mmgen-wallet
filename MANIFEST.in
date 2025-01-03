@@ -9,7 +9,7 @@ include mmgen/proto/eth/*/LICENSE
 include mmgen/data/*
 
 include scripts/*
-include scripts/mmgen-wallet-nix/*
+include nix/*
 
 include test/*.py
 include test/*/*.py
