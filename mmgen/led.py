@@ -41,6 +41,11 @@ class LEDControl:
 			status  = '/sys/class/leds/orangepi:red:status/brightness',
 			trigger = None,
 			trigger_states = None),
+		'orange_pi_5': binfo(
+			name    = 'Orange Pi 5 (Armbian)',
+			status  = '/sys/class/leds/status_led/brightness',
+			trigger = None,
+			trigger_states = None),
 		'rock_pi': binfo(
 			name    = 'Rock Pi (Armbian)',
 			status  = '/sys/class/leds/status/brightness',
