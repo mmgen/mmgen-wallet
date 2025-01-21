@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+
+import sys, os, atexit
+pn = os.path.abspath(os.path.dirname(sys.argv[0]))
+parpar = os.path.dirname(os.path.dirname(pn))
+os.chdir(parpar)
+sys.path[0] = os.curdir
+
+from mmgen.cfg import Config
+from mmgen.util import msg
+from mmgen.ui import keypress_confirm
+from mmgen.led import LEDControl
+
+opts_data = {
+	'text': {
+		'desc': 'Interactively test LED functionality',
+		'usage': 'command',
+		'options': """
+-h, --help     Print this help message
+""",
+	}
+}
+
+cfg = Config(opts_data=opts_data)
+
+def confirm_or_exit(prompt):
+	if not keypress_confirm(cfg, f'{prompt}.  OK?', default_yes=True):
+		msg('Exiting at user request')
+		sys.exit(1)
+
+confirm_or_exit('This script will interactively test LED functionality')
+
+led = LEDControl(enabled=True)
+
+atexit.register(led.stop)
+
+confirm_or_exit('LED should now be turned off')
+
+led.set('busy')
+
+confirm_or_exit('LED should now be signaling busy (rapid flashing)')
+
+led.set('standby')
+
+confirm_or_exit('LED should now be signaling standby (slow flashing)')
+
+led.set('error')
+
+confirm_or_exit('LED should now be signaling error (insistent flashing)')
+
+led.set('off')
+
+confirm_or_exit('LED should now be turned off')
+
+led.stop()
+
+confirm_or_exit(f'LED should now be in its original state [trigger={led.board.trigger_reset}]')

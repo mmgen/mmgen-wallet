@@ -80,47 +80,67 @@ class LEDControl:
 				continue
 			try:
 				os.stat(board.control)
-			except:
-				pass
-			else:
 				break
+			except FileNotFoundError:
+				pass
 		else:
 			die('NoLEDSupport', 'Control files not found!  LED control not supported on this system')
 
 		msg(f'{board.name} board detected')
 
 		if self.debug:
-			msg(f'\n  Control file:  {board.control}\n  Trigger file: {board.trigger}')
+			msg(f'\n  Status file:  {board.control}\n  Trigger file: {board.trigger}')
 
-		def check_access(fn, desc, init_val=None):
+		def write_init_val(fn, init_val):
+			if not init_val:
+				with open(fn) as fp:
+					init_val = fp.read().strip()
+			with open(fn, 'w') as fp:
+				fp.write(f'{init_val}\n')
 
-			def write_init_val(init_val):
-				if not init_val:
-					with open(fn) as fp:
-						init_val = fp.read().strip()
-				with open(fn, 'w') as fp:
-					fp.write(f'{init_val}\n')
+		def permission_error_action(fn, desc):
+			cmd = f'sudo chmod 0666 {fn}'
+			if have_sudo():
+				msg(orange(f'Running ‘{cmd}’'))
+				run(cmd.split(), check=True)
+			else:
+				msg('\n{}\n{}\n{}'.format(
+					blue(f'You do not have write access to the {desc}'),
+					blue(f'To allow access, run the following command:\n\n    {cmd}'),
+					orange('[To prevent this message in the future, enable sudo without a password]')
+				))
+				sys.exit(1)
 
+		def init_state(fn, desc, init_val=None):
 			try:
-				write_init_val(init_val)
+				write_init_val(fn, init_val)
 			except PermissionError:
-				cmd = f'sudo chmod 0666 {fn}'
-				if have_sudo():
-					msg(orange(f'Running ‘{cmd}’'))
-					run(cmd.split(), check=True)
-					write_init_val(init_val)
-				else:
-					msg('\n{}\n{}\n{}'.format(
-						blue(f'You do not have access to the {desc} file'),
-						blue(f'To allow access, run the following command:\n\n    {cmd}'),
-						orange('[To prevent this message in the future, enable sudo without a password]')
-					))
-					sys.exit(1)
+				permission_error_action(fn, desc)
+				write_init_val(fn, init_val)
 
-		check_access(board.control, desc='status LED control')
-
+		# Writing to control file can alter trigger file, so read and initialize trigger file first:
 		if board.trigger:
-			check_access(board.trigger, desc='LED trigger', init_val=board.trigger_states[0])
+			def get_cur_state():
+				try:
+					with open(board.trigger) as fh:
+						states = fh.read()
+				except PermissionError:
+					permission_error_action(board.trigger, 'status LED trigger file')
+					with open(board.trigger) as fh:
+						states = fh.read()
+
+				res = [a for a in states.split() if a.startswith('[') and a.endswith(']')]
+				return res[0][1:-1] if len(res) == 1 else None
+
+			if cur_state := get_cur_state():
+				msg(f'Saving current LED trigger state: [{cur_state}]')
+				board.trigger_reset = cur_state
+			else:
+				msg('Unable to determine current LED trigger state')
+
+			init_state(board.trigger, desc='status LED trigger file', init_val=board.trigger_disable)
+
+		init_state(board.control, desc='status LED control file')
 
 		self.board = board
 
