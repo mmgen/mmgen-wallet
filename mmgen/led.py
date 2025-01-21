@@ -26,36 +26,41 @@ from subprocess import run
 
 from .util import msg, msg_r, die, have_sudo
 from .color import blue, orange
+from .base_obj import Lockable
 
 class LEDControl:
 
-	binfo = namedtuple('board_info', ['name', 'control', 'trigger', 'trigger_states'])
+	class binfo(Lockable):
+		_reset_ok = ('trigger_reset',)
+
+		def __init__(self, name, control, trigger=None, trigger_dfl='heartbeat', trigger_disable='none'):
+			self.name = name
+			self.control = control
+			self.trigger = trigger
+			self.trigger_dfl = trigger_dfl
+			self.trigger_reset = trigger_dfl
+			self.trigger_disable = trigger_disable
+
 	boards = {
 		'raspi_pi': binfo(
 			name    = 'Raspberry Pi',
 			control = '/sys/class/leds/led0/brightness',
 			trigger = '/sys/class/leds/led0/trigger',
-			trigger_states = ('none', 'mmc0')),
+			trigger_dfl = 'mmc0'),
 		'orange_pi': binfo(
 			name    = 'Orange Pi (Armbian)',
-			control = '/sys/class/leds/orangepi:red:status/brightness',
-			trigger = None,
-			trigger_states = None),
+			control = '/sys/class/leds/orangepi:red:status/brightness'),
 		'orange_pi_5': binfo(
 			name    = 'Orange Pi 5 (Armbian)',
-			control = '/sys/class/leds/status_led/brightness',
-			trigger = None,
-			trigger_states = None),
+			control = '/sys/class/leds/status_led/brightness'),
 		'rock_pi': binfo(
 			name    = 'Rock Pi (Armbian)',
 			control = '/sys/class/leds/status/brightness',
-			trigger = '/sys/class/leds/status/trigger',
-			trigger_states = ('none', 'heartbeat')),
+			trigger = '/sys/class/leds/status/trigger'),
 		'dummy': binfo(
-			name    = 'Fake',
+			name    = 'Fake Board',
 			control = '/tmp/led_status',
-			trigger = '/tmp/led_trigger',
-			trigger_states = ('none', 'original_value')),
+			trigger = '/tmp/led_trigger'),
 	}
 
 	def __init__(self, enabled, simulate=False, debug=False):
@@ -125,7 +130,7 @@ class LEDControl:
 		with open(db.control, 'w') as fp:
 			fp.write('0\n')
 		with open(db.trigger, 'w') as fp:
-			fp.write(db.trigger_states[1]+'\n')
+			fp.write(db.trigger_dfl + '\n')
 
 	def noop(self, *args, **kwargs):
 		pass
@@ -192,4 +197,4 @@ class LEDControl:
 
 		if self.board.trigger:
 			with open(self.board.trigger, 'w') as fp:
-				fp.write(self.board.trigger_states[1]+'\n')
+				fp.write(self.board.trigger_reset + '\n')
