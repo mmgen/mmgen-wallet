@@ -91,7 +91,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	def __del__(self):
 		if hasattr(self, 'have_dummy_control_files'):
 			db = LEDControl.boards['dummy']
-			for fn in (db.status, db.trigger):
+			for fn in (db.control, db.trigger):
 				run(f'sudo rm -f {fn}'.split(), check=True)
 
 		if hasattr(self, 'txdev'):
@@ -609,7 +609,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 			LEDControl.create_dummy_control_files()
 			db = LEDControl.boards['dummy']
 			usrgrp = {'linux': 'root:root', 'darwin': 'root:wheel'}[sys.platform]
-			for fn in (db.status, db.trigger): # trigger the auto-chmod feature
+			for fn in (db.control, db.trigger): # trigger the auto-chmod feature
 				run(f'sudo chmod 644 {fn}'.split(), check=True)
 				run(f'sudo chown {usrgrp} {fn}'.split(), check=True)
 			self.have_dummy_control_files = True

@@ -29,31 +29,31 @@ from .color import blue, orange
 
 class LEDControl:
 
-	binfo = namedtuple('board_info', ['name', 'status', 'trigger', 'trigger_states'])
+	binfo = namedtuple('board_info', ['name', 'control', 'trigger', 'trigger_states'])
 	boards = {
 		'raspi_pi': binfo(
 			name    = 'Raspberry Pi',
-			status  = '/sys/class/leds/led0/brightness',
+			control = '/sys/class/leds/led0/brightness',
 			trigger = '/sys/class/leds/led0/trigger',
 			trigger_states = ('none', 'mmc0')),
 		'orange_pi': binfo(
 			name    = 'Orange Pi (Armbian)',
-			status  = '/sys/class/leds/orangepi:red:status/brightness',
+			control = '/sys/class/leds/orangepi:red:status/brightness',
 			trigger = None,
 			trigger_states = None),
 		'orange_pi_5': binfo(
 			name    = 'Orange Pi 5 (Armbian)',
-			status  = '/sys/class/leds/status_led/brightness',
+			control = '/sys/class/leds/status_led/brightness',
 			trigger = None,
 			trigger_states = None),
 		'rock_pi': binfo(
 			name    = 'Rock Pi (Armbian)',
-			status  = '/sys/class/leds/status/brightness',
+			control = '/sys/class/leds/status/brightness',
 			trigger = '/sys/class/leds/status/trigger',
 			trigger_states = ('none', 'heartbeat')),
 		'dummy': binfo(
 			name    = 'Fake',
-			status  = '/tmp/led_status',
+			control = '/tmp/led_status',
 			trigger = '/tmp/led_trigger',
 			trigger_states = ('none', 'original_value')),
 	}
@@ -74,7 +74,7 @@ class LEDControl:
 			if board_id == 'dummy' and not simulate:
 				continue
 			try:
-				os.stat(board.status)
+				os.stat(board.control)
 			except:
 				pass
 			else:
@@ -85,7 +85,7 @@ class LEDControl:
 		msg(f'{board.name} board detected')
 
 		if self.debug:
-			msg(f'\n  Status file:  {board.status}\n  Trigger file: {board.trigger}')
+			msg(f'\n  Control file:  {board.control}\n  Trigger file: {board.trigger}')
 
 		def check_access(fn, desc, init_val=None):
 
@@ -112,7 +112,7 @@ class LEDControl:
 					))
 					sys.exit(1)
 
-		check_access(board.status, desc='status LED control')
+		check_access(board.control, desc='status LED control')
 
 		if board.trigger:
 			check_access(board.trigger, desc='LED trigger', init_val=board.trigger_states[0])
@@ -122,7 +122,7 @@ class LEDControl:
 	@classmethod
 	def create_dummy_control_files(cls):
 		db = cls.boards['dummy']
-		with open(db.status, 'w') as fp:
+		with open(db.control, 'w') as fp:
 			fp.write('0\n')
 		with open(db.trigger, 'w') as fp:
 			fp.write(db.trigger_states[1]+'\n')
@@ -140,7 +140,7 @@ class LEDControl:
 			msg(f'led_loop({on_secs}, {off_secs})')
 
 		if not on_secs:
-			with open(self.board.status, 'w') as fp:
+			with open(self.board.control, 'w') as fp:
 				fp.write('0\n')
 			while True:
 				if self.ev_sleep(3600):
@@ -150,7 +150,7 @@ class LEDControl:
 			for s_time, val in ((on_secs, 255), (off_secs, 0)):
 				if self.debug:
 					msg_r(('^', '+')[bool(val)])
-				with open(self.board.status, 'w') as fp:
+				with open(self.board.control, 'w') as fp:
 					fp.write(f'{val}\n')
 				if self.ev_sleep(s_time):
 					if self.debug:
