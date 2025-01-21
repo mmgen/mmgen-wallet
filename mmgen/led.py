@@ -57,6 +57,14 @@ class LEDControl:
 			name    = 'Rock Pi (Armbian)',
 			control = '/sys/class/leds/status/brightness',
 			trigger = '/sys/class/leds/status/trigger'),
+		'rock_5': binfo(
+			name    = 'Rock 5 (Armbian)',
+			control = '/sys/class/leds/user-led2/brightness',
+			trigger = '/sys/class/leds/user-led2/trigger'),
+		'banana_pi_f3': binfo(
+			name    = 'Banana Pi F3 (Armbian)',
+			control = '/sys/class/leds/sys-led/brightness',
+			trigger = '/sys/class/leds/sys-led/trigger'),
 		'dummy': binfo(
 			name    = 'Fake Board',
 			control = '/tmp/led_status',
