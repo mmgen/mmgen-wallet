@@ -50,8 +50,18 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	diff_adjust_interval = 2016
 	max_halvings    = 64
 	start_subsidy   = 50
-	ignore_daemon_version = False
 	max_int         = 0xffffffff
+
+	coin_cfg_opts = (
+		'ignore_daemon_version',
+		'rpc_host',
+		'rpc_port',
+		'rpc_user',
+		'rpc_password',
+		'tw_name',
+		'max_tx_fee',
+		'cashaddr',
+	)
 
 	def encode_wif(self, privbytes, pubkey_type, compressed): # input is preprocessed hex
 		assert len(privbytes) == self.privkey_len, f'{len(privbytes)} bytes: incorrect private key length!'

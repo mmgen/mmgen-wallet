@@ -420,7 +420,8 @@ class CoinDaemon(Daemon):
 		ps_adj = (port_shift or 0) + (self.test_suite_port_shift if test_suite else 0)
 
 		# user-set values take precedence
-		self.rpc_port = (cfg.rpc_port or 0) + (port_shift or 0) if cfg.rpc_port else ps_adj + self.get_rpc_port()
+		usr_rpc_port = self.proto.rpc_port or cfg.rpc_port
+		self.rpc_port = usr_rpc_port + (port_shift or 0) if usr_rpc_port else ps_adj + self.get_rpc_port()
 		self.p2p_port = (
 			p2p_port or (
 				self.get_p2p_port() + ps_adj if self.get_p2p_port() and (test_suite or ps_adj) else None

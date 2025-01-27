@@ -60,6 +60,11 @@ if cfg.show_opts:
 	col1_w = max(len(s) for s in opts) + 5
 	for opt in opts:
 		msg('{:{w}} {}'.format(f'cfg.{opt}:', getattr(cfg, opt), w=col1_w))
+		if cfg._proto:
+			coin, *rem = opt.split('_')
+			network = rem[0] if rem[0] in cfg._proto.network_names else None
+			opt_name = '_'.join(rem[bool(network):])
+			msg('{:{w}} {}'.format(f'proto.{opt_name}:', getattr(cfg._proto, opt_name), w=col1_w))
 
 msg('')
 for n, arg in enumerate(cfg._args, 1):

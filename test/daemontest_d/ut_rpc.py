@@ -78,6 +78,9 @@ async def print_daemon_info(rpc):
     WALLETINFO:     {fmt_dict(await rpc.walletinfo)}
 		""".rstrip())
 
+	if rpc.proto.base_proto == 'Ethereum':
+		msg(f'    CHAIN_NAMES:    {" ".join(rpc.daemon.proto.chain_names)}')
+
 	msg('')
 
 def do_msg(rpc, backend):
@@ -92,7 +95,9 @@ class init_test:
 		do_msg(rpc, backend)
 
 		wi = await rpc.walletinfo
-		assert wi['walletname'] == cfg_override['tw_name']
+		assert wi['walletname'] == cfg_override['btc_tw_name']
+		assert wi['walletname'] == rpc.cfg._proto.tw_name, f'{wi["walletname"]!r} != {rpc.cfg._proto.tw_name!r}'
+		assert daemon.bind_port == cfg_override['btc_rpc_port']
 
 		bh = (await rpc.call('getblockchaininfo', timeout=300))['bestblockhash']
 		await rpc.gathered_call('getblock', ((bh,), (bh, 1)), timeout=300)
@@ -112,6 +117,9 @@ class init_test:
 		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
 		do_msg(rpc, backend)
 		await rpc.call('eth_blockNumber', timeout=300)
+		if rpc.proto.network == 'testnet':
+			assert daemon.proto.chain_names == cfg_override['eth_testnet_chain_names']
+			assert daemon.bind_port == cfg_override['eth_rpc_port']
 		return rpc
 
 	etc = eth
@@ -166,7 +174,15 @@ class unit_tests:
 		return await run_test(
 			['btc', 'btc_tn'],
 			test_cf_auth = True,
-			cfg_override = {'_clone': cfg, 'tw_name': 'alternate-tracking-wallet'})
+			cfg_override = {
+				'_clone': cfg,
+				'btc_rpc_port': 19777,
+				'rpc_port':     32323, # ignored
+				'btc_tw_name': 'alternate-tracking-wallet',
+				'tw_name':     'this-is-overridden',
+				'ltc_tw_name': 'this-is-ignored',
+				'eth_mainnet_chain_names': ['also', 'ignored'],
+		})
 
 	async def ltc(self, name, ut):
 		return await run_test(['ltc', 'ltc_tn'], test_cf_auth=True)
@@ -176,7 +192,17 @@ class unit_tests:
 
 	async def geth(self, name, ut):
 		# mainnet returns EIP-155 error on empty blockchain:
-		return await run_test(['eth_tn', 'eth_rt'], daemon_ids=['geth'])
+		return await run_test(
+			['eth_tn', 'eth_rt'],
+			daemon_ids = ['geth'],
+			cfg_override = {
+				'_clone': cfg,
+				'eth_rpc_port': 19777,
+				'rpc_port':     32323, # ignored
+				'btc_tw_name': 'ignored',
+				'tw_name':     'also-ignored',
+				'eth_testnet_chain_names': ['goerli', 'foo', 'bar', 'baz'],
+		})
 
 	async def erigon(self, name, ut):
 		return await run_test(['eth', 'eth_tn', 'eth_rt'], daemon_ids=['erigon'])

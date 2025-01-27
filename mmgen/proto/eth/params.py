@@ -35,7 +35,6 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 	base_proto_coin = 'ETH'
 	base_coin     = 'ETH'
 	avg_bdi       = 15
-	ignore_daemon_version = False
 	decimal_prec  = 36
 
 	chain_ids = {
@@ -51,6 +50,17 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 		1337: 'developmentchain', # geth dev chain
 		711:  'ethereum',         # geth mainnet (empty chain)
 	}
+
+	coin_cfg_opts = (
+		'ignore_daemon_version',
+		'rpc_host',
+		'rpc_port',
+		'max_tx_fee',
+	)
+
+	proto_cfg_opts = (
+		'chain_names',
+	)
 
 	@property
 	def dcoin(self):

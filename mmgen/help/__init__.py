@@ -142,17 +142,18 @@ class GlobalHelp(Help):
 	data_desc = 'global_opts_data'
 
 	def gen_text(self, opts):
-		from ..opts import global_opts_pat
+		from ..opts import global_opts_help_pat
 		skipping = False
 		for line in opts.global_opts_data['text']['options'][1:-3].splitlines():
-			if m := global_opts_pat.match(line):
-				if m[1] in opts.global_opts_filter.coin and m[2] in opts.global_opts_filter.cmd:
-					yield '  --{} {}'.format(m[3], m[5])
-					skipping = False
-				else:
-					skipping = True
-			elif not skipping:
-				yield line[4:]
+			m = global_opts_help_pat.match(line)
+			if m[1] == '+':
+				if not skipping:
+					yield line[4:]
+			elif m[1] in opts.global_opts_filter.coin and m[2] in opts.global_opts_filter.cmd:
+				yield '  --{} {}'.format(m[3], m[5]) if m[3] else m[5]
+				skipping = False
+			else:
+				skipping = True
 
 def print_help(cfg, opts):
 

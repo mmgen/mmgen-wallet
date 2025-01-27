@@ -46,6 +46,13 @@ class CmdTestOpts(CmdTestBase):
 		('opt_good22',           (41, 'good cmdline opt (opt + negated opt [substring])', [])),
 		('opt_good23',           (41, 'good cmdline opt (negated negative opt [substring])', [])),
 		('opt_good24',           (41, 'good cmdline opt (negated opt + opt [substring])', [])),
+		('opt_good25',           (41, 'good cmdline opt (--btc-rpc-host)', [])),
+		('opt_good26',           (41, 'good cmdline opt (--btc-rpc-port)', [])),
+		('opt_good27',           (41, 'good cmdline opt (--btc-ignore-daemon-version)', [])),
+		('opt_good28',           (41, 'good cmdline opt (--bch-cashaddr)', [])),
+		('opt_good29',           (41, 'good cmdline opt (--etc-max-tx-fee=0.1)', [])),
+		('opt_good30',           (41, 'good cmdline opt (--eth-chain-names=foo,bar)', [])),
+		('opt_good31',           (41, 'good cmdline opt (--xmr-rpc-port=28081)', [])),
 		('opt_bad_param',        (41, 'bad global opt (--pager=1)', [])),
 		('opt_bad_infile',       (41, 'bad infile parameter', [])),
 		('opt_bad_outdir',       (41, 'bad outdir parameter', [])),
@@ -65,6 +72,23 @@ class CmdTestOpts(CmdTestBase):
 		('opt_invalid_14',       (41, 'invalid cmdline opt (long opt substring too short)', [])),
 		('opt_invalid_15',       (41, 'invalid cmdline (too many args)', [])),
 		('opt_invalid_16',       (41, 'invalid cmdline (overlong arg)', [])),
+		('opt_invalid_17',       (41, 'invalid cmdline opt (--btc-rpc-host without ‘need_proto’)', [])),
+		('opt_invalid_18',       (41, 'invalid cmdline opt (--btc-rpc-port without ‘need_proto’)', [])),
+		('opt_invalid_19',       (41, 'invalid cmdline opt (--btc-rpc-port with non-integer param)', [])),
+		('opt_invalid_21',       (41, 'invalid cmdline opt (--btc-foo)', [])),
+		('opt_invalid_22',       (41, 'invalid cmdline opt (--btc-rpc-host with missing param)', [])),
+		('opt_invalid_23',       (41, 'invalid cmdline opt (--btc-ignore-daemon-version with param)', [])),
+		('opt_invalid_24',       (41, 'invalid cmdline opt (--bch-cashaddr without ‘need_proto’)', [])),
+		('opt_invalid_25',       (41, 'invalid cmdline opt (--bch-cashaddr without parameter)', [])),
+		('opt_invalid_26',       (41, 'invalid cmdline opt (--bch-cashaddr with non-bool parameter)', [])),
+		('opt_invalid_27',       (41, 'invalid cmdline opt (--ltc-cashaddr)', [])),
+		('opt_invalid_28',       (41, 'invalid cmdline opt (--xmr-max-tx-fee)', [])),
+		('opt_invalid_29',       (41, 'invalid cmdline opt (--eth-max-tx-fee without parameter)', [])),
+		('opt_invalid_30',       (41, 'invalid cmdline opt (--eth-max-tx-fee with non-numeric parameter)', [])),
+		('opt_invalid_31',       (41, 'invalid cmdline opt (--bch-cashaddr without --coin=bch)', [])),
+		('opt_invalid_32',       (41, 'invalid cmdline opt (--eth-chain-names without --coin=eth)', [])),
+		('opt_invalid_33',       (41, 'invalid cmdline opt (--xmr-rpc-host)', [])),
+		('opt_invalid_34',       (41, 'invalid cmdline opt (--eth-rpc-user)', [])),
 	)
 
 	def spawn_prog(self, args, opts=[], exit_val=None, need_proto=False):
@@ -242,6 +266,45 @@ class CmdTestOpts(CmdTestBase):
 	def opt_good24(self):
 		return self.check_vals(['--no-pag', '--pag'], (('cfg.pager', 'True'),))
 
+	def opt_good25(self):
+		return self.check_vals(
+			['--btc-rpc-host=pi5'],
+			(('cfg.btc_rpc_host', 'pi5'), ('proto.rpc_host', 'pi5')),
+			need_proto=True)
+
+	def opt_good26(self):
+		return self.check_vals(
+			['--btc-rpc-port=7272'],
+			(('cfg.btc_rpc_port', '7272'), ('proto.rpc_port', '7272')),
+			need_proto=True)
+
+	def opt_good27(self):
+		return self.check_vals(
+			['--btc-ignore-daemon-version'],
+			(('cfg.btc_ignore_daemon_version', 'True'), ('proto.ignore_daemon_version', 'True'),),
+			need_proto = True)
+
+	def opt_good28(self):
+		return self.check_vals(
+			['--coin=bch', '--bch-cashaddr=yes'],
+			(('cfg.bch_cashaddr', 'True'), ('proto.cashaddr', 'True'),),
+			need_proto = True)
+
+	def opt_good29(self):
+		return self.check_vals(['--etc-max-tx-fee=0.1'], (('cfg.etc_max_tx_fee', '0.1'),), need_proto=True)
+
+	def opt_good30(self):
+		return self.check_vals(
+			['--coin=eth', '--eth-mainnet-chain-names=foo,bar'],
+			(('cfg.eth_mainnet_chain_names', r"\['foo', 'bar'\]"), ('proto.chain_names', r"\['foo', 'bar'\]")),
+			need_proto = True)
+
+	def opt_good31(self):
+		return self.check_vals(
+			['--coin=xmr', '--xmr-rpc-port=28081'],
+			(('cfg.xmr_rpc_port', '28081'),('proto.rpc_port', '28081'),),
+			need_proto = True)
+
 	def opt_bad_param(self):
 		return self.do_run(['--pager=1'], 'no parameter', 1)
 
@@ -259,8 +322,8 @@ class CmdTestOpts(CmdTestBase):
 	def opt_bad_autoset(self):
 		return self.do_run(['--fee-estimate-mode=Fubar'], 'not unique substring', 1)
 
-	def opt_invalid(self, args, expect, exit_val=1):
-		t = self.spawn_prog(args, exit_val=exit_val)
+	def opt_invalid(self, args, expect, opts=[], need_proto=False, exit_val=1):
+		t = self.spawn_prog(args, opts=opts, exit_val=exit_val, need_proto=need_proto)
 		t.expect(expect)
 		return t
 
@@ -305,3 +368,54 @@ class CmdTestOpts(CmdTestBase):
 
 	def opt_invalid_16(self):
 		return self.opt_invalid(['e' * 4097], 'too long')
+
+	def opt_invalid_17(self):
+		return self.opt_invalid(['--btc-rpc-host'], 'unrecognized option')
+
+	def opt_invalid_18(self):
+		return self.opt_invalid(['--btc-rpc-port'], 'unrecognized option')
+
+	def opt_invalid_19(self):
+		return self.opt_invalid(['--btc-rpc-port=foo'], "must be of type 'int'", need_proto=True)
+
+	def opt_invalid_21(self):
+		return self.opt_invalid(['--btc-foo'], 'unrecognized option')
+
+	def opt_invalid_22(self):
+		return self.opt_invalid(['--btc-rpc-host'], 'missing parameter', need_proto=True)
+
+	def opt_invalid_23(self):
+		return self.opt_invalid(['--btc-ignore-daemon-version=1'], 'requires no parameter', need_proto=True)
+
+	def opt_invalid_24(self):
+		return self.opt_invalid(['--bch-cashaddr'], 'unrecognized option')
+
+	def opt_invalid_25(self):
+		return self.opt_invalid(['--bch-cashaddr'], 'missing parameter', need_proto=True)
+
+	def opt_invalid_26(self):
+		return self.opt_invalid(['--bch-cashaddr=foo'], "must be of type 'bool'", need_proto=True)
+
+	def opt_invalid_27(self):
+		return self.opt_invalid(['--ltc-cashaddr'], 'unrecognized option', need_proto=True)
+
+	def opt_invalid_28(self):
+		return self.opt_invalid(['--xmr-max-tx-fee=0.1'], 'unrecognized option', need_proto=True)
+
+	def opt_invalid_29(self):
+		return self.opt_invalid(['--eth-max-tx-fee'], 'missing parameter', need_proto=True)
+
+	def opt_invalid_30(self):
+		return self.opt_invalid(['--eth-max-tx-fee=true'], 'must be of type', need_proto=True)
+
+	def opt_invalid_31(self):
+		return self.opt_invalid(['--bch-cashaddr=true'], 'has no attribute', opts=['--show-opts=bch_cashaddr'], need_proto=True)
+
+	def opt_invalid_32(self):
+		return self.opt_invalid(['--eth-chain-names=foo,bar'], 'unrecognized option', need_proto=True)
+
+	def opt_invalid_33(self):
+		return self.opt_invalid(['--xmr-rpc-host=solaris'], 'unrecognized option', need_proto=True)
+
+	def opt_invalid_34(self):
+		return self.opt_invalid(['--eth-rpc-user=bob'], 'unrecognized option', need_proto=True)

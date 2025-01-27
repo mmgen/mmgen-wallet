@@ -254,15 +254,17 @@ class CfgFileSampleUsr(cfg_file_sample):
 	def show_changes(self, diff):
 		ymsg('Warning: configuration file options have changed!\n')
 		for desc in ('added', 'removed'):
-			data = diff[desc]
-			if data:
-				opts = fmt_list([i.name for i in data], fmt='bare')
-				msg(f'  The following option{suf(data, verb="has")} been {desc}:\n    {opts}\n')
-				if desc == 'removed' and data:
+			changed_opts = [i.name for i in diff[desc]
+				# workaround for coin-specific opts previously listed in sample file:
+				if not (i.name.endswith('_ignore_daemon_version') and desc == 'removed')
+			]
+			if changed_opts:
+				msg(f'  The following option{suf(changed_opts, verb="has")} been {desc}:')
+				msg(f'    {fmt_list(changed_opts, fmt="bare")}\n')
+				if desc == 'removed':
 					uc = mmgen_cfg_file(self.cfg, 'usr')
 					usr_names = [i.name for i in uc.get_lines()]
-					rm_names = [i.name for i in data]
-					bad = sorted(set(usr_names).intersection(rm_names))
+					bad = sorted(set(usr_names).intersection(changed_opts))
 					if bad:
 						m = f"""
 							The following removed option{suf(bad, verb='is')} set in {uc.fn!r}

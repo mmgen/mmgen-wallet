@@ -124,11 +124,13 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 		self.proto = proto
 		self.daemon = daemon
 		self.call_sigs = getattr(CallSigs, daemon.id)(cfg)
-		self.twname = TrackingWalletName(cfg.regtest_user or cfg.tw_name or self.dfl_twname)
+		self.twname = TrackingWalletName(cfg.regtest_user or proto.tw_name or cfg.tw_name or self.dfl_twname)
 
 		super().__init__(
 			cfg  = cfg,
-			host = 'localhost' if cfg.test_suite or cfg.network == 'regtest' else (cfg.rpc_host or 'localhost'),
+			host = (
+				'localhost' if cfg.test_suite or cfg.network == 'regtest'
+				else (proto.rpc_host or cfg.rpc_host or 'localhost')),
 			port = daemon.rpc_port)
 
 		self.set_auth()
@@ -210,14 +212,15 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 		"""
 		if self.cfg.network == 'regtest':
 			from .regtest import MMGenRegtest
-			user, passwd = (MMGenRegtest.rpc_user, MMGenRegtest.rpc_password)
-		elif self.cfg.rpc_user:
-			user, passwd = (self.cfg.rpc_user, self.cfg.rpc_password)
+			user = MMGenRegtest.rpc_user
+			passwd = MMGenRegtest.rpc_password
 		else:
-			user, passwd = self.get_daemon_cfg_options(('rpcuser', 'rpcpassword')).values()
-
-		if not (user and passwd):
-			user, passwd = (self.daemon.rpc_user, self.daemon.rpc_password)
+			user = (
+				self.proto.rpc_user or self.cfg.rpc_user or self.get_daemon_cfg_option('rpcuser')
+				or self.daemon.rpc_user)
+			passwd = (
+				self.proto.rpc_password or self.cfg.rpc_password or self.get_daemon_cfg_option('rpcpassword')
+				or self.daemon.rpc_password)
 
 		if user and passwd:
 			self.auth = auth_data(user, passwd)
@@ -259,6 +262,9 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 		return os.path.join(
 			(os.path.dirname(self.cfg.data_dir) if self.proto.regtest else self.daemon.datadir),
 			self.daemon.cfg_file)
+
+	def get_daemon_cfg_option(self, req_key):
+		return list(self.get_daemon_cfg_options([req_key]).values())[0]
 
 	def get_daemon_cfg_options(self, req_keys):
 

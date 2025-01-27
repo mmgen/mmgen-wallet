@@ -203,10 +203,10 @@ class CmdTestCfgFile(CmdTestBase):
 
 		for coin, res1_chk, res2_chk, res2_chk_eq in (
 			('BTC', 'True',  '1.2345', True),
-			('LTC', 'False', '1.2345', False),
-			('BCH', 'False', '1.2345', False),
+			('LTC', 'None',  '1.2345', False),
+			('BCH', 'None',  '1.2345', False),
 			('ETH', 'True',  '5.4321', True),
-			('ETC', 'False', '5.4321', False)
+			('ETC', 'None',  '5.4321', False)
 		):
 			if cfg.no_altcoin and coin != 'BTC':
 				continue

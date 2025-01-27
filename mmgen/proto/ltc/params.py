@@ -26,7 +26,6 @@ class mainnet(mainnet):
 	bech32_hrp      = 'ltc'
 	avg_bdi         = 150
 	halving_interval = 840000
-	ignore_daemon_version = False
 
 class testnet(mainnet):
 	# addr ver nums same as Bitcoin testnet, except for 'p2sh'

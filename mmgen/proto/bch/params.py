@@ -28,7 +28,6 @@ class mainnet(mainnet):
 	caps = ()
 	coin_amt        = 'BCHAmt'
 	max_tx_fee      = 0.1
-	ignore_daemon_version = False
 	cashaddr_pfx    = 'bitcoincash'
 	cashaddr        = True
 

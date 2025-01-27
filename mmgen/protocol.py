@@ -116,6 +116,11 @@ class CoinProtocol(MMGenObject):
 				self.coin_amt = None
 				self.max_tx_fee = None
 
+			self.set_cfg_opts()
+
+		def set_cfg_opts(self):
+			pass
+
 		@property
 		def dcoin(self):
 			return self.coin
@@ -192,8 +197,43 @@ class CoinProtocol(MMGenObject):
 			else:
 				return getattr(importlib.import_module(modpath), clsname)
 
+	class RPC:
 
-	class Secp256k1(Base):
+		# prefixed with coin, e.g. ‘ltc_rpc_host’: refvals taken from proto class
+		coin_cfg_opts = ()
+
+		# prefixed with coin + network, e.g. ‘eth_mainnet_chain_names’: refvals taken from proto class
+		proto_cfg_opts = ()
+
+		# default vals (refvals): bool(val) must be False (val = None -> option takes no parameter)
+		ignore_daemon_version = None
+		rpc_host              = ''
+		rpc_port              = 0
+		rpc_user              = ''
+		rpc_password          = ''
+		tw_name               = ''
+
+		@classmethod
+		def get_opt_clsval(cls, cfg, opt):
+			coin, *rem = opt.split('_', 2)
+			network = rem[0] if rem[0] in init_proto(cfg, coin, return_cls=True).network_names else None
+			opt_name = '_'.join(rem[bool(network):])
+			if ((network is None and opt_name in cls.coin_cfg_opts) or
+				(network and opt_name in cls.proto_cfg_opts)):
+				# raises AttributeError on failure:
+				return getattr(init_proto(cfg, coin, network=network, return_cls=True), opt_name)
+			else:
+				raise AttributeError(f'{opt_name}: unrecognized attribute')
+
+		def set_cfg_opts(self):
+			for opt in self.cfg.__dict__:
+				if opt.startswith(self.coin.lower() + '_'):
+					res = opt.split('_', 2)[1:]
+					network = res[0] if res[0] in self.network_names else None
+					if network is None or network == self.network:
+						setattr(self, '_'.join(res[bool(network):]), getattr(self.cfg, opt))
+
+	class Secp256k1(RPC, Base):
 		"""
 		Bitcoin and Ethereum protocols inherit from this class
 		"""

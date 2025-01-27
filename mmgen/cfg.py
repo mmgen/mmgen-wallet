@@ -280,6 +280,8 @@ class Config(Lockable):
 		('autosign', 'outdir'),
 	)
 
+	# proto-specific only: eth_mainnet_chain_names eth_testnet_chain_names
+	# coin-specific only:  bch_cashaddr (alias of cashaddr)
 	_cfg_file_opts = (
 		'autochg_ignore_labels',
 		'color',
@@ -289,6 +291,7 @@ class Config(Lockable):
 		'force_256_color',
 		'hash_preset',
 		'http_timeout',
+		'ignore_daemon_version', # also coin-specific
 		'macos_autosign_ramdisk_size',
 		'max_input_size',
 		'max_tx_file_size',
@@ -298,27 +301,15 @@ class Config(Lockable):
 		'no_license',
 		'quiet',
 		'regtest',
-		'rpc_host',
-		'rpc_password',
-		'rpc_port',
-		'rpc_user',
+		'rpc_host',     # also coin-specific
+		'rpc_password', # also coin-specific
+		'rpc_port',     # also coin-specific
+		'rpc_user',     # also coin-specific
 		'scroll',
 		'subseeds',
 		'testnet',
-		'usr_randchars',
-		'bch_cashaddr',
-		'bch_max_tx_fee',
-		'btc_max_tx_fee',
-		'eth_max_tx_fee',
-		'ltc_max_tx_fee',
-		'bch_ignore_daemon_version',
-		'btc_ignore_daemon_version',
-		'etc_ignore_daemon_version',
-		'eth_ignore_daemon_version',
-		'ltc_ignore_daemon_version',
-		'xmr_ignore_daemon_version',
-		'eth_mainnet_chain_names',
-		'eth_testnet_chain_names')
+		'tw_name',      # also coin-specific
+		'usr_randchars')
 
 	# Supported environmental vars
 	# The corresponding attributes (lowercase, without 'mmgen_') must exist in the class.
@@ -563,6 +554,9 @@ class Config(Lockable):
 
 		del self._cloned
 
+		if hasattr(self, 'bch_cashaddr') and not hasattr(self, 'cashaddr'):
+			self.cashaddr = self.bch_cashaddr
+
 		self._lock()
 
 		if need_proto:
@@ -634,34 +628,29 @@ class Config(Lockable):
 		non_auto_opts = []
 		already_set = tuple(self._uopts) + env_cfg
 
+		def set_opt(d, obj, name, refval):
+			val = ucfg.parse_value(d.value, refval)
+			if not val:
+				die('CfgFileParseError', f'Parse error in file {ucfg.fn!r}, line {d.lineno}')
+			val_conv = conv_type(name, val, refval, src=ucfg.fn)
+			setattr(obj, name, val_conv)
+			non_auto_opts.append(name)
+
 		for d in ucfg.get_lines():
 			if d.name in self._cfg_file_opts:
-				ns = d.name.split('_')
-				if ns[0] in gc.core_coins:
-					if not need_proto:
-						continue
-					nse, tn = (
-						(ns[2:], ns[1]=='testnet') if len(ns) > 2 and ns[1] in ('mainnet', 'testnet') else
-						(ns[1:], False)
-					)
-					# no instance yet, so override _class_ attr:
-					cls = init_proto(self, ns[0], tn, need_amt=True, return_cls=True)
-					attr = '_'.join(nse)
-				else:
-					cls = self
-					attr = d.name
-				refval = getattr(cls, attr)
-				val = ucfg.parse_value(d.value, refval)
-				if not val:
-					die('CfgFileParseError', f'Parse error in file {ucfg.fn!r}, line {d.lineno}')
-				val_conv = conv_type(attr, val, refval, src=ucfg.fn)
-				if not attr in already_set:
-					setattr(cls, attr, val_conv)
-					non_auto_opts.append(attr)
+				if not d.name in already_set:
+					set_opt(d, self, d.name, getattr(self, d.name))
 			elif d.name in self._autoset_opts:
 				autoset_opts[d.name] = d.value
 			elif d.name in self._auto_typeset_opts:
 				auto_typeset_opts[d.name] = d.value
+			elif any(d.name.startswith(coin + '_') for coin in gc.rpc_coins):
+				if need_proto and not d.name in already_set:
+					try:
+						refval = init_proto(self, d.name.split('_', 1)[0]).get_opt_clsval(self, d.name)
+					except AttributeError:
+						die('CfgFileParseError', f'{d.name!r}: unrecognized option in {ucfg.fn!r}, line {d.lineno}')
+					set_opt(d, self, d.name, refval)
 			else:
 				die('CfgFileParseError', f'{d.name!r}: unrecognized option in {ucfg.fn!r}, line {d.lineno}')
 
@@ -946,7 +935,8 @@ def conv_type(name, val, refval, src, invert_bool=False):
 			d = '' if src in ('cmdline', 'cfg', 'env') else f' in {src!r}',
 			e = type(refval).__name__))
 
-	if type(refval) is bool:
+	# refval is None = boolean opt with no cmdline parameter
+	if type(refval) is bool or refval is None:
 		v = str(val).lower()
 		ret = (
 			True  if v in ('true', 'yes', '1', 'on') else
@@ -954,6 +944,12 @@ def conv_type(name, val, refval, src, invert_bool=False):
 			None
 		)
 		return do_fail() if ret is None else (not ret) if invert_bool else ret
+	elif isinstance(refval, (list, tuple)):
+		if src == 'cmdline':
+			return type(refval)(val.split(','))
+		else:
+			assert isinstance(val, (list, tuple)), f'{val}: not a list or tuple'
+			return type(refval)(val)
 	else:
 		try:
 			return type(refval)(not val if invert_bool else val)

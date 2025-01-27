@@ -23,7 +23,7 @@ class MoneroViewKey(HexStr):
 	color, width, hexcase = 'cyan', 64, 'lower' # FIXME - no checking performed
 
 # https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
-class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Base):
+class mainnet(CoinProtocol.RPC, CoinProtocol.DummyWIF, CoinProtocol.Base):
 
 	network_names  = _nw('mainnet', 'stagenet', None)
 	base_proto     = 'Monero'
@@ -37,9 +37,13 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Base):
 	avg_bdi        = 120
 	privkey_len    = 32
 	mmcaps         = ('rpc',)
-	ignore_daemon_version = False
 	coin_amt       = 'XMRAmt'
 	sign_mode      = 'standalone'
+
+	coin_cfg_opts = (
+		'ignore_daemon_version',
+		'rpc_port',
+	)
 
 	def get_addr_len(self, addr_fmt):
 		return (64, 72)[addr_fmt == 'monero_integrated']

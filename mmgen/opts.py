@@ -43,7 +43,7 @@ def get_opt_by_substring(opt, opts):
 		from .util import die
 		die('CmdlineOptError', f'--{opt}: ambiguous option (not unique substring)')
 
-def process_uopts(opts_data, opts):
+def process_uopts(cfg, opts_data, opts, need_proto):
 
 	from .util import die
 
@@ -83,6 +83,32 @@ def process_uopts(opts_data, opts):
 					if parm:
 						die('CmdlineOptError', f'option --{_opt} requires no parameter')
 					yield (negated_opts(opts)[_opt].name, False)
+				elif (
+						need_proto
+						and (not gc.cmd_caps or gc.cmd_caps.rpc)
+						and any(opt.startswith(coin + '-') for coin in gc.rpc_coins)):
+					opt_name = opt.replace('-', '_')
+					from .protocol import init_proto
+					try:
+						refval = init_proto(cfg, opt.split('-', 1)[0], return_cls=True).get_opt_clsval(cfg, opt_name)
+					except AttributeError:
+						die('CmdlineOptError', f'--{opt}: unrecognized option')
+					else:
+						if refval is None: # None == no parm
+							if parm:
+								die('CmdlineOptError', f'option --{opt} requires no parameter')
+							yield (opt_name, True)
+						else:
+							from .cfg import conv_type
+							if parm:
+								yield (opt_name,
+									conv_type(opt_name, parm, refval, src='cmdline'))
+							else:
+								idx += 1
+								if idx == argv_len or (parm := sys.argv[idx]).startswith('-'):
+									die('CmdlineOptError', f'missing parameter for option --{opt}')
+								yield (opt_name,
+									conv_type(opt_name, parm, refval, src='cmdline'))
 				else:
 					die('CmdlineOptError', f'--{opt}: unrecognized option')
 			elif arg[0] == '-' and len(arg) > 1:
@@ -125,10 +151,11 @@ def process_uopts(opts_data, opts):
 	return uopts, uargs
 
 cmd_opts_pat = re.compile(r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)')
-global_opts_pat = re.compile(r'^\t\t\t(.)(.) --([a-zA-Z0-9-]{2,64})(=| )(.+)')
+global_opts_pat = re.compile(r'^\t\t\t(.)(.) --([a-z0-9-]{2,64})(=| )(.+)')
+global_opts_help_pat = re.compile(r'^\t\t\t(.)(.) (?:--([{}a-zA-Z0-9-]{2,64})(=| ))?(.+)')
 opt_tuple = namedtuple('cmdline_option', ['name', 'has_parm'])
 
-def parse_opts(opts_data, opt_filter, global_opts_data, global_opts_filter):
+def parse_opts(cfg, opts_data, opt_filter, global_opts_data, global_opts_filter, need_proto):
 
 	def parse_cmd_opts_text():
 		for line in opts_data['text']['options'].strip().splitlines():
@@ -146,7 +173,7 @@ def parse_opts(opts_data, opt_filter, global_opts_data, global_opts_filter):
 
 	opts = tuple(parse_cmd_opts_text()) + tuple(parse_global_opts_text())
 
-	uopts, uargs = process_uopts(opts_data, dict(opts))
+	uopts, uargs = process_uopts(cfg, opts_data, dict(opts), need_proto)
 
 	return namedtuple('parsed_cmd_opts', ['user_opts', 'cmd_args', 'opts'])(
 		uopts, # dict
@@ -214,10 +241,12 @@ class Opts:
 		self.opts_data = opts_data
 
 		po = parsed_opts or parse_opts(
+			cfg,
 			opts_data,
 			opt_filter,
 			self.global_opts_data,
-			self.global_opts_filter)
+			self.global_opts_filter,
+			need_proto)
 
 		cfg._args = po.cmd_args
 		cfg._uopts = uopts = po.user_opts
@@ -283,6 +312,20 @@ class UserOpts(Opts):
 			b- --bob                  Specify user ‘Bob’ in MMGen regtest mode
 			b- --alice                Specify user ‘Alice’ in MMGen regtest mode
 			b- --carol                Specify user ‘Carol’ in MMGen regtest mode
+			rr COIN-SPECIFIC OPTIONS:
+			rr   For descriptions, refer to the non-prefixed versions of these options above
+			rr   Prefixed options override their non-prefixed counterparts
+			rr   OPTION                            SUPPORTED PREFIXES
+			rr --PREFIX-ignore-daemon-version    btc ltc bch eth etc xmr
+			br --PREFIX-tw-name                  btc ltc bch
+			Rr --PREFIX-rpc-host                 btc ltc bch eth etc
+			rr --PREFIX-rpc-port                 btc ltc bch eth etc xmr
+			br --PREFIX-rpc-user                 btc ltc bch
+			br --PREFIX-rpc-password             btc ltc bch
+			Rr --PREFIX-max-tx-fee               btc ltc bch eth etc
+			Rr PROTO-SPECIFIC OPTIONS:
+			Rr   Option                            Supported Prefixes
+			Rr --PREFIX-chain-names              eth-mainnet eth-testnet etc-mainnet etc-testnet
 			""",
 		},
 		'code': {
