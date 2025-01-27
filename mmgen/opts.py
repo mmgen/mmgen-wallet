@@ -139,7 +139,7 @@ def parse_opts(opts_data, opt_filter, global_opts_data, global_opts_filter):
 				yield (m[2], ret)
 
 	def parse_global_opts_text():
-		for line in global_opts_data['text'].splitlines():
+		for line in global_opts_data['text']['options'].splitlines():
 			m = global_opts_pat.match(line)
 			if m and m[1] in global_opts_filter.coin and m[2] in global_opts_filter.cmd:
 				yield (m[3], opt_tuple(m[3].replace('-', '_'), m[4] == '='))
@@ -249,7 +249,8 @@ class UserOpts(Opts):
 
 	global_opts_data = {
 		#  coin code : cmd code : opt : opt param : text
-		'text': """
+		'text': {
+			'options': """
 			-- --accept-defaults      Accept defaults at all prompts
 			hp --cashaddr=0|1         Display addresses in cashaddr format (default: 1)
 			-p --coin=c               Choose coin unit. Default: BTC. Current choice: {cu_dfl}
@@ -266,10 +267,10 @@ class UserOpts(Opts):
 			rr --ignore-daemon-version Ignore coin daemon version check
 			rr --http-timeout=t       Set HTTP timeout in seconds for JSON-RPC connections
 			-- --no-license           Suppress the GPL license prompt
-			rr --rpc-host=HOST        Communicate with coin daemon running on host HOST
+			Rr --rpc-host=HOST        Communicate with coin daemon running on host HOST
 			rr --rpc-port=PORT        Communicate with coin daemon listening on port PORT
-			rr --rpc-user=USER        Authenticate to coin daemon using username USER
-			rr --rpc-password=PASS    Authenticate to coin daemon using password PASS
+			br --rpc-user=USER        Authenticate to coin daemon using username USER
+			br --rpc-password=PASS    Authenticate to coin daemon using password PASS
 			Rr --rpc-backend=backend  Use backend 'backend' for JSON-RPC communications
 			Rr --aiohttp-rpc-queue-len=N Use N simultaneous RPC connections with aiohttp
 			-p --regtest=0|1          Disable or enable regtest mode
@@ -282,11 +283,14 @@ class UserOpts(Opts):
 			b- --bob                  Specify user ‘Bob’ in MMGen regtest mode
 			b- --alice                Specify user ‘Alice’ in MMGen regtest mode
 			b- --carol                Specify user ‘Carol’ in MMGen regtest mode
-		""",
-		'code': lambda proto, help_notes, s: s.format(
-			pnm     = gc.proj_name,
-			cu_dfl  = proto.coin,
-			tw_name = help_notes('dfl_twname'))
+			""",
+		},
+		'code': {
+			'options': lambda proto, help_notes, s: s.format(
+				pnm     = gc.proj_name,
+				cu_dfl  = proto.coin,
+				tw_name = help_notes('dfl_twname')),
+		}
 	}
 
 	@staticmethod

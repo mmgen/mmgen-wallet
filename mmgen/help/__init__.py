@@ -62,7 +62,7 @@ def usage(cfg):
 
 class Help:
 
-	def make(self, cfg, opts, proto):
+	def make(self, cfg, opts):
 
 		def gen_arg_tuple(func, text):
 
@@ -86,27 +86,28 @@ class Help:
 				yield d[arg] if arg in d else text
 
 		def gen_output():
-			yield '  {} {}'.format(gc.prog_name.upper() + ':', text['desc'].strip())
+			yield '  {} {}'.format(gc.prog_name.upper() + ':', opts.opts_data['text']['desc'].strip())
 			yield make_usage_str(cfg, caller='help')
-			yield help_type.upper().replace('_', ' ') + ':'
+			yield self.help_type.upper().replace('_', ' ') + ':'
 
 			# process code for options
 			opts_text = nl.join(self.gen_text(opts))
-			if help_type in code:
-				yield code[help_type](*tuple(gen_arg_tuple(code[help_type], opts_text)))
+			if 'options' in code:
+				yield code['options'](*tuple(gen_arg_tuple(code['options'], opts_text)))
 			else:
 				yield opts_text
 
 			# process code for notes
-			if help_type == 'options' and 'notes' in text:
+			if 'notes' in text:
 				if 'notes' in code:
 					yield from code['notes'](*tuple(gen_arg_tuple(code['notes'], text['notes']))).splitlines()
 				else:
 					yield from text['notes'].splitlines()
 
-		text = opts.opts_data['text']
-		code = opts.opts_data['code']
-		help_type = self.help_type
+		from ..protocol import init_proto_from_cfg
+		proto = init_proto_from_cfg(cfg, need_amt=True)
+		text = getattr(opts, self.data_desc)['text']
+		code = getattr(opts, self.data_desc)['code']
 		nl = '\n  '
 
 		return nl.join(gen_output()) + '\n'
@@ -114,6 +115,7 @@ class Help:
 class CmdHelp(Help):
 
 	help_type = 'options'
+	data_desc = 'opts_data'
 
 	def gen_text(self, opts):
 		opt_filter = opts.opt_filter
@@ -137,10 +139,12 @@ class CmdHelp(Help):
 class GlobalHelp(Help):
 
 	help_type = 'global_options'
+	data_desc = 'global_opts_data'
 
 	def gen_text(self, opts):
 		from ..opts import global_opts_pat
-		for line in opts.global_opts_data['text'][1:-2].splitlines():
+		skipping = False
+		for line in opts.global_opts_data['text']['options'][1:-3].splitlines():
 			if m := global_opts_pat.match(line):
 				if m[1] in opts.global_opts_filter.coin and m[2] in opts.global_opts_filter.cmd:
 					yield '  --{} {}'.format(m[3], m[5])
@@ -152,18 +156,9 @@ class GlobalHelp(Help):
 
 def print_help(cfg, opts):
 
-	from ..protocol import init_proto_from_cfg
-	proto = init_proto_from_cfg(cfg, need_amt=True)
-
 	if not 'code' in opts.opts_data:
 		opts.opts_data['code'] = {}
 
-	if cfg.help:
-		cls = CmdHelp
-	else:
-		opts.opts_data['code']['global_options'] = opts.global_opts_data['code']
-		cls = GlobalHelp
-
 	from ..ui import do_pager
-	do_pager(cls().make(cfg, opts, proto))
+	do_pager((CmdHelp if cfg.help else GlobalHelp)().make(cfg, opts))
 	sys.exit(0)
