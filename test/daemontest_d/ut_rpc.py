@@ -66,6 +66,8 @@ async def print_daemon_info(rpc):
     CUR_DATE:       {rpc.cur_date} [{make_timestr(rpc.cur_date)}]
 		""".rstrip())
 
+	msg(f'    BIND_PORT:      {rpc.daemon.bind_port}')
+
 	if rpc.proto.base_proto == 'Bitcoin':
 		def fmt_dict(d):
 			return '\n        ' + '\n        '.join(pp_fmt(d).split('\n')) + '\n'
@@ -85,13 +87,12 @@ def do_msg(rpc, backend):
 class init_test:
 
 	@staticmethod
-	async def btc(cfg, daemon, backend):
+	async def btc(cfg, daemon, backend, cfg_override):
 		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
 		do_msg(rpc, backend)
 
-		if cfg.tw_name:
-			wi = await rpc.walletinfo
-			assert wi['walletname'] == rpc.cfg.tw_name, f'{wi["walletname"]!r} != {rpc.cfg.tw_name!r}'
+		wi = await rpc.walletinfo
+		assert wi['walletname'] == cfg_override['tw_name']
 
 		bh = (await rpc.call('getblockchaininfo', timeout=300))['bestblockhash']
 		await rpc.gathered_call('getblock', ((bh,), (bh, 1)), timeout=300)
@@ -99,7 +100,7 @@ class init_test:
 		return rpc
 
 	@staticmethod
-	async def bch(cfg, daemon, backend):
+	async def bch(cfg, daemon, backend, cfg_override):
 		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
 		do_msg(rpc, backend)
 		return rpc
@@ -107,7 +108,7 @@ class init_test:
 	ltc = bch
 
 	@staticmethod
-	async def eth(cfg, daemon, backend):
+	async def eth(cfg, daemon, backend, cfg_override):
 		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
 		do_msg(rpc, backend)
 		await rpc.call('eth_blockNumber', timeout=300)
@@ -115,7 +116,7 @@ class init_test:
 
 	etc = eth
 
-async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_in=None):
+async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_override=None):
 
 	async def do_test(d, cfg):
 
@@ -131,7 +132,7 @@ async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_in=None
 
 		for n, backend in enumerate(cfg._autoset_opts['rpc_backend'].choices):
 			test = getattr(init_test, d.proto.coin.lower())
-			rpc = await test(cfg, d, backend)
+			rpc = await test(cfg, d, backend, cfg_override)
 			if not n and cfg.verbose:
 				await print_daemon_info(rpc)
 
@@ -145,14 +146,14 @@ async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_in=None
 
 		qmsg('')
 
-	cfg_arg = cfg_in or cfg
+	my_cfg = Config(cfg_override) if cfg_override else cfg
 
 	for network_id in network_ids:
-		proto = init_proto(cfg_arg, network_id=network_id)
-		all_ids = CoinDaemon.get_daemon_ids(cfg_arg, proto.coin)
+		proto = init_proto(my_cfg, network_id=network_id)
+		all_ids = CoinDaemon.get_daemon_ids(my_cfg, proto.coin)
 		ids = set(daemon_ids) & set(all_ids) if daemon_ids else all_ids
 		for daemon_id in ids:
-			await do_test(CoinDaemon(cfg_arg, proto=proto, test_suite=True, daemon_id=daemon_id), cfg_arg)
+			await do_test(CoinDaemon(my_cfg, proto=proto, test_suite=True, daemon_id=daemon_id), my_cfg)
 
 	return True
 
@@ -165,7 +166,7 @@ class unit_tests:
 		return await run_test(
 			['btc', 'btc_tn'],
 			test_cf_auth = True,
-			cfg_in = Config({'_clone': cfg, 'tw_name': 'alternate-tracking-wallet'}))
+			cfg_override = {'_clone': cfg, 'tw_name': 'alternate-tracking-wallet'})
 
 	async def ltc(self, name, ut):
 		return await run_test(['ltc', 'ltc_tn'], test_cf_auth=True)
