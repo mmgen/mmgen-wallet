@@ -67,13 +67,23 @@ class CmdTestOpts(CmdTestBase):
 		('opt_invalid_16',       (41, 'invalid cmdline (overlong arg)', [])),
 	)
 
-	def spawn_prog(self, args, exit_val=None):
-		return self.spawn('test/misc/opts.py', args, cmd_dir='.', exit_val=exit_val)
+	def spawn_prog(self, args, opts=[], exit_val=None, need_proto=False):
+		return self.spawn(
+			'test/misc/opts.py',
+			opts + args,
+			cmd_dir  = '.',
+			exit_val = exit_val,
+			env      = {'TEST_MISC_OPTS_NEEDS_PROTO': '1' if need_proto else ''})
 
-	def check_vals(self, args, vals):
-		t = self.spawn_prog(args)
-		for k, v in vals:
-			t.expect(rf'{k}:\s+{v}', regex=True)
+	def check_vals(self, args, vals, check=True, need_proto=False):
+		show_opts = [a.removeprefix('cfg.') for a, b in vals if a.startswith('cfg.')]
+		t = self.spawn_prog(
+			args,
+			opts       = ['--show-opts=' + ','.join(show_opts)] if show_opts else [],
+			need_proto = need_proto)
+		if check:
+			for k, v in vals:
+				t.expect(rf'{k}:\s+{v}', regex=True)
 		return t
 
 	def do_run(self, args, expect, exit_val, regex=False):
@@ -249,49 +259,49 @@ class CmdTestOpts(CmdTestBase):
 	def opt_bad_autoset(self):
 		return self.do_run(['--fee-estimate-mode=Fubar'], 'not unique substring', 1)
 
-	def opt_invalid(self, args, expect, exit_val):
+	def opt_invalid(self, args, expect, exit_val=1):
 		t = self.spawn_prog(args, exit_val=exit_val)
 		t.expect(expect)
 		return t
 
 	def opt_invalid_1(self):
-		return self.opt_invalid(['--x'], 'must be at least', 1)
+		return self.opt_invalid(['--x'], 'must be at least')
 
 	def opt_invalid_2(self):
-		return self.opt_invalid(['---'], 'must be at least', 1)
+		return self.opt_invalid(['---'], 'must be at least')
 
 	def opt_invalid_5(self):
-		return self.opt_invalid(['-l'], 'missing parameter', 1)
+		return self.opt_invalid(['-l'], 'missing parameter')
 
 	def opt_invalid_6(self):
-		return self.opt_invalid(['-l', '-k'], 'missing parameter', 1)
+		return self.opt_invalid(['-l', '-k'], 'missing parameter')
 
 	def opt_invalid_7(self):
-		return self.opt_invalid(['--quiet=1'], 'requires no parameter', 1)
+		return self.opt_invalid(['--quiet=1'], 'requires no parameter')
 
 	def opt_invalid_8(self):
-		return self.opt_invalid(['-w'], 'unrecognized option', 1)
+		return self.opt_invalid(['-w'], 'unrecognized option')
 
 	def opt_invalid_9(self):
-		return self.opt_invalid(['--frobnicate'], 'unrecognized option', 1)
+		return self.opt_invalid(['--frobnicate'], 'unrecognized option')
 
 	def opt_invalid_10(self):
-		return self.opt_invalid(['--label', '-q'], 'missing parameter', 1)
+		return self.opt_invalid(['--label', '-q'], 'missing parameter')
 
 	def opt_invalid_11(self):
-		return self.opt_invalid(['-T', '-10'], 'missing parameter', 1)
+		return self.opt_invalid(['-T', '-10'], 'missing parameter')
 
 	def opt_invalid_12(self):
-		return self.opt_invalid(['-q', '-10'], 'unrecognized option', 1)
+		return self.opt_invalid(['-q', '-10'], 'unrecognized option')
 
 	def opt_invalid_13(self):
-		return self.opt_invalid(['--mi=3'], 'ambiguous option', 1)
+		return self.opt_invalid(['--mi=3'], 'ambiguous option')
 
 	def opt_invalid_14(self):
-		return self.opt_invalid(['--m=3'], 'must be at least', 1)
+		return self.opt_invalid(['--m=3'], 'must be at least')
 
 	def opt_invalid_15(self):
-		return self.opt_invalid(['m'] * 257, 'too many', 1)
+		return self.opt_invalid(['m'] * 257, 'too many')
 
 	def opt_invalid_16(self):
-		return self.opt_invalid(['e' * 4097], 'too long', 1)
+		return self.opt_invalid(['e' * 4097], 'too long')

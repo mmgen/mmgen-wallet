@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import os
+
 from mmgen.cfg import Config
 from mmgen.util import msg
 
@@ -23,6 +25,7 @@ opts_data = {
 -L, --label=       l  Specify a label 'l' for output wallet
 -m, --minconf=     n  Minimum number of confirmations required to spend
                       outputs (default: 1)
+-o, --show-opts=   L  List of cfg opts to display
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Be quieter
@@ -43,45 +46,20 @@ sample note: {nn}
 	},
 	'code': {
 		'options': lambda cfg, help_notes, s: s.format(
-			kgs=help_notes('keygen_backends'),
-			coin_id=help_notes('coin_id'),
+			kgs     = help_notes('keygen_backends'),
+			coin_id = help_notes('coin_id'),
 		),
 		'notes': lambda s: s.format(nn='a note'),
 	}
 }
 
-cfg = Config(opts_data=opts_data)
+cfg = Config(opts_data=opts_data, need_proto=os.getenv('TEST_MISC_OPTS_NEEDS_PROTO'))
 
-for k in (
-		'foo',               # added opt
-		'print_checksum',    # sets 'quiet'
-		'quiet', 'verbose',  # _incompatible_opts
-		'passwd_file',       # _infile_opts - check_infile()
-		'outdir',            # check_outdir()
-		'cached_balances',   # opt_sets_global
-		'minconf',           # global_sets_opt
-		'hidden_incog_input_params',
-		'keep_label',
-		'seed_len',
-		'hash_preset',
-		'label',
-		'min_temp',
-		'max_temp',
-		'coin',
-		'pager',
-		'point',
-		'no_foobleize'):
-	msg('{:30} {}'.format(f'cfg.{k}:', getattr(cfg, k)))
-
-msg('')
-for k in (
-		'cached_balances',   # opt_sets_global
-		'minconf'):          # global_sets_opt
-	msg('{:30} {}'.format(f'cfg.{k}:', getattr(cfg, k)))
-
-msg('')
-for k in ('fee_estimate_mode',): # _autoset_opts
-	msg('{:30} {}'.format(f'cfg.{k}:', getattr(cfg, k)))
+if cfg.show_opts:
+	opts = cfg.show_opts.split(',')
+	col1_w = max(len(s) for s in opts) + 5
+	for opt in opts:
+		msg('{:{w}} {}'.format(f'cfg.{opt}:', getattr(cfg, opt), w=col1_w))
 
 msg('')
 for n, arg in enumerate(cfg._args, 1):
