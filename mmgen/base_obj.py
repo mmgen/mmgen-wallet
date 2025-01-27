@@ -59,7 +59,7 @@ class AttrCtrl(metaclass=AttrCtrlMeta):
 		if self._locked and self._default_to_none:
 			return None
 		else:
-			raise AttributeError(f'{type(self).__name__} object has no attribute {name!r}')
+			raise AttributeError(f'{self} has no attribute {name!r}')
 
 	def __setattr__(self, name, value):
 

@@ -213,7 +213,11 @@ class Opts:
 		self.global_opts_filter = self.get_global_opts_filter(need_proto)
 		self.opts_data = opts_data
 
-		po = parsed_opts or parse_opts(opts_data, opt_filter, self.global_opts_data, self.global_opts_filter)
+		po = parsed_opts or parse_opts(
+			opts_data,
+			opt_filter,
+			self.global_opts_data,
+			self.global_opts_filter)
 
 		cfg._args = po.cmd_args
 		cfg._uopts = uopts = po.user_opts

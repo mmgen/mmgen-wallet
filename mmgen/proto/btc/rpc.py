@@ -224,15 +224,13 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 			return
 
 		if self.has_auth_cookie:
-			cookie = self.get_daemon_auth_cookie()
-			if cookie:
+			if cookie := self.get_daemon_auth_cookie():
 				self.auth = auth_data(*cookie.split(':'))
 				return
 
 		die(1, '\n\n' + fmt(no_credentials_errmsg, strip_char='\t', indent='  ').format(
-				proto_name = self.proto.name,
-				cf_name = (self.proto.is_fork_of or self.proto.name).lower(),
-			))
+			proto_name = self.proto.name,
+			cf_name = (self.proto.is_fork_of or self.proto.name).lower()))
 
 	def make_host_path(self, wallet):
 		return f'/wallet/{wallet}' if wallet else self.wallet_path

@@ -31,7 +31,8 @@ if op:
 		msg('usr cfg: {}'.format(' '.join(f'{i.name}={i.value}' for i in pu)))
 	elif op == 'coin_specific_vars':
 		for varname in args:
-			msg('{}.{}: {}'.format(
+			msg('{}.{}.{}: {}'.format(
+				cfg._proto.coin.lower(),
 				type(cfg._proto).__name__,
 				varname,
 				getattr(cfg._proto, varname)
