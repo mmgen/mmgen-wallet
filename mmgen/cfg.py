@@ -467,7 +467,7 @@ class Config(Lockable):
 				opt_filter   = opt_filter,
 				parsed_opts  = parsed_opts,
 				need_proto   = need_proto)
-			self._uopt_desc = 'command-line option'
+			self._uopt_src = 'cmdline'
 		else:
 			if cfg is None:
 				self._uopts = {}
@@ -480,7 +480,7 @@ class Config(Lockable):
 							setattr(self, k, v)
 					del cfg['_clone']
 				self._uopts = cfg
-			self._uopt_desc = 'configuration option'
+			self._uopt_src = 'cfg'
 
 		self._data_dir_root_override = self._cloned.pop(
 			'_data_dir_root_override',
@@ -503,7 +503,7 @@ class Config(Lockable):
 						self,
 						key,
 						getattr(type(self), key) if val is None else
-							conv_type(key, val, getattr(type(self), key), self._uopt_desc))
+							conv_type(key, val, getattr(type(self), key), src=self._uopt_src))
 				elif val is None:
 					if hasattr(self, key):
 						delattr(self, key)
@@ -604,7 +604,7 @@ class Config(Lockable):
 						setattr(
 							self,
 							gname,
-							conv_type(name, val, getattr(self, gname), 'environment var', invert_bool=disable))
+							conv_type(name, val, getattr(self, gname), src='env', invert_bool=disable))
 						yield gname
 					else:
 						raise ValueError(f'Name {gname!r} not present in globals')
@@ -654,7 +654,7 @@ class Config(Lockable):
 				val = ucfg.parse_value(d.value, refval)
 				if not val:
 					die('CfgFileParseError', f'Parse error in file {ucfg.fn!r}, line {d.lineno}')
-				val_conv = conv_type(attr, val, refval, 'configuration file option', src=ucfg.fn)
+				val_conv = conv_type(attr, val, refval, src=ucfg.fn)
 				if not attr in already_set:
 					setattr(cls, attr, val_conv)
 					non_auto_opts.append(attr)
@@ -755,7 +755,7 @@ def check_opts(cfg): # Raises exception if any check fails
 			(desc_pfx + ' ' if desc_pfx else '')
 			+ (
 				f'parameter for command-line option {fmt_opt(name)!r}'
-					if name in cfg._uopts and 'command-line' in cfg._uopt_desc else
+					if name in cfg._uopts and cfg._uopt_src == 'cmdline' else
 				f'value for configuration option {name!r}'
 			)
 			+ (' from environment' if name in cfg._envopts else '')
@@ -931,20 +931,19 @@ def opt_postproc_debug(cfg):
 	Msg('        {}\n'.format('\n        '.join(none_opts)))
 	Msg('\n=== end opts.py debug ===\n')
 
-def conv_type(
-		name,
-		val,
-		refval,
-		desc,
-		invert_bool = False,
-		src         = None):
+def conv_type(name, val, refval, src, invert_bool=False):
 
 	def do_fail():
-		die(1, '{a!r}: invalid value for {b} {c!r}{d} (must be of type {e!r})'.format(
+		desc = {
+			'cmdline': 'command-line',
+			'cfg':     'Config',
+			'env':     'environment var',
+		}
+		die(1, '{a!r}: invalid value for {b} option {c!r}{d} (must be of type {e!r})'.format(
 			a = val,
-			b = desc,
-			c = fmt_opt(name) if 'command-line' in desc else name,
-			d = f' in {src!r}' if src else '',
+			b = desc.get(src, 'config file'),
+			c = fmt_opt(name) if src == 'cmdline' else name,
+			d = '' if src in ('cmdline', 'cfg', 'env') else f' in {src!r}',
 			e = type(refval).__name__))
 
 	if type(refval) is bool:
