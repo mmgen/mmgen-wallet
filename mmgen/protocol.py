@@ -110,7 +110,7 @@ class CoinProtocol(MMGenObject):
 				from . import amt
 				from decimal import getcontext
 				self.coin_amt = getattr(amt, self.coin_amt)
-				self.max_tx_fee = self.coin_amt(self.max_tx_fee) if hasattr(self, 'max_tx_fee') else None
+				self.max_tx_fee = self.coin_amt(str(self.max_tx_fee)) if hasattr(self, 'max_tx_fee') else None
 				getcontext().prec = self.decimal_prec
 			else:
 				self.coin_amt = None

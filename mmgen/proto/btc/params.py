@@ -28,7 +28,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	mmtypes         = ('L', 'C', 'S', 'B')
 	dfl_mmtype      = 'L'
 	coin_amt        = 'BTCAmt'
-	max_tx_fee      = '0.003'
+	max_tx_fee      = 0.003
 	sighash_type    = 'ALL'
 	block0          = '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
 	forks           = [

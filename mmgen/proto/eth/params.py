@@ -26,7 +26,7 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 	pubkey_type   = 'std' # required by DummyWIF
 
 	coin_amt      = 'ETHAmt'
-	max_tx_fee    = '0.005'
+	max_tx_fee    = 0.005
 	chain_names   = ['ethereum', 'foundation']
 	sign_mode     = 'standalone'
 	caps          = ('token',)

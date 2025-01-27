@@ -20,7 +20,7 @@ class mainnet(mainnet):
 	wif_ver_num     = {'std': 'b0'}
 	mmtypes         = ('L', 'C', 'S', 'B')
 	coin_amt        = 'LTCAmt'
-	max_tx_fee      = '0.3'
+	max_tx_fee      = 0.3
 	base_coin       = 'LTC'
 	forks           = []
 	bech32_hrp      = 'ltc'
