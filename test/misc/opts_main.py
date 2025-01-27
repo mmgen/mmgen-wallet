@@ -84,5 +84,5 @@ for k in ('fee_estimate_mode',): # _autoset_opts
 	msg('{:30} {}'.format(f'cfg.{k}:', getattr(cfg, k)))
 
 msg('')
-for n, k in enumerate(cfg._args, 1):
-	msg(f'arg{n}: {k}')
+for n, arg in enumerate(cfg._args, 1):
+	msg(f'arg{n}: {arg}')

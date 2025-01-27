@@ -74,6 +74,7 @@ init_tests() {
 	[ "$VERBOSE" ] || STDOUT_DEVNULL='> /dev/null'
 	d_lint="code errors with static code analyzer"
 	t_lint="
+		b ruff check setup.py $STDOUT_DEVNULL
 		b ruff check mmgen $STDOUT_DEVNULL
 		b ruff check test $STDOUT_DEVNULL
 		b ruff check examples $STDOUT_DEVNULL

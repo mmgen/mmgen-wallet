@@ -10,7 +10,7 @@
 
 import sys, os
 from pathlib import Path
-from subprocess import run, PIPE
+from subprocess import run
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 

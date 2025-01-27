@@ -35,7 +35,7 @@ def die2(exit_val, s):
 class GlobalConstants(Lockable):
 	"""
 	These values are non-runtime-configurable.  They’re constant for a given machine,
-	user, executable and MMGen release.
+	user, executable and MMGen Wallet version
 	"""
 	_autolock = True
 
@@ -367,6 +367,7 @@ class Config(Lockable):
 		'MMGEN_ENABLE_ERIGON',
 		'MMGEN_DISABLE_COLOR',
 	)
+
 	_infile_opts = (
 		'keys_from_file',
 		'mmgen_keys_from_file',
@@ -375,6 +376,7 @@ class Config(Lockable):
 		'comment_file',
 		'contract_data',
 	)
+
 	# Auto-typechecked and auto-set opts - first value in list is the default
 	_ov = namedtuple('autoset_opt_info', ['type', 'choices'])
 	_autoset_opts = {
