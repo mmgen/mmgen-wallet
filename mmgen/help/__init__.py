@@ -118,29 +118,44 @@ class Help:
 
 		return nl.join(gen_output()) + '\n'
 
-class CmdHelp(Help):
+class CmdHelp_v1(Help):
 
 	help_type = 'options'
 	data_desc = 'opts_data'
 
 	def gen_text(self, opts):
-		opt_filter = opts.opt_filter
-		from ..opts import cmd_opts_pat
+		from ..opts import cmd_opts_v1_pat
 		skipping = False
 		for line in opts.opts_data['text']['options'].strip().splitlines():
-			if m := cmd_opts_pat.match(line):
-				if opt_filter:
-					if m[1] in opt_filter:
-						skipping = False
-					else:
-						skipping = True
-						continue
+			if m := cmd_opts_v1_pat.match(line):
 				yield '{} --{} {}'.format(
 					(f'-{m[1]},', '   ')[m[1] == '-'],
 					m[2],
 					m[4])
 			elif not skipping:
 				yield line
+
+class CmdHelp_v2(CmdHelp_v1):
+
+	def gen_text(self, opts):
+		from ..opts import cmd_opts_v2_help_pat
+		skipping = False
+		coin_filter_codes = opts.global_filter_codes.coin
+		cmd_filter_codes = opts.opts_data['filter_codes']
+		for line in opts.opts_data['text']['options'][1:].rstrip().splitlines():
+			m = cmd_opts_v2_help_pat.match(line)
+			if m[1] == '+':
+				if not skipping:
+					yield line[6:]
+			elif m[1] in coin_filter_codes and m[2] in cmd_filter_codes:
+				yield '{} --{} {}'.format(
+					(f'-{m[3]},', '   ')[m[3] == '-'],
+					m[4],
+					m[6]
+				) if m[4] else m[6]
+				skipping = False
+			else:
+				skipping = True
 
 class GlobalHelp(Help):
 
@@ -166,7 +181,7 @@ class GlobalHelp(Help):
 def print_help(cfg, opts):
 
 	if cfg.help:
-		help_cls = CmdHelp
+		help_cls = CmdHelp_v2 if 'filter_codes' in opts.opts_data else CmdHelp_v1
 	else:
 		help_cls = GlobalHelp
 

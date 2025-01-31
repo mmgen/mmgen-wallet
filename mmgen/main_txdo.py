@@ -25,68 +25,69 @@ from .util import die, fmt_list, async_run
 from .subseed import SubSeedIdxRange
 
 opts_data = {
+	'filter_codes': ['-'],
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
 		'desc': f'Create, sign and send an {gc.proj_name} transaction',
 		'usage':   '[opts] {u_args} [addr file ...] [seed source ...]',
 		'options': """
--h, --help             Print this help message
---, --longhelp         Print help message for long (global) options
--A, --fee-adjust=    f Adjust transaction fee by factor 'f' (see below)
--b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
-                       brainwallet input
--B, --no-blank         Don't blank screen before displaying {a_info}
--c, --comment-file=  f Source the transaction's comment from file 'f'
--C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
-                       (default: {cfg.fee_estimate_confs})
--d, --outdir=        d Specify an alternate directory 'd' for output
--D, --contract-data= D Path to hex-encoded contract data (ETH only)
--e, --echo-passphrase  Print passphrase to screen when typing it
--E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
-                       {fe_all}.  Default: {fe_dfl!r}
--f, --fee=           f Transaction fee, as a decimal {cu} amount or as
-                       {fu} (an integer followed by {fl!r}).
-                       See FEE SPECIFICATION below.  If omitted, fee will be
-                       calculated using network fee estimation.
--g, --gas=           g Specify start gas amount in Wei (ETH only)
--H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
-                      'f' at offset 'o' (comma-separated)
--i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
--I, --inputs=        i Specify transaction inputs (comma-separated list of
-                       MMGen IDs or coin addresses).  Note that ALL unspent
-                       outputs associated with each address will be included.
--l, --seed-len=      l Specify wallet seed length of 'l' bits. This option
-                       is required only for brainwallet and incognito inputs
-                       with non-standard (< {dsl}-bit) seed lengths.
--k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
--K, --keygen-backend=n Use backend 'n' for public key generation.  Options
-                       for {coin_id}: {kgs}
--l, --locktime=      t Lock time (block height or unix seconds) (default: 0)
--L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
--m, --minconf=n        Minimum number of confirmations required to spend
-                       outputs (default: 1)
--M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
-                       address file (output of '{pnl}-keygen'). Permits
-                       online signing without an {pnm} seed source. The
-                       key-address file is also used to verify {pnm}-to-{cu}
-                       mappings, so the user should record its checksum.
--O, --old-incog-fmt    Specify old-format incognito input
--p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
-                       for password hashing (default: '{gc.dfl_hash_preset}')
--P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
--R, --no-rbf           Make transaction non-replaceable (non-replace-by-fee
-                       according to BIP 125)
--q, --quiet            Suppress warnings; overwrite files without prompting
--u, --subseeds=      n The number of subseed pairs to scan for (default: {ss},
-                       maximum: {ss_max}). Only the default or first supplied
-                       wallet is scanned for subseeds.
--v, --verbose          Produce more verbose output
--V, --vsize-adj=     f Adjust transaction's estimated vsize by factor 'f'
--X, --cached-balances  Use cached balances (Ethereum only)
--y, --yes              Answer 'yes' to prompts, suppress non-essential output
--z, --show-hash-presets Show information on available hash presets
-""",
-	'notes': """
+			-- -h, --help             Print this help message
+			-- --, --longhelp         Print help message for long (global) options
+			-- -A, --fee-adjust=    f Adjust transaction fee by factor 'f' (see below)
+			-- -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
+			+                         brainwallet input
+			-- -B, --no-blank         Don't blank screen before displaying {a_info}
+			-- -c, --comment-file=  f Source the transaction's comment from file 'f'
+			b- -C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
+			+                         (default: {cfg.fee_estimate_confs})
+			-- -d, --outdir=        d Specify an alternate directory 'd' for output
+			e- -D, --contract-data= D Path to file containing hex-encoded contract data
+			-- -e, --echo-passphrase  Print passphrase to screen when typing it
+			b- -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
+			+                         {fe_all}.  Default: {fe_dfl!r}
+			-- -f, --fee=           f Transaction fee, as a decimal {cu} amount or as
+			+                         {fu} (an integer followed by {fl!r}).
+			+                         See FEE SPECIFICATION below.  If omitted, fee will be
+			+                         calculated using network fee estimation.
+			e- -g, --gas=           g Specify start gas amount in Wei
+			-- -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
+			+                        'f' at offset 'o' (comma-separated)
+			-- -i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
+			-- -I, --inputs=        i Specify transaction inputs (comma-separated list of
+			+                         MMGen IDs or coin addresses).  Note that ALL unspent
+			+                         outputs associated with each address will be included.
+			-- -l, --seed-len=      l Specify wallet seed length of 'l' bits. This option
+			+                         is required only for brainwallet and incognito inputs
+			+                         with non-standard (< {dsl}-bit) seed lengths.
+			-- -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
+			-- -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
+			+                         for {coin_id}: {kgs}
+			b- -l, --locktime=      t Lock time (block height or unix seconds) (default: 0)
+			b- -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
+			-- -m, --minconf=n        Minimum number of confirmations required to spend
+			+                         outputs (default: 1)
+			-- -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
+			+                         address file (output of '{pnl}-keygen'). Permits
+			+                         online signing without an {pnm} seed source. The
+			+                         key-address file is also used to verify {pnm}-to-{cu}
+			+                         mappings, so the user should record its checksum.
+			-- -O, --old-incog-fmt    Specify old-format incognito input
+			-- -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
+			+                         for password hashing (default: '{gc.dfl_hash_preset}')
+			-- -P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
+			b- -R, --no-rbf           Make transaction non-replaceable (non-replace-by-fee
+			+                         according to BIP 125)
+			-- -q, --quiet            Suppress warnings; overwrite files without prompting
+			-- -u, --subseeds=      n The number of subseed pairs to scan for (default: {ss},
+			+                         maximum: {ss_max}). Only the default or first supplied
+			+                         wallet is scanned for subseeds.
+			-- -v, --verbose          Produce more verbose output
+			b- -V, --vsize-adj=     f Adjust transaction's estimated vsize by factor 'f'
+			e- -X, --cached-balances  Use cached balances
+			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output
+			-- -z, --show-hash-presets Show information on available hash presets
+		""",
+		'notes': """
 {c}\n{F}
 
                                  SIGNING NOTES

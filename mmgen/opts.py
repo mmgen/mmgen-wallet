@@ -150,22 +150,33 @@ def process_uopts(cfg, opts_data, opts, need_proto):
 
 	return uopts, uargs
 
-cmd_opts_pat         = re.compile(r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)')
+cmd_opts_v1_pat      = re.compile(r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)')
+
+cmd_opts_v2_pat      = re.compile(r'^\t\t\t(.)(.) -([a-zA-Z0-9-]), --([a-z0-9-]{2,64})(=| )(.+)')
+cmd_opts_v2_help_pat = re.compile(r'^\t\t\t(.)(.) (?:-([a-zA-Z0-9-]), --([a-z0-9-]{2,64})(=| ))?(.+)')
 
 global_opts_pat      = re.compile(r'^\t\t\t(.)(.) --([a-z0-9-]{2,64})(=| )(.+)')
 global_opts_help_pat = re.compile(r'^\t\t\t(.)(.) (?:--([{}a-zA-Z0-9-]{2,64})(=| ))?(.+)')
 
 opt_tuple = namedtuple('cmdline_option', ['name', 'has_parm'])
 
-def parse_opts(cfg, opts_data, opt_filter, global_opts_data, global_filter_codes, need_proto):
+def parse_opts(cfg, opts_data, global_opts_data, global_filter_codes, need_proto):
 
-	def parse_cmd():
+	def parse_v1():
 		for line in opts_data['text']['options'].strip().splitlines():
-			m = cmd_opts_pat.match(line)
-			if m and (not opt_filter or m[1] in opt_filter):
+			if m := cmd_opts_v1_pat.match(line):
 				ret = opt_tuple(m[2].replace('-', '_'), m[3] == '=')
 				yield (m[1], ret)
 				yield (m[2], ret)
+
+	def parse_v2():
+		cmd_filter_codes = opts_data['filter_codes']
+		for line in opts_data['text']['options'].splitlines():
+			m = cmd_opts_v2_pat.match(line)
+			if m and m[1] in global_filter_codes.coin and m[2] in cmd_filter_codes:
+				ret = opt_tuple(m[4].replace('-', '_'), m[5] == '=')
+				yield (m[3], ret)
+				yield (m[4], ret)
 
 	def parse_global():
 		for line in global_opts_data['text']['options'].splitlines():
@@ -173,7 +184,7 @@ def parse_opts(cfg, opts_data, opt_filter, global_opts_data, global_filter_codes
 			if m and m[1] in global_filter_codes.coin and m[2] in global_filter_codes.cmd:
 				yield (m[3], opt_tuple(m[3].replace('-', '_'), m[4] == '='))
 
-	opts = tuple(parse_cmd()) + tuple(parse_global())
+	opts = tuple((parse_v2 if 'filter_codes' in opts_data else parse_v1)()) + tuple(parse_global())
 
 	uopts, uargs = process_uopts(cfg, opts_data, dict(opts), need_proto)
 
@@ -229,7 +240,6 @@ class Opts:
 			cfg,
 			opts_data,
 			init_opts,    # dict containing opts to pre-initialize
-			opt_filter,   # whitelist of opt letters; all others are skipped
 			parsed_opts,
 			need_proto):
 
@@ -237,7 +247,6 @@ class Opts:
 			raise RuntimeError(f'{len(sys.argv) - 1}: too many command-line arguments')
 
 		opts_data = opts_data or opts_data_dfl
-		self.opt_filter = opt_filter
 
 		self.global_filter_codes = self.get_global_filter_codes(need_proto)
 		self.opts_data = opts_data
@@ -245,7 +254,6 @@ class Opts:
 		po = parsed_opts or parse_opts(
 			cfg,
 			opts_data,
-			opt_filter,
 			self.global_opts_data,
 			self.global_filter_codes,
 			need_proto)

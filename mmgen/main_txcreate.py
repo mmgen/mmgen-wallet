@@ -25,46 +25,47 @@ from .cfg import gc, Config
 from .util import fmt_list, async_run
 
 opts_data = {
+	'filter_codes': ['-'],
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
 		'desc': f'Create a transaction with outputs to specified coin or {gc.proj_name} addresses',
 		'usage':   '[opts] {u_args} [addr file ...]',
 		'options': """
--h, --help            Print this help message
---, --longhelp        Print help message for long (global) options
--a, --autosign        Create a transaction for offline autosigning (see
-                      ‘mmgen-autosign’). The removable device is mounted and
-                      unmounted automatically
--A, --fee-adjust=  f  Adjust transaction fee by factor 'f' (see below)
--B, --no-blank        Don't blank screen before displaying {a_info}
--c, --comment-file=f  Source the transaction's comment from file 'f'
--C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
-                      (default: {cfg.fee_estimate_confs})
--d, --outdir=      d  Specify an alternate directory 'd' for output
--D, --contract-data=D Path to hex-encoded contract data (ETH only)
--E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
-                      {fe_all}.  Default: {fe_dfl!r}
--f, --fee=         f  Transaction fee, as a decimal {cu} amount or as
-                      {fu} (an integer followed by {fl!r}).
-                      See FEE SPECIFICATION below.  If omitted, fee will be
-                      calculated using network fee estimation.
--g, --gas=         g  Specify start gas amount in Wei (ETH only)
--i, --info            Display {a_info} and exit
--I, --inputs=      i  Specify transaction inputs (comma-separated list of
-                      MMGen IDs or coin addresses).  Note that ALL unspent
-                      outputs associated with each address will be included.
--l, --locktime=    t  Lock time (block height or unix seconds) (default: 0)
--L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
--m, --minconf=     n  Minimum number of confirmations required to spend
-                      outputs (default: 1)
--q, --quiet           Suppress warnings; overwrite files without prompting
--R, --no-rbf          Make transaction non-replaceable (non-replace-by-fee
-                      according to BIP 125)
--v, --verbose         Produce more verbose output
--V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
--y, --yes             Answer 'yes' to prompts, suppress non-essential output
--X, --cached-balances Use cached balances (Ethereum only)
-""",
+			-- -h, --help            Print this help message
+			-- --, --longhelp        Print help message for long (global) options
+			-- -a, --autosign        Create a transaction for offline autosigning (see
+			+                        ‘mmgen-autosign’). The removable device is mounted and
+			+                        unmounted automatically
+			-- -A, --fee-adjust=  f  Adjust transaction fee by factor 'f' (see below)
+			-- -B, --no-blank        Don't blank screen before displaying {a_info}
+			-- -c, --comment-file=f  Source the transaction's comment from file 'f'
+			b- -C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
+			+                        (default: {cfg.fee_estimate_confs})
+			-- -d, --outdir=      d  Specify an alternate directory 'd' for output
+			e- -D, --contract-data=D Path to file containing hex-encoded contract data
+			b- -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
+			+                        {fe_all}.  Default: {fe_dfl!r}
+			-- -f, --fee=         f  Transaction fee, as a decimal {cu} amount or as
+			+                        {fu} (an integer followed by {fl!r}).
+			+                        See FEE SPECIFICATION below.  If omitted, fee will be
+			+                        calculated using network fee estimation.
+			e- -g, --gas=         g  Specify start gas amount in Wei
+			-- -i, --info            Display {a_info} and exit
+			-- -I, --inputs=      i  Specify transaction inputs (comma-separated list of
+			+                        MMGen IDs or coin addresses).  Note that ALL unspent
+			+                        outputs associated with each address will be included.
+			b- -l, --locktime=    t  Lock time (block height or unix seconds) (default: 0)
+			b- -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
+			-- -m, --minconf=     n  Minimum number of confirmations required to spend
+			+                        outputs (default: 1)
+			-- -q, --quiet           Suppress warnings; overwrite files without prompting
+			b- -R, --no-rbf          Make transaction non-replaceable (non-replace-by-fee
+			+                        according to BIP 125)
+			-- -v, --verbose         Produce more verbose output
+			b- -V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
+			-- -y, --yes             Answer 'yes' to prompts, suppress non-essential output
+			e- -X, --cached-balances Use cached balances
+		""",
 		'notes': '\n{c}\n{F}\n{x}',
 	},
 	'code': {

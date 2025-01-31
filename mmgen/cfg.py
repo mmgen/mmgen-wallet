@@ -433,7 +433,6 @@ class Config(Lockable):
 			cfg          = None,
 			opts_data    = None,
 			init_opts    = None,
-			opt_filter   = None,
 			parse_only   = False,
 			parsed_opts  = None,
 			need_proto   = True,
@@ -455,7 +454,6 @@ class Config(Lockable):
 				cfg          = self,
 				opts_data    = opts_data,
 				init_opts    = init_opts,
-				opt_filter   = opt_filter,
 				parsed_opts  = parsed_opts,
 				need_proto   = need_proto)
 			self._uopt_src = 'cmdline'

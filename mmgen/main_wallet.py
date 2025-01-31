@@ -45,78 +45,80 @@ invoked_as = {
 
 dsw = f'the default or specified {gc.proj_name} wallet'
 
-# full: defhHiJkKlLmoOpPqrSvz-
 if invoked_as == 'gen':
 	desc = f'Generate an {gc.proj_name} wallet from a random seed'
-	opt_filter = 'ehdoJlLpPqrSvz-'
 	usage = '[opts]'
 	oaction = 'output'
 	nargs = 0
 elif invoked_as == 'conv':
 	desc = 'Convert ' + dsw + ' from one format to another'
-	opt_filter = 'dehHiJkKlLmNoOpPqrSvz-'
 elif invoked_as == 'chk':
 	desc = 'Check validity of ' + dsw
-	opt_filter = 'ehiHOlpPqrvz-'
 	iaction = 'input'
 elif invoked_as == 'passchg':
 	desc = 'Change the passphrase, hash preset or label of ' + dsw
-	opt_filter = 'efhdiHkKOlLmNpPqrSvz-'
 	iaction = 'input'
 	do_bw_note = False
 elif invoked_as == 'subgen':
 	desc = 'Generate a subwallet from ' + dsw
-	opt_filter = 'dehHiJkKlLmNoOpPqrSvz-' # omitted: f
 	usage = '[opts] [infile] <Subseed Index>'
 	iaction = 'input'
 	oaction = 'output'
 	do_sw_note = True
 elif invoked_as == 'seedsplit':
 	desc = 'Generate a seed share from ' + dsw
-	opt_filter = 'dehHiJlLMNIoOpPqrSvz-'
 	usage = '[opts] [infile] [<Split ID String>:]<index>:<share count>'
 	iaction = 'input'
 	oaction = 'output'
 	do_ss_note = True
 
 opts_data = {
+	'filter_codes': {
+		# Write  In-fmt  Out-fmt  Keep-pass  Force-update  Master-share  passwd-file-New-only
+		'chk':       ['-',      'i'],
+		'conv':      ['-', 'w', 'i', 'o', 'k',      'n'],
+		'gen':       ['-', 'w',      'o'],
+		'passchg':   ['-', 'w', 'i',      'k', 'f', 'n'],
+		'seedsplit': ['-', 'w', 'i', 'o',      'm', 'n'],
+		'subgen':    ['-', 'w', 'i', 'o', 'k',      'n'],
+	}[invoked_as],
 	'text': {
 		'desc': desc,
 		'usage': usage,
 		'options': """
--h, --help            Print this help message
---, --longhelp        Print help message for long (global) options
--d, --outdir=      d  Output files to directory 'd' instead of working dir
--e, --echo-passphrase Echo passphrases and other user input to screen
--f, --force-update    Force update of wallet even if nothing has changed
--i, --in-fmt=      f  {iaction} from wallet format 'f' (see FMT CODES below)
--o, --out-fmt=     f  {oaction} to wallet format 'f' (see FMT CODES below)
--H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
-                      'f' at offset 'o' (comma-separated)
--J, --hidden-incog-output-params=f,o  Write hidden incognito data to file
-                      'f' at offset 'o' (comma-separated). File 'f' will be
-                      created if necessary and filled with random data.
--O, --old-incog-fmt   Specify old-format incognito input
--k, --keep-passphrase Reuse passphrase of input wallet for output wallet
--K, --keep-hash-preset Reuse hash preset of input wallet for output wallet
--l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
-                      is required only for brainwallet and incognito inputs
-                      with non-standard (< {dsl}-bit) seed lengths.
--L, --label=       l  Specify a label 'l' for output wallet
--m, --keep-label      Reuse label of input wallet for output wallet
--M, --master-share=i  Use a master share with index 'i' (min:{ms_min}, max:{ms_max})
--p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{gc.dfl_hash_preset}')
--z, --show-hash-presets Show information on available hash presets
--P, --passwd-file= f  Get wallet passphrase from file 'f'
--N, --passwd-file-new-only Use passwd file only for new, not existing, wallet
--q, --quiet           Produce quieter output; suppress some warnings
--r, --usr-randchars=n Get 'n' characters of additional randomness from user
-                      (min={cfg.min_urandchars}, max={cfg.max_urandchars}, default={cfg.usr_randchars})
--S, --stdout          Write wallet data to stdout instead of file
--v, --verbose         Produce more verbose output
-""",
-	'notes': """
+			-- -h, --help            Print this help message
+			-- --, --longhelp        Print help message for long (global) options
+			-w -d, --outdir=      d  Output files to directory 'd' instead of working dir
+			-- -e, --echo-passphrase Echo passphrases and other user input to screen
+			-f -f, --force-update    Force update of wallet even if nothing has changed
+			-i -i, --in-fmt=      f  {iaction} from wallet format 'f' (see FMT CODES below)
+			-o -o, --out-fmt=     f  {oaction} to wallet format 'f' (see FMT CODES below)
+			-i -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
+			+                        'f' at offset 'o' (comma-separated)
+			-o -J, --hidden-incog-output-params=f,o  Write hidden incognito data to file
+			+                        'f' at offset 'o' (comma-separated). File 'f' will be
+			+                        created if necessary and filled with random data.
+			-i -O, --old-incog-fmt   Specify old-format incognito input
+			-k -k, --keep-passphrase Reuse passphrase of input wallet for output wallet
+			-k -K, --keep-hash-preset Reuse hash preset of input wallet for output wallet
+			-- -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
+			+                        is required only for brainwallet and incognito inputs
+			+                        with non-standard (< {dsl}-bit) seed lengths.
+			-w -L, --label=       l  Specify a label 'l' for output wallet
+			-k -m, --keep-label      Reuse label of input wallet for output wallet
+			-m -M, --master-share=i  Use a master share with index 'i' (min:{ms_min}, max:{ms_max})
+			-- -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
+			+                        for password hashing (default: '{gc.dfl_hash_preset}')
+			-- -z, --show-hash-presets Show information on available hash presets
+			-- -P, --passwd-file= f  Get wallet passphrase from file 'f'
+			-n -N, --passwd-file-new-only Use passwd file only for new, not existing, wallet
+			-- -q, --quiet           Produce quieter output; suppress some warnings
+			-- -r, --usr-randchars=n Get 'n' characters of additional randomness from user
+			+                        (min={cfg.min_urandchars}, max={cfg.max_urandchars}, default={cfg.usr_randchars})
+			-w -S, --stdout          Write wallet data to stdout instead of file
+			-- -v, --verbose         Produce more verbose output
+		""",
+		'notes': """
 
 {n_ss}{n_sw}{n_pw}{n_bw}
 
@@ -145,7 +147,7 @@ FMT CODES:
 	}
 }
 
-cfg = Config(opts_data=opts_data, opt_filter=opt_filter, need_proto=False)
+cfg = Config(opts_data=opts_data, need_proto=False)
 
 cmd_args = cfg._args
 
