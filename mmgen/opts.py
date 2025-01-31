@@ -262,8 +262,10 @@ class Opts:
 		cfg._parsed_opts = po
 		cfg._use_env = True
 		cfg._use_cfg_file = not 'skip_cfg_file' in uopts
-		# Make this available to usage()
+
+		# Make these available to usage():
 		cfg._usage_data = opts_data['text'].get('usage2') or opts_data['text']['usage']
+		cfg._usage_code = opts_data.get('code', {}).get('usage')
 
 		if os.getenv('MMGEN_DEBUG_OPTS'):
 			opt_preproc_debug(po)
@@ -276,7 +278,7 @@ class Opts:
 class UserOpts(Opts):
 
 	help_pkg = 'mmgen.help'
-	info_funcs = ('usage', 'version', 'show_hash_presets')
+	info_funcs = ('version', 'show_hash_presets')
 
 	global_opts_data = {
 		#  coin code : cmd code : opt : opt param : text

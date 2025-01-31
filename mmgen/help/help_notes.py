@@ -20,6 +20,11 @@ class help_notes:
 		self.proto = proto
 		self.cfg = cfg
 
+	def txcreate_args(self):
+		return (
+			'<addr,amt>' if self.proto.base_coin == 'ETH' else
+			'[<addr,amt> ...] <change addr, addrlist ID or addr type>')
+
 	def account_info_desc(self):
 		return 'account info' if self.proto.base_coin == 'ETH' else 'unspent outputs'
 

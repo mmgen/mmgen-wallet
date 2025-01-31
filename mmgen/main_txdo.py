@@ -28,8 +28,7 @@ opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
 		'desc': f'Create, sign and send an {gc.proj_name} transaction',
-		'usage':   '[opts]  [<addr,amt> ...] <change addr, addrlist ID or addr type> [addr file ...] ' +
-					'[seed source ...]',
+		'usage':   '[opts] {u_args} [addr file ...] [seed source ...]',
 		'options': """
 -h, --help             Print this help message
 --, --longhelp         Print help message for long (global) options
@@ -102,6 +101,8 @@ FMT CODES:
 {x}"""
 	},
 	'code': {
+		'usage': lambda cfg, proto, help_notes, s: s.format(
+			u_args  = help_notes('txcreate_args')),
 		'options': lambda cfg, proto, help_notes, s: s.format(
 			gc      = gc,
 			cfg     = cfg,

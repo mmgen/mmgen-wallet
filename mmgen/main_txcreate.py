@@ -28,7 +28,7 @@ opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
 		'desc': f'Create a transaction with outputs to specified coin or {gc.proj_name} addresses',
-		'usage':   '[opts]  [<addr,amt> ...] <change addr, addrlist ID or addr type> [addr file ...]',
+		'usage':   '[opts] {u_args} [addr file ...]',
 		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long (global) options
@@ -68,6 +68,8 @@ opts_data = {
 		'notes': '\n{c}\n{F}\n{x}',
 	},
 	'code': {
+		'usage': lambda cfg, proto, help_notes, s: s.format(
+			u_args = help_notes('txcreate_args')),
 		'options': lambda cfg, proto, help_notes, s: s.format(
 			a_info = help_notes('account_info_desc'),
 			fu     = help_notes('rel_fee_desc'),

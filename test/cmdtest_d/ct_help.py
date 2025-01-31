@@ -26,7 +26,9 @@ class CmdTestHelp(CmdTestBase):
 	passthru_opts = ('daemon_data_dir', 'rpc_port', 'coin', 'testnet')
 	cmd_group = (
 		('usage1',            (1, 'usage message (via --usage)', [])),
-		('usage2',            (1, 'usage message (via bad invocation)', [])),
+		('usage2',            (1, 'usage message (via --usage)', [])),
+		('usage3',            (1, 'usage message (via bad invocation)', [])),
+		('usage4',            (1, 'usage message (via bad invocation, with --coin)', [])),
 		('version',           (1, 'version message', [])),
 		('license',           (1, 'license message', [])),
 		('helpscreens',       (1, 'help screens',             [])),
@@ -39,13 +41,25 @@ class CmdTestHelp(CmdTestBase):
 	)
 
 	def usage1(self):
-		t = self.spawn('mmgen-txsend', ['--usage'], no_passthru_opts=True)
-		t.expect('USAGE: mmgen-txsend')
+		t = self.spawn('mmgen-walletgen', ['--usage'], no_passthru_opts=True)
+		t.expect('USAGE: mmgen-walletgen')
 		return t
 
 	def usage2(self):
+		cmd = 'xmrwallet' if self.coin == 'xmr' else 'txcreate'
+		t = self.spawn(f'mmgen-{cmd}', ['--usage', f'--coin={self.coin}'], no_passthru_opts=True)
+		t.expect(f'USAGE: mmgen-{cmd}')
+		return t
+
+	def usage3(self):
 		t = self.spawn('mmgen-walletgen', ['foo'], exit_val=1, no_passthru_opts=True)
 		t.expect('USAGE: mmgen-walletgen')
+		return t
+
+	def usage4(self):
+		cmd = 'xmrwallet' if self.coin == 'xmr' else 'addrgen'
+		t = self.spawn(f'mmgen-{cmd}', [f'--coin={self.coin}'], exit_val=1, no_passthru_opts=True)
+		t.expect(f'USAGE: mmgen-{cmd}')
 		return t
 
 	def version(self):

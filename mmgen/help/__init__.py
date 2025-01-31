@@ -80,7 +80,7 @@ def make_usage_str(cfg, caller):
 			yield '{a:{w}} {b} {c}'.format(
 				a = ulbl,
 				b = gc.prog_name,
-				c = line,
+				c = cfg._usage_code(*gen_arg_tuple(cfg, cfg._usage_code, line)) if cfg._usage_code else line,
 				w = col1_w)
 			ulbl = ''
 	return ('\n' + (' ' * indent)).join(gen())

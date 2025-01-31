@@ -533,6 +533,10 @@ class Config(Lockable):
 		self.coin = self.coin.upper()
 		self.token = self.token.upper() if self.token else None
 
+		if 'usage' in self._uopts: # requires self.coin
+			import importlib
+			getattr(importlib.import_module(UserOpts.help_pkg), 'usage')(self) # exits
+
 		# self.color is finalized, so initialize color:
 		if self.color: # MMGEN_DISABLE_COLOR sets this to False
 			from .color import init_color
