@@ -155,9 +155,9 @@ global_opts_pat = re.compile(r'^\t\t\t(.)(.) --([a-z0-9-]{2,64})(=| )(.+)')
 global_opts_help_pat = re.compile(r'^\t\t\t(.)(.) (?:--([{}a-zA-Z0-9-]{2,64})(=| ))?(.+)')
 opt_tuple = namedtuple('cmdline_option', ['name', 'has_parm'])
 
-def parse_opts(cfg, opts_data, opt_filter, global_opts_data, global_opts_filter, need_proto):
+def parse_opts(cfg, opts_data, opt_filter, global_opts_data, global_filter_codes, need_proto):
 
-	def parse_cmd_opts_text():
+	def parse_cmd():
 		for line in opts_data['text']['options'].strip().splitlines():
 			m = cmd_opts_pat.match(line)
 			if m and (not opt_filter or m[1] in opt_filter):
@@ -165,13 +165,13 @@ def parse_opts(cfg, opts_data, opt_filter, global_opts_data, global_opts_filter,
 				yield (m[1], ret)
 				yield (m[2], ret)
 
-	def parse_global_opts_text():
+	def parse_global():
 		for line in global_opts_data['text']['options'].splitlines():
 			m = global_opts_pat.match(line)
-			if m and m[1] in global_opts_filter.coin and m[2] in global_opts_filter.cmd:
+			if m and m[1] in global_filter_codes.coin and m[2] in global_filter_codes.cmd:
 				yield (m[3], opt_tuple(m[3].replace('-', '_'), m[4] == '='))
 
-	opts = tuple(parse_cmd_opts_text()) + tuple(parse_global_opts_text())
+	opts = tuple(parse_cmd()) + tuple(parse_global())
 
 	uopts, uargs = process_uopts(cfg, opts_data, dict(opts), need_proto)
 
@@ -237,7 +237,7 @@ class Opts:
 		opts_data = opts_data or opts_data_dfl
 		self.opt_filter = opt_filter
 
-		self.global_opts_filter = self.get_global_opts_filter(need_proto)
+		self.global_filter_codes = self.get_global_filter_codes(need_proto)
 		self.opts_data = opts_data
 
 		po = parsed_opts or parse_opts(
@@ -245,7 +245,7 @@ class Opts:
 			opts_data,
 			opt_filter,
 			self.global_opts_data,
-			self.global_opts_filter,
+			self.global_filter_codes,
 			need_proto)
 
 		cfg._args = po.cmd_args
@@ -337,7 +337,7 @@ class UserOpts(Opts):
 	}
 
 	@staticmethod
-	def get_global_opts_filter(need_proto):
+	def get_global_filter_codes(need_proto):
 		"""
 		Coin codes:
 		  'b' - Bitcoin or Bitcoin code fork supporting RPC
@@ -351,7 +351,7 @@ class UserOpts(Opts):
 		  'r' - RPC required
 		  '-' - no capabilities required
 		"""
-		ret = namedtuple('global_opts_filter', ['coin', 'cmd'])
+		ret = namedtuple('global_filter_codes', ['coin', 'cmd'])
 		if caps := gc.cmd_caps:
 			coin = caps.coin if caps.coin and len(caps.coin) > 1 else get_coin()
 			return ret(
