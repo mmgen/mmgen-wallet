@@ -44,6 +44,31 @@ def show_hash_presets(cfg):
 	msg('  N = memory usage (power of two)\n  p = iterations (rounds)')
 	sys.exit(0)
 
+def gen_arg_tuple(cfg, func, text):
+
+	def help_notes(k):
+		import importlib
+		return getattr(importlib.import_module(
+			f'{cfg._opts.help_pkg}.help_notes').help_notes(proto, cfg), k)()
+
+	def help_mod(modname):
+		import importlib
+		return importlib.import_module(
+			f'{cfg._opts.help_pkg}.{modname}').help(proto, cfg)
+
+	from ..protocol import init_proto_from_cfg
+	proto = init_proto_from_cfg(cfg, need_amt=True)
+
+	d = {
+		'proto':      proto,
+		'help_notes': help_notes,
+		'help_mod':   help_mod,
+		'cfg':        cfg,
+	}
+
+	for arg in func.__code__.co_varnames:
+		yield d[arg] if arg in d else text
+
 def make_usage_str(cfg, caller):
 	indent, col1_w = {
 		'help': (2, len(gc.prog_name) + 1),
@@ -52,7 +77,11 @@ def make_usage_str(cfg, caller):
 	def gen():
 		ulbl = 'USAGE:'
 		for line in [cfg._usage_data.strip()] if isinstance(cfg._usage_data, str) else cfg._usage_data:
-			yield f'{ulbl:{col1_w}} {gc.prog_name} {line}'
+			yield '{a:{w}} {b} {c}'.format(
+				a = ulbl,
+				b = gc.prog_name,
+				c = line,
+				w = col1_w)
 			ulbl = ''
 	return ('\n' + (' ' * indent)).join(gen())
 
@@ -64,27 +93,6 @@ class Help:
 
 	def make(self, cfg, opts):
 
-		def gen_arg_tuple(func, text):
-
-			def help_notes(k):
-				import importlib
-				return getattr(importlib.import_module(
-					f'{opts.help_pkg}.help_notes').help_notes(proto, cfg), k)()
-
-			def help_mod(modname):
-				import importlib
-				return importlib.import_module(
-					f'{opts.help_pkg}.{modname}').help(proto, cfg)
-
-			d = {
-				'proto':      proto,
-				'help_notes': help_notes,
-				'help_mod':   help_mod,
-				'cfg':        cfg,
-			}
-			for arg in func.__code__.co_varnames:
-				yield d[arg] if arg in d else text
-
 		def gen_output():
 			yield '  {} {}'.format(gc.prog_name.upper() + ':', opts.opts_data['text']['desc'].strip())
 			yield make_usage_str(cfg, caller='help')
@@ -93,21 +101,19 @@ class Help:
 			# process code for options
 			opts_text = nl.join(self.gen_text(opts))
 			if 'options' in code:
-				yield code['options'](*tuple(gen_arg_tuple(code['options'], opts_text)))
+				yield code['options'](*gen_arg_tuple(cfg, code['options'], opts_text))
 			else:
 				yield opts_text
 
 			# process code for notes
 			if 'notes' in text:
 				if 'notes' in code:
-					yield from code['notes'](*tuple(gen_arg_tuple(code['notes'], text['notes']))).splitlines()
+					yield from code['notes'](*gen_arg_tuple(cfg, code['notes'], text['notes'])).splitlines()
 				else:
 					yield from text['notes'].splitlines()
 
-		from ..protocol import init_proto_from_cfg
-		proto = init_proto_from_cfg(cfg, need_amt=True)
 		text = getattr(opts, self.data_desc)['text']
-		code = getattr(opts, self.data_desc)['code']
+		code = getattr(opts, self.data_desc).get('code', {})
 		nl = '\n  '
 
 		return nl.join(gen_output()) + '\n'
@@ -146,7 +152,7 @@ class GlobalHelp(Help):
 		skipping = False
 		coin_filter_codes = opts.global_filter_codes.coin
 		cmd_filter_codes = opts.global_filter_codes.cmd
-		for line in opts.global_opts_data['text']['options'][1:-3].splitlines():
+		for line in opts.global_opts_data['text']['options'][1:].rstrip().splitlines():
 			m = global_opts_help_pat.match(line)
 			if m[1] == '+':
 				if not skipping:
@@ -159,9 +165,11 @@ class GlobalHelp(Help):
 
 def print_help(cfg, opts):
 
-	if not 'code' in opts.opts_data:
-		opts.opts_data['code'] = {}
+	if cfg.help:
+		help_cls = CmdHelp
+	else:
+		help_cls = GlobalHelp
 
 	from ..ui import do_pager
-	do_pager((CmdHelp if cfg.help else GlobalHelp)().make(cfg, opts))
+	do_pager(help_cls().make(cfg, opts))
 	sys.exit(0)

@@ -150,9 +150,11 @@ def process_uopts(cfg, opts_data, opts, need_proto):
 
 	return uopts, uargs
 
-cmd_opts_pat = re.compile(r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)')
-global_opts_pat = re.compile(r'^\t\t\t(.)(.) --([a-z0-9-]{2,64})(=| )(.+)')
+cmd_opts_pat         = re.compile(r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)')
+
+global_opts_pat      = re.compile(r'^\t\t\t(.)(.) --([a-z0-9-]{2,64})(=| )(.+)')
 global_opts_help_pat = re.compile(r'^\t\t\t(.)(.) (?:--([{}a-zA-Z0-9-]{2,64})(=| ))?(.+)')
+
 opt_tuple = namedtuple('cmdline_option', ['name', 'has_parm'])
 
 def parse_opts(cfg, opts_data, opt_filter, global_opts_data, global_filter_codes, need_proto):

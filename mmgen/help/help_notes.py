@@ -20,6 +20,9 @@ class help_notes:
 		self.proto = proto
 		self.cfg = cfg
 
+	def account_info_desc(self):
+		return 'account info' if self.proto.base_coin == 'ETH' else 'unspent outputs'
+
 	def fee_spec_letters(self, use_quotes=False):
 		cu = self.proto.coin_amt.units
 		sep, conj = ((',', ' or '), ("','", "' or '"))[use_quotes]
@@ -139,7 +142,20 @@ seed, the same seed length and hash preset parameters must always be used.
 		addr = t.privhex2addr('bead' * 16)
 		sample_addr = addr.views[addr.view_pref]
 
-		return f"""
+		if self.proto.base_coin == 'ETH':
+			return f"""
+EXAMPLES:
+
+  Send 0.123 {self.proto.coin} to an external {self.proto.name} address:
+
+    $ {gc.prog_name} {sample_addr},0.123
+
+  Send 0.123 {self.proto.coin} to another account in wallet 01ABCDEF:
+
+    $ {gc.prog_name} 01ABCDEF:{mmtype}:7,0.123
+"""
+		else:
+			return f"""
 EXAMPLES:
 
   Send 0.123 {self.proto.coin} to an external {self.proto.name} address, returning the change to a

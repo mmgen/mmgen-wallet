@@ -36,7 +36,7 @@ opts_data = {
 -A, --fee-adjust=    f Adjust transaction fee by factor 'f' (see below)
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
                        brainwallet input
--B, --no-blank         Don't blank screen before displaying unspent outputs
+-B, --no-blank         Don't blank screen before displaying {a_info}
 -c, --comment-file=  f Source the transaction's comment from file 'f'
 -C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
                        (default: {cfg.fee_estimate_confs})
@@ -107,6 +107,7 @@ FMT CODES:
 			cfg     = cfg,
 			pnm     = gc.proj_name,
 			pnl     = gc.proj_name.lower(),
+			a_info  = help_notes('account_info_desc'),
 			kgs     = help_notes('keygen_backends'),
 			coin_id = help_notes('coin_id'),
 			fu      = help_notes('rel_fee_desc'),

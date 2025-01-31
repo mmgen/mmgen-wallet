@@ -36,7 +36,7 @@ opts_data = {
                       ‘mmgen-autosign’). The removable device is mounted and
                       unmounted automatically
 -A, --fee-adjust=  f  Adjust transaction fee by factor 'f' (see below)
--B, --no-blank        Don't blank screen before displaying unspent outputs
+-B, --no-blank        Don't blank screen before displaying {a_info}
 -c, --comment-file=f  Source the transaction's comment from file 'f'
 -C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
                       (default: {cfg.fee_estimate_confs})
@@ -49,7 +49,7 @@ opts_data = {
                       See FEE SPECIFICATION below.  If omitted, fee will be
                       calculated using network fee estimation.
 -g, --gas=         g  Specify start gas amount in Wei (ETH only)
--i, --info            Display unspent outputs and exit
+-i, --info            Display {a_info} and exit
 -I, --inputs=      i  Specify transaction inputs (comma-separated list of
                       MMGen IDs or coin addresses).  Note that ALL unspent
                       outputs associated with each address will be included.
@@ -69,6 +69,7 @@ opts_data = {
 	},
 	'code': {
 		'options': lambda cfg, proto, help_notes, s: s.format(
+			a_info = help_notes('account_info_desc'),
 			fu     = help_notes('rel_fee_desc'),
 			fl     = help_notes('fee_spec_letters'),
 			fe_all = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),
