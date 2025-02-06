@@ -222,9 +222,13 @@ class Base(TxBase.Base):
 			return ret + sum(input_size['C'] for i in self.inputs if not i.mmtype)
 
 		def get_outputs_size():
-			# output bytes = amt: 8, byte_count: 1+, pk_script
-			# pk_script bytes: p2pkh: 25, p2sh: 23, bech32: 22
-			return sum({'p2pkh':34, 'p2sh':32, 'bech32':31}[o.addr.addr_fmt] for o in self.outputs)
+			# output bytes:
+			#   8 (amt) + scriptlen_byte + script_bytes
+			#   script_bytes:
+			#     ADDR: p2pkh: 25, p2sh: 23, bech32: 22
+			return sum(
+				{'p2pkh':34, 'p2sh':32, 'bech32':31}[o.addr.addr_fmt]
+					for o in self.outputs)
 
 		# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
 		# The witness is a serialization of all witness data of the transaction. Each txin is

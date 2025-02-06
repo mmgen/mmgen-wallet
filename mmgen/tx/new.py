@@ -101,11 +101,11 @@ class New(Base):
 				if f:
 					e.comment = f
 
-	def check_dup_addrs(self, io_str):
-		assert io_str in ('inputs', 'outputs')
-		addrs = [e.addr for e in getattr(self, io_str)]
+	def check_dup_addrs(self, io_desc):
+		assert io_desc in ('inputs', 'outputs')
+		addrs = [e.addr for e in getattr(self, io_desc)]
 		if len(addrs) != len(set(addrs)):
-			die(2, f'{addrs}: duplicate address in transaction {io_str}')
+			die(2, f'{addrs}: duplicate address in transaction {io_desc}')
 
 	# given tx size and absolute fee or fee spec, return absolute fee
 	# relative fee is N+<first letter of unit name>

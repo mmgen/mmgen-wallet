@@ -91,8 +91,8 @@ class Base(MMGenObject):
 	file_format = 'json'
 
 	class Input(MMGenTxIO):
-		scriptPubKey = ListItemAttr(HexStr)
-		sequence     = ListItemAttr(int, typeconv=False)
+		scriptPubKey  = ListItemAttr(HexStr)
+		sequence      = ListItemAttr(int, typeconv=False)
 		tw_copy_attrs = {'scriptPubKey', 'vout', 'amt', 'comment', 'mmid', 'addr', 'confs', 'txid'}
 
 	class Output(MMGenTxIO):
