@@ -10,7 +10,7 @@ from mmgen.tx import CompletedTX, UnsignedTX
 from mmgen.tx.file import MMGenTxFile
 from mmgen.cfg import Config
 
-from ..include.common import cfg, qmsg, vmsg
+from ..include.common import cfg, qmsg, vmsg, gr_uc
 
 async def do_txfile_test(desc, fns, cfg=cfg, check=False):
 	qmsg(f'\n  Testing CompletedTX initializer ({desc})')
@@ -102,4 +102,61 @@ class unit_tests:
 			('forbidden positional args', 'TypeError', 'positional arguments', bad2),
 		)
 		ut.process_bad_data(bad_data)
+		return True
+
+	def op_return_data(self, name, ut, desc='OpReturnData class'):
+		from mmgen.proto.btc.tx.op_return_data import OpReturnData
+		vecs = [
+			'data:=:ETH.ETH:0x86d526d6624AbC0178cF7296cD538Ecc080A95F1:0/1/0',
+			'hexdata:3d3a4554482e4554483a30783836643532366436363234416243303137'
+				'38634637323936634435333845636330383041393546313a302f312f30',
+			'hexdata:00010203040506',
+			'data:a\n',
+			'data:a\tb',
+			'data:' + gr_uc[:24],
+		]
+
+		assert OpReturnData(cfg._proto, vecs[0]) == OpReturnData(cfg._proto, vecs[1])
+
+		for vec in vecs:
+			d = OpReturnData(cfg._proto, vec)
+			assert d == OpReturnData(cfg._proto, repr(d)) # repr() must return a valid initializer
+			assert isinstance(d, bytes)
+			assert isinstance(str(d), str)
+			vmsg('-' * 80)
+			vmsg(vec)
+			vmsg(repr(d))
+			vmsg(d.hl())
+			vmsg(d.hl(add_label=True))
+
+		bad_data = [
+			'data:',
+			'hexdata:',
+			'data:' + ('x' * 81),
+			'hexdata:' + ('deadbeef' * 20) + 'ee',
+			'hex:0abc',
+			'da:xyz',
+			'hexdata:xyz',
+			'hexdata:abcde',
+			b'data:abc',
+		]
+
+		def bad(n):
+			return lambda: OpReturnData(cfg._proto, bad_data[n])
+
+		vmsg('-' * 80)
+		vmsg('Testing error handling:')
+
+		ut.process_bad_data((
+			('bad1',    'AssertionError', 'not in range', bad(0)),
+			('bad2',    'AssertionError', 'not in range', bad(1)),
+			('bad3',    'AssertionError', 'not in range', bad(2)),
+			('bad4',    'AssertionError', 'not in range', bad(3)),
+			('bad5',    'ValueError',     'must start',   bad(4)),
+			('bad6',    'ValueError',     'must start',   bad(5)),
+			('bad7',    'AssertionError', 'not in hex',   bad(6)),
+			('bad8',    'AssertionError', 'even',         bad(7)),
+			('bad9',    'AssertionError', 'a string',     bad(8)),
+		), pfx='')
+
 		return True

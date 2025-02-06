@@ -51,6 +51,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	max_halvings    = 64
 	start_subsidy   = 50
 	max_int         = 0xffffffff
+	max_op_return_data_len = 80
 
 	coin_cfg_opts = (
 		'ignore_daemon_version',

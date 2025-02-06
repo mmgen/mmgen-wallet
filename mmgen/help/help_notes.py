@@ -22,7 +22,7 @@ class help_notes:
 
 	def txcreate_args(self):
 		return (
-			'[ADDR,AMT ...] ADDR <change addr, addrlist ID or addr type>'
+			'[ADDR,AMT ... | DATA_SPEC] ADDR <change addr, addrlist ID or addr type>'
 				if self.proto.base_proto == 'Bitcoin' else
 			'ADDR,AMT')
 
@@ -212,7 +212,15 @@ will be displayed in a menu, with the user prompted to select one.  In the
 second form, the user specifies the Seed ID as well, allowing the script to
 select the transaction’s change output or single output without prompting.
 See EXAMPLES below.
-"""
+
+A single DATA_SPEC argument may also be given on the command line to create
+an OP_RETURN data output with a zero spend amount.  This is the preferred way
+to embed data in the blockchain.  DATA_SPEC may be of the form "data":DATA
+or "hexdata":DATA. In the first form, DATA is a string in your system’s native
+encoding, typically UTF-8.  In the second, DATA is a hexadecimal string (with
+the leading ‘0x’ omitted) encoding the binary data to be embedded.  In both
+cases, the resulting byte string must not exceed {bl} bytes in length.
+""".format(bl=self.proto.max_op_return_data_len)
 		if self.proto.base_proto == 'Bitcoin' else """
 The transaction output is specified in the form ADDRESS,AMOUNT.
 """)

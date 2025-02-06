@@ -15,7 +15,7 @@ import time
 
 from .ct_autosign import CmdTestAutosignThreaded
 from .ct_regtest import CmdTestRegtestBDBWallet, rt_pw
-from ..include.common import cfg
+from ..include.common import cfg, gr_uc
 
 class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet):
 	'automounted transacting operations via regtest mode'
@@ -78,7 +78,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 
 		self.opts.append('--alice')
 
-	def _alice_txcreate(self, chg_addr, opts=[], exit_val=0, expect_str=None):
+	def _alice_txcreate(self, chg_addr, opts=[], exit_val=0, expect_str=None, data_arg=None):
 
 		def do_return():
 			if expect_str:
@@ -94,6 +94,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 			'mmgen-txcreate',
 			opts
 			+ ['--alice', '--autosign']
+			+ ([data_arg] if data_arg else [])
 			+ [f'{self.burn_addr},1.23456', f'{sid}:{chg_addr}'],
 			exit_val = exit_val or None)
 
@@ -109,7 +110,9 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		return do_return()
 
 	def alice_txcreate1(self):
-		return self._alice_txcreate(chg_addr='C:5')
+		return self._alice_txcreate(
+			chg_addr = 'C:5',
+			data_arg = 'data:'+gr_uc[:24])
 
 	def alice_txcreate2(self):
 		return self._alice_txcreate(chg_addr='L:5')

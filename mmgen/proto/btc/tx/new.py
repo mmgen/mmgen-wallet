@@ -23,6 +23,15 @@ class New(Base, TxBase.New):
 	fee_fail_fs = 'Network fee estimation for {c} confirmations failed ({t})'
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
 
+	def process_data_output_arg(self, arg):
+		if any(arg.startswith(pfx) for pfx in ('data:', 'hexdata:')):
+			if hasattr(self, '_have_op_return_data'):
+				die(1, 'Transaction may have at most one OP_RETURN data output!')
+			self._have_op_return_data = True
+			from .op_return_data import OpReturnData
+			OpReturnData(self.proto, arg) # test data for validity
+			return arg
+
 	@property
 	def relay_fee(self):
 		kb_fee = self.proto.coin_amt(self.rpc.cached['networkinfo']['relayfee'])
@@ -134,7 +143,7 @@ class New(Base, TxBase.New):
 				'sequence': e.sequence
 			} for e in self.inputs]
 
-		outputs_dict = {e.addr:e.amt for e in self.outputs}
+		outputs_dict = dict((e.addr, e.amt) if e.addr else ('data', e.data.hex()) for e in self.outputs)
 
 		ret = await self.rpc.call('createrawtransaction', inputs_list, outputs_dict)
 

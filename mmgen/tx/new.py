@@ -103,7 +103,7 @@ class New(Base):
 
 	def check_dup_addrs(self, io_desc):
 		assert io_desc in ('inputs', 'outputs')
-		addrs = [e.addr for e in getattr(self, io_desc)]
+		addrs = [e.addr for e in getattr(self, io_desc) if e.addr]
 		if len(addrs) != len(set(addrs)):
 			die(2, f'{addrs}: duplicate address in transaction {io_desc}')
 
@@ -161,12 +161,18 @@ class New(Base):
 			return False
 		return True
 
-	def add_output(self, coinaddr, amt, is_chg=None):
-		self.outputs.append(self.Output(self.proto, addr=coinaddr, amt=amt, is_chg=is_chg))
+	def add_output(self, coinaddr, amt, is_chg=False, data=None):
+		self.outputs.append(self.Output(self.proto, addr=coinaddr, amt=amt, is_chg=is_chg, data=data))
+
+	def process_data_output_arg(self, arg):
+		return None
 
 	def parse_cmd_arg(self, arg_in, ad_f, ad_w):
 
-		_pa = namedtuple('parsed_txcreate_cmdline_arg', ['arg', 'mmid', 'coin_addr', 'amt'])
+		_pa = namedtuple('parsed_txcreate_cmdline_arg', ['arg', 'mmid', 'coin_addr', 'amt', 'data'])
+
+		if data := self.process_data_output_arg(arg_in):
+			return _pa(arg_in, None, None, None, data)
 
 		arg, amt = arg_in.split(',', 1) if ',' in arg_in else (arg_in, None)
 
@@ -182,7 +188,7 @@ class New(Base):
 		else:
 			die(2, f'{arg_in}: invalid command-line argument')
 
-		return _pa(arg, mmid, coin_addr, amt)
+		return _pa(arg, mmid, coin_addr, amt, None)
 
 	async def process_cmd_args(self, cmd_args, ad_f, ad_w):
 
@@ -208,17 +214,20 @@ class New(Base):
 
 		parsed_args = [self.parse_cmd_arg(a, ad_f, ad_w) for a in cmd_args]
 
-		chg_args = [a for a in parsed_args if not (a.amt and a.coin_addr)]
+		chg_args = [a for a in parsed_args if not ((a.amt and a.coin_addr) or a.data)]
 
 		if len(chg_args) > 1:
 			desc = 'requested' if self.chg_autoselected else 'listed'
 			die(2, f'ERROR: More than one change address {desc} on command line')
 
 		for a in parsed_args:
-			self.add_output(
-				coinaddr = a.coin_addr or (await get_autochg_addr(a.arg, parsed_args)).addr,
-				amt      = self.proto.coin_amt(a.amt or '0'),
-				is_chg   = not a.amt)
+			if a.data:
+				self.add_output(None, self.proto.coin_amt('0'), data=a.data)
+			else:
+				self.add_output(
+					coinaddr = a.coin_addr or (await get_autochg_addr(a.arg, parsed_args)).addr,
+					amt      = self.proto.coin_amt(a.amt or '0'),
+					is_chg   = not a.amt)
 
 		if self.chg_idx is None:
 			die(2,

@@ -24,10 +24,18 @@ import os, json
 
 from ..util import ymsg, make_chksum_6, die
 from ..obj import MMGenObject, HexStr, MMGenTxID, CoinTxID, MMGenTxComment
-from ..rpc import json_encoder
+
+class txdata_json_encoder(json.JSONEncoder):
+	def default(self, o):
+		if type(o).__name__.endswith('Amt'):
+			return str(o)
+		elif type(o).__name__ == 'OpReturnData':
+			return repr(o)
+		else:
+			return json.JSONEncoder.default(self, o)
 
 def json_dumps(data):
-	return json.dumps(data, separators = (',', ':'), cls=json_encoder)
+	return json.dumps(data, separators = (',', ':'), cls=txdata_json_encoder)
 
 def get_proto_from_coin_id(tx, coin_id, chain):
 	coin, tokensym = coin_id.split(':') if ':' in coin_id else (coin_id, None)

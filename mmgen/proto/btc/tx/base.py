@@ -14,9 +14,15 @@ proto.btc.tx.base: Bitcoin base transaction class
 
 from collections import namedtuple
 
+from ....addr import CoinAddr
 from ....tx import base as TxBase
-from ....obj import MMGenList, HexStr
+from ....obj import MMGenList, HexStr, ListItemAttr
 from ....util import msg, make_chksum_6, die, pp_fmt
+
+from .op_return_data import OpReturnData
+
+def data2scriptPubKey(data):
+	return '6a' + '{:02x}'.format(len(data)) + data.hex() # OP_RETURN data
 
 def addr2scriptPubKey(proto, addr):
 
@@ -44,6 +50,15 @@ def decodeScriptPubKey(proto, s):
 
 	elif len(s) == 44 and s[:4] == proto.witness_vernum_hex + '14':
 		return ret('witness_v0_keyhash', 'bech32', proto.pubhash2bech32addr(bytes.fromhex(s[4:])), None)
+
+	elif s[:2] == '6a': # OP_RETURN
+		# range 1-80 == hex 2-160, plus 4 for opcode byte + push byte
+		if 6 <= len(s) <= (proto.max_op_return_data_len * 2) + 6: # 2-160 -> 6-166
+			return ret('nulldata', None, None, s[4:]) # return data in hex format
+		else:
+			raise ValueError('{}: OP_RETURN data bytes length not in range 1-{}'.format(
+					len(s[4:]) // 2,
+					proto.max_op_return_data_len))
 
 	else:
 		raise NotImplementedError(f'Unrecognized scriptPubKey ({s})')
@@ -159,6 +174,10 @@ class Base(TxBase.Base):
 	rel_fee_disp = 'sat/byte'
 	_deserialized = None
 
+	class Output(TxBase.Base.Output): # output contains either addr or data, but not both
+		addr = ListItemAttr(CoinAddr, include_proto=True) # ImmutableAttr in parent cls
+		data = ListItemAttr(OpReturnData, include_proto=True, typeconv=True) # type None in parent cls
+
 	class InputList(TxBase.Base.InputList):
 
 		# Lexicographical Indexing of Transaction Inputs and Outputs
@@ -176,7 +195,9 @@ class Base(TxBase.Base):
 			def sort_func(a):
 				return (
 					int.to_bytes(a.amt.to_unit('satoshi'), 8, 'big')
-					+ bytes.fromhex(addr2scriptPubKey(self.parent.proto, a.addr)))
+					+ bytes.fromhex(
+						addr2scriptPubKey(self.parent.proto, a.addr) if a.addr else
+						data2scriptPubKey(a.data)))
 			self.sort(key=sort_func)
 
 	def has_segwit_inputs(self):
@@ -226,8 +247,10 @@ class Base(TxBase.Base):
 			#   8 (amt) + scriptlen_byte + script_bytes
 			#   script_bytes:
 			#     ADDR: p2pkh: 25, p2sh: 23, bech32: 22
+			#     DATA: opcode_byte ('6a') + push_byte + nulldata_bytes
 			return sum(
-				{'p2pkh':34, 'p2sh':32, 'bech32':31}[o.addr.addr_fmt]
+				{'p2pkh':34, 'p2sh':32, 'bech32':31}[o.addr.addr_fmt] if o.addr else
+				(11 + len(o.data))
 					for o in self.outputs)
 
 		# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
@@ -328,8 +351,8 @@ class Base(TxBase.Base):
 
 		check_equal(
 			'outputs',
-			sorted((o['addr'], o['amt']) for o in dtx.txouts),
-			sorted((o.addr, o.amt) for o in self.outputs))
+			sorted((o['addr'] or o['data'], o['amt']) for o in dtx.txouts),
+			sorted((o.addr or o.data.hex(), o.amt) for o in self.outputs))
 
 		if str(self.txid) != make_chksum_6(bytes.fromhex(dtx.unsigned_hex)).upper():
 			do_error(f'MMGen TxID ({self.txid}) does not match serialized transaction data!')

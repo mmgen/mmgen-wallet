@@ -14,7 +14,7 @@ proto.btc.tx.info: Bitcoin transaction info class
 
 from ....tx.info import TxInfo
 from ....util import fmt, die
-from ....color import red, green, pink
+from ....color import red, green, pink, blue
 from ....addr import MMGenID
 
 class TxInfo(TxInfo):
@@ -79,17 +79,20 @@ class TxInfo(TxInfo):
 				'raw':  lambda: io
 			}[sort]
 
+			def data_disp(data):
+				return f'OP_RETURN data ({len(data)} bytes)'
+
 			if terse:
 				iwidth = max(len(str(int(e.amt))) for e in io)
-				addr_w = max(len(e.addr.views[vp1]) for f in (tx.inputs, tx.outputs) for e in f)
+				addr_w = max((len(e.addr.views[vp1]) if e.addr else len(data_disp(e.data))) for f in (tx.inputs, tx.outputs) for e in f)
 				for n, e in enumerate(io_sorted()):
 					yield '{:3} {} {} {} {}\n'.format(
 						n+1,
-						e.addr.fmt(vp1, width=addr_w, color=True),
-						get_mmid_fmt(e, is_input),
+						e.addr.fmt(vp1, width=addr_w, color=True) if e.addr else blue(data_disp(e.data).ljust(addr_w)),
+						get_mmid_fmt(e, is_input) if e.addr else ''.ljust(max_mmwid),
 						e.amt.fmt(iwidth=iwidth, color=True),
 						tx.dcoin)
-					if have_bch:
+					if have_bch and e.addr:
 						yield '{:3} [{}]\n'.format('', e.addr.hl(vp2, color=False))
 			else:
 				col1_w = len(str(len(io))) + 1
@@ -105,8 +108,11 @@ class TxInfo(TxInfo):
 							if have_bch:
 								yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
 						else:
-							yield (n+1, 'address:', f'{e.addr.hl(vp1)} {mmid_fmt}')
-							if have_bch:
+							yield (
+								n + 1,
+								'address:',
+								(f'{e.addr.hl(vp1)} {mmid_fmt}' if e.addr else e.data.hl(add_label=True)))
+							if have_bch and e.addr:
 								yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
 						if e.comment:
 							yield ('',  'comment:', e.comment.hl())

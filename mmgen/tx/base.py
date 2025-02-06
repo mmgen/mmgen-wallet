@@ -55,7 +55,8 @@ class MMGenTxIO(MMGenListItem):
 			str(self.mmid.mmtype) if self.mmid else
 			'B' if self.addr.addr_fmt == 'bech32' else
 			'S' if self.addr.addr_fmt == 'p2sh' else
-			None)
+			None
+		) if self.addr else None
 
 class MMGenTxIOList(list, MMGenObject):
 
@@ -97,6 +98,7 @@ class Base(MMGenObject):
 
 	class Output(MMGenTxIO):
 		is_chg = ListItemAttr(bool, typeconv=False)
+		data   = ListItemAttr(None, typeconv=False) # placeholder
 
 	class InputList(MMGenTxIOList):
 		desc = 'transaction inputs'
