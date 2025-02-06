@@ -1169,17 +1169,23 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		t.expect(f'Mined {num_blocks} block')
 		return t
 
-	def _get_mempool(self):
+	def _do_mmgen_regtest(self, cmd_args, decode_json=False):
 		ret = self.spawn(
 			'mmgen-regtest',
-			['mempool'],
-			env = os.environ if cfg.debug_utf8 else get_env_without_debug_vars(),
-		).read()
-		m = re.search(r'(\[\s*"[a-f0-9]{64}"\s*])', ret) # allow for extra output by handler at end
-		return json.loads(m.group(1))
+			cmd_args,
+			env = (os.environ if cfg.debug_utf8 else get_env_without_debug_vars()) | (
+				{'EXEC_WRAPPER_DO_RUNTIME_MSG': ''}),
+			no_msg = True
+		).read().strip()
+		return json.loads(ret) if decode_json else ret
+
+	def _get_mempool(self, do_msg=False):
+		if do_msg:
+			self.spawn('', msg_only=True)
+		return self._do_mmgen_regtest(['mempool'], decode_json=True)
 
 	def get_mempool1(self):
-		mp = self._get_mempool()
+		mp = self._get_mempool(do_msg=True)
 		if len(mp) != 1:
 			die(4, 'Mempool has more or less than one TX!')
 		self.write_to_tmpfile('rbf_txid', mp[0]+'\n')
@@ -1200,7 +1206,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def get_mempool2(self):
 		if not self.proto.cap('rbf'):
 			return 'skip'
-		mp = self._get_mempool()
+		mp = self._get_mempool(do_msg=True)
 		if len(mp) != 1:
 			die(4, 'Mempool has more or less than one TX!')
 		chk = self.read_from_tmpfile('rbf_txid')
@@ -2145,7 +2151,6 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			imsg('')
 		else:
 			stop_test_daemons(self.proto.network_id, remove_datadir=True)
-		ok()
 		return 'ok'
 
 class CmdTestRegtestBDBWallet(CmdTestRegtest):
