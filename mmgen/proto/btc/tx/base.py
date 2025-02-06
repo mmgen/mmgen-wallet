@@ -31,15 +31,22 @@ def addr2scriptPubKey(proto, addr):
 		'bech32': proto.witness_vernum_hex + '14' + decode_addr(proto, addr)
 	}[addr.addr_fmt]
 
-def scriptPubKey2addr(proto, s):
+def decodeScriptPubKey(proto, s):
+	# src/wallet/rpc/addresses.cpp:
+	#   types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash
+	ret = namedtuple('decoded_scriptPubKey', ['type', 'addr_fmt', 'addr', 'data'])
+
 	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
-		return proto.pubhash2addr(bytes.fromhex(s[6:-4]), 'p2pkh'), 'p2pkh'
+		return ret('pubkeyhash', 'p2pkh', proto.pubhash2addr(bytes.fromhex(s[6:-4]), 'p2pkh'), None)
+
 	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':
-		return proto.pubhash2addr(bytes.fromhex(s[4:-2]), 'p2sh'), 'p2sh'
+		return ret('scripthash', 'p2sh', proto.pubhash2addr(bytes.fromhex(s[4:-2]), 'p2sh'), None)
+
 	elif len(s) == 44 and s[:4] == proto.witness_vernum_hex + '14':
-		return proto.pubhash2bech32addr(bytes.fromhex(s[4:])), 'bech32'
+		return ret('witness_v0_keyhash', 'bech32', proto.pubhash2bech32addr(bytes.fromhex(s[4:])), None)
+
 	else:
-		raise NotImplementedError(f'Unknown scriptPubKey ({s})')
+		raise NotImplementedError(f'Unrecognized scriptPubKey ({s})')
 
 def DeserializeTX(proto, txhex):
 	"""
@@ -119,7 +126,7 @@ def DeserializeTX(proto, txhex):
 	} for i in range(d['num_txouts'])])
 
 	for o in d['txouts']:
-		o['address'] = scriptPubKey2addr(proto, o['scriptPubKey'])[0]
+		o.update(decodeScriptPubKey(proto, o['scriptPubKey'])._asdict())
 
 	if has_witness:
 		# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
@@ -317,7 +324,7 @@ class Base(TxBase.Base):
 
 		check_equal(
 			'outputs',
-			sorted((o['address'], o['amt']) for o in dtx.txouts),
+			sorted((o['addr'], o['amt']) for o in dtx.txouts),
 			sorted((o.addr, o.amt) for o in self.outputs))
 
 		if str(self.txid) != make_chksum_6(bytes.fromhex(dtx.unsigned_hex)).upper():

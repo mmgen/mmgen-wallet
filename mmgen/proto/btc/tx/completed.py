@@ -15,7 +15,7 @@ proto.btc.tx.completed: Bitcoin completed transaction class
 from ....tx import completed as TxBase
 from ....obj import HexStr
 from ....util import msg, die
-from .base import Base, scriptPubKey2addr
+from .base import Base, decodeScriptPubKey
 
 class Completed(Base, TxBase.Completed):
 	fn_fee_unit = 'satoshi'
@@ -45,17 +45,17 @@ class Completed(Base, TxBase.Completed):
 
 	def check_pubkey_scripts(self):
 		for n, i in enumerate(self.inputs, 1):
-			addr, fmt = scriptPubKey2addr(self.proto, i.scriptPubKey)
-			if i.addr != addr:
-				if fmt != i.addr.addr_fmt:
+			ds = decodeScriptPubKey(self.proto, i.scriptPubKey)
+			if ds.addr != i.addr:
+				if ds.addr_fmt != i.addr.addr_fmt:
 					m = 'Address format of scriptPubKey ({}) does not match that of address ({}) in input #{}'
-					msg(m.format(fmt, i.addr.addr_fmt, n))
+					msg(m.format(ds.addr_fmt, i.addr.addr_fmt, n))
 				m = 'ERROR: Address and scriptPubKey of transaction input #{} do not match!'
 				die(3, (m+'\n  {:23}{}'*3).format(
 					n,
 					'address:',               i.addr,
 					'scriptPubKey:',          i.scriptPubKey,
-					'scriptPubKey->address:', addr))
+					'scriptPubKey->address:', ds.addr))
 
 #	def is_replaceable_from_rpc(self):
 #		dec_tx = await self.rpc.call('decoderawtransaction', self.serialized)

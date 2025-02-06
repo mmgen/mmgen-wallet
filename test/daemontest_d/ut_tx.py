@@ -75,7 +75,7 @@ async def test_tx(tx_proto, tx_hex, desc, n):
 	for i in range(len(a)):
 		if 'addresses' in a[i]['scriptPubKey']:
 			A = a[i]['scriptPubKey']['addresses'][0]
-			B = b[i]['address']
+			B = b[i]['addr']
 			fs = 'address of output {} does not match\nA: {}\nB: {}'
 			assert A == B, fs.format(i, A, B)
 

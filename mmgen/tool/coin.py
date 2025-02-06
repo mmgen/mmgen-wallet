@@ -184,8 +184,8 @@ class tool_cmd(tool_cmd_base):
 
 	def scriptpubkey2addr(self, hexstr: 'sstr'):
 		"convert scriptPubKey to coin address"
-		from ..proto.btc.tx.base import scriptPubKey2addr
-		return scriptPubKey2addr(self.proto, hexstr)[0]
+		from ..proto.btc.tx.base import decodeScriptPubKey
+		return decodeScriptPubKey(self.proto, hexstr).addr
 
 	def eth_checksummed_addr(self, addr: 'sstr'):
 		"create a checksummed Ethereum address"
