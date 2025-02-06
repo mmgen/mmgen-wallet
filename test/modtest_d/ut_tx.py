@@ -13,7 +13,7 @@ from mmgen.cfg import Config
 from ..include.common import cfg, qmsg, vmsg
 
 async def do_txfile_test(desc, fns, cfg=cfg, check=False):
-	qmsg(f'  Testing CompletedTX initializer ({desc})')
+	qmsg(f'\n  Testing CompletedTX initializer ({desc})')
 	for fn in fns:
 		qmsg(f'     parsing: {os.path.basename(fn)}')
 		fpath = os.path.join('test', 'ref', fn)
@@ -42,7 +42,7 @@ class unit_tests:
 
 	altcoin_deps = ('txfile_alt', 'txfile_alt_legacy')
 
-	async def txfile(self, name, ut):
+	async def txfile(self, name, ut, desc='displaying transaction files (BTC)'):
 		return await do_txfile_test(
 			'Bitcoin',
 			(
@@ -53,7 +53,7 @@ class unit_tests:
 			check = True
 		)
 
-	async def txfile_alt(self, name, ut):
+	async def txfile_alt(self, name, ut, desc='displaying transaction files (LTC, BCH, ETH)'):
 		return await do_txfile_test(
 			'altcoins',
 			(
@@ -66,7 +66,7 @@ class unit_tests:
 			check = True
 		)
 
-	async def txfile_legacy(self, name, ut):
+	async def txfile_legacy(self, name, ut, desc='displaying transaction files (legacy format, BTC)'):
 		return await do_txfile_test(
 			'Bitcoin - legacy file format',
 			(
@@ -77,7 +77,7 @@ class unit_tests:
 			)
 		)
 
-	async def txfile_alt_legacy(self, name, ut):
+	async def txfile_alt_legacy(self, name, ut, desc='displaying transaction files (legacy format, LTC, BCH, ETH)'):
 		return await do_txfile_test(
 			'altcoins - legacy file format',
 			(
@@ -92,7 +92,7 @@ class unit_tests:
 			)
 		)
 
-	def errors(self, name, ut):
+	def errors(self, name, ut, desc='reading transaction files (error handling)'):
 		async def bad1():
 			await CompletedTX(cfg, filename='foo')
 		def bad2():
