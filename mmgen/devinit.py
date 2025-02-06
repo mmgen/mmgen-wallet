@@ -43,14 +43,15 @@ class MMGenObjectDevTools:
 	pexit = lambda *args, **kwargs: MMGenObject_call('pexit', *args, **kwargs)
 	pfmt  = lambda *args, **kwargs: MMGenObject_call('pfmt', *args, **kwargs)
 
-	# Check that all immutables have been initialized.  Expensive, so do only when testing.
+	# Check that all immutable attrs in ‘valid_attrs’ exist and have been initialized.
+	# Expensive, so do only when testing.
 	def immutable_attr_init_check(self):
 
 		cls = type(self)
 
 		for attrname in self.valid_attrs:
-
-			for o in (cls, cls.__bases__[0]): # assume there's only one base class
+			# existence check:
+			for o in cls.__mro__[:3]: # allow for 2 levels of subclassing
 				if attrname in o.__dict__:
 					attr = o.__dict__[attrname]
 					break
@@ -58,6 +59,7 @@ class MMGenObjectDevTools:
 				from .util import die
 				die(4, f'unable to find descriptor {cls.__name__}.{attrname}')
 
+			# initialization check:
 			if type(attr).__name__ == 'ImmutableAttr' and attrname not in self.__dict__:
 				from .util import die
 				die(4, f'attribute {attrname!r} of {cls.__name__} has not been initialized in constructor!')

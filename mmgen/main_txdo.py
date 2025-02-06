@@ -95,9 +95,9 @@ opts_data = {
 Seed source files must have the canonical extensions listed in the 'FileExt'
 column below:
 
-FMT CODES:
+{n_at}
 
-  {f}
+{f}
 
 {x}"""
 	},
@@ -124,6 +124,7 @@ FMT CODES:
 			c       = help_notes('txcreate'),
 			F       = help_notes('fee'),
 			s       = help_notes('txsign'),
+			n_at    = help_notes('address_types'),
 			f       = help_notes('fmt_codes'),
 			x       = help_notes('txcreate_examples')),
 	}

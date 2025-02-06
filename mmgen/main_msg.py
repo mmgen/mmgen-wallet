@@ -126,16 +126,13 @@ export - dump signed MMGen message file to ‘signatures.json’, including only
 The `create` operation takes one or more ADDRESS_SPEC arguments with the
 following format:
 
-    SEED_ID:ADDR_TYPE:ADDR_IDX_SPEC
+    SEED_ID:ADDRTYPE_CODE:ADDR_IDX_SPEC
 
-where ADDR_TYPE is an address type letter from the list below, and
-ADDR_IDX_SPEC is a comma-separated list of address indexes or hyphen-
-separated address index ranges.
+where ADDRTYPE_CODE is a one-letter address type code from the list below, and
+ADDR_IDX_SPEC is a comma-separated list of address indexes or hyphen-separated
+address index ranges.
 
-
-                                ADDRESS TYPES
-
-  {n_at}
+{n_at}
 
 
                                     NOTES

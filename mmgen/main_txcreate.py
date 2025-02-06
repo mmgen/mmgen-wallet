@@ -66,7 +66,7 @@ opts_data = {
 			-- -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 			e- -X, --cached-balances Use cached balances
 		""",
-		'notes': '\n{c}\n{F}\n{x}',
+		'notes': '\n{c}\n{n_at}\n\n{F}\n{x}',
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
@@ -82,7 +82,8 @@ opts_data = {
 		'notes': lambda cfg, help_notes, s: s.format(
 			c      = help_notes('txcreate'),
 			F      = help_notes('fee'),
-			x      = help_notes('txcreate_examples'))
+			x      = help_notes('txcreate_examples'),
+			n_at   = help_notes('address_types'))
 	}
 }
 

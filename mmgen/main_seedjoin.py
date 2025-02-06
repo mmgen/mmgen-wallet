@@ -73,9 +73,7 @@ For usage examples, see the help screen for the 'mmgen-seedsplit' command.
 
 {n_pw}
 
-FMT CODES:
-
-  {f}
+{f}
 """
 	},
 	'code': {

@@ -90,17 +90,14 @@ range(s).
 
 {n_addrkey}If available, the libsecp256k1 library will be used for address generation.
 
-ADDRESS TYPES:
-  {n_at}
-
 
                       NOTES FOR ALL GENERATOR COMMANDS
 
 {n_sw}{n_pw}{n_bw}
 
-FMT CODES:
+{n_at}
 
-  {n_fmt}
+{n_fmt}
 """
 	},
 	'code': {

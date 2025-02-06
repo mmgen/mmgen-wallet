@@ -21,7 +21,6 @@ rpc: Cryptocoin RPC library for the MMGen suite
 """
 
 import sys, re, base64, json, asyncio, importlib
-from decimal import Decimal
 from collections import namedtuple
 
 from .util import msg, ymsg, die, fmt, fmt_list, pp_fmt, oneshot_warning
@@ -75,7 +74,7 @@ class IPPort(HiliteStr, InitErrors):
 
 class json_encoder(json.JSONEncoder):
 	def default(self, o):
-		if isinstance(o, Decimal):
+		if type(o).__name__.endswith('Amt'):
 			return str(o)
 		else:
 			return json.JSONEncoder.default(self, o)

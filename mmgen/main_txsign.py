@@ -74,9 +74,7 @@ opts_data = {
 Seed source files must have the canonical extensions listed in the 'FileExt'
 column below:
 
-FMT CODES:
-
-  {f}
+{f}
 """
 	},
 	'code': {

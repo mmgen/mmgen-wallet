@@ -82,7 +82,7 @@ class MMGenPexpect:
 
 	def view_tx(self, view):
 		self.expect(r'View.* transaction.*\? .*: ', view, regex=True)
-		if view not in 'n\n':
+		if view not in 'vn\n':
 			self.expect('to continue: ', '\n')
 
 	def do_comment(self, add_comment, has_label=False):

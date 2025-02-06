@@ -63,7 +63,8 @@ pat_date_time = r'\b\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d\b'
 
 dfl_wcls = get_wallet_cls('mmgen')
 
-tx_fee = rtFundAmt = rtFee = rtBals = rtBals_gb = rtBobOp3 = rtAmts = {} # ruff
+tx_fee = rtFundAmt = rtFee = rtBals = rtBals_gb = rtBobOp3 = rtAmts = None # ruff
+
 rt_pw = 'abc-α'
 rt_data = {
 	'tx_fee': {'btc':'0.0001', 'bch':'0.001', 'ltc':'0.01'},

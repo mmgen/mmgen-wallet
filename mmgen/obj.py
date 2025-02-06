@@ -107,10 +107,9 @@ class ImmutableAttr: # Descriptor
 		self.typeconv = typeconv
 
 		assert isinstance(dtype, self.ok_dtypes), 'ImmutableAttr_check1'
-		if include_proto:
-			assert typeconv, 'ImmutableAttr_check2'
+
 		if set_none_ok:
-			assert typeconv and not isinstance(dtype, str), 'ImmutableAttr_check3'
+			assert typeconv and not isinstance(dtype, str), 'ImmutableAttr_check2'
 
 		if typeconv:
 			# convert this attribute's type

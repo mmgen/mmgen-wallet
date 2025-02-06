@@ -110,9 +110,7 @@ EXAMPLES:
 
 {n_bw}
 
-FMT CODES:
-
-  {n_fmt}
+{n_fmt}
 """
 	},
 	'code': {

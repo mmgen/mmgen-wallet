@@ -22,11 +22,12 @@ class help_notes:
 
 	def txcreate_args(self):
 		return (
-			'<addr,amt>' if self.proto.base_coin == 'ETH' else
-			'[<addr,amt> ...] <change addr, addrlist ID or addr type>')
+			'[ADDR,AMT ...] ADDR <change addr, addrlist ID or addr type>'
+				if self.proto.base_proto == 'Bitcoin' else
+			'ADDR,AMT')
 
 	def account_info_desc(self):
-		return 'account info' if self.proto.base_coin == 'ETH' else 'unspent outputs'
+		return 'unspent outputs' if self.proto.base_proto == 'Bitcoin' else 'account info'
 
 	def fee_spec_letters(self, use_quotes=False):
 		cu = self.proto.coin_amt.units
@@ -77,14 +78,20 @@ class help_notes:
 
 	def address_types(self):
 		from ..addr import MMGenAddrType
-		return '\n  '.join([
-			"'{}','{:<12} - {}".format(k, v.name + "'", v.desc)
-				for k, v in MMGenAddrType.mmtypes.items()
-		])
+		return """
+ADDRESS TYPES:
+
+  Code Type           Description
+  ---- ----           -----------
+  """ + format('\n  '.join(['‘{}’  {:<12} - {}'.format(k, v.name, v.desc)
+				for k, v in MMGenAddrType.mmtypes.items()]))
 
 	def fmt_codes(self):
 		from ..wallet import format_fmt_codes
-		return '\n  '.join(format_fmt_codes().splitlines())
+		return """
+FMT CODES:
+
+  """ + '\n  '.join(format_fmt_codes().splitlines())
 
 	def coin_id(self):
 		return self.proto.coin_id
@@ -147,20 +154,7 @@ seed, the same seed length and hash preset parameters must always be used.
 		addr = t.privhex2addr('bead' * 16)
 		sample_addr = addr.views[addr.view_pref]
 
-		if self.proto.base_coin == 'ETH':
-			return f"""
-EXAMPLES:
-
-  Send 0.123 {self.proto.coin} to an external {self.proto.name} address:
-
-    $ {gc.prog_name} {sample_addr},0.123
-
-  Send 0.123 {self.proto.coin} to another account in wallet 01ABCDEF:
-
-    $ {gc.prog_name} 01ABCDEF:{mmtype}:7,0.123
-"""
-		else:
-			return f"""
+		return f"""
 EXAMPLES:
 
   Send 0.123 {self.proto.coin} to an external {self.proto.name} address, returning the change to a
@@ -190,23 +184,47 @@ EXAMPLES:
   address of specified type:
 
     $ {gc.prog_name} {mmtype}
+""" if self.proto.base_proto == 'Bitcoin' else f"""
+EXAMPLES:
+
+  Send 0.123 {self.proto.coin} to an external {self.proto.name} address:
+
+    $ {gc.prog_name} {sample_addr},0.123
+
+  Send 0.123 {self.proto.coin} to another account in wallet 01ABCDEF:
+
+    $ {gc.prog_name} 01ABCDEF:{mmtype}:7,0.123
 """
 
 	def txcreate(self):
-		return f"""
+		outputs_info = (
+			"""
+Outputs are specified in the form ADDRESS,AMOUNT or ADDRESS.  The first form
+creates an output sending the given amount to the given address.  The bare
+address form designates the given address as either the change output or the
+sole output of the transaction (excluding any data output).  Exactly one bare
+address argument is required.
+
+For convenience, the bare address argument may be given as ADDRTYPE_CODE or
+SEED_ID:ADDRTYPE_CODE (see ADDRESS TYPES below). In the first form, the first
+unused address of type ADDRTYPE_CODE for each Seed ID in the tracking wallet
+will be displayed in a menu, with the user prompted to select one.  In the
+second form, the user specifies the Seed ID as well, allowing the script to
+select the transaction’s change output or single output without prompting.
+See EXAMPLES below.
+"""
+		if self.proto.base_proto == 'Bitcoin' else """
+The transaction output is specified in the form ADDRESS,AMOUNT.
+""")
+
+		return """
 The transaction’s outputs are listed on the command line, while its inputs
 are chosen from a list of the wallet’s unspent outputs via an interactive
 menu.  Alternatively, inputs may be specified using the --inputs option.
 
-All addresses on the command line can be either {self.proto.name} addresses or MMGen
-IDs in the form <seed ID>:<address type letter>:<index>.
-
-Outputs are specified in the form <address>,<amount>, with the change output
-specified by address only.  Alternatively, the change output may be an
-addrlist ID in the form <seed ID>:<address type letter>, in which case the
-first unused address in the tracking wallet matching the requested ID will
-be automatically selected as the change output.
-
+Addresses on the command line can be either native coin addresses or MMGen
+IDs in the form SEED_ID:ADDRTYPE_CODE:INDEX.
+{oinfo}
 If the transaction fee is not specified on the command line (see FEE
 SPECIFICATION below), it will be calculated dynamically using network fee
 estimation for the default (or user-specified) number of confirmations.
@@ -214,12 +232,7 @@ If network fee estimation fails, the user will be prompted for a fee.
 
 Network-estimated fees will be multiplied by the value of --fee-adjust, if
 specified.
-
-To send the value of all inputs (minus TX fee) to a single output, specify
-a single address with no amount on the command line.  Alternatively, an
-addrlist ID may be specified, and the address will be chosen automatically
-as described above for the change output.
-"""
+""".format(oinfo=outputs_info)
 
 	def txsign(self):
 		from ..proto.btc.params import mainnet

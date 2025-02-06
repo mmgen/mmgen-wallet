@@ -122,9 +122,7 @@ opts_data = {
 
 {n_ss}{n_sw}{n_pw}{n_bw}
 
-FMT CODES:
-
-  {f}
+{f}
 """
 	},
 	'code': {
