@@ -358,7 +358,7 @@ def secs_to_ms(secs):
 	return '{:02d}:{:02d}'.format(secs//60, secs % 60)
 
 def is_int(s): # actually is_nonnegative_int()
-	return set(str(s)) <= set(digits)
+	return set(str(s) or 'x') <= set(digits)
 
 def check_int_between(val, imin, imax, desc):
 	if not imin <= int(val) <= imax:

@@ -14,7 +14,6 @@ proto.btc.tw.addresses: Bitcoin base protocol tracking wallet address list class
 
 from ....tw.addresses import TwAddresses
 from ....tw.shared import TwLabel
-from ....util import msg, msg_r
 from ....obj import get_obj
 from .rpc import BitcoinTwRPC
 
@@ -47,15 +46,17 @@ class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
 
 	async def get_rpc_data(self):
 
-		msg_r('Getting unspent outputs...')
+		qmsg = self.cfg._util.qmsg
+		qmsg_r = self.cfg._util.qmsg_r
+		qmsg_r('Getting unspent outputs...')
 		addrs = await self.get_unspent_by_mmid(self.minconf)
-		msg('done')
+		qmsg('done')
 
 		coin_amt = self.proto.coin_amt
 		amt0 = coin_amt('0')
 		self.total = sum((v['amt'] for v in addrs.values()), start=amt0)
 
-		msg_r('Getting labels and associated addresses...')
+		qmsg_r('Getting labels and associated addresses...')
 		for e in await self.get_label_addr_pairs():
 			if e.label and e.label.mmid not in addrs:
 				addrs[e.label.mmid] = {
@@ -64,9 +65,9 @@ class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
 					'recvd':  amt0,
 					'confs':  0,
 					'lbl':    e.label}
-		msg('done')
+		qmsg('done')
 
-		msg_r('Getting received funds data...')
+		qmsg_r('Getting received funds data...')
 		# args: 1:minconf, 2:include_empty, 3:include_watchonly, 4:include_immature_coinbase (>=v23.0.0)
 		for d in await self.rpc.call('listreceivedbylabel', 1, True, True):
 			label = get_obj(TwLabel, proto=self.proto, text=d['label'])
@@ -74,6 +75,6 @@ class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
 				assert label.mmid in addrs, f'{label.mmid!r} not found in addrlist!'
 				addrs[label.mmid]['recvd'] = coin_amt(d['amount'])
 				addrs[label.mmid]['confs'] = d['confirmations']
-		msg('done')
+		qmsg('done')
 
 		return addrs

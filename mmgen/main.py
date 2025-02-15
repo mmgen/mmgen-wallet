@@ -56,7 +56,7 @@ def launch(*, mod=None, func=None, fqmod=None, package='mmgen'):
 			2:   _o(yellow,  2, '{message}'),
 			3:   _o(yellow,  3, '\nMMGen Error ({name}):\n{message}'),
 			4:   _o(red,     4, '\nMMGen Fatal Error ({name}):\n{message}'),
-			'x': _o(yellow,  5, '\nMMGen Unhandled Exception ({name}): {e}'),
+			'x': _o(yellow,  5, '\nMMGen Python Exception ({name}): {e}'),
 		}[getattr(e, 'mmcode', 'x')]
 
 		(sys.stdout if getattr(e, 'stdout', None) else sys.stderr).write(

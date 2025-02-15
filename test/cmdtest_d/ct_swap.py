@@ -12,7 +12,13 @@
 test.cmdtest_d.ct_swap: asset swap tests for the cmdtest.py test suite
 """
 
-from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw
+from mmgen.protocol import init_proto
+
+from .ct_regtest import (
+	CmdTestRegtest,
+	rt_data,
+	dfl_wcls,
+	rt_pw)
 
 sample1 = '=:ETH.ETH:0x86d526d6624AbC0178cF7296cD538Ecc080A95F1:0/1/0'
 sample2 = '00010203040506'
@@ -62,10 +68,12 @@ class CmdTestSwap(CmdTestRegtest):
 	}
 
 	def __init__(self, trunner, cfgs, spawn):
+
 		super().__init__(trunner, cfgs, spawn)
-		gldict = globals()
+
+		globals_dict = globals()
 		for k in rt_data:
-			gldict[k] = rt_data[k]['btc']
+			globals_dict[k] = rt_data[k]['btc']
 
 	@property
 	def sid(self):

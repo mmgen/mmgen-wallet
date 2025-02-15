@@ -80,7 +80,7 @@ class New(Base, TxBase.New):
 			'update_txid() must be called only when self.serialized is not hex data')
 		self.txid = MMGenTxID(make_chksum_6(self.serialized).upper())
 
-	async def process_cmd_args(self, cmd_args, ad_f, ad_w):
+	async def process_cmdline_args(self, cmd_args, ad_f, ad_w):
 
 		lc = len(cmd_args)
 
@@ -90,10 +90,10 @@ class New(Base, TxBase.New):
 		if lc != 1:
 			die(1, f'{lc} output{suf(lc)} specified, but Ethereum transactions must have exactly one')
 
-		arg = self.parse_cmd_arg(cmd_args[0], ad_f, ad_w)
+		arg = self.parse_cmdline_arg(cmd_args[0], ad_f, ad_w)
 
 		self.add_output(
-			coinaddr = arg.coin_addr,
+			coinaddr = arg.addr,
 			amt      = self.proto.coin_amt(arg.amt or '0'),
 			is_chg   = not arg.amt)
 

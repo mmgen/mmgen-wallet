@@ -17,6 +17,5 @@ from .new import New
 class NewSwap(New):
 	desc = 'swap transaction'
 
-	async def process_swap_cmd_args(self, cmd_args):
-		raise NotImplementedError('Work in Progress!')
-		return cmd_args
+	async def process_swap_cmdline_args(self, cmd_args):
+		raise NotImplementedError(f'Swap not implemented for protocol {self.proto.__name__}')

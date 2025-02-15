@@ -171,9 +171,9 @@ class New(Base):
 	def process_data_output_arg(self, arg):
 		return None
 
-	def parse_cmd_arg(self, arg_in, ad_f, ad_w):
+	def parse_cmdline_arg(self, arg_in, ad_f, ad_w):
 
-		_pa = namedtuple('parsed_txcreate_cmdline_arg', ['arg', 'mmid', 'coin_addr', 'amt', 'data'])
+		_pa = namedtuple('txcreate_cmdline_output', ['arg', 'mmid', 'addr', 'amt', 'data'])
 
 		if data := self.process_data_output_arg(arg_in):
 			return _pa(arg_in, None, None, None, data)
@@ -194,7 +194,7 @@ class New(Base):
 
 		return _pa(arg, mmid, coin_addr, amt, None)
 
-	async def process_cmd_args(self, cmd_args, ad_f, ad_w):
+	async def process_cmdline_args(self, cmd_args, ad_f, ad_w):
 
 		async def get_autochg_addr(arg, parsed_args):
 			from ..tw.addresses import TwAddresses
@@ -216,9 +216,9 @@ class New(Base):
 				d = desc,
 				a = arg))
 
-		parsed_args = [self.parse_cmd_arg(a, ad_f, ad_w) for a in cmd_args]
+		parsed_args = [self.parse_cmdline_arg(arg, ad_f, ad_w) for arg in cmd_args]
 
-		chg_args = [a for a in parsed_args if not ((a.amt and a.coin_addr) or a.data)]
+		chg_args = [a for a in parsed_args if not ((a.amt and a.addr) or a.data)]
 
 		if len(chg_args) > 1:
 			desc = 'requested' if self.chg_autoselected else 'listed'
@@ -229,7 +229,7 @@ class New(Base):
 				self.add_output(None, self.proto.coin_amt('0'), data=a.data)
 			else:
 				self.add_output(
-					coinaddr = a.coin_addr or (await get_autochg_addr(a.arg, parsed_args)).addr,
+					coinaddr = a.addr or (await get_autochg_addr(a.arg, parsed_args)).addr,
 					amt      = self.proto.coin_amt(a.amt or '0'),
 					is_chg   = not a.amt)
 
@@ -260,19 +260,19 @@ class New(Base):
 		from ..addrdata import AddrData
 		from ..addrlist import AddrList
 		from ..addrfile import AddrFile
-		addrfiles = remove_dups(
+		addrfile_args = remove_dups(
 			tuple(a for a in cmd_args if get_extension(a) == AddrFile.ext),
 			desc = 'command line',
 			edesc = 'argument',
 		)
 		cmd_args  = remove_dups(
-			tuple(a for a in cmd_args if a not in addrfiles),
+			tuple(a for a in cmd_args if a not in addrfile_args),
 			desc = 'command line',
 			edesc = 'argument',
 		)
 		ad_f = AddrData(self.proto)
 		from ..fileutil import check_infile
-		for addrfile in addrfiles:
+		for addrfile in addrfile_args:
 			check_infile(addrfile)
 			ad_f.add(AddrList(self.cfg, self.proto, addrfile))
 		return ad_f, cmd_args
@@ -417,8 +417,8 @@ class New(Base):
 			from ..addrdata import TwAddrData
 			ad_w = await TwAddrData(self.cfg, self.proto, twctl=self.twctl)
 			if self.target == 'swaptx':
-				cmd_args = await self.process_swap_cmd_args(cmd_args)
-			await self.process_cmd_args(cmd_args, ad_f, ad_w)
+				cmd_args = await self.process_swap_cmdline_args(cmd_args)
+			await self.process_cmdline_args(cmd_args, ad_f, ad_w)
 
 		from ..ui import do_license_msg
 		do_license_msg(self.cfg)

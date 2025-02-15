@@ -161,13 +161,13 @@ rt_data = {
 	}
 }
 
-def make_burn_addr(proto):
+def make_burn_addr(proto, mmtype='compressed'):
 	from mmgen.tool.coin import tool_cmd
 	return tool_cmd(
 		cfg     = cfg,
 		cmdname = 'pubhash2addr',
 		proto   = proto,
-		mmtype  = 'compressed').pubhash2addr('00'*20)
+		mmtype  = mmtype).pubhash2addr('00'*20)
 
 class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	'transacting and tracking wallet operations via regtest mode'
