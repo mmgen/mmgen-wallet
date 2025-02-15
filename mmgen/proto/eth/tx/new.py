@@ -97,7 +97,7 @@ class New(Base, TxBase.New):
 			amt      = self.proto.coin_amt(arg.amt or '0'),
 			is_chg   = not arg.amt)
 
-	def select_unspent(self, unspent):
+	def get_unspent_nums_from_user(self, unspent):
 		from ....ui import line_input
 		while True:
 			reply = line_input(self.cfg, 'Enter an account to spend from: ').strip()
@@ -152,7 +152,7 @@ class New(Base, TxBase.New):
 		if self.outputs and self.outputs[0].is_chg:
 			self.update_output_amt(0, funds_left)
 
-	async def get_input_addrs_from_cmdline(self):
+	async def get_input_addrs_from_inputs_opt(self):
 		ret = []
 		if self.cfg.inputs:
 			data_root = (await TwCtl(self.cfg, self.proto)).data_root # must create new instance here

@@ -12,13 +12,13 @@
 proto.btc.tx.new: Bitcoin new transaction class
 """
 
-from ....tx import new as TxBase
+from ....tx.new import New as TxNew
 from ....obj import MMGenTxID
 from ....util import msg, fmt, make_chksum_6, die, suf
 from ....color import pink
 from .base import Base
 
-class New(Base, TxBase.New):
+class New(Base, TxNew):
 	usr_fee_prompt = 'Enter transaction fee: '
 	fee_fail_fs = 'Network fee estimation for {c} confirmations failed ({t})'
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
@@ -105,7 +105,7 @@ class New(Base, TxBase.New):
 		msg(err)
 		return False
 
-	async def get_input_addrs_from_cmdline(self):
+	async def get_input_addrs_from_inputs_opt(self):
 		# Bitcoin full node, call doesn't go to the network, so just call listunspent with addrs=[]
 		return []
 

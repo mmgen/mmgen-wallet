@@ -15,7 +15,7 @@ proto.btc.tx.base: Bitcoin base transaction class
 from collections import namedtuple
 
 from ....addr import CoinAddr
-from ....tx import base as TxBase
+from ....tx.base import Base as TxBase
 from ....obj import MMGenList, HexStr, ListItemAttr
 from ....util import msg, make_chksum_6, die, pp_fmt
 
@@ -169,16 +169,16 @@ def DeserializeTX(proto, txhex):
 
 	return namedtuple('deserialized_tx', list(d.keys()))(**d)
 
-class Base(TxBase.Base):
+class Base(TxBase):
 	rel_fee_desc = 'satoshis per byte'
 	rel_fee_disp = 'sat/byte'
 	_deserialized = None
 
-	class Output(TxBase.Base.Output): # output contains either addr or data, but not both
+	class Output(TxBase.Output): # output contains either addr or data, but not both
 		addr = ListItemAttr(CoinAddr, include_proto=True) # ImmutableAttr in parent cls
 		data = ListItemAttr(OpReturnData, include_proto=True) # type None in parent cls
 
-	class InputList(TxBase.Base.InputList):
+	class InputList(TxBase.InputList):
 
 		# Lexicographical Indexing of Transaction Inputs and Outputs
 		# https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
@@ -189,7 +189,7 @@ class Base(TxBase.Base):
 					+ int.to_bytes(a.vout, 4, 'big'))
 			self.sort(key=sort_func)
 
-	class OutputList(TxBase.Base.OutputList):
+	class OutputList(TxBase.OutputList):
 
 		def sort_bip69(self):
 			def sort_func(a):
