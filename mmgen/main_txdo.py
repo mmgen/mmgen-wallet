@@ -153,9 +153,6 @@ async def main():
 
 	tx1 = await NewTX(cfg=cfg, proto=cfg._proto, target=target)
 
-	from .rpc import rpc_init
-	tx1.rpc = await rpc_init(cfg)
-
 	tx2 = await tx1.create(
 		cmd_args = cfg._args,
 		locktime = int(cfg.locktime or 0),
