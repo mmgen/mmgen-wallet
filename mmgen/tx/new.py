@@ -252,11 +252,11 @@ class New(Base):
 
 		if self.chg_output is not None:
 			if self.chg_autoselected:
-				self.confirm_autoselected_addr(self.chg_output)
+				self.confirm_autoselected_addr(self.chg_output.mmid, 'change address')
 			elif len(self.outputs) > 1:
-				await self.warn_chg_addr_used(self.chg_output)
+				await self.warn_addr_used(self.proto, self.chg_output, 'change address')
 
-	def get_addrdata_from_files(self, cmd_args):
+	def get_addrdata_from_files(self, proto, cmd_args):
 		from ..addrdata import AddrData
 		from ..addrlist import AddrList
 		from ..addrfile import AddrFile
@@ -270,31 +270,31 @@ class New(Base):
 			desc = 'command line',
 			edesc = 'argument',
 		)
-		ad_f = AddrData(self.proto)
+		ad_f = AddrData(proto)
 		from ..fileutil import check_infile
 		for addrfile in addrfile_args:
 			check_infile(addrfile)
-			ad_f.add(AddrList(self.cfg, self.proto, addrfile))
+			ad_f.add(AddrList(self.cfg, proto, addrfile))
 		return ad_f, cmd_args
 
-	def confirm_autoselected_addr(self, chg):
+	def confirm_autoselected_addr(self, mmid, desc):
 		from ..ui import keypress_confirm
 		if not keypress_confirm(
 				self.cfg,
-				'Using {a} as {b} address. OK?'.format(
-					a = chg.mmid.hl(),
-					b = 'single output' if len(self.outputs) == 1 else 'change'),
+				'Using {a} as {b}. OK?'.format(
+					a = mmid.hl(),
+					b = 'single output address' if len(self.outputs) == 1 else desc),
 				default_yes = True):
 			die(1, 'Exiting at user request')
 
-	async def warn_chg_addr_used(self, chg):
+	async def warn_addr_used(self, proto, chg, desc):
 		from ..tw.addresses import TwAddresses
-		if (await TwAddresses(self.cfg, self.proto, get_data=True)).is_used(chg.addr):
+		if (await TwAddresses(self.cfg, proto, get_data=True)).is_used(chg.addr):
 			from ..ui import keypress_confirm
 			if not keypress_confirm(
 					self.cfg,
 					'{a} {b} {c}\n{d}'.format(
-						a = yellow('Requested change address'),
+						a = yellow(f'Requested {desc}'),
 						b = chg.mmid.hl() if chg.mmid else chg.addr.hl(chg.addr.view_pref),
 						c = yellow('is already used!'),
 						d = yellow('Address reuse harms your privacy and security. Continue anyway? (y/N): ')
@@ -413,7 +413,7 @@ class New(Base):
 		await self.twuo.get_data()
 
 		if not do_info:
-			ad_f, cmd_args = self.get_addrdata_from_files(cmd_args) # pops from end of cmd_args
+			ad_f, cmd_args = self.get_addrdata_from_files(self.proto, cmd_args) # pops from end of cmd_args
 			from ..addrdata import TwAddrData
 			ad_w = await TwAddrData(self.cfg, self.proto, twctl=self.twctl)
 			if self.target == 'swaptx':
