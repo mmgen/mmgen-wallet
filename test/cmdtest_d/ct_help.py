@@ -41,26 +41,27 @@ class CmdTestHelp(CmdTestBase):
 	)
 
 	def usage1(self):
-		t = self.spawn('mmgen-walletgen', ['--usage'], no_passthru_opts=True)
-		t.expect('USAGE: mmgen-walletgen')
-		return t
+		return self._usage('walletgen', ['--usage'], True, False, 0)
 
 	def usage2(self):
-		cmd = 'xmrwallet' if self.coin == 'xmr' else 'txcreate'
-		t = self.spawn(f'mmgen-{cmd}', ['--usage', f'--coin={self.coin}'], no_passthru_opts=True)
-		t.expect(f'USAGE: mmgen-{cmd}')
-		return t
+		return self._usage('tool' if self.coin == 'xmr' else 'txcreate', ['--usage'], True, True, 0)
 
 	def usage3(self):
-		t = self.spawn('mmgen-walletgen', ['foo'], exit_val=1, no_passthru_opts=True)
-		t.expect('USAGE: mmgen-walletgen')
-		return t
+		return self._usage('walletgen', ['foo'], True, False, 1)
 
 	def usage4(self):
-		cmd = 'xmrwallet' if self.coin == 'xmr' else 'addrgen'
-		t = self.spawn(f'mmgen-{cmd}', [f'--coin={self.coin}'], exit_val=1, no_passthru_opts=True)
-		t.expect(f'USAGE: mmgen-{cmd}')
-		return t
+		return self._usage('tool' if self.coin == 'xmr' else 'addrgen', [], True, True, 1)
+
+	def _usage(self, cmd_arg, args, no_passthru_opts, add_coin_opt, exit_val):
+		if cmd := (None if self._gen_skiplist(cmd_arg) else cmd_arg):
+			t = self.spawn(
+				f'mmgen-{cmd}',
+				([f'--coin={self.coin}'] if add_coin_opt else []) + args,
+				exit_val = exit_val,
+				no_passthru_opts = no_passthru_opts)
+			t.expect(f'USAGE: mmgen-{cmd}')
+			return t
+		return 'skip'
 
 	def version(self):
 		t = self.spawn('mmgen-tool', ['--version'], exit_val=0)
@@ -97,29 +98,37 @@ class CmdTestHelp(CmdTestBase):
 		t.skip_ok = True
 		return t
 
+	def _gen_skiplist(self, scripts):
+		def gen(scripts):
+			if isinstance(scripts, str):
+				scripts = [scripts]
+			for script in scripts:
+				d = gc.cmd_caps_data[script]
+				if sys.platform == 'win32' and 'w' not in d.platforms:
+					yield script
+				elif not (d.use_coin_opt or self.proto.coin.lower() == 'btc'):
+					yield script
+				else:
+					for cap in d.caps:
+						if cap not in self.proto.mmcaps:
+							yield script
+							break
+		return set(gen(scripts))
+
 	def helpscreens(self, arg='--help', scripts=(), expect='USAGE:.*OPTIONS:', pager=True):
 
 		scripts = list(scripts or gc.cmd_caps_data)
 
-		def gen_skiplist():
-			for script in scripts:
-				d = gc.cmd_caps_data[script]
-				for cap in d.caps:
-					if cap not in self.proto.mmcaps:
-						yield script
-						break
-				else:
-					if sys.platform == 'win32' and 'w' not in d.platforms:
-						yield script
-					elif d.coin and len(d.coin) > 1 and self.proto.coin.lower() not in (d.coin, 'btc'):
-						yield script
+		cmdlist = sorted(set(scripts) - self._gen_skiplist(scripts))
 
-		for cmdname in sorted(set(scripts) - set(list(gen_skiplist()))):
+		for cmdname in cmdlist:
+			cmd_caps = gc.cmd_caps_data[cmdname]
+			assert cmd_caps, cmdname
 			t = self.spawn(
 				f'mmgen-{cmdname}',
 				[arg],
 				extra_desc       = f'(mmgen-{cmdname})',
-				no_passthru_opts = not gc.cmd_caps_data[cmdname].proto)
+				no_passthru_opts = not cmd_caps.use_coin_opt)
 			t.expect(expect, regex=True)
 			if pager and t.pexpect_spawn:
 				time.sleep(0.2)
@@ -128,7 +137,7 @@ class CmdTestHelp(CmdTestBase):
 			t.ok()
 			t.skip_ok = True
 
-		return t
+		return 'silent'
 
 	def longhelpscreens(self):
 		return self.helpscreens(arg='--longhelp', expect='USAGE:.*GLOBAL OPTIONS:')

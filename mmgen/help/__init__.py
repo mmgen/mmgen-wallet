@@ -140,14 +140,14 @@ class CmdHelp_v2(CmdHelp_v1):
 	def gen_text(self, opts):
 		from ..opts import cmd_opts_v2_help_pat
 		skipping = False
-		coin_filter_codes = opts.global_filter_codes.coin
-		cmd_filter_codes = opts.opts_data['filter_codes']
+		coin_codes = opts.global_filter_codes.coin
+		cmd_codes = opts.opts_data['filter_codes']
 		for line in opts.opts_data['text']['options'][1:].rstrip().splitlines():
 			m = cmd_opts_v2_help_pat.match(line)
 			if m[1] == '+':
 				if not skipping:
 					yield line[6:]
-			elif m[1] in coin_filter_codes and m[2] in cmd_filter_codes:
+			elif (coin_codes is None or m[1] in coin_codes) and m[2] in cmd_codes:
 				yield '{} --{} {}'.format(
 					(f'-{m[3]},', '   ')[m[3] == '-'],
 					m[4],
@@ -165,14 +165,14 @@ class GlobalHelp(Help):
 	def gen_text(self, opts):
 		from ..opts import global_opts_help_pat
 		skipping = False
-		coin_filter_codes = opts.global_filter_codes.coin
-		cmd_filter_codes = opts.global_filter_codes.cmd
+		coin_codes = opts.global_filter_codes.coin
+		cmd_codes = opts.global_filter_codes.cmd
 		for line in opts.global_opts_data['text']['options'][1:].rstrip().splitlines():
 			m = global_opts_help_pat.match(line)
 			if m[1] == '+':
 				if not skipping:
 					yield line[4:]
-			elif m[1] in coin_filter_codes and m[2] in cmd_filter_codes:
+			elif (coin_codes is None or m[1] in coin_codes) and (cmd_codes is None or m[2] in cmd_codes):
 				yield '  --{} {}'.format(m[3], m[5]) if m[3] else m[5]
 				skipping = False
 			else:

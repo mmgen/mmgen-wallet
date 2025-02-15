@@ -171,17 +171,22 @@ def parse_opts(cfg, opts_data, global_opts_data, global_filter_codes, need_proto
 
 	def parse_v2():
 		cmd_filter_codes = opts_data['filter_codes']
+		coin_codes = global_filter_codes.coin
 		for line in opts_data['text']['options'].splitlines():
 			m = cmd_opts_v2_pat.match(line)
-			if m and m[1] in global_filter_codes.coin and m[2] in cmd_filter_codes:
+			if m and (coin_codes is None or m[1] in coin_codes) and m[2] in cmd_filter_codes:
 				ret = opt_tuple(m[4].replace('-', '_'), m[5] == '=')
 				yield (m[3], ret)
 				yield (m[4], ret)
 
 	def parse_global():
+		coin_codes = global_filter_codes.coin
+		cmd_codes = global_filter_codes.cmd
 		for line in global_opts_data['text']['options'].splitlines():
 			m = global_opts_pat.match(line)
-			if m and m[1] in global_filter_codes.coin and m[2] in global_filter_codes.cmd:
+			if m and (
+					(coin_codes is None or m[1] in coin_codes) and
+					(cmd_codes is None or m[2] in cmd_codes)):
 				yield (m[3], opt_tuple(m[3].replace('-', '_'), m[4] == '='))
 
 	opts = tuple((parse_v2 if 'filter_codes' in opts_data else parse_v1)()) + tuple(parse_global())
@@ -294,7 +299,7 @@ class UserOpts(Opts):
 			'options': """
 			-- --accept-defaults      Accept defaults at all prompts
 			hp --cashaddr=0|1         Display addresses in cashaddr format (default: 1)
-			-p --coin=c               Choose coin unit. Default: BTC. Current choice: {cu_dfl}
+			-c --coin=c               Choose coin unit. Default: BTC. Current choice: {cu_dfl}
 			er --token=t              Specify an ERC20 token by address or symbol
 			-- --color=0|1            Disable or enable color output (default: 1)
 			-- --columns=N            Force N columns of output with certain commands
@@ -351,6 +356,10 @@ class UserOpts(Opts):
 	@staticmethod
 	def get_global_filter_codes(need_proto):
 		"""
+		Enable options based on the value of --coin and name of executable
+
+		Both must produce a matching code list, or None, for the option to be enabled
+
 		Coin codes:
 		  'b' - Bitcoin or Bitcoin code fork supporting RPC
 		  'R' - Bitcoin or Ethereum code fork supporting RPC
@@ -360,26 +369,26 @@ class UserOpts(Opts):
 		  '-' - other coin
 		Cmd codes:
 		  'p' - proto required
+		  'c' - proto required, --coin recognized
 		  'r' - RPC required
 		  '-' - no capabilities required
 		"""
 		ret = namedtuple('global_filter_codes', ['coin', 'cmd'])
 		if caps := gc.cmd_caps:
-			coin = caps.coin if caps.coin and len(caps.coin) > 1 else get_coin()
+			coin = get_coin() if caps.use_coin_opt else None
+			# a return value of None removes the filter, enabling all options for the given criterion
 			return ret(
-				coin = (
-					('-', 'r', 'R', 'b', 'h') if coin == 'bch' else
-					('-', 'r', 'R', 'b') if coin in gc.btc_fork_rpc_coins else
-					('-', 'r', 'R', 'e') if coin in gc.eth_fork_coins else
-					('-', 'r') if coin in gc.rpc_coins else
-					('-')),
+				coin = caps.coin_codes or (
+					None if coin is None else
+					['-', 'r', 'R', 'b', 'h'] if coin == 'bch' else
+					['-', 'r', 'R', 'b'] if coin in gc.btc_fork_rpc_coins else
+					['-', 'r', 'R', 'e'] if coin in gc.eth_fork_coins else
+					['-', 'r'] if coin in gc.rpc_coins else
+					['-']),
 				cmd = (
 					['-']
 					+ (['r'] if caps.rpc else [])
-					+ (['p'] if caps.proto else [])
+					+ (['p', 'c'] if caps.proto and caps.use_coin_opt else ['p'] if caps.proto else [])
 				))
-		else:
-			return ret(
-				coin = ('-', 'r', 'R', 'b', 'h', 'e'),
-				cmd = ('-', 'r', 'p')
-			)
+		else: # unmanaged command: enable everything
+			return ret(None, None)

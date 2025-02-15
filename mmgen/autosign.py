@@ -516,9 +516,6 @@ class Autosign:
 		if any(k in cfg._uopts for k in ('help', 'longhelp')):
 			return
 
-		if 'coin' in cfg._uopts:
-			die(1, '--coin option not supported with this command.  Use --coins instead')
-
 		self.coins = cfg.coins.upper().split(',') if cfg.coins else []
 
 		if cfg.xmrwallets and not 'XMR' in self.coins:
