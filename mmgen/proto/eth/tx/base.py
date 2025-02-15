@@ -29,6 +29,10 @@ class Base(TxBase.Base):
 	usr_contract_data = HexStr('')
 	disable_fee_check = False
 
+	@property
+	def nondata_outputs(self):
+		return self.outputs
+
 	def pretty_fmt_fee(self, fee):
 		if fee < 1:
 			ret = f'{fee:.8f}'.rstrip('0')

@@ -49,8 +49,8 @@ class Bump(Completed, New):
 				return False
 			return True
 
-		if len(self.outputs) == 1:
-			if check_sufficient_funds(self.outputs[0].amt):
+		if len(self.nondata_outputs) == 1:
+			if check_sufficient_funds(self.nondata_outputs[0].amt):
 				self.bump_output_idx = 0
 				return 0
 			else:

@@ -132,7 +132,7 @@ class New(Base, TxNew):
 				cfg = self.cfg,
 				message = yellow(message),
 				action = 'Are you sure this is what you want?')
-		if len(self.outputs) > 1 and not self.chg_output.mmid:
+		if len(self.nondata_outputs) > 1 and not self.chg_output.mmid:
 			do_err()
 
 	async def create_serialized(self, locktime=None, bump=None):

@@ -245,8 +245,8 @@ class New(Base):
 				f'{gc.proj_name} Segwit address requested on the command line, '
 				'but Segwit is not active on this chain')
 
-		if not self.outputs:
-			die(2, 'At least one output must be specified on the command line')
+		if not self.nondata_outputs:
+			die(2, 'At least one spending output must be specified on the command line')
 
 		self.add_mmaddrs_to_outputs(ad_f, ad_w)
 
@@ -255,7 +255,7 @@ class New(Base):
 		if self.chg_output is not None:
 			if self.chg_autoselected:
 				self.confirm_autoselected_addr(self.chg_output.mmid, 'change address')
-			elif len(self.outputs) > 1:
+			elif len(self.nondata_outputs) > 1:
 				await self.warn_addr_used(self.proto, self.chg_output, 'change address')
 
 	def get_addrfiles_from_cmdline(self, cmd_args):
@@ -289,7 +289,7 @@ class New(Base):
 				self.cfg,
 				'Using {a} as {b}. OK?'.format(
 					a = mmid.hl(),
-					b = 'single output address' if len(self.outputs) == 1 else desc),
+					b = 'single output address' if len(self.nondata_outputs) == 1 else desc),
 				default_yes = True):
 			die(1, 'Exiting at user request')
 

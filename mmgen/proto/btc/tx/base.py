@@ -296,6 +296,10 @@ class Base(TxBase):
 			self.estimate_size()))
 
 	@property
+	def nondata_outputs(self):
+		return [o for o in self.outputs if not o.data]
+
+	@property
 	def deserialized(self):
 		if not self._deserialized:
 			self._deserialized = DeserializeTX(self.proto, self.serialized)
