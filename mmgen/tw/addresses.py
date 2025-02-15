@@ -274,7 +274,7 @@ class TwAddresses(TwView):
 				return bool(e.recvd)
 		return None # addr not in tracking wallet
 
-	def get_change_address(self, al_id, bot=None, top=None, exclude=None):
+	def get_change_address(self, al_id, bot=None, top=None, exclude=None, desc=None):
 		"""
 		Get lowest-indexed unused address in tracking wallet for requested AddrListID.
 		Return values on failure:
@@ -326,14 +326,14 @@ class TwAddresses(TwView):
 								d.twmmid.hl(),
 								yellow('has a label,'),
 								d.comment.hl2(encl='‘’'),
-								yellow(',\n  but allowing it for change anyway by user request')
+								yellow(f',\n  but allowing it for {desc} anyway by user request')
 							))
 						return d
 				else:
 					break
 			return False
 
-	def get_change_address_by_addrtype(self, mmtype, exclude=None):
+	def get_change_address_by_addrtype(self, mmtype, exclude, desc):
 		"""
 		Find the lowest-indexed change addresses in tracking wallet of given address type,
 		present them in a menu and return a single change address chosen by the user.
@@ -352,9 +352,9 @@ class TwAddresses(TwView):
 					c = yellow(' <== has a label!') if d.comment else ''
 				)
 
-			prompt = '\nChoose a change address:\n\n{}\n\nEnter a number> '.format(
-				'\n'.join(format_line(n, d) for n, d in enumerate(addrs, 1))
-			)
+			prompt = '\nChoose a {desc}:\n\n{items}\n\nEnter a number> '.format(
+				desc = desc,
+				items = '\n'.join(format_line(n, d) for n, d in enumerate(addrs, 1)))
 
 			from ..ui import line_input
 			while True:
