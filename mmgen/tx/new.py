@@ -256,26 +256,30 @@ class New(Base):
 			elif len(self.outputs) > 1:
 				await self.warn_addr_used(self.proto, self.chg_output, 'change address')
 
-	def get_addrdata_from_files(self, proto, cmd_args):
-		from ..addrdata import AddrData
-		from ..addrlist import AddrList
+	def get_addrfiles_from_cmdline(self, cmd_args):
 		from ..addrfile import AddrFile
 		addrfile_args = remove_dups(
 			tuple(a for a in cmd_args if get_extension(a) == AddrFile.ext),
 			desc = 'command line',
 			edesc = 'argument',
 		)
-		cmd_args  = remove_dups(
-			tuple(a for a in cmd_args if a not in addrfile_args),
-			desc = 'command line',
-			edesc = 'argument',
-		)
-		ad_f = AddrData(proto)
+		cmd_args = tuple(a for a in cmd_args if a not in addrfile_args)
+		if self.target == 'tx':
+			cmd_args = remove_dups(cmd_args, desc='command line', edesc='argument')
+		return cmd_args, addrfile_args
+
+	def get_addrdata_from_files(self, proto, addrfiles):
+		from ..addrdata import AddrData
+		from ..addrlist import AddrList
 		from ..fileutil import check_infile
-		for addrfile in addrfile_args:
+		ad_f = AddrData(proto)
+		for addrfile in addrfiles:
 			check_infile(addrfile)
-			ad_f.add(AddrList(self.cfg, proto, addrfile))
-		return ad_f, cmd_args
+			try:
+				ad_f.add(AddrList(self.cfg, proto, addrfile))
+			except Exception as e:
+				msg(f'{type(e).__name__}: {e}')
+		return ad_f
 
 	def confirm_autoselected_addr(self, mmid, desc):
 		from ..ui import keypress_confirm
@@ -413,7 +417,8 @@ class New(Base):
 		await self.twuo.get_data()
 
 		if not do_info:
-			ad_f, cmd_args = self.get_addrdata_from_files(self.proto, cmd_args) # pops from end of cmd_args
+			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(cmd_args)
+			ad_f = self.get_addrdata_from_files(self.proto, addrfile_args) # pops from end of cmd_args
 			from ..addrdata import TwAddrData
 			ad_w = await TwAddrData(self.cfg, self.proto, twctl=self.twctl)
 			if self.target == 'swaptx':
