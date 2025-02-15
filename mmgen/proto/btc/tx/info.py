@@ -14,12 +14,12 @@ proto.btc.tx.info: Bitcoin transaction info class
 
 from ....tx.info import TxInfo
 from ....util import fmt, die
-from ....color import red, green, pink, blue
+from ....color import red, green, blue, pink
 from ....addr import MMGenID
 
 class TxInfo(TxInfo):
 	sort_orders = ('addr', 'raw')
-	txinfo_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) RBF={r} Sig={s} Locktime={l}\n'
+	txinfo_hdr_fs = '{hdr}\n  ID={i} ({a} {c}) RBF={r} Sig={s} Locktime={l}\n'
 	txinfo_hdr_fs_short = 'TX {i} ({a} {c}) RBF={r} Sig={s} Locktime={l}\n'
 	txinfo_ftr_fs = fmt("""
 		Input amount: {i} {d}
@@ -64,7 +64,10 @@ class TxInfo(TxInfo):
 					append_chars=('', ' (chg)')[bool(not is_input and e.is_chg and terse)],
 					append_color='green')
 			else:
-				return MMGenID.fmtc(nonmm_str, width=max_mmwid, color=True)
+				return MMGenID.fmtc(
+					nonmm_str,
+					width = max_mmwid,
+					color = True)
 
 		def format_io(desc):
 			io = getattr(tx, desc)
@@ -134,7 +137,10 @@ class TxInfo(TxInfo):
 			vp1 = 0
 
 		return (
-			'Displaying inputs and outputs in {} sort order'.format({'raw':'raw', 'addr':'address'}[sort])
+			'Inputs/Outputs sort order: {}'.format({
+				'raw':  pink('UNSORTED'),
+				'addr': pink('ADDRESS')
+			}[sort])
 			+ ('\n\n', '\n')[terse]
 			+ ''.join(format_io('inputs'))
 			+ ''.join(format_io('outputs')))

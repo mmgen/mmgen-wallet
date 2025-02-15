@@ -83,16 +83,16 @@ opts_data = {
 			-- -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
 			+                         for password hashing (default: '{gc.dfl_hash_preset}')
 			-- -P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
+			-- -q, --quiet            Suppress warnings; overwrite files without prompting
 			bt -R, --no-rbf           Make transaction non-replaceable (non-replace-by-fee
 			+                         according to BIP 125)
-			-- -q, --quiet            Suppress warnings; overwrite files without prompting
+			-s -s, --swap-proto       Swap protocol to use (Default: {x_dfl},
+			+                         Choices: {x_all})
 			-- -u, --subseeds=      n The number of subseed pairs to scan for (default: {ss},
 			+                         maximum: {ss_max}). Only the default or first supplied
 			+                         wallet is scanned for subseeds.
 			-- -v, --verbose          Produce more verbose output
 			b- -V, --vsize-adj=     f Adjust transaction's estimated vsize by factor 'f'
-			-s -x, --swap-proto       Swap protocol to use (Default: {x_dfl},
-			+                         Choices: {x_all})
 			e- -X, --cached-balances  Use cached balances
 			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 			-- -z, --show-hash-presets Show information on available hash presets

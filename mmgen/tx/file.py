@@ -64,15 +64,13 @@ class MMGenTxFile(MMGenObject):
 		'send_amt': 'skip',
 		'timestamp': None,
 		'blockcount': None,
-		'serialized': None,
-	}
+		'serialized': None}
 	extra_attrs = {
 		'locktime': None,
 		'comment': MMGenTxComment,
 		'coin_txid': CoinTxID,
 		'sent_timestamp': None,
-		'is_swap': False,
-	}
+		'is_swap': None}
 
 	def __init__(self, tx):
 		self.tx       = tx

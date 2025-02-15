@@ -350,6 +350,14 @@ def in_nix_environment():
 			return True
 	return False
 
+def make_burn_addr(proto, mmtype='compressed', hexdata=None):
+	from mmgen.tool.coin import tool_cmd
+	return tool_cmd(
+		cfg     = cfg,
+		cmdname = 'pubhash2addr',
+		proto   = proto,
+		mmtype  = mmtype).pubhash2addr(hexdata or '00'*20)
+
 def VirtBlockDevice(img_path, size):
 	if sys.platform == 'linux':
 		return VirtBlockDeviceLinux(img_path, size)

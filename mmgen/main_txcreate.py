@@ -69,10 +69,10 @@ opts_data = {
 			-- -q, --quiet           Suppress warnings; overwrite files without prompting
 			bt -R, --no-rbf          Make transaction non-replaceable (non-replace-by-fee
 			+                        according to BIP 125)
+			-s -s, --swap-proto      Swap protocol to use (Default: {x_dfl},
+			+                        Choices: {x_all})
 			-- -v, --verbose         Produce more verbose output
 			b- -V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
-			-s -x, --swap-proto      Swap protocol to use (Default: {x_dfl},
-			+                        Choices: {x_all})
 			-- -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 			e- -X, --cached-balances Use cached balances
 		""",
@@ -101,7 +101,7 @@ opts_data = {
 
 cfg = Config(opts_data=opts_data)
 
-if not cfg.info and len(cfg._args) < {'tx': 1, 'swaptx': 2}[target]:
+if not (cfg.info or cfg.contract_data) and len(cfg._args) < {'tx': 1, 'swaptx': 2}[target]:
 	cfg._usage()
 
 async def main():

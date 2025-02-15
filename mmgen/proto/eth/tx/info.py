@@ -18,7 +18,7 @@ from ....color import pink, yellow, blue
 from ....addr import MMGenID
 
 class TxInfo(TxInfo):
-	txinfo_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) Sig={s} Locktime={l}\n'
+	txinfo_hdr_fs = '{hdr}\n  ID={i} ({a} {c}) Sig={s} Locktime={l}\n'
 	txinfo_hdr_fs_short = 'TX {i} ({a} {c}) Sig={s} Locktime={l}\n'
 	txinfo_ftr_fs = fmt("""
 		Total in account:  {i} {d}

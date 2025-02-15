@@ -98,8 +98,8 @@ class Base(MMGenObject):
 		tw_copy_attrs = {'scriptPubKey', 'vout', 'amt', 'comment', 'mmid', 'addr', 'confs', 'txid'}
 
 	class Output(MMGenTxIO):
-		is_chg = ListItemAttr(bool, typeconv=False)
-		data   = ListItemAttr(None, typeconv=False) # placeholder
+		is_chg   = ListItemAttr(bool, typeconv=False)
+		data     = ListItemAttr(None, typeconv=False) # placeholder
 
 	class InputList(MMGenTxIOList):
 		desc = 'transaction inputs'
@@ -146,12 +146,10 @@ class Base(MMGenObject):
 			return self.proto.coin_amt('0')
 		return sum(e.amt for e in olist)
 
-	def _chg_output_ops(self, op):
-		is_chgs = [x.is_chg for x in self.outputs]
+	def _chg_output_ops(self, op, attr):
+		is_chgs = [getattr(x, attr) for x in self.outputs]
 		if is_chgs.count(True) == 1:
-			return (
-				is_chgs.index(True) if op == 'idx' else
-				self.outputs[is_chgs.index(True)])
+			return is_chgs.index(True) if op == 'idx' else self.outputs[is_chgs.index(True)]
 		elif is_chgs.count(True) == 0:
 			return None
 		else:
@@ -159,11 +157,11 @@ class Base(MMGenObject):
 
 	@property
 	def chg_idx(self):
-		return self._chg_output_ops('idx')
+		return self._chg_output_ops('idx', 'is_chg')
 
 	@property
 	def chg_output(self):
-		return self._chg_output_ops('output')
+		return self._chg_output_ops('output', 'is_chg')
 
 	def add_timestamp(self):
 		self.timestamp = make_timestamp()

@@ -18,6 +18,6 @@ from .new import New
 class NewSwap(New, TxNewSwap):
 	desc = 'Bitcoin swap transaction'
 
-	async def process_swap_cmdline_args(self, cmd_args):
+	async def process_swap_cmdline_args(self, cmd_args, addrfile_args):
 		import sys
 		sys.exit(0)

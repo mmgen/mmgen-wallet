@@ -135,14 +135,14 @@ def format_elapsed_days_hr(t, now=None, cached={}):
 		cached[e] = f'{days} day{suf(days)} ' + ('ago' if e > 0 else 'in the future')
 	return cached[e]
 
-def format_elapsed_hr(t, now=None, cached={}, rel_now=True, show_secs=False):
+def format_elapsed_hr(t, now=None, cached={}, rel_now=True, show_secs=False, future_msg='in the future'):
 	e = int((now or time.time()) - t)
 	key = f'{e}:{rel_now}:{show_secs}'
 	if not key in cached:
 		def add_suffix():
 			return (
 				((' ago'           if rel_now else '') if e > 0 else
-				(' in the future' if rel_now else ' (negative elapsed)'))
+				(f' {future_msg}' if rel_now else ' (negative elapsed)'))
 					if (abs_e if show_secs else abs_e // 60) else
 				('just now' if rel_now else ('0 ' + ('seconds' if show_secs else 'minutes')))
 			)

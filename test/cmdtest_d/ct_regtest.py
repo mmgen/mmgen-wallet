@@ -44,8 +44,9 @@ from ..include.common import (
 	cmp_or_die,
 	strip_ansi_escapes,
 	gr_uc,
-	getrandhex
-)
+	getrandhex,
+	make_burn_addr)
+
 from .common import (
 	ok_msg,
 	get_file_with_ext,
@@ -53,8 +54,8 @@ from .common import (
 	tw_comment_lat_cyr_gr,
 	tw_comment_zh,
 	tx_comment_jp,
-	get_env_without_debug_vars
-)
+	get_env_without_debug_vars)
+
 from .ct_base import CmdTestBase
 from .ct_shared import CmdTestShared
 
@@ -160,14 +161,6 @@ rt_data = {
 		'ltc': ('5500', '5500')
 	}
 }
-
-def make_burn_addr(proto, mmtype='compressed'):
-	from mmgen.tool.coin import tool_cmd
-	return tool_cmd(
-		cfg     = cfg,
-		cmdname = 'pubhash2addr',
-		proto   = proto,
-		mmtype  = mmtype).pubhash2addr('00'*20)
 
 class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	'transacting and tracking wallet operations via regtest mode'
@@ -1185,9 +1178,9 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		txfile = self.get_file_with_ext(ext, delete=False, no_dot=True)
 		return self.user_txbump('bob', self.tmpdir, txfile, rtFee[2], add_args=['--send'])
 
-	def generate(self, num_blocks=1):
+	def generate(self, num_blocks=1, add_opts=[]):
 		int(num_blocks)
-		t = self.spawn('mmgen-regtest', ['generate', str(num_blocks)])
+		t = self.spawn('mmgen-regtest', add_opts + ['generate', str(num_blocks)])
 		t.expect(f'Mined {num_blocks} block')
 		return t
 
