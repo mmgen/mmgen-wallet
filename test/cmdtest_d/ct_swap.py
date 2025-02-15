@@ -18,7 +18,8 @@ from .ct_regtest import (
 	CmdTestRegtest,
 	rt_data,
 	dfl_wcls,
-	rt_pw)
+	rt_pw,
+	cfg)
 
 sample1 = '=:ETH.ETH:0x86d526d6624AbC0178cF7296cD538Ecc080A95F1:0/1/0'
 sample2 = '00010203040506'
@@ -27,6 +28,7 @@ class CmdTestSwap(CmdTestRegtest):
 	bdb_wallet = True
 	networks = ('btc',)
 	tmpdir_nums = [37]
+	passthru_opts = ('rpc_backend',)
 
 	cmd_group_in = (
 		('setup',             'regtest (Bob and Alice) mode setup'),
@@ -75,24 +77,38 @@ class CmdTestSwap(CmdTestRegtest):
 		for k in rt_data:
 			globals_dict[k] = rt_data[k]['btc']
 
+		self.protos = [init_proto(cfg, k, network='regtest', need_amt=True) for k in ('btc', 'ltc', 'bch')]
+
 	@property
 	def sid(self):
 		return self._user_sid('bob')
 
+	def _addrgen_bob(self, proto_idx, mmtypes, subseed_idx=None):
+		return self.addrgen('bob', subseed_idx=subseed_idx, mmtypes=mmtypes, proto=self.protos[proto_idx])
+
+	def _addrimport_bob(self, proto_idx):
+		return self.addrimport('bob', mmtypes=['S', 'B'], proto=self.protos[proto_idx])
+
+	def _fund_bob(self, proto_idx, addrtype_code, amt):
+		return self.fund_wallet('bob', addrtype_code, amt, proto=self.protos[proto_idx])
+
+	def _bob_bal(self, proto_idx, bal, skip_check=False):
+		return self.user_bal('bob', bal, proto=self.protos[proto_idx], skip_check=skip_check)
+
 	def addrgen_bob(self):
-		return self.addrgen('bob', mmtypes=['S', 'B'])
+		return self._addrgen_bob(0, ['S', 'B'])
 
 	def addrimport_bob(self):
-		return self.addrimport('bob', mmtypes=['S', 'B'])
+		return self._addrimport_bob(0)
 
 	def fund_bob1(self):
-		return self.fund_wallet('bob', 'B', '500')
+		return self._fund_bob(0, 'B', '500')
 
 	def fund_bob2(self):
-		return self.fund_wallet('bob', 'S', '500')
+		return self._fund_bob(0, 'S', '500')
 
 	def bob_bal(self):
-		return self.user_bal('bob', '1000')
+		return self._bob_bal(0, '1000')
 
 	def data_tx1_create(self):
 		return self._data_tx_create('1', 'B:2', 'B:3', 'data', sample1)

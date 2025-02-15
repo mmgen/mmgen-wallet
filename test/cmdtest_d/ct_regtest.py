@@ -27,7 +27,7 @@ from mmgen.proto.btc.regtest import MMGenRegtest
 from mmgen.proto.bch.cashaddr import b32a
 from mmgen.proto.btc.common import b58a
 from mmgen.color import yellow
-from mmgen.util import msg_r, die, gmsg, capfirst, fmt_list
+from mmgen.util import msg_r, die, gmsg, capfirst, suf, fmt_list
 from mmgen.protocol import init_proto
 from mmgen.addrlist import AddrList
 from mmgen.wallet import Wallet, get_wallet_cls
@@ -497,11 +497,12 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		self.dfl_mmtype = 'C' if coin == 'bch' else 'B'
 		self.burn_addr = make_burn_addr(self.proto)
 		self.user_sids = {}
+		self.protos = (self.proto,)
 
-	def _add_comments_to_addr_file(self, addrfile, outfile, use_comments=False):
+	def _add_comments_to_addr_file(self, proto, addrfile, outfile, use_comments=False):
 		silence()
 		gmsg(f'Adding comments to address file {addrfile!r}')
-		a = AddrList(cfg, self.proto, addrfile)
+		a = AddrList(cfg, proto, addrfile)
 		for n, idx in enumerate(a.idxs(), 1):
 			if use_comments:
 				a.set_comment(idx, get_comment())
@@ -520,16 +521,21 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		end_silence()
 
 	def setup(self):
-		stop_test_daemons(self.proto.network_id, force=True, remove_datadir=True)
-		from shutil import rmtree
-		try:
-			rmtree(joinpath(self.tr.data_dir, 'regtest'))
-		except:
-			pass
+		return self._setup(proto=self.proto, remove_datadir=True)
+
+	def _setup(self, proto, remove_datadir):
+		stop_test_daemons(proto.network_id, force=True, remove_datadir=True)
+		if remove_datadir:
+			from shutil import rmtree
+			try:
+				rmtree(joinpath(self.tr.data_dir, 'regtest'))
+			except:
+				pass
 		t = self.spawn(
 			'mmgen-regtest',
 			(['--bdb-wallet'] if self.use_bdb_wallet else [])
-			+ ['--setup-no-stop-daemon', 'setup'])
+			+ [f'--coin={proto.coin}', '--setup-no-stop-daemon', 'setup'],
+			no_passthru_opts = True)
 		t.expect('Starting')
 		for _ in range(3): t.expect('Creating')
 		for _ in range(5): t.expect('Mined')
@@ -556,6 +562,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def walletgen_bob(self):
 		return self.walletgen('bob')
+
 	def walletgen_alice(self):
 		return self.walletgen('alice')
 
@@ -582,16 +589,20 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			wf          = None,
 			addr_range  = '1-5',
 			subseed_idx = None,
-			mmtypes     = []):
+			mmtypes     = [],
+			proto       = None):
 		from mmgen.addr import MMGenAddrType
-		for mmtype in mmtypes or self.proto.mmtypes:
+		proto = proto or self.proto
+		for mmtype in mmtypes or proto.mmtypes:
 			t = self.spawn(
 				'mmgen-addrgen',
 				['--quiet', f'--{user}', f'--type={mmtype}', f'--outdir={self._user_dir(user)}']
 				+ ([wf] if wf else [])
 				+ ([f'--subwallet={subseed_idx}'] if subseed_idx else [])
+				+ [f'--coin={proto.coin}']
 				+ [addr_range],
-				extra_desc = '({})'.format(MMGenAddrType.mmtypes[mmtype].name))
+				extra_desc = '({})'.format(MMGenAddrType.mmtypes[mmtype].name),
+				no_passthru_opts = True)
 			t.passphrase(dfl_wcls.desc, rt_pw)
 			t.written_to_file('Addresses')
 			ok_msg()
@@ -611,26 +622,28 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			num_addrs  = 5,
 			mmtypes    = [],
 			batch      = True,
-			quiet      = True):
+			quiet      = True,
+			proto      = None):
+		proto = proto or self.proto
 		id_strs = {'legacy':'', 'compressed':'-C', 'segwit':'-S', 'bech32':'-B'}
 		if not sid:
 			sid = self._user_sid(user)
 		from mmgen.addr import MMGenAddrType
-		for mmtype in mmtypes or self.proto.mmtypes:
+		for mmtype in mmtypes or proto.mmtypes:
 			desc = MMGenAddrType.mmtypes[mmtype].name
 			addrfile = joinpath(self._user_dir(user),
 				'{}{}{}[{}]{x}.regtest.addrs'.format(
-					sid, self.altcoin_pfx, id_strs[desc], addr_range,
+					sid, self.get_altcoin_pfx(proto.coin), id_strs[desc], addr_range,
 					x='-α' if cfg.debug_utf8 else ''))
-			if mmtype == self.proto.mmtypes[0] and user == 'bob':
-				self._add_comments_to_addr_file(addrfile, addrfile, use_comments=True)
+			if mmtype == proto.mmtypes[0] and user == 'bob':
+				self._add_comments_to_addr_file(proto, addrfile, addrfile, use_comments=True)
 			t = self.spawn(
 				'mmgen-addrimport',
 				args = (
 					(['--quiet'] if quiet else []) +
 					['--'+user] +
 					(['--batch'] if batch else []) +
-					[addrfile]),
+					[f'--coin={proto.coin}', addrfile]),
 				extra_desc = f'({desc})')
 			if cfg.debug:
 				t.expect("Type uppercase 'YES' to confirm: ", 'YES\n')
@@ -707,14 +720,15 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			return 'skip'
 		return self.addrimport('bob')
 
-	def fund_wallet(self, user, mmtype, amt, sid=None, addr_range='1-5'):
+	def fund_wallet(self, user, mmtype, amt, sid=None, addr_range='1-5', proto=None):
+		proto = proto or self.proto
 		if self.deterministic:
 			return 'skip'
 		if not sid:
 			sid = self._user_sid(user)
-		addr = self.get_addr_from_addrlist(user, sid, mmtype, 0, addr_range=addr_range)
-		t = self.spawn('mmgen-regtest', ['send', str(addr), str(amt)])
-		t.expect(f'Sending {amt} miner {self.proto.coin}')
+		addr = self.get_addr_from_addrlist(user, sid, mmtype, 0, addr_range=addr_range, proto=proto)
+		t = self.spawn('mmgen-regtest', [f'--coin={proto.coin}', 'send', str(addr), str(amt)], no_passthru_opts=True)
+		t.expect(f'Sending {amt} miner {proto.coin}')
 		t.expect('Mined 1 block')
 		return t
 
@@ -755,10 +769,11 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def bob_twview1(self):
 		return self.user_twview('bob', chk=('1', rtAmts[0]))
 
-	def user_bal(self, user, bal, opts=[], args=['showempty=1'], skip_check=False):
-		t = self.spawn('mmgen-tool', opts + [f'--{user}', 'listaddresses'] + args)
+	def user_bal(self, user, bal, opts=[], args=['showempty=1'], skip_check=False, proto=None):
+		proto = proto or self.proto
+		t = self.spawn('mmgen-tool', opts + [f'--{user}', f'--coin={proto.coin}', 'listaddresses'] + args)
 		if not skip_check:
-			cmp_or_die(f'{bal} {self.proto.coin}', strip_ansi_escapes(t.expect_getend('TOTAL: ')))
+			cmp_or_die(f'{bal} {proto.coin}', strip_ansi_escapes(t.expect_getend('TOTAL: ')))
 		return t
 
 	def alice_bal1(self):
@@ -809,26 +824,28 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def bob_subwallet_addrgen2(self):
 		return self.addrgen('bob', subseed_idx='127S', mmtypes=['C']) # 127S: '09E8E286'
 
-	def subwallet_addrimport(self, user, subseed_idx):
+	def _subwallet_addrimport(self, user, subseed_idx, mmtypes, proto=None):
 		sid = self._get_user_subsid(user, subseed_idx)
-		return self.addrimport(user, sid=sid, mmtypes=['C'])
+		return self.addrimport(user, sid=sid, mmtypes=mmtypes, proto=proto)
 
 	def bob_subwallet_addrimport1(self):
-		return self.subwallet_addrimport('bob', '29L')
-	def bob_subwallet_addrimport2(self):
-		return self.subwallet_addrimport('bob', '127S')
+		return self._subwallet_addrimport('bob', '29L', ['C'])
 
-	def bob_subwallet_fund(self):
+	def bob_subwallet_addrimport2(self):
+		return self._subwallet_addrimport('bob', '127S', ['C'])
+
+	def bob_subwallet_fund(self, proto=None):
+		proto = proto or self.proto
 		sid1 = self._get_user_subsid('bob', '29L')
 		sid2 = self._get_user_subsid('bob', '127S')
-		chg_addr = self._user_sid('bob') + (':B:1', ':L:1')[self.proto.coin=='BCH']
+		chg_addr = self._user_sid('bob') + (':B:1', ':L:1')[proto.coin=='BCH']
 		return self.user_txdo(
 			user               = 'bob',
 			fee                = rtFee[1],
 			outputs_cl         = [sid1+':C:2,0.29', sid2+':C:3,0.127', chg_addr],
-			outputs_list       = ('3', '1')[self.proto.coin=='BCH'],
+			outputs_list       = ('3', '1')[proto.coin=='BCH'],
 			extra_args         = ['--subseeds=127'],
-			used_chg_addr_resp = (None, 'y')[self.proto.coin=='BCH'])
+			used_chg_addr_resp = (None, 'y')[proto.coin=='BCH'])
 
 	def bob_twview2(self):
 		sid1 = self._get_user_subsid('bob', '29L')
@@ -1072,13 +1089,14 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		outputs_cl = [sid+':C:1,100', sid+':L:2,200', sid+':'+rtBobOp3]
 		return self.user_txdo('bob', rtFee[0], outputs_cl, '1', extra_args=['--locktime=500000001'])
 
-	def get_addr_from_addrlist(self, user, sid, mmtype, idx, addr_range='1-5'):
+	def get_addr_from_addrlist(self, user, sid, mmtype, idx, addr_range='1-5', proto=None):
+		proto = proto or self.proto
 		id_str = {'L':'', 'S':'-S', 'C':'-C', 'B':'-B'}[mmtype]
 		ext = '{}{}{}[{}]{x}.regtest.addrs'.format(
-			sid, self.altcoin_pfx, id_str, addr_range, x='-α' if cfg.debug_utf8 else '')
+			sid, self.get_altcoin_pfx(proto.coin), id_str, addr_range, x='-α' if cfg.debug_utf8 else '')
 		addrfile = get_file_with_ext(self._user_dir(user), ext, no_dot=True)
 		silence()
-		addr = AddrList(cfg, self.proto, addrfile).data[idx].addr
+		addr = AddrList(cfg, proto, addrfile).data[idx].addr
 		end_silence()
 		return addr
 
@@ -2151,10 +2169,11 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def stop(self):
 		self.spawn('', msg_only=True)
 		if cfg.no_daemon_stop:
-			msg_r('(leaving regtest daemon running by user request)')
+			msg_r(f'(leaving regtest daemon{suf(self.protos)} running by user request)')
 			imsg('')
 		else:
-			stop_test_daemons(self.proto.network_id, remove_datadir=True)
+			for proto in self.protos:
+				stop_test_daemons(proto.network_id, remove_datadir=True)
 		return 'ok'
 
 class CmdTestRegtestBDBWallet(CmdTestRegtest):

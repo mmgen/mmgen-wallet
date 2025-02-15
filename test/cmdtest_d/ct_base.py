@@ -64,6 +64,11 @@ class CmdTestBase:
 		else:
 			self.spawn_env = {} # placeholder
 
+	def get_altcoin_pfx(self, coin, cashaddr=True):
+		coin = coin.lower()
+		fork = 'btc' if coin == 'bch' and not cashaddr else coin
+		return '' if fork == 'btc' else f'-{coin.upper()}'
+
 	@property
 	def tmpdir(self):
 		return os.path.join('test', 'tmp', '{}{}'.format(self.tmpdir_num, '-α' if cfg.debug_utf8 else ''))
