@@ -120,6 +120,6 @@ async def main():
 			outdir        = asi.txauto_dir if cfg.autosign else None,
 			ask_overwrite = False,
 			ask_write     = False)
-		tx2.print_contract_addr()
+		tx2.post_write()
 
 async_run(main())

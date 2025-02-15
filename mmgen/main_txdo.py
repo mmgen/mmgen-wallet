@@ -107,6 +107,7 @@ column below:
 		'options': lambda cfg, proto, help_notes, s: s.format(
 			gc      = gc,
 			cfg     = cfg,
+			cu      = proto.coin,
 			pnm     = gc.proj_name,
 			pnl     = gc.proj_name.lower(),
 			a_info  = help_notes('account_info_desc'),
@@ -114,12 +115,11 @@ column below:
 			coin_id = help_notes('coin_id'),
 			fu      = help_notes('rel_fee_desc'),
 			fl      = help_notes('fee_spec_letters'),
+			dsl     = help_notes('dfl_seed_len'),
 			ss      = help_notes('dfl_subseeds'),
 			ss_max  = SubSeedIdxRange.max_idx,
 			fe_all  = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),
-			fe_dfl  = cfg._autoset_opts['fee_estimate_mode'].choices[0],
-			dsl     = help_notes('dfl_seed_len'),
-			cu      = proto.coin),
+			fe_dfl  = cfg._autoset_opts['fee_estimate_mode'].choices[0]),
 		'notes': lambda cfg, help_notes, s: s.format(
 			c       = help_notes('txcreate'),
 			F       = help_notes('fee'),
@@ -159,7 +159,7 @@ async def main():
 		tx4 = await SentTX(cfg=cfg, data=tx3.__dict__)
 		if await tx4.send():
 			tx4.file.write(ask_overwrite=False, ask_write=False)
-			tx4.print_contract_addr()
+			tx4.post_write()
 	else:
 		die(2, 'Transaction could not be signed')
 

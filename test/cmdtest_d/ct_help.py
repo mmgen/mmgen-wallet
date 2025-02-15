@@ -26,7 +26,7 @@ class CmdTestHelp(CmdTestBase):
 	passthru_opts = ('daemon_data_dir', 'rpc_port', 'coin', 'testnet')
 	cmd_group = (
 		('usage1',            (1, 'usage message (via --usage)', [])),
-		('usage2',            (1, 'usage message (via --usage)', [])),
+		('usage2',            (1, 'usage message (via --usage, with --coin)', [])),
 		('usage3',            (1, 'usage message (via bad invocation)', [])),
 		('usage4',            (1, 'usage message (via bad invocation, with --coin)', [])),
 		('version',           (1, 'version message', [])),

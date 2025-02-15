@@ -72,13 +72,13 @@ opts_data = {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
 			u_args = help_notes('txcreate_args')),
 		'options': lambda cfg, proto, help_notes, s: s.format(
+			cfg    = cfg,
+			cu     = proto.coin,
 			a_info = help_notes('account_info_desc'),
 			fu     = help_notes('rel_fee_desc'),
 			fl     = help_notes('fee_spec_letters'),
 			fe_all = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),
-			fe_dfl = cfg._autoset_opts['fee_estimate_mode'].choices[0],
-			cu     = proto.coin,
-			cfg    = cfg),
+			fe_dfl = cfg._autoset_opts['fee_estimate_mode'].choices[0]),
 		'notes': lambda cfg, help_notes, s: s.format(
 			c      = help_notes('txcreate'),
 			F      = help_notes('fee'),

@@ -14,8 +14,6 @@ test.cmdtest_d.ct_swap: asset swap tests for the cmdtest.py test suite
 
 from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw
 
-rtFundAmt = rtFee = None # ruff
-
 sample1 = '=:ETH.ETH:0x86d526d6624AbC0178cF7296cD538Ecc080A95F1:0/1/0'
 sample2 = '00010203040506'
 
@@ -73,7 +71,7 @@ class CmdTestSwap(CmdTestRegtest):
 		return self.addrimport('bob', mmtypes=['S', 'B'])
 
 	def fund_bob(self):
-		return self.fund_wallet('bob', 'B', rtFundAmt)
+		return self.fund_wallet('bob', 'B', '500')
 
 	def data_tx1_create(self):
 		return self._data_tx_create('1', 'B:2', 'B:3', 'data', sample1)
@@ -121,7 +119,7 @@ class CmdTestSwap(CmdTestRegtest):
 	def _data_tx_do(self, src, dest, chg, pfx, sample, view):
 		t = self.user_txdo(
 			user         = 'bob',
-			fee          = rtFee[0],
+			fee          = '30s',
 			outputs_cl   = [f'{self.sid}:{dest},1', f'{self.sid}:{chg}', f'{pfx}:{sample}'],
 			outputs_list = src,
 			add_comment  = 'Transaction with OP_RETURN data',

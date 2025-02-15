@@ -176,7 +176,7 @@ class Base(TxBase.Base):
 
 	class Output(TxBase.Base.Output): # output contains either addr or data, but not both
 		addr = ListItemAttr(CoinAddr, include_proto=True) # ImmutableAttr in parent cls
-		data = ListItemAttr(OpReturnData, include_proto=True, typeconv=True) # type None in parent cls
+		data = ListItemAttr(OpReturnData, include_proto=True) # type None in parent cls
 
 	class InputList(TxBase.Base.InputList):
 

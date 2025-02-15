@@ -72,7 +72,7 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 		self.add_blockcount()
 		return True
 
-	def print_contract_addr(self):
+	def post_write(self):
 		pass
 
 class Sent(TxBase.Sent, OnlineSigned):
