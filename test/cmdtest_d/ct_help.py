@@ -50,7 +50,7 @@ class CmdTestHelp(CmdTestBase):
 		return self._usage('walletgen', ['foo'], True, False, 1)
 
 	def usage4(self):
-		return self._usage('tool' if self.coin == 'xmr' else 'addrgen', [], True, True, 1)
+		return self._usage('tool' if self.coin == 'xmr' else 'txcreate', [], True, True, 1)
 
 	def _usage(self, cmd_arg, args, no_passthru_opts, add_coin_opt, exit_val):
 		if cmd := (None if self._gen_skiplist(cmd_arg) else cmd_arg):

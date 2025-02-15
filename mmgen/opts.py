@@ -279,6 +279,7 @@ class Opts:
 		# Make these available to usage():
 		cfg._usage_data = opts_data['text'].get('usage2') or opts_data['text']['usage']
 		cfg._usage_code = opts_data.get('code', {}).get('usage')
+		cfg._help_pkg = self.help_pkg
 
 		if os.getenv('MMGEN_DEBUG_OPTS'):
 			opt_preproc_debug(po)

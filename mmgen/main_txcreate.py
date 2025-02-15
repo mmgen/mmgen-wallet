@@ -101,6 +101,9 @@ opts_data = {
 
 cfg = Config(opts_data=opts_data)
 
+if not cfg.info and len(cfg._args) < {'tx': 1, 'swaptx': 2}[target]:
+	cfg._usage()
+
 async def main():
 
 	if cfg.autosign:
