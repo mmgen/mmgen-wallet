@@ -79,6 +79,7 @@ class Base(MMGenObject):
 	locktime     = None
 	chain        = None
 	signed       = False
+	file_format  = 'json'
 	non_mmgen_inputs_msg = f"""
 		This transaction includes inputs with non-{gc.proj_name} addresses.  When
 		signing the transaction, private keys for the addresses listed below must
@@ -89,7 +90,6 @@ class Base(MMGenObject):
 		Non-{gc.proj_name} addresses found in inputs:
 		    {{}}
 	"""
-	file_format = 'json'
 
 	class Input(MMGenTxIO):
 		scriptPubKey  = ListItemAttr(HexStr)

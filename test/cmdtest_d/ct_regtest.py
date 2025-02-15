@@ -1140,7 +1140,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def bob_send_non_mmgen(self):
 		keyfile = joinpath(self.tmpdir, 'non-mmgen.keys')
 		atype = 'S' if self.proto.cap('segwit') else 'L'
-		outputs_cl = self._create_tx_outputs('alice', ((atype, 2, ', 10'), (atype, 3, '')))
+		outputs_cl = self._create_tx_outputs('alice', ((atype, 2, ',10'), (atype, 3, '')))
 		return self.user_txdo(
 			user         = 'bob',
 			fee          = rtFee[3],

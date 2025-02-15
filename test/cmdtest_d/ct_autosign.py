@@ -458,16 +458,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		return 'silent'
 
 	def wait_loop_kill(self):
-		self.spawn('', msg_only=True)
-		pid = int(self.read_from_tmpfile('autosign_thread_pid'))
-		self.delete_tmpfile('autosign_thread_pid')
-		from signal import SIGTERM
-		imsg(purple(f'Killing autosign wait loop [PID {pid}]'))
-		try:
-			os.kill(pid, SIGTERM)
-		except:
-			imsg(yellow(f'{pid}: no such process'))
-		return 'ok'
+		return self._kill_process_from_pid_file('autosign_thread_pid', 'autosign wait loop')
 
 	def _wait_signed(self, desc):
 		oqmsg_r(gray(f'→ offline wallet{"s" if desc.endswith("s") else ""} waiting for {desc}'))

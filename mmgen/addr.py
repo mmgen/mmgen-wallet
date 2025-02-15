@@ -117,10 +117,10 @@ class AddrListID(HiliteStr, InitErrors, MMGenObject):
 			me.mmtype = mmtype
 			return me
 		except Exception as e:
-			return cls.init_fail(e, f'sid={sid}, mmtype={mmtype}')
+			return cls.init_fail(e, f'sid={sid}, mmtype={mmtype}, id_str={id_str}')
 
 def is_addrlist_id(proto, s):
-	return get_obj(AddrListID, proto=proto, id_str=s, silent=False, return_bool=True)
+	return get_obj(AddrListID, proto=proto, id_str=s, silent=True, return_bool=True)
 
 class MMGenID(HiliteStr, InitErrors, MMGenObject):
 	color = 'orange'

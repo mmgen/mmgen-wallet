@@ -23,9 +23,9 @@ test.cmdtest_d.ct_base: Base class for the cmdtest.py test suite
 import sys, os
 
 from mmgen.util import msg
-from mmgen.color import gray
+from mmgen.color import gray, purple, yellow
 
-from ..include.common import cfg, write_to_file, read_from_file
+from ..include.common import cfg, write_to_file, read_from_file, imsg
 from .common import get_file_with_ext
 
 class CmdTestBase:
@@ -122,3 +122,15 @@ class CmdTestBase:
 
 	def _cashaddr_opt(self, val):
 		return [f'--cashaddr={val}'] if self.proto.coin == 'BCH' else []
+
+	def _kill_process_from_pid_file(self, fn, desc):
+		self.spawn('', msg_only=True)
+		pid = int(self.read_from_tmpfile(fn))
+		self.delete_tmpfile(fn)
+		from signal import SIGTERM
+		imsg(purple(f'Killing {desc} [PID {pid}]'))
+		try:
+			os.kill(pid, SIGTERM)
+		except:
+			imsg(yellow(f'{pid}: no such process'))
+		return 'ok'

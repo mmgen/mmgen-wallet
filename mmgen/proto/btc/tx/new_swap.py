@@ -20,8 +20,4 @@ class NewSwap(New, TxNewSwap):
 
 	async def process_swap_cmdline_args(self, cmd_args):
 		import sys
-		from ....util import msg
-		msg(' '.join(cmd_args))
 		sys.exit(0)
-		raise NotImplementedError('Work in Progress!')
-		return cmd_args

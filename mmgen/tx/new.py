@@ -249,6 +249,7 @@ class New(Base):
 			die(2, 'At least one output must be specified on the command line')
 
 		self.add_mmaddrs_to_outputs(ad_f, ad_w)
+
 		self.check_dup_addrs('outputs')
 
 		if self.chg_output is not None:
