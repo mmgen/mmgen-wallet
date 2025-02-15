@@ -77,35 +77,45 @@ def generate_kals_for_mmgen_addrs(need_keys, infiles, saved_seeds, proto):
 						skip_chksum = True)
 	return MMGenList(gen_kals())
 
-def add_keys(tx, src, infiles=None, saved_seeds=None, keyaddr_list=None):
-	need_keys = [e for e in getattr(tx, src) if e.mmid and not e.have_wif]
+def add_keys(src, io_list, infiles=None, saved_seeds=None, keyaddr_list=None):
+
+	need_keys = [e for e in io_list if e.mmid and not e.have_wif]
+
 	if not need_keys:
 		return []
-	desc, src_desc = (
-		('key-address file', 'From key-address file:') if keyaddr_list else
-		('seed(s)', 'Generated from seed:'))
-	cfg._util.qmsg(f'Checking {gc.proj_name} -> {tx.proto.coin} address mappings for {src} (from {desc})')
-	d = (
-		MMGenList([keyaddr_list]) if keyaddr_list else
-		generate_kals_for_mmgen_addrs(need_keys, infiles, saved_seeds, tx.proto))
-	new_keys = []
-	for e in need_keys:
-		for kal in d:
-			for f in kal.data:
-				mmid = f'{kal.al_id}:{f.idx}'
-				if mmid == e.mmid:
-					if f.addr == e.addr:
-						e.have_wif = True
-						if src == 'inputs':
-							new_keys.append(f)
-					else:
-						die(3, fmt(f"""
-							{gc.proj_name} -> {tx.proto.coin} address mappings differ!
-							{src_desc:<23} {mmid} -> {f.addr}
-							{'tx file:':<23} {e.mmid} -> {e.addr}
-							""").strip())
-	if new_keys:
+
+	proto = need_keys[0].proto
+
+	if keyaddr_list:
+		desc = 'key-address file'
+		src_desc = 'From key-address file:'
+		d = MMGenList([keyaddr_list])
+	else:
+		desc = 'seed(s)'
+		src_desc = 'Generated from seed:'
+		d = generate_kals_for_mmgen_addrs(need_keys, infiles, saved_seeds, proto)
+
+	cfg._util.qmsg(f'Checking {gc.proj_name} -> {proto.coin} address mappings for {src} (from {desc})')
+
+	def gen_keys():
+		for e in need_keys:
+			for kal in d:
+				for f in kal.data:
+					if mmid := f'{kal.al_id}:{f.idx}' == e.mmid:
+						if f.addr == e.addr:
+							e.have_wif = True
+							if src == 'inputs':
+								yield f
+						else:
+							die(3, fmt(f"""
+								{gc.proj_name} -> {proto.coin} address mappings differ!
+								{src_desc:<23} {mmid} -> {f.addr}
+								{'tx file:':<23} {e.mmid} -> {e.addr}
+								""").strip())
+
+	if new_keys := list(gen_keys()):
 		cfg._util.vmsg(f'Added {len(new_keys)} wif key{suf(new_keys)} from {desc}')
+
 	return new_keys
 
 def _pop_matching_fns(args, cmplist): # strips found args
@@ -169,11 +179,11 @@ async def txsign(cfg_parm, tx, seed_files, kl, kal, tx_num_str='', passwd_file=N
 		keys += tmp.data
 
 	if cfg.mmgen_keys_from_file:
-		keys += add_keys(tx, 'inputs', keyaddr_list=kal)
-		add_keys(tx, 'outputs', keyaddr_list=kal)
+		keys += add_keys('inputs', tx.inputs, keyaddr_list=kal)
+		add_keys('outputs', tx.outputs, keyaddr_list=kal)
 
-	keys += add_keys(tx, 'inputs', seed_files, saved_seeds)
-	add_keys(tx, 'outputs', seed_files, saved_seeds)
+	keys += add_keys('inputs', tx.inputs, seed_files, saved_seeds)
+	add_keys('outputs', tx.outputs, seed_files, saved_seeds)
 
 	# this (boolean) attr isn't needed in transaction file
 	tx.delete_attrs('inputs', 'have_wif')
