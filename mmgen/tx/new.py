@@ -83,7 +83,7 @@ class New(Base):
 	_funds_available = namedtuple('funds_available', ['is_positive', 'amt'])
 
 	def __init__(self, *args, target=None, **kwargs):
-		self.target = target
+		self.is_swap = target == 'swaptx'
 		super().__init__(*args, **kwargs)
 
 	def warn_insufficient_funds(self, amt, coin):
@@ -266,7 +266,7 @@ class New(Base):
 			edesc = 'argument',
 		)
 		cmd_args = tuple(a for a in cmd_args if a not in addrfile_args)
-		if self.target == 'tx':
+		if not self.is_swap:
 			cmd_args = remove_dups(cmd_args, desc='command line', edesc='argument')
 		return cmd_args, addrfile_args
 
@@ -415,7 +415,7 @@ class New(Base):
 
 		if not do_info:
 			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(cmd_args)
-			if self.target == 'swaptx':
+			if self.is_swap:
 				# updates self.proto!
 				self.proto, cmd_args = await self.process_swap_cmdline_args(cmd_args, addrfile_args)
 			from ..rpc import rpc_init

@@ -135,7 +135,7 @@ class New(Base, TxNew):
 
 	async def create_serialized(self, locktime=None, bump=None):
 
-		if not bump:
+		if not (bump or self.is_swap):
 			self.inputs.sort_bip69()
 			# Set all sequence numbers to the same value, in conformity with the behavior of most modern wallets:
 			do_rbf = self.proto.cap('rbf') and not self.cfg.no_rbf
@@ -143,7 +143,8 @@ class New(Base, TxNew):
 			for i in self.inputs:
 				i.sequence = seqnum_val
 
-		self.outputs.sort_bip69()
+		if not self.is_swap:
+			self.outputs.sort_bip69()
 
 		inputs_list = [{
 				'txid':     e.txid,

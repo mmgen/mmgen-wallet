@@ -29,6 +29,9 @@ class TxInfo:
 
 		tx = self.tx
 
+		if tx.is_swap:
+			sort = 'raw'
+
 		if tx.proto.base_proto == 'Ethereum':
 			blockcount = None
 		else:
