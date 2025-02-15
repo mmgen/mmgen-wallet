@@ -15,7 +15,7 @@ proto.btc.tx.new: Bitcoin new transaction class
 from ....tx.new import New as TxNew
 from ....obj import MMGenTxID
 from ....util import msg, fmt, make_chksum_6, die, suf
-from ....color import pink
+from ....color import pink, yellow
 from .base import Base
 
 class New(Base, TxNew):
@@ -124,6 +124,14 @@ class New(Base, TxNew):
 
 	def final_inputs_ok_msg(self, funds_left):
 		return 'Transaction produces {} {} in change'.format(funds_left.hl(), self.coin)
+
+	def check_chg_addr_is_wallet_addr(self):
+		if len([o for o in self.outputs if not o.data]) > 1 and not self.chg_output.mmid:
+			from ....ui import confirm_or_raise
+			confirm_or_raise(
+				cfg = self.cfg,
+				message = yellow('Change address is not an MMGen wallet address!'),
+				action = 'Are you sure this is what you want?')
 
 	async def create_serialized(self, locktime=None, bump=None):
 

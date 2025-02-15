@@ -456,6 +456,8 @@ class New(Base):
 
 		self.update_change_output(funds_left)
 
+		self.check_chg_addr_is_wallet_addr()
+
 		if not self.cfg.yes:
 			self.add_comment()  # edits an existing comment
 

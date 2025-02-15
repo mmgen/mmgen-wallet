@@ -109,6 +109,9 @@ class CmdTestShared:
 		if 'confirm_non_mmgen' in tweaks:
 			t.expect('Continue? (Y/n)', '\n')
 
+		if 'confirm_chg_non_mmgen' in tweaks:
+			t.expect('to confirm: ', 'YES\n')
+
 		t.do_comment(add_comment)
 
 		if return_early:

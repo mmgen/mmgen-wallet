@@ -119,6 +119,9 @@ class New(Base, TxBase.New):
 	async def get_rel_fee_from_network(self):
 		return Int(await self.rpc.call('eth_gasPrice'), 16), 'eth_gasPrice'
 
+	def check_chg_addr_is_wallet_addr(self):
+		pass
+
 	def check_fee(self):
 		if not self.disable_fee_check:
 			assert self.usr_fee <= self.proto.max_tx_fee

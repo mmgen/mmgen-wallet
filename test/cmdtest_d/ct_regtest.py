@@ -1043,6 +1043,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			wf                 = None,
 			add_comment        = tx_comment_jp,
 			return_early       = False,
+			tweaks             = [],
 			return_after_send  = False,
 			menu               = ['M'],
 			skip_passphrase    = False,
@@ -1067,6 +1068,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 				interactive_fee    = (tx_fee, '')[bool(fee)],
 				add_comment        = add_comment,
 				return_early       = return_early,
+				tweaks             = tweaks,
 				view               = 't',
 				save               = True,
 				used_chg_addr_resp = used_chg_addr_resp)
@@ -1144,6 +1146,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			fee          = rtFee[3],
 			outputs_cl   = outputs_cl, # alice_sid:S:2,10, alice_sid:S:3
 			outputs_list = '1,4-10',
+			tweaks       = ['confirm_chg_non_mmgen'],
 			extra_args   = [f'--keys-from-file={keyfile}', '--vsize-adj=1.02'])
 
 	def alice_send_estimatefee(self):
