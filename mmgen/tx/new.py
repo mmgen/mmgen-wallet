@@ -412,19 +412,24 @@ class New(Base):
 		if self.cfg.comment_file:
 			self.add_comment(self.cfg.comment_file)
 
-		twuo_addrs = await self.get_input_addrs_from_inputs_opt()
-
-		self.twuo = await TwUnspentOutputs(self.cfg, self.proto, minconf=self.cfg.minconf, addrs=twuo_addrs)
-		await self.twuo.get_data()
-
 		if not do_info:
 			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(cmd_args)
-			ad_f = self.get_addrdata_from_files(self.proto, addrfile_args) # pops from end of cmd_args
-			from ..addrdata import TwAddrData
-			ad_w = await TwAddrData(self.cfg, self.proto, twctl=self.twctl)
 			if self.target == 'swaptx':
-				cmd_args = await self.process_swap_cmdline_args(cmd_args)
-			await self.process_cmdline_args(cmd_args, ad_f, ad_w)
+				# updates self.proto!
+				self.proto, cmd_args = await self.process_swap_cmdline_args(cmd_args, addrfile_args)
+			from ..addrdata import TwAddrData
+			await self.process_cmdline_args(
+				cmd_args,
+				self.get_addrdata_from_files(self.proto, addrfile_args),
+				await TwAddrData(self.cfg, self.proto, twctl=self.twctl))
+
+		self.twuo = await TwUnspentOutputs(
+			self.cfg,
+			self.proto,
+			minconf = self.cfg.minconf,
+			addrs = await self.get_input_addrs_from_inputs_opt())
+
+		await self.twuo.get_data()
 
 		from ..ui import do_license_msg
 		do_license_msg(self.cfg)
