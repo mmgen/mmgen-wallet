@@ -171,7 +171,7 @@ class New(Base):
 	def process_data_output_arg(self, arg):
 		return None
 
-	def parse_cmdline_arg(self, arg_in, ad_f, ad_w):
+	def parse_cmdline_arg(self, proto, arg_in, ad_f, ad_w):
 
 		_pa = namedtuple('txcreate_cmdline_output', ['arg', 'mmid', 'addr', 'amt', 'data'])
 
@@ -180,13 +180,13 @@ class New(Base):
 
 		arg, amt = arg_in.split(',', 1) if ',' in arg_in else (arg_in, None)
 
-		if mmid := get_obj(MMGenID, proto=self.proto, id_str=arg, silent=True):
-			coin_addr = mmaddr2coinaddr(self.cfg, arg, ad_w, ad_f, self.proto)
-		elif is_coin_addr(self.proto, arg):
-			coin_addr = CoinAddr(self.proto, arg)
-		elif is_mmgen_addrtype(self.proto, arg) or is_addrlist_id(self.proto, arg):
-			if self.proto.base_proto_coin != 'BTC':
-				die(2, f'Change addresses not supported for {self.proto.name} protocol')
+		if mmid := get_obj(MMGenID, proto=proto, id_str=arg, silent=True):
+			coin_addr = mmaddr2coinaddr(self.cfg, arg, ad_w, ad_f, proto)
+		elif is_coin_addr(proto, arg):
+			coin_addr = CoinAddr(proto, arg)
+		elif is_mmgen_addrtype(proto, arg) or is_addrlist_id(proto, arg):
+			if proto.base_proto_coin != 'BTC':
+				die(2, f'Change addresses not supported for {proto.name} protocol')
 			self.chg_autoselected = True
 			coin_addr = None
 		else:
@@ -194,29 +194,29 @@ class New(Base):
 
 		return _pa(arg, mmid, coin_addr, amt, None)
 
+	async def get_autochg_addr(self, proto, arg, parsed_args):
+		from ..tw.addresses import TwAddresses
+		al = await TwAddresses(self.cfg, proto, get_data=True)
+		exclude = [a.mmid for a in parsed_args if a.mmid]
+
+		if is_mmgen_addrtype(proto, arg):
+			res = al.get_change_address_by_addrtype(MMGenAddrType(proto, arg), exclude=exclude)
+			desc = 'of address type'
+		else:
+			res = al.get_change_address(arg, exclude=exclude)
+			desc = 'from address list'
+
+		if res:
+			return res
+
+		die(2, 'Tracking wallet contains no {t}addresses {d} {a!r}'.format(
+			t = '' if res is None else 'unused ',
+			d = desc,
+			a = arg))
+
 	async def process_cmdline_args(self, cmd_args, ad_f, ad_w):
 
-		async def get_autochg_addr(arg, parsed_args):
-			from ..tw.addresses import TwAddresses
-			al = await TwAddresses(self.cfg, self.proto, get_data=True)
-			exclude = [a.mmid for a in parsed_args if a.mmid]
-
-			if is_mmgen_addrtype(self.proto, arg):
-				res = al.get_change_address_by_addrtype(MMGenAddrType(self.proto, arg), exclude=exclude)
-				desc = 'of address type'
-			else:
-				res = al.get_change_address(arg, exclude=exclude)
-				desc = 'from address list'
-
-			if res:
-				return res
-
-			die(2, 'Tracking wallet contains no {t}addresses {d} {a!r}'.format(
-				t = '' if res is None else 'unused ',
-				d = desc,
-				a = arg))
-
-		parsed_args = [self.parse_cmdline_arg(arg, ad_f, ad_w) for arg in cmd_args]
+		parsed_args = [self.parse_cmdline_arg(self.proto, arg, ad_f, ad_w) for arg in cmd_args]
 
 		chg_args = [a for a in parsed_args if not ((a.amt and a.addr) or a.data)]
 
@@ -229,7 +229,7 @@ class New(Base):
 				self.add_output(None, self.proto.coin_amt('0'), data=a.data)
 			else:
 				self.add_output(
-					coinaddr = a.addr or (await get_autochg_addr(a.arg, parsed_args)).addr,
+					coinaddr = a.addr or (await self.get_autochg_addr(self.proto, a.arg, parsed_args)).addr,
 					amt      = self.proto.coin_amt(a.amt or '0'),
 					is_chg   = not a.amt)
 

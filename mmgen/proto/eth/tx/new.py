@@ -90,7 +90,7 @@ class New(Base, TxBase.New):
 		if lc != 1:
 			die(1, f'{lc} output{suf(lc)} specified, but Ethereum transactions must have exactly one')
 
-		arg = self.parse_cmdline_arg(cmd_args[0], ad_f, ad_w)
+		arg = self.parse_cmdline_arg(self.proto, cmd_args[0], ad_f, ad_w)
 
 		self.add_output(
 			coinaddr = arg.addr,
