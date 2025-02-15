@@ -148,7 +148,7 @@ class CmdTestHelp(CmdTestBase):
 			scripts = (
 				'walletgen', 'walletconv', 'walletchk', 'passchg', 'subwalletgen',
 				'addrgen', 'keygen', 'passgen',
-				'txsign', 'txdo', 'txbump'),
+				'txdo', 'swaptxdo', 'txsign', 'txbump'),
 			expect = 'Available parameters.*Preset',
 			pager  = False)
 

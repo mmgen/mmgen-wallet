@@ -20,8 +20,10 @@ class help_notes:
 		self.proto = proto
 		self.cfg = cfg
 
-	def txcreate_args(self):
+	def txcreate_args(self, target):
 		return (
+			'COIN1 [AMT CHG_ADDR] COIN2 [ADDR]'
+				if target == 'swaptx' else
 			'[ADDR,AMT ... | DATA_SPEC] ADDR <change addr, addrlist ID or addr type>'
 				if self.proto.base_proto == 'Bitcoin' else
 			'ADDR,AMT')

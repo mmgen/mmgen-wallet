@@ -24,11 +24,19 @@ from .cfg import gc, Config
 from .util import die, fmt_list, async_run
 from .subseed import SubSeedIdxRange
 
+target = gc.prog_name.split('-')[1].removesuffix('do')
+
 opts_data = {
-	'filter_codes': ['-'],
+	'filter_codes': {
+		'tx':     ['-', 't'],
+		'swaptx': ['-', 's'],
+	}[target],
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc': f'Create, sign and send an {gc.proj_name} transaction',
+		'desc': {
+			'tx':     f'Create, sign and send an {gc.proj_name} transaction',
+			'swaptx': f'Create, sign and send a DEX swap transaction with {gc.proj_name} inputs and outputs',
+		}[target],
 		'usage':   '[opts] {u_args} [addr file ...] [seed source ...]',
 		'options': """
 			-- -h, --help             Print this help message
@@ -62,7 +70,7 @@ opts_data = {
 			-- -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
 			-- -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
 			+                         for {coin_id}: {kgs}
-			b- -l, --locktime=      t Lock time (block height or unix seconds) (default: 0)
+			bt -l, --locktime=      t Lock time (block height or unix seconds) (default: 0)
 			b- -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
 			-- -m, --minconf=n        Minimum number of confirmations required to spend
 			+                         outputs (default: 1)
@@ -75,7 +83,7 @@ opts_data = {
 			-- -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
 			+                         for password hashing (default: '{gc.dfl_hash_preset}')
 			-- -P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
-			b- -R, --no-rbf           Make transaction non-replaceable (non-replace-by-fee
+			bt -R, --no-rbf           Make transaction non-replaceable (non-replace-by-fee
 			+                         according to BIP 125)
 			-- -q, --quiet            Suppress warnings; overwrite files without prompting
 			-- -u, --subseeds=      n The number of subseed pairs to scan for (default: {ss},
@@ -83,6 +91,8 @@ opts_data = {
 			+                         wallet is scanned for subseeds.
 			-- -v, --verbose          Produce more verbose output
 			b- -V, --vsize-adj=     f Adjust transaction's estimated vsize by factor 'f'
+			-s -x, --swap-proto       Swap protocol to use (Default: {x_dfl},
+			+                         Choices: {x_all})
 			e- -X, --cached-balances  Use cached balances
 			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 			-- -z, --show-hash-presets Show information on available hash presets
@@ -103,7 +113,7 @@ column below:
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
-			u_args  = help_notes('txcreate_args')),
+			u_args  = help_notes('txcreate_args', target)),
 		'options': lambda cfg, proto, help_notes, s: s.format(
 			gc      = gc,
 			cfg     = cfg,
@@ -119,7 +129,9 @@ column below:
 			ss      = help_notes('dfl_subseeds'),
 			ss_max  = SubSeedIdxRange.max_idx,
 			fe_all  = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),
-			fe_dfl  = cfg._autoset_opts['fee_estimate_mode'].choices[0]),
+			fe_dfl  = cfg._autoset_opts['fee_estimate_mode'].choices[0],
+			x_all   = fmt_list(cfg._autoset_opts['swap_proto'].choices, fmt='no_spc'),
+			x_dfl   = cfg._autoset_opts['swap_proto'].choices[0]),
 		'notes': lambda cfg, help_notes, s: s.format(
 			c       = help_notes('txcreate'),
 			F       = help_notes('fee'),
@@ -139,7 +151,7 @@ seed_files = get_seed_files(cfg, cfg._args)
 
 async def main():
 
-	tx1 = await NewTX(cfg=cfg, proto=cfg._proto)
+	tx1 = await NewTX(cfg=cfg, proto=cfg._proto, target=target)
 
 	from .rpc import rpc_init
 	tx1.rpc = await rpc_init(cfg)

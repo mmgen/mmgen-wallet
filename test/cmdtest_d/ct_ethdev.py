@@ -975,7 +975,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		if self.daemon.id == 'geth': # yet another Geth bug
 			await asyncio.sleep(0.5)
 		from mmgen.tx import NewTX
-		tx = await NewTX(cfg=cfg, proto=self.proto)
+		tx = await NewTX(cfg=cfg, proto=self.proto, target='tx')
 		tx.rpc = await self.rpc
 		res = await tx.get_receipt(txid)
 		imsg(f'Gas sent:  {res.gas_sent.hl():<9} {(res.gas_sent*res.gas_price).hl2(encl="()")}')

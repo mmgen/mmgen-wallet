@@ -45,6 +45,9 @@ def _get_cls_info(clsname, modname, kwargs):
 			die(1, f'{ext!r}: unrecognized file extension for CompletedTX')
 		clsname = cls.__name__
 		modname = cls.__module__.rsplit('.', maxsplit=1)[-1]
+	elif clsname == 'New' and kwargs['target'] == 'swaptx':
+		clsname = 'NewSwap'
+		modname = 'new_swap'
 
 	kwargs['proto'] = proto
 
@@ -94,6 +97,7 @@ BaseTX         = _get('Base',     'base')
 UnsignedTX     = _get('Unsigned', 'unsigned')
 
 NewTX          = _get_async('New',          'new')
+NewSwapTX      = _get_async('NewSwap',      'new_swap')
 CompletedTX    = _get_async('Completed',    'completed')
 SignedTX       = _get_async('Signed',       'signed')
 OnlineSignedTX = _get_async('OnlineSigned', 'online')

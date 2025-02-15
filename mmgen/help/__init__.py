@@ -46,10 +46,10 @@ def show_hash_presets(cfg):
 
 def gen_arg_tuple(cfg, func, text):
 
-	def help_notes(k):
+	def help_notes(k, *args, **kwargs):
 		import importlib
 		return getattr(importlib.import_module(
-			f'{cfg._opts.help_pkg}.help_notes').help_notes(proto, cfg), k)()
+			f'{cfg._opts.help_pkg}.help_notes').help_notes(proto, cfg), k)(*args, **kwargs)
 
 	def help_mod(modname):
 		import importlib

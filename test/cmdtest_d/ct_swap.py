@@ -26,7 +26,8 @@ class CmdTestSwap(CmdTestRegtest):
 		('setup',             'regtest (Bob and Alice) mode setup'),
 		('subgroup.init_bob', []),
 		('subgroup.fund_bob', ['init_bob']),
-		('subgroup.data',     ['init_bob']),
+		('subgroup.data',     ['fund_bob']),
+		('subgroup.swap',     ['fund_bob']),
 		('stop',              'stopping regtest daemon'),
 	)
 	cmd_subgroups = {
@@ -38,8 +39,9 @@ class CmdTestSwap(CmdTestRegtest):
 		),
 		'fund_bob': (
 			'funding Bob’s wallet',
-			('fund_bob', 'funding Bob’s wallet'),
-			('bob_bal1', 'Bob’s balance'),
+			('fund_bob1', 'funding Bob’s wallet (bech32)'),
+			('fund_bob2', 'funding Bob’s wallet (native Segwit)'),
+			('bob_bal',   'displaying Bob’s balance'),
 		),
 		'data': (
 			'OP_RETURN data operations',
@@ -51,6 +53,11 @@ class CmdTestSwap(CmdTestRegtest):
 			('data_tx2_do',      'Creating and sending a transaction with OP_RETURN data (binary)'),
 			('data_tx2_chk',     'Checking the sent transaction'),
 			('generate3',        'Generate 3 blocks'),
+			('bob_listaddrs',    'Display Bob’s addresses'),
+		),
+		'swap': (
+			'Swap operations',
+			('bob_swaptxcreate1', 'Create a swap transaction'),
 		),
 	}
 
@@ -70,8 +77,14 @@ class CmdTestSwap(CmdTestRegtest):
 	def addrimport_bob(self):
 		return self.addrimport('bob', mmtypes=['S', 'B'])
 
-	def fund_bob(self):
+	def fund_bob1(self):
 		return self.fund_wallet('bob', 'B', '500')
+
+	def fund_bob2(self):
+		return self.fund_wallet('bob', 'S', '500')
+
+	def bob_bal(self):
+		return self.user_bal('bob', '1000')
 
 	def data_tx1_create(self):
 		return self._data_tx_create('1', 'B:2', 'B:3', 'data', sample1)
@@ -149,3 +162,13 @@ class CmdTestSwap(CmdTestRegtest):
 
 	def generate3(self):
 		return self.generate(3)
+
+	def bob_listaddrs(self):
+		t = self.spawn('mmgen-tool', ['--bob', 'listaddresses'])
+		return t
+
+	def bob_swaptxcreate1(self):
+		t = self.spawn(
+			'mmgen-swaptxcreate',
+			['-d', self.tmpdir, '-B', '--bob', 'BTC', '1.234', f'{self.sid}:S:3', 'LTC'])
+		return t

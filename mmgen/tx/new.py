@@ -82,6 +82,10 @@ class New(Base):
 	chg_autoselected = False
 	_funds_available = namedtuple('funds_available', ['is_positive', 'amt'])
 
+	def __init__(self, *args, target=None, **kwargs):
+		self.target = target
+		super().__init__(*args, **kwargs)
+
 	def warn_insufficient_funds(self, amt, coin):
 		msg(self.msg_insufficient_funds.format(amt.hl(), coin))
 
@@ -412,6 +416,8 @@ class New(Base):
 			ad_f, cmd_args = self.get_addrdata_from_files(cmd_args) # pops from end of cmd_args
 			from ..addrdata import TwAddrData
 			ad_w = await TwAddrData(self.cfg, self.proto, twctl=self.twctl)
+			if self.target == 'swaptx':
+				cmd_args = await self.process_swap_cmd_args(cmd_args)
 			await self.process_cmd_args(cmd_args, ad_f, ad_w)
 
 		from ..ui import do_license_msg

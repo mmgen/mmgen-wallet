@@ -376,6 +376,7 @@ class Config(Lockable):
 	_autoset_opts = {
 		'fee_estimate_mode': _ov('nocase_pfx', ['conservative', 'economical']),
 		'rpc_backend':       _ov('nocase_pfx', ['auto', 'httplib', 'curl', 'aiohttp', 'requests']),
+		'swap_proto':        _ov('nocase_pfx', ['thorchain']),
 	}
 
 	_auto_typeset_opts = {

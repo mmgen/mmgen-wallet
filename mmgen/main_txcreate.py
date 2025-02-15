@@ -24,11 +24,19 @@ mmgen-txcreate: Create a cryptocoin transaction with MMGen- and/or non-MMGen
 from .cfg import gc, Config
 from .util import fmt_list, async_run
 
+target = gc.prog_name.split('-')[1].removesuffix('create')
+
 opts_data = {
-	'filter_codes': ['-'],
+	'filter_codes': {
+		'tx':     ['-', 't'],
+		'swaptx': ['-', 's'],
+	}[target],
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc': f'Create a transaction with outputs to specified coin or {gc.proj_name} addresses',
+		'desc': {
+			'tx':     f'Create a transaction with outputs to specified coin or {gc.proj_name} addresses',
+			'swaptx': f'Create a DEX swap transaction with {gc.proj_name} inputs and outputs',
+		}[target],
 		'usage':   '[opts] {u_args} [addr file ...]',
 		'options': """
 			-- -h, --help            Print this help message
@@ -54,15 +62,17 @@ opts_data = {
 			-- -I, --inputs=      i  Specify transaction inputs (comma-separated list of
 			+                        MMGen IDs or coin addresses).  Note that ALL unspent
 			+                        outputs associated with each address will be included.
-			b- -l, --locktime=    t  Lock time (block height or unix seconds) (default: 0)
+			bt -l, --locktime=    t  Lock time (block height or unix seconds) (default: 0)
 			b- -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
 			-- -m, --minconf=     n  Minimum number of confirmations required to spend
 			+                        outputs (default: 1)
 			-- -q, --quiet           Suppress warnings; overwrite files without prompting
-			b- -R, --no-rbf          Make transaction non-replaceable (non-replace-by-fee
+			bt -R, --no-rbf          Make transaction non-replaceable (non-replace-by-fee
 			+                        according to BIP 125)
 			-- -v, --verbose         Produce more verbose output
 			b- -V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
+			-s -x, --swap-proto      Swap protocol to use (Default: {x_dfl},
+			+                        Choices: {x_all})
 			-- -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 			e- -X, --cached-balances Use cached balances
 		""",
@@ -70,7 +80,7 @@ opts_data = {
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
-			u_args = help_notes('txcreate_args')),
+			u_args = help_notes('txcreate_args', target)),
 		'options': lambda cfg, proto, help_notes, s: s.format(
 			cfg    = cfg,
 			cu     = proto.coin,
@@ -78,7 +88,9 @@ opts_data = {
 			fu     = help_notes('rel_fee_desc'),
 			fl     = help_notes('fee_spec_letters'),
 			fe_all = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),
-			fe_dfl = cfg._autoset_opts['fee_estimate_mode'].choices[0]),
+			fe_dfl = cfg._autoset_opts['fee_estimate_mode'].choices[0],
+			x_all = fmt_list(cfg._autoset_opts['swap_proto'].choices, fmt='no_spc'),
+			x_dfl = cfg._autoset_opts['swap_proto'].choices[0]),
 		'notes': lambda cfg, help_notes, s: s.format(
 			c      = help_notes('txcreate'),
 			F      = help_notes('fee'),
@@ -98,7 +110,7 @@ async def main():
 		Signable.automount_transaction(asi).check_create_ok()
 
 	from .tx import NewTX
-	tx1 = await NewTX(cfg=cfg, proto=cfg._proto)
+	tx1 = await NewTX(cfg=cfg, proto=cfg._proto, target=target)
 
 	from .rpc import rpc_init
 	tx1.rpc = await rpc_init(cfg)
