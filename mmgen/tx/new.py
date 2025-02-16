@@ -363,46 +363,51 @@ class New(Base):
 		self.inputs = type(self.inputs)(self, list(gen_inputs()))
 
 	async def get_funds_available(self, fee, outputs_sum):
-		in_ = self.sum_inputs()
-		out = outputs_sum + fee
-		return self._funds_available(in_ >= out, in_ - out if in_ >= out else out - in_)
+		in_sum = self.sum_inputs()
+		out_sum = outputs_sum + fee
+		return self._funds_available(
+			in_sum >= out_sum,
+			# CoinAmt must be non-negative, so cannot use abs():
+			in_sum - out_sum if in_sum >= out_sum else out_sum - in_sum)
 
-	async def get_inputs_from_user(self, outputs_sum):
+	async def get_inputs(self, outputs_sum):
+		sel_nums = (
+			self.get_unspent_nums_from_inputs_opt if self.cfg.inputs else
+			self.get_unspent_nums_from_user
+		)(self.twuo.data)
 
-		while True:
-			sel_nums = (
-				self.get_unspent_nums_from_inputs_opt if self.cfg.inputs else
-				self.get_unspent_nums_from_user
-			)(self.twuo.data)
+		msg(f'Selected output{suf(sel_nums)}: {{}}'.format(' '.join(str(n) for n in sel_nums)))
+		sel_unspent = MMGenList(self.twuo.data[i-1] for i in sel_nums)
 
-			msg(f'Selected output{suf(sel_nums)}: {{}}'.format(' '.join(str(n) for n in sel_nums)))
-			sel_unspent = MMGenList(self.twuo.data[i-1] for i in sel_nums)
+		if not await self.precheck_sufficient_funds(
+				sum(s.amt for s in sel_unspent),
+				sel_unspent,
+				outputs_sum):
+			return False
+		self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
+		return True
 
-			inputs_sum = sum(s.amt for s in sel_unspent)
-			if not await self.precheck_sufficient_funds(inputs_sum, sel_unspent, outputs_sum):
-				continue
+	async def get_fee(self, fee, outputs_sum):
 
-			self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
+		if fee:
+			self.usr_fee = self.get_usr_fee_interactive(fee, 'User-selected')
+		else:
+			fee_per_kb, fe_type = await self.get_rel_fee_from_network()
+			self.usr_fee = self.get_usr_fee_interactive(
+				None if fee_per_kb is None else self.fee_est2abs(fee_per_kb, fe_type),
+				self.network_estimated_fee_label)
 
-			if self.cfg.fee:
-				self.usr_fee = self.get_usr_fee_interactive(self.cfg.fee, 'User-selected')
-			else:
-				fee_per_kb, fe_type = await self.get_rel_fee_from_network()
-				self.usr_fee = self.get_usr_fee_interactive(
-					None if fee_per_kb is None else self.fee_est2abs(fee_per_kb, fe_type),
-					self.network_estimated_fee_label)
+		funds = await self.get_funds_available(self.usr_fee, outputs_sum)
 
-			funds = await self.get_funds_available(self.usr_fee, outputs_sum)
-
-			if funds.is_positive:
-				p = self.final_inputs_ok_msg(funds.amt)
-				from ..ui import keypress_confirm
-				if self.cfg.yes or keypress_confirm(self.cfg, p+'. OK?', default_yes=True):
-					if self.cfg.yes:
-						msg(p)
-					return funds.amt
-			else:
-				self.warn_insufficient_funds(funds.amt, self.coin)
+		if funds.is_positive:
+			p = self.final_inputs_ok_msg(funds.amt)
+			from ..ui import keypress_confirm
+			if self.cfg.yes or keypress_confirm(self.cfg, p+'. OK?', default_yes=True):
+				if self.cfg.yes:
+					msg(p)
+				return funds.amt
+		else:
+			self.warn_insufficient_funds(funds.amt, self.coin)
 
 	async def create(self, cmd_args, locktime=None, do_info=False, caller='txcreate'):
 
@@ -453,7 +458,11 @@ class New(Base):
 			f'{outputs_sum.hl()} {self.dcoin}' if outputs_sum else 'Unknown'
 		))
 
-		funds_left = await self.get_inputs_from_user(outputs_sum)
+		while True:
+			if not await self.get_inputs(outputs_sum):
+				continue
+			if funds_left := await self.get_fee(self.cfg.fee, outputs_sum):
+				break
 
 		self.check_non_mmgen_inputs(caller)
 
