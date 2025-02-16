@@ -23,6 +23,8 @@ from .rpc import BitcoinTwRPC
 
 class BitcoinTwTransaction:
 
+	no_address_str = '[DATA]'
+
 	def __init__(self, parent, proto, rpc,
 			idx,          # unique numeric identifier of this transaction in listing
 			unspent_info, # addrs in wallet with balances: {'mmid': {'addr', 'comment', 'amt'}}
@@ -58,7 +60,9 @@ class BitcoinTwTransaction:
 			_d = namedtuple('vout_info', ['txid', 'coin_addr', 'twlabel', 'data'])
 			def gen():
 				for d in data:
-					addr = d.data['scriptPubKey'].get('address') or d.data['scriptPubKey']['addresses'][0]
+					addr = (
+						d.data['scriptPubKey'].get('address') or
+						d.data['scriptPubKey'].get('addresses',[self.no_address_str])[0])
 					yield _d(
 						txid = d.txid,
 						coin_addr = addr,
@@ -161,7 +165,9 @@ class BitcoinTwTransaction:
 						i = CoinTxID(e.txid).hl(color=color),
 						n = (nocolor, red)[color](str(e.data['n']).ljust(3)),
 						a = CoinAddr(self.proto, e.coin_addr).fmt(
-							addr_view_pref, width=self.max_addrlen[src], color=color),
+							addr_view_pref, width=self.max_addrlen[src], color=color)
+								if e.coin_addr != self.no_address_str else
+							CoinAddr.fmtc(e.coin_addr, width=self.max_addrlen[src], color=color),
 						A = self.proto.coin_amt(e.data['value']).fmt(color=color)
 					).rstrip()
 				else:
@@ -193,7 +199,10 @@ class BitcoinTwTransaction:
 				if not mmid:
 					if width and space_left < addr_w:
 						break
-					yield CoinAddr(self.proto, e.coin_addr).fmt(addr_view_pref, width=addr_w, color=color)
+					yield (
+						CoinAddr(self.proto, e.coin_addr).fmt(addr_view_pref, width=addr_w, color=color)
+							if e.coin_addr != self.no_address_str else
+						CoinAddr.fmtc(e.coin_addr, width=addr_w, color=color))
 					space_left -= addr_w
 				elif mmid.type == 'mmgen':
 					mmid_disp = mmid + bal_star
@@ -312,7 +321,7 @@ class BitcoinTwTxHistory(TwTxHistory, BitcoinTwRPC):
 				_mmp(TwMMGenID(self.proto, i['twmmid']), TwComment(i['comment']))
 					if i['twmmid'] else _mmp(None, None)
 			)
-			for i in data}
+			for i in data if 'address' in i}
 
 		if self.sinceblock: # mapping data may be incomplete for inputs, so update from 'listlabels'
 			mm_map.update(
