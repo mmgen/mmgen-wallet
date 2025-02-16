@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
-              transaction, and optionally sign and send it
+mmgen-txbump: Create, and optionally send and sign, a replacement transaction
+              on networks that support replace-by-fee (RBF)
 """
 
 from .cfg import gc, Config
@@ -26,58 +26,58 @@ from .util import msg, msg_r, die, async_run
 from .color import green
 
 opts_data = {
+	'filter_codes': ['-'],
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
 		'desc': f"""
-                Increase the fee on a replaceable (RBF) {gc.proj_name} transaction,
-                creating a new transaction, and optionally sign and send the
-                new transaction
+                Create, and optionally send and sign, a replacement transaction
+                on networks that support replace-by-fee (RBF)
 		 """,
 		'usage':   f'[opts] [{gc.proj_name} TX file] [seed source] ...',
 		'options': """
--h, --help             Print this help message
---, --longhelp         Print help message for long (global) options
--a, --autosign         Bump the most recent transaction created and sent with
-                       the --autosign option. The removable device is mounted
-                       and unmounted automatically.  The transaction file
-                       argument must be omitted.  Note that only sent trans-
-                       actions may be bumped with this option.  To redo an
-                       unsent --autosign transaction, first delete it using
-                       ‘mmgen-txsend --abort’ and then create a new one
--b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
-                       brainwallet input
--c, --comment-file=  f Source the transaction's comment from file 'f'
--d, --outdir=        d Specify an alternate directory 'd' for output
--e, --echo-passphrase  Print passphrase to screen when typing it
--f, --fee=           f Transaction fee, as a decimal {cu} amount or as
-                       {fu} (an integer followed by {fl!r}).
-                       See FEE SPECIFICATION below.
--H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
-                      'f' at offset 'o' (comma-separated)
--i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
--l, --seed-len=      l Specify wallet seed length of 'l' bits. This option
-                       is required only for brainwallet and incognito inputs
-                       with non-standard (< {dsl}-bit) seed lengths.
--k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
--K, --keygen-backend=n Use backend 'n' for public key generation.  Options
-                       for {coin_id}: {kgs}
--M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
-                       address file (output of '{pnl}-keygen'). Permits
-                       online signing without an {pnm} seed source. The
-                       key-address file is also used to verify {pnm}-to-{cu}
-                       mappings, so the user should record its checksum.
--o, --output-to-reduce=o Deduct the fee from output 'o' (an integer, or 'c'
-                       for the transaction's change output, if present)
--O, --old-incog-fmt    Specify old-format incognito input
--p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
-                       for password hashing (default: '{gc.dfl_hash_preset}')
--P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
--q, --quiet            Suppress warnings; overwrite files without prompting
--s, --send             Sign and send the transaction (the default if seed
-                       data is provided)
--v, --verbose          Produce more verbose output
--y, --yes             Answer 'yes' to prompts, suppress non-essential output
--z, --show-hash-presets Show information on available hash presets
+			-- -h, --help             Print this help message
+			-- --, --longhelp         Print help message for long (global) options
+			-- -a, --autosign         Bump the most recent transaction created and sent with
+			+                         the --autosign option. The removable device is mounted
+			+                         and unmounted automatically.  The transaction file
+			+                         argument must be omitted.  Note that only sent trans-
+			+                         actions may be bumped with this option.  To redo an
+			+                         unsent --autosign transaction, first delete it using
+			+                         ‘mmgen-txsend --abort’ and then create a new one
+			-- -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
+			+                         brainwallet input
+			-- -c, --comment-file=  f Source the transaction's comment from file 'f'
+			-- -d, --outdir=        d Specify an alternate directory 'd' for output
+			-- -e, --echo-passphrase  Print passphrase to screen when typing it
+			-- -f, --fee=           f Transaction fee, as a decimal {cu} amount or as
+			+                         {fu} (an integer followed by {fl!r}).
+			+                         See FEE SPECIFICATION below.
+			-- -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
+			+                        'f' at offset 'o' (comma-separated)
+			-- -i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
+			-- -l, --seed-len=      l Specify wallet seed length of 'l' bits. This option
+			+                         is required only for brainwallet and incognito inputs
+			+                         with non-standard (< {dsl}-bit) seed lengths.
+			-- -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
+			-- -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
+			+                         for {coin_id}: {kgs}
+			-- -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
+			+                         address file (output of '{pnl}-keygen'). Permits
+			+                         online signing without an {pnm} seed source. The
+			+                         key-address file is also used to verify {pnm}-to-{cu}
+			+                         mappings, so the user should record its checksum.
+			b- -o, --output-to-reduce=o Deduct the fee from output 'o' (an integer, or 'c'
+			+                         for the transaction's change output, if present)
+			-- -O, --old-incog-fmt    Specify old-format incognito input
+			-- -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
+			+                         for password hashing (default: '{gc.dfl_hash_preset}')
+			-- -P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
+			-- -q, --quiet            Suppress warnings; overwrite files without prompting
+			-- -s, --send             Sign and send the transaction (the default if seed
+			+                         data is provided)
+			-- -v, --verbose          Produce more verbose output
+			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output
+			-- -z, --show-hash-presets Show information on available hash presets
 """,
 	'notes': """
 {e}{s}
