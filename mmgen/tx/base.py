@@ -79,6 +79,7 @@ class Base(MMGenObject):
 	locktime     = None
 	chain        = None
 	signed       = False
+	is_bump      = False
 	is_swap      = False
 	file_format  = 'json'
 	non_mmgen_inputs_msg = f"""

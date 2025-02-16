@@ -137,21 +137,24 @@ class New(Base):
 			if fee:
 				abs_fee = self.convert_and_check_fee(fee, desc)
 			if abs_fee:
-				prompt = '{a} TX fee{b}: {c}{d} {e} ({f} {g})\n'.format(
-					a = desc,
-					b = (f' (after {self.cfg.fee_adjust:.2f}X adjustment)'
-							if self.cfg.fee_adjust != 1 and desc.startswith('Network-estimated')
-								else ''),
-					c = ('', '≈')[self.fee_is_approximate],
-					d = abs_fee.hl(),
-					e = self.coin,
-					f = pink(self.fee_abs2rel(abs_fee)),
-					g = self.rel_fee_disp)
-				from ..ui import keypress_confirm
-				if self.cfg.yes or keypress_confirm(self.cfg, prompt+'OK?', default_yes=True):
-					if self.cfg.yes:
-						msg(prompt)
-					return abs_fee
+				if self.is_bump and not self.check_bumped_fee_ok(abs_fee):
+					pass
+				else:
+					prompt = '{a} TX fee{b}: {c}{d} {e} ({f} {g})\n'.format(
+						a = desc,
+						b = (f' (after {self.cfg.fee_adjust:.2f}X adjustment)'
+								if self.cfg.fee_adjust != 1 and desc.startswith('Network-estimated')
+									else ''),
+						c = ('', '≈')[self.fee_is_approximate],
+						d = abs_fee.hl(),
+						e = self.coin,
+						f = pink(self.fee_abs2rel(abs_fee)),
+						g = self.rel_fee_disp)
+					from ..ui import keypress_confirm
+					if self.cfg.yes or keypress_confirm(self.cfg, prompt+'OK?', default_yes=True):
+						if self.cfg.yes:
+							msg(prompt)
+						return abs_fee
 			fee = line_input(self.cfg, self.usr_fee_prompt)
 			desc = 'User-selected'
 
@@ -431,21 +434,22 @@ class New(Base):
 				self.get_addrdata_from_files(self.proto, addrfile_args),
 				await TwAddrData(self.cfg, self.proto, twctl=self.twctl))
 
-		self.twuo = await TwUnspentOutputs(
-			self.cfg,
-			self.proto,
-			minconf = self.cfg.minconf,
-			addrs = await self.get_input_addrs_from_inputs_opt())
-
-		await self.twuo.get_data()
+		if not self.is_bump:
+			self.twuo = await TwUnspentOutputs(
+				self.cfg,
+				self.proto,
+				minconf = self.cfg.minconf,
+				addrs = await self.get_input_addrs_from_inputs_opt())
+			await self.twuo.get_data()
 
 		from ..ui import do_license_msg
 		do_license_msg(self.cfg)
 
-		if not self.cfg.inputs:
+		if not (self.is_bump or self.cfg.inputs):
 			await self.twuo.view_filter_and_sort()
 
-		self.twuo.display_total()
+		if not self.is_bump:
+			self.twuo.display_total()
 
 		if do_info:
 			del self.twuo.twctl
@@ -461,7 +465,10 @@ class New(Base):
 		while True:
 			if not await self.get_inputs(outputs_sum):
 				continue
-			if funds_left := await self.get_fee(self.cfg.fee, outputs_sum):
+			fee_hint = None
+			if self.is_swap:
+				fee_hint = self.update_vault_output(self.vault_output.amt or self.sum_inputs())
+			if funds_left := await self.get_fee(fee_hint or self.cfg.fee, outputs_sum):
 				break
 
 		self.check_non_mmgen_inputs(caller)
@@ -481,6 +488,9 @@ class New(Base):
 		self.check_fee()
 
 		self.cfg._util.qmsg('Transaction successfully created')
+
+		if self.is_bump:
+			return
 
 		from . import UnsignedTX
 		new = UnsignedTX(cfg=self.cfg, data=self.__dict__, automount=self.cfg.autosign)

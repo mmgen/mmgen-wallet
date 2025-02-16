@@ -128,15 +128,15 @@ def get_tx_files(cfg, args):
 		die(1, 'You must specify a raw transaction file!')
 	return ret
 
-def get_seed_files(cfg, args):
+def get_seed_files(cfg, args, ignore_dfl_wallet=False, empty_ok=False):
 	# favor unencrypted seed sources first, as they don't require passwords
 	ret = _pop_matching_fns(args, get_wallet_extensions('unenc'))
 	from ..filename import find_file_in_dir
-	wf = find_file_in_dir(get_wallet_cls('mmgen'), cfg.data_dir) # Make this the first encrypted ss in the list
-	if wf:
-		ret.append(wf)
+	if not ignore_dfl_wallet: # Make this the first encrypted ss in the list
+		if wf := find_file_in_dir(get_wallet_cls('mmgen'), cfg.data_dir):
+			ret.append(wf)
 	ret += _pop_matching_fns(args, get_wallet_extensions('enc'))
-	if not (ret or cfg.mmgen_keys_from_file or cfg.keys_from_file): # or cfg.use_wallet_dat
+	if not (ret or empty_ok or cfg.mmgen_keys_from_file or cfg.keys_from_file): # or cfg.use_wallet_dat
 		die(1, 'You must specify a seed or key source!')
 	return ret
 

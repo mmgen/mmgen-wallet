@@ -65,7 +65,7 @@ class New(Base, TxBase.New):
 	# Instead of serializing tx data as with BTC, just create a JSON dump.
 	# This complicates things but means we avoid using the rlp library to deserialize the data,
 	# thus removing an attack vector
-	async def create_serialized(self, locktime=None, bump=None):
+	async def create_serialized(self, locktime=None):
 		assert len(self.inputs) == 1, 'Transaction has more than one input!'
 		o_num = len(self.outputs)
 		o_ok = 0 if self.usr_contract_data else 1

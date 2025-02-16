@@ -71,9 +71,9 @@ rt_data = {
 	'tx_fee': {'btc':'0.0001', 'bch':'0.001', 'ltc':'0.01'},
 	'rtFundAmt': {'btc':'500', 'bch':'500', 'ltc':'5500'},
 	'rtFee': {
-		'btc': ('20s', '10s', '60s', '31s', '10s', '20s'),
-		'bch': ('20s', '10s', '60s', '0.0001', '10s', '20s'),
-		'ltc': ('1000s', '500s', '1500s', '0.05', '400s', '1000s')
+		'btc': ('20s', '10s', '60s', '31s', '10s', '20s', '40s'),
+		'bch': ('20s', '10s', '60s', '0.0001', '10s', '20s', '40s'),
+		'ltc': ('1000s', '500s', '1500s', '0.05', '400s', '1000s', '1200s')
 	},
 	'rtBals': {
 		'btc': ('499.9999488', '399.9998282', '399.9998147', '399.9996877',
@@ -291,8 +291,10 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		('bob_send_maybe_rbf',         'sending funds to Alice (RBF, if supported)'),
 		('get_mempool1',               'mempool (before RBF bump)'),
 		('bob_rbf_status1',            'getting status of transaction'),
-		('bob_rbf_bump',               'bumping RBF transaction'),
+		('bob_rbf_bump_newoutputs',    'bumping RBF transaction (new outputs)'),
 		('get_mempool2',               'mempool (after RBF bump)'),
+		('bob_rbf_bump',               'bumping RBF transaction'),
+		('get_mempool3',               'mempool (after RBF bump)'),
 		('bob_rbf_status2',            'getting status of transaction after replacement'),
 		('bob_rbf_status3',            'getting status of replacement transaction (mempool)'),
 		('generate',                   'mining a block'),
@@ -1173,10 +1175,18 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			t.written_to_file('Fee-bumped transaction')
 		return t
 
+	def bob_rbf_bump_newoutputs(self):
+		return self._bob_rbf_bump(
+			['--send', 'data:embedded forever', f'{self.burn_addr},0.1', f'{self._user_sid("bob")}:C:5'],
+			rtFee[6])
+
 	def bob_rbf_bump(self):
+		return self._bob_rbf_bump(['--send'], rtFee[2])
+
+	def _bob_rbf_bump(self, add_args, fee):
 		ext = ',{}]{x}.regtest.sigtx'.format(rtFee[1][:-1], x='-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext, delete=False, no_dot=True)
-		return self.user_txbump('bob', self.tmpdir, txfile, rtFee[2], add_args=['--send'])
+		return self.user_txbump('bob', self.tmpdir, txfile, fee, add_args=add_args)
 
 	def generate(self, num_blocks=1, add_opts=[]):
 		int(num_blocks)
@@ -1202,6 +1212,9 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def get_mempool2(self):
 		return self._get_mempool_compare_txid('rbf_txid1', 'rbf_txid2')
+
+	def get_mempool3(self):
+		return self._get_mempool_compare_txid('rbf_txid2', 'rbf_txid3')
 
 	def _get_mempool(self, do_msg=False):
 		if do_msg:
@@ -1243,19 +1256,19 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return self._bob_rbf_status(rtFee[1])
 
 	def bob_rbf_status2(self):
-		return self._bob_rbf_status(rtFee[1], txid='rbf_txid2')
+		return self._bob_rbf_status(rtFee[1], txid='rbf_txid3')
 
 	def bob_rbf_status3(self):
 		return self._bob_rbf_status(rtFee[2])
 
 	def bob_rbf_status4(self):
-		return self._bob_rbf_status(rtFee[1], txid='rbf_txid2', confirmations=1, exit_val=0)
+		return self._bob_rbf_status(rtFee[1], txid='rbf_txid3', confirmations=1, exit_val=0)
 
 	def bob_rbf_status5(self):
 		return self._bob_rbf_status(rtFee[2], confirmations=1, exit_val=0)
 
 	def bob_rbf_status6(self):
-		return self._bob_rbf_status(rtFee[1], txid='rbf_txid2', confirmations=2, exit_val=0)
+		return self._bob_rbf_status(rtFee[1], txid='rbf_txid3', confirmations=2, exit_val=0)
 
 	def _gen_pairs(self, n):
 		from mmgen.tool.api import tool_api

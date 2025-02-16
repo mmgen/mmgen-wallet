@@ -135,9 +135,9 @@ class New(Base, TxNew):
 		if len(self.nondata_outputs) > 1 and not self.chg_output.mmid:
 			do_err()
 
-	async def create_serialized(self, locktime=None, bump=None):
+	async def create_serialized(self, locktime=None):
 
-		if not bump:
+		if not self.is_bump:
 			# Set all sequence numbers to the same value, in conformity with the behavior of most modern wallets:
 			do_rbf = self.proto.cap('rbf') and not self.cfg.no_rbf
 			seqnum_val = self.proto.max_int - (2 if do_rbf else 1 if locktime else 0)
@@ -158,7 +158,7 @@ class New(Base, TxNew):
 
 		ret = await self.rpc.call('createrawtransaction', inputs_list, outputs_dict)
 
-		if locktime and not bump:
+		if locktime and not self.is_bump:
 			msg(f'Setting nLockTime to {self.info.strfmt_locktime(locktime)}!')
 			assert isinstance(locktime, int), 'locktime value not an integer'
 			self.locktime = locktime

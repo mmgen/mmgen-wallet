@@ -21,6 +21,9 @@ from .new import New, TokenNew
 class Bump(Completed, New, TxBase.Bump):
 	desc = 'fee-bumped transaction'
 
+	def get_orig_rel_fee(self): # disable this check for ETH
+		return 0
+
 	@property
 	def min_fee(self):
 		return self.fee * Decimal('1.101')

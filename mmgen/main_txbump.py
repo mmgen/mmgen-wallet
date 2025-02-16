@@ -33,7 +33,10 @@ opts_data = {
                 Create, and optionally send and sign, a replacement transaction
                 on networks that support replace-by-fee (RBF)
 		 """,
-		'usage':   f'[opts] [{gc.proj_name} TX file] [seed source] ...',
+		'usage2':   (
+			f'[opts] [{gc.proj_name} TX file] [seed source] ...',
+			f'[opts] {{u_args}} [{gc.proj_name} TX file] [seed source] ...',
+		),
 		'options': """
 			-- -h, --help             Print this help message
 			-- --, --longhelp         Print help message for long (global) options
@@ -80,6 +83,18 @@ opts_data = {
 			-- -z, --show-hash-presets Show information on available hash presets
 """,
 	'notes': """
+
+With --autosign, the TX file argument is omitted, and the last submitted TX
+file on the removable device will be used.
+
+If no outputs are specified, the original outputs will be used for the
+replacement transaction, otherwise a new transaction will be created with the
+outputs listed on the command line.  The syntax for the output arguments is
+identical to that of ‘mmgen-txcreate’.
+
+The user should take care to select a fee sufficient to ensure the original
+transaction is replaced in the mempool.
+
 {e}{s}
 Seed source files must have the canonical extensions listed in the 'FileExt'
 column below:
@@ -88,6 +103,8 @@ column below:
 """
 	},
 	'code': {
+		'usage': lambda cfg, proto, help_notes, s: s.format(
+			u_args = help_notes('txcreate_args', 'tx')),
 		'options': lambda cfg, help_notes, proto, s: s.format(
 			cfg     = cfg,
 			gc      = gc,
@@ -108,15 +125,22 @@ column below:
 
 cfg = Config(opts_data=opts_data)
 
-if not cfg.autosign:
-	tx_file = cfg._args.pop(0)
-	from .fileutil import check_infile
-	check_infile(tx_file)
-
 from .tx import CompletedTX, BumpTX, UnsignedTX, OnlineSignedTX
 from .tx.sign import txsign, get_seed_files, get_keyaddrlist, get_keylist
 
-seed_files = get_seed_files(cfg, cfg._args) if (cfg._args or cfg.send) else None
+seed_files = get_seed_files(
+	cfg,
+	cfg._args,
+	ignore_dfl_wallet = not cfg.send,
+	empty_ok = not cfg.send)
+
+if cfg.autosign:
+	if cfg.send:
+		die(1, '--send cannot be used together with --autosign')
+else:
+	tx_file = cfg._args.pop()
+	from .fileutil import check_infile
+	check_infile(tx_file)
 
 from .ui import do_license_msg
 do_license_msg(cfg)
@@ -158,33 +182,17 @@ async def main():
 		check_sent = cfg.autosign or sign_and_send,
 		twctl = await TwCtl(cfg, orig_tx.proto) if orig_tx.proto.tokensym else None)
 
-	from .rpc import rpc_init
-	tx.rpc = await rpc_init(cfg, tx.proto)
+	tx.orig_rel_fee = tx.get_orig_rel_fee()
 
-	msg('Creating replacement transaction')
-
-	tx.check_sufficient_funds_for_bump()
-
-	output_idx = tx.choose_output()
-
-	if not silent:
-		msg(f'Minimum fee for new transaction: {tx.min_fee.hl()} {tx.proto.coin}')
-
-	tx.usr_fee = tx.get_usr_fee_interactive(fee=cfg.fee, desc='User-selected')
-
-	tx.bump_fee(output_idx, tx.usr_fee)
-
-	assert tx.fee <= tx.proto.max_tx_fee
-
-	if not cfg.yes:
-		tx.add_comment()   # edits an existing comment
-
-	await tx.create_serialized(bump=True)
-
-	tx.add_timestamp()
-	tx.add_blockcount()
-
-	cfg._util.qmsg('Fee successfully increased')
+	if cfg._args:
+		tx.new_outputs = True
+		tx.is_swap = False
+		tx.outputs = tx.OutputList(tx)
+		tx.cfg = cfg # NB: with --automount, must use current cfg opts, not those from orig_tx
+		await tx.create(cfg._args, caller='txdo' if sign_and_send else 'txcreate')
+	else:
+		tx.new_outputs = False
+		await tx.create_feebump(silent=silent)
 
 	if not silent:
 		msg(green('\nREPLACEMENT TRANSACTION:'))

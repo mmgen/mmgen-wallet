@@ -61,6 +61,13 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		('alice_txsend2',                    'sending the transaction'),
 		('alice_txbump3',                    'bumping the transaction'),
 		('alice_txsend3',                    'sending the bumped transaction'),
+		('alice_txbump4',                    'bumping the transaction (new outputs, fee too low)'),
+		('alice_txbump_abort1',              'aborting the transaction'),
+		('alice_txbump5',                    'bumping the transaction (new outputs)'),
+		('alice_txsend5',                    'sending the bumped transaction'),
+		('alice_txstatus5',                  'getting transaction status (in mempool)'),
+		('generate',                         'mining a block'),
+		('alice_bal2',                       'checking Alice’s balance'),
 		('wait_loop_kill',                   'stopping autosign wait loop'),
 		('stop',                             'stopping regtest daemon'),
 		('txview',                           'viewing transactions'),
@@ -176,6 +183,9 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 	def alice_txsend3(self):
 		return self._alice_txsend(need_rbf=True)
 
+	def alice_txsend5(self):
+		return self._alice_txsend(need_rbf=True)
+
 	def _alice_txstatus(self, expect, exit_val=None, need_rbf=False):
 
 		if need_rbf and not self.proto.cap('rbf'):
@@ -204,6 +214,9 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 	def alice_txstatus4(self):
 		return self._alice_txstatus('1 confirmation', 0)
 
+	def alice_txstatus5(self):
+		return self._alice_txstatus('in mempool', need_rbf=True)
+
 	def _alice_txsend(self, comment=None, no_wait=False, need_rbf=False):
 
 		if need_rbf and not self.proto.cap('rbf'):
@@ -211,6 +224,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 
 		if not no_wait:
 			self._wait_signed('transaction')
+
 		self.insert_device_online()
 		t = self.spawn('mmgen-txsend', ['--alice', '--quiet', '--autosign'])
 		t.view_tx('t')
@@ -229,22 +243,30 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		self.remove_device_online()
 		return t
 
-	def _alice_txbump(self, bad_tx_expect=None):
-		if cfg.coin == 'BCH':
+	def _alice_txbump(self, fee_opt=None, output_args=[], bad_tx_expect=None, low_fee_fix=None):
+		if not self.proto.cap('rbf'):
 			return 'skip'
 		self.insert_device_online()
 		t = self.spawn(
 				'mmgen-txbump',
-				['--alice', '--autosign'],
+				['--alice', '--autosign']
+				+ ([fee_opt] if fee_opt else [])
+				+ output_args,
 				exit_val = 1 if bad_tx_expect else None)
 		if bad_tx_expect:
 			time.sleep(0.5)
 			t.expect('Only sent transactions')
 			t.expect(bad_tx_expect)
 		else:
-			t.expect(r'to deduct the fee from .* change output\): ', '\n', regex=True)
-			t.expect(r'(Y/n): ', 'y')  # output OK?
-			t.expect('transaction fee: ', '200s\n')
+			if not output_args:
+				t.expect(r'to deduct the fee from .* change output\): ', '\n', regex=True)
+				t.expect(r'(Y/n): ', 'y')  # output OK?
+			if low_fee_fix or not fee_opt:
+				if low_fee_fix:
+					t.expect('Please choose a higher fee')
+				t.expect('transaction fee: ', (low_fee_fix or '200s') + '\n')
+			if output_args:
+				t.expect(r'(Y/n): ', 'y')
 			t.expect(r'(Y/n): ', 'y')  # fee OK?
 			t.expect(r'(y/N): ', '\n') # add comment?
 			t.expect(r'(y/N): ', 'y')  # save?
@@ -261,3 +283,29 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 
 	def alice_txbump3(self):
 		return self._alice_txbump()
+
+	def alice_txbump4(self):
+		sid = self._user_sid('alice')
+		return self._alice_txbump(
+			fee_opt = '--fee=3s',
+			output_args = [f'{self.burn_addr},7.654321', f'{sid}:C:1'],
+			low_fee_fix = '300s')
+
+	def alice_txbump_abort1(self):
+		if not self.proto.cap('rbf'):
+			return 'skip'
+		return self._alice_txsend_abort(shred_expect=['Shredding .*arawtx'])
+
+	def alice_txbump5(self):
+		sid = self._user_sid('alice')
+		return self._alice_txbump(
+			fee_opt = '--fee=400s',
+			output_args = ['data:message for posterity', f'{self.burn_addr},7.654321', f'{sid}:C:1'])
+
+	def alice_bal2(self):
+		bals = {
+			'btc': '491.11002204',
+			'ltc': '5491.11002204',
+			'bch': '498.7653392',
+		}
+		return self.user_bal('alice', bals.get(self.coin, None))

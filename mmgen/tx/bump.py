@@ -14,12 +14,13 @@ tx.bump: transaction bump class
 
 from .new import New
 from .completed import Completed
-from ..util import msg, is_int, die
+from ..util import msg, ymsg, is_int, die
 
 class Bump(Completed, New):
 	desc = 'fee-bumped transaction'
 	ext  = 'rawtx'
 	bump_output_idx = None
+	is_bump = True
 
 	def __init__(self, check_sent, *args, **kwargs):
 
@@ -34,6 +35,48 @@ class Bump(Completed, New):
 
 		self.coin_txid = ''
 		self.sent_timestamp = None
+
+	async def get_inputs(self, outputs_sum):
+		return True
+
+	def check_bumped_fee_ok(self, abs_fee):
+		orig = int(self.orig_rel_fee)
+		new = int(self.fee_abs2rel(abs_fee))
+		if new <= orig:
+			ymsg('New fee ({b} {d}) <= original fee ({a} {d}). Please choose a higher fee'.format(
+				a=orig, b=new, d=self.rel_fee_disp))
+			return False
+		return True
+
+	async def create_feebump(self, silent):
+
+		from ..rpc import rpc_init
+		self.rpc = await rpc_init(self.cfg, self.proto)
+
+		msg('Creating replacement transaction')
+
+		self.check_sufficient_funds_for_bump()
+
+		output_idx = self.choose_output()
+
+		if not silent:
+			msg(f'Minimum fee for new transaction: {self.min_fee.hl()} {self.proto.coin}')
+
+		self.usr_fee = self.get_usr_fee_interactive(fee=self.cfg.fee, desc='User-selected')
+
+		self.bump_fee(output_idx, self.usr_fee)
+
+		assert self.fee <= self.proto.max_tx_fee
+
+		if not self.cfg.yes:
+			self.add_comment()   # edits an existing comment
+
+		await self.create_serialized()
+
+		self.add_timestamp()
+		self.add_blockcount()
+
+		self.cfg._util.qmsg('Fee successfully increased')
 
 	def check_sufficient_funds_for_bump(self):
 		if not [o.amt for o in self.outputs if o.amt >= self.min_fee]:
