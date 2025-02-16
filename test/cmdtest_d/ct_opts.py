@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # MMGen Wallet, a terminal-based cryptocurrency wallet
-# Copyright (C)2013-2024 The MMGen Project <mmgen@tuta.io>
+# Copyright (C)2013-2025 The MMGen Project <mmgen@tuta.io>
 #
 # Project source code repository: https://github.com/mmgen/mmgen-wallet
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
