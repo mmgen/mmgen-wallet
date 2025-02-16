@@ -54,7 +54,8 @@ from .common import (
 	tw_comment_lat_cyr_gr,
 	tw_comment_zh,
 	tx_comment_jp,
-	get_env_without_debug_vars)
+	get_env_without_debug_vars,
+	rt_pw)
 
 from .ct_base import CmdTestBase
 from .ct_shared import CmdTestShared
@@ -66,7 +67,6 @@ dfl_wcls = get_wallet_cls('mmgen')
 
 tx_fee = rtFundAmt = rtFee = rtBals = rtBals_gb = rtBobOp3 = rtAmts = None # ruff
 
-rt_pw = 'abc-α'
 rt_data = {
 	'tx_fee': {'btc':'0.0001', 'bch':'0.001', 'ltc':'0.01'},
 	'rtFundAmt': {'btc':'500', 'bch':'500', 'ltc':'5500'},

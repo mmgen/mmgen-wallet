@@ -24,7 +24,7 @@ class help_notes:
 		return (
 			'COIN1 [AMT CHG_ADDR] COIN2 [ADDR]'
 				if target == 'swaptx' else
-			'[ADDR,AMT ... | DATA_SPEC] ADDR <change addr, addrlist ID or addr type>'
+			'[ADDR,AMT ... | DATA_SPEC] ADDR'
 				if self.proto.base_proto == 'Bitcoin' else
 			'ADDR,AMT')
 

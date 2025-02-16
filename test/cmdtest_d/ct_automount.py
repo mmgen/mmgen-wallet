@@ -78,7 +78,10 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 
 		self.opts.append('--alice')
 
-	def _alice_txcreate(self, chg_addr, opts=[], exit_val=0, expect_str=None, data_arg=None):
+	def _alice_txcreate(self, chg_addr, opts=[], exit_val=0, expect_str=None, data_arg=None, need_rbf=False):
+
+		if need_rbf and not self.proto.cap('rbf'):
+			return 'skip'
 
 		def do_return():
 			if expect_str:
@@ -120,9 +123,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 	alice_txcreate3 = alice_txcreate2
 
 	def alice_txcreate4(self):
-		if cfg.coin == 'BCH':
-			return 'skip'
-		return self._alice_txcreate(chg_addr='L:4')
+		return self._alice_txcreate(chg_addr='L:4', need_rbf=True)
 
 	def _alice_txsend_abort(self, err=False, send_resp='y', expect=None, shred_expect=[]):
 		self.insert_device_online()
@@ -170,16 +171,16 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		return self._alice_txsend('This one’s worth a comment', no_wait=True)
 
 	def alice_txsend2(self):
-		if cfg.coin == 'BCH':
-			return 'skip'
-		return self._alice_txsend()
+		return self._alice_txsend(need_rbf=True)
 
 	def alice_txsend3(self):
-		if cfg.coin == 'BCH':
-			return 'skip'
-		return self._alice_txsend()
+		return self._alice_txsend(need_rbf=True)
 
-	def _alice_txstatus(self, expect, exit_val=None):
+	def _alice_txstatus(self, expect, exit_val=None, need_rbf=False):
+
+		if need_rbf and not self.proto.cap('rbf'):
+			return 'skip'
+
 		self.insert_device_online()
 		t = self.spawn(
 				'mmgen-txsend',
@@ -203,7 +204,11 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 	def alice_txstatus4(self):
 		return self._alice_txstatus('1 confirmation', 0)
 
-	def _alice_txsend(self, comment=None, no_wait=False):
+	def _alice_txsend(self, comment=None, no_wait=False, need_rbf=False):
+
+		if need_rbf and not self.proto.cap('rbf'):
+			return 'skip'
+
 		if not no_wait:
 			self._wait_signed('transaction')
 		self.insert_device_online()
@@ -224,18 +229,18 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		self.remove_device_online()
 		return t
 
-	def _alice_txbump(self, bad_tx_desc=None):
+	def _alice_txbump(self, bad_tx_expect=None):
 		if cfg.coin == 'BCH':
 			return 'skip'
 		self.insert_device_online()
 		t = self.spawn(
 				'mmgen-txbump',
 				['--alice', '--autosign'],
-				exit_val = 1 if bad_tx_desc else None)
-		if bad_tx_desc:
+				exit_val = 1 if bad_tx_expect else None)
+		if bad_tx_expect:
 			time.sleep(0.5)
 			t.expect('Only sent transactions')
-			t.expect(bad_tx_desc)
+			t.expect(bad_tx_expect)
 		else:
 			t.expect(r'to deduct the fee from .* change output\): ', '\n', regex=True)
 			t.expect(r'(Y/n): ', 'y')  # output OK?
@@ -248,11 +253,11 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		return t
 
 	def alice_txbump1(self):
-		return self._alice_txbump(bad_tx_desc='unsigned transaction')
+		return self._alice_txbump(bad_tx_expect='unsigned transaction')
 
 	def alice_txbump2(self):
 		self._wait_signed('transaction')
-		return self._alice_txbump(bad_tx_desc='unsent transaction')
+		return self._alice_txbump(bad_tx_expect='unsent transaction')
 
 	def alice_txbump3(self):
 		return self._alice_txbump()

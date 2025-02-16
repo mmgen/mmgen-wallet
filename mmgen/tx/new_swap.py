@@ -18,5 +18,5 @@ class NewSwap(New):
 	desc = 'swap transaction'
 	is_swap = True
 
-	async def process_swap_cmdline_args(self, cmd_args, addrfile_args):
+	async def process_swap_cmdline_args(self, cmd_args, addrfiles):
 		raise NotImplementedError(f'Swap not implemented for protocol {self.proto.__name__}')

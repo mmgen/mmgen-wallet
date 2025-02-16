@@ -14,6 +14,8 @@ test.cmdtest_d.ct_swap: asset swap tests for the cmdtest.py test suite
 
 from mmgen.protocol import init_proto
 
+from ..include.common import gr_uc
+
 from .ct_regtest import (
 	CmdTestRegtest,
 	rt_data,
@@ -21,7 +23,7 @@ from .ct_regtest import (
 	rt_pw,
 	cfg)
 
-sample1 = '=:ETH.ETH:0x86d526d6624AbC0178cF7296cD538Ecc080A95F1:0/1/0'
+sample1 = gr_uc[:24]
 sample2 = '00010203040506'
 
 class CmdTestSwap(CmdTestRegtest):
@@ -53,7 +55,7 @@ class CmdTestSwap(CmdTestRegtest):
 		),
 		'data': (
 			'OP_RETURN data operations',
-			('data_tx1_create',  'Creating a transaction with OP_RETURN data (hex-encoded ascii)'),
+			('data_tx1_create',  'Creating a transaction with OP_RETURN data (hex-encoded UTF-8)'),
 			('data_tx1_sign',    'Signing the transaction'),
 			('data_tx1_send',    'Sending the transaction'),
 			('data_tx1_chk',     'Checking the sent transaction'),

@@ -30,7 +30,7 @@ class Bump(Completed, New):
 
 		# If sending, require original tx to be sent
 		if check_sent and not self.coin_txid:
-			die(1, 'Transaction {self.txid!r} was not broadcast to the network')
+			die(1, f'Transaction {self.txid!r} was not broadcast to the network')
 
 		self.coin_txid = ''
 		self.sent_timestamp = None

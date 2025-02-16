@@ -29,7 +29,7 @@ opts_data = {
 	'filter_codes': ['-'],
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc': f"""
+		'desc': """
                 Create, and optionally send and sign, a replacement transaction
                 on networks that support replace-by-fee (RBF)
 		 """,

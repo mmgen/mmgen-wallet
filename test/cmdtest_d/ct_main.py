@@ -1058,7 +1058,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return self.txbump(
 			f7,
 			prepend_args = ['-p1', '-k', non_mm_file, '-M', f1],
-			seed_args    = [f2, f3, f4, f5, f6, f8])
+			seed_args    = [f2, f3, f4, f6, f8])
 
 	def walletgen5(self, del_dw_run='dummy'):
 		return self.walletgen()
