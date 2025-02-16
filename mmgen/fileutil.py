@@ -159,6 +159,7 @@ def write_data_to_file(
 		ask_overwrite         = True,
 		ask_tty               = True,
 		no_tty                = False,
+		no_stdout             = False,
 		quiet                 = False,
 		binary                = False,
 		ignore_opt_outdir     = False,
@@ -269,7 +270,9 @@ def write_data_to_file(
 
 		return True
 
-	if cfg.stdout or outfile in ('', '-'):
+	if no_stdout:
+		do_file(outfile, ask_write_prompt)
+	elif cfg.stdout or outfile in ('', '-'):
 		do_stdout()
 	elif sys.stdin.isatty() and not sys.stdout.isatty():
 		do_stdout()

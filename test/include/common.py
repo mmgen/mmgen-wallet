@@ -205,6 +205,7 @@ def write_to_file(fn, data, binary=False):
 		fn,
 		data,
 		quiet = True,
+		no_stdout = True,
 		binary = binary,
 		ignore_opt_outdir = True)
 
