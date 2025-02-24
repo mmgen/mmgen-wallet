@@ -16,7 +16,27 @@ from .new import New
 
 class NewSwap(New):
 	desc = 'swap transaction'
-	is_swap = True
 
 	async def process_swap_cmdline_args(self, cmd_args, addrfiles):
 		raise NotImplementedError(f'Swap not implemented for protocol {self.proto.__name__}')
+
+	def update_vault_output(self, amt):
+		import importlib
+		sp = importlib.import_module(f'mmgen.swap.proto.{self.swap_proto}')
+		c = sp.rpc_client(self, amt)
+
+		from ..util import msg
+		from ..term import get_char
+		while True:
+			self.cfg._util.qmsg(f'Retrieving data from {c.rpc.host}...')
+			c.get_quote()
+			self.cfg._util.qmsg('OK')
+			msg(c.format_quote())
+			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')
+			msg('')
+			if ch not in 'Rr':
+				break
+
+		self.swap_quote_expiry = c.data['expiry']
+		self.update_vault_addr(c.inbound_address)
+		return c.rel_fee_hint

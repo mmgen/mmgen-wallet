@@ -14,11 +14,11 @@ proto.btc.tx.bump: Bitcoin transaction bump class
 
 from ....tx import bump as TxBase
 from ....util import msg
-from .new import New
+from .new_swap import NewSwap
 from .completed import Completed
 from .unsigned import AutomountUnsigned
 
-class Bump(Completed, New, TxBase.Bump):
+class Bump(Completed, NewSwap, TxBase.Bump):
 	desc = 'fee-bumped transaction'
 
 	def get_orig_rel_fee(self):

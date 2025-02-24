@@ -26,6 +26,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	addr_len        = 20
 	wif_ver_num     = {'std': '80'}
 	mmtypes         = ('L', 'C', 'S', 'B')
+	preferred_mmtypes  = ('B', 'S', 'C')
 	dfl_mmtype      = 'L'
 	coin_amt        = 'BTCAmt'
 	max_tx_fee      = 0.003

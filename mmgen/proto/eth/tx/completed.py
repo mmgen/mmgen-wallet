@@ -27,6 +27,9 @@ class Completed(Base, TxBase.Completed):
 		self.gas = self.proto.coin_amt(self.dfl_gas, from_unit='wei')
 		self.start_gas = self.proto.coin_amt(self.dfl_start_gas, from_unit='wei')
 
+	def check_swap_memo(self):
+		pass
+
 	@property
 	def send_amt(self):
 		return self.outputs[0].amt if self.outputs else self.proto.coin_amt('0')

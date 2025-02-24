@@ -338,6 +338,8 @@ class TwAddresses(TwView):
 		Find the lowest-indexed change addresses in tracking wallet of given address type,
 		present them in a menu and return a single change address chosen by the user.
 
+		If mmtype is None, search all preferred_mmtypes in tracking wallet
+
 		Return values on failure:
 		    None:  no addresses in wallet of requested address type
 		    False: no unused addresses in wallet of requested address type
@@ -363,10 +365,24 @@ class TwAddresses(TwView):
 					return addrs[int(res)-1]
 				msg(f'{res}: invalid entry')
 
-		assert isinstance(mmtype, MMGenAddrType)
+		def get_addr(mmtype):
+			return [self.get_change_address(f'{sid}:{mmtype}', r.bot, r.top, exclude=exclude, desc=desc)
+					for sid, r in self.sid_ranges.items()]
 
-		res = [self.get_change_address(f'{sid}:{mmtype}', r.bot, r.top, exclude)
-				for sid, r in self.sid_ranges.items()]
+		assert isinstance(mmtype, (type(None), MMGenAddrType))
+
+		if mmtype:
+			res = get_addr(mmtype)
+		else:
+			have_used = False
+			for mmtype in self.proto.preferred_mmtypes:
+				res = get_addr(mmtype)
+				if any(res):
+					break
+				if False in res:
+					have_used = True
+			else:
+				return False if have_used else None
 
 		if any(res):
 			res = list(filter(None, res))

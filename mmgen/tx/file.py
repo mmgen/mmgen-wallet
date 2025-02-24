@@ -70,7 +70,10 @@ class MMGenTxFile(MMGenObject):
 		'comment': MMGenTxComment,
 		'coin_txid': CoinTxID,
 		'sent_timestamp': None,
-		'is_swap': None}
+		'is_swap': None,
+		'swap_proto': None,
+		'swap_quote_expiry': None,
+		'swap_recv_addr_mmid': None}
 
 	def __init__(self, tx):
 		self.tx       = tx

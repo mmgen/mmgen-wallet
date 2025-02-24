@@ -14,7 +14,7 @@ proto.btc.tx.completed: Bitcoin completed transaction class
 
 from ....tx import completed as TxBase
 from ....obj import HexStr
-from ....util import msg, die
+from ....util import msg, ymsg, die
 from .base import Base, decodeScriptPubKey
 
 class Completed(Base, TxBase.Completed):
@@ -42,6 +42,24 @@ class Completed(Base, TxBase.Completed):
 				# sig_size 72 (DER format), pubkey_size 'compressed':33, 'uncompressed':65
 				assert (200 < len(ti['scriptSig']) < 300), 'malformed scriptSig' # VERY rough check
 		return True
+
+	def check_swap_memo(self):
+		if o := self.data_output:
+			from ....swap.proto.thorchain.memo import Memo
+			if Memo.is_partial_memo(o.data):
+				from ....protocol import init_proto
+				p = Memo.parse(o.data)
+				assert p.function == 'SWAP', f'‘{p.function}’: unsupported function in swap memo ‘{o.data}’'
+				assert p.chain == p.asset, f'{p.chain} != {p.asset}: chain/asset mismatch in swap memo ‘{o.data}’'
+				proto = init_proto(self.cfg, p.asset, network=self.cfg.network, need_amt=True)
+				if self.swap_recv_addr_mmid:
+					mmid = self.swap_recv_addr_mmid
+				elif self.cfg.allow_non_wallet_swap:
+					ymsg('Warning: allowing swap to non-wallet address (--allow-non-wallet-swap)')
+					mmid = None
+				else:
+					raise ValueError('Swap to non-wallet address forbidden (override with --allow-non-wallet-swap)')
+				return self.Output(proto, addr=p.address, mmid=mmid, amt=proto.coin_amt('0'))
 
 	def check_pubkey_scripts(self):
 		for n, i in enumerate(self.inputs, 1):

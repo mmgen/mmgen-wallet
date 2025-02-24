@@ -12,39 +12,54 @@
 test.cmdtest_d.ct_swap: asset swap tests for the cmdtest.py test suite
 """
 
+from pathlib import Path
+
 from mmgen.protocol import init_proto
-from ..include.common import gr_uc
-from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, cfg
+from ..include.common import make_burn_addr, gr_uc
+from .common import dfl_bip39_file
+from .midgard import run_midgard_server
+
+from .ct_autosign import CmdTestAutosign, CmdTestAutosignThreaded
+from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, cfg, strip_ansi_escapes
 
 sample1 = gr_uc[:24]
 sample2 = '00010203040506'
 
-class CmdTestSwap(CmdTestRegtest):
+def midgard_server_start():
+	import threading
+	t = threading.Thread(target=run_midgard_server, name='Midgard server thread')
+	t.daemon = True
+	t.start()
+
+class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 	bdb_wallet = True
 	networks = ('btc',)
 	tmpdir_nums = [37]
 	passthru_opts = ('rpc_backend',)
+	coins = ('btc',)
+	need_daemon = True
 
 	cmd_group_in = (
-		('setup',             'regtest (Bob and Alice) mode setup'),
-		('subgroup.init_bob', []),
-		('subgroup.fund_bob', ['init_bob']),
-		('subgroup.data',     ['fund_bob']),
-		('subgroup.swap',     ['fund_bob']),
-		('stop',              'stopping regtest daemon'),
+		('subgroup.init_data',    []),
+		('subgroup.data',         ['init_data']),
+		('subgroup.init_swap',    []),
+		('subgroup.create',       ['init_swap']),
+		('subgroup.create_bad',   ['init_swap']),
+		('subgroup.signsend',     ['init_swap']),
+		('subgroup.signsend_bad', ['init_swap']),
+		('subgroup.autosign',     ['init_data', 'signsend']),
+		('stop',                  'stopping regtest daemons'),
 	)
 	cmd_subgroups = {
-		'init_bob': (
-			'creating Bob’s MMGen wallet and tracking wallet',
-			('walletgen_bob',       'wallet generation (Bob)'),
-			('addrgen_bob',         'address generation (Bob)'),
-			('addrimport_bob',      'importing Bob’s addresses'),
-		),
-		'fund_bob': (
-			'funding Bob’s wallet',
-			('fund_bob1', 'funding Bob’s wallet (bech32)'),
-			('fund_bob2', 'funding Bob’s wallet (native Segwit)'),
-			('bob_bal',   'displaying Bob’s balance'),
+		'init_data': (
+			'Initialize regtest setup for OP_RETURN data operations',
+			('setup',            'regtest (Bob and Alice) mode setup'),
+			('walletcreate_bob', 'wallet creation (Bob)'),
+			('addrgen_bob',      'address generation (Bob)'),
+			('addrimport_bob',   'importing Bob’s addresses'),
+			('fund_bob1',        'funding Bob’s wallet (bech32)'),
+			('fund_bob2',        'funding Bob’s wallet (native Segwit)'),
+			('bob_bal',          'displaying Bob’s balance'),
 		),
 		'data': (
 			'OP_RETURN data operations',
@@ -58,15 +73,101 @@ class CmdTestSwap(CmdTestRegtest):
 			('generate3',        'Generate 3 blocks'),
 			('bob_listaddrs',    'Display Bob’s addresses'),
 		),
-		'swap': (
-			'Swap operations',
-			('bob_swaptxcreate1', 'Create a swap transaction'),
+		'init_swap': (
+			'Initialize regtest setup for swap operations',
+			('setup_send_coin',               'setting up the sending coin regtest blockchain'),
+			('walletcreate_bob',              'wallet creation (Bob)'),
+			('addrgen_bob_send',              'address generation (Bob, sending coin)'),
+			('addrimport_bob_send',           'importing Bob’s addresses (sending coin)'),
+			('fund_bob_send',                 'funding Bob’s wallet (bech32)'),
+			('bob_bal_send',                  'displaying Bob’s send balance'),
+
+			('setup_recv_coin',               'setting up the receiving coin regtest blockchain'),
+			('addrgen_bob_recv',              'address generation (Bob, receiving coin)'),
+			('addrimport_bob_recv',           'importing Bob’s addresses (receiving coin)'),
+			('fund_bob_recv1',                'funding Bob’s wallet (bech32)'),
+			('fund_bob_recv2',                'funding Bob’s wallet (native Segwit)'),
+			('addrgen_bob_recv_subwallet',    'address generation (Bob, receiving coin)'),
+			('addrimport_bob_recv_subwallet', 'importing Bob’s addresses (receiving coin)'),
+			('fund_bob_recv_subwallet',       'funding Bob’s subwwallet (native Segwit)'),
+			('bob_bal_recv',                  'displaying Bob’s receive balance'),
+		),
+		'create': (
+			'Swap TX create operations (BCH => LTC)',
+			('swaptxcreate1',  'creating a swap transaction (full args)'),
+			('swaptxcreate2',  'creating a swap transaction (coin args only)'),
+			('swaptxcreate3',  'creating a swap transaction (no chg arg)'),
+			('swaptxcreate4',  'creating a swap transaction (chg and dest by addrtype)'),
+			('swaptxcreate5',  'creating a swap transaction (chg and dest by addrlist ID)'),
+			('swaptxcreate6',  'creating a swap transaction (dest is non-wallet addr)'),
+			('swaptxcreate7',  'creating a swap transaction (coin-amt-coin)'),
+		),
+		'create_bad': (
+			'Swap TX create operations: error handling',
+			('swaptxcreate_bad1',  'creating a swap transaction (bad, used destination address)'),
+			('swaptxcreate_bad2',  'creating a swap transaction (bad, used change address)'),
+			('swaptxcreate_bad3',  'creating a swap transaction (bad, unsupported send coin)'),
+			('swaptxcreate_bad4',  'creating a swap transaction (bad, unsupported recv coin)'),
+			('swaptxcreate_bad5',  'creating a swap transaction (bad, malformed cmdline)'),
+			('swaptxcreate_bad6',  'creating a swap transaction (bad, malformed cmdline)'),
+			('swaptxcreate_bad7',  'creating a swap transaction (bad, bad user input, user exit)'),
+			('swaptxcreate_bad8',  'creating a swap transaction (bad, non-MMGen change address)'),
+			('swaptxcreate_bad9',  'creating a swap transaction (bad, invalid addrtype)'),
+		),
+		'signsend': (
+			'Swap TX create, sign and send operations (LTC => BCH)',
+			('swaptxsign1_create', 'creating a swap transaction (full args)'),
+			('swaptxsign1',        'signing the transaction'),
+			('swaptxsend1',        'sending the transaction'),
+			('swaptxsend1_status', 'getting status of sent transaction'),
+			('generate1',          'generating a block'),
+			('swaptxsign2_create', 'creating a swap transaction (non-wallet swap address)'),
+			('swaptxsign2',        'signing the transaction'),
+			('swaptxsend2',        'sending the transaction'),
+			('mempool1',           'viewing the mempool'),
+			('swaptxbump1',        'bumping the transaction'),
+			('swaptxsign3',        'signing the transaction'),
+			('swaptxsend3',        'sending the transaction'),
+			('mempool1',           'viewing the mempool'),
+			('swaptxbump2',        'bumping the transaction again'),
+			('swaptxsign4',        'signing the transaction'),
+			('swaptxsend4',        'sending the transaction'),
+			('mempool1',           'viewing the mempool'),
+			('generate1',          'generating a block'),
+			('swap_bal1',          'checking the balance'),
+			('swaptxsign1_do',     'creating, signing and sending a swap transaction'),
+			('generate1',          'generating a block'),
+			('swap_bal2',          'checking the balance'),
+		),
+		'signsend_bad': (
+			'Swap TX create, sign and send operations: error handling',
+			('swaptxsign_bad1_create', 'creating a swap transaction (non-wallet swap address)'),
+			('swaptxsign_bad1',        'signing the transaction (non-wallet swap address)'),
+			('swaptxsign_bad2_create', 'creating a swap transaction'),
+			('swaptxsign_bad2',        'signing the transaction'),
+			('swaptxsend_bad2',        'sending the transaction (swap quote expired)'),
+		),
+		'autosign': (
+			'Swap TX operations with autosigning (BTC => LTC)',
+			('run_setup_bip39',        'setting up offline autosigning'),
+			('swap_wait_loop_start',   'starting autosign wait loop'),
+			('autosign_swaptxcreate1', 'creating a swap transaction'),
+			('autosign_swaptxsend1',   'sending the transaction'),
+			('autosign_swaptxbump1',   'bumping the transaction'),
+			('autosign_swaptxsend2',   'sending the transaction'),
+			('generate0',              'generating a block'),
+			('swap_bal3',              'checking the balance'),
+			('wait_loop_kill',         'stopping autosign wait loop'),
 		),
 	}
 
 	def __init__(self, trunner, cfgs, spawn):
 
-		super().__init__(trunner, cfgs, spawn)
+		CmdTestAutosignThreaded.__init__(self, trunner, cfgs, spawn)
+		CmdTestRegtest.__init__(self, trunner, cfgs, spawn)
+
+		if trunner is None:
+			return
 
 		globals_dict = globals()
 		for k in rt_data:
@@ -74,9 +175,28 @@ class CmdTestSwap(CmdTestRegtest):
 
 		self.protos = [init_proto(cfg, k, network='regtest', need_amt=True) for k in ('btc', 'ltc', 'bch')]
 
+		midgard_server_start() # TODO: stop server when test group finishes executing
+
+		self.opts.append('--bob')
+
 	@property
 	def sid(self):
 		return self._user_sid('bob')
+
+	def walletcreate_bob(self):
+		dest = Path(self.tr.data_dir, 'regtest', 'bob')
+		dest.mkdir(exist_ok=True)
+		t = self.spawn('mmgen-walletconv', [
+			'--quiet',
+			'--usr-randchars=0',
+			'--hash-preset=1',
+			'--label=SwapWalletLabel',
+			f'--outdir={str(dest)}',
+			dfl_bip39_file])
+		t.expect('wallet: ', rt_pw + '\n')
+		t.expect('phrase: ', rt_pw + '\n')
+		t.written_to_file('wallet')
+		return t
 
 	def _addrgen_bob(self, proto_idx, mmtypes, subseed_idx=None):
 		return self.addrgen('bob', subseed_idx=subseed_idx, mmtypes=mmtypes, proto=self.protos[proto_idx])
@@ -186,8 +306,412 @@ class CmdTestSwap(CmdTestRegtest):
 		t = self.spawn('mmgen-tool', ['--bob', 'listaddresses'])
 		return t
 
-	def bob_swaptxcreate1(self):
-		t = self.spawn(
-			'mmgen-swaptxcreate',
-			['-d', self.tmpdir, '-B', '--bob', 'BTC', '1.234', f'{self.sid}:S:3', 'LTC'])
+	def setup_send_coin(self):
+		self.user_sids = {}
+		return self._setup(proto=self.protos[2], remove_datadir=True)
+
+	def addrgen_bob_send(self):
+		return self._addrgen_bob(2, ['C'])
+
+	def addrimport_bob_send(self):
+		return self.addrimport('bob', mmtypes=['C'], proto=self.protos[2])
+
+	def fund_bob_send(self):
+		return self._fund_bob(2, 'C', '500')
+
+	def bob_bal_send(self):
+		return self._bob_bal(2, '500')
+
+	def setup_recv_coin(self):
+		return self._setup(proto=self.protos[1], remove_datadir=False)
+
+	def addrgen_bob_recv(self):
+		return self._addrgen_bob(1, ['S', 'B'])
+
+	def addrimport_bob_recv(self):
+		return self._addrimport_bob(1)
+
+	def fund_bob_recv1(self):
+		return self._fund_bob(1, 'S', '500')
+
+	def fund_bob_recv2(self):
+		return self._fund_bob(1, 'B', '500')
+
+	def addrgen_bob_recv_subwallet(self):
+		return self._addrgen_bob(1, ['C', 'B'], subseed_idx='29L')
+
+	def addrimport_bob_recv_subwallet(self):
+		return self._subwallet_addrimport('bob', '29L', ['C', 'B'], proto=self.protos[1])
+
+	def fund_bob_recv_subwallet(self, proto_idx=1, amt='500'):
+		coin_arg = f'--coin={self.protos[proto_idx].coin}'
+		t = self.spawn('mmgen-tool', ['--bob', coin_arg, 'listaddresses'])
+		addr = [s for s in strip_ansi_escapes(t.read()).splitlines() if 'C:1 No' in s][0].split()[3]
+		t = self.spawn('mmgen-regtest', [coin_arg, 'send', addr, str(amt)], no_passthru_opts=True, no_msg=True)
 		return t
+
+	def bob_bal_recv(self):
+		return self._bob_bal(1, '1500')
+
+	def _swaptxcreate_ui_common(
+			self,
+			t,
+			*,
+			inputs          = '1',
+			interactive_fee = None,
+			file_desc       = 'Unsigned transaction',
+			reload_quote    = False,
+			sign_and_send   = False):
+		t.expect('abel:\b', 'q')
+		t.expect('to spend: ', f'{inputs}\n')
+		if reload_quote:
+			t.expect('to continue: ', 'r')  # reload swap quote
+		t.expect('to continue: ', '\n')     # exit swap quote view
+		t.expect('(Y/n): ', 'y')            # fee OK?
+		t.expect('(Y/n): ', 'y')            # change OK?
+		t.expect('(y/N): ', 'n')            # add comment?
+		if reload_quote:
+			t.expect('to continue: ', 'r')  # reload swap quote
+		t.expect('to continue: ', '\n')     # exit swap quote view
+		t.expect('view: ', 'y')             # view TX
+		t.expect('to continue: ', '\n')
+		if sign_and_send:
+			t.passphrase(dfl_wcls.desc, rt_pw)
+			t.expect('to confirm: ', 'YES\n')
+		else:
+			t.expect('(y/N): ', 'y')            # save?
+		t.written_to_file(file_desc)
+		return t
+
+	def _swaptxcreate(self, args, *, action='txcreate', add_opts=[], exit_val=None):
+		return self.spawn(
+			f'mmgen-swap{action}',
+			['-q', '-d', self.tmpdir, '-B', '--bob']
+			+ add_opts
+			+ args,
+			exit_val = exit_val)
+
+	def swaptxcreate1(self, idx=3):
+		return self._swaptxcreate_ui_common(
+			self._swaptxcreate(['BCH', '1.234', f'{self.sid}:C:{idx}', 'LTC', f'{self.sid}:B:3']))
+
+	def swaptxcreate2(self):
+		t = self._swaptxcreate(['BCH', 'LTC'], add_opts=['--no-quiet'])
+		t.expect('Enter a number> ', '1')
+		t.expect('OK? (Y/n): ', 'y')
+		return self._swaptxcreate_ui_common(t, reload_quote=True)
+
+	def swaptxcreate3(self):
+		return self._swaptxcreate_ui_common(
+			self._swaptxcreate(['BCH', 'LTC', f'{self.sid}:B:3']))
+
+	def swaptxcreate4(self):
+		t = self._swaptxcreate(['BCH', '1.234', 'C', 'LTC', 'B'])
+		t.expect('OK? (Y/n): ', 'y')
+		t.expect('Enter a number> ', '1')
+		t.expect('OK? (Y/n): ', 'y')
+		return self._swaptxcreate_ui_common(t)
+
+	def swaptxcreate5(self):
+		t = self._swaptxcreate(['BCH', '1.234', f'{self.sid}:C', 'LTC', f'{self.sid}:B'])
+		t.expect('OK? (Y/n): ', 'y')
+		t.expect('OK? (Y/n): ', 'y')
+		return self._swaptxcreate_ui_common(t)
+
+	def swaptxcreate6(self):
+		addr = make_burn_addr(self.protos[1], mmtype='bech32')
+		t = self._swaptxcreate(['BCH', '1.234', f'{self.sid}:C', 'LTC', addr])
+		t.expect('OK? (Y/n): ', 'y')
+		t.expect('to confirm: ', 'YES\n')
+		return self._swaptxcreate_ui_common(t)
+
+	def swaptxcreate7(self):
+		t = self._swaptxcreate(['BCH', '0.56789', 'LTC'])
+		t.expect('OK? (Y/n): ', 'y')
+		t.expect('Enter a number> ', '1')
+		t.expect('OK? (Y/n): ', 'y')
+		return self._swaptxcreate_ui_common(t)
+
+	def _swaptxcreate_bad(self, args, *, exit_val=1, expect1=None, expect2=None):
+		t = self._swaptxcreate(args, exit_val=exit_val)
+		if expect1:
+			t.expect(expect1)
+		if expect2:
+			t.expect(expect2)
+		return t
+
+	def swaptxcreate_bad1(self):
+		t = self._swaptxcreate_bad(
+			['BCH', '1.234', f'{self.sid}:C:3', 'LTC', f'{self.sid}:S:1'],
+			expect1 = 'Requested destination address',
+			expect2 = 'Address reuse harms your privacy')
+		t.expect('(y/N): ', 'n')
+		return t
+
+	def swaptxcreate_bad2(self):
+		t = self._swaptxcreate_bad(
+			['BCH', '1.234', f'{self.sid}:C:1', 'LTC', f'{self.sid}:S:2'],
+			expect1 = 'Requested change address',
+			expect2 = 'Address reuse harms your privacy')
+		t.expect('(y/N): ', 'n')
+		return t
+
+	def swaptxcreate_bad3(self):
+		return self._swaptxcreate_bad(['RTC', 'LTC'], expect1='unsupported send coin')
+
+	def swaptxcreate_bad4(self):
+		return self._swaptxcreate_bad(['LTC', 'XTC'], expect1='unsupported receive coin')
+
+	def swaptxcreate_bad5(self):
+		return self._swaptxcreate_bad(['LTC'], expect1='USAGE:')
+
+	def swaptxcreate_bad6(self):
+		return self._swaptxcreate_bad(['LTC', '1.2345'], expect1='USAGE:')
+
+	def swaptxcreate_bad7(self):
+		t = self._swaptxcreate(['BCH', 'LTC'], exit_val=1)
+		t.expect('Enter a number> ', '3')
+		t.expect('Enter a number> ', '1')
+		t.expect('OK? (Y/n): ', 'n')
+		return t
+
+	def swaptxcreate_bad8(self):
+		addr = make_burn_addr(self.protos[2], mmtype='compressed')
+		t = self._swaptxcreate_bad(['BCH', '1.234', addr, 'LTC', 'S'])
+		t.expect('to confirm: ', 'NO\n')
+		return t
+
+	def swaptxcreate_bad9(self):
+		return self._swaptxcreate_bad(['BCH', '1.234', 'S', 'LTC', 'B'], exit_val=2, expect1='invalid command-')
+
+	def swaptxsign1_create(self):
+		self.get_file_with_ext('rawtx', delete_all=True)
+		return self._swaptxcreate_ui_common(
+			self._swaptxcreate(['LTC', '5.4321', f'{self.sid}:S:2', 'BCH', f'{self.sid}:C:2']))
+
+	def swaptxsign1(self):
+		return self._swaptxsign()
+
+	def swaptxsend1(self):
+		return self._swaptxsend1()
+
+	def swaptxsend1_status(self):
+		t = self._swaptxsend1(add_opts=['--status'], spawn_only=True)
+		t.expect('in mempool')
+		return t
+
+	def _swaptxsend1(self, *, add_opts=[], spawn_only=False):
+		return self._swaptxsend(
+			add_opts = add_opts + [
+			# test overriding host:port with coin-specific options:
+			'--rpc-host=unreachable', # unreachable host
+			'--ltc-rpc-host=localhost',
+			'--rpc-port=46381',       # bad port
+			'--ltc-rpc-port=20680',
+			],
+			spawn_only = spawn_only)
+
+	def _swaptxsend(self, *, add_opts=[], spawn_only=False):
+		fn = self.get_file_with_ext('sigtx')
+		t = self.spawn('mmgen-txsend', add_opts + ['-q', '-d', self.tmpdir, '--bob', fn])
+		if spawn_only:
+			return t
+		t.expect('view: ', 'v')
+		t.expect('(y/N): ', 'n')
+		t.expect('to confirm: ', 'YES\n')
+		return t
+
+	def _swaptxsign(self, *, add_opts=[], expect=None):
+		self.get_file_with_ext('sigtx', delete_all=True)
+		fn = self.get_file_with_ext('rawtx')
+		t = self.spawn('mmgen-txsign', add_opts + ['-d', self.tmpdir, '--bob', fn])
+		t.view_tx('t')
+		if expect:
+			t.expect(expect)
+		t.passphrase(dfl_wcls.desc, rt_pw)
+		t.do_comment(None)
+		t.expect('(Y/n): ', 'y')
+		t.written_to_file('Signed transaction')
+		return t
+
+	def swaptxsign2_create(self):
+		self.get_file_with_ext('rawtx', delete_all=True)
+		addr = make_burn_addr(self.protos[2], mmtype='compressed')
+		t = self._swaptxcreate(['LTC', '4.56789', f'{self.sid}:S:3', 'BCH', addr])
+		t.expect('to confirm: ', 'YES\n') # confirm non-MMGen destination
+		return self._swaptxcreate_ui_common(t)
+
+	def swaptxsign2(self):
+		return self._swaptxsign(add_opts=['--allow-non-wallet-swap'], expect='swap to non-wallet address')
+
+	def swaptxsend2(self):
+		return self._swaptxsend()
+
+	def swaptxbump1(self):
+		return self._swaptxbump('20s', add_opts=['--allow-non-wallet-swap'])
+
+	def swaptxbump2(self): # create one-output TX back to self to rescue funds
+		return self._swaptxbump('40s', output_args=[f'{self.sid}:S:4'])
+
+	def _swaptxbump(self, fee, *, add_opts=[], output_args=[], exit_val=None):
+		self.get_file_with_ext('rawtx', delete_all=True)
+		fn = self.get_file_with_ext('sigtx')
+		t = self.spawn(
+			'mmgen-txbump',
+			['-q', '-d', self.tmpdir, '--bob'] + add_opts + output_args + [fn],
+			exit_val = exit_val)
+		return self._swaptxbump_ui_common(t, interactive_fee=fee, new_outputs=bool(output_args))
+
+	def _swaptxbump_ui_common_new_outputs(self, t, *, inputs=None, interactive_fee=None, file_desc=None):
+		return self._swaptxbump_ui_common(t, interactive_fee=interactive_fee, new_outputs=True)
+
+	def _swaptxbump_ui_common(self, t, *, inputs=None, interactive_fee=None, file_desc=None, new_outputs=False):
+		if new_outputs:
+			t.expect('fee: ', interactive_fee + '\n')
+			t.expect('(Y/n): ', 'y')        # fee ok?
+			t.expect('(Y/n): ', 'y')        # change ok?
+		else:
+			t.expect('ENTER for the change output): ', '\n')
+			t.expect('(Y/n): ', 'y')        # confirm deduct from chg output
+			t.expect('to continue: ', '\n') # exit swap quote
+			t.expect('fee: ', interactive_fee + '\n')
+			t.expect('(Y/n): ', 'y')        # fee ok?
+		t.expect('(y/N): ', 'n')            # comment?
+		t.expect('(y/N): ', 'y')            # save?
+		return t
+
+	def swaptxsign3(self):
+		return self.swaptxsign2()
+
+	def swaptxsend3(self):
+		return self._swaptxsend()
+
+	def swaptxsign4(self):
+		return self._swaptxsign()
+
+	def swaptxsend4(self):
+		return self._swaptxsend()
+
+	def _generate_for_proto(self, proto_idx):
+		return self.generate(num_blocks=1, add_opts=[f'--coin={self.protos[proto_idx].coin}'])
+
+	def generate0(self):
+		return self._generate_for_proto(0)
+
+	def generate1(self):
+		return self._generate_for_proto(1)
+
+	def generate2(self):
+		return self._generate_for_proto(2)
+
+	def swap_bal1(self):
+		return self._bob_bal(1, '1494.56784238')
+
+	def swap_bal2(self):
+		return self._bob_bal(1, '1382.79038152')
+
+	def swap_bal3(self):
+		return self._bob_bal(0, '999.99990407')
+
+	def swaptxsign1_do(self):
+		return self._swaptxcreate_ui_common(
+			self._swaptxcreate(['LTC', '111.777444', f'{self.sid}:B:2', 'BCH', f'{self.sid}:C:2'], action='txdo'),
+			sign_and_send = True,
+			file_desc = 'Sent transaction')
+
+	def swaptxsign_bad1_create(self):
+		self.get_file_with_ext('rawtx', delete_all=True)
+		return self.swaptxcreate6()
+
+	def swaptxsign_bad1(self):
+		self.get_file_with_ext('sigtx', delete_all=True)
+		return self._swaptxsign_bad('non-wallet address forbidden')
+
+	def _swaptxsign_bad(self, expect, *, add_opts=[], exit_val=1):
+		fn = self.get_file_with_ext('rawtx')
+		t = self.spawn('mmgen-txsign', add_opts + ['-d', self.tmpdir, '--bob', fn], exit_val=exit_val)
+		t.expect('view: ', '\n')
+		t.expect(expect)
+		return t
+
+	def swaptxsign_bad2_create(self):
+		self.get_file_with_ext('rawtx', delete_all=True)
+		return self.swaptxcreate1(idx=4)
+
+	def swaptxsign_bad2(self):
+		return self._swaptxsign()
+
+	def swaptxsend_bad2(self):
+		import json
+		from mmgen.tx.file import json_dumps
+		from mmgen.util import make_chksum_6
+		fn = self.get_file_with_ext('sigtx')
+		with open(fn) as fh:
+			data = json.load(fh)
+		data['MMGenTransaction']['swap_quote_expiry'] -= 2400
+		data['chksum'] = make_chksum_6(json_dumps(data['MMGenTransaction']))
+		with open(fn, 'w') as fh:
+			json.dump(data, fh)
+		t = self.spawn('mmgen-txsend', ['-d', self.tmpdir, '--bob', fn], exit_val=2)
+		t.expect('expired')
+		return t
+
+	run_setup_bip39 = CmdTestAutosign.run_setup_bip39
+	run_setup = CmdTestAutosign.run_setup
+
+	def swap_wait_loop_start(self):
+		return self.wait_loop_start(add_opts=['--allow-non-wallet-swap'])
+
+	def autosign_swaptxcreate1(self):
+		return self._user_txcreate(
+			'bob',
+			progname = 'swaptxcreate',
+			input_handler = self._swaptxcreate_ui_common,
+			output_args = ['BTC', '8.88', f'{self.sid}:S:3', 'LTC', f'{self.sid}:S:3'])
+
+	def autosign_swaptxsend1(self):
+		return self._user_txsend('bob', need_rbf=True)
+
+	def autosign_swaptxbump1(self):
+		return self._user_txcreate(
+			'bob',
+			progname = 'txbump',
+			input_handler = self._swaptxbump_ui_common_new_outputs,
+			output_args = [f'{self.sid}:S:3'])
+
+	def autosign_swaptxsend2(self):
+		return self._user_txsend('bob', need_rbf=True)
+
+	# admin methods:
+
+	def sleep(self):
+		import time
+		time.sleep(1000)
+		return 'ok'
+
+	def listaddresses0(self):
+		return self._listaddresses(0)
+
+	def listaddresses1(self):
+		return self._listaddresses(1)
+
+	def listaddresses2(self):
+		return self._listaddresses(2)
+
+	def _listaddresses(self, proto_idx):
+		return self.user_bal('bob', None, proto=self.protos[proto_idx], skip_check=True)
+
+	def mempool0(self):
+		return self._mempool(0)
+
+	def mempool1(self):
+		return self._mempool(1)
+
+	def mempool2(self):
+		return self._mempool(2)
+
+	def _mempool(self, proto_idx):
+		self.spawn('', msg_only=True)
+		data = self._do_cli(['getrawmempool'], add_opts=[f'--coin={self.protos[proto_idx].coin}'])
+		assert data
+		return 'ok'

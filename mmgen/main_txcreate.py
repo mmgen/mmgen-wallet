@@ -73,6 +73,7 @@ opts_data = {
 			+                        Choices: {x_all})
 			-- -v, --verbose         Produce more verbose output
 			b- -V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
+			-s -x, --proxy=P         Fetch the swap quote via SOCKS5 proxy ‘P’ (host:port)
 			-- -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 			e- -X, --cached-balances Use cached balances
 		""",
@@ -80,7 +81,7 @@ opts_data = {
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
-			u_args = help_notes('txcreate_args')),
+			u_args = help_notes(f'{target}create_args')),
 		'options': lambda cfg, proto, help_notes, s: s.format(
 			cfg    = cfg,
 			cu     = proto.coin,
@@ -92,10 +93,10 @@ opts_data = {
 			x_all = fmt_list(cfg._autoset_opts['swap_proto'].choices, fmt='no_spc'),
 			x_dfl = cfg._autoset_opts['swap_proto'].choices[0]),
 		'notes': lambda cfg, help_mod, help_notes, s: s.format(
-			c      = help_mod('txcreate'),
+			c      = help_mod(f'{target}create'),
 			F      = help_notes('fee'),
 			n_at   = help_notes('address_types'),
-			x      = help_mod('txcreate_examples'))
+			x      = help_mod(f'{target}create_examples'))
 	}
 }
 

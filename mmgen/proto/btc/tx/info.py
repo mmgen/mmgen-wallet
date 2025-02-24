@@ -65,7 +65,7 @@ class TxInfo(TxInfo):
 					append_color='green')
 			else:
 				return MMGenID.fmtc(
-					nonmm_str,
+					'[vault address]' if not is_input and e.is_vault else nonmm_str,
 					width = max_mmwid,
 					color = True)
 

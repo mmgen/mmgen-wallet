@@ -15,7 +15,7 @@ tx.info: transaction info class
 import importlib
 
 from ..cfg import gc
-from ..color import red, green, cyan, orange
+from ..color import red, green, cyan, orange, blue, yellow, magenta
 from ..util import msg, msg_r, decode_timestamp, make_timestr
 from ..util2 import format_elapsed_hr
 
@@ -51,7 +51,7 @@ class TxInfo:
 
 		def gen_view():
 			yield (self.txinfo_hdr_fs_short if terse else self.txinfo_hdr_fs).format(
-				hdr = cyan('TRANSACTION DATA'),
+				hdr = cyan(('SWAP ' if tx.is_swap else '') + 'TRANSACTION DATA'),
 				i = tx.txid.hl(),
 				a = tx.send_amt.hl(),
 				c = tx.dcoin,
@@ -71,6 +71,18 @@ class TxInfo:
 
 			if tx.coin_txid:
 				yield f'  {tx.coin} TxID: {tx.coin_txid.hl()}\n'
+
+			if tx.is_swap:
+				from ..swap.proto.thorchain.memo import Memo, proto_name
+				if Memo.is_partial_memo(tx.data_output.data):
+					p = Memo.parse(tx.data_output.data)
+					yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(proto_name))
+					yield '    Swap: {}\n'.format(orange(f'{tx.proto.coin} => {p.asset}'))
+					yield '    Dest: {}{}\n'.format(
+						cyan(p.address),
+						orange(f' ({tx.swap_recv_addr_mmid})') if tx.swap_recv_addr_mmid else '')
+					if not tx.swap_recv_addr_mmid:
+						yield yellow('    Warning: swap destination address is not a wallet address!\n')
 
 			enl = ('\n', '')[bool(terse)]
 			yield enl

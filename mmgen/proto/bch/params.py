@@ -21,6 +21,7 @@ from .cashaddr import cashaddr_decode_addr, cashaddr_encode_addr, cashaddr_addr_
 class mainnet(mainnet):
 	is_fork_of      = 'Bitcoin'
 	mmtypes         = ('L', 'C')
+	preferred_mmtypes = ('C',)
 	sighash_type    = 'ALL|FORKID'
 	forks = [
 		_finfo(478559, '000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec', 'BTC', False)

@@ -12,17 +12,21 @@
 tx.bump: transaction bump class
 """
 
-from .new import New
+from .new_swap import NewSwap
 from .completed import Completed
 from ..util import msg, ymsg, is_int, die
 from ..color import pink
 
-class Bump(Completed, New):
+class Bump(Completed, NewSwap):
 	desc = 'fee-bumped transaction'
 	ext  = 'rawtx'
 	bump_output_idx = None
 	is_bump = True
-	swap_attrs = ('is_swap',)
+	swap_attrs = (
+		'is_swap',
+		'swap_proto',
+		'swap_quote_expiry',
+		'swap_recv_addr_mmid')
 
 	def __init__(self, *, check_sent, new_outputs, **kwargs):
 
@@ -79,7 +83,16 @@ class Bump(Completed, New):
 				pink(self.fee_abs2rel(self.min_fee)),
 				self.rel_fee_disp))
 
-		self.usr_fee = self.get_usr_fee_interactive(fee=self.cfg.fee, desc='User-selected')
+		if self.is_swap:
+			self.send_proto = self.proto
+			self.recv_proto = self.check_swap_memo().proto
+			fee_hint = self.update_vault_output(self.send_amt)
+		else:
+			fee_hint = None
+
+		self.usr_fee = self.get_usr_fee_interactive(
+			fee = self.cfg.fee or fee_hint,
+			desc = 'User-selected' if self.cfg.fee else 'Recommended' if fee_hint else None)
 
 		self.bump_fee(output_idx, self.usr_fee)
 

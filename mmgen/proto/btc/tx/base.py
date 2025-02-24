@@ -250,7 +250,10 @@ class Base(TxBase):
 			#     DATA: opcode_byte ('6a') + push_byte + nulldata_bytes
 			return sum(
 				{'p2pkh':34, 'p2sh':32, 'bech32':31}[o.addr.addr_fmt] if o.addr else
-				(11 + len(o.data))
+				(11 + len(o.data)) if o.data else
+				# guess value if o.addr is missing (probably a vault address):
+				34 if self.proto.coin == 'BCH' else
+				31
 					for o in self.outputs)
 
 		# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
@@ -294,6 +297,17 @@ class Base(TxBase):
 			abs_fee /
 			getattr(self.proto.coin_amt, to_unit) /
 			self.estimate_size()))
+
+	@property
+	def data_output(self):
+		res = self.data_outputs
+		if len(res) > 1:
+			raise ValueError(f'{res}: too many data outputs in transaction (only one allowed)')
+		return res[0] if len(res) == 1 else None
+
+	@property
+	def data_outputs(self):
+		return [o for o in self.outputs if o.data]
 
 	@property
 	def nondata_outputs(self):

@@ -21,6 +21,7 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 	network_names = _nw('mainnet', 'testnet', 'devnet')
 	addr_len      = 20
 	mmtypes       = ('E',)
+	preferred_mmtypes  = ('E',)
 	dfl_mmtype    = 'E'
 	mod_clsname   = 'Ethereum'
 	pubkey_type   = 'std' # required by DummyWIF

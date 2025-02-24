@@ -110,6 +110,9 @@ async def main():
 			tx.info.view_with_prompt('View transaction details?', pause=False)
 		sys.exit(retval)
 
+	if tx.is_swap:
+		tx.check_swap_expiry()
+
 	if not cfg.yes:
 		tx.info.view_with_prompt('View transaction details?')
 		if tx.add_comment(): # edits an existing comment, returns true if changed

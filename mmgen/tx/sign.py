@@ -178,12 +178,18 @@ async def txsign(cfg_parm, tx, seed_files, kl, kal, tx_num_str='', passwd_file=N
 				sep + sep.join(missing)))
 		keys += tmp.data
 
+	sm_output = tx.check_swap_memo() # do this for non-swap transactions too!
+
 	if cfg.mmgen_keys_from_file:
 		keys += add_keys('inputs', tx.inputs, keyaddr_list=kal)
 		add_keys('outputs', tx.outputs, keyaddr_list=kal)
+		if sm_output:
+			add_keys('swap destination address', [sm_output], keyaddr_list=kal)
 
 	keys += add_keys('inputs', tx.inputs, seed_files, saved_seeds)
 	add_keys('outputs', tx.outputs, seed_files, saved_seeds)
+	if sm_output:
+		add_keys('swap destination address', [sm_output], seed_files, saved_seeds)
 
 	# this (boolean) attr isn't needed in transaction file
 	tx.delete_attrs('inputs', 'have_wif')

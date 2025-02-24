@@ -79,6 +79,9 @@ opts_data = {
 			-- -s, --send             Sign and send the transaction (the default if seed
 			+                         data is provided)
 			-- -v, --verbose          Produce more verbose output
+			-- -W, --allow-non-wallet-swap Allow signing of swap transactions that send funds
+			+                         to non-wallet addresses
+			-- -x, --proxy=P          Fetch the swap quote via SOCKS5 proxy ‘P’ (host:port)
 			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 			-- -z, --show-hash-presets Show information on available hash presets
 """,
@@ -94,6 +97,11 @@ identical to that of ‘mmgen-txcreate’.
 
 The user should take care to select a fee sufficient to ensure the original
 transaction is replaced in the mempool.
+
+When bumping a swap transaction, the swap protocol’s quote server on the
+Internet must be reachable either directly or via the SOCKS5 proxy specified
+with the --proxy option.  To improve privacy, it’s recommended to proxy
+requests to the quote server via Tor or some other anonymity network.
 
 {e}
 {s}

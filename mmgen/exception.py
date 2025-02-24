@@ -70,6 +70,7 @@ class ExtensionModuleError(Exception):    mmcode = 2
 class MoneroMMGenTXFileParseError(Exception): mmcode = 2
 class AutosignTXError(Exception):         mmcode = 2
 class MMGenImportError(Exception):        mmcode = 2
+class SwapMemoParseError(Exception):      mmcode = 2
 
 # 3: yellow hl, 'MMGen Error' + exception + message
 class RPCFailure(Exception):              mmcode = 3

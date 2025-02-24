@@ -170,24 +170,27 @@ class New(Base):
 			return False
 		return True
 
-	def add_output(self, coinaddr, amt, is_chg=False, data=None):
-		self.outputs.append(self.Output(self.proto, addr=coinaddr, amt=amt, is_chg=is_chg, data=data))
+	def add_output(self, coinaddr, amt, is_chg=False, is_vault=False, data=None):
+		self.outputs.append(
+			self.Output(self.proto, addr=coinaddr, amt=amt, is_chg=is_chg, is_vault=is_vault, data=data))
 
 	def process_data_output_arg(self, arg):
 		return None
 
 	def parse_cmdline_arg(self, proto, arg_in, ad_f, ad_w):
 
-		_pa = namedtuple('txcreate_cmdline_output', ['arg', 'mmid', 'addr', 'amt', 'data'])
+		_pa = namedtuple('txcreate_cmdline_output', ['arg', 'mmid', 'addr', 'amt', 'data', 'is_vault'])
 
 		if data := self.process_data_output_arg(arg_in):
-			return _pa(arg_in, None, None, None, data)
+			return _pa(arg_in, None, None, None, data, False)
 
 		arg, amt = arg_in.split(',', 1) if ',' in arg_in else (arg_in, None)
 
-		coin_addr, mmid = (None, None)
+		coin_addr, mmid, is_vault = (None, None, False)
 
-		if mmid := get_obj(MMGenID, proto=proto, id_str=arg, silent=True):
+		if arg == 'vault' and self.is_swap:
+			is_vault = True
+		elif mmid := get_obj(MMGenID, proto=proto, id_str=arg, silent=True):
 			coin_addr = mmaddr2coinaddr(self.cfg, arg, ad_w, ad_f, proto)
 		elif is_coin_addr(proto, arg):
 			coin_addr = CoinAddr(proto, arg)
@@ -198,13 +201,16 @@ class New(Base):
 		else:
 			die(2, f'{arg_in}: invalid command-line argument')
 
-		return _pa(arg, mmid, coin_addr, amt, None)
+		return _pa(arg, mmid, coin_addr, amt, None, is_vault)
 
-	async def get_autochg_addr(self, proto, arg, exclude, desc):
+	async def get_autochg_addr(self, proto, arg, exclude, desc, all_addrtypes=False):
 		from ..tw.addresses import TwAddresses
 		al = await TwAddresses(self.cfg, proto, get_data=True)
 
-		if obj := get_obj(MMGenAddrType, proto=proto, id_str=arg, silent=True):
+		if all_addrtypes:
+			res = al.get_change_address_by_addrtype(None, exclude=exclude, desc=desc)
+			req_desc = 'of any allowed address type'
+		elif obj := get_obj(MMGenAddrType, proto=proto, id_str=arg, silent=True):
 			res = al.get_change_address_by_addrtype(obj, exclude=exclude, desc=desc)
 			req_desc = f'of address type {arg!r}'
 		else:
@@ -233,14 +239,15 @@ class New(Base):
 				self.add_output(None, self.proto.coin_amt('0'), data=a.data)
 			else:
 				self.add_output(
-					coinaddr = a.addr or (
+					coinaddr = None if a.is_vault else a.addr or (
 						await self.get_autochg_addr(
 							self.proto,
 							a.arg,
 							exclude = [a.mmid for a in parsed_args if a.mmid],
 							desc = 'change address')).addr,
 					amt = self.proto.coin_amt(a.amt or '0'),
-					is_chg = not a.amt)
+					is_chg = not a.amt,
+					is_vault = a.is_vault)
 
 		if self.chg_idx is None:
 			die(2,
@@ -261,7 +268,7 @@ class New(Base):
 		self.check_dup_addrs('outputs')
 
 		if self.chg_output is not None:
-			if self.chg_autoselected:
+			if self.chg_autoselected and not self.is_swap: # swap TX, so user has already confirmed
 				self.confirm_autoselected_addr(self.chg_output.mmid, 'change address')
 			elif len(self.nondata_outputs) > 1:
 				await self.warn_addr_used(self.proto, self.chg_output, 'change address')
@@ -430,8 +437,8 @@ class New(Base):
 		if not do_info:
 			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(cmd_args)
 			if self.is_swap:
-				# updates self.proto!
-				self.proto, cmd_args = await self.process_swap_cmdline_args(cmd_args, addrfile_args)
+				cmd_args = await self.process_swap_cmdline_args(cmd_args, addrfile_args)
+				self.proto = self.send_proto # updating self.proto!
 			from ..rpc import rpc_init
 			self.rpc = await rpc_init(self.cfg, self.proto)
 			from ..addrdata import TwAddrData
@@ -488,6 +495,9 @@ class New(Base):
 
 		if not self.cfg.yes:
 			self.add_comment()  # edits an existing comment
+
+		if self.is_swap:
+			self.update_vault_output(self.vault_output.amt)
 
 		await self.create_serialized(locktime=locktime) # creates self.txid too
 

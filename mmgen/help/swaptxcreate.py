@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+#
+# MMGen Wallet, a terminal-based cryptocurrency wallet
+# Copyright (C)2013-2025 The MMGen Project <mmgen@tuta.io>
+# Licensed under the GNU General Public License, Version 3:
+#   https://www.gnu.org/licenses
+# Public project repositories:
+#   https://github.com/mmgen/mmgen-wallet
+#   https://gitlab.com/mmgen/mmgen-wallet
+
+"""
+help.swaptxcreate: swaptxcreate and swaptxdo help notes for the MMGen Wallet suite
+"""
+
+def help(proto, cfg):
+	return """
+This script is similar in operation to ‘mmgen-txcreate’, only with additional
+steps.  Users are advised to first familiarize themselves with the use of that
+script before attempting to perform a swap with this one.
+
+The tracking wallets of both the send and receive coins must be available when
+the script is invoked.  If the two coin daemons are running on different hosts
+than the script, or with non-standard ports, coin-specific RPC options may be
+required (see EXAMPLES below).
+
+The swap protocol’s quote server on the Internet must be reachable either
+directly or via the SOCKS5 proxy specified with the --proxy option. To improve
+privacy, it’s recommended to proxy requests to the quote server via Tor or
+some other anonymity network.
+
+The resulting transaction file is saved, signed, sent, and optionally bumped,
+exactly the same way as one created with ‘mmgen-txcreate’.  Autosign with
+automount is likewise supported via the --autosign option.
+
+The command line must contain at minimum a send coin (COIN1) and receive coin
+(COIN2) symbol.  Currently supported coins are BTC, LTC and BCH.  All other
+arguments are optional.  If AMT is specified, the specified value of send coin
+will be swapped and the rest returned to a change address in the originating
+tracking wallet.  Otherwise, the entire value of the interactively selected
+inputs will be swapped.
+
+By default, the change and destination addresses are chosen automatically by
+finding the lowest-indexed unused addresses of the preferred address types in
+the send and receive tracking wallets.  Types ‘B’, ‘S’ and ‘C’ (see ADDRESS
+TYPES below) are searched in that order for unused addresses.
+
+If the wallet contains eligible unused addresses with multiple Seed IDs, the
+user will be presented with a list of the lowest-indexed addresses of
+preferred type for each Seed ID and prompted to choose from among them.
+
+Change and destination addresses may also be specified manually with the
+CHG_ADDR and ADDR arguments.  These may be given as full MMGen IDs or in the
+form ADDRTYPE_CODE or SEED_ID:ADDRTYPE_CODE (see EXAMPLES below and the
+‘mmgen-txcreate’ help screen for details).
+
+While discouraged, sending change or swapping to non-wallet addresses is also
+supported, in which case the signing script (‘mmgen-txsign’ or ‘mmgen-
+autosign’, as applicable) must be invoked with the --allow-non-wallet-swap
+option.
+
+Rather than specifying a transaction fee on the command line, it’s advisable
+to start with the fee suggested by the swap protocol quote server (the script
+does this automatically) and then adjust the fee interactively if desired.
+
+When choosing a fee, bear in mind that the longer the transaction remains
+unconfirmed, the greater the risk that the vault address will expire, leading
+to loss of funds.  It’s therefore advisable to learn how to create, sign and
+send replacement transactions with ‘mmgen-txbump’ before performing a swap
+with this script.  When bumping a stuck swap transaction, the safest option
+is to create a replacement transaction with one output that returns funds back
+to the originating tracking wallet, thus aborting the swap, rather than one
+that merely increases the fee (see EXAMPLES below).
+
+Before broadcasting the transaction, it’s advisable to double-check the vault
+address on a block explorer such as thorchain.net or runescan.io.
+
+The MMGen Node Tools suite contains two useful tools to help with fine-tuning
+transaction fees, ‘mmnode-feeview’ and ‘mmnode-blocks-info’, in addition to
+‘mmnode-ticker’, which can be used to calculate the current cross-rate between
+the asset pair of a swap, as well as the total receive value in terms of the
+send value.
+"""

@@ -22,6 +22,7 @@ amt: MMGen CoinAmt and related classes
 
 from decimal import Decimal
 from .objmethods import Hilite, InitErrors
+from .obj import get_obj
 
 class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 	"""
@@ -154,6 +155,9 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 
 	def __mod__(self, *args, **kwargs):
 		self.method_not_implemented()
+
+def is_coin_amt(proto, num, from_unit=None, from_decimal=False):
+	return get_obj(proto.coin_amt, num=num, from_unit=from_unit, from_decimal=from_decimal, silent=True, return_bool=True)
 
 class BTCAmt(CoinAmt):
 	coin = 'BTC'

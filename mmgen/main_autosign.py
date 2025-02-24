@@ -57,6 +57,8 @@ opts_data = {
 -v, --verbose         Produce more verbose output
 -w, --wallet-dir=D    Specify an alternate wallet dir
                       (default: {asi.dfl_wallet_dir!r})
+-W, --allow-non-wallet-swap Allow signing of swap transactions that send funds
+                      to non-wallet addresses
 -x, --xmrwallets=L    Range or list of wallets to be used for XMR autosigning
 """,
 	'notes': """

@@ -67,6 +67,8 @@ opts_data = {
                       wallet is scanned for subseeds.
 -v, --verbose         Produce more verbose output
 -V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
+-W, --allow-non-wallet-swap Allow signing of swap transactions that send funds
+                      to non-wallet addresses
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 """,
 	'notes': """

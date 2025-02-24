@@ -1194,8 +1194,8 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		t.expect(f'Mined {num_blocks} block')
 		return t
 
-	def _do_cli(self, cmd_args, decode_json=False):
-		return self._do_mmgen_regtest(['cli'] + cmd_args, decode_json=decode_json)
+	def _do_cli(self, cmd_args, add_opts=[], decode_json=False):
+		return self._do_mmgen_regtest(add_opts + ['cli'] + cmd_args, decode_json=decode_json)
 
 	def _do_mmgen_regtest(self, cmd_args, decode_json=False):
 		ret = self.spawn(

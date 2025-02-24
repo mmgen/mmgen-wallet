@@ -21,6 +21,22 @@ class OnlineSigned(Signed):
 		from . import _base_proto_subclass
 		return _base_proto_subclass('Status', 'status', self.proto)(self)
 
+	def check_swap_expiry(self):
+		import time
+		from ..util import msg, make_timestr, die
+		from ..util2 import format_elapsed_hr
+		from ..color import pink, yellow
+		expiry = self.swap_quote_expiry
+		now = int(time.time())
+		t_rem = expiry - now
+		clr = yellow if t_rem < 0 else pink
+		msg('Swap quote {a} {b} [{c}]'.format(
+			a = clr('expired' if t_rem < 0 else 'expires'),
+			b = clr(format_elapsed_hr(expiry, now=now, future_msg='from now')),
+			c = make_timestr(expiry)))
+		if t_rem < 0:
+			die(2, 'Swap quote has expired. Please re-create the transaction')
+
 	def confirm_send(self):
 		from ..util import msg
 		from ..ui import confirm_or_raise
