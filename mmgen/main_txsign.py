@@ -89,8 +89,8 @@ column below:
 			ss      = help_notes('dfl_subseeds'),
 			ss_max  = SubSeedIdxRange.max_idx,
 			cu      = proto.coin),
-		'notes': lambda help_notes, s: s.format(
-			t       = help_notes('txsign'),
+		'notes': lambda help_mod, help_notes, s: s.format(
+			t       = help_mod('txsign'),
 			f       = help_notes('fmt_codes')),
 	}
 }

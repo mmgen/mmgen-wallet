@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-txdo: Create, sign and broadcast an online MMGen transaction
+mmgen-txdo: Create, sign and send an online MMGen transaction
 """
 
 from .cfg import gc, Config
@@ -35,7 +35,7 @@ opts_data = {
 	'text': {
 		'desc': {
 			'tx':     f'Create, sign and send an {gc.proj_name} transaction',
-			'swaptx': f'Create, sign and send a DEX swap transaction with {gc.proj_name} inputs and outputs',
+			'swaptx': f'Create, sign and send a DEX swap transaction from one {gc.proj_name} tracking wallet to another',
 		}[target],
 		'usage':   '[opts] {u_args} [addr file ...] [seed source ...]',
 		'options': """
@@ -98,14 +98,15 @@ opts_data = {
 			-- -z, --show-hash-presets Show information on available hash presets
 		""",
 		'notes': """
-{c}\n{F}
+{c}
+{n_at}
+
+{F}
 
                                  SIGNING NOTES
 {s}
 Seed source files must have the canonical extensions listed in the 'FileExt'
 column below:
-
-{n_at}
 
 {f}
 
@@ -113,7 +114,7 @@ column below:
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
-			u_args  = help_notes('txcreate_args', target)),
+			u_args  = help_notes('txcreate_args')),
 		'options': lambda cfg, proto, help_notes, s: s.format(
 			gc      = gc,
 			cfg     = cfg,
@@ -132,13 +133,13 @@ column below:
 			fe_dfl  = cfg._autoset_opts['fee_estimate_mode'].choices[0],
 			x_all   = fmt_list(cfg._autoset_opts['swap_proto'].choices, fmt='no_spc'),
 			x_dfl   = cfg._autoset_opts['swap_proto'].choices[0]),
-		'notes': lambda cfg, help_notes, s: s.format(
-			c       = help_notes('txcreate'),
+		'notes': lambda cfg, help_mod, help_notes, s: s.format(
+			c       = help_mod('txcreate'),
 			F       = help_notes('fee'),
-			s       = help_notes('txsign'),
 			n_at    = help_notes('address_types'),
 			f       = help_notes('fmt_codes'),
-			x       = help_notes('txcreate_examples')),
+			s       = help_mod('txsign'),
+			x       = help_mod('txcreate_examples'))
 	}
 }
 

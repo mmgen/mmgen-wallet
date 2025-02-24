@@ -35,7 +35,7 @@ opts_data = {
 	'text': {
 		'desc': {
 			'tx':     f'Create a transaction with outputs to specified coin or {gc.proj_name} addresses',
-			'swaptx': f'Create a DEX swap transaction with {gc.proj_name} inputs and outputs',
+			'swaptx': f'Create a DEX swap transaction from one {gc.proj_name} tracking wallet to another',
 		}[target],
 		'usage':   '[opts] {u_args} [addr file ...]',
 		'options': """
@@ -80,7 +80,7 @@ opts_data = {
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
-			u_args = help_notes('txcreate_args', target)),
+			u_args = help_notes('txcreate_args')),
 		'options': lambda cfg, proto, help_notes, s: s.format(
 			cfg    = cfg,
 			cu     = proto.coin,
@@ -91,11 +91,11 @@ opts_data = {
 			fe_dfl = cfg._autoset_opts['fee_estimate_mode'].choices[0],
 			x_all = fmt_list(cfg._autoset_opts['swap_proto'].choices, fmt='no_spc'),
 			x_dfl = cfg._autoset_opts['swap_proto'].choices[0]),
-		'notes': lambda cfg, help_notes, s: s.format(
-			c      = help_notes('txcreate'),
+		'notes': lambda cfg, help_mod, help_notes, s: s.format(
+			c      = help_mod('txcreate'),
 			F      = help_notes('fee'),
-			x      = help_notes('txcreate_examples'),
-			n_at   = help_notes('address_types'))
+			n_at   = help_notes('address_types'),
+			x      = help_mod('txcreate_examples'))
 	}
 }
 

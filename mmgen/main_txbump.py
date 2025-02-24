@@ -95,7 +95,8 @@ identical to that of ‘mmgen-txcreate’.
 The user should take care to select a fee sufficient to ensure the original
 transaction is replaced in the mempool.
 
-{e}{s}
+{e}
+{s}
 Seed source files must have the canonical extensions listed in the 'FileExt'
 column below:
 
@@ -104,7 +105,7 @@ column below:
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
-			u_args = help_notes('txcreate_args', 'tx')),
+			u_args = help_notes('txcreate_args')),
 		'options': lambda cfg, help_notes, proto, s: s.format(
 			cfg     = cfg,
 			gc      = gc,
@@ -116,9 +117,9 @@ column below:
 			coin_id = help_notes('coin_id'),
 			dsl     = help_notes('dfl_seed_len'),
 			cu      = proto.coin),
-		'notes': lambda help_notes, s: s.format(
+		'notes': lambda help_mod, help_notes, s: s.format(
 			e       = help_notes('fee'),
-			s       = help_notes('txsign'),
+			s       = help_mod('txsign'),
 			f       = help_notes('fmt_codes')),
 	}
 }

@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-help.xmrwallet: xmrwallet help notes for MMGen suite
+help.xmrwallet: xmrwallet help notes for the MMGen Wallet suite
 """
 
 def help(proto, cfg):

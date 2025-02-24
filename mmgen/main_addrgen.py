@@ -111,9 +111,9 @@ range(s).
 			cfg       = cfg,
 			gc        = gc,
 		),
-		'notes': lambda help_notes, s: s.format(
+		'notes': lambda help_mod, help_notes, s: s.format(
 			n_addrkey = note_addrkey,
-			n_sw      = help_notes('subwallet')+'\n\n',
+			n_sw      = help_mod('subwallet')+'\n\n',
 			n_pw      = help_notes('passwd')+'\n\n',
 			n_bw      = help_notes('brainwallet'),
 			n_fmt     = help_notes('fmt_codes'),
