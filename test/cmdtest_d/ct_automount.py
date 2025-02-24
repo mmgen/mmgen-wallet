@@ -165,6 +165,8 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 				['--alice', '--autosign', '--status', '--verbose'],
 				exit_val = exit_val)
 		t.expect(expect)
+		if not exit_val:
+			t.expect('view: ', 'n')
 		t.read()
 		self.remove_device_online()
 		return t
@@ -177,7 +179,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		return self._alice_txstatus('unsent', 1)
 
 	def alice_txstatus3(self):
-		return self._alice_txstatus('in mempool')
+		return self._alice_txstatus('in mempool', 0)
 
 	def alice_txstatus4(self):
 		return self._alice_txstatus('1 confirmation', 0)

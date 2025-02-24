@@ -20,7 +20,14 @@ from ....util2 import format_elapsed_hr
 
 class Status(TxBase.Status):
 
-	async def display(self, usr_req=False):
+	async def display(self, *, usr_req=False, return_exit_val=False):
+
+		def do_exit(retval, message):
+			if return_exit_val:
+				msg(message)
+				return retval
+			else:
+				die(retval, message)
 
 		tx = self.tx
 
@@ -91,9 +98,9 @@ class Status(TxBase.Status):
 			else:
 				msg('Warning: transaction is in mempool!')
 		elif await is_in_wallet():
-			die(0, f'Transaction has {r.confs} confirmation{suf(r.confs)}')
+			return do_exit(0, f'Transaction has {r.confs} confirmation{suf(r.confs)}')
 		elif await is_in_utxos():
-			die(4, 'ERROR: transaction is in the blockchain (but not in the tracking wallet)!')
+			return do_exit(4, 'ERROR: transaction is in the blockchain (but not in the tracking wallet)!')
 		elif await is_replaced():
 			msg('Transaction has been replaced')
 			msg('Replacement transaction ' + (
@@ -110,4 +117,4 @@ class Status(TxBase.Status):
 						d.append({})
 				for txid, mp_entry in zip(r.replacing_txs, d):
 					msg(f'  {txid}' + (' in mempool' if 'height' in mp_entry else ''))
-			die(0, '')
+			return do_exit(0, '')

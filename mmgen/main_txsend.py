@@ -105,8 +105,10 @@ async def main():
 	if cfg.status:
 		if tx.coin_txid:
 			cfg._util.qmsg(f'{tx.proto.coin} txid: {tx.coin_txid.hl()}')
-		await tx.status.display(usr_req=True)
-		sys.exit(0)
+		retval = await tx.status.display(usr_req=True, return_exit_val=True)
+		if cfg.verbose:
+			tx.info.view_with_prompt('View transaction details?', pause=False)
+		sys.exit(retval)
 
 	if not cfg.yes:
 		tx.info.view_with_prompt('View transaction details?')

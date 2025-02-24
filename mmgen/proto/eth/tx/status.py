@@ -17,7 +17,14 @@ from ....util import msg, die, suf, capfirst
 
 class Status(TxBase.Status):
 
-	async def display(self, usr_req=False):
+	async def display(self, *, usr_req=False, return_exit_val=False):
+
+		def do_exit(retval, message):
+			if return_exit_val:
+				msg(message)
+				return retval
+			else:
+				die(retval, message)
 
 		tx = self.tx
 
@@ -56,8 +63,8 @@ class Status(TxBase.Status):
 						msg(f'{cd} failed to execute!')
 					else:
 						msg(f'{cd} successfully executed with status {ret.exec_status}')
-				die(0, f'Transaction has {ret.confs} confirmation{suf(ret.confs)}')
-			die(1, 'Transaction is neither in mempool nor blockchain!')
+				return do_exit(0, f'Transaction has {ret.confs} confirmation{suf(ret.confs)}')
+			return do_exit(1, 'Transaction is neither in mempool nor blockchain!')
 
 class TokenStatus(Status):
 	pass
