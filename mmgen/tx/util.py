@@ -17,13 +17,11 @@ def get_autosign_obj(cfg):
 	from ..autosign import Autosign
 	return Autosign(
 		Config({
+			'_clone': cfg,
 			'mountpoint': cfg.autosign_mountpoint,
-			'test_suite': cfg.test_suite,
-			'test_suite_root_pfx': cfg.test_suite_root_pfx,
 			'coins': cfg.coin,
 			'online': not cfg.offline, # used only in online environment (xmrwallet, txcreate, txsend, txbump)
-		})
-	)
+		}))
 
 def mount_removable_device(cfg):
 	asi = get_autosign_obj(cfg)
