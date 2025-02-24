@@ -447,7 +447,7 @@ class CmdGroupMgr:
 				yield '  {} - {}'.format(
 					yellow(name.ljust(13)),
 					(cls.__doc__.strip() if cls.__doc__ else cls.__name__))
-				if hasattr(cls, 'cmd_subgroups'):
+				if 'cmd_subgroups' in cls.__dict__:
 					subgroups = {k:v for k, v in cls.cmd_subgroups.items() if not k.startswith('_')}
 					max_w = max(len(k) for k in subgroups)
 					for k, v in subgroups.items():
@@ -762,7 +762,8 @@ class CmdTestRunner:
 									if isinstance(e, KeyError) and e.args[0] == cmdname:
 										ret = getattr(self.tg, cmdname)()
 										if type(ret).__name__ == 'coroutine':
-											asyncio.run(ret)
+											ret = asyncio.run(ret)
+										self.process_retval(cmdname, ret)
 									else:
 										raise
 								do_between()

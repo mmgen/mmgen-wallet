@@ -217,9 +217,7 @@ do_reexec() {
 
 install_secp256k1_mod_maybe() {
 	if [[ "$repo" =~ ^mmgen[-_]wallet ]]; then
-		[ -e mmgen/proto/secp256k1/secp256k1*$(python3 --version | sed 's/.* //;s/\.//;s/\..*//')* ] || {
-			eval "python3 setup.py build_ext --inplace $STDOUT_DEVNULL"
-		}
+		eval "python3 setup.py build_ext --inplace $STDOUT_DEVNULL"
 	fi
 }
 

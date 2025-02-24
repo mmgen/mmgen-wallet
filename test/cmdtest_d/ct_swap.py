@@ -13,15 +13,8 @@ test.cmdtest_d.ct_swap: asset swap tests for the cmdtest.py test suite
 """
 
 from mmgen.protocol import init_proto
-
 from ..include.common import gr_uc
-
-from .ct_regtest import (
-	CmdTestRegtest,
-	rt_data,
-	dfl_wcls,
-	rt_pw,
-	cfg)
+from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, cfg
 
 sample1 = gr_uc[:24]
 sample2 = '00010203040506'

@@ -280,8 +280,8 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		('bob_split1',                 'splitting Bob’s funds'),
 		('generate',                   'mining a block'),
 		('bob_bal2',                   'Bob’s balance'),
-		('bob_rbf_1output_create',     'creating RBF tx with one output'),
-		('bob_rbf_1output_bump',       'bumping RBF tx with one output'),
+		('bob_rbf_1output_create',     'creating RBF TX with one output'),
+		('bob_rbf_1output_bump',       'creating replacement TX with one output'),
 		('bob_bal2a',                  'Bob’s balance (age_fmt=confs)'),
 		('bob_bal2b',                  'Bob’s balance (showempty=1)'),
 		('bob_bal2c',                  'Bob’s balance (showempty=1 minconf=2 age_fmt=days)'),
@@ -1122,7 +1122,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			one_output = True)
 
 	def bob_send_maybe_rbf(self):
-		outputs_cl = self._create_tx_outputs('alice', (('L', 1, ', 60'), ('C', 1, ', 40')))
+		outputs_cl = self._create_tx_outputs('alice', (('L', 1, ',60'), ('C', 1, ',40')))
 		outputs_cl += [self._user_sid('bob')+':'+rtBobOp3]
 		return self.user_txdo(
 			user               = 'bob',
@@ -2174,4 +2174,5 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return 'ok'
 
 class CmdTestRegtestBDBWallet(CmdTestRegtest):
+	'transacting and tracking wallet operations via regtest mode (legacy BDB wallet)'
 	bdb_wallet = True

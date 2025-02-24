@@ -123,6 +123,15 @@ def exec_wrapper_tracemalloc_log():
 			s = sum(stat.size for stat in stats) / 1024,
 			w = col1w))
 
+def exec_wrapper_do_exit(e, exit_val):
+	if exit_val != 0:
+		exec_wrapper_write_traceback(e, exit_val)
+	else:
+		if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
+			exec_wrapper_tracemalloc_log()
+		exec_wrapper_end_msg()
+	exec_wrapper_sys.exit(exit_val)
+
 import sys as exec_wrapper_sys
 import os as exec_wrapper_os
 import time as exec_wrapper_time
@@ -145,17 +154,10 @@ try:
 	with open(exec_wrapper_execed_file) as fp:
 		exec(fp.read())
 except SystemExit as e:
-	if e.code != 0:
-		exec_wrapper_write_traceback(e, e.code)
-	else:
-		if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
-			exec_wrapper_tracemalloc_log()
-		exec_wrapper_end_msg()
-	exec_wrapper_sys.exit(e.code)
+	exec_wrapper_do_exit(e, e.code)
 except Exception as e:
-	exit_val = e.mmcode if hasattr(e, 'mmcode') else e.code if hasattr(e, 'code') else 1
-	exec_wrapper_write_traceback(e, exit_val)
-	exec_wrapper_sys.exit(exit_val)
+	exec_wrapper_do_exit(
+		e, e.mmcode if hasattr(e, 'mmcode') else e.code if hasattr(e, 'code') else 1)
 
 if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
 	exec_wrapper_tracemalloc_log()

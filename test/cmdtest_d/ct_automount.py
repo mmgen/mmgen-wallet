@@ -14,14 +14,15 @@ test.cmdtest_d.ct_automount: autosigning with automount tests for the cmdtest.py
 import time
 
 from .ct_autosign import CmdTestAutosignThreaded
-from .ct_regtest import CmdTestRegtestBDBWallet, rt_pw
+from .ct_regtest import CmdTestRegtest, rt_pw
 from ..include.common import cfg, gr_uc
 
-class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet):
+class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	'automounted transacting operations via regtest mode'
 
 	networks = ('btc', 'bch', 'ltc')
 	tmpdir_nums = [49]
+	bdb_wallet = True
 
 	rt_data = {
 		'rtFundAmt': {'btc':'500', 'bch':'500', 'ltc':'5500'},
@@ -78,7 +79,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtestBDBWallet)
 		self.coins = [cfg.coin.lower()]
 
 		CmdTestAutosignThreaded.__init__(self, trunner, cfgs, spawn)
-		CmdTestRegtestBDBWallet.__init__(self, trunner, cfgs, spawn)
+		CmdTestRegtest.__init__(self, trunner, cfgs, spawn)
 
 		if trunner is None:
 			return

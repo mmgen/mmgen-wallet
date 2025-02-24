@@ -83,7 +83,9 @@ class New(Base):
 	_funds_available = namedtuple('funds_available', ['is_positive', 'amt'])
 
 	def __init__(self, *args, target=None, **kwargs):
-		self.is_swap = target == 'swaptx'
+		if target == 'swaptx':
+			self.is_swap = True
+			self.swap_proto = kwargs['cfg'].swap_proto
 		super().__init__(*args, **kwargs)
 
 	def warn_insufficient_funds(self, amt, coin):
@@ -183,6 +185,8 @@ class New(Base):
 
 		arg, amt = arg_in.split(',', 1) if ',' in arg_in else (arg_in, None)
 
+		coin_addr, mmid = (None, None)
+
 		if mmid := get_obj(MMGenID, proto=proto, id_str=arg, silent=True):
 			coin_addr = mmaddr2coinaddr(self.cfg, arg, ad_w, ad_f, proto)
 		elif is_coin_addr(proto, arg):
@@ -191,7 +195,6 @@ class New(Base):
 			if proto.base_proto_coin != 'BTC':
 				die(2, f'Change addresses not supported for {proto.name} protocol')
 			self.chg_autoselected = True
-			coin_addr = None
 		else:
 			die(2, f'{arg_in}: invalid command-line argument')
 
@@ -219,7 +222,7 @@ class New(Base):
 
 		parsed_args = [self.parse_cmdline_arg(self.proto, arg, ad_f, ad_w) for arg in cmd_args]
 
-		chg_args = [a for a in parsed_args if not ((a.amt and a.addr) or a.data)]
+		chg_args = [a for a in parsed_args if not (a.amt or a.data)]
 
 		if len(chg_args) > 1:
 			desc = 'requested' if self.chg_autoselected else 'listed'
@@ -229,13 +232,15 @@ class New(Base):
 			if a.data:
 				self.add_output(None, self.proto.coin_amt('0'), data=a.data)
 			else:
-				exclude = [a.mmid for a in parsed_args if a.mmid]
 				self.add_output(
 					coinaddr = a.addr or (
-						await self.get_autochg_addr(self.proto, a.arg, exclude=exclude, desc='change address')
-					).addr,
-					amt      = self.proto.coin_amt(a.amt or '0'),
-					is_chg   = not a.amt)
+						await self.get_autochg_addr(
+							self.proto,
+							a.arg,
+							exclude = [a.mmid for a in parsed_args if a.mmid],
+							desc = 'change address')).addr,
+					amt = self.proto.coin_amt(a.amt or '0'),
+					is_chg = not a.amt)
 
 		if self.chg_idx is None:
 			die(2,
@@ -387,13 +392,14 @@ class New(Base):
 				sel_unspent,
 				outputs_sum):
 			return False
+
 		self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
 		return True
 
-	async def get_fee(self, fee, outputs_sum):
+	async def get_fee(self, fee, outputs_sum, start_fee_desc):
 
 		if fee:
-			self.usr_fee = self.get_usr_fee_interactive(fee, 'User-selected')
+			self.usr_fee = self.get_usr_fee_interactive(fee, start_fee_desc)
 		else:
 			fee_per_kb, fe_type = await self.get_rel_fee_from_network()
 			self.usr_fee = self.get_usr_fee_interactive(
@@ -468,7 +474,10 @@ class New(Base):
 			fee_hint = None
 			if self.is_swap:
 				fee_hint = self.update_vault_output(self.vault_output.amt or self.sum_inputs())
-			if funds_left := await self.get_fee(fee_hint or self.cfg.fee, outputs_sum):
+			if funds_left := await self.get_fee(
+					self.cfg.fee or fee_hint,
+					outputs_sum,
+					'User-selected' if self.cfg.fee else 'Recommended' if fee_hint else None):
 				break
 
 		self.check_non_mmgen_inputs(caller)

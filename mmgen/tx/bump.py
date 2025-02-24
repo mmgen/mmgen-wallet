@@ -15,16 +15,29 @@ tx.bump: transaction bump class
 from .new import New
 from .completed import Completed
 from ..util import msg, ymsg, is_int, die
+from ..color import pink
 
 class Bump(Completed, New):
 	desc = 'fee-bumped transaction'
 	ext  = 'rawtx'
 	bump_output_idx = None
 	is_bump = True
+	swap_attrs = ('is_swap',)
 
-	def __init__(self, check_sent, *args, **kwargs):
+	def __init__(self, *, check_sent, new_outputs, **kwargs):
 
-		super().__init__(*args, **kwargs)
+		super().__init__(**kwargs)
+
+		self.new_outputs = new_outputs
+		self.orig_rel_fee = self.get_orig_rel_fee()
+
+		if new_outputs:
+			from .base import Base
+			if self.is_swap:
+				for attr in self.swap_attrs:
+					setattr(self, attr, getattr(Base, attr))
+			self.outputs = self.OutputList(self)
+			self.cfg = kwargs['cfg'] # must use current cfg opts, not those from orig_tx
 
 		if not self.is_replaceable():
 			die(1, f'Transaction {self.txid} is not replaceable')
@@ -60,7 +73,11 @@ class Bump(Completed, New):
 		output_idx = self.choose_output()
 
 		if not silent:
-			msg(f'Minimum fee for new transaction: {self.min_fee.hl()} {self.proto.coin}')
+			msg('Minimum fee for new transaction: {} {} ({} {})'.format(
+				self.min_fee.hl(),
+				self.proto.coin,
+				pink(self.fee_abs2rel(self.min_fee)),
+				self.rel_fee_disp))
 
 		self.usr_fee = self.get_usr_fee_interactive(fee=self.cfg.fee, desc='User-selected')
 

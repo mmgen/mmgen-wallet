@@ -164,15 +164,13 @@ async def main():
 		kal = kl = sign_and_send = None
 	else:
 		orig_tx = await CompletedTX(cfg=cfg, filename=tx_file)
+		kal = get_keyaddrlist(cfg, orig_tx.proto)
+		kl = get_keylist(cfg)
+		sign_and_send = any([seed_files, kl, kal])
 
 	if not silent:
 		msg(green('ORIGINAL TRANSACTION'))
 		msg(orig_tx.info.format(terse=True))
-
-	if not cfg.autosign:
-		kal = get_keyaddrlist(cfg, orig_tx.proto)
-		kl = get_keylist(cfg)
-		sign_and_send = any([seed_files, kl, kal])
 
 	from .tw.ctl import TwCtl
 	tx = await BumpTX(
@@ -180,18 +178,12 @@ async def main():
 		data = orig_tx.__dict__,
 		automount = cfg.autosign,
 		check_sent = cfg.autosign or sign_and_send,
+		new_outputs = bool(cfg._args),
 		twctl = await TwCtl(cfg, orig_tx.proto) if orig_tx.proto.tokensym else None)
 
-	tx.orig_rel_fee = tx.get_orig_rel_fee()
-
-	if cfg._args:
-		tx.new_outputs = True
-		tx.is_swap = False
-		tx.outputs = tx.OutputList(tx)
-		tx.cfg = cfg # NB: with --automount, must use current cfg opts, not those from orig_tx
+	if tx.new_outputs:
 		await tx.create(cfg._args, caller='txdo' if sign_and_send else 'txcreate')
 	else:
-		tx.new_outputs = False
 		await tx.create_feebump(silent=silent)
 
 	if not silent:
