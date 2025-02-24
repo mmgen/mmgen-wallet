@@ -48,7 +48,7 @@ class EthereumRPCClient(RPCClient, metaclass=AsyncInit):
 
 		super().__init__(
 			cfg  = cfg,
-			host = 'localhost' if cfg.test_suite else (proto.rpc_host or cfg.rpc_host or 'localhost'),
+			host = proto.rpc_host or cfg.rpc_host or 'localhost',
 			port = daemon.rpc_port)
 
 		await self.set_backend_async(backend)

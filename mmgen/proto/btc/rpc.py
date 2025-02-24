@@ -128,9 +128,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 
 		super().__init__(
 			cfg  = cfg,
-			host = (
-				'localhost' if cfg.test_suite or cfg.network == 'regtest'
-				else (proto.rpc_host or cfg.rpc_host or 'localhost')),
+			host = proto.rpc_host or cfg.rpc_host or 'localhost',
 			port = daemon.rpc_port)
 
 		self.set_auth()
