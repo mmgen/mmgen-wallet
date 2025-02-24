@@ -269,7 +269,8 @@ class MMGenTxFile(MMGenObject):
 					k: getattr(tx, k) for k in self.attrs
 				} | {
 					'inputs':  [e._asdict() for e in tx.inputs],
-					'outputs': [e._asdict() for e in tx.outputs]
+					'outputs': [{k:v for k,v in e._asdict().items() if not (type(v) is bool and v is False)}
+									for e in tx.outputs]
 				} | {
 					k: getattr(tx, k) for k in self.extra_attrs if getattr(tx, k)
 				})

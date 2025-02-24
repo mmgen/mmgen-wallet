@@ -30,10 +30,19 @@ async def do_txfile_test(desc, fns, cfg=cfg, check=False):
 		assert fn_gen == os.path.basename(fn), f'{fn_gen} != {fn}'
 
 		if check:
+			import json
+			from mmgen.tx.file import json_dumps
+			from mmgen.util import make_chksum_6
 			text = f.format()
 			with open(fpath) as fh:
 				text_chk = fh.read()
-			assert text == text_chk, f'\nformatted text:\n{text}\n  !=\noriginal file:\n{text_chk}'
+			data_chk = json.loads(text_chk)
+			outputs = data_chk['MMGenTransaction']['outputs']
+			for n, o in enumerate(outputs):
+				outputs[n] = {k:v for k,v in o.items() if not (type(v) is bool and v is False)}
+			data_chk['chksum'] = make_chksum_6(json_dumps(data_chk['MMGenTransaction']))
+			text_chk_fixed = json_dumps(data_chk)
+			assert text == text_chk_fixed, f'\nformatted text:\n{text}\n  !=\noriginal file:\n{text_chk_fixed}'
 
 	qmsg('  OK')
 	return True
