@@ -441,6 +441,75 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 	no_insert_check = False
 	threaded        = True
 
+	def _user_txcreate(
+			self,
+			user,
+			progname    = 'txcreate',
+			input_handler = None,
+			chg_addr    = None,
+			opts        = [],
+			output_args = [],
+			exit_val    = 0,
+			expect_str  = None,
+			data_arg    = None,
+			need_rbf    = False):
+
+		if output_args:
+			assert not chg_addr
+
+		if chg_addr:
+			assert not output_args
+
+		if need_rbf and not self.proto.cap('rbf'):
+			return 'skip'
+
+		def do_return():
+			if expect_str:
+				t.expect(expect_str)
+			t.read()
+			self.remove_device_online()
+			return t
+
+		self.insert_device_online()
+
+		sid = self._user_sid(user)
+		t = self.spawn(
+			f'mmgen-{progname}',
+			opts
+			+ [f'--{user}', '--autosign']
+			+ ([data_arg] if data_arg else [])
+			+ (output_args or [f'{self.burn_addr},1.23456', f'{sid}:{chg_addr}']),
+			exit_val = exit_val or None)
+
+		if exit_val:
+			return do_return()
+
+		t = (input_handler or self.txcreate_ui_common)(
+			t,
+			inputs          = '1',
+			interactive_fee = '32s',
+			file_desc       = 'Unsigned automount transaction')
+
+		return do_return()
+
+	def _user_txsend(self, user, comment=None, no_wait=False, need_rbf=False):
+
+		if need_rbf and not self.proto.cap('rbf'):
+			return 'skip'
+
+		if not no_wait:
+			self._wait_signed('transaction')
+
+		self.insert_device_online()
+		t = self.spawn('mmgen-txsend', [f'--{user}', '--quiet', '--autosign'])
+		t.view_tx('t')
+		t.do_comment(comment)
+		self._do_confirm_send(t, quiet=True)
+		t.written_to_file('Sent automount transaction')
+		t.read()
+		self.remove_device_online()
+		return t
+
 	def _wait_loop_start(self, add_opts=[]):
 		t = self.spawn(
 			'mmgen-autosign',

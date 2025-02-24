@@ -86,52 +86,19 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 
 		self.opts.append('--alice')
 
-	def _alice_txcreate(self, chg_addr, opts=[], exit_val=0, expect_str=None, data_arg=None, need_rbf=False):
-
-		if need_rbf and not self.proto.cap('rbf'):
-			return 'skip'
-
-		def do_return():
-			if expect_str:
-				t.expect(expect_str)
-			t.read()
-			self.remove_device_online()
-			return t
-
-		self.insert_device_online()
-
-		sid = self._user_sid('alice')
-		t = self.spawn(
-			'mmgen-txcreate',
-			opts
-			+ ['--alice', '--autosign']
-			+ ([data_arg] if data_arg else [])
-			+ [f'{self.burn_addr},1.23456', f'{sid}:{chg_addr}'],
-			exit_val = exit_val or None)
-
-		if exit_val:
-			return do_return()
-
-		t = self.txcreate_ui_common(
-			t,
-			inputs          = '1',
-			interactive_fee = '32s',
-			file_desc       = 'Unsigned automount transaction')
-
-		return do_return()
-
 	def alice_txcreate1(self):
-		return self._alice_txcreate(
+		return self._user_txcreate(
+			'alice',
 			chg_addr = 'C:5',
 			data_arg = 'data:'+gr_uc[:24])
 
 	def alice_txcreate2(self):
-		return self._alice_txcreate(chg_addr='L:5')
+		return self._user_txcreate('alice', chg_addr='L:5')
 
 	alice_txcreate3 = alice_txcreate2
 
 	def alice_txcreate4(self):
-		return self._alice_txcreate(chg_addr='L:4', need_rbf=True)
+		return self._user_txcreate('alice', chg_addr='L:4', need_rbf=True)
 
 	def _alice_txsend_abort(self, err=False, send_resp='y', expect=None, shred_expect=[]):
 		self.insert_device_online()
@@ -167,25 +134,25 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	alice_txsend_abort5 = alice_txsend_abort2
 
 	def alice_txcreate_bad_have_unsigned(self):
-		return self._alice_txcreate(chg_addr='C:5', exit_val=2, expect_str='already present')
+		return self._user_txcreate('alice', chg_addr='C:5', exit_val=2, expect_str='already present')
 
 	def alice_txcreate_bad_have_unsent(self):
-		return self._alice_txcreate(chg_addr='C:5', exit_val=2, expect_str='unsent transaction')
+		return self._user_txcreate('alice', chg_addr='C:5', exit_val=2, expect_str='unsent transaction')
 
 	def alice_run_autosign_setup(self):
 		return self.run_setup(mn_type='default', use_dfl_wallet=True, passwd=rt_pw)
 
 	def alice_txsend1(self):
-		return self._alice_txsend('This one’s worth a comment', no_wait=True)
+		return self._user_txsend('alice', 'This one’s worth a comment', no_wait=True)
 
 	def alice_txsend2(self):
-		return self._alice_txsend(need_rbf=True)
+		return self._user_txsend('alice', need_rbf=True)
 
 	def alice_txsend3(self):
-		return self._alice_txsend(need_rbf=True)
+		return self._user_txsend('alice', need_rbf=True)
 
 	def alice_txsend5(self):
-		return self._alice_txsend(need_rbf=True)
+		return self._user_txsend('alice', need_rbf=True)
 
 	def _alice_txstatus(self, expect, exit_val=None, need_rbf=False):
 
@@ -217,24 +184,6 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 
 	def alice_txstatus5(self):
 		return self._alice_txstatus('in mempool', need_rbf=True)
-
-	def _alice_txsend(self, comment=None, no_wait=False, need_rbf=False):
-
-		if need_rbf and not self.proto.cap('rbf'):
-			return 'skip'
-
-		if not no_wait:
-			self._wait_signed('transaction')
-
-		self.insert_device_online()
-		t = self.spawn('mmgen-txsend', ['--alice', '--quiet', '--autosign'])
-		t.view_tx('t')
-		t.do_comment(comment)
-		self._do_confirm_send(t, quiet=True)
-		t.written_to_file('Sent automount transaction')
-		t.read()
-		self.remove_device_online()
-		return t
 
 	def alice_txsend_bad_no_unsent(self):
 		self.insert_device_online()
