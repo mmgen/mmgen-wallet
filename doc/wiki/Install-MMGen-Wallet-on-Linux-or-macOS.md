@@ -11,7 +11,7 @@ For computers with no Internet connection, see **Note for offline machines** bel
 #### Debian/Ubuntu:
 
 ```text
-$ sudo apt-get install curl git gcc libtool make autoconf libgmp-dev libssl-dev libpcre3-dev libmpfr-dev libmpc-dev python3-dev python3-pip libsecp256k1-dev
+$ sudo apt-get install curl git gcc libtool make autoconf libgmp-dev libssl-dev libpcre2-dev libmpfr-dev libmpc-dev python3-dev python3-pip libsecp256k1-dev
 ```
 
 #### Arch Linux:

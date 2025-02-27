@@ -38,20 +38,6 @@ Every time the container is started, you may need to create the files afresh:
 
 ### BTC-only testing
 
-Clone the Bitcoin Core repo somewhere on your system:
-
-```text
-$ git clone https://github.com/bitcoin/bitcoin
-```
-
-Install the Bitcoin Core daemon [(source)][sd] [(binaries)][bd].
-
-Point the test suite to your copy of the Bitcoin Core repo:
-
-```text
-$ export CORE_REPO_ROOT=/path/to/bitcoin/core/repo
-```
-
 Install Pycoin:
 
 ```text
@@ -61,12 +47,6 @@ $ python3 -m pip install pycoin
 # offline install:
 $ python3 -m pip download pycoin # online
 $ python3 -m pip install --no-build-isolation pycoin-*.tar.gz # offline
-```
-
-Install Pylint:
-
-```text
-$ python3 -m pip install pylint
 ```
 
 CD to the MMGen Wallet repository root and build without installing:
@@ -135,8 +115,14 @@ may also be started and stopped manually at the DOS or MSYS2 prompt as follows
 #### Monero-Python
 
 ```text
-$ python3 -m pip install pycryptodomex ipaddress varint
+$ python3 -m pip install pycryptodome ipaddress varint
 $ python3 -m pip install --no-deps monero
+```
+
+#### Eth-Keys
+
+```text
+$ python3 -m pip install eth-keys
 ```
 
 #### Vanitygen PlusPlus (forked from Vanitygen Plus)
@@ -157,26 +143,17 @@ $ cd ..
 $ sudo apt-get install golang  # skip this if Go is already installed
 $ git clone https://github.com/FiloSottile/zcash-mini
 $ cd zcash-mini
+$ sed -e "s@github.com/FiloSottile/@@" -i main.go
+$ sed -e "s@github.com/FiloSottile/@@" -i zcash/address.go
+$ sed -e "s@github.com/btcsuite@zcash-mini@" -i zcash/address.go
+$ sed -e "s@golang.org/x@zcash-mini@" -i zcash/address.go
+$ mv vendor/github.com/btcsuite/btcutil .
+$ mv vendor/golang.org/x/crypto .
 $ go mod init zcash-mini
-$ go mod tidy
-$ go build -mod=mod # or just ’go build’
+$ go build -mod=mod
 $ sudo install --strip ./zcash-mini /usr/local/bin
 $ cd ..
 ```
-
-#### Ethkey
-
-On Arch Linux and ArchLinuxArm systems, the ‘ethkey’ utility is included in the
-OpenEthereum package:
-
-```text
-$ pacman -S openethereum
-```
-
-For 64-bit Windows, Linux and macOS systems, ‘ethkey’ can be found in the zip
-archives distributed with [this release][oz].
-
-For other systems (i.e. Debian/Ubuntu ARM), tests involving ‘ethkey’ are skipped.
 
 #### Monero note
 

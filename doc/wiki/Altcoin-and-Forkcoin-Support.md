@@ -77,7 +77,8 @@ option for more complete information.
 #### <a id="a_tx">Transacting and other basic operations</a>
 
 Basic operations with ETH, ETC and ERC20 tokens work as described in the
-[Getting Started][bo] guide, with some differences.  Please note the following:
+[**Getting Started**][bo] guide, with some differences.  Please note the
+following:
 
 * Don’t forget to invoke all commands with `--coin=eth` or `--coin=etc`.
 * Use the `--token` option with the token symbol as parameter for all token

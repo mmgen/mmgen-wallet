@@ -84,7 +84,7 @@ $ bitcoind
 
 # Bitcoin Cash Node:
 $ mkdir $APPDATA/Bitcoin-Cash-Node
-$ bitcoind-bchn --listen=0 --rpcport=8432 --datadir=$APPDATA/Bitcoin-Cash-Node --usecashaddr=0
+$ bitcoind-bchn --listen=0 --rpcport=8432 --datadir=$APPDATA/Bitcoin-Cash-Node
 
 # Litecoin
 $ litecoind
@@ -105,7 +105,7 @@ $ bitcoind --daemon
 $ mkdir ~/.bitcoin-bchn
 $ BCH_DATADIR="$HOME/.bitcoin-bchn"                                 # Linux
 $ BCH_DATADIR="$HOME/Library/Application Support/Bitcoin-Cash-Node" # macOS
-$ bitcoind-bchn --daemon --listen=0 --rpcport=8432 --usecashaddr=0 --datadir="$BCH_DATADIR"
+$ bitcoind-bchn --daemon --listen=0 --rpcport=8432 --datadir="$BCH_DATADIR"
 
 # Litecoin:
 $ litecoind --daemon

@@ -1,9 +1,10 @@
-MMGen Wallet’s regtest mode, also known as Bob and Alice mode, uses the Bitcoin
-daemon’s regression test feature to create a virtual network of two users who
-transact on a private blockchain.
+MMGen Wallet’s regtest mode, also known as Bob and Alice mode, uses the
+regression test feature of the Bitcoin, Litecoin, and Bitcoin Cash daemons
+to create a virtual network of two users who transact on a private blockchain.
 
-All of MMGen Wallet’s functionality is available in regtest mode, making it an
-ideal way to learn to use MMGen Wallet without risking real coins.
+All of MMGen Wallet’s functionality for these coins is available in regtest
+mode, making it an ideal way to learn to use MMGen Wallet without risking real
+assets.
 
 To send a transaction or perform any other operation as Bob or Alice, just add
 the `--bob` or `--alice` option to the applicable MMGen Wallet command.
@@ -128,7 +129,7 @@ Transaction sent: 78ca853816b55527b42ca8784c887a5f482c752522f914d2f17d6afcd8a3b0
 	to create, sign and send transactions in one operation.  In normal, cold
 	wallet mode, you’d create the transaction with `mmgen-txcreate`, sign it
 	offline with `mmgen-txsign` and send it with `mmgen-txsend`.  Use of these
-	commands is explained in detail in the [**Getting Started**][G] guide.
+	commands is explained in detail in the [**Getting Started**][gs] guide.
 
 13. View the transaction in the mempool:
 
@@ -224,4 +225,4 @@ TOTAL: 510 BTC
 $ mmgen-regtest stop
 ```
 
-[G]: Getting-Started-with-MMGen-Wallet.md#a_ct
+[gs]: Getting-Started-with-MMGen-Wallet.md#a_ct
