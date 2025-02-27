@@ -9,6 +9,8 @@
 * [mmgen-seedjoin](commands/command-help-seedjoin.md)
 * [mmgen-seedsplit](commands/command-help-seedsplit.md)
 * [mmgen-subwalletgen](commands/command-help-subwalletgen.md)
+* [mmgen-swaptxcreate](commands/command-help-swaptxcreate.md)
+* [mmgen-swaptxdo](commands/command-help-swaptxdo.md)
 * [mmgen-tool](commands/command-help-tool.md)
 * [mmgen-tool (usage)][u]
 * [mmgen-tool (detailed usage)][d]
