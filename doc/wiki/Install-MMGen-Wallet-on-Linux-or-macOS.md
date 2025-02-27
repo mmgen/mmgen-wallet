@@ -41,7 +41,7 @@ invoked as user.
 $ python3 -m pip install --upgrade pip setuptools build wheel
 ```
 
-### Install MMGen:
+### Install MMGen Wallet:
 
 #### Stable version:
 
@@ -102,11 +102,11 @@ following steps:
 Congratulations, your installation is now complete!  You can now proceed to
 [**Getting Started with MMGen Wallet**][gs].
 
-[01]: Install-Bitcoind
-[02]: Install-Bitcoind-from-Source-on-Linux
-[ts]: Test-Suite
-[gs]: Getting-Started-with-MMGen-Wallet
+[01]: Install-Bitcoind.md
+[02]: Install-Bitcoind-from-Source-on-Linux.md
+[ts]: Test-Suite.md
+[gs]: Getting-Started-with-MMGen-Wallet.md
 [pi]: https://pypi.org
-[af]: Altcoin-and-Forkcoin-Support
+[af]: Altcoin-and-Forkcoin-Support.md
 [ec]: https://github.com/bitcoin-core/secp256k1.git
 [vv]: https://docs.python.org/3/library/venv.html

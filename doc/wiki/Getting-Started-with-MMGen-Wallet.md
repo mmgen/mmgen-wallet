@@ -876,7 +876,7 @@ autosigning][07] on your offline machine.  Autosigning makes it possible to
 transact directly from cold storage in a secure and convenient way.  Ideally,
 your autosigning device should be a Raspberry Pi or other single-board computer
 for which MMGen Wallet provides LED support.  However, an old laptop running
-Linux or macOS would also suffice, provided its network interfaces are removed
+Linux or macOS will also suffice, provided its network interfaces are removed
 or disabled.*
 
 To use MMGen Wallet for not only cold storage but also day-to-day transacting,
@@ -1140,17 +1140,17 @@ $ python3 -m build --no-isolation
 $ python3 -m pip install user --upgrade dist/*.whl
 ```
 
-[01]: Tracking-and-spending-ordinary-Bitcoin-addresses
+[01]: Tracking-and-spending-ordinary-Bitcoin-addresses.md
 [02]: https://tpfaucet.appspot.com
-[03]: Recovering-Your-Keys-Without-the-MMGen-Wallet-Software
-[04]: MMGen-Wallet-Quick-Start-with-Regtest-Mode
-[05]: Key-address-files
-[06]: Subwallets
-[07]: command-help-autosign
-[08]: Install-Bitcoind
-[09]: Altcoin-and-Forkcoin-Support
-[ax]: Altcoin-and-Forkcoin-Support#a_xmr
-[cp]: ../commits/master
-[mx]: command-help-xmrwallet
-[li]: Install-MMGen-Wallet-on-Linux-or-macOS
-[wi]: Install-MMGen-Wallet-on-Microsoft-Windows
+[03]: Recovering-Your-Keys-Without-the-MMGen-Wallet-Software.md
+[04]: MMGen-Wallet-Quick-Start-with-Regtest-Mode.md
+[05]: Key-address-files.md
+[06]: Subwallets.md
+[07]: commands/command-help-autosign.md
+[08]: Install-Bitcoind.md
+[09]: Altcoin-and-Forkcoin-Support.md
+[ax]: Altcoin-and-Forkcoin-Support.md#a_xmr
+[cp]: ../../../../commits/master
+[mx]: commands/command-help-xmrwallet.md
+[li]: Install-MMGen-Wallet-on-Linux-or-macOS.md
+[wi]: Install-MMGen-Wallet-on-Microsoft-Windows.md

@@ -106,7 +106,7 @@ $ curl -O 'https://raw.githubusercontent.com/mmgen/MMGenLive/master/home.mmgen/b
 $ sudo install -v mmlive-node-{start,stop} /usr/local/bin
 ```
 
-[01]: Install-Bitcoind
-[02]: Install-Bitcoind#a_r
+[01]: Install-Bitcoind.md
+[02]: Install-Bitcoind.md#a_r
 [bu]: https://github.com/bitcoin/bitcoin/blob/master/doc/build-unix.md
 [bcha]: https://github.com/Bitcoin-ABC/bitcoin-abc

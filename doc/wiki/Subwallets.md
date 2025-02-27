@@ -145,7 +145,7 @@ the above examples that can be run as-is, see commits [`7538a94`][c1],
 For more detailed usage information, see the [`mmgen-subwalletgen` help
 screen][sh].
 
-[c1]: ../commit/7538a9460e897b9b23d8ac58853c33713334043f
-[c2]: ../commit/d1b8aefde6d3a13337cbe3147d9913eb09b6765b
-[c3]: ../commit/82086c9936843dc43c1892b672cdf1680763ee84
-[sh]: command-help-subwalletgen
+[c1]: ../../../../commit/7538a9460e897b9b23d8ac58853c33713334043f
+[c2]: ../../../../commit/d1b8aefde6d3a13337cbe3147d9913eb09b6765b
+[c3]: ../../../../commit/82086c9936843dc43c1892b672cdf1680763ee84
+[sh]: commands/command-help-subwalletgen.md

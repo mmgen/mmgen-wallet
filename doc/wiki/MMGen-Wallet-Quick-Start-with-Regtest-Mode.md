@@ -224,4 +224,4 @@ TOTAL: 510 BTC
 $ mmgen-regtest stop
 ```
 
-[G]: Getting-Started-with-MMGen-Wallet#a_ct
+[G]: Getting-Started-with-MMGen-Wallet.md#a_ct

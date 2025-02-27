@@ -219,15 +219,16 @@ display the commands’ output on the screen as they’re being run.
 | `test/cmdtest.py`     | overall operation of MMGen Wallet commands           |
 | `test/tooltest.py`    | the `mmgen-tool` utility - overall operation         |
 | `test/tooltest2.py`   | the `mmgen-tool` utility - data validity             |
-| `test/unit_tests.py`  | low-level subsystems                                 |
+| `test/modtest.py`     | low-level subsystems (unit tests)                    |
+| `test/daemontest.py`  | low-level subsystems requiring daemons               |
 
-[sd]: Install-Bitcoind-from-Source-on-Linux
-[bd]: Install-Bitcoind
+[sd]: Install-Bitcoind-from-Source-on-Linux.md
+[bd]: Install-Bitcoind.md
 [md]: https://getmonero.org/downloads/#linux
 [ad]: https://download.bitcoinabc.org/
 [cnd]: https://bitcoincashnode.org/
 [ld]: https://download.litecoin.org/litecoin-0.17.1/
-[oe]: Altcoin-and-Forkcoin-Support#a_ed
-[sc]: Altcoin-and-Forkcoin-Support#a_dt
-[xr]: Altcoin-and-Forkcoin-Support#a_xmr_req
+[oe]: Altcoin-and-Forkcoin-Support.md#a_ed
+[sc]: Altcoin-and-Forkcoin-Support.md#a_dt
+[xr]: Altcoin-and-Forkcoin-Support.md#a_xmr_req
 [oz]: https://github.com/openethereum/openethereum/releases/tag/v3.1.0
