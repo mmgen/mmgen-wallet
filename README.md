@@ -198,7 +198,7 @@ Donate:
 [2]:  ../../wiki/Install-MMGen-Wallet-on-Linux-or-macOS
 [3]:  ../../wiki/Getting-Started-with-MMGen-Wallet
 [5]:  ../../wiki/MMGen-Signing-Keys
-[6]:  ../../wiki/MMGen-command-help
+[6]:  ../../wiki/MMGen-Wallet-command-help
 [7]:  http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
 [8]:  https://github.com/mmgen/MMGenLive
 [9]:  https://mmgen.org/images/rxvt-txcreate.jpg
