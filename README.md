@@ -183,7 +183,7 @@ Code repository:
 Code repository mirrors:
 [Github](https://github.com/mmgen/mmgen-wallet) |
 [Gitlab](https://gitlab.com/mmgen/mmgen-wallet) |
-[Gitflic](https://gitflic.ru/project/mmgen/mmgen-wallet)     
+[Codeberg](https://codeberg.org/mmgen/mmgen-wallet)     
 [Keybase](https://keybase.io/mmgen) |
 [Twitter](https://twitter.com/TheMMGenProject) |
 [Reddit](https://www.reddit.com/user/mmgen-py) |
