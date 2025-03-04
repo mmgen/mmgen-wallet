@@ -41,10 +41,6 @@ class NewSwap(New, TxNewSwap):
 
 	async def process_swap_cmdline_args(self, cmd_args, addrfiles):
 
-		from ....protocol import init_proto
-		import importlib
-		sp = importlib.import_module(f'mmgen.swap.proto.{self.swap_proto}')
-
 		class CmdlineArgs: # listed in command-line order
 			# send_coin      # required: uppercase coin symbol
 			send_amt  = None # optional: Omit to skip change addr and send value of all inputs minus fees to vault
@@ -102,6 +98,8 @@ class NewSwap(New, TxNewSwap):
 			if args_in: # done parsing, all args consumed
 				self.cfg._usage()
 
+		from ....protocol import init_proto
+		sp = self.swap_proto_mod
 		args_in = list(cmd_args)
 		args = CmdlineArgs()
 		parse()

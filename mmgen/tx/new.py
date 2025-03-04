@@ -82,12 +82,6 @@ class New(Base):
 	chg_autoselected = False
 	_funds_available = namedtuple('funds_available', ['is_positive', 'amt'])
 
-	def __init__(self, *args, target=None, **kwargs):
-		if target == 'swaptx':
-			self.is_swap = True
-			self.swap_proto = kwargs['cfg'].swap_proto
-		super().__init__(*args, **kwargs)
-
 	def warn_insufficient_funds(self, amt, coin):
 		msg(self.msg_insufficient_funds.format(amt.hl(), coin))
 

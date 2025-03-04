@@ -17,9 +17,15 @@ from .new import New
 class NewSwap(New):
 	desc = 'swap transaction'
 
-	def update_vault_output(self, amt):
+	def __init__(self, *args, **kwargs):
 		import importlib
-		sp = importlib.import_module(f'mmgen.swap.proto.{self.swap_proto}')
+		self.is_swap = True
+		self.swap_proto = kwargs['cfg'].swap_proto
+		self.swap_proto_mod = importlib.import_module(f'mmgen.swap.proto.{self.swap_proto}')
+		New.__init__(self, *args, **kwargs)
+
+	def update_vault_output(self, amt):
+		sp = self.swap_proto_mod
 		c = sp.rpc_client(self, amt)
 
 		from ..util import msg
