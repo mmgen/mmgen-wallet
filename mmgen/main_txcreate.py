@@ -63,6 +63,8 @@ opts_data = {
 			+                        MMGen IDs or coin addresses).  Note that ALL unspent
 			+                        outputs associated with each address will be included.
 			bt -l, --locktime=    t  Lock time (block height or unix seconds) (default: 0)
+			-s -l, --trade-limit=L   Minimum swap amount, as either percentage or absolute
+			+                        coin amount (see TRADE LIMIT below)
 			b- -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
 			-- -m, --minconf=     n  Minimum number of confirmations required to spend
 			+                        outputs (default: 1)

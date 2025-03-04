@@ -305,6 +305,13 @@ class Base(TxBase):
 			raise ValueError(f'{res}: too many data outputs in transaction (only one allowed)')
 		return res[0] if len(res) == 1 else None
 
+	@data_output.setter
+	def data_output(self, val):
+		dbool = [bool(o.data) for o in self.outputs]
+		if dbool.count(True) != 1:
+			raise ValueError('more or less than one data output in transaction!')
+		self.outputs[dbool.index(True)] = val
+
 	@property
 	def data_outputs(self):
 		return [o for o in self.outputs if o.data]

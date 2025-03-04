@@ -70,6 +70,8 @@ opts_data = {
 			-- -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
 			-- -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
 			+                         for {coin_id}: {kgs}
+			-s -l, --trade-limit=L    Minimum swap amount, as either percentage or absolute
+			+                         coin amount (see TRADE LIMIT below)
 			bt -l, --locktime=      t Lock time (block height or unix seconds) (default: 0)
 			b- -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
 			-- -m, --minconf=n        Minimum number of confirmations required to spend

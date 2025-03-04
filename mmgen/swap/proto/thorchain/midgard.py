@@ -62,10 +62,10 @@ class Midgard:
 			from ....util import pp_fmt, die
 			die(2, pp_fmt(self.data))
 
-	def format_quote(self, *, deduct_est_fee=False):
+	def format_quote(self, trade_limit, usr_trade_limit, *, deduct_est_fee=False):
 		from ....util import make_timestr, ymsg
 		from ....util2 import format_elapsed_hr
-		from ....color import blue, cyan, pink, orange
+		from ....color import blue, green, cyan, pink, orange, redbg, yelbg, grnbg
 		from . import name
 
 		d = self.data
@@ -75,10 +75,28 @@ class Midgard:
 		in_amt = self.in_amt
 		out_amt = tx.recv_proto.coin_amt(int(d['expected_amount_out']), from_unit='satoshi')
 
+		if trade_limit:
+			from . import ExpInt4
+			e = ExpInt4(trade_limit.to_unit('satoshi'))
+			tl_rounded = tx.recv_proto.coin_amt(e.trunc, from_unit='satoshi')
+			ratio = usr_trade_limit if type(usr_trade_limit) is float else float(tl_rounded / out_amt)
+			direction = 'ABOVE' if ratio > 1 else 'below'
+			mcolor, lblcolor = (
+				(redbg, redbg) if (ratio < 0.93 or ratio > 0.999) else
+				(yelbg, yelbg) if ratio < 0.97 else
+				(green, grnbg))
+			trade_limit_disp = f"""
+  {lblcolor('Trade limit:')}                   {tl_rounded.hl()} {out_coin} """ + mcolor(
+				f'({abs(1 - ratio) * 100:0.2f}% {direction} expected amount)')
+			tx_size_adj = len(e.enc) - 1
+		else:
+			trade_limit_disp = ''
+			tx_size_adj = 0
+
 		_amount_in_label = 'Amount in:'
 		if deduct_est_fee:
 			if d['gas_rate_units'] == 'satsperbyte':
-				in_amt -= tx.feespec2abs(d['recommended_gas_rate'] + 's', tx.estimate_size())
+				in_amt -= tx.feespec2abs(d['recommended_gas_rate'] + 's', tx.estimate_size() + tx_size_adj)
 				out_amt *= (in_amt / self.in_amt)
 				_amount_in_label = 'Amount in (estimated):'
 			else:
@@ -102,7 +120,7 @@ class Midgard:
   Vault address:                 {cyan(d['inbound_address'])}
   Quote expires:                 {pink(elapsed_disp)} [{make_timestr(d['expiry'])}]
   {_amount_in_label:<22}         {in_amt.hl()} {in_coin}
-  Expected amount out:           {out_amt.hl()} {out_coin}
+  Expected amount out:           {out_amt.hl()} {out_coin}{trade_limit_disp}
   Rate:                          {(out_amt / in_amt).hl()} {out_coin}/{in_coin}
   Reverse rate:                  {(in_amt / out_amt).hl()} {in_coin}/{out_coin}
   Recommended minimum in amount: {min_in_amt.hl()} {in_coin}

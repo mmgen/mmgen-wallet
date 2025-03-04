@@ -79,4 +79,23 @@ transaction fees, ‘mmnode-feeview’ and ‘mmnode-blocks-info’, in addition
 ‘mmnode-ticker’, which can be used to calculate the current cross-rate between
 the asset pair of a swap, as well as the total receive value in terms of the
 send value.
+
+
+                                TRADE LIMIT
+
+A target value for the swap may be set, known as the “trade limit”.  If
+this target cannot be met, the network will refund the user’s coins, minus
+transaction fees (note that the refund goes to the address associated with the
+transaction’s first input, leading to coin reuse).  Since under certain
+circumstances large amounts of slippage can occur, resulting in significant
+losses, setting a trade limit is highly recommended.
+
+The target may be given as either an absolute coin amount or percentage value.
+In the latter case, it’s interpreted as the percentage below the “expected
+amount out” returned by the swap quote server.  Zero or negative percentage
+values are also accepted, but are likely to result in your coins being
+refunded.
+
+The trade limit is rounded to four digits of precision in order to reduce
+transaction size.
 """

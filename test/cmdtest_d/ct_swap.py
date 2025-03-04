@@ -361,7 +361,8 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 			interactive_fee = None,
 			file_desc       = 'Unsigned transaction',
 			reload_quote    = False,
-			sign_and_send   = False):
+			sign_and_send   = False,
+			expect         = None):
 		t.expect('abel:\b', 'q')
 		t.expect('to spend: ', f'{inputs}\n')
 		if reload_quote:
@@ -374,6 +375,8 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 			t.expect('to continue: ', 'r')  # reload swap quote
 		t.expect('to continue: ', '\n')     # exit swap quote view
 		t.expect('view: ', 'y')             # view TX
+		if expect:
+			t.expect(expect)
 		t.expect('to continue: ', '\n')
 		if sign_and_send:
 			t.passphrase(dfl_wcls.desc, rt_pw)
@@ -393,44 +396,58 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 
 	def swaptxcreate1(self, idx=3):
 		return self._swaptxcreate_ui_common(
-			self._swaptxcreate(['BCH', '1.234', f'{self.sid}:C:{idx}', 'LTC', f'{self.sid}:B:3']))
+			self._swaptxcreate(
+				['BCH', '1.234', f'{self.sid}:C:{idx}', 'LTC', f'{self.sid}:B:3'],
+				add_opts = ['--trade-limit=0%']),
+			expect = ':3541e5/1/0')
 
 	def swaptxcreate2(self):
-		t = self._swaptxcreate(['BCH', 'LTC'], add_opts=['--no-quiet'])
+		t = self._swaptxcreate(
+			['BCH', 'LTC'],
+			add_opts = ['--no-quiet', '--trade-limit=3.337%'])
 		t.expect('Enter a number> ', '1')
 		t.expect('OK? (Y/n): ', 'y')
-		return self._swaptxcreate_ui_common(t, reload_quote=True)
+		return self._swaptxcreate_ui_common(t, reload_quote=True, expect=':1386e6/1/0')
 
 	def swaptxcreate3(self):
 		return self._swaptxcreate_ui_common(
-			self._swaptxcreate(['BCH', 'LTC', f'{self.sid}:B:3']))
+			self._swaptxcreate(
+				['BCH', 'LTC', f'{self.sid}:B:3'],
+				add_opts = ['--trade-limit=10.1%']),
+			expect = ':1289e6/1/0')
 
 	def swaptxcreate4(self):
-		t = self._swaptxcreate(['BCH', '1.234', 'C', 'LTC', 'B'])
+		t = self._swaptxcreate(
+			['BCH', '1.234', 'C', 'LTC', 'B'],
+			add_opts = ['--trade-limit=-1.123%'])
 		t.expect('OK? (Y/n): ', 'y')
 		t.expect('Enter a number> ', '1')
 		t.expect('OK? (Y/n): ', 'y')
-		return self._swaptxcreate_ui_common(t)
+		return self._swaptxcreate_ui_common(t, expect=':358e6/1/0')
 
 	def swaptxcreate5(self):
-		t = self._swaptxcreate(['BCH', '1.234', f'{self.sid}:C', 'LTC', f'{self.sid}:B'])
+		t = self._swaptxcreate(
+			['BCH', '1.234', f'{self.sid}:C', 'LTC', f'{self.sid}:B'],
+			add_opts = ['--trade-limit=3.6'])
 		t.expect('OK? (Y/n): ', 'y')
 		t.expect('OK? (Y/n): ', 'y')
-		return self._swaptxcreate_ui_common(t)
+		return self._swaptxcreate_ui_common(t, expect=':36e7/1/0')
 
 	def swaptxcreate6(self):
 		addr = make_burn_addr(self.protos[1], mmtype='bech32')
-		t = self._swaptxcreate(['BCH', '1.234', f'{self.sid}:C', 'LTC', addr])
+		t = self._swaptxcreate(
+			['BCH', '1.234', f'{self.sid}:C', 'LTC', addr],
+			add_opts = ['--trade-limit=2.7%'])
 		t.expect('OK? (Y/n): ', 'y')
 		t.expect('to confirm: ', 'YES\n')
-		return self._swaptxcreate_ui_common(t)
+		return self._swaptxcreate_ui_common(t, expect=':3445e5/1/0')
 
 	def swaptxcreate7(self):
 		t = self._swaptxcreate(['BCH', '0.56789', 'LTC'])
 		t.expect('OK? (Y/n): ', 'y')
 		t.expect('Enter a number> ', '1')
 		t.expect('OK? (Y/n): ', 'y')
-		return self._swaptxcreate_ui_common(t)
+		return self._swaptxcreate_ui_common(t, expect=':0/1/0')
 
 	def _swaptxcreate_bad(self, args, *, exit_val=1, expect1=None, expect2=None):
 		t = self._swaptxcreate(args, exit_val=exit_val)

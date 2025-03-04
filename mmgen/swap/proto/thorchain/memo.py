@@ -20,7 +20,7 @@ class Memo:
 
 	# The trade limit, i.e., set 100000000 to get a minimum of 1 full asset, else a refund
 	# Optional. 1e8 or scientific notation
-	trade_limit = 0
+	trade_limit = None
 
 	# Swap interval in blocks. Optional. If 0, do not stream
 	stream_interval = 1
@@ -102,7 +102,13 @@ class Memo:
 		except ValueError:
 			die('SwapMemoParseError', f'malformed memo (failed to parse {desc} field) [{lsq}]')
 
-		for n in (limit, interval, quantity):
+		from . import ExpInt4
+		try:
+			limit_int = ExpInt4(limit)
+		except Exception as e:
+			die('SwapMemoParseError', str(e))
+
+		for n in (interval, quantity):
 			if not is_int(n):
 				die('SwapMemoParseError', f'malformed memo (non-integer in {desc} field [{lsq}])')
 
@@ -113,18 +119,28 @@ class Memo:
 			'parsed_memo',
 			['proto', 'function', 'chain', 'asset', 'address', 'trade_limit', 'stream_interval', 'stream_quantity'])
 
-		return ret(proto_name, function, chain, asset, address, int(limit), int(interval), int(quantity))
+		return ret(proto_name, function, chain, asset, address, limit_int, int(interval), int(quantity))
 
-	def __init__(self, proto, addr, chain=None):
+	def __init__(self, proto, addr, chain=None, trade_limit=None):
 		self.proto = proto
 		self.chain = chain or proto.coin
-		from ....addr import CoinAddr
-		assert isinstance(addr, CoinAddr)
+		if trade_limit is None:
+			self.trade_limit = self.proto.coin_amt('0')
+		else:
+			assert type(trade_limit) is self.proto.coin_amt, f'{type(trade_limit)} != {self.proto.coin_amt}'
+			self.trade_limit = trade_limit
+		from ....addr import is_coin_addr
+		assert is_coin_addr(proto, addr)
 		self.addr = addr.views[addr.view_pref]
 		assert not ':' in self.addr # colon is record separator, so address mustn’t contain one
 
 	def __str__(self):
-		suf = '/'.join(str(n) for n in (self.trade_limit, self.stream_interval, self.stream_quantity))
+		from . import ExpInt4
+		try:
+			tl_enc = ExpInt4(self.trade_limit.to_unit('satoshi')).enc
+		except Exception as e:
+			die('SwapMemoParseError', str(e))
+		suf = '/'.join(str(n) for n in (tl_enc, self.stream_interval, self.stream_quantity))
 		asset = f'{self.chain}.{self.proto.coin}'
 		ret = ':'.join([
 			self.function_abbrevs[self.function],

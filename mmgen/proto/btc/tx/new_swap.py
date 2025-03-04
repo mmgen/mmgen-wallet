@@ -128,6 +128,17 @@ class NewSwap(New, TxNewSwap):
 			[f'vault,{args.send_amt}', chg_output.mmid, f'data:{memo}'] if args.send_amt else
 			['vault', f'data:{memo}'])
 
+	def update_data_output(self, trade_limit):
+		sp = self.swap_proto_mod
+		o = self.data_output._asdict()
+		parsed_memo = sp.data.parse(o['data'].decode())
+		memo = sp.data(
+			self.recv_proto,
+			self.recv_proto.coin_addr(parsed_memo.address),
+			trade_limit = trade_limit)
+		o['data'] = f'data:{memo}'
+		self.data_output = self.Output(self.proto, **o)
+
 	def update_vault_addr(self, addr):
 		vault_idx = self.vault_idx
 		assert vault_idx == 0, f'{vault_idx}: vault index is not zero!'

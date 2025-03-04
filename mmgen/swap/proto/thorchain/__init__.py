@@ -17,6 +17,7 @@ __all__ = ['data']
 name = 'THORChain'
 
 class params:
+	exp_prec = 4
 	coins = {
 		'send': {
 			'BTC': 'Bitcoin',
@@ -29,6 +30,11 @@ class params:
 			'BCH': 'Bitcoin Cash',
 		}
 	}
+
+from ....util2 import ExpInt
+class ExpInt4(ExpInt):
+	def __new__(cls, spec):
+		return ExpInt.__new__(cls, spec, prec=params.exp_prec)
 
 def rpc_client(tx, amt):
 	from .midgard import Midgard

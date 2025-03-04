@@ -432,6 +432,7 @@ class New(Base):
 			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(cmd_args)
 			if self.is_swap:
 				cmd_args = await self.process_swap_cmdline_args(cmd_args, addrfile_args)
+				self.process_swap_options()
 				self.proto = self.send_proto # updating self.proto!
 			from ..rpc import rpc_init
 			self.rpc = await rpc_init(self.cfg, self.proto)

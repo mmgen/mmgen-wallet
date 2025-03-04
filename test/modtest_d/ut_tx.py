@@ -177,16 +177,25 @@ class unit_tests:
 			('ltc', 'bech32'),
 			('bch', 'compressed'),
 		):
-			proto = init_proto(cfg, coin)
+			proto = init_proto(cfg, coin, need_amt=True)
 			addr = make_burn_addr(proto, addrtype)
 
-			if True:
+			for limit, limit_chk in (
+				('123.4567',   12340000000),
+				('1.234567',   123400000),
+				('0.01234567', 1234000),
+				('0.00012345', 12345),
+				(None, 0),
+			):
 				vmsg('\nTesting memo initialization:')
-				m = Memo(proto, addr)
+				m = Memo(proto, addr, trade_limit=proto.coin_amt(limit) if limit else None)
 				vmsg(f'str(memo):  {m}')
 				vmsg(f'repr(memo): {m!r}')
+				vmsg(f'limit:      {limit}')
 
 				p = Memo.parse(m)
+				limit_dec = proto.coin_amt(p.trade_limit, from_unit='satoshi')
+				vmsg(f'limit_dec:  {limit_dec.hl()}')
 
 				vmsg('\nTesting memo parsing:')
 				from pprint import pformat
@@ -196,7 +205,7 @@ class unit_tests:
 				assert p.chain == coin.upper()
 				assert p.asset == coin.upper()
 				assert p.address == addr.views[addr.view_pref]
-				assert p.trade_limit == 0
+				assert p.trade_limit == limit_chk
 				assert p.stream_interval == 1
 				assert p.stream_quantity == 0 # auto
 
@@ -237,7 +246,7 @@ class unit_tests:
 				('bad3', 'SwapMemoParseError', 'function abbrev',   bad('z:l:foobar:0/1/0')),
 				('bad4', 'SwapMemoParseError', 'asset abbrev',      bad('=:x:foobar:0/1/0')),
 				('bad5', 'SwapMemoParseError', 'failed to parse',   bad('=:l:foobar:n')),
-				('bad6', 'SwapMemoParseError', 'non-integer',       bad('=:l:foobar:x/1/0')),
+				('bad6', 'SwapMemoParseError', 'invalid specifier', bad('=:l:foobar:x/1/0')),
 				('bad7', 'SwapMemoParseError', 'extra',             bad('=:l:foobar:0/1/0:x')),
 			), pfx='')
 
