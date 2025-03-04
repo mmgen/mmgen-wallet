@@ -12,14 +12,26 @@
 swap.proto.thorchain: THORChain swap protocol implementation for the MMGen Wallet suite
 """
 
-__all__ = ['params', 'data']
+__all__ = ['data']
 
 name = 'THORChain'
 
-from .params import params
-
-from .memo import Memo as data
+class params:
+	coins = {
+		'send': {
+			'BTC': 'Bitcoin',
+			'LTC': 'Litecoin',
+			'BCH': 'Bitcoin Cash',
+		},
+		'receive': {
+			'BTC': 'Bitcoin',
+			'LTC': 'Litecoin',
+			'BCH': 'Bitcoin Cash',
+		}
+	}
 
 def rpc_client(tx, amt):
 	from .midgard import Midgard
 	return Midgard(tx, amt)
+
+from .memo import Memo as data
