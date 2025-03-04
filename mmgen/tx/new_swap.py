@@ -24,7 +24,7 @@ class NewSwap(New):
 		self.swap_proto_mod = importlib.import_module(f'mmgen.swap.proto.{self.swap_proto}')
 		New.__init__(self, *args, **kwargs)
 
-	def update_vault_output(self, amt):
+	def update_vault_output(self, amt, *, deduct_est_fee=False):
 		sp = self.swap_proto_mod
 		c = sp.rpc_client(self, amt)
 
@@ -34,7 +34,7 @@ class NewSwap(New):
 			self.cfg._util.qmsg(f'Retrieving data from {c.rpc.host}...')
 			c.get_quote()
 			self.cfg._util.qmsg('OK')
-			msg(c.format_quote())
+			msg(c.format_quote(deduct_est_fee=deduct_est_fee))
 			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')
 			msg('')
 			if ch not in 'Rr':

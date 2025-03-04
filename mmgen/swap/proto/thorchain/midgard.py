@@ -62,8 +62,8 @@ class Midgard:
 			from ....util import pp_fmt, die
 			die(2, pp_fmt(self.data))
 
-	def format_quote(self):
-		from ....util import make_timestr
+	def format_quote(self, *, deduct_est_fee=False):
+		from ....util import make_timestr, ymsg
 		from ....util2 import format_elapsed_hr
 		from ....color import blue, cyan, pink, orange
 		from . import name
@@ -74,6 +74,15 @@ class Midgard:
 		out_coin = tx.recv_proto.coin
 		in_amt = self.in_amt
 		out_amt = tx.recv_proto.coin_amt(int(d['expected_amount_out']), from_unit='satoshi')
+
+		_amount_in_label = 'Amount in:'
+		if deduct_est_fee:
+			if d['gas_rate_units'] == 'satsperbyte':
+				in_amt -= tx.feespec2abs(d['recommended_gas_rate'] + 's', tx.estimate_size())
+				out_amt *= (in_amt / self.in_amt)
+				_amount_in_label = 'Amount in (estimated):'
+			else:
+				ymsg('Warning: unknown gas unit ‘{}’, cannot estimate fee'.format(d['gas_rate_units']))
 
 		min_in_amt = tx.send_proto.coin_amt(int(d['recommended_min_amount_in']), from_unit='satoshi')
 		gas_unit = {
@@ -92,7 +101,7 @@ class Midgard:
   Direction:                     {orange(f'{in_coin} => {out_coin}')}
   Vault address:                 {cyan(d['inbound_address'])}
   Quote expires:                 {pink(elapsed_disp)} [{make_timestr(d['expiry'])}]
-  Amount in:                     {in_amt.hl()} {in_coin}
+  {_amount_in_label:<22}         {in_amt.hl()} {in_coin}
   Expected amount out:           {out_amt.hl()} {out_coin}
   Rate:                          {(out_amt / in_amt).hl()} {out_coin}/{in_coin}
   Reverse rate:                  {(in_amt / out_amt).hl()} {in_coin}/{out_coin}

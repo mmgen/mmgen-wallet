@@ -474,7 +474,9 @@ class New(Base):
 				continue
 			fee_hint = None
 			if self.is_swap:
-				fee_hint = self.update_vault_output(self.vault_output.amt or self.sum_inputs())
+				fee_hint = self.update_vault_output(
+					self.vault_output.amt or self.sum_inputs(),
+					deduct_est_fee = self.vault_output == self.chg_output)
 			if funds_left := await self.get_fee(
 					self.cfg.fee or fee_hint,
 					outputs_sum,
