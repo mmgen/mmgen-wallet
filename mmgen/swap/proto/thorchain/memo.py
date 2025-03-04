@@ -12,6 +12,8 @@
 swap.proto.thorchain.memo: THORChain swap protocol memo class
 """
 
+from ....util import die
+
 from . import name as proto_name
 
 class Memo:
@@ -65,14 +67,13 @@ class Memo:
 		All fields are validated, excluding address (cannot validate, since network is unknown)
 		"""
 		from collections import namedtuple
-		from ....exception import SwapMemoParseError
 		from ....util import is_int
 
 		def get_item(desc):
 			try:
 				return fields.pop(0)
-			except IndexError as e:
-				raise SwapMemoParseError(f'malformed {proto_name} memo (missing {desc} field)') from e
+			except IndexError:
+				die('SwapMemoParseError', f'malformed {proto_name} memo (missing {desc} field)')
 
 		def get_id(data, item, desc):
 			if item in data:
@@ -80,12 +81,12 @@ class Memo:
 			rev_data = {v:k for k,v in data.items()}
 			if item in rev_data:
 				return rev_data[item]
-			raise SwapMemoParseError(f'{item!r}: unrecognized {proto_name} {desc} abbreviation')
+			die('SwapMemoParseError', f'{item!r}: unrecognized {proto_name} {desc} abbreviation')
 
 		fields = str(s).split(':')
 
 		if len(fields) < 4:
-			raise SwapMemoParseError('memo must contain at least 4 comma-separated fields')
+			die('SwapMemoParseError', 'memo must contain at least 4 comma-separated fields')
 
 		function = get_id(cls.function_abbrevs, get_item('function'), 'function')
 
@@ -98,15 +99,15 @@ class Memo:
 
 		try:
 			limit, interval, quantity = lsq.split('/')
-		except ValueError as e:
-			raise SwapMemoParseError(f'malformed memo (failed to parse {desc} field) [{lsq}]') from e
+		except ValueError:
+			die('SwapMemoParseError', f'malformed memo (failed to parse {desc} field) [{lsq}]')
 
 		for n in (limit, interval, quantity):
 			if not is_int(n):
-				raise SwapMemoParseError(f'malformed memo (non-integer in {desc} field [{lsq}])')
+				die('SwapMemoParseError', f'malformed memo (non-integer in {desc} field [{lsq}])')
 
 		if fields:
-			raise SwapMemoParseError('malformed memo (unrecognized extra data)')
+			die('SwapMemoParseError', 'malformed memo (unrecognized extra data)')
 
 		ret = namedtuple(
 			'parsed_memo',

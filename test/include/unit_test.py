@@ -144,7 +144,7 @@ class UnitTestHelpers:
 					asyncio.run(ret)
 			except Exception as e:
 				exc = type(e).__name__
-				emsg = e.args[0]
+				emsg = e.args[0] if e.args else '(unspecified error)'
 				cfg._util.vmsg(f' {exc:{exc_w}} [{emsg}]')
 				assert exc == exc_chk, m_exc.format(exc, exc_chk)
 				assert re.search(emsg_chk, emsg), m_err.format(emsg, emsg_chk)

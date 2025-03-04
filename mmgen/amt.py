@@ -48,7 +48,7 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 		try:
 			if from_unit:
 				assert from_unit in cls.units, f'{from_unit!r}: unrecognized coin unit for {cls.__name__}'
-				assert type(num) is int, 'value is not an integer'
+				assert isinstance(num, int), 'value is not an integer'
 				me = Decimal.__new__(cls, num * getattr(cls, from_unit))
 			elif from_decimal:
 				assert isinstance(num, Decimal), f'number must be of type Decimal, not {type(num).__name__})'
@@ -157,6 +157,7 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 		self.method_not_implemented()
 
 def is_coin_amt(proto, num, from_unit=None, from_decimal=False):
+	assert proto.coin_amt, 'proto.coin_amt is None!  Did you call init_proto() with ‘need_amt’?'
 	return get_obj(proto.coin_amt, num=num, from_unit=from_unit, from_decimal=from_decimal, silent=True, return_bool=True)
 
 class BTCAmt(CoinAmt):

@@ -17,9 +17,6 @@ from .new import New
 class NewSwap(New):
 	desc = 'swap transaction'
 
-	async def process_swap_cmdline_args(self, cmd_args, addrfiles):
-		raise NotImplementedError(f'Swap not implemented for protocol {self.proto.__name__}')
-
 	def update_vault_output(self, amt):
 		import importlib
 		sp = importlib.import_module(f'mmgen.swap.proto.{self.swap_proto}')

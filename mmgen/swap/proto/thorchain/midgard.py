@@ -58,20 +58,23 @@ class Midgard:
 			c = self.in_amt.to_unit('satoshi'))
 		self.result = self.rpc.get(self.get_str)
 		self.data = json.loads(self.result.content)
+		if not 'expiry' in self.data:
+			from ....util import pp_fmt, die
+			die(2, pp_fmt(self.data))
 
 	def format_quote(self):
-		from ....util import make_timestr, pp_fmt, die
+		from ....util import make_timestr
 		from ....util2 import format_elapsed_hr
 		from ....color import blue, cyan, pink, orange
 		from . import name
 
 		d = self.data
-		if not 'expiry' in d:
-			die(2, pp_fmt(d))
 		tx = self.tx
 		in_coin = tx.send_proto.coin
 		out_coin = tx.recv_proto.coin
+		in_amt = self.in_amt
 		out_amt = tx.recv_proto.coin_amt(int(d['expected_amount_out']), from_unit='satoshi')
+
 		min_in_amt = tx.send_proto.coin_amt(int(d['recommended_min_amount_in']), from_unit='satoshi')
 		gas_unit = {
 			'satsperbyte': 'sat/byte',
@@ -82,16 +85,17 @@ class Midgard:
 		fees_pct_disp = str(fees['total_bps'] / 100) + '%'
 		slip_pct_disp = str(fees['slippage_bps'] / 100) + '%'
 		hdr = f'SWAP QUOTE (source: {self.rpc.host})'
+
 		return f"""
 {cyan(hdr)}
   Protocol:                      {blue(name)}
   Direction:                     {orange(f'{in_coin} => {out_coin}')}
   Vault address:                 {cyan(d['inbound_address'])}
   Quote expires:                 {pink(elapsed_disp)} [{make_timestr(d['expiry'])}]
-  Amount in:                     {self.in_amt.hl()} {in_coin}
+  Amount in:                     {in_amt.hl()} {in_coin}
   Expected amount out:           {out_amt.hl()} {out_coin}
-  Rate:                          {(out_amt / self.in_amt).hl()} {out_coin}/{in_coin}
-  Reverse rate:                  {(self.in_amt / out_amt).hl()} {in_coin}/{out_coin}
+  Rate:                          {(out_amt / in_amt).hl()} {out_coin}/{in_coin}
+  Reverse rate:                  {(in_amt / out_amt).hl()} {in_coin}/{out_coin}
   Recommended minimum in amount: {min_in_amt.hl()} {in_coin}
   Recommended fee:               {pink(d['recommended_gas_rate'])} {pink(gas_unit)}
   Fees:

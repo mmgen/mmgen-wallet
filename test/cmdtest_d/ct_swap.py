@@ -317,10 +317,10 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		return self.addrimport('bob', mmtypes=['C'], proto=self.protos[2])
 
 	def fund_bob_send(self):
-		return self._fund_bob(2, 'C', '500')
+		return self._fund_bob(2, 'C', '5')
 
 	def bob_bal_send(self):
-		return self._bob_bal(2, '500')
+		return self._bob_bal(2, '5')
 
 	def setup_recv_coin(self):
 		return self._setup(proto=self.protos[1], remove_datadir=False)
@@ -332,10 +332,10 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		return self._addrimport_bob(1)
 
 	def fund_bob_recv1(self):
-		return self._fund_bob(1, 'S', '500')
+		return self._fund_bob(1, 'S', '5')
 
 	def fund_bob_recv2(self):
-		return self._fund_bob(1, 'B', '500')
+		return self._fund_bob(1, 'B', '5')
 
 	def addrgen_bob_recv_subwallet(self):
 		return self._addrgen_bob(1, ['C', 'B'], subseed_idx='29L')
@@ -343,7 +343,7 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 	def addrimport_bob_recv_subwallet(self):
 		return self._subwallet_addrimport('bob', '29L', ['C', 'B'], proto=self.protos[1])
 
-	def fund_bob_recv_subwallet(self, proto_idx=1, amt='500'):
+	def fund_bob_recv_subwallet(self, proto_idx=1, amt='5'):
 		coin_arg = f'--coin={self.protos[proto_idx].coin}'
 		t = self.spawn('mmgen-tool', ['--bob', coin_arg, 'listaddresses'])
 		addr = [s for s in strip_ansi_escapes(t.read()).splitlines() if 'C:1 No' in s][0].split()[3]
@@ -351,7 +351,7 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		return t
 
 	def bob_bal_recv(self):
-		return self._bob_bal(1, '1500')
+		return self._bob_bal(1, '15')
 
 	def _swaptxcreate_ui_common(
 			self,
@@ -487,7 +487,7 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 	def swaptxsign1_create(self):
 		self.get_file_with_ext('rawtx', delete_all=True)
 		return self._swaptxcreate_ui_common(
-			self._swaptxcreate(['LTC', '5.4321', f'{self.sid}:S:2', 'BCH', f'{self.sid}:C:2']))
+			self._swaptxcreate(['LTC', '4.321', f'{self.sid}:S:2', 'BCH', f'{self.sid}:C:2']))
 
 	def swaptxsign1(self):
 		return self._swaptxsign()
@@ -605,17 +605,17 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		return self._generate_for_proto(2)
 
 	def swap_bal1(self):
-		return self._bob_bal(1, '1494.56784238')
+		return self._bob_bal(1, '10.67894238')
 
 	def swap_bal2(self):
-		return self._bob_bal(1, '1382.79038152')
+		return self._bob_bal(1, '8.90148152')
 
 	def swap_bal3(self):
 		return self._bob_bal(0, '999.99990407')
 
 	def swaptxsign1_do(self):
 		return self._swaptxcreate_ui_common(
-			self._swaptxcreate(['LTC', '111.777444', f'{self.sid}:B:2', 'BCH', f'{self.sid}:C:2'], action='txdo'),
+			self._swaptxcreate(['LTC', '1.777444', f'{self.sid}:B:2', 'BCH', f'{self.sid}:C:2'], action='txdo'),
 			sign_and_send = True,
 			file_desc = 'Sent transaction')
 

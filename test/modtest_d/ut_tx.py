@@ -180,23 +180,25 @@ class unit_tests:
 			proto = init_proto(cfg, coin)
 			addr = make_burn_addr(proto, addrtype)
 
-			vmsg('\nTesting memo initialization:')
-			m = Memo(proto, addr)
-			vmsg(f'str(memo):  {m}')
-			vmsg(f'repr(memo): {m!r}')
+			if True:
+				vmsg('\nTesting memo initialization:')
+				m = Memo(proto, addr)
+				vmsg(f'str(memo):  {m}')
+				vmsg(f'repr(memo): {m!r}')
 
-			vmsg('\nTesting memo parsing:')
-			p = Memo.parse(m)
-			from pprint import pformat
-			vmsg(pformat(p._asdict()))
-			assert p.proto == 'THORChain'
-			assert p.function == 'SWAP'
-			assert p.chain == coin.upper()
-			assert p.asset == coin.upper()
-			assert p.address == addr.views[addr.view_pref]
-			assert p.trade_limit == 0
-			assert p.stream_interval == 1
-			assert p.stream_quantity == 0 # auto
+				p = Memo.parse(m)
+
+				vmsg('\nTesting memo parsing:')
+				from pprint import pformat
+				vmsg(pformat(p._asdict()))
+				assert p.proto == 'THORChain'
+				assert p.function == 'SWAP'
+				assert p.chain == coin.upper()
+				assert p.asset == coin.upper()
+				assert p.address == addr.views[addr.view_pref]
+				assert p.trade_limit == 0
+				assert p.stream_interval == 1
+				assert p.stream_quantity == 0 # auto
 
 			vmsg('\nTesting is_partial_memo():')
 			for vec in (
@@ -230,13 +232,13 @@ class unit_tests:
 				return lambda: Memo.parse(s)
 
 			ut.process_bad_data((
-				('bad1', 'SwapMemoParseError', 'must contain',    bad('x')),
-				('bad2', 'SwapMemoParseError', 'must contain',    bad('y:z:x')),
-				('bad3', 'SwapMemoParseError', 'function abbrev', bad('z:l:foobar:0/1/0')),
-				('bad4', 'SwapMemoParseError', 'asset abbrev',    bad('=:x:foobar:0/1/0')),
-				('bad5', 'SwapMemoParseError', 'failed to parse', bad('=:l:foobar:n')),
-				('bad6', 'SwapMemoParseError', 'non-integer',     bad('=:l:foobar:x/1/0')),
-				('bad7', 'SwapMemoParseError', 'extra',           bad('=:l:foobar:0/1/0:x')),
+				('bad1', 'SwapMemoParseError', 'must contain',      bad('x')),
+				('bad2', 'SwapMemoParseError', 'must contain',      bad('y:z:x')),
+				('bad3', 'SwapMemoParseError', 'function abbrev',   bad('z:l:foobar:0/1/0')),
+				('bad4', 'SwapMemoParseError', 'asset abbrev',      bad('=:x:foobar:0/1/0')),
+				('bad5', 'SwapMemoParseError', 'failed to parse',   bad('=:l:foobar:n')),
+				('bad6', 'SwapMemoParseError', 'non-integer',       bad('=:l:foobar:x/1/0')),
+				('bad7', 'SwapMemoParseError', 'extra',             bad('=:l:foobar:0/1/0:x')),
 			), pfx='')
 
 		return True
