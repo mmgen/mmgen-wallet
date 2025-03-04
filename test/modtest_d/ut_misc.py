@@ -154,3 +154,41 @@ class unit_tests:
 		assert '4.3' == ver['4.3'] == '4.3'
 
 		return True
+
+	def exp_int(self, name, ut, desc='ExpInt() class'):
+		from mmgen.util2 import ExpInt
+
+		for num, trunc, chk, out in (
+				('0e0',              0,                  0,                  '0'),
+				('0e1',              0,                  0,                  '0'),
+				('3e0',              3,                  3,                  '3'),
+				('3e1',              30,                 30,                 '30'),
+				('3e2',              300,                300,                '300'),
+				('3e3',              3000,               3000,               '3e3'),
+				(3000,               3000,               3000,               '3e3'),
+				(1,                  1,                  1,                  '1'),
+				('123e0',            123,                123,                '123'),
+				(123,                123,                123,                '123'),
+				(12345,              12340,              12345,              '12345'),
+				(123456,             123400,             123456,             '123456'),
+				(1234567,            1234000,            1234000,            '1234e3'),
+				(123456789,          123400000,          123400000,          '1234e5'),
+				(998877665544332211, 998800000000000000, 998800000000000000, '9988e14'),
+			):
+			e = ExpInt(num, prec=4)
+			enc = e.enc
+			assert enc == out, f'{enc} != {out}'
+			assert e.trunc == trunc, f'{e.trunc} != {trunc}'
+			vmsg('')
+			vmsg(f'num        {num}')
+			vmsg(f'enc        {enc}')
+			dec = ExpInt(enc, prec=4)
+			vmsg(f'enc -> dec {dec}')
+			vmsg(f'chk        {chk}')
+			assert dec == chk, f'{dec} != {chk}'
+			dec_enc = dec.enc
+			vmsg(f'dec -> enc {dec_enc}')
+			vmsg(f'out        {out}')
+			assert dec_enc == out, f'{dec_enc} != {out}'
+
+		return True

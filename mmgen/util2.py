@@ -196,3 +196,35 @@ def decode_pretty_hexdump(data):
 	except:
 		msg('Data not in hexdump format')
 		return False
+
+class ExpInt(int):
+	'encode or parse an integer in exponential notation with specified precision'
+
+	max_prec = 10
+
+	def __new__(cls, spec, *, prec):
+		assert 0 < prec < cls.max_prec
+		cls.prec = prec
+
+		from .util import is_int
+		if is_int(spec):
+			return int.__new__(cls, spec)
+		else:
+			assert isinstance(spec, str), f'ExpInt: {spec!r}: not a string!'
+			assert len(spec) >= 3, f'ExpInt: {spec!r}: invalid specifier'
+			val, exp = spec.split('e')
+			assert is_int(val) and is_int(exp)
+			return int.__new__(cls, val + '0' * int(exp))
+
+	@property
+	def trunc(self):
+		s = str(self)
+		return int(s[:self.prec] + '0' * (len(s) - self.prec))
+
+	@property
+	def enc(self):
+		s = str(self)
+		s_len = len(s)
+		digits = s[:min(s_len, self.prec)].rstrip('0')
+		ret = '{}e{}'.format(digits, s_len - len(digits))
+		return ret if len(ret) < s_len else s
