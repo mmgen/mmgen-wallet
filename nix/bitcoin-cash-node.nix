@@ -2,7 +2,7 @@
 
 pkgs.stdenv.mkDerivation rec {
     pname = "bitcoin-cash-node";
-    version = "v28.0.0";
+    version = "v28.0.1";
     src = fetchGit {
         url = "https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node";
         ref = "refs/tags/${version}";
