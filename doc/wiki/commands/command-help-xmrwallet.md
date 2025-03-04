@@ -499,5 +499,5 @@
   to delete your old hot wallets, make sure to do so securely using ‘shred’,
   ‘wipe’ or some other secure deletion utility.
 
-  MMGEN v15.1.dev17              February 2025              MMGEN-XMRWALLET(1)
+  MMGEN v15.1.dev18              March 2025                 MMGEN-XMRWALLET(1)
 ```

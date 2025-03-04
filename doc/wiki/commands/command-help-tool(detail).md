@@ -1240,5 +1240,5 @@ Optional KEYWORD ARGS (type and default value shown in square brackets):
 ```
 
 ```text
-MMGEN v15.1.dev17              February 2025              MMGEN-TOOL(DETAIL)(1)
+MMGEN v15.1.dev18              March 2025                 MMGEN-TOOL(DETAIL)(1)
 ```

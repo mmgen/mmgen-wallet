@@ -25,5 +25,5 @@
     wallet_cli      - execute a wallet RPC call with supplied arguments (wallet
                       is first argument)
 
-  MMGEN v15.1.dev17              February 2025                MMGEN-REGTEST(1)
+  MMGEN v15.1.dev18              March 2025                   MMGEN-REGTEST(1)
 ```

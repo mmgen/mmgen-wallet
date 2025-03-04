@@ -187,5 +187,5 @@ EXAMPLES:
   Same as above, but supply input via STDIN:
   $ echo "deadbeefcafe" | mmgen-tool hexreverse -
 
-  MMGEN v15.1.dev17              February 2025            MMGEN-TOOL(USAGE)(1)
+  MMGEN v15.1.dev18              March 2025               MMGEN-TOOL(USAGE)(1)
 ```

@@ -106,5 +106,5 @@
   Verify and display the exported JSON signature data:
   $ mmgen-msg verify signatures.json
 
-  MMGEN v15.1.dev17              February 2025                    MMGEN-MSG(1)
+  MMGEN v15.1.dev18              March 2025                       MMGEN-MSG(1)
 ```

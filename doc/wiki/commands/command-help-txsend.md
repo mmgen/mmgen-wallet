@@ -18,5 +18,5 @@
   -v, --verbose   Be more verbose
   -y, --yes       Answer 'yes' to prompts, suppress non-essential output
 
-  MMGEN v15.1.dev17              February 2025                 MMGEN-TXSEND(1)
+  MMGEN v15.1.dev18              March 2025                    MMGEN-TXSEND(1)
 ```

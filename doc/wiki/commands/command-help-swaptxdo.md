@@ -31,6 +31,8 @@
   -k, --keys-from-file f Provide additional keys for non-MMGen addresses
   -K, --keygen-backend n Use backend 'n' for public key generation.  Options
                          for BTC: 1:libsecp256k1 [default] 2:python-ecdsa
+  -l, --trade-limit L    Minimum swap amount, as either percentage or absolute
+                         coin amount (see TRADE LIMIT below)
   -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
   -m, --minconf n        Minimum number of confirmations required to spend
                          outputs (default: 1)
@@ -121,6 +123,25 @@
   ‘mmnode-ticker’, which can be used to calculate the current cross-rate between
   the asset pair of a swap, as well as the total receive value in terms of the
   send value.
+
+
+                                  TRADE LIMIT
+
+  A target value for the swap may be set, known as the “trade limit”.  If
+  this target cannot be met, the network will refund the user’s coins, minus
+  transaction fees (note that the refund goes to the address associated with the
+  transaction’s first input, leading to coin reuse).  Since under certain
+  circumstances large amounts of slippage can occur, resulting in significant
+  losses, setting a trade limit is highly recommended.
+
+  The target may be given as either an absolute coin amount or percentage value.
+  In the latter case, it’s interpreted as the percentage below the “expected
+  amount out” returned by the swap quote server.  Zero or negative percentage
+  values are also accepted, but are likely to result in your coins being
+  refunded.
+
+  The trade limit is rounded to four digits of precision in order to reduce
+  transaction size.
 
 
   ADDRESS TYPES:
@@ -239,5 +260,5 @@
 
       $ mmgen-tool --coin=bch --bch-rpc-host=gemini twview minconf=0
 
-  MMGEN v15.1.dev17              February 2025               MMGEN-SWAPTXDO(1)
+  MMGEN v15.1.dev18              March 2025                  MMGEN-SWAPTXDO(1)
 ```

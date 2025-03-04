@@ -23,6 +23,8 @@
   -I, --inputs       i  Specify transaction inputs (comma-separated list of
                         MMGen IDs or coin addresses).  Note that ALL unspent
                         outputs associated with each address will be included.
+  -l, --trade-limit L   Minimum swap amount, as either percentage or absolute
+                        coin amount (see TRADE LIMIT below)
   -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
   -m, --minconf      n  Minimum number of confirmations required to spend
                         outputs (default: 1)
@@ -102,6 +104,25 @@
   send value.
 
 
+                                  TRADE LIMIT
+
+  A target value for the swap may be set, known as the “trade limit”.  If
+  this target cannot be met, the network will refund the user’s coins, minus
+  transaction fees (note that the refund goes to the address associated with the
+  transaction’s first input, leading to coin reuse).  Since under certain
+  circumstances large amounts of slippage can occur, resulting in significant
+  losses, setting a trade limit is highly recommended.
+
+  The target may be given as either an absolute coin amount or percentage value.
+  In the latter case, it’s interpreted as the percentage below the “expected
+  amount out” returned by the swap quote server.  Zero or negative percentage
+  values are also accepted, but are likely to result in your coins being
+  refunded.
+
+  The trade limit is rounded to four digits of precision in order to reduce
+  transaction size.
+
+
   ADDRESS TYPES:
 
     Code Type           Description
@@ -175,5 +196,5 @@
 
       $ mmgen-tool --coin=bch --bch-rpc-host=gemini twview minconf=0
 
-  MMGEN v15.1.dev17              February 2025            MMGEN-SWAPTXCREATE(1)
+  MMGEN v15.1.dev18              March 2025               MMGEN-SWAPTXCREATE(1)
 ```
