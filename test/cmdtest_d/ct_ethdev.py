@@ -20,7 +20,7 @@
 test.cmdtest_d.ct_ethdev: Ethdev tests for the cmdtest.py test suite
 """
 
-import sys, os, re, shutil, asyncio, json
+import sys, time, os, re, shutil, asyncio, json
 from decimal import Decimal
 from collections import namedtuple
 from subprocess import run, PIPE, DEVNULL
@@ -66,6 +66,15 @@ dfl_sid = '98831F3A'
 dfl_devaddr = '00a329c0648769a73afac7f9381e08fb43dbea72'
 dfl_devkey = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
 
+def get_reth_dev_keypair():
+	from mmgen.bip39 import bip39
+	from mmgen.bip_hd import MasterNode
+	mn = 'test test test test test test test test test test test junk' # See ‘reth node --help’
+	seed = bip39().generate_seed(mn.split())
+	m = MasterNode(cfg, seed)
+	node = m.to_chain(idx=0, coin='eth').derive_private(0)
+	return (node.key.hex(), node.address)
+
 burn_addr  = 'deadbeef'*5
 burn_addr2 = 'beadcafe'*5
 
@@ -79,6 +88,16 @@ def set_vbals(daemon_id):
 	if daemon_id == 'geth':
 		vbal1 = '1.2288334'
 		vbal2 = '99.996560752'
+		vbal3 = '1.2314176'
+		vbal4 = '127.0287834'
+		vbal5 = '999904.14775104212345678'
+		vbal6 = '999904.14880104212345678'
+		vbal7 = '999902.91891764212345678'
+		vbal9 = '1.2262504'
+	elif daemon_id == 'reth':
+		vbal1 = '1.2288334'
+		vbal2 = '99.996560752'
+		vbal3 = '1.23142525'
 		vbal3 = '1.2314176'
 		vbal4 = '127.0287834'
 		vbal5 = '999904.14775104212345678'
@@ -409,6 +428,10 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		from mmgen.daemon import CoinDaemon
 		self.daemon = CoinDaemon( cfg, self.proto.coin+'_rt', test_suite=True)
 
+		if self.daemon.id == 'reth':
+			global dfl_devkey, dfl_devaddr
+			dfl_devkey, dfl_devaddr = get_reth_dev_keypair()
+
 		set_vbals(self.daemon.id)
 
 		self.using_solc = check_solc_ver()
@@ -432,16 +455,21 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		from mmgen.rpc import rpc_init
 		return await rpc_init(cfg, self.proto)
 
+	def mining_delay(self): # workaround for mining race condition in dev mode
+		if self.daemon.id == 'reth':
+			time.sleep(0.5)
+
 	async def setup(self):
 		self.spawn('', msg_only=True)
 
 		d = self.daemon
 
 		if not self.using_solc:
-			srcdir = os.path.join(self.tr.repo_root, 'test', 'ref', 'ethereum', 'bin')
+			subdir = 'reth' if d.id == 'reth' else 'geth'
+			srcdir = os.path.join(self.tr.repo_root, 'test', 'ref', 'ethereum', 'bin', subdir)
 			from shutil import copytree
-			for d in ('mm1', 'mm2'):
-				copytree(os.path.join(srcdir, d), os.path.join(self.tmpdir, d))
+			for _ in ('mm1', 'mm2'):
+				copytree(os.path.join(srcdir, _), os.path.join(self.tmpdir, _))
 
 		if d.id in ('geth', 'erigon'):
 			self.genesis_setup(d)
@@ -575,6 +603,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			[f'--coin={self.proto.coin}', '--regtest=1', 'eth_getBalance', '0x'+dfl_devaddr, 'latest'])
 		if self.daemon.id == 'geth':
 			t.expect('0x33b2e3c91ec0e9113986000')
+		elif self.daemon.id == 'reth':
+			t.expect('0xd3c21bcecceda1000000')
 		return t
 
 	async def _wallet_upgrade(self, src_fn, expect1, expect2=None):
@@ -763,6 +793,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return self.bal(n='3')
 
 	def tx_status(self, ext, expect_str, expect_str2='', add_args=[], exit_val=0):
+		self.mining_delay()
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
@@ -893,6 +924,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return self.bal(n='5')
 
 	def bal(self, n):
+		self.mining_delay()
 		t = self.spawn('mmgen-tool', self.eth_args + ['twview', 'wide=1'])
 		text = t.read(strip_color=True)
 		for addr, amt in bals(n):
@@ -903,6 +935,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return t
 
 	def token_bal(self, n=None):
+		self.mining_delay()
 		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1', 'twview', 'wide=1'])
 		text = t.read(strip_color=True)
 		for addr, _amt1, _amt2 in token_bals(n):
@@ -982,8 +1015,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return self.token_compile(token_data)
 
 	async def get_tx_receipt(self, txid):
-		if self.daemon.id == 'geth': # yet another Geth bug
-			await asyncio.sleep(0.5)
+		if self.daemon.id in ('geth', 'reth'): # workaround for mining race condition in dev mode
+			await asyncio.sleep(1 if self.daemon.id == 'reth' else 0.5)
 		from mmgen.tx import NewTX
 		tx = await NewTX(cfg=cfg, proto=self.proto, target='tx')
 		tx.rpc = await self.rpc
@@ -1312,6 +1345,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			total_coin = None)
 
 	def _txcreate_refresh_balances(self, bals, args, total, adj_total, total_coin):
+
+		self.mining_delay()
 
 		if total_coin is None:
 			total_coin = self.proto.coin

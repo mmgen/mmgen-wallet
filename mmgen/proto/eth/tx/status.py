@@ -33,7 +33,7 @@ class Status(TxBase.Status):
 				return False
 			if tx.rpc.daemon.id in ('parity', 'openethereum'):
 				pool = [x['hash'] for x in await tx.rpc.call('parity_pendingTransactions')]
-			elif tx.rpc.daemon.id in ('geth', 'erigon'):
+			elif tx.rpc.daemon.id in ('geth', 'reth', 'erigon'):
 				res = await tx.rpc.call('txpool_content')
 				pool = list(res['pending']) + list(res['queued'])
 			return '0x'+tx.coin_txid in pool

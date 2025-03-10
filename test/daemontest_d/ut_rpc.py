@@ -201,7 +201,7 @@ class unit_tests:
 				'rpc_port':     32323, # ignored
 				'btc_tw_name': 'ignored',
 				'tw_name':     'also-ignored',
-				'eth_testnet_chain_names': ['goerli', 'foo', 'bar', 'baz'],
+				'eth_testnet_chain_names': ['goerli', 'holesky', 'foo', 'bar', 'baz'],
 		})
 
 	async def erigon(self, name, ut):

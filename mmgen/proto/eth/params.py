@@ -38,6 +38,7 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 	avg_bdi       = 15
 	decimal_prec  = 36
 
+	# https://www.chainid.dev
 	chain_ids = {
 		1:    'ethereum',         # ethereum mainnet
 		2:    'morden',           # morden testnet (deprecated)
@@ -50,6 +51,7 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 		17:   'developmentchain', # parity dev chain
 		1337: 'developmentchain', # geth dev chain
 		711:  'ethereum',         # geth mainnet (empty chain)
+		17000: 'holesky',         # proof-of-stake testnet
 	}
 
 	coin_cfg_opts = (

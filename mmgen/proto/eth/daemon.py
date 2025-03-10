@@ -113,18 +113,28 @@ class geth_daemon(ethereum_daemon):
 	def init_subclass(self):
 
 		self.coind_args = list_gen(
-			['--verbosity=0'],
+			['node', self.id == 'reth'],
+			['--quiet', self.id == 'reth'],
+			['--verbosity=0', self.id == 'geth'],
 			['--ipcdisable'], # IPC-RPC: if path to socket is longer than 108 chars, geth fails to start
 			['--http'],
 			['--http.api=eth,web3,txpool'],
 			[f'--http.port={self.rpc_port}'],
 			[f'--authrpc.port={self.authrpc_port}'],
 			[f'--port={self.p2p_port}', self.p2p_port], # geth binds p2p port even with --maxpeers=0
-			['--maxpeers=0', not self.opt.online],
+			['--maxpeers=0', self.id == 'geth' and not self.opt.online],
 			[f'--datadir={self.datadir}', self.non_dfl_datadir],
 			['--holesky', self.network=='testnet'],
 			['--dev', self.network=='regtest'],
 		)
+
+class reth_daemon(geth_daemon):
+	daemon_data = _dd('Reth', 1002002, '1.2.2')
+	version_pat = r'reth/v(\d+)\.(\d+)\.(\d+)'
+	exec_fn = 'reth'
+	datadirs = {
+		'linux': [gc.home_dir, '.local', 'share', 'reth'],
+	}
 
 # https://github.com/ledgerwatch/erigon
 class erigon_daemon(geth_daemon):
