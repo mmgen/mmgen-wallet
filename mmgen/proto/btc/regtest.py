@@ -22,6 +22,7 @@ proto.btc.regtest: Coin daemon regression test mode setup and operations
 
 import os, shutil, json
 from ...util import msg, gmsg, die, capfirst, suf
+from ...util2 import cliargs_convert
 from ...protocol import init_proto
 from ...rpc import rpc_init, json_encoder
 from ...objmethods import MMGenObject
@@ -45,16 +46,6 @@ def create_data_dir(cfg, data_dir):
 		os.makedirs(data_dir)
 	except:
 		pass
-
-def cliargs_convert(args):
-	def gen():
-		for arg in args:
-			try:
-				yield json.loads(arg) # list, dict, bool, int, null
-			except:
-				yield arg # arbitrary string
-
-	return tuple(gen())
 
 class MMGenRegtest(MMGenObject):
 

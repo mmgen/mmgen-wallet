@@ -1,6 +1,7 @@
 * [mmgen-addrgen](commands/command-help-addrgen.md)
 * [mmgen-addrimport](commands/command-help-addrimport.md)
 * [mmgen-autosign](commands/command-help-autosign.md)
+* [mmgen-cli](commands/command-help-cli.md)
 * [mmgen-keygen](commands/command-help-keygen.md)
 * [mmgen-msg](commands/command-help-msg.md)
 * [mmgen-passchg](commands/command-help-passchg.md)

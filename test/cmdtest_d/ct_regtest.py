@@ -196,6 +196,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		'miscellaneous commands',
 		('daemon_version',         'mmgen-tool daemon_version'),
 		('halving_calculator_bob', 'halving calculator (Bob)'),
+		('cli_txcreate',           '‘mmgen-cli createrawtransaction’'),
 	),
 	'init_bob': (
 		'creating Bob’s MMGen wallet and tracking wallet',
@@ -223,7 +224,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		('fund_bob',                     'funding Bob’s wallet'),
 		('fund_alice',                   'funding Alice’s wallet'),
 		('generate',                     'mining a block'),
-		('bob_bal1',                     'Bob’s balance'),
+		('bob_bal1_cli',                 'Bob’s balance (via ‘mmgen-cli’)'),
 		('generate_extra_deterministic', 'generate extra blocks for deterministic run'),
 	),
 	'msg': (
@@ -547,6 +548,18 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		t.expect('time until halving')
 		return t
 
+	def cli_txcreate(self):
+		txid = 'beadcafe' * 8
+		return self.spawn(
+			'mmgen-cli',
+			[
+				'--regtest=1',
+				f'--coin={self.proto.coin}',
+				'createrawtransaction',
+				f'[{{"txid":"{txid}","vout":7}}]',
+				f'[{{"{self.burn_addr}":0.001}}]'
+			])
+
 	def walletgen(self, user):
 		t = self.spawn('mmgen-walletgen', ['-q', '-r0', '-p1', f'--{user}'], no_passthru_opts=True)
 		t.passphrase_new(f'new {dfl_wcls.desc}', rt_pw)
@@ -777,8 +790,12 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def alice_bal2(self):
 		return self.user_bal('alice', rtBals[8])
 
-	def bob_bal1(self):
-		return self.user_bal('bob', rtFundAmt, self._cashaddr_opt(0))
+	def bob_bal1_cli(self):
+		t = self.spawn(
+			'mmgen-cli',
+			['--regtest=1', '--wallet=bob', f'--coin={self.proto.coin}', 'getbalance', '*', '0', 'true'])
+		t.expect(rtFundAmt + '.00')
+		return t
 
 	def bob_bal2(self):
 		return self.user_bal('bob', rtBals[0], self._cashaddr_opt(1))

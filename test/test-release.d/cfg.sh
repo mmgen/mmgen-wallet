@@ -230,7 +230,11 @@ init_tests() {
 	t_ltc_rt="- $cmdtest_py --coin=ltc regtest"
 
 	d_eth="operations for Ethereum using devnet"
-	t_eth="geth $cmdtest_py --coin=eth ethdev"
+	t_eth="
+		geth $cmdtest_py --coin=eth ethdev
+		reth $cmdtest_py --coin=eth --daemon-id=reth ethdev
+	"
+	[ "$FAST" ]  && t_eth_skip='reth'
 
 	d_etc="operations for Ethereum Classic using devnet"
 	t_etc="parity $cmdtest_py --coin=etc ethdev"

@@ -193,6 +193,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		('addrimport',          'importing addresses'),
 		('addrimport_dev_addr', "importing dev faucet address 'Ox00a329c..'"),
 		('fund_dev_address',    'funding the default (Parity dev) address'),
+		('cli_dev_balance',      'mmgen-cli eth_getBalance'),
 	),
 	'msg': (
 		'message signing',
@@ -566,6 +567,14 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	def daemon_version(self):
 		t = self.spawn('mmgen-tool', self.eth_args + ['daemon_version'])
 		t.expect('version')
+		return t
+
+	def cli_dev_balance(self):
+		t = self.spawn(
+			'mmgen-cli',
+			[f'--coin={self.proto.coin}', '--regtest=1', 'eth_getBalance', '0x'+dfl_devaddr, 'latest'])
+		if self.daemon.id == 'geth':
+			t.expect('0x33b2e3c91ec0e9113986000')
 		return t
 
 	async def _wallet_upgrade(self, src_fn, expect1, expect2=None):

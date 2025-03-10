@@ -62,6 +62,7 @@ class GlobalConstants(Lockable):
 		'addrgen':      _cc(True,  False, True,  None,    [],      'lmw'),
 		'addrimport':   _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
 		'autosign':     _cc(True,  True,  False, '-rRb',  ['rpc'], 'lm'),
+		'cli':          _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
 		'keygen':       _cc(True,  False, True,  None,    [],      'lmw'),
 		'msg':          _cc(True,  True,  True,  None,    ['msg'], 'lmw'),
 		'passchg':      _cc(False, False, False, None,    [],      'lmw'),

@@ -197,6 +197,22 @@ def decode_pretty_hexdump(data):
 		msg('Data not in hexdump format')
 		return False
 
+def cliargs_convert(args):
+
+	# return str instead of float for input into JSON-RPC
+	def float_parser(n):
+		return n
+
+	import json
+	def gen():
+		for arg in args:
+			try:
+				yield json.loads(arg, parse_float=float_parser) # list, dict, bool, int, null, float
+			except json.decoder.JSONDecodeError:
+				yield arg # arbitrary string
+
+	return tuple(gen())
+
 class ExpInt(int):
 	'encode or parse an integer in exponential notation with specified precision'
 
