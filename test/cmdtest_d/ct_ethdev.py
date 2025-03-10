@@ -69,7 +69,7 @@ dfl_devkey = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
 burn_addr  = 'deadbeef'*5
 burn_addr2 = 'beadcafe'*5
 
-amt1 = '999999.12345689012345678'
+amt1 = '999777.12345689012345678'
 amt2 = '888.111122223333444455'
 
 parity_devkey_fn = 'parity.devkey'
@@ -81,9 +81,9 @@ def set_vbals(daemon_id):
 		vbal2 = '99.996560752'
 		vbal3 = '1.2314176'
 		vbal4 = '127.0287834'
-		vbal5 = '1000126.14775104212345678'
-		vbal6 = '1000126.14880104212345678'
-		vbal7 = '1000124.91891764212345678'
+		vbal5 = '999904.14775104212345678'
+		vbal6 = '999904.14880104212345678'
+		vbal7 = '999902.91891764212345678'
 		vbal9 = '1.2262504'
 	else:
 		vbal1 = '1.2288396'
@@ -153,7 +153,7 @@ token_bals = lambda k: {
 }[k]
 
 token_bals_getbalance = lambda k: {
-	'1': (vbal4, '999999.12345689012345678'),
+	'1': (vbal4, '999777.12345689012345678'),
 	'2': ('111.888877776666555545', '888.111122223333444455')
 }[k]
 
@@ -267,8 +267,6 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		('token_deploy2a',  'deploying ERC20 token #2 (SafeMath)'),
 		('token_deploy2b',  'deploying ERC20 token #2 (Owned)'),
 		('token_deploy2c',  'deploying ERC20 token #2 (Token)'),
-
-		('contract_deploy', 'deploying contract (create, sign, send)'),
 	),
 	'token': (
 		'creating, signing, sending and bumping ERC20 token transactions',
@@ -436,13 +434,13 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	async def setup(self):
 		self.spawn('', msg_only=True)
 
+		d = self.daemon
+
 		if not self.using_solc:
 			srcdir = os.path.join(self.tr.repo_root, 'test', 'ref', 'ethereum', 'bin')
 			from shutil import copytree
 			for d in ('mm1', 'mm2'):
 				copytree(os.path.join(srcdir, d), os.path.join(self.tmpdir, d))
-
-		d = self.daemon
 
 		if d.id in ('geth', 'erigon'):
 			self.genesis_setup(d)
@@ -596,7 +594,10 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return await self._wallet_upgrade('tracking-wallet-v2.json', 'token params field', 'network field')
 
 	def addrgen(self, addrs='1-3,11-13,21-23'):
-		t = self.spawn('mmgen-addrgen', self.eth_args + [dfl_words_file, addrs])
+		t = self.spawn(
+			'mmgen-addrgen',
+			[f'--coin={self.proto.coin}'] + self.eth_args + [dfl_words_file, addrs],
+			no_passthru_opts = True)
 		t.written_to_file('Addresses')
 		return t
 
@@ -1035,15 +1036,12 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	def bal6(self):
 		return self.bal5()
 
-	async def token_deploy2a(self):
-		return await self.token_deploy(num=2, key='SafeMath', gas=500_000)
+	async def token_deploy2a(self): # test create, sign, send:
+		return await self.token_deploy(num=2, key='SafeMath', gas=500_000, mmgen_cmd='txcreate')
 	async def token_deploy2b(self):
 		return await self.token_deploy(num=2, key='Owned',   gas=1_000_000)
 	async def token_deploy2c(self):
 		return await self.token_deploy(num=2, key='Token',   gas=4_000_000)
-
-	async def contract_deploy(self): # test create, sign, send
-		return await self.token_deploy(num=2, key='SafeMath', gas=500_000, mmgen_cmd='txcreate')
 
 	async def token_transfer_ops(self, op, amt=1000, num_tokens=2):
 		self.spawn('', msg_only=True)

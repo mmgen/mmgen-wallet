@@ -110,16 +110,12 @@ class CmdTestInput(CmdTestBase):
 	def get_seed_from_stdin(self):
 		self.spawn('', msg_only=True)
 		from subprocess import run, PIPE
-		cmd = ['python3', 'cmds/mmgen-walletconv', '--in-fmt=words', '--out-fmt=words', '--outdir=test/trash']
+		cmd = ['python3', 'cmds/mmgen-walletconv', '--skip-cfg-file', '--in-fmt=words', '--out-fmt=words', '--outdir=test/trash']
 		mn = sample_mn['mmgen']['mn']
 		run_env = dict(os.environ)
 		run_env['MMGEN_TEST_SUITE'] = ''
 
-		# the test can fail the first time if cfg file has changed, so run it twice if necessary:
-		for _ in range(2):
-			cp = run(cmd, input=mn.encode(), stdout=PIPE, stderr=PIPE, env=run_env)
-			if b'written to file' in cp.stderr:
-				break
+		cp = run(cmd, input=mn.encode(), stdout=PIPE, stderr=PIPE, env=run_env)
 
 		from mmgen.color import set_vt100
 		set_vt100()

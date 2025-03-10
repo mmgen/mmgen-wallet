@@ -67,10 +67,10 @@ class Base(TxBase.Base):
 			gas_sent      = Int(tx['gas'], 16),
 			gas_used      = Int(rx['gasUsed'], 16),
 			gas_price     = self.proto.coin_amt(int(tx['gasPrice'], 16), from_unit='wei'),
-			contract_addr = self.proto.coin_addr(rx['contractAddress'][2:]) if rx['contractAddress'] else None,
-			tx            = tx,
-			rx            = rx,
-		)
+			contract_addr = self.proto.coin_addr(rx['contractAddress'][2:])
+				if rx['contractAddress'] else None,
+			tx = tx,
+			rx = rx)
 
 	def check_serialized_integrity(self): # TODO
 		return True
