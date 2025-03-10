@@ -221,6 +221,7 @@ class Config(Lockable):
 	force_standalone_scrypt_module = False
 	enable_erigon                  = False
 	autochg_ignore_labels          = False
+	autosign                       = False
 
 	# regtest:
 	bob          = False
@@ -287,6 +288,7 @@ class Config(Lockable):
 	# coin-specific only:  bch_cashaddr (alias of cashaddr)
 	_cfg_file_opts = (
 		'autochg_ignore_labels',
+		'autosign',
 		'color',
 		'daemon_data_dir',
 		'debug',
