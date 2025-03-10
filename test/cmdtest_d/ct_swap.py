@@ -17,7 +17,7 @@ from pathlib import Path
 from mmgen.protocol import init_proto
 from ..include.common import make_burn_addr, gr_uc
 from .common import dfl_bip39_file
-from .midgard import run_midgard_server
+from .thornode import run_thornode_server
 
 from .ct_autosign import CmdTestAutosign, CmdTestAutosignThreaded
 from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, cfg, strip_ansi_escapes
@@ -25,9 +25,9 @@ from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, cfg, strip_ans
 sample1 = gr_uc[:24]
 sample2 = '00010203040506'
 
-def midgard_server_start():
+def thornode_server_start():
 	import threading
-	t = threading.Thread(target=run_midgard_server, name='Midgard server thread')
+	t = threading.Thread(target=run_thornode_server, name='Thornode server thread')
 	t.daemon = True
 	t.start()
 
@@ -175,7 +175,7 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 
 		self.protos = [init_proto(cfg, k, network='regtest', need_amt=True) for k in ('btc', 'ltc', 'bch')]
 
-		midgard_server_start() # TODO: stop server when test group finishes executing
+		thornode_server_start() # TODO: stop server when test group finishes executing
 
 		self.opts.append('--bob')
 

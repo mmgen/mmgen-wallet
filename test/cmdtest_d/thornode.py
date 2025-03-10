@@ -78,12 +78,12 @@ class handler(BaseHTTPRequestHandler):
 	header = b'HTTP/1.1 200 OK\nContent-type: application/json\n\n'
 
 	def do_GET(self):
-		# print(f'Midgard server received:\n  {self.requestline}')
+		# print(f'Thornode server received:\n  {self.requestline}')
 		self.wfile.write(self.header + json.dumps(create_data(self.requestline)).encode())
 
-def run_midgard_server(server_class=HTTPServer, handler_class=handler):
-	print('Midgard server listening on port 18800')
+def run_thornode_server(server_class=HTTPServer, handler_class=handler):
+	print('Thornode server listening on port 18800')
 	server_address = ('localhost', 18800)
 	httpd = server_class(server_address, handler_class)
 	httpd.serve_forever()
-	print('Midgard server exiting')
+	print('Thornode server exiting')

@@ -37,7 +37,7 @@ class ExpInt4(ExpInt):
 		return ExpInt.__new__(cls, spec, prec=params.exp_prec)
 
 def rpc_client(tx, amt):
-	from .midgard import Midgard
-	return Midgard(tx, amt)
+	from .thornode import Thornode
+	return Thornode(tx, amt)
 
 from .memo import Memo as data

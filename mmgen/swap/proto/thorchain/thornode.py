@@ -9,12 +9,12 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-swap.proto.thorchain.midgard: THORChain swap protocol network query ops
+swap.proto.thorchain.thornode: THORChain swap protocol network query ops
 """
 
 import json
 
-class MidgardRPCClient:
+class ThornodeRPCClient:
 
 	http_hdrs = {'Content-Type': 'application/json'}
 	proto = 'https'
@@ -44,12 +44,12 @@ class MidgardRPCClient:
 			timeout = timeout or self.timeout,
 			verify  = self.verify)
 
-class Midgard:
+class Thornode:
 
 	def __init__(self, tx, amt):
 		self.tx = tx
 		self.in_amt = amt
-		self.rpc = MidgardRPCClient(tx)
+		self.rpc = ThornodeRPCClient(tx)
 
 	def get_quote(self):
 		self.get_str = '/thorchain/quote/swap?from_asset={a}.{a}&to_asset={b}.{b}&amount={c}'.format(
