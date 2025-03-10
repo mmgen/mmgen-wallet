@@ -39,6 +39,7 @@ pkgs.mkShellNoCC {
         pwd=$(pwd)
         export PYTHONPATH=$pwd
         export PATH=$pwd/cmds:$pwd/.bin-override:$HOME/.local/bin:$PATH
+        export LANG="en_US.UTF-8"
 
         [ "$UID" == 0 ] || do_bin_override
     '';

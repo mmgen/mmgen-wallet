@@ -8,7 +8,7 @@
 rec {
     ### Set nixpkgs globally for the MMGen environment.
     ### If you set it, make sure to uncomment the python variable assignment below.
-    # pkgs = import (bdir + /nixpkgs-24.05.nix) {};
+    # pkgs = import (bdir + /nixpkgs-24.11.nix) {};
 
     ### Set python version globally for the MMGen environment.
     ### Must be set if pkgs is set.
