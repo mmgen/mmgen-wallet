@@ -25,10 +25,6 @@ class daemon_warning(oneshot_warning_group):
 		color = 'yellow'
 		message = 'Geth has not been tested on mainnet. You may experience problems.'
 
-	class reth:
-		color = 'yellow'
-		message = 'Reth has not been tested on mainnet. You may experience problems.'
-
 	class erigon:
 		color = 'red'
 		message = 'Erigon support is EXPERIMENTAL. Use at your own risk!!!'
@@ -87,7 +83,7 @@ class EthereumRPCClient(RPCClient, metaclass=AsyncInit):
 			self.chainID = None if ci is None else Int(ci, base=16)
 			self.chain = (await self.call('parity_chain')).replace(' ', '_').replace('_testnet', '')
 		elif self.daemon.id in ('geth', 'reth', 'erigon'):
-			if self.daemon.network == 'mainnet':
+			if self.daemon.network == 'mainnet' and hasattr(daemon_warning, self.daemon.id):
 				daemon_warning(self.daemon.id)
 			self.caps += ('full_node',)
 			self.chainID = Int(ci, base=16)
