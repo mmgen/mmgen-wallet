@@ -194,9 +194,9 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	cmd_subgroups = {
 	'misc': (
 		'miscellaneous commands',
-		('daemon_version',         'mmgen-tool daemon_version'),
-		('halving_calculator_bob', 'halving calculator (Bob)'),
-		('cli_txcreate',           '‘mmgen-cli createrawtransaction’'),
+		('daemon_version',           'mmgen-tool daemon_version'),
+		('halving_calculator_bob',   'halving calculator (Bob)'),
+		('cli_createrawtransaction', '‘mmgen-cli createrawtransaction’'),
 	),
 	'init_bob': (
 		'creating Bob’s MMGen wallet and tracking wallet',
@@ -224,7 +224,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		('fund_bob',                     'funding Bob’s wallet'),
 		('fund_alice',                   'funding Alice’s wallet'),
 		('generate',                     'mining a block'),
-		('bob_bal1_cli',                 'Bob’s balance (via ‘mmgen-cli’)'),
+		('bob_bal1',                     'Bob’s balance'),
 		('generate_extra_deterministic', 'generate extra blocks for deterministic run'),
 	),
 	'msg': (
@@ -548,7 +548,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		t.expect('time until halving')
 		return t
 
-	def cli_txcreate(self):
+	def cli_createrawtransaction(self):
 		txid = 'beadcafe' * 8
 		return self.spawn(
 			'mmgen-cli',
@@ -777,6 +777,15 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def bob_twview1(self):
 		return self.user_twview('bob', chk=('1', rtAmts[0]))
 
+	def _user_bal_cli(self, user, *, chk=None, chks=[]):
+		t = self.spawn('mmgen-cli', [f'--{user}', 'getbalance', '*', '1', 'true'])
+		res = t.read().splitlines()[0].rstrip('0').rstrip('.')
+		if chk:
+			assert res == chk, f'{res}: invalid balance! (expected {chk})'
+		else:
+			assert res in chks, f'{res}: invalid balance! (expected one of {chks})'
+		return t
+
 	def user_bal(self, user, bal, opts=[], args=['showempty=1'], skip_check=False, proto=None):
 		proto = proto or self.proto
 		t = self.spawn('mmgen-tool', opts + [f'--{user}', f'--coin={proto.coin}', 'listaddresses'] + args)
@@ -785,20 +794,16 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return t
 
 	def alice_bal1(self):
-		return self.user_bal('alice', rtFundAmt)
+		return self._user_bal_cli('alice', chk=rtFundAmt)
 
 	def alice_bal2(self):
-		return self.user_bal('alice', rtBals[8])
+		return self._user_bal_cli('alice', chk=rtBals[8])
 
-	def bob_bal1_cli(self):
-		t = self.spawn(
-			'mmgen-cli',
-			['--regtest=1', '--wallet=bob', f'--coin={self.proto.coin}', 'getbalance', '*', '0', 'true'])
-		t.expect(rtFundAmt + '.00')
-		return t
+	def bob_bal1(self):
+		return self._user_bal_cli('bob', chk=rtFundAmt)
 
 	def bob_bal2(self):
-		return self.user_bal('bob', rtBals[0], self._cashaddr_opt(1))
+		return self._user_bal_cli('bob', chk=rtBals[0])
 
 	def bob_bal2a(self):
 		return self.user_bal('bob', rtBals[0], args=['showempty=1', 'age_fmt=confs'])
@@ -819,16 +824,16 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return self.user_bal('bob', rtBals[0], args=['showempty=0', 'sort=twmmid', 'reverse=1'])
 
 	def bob_bal3(self):
-		return self.user_bal('bob', rtBals[1])
+		return self._user_bal_cli('bob', chk=rtBals[1])
 
 	def bob_bal4(self):
-		return self.user_bal('bob', rtBals[2])
+		return self._user_bal_cli('bob', chk=rtBals[2])
 
 	def bob_bal5(self):
-		return self.user_bal('bob', rtBals[3])
+		return self._user_bal_cli('bob', chk=rtBals[3])
 
 	def bob_bal6(self):
-		return self.user_bal('bob', rtBals[7])
+		return self._user_bal_cli('bob', chk=rtBals[7])
 
 	def bob_subwallet_addrgen1(self):
 		return self.addrgen('bob', subseed_idx='29L', mmtypes=['C'])  # 29L: 2FA7BBA8
