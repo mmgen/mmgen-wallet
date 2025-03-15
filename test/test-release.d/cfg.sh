@@ -72,7 +72,8 @@ init_tests() {
 	"
 
 	[ "$VERBOSE" ] || STDOUT_DEVNULL='> /dev/null'
-	d_lint="code errors with static code analyzer"
+	d_lint="code errors with Ruff static code analyzer"
+	e_lint="Error checking failed!"
 	t_lint="
 		b ruff check setup.py $STDOUT_DEVNULL
 		b ruff check mmgen $STDOUT_DEVNULL
@@ -81,7 +82,7 @@ init_tests() {
 	"
 
 	PYLINT_OPTS='--errors-only --jobs=0'
-	d_pylint="code errors with static code analyzer"
+	d_pylint="code errors with Pylint static code analyzer"
 	e_pylint="Error checking failed!"
 	t_pylint="
 		b $pylint $PYLINT_OPTS mmgen

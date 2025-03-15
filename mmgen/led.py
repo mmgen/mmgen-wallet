@@ -33,7 +33,13 @@ class LEDControl:
 	class binfo(Lockable):
 		_reset_ok = ('trigger_reset',)
 
-		def __init__(self, name, control, trigger=None, trigger_dfl='heartbeat', trigger_disable='none'):
+		def __init__(
+				self,
+				name,
+				control,
+				trigger         = None,
+				trigger_dfl     = 'heartbeat',
+				trigger_disable = 'none'):
 			self.name = name
 			self.control = control
 			self.trigger = trigger

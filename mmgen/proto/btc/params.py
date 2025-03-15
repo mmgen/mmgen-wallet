@@ -65,7 +65,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 		'cashaddr',
 	)
 
-	def encode_wif(self, privbytes, pubkey_type, compressed): # input is preprocessed hex
+	def encode_wif(self, privbytes, pubkey_type, compressed): # input is preprocessed
 		assert len(privbytes) == self.privkey_len, f'{len(privbytes)} bytes: incorrect private key length!'
 		assert pubkey_type in self.wif_ver_bytes, f'{pubkey_type!r}: invalid pubkey_type'
 		return b58chk_encode(

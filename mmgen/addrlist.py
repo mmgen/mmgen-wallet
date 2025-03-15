@@ -186,7 +186,9 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		if seed and addr_idxs:   # data from seed + idxs
 			self.al_id = AddrListID(sid=seed.sid, mmtype=MMGenAddrType(proto, mmtype or proto.dfl_mmtype))
 			src = 'gen'
-			adata = self.generate(seed, addr_idxs if isinstance(addr_idxs, AddrIdxList) else AddrIdxList(addr_idxs))
+			adata = self.generate(
+				seed,
+				addr_idxs if isinstance(addr_idxs, AddrIdxList) else AddrIdxList(addr_idxs))
 			do_chksum = True
 		elif infile:             # data from MMGen address file
 			self.infile = infile

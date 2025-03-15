@@ -125,7 +125,10 @@ class New(Base, TxNew):
 	def final_inputs_ok_msg(self, funds_left):
 		return 'Transaction produces {} {} in change'.format(funds_left.hl(), self.coin)
 
-	def check_chg_addr_is_wallet_addr(self, output=None, message='Change address is not an MMGen wallet address!'):
+	def check_chg_addr_is_wallet_addr(
+			self,
+			output  = None,
+			message = 'Change address is not an MMGen wallet address!'):
 		def do_err():
 			from ....ui import confirm_or_raise
 			confirm_or_raise(

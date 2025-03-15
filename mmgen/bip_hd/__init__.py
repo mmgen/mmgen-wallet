@@ -193,7 +193,13 @@ class MasterNode(Lockable):
 
 		new = BipHDNodeMaster()
 
-		new.cfg       = BipHDConfig(self.base_cfg, coin, network, addr_type, from_path, no_path_checks)
+		new.cfg = BipHDConfig(
+			self.base_cfg,
+			coin,
+			network,
+			addr_type,
+			from_path,
+			no_path_checks)
 		new.par_print = self.par_print
 		new.depth     = self.depth
 		new.key       = self.key

@@ -126,22 +126,18 @@ class PasswordList(AddrList):
 			die('InvalidPasswdFormat',
 				f'{self.pw_fmt!r}: invalid password format.  Valid formats: {", ".join(self.pw_info)}')
 
-	def chk_pw_len(self, passwd=None):
-		if passwd is None:
-			assert self.pw_len, 'either passwd or pw_len must be set'
-			pw_len = self.pw_len
-			fs = '{l}: invalid user-requested length for {b} ({c}{m})'
-		else:
-			pw_len = len(passwd)
-			fs = '{pw}: {b} has invalid length {l} ({c}{m} characters)'
+	def chk_pw_len(self):
+		assert self.pw_len, 'pw_len must be set'
+		pw_len = self.pw_len
+		fs = '{l}: invalid user-requested length for {b} ({c}{m})'
 		d = self.pw_info[self.pw_fmt]
 		if d.valid_lens:
 			if pw_len not in d.valid_lens:
-				die(2, fs.format(l=pw_len, b=d.desc, c='not one of ', m=d.valid_lens, pw=passwd))
+				die(2, fs.format(l=pw_len, b=d.desc, c='not one of ', m=d.valid_lens))
 		elif pw_len > d.max_len:
-			die(2, fs.format(l=pw_len, b=d.desc, c='>', m=d.max_len, pw=passwd))
+			die(2, fs.format(l=pw_len, b=d.desc, c='>', m=d.max_len))
 		elif pw_len < d.min_len:
-			die(2, fs.format(l=pw_len, b=d.desc, c='<', m=d.min_len, pw=passwd))
+			die(2, fs.format(l=pw_len, b=d.desc, c='<', m=d.min_len))
 
 	def set_pw_len(self, pw_len):
 		d = self.pw_info[self.pw_fmt]

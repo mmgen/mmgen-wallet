@@ -75,10 +75,6 @@ class Completed(Base, TxBase.Completed):
 					'scriptPubKey:',          i.scriptPubKey,
 					'scriptPubKey->address:', ds.addr))
 
-#	def is_replaceable_from_rpc(self):
-#		dec_tx = await self.rpc.call('decoderawtransaction', self.serialized)
-#		return None < dec_tx['vin'][0]['sequence'] <= self.proto.max_int - 2
-
 	def is_replaceable(self):
 		return self.inputs[0].sequence == self.proto.max_int - 2
 
