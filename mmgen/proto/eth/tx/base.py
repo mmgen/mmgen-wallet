@@ -42,10 +42,10 @@ class Base(TxBase.Base):
 	# given absolute fee in ETH, return gas price for display in selected unit
 	def fee_abs2rel(self, abs_fee, *, to_unit='Gwei'):
 		return self.pretty_fmt_fee(
-			self.fee_abs2gas(abs_fee).to_unit(to_unit))
+			self.fee_abs2gasprice(abs_fee).to_unit(to_unit))
 
 	# given absolute fee in ETH, return gas price in ETH
-	def fee_abs2gas(self, abs_fee):
+	def fee_abs2gasprice(self, abs_fee):
 		return self.proto.coin_amt(int(abs_fee.toWei() // self.gas.toWei()), from_unit='wei')
 
 	# given rel fee (gasPrice) in wei, return absolute fee using self.gas (Ethereum-only method)

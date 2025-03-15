@@ -220,6 +220,15 @@ def cliargs_convert(args):
 
 	return tuple(gen())
 
+def port_in_use(port):
+	import socket
+	try:
+		socket.create_connection(('localhost', port)).close()
+	except:
+		return False
+	else:
+		return True
+
 class ExpInt(int):
 	'encode or parse an integer in exponential notation with specified precision'
 

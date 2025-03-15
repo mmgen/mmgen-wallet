@@ -43,7 +43,7 @@ opts_data = {
 -A, --abort      Abort an unsent transaction created by ‘mmgen-txcreate
                  --autosign’ and delete it from the removable device.  The
                  transaction may be signed or unsigned.
--d, --outdir= d  Specify an alternate directory 'd' for output
+-d, --outdir=d   Specify an alternate directory 'd' for output
 -H, --dump-hex=F Instead of sending to the network, dump the transaction hex
                  to file ‘F’.  Use filename ‘-’ to dump to standard output.
 -m, --mark-sent  Mark the transaction as sent by adding it to the removable
@@ -97,6 +97,7 @@ if not cfg.status:
 	do_license_msg(cfg)
 
 from .tx import OnlineSignedTX, SentTX
+from .ui import keypress_confirm
 
 async def post_send(tx):
 	tx2 = await SentTX(cfg=cfg, data=tx.__dict__, automount=cfg.autosign)
@@ -153,7 +154,6 @@ async def main():
 				ask_overwrite = False,
 				ask_tty = False)
 		if cfg.autosign:
-			from .ui import keypress_confirm
 			if keypress_confirm(cfg, 'Mark transaction as sent on removable device?'):
 				await post_send(tx)
 		else:

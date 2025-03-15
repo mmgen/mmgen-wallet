@@ -55,12 +55,11 @@ class New(Base, TxBase.New):
 			'from': self.inputs[0].addr,
 			'to':   self.outputs[0].addr if self.outputs else None,
 			'amt':  self.outputs[0].amt if self.outputs else self.proto.coin_amt('0'),
-			'gasPrice': self.fee_abs2gas(self.usr_fee),
+			'gasPrice': self.fee_abs2gasprice(self.usr_fee),
 			'startGas': self.start_gas,
 			'nonce': await self.get_nonce(),
 			'chainId': self.rpc.chainID,
-			'data':  self.usr_contract_data,
-		}
+			'data':  self.usr_contract_data}
 
 	# Instead of serializing tx data as with BTC, just create a JSON dump.
 	# This complicates things but means we avoid using the rlp library to deserialize the data,

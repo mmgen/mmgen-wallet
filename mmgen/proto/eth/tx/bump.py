@@ -29,7 +29,7 @@ class Bump(Completed, New, TxBase.Bump):
 		return self.fee * Decimal('1.101')
 
 	def bump_fee(self, idx, fee):
-		self.txobj['gasPrice'] = self.fee_abs2gas(fee)
+		self.txobj['gasPrice'] = self.fee_abs2gasprice(fee)
 
 	async def get_nonce(self):
 		return self.txobj['nonce']

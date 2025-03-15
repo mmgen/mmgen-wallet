@@ -25,6 +25,7 @@ from subprocess import run, PIPE
 from collections import namedtuple
 
 from mmgen.util import msg, fmt, async_run, capfirst, is_int, die, list_gen
+from mmgen.util2 import port_in_use
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
 from mmgen.addrlist import ViewKeyAddrList, KeyAddrList, AddrIdxList
@@ -154,15 +155,6 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	@classmethod
 	def init_proxy(cls, external_call=False):
-
-		def port_in_use(port):
-			import socket
-			try:
-				socket.create_connection(('localhost', port)).close()
-			except:
-				return False
-			else:
-				return True
 
 		def start_proxy():
 			if external_call or not cfg.no_daemon_autostart:
