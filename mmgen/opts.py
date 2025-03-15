@@ -293,7 +293,7 @@ class Opts:
 class UserOpts(Opts):
 
 	help_pkg = 'mmgen.help'
-	info_funcs = ('version', 'show_hash_presets')
+	info_funcs = ('version', 'show_hash_presets', 'list_daemon_ids')
 
 	global_opts_data = {
 		#  coin code : cmd code : opt : opt param : text
@@ -313,6 +313,7 @@ class UserOpts(Opts):
 			rr --daemon-data-dir=path Specify coin daemon data directory location
 			Rr --daemon-id=ID         Specify the coin daemon ID
 			rr --ignore-daemon-version Ignore coin daemon version check
+			Rr --list-daemon-ids      List all available daemon IDs
 			rr --http-timeout=t       Set HTTP timeout in seconds for JSON-RPC connections
 			-- --no-license           Suppress the GPL license prompt
 			Rr --rpc-host=HOST        Communicate with coin daemon running on host HOST

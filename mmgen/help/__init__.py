@@ -33,6 +33,15 @@ def version(cfg):
 	""", indent='  ').rstrip())
 	sys.exit(0)
 
+def list_daemon_ids(cfg):
+	from ..daemon import CoinDaemon
+	from ..util import msg, fmt_list
+	msg('  {} {}'.format('Coin', 'Daemon IDs'))
+	msg('  {} {}'.format('----', '----------'))
+	for k, v in CoinDaemon.coins.items():
+		msg('  {}  {}'.format(k, fmt_list(v.daemon_ids, fmt='barest')))
+	sys.exit(0)
+
 def show_hash_presets(cfg):
 	fs = '      {:<6} {:<3} {:<2} {}'
 	from ..util import msg
