@@ -65,7 +65,7 @@ class TwGetBalance(MMGenObject, metaclass=AsyncInit):
 					return len(str(int(max(v[colname] for v in self.data.values())))) + iwidth_adj
 
 				def make_col(label, col):
-					return self.data[label][col].fmt(iwidth=iwidths[col], color=color)
+					return self.data[label][col].fmt(iwidths[col], color=color)
 
 				if color:
 					from ..color import green, yellow

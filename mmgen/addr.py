@@ -182,14 +182,14 @@ class CoinAddr(HiliteStr, InitErrors, MMGenObject):
 
 	# reimplement some HiliteStr methods:
 	@classmethod
-	def fmtc(cls, s, width, *, color=False):
-		return super().fmtc(s=s[:width-2]+'..' if len(s) > width else s, width=width, color=color)
+	def fmtc(cls, s, width, /, *, color=False):
+		return super().fmtc(s[:width-2]+'..' if len(s) > width else s, width, color=color)
 
-	def fmt(self, view_pref, width, *, color=False):
+	def fmt(self, view_pref, width, /, *, color=False):
 		s = self.views[view_pref]
-		return super().fmtc(f'{s[:width-2]}..' if len(s) > width else s, width=width, color=color)
+		return super().fmtc(f'{s[:width-2]}..' if len(s) > width else s, width, color=color)
 
-	def hl(self, view_pref, *, color=True):
+	def hl(self, view_pref, /, *, color=True):
 		return getattr(color_mod, self.color)(self.views[view_pref]) if color else self.views[view_pref]
 
 def is_coin_addr(proto, s):

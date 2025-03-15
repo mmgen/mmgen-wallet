@@ -310,8 +310,8 @@ class Signable:
 					for tx, non_mmgen in body:
 						for nm in non_mmgen:
 							yield fs.format(
-								tx.txid.fmt(width=t_wid, color=True) if nm is non_mmgen[0] else ' '*t_wid,
-								nm.addr.fmt(nm.addr.view_pref, width=a_wid, color=True),
+								tx.txid.fmt(t_wid, color=True) if nm is non_mmgen[0] else ' '*t_wid,
+								nm.addr.fmt(nm.addr.view_pref, a_wid, color=True),
 								nm.amt.hl() + ' ' + yellow(tx.coin))
 
 				msg('\n' + '\n'.join(gen()))

@@ -45,8 +45,8 @@ class TwMMGenID(HiliteStr, InitErrors, MMGenObject):
 		me.proto = proto
 		return me
 
-	def fmt(self, **kwargs):
-		return super().fmtc(self.disp, **kwargs)
+	def fmt(self, width, /, **kwargs):
+		return super().fmtc(self.disp, width, **kwargs)
 
 # non-displaying container for TwMMGenID, TwComment
 class TwLabel(str, InitErrors, MMGenObject):

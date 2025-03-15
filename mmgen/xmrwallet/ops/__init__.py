@@ -51,7 +51,7 @@ class OpBase:
 		self.uargs = uarg_tuple
 
 		def fmt_amt(amt):
-			return self.proto.coin_amt(amt, from_unit='atomic').fmt(iwidth=5, prec=12, color=True)
+			return self.proto.coin_amt(amt, from_unit='atomic').fmt(5, prec=12, color=True)
 		def hl_amt(amt):
 			return self.proto.coin_amt(amt, from_unit='atomic').hl()
 

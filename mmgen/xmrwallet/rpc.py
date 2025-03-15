@@ -79,7 +79,7 @@ class MoneroWalletRPC:
 			from .ops import fmt_amt
 			yield fs.format(
 				I = str(e['account_index']),
-				A = ca.hl(0) if self.cfg.full_address else ca.fmt(0, color=True, width=addr_width),
+				A = ca.hl(0) if self.cfg.full_address else ca.fmt(0, addr_width, color=True),
 				N = red(str(len(addrs_data[i]['addresses'])).ljust(6)),
 				B = fmt_amt(e['unlocked_balance']),
 				L = pink(e['label']))

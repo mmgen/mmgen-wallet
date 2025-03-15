@@ -59,7 +59,7 @@ class OpLabel(OpMixinSpec, OpWallet):
 		from . import addr_width
 		msg('\n  {a} {b}\n  {c} {d}\n  {e} {f}'.format(
 				a = 'Address:       ',
-				b = ca.hl(0) if self.cfg.full_address else ca.fmt(0, color=True, width=addr_width),
+				b = ca.hl(0) if self.cfg.full_address else ca.fmt(0, addr_width, color=True),
 				c = 'Existing label:',
 				d = pink(addr['label']) if addr['label'] else gray('[none]'),
 				e = 'New label:     ',

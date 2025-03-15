@@ -280,11 +280,11 @@ class Int(int, Hilite, InitErrors):
 			return cls.init_fail(e, n)
 
 	@classmethod
-	def fmtc(cls, s, width, *, color=False):
-		return super().fmtc(str(s), width=width, color=color)
+	def fmtc(cls, s, width, /, *, color=False):
+		return super().fmtc(str(s), width, color=color)
 
-	def fmt(self, width, *, color=False):
-		return super().fmtc(str(self), width=width, color=color)
+	def fmt(self, width, /, *, color=False):
+		return super().fmtc(str(self), width, color=color)
 
 	def hl(self, **kwargs):
 		return super().colorize(str(self), **kwargs)
@@ -324,7 +324,7 @@ class HexStr(HiliteStr, InitErrors):
 		except Exception as e:
 			return cls.init_fail(e, s)
 
-	def truncate(self, width, *, color=True):
+	def truncate(self, width, /, *, color=True):
 		return self.colorize(
 			self if width >= self.width else self[:width-2] + '..',
 			color = color)

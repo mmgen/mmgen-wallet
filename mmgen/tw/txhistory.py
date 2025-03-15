@@ -132,9 +132,9 @@ class TwTxHistory(TwView):
 				t = d.txid_disp(width=cw.txid, color=color) if hasattr(cw, 'txid') else None,
 				d = d.age_disp(self.age_fmt, width=self.age_w, color=color),
 				i = d.vouts_disp('inputs', width=cw.inputs, color=color, addr_view_pref=self.addr_view_pref),
-				A = d.amt_disp(self.show_total_amt).fmt(iwidth=cw.iwidth, prec=self.disp_prec, color=color),
+				A = d.amt_disp(self.show_total_amt).fmt(cw.iwidth, prec=self.disp_prec, color=color),
 				o = d.vouts_disp('outputs', width=cw.outputs, color=color, addr_view_pref=self.addr_view_pref),
-				c = d.comment.fmt2(width=cw.comment, color=color, nullrepl='-'))
+				c = d.comment.fmt2(cw.comment, color=color, nullrepl='-'))
 
 	def gen_detail_display(self, data, cw, fs, color, fmt_method):
 

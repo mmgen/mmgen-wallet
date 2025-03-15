@@ -47,7 +47,7 @@ def gen_acct_addr_info(self, wallet_data, account, indent=''):
 		from .ops import fmt_amt
 		yield fs.format(
 			I = addr['address_index'],
-			A = ca.hl(0) if self.cfg.full_address else ca.fmt(0, color=True, width=addr_width),
+			A = ca.hl(0) if self.cfg.full_address else ca.fmt(0, addr_width, color=True),
 			U = (red('True ') if addr['used'] else green('False')),
 			B = fmt_amt(bal),
 			L = pink(addr['label']))

@@ -49,7 +49,7 @@ class Hilite:
 
 	# class method equivalent of fmt()
 	@classmethod
-	def fmtc(cls, s, width, *, color=False):
+	def fmtc(cls, s, width, /, *, color=False):
 		if len(s) > width:
 			assert cls.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= width of string"
 			return cls.colorize(s[:width].ljust(width), color=color)
@@ -71,7 +71,7 @@ class Hilite:
 class HiliteStr(str, Hilite):
 
 	# supports single-width characters only
-	def fmt(self, width, *, color=False):
+	def fmt(self, width, /, *, color=False):
 		if len(self) > width:
 			assert self.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= width of string"
 			return self.colorize(self[:width].ljust(width), color=color)
@@ -82,6 +82,7 @@ class HiliteStr(str, Hilite):
 	def fmt2(
 			self,
 			width,                  # screen width - must be at least 2 (one wide char)
+			/,
 			*,
 			color          = False,
 			encl           = '',    # if set, must be exactly 2 single-width chars

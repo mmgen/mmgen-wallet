@@ -36,8 +36,8 @@ class TxInfo(TxInfo):
 			pink('{:0.6f}%'.format(tx.fee / tx.send_amt * 100))
 		)
 
-	def format_abs_fee(self, color, iwidth):
-		return self.tx.fee.fmt(color=color, iwidth=iwidth)
+	def format_abs_fee(self, iwidth, /, *, color=None):
+		return self.tx.fee.fmt(iwidth, color=color)
 
 	def format_verbose_footer(self):
 		tx = self.tx
@@ -58,15 +58,15 @@ class TxInfo(TxInfo):
 		def get_mmid_fmt(e, is_input):
 			if e.mmid:
 				return e.mmid.fmt2(
-					width=max_mmwid,
-					encl='()',
-					color=True,
-					append_chars=('', ' (chg)')[bool(not is_input and e.is_chg and terse)],
-					append_color='green')
+					max_mmwid,
+					encl = '()',
+					color = True,
+					append_chars = ('', ' (chg)')[bool(not is_input and e.is_chg and terse)],
+					append_color = 'green')
 			else:
 				return MMGenID.fmtc(
 					'[vault address]' if not is_input and e.is_vault else nonmm_str,
-					width = max_mmwid,
+					max_mmwid,
 					color = True)
 
 		def format_io(desc):
@@ -91,9 +91,9 @@ class TxInfo(TxInfo):
 				for n, e in enumerate(io_sorted()):
 					yield '{:3} {} {} {} {}\n'.format(
 						n+1,
-						e.addr.fmt(vp1, width=addr_w, color=True) if e.addr else blue(data_disp(e.data).ljust(addr_w)),
+						e.addr.fmt(vp1, addr_w, color=True) if e.addr else blue(data_disp(e.data).ljust(addr_w)),
 						get_mmid_fmt(e, is_input) if e.addr else ''.ljust(max_mmwid),
-						e.amt.fmt(iwidth=iwidth, color=True),
+						e.amt.fmt(iwidth, color=True),
 						tx.dcoin)
 					if have_bch and e.addr:
 						yield '{:3} [{}]\n'.format('', e.addr.hl(vp2, color=False))

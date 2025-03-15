@@ -101,11 +101,11 @@ class TxInfo:
 			iwidth = len(str(int(tx.sum_inputs())))
 
 			yield self.txinfo_ftr_fs.format(
-				i = tx.sum_inputs().fmt(color=True, iwidth=iwidth),
-				o = tx.sum_outputs().fmt(color=True, iwidth=iwidth),
-				C = tx.change.fmt(color=True, iwidth=iwidth),
-				s = tx.send_amt.fmt(color=True, iwidth=iwidth),
-				a = self.format_abs_fee(color=True, iwidth=iwidth),
+				i = tx.sum_inputs().fmt(iwidth, color=True),
+				o = tx.sum_outputs().fmt(iwidth, color=True),
+				C = tx.change.fmt(iwidth, color=True),
+				s = tx.send_amt.fmt(iwidth, color=True),
+				a = self.format_abs_fee(iwidth, color=True),
 				r = self.format_rel_fee(),
 				d = tx.dcoin,
 				c = tx.coin)

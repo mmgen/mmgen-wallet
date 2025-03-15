@@ -94,8 +94,8 @@ class MoneroMMGenTX:
 					e = purple(d.op.ljust(9)),
 					f = red('{}:{}'.format(d.source.wallet, d.source.account).ljust(6)),
 					g = red('{}:{}'.format(d.dest.wallet, d.dest.account).ljust(6)) if d.dest else cyan('ext   '),
-					h = d.amount.fmt(color=True, iwidth=4, prec=12),
-					j = d.dest_address.fmt(0, width=addr_w, color=True) if addr_w else d.dest_address.hl(0),
+					h = d.amount.fmt(4, color=True, prec=12),
+					j = d.dest_address.fmt(0, addr_w, color=True) if addr_w else d.dest_address.hl(0),
 					x = '->'
 				)
 
@@ -138,7 +138,7 @@ class MoneroMMGenTX:
 					F = (Int(d.priority).hl() + f' [{tx_priorities[d.priority]}]') if d.priority else None,
 					n = d.fee.hl(),
 					o = d.dest_address.hl(0) if self.cfg.full_address
-						else d.dest_address.fmt(0, width=addr_width, color=True),
+						else d.dest_address.fmt(0, addr_width, color=True),
 					P = pink(pmt_id.hex()) if pmt_id else None,
 					s = make_timestr(d.submit_time) if d.submit_time else None,
 					S = pink(f" [cold signed{', submitted' if d.complete else ''}]") if d.signed_txset else '',

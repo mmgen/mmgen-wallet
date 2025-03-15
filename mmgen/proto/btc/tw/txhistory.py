@@ -147,8 +147,8 @@ class BitcoinTwTransaction:
 	def txdate_disp(self, age_fmt):
 		return self.parent.date_formatter[age_fmt](self.rpc, self.time)
 
-	def txid_disp(self, color, width=None):
-		return self.txid.hl(color=color) if width is None else self.txid.truncate(width=width, color=color)
+	def txid_disp(self, *, color, width=None):
+		return self.txid.hl(color=color) if width is None else self.txid.truncate(width, color=color)
 
 	def vouts_list_disp(self, src, color, indent, addr_view_pref):
 
@@ -165,9 +165,9 @@ class BitcoinTwTransaction:
 						i = CoinTxID(e.txid).hl(color=color),
 						n = (nocolor, red)[color](str(e.data['n']).ljust(3)),
 						a = CoinAddr(self.proto, e.coin_addr).fmt(
-							addr_view_pref, width=self.max_addrlen[src], color=color)
+							addr_view_pref, self.max_addrlen[src], color=color)
 								if e.coin_addr != self.no_address_str else
-							CoinAddr.fmtc(e.coin_addr, width=self.max_addrlen[src], color=color),
+							CoinAddr.fmtc(e.coin_addr, self.max_addrlen[src], color=color),
 						A = self.proto.coin_amt(e.data['value']).fmt(color=color)
 					).rstrip()
 				else:
@@ -200,9 +200,9 @@ class BitcoinTwTransaction:
 					if width and space_left < addr_w:
 						break
 					yield (
-						CoinAddr(self.proto, e.coin_addr).fmt(addr_view_pref, width=addr_w, color=color)
+						CoinAddr(self.proto, e.coin_addr).fmt(addr_view_pref, addr_w, color=color)
 							if e.coin_addr != self.no_address_str else
-						CoinAddr.fmtc(e.coin_addr, width=addr_w, color=color))
+						CoinAddr.fmtc(e.coin_addr, addr_w, color=color))
 					space_left -= addr_w
 				elif mmid.type == 'mmgen':
 					mmid_disp = mmid + bal_star
@@ -215,7 +215,7 @@ class BitcoinTwTransaction:
 						break
 					yield TwMMGenID.hl2(
 						TwMMGenID,
-						s = CoinAddr.fmtc(mmid.split(':', 1)[1] + bal_star, width=addr_w),
+						s = CoinAddr.fmtc(mmid.split(':', 1)[1] + bal_star, addr_w),
 						color = color,
 						color_override = co)
 					space_left -= addr_w
