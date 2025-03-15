@@ -18,8 +18,7 @@
 
 run_test() {
 	set +x
-	tests="t_$1"
-	skips="t_$1_skip"
+	local tests="t_$1" skips="t_$1_skip" continue_on_error="e_$1" have_error=
 
 	while read skip test; do
 		[ "$test" ] || continue
@@ -35,11 +34,13 @@ run_test() {
 				echo -e "${GREEN}Running:$RESET $test_disp"
 				eval "$test" || {
 					echo -e $RED"test-release.sh: test '$CUR_TEST' failed at command '$test'"$RESET
-					exit 1
+					have_error=1
+					[ "${!continue_on_error}" ] || exit 1
 				}
 			fi
 		fi
 	done <<<${!tests}
+	if [ "$have_error" ]; then { echo -e "$RED${!continue_on_error}$RESET"; exit 1; }; fi
 }
 
 prompt_skip() {
@@ -276,6 +277,7 @@ gentest_py='test/gentest.py --quiet'
 scrambletest_py='test/scrambletest.py'
 altcoin_mod_opts='--quiet'
 mmgen_tool='cmds/mmgen-tool'
+pylint='PYTHONPATH=. pylint' # PYTHONPATH required by older Pythons (e.g. v3.9)
 python='python3'
 rounds=10
 typescript_file='test-release.out'
@@ -370,6 +372,7 @@ do
 		tooltest_py+=" --verbose"
 		mmgen_tool+=" --verbose"
 		objattrtest_py+=" --verbose"
+		pylint+=" --verbose"
 		scrambletest_py+=" --verbose" ;;
 	X)  IN_REEXEC=1 ;;
 	*)  exit ;;

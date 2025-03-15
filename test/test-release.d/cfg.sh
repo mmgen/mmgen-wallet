@@ -20,7 +20,7 @@ groups_desc="
 
 init_groups() {
 	dfl_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc xmr'
-	extra_tests='dep dev lint autosign_live ltc_tn bch_tn'
+	extra_tests='dep dev lint pylint autosign_live ltc_tn bch_tn'
 	noalt_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
 	quick_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen eth etc xmr'
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
@@ -78,6 +78,19 @@ init_tests() {
 		b ruff check mmgen $STDOUT_DEVNULL
 		b ruff check test $STDOUT_DEVNULL
 		b ruff check examples $STDOUT_DEVNULL
+	"
+
+	PYLINT_OPTS='--errors-only --jobs=0'
+	d_pylint="code errors with static code analyzer"
+	e_pylint="Error checking failed!"
+	t_pylint="
+		b $pylint $PYLINT_OPTS mmgen
+		b $pylint $PYLINT_OPTS test
+		b $pylint $PYLINT_OPTS --disable=relative-beyond-top-level test/cmdtest_d
+		a $pylint $PYLINT_OPTS --ignore-paths '.*/eth/.*' mmgen
+		a $pylint $PYLINT_OPTS --ignore-paths '.*/ut_dep.py,.*/ut_testdep.py' test
+		a $pylint $PYLINT_OPTS --ignore-paths '.*/ct_ethdev.py' --disable=relative-beyond-top-level test/cmdtest_d
+		- $pylint $PYLINT_OPTS examples
 	"
 
 	d_daemon="low-level subsystems involving coin daemons"
