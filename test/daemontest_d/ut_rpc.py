@@ -167,7 +167,7 @@ async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_overrid
 
 class unit_tests:
 
-	altcoin_deps = ('ltc', 'bch', 'geth', 'erigon', 'parity', 'xmrwallet')
+	altcoin_deps = ('ltc', 'bch', 'geth', 'reth', 'erigon', 'parity', 'xmrwallet')
 	arm_skip = ('parity',) # no prebuilt binaries for ARM
 
 	async def btc(self, name, ut):
@@ -203,6 +203,9 @@ class unit_tests:
 				'tw_name':     'also-ignored',
 				'eth_testnet_chain_names': ['goerli', 'holesky', 'foo', 'bar', 'baz'],
 		})
+
+	async def reth(self, name, ut):
+		return await run_test(['eth', 'eth_rt'], daemon_ids=['reth']) # TODO: eth_tn
 
 	async def erigon(self, name, ut):
 		return await run_test(['eth', 'eth_tn', 'eth_rt'], daemon_ids=['erigon'])
