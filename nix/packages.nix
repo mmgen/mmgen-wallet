@@ -46,5 +46,6 @@
         semantic-version = semantic-version;
         pexpect          = pexpect;         # test suite
         pycoin           = pycoin;          # test suite
+        lxml             = lxml;
     };
 }

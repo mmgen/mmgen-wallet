@@ -332,6 +332,9 @@ class HexStr(HiliteStr, InitErrors):
 class CoinTxID(HexStr):
 	color, width, hexcase = ('purple', 64, 'lower')
 
+def is_coin_txid(s):
+	return get_obj(CoinTxID, s=s, silent=True, return_bool=True)
+
 class WalletPassword(HexStr):
 	color, width, hexcase = ('blue', 32, 'lower')
 

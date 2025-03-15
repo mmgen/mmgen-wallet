@@ -106,6 +106,10 @@ FMT CODES:
 		from ..util import fmt_list
 		return fmt_list(CoinDaemon.get_network_ids(self.cfg), fmt='bare')
 
+	def tx_proxies(self):
+		from ..util import fmt_list
+		return fmt_list(self.cfg._autoset_opts['tx_proxy'].choices, fmt='fancy')
+
 	def rel_fee_desc(self):
 		from ..tx import BaseTX
 		return BaseTX(cfg=self.cfg, proto=self.proto).rel_fee_desc

@@ -49,13 +49,21 @@ opts_data = {
 -m, --mark-sent  Mark the transaction as sent by adding it to the removable
                  device.  Used in combination with --autosign when a trans-
                  action has been successfully sent out-of-band.
+-n, --tx-proxy=P Send transaction via public TX proxy ‘P’ (supported proxies:
+                 {tx_proxies}).  This is done via a publicly accessible web
+                 page, so no API key or registration is required
 -q, --quiet      Suppress warnings; overwrite files without prompting
 -s, --status     Get status of a sent transaction (or current transaction,
                  whether sent or unsent, when used with --autosign)
 -t, --test       Test whether the transaction can be sent without sending it
 -v, --verbose    Be more verbose
+-x, --proxy=P    Connect to TX proxy via SOCKS5 proxy ‘P’ (host:port)
 -y, --yes        Answer 'yes' to prompts, suppress non-essential output
 """
+	},
+	'code': {
+		'options': lambda cfg, proto, help_notes, s: s.format(
+			tx_proxies = help_notes('tx_proxies'))
 	}
 }
 
@@ -69,6 +77,10 @@ if cfg.mark_sent and not cfg.autosign:
 
 if cfg.test and cfg.dump_hex:
 	die(1, '--test cannot be used in combination with --dump-hex')
+
+if cfg.tx_proxy:
+	from .tx.tx_proxy import check_client
+	check_client(cfg)
 
 if cfg.dump_hex and cfg.dump_hex != '-':
 	from .fileutil import check_outfile_dir
@@ -162,6 +174,12 @@ async def main():
 				await post_send(tx)
 		else:
 			await post_send(tx)
+	elif cfg.tx_proxy:
+		from .tx.tx_proxy import send_tx
+		if send_tx(cfg, tx):
+			if (not cfg.autosign or
+				keypress_confirm(cfg, 'Mark transaction as sent on removable device?')):
+				await post_send(tx)
 	elif cfg.test:
 		await tx.test_sendable()
 	elif await tx.send():

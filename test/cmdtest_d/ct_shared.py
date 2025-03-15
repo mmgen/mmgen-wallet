@@ -179,6 +179,9 @@ class CmdTestShared:
 		if bogus_send:
 			txid = ''
 			t.expect('BOGUS transaction NOT sent')
+		elif test == 'tx_proxy':
+			t.expect('can be sent')
+			return True
 		else:
 			m = 'TxID: ' if test else 'Transaction sent: '
 			txid = strip_ansi_escapes(t.expect_getend(m))

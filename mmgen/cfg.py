@@ -381,7 +381,9 @@ class Config(Lockable):
 		'fee_estimate_mode': _ov('nocase_pfx', ['conservative', 'economical']),
 		'rpc_backend':       _ov('nocase_pfx', ['auto', 'httplib', 'curl', 'aiohttp', 'requests']),
 		'swap_proto':        _ov('nocase_pfx', ['thorchain']),
+		'tx_proxy':          _ov('nocase_pfx', ['etherscan']) # , 'blockchair'
 	}
+	_dfl_none_autoset_opts = ('tx_proxy',)
 
 	_auto_typeset_opts = {
 		'seed_len': int,
@@ -719,7 +721,8 @@ class Config(Lockable):
 				val = None
 
 			if val is None:
-				setattr(self, key, self._autoset_opts[key].choices[0])
+				if key not in self._dfl_none_autoset_opts:
+					setattr(self, key, self._autoset_opts[key].choices[0])
 			else:
 				setattr(self, key, get_autoset_opt(key, val, src=src))
 

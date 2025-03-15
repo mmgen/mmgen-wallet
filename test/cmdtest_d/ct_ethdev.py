@@ -58,6 +58,7 @@ from .common import (
 )
 from .ct_base import CmdTestBase
 from .ct_shared import CmdTestShared
+from .etherscan import run_etherscan_server
 
 del_addrs = ('4', '1')
 dfl_sid = '98831F3A'
@@ -178,6 +179,12 @@ token_bals_getbalance = lambda k: {
 
 coin = cfg.coin
 
+def etherscan_server_start():
+	import threading
+	t = threading.Thread(target=run_etherscan_server, name='Etherscan server thread')
+	t.daemon = True
+	t.start()
+
 class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
 	networks = ('eth', 'etc')
@@ -237,6 +244,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		('txview1_sig',          'viewing the signed transaction'),
 		('tx_status0_bad',       'getting the transaction status'),
 		('txsign1_ni',           'signing the transaction (non-interactive)'),
+		('txsend_etherscan_test','sending the transaction via Etherscan (simulation, with --test)'),
+		('txsend_etherscan',     'sending the transaction via Etherscan (simulation)'),
 		('txsend1',              'sending the transaction'),
 		('bal1',                 f'the {coin} balance'),
 
@@ -449,6 +458,9 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 
 		self.message = 'attack at dawn'
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
+
+		if type(self) is CmdTestEthdev:
+			etherscan_server_start() # TODO: stop server when test group finishes executing
 
 	@property
 	async def rpc(self):
@@ -715,7 +727,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			+ [txfile, dfl_words_file])
 		return self.txsign_ui_common(t, ni=ni, has_label=True)
 
-	def txsend(self, ext='{}.regtest.sigtx', add_args=[]):
+	def txsend(self, ext='{}.regtest.sigtx', add_args=[], test=False):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile])
@@ -723,6 +735,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			t,
 			quiet      = not cfg.debug,
 			bogus_send = False,
+			test       = test,
 			has_label  = True)
 		return t
 
@@ -765,6 +778,10 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return self.tx_status(ext='{}.regtest.sigtx', expect_str='neither in mempool nor blockchain', exit_val=1)
 	def txsign1_ni(self):
 		return self.txsign(ni=True, dev_send=True)
+	def txsend_etherscan_test(self):
+		return self.txsend(add_args=['--tx-proxy=ether', '--test'], test='tx_proxy')
+	def txsend_etherscan(self):
+		return self.txsend(add_args=['--tx-proxy=ethersc'])
 	def txsend1(self):
 		return self.txsend()
 	def txview1_sig(self): # do after send so that TxID is displayed

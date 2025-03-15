@@ -1,0 +1,34 @@
+<!doctype html>
+<html id="html" lang="en">
+<head><title>
+	Broadcast Raw Transaction | Etherscan
+</title>
+<meta charset="utf-8" />
+</head>
+<body>
+
+<form action="/search" method="GET">
+	<input type="hidden" value="" id="hdnSearchLabel" />
+</form>
+
+<form method="post" action="./pushTx" id="ctl00" class="js-validate">
+	<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="foo" />
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="bar" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="baz" />
+<div>
+	<div>
+		<label for="signedTransactionHex">Enter signed transaction hex</label>
+		<div class="js-form-message">
+		<textarea name="ctl00$ContentPlaceHolder1$txtRawTx" rows="8" cols="20" maxlength="50000" id="ContentPlaceHolder1_txtRawTx" required="" placeholder="e.g. 0x.." data-bg-msg="Please enter signed transaction hex">
+</textarea>
+		</div>
+		<p>Tip: You can also broadcast programatically via our <a href="https://docs.etherscan.io/api-endpoints/geth-parity-proxy" target="_blank">[eth_sendRawTransaction]</a>. Accepts the paramater "hex" for prefilling the input box above (i.e <a href="/pushTx?hex=0x000000">Click here</a>)</p>
+	</div>
+
+	<div class="card-footer bg-light">
+	  <input type="submit" name="ctl00$ContentPlaceHolder1$btnSubmit" value="Send Transaction" id="ContentPlaceHolder1_btnSubmit" class="btn btn-primary" />
+	</div>
+ </div>
+</form>
+</body>
+</html>
