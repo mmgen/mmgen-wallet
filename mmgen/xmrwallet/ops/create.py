@@ -68,7 +68,7 @@ class OpCreateOffline(OpCreate):
 		vkal = ViewKeyAddrList(
 			cfg       = self.cfg,
 			proto     = self.proto,
-			addrfile  = None,
+			infile    = None,
 			addr_idxs = self.uargs.wallets,
 			seed      = self.seed_src.seed,
 			skip_chksum_msg = True)

@@ -684,7 +684,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		kal = (ViewKeyAddrList if data.autosign else KeyAddrList)(
 			cfg      = cfg,
 			proto    = self.proto,
-			addrfile = data.kafile,
+			infile   = data.kafile,
 			skip_chksum_msg = True,
 			key_address_validity_check = False)
 		end_silence()

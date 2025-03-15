@@ -102,9 +102,9 @@ class OpWallet(OpBase):
 			for first_try in (True, False):
 				try:
 					self.kal = (ViewKeyAddrList if (self.cfg.watch_only and first_try) else KeyAddrList)(
-						cfg      = cfg,
-						proto    = self.proto,
-						addrfile = str(self.autosign_viewkey_addr_file) if self.cfg.autosign else self.uargs.infile,
+						cfg    = cfg,
+						proto  = self.proto,
+						infile = str(self.autosign_viewkey_addr_file) if self.cfg.autosign else self.uargs.infile,
 						key_address_validity_check = True,
 						skip_chksum_msg = True)
 					break

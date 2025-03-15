@@ -159,7 +159,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			self,
 			cfg,
 			proto,
-			addrfile  = '',
+			infile    = '',
 			al_id     = '',
 			adata     = [],
 			seed      = '',
@@ -187,9 +187,9 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			src = 'gen'
 			adata = self.generate(seed, addr_idxs if isinstance(addr_idxs, AddrIdxList) else AddrIdxList(addr_idxs))
 			do_chksum = True
-		elif addrfile:           # data from MMGen address file
-			self.infile = addrfile
-			adata = self.file.parse_file(addrfile) # sets self.al_id
+		elif infile:             # data from MMGen address file
+			self.infile = infile
+			adata = self.file.parse_file(infile) # sets self.al_id
 			do_chksum = True
 		elif al_id and adata:    # data from tracking wallet
 			self.al_id = al_id
