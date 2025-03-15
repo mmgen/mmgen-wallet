@@ -669,7 +669,7 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		data['chksum'] = make_chksum_6(json_dumps(data['MMGenTransaction']))
 		with open(fn, 'w') as fh:
 			json.dump(data, fh)
-		t = self.spawn('mmgen-txsend', ['-d', self.tmpdir, '--bob', fn], exit_val=2)
+		t = self.spawn('mmgen-txsend', ['-d', self.tmpdir, '--bob', fn], exit_val=1)
 		t.expect('expired')
 		return t
 

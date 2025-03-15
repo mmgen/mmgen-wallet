@@ -34,21 +34,21 @@ opts_data = {
 		'desc':    f'Send a signed {gc.proj_name} cryptocoin transaction',
 		'usage':   '[opts] [signed transaction file]',
 		'options': """
--h, --help      Print this help message
---, --longhelp  Print help message for long (global) options
--a, --autosign  Send an autosigned transaction created by ‘mmgen-txcreate
-                --autosign’.  The removable device is mounted and unmounted
-                automatically. The transaction file argument must be omitted
-                when using this option
--A, --abort     Abort an unsent transaction created by ‘mmgen-txcreate
-                --autosign’ and delete it from the removable device.  The
-                transaction may be signed or unsigned.
--d, --outdir= d Specify an alternate directory 'd' for output
--q, --quiet     Suppress warnings; overwrite files without prompting
--s, --status    Get status of a sent transaction (or the current transaction,
-                whether sent or unsent, when used with --autosign)
--v, --verbose   Be more verbose
--y, --yes       Answer 'yes' to prompts, suppress non-essential output
+-h, --help       Print this help message
+--, --longhelp   Print help message for long (global) options
+-a, --autosign   Send an autosigned transaction created by ‘mmgen-txcreate
+                 --autosign’.  The removable device is mounted and unmounted
+                 automatically. The transaction file argument must be omitted
+                 when using this option
+-A, --abort      Abort an unsent transaction created by ‘mmgen-txcreate
+                 --autosign’ and delete it from the removable device.  The
+                 transaction may be signed or unsigned.
+-d, --outdir= d  Specify an alternate directory 'd' for output
+-q, --quiet      Suppress warnings; overwrite files without prompting
+-s, --status     Get status of a sent transaction (or current transaction,
+                 whether sent or unsent, when used with --autosign)
+-v, --verbose    Be more verbose
+-y, --yes        Answer 'yes' to prompts, suppress non-essential output
 """
 	}
 }
@@ -84,9 +84,17 @@ if not cfg.status:
 	from .ui import do_license_msg
 	do_license_msg(cfg)
 
-async def main():
+from .tx import OnlineSignedTX, SentTX
 
-	from .tx import OnlineSignedTX, SentTX
+async def post_send(tx):
+	tx2 = await SentTX(cfg=cfg, data=tx.__dict__, automount=cfg.autosign)
+	tx2.file.write(
+		outdir        = asi.txauto_dir if cfg.autosign else None,
+		ask_overwrite = False,
+		ask_write     = False)
+	tx2.post_write()
+
+async def main():
 
 	if cfg.status and cfg.autosign:
 		tx = await si.get_last_created()
@@ -110,8 +118,8 @@ async def main():
 			tx.info.view_with_prompt('View transaction details?', pause=False)
 		sys.exit(retval)
 
-	if tx.is_swap:
-		tx.check_swap_expiry()
+	if tx.is_swap and not tx.check_swap_expiry():
+		die(1, 'Swap quote has expired. Please re-create the transaction')
 
 	if not cfg.yes:
 		tx.info.view_with_prompt('View transaction details?')
@@ -120,11 +128,6 @@ async def main():
 				tx.file.write(ask_write_default_yes=True)
 
 	if await tx.send():
-		tx2 = await SentTX(cfg=cfg, data=tx.__dict__, automount=cfg.autosign)
-		tx2.file.write(
-			outdir        = asi.txauto_dir if cfg.autosign else None,
-			ask_overwrite = False,
-			ask_write     = False)
-		tx2.post_write()
+		await post_send(tx)
 
 async_run(main())

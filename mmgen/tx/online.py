@@ -23,7 +23,7 @@ class OnlineSigned(Signed):
 
 	def check_swap_expiry(self):
 		import time
-		from ..util import msg, make_timestr, die
+		from ..util import msg, make_timestr
 		from ..util2 import format_elapsed_hr
 		from ..color import pink, yellow
 		expiry = self.swap_quote_expiry
@@ -34,8 +34,7 @@ class OnlineSigned(Signed):
 			a = clr('expired' if t_rem < 0 else 'expires'),
 			b = clr(format_elapsed_hr(expiry, now=now, future_msg='from now')),
 			c = make_timestr(expiry)))
-		if t_rem < 0:
-			die(2, 'Swap quote has expired. Please re-create the transaction')
+		return t_rem >= 0
 
 	def confirm_send(self):
 		from ..util import msg
