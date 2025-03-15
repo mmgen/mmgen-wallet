@@ -182,7 +182,13 @@ class MasterNode(Lockable):
 
 		check_privkey(int.from_bytes(self.key, byteorder='big'))
 
-	def init_cfg(self, coin=None, network=None, addr_type=None, from_path=False, no_path_checks=False):
+	def init_cfg(
+			self,
+			coin           = None,
+			network        = None,
+			addr_type      = None,
+			from_path      = False,
+			no_path_checks = False):
 
 		new = BipHDNodeMaster()
 

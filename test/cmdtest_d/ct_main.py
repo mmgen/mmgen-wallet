@@ -533,7 +533,13 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return self.walletchk(wf, wcls=wcls, dfl_wallet=dfl_wallet)
 
 	def _write_fake_data_to_file(self, d):
-		write_data_to_file(cfg, self.unspent_data_file, d, 'Unspent outputs', quiet=True, ignore_opt_outdir=True)
+		write_data_to_file(
+				cfg,
+				self.unspent_data_file,
+				d,
+				'Unspent outputs',
+				quiet             = True,
+				ignore_opt_outdir = True)
 		if cfg.verbose or cfg.exact_output:
 			sys.stderr.write(f'Fake transaction wallet data written to file {self.unspent_data_file!r}\n')
 

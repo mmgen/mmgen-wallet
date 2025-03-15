@@ -135,7 +135,13 @@ def format_elapsed_days_hr(t, now=None, cached={}):
 		cached[e] = f'{days} day{suf(days)} ' + ('ago' if e > 0 else 'in the future')
 	return cached[e]
 
-def format_elapsed_hr(t, now=None, cached={}, rel_now=True, show_secs=False, future_msg='in the future'):
+def format_elapsed_hr(
+		t,
+		now        = None,
+		cached     = {},
+		rel_now    = True,
+		show_secs  = False,
+		future_msg = 'in the future'):
 	e = int((now or time.time()) - t)
 	key = f'{e}:{rel_now}:{show_secs}'
 	if not key in cached:

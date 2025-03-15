@@ -81,12 +81,12 @@ def line_input(cfg, prompt, echo=True, insert_txt='', hold_protect=True):
 	return reply.strip()
 
 def keypress_confirm(
-	cfg,
-	prompt,
-	default_yes     = False,
-	verbose         = False,
-	no_nl           = False,
-	complete_prompt = False):
+		cfg,
+		prompt,
+		default_yes     = False,
+		verbose         = False,
+		no_nl           = False,
+		complete_prompt = False):
 
 	if not complete_prompt:
 		prompt = '{} {}: '.format(prompt, '(Y/n)' if default_yes else '(y/N)')
