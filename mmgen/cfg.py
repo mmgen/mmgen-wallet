@@ -292,6 +292,7 @@ class Config(Lockable):
 		'autosign',
 		'color',
 		'daemon_data_dir',
+		'daemon_id', # also coin-specific
 		'debug',
 		'fee_adjust',
 		'force_256_color',

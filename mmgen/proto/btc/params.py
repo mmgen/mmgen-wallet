@@ -55,6 +55,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	max_op_return_data_len = 80
 
 	coin_cfg_opts = (
+		'daemon_id',
 		'ignore_daemon_version',
 		'rpc_host',
 		'rpc_port',

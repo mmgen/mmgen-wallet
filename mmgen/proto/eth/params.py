@@ -55,6 +55,7 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 	}
 
 	coin_cfg_opts = (
+		'daemon_id',
 		'ignore_daemon_version',
 		'rpc_host',
 		'rpc_port',

@@ -367,7 +367,11 @@ class CoinDaemon(Daemon):
 		daemon_ids = cls.get_daemon_ids(cfg, coin)
 		if not daemon_ids:
 			die(1, f'No configured daemons for coin {coin}!')
-		daemon_id = daemon_id or cfg.daemon_id or daemon_ids[0]
+		daemon_id = (
+			daemon_id
+			or getattr(cfg, f'{coin.lower()}_daemon_id', None)
+			or cfg.daemon_id
+			or daemon_ids[0])
 
 		if daemon_id not in daemon_ids:
 			die(1, f'{daemon_id!r}: invalid daemon_id - valid choices: {fmt_list(daemon_ids)}')

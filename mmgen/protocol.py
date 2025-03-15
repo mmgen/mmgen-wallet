@@ -212,6 +212,7 @@ class CoinProtocol(MMGenObject):
 		rpc_user              = ''
 		rpc_password          = ''
 		tw_name               = ''
+		daemon_id             = ''
 
 		@classmethod
 		def get_opt_clsval(cls, cfg, opt):

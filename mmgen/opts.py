@@ -337,6 +337,7 @@ class UserOpts(Opts):
 			rr   For descriptions, refer to the non-prefixed versions of these options above
 			rr   Prefixed options override their non-prefixed counterparts
 			rr   OPTION                            SUPPORTED PREFIXES
+			Rr --PREFIX-daemon-id                btc ltc bch eth etc
 			rr --PREFIX-ignore-daemon-version    btc ltc bch eth etc xmr
 			br --PREFIX-tw-name                  btc ltc bch
 			Rr --PREFIX-rpc-host                 btc ltc bch eth etc
