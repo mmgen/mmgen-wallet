@@ -45,7 +45,7 @@ def get_proto_from_coin_id(tx, coin_id, chain):
 
 	return init_proto(tx.cfg, coin, network=network, need_amt=True, tokensym=tokensym)
 
-def eval_io_data(tx, data, desc):
+def eval_io_data(tx, data, *, desc):
 	if not (desc == 'outputs' and tx.proto.base_coin == 'ETH'): # ETH txs can have no outputs
 		assert len(data), f'no {desc}!'
 	for d in data:
@@ -112,7 +112,7 @@ class MMGenTxFile(MMGenObject):
 				setattr(tx, k, v(data[k]) if v else data[k])
 
 		for k in ('inputs', 'outputs'):
-			setattr(tx, k, eval_io_data(tx, data[k], k))
+			setattr(tx, k, eval_io_data(tx, data[k], desc=k))
 
 		tx.check_txfile_hex_data()
 
@@ -124,7 +124,7 @@ class MMGenTxFile(MMGenObject):
 		tx = self.tx
 		tx.file_format = 'legacy'
 
-		def deserialize(raw_data, desc):
+		def deserialize(raw_data, *, desc):
 			from ast import literal_eval
 			try:
 				return literal_eval(raw_data)
@@ -199,12 +199,12 @@ class MMGenTxFile(MMGenObject):
 			tx.parse_txfile_serialized_data()
 			for k in ('inputs', 'outputs'):
 				desc = f'{k} data'
-				res = deserialize(io_data[k], k)
+				res = deserialize(io_data[k], desc=k)
 				for d in res:
 					if 'label' in d:
 						d['comment'] = d['label']
 						del d['label']
-				setattr(tx, k, eval_io_data(tx, res, k))
+				setattr(tx, k, eval_io_data(tx, res, desc=k))
 			desc = 'send amount in metadata'
 			assert tx.proto.coin_amt(send_amt) == tx.send_amt, f'{send_amt} != {tx.send_amt}'
 		except Exception as e:

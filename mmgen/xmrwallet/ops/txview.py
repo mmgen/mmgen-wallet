@@ -28,7 +28,7 @@ class OpTxview(OpBase):
 	footer = ''
 	do_umount = False
 
-	async def main(self, cols=None):
+	async def main(self, *, cols=None):
 
 		self.mount_removable_device()
 

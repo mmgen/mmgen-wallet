@@ -183,7 +183,7 @@ def gen_tool_cmd_usage(mod, cmdname):
 		for line in docstr.split('\n')[1:]:
 			yield line.lstrip('\t')
 
-def usage(cmdname=None, exit_val=1):
+def usage(cmdname=None, *, exit_val=1):
 
 	from ..util import Msg, die
 

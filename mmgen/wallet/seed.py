@@ -59,7 +59,7 @@ class wallet(wallet):
 			msg(f'Invalid base-58 encoded seed: {b}')
 			return False
 
-		self.seed = Seed(self.cfg, ret)
+		self.seed = Seed(self.cfg, seed_bin=ret)
 		self.ssdata.chksum = a
 		self.ssdata.b58seed = b
 

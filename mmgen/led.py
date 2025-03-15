@@ -35,6 +35,7 @@ class LEDControl:
 
 		def __init__(
 				self,
+				*,
 				name,
 				control,
 				trigger         = None,
@@ -125,7 +126,7 @@ class LEDControl:
 				))
 				sys.exit(1)
 
-		def init_state(fn, desc, init_val=None):
+		def init_state(fn, *, desc, init_val=None):
 			try:
 				write_init_val(fn, init_val)
 			except PermissionError:

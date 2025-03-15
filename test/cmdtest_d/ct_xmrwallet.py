@@ -512,7 +512,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ ([] if data.autosign else [data.kafile])
 			+ ([wallets] if wallets else [])
 		)
-		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
+		wlist = AddrIdxList(fmt_str=wallets) if wallets else MMGenRange(data.kal_range).items
 		for n, wnum in enumerate(wlist, 1):
 			t.expect('ing wallet {}/{} ({})'.format(
 				n,

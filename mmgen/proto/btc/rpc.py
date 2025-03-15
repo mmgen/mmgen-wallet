@@ -119,6 +119,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 			self,
 			cfg,
 			proto,
+			*,
 			daemon,
 			backend,
 			ignore_wallet):

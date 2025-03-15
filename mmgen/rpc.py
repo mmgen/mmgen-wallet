@@ -317,7 +317,7 @@ class RPCClient(MMGenObject):
 			host_path = self.make_host_path(wallet)
 		))
 
-	async def batch_call(self, method, param_list, timeout=None, wallet=None):
+	async def batch_call(self, method, param_list, *, timeout=None, wallet=None):
 		"""
 		Make a single call with a list of tuples as first argument
 		For RPC calls that return a list of results
@@ -332,7 +332,7 @@ class RPCClient(MMGenObject):
 			host_path = self.make_host_path(wallet)
 		), batch=True)
 
-	async def gathered_call(self, method, args_list, timeout=None, wallet=None):
+	async def gathered_call(self, method, args_list, *, timeout=None, wallet=None):
 		"""
 		Perform multiple RPC calls, returning results in a list
 		Can be called two ways:
@@ -369,7 +369,7 @@ class RPCClient(MMGenObject):
 			timeout = timeout,
 			wallet = wallet)
 
-	def gathered_icall(self, method, args_list, timeout=None, wallet=None):
+	def gathered_icall(self, method, args_list, *, timeout=None, wallet=None):
 		return self.gathered_call(
 			method,
 			[getattr(self.call_sigs, method)(*a)[1:] for a in args_list],

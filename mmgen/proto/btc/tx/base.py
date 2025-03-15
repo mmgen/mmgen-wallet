@@ -292,7 +292,7 @@ class Base(TxBase):
 		return int(ret * (self.cfg.vsize_adj or 1))
 
 	# convert absolute CoinAmt fee to sat/byte for display using estimated size
-	def fee_abs2rel(self, abs_fee, to_unit='satoshi'):
+	def fee_abs2rel(self, abs_fee, *, to_unit='satoshi'):
 		return str(int(
 			abs_fee /
 			getattr(self.proto.coin_amt, to_unit) /

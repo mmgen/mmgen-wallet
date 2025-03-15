@@ -32,7 +32,7 @@ class wallet(wallet):
 
 		if not self.cfg.stdin_tty:
 			from ..ui import get_data_from_user
-			return get_data_from_user(self.cfg, desc)
+			return get_data_from_user(self.cfg, desc=desc)
 
 		self._print_seed_type()
 
@@ -93,7 +93,7 @@ class wallet(wallet):
 			desc2 = 'original mnemonic',
 			e     = 'Internal error')
 
-		self.seed = Seed(self.cfg, seed)
+		self.seed = Seed(self.cfg, seed_bin=seed)
 		self.ssdata.mnemonic = mn
 
 		self.check_usr_seed_len()

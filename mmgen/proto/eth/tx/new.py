@@ -65,7 +65,7 @@ class New(Base, TxBase.New):
 	# Instead of serializing tx data as with BTC, just create a JSON dump.
 	# This complicates things but means we avoid using the rlp library to deserialize the data,
 	# thus removing an attack vector
-	async def create_serialized(self, locktime=None):
+	async def create_serialized(self, *, locktime=None):
 		assert len(self.inputs) == 1, 'Transaction has more than one input!'
 		o_num = len(self.outputs)
 		o_ok = 0 if self.usr_contract_data else 1
@@ -117,7 +117,7 @@ class New(Base, TxBase.New):
 
 	# get rel_fee (gas price) from network, return in native wei
 	async def get_rel_fee_from_network(self):
-		return Int(await self.rpc.call('eth_gasPrice'), 16), 'eth_gasPrice'
+		return Int(await self.rpc.call('eth_gasPrice'), base=16), 'eth_gasPrice'
 
 	def check_chg_addr_is_wallet_addr(self):
 		pass
@@ -131,7 +131,7 @@ class New(Base, TxBase.New):
 		return self.proto.coin_amt(amt_in_units, from_unit=units[unit]) * self.gas.toWei()
 
 	# given fee estimate (gas price) in wei, return absolute fee, adjusting by self.cfg.fee_adjust
-	def fee_est2abs(self, rel_fee, fe_type=None):
+	def fee_est2abs(self, rel_fee, *, fe_type=None):
 		ret = self.fee_gasPrice2abs(rel_fee) * self.cfg.fee_adjust
 		if self.cfg.verbose:
 			msg(f'Estimated fee: {ret} ETH')

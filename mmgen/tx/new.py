@@ -126,7 +126,7 @@ class New(Base):
 
 		return False
 
-	def get_usr_fee_interactive(self, fee=None, desc='Starting'):
+	def get_usr_fee_interactive(self, fee=None, *, desc='Starting'):
 		abs_fee = None
 		from ..ui import line_input
 		while True:
@@ -400,12 +400,12 @@ class New(Base):
 	async def get_fee(self, fee, outputs_sum, start_fee_desc):
 
 		if fee:
-			self.usr_fee = self.get_usr_fee_interactive(fee, start_fee_desc)
+			self.usr_fee = self.get_usr_fee_interactive(fee, desc=start_fee_desc)
 		else:
 			fee_per_kb, fe_type = await self.get_rel_fee_from_network()
 			self.usr_fee = self.get_usr_fee_interactive(
-				None if fee_per_kb is None else self.fee_est2abs(fee_per_kb, fe_type),
-				self.network_estimated_fee_label)
+				None if fee_per_kb is None else self.fee_est2abs(fee_per_kb, fe_type=fe_type),
+				desc = self.network_estimated_fee_label)
 
 		funds = await self.get_funds_available(self.usr_fee, outputs_sum)
 
@@ -426,7 +426,7 @@ class New(Base):
 		from ..tw.unspent import TwUnspentOutputs
 
 		if self.cfg.comment_file:
-			self.add_comment(self.cfg.comment_file)
+			self.add_comment(infile=self.cfg.comment_file)
 
 		if not do_info:
 			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(cmd_args)

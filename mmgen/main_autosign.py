@@ -211,7 +211,7 @@ if cmd not in ('sign', 'wait'):
 		if getattr(cfg, opt):
 			die(1, f'--{opt.replace("_", "-")} makes no sense for the ‘{cmd}’ operation')
 
-asi = Autosign(cfg, cmd)
+asi = Autosign(cfg, cmd=cmd)
 
 cfg._post_init()
 

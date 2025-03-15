@@ -66,7 +66,7 @@ class EthereumTwUnspentOutputs(EthereumTwView, TwUnspentOutputs):
 
 	no_data_errmsg = 'No accounts in tracking wallet!'
 
-	def get_column_widths(self, data, wide, interactive):
+	def get_column_widths(self, data, *, wide, interactive):
 		# min screen width: 80 cols
 		# num addr [mmid] [comment] amt [amt2]
 		return self.compute_column_widths(

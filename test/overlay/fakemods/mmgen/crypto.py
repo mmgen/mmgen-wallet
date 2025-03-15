@@ -12,4 +12,4 @@ if overlay_fake_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 		len(overlay_fake_get_random_orig(self, length)))
 
 	Crypto.add_user_random = lambda self, rand_bytes, desc: overlay_fake_urandom(
-		len(overlay_fake_add_user_random_orig(self, rand_bytes, desc)))
+		len(overlay_fake_add_user_random_orig(self, rand_bytes, desc=desc)))

@@ -290,7 +290,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		# so add NL here (' ' required because CUR_HOME erases preceding blank lines)
 		msg(' ')
 
-	def get_term_dimensions(self, min_cols, min_lines=None):
+	def get_term_dimensions(self, min_cols, *, min_lines=None):
 		from ..term import get_terminal_size, get_char_raw, _term_dimensions
 		user_resized = False
 		while True:
@@ -311,7 +311,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			else:
 				return _term_dimensions(min_cols, ts.height)
 
-	def compute_column_widths(self, widths, maxws, minws, maxws_nice, wide, interactive):
+	def compute_column_widths(self, widths, maxws, minws, maxws_nice, *, wide, interactive):
 
 		def do_ret(freews):
 			widths.update({k:minws[k] + freews.get(k, 0) for k in minws})

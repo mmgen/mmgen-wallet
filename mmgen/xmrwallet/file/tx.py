@@ -84,7 +84,7 @@ class MoneroMMGenTX:
 		def src_wallet_idx(self):
 			return int(self.data.source.split(':')[0])
 
-		def get_info_oneline(self, indent='', addr_w=None):
+		def get_info_oneline(self, *, indent='', addr_w=None):
 			d = self.data
 			return self.oneline_fs.format(
 					a = yellow(d.network),
@@ -99,7 +99,7 @@ class MoneroMMGenTX:
 					x = '->'
 				)
 
-		def get_info(self, indent='', addr_w=None):
+		def get_info(self, *, indent='', addr_w=None):
 			d = self.data
 			pmt_id = d.dest_address.parsed.payment_id
 			fs = '\n'.join(list_gen(

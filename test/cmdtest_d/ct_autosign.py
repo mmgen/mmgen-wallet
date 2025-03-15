@@ -228,7 +228,7 @@ class CmdTestAutosignBase(CmdTestBase):
 				t.expect('OK? (Y/n): ', '\n')
 			from mmgen.mn_entry import mn_entry
 			entry_mode = 'full'
-			mne = mn_entry(cfg, mn_type, entry_mode)
+			mne = mn_entry(cfg, mn_type, entry_mode=entry_mode)
 			if usr_entry_modes:
 				t.expect('user-configured')
 			else:

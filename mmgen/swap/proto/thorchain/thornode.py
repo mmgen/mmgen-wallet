@@ -22,7 +22,7 @@ class ThornodeRPCClient:
 	verify = True
 	timeout = 5
 
-	def __init__(self, tx, proto=None, host=None):
+	def __init__(self, tx, *, proto=None, host=None):
 		self.cfg = tx.cfg
 		if proto:
 			self.proto = proto
@@ -38,7 +38,7 @@ class ThornodeRPCClient:
 				'https': f'socks5h://{self.cfg.proxy}'
 			})
 
-	def get(self, path, timeout=None):
+	def get(self, path, *, timeout=None):
 		return self.session.get(
 			url     = self.proto + '://' + self.host + path,
 			timeout = timeout or self.timeout,

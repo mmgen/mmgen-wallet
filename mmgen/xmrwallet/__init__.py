@@ -113,5 +113,5 @@ def op_cls(op_name):
 	cls.name = op_name
 	return cls
 
-def op(op, cfg, infile, wallets, spec=None):
+def op(op, cfg, infile, wallets, *, spec=None):
 	return op_cls(op.replace('-', '_'))(cfg, uargs(infile, wallets, spec))

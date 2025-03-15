@@ -142,7 +142,7 @@ class Base(MMGenObject):
 	def sum_inputs(self):
 		return sum(e.amt for e in self.inputs)
 
-	def sum_outputs(self, exclude=None):
+	def sum_outputs(self, *, exclude=None):
 		if exclude is None:
 			olist = self.outputs
 		else:
@@ -178,7 +178,7 @@ class Base(MMGenObject):
 		self.blockcount = self.rpc.blockcount
 
 	# returns True if comment added or changed, False otherwise
-	def add_comment(self, infile=None):
+	def add_comment(self, *, infile=None):
 		if infile:
 			from ..fileutil import get_data_from_file
 			self.comment = MMGenTxComment(
@@ -204,7 +204,7 @@ class Base(MMGenObject):
 			edesc = 'non-MMGen address',
 			quiet = True)
 
-	def check_non_mmgen_inputs(self, caller, non_mmaddrs=None):
+	def check_non_mmgen_inputs(self, caller, *, non_mmaddrs=None):
 		non_mmaddrs = non_mmaddrs or self.get_non_mmaddrs('inputs')
 		if non_mmaddrs:
 			indent = '  '

@@ -40,7 +40,7 @@ class Base(TxBase.Base):
 		return str(int(fee))
 
 	# given absolute fee in ETH, return gas price for display in selected unit
-	def fee_abs2rel(self, abs_fee, to_unit='Gwei'):
+	def fee_abs2rel(self, abs_fee, *, to_unit='Gwei'):
 		return self.pretty_fmt_fee(
 			self.fee_abs2gas(abs_fee).to_unit(to_unit))
 
@@ -63,10 +63,10 @@ class Base(TxBase.Base):
 		tx = await self.rpc.call('eth_getTransactionByHash', '0x'+txid)
 		return namedtuple('exec_status',
 				['status', 'gas_sent', 'gas_used', 'gas_price', 'contract_addr', 'tx', 'rx'])(
-			status        = Int(rx['status'], 16), # zero is failure, non-zero success
-			gas_sent      = Int(tx['gas'], 16),
-			gas_used      = Int(rx['gasUsed'], 16),
-			gas_price     = self.proto.coin_amt(int(tx['gasPrice'], 16), from_unit='wei'),
+			status        = Int(rx['status'], base=16), # zero is failure, non-zero success
+			gas_sent      = Int(tx['gas'], base=16),
+			gas_used      = Int(rx['gasUsed'], base=16),
+			gas_price     = self.proto.coin_amt(Int(tx['gasPrice'], base=16), from_unit='wei'),
 			contract_addr = self.proto.coin_addr(rx['contractAddress'][2:])
 				if rx['contractAddress'] else None,
 			tx = tx,

@@ -30,9 +30,9 @@ class EthereumTwGetBalance(TwGetBalance):
 		'ge_minconf': 'Balance',
 	}
 
-	async def __init__(self, cfg, proto, *args, **kwargs):
+	async def __init__(self, cfg, proto, *, minconf, quiet):
 		self.twctl = await TwCtl(cfg, proto, mode='w')
-		await super().__init__(cfg, proto, *args, **kwargs)
+		await super().__init__(cfg, proto, minconf=minconf, quiet=quiet)
 
 	async def create_data(self):
 		in_data = self.twctl.mmid_ordered_dict

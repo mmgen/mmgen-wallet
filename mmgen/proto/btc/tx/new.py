@@ -77,7 +77,7 @@ class New(Base, TxNew):
 		return self.proto.coin_amt(amt_in_units * tx_size, from_unit=units[unit])
 
 	# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
-	def fee_est2abs(self, fee_per_kb, fe_type=None):
+	def fee_est2abs(self, fee_per_kb, *, fe_type=None):
 		tx_size = self.estimate_size()
 		ret = self.proto.coin_amt('1') * (fee_per_kb * self.cfg.fee_adjust * tx_size / 1024)
 		if self.cfg.verbose:
@@ -128,6 +128,7 @@ class New(Base, TxNew):
 	def check_chg_addr_is_wallet_addr(
 			self,
 			output  = None,
+			*,
 			message = 'Change address is not an MMGen wallet address!'):
 		def do_err():
 			from ....ui import confirm_or_raise
@@ -141,7 +142,7 @@ class New(Base, TxNew):
 		elif len(self.nondata_outputs) > 1 and not self.chg_output.mmid:
 			do_err()
 
-	async def create_serialized(self, locktime=None):
+	async def create_serialized(self, *, locktime=None):
 
 		if not self.is_bump:
 			# Set all sequence numbers to the same value, in conformity with the behavior of most modern wallets:

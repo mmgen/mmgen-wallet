@@ -128,7 +128,7 @@ def parse_bytespec(nbytes):
 
 	die(1, f'{nbytes!r}: invalid byte specifier')
 
-def format_elapsed_days_hr(t, now=None, cached={}):
+def format_elapsed_days_hr(t, *, now=None, cached={}):
 	e = int((now or time.time()) - t)
 	if not e in cached:
 		days = abs(e) // 86400
@@ -167,7 +167,7 @@ def format_elapsed_hr(
 		cached[key] = ' '.join(f'{n} {desc}{suf(n)}' for desc, n in data if n) + add_suffix()
 	return cached[key]
 
-def pretty_format(s, width=80, pfx=''):
+def pretty_format(s, *, width=80, pfx=''):
 	out = []
 	while s:
 		if len(s) <= width:
@@ -192,7 +192,7 @@ def block_format(data, *, gw=2, cols=8, line_nums=None, data_is_hex=False):
 			for i in range(nchunks)
 	).rstrip() + '\n'
 
-def pretty_hexdump(data, gw=2, cols=8, line_nums=None):
+def pretty_hexdump(data, *, gw=2, cols=8, line_nums=None):
 	return block_format(data.hex(), gw=gw, cols=cols, line_nums=line_nums, data_is_hex=True)
 
 def decode_pretty_hexdump(data):

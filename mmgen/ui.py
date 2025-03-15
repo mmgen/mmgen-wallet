@@ -16,7 +16,7 @@ import sys, os
 
 from .util import msg, msg_r, Msg, die
 
-def confirm_or_raise(cfg, message, action, expect='YES', exit_msg='Exiting at user request'):
+def confirm_or_raise(cfg, message, action, *, expect='YES', exit_msg='Exiting at user request'):
 	if message:
 		msg(message)
 	if line_input(
@@ -32,7 +32,7 @@ def get_words_from_user(cfg, prompt):
 		msg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
-def get_data_from_user(cfg, desc='data'): # user input MUST be UTF-8
+def get_data_from_user(cfg, *, desc='data'): # user input MUST be UTF-8
 	data = line_input(cfg, f'Enter {desc}: ', echo=cfg.echo_passphrase)
 	if cfg.debug:
 		msg(f'User input: [{data}]')

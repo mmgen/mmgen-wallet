@@ -89,7 +89,7 @@ class Util:
 
 		return True
 
-	def compare_or_die(self, val1, desc1, val2, desc2, e='Error'):
+	def compare_or_die(self, val1, desc1, val2, desc2, *, e='Error'):
 		if val1 != val2:
 			die(3, f"{e}: {desc2} ({val2}) doesn't match {desc1} ({val1})")
 		if self.cfg.debug:
@@ -180,15 +180,15 @@ def pp_fmt(d):
 def pp_msg(d):
 	msg(pp_fmt(d))
 
-def indent(s, indent='    ', append='\n'):
+def indent(s, *, indent='    ', append='\n'):
 	"indent multiple lines of text with specified string"
 	return indent + ('\n'+indent).join(s.strip().splitlines()) + append
 
-def fmt(s, indent='', strip_char=None, append='\n'):
+def fmt(s, *, indent='', strip_char=None, append='\n'):
 	"de-indent multiple lines of text, or indent with specified string"
 	return indent + ('\n'+indent).join([l.lstrip(strip_char) for l in s.strip().splitlines()]) + append
 
-def fmt_list(iterable, fmt='dfl', indent='', conv=None):
+def fmt_list(iterable, *, fmt='dfl', indent='', conv=None):
 	"pretty-format a list"
 	_conv, sep, lq, rq = {
 		'dfl':       (str,  ", ", "'",  "'"),
@@ -207,7 +207,7 @@ def fmt_list(iterable, fmt='dfl', indent='', conv=None):
 	conv = conv or _conv
 	return indent + (sep+indent).join(lq+conv(e)+rq for e in iterable)
 
-def fmt_dict(mapping, fmt='dfl', kconv=None, vconv=None):
+def fmt_dict(mapping, *, fmt='dfl', kconv=None, vconv=None):
 	"pretty-format a dict"
 	kc, vc, sep, fs = {
 		'dfl':           (str, str,  ", ",  "'{}' ({})"),
@@ -260,7 +260,7 @@ def remove_dups(iterable, *, edesc='element', desc='list', quiet=False, hide=Fal
 def contains_any(target_list, source_list):
 	return any(map(target_list.count, source_list))
 
-def suf(arg, suf_type='s', verb='none'):
+def suf(arg, suf_type='s', *, verb='none'):
 	suf_types = {
 		'none': {
 			's':   ('s',   ''),
@@ -361,7 +361,7 @@ def secs_to_ms(secs):
 def is_int(s): # actually is_nonnegative_int()
 	return set(str(s) or 'x') <= set(digits)
 
-def check_int_between(val, imin, imax, desc):
+def check_int_between(val, imin, imax, *, desc):
 	if not imin <= int(val) <= imax:
 		die(1, f'{val}: invalid value for {desc} (must be between {imin} and {imax})')
 	return int(val)
@@ -380,7 +380,7 @@ def is_utf8(s):
 	else:
 		return True
 
-def remove_whitespace(s, ws='\t\r\n '):
+def remove_whitespace(s, *, ws='\t\r\n '):
 	return s.translate(dict((ord(e), None) for e in ws))
 
 def strip_comment(line):

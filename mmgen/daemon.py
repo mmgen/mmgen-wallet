@@ -50,7 +50,7 @@ class Daemon(Lockable):
 	_reset_ok = ('debug', 'wait', 'pids')
 	version_info_arg = '--version'
 
-	def __init__(self, cfg, opts=None, flags=None):
+	def __init__(self, cfg, *, opts=None, flags=None):
 
 		self.cfg = cfg
 		self.platform = sys.platform
@@ -78,7 +78,7 @@ class Daemon(Lockable):
 		p = Popen(cmd, creationflags=CREATE_NEW_CONSOLE, startupinfo=si)
 		p.wait()
 
-	def exec_cmd(self, cmd, is_daemon=False, check_retcode=False):
+	def exec_cmd(self, cmd, *, is_daemon=False, check_retcode=False):
 		out = (PIPE, None)[is_daemon and self.opt.no_daemonize]
 		try:
 			cp = run(cmd, check=False, stdout=out, stderr=out)
@@ -105,7 +105,7 @@ class Daemon(Lockable):
 		if self.use_threads and is_daemon and not self.opt.no_daemonize:
 			ret = self.exec_cmd_thread(cmd)
 		else:
-			ret = self.exec_cmd(cmd, is_daemon, check_retcode)
+			ret = self.exec_cmd(cmd, is_daemon=is_daemon, check_retcode=check_retcode)
 
 		if isinstance(ret, CompletedProcess):
 			if ret.stdout and (self.debug or not silent):
@@ -166,7 +166,7 @@ class Daemon(Lockable):
 	def cli(self, *cmds, silent=False):
 		return self.run_cmd(self.cli_cmd(*cmds), silent=silent)
 
-	def state_msg(self, extra_text=None):
+	def state_msg(self, *, extra_text=None):
 		try:
 			pid = self.pid
 		except:
@@ -225,7 +225,7 @@ class Daemon(Lockable):
 		self.stop(silent=silent)
 		return self.start(silent=silent)
 
-	def test_socket(self, host, port, timeout=10):
+	def test_socket(self, host, port, *, timeout=10):
 		import socket
 		try:
 			socket.create_connection((host, port), timeout=timeout).close()
@@ -258,7 +258,7 @@ class RPCDaemon(Daemon):
 
 	avail_opts = ('no_daemonize',)
 
-	def __init__(self, cfg, opts=None, flags=None):
+	def __init__(self, cfg, *, opts=None, flags=None):
 		super().__init__(cfg, opts=opts, flags=flags)
 		self.desc = '{} {} {}RPC daemon'.format(
 			self.rpc_type,
@@ -317,7 +317,7 @@ class CoinDaemon(Daemon):
 		return ret
 
 	@classmethod
-	def get_daemon(cls, cfg, coin, daemon_id, proto=None):
+	def get_daemon(cls, cfg, coin, daemon_id, *, proto=None):
 		if proto:
 			proto_cls = type(proto)
 		else:

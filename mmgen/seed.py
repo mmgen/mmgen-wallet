@@ -28,7 +28,7 @@ class SeedID(HiliteStr, InitErrors):
 	color = 'blue'
 	width = 8
 	trunc_ok = False
-	def __new__(cls, seed=None, sid=None):
+	def __new__(cls, *, seed=None, sid=None):
 		if isinstance(sid, cls):
 			return sid
 		try:
@@ -54,7 +54,7 @@ class SeedBase(MMGenObject):
 	data = ImmutableAttr(bytes, typeconv=False)
 	sid  = ImmutableAttr(SeedID, typeconv=False)
 
-	def __init__(self, cfg, seed_bin=None, nSubseeds=None):
+	def __init__(self, cfg, *, seed_bin=None, nSubseeds=None):
 
 		if not seed_bin:
 			from .crypto import Crypto

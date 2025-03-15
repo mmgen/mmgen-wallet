@@ -41,7 +41,7 @@ class TwTxHistory(TwView):
 	filters = ('show_unconfirmed',)
 	mod_subpath = 'tw.txhistory'
 
-	async def __init__(self, cfg, proto, sinceblock=0):
+	async def __init__(self, cfg, proto, *, sinceblock=0):
 		await super().__init__(cfg, proto)
 		self.sinceblock = NonNegativeInt(sinceblock if sinceblock >= 0 else self.rpc.blockcount + sinceblock)
 
@@ -57,7 +57,7 @@ class TwTxHistory(TwView):
 		amts_tuple = namedtuple('amts_data', ['amt'])
 		return super().set_amt_widths([amts_tuple(d.amt_disp(self.show_total_amt)) for d in data])
 
-	def get_column_widths(self, data, wide, interactive):
+	def get_column_widths(self, data, *, wide, interactive):
 
 		# var cols: inputs outputs comment [txid]
 		if not hasattr(self, 'varcol_maxwidths'):

@@ -106,7 +106,8 @@ class SeedShareList(SubSeedList):
 			if last_share_debug(ls) or ls.sid in self.data['long'] or ls.sid == parent_seed.sid:
 				# collision: throw out entire split list and redo with new start nonce
 				if parent_seed.cfg.debug_subseed:
-					self._collision_debug_msg(ls.sid, count, nonce, 'nonce_start', debug_last_share)
+					self._collision_debug_msg(
+						ls.sid, count, nonce, nonce_desc='nonce_start', debug_last_share=debug_last_share)
 			else:
 				self.data['long'][ls.sid] = (count, nonce)
 				break
@@ -250,12 +251,11 @@ class SeedShareMaster(SeedBase, SeedShareBase):
 		self.parent_list = parent_list
 		self.cfg = parent_list.parent_seed.cfg
 
-		SeedBase.__init__(self, self.cfg, self.make_base_seed_bin())
+		SeedBase.__init__(self, self.cfg, seed_bin=self.make_base_seed_bin())
 
 		self.derived_seed = SeedBase(
 			self.cfg,
-			self.make_derived_seed_bin(parent_list.id_str, parent_list.count)
-		)
+			seed_bin = self.make_derived_seed_bin(parent_list.id_str, parent_list.count))
 
 	@property
 	def fn_stem(self):
@@ -291,11 +291,14 @@ class SeedShareMasterJoining(SeedShareMaster):
 		self.cfg = cfg
 		self.id_str = id_str or 'default'
 		self.count = count
-		self.derived_seed = SeedBase(cfg, self.make_derived_seed_bin(self.id_str, self.count))
+		self.derived_seed = SeedBase(
+			cfg,
+			seed_bin = self.make_derived_seed_bin(self.id_str, self.count))
 
 def join_shares(
 		cfg,
 		seed_list,
+		*,
 		master_idx = None,
 		id_str     = None):
 

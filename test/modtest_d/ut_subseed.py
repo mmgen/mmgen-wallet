@@ -25,7 +25,7 @@ class unit_test:
 				):
 
 				seed_bin = bytes.fromhex('deadbeef' * a)
-				seed = Seed(cfg, seed_bin)
+				seed = Seed(cfg, seed_bin=seed_bin)
 				assert seed.sid == b, seed.sid
 
 				subseed = seed.subseed('2s')
@@ -40,7 +40,7 @@ class unit_test:
 				assert subseed.idx == 10, subseed.idx
 				assert subseed.ss_idx == h, subseed.ss_idx
 
-				seed2 = Seed(cfg, seed_bin)
+				seed2 = Seed(cfg, seed_bin=seed_bin)
 				ss2_list = seed2.subseeds
 
 				seed2.subseeds._generate(1)
@@ -98,31 +98,31 @@ class unit_test:
 
 			seed_bin = bytes.fromhex('deadbeef' * 8)
 
-			seed = Seed(cfg, seed_bin, nSubseeds=11)
+			seed = Seed(cfg, seed_bin=seed_bin, nSubseeds=11)
 			seed.subseeds._generate()
 			ss = seed.subseeds
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert len(ss) == 11, len(ss)
 
-			seed = Seed(cfg, seed_bin)
+			seed = Seed(cfg, seed_bin=seed_bin)
 			seed.subseeds._generate()
 			ss = seed.subseeds
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert len(ss) == nSubseeds, len(ss)
 
-			seed = Seed(cfg, seed_bin)
+			seed = Seed(cfg, seed_bin=seed_bin)
 			seed.subseed_by_seed_id('EEEEEEEE')
 			ss = seed.subseeds
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert len(ss) == nSubseeds, len(ss)
 
-			seed = Seed(cfg, seed_bin)
+			seed = Seed(cfg, seed_bin=seed_bin)
 			subseed = seed.subseed_by_seed_id('803B165C')
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert subseed.sid == '803B165C', subseed.sid
 			assert subseed.idx == 3, subseed.idx
 
-			seed = Seed(cfg, seed_bin)
+			seed = Seed(cfg, seed_bin=seed_bin)
 			subseed = seed.subseed_by_seed_id('803B165C', last_idx=1)
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert subseed is None, subseed
@@ -169,7 +169,7 @@ class unit_test:
 			msg_r(f'Testing Seed ID collisions ({ss_count} subseed pairs)...')
 
 			seed_bin = bytes.fromhex('12abcdef' * 8) # 95B3D78D
-			seed = Seed(cfg, seed_bin)
+			seed = Seed(cfg, seed_bin=seed_bin)
 
 			seed.subseeds._generate(ss_count)
 			ss = seed.subseeds

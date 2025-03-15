@@ -1127,7 +1127,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 					usr_addrs[i]))
 
 		def gen_addr(addr):
-			return tool_cmd(cfg, cmdname='gen_addr', proto=self.proto).gen_addr(addr, dfl_words_file)
+			return tool_cmd(
+				cfg, cmdname='gen_addr', proto=self.proto).gen_addr(addr, wallet=dfl_words_file)
 
 		silence()
 		usr_addrs = list(map(gen_addr, usr_mmaddrs))

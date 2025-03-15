@@ -121,7 +121,7 @@ class Memo:
 
 		return ret(proto_name, function, chain, asset, address, limit_int, int(interval), int(quantity))
 
-	def __init__(self, proto, addr, chain=None, trade_limit=None):
+	def __init__(self, proto, addr, *, chain=None, trade_limit=None):
 		self.proto = proto
 		self.chain = chain or proto.coin
 		if trade_limit is None:

@@ -89,10 +89,10 @@ class Crypto:
 			msg(f'Seed:  {seed.hex()!r}\nScramble key: {scramble_key}\nScrambled seed: {step1.hex()}\n')
 		return self.sha256_rounds(step1)
 
-	def encrypt_seed(self, data, key, desc='seed'):
+	def encrypt_seed(self, data, key, *, desc='seed'):
 		return self.encrypt_data(data, key=key, desc=desc)
 
-	def decrypt_seed(self, enc_seed, key, seed_id, key_id):
+	def decrypt_seed(self, enc_seed, key, *, seed_id, key_id):
 		self.util.vmsg_r('Checking key...')
 		chk1 = make_chksum_8(key)
 		if key_id:
@@ -152,6 +152,7 @@ class Crypto:
 			self,
 			enc_data,
 			key,
+			*,
 			iv   = aesctr_dfl_iv,
 			desc = 'data'):
 
@@ -167,6 +168,7 @@ class Crypto:
 			passwd,
 			salt,
 			hash_preset,
+			*,
 			buflen = 32):
 
 		# Buflen arg is for brainwallets only, which use this function to generate
@@ -228,7 +230,7 @@ class Crypto:
 		self.util.dmsg(f'Key: {key.hex()}')
 		return key
 
-	def _get_random_data_from_user(self, uchars=None, desc='data'):
+	def _get_random_data_from_user(self, uchars=None, *, desc='data'):
 
 		if uchars is None:
 			uchars = self.cfg.usr_randchars
@@ -297,6 +299,7 @@ class Crypto:
 	def add_user_random(
 			self,
 			rand_bytes,
+			*,
 			desc,
 			urand = {'data':b'', 'counter':0}):
 
@@ -329,6 +332,7 @@ class Crypto:
 	def get_hash_preset_from_user(
 			self,
 			old_preset = gc.dfl_hash_preset,
+			*,
 			data_desc  = 'data',
 			prompt     = None):
 
@@ -347,7 +351,7 @@ class Crypto:
 			else:
 				return old_preset
 
-	def get_new_passphrase(self, data_desc, hash_preset, passwd_file, pw_desc='passphrase'):
+	def get_new_passphrase(self, data_desc, hash_preset, passwd_file, *, pw_desc='passphrase'):
 		message = f"""
 				You must choose a passphrase to encrypt your {data_desc} with.
 				A key will be generated from your passphrase using a hash preset of '{hash_preset}'.
@@ -383,7 +387,7 @@ class Crypto:
 
 		return pw
 
-	def get_passphrase(self, data_desc, passwd_file, pw_desc='passphrase'):
+	def get_passphrase(self, data_desc, passwd_file, *, pw_desc='passphrase'):
 		if passwd_file:
 			from .fileutil import get_words_from_file
 			return ' '.join(get_words_from_file(
@@ -395,7 +399,7 @@ class Crypto:
 			from .ui import get_words_from_user
 			return ' '.join(get_words_from_user(self.cfg, f'Enter {pw_desc} for {data_desc}: '))
 
-	def mmgen_encrypt(self, data, desc='data', hash_preset=None):
+	def mmgen_encrypt(self, data, *, desc='data', hash_preset=None):
 		salt  = self.get_random(self.mmenc_salt_len)
 		iv    = self.get_random(self.aesctr_iv_len)
 		nonce = self.get_random(self.mmenc_nonce_len)
@@ -412,7 +416,7 @@ class Crypto:
 		enc_d  = self.encrypt_data(sha256(nonce+data).digest() + nonce + data, key=key, iv=iv, desc=desc)
 		return salt+iv+enc_d
 
-	def mmgen_decrypt(self, data, desc='data', hash_preset=None):
+	def mmgen_decrypt(self, data, *, desc='data', hash_preset=None):
 		self.util.vmsg(f'Preparing to decrypt {desc}')
 		dstart = self.mmenc_salt_len + self.aesctr_iv_len
 		salt   = data[:self.mmenc_salt_len]
@@ -425,7 +429,7 @@ class Crypto:
 			data_desc = desc,
 			passwd_file = self.cfg.passwd_file)
 		key    = self.make_key(passwd, salt, hp)
-		dec_d  = self.decrypt_data(enc_d, key, iv, desc)
+		dec_d  = self.decrypt_data(enc_d, key, iv=iv, desc=desc)
 		sha256_len = 32
 		from hashlib import sha256
 		if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
@@ -435,9 +439,9 @@ class Crypto:
 			msg('Incorrect passphrase or hash preset')
 			return False
 
-	def mmgen_decrypt_retry(self, d, desc='data'):
+	def mmgen_decrypt_retry(self, d, *, desc='data'):
 		while True:
-			d_dec = self.mmgen_decrypt(d, desc)
+			d_dec = self.mmgen_decrypt(d, desc=desc)
 			if d_dec:
 				return d_dec
 			msg('Trying again...')

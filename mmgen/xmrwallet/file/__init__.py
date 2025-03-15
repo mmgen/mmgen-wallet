@@ -21,7 +21,7 @@ class MoneroMMGenFile:
 
 	silent_load = False
 
-	def make_chksum(self, keys=None):
+	def make_chksum(self, *, keys=None):
 		res = json.dumps(
 			dict((k, v) for k, v in self.data._asdict().items() if (not keys or k in keys)),
 			cls = json_encoder
@@ -30,11 +30,11 @@ class MoneroMMGenFile:
 
 	@property
 	def base_chksum(self):
-		return self.make_chksum(self.base_chksum_fields)
+		return self.make_chksum(keys=self.base_chksum_fields)
 
 	@property
 	def full_chksum(self):
-		return self.make_chksum(self.full_chksum_fields) if self.full_chksum_fields else None
+		return self.make_chksum(keys=self.full_chksum_fields) if self.full_chksum_fields else None
 
 	def check_checksums(self, d_wrap):
 		for k in ('base_chksum', 'full_chksum'):

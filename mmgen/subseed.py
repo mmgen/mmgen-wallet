@@ -86,7 +86,7 @@ class SubSeedList(MMGenObject):
 	debug_last_share_sid_len = 3
 	dfl_len = 100
 
-	def __init__(self, parent_seed, length=None):
+	def __init__(self, parent_seed, *, length=None):
 		self.member_type = SubSeed
 		self.parent_seed = parent_seed
 		self.data = {'long': IndexedDict(), 'short': IndexedDict()}
@@ -157,7 +157,7 @@ class SubSeedList(MMGenObject):
 			do_msg(subseed)
 			return subseed
 
-	def _collision_debug_msg(self, sid, idx, nonce, nonce_desc='nonce', debug_last_share=False):
+	def _collision_debug_msg(self, sid, idx, nonce, *, nonce_desc='nonce', debug_last_share=False):
 		slen = 'short' if sid in self.data['short'] else 'long'
 		m1 = f'add_subseed(idx={idx},{slen}):'
 		if sid == self.parent_seed.sid:
@@ -172,7 +172,7 @@ class SubSeedList(MMGenObject):
 			m2 = f'collision with ID {sid} (idx={colliding_idx},{slen}),'
 		msg(f'{m1:30} {m2:46} incrementing {nonce_desc} to {nonce+1}')
 
-	def _generate(self, last_idx=None, last_sid=None):
+	def _generate(self, last_idx=None, *, last_sid=None):
 
 		if last_idx is None:
 			last_idx = self.len

@@ -31,7 +31,7 @@ class tool_cmd_base(MMGenObject):
 	need_addrtype = False
 	need_amt = False
 
-	def __init__(self, cfg, cmdname=None, proto=None, mmtype=None):
+	def __init__(self, cfg, *, cmdname=None, proto=None, mmtype=None):
 
 		self.cfg = cfg
 

@@ -42,6 +42,7 @@ class EthereumRPCClient(RPCClient, metaclass=AsyncInit):
 			self,
 			cfg,
 			proto,
+			*,
 			daemon,
 			backend,
 			ignore_wallet):
@@ -83,13 +84,13 @@ class EthereumRPCClient(RPCClient, metaclass=AsyncInit):
 			if (await self.call('parity_nodeKind'))['capability'] == 'full':
 				self.caps += ('full_node',)
 			# parity/openethereum return chainID only for dev chain:
-			self.chainID = None if ci is None else Int(ci, 16)
+			self.chainID = None if ci is None else Int(ci, base=16)
 			self.chain = (await self.call('parity_chain')).replace(' ', '_').replace('_testnet', '')
 		elif self.daemon.id in ('geth', 'reth', 'erigon'):
 			if self.daemon.network == 'mainnet':
 				daemon_warning(self.daemon.id)
 			self.caps += ('full_node',)
-			self.chainID = Int(ci, 16)
+			self.chainID = Int(ci, base=16)
 			self.chain = self.proto.chain_ids[self.chainID]
 
 	def make_host_path(self, wallet):

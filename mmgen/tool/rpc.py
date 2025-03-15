@@ -56,7 +56,8 @@ class tool_cmd(tool_cmd_base):
 			pager:   'send output to pager' = False):
 		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
 		from ..tw.bal import TwGetBalance
-		return (await TwGetBalance(self.cfg, self.proto, minconf, quiet)).format(color=self.cfg.color)
+		return (await TwGetBalance(
+			self.cfg, self.proto, minconf=minconf, quiet=quiet)).format(color=self.cfg.color)
 
 	async def twops(self,
 			obj, pager, reverse, detail, sort, age_fmt, interactive,
@@ -189,7 +190,7 @@ class tool_cmd(tool_cmd_base):
 		from ..tw.ctl import TwCtl
 		return await (await TwCtl(self.cfg, self.proto, mode='w')).rescan_address(mmgen_or_coin_addr)
 
-	async def rescan_blockchain(self,
+	async def rescan_blockchain(self, *,
 			start_block: int = None,
 			stop_block: int  = None):
 		"""

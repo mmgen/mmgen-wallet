@@ -54,7 +54,7 @@ class MMGenAddrType(HiliteStr, InitErrors, MMGenObject):
 		'Z': ati('zcash_z','zcash_z',False,'zcash_z', 'zcash_z', 'wif',     ('viewkey',),      'Zcash z-address'),
 		'M': ati('monero', 'monero', False,'monero',  'monero',  'spendkey',('viewkey','wallet_passwd'),'Monero address'),
 	}
-	def __new__(cls, proto, id_str, errmsg=None):
+	def __new__(cls, proto, id_str, *, errmsg=None):
 		if isinstance(id_str, cls):
 			return id_str
 		try:
@@ -99,7 +99,7 @@ class AddrListID(HiliteStr, InitErrors, MMGenObject):
 	width = 10
 	trunc_ok = False
 	color = 'yellow'
-	def __new__(cls, sid=None, mmtype=None, proto=None, id_str=None):
+	def __new__(cls, *, sid=None, mmtype=None, proto=None, id_str=None):
 		try:
 			if id_str:
 				a, b = id_str.split(':')

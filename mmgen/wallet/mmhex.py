@@ -54,7 +54,7 @@ class wallet(wallet):
 		if not self.cfg._util.compare_chksums(chk, 'file', make_chksum_6(hstr), 'computed', verbose=True):
 			return False
 
-		self.seed = Seed(self.cfg, bytes.fromhex(hstr))
+		self.seed = Seed(self.cfg, seed_bin=bytes.fromhex(hstr))
 		self.ssdata.chksum = chk
 
 		self.check_usr_seed_len()

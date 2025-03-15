@@ -99,7 +99,7 @@ class GlobalConstants(Lockable):
 	else:
 		die2(2, '$HOME is not set!  Unable to determine home directory')
 
-	def get_mmgen_data_file(self, filename, package='mmgen'):
+	def get_mmgen_data_file(self, *, filename, package='mmgen'):
 		"""
 		this is an expensive import, so do only when required
 		"""
@@ -522,7 +522,7 @@ class Config(Lockable):
 		# Step 4: set cfg from cfgfile, skipping already-set opts and auto opts; save set opts and auto
 		#         opts to be set:
 		# requires ‘data_dir_root’, ‘test_suite_cfgtest’
-		self._cfgfile_opts = self._set_cfg_from_cfg_file(self._envopts, need_proto)
+		self._cfgfile_opts = self._set_cfg_from_cfg_file(self._envopts, need_proto=need_proto)
 
 		# Step 5: set autoset opts from user-supplied data, cfgfile data, or default values, in that order:
 		self._set_autoset_opts(self._cfgfile_opts.autoset)
@@ -615,7 +615,7 @@ class Config(Lockable):
 			else:
 				raise ValueError(f'{name!r} is not a valid MMGen environment variable')
 
-	def _set_cfg_from_cfg_file(self, env_cfg, need_proto):
+	def _set_cfg_from_cfg_file(self, env_cfg, *, need_proto):
 
 		_ret = namedtuple('cfgfile_opts', ['non_auto', 'autoset', 'auto_typeset'])
 
@@ -761,7 +761,7 @@ def check_opts(cfg): # Raises exception if any check fails
 			+ (f' in {cfg._cfgfile_fn!r}' if name in cfg._cfgfile_opts.non_auto else '')
 		)
 
-	def display_opt(name, val='', beg='For selected', end=':\n'):
+	def display_opt(name, val='', *, beg='For selected', end=':\n'):
 		from .util import msg_r
 		msg_r('{} option {!r}{}'.format(
 			beg,
@@ -779,11 +779,11 @@ def check_opts(cfg): # Raises exception if any check fails
 		}[op_str](val, target):
 			die('UserOptError', f'{val}: invalid {get_desc()} (not {op_str} {target})')
 
-	def opt_is_int(val, desc_pfx=''):
+	def opt_is_int(val, *, desc_pfx=''):
 		if not is_int(val):
 			die('UserOptError', f'{val!r}: invalid {get_desc(desc_pfx)} (not an integer)')
 
-	def opt_is_in_list(val, tlist, desc_pfx=''):
+	def opt_is_in_list(val, tlist, *, desc_pfx=''):
 		if val not in tlist:
 			q, sep = (('', ','), ("'", "','"))[isinstance(tlist[0], str)]
 			die('UserOptError', '{q}{v}{q}: invalid {w}\nValid choices: {q}{o}{q}'.format(

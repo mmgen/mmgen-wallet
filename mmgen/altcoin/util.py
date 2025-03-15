@@ -14,7 +14,7 @@ altcoin.util: various altcoin-related utilities
 
 from ..util import die
 
-def decrypt_keystore(data, passwd, mac_algo=None, mac_params={}):
+def decrypt_keystore(data, passwd, *, mac_algo=None, mac_params={}):
 	"""
 	Decrypt the encrypted data in a cross-chain keystore
 	Returns the decrypted data as a bytestring

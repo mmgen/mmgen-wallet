@@ -50,7 +50,7 @@ class wallet(wallet):
 			d.hash_preset,
 			buflen = bw_seed_len // 8)
 		self.cfg._util.qmsg('Done')
-		self.seed = Seed(self.cfg, seed)
+		self.seed = Seed(self.cfg, seed_bin=seed)
 		msg(f'Seed ID: {self.seed.sid}')
 		self.cfg._util.qmsg('Check this value against your records')
 		return True

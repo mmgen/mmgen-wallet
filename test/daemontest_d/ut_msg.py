@@ -84,13 +84,13 @@ async def run_test(network_id, chksum, msghash_type='raw'):
 	print_total(await m.verify())
 
 	pumsg('\nTesting single address verification:\n')
-	print_total(await m.verify(single_addr))
+	print_total(await m.verify(addr=single_addr))
 
 	pumsg('\nTesting JSON dump for export:\n')
 	msg(m.get_json_for_export())
 
 	pumsg('\nTesting single address JSON dump for export:\n')
-	msg(m.get_json_for_export(single_addr))
+	msg(m.get_json_for_export(addr=single_addr))
 
 	from mmgen.fileutil import write_data_to_file
 	exported_sigs = os.path.join(tmpdir, 'signatures.json')
@@ -107,7 +107,7 @@ async def run_test(network_id, chksum, msghash_type='raw'):
 	print_total(await m.verify())
 
 	pumsg('\nTesting single address verification (exported data):\n')
-	print_total(await m.verify(single_addr_coin))
+	print_total(await m.verify(addr=single_addr_coin))
 
 	pumsg('\nTesting display (exported data):\n')
 	msg(m.format())

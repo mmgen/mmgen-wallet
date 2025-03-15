@@ -213,7 +213,8 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 		return 'token ' + self.get_param('symbol')
 
 	async def rpc_get_balance(self, addr):
-		return await Token(self.cfg, self.proto, self.token, self.decimals, self.rpc).get_balance(addr)
+		return await Token(
+			self.cfg, self.proto, self.token, self.decimals, rpc=self.rpc).get_balance(addr)
 
 	async def get_eth_balance(self, addr, *, force_rpc=False):
 		cache = self.cur_eth_balances

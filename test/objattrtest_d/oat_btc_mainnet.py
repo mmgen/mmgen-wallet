@@ -93,8 +93,8 @@ tests = {
 		'data': (0b00001, bytes),
 		'sid':  (0b00001, SeedID),
 		},
-		[cfg, seed_bin],
-		{},
+		(cfg,),
+		{'seed_bin': seed_bin},
 	),
 	'SubSeed': atd({
 		'idx':    (0b00001, int),

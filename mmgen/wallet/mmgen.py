@@ -33,7 +33,7 @@ class wallet(wallet):
 		super().__init__(*args, **kwargs)
 
 	# logic identical to _get_hash_preset_from_user()
-	def _get_label_from_user(self, old_lbl=''):
+	def _get_label_from_user(self, *, old_lbl=''):
 		prompt = 'Enter a wallet label, or hit ENTER {}: '.format(
 			'to reuse the label {}'.format(old_lbl.hl2(encl='‘’')) if old_lbl else
 			'for no label')
@@ -60,7 +60,7 @@ class wallet(wallet):
 				lbl = self.label
 				self.cfg._util.qmsg('Using user-configured label {}'.format(lbl.hl2(encl='‘’')))
 			else: # Prompt, using old value as default
-				lbl = self._get_label_from_user(old_lbl)
+				lbl = self._get_label_from_user(old_lbl=old_lbl)
 			if (not self.cfg.keep_label) and self.op == 'pwchg_new':
 				self.cfg._util.qmsg('Label {}'.format('unchanged' if lbl == old_lbl else f'changed to {lbl!r}'))
 		elif self.label:
@@ -122,7 +122,7 @@ class wallet(wallet):
 		d1, d2, d3, d4, d5 = lines[2].split()
 		d.seed_id = d1.upper()
 		d.key_id  = d2.upper()
-		self.check_usr_seed_len(int(d3))
+		self.check_usr_seed_len(bitlen=int(d3))
 		d.pw_status, d.timestamp = d4, d5
 
 		hpdata = lines[3].split()
@@ -171,9 +171,9 @@ class wallet(wallet):
 		d.passwd = self._get_passphrase(
 			add_desc = os.path.basename(self.infile.name) if self.cfg.quiet else '')
 		key = self.crypto.make_key(d.passwd, d.salt, d.hash_preset)
-		ret = self.crypto.decrypt_seed(d.enc_seed, key, d.seed_id, d.key_id)
+		ret = self.crypto.decrypt_seed(d.enc_seed, key, seed_id=d.seed_id, key_id=d.key_id)
 		if ret:
-			self.seed = Seed(self.cfg, ret)
+			self.seed = Seed(self.cfg, seed_bin=ret)
 			return True
 		else:
 			return False

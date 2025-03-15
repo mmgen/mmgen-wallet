@@ -264,7 +264,7 @@ class Int(int, Hilite, InitErrors):
 	max_digits = None
 	color = 'red'
 
-	def __new__(cls, n, base=10):
+	def __new__(cls, n, *, base=10):
 		if isinstance(n, cls):
 			return n
 		try:
@@ -306,7 +306,7 @@ class HexStr(HiliteStr, InitErrors):
 	width = None
 	hexcase = 'lower'
 	trunc_ok = False
-	def __new__(cls, s, case=None):
+	def __new__(cls, s, *, case=None):
 		if isinstance(s, cls):
 			return s
 		if case is None:

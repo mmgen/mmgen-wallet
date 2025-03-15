@@ -36,7 +36,7 @@ class wallet(wallet):
 			msg(f'Invalid data length ({len(d)}) in {desc}')
 			return False
 
-		self.seed = Seed(self.cfg, bytes.fromhex(d))
+		self.seed = Seed(self.cfg, seed_bin=bytes.fromhex(d))
 
 		self.check_usr_seed_len()
 

@@ -43,7 +43,7 @@ class MacOSRamDisk:
 	desc = 'ramdisk'
 	min_size = 10 # 10MB is the minimum supported by hdiutil
 
-	def __init__(self, cfg, label, size, path=None):
+	def __init__(self, cfg, label, size, *, path=None):
 		if size < self.min_size:
 			warn_ramdisk_too_small(size, self.min_size)
 			size = self.min_size

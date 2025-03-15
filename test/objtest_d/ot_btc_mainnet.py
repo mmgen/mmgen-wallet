@@ -80,11 +80,17 @@ tests = {
 	},
 	'AddrIdxList': {
 		'arg1': 'fmt_str',
-		'bad': ('x', '5,9,1-2-3', '8,-11', '66,3-2', '0-3'),
+		'bad': (
+			{'fmt_str': 'x'},
+			{'fmt_str': '5,9,1-2-3'},
+			{'fmt_str': '8,-11'},
+			{'fmt_str': '66,3-2'},
+			{'fmt_str': '0-3'},
+		),
 		'good': (
-			('3,2,2', (2, 3)),
-			('101,1,3,5,2-7,99', (1, 2, 3, 4, 5, 6, 7, 99, 101)),
-			({'idx_list': AddrIdxList('1-5')}, (1, 2, 3, 4, 5))
+			{'fmt_str': '3,2,2', 'ret': (2, 3)},
+			{'fmt_str': '101,1,3,5,2-7,99', 'ret': (1, 2, 3, 4, 5, 6, 7, 99, 101)},
+			{'idx_list': AddrIdxList(fmt_str='1-5'), 'ret': (1, 2, 3, 4, 5)},
 		)
 	},
 	'SubSeedIdxRange': {
@@ -143,13 +149,14 @@ tests = {
 			{'sid': 1},
 			{'sid': 'F00BAA123'},
 			{'sid': 'f00baa12'},
-			'я', r32, 'abc'
-			),
+			{'seed': r32},
+			{'sid': 'abc'},
+		),
 		'good': (
 			{'sid': 'F00BAA12'},
-			{'seed': Seed(cfg, r16),     'ret': SeedID(seed=Seed(cfg, r16))},
-			{'sid':  Seed(cfg, r16).sid, 'ret': SeedID(seed=Seed(cfg, r16))}
-			)
+			{'seed': Seed(cfg, seed_bin=r16),     'ret': SeedID(seed=Seed(cfg, seed_bin=r16))},
+			{'sid':  Seed(cfg, seed_bin=r16).sid, 'ret': SeedID(seed=Seed(cfg, seed_bin=r16))}
+		)
 	},
 	'SubSeedIdx': {
 		'arg1': 's',

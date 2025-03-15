@@ -49,7 +49,7 @@ class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
 		qmsg = self.cfg._util.qmsg
 		qmsg_r = self.cfg._util.qmsg_r
 		qmsg_r('Getting unspent outputs...')
-		addrs = await self.get_unspent_by_mmid(self.minconf)
+		addrs = await self.get_unspent_by_mmid(minconf=self.minconf)
 		qmsg('done')
 
 		coin_amt = self.proto.coin_amt

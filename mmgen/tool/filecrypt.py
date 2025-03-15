@@ -35,20 +35,20 @@ class tool_cmd(tool_cmd_base):
 	* Enc: AES256_CTR, 16-byte rand IV, sha256 hash + 32-byte nonce + data
 	* The encrypted file is indistinguishable from random data
 	"""
-	def encrypt(self, infile: str, outfile='', hash_preset=''):
+	def encrypt(self, infile: str, *, outfile='', hash_preset=''):
 		"encrypt a file"
 		data = get_data_from_file(self.cfg, infile, desc='data for encryption', binary=True)
-		enc_d = Crypto(self.cfg).mmgen_encrypt(data, 'data', hash_preset)
+		enc_d = Crypto(self.cfg).mmgen_encrypt(data, desc='data', hash_preset=hash_preset)
 		if not outfile:
 			outfile = f'{os.path.basename(infile)}.{Crypto.mmenc_ext}'
 		write_data_to_file(self.cfg, outfile, enc_d, desc='encrypted data', binary=True)
 		return True
 
-	def decrypt(self, infile: str, outfile='', hash_preset=''):
+	def decrypt(self, infile: str, *, outfile='', hash_preset=''):
 		"decrypt a file"
 		enc_d = get_data_from_file(self.cfg, infile, desc='encrypted data', binary=True)
 		while True:
-			dec_d = Crypto(self.cfg).mmgen_decrypt(enc_d, 'data', hash_preset)
+			dec_d = Crypto(self.cfg).mmgen_decrypt(enc_d, desc='data', hash_preset=hash_preset)
 			if dec_d:
 				break
 			from ..util import msg

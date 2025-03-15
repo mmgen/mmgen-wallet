@@ -189,7 +189,7 @@ class wallet(wallet):
 				key_id   = ''))
 
 		if seed:
-			self.seed = Seed(self.cfg, seed)
+			self.seed = Seed(self.cfg, seed_bin=seed)
 			msg(f'Seed ID: {self.seed.sid}')
 			return True
 		else:

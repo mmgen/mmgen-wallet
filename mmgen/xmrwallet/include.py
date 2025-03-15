@@ -19,7 +19,7 @@ from ..color import red, green, pink
 from ..addr import CoinAddr, AddrIdx
 from ..util import die
 
-def gen_acct_addr_info(self, wallet_data, account, indent=''):
+def gen_acct_addr_info(self, wallet_data, account, *, indent=''):
 	fs = indent + '{I:<3} {A} {U} {B} {L}'
 	addrs_data = wallet_data.addrs_data[account]['addresses']
 

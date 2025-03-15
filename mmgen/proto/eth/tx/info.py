@@ -28,7 +28,7 @@ class TxInfo(TxInfo):
 	""")
 	to_addr_key = 'to'
 
-	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, terse, sort):
+	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, *, terse, sort):
 		tx = self.tx
 		m = {}
 		for k in ('inputs', 'outputs'):

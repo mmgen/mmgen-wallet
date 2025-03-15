@@ -64,7 +64,7 @@ class BitcoinTwRPC(TwRPC):
 		return [label_addr_pair(label, CoinAddr(self.proto, addrs[0]))
 			for label, addrs in zip(acct_labels, acct_addrs)]
 
-	async def get_unspent_by_mmid(self, minconf=1, mmid_filter=[]):
+	async def get_unspent_by_mmid(self, *, minconf=1, mmid_filter=[]):
 		"""
 		get unspent outputs in tracking wallet, compute balances per address
 		and return a dict with elements {'twmmid': {'addr', 'lbl', 'amt'}}

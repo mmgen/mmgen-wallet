@@ -163,7 +163,7 @@ class OpWallet(OpBase):
 
 	def create_addr_data(self):
 		if self.uargs.wallets:
-			idxs = AddrIdxList(self.uargs.wallets)
+			idxs = AddrIdxList(fmt_str=self.uargs.wallets)
 			self.addr_data = [d for d in self.kal.data if d.idx in idxs]
 			if len(self.addr_data) != len(idxs):
 				die(1, f'List {self.uargs.wallets!r} contains addresses not present in supplied key-address file')
@@ -183,7 +183,7 @@ class OpWallet(OpBase):
 				self.c.daemon.force_kill = True
 				self.c.daemon.stop()
 
-	def get_wallet_fn(self, data, watch_only=None):
+	def get_wallet_fn(self, data, *, watch_only=None):
 		if watch_only is None:
 			watch_only = self.cfg.watch_only
 		return Path(

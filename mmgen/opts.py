@@ -160,7 +160,7 @@ global_opts_help_pat = re.compile(r'^\t\t\t(.)(.) (?:--([{}a-zA-Z0-9-]{2,64})(=|
 
 opt_tuple = namedtuple('cmdline_option', ['name', 'has_parm'])
 
-def parse_opts(cfg, opts_data, global_opts_data, global_filter_codes, need_proto):
+def parse_opts(cfg, opts_data, global_opts_data, global_filter_codes, *, need_proto):
 
 	def parse_v1():
 		for line in opts_data['text']['options'].strip().splitlines():
@@ -243,6 +243,7 @@ class Opts:
 	def __init__(
 			self,
 			cfg,
+			*,
 			opts_data,
 			init_opts,    # dict containing opts to pre-initialize
 			parsed_opts,
@@ -261,7 +262,7 @@ class Opts:
 			opts_data,
 			self.global_opts_data,
 			self.global_filter_codes,
-			need_proto)
+			need_proto = need_proto)
 
 		cfg._args = po.cmd_args
 		cfg._uopts = uopts = po.user_opts

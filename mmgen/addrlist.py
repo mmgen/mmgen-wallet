@@ -30,7 +30,7 @@ class AddrIdxList(tuple, InitErrors, MMGenObject):
 
 	max_len = 1000000
 
-	def __new__(cls, fmt_str=None, idx_list=None, sep=','):
+	def __new__(cls, *, fmt_str=None, idx_list=None, sep=','):
 		try:
 			if fmt_str:
 				def gen():
@@ -103,7 +103,7 @@ class AddrListIDStr(HiliteStr):
 	color = 'green'
 	trunc_ok = False
 
-	def __new__(cls, addrlist, fmt_str=None):
+	def __new__(cls, addrlist, *, fmt_str=None):
 		idxs = [e.idx for e in addrlist.data]
 		prev = idxs[0]
 		ret = [prev]
@@ -188,7 +188,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			src = 'gen'
 			adata = self.generate(
 				seed,
-				addr_idxs if isinstance(addr_idxs, AddrIdxList) else AddrIdxList(addr_idxs))
+				addr_idxs if isinstance(addr_idxs, AddrIdxList) else AddrIdxList(fmt_str=addr_idxs))
 			do_chksum = True
 		elif infile:             # data from MMGen address file
 			self.infile = infile

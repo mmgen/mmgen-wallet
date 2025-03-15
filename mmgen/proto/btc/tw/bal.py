@@ -18,10 +18,10 @@ from ....rpc import rpc_init
 
 class BitcoinTwGetBalance(TwGetBalance):
 
-	async def __init__(self, cfg, proto, minconf, quiet):
+	async def __init__(self, cfg, proto, *, minconf, quiet):
 		self.rpc = await rpc_init(cfg, proto)
 		self.walletinfo = await self.rpc.walletinfo
-		await super().__init__(cfg, proto, minconf, quiet)
+		await super().__init__(cfg, proto, minconf=minconf, quiet=quiet)
 
 	start_labels = ('TOTAL', 'Non-MMGen', 'Non-wallet')
 	conf_cols = {

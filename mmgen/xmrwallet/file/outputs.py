@@ -71,7 +71,7 @@ class MoneroWalletOutputsFile:
 			)
 			return fn.parent / fn.name[:-(len(self.ext)+self.ext_offset+1)]
 
-		def get_info(self, indent=''):
+		def get_info(self, *, indent=''):
 			if self.data.signed_key_images is not None:
 				data = self.data.signed_key_images or []
 				return f'{indent}{self.wallet_fn.name}: {len(data)} signed key image{suf(data)}'
@@ -96,7 +96,7 @@ class MoneroWalletOutputsFile:
 
 	class Completed(New):
 
-		def __init__(self, parent, fn=None, wallet_fn=None):
+		def __init__(self, parent, *, fn=None, wallet_fn=None):
 			def check_equal(desc, a, b):
 				assert a == b, f'{desc} mismatch: {a} (from file) != {b} (from filename)'
 			fn = fn or self.get_outfile(parent.cfg, wallet_fn)

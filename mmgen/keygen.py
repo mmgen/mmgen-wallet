@@ -78,7 +78,7 @@ def get_pubkey_type_cls(pubkey_type):
 		importlib.import_module(f'mmgen.proto.{backend_data[pubkey_type]["package"]}.keygen'),
 		'backend')
 
-def _check_backend(cfg, backend, pubkey_type, desc='keygen backend'):
+def _check_backend(cfg, backend, pubkey_type, *, desc='keygen backend'):
 
 	from .util import is_int, die
 

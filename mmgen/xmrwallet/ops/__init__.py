@@ -102,7 +102,7 @@ class OpBase:
 			self.cfg.tx_relay_daemon,
 			re.ASCII)
 
-	def display_tx_relay_info(self, indent=''):
+	def display_tx_relay_info(self, *, indent=''):
 		m = self.parse_tx_relay_opt()
 		msg(fmt(f"""
 			TX relay info:

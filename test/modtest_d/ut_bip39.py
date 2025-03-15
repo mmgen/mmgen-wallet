@@ -180,7 +180,7 @@ class unit_tests:
 		assert seed_hex == '3c30b98d3d9a713cf5a7a42f5dd27b3bf7f4d792d2b9225f6f519a0da978e13c6f36989ef2123b12a96d6ad5a443a95d61022ffaa9fbce8f946da7b67f75d339'
 
 		passwd = 'passw0rd'
-		seed_hex = bip39().generate_seed(mnemonic.split(), passwd).hex()
+		seed_hex = bip39().generate_seed(mnemonic.split(), passwd=passwd).hex()
 		vmsg(f'  Password: {orange(passwd)}\n    {seed_hex}')
 		assert seed_hex == '7eb773bf60f1a5071f96736b6ddbe5c544a7b7740182a80493e29577e58b7cde011d4e38d26f65dab6c9fdebe5594e523447a1427ffd60746e6d04b4daa42eb1'
 

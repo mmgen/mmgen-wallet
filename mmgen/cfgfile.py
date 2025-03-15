@@ -190,7 +190,7 @@ class CfgFileSampleSys(cfg_file_sample):
 		else:
 			# self.fn is used for error msgs only, so file need not exist on filesystem
 			self.fn = os.path.join(os.path.dirname(__file__), 'data', self.fn_base)
-			self.data = gc.get_mmgen_data_file(self.fn_base).splitlines()
+			self.data = gc.get_mmgen_data_file(filename=self.fn_base).splitlines()
 
 	def make_metadata(self):
 		return [f'# Version {self.cur_ver} {self.computed_chksum}']

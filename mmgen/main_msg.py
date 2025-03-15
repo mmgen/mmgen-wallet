@@ -61,13 +61,13 @@ class MsgOps:
 
 	class verify(sign):
 
-		async def __init__(self, msgfile, addr=None):
+		async def __init__(self, msgfile, *, addr=None):
 			try:
 				m = SignedOnlineMsg(cfg, infile=msgfile)
 			except:
 				m = ExportedMsgSigs(cfg, infile=msgfile)
 
-			nSigs = await m.verify(addr)
+			nSigs = await m.verify(addr=addr)
 
 			summary = f'{nSigs} signature{suf(nSigs)} verified'
 
@@ -81,13 +81,13 @@ class MsgOps:
 
 	class export(sign):
 
-		async def __init__(self, msgfile, addr=None):
+		async def __init__(self, msgfile, *, addr=None):
 
 			from .fileutil import write_data_to_file
 			write_data_to_file(
 				cfg     = cfg,
 				outfile = 'signatures.json',
-				data    = SignedOnlineMsg(cfg, infile=msgfile).get_json_for_export(addr),
+				data    = SignedOnlineMsg(cfg, infile=msgfile).get_json_for_export(addr=addr),
 				desc    = 'signature data')
 
 opts_data = {
@@ -223,7 +223,7 @@ async def main():
 	elif op in ('verify', 'export'):
 		if len(cmd_args) not in (1, 2):
 			cfg._usage()
-		await getattr(MsgOps, op)(cmd_args[0], cmd_args[1] if len(cmd_args) == 2 else None)
+		await getattr(MsgOps, op)(cmd_args[0], addr=cmd_args[1] if len(cmd_args) == 2 else None)
 	else:
 		die(1, f'{op!r}: unrecognized operation')
 

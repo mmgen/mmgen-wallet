@@ -459,7 +459,7 @@ class Autosign:
 	def init_fixup(self): # see test/overlay/fakemods/mmgen/autosign.py
 		pass
 
-	def __init__(self, cfg, cmd=None):
+	def __init__(self, cfg, *, cmd=None):
 
 		if cfg.mnemonic_fmt:
 			if cfg.mnemonic_fmt not in self.mn_fmts:
@@ -728,7 +728,7 @@ class Autosign:
 	def _get_macOS_ramdisk_size(self):
 		from .platform.darwin.util import MacOSRamDisk, warn_ramdisk_too_small
 		# allow 1MB for each Monero wallet
-		xmr_size = len(AddrIdxList(self.cfg.xmrwallets)) if self.cfg.xmrwallets else 0
+		xmr_size = len(AddrIdxList(fmt_str=self.cfg.xmrwallets)) if self.cfg.xmrwallets else 0
 		calc_size = xmr_size + 1
 		usr_size = self.cfg.macos_ramdisk_size or self.cfg.macos_autosign_ramdisk_size
 		if is_int(usr_size):

@@ -261,7 +261,7 @@ class MnemonicEntry:
 			self._usl = usl
 		return self._usl
 
-	def idx(self, w, entry_mode, lo_idx=None, hi_idx=None):
+	def idx(self, w, entry_mode, *, lo_idx=None, hi_idx=None):
 		"""
 		Return values:
 		  - all modes:
@@ -306,7 +306,7 @@ class MnemonicEntry:
 			msg('  {}) {:8} {}'.format(
 				n,
 				mode.name + ':',
-				fmt(mode.choose_info, ' '*14).lstrip().format(usl=self.uniq_ss_len),
+				fmt(mode.choose_info, indent=' '*14).lstrip().format(usl=self.uniq_ss_len),
 			))
 		prompt = f'Type a number, or hit ENTER for the default ({capfirst(self.dfl_entry_mode)}): '
 		erase = '\r' + ' ' * (len(prompt)+19) + '\r'
@@ -418,7 +418,7 @@ class MnemonicEntryMonero(MnemonicEntry):
 	dfl_entry_mode = 'short'
 	has_chksum = True
 
-def mn_entry(cfg, wl_id, entry_mode=None):
+def mn_entry(cfg, wl_id, *, entry_mode=None):
 	if wl_id == 'words':
 		wl_id = 'mmgen'
 	me = MnemonicEntry.get_cls_by_wordlist(wl_id)(cfg)

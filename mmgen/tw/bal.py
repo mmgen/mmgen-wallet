@@ -26,10 +26,10 @@ from ..obj import NonNegativeInt
 
 class TwGetBalance(MMGenObject, metaclass=AsyncInit):
 
-	def __new__(cls, cfg, proto, *args, **kwargs):
+	def __new__(cls, cfg, proto, *, minconf, quiet):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls, 'tw.bal'))
 
-	async def __init__(self, cfg, proto, minconf, quiet):
+	async def __init__(self, cfg, proto, *, minconf, quiet):
 
 		class BalanceInfo(dict):
 			def __init__(self):

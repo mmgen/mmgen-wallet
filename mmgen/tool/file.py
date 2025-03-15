@@ -27,7 +27,7 @@ class tool_cmd(tool_cmd_base):
 
 	need_proto = True
 
-	def __init__(self, cfg, cmdname=None, proto=None, mmtype=None):
+	def __init__(self, cfg, *, cmdname=None, proto=None, mmtype=None):
 		if cmdname == 'txview':
 			self.need_amt = True
 		super().__init__(cfg=cfg, cmdname=cmdname, proto=proto, mmtype=mmtype)

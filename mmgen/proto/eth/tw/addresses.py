@@ -37,7 +37,7 @@ class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
 		'w':'a_view_detail',
 		'p':'a_print_detail'}
 
-	def get_column_widths(self, data, wide, interactive):
+	def get_column_widths(self, data, *, wide, interactive):
 
 		return self.compute_column_widths(
 			widths = { # fixed cols

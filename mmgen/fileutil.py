@@ -341,7 +341,7 @@ def get_lines_from_file(
 		if have_enc_ext or not is_utf8(data):
 			m = ('Attempting to decrypt', 'Decrypting')[have_enc_ext]
 			cfg._util.qmsg(f'{m} {desc} ‘{fn}’')
-			data = Crypto(cfg).mmgen_decrypt_retry(data, desc)
+			data = Crypto(cfg).mmgen_decrypt_retry(data, desc=desc)
 		return data
 
 	lines = decrypt_file_maybe().decode().splitlines()

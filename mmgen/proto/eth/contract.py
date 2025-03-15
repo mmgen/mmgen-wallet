@@ -99,6 +99,7 @@ class TokenCommon(MMGenObject):
 			self,
 			to_addr,
 			amt,
+			*,
 			method_sig = 'transfer(address,uint256)'):
 		from_arg = ''
 		to_arg = to_addr.rjust(64, '0')
@@ -112,6 +113,7 @@ class TokenCommon(MMGenObject):
 			start_gas,
 			gasPrice,
 			nonce,
+			*,
 			method_sig = 'transfer(address,uint256)'):
 		data = self.create_data(
 				to_addr,
@@ -125,7 +127,7 @@ class TokenCommon(MMGenObject):
 			'nonce':    nonce,
 			'data':     bytes.fromhex(data)}
 
-	async def txsign(self, tx_in, key, from_addr, chain_id=None):
+	async def txsign(self, tx_in, key, from_addr, *, chain_id=None):
 
 		from .pyethereum.transactions import Transaction
 
@@ -162,6 +164,7 @@ class TokenCommon(MMGenObject):
 			key,
 			start_gas,
 			gasPrice,
+			*,
 			method_sig = 'transfer(address,uint256)'):
 		tx_in = self.make_tx_in(
 				to_addr,
@@ -175,7 +178,7 @@ class TokenCommon(MMGenObject):
 
 class Token(TokenCommon):
 
-	def __init__(self, cfg, proto, addr, decimals, rpc=None):
+	def __init__(self, cfg, proto, addr, decimals, *, rpc=None):
 		if type(self).__name__ == 'Token':
 			from ...util2 import get_keccak
 			self.keccak_256 = get_keccak(cfg)
@@ -199,4 +202,4 @@ class ResolvedToken(TokenCommon, metaclass=AsyncInit):
 		decimals = await self.get_decimals() # requires self.addr!
 		if not decimals:
 			die('TokenNotInBlockchain', f'Token {addr!r} not in blockchain')
-		Token.__init__(self, cfg, proto, addr, decimals, rpc)
+		Token.__init__(self, cfg, proto, addr, decimals, rpc=rpc)

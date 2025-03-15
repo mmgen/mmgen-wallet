@@ -29,7 +29,7 @@ from .addrlist import AddrListEntry, AddrListData, AddrList
 
 class AddrData(MMGenObject):
 
-	def __init__(self, proto, *args, **kwargs):
+	def __init__(self, proto):
 		self.al_ids = {}
 		self.proto = proto
 		self.rpc = None
@@ -68,10 +68,10 @@ class AddrData(MMGenObject):
 
 class TwAddrData(AddrData, metaclass=AsyncInit):
 
-	def __new__(cls, cfg, proto, *args, **kwargs):
+	def __new__(cls, cfg, proto, *, twctl=None):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls, 'addrdata'))
 
-	async def __init__(self, cfg, proto, twctl=None):
+	async def __init__(self, cfg, proto, *, twctl=None):
 		from .rpc import rpc_init
 		from .tw.shared import TwLabel
 		from .seed import SeedID
@@ -79,7 +79,7 @@ class TwAddrData(AddrData, metaclass=AsyncInit):
 		self.proto = proto
 		self.rpc = await rpc_init(cfg, proto)
 		self.al_ids = {}
-		twd = await self.get_tw_data(twctl)
+		twd = await self.get_tw_data(twctl=twctl)
 		out, i = {}, 0
 		for acct, addr_array in twd:
 			l = get_obj(TwLabel, proto=self.proto, text=acct, silent=True)

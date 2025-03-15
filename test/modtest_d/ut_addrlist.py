@@ -27,7 +27,7 @@ def do_test(
 	proto = init_proto(cfg, coin or 'btc')
 	seed = Seed(cfg, seed_bin=bytes.fromhex('feedbead'*8))
 	mmtype = MMGenAddrType(proto, addrtype or 'C')
-	idxs = AddrIdxList(idx_spec or '1-3')
+	idxs = AddrIdxList(fmt_str=idx_spec or '1-3')
 
 	if cfg.verbose:
 		debug_addrlist_save = cfg.debug_addrlist
@@ -84,7 +84,7 @@ class unit_tests:
 				('2,4',           '2,4'),
 				('',              ''),
 			):
-			l = AddrIdxList(i)
+			l = AddrIdxList(fmt_str=i)
 			if cfg.verbose:
 				msg(f'list: {list(l)}\nin:   {i}\nout:  {o}\n')
 			assert l.id_str == o, f'{l.id_str} != {o}'

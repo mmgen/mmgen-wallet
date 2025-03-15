@@ -114,6 +114,7 @@ class tool_cmd(tool_cmd_base):
 
 	def hexdump(self,
 			infile: str,
+			*,
 			cols:      'number of columns in output' = 8,
 			line_nums: "format for line numbers (valid choices: 'hex','dec')" = 'hex'):
 		"create hexdump of data from file (use '-' for stdin)"
@@ -174,7 +175,7 @@ class tool_cmd(tool_cmd_base):
 		return make_chksum_8(
 			get_data_from_file(self.cfg, infile, dash=True, quiet=True, binary=True))
 
-	def randb58(self,
+	def randb58(self, *,
 			nbytes: 'number of bytes to output' = 32,
 			pad:    'pad output to this width' = 0):
 		"generate random data (default: 32 bytes) and convert it to base 58"
@@ -182,24 +183,24 @@ class tool_cmd(tool_cmd_base):
 		from ..crypto import Crypto
 		return baseconv('b58').frombytes(Crypto(self.cfg).get_random(nbytes), pad=pad, tostr=True)
 
-	def bytestob58(self, infile: str, pad: 'pad output to this width' = 0):
+	def bytestob58(self, infile: str, *, pad: 'pad output to this width' = 0):
 		"convert bytes to base 58 (supply data via STDIN)"
 		from ..fileutil import get_data_from_file
 		from ..baseconv import baseconv
 		data = get_data_from_file(self.cfg, infile, dash=True, quiet=True, binary=True)
 		return baseconv('b58').frombytes(data, pad=pad, tostr=True)
 
-	def b58tobytes(self, b58_str: 'sstr', pad: 'pad output to this width' = 0):
+	def b58tobytes(self, b58_str: 'sstr', *, pad: 'pad output to this width' = 0):
 		"convert a base 58 string to bytes (warning: outputs binary data)"
 		from ..baseconv import baseconv
 		return baseconv('b58').tobytes(b58_str, pad=pad)
 
-	def hextob58(self, hexstr: 'sstr', pad: 'pad output to this width' = 0):
+	def hextob58(self, hexstr: 'sstr', *, pad: 'pad output to this width' = 0):
 		"convert a hexadecimal string to base 58"
 		from ..baseconv import baseconv
 		return baseconv('b58').fromhex(hexstr, pad=pad, tostr=True)
 
-	def b58tohex(self, b58_str: 'sstr', pad: 'pad output to this width' = 0):
+	def b58tohex(self, b58_str: 'sstr', *, pad: 'pad output to this width' = 0):
 		"convert a base 58 string to hexadecimal"
 		from ..baseconv import baseconv
 		return baseconv('b58').tohex(b58_str, pad=pad)
@@ -214,12 +215,12 @@ class tool_cmd(tool_cmd_base):
 		from ..proto.btc.common import b58chk_decode
 		return b58chk_decode(b58chk_str).hex()
 
-	def hextob32(self, hexstr: 'sstr', pad: 'pad output to this width' = 0):
+	def hextob32(self, hexstr: 'sstr', *, pad: 'pad output to this width' = 0):
 		"convert a hexadecimal string to an MMGen-flavor base 32 string"
 		from ..baseconv import baseconv
 		return baseconv('b32').fromhex(hexstr, pad=pad, tostr=True)
 
-	def b32tohex(self, b32_str: 'sstr', pad: 'pad output to this width' = 0):
+	def b32tohex(self, b32_str: 'sstr', *, pad: 'pad output to this width' = 0):
 		"convert an MMGen-flavor base 32 string to hexadecimal"
 		from ..baseconv import baseconv
 		return baseconv('b32').tohex(b32_str.upper(), pad=pad)
@@ -235,7 +236,7 @@ class tool_cmd(tool_cmd_base):
 		ret = baseconv('b6d').fromhex(hexstr, pad=pad, tostr=True)
 		return block_format(ret, gw=5, cols=None).strip() if add_spaces else ret
 
-	def b6dtohex(self, b6d_str: 'sstr', pad: 'pad output to this width' = 0):
+	def b6dtohex(self, b6d_str: 'sstr', *, pad: 'pad output to this width' = 0):
 		"convert a die roll base6 (base6d) string to hexadecimal"
 		from ..baseconv import baseconv
 		from ..util import remove_whitespace

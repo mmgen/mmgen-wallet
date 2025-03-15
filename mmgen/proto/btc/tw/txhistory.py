@@ -25,7 +25,7 @@ class BitcoinTwTransaction:
 
 	no_address_str = '[DATA]'
 
-	def __init__(self, parent, proto, rpc,
+	def __init__(self, *, parent, proto, rpc,
 			idx,          # unique numeric identifier of this transaction in listing
 			unspent_info, # addrs in wallet with balances: {'mmid': {'addr', 'comment', 'amt'}}
 			mm_map,       # all addrs in wallet: ['addr', ['twmmid', 'comment']]
@@ -127,13 +127,13 @@ class BitcoinTwTransaction:
 		self.time = self.tx.get('blocktime') or self.tx['time']
 		self.time_received = self.tx.get('timereceived')
 
-	def blockheight_disp(self, color):
+	def blockheight_disp(self, *, color):
 		return (
 			# old/altcoin daemons return no 'blockheight' field, so use confirmations instead
 			Int(self.rpc.blockcount + 1 - self.confirmations).hl(color=color)
 			if self.confirmations > 0 else None)
 
-	def age_disp(self, age_fmt, width, color):
+	def age_disp(self, age_fmt, *, width, color):
 		if age_fmt == 'confs':
 			ret_str = str(self.confirmations).ljust(width)
 			return gray(ret_str) if self.confirmations < 0 and color else ret_str

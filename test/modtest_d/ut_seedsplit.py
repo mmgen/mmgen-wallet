@@ -66,7 +66,7 @@ class unit_test:
 
 				for a, b, c, d, e, f, h, i, p in test_data[id_str if id_str is not None else 'default']:
 					seed_bin = bytes.fromhex('deadbeef' * a)
-					seed = Seed(cfg, seed_bin)
+					seed = Seed(cfg, seed_bin=seed_bin)
 					assert seed.sid == b, seed.sid
 
 					for share_count, j, k, l, m in (
@@ -103,7 +103,7 @@ class unit_test:
 
 						if master_idx:
 							slist = [shares.get_share_by_idx(i+1, base_seed=True) for i in range(len(shares))]
-							A = Seed.join_shares(cfg, slist, master_idx, id_str).sid
+							A = Seed.join_shares(cfg, slist, master_idx=master_idx, id_str=id_str).sid
 							assert A == b, A
 
 				msg('OK')
@@ -112,7 +112,7 @@ class unit_test:
 			msg_r('Testing defaults and limits...')
 
 			seed_bin = bytes.fromhex('deadbeef' * 8)
-			seed = Seed(cfg, seed_bin)
+			seed = Seed(cfg, seed_bin=seed_bin)
 
 			shares = seed.split(SeedShareIdx.max_val)
 			s = shares.format()
@@ -136,7 +136,7 @@ class unit_test:
 			vmsg('')
 
 			seed_bin = bytes.fromhex(seed_hex)
-			seed = Seed(cfg, seed_bin)
+			seed = Seed(cfg, seed_bin=seed_bin)
 
 			SeedShareIdx.max_val = ss_count
 			shares = seed.split(ss_count, master_idx=master_idx)
@@ -159,7 +159,7 @@ class unit_test:
 			msg_r('Testing last share collisions with shortened Seed IDs')
 			vmsg('')
 			seed_bin = bytes.fromhex('2eadbeef'*8)
-			seed = Seed(cfg, seed_bin)
+			seed = Seed(cfg, seed_bin=seed_bin)
 			ssm_save = SeedShareIdx.max_val
 			ssm = SeedShareIdx.max_val = 2048
 			shares = SeedShareList(seed, count=ssm, id_str='foo', master_idx=1, debug_last_share=True)

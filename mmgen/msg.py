@@ -38,7 +38,7 @@ class MMGenIDRange(HiliteStr, InitErrors, MMGenObject):
 			t = proto.addr_type((ss[1], proto.dfl_mmtype)[len(ss)==2])
 			me = str.__new__(cls, '{}:{}:{}'.format(ss[0], t, ss[-1]))
 			me.sid = SeedID(sid=ss[0])
-			me.idxlist = AddrIdxList(ss[-1])
+			me.idxlist = AddrIdxList(fmt_str=ss[-1])
 			me.mmtype = t
 			assert t in proto.mmtypes, f'{t}: invalid address type for {proto.cls_name}'
 			me.al_id = str.__new__(AddrListID, me.sid+':'+me.mmtype) # checks already done
@@ -208,7 +208,7 @@ class coin_msg:
 
 	class unsigned(completed):
 
-		async def sign(self, wallet_files, passwd_file=None):
+		async def sign(self, wallet_files, *, passwd_file=None):
 
 			from .addrlist import KeyAddrList
 
@@ -300,7 +300,7 @@ class coin_msg:
 
 			return sigs
 
-		async def verify(self, addr=None):
+		async def verify(self, *, addr=None):
 
 			sigs = self.get_sigs(addr)
 
@@ -319,7 +319,7 @@ class coin_msg:
 
 			return len(sigs)
 
-		def get_json_for_export(self, addr=None):
+		def get_json_for_export(self, *, addr=None):
 			sigs = list(self.get_sigs(addr).values())
 			pfx = self.msg_cls.sigdata_pfx
 			if pfx:

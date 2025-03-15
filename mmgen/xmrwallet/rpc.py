@@ -35,7 +35,7 @@ class MoneroWalletRPC:
 			MoneroMMGenTX.NewUnsigned if self.cfg.watch_only else
 			MoneroMMGenTX.NewSigned)
 
-	def open_wallet(self, desc=None, refresh=True):
+	def open_wallet(self, desc=None, *, refresh=True):
 		add_desc = desc + ' ' if desc else self.parent.add_wallet_desc
 		gmsg_r(f'\n  Opening {add_desc}wallet...')
 		self.c.call( # returns {}

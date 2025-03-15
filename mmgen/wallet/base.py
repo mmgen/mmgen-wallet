@@ -40,7 +40,7 @@ class wallet(MMGenObject, metaclass=WalletMeta):
 	class WalletData(MMGenObject):
 		pass
 
-	def __init__(self,
+	def __init__(self, *,
 		in_data       = None,
 		passwd_file   = None):
 
@@ -88,7 +88,7 @@ class wallet(MMGenObject, metaclass=WalletMeta):
 
 	def _get_data_from_user(self, desc):
 		from ..ui import get_data_from_user
-		return get_data_from_user(self.cfg, desc)
+		return get_data_from_user(self.cfg, desc=desc)
 
 	def _deformat_once(self):
 		self._get_data()
@@ -110,7 +110,7 @@ class wallet(MMGenObject, metaclass=WalletMeta):
 		self._format()
 		return self.fmt_data
 
-	def write_to_file(self, outdir='', desc=''):
+	def write_to_file(self, *, outdir='', desc=''):
 		self._format()
 		kwargs = {
 			'desc':     desc or self.desc,
@@ -130,7 +130,7 @@ class wallet(MMGenObject, metaclass=WalletMeta):
 			self.fmt_data,
 			**kwargs)
 
-	def check_usr_seed_len(self, bitlen=None):
+	def check_usr_seed_len(self, *, bitlen=None):
 		chk = bitlen or self.seed.bitlen
 		if self.cfg.seed_len and self.cfg.seed_len != chk:
 			die(1, f'ERROR: requested seed length ({self.cfg.seed_len}) doesn’t match seed length of source ({chk})')

@@ -48,7 +48,7 @@ class TxInfo(TxInfo):
 			out += f', Base {tsize-wsize}, Witness {wsize}'
 		return out + '\n'
 
-	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, terse, sort):
+	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, *, terse, sort):
 
 		if sort not in self.sort_orders:
 			die(1, '{!r}: invalid transaction view sort order. Valid options: {}'.format(

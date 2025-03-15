@@ -109,7 +109,7 @@ class PasswordList(AddrList):
 		self.chksum = AddrListChksum(self)
 
 		fs = f'{self.al_id.sid}-{self.pw_id_str}-{self.pw_fmt_disp}-{self.pw_len}[{{}}]'
-		self.id_str = AddrListIDStr(self, fs)
+		self.id_str = AddrListIDStr(self, fmt_str=fs)
 
 		if not skip_chksum_msg:
 			self.do_chksum_msg(record=not infile)

@@ -54,24 +54,24 @@ class bip39(baseconv):
 		self.wl_id = 'bip39'
 
 	@classmethod
-	def nwords2seedlen(cls, nwords, *, in_bytes=False, in_hex=False):
+	def nwords2seedlen(cls, nwords, /, *, in_bytes=False, in_hex=False):
 		for k, v in cls.constants.items():
 			if v.mn_len == nwords:
 				return k//8 if in_bytes else k//4 if in_hex else k
 		die('MnemonicError', f'{nwords!r}: invalid word length for BIP39 mnemonic')
 
 	@classmethod
-	def seedlen2nwords(cls, seed_len, *, in_bytes=False, in_hex=False):
+	def seedlen2nwords(cls, seed_len, /, *, in_bytes=False, in_hex=False):
 		seed_bits = seed_len * 8 if in_bytes else seed_len * 4 if in_hex else seed_len
 		try:
 			return cls.constants[seed_bits].mn_len
 		except Exception as e:
 			raise ValueError(f'{seed_bits!r}: invalid seed length for BIP39 mnemonic') from e
 
-	def tohex(self, words_arg, pad=None):
+	def tohex(self, words_arg, /, *, pad=None):
 		return self.tobytes(words_arg, pad=pad).hex()
 
-	def tobytes(self, words_arg, pad=None):
+	def tobytes(self, words_arg, /, *, pad=None):
 		assert isinstance(words_arg, (list, tuple)), 'words_arg must be list or tuple'
 		assert pad in (None, 'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
@@ -105,11 +105,11 @@ class bip39(baseconv):
 
 		return seed_bytes
 
-	def fromhex(self, hexstr, *, pad=None, tostr=False):
+	def fromhex(self, hexstr, /, *, pad=None, tostr=False):
 		assert is_hex_str(hexstr), 'seed data not a hexadecimal string'
 		return self.frombytes(bytes.fromhex(hexstr), pad=pad, tostr=tostr)
 
-	def frombytes(self, seed_bytes, *, pad=None, tostr=False):
+	def frombytes(self, seed_bytes, /, *, pad=None, tostr=False):
 		assert tostr is False, "'tostr' must be False for 'bip39'"
 		assert pad in (None, 'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
@@ -128,7 +128,7 @@ class bip39(baseconv):
 
 		return tuple(wl[int(res[i*11:(i+1)*11], 2)] for i in range(c.mn_len))
 
-	def generate_seed(self, words_arg, passwd=''):
+	def generate_seed(self, words_arg, /, *, passwd=''):
 
 		self.tohex(words_arg) # validate
 

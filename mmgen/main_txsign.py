@@ -151,7 +151,7 @@ async def main():
 		kal = get_keyaddrlist(cfg, tx1.proto)
 		kl = get_keylist(cfg)
 
-		tx2 = await txsign(cfg, tx1, seed_files, kl, kal, tx_num_disp)
+		tx2 = await txsign(cfg, tx1, seed_files, kl, kal, tx_num_str=tx_num_disp)
 		if tx2:
 			if not cfg.yes:
 				tx2.add_comment() # edits an existing comment

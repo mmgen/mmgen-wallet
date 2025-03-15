@@ -113,7 +113,7 @@ class baseconv:
 			die(3, 'ERROR: List is not sorted!')
 
 	@staticmethod
-	def get_pad(pad, seed_pad_func):
+	def get_pad(pad, /, seed_pad_func):
 		"""
 		'pad' argument to baseconv conversion methods must be either None, 'seed' or an integer.
 		If None, output of minimum (but never zero) length will be produced.
@@ -129,11 +129,11 @@ class baseconv:
 		else:
 			die('BaseConversionPadError', f"{pad!r}: illegal value for 'pad' (must be None, 'seed' or int)")
 
-	def tohex(self, words_arg, *, pad=None):
+	def tohex(self, words_arg, /, *, pad=None):
 		"convert string or list data of instance base to a hexadecimal string"
 		return self.tobytes(words_arg, pad=pad//2 if type(pad) is int else pad).hex()
 
-	def tobytes(self, words_arg, *, pad=None):
+	def tobytes(self, words_arg, /, *, pad=None):
 		"convert string or list data of instance base to byte string"
 
 		words = words_arg if isinstance(words_arg, (list, tuple)) else tuple(words_arg.strip())
@@ -163,7 +163,7 @@ class baseconv:
 		bl = ret.bit_length()
 		return ret.to_bytes(max(pad_val, bl//8+bool(bl%8)), 'big')
 
-	def fromhex(self, hexstr, *, pad=None, tostr=False):
+	def fromhex(self, hexstr, /, *, pad=None, tostr=False):
 		"convert a hexadecimal string to a list or string data of instance base"
 
 		from .util import is_hex_str
@@ -174,7 +174,7 @@ class baseconv:
 
 		return self.frombytes(bytes.fromhex(hexstr), pad=pad, tostr=tostr)
 
-	def frombytes(self, bytestr, *, pad=None, tostr=False):
+	def frombytes(self, bytestr, /, *, pad=None, tostr=False):
 		"convert byte string to list or string data of instance base"
 
 		if not bytestr:

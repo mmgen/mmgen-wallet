@@ -77,7 +77,7 @@ def generate_kals_for_mmgen_addrs(need_keys, infiles, saved_seeds, proto):
 						skip_chksum = True)
 	return MMGenList(gen_kals())
 
-def add_keys(src, io_list, infiles=None, saved_seeds=None, keyaddr_list=None):
+def add_keys(src, io_list, infiles=None, saved_seeds=None, *, keyaddr_list=None):
 
 	need_keys = [e for e in io_list if e.mmid and not e.have_wif]
 
@@ -151,7 +151,7 @@ def get_keylist(cfg):
 		return get_lines_from_file(cfg, cfg.keys_from_file, desc='key-address data', trim_comments=True)
 	return None
 
-async def txsign(cfg_parm, tx, seed_files, kl, kal, tx_num_str='', passwd_file=None):
+async def txsign(cfg_parm, tx, seed_files, kl, kal, *, tx_num_str='', passwd_file=None):
 
 	keys = MMGenList() # list of AddrListEntry objects
 	non_mmaddrs = tx.get_non_mmaddrs('inputs')

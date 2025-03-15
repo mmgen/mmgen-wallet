@@ -143,7 +143,7 @@ elif op in ('export-outputs', 'export-outputs-sign', 'import-key-images'):
 else:
 	die(1, f'{op!r}: unrecognized operation')
 
-m = xmrwallet.op(op, cfg, infile, wallets, spec)
+m = xmrwallet.op(op, cfg, infile, wallets, spec=spec)
 
 if asyncio.run(m.main()):
 	m.post_main_success()
