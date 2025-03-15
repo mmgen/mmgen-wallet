@@ -36,7 +36,7 @@ class tool_cmd(tool_cmd_base):
 		kwargs = {'skip_chksum_msg':True}
 		if not obj.__name__ == 'PasswordList':
 			kwargs.update({'key_address_validity_check':False})
-		ret = obj(self.cfg, self.proto, mmgen_addrfile, **kwargs)
+		ret = obj(self.cfg, self.proto, infile=mmgen_addrfile, **kwargs)
 		if self.cfg.verbose:
 			from ..util import msg, capfirst
 			if ret.al_id.mmtype.name == 'password':

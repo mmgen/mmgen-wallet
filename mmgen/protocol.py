@@ -59,7 +59,7 @@ class CoinProtocol(MMGenObject):
 		decimal_prec = 28
 		_set_ok = ('tokensym',)
 
-		def __init__(self, cfg, coin, name, network, tokensym=None, need_amt=False):
+		def __init__(self, cfg, coin, *, name, network, tokensym=None, need_amt=False):
 			self.cfg        = cfg
 			self.coin       = coin.upper()
 			self.coin_id    = self.coin
@@ -180,7 +180,7 @@ class CoinProtocol(MMGenObject):
 		def viewkey(self, viewkey_str):
 			raise NotImplementedError(f'{self.name} protocol does not support view keys')
 
-		def base_proto_subclass(self, cls, modname, sub_clsname=None, is_token=False):
+		def base_proto_subclass(self, cls, modname, *, sub_clsname=None, is_token=False):
 			"""
 			magic module loading and class selection
 			"""
@@ -281,6 +281,7 @@ class CoinProtocol(MMGenObject):
 def init_proto(
 		cfg,
 		coin       = None,
+		*,
 		testnet    = False,
 		regtest    = False,
 		network    = None,

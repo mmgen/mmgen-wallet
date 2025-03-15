@@ -98,14 +98,15 @@ class tool_cmd(tool_cmd_base):
 		if fmt == 'xmrseed':
 			hexstr = self._xmr_reduce(bytes.fromhex(hexstr)).hex()
 		f = mnemonic_fmts[fmt]
-		return ' '.join(f.conv_cls(fmt).fromhex(hexstr, f.pad))
+		return ' '.join(f.conv_cls(fmt).fromhex(hexstr, pad=f.pad))
 
 	def mn2hex(self, seed_mnemonic: 'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt):
 		"convert a mnemonic seed phrase to a hexadecimal string"
 		f = mnemonic_fmts[fmt]
-		return f.conv_cls(fmt).tohex(seed_mnemonic.split(), f.pad)
+		return f.conv_cls(fmt).tohex(seed_mnemonic.split(), pad=f.pad)
 
 	def mn2hex_interactive(self,
+			*,
 			fmt: mn_opts_disp = dfl_mnemonic_fmt,
 			mn_len: 'length of seed phrase in words' = 24,
 			print_mn: 'print the seed phrase after entry' = False):
@@ -122,6 +123,7 @@ class tool_cmd(tool_cmd_base):
 		return mnemonic_fmts[fmt].conv_cls(fmt).check_wordlist(self.cfg)
 
 	def mn_printlist(self,
+			*,
 			fmt: mn_opts_disp = dfl_mnemonic_fmt,
 			enum: 'enumerate the list' = False,
 			pager: 'send output to pager' = False):

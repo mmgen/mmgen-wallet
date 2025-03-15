@@ -54,14 +54,14 @@ class bip39(baseconv):
 		self.wl_id = 'bip39'
 
 	@classmethod
-	def nwords2seedlen(cls, nwords, in_bytes=False, in_hex=False):
+	def nwords2seedlen(cls, nwords, *, in_bytes=False, in_hex=False):
 		for k, v in cls.constants.items():
 			if v.mn_len == nwords:
 				return k//8 if in_bytes else k//4 if in_hex else k
 		die('MnemonicError', f'{nwords!r}: invalid word length for BIP39 mnemonic')
 
 	@classmethod
-	def seedlen2nwords(cls, seed_len, in_bytes=False, in_hex=False):
+	def seedlen2nwords(cls, seed_len, *, in_bytes=False, in_hex=False):
 		seed_bits = seed_len * 8 if in_bytes else seed_len * 4 if in_hex else seed_len
 		try:
 			return cls.constants[seed_bits].mn_len
@@ -105,11 +105,11 @@ class bip39(baseconv):
 
 		return seed_bytes
 
-	def fromhex(self, hexstr, pad=None, tostr=False):
+	def fromhex(self, hexstr, *, pad=None, tostr=False):
 		assert is_hex_str(hexstr), 'seed data not a hexadecimal string'
 		return self.frombytes(bytes.fromhex(hexstr), pad=pad, tostr=tostr)
 
-	def frombytes(self, seed_bytes, pad=None, tostr=False):
+	def frombytes(self, seed_bytes, *, pad=None, tostr=False):
 		assert tostr is False, "'tostr' must be False for 'bip39'"
 		assert pad in (None, 'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 

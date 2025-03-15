@@ -33,12 +33,12 @@ def SwapMgr(*args, **kwargs):
 
 class SwapMgrBase:
 
-	def __init__(self, cfg, ignore_zram=False):
+	def __init__(self, cfg, *, ignore_zram=False):
 		self.cfg = cfg
 		self.ignore_zram = ignore_zram
 		self.desc = 'disk swap' if ignore_zram else 'swap'
 
-	def enable(self, quiet=False):
+	def enable(self, *, quiet=False):
 		ret = self.do_enable()
 		if not quiet:
 			self.cfg._util.qmsg(
@@ -47,7 +47,7 @@ class SwapMgrBase:
 				f'Could not enable {self.desc}')
 		return ret
 
-	def disable(self, quiet=False):
+	def disable(self, *, quiet=False):
 		self.cfg._util.qmsg_r(f'Attempting to disable {self.desc}...')
 		ret = self.do_disable()
 		self.cfg._util.qmsg('success')
@@ -189,7 +189,7 @@ class Signable:
 				b = '  {}\n'.format('\n  '.join(self.gen_bad_list(sorted(bad_files, key=lambda f: f.name))))
 			))
 
-		def die_wrong_num_txs(self, tx_type, msg=None, desc=None, show_dir=False):
+		def die_wrong_num_txs(self, tx_type, *, msg=None, desc=None, show_dir=False):
 			num_txs = len(getattr(self, tx_type))
 			die('AutosignTXError', "{m}{a} {b} transaction{c} {d} {e}!".format(
 				m = msg + '\n' if msg else '',
@@ -581,7 +581,7 @@ class Autosign:
 
 		return self._wallet_files
 
-	def do_mount(self, silent=False, verbose=False):
+	def do_mount(self, *, silent=False, verbose=False):
 
 		def check_or_create(dirname):
 			path = getattr(self, dirname)
@@ -615,7 +615,7 @@ class Autosign:
 		for dirname in self.dirs:
 			check_or_create(dirname)
 
-	def do_umount(self, silent=False, verbose=False):
+	def do_umount(self, *, silent=False, verbose=False):
 		if self.mountpoint.is_mount():
 			run(['sync'], check=True)
 			if not silent:
@@ -630,7 +630,7 @@ class Autosign:
 		fails = 0
 		for wf in self.wallet_files:
 			try:
-				Wallet(self.cfg, wf, ignore_in_fmt=True, passwd_file=str(self.keyfile))
+				Wallet(self.cfg, fn=wf, ignore_in_fmt=True, passwd_file=str(self.keyfile))
 			except SystemExit as e:
 				if e.code != 0:
 					fails += 1
@@ -710,7 +710,7 @@ class Autosign:
 			die(2, 'Unable to write ' + desc)
 		msg('Wrote ' + desc)
 
-	def gen_key(self, no_unmount=False):
+	def gen_key(self, *, no_unmount=False):
 		if not self.device_inserted:
 			die(1, 'Removable device not present!')
 		self.do_mount()
@@ -776,7 +776,7 @@ class Autosign:
 				cfg         = self.cfg,
 				prompt      = f"Default wallet '{wf}' found.\nUse default wallet for autosigning?",
 				default_yes = True):
-			ss_in = Wallet(Config(), wf)
+			ss_in = Wallet(Config(), fn=wf)
 		else:
 			ss_in = Wallet(self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt])
 		ss_out = Wallet(self.cfg, ss=ss_in, passwd_file=str(self.keyfile))

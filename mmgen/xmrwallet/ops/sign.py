@@ -21,7 +21,7 @@ class OpSign(OpWallet):
 	action = 'signing transaction with'
 	start_daemon = False
 
-	async def main(self, fn, restart_daemon=True):
+	async def main(self, fn, *, restart_daemon=True):
 		if restart_daemon:
 			await self.restart_wallet_daemon()
 		tx = MoneroMMGenTX.Unsigned(self.cfg, fn)

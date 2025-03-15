@@ -37,16 +37,16 @@ class tool_cmd(tool_cmd_base):
 	"""
 	def encrypt(self, infile: str, outfile='', hash_preset=''):
 		"encrypt a file"
-		data = get_data_from_file(self.cfg, infile, 'data for encryption', binary=True)
+		data = get_data_from_file(self.cfg, infile, desc='data for encryption', binary=True)
 		enc_d = Crypto(self.cfg).mmgen_encrypt(data, 'data', hash_preset)
 		if not outfile:
 			outfile = f'{os.path.basename(infile)}.{Crypto.mmenc_ext}'
-		write_data_to_file(self.cfg, outfile, enc_d, 'encrypted data', binary=True)
+		write_data_to_file(self.cfg, outfile, enc_d, desc='encrypted data', binary=True)
 		return True
 
 	def decrypt(self, infile: str, outfile='', hash_preset=''):
 		"decrypt a file"
-		enc_d = get_data_from_file(self.cfg, infile, 'encrypted data', binary=True)
+		enc_d = get_data_from_file(self.cfg, infile, desc='encrypted data', binary=True)
 		while True:
 			dec_d = Crypto(self.cfg).mmgen_decrypt(enc_d, 'data', hash_preset)
 			if dec_d:
@@ -59,5 +59,5 @@ class tool_cmd(tool_cmd_base):
 			outfile = remove_extension(o, Crypto.mmenc_ext)
 			if outfile == o:
 				outfile += '.dec'
-		write_data_to_file(self.cfg, outfile, dec_d, 'decrypted data', binary=True)
+		write_data_to_file(self.cfg, outfile, dec_d, desc='decrypted data', binary=True)
 		return True

@@ -146,7 +146,7 @@ pw_idxs = AddrIdxList(fmt_str=cfg._args.pop())
 pw_id_str = cfg._args.pop()
 
 from .fileutil import get_seed_file
-sf = get_seed_file(cfg, 1)
+sf = get_seed_file(cfg, nargs=1)
 
 pw_fmt = cfg.passwd_fmt or PasswordList.dfl_pw_fmt
 pw_len = pwi[pw_fmt].dfl_len // 2 if cfg.passwd_len in ('h', 'H') else cfg.passwd_len
@@ -165,7 +165,7 @@ PasswordList(
 from .ui import do_license_msg
 do_license_msg(cfg)
 
-ss = Wallet(cfg, sf)
+ss = Wallet(cfg, fn=sf)
 
 al = PasswordList(
 	cfg       = cfg,

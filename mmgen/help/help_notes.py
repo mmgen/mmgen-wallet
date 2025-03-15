@@ -30,7 +30,7 @@ class help_notes:
 	def account_info_desc(self):
 		return 'unspent outputs' if self.proto.base_proto == 'Bitcoin' else 'account info'
 
-	def fee_spec_letters(self, use_quotes=False):
+	def fee_spec_letters(self, *, use_quotes=False):
 		cu = self.proto.coin_amt.units
 		sep, conj = ((',', ' or '), ("','", "' or '"))[use_quotes]
 		return sep.join(u[0] for u in cu[:-1]) + ('', conj)[len(cu)>1] + cu[-1][0]

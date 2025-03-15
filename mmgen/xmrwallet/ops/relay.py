@@ -41,7 +41,7 @@ class OpRelay(OpBase):
 			md = None
 		else:
 			from ...daemon import CoinDaemon
-			md = CoinDaemon(self.cfg, 'xmr', test_suite=self.cfg.test_suite)
+			md = CoinDaemon(self.cfg, network_id='xmr', test_suite=self.cfg.test_suite)
 			host, port = ('localhost', md.rpc_port)
 			proxy = None
 

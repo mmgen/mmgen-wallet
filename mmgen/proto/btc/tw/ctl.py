@@ -27,7 +27,7 @@ class BitcoinTwCtl(TwCtl):
 		raise NotImplementedError('not implemented')
 
 	@write_mode
-	async def import_address(self, addr, label, rescan=False):
+	async def import_address(self, addr, *, label, rescan=False):
 		if (await self.rpc.walletinfo).get('descriptors'):
 			return await self.batch_import_address([(addr, label, rescan)])
 		else:

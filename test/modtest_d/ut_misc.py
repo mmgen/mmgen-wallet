@@ -50,7 +50,7 @@ class unit_tests:
 		vmsg(brown('  vectors:'))
 		vmsg(fs.format('REL_NOW', 'SHOW_SECS', 'ELAPSED', 'OUTPUT'))
 		for (t, now, rel_now, show_secs, out_chk) in vectors:
-			out = format_elapsed_hr(t, now, rel_now=rel_now, show_secs=show_secs)
+			out = format_elapsed_hr(t, now=now, rel_now=rel_now, show_secs=show_secs)
 			assert out == out_chk, f'{out} != {out_chk}'
 			vmsg(fs.format(repr(rel_now), repr(show_secs), now-t, out))
 

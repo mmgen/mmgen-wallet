@@ -68,7 +68,7 @@ def make_brainwallet_file(fn):
 	d = ''.join(rand_pairs).rstrip() + '\n'
 	if cfg.verbose:
 		msg_r(f'Brainwallet password:\n{cyan(d)}')
-	write_data_to_file(cfg, fn, d, 'brainwallet password', quiet=True, ignore_opt_outdir=True)
+	write_data_to_file(cfg, fn, d, desc='brainwallet password', quiet=True, ignore_opt_outdir=True)
 
 def verify_checksum_or_exit(checksum, chk):
 	chk = strip_ansi_escapes(chk)
@@ -397,7 +397,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		addrfile = self.get_file_with_ext('addrs')
 		from mmgen.addrlist import AddrList
 		silence()
-		chk = AddrList(cfg, self.proto, addrfile).chksum
+		chk = AddrList(cfg, self.proto, infile=addrfile).chksum
 		end_silence()
 		if cfg.verbose and display:
 			msg(f'Checksum: {cyan(chk)}')
@@ -537,7 +537,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 				cfg,
 				self.unspent_data_file,
 				d,
-				'Unspent outputs',
+				desc              = 'Unspent outputs',
 				quiet             = True,
 				ignore_opt_outdir = True)
 		if cfg.verbose or cfg.exact_output:
@@ -633,7 +633,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		tx_data, ad = {}, AddrData(self.proto)
 		for s in sources:
 			addrfile = get_file_with_ext(self.cfgs[s]['tmpdir'], 'addrs')
-			al = AddrList(cfg, self.proto, addrfile)
+			al = AddrList(cfg, self.proto, infile=addrfile)
 			ad.add(al)
 			aix = AddrIdxList(fmt_str=self.cfgs[s]['addr_idx_list'])
 			if len(aix) != addrs_per_wallet:
@@ -849,7 +849,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		wcls = get_wallet_cls(fmt_code=out_fmt)
 		msg('==> {}: {}'.format(
 			wcls.desc,
-			cyan(get_data_from_file(cfg, f, wcls.desc))
+			cyan(get_data_from_file(cfg, f, desc=wcls.desc))
 		))
 		end_silence()
 		return t

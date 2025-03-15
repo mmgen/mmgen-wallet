@@ -50,7 +50,7 @@ class tool_cmd(tool_cmd_base):
 			r = await rpc_init(self.cfg, self.proto, ignore_daemon_version=True, ignore_wallet=True)
 		return f'{d.coind_name} version {r.daemon_version} ({r.daemon_version_str})'
 
-	async def getbalance(self,
+	async def getbalance(self, *,
 			minconf: 'minimum number of confirmations' = 1,
 			quiet:   'produce quieter output' = False,
 			pager:   'send output to pager' = False):
@@ -81,7 +81,7 @@ class tool_cmd(tool_cmd_base):
 
 		return ret
 
-	async def twview(self,
+	async def twview(self, *,
 			pager:       'send output to pager' = False,
 			reverse:     'reverse order of unspent outputs' = False,
 			wide:        'display data in wide tabular format' = False,
@@ -98,7 +98,7 @@ class tool_cmd(tool_cmd_base):
 			obj, pager, reverse, wide, sort, age_fmt, interactive,
 			show_mmid = show_mmid)
 
-	async def txhist(self,
+	async def txhist(self, *,
 			pager:       'send output to pager' = False,
 			reverse:     'reverse order of transactions' = False,
 			detail:      'produce detailed, non-tabular output' = False,
@@ -114,6 +114,7 @@ class tool_cmd(tool_cmd_base):
 
 	async def listaddress(self,
 			mmgen_addr: str,
+			*,
 			wide:         'display data in wide tabular format' = False,
 			minconf:      'minimum number of confirmations' = 1,
 			showcoinaddr: 'display coin address in addition to MMGen ID' = True,
@@ -127,7 +128,7 @@ class tool_cmd(tool_cmd_base):
 			showcoinaddrs = showcoinaddr,
 			age_fmt       = age_fmt)
 
-	async def listaddresses(self,
+	async def listaddresses(self, *,
 			pager:        'send output to pager' = False,
 			reverse:      'reverse order of unspent outputs' = False,
 			wide:         'display data in wide tabular format' = False,
@@ -204,7 +205,7 @@ class tool_cmd(tool_cmd_base):
 		await (await TwCtl(self.cfg, self.proto, mode='w')).rescan_blockchain(start_block, stop_block)
 		return True
 
-	async def twexport(self,
+	async def twexport(self, *,
 			include_amts = True,
 			pretty       = False,
 			prune        = False,
@@ -242,7 +243,7 @@ class tool_cmd(tool_cmd_base):
 			force_overwrite = force)
 		return True
 
-	async def twimport(self, filename: str, ignore_checksum=False, batch=False):
+	async def twimport(self, filename: str, *, ignore_checksum=False, batch=False):
 		"""
 		restore a tracking wallet from a JSON dump created by ‘twexport’
 

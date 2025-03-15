@@ -73,7 +73,7 @@ class unit_test:
 							(2, c, c, d, i),
 							(5, e, f, h, p)):
 
-						shares = seed.split(share_count, id_str, master_idx)
+						shares = seed.split(share_count, id_str=id_str, master_idx=master_idx)
 						A = len(shares)
 						assert A == share_count, A
 

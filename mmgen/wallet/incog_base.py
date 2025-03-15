@@ -142,9 +142,9 @@ class wallet(wallet):
 			return False
 
 	def _verify_seed_oldfmt(self, seed):
-		m = f'Seed ID: {make_chksum_8(seed)}.  Is the Seed ID correct?'
+		prompt = f'Seed ID: {make_chksum_8(seed)}.  Is the Seed ID correct?'
 		from ..ui import keypress_confirm
-		if keypress_confirm(self.cfg, m, True):
+		if keypress_confirm(self.cfg, prompt, default_yes=True):
 			return seed
 		else:
 			return False

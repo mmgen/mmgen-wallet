@@ -80,10 +80,10 @@ class MMGenTxFile(MMGenObject):
 		self.fmt_data = None
 		self.filename = None
 
-	def parse(self, infile, metadata_only=False, quiet_open=False):
+	def parse(self, infile, *, metadata_only=False, quiet_open=False):
 		tx = self.tx
 		from ..fileutil import get_data_from_file
-		data = get_data_from_file(tx.cfg, infile, f'{tx.desc} data', quiet=quiet_open)
+		data = get_data_from_file(tx.cfg, infile, desc=f'{tx.desc} data', quiet=quiet_open)
 		if len(data) > tx.cfg.max_tx_file_size:
 			die('MaxFileSizeExceeded',
 				f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)')
@@ -286,7 +286,7 @@ class MMGenTxFile(MMGenObject):
 
 		return fmt_data
 
-	def write(self,
+	def write(self, *,
 		add_desc              = '',
 		outdir                = None,
 		ask_write             = True,
@@ -316,7 +316,7 @@ class MMGenTxFile(MMGenObject):
 			ignore_opt_outdir     = outdir)
 
 	@classmethod
-	def get_proto(cls, cfg, filename, quiet_open=False):
+	def get_proto(cls, cfg, filename, *, quiet_open=False):
 		from . import BaseTX
 		tmp_tx = BaseTX(cfg=cfg)
 		cls(tmp_tx).parse(filename, metadata_only=True, quiet_open=quiet_open)

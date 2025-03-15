@@ -62,7 +62,7 @@ class MoneroWalletRPC:
 		await self.c.stop_daemon(quiet=True) # closes wallet
 		gmsg_r('done')
 
-	def gen_accts_info(self, accts_data, addrs_data, indent='    ', skip_empty_ok=False):
+	def gen_accts_info(self, accts_data, addrs_data, *, indent='    ', skip_empty_ok=False):
 		from .ops import addr_width
 		fs = indent + '  {I:<3} {A} {N} {B} {L}'
 		yield indent + f'Accounts of wallet {self.fn.name}:'
@@ -84,7 +84,7 @@ class MoneroWalletRPC:
 				B = fmt_amt(e['unlocked_balance']),
 				L = pink(e['label']))
 
-	def get_wallet_data(self, print=True, skip_empty_ok=False):
+	def get_wallet_data(self, *, print=True, skip_empty_ok=False):
 		accts_data = self.c.call('get_accounts')
 		addrs_data = [
 			self.c.call('get_address', account_index=i)
@@ -123,7 +123,7 @@ class MoneroWalletRPC:
 		msg(cyan(ret['address']))
 		return ret['address']
 
-	def get_last_addr(self, account, wallet_data, display=True):
+	def get_last_addr(self, account, wallet_data, *, display=True):
 		if display:
 			msg('\n    Getting last address:')
 		acct_addrs = wallet_data.addrs_data[account]['addresses']

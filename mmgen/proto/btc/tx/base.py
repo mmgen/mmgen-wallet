@@ -75,7 +75,7 @@ def DeserializeTX(proto, txhex):
 	def bytes2coin_amt(bytes_le):
 		return proto.coin_amt(bytes2int(bytes_le), from_unit='satoshi')
 
-	def bshift(n, skip=False, sub_null=False):
+	def bshift(n, *, skip=False, sub_null=False):
 		nonlocal idx, raw_tx
 		ret = tx[idx:idx+n]
 		idx += n
@@ -87,7 +87,7 @@ def DeserializeTX(proto, txhex):
 
 	# https://bitcoin.org/en/developer-reference#compactsize-unsigned-integers
 	# For example, the number 515 is encoded as 0xfd0302.
-	def readVInt(skip=False):
+	def readVInt(*, skip=False):
 		nonlocal idx, raw_tx
 		s = tx[idx]
 		idx += 1

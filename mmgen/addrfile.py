@@ -66,6 +66,7 @@ class AddrFile(MMGenObject):
 	def write(
 			self,
 			fn            = None,
+			*,
 			binary        = False,
 			desc          = None,
 			ask_overwrite = True,
@@ -92,7 +93,7 @@ class AddrFile(MMGenObject):
 		)
 		return self.parent.al_id.sid + (' ' if lbl_p2 else '') + lbl_p2
 
-	def format(self, add_comments=False):
+	def format(self, *, add_comments=False):
 		p = self.parent
 		if p.gen_passwds and p.pw_fmt in ('bip39', 'xmrseed'):
 			desc_pfx = f'{p.pw_fmt.upper()} '
@@ -200,7 +201,7 @@ class AddrFile(MMGenObject):
 
 		return ret
 
-	def parse_file(self, fn, buf=[], exit_on_error=True):
+	def parse_file(self, fn, *, buf=[], exit_on_error=True):
 
 		def parse_addrfile_label(lbl):
 			"""
@@ -249,7 +250,7 @@ class AddrFile(MMGenObject):
 		p = self.parent
 
 		from .fileutil import get_lines_from_file
-		lines = get_lines_from_file(p.cfg, fn, p.desc+' data', trim_comments=True)
+		lines = get_lines_from_file(p.cfg, fn, desc=f'{p.desc} data', trim_comments=True)
 
 		try:
 			assert len(lines) >= 3, f'Too few lines in address file ({len(lines)})'

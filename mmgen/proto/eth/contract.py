@@ -45,7 +45,7 @@ class TokenCommon(MMGenObject):
 			int(parse_abi(data)[-1], 16) * self.base_unit,
 			from_decimal = True)
 
-	async def do_call(self, method_sig, method_args='', toUnit=False):
+	async def do_call(self, method_sig, method_args='', *, toUnit=False):
 		data = self.create_method_id(method_sig) + method_args
 		if self.cfg.debug:
 			msg('ETH_CALL {}:  {}'.format(

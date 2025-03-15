@@ -91,7 +91,7 @@ class Daemon(Lockable):
 			print(cp)
 		return cp
 
-	def run_cmd(self, cmd, silent=False, is_daemon=False, check_retcode=False):
+	def run_cmd(self, cmd, *, silent=False, is_daemon=False, check_retcode=False):
 
 		if self.debug:
 			msg('\n\n')
@@ -181,7 +181,7 @@ class Daemon(Lockable):
 	def pre_start(self):
 		pass
 
-	def start(self, quiet=False, silent=False):
+	def start(self, *, quiet=False, silent=False):
 		if self.state == 'ready':
 			if not (quiet or silent):
 				msg(self.state_msg(extra_text='already'))
@@ -200,7 +200,7 @@ class Daemon(Lockable):
 
 		return ret
 
-	def stop(self, quiet=False, silent=False):
+	def stop(self, *, quiet=False, silent=False):
 		if self.state == 'ready':
 			if not silent:
 				msg(f'Stopping {self.desc} on port {self.bind_port}')
@@ -221,7 +221,7 @@ class Daemon(Lockable):
 				msg(f'{self.desc} on port {self.bind_port} not running')
 			return True
 
-	def restart(self, silent=False):
+	def restart(self, *, silent=False):
 		self.stop(silent=silent)
 		return self.start(silent=silent)
 
@@ -339,6 +339,7 @@ class CoinDaemon(Daemon):
 
 	def __new__(cls,
 			cfg,
+			*,
 			network_id = None,
 			proto      = None,
 			opts       = None,
@@ -384,6 +385,7 @@ class CoinDaemon(Daemon):
 
 	def __init__(self,
 			cfg,
+			*,
 			network_id = None,
 			proto      = None,
 			opts       = None,

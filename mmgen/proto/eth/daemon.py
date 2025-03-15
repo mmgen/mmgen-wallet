@@ -174,12 +174,12 @@ class erigon_daemon(geth_daemon):
 			test_suite   = self.test_suite,
 			datadir      = self.datadir)
 
-	def start(self, quiet=False, silent=False):
+	def start(self, *, quiet=False, silent=False):
 		super().start(quiet=quiet, silent=silent)
 		self.rpc_d.debug = self.debug
 		return self.rpc_d.start(quiet=quiet, silent=silent)
 
-	def stop(self, quiet=False, silent=False):
+	def stop(self, *, quiet=False, silent=False):
 		self.rpc_d.debug = self.debug
 		self.rpc_d.stop(quiet=quiet, silent=silent)
 		return super().stop(quiet=quiet, silent=silent)
@@ -196,7 +196,7 @@ class erigon_rpcdaemon(RPCDaemon):
 	use_pidfile = False
 	use_threads = True
 
-	def __init__(self, cfg, proto, rpc_port, private_port, test_suite, datadir):
+	def __init__(self, cfg, proto, *, rpc_port, private_port, test_suite, datadir):
 
 		self.proto = proto
 		self.test_suite = test_suite

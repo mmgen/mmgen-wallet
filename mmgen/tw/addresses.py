@@ -68,7 +68,7 @@ class TwAddresses(TwView):
 	def coinaddr_list(self):
 		return [d.addr for d in self.data]
 
-	async def __init__(self, cfg, proto, minconf=1, mmgen_addrs='', get_data=False):
+	async def __init__(self, cfg, proto, *, minconf=1, mmgen_addrs='', get_data=False):
 
 		await super().__init__(cfg, proto)
 

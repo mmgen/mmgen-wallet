@@ -14,7 +14,7 @@ proto.eth.misc: miscellaneous utilities for Ethereum base protocol
 
 from ...util2 import get_keccak
 
-def decrypt_geth_keystore(cfg, wallet_fn, passwd, check_addr=True):
+def decrypt_geth_keystore(cfg, wallet_fn, passwd, *, check_addr=True):
 	"""
 	Decrypt the encrypted private key in a Geth keystore wallet, returning the decrypted key
 	"""

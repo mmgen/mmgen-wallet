@@ -57,7 +57,7 @@ def check_binary(args):
 		die(2, f'{args[0]!r} binary missing, not in path, or not executable')
 	set_vt100()
 
-def shred_file(fn, verbose=False):
+def shred_file(fn, *, verbose=False):
 	check_binary(['shred', '--version'])
 	from subprocess import run
 	run(
@@ -67,7 +67,7 @@ def shred_file(fn, verbose=False):
 		check=True)
 	set_vt100()
 
-def _check_file_type_and_access(fname, ftype, blkdev_ok=False):
+def _check_file_type_and_access(fname, ftype, *, blkdev_ok=False):
 
 	import stat
 
@@ -103,16 +103,16 @@ def _check_file_type_and_access(fname, ftype, blkdev_ok=False):
 
 	return True
 
-def check_infile(f, blkdev_ok=False):
+def check_infile(f, *, blkdev_ok=False):
 	return _check_file_type_and_access(f, 'input file', blkdev_ok=blkdev_ok)
 
-def check_outfile(f, blkdev_ok=False):
+def check_outfile(f, *, blkdev_ok=False):
 	return _check_file_type_and_access(f, 'output file', blkdev_ok=blkdev_ok)
 
 def check_outdir(f):
 	return _check_file_type_and_access(f, 'output directory')
 
-def get_seed_file(cfg, nargs, wallets=None, invoked_as=None):
+def get_seed_file(cfg, *, nargs, wallets=None, invoked_as=None):
 
 	wallets = wallets or cfg._args
 
@@ -137,7 +137,7 @@ def get_seed_file(cfg, nargs, wallets=None, invoked_as=None):
 
 	return str(wallets[0]) if wallets else (wf, None)[wd_from_opt] # could be a Path instance
 
-def _open_or_die(filename, mode, silent=False):
+def _open_or_die(filename, mode, *, silent=False):
 	try:
 		return open(filename, mode)
 	except:
@@ -152,6 +152,7 @@ def write_data_to_file(
 		cfg,
 		outfile,
 		data,
+		*,
 		desc                  = 'data',
 		ask_write             = False,
 		ask_write_prompt      = '',
@@ -279,7 +280,7 @@ def write_data_to_file(
 	else:
 		do_file(outfile, ask_write_prompt)
 
-def get_words_from_file(cfg, infile, desc, quiet=False):
+def get_words_from_file(cfg, infile, *, desc, quiet=False):
 
 	if not quiet:
 		cfg._util.qmsg(f'Getting {desc} from file ‘{infile}’')
@@ -299,6 +300,7 @@ def get_words_from_file(cfg, infile, desc, quiet=False):
 def get_data_from_file(
 		cfg,
 		infile,
+		*,
 		desc   = 'data',
 		dash   = False,
 		silent = False,
@@ -326,6 +328,7 @@ def get_data_from_file(
 def get_lines_from_file(
 		cfg,
 		fn,
+		*,
 		desc          = 'data',
 		trim_comments = False,
 		quiet         = False,

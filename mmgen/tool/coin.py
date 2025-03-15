@@ -113,7 +113,7 @@ class tool_cmd(tool_cmd_base):
 			gd.ag.to_segwit_redeem_script(data),
 			gd.ag.to_addr(data))
 
-	def _privhex2out(self, privhex: 'sstr', output_pubhex=False):
+	def _privhex2out(self, privhex: 'sstr', *, output_pubhex=False):
 		gd = self._init_generators()
 		pk = PrivKey(
 			self.proto,

@@ -45,7 +45,7 @@ class MoneroWalletOutputsFile:
 			self.name = type(self).__name__
 			self.cfg = cfg
 
-		def write(self, add_suf='', quiet=False):
+		def write(self, *, add_suf='', quiet=False):
 			from ...fileutil import write_data_to_file
 			write_data_to_file(
 				cfg               = self.cfg,
@@ -81,7 +81,7 @@ class MoneroWalletOutputsFile:
 	class New(Base):
 		ext = 'raw'
 
-		def __init__(self, parent, wallet_fn, data, wallet_idx=None, sign=False):
+		def __init__(self, parent, wallet_fn, data, *, wallet_idx=None, sign=False):
 			super().__init__(parent.cfg)
 			self.wallet_fn = wallet_fn
 			init_data = dict.fromkeys(self.data_tuple._fields)
@@ -115,7 +115,7 @@ class MoneroWalletOutputsFile:
 			self.check_checksums(d_wrap)
 
 		@classmethod
-		def find_fn_from_wallet_fn(cls, cfg, wallet_fn, ret_on_no_match=False):
+		def find_fn_from_wallet_fn(cls, cfg, wallet_fn, *, ret_on_no_match=False):
 			path = get_autosign_obj(cfg).xmr_outputs_dir or Path()
 			pat = cls.fn_fs.format(
 				a = wallet_fn.name,

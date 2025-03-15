@@ -59,7 +59,7 @@ class MacOSRamDisk:
 	def get_diskutil_size(self):
 		return get_device_size(self.label) // (2**20)
 
-	def create(self, quiet=False):
+	def create(self, *, quiet=False):
 		redir = DEVNULL if quiet else None
 		if self.exists():
 			diskutil_size = self.get_diskutil_size()
@@ -81,7 +81,7 @@ class MacOSRamDisk:
 			self.path.mkdir(parents=True, exist_ok=True)
 			run(['diskutil', 'mount', '-mountPoint', str(self.path.absolute()), self.label], stdout=redir, check=True)
 
-	def destroy(self, quiet=False):
+	def destroy(self, *, quiet=False):
 		if not self.exists():
 			self.cfg._util.qmsg(f'{self.desc.capitalize()} {self.label.hl()} at path {self.path} not found')
 			return

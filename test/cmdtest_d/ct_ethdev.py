@@ -426,7 +426,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		self.proto = init_proto( cfg, cfg.coin, network='regtest', need_amt=True)
 
 		from mmgen.daemon import CoinDaemon
-		self.daemon = CoinDaemon( cfg, self.proto.coin+'_rt', test_suite=True)
+		self.daemon = CoinDaemon( cfg, network_id=self.proto.coin+'_rt', test_suite=True)
 
 		if self.daemon.id == 'reth':
 			global dfl_devkey, dfl_devaddr

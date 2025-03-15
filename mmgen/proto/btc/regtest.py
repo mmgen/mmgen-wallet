@@ -73,7 +73,7 @@ class MMGenRegtest(MMGenObject):
 		'bch': 'n2fxhNx27GhHAWQhyuZ5REcBNrJqCJsJ12',
 	}
 
-	def __init__(self, cfg, coin, bdb_wallet=False):
+	def __init__(self, cfg, coin, *, bdb_wallet=False):
 		self.cfg = cfg
 		self.coin = coin.lower()
 		self.bdb_wallet = bdb_wallet
@@ -83,7 +83,7 @@ class MMGenRegtest(MMGenObject):
 		self.proto = init_proto(cfg, self.coin, regtest=True, need_amt=True)
 		self.d = CoinDaemon(
 			cfg,
-			self.coin + '_rt',
+			network_id = self.coin + '_rt',
 			test_suite = cfg.test_suite,
 			opts       = ['bdb_wallet'] if bdb_wallet else None)
 
@@ -116,7 +116,7 @@ class MMGenRegtest(MMGenObject):
 		t.addrtype = 'compressed' if self.proto.coin == 'BCH' else 'bech32'
 		return t.hex2wif(self.bdb_hdseed)
 
-	async def generate(self, blocks=1, silent=False):
+	async def generate(self, blocks=1, *, silent=False):
 
 		blocks = int(blocks)
 
@@ -194,11 +194,11 @@ class MMGenRegtest(MMGenObject):
 			msg('Stopping regtest daemon')
 			await self.rpc_call('stop')
 
-	def init_daemon(self, reindex=False):
+	def init_daemon(self, *, reindex=False):
 		if reindex:
 			self.d.usr_coind_args.append('--reindex')
 
-	async def start_daemon(self, reindex=False, silent=True):
+	async def start_daemon(self, *, reindex=False, silent=True):
 		self.init_daemon(reindex=reindex)
 		self.d.start(silent=silent)
 		for user in ('miner', 'bob', 'alice'):
@@ -260,7 +260,7 @@ class MMGenRegtest(MMGenObject):
 
 	async def fork(self, coin): # currently disabled
 
-		proto = init_proto(self.cfg, coin, False)
+		proto = init_proto(self.cfg, coin, testnet=False)
 		if not [f for f in proto.forks if f[2] == proto.coin.lower() and f[3] is True]:
 			die(1, f'Coin {proto.coin} is not a replayable fork of coin {coin}')
 

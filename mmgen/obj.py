@@ -102,7 +102,7 @@ class ImmutableAttr: # Descriptor
 	"""
 	ok_dtypes = (type, type(None), type(lambda:0))
 
-	def __init__(self, dtype, typeconv=True, set_none_ok=False, include_proto=False):
+	def __init__(self, dtype, *, typeconv=True, set_none_ok=False, include_proto=False):
 		self.set_none_ok = set_none_ok
 		self.typeconv = typeconv
 
@@ -154,7 +154,7 @@ class ListItemAttr(ImmutableAttr):
 	For attributes that might not be present in the data instance
 	Reassignment or deletion allowed if specified
 	"""
-	def __init__(self, dtype, typeconv=True, include_proto=False, reassign_ok=False, delete_ok=False):
+	def __init__(self, dtype, *, typeconv=True, include_proto=False, reassign_ok=False, delete_ok=False):
 		self.reassign_ok = reassign_ok
 		self.delete_ok = delete_ok
 		ImmutableAttr.__init__(self, dtype, typeconv=typeconv, include_proto=include_proto)
@@ -280,10 +280,10 @@ class Int(int, Hilite, InitErrors):
 			return cls.init_fail(e, n)
 
 	@classmethod
-	def fmtc(cls, s, width, color=False):
+	def fmtc(cls, s, width, *, color=False):
 		return super().fmtc(str(s), width=width, color=color)
 
-	def fmt(self, width, color=False):
+	def fmt(self, width, *, color=False):
 		return super().fmtc(str(self), width=width, color=color)
 
 	def hl(self, **kwargs):
@@ -324,7 +324,7 @@ class HexStr(HiliteStr, InitErrors):
 		except Exception as e:
 			return cls.init_fail(e, s)
 
-	def truncate(self, width, color=True):
+	def truncate(self, width, *, color=True):
 		return self.colorize(
 			self if width >= self.width else self[:width-2] + '..',
 			color = color)

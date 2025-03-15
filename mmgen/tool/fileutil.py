@@ -32,6 +32,7 @@ class tool_cmd(tool_cmd_base):
 	def find_incog_data(self,
 			filename: str,
 			incog_id: str,
+			*,
 			keep_searching: 'continue search after finding data (ID collisions can yield false positives)' = False):
 		"Use an Incog ID to find hidden incognito wallet data"
 
@@ -65,7 +66,7 @@ class tool_cmd(tool_cmd_base):
 		os.close(f)
 		return True
 
-	def rand2file(self, outfile: str, nbytes: str, threads=4, silent=False):
+	def rand2file(self, outfile: str, nbytes: str, *, threads=4, silent=False):
 		"""
 		write ‘nbytes’ bytes of random data to specified file (dd-style byte specifiers supported)
 
@@ -148,7 +149,7 @@ class tool_cmd(tool_cmd_base):
 
 		return True
 
-	def decrypt_keystore(self, wallet_file: str, output_hex=False):
+	def decrypt_keystore(self, wallet_file: str, *, output_hex=False):
 		"decrypt the data in a keystore wallet, returning the decrypted data in binary format"
 		from ..ui import line_input
 		passwd = line_input(self.cfg, 'Enter passphrase: ', echo=self.cfg.echo_passphrase).strip().encode()
@@ -159,9 +160,9 @@ class tool_cmd(tool_cmd_base):
 		ret = decrypt_keystore(data[0]['keystore'], passwd)
 		return ret.hex() if output_hex else ret
 
-	def decrypt_geth_keystore(self, wallet_file: str, check_addr=True):
+	def decrypt_geth_keystore(self, wallet_file: str, *, check_addr=True):
 		"decrypt the private key in a Geth keystore wallet, returning the decrypted key in hex format"
 		from ..ui import line_input
 		passwd = line_input(self.cfg, 'Enter passphrase: ', echo=self.cfg.echo_passphrase).strip().encode()
 		from ..proto.eth.misc import decrypt_geth_keystore
-		return decrypt_geth_keystore(self.cfg, wallet_file, passwd, check_addr).hex()
+		return decrypt_geth_keystore(self.cfg, wallet_file, passwd, check_addr=check_addr).hex()

@@ -133,7 +133,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			cfg       = self.cfg,
 			proto     = self.proto,
 			addr_idxs = '1-2',
-			seed      = Wallet(cfg, data.mmwords).seed,
+			seed      = Wallet(cfg, fn=data.mmwords).seed,
 			skip_chksum_msg = True,
 			key_address_validity_check = False)
 		kal.file.write(ask_overwrite=False)

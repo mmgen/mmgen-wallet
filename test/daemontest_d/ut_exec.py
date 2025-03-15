@@ -14,7 +14,7 @@ from mmgen.daemon import CoinDaemon
 from ..include.common import cfg, qmsg, qmsg_r, vmsg, msg
 
 def test_flags(coin):
-	d = CoinDaemon(cfg, coin)
+	d = CoinDaemon(cfg, network_id=coin)
 	vmsg(f'Available opts:  {fmt_list(d.avail_opts, fmt="bare")}')
 	vmsg(f'Available flags: {fmt_list(d.avail_flags, fmt="bare")}')
 	vals = namedtuple('vals', ['online', 'no_daemonize', 'keep_cfg_file'])
@@ -26,7 +26,7 @@ def test_flags(coin):
 				(['online'],                 ['keep_cfg_file'], vals(True, False, True)),
 				(['online', 'no_daemonize'], ['keep_cfg_file'], vals(True, True, True)),
 			):
-			d = CoinDaemon(cfg, coin, opts=opts, flags=flags)
+			d = CoinDaemon(cfg, network_id=coin, opts=opts, flags=flags)
 			assert d.flag.keep_cfg_file == val.keep_cfg_file
 			assert d.opt.online == val.online
 			assert d.opt.no_daemonize == val.no_daemonize

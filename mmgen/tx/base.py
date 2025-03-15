@@ -181,7 +181,8 @@ class Base(MMGenObject):
 	def add_comment(self, infile=None):
 		if infile:
 			from ..fileutil import get_data_from_file
-			self.comment = MMGenTxComment(get_data_from_file(self.cfg, infile, 'transaction comment'))
+			self.comment = MMGenTxComment(
+				get_data_from_file(self.cfg, infile, desc='transaction comment'))
 		else:
 			from ..ui import keypress_confirm, line_input
 			if keypress_confirm(

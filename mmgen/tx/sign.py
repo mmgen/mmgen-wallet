@@ -37,7 +37,7 @@ def get_seed_for_seed_id(sid, infiles, saved_seeds):
 	subseeds_checked = False
 	while True:
 		if infiles:
-			seed = Wallet(cfg, infiles.pop(0), ignore_in_fmt=True, passwd_file=global_passwd_file).seed
+			seed = Wallet(cfg, fn=infiles.pop(0), ignore_in_fmt=True, passwd_file=global_passwd_file).seed
 		elif subseeds_checked is False:
 			seed = saved_seeds[list(saved_seeds)[0]].subseed_by_seed_id(sid, print_msg=True)
 			subseeds_checked = True
@@ -128,7 +128,7 @@ def get_tx_files(cfg, args):
 		die(1, 'You must specify a raw transaction file!')
 	return ret
 
-def get_seed_files(cfg, args, ignore_dfl_wallet=False, empty_ok=False):
+def get_seed_files(cfg, args, *, ignore_dfl_wallet=False, empty_ok=False):
 	# favor unencrypted seed sources first, as they don't require passwords
 	ret = _pop_matching_fns(args, get_wallet_extensions('unenc'))
 	from ..filename import find_file_in_dir
@@ -142,13 +142,13 @@ def get_seed_files(cfg, args, ignore_dfl_wallet=False, empty_ok=False):
 
 def get_keyaddrlist(cfg, proto):
 	if cfg.mmgen_keys_from_file:
-		return KeyAddrList(cfg, proto, cfg.mmgen_keys_from_file)
+		return KeyAddrList(cfg, proto, infile=cfg.mmgen_keys_from_file)
 	return None
 
 def get_keylist(cfg):
 	if cfg.keys_from_file:
 		from ..fileutil import get_lines_from_file
-		return get_lines_from_file(cfg, cfg.keys_from_file, 'key-address data', trim_comments=True)
+		return get_lines_from_file(cfg, cfg.keys_from_file, desc='key-address data', trim_comments=True)
 	return None
 
 async def txsign(cfg_parm, tx, seed_files, kl, kal, tx_num_str='', passwd_file=None):

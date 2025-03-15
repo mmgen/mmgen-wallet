@@ -164,7 +164,7 @@ class New(Base):
 			return False
 		return True
 
-	def add_output(self, coinaddr, amt, is_chg=False, is_vault=False, data=None):
+	def add_output(self, coinaddr, amt, *, is_chg=False, is_vault=False, data=None):
 		self.outputs.append(
 			self.Output(self.proto, addr=coinaddr, amt=amt, is_chg=is_chg, is_vault=is_vault, data=data))
 
@@ -197,7 +197,7 @@ class New(Base):
 
 		return _pa(arg, mmid, coin_addr, amt, None, is_vault)
 
-	async def get_autochg_addr(self, proto, arg, exclude, desc, all_addrtypes=False):
+	async def get_autochg_addr(self, proto, arg, *, exclude, desc, all_addrtypes=False):
 		from ..tw.addresses import TwAddresses
 		al = await TwAddresses(self.cfg, proto, get_data=True)
 
@@ -287,7 +287,7 @@ class New(Base):
 		for addrfile in addrfiles:
 			check_infile(addrfile)
 			try:
-				ad_f.add(AddrList(self.cfg, proto, addrfile))
+				ad_f.add(AddrList(self.cfg, proto, infile=addrfile))
 			except Exception as e:
 				msg(f'{type(e).__name__}: {e}')
 		return ad_f
@@ -419,7 +419,7 @@ class New(Base):
 		else:
 			self.warn_insufficient_funds(funds.amt, self.coin)
 
-	async def create(self, cmd_args, locktime=None, do_info=False, caller='txcreate'):
+	async def create(self, cmd_args, *, locktime=None, do_info=False, caller='txcreate'):
 
 		assert isinstance(locktime, (int, type(None))), 'locktime must be of type int'
 

@@ -110,7 +110,7 @@ class unit_tests:
 
 	async def newtx(self, name, ut):
 		qmsg('  Testing NewTX initializer')
-		d = CoinDaemon(cfg, 'btc', test_suite=True)
+		d = CoinDaemon(cfg, network_id='btc', test_suite=True)
 		d.start()
 
 		proto = init_proto(cfg, 'btc', need_amt=True)

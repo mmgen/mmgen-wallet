@@ -77,7 +77,7 @@ class xmrseed(baseconv):
 
 		return b''.join(gen())
 
-	def frombytes(self, bytestr, pad=None, tostr=False):
+	def frombytes(self, bytestr, *, pad=None, tostr=False):
 		assert pad is None, f"{pad}: invalid 'pad' argument (must be None)"
 
 		desc = self.desc.short

@@ -33,7 +33,7 @@ def die_pause(ev=0, s=''):
 def cffi_override_fixup():
 	from cffi import FFI
 	class FFI_override:
-		def cdef(self, csource, override=False, packed=False, pack=None):
+		def cdef(self, csource, *, override=False, packed=False, pack=None):
 			self._cdef(csource, override=True, packed=packed, pack=pack)
 	FFI.cdef = FFI_override.cdef
 
@@ -92,7 +92,7 @@ bytespec_map = (
 	('E',  1152921504606846976),
 )
 
-def int2bytespec(n, spec, fmt, print_sym=True, strip=False, add_space=False):
+def int2bytespec(n, spec, fmt, *, print_sym=True, strip=False, add_space=False):
 
 	def spec2int(spec):
 		for k, v in bytespec_map:
@@ -137,6 +137,7 @@ def format_elapsed_days_hr(t, now=None, cached={}):
 
 def format_elapsed_hr(
 		t,
+		*,
 		now        = None,
 		cached     = {},
 		rel_now    = True,
@@ -177,7 +178,7 @@ def pretty_format(s, width=80, pfx=''):
 		s = s[i+1:]
 	return pfx + ('\n'+pfx).join(out)
 
-def block_format(data, gw=2, cols=8, line_nums=None, data_is_hex=False):
+def block_format(data, *, gw=2, cols=8, line_nums=None, data_is_hex=False):
 	assert line_nums in (None, 'hex', 'dec'), "'line_nums' must be one of None, 'hex' or 'dec'"
 	ln_fs = '{:06x}: ' if line_nums == 'hex' else '{:06}: '
 	bytes_per_chunk = gw
@@ -192,7 +193,7 @@ def block_format(data, gw=2, cols=8, line_nums=None, data_is_hex=False):
 	).rstrip() + '\n'
 
 def pretty_hexdump(data, gw=2, cols=8, line_nums=None):
-	return block_format(data.hex(), gw, cols, line_nums, data_is_hex=True)
+	return block_format(data.hex(), gw=gw, cols=cols, line_nums=line_nums, data_is_hex=True)
 
 def decode_pretty_hexdump(data):
 	pat = re.compile(fr'^[{hexdigits}]+:\s+')

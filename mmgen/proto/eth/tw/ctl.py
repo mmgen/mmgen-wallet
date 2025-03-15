@@ -88,13 +88,13 @@ class EthereumTwCtl(TwCtl):
 
 	@write_mode
 	async def batch_import_address(self, args_list):
-		return [await self.import_address(*a) for a in args_list]
+		return [await self.import_address(a, label=b, rescan=c) for a, b, c in args_list]
 
 	async def rescan_addresses(self, coin_addrs):
 		pass
 
 	@write_mode
-	async def import_address(self, addr, label, rescan=False):
+	async def import_address(self, addr, *, label, rescan=False):
 		r = self.data_root
 		if addr in r:
 			if not r[addr]['mmid'] and label.mmid:
@@ -174,7 +174,7 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 	symbol = None
 	cur_eth_balances = {}
 
-	async def __init__(self, cfg, proto, mode='r', token_addr=None, no_rpc=False):
+	async def __init__(self, cfg, proto, *, mode='r', token_addr=None, no_rpc=False):
 
 		await super().__init__(cfg, proto, mode=mode, no_rpc=no_rpc)
 
@@ -215,13 +215,13 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 	async def rpc_get_balance(self, addr):
 		return await Token(self.cfg, self.proto, self.token, self.decimals, self.rpc).get_balance(addr)
 
-	async def get_eth_balance(self, addr, force_rpc=False):
+	async def get_eth_balance(self, addr, *, force_rpc=False):
 		cache = self.cur_eth_balances
 		r = self.data['accounts']
 		ret = None if force_rpc else self.get_cached_balance(addr, cache, r)
 		if ret is None:
 			ret = await super().rpc_get_balance(addr)
-			self.cache_balance(addr, ret, cache, r)
+			self.cache_balance(addr, ret, session_cache=cache, data_root=r)
 		return ret
 
 	def get_param(self, param):

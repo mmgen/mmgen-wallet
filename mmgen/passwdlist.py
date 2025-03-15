@@ -69,6 +69,7 @@ class PasswordList(AddrList):
 			self,
 			cfg,
 			proto,
+			*,
 			infile          = None,
 			seed            = None,
 			pw_idxs         = None,

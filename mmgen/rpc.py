@@ -30,7 +30,7 @@ from .objmethods import HiliteStr, InitErrors, MMGenObject
 
 auth_data = namedtuple('rpc_auth_data', ['user', 'passwd'])
 
-def dmsg_rpc(fs, data=None, is_json=False):
+def dmsg_rpc(fs, data=None, *, is_json=False):
 	msg(
 		fs if data is None else
 		fs.format(pp_fmt(json.loads(data) if is_json else data))
@@ -255,7 +255,7 @@ class RPCClient(MMGenObject):
 	network_proto = 'http'
 	proxy = None
 
-	def __init__(self, cfg, host, port, test_connection=True):
+	def __init__(self, cfg, host, port, *, test_connection=True):
 
 		self.cfg = cfg
 		self.name = type(self).__name__
@@ -376,7 +376,7 @@ class RPCClient(MMGenObject):
 			timeout = timeout,
 			wallet = wallet)
 
-	def process_http_resp(self, run_ret, batch=False, json_rpc=True):
+	def process_http_resp(self, run_ret, *, batch=False, json_rpc=True):
 
 		def float_parser(n):
 			return n
@@ -424,7 +424,7 @@ class RPCClient(MMGenObject):
 						m = text
 			die('RPCFailure', f'{s.value} {s.name}: {m}')
 
-	async def stop_daemon(self, quiet=False, silent=False):
+	async def stop_daemon(self, *, quiet=False, silent=False):
 		if self.daemon.state == 'ready':
 			if not (quiet or silent):
 				msg(f'Stopping {self.daemon.desc} on port {self.daemon.bind_port}')
@@ -437,10 +437,10 @@ class RPCClient(MMGenObject):
 				msg(f'{self.daemon.desc} on port {self.daemon.bind_port} not running')
 			return True
 
-	def start_daemon(self, silent=False):
+	def start_daemon(self, *, silent=False):
 		return self.daemon.start(silent=silent)
 
-	async def restart_daemon(self, quiet=False, silent=False):
+	async def restart_daemon(self, *, quiet=False, silent=False):
 		await self.stop_daemon(quiet=quiet, silent=silent)
 		return self.daemon.start(silent=silent)
 
@@ -467,6 +467,7 @@ class RPCClient(MMGenObject):
 async def rpc_init(
 		cfg,
 		proto                 = None,
+		*,
 		backend               = None,
 		daemon                = None,
 		ignore_daemon_version = False,

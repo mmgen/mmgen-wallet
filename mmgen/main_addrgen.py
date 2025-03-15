@@ -141,12 +141,12 @@ if cfg.keygen_backend:
 idxs = addrlist.AddrIdxList(fmt_str=cfg._args.pop())
 
 from .fileutil import get_seed_file
-sf = get_seed_file(cfg, 1)
+sf = get_seed_file(cfg, nargs=1)
 
 from .ui import do_license_msg
 do_license_msg(cfg)
 
-ss = Wallet(cfg, sf)
+ss = Wallet(cfg, fn=sf)
 
 ss_seed = ss.seed if cfg.subwallet is None else ss.seed.subseed(cfg.subwallet, print_msg=True)
 

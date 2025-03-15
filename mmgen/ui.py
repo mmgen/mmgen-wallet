@@ -38,7 +38,7 @@ def get_data_from_user(cfg, desc='data'): # user input MUST be UTF-8
 		msg(f'User input: [{data}]')
 	return data
 
-def line_input(cfg, prompt, echo=True, insert_txt='', hold_protect=True):
+def line_input(cfg, prompt, *, echo=True, insert_txt='', hold_protect=True):
 	"""
 	multi-line prompts OK
 	one-line prompts must begin at beginning of line
@@ -83,6 +83,7 @@ def line_input(cfg, prompt, echo=True, insert_txt='', hold_protect=True):
 def keypress_confirm(
 		cfg,
 		prompt,
+		*,
 		default_yes     = False,
 		verbose         = False,
 		no_nl           = False,
@@ -133,7 +134,7 @@ def do_pager(text):
 		Msg(text+end_msg)
 	set_vt100()
 
-def do_license_msg(cfg, immed=False):
+def do_license_msg(cfg, *, immed=False):
 
 	if cfg.quiet or cfg.no_license or cfg.yes or not cfg.stdin_tty:
 		return

@@ -20,7 +20,7 @@ from .signed import Signed, TokenSigned
 
 class OnlineSigned(Signed, TxBase.OnlineSigned):
 
-	async def send(self, prompt_user=True):
+	async def send(self, *, prompt_user=True):
 
 		self.check_correct_chain()
 

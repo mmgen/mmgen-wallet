@@ -47,6 +47,7 @@ _wd('words',        'MMGenMnemonic',     'mmwords', 'mnemonic',   False, ('mmwor
 }
 
 def get_wallet_data(
+		*,
 		wtype       = None,
 		fmt_code    = None,
 		ext         = None,
@@ -73,6 +74,7 @@ def get_wallet_data(
 
 def get_wallet_cls(
 		wtype       = None,
+		*,
 		fmt_code    = None,
 		ext         = None,
 		die_on_fail = False):
@@ -111,6 +113,7 @@ def _get_me(modname):
 
 def Wallet(
 	cfg,
+	*,
 	fn            = None,
 	ss            = None,
 	seed_bin      = None,

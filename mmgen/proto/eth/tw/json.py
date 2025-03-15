@@ -109,7 +109,7 @@ class EthereumTwJSON(TwJSON):
 
 	class Export(TwJSON.Export, Base):
 
-		async def get_entries(self, include_amts=True):
+		async def get_entries(self, *, include_amts=True):
 
 			def gen_data(data):
 				for k, v in data.items():

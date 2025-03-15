@@ -63,6 +63,7 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 			self,
 			cfg,
 			proto,
+			*,
 			mode              = 'r',
 			token_addr        = None,
 			no_rpc            = False,
@@ -167,7 +168,7 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 	def data_root_desc(self):
 		return self.data_key
 
-	def cache_balance(self, addr, bal, session_cache, data_root, force=False):
+	def cache_balance(self, addr, bal, *, session_cache, data_root, force=False):
 		if force or addr not in session_cache:
 			session_cache[addr] = str(bal)
 			if addr in data_root:
@@ -183,11 +184,11 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 		if addr in data_root and 'balance' in data_root[addr]:
 			return self.proto.coin_amt(data_root[addr]['balance'])
 
-	async def get_balance(self, addr, force_rpc=False):
+	async def get_balance(self, addr, *, force_rpc=False):
 		ret = None if force_rpc else self.get_cached_balance(addr, self.cur_balances, self.data_root)
 		if ret is None:
 			ret = await self.rpc_get_balance(addr)
-			self.cache_balance(addr, ret, self.cur_balances, self.data_root)
+			self.cache_balance(addr, ret, session_cache=self.cur_balances, data_root=self.data_root)
 		return ret
 
 	def force_write(self):
@@ -212,7 +213,7 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 
 		self.orig_data = data
 
-	def write(self, quiet=True):
+	def write(self, *, quiet=True):
 		if not self.use_tw_file:
 			self.cfg._util.dmsg("'use_tw_file' is False, doing nothing")
 			return
@@ -256,6 +257,7 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 			self,
 			addrspec,
 			comment      = '',
+			*,
 			trusted_pair = None,
 			silent       = False):
 
@@ -296,11 +298,11 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 	async def remove_comment(self, mmaddr):
 		await self.set_comment(mmaddr, '')
 
-	async def import_address_common(self, data, batch=False, gather=False):
+	async def import_address_common(self, data, *, batch=False, gather=False):
 
 		async def do_import(address, comment, message):
 			try:
-				res = await self.import_address(address, comment)
+				res = await self.import_address(address, label=comment)
 				self.cfg._util.qmsg(message)
 				return res
 			except Exception as e:

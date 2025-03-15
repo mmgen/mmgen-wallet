@@ -51,7 +51,7 @@ class keygen_base:
 		return None
 
 	@classmethod
-	def get_clsname(cls, cfg, silent=False):
+	def get_clsname(cls, cfg, *, silent=False):
 		return cls.__name__
 
 backend_data = {
@@ -104,7 +104,7 @@ def check_backend(cfg, proto, backend, addr_type):
 
 	return  _check_backend(cfg, backend, pubkey_type, desc='--keygen-backend parameter')
 
-def KeyGenerator(cfg, proto, pubkey_type, backend=None, silent=False):
+def KeyGenerator(cfg, proto, pubkey_type, *, backend=None, silent=False):
 	"""
 	factory function returning a key generator backend for the specified pubkey type
 	"""

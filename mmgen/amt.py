@@ -40,7 +40,7 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 	max_amt  = None   # coin supply if known, otherwise None
 	units    = ()     # defined unit names, e.g. ('satoshi',...)
 
-	def __new__(cls, num, from_unit=None, from_decimal=False):
+	def __new__(cls, num, *, from_unit=None, from_decimal=False):
 
 		if isinstance(num, CoinAmt):
 			raise TypeError(f'CoinAmt: {num} is instance of {cls.__name__}')
@@ -71,7 +71,7 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 	def fmtc(cls, *args, **kwargs):
 		cls.method_not_implemented()
 
-	def fmt(self, color=False, iwidth=1, prec=None): # iwidth: width of the integer part
+	def fmt(self, *, color=False, iwidth=1, prec=None): # iwidth: width of the integer part
 		prec = prec or self.max_prec
 		if '.' in (s := str(self)):
 			a, b = s.split('.', 1)
@@ -83,11 +83,11 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 				s.rjust(iwidth).ljust(iwidth+prec+1),
 				color = color)
 
-	def hl(self, color=True):
+	def hl(self, *, color=True):
 		return self.colorize(str(self), color=color)
 
 	# fancy highlighting with coin unit, enclosure, formatting
-	def hl2(self, color=True, unit=False, fs='{}', encl=''):
+	def hl2(self, *, color=True, unit=False, fs='{}', encl=''):
 		res = fs.format(self)
 		return (
 			encl[:-1]
@@ -156,7 +156,7 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 	def __mod__(self, *args, **kwargs):
 		self.method_not_implemented()
 
-def is_coin_amt(proto, num, from_unit=None, from_decimal=False):
+def is_coin_amt(proto, num, *, from_unit=None, from_decimal=False):
 	assert proto.coin_amt, 'proto.coin_amt is None!  Did you call init_proto() with ‘need_amt’?'
 	return get_obj(proto.coin_amt, num=num, from_unit=from_unit, from_decimal=from_decimal, silent=True, return_bool=True)
 

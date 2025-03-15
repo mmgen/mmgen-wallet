@@ -104,6 +104,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			self,
 			cfg,
 			proto,
+			*,
 			wallet_dir  = None,
 			test_suite  = False,
 			user        = None,

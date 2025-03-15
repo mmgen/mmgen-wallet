@@ -323,7 +323,7 @@ class MnemonicEntry:
 				time.sleep(self.cfg.err_disp_timeout)
 				msg_r(erase)
 
-	def get_mnemonic_from_user(self, mn_len, validate=True):
+	def get_mnemonic_from_user(self, mn_len, *, validate=True):
 		mll = list(self.bconv.seedlen_map_rev)
 		assert mn_len in mll, f'{mn_len}: invalid mnemonic length (must be one of {mll})'
 

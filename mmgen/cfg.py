@@ -438,6 +438,7 @@ class Config(Lockable):
 	def __init__(
 			self,
 			cfg          = None,
+			*,
 			opts_data    = None,
 			init_opts    = None,
 			parse_only   = False,
@@ -845,7 +846,7 @@ def check_opts(cfg): # Raises exception if any check fails
 			if hasattr(cfg, key2):
 				val2 = getattr(cfg, key2)
 				from .wallet import get_wallet_data
-				wd = get_wallet_data('incog_hidden')
+				wd = get_wallet_data(wtype='incog_hidden')
 				if val2 and val2 not in wd.fmt_codes:
 					die('UserOptError', f'Option conflict:\n  {fmt_opt(name)}, with\n  {fmt_opt(key2)}={val2}')
 
@@ -929,7 +930,7 @@ def opt_postproc_debug(cfg):
 	Msg('        {}\n'.format('\n        '.join(none_opts)))
 	Msg('\n=== end opts.py debug ===\n')
 
-def conv_type(name, val, refval, src, invert_bool=False):
+def conv_type(name, val, refval, *, src, invert_bool=False):
 
 	def do_fail():
 		desc = {

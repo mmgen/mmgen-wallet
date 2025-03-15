@@ -159,6 +159,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 			self,
 			cfg,
 			proto,
+			*,
 			infile    = '',
 			al_id     = '',
 			adata     = [],

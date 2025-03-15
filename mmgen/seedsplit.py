@@ -68,7 +68,7 @@ class SeedShareList(SubSeedList):
 	count  = ImmutableAttr(SeedShareCount)
 	id_str = ImmutableAttr(SeedSplitIDString)
 
-	def __init__(self, parent_seed, count, id_str=None, master_idx=None, debug_last_share=False):
+	def __init__(self, parent_seed, count, *, id_str=None, master_idx=None, debug_last_share=False):
 		self.member_type = SeedShare
 		self.parent_seed = parent_seed
 		self.id_str = id_str or 'default'
@@ -118,7 +118,7 @@ class SeedShareList(SubSeedList):
 			B = self.join().data
 			assert A == B, f'Data mismatch!\noriginal seed: {A!r}\nrejoined seed: {B!r}'
 
-	def get_share_by_idx(self, idx, base_seed=False):
+	def get_share_by_idx(self, idx, *, base_seed=False):
 		if idx < 1 or idx > self.count:
 			die('RangeError', f'{idx}: share index out of range')
 		elif idx == self.count:
@@ -129,7 +129,7 @@ class SeedShareList(SubSeedList):
 			ss_idx = SubSeedIdx(str(idx) + 'L')
 			return self.get_subseed_by_ss_idx(ss_idx)
 
-	def get_share_by_seed_id(self, sid, base_seed=False):
+	def get_share_by_seed_id(self, sid, *, base_seed=False):
 		if sid == self.data['long'].key(self.count-1):
 			return self.last_share
 		elif self.master_share and sid == self.data['long'].key(0):
@@ -181,7 +181,7 @@ class SeedShareBase(MMGenObject):
 	def desc(self):
 		return self.get_desc()
 
-	def get_desc(self, ui=False):
+	def get_desc(self, *, ui=False):
 		pl = self.parent_list
 		mss = f', with master share #{pl.master_share.idx}' if pl.master_share else ''
 		if ui:
@@ -274,7 +274,7 @@ class SeedShareMaster(SeedBase, SeedShareBase):
 		scramble_key = id_str.encode() + b':' + count.to_bytes(2, 'big')
 		return Crypto(self.cfg).scramble_seed(self.data, scramble_key)[:self.byte_len]
 
-	def get_desc(self, ui=False):
+	def get_desc(self, *, ui=False):
 		psid = self.parent_list.parent_seed.sid
 		mss = f'master share #{self.idx} of '
 		return yellow('(' + mss) + psid.hl() + yellow(')') if ui else mss + psid

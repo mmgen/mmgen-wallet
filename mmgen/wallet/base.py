@@ -79,7 +79,7 @@ class wallet(MMGenObject, metaclass=WalletMeta):
 			self.fmt_data = get_data_from_file(
 				self.cfg,
 				self.infile.name,
-				self.desc,
+				desc   = self.desc,
 				binary = self.file_mode=='binary')
 		elif self.in_data:
 			self.fmt_data = self.in_data

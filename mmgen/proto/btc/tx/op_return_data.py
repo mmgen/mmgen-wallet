@@ -61,7 +61,7 @@ class OpReturnData(bytes, InitErrors):
 			self.display_hex = False
 			return ret
 
-	def hl(self, add_label=False):
+	def hl(self, *, add_label=False):
 		'colorize and optionally label the result of str()'
 		from ....color import blue, pink
 		ret = str(self)

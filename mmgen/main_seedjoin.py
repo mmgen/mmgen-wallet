@@ -131,7 +131,7 @@ do_license_msg(cfg)
 cfg._util.qmsg('Input files:\n  {}\n'.format('\n  '.join(cfg._args)))
 
 shares = [Wallet(cfg).seed] if cfg.hidden_incog_input_params else []
-shares += [Wallet(cfg,fn).seed for fn in cfg._args]
+shares += [Wallet(cfg, fn=fn).seed for fn in cfg._args]
 
 if cfg.master_share:
 	share1 = SeedShareMasterJoining(cfg, master_idx, shares[0], id_str, len(shares)).derived_seed

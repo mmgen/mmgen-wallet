@@ -84,7 +84,7 @@ addrimport_msgs = {
 def parse_cmd_args(rpc, cmd_args):
 
 	def import_mmgen_list(infile):
-		return (AddrList, KeyAddrList)[bool(cfg.keyaddr_file)](cfg, proto, infile)
+		return (AddrList, KeyAddrList)[bool(cfg.keyaddr_file)](cfg, proto, infile=infile)
 
 	if len(cmd_args) == 1:
 		infile = cmd_args[0]
@@ -97,7 +97,7 @@ def parse_cmd_args(rpc, cmd_args):
 				addrlist = get_lines_from_file(
 					cfg,
 					infile,
-					f'non-{gc.proj_name} addresses',
+					desc = f'non-{gc.proj_name} addresses',
 					trim_comments = True))
 		else:
 			al = import_mmgen_list(infile)

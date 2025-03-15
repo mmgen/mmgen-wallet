@@ -30,7 +30,8 @@ class TwJSON:
 		fn_pfx = 'mmgen-tracking-wallet-dump'
 
 		def __new__(cls, cfg, proto, *args, **kwargs):
-			return MMGenObject.__new__(proto.base_proto_subclass(TwJSON, 'tw.json', cls.__name__))
+			return MMGenObject.__new__(
+				proto.base_proto_subclass(TwJSON, 'tw.json', sub_clsname=cls.__name__))
 
 		def __init__(self, cfg, proto):
 			self.cfg = cfg
@@ -62,7 +63,7 @@ class TwJSON:
 
 			return fn
 
-		def json_dump(self, data, pretty=False):
+		def json_dump(self, data, *, pretty=False):
 			return json.dumps(
 				data,
 				cls        = json_encoder,
@@ -90,6 +91,7 @@ class TwJSON:
 				cfg,
 				proto,
 				filename,
+				*,
 				ignore_checksum = False,
 				batch           = False):
 
@@ -163,6 +165,7 @@ class TwJSON:
 				self,
 				cfg,
 				proto,
+				*,
 				include_amts    = True,
 				pretty          = False,
 				prune           = False,

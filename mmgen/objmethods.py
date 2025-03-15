@@ -49,7 +49,7 @@ class Hilite:
 
 	# class method equivalent of fmt()
 	@classmethod
-	def fmtc(cls, s, width, color=False):
+	def fmtc(cls, s, width, *, color=False):
 		if len(s) > width:
 			assert cls.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= width of string"
 			return cls.colorize(s[:width].ljust(width), color=color)
@@ -57,21 +57,21 @@ class Hilite:
 			return cls.colorize(s.ljust(width), color=color)
 
 	@classmethod
-	def hlc(cls, s, color=True):
+	def hlc(cls, s, *, color=True):
 		return getattr(color_mod, cls.color)(s) if color else s
 
 	@classmethod
-	def colorize(cls, s, color=True):
+	def colorize(cls, s, *, color=True):
 		return getattr(color_mod, cls.color)(s) if color else s
 
 	@classmethod
-	def colorize2(cls, s, color=True, color_override=''):
+	def colorize2(cls, s, *, color=True, color_override=''):
 		return getattr(color_mod, color_override or cls.color)(s) if color else s
 
 class HiliteStr(str, Hilite):
 
 	# supports single-width characters only
-	def fmt(self, width, color=False):
+	def fmt(self, width, *, color=False):
 		if len(self) > width:
 			assert self.trunc_ok, "If 'trunc_ok' is false, 'width' must be >= width of string"
 			return self.colorize(self[:width].ljust(width), color=color)
@@ -82,6 +82,7 @@ class HiliteStr(str, Hilite):
 	def fmt2(
 			self,
 			width,                  # screen width - must be at least 2 (one wide char)
+			*,
 			color          = False,
 			encl           = '',    # if set, must be exactly 2 single-width chars
 			nullrepl       = '',
@@ -112,12 +113,12 @@ class HiliteStr(str, Hilite):
 		else:
 			return self.colorize2(s.ljust(width-s_wide_count), color=color, color_override=color_override)
 
-	def hl(self, color=True):
+	def hl(self, *, color=True):
 		return getattr(color_mod, self.color)(self) if color else self
 
 	# an alternative to hl(), with enclosure and color override
 	# can be called as an unbound method with class as first argument
-	def hl2(self, s=None, color=True, encl='', color_override=''):
+	def hl2(self, s=None, *, color=True, encl='', color_override=''):
 		if encl:
 			return self.colorize2(encl[0]+(s or self)+encl[1], color=color, color_override=color_override)
 		else:
@@ -126,7 +127,7 @@ class HiliteStr(str, Hilite):
 class InitErrors:
 
 	@classmethod
-	def init_fail(cls, e, m, e2=None, m2=None, objname=None, preformat=False):
+	def init_fail(cls, e, m, *, e2=None, m2=None, objname=None, preformat=False):
 
 		def get_errmsg():
 			ret = m if preformat else (

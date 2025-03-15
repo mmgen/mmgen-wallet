@@ -53,8 +53,8 @@ class wallet(wallet):
 		seed = self.seed.data
 
 		bc = self.conv_cls(self.wl_id)
-		mn  = bc.frombytes(seed, 'seed')
-		rev = bc.tobytes(mn, 'seed')
+		mn  = bc.frombytes(seed, pad='seed')
+		rev = bc.tobytes(mn, pad='seed')
 
 		# Internal error, so just die on fail
 		self.cfg._util.compare_or_die(rev, 'recomputed seed', seed, 'original seed', e='Internal error')
@@ -78,8 +78,8 @@ class wallet(wallet):
 				msg(f'Invalid mnemonic: word #{n} is not in the {self.wl_id.upper()} wordlist')
 				return False
 
-		seed = bc.tobytes(mn, 'seed')
-		rev  = bc.frombytes(seed, 'seed')
+		seed = bc.tobytes(mn, pad='seed')
+		rev  = bc.frombytes(seed, pad='seed')
 
 		if len(seed) * 8 not in Seed.lens:
 			msg('Invalid mnemonic (produces too large a number)')

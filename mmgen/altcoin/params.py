@@ -267,7 +267,7 @@ class CoinInfo:
 			return None
 		return cls.coin_constants[network][idx]
 
-def make_proto(e, testnet=False):
+def make_proto(e, *, testnet=False):
 
 	proto = ('X_' if e.name[0] in '0123456789' else '') + e.name + ('Testnet' if testnet else '')
 
@@ -297,7 +297,7 @@ def make_proto(e, testnet=False):
 		)
 	)
 
-def init_genonly_altcoins(usr_coin=None, testnet=False):
+def init_genonly_altcoins(usr_coin=None, *, testnet=False):
 	"""
 	Initialize altcoin protocol class or classes for current network.
 	If usr_coin is a core coin, initialization is skipped.

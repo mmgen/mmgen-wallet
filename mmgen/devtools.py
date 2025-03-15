@@ -131,7 +131,7 @@ class MMGenObjectMethods: # mixin class for MMGenObject
 		def isScalar(obj):
 			return isinstance(obj, scalars)
 
-		def do_list(out, e, lvl=0, is_dict=False):
+		def do_list(out, e, *, lvl=0, is_dict=False):
 			out.append('\n')
 			for i in e:
 				el = i if not is_dict else e[i]

@@ -23,7 +23,7 @@ class OpImportOutputs(OpWallet):
 	action = 'importing wallet outputs into'
 	start_daemon = False
 
-	async def main(self, fn, wallet_idx, restart_daemon=True):
+	async def main(self, fn, wallet_idx, *, restart_daemon=True):
 		if restart_daemon:
 			await self.restart_wallet_daemon()
 		h = MoneroWalletRPC(self, self.addr_data[0])

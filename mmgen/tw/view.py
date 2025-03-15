@@ -250,14 +250,14 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		'twmmid': lambda i: '{} {:010} {:024.12f}'.format(i.twmmid.sort_key, 0xffffffff - abs(i.confs), i.amt)
 	}
 
-	def sort_info(self, include_group=True):
+	def sort_info(self, *, include_group=True):
 		ret = ([], ['Reverse'])[self.reverse]
 		ret.append(self.sort_disp[self.sort_key])
 		if include_group and self.group and (self.sort_key in ('addr', 'txid', 'twmmid')):
 			ret.append('Grouped')
 		return ret
 
-	def do_sort(self, key=None, reverse=False):
+	def do_sort(self, key=None, *, reverse=False):
 		key = key or self.sort_key
 		if key not in self.sort_funcs:
 			die(1, f'{key!r}: invalid sort key.  Valid options: {" ".join(self.sort_funcs)}')
@@ -268,7 +268,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		if self.data != save:
 			self.pos = 0
 
-	async def get_data(self, sort_key=None, reverse_sort=False):
+	async def get_data(self, *, sort_key=None, reverse_sort=False):
 
 		rpc_data = await self.get_rpc_data()
 
@@ -390,6 +390,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	async def format(
 			self,
 			display_type,
+			*,
 			color           = True,
 			interactive     = False,
 			line_processing = None,

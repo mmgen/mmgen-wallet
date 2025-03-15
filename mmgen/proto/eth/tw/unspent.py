@@ -95,7 +95,7 @@ class EthereumTwUnspentOutputs(EthereumTwView, TwUnspentOutputs):
 			interactive = interactive,
 		)
 
-	def do_sort(self, key=None, reverse=False):
+	def do_sort(self, key=None, *, reverse=False):
 		if key == 'txid':
 			return
 		super().do_sort(key=key, reverse=reverse)

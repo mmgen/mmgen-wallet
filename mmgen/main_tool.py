@@ -179,7 +179,7 @@ mods = {
 def get_cmds():
 	return [cmd for mod, cmds in mods.items() if mod != 'help' for cmd in cmds]
 
-def create_call_sig(cmd, cls, as_string=False):
+def create_call_sig(cmd, cls, *, as_string=False):
 
 	m = getattr(cls, cmd)
 
@@ -189,8 +189,11 @@ def create_call_sig(cmd, cls, as_string=False):
 		args, dfls, ann = va['args'], va['dfls'], va['annots']
 	else:
 		flag = None
-		args = m.__code__.co_varnames[1:m.__code__.co_argcount]
-		dfls = m.__defaults__ or ()
+		c = m.__code__
+		args = c.co_varnames[1:c.co_argcount + c.co_posonlyargcount + c.co_kwonlyargcount]
+		dfls = (
+			(m.__defaults__ or ()) +
+			tuple(m.__kwdefaults__[k] for k in args if k in (m.__kwdefaults__ or ())))
 		ann  = m.__annotations__
 
 	nargs = len(args) - len(dfls)
@@ -295,7 +298,7 @@ def process_args(cmd, cmd_args, cls):
 
 	return (args, kwargs)
 
-def process_result(ret, pager=False, print_result=False):
+def process_result(ret, *, pager=False, print_result=False):
 	"""
 	Convert result to something suitable for output to screen and return it.
 	If result is bytes and not convertible to utf8, output as binary using os.write().

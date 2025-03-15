@@ -185,6 +185,7 @@ class MasterNode(Lockable):
 	def init_cfg(
 			self,
 			coin           = None,
+			*,
 			network        = None,
 			addr_type      = None,
 			from_path      = False,
@@ -204,11 +205,11 @@ class MasterNode(Lockable):
 		new._lock()
 		return new
 
-	def to_coin_type(self, coin=None, network=None, addr_type=None):
-		return self.init_cfg(coin, network, addr_type).to_coin_type()
+	def to_coin_type(self, *, coin=None, network=None, addr_type=None):
+		return self.init_cfg(coin, network=network, addr_type=addr_type).to_coin_type()
 
-	def to_chain(self, idx, coin=None, network=None, addr_type=None, hardened=False, public=False):
-		return self.init_cfg(coin, network, addr_type).to_chain(
+	def to_chain(self, idx, *, coin=None, network=None, addr_type=None, hardened=False, public=False):
+		return self.init_cfg(coin, network=network, addr_type=addr_type).to_chain(
 			idx      = idx,
 			hardened = hardened,
 			public   = public)
@@ -294,7 +295,7 @@ class BipHDNode(Lockable):
 	def xprv(self):
 		return self.key_extended(public=False, as_str=True)
 
-	def key_extended(self, public, as_str=False):
+	def key_extended(self, public, *, as_str=False):
 		if self.public and not public:
 			raise ValueError('cannot create extended private key for public node!')
 		ret = b58chk_encode(
@@ -363,6 +364,7 @@ class BipHDNode(Lockable):
 			base_cfg,
 			seed,
 			path_str,
+			*,
 			coin           = None,
 			addr_type      = None,
 			no_path_checks = False):
@@ -441,7 +443,7 @@ class BipHDNodeMaster(BipHDNode):
 		#           purpose          coin_type
 		return self.derive_private().derive_private()
 
-	def to_chain(self, idx, hardened=False, public=False):
+	def to_chain(self, idx, *, hardened=False, public=False):
 		#           purpose          coin_type        account #0            chain
 		return self.derive_private().derive_private().derive_private(idx=0).derive(
 			idx      = idx,
@@ -475,7 +477,7 @@ class BipHDNodeCoinType(BipHDNode):
 				f'chain index {chain_idx} for coin {cfg.base_cfg.coin!r}')
 		return (chain_idx, type(self).hardened)
 
-	def to_chain(self, idx, hardened=False, public=False):
+	def to_chain(self, idx, *, hardened=False, public=False):
 		#           account #0            chain
 		return self.derive_private(idx=0).derive(
 			idx      = idx,

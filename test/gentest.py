@@ -322,7 +322,7 @@ def do_ab_test(proto, scfg, addr_type, gen1, kg2, ag, tool, cache_data):
 			for _ in range(scfg.rounds):
 				yield getrand(32)
 
-	kg1 = KeyGenerator(cfg, proto, addr_type.pubkey_type, gen1)
+	kg1 = KeyGenerator(cfg, proto, addr_type.pubkey_type, backend=gen1)
 	if type(kg1) == type(kg2):
 		die(4, 'Key generators are the same!')
 
@@ -378,7 +378,7 @@ def ab_test(proto, scfg):
 
 	if scfg.gen2:
 		assert scfg.gen1 != 'all', "'all' must be used only with external tool"
-		kg2 = KeyGenerator(cfg, proto, addr_type.pubkey_type, scfg.gen2)
+		kg2 = KeyGenerator(cfg, proto, addr_type.pubkey_type, backend=scfg.gen2)
 		tool = None
 	else:
 		toolname = find_or_check_tool(proto, addr_type, scfg.tool)
@@ -541,7 +541,7 @@ def main():
 		for p in protos:
 			ab_test(p, scfg)
 	else:
-		kg = KeyGenerator(cfg, proto, addr_type.pubkey_type, scfg.gen1)
+		kg = KeyGenerator(cfg, proto, addr_type.pubkey_type, backend=scfg.gen1)
 		ag = AddrGenerator(cfg, proto, addr_type)
 		if scfg.test == 'speed':
 			speed_test(proto, kg, ag, scfg.rounds)

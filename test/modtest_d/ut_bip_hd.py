@@ -197,7 +197,7 @@ class unit_tests:
 
 		coin_type1 = purpose.derive_private()
 
-		coin_type2 = m.to_coin_type('btc', addr_type='bech32')
+		coin_type2 = m.to_coin_type(coin='btc', addr_type='bech32')
 		assert coin_type1.address == coin_type2.address
 		vmsg(f'  {coin_type1.address=}')
 

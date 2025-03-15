@@ -71,7 +71,7 @@ class LEDControl:
 			trigger = '/tmp/led_trigger'),
 	}
 
-	def __init__(self, enabled, simulate=False, debug=False):
+	def __init__(self, *, enabled, simulate=False, debug=False):
 
 		self.enabled = enabled
 		self.debug = debug or simulate

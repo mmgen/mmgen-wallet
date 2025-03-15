@@ -95,7 +95,7 @@ class SubSeedList(MMGenObject):
 	def __len__(self):
 		return len(self.data['long'])
 
-	def get_subseed_by_ss_idx(self, ss_idx_in, print_msg=False):
+	def get_subseed_by_ss_idx(self, ss_idx_in, *, print_msg=False):
 		ss_idx = SubSeedIdx(ss_idx_in)
 		if print_msg:
 			msg_r('{} {} of {}...'.format(
@@ -122,7 +122,7 @@ class SubSeedList(MMGenObject):
 		assert seed.sid == sid, f'{seed.sid} != {sid}: Seed ID mismatch!'
 		return seed
 
-	def get_subseed_by_seed_id(self, sid, last_idx=None, print_msg=False):
+	def get_subseed_by_seed_id(self, sid, *, last_idx=None, print_msg=False):
 
 		def get_existing_subseed_by_seed_id(sid):
 			for k in ('long', 'short') if self.have_short else ('long',):

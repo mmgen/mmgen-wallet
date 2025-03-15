@@ -19,7 +19,7 @@ from ..daemon import CoinDaemon
 def help(proto, cfg):
 
 	def coind_exec():
-		return CoinDaemon(cfg, proto.coin).exec_fn if proto.coin in CoinDaemon.coins else 'bitcoind'
+		return CoinDaemon(cfg, network_id=proto.coin).exec_fn if proto.coin in CoinDaemon.coins else 'bitcoind'
 
 	return """
 Transactions may contain both {pnm} or non-{pnm} input addresses.

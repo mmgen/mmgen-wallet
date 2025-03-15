@@ -140,7 +140,7 @@ class OpWallet(OpBase):
 		return MoneroRPCClient(
 			cfg    = self.cfg,
 			proto  = self.proto,
-			daemon = CoinDaemon(self.cfg, 'xmr'),
+			daemon = CoinDaemon(self.cfg, network_id='xmr'),
 			host   = host,
 			port   = int(port),
 			user   = None,

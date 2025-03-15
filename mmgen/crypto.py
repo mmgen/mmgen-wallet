@@ -90,7 +90,7 @@ class Crypto:
 		return self.sha256_rounds(step1)
 
 	def encrypt_seed(self, data, key, desc='seed'):
-		return self.encrypt_data(data, key, desc=desc)
+		return self.encrypt_data(data, key=key, desc=desc)
 
 	def decrypt_seed(self, enc_seed, key, seed_id, key_id):
 		self.util.vmsg_r('Checking key...')
@@ -121,6 +121,7 @@ class Crypto:
 	def encrypt_data(
 			self,
 			data,
+			*,
 			key,
 			iv     = aesctr_dfl_iv,
 			desc   = 'data',
@@ -214,6 +215,7 @@ class Crypto:
 			passwd,
 			salt,
 			hash_preset,
+			*,
 			desc      = 'encryption key',
 			from_what = 'passphrase',
 			verbose   = False):
@@ -407,7 +409,7 @@ class Crypto:
 			passwd_file = self.cfg.passwd_file)
 		key    = self.make_key(passwd, salt, hp)
 		from hashlib import sha256
-		enc_d  = self.encrypt_data(sha256(nonce+data).digest() + nonce + data, key, iv, desc=desc)
+		enc_d  = self.encrypt_data(sha256(nonce+data).digest() + nonce + data, key=key, iv=iv, desc=desc)
 		return salt+iv+enc_d
 
 	def mmgen_decrypt(self, data, desc='data', hash_preset=None):

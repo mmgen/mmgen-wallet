@@ -25,6 +25,7 @@ class MoneroRPCClient(RPCClient):
 			self,
 			cfg,
 			proto,
+			*,
 			host,
 			port,
 			user,
@@ -42,7 +43,7 @@ class MoneroRPCClient(RPCClient):
 			if host.endswith('.onion'):
 				self.network_proto = 'http'
 
-		super().__init__(cfg, host, port, test_connection)
+		super().__init__(cfg, host, port, test_connection=test_connection)
 
 		if self.auth_type:
 			self.auth = auth_data(user, passwd)
@@ -90,7 +91,7 @@ class MoneroRPCClient(RPCClient):
 			host_path = f'/{method}'
 		), json_rpc=False)
 
-	async def do_stop_daemon(self, silent=False):
+	async def do_stop_daemon(self, *, silent=False):
 		return self.call_raw('stop_daemon') # unreliable on macOS (daemon stops, but closes connection)
 
 	rpcmethods = ('get_info',)
@@ -100,7 +101,7 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 
 	auth_type = 'digest'
 
-	def __init__(self, cfg, daemon, test_connection=True):
+	def __init__(self, cfg, daemon, *, test_connection=True):
 
 		RPCClient.__init__(
 			self            = self,
@@ -128,7 +129,7 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 	def call_raw(self, *args, **kwargs):
 		raise NotImplementedError('call_raw() not implemented for class MoneroWalletRPCClient')
 
-	async def do_stop_daemon(self, silent=False):
+	async def do_stop_daemon(self, *, silent=False):
 		"""
 		NB: the 'stop_wallet' RPC call closes the open wallet before shutting down the daemon,
 		returning an error if no wallet is open

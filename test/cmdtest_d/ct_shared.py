@@ -295,7 +295,7 @@ class CmdTestShared:
 			fn = t.written_to_file('Password list' if passgen else 'Addresses')
 			cls = PasswordList if passgen else AddrList
 			silence()
-			al = cls(cfg, self.proto, fn, skip_chksum_msg=True) # read back the file we’ve written
+			al = cls(cfg, self.proto, infile=fn, skip_chksum_msg=True) # read back the file we’ve written
 			end_silence()
 			cmp_or_die(al.chksum, chksum, desc=f'{ftype}list data checksum from file')
 		return t

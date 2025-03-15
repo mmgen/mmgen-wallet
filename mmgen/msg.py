@@ -91,7 +91,7 @@ class coin_msg:
 			coin, network = network_id.split('_')
 			return init_proto(cfg=cfg, coin=coin, network=network)
 
-		def write_to_file(self, outdir=None, ask_overwrite=False):
+		def write_to_file(self, *, outdir=None, ask_overwrite=False):
 			data = {
 				'id': f'{gc.proj_name} {self.desc}',
 				'metadata': self.data,

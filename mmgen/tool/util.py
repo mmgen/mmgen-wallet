@@ -57,6 +57,7 @@ class tool_cmd(tool_cmd_base):
 	def to_bytespec(self,
 			n: int,
 			dd_style_byte_specifier: str,
+			*,
 			fmt:       'width and precision of output' = '0.2',
 			print_sym: 'print the specifier after the numerical value' = True,
 			strip:     'strip trailing zeroes' = False,
@@ -139,6 +140,7 @@ class tool_cmd(tool_cmd_base):
 	# TODO: handle stdin
 	def hash256(self,
 			data: str,
+			*,
 			file_input: 'first arg is the name of a file containing the data' = False,
 			hex_input:  'first arg is a hexadecimal string' = False):
 		"compute sha256(sha256(data)) (double sha256)"
@@ -215,25 +217,26 @@ class tool_cmd(tool_cmd_base):
 	def hextob32(self, hexstr: 'sstr', pad: 'pad output to this width' = 0):
 		"convert a hexadecimal string to an MMGen-flavor base 32 string"
 		from ..baseconv import baseconv
-		return baseconv('b32').fromhex(hexstr, pad, tostr=True)
+		return baseconv('b32').fromhex(hexstr, pad=pad, tostr=True)
 
 	def b32tohex(self, b32_str: 'sstr', pad: 'pad output to this width' = 0):
 		"convert an MMGen-flavor base 32 string to hexadecimal"
 		from ..baseconv import baseconv
-		return baseconv('b32').tohex(b32_str.upper(), pad)
+		return baseconv('b32').tohex(b32_str.upper(), pad=pad)
 
 	def hextob6d(self,
 			hexstr: 'sstr',
+			*,
 			pad: 'pad output to this width' = 0,
 			add_spaces: 'add a space after every 5th character' = True):
 		"convert a hexadecimal string to die roll base6 (base6d)"
 		from ..baseconv import baseconv
 		from ..util2 import block_format
-		ret = baseconv('b6d').fromhex(hexstr, pad, tostr=True)
+		ret = baseconv('b6d').fromhex(hexstr, pad=pad, tostr=True)
 		return block_format(ret, gw=5, cols=None).strip() if add_spaces else ret
 
 	def b6dtohex(self, b6d_str: 'sstr', pad: 'pad output to this width' = 0):
 		"convert a die roll base6 (base6d) string to hexadecimal"
 		from ..baseconv import baseconv
 		from ..util import remove_whitespace
-		return baseconv('b6d').tohex(remove_whitespace(b6d_str), pad)
+		return baseconv('b6d').tohex(remove_whitespace(b6d_str), pad=pad)

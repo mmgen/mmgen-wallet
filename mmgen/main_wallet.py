@@ -179,7 +179,7 @@ if cmd_args:
 		cfg._usage()
 	check_infile(cmd_args[0])
 
-sf = get_seed_file(cfg, nargs, invoked_as=invoked_as)
+sf = get_seed_file(cfg, nargs=nargs, invoked_as=invoked_as)
 
 if invoked_as != 'chk':
 	from .ui import do_license_msg
@@ -212,7 +212,7 @@ if invoked_as == 'subgen':
 		cfg      = cfg,
 		seed_bin = ss_in.seed.subseed(ss_idx, print_msg=True).data)
 elif invoked_as == 'seedsplit':
-	shares = ss_in.seed.split(sss.count, sss.id, master_share)
+	shares = ss_in.seed.split(sss.count, id_str=sss.id, master_idx=master_share)
 	seed_out = shares.get_share_by_idx(sss.idx, base_seed=True)
 	msg(seed_out.get_desc(ui=True))
 	ss_out = Wallet(

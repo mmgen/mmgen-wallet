@@ -68,7 +68,7 @@ class Sha2:
 		# First wordBits bits of the fractional parts of the cube roots of the first nRounds primes
 		cls.K = tuple(getFractionalBits(cbrt(n)) for n in primes)
 
-	def __init__(self, message, preprocess=True):
+	def __init__(self, message, *, preprocess=True):
 		'Use preprocess=False for Sha256Compress'
 		assert isinstance(message, (bytes, bytearray, list)), 'message must be of type bytes, bytearray or list'
 		if not self.K:

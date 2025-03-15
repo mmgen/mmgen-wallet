@@ -145,7 +145,7 @@ class TxInfo(TxInfo):
 			+ ''.join(format_io('inputs'))
 			+ ''.join(format_io('outputs')))
 
-	def strfmt_locktime(self, locktime=None, terse=False):
+	def strfmt_locktime(self, locktime=None, *, terse=False):
 		# Locktime itself is an unsigned 4-byte integer which can be parsed two ways:
 		#
 		# If less than 500 million, locktime is parsed as a block height. The transaction can be

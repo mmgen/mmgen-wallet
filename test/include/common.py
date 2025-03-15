@@ -307,7 +307,7 @@ def test_daemons_ops(*network_ids, op, remove_datadir=False):
 		silent = not (cfg.verbose or cfg.exact_output)
 		ret = False
 		for network_id in network_ids:
-			d = CoinDaemon(cfg, network_id, test_suite=True)
+			d = CoinDaemon(cfg, network_id=network_id, test_suite=True)
 			if remove_datadir:
 				d.wait = True
 				d.stop(silent=True)

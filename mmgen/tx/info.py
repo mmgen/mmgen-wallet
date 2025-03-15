@@ -25,7 +25,7 @@ class TxInfo:
 		self.cfg = cfg
 		self.tx = tx
 
-	def format(self, terse=False, sort='addr'):
+	def format(self, *, terse=False, sort='addr'):
 
 		tx = self.tx
 
@@ -115,7 +115,7 @@ class TxInfo:
 
 		return ''.join(gen_view())
 
-	def view_with_prompt(self, prompt, pause=True):
+	def view_with_prompt(self, prompt, *, pause=True):
 		prompt += ' (y)es, (N)o, pager (v)iew, (t)erse view: '
 		from ..term import get_char
 		while True:
@@ -131,7 +131,7 @@ class TxInfo:
 				break
 			msg('Invalid reply')
 
-	def view(self, pager=False, pause=True, terse=False):
+	def view(self, *, pager=False, pause=True, terse=False):
 		o = self.format(terse=terse)
 		if pager:
 			from ..ui import do_pager

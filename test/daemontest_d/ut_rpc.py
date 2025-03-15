@@ -91,7 +91,7 @@ class init_test:
 
 	@staticmethod
 	async def btc(cfg, daemon, backend, cfg_override):
-		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
+		rpc = await rpc_init(cfg, daemon.proto, backend=backend, daemon=daemon)
 		do_msg(rpc, backend)
 
 		wi = await rpc.walletinfo
@@ -106,7 +106,7 @@ class init_test:
 
 	@staticmethod
 	async def bch(cfg, daemon, backend, cfg_override):
-		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
+		rpc = await rpc_init(cfg, daemon.proto, backend=backend, daemon=daemon)
 		do_msg(rpc, backend)
 		return rpc
 
@@ -114,7 +114,7 @@ class init_test:
 
 	@staticmethod
 	async def eth(cfg, daemon, backend, cfg_override):
-		rpc = await rpc_init(cfg, daemon.proto, backend, daemon)
+		rpc = await rpc_init(cfg, daemon.proto, backend=backend, daemon=daemon)
 		do_msg(rpc, backend)
 		await rpc.call('eth_blockNumber', timeout=300)
 		if rpc.proto.network == 'testnet':

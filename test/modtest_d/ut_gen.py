@@ -62,7 +62,7 @@ def do_test(proto, wif, addr_chk, addr_type, internal_keccak):
 
 	for n, backend in enumerate(get_backends(at.pubkey_type)):
 
-		kg = KeyGenerator( cfg, proto, at.pubkey_type, n+1)
+		kg = KeyGenerator(cfg, proto, at.pubkey_type, silent=n+1)
 		qmsg(blue(f'  Testing backend {backend!r} for addr type {addr_type!r}{add_msg}'))
 
 		data = kg.gen_data(privkey)

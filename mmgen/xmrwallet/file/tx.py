@@ -153,7 +153,7 @@ class MoneroMMGenTX:
 		def file_id(self):
 			return (self.base_chksum + ('-' + self.full_chksum if self.full_chksum else '')).upper()
 
-		def write(self, delete_metadata=False, ask_write=True, ask_overwrite=True):
+		def write(self, *, delete_metadata=False, ask_write=True, ask_overwrite=True):
 			dict_data = self.data._asdict()
 			if delete_metadata:
 				dict_data['metadata'] = None

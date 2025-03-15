@@ -25,7 +25,7 @@ from .util import die, get_extension
 
 class File:
 
-	def __init__(self, fn, write=False):
+	def __init__(self, fn, *, write=False):
 
 		self.name     = fn
 		self.dirname  = os.path.dirname(fn)
@@ -66,21 +66,21 @@ class File:
 
 class FileList(list):
 
-	def __init__(self, fns, write=False):
+	def __init__(self, fns, *, write=False):
 		list.__init__(
 			self,
-			[File(fn, write) for fn in fns])
+			[File(fn, write=write) for fn in fns])
 
 	def names(self):
 		return [f.name for f in self]
 
-	def sort_by_age(self, key='mtime', reverse=False):
+	def sort_by_age(self, *, key='mtime', reverse=False):
 		assert key in ('atime', 'ctime', 'mtime'), f'{key!r}: invalid sort key'
 		self.sort(key=lambda a: getattr(a, key), reverse=reverse)
 
 class MMGenFile(File):
 
-	def __init__(self, fn, base_class=None, subclass=None, proto=None, write=False):
+	def __init__(self, fn, *, base_class=None, subclass=None, proto=None, write=False):
 		"""
 		'base_class' - a base class with an 'ext_to_cls' method
 		'subclass'   - a subclass with an 'ext' attribute
@@ -91,7 +91,7 @@ class MMGenFile(File):
 		attribute to True.
 		"""
 
-		super().__init__(fn, write)
+		super().__init__(fn, write=write)
 
 		assert (subclass or base_class) and not (subclass and base_class), 'MMGenFile chk1'
 
@@ -107,12 +107,12 @@ class MMGenFile(File):
 
 class MMGenFileList(FileList):
 
-	def __init__(self, fns, base_class, proto=None, write=False):
+	def __init__(self, fns, base_class, *, proto=None, write=False):
 		list.__init__(
 			self,
 			[MMGenFile(fn, base_class=base_class, proto=proto, write=write) for fn in fns])
 
-def find_files_in_dir(subclass, fdir, no_dups=False):
+def find_files_in_dir(subclass, fdir, *, no_dups=False):
 
 	assert isinstance(subclass, type), f'{subclass}: not a class'
 

@@ -498,7 +498,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def _add_comments_to_addr_file(self, proto, addrfile, outfile, use_comments=False):
 		silence()
 		gmsg(f'Adding comments to address file {addrfile!r}')
-		a = AddrList(cfg, proto, addrfile)
+		a = AddrList(cfg, proto, infile=addrfile)
 		for n, idx in enumerate(a.idxs(), 1):
 			if use_comments:
 				a.set_comment(idx, get_comment())
@@ -1110,7 +1110,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			sid, self.get_altcoin_pfx(proto.coin), id_str, addr_range, x='-α' if cfg.debug_utf8 else '')
 		addrfile = get_file_with_ext(self._user_dir(user), ext, no_dot=True)
 		silence()
-		addr = AddrList(cfg, proto, addrfile).data[idx].addr
+		addr = AddrList(cfg, proto, infile=addrfile).data[idx].addr
 		end_silence()
 		return addr
 

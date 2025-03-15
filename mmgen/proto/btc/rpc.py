@@ -54,6 +54,7 @@ class CallSigs:
 		def createwallet(
 				self,
 				wallet_name,
+				*,
 				no_keys         = True,
 				blank           = True,
 				passphrase      = '',
@@ -86,6 +87,7 @@ class CallSigs:
 		def createwallet(
 				self,
 				wallet_name,
+				*,
 				no_keys         = True,
 				blank           = True,
 				passphrase      = '',
@@ -269,7 +271,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 		fn = self.get_daemon_cfg_fn()
 		try:
 			lines = get_lines_from_file(
-				self.cfg, fn, 'daemon config file', silent=not self.cfg.verbose)
+				self.cfg, fn, desc='daemon config file', silent=not self.cfg.verbose)
 		except:
 			self.cfg._util.vmsg(f'Warning: {fn!r} does not exist or is unreadable')
 			return dict((k, None) for k in req_keys)
@@ -289,7 +291,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 	def get_daemon_auth_cookie(self):
 		fn = self.daemon.auth_cookie_fn
 		return get_lines_from_file(
-			self.cfg, fn, 'cookie', quiet=True)[0] if os.access(fn, os.R_OK) else ''
+			self.cfg, fn, desc='cookie', quiet=True)[0] if os.access(fn, os.R_OK) else ''
 
 	def info(self, info_id):
 

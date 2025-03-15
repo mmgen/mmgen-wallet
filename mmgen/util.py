@@ -69,6 +69,7 @@ class Util:
 			desc1,
 			chk2,
 			desc2,
+			*,
 			hdr         = '',
 			die_on_fail = False,
 			verbose     = False):
@@ -156,7 +157,7 @@ def mdie(*args):
 	mmsg(*args)
 	sys.exit(0)
 
-def die(ev, s='', stdout=False):
+def die(ev, s='', *, stdout=False):
 	if isinstance(ev, int):
 		from .exception import MMGenSystemExit, MMGenError
 		if ev <= 2:
@@ -242,7 +243,7 @@ def list_gen(*data):
 					yield d[idx]
 	return list(gen())
 
-def remove_dups(iterable, edesc='element', desc='list', quiet=False, hide=False):
+def remove_dups(iterable, *, edesc='element', desc='list', quiet=False, hide=False):
 	"""
 	Remove duplicate occurrences of iterable elements, preserving first occurrence
 	If iterable is a generator, return a list, else type(iterable)
@@ -292,7 +293,7 @@ def remove_extension(fn, ext):
 	a, b = os.path.splitext(fn)
 	return a if b[1:] == ext else fn
 
-def make_chksum_N(s, nchars, sep=False, rounds=2, upper=True):
+def make_chksum_N(s, nchars, *, sep=False, rounds=2, upper=True):
 	if isinstance(s, str):
 		s = s.encode()
 	from hashlib import sha256
@@ -306,7 +307,7 @@ def make_chksum_N(s, nchars, sep=False, rounds=2, upper=True):
 		assert 4 <= nchars <= 64, 'illegal ‘nchars’ value'
 	return ret.upper() if upper else ret
 
-def make_chksum_8(s, sep=False):
+def make_chksum_8(s, *, sep=False):
 	from .obj import HexStr
 	from hashlib import sha256
 	s = HexStr(sha256(sha256(s).digest()).hexdigest()[:8].upper(), case='upper')
@@ -396,7 +397,7 @@ class oneshot_warning:
 
 	color = 'nocolor'
 
-	def __init__(self, div=None, fmt_args=[], reverse=False):
+	def __init__(self, *, div=None, fmt_args=[], reverse=False):
 		self.do(type(self), div, fmt_args, reverse)
 
 	def do(self, wcls, div, fmt_args, reverse):
@@ -422,10 +423,10 @@ class oneshot_warning:
 
 class oneshot_warning_group(oneshot_warning):
 
-	def __init__(self, wcls, div=None, fmt_args=[], reverse=False):
+	def __init__(self, wcls, *, div=None, fmt_args=[], reverse=False):
 		self.do(getattr(self, wcls), div, fmt_args, reverse)
 
-def get_subclasses(cls, names=False):
+def get_subclasses(cls, *, names=False):
 	def gen(cls):
 		for i in cls.__subclasses__():
 			yield i
@@ -456,7 +457,7 @@ def exit_if_mswin(feature):
 	if sys.platform == 'win32':
 		die(2, capfirst(feature) + ' not supported on the MSWin / MSYS2 platform')
 
-def have_sudo(silent=False):
+def have_sudo(*, silent=False):
 	from subprocess import run, DEVNULL
 	redir = DEVNULL if silent else None
 	try:
