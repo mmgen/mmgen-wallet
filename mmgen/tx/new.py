@@ -70,6 +70,13 @@ def mmaddr2coinaddr(cfg, mmaddr, ad_w, ad_f, proto):
 
 	return CoinAddr(proto, coin_addr)
 
+def parse_fee_spec(proto, fee_arg):
+	import re
+	units = {u[0]:u for u in proto.coin_amt.units}
+	pat = re.compile(r'((?:[1-9][0-9]*)|(?:[0-9]+\.[0-9]+))({})'.format('|'.join(units)))
+	if m := pat.match(fee_arg):
+		return namedtuple('parsed_fee_spec', ['amt', 'unit'])(m[1], units[m[2]])
+
 class New(Base):
 
 	fee_is_approximate = False
@@ -117,12 +124,8 @@ class New(Base):
 		if fee := get_obj(self.proto.coin_amt, num=fee_arg, silent=True):
 			return fee
 
-		import re
-		units = {u[0]:u for u in self.proto.coin_amt.units}
-		pat = re.compile(r'([1-9][0-9]*)({})'.format('|'.join(units)))
-		if pat.match(fee_arg):
-			amt, unit = pat.match(fee_arg).groups()
-			return self.fee_rel2abs(tx_size, units, int(amt), unit)
+		if res := parse_fee_spec(self.proto, fee_arg):
+			return self.fee_rel2abs(tx_size, float(res.amt), res.unit)
 
 		return False
 

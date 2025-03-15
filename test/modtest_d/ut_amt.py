@@ -7,6 +7,7 @@ test.modtest_d.ut_amt: CoinAmt unit tests for the MMGen suite
 from decimal import Decimal
 
 from mmgen.protocol import init_proto
+from mmgen.tx.new import parse_fee_spec
 from mmgen.cfg import Config
 
 from ..include.common import cfg, vmsg
@@ -26,9 +27,18 @@ def test_to_unit(data):
 			assert res == int(chk), f'{res} != {int(chk)}'
 	return True
 
+def test_fee_spec(data):
+	protos = get_protos(data)
+	for proto, spec, amt, unit in data:
+		vmsg(f'  {proto.upper():6} {spec:<5} => {amt:<4} {unit}')
+		res = parse_fee_spec(protos[proto], spec)
+		assert res.amt == amt, f'  {res.amt} != {amt}'
+		assert res.unit == unit, f'  {res.unit} != {unit}'
+	return True
+
 class unit_tests:
 
-	altcoin_deps = ('to_unit_alt',)
+	altcoin_deps = ('fee_spec_alt', 'to_unit_alt')
 
 	def to_unit(self, name, ut, desc='CoinAmt.to_unit() (BTC)'):
 		return test_to_unit((
@@ -54,3 +64,18 @@ class unit_tests:
 			('xmr', '1',                    'atomic',  '1000000000000'),
 			('xmr', '0.000000000001',       'atomic',  '1'),
 			('xmr', '1.234567890123',       'atomic',  '1234567890123')))
+
+	def fee_spec(self, name, ut, desc='fee spec parsing (BTC)'):
+		return test_fee_spec((
+			('btc', '32s',  '32', 'satoshi'),
+			('btc', '1s',   '1',  'satoshi')))
+
+	def fee_spec_alt(self, name, ut, desc='fee spec parsing (LTC, BCH, ETH, XMR)'):
+		return test_fee_spec((
+			('ltc', '3.07s', '3.07', 'satoshi'),
+			('bch', '3.07s', '3.07', 'satoshi'),
+			('eth', '3.07G', '3.07', 'Gwei'),
+			('eth', '37M',   '37',   'Mwei'),
+			('eth', '3701w', '3701', 'wei'),
+			('eth', '3.07M', '3.07', 'Mwei'),
+			('xmr', '3.07a', '3.07', 'atomic')))

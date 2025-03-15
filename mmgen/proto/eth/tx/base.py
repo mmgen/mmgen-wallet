@@ -34,9 +34,8 @@ class Base(TxBase.Base):
 		return self.outputs
 
 	def pretty_fmt_fee(self, fee):
-		if fee < 1:
-			ret = f'{fee:.8f}'.rstrip('0')
-			return ret + '0' if ret.endswith('.') else ret
+		if fee < 10:
+			return f'{fee:.3f}'.rstrip('0').rstrip('.')
 		return str(int(fee))
 
 	# given absolute fee in ETH, return gas price for display in selected unit

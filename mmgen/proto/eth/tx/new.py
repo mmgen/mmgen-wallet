@@ -126,8 +126,8 @@ class New(Base, TxBase.New):
 			assert self.usr_fee <= self.proto.max_tx_fee
 
 	# given rel fee and units, return absolute fee using self.gas
-	def fee_rel2abs(self, tx_size, units, amt_in_units, unit):
-		return self.proto.coin_amt(amt_in_units, from_unit=units[unit]) * self.gas.toWei()
+	def fee_rel2abs(self, tx_size, amt_in_units, unit):
+		return self.proto.coin_amt(int(amt_in_units * self.gas.toWei()), from_unit=unit)
 
 	# given fee estimate (gas price) in wei, return absolute fee, adjusting by self.cfg.fee_adjust
 	def fee_est2abs(self, rel_fee, *, fe_type=None):
