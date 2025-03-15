@@ -206,10 +206,11 @@ class TwUnspentOutputs(TwView):
 				c = d.comment.fmt2(cw.comment, color=color, nullrepl='-'))
 
 	def display_total(self):
-		msg('\nTotal unspent: {} {} ({} output{})'.format(
+		msg('\nTotal unspent: {} {} ({} {}{})'.format(
 			self.total.hl(),
 			self.proto.dcoin,
 			len(self.data),
+			self.item_desc,
 			suf(self.data)))
 
 	async def set_dates(self, us):

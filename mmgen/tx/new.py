@@ -85,7 +85,6 @@ class New(Base):
 		ERROR: No change address specified.  If you wish to create a transaction with
 		only one output, specify a single output address with no {} amount
 	"""
-	msg_insufficient_funds = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
 	chg_autoselected = False
 	_funds_available = namedtuple('funds_available', ['is_positive', 'amt'])
 
@@ -388,7 +387,10 @@ class New(Base):
 			self.get_unspent_nums_from_user
 		)(self.twuo.data)
 
-		msg(f'Selected output{suf(sel_nums)}: {{}}'.format(' '.join(str(n) for n in sel_nums)))
+		msg('Selected {}{}: {}'.format(
+			self.twuo.item_desc,
+			suf(sel_nums),
+			' '.join(str(n) for n in sel_nums)))
 		sel_unspent = MMGenList(self.twuo.data[i-1] for i in sel_nums)
 
 		if not await self.precheck_sufficient_funds(
@@ -481,10 +483,11 @@ class New(Base):
 				fee_hint = self.update_vault_output(
 					self.vault_output.amt or self.sum_inputs(),
 					deduct_est_fee = self.vault_output == self.chg_output)
-			if funds_left := await self.get_fee(
+			desc = 'User-selected' if self.cfg.fee else 'Recommended' if fee_hint else None
+			if (funds_left := await self.get_fee(
 					self.cfg.fee or fee_hint,
 					outputs_sum,
-					'User-selected' if self.cfg.fee else 'Recommended' if fee_hint else None):
+					desc)) is not None:
 				break
 
 		self.check_non_mmgen_inputs(caller)

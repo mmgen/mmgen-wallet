@@ -22,6 +22,7 @@ class New(Base, TxNew):
 	usr_fee_prompt = 'Enter transaction fee: '
 	fee_fail_fs = 'Network fee estimation for {c} confirmations failed ({t})'
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
+	msg_insufficient_funds = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
 
 	def process_data_output_arg(self, arg):
 		if any(arg.startswith(pfx) for pfx in ('data:', 'hexdata:')):
