@@ -109,6 +109,10 @@ def check_infile(f, *, blkdev_ok=False):
 def check_outfile(f, *, blkdev_ok=False):
 	return _check_file_type_and_access(f, 'output file', blkdev_ok=blkdev_ok)
 
+def check_outfile_dir(fn, *, blkdev_ok=False):
+	return _check_file_type_and_access(
+		os.path.dirname(os.path.abspath(fn)), 'output directory', blkdev_ok=blkdev_ok)
+
 def check_outdir(f):
 	return _check_file_type_and_access(f, 'output directory')
 

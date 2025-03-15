@@ -134,15 +134,18 @@ class CmdTestShared:
 			ni          = False,
 			save        = True,
 			do_passwd   = False,
+			passwd      = None,
 			has_label   = False):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
-		if do_passwd:
-			t.passphrase('MMGen wallet', self.wpasswd)
+		if do_passwd and txdo:
+			t.passphrase('MMGen wallet', passwd or self.wpasswd)
 
-		if not ni and not txdo:
+		if not (ni or txdo):
 			t.view_tx(view)
+			if do_passwd:
+				t.passphrase('MMGen wallet', passwd or self.wpasswd)
 			t.do_comment(add_comment, has_label=has_label)
 			t.expect('(Y/n): ', ('n', 'y')[save])
 

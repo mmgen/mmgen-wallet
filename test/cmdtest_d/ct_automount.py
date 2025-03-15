@@ -59,7 +59,9 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('alice_txcreate4',                  'creating a transaction'),
 		('alice_txbump1',                    'bumping the unsigned transaction (error)'),
 		('alice_txbump2',                    'bumping the unsent transaction (error)'),
-		('alice_txsend2',                    'sending the transaction'),
+		('alice_txsend2_dump_hex',           'dumping the transaction to hex'),
+		('alice_txsend2_cli',                'sending the transaction via cli'),
+		('alice_txsend2_mark_sent',          'marking the transaction sent'),
 		('alice_txbump3',                    'bumping the transaction'),
 		('alice_txsend3',                    'sending the bumped transaction'),
 		('alice_txbump4',                    'bumping the transaction (new outputs, fee too low)'),
@@ -143,10 +145,18 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		return self.run_setup(mn_type='default', use_dfl_wallet=True, passwd=rt_pw)
 
 	def alice_txsend1(self):
-		return self._user_txsend('alice', 'This one’s worth a comment', no_wait=True)
+		return self._user_txsend('alice', comment='This one’s worth a comment', no_wait=True)
 
-	def alice_txsend2(self):
-		return self._user_txsend('alice', need_rbf=True)
+	def alice_txsend2_dump_hex(self):
+		return self._user_txsend('alice', need_rbf=True, dump_hex=True)
+
+	def alice_txsend2_cli(self):
+		if not self.proto.cap('rbf'):
+			return 'skip'
+		return self._user_dump_hex_send_cli('alice')
+
+	def alice_txsend2_mark_sent(self):
+		return self._user_txsend('alice', need_rbf=True, mark_sent=True)
 
 	def alice_txsend3(self):
 		return self._user_txsend('alice', need_rbf=True)

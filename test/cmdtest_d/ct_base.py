@@ -76,8 +76,9 @@ class CmdTestBase:
 	def get_file_with_ext(self, ext, **kwargs):
 		return get_file_with_ext(self.tmpdir, ext, **kwargs)
 
-	def read_from_tmpfile(self, fn, binary=False):
-		return read_from_file(os.path.join(self.tmpdir, fn), binary=binary)
+	def read_from_tmpfile(self, fn, binary=False, subdir=None):
+		tdir = os.path.join(self.tmpdir, subdir) if subdir else self.tmpdir
+		return read_from_file(os.path.join(tdir, fn), binary=binary)
 
 	def write_to_tmpfile(self, fn, data, binary=False):
 		return write_to_file(os.path.join(self.tmpdir, fn), data, binary=binary)

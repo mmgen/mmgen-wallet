@@ -27,7 +27,7 @@ from mmgen.proto.btc.regtest import MMGenRegtest
 from mmgen.proto.bch.cashaddr import b32a
 from mmgen.proto.btc.common import b58a
 from mmgen.color import yellow
-from mmgen.util import msg_r, die, gmsg, capfirst, suf, fmt_list
+from mmgen.util import msg_r, die, gmsg, capfirst, suf, fmt_list, is_hex_str
 from mmgen.protocol import init_proto
 from mmgen.addrlist import AddrList
 from mmgen.wallet import Wallet, get_wallet_cls
@@ -189,6 +189,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		('subgroup.view',           ['label']),
 		('subgroup._auto_chg_deps', ['twexport', 'label']),
 		('subgroup.auto_chg',       ['_auto_chg_deps']),
+		('subgroup.dump_hex',       ['fund_users']),
 		('stop',                    'stopping regtest daemon'),
 	)
 	cmd_subgroups = {
@@ -458,6 +459,16 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 									'(no unused addresses)'),
 		('carol_delete_wallet',      'unloading and deleting Carol’s tracking wallet'),
 	),
+	'dump_hex': (
+		'sending from dumped hex',
+		('bob_dump_hex_create',      'dump_hex transaction - creating'),
+		('bob_dump_hex_sign',        'dump_hex transaction - signing'),
+		('bob_dump_hex_dump_stdout', 'dump_hex transaction - dumping tx hex to stdout'),
+		('bob_dump_hex_dump',        'dump_hex transaction - dumping tx hex to file'),
+		('bob_dump_hex_send_cli',    'dump_hex transaction - sending via cli'),
+		('generate',                 'mining a block'),
+		('bob_bal7',                 'Bob’s balance'),
+	),
 	}
 
 	def __init__(self, trunner, cfgs, spawn):
@@ -494,6 +505,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		self.burn_addr = make_burn_addr(self.proto)
 		self.user_sids = {}
 		self.protos = (self.proto,)
+		self.dump_hex_subdir = os.path.join(self.tmpdir, 'nochg_tx')
 
 	def _add_comments_to_addr_file(self, proto, addrfile, outfile, use_comments=False):
 		silence()
@@ -2184,6 +2196,58 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			'carol',
 			'L',
 			'contains no unused addresses of address type')
+
+	def bob_dump_hex_create(self):
+		if not os.path.exists(self.dump_hex_subdir):
+			os.mkdir(self.dump_hex_subdir)
+		autochg_arg = self._user_sid('bob') + ':C'
+		return self.txcreate_ui_common(
+			self.spawn('mmgen-txcreate',
+				[
+					'-d',
+					self.dump_hex_subdir,
+					'-B',
+					'--bob',
+					'--fee=0.00009713',
+					autochg_arg
+				]),
+			auto_chg_addr = autochg_arg)
+
+	def bob_dump_hex_sign(self):
+		txfile = get_file_with_ext(self.dump_hex_subdir, 'rawtx')
+		return self.txsign_ui_common(
+			self.spawn('mmgen-txsign', ['-d', self.dump_hex_subdir, '--bob', txfile]),
+			do_passwd = True,
+			passwd    = rt_pw)
+
+	def _bob_dump_hex_dump(self, file):
+		txfile = get_file_with_ext(self.dump_hex_subdir, 'sigtx')
+		t = self.spawn('mmgen-txsend', ['-d', self.dump_hex_subdir, f'--dump-hex={file}', '--bob', txfile])
+		t.expect('view: ', '\n')
+		t.expect('(y/N): ', '\n') # add comment?
+		t.written_to_file('Sent transaction')
+		return t
+
+	def bob_dump_hex_dump(self):
+		return self._bob_dump_hex_dump('tx_dump.hex')
+
+	def bob_dump_hex_dump_stdout(self):
+		return self._bob_dump_hex_dump('-')
+
+	def _user_dump_hex_send_cli(self, user, *, subdir=None):
+		txhex = self.read_from_tmpfile('tx_dump.hex', subdir=subdir).strip()
+		t = self.spawn('mmgen-cli', [f'--{user}', 'sendrawtransaction', txhex])
+		txid = t.read().splitlines()[0]
+		assert is_hex_str(txid) and len(txid) == 64
+		return t
+
+	def bob_dump_hex_send_cli(self):
+		return self._user_dump_hex_send_cli('bob', subdir='nochg_tx')
+
+	def bob_bal7(self):
+		if not self.coin == 'btc':
+			return 'skip'
+		return self._user_bal_cli('bob', chks=['499.99990287', '46.51845565'])
 
 	def stop(self):
 		self.spawn('', msg_only=True)

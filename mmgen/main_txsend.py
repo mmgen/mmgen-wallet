@@ -44,6 +44,11 @@ opts_data = {
                  --autosign’ and delete it from the removable device.  The
                  transaction may be signed or unsigned.
 -d, --outdir= d  Specify an alternate directory 'd' for output
+-H, --dump-hex=F Instead of sending to the network, dump the transaction hex
+                 to file ‘F’.  Use filename ‘-’ to dump to standard output.
+-m, --mark-sent  Mark the transaction as sent by adding it to the removable
+                 device.  Used in combination with --autosign when a trans-
+                 action has been successfully sent out-of-band.
 -q, --quiet      Suppress warnings; overwrite files without prompting
 -s, --status     Get status of a sent transaction (or current transaction,
                  whether sent or unsent, when used with --autosign)
@@ -57,6 +62,13 @@ cfg = Config(opts_data=opts_data)
 
 if cfg.autosign and cfg.outdir:
 	die(1, '--outdir cannot be used in combination with --autosign')
+
+if cfg.mark_sent and not cfg.autosign:
+	die(1, '--mark-sent is used only in combination with --autosign')
+
+if cfg.dump_hex and cfg.dump_hex != '-':
+	from .fileutil import check_outfile_dir
+	check_outfile_dir(cfg.dump_hex)
 
 if len(cfg._args) == 1:
 	infile = cfg._args[0]
@@ -110,6 +122,10 @@ async def main():
 
 	cfg._util.vmsg(f'Getting {tx.desc} ‘{tx.infile}’')
 
+	if cfg.mark_sent:
+		await post_send(tx)
+		sys.exit(0)
+
 	if cfg.status:
 		if tx.coin_txid:
 			cfg._util.qmsg(f'{tx.proto.coin} txid: {tx.coin_txid.hl()}')
@@ -127,7 +143,22 @@ async def main():
 			if not cfg.autosign:
 				tx.file.write(ask_write_default_yes=True)
 
-	if await tx.send():
+	if cfg.dump_hex:
+		from .fileutil import write_data_to_file
+		write_data_to_file(
+				cfg,
+				cfg.dump_hex,
+				tx.serialized + '\n',
+				desc = 'serialized transaction hex data',
+				ask_overwrite = False,
+				ask_tty = False)
+		if cfg.autosign:
+			from .ui import keypress_confirm
+			if keypress_confirm(cfg, 'Mark transaction as sent on removable device?'):
+				await post_send(tx)
+		else:
+			await post_send(tx)
+	elif await tx.send():
 		await post_send(tx)
 
 async_run(main())

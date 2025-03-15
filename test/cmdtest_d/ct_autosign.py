@@ -81,6 +81,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			atexit.register(self._macOS_eject_disk, self.asi.dev_label)
 
 		self.opts = ['--coins='+','.join(self.coins)]
+		self.txhex_file = f'{self.tmpdir}/tx_dump.hex'
 
 		if not self.live:
 			self.spawn_env['MMGEN_TEST_SUITE_ROOT_PFX'] = self.tmpdir
@@ -492,7 +493,15 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 		return do_return()
 
-	def _user_txsend(self, user, comment=None, no_wait=False, need_rbf=False):
+	def _user_txsend(
+			self,
+			user,
+			*,
+			comment   = None,
+			no_wait   = False,
+			need_rbf  = False,
+			dump_hex  = False,
+			mark_sent = False):
 
 		if need_rbf and not self.proto.cap('rbf'):
 			return 'skip'
@@ -500,12 +509,26 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		if not no_wait:
 			self._wait_signed('transaction')
 
+		extra_opt = (
+			[f'--dump-hex={self.txhex_file}'] if dump_hex
+			else ['--mark-sent'] if mark_sent
+			else [])
+
 		self.insert_device_online()
-		t = self.spawn('mmgen-txsend', [f'--{user}', '--quiet', '--autosign'])
-		t.view_tx('t')
-		t.do_comment(comment)
-		self._do_confirm_send(t, quiet=True)
-		t.written_to_file('Sent automount transaction')
+		t = self.spawn('mmgen-txsend', [f'--{user}', '--quiet', '--autosign'] + extra_opt)
+
+		if mark_sent:
+			t.written_to_file('Sent automount transaction')
+		else:
+			t.view_tx('t')
+			t.do_comment(comment)
+			if dump_hex:
+				t.written_to_file('Serialized transaction hex data')
+				t.expect('(y/N): ', 'n') # mark as sent?
+			else:
+				self._do_confirm_send(t, quiet=True)
+				t.written_to_file('Sent automount transaction')
+
 		t.read()
 		self.remove_device_online()
 		return t

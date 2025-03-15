@@ -108,6 +108,7 @@ def get_file_with_ext(
 		no_dot      = False,
 		return_list = False,
 		delete_all  = False,
+		subdir      = None,
 		substr      = False):
 
 	dot = '' if no_dot else '.'
@@ -117,6 +118,9 @@ def get_file_with_ext(
 			fn == ext
 			or fn.endswith(dot + ext)
 			or (substr and ext in fn))
+
+	if subdir:
+		tdir = os.path.join(tdir, subdir)
 
 	# Don’t use os.scandir here - it returns broken paths under Windows/MSYS2
 	flist = [os.path.join(tdir, name) for name in os.listdir(tdir) if have_match(name)]
