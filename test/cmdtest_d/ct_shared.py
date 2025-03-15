@@ -162,6 +162,7 @@ class CmdTestShared:
 			file_desc    = 'Sent transaction',
 			confirm_send = True,
 			bogus_send   = True,
+			test         = False,
 			quiet        = False,
 			has_label    = False):
 
@@ -172,16 +173,19 @@ class CmdTestShared:
 			t.view_tx(view)
 			t.do_comment(add_comment, has_label=has_label)
 
-		self._do_confirm_send(t, quiet=quiet, confirm_send=confirm_send)
+		if not test:
+			self._do_confirm_send(t, quiet=quiet, confirm_send=confirm_send)
 
 		if bogus_send:
 			txid = ''
 			t.expect('BOGUS transaction NOT sent')
 		else:
-			txid = strip_ansi_escapes(t.expect_getend('Transaction sent: '))
+			m = 'TxID: ' if test else 'Transaction sent: '
+			txid = strip_ansi_escapes(t.expect_getend(m))
 			assert len(txid) == 64, f'{txid!r}: Incorrect txid length!'
 
-		t.written_to_file(file_desc)
+		if not test:
+			t.written_to_file(file_desc)
 
 		return txid
 

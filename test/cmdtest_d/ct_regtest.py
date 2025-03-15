@@ -465,6 +465,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		('bob_dump_hex_sign',        'dump_hex transaction - signing'),
 		('bob_dump_hex_dump_stdout', 'dump_hex transaction - dumping tx hex to stdout'),
 		('bob_dump_hex_dump',        'dump_hex transaction - dumping tx hex to file'),
+		('bob_dump_hex_test',        'dump_hex transaction - test whether TX can be sent'),
 		('bob_dump_hex_send_cli',    'dump_hex transaction - sending via cli'),
 		('generate',                 'mining a block'),
 		('bob_bal7',                 'Bob’s balance'),
@@ -2239,6 +2240,12 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		t = self.spawn('mmgen-cli', [f'--{user}', 'sendrawtransaction', txhex])
 		txid = t.read().splitlines()[0]
 		assert is_hex_str(txid) and len(txid) == 64
+		return t
+
+	def bob_dump_hex_test(self):
+		txfile = get_file_with_ext(self.dump_hex_subdir, 'sigtx')
+		t = self.spawn('mmgen-txsend', ['--bob', '--test', txfile])
+		self.txsend_ui_common(t, bogus_send=False, test=True)
 		return t
 
 	def bob_dump_hex_send_cli(self):

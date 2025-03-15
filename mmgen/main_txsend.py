@@ -52,6 +52,7 @@ opts_data = {
 -q, --quiet      Suppress warnings; overwrite files without prompting
 -s, --status     Get status of a sent transaction (or current transaction,
                  whether sent or unsent, when used with --autosign)
+-t, --test       Test whether the transaction can be sent without sending it
 -v, --verbose    Be more verbose
 -y, --yes        Answer 'yes' to prompts, suppress non-essential output
 """
@@ -65,6 +66,9 @@ if cfg.autosign and cfg.outdir:
 
 if cfg.mark_sent and not cfg.autosign:
 	die(1, '--mark-sent is used only in combination with --autosign')
+
+if cfg.test and cfg.dump_hex:
+	die(1, '--test cannot be used in combination with --dump-hex')
 
 if cfg.dump_hex and cfg.dump_hex != '-':
 	from .fileutil import check_outfile_dir
@@ -158,6 +162,8 @@ async def main():
 				await post_send(tx)
 		else:
 			await post_send(tx)
+	elif cfg.test:
+		await tx.test_sendable()
 	elif await tx.send():
 		await post_send(tx)
 
