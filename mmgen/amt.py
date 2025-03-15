@@ -65,7 +65,12 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 			return cls.init_fail(e, num)
 
 	def to_unit(self, unit):
-		return int(Decimal(self) // getattr(self, unit))
+		if (u := getattr(self, unit)) == self.atomic:
+			return int(Decimal(self) // u)
+		else:
+			return Decimal('{:0.{w}f}'.format(
+				self / u,
+				w = (u/self.atomic).as_tuple().exponent))
 
 	@classmethod
 	def fmtc(cls, *args, **kwargs):
@@ -165,6 +170,7 @@ class BTCAmt(CoinAmt):
 	max_prec = 8
 	max_amt = 21000000
 	satoshi = Decimal('0.00000001')
+	atomic = satoshi
 	units = ('satoshi',)
 
 class BCHAmt(BTCAmt):
@@ -190,6 +196,7 @@ class ETHAmt(CoinAmt):
 	Gwei    = Decimal('0.000000001')
 	szabo   = Decimal('0.000001')
 	finney  = Decimal('0.001')
+	atomic  = wei
 	units   = ('wei', 'Kwei', 'Mwei', 'Gwei', 'szabo', 'finney')
 
 	def toWei(self):
