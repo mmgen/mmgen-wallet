@@ -323,6 +323,7 @@ class UserOpts(Opts):
 			Rr --aiohttp-rpc-queue-len=N Use N simultaneous RPC connections with aiohttp
 			-p --regtest=0|1          Disable or enable regtest mode
 			-- --testnet=0|1          Disable or enable testnet
+			-- --test-suite           Use test suite configuration
 			br --tw-name=NAME         Specify alternate name for the BTC/LTC/BCH tracking
 			+                         wallet (default: ‘{tw_name}’)
 			-- --skip-cfg-file        Skip reading the configuration file
