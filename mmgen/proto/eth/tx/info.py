@@ -30,11 +30,8 @@ class TxInfo(TxInfo):
 
 	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, *, terse, sort):
 		tx = self.tx
-		m = {}
-		for k in ('inputs', 'outputs'):
-			if len(getattr(tx, k)):
-				m[k] = getattr(tx, k)[0].mmid if len(getattr(tx, k)) else ''
-				m[k] = ' ' + m[k].hl() if m[k] else ' ' + MMGenID.hlc(nonmm_str)
+		def mmid_disp(io):
+			return ' ' + (io.mmid.hl() if io.mmid else MMGenID.hlc(nonmm_str))
 		fs = """
 			From:      {f}{f_mmid}
 			To:        {t}{t_mmid}
@@ -56,8 +53,8 @@ class TxInfo(TxInfo):
 			c      = tx.proto.dcoin if len(tx.outputs) else '',
 			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
 			G      = yellow(tx.pretty_fmt_fee(t['startGas'].to_unit('Kwei'))),
-			t_mmid = m['outputs'] if len(tx.outputs) else '',
-			f_mmid = m['inputs']) + '\n\n'
+			f_mmid = mmid_disp(tx.inputs[0]),
+			t_mmid = mmid_disp(tx.outputs[0]) if tx.outputs else '') + '\n\n'
 
 	def format_abs_fee(self, iwidth, /, *, color=None):
 		return self.tx.fee.fmt(iwidth, color=color) + (' (max)' if self.tx.txobj['data'] else '')

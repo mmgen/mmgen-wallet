@@ -21,6 +21,8 @@ proto.eth.contract: Ethereum ERC20 token classes
 """
 
 from decimal import Decimal
+from collections import namedtuple
+
 from . import rlp
 
 from . import erigon_sleep
@@ -135,21 +137,21 @@ class TokenCommon(MMGenObject):
 			res = await self.rpc.call('eth_chainId')
 			chain_id = None if res is None else int(res, 16)
 
-		tx = Transaction(**tx_in).sign(key, chain_id)
+		etx = Transaction(**tx_in).sign(key, chain_id)
 
-		if tx.sender.hex() != from_addr:
-			die(3, f'Sender address {from_addr!r} does not match address of key {tx.sender.hex()!r}!')
+		if etx.sender.hex() != from_addr:
+			die(3, f'Sender address {from_addr!r} does not match address of key {etx.sender.hex()!r}!')
 
 		if self.cfg.debug:
 			msg('TOKEN DATA:')
-			pp_msg(tx.to_dict())
+			pp_msg(etx.to_dict())
 			msg('PARSED ABI DATA:\n  {}'.format(
-				'\n  '.join(parse_abi(tx.data.hex()))))
+				'\n  '.join(parse_abi(etx.data.hex()))))
 
-		return (
-			rlp.encode(tx).hex(),
-			CoinTxID(tx.hash.hex())
-		)
+		return namedtuple('signed_contract_transaction', ['etx', 'txhex', 'txid'])(
+			etx,
+			rlp.encode(etx).hex(),
+			CoinTxID(etx.hash.hex()))
 
 # The following are used for token deployment only:
 
@@ -173,8 +175,8 @@ class TokenCommon(MMGenObject):
 				gasPrice,
 				nonce = int(await self.rpc.call('eth_getTransactionCount', '0x'+from_addr, 'pending'), 16),
 				method_sig = method_sig)
-		txhex, _ = await self.txsign(tx_in, key, from_addr)
-		return await self.txsend(txhex)
+		res = await self.txsign(tx_in, key, from_addr)
+		return await self.txsend(res.txhex)
 
 class Token(TokenCommon):
 

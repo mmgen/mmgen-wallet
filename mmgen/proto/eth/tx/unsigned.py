@@ -40,8 +40,7 @@ class Unsigned(Completed, TxBase.Unsigned):
 		self.txobj = o
 		return d # 'token_addr', 'decimals' required by Token subclass
 
-	async def do_sign(self, wif):
-		o = self.txobj
+	async def do_sign(self, o, wif):
 		o_conv = {
 			'to':       bytes.fromhex(o['to'] or ''),
 			'startgas': o['startGas'].toWei(),
@@ -59,10 +58,10 @@ class Unsigned(Completed, TxBase.Unsigned):
 		self.serialized = rlp.encode(etx).hex()
 		self.coin_txid = CoinTxID(etx.hash.hex())
 
-		if o['data']:
+		if o['data']: # contract-creating transaction
 			if o['to']:
-				assert self.txobj['token_addr'] == TokenAddr(self.proto, etx.creates.hex()), 'Token address mismatch'
-			else: # token- or contract-creating transaction
+				raise ValueError('contract-creating transaction cannot have to-address')
+			else:
 				self.txobj['token_addr'] = TokenAddr(self.proto, etx.creates.hex())
 
 	async def sign(self, tx_num_str, keys): # return TX object or False; don't exit or raise exception
@@ -73,10 +72,12 @@ class Unsigned(Completed, TxBase.Unsigned):
 		except TransactionChainMismatch:
 			return False
 
+		o = self.txobj
+
 		msg_r(f'Signing transaction{tx_num_str}...')
 
 		try:
-			await self.do_sign(keys[0].sec.wif)
+			await self.do_sign(o, keys[0].sec.wif)
 			msg('OK')
 			from ....tx import SignedTX
 			return await SignedTX(cfg=self.cfg, data=self.__dict__, automount=self.automount)
@@ -96,8 +97,7 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 		o['data'] = t.create_data(o['to'], o['amt'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
 
-	async def do_sign(self, wif):
-		o = self.txobj
+	async def do_sign(self, o, wif):
 		t = Token(self.cfg, self.proto, o['token_addr'], o['decimals'])
 		tx_in = t.make_tx_in(
 				to_addr   = o['to'],
@@ -105,7 +105,9 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 				start_gas = self.start_gas,
 				gasPrice  = o['gasPrice'],
 				nonce     = o['nonce'])
-		(self.serialized, self.coin_txid) = await t.txsign(tx_in, wif, o['from'], chain_id=o['chainId'])
+		res = await t.txsign(tx_in, wif, o['from'], chain_id=o['chainId'])
+		self.serialized = res.txhex
+		self.coin_txid = res.txid
 
 class AutomountUnsigned(TxBase.AutomountUnsigned, Unsigned):
 	pass

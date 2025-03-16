@@ -721,9 +721,9 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			self.eth_args
 			+ [f'--coin={self.proto.coin}']
 			+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
-			+ add_args
 			+ ([], ['--yes'])[ni]
 			+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
+			+ add_args
 			+ [txfile, dfl_words_file])
 		return self.txsign_ui_common(t, ni=ni, has_label=True)
 
@@ -924,7 +924,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return t
 
 	def txsign4(self):
-		return self.txsign(ni=True, ext='.45495,50000]{}.regtest.rawtx', dev_send=True)
+		return self.txsign(ext='.45495,50000]{}.regtest.rawtx', add_args=['--no-quiet', '--no-yes'])
 	def txsend4(self):
 		return self.txsend(ext='.45495,50000]{}.regtest.sigtx')
 	def bal4(self):
@@ -1222,8 +1222,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			input_sels_prompt = 'to spend from',
 			add_comment       = tx_comment_lat_cyr_gr,
 			file_desc         = file_desc)
-	def token_txsign(self, ext='', token=''):
-		return self.txsign(ni=True, ext=ext, add_args=['--token='+token])
+	def token_txsign(self, ext='', token='', add_args=[], ni=True):
+		return self.txsign(ni=ni, ext=ext, add_args=[f'--token={token}'] + add_args)
 	def token_txsend(self, ext='', token=''):
 		return self.txsend(ext=ext, add_args=['--token='+token])
 
@@ -1232,7 +1232,11 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	def token_txview1_raw(self):
 		return self.txview(ext_fs='1.23456,50000]{}.regtest.rawtx')
 	def token_txsign1(self):
-		return self.token_txsign(ext='1.23456,50000]{}.regtest.rawtx', token='mm1')
+		return self.token_txsign(
+			ext = '1.23456,50000]{}.regtest.rawtx',
+			token = 'mm1',
+			ni = False,
+			add_args = ['--no-quiet', '--no-yes'])
 	def token_txsend1(self):
 		return self.token_txsend(ext='1.23456,50000]{}.regtest.sigtx', token='mm1')
 	def token_txview1_sig(self):
