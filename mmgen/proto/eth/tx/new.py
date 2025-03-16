@@ -96,6 +96,8 @@ class New(Base, TxBase.New):
 			amt      = self.proto.coin_amt(arg.amt or '0'),
 			is_chg   = not arg.amt)
 
+		self.add_mmaddrs_to_outputs(ad_f, ad_w)
+
 	def get_unspent_nums_from_user(self, unspent):
 		from ....ui import line_input
 		while True:

@@ -74,6 +74,12 @@ class Unsigned(Completed, TxBase.Unsigned):
 
 		o = self.txobj
 
+		m = 'mismatch -- a compromised online installation may have altered your serialized data!'
+		assert o['from'] == self.inputs[0].addr, f'from_addr {m}'
+		if self.outputs:
+			assert o['to'] == self.outputs[0].addr, f'to_addr {m}'
+			assert o['amt'] == self.outputs[0].amt, f'to_amt {m}'
+
 		msg_r(f'Signing transaction{tx_num_str}...')
 
 		try:
