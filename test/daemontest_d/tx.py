@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.daemontest_d.ut_tx: TX daemon tests for the MMGen suite
+test.daemontest_d.tx: TX daemon tests for the MMGen suite
 """
 
 import json

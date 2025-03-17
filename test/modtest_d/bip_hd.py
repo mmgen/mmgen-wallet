@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_bip_hd: bip_hd unit test for the MMGen suite
+test.modtest_d.bip_hd: bip_hd unit test for the MMGen suite
 """
 
 from mmgen.color import gray, pink, blue

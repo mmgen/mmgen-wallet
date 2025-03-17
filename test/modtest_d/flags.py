@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_flags: unit test for the MMGen suite's ClassFlags class
+test.modtest_d.flags: unit test for the MMGen suite's ClassFlags class
 """
 
 from mmgen.flags import ClassOpts, ClassFlags

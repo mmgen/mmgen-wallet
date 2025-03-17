@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_gen: key/address generation unit tests for the MMGen suite
+test.modtest_d.gen: key/address generation unit tests for the MMGen suite
 """
 
 from mmgen.color import blue

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_amt: CoinAmt unit tests for the MMGen suite
+test.modtest_d.amt: CoinAmt unit tests for the MMGen suite
 """
 
 from decimal import Decimal

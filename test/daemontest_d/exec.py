@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.daemontest_d.ut_exec: unit test for the MMGen suite's Daemon class
+test.daemontest_d.exec: unit test for the MMGen suite's Daemon class
 """
 
 from subprocess import run, PIPE

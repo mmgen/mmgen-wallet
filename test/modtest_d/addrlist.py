@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_addrlist: address list unit tests for the MMGen suite
+test.modtest_d.addrlist: address list unit tests for the MMGen suite
 """
 
 from mmgen.color import blue

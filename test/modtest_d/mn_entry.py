@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_mn_entry: Mnemonic user entry unit test for the MMGen suite
+test.modtest_d.mn_entry: Mnemonic user entry unit test for the MMGen suite
 """
 
 from mmgen.mn_entry import mn_entry

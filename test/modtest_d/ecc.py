@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_ecc: elliptic curve unit test for the MMGen suite
+test.modtest_d.ecc: elliptic curve unit test for the MMGen suite
 """
 
 from mmgen.proto.secp256k1.secp256k1 import pubkey_gen, pubkey_tweak_add, pubkey_check

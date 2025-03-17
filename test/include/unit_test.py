@@ -77,8 +77,6 @@ type(cfg)._reset_ok += ('use_internal_keccak_module', 'debug_addrlist')
 
 set_globals(cfg)
 
-file_pfx = 'ut_'
-
 test_type = {
 	'modtest.py':    'unit',
 	'daemontest.py': 'daemon',
@@ -88,7 +86,7 @@ test_subdir = gc.prog_name.removesuffix('.py') + '_d'
 
 test_dir = os.path.join(repo_root, 'test', test_subdir)
 
-all_tests = sorted(fn[len(file_pfx):-len('.py')] for fn in os.listdir(test_dir) if fn.startswith(file_pfx))
+all_tests = sorted(fn.removesuffix('.py') for fn in os.listdir(test_dir) if not fn.startswith('_'))
 
 exclude = cfg.exclude.split(',') if cfg.exclude else []
 
@@ -105,7 +103,7 @@ if cfg.list:
 if cfg.list_subtests:
 	def gen():
 		for test in all_tests:
-			mod = importlib.import_module(f'test.{test_subdir}.{file_pfx}{test}')
+			mod = importlib.import_module(f'test.{test_subdir}.{test}')
 			if hasattr(mod, 'unit_tests'):
 				t = getattr(mod, 'unit_tests')
 				subtests = [k for k, v in t.__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
@@ -154,7 +152,7 @@ class UnitTestHelpers:
 tests_seen = []
 
 def run_test(test, subtest=None):
-	mod = importlib.import_module(f'test.{test_subdir}.{file_pfx}{test}')
+	mod = importlib.import_module(f'test.{test_subdir}.{test}')
 
 	def run_subtest(t, subtest):
 		subtest_disp = subtest.replace('_', '-')

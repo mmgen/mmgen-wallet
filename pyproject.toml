@@ -36,10 +36,10 @@ ignore = [
 ]
 "test/include/common.py"        = [ "F821" ]         # undefined name 'cfg'
 "test/misc/input_func.py"       = [ "F401" ]         # imported but unused
-"test/modtest_d/ut_cashaddr.py" = [ "F841" ]         # assigned to but never used
-"test/modtest_d/ut_dep.py"      = [ "F401" ]         # imported but unused
-"test/modtest_d/ut_testdep.py"  = [ "F401" ]         # imported but unused
-"test/modtest_d/ut_obj.py"      = [ "F841" ]         # assigned to but never used
+"test/modtest_d/cashaddr.py"    = [ "F841" ]         # assigned to but never used
+"test/modtest_d/dep.py"         = [ "F401" ]         # imported but unused
+"test/modtest_d/testdep.py"     = [ "F401" ]         # imported but unused
+"test/modtest_d/obj.py"         = [ "F841" ]         # assigned to but never used
 "test/objtest_d/*"              = [ "F401" ]         # imported but unused
 "test/objattrtest_d/*"          = [ "F401" ]         # imported but unused
 "test/overlay/fakemods/*"       = [ "F403", "F405" ] # `import *` used
@@ -61,7 +61,7 @@ ignore = [
 	"pyethereum",
 	"rlp",
 	"main_split.py",
-	"ut_tx.py",
+	"tx.py",
 ]
 ignored-modules = [ # ignored for no-member, otherwise checked
 	"mmgen.proto.secp256k1.secp256k1",

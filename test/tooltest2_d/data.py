@@ -23,9 +23,9 @@ from mmgen.bip39 import is_bip39_mnemonic
 from mmgen.baseconv import is_mmgen_mnemonic, is_b58_str
 from mmgen.xmrseed import is_xmrseed
 
-from ..modtest_d.ut_baseconv import unit_test as ut_baseconv
-from ..modtest_d.ut_bip39 import unit_tests as ut_bip39
-from ..modtest_d.ut_xmrseed import unit_tests as ut_xmrseed
+from ..modtest_d.baseconv import unit_test as baseconv
+from ..modtest_d.bip39 import unit_tests as bip39
+from ..modtest_d.xmrseed import unit_tests as xmrseed
 
 from ..include.common import cfg, sample_text
 proto = cfg._proto
@@ -110,14 +110,14 @@ zec_pubhex1 = 'e6a4edbff547f21bcc2a825b6cf70f06e266a452d2da9d6dc5c1da3d99d7e996f
 tests = {
 	'Mnemonic': {
 		'hex2mn': (
-			[([a[0]], b) for a, b in ut_baseconv.vectors['mmgen']] +
-			[([a, 'fmt=bip39'], b) for a, b in ut_bip39.vectors] +
-			[([a, 'fmt=xmrseed'], b) for a, b in ut_xmrseed.vectors]
+			[([a[0]], b) for a, b in baseconv.vectors['mmgen']] +
+			[([a, 'fmt=bip39'], b) for a, b in bip39.vectors] +
+			[([a, 'fmt=xmrseed'], b) for a, b in xmrseed.vectors]
 		),
 		'mn2hex': (
-			[([b, 'fmt=mmgen'], a[0]) for a, b in ut_baseconv.vectors['mmgen']] +
-			[([b, 'fmt=bip39'], a) for a, b in ut_bip39.vectors] +
-			[([b, 'fmt=xmrseed'], a) for a, b in ut_xmrseed.vectors]
+			[([b, 'fmt=mmgen'], a[0]) for a, b in baseconv.vectors['mmgen']] +
+			[([b, 'fmt=bip39'], a) for a, b in bip39.vectors] +
+			[([b, 'fmt=xmrseed'], a) for a, b in xmrseed.vectors]
 		),
 		'mn_rand128': [
 			([], is_mmgen_mnemonic, ['-r0']),

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_xmrseed: Monero mnemonic unit test for the MMGen suite
+test.modtest_d.xmrseed: Monero mnemonic unit test for the MMGen suite
 """
 
 altcoin_dep = True

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_subseed: subseed unit test for the MMGen suite
+test.modtest_d.subseed: subseed unit test for the MMGen suite
 """
 
 from mmgen.util import msg, msg_r

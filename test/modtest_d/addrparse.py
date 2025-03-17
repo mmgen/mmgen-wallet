@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_addrparse: address parsing tests for the MMGen suite
+test.modtest_d.addrparse: address parsing tests for the MMGen suite
 """
 
 from mmgen.color import yellow, cyan
@@ -21,7 +21,7 @@ vectors = {
 		{'std': 'ltc1qvmqas4maw7lg9clqu6kqu9zq9cluvllnst5pxs'}
 	],
 	'xmr_mainnet': [
-		{ # ut_xmrseed.vectors[0]:
+		{ # xmrseed.vectors[0]:
 		'std': '42ey1afDFnn4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfJJQAWDm',
 		# https://github.com/monero-project/monero/tests/functional_tests/integrated_address.py
 		'int': '4CMe2PUhs4J4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfSbLRB61BQVATzerHGj',

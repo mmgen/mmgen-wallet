@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-test.modtest_d.ut_devtools: devtools unit tests for the MMGen suite
+test.modtest_d.devtools: devtools unit tests for the MMGen suite
 """
 
 import os, json
