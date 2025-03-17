@@ -38,6 +38,7 @@ pkgs.mkShellNoCC {
 
         pwd=$(pwd)
         export PYTHONPATH=$pwd
+        export PYTHONPYCACHEPREFIX=$HOME/.cache/pycache
         export PATH=$pwd/cmds:$pwd/.bin-override:$HOME/.local/bin:$PATH
         export LANG="en_US.UTF-8"
 
