@@ -728,7 +728,7 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		return self._mempool(2)
 
 	def _mempool(self, proto_idx):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		data = self._do_cli(['getrawmempool'], add_opts=[f'--coin={self.protos[proto_idx].coin}'])
 		assert data
 		return 'ok'

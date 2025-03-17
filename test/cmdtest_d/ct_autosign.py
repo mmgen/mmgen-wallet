@@ -181,12 +181,12 @@ class CmdTestAutosignBase(CmdTestBase):
 			pass
 
 	def start_daemons(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		start_test_daemons(*self.network_ids)
 		return 'ok'
 
 	def stop_daemons(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		stop_test_daemons(*self.network_ids, remove_datadir=True)
 		return 'ok'
 
@@ -378,7 +378,7 @@ class CmdTestAutosignClean(CmdTestAutosignBase):
 
 	def _clean(self, coins):
 
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 
 		self.insert_device()
 
@@ -589,7 +589,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		return self._mount_ops('asi_online', 'do_umount', *args, **kwargs)
 
 	async def txview(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		self.insert_device()
 		self.do_mount()
 		src = Path(self.asi.txauto_dir)
@@ -754,7 +754,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		return t
 
 	def copy_tx_files(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		return self.tx_file_ops('copy')
 
 	def remove_signed_txfiles(self):
@@ -822,7 +822,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.insert_device()
 		self.do_mount()
 		# create or delete 2 bad tx files
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		fns = [joinpath(self.asi.tx_dir, f'bad{n}.rawtx') for n in (1, 2)]
 		if op == 'create':
 			for fn in fns:
@@ -853,7 +853,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		return self.msgfile_ops('remove_invalid')
 
 	def msgfile_ops(self, op):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		destdir = joinpath(self.asi.mountpoint, 'msg')
 		self.insert_device()
 		self.do_mount()
@@ -1060,7 +1060,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 			info_msg = 'Running ‘mmgen-autosign wait’'
 			insert_msg = 'Insert removable device '
 
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 
 		self.do_umount()
 		prompt_remove()

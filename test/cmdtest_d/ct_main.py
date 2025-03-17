@@ -433,7 +433,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			return 'skip'
 		for wf in [f for f in os.listdir(cfg.data_dir) if f[-6:]=='.mmdat']:
 			os.unlink(joinpath(cfg.data_dir, wf))
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		self.have_dfl_wallet = False
 		return 'ok'
 

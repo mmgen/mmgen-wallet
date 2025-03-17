@@ -543,7 +543,7 @@ class CmdTestRunner:
 
 	def spawn_wrapper(
 			self,
-			cmd,
+			cmd             = '',
 			args            = [],
 			extra_desc      = '',
 			no_output       = False,

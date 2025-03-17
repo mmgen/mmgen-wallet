@@ -108,7 +108,7 @@ class CmdTestInput(CmdTestBase):
 	}
 
 	def get_seed_from_stdin(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		from subprocess import run, PIPE
 		cmd = ['python3', 'cmds/mmgen-walletconv', '--skip-cfg-file', '--in-fmt=words', '--out-fmt=words', '--outdir=test/trash']
 		mn = sample_mn['mmgen']['mn']

@@ -123,7 +123,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		self.spawn_env['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = '1'
 
 	def create_tmp_wallets(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		data = self.users['alice']
 		from mmgen.wallet import Wallet
 		from mmgen.xmrwallet import op
@@ -191,7 +191,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 	def _delete_files(self, *ext_list):
 		data = self.users['alice']
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		for ext in ext_list:
 			get_file_with_ext(data.udir, ext, no_dot=True, delete_all=True)
 		return 'ok'
@@ -432,7 +432,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		return t
 
 	def txview_all(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		self.insert_device()
 		self.do_mount()
 		imsg(blue('Opening transaction directory: ') + cyan(f'{self.asi.xmr_tx_dir}'))

@@ -723,7 +723,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	async def bob_recreate_tracking_wallet(self):
 		if not self.deterministic:
 			return 'skip'
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		await self.rt.stop()
 		from shutil import rmtree
 		imsg('Deleting Bob’s old tracking wallet')
@@ -1253,7 +1253,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def _get_mempool(self, do_msg=False):
 		if do_msg:
-			self.spawn('', msg_only=True)
+			self.spawn(msg_only=True)
 		return self._do_mmgen_regtest(['mempool'], decode_json=True)
 
 	def _get_mempool_compare_txid(self, txid1, txid2):
@@ -1534,7 +1534,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return self._bob_twprune_selected(resp='sssSpP', npruned=7)
 
 	def bob_edit_json_twdump(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		from mmgen.tw.json import TwJSON
 		fn = TwJSON.Base(cfg, self.proto).dump_fn
 		text = json.loads(self.read_from_tmpfile(fn))
@@ -2257,7 +2257,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return self._user_bal_cli('bob', chks=['499.99990287', '46.51845565'])
 
 	def stop(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		if cfg.no_daemon_stop:
 			msg_r(f'(leaving regtest daemon{suf(self.protos)} running by user request)')
 			imsg('')

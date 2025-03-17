@@ -472,7 +472,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			time.sleep(0.5)
 
 	async def setup(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 
 		d = self.daemon
 
@@ -848,7 +848,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		if not self.daemon.id == 'geth':
 			return 'skip'
 
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 
 		sig = '0x' + create_signature_mmgen()
 		sig_chk = await create_signature_rpc()
@@ -1002,7 +1002,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		if not self.using_solc:
 			imsg(f'Using precompiled contract data in {odir}')
 			return 'skip' if os.path.exists(odir) else False
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		cmd_args = [f'--{k}={v}' for k, v in list(token_data.items())]
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
 		try:
@@ -1103,7 +1103,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return await self.token_deploy(num=2, key='Token',   gas=4_000_000)
 
 	async def token_transfer_ops(self, op, amt=1000, num_tokens=2):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		sid = dfl_sid
 		from mmgen.tool.wallet import tool_cmd
 		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11, 21)][:num_tokens]
@@ -1503,7 +1503,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return t
 
 	async def twmove(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		from mmgen.tw.ctl import TwCtl
 		twctl = await TwCtl(cfg, self.proto, no_wallet_init=True)
 		imsg('Moving tracking wallet')
@@ -1526,7 +1526,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return self.twimport(add_args=['ignore_checksum=true'], expect_str='ignoring incorrect checksum')
 
 	def tw_chktotal(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		from mmgen.tw.json import TwJSON
 		fn = joinpath(self.tmpdir, TwJSON.Base(cfg, self.proto).dump_fn)
 		res = json.loads(read_from_file(fn))
@@ -1534,7 +1534,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return 'ok'
 
 	async def twcompare(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		from mmgen.tw.ctl import TwCtl
 		twctl = await TwCtl(cfg, self.proto, no_wallet_init=True)
 		fn = twctl.tw_path
@@ -1545,7 +1545,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return 'ok'
 
 	def edit_json_twdump(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		from mmgen.tw.json import TwJSON
 		fn = TwJSON.Base(cfg, self.proto).dump_fn
 		text = json.loads(self.read_from_tmpfile(fn))
@@ -1555,7 +1555,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return 'ok'
 
 	def stop(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		if not cfg.no_daemon_stop:
 			if not stop_test_daemons(self.proto.coin+'_rt', remove_datadir=True):
 				return False

@@ -423,14 +423,14 @@ class CmdTestXMRWallet(CmdTestBase):
 			r'Creating new address for wallet .*4.*, account .*#2.* with label .*‘Alice’s new address .*y/N\): ')
 
 	async def mine_initial_coins(self):
-		self.spawn('', msg_only=True, extra_desc='(opening wallet)')
+		self.spawn(msg_only=True, extra_desc='(opening wallet)')
 		await self.open_wallet_user('miner', 1)
 		ok()
 		# NB: a large balance is required to avoid ‘insufficient outputs’ error
 		return await self.mine_chk('miner', 1, 0, lambda x: x.ub > 2000, 'unlocked balance > 2000')
 
 	async def fund_alice(self, wallet=1, amt=1234567891234):
-		self.spawn('', msg_only=True, extra_desc='(transferring funds from Miner wallet)')
+		self.spawn(msg_only=True, extra_desc='(transferring funds from Miner wallet)')
 		await self.transfer(
 			'miner',
 			amt,
@@ -887,11 +887,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		return ret['status']
 
 	def do_msg(self, extra_desc=None):
-		self.spawn(
-			'',
-			msg_only = True,
-			extra_desc = f'({extra_desc})' if extra_desc else None
-		)
+		self.spawn(msg_only=True, extra_desc=f'({extra_desc})' if extra_desc else None)
 
 	async def transfer(self, user, amt, addr):
 		return self.users[user].wd_rpc.call('transfer', destinations=[{'amount':amt, 'address':addr}])
@@ -904,7 +900,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			v.md.start()
 
 	def stop_daemons(self):
-		self.spawn('', msg_only=True)
+		self.spawn(msg_only=True)
 		if cfg.no_daemon_stop:
 			omsg('[not stopping daemons at user request]')
 		else:
