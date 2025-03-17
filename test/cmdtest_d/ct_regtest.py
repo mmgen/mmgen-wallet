@@ -1052,6 +1052,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		t = self.spawn(
 				'mmgen-txsend',
 				['-d', self.tmpdir, '--'+user, '--status'] + extra_args + [tx_file],
+				no_passthru_opts = ['coin'],
 				exit_val = exit_val)
 		if exp1:
 			t.expect(exp1, regex=True)
@@ -2225,7 +2226,8 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def _bob_dump_hex_dump(self, file):
 		txfile = get_file_with_ext(self.dump_hex_subdir, 'sigtx')
-		t = self.spawn('mmgen-txsend', ['-d', self.dump_hex_subdir, f'--dump-hex={file}', '--bob', txfile])
+		t = self.spawn('mmgen-txsend',
+			['-d', self.dump_hex_subdir, f'--dump-hex={file}', '--bob', txfile], no_passthru_opts=['coin'])
 		t.expect('view: ', '\n')
 		t.expect('(y/N): ', '\n') # add comment?
 		t.written_to_file('Sent transaction')
@@ -2246,7 +2248,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def bob_dump_hex_test(self):
 		txfile = get_file_with_ext(self.dump_hex_subdir, 'sigtx')
-		t = self.spawn('mmgen-txsend', ['--bob', '--test', txfile])
+		t = self.spawn('mmgen-txsend', ['--bob', '--test', txfile], no_passthru_opts=['coin'])
 		self.txsend_ui_common(t, bogus_send=False, test=True)
 		return t
 

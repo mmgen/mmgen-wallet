@@ -515,7 +515,8 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			else [])
 
 		self.insert_device_online()
-		t = self.spawn('mmgen-txsend', [f'--{user}', '--quiet', '--autosign'] + extra_opt)
+		t = self.spawn('mmgen-txsend',
+			[f'--{user}', '--quiet', '--autosign'] + extra_opt, no_passthru_opts=['coin'])
 
 		if mark_sent:
 			t.written_to_file('Sent automount transaction')

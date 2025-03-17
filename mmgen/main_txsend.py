@@ -78,10 +78,6 @@ if cfg.mark_sent and not cfg.autosign:
 if cfg.test and cfg.dump_hex:
 	die(1, '--test cannot be used in combination with --dump-hex')
 
-if cfg.tx_proxy:
-	from .tx.tx_proxy import check_client
-	check_client(cfg)
-
 if cfg.dump_hex and cfg.dump_hex != '-':
 	from .fileutil import check_outfile_dir
 	check_outfile_dir(cfg.dump_hex)
@@ -125,6 +121,8 @@ async def post_send(tx):
 
 async def main():
 
+	global cfg
+
 	if cfg.status and cfg.autosign:
 		tx = await si.get_last_created()
 	else:
@@ -134,8 +132,14 @@ async def main():
 			automount  = cfg.autosign,
 			quiet_open = True)
 
+	cfg = Config({'_clone': cfg, 'proto': tx.proto, 'coin': tx.proto.coin})
+
+	if cfg.tx_proxy:
+		from .tx.tx_proxy import check_client
+		check_client(cfg)
+
 	from .rpc import rpc_init
-	tx.rpc = await rpc_init(cfg, tx.proto)
+	tx.rpc = await rpc_init(cfg)
 
 	cfg._util.vmsg(f'Getting {tx.desc} ‘{tx.infile}’')
 

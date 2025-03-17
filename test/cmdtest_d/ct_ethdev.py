@@ -727,7 +727,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	def txsend(self, ext='{}.regtest.sigtx', add_args=[], test=False):
 		ext = ext.format('-α' if cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext, no_dot=True)
-		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile])
+		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile], no_passthru_opts=['coin'])
 		self.txsend_ui_common(
 			t,
 			quiet      = not cfg.debug,
@@ -823,6 +823,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		t = self.spawn(
 			'mmgen-txsend',
 			self.eth_args + add_args + ['--status', txfile],
+			no_passthru_opts = ['coin'],
 			exit_val = exit_val)
 		t.expect(expect_str)
 		if expect_str2:
@@ -1075,7 +1076,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 				self.eth_args + ['--yes', '-k', keyfile, txfile], no_msg=True, no_passthru_opts=['coin'])
 			self.txsign_ui_common(t, ni=True)
 			txfile = txfile.replace('.rawtx', '.sigtx')
-			t = self.spawn('mmgen-txsend', self.eth_args + [txfile], no_msg=True)
+			t = self.spawn('mmgen-txsend',
+				self.eth_args + [txfile], no_msg=True, no_passthru_opts=['coin'])
 
 		txid = self.txsend_ui_common(t,
 			caller = mmgen_cmd,
@@ -1241,7 +1243,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	def token_txsign(self, ext='', token='', add_args=[], ni=True):
 		return self.txsign(ni=ni, ext=ext, add_args=add_args)
 	def token_txsend(self, ext='', token=''):
-		return self.txsend(ext=ext, add_args=['--token='+token])
+		return self.txsend(ext=ext)
 
 	def token_txcreate1(self):
 		return self.token_txcreate(args=['98831F3A:E:12,1.23456'], token='mm1')
@@ -1261,7 +1263,6 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	def tx_status3(self):
 		return self.tx_status(
 			ext         = '1.23456,50000]{}.regtest.sigtx',
-			add_args    = ['--token=mm1'],
 			expect_str  = 'successfully executed',
 			expect_str2 = 'has 1 confirmation')
 

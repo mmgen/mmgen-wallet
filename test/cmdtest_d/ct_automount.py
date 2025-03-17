@@ -107,6 +107,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		t = self.spawn(
 				'mmgen-txsend',
 				['--quiet', '--abort'],
+				no_passthru_opts = ['coin'],
 				exit_val = 2 if err else 1 if send_resp == 'n' else None)
 		if err:
 			t.expect(expect)
@@ -173,6 +174,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		t = self.spawn(
 				'mmgen-txsend',
 				['--alice', '--autosign', '--status', '--verbose'],
+				no_passthru_opts = ['coin'],
 				exit_val = exit_val)
 		t.expect(expect)
 		if not exit_val:
@@ -199,7 +201,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 
 	def alice_txsend_bad_no_unsent(self):
 		self.insert_device_online()
-		t = self.spawn('mmgen-txsend', ['--quiet', '--autosign'], exit_val=2)
+		t = self.spawn('mmgen-txsend', ['--quiet', '--autosign'], exit_val=2, no_passthru_opts=['coin'])
 		t.expect('No unsent transactions')
 		t.read()
 		self.remove_device_online()

@@ -77,7 +77,7 @@ class GlobalConstants(Lockable):
 		'txbump':       _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
 		'txcreate':     _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
 		'txdo':         _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
-		'txsend':       _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
+		'txsend':       _cc(True,  True,  False, '-rRb',  ['tw'],  'lmw'),
 		'txsign':       _cc(True,  True,  False, '-rRb',  ['tw'],  'lmw'),
 		'walletchk':    _cc(False, False, False, None,    [],      'lmw'),
 		'walletconv':   _cc(False, False, False, None,    [],      'lmw'),

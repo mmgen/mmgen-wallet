@@ -99,7 +99,7 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 	def send_tx(self, add_args=[]):
 		self._wait_signed('transaction')
 		self.insert_device_online()
-		t = self.spawn('mmgen-txsend', self.txop_opts + add_args)
+		t = self.spawn('mmgen-txsend', self.txop_opts + add_args, no_passthru_opts=['coin'])
 		t.view_tx('t')
 		t.expect('(y/N): ', 'n')
 		self._do_confirm_send(t, quiet=True)
@@ -140,4 +140,4 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		return t
 
 	def send_token_tx(self):
-		return self.send_tx(add_args=['--token=MM1'])
+		return self.send_tx()
