@@ -15,6 +15,7 @@ test.cmdtest_d.httpd.thornode: Thornode WSGI http server
 import time, re, json
 
 from mmgen.cfg import Config
+from mmgen.amt import UniAmt
 
 from . import HTTPD
 
@@ -75,7 +76,7 @@ class ThornodeServer(HTTPD):
 
 		from mmgen.protocol import init_proto
 		send_proto = init_proto(cfg, send_coin, network='regtest', need_amt=True)
-		in_amt = send_proto.coin_amt(int(amt_atomic), from_unit='satoshi')
+		in_amt = UniAmt(int(amt_atomic), from_unit='satoshi')
 		out_amt = in_amt * (prices[send_coin] / prices[recv_coin])
 
 		addr = make_inbound_addr(send_proto, send_proto.preferred_mmtypes[0])

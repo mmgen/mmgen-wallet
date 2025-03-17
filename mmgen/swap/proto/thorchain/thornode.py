@@ -13,6 +13,7 @@ swap.proto.thorchain.thornode: THORChain swap protocol network query ops
 """
 
 import json
+from ....amt import UniAmt
 
 class ThornodeRPCClient:
 
@@ -73,12 +74,12 @@ class Thornode:
 		in_coin = tx.send_proto.coin
 		out_coin = tx.recv_proto.coin
 		in_amt = self.in_amt
-		out_amt = tx.recv_proto.coin_amt(int(d['expected_amount_out']), from_unit='satoshi')
+		out_amt = UniAmt(int(d['expected_amount_out']), from_unit='satoshi')
 
 		if trade_limit:
 			from . import ExpInt4
 			e = ExpInt4(trade_limit.to_unit('satoshi'))
-			tl_rounded = tx.recv_proto.coin_amt(e.trunc, from_unit='satoshi')
+			tl_rounded = UniAmt(e.trunc, from_unit='satoshi')
 			ratio = usr_trade_limit if type(usr_trade_limit) is float else float(tl_rounded / out_amt)
 			direction = 'ABOVE' if ratio > 1 else 'below'
 			mcolor, lblcolor = (
@@ -102,13 +103,13 @@ class Thornode:
 			else:
 				ymsg('Warning: unknown gas unit ‘{}’, cannot estimate fee'.format(d['gas_rate_units']))
 
-		min_in_amt = tx.send_proto.coin_amt(int(d['recommended_min_amount_in']), from_unit='satoshi')
+		min_in_amt = UniAmt(int(d['recommended_min_amount_in']), from_unit='satoshi')
 		gas_unit = {
 			'satsperbyte': 'sat/byte',
 		}.get(d['gas_rate_units'], d['gas_rate_units'])
 		elapsed_disp = format_elapsed_hr(d['expiry'], future_msg='from now')
 		fees = d['fees']
-		fees_t = tx.recv_proto.coin_amt(int(fees['total']), from_unit='satoshi')
+		fees_t = UniAmt(int(fees['total']), from_unit='satoshi')
 		fees_pct_disp = str(fees['total_bps'] / 100) + '%'
 		slip_pct_disp = str(fees['slippage_bps'] / 100) + '%'
 		hdr = f'SWAP QUOTE (source: {self.rpc.host})'

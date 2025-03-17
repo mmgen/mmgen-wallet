@@ -173,6 +173,9 @@ class BTCAmt(CoinAmt):
 	atomic = satoshi
 	units = ('satoshi',)
 
+class UniAmt(BTCAmt):
+	coin = None
+
 class BCHAmt(BTCAmt):
 	coin = 'BCH'
 

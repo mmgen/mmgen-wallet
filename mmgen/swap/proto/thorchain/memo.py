@@ -13,6 +13,7 @@ swap.proto.thorchain.memo: THORChain swap protocol memo class
 """
 
 from ....util import die
+from ....amt import UniAmt
 
 from . import name as proto_name
 
@@ -125,9 +126,9 @@ class Memo:
 		self.proto = proto
 		self.chain = chain or proto.coin
 		if trade_limit is None:
-			self.trade_limit = self.proto.coin_amt('0')
+			self.trade_limit = UniAmt('0')
 		else:
-			assert type(trade_limit) is self.proto.coin_amt, f'{type(trade_limit)} != {self.proto.coin_amt}'
+			assert type(trade_limit) is UniAmt, f'{type(trade_limit)} != {UniAmt}'
 			self.trade_limit = trade_limit
 		from ....addr import is_coin_addr
 		assert is_coin_addr(proto, addr)

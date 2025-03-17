@@ -170,6 +170,7 @@ class unit_tests:
 
 	def memo(self, name, ut, desc='Swap transaction memo'):
 		from mmgen.protocol import init_proto
+		from mmgen.amt import UniAmt
 		from mmgen.swap.proto.thorchain.memo import Memo
 		for coin, addrtype in (
 			('ltc', 'bech32'),
@@ -186,13 +187,13 @@ class unit_tests:
 				(None, 0),
 			):
 				vmsg('\nTesting memo initialization:')
-				m = Memo(proto, addr, trade_limit=proto.coin_amt(limit) if limit else None)
+				m = Memo(proto, addr, trade_limit=UniAmt(limit) if limit else None)
 				vmsg(f'str(memo):  {m}')
 				vmsg(f'repr(memo): {m!r}')
 				vmsg(f'limit:      {limit}')
 
 				p = Memo.parse(m)
-				limit_dec = proto.coin_amt(p.trade_limit, from_unit='satoshi')
+				limit_dec = UniAmt(p.trade_limit, from_unit='satoshi')
 				vmsg(f'limit_dec:  {limit_dec.hl()}')
 
 				vmsg('\nTesting memo parsing:')

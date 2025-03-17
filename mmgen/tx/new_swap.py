@@ -13,6 +13,7 @@ tx.new_swap: new swap transaction class
 """
 
 from .new import New
+from ..amt import UniAmt
 
 class NewSwap(New):
 	desc = 'swap transaction'
@@ -28,7 +29,7 @@ class NewSwap(New):
 		if s := self.cfg.trade_limit:
 			self.usr_trade_limit = (
 				1 - float(s[:-1]) / 100 if s.endswith('%') else
-				self.recv_proto.coin_amt(self.cfg.trade_limit))
+				UniAmt(self.cfg.trade_limit))
 		else:
 			self.usr_trade_limit = None
 
@@ -40,11 +41,11 @@ class NewSwap(New):
 		from ..term import get_char
 
 		def get_trade_limit():
-			if type(self.usr_trade_limit) is self.recv_proto.coin_amt:
+			if type(self.usr_trade_limit) is UniAmt:
 				return self.usr_trade_limit
 			elif type(self.usr_trade_limit) is float:
 				return (
-					self.recv_proto.coin_amt(int(c.data['expected_amount_out']), from_unit='satoshi')
+					UniAmt(int(c.data['expected_amount_out']), from_unit='satoshi')
 					* self.usr_trade_limit)
 
 		while True:
