@@ -215,6 +215,7 @@ class CmdTestShared:
 			'mmgen-txsign',
 			opts,
 			extra_desc,
+			no_passthru_opts = ['coin'],
 			exit_val = None if save or (wcls.enc and wcls.type != 'brain') else 1)
 		t.license()
 		t.view_tx(view)

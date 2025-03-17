@@ -931,7 +931,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			args=['-H', f'{rf},{hincog_offset}', '-l', str(hincog_seedlen)])
 
 	def txsign_keyaddr(self, keyaddr_file, txfile):
-		t = self.spawn('mmgen-txsign', ['-d', self.tmpdir, '-p1', '-M', keyaddr_file, txfile])
+		t = self.spawn('mmgen-txsign',
+			['-d', self.tmpdir, '-p1', '-M', keyaddr_file, txfile], no_passthru_opts=['coin'])
 		t.license()
 		t.view_tx('n')
 		t.do_decrypt_ka_data(pw=self.kapasswd)
@@ -951,7 +952,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return self.txcreate_common(sources=['2'])
 
 	def txsign2(self, wf1, txf1, wf2, txf2):
-		t = self.spawn('mmgen-txsign', ['-d', self.tmpdir, txf1, wf1, txf2, wf2])
+		t = self.spawn('mmgen-txsign',
+			['-d', self.tmpdir, txf1, wf1, txf2, wf2], no_passthru_opts=['coin'])
 		t.license()
 		for cnum, wf in (('1', wf1), ('2', wf2)):
 			wcls = get_wallet_cls(ext=get_extension(wf))
@@ -973,7 +975,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return self.txcreate_common(sources=['1', '3'])
 
 	def txsign3(self, wf1, wf2, txf2):
-		t = self.spawn('mmgen-txsign', ['-d', self.tmpdir, wf1, wf2, txf2])
+		t = self.spawn('mmgen-txsign', ['-d', self.tmpdir, wf1, wf2, txf2], no_passthru_opts=['coin'])
 		t.license()
 		t.view_tx('n')
 		for cnum, wf in (('1', wf1), ('3', wf2)):
@@ -1021,7 +1023,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			'--keys-from-file=' + non_mm_file,
 			'--mmgen-keys-from-file=' + f6,
 			f1, f2, f3, f4, f5]
-		t = self.spawn('mmgen-txsign', add_args)
+		t = self.spawn('mmgen-txsign', add_args, no_passthru_opts=['coin'])
 		t.license()
 		t.view_tx('t')
 		t.do_decrypt_ka_data(pw=self.cfgs['14']['kapasswd'])
@@ -1084,6 +1086,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		t = self.spawn(
 			'mmgen-txsign',
 			add_args + ['-d', self.tmpdir, '-k', non_mm_file, txf, wf],
+			no_passthru_opts = ['coin'],
 			exit_val = 2 if bad_vsize else None)
 		t.license()
 		t.view_tx('n')

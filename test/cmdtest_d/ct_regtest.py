@@ -907,7 +907,8 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def bob_subwallet_txsign(self):
 		fn = get_file_with_ext(self.tmpdir, 'rawtx')
-		t = self.spawn('mmgen-txsign', ['-d', self.tmpdir, '--bob', '--subseeds=127', fn])
+		t = self.spawn('mmgen-txsign',
+			['-d', self.tmpdir, '--bob', '--subseeds=127', fn], no_passthru_opts=['coin'])
 		t.view_tx('t')
 		t.passphrase(dfl_wcls.desc, rt_pw)
 		t.do_comment(None)
@@ -2217,7 +2218,8 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def bob_dump_hex_sign(self):
 		txfile = get_file_with_ext(self.dump_hex_subdir, 'rawtx')
 		return self.txsign_ui_common(
-			self.spawn('mmgen-txsign', ['-d', self.dump_hex_subdir, '--bob', txfile]),
+			self.spawn('mmgen-txsign',
+				['-d', self.dump_hex_subdir, '--bob', txfile], no_passthru_opts=['coin']),
 			do_passwd = True,
 			passwd    = rt_pw)
 

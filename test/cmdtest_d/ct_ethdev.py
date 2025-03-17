@@ -716,12 +716,12 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		t = self.spawn(
 			'mmgen-txsign',
 				self.eth_args
-				+ [f'--coin={self.proto.coin}']
 				+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
 				+ ([], ['--yes'])[ni]
 				+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
 				+ add_args
-				+ [txfile, dfl_words_file])
+				+ [txfile, dfl_words_file],
+			no_passthru_opts = ['coin'])
 		return self.txsign_ui_common(t, ni=ni, has_label=True)
 
 	def txsend(self, ext='{}.regtest.sigtx', add_args=[], test=False):
@@ -1070,7 +1070,9 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			t.written_to_file('transaction')
 			ext = '[0,8000]{}.regtest.rawtx'.format('-α' if cfg.debug_utf8 else '')
 			txfile = self.get_file_with_ext(ext, no_dot=True)
-			t = self.spawn('mmgen-txsign', self.eth_args + ['--yes', '-k', keyfile, txfile], no_msg=True)
+			t = self.spawn(
+				'mmgen-txsign',
+				self.eth_args + ['--yes', '-k', keyfile, txfile], no_msg=True, no_passthru_opts=['coin'])
 			self.txsign_ui_common(t, ni=True)
 			txfile = txfile.replace('.rawtx', '.sigtx')
 			t = self.spawn('mmgen-txsend', self.eth_args + [txfile], no_msg=True)
@@ -1237,7 +1239,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			add_comment       = tx_comment_lat_cyr_gr,
 			file_desc         = file_desc)
 	def token_txsign(self, ext='', token='', add_args=[], ni=True):
-		return self.txsign(ni=ni, ext=ext, add_args=[f'--token={token}'] + add_args)
+		return self.txsign(ni=ni, ext=ext, add_args=add_args)
 	def token_txsend(self, ext='', token=''):
 		return self.txsend(ext=ext, add_args=['--token='+token])
 
