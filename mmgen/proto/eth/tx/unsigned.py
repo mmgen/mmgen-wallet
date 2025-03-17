@@ -15,7 +15,7 @@ proto.eth.tx.unsigned: Ethereum unsigned transaction class
 import json
 
 from ....tx import unsigned as TxBase
-from ....util import msg, msg_r
+from ....util import msg, msg_r, die
 from ....obj import CoinTxID, ETHNonce, Int, HexStr
 from ....addr import CoinAddr, TokenAddr
 from ..contract import Token
@@ -74,11 +74,18 @@ class Unsigned(Completed, TxBase.Unsigned):
 
 		o = self.txobj
 
-		m = 'mismatch -- a compromised online installation may have altered your serialized data!'
-		assert o['from'] == self.inputs[0].addr, f'from_addr {m}'
+		def do_mismatch_err(io, j, k, desc):
+			m = 'A compromised online installation may have altered your serialized data!'
+			fs = '\n{} mismatch!\n{}\n  orig:       {}\n  serialized: {}'
+			die(3, fs.format(desc.upper(), m, getattr(io[0], k), o[j]))
+
+		if o['from'] != self.inputs[0].addr:
+			do_mismatch_err(self.inputs, 'from', 'addr', 'from-address')
 		if self.outputs:
-			assert o['to'] == self.outputs[0].addr, f'to_addr {m}'
-			assert o['amt'] == self.outputs[0].amt, f'to_amt {m}'
+			if o['to'] != self.outputs[0].addr:
+				do_mismatch_err(self.outputs, 'to', 'addr', 'to-address')
+			if o['amt'] != self.outputs[0].amt:
+				do_mismatch_err(self.outputs, 'amt', 'amt', 'amount')
 
 		msg_r(f'Signing transaction{tx_num_str}...')
 

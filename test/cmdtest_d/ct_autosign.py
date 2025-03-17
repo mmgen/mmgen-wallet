@@ -692,8 +692,10 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.bad_msg_count = 0
 
 		if self.simulate_led:
-			LEDControl.create_dummy_control_files()
 			db = LEDControl.boards['dummy']
+			for fn in (db.control, db.trigger):
+				run(f'sudo rm -f {fn}'.split(), check=True)
+			LEDControl.create_dummy_control_files()
 			usrgrp = {'linux': 'root:root', 'darwin': 'root:wheel'}[sys.platform]
 			for fn in (db.control, db.trigger): # trigger the auto-chmod feature
 				run(f'sudo chmod 644 {fn}'.split(), check=True)

@@ -715,13 +715,13 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
 			'mmgen-txsign',
-			self.eth_args
-			+ [f'--coin={self.proto.coin}']
-			+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
-			+ ([], ['--yes'])[ni]
-			+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
-			+ add_args
-			+ [txfile, dfl_words_file])
+				self.eth_args
+				+ [f'--coin={self.proto.coin}']
+				+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
+				+ ([], ['--yes'])[ni]
+				+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
+				+ add_args
+				+ [txfile, dfl_words_file])
 		return self.txsign_ui_common(t, ni=ni, has_label=True)
 
 	def txsend(self, ext='{}.regtest.sigtx', add_args=[], test=False):
@@ -1221,9 +1221,16 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	def token_bal1(self):
 		return self.token_bal(n='1')
 
-	def token_txcreate(self, args=[], token='', inputs='1', fee='50G', file_desc='Unsigned transaction'):
+	def token_txcreate(
+			self,
+			args      = [],
+			token     = '',
+			inputs    = '1',
+			fee       = '50G',
+			file_desc = 'Unsigned transaction'):
 		return self.txcreate_ui_common(
-			self.spawn('mmgen-txcreate', self.eth_args + [f'--token={token}', '-B', f'--fee={fee}'] + args),
+			self.spawn('mmgen-txcreate',
+				self.eth_args + [f'--token={token}', '-B', f'--fee={fee}'] + args),
 			menu              = [],
 			inputs            = inputs,
 			input_sels_prompt = 'to spend from',

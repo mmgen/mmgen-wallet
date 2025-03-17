@@ -109,6 +109,7 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 				t = self.spawn(
 					'mmgen-txsign',
 					['--outdir=test/trash', '--yes', f'--passwd-file={passfile}', dfl_words_file, txfile],
+					no_passthru_opts = ['coin'],
 					extra_desc = f'{proto.coin}{token_desc} {proto.network}')
 				t.read()
 				t.ok()

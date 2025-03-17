@@ -569,11 +569,16 @@ class CmdTestRunner:
 			cmd if cfg.system # cfg.system is broken for main test group with overlay tree
 			else os.path.relpath(os.path.join(repo_root, cmd_dir, cmd)))
 
+		passthru_opts = (
+			self.passthru_opts if not no_passthru_opts else
+			[] if no_passthru_opts is True else
+			[o for o in self.passthru_opts if o[2:].split('=')[0] not in no_passthru_opts])
+
 		args = (
 			self.pre_args +
 			([] if no_exec_wrapper else ['scripts/exec_wrapper.py']) +
 			[cmd_path] +
-			([] if no_passthru_opts else self.passthru_opts) +
+			passthru_opts +
 			args)
 
 		try:
