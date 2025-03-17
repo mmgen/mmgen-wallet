@@ -94,8 +94,6 @@ class unit_tests:
 				'ethereum/5881D2-MM1[1.23456,50000].rawtx',
 				'ethereum/6BDB25-MM1[1.23456,50000].testnet.rawtx',
 				'ethereum/88FEFD-ETH[23.45495,40000].rawtx',
-				'ethereum/B472BD-ETH[23.45495,40000].testnet.rawtx',
-				'ethereum/B472BD-ETH[23.45495,40000].testnet.sigtx',
 				'litecoin/A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx',
 				'litecoin/AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx',
 			)

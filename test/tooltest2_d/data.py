@@ -745,8 +745,8 @@ tests = {
 									None),],
 			'eth_mainnet': [(['test/ref/ethereum/88FEFD-ETH[23.45495,40000].rawtx'], None),],
 			'eth_testnet': [([
-				'test/ref/ethereum/B472BD-ETH[23.45495,40000].testnet.rawtx',
-				'test/ref/ethereum/B472BD-ETH[23.45495,40000].testnet.sigtx'
+				'test/ref/ethereum/76CF8C-ETH[99.99895,50000].regtest.rawtx',
+				'test/ref/ethereum/76CF8C-ETH[99.99895,50000].regtest.sigtx'
 				], None),],
 			'mm1_mainnet': [(['test/ref/ethereum/5881D2-MM1[1.23456,50000].rawtx'], None),],
 			'mm1_testnet': [(['test/ref/ethereum/6BDB25-MM1[1.23456,50000].testnet.rawtx'], None),],

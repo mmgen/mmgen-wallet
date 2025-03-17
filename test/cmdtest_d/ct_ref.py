@@ -91,7 +91,7 @@ class CmdTestRef(CmdTestBase, CmdTestShared):
 			),
 			'eth': (
 				'88FEFD-ETH[23.45495,40000].rawtx',
-				'B472BD-ETH[23.45495,40000].testnet.rawtx'
+				'76CF8C-ETH[99.99895,50000].regtest.rawtx'
 			),
 			'mm1': (
 				'5881D2-MM1[1.23456,50000].rawtx',
