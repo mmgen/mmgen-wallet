@@ -17,19 +17,15 @@ from pathlib import Path
 from mmgen.protocol import init_proto
 from ..include.common import make_burn_addr, gr_uc
 from .common import dfl_bip39_file
-from .thornode import run_thornode_server
+from .httpd.thornode import ThornodeServer
 
 from .ct_autosign import CmdTestAutosign, CmdTestAutosignThreaded
 from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, cfg, strip_ansi_escapes
 
+thornode_server = ThornodeServer()
+
 sample1 = gr_uc[:24]
 sample2 = '00010203040506'
-
-def thornode_server_start():
-	import threading
-	t = threading.Thread(target=run_thornode_server, name='Thornode server thread')
-	t.daemon = True
-	t.start()
 
 class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 	bdb_wallet = True
@@ -48,6 +44,7 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		('subgroup.signsend',     ['init_swap']),
 		('subgroup.signsend_bad', ['init_swap']),
 		('subgroup.autosign',     ['init_data', 'signsend']),
+		('thornode_server_stop',  'stopping the Thornode server'),
 		('stop',                  'stopping regtest daemons'),
 	)
 	cmd_subgroups = {
@@ -175,7 +172,7 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 
 		self.protos = [init_proto(cfg, k, network='regtest', need_amt=True) for k in ('btc', 'ltc', 'bch')]
 
-		thornode_server_start() # TODO: stop server when test group finishes executing
+		thornode_server.start()
 
 		self.opts.append('--bob')
 
@@ -731,4 +728,9 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		self.spawn(msg_only=True)
 		data = self._do_cli(['getrawmempool'], add_opts=[f'--coin={self.protos[proto_idx].coin}'])
 		assert data
+		return 'ok'
+
+	def thornode_server_stop(self):
+		self.spawn(msg_only=True)
+		thornode_server.stop()
 		return 'ok'
