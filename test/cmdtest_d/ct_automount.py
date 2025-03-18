@@ -15,7 +15,7 @@ import time
 
 from .ct_autosign import CmdTestAutosignThreaded
 from .ct_regtest import CmdTestRegtest, rt_pw
-from ..include.common import cfg, gr_uc
+from ..include.common import gr_uc
 
 class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	'automounted transacting operations via regtest mode'
@@ -76,12 +76,12 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('txview',                           'viewing transactions'),
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 
 		self.coins = [cfg.coin.lower()]
 
-		CmdTestAutosignThreaded.__init__(self, trunner, cfgs, spawn)
-		CmdTestRegtest.__init__(self, trunner, cfgs, spawn)
+		CmdTestAutosignThreaded.__init__(self, cfg, trunner, cfgs, spawn)
+		CmdTestRegtest.__init__(self, cfg, trunner, cfgs, spawn)
 
 		if trunner is None:
 			return

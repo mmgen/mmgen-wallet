@@ -12,7 +12,6 @@ test.cmdtest_d.ct_opts: options processing tests for the MMGen cmdtest.py test s
 
 import os, time
 
-from ..include.common import cfg
 from .ct_base import CmdTestBase
 
 class CmdTestOpts(CmdTestBase):
@@ -117,7 +116,7 @@ class CmdTestOpts(CmdTestBase):
 
 	def opt_helpscreen(self):
 		expect = r'OPTS.PY: Opts test.*USAGE:\s+opts.py'
-		if not cfg.pexpect_spawn:
+		if not self.cfg.pexpect_spawn:
 			expect += r'.*--minconf.*NOTES FOR THIS.*a note'
 		t = self.do_run(['--help'], expect, 0, regex=True)
 		if t.pexpect_spawn:
@@ -206,12 +205,12 @@ class CmdTestOpts(CmdTestBase):
 		return self.check_vals(['--minc=7'], (('cfg.minconf', '7'),))
 
 	def opt_good6(self):
-		if cfg.no_altcoin:
+		if self.cfg.no_altcoin:
 			return 'skip'
 		return self.check_vals(['--coin=xmr'], (('cfg.coin', 'XMR'),))
 
 	def opt_good7(self):
-		if cfg.no_altcoin:
+		if self.cfg.no_altcoin:
 			return 'skip'
 		return self.check_vals(['--coin', 'xmr'], (('cfg.coin', 'XMR'),))
 

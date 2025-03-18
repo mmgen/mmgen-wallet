@@ -31,7 +31,6 @@ from mmgen.led import LEDControl
 from mmgen.autosign import Autosign, Signable
 
 from ..include.common import (
-	cfg,
 	omsg,
 	omsg_r,
 	oqmsg,
@@ -58,9 +57,9 @@ class CmdTestAutosignBase(CmdTestBase):
 	threaded     = False
 	daemon_coins = []
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 
-		CmdTestBase.__init__(self, trunner, cfgs, spawn)
+		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)
 
 		if trunner is None:
 			return
@@ -98,7 +97,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		if hasattr(self, 'txdev'):
 			del self.txdev
 
-		if not cfg.no_daemon_stop:
+		if not self.cfg.no_daemon_stop:
 			if sys.platform == 'darwin':
 				for label in (self.asi.dev_label, self.asi.ramdisk.label):
 					self._macOS_eject_disk(label)
@@ -165,7 +164,7 @@ class CmdTestAutosignBase(CmdTestBase):
 				'hdiutil', 'create', '-size', '10M', '-fs', 'exFAT',
 				'-volname', self.asi.dev_label,
 				str(self.fs_image_path)]
-			redir = None if cfg.exact_output or cfg.verbose else DEVNULL
+			redir = None if self.cfg.exact_output or self.cfg.verbose else DEVNULL
 			run(cmd, stdout=redir, check=True)
 
 	def _macOS_mount_fs_image(self, loc):
@@ -203,7 +202,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		mn_desc = mn_type or 'default'
 		mn_type = mn_type or 'mmgen'
 
-		if sys.platform == 'darwin' and not cfg.no_daemon_stop:
+		if sys.platform == 'darwin' and not self.cfg.no_daemon_stop:
 			self._macOS_eject_disk(self.asi.ramdisk.label)
 
 		self.insert_device()
@@ -229,7 +228,7 @@ class CmdTestAutosignBase(CmdTestBase):
 				t.expect('OK? (Y/n): ', '\n')
 			from mmgen.mn_entry import mn_entry
 			entry_mode = 'full'
-			mne = mn_entry(cfg, mn_type, entry_mode=entry_mode)
+			mne = mn_entry(self.cfg, mn_type, entry_mode=entry_mode)
 			if usr_entry_modes:
 				t.expect('user-configured')
 			else:
@@ -247,7 +246,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		t.read()
 		self.remove_device()
 
-		if sys.platform == 'darwin' and not cfg.no_daemon_stop:
+		if sys.platform == 'darwin' and not self.cfg.no_daemon_stop:
 			atexit.register(self._macOS_eject_disk, self.asi.ramdisk.label)
 
 		return t
@@ -596,7 +595,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		src = Path(self.asi.txauto_dir)
 		from mmgen.tx import CompletedTX
 		txs = sorted(
-			[await CompletedTX(cfg=cfg, filename=path, quiet_open=True) for path in sorted(src.iterdir())],
+			[await CompletedTX(cfg=self.cfg, filename=path, quiet_open=True) for path in sorted(src.iterdir())],
 			key = lambda x: x.timestamp)
 		for tx in txs:
 			imsg(blue(f'\nViewing ‘{tx.infile.name}’:'))
@@ -662,14 +661,14 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		('sign_bad_no_daemon',        'signing transactions (error, no daemons running)'),
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 
-		super().__init__(trunner, cfgs, spawn)
+		super().__init__(cfg, trunner, cfgs, spawn)
 
 		if trunner is None:
 			return
 
-		if self.live and not cfg.exact_output:
+		if self.live and not self.cfg.exact_output:
 			die(1, red('autosign_live tests must be run with --exact-output enabled!'))
 
 		if self.no_insert_check:
@@ -714,7 +713,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 
 	def create_dfl_wallet(self):
 		t = self.spawn('mmgen-walletconv', [
-				f'--outdir={cfg.data_dir}',
+				f'--outdir={self.cfg.data_dir}',
 				'--usr-randchars=0', '--quiet', '--hash-preset=1', '--label=foo',
 				'test/ref/98831F3A.hex'
 			]
@@ -742,8 +741,8 @@ class CmdTestAutosign(CmdTestAutosignBase):
 
 	def run_setup_bip39(self):
 		from mmgen.cfgfile import mmgen_cfg_file
-		fn = mmgen_cfg_file(cfg, 'usr').fn
-		old_data = mmgen_cfg_file(cfg, 'usr').get_data(fn)
+		fn = mmgen_cfg_file(self.cfg, 'usr').fn
+		old_data = mmgen_cfg_file(self.cfg, 'usr').get_data(fn)
 		new_data = [d.replace('bip39:fixed', 'bip39:full')[2:]
 			if d.startswith('# mnemonic_entry_modes') else d for d in old_data]
 		with open(fn, 'w') as fh:
@@ -791,12 +790,12 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.insert_device()
 
 		silence()
-		self.do_mount(verbose=cfg.verbose or cfg.exact_output)
+		self.do_mount(verbose=self.cfg.verbose or self.cfg.exact_output)
 		end_silence()
 
 		for coindir, fn in data:
 			src = joinpath(ref_dir, coindir, fn)
-			if cfg.debug_utf8:
+			if self.cfg.debug_utf8:
 				ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
 				fn = fn[:-len(ext)] + '-α' + ext
 			target = joinpath(self.asi.tx_dir, fn)
@@ -1016,9 +1015,9 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		('stop_daemons',          'stopping daemons'),
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 
-		super().__init__(trunner, cfgs, spawn)
+		super().__init__(cfg, trunner, cfgs, spawn)
 
 		if trunner is None:
 			return
@@ -1075,7 +1074,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 			no_msg   = True,
 			exit_val = 1)
 
-		if not cfg.exact_output:
+		if not self.cfg.exact_output:
 			omsg('')
 
 		prompt_insert_sign(t)

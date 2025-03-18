@@ -17,7 +17,6 @@ from mmgen.util import fmt, capfirst, remove_whitespace
 from mmgen.wallet import get_wallet_cls
 
 from ..include.common import (
-	cfg,
 	imsg,
 	imsg_r,
 	sample_mn,
@@ -120,7 +119,7 @@ class CmdTestInput(CmdTestBase):
 		from mmgen.color import set_vt100
 		set_vt100()
 		imsg(cp.stderr.decode().strip())
-		res = get_data_from_file(cfg, 'test/trash/A773B05C[128].mmwords', silent=True).strip()
+		res = get_data_from_file(self.cfg, 'test/trash/A773B05C[128].mmwords', silent=True).strip()
 		assert res == mn, f'{res} != {mn}'
 		return 'ok' if b'written to file' in cp.stderr else 'error'
 
@@ -422,7 +421,7 @@ class CmdTestInput(CmdTestBase):
 		mn = mn or sample_mn[fmt]['mn'].split()
 		t = self.spawn('mmgen-tool', ['mn2hex_interactive', 'fmt='+fmt, 'mn_len=12', 'print_mn=1'])
 		from mmgen.mn_entry import mn_entry
-		mne = mn_entry(cfg, fmt, entry_mode=entry_mode)
+		mne = mn_entry(self.cfg, fmt, entry_mode=entry_mode)
 		t.expect(
 			'Type a number.*: ',
 			('\n' if enter_for_dfl else str(mne.entry_modes.index(entry_mode)+1)),
@@ -465,7 +464,7 @@ class CmdTestInput(CmdTestBase):
 			t.expect('Type a number.*: ', '6', regex=True)
 			t.expect('invalid')
 			from mmgen.mn_entry import mn_entry
-			mne = mn_entry(cfg, fmt, entry_mode=entry_mode)
+			mne = mn_entry(self.cfg, fmt, entry_mode=entry_mode)
 			t.expect('Type a number.*: ', str(mne.entry_modes.index(entry_mode)+1), regex=True)
 			t.expect(r'Using entry mode (\S+)', regex=True)
 			mode = strip_ansi_escapes(t.p.match.group(1)).lower()
@@ -489,7 +488,7 @@ class CmdTestInput(CmdTestBase):
 	def mnemonic_entry_mmgen_minimal(self):
 		from mmgen.mn_entry import mn_entry
 		# erase_chars: '\b\x7f'
-		m = mn_entry(cfg, 'mmgen', entry_mode='minimal')
+		m = mn_entry(self.cfg, 'mmgen', entry_mode='minimal')
 		np = 2
 		mn = (
 			'z',

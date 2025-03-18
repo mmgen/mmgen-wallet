@@ -24,7 +24,7 @@ import sys, re
 
 from mmgen.util import die
 
-from ..include.common import cfg, start_test_daemons, stop_test_daemons, imsg
+from ..include.common import start_test_daemons, stop_test_daemons, imsg
 from .common import get_file_with_ext, dfl_words_file
 from .ct_base import CmdTestBase
 from .ct_main import CmdTestMain
@@ -79,13 +79,13 @@ class CmdTestMisc(CmdTestBase):
 	color = True
 
 	def rpc_backends(self):
-		backends = cfg._autoset_opts['rpc_backend'][1]
+		backends = self.cfg._autoset_opts['rpc_backend'][1]
 		for b in backends:
 			t = self.spawn_chk('mmgen-tool', [f'--rpc-backend={b}', 'daemon_version'], extra_desc=f'({b})')
 		return t
 
 	def _bch_txview(self, view_pref, terse, expect):
-		if cfg.no_altcoin:
+		if self.cfg.no_altcoin:
 			return 'skip'
 		tx = 'test/ref/bitcoin_cash/895108-BCH[2.65913].rawtx'
 		t = self.spawn('mmgen-tool', ['--coin=bch', f'--cashaddr={view_pref}', 'txview', tx, f'terse={terse}'])
@@ -106,7 +106,7 @@ class CmdTestMisc(CmdTestBase):
 		return self._bch_txview(1, 1, '[1HpynST7vkLn8yNtdrqPfeghexZk4sdB3W]')
 
 	def xmrwallet_txview(self, op='txview'):
-		if cfg.no_altcoin:
+		if self.cfg.no_altcoin:
 			return 'skip'
 		files = get_file_with_ext('test/ref/monero', 'tx', no_dot=True, delete=False, return_list=True)
 		t = self.spawn('mmgen-xmrwallet', [op] + files)
@@ -125,12 +125,12 @@ class CmdTestMisc(CmdTestBase):
 		return self.xmrwallet_txview(op='txlist')
 
 	def examples_bip_hd(self):
-		if cfg.no_altcoin:
+		if self.cfg.no_altcoin:
 			return 'skip'
 		return self.spawn('examples/bip_hd.py', cmd_dir='.')
 
 	def coin_daemon_info(self):
-		if cfg.no_altcoin:
+		if self.cfg.no_altcoin:
 			coins = ['btc']
 		else:
 			coins = ['btc', 'ltc', 'eth']
@@ -138,9 +138,9 @@ class CmdTestMisc(CmdTestBase):
 		t = self.spawn('examples/coin-daemon-info.py', coins, cmd_dir='.')
 		for coin in coins:
 			t.expect(coin.upper() + r'\s+mainnet\s+Up', regex=True)
-		if cfg.pexpect_spawn:
+		if self.cfg.pexpect_spawn:
 			t.send('q')
-		if not cfg.no_altcoin:
+		if not self.cfg.no_altcoin:
 			stop_test_daemons('ltc', 'eth', remove_datadir=True)
 		return t
 
@@ -166,7 +166,7 @@ class CmdTestMisc(CmdTestBase):
 
 		t = self.spawn('test/misc/term_ni.py', ['echo'], cmd_dir='.', pexpect_spawn=True, timeout=1)
 		t.p.logfile = None
-		t.p.logfile_read = sys.stdout if cfg.verbose or cfg.exact_output else None
+		t.p.logfile_read = sys.stdout if self.cfg.verbose or self.cfg.exact_output else None
 		t.p.logfile_send = None
 
 		test_noecho()
@@ -252,7 +252,7 @@ class CmdTestRefTX(CmdTestMain, CmdTestBase):
 		),
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 		if cfgs:
 			for n in self.tmpdir_nums:
 				cfgs[str(n)].update({
@@ -260,7 +260,7 @@ class CmdTestRefTX(CmdTestMain, CmdTestBase):
 					'segwit': n in (33, 34),
 					'dep_generators': {'addrs':'ref_tx_addrgen'+str(n)[-1]}
 				})
-		CmdTestMain.__init__(self, trunner, cfgs, spawn)
+		CmdTestMain.__init__(self, cfg, trunner, cfgs, spawn)
 
 	def ref_tx_addrgen(self, atype):
 		if atype not in self.proto.mmtypes:

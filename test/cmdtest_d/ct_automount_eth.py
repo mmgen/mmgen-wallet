@@ -52,12 +52,12 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		('txview',                 'viewing transactions'),
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 
 		self.coins = [cfg.coin.lower()]
 
-		CmdTestAutosignThreaded.__init__(self, trunner, cfgs, spawn)
-		CmdTestEthdev.__init__(self, trunner, cfgs, spawn)
+		CmdTestAutosignThreaded.__init__(self, cfg, trunner, cfgs, spawn)
+		CmdTestEthdev.__init__(self, cfg, trunner, cfgs, spawn)
 
 		self.txop_opts = ['--autosign', '--regtest=1', '--quiet']
 

@@ -25,7 +25,6 @@ import os
 from mmgen.util import capfirst
 from mmgen.wallet import get_wallet_cls
 from ..include.common import (
-	cfg,
 	imsg_r,
 	ok,
 	joinpath,
@@ -341,7 +340,7 @@ class CmdTestRef(CmdTestBase, CmdTestShared):
 		t = self.spawn(
 			'mmgen-tool',
 			['-q', 'decrypt', f, 'outfile='+dec_file, 'hash_preset=1'],
-			env = os.environ if cfg.debug_utf8 else get_env_without_debug_vars())
+			env = os.environ if self.cfg.debug_utf8 else get_env_without_debug_vars())
 		t.passphrase('data', tool_enc_passwd)
 		t.written_to_file('Decrypted data')
 		dec_txt = read_from_file(dec_file)

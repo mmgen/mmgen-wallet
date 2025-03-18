@@ -33,7 +33,6 @@ from mmgen.addrlist import AddrList
 from mmgen.wallet import Wallet, get_wallet_cls
 
 from ..include.common import (
-	cfg,
 	imsg,
 	omsg,
 	ok,
@@ -472,9 +471,9 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	),
 	}
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 
-		CmdTestBase.__init__(self, trunner, cfgs, spawn)
+		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)
 
 		if trunner is None:
 			return
@@ -511,7 +510,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def _add_comments_to_addr_file(self, proto, addrfile, outfile, use_comments=False):
 		silence()
 		gmsg(f'Adding comments to address file {addrfile!r}')
-		a = AddrList(cfg, proto, infile=addrfile)
+		a = AddrList(self.cfg, proto, infile=addrfile)
 		for n, idx in enumerate(a.idxs(), 1):
 			if use_comments:
 				a.set_comment(idx, get_comment())
@@ -521,7 +520,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		a.file.format(add_comments=True)
 		from mmgen.fileutil import write_data_to_file
 		write_data_to_file(
-			cfg,
+			self.cfg,
 			outfile           = outfile,
 			data              = a.file.fmt_data,
 			quiet             = True,
@@ -600,7 +599,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def _get_user_subsid(self, user, subseed_idx):
 		fn = get_file_with_ext(self._user_dir(user), dfl_wcls.ext)
 		silence()
-		w = Wallet(cfg, fn=fn, passwd_file=os.path.join(self.tmpdir, 'wallet_password'))
+		w = Wallet(self.cfg, fn=fn, passwd_file=os.path.join(self.tmpdir, 'wallet_password'))
 		end_silence()
 		return w.seed.subseed(subseed_idx).sid
 
@@ -655,7 +654,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			addrfile = joinpath(self._user_dir(user),
 				'{}{}{}[{}]{x}.regtest.addrs'.format(
 					sid, self.get_altcoin_pfx(proto.coin), id_strs[desc], addr_range,
-					x='-α' if cfg.debug_utf8 else ''))
+					x='-α' if self.cfg.debug_utf8 else ''))
 			if mmtype == proto.mmtypes[0] and user == 'bob':
 				self._add_comments_to_addr_file(proto, addrfile, addrfile, use_comments=True)
 			t = self.spawn(
@@ -666,7 +665,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 					(['--batch'] if batch else []) +
 					[f'--coin={proto.coin}', addrfile]),
 				extra_desc = f'({desc})')
-			if cfg.debug:
+			if self.cfg.debug:
 				t.expect("Type uppercase 'YES' to confirm: ", 'YES\n')
 			t.expect('Importing')
 			if batch:
@@ -1127,10 +1126,10 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		proto = proto or self.proto
 		id_str = {'L':'', 'S':'-S', 'C':'-C', 'B':'-B'}[mmtype]
 		ext = '{}{}{}[{}]{x}.regtest.addrs'.format(
-			sid, self.get_altcoin_pfx(proto.coin), id_str, addr_range, x='-α' if cfg.debug_utf8 else '')
+			sid, self.get_altcoin_pfx(proto.coin), id_str, addr_range, x='-α' if self.cfg.debug_utf8 else '')
 		addrfile = get_file_with_ext(self._user_dir(user), ext, no_dot=True)
 		silence()
-		addr = AddrList(cfg, proto, infile=addrfile).data[idx].addr
+		addr = AddrList(self.cfg, proto, infile=addrfile).data[idx].addr
 		end_silence()
 		return addr
 
@@ -1148,7 +1147,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def bob_rbf_1output_bump(self):
 		if not self.test_rbf:
 			return 'skip'
-		ext = '9343,3]{x}.regtest.rawtx'.format(x='-α' if cfg.debug_utf8 else '')
+		ext = '9343,3]{x}.regtest.rawtx'.format(x='-α' if self.cfg.debug_utf8 else '')
 		txfile = get_file_with_ext(self.tr.trash_dir, ext, delete=False, no_dot=True)
 		return self.user_txbump('bob',
 			self.tr.trash_dir,
@@ -1221,7 +1220,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return self._bob_rbf_bump(['--send'], rtFee[2])
 
 	def _bob_rbf_bump(self, add_args, fee):
-		ext = ',{}]{x}.regtest.sigtx'.format(rtFee[1][:-1], x='-α' if cfg.debug_utf8 else '')
+		ext = ',{}]{x}.regtest.sigtx'.format(rtFee[1][:-1], x='-α' if self.cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext, delete=False, no_dot=True)
 		return self.user_txbump('bob', self.tmpdir, txfile, fee, add_args=add_args)
 
@@ -1238,7 +1237,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		ret = self.spawn(
 			'mmgen-regtest',
 			cmd_args,
-			env = (os.environ if cfg.debug_utf8 else get_env_without_debug_vars()) | (
+			env = (os.environ if self.cfg.debug_utf8 else get_env_without_debug_vars()) | (
 				{'EXEC_WRAPPER_DO_RUNTIME_MSG': ''}),
 			no_msg = True
 		).read().strip()
@@ -1285,7 +1284,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			r1, r2 = (f'Transaction has {confirmations} confirmation', '')
 		else:
 			r1, r2 = ('in mempool, replaceable', '')
-		ext = ',{}]{x}.regtest.sigtx'.format(fee[:-1], x='-α' if cfg.debug_utf8 else '')
+		ext = ',{}]{x}.regtest.sigtx'.format(fee[:-1], x='-α' if self.cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext, delete=False, no_dot=True)
 		return self.user_txsend_status('bob', txfile, r1, r2, exit_val=exit_val)
 
@@ -1309,7 +1308,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def _gen_pairs(self, n):
 		from mmgen.tool.api import tool_api
-		t = tool_api(cfg)
+		t = tool_api(self.cfg)
 		t.init_coin(self.proto.coin, self.proto.network)
 
 		def gen_addr(Type):
@@ -1327,7 +1326,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def user_import(self, user, args, nAddr):
 		t = self.spawn('mmgen-addrimport', ['--'+user] + args)
-		if cfg.debug:
+		if self.cfg.debug:
 			t.expect("Type uppercase 'YES' to confirm: ", 'YES\n')
 		t.expect(f'Importing {nAddr} address')
 		if '--rescan' in args:
@@ -1538,7 +1537,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def bob_edit_json_twdump(self):
 		self.spawn(msg_only=True)
 		from mmgen.tw.json import TwJSON
-		fn = TwJSON.Base(cfg, self.proto).dump_fn
+		fn = TwJSON.Base(self.cfg, self.proto).dump_fn
 		text = json.loads(self.read_from_tmpfile(fn))
 		text['data']['entries'][3][3] = f'edited comment [фубар] [{gr_uc}]'
 		self.write_to_tmpfile(fn, json.dumps(text, indent=4))
@@ -1551,7 +1550,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			expect_str  = None,
 			expect_str2 = 'Found 1 unspent output'):
 		from mmgen.tw.json import TwJSON
-		fn = joinpath(self.tmpdir, TwJSON.Base(cfg, self.proto).dump_fn)
+		fn = joinpath(self.tmpdir, TwJSON.Base(self.cfg, self.proto).dump_fn)
 		t = self.spawn(
 			'mmgen-tool',
 			([f'--rpc-backend={rpc_backend}'] if rpc_backend else [])
@@ -1684,7 +1683,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def alice_add_comment_badaddr2(self):
 		# mainnet zero address:
-		addr = init_proto(cfg, self.proto.coin, network='mainnet').pubhash2addr(bytes(20), 'p2pkh')
+		addr = init_proto(self.cfg, self.proto.coin, network='mainnet').pubhash2addr(bytes(20), 'p2pkh')
 		return self.alice_add_comment_badaddr(addr, 'invalid address', 2)
 
 	def alice_add_comment_badaddr3(self):
@@ -1861,7 +1860,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 				s,
 				regex=True)
 			if t.pexpect_spawn and s == 'w':
-				t.expect(r'Total.*', 'q', regex=True, delay=1 if cfg.exact_output else t.send_delay)
+				t.expect(r'Total.*', 'q', regex=True, delay=1 if self.cfg.exact_output else t.send_delay)
 				time.sleep(t.send_delay)
 				t.send('e')
 		return t
@@ -2262,7 +2261,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def stop(self):
 		self.spawn(msg_only=True)
-		if cfg.no_daemon_stop:
+		if self.cfg.no_daemon_stop:
 			msg_r(f'(leaving regtest daemon{suf(self.protos)} running by user request)')
 			imsg('')
 		else:

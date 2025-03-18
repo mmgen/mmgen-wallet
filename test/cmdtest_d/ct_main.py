@@ -31,7 +31,6 @@ from mmgen.wallet.incog import wallet as IncogWallet
 from mmgen.rpc import rpc_init
 
 from ..include.common import (
-	cfg,
 	vmsg,
 	joinpath,
 	silence,
@@ -57,7 +56,7 @@ from .common import (
 from .ct_base import CmdTestBase
 from .ct_shared import CmdTestShared
 
-def make_brainwallet_file(fn):
+def make_brainwallet_file(cfg, fn):
 	# Print random words with random whitespace in between
 	wl = rwords.split()
 	nwords, ws_list, max_spaces = 10, '    \n', 5
@@ -375,8 +374,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		'txsign6',
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
-		CmdTestBase.__init__(self, trunner, cfgs, spawn)
+	def __init__(self, cfg, trunner, cfgs, spawn):
+		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)
 		if trunner is None or self.coin not in self.networks:
 			return
 		if self.coin in ('btc', 'bch', 'ltc'):
@@ -389,7 +388,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 	@property
 	def lbl_id(self):
 		if not hasattr(self, '_lbl_id'):
-			rpc = async_run(rpc_init(cfg, self.proto))
+			rpc = async_run(rpc_init(self.cfg, self.proto))
 			self._lbl_id = ('account', 'label')['label_api' in rpc.caps]
 		return self._lbl_id
 
@@ -397,9 +396,9 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		addrfile = self.get_file_with_ext('addrs')
 		from mmgen.addrlist import AddrList
 		silence()
-		chk = AddrList(cfg, self.proto, infile=addrfile).chksum
+		chk = AddrList(self.cfg, self.proto, infile=addrfile).chksum
 		end_silence()
-		if cfg.verbose and display:
+		if self.cfg.verbose and display:
 			msg(f'Checksum: {cyan(chk)}')
 		return chk
 
@@ -429,10 +428,10 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 	def delete_dfl_wallet(self, pf):
 		self.write_to_tmpfile('del_dw_run', b'', binary=True)
-		if cfg.no_dw_delete:
+		if self.cfg.no_dw_delete:
 			return 'skip'
-		for wf in [f for f in os.listdir(cfg.data_dir) if f[-6:]=='.mmdat']:
-			os.unlink(joinpath(cfg.data_dir, wf))
+		for wf in [f for f in os.listdir(self.cfg.data_dir) if f[-6:]=='.mmdat']:
+			os.unlink(joinpath(self.cfg.data_dir, wf))
 		self.spawn(msg_only=True)
 		self.have_dfl_wallet = False
 		return 'ok'
@@ -487,7 +486,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 	def passchg(self, wf, pf, label_action='cmdline', dfl_wallet=False, delete=False):
 		silence()
-		self.write_to_tmpfile(pwfile, get_data_from_file(cfg, pf))
+		self.write_to_tmpfile(pwfile, get_data_from_file(self.cfg, pf))
 		end_silence()
 		add_args = {
 			'cmdline': ['-d', self.tmpdir, '-L', 'Changed label (UTF-8) α'],
@@ -534,13 +533,13 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 	def _write_fake_data_to_file(self, d):
 		write_data_to_file(
-				cfg,
+				self.cfg,
 				self.unspent_data_file,
 				d,
 				desc              = 'Unspent outputs',
 				quiet             = True,
 				ignore_opt_outdir = True)
-		if cfg.verbose or cfg.exact_output:
+		if self.cfg.verbose or self.cfg.exact_output:
 			sys.stderr.write(f'Fake transaction wallet data written to file {self.unspent_data_file!r}\n')
 
 	def _create_fake_unspent_entry(
@@ -595,7 +594,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		for d in tx_data.values():
 			al = adata.addrlist(al_id=d['al_id'])
 			for n, (idx, coinaddr) in enumerate(al.addrpairs()):
-				comment = get_comment(do_shuffle=not cfg.test_suite_deterministic)
+				comment = get_comment(do_shuffle=not self.cfg.test_suite_deterministic)
 				out.append(self._create_fake_unspent_entry(
 					coinaddr, d['al_id'], idx, comment, segwit=d['segwit']))
 				if n == 0:  # create a duplicate address. This means addrs_per_wallet += 1
@@ -611,13 +610,13 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 				pubkey_type = 'std')
 			from mmgen.addrgen import KeyGenerator, AddrGenerator
 			rand_coinaddr = AddrGenerator(
-				cfg,
+				self.cfg,
 				self.proto,
 				('legacy', 'compressed')[non_mmgen_input_compressed]
-				).to_addr(KeyGenerator(cfg, self.proto, 'std').gen_data(privkey))
+				).to_addr(KeyGenerator(self.cfg, self.proto, 'std').gen_data(privkey))
 			of = joinpath(self.cfgs[non_mmgen_input]['tmpdir'], non_mmgen_fn)
 			write_data_to_file(
-				cfg               = cfg,
+				cfg               = self.cfg,
 				outfile           = of,
 				data              = privkey.wif + '\n',
 				desc              = f'compressed {self.proto.name} key',
@@ -633,7 +632,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		tx_data, ad = {}, AddrData(self.proto)
 		for s in sources:
 			addrfile = get_file_with_ext(self.cfgs[s]['tmpdir'], 'addrs')
-			al = AddrList(cfg, self.proto, infile=addrfile)
+			al = AddrList(self.cfg, self.proto, infile=addrfile)
 			ad.add(al)
 			aix = AddrIdxList(fmt_str=self.cfgs[s]['addr_idx_list'])
 			if len(aix) != addrs_per_wallet:
@@ -652,8 +651,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		privkey = PrivKey(self.proto, getrand(32), compressed=True, pubkey_type='std')
 		t = ('compressed', 'segwit')['S' in self.proto.mmtypes]
 		from mmgen.addrgen import KeyGenerator, AddrGenerator
-		rand_coinaddr = AddrGenerator(cfg, self.proto, t).to_addr(
-			KeyGenerator(cfg, self.proto, 'std').gen_data(privkey)
+		rand_coinaddr = AddrGenerator(self.cfg, self.proto, t).to_addr(
+			KeyGenerator(self.cfg, self.proto, 'std').gen_data(privkey)
 		)
 
 		# total of two outputs must be < 10 BTC (<1000 LTC)
@@ -703,7 +702,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			cmdline_inputs             = False,
 			tweaks                     = []):
 
-		if cfg.verbose or cfg.exact_output:
+		if self.cfg.verbose or self.cfg.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
 
 		silence()
@@ -727,7 +726,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 		end_silence()
 
-		if cfg.verbose or cfg.exact_output:
+		if self.cfg.verbose or self.cfg.exact_output:
 			sys.stderr.write('\n')
 
 		t = self.spawn(
@@ -789,8 +788,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			t.do_comment(False, has_label=True)
 			for cnum, wcls in (('1', IncogWallet), ('3', MMGenWallet), ('4', MMGenWallet)):
 				t.passphrase(wcls.desc, self.cfgs[cnum]['wpasswd'])
-			self._do_confirm_send(t, quiet=not cfg.debug, confirm_send=True)
-			if cfg.debug:
+			self._do_confirm_send(t, quiet=not self.cfg.debug, confirm_send=True)
+			if self.cfg.debug:
 				t.written_to_file('Transaction')
 		else:
 			t.do_comment(False)
@@ -849,7 +848,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		wcls = get_wallet_cls(fmt_code=out_fmt)
 		msg('==> {}: {}'.format(
 			wcls.desc,
-			cyan(get_data_from_file(cfg, f, desc=wcls.desc))
+			cyan(get_data_from_file(self.cfg, f, desc=wcls.desc))
 		))
 		end_silence()
 		return t
@@ -990,7 +989,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 	def walletgen4(self, del_dw_run='dummy'):
 		bwf = joinpath(self.tmpdir, self.bw_filename)
-		make_brainwallet_file(bwf)
+		make_brainwallet_file(self.cfg, bwf)
 		seed_len = str(self.seed_len)
 		args = ['-d', self.tmpdir, '-p1', self.usr_rand_arg, '-l'+seed_len, '-ibw']
 		t = self.spawn('mmgen-walletconv', self.testnet_opt + args + [bwf], no_passthru_opts=True)

@@ -40,10 +40,10 @@ class CmdTestRunner:
 		if self.logging:
 			self.log_fd.close()
 
-	def __init__(self, cfg, proto, repo_root, data_dir, trash_dir, trash_dir2):
+	def __init__(self, cfg, repo_root, data_dir, trash_dir, trash_dir2):
 
 		self.cfg = cfg
-		self.proto = proto
+		self.proto = cfg._proto
 		self.data_dir = data_dir
 		self.trash_dir = trash_dir
 		self.trash_dir2 = trash_dir2
@@ -56,7 +56,8 @@ class CmdTestRunner:
 		self.deps_only = None
 		self.logging = self.cfg.log or os.getenv('MMGEN_EXEC_WRAPPER')
 		self.testing_segwit = cfg.segwit or cfg.segwit_random or cfg.bech32
-		self.network_id = cfg.coin.lower() + ('_tn' if cfg.testnet else '')
+		self.network_id = self.proto.coin.lower() + ('_tn' if self.proto.testnet else '')
+		self.daemon_started = False
 
 		global qmsg, qmsg_r
 		if cfg.exact_output:
@@ -83,6 +84,7 @@ class CmdTestRunner:
 			omsg('INFO → Using pexpect.spawn() for real terminal emulation')
 
 		self.set_spawn_env()
+		self.start_time = time.time()
 
 	def do_between(self):
 		if self.cfg.pause:
@@ -279,7 +281,7 @@ class CmdTestRunner:
 		if hasattr(self, 'tg'):
 			del self.tg
 
-		self.tg = self.gm.gm_init_group(self, gname, sg_name, self.spawn_wrapper)
+		self.tg = self.gm.gm_init_group(self.cfg, self, gname, sg_name, self.spawn_wrapper)
 		self.ct_clsname = type(self.tg).__name__
 
 		# pass through opts from cmdline (po.user_opts)
@@ -302,8 +304,6 @@ class CmdTestRunner:
 		return self.tg
 
 	def run_tests(self, cmd_args):
-		self.start_time = time.time()
-		self.daemon_started = False
 		gname_save = None
 
 		def parse_arg(arg):
@@ -497,7 +497,7 @@ class CmdTestRunner:
 		else:
 			die(2, f'{cmd!r} returned {ret}')
 
-	def check_deps(self, cmds): # TODO: broken
+	def check_deps(self, cmds): # TODO: broken, unused
 		if len(cmds) != 1:
 			die(1, f'Usage: {gc.prog_name} check_deps <command>')
 
@@ -509,7 +509,7 @@ class CmdTestRunner:
 		if not self.cfg.quiet:
 			omsg(f'Checking dependencies for {cmd!r}')
 
-		self.check_needs_rerun(self.tg, cmd)
+		self.check_needs_rerun(cmd)
 
 		w = max(map(len, self.rebuild_list)) + 1
 		for cmd in self.rebuild_list:

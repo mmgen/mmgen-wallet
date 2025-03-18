@@ -25,7 +25,7 @@ import sys, os
 from mmgen.util import msg
 from mmgen.color import gray, purple, yellow
 
-from ..include.common import cfg, write_to_file, read_from_file, imsg
+from ..include.common import write_to_file, read_from_file, imsg
 from .common import get_file_with_ext
 
 class CmdTestBase:
@@ -40,10 +40,11 @@ class CmdTestBase:
 	tmpdir_nums = []
 	test_name = None
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 		if hasattr(self, 'name'): # init will be called multiple times for classes with multiple inheritance
 			return
 		self.name = type(self).__name__
+		self.cfg = cfg
 		self.proto = cfg._proto
 		self.tr = trunner
 		self.cfgs = cfgs
@@ -71,7 +72,7 @@ class CmdTestBase:
 
 	@property
 	def tmpdir(self):
-		return os.path.join('test', 'tmp', '{}{}'.format(self.tmpdir_num, '-α' if cfg.debug_utf8 else ''))
+		return os.path.join('test', 'tmp', '{}{}'.format(self.tmpdir_num, '-α' if self.cfg.debug_utf8 else ''))
 
 	def get_file_with_ext(self, ext, **kwargs):
 		return get_file_with_ext(self.tmpdir, ext, **kwargs)

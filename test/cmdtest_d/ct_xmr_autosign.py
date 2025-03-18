@@ -18,13 +18,13 @@ import re
 from mmgen.color import blue, cyan, brown
 from mmgen.util import async_run
 
-from ..include.common import cfg, imsg, silence, end_silence
+from ..include.common import imsg, silence, end_silence
 from .common import get_file_with_ext
 
 from .ct_xmrwallet import CmdTestXMRWallet
 from .ct_autosign import CmdTestAutosignThreaded
 
-def make_burn_addr():
+def make_burn_addr(cfg):
 	from mmgen.tool.coin import tool_cmd
 	return tool_cmd(
 		cfg     = cfg,
@@ -99,16 +99,16 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		('check_tx_dirs',            'cleaning and checking signable file directories'),
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 
-		CmdTestAutosignThreaded.__init__(self, trunner, cfgs, spawn)
-		CmdTestXMRWallet.__init__(self, trunner, cfgs, spawn)
+		CmdTestAutosignThreaded.__init__(self, cfg, trunner, cfgs, spawn)
+		CmdTestXMRWallet.__init__(self, cfg, trunner, cfgs, spawn)
 
 		if trunner is None:
 			return
 
 		from mmgen.cfg import Config
-		self.cfg = Config({
+		self.alice_cfg = Config({
 			'coin': 'XMR',
 			'outdir': self.users['alice'].udir,
 			'wallet_dir': self.users['alice'].udir,
@@ -116,7 +116,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			'test_suite': True,
 		})
 
-		self.burn_addr = make_burn_addr()
+		self.burn_addr = make_burn_addr(cfg)
 
 		self.opts.append('--xmrwallets={}'.format(self.users['alice'].kal_range)) # mmgen-autosign opts
 		self.autosign_opts = ['--autosign']                                       # mmgen-xmrwallet opts
@@ -130,15 +130,15 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		from mmgen.addrlist import KeyAddrList
 		silence()
 		kal = KeyAddrList(
-			cfg       = self.cfg,
+			cfg       = self.alice_cfg,
 			proto     = self.proto,
 			addr_idxs = '1-2',
-			seed      = Wallet(cfg, fn=data.mmwords).seed,
+			seed      = Wallet(self.alice_cfg, fn=data.mmwords).seed,
 			skip_chksum_msg = True,
 			key_address_validity_check = False)
 		kal.file.write(ask_overwrite=False)
 		fn = get_file_with_ext(data.udir, 'akeys')
-		m = op('create', self.cfg, fn, '1-2')
+		m = op('create', self.alice_cfg, fn, '1-2')
 		async_run(m.main())
 		async_run(m.stop_wallet_daemon())
 		end_silence()

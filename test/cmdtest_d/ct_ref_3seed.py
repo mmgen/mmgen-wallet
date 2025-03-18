@@ -26,7 +26,7 @@ import os
 from mmgen.util import msg, capfirst
 from mmgen.wallet import get_wallet_cls
 
-from ..include.common import cfg, cmp_or_die, joinpath
+from ..include.common import cmp_or_die, joinpath
 from .common import (
 	pwfile,
 	ref_wallet_hash_preset,
@@ -79,7 +79,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 		('ref_walletconv_hexincog',     ([], 'wallet filename (hex incog)')),
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 		for k, _ in self.cmd_group:
 			for n in (1, 2, 3): # 128, 192, 256 bits
 				setattr(self, f'{k}_{n}', getattr(self, k))
@@ -87,7 +87,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 			for n in self.tmpdir_nums:
 				cfgs[str(n)]['addr_idx_list'] = self.addr_idx_list_in
 				cfgs[str(n)]['pass_idx_list'] = self.pass_idx_list_in
-		CmdTestBase.__init__(self, trunner, cfgs, spawn)
+		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)
 
 	def ref_wallet_chk(self):
 		wf = joinpath(ref_dir, CmdTestWalletConv.sources[str(self.seed_len)]['ref_wallet'])
@@ -129,7 +129,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 			]
 			slarg = [f'-l{self.seed_len} ']
 			hparg = ['-p1']
-			if wtype == 'hic_wallet_old' and cfg.profile:
+			if wtype == 'hic_wallet_old' and self.cfg.profile:
 				msg('')
 			t = self.spawn('mmgen-walletchk',
 				slarg + hparg + of_arg + ic_arg,
@@ -163,7 +163,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 		pat = r'{}-[0-9A-F]{{8}}\[{},1\]{}.mmdat'.format(
 			self.chk_data['sids'][idx],
 			self.chk_data['lens'][idx],
-			'-α' if cfg.debug_utf8 else '')
+			'-α' if self.cfg.debug_utf8 else '')
 		assert re.match(pat, fn), f'{pat} != {fn}'
 		sid = os.path.basename(fn.split('-')[0])
 		cmp_or_die(sid, self.seed_id, desc='Seed ID')
@@ -186,7 +186,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 			cmp_or_die('{}[{}]{}.{}'.format(
 				sid,
 				slen,
-				'-α' if cfg.debug_utf8 else '',
+				'-α' if self.cfg.debug_utf8 else '',
 				wcls.ext),
 				fn)
 		return t
@@ -206,7 +206,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 
 	def ref_walletconv_incog(self, ofmt='incog', ext='mmincog'):
 		args = ['-r0', '-p1']
-		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\]' + ('-α' if cfg.debug_utf8 else '') + '.' + ext
+		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\]' + ('-α' if self.cfg.debug_utf8 else '') + '.' + ext
 		return self.ref_walletconv(ofmt=ofmt, extra_args=args, re_pat=pat)
 
 	def ref_walletconv_hexincog(self):
@@ -465,7 +465,7 @@ class CmdTestRef3Passwd(CmdTestRef3Seed):
 		if pwlen > {'1':12, '2':18, '3':24}[self.test_name[-1]]:
 			return 'skip'
 		if pwfmt == 'xmrseed':
-			if cfg.no_altcoin:
+			if self.cfg.no_altcoin:
 				return 'skip'
 			pwlen += 1
 		return self.pwgen(ftype, 'фубар@crypto.org', pwfmt, pwlen, ['--accept-defaults'])

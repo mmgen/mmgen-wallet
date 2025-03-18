@@ -31,7 +31,6 @@ from mmgen.amt import XMRAmt
 from mmgen.addrlist import ViewKeyAddrList, KeyAddrList, AddrIdxList
 
 from ..include.common import (
-	cfg,
 	omsg,
 	oqmsg_r,
 	ok,
@@ -118,8 +117,9 @@ class CmdTestXMRWallet(CmdTestBase):
 		('stop_daemons',                  'stopping all wallet and coin daemons'),
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
-		CmdTestBase.__init__(self, trunner, cfgs, spawn)
+	def __init__(self, cfg, trunner, cfgs, spawn):
+		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)
+
 		if trunner is None:
 			return
 
@@ -147,14 +147,14 @@ class CmdTestXMRWallet(CmdTestBase):
 				shutil.rmtree(self.datadir_base)
 			os.makedirs(self.datadir_base)
 			self.start_daemons()
-			self.init_proxy()
+			self.init_proxy(cfg)
 
 		self.balance = None
 
 	# init methods
 
 	@classmethod
-	def init_proxy(cls, external_call=False):
+	def init_proxy(cls, cfg, external_call=False):
 
 		def start_proxy():
 			if external_call or not cfg.no_daemon_autostart:
@@ -256,7 +256,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			udir = os.path.join(tmpdir, user)
 			datadir = os.path.join(self.datadir_base, user)
 			md = CoinDaemon(
-				cfg        = cfg,
+				cfg        = self.cfg,
 				proto      = self.proto,
 				test_suite = True,
 				port_shift = shift,
@@ -264,7 +264,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				datadir    = datadir
 			)
 			md_rpc = MoneroRPCClient(
-				cfg    = cfg,
+				cfg    = self.cfg,
 				proto  = self.proto,
 				host   = 'localhost',
 				port   = md.rpc_port,
@@ -274,7 +274,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				daemon = md,
 			)
 			wd = MoneroWalletDaemon(
-				cfg          = cfg,
+				cfg          = self.cfg,
 				proto        = self.proto,
 				test_suite   = True,
 				wallet_dir   = udir,
@@ -284,7 +284,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				monerod_addr = f'127.0.0.1:{md.rpc_port}',
 			)
 			wd_rpc = MoneroWalletRPCClient(
-				cfg             = cfg,
+				cfg             = self.cfg,
 				daemon          = wd,
 				test_connection = False,
 			)
@@ -376,7 +376,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		)
 		for i in MMGenRange(wallet or data.kal_range).items:
 			write_data_to_file(
-				cfg,
+				self.cfg,
 				self.users[user].addrfile_fs.format(i),
 				t.expect_getend('Address: '),
 				quiet = True
@@ -674,7 +674,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			self.do_mount_online()
 		silence()
 		kal = (ViewKeyAddrList if data.autosign else KeyAddrList)(
-			cfg      = cfg,
+			cfg      = self.cfg,
 			proto    = self.proto,
 			infile   = data.kafile,
 			skip_chksum_msg = True,
@@ -683,14 +683,14 @@ class CmdTestXMRWallet(CmdTestBase):
 		if data.autosign:
 			self.do_umount_online()
 			self.remove_device_online()
-		self.users[user].wd.start(silent=not (cfg.exact_output or cfg.verbose))
+		self.users[user].wd.start(silent=not (self.cfg.exact_output or self.cfg.verbose))
 		return data.wd_rpc.call(
 			'open_wallet',
 			filename = os.path.basename(data.walletfile_fs.format(wnum)),
 			password = kal.entry(wnum).wallet_passwd)
 
 	async def stop_wallet_user(self, user):
-		await self.users[user].wd_rpc.stop_daemon(silent=not (cfg.exact_output or cfg.verbose))
+		await self.users[user].wd_rpc.stop_daemon(silent=not (self.cfg.exact_output or self.cfg.verbose))
 		return 'ok'
 
 	# mining methods
@@ -786,7 +786,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 		async def send_random_txs():
 			from mmgen.tool.api import tool_api
-			t = tool_api(cfg)
+			t = tool_api(self.cfg)
 			t.init_coin('XMR', 'mainnet')
 			t.usr_randchars = 0
 			imsg_r('Sending random transactions: ')
@@ -901,7 +901,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	def stop_daemons(self):
 		self.spawn(msg_only=True)
-		if cfg.no_daemon_stop:
+		if self.cfg.no_daemon_stop:
 			omsg('[not stopping daemons at user request]')
 		else:
 			omsg('')

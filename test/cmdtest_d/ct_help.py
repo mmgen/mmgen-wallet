@@ -17,7 +17,6 @@ import sys, os, time
 from mmgen.util import ymsg
 from mmgen.cfg import gc
 
-from ..include.common import cfg
 from .ct_base import CmdTestBase
 
 class CmdTestHelp(CmdTestBase):
@@ -76,10 +75,10 @@ class CmdTestHelp(CmdTestBase):
 			no_passthru_opts = True)
 		t.expect('to continue: ', 'w')
 		t.expect('TERMS AND CONDITIONS') # start of GPL text
-		if cfg.pexpect_spawn:
+		if self.cfg.pexpect_spawn:
 			t.send('G')
 		t.expect('return for a fee.')    # end of GPL text
-		if cfg.pexpect_spawn:
+		if self.cfg.pexpect_spawn:
 			t.send('q')
 		t.expect('to continue: ', 'c')
 		t.expect('data: ', 'beadcafe'*4 + '\n')

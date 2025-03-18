@@ -23,7 +23,7 @@ test.cmdtest_d.ct_ref_altcoin: Altcoin reference file tests for the cmdtest.py t
 from mmgen.color import set_vt100
 
 from .common import pwfile, dfl_wpasswd, ref_dir, dfl_words_file, dfl_addr_idx_list
-from ..include.common import cfg, joinpath, start_test_daemons, stop_test_daemons, cmp_or_die
+from ..include.common import joinpath, start_test_daemons, stop_test_daemons, cmp_or_die
 from .ct_ref import CmdTestRef
 from .ct_base import CmdTestBase
 
@@ -102,7 +102,7 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 					ref_dir,
 					self._get_ref_subdir_by_coin(coin),
 					fn)
-				proto = MMGenTxFile.get_proto(cfg, txfile, quiet_open=True)
+				proto = MMGenTxFile.get_proto(self.cfg, txfile, quiet_open=True)
 				if proto.sign_mode == 'daemon':
 					start_test_daemons(proto.network_id)
 					set_vt100()

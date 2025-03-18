@@ -28,7 +28,7 @@ class CmdGroupMgr:
 
 	def __init__(self, cfg):
 		self.cfg = cfg
-		self.network_id = cfg.coin.lower() + ('_tn' if cfg.testnet else '')
+		self.network_id = cfg._proto.coin.lower() + ('_tn' if cfg._proto.testnet else '')
 		self.name = type(self).__name__
 
 	def create_cmd_group(self, cls, sg_name=None):
@@ -120,11 +120,11 @@ class CmdGroupMgr:
 
 		return cls
 
-	def gm_init_group(self, trunner, gname, sg_name, spawn_prog):
+	def gm_init_group(self, cfg, trunner, gname, sg_name, spawn_prog):
 		kwargs = self.cmd_groups[gname][1]
 		cls = self.create_group(gname, sg_name, **kwargs)
 		cls.group_name = gname
-		return cls(trunner, cfgs, spawn_prog)
+		return cls(cfg, trunner, cfgs, spawn_prog)
 
 	def get_cls_by_gname(self, gname):
 		return self.load_mod(gname, self.cmd_groups[gname][1].get('modname'))
@@ -184,7 +184,7 @@ class CmdGroupMgr:
 			if cmd in cls.cmd_group:             # first search the class
 				return gname
 
-			if cmd in dir(cls(None, None, None)):  # then a throwaway instance
+			if cmd in dir(cls(self.cfg, None, None, None)):  # then a throwaway instance
 				return gname # cmd might exist in more than one group - we'll go with the first
 
 		return None

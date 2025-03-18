@@ -15,7 +15,7 @@ import sys, os, time, shutil
 from mmgen.color import yellow
 from mmgen.cfgfile import CfgFileSampleSys, CfgFileSampleUsr, cfg_file_sample
 
-from ..include.common import cfg, read_from_file, write_to_file, imsg
+from ..include.common import read_from_file, write_to_file, imsg
 from .ct_base import CmdTestBase
 
 class CmdTestCfgFile(CmdTestBase):
@@ -42,8 +42,8 @@ class CmdTestCfgFile(CmdTestBase):
 		('opt_override2',            (40, 'negative cmdline opts overriding cfg file opts', [])),
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
-		CmdTestBase.__init__(self, trunner, cfgs, spawn)
+	def __init__(self, cfg, trunner, cfgs, spawn):
+		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)
 		self.spawn_env['MMGEN_TEST_SUITE_CFGTEST'] = '1'
 
 	def read_from_cfgfile(self, loc):
@@ -139,7 +139,7 @@ class CmdTestCfgFile(CmdTestBase):
 			t.expect(s)
 
 		if t.pexpect_spawn: # view and exit pager
-			time.sleep(1 if cfg.exact_output else t.send_delay)
+			time.sleep(1 if self.cfg.exact_output else t.send_delay)
 			t.send('q')
 
 		t.expect(cp, 'n')
@@ -208,7 +208,7 @@ class CmdTestCfgFile(CmdTestBase):
 			('ETH', 'True',  '5.4321', True),
 			('ETC', 'None',  '5.4321', False)
 		):
-			if cfg.no_altcoin and coin != 'BTC':
+			if self.cfg.no_altcoin and coin != 'BTC':
 				continue
 			t = self.spawn_test(
 				args = [
@@ -249,7 +249,7 @@ class CmdTestCfgFile(CmdTestBase):
 
 	def chain_names(self):
 
-		if cfg.no_altcoin:
+		if self.cfg.no_altcoin:
 			return 'skip'
 
 		def run(chk, testnet):

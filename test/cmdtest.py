@@ -249,7 +249,7 @@ def list_cmds():
 		yield green('AVAILABLE COMMANDS:')
 
 		for gname in gm.cmd_groups:
-			tg = gm.gm_init_group(None, gname, None, None)
+			tg = gm.gm_init_group(cfg, None, gname, None, None)
 			desc = tg.__doc__.strip() if tg.__doc__ else type(tg).__name__
 			d.append((gname, desc, gm.cmd_list, gm.dpy_data))
 			cw = max(max(len(k) for k in gm.dpy_data), cw)
@@ -311,7 +311,7 @@ if __name__ == '__main__':
 	from test.cmdtest_d.runner import CmdTestRunner
 
 	try:
-		tr = CmdTestRunner(cfg, cfg._proto, repo_root, data_dir, trash_dir, trash_dir2)
+		tr = CmdTestRunner(cfg, repo_root, data_dir, trash_dir, trash_dir2)
 		tr.run_tests(cmd_args)
 		tr.warn_skipped()
 		if tr.daemon_started and not cfg.no_daemon_stop:

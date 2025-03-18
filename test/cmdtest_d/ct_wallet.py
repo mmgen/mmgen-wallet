@@ -25,7 +25,7 @@ import sys, os
 from mmgen.util import msg, capfirst, get_extension
 from mmgen.wallet import get_wallet_cls
 
-from ..include.common import cfg, joinpath, VirtBlockDevice
+from ..include.common import joinpath, VirtBlockDevice
 from .common import ref_dir, ref_wallet_brainpass, ref_wallet_incog_offset, hincog_fn, hincog_bytes
 from .ct_base import CmdTestBase
 from .ct_shared import CmdTestShared
@@ -89,11 +89,11 @@ class CmdTestWalletConv(CmdTestBase, CmdTestShared):
 		('ref_hincog_blkdev_conv_out', 'ref seed conversion to hidden incog data on block device')
 	)
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 		for k, _ in self.cmd_group:
 			for n in (1, 2, 3):
 				setattr(self, f'{k}_{n}', getattr(self, k))
-		CmdTestBase.__init__(self, trunner, cfgs, spawn)
+		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)
 
 	def ref_wallet_conv(self):
 		wf = joinpath(ref_dir, self.sources[str(self.seed_len)]['ref_wallet'])
@@ -200,7 +200,7 @@ class CmdTestWalletConv(CmdTestBase, CmdTestShared):
 		wf = t.written_to_file(capfirst(ocls.desc))
 		t.p.wait()
 		# back check of result
-		msg('' if cfg.profile else ' OK')
+		msg('' if self.cfg.profile else ' OK')
 		return self.walletchk(
 			wf,
 			extra_desc = '(check)',
@@ -229,7 +229,7 @@ class CmdTestWalletConv(CmdTestBase, CmdTestShared):
 		if wcls.type == 'incog_hidden':
 			add_args += uopts_chk
 			wf = None
-		msg('' if cfg.profile else ' OK')
+		msg('' if self.cfg.profile else ' OK')
 		return self.walletchk(
 			wf,
 			wcls       = wcls,

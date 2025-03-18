@@ -16,7 +16,6 @@ from mmgen.util import suf
 from mmgen.color import cyan
 
 from ..include.common import (
-	cfg,
 	vmsg,
 	read_from_file,
 	write_to_file,
@@ -117,7 +116,7 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 		return t
 
 	def _decrypt_keystore(self, cmd, fn, pw, chk):
-		if cfg.no_altcoin:
+		if self.cfg.no_altcoin:
 			return 'skip'
 		t = self.spawn('mmgen-tool', ['-d', self.tmpdir, cmd, fn])
 		t.expect('Enter passphrase: ', pw+'\n')
@@ -141,7 +140,7 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 	def tool_api(self):
 		t = self.spawn(
 				'tool_api_test.py',
-				(['no_altcoin'] if cfg.no_altcoin else []),
+				(['no_altcoin'] if self.cfg.no_altcoin else []),
 				cmd_dir = 'test/misc')
 		t.expect('legacy.*compressed.*segwit.*bech32', regex=True)
 		return t

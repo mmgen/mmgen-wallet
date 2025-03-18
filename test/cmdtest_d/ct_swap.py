@@ -20,7 +20,7 @@ from .common import dfl_bip39_file
 from .httpd.thornode import ThornodeServer
 
 from .ct_autosign import CmdTestAutosign, CmdTestAutosignThreaded
-from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, cfg, strip_ansi_escapes
+from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, strip_ansi_escapes
 
 thornode_server = ThornodeServer()
 
@@ -158,10 +158,10 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		),
 	}
 
-	def __init__(self, trunner, cfgs, spawn):
+	def __init__(self, cfg, trunner, cfgs, spawn):
 
-		CmdTestAutosignThreaded.__init__(self, trunner, cfgs, spawn)
-		CmdTestRegtest.__init__(self, trunner, cfgs, spawn)
+		CmdTestAutosignThreaded.__init__(self, cfg, trunner, cfgs, spawn)
+		CmdTestRegtest.__init__(self, cfg, trunner, cfgs, spawn)
 
 		if trunner is None:
 			return
