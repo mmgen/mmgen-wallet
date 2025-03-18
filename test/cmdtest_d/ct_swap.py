@@ -27,7 +27,206 @@ thornode_server = ThornodeServer()
 sample1 = gr_uc[:24]
 sample2 = '00010203040506'
 
-class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
+class CmdTestSwapMethods:
+
+	def _addrgen_bob(self, proto_idx, mmtypes, subseed_idx=None):
+		return self.addrgen('bob', subseed_idx=subseed_idx, mmtypes=mmtypes, proto=self.protos[proto_idx])
+
+	def _addrimport_bob(self, proto_idx):
+		return self.addrimport('bob', mmtypes=['S', 'B'], proto=self.protos[proto_idx])
+
+	def _fund_bob(self, proto_idx, addrtype_code, amt):
+		return self.fund_wallet('bob', addrtype_code, amt, proto=self.protos[proto_idx])
+
+	def _bob_bal(self, proto_idx, bal, skip_check=False):
+		return self.user_bal('bob', bal, proto=self.protos[proto_idx], skip_check=skip_check)
+
+	def _data_tx_create(self, src, dest, chg, pfx, sample):
+		t = self.spawn(
+			'mmgen-txcreate',
+			['-d', self.tmpdir, '-B', '--bob', f'{self.sid}:{dest},1', f'{self.sid}:{chg}', f'{pfx}:{sample}'])
+		return self.txcreate_ui_common(t, menu=[], inputs='1', interactive_fee='3s')
+
+	def _data_tx_sign(self):
+		fn = self.get_file_with_ext('rawtx')
+		t = self.spawn('mmgen-txsign', ['-d', self.tmpdir, '--bob', fn])
+		t.view_tx('v')
+		t.passphrase(dfl_wcls.desc, rt_pw)
+		t.do_comment(None)
+		t.expect('(Y/n): ', 'y')
+		t.written_to_file('Signed transaction')
+		return t
+
+	def _data_tx_send(self):
+		fn = self.get_file_with_ext('sigtx')
+		t = self.spawn('mmgen-txsend', ['-q', '-d', self.tmpdir, '--bob', fn])
+		t.expect('view: ', 'n')
+		t.expect('(y/N): ', '\n')
+		t.expect('to confirm: ', 'YES\n')
+		t.written_to_file('Sent transaction')
+		return t
+
+	def _data_tx_do(self, src, dest, chg, pfx, sample, view):
+		t = self.user_txdo(
+			user         = 'bob',
+			fee          = '30s',
+			outputs_cl   = [f'{self.sid}:{dest},1', f'{self.sid}:{chg}', f'{pfx}:{sample}'],
+			outputs_list = src,
+			add_comment  = 'Transaction with OP_RETURN data',
+			return_early = True)
+
+		t.view_tx(view)
+		if view == 'v':
+			t.expect(sample)
+			t.expect('amount:')
+		t.passphrase(dfl_wcls.desc, rt_pw)
+		t.written_to_file('Signed transaction')
+		self._do_confirm_send(t)
+		t.expect('Transaction sent')
+		return t
+
+	def _data_tx_chk(self, sample):
+		mp = self._get_mempool(do_msg=True)
+		assert len(mp) == 1
+		self.write_to_tmpfile('data_tx1_id', mp[0]+'\n')
+		tx_hex = self._do_cli(['getrawtransaction', mp[0]])
+		tx = self._do_cli(['decoderawtransaction', tx_hex], decode_json=True)
+		v0 = tx['vout'][0]
+		assert v0['scriptPubKey']['hex'] == f'6a{(len(sample) // 2):02x}{sample}'
+		assert v0['scriptPubKey']['type'] == 'nulldata'
+		assert v0['value'] == "0.00000000"
+		return 'ok'
+
+	def _swaptxcreate_ui_common(
+			self,
+			t,
+			*,
+			inputs          = '1',
+			interactive_fee = None,
+			file_desc       = 'Unsigned transaction',
+			reload_quote    = False,
+			sign_and_send   = False,
+			expect         = None):
+		t.expect('abel:\b', 'q')
+		t.expect('to spend: ', f'{inputs}\n')
+		if reload_quote:
+			t.expect('to continue: ', 'r')  # reload swap quote
+		t.expect('to continue: ', '\n')     # exit swap quote view
+		t.expect('(Y/n): ', 'y')            # fee OK?
+		t.expect('(Y/n): ', 'y')            # change OK?
+		t.expect('(y/N): ', 'n')            # add comment?
+		if reload_quote:
+			t.expect('to continue: ', 'r')  # reload swap quote
+		t.expect('to continue: ', '\n')     # exit swap quote view
+		t.expect('view: ', 'y')             # view TX
+		if expect:
+			t.expect(expect)
+		t.expect('to continue: ', '\n')
+		if sign_and_send:
+			t.passphrase(dfl_wcls.desc, rt_pw)
+			t.expect('to confirm: ', 'YES\n')
+		else:
+			t.expect('(y/N): ', 'y')            # save?
+		t.written_to_file(file_desc)
+		return t
+
+	def _swaptxcreate(self, args, *, action='txcreate', add_opts=[], exit_val=None):
+		return self.spawn(
+			f'mmgen-swap{action}',
+			['-q', '-d', self.tmpdir, '-B', '--bob']
+			+ add_opts
+			+ args,
+			exit_val = exit_val)
+
+	def _swaptxcreate_bad(self, args, *, exit_val=1, expect1=None, expect2=None):
+		t = self._swaptxcreate(args, exit_val=exit_val)
+		if expect1:
+			t.expect(expect1)
+		if expect2:
+			t.expect(expect2)
+		return t
+
+	def _swaptxsend1(self, *, add_opts=[], spawn_only=False):
+		return self._swaptxsend(
+			add_opts = add_opts + [
+			# test overriding host:port with coin-specific options:
+			'--rpc-host=unreachable', # unreachable host
+			'--ltc-rpc-host=localhost',
+			'--rpc-port=46381',       # bad port
+			'--ltc-rpc-port=20680',
+			],
+			spawn_only = spawn_only)
+
+	def _swaptxsend(self, *, add_opts=[], spawn_only=False):
+		fn = self.get_file_with_ext('sigtx')
+		t = self.spawn('mmgen-txsend', add_opts + ['-q', '-d', self.tmpdir, '--bob', fn])
+		if spawn_only:
+			return t
+		t.expect('view: ', 'v')
+		t.expect('(y/N): ', 'n')
+		t.expect('to confirm: ', 'YES\n')
+		return t
+
+	def _swaptxsign(self, *, add_opts=[], expect=None):
+		self.get_file_with_ext('sigtx', delete_all=True)
+		fn = self.get_file_with_ext('rawtx')
+		t = self.spawn('mmgen-txsign', add_opts + ['-d', self.tmpdir, '--bob', fn])
+		t.view_tx('t')
+		if expect:
+			t.expect(expect)
+		t.passphrase(dfl_wcls.desc, rt_pw)
+		t.do_comment(None)
+		t.expect('(Y/n): ', 'y')
+		t.written_to_file('Signed transaction')
+		return t
+
+	def _swaptxbump(self, fee, *, add_opts=[], output_args=[], exit_val=None):
+		self.get_file_with_ext('rawtx', delete_all=True)
+		fn = self.get_file_with_ext('sigtx')
+		t = self.spawn(
+			'mmgen-txbump',
+			['-q', '-d', self.tmpdir, '--bob'] + add_opts + output_args + [fn],
+			exit_val = exit_val)
+		return self._swaptxbump_ui_common(t, interactive_fee=fee, new_outputs=bool(output_args))
+
+	def _swaptxbump_ui_common_new_outputs(self, t, *, inputs=None, interactive_fee=None, file_desc=None):
+		return self._swaptxbump_ui_common(t, interactive_fee=interactive_fee, new_outputs=True)
+
+	def _swaptxbump_ui_common(self, t, *, inputs=None, interactive_fee=None, file_desc=None, new_outputs=False):
+		if new_outputs:
+			t.expect('fee: ', interactive_fee + '\n')
+			t.expect('(Y/n): ', 'y')        # fee ok?
+			t.expect('(Y/n): ', 'y')        # change ok?
+		else:
+			t.expect('ENTER for the change output): ', '\n')
+			t.expect('(Y/n): ', 'y')        # confirm deduct from chg output
+			t.expect('to continue: ', '\n') # exit swap quote
+			t.expect('fee: ', interactive_fee + '\n')
+			t.expect('(Y/n): ', 'y')        # fee ok?
+		t.expect('(y/N): ', 'n')            # comment?
+		t.expect('(y/N): ', 'y')            # save?
+		return t
+
+	def _generate_for_proto(self, proto_idx):
+		return self.generate(num_blocks=1, add_opts=[f'--coin={self.protos[proto_idx].coin}'])
+
+	def _swaptxsign_bad(self, expect, *, add_opts=[], exit_val=1):
+		fn = self.get_file_with_ext('rawtx')
+		t = self.spawn('mmgen-txsign', add_opts + ['-d', self.tmpdir, '--bob', fn], exit_val=exit_val)
+		t.expect('view: ', '\n')
+		t.expect(expect)
+		return t
+
+	def _listaddresses(self, proto_idx):
+		return self.user_bal('bob', None, proto=self.protos[proto_idx], skip_check=True)
+
+	def _mempool(self, proto_idx):
+		self.spawn(msg_only=True)
+		data = self._do_cli(['getrawmempool'], add_opts=[f'--coin={self.protos[proto_idx].coin}'])
+		assert data
+		return 'ok'
+
+class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded, CmdTestSwapMethods):
 	bdb_wallet = True
 	networks = ('btc',)
 	tmpdir_nums = [37]
@@ -195,18 +394,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		t.written_to_file('wallet')
 		return t
 
-	def _addrgen_bob(self, proto_idx, mmtypes, subseed_idx=None):
-		return self.addrgen('bob', subseed_idx=subseed_idx, mmtypes=mmtypes, proto=self.protos[proto_idx])
-
-	def _addrimport_bob(self, proto_idx):
-		return self.addrimport('bob', mmtypes=['S', 'B'], proto=self.protos[proto_idx])
-
-	def _fund_bob(self, proto_idx, addrtype_code, amt):
-		return self.fund_wallet('bob', addrtype_code, amt, proto=self.protos[proto_idx])
-
-	def _bob_bal(self, proto_idx, bal, skip_check=False):
-		return self.user_bal('bob', bal, proto=self.protos[proto_idx], skip_check=skip_check)
-
 	def addrgen_bob(self):
 		return self._addrgen_bob(0, ['S', 'B'])
 
@@ -225,36 +412,11 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 	def data_tx1_create(self):
 		return self._data_tx_create('1', 'B:2', 'B:3', 'data', sample1)
 
-	def _data_tx_create(self, src, dest, chg, pfx, sample):
-		t = self.spawn(
-			'mmgen-txcreate',
-			['-d', self.tmpdir, '-B', '--bob', f'{self.sid}:{dest},1', f'{self.sid}:{chg}', f'{pfx}:{sample}'])
-		return self.txcreate_ui_common(t, menu=[], inputs='1', interactive_fee='3s')
-
 	def data_tx1_sign(self):
 		return self._data_tx_sign()
 
-	def _data_tx_sign(self):
-		fn = self.get_file_with_ext('rawtx')
-		t = self.spawn('mmgen-txsign', ['-d', self.tmpdir, '--bob', fn])
-		t.view_tx('v')
-		t.passphrase(dfl_wcls.desc, rt_pw)
-		t.do_comment(None)
-		t.expect('(Y/n): ', 'y')
-		t.written_to_file('Signed transaction')
-		return t
-
 	def data_tx1_send(self):
 		return self._data_tx_send()
-
-	def _data_tx_send(self):
-		fn = self.get_file_with_ext('sigtx')
-		t = self.spawn('mmgen-txsend', ['-q', '-d', self.tmpdir, '--bob', fn])
-		t.expect('view: ', 'n')
-		t.expect('(y/N): ', '\n')
-		t.expect('to confirm: ', 'YES\n')
-		t.written_to_file('Sent transaction')
-		return t
 
 	def data_tx1_chk(self):
 		return self._data_tx_chk(sample1.encode().hex())
@@ -264,37 +426,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 
 	def data_tx2_chk(self):
 		return self._data_tx_chk(sample2)
-
-	def _data_tx_do(self, src, dest, chg, pfx, sample, view):
-		t = self.user_txdo(
-			user         = 'bob',
-			fee          = '30s',
-			outputs_cl   = [f'{self.sid}:{dest},1', f'{self.sid}:{chg}', f'{pfx}:{sample}'],
-			outputs_list = src,
-			add_comment  = 'Transaction with OP_RETURN data',
-			return_early = True)
-
-		t.view_tx(view)
-		if view == 'v':
-			t.expect(sample)
-			t.expect('amount:')
-		t.passphrase(dfl_wcls.desc, rt_pw)
-		t.written_to_file('Signed transaction')
-		self._do_confirm_send(t)
-		t.expect('Transaction sent')
-		return t
-
-	def _data_tx_chk(self, sample):
-		mp = self._get_mempool(do_msg=True)
-		assert len(mp) == 1
-		self.write_to_tmpfile('data_tx1_id', mp[0]+'\n')
-		tx_hex = self._do_cli(['getrawtransaction', mp[0]])
-		tx = self._do_cli(['decoderawtransaction', tx_hex], decode_json=True)
-		v0 = tx['vout'][0]
-		assert v0['scriptPubKey']['hex'] == f'6a{(len(sample) // 2):02x}{sample}'
-		assert v0['scriptPubKey']['type'] == 'nulldata'
-		assert v0['value'] == "0.00000000"
-		return 'ok'
 
 	def generate3(self):
 		return self.generate(3)
@@ -350,47 +481,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 	def bob_bal_recv(self):
 		return self._bob_bal(1, '15')
 
-	def _swaptxcreate_ui_common(
-			self,
-			t,
-			*,
-			inputs          = '1',
-			interactive_fee = None,
-			file_desc       = 'Unsigned transaction',
-			reload_quote    = False,
-			sign_and_send   = False,
-			expect         = None):
-		t.expect('abel:\b', 'q')
-		t.expect('to spend: ', f'{inputs}\n')
-		if reload_quote:
-			t.expect('to continue: ', 'r')  # reload swap quote
-		t.expect('to continue: ', '\n')     # exit swap quote view
-		t.expect('(Y/n): ', 'y')            # fee OK?
-		t.expect('(Y/n): ', 'y')            # change OK?
-		t.expect('(y/N): ', 'n')            # add comment?
-		if reload_quote:
-			t.expect('to continue: ', 'r')  # reload swap quote
-		t.expect('to continue: ', '\n')     # exit swap quote view
-		t.expect('view: ', 'y')             # view TX
-		if expect:
-			t.expect(expect)
-		t.expect('to continue: ', '\n')
-		if sign_and_send:
-			t.passphrase(dfl_wcls.desc, rt_pw)
-			t.expect('to confirm: ', 'YES\n')
-		else:
-			t.expect('(y/N): ', 'y')            # save?
-		t.written_to_file(file_desc)
-		return t
-
-	def _swaptxcreate(self, args, *, action='txcreate', add_opts=[], exit_val=None):
-		return self.spawn(
-			f'mmgen-swap{action}',
-			['-q', '-d', self.tmpdir, '-B', '--bob']
-			+ add_opts
-			+ args,
-			exit_val = exit_val)
-
 	def swaptxcreate1(self, idx=3):
 		return self._swaptxcreate_ui_common(
 			self._swaptxcreate(
@@ -445,14 +535,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		t.expect('Enter a number> ', '1')
 		t.expect('OK? (Y/n): ', 'y')
 		return self._swaptxcreate_ui_common(t, expect=':0/1/0')
-
-	def _swaptxcreate_bad(self, args, *, exit_val=1, expect1=None, expect2=None):
-		t = self._swaptxcreate(args, exit_val=exit_val)
-		if expect1:
-			t.expect(expect1)
-		if expect2:
-			t.expect(expect2)
-		return t
 
 	def swaptxcreate_bad1(self):
 		t = self._swaptxcreate_bad(
@@ -514,40 +596,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 		t.expect('in mempool')
 		return t
 
-	def _swaptxsend1(self, *, add_opts=[], spawn_only=False):
-		return self._swaptxsend(
-			add_opts = add_opts + [
-			# test overriding host:port with coin-specific options:
-			'--rpc-host=unreachable', # unreachable host
-			'--ltc-rpc-host=localhost',
-			'--rpc-port=46381',       # bad port
-			'--ltc-rpc-port=20680',
-			],
-			spawn_only = spawn_only)
-
-	def _swaptxsend(self, *, add_opts=[], spawn_only=False):
-		fn = self.get_file_with_ext('sigtx')
-		t = self.spawn('mmgen-txsend', add_opts + ['-q', '-d', self.tmpdir, '--bob', fn])
-		if spawn_only:
-			return t
-		t.expect('view: ', 'v')
-		t.expect('(y/N): ', 'n')
-		t.expect('to confirm: ', 'YES\n')
-		return t
-
-	def _swaptxsign(self, *, add_opts=[], expect=None):
-		self.get_file_with_ext('sigtx', delete_all=True)
-		fn = self.get_file_with_ext('rawtx')
-		t = self.spawn('mmgen-txsign', add_opts + ['-d', self.tmpdir, '--bob', fn])
-		t.view_tx('t')
-		if expect:
-			t.expect(expect)
-		t.passphrase(dfl_wcls.desc, rt_pw)
-		t.do_comment(None)
-		t.expect('(Y/n): ', 'y')
-		t.written_to_file('Signed transaction')
-		return t
-
 	def swaptxsign2_create(self):
 		self.get_file_with_ext('rawtx', delete_all=True)
 		addr = make_burn_addr(self.protos[2], mmtype='compressed')
@@ -567,33 +615,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 	def swaptxbump2(self): # create one-output TX back to self to rescue funds
 		return self._swaptxbump('40s', output_args=[f'{self.sid}:S:4'])
 
-	def _swaptxbump(self, fee, *, add_opts=[], output_args=[], exit_val=None):
-		self.get_file_with_ext('rawtx', delete_all=True)
-		fn = self.get_file_with_ext('sigtx')
-		t = self.spawn(
-			'mmgen-txbump',
-			['-q', '-d', self.tmpdir, '--bob'] + add_opts + output_args + [fn],
-			exit_val = exit_val)
-		return self._swaptxbump_ui_common(t, interactive_fee=fee, new_outputs=bool(output_args))
-
-	def _swaptxbump_ui_common_new_outputs(self, t, *, inputs=None, interactive_fee=None, file_desc=None):
-		return self._swaptxbump_ui_common(t, interactive_fee=interactive_fee, new_outputs=True)
-
-	def _swaptxbump_ui_common(self, t, *, inputs=None, interactive_fee=None, file_desc=None, new_outputs=False):
-		if new_outputs:
-			t.expect('fee: ', interactive_fee + '\n')
-			t.expect('(Y/n): ', 'y')        # fee ok?
-			t.expect('(Y/n): ', 'y')        # change ok?
-		else:
-			t.expect('ENTER for the change output): ', '\n')
-			t.expect('(Y/n): ', 'y')        # confirm deduct from chg output
-			t.expect('to continue: ', '\n') # exit swap quote
-			t.expect('fee: ', interactive_fee + '\n')
-			t.expect('(Y/n): ', 'y')        # fee ok?
-		t.expect('(y/N): ', 'n')            # comment?
-		t.expect('(y/N): ', 'y')            # save?
-		return t
-
 	def swaptxsign3(self):
 		return self.swaptxsign2()
 
@@ -605,9 +626,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 
 	def swaptxsend4(self):
 		return self._swaptxsend()
-
-	def _generate_for_proto(self, proto_idx):
-		return self.generate(num_blocks=1, add_opts=[f'--coin={self.protos[proto_idx].coin}'])
 
 	def generate0(self):
 		return self._generate_for_proto(0)
@@ -640,13 +658,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 	def swaptxsign_bad1(self):
 		self.get_file_with_ext('sigtx', delete_all=True)
 		return self._swaptxsign_bad('non-wallet address forbidden')
-
-	def _swaptxsign_bad(self, expect, *, add_opts=[], exit_val=1):
-		fn = self.get_file_with_ext('rawtx')
-		t = self.spawn('mmgen-txsign', add_opts + ['-d', self.tmpdir, '--bob', fn], exit_val=exit_val)
-		t.expect('view: ', '\n')
-		t.expect(expect)
-		return t
 
 	def swaptxsign_bad2_create(self):
 		self.get_file_with_ext('rawtx', delete_all=True)
@@ -712,9 +723,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 	def listaddresses2(self):
 		return self._listaddresses(2)
 
-	def _listaddresses(self, proto_idx):
-		return self.user_bal('bob', None, proto=self.protos[proto_idx], skip_check=True)
-
 	def mempool0(self):
 		return self._mempool(0)
 
@@ -723,12 +731,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded):
 
 	def mempool2(self):
 		return self._mempool(2)
-
-	def _mempool(self, proto_idx):
-		self.spawn(msg_only=True)
-		data = self._do_cli(['getrawmempool'], add_opts=[f'--coin={self.protos[proto_idx].coin}'])
-		assert data
-		return 'ok'
 
 	def thornode_server_stop(self):
 		self.spawn(msg_only=True)
