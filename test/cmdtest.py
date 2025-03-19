@@ -250,14 +250,14 @@ def list_cmds():
 
 		for gname in gm.cmd_groups:
 			tg = gm.gm_init_group(cfg, None, gname, None, None)
-			desc = tg.__doc__.strip() if tg.__doc__ else type(tg).__name__
-			d.append((gname, desc, gm.cmd_list, gm.dpy_data))
+			gdesc = tg.__doc__.strip() if tg.__doc__ else type(tg).__name__
+			d.append((gname, gdesc, gm.cmd_list, gm.dpy_data))
 			cw = max(max(len(k) for k in gm.dpy_data), cw)
 
-		for gname, gdesc, clist, dpdata in d:
+		for gname, gdesc, cmd_list, dpy_data in d:
 			yield '\n'+green(f'{gname!r} - {gdesc}:')
-			for cmd in clist:
-				data = dpdata[cmd]
+			for cmd in cmd_list:
+				data = dpy_data[cmd]
 				yield '    {:{w}} - {}'.format(
 					cmd,
 					(data if isinstance(data, str) else data[1]),
@@ -265,8 +265,6 @@ def list_cmds():
 
 	from mmgen.ui import do_pager
 	do_pager('\n'.join(gen_output()))
-
-	sys.exit(0)
 
 def create_tmp_dirs(shm_dir):
 	if sys.platform in ('win32', 'darwin'):
@@ -301,8 +299,10 @@ if __name__ == '__main__':
 	if cfg.list_cmd_groups:
 		from test.cmdtest_d.group_mgr import CmdGroupMgr
 		CmdGroupMgr(cfg).list_cmd_groups()
+		sys.exit(0)
 	elif cfg.list_cmds:
 		list_cmds()
+		sys.exit(0)
 
 	if cfg.pause:
 		set_restore_term_at_exit()

@@ -33,6 +33,13 @@ from .common import get_file_with_ext, confirm_continue
 from .cfg import cfgs, cmd_groups_dfl
 from .group_mgr import CmdGroupMgr
 
+def format_args(args):
+	try:
+		return ' '.join((f"'{a}'" if ' ' in a else a) for a in args).replace('\\', '/') # for MSYS2
+	except Exception as e:
+		print(type(e), e)
+		print('cmdline:', args)
+
 class CmdTestRunner:
 	'cmdtest.py test runner'
 
@@ -150,17 +157,11 @@ class CmdTestRunner:
 			passthru_opts +
 			args)
 
-		try:
-			qargs = ['{q}{}{q}'.format(a, q = "'" if ' ' in a else '') for a in args]
-		except:
-			msg(f'args: {args}')
-			raise
-
-		cmd_disp = ' '.join(qargs).replace('\\', '/') # for mingw
+		cmd_disp = format_args(args)
 
 		if self.logging:
 			self.log_fd.write('[{}][{}:{}] {}\n'.format(
-				(self.proto.coin.lower() if 'coin' in self.tg.passthru_opts else 'NONE'),
+				(self.proto.coin.lower() if 'coin' in passthru_opts else 'NONE'),
 				self.tg.group_name,
 				self.tg.test_name,
 				cmd_disp))
@@ -428,14 +429,16 @@ class CmdTestRunner:
 		if self.deps_only and cmd == self.deps_only:
 			sys.exit(0)
 
-		d = [(str(num), ext) for exts, num in self.gm.dpy_data[cmd][2] for ext in exts]
+		if self.tg.full_data:
+			d = [(str(num), ext) for exts, num in self.gm.dpy_data[cmd][2] for ext in exts]
+			# delete files depended on by this cmd
+			arg_list = [get_file_with_ext(cfgs[num]['tmpdir'], ext) for num, ext in d]
 
-		# delete files depended on by this cmd
-		arg_list = [get_file_with_ext(cfgs[num]['tmpdir'], ext) for num, ext in d]
-
-		# remove shared_deps from arg list
-		if hasattr(self.tg, 'shared_deps'):
-			arg_list = arg_list[:-len(self.tg.shared_deps)]
+			# remove shared_deps from arg list
+			if hasattr(self.tg, 'shared_deps'):
+				arg_list = arg_list[:-len(self.tg.shared_deps)]
+		else:
+			arg_list = []
 
 		if self.resume_cmd:
 			if cmd != self.resume_cmd:
@@ -449,20 +452,18 @@ class CmdTestRunner:
 			start = time.time()
 
 		self.tg.test_name = cmd # NB: Do not remove, this needs to be set twice
-		cdata = self.gm.dpy_data[cmd]
-#		self.tg.test_dpydata = cdata
-		self.tg.tmpdir_num = cdata[0]
-#		self.tg.self.cfg = cfgs[str(cdata[0])] # will remove this eventually
-		test_cfg = cfgs[str(cdata[0])]
-		for k in (
-				'seed_len', 'seed_id', 'wpasswd', 'kapasswd', 'segwit', 'hash_preset', 'bw_filename',
-				'bw_params', 'ref_bw_seed_id', 'addr_idx_list', 'pass_idx_list'):
-			if k in test_cfg:
-				setattr(self.tg, k, test_cfg[k])
+
+		if self.tg.full_data:
+			tmpdir_num = self.gm.dpy_data[cmd][0]
+			self.tg.tmpdir_num = tmpdir_num
+			for k in (test_cfg := cfgs[str(tmpdir_num)]):
+				if k in self.gm.cfg_attrs:
+					setattr(self.tg, k, test_cfg[k])
 
 		ret = getattr(self.tg, cmd)(*arg_list) # run the test
 		if type(ret).__name__ == 'coroutine':
 			ret = asyncio.run(ret)
+
 		self.process_retval(cmd, ret)
 
 		if self.cfg.profile:
@@ -484,13 +485,13 @@ class CmdTestRunner:
 		elif ret == 'ok':
 			ok()
 			self.cmd_total += 1
-		elif ret == 'error':
-			die(2, red(f'\nTest {self.tg.test_name!r} failed'))
 		elif ret in ('skip', 'skip_msg', 'silent'):
 			if ret == 'silent':
 				self.cmd_total += 1
 			elif ret == 'skip_msg':
 				ok('SKIP')
+		elif ret == 'error':
+			die(2, red(f'\nTest {self.tg.test_name!r} failed'))
 		elif isinstance(ret, tuple) and ret[0] == 'skip_warn':
 			self.skipped_warnings.append(
 				'Test {!r} was skipped:\n  {}'.format(cmd, '\n  '.join(ret[1].split('\n'))))

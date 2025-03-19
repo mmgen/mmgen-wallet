@@ -26,6 +26,19 @@ class CmdGroupMgr:
 	cmd_groups = cmd_groups_dfl.copy()
 	cmd_groups.update(cmd_groups_extra)
 
+	cfg_attrs = (
+		'seed_len',
+		'seed_id',
+		'wpasswd',
+		'kapasswd',
+		'segwit',
+		'hash_preset',
+		'bw_filename',
+		'bw_params',
+		'ref_bw_seed_id',
+		'addr_idx_list',
+		'pass_idx_list')
+
 	def __init__(self, cfg):
 		self.cfg = cfg
 		self.network_id = cfg._proto.coin.lower() + ('_tn' if cfg._proto.testnet else '')
@@ -109,14 +122,23 @@ class CmdGroupMgr:
 						cdata.append((k, (i, f'{b} ({j}-bit)', [[[]+sdeps, i]])))
 					else:
 						cdata.append((k, (i, f'{b[1]} ({j}-bit)', [[b[0]+sdeps, i]])))
+			elif full_data:
+				cdata.append((a, b))
 			else:
-				cdata.append((a, b if full_data else (cls.tmpdir_nums[0], b, [[[], cls.tmpdir_nums[0]]])))
+				cdata.append((a, (cls.tmpdir_nums[0], b, [[[], cls.tmpdir_nums[0]]])))
 
 		if add_dpy:
 			self.dpy_data.update(dict(cdata))
 		else:
 			self.cmd_list = tuple(e[0] for e in cdata)
 			self.dpy_data = dict(cdata)
+
+		cls.full_data = full_data or is3seed
+
+		if not cls.full_data:
+			cls.tmpdir_num = cls.tmpdir_nums[0]
+			for k, v in cfgs[str(cls.tmpdir_num)].items():
+				setattr(cls, k, v)
 
 		return cls
 
@@ -161,7 +183,6 @@ class CmdGroupMgr:
 		do_pager('\n'.join(gen_output()))
 
 		Msg('\n' + ' '.join(e[0] for e in ginfo))
-		sys.exit(0)
 
 	def find_cmd_in_groups(self, cmd, group=None):
 		"""
