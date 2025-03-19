@@ -50,7 +50,7 @@ ignore = [
 [tool.pylint.format]
 indent-string = "\t"
 indent-after-paren = 2
-max-line-length = 116
+max-line-length = 106
 
 [tool.pylint.main]
 recursive = true

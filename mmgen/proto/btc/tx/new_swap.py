@@ -43,10 +43,11 @@ class NewSwap(New, TxNewSwap):
 
 		class CmdlineArgs: # listed in command-line order
 			# send_coin      # required: uppercase coin symbol
-			send_amt  = None # optional: Omit to skip change addr and send value of all inputs minus fees to vault
-			chg_spec  = None # optional: change address spec, e.g. ‘B’ ‘DEADBEEF:B’ ‘DEADBEEF:B:1’ or coin address.
-							 #           Omit for autoselected change address.  Use of non-wallet change address
-							 #           will emit warning and prompt user for confirmation
+			send_amt  = None # optional: Omit to skip change addr and send value of all inputs minus fees
+							 #           to vault
+			chg_spec  = None # optional: change address spec, e.g. ‘B’ ‘DEADBEEF:B’ ‘DEADBEEF:B:1’ or coin
+							 #           address.  Omit for autoselected change address. Use of non-wallet
+							 #           change address will emit warning and prompt user for confirmation
 			# recv_coin      # required: uppercase coin symbol
 			recv_spec = None # optional: destination address spec. Same rules as for chg_spec
 

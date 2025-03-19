@@ -101,12 +101,14 @@ class EthereumRPCClient(RPCClient, metaclass=AsyncInit):
 		'eth_chainId',
 		'eth_gasPrice',
 		'eth_getBalance',
+		'eth_getBlockByNumber',
 		'eth_getCode',
+		'eth_getTransactionByHash',
 		'eth_getTransactionCount',
 		'eth_getTransactionReceipt',
 		'eth_sendRawTransaction',
 		'parity_chain',
 		'parity_nodeKind',
 		'parity_pendingTransactions',
-		'txpool_content',
+		'txpool_content', # Geth and friends only
 	)
