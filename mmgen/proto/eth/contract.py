@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-proto.eth.contract: Ethereum ERC20 token classes
+proto.eth.contract: Ethereum contract and ERC20 token classes
 """
 
 from decimal import Decimal
@@ -28,13 +28,13 @@ from . import rlp
 from . import erigon_sleep
 from ...util import msg, pp_msg, die
 from ...base_obj import AsyncInit
-from ...obj import MMGenObject, CoinTxID
+from ...obj import CoinTxID
 from ...addr import CoinAddr, TokenAddr
 
 def parse_abi(s):
 	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]
 
-class TokenCommon(MMGenObject):
+class Contract:
 
 	def create_method_id(self, sig):
 		return self.keccak_256(sig.encode()).hexdigest()[:8]
@@ -178,7 +178,7 @@ class TokenCommon(MMGenObject):
 		res = await self.txsign(tx_in, key, from_addr)
 		return await self.txsend(res.txhex)
 
-class Token(TokenCommon):
+class Token(Contract):
 
 	def __init__(self, cfg, proto, addr, decimals, *, rpc=None):
 		if type(self).__name__ == 'Token':
@@ -192,7 +192,7 @@ class Token(TokenCommon):
 		self.base_unit = Decimal('10') ** -self.decimals
 		self.rpc = rpc
 
-class ResolvedToken(TokenCommon, metaclass=AsyncInit):
+class ResolvedToken(Token, metaclass=AsyncInit):
 
 	async def __init__(self, cfg, proto, rpc, addr):
 		from ...util2 import get_keccak
