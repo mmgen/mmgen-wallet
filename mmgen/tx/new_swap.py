@@ -28,6 +28,10 @@ class NewSwap(New):
 		self.swap_proto_mod = importlib.import_module(f'mmgen.swap.proto.{self.swap_proto}')
 		New.__init__(self, *args, **kwargs)
 
+	def check_addr_is_wallet_addr(self, output, *, message):
+		if not output.mmid:
+			self._non_wallet_addr_confirm(message)
+
 	async def get_swap_output(self, proto, arg, addrfiles, desc):
 		ret = namedtuple('swap_output', ['coin', 'network', 'addr', 'mmid'])
 		if arg:
@@ -117,11 +121,13 @@ class NewSwap(New):
 			if args.send_amt else None)
 
 		if chg_output:
-			self.check_chg_addr_is_wallet_addr(chg_output)
+			self.check_addr_is_wallet_addr(
+				chg_output,
+				message = 'Change address is not an MMGen wallet address!')
 
 		recv_output = await self.get_swap_output(self.recv_proto, args.recv_spec, addrfiles, 'destination address')
 
-		self.check_chg_addr_is_wallet_addr(
+		self.check_addr_is_wallet_addr(
 			recv_output,
 			message = (
 				'Swap destination address is not an MMGen wallet address!\n'

@@ -424,6 +424,13 @@ class New(Base):
 		else:
 			self.warn_insufficient_funds(funds.amt, self.coin)
 
+	def _non_wallet_addr_confirm(self, message):
+		from ..ui import confirm_or_raise
+		confirm_or_raise(
+			cfg = self.cfg,
+			message = yellow(message),
+			action = 'Are you sure this is what you want?')
+
 	async def create(self, cmd_args, *, locktime=None, do_info=False, caller='txcreate'):
 
 		assert isinstance(locktime, (int, type(None))), 'locktime must be of type int'
