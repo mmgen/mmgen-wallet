@@ -125,13 +125,18 @@ class NewSwap(New):
 				chg_output,
 				message = 'Change address is not an MMGen wallet address!')
 
-		recv_output = await self.get_swap_output(self.recv_proto, args.recv_spec, addrfiles, 'destination address')
+		recv_output = await self.get_swap_output(
+			self.recv_proto,
+			args.recv_spec,
+			addrfiles,
+			'destination address')
 
 		self.check_addr_is_wallet_addr(
 			recv_output,
 			message = (
 				'Swap destination address is not an MMGen wallet address!\n'
-				'To sign this transaction, autosign or txsign must be invoked with --allow-non-wallet-swap'))
+				'To sign this transaction, autosign or txsign must be invoked'
+				' with --allow-non-wallet-swap'))
 
 		memo = sp.data(self.recv_proto, recv_output.addr)
 
