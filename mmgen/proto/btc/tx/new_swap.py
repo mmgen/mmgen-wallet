@@ -13,13 +13,14 @@ proto.btc.tx.new_swap: Bitcoin new swap transaction class
 """
 
 from ....tx.new_swap import NewSwap as TxNewSwap
+from ....tx.new_swap import get_swap_proto_mod
 from .new import New
 
 class NewSwap(New, TxNewSwap):
 	desc = 'Bitcoin swap transaction'
 
 	def update_data_output(self, trade_limit):
-		sp = self.swap_proto_mod
+		sp = get_swap_proto_mod(self.swap_proto)
 		o = self.data_output._asdict()
 		parsed_memo = sp.data.parse(o['data'].decode())
 		memo = sp.data(
@@ -28,13 +29,6 @@ class NewSwap(New, TxNewSwap):
 			trade_limit = trade_limit)
 		o['data'] = f'data:{memo}'
 		self.data_output = self.Output(self.proto, **o)
-
-	def update_vault_addr(self, addr):
-		vault_idx = self.vault_idx
-		assert vault_idx == 0, f'{vault_idx}: vault index is not zero!'
-		o = self.outputs[vault_idx]._asdict()
-		o['addr'] = addr
-		self.outputs[vault_idx] = self.Output(self.proto, **o)
 
 	@property
 	def vault_idx(self):

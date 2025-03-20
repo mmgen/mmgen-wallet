@@ -18,14 +18,22 @@ from ..cfg import gc
 from .new import New
 from ..amt import UniAmt
 
+def get_swap_proto_mod(swap_proto_name):
+	import importlib
+	return importlib.import_module(f'mmgen.swap.proto.{swap_proto_name}')
+
+def init_proto_from_coin(cfg, sp, coin, desc):
+	if coin not in sp.params.coins[desc]:
+		raise ValueError(f'{coin!r}: unsupported {desc} coin for {gc.proj_name} {sp.name} swap')
+	from ..protocol import init_proto
+	return init_proto(cfg, coin, network=cfg._proto.network, need_amt=True)
+
 class NewSwap(New):
 	desc = 'swap transaction'
 
 	def __init__(self, *args, **kwargs):
-		import importlib
 		self.is_swap = True
 		self.swap_proto = kwargs['cfg'].swap_proto
-		self.swap_proto_mod = importlib.import_module(f'mmgen.swap.proto.{self.swap_proto}')
 		New.__init__(self, *args, **kwargs)
 
 	def check_addr_is_wallet_addr(self, output, *, message):
@@ -62,23 +70,11 @@ class NewSwap(New):
 			# recv_coin      # required: uppercase coin symbol
 			recv_spec = None # optional: destination address spec. Same rules as for chg_spec
 
-		def check_coin_arg(coin, desc):
-			if coin not in sp.params.coins[desc]:
-				raise ValueError(f'{coin!r}: unsupported {desc} coin for {gc.proj_name} {sp.name} swap')
-			return coin
-
 		def get_arg():
 			try:
 				return args_in.pop(0)
 			except:
 				self.cfg._usage()
-
-		def init_proto_from_coin(coinsym, desc):
-			return init_proto(
-				self.cfg,
-				check_coin_arg(coinsym, desc),
-				network = self.proto.network,
-				need_amt = True)
 
 		def parse():
 
@@ -86,7 +82,7 @@ class NewSwap(New):
 			arg = get_arg()
 
 			# arg 1: send_coin
-			self.send_proto = init_proto_from_coin(arg, 'send')
+			self.send_proto = init_proto_from_coin(self.cfg, sp, arg, 'send')
 			arg = get_arg()
 
 			# arg 2: amt
@@ -101,7 +97,7 @@ class NewSwap(New):
 					arg = get_arg()
 
 			# arg 4: recv_coin
-			self.recv_proto = init_proto_from_coin(arg, 'receive')
+			self.recv_proto = init_proto_from_coin(self.cfg, sp, arg, 'receive')
 
 			# arg 5: recv_spec (receive address spec)
 			if args_in:
@@ -110,8 +106,7 @@ class NewSwap(New):
 			if args_in: # done parsing, all args consumed
 				self.cfg._usage()
 
-		from ..protocol import init_proto
-		sp = self.swap_proto_mod
+		sp = get_swap_proto_mod(self.swap_proto)
 		args_in = list(cmd_args)
 		args = CmdlineArgs()
 		parse()
@@ -155,8 +150,15 @@ class NewSwap(New):
 		else:
 			self.usr_trade_limit = None
 
+	def update_vault_addr(self, addr):
+		vault_idx = self.vault_idx
+		assert vault_idx == 0, f'{vault_idx}: vault index is not zero!'
+		o = self.outputs[vault_idx]._asdict()
+		o['addr'] = addr
+		self.outputs[vault_idx] = self.Output(self.proto, **o)
+
 	def update_vault_output(self, amt, *, deduct_est_fee=False):
-		sp = self.swap_proto_mod
+		sp = get_swap_proto_mod(self.swap_proto)
 		c = sp.rpc_client(self, amt)
 
 		from ..util import msg

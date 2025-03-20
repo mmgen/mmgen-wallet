@@ -42,9 +42,6 @@ class Bump(Completed, NewSwap):
 					setattr(self, attr, getattr(Base, attr))
 			self.outputs = self.OutputList(self)
 			self.cfg = kwargs['cfg'] # must use current cfg opts, not those from orig_tx
-		elif self.is_swap:
-			import importlib
-			self.swap_proto_mod = importlib.import_module(f'mmgen.swap.proto.{self.swap_proto}')
 
 		if not self.is_replaceable():
 			die(1, f'Transaction {self.txid} is not replaceable')
