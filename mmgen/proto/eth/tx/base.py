@@ -21,10 +21,9 @@ class Base(TxBase.Base):
 
 	rel_fee_desc = 'gas price'
 	rel_fee_disp = 'gas price in Gwei'
-	txobj  = None # ""
-	dfl_gas = 21000               # an approximate number, used for fee estimation purposes
-	dfl_start_gas = 21000         # the actual startgas amt used in the transaction
-	                              # for simple sends with no data, gas = start_gas = 21000
+	txobj = None
+	dfl_gas = 21000 # the startGas amt used in the transaction
+	                # for simple sends with no data, startGas = 21000
 	contract_desc = 'contract'
 	usr_contract_data = HexStr('')
 	disable_fee_check = False
@@ -76,5 +75,4 @@ class Base(TxBase.Base):
 
 class TokenBase(Base):
 	dfl_gas = 52000
-	dfl_start_gas = 60000
 	contract_desc = 'token contract'

@@ -34,10 +34,9 @@ class New(Base, TxBase.New):
 		super().__init__(*args, **kwargs)
 
 		if self.cfg.gas:
-			self.gas = self.start_gas = self.proto.coin_amt(int(self.cfg.gas), from_unit='wei')
+			self.gas = self.proto.coin_amt(int(self.cfg.gas), from_unit='wei')
 		else:
 			self.gas = self.proto.coin_amt(self.dfl_gas, from_unit='wei')
-			self.start_gas = self.proto.coin_amt(self.dfl_start_gas, from_unit='wei')
 
 		if self.cfg.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
@@ -56,7 +55,7 @@ class New(Base, TxBase.New):
 			'to':   self.outputs[0].addr if self.outputs else None,
 			'amt':  self.outputs[0].amt if self.outputs else self.proto.coin_amt('0'),
 			'gasPrice': self.fee_abs2gasprice(self.usr_fee),
-			'startGas': self.start_gas,
+			'startGas': self.gas,
 			'nonce': await self.get_nonce(),
 			'chainId': self.rpc.chainID,
 			'data':  self.usr_contract_data}

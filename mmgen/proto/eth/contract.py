@@ -151,12 +151,12 @@ class Token(Contract):
 
 	def make_tx_in(
 			self,
+			*,
 			to_addr,
 			amt,
-			start_gas,
+			gas,
 			gasPrice,
 			nonce,
-			*,
 			method_sig = 'transfer(address,uint256)'):
 		data = self.create_data(
 				to_addr,
@@ -164,7 +164,7 @@ class Token(Contract):
 				method_sig = method_sig)
 		return {
 			'to':       bytes.fromhex(self.addr),
-			'startgas': start_gas.toWei(),
+			'startgas': gas.toWei(),
 			'gasprice': gasPrice.toWei(),
 			'value':    0,
 			'nonce':    nonce,
@@ -173,20 +173,20 @@ class Token(Contract):
 	# used for token deployment only:
 	async def transfer(
 			self,
+			*,
 			from_addr,
 			to_addr,
 			amt,
 			key,
-			start_gas,
+			gas,
 			gasPrice,
-			*,
 			method_sig = 'transfer(address,uint256)'):
 		tx_in = self.make_tx_in(
-				to_addr,
-				amt,
-				start_gas,
-				gasPrice,
-				nonce = int(await self.rpc.call('eth_getTransactionCount', '0x'+from_addr, 'pending'), 16),
+				to_addr    = to_addr,
+				amt        = amt,
+				gas        = gas,
+				gasPrice   = gasPrice,
+				nonce      = int(await self.rpc.call('eth_getTransactionCount', '0x'+from_addr, 'pending'), 16),
 				method_sig = method_sig)
 		res = await self.txsign(tx_in, key, from_addr)
 		return await self.txsend(res.txhex)

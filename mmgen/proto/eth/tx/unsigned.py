@@ -36,7 +36,7 @@ class Unsigned(Completed, TxBase.Unsigned):
 			'nonce':    ETHNonce(d['nonce']),
 			'chainId':  None if d['chainId'] == 'None' else Int(d['chainId']),
 			'data':     HexStr(d['data'])}
-		self.gas = o['startGas'] # approximate, but better than nothing
+		self.gas = o['startGas']
 		self.txobj = o
 		return d # 'token_addr', 'decimals' required by Token subclass
 
@@ -115,7 +115,7 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 		tx_in = t.make_tx_in(
 				to_addr   = o['to'],
 				amt       = o['amt'],
-				start_gas = self.start_gas,
+				gas       = self.gas,
 				gasPrice  = o['gasPrice'],
 				nonce     = o['nonce'])
 		res = await t.txsign(tx_in, wif, o['from'], chain_id=o['chainId'])

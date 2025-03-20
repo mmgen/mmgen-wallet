@@ -1134,11 +1134,11 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_devaddr)))
 				imsg(f'Sending {amt} {self.proto.dcoin} to address {usr_addrs[i]} ({usr_mmaddrs[i]})')
 				txid = await tk.transfer(
-					dfl_devaddr,
-					usr_addrs[i],
-					amt,
-					dfl_devkey,
-					start_gas = self.proto.coin_amt(60000, from_unit='wei'),
+					from_addr = dfl_devaddr,
+					to_addr   = usr_addrs[i],
+					amt       = amt,
+					key       = dfl_devkey,
+					gas       = self.proto.coin_amt(60000, from_unit='wei'),
 					gasPrice  = self.proto.coin_amt(8, from_unit='Gwei'))
 				if (await self.get_tx_receipt(txid)).status == 0:
 					die(2, 'Transfer of token funds failed. Aborting')
