@@ -36,6 +36,9 @@ def parse_abi(s):
 
 class Contract:
 
+	def strip(self, s):
+		return ''.join([chr(b) for b in s if 32 <= b <= 127]).strip()
+
 	def create_method_id(self, sig):
 		return self.keccak_256(sig.encode()).hexdigest()[:8]
 
@@ -46,6 +49,9 @@ class Contract:
 		return self.proto.coin_amt(
 			int(parse_abi(data)[-1], 16) * self.base_unit,
 			from_decimal = True)
+
+	async def code(self):
+		return (await self.rpc.call('eth_getCode', '0x'+self.addr))[2:]
 
 	async def do_call(self, method_sig, method_args='', *, toUnit=False):
 		data = self.create_method_id(method_sig) + method_args
@@ -60,13 +66,51 @@ class Contract:
 		else:
 			return ret
 
+	async def txsign(self, tx_in, key, from_addr, *, chain_id=None):
+
+		from .pyethereum.transactions import Transaction
+
+		if chain_id is None:
+			res = await self.rpc.call('eth_chainId')
+			chain_id = None if res is None else int(res, 16)
+
+		etx = Transaction(**tx_in).sign(key, chain_id)
+
+		if etx.sender.hex() != from_addr:
+			die(3, f'Sender address {from_addr!r} does not match address of key {etx.sender.hex()!r}!')
+
+		if self.cfg.debug:
+			msg('TOKEN DATA:')
+			pp_msg(etx.to_dict())
+			msg('PARSED ABI DATA:\n  {}'.format(
+				'\n  '.join(parse_abi(etx.data.hex()))))
+
+		return namedtuple('signed_contract_transaction', ['etx', 'txhex', 'txid'])(
+			etx,
+			rlp.encode(etx).hex(),
+			CoinTxID(etx.hash.hex()))
+
+	async def txsend(self, txhex):
+		return (await self.rpc.call('eth_sendRawTransaction', '0x'+txhex)).replace('0x', '', 1)
+
+class Token(Contract):
+
+	def __init__(self, cfg, proto, addr, decimals, *, rpc=None):
+		if type(self).__name__ == 'Token':
+			from ...util2 import get_keccak
+			self.keccak_256 = get_keccak(cfg)
+		self.cfg = cfg
+		self.proto = proto
+		self.addr = TokenAddr(proto, addr)
+		assert isinstance(decimals, int), f'decimals param must be int instance, not {type(decimals)}'
+		self.decimals = decimals
+		self.base_unit = Decimal('10') ** -self.decimals
+		self.rpc = rpc
+
 	async def get_balance(self, acct_addr):
 		return self.proto.coin_amt(
 			await self.do_call('balanceOf(address)', acct_addr.rjust(64, '0'), toUnit=True),
 			from_decimal = True)
-
-	def strip(self, s):
-		return ''.join([chr(b) for b in s if 32 <= b <= 127]).strip()
 
 	async def get_name(self):
 		return self.strip(bytes.fromhex((await self.do_call('name()'))[2:]))
@@ -93,9 +137,6 @@ class Contract:
 			'token name:',    await self.get_name(),
 			'decimals:',      self.decimals,
 			'total supply:',  await self.get_total_supply())
-
-	async def code(self):
-		return (await self.rpc.call('eth_getCode', '0x'+self.addr))[2:]
 
 	def create_data(
 			self,
@@ -129,35 +170,7 @@ class Contract:
 			'nonce':    nonce,
 			'data':     bytes.fromhex(data)}
 
-	async def txsign(self, tx_in, key, from_addr, *, chain_id=None):
-
-		from .pyethereum.transactions import Transaction
-
-		if chain_id is None:
-			res = await self.rpc.call('eth_chainId')
-			chain_id = None if res is None else int(res, 16)
-
-		etx = Transaction(**tx_in).sign(key, chain_id)
-
-		if etx.sender.hex() != from_addr:
-			die(3, f'Sender address {from_addr!r} does not match address of key {etx.sender.hex()!r}!')
-
-		if self.cfg.debug:
-			msg('TOKEN DATA:')
-			pp_msg(etx.to_dict())
-			msg('PARSED ABI DATA:\n  {}'.format(
-				'\n  '.join(parse_abi(etx.data.hex()))))
-
-		return namedtuple('signed_contract_transaction', ['etx', 'txhex', 'txid'])(
-			etx,
-			rlp.encode(etx).hex(),
-			CoinTxID(etx.hash.hex()))
-
-# The following are used for token deployment only:
-
-	async def txsend(self, txhex):
-		return (await self.rpc.call('eth_sendRawTransaction', '0x'+txhex)).replace('0x', '', 1)
-
+	# used for token deployment only:
 	async def transfer(
 			self,
 			from_addr,
@@ -177,20 +190,6 @@ class Contract:
 				method_sig = method_sig)
 		res = await self.txsign(tx_in, key, from_addr)
 		return await self.txsend(res.txhex)
-
-class Token(Contract):
-
-	def __init__(self, cfg, proto, addr, decimals, *, rpc=None):
-		if type(self).__name__ == 'Token':
-			from ...util2 import get_keccak
-			self.keccak_256 = get_keccak(cfg)
-		self.cfg = cfg
-		self.proto = proto
-		self.addr = TokenAddr(proto, addr)
-		assert isinstance(decimals, int), f'decimals param must be int instance, not {type(decimals)}'
-		self.decimals = decimals
-		self.base_unit = Decimal('10') ** -self.decimals
-		self.rpc = rpc
 
 class ResolvedToken(Token, metaclass=AsyncInit):
 
