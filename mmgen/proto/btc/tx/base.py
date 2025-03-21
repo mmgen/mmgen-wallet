@@ -14,7 +14,6 @@ proto.btc.tx.base: Bitcoin base transaction class
 
 from collections import namedtuple
 
-from ....addr import CoinAddr
 from ....tx.base import Base as TxBase
 from ....obj import MMGenList, HexStr, ListItemAttr
 from ....util import msg, make_chksum_6, die, pp_fmt
@@ -175,7 +174,6 @@ class Base(TxBase):
 	_deserialized = None
 
 	class Output(TxBase.Output): # output contains either addr or data, but not both
-		addr = ListItemAttr(CoinAddr, include_proto=True) # ImmutableAttr in parent cls
 		data = ListItemAttr(OpReturnData, include_proto=True) # type None in parent cls
 
 	class InputList(TxBase.InputList):

@@ -28,6 +28,8 @@ sample1 = gr_uc[:24]
 sample2 = '00010203040506'
 
 class CmdTestSwapMethods:
+	menu_prompt = 'abel:\b'
+	input_sels_prompt = 'to spend: '
 
 	def _addrgen_bob(self, proto_idx, mmtypes, subseed_idx=None):
 		return self.addrgen('bob', subseed_idx=subseed_idx, mmtypes=mmtypes, proto=self.protos[proto_idx])
@@ -107,8 +109,8 @@ class CmdTestSwapMethods:
 			reload_quote    = False,
 			sign_and_send   = False,
 			expect         = None):
-		t.expect('abel:\b', 'q')
-		t.expect('to spend: ', f'{inputs}\n')
+		t.expect(self.menu_prompt, 'q')
+		t.expect(self.input_sels_prompt, f'{inputs}\n')
 		if reload_quote:
 			t.expect('to continue: ', 'r')  # reload swap quote
 		t.expect('to continue: ', '\n')     # exit swap quote view
@@ -136,7 +138,8 @@ class CmdTestSwapMethods:
 			['-q', '-d', self.tmpdir, '-B', '--bob']
 			+ add_opts
 			+ args,
-			exit_val = exit_val)
+			exit_val = exit_val,
+			no_passthru_opts = ['coin'])
 
 	def _swaptxcreate_bad(self, args, *, exit_val=1, expect1=None, expect2=None):
 		t = self._swaptxcreate(args, exit_val=exit_val)
@@ -159,7 +162,10 @@ class CmdTestSwapMethods:
 
 	def _swaptxsend(self, *, add_opts=[], spawn_only=False):
 		fn = self.get_file_with_ext('sigtx')
-		t = self.spawn('mmgen-txsend', add_opts + ['-q', '-d', self.tmpdir, '--bob', fn])
+		t = self.spawn(
+			'mmgen-txsend',
+			add_opts + ['-q', '-d', self.tmpdir, '--bob', fn],
+			no_passthru_opts = ['coin'])
 		if spawn_only:
 			return t
 		t.expect('view: ', 'v')
@@ -170,7 +176,10 @@ class CmdTestSwapMethods:
 	def _swaptxsign(self, *, add_opts=[], expect=None):
 		self.get_file_with_ext('sigtx', delete_all=True)
 		fn = self.get_file_with_ext('rawtx')
-		t = self.spawn('mmgen-txsign', add_opts + ['-d', self.tmpdir, '--bob', fn])
+		t = self.spawn(
+			'mmgen-txsign',
+			add_opts + ['-d', self.tmpdir, '--bob', fn],
+			no_passthru_opts = ['coin'])
 		t.view_tx('t')
 		if expect:
 			t.expect(expect)
@@ -475,7 +484,11 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded, CmdTestSwapMethods):
 		coin_arg = f'--coin={self.protos[proto_idx].coin}'
 		t = self.spawn('mmgen-tool', ['--bob', coin_arg, 'listaddresses'])
 		addr = [s for s in strip_ansi_escapes(t.read()).splitlines() if 'C:1 No' in s][0].split()[3]
-		t = self.spawn('mmgen-regtest', [coin_arg, 'send', addr, str(amt)], no_passthru_opts=True, no_msg=True)
+		t = self.spawn(
+			'mmgen-regtest',
+			[coin_arg, 'send', addr, str(amt)],
+			no_passthru_opts = ['coin'],
+			no_msg = True)
 		return t
 
 	def bob_bal_recv(self):

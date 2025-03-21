@@ -161,7 +161,7 @@ class CmdTestRunner:
 
 		if self.logging:
 			self.log_fd.write('[{}][{}:{}] {}\n'.format(
-				(self.proto.coin.lower() if 'coin' in passthru_opts else 'NONE'),
+				(self.proto.coin.lower() if 'coin' in self.tg.passthru_opts else 'NONE'),
 				self.tg.group_name,
 				self.tg.test_name,
 				cmd_disp))

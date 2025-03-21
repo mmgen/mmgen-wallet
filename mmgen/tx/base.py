@@ -102,6 +102,7 @@ class Base(MMGenObject):
 		tw_copy_attrs = {'scriptPubKey', 'vout', 'amt', 'comment', 'mmid', 'addr', 'confs', 'txid'}
 
 	class Output(MMGenTxIO):
+		addr     = ListItemAttr(CoinAddr, include_proto=True) # ImmutableAttr in parent cls
 		is_chg   = ListItemAttr(bool, typeconv=False)
 		is_vault = ListItemAttr(bool, typeconv=False)
 		data     = ListItemAttr(None, typeconv=False) # placeholder

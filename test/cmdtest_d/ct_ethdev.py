@@ -118,67 +118,6 @@ def set_vbals(daemon_id):
 		vbal7 = '1000124.91944498212345678'
 		vbal9 = '1.226261'
 
-bals = lambda k: {
-	'1': [  ('98831F3A:E:1', '123.456')],
-	'2': [  ('98831F3A:E:1', '123.456'), ('98831F3A:E:11', '1.234')],
-	'3': [  ('98831F3A:E:1', '123.456'), ('98831F3A:E:11', '1.234'), ('98831F3A:E:21', '2.345')],
-	'4': [  ('98831F3A:E:1', '100'),
-			('98831F3A:E:2', '23.45495'),
-			('98831F3A:E:11', '1.234'),
-			('98831F3A:E:21', '2.345')],
-	'5': [  ('98831F3A:E:1', '100'),
-			('98831F3A:E:2', '23.45495'),
-			('98831F3A:E:11', '1.234'),
-			('98831F3A:E:21', '2.345'),
-			(burn_addr + r'\s+non-MMGen', amt1)],
-	'8': [  ('98831F3A:E:1', '0'),
-			('98831F3A:E:2', '23.45495'),
-			('98831F3A:E:11', vbal1),
-			('98831F3A:E:12', '99.99895'),
-			('98831F3A:E:21', '2.345'),
-			(burn_addr + r'\s+non-MMGen', amt1)],
-	'9': [  ('98831F3A:E:1', '0'),
-			('98831F3A:E:2', '23.45495'),
-			('98831F3A:E:11', vbal1),
-			('98831F3A:E:12', vbal2),
-			('98831F3A:E:21', '2.345'),
-			(burn_addr + r'\s+non-MMGen', amt1)],
-	'10': [ ('98831F3A:E:1', '0'),
-			('98831F3A:E:2', '23.0218'),
-			('98831F3A:E:3', '0.4321'),
-			('98831F3A:E:11', vbal1),
-			('98831F3A:E:12', vbal2),
-			('98831F3A:E:21', '2.345'),
-			(burn_addr + r'\s+non-MMGen', amt1)]
-}[k]
-
-token_bals = lambda k: {
-	'1': [  ('98831F3A:E:11', '1000', '1.234')],
-	'2': [  ('98831F3A:E:11', '998.76544', vbal3),
-			('98831F3A:E:12', '1.23456', '0')],
-	'3': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
-			('98831F3A:E:12', '1.23456', '0')],
-	'4': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
-			('98831F3A:E:12', '1.23456', '0'),
-			(burn_addr + r'\s+non-MMGen', amt2, amt1)],
-	'5': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
-			('98831F3A:E:12', '1.23456', '99.99895'),
-			(burn_addr + r'\s+non-MMGen', amt2, amt1)],
-	'6': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
-			('98831F3A:E:12', '0', vbal2),
-			('98831F3A:E:13', '1.23456', '0'),
-			(burn_addr + r'\s+non-MMGen', amt2, amt1)],
-	'7': [  ('98831F3A:E:11', '67.444317776666555545', vbal9),
-			('98831F3A:E:12', '43.21', vbal2),
-			('98831F3A:E:13', '1.23456', '0'),
-			(burn_addr + r'\s+non-MMGen', amt2, amt1)]
-}[k]
-
-token_bals_getbalance = lambda k: {
-	'1': (vbal4, '999777.12345689012345678'),
-	'2': ('111.888877776666555545', '888.111122223333444455')
-}[k]
-
 coin = cfg.coin
 
 class CmdTestEthdev(CmdTestBase, CmdTestShared):
@@ -187,6 +126,70 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	passthru_opts = ('coin', 'daemon_id', 'http_timeout', 'rpc_backend')
 	tmpdir_nums = [22]
 	color = True
+	menu_prompt = 'efresh balance:\b'
+	input_sels_prompt = 'to spend from: '
+
+	bals = lambda self, k: {
+		'1': [  ('98831F3A:E:1', '123.456')],
+		'2': [  ('98831F3A:E:1', '123.456'), ('98831F3A:E:11', '1.234')],
+		'3': [  ('98831F3A:E:1', '123.456'), ('98831F3A:E:11', '1.234'), ('98831F3A:E:21', '2.345')],
+		'4': [  ('98831F3A:E:1', '100'),
+				('98831F3A:E:2', '23.45495'),
+				('98831F3A:E:11', '1.234'),
+				('98831F3A:E:21', '2.345')],
+		'5': [  ('98831F3A:E:1', '100'),
+				('98831F3A:E:2', '23.45495'),
+				('98831F3A:E:11', '1.234'),
+				('98831F3A:E:21', '2.345'),
+				(burn_addr + r'\s+non-MMGen', amt1)],
+		'8': [  ('98831F3A:E:1', '0'),
+				('98831F3A:E:2', '23.45495'),
+				('98831F3A:E:11', vbal1),
+				('98831F3A:E:12', '99.99895'),
+				('98831F3A:E:21', '2.345'),
+				(burn_addr + r'\s+non-MMGen', amt1)],
+		'9': [  ('98831F3A:E:1', '0'),
+				('98831F3A:E:2', '23.45495'),
+				('98831F3A:E:11', vbal1),
+				('98831F3A:E:12', vbal2),
+				('98831F3A:E:21', '2.345'),
+				(burn_addr + r'\s+non-MMGen', amt1)],
+		'10': [ ('98831F3A:E:1', '0'),
+				('98831F3A:E:2', '23.0218'),
+				('98831F3A:E:3', '0.4321'),
+				('98831F3A:E:11', vbal1),
+				('98831F3A:E:12', vbal2),
+				('98831F3A:E:21', '2.345'),
+				(burn_addr + r'\s+non-MMGen', amt1)]
+	}[k]
+
+	token_bals = lambda self, k: {
+		'1': [  ('98831F3A:E:11', '1000', '1.234')],
+		'2': [  ('98831F3A:E:11', '998.76544', vbal3),
+				('98831F3A:E:12', '1.23456', '0')],
+		'3': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
+				('98831F3A:E:12', '1.23456', '0')],
+		'4': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
+				('98831F3A:E:12', '1.23456', '0'),
+				(burn_addr + r'\s+non-MMGen', amt2, amt1)],
+		'5': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
+				('98831F3A:E:12', '1.23456', '99.99895'),
+				(burn_addr + r'\s+non-MMGen', amt2, amt1)],
+		'6': [  ('98831F3A:E:11', '110.654317776666555545', vbal1),
+				('98831F3A:E:12', '0', vbal2),
+				('98831F3A:E:13', '1.23456', '0'),
+				(burn_addr + r'\s+non-MMGen', amt2, amt1)],
+		'7': [  ('98831F3A:E:11', '67.444317776666555545', vbal9),
+				('98831F3A:E:12', '43.21', vbal2),
+				('98831F3A:E:13', '1.23456', '0'),
+				(burn_addr + r'\s+non-MMGen', amt2, amt1)]
+	}[k]
+
+	token_bals_getbalance = lambda self, k: {
+		'1': (vbal4, '999777.12345689012345678'),
+		'2': ('111.888877776666555545', '888.111122223333444455')
+	}[k]
+
 	cmd_group_in = (
 		('setup',             f'dev mode tests for coin {coin} (start daemon)'),
 		('subgroup.misc',     []),
@@ -955,7 +958,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		self.mining_delay()
 		t = self.spawn('mmgen-tool', self.eth_args + ['twview', 'wide=1'])
 		text = t.read(strip_color=True)
-		for addr, amt in bals(n):
+		for addr, amt in self.bals(n):
 			pat = r'\D{}\D.*\D{}\D'.format(addr, amt.replace('.', r'\.'))
 			assert re.search(pat, text), pat
 		ss = f'Total {self.proto.coin}:'
@@ -966,7 +969,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		self.mining_delay()
 		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1', 'twview', 'wide=1'])
 		text = t.read(strip_color=True)
-		for addr, _amt1, _amt2 in token_bals(n):
+		for addr, _amt1, _amt2 in self.token_bals(n):
 			pat = fr'{addr}\b.*\D{_amt1}\D.*\b{_amt2}\D'
 			assert re.search(pat, text), pat
 		ss = 'Total MM1:'
@@ -974,8 +977,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		return t
 
 	def bal_getbalance(self, sid, idx, etc_adj=False, extra_args=[]):
-		bal1 = token_bals_getbalance(idx)[0]
-		bal2 = token_bals_getbalance(idx)[1]
+		bal1 = self.token_bals_getbalance(idx)[0]
+		bal2 = self.token_bals_getbalance(idx)[1]
 		bal1 = Decimal(bal1)
 		t = self.spawn('mmgen-tool', self.eth_args + extra_args + ['getbalance'])
 		t.expect(rf'{sid}:.*'+str(bal1), regex=True)
@@ -1056,12 +1059,12 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			omsg(yellow('Warning: all gas was used!'))
 		return res
 
-	async def token_deploy(self, num, key, gas, mmgen_cmd='txdo', tx_fee='8G'):
+	async def token_deploy(self, num, key, gas, mmgen_cmd='txdo', gas_price='8G'):
 		keyfile = joinpath(self.tmpdir, parity_devkey_fn)
 		fn = joinpath(self.tmpdir, 'mm'+str(num), key+'.bin')
 		args = [
 			'-B',
-			f'--fee={tx_fee}',
+			f'--fee={gas_price}',
 			f'--gas={gas}',
 			f'--contract-data={fn}',
 			f'--inputs={dfl_devaddr}',
@@ -1099,7 +1102,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	async def token_deploy1b(self):
 		return await self.token_deploy(num=1, key='Owned',    gas=1_000_000)
 	async def token_deploy1c(self):
-		return await self.token_deploy(num=1, key='Token',    gas=4_000_000, tx_fee='7G')
+		return await self.token_deploy(num=1, key='Token',    gas=4_000_000, gas_price='7G')
 
 	def tx_status2(self):
 		return self.tx_status(
@@ -1138,7 +1141,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 					to_addr   = usr_addrs[i],
 					amt       = amt,
 					key       = dfl_devkey,
-					gas       = self.proto.coin_amt(60000, from_unit='wei'),
+					gas       = self.proto.coin_amt(120000, from_unit='wei'),
 					gasPrice  = self.proto.coin_amt(8, from_unit='Gwei'))
 				if (await self.get_tx_receipt(txid)).status == 0:
 					die(2, 'Transfer of token funds failed. Aborting')
@@ -1459,10 +1462,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 
 		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B', '-i'], pexpect_spawn=pexpect_spawn)
 
-		menu_prompt = 'efresh balance:\b'
-
-		t.expect(menu_prompt, 'M')
-		t.expect(menu_prompt, action)
+		t.expect(self.menu_prompt, 'M')
+		t.expect(self.menu_prompt, action)
 		t.expect(r'return to main menu): ', out_num+'\n')
 
 		for p, r in (
@@ -1479,8 +1480,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			'Label removed from account #{}')
 
 		t.expect(m.format(out_num))
-		t.expect(menu_prompt, 'M')
-		t.expect(menu_prompt, 'q')
+		t.expect(self.menu_prompt, 'M')
+		t.expect(self.menu_prompt, 'q')
 
 		t.expect('Total unspent:')
 

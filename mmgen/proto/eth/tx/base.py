@@ -14,10 +14,10 @@ proto.eth.tx.base: Ethereum base transaction class
 
 from collections import namedtuple
 
-from ....tx import base as TxBase
-from ....obj import HexStr, Int
+from ....tx.base import Base as TxBase
+from ....obj import Int
 
-class Base(TxBase.Base):
+class Base(TxBase):
 
 	rel_fee_desc = 'gas price'
 	rel_fee_disp = 'gas price in Gwei'
@@ -25,7 +25,7 @@ class Base(TxBase.Base):
 	dfl_gas = 21000 # the startGas amt used in the transaction
 	                # for simple sends with no data, startGas = 21000
 	contract_desc = 'contract'
-	usr_contract_data = HexStr('')
+	usr_contract_data = b''
 	disable_fee_check = False
 
 	@property

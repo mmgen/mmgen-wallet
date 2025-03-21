@@ -15,7 +15,7 @@ proto.eth.tx.new: Ethereum new transaction class
 import json
 
 from ....tx import new as TxBase
-from ....obj import Int, ETHNonce, MMGenTxID, HexStr
+from ....obj import Int, ETHNonce, MMGenTxID
 from ....util import msg, is_int, is_hex_str, make_chksum_6, suf, die
 from ....tw.ctl import TwCtl
 from ....addr import is_mmgen_id, is_coin_addr
@@ -42,7 +42,7 @@ class New(Base, TxBase.New):
 			m = "'--contract-data' option may not be used with token transaction"
 			assert 'Token' not in self.name, m
 			with open(self.cfg.contract_data) as fp:
-				self.usr_contract_data = HexStr(fp.read().strip())
+				self.usr_contract_data = bytes.fromhex(fp.read().strip())
 			self.disable_fee_check = True
 
 	async def get_nonce(self):
@@ -58,7 +58,7 @@ class New(Base, TxBase.New):
 			'startGas': self.gas,
 			'nonce': await self.get_nonce(),
 			'chainId': self.rpc.chainID,
-			'data':  self.usr_contract_data}
+			'data':  self.usr_contract_data.hex()}
 
 	# Instead of serializing tx data as with BTC, just create a JSON dump.
 	# This complicates things but means we avoid using the rlp library to deserialize the data,
@@ -88,12 +88,12 @@ class New(Base, TxBase.New):
 		if lc != 1:
 			die(1, f'{lc} output{suf(lc)} specified, but Ethereum transactions must have exactly one')
 
-		arg = self.parse_cmdline_arg(self.proto, cmd_args[0], ad_f, ad_w)
+		a = self.parse_cmdline_arg(self.proto, cmd_args[0], ad_f, ad_w)
 
 		self.add_output(
-			coinaddr = arg.addr,
-			amt      = self.proto.coin_amt(arg.amt or '0'),
-			is_chg   = not arg.amt)
+			coinaddr = a.addr,
+			amt      = self.proto.coin_amt(a.amt or '0'),
+			is_chg   = not a.amt)
 
 		self.add_mmaddrs_to_outputs(ad_f, ad_w)
 
