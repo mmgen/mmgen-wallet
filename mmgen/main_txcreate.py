@@ -115,8 +115,14 @@ async def main():
 		asi = mount_removable_device(cfg)
 		Signable.automount_transaction(asi).check_create_ok()
 
+	if target == 'swaptx':
+		from .tx.new_swap import get_send_proto
+		proto = get_send_proto(cfg)
+	else:
+		proto = cfg._proto
+
 	from .tx import NewTX
-	tx1 = await NewTX(cfg=cfg, proto=cfg._proto, target=target)
+	tx1 = await NewTX(cfg=cfg, proto=proto, target=target)
 
 	tx2 = await tx1.create(
 		cmd_args = cfg._args,

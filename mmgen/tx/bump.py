@@ -84,7 +84,6 @@ class Bump(Completed, NewSwap):
 				self.rel_fee_disp))
 
 		if self.is_swap:
-			self.send_proto = self.proto
 			self.recv_proto = self.check_swap_memo().proto
 			self.process_swap_options()
 			fee_hint = self.update_vault_output(self.send_amt)

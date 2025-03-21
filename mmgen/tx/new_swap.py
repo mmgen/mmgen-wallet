@@ -28,6 +28,13 @@ def init_proto_from_coin(cfg, sp, coin, desc):
 	from ..protocol import init_proto
 	return init_proto(cfg, coin, network=cfg._proto.network, need_amt=True)
 
+def get_send_proto(cfg):
+	try:
+		arg = cfg._args.pop(0)
+	except:
+		cfg._usage()
+	return init_proto_from_coin(cfg, get_swap_proto_mod(cfg.swap_proto), arg, 'send')
+
 class NewSwap(New):
 	desc = 'swap transaction'
 
@@ -78,16 +85,14 @@ class NewSwap(New):
 
 		def parse():
 
+			# arg 1: send_coin - already popped and parsed by get_send_proto()
+
 			from ..amt import is_coin_amt
 			arg = get_arg()
 
-			# arg 1: send_coin
-			self.send_proto = init_proto_from_coin(self.cfg, sp, arg, 'send')
-			arg = get_arg()
-
 			# arg 2: amt
-			if is_coin_amt(self.send_proto, arg):
-				args.send_amt = self.send_proto.coin_amt(arg)
+			if is_coin_amt(self.proto, arg):
+				args.send_amt = self.proto.coin_amt(arg)
 				arg = get_arg()
 
 			# arg 3: chg_spec (change address spec)
@@ -112,7 +117,7 @@ class NewSwap(New):
 		parse()
 
 		chg_output = (
-			await self.get_swap_output(self.send_proto, args.chg_spec, addrfiles, 'change address')
+			await self.get_swap_output(self.proto, args.chg_spec, addrfiles, 'change address')
 			if args.send_amt else None)
 
 		if chg_output:

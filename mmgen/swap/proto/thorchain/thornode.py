@@ -61,7 +61,7 @@ class Thornode:
 
 	def get_quote(self):
 		self.get_str = '/thorchain/quote/swap?from_asset={a}.{a}&to_asset={b}.{b}&amount={c}'.format(
-			a = self.tx.send_proto.coin,
+			a = self.tx.proto.coin,
 			b = self.tx.recv_proto.coin,
 			c = self.in_amt.to_unit('satoshi'))
 		self.result = self.rpc.get(self.get_str)
@@ -78,7 +78,7 @@ class Thornode:
 
 		d = self.data
 		tx = self.tx
-		in_coin = tx.send_proto.coin
+		in_coin = tx.proto.coin
 		out_coin = tx.recv_proto.coin
 		in_amt = UniAmt(str(self.in_amt))
 		out_amt = UniAmt(int(d['expected_amount_out']), from_unit='satoshi')
