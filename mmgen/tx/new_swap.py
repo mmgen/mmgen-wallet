@@ -162,7 +162,7 @@ class NewSwap(New):
 		o['addr'] = addr
 		self.outputs[vault_idx] = self.Output(self.proto, **o)
 
-	def update_vault_output(self, amt, *, deduct_est_fee=False):
+	async def update_vault_output(self, amt, *, deduct_est_fee=False):
 		sp = get_swap_proto_mod(self.swap_proto)
 		c = sp.rpc_client(self, amt)
 
@@ -182,7 +182,7 @@ class NewSwap(New):
 			c.get_quote()
 			trade_limit = get_trade_limit()
 			self.cfg._util.qmsg('OK')
-			msg(c.format_quote(trade_limit, self.usr_trade_limit, deduct_est_fee=deduct_est_fee))
+			msg(await c.format_quote(trade_limit, self.usr_trade_limit, deduct_est_fee=deduct_est_fee))
 			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')
 			msg('')
 			if ch not in 'Rr':

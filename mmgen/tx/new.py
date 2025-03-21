@@ -87,6 +87,7 @@ class New(Base):
 	"""
 	chg_autoselected = False
 	_funds_available = namedtuple('funds_available', ['is_positive', 'amt'])
+	_net_fee = namedtuple('network_fee_estimate', ['fee', 'type'])
 
 	def warn_insufficient_funds(self, amt, coin):
 		msg(self.msg_insufficient_funds.format(amt.hl(), coin))
@@ -402,14 +403,20 @@ class New(Base):
 		self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
 		return True
 
+	async def network_fee_disp(self):
+		res = await self.get_rel_fee_from_network()
+		return pink(
+			'N/A' if res.fee is None else
+			self.network_fee_to_unit_disp(res))
+
 	async def get_fee(self, fee, outputs_sum, start_fee_desc):
 
 		if fee:
 			self.usr_fee = self.get_usr_fee_interactive(fee, desc=start_fee_desc)
 		else:
-			fee_per_kb, fe_type = await self.get_rel_fee_from_network()
+			res = await self.get_rel_fee_from_network()
 			self.usr_fee = self.get_usr_fee_interactive(
-				None if fee_per_kb is None else self.fee_est2abs(fee_per_kb, fe_type=fe_type),
+				None if res.fee is None else self.fee_est2abs(res),
 				desc = self.network_estimated_fee_label)
 
 		funds = await self.get_funds_available(self.usr_fee, outputs_sum)
@@ -486,7 +493,7 @@ class New(Base):
 				continue
 			fee_hint = None
 			if self.is_swap:
-				fee_hint = self.update_vault_output(
+				fee_hint = await self.update_vault_output(
 					self.vault_output.amt or self.sum_inputs(),
 					deduct_est_fee = self.vault_output == self.chg_output)
 			desc = 'User-selected' if self.cfg.fee else 'Recommended' if fee_hint else None
@@ -506,7 +513,7 @@ class New(Base):
 			self.add_comment()  # edits an existing comment
 
 		if self.is_swap:
-			self.update_vault_output(self.vault_output.amt)
+			await self.update_vault_output(self.vault_output.amt)
 
 		await self.create_serialized(locktime=locktime) # creates self.txid too
 

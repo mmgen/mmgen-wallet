@@ -70,7 +70,7 @@ class Thornode:
 			from ....util import pp_fmt, die
 			die(2, pp_fmt(self.data))
 
-	def format_quote(self, trade_limit, usr_trade_limit, *, deduct_est_fee=False):
+	async def format_quote(self, trade_limit, usr_trade_limit, *, deduct_est_fee=False):
 		from ....util import make_timestr, ymsg
 		from ....util2 import format_elapsed_hr
 		from ....color import blue, green, cyan, pink, orange, redbg, yelbg, grnbg
@@ -137,6 +137,7 @@ class Thornode:
   Reverse rate:                  {(in_amt / out_amt).hl()} {in_coin}/{out_coin}
   Recommended minimum in amount: {min_in_amt.hl()} {in_coin}
   Recommended fee:               {pink(d['recommended_gas_rate'])} {pink(gas_unit_disp)}
+  Network-estimated fee:         {await self.tx.network_fee_disp()} (from node)
   Fees:
     Total:    {fees_t.hl()} {out_coin} ({pink(fees_pct_disp)})
     Slippage: {pink(slip_pct_disp)}

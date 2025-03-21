@@ -54,6 +54,9 @@ class New(Base, TxNew):
 				t = fe_type))
 			self._fee_estimate_fail_warning_shown = True
 
+	def network_fee_to_unit_disp(self, net_fee):
+		return '{} sat/byte'.format(net_fee.fee.to_unit('satoshi') // 1024)
+
 	async def get_rel_fee_from_network(self):
 		try:
 			ret = await self.rpc.call(
@@ -71,22 +74,22 @@ class New(Base, TxNew):
 		if fee_per_kb is None:
 			self.warn_fee_estimate_fail(fe_type)
 
-		return fee_per_kb, fe_type
+		return self._net_fee(fee_per_kb, fe_type)
 
 	# given tx size, rel fee and units, return absolute fee
 	def fee_rel2abs(self, tx_size, amt_in_units, unit):
 		return self.proto.coin_amt(int(amt_in_units * tx_size), from_unit=unit)
 
 	# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
-	def fee_est2abs(self, fee_per_kb, *, fe_type=None):
+	def fee_est2abs(self, net_fee):
 		tx_size = self.estimate_size()
-		ret = self.proto.coin_amt('1') * (fee_per_kb * self.cfg.fee_adjust * tx_size / 1024)
+		ret = self.proto.coin_amt('1') * (net_fee.fee * self.cfg.fee_adjust * tx_size / 1024)
 		if self.cfg.verbose:
 			msg(fmt(f"""
-				{fe_type.upper()} fee for {self.cfg.fee_estimate_confs} confirmations: {fee_per_kb} {self.coin}/kB
+				{net_fee.type.upper()} fee for {self.cfg.fee_estimate_confs} confirmations: {net_fee.fee} {self.coin}/kB
 				TX size (estimated): {tx_size} bytes
 				Fee adjustment factor: {self.cfg.fee_adjust:.2f}
-				Absolute fee (fee_per_kb * adj_factor * tx_size / 1024): {ret} {self.coin}
+				Absolute fee (net_fee.fee * adj_factor * tx_size / 1024): {ret} {self.coin}
 			""").strip())
 		return ret
 

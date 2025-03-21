@@ -115,9 +115,15 @@ class New(Base, TxBase.New):
 	def network_estimated_fee_label(self):
 		return 'Network-estimated'
 
+	def network_fee_to_unit_disp(self, net_fee):
+		return '{} Gwei'.format(self.pretty_fmt_fee(
+			self.proto.coin_amt(net_fee.fee, from_unit='wei').to_unit('Gwei')))
+
 	# get rel_fee (gas price) from network, return in native wei
 	async def get_rel_fee_from_network(self):
-		return Int(await self.rpc.call('eth_gasPrice'), base=16), 'eth_gasPrice'
+		return self._net_fee(
+			Int(await self.rpc.call('eth_gasPrice'), base=16),
+			'eth_gasPrice')
 
 	def check_chg_addr_is_wallet_addr(self):
 		pass
@@ -131,10 +137,10 @@ class New(Base, TxBase.New):
 		return self.proto.coin_amt(int(amt_in_units * self.gas.toWei()), from_unit=unit)
 
 	# given fee estimate (gas price) in wei, return absolute fee, adjusting by self.cfg.fee_adjust
-	def fee_est2abs(self, rel_fee, *, fe_type=None):
-		ret = self.fee_gasPrice2abs(rel_fee) * self.cfg.fee_adjust
+	def fee_est2abs(self, net_fee):
+		ret = self.fee_gasPrice2abs(net_fee.fee) * self.cfg.fee_adjust
 		if self.cfg.verbose:
-			msg(f'Estimated fee: {ret} ETH')
+			msg(f'Estimated fee: {net_fee.fee} ETH')
 		return ret
 
 	def convert_and_check_fee(self, fee, desc):
