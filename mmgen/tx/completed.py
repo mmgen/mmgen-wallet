@@ -68,3 +68,22 @@ class Completed(Base):
 		for cls in (Signed, AutomountSigned):
 			if ext == getattr(cls, 'ext'):
 				return cls
+
+	def check_swap_memo(self):
+		if text := self.decode_tx_usr_data():
+			from ..swap.proto.thorchain.memo import Memo
+			if Memo.is_partial_memo(text):
+				from ..protocol import init_proto
+				p = Memo.parse(text)
+				assert p.function == 'SWAP', f'‘{p.function}’: unsupported function in swap memo ‘{text}’'
+				assert p.chain == p.asset, f'{p.chain} != {p.asset}: chain/asset mismatch in swap memo ‘{text}’'
+				proto = init_proto(self.cfg, p.asset, network=self.cfg.network, need_amt=True)
+				if self.swap_recv_addr_mmid:
+					mmid = self.swap_recv_addr_mmid
+				elif self.cfg.allow_non_wallet_swap:
+					from ..util import ymsg
+					ymsg('Warning: allowing swap to non-wallet address (--allow-non-wallet-swap)')
+					mmid = None
+				else:
+					raise ValueError('Swap to non-wallet address forbidden (override with --allow-non-wallet-swap)')
+				return self.Output(proto, addr=p.address, mmid=mmid, amt=proto.coin_amt('0'))

@@ -18,9 +18,6 @@ from .base import Base, TokenBase
 class Completed(Base, TxBase.Completed):
 	fn_fee_unit = 'Mwei'
 
-	def check_swap_memo(self):
-		pass
-
 	@property
 	def send_amt(self):
 		return self.outputs[0].amt if self.outputs else self.proto.coin_amt('0')
