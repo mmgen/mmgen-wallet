@@ -74,8 +74,9 @@ class TxInfo:
 
 			if tx.is_swap:
 				from ..swap.proto.thorchain.memo import Memo, proto_name
-				if Memo.is_partial_memo(tx.data_output.data):
-					p = Memo.parse(tx.data_output.data)
+				text = tx.data_output.data.decode()
+				if Memo.is_partial_memo(text):
+					p = Memo.parse(text)
 					yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(proto_name))
 					yield '    Swap: {}\n'.format(orange(f'{tx.proto.coin} => {p.asset}'))
 					yield '    Dest: {}{}\n'.format(

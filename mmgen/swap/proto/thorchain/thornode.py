@@ -56,7 +56,7 @@ class Thornode:
 
 	def __init__(self, tx, amt):
 		self.tx = tx
-		self.in_amt = UniAmt(str(amt))
+		self.in_amt = UniAmt(f'{amt:.8f}')
 		self.rpc = ThornodeRPCClient(tx)
 
 	def get_quote(self):
@@ -80,7 +80,7 @@ class Thornode:
 		tx = self.tx
 		in_coin = tx.proto.coin
 		out_coin = tx.recv_proto.coin
-		in_amt = UniAmt(str(self.in_amt))
+		in_amt = self.in_amt
 		out_amt = UniAmt(int(d['expected_amount_out']), from_unit='satoshi')
 		gas_unit = d['gas_rate_units']
 
@@ -110,7 +110,7 @@ class Thornode:
 		_amount_in_label = 'Amount in:'
 		if deduct_est_fee:
 			if gas_unit in gas_unit_data:
-				in_amt -= UniAmt(str(get_estimated_fee()))
+				in_amt -= UniAmt(f'{get_estimated_fee():.8f}')
 				out_amt *= (in_amt / self.in_amt)
 				_amount_in_label = 'Amount in (estimated):'
 			else:

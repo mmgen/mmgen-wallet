@@ -97,7 +97,8 @@ mixin-class-rgx = """.*[Mm]ixin|\
 	^(Hilite|InitErrors|DummyWIF|\
 	cfg_file|cfg_file_sample|\
 	MoneroMMGenFile|keygen_base|xmr_signable|\
-	CmdTestShared)$"""
+	CmdTestShared|CmdTestSwapMethods|HTTPD|\
+	RPC|TxProxyClient|Contract)$"""
 
 ignored-classes = [ # ignored for no-member, otherwise checked
 	"optparse.Values",
@@ -133,5 +134,5 @@ ignored-classes = [ # ignored for no-member, otherwise checked
 	"Opts",
 	"Help",
 	"FFI_override",
-	"RPC",
+	"CmdGroupMgr",
 ]

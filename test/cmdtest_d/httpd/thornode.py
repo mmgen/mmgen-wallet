@@ -24,7 +24,9 @@ cfg = Config()
 # https://thornode.ninerealms.com/thorchain/quote/swap?from_asset=BCH.BCH&to_asset=LTC.LTC&amount=1000000
 sample_request = 'GET /thorchain/quote/swap?from_asset=BCH.BCH&to_asset=LTC.LTC&amount=1000000000'
 request_pat = r'/thorchain/quote/swap\?from_asset=(\S+)\.(\S+)&to_asset=(\S+)\.(\S+)&amount=(\d+)'
-prices = { 'BTC': 97000, 'LTC': 115, 'BCH': 330 }
+prices = {'BTC': 97000, 'LTC': 115, 'BCH': 330}
+gas_rate_units = {'BTC': 'satsperbyte'}
+recommended_gas_rate = {'BTC': '6'}
 
 data_template = {
 	'inbound_address': None,
@@ -84,5 +86,7 @@ class ThornodeServer(HTTPD):
 			'expected_amount_out': str(out_amt.to_unit('satoshi')),
 			'expiry': int(time.time()) + (10 * 60),
 			'inbound_address': addr,
+			'gas_rate_units': gas_rate_units[send_proto.base_proto_coin],
+			'recommended_gas_rate': recommended_gas_rate[send_proto.base_proto_coin],
 		}
 		return json.dumps(data).encode()

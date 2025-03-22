@@ -148,7 +148,8 @@ class CmdTestRunner:
 		passthru_opts = (
 			self.passthru_opts if not no_passthru_opts else
 			[] if no_passthru_opts is True else
-			[o for o in self.passthru_opts if o[2:].split('=')[0] not in no_passthru_opts])
+			[o for o in self.passthru_opts
+				if o[2:].split('=')[0].replace('-','_') not in no_passthru_opts])
 
 		args = (
 			self.pre_args +
@@ -289,7 +290,8 @@ class CmdTestRunner:
 		self.passthru_opts = ['--{}{}'.format(
 				k.replace('_', '-'),
 				'' if self.cfg._uopts[k] is True else '=' + self.cfg._uopts[k]
-			) for k in self.cfg._uopts if k in self.tg.base_passthru_opts + self.tg.passthru_opts]
+			) for k in self.cfg._uopts
+				if self.cfg._uopts[k] and k in self.tg.base_passthru_opts + self.tg.passthru_opts]
 
 		if self.cfg.resuming:
 			rc = self.cfg.resume or self.cfg.resume_after

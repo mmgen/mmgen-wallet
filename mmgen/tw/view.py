@@ -398,7 +398,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 		def make_display():
 
-			def gen_hdr():
+			def gen_hdr(spc):
 
 				Blue, Green = (blue, green) if color else (nocolor, nocolor)
 				Yes, No, All = (green('yes'), red('no'), yellow('all')) if color else ('yes', 'no', 'all')
@@ -410,12 +410,12 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				yield '{} (sort order: {}){}'.format(
 					self.hdr_lbl.upper(),
 					Blue(sort_info),
-					' ' * (self.cols - len(f'{self.hdr_lbl} (sort order: {sort_info})')))
+					spc * (self.cols - len(f'{self.hdr_lbl} (sort order: {sort_info})')))
 
 				if self.filters:
 					yield 'Filters: {}{}'.format(
 						' '.join(map(fmt_filter, self.filters)),
-						' ' * len(self.filters))
+						spc * len(self.filters))
 
 				yield 'Network: {}'.format(Green(
 					self.proto.coin + ' ' + self.proto.chain_name.upper()))
@@ -429,7 +429,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 				yield from getattr(self, dt.subhdr_fmt_method)(cw, color)
 
-				yield ' ' * self.term_width
+				yield spc * self.term_width
 
 				if data and dt.colhdr_fmt_method:
 					col_hdr = getattr(self, dt.colhdr_fmt_method)(cw, hdr_fs, color)
@@ -456,7 +456,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				cw = hdr_fs = fs = None
 
 			return (
-				tuple(gen_hdr()),
+				tuple(gen_hdr(spc='' if line_processing == 'print' else ' ')),
 				tuple(
 					get_body(getattr(self, dt.fmt_method)) if data else
 					[(nocolor, yellow)[color](self.nodata_msg.ljust(self.term_width))])

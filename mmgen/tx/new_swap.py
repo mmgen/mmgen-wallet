@@ -55,12 +55,12 @@ class NewSwap(New):
 				proto,
 				arg,
 				self.get_addrdata_from_files(proto, addrfiles),
-				await TwAddrData(self.cfg, proto, twctl=None)) # TODO: twctl required for Ethereum
+				await TwAddrData(self.cfg, proto))
 			if pa.addr:
 				await self.warn_addr_used(proto, pa, desc)
 				return ret(proto.coin, proto.network, pa.addr, pa.mmid)
 
-		full_desc = '{} on the {} {} network'.format(desc, proto.coin, proto.network)
+		full_desc = f'{desc} on the {proto.coin} {proto.network} network'
 		res = await self.get_autochg_addr(proto, arg, exclude=[], desc=full_desc, all_addrtypes=not arg)
 		self.confirm_autoselected_addr(res.twmmid, full_desc)
 		return ret(proto.coin, proto.network, res.addr, res.twmmid)
@@ -92,6 +92,7 @@ class NewSwap(New):
 
 			# arg 2: amt
 			if is_coin_amt(self.proto, arg):
+				UniAmt(arg) # throw exception on decimal overflow
 				args.send_amt = self.proto.coin_amt(arg)
 				arg = get_arg()
 

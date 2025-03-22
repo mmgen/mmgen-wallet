@@ -24,7 +24,7 @@ class Completed(Base, TxBase.Completed):
 		if o := self.data_output:
 			try:
 				return o.data.decode()
-			except:
+			except UnicodeDecodeError:
 				pass
 
 	# check signature and witness data
