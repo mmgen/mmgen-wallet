@@ -53,6 +53,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	start_subsidy   = 50
 	max_int         = 0xffffffff
 	max_op_return_data_len = 80
+	address_reuse_ok = False
 
 	coin_cfg_opts = (
 		'daemon_id',

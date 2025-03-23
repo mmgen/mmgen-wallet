@@ -124,6 +124,7 @@ class CmdTestRunner:
 			extra_desc      = '',
 			no_output       = False,
 			msg_only        = False,
+			log_only        = False,
 			no_msg          = False,
 			cmd_dir         = 'cmds',
 			no_exec_wrapper = False,
@@ -166,6 +167,9 @@ class CmdTestRunner:
 				self.tg.group_name,
 				self.tg.test_name,
 				cmd_disp))
+
+		if log_only:
+			return
 
 		for i in args: # die only after writing log entry
 			if not isinstance(i, str):
@@ -426,7 +430,7 @@ class CmdTestRunner:
 
 		return rerun
 
-	def run_test(self, cmd):
+	def run_test(self, cmd, sub=False):
 
 		if self.deps_only and cmd == self.deps_only:
 			sys.exit(0)
@@ -463,6 +467,9 @@ class CmdTestRunner:
 					setattr(self.tg, k, test_cfg[k])
 
 		ret = getattr(self.tg, cmd)(*arg_list) # run the test
+		if sub:
+			return ret
+
 		if type(ret).__name__ == 'coroutine':
 			ret = asyncio.run(ret)
 

@@ -60,7 +60,8 @@ class Unsigned(Completed, TxBase.Unsigned):
 
 		if o['data']: # contract-creating transaction
 			if o['to']:
-				raise ValueError('contract-creating transaction cannot have to-address')
+				if not self.is_swap:
+					raise ValueError('contract-creating transaction cannot have to-address')
 			else:
 				self.txobj['token_addr'] = TokenAddr(self.proto, etx.creates.hex())
 

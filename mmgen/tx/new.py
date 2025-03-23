@@ -306,6 +306,8 @@ class New(Base):
 			die(1, 'Exiting at user request')
 
 	async def warn_addr_used(self, proto, chg, desc):
+		if proto.address_reuse_ok:
+			return
 		from ..tw.addresses import TwAddresses
 		if (await TwAddresses(self.cfg, proto, get_data=True)).is_used(chg.addr):
 			from ..ui import keypress_confirm

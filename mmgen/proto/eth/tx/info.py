@@ -49,7 +49,10 @@ class TxInfo(TxInfo):
 			t      = to_addr.hl(0) if to_addr else blue('None'),
 			a      = t['amt'].hl(),
 			n      = t['nonce'].hl(),
-			d      = '{}... ({} bytes)'.format(td[:40], len(td)//2) if len(td) else blue('None'),
+			d      = (
+				blue('None') if not td
+				else pink(bytes.fromhex(td).decode()) if tx.is_swap
+				else '{}... ({} bytes)'.format(td[:40], len(td)//2)),
 			c      = tx.proto.dcoin if len(tx.outputs) else '',
 			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
 			G      = yellow(tx.pretty_fmt_fee(t['startGas'].to_unit('Kwei'))),
@@ -65,7 +68,7 @@ class TxInfo(TxInfo):
 		)
 
 	def format_verbose_footer(self):
-		if self.tx.txobj['data']:
+		if self.tx.txobj['data'] and not self.tx.is_swap:
 			from ..contract import parse_abi
 			return '\nParsed contract data: ' + pp_fmt(parse_abi(self.tx.txobj['data']))
 		else:

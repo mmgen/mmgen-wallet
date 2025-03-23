@@ -37,6 +37,8 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 	base_coin     = 'ETH'
 	avg_bdi       = 15
 	decimal_prec  = 36
+	address_reuse_ok = True
+	is_evm = True
 
 	# https://www.chainid.dev
 	chain_ids = {

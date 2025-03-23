@@ -28,6 +28,8 @@ class New(Base, TxBase.New):
 	no_chg_msg = 'Warning: Transaction leaves account with zero balance'
 	usr_fee_prompt = 'Enter transaction fee or gas price: '
 	msg_insufficient_funds = 'Account balance insufficient to fund this transaction ({} {} needed)'
+	byte_cost = 68 # https://ethereum.stackexchange.com/questions/39401/
+	               # how-do-you-calculate-gas-limit-for-transaction-with-data-in-ethereum
 
 	def __init__(self, *args, **kwargs):
 
@@ -66,7 +68,7 @@ class New(Base, TxBase.New):
 	async def create_serialized(self, *, locktime=None):
 		assert len(self.inputs) == 1, 'Transaction has more than one input!'
 		o_num = len(self.outputs)
-		o_ok = 0 if self.usr_contract_data else 1
+		o_ok = 0 if self.usr_contract_data and not self.is_swap else 1
 		assert o_num == o_ok, f'Transaction has {o_num} output{suf(o_num)} (should have {o_ok})'
 		await self.make_txobj()
 		odict = {k:v if v is None else str(v) for k, v in self.txobj.items() if k != 'token_to'}
@@ -78,9 +80,25 @@ class New(Base, TxBase.New):
 			'update_txid() must be called only when self.serialized is not hex data')
 		self.txid = MMGenTxID(make_chksum_6(self.serialized).upper())
 
+	def set_gas_with_data(self, data):
+		self.gas = self.proto.coin_amt(self.dfl_gas + self.byte_cost * len(data), from_unit='wei')
+
+	# one-shot method
+	def adj_gas_with_extra_data_len(self, extra_data_len):
+		if not hasattr(self, '_gas_adjusted'):
+			self.gas += self.proto.coin_amt(self.byte_cost * extra_data_len, from_unit='wei')
+			self._gas_adjusted = True
+
 	async def process_cmdline_args(self, cmd_args, ad_f, ad_w):
 
 		lc = len(cmd_args)
+
+		if lc == 2 and self.is_swap:
+			data_arg = cmd_args.pop()
+			lc = 1
+			assert data_arg.startswith('data:'), f'{data_arg}: invalid data arg (must start with "data:")'
+			self.usr_contract_data = data_arg.removeprefix('data:').encode()
+			self.set_gas_with_data(self.usr_contract_data)
 
 		if lc == 0 and self.usr_contract_data and 'Token' not in self.name:
 			return
@@ -91,9 +109,10 @@ class New(Base, TxBase.New):
 		a = self.parse_cmdline_arg(self.proto, cmd_args[0], ad_f, ad_w)
 
 		self.add_output(
-			coinaddr = a.addr,
+			coinaddr = None if a.is_vault else a.addr,
 			amt      = self.proto.coin_amt(a.amt or '0'),
-			is_chg   = not a.amt)
+			is_chg   = not a.amt,
+			is_vault = a.is_vault)
 
 		self.add_mmaddrs_to_outputs(ad_f, ad_w)
 

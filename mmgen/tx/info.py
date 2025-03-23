@@ -74,7 +74,9 @@ class TxInfo:
 
 			if tx.is_swap:
 				from ..swap.proto.thorchain.memo import Memo, proto_name
-				data = tx.data_output.data
+				data = (
+					(tx.usr_contract_data or bytes.fromhex(tx.txobj['data'])) if tx.proto.is_evm
+					else tx.data_output.data)
 				if Memo.is_partial_memo(data):
 					p = Memo.parse(data.decode('ascii'))
 					yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(proto_name))

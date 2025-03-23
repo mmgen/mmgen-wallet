@@ -41,8 +41,11 @@ inputs will be swapped.
 
 By default, the change and destination addresses are chosen automatically by
 finding the lowest-indexed unused addresses of the preferred address types in
-the send and receive tracking wallets.  Types ‘B’, ‘S’ and ‘C’ (see ADDRESS
-TYPES below) are searched in that order for unused addresses.
+the send and receive tracking wallets.  For Bitcoin and forks, types ‘B’,
+‘S’ and ‘C’ (see ADDRESS TYPES below) are searched in that order for unused
+addresses.  Note that sending to an unused address may be undesirable for
+Ethereum, where address (i.e. account) reuse is the norm.  In that case, the
+user should specify a destination address on the command line.
 
 If the wallet contains eligible unused addresses with multiple Seed IDs, the
 user will be presented with a list of the lowest-indexed addresses of
@@ -51,7 +54,8 @@ preferred type for each Seed ID and prompted to choose from among them.
 Change and destination addresses may also be specified manually with the
 CHG_ADDR and ADDR arguments.  These may be given as full MMGen IDs or in the
 form ADDRTYPE_CODE or SEED_ID:ADDRTYPE_CODE (see EXAMPLES below and the
-‘mmgen-txcreate’ help screen for details).
+‘mmgen-txcreate’ help screen for details).  For Ethereum, the CHG_ADDR
+argument is not supported.
 
 While discouraged, sending change or swapping to non-wallet addresses is also
 supported, in which case the signing script (‘mmgen-txsign’ or ‘mmgen-

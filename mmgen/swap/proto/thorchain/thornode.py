@@ -98,6 +98,8 @@ class Thornode:
   {lblcolor('Trade limit:')}                   {tl_rounded.hl()} {out_coin} """ + mcolor(
 				f'({abs(1 - ratio) * 100:0.2f}% {direction} expected amount)')
 			tx_size_adj = len(e.enc) - 1
+			if tx.proto.is_evm:
+				tx.adj_gas_with_extra_data_len(len(e.enc) - 1) # one-shot method, no-op if repeated
 		else:
 			trade_limit_disp = ''
 			tx_size_adj = 0
@@ -105,7 +107,7 @@ class Thornode:
 		def get_estimated_fee():
 			return tx.feespec2abs(
 				fee_arg = d['recommended_gas_rate'] + gas_unit_data[gas_unit].code,
-				tx_size = tx.estimate_size() + tx_size_adj)
+				tx_size = None if tx.proto.is_evm else tx.estimate_size() + tx_size_adj)
 
 		_amount_in_label = 'Amount in:'
 		if deduct_est_fee:
@@ -145,7 +147,8 @@ class Thornode:
 
 	@property
 	def inbound_address(self):
-		return self.data['inbound_address']
+		addr = self.data['inbound_address']
+		return addr.removeprefix('0x') if self.tx.proto.is_evm else addr
 
 	@property
 	def rel_fee_hint(self):

@@ -24,9 +24,9 @@ cfg = Config()
 # https://thornode.ninerealms.com/thorchain/quote/swap?from_asset=BCH.BCH&to_asset=LTC.LTC&amount=1000000
 sample_request = 'GET /thorchain/quote/swap?from_asset=BCH.BCH&to_asset=LTC.LTC&amount=1000000000'
 request_pat = r'/thorchain/quote/swap\?from_asset=(\S+)\.(\S+)&to_asset=(\S+)\.(\S+)&amount=(\d+)'
-prices = {'BTC': 97000, 'LTC': 115, 'BCH': 330}
-gas_rate_units = {'BTC': 'satsperbyte'}
-recommended_gas_rate = {'BTC': '6'}
+prices = {'BTC': 97000, 'LTC': 115, 'BCH': 330, 'ETH': 2304}
+gas_rate_units = {'ETH': 'gwei', 'BTC': 'satsperbyte'}
+recommended_gas_rate = {'ETH': '1', 'BTC': '6'}
 
 data_template = {
 	'inbound_address': None,
@@ -59,11 +59,12 @@ data_template = {
 def make_inbound_addr(proto, mmtype):
 	from mmgen.tool.coin import tool_cmd
 	n = int(time.time()) // (60 * 60 * 24) # increments once every 24 hrs
-	return tool_cmd(
+	ret = tool_cmd(
 		cfg     = cfg,
 		cmdname = 'pubhash2addr',
 		proto   = proto,
 		mmtype  = mmtype).pubhash2addr(f'{n:040x}')
+	return '0x' + ret if proto.is_evm else ret
 
 class ThornodeServer(HTTPD):
 	name = 'thornode server'

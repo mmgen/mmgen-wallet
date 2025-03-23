@@ -97,7 +97,7 @@ class NewSwap(New):
 				arg = get_arg()
 
 			# arg 3: chg_spec (change address spec)
-			if args.send_amt:
+			if args.send_amt and not self.proto.is_evm:
 				if not arg in sp.params.coins['receive']: # is change arg
 					args.chg_spec = arg
 					arg = get_arg()
@@ -119,7 +119,7 @@ class NewSwap(New):
 
 		chg_output = (
 			await self.get_swap_output(self.proto, args.chg_spec, addrfiles, 'change address')
-			if args.send_amt else None)
+			if args.send_amt and not self.proto.is_evm else None)
 
 		if chg_output:
 			self.check_addr_is_wallet_addr(
@@ -145,6 +145,7 @@ class NewSwap(New):
 		self.swap_recv_addr_mmid = recv_output.mmid
 
 		return (
+			[f'vault,{args.send_amt}', f'data:{memo}'] if args.send_amt and self.proto.is_evm else
 			[f'vault,{args.send_amt}', chg_output.mmid, f'data:{memo}'] if args.send_amt else
 			['vault', f'data:{memo}'])
 

@@ -60,7 +60,7 @@ class Status(TxBase.Status):
 				from ....color import cyan
 				msg('{}\n{}'.format(cyan('TRANSACTION RECEIPT'), pp_fmt(ret.rx)))
 			if ret:
-				if tx.txobj['data']:
+				if tx.txobj['data'] and not tx.is_swap:
 					cd = capfirst(tx.contract_desc)
 					if ret.exec_status == 0:
 						msg(f'{cd} failed to execute!')

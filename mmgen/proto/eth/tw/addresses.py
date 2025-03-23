@@ -65,8 +65,7 @@ class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
 
 	async def get_rpc_data(self):
 
-		amt0 = self.proto.coin_amt('0')
-		self.total = amt0
+		self.total = self.proto.coin_amt('0')
 		self.minconf = None
 		addrs = {}
 
@@ -75,7 +74,8 @@ class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
 			addrs[e.label.mmid] = {
 				'addr':  e.coinaddr,
 				'amt':   bal,
-				'recvd': amt0,
+				'recvd': bal, # since it’s nearly impossible to empty an Ethereum account,
+							  # we consider a used account to be any account with a balance
 				'confs': 0,
 				'lbl':   e.label}
 			self.total += bal

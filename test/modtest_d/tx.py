@@ -9,6 +9,7 @@ import os
 from mmgen.tx import CompletedTX, UnsignedTX
 from mmgen.tx.file import MMGenTxFile
 from mmgen.cfg import Config
+from mmgen.color import cyan
 
 from ..include.common import cfg, qmsg, vmsg, gr_uc, make_burn_addr
 
@@ -175,9 +176,12 @@ class unit_tests:
 		for coin, addrtype in (
 			('ltc', 'bech32'),
 			('bch', 'compressed'),
+			('eth', None),
 		):
 			proto = init_proto(cfg, coin, need_amt=True)
 			addr = make_burn_addr(proto, addrtype)
+
+			vmsg(f'\nTesting coin {cyan(coin.upper())}:')
 
 			for limit, limit_chk in (
 				('123.4567',   12340000000),

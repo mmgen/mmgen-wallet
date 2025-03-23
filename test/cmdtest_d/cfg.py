@@ -39,6 +39,7 @@ cmd_groups_dfl = {
 	'autosign_eth':       ('CmdTestAutosignETH',       {'modname': 'automount_eth'}),
 	'regtest':            ('CmdTestRegtest',           {}),
 	'swap':               ('CmdTestSwap',              {}),
+	'ethswap':            ('CmdTestEthSwap',           {}),
 	# 'chainsplit':         ('CmdTestChainsplit',      {}),
 	'ethdev':             ('CmdTestEthdev',            {}),
 	'xmrwallet':          ('CmdTestXMRWallet',         {}),
@@ -46,6 +47,7 @@ cmd_groups_dfl = {
 }
 
 cmd_groups_extra = {
+	'ethswap_eth':            ('CmdTestEthSwapEth',           {'modname': 'ethswap'}),
 	'dev':                    ('CmdTestDev',                  {'modname': 'misc'}),
 	'regtest_legacy':         ('CmdTestRegtestBDBWallet',     {'modname': 'regtest'}),
 	'autosign_btc':           ('CmdTestAutosignBTC',          {'modname': 'autosign'}),
@@ -241,6 +243,8 @@ cfgs = { # addr_idx_lists (except 31, 32, 33, 34) must contain exactly 8 address
 	'39': {}, # xmr_autosign
 	'40': {}, # cfgfile
 	'41': {}, # opts
+	'47': {}, # ethswap
+	'48': {}, # ethswap_eth
 	'49': {}, # autosign_automount
 	'59': {}, # autosign_eth
 	'99': {}, # dummy

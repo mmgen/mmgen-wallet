@@ -23,11 +23,13 @@ class params:
 			'BTC': 'Bitcoin',
 			'LTC': 'Litecoin',
 			'BCH': 'Bitcoin Cash',
+			'ETH': 'Ethereum',
 		},
 		'receive': {
 			'BTC': 'Bitcoin',
 			'LTC': 'Litecoin',
 			'BCH': 'Bitcoin Cash',
+			'ETH': 'Ethereum',
 		}
 	}
 

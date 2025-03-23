@@ -12,7 +12,7 @@
 swap.proto.thorchain.memo: THORChain swap protocol memo class
 """
 
-from ....util import die
+from ....util import die, is_hex_str
 from ....amt import UniAmt
 
 from . import name as proto_name
@@ -41,6 +41,8 @@ class Memo:
 		'DOGE.DOGE': 'd',
 		'THOR.RUNE': 'r',
 	}
+
+	evm_chains = ('ETH', 'AVAX', 'BSC', 'BASE')
 
 	function_abbrevs = {
 		'SWAP': '=',
@@ -95,6 +97,11 @@ class Memo:
 
 		address = get_item('address')
 
+		if chain in cls.evm_chains:
+			assert address.startswith('0x'), f'{address}: address does not start with ‘0x’'
+			assert len(address) == 42, f'{address}: address has incorrect length ({len(address)} != 42)'
+			address = address.removeprefix('0x')
+
 		desc = 'trade_limit/stream_interval/stream_quantity'
 		lsq = get_item(desc)
 
@@ -134,6 +141,11 @@ class Memo:
 		assert is_coin_addr(proto, addr)
 		self.addr = addr.views[addr.view_pref]
 		assert not ':' in self.addr # colon is record separator, so address mustn’t contain one
+
+		if self.chain in self.evm_chains:
+			assert len(self.addr) == 40, f'{self.addr}: address has incorrect length ({len(self.addr)} != 40)'
+			assert is_hex_str(self.addr), f'{self.addr}: address is not a hexadecimal string'
+			self.addr = '0x' + self.addr
 
 	def __str__(self):
 		from . import ExpInt4
