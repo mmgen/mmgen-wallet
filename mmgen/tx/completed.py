@@ -70,10 +70,11 @@ class Completed(Base):
 				return cls
 
 	def check_swap_memo(self):
-		if text := self.decode_tx_usr_data():
+		if data := self.get_tx_usr_data():
 			from ..swap.proto.thorchain.memo import Memo
-			if Memo.is_partial_memo(text):
+			if Memo.is_partial_memo(data):
 				from ..protocol import init_proto
+				text = data.decode('ascii')
 				p = Memo.parse(text)
 				assert p.function == 'SWAP', f'‘{p.function}’: unsupported function in swap memo ‘{text}’'
 				assert p.chain == p.asset, f'{p.chain} != {p.asset}: chain/asset mismatch in swap memo ‘{text}’'

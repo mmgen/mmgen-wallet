@@ -47,7 +47,7 @@ class Memo:
 	}
 
 	@classmethod
-	def is_partial_memo(cls, s):
+	def is_partial_memo(cls, bytes_data):
 		import re
 		ops = {
 			'swap':     ('SWAP',     's',  '='),
@@ -60,7 +60,7 @@ class Memo:
 			'misc':     ('BOND', 'UNBOND', 'LEAVE', 'MIGRATE', 'NOOP', 'DONATE', 'RESERVE'),
 		}
 		pat = r'^(' + '|'.join('|'.join(pats) for pats in ops.values()) + r'):\S\S+'
-		return bool(re.search(pat, str(s)))
+		return bool(re.search(pat.encode(), bytes_data))
 
 	@classmethod
 	def parse(cls, s):

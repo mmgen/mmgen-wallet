@@ -20,12 +20,9 @@ from .base import Base, decodeScriptPubKey
 class Completed(Base, TxBase.Completed):
 	fn_fee_unit = 'satoshi'
 
-	def decode_tx_usr_data(self):
+	def get_tx_usr_data(self):
 		if o := self.data_output:
-			try:
-				return o.data.decode()
-			except UnicodeDecodeError:
-				pass
+			return o.data
 
 	# check signature and witness data
 	def check_sigs(self): # return True if sigs found, False otherwise; raise exception on error

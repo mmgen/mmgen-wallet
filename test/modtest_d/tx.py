@@ -222,7 +222,7 @@ class unit_tests:
 				'BOND:xz',
 			):
 				vmsg(f'  pass: {vec}')
-				assert Memo.is_partial_memo(vec), vec
+				assert Memo.is_partial_memo(vec.encode('ascii')), vec
 
 			for vec in (
 				'=',
@@ -232,7 +232,7 @@ class unit_tests:
 				'SWAP:a',
 			):
 				vmsg(f'  fail: {vec}')
-				assert not Memo.is_partial_memo(vec), vec
+				assert not Memo.is_partial_memo(vec.encode('ascii')), vec
 
 			vmsg('\nTesting error handling:')
 
