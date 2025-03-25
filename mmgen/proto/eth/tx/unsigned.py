@@ -114,11 +114,11 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 	async def do_sign(self, o, wif):
 		t = Token(self.cfg, self.proto, o['token_addr'], o['decimals'])
 		tx_in = t.make_tx_in(
-				to_addr   = o['to'],
-				amt       = o['amt'],
-				gas       = self.gas,
-				gasPrice  = o['gasPrice'],
-				nonce     = o['nonce'])
+			to_addr  = o['to'],
+			amt      = o['amt'],
+			gas      = self.gas,
+			gasPrice = o['gasPrice'],
+			nonce    = o['nonce'])
 		res = await t.txsign(tx_in, wif, o['from'], chain_id=o['chainId'])
 		self.serialized = res.txhex
 		self.coin_txid = res.txid

@@ -42,14 +42,6 @@ class Contract:
 	def create_method_id(self, sig):
 		return self.keccak_256(sig.encode()).hexdigest()[:8]
 
-	def transferdata2sendaddr(self, data): # online
-		return CoinAddr(self.proto, parse_abi(data)[1][-40:])
-
-	def transferdata2amt(self, data): # online
-		return self.proto.coin_amt(
-			int(parse_abi(data)[-1], 16) * self.base_unit,
-			from_decimal = True)
-
 	async def code(self):
 		return (await self.rpc.call('eth_getCode', '0x'+self.addr))[2:]
 
@@ -169,6 +161,14 @@ class Token(Contract):
 			'nonce':    nonce,
 			'data':     bytes.fromhex(data)}
 
+	def transferdata2sendaddr(self, data): # online
+		return CoinAddr(self.proto, parse_abi(data)[1][-40:])
+
+	def transferdata2amt(self, data): # online
+		return self.proto.coin_amt(
+			int(parse_abi(data)[-1], 16) * self.base_unit,
+			from_decimal = True)
+
 	# used for testing only:
 	async def transfer(
 			self,
@@ -181,12 +181,12 @@ class Token(Contract):
 			gasPrice,
 			method_sig = 'transfer(address,uint256)'):
 		tx_in = self.make_tx_in(
-				to_addr    = to_addr,
-				amt        = amt,
-				gas        = gas,
-				gasPrice   = gasPrice,
-				nonce      = int(await self.rpc.call('eth_getTransactionCount', '0x'+from_addr, 'pending'), 16),
-				method_sig = method_sig)
+			to_addr  = to_addr,
+			amt      = amt,
+			gas      = gas,
+			gasPrice = gasPrice,
+			nonce    = int(await self.rpc.call('eth_getTransactionCount', '0x'+from_addr, 'pending'), 16),
+			method_sig = method_sig)
 		res = await self.txsign(tx_in, key, from_addr)
 		return await self.txsend(res.txhex)
 
