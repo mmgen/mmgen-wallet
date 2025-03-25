@@ -58,6 +58,15 @@ class Contract:
 		else:
 			return ret
 
+	def make_tx_in(self, *, gas, gasPrice, nonce, data):
+		return {
+			'to':       bytes.fromhex(self.addr),
+			'startgas': gas.toWei(),
+			'gasprice': gasPrice.toWei(),
+			'value':    0,
+			'nonce':    nonce,
+			'data':     bytes.fromhex(data)}
+
 	async def txsign(self, tx_in, key, from_addr, *, chain_id=None):
 
 		from .pyethereum.transactions import Transaction
@@ -129,38 +138,6 @@ class Token(Contract):
 			'decimals:',      self.decimals,
 			'total supply:',  await self.get_total_supply())
 
-	def create_data(
-			self,
-			to_addr,
-			amt,
-			*,
-			method_sig = 'transfer(address,uint256)'):
-		from_arg = ''
-		to_arg = to_addr.rjust(64, '0')
-		amt_arg = '{:064x}'.format(int(amt / self.base_unit))
-		return self.create_method_id(method_sig) + from_arg + to_arg + amt_arg
-
-	def make_tx_in(
-			self,
-			*,
-			to_addr,
-			amt,
-			gas,
-			gasPrice,
-			nonce,
-			method_sig = 'transfer(address,uint256)'):
-		data = self.create_data(
-				to_addr,
-				amt,
-				method_sig = method_sig)
-		return {
-			'to':       bytes.fromhex(self.addr),
-			'startgas': gas.toWei(),
-			'gasprice': gasPrice.toWei(),
-			'value':    0,
-			'nonce':    nonce,
-			'data':     bytes.fromhex(data)}
-
 	def transferdata2sendaddr(self, data): # online
 		return CoinAddr(self.proto, parse_abi(data)[1][-40:])
 
@@ -169,24 +146,21 @@ class Token(Contract):
 			int(parse_abi(data)[-1], 16) * self.base_unit,
 			from_decimal = True)
 
+	def create_token_data(self, to_addr, amt, *, op):
+		assert op in ('transfer', 'approve'), f'{op}: invalid operation (not ‘transfer’ or ‘approve’)'
+		return (
+			self.create_method_id(f'{op}(address,uint256)')
+			+ to_addr.rjust(64, '0')
+			+ '{:064x}'.format(int(amt / self.base_unit)))
+
 	# used for testing only:
-	async def transfer(
-			self,
-			*,
-			from_addr,
-			to_addr,
-			amt,
-			key,
-			gas,
-			gasPrice,
-			method_sig = 'transfer(address,uint256)'):
+	async def transfer(self, *, from_addr, to_addr, amt, key, gas, gasPrice):
+		nonce = await self.rpc.call('eth_getTransactionCount', '0x'+from_addr, 'pending')
 		tx_in = self.make_tx_in(
-			to_addr  = to_addr,
-			amt      = amt,
 			gas      = gas,
 			gasPrice = gasPrice,
-			nonce    = int(await self.rpc.call('eth_getTransactionCount', '0x'+from_addr, 'pending'), 16),
-			method_sig = method_sig)
+			nonce    = int(nonce, 16),
+			data     = self.create_token_data(to_addr, amt, op='transfer'))
 		res = await self.txsign(tx_in, key, from_addr)
 		return await self.txsend(res.txhex)
 
