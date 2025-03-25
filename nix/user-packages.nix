@@ -22,6 +22,7 @@ rec {
         #     tag_version = "v1.13.15";
         #     vendor_hash = "sha256-LWNFuF66KudxrpWBBXjMbrWP5CwEuPE2h3kGfILIII0";
         # };
+        # solc         = callPackage (bdir + /solc.nix) {};               # Solidity compiler
         # litecoin     = callPackage (bdir + /litecoin.nix) {};           # Litecoin daemon
         # bitcoin-cash = callPackage (bdir + /bitcoin-cash-node.nix) {};  # Bitcoin Cash Node daemon
         # zcash-mini   = callPackage (bdir + /zcash-mini.nix) {};         # ZEC (test suite)
