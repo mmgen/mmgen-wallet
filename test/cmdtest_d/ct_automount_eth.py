@@ -121,6 +121,7 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		return self.token_bal(pat=r':E:11\s+998.76544\s+54.318\d+\s+.*:E:12\s+1\.23456\s+')
 
 	def token_bal(self, pat):
+		self.mining_delay()
 		t = self.spawn('mmgen-tool', ['--regtest=1', '--token=mm1', 'twview', 'wide=1'])
 		text = t.read(strip_color=True)
 		assert re.search(pat, text, re.DOTALL), f'output failed to match regex {pat}'

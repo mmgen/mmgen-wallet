@@ -210,6 +210,7 @@ class CmdTestEthSwapEth(CmdTestEthdev, CmdTestSwapMethods):
 		return self._swaptxsend()
 
 	def swaptxstatus1(self):
+		self.mining_delay()
 		return self._swaptxsend(add_opts=['--verbose', '--status'], status=True)
 
 	def bal1(self):

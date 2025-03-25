@@ -472,7 +472,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 
 	def mining_delay(self): # workaround for mining race condition in dev mode
 		if self.daemon.id == 'reth':
-			time.sleep(0.5)
+			time.sleep(1)
 
 	async def setup(self):
 		self.spawn(msg_only=True)

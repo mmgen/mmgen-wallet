@@ -125,7 +125,6 @@ class Token(Contract):
 			return int(ret, 16)
 		except:
 			msg(f'RPC call to decimals() failed (returned {ret!r})')
-			return None
 
 	async def get_total_supply(self):
 		return await self.do_call('totalSupply()', toUnit=True)
@@ -170,7 +169,7 @@ class Token(Contract):
 			'nonce':    nonce,
 			'data':     bytes.fromhex(data)}
 
-	# used for token deployment only:
+	# used for testing only:
 	async def transfer(
 			self,
 			*,

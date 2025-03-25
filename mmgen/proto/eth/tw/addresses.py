@@ -75,7 +75,7 @@ class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
 				'addr':  e.coinaddr,
 				'amt':   bal,
 				'recvd': bal, # since it’s nearly impossible to empty an Ethereum account,
-							  # we consider a used account to be any account with a balance
+				              # we consider a used account to be any account with a balance
 				'confs': 0,
 				'lbl':   e.label}
 			self.total += bal
