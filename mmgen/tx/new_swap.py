@@ -28,12 +28,29 @@ def init_proto_from_coin(cfg, sp, coin, desc):
 	from ..protocol import init_proto
 	return init_proto(cfg, coin, network=cfg._proto.network, need_amt=True)
 
+def do_eth_fee_warning(cfg):
+	from ..ui import keypress_confirm
+	from ..color import yellow
+	warning = """
+  Warning: Fee bumping for Ethereum swap transactions is not currently supported.
+  Make sure to include a sufficient transaction fee!  Continue? (Y/n):
+	"""
+	keypress_confirm(
+		cfg,
+		'  ' + yellow(warning.strip()) + ' ',
+		default_yes = True,
+		complete_prompt = True,
+		do_exit = True)
+
 def get_send_proto(cfg):
 	try:
 		arg = cfg._args.pop(0)
 	except:
 		cfg._usage()
-	return init_proto_from_coin(cfg, get_swap_proto_mod(cfg.swap_proto), arg, 'send')
+	proto = init_proto_from_coin(cfg, get_swap_proto_mod(cfg.swap_proto), arg, 'send')
+	if proto.coin == 'ETH':
+		do_eth_fee_warning(cfg)
+	return proto
 
 class NewSwap(New):
 	desc = 'swap transaction'
