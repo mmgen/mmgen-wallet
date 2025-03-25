@@ -189,12 +189,12 @@ class PasswordList(AddrList):
 
 		if pf in ('bip39', 'hex') and pw_bytes < seed.byte_len:
 			from .ui import keypress_confirm
-			if not keypress_confirm(
-					self.cfg,
-					f'WARNING: requested {self.pw_info[pf].desc} length has less entropy ' +
-					'than underlying seed!\nIs this what you want?',
-					default_yes = True):
-				die(1, 'Exiting at user request')
+			keypress_confirm(
+				self.cfg,
+				f'WARNING: requested {self.pw_info[pf].desc} length has less entropy ' +
+				'than underlying seed!\nIs this what you want?',
+				default_yes = True,
+				do_exit = True)
 
 	def gen_passwd(self, secbytes):
 		assert self.pw_fmt in self.pw_info

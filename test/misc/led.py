@@ -24,9 +24,7 @@ opts_data = {
 cfg = Config(opts_data=opts_data)
 
 def confirm_or_exit(prompt):
-	if not keypress_confirm(cfg, f'{prompt}.  OK?', default_yes=True):
-		msg('Exiting at user request')
-		sys.exit(1)
+	keypress_confirm(cfg, f'{prompt}.  OK?', default_yes=True, do_exit=True)
 
 confirm_or_exit('This script will interactively test LED functionality')
 

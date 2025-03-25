@@ -70,9 +70,12 @@ class OpSweep(OpMixinSpec, OpWallet):
 		def create_new_addr_maybe(h, account, label):
 			if keypress_confirm(self.cfg, f'\nCreate new address for account #{account}?'):
 				return h.create_new_addr(account, label)
-			elif not keypress_confirm(self.cfg, f'Sweep to last existing address of account #{account}?'):
-				die(1, 'Exiting at user request')
-			return None
+			else:
+				keypress_confirm(
+					self.cfg,
+					f'Sweep to last existing address of account #{account}?',
+					do_exit = True)
+				return None
 
 		dest_addr_chk = None
 
@@ -97,11 +100,13 @@ class OpSweep(OpMixinSpec, OpWallet):
 					label = f'{self.name} from {self.source.idx}:{self.account} [{make_timestr()}]')
 				dest_addr_idx = 0
 				h2.get_wallet_data()
-			elif keypress_confirm(self.cfg, f'Sweep to last existing account of wallet {wf.name!r}?'):
+			else:
+				keypress_confirm(
+					self.cfg,
+					f'Sweep to last existing account of wallet {wf.name!r}?',
+					do_exit = True)
 				dest_acct, dest_addr_chk = h2.get_last_acct(wallet_data2.accts_data)
 				dest_addr, dest_addr_idx = h2.get_last_addr(dest_acct, wallet_data2, display=False)
-			else:
-				die(1, 'Exiting at user request')
 
 			h2.close_wallet('destination')
 			h.open_wallet('source', refresh=False)
@@ -181,19 +186,22 @@ class OpSweep(OpMixinSpec, OpWallet):
 		if self.cfg.no_relay or self.cfg.autosign:
 			return True
 
-		if keypress_confirm(self.cfg, f'Relay {self.name} transaction?'):
-			if self.cfg.tx_relay_daemon:
-				await h.stop_wallet('source')
-				msg('')
-				self.init_tx_relay_daemon()
-				h = MoneroWalletRPC(self, self.source)
-				h.open_wallet('TX-relay-configured source', refresh=False)
-			msg_r(f'\n    Relaying {self.name} transaction...')
-			h.relay_tx(new_tx.data.metadata)
-			gmsg('\nAll done')
-			return True
-		else:
-			die(1, '\nExiting at user request')
+		keypress_confirm(
+			self.cfg,
+			f'Relay {self.name} transaction?',
+			do_exit = True,
+			exit_msg = '\nExiting at user request')
+
+		if self.cfg.tx_relay_daemon:
+			await h.stop_wallet('source')
+			msg('')
+			self.init_tx_relay_daemon()
+			h = MoneroWalletRPC(self, self.source)
+			h.open_wallet('TX-relay-configured source', refresh=False)
+		msg_r(f'\n    Relaying {self.name} transaction...')
+		h.relay_tx(new_tx.data.metadata)
+		gmsg('\nAll done')
+		return True
 
 class OpSweepAll(OpSweep):
 	stem = 'sweep'

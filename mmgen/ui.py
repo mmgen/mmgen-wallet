@@ -87,7 +87,14 @@ def keypress_confirm(
 		default_yes     = False,
 		verbose         = False,
 		no_nl           = False,
-		complete_prompt = False):
+		complete_prompt = False,
+		do_exit         = False,
+		exit_msg        = 'Exiting at user request'):
+
+	def do_return(retval):
+		if do_exit and not retval:
+			die(1, exit_msg)
+		return retval
 
 	if not complete_prompt:
 		prompt = '{} {}: '.format(prompt, '(Y/n)' if default_yes else '(y/N)')
@@ -96,17 +103,17 @@ def keypress_confirm(
 
 	if cfg.accept_defaults:
 		msg(prompt)
-		return default_yes
+		return do_return(default_yes)
 
 	from .term import get_char
 	while True:
 		reply = get_char(prompt, immed_chars='yYnN').strip('\n\r')
 		if not reply:
 			msg_r(nl)
-			return default_yes
+			return do_return(default_yes)
 		elif reply in 'yYnN':
 			msg_r(nl)
-			return reply in 'yY'
+			return do_return(reply in 'yY')
 		else:
 			msg_r('\nInvalid reply\n' if verbose else '\r')
 

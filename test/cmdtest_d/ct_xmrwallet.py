@@ -203,10 +203,8 @@ class CmdTestXMRWallet(CmdTestBase):
 				""", indent='    ', strip_char='\t'))
 
 				from mmgen.ui import keypress_confirm
-				if keypress_confirm(cfg, 'Continue?'):
-					start_proxy()
-				else:
-					die(1, 'Exiting at user request')
+				keypress_confirm(cfg, 'Continue?', do_exit=True)
+				start_proxy()
 			else:
 				die(2, fmt(f"""
 					Please start the SSH SOCKS proxy by entering the following command:

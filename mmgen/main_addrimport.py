@@ -119,11 +119,11 @@ def check_opts(twctl):
 
 	if rescan and not cfg.quiet:
 		from .ui import keypress_confirm
-		if not keypress_confirm(
-				cfg,
-				f'\n{addrimport_msgs["rescan"]}\n\nContinue?',
-				default_yes = True):
-			die(1, 'Exiting at user request')
+		keypress_confirm(
+			cfg,
+			f'\n{addrimport_msgs["rescan"]}\n\nContinue?',
+			default_yes = True,
+			do_exit = True)
 
 	if batch and not 'batch' in twctl.caps:
 		msg(f"‘--batch’ ignored: not supported by {type(twctl).__name__}")

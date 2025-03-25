@@ -100,23 +100,23 @@ class wallet(wallet):
 			os.stat(fn)
 		except:
 			from ..ui import keypress_confirm, line_input
-			if keypress_confirm(
-					self.cfg,
-					f'Requested file {fn!r} does not exist.  Create?',
-					default_yes = True):
-				min_fsize = d.target_data_len + d.hincog_offset
-				msg('\n  ' + self.msg['choose_file_size'].strip().format(min_fsize)+'\n')
-				while True:
-					fsize = parse_bytespec(line_input(self.cfg, 'Enter file size: '))
-					if fsize >= min_fsize:
-						break
-					msg(f'File size must be an integer no less than {min_fsize}')
+			keypress_confirm(
+				self.cfg,
+				f'Requested file {fn!r} does not exist.  Create?',
+				default_yes = True,
+				do_exit = True)
 
-				from ..tool.fileutil import tool_cmd
-				tool_cmd(self.cfg).rand2file(fn, str(fsize))
-				check_offset = False
-			else:
-				die(1, 'Exiting at user request')
+			min_fsize = d.target_data_len + d.hincog_offset
+			msg('\n  ' + self.msg['choose_file_size'].strip().format(min_fsize)+'\n')
+			while True:
+				fsize = parse_bytespec(line_input(self.cfg, 'Enter file size: '))
+				if fsize >= min_fsize:
+					break
+				msg(f'File size must be an integer no less than {min_fsize}')
+
+			from ..tool.fileutil import tool_cmd
+			tool_cmd(self.cfg).rand2file(fn, str(fsize))
+			check_offset = False
 
 		from ..filename import MMGenFile
 		f = MMGenFile(fn, subclass=type(self), write=True)

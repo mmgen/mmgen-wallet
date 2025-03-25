@@ -297,13 +297,13 @@ class New(Base):
 
 	def confirm_autoselected_addr(self, mmid, desc):
 		from ..ui import keypress_confirm
-		if not keypress_confirm(
-				self.cfg,
-				'Using {a} as {b}. OK?'.format(
-					a = mmid.hl(),
-					b = 'single output address' if len(self.nondata_outputs) == 1 else desc),
-				default_yes = True):
-			die(1, 'Exiting at user request')
+		keypress_confirm(
+			self.cfg,
+			'Using {a} as {b}. OK?'.format(
+				a = mmid.hl(),
+				b = 'single output address' if len(self.nondata_outputs) == 1 else desc),
+			default_yes = True,
+			do_exit = True)
 
 	async def warn_addr_used(self, proto, chg, desc):
 		if proto.address_reuse_ok:
@@ -311,17 +311,17 @@ class New(Base):
 		from ..tw.addresses import TwAddresses
 		if (await TwAddresses(self.cfg, proto, get_data=True)).is_used(chg.addr):
 			from ..ui import keypress_confirm
-			if not keypress_confirm(
-					self.cfg,
-					'{a} {b} {c}\n{d}'.format(
-						a = yellow(f'Requested {desc}'),
-						b = chg.mmid.hl() if chg.mmid else chg.addr.hl(chg.addr.view_pref),
-						c = yellow('is already used!'),
-						d = yellow('Address reuse harms your privacy and security. Continue anyway? (y/N): ')
-					),
-					complete_prompt = True,
-					default_yes = False):
-				die(1, 'Exiting at user request')
+			keypress_confirm(
+				self.cfg,
+				'{a} {b} {c}\n{d}'.format(
+					a = yellow(f'Requested {desc}'),
+					b = chg.mmid.hl() if chg.mmid else chg.addr.hl(chg.addr.view_pref),
+					c = yellow('is already used!'),
+					d = yellow('Address reuse harms your privacy and security. Continue anyway? (y/N): ')
+				),
+				complete_prompt = True,
+				default_yes = False,
+				do_exit = True)
 
 	# inputs methods
 	def get_unspent_nums_from_user(self, unspent):

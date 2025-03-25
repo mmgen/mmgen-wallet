@@ -218,5 +218,4 @@ class Base(MMGenObject):
 				msg(f'\n{indent}WARNING: {m}\n')
 				if not self.cfg.yes:
 					from ..ui import keypress_confirm
-					if not keypress_confirm(self.cfg, 'Continue?', default_yes=True):
-						die(1, 'Exiting at user request')
+					keypress_confirm(self.cfg, 'Continue?', default_yes=True, do_exit=True)

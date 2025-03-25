@@ -89,19 +89,18 @@ class OpSubmit(OpWallet):
 		if self.cfg.tx_relay_daemon:
 			self.display_tx_relay_info(indent='    ')
 
-		if keypress_confirm(self.cfg, f'{self.name.capitalize()} transaction?'):
-			if self.cfg.tx_relay_daemon:
-				msg_r('Relaying transaction to remote daemon, please be patient...')
-				t_start = time.time()
-			res = self.c.call(
-				'submit_transfer',
-				tx_data_hex = tx.data.signed_txset)
-			assert res['tx_hash_list'][0] == tx.data.txid, 'TxID mismatch in ‘submit_transfer’ result!'
-			if self.cfg.tx_relay_daemon:
-				from ...util2 import format_elapsed_hr
-				msg(f'success\nRelay time: {format_elapsed_hr(t_start, rel_now=False, show_secs=True)}')
-		else:
-			die(1, 'Exiting at user request')
+		keypress_confirm(self.cfg, f'{self.name.capitalize()} transaction?', do_exit=True)
+
+		if self.cfg.tx_relay_daemon:
+			msg_r('Relaying transaction to remote daemon, please be patient...')
+			t_start = time.time()
+		res = self.c.call(
+			'submit_transfer',
+			tx_data_hex = tx.data.signed_txset)
+		assert res['tx_hash_list'][0] == tx.data.txid, 'TxID mismatch in ‘submit_transfer’ result!'
+		if self.cfg.tx_relay_daemon:
+			from ...util2 import format_elapsed_hr
+			msg(f'success\nRelay time: {format_elapsed_hr(t_start, rel_now=False, show_secs=True)}')
 
 		new_tx = MoneroMMGenTX.NewSubmitted(
 			cfg          = self.cfg,
