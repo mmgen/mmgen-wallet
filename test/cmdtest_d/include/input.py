@@ -7,12 +7,12 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.cmdtest_d.input: Shared input routines for the cmdtest.py test suite
+test.cmdtest_d.include.input: Shared input routines for the cmdtest.py test suite
 """
 
 import time
+from ...include.common import getrand
 from .common import randbool
-from ..include.common import getrand
 
 def stealth_mnemonic_entry(t, mne, mn, entry_mode, pad_entry=False):
 
