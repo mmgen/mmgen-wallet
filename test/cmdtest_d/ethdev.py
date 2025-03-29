@@ -692,6 +692,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			fee_info_data   = ('0.00105', '50'),
 			no_read         = False,
 			print_listing   = True,
+			bad_input_sels  = True,
 			tweaks          = []):
 		fee_info_pat = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format(*fee_info_data, c=self.proto.coin)
 		t = self.spawn(f'mmgen-{caller}', self.eth_args + ['-B'] + args)
@@ -705,7 +706,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			input_sels_prompt = 'to spend from',
 			inputs            = acct,
 			file_desc         = 'transaction',
-			bad_input_sels    = True,
+			bad_input_sels    = bad_input_sels,
 			interactive_fee   = interactive_fee,
 			fee_info_pat      = fee_info_pat,
 			fee_desc          = 'transaction fee or gas price',

@@ -18,7 +18,7 @@
 
 """
 mmgen-txbump: Create, and optionally send and sign, a replacement transaction
-              on networks that support replace-by-fee (RBF)
+              on supporting networks
 """
 
 from .cfg import gc, Config
@@ -31,7 +31,7 @@ opts_data = {
 	'text': {
 		'desc': """
                 Create, and optionally send and sign, a replacement transaction
-                on networks that support replace-by-fee (RBF)
+                on supporting networks
 		 """,
 		'usage2':   (
 			f'[opts] [{gc.proj_name} TX file] [seed source] ...',

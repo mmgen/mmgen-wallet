@@ -134,6 +134,7 @@ class CmdTestRunner:
 			no_passthru_opts = False,
 			spawn_env_override = None,
 			exit_val        = None,
+			silent          = False,
 			env             = {}):
 
 		self.exit_val = exit_val
@@ -218,6 +219,7 @@ class CmdTestRunner:
 			pexpect_spawn = pexpect_spawn,
 			timeout       = timeout,
 			send_delay    = send_delay,
+			silent        = silent,
 			direct_exec   = direct_exec)
 
 	def end_msg(self):

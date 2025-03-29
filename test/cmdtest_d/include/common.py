@@ -94,12 +94,14 @@ def confirm_continue():
 def randbool():
 	return getrand(1).hex()[0] in '02468ace'
 
-def get_env_without_debug_vars():
+def cleanup_env(cfg):
 	ret = dict(os.environ)
+	if cfg.debug_utf8:
+		return ret
 	for k in cfg._env_opts:
 		if k[:11] == 'MMGEN_DEBUG' and k in ret:
 			del ret[k]
-	return ret
+	return ret | {'EXEC_WRAPPER_DO_RUNTIME_MSG': ''}
 
 def get_file_with_ext(
 		tdir,

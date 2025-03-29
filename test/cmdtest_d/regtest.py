@@ -53,7 +53,7 @@ from .include.common import (
 	tw_comment_lat_cyr_gr,
 	tw_comment_zh,
 	tx_comment_jp,
-	get_env_without_debug_vars,
+	cleanup_env,
 	rt_pw)
 
 from .base import CmdTestBase
@@ -1237,8 +1237,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		ret = self.spawn(
 			'mmgen-regtest',
 			cmd_args,
-			env = (os.environ if self.cfg.debug_utf8 else get_env_without_debug_vars()) | (
-				{'EXEC_WRAPPER_DO_RUNTIME_MSG': ''}),
+			env = cleanup_env(self.cfg),
 			no_msg = True
 		).read().strip()
 		return json.loads(ret) if decode_json else ret

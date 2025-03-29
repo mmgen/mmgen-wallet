@@ -13,7 +13,7 @@ proto.eth.tx.status: Ethereum transaction status class
 """
 
 from ....tx import status as TxBase
-from ....util import msg, Msg, die, suf, capfirst, pp_fmt
+from ....util import msg, Msg, die, suf, capfirst
 
 class Status(TxBase.Status):
 

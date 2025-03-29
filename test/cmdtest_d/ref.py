@@ -40,7 +40,7 @@ from .include.common import (
 	pwfile,
 	ref_bw_file_spc,
 	ref_enc_fn,
-	get_env_without_debug_vars,
+	cleanup_env,
 	tool_enc_passwd,
 	skip
 )
@@ -340,7 +340,7 @@ class CmdTestRef(CmdTestBase, CmdTestShared):
 		t = self.spawn(
 			'mmgen-tool',
 			['-q', 'decrypt', f, 'outfile='+dec_file, 'hash_preset=1'],
-			env = os.environ if self.cfg.debug_utf8 else get_env_without_debug_vars())
+			env = cleanup_env(self.cfg))
 		t.passphrase('data', tool_enc_passwd)
 		t.written_to_file('Decrypted data')
 		dec_txt = read_from_file(dec_file)

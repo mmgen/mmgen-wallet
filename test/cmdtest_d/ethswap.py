@@ -17,10 +17,9 @@ from mmgen.cfg import Config
 from mmgen.protocol import init_proto
 
 from .include.runner import CmdTestRunner
-
 from .include.common import dfl_words_file, dfl_seed_id, rt_pw
-
 from .httpd.thornode import ThornodeServer
+
 from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods
 from .ethdev import CmdTestEthdev

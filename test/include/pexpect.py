@@ -47,6 +47,7 @@ class MMGenPexpect:
 			pexpect_spawn = False,
 			send_delay    = None,
 			timeout       = None,
+			silent        = False,
 			direct_exec   = False):
 
 		self.pexpect_spawn = pexpect_spawn
@@ -67,7 +68,7 @@ class MMGenPexpect:
 			else:
 				self.p = PopenSpawn(args, encoding='utf8', timeout=timeout, env=spawn_env)
 
-			if cfg.exact_output:
+			if cfg.exact_output and not silent:
 				self.p.logfile = sys.stdout
 
 	def do_decrypt_ka_data(
