@@ -115,9 +115,9 @@ def set_vbals(daemon_id):
 		vbal3 = '1.23142525'
 		vbal3 = '1.2314246'
 		vbal4 = '127.0287896'
-		vbal5 = '1000126.14828458212345678'
-		vbal6 = '1000126.14933458212345678'
-		vbal7 = '1000124.91944498212345678'
+		vbal5 = '999904.14828458212345678'
+		vbal6 = '999904.14933458212345678'
+		vbal7 = '999902.91944498212345678'
 		vbal9 = '1.226261'
 
 coin = cfg.coin
@@ -1020,14 +1020,25 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		return self.txsign(ni=True, dev_send=True)
 
 	def etherscan_server_start(self):
+		if self.proto.coin == 'ETC':
+			return 'skip'
 		self.spawn(msg_only=True)
 		etherscan_server.start()
 		return 'ok'
+
 	def txsend_etherscan_test(self):
+		if self.proto.coin == 'ETC':
+			return 'skip'
 		return self.txsend(add_args=['--tx-proxy=ether', '--test'], test='tx_proxy')
+
 	def txsend_etherscan(self):
+		if self.proto.coin == 'ETC':
+			return 'skip'
 		return self.txsend(add_args=['--tx-proxy=ethersc'])
+
 	def etherscan_server_stop(self):
+		if self.proto.coin == 'ETC':
+			return 'skip'
 		self.spawn(msg_only=True)
 		etherscan_server.stop()
 		return 'ok'
