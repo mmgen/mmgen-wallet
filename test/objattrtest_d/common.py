@@ -4,7 +4,7 @@
 # Copyright (C)2013-2025 The MMGen Project <mmgen@tuta.io>
 
 """
-test.objattrtest_d.oat_common: shared data for MMGen data objects tests
+test.objattrtest_d.common: shared data for MMGen data objects tests
 """
 
 from decimal import Decimal

@@ -4,10 +4,10 @@
 # Copyright (C)2013-2025 The MMGen Project <mmgen@tuta.io>
 
 """
-test.objattrtest_d.oat_btc_mainnet: BTC mainnet test vectors for MMGen data objects
+test.objattrtest_d.btc_mainnet: BTC mainnet test vectors for MMGen data objects
 """
 
-from .oat_common import sample_objs, seed_bin, atd
+from .common import sample_objs, seed_bin, atd
 from ..include.common import cfg
 from mmgen.protocol import init_proto
 
