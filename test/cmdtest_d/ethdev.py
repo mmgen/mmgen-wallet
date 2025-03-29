@@ -127,7 +127,7 @@ class CmdTestEthdevMethods: # mixin class
 	def _addrgen(self, addrs='1-3,11-13,21-23', no_msg=False):
 		t = self.spawn(
 			'mmgen-addrgen',
-			[f'--coin={self.proto.coin}'] + self.eth_args + [dfl_words_file, addrs],
+			[f'--coin={self.proto.coin}'] + self.eth_opts + [dfl_words_file, addrs],
 			no_msg = no_msg,
 			no_passthru_opts = True)
 		t.written_to_file('Addresses')
@@ -167,7 +167,7 @@ class CmdTestEthdevMethods: # mixin class
 	def _txbump(self, *, fee, ext, add_opts=[], add_args=[]):
 		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext, no_dot=True)
-		t = self.spawn('mmgen-txbump', self.eth_args + add_opts + ['--yes', txfile] + add_args)
+		t = self.spawn('mmgen-txbump', self.eth_opts + add_opts + ['--yes', txfile] + add_args)
 		t.expect('or gas price: ', fee+'\n')
 		return t
 
@@ -228,19 +228,19 @@ class CmdTestEthdevMethods: # mixin class
 
 		if mmgen_cmd == 'txdo':
 			args += ['-k', keyfile]
-		t = self.spawn('mmgen-'+mmgen_cmd, self.eth_args + args)
+		t = self.spawn('mmgen-'+mmgen_cmd, self.eth_opts + args)
 		if mmgen_cmd == 'txcreate':
 			t.written_to_file('transaction')
 			ext = '[0,8000]{}.regtest.rawtx'.format('-α' if self.cfg.debug_utf8 else '')
 			txfile = self.get_file_with_ext(ext, no_dot=True)
 			t = self.spawn(
 				'mmgen-txsign',
-				self.eth_args + ['--yes', '-k', keyfile, txfile], no_msg=True, no_passthru_opts=['coin'])
+				self.eth_opts + ['--yes', '-k', keyfile, txfile], no_msg=True, no_passthru_opts=['coin'])
 			self.txsign_ui_common(t, ni=True)
 
 			txfile = txfile.replace('.rawtx', '.sigtx')
 			t = self.spawn('mmgen-txsend',
-				self.eth_args + [txfile], no_msg=True, no_passthru_opts=['coin'])
+				self.eth_opts + [txfile], no_msg=True, no_passthru_opts=['coin'])
 
 		txid = self.txsend_ui_common(t,
 			caller = mmgen_cmd,
@@ -656,8 +656,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		global coin
 		coin = cfg.coin
 
-		self.eth_args         = [f'--outdir={self.tmpdir}', '--regtest=1', '--quiet']
-		self.eth_args_noquiet = [f'--outdir={self.tmpdir}', '--regtest=1']
+		self.eth_opts         = [f'--outdir={self.tmpdir}', '--regtest=1', '--quiet']
+		self.eth_opts_noquiet = [f'--outdir={self.tmpdir}', '--regtest=1']
 
 		from mmgen.protocol import init_proto
 		self.proto = init_proto(cfg, network_id=self.proto.coin+'_rt', need_amt=True)
@@ -830,7 +830,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		init_genesis(self.genesis_fn)
 
 	def daemon_version(self):
-		t = self.spawn('mmgen-tool', self.eth_args + ['daemon_version'])
+		t = self.spawn('mmgen-tool', self.eth_opts + ['daemon_version'])
 		t.expect('version')
 		return t
 
@@ -855,7 +855,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		twctl.tw_dir.mkdir(mode=0o750, parents=True, exist_ok=True)
 		dest = shutil.copy2(from_fn, twctl.tw_path)
 		assert dest == twctl.tw_path, f'{dest} != {twctl.tw_path}'
-		t = self.spawn('mmgen-tool', self.eth_args + ['twview'])
+		t = self.spawn('mmgen-tool', self.eth_opts + ['twview'])
 		t.expect(expect1)
 		if expect2:
 			t.expect(expect2)
@@ -912,7 +912,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 			bad_input_sels  = True,
 			tweaks          = []):
 		fee_info_pat = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format(*fee_info_data, c=self.proto.coin)
-		t = self.spawn(f'mmgen-{caller}', self.eth_args + ['-B'] + args)
+		t = self.spawn(f'mmgen-{caller}', self.eth_opts + ['-B'] + args)
 		if print_listing:
 			t.expect(r'add \[l\]abel, .*?:.', 'p', regex=True)
 			t.written_to_file('Account balances listing')
@@ -939,7 +939,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
 			'mmgen-txsign',
-				self.eth_args
+				self.eth_opts
 				+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
 				+ ([], ['--yes'])[ni]
 				+ ([f'--keys-from-file={keyfile}'] if dev_send else [])
@@ -960,7 +960,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
 			'mmgen-txsend',
-			self.eth_args + add_args + [txfile],
+			self.eth_opts + add_args + [txfile],
 			no_passthru_opts = ['coin'],
 			env = env)
 		if return_early:
@@ -986,7 +986,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		dt = namedtuple('data', ['devkey_fn', 'dest', 'amt'])
 		d = dt(parity_devkey_fn, burn_addr2, '1')
 		t = self.txcreate(
-			args    = self.eth_args_noquiet + [
+			args    = self.eth_opts_noquiet + [
 				f'--keys-from-file={joinpath(self.tmpdir, d.devkey_fn)}',
 				f'{d.dest},{d.amt}',
 			],
@@ -1059,7 +1059,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
 			'mmgen-txsend',
-			self.eth_args + add_args + ['--status', txfile],
+			self.eth_opts + add_args + ['--status', txfile],
 			no_passthru_opts = ['coin'],
 			exit_val = exit_val)
 		t.expect(expect_str)
@@ -1107,26 +1107,26 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		return 'ok'
 
 	def msgcreate(self, add_args=[]):
-		t = self.spawn('mmgen-msg', self.eth_args_noquiet + add_args + ['create', self.message, '98831F3A:E:1'])
+		t = self.spawn('mmgen-msg', self.eth_opts_noquiet + add_args + ['create', self.message, '98831F3A:E:1'])
 		t.written_to_file('Unsigned message data')
 		return t
 
 	def msgsign(self):
 		fn = get_file_with_ext(self.tmpdir, 'rawmsg.json')
-		t = self.spawn('mmgen-msg', self.eth_args_noquiet + ['sign', fn, dfl_words_file])
+		t = self.spawn('mmgen-msg', self.eth_opts_noquiet + ['sign', fn, dfl_words_file])
 		t.written_to_file('Signed message data')
 		return t
 
 	def msgverify(self, fn=None, msghash_type='eth_sign'):
 		fn = fn or get_file_with_ext(self.tmpdir, 'sigmsg.json')
-		t = self.spawn('mmgen-msg', self.eth_args_noquiet + ['verify', fn])
+		t = self.spawn('mmgen-msg', self.eth_opts_noquiet + ['verify', fn])
 		t.expect(msghash_type)
 		t.expect('1 signature verified')
 		return t
 
 	def msgexport(self):
 		fn = get_file_with_ext(self.tmpdir, 'sigmsg.json')
-		t = self.spawn('mmgen-msg', self.eth_args_noquiet + ['export', fn])
+		t = self.spawn('mmgen-msg', self.eth_opts_noquiet + ['export', fn])
 		t.written_to_file('Signature data')
 		return t
 
@@ -1183,7 +1183,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 
 	def bal(self, n):
 		self.mining_delay()
-		t = self.spawn('mmgen-tool', self.eth_args + ['twview', 'wide=1'])
+		t = self.spawn('mmgen-tool', self.eth_opts + ['twview', 'wide=1'])
 		text = t.read(strip_color=True)
 		for addr, amt in self.bals(n):
 			pat = r'\D{}\D.*\D{}\D'.format(addr, amt.replace('.', r'\.'))
@@ -1194,7 +1194,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 
 	def token_bal(self, n=None):
 		self.mining_delay()
-		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1', 'twview', 'wide=1'])
+		t = self.spawn('mmgen-tool', self.eth_opts + ['--token=mm1', 'twview', 'wide=1'])
 		text = t.read(strip_color=True)
 		for addr, _amt1, _amt2 in self.token_bals(n):
 			pat = fr'{addr}\b.*\D{_amt1}\D.*\b{_amt2}\D'
@@ -1207,7 +1207,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		bal1 = self.token_bals_getbalance(idx)[0]
 		bal2 = self.token_bals_getbalance(idx)[1]
 		bal1 = Decimal(bal1)
-		t = self.spawn('mmgen-tool', self.eth_args + extra_args + ['getbalance'])
+		t = self.spawn('mmgen-tool', self.eth_opts + extra_args + ['getbalance'])
 		t.expect(rf'{sid}:.*'+str(bal1), regex=True)
 		t.expect(r'Non-MMGen:.*'+bal2, regex=True)
 		total = strip_ansi_escapes(t.expect_getend(rf'TOTAL {self.proto.coin}')).split()[0]
@@ -1215,12 +1215,12 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		return t
 
 	def add_comment(self, comment, addr='98831F3A:E:3'):
-		t = self.spawn('mmgen-tool', self.eth_args + ['add_label', addr, comment])
+		t = self.spawn('mmgen-tool', self.eth_opts + ['add_label', addr, comment])
 		t.expect('Added label.*in tracking wallet', regex=True)
 		return t
 
 	def chk_comment(self, comment_pat, addr='98831F3A:E:3'):
-		t = self.spawn('mmgen-tool', self.eth_args + ['listaddresses', 'all_labels=1'])
+		t = self.spawn('mmgen-tool', self.eth_opts + ['listaddresses', 'all_labels=1'])
 		t.expect(fr'{addr}\b.*{comment_pat}', regex=True)
 		return t
 
@@ -1234,7 +1234,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		return self.chk_comment(comment_pat=tw_comment_lat_cyr_gr[:3])
 
 	def remove_comment(self, addr='98831F3A:E:3'):
-		t = self.spawn('mmgen-tool', self.eth_args + ['remove_label', addr])
+		t = self.spawn('mmgen-tool', self.eth_opts + ['remove_label', addr])
 		t.expect('Removed label.*in tracking wallet', regex=True)
 		return t
 
@@ -1370,7 +1370,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 			file_desc = 'Unsigned transaction'):
 		return self.txcreate_ui_common(
 			self.spawn('mmgen-txcreate',
-				self.eth_args + [f'--token={token}', '-B', f'--fee={fee}'] + args),
+				self.eth_opts + [f'--token={token}', '-B', f'--fee={fee}'] + args),
 			menu              = [],
 			inputs            = inputs,
 			input_sels_prompt = 'to spend from',
@@ -1406,7 +1406,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		return self.token_bal(n='2')
 
 	def twview(self, args=[], expect_str='', tool_args=[]):
-		t = self.spawn('mmgen-tool', self.eth_args + args + ['twview'] + tool_args)
+		t = self.spawn('mmgen-tool', self.eth_opts + args + ['twview'] + tool_args)
 		if expect_str:
 			t.expect(expect_str, regex=True)
 		return t
@@ -1424,7 +1424,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		return self.token_bal(n='3')
 
 	def del_dev_addr(self):
-		t = self.spawn('mmgen-tool', self.eth_args + ['remove_address', dfl_devaddr])
+		t = self.spawn('mmgen-tool', self.eth_opts + ['remove_address', dfl_devaddr])
 		t.expect(f"'{dfl_devaddr}' deleted")
 		return t
 
@@ -1465,7 +1465,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		return self.token_bal(n='6')
 
 	def listaddresses(self, args=[], tool_args=['all_labels=1']):
-		return self.spawn('mmgen-tool', self.eth_args + args + ['listaddresses'] + tool_args)
+		return self.spawn('mmgen-tool', self.eth_opts + args + ['listaddresses'] + tool_args)
 
 	def listaddresses1(self):
 		return self.listaddresses()
@@ -1526,7 +1526,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		if total_coin is None:
 			total_coin = self.proto.coin
 
-		t = self.spawn('mmgen-txcreate', self.eth_args + args)
+		t = self.spawn('mmgen-txcreate', self.eth_opts + args)
 		for n in bals:
 			t.expect('[R]efresh balance:\b', 'R')
 			t.expect(' main menu): ', n+'\n')
@@ -1590,7 +1590,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 			changed       = False,
 			pexpect_spawn = None):
 
-		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B', '-i'], pexpect_spawn=pexpect_spawn)
+		t = self.spawn('mmgen-txcreate', self.eth_opts + args + ['-B', '-i'], pexpect_spawn=pexpect_spawn)
 
 		t.expect(self.menu_prompt, 'M')
 		t.expect(self.menu_prompt, action)
@@ -1649,7 +1649,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		return self.twexport(add_args=['include_amts=0'])
 
 	def twexport(self, add_args=[]):
-		t = self.spawn('mmgen-tool', self.eth_args + ['twexport'] + add_args)
+		t = self.spawn('mmgen-tool', self.eth_opts + ['twexport'] + add_args)
 		t.written_to_file('JSON data')
 		return t
 
@@ -1666,7 +1666,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 	def twimport(self, add_args=[], expect_str=None):
 		from mmgen.tw.json import TwJSON
 		fn = joinpath(self.tmpdir, TwJSON.Base(self.cfg, self.proto).dump_fn)
-		t = self.spawn('mmgen-tool', self.eth_args_noquiet + ['twimport', fn] + add_args)
+		t = self.spawn('mmgen-tool', self.eth_opts_noquiet + ['twimport', fn] + add_args)
 		t.expect('(y/N): ', 'y')
 		if expect_str:
 			t.expect(expect_str)
