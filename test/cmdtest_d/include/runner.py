@@ -65,6 +65,7 @@ class CmdTestRunner:
 		self.testing_segwit = cfg.segwit or cfg.segwit_random or cfg.bech32
 		self.network_id = self.proto.coin.lower() + ('_tn' if self.proto.testnet else '')
 		self.daemon_started = False
+		self.quiet = not (cfg.exact_output or cfg.verbose)
 
 		global qmsg, qmsg_r
 		if cfg.exact_output:
@@ -96,7 +97,7 @@ class CmdTestRunner:
 	def do_between(self):
 		if self.cfg.pause:
 			confirm_continue()
-		elif (self.cfg.verbose or self.cfg.exact_output) and not self.cfg.skipping_deps:
+		elif not (self.quiet or self.cfg.skipping_deps):
 			sys.stderr.write('\n')
 
 	def set_spawn_env(self):
@@ -180,7 +181,7 @@ class CmdTestRunner:
 
 		if not no_msg:
 			t_pfx = '' if self.cfg.no_timings else f'[{time.time() - self.start_time:08.2f}] '
-			if self.cfg.verbose or self.cfg.print_cmdline or self.cfg.exact_output:
+			if (not self.quiet) or self.cfg.print_cmdline:
 				omsg(green(f'{t_pfx}Testing: {desc}'))
 				if not msg_only:
 					clr1, clr2 = (nocolor, nocolor) if self.cfg.print_cmdline else (green, cyan)

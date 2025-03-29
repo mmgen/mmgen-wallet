@@ -503,7 +503,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			if not d.id in ('geth', 'erigon'):
 				d.stop(silent=True)
 				d.remove_datadir()
-			d.start( silent = not (self.cfg.verbose or self.cfg.exact_output))
+			d.start(silent=self.tr.quiet)
 			rpc = await self.rpc
 			imsg(f'Daemon: {rpc.daemon.coind_name} v{rpc.daemon_version_str}')
 

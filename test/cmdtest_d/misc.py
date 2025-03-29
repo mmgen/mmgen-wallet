@@ -166,7 +166,7 @@ class CmdTestMisc(CmdTestBase):
 
 		t = self.spawn('test/misc/term_ni.py', ['echo'], cmd_dir='.', pexpect_spawn=True, timeout=1)
 		t.p.logfile = None
-		t.p.logfile_read = sys.stdout if self.cfg.verbose or self.cfg.exact_output else None
+		t.p.logfile_read = None if self.tr.quiet else sys.stdout
 		t.p.logfile_send = None
 
 		test_noecho()

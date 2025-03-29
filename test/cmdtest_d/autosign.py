@@ -64,7 +64,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		if trunner is None:
 			return
 
-		self.silent_mount = self.live or not (cfg.exact_output or cfg.verbose)
+		self.silent_mount = self.live or self.tr.quiet
 		self.network_ids = [c+'_tn' for c in self.daemon_coins] + self.daemon_coins
 
 		self._create_autosign_instances(create_dirs=not cfg.skipping_deps)
@@ -164,7 +164,7 @@ class CmdTestAutosignBase(CmdTestBase):
 				'hdiutil', 'create', '-size', '10M', '-fs', 'exFAT',
 				'-volname', self.asi.dev_label,
 				str(self.fs_image_path)]
-			redir = None if self.cfg.exact_output or self.cfg.verbose else DEVNULL
+			redir = DEVNULL if self.tr.quiet else None
 			run(cmd, stdout=redir, check=True)
 
 	def _macOS_mount_fs_image(self, loc):
@@ -790,7 +790,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.insert_device()
 
 		silence()
-		self.do_mount(verbose=self.cfg.verbose or self.cfg.exact_output)
+		self.do_mount(verbose=not self.tr.quiet)
 		end_silence()
 
 		for coindir, fn in data:
@@ -1074,7 +1074,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 			no_msg   = True,
 			exit_val = 1)
 
-		if not self.cfg.exact_output:
+		if self.tr.quiet:
 			omsg('')
 
 		prompt_insert_sign(t)

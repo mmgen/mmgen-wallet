@@ -681,14 +681,14 @@ class CmdTestXMRWallet(CmdTestBase):
 		if data.autosign:
 			self.do_umount_online()
 			self.remove_device_online()
-		self.users[user].wd.start(silent=not (self.cfg.exact_output or self.cfg.verbose))
+		self.users[user].wd.start(silent=self.tr.quiet)
 		return data.wd_rpc.call(
 			'open_wallet',
 			filename = os.path.basename(data.walletfile_fs.format(wnum)),
 			password = kal.entry(wnum).wallet_passwd)
 
 	async def stop_wallet_user(self, user):
-		await self.users[user].wd_rpc.stop_daemon(silent=not (self.cfg.exact_output or self.cfg.verbose))
+		await self.users[user].wd_rpc.stop_daemon(silent=self.tr.quiet)
 		return 'ok'
 
 	# mining methods

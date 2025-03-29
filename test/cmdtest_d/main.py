@@ -539,7 +539,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 				desc              = 'Unspent outputs',
 				quiet             = True,
 				ignore_opt_outdir = True)
-		if self.cfg.verbose or self.cfg.exact_output:
+		if not self.tr.quiet:
 			sys.stderr.write(f'Fake transaction wallet data written to file {self.unspent_data_file!r}\n')
 
 	def _create_fake_unspent_entry(
@@ -702,7 +702,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			cmdline_inputs             = False,
 			tweaks                     = []):
 
-		if self.cfg.verbose or self.cfg.exact_output:
+		if not self.tr.quiet:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
 
 		silence()
@@ -726,7 +726,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 		end_silence()
 
-		if self.cfg.verbose or self.cfg.exact_output:
+		if not self.tr.quiet:
 			sys.stderr.write('\n')
 
 		t = self.spawn(
