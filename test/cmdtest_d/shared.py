@@ -118,6 +118,7 @@ class CmdTestShared:
 			return t
 
 		t.view_tx(view)
+
 		if not txdo:
 			t.expect('(y/N): ', ('n', 'y')[save])
 			t.written_to_file(file_desc)
@@ -191,6 +192,18 @@ class CmdTestShared:
 			t.written_to_file(file_desc)
 
 		return txid
+
+	def txbump_ui_common(self, t, *, fee, fee_desc='transaction fee', bad_fee=None):
+		t.expect('(Y/n): ', 'n') # network-estimated fee OK?
+		if bad_fee:
+			t.expect(f'{fee_desc}: ', f'{bad_fee}\n')
+		t.expect(f'{fee_desc}: ', f'{fee}\n')
+		t.expect('(Y/n): ', 'y') # fee OK?
+		t.expect('(Y/n): ', 'y') # signoff
+		t.expect('(y/N): ', 'n') # edit comment
+		t.expect('(y/N): ', 'y') # save TX?
+		t.written_to_file('Fee-bumped transaction')
+		return t
 
 	def txsign_end(self, t, tnum=None, has_label=False):
 		t.expect('Signing transaction')

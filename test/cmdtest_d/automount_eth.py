@@ -14,11 +14,11 @@ test.cmdtest_d.automount_eth: Ethereum automount autosigning tests for the cmdte
 import os, re
 
 from .autosign import CmdTestAutosignThreaded
-from .ethdev import CmdTestEthdev, parity_devkey_fn
+from .ethdev import CmdTestEthdev, CmdTestEthdevMethods
 from .include.common import dfl_words_file
-from ..include.common import cfg
+from ..include.common import cfg, joinpath
 
-class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
+class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev, CmdTestEthdevMethods):
 	'automounted transacting operations for Ethereum via ethdev'
 
 	networks = ('eth', 'etc')
@@ -41,8 +41,8 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		('token_deploy1c',         'deploying ERC20 token #1 (Token)'),
 		('tx_status2',             'getting the transaction status'),
 		('token_fund_user',        'transferring token funds from dev to user'),
-		('token_addrgen_addr1',    'generating token addresses'),
-		('token_addrimport_addr1', 'importing token addresses using token address (MM1)'),
+		('token_addrgen',          'generating token addresses'),
+		('token_addrimport',       'importing token addresses using token address (MM1)'),
 		('token_bal1',             f'the {cfg.coin} balance and token balance'),
 		('create_token_tx',        'creating a token transaction'),
 		('send_token_tx',          'sending a token transaction'),
@@ -62,33 +62,11 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 		self.txop_opts = ['--autosign', '--regtest=1', '--quiet']
 
 	def fund_mmgen_address(self):
-		keyfile = os.path.join(self.tmpdir, parity_devkey_fn)
-		t = self.spawn(
-			'mmgen-txdo',
-			self.eth_args
-			+ [f'--keys-from-file={keyfile}']
-			+ ['--fee=40G', '98831F3A:E:1,123.456', dfl_words_file],
-		)
-		t.expect('efresh balance:\b', 'q')
-		t.expect('from: ', '10')
-		t.expect('(Y/n): ', 'y')
-		t.expect('(Y/n): ', 'y')
-		t.expect('(y/N): ', 'n')
-		t.expect('view: ', 'n')
-		t.expect('confirm: ', 'YES')
-		return t
+		return self._fund_mmgen_address(arg='98831F3A:E:1,123.456')
 
 	def create_tx(self):
 		self.insert_device_online()
-		t = self.spawn('mmgen-txcreate', self.txop_opts + ['-B', '98831F3A:E:11,54.321'])
-		t = self.txcreate_ui_common(
-			t,
-			caller            = 'txcreate',
-			input_sels_prompt = 'to spend from',
-			inputs            = '1',
-			file_desc         = 'transaction',
-			interactive_fee   = '50G',
-			fee_desc          = 'transaction fee or gas price')
+		t = self._create_tx(fee='50G', args=['98831F3A:E:11,54.321'], add_opts=self.txop_opts)
 		t.read()
 		self.remove_device_online()
 		return t
@@ -96,49 +74,38 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):
 	def run_autosign_setup(self):
 		return self.run_setup(mn_type='bip39', mn_file='test/ref/98831F3A.bip39', use_dfl_wallet=None)
 
-	def send_tx(self, add_args=[]):
+	def send_tx(self):
 		self._wait_signed('transaction')
 		self.insert_device_online()
-		t = self.spawn('mmgen-txsend', self.txop_opts + add_args, no_passthru_opts=['coin'])
-		t.view_tx('t')
-		t.expect('(y/N): ', 'n')
-		self._do_confirm_send(t, quiet=True)
-		t.written_to_file('Sent automount transaction')
+		t = self._send_tx(desc='automount transaction', add_opts=self.txop_opts)
 		t.read()
 		self.remove_device_online()
 		return t
 
-	def token_fund_user(self):
-		return self.token_transfer_ops(op='do_transfer', num_tokens=1)
+	def token_addrgen(self):
+		return self._token_addrgen(mm_idxs=[11], naddrs=3)
 
-	def token_addrgen_addr1(self):
-		return self.token_addrgen(num_tokens=1)
+	def token_addrimport(self):
+		return self._token_addrimport('token_addr1', '11-13', expect='3/3')
+
+	def token_fund_user(self):
+		return self._token_transfer_ops(op='fund_user', mm_idxs=[11])
 
 	def token_bal1(self):
-		return self.token_bal(pat=r':E:11\s+1000\s+54\.321\s+')
+		return self._bal_check(pat=r':E:11\s+1000\s+54\.321\s+')
 
 	def token_bal2(self):
-		return self.token_bal(pat=r':E:11\s+998.76544\s+54.318\d+\s+.*:E:12\s+1\.23456\s+')
-
-	def token_bal(self, pat):
-		self.mining_delay()
-		t = self.spawn('mmgen-tool', ['--regtest=1', '--token=mm1', 'twview', 'wide=1'])
-		text = t.read(strip_color=True)
-		assert re.search(pat, text, re.DOTALL), f'output failed to match regex {pat}'
-		return t
+		return self._bal_check(pat=r':E:11\s+998.76544\s+54.318\d+\s+.*:E:12\s+1\.23456\s+')
 
 	def create_token_tx(self):
 		self.insert_device_online()
-		t = self.txcreate_ui_common(
-			self.spawn(
-				'mmgen-txcreate',
-				self.txop_opts + ['--token=MM1', '-B', '--fee=50G', '98831F3A:E:12,1.23456']),
-			inputs            = '1',
-			input_sels_prompt = 'to spend from',
-			file_desc         = 'Unsigned automount transaction')
+		t = self._create_token_tx(
+			cmd = 'txcreate',
+			fee = '50G',
+			args = ['98831F3A:E:12,1.23456'],
+			add_opts = self.txop_opts)
 		t.read()
 		self.remove_device_online()
 		return t
 
-	def send_token_tx(self):
-		return self.send_tx()
+	send_token_tx = send_tx

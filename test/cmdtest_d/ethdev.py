@@ -26,8 +26,9 @@ from collections import namedtuple
 from subprocess import run, PIPE, DEVNULL
 from pathlib import Path
 
-from mmgen.color import yellow, blue, cyan, set_vt100
+from mmgen.color import red, yellow, blue, cyan, set_vt100
 from mmgen.util import msg, rmsg, die
+from mmgen.proto.eth.misc import compute_contract_addr
 
 from ..include.common import (
 	cfg,
@@ -43,8 +44,8 @@ from ..include.common import (
 	silence,
 	end_silence,
 	gr_uc,
-	stop_test_daemons
-)
+	stop_test_daemons)
+
 from .include.common import (
 	ref_dir,
 	dfl_words_file,
@@ -54,8 +55,9 @@ from .include.common import (
 	tw_comment_lat_cyr_gr,
 	get_file_with_ext,
 	ok_msg,
-	Ctrl_U
-)
+	Ctrl_U,
+	cleanup_env)
+
 from .base import CmdTestBase
 from .shared import CmdTestShared
 from .httpd.etherscan import EtherscanServer
@@ -120,7 +122,227 @@ def set_vbals(daemon_id):
 
 coin = cfg.coin
 
-class CmdTestEthdev(CmdTestBase, CmdTestShared):
+class CmdTestEthdevMethods: # mixin class
+
+	def _addrgen(self, addrs='1-3,11-13,21-23', no_msg=False):
+		t = self.spawn(
+			'mmgen-addrgen',
+			[f'--coin={self.proto.coin}'] + self.eth_args + [dfl_words_file, addrs],
+			no_msg = no_msg,
+			no_passthru_opts = True)
+		t.written_to_file('Addresses')
+		return t
+
+	def _create_tx(self, *, fee, args, add_opts=[]):
+		return self.txcreate_ui_common(
+			self.spawn('mmgen-txcreate', add_opts + ['-B'] + args),
+			caller            = 'txcreate',
+			input_sels_prompt = 'to spend from',
+			inputs            = '1',
+			file_desc         = 'transaction',
+			interactive_fee   = fee,
+			fee_desc          = 'transaction fee or gas price')
+
+	def _send_tx(self, *, desc='transaction', add_opts=[]):
+		t = self.spawn('mmgen-txsend', add_opts, no_passthru_opts=['coin'])
+		t.view_tx('t')
+		t.expect('(y/N): ', 'n')
+		self._do_confirm_send(t, quiet=True)
+		t.written_to_file(f'Sent {desc}')
+		return t
+
+	def _txdo(self, *, args, acct, fee='50G'):
+		t = self.txcreate(
+			args,
+			acct            = acct,
+			caller          = 'txdo',
+			no_read         = True,
+			bad_input_sels  = False,
+			interactive_fee = fee,
+			print_listing   = False)
+		t.written_to_file('Signed transaction')
+		t.expect('confirm: ', 'YES\n')
+		return t
+
+	def _txbump(self, *, fee, ext, add_opts=[], add_args=[]):
+		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
+		txfile = self.get_file_with_ext(ext, no_dot=True)
+		t = self.spawn('mmgen-txbump', self.eth_args + add_opts + ['--yes', txfile] + add_args)
+		t.expect('or gas price: ', fee+'\n')
+		return t
+
+	def _tx_receipt(self, ext='{}.regtest.sigtx'):
+		self.mining_delay()
+		return self.txsend(
+			ext = ext,
+			add_args = ['--receipt'],
+			return_early = True,
+			env = cleanup_env(cfg=self.cfg))
+
+	def _fund_mmgen_address(self, arg):
+		return self._txdo(
+			args = [f'--keys-from-file={joinpath(self.tmpdir, parity_devkey_fn)}', arg, dfl_words_file],
+			acct = '10')
+
+	def _token_addrgen(self, *, mm_idxs, naddrs):
+		self.spawn(msg_only=True)
+		for idx in mm_idxs:
+			t = self._addrgen(addrs=f'{idx}-{idx+naddrs-1}', no_msg=True)
+		return t
+
+	def _token_addrimport(self, addr_file, addr_range, expect, extra_args=[]):
+		token_addr = self.read_from_tmpfile(addr_file).strip()
+		return self.addrimport(
+			ext      = f'[{addr_range}]{{}}.regtest.addrs',
+			expect   = expect,
+			add_args = ['--token-addr='+token_addr]+extra_args)
+
+	def _get_contract_address(self, deployer_addr):
+		t = self.spawn(
+			'mmgen-cli',
+			['--regtest=1', 'eth_getTransactionCount', '0x'+deployer_addr, 'pending'],
+			env = cleanup_env(cfg=self.cfg),
+			silent = True,
+			no_msg = True)
+		nonce = t.read().strip()
+		imsg(f'Nonce: {red(nonce)}')
+		ret = compute_contract_addr(self.cfg, deployer_addr, int(nonce, 16))
+		imsg(f'Computed contract address: {blue(ret)}')
+		return ret
+
+	async def _token_deploy(self, num, key, gas, mmgen_cmd='txdo', gas_price='8G', get_receipt=True):
+		keyfile = joinpath(self.tmpdir, parity_devkey_fn)
+		fn = joinpath(self.tmpdir, 'mm'+str(num), key+'.bin')
+		args = [
+			'-B',
+			f'--fee={gas_price}',
+			f'--gas={gas}',
+			f'--contract-data={fn}',
+			f'--inputs={dfl_devaddr}',
+			'--yes',
+		]
+
+		contract_addr = self._get_contract_address(dfl_devaddr)
+		if key == 'Token':
+			self.write_to_tmpfile(f'token_addr{num}', contract_addr+'\n')
+
+		if mmgen_cmd == 'txdo':
+			args += ['-k', keyfile]
+		t = self.spawn('mmgen-'+mmgen_cmd, self.eth_args + args)
+		if mmgen_cmd == 'txcreate':
+			t.written_to_file('transaction')
+			ext = '[0,8000]{}.regtest.rawtx'.format('-α' if self.cfg.debug_utf8 else '')
+			txfile = self.get_file_with_ext(ext, no_dot=True)
+			t = self.spawn(
+				'mmgen-txsign',
+				self.eth_args + ['--yes', '-k', keyfile, txfile], no_msg=True, no_passthru_opts=['coin'])
+			self.txsign_ui_common(t, ni=True)
+
+			txfile = txfile.replace('.rawtx', '.sigtx')
+			t = self.spawn('mmgen-txsend',
+				self.eth_args + [txfile], no_msg=True, no_passthru_opts=['coin'])
+
+		txid = self.txsend_ui_common(t,
+			caller = mmgen_cmd,
+			quiet  = mmgen_cmd == 'txdo' or not self.cfg.debug,
+			bogus_send = False)
+
+		_ = strip_ansi_escapes(t.expect_getend('Contract address: '))
+		assert _ == contract_addr, f'Contract address mismatch: {_} != {contract_addr}'
+
+		if get_receipt:
+			if (await self.get_tx_receipt(txid)).status == 0:
+				die(2, f'Contract {num}:{key} failed to execute. Aborting')
+
+		if key == 'Token':
+			imsg(f'\nToken MM{num} deployed!')
+
+		return t
+
+	async def _token_deploy_math(self, *, num, get_receipt=True, mmgen_cmd='txdo'):
+		return await self._token_deploy(
+			num=num, key='SafeMath', gas=500_000, get_receipt=get_receipt, mmgen_cmd=mmgen_cmd)
+
+	async def _token_deploy_owned(self, *, num, get_receipt=True):
+		return await self._token_deploy(
+			num=num, key='Owned', gas=1_000_000, get_receipt=get_receipt)
+
+	async def _token_deploy_token(self, *, num, get_receipt=True):
+		return await self._token_deploy(
+			num=num, key='Token', gas=4_000_000, gas_price='7G', get_receipt=get_receipt)
+
+	def _bal_check(self, *, pat):
+		self.mining_delay()
+		t = self.spawn('mmgen-tool', ['--regtest=1', '--token=mm1', 'twview', 'wide=1'])
+		text = t.read(strip_color=True)
+		assert re.search(pat, text, re.DOTALL), f'output failed to match regex {pat}'
+		return t
+
+	def _create_token_tx(self, *, cmd, fee, args, add_opts=[]):
+		return self.txcreate_ui_common(
+			self.spawn(
+				f'mmgen-{cmd}',
+				['--token=MM1', '-B', f'--fee={fee}'] + add_opts + args),
+			inputs            = '1',
+			input_sels_prompt = 'to spend from',
+			caller            = cmd,
+			file_desc         = 'Unsigned automount transaction')
+
+	async def _token_transfer_ops(self, *, op, mm_idxs, amt=1000, get_receipt=True, sid=dfl_sid):
+		self.spawn(msg_only=True)
+		from mmgen.tool.wallet import tool_cmd
+		usr_mmaddrs = [f'{sid}:E:{i}' for i in mm_idxs]
+
+		from mmgen.proto.eth.contract import ResolvedToken
+		async def fund_user(rpc):
+			for i in range(len(usr_mmaddrs)):
+				tk = await ResolvedToken(
+					self.cfg,
+					self.proto,
+					rpc,
+					self.read_from_tmpfile(f'token_addr{i+1}').strip())
+				imsg_r('\n' + await tk.info())
+				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_devaddr)))
+				imsg(f'Sending {amt} {self.proto.dcoin} to address {usr_addrs[i]} ({usr_mmaddrs[i]})')
+				txid = await tk.transfer(
+					from_addr = dfl_devaddr,
+					to_addr   = usr_addrs[i],
+					amt       = amt,
+					key       = dfl_devkey,
+					gas       = self.proto.coin_amt(120000, from_unit='wei'),
+					gasPrice  = self.proto.coin_amt(8, from_unit='Gwei'))
+
+				if get_receipt and (await self.get_tx_receipt(txid)).status == 0:
+					die(2, 'Transfer of token funds failed. Aborting')
+
+		async def show_bals(rpc):
+			for i in range(len(usr_mmaddrs)):
+				tk = await ResolvedToken(
+					self.cfg,
+					self.proto,
+					rpc,
+					self.read_from_tmpfile(f'token_addr{i+1}').strip())
+				imsg('Token: {}'.format(await tk.get_symbol()))
+				imsg(f'dev token balance: {await tk.get_balance(dfl_devaddr)}')
+				imsg('usr token balance: {} ({} {})'.format(
+					await tk.get_balance(usr_addrs[i]),
+					usr_mmaddrs[i],
+					usr_addrs[i]))
+
+		def gen_addr(addr):
+			return tool_cmd(
+				self.cfg, cmdname='gen_addr', proto=self.proto).gen_addr(addr, wallet=dfl_words_file)
+
+		silence()
+		usr_addrs = list(map(gen_addr, usr_mmaddrs))
+		if op == 'show_bals':
+			await show_bals(await self.rpc)
+		elif op == 'fund_user':
+			await fund_user(await self.rpc)
+		end_silence()
+		return 'ok'
+
+class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 	'Ethereum transacting, token deployment and tracking wallet operations'
 	networks = ('eth', 'etc')
 	passthru_opts = ('coin', 'daemon_id', 'eth_daemon_id', 'http_timeout', 'rpc_backend')
@@ -595,7 +817,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 
 		make_key()
 		signer_addr = self.keystore_data['address']
-		self.write_to_tmpfile( 'signer_addr', signer_addr + '\n')
+		self.write_to_tmpfile('signer_addr', signer_addr + '\n')
 
 		imsg(f'  Keystore:           {self.keystore_dir}')
 		imsg(f'  Signer key:         {self.keystore_data["key"]}')
@@ -647,13 +869,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	async def wallet_upgrade2(self):
 		return await self._wallet_upgrade('tracking-wallet-v2.json', 'token params field', 'network field')
 
-	def addrgen(self, addrs='1-3,11-13,21-23'):
-		t = self.spawn(
-			'mmgen-addrgen',
-			[f'--coin={self.proto.coin}'] + self.eth_args + [dfl_words_file, addrs],
-			no_passthru_opts = True)
-		t.written_to_file('Addresses')
-		return t
+	def addrgen(self):
+		return self._addrgen()
 
 	def addrimport(
 			self,
@@ -716,7 +933,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			t.read()
 		return t
 
-	def txsign(self, ni=False, ext='{}.regtest.rawtx', add_args=[], dev_send=False):
+	def txsign(self, ni=False, ext='{}.regtest.rawtx', add_args=[], dev_send=False, has_label=True):
 		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
 		keyfile = joinpath(self.tmpdir, parity_devkey_fn)
 		txfile = self.get_file_with_ext(ext, no_dot=True)
@@ -729,18 +946,31 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 				+ add_args
 				+ [txfile, dfl_words_file],
 			no_passthru_opts = ['coin'])
-		return self.txsign_ui_common(t, ni=ni, has_label=True)
+		return self.txsign_ui_common(t, ni=ni, has_label=has_label)
 
-	def txsend(self, ext='{}.regtest.sigtx', add_args=[], test=False):
+	def txsend(
+			self,
+			ext          = '{}.regtest.sigtx',
+			add_args     = [],
+			test         = False,
+			return_early = False,
+			has_label    = True,
+			env          = {}):
 		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext, no_dot=True)
-		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile], no_passthru_opts=['coin'])
+		t = self.spawn(
+			'mmgen-txsend',
+			self.eth_args + add_args + [txfile],
+			no_passthru_opts = ['coin'],
+			env = env)
+		if return_early:
+			return t
 		self.txsend_ui_common(
 			t,
 			quiet      = not self.cfg.debug,
 			bogus_send = False,
 			test       = test,
-			has_label  = True)
+			has_label  = has_label)
 		return t
 
 	def txview(self, ext_fs):
@@ -931,12 +1161,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			interactive_fee  = '40G',
 			fee_info_data    = ('0.00084', '40'))
 
-	def txbump(self, ext=',40000]{}.regtest.rawtx', fee='50G', add_args=[]):
-		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
-		txfile = self.get_file_with_ext(ext, no_dot=True)
-		t = self.spawn('mmgen-txbump', self.eth_args + add_args + ['--yes', txfile])
-		t.expect('or gas price: ', fee+'\n')
-		return t
+	def txbump(self):
+		return self._txbump(fee='50G', ext=',40000]{}.regtest.rawtx')
 
 	def txsign4(self):
 		return self.txsign(ext='.45495,50000]{}.regtest.rawtx', add_args=['--no-quiet', '--no-yes'])
@@ -1053,6 +1279,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		tx = await NewTX(cfg=self.cfg, proto=self.proto, target='tx')
 		tx.rpc = await self.rpc
 		res = await tx.get_receipt(txid)
+		if not res:
+			die(1, f'Error getting receipt for transaction {txid}')
 		imsg(f'Gas sent:  {res.gas_sent.hl():<9} {(res.gas_sent*res.gas_price).hl2(encl="()")}')
 		imsg(f'Gas used:  {res.gas_used.hl():<9} {(res.gas_used*res.gas_price).hl2(encl="()")}')
 		imsg(f'Gas price: {res.gas_price.hl()}')
@@ -1060,50 +1288,23 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 			omsg(yellow('Warning: all gas was used!'))
 		return res
 
-	async def token_deploy(self, num, key, gas, mmgen_cmd='txdo', gas_price='8G'):
-		keyfile = joinpath(self.tmpdir, parity_devkey_fn)
-		fn = joinpath(self.tmpdir, 'mm'+str(num), key+'.bin')
-		args = [
-			'-B',
-			f'--fee={gas_price}',
-			f'--gas={gas}',
-			f'--contract-data={fn}',
-			f'--inputs={dfl_devaddr}',
-			'--yes',
-		]
-		if mmgen_cmd == 'txdo':
-			args += ['-k', keyfile]
-		t = self.spawn('mmgen-'+mmgen_cmd, self.eth_args + args)
-		if mmgen_cmd == 'txcreate':
-			t.written_to_file('transaction')
-			ext = '[0,8000]{}.regtest.rawtx'.format('-α' if self.cfg.debug_utf8 else '')
-			txfile = self.get_file_with_ext(ext, no_dot=True)
-			t = self.spawn(
-				'mmgen-txsign',
-				self.eth_args + ['--yes', '-k', keyfile, txfile], no_msg=True, no_passthru_opts=['coin'])
-			self.txsign_ui_common(t, ni=True)
-			txfile = txfile.replace('.rawtx', '.sigtx')
-			t = self.spawn('mmgen-txsend',
-				self.eth_args + [txfile], no_msg=True, no_passthru_opts=['coin'])
-
-		txid = self.txsend_ui_common(t,
-			caller = mmgen_cmd,
-			quiet  = mmgen_cmd == 'txdo' or not self.cfg.debug,
-			bogus_send = False)
-		addr = strip_ansi_escapes(t.expect_getend('Contract address: '))
-		if (await self.get_tx_receipt(txid)).status == 0:
-			die(2, f'Contract {num}:{key} failed to execute. Aborting')
-		if key == 'Token':
-			self.write_to_tmpfile(f'token_addr{num}', addr+'\n')
-			imsg(f'\nToken MM{num} deployed!')
-		return t
-
 	async def token_deploy1a(self):
-		return await self.token_deploy(num=1, key='SafeMath', gas=500_000)
+		return await self._token_deploy_math(num=1)
+
 	async def token_deploy1b(self):
-		return await self.token_deploy(num=1, key='Owned',    gas=1_000_000)
+		return await self._token_deploy_owned(num=1)
+
 	async def token_deploy1c(self):
-		return await self.token_deploy(num=1, key='Token',    gas=4_000_000, gas_price='7G')
+		return await self._token_deploy_token(num=1)
+
+	async def token_deploy2a(self): # test create, sign, send:
+		return await self._token_deploy_math(num=2, mmgen_cmd='txcreate')
+
+	async def token_deploy2b(self):
+		return await self._token_deploy_owned(num=2)
+
+	async def token_deploy2c(self):
+		return await self._token_deploy_token(num=2)
 
 	def tx_status2(self):
 		return self.tx_status(
@@ -1113,79 +1314,14 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	def bal6(self):
 		return self.bal5()
 
-	async def token_deploy2a(self): # test create, sign, send:
-		return await self.token_deploy(num=2, key='SafeMath', gas=500_000, mmgen_cmd='txcreate')
-	async def token_deploy2b(self):
-		return await self.token_deploy(num=2, key='Owned',   gas=1_000_000)
-	async def token_deploy2c(self):
-		return await self.token_deploy(num=2, key='Token',   gas=4_000_000)
-
-	async def token_transfer_ops(self, op, amt=1000, num_tokens=2):
-		self.spawn(msg_only=True)
-		sid = dfl_sid
-		from mmgen.tool.wallet import tool_cmd
-		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11, 21)][:num_tokens]
-
-		from mmgen.proto.eth.contract import ResolvedToken
-		async def do_transfer(rpc):
-			for i in range(num_tokens):
-				tk = await ResolvedToken(
-					self.cfg,
-					self.proto,
-					rpc,
-					self.read_from_tmpfile(f'token_addr{i+1}').strip())
-				imsg_r('\n' + await tk.info())
-				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_devaddr)))
-				imsg(f'Sending {amt} {self.proto.dcoin} to address {usr_addrs[i]} ({usr_mmaddrs[i]})')
-				txid = await tk.transfer(
-					from_addr = dfl_devaddr,
-					to_addr   = usr_addrs[i],
-					amt       = amt,
-					key       = dfl_devkey,
-					gas       = self.proto.coin_amt(120000, from_unit='wei'),
-					gasPrice  = self.proto.coin_amt(8, from_unit='Gwei'))
-				if (await self.get_tx_receipt(txid)).status == 0:
-					die(2, 'Transfer of token funds failed. Aborting')
-
-		async def show_bals(rpc):
-			for i in range(num_tokens):
-				tk = await ResolvedToken(
-					self.cfg,
-					self.proto,
-					rpc,
-					self.read_from_tmpfile(f'token_addr{i+1}').strip())
-				imsg('Token: {}'.format(await tk.get_symbol()))
-				imsg(f'dev token balance: {await tk.get_balance(dfl_devaddr)}')
-				imsg('usr token balance: {} ({} {})'.format(
-					await tk.get_balance(usr_addrs[i]),
-					usr_mmaddrs[i],
-					usr_addrs[i]))
-
-		def gen_addr(addr):
-			return tool_cmd(
-				self.cfg, cmdname='gen_addr', proto=self.proto).gen_addr(addr, wallet=dfl_words_file)
-
-		silence()
-		usr_addrs = list(map(gen_addr, usr_mmaddrs))
-		if op == 'show_bals':
-			await show_bals(await self.rpc)
-		elif op == 'do_transfer':
-			await do_transfer(await self.rpc)
-		end_silence()
-		return 'ok'
-
 	def token_fund_users(self):
-		return self.token_transfer_ops(op='do_transfer')
+		return self._token_transfer_ops(op='fund_user', mm_idxs=[11, 21])
 
 	def token_user_bals(self):
-		return self.token_transfer_ops(op='show_bals')
+		return self._token_transfer_ops(op='show_bals', mm_idxs=[11, 21])
 
-	def token_addrgen(self, num_tokens=2):
-		t = self.addrgen(addrs='11-13')
-		if num_tokens == 1:
-			return t
-		ok_msg()
-		return self.addrgen(addrs='21-23')
+	def token_addrgen(self):
+		return self._token_addrgen(mm_idxs=[11, 21], naddrs=3)
 
 	def token_addrimport_badaddr1(self):
 		t = self.addrimport(
@@ -1205,21 +1341,14 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 		t.expect('could not be resolved')
 		return t
 
-	def token_addrimport(self, addr_file, addr_range, expect, extra_args=[]):
-		token_addr = self.read_from_tmpfile(addr_file).strip()
-		return self.addrimport(
-			ext      = f'[{addr_range}]{{}}.regtest.addrs',
-			expect   = expect,
-			add_args = ['--token-addr='+token_addr]+extra_args)
-
 	def token_addrimport_addr1(self):
-		return self.token_addrimport('token_addr1', '11-13', expect='3/3')
+		return self._token_addrimport('token_addr1', '11-13', expect='3/3')
 
 	def token_addrimport_addr2(self):
-		return self.token_addrimport('token_addr2', '21-23', expect='3/3')
+		return self._token_addrimport('token_addr2', '21-23', expect='3/3')
 
 	def token_addrimport_batch(self):
-		return self.token_addrimport('token_addr1', '11-13', expect='3 addresses', extra_args=['--batch'])
+		return self._token_addrimport('token_addr1', '11-13', expect='3 addresses', extra_args=['--batch'])
 
 	def token_addrimport_sym(self):
 		return self.addrimport(
@@ -1285,7 +1414,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared):
 	def token_txcreate2(self):
 		return self.token_txcreate(args=[burn_addr+', '+amt2], token='mm1')
 	def token_txbump(self):
-		return self.txbump(ext=amt2+',50000]{}.regtest.rawtx', fee='56G', add_args=['--token=mm1'])
+		return self._txbump(ext=amt2+',50000]{}.regtest.rawtx', fee='56G', add_opts=['--token=MM1'])
 	def token_txsign2(self):
 		return self.token_txsign(ext=amt2+',50000]{}.regtest.rawtx', token='mm1')
 	def token_txsend2(self):

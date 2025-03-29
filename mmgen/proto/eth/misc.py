@@ -71,3 +71,8 @@ def ec_recover_pubkey(cfg, message, sig, msghash_type):
 		*ecdsa_raw_recover(
 			hash_message(cfg, message, msghash_type), tuple(int(hexstr, 16) for hexstr in (v, r, s)))
 	)
+
+def compute_contract_addr(cfg, deployer_addr, nonce):
+	from . import rlp
+	encoded = rlp.encode([bytes.fromhex(deployer_addr), nonce])
+	return get_keccak(cfg)(encoded).hexdigest()[-40:]
