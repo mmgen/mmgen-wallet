@@ -42,6 +42,7 @@ cmd_groups_dfl = {
 	'ethswap':            ('CmdTestEthSwap',           {}),
 	# 'chainsplit':         ('CmdTestChainsplit',      {}),
 	'ethdev':             ('CmdTestEthdev',            {}),
+	'ethbump':            ('CmdTestEthBump',           {}),
 	'xmrwallet':          ('CmdTestXMRWallet',         {}),
 	'xmr_autosign':       ('CmdTestXMRAutosign',       {}),
 }
@@ -243,6 +244,7 @@ cfgs = { # addr_idx_lists (except 31, 32, 33, 34) must contain exactly 8 address
 	'39': {}, # xmr_autosign
 	'40': {}, # cfgfile
 	'41': {}, # opts
+	'42': {}, # ethbump
 	'47': {}, # ethswap
 	'48': {}, # ethswap_eth
 	'49': {}, # autosign_automount

@@ -1,6 +1,6 @@
 ```text
   MMGEN-TXBUMP: Create, and optionally send and sign, a replacement transaction
-                on networks that support replace-by-fee (RBF)
+                on supporting networks
   USAGE:        mmgen-txbump [opts] [MMGen TX file] [seed source] ...
                 mmgen-txbump [opts] [ADDR,AMT ... | DATA_SPEC] ADDR [MMGen TX file] [seed source] ...
   OPTIONS:
@@ -116,5 +116,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN v15.1.dev18              March 2025                    MMGEN-TXBUMP(1)
+  MMGEN-WALLET 15.1.dev25        March 2025                    MMGEN-TXBUMP(1)
 ```

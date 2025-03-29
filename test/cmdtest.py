@@ -129,6 +129,7 @@ opts_data = {
                      debugging only)
 -e, --exact-output   Show the exact output of the MMGen script(s) being run
 -G, --exclude-groups=G Exclude the specified command groups (comma-separated)
+-k, --devnet-block-period=N Block time for Ethereum devnet bump tests
 -l, --list-cmds      List the test script’s available commands
 -L, --list-cmd-groups List the test script’s command groups and subgroups
 -g, --list-current-cmd-groups List command groups for current configuration

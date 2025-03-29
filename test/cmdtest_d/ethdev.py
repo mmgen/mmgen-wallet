@@ -353,6 +353,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 	color = True
 	menu_prompt = 'efresh balance:\b'
 	input_sels_prompt = 'to spend from: '
+	devnet_block_period = None
 
 	bals = lambda self, k: {
 		'1': [  ('98831F3A:E:1', '123.456')],
@@ -728,6 +729,10 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 			if not d.id in ('geth', 'erigon'):
 				d.stop(silent=True)
 				d.remove_datadir()
+			if d.id in ('geth', 'reth'):
+				if bp := self.devnet_block_period:
+					d.usr_coind_args = [
+						f'--dev.block-time={bp}s' if d.id == 'reth' else f'--dev.period={bp}']
 			d.start(silent=self.tr.quiet)
 			rpc = await self.rpc
 			imsg(f'Daemon: {rpc.daemon.coind_name} v{rpc.daemon_version_str}')

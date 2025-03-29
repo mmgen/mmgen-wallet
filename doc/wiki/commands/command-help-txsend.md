@@ -21,6 +21,7 @@
                    ‘etherscan’).  This is done via a publicly accessible web
                    page, so no API key or registration is required
   -q, --quiet      Suppress warnings; overwrite files without prompting
+  -r, --receipt    Print the receipt of the sent transaction (Ethereum only)
   -s, --status     Get status of a sent transaction (or current transaction,
                    whether sent or unsent, when used with --autosign)
   -t, --test       Test whether the transaction can be sent without sending it
@@ -28,5 +29,5 @@
   -x, --proxy P    Connect to TX proxy via SOCKS5 proxy ‘P’ (host:port)
   -y, --yes        Answer 'yes' to prompts, suppress non-essential output
 
-  MMGEN v15.1.dev20              March 2025                    MMGEN-TXSEND(1)
+  MMGEN-WALLET 15.1.dev25        March 2025                    MMGEN-TXSEND(1)
 ```
