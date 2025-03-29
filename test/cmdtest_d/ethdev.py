@@ -184,6 +184,13 @@ class CmdTestEthdevMethods: # mixin class
 			args = [f'--keys-from-file={joinpath(self.tmpdir, parity_devkey_fn)}', arg, dfl_words_file],
 			acct = '10')
 
+	def _bal_check(self, *, pat, add_opts=[]):
+		self.mining_delay()
+		t = self.spawn('mmgen-tool', ['--regtest=1'] + add_opts + ['twview', 'wide=1'])
+		text = t.read(strip_color=True)
+		assert re.search(pat, text, re.DOTALL), f'output failed to match regex {pat}'
+		return t
+
 	def _token_addrgen(self, *, mm_idxs, naddrs):
 		self.spawn(msg_only=True)
 		for idx in mm_idxs:
@@ -271,12 +278,8 @@ class CmdTestEthdevMethods: # mixin class
 		return await self._token_deploy(
 			num=num, key='Token', gas=4_000_000, gas_price='7G', get_receipt=get_receipt)
 
-	def _bal_check(self, *, pat):
-		self.mining_delay()
-		t = self.spawn('mmgen-tool', ['--regtest=1', '--token=mm1', 'twview', 'wide=1'])
-		text = t.read(strip_color=True)
-		assert re.search(pat, text, re.DOTALL), f'output failed to match regex {pat}'
-		return t
+	def _token_bal_check(self, *, pat):
+		return self._bal_check(pat=pat, add_opts=['--token=MM1'])
 
 	def _create_token_tx(self, *, cmd, fee, args, add_opts=[]):
 		return self.txcreate_ui_common(
@@ -1009,7 +1012,10 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 	def txsign1(self):
 		return self.txsign(add_args=['--use-internal-keccak-module'], dev_send=True)
 	def tx_status0_bad(self):
-		return self.tx_status(ext='{}.regtest.sigtx', expect_str='neither in mempool nor blockchain', exit_val=1)
+		return self.tx_status(
+			ext        = '{}.regtest.sigtx',
+			expect_str = 'neither in mempool nor blockchain',
+			exit_val   = 1)
 	def txsign1_ni(self):
 		return self.txsign(ni=True, dev_send=True)
 
@@ -1053,13 +1059,13 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 	def bal3(self):
 		return self.bal(n='3')
 
-	def tx_status(self, ext, expect_str, expect_str2='', add_args=[], exit_val=0):
+	def tx_status(self, ext, expect_str, expect_str2='', exit_val=0):
 		self.mining_delay()
 		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
 			'mmgen-txsend',
-			self.eth_opts + add_args + ['--status', txfile],
+			self.eth_opts + ['--status', txfile],
 			no_passthru_opts = ['coin'],
 			exit_val = exit_val)
 		t.expect(expect_str)
@@ -1308,8 +1314,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 
 	def tx_status2(self):
 		return self.tx_status(
-				ext        = self.proto.coin+'[0,7000]{}.regtest.sigtx',
-				expect_str = 'successfully executed')
+			ext        = self.proto.coin+'[0,7000]{}.regtest.sigtx',
+			expect_str = 'successfully executed')
 
 	def bal6(self):
 		return self.bal5()
@@ -1369,7 +1375,8 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 			fee       = '50G',
 			file_desc = 'Unsigned transaction'):
 		return self.txcreate_ui_common(
-			self.spawn('mmgen-txcreate',
+			self.spawn(
+				'mmgen-txcreate',
 				self.eth_opts + [f'--token={token}', '-B', f'--fee={fee}'] + args),
 			menu              = [],
 			inputs            = inputs,

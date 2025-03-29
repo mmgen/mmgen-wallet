@@ -92,10 +92,10 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev, CmdTestEthdevMe
 		return self._token_transfer_ops(op='fund_user', mm_idxs=[11])
 
 	def token_bal1(self):
-		return self._bal_check(pat=r':E:11\s+1000\s+54\.321\s+')
+		return self._token_bal_check(pat=r':E:11\s+1000\s+54\.321\s+')
 
 	def token_bal2(self):
-		return self._bal_check(pat=r':E:11\s+998.76544\s+54.318\d+\s+.*:E:12\s+1\.23456\s+')
+		return self._token_bal_check(pat=r':E:11\s+998.76544\s+54.318\d+\s+.*:E:12\s+1\.23456\s+')
 
 	def create_token_tx(self):
 		self.insert_device_online()
