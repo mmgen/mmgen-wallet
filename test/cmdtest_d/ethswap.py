@@ -39,6 +39,7 @@ class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
 	tmpdir_nums = [47]
 	networks = ('btc',)
 	passthru_opts = ('coin', 'rpc_backend', 'eth_daemon_id')
+	eth_group = 'ethswap_eth'
 
 	cmd_group_in = (
 		('setup',                'regtest (Bob and Alice) mode setup'),
@@ -87,8 +88,14 @@ class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
 		('swaptxcreate2', 'creating a BTC->ETH swap transaction (used account)'),
 		('swaptxsign1',   'signing the swap transaction'),
 		('swaptxsend1',   'sending the swap transaction'),
+		('swaptxbump1',   'bumping the swap transaction'),
+		('swaptxsign2',   'signing the bump transaction'),
+		('swaptxsend2',   'sending the bump transaction'),
 		('generate',      'generating a block'),
 		('bob_bal2',      'Bob’s balance'),
+		('swaptxdo1',     'creating, signing and sending a swap transaction'),
+		('generate',      'generating a block'),
+		('bob_bal3',      'Bob’s balance'),
 	),
 	'eth_swap': (
 		'swap operations (ETH -> BTC)',
@@ -125,7 +132,7 @@ class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
 			'coin': 'eth'})
 		t = trunner
 		ethswap_eth = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
-		ethswap_eth.init_group('ethswap_eth')
+		ethswap_eth.init_group(self.eth_group)
 
 		thornode_server.start()
 
@@ -156,11 +163,31 @@ class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
 	def swaptxsign1(self):
 		return self._swaptxsign()
 
+	def swaptxsign2(self):
+		return self._swaptxsign()
+
 	def swaptxsend1(self):
 		return self._swaptxsend()
 
+	def swaptxsend2(self):
+		return self._swaptxsend()
+
+	def swaptxbump1(self): # create one-output TX back to self to rescue funds
+		return self._swaptxbump('40s', output_args=[f'{dfl_seed_id}:B:1'])
+
+	def swaptxdo1(self):
+		return self._swaptxcreate_ui_common(
+			self._swaptxcreate(
+				['BTC', '0.223344', f'{dfl_seed_id}:B:3', 'ETH', f'{dfl_seed_id}:E:2'],
+				action = 'txdo'),
+			sign_and_send = True,
+			file_desc = 'Sent transaction')
+
 	def bob_bal2(self):
-		return self._user_bal_cli('bob', chk='491.23498314')
+		return self._user_bal_cli('bob', chk='499.9999252')
+
+	def bob_bal3(self):
+		return self._user_bal_cli('bob', chk='499.77656902')
 
 	def thornode_server_stop(self):
 		self.spawn(msg_only=True)
@@ -198,7 +225,7 @@ class CmdTestEthSwapEth(CmdTestEthdev, CmdTestSwapMethods):
 	def swaptxcreate2(self):
 		self.get_file_with_ext('rawtx', delete_all=True)
 		t = self._swaptxcreate(
-			['ETH', '8.765', 'BTC', f'{dfl_seed_id}:B:3'],
+			['ETH', '8.765', 'BTC', f'{dfl_seed_id}:B:4'],
 			add_opts = ['--trade-limit=3%'])
 		t.expect('Continue? (Y/n):', 'y')
 		return self._swaptxcreate_ui_common(t, expect=':2019e4/1/0')
