@@ -9,21 +9,21 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-test.cmdtest_d.ct_ethswap: Ethereum swap tests for the cmdtest.py test suite
+test.cmdtest_d.ethswap: Ethereum swap tests for the cmdtest.py test suite
 """
 
 from mmgen.wallet.mmgen import wallet as MMGenWallet
 from mmgen.cfg import Config
 from mmgen.protocol import init_proto
 
-from .runner import CmdTestRunner
+from .include.runner import CmdTestRunner
 
-from .common import dfl_words_file, dfl_seed_id, rt_pw
+from .include.common import dfl_words_file, dfl_seed_id, rt_pw
 
 from .httpd.thornode import ThornodeServer
-from .ct_regtest import CmdTestRegtest
-from .ct_swap import CmdTestSwapMethods
-from .ct_ethdev import CmdTestEthdev
+from .regtest import CmdTestRegtest
+from .swap import CmdTestSwapMethods
+from .ethdev import CmdTestEthdev
 
 thornode_server = ThornodeServer()
 

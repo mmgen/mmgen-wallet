@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_regtest: Regtest tests for the cmdtest.py test suite
+test.cmdtest_d.regtest: Regtest tests for the cmdtest.py test suite
 """
 
 import os, json, time, re
@@ -46,7 +46,7 @@ from ..include.common import (
 	getrandhex,
 	make_burn_addr)
 
-from .common import (
+from .include.common import (
 	ok_msg,
 	get_file_with_ext,
 	get_comment,
@@ -56,8 +56,8 @@ from .common import (
 	get_env_without_debug_vars,
 	rt_pw)
 
-from .ct_base import CmdTestBase
-from .ct_shared import CmdTestShared
+from .base import CmdTestBase
+from .shared import CmdTestShared
 
 pat_date = r'\b\d\d-\d\d-\d\d\b'
 pat_date_time = r'\b\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d\b'

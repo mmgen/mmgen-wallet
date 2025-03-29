@@ -90,7 +90,7 @@ init_tests() {
 		b $pylint $PYLINT_OPTS --disable=relative-beyond-top-level test/cmdtest_d
 		a $pylint $PYLINT_OPTS --ignore-paths '.*/eth/.*' mmgen
 		a $pylint $PYLINT_OPTS --ignore-paths '.*/dep.py,.*/testdep.py' test
-		a $pylint $PYLINT_OPTS --ignore-paths '.*/ct_ethdev.py' --disable=relative-beyond-top-level test/cmdtest_d
+		a $pylint $PYLINT_OPTS --ignore-paths '.*/ethdev.py' --disable=relative-beyond-top-level test/cmdtest_d
 		- $pylint $PYLINT_OPTS examples
 	"
 

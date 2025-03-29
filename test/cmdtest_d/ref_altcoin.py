@@ -17,15 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_ref_altcoin: Altcoin reference file tests for the cmdtest.py test suite
+test.cmdtest_d.ref_altcoin: Altcoin reference file tests for the cmdtest.py test suite
 """
 
 from mmgen.color import set_vt100
 
-from .common import pwfile, dfl_wpasswd, ref_dir, dfl_words_file, dfl_addr_idx_list
+from .include.common import pwfile, dfl_wpasswd, ref_dir, dfl_words_file, dfl_addr_idx_list
 from ..include.common import joinpath, start_test_daemons, stop_test_daemons, cmp_or_die
-from .ct_ref import CmdTestRef
-from .ct_base import CmdTestBase
+from .ref import CmdTestRef
+from .base import CmdTestBase
 
 class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 	'saved and generated altcoin reference files'

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_wallet: Wallet conversion tests for the cmdtest.py test suite
+test.cmdtest_d.wallet: Wallet conversion tests for the cmdtest.py test suite
 """
 
 import sys, os
@@ -26,9 +26,9 @@ from mmgen.util import msg, capfirst, get_extension
 from mmgen.wallet import get_wallet_cls
 
 from ..include.common import joinpath, VirtBlockDevice
-from .common import ref_dir, ref_wallet_brainpass, ref_wallet_incog_offset, hincog_fn, hincog_bytes
-from .ct_base import CmdTestBase
-from .ct_shared import CmdTestShared
+from .include.common import ref_dir, ref_wallet_brainpass, ref_wallet_incog_offset, hincog_fn, hincog_bytes
+from .base import CmdTestBase
+from .shared import CmdTestShared
 
 class CmdTestWalletConv(CmdTestBase, CmdTestShared):
 	'wallet conversion to and from reference data'

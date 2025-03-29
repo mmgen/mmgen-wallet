@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-test.include.group_mgr: Command group manager for the MMGen Wallet cmdtest suite
+cmdtest_d.include.group_mgr: Command group manager for the MMGen Wallet cmdtest suite
 """
 
 import sys, os, time
@@ -84,7 +84,7 @@ class CmdGroupMgr:
 		if modname is None and 'modname' in kwargs:
 			modname = kwargs['modname']
 		import importlib
-		modpath = f'test.cmdtest_d.ct_{modname or gname}'
+		modpath = f'test.cmdtest_d.{modname or gname}'
 		return getattr(importlib.import_module(modpath), clsname)
 
 	def create_group(self, gname, sg_name, full_data=False, modname=None, is3seed=False, add_dpy=False):

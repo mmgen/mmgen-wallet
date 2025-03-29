@@ -12,4 +12,4 @@
 test.include.cfg: Configuration for test scripts
 """
 
-from ..cmdtest_d.cfg import cfgs as clean_cfgs
+from ..cmdtest_d.include.cfg import cfgs as clean_cfgs

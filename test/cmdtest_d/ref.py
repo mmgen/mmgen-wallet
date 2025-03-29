@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_ref: Reference file tests for the cmdtest.py test suite
+test.cmdtest_d.ref: Reference file tests for the cmdtest.py test suite
 """
 
 import os
@@ -33,7 +33,7 @@ from ..include.common import (
 	read_from_file,
 	sample_text
 )
-from .common import (
+from .include.common import (
 	dfl_words_file,
 	ref_dir,
 	chksum_pat,
@@ -45,8 +45,8 @@ from .common import (
 	skip
 )
 
-from .ct_base import CmdTestBase
-from .ct_shared import CmdTestShared
+from .base import CmdTestBase
+from .shared import CmdTestShared
 
 wpasswd = 'reference password'
 

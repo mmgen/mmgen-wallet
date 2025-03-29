@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.cmdtest_d.ct_tool: tool tests for the MMGen cmdtest.py test suite
+test.cmdtest_d.tool: tool tests for the MMGen cmdtest.py test suite
 """
 
 import sys, os
@@ -23,9 +23,9 @@ from ..include.common import (
 	joinpath,
 	getrand
 )
-from .common import hincog_fn, incog_id_fn, hincog_offset, tool_enc_passwd, ref_dir
-from .ct_base import CmdTestBase
-from .ct_main import CmdTestMain
+from .include.common import hincog_fn, incog_id_fn, hincog_offset, tool_enc_passwd, ref_dir
+from .base import CmdTestBase
+from .main import CmdTestMain
 
 class CmdTestTool(CmdTestMain, CmdTestBase):
 	"interactive 'mmgen-tool' commands"

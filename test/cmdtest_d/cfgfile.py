@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.cmdtest_d.ct_cfgfile: CfgFile tests for the MMGen cmdtest.py test suite
+test.cmdtest_d.cfgfile: CfgFile tests for the MMGen cmdtest.py test suite
 """
 
 import sys, os, time, shutil
@@ -16,7 +16,7 @@ from mmgen.color import yellow
 from mmgen.cfgfile import CfgFileSampleSys, CfgFileSampleUsr, cfg_file_sample
 
 from ..include.common import read_from_file, write_to_file, imsg
-from .ct_base import CmdTestBase
+from .base import CmdTestBase
 
 class CmdTestCfgFile(CmdTestBase):
 	'CfgFile API'

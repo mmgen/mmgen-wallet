@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_xmrwallet: xmrwallet tests for the cmdtest.py test suite
+test.cmdtest_d.xmrwallet: xmrwallet tests for the cmdtest.py test suite
 """
 
 import sys, os, time, re, atexit, asyncio, shutil
@@ -42,8 +42,8 @@ from ..include.common import (
 	end_silence,
 	strip_ansi_escapes
 )
-from .common import get_file_with_ext
-from .ct_base import CmdTestBase
+from .include.common import get_file_with_ext
+from .base import CmdTestBase
 
 # atexit functions:
 def stop_daemons(self):

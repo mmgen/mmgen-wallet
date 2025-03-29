@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-test.include.runner: test runner for the MMGen Wallet cmdtest suite
+test.cmdtest_d.include.runner: test runner for the MMGen Wallet cmdtest suite
 """
 
 import sys, os, time, asyncio
@@ -18,7 +18,7 @@ from mmgen.cfg import gc
 from mmgen.color import red, yellow, green, blue, cyan, gray, nocolor
 from mmgen.util import msg, Msg, rmsg, bmsg, die, suf, make_timestr
 
-from test.include.common import (
+from ...include.common import (
 	cmdtest_py_log_fn,
 	iqmsg,
 	omsg,
@@ -229,7 +229,7 @@ class CmdTestRunner:
 
 	def init_group(self, gname, sg_name=None, cmd=None, quiet=False, do_clean=True):
 
-		from test.cmdtest_d.cfg import cmd_groups_altcoin
+		from .cfg import cmd_groups_altcoin
 		if self.cfg.no_altcoin and gname in cmd_groups_altcoin:
 			omsg(gray(f'INFO → skipping test group {gname!r} (--no-altcoin)'))
 			return None

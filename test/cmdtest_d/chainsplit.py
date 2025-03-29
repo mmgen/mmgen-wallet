@@ -17,14 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_chainsplit: Forking scenario tests for the cmdtest.py test suite
+test.cmdtest_d.chainsplit: Forking scenario tests for the cmdtest.py test suite
 This module is unmaintained and currently non-functional
 """
 
 from mmgen.util import die
 
-from .common import get_file_with_ext, rt_pw
-from .ct_regtest import CmdTestRegtest
+from .include.common import get_file_with_ext, rt_pw
+from .regtest import CmdTestRegtest
 
 class CmdTestChainsplit(CmdTestRegtest):
 	'forking scenario tests for the cmdtest.py test suite'

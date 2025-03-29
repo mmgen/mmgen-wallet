@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_shared: Shared methods for the cmdtest.py test suite
+test.cmdtest_d.shared: Shared methods for the cmdtest.py test suite
 """
 
 from mmgen.util import get_extension
@@ -26,7 +26,7 @@ from mmgen.addrlist import AddrList
 from mmgen.passwdlist import PasswordList
 
 from ..include.common import cfg, cmp_or_die, strip_ansi_escapes, joinpath, silence, end_silence
-from .common import ref_bw_file, ref_bw_hash_preset, ref_dir
+from .include.common import ref_bw_file, ref_bw_hash_preset, ref_dir
 
 class CmdTestShared:
 	'shared methods for the cmdtest.py test suite'

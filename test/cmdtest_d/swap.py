@@ -9,18 +9,18 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-test.cmdtest_d.ct_swap: asset swap tests for the cmdtest.py test suite
+test.cmdtest_d.swap: asset swap tests for the cmdtest.py test suite
 """
 
 from pathlib import Path
 
 from mmgen.protocol import init_proto
 from ..include.common import make_burn_addr, gr_uc
-from .common import dfl_bip39_file
+from .include.common import dfl_bip39_file
 from .httpd.thornode import ThornodeServer
 
-from .ct_autosign import CmdTestAutosign, CmdTestAutosignThreaded
-from .ct_regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, strip_ansi_escapes
+from .autosign import CmdTestAutosign, CmdTestAutosignThreaded
+from .regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, strip_ansi_escapes
 
 thornode_server = ThornodeServer()
 

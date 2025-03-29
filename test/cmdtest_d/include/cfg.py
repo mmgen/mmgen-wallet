@@ -9,11 +9,11 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-test.cmdtest_d.cfg: configuration data for cmdtest.py
+test.cmdtest_d.include.cfg: configuration data for cmdtest.py
 """
 
+from ...include.common import cfg
 from .common import pwfile, hincog_fn, incog_id_fn, randbool
-from ..include.common import cfg
 
 cmd_groups_altcoin = ['ref_altcoin', 'autosign', 'ethdev', 'xmrwallet', 'xmr_autosign']
 

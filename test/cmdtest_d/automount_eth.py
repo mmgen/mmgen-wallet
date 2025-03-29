@@ -9,13 +9,13 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-test.cmdtest_d.ct_automount_eth: Ethereum automount autosigning tests for the cmdtest.py test suite
+test.cmdtest_d.automount_eth: Ethereum automount autosigning tests for the cmdtest.py test suite
 """
 import os, re
 
-from .ct_autosign import CmdTestAutosignThreaded
-from .ct_ethdev import CmdTestEthdev, parity_devkey_fn
-from .common import dfl_words_file
+from .autosign import CmdTestAutosignThreaded
+from .ethdev import CmdTestEthdev, parity_devkey_fn
+from .include.common import dfl_words_file
 from ..include.common import cfg
 
 class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev):

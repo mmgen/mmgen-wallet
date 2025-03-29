@@ -9,12 +9,12 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-test.cmdtest_d.ct_automount: autosigning with automount tests for the cmdtest.py test suite
+test.cmdtest_d.automount: autosigning with automount tests for the cmdtest.py test suite
 """
 import time
 
-from .ct_autosign import CmdTestAutosignThreaded
-from .ct_regtest import CmdTestRegtest, rt_pw
+from .autosign import CmdTestAutosignThreaded
+from .regtest import CmdTestRegtest, rt_pw
 from ..include.common import gr_uc
 
 class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):

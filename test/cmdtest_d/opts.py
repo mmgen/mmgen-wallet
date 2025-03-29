@@ -7,12 +7,12 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.cmdtest_d.ct_opts: options processing tests for the MMGen cmdtest.py test suite
+test.cmdtest_d.opts: options processing tests for the MMGen cmdtest.py test suite
 """
 
 import os, time
 
-from .ct_base import CmdTestBase
+from .base import CmdTestBase
 
 class CmdTestOpts(CmdTestBase):
 	'command-line options parsing and processing'

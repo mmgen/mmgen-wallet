@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_ref_3seed: Saved and generated reference file tests for 128,
-                             192 and 256-bit seeds for the cmdtest.py test suite
+test.cmdtest_d.ref_3seed: Saved and generated reference file tests for 128,
+                          192 and 256-bit seeds for the cmdtest.py test suite
 """
 
 import os
@@ -27,7 +27,7 @@ from mmgen.util import msg, capfirst
 from mmgen.wallet import get_wallet_cls
 
 from ..include.common import cmp_or_die, joinpath
-from .common import (
+from .include.common import (
 	pwfile,
 	ref_wallet_hash_preset,
 	ref_wallet_brainpass,
@@ -35,9 +35,9 @@ from .common import (
 	ref_dir,
 	ok_msg
 )
-from .ct_base import CmdTestBase
-from .ct_shared import CmdTestShared
-from .ct_wallet import CmdTestWalletConv
+from .base import CmdTestBase
+from .shared import CmdTestShared
+from .wallet import CmdTestWalletConv
 
 class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 	'saved wallet files for 128-, 192- and 256-bit seeds + generated filename checks'
@@ -65,7 +65,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 		('ref_mn_chk',       ([], 'saved native MMGen mnemonic file')),
 		('ref_bip39_chk',    ([], 'saved BIP39 mnemonic file')),
 		('ref_hincog_chk',   ([], 'saved hidden incog reference wallet')),
-		('ref_brain_chk',    ([], 'saved brainwallet')),                    # in ct_shared
+		('ref_brain_chk',    ([], 'saved brainwallet')),                    # in shared
 
 		# generating new reference ('abc' brainwallet) wallets for filename checks:
 		('ref_walletgen_brain',         ([], 'generating new reference wallet + filename check (brain)')),

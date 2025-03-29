@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_misc: Miscellaneous test groups for the cmdtest.py test suite
+test.cmdtest_d.misc: Miscellaneous test groups for the cmdtest.py test suite
 """
 
 import sys, re
@@ -25,9 +25,9 @@ import sys, re
 from mmgen.util import die
 
 from ..include.common import start_test_daemons, stop_test_daemons, imsg
-from .common import get_file_with_ext, dfl_words_file
-from .ct_base import CmdTestBase
-from .ct_main import CmdTestMain
+from .include.common import get_file_with_ext, dfl_words_file
+from .base import CmdTestBase
+from .main import CmdTestMain
 
 class CmdTestDev(CmdTestBase):
 	'developer scripts'

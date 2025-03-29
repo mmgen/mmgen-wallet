@@ -10,7 +10,7 @@
 
 
 """
-test.cmdtest_d.ct_xmr_autosign: xmr autosigning tests for the cmdtest.py test suite
+test.cmdtest_d.xmr_autosign: xmr autosigning tests for the cmdtest.py test suite
 """
 
 import re
@@ -19,10 +19,10 @@ from mmgen.color import blue, cyan, brown
 from mmgen.util import async_run
 
 from ..include.common import imsg, silence, end_silence
-from .common import get_file_with_ext
+from .include.common import get_file_with_ext
 
-from .ct_xmrwallet import CmdTestXMRWallet
-from .ct_autosign import CmdTestAutosignThreaded
+from .xmrwallet import CmdTestXMRWallet
+from .autosign import CmdTestAutosignThreaded
 
 def make_burn_addr(cfg):
 	from mmgen.tool.coin import tool_cmd
@@ -38,7 +38,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 	"""
 	tmpdir_nums = [39]
 
-	# ct_xmrwallet attrs:
+	# xmrwallet attrs:
 	tx_relay_user = 'miner'
 	#    user     sid      autosign  shift kal_range add_coind_args
 	user_data = (
@@ -46,7 +46,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		('alice', 'FE3C6545', True,  150, '1-2', []),
 	)
 
-	# ct_autosign attrs:
+	# autosign attrs:
 	coins = ['xmr']
 
 	cmd_group = (

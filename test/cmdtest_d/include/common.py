@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.common: Shared routines and data for the cmdtest.py test suite
+test.cmdtest_d.include.common: Shared routines and data for the cmdtest.py test suite
 """
 
 import sys, os
@@ -25,7 +25,7 @@ import sys, os
 from mmgen.color import green, blue, gray
 from mmgen.util import msg
 
-from ..include.common import cfg, getrand, text_jp, text_zh, ascii_cyr_gr, lat_cyr_gr
+from ...include.common import cfg, getrand, text_jp, text_zh, ascii_cyr_gr, lat_cyr_gr
 
 rt_pw = 'abc-α'
 ref_wallet_brainpass = 'abc'

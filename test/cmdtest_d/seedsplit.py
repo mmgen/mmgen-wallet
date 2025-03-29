@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_seedsplit: Seed split/join tests for the cmdtest.py test suite
+test.cmdtest_d.seedsplit: Seed split/join tests for the cmdtest.py test suite
 """
 
 import os
@@ -26,8 +26,8 @@ from mmgen.wallet import get_wallet_cls
 from mmgen.util import capfirst
 
 from ..include.common import strip_ansi_escapes, cmp_or_die
-from .common import get_file_with_ext
-from .ct_base import CmdTestBase
+from .include.common import get_file_with_ext
+from .base import CmdTestBase
 
 ref_wf = 'test/ref/98831F3A.bip39'
 ref_sid = '98831F3A'

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_base: Base class for the cmdtest.py test suite
+test.cmdtest_d.base: Base class for the cmdtest.py test suite
 """
 
 import sys, os
@@ -26,7 +26,7 @@ from mmgen.util import msg
 from mmgen.color import gray, purple, yellow
 
 from ..include.common import write_to_file, read_from_file, imsg
-from .common import get_file_with_ext
+from .include.common import get_file_with_ext
 
 class CmdTestBase:
 	'initializer class for the cmdtest.py test suite'

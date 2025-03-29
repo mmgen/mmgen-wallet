@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_autosign: Autosign tests for the cmdtest.py test suite
+test.cmdtest_d.autosign: Autosign tests for the cmdtest.py test suite
 """
 
 import sys, os, time, shutil, atexit
@@ -44,10 +44,10 @@ from ..include.common import (
 	end_silence,
 	VirtBlockDevice,
 )
-from .common import ref_dir, dfl_words_file, dfl_bip39_file
+from .include.common import ref_dir, dfl_words_file, dfl_bip39_file
 
-from .ct_base import CmdTestBase
-from .input import stealth_mnemonic_entry
+from .base import CmdTestBase
+from .include.input import stealth_mnemonic_entry
 
 class CmdTestAutosignBase(CmdTestBase):
 	networks     = ('btc',)
@@ -771,7 +771,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 
 		assert op in ('copy', 'set_count', 'remove_signed')
 
-		from .ct_ref import CmdTestRef
+		from .ref import CmdTestRef
 		def gen():
 			d = CmdTestRef.sources['ref_tx_file']
 			dirmap = [e for e in self.filedir_map if e[0] in (txfile_coins or self.txfile_coins)]

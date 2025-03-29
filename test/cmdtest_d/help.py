@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-test.cmdtest_d.ct_help: helpscreen test group for the cmdtest.py test suite
+test.cmdtest_d.help: helpscreen test group for the cmdtest.py test suite
 """
 
 import sys, os, time
@@ -17,7 +17,7 @@ import sys, os, time
 from mmgen.util import ymsg
 from mmgen.cfg import gc
 
-from .ct_base import CmdTestBase
+from .base import CmdTestBase
 
 class CmdTestHelp(CmdTestBase):
 	'help, info and usage screens'

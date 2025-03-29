@@ -236,13 +236,13 @@ else:
 if cfg.skipping_deps:
 	cfg.no_daemon_autostart = True
 
-from test.cmdtest_d.cfg import cfgs
+from test.cmdtest_d.include.cfg import cfgs
 
 def list_cmds():
 
 	def gen_output():
 
-		from test.cmdtest_d.group_mgr import CmdGroupMgr
+		from test.cmdtest_d.include.group_mgr import CmdGroupMgr
 		gm = CmdGroupMgr(cfg)
 		cw, d = 0, []
 
@@ -297,7 +297,7 @@ if __name__ == '__main__':
 		create_tmp_dirs(shm_dir)
 
 	if cfg.list_cmd_groups:
-		from test.cmdtest_d.group_mgr import CmdGroupMgr
+		from test.cmdtest_d.include.group_mgr import CmdGroupMgr
 		CmdGroupMgr(cfg).list_cmd_groups()
 		sys.exit(0)
 	elif cfg.list_cmds:
@@ -308,7 +308,7 @@ if __name__ == '__main__':
 		set_restore_term_at_exit()
 
 	from mmgen.exception import TestSuiteSpawnedScriptException
-	from test.cmdtest_d.runner import CmdTestRunner
+	from test.cmdtest_d.include.runner import CmdTestRunner
 
 	try:
 		tr = CmdTestRunner(cfg, repo_root, data_dir, trash_dir, trash_dir2)

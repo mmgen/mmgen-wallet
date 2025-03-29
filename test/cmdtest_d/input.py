@@ -7,7 +7,7 @@
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.
 
 """
-test.cmdtest_d.ct_input: user input tests for the MMGen cmdtest.py test suite
+test.cmdtest_d.input: user input tests for the MMGen cmdtest.py test suite
 """
 
 import sys, os
@@ -24,9 +24,9 @@ from ..include.common import (
 	read_from_file,
 	strip_ansi_escapes
 )
-from .common import Ctrl_U, ref_dir
-from .ct_base import CmdTestBase
-from .input import stealth_mnemonic_entry, user_dieroll_entry
+from .include.common import Ctrl_U, ref_dir
+from .base import CmdTestBase
+from .include.input import stealth_mnemonic_entry, user_dieroll_entry
 
 hold_protect_delay = 2 if sys.platform == 'darwin' else None
 

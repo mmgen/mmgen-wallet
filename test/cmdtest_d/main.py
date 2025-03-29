@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.cmdtest_d.ct_main: Basic operations tests for the cmdtest.py test suite
+test.cmdtest_d.main: Basic operations tests for the cmdtest.py test suite
 """
 
 import sys, os
@@ -41,7 +41,7 @@ from ..include.common import (
 	getrandhex,
 	strip_ansi_escapes
 )
-from .common import (
+from .include.common import (
 	pwfile,
 	hincog_fn,
 	get_file_with_ext,
@@ -53,8 +53,8 @@ from .common import (
 	incog_id_fn,
 	non_mmgen_fn
 )
-from .ct_base import CmdTestBase
-from .ct_shared import CmdTestShared
+from .base import CmdTestBase
+from .shared import CmdTestShared
 
 def make_brainwallet_file(cfg, fn):
 	# Print random words with random whitespace in between
