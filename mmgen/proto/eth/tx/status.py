@@ -13,11 +13,11 @@ proto.eth.tx.status: Ethereum transaction status class
 """
 
 from ....tx import status as TxBase
-from ....util import msg, die, suf, capfirst, pp_fmt
+from ....util import msg, Msg, die, suf, capfirst, pp_fmt
 
 class Status(TxBase.Status):
 
-	async def display(self, *, usr_req=False, return_exit_val=False):
+	async def display(self, *, usr_req=False, return_exit_val=False, print_receipt=False):
 
 		def do_exit(retval, message):
 			if return_exit_val:
@@ -54,11 +54,12 @@ class Status(TxBase.Status):
 				'Warning: transaction is in mempool!')
 			return
 
-		if usr_req:
+		if usr_req or print_receipt:
 			ret = await is_in_wallet()
-			if tx.cfg.verbose:
-				from ....color import cyan
-				msg('{}\n{}'.format(cyan('TRANSACTION RECEIPT'), pp_fmt(ret.rx)))
+			if print_receipt:
+				import json
+				Msg(json.dumps(ret.rx, indent=4))
+				return not ret.exec_status
 			if ret:
 				if tx.txobj['data'] and not tx.is_swap:
 					cd = capfirst(tx.contract_desc)

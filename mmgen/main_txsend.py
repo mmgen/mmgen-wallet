@@ -53,6 +53,7 @@ opts_data = {
                  {tx_proxies}).  This is done via a publicly accessible web
                  page, so no API key or registration is required
 -q, --quiet      Suppress warnings; overwrite files without prompting
+-r, --receipt    Print the receipt of the sent transaction (Ethereum only)
 -s, --status     Get status of a sent transaction (or current transaction,
                  whether sent or unsent, when used with --autosign)
 -t, --test       Test whether the transaction can be sent without sending it
@@ -146,6 +147,9 @@ async def main():
 	if cfg.mark_sent:
 		await post_send(tx)
 		sys.exit(0)
+
+	if cfg.receipt:
+		sys.exit(await tx.status.display(print_receipt=True))
 
 	if cfg.status:
 		if tx.coin_txid:
