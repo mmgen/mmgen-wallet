@@ -211,3 +211,8 @@ class ETCAmt(ETHAmt):
 def CoinAmtChk(proto, num):
 	assert type(num) is proto.coin_amt, f'CoinAmtChk: {type(num)} != {proto.coin_amt}'
 	return num
+
+class RelFeeAmt(Decimal):
+
+	def __str__(self):
+		return '{:.08f}'.format(self).rstrip('0').rstrip('.')

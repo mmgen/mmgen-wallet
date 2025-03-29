@@ -58,7 +58,7 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 		return True
 
 	def post_write(self):
-		if 'token_addr' in self.txobj:
+		if 'token_addr' in self.txobj and not self.txobj['to']:
 			msg('Contract address: {}'.format(self.txobj['token_addr'].hl(0)))
 
 class TokenOnlineSigned(TokenSigned, OnlineSigned):

@@ -57,11 +57,12 @@ class Bump(Completed, NewSwap):
 		return True
 
 	def check_bumped_fee_ok(self, abs_fee):
-		orig = int(self.orig_rel_fee)
-		new = int(self.fee_abs2rel(abs_fee))
+		from ..amt import RelFeeAmt
+		orig = RelFeeAmt(self.orig_rel_fee)
+		new = RelFeeAmt(self.fee_abs2rel(abs_fee))
 		if new <= orig:
-			ymsg('New fee ({b} {d}) <= original fee ({a} {d}). Please choose a higher fee'.format(
-				a=orig, b=new, d=self.rel_fee_disp))
+			fs = 'New fee ({b!s} {d}) <= original fee ({a!s} {d})\nPlease choose a higher fee'
+			ymsg(fs.format(a=orig, b=new, d=self.rel_fee_disp))
 			return False
 		return True
 
