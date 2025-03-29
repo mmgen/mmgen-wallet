@@ -4,7 +4,7 @@
 # Copyright (C)2013-2025 The MMGen Project <mmgen@tuta.io>
 
 """
-test.objtest_d.ot_eth_mainnet: ETH mainnet test vectors for MMGen data objects
+test.objtest_d.eth_mainnet: ETH mainnet test vectors for MMGen data objects
 """
 
 from decimal import Decimal

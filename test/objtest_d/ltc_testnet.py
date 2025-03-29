@@ -4,17 +4,17 @@
 # Copyright (C)2013-2025 The MMGen Project <mmgen@tuta.io>
 
 """
-test.objtest_d.ot_btc_testnet: BTC testnet test vectors for MMGen data objects
+test.objtest_d.ltc_testnet: LTC testnet test vectors for MMGen data objects
 """
 
-from mmgen.key import PrivKey, WifKey
 from mmgen.addr import CoinAddr
+from mmgen.key import WifKey, PrivKey
 from mmgen.protocol import init_proto
 
-from .ot_common import r16, r32
+from .common import r16, r32
 from ..include.common import cfg
 
-proto = init_proto(cfg, 'btc', network='testnet', need_amt=True)
+proto = init_proto(cfg, 'ltc', network='testnet', need_amt=True)
 
 tests = {
 	'CoinAddr': {
@@ -24,8 +24,8 @@ tests = {
 			{'addr': 'я', 'proto': proto},
 		),
 		'good': (
-			{'addr': 'n2FgXPKwuFkCXF946EnoxWJDWF2VwQ6q8J', 'proto': proto},
-			{'addr': '2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN', 'proto': proto},
+			{'addr': 'n2D3joAy3yE5fqxUeCp38X6uPUcVn7EFw9', 'proto': proto},
+			{'addr': 'QN59YbnHsPQcbKWSq9PmTpjrhBnHGQqRmf', 'proto': proto},
 		),
 	},
 	'WifKey': {
@@ -43,8 +43,8 @@ tests = {
 			{'proto': proto, 'wif': '2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'},
 		),
 		'good': (
-			{'proto': proto, 'wif': '93HsQEpH75ibaUJYi3QwwiQxnkW4dUuYFPXZxcbcKds7XrqHkY6',  'ret_idx': 1},
-			{'proto': proto, 'wif': 'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR', 'ret_idx': 1},
+			{'proto': proto, 'wif': '936Fd4qs3Zy2ZiYHH7vZ3UpT23KtCAiGiG2xBTkjHo7jE9aWA2f',  'ret_idx': 1},
+			{'proto': proto, 'wif': 'cQY3EumdaSNuttvDSUuPdiMYLyw8aVmYfFqxo9kdPuWbJBN4Ny66', 'ret_idx': 1},
 		)
 	},
 	'PrivKey': {
@@ -61,12 +61,12 @@ tests = {
 			{'proto': proto, 's': r32+b'x', 'compressed': True, 'pubkey_type': 'std'}
 		),
 		'good': (
-			{'proto': proto, 'wif': '93HsQEpH75ibaUJYi3QwwiQxnkW4dUuYFPXZxcbcKds7XrqHkY6',
-			'ret': bytes.fromhex('e0aef965b905a2fedf907151df8e0a6bac832aa697801c51f58bd2ecb4fd381c')},
-			{'proto': proto, 'wif': 'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR',
-			'ret': bytes.fromhex('08d0ed83b64b68d56fa064be48e2385060ed205be2b1e63cd56d218038c3a05f')},
+			{'proto': proto, 'wif': '92iqzh6NqiKawyB1ronw66YtEHrU4rxRJ5T4aHniZqvuSVZS21f',
+			'ret': bytes.fromhex('95b2aa7912550eacdd3844dcc14bee08ce7bc2434ad4858beb136021e945afeb')},
+			{'proto': proto, 'wif': 'cSaJAXBAm9ooHpVJgoxqjDG3AcareFy29Cz8mhnNTRijjv2HLgta',
+			'ret': bytes.fromhex('94fa8b90c11fea8fb907c9376b919534b0a75b9a9621edf71a78753544b4101c')},
 			{'proto': proto, 's': r32, 'compressed': False, 'pubkey_type': 'std', 'ret': r32},
 			{'proto': proto, 's': r32, 'compressed': True, 'pubkey_type': 'std', 'ret': r32}
-		),
+		)
 	},
 }

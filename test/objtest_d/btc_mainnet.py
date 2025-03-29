@@ -4,7 +4,7 @@
 # Copyright (C)2013-2025 The MMGen Project <mmgen@tuta.io>
 
 """
-test.objtest_d.ot_btc_mainnet: BTC mainnet test vectors for MMGen data objects
+test.objtest_d.btc_mainnet: BTC mainnet test vectors for MMGen data objects
 """
 
 from decimal import Decimal
@@ -28,7 +28,7 @@ from mmgen.tw.shared import TwMMGenID, TwLabel, TwComment
 from mmgen.rpc import IPPort
 from mmgen.protocol import init_proto
 
-from .ot_common import r16, r32
+from .common import r16, r32
 from ..include.common import (
 	cfg,
 	utf8_ctrl,
