@@ -203,17 +203,15 @@ class CmdTestEthSwapEth(CmdTestEthdev, CmdTestSwapMethods):
 
 	def swaptxcreate1(self):
 		t = self._swaptxcreate(['ETH', '8.765', 'BTC'])
-		t.expect('Continue? (Y/n):', 'y')
 		t.expect('OK? (Y/n): ', 'y')
 		return self._swaptxcreate_ui_common(t)
 
 	def swaptxcreate2(self):
-		self.get_file_with_ext('rawtx', delete_all=True)
-		t = self._swaptxcreate(
-			['ETH', '8.765', 'BTC', f'{dfl_seed_id}:B:4'],
-			add_opts = ['--trade-limit=3%'])
-		t.expect('Continue? (Y/n):', 'y')
-		return self._swaptxcreate_ui_common(t, expect=':2019e4/1/0')
+		return self._swaptxcreate_ui_common(
+			self._swaptxcreate(
+				['ETH', '8.765', 'BTC', f'{dfl_seed_id}:B:4'],
+				add_opts = ['--trade-limit=3%']),
+			expect = ':2019e4/1/0')
 
 	def swaptxsign1(self):
 		return self._swaptxsign()
