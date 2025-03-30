@@ -17,19 +17,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.include.pexpect: pexpect implementation for MMGen test suites
+test.cmdtest_d.include.pexpect: pexpect implementation for MMGen Wallet cmdtest suite
 """
 
 import sys, time
+
 from mmgen.color import red, yellow, green, cyan
 from mmgen.util import msg, msg_r, rmsg, die
-from .common import cfg, vmsg, vmsg_r, getrandstr, strip_ansi_escapes
+
+from ...include.common import cfg, vmsg, vmsg_r, getrandstr, strip_ansi_escapes
 
 try:
 	import pexpect
 	from pexpect.popen_spawn import PopenSpawn
 except ImportError as e:
-	die(2, red(f'Pexpect module is missing.  Cannnot run test suite ({e!r})'))
+	die(2, red(f'‘pexpect’ module is missing.  Cannnot run test suite ({e!r})'))
 
 def debug_pexpect_msg(p):
 	msg('\n{}{}{}'.format(red('BEFORE ['), p.before, red(']')))
@@ -37,7 +39,7 @@ def debug_pexpect_msg(p):
 
 NL = '\n'
 
-class MMGenPexpect:
+class CmdTestPexpect:
 
 	def __init__(
 			self,

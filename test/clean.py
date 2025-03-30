@@ -44,12 +44,11 @@ from test.include.common import clean, set_globals
 
 set_globals(cfg)
 
-from test.include.cfg import clean_cfgs
-
 extra_dirs = [
 	Config.test_datadir,
 	os.path.join('test', 'trash'),
 	os.path.join('test', 'trash2')
 ]
 
-clean(clean_cfgs, extra_dirs=extra_dirs)
+from test.cmdtest_d.include.cfg import cfgs
+clean(cfgs, extra_dirs=extra_dirs)

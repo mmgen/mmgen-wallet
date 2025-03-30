@@ -212,8 +212,8 @@ class CmdTestRunner:
 		})
 		spawn_env.update(env)
 
-		from test.include.pexpect import MMGenPexpect
-		return MMGenPexpect(
+		from .pexpect import CmdTestPexpect
+		return CmdTestPexpect(
 			args          = args,
 			no_output     = no_output,
 			spawn_env     = spawn_env,
@@ -491,7 +491,7 @@ class CmdTestRunner:
 			print(r+('\n'+r).join(self.skipped_warnings))
 
 	def process_retval(self, cmd, ret):
-		if type(ret).__name__ == 'MMGenPexpect':
+		if type(ret).__name__ == 'CmdTestPexpect':
 			ret.ok(exit_val=self.exit_val)
 			self.cmd_total += 1
 		elif ret == 'ok':

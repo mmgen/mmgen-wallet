@@ -366,6 +366,11 @@ def check_int_between(val, imin, imax, *, desc):
 		die(1, f'{val}: invalid value for {desc} (must be between {imin} and {imax})')
 	return int(val)
 
+def check_member(e, iterable, desc, message='unsupported'):
+	if e not in iterable:
+		from mmgen.color import yellow
+		die(1, yellow(f'{e}: {message} {desc} (must be one of {fmt_list(iterable)})'))
+
 def is_hex_str(s):
 	return set(s) <= set(hexdigits)
 
