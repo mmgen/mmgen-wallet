@@ -26,7 +26,7 @@ from collections import namedtuple
 from subprocess import run, PIPE, DEVNULL
 from pathlib import Path
 
-from mmgen.color import red, yellow, blue, cyan, set_vt100
+from mmgen.color import red, yellow, blue, cyan, orange, set_vt100
 from mmgen.util import msg, rmsg, die
 from mmgen.proto.eth.misc import compute_contract_addr
 
@@ -353,7 +353,6 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 	color = True
 	menu_prompt = 'efresh balance:\b'
 	input_sels_prompt = 'to spend from: '
-	devnet_block_period = None
 
 	bals = lambda self, k: {
 		'1': [  ('98831F3A:E:1', '123.456')],
@@ -679,7 +678,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		if not self.using_solc:
 			omsg(yellow('Using precompiled contract data'))
 
-		omsg(blue(f'Coin daemon {self.daemon.id!r} selected'))
+		omsg(orange(f'Coin daemon {self.daemon.id!r} selected'))
 
 		self.genesis_fn = joinpath(self.tmpdir, 'genesis.json')
 		self.keystore_dir = os.path.relpath(joinpath(self.daemon.datadir, 'keystore'))
@@ -729,15 +728,15 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 			if not d.id in ('geth', 'erigon'):
 				d.stop(silent=True)
 				d.remove_datadir()
-			if d.id in ('geth', 'reth'):
-				if bp := self.devnet_block_period:
-					d.usr_coind_args = [
-						f'--dev.block-time={bp}s' if d.id == 'reth' else f'--dev.period={bp}']
+			self.init_block_period()
 			d.start(silent=self.tr.quiet)
 			rpc = await self.rpc
 			imsg(f'Daemon: {rpc.daemon.coind_name} v{rpc.daemon_version_str}')
 
 		return 'ok'
+
+	def init_block_period(self):
+		pass
 
 	@property
 	def keystore_data(self):

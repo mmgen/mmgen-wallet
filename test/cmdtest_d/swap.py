@@ -15,8 +15,10 @@ test.cmdtest_d.swap: asset swap tests for the cmdtest.py test suite
 from pathlib import Path
 
 from mmgen.protocol import init_proto
+from mmgen.wallet.mmgen import wallet as MMGenWallet
+
 from ..include.common import make_burn_addr, gr_uc
-from .include.common import dfl_bip39_file
+from .include.common import dfl_bip39_file, dfl_words_file
 from .httpd.thornode import ThornodeServer
 
 from .autosign import CmdTestAutosign, CmdTestAutosignThreaded
@@ -30,6 +32,24 @@ sample2 = '00010203040506'
 class CmdTestSwapMethods:
 	menu_prompt = 'abel:\b'
 	input_sels_prompt = 'to spend: '
+
+	@property
+	def bob_opt(self):
+		return ['--bob'] if self.proto.base_proto == 'Bitcoin' else ['--regtest=1']
+
+	@property
+	def fee_desc(self):
+		return 'fee or gas price' if self.proto.is_evm else 'fee'
+
+	def walletconv_bob(self):
+		t = self.spawn(
+			'mmgen-walletconv',
+			['--bob', '--quiet', '-r0', f'-d{self.cfg.data_dir}/regtest/bob', dfl_words_file],
+			no_passthru_opts = ['coin', 'eth_daemon_id'])
+		t.hash_preset(MMGenWallet.desc, '1')
+		t.passphrase_new('new '+MMGenWallet.desc, rt_pw)
+		t.label()
+		return t
 
 	def _addrgen_bob(self, proto_idx, mmtypes, subseed_idx=None):
 		return self.addrgen('bob', subseed_idx=subseed_idx, mmtypes=mmtypes, proto=self.protos[proto_idx])
@@ -133,6 +153,7 @@ class CmdTestSwapMethods:
 		return t
 
 	def _swaptxcreate(self, args, *, action='txcreate', add_opts=[], exit_val=None):
+		self.get_file_with_ext('rawtx', delete_all=True)
 		return self.spawn(
 			f'mmgen-swap{action}',
 			['-q', '-d', self.tmpdir, '-B', '--bob']
@@ -196,23 +217,29 @@ class CmdTestSwapMethods:
 		fn = self.get_file_with_ext('sigtx')
 		t = self.spawn(
 			'mmgen-txbump',
-			['-q', '-d', self.tmpdir, '--bob'] + add_opts + output_args + [fn],
+			['-q', '-d', self.tmpdir] + self.bob_opt + add_opts + output_args + [fn],
 			exit_val = exit_val)
 		return self._swaptxbump_ui_common(t, interactive_fee=fee, new_outputs=bool(output_args))
 
 	def _swaptxbump_ui_common_new_outputs(self, t, *, inputs=None, interactive_fee=None, file_desc=None):
 		return self._swaptxbump_ui_common(t, interactive_fee=interactive_fee, new_outputs=True)
 
-	def _swaptxbump_ui_common(self, t, *, inputs=None, interactive_fee=None, file_desc=None, new_outputs=False):
+	def _swaptxbump_ui_common(self, t, *,
+			inputs          = None,
+			interactive_fee = None,
+			file_desc       = None,
+			new_outputs     = False):
 		if new_outputs:
-			t.expect('fee: ', interactive_fee + '\n')
+			if not self.proto.is_evm:
+				t.expect(f'{self.fee_desc}: ', interactive_fee + '\n')
 			t.expect('(Y/n): ', 'y')        # fee ok?
 			t.expect('(Y/n): ', 'y')        # change ok?
 		else:
-			t.expect('ENTER for the change output): ', '\n')
-			t.expect('(Y/n): ', 'y')        # confirm deduct from chg output
+			if not self.proto.is_evm:
+				t.expect('ENTER for the change output): ', '\n')
+				t.expect('(Y/n): ', 'y')    # confirm deduct from chg output
 			t.expect('to continue: ', '\n') # exit swap quote
-			t.expect('fee: ', interactive_fee + '\n')
+			t.expect(f'{self.fee_desc}: ', interactive_fee + '\n')
 			t.expect('(Y/n): ', 'y')        # fee ok?
 		t.expect('(y/N): ', 'n')            # comment?
 		t.expect('(y/N): ', 'y')            # save?
@@ -222,6 +249,7 @@ class CmdTestSwapMethods:
 		return self.generate(num_blocks=1, add_opts=[f'--coin={self.protos[proto_idx].coin}'])
 
 	def _swaptxsign_bad(self, expect, *, add_opts=[], exit_val=1):
+		self.get_file_with_ext('sigtx', delete_all=True)
 		fn = self.get_file_with_ext('rawtx')
 		t = self.spawn('mmgen-txsign', add_opts + ['-d', self.tmpdir, '--bob', fn], exit_val=exit_val)
 		t.expect('view: ', '\n')
@@ -596,7 +624,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded, CmdTestSwapMethods):
 		return self._swaptxcreate_bad(['BCH', '1.234', 'S', 'LTC', 'B'], exit_val=2, expect1='invalid command-')
 
 	def swaptxsign1_create(self):
-		self.get_file_with_ext('rawtx', delete_all=True)
 		return self._swaptxcreate_ui_common(
 			self._swaptxcreate(['LTC', '4.321', f'{self.sid}:S:2', 'BCH', f'{self.sid}:C:2']))
 
@@ -612,7 +639,6 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded, CmdTestSwapMethods):
 		return t
 
 	def swaptxsign2_create(self):
-		self.get_file_with_ext('rawtx', delete_all=True)
 		addr = make_burn_addr(self.protos[2], mmtype='compressed')
 		t = self._swaptxcreate(['LTC', '4.56789', f'{self.sid}:S:3', 'BCH', addr])
 		t.expect('to confirm: ', 'YES\n') # confirm non-MMGen destination
@@ -667,15 +693,12 @@ class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded, CmdTestSwapMethods):
 			file_desc = 'Sent transaction')
 
 	def swaptxsign_bad1_create(self):
-		self.get_file_with_ext('rawtx', delete_all=True)
 		return self.swaptxcreate6()
 
 	def swaptxsign_bad1(self):
-		self.get_file_with_ext('sigtx', delete_all=True)
 		return self._swaptxsign_bad('non-wallet address forbidden')
 
 	def swaptxsign_bad2_create(self):
-		self.get_file_with_ext('rawtx', delete_all=True)
 		return self.swaptxcreate1(idx=4)
 
 	def swaptxsign_bad2(self):

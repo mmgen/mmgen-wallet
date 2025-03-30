@@ -245,10 +245,8 @@ init_tests() {
 
 	d_eth="operations for Ethereum using devnet"
 	t_eth="
-		geth $cmdtest_py --coin=eth --daemon-id=geth ethdev
-		geth $cmdtest_py --coin=eth --daemon-id=geth ethbump
-		reth $cmdtest_py --coin=eth --daemon-id=reth ethdev
-		reth $cmdtest_py --coin=eth --daemon-id=reth ethbump
+		geth $cmdtest_py --coin=eth --eth-daemon-id=geth ethdev ethbump
+		reth $cmdtest_py --coin=eth --eth-daemon-id=reth ethdev ethbump
 	"
 	[ "$FAST" ]  && t_eth_skip='reth'
 

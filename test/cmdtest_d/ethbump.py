@@ -16,13 +16,31 @@ import sys, time, asyncio, json
 
 from mmgen.util import ymsg, suf
 
-from .ethdev import CmdTestEthdev, CmdTestEthdevMethods, dfl_sid
 from ..include.common import imsg, omsg_r
+
 from .include.common import cleanup_env, dfl_words_file
 
+from .ethdev import CmdTestEthdev, CmdTestEthdevMethods, dfl_sid
+from .regtest import CmdTestRegtest
+from .swap import CmdTestSwapMethods
+
 burn_addr = 'beefcafe22' * 4
+method_template = """
+def {name}(self):
+	self.spawn(log_only=True)
+	return ethbump_ltc.run_test("{ltc_name}", sub=True)
+"""
 
 class CmdTestEthBumpMethods:
+
+	def init_block_period(self):
+		d = self.daemon
+		bp = self.cfg.devnet_block_period or self.dfl_devnet_block_period[d.id]
+		d.usr_coind_args = {
+			'reth': [f'--dev.block-time={bp}s'],
+			'geth': [f'--dev.period={bp}']
+		}[d.id]
+		self.devnet_block_period = bp
 
 	def _txcreate(self, args, acct):
 		self.get_file_with_ext('rawtx', delete_all=True)
@@ -90,32 +108,34 @@ class CmdTestEthBumpMethods:
 
 		return 'ok'
 
-class CmdTestEthBump(CmdTestEthdev, CmdTestEthdevMethods, CmdTestEthBumpMethods):
+class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 	'Ethereum transaction bumping operations'
 
 	networks = ('eth',)
 	tmpdir_nums = [42]
-	dfl_devnet_block_period = 7
+	dfl_devnet_block_period = {'geth': 7, 'reth': 9}
 
 	cmd_group_in = (
-		('setup',                       'dev mode transaction bumping tests for Ethereum (start daemon)'),
-		('subgroup.init',               []),
-		('subgroup.feebump',            ['init']),
-		('subgroup.new_outputs',        ['init']),
-		('subgroup.token_init',         ['init']),
+		('subgroup.eth_init',           []),
+		('subgroup.feebump',            ['eth_init']),
+		('subgroup.new_outputs',        ['eth_init']),
+		('subgroup.token_init',         ['eth_init']),
 		('subgroup.token_feebump',      ['token_init']),
 		('subgroup.token_new_outputs',  ['token_init']),
 		('stop',                        'stopping daemon'),
 	)
-	cmd_subgroups = CmdTestEthdev.cmd_subgroups | {
-		'init': (
-			'initializing wallets',
+	cmd_subgroups = {
+		'eth_init': (
+			'initializing ETH tracking wallet',
+			('setup',               'dev mode transaction bumping tests for Ethereum (start daemon)'),
 			('addrgen',             'generating addresses'),
 			('addrimport',          'importing addresses'),
 			('addrimport_dev_addr', 'importing dev faucet address ‘Ox00a329c..’'),
 			('fund_dev_address',    'funding the default (Parity dev) address'),
-			('fund_mmgen_address',  'creating a transaction (spend from dev address to address :1)'),
-			('wait2',               'waiting for block'),
+			('fund_mmgen_address1', 'spend from dev address to address :1)'),
+			('fund_mmgen_address2', 'spend from dev address to address :11)'),
+			('fund_mmgen_address3', 'spend from dev address to address :21)'),
+			('wait1',               'waiting for block'),
 		),
 		'feebump': (
 			'creating, signing, sending, bumping and resending a transaction (fee-bump only)',
@@ -125,7 +145,7 @@ class CmdTestEthBump(CmdTestEthdev, CmdTestEthdevMethods, CmdTestEthBumpMethods)
 			('txbump1',     'creating a replacement transaction (fee-bump)'),
 			('txbump1sign', 'signing the replacement transaction'),
 			('txbump1send', 'sending the replacement transaction'),
-			('wait3',       'waiting for block'),
+			('wait2',       'waiting for block'),
 			('bal1',        'checking the balance'),
 		),
 		'new_outputs': (
@@ -136,7 +156,7 @@ class CmdTestEthBump(CmdTestEthdev, CmdTestEthdevMethods, CmdTestEthBumpMethods)
 			('txbump2',     'creating a replacement transaction (new outputs)'),
 			('txbump2sign', 'signing the replacement transaction'),
 			('txbump2send', 'sending the replacement transaction'),
-			('wait4',       'waiting for block'),
+			('wait3',       'waiting for block'),
 			('bal2',        'checking the balance'),
 		),
 		'token_init': (
@@ -171,11 +191,17 @@ class CmdTestEthBump(CmdTestEthdev, CmdTestEthdevMethods, CmdTestEthBumpMethods)
 	}
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
-		self.devnet_block_period = cfg.devnet_block_period or self.dfl_devnet_block_period
+
 		CmdTestEthdev.__init__(self, cfg, trunner, cfgs, spawn)
 
-	def fund_mmgen_address(self):
-		return self._fund_mmgen_address(arg=f'{dfl_sid}:E:1,98765.4321')
+	def fund_mmgen_address1(self):
+		return self._fund_mmgen_address(arg=f'{dfl_sid}:E:1,100000')
+
+	def fund_mmgen_address2(self):
+		return self._fund_mmgen_address(arg=f'{dfl_sid}:E:11,100000')
+
+	def fund_mmgen_address3(self):
+		return self._fund_mmgen_address(arg=f'{dfl_sid}:E:21,100000')
 
 	def txcreate1(self):
 		return self._txcreate(args=[f'{burn_addr},987'], acct='1')
@@ -190,7 +216,7 @@ class CmdTestEthBump(CmdTestEthdev, CmdTestEthdevMethods, CmdTestEthBumpMethods)
 		return self._txbump_new_outputs(args=[f'{dfl_sid}:E:2,777'], fee='1.3G')
 
 	def bal1(self):
-		return self._bal_check(pat=rf'{dfl_sid}:E:1\s+97778\.4320727\s')
+		return self._bal_check(pat=rf'{dfl_sid}:E:1\s+99012\.9999727\s')
 
 	def bal2(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:2\s+777\s')
@@ -230,7 +256,7 @@ class CmdTestEthBump(CmdTestEthdev, CmdTestEthdevMethods, CmdTestEthBumpMethods)
 		return t
 
 	def token_bal2(self):
-		return self._token_bal_check(pat=rf'{dfl_sid}:E:1\s+998.76544\s.*\s{dfl_sid}:E:2\s+1\.23456')
+		return self._token_bal_check(pat=rf'{dfl_sid}:E:2\s+1\.23456')
 
 	def token_txdo2(self):
 		return self._token_txcreate(cmd='txdo', args=[f'{dfl_sid}:E:3,5.4321', dfl_words_file])
@@ -254,5 +280,6 @@ class CmdTestEthBump(CmdTestEthdev, CmdTestEthdevMethods, CmdTestEthBumpMethods)
 		return self._wait_for_block() if self.daemon.id == 'reth' else 'silent'
 
 	wait1 = wait2 = wait3 = wait4 = wait5 = wait6 = wait7 = wait8 = CmdTestEthBumpMethods._wait_for_block
+
 	txsign1 = txsign2 = txbump1sign = txbump2sign = CmdTestEthBumpMethods._txsign
 	txsend1 = txsend2 = txbump1send = txbump2send = CmdTestEthBumpMethods._txsend

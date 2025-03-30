@@ -12,12 +12,11 @@
 test.cmdtest_d.ethswap: Ethereum swap tests for the cmdtest.py test suite
 """
 
-from mmgen.wallet.mmgen import wallet as MMGenWallet
 from mmgen.cfg import Config
 from mmgen.protocol import init_proto
 
 from .include.runner import CmdTestRunner
-from .include.common import dfl_words_file, dfl_seed_id, rt_pw
+from .include.common import dfl_seed_id
 from .httpd.thornode import ThornodeServer
 
 from .regtest import CmdTestRegtest
@@ -123,31 +122,19 @@ class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
 		global ethswap_eth
 		cfg = Config({
 			'_clone': trunner.cfg,
-			'proto': init_proto(cfg, network_id='eth'),
+			'coin': 'eth',
+			'eth_daemon_id': trunner.cfg.eth_daemon_id,
 			'resume': None,
 			'resume_after': None,
 			'exit_after': None,
-			'eth_daemon_id': trunner.cfg.eth_daemon_id,
-			'log': None,
-			'coin': 'eth'})
+			'log': None})
 		t = trunner
 		ethswap_eth = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
 		ethswap_eth.init_group(self.eth_group)
 
 		thornode_server.start()
 
-	def walletconv_bob(self):
-		t = self.spawn(
-			'mmgen-walletconv',
-			['--bob', '--quiet', '-r0', f'-d{self.cfg.data_dir}/regtest/bob', dfl_words_file],
-			no_passthru_opts = ['coin', 'eth_daemon_id'])
-		t.hash_preset(MMGenWallet.desc, '1')
-		t.passphrase_new('new '+MMGenWallet.desc, rt_pw)
-		t.label()
-		return t
-
 	def swaptxcreate1(self):
-		self.get_file_with_ext('rawtx', delete_all=True)
 		t = self._swaptxcreate(['BTC', '8.765', 'ETH'])
 		t.expect('OK? (Y/n): ', 'y')
 		t.expect(':E:2')
@@ -155,7 +142,6 @@ class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
 		return self._swaptxcreate_ui_common(t)
 
 	def swaptxcreate2(self):
-		self.get_file_with_ext('rawtx', delete_all=True)
 		t = self._swaptxcreate(['BTC', '8.765', 'ETH', f'{dfl_seed_id}:E:1'])
 		t.expect('OK? (Y/n): ', 'y')
 		return self._swaptxcreate_ui_common(t)
@@ -216,7 +202,6 @@ class CmdTestEthSwapEth(CmdTestEthdev, CmdTestSwapMethods):
 	)
 
 	def swaptxcreate1(self):
-		self.get_file_with_ext('rawtx', delete_all=True)
 		t = self._swaptxcreate(['ETH', '8.765', 'BTC'])
 		t.expect('Continue? (Y/n):', 'y')
 		t.expect('OK? (Y/n): ', 'y')
