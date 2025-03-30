@@ -16,9 +16,10 @@ from decimal import Decimal
 
 from ....tx import bump as TxBase
 from .completed import Completed, TokenCompleted
-from .new import New, TokenNew
+from .new import TokenNew
+from .new_swap import NewSwap
 
-class Bump(Completed, New, TxBase.Bump):
+class Bump(Completed, NewSwap, TxBase.Bump):
 	desc = 'fee-bumped transaction'
 
 	def get_orig_rel_fee(self):

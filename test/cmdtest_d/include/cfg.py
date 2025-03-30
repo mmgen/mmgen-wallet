@@ -49,6 +49,7 @@ cmd_groups_dfl = {
 
 cmd_groups_extra = {
 	'ethswap_eth':            ('CmdTestEthSwapEth',           {'modname': 'ethswap'}),
+	'ethbump_ltc':            ('CmdTestEthBumpLTC',           {'modname': 'ethbump'}),
 	'dev':                    ('CmdTestDev',                  {'modname': 'misc'}),
 	'regtest_legacy':         ('CmdTestRegtestBDBWallet',     {'modname': 'regtest'}),
 	'autosign_btc':           ('CmdTestAutosignBTC',          {'modname': 'autosign'}),
@@ -245,6 +246,7 @@ cfgs = { # addr_idx_lists (except 31, 32, 33, 34) must contain exactly 8 address
 	'40': {}, # cfgfile
 	'41': {}, # opts
 	'42': {}, # ethbump
+	'43': {}, # ethbump_ltc
 	'47': {}, # ethswap
 	'48': {}, # ethswap_eth
 	'49': {}, # autosign_automount

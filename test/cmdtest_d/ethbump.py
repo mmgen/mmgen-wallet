@@ -14,16 +14,21 @@ test.cmdtest_d.ethbump: Ethereum transaction bumping tests for the cmdtest.py te
 
 import sys, time, asyncio, json
 
+from mmgen.cfg import Config
+from mmgen.protocol import init_proto
 from mmgen.util import ymsg, suf
 
 from ..include.common import imsg, omsg_r
 
 from .include.common import cleanup_env, dfl_words_file
+from .include.runner import CmdTestRunner
+from .httpd.thornode import ThornodeServer
 
 from .ethdev import CmdTestEthdev, CmdTestEthdevMethods, dfl_sid
 from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods
 
+thornode_server = ThornodeServer()
 burn_addr = 'beefcafe22' * 4
 method_template = """
 def {name}(self):
@@ -116,9 +121,12 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 	dfl_devnet_block_period = {'geth': 7, 'reth': 9}
 
 	cmd_group_in = (
+		('subgroup.ltc_init',           []),
 		('subgroup.eth_init',           []),
 		('subgroup.feebump',            ['eth_init']),
 		('subgroup.new_outputs',        ['eth_init']),
+		('subgroup.swap_feebump',       ['ltc_init', 'eth_init']),
+		('subgroup.swap_new_outputs',   ['ltc_init', 'eth_init']),
 		('subgroup.token_init',         ['eth_init']),
 		('subgroup.token_feebump',      ['token_init']),
 		('subgroup.token_new_outputs',  ['token_init']),
@@ -136,6 +144,13 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 			('fund_mmgen_address2', 'spend from dev address to address :11)'),
 			('fund_mmgen_address3', 'spend from dev address to address :21)'),
 			('wait1',               'waiting for block'),
+		),
+		'ltc_init': (
+			'initializing LTC tracking wallet',
+			('ltc_setup',               'regtest (Bob and Alice) mode setup'),
+			('ltc_walletconv_bob',      'wallet generation (Bob)'),
+			('ltc_addrgen_bob',         'address generation (Bob)'),
+			('ltc_addrimport_bob',      'importing Bob’s addresses'),
 		),
 		'feebump': (
 			'creating, signing, sending, bumping and resending a transaction (fee-bump only)',
@@ -158,6 +173,28 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 			('txbump2send', 'sending the replacement transaction'),
 			('wait3',       'waiting for block'),
 			('bal2',        'checking the balance'),
+		),
+		'swap_feebump': (
+			'creating, signing, sending, bumping and resending a swap transaction (fee-bump only)',
+			('swaptxcreate1',   'creating a swap transaction (from address :11)'),
+			('swaptxsign1',     'signing the transaction'),
+			('swaptxsend1',     'sending the transaction'),
+			('swaptxbump1',     'creating a replacement swap transaction (fee-bump)'),
+			('swaptxbump1sign', 'signing the replacement transaction'),
+			('swaptxbump1send', 'sending the replacement transaction'),
+			('wait4',           'waiting for block'),
+			('bal3',            'checking the balance'),
+		),
+		'swap_new_outputs': (
+			'creating, signing, sending, bumping and resending a swap transaction (new output)',
+			('swaptxcreate2',   'creating a swap transaction (from address :21)'),
+			('swaptxsign2',     'signing the transaction'),
+			('swaptxsend2',     'sending the transaction'),
+			('swaptxbump2',     'creating a replacement swap transaction (new output)'),
+			('swaptxbump2sign', 'signing the replacement transaction'),
+			('swaptxbump2send', 'sending the replacement transaction'),
+			('wait5',           'waiting for block'),
+			('bal4',            'checking the balance'),
 		),
 		'token_init': (
 			'initializing token wallets',
@@ -190,9 +227,31 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 		)
 	}
 
+	ltc_tests = [c[0] for v in tuple(cmd_subgroups.values()) + (cmd_group_in,)
+		for c in v if isinstance(c, tuple) and c[0].startswith('ltc_')]
+
+	exec(''.join(method_template.format(name=k, ltc_name=k.removeprefix('ltc_')) for k in ltc_tests))
+
 	def __init__(self, cfg, trunner, cfgs, spawn):
 
 		CmdTestEthdev.__init__(self, cfg, trunner, cfgs, spawn)
+
+		if not trunner:
+			return
+
+		global ethbump_ltc
+		cfg = Config({
+			'_clone': trunner.cfg,
+			'coin': 'ltc',
+			'resume': None,
+			'resume_after': None,
+			'exit_after': None,
+			'log': None})
+		t = trunner
+		ethbump_ltc = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
+		ethbump_ltc.init_group('ethbump_ltc')
+
+		thornode_server.start()
 
 	def fund_mmgen_address1(self):
 		return self._fund_mmgen_address(arg=f'{dfl_sid}:E:1,100000')
@@ -215,11 +274,34 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 	def txbump2(self):
 		return self._txbump_new_outputs(args=[f'{dfl_sid}:E:2,777'], fee='1.3G')
 
+	def swaptxcreate1(self):
+		return self._swaptxcreate_ui_common(
+			self._swaptxcreate(['ETH', '12.34567', 'LTC', f'{dfl_sid}:B:3']),
+			inputs = 4)
+
+	def swaptxsign1(self):
+		return self._swaptxsign()
+
+	def swaptxsend1(self):
+		return self._swaptxsend()
+
+	def swaptxbump1(self):
+		return self._swaptxbump('41.1G')
+
+	def swaptxbump2(self):
+		return self._swaptxbump('1.9G', output_args=[f'{dfl_sid}:E:12,4444.3333'])
+
 	def bal1(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:1\s+99012\.9999727\s')
 
 	def bal2(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:2\s+777\s')
+
+	def bal3(self):
+		return self._bal_check(pat=rf'{dfl_sid}:E:11\s+99987\.653431389777251448\s')
+
+	def bal4(self):
+		return self._bal_check(pat=rf'{dfl_sid}:E:12\s+4444\.3333\s')
 
 	async def token_deploy_a(self):
 		return await self._token_deploy_math(num=1, get_receipt=False)
@@ -283,3 +365,19 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 
 	txsign1 = txsign2 = txbump1sign = txbump2sign = CmdTestEthBumpMethods._txsign
 	txsend1 = txsend2 = txbump1send = txbump2send = CmdTestEthBumpMethods._txsend
+
+	swaptxcreate2 = swaptxcreate1
+	swaptxsign2 = swaptxsign1
+	swaptxsend2 = swaptxsend1
+
+	swaptxbump1sign = swaptxbump2sign = token_txbump2sign
+	swaptxbump1send = swaptxbump2send = token_txbump2send
+
+class CmdTestEthBumpLTC(CmdTestRegtest, CmdTestSwapMethods):
+	network = ('ltc',)
+	tmpdir_nums = [43]
+	cmd_group_in = CmdTestRegtest.cmd_group_in + (
+		('walletconv_bob',  'LTC wallet generation'),
+		('addrgen_bob',     'LTC address generation'),
+		('addrimport_bob',  'importing LTC addresses'),
+	)
