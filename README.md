@@ -143,32 +143,7 @@ that widespread standard.
 
 Linux, macOS, Windows/MSYS2
 
-### Download/Install
-
-> #### [Install on Microsoft Windows][1]
-
-> #### [Install on Linux or macOS][2]
-
-
-### Using MMGen Wallet
-
-> #### [Getting Started with MMGen Wallet][3]
-
-> #### [MMGen Wallet Quick Start with Regtest Mode][Q]
-
-> #### [MMGen Wallet command help][6]
-
-> #### [Recovering your keys without the MMGen Wallet software][K]
-
-> #### [Altcoin and Forkcoin support (ETH,ETC,XMR,ZEC,LTC,BCH and 144 Bitcoin-derived alts)][F]
-
-> #### [Subwallets][U]
-
-> #### [XOR Seed Splitting][O]
-
-> #### [Test Suite][ts]
-
-> #### [Tool API][ta]
+### [Download / Install / Use][D]
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -194,18 +169,11 @@ Donate:
 &nbsp;⊙&nbsp;BCH:&nbsp;*15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w*    
 &nbsp;⊙&nbsp;XMR:&nbsp;*8B14zb8wgLuKDdse5p8f3aKpFqRdB4i4xj83b7BHYABHMvHifWxiDXeKRELnaxL5FySfeRRS5girgUvgy8fQKsYMEzPUJ8h*
 
-[1]:  ../../wiki/Install-MMGen-Wallet-on-Microsoft-Windows
-[2]:  ../../wiki/Install-MMGen-Wallet-on-Linux-or-macOS
-[3]:  ../../wiki/Getting-Started-with-MMGen-Wallet
+[D]:  ../../wiki
 [5]:  ../../wiki/MMGen-Signing-Keys
-[6]:  ../../wiki/MMGen-Wallet-command-help
-[7]:  http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
-[8]:  https://github.com/mmgen/MMGenLive
 [9]:  https://mmgen.org/images/rxvt-txcreate.jpg
-[Q]:  ../../wiki/MMGen-Wallet-Quick-Start-with-Regtest-Mode
 [K]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Wallet-Software
 [S]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Wallet-Software#a_mh
-[F]:  ../../wiki/Altcoin-and-Forkcoin-Support
 [W]:  https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 [ew]: https://github.com/spesmilo/electrum/blob/1.9.5/lib/mnemonic.py
 [bw]: https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
@@ -219,7 +187,6 @@ Donate:
 [E]:  ../../wiki/Altcoin-and-Forkcoin-Support#a_tx
 [ag]: ../../wiki/command-help-addrgen
 [bx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_bch
-[mx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_xmr
 [zx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_zec
 [ax]: ../../wiki/Altcoin-and-Forkcoin-Support#a_kg
 [M]:  ../../wiki/Getting-Started-with-MMGen-Wallet#a_fee
@@ -229,5 +196,4 @@ Donate:
 [O]:  ../../wiki/XOR-Seed-Splitting:-Theory-and-Practice
 [ms]: ../../wiki/command-help-seedsplit
 [ta]: ../../wiki/Tool-API
-[ts]: ../../wiki/Test-Suite
 [L]:  ../../wiki/command-help-tool
