@@ -33,19 +33,19 @@ exactly the same way as one created with ‘mmgen-txcreate’.  Autosign with
 automount is likewise supported via the --autosign option.
 
 The command line must contain at minimum a send coin (COIN1) and receive coin
-(COIN2) symbol.  Currently supported coins are BTC, LTC and BCH.  All other
-arguments are optional.  If AMT is specified, the specified value of send coin
-will be swapped and the rest returned to a change address in the originating
-tracking wallet.  Otherwise, the entire value of the interactively selected
-inputs will be swapped.
+(COIN2) symbol.  Currently supported coins are BTC, LTC, BCH and ETH.  All
+other arguments are optional.  If AMT is specified, the specified value of
+send coin will be swapped and the rest returned to a change address in the
+originating tracking wallet.  Otherwise, the entire value of the interactively
+selected inputs will be swapped.
 
-By default, the change and destination addresses are chosen automatically by
-finding the lowest-indexed unused addresses of the preferred address types in
-the send and receive tracking wallets.  For Bitcoin and forks, types ‘B’,
-‘S’ and ‘C’ (see ADDRESS TYPES below) are searched in that order for unused
-addresses.  Note that sending to an unused address may be undesirable for
-Ethereum, where address (i.e. account) reuse is the norm.  In that case, the
-user should specify a destination address on the command line.
+By default, the change (if applicable) and destination addresses are chosen
+automatically by finding the lowest-indexed unused addresses of the preferred
+address types in the send and receive tracking wallets.  For Bitcoin and
+forks, types ‘B’, ‘S’ and ‘C’ (see ADDRESS TYPES below) are searched in that
+order for unused addresses.  Note that sending to an unused address may be
+undesirable for Ethereum, where address (i.e. account) reuse is the norm.  In
+that case, the user should specify a destination address on the command line.
 
 If the wallet contains eligible unused addresses with multiple Seed IDs, the
 user will be presented with a list of the lowest-indexed addresses of
@@ -81,8 +81,8 @@ address on a block explorer such as thorchain.net or runescan.io.
 The MMGen Node Tools suite contains two useful tools to help with fine-tuning
 transaction fees, ‘mmnode-feeview’ and ‘mmnode-blocks-info’, in addition to
 ‘mmnode-ticker’, which can be used to calculate the current cross-rate between
-the asset pair of a swap, as well as the total receive value in terms of the
-send value.
+the asset pair of a swap, as well as the total receive value in terms of send
+value.
 
 
                                 TRADE LIMIT
