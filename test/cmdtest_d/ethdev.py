@@ -81,6 +81,9 @@ def get_reth_dev_keypair(cfg):
 	node = m.to_chain(idx=0, coin='eth').derive_private(0)
 	return (node.key.hex(), node.address)
 
+reth_dev_amt = 1_000_000
+reth_devkey_fn = 'reth.devkey'
+
 burn_addr  = 'deadbeef'*5
 burn_addr2 = 'beadcafe'*5
 
@@ -446,7 +449,9 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		('addrgen',                 'generating addresses'),
 		('addrimport',              'importing addresses'),
 		('addrimport_devaddr',      'importing the dev address'),
+		('addrimport_reth_devaddr', 'importing the reth dev address'),
 		('fund_devaddr',            'funding the dev address'),
+		('del_reth_devaddr',        'deleting the reth dev address'),
 		('cli_dev_balance',         'mmgen-cli eth_getBalance'),
 	),
 	'msg': (
@@ -673,8 +678,9 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		self.daemon = CoinDaemon(cfg, network_id=self.proto.coin+'_rt', test_suite=True)
 
 		if self.daemon.id == 'reth':
-			global dfl_devkey, dfl_devaddr
-			dfl_devkey, dfl_devaddr = get_reth_dev_keypair(cfg)
+			global reth_devkey, reth_devaddr
+			reth_devkey, reth_devaddr = get_reth_dev_keypair(cfg)
+			write_to_file(joinpath(self.tmpdir, reth_devkey_fn), reth_devkey+'\n')
 
 		set_vbals(self.daemon.id)
 
@@ -709,8 +715,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		d = self.daemon
 
 		if not self.using_solc:
-			subdir = 'reth' if d.id == 'reth' else 'geth'
-			srcdir = os.path.join(self.tr.repo_root, 'test', 'ref', 'ethereum', 'bin', subdir)
+			srcdir = os.path.join(self.tr.repo_root, 'test', 'ref', 'ethereum', 'bin')
 			from shutil import copytree
 			for _ in ('mm1', 'mm2'):
 				copytree(os.path.join(srcdir, _), os.path.join(self.tmpdir, _))
@@ -846,13 +851,14 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		return t
 
 	def cli_dev_balance(self):
+		self.mining_delay()
 		t = self.spawn(
 			'mmgen-cli',
 			[f'--coin={self.proto.coin}', '--regtest=1', 'eth_getBalance', '0x'+dfl_devaddr, 'latest'])
 		if self.daemon.id == 'geth':
 			t.expect('0x33b2e3c91ec0e9113986000')
 		elif self.daemon.id == 'reth':
-			t.expect('0xd3c21bcecceda1000000')
+			t.expect('0xd3c21bab45fb313f0000')
 		return t
 
 	async def _wallet_upgrade(self, src_fn, expect1, expect2=None):
@@ -906,6 +912,11 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 
 	def addrimport_devaddr(self):
 		return self._addrimport_one_addr(addr=dfl_devaddr)
+
+	def addrimport_reth_devaddr(self):
+		if not self.daemon.id == 'reth':
+			return 'silent'
+		return self._addrimport_one_addr(addr=reth_devaddr)
 
 	def addrimport_burn_addr(self):
 		return self._addrimport_one_addr(addr=burn_addr)
@@ -991,11 +1002,14 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 
 	def fund_devaddr(self):
 		"""
-		For Erigon, fund the default (Parity) dev address from the Erigon dev address
+		For Reth, fund the default (Parity) dev address from the Reth dev address
 		For the others, send a junk TX to keep block counts equal for all daemons
 		"""
 		dt = namedtuple('data', ['devkey_fn', 'dest', 'amt'])
-		d = dt(dfl_devkey_fn, burn_addr2, '1')
+		if self.daemon.id == 'reth':
+			d = dt(reth_devkey_fn, dfl_devaddr, Decimal(reth_dev_amt) - Decimal('0.01'))
+		else:
+			d = dt(dfl_devkey_fn, burn_addr2, '1')
 		t = self.txcreate(
 			args    = self.eth_opts_noquiet + [
 				f'--keys-from-file={joinpath(self.tmpdir, d.devkey_fn)}',
@@ -1009,6 +1023,11 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		t.read()
 		self.get_file_with_ext('sigtx', delete_all=True)
 		return t
+
+	def del_reth_devaddr(self):
+		if not self.daemon.id == 'reth':
+			return 'silent'
+		return self._del_addr(reth_devaddr)
 
 	def txcreate1(self):
 		# include one invalid keypress 'X' -- see EthereumTwUnspentOutputs.key_mappings
