@@ -32,7 +32,6 @@ ref_wallet_brainpass = 'abc'
 ref_wallet_hash_preset = '1'
 ref_wallet_incog_offset = 123
 
-dfl_seed_id = '98831F3A'
 dfl_addr_idx_list = '1010,500-501,31-33,1,33,500,1011'
 dfl_wpasswd = 'reference password'
 
@@ -46,6 +45,8 @@ incog_id_fn = 'incog_id'
 non_mmgen_fn = 'coinkey'
 
 ref_dir = os.path.join('test', 'ref')
+
+dfl_sid = '98831F3A'
 dfl_words_file = os.path.join(ref_dir, '98831F3A.mmwords')
 dfl_bip39_file = os.path.join(ref_dir, '98831F3A.bip39')
 

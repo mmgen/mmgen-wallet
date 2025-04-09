@@ -170,6 +170,8 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	deterministic = False
 	test_rbf = False
 	bdb_wallet = False
+	menu_prompt = 'abel:\b'
+	input_sels_prompt = 'to spend: '
 
 	cmd_group_in = (
 		('setup',                   'regtest (Bob and Alice) mode setup'),

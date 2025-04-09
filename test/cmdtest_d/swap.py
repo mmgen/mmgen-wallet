@@ -30,8 +30,6 @@ sample1 = gr_uc[:24]
 sample2 = '00010203040506'
 
 class CmdTestSwapMethods:
-	menu_prompt = 'abel:\b'
-	input_sels_prompt = 'to spend: '
 
 	@property
 	def bob_opt(self):
@@ -265,7 +263,7 @@ class CmdTestSwapMethods:
 		assert data
 		return 'ok'
 
-class CmdTestSwap(CmdTestRegtest, CmdTestAutosignThreaded, CmdTestSwapMethods):
+class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 	bdb_wallet = True
 	networks = ('btc',)
 	tmpdir_nums = [37]

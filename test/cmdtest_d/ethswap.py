@@ -16,7 +16,7 @@ from mmgen.cfg import Config
 from mmgen.protocol import init_proto
 
 from .include.runner import CmdTestRunner
-from .include.common import dfl_seed_id
+from .include.common import dfl_sid
 from .httpd.thornode import ThornodeServer
 
 from .regtest import CmdTestRegtest
@@ -31,7 +31,34 @@ def {name}(self):
 	return ethswap_eth.run_test("{eth_name}", sub=True)
 """
 
-class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
+class CmdTestEthSwapMethods:
+
+	async def token_deploy_a(self):
+		return await self._token_deploy_math(num=1, get_receipt=False)
+
+	async def token_deploy_b(self):
+		return await self._token_deploy_owned(num=1, get_receipt=False)
+
+	async def token_deploy_c(self):
+		return await self._token_deploy_token(num=1, get_receipt=False)
+
+	def token_fund_user(self):
+		return self._token_transfer_ops(
+			op          = 'fund_user',
+			mm_idxs     = [1],
+			amt         = self.token_fund_amt,
+			get_receipt = False)
+
+	def token_addrgen(self):
+		return self._token_addrgen(mm_idxs=[1], naddrs=5)
+
+	def token_addrimport(self):
+		return self._token_addrimport('token_addr1', '1-5', expect='5/5')
+
+	def token_bal1(self):
+		return self._token_bal_check(pat=rf'{dfl_sid}:E:1\s+{self.token_fund_amt}\s')
+
+class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	'Ethereum swap operations'
 
 	bdb_wallet = True
@@ -76,10 +103,9 @@ class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
 	),
 	'eth_fund': (
 		'funding the ETH tracking wallet',
-		('eth_txcreate1', ''),
-		('eth_txsign1',   ''),
-		('eth_txsend1',   ''),
-		('eth_bal1',      ''),
+		('eth_fund_mmgen_addr1', ''),
+		('eth_fund_mmgen_addr2', ''),
+		('eth_bal1',             ''),
 	),
 	'swap': (
 		'swap operations (BTC -> ETH)',
@@ -142,7 +168,7 @@ class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
 		return self._swaptxcreate_ui_common(t)
 
 	def swaptxcreate2(self):
-		t = self._swaptxcreate(['BTC', '8.765', 'ETH', f'{dfl_seed_id}:E:1'])
+		t = self._swaptxcreate(['BTC', '8.765', 'ETH', f'{dfl_sid}:E:1'])
 		t.expect('OK? (Y/n): ', 'y')
 		return self._swaptxcreate_ui_common(t)
 
@@ -159,12 +185,12 @@ class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
 		return self._swaptxsend()
 
 	def swaptxbump1(self): # create one-output TX back to self to rescue funds
-		return self._swaptxbump('40s', output_args=[f'{dfl_seed_id}:B:1'])
+		return self._swaptxbump('40s', output_args=[f'{dfl_sid}:B:1'])
 
 	def swaptxdo1(self):
 		return self._swaptxcreate_ui_common(
 			self._swaptxcreate(
-				['BTC', '0.223344', f'{dfl_seed_id}:B:3', 'ETH', f'{dfl_seed_id}:E:2'],
+				['BTC', '0.223344', f'{dfl_sid}:B:3', 'ETH', f'{dfl_sid}:E:2'],
 				action = 'txdo'),
 			sign_and_send = True,
 			file_desc = 'Sent transaction')
@@ -180,11 +206,13 @@ class CmdTestEthSwap(CmdTestRegtest, CmdTestSwapMethods):
 		thornode_server.stop()
 		return 'ok'
 
-class CmdTestEthSwapEth(CmdTestEthdev, CmdTestSwapMethods):
+class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev):
 	'Ethereum swap operations - Ethereum wallet'
 
 	networks = ('eth',)
 	tmpdir_nums = [48]
+	fund_amt = '123.456'
+	token_fund_amt = 1000
 
 	bals = lambda self, k: {
 		'swap1': [('98831F3A:E:1', '123.456')],
@@ -192,13 +220,15 @@ class CmdTestEthSwapEth(CmdTestEthdev, CmdTestSwapMethods):
 	}[k]
 
 	cmd_group_in = CmdTestEthdev.cmd_group_in + (
-		('swaptxcreate1', 'creating an ETH->BTC swap transaction'),
-		('swaptxcreate2', 'creating an ETH->BTC swap transaction (specific address, trade limit)'),
-		('swaptxsign1',   'signing the transaction'),
-		('swaptxsend1',   'sending the transaction'),
-		('swaptxstatus1', 'getting the transaction status (with --verbose)'),
-		('bal1',          'the ETH balance'),
-		('bal2',          'the ETH balance'),
+		('fund_mmgen_addr1', 'funding user address :1)'),
+		('fund_mmgen_addr2', 'funding user address :11)'),
+		('swaptxcreate1',    'creating an ETH->BTC swap transaction'),
+		('swaptxcreate2',    'creating an ETH->BTC swap transaction (specific address, trade limit)'),
+		('swaptxsign1',      'signing the transaction'),
+		('swaptxsend1',      'sending the transaction'),
+		('swaptxstatus1',    'getting the transaction status (with --verbose)'),
+		('bal1',             'the ETH balance'),
+		('bal2',             'the ETH balance'),
 	)
 
 	def swaptxcreate1(self):
@@ -209,7 +239,7 @@ class CmdTestEthSwapEth(CmdTestEthdev, CmdTestSwapMethods):
 	def swaptxcreate2(self):
 		return self._swaptxcreate_ui_common(
 			self._swaptxcreate(
-				['ETH', '8.765', 'BTC', f'{dfl_seed_id}:B:4'],
+				['ETH', '8.765', 'BTC', f'{dfl_sid}:B:4'],
 				add_opts = ['--trade-limit=3%']),
 			expect = ':2019e4/1/0')
 

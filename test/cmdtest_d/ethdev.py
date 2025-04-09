@@ -49,6 +49,7 @@ from ..include.common import (
 from .include.common import (
 	ref_dir,
 	dfl_words_file,
+	dfl_sid,
 	tx_comment_jp,
 	tx_comment_lat_cyr_gr,
 	tw_comment_zh,
@@ -65,7 +66,6 @@ from .httpd.etherscan import EtherscanServer
 etherscan_server = EtherscanServer()
 
 del_addrs = ('4', '1')
-dfl_sid = '98831F3A'
 
 # The OpenEthereum dev address with lots of coins.  Create with "ethkey -b info ''":
 dfl_devaddr = '00a329c0648769a73afac7f9381e08fb43dbea72'
@@ -124,7 +124,7 @@ def set_vbals(daemon_id):
 
 coin = cfg.coin
 
-class CmdTestEthdevMethods: # mixin class
+class CmdTestEthdevMethods:
 
 	def _del_addr(self, addr):
 		t = self.spawn('mmgen-tool', self.eth_opts + ['remove_address', addr])
@@ -185,6 +185,15 @@ class CmdTestEthdevMethods: # mixin class
 			add_args = ['--receipt'],
 			return_early = True,
 			env = cleanup_env(cfg=self.cfg))
+
+	def fund_mmgen_addr1(self):
+		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:1,{self.fund_amt}')
+
+	def fund_mmgen_addr2(self):
+		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:11,{self.fund_amt}')
+
+	def fund_mmgen_addr3(self):
+		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:21,{self.fund_amt}')
 
 	def _fund_mmgen_addr(self, arg):
 		return self._txdo(
@@ -352,7 +361,7 @@ class CmdTestEthdevMethods: # mixin class
 		end_silence()
 		return 'ok'
 
-class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
+class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
 	networks = ('eth', 'etc')
 	passthru_opts = ('coin', 'daemon_id', 'eth_daemon_id', 'http_timeout', 'rpc_backend')

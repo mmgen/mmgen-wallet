@@ -20,13 +20,14 @@ from mmgen.util import ymsg, suf
 
 from ..include.common import imsg, omsg_r
 
-from .include.common import cleanup_env, dfl_words_file
+from .include.common import cleanup_env, dfl_words_file, dfl_sid
 from .include.runner import CmdTestRunner
 from .httpd.thornode import ThornodeServer
 
-from .ethdev import CmdTestEthdev, CmdTestEthdevMethods, dfl_sid
+from .ethdev import CmdTestEthdev, CmdTestEthdevMethods
 from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods
+from .ethswap import CmdTestEthSwapMethods
 
 thornode_server = ThornodeServer()
 burn_addr = 'beefcafe22' * 4
@@ -113,12 +114,14 @@ class CmdTestEthBumpMethods:
 
 		return 'ok'
 
-class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
+class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev):
 	'Ethereum transaction bumping operations'
 
 	networks = ('eth',)
 	tmpdir_nums = [42]
 	dfl_devnet_block_period = {'geth': 7, 'reth': 9}
+	fund_amt = 100000
+	token_fund_amt = 1000
 
 	cmd_group_in = (
 		('subgroup.ltc_init',           []),
@@ -140,9 +143,9 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 			('addrimport',          'importing addresses'),
 			('addrimport_devaddr',  'importing the dev address'),
 			('fund_devaddr',        'funding the dev address'),
-			('fund_mmgen_addr1',    'spend from dev address to address :1)'),
-			('fund_mmgen_addr2',    'spend from dev address to address :11)'),
-			('fund_mmgen_addr3',    'spend from dev address to address :21)'),
+			('fund_mmgen_addr1',    'funding user address :1)'),
+			('fund_mmgen_addr2',    'funding user address :11)'),
+			('fund_mmgen_addr3',    'funding user address :21)'),
 			('wait1',               'waiting for block'),
 		),
 		'ltc_init': (
@@ -253,15 +256,6 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 
 		thornode_server.start()
 
-	def fund_mmgen_addr1(self):
-		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:1,100000')
-
-	def fund_mmgen_addr2(self):
-		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:11,100000')
-
-	def fund_mmgen_addr3(self):
-		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:21,100000')
-
 	def txcreate1(self):
 		return self._txcreate(args=[f'{burn_addr},987'], acct='1')
 
@@ -302,27 +296,6 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 
 	def bal4(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:12\s+4444\.3333\s')
-
-	async def token_deploy_a(self):
-		return await self._token_deploy_math(num=1, get_receipt=False)
-
-	async def token_deploy_b(self):
-		return await self._token_deploy_owned(num=1, get_receipt=False)
-
-	async def token_deploy_c(self):
-		return await self._token_deploy_token(num=1, get_receipt=False)
-
-	def token_fund_user(self):
-		return self._token_transfer_ops(op='fund_user', mm_idxs=[1], get_receipt=False)
-
-	def token_addrgen(self):
-		return self._token_addrgen(mm_idxs=[1], naddrs=5)
-
-	def token_addrimport(self):
-		return self._token_addrimport('token_addr1', '1-5', expect='5/5')
-
-	def token_bal1(self):
-		return self._token_bal_check(pat=rf'{dfl_sid}:E:1\s+1000\s')
 
 	def token_txdo1(self):
 		return self._token_txcreate(cmd='txdo', args=[f'{dfl_sid}:E:2,1.23456', dfl_words_file])
@@ -373,7 +346,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 	swaptxbump1sign = swaptxbump2sign = token_txbump2sign
 	swaptxbump1send = swaptxbump2send = token_txbump2send
 
-class CmdTestEthBumpLTC(CmdTestRegtest, CmdTestSwapMethods):
+class CmdTestEthBumpLTC(CmdTestSwapMethods, CmdTestRegtest):
 	network = ('ltc',)
 	tmpdir_nums = [43]
 	cmd_group_in = CmdTestRegtest.cmd_group_in + (
