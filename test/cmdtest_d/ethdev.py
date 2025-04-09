@@ -70,6 +70,7 @@ dfl_sid = '98831F3A'
 # The OpenEthereum dev address with lots of coins.  Create with "ethkey -b info ''":
 dfl_devaddr = '00a329c0648769a73afac7f9381e08fb43dbea72'
 dfl_devkey = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
+dfl_devkey_fn = 'dfl.devkey'
 
 def get_reth_dev_keypair(cfg):
 	from mmgen.bip39 import bip39
@@ -85,8 +86,6 @@ burn_addr2 = 'beadcafe'*5
 
 amt1 = '999777.12345689012345678'
 amt2 = '888.111122223333444455'
-
-parity_devkey_fn = 'parity.devkey'
 
 def set_vbals(daemon_id):
 	global vbal1, vbal2, vbal3, vbal4, vbal5, vbal6, vbal7, vbal9
@@ -123,6 +122,11 @@ def set_vbals(daemon_id):
 coin = cfg.coin
 
 class CmdTestEthdevMethods: # mixin class
+
+	def _del_addr(self, addr):
+		t = self.spawn('mmgen-tool', self.eth_opts + ['remove_address', addr])
+		t.expect(f"'{addr}' deleted")
+		return t
 
 	def _addrgen(self, addrs='1-3,11-13,21-23', no_msg=False):
 		t = self.spawn(
@@ -179,9 +183,9 @@ class CmdTestEthdevMethods: # mixin class
 			return_early = True,
 			env = cleanup_env(cfg=self.cfg))
 
-	def _fund_mmgen_address(self, arg):
+	def _fund_mmgen_addr(self, arg):
 		return self._txdo(
-			args = [f'--keys-from-file={joinpath(self.tmpdir, parity_devkey_fn)}', arg, dfl_words_file],
+			args = [f'--keys-from-file={joinpath(self.tmpdir, dfl_devkey_fn)}', arg, dfl_words_file],
 			acct = '10')
 
 	def _bal_check(self, *, pat, add_opts=[]):
@@ -218,7 +222,7 @@ class CmdTestEthdevMethods: # mixin class
 		return ret
 
 	async def _token_deploy(self, num, key, gas, mmgen_cmd='txdo', gas_price='8G', get_receipt=True):
-		keyfile = joinpath(self.tmpdir, parity_devkey_fn)
+		keyfile = joinpath(self.tmpdir, dfl_devkey_fn)
 		fn = joinpath(self.tmpdir, 'mm'+str(num), key+'.bin')
 		args = [
 			'-B',
@@ -437,13 +441,13 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 	),
 	'init': (
 		'initializing wallets',
-		('wallet_upgrade1',     'upgrading the tracking wallet (v1 -> v2)'),
-		('wallet_upgrade2',     'upgrading the tracking wallet (v2 -> v3)'),
-		('addrgen',             'generating addresses'),
-		('addrimport',          'importing addresses'),
-		('addrimport_dev_addr', "importing dev faucet address 'Ox00a329c..'"),
-		('fund_dev_address',    'funding the default (Parity dev) address'),
-		('cli_dev_balance',      'mmgen-cli eth_getBalance'),
+		('wallet_upgrade1',         'upgrading the tracking wallet (v1 -> v2)'),
+		('wallet_upgrade2',         'upgrading the tracking wallet (v2 -> v3)'),
+		('addrgen',                 'generating addresses'),
+		('addrimport',              'importing addresses'),
+		('addrimport_devaddr',      'importing the dev address'),
+		('fund_devaddr',            'funding the dev address'),
+		('cli_dev_balance',         'mmgen-cli eth_getBalance'),
 	),
 	'msg': (
 		'message signing',
@@ -556,7 +560,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		('token_txsend2',              'sending the transaction'),
 		('token_bal3',                 f'the {coin} balance and token balance'),
 
-		('del_dev_addr',               'deleting the dev address'),
+		('del_devaddr',                'deleting the dev address'),
 
 		('bal1_getbalance',            f'the {coin} balance (getbalance)'),
 
@@ -684,7 +688,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		self.keystore_dir = os.path.relpath(joinpath(self.daemon.datadir, 'keystore'))
 
 		write_to_file(
-			joinpath(self.tmpdir, parity_devkey_fn),
+			joinpath(self.tmpdir, dfl_devkey_fn),
 			dfl_devkey+'\n')
 
 		self.message = 'attack at dawn'
@@ -895,16 +899,16 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		t.expect(expect)
 		return t
 
-	def addrimport_one_addr(self, addr=None, extra_args=[]):
+	def _addrimport_one_addr(self, addr=None, extra_args=[]):
 		t = self.spawn('mmgen-addrimport', ['--regtest=1', '--quiet', f'--address={addr}'] + extra_args)
 		t.expect('OK')
 		return t
 
-	def addrimport_dev_addr(self):
-		return self.addrimport_one_addr(addr=dfl_devaddr)
+	def addrimport_devaddr(self):
+		return self._addrimport_one_addr(addr=dfl_devaddr)
 
 	def addrimport_burn_addr(self):
-		return self.addrimport_one_addr(addr=burn_addr)
+		return self._addrimport_one_addr(addr=burn_addr)
 
 	def txcreate(
 			self,
@@ -942,7 +946,7 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 
 	def txsign(self, ni=False, ext='{}.regtest.rawtx', add_args=[], dev_send=False, has_label=True):
 		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
-		keyfile = joinpath(self.tmpdir, parity_devkey_fn)
+		keyfile = joinpath(self.tmpdir, dfl_devkey_fn)
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
 			'mmgen-txsign',
@@ -985,13 +989,13 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		return self.spawn('mmgen-tool', ['--verbose', 'txview', txfile])
 
-	def fund_dev_address(self):
+	def fund_devaddr(self):
 		"""
 		For Erigon, fund the default (Parity) dev address from the Erigon dev address
 		For the others, send a junk TX to keep block counts equal for all daemons
 		"""
 		dt = namedtuple('data', ['devkey_fn', 'dest', 'amt'])
-		d = dt(parity_devkey_fn, burn_addr2, '1')
+		d = dt(dfl_devkey_fn, burn_addr2, '1')
 		t = self.txcreate(
 			args    = self.eth_opts_noquiet + [
 				f'--keys-from-file={joinpath(self.tmpdir, d.devkey_fn)}',
@@ -1445,16 +1449,14 @@ class CmdTestEthdev(CmdTestBase, CmdTestShared, CmdTestEthdevMethods):
 	def token_bal3(self):
 		return self.token_bal(n='3')
 
-	def del_dev_addr(self):
-		t = self.spawn('mmgen-tool', self.eth_opts + ['remove_address', dfl_devaddr])
-		t.expect(f"'{dfl_devaddr}' deleted")
-		return t
+	def del_devaddr(self):
+		return self._del_addr(dfl_devaddr)
 
 	def bal1_getbalance(self):
 		return self.bal_getbalance(dfl_sid, '1', etc_adj=True)
 
 	def addrimport_token_burn_addr(self):
-		return self.addrimport_one_addr(addr=burn_addr, extra_args=['--token=mm1'])
+		return self._addrimport_one_addr(addr=burn_addr, extra_args=['--token=mm1'])
 
 	def token_bal4(self):
 		return self.token_bal(n='4')

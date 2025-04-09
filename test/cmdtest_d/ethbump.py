@@ -138,19 +138,19 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 			('setup',               'dev mode transaction bumping tests for Ethereum (start daemon)'),
 			('addrgen',             'generating addresses'),
 			('addrimport',          'importing addresses'),
-			('addrimport_dev_addr', 'importing dev faucet address ‘Ox00a329c..’'),
-			('fund_dev_address',    'funding the default (Parity dev) address'),
-			('fund_mmgen_address1', 'spend from dev address to address :1)'),
-			('fund_mmgen_address2', 'spend from dev address to address :11)'),
-			('fund_mmgen_address3', 'spend from dev address to address :21)'),
+			('addrimport_devaddr',  'importing the dev address'),
+			('fund_devaddr',        'funding the dev address'),
+			('fund_mmgen_addr1',    'spend from dev address to address :1)'),
+			('fund_mmgen_addr2',    'spend from dev address to address :11)'),
+			('fund_mmgen_addr3',    'spend from dev address to address :21)'),
 			('wait1',               'waiting for block'),
 		),
 		'ltc_init': (
 			'initializing LTC tracking wallet',
-			('ltc_setup',               'regtest (Bob and Alice) mode setup'),
-			('ltc_walletconv_bob',      'wallet generation (Bob)'),
-			('ltc_addrgen_bob',         'address generation (Bob)'),
-			('ltc_addrimport_bob',      'importing Bob’s addresses'),
+			('ltc_setup',          ''),
+			('ltc_walletconv_bob', ''),
+			('ltc_addrgen_bob',    ''),
+			('ltc_addrimport_bob', ''),
 		),
 		'feebump': (
 			'creating, signing, sending, bumping and resending a transaction (fee-bump only)',
@@ -253,14 +253,14 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthdev, CmdTestSwapMethods):
 
 		thornode_server.start()
 
-	def fund_mmgen_address1(self):
-		return self._fund_mmgen_address(arg=f'{dfl_sid}:E:1,100000')
+	def fund_mmgen_addr1(self):
+		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:1,100000')
 
-	def fund_mmgen_address2(self):
-		return self._fund_mmgen_address(arg=f'{dfl_sid}:E:11,100000')
+	def fund_mmgen_addr2(self):
+		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:11,100000')
 
-	def fund_mmgen_address3(self):
-		return self._fund_mmgen_address(arg=f'{dfl_sid}:E:21,100000')
+	def fund_mmgen_addr3(self):
+		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:21,100000')
 
 	def txcreate1(self):
 		return self._txcreate(args=[f'{burn_addr},987'], acct='1')
@@ -377,6 +377,7 @@ class CmdTestEthBumpLTC(CmdTestRegtest, CmdTestSwapMethods):
 	network = ('ltc',)
 	tmpdir_nums = [43]
 	cmd_group_in = CmdTestRegtest.cmd_group_in + (
+		('setup',           'LTC regtest setup'),
 		('walletconv_bob',  'LTC wallet generation'),
 		('addrgen_bob',     'LTC address generation'),
 		('addrimport_bob',  'importing LTC addresses'),

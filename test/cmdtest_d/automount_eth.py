@@ -28,9 +28,9 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev, CmdTestEthdevMe
 		('setup',                  f'dev mode tests for coin {cfg.coin} (start daemon)'),
 		('addrgen',                'generating addresses'),
 		('addrimport',             'importing addresses'),
-		('addrimport_dev_addr',    "importing dev faucet address 'Ox00a329c..'"),
-		('fund_dev_address',       'funding the default (Parity dev) address'),
-		('fund_mmgen_address',     'funding an MMGen address'),
+		('addrimport_devaddr',     'importing the dev address'),
+		('fund_devaddr',           'funding the dev address'),
+		('fund_mmgen_addr',        'funding an MMGen address'),
 		('create_tx',              'creating a transaction'),
 		('run_autosign_setup',     'running ‘autosign setup’'),
 		('wait_loop_start',        'starting autosign wait loop'),
@@ -61,8 +61,8 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev, CmdTestEthdevMe
 
 		self.txop_opts = ['--autosign', '--regtest=1', '--quiet']
 
-	def fund_mmgen_address(self):
-		return self._fund_mmgen_address(arg='98831F3A:E:1,123.456')
+	def fund_mmgen_addr(self):
+		return self._fund_mmgen_addr(arg='98831F3A:E:1,123.456')
 
 	def create_tx(self):
 		self.insert_device_online()
