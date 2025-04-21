@@ -24,9 +24,51 @@ cfg = Config()
 # https://thornode.ninerealms.com/thorchain/quote/swap?from_asset=BCH.BCH&to_asset=LTC.LTC&amount=1000000
 sample_request = 'GET /thorchain/quote/swap?from_asset=BCH.BCH&to_asset=LTC.LTC&amount=1000000000'
 request_pat = r'/thorchain/quote/swap\?from_asset=(\S+)\.(\S+)&to_asset=(\S+)\.(\S+)&amount=(\d+)'
-prices = {'BTC': 97000, 'LTC': 115, 'BCH': 330, 'ETH': 2304}
+prices = {'BTC': 97000, 'LTC': 115, 'BCH': 330, 'ETH': 2304, 'MM1': 0.998, 'RUNE': 1.4}
 gas_rate_units = {'ETH': 'gwei', 'BTC': 'satsperbyte'}
 recommended_gas_rate = {'ETH': '1', 'BTC': '6'}
+
+data_template_from_rune = {
+	'outbound_delay_blocks': 0,
+	'outbound_delay_seconds': 0,
+	'fees': {
+		'asset': 'BTC.BTC',
+		'affiliate': '0',
+		'outbound': '1182',
+		'liquidity': '110',
+		'total': '1292',
+		'slippage_bps': 7,
+		'total_bps': 92
+	},
+	'warning': 'Do not cache this response. Do not send funds after the expiry.',
+	'notes': 'Broadcast a MsgDeposit to the THORChain network with the appropriate memo. Do not use multi-in, multi-out transactions.',
+	'max_streaming_quantity': 0,
+	'streaming_swap_blocks': 0
+}
+
+data_template_to_rune = {
+	'inbound_confirmation_blocks': 2,
+	'inbound_confirmation_seconds': 24,
+	'outbound_delay_blocks': 0,
+	'outbound_delay_seconds': 0,
+	'fees': {
+		'asset': 'THOR.RUNE',
+		'affiliate': '0',
+		'outbound': '2000000',
+		'liquidity': '684966',
+		'total': '2684966',
+		'slippage_bps': 8,
+		'total_bps': 31
+	},
+	'router': '0xD37BbE5744D730a1d98d8DC97c42F0Ca46aD7146',
+	'warning': 'Do not cache this response. Do not send funds after the expiry.',
+	'notes': 'Base Asset: Send the inbound_address the asset with the memo encoded in hex in the data field. Tokens: First approve router to spend tokens from user: asset.approve(router, amount). Then call router.depositWithExpiry(inbound_address, asset, amount, memo, expiry). Asset is the token contract address. Amount should be in native asset decimals (eg 1e18 for most tokens). Do not swap to smart contract addresses.',
+	'dust_threshold': '1',
+	'recommended_gas_rate': '1',
+	'max_streaming_quantity': 0,
+	'streaming_swap_blocks': 0,
+	'total_swap_seconds': 24
+}
 
 data_template_btc = {
 	'inbound_confirmation_blocks': 4,
@@ -98,17 +140,24 @@ class ThornodeServer(HTTPD):
 		out_amt = in_amt * (prices[send_asset] / prices[recv_asset])
 
 		data_template = (
+			data_template_from_rune if send_asset == 'RUNE' else
+			data_template_to_rune if recv_asset == 'RUNE' else
 			data_template_eth if send_asset == 'ETH' else
 			data_template_btc)
 
-		from mmgen.protocol import init_proto
-		send_proto = init_proto(cfg, send_chain, network='regtest', need_amt=True)
 		data = data_template | {
 			'recommended_min_amount_in': str(int(70 * 10**8 / prices[send_asset])), # $70
 			'expected_amount_out': str(out_amt.to_unit('satoshi')),
 			'expiry': int(time.time()) + (10 * 60),
-			'inbound_address': make_inbound_addr(send_proto, send_proto.preferred_mmtypes[0]),
-			'gas_rate_units': gas_rate_units[send_proto.base_proto_coin],
-			'recommended_gas_rate': recommended_gas_rate[send_proto.base_proto_coin],
 		}
+
+		if send_asset != 'RUNE':
+			from mmgen.protocol import init_proto
+			send_proto = init_proto(cfg, send_chain, network='regtest', need_amt=True)
+			data.update({
+				'inbound_address': make_inbound_addr(send_proto, send_proto.preferred_mmtypes[0]),
+				'gas_rate_units': gas_rate_units[send_proto.base_proto_coin],
+				'recommended_gas_rate': recommended_gas_rate[send_proto.base_proto_coin]
+			})
+
 		return json.dumps(data).encode()

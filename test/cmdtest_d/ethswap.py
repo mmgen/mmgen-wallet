@@ -68,17 +68,20 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	eth_group = 'ethswap_eth'
 
 	cmd_group_in = (
-		('setup',                'regtest (Bob and Alice) mode setup'),
-		('eth_setup',            'Ethereum devnet setup'),
-		('subgroup.init',        []),
-		('subgroup.fund',        ['init']),
-		('subgroup.eth_init',    []),
-		('subgroup.eth_fund',    ['eth_init']),
-		('subgroup.swap',        ['fund', 'eth_fund']),
-		('subgroup.eth_swap',    ['fund', 'eth_fund']),
-		('stop',                 'stopping regtest daemon'),
-		('eth_stop',             'stopping Ethereum daemon'),
-		('thornode_server_stop', 'stopping the Thornode server'),
+		('setup',                   'regtest (Bob and Alice) mode setup'),
+		('eth_setup',               'Ethereum devnet setup'),
+		('subgroup.init',           []),
+		('subgroup.fund',           ['init']),
+		('subgroup.eth_init',       []),
+		('subgroup.eth_fund',       ['eth_init']),
+		('subgroup.swap',           ['fund', 'eth_fund']),
+		('subgroup.eth_swap',       ['fund', 'eth_fund']),
+		('subgroup.token_init',     ['eth_fund']),
+		('subgroup.token_swap',     ['fund', 'token_init']),
+		('subgroup.eth_token_swap', ['fund', 'token_init']),
+		('stop',                    'stopping regtest daemon'),
+		('eth_stop',                'stopping Ethereum daemon'),
+		('thornode_server_stop',    'stopping the Thornode server'),
 	)
 	cmd_subgroups = {
 	'init': (
@@ -107,6 +110,23 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('eth_fund_mmgen_addr2', ''),
 		('eth_bal1',             ''),
 	),
+	'token_init': (
+		'deploying tokens and initializing the ETH token tracking wallet',
+		('eth_token_compile1',   ''),
+		('eth_token_deploy_a',   ''),
+		('eth_token_deploy_b',   ''),
+		('eth_token_deploy_c',   ''),
+		('eth_token_fund_user',  ''),
+		('eth_token_addrgen',    ''),
+		('eth_token_addrimport', ''),
+		('eth_token_bal1',       ''),
+	),
+	'token_swap': (
+		'token swap operations (BTC -> MM1)',
+		('swaptxcreate3', 'creating a BTC->MM1 swap transaction'),
+		('swaptxsign3',   'signing the swap transaction'),
+		('swaptxsend3',   'sending the swap transaction'),
+	),
 	'swap': (
 		'swap operations (BTC -> ETH)',
 		('swaptxcreate1', 'creating a BTC->ETH swap transaction'),
@@ -130,6 +150,12 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('eth_swaptxsend1',   ''),
 		('eth_swaptxstatus1', ''),
 		('eth_bal2',          ''),
+	),
+	'eth_token_swap': (
+		'swap operations (ETH <-> MM1)',
+		('eth_swaptxcreate3', ''),
+		('eth_swaptxsign3',   ''),
+		('eth_swaptxsend3',   ''),
 	),
 	}
 
@@ -178,8 +204,8 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	def swaptxsend1(self):
 		return self._swaptxsend()
 
-	swaptxsign2 = swaptxsign1
-	swaptxsend2 = swaptxsend1
+	swaptxsign2 = swaptxsign3 = swaptxsign1
+	swaptxsend2 = swaptxsend3 = swaptxsend1
 
 	def swaptxbump1(self): # create one-output TX back to self to rescue funds
 		return self._swaptxbump('40s', output_args=[f'{dfl_sid}:B:1'])
@@ -197,6 +223,11 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 
 	def bob_bal3(self):
 		return self._user_bal_cli('bob', chk='499.77656902')
+
+	def swaptxcreate3(self):
+		t = self._swaptxcreate(['BTC', '0.87654321', 'ETH.MM1', f'{dfl_sid}:E:5'])
+		t.expect('OK? (Y/n): ', 'y')
+		return self._swaptxcreate_ui_common(t)
 
 	def thornode_server_stop(self):
 		self.spawn(msg_only=True)
@@ -224,8 +255,19 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		('swaptxsign1',      'signing the transaction'),
 		('swaptxsend1',      'sending the transaction'),
 		('swaptxstatus1',    'getting the transaction status (with --verbose)'),
+		('swaptxcreate3',    'creating an ETH->MM1 swap transaction'),
+		('swaptxsign3',      'signing the transaction'),
+		('swaptxsend3',      'sending the transaction'),
 		('bal1',             'the ETH balance'),
 		('bal2',             'the ETH balance'),
+		('token_compile1',   'compiling ERC20 token #1'),
+		('token_deploy_a',   'deploying ERC20 token MM1 (SafeMath)'),
+		('token_deploy_b',   'deploying ERC20 token MM1 (Owned)'),
+		('token_deploy_c',   'deploying ERC20 token MM1 (Token)'),
+		('token_fund_user',  'transferring token funds from dev to user'),
+		('token_addrgen',    'generating token addresses'),
+		('token_addrimport', 'importing token addresses using token address (MM1)'),
+		('token_bal1',       'the token balance'),
 	)
 
 	def swaptxcreate1(self):
@@ -240,11 +282,18 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 				add_opts = ['--trade-limit=3%']),
 			expect = ':2019e4/1/0')
 
+	def swaptxcreate3(self):
+		t = self._swaptxcreate(['ETH', '8.765', 'ETH.MM1', f'{dfl_sid}:E:5'])
+		return self._swaptxcreate_ui_common(t)
+
 	def swaptxsign1(self):
 		return self._swaptxsign()
 
 	def swaptxsend1(self):
 		return self._swaptxsend()
+
+	swaptxsign3 = swaptxsign1
+	swaptxsend3 = swaptxsend1
 
 	def swaptxstatus1(self):
 		self.mining_delay()

@@ -17,6 +17,7 @@ class unit_tests:
 			('BTC',      'BTC.BTC',  'b',        'BTC', None,   'recv'),
 			('LTC',      'LTC.LTC',  'l',        'LTC', None,   'recv'),
 			('BCH',      'BCH.BCH',  'c',        'BCH', None,   'recv'),
+			('ETH.USDT', 'ETH.USDT', 'ETH.USDT', 'ETH', 'USDT', 'recv'),
 		):
 			a = SwapAsset(name, direction)
 			vmsg(f'  {a.name}')
@@ -36,6 +37,7 @@ class unit_tests:
 			('ltc', 'bech32',     'LTC',      None),
 			('bch', 'compressed', 'BCH',      None),
 			('eth', None,         'ETH',      None),
+			('eth', None,         'ETH.USDT', 'USDT'),
 		):
 			proto = init_proto(cfg, coin, tokensym=token, need_amt=True)
 			addr = make_burn_addr(proto, addrtype)

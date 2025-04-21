@@ -12,8 +12,9 @@
 swap.proto.thorchain.thornode: THORChain swap protocol network query ops
 """
 
-import json
+import time, json
 from collections import namedtuple
+
 from ....amt import UniAmt
 
 _gd = namedtuple('gas_unit_data', ['code', 'disp'])
@@ -60,15 +61,36 @@ class Thornode:
 		self.rpc = ThornodeRPCClient(tx)
 
 	def get_quote(self):
-		self.get_str = '/thorchain/quote/swap?from_asset={a}&to_asset={b}&amount={c}'.format(
-			a = self.tx.send_asset.full_name,
-			b = self.tx.recv_asset.full_name,
-			c = self.in_amt.to_unit('satoshi'))
-		self.result = self.rpc.get(self.get_str)
-		self.data = json.loads(self.result.content)
-		if not 'expiry' in self.data:
-			from ....util import pp_fmt, die
-			die(2, pp_fmt(self.data))
+
+		def get_data(send, recv, amt):
+			get_str = f'/thorchain/quote/swap?from_asset={send}&to_asset={recv}&amount={amt}'
+			data = json.loads(self.rpc.get(get_str).content)
+			if not 'expiry' in data:
+				from ....util import pp_fmt, die
+				die(2, pp_fmt(data))
+			return data
+
+		if self.tx.proto.tokensym or self.tx.recv_asset.asset: # token swap
+			in_data = get_data(
+				self.tx.send_asset.full_name,
+				'THOR.RUNE',
+				self.in_amt.to_unit('satoshi'))
+			if self.tx.proto.network != 'regtest':
+				time.sleep(1.1) # ninerealms max request rate 1/sec
+			out_data = get_data(
+				'THOR.RUNE',
+				self.tx.recv_asset.full_name,
+				in_data['expected_amount_out'])
+			self.data = in_data | {
+				'expected_amount_out': out_data['expected_amount_out'],
+				'fees': out_data['fees'],
+				'expiry': min(in_data['expiry'], out_data['expiry'])
+			}
+		else:
+			self.data = get_data(
+				self.tx.send_asset.full_name,
+				self.tx.recv_asset.full_name,
+				self.in_amt.to_unit('satoshi'))
 
 	async def format_quote(self, trade_limit, usr_trade_limit, *, deduct_est_fee=False):
 		from ....util import make_timestr, ymsg
