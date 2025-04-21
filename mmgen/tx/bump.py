@@ -22,12 +22,6 @@ class Bump(Completed, NewSwap):
 	ext  = 'rawtx'
 	bump_output_idx = None
 	is_bump = True
-	swap_attrs = (
-		'is_swap',
-		'swap_proto',
-		'swap_quote_expiry',
-		'swap_recv_addr_mmid',
-		'swap_recv_asset_spec')
 
 	def __init__(self, *, check_sent, new_outputs, **kwargs):
 
@@ -38,9 +32,9 @@ class Bump(Completed, NewSwap):
 
 		if new_outputs:
 			if self.is_swap:
-				from .base import Base
+				self.is_swap = False
 				for attr in self.swap_attrs:
-					setattr(self, attr, getattr(Base, attr))
+					setattr(self, attr, None)
 			self.outputs = self.OutputList(self)
 			self.cfg = kwargs['cfg'] # must use current cfg opts, not those from orig_tx
 

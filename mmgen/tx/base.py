@@ -81,10 +81,11 @@ class Base(MMGenObject):
 	signed       = False
 	is_bump      = False
 	is_swap      = False
-	swap_proto   = None
-	swap_quote_expiry = None
-	swap_recv_addr_mmid = None
-	swap_recv_asset_spec = None
+	swap_attrs = {
+		'swap_proto': None,
+		'swap_quote_expiry': None,
+		'swap_recv_addr_mmid': None,
+		'swap_recv_asset_spec': None}
 	file_format  = 'json'
 	non_mmgen_inputs_msg = f"""
 		This transaction includes inputs with non-{gc.proj_name} addresses.  When

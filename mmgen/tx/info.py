@@ -78,13 +78,14 @@ class TxInfo:
 					(tx.usr_contract_data or bytes.fromhex(tx.txobj['data'])) if tx.proto.is_evm
 					else tx.data_output.data)
 				if Memo.is_partial_memo(data):
+					recv_mmid = getattr(tx, 'swap_recv_addr_mmid', None)
 					p = Memo.parse(data.decode('ascii'))
 					yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(name))
 					yield '    Swap: {}\n'.format(orange(f'{tx.send_asset.name} => {tx.recv_asset.name}'))
 					yield '    Dest: {}{}\n'.format(
 						cyan(p.address),
-						orange(f' ({tx.swap_recv_addr_mmid})') if tx.swap_recv_addr_mmid else '')
-					if not tx.swap_recv_addr_mmid:
+						orange(f' ({recv_mmid})') if recv_mmid else '')
+					if not recv_mmid:
 						yield yellow('    Warning: swap destination address is not a wallet address!\n')
 
 			enl = ('\n', '')[bool(terse)]

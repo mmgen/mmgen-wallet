@@ -85,12 +85,11 @@ class Completed(Base):
 						network = self.cfg.network,
 						tokensym = None if p.chain == p.asset else p.asset,
 						need_amt = True)
-				if self.swap_recv_addr_mmid:
-					mmid = self.swap_recv_addr_mmid
+				if mmid := getattr(self, 'swap_recv_addr_mmid', None):
+					pass
 				elif self.cfg.allow_non_wallet_swap:
 					from ..util import ymsg
 					ymsg('Warning: allowing swap to non-wallet address (--allow-non-wallet-swap)')
-					mmid = None
 				else:
 					raise ValueError('Swap to non-wallet address forbidden (override with --allow-non-wallet-swap)')
 				return self.Output(proto, addr=p.address, mmid=mmid, amt=proto.coin_amt('0'))
