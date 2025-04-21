@@ -170,13 +170,10 @@ class EtherscanTxProxyClient(TxProxyClient):
 		else:
 			return False
 
-def send_tx(cfg, tx):
+def send_tx(cfg, txhex):
 
 	c = get_client(cfg)
 	msg(f'Using {pink(cfg.tx_proxy.upper())} tx proxy')
-
-	if not cfg.test:
-		tx.confirm_send()
 
 	msg_r(f'Retrieving form from {orange(c.host)}...')
 	form_text = c.get_form(timeout=180)
@@ -186,7 +183,7 @@ def send_tx(cfg, tx):
 	post_data = c.create_post_data(
 		form_text = form_text,
 		coin      = cfg.coin,
-		tx_hex    = tx.serialized)
+		tx_hex    = txhex)
 	msg('done')
 
 	if cfg.test:
@@ -205,7 +202,7 @@ def send_tx(cfg, tx):
 	msg('Transaction ' + (f'sent: {txid.hl()}' if txid else 'send failed'))
 	c.save_response(result_text, 'result')
 
-	return bool(txid)
+	return txid
 
 tx_proxies = {
 	'blockchair': BlockchairTxProxyClient,

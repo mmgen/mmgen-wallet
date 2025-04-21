@@ -17,7 +17,7 @@ from ....util import msg, Msg, die, suf, capfirst
 
 class Status(TxBase.Status):
 
-	async def display(self, *, usr_req=False, return_exit_val=False, print_receipt=False):
+	async def display(self, *, usr_req=False, return_exit_val=False, print_receipt=False, idx=''):
 
 		def do_exit(retval, message):
 			if return_exit_val:
@@ -27,6 +27,7 @@ class Status(TxBase.Status):
 				die(retval, message)
 
 		tx = self.tx
+		coin_txid = '0x' + getattr(tx, f'coin_txid{idx}')
 
 		async def is_in_mempool():
 			if not 'full_node' in tx.rpc.caps:
@@ -36,12 +37,10 @@ class Status(TxBase.Status):
 			elif tx.rpc.daemon.id in ('geth', 'reth', 'erigon'):
 				res = await tx.rpc.call('txpool_content')
 				pool = list(res['pending']) + list(res['queued'])
-			return '0x'+tx.coin_txid in pool
+			return coin_txid in pool
 
 		async def is_in_wallet():
-			d = await tx.rpc.call(
-				'eth_getTransactionReceipt',
-				'0x' + tx.coin_txid)
+			d = await tx.rpc.call('eth_getTransactionReceipt', coin_txid)
 			if d and 'blockNumber' in d and d['blockNumber'] is not None:
 				from collections import namedtuple
 				receipt_info = namedtuple('receipt_info', ['confs', 'exec_status', 'rx'])

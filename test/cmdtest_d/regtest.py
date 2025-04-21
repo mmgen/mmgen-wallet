@@ -1207,7 +1207,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		if signed_tx:
 			t.passphrase(dfl_wcls.desc, rt_pw)
 			t.written_to_file('Signed transaction')
-			self.txsend_ui_common(t, caller='txdo', bogus_send=False, file_desc='Signed transaction')
+			self.txsend_ui_common(t, caller='txdo', bogus_send=False)
 		else:
 			t.expect('Save fee-bumped transaction? (y/N): ', 'y')
 			t.written_to_file('Fee-bumped transaction')
@@ -2230,7 +2230,8 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			['-d', self.dump_hex_subdir, f'--dump-hex={file}', '--bob', txfile], no_passthru_opts=['coin'])
 		t.expect('view: ', '\n')
 		t.expect('(y/N): ', '\n') # add comment?
-		t.written_to_file('Sent transaction')
+		if file != '-':
+			t.written_to_file('Serialized transaction hex data')
 		return t
 
 	def bob_dump_hex_dump(self):

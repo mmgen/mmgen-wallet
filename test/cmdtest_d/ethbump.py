@@ -308,7 +308,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			add_opts = ['--token=MM1'],
 			add_args = [dfl_words_file])
 		t.expect('to confirm: ', 'YES\n')
-		t.written_to_file('Signed transaction')
+		t.written_to_file('Sent transaction')
 		return t
 
 	def token_bal2(self):

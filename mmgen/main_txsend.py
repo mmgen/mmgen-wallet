@@ -83,6 +83,8 @@ if cfg.dump_hex and cfg.dump_hex != '-':
 	from .fileutil import check_outfile_dir
 	check_outfile_dir(cfg.dump_hex)
 
+asi = None
+
 if len(cfg._args) == 1:
 	infile = cfg._args[0]
 	from .fileutil import check_infile
@@ -109,16 +111,7 @@ if not cfg.status:
 	from .ui import do_license_msg
 	do_license_msg(cfg)
 
-from .tx import OnlineSignedTX, SentTX
-from .ui import keypress_confirm
-
-async def post_send(tx):
-	tx2 = await SentTX(cfg=cfg, data=tx.__dict__, automount=cfg.autosign)
-	tx2.file.write(
-		outdir        = asi.txauto_dir if cfg.autosign else None,
-		ask_overwrite = False,
-		ask_write     = False)
-	tx2.post_write()
+from .tx import OnlineSignedTX
 
 async def main():
 
@@ -145,11 +138,8 @@ async def main():
 	cfg._util.vmsg(f'Getting {tx.desc} ‘{tx.infile}’')
 
 	if cfg.mark_sent:
-		await post_send(tx)
+		await tx.post_send(asi)
 		sys.exit(0)
-
-	if cfg.receipt:
-		sys.exit(await tx.status.display(print_receipt=True))
 
 	if cfg.status:
 		if tx.coin_txid:
@@ -162,35 +152,12 @@ async def main():
 	if tx.is_swap and not tx.check_swap_expiry():
 		die(1, 'Swap quote has expired. Please re-create the transaction')
 
-	if not cfg.yes:
+	if not (cfg.yes or cfg.receipt):
 		tx.info.view_with_prompt('View transaction details?')
 		if tx.add_comment(): # edits an existing comment, returns true if changed
 			if not cfg.autosign:
 				tx.file.write(ask_write_default_yes=True)
 
-	if cfg.dump_hex:
-		from .fileutil import write_data_to_file
-		write_data_to_file(
-				cfg,
-				cfg.dump_hex,
-				tx.serialized + '\n',
-				desc = 'serialized transaction hex data',
-				ask_overwrite = False,
-				ask_tty = False)
-		if cfg.autosign:
-			if keypress_confirm(cfg, 'Mark transaction as sent on removable device?'):
-				await post_send(tx)
-		else:
-			await post_send(tx)
-	elif cfg.tx_proxy:
-		from .tx.tx_proxy import send_tx
-		if send_tx(cfg, tx):
-			if (not cfg.autosign or
-				keypress_confirm(cfg, 'Mark transaction as sent on removable device?')):
-				await post_send(tx)
-	elif cfg.test:
-		await tx.test_sendable()
-	elif await tx.send():
-		await post_send(tx)
+	await tx.send(cfg, asi)
 
 async_run(main())

@@ -524,7 +524,6 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			t.do_comment(comment)
 			if dump_hex:
 				t.written_to_file('Serialized transaction hex data')
-				t.expect('(y/N): ', 'n') # mark as sent?
 			else:
 				self._do_confirm_send(t, quiet=True)
 				t.written_to_file('Sent automount transaction')

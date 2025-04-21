@@ -37,11 +37,11 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 
 		await self.status.display()
 
-	async def test_sendable(self):
+	async def test_sendable(self, txhex):
 
 		await self.send_checks()
 
-		res = await self.rpc.call('testmempoolaccept', (self.serialized,))
+		res = await self.rpc.call('testmempoolaccept', (txhex,))
 		ret = res[0]
 
 		if ret['allowed']:
@@ -54,44 +54,27 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 			msg(ret['reject-reason'])
 			return False
 
-	async def send(self, *, prompt_user=True):
-
-		await self.send_checks()
-
-		if prompt_user:
-			self.confirm_send()
-
-		if self.cfg.bogus_send:
-			m = 'BOGUS transaction NOT sent: {}'
-		else:
-			m = 'Transaction sent: {}'
-			try:
-				ret = await self.rpc.call('sendrawtransaction', self.serialized)
-			except Exception as e:
-				errmsg = str(e)
-				nl = '\n'
-				if errmsg.count('Signature must use SIGHASH_FORKID'):
-					m = (
-						'The Aug. 1 2017 UAHF has activated on this chain.\n'
-						'Re-run the script with the --coin=bch option.')
-				elif errmsg.count('Illegal use of SIGHASH_FORKID'):
-					m  = (
-						'The Aug. 1 2017 UAHF is not yet active on this chain.\n'
-						'Re-run the script without the --coin=bch option.')
-				elif errmsg.count('non-final'):
-					m = "Transaction with nLockTime {!r} can’t be included in this block!".format(
-						self.info.strfmt_locktime(self.get_serialized_locktime()))
-				else:
-					m, nl = ('', '')
-				msg(orange('\n'+errmsg))
-				die(2, f'{m}{nl}Send of MMGen transaction {self.txid} failed')
+	async def send_with_node(self, txhex):
+		try:
+			return await self.rpc.call('sendrawtransaction', txhex)
+		except Exception as e:
+			errmsg = str(e)
+			nl = '\n'
+			if errmsg.count('Signature must use SIGHASH_FORKID'):
+				m = (
+					'The Aug. 1 2017 UAHF has activated on this chain.\n'
+					'Re-run the script with the --coin=bch option.')
+			elif errmsg.count('Illegal use of SIGHASH_FORKID'):
+				m  = (
+					'The Aug. 1 2017 UAHF is not yet active on this chain.\n'
+					'Re-run the script without the --coin=bch option.')
+			elif errmsg.count('non-final'):
+				m = "Transaction with nLockTime {!r} can’t be included in this block!".format(
+					self.info.strfmt_locktime(self.get_serialized_locktime()))
 			else:
-				assert ret == self.coin_txid, 'txid mismatch (after sending)'
-
-		msg(m.format(self.coin_txid.hl()))
-		self.add_sent_timestamp()
-		self.add_blockcount()
-		return True
+				m, nl = ('', '')
+			msg(orange('\n'+errmsg))
+			die(2, f'{m}{nl}Send of MMGen transaction {self.txid} failed')
 
 	def post_write(self):
 		pass

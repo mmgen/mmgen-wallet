@@ -20,42 +20,27 @@ from .signed import Signed, TokenSigned
 
 class OnlineSigned(Signed, TxBase.OnlineSigned):
 
-	async def test_sendable(self):
+	async def test_sendable(self, txhex):
 		raise NotImplementedError('transaction testing not implemented for Ethereum')
 
-	async def send(self, *, prompt_user=True):
-
+	async def send_checks(self):
 		self.check_correct_chain()
-
 		if not self.disable_fee_check and (self.fee > self.proto.max_tx_fee):
 			die(2, 'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
 				self.fee,
 				self.proto.name,
 				self.proto.max_tx_fee,
 				self.proto.coin))
-
 		await self.status.display()
 
-		if prompt_user:
-			self.confirm_send()
-
-		if self.cfg.bogus_send:
-			m = 'BOGUS transaction NOT sent: {}'
-		else:
-			try:
-				ret = await self.rpc.call('eth_sendRawTransaction', '0x'+self.serialized)
-			except Exception as e:
-				msg(orange('\n'+str(e)))
-				die(2, f'Send of MMGen transaction {self.txid} failed')
-			m = 'Transaction sent: {}'
-			assert ret == '0x'+self.coin_txid, 'txid mismatch (after sending)'
-			await erigon_sleep(self)
-
-		msg(m.format(self.coin_txid.hl()))
-		self.add_sent_timestamp()
-		self.add_blockcount()
-
-		return True
+	async def send_with_node(self, txhex):
+		try:
+			ret = await self.rpc.call('eth_sendRawTransaction', '0x' + txhex)
+		except Exception as e:
+			msg(orange('\n'+str(e)))
+			die(2, f'Send of MMGen transaction {self.txid} failed')
+		await erigon_sleep(self)
+		return ret.removeprefix('0x')
 
 	def post_write(self):
 		if 'token_addr' in self.txobj and not self.txobj['to']:
