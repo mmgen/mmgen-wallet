@@ -78,8 +78,8 @@ class Thornode:
 
 		d = self.data
 		tx = self.tx
-		in_coin = tx.send_asset.chain
-		out_coin = tx.recv_asset.chain
+		in_coin = tx.send_asset.short_name
+		out_coin = tx.recv_asset.short_name
 		in_amt = self.in_amt
 		out_amt = UniAmt(int(d['expected_amount_out']), from_unit='satoshi')
 		gas_unit = d['gas_rate_units']
@@ -130,7 +130,7 @@ class Thornode:
 		return f"""
 {cyan(hdr)}
   Protocol:                      {blue(name)}
-  Direction:                     {orange(f'{in_coin} => {out_coin}')}
+  Direction:                     {orange(f'{tx.send_asset.name} => {tx.recv_asset.name}')}
   Vault address:                 {cyan(self.inbound_address)}
   Quote expires:                 {pink(elapsed_disp)} [{make_timestr(d['expiry'])}]
   {_amount_in_label:<22}         {in_amt.hl()} {in_coin}

@@ -175,14 +175,11 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	def swaptxsign1(self):
 		return self._swaptxsign()
 
-	def swaptxsign2(self):
-		return self._swaptxsign()
-
 	def swaptxsend1(self):
 		return self._swaptxsend()
 
-	def swaptxsend2(self):
-		return self._swaptxsend()
+	swaptxsign2 = swaptxsign1
+	swaptxsend2 = swaptxsend1
 
 	def swaptxbump1(self): # create one-output TX back to self to rescue funds
 		return self._swaptxbump('40s', output_args=[f'{dfl_sid}:B:1'])

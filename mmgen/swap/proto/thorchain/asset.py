@@ -18,12 +18,12 @@ class THORChainSwapAsset(SwapAsset):
 
 	_ad = SwapAsset._ad
 	assets_data = {
-		'BTC':      _ad('Bitcoin',        'BTC',   None,        'b'),
-		'LTC':      _ad('Litecoin',       'LTC',   None,        'l'),
-		'BCH':      _ad('Bitcoin Cash',   'BCH',   None,        'c'),
-		'ETH':      _ad('Ethereum',       'ETH',   None,        'e'),
-		'DOGE':     _ad('Dogecoin',       'DOGE',  None,        'd'),
-		'RUNE':     _ad('THORChain Rune', 'RUNE',  'THOR.RUNE', 'r'),
+		'BTC':      _ad('Bitcoin',          'BTC',   None,       'b'),
+		'LTC':      _ad('Litecoin',         'LTC',   None,       'l'),
+		'BCH':      _ad('Bitcoin Cash',     'BCH',   None,       'c'),
+		'ETH':      _ad('Ethereum',         'ETH',   None,       'e'),
+		'DOGE':     _ad('Dogecoin',         'DOGE',  None,       'd'),
+		'RUNE':     _ad('Rune (THORChain)', 'RUNE', 'THOR.RUNE', 'r'),
 	}
 
 	send = ('BTC', 'LTC', 'BCH', 'ETH')

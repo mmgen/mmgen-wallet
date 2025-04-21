@@ -44,6 +44,10 @@ class SwapAsset:
 		return self.data.full_name or f'{self.data.name}.{self.data.name}'
 
 	@property
+	def short_name(self):
+		return self.asset or self.chain
+
+	@property
 	def memo_asset_name(self):
 		return self.data.abbr or self.data.full_name
 

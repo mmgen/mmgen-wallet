@@ -28,8 +28,7 @@ prices = {'BTC': 97000, 'LTC': 115, 'BCH': 330, 'ETH': 2304}
 gas_rate_units = {'ETH': 'gwei', 'BTC': 'satsperbyte'}
 recommended_gas_rate = {'ETH': '1', 'BTC': '6'}
 
-data_template = {
-	'inbound_address': None,
+data_template_btc = {
 	'inbound_confirmation_blocks': 4,
 	'inbound_confirmation_seconds': 2400,
 	'outbound_delay_blocks': 5,
@@ -43,17 +42,35 @@ data_template = {
 		'slippage_bps': 31,
 		'total_bps': 34
 	},
-	'expiry': None,
 	'warning': 'Do not cache this response. Do not send funds after the expiry.',
 	'notes': 'First output should be to inbound_address, second output should be change back to self, third output should be OP_RETURN, limited to 80 bytes. Do not send below the dust threshold. Do not use exotic spend scripts, locks or address formats.',
 	'dust_threshold': '10000',
-	'recommended_min_amount_in': '1222064',
-	'recommended_gas_rate': '6',
-	'gas_rate_units': 'satsperbyte',
-	'expected_amount_out': None,
 	'max_streaming_quantity': 0,
 	'streaming_swap_blocks': 0,
 	'total_swap_seconds': 2430
+}
+
+data_template_eth = {
+	'inbound_confirmation_blocks': 2,
+	'inbound_confirmation_seconds': 24,
+	'outbound_delay_blocks': 0,
+	'outbound_delay_seconds': 0,
+	'fees': {
+		'asset': 'BTC.BTC',
+		'affiliate': '0',
+		'outbound': '1097',
+		'liquidity': '77',
+		'total': '1174',
+		'slippage_bps': 15,
+		'total_bps': 237
+	},
+	'router': '0xD37BbE5744D730a1d98d8DC97c42F0Ca46aD7146',
+	'warning': 'Do not cache this response. Do not send funds after the expiry.',
+	'notes': 'Base Asset: Send the inbound_address the asset with the memo encoded in hex in the data field. Tokens: First approve router to spend tokens from user: asset.approve(router, amount). Then call router.depositWithExpiry(inbound_address, asset, amount, memo, expiry). Asset is the token contract address. Amount should be in native asset decimals (eg 1e18 for most tokens). Do not swap to smart contract addresses.',
+	'recommended_gas_rate': '1',
+	'max_streaming_quantity': 0,
+	'streaming_swap_blocks': 0,
+	'total_swap_seconds': 24
 }
 
 def make_inbound_addr(proto, mmtype):
@@ -77,16 +94,20 @@ class ThornodeServer(HTTPD):
 		m = re.search(request_pat, request_uri(environ))
 		send_chain, send_asset, recv_chain, recv_asset, amt_atomic = m.groups()
 
-		from mmgen.protocol import init_proto
-		send_proto = init_proto(cfg, send_chain, network='regtest', need_amt=True)
 		in_amt = UniAmt(int(amt_atomic), from_unit='satoshi')
 		out_amt = in_amt * (prices[send_asset] / prices[recv_asset])
 
-		addr = make_inbound_addr(send_proto, send_proto.preferred_mmtypes[0])
+		data_template = (
+			data_template_eth if send_asset == 'ETH' else
+			data_template_btc)
+
+		from mmgen.protocol import init_proto
+		send_proto = init_proto(cfg, send_chain, network='regtest', need_amt=True)
 		data = data_template | {
+			'recommended_min_amount_in': str(int(70 * 10**8 / prices[send_asset])), # $70
 			'expected_amount_out': str(out_amt.to_unit('satoshi')),
 			'expiry': int(time.time()) + (10 * 60),
-			'inbound_address': addr,
+			'inbound_address': make_inbound_addr(send_proto, send_proto.preferred_mmtypes[0]),
 			'gas_rate_units': gas_rate_units[send_proto.base_proto_coin],
 			'recommended_gas_rate': recommended_gas_rate[send_proto.base_proto_coin],
 		}
