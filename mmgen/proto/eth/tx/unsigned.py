@@ -108,7 +108,7 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 		o['token_addr'] = TokenAddr(self.proto, d['token_addr'])
 		o['decimals'] = Int(d['decimals'])
 		t = Token(self.cfg, self.proto, o['token_addr'], decimals=o['decimals'])
-		o['data'] = t.create_token_data(o['to'], o['amt'], op='transfer')
+		o['data'] = t.create_transfer_data(o['to'], o['amt'], op='transfer')
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
 
 	async def do_sign(self, o, wif):
@@ -117,7 +117,7 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 			gas      = self.gas,
 			gasPrice = o['gasPrice'],
 			nonce    = o['nonce'],
-			data     = t.create_token_data(o['to'], o['amt'], op='transfer'))
+			data     = t.create_transfer_data(o['to'], o['amt'], op='transfer'))
 		res = await t.txsign(tx_in, wif, o['from'], chain_id=o['chainId'])
 		self.serialized = res.txhex
 		self.coin_txid = res.txid

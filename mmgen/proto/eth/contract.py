@@ -146,7 +146,7 @@ class Token(Contract):
 			int(parse_abi(data)[-1], 16) * self.base_unit,
 			from_decimal = True)
 
-	def create_token_data(self, to_addr, amt, *, op):
+	def create_transfer_data(self, to_addr, amt, *, op):
 		assert op in ('transfer', 'approve'), f'{op}: invalid operation (not ‘transfer’ or ‘approve’)'
 		return (
 			self.create_method_id(f'{op}(address,uint256)')
@@ -160,7 +160,7 @@ class Token(Contract):
 			gas      = gas,
 			gasPrice = gasPrice,
 			nonce    = int(nonce, 16),
-			data     = self.create_token_data(to_addr, amt, op='transfer'))
+			data     = self.create_transfer_data(to_addr, amt, op='transfer'))
 		res = await self.txsign(tx_in, key, from_addr)
 		return await self.txsend(res.txhex)
 

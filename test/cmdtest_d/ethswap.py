@@ -112,14 +112,14 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	),
 	'token_init': (
 		'deploying tokens and initializing the ETH token tracking wallet',
-		('eth_token_compile1',   ''),
-		('eth_token_deploy_a',   ''),
-		('eth_token_deploy_b',   ''),
-		('eth_token_deploy_c',   ''),
-		('eth_token_fund_user',  ''),
-		('eth_token_addrgen',    ''),
-		('eth_token_addrimport', ''),
-		('eth_token_bal1',       ''),
+		('eth_token_compile1',           ''),
+		('eth_token_deploy_a',           ''),
+		('eth_token_deploy_b',           ''),
+		('eth_token_deploy_c',           ''),
+		('eth_token_fund_user',          ''),
+		('eth_token_addrgen',            ''),
+		('eth_token_addrimport',         ''),
+		('eth_token_bal1',               ''),
 	),
 	'token_swap': (
 		'token swap operations (BTC -> MM1)',
@@ -153,9 +153,9 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	),
 	'eth_token_swap': (
 		'swap operations (ETH <-> MM1)',
-		('eth_swaptxcreate3', ''),
-		('eth_swaptxsign3',   ''),
-		('eth_swaptxsend3',   ''),
+		('eth_swaptxcreate3',  ''),
+		('eth_swaptxsign3',    ''),
+		('eth_swaptxsend3',    ''),
 	),
 	}
 
@@ -204,8 +204,8 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	def swaptxsend1(self):
 		return self._swaptxsend()
 
-	swaptxsign2 = swaptxsign3 = swaptxsign1
-	swaptxsend2 = swaptxsend3 = swaptxsend1
+	swaptxsign3 = swaptxsign2 = swaptxsign1
+	swaptxsend3 = swaptxsend2 = swaptxsend1
 
 	def swaptxbump1(self): # create one-output TX back to self to rescue funds
 		return self._swaptxbump('40s', output_args=[f'{dfl_sid}:B:1'])
@@ -248,26 +248,26 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 	}[k]
 
 	cmd_group_in = CmdTestEthdev.cmd_group_in + (
-		('fund_mmgen_addr1', 'funding user address :1)'),
-		('fund_mmgen_addr2', 'funding user address :11)'),
-		('swaptxcreate1',    'creating an ETH->BTC swap transaction'),
-		('swaptxcreate2',    'creating an ETH->BTC swap transaction (specific address, trade limit)'),
-		('swaptxsign1',      'signing the transaction'),
-		('swaptxsend1',      'sending the transaction'),
-		('swaptxstatus1',    'getting the transaction status (with --verbose)'),
-		('swaptxcreate3',    'creating an ETH->MM1 swap transaction'),
-		('swaptxsign3',      'signing the transaction'),
-		('swaptxsend3',      'sending the transaction'),
-		('bal1',             'the ETH balance'),
-		('bal2',             'the ETH balance'),
-		('token_compile1',   'compiling ERC20 token #1'),
-		('token_deploy_a',   'deploying ERC20 token MM1 (SafeMath)'),
-		('token_deploy_b',   'deploying ERC20 token MM1 (Owned)'),
-		('token_deploy_c',   'deploying ERC20 token MM1 (Token)'),
-		('token_fund_user',  'transferring token funds from dev to user'),
-		('token_addrgen',    'generating token addresses'),
-		('token_addrimport', 'importing token addresses using token address (MM1)'),
-		('token_bal1',       'the token balance'),
+		('fund_mmgen_addr1',         'funding user address :1)'),
+		('fund_mmgen_addr2',         'funding user address :11)'),
+		('swaptxcreate1',            'creating an ETH->BTC swap transaction'),
+		('swaptxcreate2',            'creating an ETH->BTC swap transaction (spec address, trade limit)'),
+		('swaptxsign1',              'signing the transaction'),
+		('swaptxsend1',              'sending the transaction'),
+		('swaptxstatus1',            'getting the transaction status (with --verbose)'),
+		('swaptxcreate3',            'creating an ETH->MM1 swap transaction'),
+		('swaptxsign3',              'signing the transaction'),
+		('swaptxsend3',              'sending the transaction'),
+		('bal1',                     'the ETH balance'),
+		('bal2',                     'the ETH balance'),
+		('token_compile1',           'compiling ERC20 token #1'),
+		('token_deploy_a',           'deploying ERC20 token MM1 (SafeMath)'),
+		('token_deploy_b',           'deploying ERC20 token MM1 (Owned)'),
+		('token_deploy_c',           'deploying ERC20 token MM1 (Token)'),
+		('token_fund_user',          'transferring token funds from dev to user'),
+		('token_addrgen',            'generating token addresses'),
+		('token_addrimport',         'importing token addresses using token address (MM1)'),
+		('token_bal1',               'the token balance'),
 	)
 
 	def swaptxcreate1(self):
@@ -292,12 +292,12 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 	def swaptxsend1(self):
 		return self._swaptxsend()
 
-	swaptxsign3 = swaptxsign1
-	swaptxsend3 = swaptxsend1
-
 	def swaptxstatus1(self):
 		self.mining_delay()
 		return self._swaptxsend(add_opts=['--verbose', '--status'], status=True)
+
+	swaptxsign3 = swaptxsign1
+	swaptxsend3 = swaptxsend1
 
 	def bal1(self):
 		return self.bal('swap1')

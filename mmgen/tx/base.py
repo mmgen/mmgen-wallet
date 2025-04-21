@@ -223,7 +223,6 @@ class Base(MMGenObject):
 					keypress_confirm(self.cfg, 'Continue?', default_yes=True, do_exit=True)
 
 	# swap methods:
-
 	@cached_property
 	def swap_proto_mod(self):
 		from .new_swap import get_swap_proto_mod

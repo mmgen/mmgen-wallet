@@ -18,7 +18,7 @@ from .base import Base, TokenBase
 class Completed(Base, TxBase.Completed):
 	fn_fee_unit = 'Mwei'
 
-	def get_tx_usr_data(self):
+	def get_swap_memo_maybe(self):
 		o = self.txobj
 		if o['to'] and o['data']:
 			return bytes.fromhex(o['data'])

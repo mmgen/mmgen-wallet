@@ -39,7 +39,9 @@ class Status(TxBase.Status):
 			return '0x'+tx.coin_txid in pool
 
 		async def is_in_wallet():
-			d = await tx.rpc.call('eth_getTransactionReceipt', '0x'+tx.coin_txid)
+			d = await tx.rpc.call(
+				'eth_getTransactionReceipt',
+				'0x' + tx.coin_txid)
 			if d and 'blockNumber' in d and d['blockNumber'] is not None:
 				from collections import namedtuple
 				receipt_info = namedtuple('receipt_info', ['confs', 'exec_status', 'rx'])

@@ -20,7 +20,7 @@ from .base import Base, decodeScriptPubKey
 class Completed(Base, TxBase.Completed):
 	fn_fee_unit = 'satoshi'
 
-	def get_tx_usr_data(self):
+	def get_swap_memo_maybe(self):
 		if o := self.data_output:
 			return o.data
 

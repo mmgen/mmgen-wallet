@@ -216,7 +216,7 @@ class TokenNew(TokenBase, New):
 		o['token_addr'] = t.addr
 		o['decimals'] = t.decimals
 		o['token_to'] = o['to']
-		o['data'] = t.create_token_data(o['token_to'], o['amt'], op='transfer')
+		o['data'] = t.create_transfer_data(o['token_to'], o['amt'], op='transfer')
 
 	def update_change_output(self, funds_left):
 		if self.outputs[0].is_chg:
