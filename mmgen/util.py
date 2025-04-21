@@ -470,3 +470,12 @@ def have_sudo(*, silent=False):
 		return True
 	except:
 		return False
+
+def cached_property(orig_func):
+	@property
+	def new_func(self):
+		attr_name = '_' + orig_func.__name__
+		if not hasattr(self, attr_name):
+			setattr(self, attr_name, orig_func(self))
+		return getattr(self, attr_name)
+	return new_func
