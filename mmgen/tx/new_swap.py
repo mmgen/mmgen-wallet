@@ -139,7 +139,7 @@ class NewSwap(New):
 				'To sign this transaction, autosign or txsign must be invoked'
 				' with --allow-non-wallet-swap'))
 
-		memo = sp.data(self.recv_proto, recv_output.addr)
+		memo = sp.Memo(self.recv_proto, recv_output.addr)
 
 		# this goes into the transaction file:
 		self.swap_recv_addr_mmid = recv_output.mmid

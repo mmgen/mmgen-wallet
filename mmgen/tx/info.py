@@ -73,13 +73,13 @@ class TxInfo:
 				yield f'  {tx.coin} TxID: {tx.coin_txid.hl()}\n'
 
 			if tx.is_swap:
-				from ..swap.proto.thorchain.memo import Memo, proto_name
+				from ..swap.proto.thorchain import Memo, name
 				data = (
 					(tx.usr_contract_data or bytes.fromhex(tx.txobj['data'])) if tx.proto.is_evm
 					else tx.data_output.data)
 				if Memo.is_partial_memo(data):
 					p = Memo.parse(data.decode('ascii'))
-					yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(proto_name))
+					yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(name))
 					yield '    Swap: {}\n'.format(orange(f'{tx.proto.coin} => {p.asset}'))
 					yield '    Dest: {}{}\n'.format(
 						cyan(p.address),

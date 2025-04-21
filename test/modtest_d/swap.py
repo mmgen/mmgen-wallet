@@ -13,7 +13,7 @@ class unit_tests:
 	def memo(self, name, ut, desc='Swap transaction memo'):
 		from mmgen.protocol import init_proto
 		from mmgen.amt import UniAmt
-		from mmgen.swap.proto.thorchain import data as Memo
+		from mmgen.swap.proto.thorchain import Memo
 		for coin, addrtype in (
 			('ltc', 'bech32'),
 			('bch', 'compressed'),

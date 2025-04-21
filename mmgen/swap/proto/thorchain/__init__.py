@@ -12,7 +12,7 @@
 swap.proto.thorchain: THORChain swap protocol implementation for the MMGen Wallet suite
 """
 
-__all__ = ['data']
+__all__ = ['Memo']
 
 name = 'THORChain'
 
@@ -42,4 +42,4 @@ def rpc_client(tx, amt):
 	from .thornode import Thornode
 	return Thornode(tx, amt)
 
-from .memo import Memo as data
+from .memo import THORChainMemo as Memo

@@ -17,7 +17,7 @@ from ....amt import UniAmt
 
 from . import name as proto_name
 
-class Memo:
+class THORChainMemo:
 
 	# The trade limit, i.e., set 100000000 to get a minimum of 1 full asset, else a refund
 	# Optional. 1e8 or scientific notation

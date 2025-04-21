@@ -71,7 +71,7 @@ class Completed(Base):
 
 	def check_swap_memo(self):
 		if data := self.get_tx_usr_data():
-			from ..swap.proto.thorchain.memo import Memo
+			from ..swap.proto.thorchain import Memo
 			if Memo.is_partial_memo(data):
 				from ..protocol import init_proto
 				text = data.decode('ascii')

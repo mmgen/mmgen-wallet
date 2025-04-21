@@ -22,8 +22,8 @@ class NewSwap(New, TxNewSwap):
 	def update_data_output(self, trade_limit):
 		sp = get_swap_proto_mod(self.swap_proto)
 		data = bytes.fromhex(self.txobj['data']) if self.is_bump else self.usr_contract_data
-		parsed_memo = sp.data.parse(data.decode())
-		memo = sp.data(
+		parsed_memo = sp.Memo.parse(data.decode())
+		memo = sp.Memo(
 			self.recv_proto,
 			self.recv_proto.coin_addr(parsed_memo.address),
 			trade_limit = trade_limit)
