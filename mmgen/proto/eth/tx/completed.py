@@ -19,9 +19,7 @@ class Completed(Base, TxBase.Completed):
 	fn_fee_unit = 'Mwei'
 
 	def get_swap_memo_maybe(self):
-		o = self.txobj
-		if o['to'] and o['data']:
-			return bytes.fromhex(o['data'])
+		return self.swap_memo.encode() if getattr(self, 'swap_memo', None) else None
 
 	@property
 	def send_amt(self):

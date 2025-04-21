@@ -68,7 +68,7 @@ class New(Base, TxBase.New):
 	async def create_serialized(self, *, locktime=None):
 		assert len(self.inputs) == 1, 'Transaction has more than one input!'
 		o_num = len(self.outputs)
-		o_ok = 0 if self.usr_contract_data and not self.is_swap else 1
+		o_ok = 0 if self.usr_contract_data else 1
 		assert o_num == o_ok, f'Transaction has {o_num} output{suf(o_num)} (should have {o_ok})'
 		await self.make_txobj()
 		odict = {k:v if v is None else str(v) for k, v in self.txobj.items() if k != 'token_to'}
@@ -97,8 +97,8 @@ class New(Base, TxBase.New):
 			data_arg = cmd_args.pop()
 			lc = 1
 			assert data_arg.startswith('data:'), f'{data_arg}: invalid data arg (must start with "data:")'
-			self.usr_contract_data = data_arg.removeprefix('data:').encode()
-			self.set_gas_with_data(self.usr_contract_data)
+			self.swap_memo = data_arg.removeprefix('data:')
+			self.set_gas_with_data(self.swap_memo.encode())
 
 		if lc == 0 and self.usr_contract_data and 'Token' not in self.name:
 			return

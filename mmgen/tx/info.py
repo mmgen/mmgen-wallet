@@ -74,9 +74,7 @@ class TxInfo:
 
 			if tx.is_swap:
 				from ..swap.proto.thorchain import Memo, name
-				data = (
-					(tx.usr_contract_data or bytes.fromhex(tx.txobj['data'])) if tx.proto.is_evm
-					else tx.data_output.data)
+				data = tx.swap_memo.encode() if tx.proto.is_evm else tx.data_output.data
 				if Memo.is_partial_memo(data):
 					recv_mmid = getattr(tx, 'swap_recv_addr_mmid', None)
 					p = Memo.parse(data.decode('ascii'))

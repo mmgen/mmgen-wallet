@@ -19,15 +19,13 @@ class NewSwap(New, TxNewSwap):
 	desc = 'Ethereum swap transaction'
 
 	def update_data_output(self, trade_limit):
-		data = bytes.fromhex(self.txobj['data']) if self.is_bump else self.usr_contract_data
-		parsed_memo = self.swap_proto_mod.Memo.parse(data.decode())
-		memo = self.swap_proto_mod.Memo(
+		parsed_memo = self.swap_proto_mod.Memo.parse(self.swap_memo)
+		self.swap_memo = str(self.swap_proto_mod.Memo(
 			self.recv_proto,
 			self.recv_asset,
 			self.recv_proto.coin_addr(parsed_memo.address),
-			trade_limit = trade_limit)
-		self.usr_contract_data = str(memo).encode()
-		self.set_gas_with_data(self.usr_contract_data)
+			trade_limit = trade_limit))
+		self.set_gas_with_data(self.swap_memo.encode())
 
 	@property
 	def vault_idx(self):

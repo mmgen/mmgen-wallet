@@ -40,7 +40,7 @@ class TxInfo(TxInfo):
 			Start gas: {G} Kwei
 			Nonce:     {n}
 			Data:      {d}
-		""".strip().replace('\t', '')
+		""".strip().replace('\t', '') + ('\nMemo:      {m}' if tx.is_swap else '')
 		t = tx.txobj
 		td = t['data']
 		to_addr = t[self.to_addr_key]
@@ -49,10 +49,8 @@ class TxInfo(TxInfo):
 			t      = to_addr.hl(0) if to_addr else blue('None'),
 			a      = t['amt'].hl(),
 			n      = t['nonce'].hl(),
-			d      = (
-				blue('None') if not td
-				else pink(bytes.fromhex(td).decode()) if tx.is_swap
-				else '{}... ({} bytes)'.format(td[:40], len(td)//2)),
+			d      = blue('None') if not td else '{}... ({} bytes)'.format(td[:40], len(td)//2),
+			m      = pink(tx.swap_memo) if tx.is_swap else None,
 			c      = tx.proto.dcoin if len(tx.outputs) else '',
 			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
 			G      = yellow(tx.pretty_fmt_fee(t['startGas'].to_unit('Kwei'))),
