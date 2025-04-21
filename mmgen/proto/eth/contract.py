@@ -96,17 +96,17 @@ class Contract:
 
 class Token(Contract):
 
-	def __init__(self, cfg, proto, addr, decimals, *, rpc=None):
-		if type(self).__name__ == 'Token':
-			from ...util2 import get_keccak
-			self.keccak_256 = get_keccak(cfg)
+	def __init__(self, cfg, proto, addr, *, decimals=None, rpc=None):
+		from ...util2 import get_keccak
+		self.keccak_256 = get_keccak(cfg)
 		self.cfg = cfg
 		self.proto = proto
 		self.addr = TokenAddr(proto, addr)
-		assert isinstance(decimals, int), f'decimals param must be int instance, not {type(decimals)}'
-		self.decimals = decimals
-		self.base_unit = Decimal('10') ** -self.decimals
 		self.rpc = rpc
+		if decimals:
+			assert isinstance(decimals, int), f'decimals param must be int instance, not {type(decimals)}'
+			self.decimals = decimals
+			self.base_unit = Decimal('10') ** -self.decimals
 
 	async def get_balance(self, acct_addr):
 		return self.proto.coin_amt(
@@ -166,14 +166,9 @@ class Token(Contract):
 
 class ResolvedToken(Token, metaclass=AsyncInit):
 
-	async def __init__(self, cfg, proto, rpc, addr):
-		from ...util2 import get_keccak
-		self.keccak_256 = get_keccak(cfg)
-		self.cfg = cfg
-		self.proto = proto
-		self.rpc = rpc
-		self.addr = TokenAddr(proto, addr)
-		decimals = await self.get_decimals() # requires self.addr!
-		if not decimals:
+	async def __init__(self, cfg, proto, addr, *, rpc):
+		Token.__init__(self, cfg, proto, addr, rpc=rpc)
+		self.decimals = await self.get_decimals()
+		if not self.decimals:
 			die('TokenNotInBlockchain', f'Token {addr!r} not in blockchain')
-		Token.__init__(self, cfg, proto, addr, decimals, rpc=rpc)
+		self.base_unit = Decimal('10') ** -self.decimals

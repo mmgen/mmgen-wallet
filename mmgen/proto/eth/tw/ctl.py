@@ -24,7 +24,7 @@ from ....util import msg, ymsg, die
 from ....tw.ctl import TwCtl, write_mode, label_addr_pair
 from ....tw.shared import TwLabel
 from ....addr import is_coin_addr, is_mmgen_id, CoinAddr
-from ..contract import Token, ResolvedToken
+from ..contract import Token
 
 class EthereumTwCtl(TwCtl):
 
@@ -214,7 +214,11 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 
 	async def rpc_get_balance(self, addr):
 		return await Token(
-			self.cfg, self.proto, self.token, self.decimals, rpc=self.rpc).get_balance(addr)
+			self.cfg,
+			self.proto,
+			self.token,
+			decimals = self.decimals,
+			rpc = self.rpc).get_balance(addr)
 
 	async def get_eth_balance(self, addr, *, force_rpc=False):
 		cache = self.cur_eth_balances
@@ -235,10 +239,10 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 		once, upon token import.  Thereafter, token address, symbol and decimals are resolved
 		either from the tracking wallet (online operations) or transaction file (when signing).
 		"""
-		t = await ResolvedToken(self.cfg, self.proto, self.rpc, tokenaddr)
+		t = Token(self.cfg, self.proto, tokenaddr, rpc=self.rpc)
 		self.data['tokens'][tokenaddr] = {
 			'params': {
 				'symbol': await t.get_symbol(),
-				'decimals': t.decimals
+				'decimals': await t.get_decimals()
 			}
 		}

@@ -107,12 +107,12 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 		o = self.txobj
 		o['token_addr'] = TokenAddr(self.proto, d['token_addr'])
 		o['decimals'] = Int(d['decimals'])
-		t = Token(self.cfg, self.proto, o['token_addr'], o['decimals'])
+		t = Token(self.cfg, self.proto, o['token_addr'], decimals=o['decimals'])
 		o['data'] = t.create_token_data(o['to'], o['amt'], op='transfer')
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
 
 	async def do_sign(self, o, wif):
-		t = Token(self.cfg, self.proto, o['token_addr'], o['decimals'])
+		t = Token(self.cfg, self.proto, o['token_addr'], decimals=o['decimals'])
 		tx_in = t.make_tx_in(
 			gas      = self.gas,
 			gasPrice = o['gasPrice'],

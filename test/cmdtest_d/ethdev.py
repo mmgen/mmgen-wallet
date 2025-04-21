@@ -275,7 +275,7 @@ class CmdTestEthdevMethods:
 
 		if get_receipt:
 			if (await self.get_tx_receipt(txid)).status == 0:
-				die(2, f'Contract {num}:{key} failed to execute. Aborting')
+				die(2, f'Contract {num}:{key} failed to deploy. Aborting')
 
 		if key == 'Token':
 			imsg(f'\nToken MM{num} deployed!')
@@ -318,8 +318,8 @@ class CmdTestEthdevMethods:
 				tk = await ResolvedToken(
 					self.cfg,
 					self.proto,
-					rpc,
-					self.read_from_tmpfile(f'token_addr{i+1}').strip())
+					self.read_from_tmpfile(f'token_addr{i+1}').strip(),
+					rpc = rpc)
 				imsg_r('\n' + await tk.info())
 				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_devaddr)))
 				imsg(f'Sending {amt} {self.proto.dcoin} to address {usr_addrs[i]} ({usr_mmaddrs[i]})')
@@ -339,8 +339,8 @@ class CmdTestEthdevMethods:
 				tk = await ResolvedToken(
 					self.cfg,
 					self.proto,
-					rpc,
-					self.read_from_tmpfile(f'token_addr{i+1}').strip())
+					self.read_from_tmpfile(f'token_addr{i+1}').strip(),
+					rpc = rpc)
 				imsg('Token: {}'.format(await tk.get_symbol()))
 				imsg(f'dev token balance: {await tk.get_balance(dfl_devaddr)}')
 				imsg('usr token balance: {} ({} {})'.format(

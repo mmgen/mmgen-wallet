@@ -71,7 +71,7 @@ class TokenOnlineSigned(TokenSigned, OnlineSigned):
 		assert self.twctl.token == o['to']
 		o['token_addr'] = TokenAddr(self.proto, o['to'])
 		o['decimals']   = self.twctl.decimals
-		t = Token(self.cfg, self.proto, o['token_addr'], o['decimals'])
+		t = Token(self.cfg, self.proto, o['token_addr'], decimals=o['decimals'])
 		o['amt'] = t.transferdata2amt(o['data'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
 

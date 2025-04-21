@@ -211,7 +211,7 @@ class TokenNew(TokenBase, New):
 
 	async def make_txobj(self): # called by create_serialized()
 		await super().make_txobj()
-		t = Token(self.cfg, self.proto, self.twctl.token, self.twctl.decimals)
+		t = Token(self.cfg, self.proto, self.twctl.token, decimals=self.twctl.decimals)
 		o = self.txobj
 		o['token_addr'] = t.addr
 		o['decimals'] = t.decimals
