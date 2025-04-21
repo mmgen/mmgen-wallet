@@ -233,7 +233,15 @@ class CmdTestEthdevMethods:
 		imsg(f'Computed contract address: {blue(ret)}')
 		return ret
 
-	async def _token_deploy(self, num, key, gas, mmgen_cmd='txdo', gas_price='8G', get_receipt=True):
+	async def _token_deploy(
+			self,
+			*,
+			key,
+			gas,
+			mmgen_cmd = 'txdo',
+			gas_price = '8G',
+			num = None,
+			get_receipt = True):
 		keyfile = joinpath(self.tmpdir, dfl_devkey_fn)
 		fn = joinpath(self.tmpdir, 'mm'+str(num), key+'.bin')
 		args = [

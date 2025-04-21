@@ -656,9 +656,9 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		('sign_no_unsigned',          'signing transactions and messages (nothing to sign)'),
 		('sign_no_unsigned_xmr',      'signing transactions and messages (nothing to sign, with XMR)'),
 		('sign_no_unsigned_xmronly',  'signing transactions and messages (nothing to sign, XMR-only)'),
-		('wipe_key',                  'wiping the wallet encryption key'),
 		('stop_daemons',              'stopping daemons'),
 		('sign_bad_no_daemon',        'signing transactions (error, no daemons running)'),
+		('wipe_key',                  'wiping the wallet encryption key'),
 	)
 
 	def __init__(self, cfg, trunner, cfgs, spawn):

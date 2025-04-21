@@ -74,7 +74,7 @@ class CmdGroupMgr:
 								added_subgroups = [sg_name] if self.cfg.deps_only else [])
 					if self.cfg.deps_only and sg_key == sg_name:
 						return
-				elif not self.cfg.skipping_deps:
+				else:
 					yield (name, data)
 
 		return tuple(gen())

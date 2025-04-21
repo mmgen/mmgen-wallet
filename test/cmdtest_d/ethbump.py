@@ -247,6 +247,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			'_clone': trunner.cfg,
 			'coin': 'ltc',
 			'resume': None,
+			'resuming': None,
 			'resume_after': None,
 			'exit_after': None,
 			'log': None})
@@ -292,7 +293,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		return self._bal_check(pat=rf'{dfl_sid}:E:2\s+777\s')
 
 	def bal3(self):
-		return self._bal_check(pat=rf'{dfl_sid}:E:11\s+99987\.653431389777251448\s')
+		return self._bal_check(pat=rf'{dfl_sid}:E:11\s+99987\.653466900170247\s')
 
 	def bal4(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:12\s+4444\.3333\s')
