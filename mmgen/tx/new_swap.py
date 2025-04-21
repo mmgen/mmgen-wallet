@@ -67,17 +67,25 @@ class NewSwap(New):
 		self.confirm_autoselected_addr(res.twmmid, full_desc)
 		return ret(proto.coin, proto.network, res.addr, res.twmmid)
 
+	async def get_chg_output(self, arg, addrfiles):
+		chg_output = await self.get_swap_output(self.proto, arg, addrfiles, 'change address')
+		self.check_addr_is_wallet_addr(
+			chg_output,
+			message = 'Change address is not an MMGen wallet address!')
+		return chg_output
+
 	async def process_swap_cmdline_args(self, cmd_args, addrfiles):
 
 		class CmdlineArgs: # listed in command-line order
-			# send_coin      # required: uppercase coin symbol
-			send_amt  = None # optional: Omit to skip change addr and send value of all inputs minus fees
-							 #           to vault
-			chg_spec  = None # optional: change address spec, e.g. ‘B’ ‘DEADBEEF:B’ ‘DEADBEEF:B:1’ or coin
-							 #           address.  Omit for autoselected change address. Use of non-wallet
-							 #           change address will emit warning and prompt user for confirmation
-			# recv_coin      # required: uppercase coin symbol
-			recv_spec = None # optional: destination address spec. Same rules as for chg_spec
+			# send_coin       # required: uppercase coin symbol
+			send_amt  = None  # optional: Omit to skip change addr and send value of all inputs minus fees
+							  #           to vault
+			# chg_spec = None # optional: change address spec, e.g. ‘B’ ‘DEADBEEF:B’ ‘DEADBEEF:B:1’ or
+							  #           coin address.  Omit for autoselected change address.  Use of
+							  #           non-wallet change address will emit warning and prompt user
+							  #           for confirmation
+			# recv_coin       # required: uppercase coin symbol
+			recv_spec = None  # optional: destination address spec. Same rules as for chg_spec
 
 		def get_arg():
 			try:
@@ -85,7 +93,7 @@ class NewSwap(New):
 			except:
 				self.cfg._usage()
 
-		def parse():
+		async def parse():
 
 			# arg 1: send_coin - already popped and parsed by get_send_proto()
 
@@ -99,10 +107,10 @@ class NewSwap(New):
 				arg = get_arg()
 
 			# arg 3: chg_spec (change address spec)
-			if args.send_amt and not self.proto.is_evm:
-				if not arg in sp.SwapAsset.recv: # is change arg
-					args.chg_spec = arg
-					arg = get_arg()
+			if args.send_amt and not (self.proto.is_evm or arg in sp.SwapAsset.recv): # is change arg
+				nonlocal chg_output
+				chg_output = await self.get_chg_output(arg, addrfiles)
+				arg = get_arg()
 
 			# arg 4: recv_coin
 			self.swap_recv_asset_spec = arg # this goes into the transaction file
@@ -118,16 +126,12 @@ class NewSwap(New):
 		sp = self.swap_proto_mod
 		args_in = list(cmd_args)
 		args = CmdlineArgs()
-		parse()
+		chg_output = None
 
-		chg_output = (
-			await self.get_swap_output(self.proto, args.chg_spec, addrfiles, 'change address')
-			if args.send_amt and not self.proto.is_evm else None)
+		await parse()
 
-		if chg_output:
-			self.check_addr_is_wallet_addr(
-				chg_output,
-				message = 'Change address is not an MMGen wallet address!')
+		if args.send_amt and not (chg_output or self.proto.is_evm):
+			chg_output = await self.get_chg_output(None, addrfiles)
 
 		recv_output = await self.get_swap_output(
 			self.recv_proto,
