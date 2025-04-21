@@ -12,34 +12,20 @@
 swap.proto.thorchain: THORChain swap protocol implementation for the MMGen Wallet suite
 """
 
-__all__ = ['Memo']
+__all__ = ['SwapAsset', 'Memo']
 
 name = 'THORChain'
-
-class params:
-	exp_prec = 4
-	coins = {
-		'send': {
-			'BTC': 'Bitcoin',
-			'LTC': 'Litecoin',
-			'BCH': 'Bitcoin Cash',
-			'ETH': 'Ethereum',
-		},
-		'receive': {
-			'BTC': 'Bitcoin',
-			'LTC': 'Litecoin',
-			'BCH': 'Bitcoin Cash',
-			'ETH': 'Ethereum',
-		}
-	}
+exp_prec = 4
 
 from ....util2 import ExpInt
 class ExpInt4(ExpInt):
 	def __new__(cls, spec):
-		return ExpInt.__new__(cls, spec, prec=params.exp_prec)
+		return ExpInt.__new__(cls, spec, prec=exp_prec)
 
 def rpc_client(tx, amt):
 	from .thornode import Thornode
 	return Thornode(tx, amt)
+
+from .asset import THORChainSwapAsset as SwapAsset
 
 from .memo import THORChainMemo as Memo

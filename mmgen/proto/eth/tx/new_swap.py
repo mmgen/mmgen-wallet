@@ -25,6 +25,7 @@ class NewSwap(New, TxNewSwap):
 		parsed_memo = sp.Memo.parse(data.decode())
 		memo = sp.Memo(
 			self.recv_proto,
+			self.recv_asset,
 			self.recv_proto.coin_addr(parsed_memo.address),
 			trade_limit = trade_limit)
 		self.usr_contract_data = str(memo).encode()

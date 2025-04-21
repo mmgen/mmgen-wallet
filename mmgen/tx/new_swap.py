@@ -13,7 +13,6 @@ tx.new_swap: new swap transaction class
 """
 
 from collections import namedtuple
-from ..cfg import gc
 
 from .new import New
 from ..amt import UniAmt
@@ -22,18 +21,25 @@ def get_swap_proto_mod(swap_proto_name):
 	import importlib
 	return importlib.import_module(f'mmgen.swap.proto.{swap_proto_name}')
 
-def init_proto_from_coin(cfg, sp, coin, desc):
-	if coin not in sp.params.coins[desc]:
-		raise ValueError(f'{coin!r}: unsupported {desc} coin for {gc.proj_name} {sp.name} swap')
+def init_swap_proto(cfg, asset):
 	from ..protocol import init_proto
-	return init_proto(cfg, coin, network=cfg._proto.network, need_amt=True)
+	return init_proto(
+		cfg,
+		asset.chain,
+		network = cfg._proto.network,
+		tokensym = asset.asset,
+		need_amt = True)
 
 def get_send_proto(cfg):
 	try:
 		arg = cfg._args.pop(0)
 	except:
 		cfg._usage()
-	return init_proto_from_coin(cfg, get_swap_proto_mod(cfg.swap_proto), arg, 'send')
+
+	global send_asset
+	send_asset = get_swap_proto_mod(cfg.swap_proto).SwapAsset(arg, 'send')
+
+	return init_swap_proto(cfg, send_asset)
 
 class NewSwap(New):
 	desc = 'swap transaction'
@@ -98,12 +104,14 @@ class NewSwap(New):
 
 			# arg 3: chg_spec (change address spec)
 			if args.send_amt and not self.proto.is_evm:
-				if not arg in sp.params.coins['receive']: # is change arg
+				if not arg in sp.SwapAsset.recv: # is change arg
 					args.chg_spec = arg
 					arg = get_arg()
 
 			# arg 4: recv_coin
-			self.recv_proto = init_proto_from_coin(self.cfg, sp, arg, 'receive')
+			self.swap_recv_asset_spec = arg # this goes into the transaction file
+			self.recv_asset = sp.SwapAsset(arg, 'recv')
+			self.recv_proto = init_swap_proto(self.cfg, self.recv_asset)
 
 			# arg 5: recv_spec (receive address spec)
 			if args_in:
@@ -139,7 +147,10 @@ class NewSwap(New):
 				'To sign this transaction, autosign or txsign must be invoked'
 				' with --allow-non-wallet-swap'))
 
-		memo = sp.Memo(self.recv_proto, recv_output.addr)
+		memo = sp.Memo(self.recv_proto, self.recv_asset, recv_output.addr)
+
+		self.is_token_swap = self.proto.tokensym or self.recv_asset.asset
+		self.send_asset = send_asset
 
 		# this goes into the transaction file:
 		self.swap_recv_addr_mmid = recv_output.mmid

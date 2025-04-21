@@ -73,7 +73,8 @@ class MMGenTxFile(MMGenObject):
 		'is_swap': None,
 		'swap_proto': None,
 		'swap_quote_expiry': None,
-		'swap_recv_addr_mmid': None}
+		'swap_recv_addr_mmid': None,
+		'swap_recv_asset_spec': None}
 
 	def __init__(self, tx):
 		self.tx       = tx

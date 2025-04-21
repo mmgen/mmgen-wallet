@@ -60,9 +60,9 @@ class Thornode:
 		self.rpc = ThornodeRPCClient(tx)
 
 	def get_quote(self):
-		self.get_str = '/thorchain/quote/swap?from_asset={a}.{a}&to_asset={b}.{b}&amount={c}'.format(
-			a = self.tx.proto.coin,
-			b = self.tx.recv_proto.coin,
+		self.get_str = '/thorchain/quote/swap?from_asset={a}&to_asset={b}&amount={c}'.format(
+			a = self.tx.send_asset.full_name,
+			b = self.tx.recv_asset.full_name,
 			c = self.in_amt.to_unit('satoshi'))
 		self.result = self.rpc.get(self.get_str)
 		self.data = json.loads(self.result.content)
@@ -78,8 +78,8 @@ class Thornode:
 
 		d = self.data
 		tx = self.tx
-		in_coin = tx.proto.coin
-		out_coin = tx.recv_proto.coin
+		in_coin = tx.send_asset.chain
+		out_coin = tx.recv_asset.chain
 		in_amt = self.in_amt
 		out_amt = UniAmt(int(d['expected_amount_out']), from_unit='satoshi')
 		gas_unit = d['gas_rate_units']

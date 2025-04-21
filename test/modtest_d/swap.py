@@ -8,21 +8,40 @@ from mmgen.color import cyan
 
 from ..include.common import cfg, vmsg, make_burn_addr
 
+from mmgen.swap.proto.thorchain import SwapAsset
+
 class unit_tests:
+
+	def asset(self, name, ut, desc='SwapAsset class'):
+		for name, full_name, memo_name, chain, asset, direction in (
+			('BTC',      'BTC.BTC',  'b',        'BTC', None,   'recv'),
+			('LTC',      'LTC.LTC',  'l',        'LTC', None,   'recv'),
+			('BCH',      'BCH.BCH',  'c',        'BCH', None,   'recv'),
+		):
+			a = SwapAsset(name, direction)
+			vmsg(f'  {a.name}')
+			assert a.name == name
+			assert a.full_name == full_name
+			assert a.direction == direction
+			assert a.asset == asset
+			assert a.chain == chain
+			assert a.memo_asset_name == memo_name
+		return True
 
 	def memo(self, name, ut, desc='Swap transaction memo'):
 		from mmgen.protocol import init_proto
 		from mmgen.amt import UniAmt
 		from mmgen.swap.proto.thorchain import Memo
-		for coin, addrtype in (
-			('ltc', 'bech32'),
-			('bch', 'compressed'),
-			('eth', None),
+		for coin, addrtype, asset_name, token in (
+			('ltc', 'bech32',     'LTC',      None),
+			('bch', 'compressed', 'BCH',      None),
+			('eth', None,         'ETH',      None),
 		):
-			proto = init_proto(cfg, coin, need_amt=True)
+			proto = init_proto(cfg, coin, tokensym=token, need_amt=True)
 			addr = make_burn_addr(proto, addrtype)
+			asset = SwapAsset(asset_name, 'recv')
 
-			vmsg(f'\nTesting coin {cyan(coin.upper())}:')
+			vmsg(f'\nTesting asset {cyan(asset_name)}:')
 
 			for limit, limit_chk in (
 				('123.4567',   12340000000),
@@ -32,7 +51,7 @@ class unit_tests:
 				(None, 0),
 			):
 				vmsg('\nTesting memo initialization:')
-				m = Memo(proto, addr, trade_limit=UniAmt(limit) if limit else None)
+				m = Memo(proto, asset, addr, trade_limit=UniAmt(limit) if limit else None)
 				vmsg(f'str(memo):  {m}')
 				vmsg(f'repr(memo): {m!r}')
 				vmsg(f'limit:      {limit}')
@@ -47,7 +66,7 @@ class unit_tests:
 				assert p.proto == 'THORChain'
 				assert p.function == 'SWAP'
 				assert p.chain == coin.upper()
-				assert p.asset == coin.upper()
+				assert p.asset == token or coin.upper()
 				assert p.address == addr.views[addr.view_pref]
 				assert p.trade_limit == limit_chk
 				assert p.stream_interval == 1
@@ -84,14 +103,30 @@ class unit_tests:
 			def bad(s):
 				return lambda: Memo.parse(s)
 
+			def bad10():
+				coin = 'BTC'
+				proto = init_proto(cfg, coin, need_amt=True)
+				addr = make_burn_addr(proto, 'C')
+				asset = SwapAsset(coin, 'send')
+				Memo(proto, asset, addr)
+
+			def bad11():
+				SwapAsset('XYZ', 'send')
+
+			def bad12():
+				SwapAsset('DOGE', 'send')
+
 			ut.process_bad_data((
 				('bad1',  'SwapMemoParseError', 'must contain',      bad('x')),
 				('bad2',  'SwapMemoParseError', 'must contain',      bad('y:z:x')),
 				('bad3',  'SwapMemoParseError', 'function abbrev',   bad('z:l:foobar:0/1/0')),
-				('bad4',  'SwapMemoParseError', 'asset abbrev',      bad('=:x:foobar:0/1/0')),
+				('bad4',  'SwapAssetError',     'unrecognized',      bad('=:x:foobar:0/1/0')),
 				('bad5',  'SwapMemoParseError', 'failed to parse',   bad('=:l:foobar:n')),
 				('bad6',  'SwapMemoParseError', 'invalid specifier', bad('=:l:foobar:x/1/0')),
 				('bad7',  'SwapMemoParseError', 'extra',             bad('=:l:foobar:0/1/0:x')),
+				('bad10', 'AssertionError',     'recv',              bad10),
+				('bad11', 'SwapAssetError',     'unrecognized',      bad11),
+				('bad12', 'SwapAssetError',     'unsupported',       bad12),
 			), pfx='')
 
 		return True

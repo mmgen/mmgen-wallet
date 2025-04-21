@@ -17,6 +17,8 @@ from ....amt import UniAmt
 
 from . import name as proto_name
 
+from . import SwapAsset
+
 class THORChainMemo:
 
 	# The trade limit, i.e., set 100000000 to get a minimum of 1 full asset, else a refund
@@ -32,17 +34,6 @@ class THORChainMemo:
 
 	max_len = 250
 	function = 'SWAP'
-
-	asset_abbrevs = {
-		'BTC.BTC':   'b',
-		'LTC.LTC':   'l',
-		'BCH.BCH':   'c',
-		'ETH.ETH':   'e',
-		'DOGE.DOGE': 'd',
-		'THOR.RUNE': 'r',
-	}
-
-	evm_chains = ('ETH', 'AVAX', 'BSC', 'BASE')
 
 	function_abbrevs = {
 		'SWAP': '=',
@@ -93,11 +84,11 @@ class THORChainMemo:
 
 		function = get_id(cls.function_abbrevs, get_item('function'), 'function')
 
-		chain, asset = get_id(cls.asset_abbrevs, get_item('asset'), 'asset').split('.')
+		chain, asset = SwapAsset.get_full_name(get_item('asset')).split('.')
 
 		address = get_item('address')
 
-		if chain in cls.evm_chains:
+		if chain in SwapAsset.evm_chains:
 			assert address.startswith('0x'), f'{address}: address does not start with ‘0x’'
 			assert len(address) == 42, f'{address}: address has incorrect length ({len(address)} != 42)'
 			address = address.removeprefix('0x')
@@ -129,9 +120,13 @@ class THORChainMemo:
 
 		return ret(proto_name, function, chain, asset, address, limit_int, int(interval), int(quantity))
 
-	def __init__(self, proto, addr, *, chain=None, trade_limit=None):
+	def __init__(self, proto, asset, addr, *, trade_limit=None):
 		self.proto = proto
-		self.chain = chain or proto.coin
+		self.asset = asset
+		assert asset.chain == proto.coin, f'{asset.chain} != {proto.coin}'
+		assert asset.asset == getattr(proto, 'tokensym', None), (
+			f'{asset.asset} != {getattr(proto, "tokensym", None)}')
+		assert asset.direction == 'recv', f'{asset.direction} != ‘recv’'
 		if trade_limit is None:
 			self.trade_limit = UniAmt('0')
 		else:
@@ -142,7 +137,7 @@ class THORChainMemo:
 		self.addr = addr.views[addr.view_pref]
 		assert not ':' in self.addr # colon is record separator, so address mustn’t contain one
 
-		if self.chain in self.evm_chains:
+		if asset.chain in SwapAsset.evm_chains:
 			assert len(self.addr) == 40, f'{self.addr}: address has incorrect length ({len(self.addr)} != 40)'
 			assert is_hex_str(self.addr), f'{self.addr}: address is not a hexadecimal string'
 			self.addr = '0x' + self.addr
@@ -154,10 +149,9 @@ class THORChainMemo:
 		except Exception as e:
 			die('SwapMemoParseError', str(e))
 		suf = '/'.join(str(n) for n in (tl_enc, self.stream_interval, self.stream_quantity))
-		asset = f'{self.chain}.{self.proto.coin}'
 		ret = ':'.join([
 			self.function_abbrevs[self.function],
-			self.asset_abbrevs[asset],
+			self.asset.memo_asset_name,
 			self.addr,
 			suf])
 		assert len(ret) <= self.max_len, f'{proto_name} memo exceeds maximum length of {self.max_len}'

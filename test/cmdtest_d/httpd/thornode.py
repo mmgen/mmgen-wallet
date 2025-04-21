@@ -75,12 +75,12 @@ class ThornodeServer(HTTPD):
 		from wsgiref.util import request_uri
 
 		m = re.search(request_pat, request_uri(environ))
-		_, send_coin, _, recv_coin, amt_atomic = m.groups()
+		send_chain, send_asset, recv_chain, recv_asset, amt_atomic = m.groups()
 
 		from mmgen.protocol import init_proto
-		send_proto = init_proto(cfg, send_coin, network='regtest', need_amt=True)
+		send_proto = init_proto(cfg, send_chain, network='regtest', need_amt=True)
 		in_amt = UniAmt(int(amt_atomic), from_unit='satoshi')
-		out_amt = in_amt * (prices[send_coin] / prices[recv_coin])
+		out_amt = in_amt * (prices[send_asset] / prices[recv_asset])
 
 		addr = make_inbound_addr(send_proto, send_proto.preferred_mmtypes[0])
 		data = data_template | {

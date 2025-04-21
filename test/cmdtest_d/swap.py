@@ -594,10 +594,10 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		return t
 
 	def swaptxcreate_bad3(self):
-		return self._swaptxcreate_bad(['RTC', 'LTC'], expect1='unsupported send coin')
+		return self._swaptxcreate_bad(['RTC', 'LTC'], exit_val=2, expect1='unrecognized asset')
 
 	def swaptxcreate_bad4(self):
-		return self._swaptxcreate_bad(['LTC', 'XTC'], expect1='unsupported receive coin')
+		return self._swaptxcreate_bad(['LTC', 'XTC'], exit_val=2, expect1='unrecognized asset')
 
 	def swaptxcreate_bad5(self):
 		return self._swaptxcreate_bad(['LTC'], expect1='USAGE:')
