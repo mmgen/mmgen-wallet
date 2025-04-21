@@ -12,7 +12,7 @@
 tx.bump: transaction bump class
 """
 
-from .new_swap import NewSwap, get_swap_proto_mod
+from .new_swap import NewSwap
 from .completed import Completed
 from ..util import msg, ymsg, is_int, die
 from ..color import pink
@@ -36,16 +36,11 @@ class Bump(Completed, NewSwap):
 		self.new_outputs = new_outputs
 		self.orig_rel_fee = self.get_orig_rel_fee()
 
-		if self.is_swap:
-			if new_outputs:
+		if new_outputs:
+			if self.is_swap:
 				from .base import Base
 				for attr in self.swap_attrs:
 					setattr(self, attr, getattr(Base, attr))
-			else:
-				sp = get_swap_proto_mod(self.swap_proto)
-				self.recv_asset = sp.SwapAsset(self.swap_recv_asset_spec, 'recv')
-
-		if new_outputs:
 			self.outputs = self.OutputList(self)
 			self.cfg = kwargs['cfg'] # must use current cfg opts, not those from orig_tx
 

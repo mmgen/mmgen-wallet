@@ -13,17 +13,15 @@ proto.btc.tx.new_swap: Bitcoin new swap transaction class
 """
 
 from ....tx.new_swap import NewSwap as TxNewSwap
-from ....tx.new_swap import get_swap_proto_mod
 from .new import New
 
 class NewSwap(New, TxNewSwap):
 	desc = 'Bitcoin swap transaction'
 
 	def update_data_output(self, trade_limit):
-		sp = get_swap_proto_mod(self.swap_proto)
 		o = self.data_output._asdict()
-		parsed_memo = sp.Memo.parse(o['data'].decode())
-		memo = sp.Memo(
+		parsed_memo = self.swap_proto_mod.Memo.parse(o['data'].decode())
+		memo = self.swap_proto_mod.Memo(
 			self.recv_proto,
 			self.recv_asset,
 			self.recv_proto.coin_addr(parsed_memo.address),

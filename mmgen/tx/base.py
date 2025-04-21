@@ -26,7 +26,7 @@ from ..obj import (
 )
 from ..amt import CoinAmtChk
 from ..addr import MMGenID, CoinAddr
-from ..util import msg, ymsg, fmt, remove_dups, make_timestamp, die
+from ..util import msg, ymsg, fmt, remove_dups, make_timestamp, die, cached_property
 
 class MMGenTxIO(MMGenListItem):
 	vout     = ListItemAttr(NonNegativeInt)
@@ -220,3 +220,19 @@ class Base(MMGenObject):
 				if not self.cfg.yes:
 					from ..ui import keypress_confirm
 					keypress_confirm(self.cfg, 'Continue?', default_yes=True, do_exit=True)
+
+	# swap methods:
+
+	@cached_property
+	def swap_proto_mod(self):
+		from .new_swap import get_swap_proto_mod
+		return get_swap_proto_mod(self.swap_proto)
+
+	@cached_property
+	def send_asset(self):
+		spec = self.proto.coin + (f'.{self.proto.tokensym}' if self.proto.tokensym else '')
+		return self.swap_proto_mod.SwapAsset(spec, 'send')
+
+	@cached_property
+	def recv_asset(self):
+		return self.swap_proto_mod.SwapAsset(self.swap_recv_asset_spec, 'recv')

@@ -13,17 +13,15 @@ proto.eth.tx.new_swap: Ethereum new swap transaction class
 """
 
 from ....tx.new_swap import NewSwap as TxNewSwap
-from ....tx.new_swap import get_swap_proto_mod
 from .new import New
 
 class NewSwap(New, TxNewSwap):
 	desc = 'Ethereum swap transaction'
 
 	def update_data_output(self, trade_limit):
-		sp = get_swap_proto_mod(self.swap_proto)
 		data = bytes.fromhex(self.txobj['data']) if self.is_bump else self.usr_contract_data
-		parsed_memo = sp.Memo.parse(data.decode())
-		memo = sp.Memo(
+		parsed_memo = self.swap_proto_mod.Memo.parse(data.decode())
+		memo = self.swap_proto_mod.Memo(
 			self.recv_proto,
 			self.recv_asset,
 			self.recv_proto.coin_addr(parsed_memo.address),

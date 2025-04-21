@@ -80,7 +80,7 @@ class TxInfo:
 				if Memo.is_partial_memo(data):
 					p = Memo.parse(data.decode('ascii'))
 					yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(name))
-					yield '    Swap: {}\n'.format(orange(f'{tx.proto.coin} => {p.asset}'))
+					yield '    Swap: {}\n'.format(orange(f'{tx.send_asset.name} => {tx.recv_asset.name}'))
 					yield '    Dest: {}{}\n'.format(
 						cyan(p.address),
 						orange(f' ({tx.swap_recv_addr_mmid})') if tx.swap_recv_addr_mmid else '')

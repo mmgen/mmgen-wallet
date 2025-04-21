@@ -35,11 +35,7 @@ def get_send_proto(cfg):
 		arg = cfg._args.pop(0)
 	except:
 		cfg._usage()
-
-	global send_asset
-	send_asset = get_swap_proto_mod(cfg.swap_proto).SwapAsset(arg, 'send')
-
-	return init_swap_proto(cfg, send_asset)
+	return init_swap_proto(cfg, get_swap_proto_mod(cfg.swap_proto).SwapAsset(arg, 'send'))
 
 class NewSwap(New):
 	desc = 'swap transaction'
@@ -110,7 +106,6 @@ class NewSwap(New):
 
 			# arg 4: recv_coin
 			self.swap_recv_asset_spec = arg # this goes into the transaction file
-			self.recv_asset = sp.SwapAsset(arg, 'recv')
 			self.recv_proto = init_swap_proto(self.cfg, self.recv_asset)
 
 			# arg 5: recv_spec (receive address spec)
@@ -120,7 +115,7 @@ class NewSwap(New):
 			if args_in: # done parsing, all args consumed
 				self.cfg._usage()
 
-		sp = get_swap_proto_mod(self.swap_proto)
+		sp = self.swap_proto_mod
 		args_in = list(cmd_args)
 		args = CmdlineArgs()
 		parse()
@@ -149,9 +144,6 @@ class NewSwap(New):
 
 		memo = sp.Memo(self.recv_proto, self.recv_asset, recv_output.addr)
 
-		self.is_token_swap = self.proto.tokensym or self.recv_asset.asset
-		self.send_asset = send_asset
-
 		# this goes into the transaction file:
 		self.swap_recv_addr_mmid = recv_output.mmid
 
@@ -176,8 +168,7 @@ class NewSwap(New):
 		self.outputs[vault_idx] = self.Output(self.proto, **o)
 
 	async def update_vault_output(self, amt, *, deduct_est_fee=False):
-		sp = get_swap_proto_mod(self.swap_proto)
-		c = sp.rpc_client(self, amt)
+		c = self.swap_proto_mod.rpc_client(self, amt)
 
 		from ..util import msg
 		from ..term import get_char
