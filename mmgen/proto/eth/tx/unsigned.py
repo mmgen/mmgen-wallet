@@ -47,7 +47,7 @@ class Unsigned(Completed, TxBase.Unsigned):
 			'gasprice': o['gasPrice'].toWei(),
 			'value':    o['amt'].toWei() if o['amt'] else 0,
 			'nonce':    o['nonce'],
-			'data':     bytes.fromhex(o['data'])}
+			'data':     self.swap_memo.encode() if self.is_swap else bytes.fromhex(o['data'])}
 
 		from ..pyethereum.transactions import Transaction
 		etx = Transaction(**o_conv).sign(wif, o['chainId'])
