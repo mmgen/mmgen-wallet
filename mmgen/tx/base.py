@@ -123,6 +123,7 @@ class Base(MMGenObject):
 		self.name     = type(self).__name__
 		self.proto    = kwargs['proto']
 		self.twctl    = kwargs.get('twctl')
+		self.is_token = 'Token' in self.name
 
 	@property
 	def coin(self):

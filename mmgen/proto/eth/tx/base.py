@@ -89,9 +89,49 @@ class Base(TxBase):
 			tx = tx,
 			rx = rx)
 
-	def check_serialized_integrity(self): # TODO
-		return True
+	def check_serialized_integrity(self):
+		if self.signed:
+			from .. import rlp
+			o = self.txobj
+			d = rlp.decode(bytes.fromhex(self.serialized))
+			to_key = 'token_addr' if self.is_token else 'to'
+
+			if o['nonce'] == 0:
+				assert d[0] == b'', f'{d[0]}: invalid nonce in serialized data'
+			else:
+				assert int(d[0].hex(), 16) == o['nonce'], f'{d[0]}: invalid nonce in serialized data'
+			if o.get(to_key):
+				assert d[3].hex() == o[to_key], f'{d[3].hex()}: invalid ‘to’ address in serialized data'
+			if not self.is_token:
+				if o['amt']:
+					assert int(d[4].hex(), 16) == o['amt'].to_unit('wei'), (
+						f'{d[4].hex()}: invalid amt in serialized data')
+				if self.is_swap:
+					assert d[5] == self.swap_memo.encode(), (
+						f'{d[5]}: invalid swap memo in serialized data')
 
 class TokenBase(Base):
 	dfl_gas = 52000
 	contract_desc = 'token contract'
+
+	def check_serialized_integrity(self):
+		if self.signed:
+			super().check_serialized_integrity()
+
+			from .. import rlp
+			from ....amt import TokenAmt
+			d = rlp.decode(bytes.fromhex(self.serialized))
+			o = self.txobj
+
+			assert d[4] == b'', f'{d[4]}: non-empty amount field in token transaction in serialized data'
+
+			data = d[5].hex()
+			assert data[:8] == 'a9059cbb', (
+				f'{data[:8]}: invalid MethodID for op ‘transfer’ in serialized data')
+			assert data[32:72] == o['token_to'], (
+				f'{data[32:72]}: invalid ‘token_to‘ address in serialized data')
+			assert TokenAmt(
+					int(data[72:], 16),
+					decimals = o['decimals'],
+					from_unit = 'atomic') == o['amt'], (
+				f'{data[72:]}: invalid amt in serialized data')

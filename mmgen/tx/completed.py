@@ -31,9 +31,16 @@ class Completed(Base):
 			self.name = type(self).__name__
 		else:
 			from .file import MMGenTxFile
-			MMGenTxFile(self).parse(str(filename), quiet_open=quiet_open)
-
-			self.check_serialized_integrity()
+			try:
+				MMGenTxFile(self).parse(str(filename), quiet_open=quiet_open)
+				self.check_serialized_integrity()
+			except Exception as e:
+				from ..color import orange
+				from ..util import msg
+				msg(orange(
+					f'Something is wrong with transaction file ‘{filename}’\n'
+					'To fix this problem, please move or delete the file'))
+				raise e
 
 			# repeat with sign and send, because coin daemon could be restarted
 			self.check_correct_chain()

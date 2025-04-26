@@ -94,7 +94,9 @@ class Unsigned(Completed, TxBase.Unsigned):
 			await self.do_sign(o, keys[0].sec.wif)
 			msg('OK')
 			from ....tx import SignedTX
-			return await SignedTX(cfg=self.cfg, data=self.__dict__, automount=self.automount)
+			tx = await SignedTX(cfg=self.cfg, data=self.__dict__, automount=self.automount)
+			tx.check_serialized_integrity()
+			return tx
 		except Exception as e:
 			msg(f'{e}: transaction signing failed!')
 			return False
