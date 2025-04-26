@@ -272,6 +272,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 	need_daemon = True
 
 	cmd_group_in = (
+		('list_assets',           'listing swap assets'),
 		('subgroup.init_data',    []),
 		('subgroup.data',         ['init_data']),
 		('subgroup.init_swap',    []),
@@ -415,6 +416,14 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 	@property
 	def sid(self):
 		return self._user_sid('bob')
+
+	def list_assets(self):
+		t = self.spawn('mmgen-swaptxcreate', ['--list-assets'])
+		t.expect('AVAILABLE')
+		t.expect('ETH.MM1')
+		t.expect('Blacklisted')
+		t.expect('ETH.JUNK')
+		return t
 
 	def walletcreate_bob(self):
 		dest = Path(self.tr.data_dir, 'regtest', 'bob')

@@ -18,14 +18,18 @@ class THORChainSwapAsset(SwapAsset):
 
 	_ad = SwapAsset._ad
 	assets_data = {
-		'BTC':      _ad('Bitcoin',          'BTC',   None,       'b'),
-		'LTC':      _ad('Litecoin',         'LTC',   None,       'l'),
-		'BCH':      _ad('Bitcoin Cash',     'BCH',   None,       'c'),
-		'ETH':      _ad('Ethereum',         'ETH',   None,       'e'),
-		'DOGE':     _ad('Dogecoin',         'DOGE',  None,       'd'),
-		'RUNE':     _ad('Rune (THORChain)', 'RUNE', 'THOR.RUNE', 'r'),
+		'BTC':       _ad('Bitcoin',                 'BTC',  None,        'b',  True),
+		'LTC':       _ad('Litecoin',                'LTC',  None,        'l',  True),
+		'BCH':       _ad('Bitcoin Cash',            'BCH',  None,        'c',  True),
+		'ETH':       _ad('Ethereum',                'ETH',  None,        'e',  True),
+		'DOGE':      _ad('Dogecoin',                'DOGE', None,        'd',  False),
+		'RUNE':      _ad('Rune (THORChain)',        'RUNE', 'THOR.RUNE', 'r',  False),
 	}
 
-	send = ('BTC', 'LTC', 'BCH', 'ETH')
-	recv = ('BTC', 'LTC', 'BCH', 'ETH')
+	evm_contracts = {}
+
+	unsupported = ('DOGE', 'RUNE')
+
+	blacklisted = {}
+
 	evm_chains = ('ETH', 'AVAX', 'BSC', 'BASE')

@@ -107,7 +107,7 @@ class NewSwap(New):
 				arg = get_arg()
 
 			# arg 3: chg_spec (change address spec)
-			if args.send_amt and not (self.proto.is_evm or arg in sp.SwapAsset.recv): # is change arg
+			if args.send_amt and not (self.proto.is_evm or arg in sa.recv): # is change arg
 				nonlocal chg_output
 				chg_output = await self.get_chg_output(arg, addrfiles)
 				arg = get_arg()
@@ -124,11 +124,20 @@ class NewSwap(New):
 				self.cfg._usage()
 
 		sp = self.swap_proto_mod
+		sa = sp.SwapAsset('BTC', 'send')
 		args_in = list(cmd_args)
 		args = CmdlineArgs()
 		chg_output = None
 
 		await parse()
+
+		for a in (self.send_asset, self.recv_asset):
+			if a.name not in sa.tested:
+				from ..util import msg, ymsg
+				from ..term import get_char
+				ymsg(f'Warning: {a.direction} asset {a.name} is untested by the MMGen Project')
+				get_char('Press any key to continue: ')
+				msg('')
 
 		if args.send_amt and not (chg_output or self.proto.is_evm):
 			chg_output = await self.get_chg_output(None, addrfiles)

@@ -18,18 +18,55 @@ from ..util import die
 
 class SwapAsset:
 
-	_ad = namedtuple('swap_asset_data', ['desc', 'name', 'full_name', 'abbr'])
+	_ad = namedtuple('swap_asset_data', ['desc', 'name', 'full_name', 'abbr', 'tested'])
 	assets_data = {}
-	send = ()
-	recv = ()
+	evm_contracts = {}
+	unsupported = ()
+	blacklisted = {}
 	evm_chains = ()
 
+	def fmt_assets_data(self, indent=''):
+
+		def gen_good():
+			fs = '%s{:10} {:23} {:9} {}' % indent
+			yield fs.format('ASSET', 'DESCRIPTION', 'STATUS', 'CONTRACT ADDRESS')
+			for k, v in self.assets_data.items():
+				if not k in self.blacklisted:
+					if k in self.send or k in self.recv:
+						yield fs.format(
+							k,
+							v.desc,
+							'tested' if v.tested else 'untested',
+							self.evm_contracts.get(k,'-'))
+
+		def gen_bad():
+			if self.blacklisted:
+				fs = '%s{:10} {:23} {}' % indent
+				yield '\n\nBlacklisted assets:'
+				yield fs.format('ASSET', 'DESCRIPTION', 'REASON')
+				for k, v in self.blacklisted.items():
+					yield fs.format(k, self.assets_data[k].desc, v)
+
+		return '\n'.join(gen_good()) + '\n'.join(gen_bad())
+
 	@classmethod
-	def get_full_name(self, s):
-		for d in self.assets_data.values():
+	def get_full_name(cls, s):
+		for d in cls.assets_data.values():
 			if s in (d.abbr, d.full_name):
 				return d.full_name or f'{d.name}.{d.name}'
 		die('SwapAssetError', f'{s!r}: unrecognized asset name or abbreviation')
+
+	@property
+	def tested(self):
+		return [k for k, v in self.assets_data.items() if v.tested]
+
+	@property
+	def send(self):
+		return set(self.assets_data) - set(self.unsupported) - set(self.blacklisted)
+
+	@property
+	def recv(self):
+		return set(self.assets_data) - set(self.unsupported) - set(self.blacklisted)
 
 	@property
 	def chain(self):

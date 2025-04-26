@@ -22,7 +22,7 @@ mmgen-txcreate: Create a cryptocoin transaction with MMGen- and/or non-MMGen
 """
 
 from .cfg import gc, Config
-from .util import fmt_list, async_run
+from .util import Msg, fmt_list, async_run
 
 target = gc.prog_name.split('-')[1].removesuffix('create')
 
@@ -73,6 +73,7 @@ opts_data = {
 			+                        according to BIP 125)
 			-s -s, --swap-proto      Swap protocol to use (Default: {x_dfl},
 			+                        Choices: {x_all})
+			-s -S, --list-assets     List available swap assets
 			-- -v, --verbose         Produce more verbose output
 			b- -V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
 			-s -x, --proxy=P         Fetch the swap quote via SOCKS5 proxy ‘P’ (host:port)
@@ -103,6 +104,13 @@ opts_data = {
 }
 
 cfg = Config(opts_data=opts_data)
+
+if cfg.list_assets:
+	import sys
+	from .tx.new_swap import get_swap_proto_mod
+	sp = get_swap_proto_mod(cfg.swap_proto)
+	Msg('AVAILABLE SWAP ASSETS:\n' + sp.SwapAsset('BTC', 'send').fmt_assets_data(indent='  '))
+	sys.exit(0)
 
 if not (cfg.info or cfg.contract_data) and len(cfg._args) < {'tx': 1, 'swaptx': 2}[target]:
 	cfg._usage()
