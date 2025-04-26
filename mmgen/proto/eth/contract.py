@@ -36,6 +36,14 @@ def parse_abi(s):
 
 class Contract:
 
+	def __init__(self, cfg, proto, addr, *, rpc=None):
+		from ...util2 import get_keccak
+		self.keccak_256 = get_keccak(cfg)
+		self.cfg = cfg
+		self.proto = proto
+		self.addr = ContractAddr(proto, addr)
+		self.rpc = rpc
+
 	def strip(self, s):
 		return ''.join([chr(b) for b in s if 32 <= b <= 127]).strip()
 
@@ -96,13 +104,8 @@ class Contract:
 
 class Token(Contract):
 
-	def __init__(self, cfg, proto, addr, *, decimals=None, rpc=None):
-		from ...util2 import get_keccak
-		self.keccak_256 = get_keccak(cfg)
-		self.cfg = cfg
-		self.proto = proto
-		self.addr = ContractAddr(proto, addr)
-		self.rpc = rpc
+	def __init__(self, cfg, proto, addr, *, rpc=None, decimals=None):
+		Contract.__init__(self, cfg, proto, addr, rpc=rpc)
 		if decimals:
 			assert isinstance(decimals, int), f'decimals param must be int instance, not {type(decimals)}'
 			self.decimals = decimals
