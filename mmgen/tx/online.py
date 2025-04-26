@@ -62,7 +62,7 @@ class OnlineSigned(Signed):
 		if not (cfg.receipt or cfg.dump_hex or cfg.test):
 			self.confirm_send()
 
-		do_post_send = False
+		sent_status = None
 
 		for idx in ('', '2'):
 			if coin_txid := getattr(self, f'coin_txid{idx}', None):
@@ -85,7 +85,7 @@ class OnlineSigned(Signed):
 						if ret != coin_txid:
 							from ..util import ymsg
 							ymsg(f'Warning: txid mismatch (after sending) ({ret} != {coin_txid})')
-						do_post_send = 'confirm'
+						sent_status = 'confirm_post_send'
 				elif cfg.test:
 					await self.test_sendable(txhex)
 				else: # node send
@@ -95,11 +95,11 @@ class OnlineSigned(Signed):
 					desc = 'BOGUS transaction NOT' if cfg.bogus_send else 'Transaction'
 					from ..util import msg
 					msg(desc + ' sent: ' + coin_txid.hl())
-					do_post_send = 'no_confirm'
+					sent_status = 'no_confirm_post_send'
 
-		if do_post_send:
+		if sent_status:
 			from ..ui import keypress_confirm
-			if do_post_send == 'no_confirm' or not asi or keypress_confirm(
+			if sent_status == 'no_confirm_post_send' or not asi or keypress_confirm(
 					cfg, 'Mark transaction as sent on removable device?'):
 				await self.post_send(asi)
 
