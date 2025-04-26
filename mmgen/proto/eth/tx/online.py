@@ -49,12 +49,12 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 class TokenOnlineSigned(TokenSigned, OnlineSigned):
 
 	def parse_txfile_serialized_data(self):
-		from ....addr import TokenAddr
+		from ....addr import ContractAddr
 		from ..contract import Token
 		OnlineSigned.parse_txfile_serialized_data(self)
 		o = self.txobj
 		assert self.twctl.token == o['to']
-		o['token_addr'] = TokenAddr(self.proto, o['to'])
+		o['token_addr'] = ContractAddr(self.proto, o['to'])
 		o['decimals']   = self.twctl.decimals
 		t = Token(self.cfg, self.proto, o['token_addr'], decimals=o['decimals'])
 		o['amt'] = t.transferdata2amt(o['data'])

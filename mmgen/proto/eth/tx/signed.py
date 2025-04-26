@@ -14,7 +14,7 @@ proto.eth.tx.signed: Ethereum signed transaction class
 
 from ....tx import signed as TxBase
 from ....obj import CoinTxID, ETHNonce, HexStr
-from ....addr import CoinAddr, TokenAddr
+from ....addr import CoinAddr, ContractAddr
 from .completed import Completed, TokenCompleted
 
 class Signed(Completed, TxBase.Signed):
@@ -40,7 +40,7 @@ class Signed(Completed, TxBase.Signed):
 			'data':     HexStr(d['data']) }
 		if o['data'] and not o['to']: # token- or contract-creating transaction
 			# NB: could be a non-token contract address:
-			o['token_addr'] = TokenAddr(self.proto, etx.creates.hex())
+			o['token_addr'] = ContractAddr(self.proto, etx.creates.hex())
 			self.disable_fee_check = True
 		txid = CoinTxID(etx.hash.hex())
 		assert txid == self.coin_txid, "txid in tx.serialized doesn't match value in MMGen transaction file"

@@ -55,7 +55,7 @@ class TestSuiteException(Exception):      mmcode = 1
 class TestSuiteSpawnedScriptException(Exception): mmcode = 1
 
 # 2: yellow hl, message only
-class InvalidTokenAddress(Exception):     mmcode = 2
+class InvalidContractAddress(Exception):  mmcode = 2
 class UnrecognizedTokenSymbol(Exception): mmcode = 2
 class TokenNotInBlockchain(Exception):    mmcode = 2
 class TokenNotInWallet(Exception):        mmcode = 2

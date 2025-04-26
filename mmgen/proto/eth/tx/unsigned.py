@@ -17,7 +17,7 @@ import json
 from ....tx import unsigned as TxBase
 from ....util import msg, msg_r, die
 from ....obj import CoinTxID, ETHNonce, Int, HexStr
-from ....addr import CoinAddr, TokenAddr
+from ....addr import CoinAddr, ContractAddr
 from ..contract import Token
 from .completed import Completed, TokenCompleted
 
@@ -63,7 +63,7 @@ class Unsigned(Completed, TxBase.Unsigned):
 				if not self.is_swap:
 					raise ValueError('contract-creating transaction cannot have to-address')
 			else:
-				self.txobj['token_addr'] = TokenAddr(self.proto, etx.creates.hex())
+				self.txobj['token_addr'] = ContractAddr(self.proto, etx.creates.hex())
 
 	async def sign(self, tx_num_str, keys): # return TX object or False; don't exit or raise exception
 
@@ -105,7 +105,7 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 	def parse_txfile_serialized_data(self):
 		d = Unsigned.parse_txfile_serialized_data(self)
 		o = self.txobj
-		o['token_addr'] = TokenAddr(self.proto, d['token_addr'])
+		o['token_addr'] = ContractAddr(self.proto, d['token_addr'])
 		o['decimals'] = Int(d['decimals'])
 		o['token_to'] = o['to']
 

@@ -195,7 +195,7 @@ class CoinAddr(HiliteStr, InitErrors, MMGenObject):
 def is_coin_addr(proto, s):
 	return get_obj(CoinAddr, proto=proto, addr=s, silent=True, return_bool=True)
 
-class TokenAddr(CoinAddr):
+class ContractAddr(CoinAddr):
 	color = 'blue'
 
 def ViewKey(proto, viewkey_str):

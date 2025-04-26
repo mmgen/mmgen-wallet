@@ -29,7 +29,7 @@ from . import erigon_sleep
 from ...util import msg, pp_msg, die
 from ...base_obj import AsyncInit
 from ...obj import CoinTxID
-from ...addr import CoinAddr, TokenAddr
+from ...addr import CoinAddr, ContractAddr
 
 def parse_abi(s):
 	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]
@@ -101,7 +101,7 @@ class Token(Contract):
 		self.keccak_256 = get_keccak(cfg)
 		self.cfg = cfg
 		self.proto = proto
-		self.addr = TokenAddr(proto, addr)
+		self.addr = ContractAddr(proto, addr)
 		self.rpc = rpc
 		if decimals:
 			assert isinstance(decimals, int), f'decimals param must be int instance, not {type(decimals)}'

@@ -183,15 +183,15 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 
 		if self.importing and token_addr:
 			if not is_coin_addr(proto, token_addr):
-				die('InvalidTokenAddress', f'{token_addr!r}: invalid token address')
+				die('InvalidContractAddress', f'{token_addr!r}: invalid token address')
 		else:
 			assert token_addr is None, 'EthereumTokenTwCtl_chk1'
 			token_addr = await self.sym2addr(proto.tokensym) # returns None on failure
 			if not is_coin_addr(proto, token_addr):
 				die('UnrecognizedTokenSymbol', f'Specified token {proto.tokensym!r} could not be resolved!')
 
-		from ....addr import TokenAddr
-		self.token = TokenAddr(proto, token_addr)
+		from ....addr import ContractAddr
+		self.token = ContractAddr(proto, token_addr)
 
 		if self.token not in self.data['tokens']:
 			if self.importing:
