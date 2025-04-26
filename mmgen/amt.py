@@ -208,6 +208,20 @@ class ETHAmt(CoinAmt):
 class ETCAmt(ETHAmt):
 	coin = 'ETC'
 
+class TokenAmt(ETHAmt):
+	units = ('atomic',)
+
+	def __new__(cls, num, *, decimals, from_unit=None):
+		assert isinstance(decimals, int)
+		cls.max_prec = decimals
+		cls.atomic = Decimal(f'{10 ** -decimals:0.{decimals}f}')
+		return ETHAmt.__new__(cls, num=num, from_unit=from_unit)
+
+	def to_unit(self, unit):
+		if (u := getattr(self, unit)) == self.atomic:
+			return int(Decimal(self) // u)
+		raise ValueError('TokenAmt unit must be ‘atomic’')
+
 def CoinAmtChk(proto, num):
 	assert type(num) is proto.coin_amt, f'CoinAmtChk: {type(num)} != {proto.coin_amt}'
 	return num
