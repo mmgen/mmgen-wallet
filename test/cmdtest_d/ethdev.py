@@ -240,8 +240,8 @@ class CmdTestEthdevMethods:
 			gas,
 			mmgen_cmd = 'txdo',
 			gas_price = '8G',
-			num = None,
-			get_receipt = True):
+			num = None):
+
 		keyfile = joinpath(self.tmpdir, dfl_devkey_fn)
 		fn = joinpath(self.tmpdir, 'mm'+str(num), key+'.bin')
 		args = [
@@ -250,8 +250,8 @@ class CmdTestEthdevMethods:
 			f'--gas={gas}',
 			f'--contract-data={fn}',
 			f'--inputs={dfl_devaddr}',
-			'--yes',
-		]
+			'--yes'
+		] + (['--wait'] if mmgen_cmd == 'txdo' else [])
 
 		contract_addr = self._get_contract_address(dfl_devaddr)
 		if key == 'Token':
@@ -271,36 +271,30 @@ class CmdTestEthdevMethods:
 
 			txfile = txfile.replace('.rawtx', '.sigtx')
 			t = self.spawn('mmgen-txsend',
-				self.eth_opts + [txfile], no_msg=True, no_passthru_opts=['coin'])
+				self.eth_opts + ['--wait', txfile], no_msg=True, no_passthru_opts=['coin'])
 
-		txid = self.txsend_ui_common(t,
+		self.txsend_ui_common(t,
 			caller = mmgen_cmd,
 			quiet  = mmgen_cmd == 'txdo' or not self.cfg.debug,
+			contract_addr = contract_addr,
 			bogus_send = False)
-
-		_ = strip_ansi_escapes(t.expect_getend('Contract address: '))
-		assert _ == contract_addr, f'Contract address mismatch: {_} != {contract_addr}'
-
-		if get_receipt:
-			if (await self.get_tx_receipt(txid)).status == 0:
-				die(2, f'Contract {num}:{key} failed to deploy. Aborting')
 
 		if key == 'Token':
 			imsg(f'\nToken MM{num} deployed!')
 
 		return t
 
-	async def _token_deploy_math(self, *, num, get_receipt=True, mmgen_cmd='txdo'):
+	async def _token_deploy_math(self, *, num, mmgen_cmd='txdo'):
 		return await self._token_deploy(
-			num=num, key='SafeMath', gas=500_000, get_receipt=get_receipt, mmgen_cmd=mmgen_cmd)
+			num=num, key='SafeMath', gas=500_000, mmgen_cmd=mmgen_cmd)
 
-	async def _token_deploy_owned(self, *, num, get_receipt=True):
+	async def _token_deploy_owned(self, *, num):
 		return await self._token_deploy(
-			num=num, key='Owned', gas=1_000_000, get_receipt=get_receipt)
+			num=num, key='Owned', gas=1_000_000)
 
-	async def _token_deploy_token(self, *, num, get_receipt=True):
+	async def _token_deploy_token(self, *, num):
 		return await self._token_deploy(
-			num=num, key='Token', gas=4_000_000, gas_price='7G', get_receipt=get_receipt)
+			num=num, key='Token', gas=4_000_000, gas_price='7G')
 
 	def _token_bal_check(self, *, pat):
 		return self._bal_check(pat=pat, add_opts=['--token=MM1'])
@@ -315,7 +309,7 @@ class CmdTestEthdevMethods:
 			caller            = cmd,
 			file_desc         = 'Unsigned automount transaction')
 
-	async def _token_transfer_ops(self, *, op, mm_idxs, amt=1000, get_receipt=True, sid=dfl_sid):
+	async def _token_transfer_ops(self, *, op, mm_idxs, amt=1000, sid=dfl_sid):
 		self.spawn(msg_only=True)
 		from mmgen.tool.wallet import tool_cmd
 		usr_mmaddrs = [f'{sid}:E:{i}' for i in mm_idxs]
@@ -338,9 +332,14 @@ class CmdTestEthdevMethods:
 					key       = dfl_devkey,
 					gas       = self.proto.coin_amt(120000, from_unit='wei'),
 					gasPrice  = self.proto.coin_amt(8, from_unit='Gwei'))
-
-				if get_receipt and (await self.get_tx_receipt(txid)).status == 0:
-					die(2, 'Transfer of token funds failed. Aborting')
+				rpc = await self.rpc
+				for n in range(50): # long delay for txbump
+					rx = await rpc.call('eth_getTransactionReceipt', '0x' + txid) # -> null if pending
+					if rx:
+						break
+					await asyncio.sleep(0.5)
+				if not rx:
+					die(1, 'tx receipt timeout exceeded')
 
 		async def show_bals(rpc):
 			for i in range(len(usr_mmaddrs)):
@@ -1114,13 +1113,13 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def bal3(self):
 		return self.bal(n='3')
 
-	def tx_status(self, ext, expect_str, expect_str2='', exit_val=0):
+	def tx_status(self, ext, *, expect_str, expect_str2='', add_opts=[], exit_val=0):
 		self.mining_delay()
 		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
 			'mmgen-txsend',
-			self.eth_opts + ['--status', txfile],
+			self.eth_opts + add_opts + ['--status', txfile],
 			no_passthru_opts = ['coin'],
 			exit_val = exit_val)
 		t.expect(expect_str)
@@ -1129,7 +1128,10 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		return t
 
 	def tx_status1(self):
-		return self.tx_status(ext='2.345,50000]{}.regtest.sigtx', expect_str='has 1 confirmation')
+		return self.tx_status(
+			ext        = '2.345,50000]{}.regtest.sigtx',
+			add_opts   = ['--verbose'],
+			expect_str = 'has 1 confirmation')
 
 	def tx_status1a(self):
 		return self.tx_status(ext='2.345,50000]{}.regtest.sigtx', expect_str='has 2 confirmations')
@@ -1332,22 +1334,6 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def token_compile2(self):
 		token_data = {'name':'MMGen Token 2', 'symbol':'MM2', 'supply':10**18, 'decimals':10}
 		return self.token_compile(token_data)
-
-	async def get_tx_receipt(self, txid):
-		if self.daemon.id in ('geth', 'reth'): # workaround for mining race condition in dev mode
-			await asyncio.sleep(1 if self.daemon.id == 'reth' else 0.5)
-		from mmgen.tx import NewTX
-		tx = await NewTX(cfg=self.cfg, proto=self.proto, target='tx')
-		tx.rpc = await self.rpc
-		res = await tx.get_receipt(txid)
-		if not res:
-			die(1, f'Error getting receipt for transaction {txid}')
-		imsg(f'Gas sent:  {res.gas_sent.hl():<9} {(res.gas_sent*res.gas_price).hl2(encl="()")}')
-		imsg(f'Gas used:  {res.gas_used.hl():<9} {(res.gas_used*res.gas_price).hl2(encl="()")}')
-		imsg(f'Gas price: {res.gas_price.hl()}')
-		if res.gas_used == res.gas_sent:
-			omsg(yellow('Warning: all gas was used!'))
-		return res
 
 	async def token_deploy1a(self):
 		return await self._token_deploy_math(num=1)

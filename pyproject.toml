@@ -46,6 +46,7 @@ ignore = [
 "test/*.py"                     = [ "F401" ]         # imported but unused
 "test/colortest.py"             = [ "F403", "F405" ] # `import *` used
 "test/tooltest2.py"             = [ "F403", "F405" ] # `import *` used
+"test/overlay/tree/*"           = [ "ALL" ]
 
 [tool.pylint.format]
 indent-string = "\t"

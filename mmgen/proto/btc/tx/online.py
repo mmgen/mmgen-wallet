@@ -76,8 +76,8 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 			msg(orange('\n'+errmsg))
 			die(2, f'{m}{nl}Send of MMGen transaction {self.txid} failed')
 
-	def post_write(self):
-		pass
+	async def post_network_send(self, coin_txid):
+		return True
 
 class Sent(TxBase.Sent, OnlineSigned):
 	pass

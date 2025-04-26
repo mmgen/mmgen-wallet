@@ -34,20 +34,19 @@ def {name}(self):
 class CmdTestEthSwapMethods:
 
 	async def token_deploy_a(self):
-		return await self._token_deploy_math(num=1, get_receipt=False)
+		return await self._token_deploy_math(num=1)
 
 	async def token_deploy_b(self):
-		return await self._token_deploy_owned(num=1, get_receipt=False)
+		return await self._token_deploy_owned(num=1)
 
 	async def token_deploy_c(self):
-		return await self._token_deploy_token(num=1, get_receipt=False)
+		return await self._token_deploy_token(num=1)
 
 	def token_fund_user(self):
 		return self._token_transfer_ops(
 			op          = 'fund_user',
 			mm_idxs     = [1],
-			amt         = self.token_fund_amt,
-			get_receipt = False)
+			amt         = self.token_fund_amt)
 
 	def token_addrgen(self):
 		return self._token_addrgen(mm_idxs=[1], naddrs=5)

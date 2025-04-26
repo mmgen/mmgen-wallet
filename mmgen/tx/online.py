@@ -12,6 +12,11 @@
 tx.online: online signed transaction class
 """
 
+import sys, time, asyncio
+
+from ..util import msg, Msg, ymsg, make_timestr, die
+from ..color import pink, yellow
+
 from .signed import Signed, AutomountSigned
 
 class OnlineSigned(Signed):
@@ -22,10 +27,7 @@ class OnlineSigned(Signed):
 		return _base_proto_subclass('Status', 'status', self.proto)(self)
 
 	def check_swap_expiry(self):
-		import time
-		from ..util import msg, make_timestr
 		from ..util2 import format_elapsed_hr
-		from ..color import pink, yellow
 		expiry = self.swap_quote_expiry
 		now = int(time.time())
 		t_rem = expiry - now
@@ -36,8 +38,7 @@ class OnlineSigned(Signed):
 			c = make_timestr(expiry)))
 		return t_rem >= 0
 
-	def confirm_send(self):
-		from ..util import msg
+	def confirm_send(self, idxs):
 		from ..ui import confirm_or_raise
 		confirm_or_raise(
 			cfg     = self.cfg,
@@ -45,6 +46,8 @@ class OnlineSigned(Signed):
 			action  = f'broadcast this transaction to the {self.proto.coin} {self.proto.network.upper()} network',
 			expect  = 'YES' if self.cfg.quiet or self.cfg.yes else 'YES, I REALLY WANT TO DO THIS')
 		msg('Sending transaction')
+		if len(idxs) > 1 and getattr(self, 'coin_txid2', None) and self.is_swap:
+			ymsg('Warning: two transactions (approval and router) will be broadcast to the network')
 
 	async def post_send(self, asi):
 		from . import SentTX
@@ -55,21 +58,40 @@ class OnlineSigned(Signed):
 			outdir        = asi.txauto_dir if asi else None,
 			ask_overwrite = False,
 			ask_write     = False)
-		tx2.post_write()
 
 	async def send(self, cfg, asi):
 
-		if not (cfg.receipt or cfg.dump_hex or cfg.test):
-			self.confirm_send()
-
+		status_exitval = None
 		sent_status = None
+		all_ok = True
+		idxs = ['', '2']
 
-		for idx in ('', '2'):
+		if cfg.txhex_idx:
+			if getattr(self, 'coin_txid2', None):
+				if cfg.txhex_idx in ('1', '2'):
+					idxs = ['' if cfg.txhex_idx == '1' else cfg.txhex_idx]
+				else:
+					die(1, f'{cfg.txhex_idx}: invalid parameter for --txhex-idx (must be 1 or 2)')
+			else:
+				die(1, 'Transaction has only one part, so --txhex-idx makes no sense')
+
+		if not (cfg.status or cfg.receipt or cfg.dump_hex or cfg.test):
+			self.confirm_send(idxs)
+
+		for idx in idxs:
 			if coin_txid := getattr(self, f'coin_txid{idx}', None):
 				txhex = getattr(self, f'serialized{idx}')
-				if cfg.receipt:
-					import sys
-					sys.exit(await self.status.display(print_receipt=True, idx=idx))
+				if cfg.status:
+					cfg._util.qmsg(f'{self.proto.coin} txid: {coin_txid.hl()}')
+					if cfg.verbose:
+						await self.post_network_send(coin_txid)
+					status_exitval = await self.status.display(idx=idx)
+				elif cfg.receipt:
+					if res := await self.get_receipt(coin_txid, receipt_only=True):
+						import json
+						Msg(json.dumps(res, indent=4))
+					else:
+						msg(f'Unable to get receipt for TX {coin_txid.hl()}')
 				elif cfg.dump_hex:
 					from ..fileutil import write_data_to_file
 					write_data_to_file(
@@ -80,28 +102,42 @@ class OnlineSigned(Signed):
 							ask_overwrite = False,
 							ask_tty = False)
 				elif cfg.tx_proxy:
+					if idx != '' and not cfg.test_suite:
+						await asyncio.sleep(2)
 					from .tx_proxy import send_tx
+					msg(f'Sending TX: {coin_txid.hl()}')
 					if ret := send_tx(cfg, txhex):
 						if ret != coin_txid:
-							from ..util import ymsg
 							ymsg(f'Warning: txid mismatch (after sending) ({ret} != {coin_txid})')
 						sent_status = 'confirm_post_send'
 				elif cfg.test:
 					await self.test_sendable(txhex)
 				else: # node send
+					msg(f'Sending TX: {coin_txid.hl()}')
 					if not cfg.bogus_send:
+						if idx != '':
+							await asyncio.sleep(1)
 						ret = await self.send_with_node(txhex)
 						assert ret == coin_txid, f'txid mismatch (after sending) ({ret} != {coin_txid})'
 					desc = 'BOGUS transaction NOT' if cfg.bogus_send else 'Transaction'
-					from ..util import msg
 					msg(desc + ' sent: ' + coin_txid.hl())
 					sent_status = 'no_confirm_post_send'
 
-		if sent_status:
+				if cfg.wait and sent_status:
+					res = await self.post_network_send(coin_txid)
+					if all_ok:
+						all_ok = res
+
+		if not cfg.txhex_idx and sent_status and all_ok:
 			from ..ui import keypress_confirm
 			if sent_status == 'no_confirm_post_send' or not asi or keypress_confirm(
 					cfg, 'Mark transaction as sent on removable device?'):
 				await self.post_send(asi)
+
+		if status_exitval is not None:
+			if cfg.verbose:
+				self.info.view_with_prompt('View transaction details?', pause=False)
+			sys.exit(status_exitval)
 
 class AutomountOnlineSigned(AutomountSigned, OnlineSigned):
 	pass

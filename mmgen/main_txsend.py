@@ -51,13 +51,16 @@ opts_data = {
                  action has been successfully sent out-of-band.
 -n, --tx-proxy=P Send transaction via public TX proxy ‘P’ (supported proxies:
                  {tx_proxies}).  This is done via a publicly accessible web
-                 page, so no API key or registration is required
+                 page, so no API key or registration is required.
 -q, --quiet      Suppress warnings; overwrite files without prompting
 -r, --receipt    Print the receipt of the sent transaction (Ethereum only)
 -s, --status     Get status of a sent transaction (or current transaction,
                  whether sent or unsent, when used with --autosign)
 -t, --test       Test whether the transaction can be sent without sending it
+-T, --txhex-idx=N Send only part ‘N’ of a multi-part transaction.  Indexing
+                 begins with one.
 -v, --verbose    Be more verbose
+-w, --wait       Wait for transaction confirmation (Ethereum only)
 -x, --proxy=P    Connect to TX proxy via SOCKS5 proxy ‘P’ (host:port)
 -y, --yes        Answer 'yes' to prompts, suppress non-essential output
 """
@@ -141,22 +144,15 @@ async def main():
 		await tx.post_send(asi)
 		sys.exit(0)
 
-	if cfg.status:
-		if tx.coin_txid:
-			cfg._util.qmsg(f'{tx.proto.coin} txid: {tx.coin_txid.hl()}')
-		retval = await tx.status.display(usr_req=True, return_exit_val=True)
-		if cfg.verbose:
-			tx.info.view_with_prompt('View transaction details?', pause=False)
-		sys.exit(retval)
+	if not cfg.status or cfg.receipt:
+		if tx.is_swap and not tx.check_swap_expiry():
+			die(1, 'Swap quote has expired. Please re-create the transaction')
 
-	if tx.is_swap and not tx.check_swap_expiry():
-		die(1, 'Swap quote has expired. Please re-create the transaction')
-
-	if not (cfg.yes or cfg.receipt):
-		tx.info.view_with_prompt('View transaction details?')
-		if tx.add_comment(): # edits an existing comment, returns true if changed
-			if not cfg.autosign:
-				tx.file.write(ask_write_default_yes=True)
+		if not cfg.yes:
+			tx.info.view_with_prompt('View transaction details?')
+			if tx.add_comment(): # edits an existing comment, returns true if changed
+				if not cfg.autosign:
+					tx.file.write(ask_write_default_yes=True)
 
 	await tx.send(cfg, asi)
 

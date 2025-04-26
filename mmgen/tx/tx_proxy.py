@@ -71,14 +71,14 @@ class TxProxyClient:
 		assert len(res) == 1, 'more than one matching form!'
 		return res[0]
 
-	def cache_fn(self, desc):
-		return f'{self.name}-{desc}.html'
+	def cache_fn(self, desc, *, extra_desc=None):
+		return '{}-{}{}.html'.format(self.name, desc, f'-{extra_desc}' if extra_desc else '')
 
-	def save_response(self, data, desc):
+	def save_response(self, data, desc, *, extra_desc=None):
 		from ..fileutil import write_data_to_file
 		write_data_to_file(
 			self.cfg,
-			self.cache_fn(desc),
+			self.cache_fn(desc, extra_desc=extra_desc),
 			data,
 			desc = f'{desc} page from {orange(self.host)}')
 
@@ -200,7 +200,7 @@ def send_tx(cfg, txhex):
 	msg('done')
 
 	msg('Transaction ' + (f'sent: {txid.hl()}' if txid else 'send failed'))
-	c.save_response(result_text, 'result')
+	c.save_response(result_text, 'result', extra_desc=txid)
 
 	return txid
 

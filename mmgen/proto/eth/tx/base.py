@@ -54,11 +54,29 @@ class Base(TxBase):
 	def is_replaceable(self):
 		return True
 
-	# used for testing only:
-	async def get_receipt(self, txid):
-		rx = await self.rpc.call('eth_getTransactionReceipt', '0x'+txid) # -> null if pending
-		if not rx:
+	async def get_receipt(self, txid, *, receipt_only=False):
+		import asyncio
+		from ....util import msg, msg_r
+
+		for n in range(60):
+			rx = await self.rpc.call('eth_getTransactionReceipt', '0x'+txid) # -> null if pending
+			if rx or not self.cfg.wait:
+				break
+			if n == 0:
+				msg_r('Waiting for first confirmation..')
+			await asyncio.sleep(1)
+			msg_r('.')
+
+		if rx:
+			if n:
+				msg('OK')
+			if receipt_only:
+				return rx
+		else:
+			if self.cfg.wait:
+				msg('timeout exceeded!')
 			return None
+
 		tx = await self.rpc.call('eth_getTransactionByHash', '0x'+txid)
 		return namedtuple('exec_status',
 				['status', 'gas_sent', 'gas_used', 'gas_price', 'contract_addr', 'tx', 'rx'])(

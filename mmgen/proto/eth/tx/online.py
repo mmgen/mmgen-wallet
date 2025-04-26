@@ -13,7 +13,7 @@ proto.eth.tx.online: Ethereum online signed transaction class
 """
 
 from ....util import msg, die
-from ....color import orange
+from ....color import yellow, green, orange
 from ....tx import online as TxBase
 from .. import erigon_sleep
 from .signed import Signed, TokenSigned
@@ -42,9 +42,25 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 		await erigon_sleep(self)
 		return ret.removeprefix('0x')
 
-	def post_write(self):
-		if 'token_addr' in self.txobj and not self.txobj['to']:
-			msg('Contract address: {}'.format(self.txobj['token_addr'].hl(0)))
+	async def post_network_send(self, coin_txid):
+		res = await self.get_receipt(coin_txid)
+		if not res:
+			if self.cfg.wait:
+				msg('{} {} {}'.format(
+					yellow('Send of'),
+					coin_txid.hl(),
+					yellow('failed? (failed to get receipt)')))
+			return False
+		msg(f'Gas sent: {res.gas_sent.hl()}\n'
+			f'Gas used: {res.gas_used.hl()}')
+		if res.status == 0:
+			if res.gas_used == res.gas_sent:
+				msg(yellow('All gas was used!'))
+			die(1, f'Send of {coin_txid.hl()} failed (status=0)')
+		msg(f'Status: {green(str(res.status))}')
+		if res.contract_addr:
+			msg('Contract address: {}'.format(res.contract_addr.hl(0)))
+		return True
 
 class TokenOnlineSigned(TokenSigned, OnlineSigned):
 

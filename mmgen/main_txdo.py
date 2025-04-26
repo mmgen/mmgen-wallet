@@ -90,11 +90,14 @@ opts_data = {
 			+                         according to BIP 125)
 			-s -s, --swap-proto       Swap protocol to use (Default: {x_dfl},
 			+                         Choices: {x_all})
+			-- -T, --txhex-idx=N      Send only part ‘N’ of a multi-part transaction.
+			+                         Indexing begins with one.
 			-- -u, --subseeds=      n The number of subseed pairs to scan for (default: {ss},
 			+                         maximum: {ss_max}). Only the default or first supplied
 			+                         wallet is scanned for subseeds.
 			-- -v, --verbose          Produce more verbose output
 			b- -V, --vsize-adj=     f Adjust transaction's estimated vsize by factor 'f'
+			e- -w, --wait             Wait for transaction confirmation
 			-s -x, --proxy=P          Fetch the swap quote via SOCKS5 proxy ‘P’ (host:port)
 			e- -X, --cached-balances  Use cached balances
 			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output

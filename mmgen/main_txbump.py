@@ -78,7 +78,10 @@ opts_data = {
 			-- -q, --quiet            Suppress warnings; overwrite files without prompting
 			-- -s, --send             Sign and send the transaction (the default if seed
 			+                         data is provided)
+			-- -T, --txhex-idx=N      Send only part ‘N’ of a multi-part transaction.
+			+                         Indexing begins with one.
 			-- -v, --verbose          Produce more verbose output
+			e- -w, --wait             Wait for transaction confirmation
 			-- -W, --allow-non-wallet-swap Allow signing of swap transactions that send funds
 			+                         to non-wallet addresses
 			-- -x, --proxy=P          Fetch the swap quote via SOCKS5 proxy ‘P’ (host:port)

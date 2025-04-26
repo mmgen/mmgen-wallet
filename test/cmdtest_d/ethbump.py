@@ -208,9 +208,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			('token_deploy_a',   'deploying ERC20 token MM1 (SafeMath)'),
 			('token_deploy_b',   'deploying ERC20 token MM1 (Owned)'),
 			('token_deploy_c',   'deploying ERC20 token MM1 (Token)'),
-			('wait_reth2',       'waiting for block'),
 			('token_fund_user',  'transferring token funds from dev to user'),
-			('wait6',            'waiting for block'),
 			('token_addrgen',    'generating token addresses'),
 			('token_addrimport', 'importing token addresses using token address (MM1)'),
 			('token_bal1',       'the token balance'),
@@ -219,7 +217,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			'creating, signing, sending, bumping and resending a token transaction (fee-bump only)',
 			('token_txdo1',   'creating, signing and sending a token transaction'),
 			('token_txbump1', 'bumping the token transaction (fee-bump)'),
-			('wait7',         'waiting for block'),
+			('wait6',         'waiting for block'),
 			('token_bal2',    'the token balance'),
 		),
 		'token_new_outputs': (
@@ -228,7 +226,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			('token_txbump2',     'creating a replacement token transaction (new outputs)'),
 			('token_txbump2sign', 'signing the replacement transaction'),
 			('token_txbump2send', 'sending the replacement transaction'),
-			('wait8',             'waiting for block'),
+			('wait7',             'waiting for block'),
 			('token_bal3',        'the token balance'),
 		)
 	}
@@ -338,8 +336,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	def wait_reth1(self):
 		return self._wait_for_block() if self.daemon.id == 'reth' else 'silent'
 
-	wait_reth2 = wait_reth1
-	wait1 = wait2 = wait3 = wait4 = wait5 = wait6 = wait7 = wait8 = CmdTestEthBumpMethods._wait_for_block
+	wait1 = wait2 = wait3 = wait4 = wait5 = wait6 = wait7 = CmdTestEthBumpMethods._wait_for_block
 
 	txsign1 = txsign2 = txbump1sign = txbump2sign = CmdTestEthBumpMethods._txsign
 	txsend1 = txsend2 = txbump1send = txbump2send = CmdTestEthBumpMethods._txsend
