@@ -108,7 +108,7 @@ class CmdGroupMgr:
 			return [k for k, v in cfgs[str(tmpdir_idx)]['dep_generators'].items()
 						if k in cls.shared_deps and v != cmdname]
 
-		if not 'cmd_group' in cls.__dict__:
+		if not 'cmd_group' in cls.__dict__ and hasattr(cls, 'cmd_group_in'):
 			cls.cmd_group = self.create_cmd_group(cls, sg_name)
 
 		for a, b in cls.cmd_group:

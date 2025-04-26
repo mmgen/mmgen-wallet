@@ -99,10 +99,12 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	),
 	'eth_init': (
 		'initializing the ETH tracking wallet',
-		('eth_addrgen',             ''),
-		('eth_addrimport',          ''),
-		('eth_addrimport_devaddr',  ''),
-		('eth_fund_devaddr',        ''),
+		('eth_addrgen',                 ''),
+		('eth_addrimport',              ''),
+		('eth_addrimport_devaddr',      ''),
+		('eth_addrimport_reth_devaddr', ''),
+		('eth_fund_devaddr',            ''),
+		('eth_del_reth_devaddr',        ''),
 	),
 	'eth_fund': (
 		'funding the ETH tracking wallet',

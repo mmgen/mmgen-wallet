@@ -142,7 +142,10 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			('addrgen',             'generating addresses'),
 			('addrimport',          'importing addresses'),
 			('addrimport_devaddr',  'importing the dev address'),
+			('addrimport_reth_devaddr','importing the reth dev address'),
 			('fund_devaddr',        'funding the dev address'),
+			('wait_reth1',          'waiting for block'),
+			('del_reth_devaddr',    'deleting the reth dev address'),
 			('fund_mmgen_addr1',    'funding user address :1)'),
 			('fund_mmgen_addr2',    'funding user address :11)'),
 			('fund_mmgen_addr3',    'funding user address :21)'),
@@ -205,7 +208,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			('token_deploy_a',   'deploying ERC20 token MM1 (SafeMath)'),
 			('token_deploy_b',   'deploying ERC20 token MM1 (Owned)'),
 			('token_deploy_c',   'deploying ERC20 token MM1 (Token)'),
-			('wait_reth1',       'waiting for block'),
+			('wait_reth2',       'waiting for block'),
 			('token_fund_user',  'transferring token funds from dev to user'),
 			('wait6',            'waiting for block'),
 			('token_addrgen',    'generating token addresses'),
@@ -335,6 +338,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	def wait_reth1(self):
 		return self._wait_for_block() if self.daemon.id == 'reth' else 'silent'
 
+	wait_reth2 = wait_reth1
 	wait1 = wait2 = wait3 = wait4 = wait5 = wait6 = wait7 = wait8 = CmdTestEthBumpMethods._wait_for_block
 
 	txsign1 = txsign2 = txbump1sign = txbump2sign = CmdTestEthBumpMethods._txsign

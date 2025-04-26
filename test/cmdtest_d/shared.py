@@ -165,6 +165,7 @@ class CmdTestShared:
 			bogus_send   = True,
 			test         = False,
 			quiet        = False,
+			contract_addr = None,
 			has_label    = False):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
@@ -189,6 +190,9 @@ class CmdTestShared:
 			assert len(txid) == 64, f'{txid!r}: Incorrect txid length!'
 
 		if not test:
+			if contract_addr:
+				_ = strip_ansi_escapes(t.expect_getend('Contract address: '))
+				assert _ == contract_addr, f'Contract address mismatch: {_} != {contract_addr}'
 			t.written_to_file(file_desc)
 
 		return txid

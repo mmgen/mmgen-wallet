@@ -176,8 +176,6 @@ init_tests() {
 		btc $cmdtest_py autosign_clean autosign_automount autosign_btc
 		-   $cmdtest_py --coin=bch autosign_automount
 		ltc $cmdtest_py --coin=ltc autosign_automount
-		-   $cmdtest_py --coin=eth autosign_eth
-		etc $cmdtest_py --coin=etc autosign_eth
 	"
 	if [ "$SKIP_ALT_DEP" ]; then t_autosign_skip='- ltc etc'; else t_autosign_skip='btc'; fi
 	[ "$FAST" ] && t_autosign_skip+=' ltc etc'
@@ -188,7 +186,21 @@ init_tests() {
 
 	d_btc="overall operations with emulated RPC data (Bitcoin)"
 	t_btc="
-		- $cmdtest_py --exclude regtest,autosign,autosign_clean,autosign_automount,ref_altcoin,help
+		- $cmdtest_py misc
+		- $cmdtest_py opts
+		- $cmdtest_py cfgfile
+		- $cmdtest_py help
+		- $cmdtest_py main
+		- $cmdtest_py conv
+		- $cmdtest_py ref
+		- $cmdtest_py ref3
+		- $cmdtest_py ref3_addr
+		- $cmdtest_py ref3_pw
+		- $cmdtest_py ref_altcoin
+		- $cmdtest_py seedsplit
+		- $cmdtest_py tool
+		- $cmdtest_py input
+		- $cmdtest_py output
 		- $cmdtest_py --segwit
 		- $cmdtest_py --segwit-random
 		- $cmdtest_py --bech32
@@ -202,10 +214,11 @@ init_tests() {
 		- $cmdtest_py --testnet=1 --bech32
 	"
 
-	d_btc_rt="overall operations using the regtest network (Bitcoin)"
+	d_btc_rt="overall operations using the regtest network (Bitcoin, multicoin)"
 	t_btc_rt="
 		- $cmdtest_py regtest
 		x $cmdtest_py regtest_legacy
+		- $cmdtest_py swap
 	"
 	[ "$FAST" ]  && t_btc_skip='x'
 
@@ -245,13 +258,18 @@ init_tests() {
 
 	d_eth="operations for Ethereum using devnet"
 	t_eth="
-		geth $cmdtest_py --coin=eth --eth-daemon-id=geth ethdev ethbump
-		reth $cmdtest_py --coin=eth --eth-daemon-id=reth ethdev ethbump
+		geth $cmdtest_py --coin=btc --eth-daemon-id=geth ethswap
+		geth $cmdtest_py --coin=eth --eth-daemon-id=geth autosign_eth ethbump ethdev
+		reth $cmdtest_py --coin=btc --eth-daemon-id=reth ethswap
+		reth $cmdtest_py --coin=eth --eth-daemon-id=reth autosign_eth ethbump ethdev
 	"
 	[ "$FAST" ]  && t_eth_skip='reth'
 
 	d_etc="operations for Ethereum Classic using devnet"
-	t_etc="parity $cmdtest_py --coin=etc ethdev"
+	t_etc="
+		parity $cmdtest_py --coin=etc autosign_eth
+		parity $cmdtest_py --coin=etc ethdev
+	"
 	[ "$SKIP_PARITY" ] && t_etc_skip='parity'
 
 	d_xmr="Monero xmrwallet operations"
