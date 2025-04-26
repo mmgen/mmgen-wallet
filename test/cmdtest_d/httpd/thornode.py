@@ -16,6 +16,7 @@ import time, re, json
 
 from mmgen.cfg import Config
 from mmgen.amt import UniAmt
+from mmgen.protocol import init_proto
 
 from . import HTTPD
 
@@ -152,7 +153,6 @@ class ThornodeServer(HTTPD):
 		}
 
 		if send_asset != 'RUNE':
-			from mmgen.protocol import init_proto
 			send_proto = init_proto(cfg, send_chain, network='regtest', need_amt=True)
 			data.update({
 				'inbound_address': make_inbound_addr(send_proto, send_proto.preferred_mmtypes[0]),

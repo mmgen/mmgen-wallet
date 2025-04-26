@@ -99,7 +99,7 @@ elif not cfg._args and cfg.autosign:
 	si = Signable.automount_transaction(asi)
 	if cfg.abort:
 		si.shred_abortable() # prompts user, then raises exception or exits
-	elif cfg.status:
+	elif cfg.status or cfg.receipt:
 		if si.unsent:
 			die(1, 'Transaction is unsent')
 		if si.unsigned:
@@ -120,7 +120,7 @@ async def main():
 
 	global cfg
 
-	if cfg.status and cfg.autosign:
+	if (cfg.status or cfg.receipt) and cfg.autosign:
 		tx = await si.get_last_created()
 	else:
 		tx = await OnlineSignedTX(
@@ -144,7 +144,7 @@ async def main():
 		await tx.post_send(asi)
 		sys.exit(0)
 
-	if not cfg.status or cfg.receipt:
+	if not (cfg.status or cfg.receipt):
 		if tx.is_swap and not tx.check_swap_expiry():
 			die(1, 'Swap quote has expired. Please re-create the transaction')
 

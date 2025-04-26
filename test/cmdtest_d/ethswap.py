@@ -250,18 +250,18 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 	}[k]
 
 	cmd_group_in = CmdTestEthdev.cmd_group_in + (
+		# eth_fund:
 		('fund_mmgen_addr1',         'funding user address :1)'),
 		('fund_mmgen_addr2',         'funding user address :11)'),
+		('bal1',                     'the ETH balance'),
+		# eth_swap:
 		('swaptxcreate1',            'creating an ETH->BTC swap transaction'),
 		('swaptxcreate2',            'creating an ETH->BTC swap transaction (spec address, trade limit)'),
 		('swaptxsign1',              'signing the transaction'),
 		('swaptxsend1',              'sending the transaction'),
 		('swaptxstatus1',            'getting the transaction status (with --verbose)'),
-		('swaptxcreate3',            'creating an ETH->MM1 swap transaction'),
-		('swaptxsign3',              'signing the transaction'),
-		('swaptxsend3',              'sending the transaction'),
-		('bal1',                     'the ETH balance'),
 		('bal2',                     'the ETH balance'),
+		# token_init:
 		('token_compile1',           'compiling ERC20 token #1'),
 		('token_deploy_a',           'deploying ERC20 token MM1 (SafeMath)'),
 		('token_deploy_b',           'deploying ERC20 token MM1 (Owned)'),
@@ -270,6 +270,12 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		('token_addrgen',            'generating token addresses'),
 		('token_addrimport',         'importing token addresses using token address (MM1)'),
 		('token_bal1',               'the token balance'),
+
+		# eth_token_swap:
+		# ETH -> MM1
+		('swaptxcreate3',          'creating an ETH->MM1 swap transaction'),
+		('swaptxsign3',            'signing the transaction'),
+		('swaptxsend3',            'sending the transaction'),
 	)
 
 	def swaptxcreate1(self):

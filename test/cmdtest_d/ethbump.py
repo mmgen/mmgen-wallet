@@ -39,14 +39,9 @@ def {name}(self):
 
 class CmdTestEthBumpMethods:
 
-	def init_block_period(self):
-		d = self.daemon
-		bp = self.cfg.devnet_block_period or self.dfl_devnet_block_period[d.id]
-		d.usr_coind_args = {
-			'reth': [f'--dev.block-time={bp}s'],
-			'geth': [f'--dev.period={bp}']
-		}[d.id]
-		self.devnet_block_period = bp
+	@property
+	def devnet_block_period(self):
+		return self.cfg.devnet_block_period or self.dfl_devnet_block_period[self.daemon.id]
 
 	def _txcreate(self, args, acct):
 		self.get_file_with_ext('rawtx', delete_all=True)
@@ -133,6 +128,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		('subgroup.token_init',         ['eth_init']),
 		('subgroup.token_feebump',      ['token_init']),
 		('subgroup.token_new_outputs',  ['token_init']),
+		('ltc_stop',                    ''),
 		('stop',                        'stopping daemon'),
 	)
 	cmd_subgroups = {
@@ -243,6 +239,11 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		if not trunner:
 			return
 
+		self.daemon.usr_coind_args = {
+			'reth': [f'--dev.block-time={self.devnet_block_period}s'],
+			'geth': [f'--dev.period={self.devnet_block_period}']
+		}[self.daemon.id]
+
 		global ethbump_ltc
 		cfg = Config({
 			'_clone': trunner.cfg,
@@ -294,7 +295,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		return self._bal_check(pat=rf'{dfl_sid}:E:2\s+777\s')
 
 	def bal3(self):
-		return self._bal_check(pat=rf'{dfl_sid}:E:11\s+99987\.653466900170247\s')
+		return self._bal_check(pat=rf'{dfl_sid}:E:11\s+99987\.653431389777251448\s')
 
 	def bal4(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:12\s+4444\.3333\s')
@@ -356,4 +357,5 @@ class CmdTestEthBumpLTC(CmdTestSwapMethods, CmdTestRegtest):
 		('walletconv_bob',  'LTC wallet generation'),
 		('addrgen_bob',     'LTC address generation'),
 		('addrimport_bob',  'importing LTC addresses'),
+		('stop',            'stopping the Litecoin daemon'),
 	)

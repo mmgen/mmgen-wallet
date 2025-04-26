@@ -105,11 +105,13 @@ class OnlineSigned(Signed):
 					if idx != '' and not cfg.test_suite:
 						await asyncio.sleep(2)
 					from .tx_proxy import send_tx
-					msg(f'Sending TX: {coin_txid.hl()}')
+					msg('{} TX: {}'.format('Testing' if cfg.test else 'Sending', coin_txid.hl()))
 					if ret := send_tx(cfg, txhex):
 						if ret != coin_txid:
 							ymsg(f'Warning: txid mismatch (after sending) ({ret} != {coin_txid})')
 						sent_status = 'confirm_post_send'
+					if cfg.test:
+						break
 				elif cfg.test:
 					await self.test_sendable(txhex)
 				else: # node send

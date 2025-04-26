@@ -56,7 +56,11 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 		if res.status == 0:
 			if res.gas_used == res.gas_sent:
 				msg(yellow('All gas was used!'))
-			die(1, f'Send of {coin_txid.hl()} failed (status=0)')
+			msg('{} {} {}'.format(
+				yellow('Send of'),
+				coin_txid.hl(),
+				yellow('failed (status=0)')))
+			return False
 		msg(f'Status: {green(str(res.status))}')
 		if res.contract_addr:
 			msg('Contract address: {}'.format(res.contract_addr.hl(0)))

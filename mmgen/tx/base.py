@@ -236,4 +236,9 @@ class Base(MMGenObject):
 
 	@cached_property
 	def recv_asset(self):
-		return self.swap_proto_mod.SwapAsset(self.swap_recv_asset_spec, 'recv')
+		if hasattr(self, 'swap_recv_asset_spec'):
+			return self.swap_proto_mod.SwapAsset(self.swap_recv_asset_spec, 'recv')
+		else: # backwards-compatibility workaround
+			from ..swap.asset import SwapAsset
+			x = '[unknown]'
+			return SwapAsset._ad(x, x, x, x, x)

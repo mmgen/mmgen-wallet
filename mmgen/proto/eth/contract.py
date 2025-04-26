@@ -150,6 +150,7 @@ class Token(Contract):
 			from_decimal = True)
 
 	def create_transfer_data(self, to_addr, amt, *, op):
+		# Method IDs: 0xa9059cbb (transfer), 0x095ea7b3 (approve)
 		assert op in ('transfer', 'approve'), f'{op}: invalid operation (not ‘transfer’ or ‘approve’)'
 		return (
 			self.create_method_id(f'{op}(address,uint256)')
