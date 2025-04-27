@@ -13,7 +13,6 @@ help.txsign: txsign help notes for the MMGen Wallet suite
 """
 
 from ..cfg import gc
-from ..proto.btc.params import mainnet
 from ..daemon import CoinDaemon
 
 def help(proto, cfg):
@@ -24,7 +23,7 @@ def help(proto, cfg):
 	return """
 Transactions may contain both {pnm} or non-{pnm} input addresses.
 
-To sign non-{pnm} inputs, a {wd}flat key list is used
+To sign non-{pnm} inputs, a coin daemon wallet dump or flat key list is used
 as the key source (--keys-from-file option).
 
 To sign {pnm} inputs, key data is generated from a seed as with the
@@ -42,7 +41,6 @@ source.  Therefore, seed files or a key-address file for all {pnm} outputs
 must also be supplied on the command line if the data can’t be found in the
 default wallet.
 """.format(
-	wd  = f'{coind_exec()} wallet dump or ' if isinstance(proto, mainnet) else '',
 	pnm = gc.proj_name,
 	pnu = proto.name,
 	pnl = gc.proj_name.lower())

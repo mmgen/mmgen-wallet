@@ -53,7 +53,7 @@ opts_data = {
 			-- -d, --outdir=        d Specify an alternate directory 'd' for output
 			-- -e, --echo-passphrase  Print passphrase to screen when typing it
 			-- -f, --fee=           f Transaction fee, as a decimal {cu} amount or as
-			+                         {fu} (an integer followed by {fl!r}).
+			+                         {fu} (an integer followed by {fl}).
 			+                         See FEE SPECIFICATION below.
 			-- -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
 			+                        'f' at offset 'o' (comma-separated)
@@ -107,6 +107,7 @@ with the --proxy option.  To improve privacy, it’s recommended to proxy
 requests to the quote server via Tor or some other anonymity network.
 
 {e}
+
 {s}
 Seed source files must have the canonical extensions listed in the 'FileExt'
 column below:

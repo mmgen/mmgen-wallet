@@ -30,14 +30,18 @@ class help_notes:
 	def account_info_desc(self):
 		return 'unspent outputs' if self.proto.base_proto == 'Bitcoin' else 'account info'
 
-	def fee_spec_letters(self, *, use_quotes=False):
-		cu = self.proto.coin_amt.units
-		sep, conj = ((',', ' or '), ("','", "' or '"))[use_quotes]
-		return sep.join(u[0] for u in cu[:-1]) + ('', conj)[len(cu)>1] + cu[-1][0]
+	def fee_spec_letters(self, *, use_quotes=False, proto=None):
+		cu = (proto or self.proto).coin_amt.units
+		pfx, sfx, sep, conj = (('', '', ',', ' or '), ("‘", "’", "’,‘", "’ or ‘"))[use_quotes]
+		return pfx + sep.join(u[0] for u in cu[:-1]) + ('', conj)[len(cu)>1] + cu[-1][0] + sfx
 
-	def fee_spec_names(self):
-		cu = self.proto.coin_amt.units
-		return ', '.join(cu[:-1]) + ('', ' and ')[len(cu)>1] + cu[-1] + ('', ',\nrespectively')[len(cu)>1]
+	def fee_spec_names(self, *, proto=None, linebreak=' '):
+		cu = (proto or self.proto).coin_amt.units
+		return (
+			', '.join(cu[:-1])
+			+ ('', ' and ')[len(cu)>1]
+			+ cu[-1]
+			+ (f',{linebreak}respectively' if len(cu) > 1 else ''))
 
 	def dfl_twname(self):
 		from ..proto.btc.rpc import BitcoinRPCClient
@@ -114,19 +118,31 @@ FMT CODES:
 		from ..tx import BaseTX
 		return BaseTX(cfg=self.cfg, proto=self.proto).rel_fee_desc
 
-	def fee(self):
+	def fee(self, all_coins=False):
 		from ..tx import BaseTX
-		return """
+		text = """
                                FEE SPECIFICATION
 
 Transaction fees, both on the command line and at the interactive prompt, may
-be specified as either absolute {c} amounts, using a plain decimal number, or
-as {r}, using an integer followed by '{l}', for {u}.
-""".format(
-	c = self.proto.coin,
-	r = BaseTX(cfg=self.cfg, proto=self.proto).rel_fee_desc,
-	l = self.fee_spec_letters(use_quotes=True),
-	u = self.fee_spec_names())
+be specified as either absolute coin amounts, using a plain decimal number, or
+as {r}, using an integer followed by {l}, for{s}{u}""".format(
+			r = BaseTX(cfg=self.cfg, proto=self.proto).rel_fee_desc,
+			l = self.fee_spec_letters(use_quotes=True),
+			s = '\n' if self.proto.base_coin == 'ETH' else ' ',
+			u = self.fee_spec_names())
+
+		if all_coins:
+			from ..protocol import init_proto
+			eth_proto = init_proto(self.cfg, 'eth', need_amt=True)
+			return text + (
+				' (for\nBitcoin, Litecoin and Bitcoin Cash)'
+				+ ", or {r}, using an integer followed\nby {l}, for {u}".format(
+					r = BaseTX(cfg=self.cfg, proto=eth_proto).rel_fee_desc,
+					l = self.fee_spec_letters(use_quotes=True, proto=eth_proto),
+					u = self.fee_spec_names(proto=eth_proto, linebreak='\n'))
+				+ ' (for Ethereum)')
+		else:
+			return text + '.'
 
 	def passwd(self):
 		return """

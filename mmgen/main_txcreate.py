@@ -54,7 +54,7 @@ opts_data = {
 			b- -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
 			+                        {fe_all}.  Default: {fe_dfl!r}
 			-- -f, --fee=         f  Transaction fee, as a decimal {cu} amount or as
-			+                        {fu} (an integer followed by {fl!r}).
+			+                        {fu} (an integer followed by {fl}).
 			+                        See FEE SPECIFICATION below.  If omitted, fee will be
 			+                        calculated using network fee estimation.
 			e- -g, --gas=         g  Specify start gas amount in Wei
@@ -80,7 +80,7 @@ opts_data = {
 			-- -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 			e- -X, --cached-balances Use cached balances
 		""",
-		'notes': '\n{c}\n{n_at}\n\n{F}\n{x}',
+		'notes': '\n{c}\n{n_at}\n\n{F}\n\n{x}',
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
@@ -97,7 +97,7 @@ opts_data = {
 			x_dfl = cfg._autoset_opts['swap_proto'].choices[0]),
 		'notes': lambda cfg, help_mod, help_notes, s: s.format(
 			c      = help_mod(f'{target}create'),
-			F      = help_notes('fee'),
+			F      = help_notes('fee', all_coins={'tx': False, 'swaptx': True}[target]),
 			n_at   = help_notes('address_types'),
 			x      = help_mod(f'{target}create_examples'))
 	}

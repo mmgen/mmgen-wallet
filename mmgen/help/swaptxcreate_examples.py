@@ -19,6 +19,10 @@ def help(proto, cfg):
 	return f"""
 EXAMPLES:
 
+  Display available swap assets:
+
+    $ {gc.prog_name} -S
+
   Create a BTC-to-LTC swap transaction, prompting the user for transaction
   inputs.  The full value of the inputs, minus miner fees, will be swapped
   and sent to an unused address in the user’s LTC tracking wallet:

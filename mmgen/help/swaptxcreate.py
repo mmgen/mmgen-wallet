@@ -68,15 +68,15 @@ does this automatically) and then adjust the fee interactively if desired.
 
 When choosing a fee, bear in mind that the longer the transaction remains
 unconfirmed, the greater the risk that the vault address will expire, leading
-to loss of funds.  It’s therefore advisable to learn how to create, sign and
+to loss of funds.  It’s therefore recommended to learn how to create, sign and
 send replacement transactions with ‘mmgen-txbump’ before performing a swap
 with this script.  When bumping a stuck swap transaction, the safest option
 is to create a replacement transaction with one output that returns funds back
 to the originating tracking wallet, thus aborting the swap, rather than one
 that merely increases the fee (see EXAMPLES below).
 
-Before broadcasting the transaction, it’s advisable to double-check the vault
-address on a block explorer such as thorchain.net or runescan.io.
+Before broadcasting the transaction, it’s a good idea to double-check the
+vault address on a block explorer such as thorchain.net or runescan.io.
 
 The MMGen Node Tools suite contains two useful tools to help with fine-tuning
 transaction fees, ‘mmnode-feeview’ and ‘mmnode-blocks-info’, in addition to
