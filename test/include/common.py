@@ -236,6 +236,9 @@ def cmp_or_die(s, t, desc=None):
 			f'ERROR: recoded data:\n{t!r}\ndiffers from original data:\n{s!r}'
 		)
 
+def chk_equal(a, b):
+	assert a == b, f'equality test failed: {a} != {b}'
+
 def init_coverage():
 	coverdir = os.path.join('test', 'trace')
 	acc_file = os.path.join('test', 'trace.acc')

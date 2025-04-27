@@ -57,7 +57,8 @@ from .include.common import (
 	get_file_with_ext,
 	ok_msg,
 	Ctrl_U,
-	cleanup_env)
+	cleanup_env,
+	thorchain_router_addr_file)
 
 from .base import CmdTestBase
 from .shared import CmdTestShared
@@ -240,10 +241,11 @@ class CmdTestEthdevMethods:
 			gas,
 			mmgen_cmd = 'txdo',
 			gas_price = '8G',
+			fn = None,
 			num = None):
 
 		keyfile = joinpath(self.tmpdir, dfl_devkey_fn)
-		fn = joinpath(self.tmpdir, 'mm'+str(num), key+'.bin')
+		fn = fn or joinpath(self.tmpdir, 'mm'+str(num), key+'.bin')
 		args = [
 			'-B',
 			f'--fee={gas_price}',
@@ -256,6 +258,14 @@ class CmdTestEthdevMethods:
 		contract_addr = self._get_contract_address(dfl_devaddr)
 		if key == 'Token':
 			self.write_to_tmpfile(f'token_addr{num}', contract_addr+'\n')
+		elif key == 'thorchain_router':
+			from mmgen.fileutil import write_data_to_file
+			write_data_to_file(
+				self.cfg,
+				thorchain_router_addr_file,
+				contract_addr + '\n',
+				ask_overwrite = False,
+				quiet = True)
 
 		if mmgen_cmd == 'txdo':
 			args += ['-k', keyfile]
@@ -1587,7 +1597,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def token_txdo_cached_balances(self):
 		return self.txdo_cached_balances(
 			acct          = '1',
-			fee_info_data = ('0.0026', '50'),
+			fee_info_data = ('0.00375', '50'),
 			add_args      = ['--token=mm1', '98831F3A:E:12,43.21'])
 
 	def token_txcreate_refresh_balances(self):

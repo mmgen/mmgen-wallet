@@ -141,7 +141,7 @@ class EthereumTwCtl(TwCtl):
 
 	async def sym2addr(self, sym):
 		for addr in self.data['tokens']:
-			if self.data['tokens'][addr]['params']['symbol'] == sym.upper():
+			if self.data['tokens'][addr]['params']['symbol'].upper() == sym.upper():
 				return addr
 
 	def get_token_param(self, token, param):

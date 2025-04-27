@@ -111,7 +111,7 @@ class Base(TxBase):
 						f'{d[5]}: invalid swap memo in serialized data')
 
 class TokenBase(Base):
-	dfl_gas = 52000
+	dfl_gas = 75000
 	contract_desc = 'token contract'
 
 	def check_serialized_integrity(self):
@@ -126,8 +126,8 @@ class TokenBase(Base):
 			assert d[4] == b'', f'{d[4]}: non-empty amount field in token transaction in serialized data'
 
 			data = d[5].hex()
-			assert data[:8] == 'a9059cbb', (
-				f'{data[:8]}: invalid MethodID for op ‘transfer’ in serialized data')
+			assert data[:8] == ('095ea7b3' if self.is_swap else 'a9059cbb'), (
+				f'{data[:8]}: invalid MethodID for op ‘{self.token_op}’ in serialized data')
 			assert data[32:72] == o['token_to'], (
 				f'{data[32:72]}: invalid ‘token_to‘ address in serialized data')
 			assert TokenAmt(
@@ -135,3 +135,20 @@ class TokenBase(Base):
 					decimals = o['decimals'],
 					from_unit = 'atomic') == o['amt'], (
 				f'{data[72:]}: invalid amt in serialized data')
+
+			if self.is_swap:
+				d = rlp.decode(bytes.fromhex(self.serialized2))
+				data = d[5].hex()
+				assert data[:8] == '44bc937b', (
+					f'{data[:8]}: invalid MethodID in router TX serialized data')
+				assert data[32:72] == self.token_vault_addr, (
+					f'{data[32:72]}: invalid vault address in router TX serialized data')
+
+				memo = bytes.fromhex(data[392:])[:len(self.swap_memo)]
+				assert memo == self.swap_memo.encode(), (
+					f'{memo}: invalid swap memo in router TX serialized data')
+				assert TokenAmt(
+						int(data[136:200], 16),
+						decimals = o['decimals'],
+						from_unit = 'atomic') == o['amt'], (
+					f'{data[136:200]}: invalid amt in router TX serialized data')

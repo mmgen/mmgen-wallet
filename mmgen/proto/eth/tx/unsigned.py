@@ -18,7 +18,7 @@ from ....tx import unsigned as TxBase
 from ....util import msg, msg_r, die
 from ....obj import CoinTxID, ETHNonce, Int, HexStr
 from ....addr import CoinAddr, ContractAddr
-from ..contract import Token
+from ..contract import Token, THORChainRouterContract
 from .completed import Completed, TokenCompleted
 
 class Unsigned(Completed, TxBase.Unsigned):
@@ -110,14 +110,32 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 		o['token_addr'] = ContractAddr(self.proto, d['token_addr'])
 		o['decimals'] = Int(d['decimals'])
 		o['token_to'] = o['to']
+		if self.is_swap:
+			o['expiry'] = Int(d['expiry'])
 
 	async def do_sign(self, o, wif):
 		t = Token(self.cfg, self.proto, o['token_addr'], decimals=o['decimals'])
-		tdata = t.create_transfer_data(o['to'], o['amt'], op='transfer')
+		tdata = t.create_transfer_data(o['to'], o['amt'], op=self.token_op)
 		tx_in = t.make_tx_in(gas=self.gas, gasPrice=o['gasPrice'], nonce=o['nonce'], data=tdata)
 		res = await t.txsign(tx_in, wif, o['from'], chain_id=o['chainId'])
 		self.serialized = res.txhex
 		self.coin_txid = res.txid
+		if self.is_swap:
+			c = THORChainRouterContract(self.cfg, self.proto, o['to'], decimals=o['decimals'])
+			cdata = c.create_deposit_with_expiry_data(
+				self.token_vault_addr,
+				o['token_addr'],
+				o['amt'],
+				self.swap_memo.encode(),
+				o['expiry'])
+			tx_in = c.make_tx_in(
+				gas = self.gas * (7.8 if self.cfg.test_suite else 2),
+				gasPrice = o['gasPrice'],
+				nonce = o['nonce'] + 1,
+				data = cdata)
+			res = await t.txsign(tx_in, wif, o['from'], chain_id=o['chainId'])
+			self.serialized2 = res.txhex
+			self.coin_txid2 = res.txid
 
 class AutomountUnsigned(TxBase.AutomountUnsigned, Unsigned):
 	pass

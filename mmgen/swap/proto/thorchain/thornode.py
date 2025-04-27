@@ -173,6 +173,10 @@ class Thornode:
 		return addr.removeprefix('0x') if self.tx.proto.is_evm else addr
 
 	@property
+	def router(self):
+		return self.data['router'].lower().removeprefix('0x')
+
+	@property
 	def rel_fee_hint(self):
 		gas_unit = self.data['gas_rate_units']
 		if gas_unit in gas_unit_data:

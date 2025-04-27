@@ -14,7 +14,7 @@ proto.eth.tx.info: Ethereum transaction info class
 
 from ....tx.info import TxInfo
 from ....util import fmt, pp_fmt
-from ....color import pink, yellow, blue
+from ....color import pink, yellow, blue, cyan
 from ....addr import MMGenID
 
 class TxInfo(TxInfo):
@@ -34,7 +34,7 @@ class TxInfo(TxInfo):
 			return ' ' + (io.mmid.hl() if io.mmid else MMGenID.hlc(nonmm_str))
 		fs = """
 			From:      {f}{f_mmid}
-			To:        {t}{t_mmid}
+			{toaddr}   {t}{t_mmid}{tvault}
 			Amount:    {a} {c}
 			Gas price: {g} Gwei
 			Start gas: {G} Kwei
@@ -44,10 +44,13 @@ class TxInfo(TxInfo):
 		t = tx.txobj
 		td = t['data']
 		to_addr = t[self.to_addr_key]
+		tokenswap = tx.is_swap and tx.is_token
 		return fs.format(
 			f      = t['from'].hl(0),
 			t      = to_addr.hl(0) if to_addr else blue('None'),
 			a      = t['amt'].hl(),
+			toaddr = ('Router:' if tokenswap else 'To:').ljust(8),
+			tvault = (f'\nVault:     {cyan(tx.token_vault_addr)}' if tokenswap else ''),
 			n      = t['nonce'].hl(),
 			d      = blue('None') if not td else '{}... ({} bytes)'.format(td[:40], len(td)//2),
 			m      = pink(tx.swap_memo) if tx.is_swap else None,
@@ -55,7 +58,7 @@ class TxInfo(TxInfo):
 			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
 			G      = yellow(tx.pretty_fmt_fee(t['startGas'].to_unit('Kwei'))),
 			f_mmid = mmid_disp(tx.inputs[0]),
-			t_mmid = mmid_disp(tx.outputs[0]) if tx.outputs else '') + '\n\n'
+			t_mmid = mmid_disp(tx.outputs[0]) if tx.outputs and not tokenswap else '') + '\n\n'
 
 	def format_abs_fee(self, iwidth, /, *, color=None):
 		return self.tx.fee.fmt(iwidth, color=color) + (' (max)' if self.tx.txobj['data'] else '')

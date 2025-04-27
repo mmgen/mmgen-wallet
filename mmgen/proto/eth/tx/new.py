@@ -216,6 +216,8 @@ class TokenNew(TokenBase, New):
 		o['token_addr'] = t.addr
 		o['decimals'] = t.decimals
 		o['token_to'] = o['to']
+		if self.is_swap:
+			o['expiry'] = self.quote_data.data['expiry']
 
 	def update_change_output(self, funds_left):
 		if self.outputs[0].is_chg:

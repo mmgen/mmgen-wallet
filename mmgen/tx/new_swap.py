@@ -173,11 +173,11 @@ class NewSwap(New):
 		else:
 			self.usr_trade_limit = None
 
-	def update_vault_addr(self, addr):
+	def update_vault_addr(self, c, *, addr='inbound_address'):
 		vault_idx = self.vault_idx
 		assert vault_idx == 0, f'{vault_idx}: vault index is not zero!'
 		o = self.outputs[vault_idx]._asdict()
-		o['addr'] = addr
+		o['addr'] = getattr(c, addr)
 		self.outputs[vault_idx] = self.Output(self.proto, **o)
 
 	async def update_vault_output(self, amt, *, deduct_est_fee=False):
@@ -206,6 +206,7 @@ class NewSwap(New):
 				break
 
 		self.swap_quote_expiry = c.data['expiry']
-		self.update_vault_addr(c.inbound_address)
+		self.update_vault_addr(c)
 		self.update_data_output(trade_limit)
+		self.quote_data = c
 		return c.rel_fee_hint

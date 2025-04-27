@@ -18,6 +18,8 @@ from mmgen.cfg import Config
 from mmgen.amt import UniAmt
 from mmgen.protocol import init_proto
 
+from ..include.common import eth_inbound_addr, thorchain_router_addr_file
+
 from . import HTTPD
 
 cfg = Config()
@@ -117,14 +119,16 @@ data_template_eth = {
 }
 
 def make_inbound_addr(proto, mmtype):
-	from mmgen.tool.coin import tool_cmd
-	n = int(time.time()) // (60 * 60 * 24) # increments once every 24 hrs
-	ret = tool_cmd(
-		cfg     = cfg,
-		cmdname = 'pubhash2addr',
-		proto   = proto,
-		mmtype  = mmtype).pubhash2addr(f'{n:040x}')
-	return '0x' + ret if proto.is_evm else ret
+	if proto.is_evm:
+		return '0x' + eth_inbound_addr # non-checksummed as per ninerealms thornode
+	else:
+		from mmgen.tool.coin import tool_cmd
+		n = int(time.time()) // (60 * 60 * 24) # increments once every 24 hrs
+		return tool_cmd(
+			cfg     = cfg,
+			cmdname = 'pubhash2addr',
+			proto   = proto,
+			mmtype  = mmtype).pubhash2addr(f'{n:040x}')
 
 class ThornodeServer(HTTPD):
 	name = 'thornode server'
@@ -159,5 +163,11 @@ class ThornodeServer(HTTPD):
 				'gas_rate_units': gas_rate_units[send_proto.base_proto_coin],
 				'recommended_gas_rate': recommended_gas_rate[send_proto.base_proto_coin]
 			})
+
+		if send_asset == 'MM1':
+			eth_proto = init_proto(cfg, 'eth', network='regtest')
+			with open(thorchain_router_addr_file) as fh:
+				raw_addr = fh.read().strip()
+			data['router'] = '0x' + eth_proto.checksummed_addr(raw_addr)
 
 		return json.dumps(data).encode()

@@ -86,7 +86,10 @@ class Base(MMGenObject):
 		'swap_quote_expiry': None,
 		'swap_recv_addr_mmid': None,
 		'swap_recv_asset_spec': None,
-		'swap_memo': None}
+		'swap_memo': None,
+		'token_vault_addr': None,
+		'serialized2': None,
+		'coin_txid2': CoinTxID}
 	file_format  = 'json'
 	non_mmgen_inputs_msg = f"""
 		This transaction includes inputs with non-{gc.proj_name} addresses.  When
@@ -243,3 +246,8 @@ class Base(MMGenObject):
 			from ..swap.asset import SwapAsset
 			x = '[unknown]'
 			return SwapAsset._ad(x, x, x, x, x)
+
+	# token methods:
+	@property
+	def token_op(self):
+		return 'approve' if self.is_swap else 'transfer'

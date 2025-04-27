@@ -78,6 +78,7 @@ async def _get_obj_async(_clsname, _modname, **kwargs):
 	# signing.
 	if proto and proto.tokensym and clsname in (
 			'New',
+			'NewSwap',
 			'OnlineSigned',
 			'AutomountOnlineSigned',
 			'Sent',

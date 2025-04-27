@@ -176,3 +176,23 @@ class ResolvedToken(Token, metaclass=AsyncInit):
 		if not self.decimals:
 			die('TokenNotInBlockchain', f'Token {addr!r} not in blockchain')
 		self.base_unit = Decimal('10') ** -self.decimals
+
+# Tokens: First approve router to spend tokens from user: asset.approve(router,amount).
+# Then call router.depositWithExpiry(inbound_address, asset, amount, memo, expiry).
+# Asset is the token contract address. Amount should be in native asset decimals
+# (eg 1e18 for most tokens). Do not swap to smart contract addresses.
+class THORChainRouterContract(Token):
+
+	def create_deposit_with_expiry_data(self, inbound_addr, asset_addr, amt, memo, expiry):
+		assert isinstance(memo, bytes)
+		assert isinstance(expiry, int)
+		memo_chunks = len(memo) // 32 + bool(len(memo) % 32)
+		return ( # Method ID: 0x44bc937b
+			self.create_method_id('depositWithExpiry(address,address,uint256,string,uint256)')
+			+ inbound_addr.rjust(64, '0')                   # 32 bytes
+			+ asset_addr.rjust(64, '0')                     # 32 bytes
+			+ '{:064x}'.format(int(amt / self.base_unit))   # 32 bytes
+			+ '{:064x}'.format(32 * 5)                      # 32 bytes (memo offset)
+			+ '{:064x}'.format(expiry)                      # 32 bytes
+			+ '{:064x}'.format(len(memo))                   # dynamic arg
+			+ memo.hex().ljust(64 * memo_chunks, '0'))

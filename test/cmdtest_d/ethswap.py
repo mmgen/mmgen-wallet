@@ -12,11 +12,17 @@
 test.cmdtest_d.ethswap: Ethereum swap tests for the cmdtest.py test suite
 """
 
+from subprocess import run, PIPE, DEVNULL
+
 from mmgen.cfg import Config
+from mmgen.util import rmsg, die
 from mmgen.protocol import init_proto
+from mmgen.fileutil import get_data_from_file
+
+from ..include.common import imsg, chk_equal
 
 from .include.runner import CmdTestRunner
-from .include.common import dfl_sid
+from .include.common import dfl_sid, eth_inbound_addr, thorchain_router_addr_file
 from .httpd.thornode import ThornodeServer
 
 from .regtest import CmdTestRegtest
@@ -42,6 +48,38 @@ class CmdTestEthSwapMethods:
 	async def token_deploy_c(self):
 		return await self._token_deploy_token(num=1)
 
+	def token_compile_router(self):
+
+		if not self.using_solc:
+			bin_fn = 'test/ref/ethereum/bin/THORChain_Router.bin'
+			imsg(f'Using precompiled contract data ‘{bin_fn}’')
+			import shutil
+			shutil.copy(bin_fn, self.tmpdir)
+			return 'skip'
+
+		imsg("Compiling THORChain router contract")
+		self.spawn(msg_only=True)
+		cmd = [
+			'solc',
+			'--evm-version=constantinople',
+			'--overwrite',
+			f'--output-dir={self.tmpdir}',
+			'--bin',
+			'test/ref/ethereum/THORChain_Router.sol']
+		imsg('Executing: {}'.format(' '.join(cmd)))
+		cp = run(cmd, stdout=DEVNULL, stderr=PIPE)
+		if cp.returncode != 0:
+			rmsg('solc failed with the following output:')
+			die(2, cp.stderr.decode())
+		imsg('THORChain router contract compiled')
+		return 'ok'
+
+	async def token_deploy_router(self):
+		return await self._token_deploy(
+			key = 'thorchain_router',
+			gas = 1_000_000,
+			fn  = f'{self.tmpdir}/THORChain_Router.bin')
+
 	def token_fund_user(self):
 		return self._token_transfer_ops(
 			op          = 'fund_user',
@@ -54,8 +92,39 @@ class CmdTestEthSwapMethods:
 	def token_addrimport(self):
 		return self._token_addrimport('token_addr1', '1-5', expect='5/5')
 
+	def token_addrimport_inbound(self):
+		token_addr = self.read_from_tmpfile('token_addr1').strip()
+		return self.spawn(
+			'mmgen-addrimport',
+			['--quiet', '--regtest=1', f'--token-addr={token_addr}', f'--address={eth_inbound_addr}'])
+
 	def token_bal1(self):
 		return self._token_bal_check(pat=rf'{dfl_sid}:E:1\s+{self.token_fund_amt}\s')
+
+	def token_bal2(self):
+		return self._token_bal_check(pat=rf'{eth_inbound_addr}\s+\S+\s+87.654321\s')
+
+	async def _swaptxmemo(self, chk):
+		from mmgen.proto.eth.contract import Contract
+		self.spawn(msg_only=True)
+		addr = get_data_from_file(self.cfg, thorchain_router_addr_file, quiet=True).strip()
+		c = Contract(self.cfg, self.proto, addr, rpc=await self.rpc)
+		res = (await c.do_call('saved_memo()'))[2:]
+		memo_len = int(res[64:128], 16)
+		chk_equal(bytes.fromhex(res[128:128+(2*memo_len)]).decode(), chk)
+		imsg(f'saved_memo: {chk}')
+		return 'ok'
+
+	def _swaptxsend_eth_proxy(self, *, add_opts=[], test=False):
+		t = self._swaptxsend(
+			add_opts = ['--tx-proxy=eth'] + (['--test'] if test else []) + add_opts,
+			spawn_only = True)
+		t.expect('view: ', 'y')
+		t.expect('continue: ', '\n') # exit swap quote
+		t.expect('(y/N): ', '\n')    # add comment
+		if not test:
+			t.expect('to confirm: ', 'YES\n')
+		return t
 
 class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	'Ethereum swap operations'
@@ -117,9 +186,12 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('eth_token_deploy_a',           ''),
 		('eth_token_deploy_b',           ''),
 		('eth_token_deploy_c',           ''),
+		('eth_token_compile_router',     ''),
+		('eth_token_deploy_router',      ''),
 		('eth_token_fund_user',          ''),
 		('eth_token_addrgen',            ''),
 		('eth_token_addrimport',         ''),
+		('eth_token_addrimport_inbound', ''),
 		('eth_token_bal1',               ''),
 	),
 	'token_swap': (
@@ -153,10 +225,28 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('eth_bal2',          ''),
 	),
 	'eth_token_swap': (
-		'swap operations (ETH <-> MM1)',
-		('eth_swaptxcreate3',  ''),
-		('eth_swaptxsign3',    ''),
-		('eth_swaptxsend3',    ''),
+		'swap operations (ETH -> ERC20, ERC20 -> BTC, ERC20 -> ETH)',
+		# ETH -> MM1
+		('eth_swaptxcreate3',          ''),
+		('eth_swaptxsign3',            ''),
+		('eth_swaptxsend3',            ''),
+		# MM1 -> BTC
+		('eth_swaptxcreate4',          ''),
+		('eth_swaptxsign4',            ''),
+		('eth_swaptxsend4',            ''),
+		('eth_swaptxmemo4',            ''),
+		('eth_swaptxstatus4',          ''),
+		('eth_swaptxreceipt4',         ''),
+		('eth_token_bal2',             ''),
+		# MM1 -> ETH
+		('eth_swaptxcreate5',          ''),
+		('eth_swaptxsign5',            ''),
+		('eth_etherscan_server_start', ''),
+		('eth_swaptxsend5_test',       ''),
+		('eth_swaptxsend5a',           ''),
+		('eth_swaptxsend5b',           ''),
+		('eth_swaptxsend5',            ''),
+		('eth_etherscan_server_stop',  ''),
 	),
 	}
 
@@ -266,9 +356,12 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		('token_deploy_a',           'deploying ERC20 token MM1 (SafeMath)'),
 		('token_deploy_b',           'deploying ERC20 token MM1 (Owned)'),
 		('token_deploy_c',           'deploying ERC20 token MM1 (Token)'),
+		('token_compile_router',     'compiling THORChain router contract'),
+		('token_deploy_router',      'deploying THORChain router contract'),
 		('token_fund_user',          'transferring token funds from dev to user'),
 		('token_addrgen',            'generating token addresses'),
 		('token_addrimport',         'importing token addresses using token address (MM1)'),
+		('token_addrimport_inbound', 'importing THORNode inbound token address'),
 		('token_bal1',               'the token balance'),
 
 		# eth_token_swap:
@@ -276,6 +369,25 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		('swaptxcreate3',          'creating an ETH->MM1 swap transaction'),
 		('swaptxsign3',            'signing the transaction'),
 		('swaptxsend3',            'sending the transaction'),
+
+		# MM1 -> BTC
+		('swaptxcreate4',          'creating an MM1->BTC swap transaction'),
+		('swaptxsign4',            'signing the transaction'),
+		('swaptxsend4',            'sending the transaction'),
+		('swaptxmemo4',            'checking the memo'),
+		('swaptxstatus4',          'getting the transaction status'),
+		('swaptxreceipt4',         'getting the transaction receipt'),
+		('token_bal2',             'the token balance'),
+
+		# MM1 -> ETH
+		('swaptxcreate5',          'creating an MM1->ETH swap transaction'),
+		('swaptxsign5',            'signing the transaction'),
+		('etherscan_server_start', 'starting the Etherscan server'),
+		('swaptxsend5_test',       'testing the transaction via Etherscan'),
+		('swaptxsend5a',           'sending the transaction via Etherscan (p1)'),
+		('swaptxsend5b',           'sending the transaction via Etherscan (p2)'),
+		('swaptxsend5',            'sending the transaction via Etherscan (complete)'),
+		('etherscan_server_stop',  'stopping the Etherscan server'),
 	)
 
 	def swaptxcreate1(self):
@@ -294,6 +406,14 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		t = self._swaptxcreate(['ETH', '8.765', 'ETH.MM1', f'{dfl_sid}:E:5'])
 		return self._swaptxcreate_ui_common(t)
 
+	def swaptxcreate4(self):
+		t = self._swaptxcreate(['ETH.MM1', '87.654321', 'BTC', f'{dfl_sid}:C:2'])
+		return self._swaptxcreate_ui_common(t)
+
+	def swaptxcreate5(self):
+		t = self._swaptxcreate(['ETH.MM1', '98.7654321', 'ETH', f'{dfl_sid}:E:12'])
+		return self._swaptxcreate_ui_common(t)
+
 	def swaptxsign1(self):
 		return self._swaptxsign()
 
@@ -304,8 +424,28 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		self.mining_delay()
 		return self._swaptxsend(add_opts=['--verbose', '--status'], status=True)
 
-	swaptxsign3 = swaptxsign1
-	swaptxsend3 = swaptxsend1
+	def swaptxmemo4(self):
+		return self._swaptxmemo('=:b:mkQsXA7mqDtnUpkaXMbDtAL1KMeof4GPw3:0/1/0')
+
+	def swaptxreceipt4(self):
+		self.mining_delay()
+		return self._swaptxsend(add_opts=['--receipt'], spawn_only=True)
+
+	def swaptxsend5_test(self):
+		return self._swaptxsend_eth_proxy(test=True)
+
+	def swaptxsend5a(self):
+		return self._swaptxsend_eth_proxy(add_opts=['--txhex-idx=1'])
+
+	def swaptxsend5b(self):
+		return self._swaptxsend_eth_proxy(add_opts=['--txhex-idx=2'])
+
+	def swaptxsend5(self):
+		return self._swaptxsend_eth_proxy()
+
+	swaptxsign5 = swaptxsign4 = swaptxsign3 = swaptxsign1
+	swaptxsend4 = swaptxsend3 = swaptxsend1
+	swaptxstatus4 = swaptxstatus1
 
 	def bal1(self):
 		return self.bal('swap1')

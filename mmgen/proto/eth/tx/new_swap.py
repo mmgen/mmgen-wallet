@@ -13,7 +13,7 @@ proto.eth.tx.new_swap: Ethereum new swap transaction class
 """
 
 from ....tx.new_swap import NewSwap as TxNewSwap
-from .new import New
+from .new import New, TokenNew
 
 class NewSwap(New, TxNewSwap):
 	desc = 'Ethereum swap transaction'
@@ -34,3 +34,10 @@ class NewSwap(New, TxNewSwap):
 	@property
 	def vault_output(self):
 		return self.outputs[0]
+
+class TokenNewSwap(TokenNew, NewSwap):
+	desc = 'Ethereum token swap transaction'
+
+	def update_vault_addr(self, c):
+		self.token_vault_addr = self.proto.coin_addr(c.inbound_address)
+		return super().update_vault_addr(c, addr='router')

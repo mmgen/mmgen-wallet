@@ -3,7 +3,6 @@ from .asset_orig import *
 class overlay_fake_THORChainSwapAsset:
 
 	assets_data = {
-		'ETH.USDT': THORChainSwapAsset._ad('Tether (ETH)',     None, 'ETH.USDT', None, True),
 		'ETH.MM1':  THORChainSwapAsset._ad('MM1 Token (ETH)',  None, 'ETH.MM1',  None, True),
 		'ETH.JUNK': THORChainSwapAsset._ad('Junk Token (ETH)', None, 'ETH.JUNK', None, True),
 		'ETH.NONE': THORChainSwapAsset._ad('Unavailable Token (ETH)', None, 'ETH.NONE', None, True)

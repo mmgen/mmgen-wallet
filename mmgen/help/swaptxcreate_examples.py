@@ -73,4 +73,21 @@ EXAMPLES:
   Check whether the funds have arrived in the BCH destination wallet:
 
     $ mmgen-tool --coin=bch --bch-rpc-host=gemini twview minconf=0
+
+  Create a Tether-to-LTC swap transaction for autosigning, connecting to the
+  swap quote server via Tor:
+
+    $ {gc.prog_name} --autosign --proxy=localhost:9050 ETH.USDT 1000 LTC
+
+  After signing, send the transaction via public Etherscan proxy over Tor:
+
+    $ mmgen-txsend --autosign --quiet --tx-proxy=etherscan --proxy=localhost:9050
+
+  After sending, check the transaction status:
+
+    $ mmgen-txsend --autosign --verbose --status
+
+  Create a Tether-to-DAI swap transaction, with explicit destination account:
+
+    $ {gc.prog_name} ETH.USDT 1000 ETH.DAI E:01234ABC:3
 """

@@ -16,6 +16,7 @@ include test/*/*.py
 include test/*/*/*.py
 include test/ref/*
 include test/ref/*/*
+include test/ref/*/*/*
 include test/ref/*/*/*/*
 include test/overlay/fakemods/mmgen/*.py
 include test/overlay/fakemods/mmgen/*/*.py
