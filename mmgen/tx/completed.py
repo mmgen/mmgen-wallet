@@ -100,3 +100,6 @@ class Completed(Base):
 				else:
 					raise ValueError('Swap to non-wallet address forbidden (override with --allow-non-wallet-swap)')
 				return self.Output(proto, addr=p.address, mmid=mmid, amt=proto.coin_amt('0'))
+
+		if self.is_swap:
+			raise ValueError('missing or invalid memo in swap transaction')

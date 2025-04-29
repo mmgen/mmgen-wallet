@@ -82,7 +82,7 @@ class TxInfo:
 					yield '    Swap: {}\n'.format(orange(f'{tx.send_asset.name} => {tx.recv_asset.name}'))
 					yield '    Dest: {}{}\n'.format(
 						cyan(p.address),
-						orange(f' ({recv_mmid})') if recv_mmid else '')
+						orange(f' {recv_mmid}') if recv_mmid else '')
 					if not recv_mmid:
 						yield yellow('    Warning: swap destination address is not a wallet address!\n')
 

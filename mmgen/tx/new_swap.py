@@ -39,6 +39,7 @@ def get_send_proto(cfg):
 
 class NewSwap(New):
 	desc = 'swap transaction'
+	swap_quote_refresh_timeout = 30
 
 	def __init__(self, *args, **kwargs):
 		self.is_swap = True
@@ -183,6 +184,7 @@ class NewSwap(New):
 	async def update_vault_output(self, amt, *, deduct_est_fee=False):
 		c = self.swap_proto_mod.rpc_client(self, amt)
 
+		import time
 		from ..util import msg
 		from ..term import get_char
 
@@ -197,6 +199,7 @@ class NewSwap(New):
 		while True:
 			self.cfg._util.qmsg(f'Retrieving data from {c.rpc.host}...')
 			c.get_quote()
+			self.swap_quote_refresh_time = time.time()
 			trade_limit = get_trade_limit()
 			self.cfg._util.qmsg('OK')
 			msg(await c.format_quote(trade_limit, self.usr_trade_limit, deduct_est_fee=deduct_est_fee))

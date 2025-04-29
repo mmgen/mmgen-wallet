@@ -515,7 +515,9 @@ class New(Base):
 			self.add_comment()  # edits an existing comment
 
 		if self.is_swap:
-			await self.update_vault_output(self.vault_output.amt)
+			import time
+			if time.time() > self.swap_quote_refresh_time + self.swap_quote_refresh_timeout:
+				await self.update_vault_output(self.vault_output.amt)
 
 		await self.create_serialized(locktime=locktime) # creates self.txid too
 

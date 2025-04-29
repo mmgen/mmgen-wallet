@@ -49,7 +49,7 @@ class TxInfo(TxInfo):
 			f      = t['from'].hl(0),
 			t      = to_addr.hl(0) if to_addr else blue('None'),
 			a      = t['amt'].hl(),
-			toaddr = ('Router:' if tokenswap else 'To:').ljust(8),
+			toaddr = ('Router:' if tokenswap else 'Vault:' if tx.is_swap else 'To:').ljust(8),
 			tvault = (f'\nVault:     {cyan(tx.token_vault_addr)}' if tokenswap else ''),
 			n      = t['nonce'].hl(),
 			d      = blue('None') if not td else '{}... ({} bytes)'.format(td[:40], len(td)//2),
@@ -58,7 +58,7 @@ class TxInfo(TxInfo):
 			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
 			G      = yellow(tx.pretty_fmt_fee(t['startGas'].to_unit('Kwei'))),
 			f_mmid = mmid_disp(tx.inputs[0]),
-			t_mmid = mmid_disp(tx.outputs[0]) if tx.outputs and not tokenswap else '') + '\n\n'
+			t_mmid = mmid_disp(tx.outputs[0]) if tx.outputs and not tx.is_swap else '') + '\n\n'
 
 	def format_abs_fee(self, iwidth, /, *, color=None):
 		return self.tx.fee.fmt(iwidth, color=color) + (' (max)' if self.tx.txobj['data'] else '')
