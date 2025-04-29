@@ -63,7 +63,12 @@ class Thornode:
 	def get_quote(self):
 
 		def get_data(send, recv, amt):
-			get_str = f'/thorchain/quote/swap?from_asset={send}&to_asset={recv}&amount={amt}'
+			get_str = (
+				'/thorchain/quote/swap?'
+				f'from_asset={send}&'
+				f'to_asset={recv}&'
+				f'amount={amt}&'
+				'streaming_interval=1')
 			data = json.loads(self.rpc.get(get_str).content)
 			if not 'expiry' in data:
 				from ....util import pp_fmt, die
