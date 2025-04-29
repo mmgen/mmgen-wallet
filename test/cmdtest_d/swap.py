@@ -135,9 +135,6 @@ class CmdTestSwapMethods:
 		t.expect('(Y/n): ', 'y')            # fee OK?
 		t.expect('(Y/n): ', 'y')            # change OK?
 		t.expect('(y/N): ', 'n')            # add comment?
-		if reload_quote:
-			t.expect('to continue: ', 'r')  # reload swap quote
-		t.expect('to continue: ', '\n')     # exit swap quote view
 		t.expect('view: ', 'y')             # view TX
 		if expect:
 			t.expect(expect)

@@ -421,14 +421,13 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		return self._swaptxsend()
 
 	def swaptxstatus1(self):
-		self.mining_delay()
 		return self._swaptxsend(add_opts=['--verbose', '--status'], status=True)
 
 	def swaptxmemo4(self):
+		self.mining_delay()
 		return self._swaptxmemo('=:b:mkQsXA7mqDtnUpkaXMbDtAL1KMeof4GPw3:0/1/0')
 
 	def swaptxreceipt4(self):
-		self.mining_delay()
 		return self._swaptxsend(add_opts=['--receipt'], spawn_only=True)
 
 	def swaptxsend5_test(self):

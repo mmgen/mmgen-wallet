@@ -128,6 +128,9 @@ ignored-classes = [ # ignored for no-member, otherwise checked
 	"MnEntryMode",
 	"deserialized_tx",
 # test suite:
+	"CmdTestEthdevMethods",
+	"CmdTestEthBumpMethods",
+	"CmdTestEthSwapMethods",
 	"TestHashFunc",
 	"GenTool",
 	"VirtBlockDeviceBase",

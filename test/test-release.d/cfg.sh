@@ -21,7 +21,7 @@ groups_desc="
 init_groups() {
 	dfl_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc xmr'
 	extra_tests='dep dev lint pylint autosign_live ltc_tn bch_tn'
-	noalt_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
+	noalt_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt pylint'
 	quick_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen eth etc xmr'
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
 	noalt_ok_tests='lint'
@@ -93,6 +93,7 @@ init_tests() {
 		a $pylint $PYLINT_OPTS --ignore-paths '.*/ethdev.py' --disable=relative-beyond-top-level test/cmdtest_d
 		- $pylint $PYLINT_OPTS examples
 	"
+	if [ "$SKIP_ALT_DEP" ]; then t_pylint_skip='b'; else t_pylint_skip='a'; fi
 
 	d_daemon="low-level subsystems involving coin daemons"
 	t_daemon="- $daemontest_py --exclude exec"
