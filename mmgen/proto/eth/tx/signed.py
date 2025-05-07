@@ -35,7 +35,7 @@ class Signed(Completed, TxBase.Signed):
 			'to':       CoinAddr(self.proto, d['to']) if d['to'] else None,
 			'amt':      self.proto.coin_amt(d['value'], from_unit='wei'),
 			'gasPrice': self.proto.coin_amt(d['gasprice'], from_unit='wei'),
-			'startGas': self.proto.coin_amt(d['startgas'], from_unit='wei'),
+			'startGas': d['startgas'],
 			'nonce':    ETHNonce(d['nonce']),
 			'data':     HexStr(d['data']) }
 		if o['data'] and not o['to']: # token- or contract-creating transaction

@@ -340,7 +340,7 @@ class CmdTestEthdevMethods:
 					to_addr   = usr_addrs[i],
 					amt       = amt,
 					key       = dfl_devkey,
-					gas       = self.proto.coin_amt(120000, from_unit='wei'),
+					gas       = 120000,
 					gasPrice  = self.proto.coin_amt(8, from_unit='Gwei'))
 				rpc = await self.rpc
 				for n in range(50): # long delay for txbump

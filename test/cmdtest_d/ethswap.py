@@ -83,14 +83,15 @@ class CmdTestEthSwapMethods:
 	def token_fund_user(self):
 		return self._token_transfer_ops(
 			op          = 'fund_user',
-			mm_idxs     = [1],
+			mm_idxs     = [1, 2, 12],
+			token_addr  = 'token_addr1',
 			amt         = self.token_fund_amt)
 
 	def token_addrgen(self):
-		return self._token_addrgen(mm_idxs=[1], naddrs=5)
+		return self._token_addrgen(mm_idxs=[1], naddrs=12)
 
 	def token_addrimport(self):
-		return self._token_addrimport('token_addr1', '1-5', expect='5/5')
+		return self._token_addrimport('token_addr1', '1-12', expect='12/12')
 
 	def token_addrimport_inbound(self):
 		token_addr = self.read_from_tmpfile('token_addr1').strip()
@@ -176,9 +177,10 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	),
 	'eth_fund': (
 		'funding the ETH tracking wallet',
-		('eth_fund_mmgen_addr1', ''),
-		('eth_fund_mmgen_addr2', ''),
-		('eth_bal1',             ''),
+		('eth_fund_mmgen_addr1',  ''),
+		('eth_fund_mmgen_addr1b', ''),
+		('eth_fund_mmgen_addr2',  ''),
+		('eth_bal1',              ''),
 	),
 	'token_init': (
 		'deploying tokens and initializing the ETH token tracking wallet',
@@ -227,7 +229,8 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	'eth_token_swap': (
 		'swap operations (ETH -> ERC20, ERC20 -> BTC, ERC20 -> ETH)',
 		# ETH -> MM1
-		('eth_swaptxcreate3',          ''),
+		('eth_swaptxcreate3a',         ''),
+		('eth_swaptxcreate3b',         ''),
 		('eth_swaptxsign3',            ''),
 		('eth_swaptxsend3',            ''),
 		('eth_swaptxmemo3',            ''),
@@ -240,7 +243,8 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('eth_swaptxreceipt4',         ''),
 		('eth_token_bal2',             ''),
 		# MM1 -> ETH
-		('eth_swaptxcreate5',          ''),
+		('eth_swaptxcreate5a',         ''),
+		('eth_swaptxcreate5b',         ''),
 		('eth_swaptxsign5',            ''),
 		('eth_etherscan_server_start', ''),
 		('eth_swaptxsend5_test',       ''),
@@ -343,6 +347,7 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 	cmd_group_in = CmdTestEthdev.cmd_group_in + (
 		# eth_fund:
 		('fund_mmgen_addr1',         'funding user address :1)'),
+		('fund_mmgen_addr1b',        'funding user address :3)'),
 		('fund_mmgen_addr2',         'funding user address :11)'),
 		('bal1',                     'the ETH balance'),
 		# eth_swap:
@@ -367,7 +372,8 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 
 		# eth_token_swap:
 		# ETH -> MM1
-		('swaptxcreate3',          'creating an ETH->MM1 swap transaction'),
+		('swaptxcreate3a',         'creating an ETH->MM1 swap transaction'),
+		('swaptxcreate3b',         'creating an ETH->MM1 swap transaction (specific address)'),
 		('swaptxsign3',            'signing the transaction'),
 		('swaptxsend3',            'sending the transaction'),
 		('swaptxmemo3',            'the memo of the sent transaction'),
@@ -382,7 +388,8 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		('token_bal2',             'the token balance'),
 
 		# MM1 -> ETH
-		('swaptxcreate5',          'creating an MM1->ETH swap transaction'),
+		('swaptxcreate5a',         'creating an MM1->ETH swap transaction'),
+		('swaptxcreate5b',         'creating an MM1->ETH swap transaction (specific address)'),
 		('swaptxsign5',            'signing the transaction'),
 		('etherscan_server_start', 'starting the Etherscan server'),
 		('swaptxsend5_test',       'testing the transaction via Etherscan'),
@@ -391,6 +398,9 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		('swaptxsend5',            'sending the transaction via Etherscan (complete)'),
 		('etherscan_server_stop',  'stopping the Etherscan server'),
 	)
+
+	def fund_mmgen_addr1b(self):
+		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:3,0.001')
 
 	def swaptxcreate1(self):
 		t = self._swaptxcreate(['ETH', '8.765', 'BTC'])
@@ -404,7 +414,13 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 				add_opts = ['--trade-limit=3%']),
 			expect = ':2019e4/1/0')
 
-	def swaptxcreate3(self):
+	def swaptxcreate3a(self):
+		t = self._swaptxcreate(['ETH', '0.7654321', 'ETH.MM1'])
+		t.expect(f'{dfl_sid}:E:4') # check that correct unused address was found
+		t.expect('(Y/n): ', 'y')
+		return self._swaptxcreate_ui_common(t)
+
+	def swaptxcreate3b(self):
 		t = self._swaptxcreate(['ETH', '8.765', 'ETH.MM1', f'{dfl_sid}:E:5'])
 		return self._swaptxcreate_ui_common(t)
 
@@ -424,7 +440,13 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		t = self._swaptxcreate(['ETH.MM1', '87.654321', 'BTC', f'{dfl_sid}:C:2'])
 		return self._swaptxcreate_ui_common(t)
 
-	def swaptxcreate5(self):
+	def swaptxcreate5a(self):
+		t = self._swaptxcreate(['ETH.MM1', '98.7654321', 'ETH'])
+		t.expect(f'{dfl_sid}:E:13') # check that correct unused address was found
+		t.expect('(Y/n): ', 'y')
+		return self._swaptxcreate_ui_common(t)
+
+	def swaptxcreate5b(self):
 		t = self._swaptxcreate(['ETH.MM1', '98.7654321', 'ETH', f'{dfl_sid}:E:12'])
 		return self._swaptxcreate_ui_common(t)
 

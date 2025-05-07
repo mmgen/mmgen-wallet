@@ -32,7 +32,9 @@ class Unsigned(Completed, TxBase.Unsigned):
 			'to':       CoinAddr(self.proto, d['to']) if d['to'] else None,
 			'amt':      self.proto.coin_amt(d['amt']),
 			'gasPrice': self.proto.coin_amt(d['gasPrice']),
-			'startGas': self.proto.coin_amt(d['startGas']),
+			'startGas': (
+				self.proto.coin_amt(d['startGas']).toWei() if '.' in d['startGas'] # for backward compat
+				else int(d['startGas'])),
 			'nonce':    ETHNonce(d['nonce']),
 			'chainId':  None if d['chainId'] == 'None' else Int(d['chainId']),
 			'data':     HexStr(d['data'])}
@@ -43,7 +45,7 @@ class Unsigned(Completed, TxBase.Unsigned):
 	async def do_sign(self, o, wif):
 		o_conv = {
 			'to':       bytes.fromhex(o['to'] or ''),
-			'startgas': o['startGas'].toWei(),
+			'startgas': o['startGas'],
 			'gasprice': o['gasPrice'].toWei(),
 			'value':    o['amt'].toWei() if o['amt'] else 0,
 			'nonce':    o['nonce'],
@@ -129,7 +131,7 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 				self.swap_memo.encode(),
 				o['expiry'])
 			tx_in = c.make_tx_in(
-				gas = self.gas * (7.8 if self.cfg.test_suite else 2),
+				gas = self.gas * (7 if self.cfg.test_suite else 2),
 				gasPrice = o['gasPrice'],
 				nonce = o['nonce'] + 1,
 				data = cdata)

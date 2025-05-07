@@ -44,12 +44,12 @@ class Base(TxBase):
 
 	# given absolute fee in ETH, return gas price in ETH
 	def fee_abs2gasprice(self, abs_fee):
-		return self.proto.coin_amt(int(abs_fee.toWei() // self.gas.toWei()), from_unit='wei')
+		return self.proto.coin_amt(int(abs_fee.toWei() // self.gas), from_unit='wei')
 
 	# given rel fee (gasPrice) in wei, return absolute fee using self.gas (Ethereum-only method)
 	def fee_gasPrice2abs(self, rel_fee):
 		assert isinstance(rel_fee, int), f'{rel_fee!r}: incorrect type for fee estimate (not an integer)'
-		return self.proto.coin_amt(rel_fee * self.gas.toWei(), from_unit='wei')
+		return self.proto.coin_amt(rel_fee * self.gas, from_unit='wei')
 
 	def is_replaceable(self):
 		return True

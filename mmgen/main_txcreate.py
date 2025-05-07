@@ -57,7 +57,8 @@ opts_data = {
 			+                        {fu} (an integer followed by {fl}).
 			+                        See FEE SPECIFICATION below.  If omitted, fee will be
 			+                        calculated using network fee estimation.
-			e- -g, --gas=         g  Specify start gas amount in Wei
+			et -g, --gas=N           Specify gas limit (integer)
+			-s -g, --gas=N           Specify gas limit for Ethereum (integer)
 			-- -i, --info            Display {a_info} and exit
 			-- -I, --inputs=      i  Specify transaction inputs (comma-separated list of
 			+                        MMGen IDs or coin addresses).  Note that ALL unspent

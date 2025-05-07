@@ -67,9 +67,10 @@ class Contract:
 			return ret
 
 	def make_tx_in(self, *, gas, gasPrice, nonce, data):
+		assert isinstance(gas, int), f'{type(gas)}: incorrect type for ‘gas’ (must be an int)'
 		return {
 			'to':       bytes.fromhex(self.addr),
-			'startgas': gas.toWei(),
+			'startgas': gas,
 			'gasprice': gasPrice.toWei(),
 			'value':    0,
 			'nonce':    nonce,

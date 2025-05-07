@@ -16,6 +16,7 @@ from ....tx.info import TxInfo
 from ....util import fmt, pp_fmt
 from ....color import yellow, blue, cyan, pink
 from ....addr import MMGenID
+from ....obj import Int
 
 class TxInfo(TxInfo):
 	txinfo_hdr_fs = '{hdr}\n  ID={i} ({a} {c}) Sig={s} Locktime={l}\n'
@@ -56,7 +57,7 @@ class TxInfo(TxInfo):
 			m      = pink(tx.swap_memo) if tx.is_swap else None,
 			c      = tx.proto.dcoin if len(tx.outputs) else '',
 			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
-			G      = yellow(tx.pretty_fmt_fee(t['startGas'].to_unit('Kwei'))),
+			G      = Int(t['startGas']).hl(),
 			f_mmid = mmid_disp(tx.inputs[0]),
 			t_mmid = mmid_disp(tx.outputs[0]) if tx.outputs and not tx.is_swap else '') + '\n\n'
 

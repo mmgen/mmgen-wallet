@@ -35,10 +35,7 @@ class New(Base, TxBase.New):
 
 		super().__init__(*args, **kwargs)
 
-		if self.cfg.gas:
-			self.gas = self.proto.coin_amt(int(self.cfg.gas), from_unit='wei')
-		else:
-			self.gas = self.proto.coin_amt(self.dfl_gas, from_unit='wei')
+		self.gas = int(self.cfg.gas or self.dfl_gas)
 
 		if self.cfg.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
@@ -82,12 +79,12 @@ class New(Base, TxBase.New):
 
 	def set_gas_with_data(self, data):
 		if not self.is_token:
-			self.gas = self.proto.coin_amt(self.dfl_gas + self.byte_cost * len(data), from_unit='wei')
+			self.gas = self.dfl_gas + self.byte_cost * len(data)
 
 	# one-shot method
 	def adj_gas_with_extra_data_len(self, extra_data_len):
 		if not (self.is_token or hasattr(self, '_gas_adjusted')):
-			self.gas += self.proto.coin_amt(self.byte_cost * extra_data_len, from_unit='wei')
+			self.gas += self.byte_cost * extra_data_len
 			self._gas_adjusted = True
 
 	async def process_cmdline_args(self, cmd_args, ad_f, ad_w):
@@ -154,7 +151,7 @@ class New(Base, TxBase.New):
 
 	# given rel fee and units, return absolute fee using self.gas
 	def fee_rel2abs(self, tx_size, amt_in_units, unit):
-		return self.proto.coin_amt(int(amt_in_units * self.gas.toWei()), from_unit=unit)
+		return self.proto.coin_amt(int(amt_in_units * self.gas), from_unit=unit)
 
 	# given fee estimate (gas price) in wei, return absolute fee, adjusting by self.cfg.fee_adjust
 	def fee_est2abs(self, net_fee):
