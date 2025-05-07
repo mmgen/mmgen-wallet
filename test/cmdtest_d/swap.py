@@ -533,7 +533,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 			self._swaptxcreate(
 				['BCH', '1.234', f'{self.sid}:C:{idx}', 'LTC', f'{self.sid}:B:3'],
 				add_opts = ['--trade-limit=0%']),
-			expect = ':3541e5/1/0')
+			expect = ':3541e5/3/0')
 
 	def swaptxcreate2(self):
 		t = self._swaptxcreate(
@@ -541,14 +541,14 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 			add_opts = ['--no-quiet', '--trade-limit=3.337%'])
 		t.expect('Enter a number> ', '1')
 		t.expect('OK? (Y/n): ', 'y')
-		return self._swaptxcreate_ui_common(t, reload_quote=True, expect=':1386e6/1/0')
+		return self._swaptxcreate_ui_common(t, reload_quote=True, expect=':1386e6/3/0')
 
 	def swaptxcreate3(self):
 		return self._swaptxcreate_ui_common(
 			self._swaptxcreate(
 				['BCH', 'LTC', f'{self.sid}:B:3'],
 				add_opts = ['--trade-limit=10.1%']),
-			expect = ':1289e6/1/0')
+			expect = ':1289e6/3/0')
 
 	def swaptxcreate4(self):
 		t = self._swaptxcreate(
@@ -557,7 +557,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		t.expect('OK? (Y/n): ', 'y')
 		t.expect('Enter a number> ', '1')
 		t.expect('OK? (Y/n): ', 'y')
-		return self._swaptxcreate_ui_common(t, expect=':358e6/1/0')
+		return self._swaptxcreate_ui_common(t, expect=':358e6/3/0')
 
 	def swaptxcreate5(self):
 		t = self._swaptxcreate(
@@ -565,7 +565,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 			add_opts = ['--trade-limit=3.6'])
 		t.expect('OK? (Y/n): ', 'y')
 		t.expect('OK? (Y/n): ', 'y')
-		return self._swaptxcreate_ui_common(t, expect=':36e7/1/0')
+		return self._swaptxcreate_ui_common(t, expect=':36e7/3/0')
 
 	def swaptxcreate6(self):
 		addr = make_burn_addr(self.protos[1], mmtype='bech32')
@@ -574,14 +574,14 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 			add_opts = ['--trade-limit=2.7%'])
 		t.expect('OK? (Y/n): ', 'y')
 		t.expect('to confirm: ', 'YES\n')
-		return self._swaptxcreate_ui_common(t, expect=':3445e5/1/0')
+		return self._swaptxcreate_ui_common(t, expect=':3445e5/3/0')
 
 	def swaptxcreate7(self):
 		t = self._swaptxcreate(['BCH', '0.56789', 'LTC'])
 		t.expect('OK? (Y/n): ', 'y')
 		t.expect('Enter a number> ', '1')
 		t.expect('OK? (Y/n): ', 'y')
-		return self._swaptxcreate_ui_common(t, expect=':0/1/0')
+		return self._swaptxcreate_ui_common(t, expect=':0/3/0')
 
 	def swaptxcreate_bad1(self):
 		t = self._swaptxcreate_bad(

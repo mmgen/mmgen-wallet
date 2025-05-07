@@ -26,7 +26,7 @@ class THORChainMemo:
 	trade_limit = None
 
 	# Swap interval in blocks. Optional. If 0, do not stream
-	stream_interval = 1
+	stream_interval = 3
 
 	# Swap quantity. The interval value determines the frequency of swaps in blocks
 	# Optional. If 0, network will determine the number of swaps

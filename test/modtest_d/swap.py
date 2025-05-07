@@ -71,7 +71,7 @@ class unit_tests:
 				assert p.asset == token or coin.upper()
 				assert p.address == addr.views[addr.view_pref]
 				assert p.trade_limit == limit_chk
-				assert p.stream_interval == 1
+				assert p.stream_interval == 3
 				assert p.stream_quantity == 0 # auto
 
 			vmsg('\nTesting is_partial_memo():')
@@ -121,11 +121,11 @@ class unit_tests:
 			ut.process_bad_data((
 				('bad1',  'SwapMemoParseError', 'must contain',      bad('x')),
 				('bad2',  'SwapMemoParseError', 'must contain',      bad('y:z:x')),
-				('bad3',  'SwapMemoParseError', 'function abbrev',   bad('z:l:foobar:0/1/0')),
-				('bad4',  'SwapAssetError',     'unrecognized',      bad('=:x:foobar:0/1/0')),
+				('bad3',  'SwapMemoParseError', 'function abbrev',   bad('z:l:foobar:0/3/0')),
+				('bad4',  'SwapAssetError',     'unrecognized',      bad('=:x:foobar:0/3/0')),
 				('bad5',  'SwapMemoParseError', 'failed to parse',   bad('=:l:foobar:n')),
-				('bad6',  'SwapMemoParseError', 'invalid specifier', bad('=:l:foobar:x/1/0')),
-				('bad7',  'SwapMemoParseError', 'extra',             bad('=:l:foobar:0/1/0:x')),
+				('bad6',  'SwapMemoParseError', 'invalid specifier', bad('=:l:foobar:x/3/0')),
+				('bad7',  'SwapMemoParseError', 'extra',             bad('=:l:foobar:0/3/0:x')),
 				('bad10', 'AssertionError',     'recv',              bad10),
 				('bad11', 'SwapAssetError',     'unrecognized',      bad11),
 				('bad12', 'SwapAssetError',     'unsupported',       bad12),

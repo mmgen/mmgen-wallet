@@ -416,7 +416,7 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 			self._swaptxcreate(
 				['ETH', '8.765', 'BTC', f'{dfl_sid}:B:4'],
 				add_opts = ['--trade-limit=3%']),
-			expect = ':2019e4/1/0')
+			expect = ':2019e4/3/0')
 
 	def swaptxcreate3a(self):
 		t = self._swaptxcreate(['ETH', '0.7654321', 'ETH.MM1'])
@@ -434,7 +434,7 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		fn = self.get_file_with_ext('sigtx')
 		tx = json.loads(get_data_from_file(self.cfg, fn, quiet=True).strip())
 		txid = tx['MMGenTransaction']['coin_txid']
-		chk = '=:ETH.MM1:0x48596c861c970eb4ca72c5082ff7fecd8ee5be9d:0/1/0' # E:5
+		chk = '=:ETH.MM1:0x48596c861c970eb4ca72c5082ff7fecd8ee5be9d:0/3/0' # E:5
 		imsg(f'TxID: {txid}\nmemo: {chk}')
 		res = await (await self.rpc).call('eth_getTransactionByHash', '0x' + txid)
 		chk_equal(bytes.fromhex(res['input'].removeprefix('0x')).decode(), chk)
@@ -467,7 +467,7 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 
 	def swaptxmemo4(self):
 		self.mining_delay()
-		return self._check_token_swaptx_memo('=:b:mkQsXA7mqDtnUpkaXMbDtAL1KMeof4GPw3:0/1/0')
+		return self._check_token_swaptx_memo('=:b:mkQsXA7mqDtnUpkaXMbDtAL1KMeof4GPw3:0/3/0')
 
 	def swaptxreceipt4(self):
 		return self._swaptxsend(add_opts=['--receipt'], spawn_only=True)
