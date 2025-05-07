@@ -63,6 +63,7 @@ class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
 					'addr':   e.coinaddr,
 					'amt':    amt0,
 					'recvd':  amt0,
+					'is_used': False,
 					'confs':  0,
 					'lbl':    e.label}
 		qmsg('done')
@@ -75,6 +76,7 @@ class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
 				assert label.mmid in addrs, f'{label.mmid!r} not found in addrlist!'
 				amt = coin_amt(d['amount'])
 				addrs[label.mmid]['recvd'] = amt
+				addrs[label.mmid]['is_used'] = bool(amt)
 				addrs[label.mmid]['confs'] = d['confirmations']
 		qmsg('done')
 

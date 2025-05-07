@@ -51,7 +51,7 @@ class TwAddressesPrune(TwAddresses):
 					pruned.append(n)
 					if d.amt:
 						rmsg(f'Warning: pruned address {d.twmmid.addr} has a balance!')
-					elif self.warn_used and d.recvd:
+					elif self.warn_used and d.is_used:
 						ymsg(f'Warning: pruned address {d.twmmid.addr} is used!')
 				else:
 					yield d
@@ -133,11 +133,11 @@ class TwAddressesPrune(TwAddresses):
 					if auto[desc]: # we’ve switched to auto mode, so go back and fix up all previous entries
 						for idx in addrnums[:n]:
 							e = parent.disp_data[idx-1]
-							if skip_all_used and e.recvd:
+							if skip_all_used and e.is_used:
 								e.tag = False
 							elif desc == 'amt' and e.amt:
 								e.tag = prune
-							elif desc == 'used' and (e.recvd and not e.amt):
+							elif desc == 'used' and (e.is_used and not e.amt):
 								e.tag = prune
 					# skipping all used addrs implies skipping all addrs with balances
 					if skip_all_used:
@@ -154,7 +154,7 @@ class TwAddressesPrune(TwAddresses):
 				e = parent.disp_data[addrnum-1]
 				if e.amt and not dfl['amt']:
 					e.tag = do_entry('amt', n, addrnum, e)
-				elif parent.warn_used and (e.recvd and not e.amt) and not dfl['used']:
+				elif parent.warn_used and (e.is_used and not e.amt) and not dfl['used']:
 					e.tag = do_entry('used', n, addrnum, e)
 				else:
 					e.tag = True

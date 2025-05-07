@@ -55,6 +55,7 @@ class TwAddresses(TwView):
 			'comment',
 			'amt',
 			'recvd',
+			'is_used',
 			'date',
 			'skip'}
 		invalid_attrs = {'proto'}
@@ -66,6 +67,7 @@ class TwAddresses(TwView):
 		comment = ListItemAttr(TwComment, reassign_ok=True)
 		amt     = ImmutableAttr(CoinAmtChk, include_proto=True)
 		recvd   = ImmutableAttr(CoinAmtChk, include_proto=True)
+		is_used = ImmutableAttr(bool)
 		date    = ListItemAttr(int, typeconv=False, reassign_ok=True)
 		skip    = ListItemAttr(str, typeconv=False, reassign_ok=True)
 
@@ -114,6 +116,7 @@ class TwAddresses(TwView):
 					comment = data['lbl'].comment,
 					amt     = data['amt'],
 					recvd   = data['recvd'],
+					is_used = data['is_used'],
 					date    = 0,
 					skip    = '')
 				for twmmid, data in rpc_data.items()
@@ -125,8 +128,8 @@ class TwAddresses(TwView):
 		else:
 			return (d for d in self.data if
 				(self.all_labels and d.comment) or
-				(self.showused == 2 and d.recvd) or
-				(not (d.recvd and not self.showused) and (d.amt or self.showempty))
+				(self.showused == 2 and d.is_used) or
+				(not (d.is_used and not self.showused) and (d.amt or self.showempty))
 			)
 
 	def get_column_widths(self, data, wide, interactive):
@@ -184,7 +187,7 @@ class TwAddresses(TwView):
 		return fs.format(
 			n = str(n) + ')',
 			m = d.twmmid.fmt(cw.mmid, color=color),
-			u = yes if d.recvd else no,
+			u = yes if d.is_used else no,
 			a = d.addr.fmt(self.addr_view_pref, cw.addr, color=color),
 			c = d.comment.fmt2(cw.comment, color=color, nullrepl='-'),
 			A = d.amt.fmt(cw.iwidth, color=color, prec=self.disp_prec),
@@ -195,7 +198,7 @@ class TwAddresses(TwView):
 		return fs.format(
 			n = str(n) + ')',
 			m = d.twmmid.fmt(cw.mmid, color=color),
-			u = yes if d.recvd else no,
+			u = yes if d.is_used else no,
 			a = d.addr.fmt(self.addr_view_pref, cw.addr, color=color),
 			c = d.comment.fmt2(cw.comment, color=color, nullrepl='-'),
 			A = d.amt.fmt(cw.iwidth, color=color, prec=self.disp_prec),
@@ -280,7 +283,7 @@ class TwAddresses(TwView):
 	def is_used(self, coinaddr):
 		for e in self.data:
 			if e.addr == coinaddr:
-				return bool(e.recvd)
+				return e.is_used
 		return None # addr not in tracking wallet
 
 	def get_change_address(self, al_id, *, bot=None, top=None, exclude=None, desc=None):
@@ -325,7 +328,7 @@ class TwAddresses(TwView):
 			for d in data[start:]:
 				if d.al_id == al_id:
 					if (
-							not d.recvd
+							not d.is_used
 							and not d.twmmid in exclude
 							and (self.cfg.autochg_ignore_labels or not d.comment)
 						):

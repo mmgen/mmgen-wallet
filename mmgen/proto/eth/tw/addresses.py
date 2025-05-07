@@ -75,6 +75,7 @@ class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
 				'addr':  e.coinaddr,
 				'amt':   bal,
 				'recvd': bal,         # current bal only, CF btc.tw.addresses.get_rpc_data()
+				'is_used': bool(bal), # ditto
 				'confs': 0,
 				'lbl':   e.label}
 			self.total += bal
