@@ -81,11 +81,12 @@ class New(Base, TxBase.New):
 		self.txid = MMGenTxID(make_chksum_6(self.serialized).upper())
 
 	def set_gas_with_data(self, data):
-		self.gas = self.proto.coin_amt(self.dfl_gas + self.byte_cost * len(data), from_unit='wei')
+		if not self.is_token:
+			self.gas = self.proto.coin_amt(self.dfl_gas + self.byte_cost * len(data), from_unit='wei')
 
 	# one-shot method
 	def adj_gas_with_extra_data_len(self, extra_data_len):
-		if not hasattr(self, '_gas_adjusted'):
+		if not (self.is_token or hasattr(self, '_gas_adjusted')):
 			self.gas += self.proto.coin_amt(self.byte_cost * extra_data_len, from_unit='wei')
 			self._gas_adjusted = True
 
