@@ -59,6 +59,8 @@ opts_data = {
 			+                        calculated using network fee estimation.
 			et -g, --gas=N           Specify gas limit (integer)
 			-s -g, --gas=N           Specify gas limit for Ethereum (integer)
+			-s -G, --router-gas=N    Specify gas limit for Ethereum router contract
+			+                        (integer). Applicable only for swaps from token assets
 			-- -i, --info            Display {a_info} and exit
 			-- -I, --inputs=      i  Specify transaction inputs (comma-separated list of
 			+                        MMGen IDs or coin addresses).  Note that ALL unspent

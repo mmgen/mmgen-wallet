@@ -14,7 +14,7 @@ proto.eth.tx.info: Ethereum transaction info class
 
 from ....tx.info import TxInfo
 from ....util import fmt, pp_fmt
-from ....color import yellow, blue, cyan, pink
+from ....color import red, yellow, blue, cyan, pink
 from ....addr import MMGenID
 from ....obj import Int
 
@@ -38,7 +38,7 @@ class TxInfo(TxInfo):
 			{toaddr}   {t}{t_mmid}{tvault}
 			Amount:    {a} {c}
 			Gas price: {g} Gwei
-			Gas limit: {G}
+			Gas limit: {G}{G_dec}
 			Nonce:     {n}
 			Data:      {d}
 		""".strip().replace('\t', '') + ('\nMemo:      {m}' if tx.is_swap else '')
@@ -57,7 +57,8 @@ class TxInfo(TxInfo):
 			m      = pink(tx.swap_memo) if tx.is_swap else None,
 			c      = tx.proto.dcoin if len(tx.outputs) else '',
 			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
-			G      = Int(t['startGas']).hl(),
+			G      = Int(tx.total_gas).hl(),
+			G_dec  = red(f" ({t['startGas']} + {t['router_gas']})") if tokenswap else '',
 			f_mmid = mmid_disp(tx.inputs[0]),
 			t_mmid = mmid_disp(tx.outputs[0]) if tx.outputs and not tx.is_swap else '') + '\n\n'
 

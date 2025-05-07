@@ -447,7 +447,9 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		return self._swaptxcreate_ui_common(t)
 
 	def swaptxcreate5b(self):
-		t = self._swaptxcreate(['ETH.MM1', '98.7654321', 'ETH', f'{dfl_sid}:E:12'])
+		t = self._swaptxcreate(
+			['ETH.MM1', '98.7654321', 'ETH', f'{dfl_sid}:E:12'],
+			add_opts = ['--gas=58000', '--router-gas=500000'])
 		return self._swaptxcreate_ui_common(t)
 
 	def swaptxsign1(self):

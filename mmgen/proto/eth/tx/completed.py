@@ -26,6 +26,10 @@ class Completed(Base, TxBase.Completed):
 		return self.outputs[0].amt if self.outputs else self.proto.coin_amt('0')
 
 	@property
+	def total_gas(self):
+		return self.txobj['startGas']
+
+	@property
 	def fee(self):
 		return self.fee_gasPrice2abs(self.txobj['gasPrice'].toWei())
 
@@ -53,3 +57,7 @@ class TokenCompleted(TokenBase, Completed):
 	@property
 	def change(self):
 		return self.sum_inputs() - self.send_amt
+
+	@property
+	def total_gas(self):
+		return self.txobj['startGas'] + (self.txobj['router_gas'] if self.is_swap else 0)

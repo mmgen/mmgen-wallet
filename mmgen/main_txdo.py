@@ -59,6 +59,8 @@ opts_data = {
 			+                         calculated using network fee estimation.
 			et -g, --gas=N            Specify gas limit (integer)
 			-s -g, --gas=N            Specify gas limit for Ethereum (integer)
+			-s -G, --router-gas=N     Specify gas limit for Ethereum router contract
+			+                         (integer). Applicable only for swaps from token assets
 			-- -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
 			+                        'f' at offset 'o' (comma-separated)
 			-- -i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)

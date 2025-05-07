@@ -38,7 +38,6 @@ class Unsigned(Completed, TxBase.Unsigned):
 			'nonce':    ETHNonce(d['nonce']),
 			'chainId':  None if d['chainId'] == 'None' else Int(d['chainId']),
 			'data':     HexStr(d['data'])}
-		self.gas = o['startGas']
 		self.txobj = o
 		return d # 'token_addr', 'decimals' required by Token subclass
 
@@ -114,11 +113,12 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 		o['token_to'] = o['to']
 		if self.is_swap:
 			o['expiry'] = Int(d['expiry'])
+			o['router_gas'] = Int(d['router_gas'])
 
 	async def do_sign(self, o, wif):
 		t = Token(self.cfg, self.proto, o['token_addr'], decimals=o['decimals'])
 		tdata = t.create_transfer_data(o['to'], o['amt'], op=self.token_op)
-		tx_in = t.make_tx_in(gas=self.gas, gasPrice=o['gasPrice'], nonce=o['nonce'], data=tdata)
+		tx_in = t.make_tx_in(gas=o['startGas'], gasPrice=o['gasPrice'], nonce=o['nonce'], data=tdata)
 		res = await t.txsign(tx_in, wif, o['from'], chain_id=o['chainId'])
 		self.serialized = res.txhex
 		self.coin_txid = res.txid
@@ -131,7 +131,7 @@ class TokenUnsigned(TokenCompleted, Unsigned):
 				self.swap_memo.encode(),
 				o['expiry'])
 			tx_in = c.make_tx_in(
-				gas = self.gas * (7 if self.cfg.test_suite else 2),
+				gas = o['router_gas'],
 				gasPrice = o['gasPrice'],
 				nonce = o['nonce'] + 1,
 				data = cdata)

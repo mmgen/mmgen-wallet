@@ -37,6 +37,9 @@ class New(Base, TxBase.New):
 
 		self.gas = int(self.cfg.gas or self.dfl_gas)
 
+		if self.is_token and self.is_swap:
+			self.router_gas = int(self.cfg.router_gas or self.dfl_router_gas)
+
 		if self.cfg.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
 			assert 'Token' not in self.name, m
@@ -149,9 +152,13 @@ class New(Base, TxBase.New):
 		if not self.disable_fee_check:
 			assert self.usr_fee <= self.proto.max_tx_fee
 
-	# given rel fee and units, return absolute fee using self.gas
+	@property
+	def total_gas(self):
+		return self.gas
+
+	# given rel fee and units, return absolute fee using self.total_gas
 	def fee_rel2abs(self, tx_size, amt_in_units, unit):
-		return self.proto.coin_amt(int(amt_in_units * self.gas), from_unit=unit)
+		return self.proto.coin_amt(int(amt_in_units * self.total_gas), from_unit=unit)
 
 	# given fee estimate (gas price) in wei, return absolute fee, adjusting by self.cfg.fee_adjust
 	def fee_est2abs(self, net_fee):
@@ -207,6 +214,10 @@ class TokenNew(TokenBase, New):
 	desc = 'transaction'
 	fee_is_approximate = True
 
+	@property
+	def total_gas(self):
+		return self.gas + (self.router_gas if self.is_swap else 0)
+
 	async def make_txobj(self): # called by create_serialized()
 		await super().make_txobj()
 		t = Token(self.cfg, self.proto, self.twctl.token, decimals=self.twctl.decimals)
@@ -216,6 +227,7 @@ class TokenNew(TokenBase, New):
 		o['token_to'] = o['to']
 		if self.is_swap:
 			o['expiry'] = self.quote_data.data['expiry']
+			o['router_gas'] = self.router_gas
 
 	def update_change_output(self, funds_left):
 		if self.outputs[0].is_chg:

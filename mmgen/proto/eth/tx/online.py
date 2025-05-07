@@ -79,6 +79,12 @@ class TokenOnlineSigned(TokenSigned, OnlineSigned):
 		t = Token(self.cfg, self.proto, o['token_addr'], decimals=o['decimals'])
 		o['amt'] = t.transferdata2amt(o['data'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
+		if self.is_swap:
+			from ..pyethereum.transactions import Transaction
+			from .. import rlp
+			etx = rlp.decode(bytes.fromhex(self.serialized2), Transaction)
+			d = etx.to_dict()
+			o['router_gas'] = d['startgas']
 
 class Sent(TxBase.Sent, OnlineSigned):
 	pass
