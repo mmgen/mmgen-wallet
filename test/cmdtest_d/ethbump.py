@@ -300,6 +300,13 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	def bal4(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:12\s+4444\.3333\s')
 
+	def token_fund_user(self):
+		return self._token_transfer_ops(
+			op          = 'fund_user',
+			mm_idxs     = [1],
+			token_addr  = 'token_addr1',
+			amt         = self.token_fund_amt)
+
 	def token_txdo1(self):
 		return self._token_txcreate(cmd='txdo', args=[f'{dfl_sid}:E:2,1.23456', dfl_words_file])
 

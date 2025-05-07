@@ -104,7 +104,7 @@ class CmdTestEthSwapMethods:
 	def token_bal2(self):
 		return self._token_bal_check(pat=rf'{eth_inbound_addr}\s+\S+\s+87.654321\s')
 
-	async def _swaptxmemo(self, chk):
+	async def _check_token_swaptx_memo(self, chk):
 		from mmgen.proto.eth.contract import Contract
 		self.spawn(msg_only=True)
 		addr = get_data_from_file(self.cfg, thorchain_router_addr_file, quiet=True).strip()
@@ -230,6 +230,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('eth_swaptxcreate3',          ''),
 		('eth_swaptxsign3',            ''),
 		('eth_swaptxsend3',            ''),
+		('eth_swaptxmemo3',            ''),
 		# MM1 -> BTC
 		('eth_swaptxcreate4',          ''),
 		('eth_swaptxsign4',            ''),
@@ -369,6 +370,7 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		('swaptxcreate3',          'creating an ETH->MM1 swap transaction'),
 		('swaptxsign3',            'signing the transaction'),
 		('swaptxsend3',            'sending the transaction'),
+		('swaptxmemo3',            'the memo of the sent transaction'),
 
 		# MM1 -> BTC
 		('swaptxcreate4',          'creating an MM1->BTC swap transaction'),
@@ -406,6 +408,18 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		t = self._swaptxcreate(['ETH', '8.765', 'ETH.MM1', f'{dfl_sid}:E:5'])
 		return self._swaptxcreate_ui_common(t)
 
+	async def swaptxmemo3(self):
+		self.spawn(msg_only=True)
+		import json
+		fn = self.get_file_with_ext('sigtx')
+		tx = json.loads(get_data_from_file(self.cfg, fn, quiet=True).strip())
+		txid = tx['MMGenTransaction']['coin_txid']
+		chk = '=:ETH.MM1:0x48596c861c970eb4ca72c5082ff7fecd8ee5be9d:0/1/0' # E:5
+		imsg(f'TxID: {txid}\nmemo: {chk}')
+		res = await (await self.rpc).call('eth_getTransactionByHash', '0x' + txid)
+		chk_equal(bytes.fromhex(res['input'].removeprefix('0x')).decode(), chk)
+		return 'ok'
+
 	def swaptxcreate4(self):
 		t = self._swaptxcreate(['ETH.MM1', '87.654321', 'BTC', f'{dfl_sid}:C:2'])
 		return self._swaptxcreate_ui_common(t)
@@ -425,7 +439,7 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 
 	def swaptxmemo4(self):
 		self.mining_delay()
-		return self._swaptxmemo('=:b:mkQsXA7mqDtnUpkaXMbDtAL1KMeof4GPw3:0/1/0')
+		return self._check_token_swaptx_memo('=:b:mkQsXA7mqDtnUpkaXMbDtAL1KMeof4GPw3:0/1/0')
 
 	def swaptxreceipt4(self):
 		return self._swaptxsend(add_opts=['--receipt'], spawn_only=True)

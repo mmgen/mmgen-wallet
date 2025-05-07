@@ -104,7 +104,7 @@ class Base(TxBase):
 				assert d[3].hex() == o[to_key], f'{d[3].hex()}: invalid ‘to’ address in serialized data'
 			if not self.is_token:
 				if o['amt']:
-					assert int(d[4].hex(), 16) == o['amt'].to_unit('wei'), (
+					assert int(d[4].hex(), 16) == o['amt'].toWei(), (
 						f'{d[4].hex()}: invalid amt in serialized data')
 				if self.is_swap:
 					assert d[5] == self.swap_memo.encode(), (

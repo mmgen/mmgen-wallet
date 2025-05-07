@@ -14,7 +14,7 @@ proto.eth.tx.info: Ethereum transaction info class
 
 from ....tx.info import TxInfo
 from ....util import fmt, pp_fmt
-from ....color import pink, yellow, blue, cyan
+from ....color import yellow, blue, cyan, pink
 from ....addr import MMGenID
 
 class TxInfo(TxInfo):
@@ -37,7 +37,7 @@ class TxInfo(TxInfo):
 			{toaddr}   {t}{t_mmid}{tvault}
 			Amount:    {a} {c}
 			Gas price: {g} Gwei
-			Start gas: {G} Kwei
+			Gas limit: {G}
 			Nonce:     {n}
 			Data:      {d}
 		""".strip().replace('\t', '') + ('\nMemo:      {m}' if tx.is_swap else '')

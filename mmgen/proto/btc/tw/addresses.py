@@ -73,7 +73,8 @@ class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
 			label = get_obj(TwLabel, proto=self.proto, text=d['label'])
 			if label:
 				assert label.mmid in addrs, f'{label.mmid!r} not found in addrlist!'
-				addrs[label.mmid]['recvd'] = coin_amt(d['amount'])
+				amt = coin_amt(d['amount'])
+				addrs[label.mmid]['recvd'] = amt
 				addrs[label.mmid]['confs'] = d['confirmations']
 		qmsg('done')
 

@@ -47,7 +47,16 @@ class TwAddresses(TwView):
 			fmt_method = 'gen_display'
 
 	class TwAddress(MMGenListItem):
-		valid_attrs = {'twmmid', 'addr', 'al_id', 'confs', 'comment', 'amt', 'recvd', 'date', 'skip'}
+		valid_attrs = {
+			'twmmid',
+			'addr',
+			'al_id',
+			'confs',
+			'comment',
+			'amt',
+			'recvd',
+			'date',
+			'skip'}
 		invalid_attrs = {'proto'}
 
 		twmmid  = ImmutableAttr(TwMMGenID, include_proto=True) # contains confs,txid(unused),date(unused),al_id

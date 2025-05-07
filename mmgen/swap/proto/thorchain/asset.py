@@ -25,7 +25,7 @@ class THORChainSwapAsset(SwapAsset):
 		'DOGE':      _ad('Dogecoin',                'DOGE', None,        'd',  False),
 		'RUNE':      _ad('Rune (THORChain)',        'RUNE', 'THOR.RUNE', 'r',  False),
 		'ETH.AAVE':  _ad('Aave (ETH)',              None,   'ETH.AAVE',  None, True),
-		'ETH.DAI':   _ad('Sky Dollar (USDS) (ETH)', None,   'ETH.DAI',   None, True),
+		'ETH.DAI':   _ad('MakerDAO USD (ETH)',      None,   'ETH.DAI',   None, True),
 		'ETH.DPI':   _ad('DeFi Pulse Index (ETH)',  None,   'ETH.DPI',   None, True),
 		'ETH.FOX':   _ad('ShapeShift FOX (ETH)',    None,   'ETH.FOX',   None, True),
 		'ETH.GUSD':  _ad('Gemini Dollar (ETH)',     None,   'ETH.GUSD',  None, True),

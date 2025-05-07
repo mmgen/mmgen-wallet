@@ -74,8 +74,7 @@ class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
 			addrs[e.label.mmid] = {
 				'addr':  e.coinaddr,
 				'amt':   bal,
-				'recvd': bal, # since it’s nearly impossible to empty an Ethereum account,
-				              # we consider a used account to be any account with a balance
+				'recvd': bal,         # current bal only, CF btc.tw.addresses.get_rpc_data()
 				'confs': 0,
 				'lbl':   e.label}
 			self.total += bal
