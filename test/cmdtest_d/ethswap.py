@@ -15,7 +15,7 @@ test.cmdtest_d.ethswap: Ethereum swap tests for the cmdtest.py test suite
 from subprocess import run, PIPE, DEVNULL
 
 from mmgen.cfg import Config
-from mmgen.util import rmsg, die
+from mmgen.util import msg_r, rmsg, die
 from mmgen.protocol import init_proto
 from mmgen.fileutil import get_data_from_file
 
@@ -328,7 +328,11 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 
 	def thornode_server_stop(self):
 		self.spawn(msg_only=True)
-		thornode_server.stop()
+		if self.cfg.no_daemon_stop:
+			msg_r('(leaving thornode server running by user request)')
+			imsg('')
+		else:
+			thornode_server.stop()
 		return 'ok'
 
 class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev):

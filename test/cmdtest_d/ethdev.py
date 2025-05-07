@@ -27,7 +27,7 @@ from subprocess import run, PIPE, DEVNULL
 from pathlib import Path
 
 from mmgen.color import red, yellow, blue, cyan, orange, set_vt100
-from mmgen.util import msg, rmsg, die
+from mmgen.util import msg, msg_r, rmsg, die
 from mmgen.proto.eth.misc import compute_contract_addr
 
 from ..include.common import (
@@ -1763,8 +1763,10 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 
 	def stop(self):
 		self.spawn(msg_only=True)
-		if not self.cfg.no_daemon_stop:
-			if not stop_test_daemons(self.proto.coin+'_rt', remove_datadir=True):
-				return False
+		if self.cfg.no_daemon_stop:
+			msg_r(f'(leaving {self.daemon.id} daemon running by user request)')
+			imsg('')
+		elif not stop_test_daemons(self.proto.coin+'_rt', remove_datadir=True):
+			return False
 		set_vt100()
 		return 'ok'

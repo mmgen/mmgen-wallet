@@ -53,18 +53,30 @@ class Contract:
 	async def code(self):
 		return (await self.rpc.call('eth_getCode', '0x'+self.addr))[2:]
 
-	async def do_call(self, method_sig, method_args='', *, toUnit=False):
+	async def do_call(
+			self,
+			method_sig,
+			method_args = '',
+			*,
+			block       = 'pending', # earliest, latest, safe, finalized
+			toUnit      = False):
+
 		data = self.create_method_id(method_sig) + method_args
+
+		args = {
+			'to': '0x' + self.addr,
+			'input': '0x' + data}
+
 		if self.cfg.debug:
 			msg('ETH_CALL {}:  {}'.format(
 				method_sig,
 				'\n  '.join(parse_abi(data))))
-		ret = await self.rpc.call('eth_call', {'to': '0x'+self.addr, 'data': '0x'+data}, 'pending')
+
+		ret = await self.rpc.call('eth_call', args, block)
+
 		await erigon_sleep(self)
-		if toUnit:
-			return int(ret, 16) * self.base_unit
-		else:
-			return ret
+
+		return int(ret, 16) * self.base_unit if toUnit else ret
 
 	def make_tx_in(self, *, gas, gasPrice, nonce, data):
 		assert isinstance(gas, int), f'{type(gas)}: incorrect type for ‘gas’ (must be an int)'
