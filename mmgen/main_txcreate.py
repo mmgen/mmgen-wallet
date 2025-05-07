@@ -57,10 +57,11 @@ opts_data = {
 			+                        {fu} (an integer followed by {fl}).
 			+                        See FEE SPECIFICATION below.  If omitted, fee will be
 			+                        calculated using network fee estimation.
-			et -g, --gas=N           Specify gas limit (integer)
-			-s -g, --gas=N           Specify gas limit for Ethereum (integer)
-			-s -G, --router-gas=N    Specify gas limit for Ethereum router contract
-			+                        (integer). Applicable only for swaps from token assets
+			et -g, --gas=N           Set the gas limit (see GAS LIMIT below)
+			-s -g, --gas=N           Set the gas limit for Ethereum (see GAS LIMIT below)
+			-s -G, --router-gas=N    Set the gas limit for the Ethereum router contract
+			+                        (integer).  When unset, a hardcoded default will be
+			+                        used.  Applicable only for swaps from token assets.
 			-- -i, --info            Display {a_info} and exit
 			-- -I, --inputs=      i  Specify transaction inputs (comma-separated list of
 			+                        MMGen IDs or coin addresses).  Note that ALL unspent
@@ -83,7 +84,7 @@ opts_data = {
 			-- -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 			e- -X, --cached-balances Use cached balances
 		""",
-		'notes': '\n{c}\n{n_at}\n\n{F}\n\n{x}',
+		'notes': '\n{c}\n{n_at}\n\n{g}{F}\n\n{x}',
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
@@ -100,6 +101,7 @@ opts_data = {
 			x_dfl = cfg._autoset_opts['swap_proto'].choices[0]),
 		'notes': lambda cfg, help_mod, help_notes, s: s.format(
 			c      = help_mod(f'{target}create'),
+			g      = help_notes('gas_limit', target),
 			F      = help_notes('fee', all_coins={'tx': False, 'swaptx': True}[target]),
 			n_at   = help_notes('address_types'),
 			x      = help_mod(f'{target}create_examples'))

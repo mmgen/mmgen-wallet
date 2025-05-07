@@ -118,6 +118,21 @@ FMT CODES:
 		from ..tx import BaseTX
 		return BaseTX(cfg=self.cfg, proto=self.proto).rel_fee_desc
 
+	def gas_limit(self, target):
+		return """
+                                 GAS LIMIT
+
+This option specifies the maximum gas allowance for an Ethereum transaction.
+It’s generally of interest only for token transactions or swap transactions
+from token assets.
+
+Parameter must be an integer or one of the special values ‘fallback’ (for a
+locally computed sane default) or ‘auto’ (for gas estimate via an RPC call,
+in the case of a token transaction, or locally computed default, in the case
+of a standard transaction). The default is ‘auto’.
+
+		""" if target == 'swaptx' or self.proto.base_coin == 'ETH' else ''
+
 	def fee(self, all_coins=False):
 		from ..tx import BaseTX
 		text = """

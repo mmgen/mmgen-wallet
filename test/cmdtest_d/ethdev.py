@@ -1597,7 +1597,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def token_txdo_cached_balances(self):
 		return self.txdo_cached_balances(
 			acct          = '1',
-			fee_info_data = ('0.00375', '50'),
+			fee_info_data = ('0.00260265', '50'),
 			add_args      = ['--token=mm1', '98831F3A:E:12,43.21'])
 
 	def token_txcreate_refresh_balances(self):

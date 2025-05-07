@@ -55,24 +55,30 @@ class Contract:
 
 	async def do_call(
 			self,
-			method_sig,
+			method_sig  = '',
 			method_args = '',
 			*,
+			method      = 'eth_call',
 			block       = 'pending', # earliest, latest, safe, finalized
+			from_addr   = None,
+			data        = None,
 			toUnit      = False):
 
-		data = self.create_method_id(method_sig) + method_args
+		data = data or (self.create_method_id(method_sig) + method_args)
 
 		args = {
 			'to': '0x' + self.addr,
 			'input': '0x' + data}
+
+		if from_addr:
+			args['from'] = '0x' + from_addr
 
 		if self.cfg.debug:
 			msg('ETH_CALL {}:  {}'.format(
 				method_sig,
 				'\n  '.join(parse_abi(data))))
 
-		ret = await self.rpc.call('eth_call', args, block)
+		ret = await self.rpc.call(method, args, block)
 
 		await erigon_sleep(self)
 

@@ -16,7 +16,7 @@ import json
 
 from ....tx import new as TxBase
 from ....obj import Int, ETHNonce, MMGenTxID
-from ....util import msg, is_int, is_hex_str, make_chksum_6, suf, die
+from ....util import msg, ymsg, is_int, is_hex_str, make_chksum_6, suf, die
 from ....tw.ctl import TwCtl
 from ....addr import is_mmgen_id, is_coin_addr
 from ..contract import Token
@@ -35,8 +35,6 @@ class New(Base, TxBase.New):
 
 		super().__init__(*args, **kwargs)
 
-		self.gas = int(self.cfg.gas or self.dfl_gas)
-
 		if self.is_token and self.is_swap:
 			self.router_gas = int(self.cfg.router_gas or self.dfl_router_gas)
 
@@ -46,6 +44,14 @@ class New(Base, TxBase.New):
 			with open(self.cfg.contract_data) as fp:
 				self.usr_contract_data = bytes.fromhex(fp.read().strip())
 			self.disable_fee_check = True
+
+	async def set_gas(self, *, to_addr=None):
+		if to_addr or not hasattr(self, 'gas'):
+			auto_gas = self.cfg.gas in ('auto', None)
+			self.gas = (
+				self.dfl_gas if self.cfg.gas == 'fallback' or (auto_gas and not self.is_token) else
+				(await self.get_gas_estimateGas(to_addr=to_addr)) if auto_gas else
+				int(self.cfg.gas))
 
 	async def get_nonce(self):
 		return ETHNonce(int(
@@ -217,6 +223,29 @@ class TokenNew(TokenBase, New):
 	@property
 	def total_gas(self):
 		return self.gas + (self.router_gas if self.is_swap else 0)
+
+	async def get_gas_estimateGas(self, *, to_addr=None):
+		t = Token(
+			self.cfg,
+			self.proto,
+			self.twctl.token,
+			decimals = self.twctl.decimals,
+			rpc = self.rpc)
+
+		data = t.create_transfer_data(
+			to_addr = to_addr or self.outputs[0].addr,
+			amt = self.outputs[0].amt or await self.twuo.twctl.get_balance(self.inputs[0].addr),
+			op = self.token_op)
+
+		try:
+			res = await t.do_call(method='eth_estimateGas', from_addr=self.inputs[0].addr, data=data)
+		except Exception as e:
+			ymsg(
+				'Unable to estimate gas limit via node. '
+				'Please retry with --gas set to an integer value, or ‘fallback’ for a sane default')
+			raise e
+
+		return int(res, 16)
 
 	async def make_txobj(self): # called by create_serialized()
 		await super().make_txobj()

@@ -419,13 +419,13 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 			expect = ':2019e4/3/0')
 
 	def swaptxcreate3a(self):
-		t = self._swaptxcreate(['ETH', '0.7654321', 'ETH.MM1'])
+		t = self._swaptxcreate(['ETH', '0.7654321', 'ETH.MM1'], add_opts=['--gas=fallback'])
 		t.expect(f'{dfl_sid}:E:4') # check that correct unused address was found
 		t.expect('(Y/n): ', 'y')
 		return self._swaptxcreate_ui_common(t)
 
 	def swaptxcreate3b(self):
-		t = self._swaptxcreate(['ETH', '8.765', 'ETH.MM1', f'{dfl_sid}:E:5'])
+		t = self._swaptxcreate(['ETH', '8.765', 'ETH.MM1', f'{dfl_sid}:E:5'], add_opts=['--gas=auto'])
 		return self._swaptxcreate_ui_common(t)
 
 	async def swaptxmemo3(self):
@@ -441,19 +441,19 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		return 'ok'
 
 	def swaptxcreate4(self):
-		t = self._swaptxcreate(['ETH.MM1', '87.654321', 'BTC', f'{dfl_sid}:C:2'])
+		t = self._swaptxcreate(['ETH.MM1', '87.654321', 'BTC', f'{dfl_sid}:C:2'], add_opts=['--gas=auto'])
 		return self._swaptxcreate_ui_common(t)
 
 	def swaptxcreate5a(self):
-		t = self._swaptxcreate(['ETH.MM1', '98.7654321', 'ETH'])
+		t = self._swaptxcreate(
+			['ETH.MM1', '98.7654321', 'ETH'],
+			add_opts = ['--gas=58000', '--router-gas=500000'])
 		t.expect(f'{dfl_sid}:E:13') # check that correct unused address was found
 		t.expect('(Y/n): ', 'y')
 		return self._swaptxcreate_ui_common(t)
 
 	def swaptxcreate5b(self):
-		t = self._swaptxcreate(
-			['ETH.MM1', '98.7654321', 'ETH', f'{dfl_sid}:E:12'],
-			add_opts = ['--gas=58000', '--router-gas=500000'])
+		t = self._swaptxcreate(['ETH.MM1', '98.7654321', 'ETH', f'{dfl_sid}:E:12'])
 		return self._swaptxcreate_ui_common(t)
 
 	def swaptxsign1(self):

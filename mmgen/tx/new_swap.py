@@ -199,6 +199,7 @@ class NewSwap(New):
 		while True:
 			self.cfg._util.qmsg(f'Retrieving data from {c.rpc.host}...')
 			c.get_quote()
+			await self.set_gas(to_addr=c.router if self.is_token else None)
 			self.swap_quote_refresh_time = time.time()
 			trade_limit = get_trade_limit()
 			self.cfg._util.qmsg('OK')

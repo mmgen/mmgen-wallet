@@ -72,6 +72,8 @@ class Bump(Completed, NewSwap):
 
 		output_idx = self.choose_output()
 
+		await self.set_gas()
+
 		if not silent:
 			msg('Minimum fee for new transaction: {} {} ({} {})'.format(
 				self.min_fee.hl(),

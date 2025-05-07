@@ -57,10 +57,11 @@ opts_data = {
 			+                         {fu} (an integer followed by {fl!r}).
 			+                         See FEE SPECIFICATION below.  If omitted, fee will be
 			+                         calculated using network fee estimation.
-			et -g, --gas=N            Specify gas limit (integer)
-			-s -g, --gas=N            Specify gas limit for Ethereum (integer)
-			-s -G, --router-gas=N     Specify gas limit for Ethereum router contract
-			+                         (integer). Applicable only for swaps from token assets
+			et -g, --gas=N            Set the gas limit (see GAS LIMIT below)
+			-s -g, --gas=N            Set the gas limit for Ethereum (see GAS LIMIT below)
+			-s -G, --router-gas=N     Set the gas limit for the Ethereum router contract
+			+                         (integer).  When unset, a hardcoded default will be
+			+                         used.  Applicable only for swaps from token assets.
 			-- -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
 			+                        'f' at offset 'o' (comma-separated)
 			-- -i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
@@ -110,7 +111,7 @@ opts_data = {
 {c}
 {n_at}
 
-{F}
+{g}{F}
 
 
                                  SIGNING NOTES
@@ -145,6 +146,7 @@ column below:
 			x_dfl   = cfg._autoset_opts['swap_proto'].choices[0]),
 		'notes': lambda cfg, help_mod, help_notes, s: s.format(
 			c       = help_mod(f'{target}create'),
+			g       = help_notes('gas_limit', target),
 			F       = help_notes('fee'),
 			n_at    = help_notes('address_types'),
 			f       = help_notes('fmt_codes'),

@@ -493,11 +493,13 @@ class New(Base):
 		while True:
 			if not await self.get_inputs(outputs_sum):
 				continue
-			fee_hint = None
 			if self.is_swap:
 				fee_hint = await self.update_vault_output(
 					self.vault_output.amt or self.sum_inputs(),
 					deduct_est_fee = self.vault_output == self.chg_output)
+			else:
+				await self.set_gas()
+				fee_hint = None
 			desc = 'User-selected' if self.cfg.fee else 'Recommended' if fee_hint else None
 			if (funds_left := await self.get_fee(
 					self.cfg.fee or fee_hint,

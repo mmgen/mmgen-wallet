@@ -24,6 +24,9 @@ class New(Base, TxNew):
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
 	msg_insufficient_funds = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
 
+	async def set_gas(self, *, to_addr=None):
+		return None
+
 	def process_data_output_arg(self, arg):
 		if any(arg.startswith(pfx) for pfx in ('data:', 'hexdata:')):
 			if hasattr(self, '_have_op_return_data'):
