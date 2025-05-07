@@ -20,7 +20,7 @@
 proto.eth.tw.ctl: Ethereum tracking wallet control class
 """
 
-from ....util import msg, ymsg, die
+from ....util import msg, ymsg, die, cached_property
 from ....tw.ctl import TwCtl, write_mode, label_addr_pair
 from ....tw.shared import TwLabel
 from ....addr import is_coin_addr, is_mmgen_id, CoinAddr
@@ -166,6 +166,17 @@ class EthereumTwCtl(TwCtl):
 				TwLabel(self.proto, f"{mmid} {d['comment']}"),
 				CoinAddr(self.proto, d['addr'])
 			) for mmid, d in self.mmid_ordered_dict.items()]
+
+	# Since it’s nearly impossible to empty an Ethereum account, consider set of used addresses
+	# to be all accounts with balances.
+	# Token addresses might have a balance but no corresponding ETH balance, so check them too.
+	@cached_property
+	def used_addrs(self):
+		from decimal import Decimal
+		return (
+			{k for k, v in self.data['accounts'].items() if Decimal(v['balance'])} |
+			{k for t in self.data['tokens'].values() for k, v in t.items()
+				if Decimal(v.get('balance', 0))})
 
 class EthereumTokenTwCtl(EthereumTwCtl):
 

@@ -319,7 +319,7 @@ class CmdTestEthdevMethods:
 			caller            = cmd,
 			file_desc         = 'Unsigned automount transaction')
 
-	async def _token_transfer_ops(self, *, op, mm_idxs, amt=1000, sid=dfl_sid):
+	async def _token_transfer_ops(self, *, op, mm_idxs, amt=1000, sid=dfl_sid, token_addr=None):
 		self.spawn(msg_only=True)
 		from mmgen.tool.wallet import tool_cmd
 		usr_mmaddrs = [f'{sid}:E:{i}' for i in mm_idxs]
@@ -330,7 +330,7 @@ class CmdTestEthdevMethods:
 				tk = await ResolvedToken(
 					self.cfg,
 					self.proto,
-					self.read_from_tmpfile(f'token_addr{i+1}').strip(),
+					self.read_from_tmpfile(token_addr or f'token_addr{i+1}').strip(),
 					rpc = rpc)
 				imsg_r('\n' + await tk.info())
 				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_devaddr)))
@@ -356,7 +356,7 @@ class CmdTestEthdevMethods:
 				tk = await ResolvedToken(
 					self.cfg,
 					self.proto,
-					self.read_from_tmpfile(f'token_addr{i+1}').strip(),
+					self.read_from_tmpfile(token_addr or f'token_addr{i+1}').strip(),
 					rpc = rpc)
 				imsg('Token: {}'.format(await tk.get_symbol()))
 				imsg(f'dev token balance: {await tk.get_balance(dfl_devaddr)}')

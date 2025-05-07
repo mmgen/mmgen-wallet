@@ -13,6 +13,7 @@ proto.eth.tw.addresses: Ethereum base protocol tracking wallet address list clas
 """
 
 from ....tw.addresses import TwAddresses
+
 from .view import EthereumTwView
 from .rpc import EthereumTwRPC
 
@@ -69,13 +70,15 @@ class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
 		self.minconf = None
 		addrs = {}
 
+		used_addrs = self.twctl.used_addrs
+
 		for e in await self.twctl.get_label_addr_pairs():
 			bal = await self.twctl.get_balance(e.coinaddr)
 			addrs[e.label.mmid] = {
 				'addr':  e.coinaddr,
 				'amt':   bal,
 				'recvd': bal,         # current bal only, CF btc.tw.addresses.get_rpc_data()
-				'is_used': bool(bal), # ditto
+				'is_used': bool(bal) or e.coinaddr in used_addrs,
 				'confs': 0,
 				'lbl':   e.label}
 			self.total += bal
