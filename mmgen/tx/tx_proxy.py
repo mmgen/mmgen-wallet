@@ -164,11 +164,14 @@ class EtherscanTxProxyClient(TxProxyClient):
 		from ..obj import CoinTxID, is_coin_txid
 		form = self.get_form_element(result_text)
 		json_text = form.find('div/div/div')[1].tail
-		txid = json.loads(json_text)['result'].removeprefix('0x')
-		if is_coin_txid(txid):
-			return CoinTxID(txid)
-		else:
-			return False
+		txid = None
+		try:
+			txid = json.loads(json_text)['result'].removeprefix('0x')
+		except json.JSONDecodeError:
+			msg(json_text)
+		except Exception as e:
+			msg(f'{type(e).__name__}: {e}')
+		return CoinTxID(txid) if is_coin_txid(txid) else False
 
 def send_tx(cfg, txhex):
 

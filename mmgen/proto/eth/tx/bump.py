@@ -18,6 +18,7 @@ from ....tx import bump as TxBase
 from .completed import Completed, TokenCompleted
 from .new import TokenNew
 from .new_swap import NewSwap
+from .unsigned import AutomountUnsigned, TokenAutomountUnsigned
 
 class Bump(Completed, NewSwap, TxBase.Bump):
 	desc = 'fee-bumped transaction'
@@ -39,7 +40,9 @@ class TokenBump(TokenCompleted, TokenNew, Bump):
 	desc = 'fee-bumped transaction'
 
 class AutomountBump(Bump):
-	pass
+	ext       = AutomountUnsigned.ext
+	automount = AutomountUnsigned.automount
 
 class TokenAutomountBump(TokenBump):
-	pass
+	ext       = TokenAutomountUnsigned.ext
+	automount = TokenAutomountUnsigned.automount
