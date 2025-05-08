@@ -68,6 +68,13 @@ class CmdTestEthBumpMethods:
 			fee_desc = 'or gas price',
 			bad_fee = '0.9G')
 
+	def _token_fund_user(self, *, mm_idxs):
+		return self._token_transfer_ops(
+			op          = 'fund_user',
+			mm_idxs     = mm_idxs,
+			token_addr  = 'token_addr1',
+			amt         = self.token_fund_amt)
+
 	def _token_txcreate(self, *, args, cmd='txcreate'):
 		self.get_file_with_ext('sigtx', delete_all=True)
 		t = self._create_token_tx(cmd=cmd, fee='1.3G', args=args, add_opts=self.eth_opts)
@@ -204,7 +211,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			('token_deploy_a',   'deploying ERC20 token MM1 (SafeMath)'),
 			('token_deploy_b',   'deploying ERC20 token MM1 (Owned)'),
 			('token_deploy_c',   'deploying ERC20 token MM1 (Token)'),
-			('token_fund_user',  'transferring token funds from dev to user'),
+			('token_fund_user1', 'transferring token funds from dev to user (addr #1)'),
 			('token_addrgen',    'generating token addresses'),
 			('token_addrimport', 'importing token addresses using token address (MM1)'),
 			('token_bal1',       'the token balance'),
@@ -300,12 +307,8 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	def bal4(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:12\s+4444\.3333\s')
 
-	def token_fund_user(self):
-		return self._token_transfer_ops(
-			op          = 'fund_user',
-			mm_idxs     = [1],
-			token_addr  = 'token_addr1',
-			amt         = self.token_fund_amt)
+	def token_fund_user1(self):
+		return self._token_fund_user(mm_idxs=[1])
 
 	def token_txdo1(self):
 		return self._token_txcreate(cmd='txdo', args=[f'{dfl_sid}:E:2,1.23456', dfl_words_file])

@@ -126,6 +126,7 @@ class CmdTestSwapMethods:
 			file_desc       = 'Unsigned transaction',
 			reload_quote    = False,
 			sign_and_send   = False,
+			need_passphrase = True,
 			expect         = None):
 		t.expect(self.menu_prompt, 'q')
 		t.expect(self.input_sels_prompt, f'{inputs}\n')
@@ -140,7 +141,8 @@ class CmdTestSwapMethods:
 			t.expect(expect)
 		t.expect('to continue: ', '\n')
 		if sign_and_send:
-			t.passphrase(dfl_wcls.desc, rt_pw)
+			if need_passphrase:
+				t.passphrase(dfl_wcls.desc, rt_pw)
 			t.expect('to confirm: ', 'YES\n')
 		else:
 			t.expect('(y/N): ', 'y')            # save?
