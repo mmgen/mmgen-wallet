@@ -73,12 +73,18 @@ class Contract:
 		if from_addr:
 			args['from'] = '0x' + from_addr
 
-		if self.cfg.debug:
-			msg('ETH_CALL {}:  {}'.format(
-				method_sig,
-				'\n  '.join(parse_abi(data))))
+		if self.cfg.debug_evm:
+			msg('{a}:\n  {b} {c}'.format(
+				a = method,
+				b = method_sig,
+				c = '\n  '.join(parse_abi(data))))
 
 		ret = await self.rpc.call(method, args, block)
+
+		if self.cfg.debug_evm:
+			msg('  ==> {a}{b}'.format(
+				a = ret,
+				b = f' [{int(ret, 16)}]' if ret.startswith('0x') and len(ret) <= 66 else ''))
 
 		await erigon_sleep(self)
 

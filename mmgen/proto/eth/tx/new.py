@@ -238,7 +238,11 @@ class TokenNew(TokenBase, New):
 			op = self.token_op)
 
 		try:
-			res = await t.do_call(method='eth_estimateGas', from_addr=self.inputs[0].addr, data=data)
+			res = await t.do_call(
+				f'{self.token_op}(address,uint256)',
+				method = 'eth_estimateGas',
+				from_addr = self.inputs[0].addr,
+				data = data)
 		except Exception as e:
 			ymsg(
 				'Unable to estimate gas limit via node. '
