@@ -59,7 +59,7 @@ class Contract:
 			method_args = '',
 			*,
 			method      = 'eth_call',
-			block       = 'pending', # earliest, latest, safe, finalized
+			block       = 'latest', # earliest, latest, safe, finalized, pending
 			from_addr   = None,
 			data        = None,
 			toUnit      = False):
@@ -130,9 +130,9 @@ class Token(Contract):
 			self.decimals = decimals
 			self.base_unit = Decimal('10') ** -self.decimals
 
-	async def get_balance(self, acct_addr):
+	async def get_balance(self, acct_addr, block='latest'):
 		return self.proto.coin_amt(
-			await self.do_call('balanceOf(address)', acct_addr.rjust(64, '0'), toUnit=True),
+			await self.do_call('balanceOf(address)', acct_addr.rjust(64, '0'), toUnit=True, block=block),
 			from_decimal = True)
 
 	async def get_name(self):

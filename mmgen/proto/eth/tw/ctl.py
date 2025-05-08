@@ -81,9 +81,9 @@ class EthereumTwCtl(TwCtl):
 			self.force_write()
 			msg(f'{self.desc} upgraded successfully!')
 
-	async def rpc_get_balance(self, addr):
+	async def rpc_get_balance(self, addr, block='latest'):
 		return self.proto.coin_amt(
-			int(await self.rpc.call('eth_getBalance', '0x' + addr, 'latest'), 16),
+			int(await self.rpc.call('eth_getBalance', '0x' + addr, block), 16),
 			from_unit = 'wei')
 
 	@write_mode
@@ -223,20 +223,20 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 	def data_root_desc(self):
 		return 'token ' + self.get_param('symbol')
 
-	async def rpc_get_balance(self, addr):
+	async def rpc_get_balance(self, addr, block='latest'):
 		return await Token(
 			self.cfg,
 			self.proto,
 			self.token,
 			decimals = self.decimals,
-			rpc = self.rpc).get_balance(addr)
+			rpc = self.rpc).get_balance(addr, block=block)
 
-	async def get_eth_balance(self, addr, *, force_rpc=False):
+	async def get_eth_balance(self, addr, *, force_rpc=False, block='latest'):
 		cache = self.cur_eth_balances
 		r = self.data['accounts']
 		ret = None if force_rpc else self.get_cached_balance(addr, cache, r)
 		if ret is None:
-			ret = await super().rpc_get_balance(addr)
+			ret = await super().rpc_get_balance(addr, block=block)
 			self.cache_balance(addr, ret, session_cache=cache, data_root=r)
 		return ret
 

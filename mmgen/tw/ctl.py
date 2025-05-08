@@ -184,10 +184,10 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 		if addr in data_root and 'balance' in data_root[addr]:
 			return self.proto.coin_amt(data_root[addr]['balance'])
 
-	async def get_balance(self, addr, *, force_rpc=False):
+	async def get_balance(self, addr, *, force_rpc=False, block='latest'):
 		ret = None if force_rpc else self.get_cached_balance(addr, self.cur_balances, self.data_root)
 		if ret is None:
-			ret = await self.rpc_get_balance(addr)
+			ret = await self.rpc_get_balance(addr, block=block)
 			self.cache_balance(addr, ret, session_cache=self.cur_balances, data_root=self.data_root)
 		return ret
 

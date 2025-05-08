@@ -23,7 +23,7 @@ class BitcoinTwCtl(TwCtl):
 	def upgrade_wallet_maybe(self):
 		pass
 
-	async def rpc_get_balance(self, addr):
+	async def rpc_get_balance(self, addr, block='latest'):
 		raise NotImplementedError('not implemented')
 
 	@write_mode
