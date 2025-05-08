@@ -55,6 +55,7 @@ opts_data = {
 			-- -f, --fee=           f Transaction fee, as a decimal {cu} amount or as
 			+                         {fu} (an integer followed by {fl}).
 			+                         See FEE SPECIFICATION below.
+			e- -g, --gas=N            Set the gas limit (see GAS LIMIT below)
 			-- -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
 			+                        'f' at offset 'o' (comma-separated)
 			-- -i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
@@ -106,7 +107,7 @@ Internet must be reachable either directly or via the SOCKS5 proxy specified
 with the --proxy option.  To improve privacy, it’s recommended to proxy
 requests to the quote server via Tor or some other anonymity network.
 
-{e}
+{g}{F}
 
 {s}
 Seed source files must have the canonical extensions listed in the 'FileExt'
@@ -130,7 +131,8 @@ column below:
 			dsl     = help_notes('dfl_seed_len'),
 			cu      = proto.coin),
 		'notes': lambda help_mod, help_notes, s: s.format(
-			e       = help_notes('fee'),
+			g       = help_notes('gas_limit', target=None),
+			F       = help_notes('fee'),
 			s       = help_mod('txsign'),
 			f       = help_notes('fmt_codes')),
 	}

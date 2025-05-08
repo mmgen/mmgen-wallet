@@ -135,6 +135,9 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		('subgroup.token_init',         ['eth_init']),
 		('subgroup.token_feebump',      ['token_init']),
 		('subgroup.token_new_outputs',  ['token_init']),
+		('subgroup.token_init_swap',    ['token_init']),
+		# ('subgroup.token_feebump_swap',  ['token_init_swap']), # TBD
+		('subgroup.token_new_outputs_swap',  ['token_init_swap']),
 		('ltc_stop',                    ''),
 		('stop',                        'stopping daemon'),
 	)
@@ -231,7 +234,32 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			('token_txbump2send', 'sending the replacement transaction'),
 			('wait7',             'waiting for block'),
 			('token_bal3',        'the token balance'),
-		)
+		),
+		'token_init_swap': (
+			'initializing token swap configuration',
+			('token_compile_router',  'compiling THORChain router contract'),
+			('token_deploy_router',   'deploying THORChain router contract'),
+		),
+		'token_feebump_swap': (
+			'creating, signing, sending, bumping and resending a token swap transaction (feebump)',
+			('token_fund_user11',     'transferring token funds from dev to user (addr #11)'),
+			('token_addrimport_inbound', 'importing THORNode inbound token address'),
+			('token_swaptxdo1',       'creating, signing and sending a token transaction (feebump)'),
+			('token_swaptxbump1',     'bumping the token transaction (fee-bump)'),
+			('token_swaptxbump1sign', 'signing the replacement transaction'),
+			('token_swaptxbump1send', 'sending the replacement transaction'),
+			('wait8',                 'waiting for block'),
+			('token_bal5',            'the token balance'),
+		),
+		'token_new_outputs_swap': (
+			'creating, signing, sending, bumping and resending a token swap transaction (new outputs)',
+			('token_swaptxdo2',       'creating, signing and sending a token swap transaction (new outputs)'),
+			('token_swaptxbump2',     'creating a replacement token transaction'),
+			('token_swaptxbump2sign', 'signing the replacement transaction'),
+			('token_swaptxbump2send', 'sending the replacement transaction'),
+			('wait9',                 'waiting for block'),
+			('token_bal6',            'the token balance'),
+		),
 	}
 
 	ltc_tests = [c[0] for v in tuple(cmd_subgroups.values()) + (cmd_group_in,)
@@ -310,6 +338,9 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	def token_fund_user1(self):
 		return self._token_fund_user(mm_idxs=[1])
 
+	def token_fund_user11(self):
+		return self._token_fund_user(mm_idxs=[11])
+
 	def token_txdo1(self):
 		return self._token_txcreate(cmd='txdo', args=[f'{dfl_sid}:E:2,1.23456', dfl_words_file])
 
@@ -333,7 +364,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		return self._txbump_new_outputs(
 			args = [f'{dfl_sid}:E:4,6.54321'],
 			fee = '1.6G',
-			add_opts = ['--token=mm1'])
+			add_opts = ['--token=mm1', '--gas=75000'])
 
 	def token_txbump2sign(self):
 		return self._txsign(has_label=False)
@@ -347,7 +378,58 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	def wait_reth1(self):
 		return self._wait_for_block() if self.daemon.id == 'reth' else 'silent'
 
-	wait1 = wait2 = wait3 = wait4 = wait5 = wait6 = wait7 = CmdTestEthBumpMethods._wait_for_block
+	def token_swaptxdo1(self):
+		self.get_file_with_ext('sigtx', delete_all=True)
+		t = self._swaptxcreate(
+				['ETH.MM1', '0.321', 'ETH', dfl_words_file],
+				action = 'txdo')
+		t.expect('(Y/n): ', '\n')
+		return self._swaptxcreate_ui_common(
+			t,
+			sign_and_send = True,
+			need_passphrase = False,
+			file_desc = 'Sent transaction',
+			inputs = 11)
+
+	def token_swaptxbump1(self):
+		time.sleep(0.2)
+		self.get_file_with_ext('rawtx', delete_all=True)
+		txfile = self.get_file_with_ext('sigtx', no_dot=True)
+		t = self.spawn(
+			'mmgen-txbump',
+			self.eth_opts
+			+ ['--gas=50000'] # , '--router-gas=600000']
+			+ ['--yes', txfile])
+		t.expect('to continue: ', '\n')     # exit swap quote view
+		t.expect('or gas price: ', '8G\n')  # enter fee
+		t.expect(r'Gas limit:.*\D650000\D', regex=True)
+		t.written_to_file('Fee-bumped transaction')
+		return t
+
+	def token_swaptxdo2(self):
+		self.get_file_with_ext('sigtx', delete_all=True)
+		return self._swaptxcreate_ui_common(
+			self._swaptxcreate(
+				['ETH.MM1', '0.321', 'ETH', f'{dfl_sid}:E:21', dfl_words_file],
+				action = 'txdo'),
+			sign_and_send = True,
+			need_passphrase = False,
+			file_desc = 'Sent transaction',
+			inputs = 1)
+
+	def token_swaptxbump2(self):
+		return self._txbump_new_outputs(
+			args = [f'{dfl_sid}:E:8,0.54321'],
+			fee = '1.4G',
+			add_opts = ['--gas=67888', '--fee=3G'])
+
+	def token_bal5(self):
+		return self._token_bal_check(pat=r'feedbeefcafe\s+non-MMGen\s+0\.321\s')
+
+	def token_bal6(self):
+		return self._token_bal_check(pat=rf'{dfl_sid}:E:8\s+0\.54321')
+
+	wait1 = wait2 = wait3 = wait4 = wait5 = wait6 = wait7 = wait8 = wait9 = CmdTestEthBumpMethods._wait_for_block
 
 	txsign1 = txsign2 = txbump1sign = txbump2sign = CmdTestEthBumpMethods._txsign
 	txsend1 = txsend2 = txbump1send = txbump2send = CmdTestEthBumpMethods._txsend
@@ -356,8 +438,8 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	swaptxsign2 = swaptxsign1
 	swaptxsend2 = swaptxsend1
 
-	swaptxbump1sign = swaptxbump2sign = token_txbump2sign
-	swaptxbump1send = swaptxbump2send = token_txbump2send
+	token_swaptxbump1sign = token_swaptxbump2sign = swaptxbump1sign = swaptxbump2sign = token_txbump2sign
+	token_swaptxbump1send = token_swaptxbump2send = swaptxbump1send = swaptxbump2send = token_txbump2send
 
 class CmdTestEthBumpLTC(CmdTestSwapMethods, CmdTestRegtest):
 	network = ('ltc',)

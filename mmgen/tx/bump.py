@@ -15,7 +15,7 @@ tx.bump: transaction bump class
 from .new_swap import NewSwap
 from .completed import Completed
 from ..util import msg, ymsg, is_int, die
-from ..color import pink
+from ..color import orange, pink
 
 class Bump(Completed, NewSwap):
 	desc = 'fee-bumped transaction'
@@ -37,6 +37,10 @@ class Bump(Completed, NewSwap):
 					setattr(self, attr, None)
 			self.outputs = self.OutputList(self)
 			self.cfg = kwargs['cfg'] # must use current cfg opts, not those from orig_tx
+		elif self.is_swap and self.is_token:
+			die(1,
+				orange('Fee-bumping of token swap transactions currently not supported.\n') +
+				orange('To bump the transaction, supply new outputs on the command line'))
 
 		if not self.is_replaceable():
 			die(1, f'Transaction {self.txid} is not replaceable')
