@@ -24,7 +24,7 @@ class New(Base, TxNew):
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
 	msg_insufficient_funds = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
 
-	async def set_gas(self, *, to_addr=None):
+	async def set_gas(self, *, to_addr=None, force=False):
 		return None
 
 	def process_data_output_arg(self, arg):

@@ -35,9 +35,6 @@ class New(Base, TxBase.New):
 
 		super().__init__(*args, **kwargs)
 
-		if self.is_token and self.is_swap:
-			self.router_gas = int(self.cfg.router_gas or self.dfl_router_gas)
-
 		if self.cfg.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
 			assert 'Token' not in self.name, m
@@ -45,13 +42,20 @@ class New(Base, TxBase.New):
 				self.usr_contract_data = bytes.fromhex(fp.read().strip())
 			self.disable_fee_check = True
 
-	async def set_gas(self, *, to_addr=None):
-		if to_addr or not hasattr(self, 'gas'):
-			auto_gas = self.cfg.gas in ('auto', None)
-			self.gas = (
-				self.dfl_gas if self.cfg.gas == 'fallback' or (auto_gas and not self.is_token) else
-				(await self.get_gas_estimateGas(to_addr=to_addr)) if auto_gas else
-				int(self.cfg.gas))
+	async def get_gas_estimateGas(self, *, to_addr):
+		return self.dfl_gas
+
+	async def set_gas(self, *, to_addr=None, force=False):
+		if force or to_addr or not hasattr(self, 'gas'):
+			if is_int(self.cfg.gas):
+				self.gas = int(self.cfg.gas)
+			elif self.cfg.gas == 'fallback':
+				self.gas = self.dfl_gas
+			elif self.is_bump and not self.rpc.daemon.id == 'reth':
+				self.gas = self.txobj['startGas']
+			else:
+				assert self.cfg.gas in ('auto', None), f'{self.cfg.gas}: invalid value for cfg.gas'
+				self.gas = await self.get_gas_estimateGas(to_addr=to_addr)
 
 	async def get_nonce(self):
 		return ETHNonce(int(
@@ -219,6 +223,14 @@ class New(Base, TxBase.New):
 class TokenNew(TokenBase, New):
 	desc = 'transaction'
 	fee_is_approximate = True
+
+	async def set_gas(self, *, to_addr=None, force=False):
+		await super().set_gas(to_addr=to_addr, force=force)
+		if self.is_swap and (force or not hasattr(self, 'router_gas')):
+			self.router_gas = (
+				int(self.cfg.router_gas) if self.cfg.router_gas else
+				self.txobj['router_gas'] if self.txobj else
+				self.dfl_router_gas)
 
 	@property
 	def total_gas(self):
