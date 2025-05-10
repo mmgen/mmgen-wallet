@@ -12,7 +12,8 @@
 tx.__init__: transaction class initializer
 """
 
-def _base_proto_subclass(clsname, modname, proto):
+def _base_proto_subclass(clsname, modname, kwargs):
+	proto = kwargs['proto']
 	if proto:
 		clsname = ('Token' if proto.tokensym else '') + clsname
 		modname = f'mmgen.proto.{proto.base_proto_coin.lower()}.tx.{modname}'
@@ -22,7 +23,9 @@ def _base_proto_subclass(clsname, modname, proto):
 	return getattr(importlib.import_module(modname), clsname)
 
 def _get_cls_info(clsname, modname, kwargs):
-
+	"""
+	determine cls/mod/proto and pass them to _base_proto_subclass() to get a TX instance
+	"""
 	if 'proto' in kwargs:
 		proto = kwargs['proto']
 	elif 'data' in kwargs:
@@ -58,24 +61,12 @@ def _get_cls_info(clsname, modname, kwargs):
 
 	return (clsname, modname, kwargs)
 
-
-def _get_obj(_clsname, _modname, **kwargs):
-	"""
-	determine cls/mod/proto and pass them to _base_proto_subclass() to get a transaction instance
-	"""
-	clsname, modname, kwargs = _get_cls_info(_clsname, _modname, kwargs)
-
-	return _base_proto_subclass(clsname, modname, kwargs['proto'])(**kwargs)
-
-async def _get_obj_async(_clsname, _modname, **kwargs):
-
-	clsname, modname, kwargs = _get_cls_info(_clsname, _modname, kwargs)
+async def _add_twctl(clsname, modname, kwargs):
 	proto = kwargs['proto']
-
-	# NB: tracking wallet needed to retrieve the 'symbol' and 'decimals' parameters of token addr
-	# (see twctl:import_token()).
-	# No twctl required for the Unsigned and Signed(data=unsigned.__dict__) classes used during
-	# signing.
+	# TwCtl instance required to retrieve the 'symbol' and 'decimals' parameters
+	# of token contract (see twctl:import_token()).
+	# No twctl required by the Unsigned and Signed classes used during signing,
+	# or by the New and Bump classes, which already have a twctl.
 	if proto and proto.tokensym and clsname in (
 			'OnlineSigned',
 			'AutomountOnlineSigned',
@@ -83,22 +74,21 @@ async def _get_obj_async(_clsname, _modname, **kwargs):
 			'AutomountSent'):
 		from ..tw.ctl import TwCtl
 		kwargs['twctl'] = await TwCtl(kwargs['cfg'], proto, no_rpc=True)
+	return (clsname, modname, kwargs)
 
-	return _base_proto_subclass(clsname, modname, proto)(**kwargs)
+def _get(clsname, modname, kwargs):
+	return _base_proto_subclass(*_get_cls_info(clsname, modname, kwargs))(**kwargs)
 
-def _get(clsname, modname):
-	return lambda **kwargs: _get_obj(clsname, modname, **kwargs)
+async def _get_async(clsname, modname, kwargs):
+	return _base_proto_subclass(*(await _add_twctl(*_get_cls_info(clsname, modname, kwargs))))(**kwargs)
 
-def _get_async(clsname, modname):
-	return lambda **kwargs: _get_obj_async(clsname, modname, **kwargs)
+BaseTX         = lambda **kwargs: _get('Base',     'base',     kwargs)
+NewTX          = lambda **kwargs: _get('New',      'new',      kwargs)
+NewSwapTX      = lambda **kwargs: _get('NewSwap',  'new_swap', kwargs)
+BumpTX         = lambda **kwargs: _get('Bump',     'bump',     kwargs)
+UnsignedTX     = lambda **kwargs: _get('Unsigned', 'unsigned', kwargs)
+SignedTX       = lambda **kwargs: _get('Signed',   'signed',   kwargs)
 
-BaseTX         = _get('Base',     'base')
-NewTX          = _get('New',      'new')
-NewSwapTX      = _get('NewSwap',  'new_swap')
-BumpTX         = _get('Bump',     'bump')
-UnsignedTX     = _get('Unsigned', 'unsigned')
-SignedTX       = _get('Signed',   'signed')
-
-CompletedTX    = _get_async('Completed',    'completed')
-OnlineSignedTX = _get_async('OnlineSigned', 'online')
-SentTX         = _get_async('Sent',         'online')
+CompletedTX    = lambda **kwargs: _get_async('Completed',    'completed', kwargs)
+OnlineSignedTX = lambda **kwargs: _get_async('OnlineSigned', 'online',    kwargs)
+SentTX         = lambda **kwargs: _get_async('Sent',         'online',    kwargs)

@@ -24,7 +24,7 @@ class OnlineSigned(Signed):
 	@property
 	def status(self):
 		from . import _base_proto_subclass
-		return _base_proto_subclass('Status', 'status', self.proto)(self)
+		return _base_proto_subclass('Status', 'status', {'proto': self.proto})(self)
 
 	def check_swap_expiry(self):
 		from ..util2 import format_elapsed_hr
