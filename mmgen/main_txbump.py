@@ -188,7 +188,7 @@ async def main():
 		msg(orig_tx.info.format(terse=True))
 
 	from .tw.ctl import TwCtl
-	tx = await BumpTX(
+	tx = BumpTX(
 		cfg  = cfg,
 		data = orig_tx.__dict__,
 		automount = cfg.autosign,

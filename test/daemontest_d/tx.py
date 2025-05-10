@@ -114,7 +114,7 @@ class unit_tests:
 		d.start()
 
 		proto = init_proto(cfg, 'btc', need_amt=True)
-		await NewTX(cfg=cfg, proto=proto, target='tx')
+		NewTX(cfg=cfg, proto=proto, target='tx')
 
 		d.stop()
 		d.remove_datadir()

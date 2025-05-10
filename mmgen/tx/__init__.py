@@ -77,8 +77,6 @@ async def _get_obj_async(_clsname, _modname, **kwargs):
 	# No twctl required for the Unsigned and Signed(data=unsigned.__dict__) classes used during
 	# signing.
 	if proto and proto.tokensym and clsname in (
-			'New',
-			'NewSwap',
 			'OnlineSigned',
 			'AutomountOnlineSigned',
 			'Sent',
@@ -95,12 +93,12 @@ def _get_async(clsname, modname):
 	return lambda **kwargs: _get_obj_async(clsname, modname, **kwargs)
 
 BaseTX         = _get('Base',     'base')
+NewTX          = _get('New',      'new')
+NewSwapTX      = _get('NewSwap',  'new_swap')
+BumpTX         = _get('Bump',     'bump')
 UnsignedTX     = _get('Unsigned', 'unsigned')
+SignedTX       = _get('Signed',   'signed')
 
-NewTX          = _get_async('New',          'new')
-NewSwapTX      = _get_async('NewSwap',      'new_swap')
 CompletedTX    = _get_async('Completed',    'completed')
-SignedTX       = _get_async('Signed',       'signed')
 OnlineSignedTX = _get_async('OnlineSigned', 'online')
 SentTX         = _get_async('Sent',         'online')
-BumpTX         = _get_async('Bump',         'bump')

@@ -469,6 +469,7 @@ class New(Base):
 				minconf = self.cfg.minconf,
 				addrs = await self.get_input_addrs_from_inputs_opt())
 			await self.twuo.get_data()
+			self.twctl = self.twuo.twctl
 
 		from ..ui import do_license_msg
 		do_license_msg(self.cfg)
@@ -480,6 +481,7 @@ class New(Base):
 			self.twuo.display_total()
 
 		if do_info:
+			del self.twctl
 			del self.twuo.twctl
 			import sys
 			sys.exit(0)

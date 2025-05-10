@@ -246,7 +246,7 @@ class TokenNew(TokenBase, New):
 
 		data = t.create_transfer_data(
 			to_addr = to_addr or self.outputs[0].addr,
-			amt = self.outputs[0].amt or await self.twuo.twctl.get_balance(self.inputs[0].addr),
+			amt = self.outputs[0].amt or await self.twctl.get_balance(self.inputs[0].addr),
 			op = self.token_op)
 
 		try:
