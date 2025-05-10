@@ -43,7 +43,9 @@ class ThornodeRPCClient:
 		self.session = requests.Session()
 		self.session.trust_env = False # ignore *_PROXY environment vars
 		self.session.headers = self.http_hdrs
-		if self.cfg.proxy:
+		if self.cfg.proxy == 'env':
+			self.session.trust_env = True
+		elif self.cfg.proxy:
 			self.session.proxies.update({
 				'http':  f'socks5h://{self.cfg.proxy}',
 				'https': f'socks5h://{self.cfg.proxy}'

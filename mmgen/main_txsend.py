@@ -61,7 +61,9 @@ opts_data = {
                  begins with one.
 -v, --verbose    Be more verbose
 -w, --wait       Wait for transaction confirmation (Ethereum only)
--x, --proxy=P    Connect to TX proxy via SOCKS5 proxy ‘P’ (host:port)
+-x, --proxy=P    Connect to TX proxy via SOCKS5h proxy ‘P’ (host:port).
+                 Use special value ‘env’ to honor *_PROXY environment vars
+                 instead.
 -y, --yes        Answer 'yes' to prompts, suppress non-essential output
 """
 	},
