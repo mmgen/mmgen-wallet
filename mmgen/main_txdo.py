@@ -85,6 +85,10 @@ opts_data = {
 			+                         online signing without an {pnm} seed source. The
 			+                         key-address file is also used to verify {pnm}-to-{cu}
 			+                         mappings, so the user should record its checksum.
+			e- -n, --tx-proxy=P       Send transaction via public TX proxy ‘P’ (supported
+			+                         proxies: {tx_proxies}).  This is done via a publicly
+			+                         accessible web page, so no API key or registration is
+			+                         required.
 			-- -O, --old-incog-fmt    Specify old-format incognito input
 			-- -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
 			+                         for password hashing (default: '{gc.dfl_hash_preset}')
@@ -139,6 +143,7 @@ column below:
 			fl      = help_notes('fee_spec_letters'),
 			dsl     = help_notes('dfl_seed_len'),
 			ss      = help_notes('dfl_subseeds'),
+			tx_proxies = help_notes('tx_proxies'),
 			ss_max  = SubSeedIdxRange.max_idx,
 			fe_all  = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),
 			fe_dfl  = cfg._autoset_opts['fee_estimate_mode'].choices[0],
