@@ -94,6 +94,7 @@ opts_data = {
 			+                         for password hashing (default: '{gc.dfl_hash_preset}')
 			-- -P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
 			-- -q, --quiet            Suppress warnings; overwrite files without prompting
+			-s -r, --stream-interval=N Set block interval for streaming swap (default: {si})
 			bt -R, --no-rbf           Make transaction non-replaceable (non-replace-by-fee
 			+                         according to BIP 125)
 			-s -s, --swap-proto       Swap protocol to use (Default: {x_dfl},
@@ -145,6 +146,7 @@ column below:
 			fl      = help_notes('fee_spec_letters'),
 			dsl     = help_notes('dfl_seed_len'),
 			ss      = help_notes('dfl_subseeds'),
+			si      = help_notes('stream_interval'),
 			tx_proxies = help_notes('tx_proxies'),
 			ss_max  = SubSeedIdxRange.max_idx,
 			fe_all  = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),

@@ -415,8 +415,8 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		return self._swaptxcreate_ui_common(
 			self._swaptxcreate(
 				['ETH', '8.765', 'BTC', f'{dfl_sid}:B:4'],
-				add_opts = ['--trade-limit=3%']),
-			expect = ':2019e4/3/0')
+				add_opts = ['--trade-limit=3%' ,'--stream-interval=7']),
+			expect = ':2019e4/7/0')
 
 	def swaptxcreate3a(self):
 		t = self._swaptxcreate(['ETH', '0.7654321', 'ETH.MM1'], add_opts=['--gas=fallback'])

@@ -73,6 +73,7 @@ opts_data = {
 			-- -m, --minconf=     n  Minimum number of confirmations required to spend
 			+                        outputs (default: 1)
 			-- -q, --quiet           Suppress warnings; overwrite files without prompting
+			-s -r, --stream-interval=N Set block interval for streaming swap (default: {si})
 			bt -R, --no-rbf          Make transaction non-replaceable (non-replace-by-fee
 			+                        according to BIP 125)
 			-s -s, --swap-proto      Swap protocol to use (Default: {x_dfl},
@@ -97,6 +98,7 @@ opts_data = {
 			a_info = help_notes('account_info_desc'),
 			fu     = help_notes('rel_fee_desc'),
 			fl     = help_notes('fee_spec_letters'),
+			si     = help_notes('stream_interval'),
 			fe_all = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),
 			fe_dfl = cfg._autoset_opts['fee_estimate_mode'].choices[0],
 			x_all = fmt_list(cfg._autoset_opts['swap_proto'].choices, fmt='no_spc'),

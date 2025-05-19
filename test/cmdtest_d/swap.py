@@ -534,16 +534,16 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		return self._swaptxcreate_ui_common(
 			self._swaptxcreate(
 				['BCH', '1.234', f'{self.sid}:C:{idx}', 'LTC', f'{self.sid}:B:3'],
-				add_opts = ['--trade-limit=0%']),
-			expect = ':3541e5/3/0')
+				add_opts = ['--trade-limit=0%', '--stream-interval=1']),
+			expect = ':3541e5/1/0')
 
 	def swaptxcreate2(self):
 		t = self._swaptxcreate(
 			['BCH', 'LTC'],
-			add_opts = ['--no-quiet', '--trade-limit=3.337%'])
+			add_opts = ['--no-quiet', '--stream-interval=10', '--trade-limit=3.337%'])
 		t.expect('Enter a number> ', '1')
 		t.expect('OK? (Y/n): ', 'y')
-		return self._swaptxcreate_ui_common(t, reload_quote=True, expect=':1386e6/3/0')
+		return self._swaptxcreate_ui_common(t, reload_quote=True, expect=':1386e6/10/0')
 
 	def swaptxcreate3(self):
 		return self._swaptxcreate_ui_common(
