@@ -121,19 +121,18 @@ class THORChainMemo:
 		return ret(proto_name, function, chain, asset, address, limit_int, int(interval), int(quantity))
 
 	def __init__(self, proto, asset, addr, *, trade_limit=None):
-		self.proto = proto
-		self.asset = asset
+
+		from ....amt import UniAmt
+		from ....addr import is_coin_addr
+
+		assert trade_limit is None or isinstance(trade_limit, UniAmt), f'{type(trade_limit)} != {UniAmt}'
+		assert is_coin_addr(proto, addr)
+
 		assert asset.chain == proto.coin, f'{asset.chain} != {proto.coin}'
 		assert asset.asset == getattr(proto, 'tokensym', None), (
 			f'{asset.asset} != {getattr(proto, "tokensym", None)}')
 		assert asset.direction == 'recv', f'{asset.direction} != ‘recv’'
-		if trade_limit is None:
-			self.trade_limit = UniAmt('0')
-		else:
-			assert type(trade_limit) is UniAmt, f'{type(trade_limit)} != {UniAmt}'
-			self.trade_limit = trade_limit
-		from ....addr import is_coin_addr
-		assert is_coin_addr(proto, addr)
+
 		self.addr = addr.views[addr.view_pref]
 		assert not ':' in self.addr # colon is record separator, so address mustn’t contain one
 
@@ -142,13 +141,22 @@ class THORChainMemo:
 			assert is_hex_str(self.addr), f'{self.addr}: address is not a hexadecimal string'
 			self.addr = '0x' + self.addr
 
+		self.proto = proto
+		self.asset = asset
+		self.trade_limit = trade_limit
+
 	def __str__(self):
 		from . import ExpInt4
 		try:
-			tl_enc = ExpInt4(self.trade_limit.to_unit('satoshi')).enc
+			tl_enc = (
+				0 if self.trade_limit is None else
+				ExpInt4(self.trade_limit.to_unit('satoshi')).enc)
 		except Exception as e:
 			die('SwapMemoParseError', str(e))
-		suf = '/'.join(str(n) for n in (tl_enc, self.stream_interval, self.stream_quantity))
+		suf = '/'.join(str(n) for n in (
+			tl_enc,
+			self.stream_interval,
+			self.stream_quantity))
 		ret = ':'.join([
 			self.function_abbrevs[self.function],
 			self.asset.memo_asset_name,

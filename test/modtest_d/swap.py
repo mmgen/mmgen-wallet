@@ -5,10 +5,12 @@ test.modtest_d.swap: swap unit tests for the MMGen suite
 """
 
 from mmgen.color import cyan
+from mmgen.cfg import Config
+from mmgen.amt import UniAmt
+from mmgen.swap.proto.thorchain import SwapAsset, Memo
+from mmgen.protocol import init_proto
 
 from ..include.common import cfg, vmsg, make_burn_addr
-
-from mmgen.swap.proto.thorchain import SwapAsset
 
 class unit_tests:
 
@@ -30,9 +32,7 @@ class unit_tests:
 		return True
 
 	def memo(self, name, ut, desc='Swap transaction memo'):
-		from mmgen.protocol import init_proto
-		from mmgen.amt import UniAmt
-		from mmgen.swap.proto.thorchain import Memo
+
 		for coin, addrtype, asset_name, token in (
 			('ltc', 'bech32',     'LTC',      None),
 			('bch', 'compressed', 'BCH',      None),
@@ -45,18 +45,24 @@ class unit_tests:
 
 			vmsg(f'\nTesting asset {cyan(asset_name)}:')
 
-			for limit, limit_chk in (
-				('123.4567',   12340000000),
-				('1.234567',   123400000),
-				('0.01234567', 1234000),
-				('0.00012345', 12345),
-				(None, 0),
+			for limit, limit_chk, suf in (
+				('123.4567',   12340000000, '1234e7/3/0'),
+				('1.234567',   123400000,   '1234e5/3/0'),
+				('0.01234567', 1234000,     '1234e3/3/0'),
+				('0.00012345', 12345,       '12345/3/0'),
+				(None,         0,           '0/3/0'),
 			):
 				vmsg('\nTesting memo initialization:')
-				m = Memo(proto, asset, addr, trade_limit=UniAmt(limit) if limit else None)
+				m = Memo(
+					proto,
+					asset,
+					addr,
+					trade_limit = None if limit is None else UniAmt(limit))
 				vmsg(f'str(memo):  {m}')
 				vmsg(f'repr(memo): {m!r}')
 				vmsg(f'limit:      {limit}')
+
+				assert str(m).endswith(':' + suf), f'{m} doesn’t end with {suf}'
 
 				p = Memo.parse(m)
 				limit_dec = UniAmt(p.trade_limit, from_unit='satoshi')
@@ -110,7 +116,7 @@ class unit_tests:
 				proto = init_proto(cfg, coin, need_amt=True)
 				addr = make_burn_addr(proto, 'C')
 				asset = SwapAsset(coin, 'send')
-				Memo(proto, asset, addr)
+				Memo(proto, asset, addr, trade_limit=None)
 
 			def bad11():
 				SwapAsset('XYZ', 'send')
