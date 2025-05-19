@@ -101,7 +101,7 @@ class Thornode:
 				self.tx.recv_asset.full_name,
 				self.in_amt.to_unit('satoshi'))
 
-	async def format_quote(self, trade_limit, usr_trade_limit, *, deduct_est_fee=False):
+	async def format_quote(self, trade_limit, *, deduct_est_fee=False):
 		from ....util import make_timestr, ymsg
 		from ....util2 import format_elapsed_hr
 		from ....color import blue, green, cyan, pink, orange, redbg, yelbg, grnbg
@@ -119,7 +119,7 @@ class Thornode:
 			from . import ExpInt4
 			tl_int = ExpInt4(trade_limit.to_unit('satoshi'))
 			tl_uniamt = UniAmt(tl_int.trunc, from_unit='satoshi')
-			ratio = usr_trade_limit if type(usr_trade_limit) is float else float(tl_uniamt / out_amt)
+			ratio = float(tl_uniamt / out_amt)
 			direction = 'ABOVE' if ratio > 1 else 'below'
 			mcolor, lblcolor = (
 				(redbg, redbg) if (ratio < 0.93 or ratio > 0.999) else

@@ -203,7 +203,7 @@ class NewSwap(New):
 			self.swap_quote_refresh_time = time.time()
 			await self.set_gas(to_addr=c.router if self.is_token else None)
 			trade_limit = get_trade_limit()
-			msg(await c.format_quote(trade_limit, self.usr_trade_limit, deduct_est_fee=deduct_est_fee))
+			msg(await c.format_quote(trade_limit, deduct_est_fee=deduct_est_fee))
 			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')
 			msg('')
 			if ch not in 'Rr':
