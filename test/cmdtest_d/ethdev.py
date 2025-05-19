@@ -197,6 +197,7 @@ class CmdTestEthdevMethods:
 		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:21,{self.fund_amt}')
 
 	def _fund_mmgen_addr(self, arg):
+		self.mining_delay()
 		return self._txdo(
 			args = [f'--keys-from-file={joinpath(self.tmpdir, dfl_devkey_fn)}', arg, dfl_words_file],
 			acct = '10')

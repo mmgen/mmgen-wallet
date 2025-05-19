@@ -106,7 +106,7 @@ opts_data = {
 			-- -v, --verbose          Produce more verbose output
 			b- -V, --vsize-adj=     f Adjust transaction's estimated vsize by factor 'f'
 			e- -w, --wait             Wait for transaction confirmation
-			-s -x, --proxy=P          Fetch the swap quote via SOCKS5 proxy ‘P’ (host:port).
+			-s -x, --proxy=P          Fetch the swap quote via SOCKS5h proxy ‘P’ (host:port).
 			+                         Use special value ‘env’ to honor *_PROXY environment
 			+                         vars instead.
 			e- -X, --cached-balances  Use cached balances

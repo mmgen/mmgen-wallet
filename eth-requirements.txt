@@ -2,4 +2,3 @@
 # installed.
 
 py_ecc
-mypy_extensions
