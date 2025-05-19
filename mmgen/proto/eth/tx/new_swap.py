@@ -21,6 +21,7 @@ class NewSwap(New, TxNewSwap):
 	def update_data_output(self, trade_limit):
 		parsed_memo = self.swap_proto_mod.Memo.parse(self.swap_memo)
 		self.swap_memo = str(self.swap_proto_mod.Memo(
+			self.swap_cfg,
 			self.recv_proto,
 			self.recv_asset,
 			self.recv_proto.coin_addr(parsed_memo.address),

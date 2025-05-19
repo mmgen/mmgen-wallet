@@ -17,8 +17,6 @@ from collections import namedtuple
 
 from ....amt import UniAmt
 
-from . import Memo
-
 _gd = namedtuple('gas_unit_data', ['code', 'disp'])
 gas_unit_data = {
 	'satsperbyte': _gd('s', 'sat/byte'),
@@ -64,7 +62,7 @@ class Thornode:
 		self.in_amt = UniAmt(f'{amt:.8f}')
 		self.rpc = ThornodeRPCClient(tx)
 
-	def get_quote(self):
+	def get_quote(self, swap_cfg):
 
 		def get_data(send, recv, amt):
 			get_str = (
@@ -72,7 +70,7 @@ class Thornode:
 				f'from_asset={send}&'
 				f'to_asset={recv}&'
 				f'amount={amt}&'
-				f'streaming_interval={Memo.stream_interval}')
+				f'streaming_interval={swap_cfg.stream_interval}')
 			data = json.loads(self.rpc.get(get_str).content)
 			if not 'expiry' in data:
 				from ....util import pp_fmt, die

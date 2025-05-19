@@ -13,24 +13,12 @@ swap.proto.thorchain.memo: THORChain swap protocol memo class
 """
 
 from ....util import die, is_hex_str
-from ....amt import UniAmt
 
 from . import name as proto_name
 
 from . import SwapAsset
 
 class THORChainMemo:
-
-	# The trade limit, i.e., set 100000000 to get a minimum of 1 full asset, else a refund
-	# Optional. 1e8 or scientific notation
-	trade_limit = None
-
-	# Swap interval in blocks. Optional. If 0, do not stream
-	stream_interval = 3
-
-	# Swap quantity. The interval value determines the frequency of swaps in blocks
-	# Optional. If 0, network will determine the number of swaps
-	stream_quantity = 0
 
 	max_len = 250
 	function = 'SWAP'
@@ -120,7 +108,7 @@ class THORChainMemo:
 
 		return ret(proto_name, function, chain, asset, address, limit_int, int(interval), int(quantity))
 
-	def __init__(self, proto, asset, addr, *, trade_limit=None):
+	def __init__(self, swap_cfg, proto, asset, addr, *, trade_limit):
 
 		from ....amt import UniAmt
 		from ....addr import is_coin_addr
@@ -143,6 +131,7 @@ class THORChainMemo:
 
 		self.proto = proto
 		self.asset = asset
+		self.swap_cfg = swap_cfg
 		self.trade_limit = trade_limit
 
 	def __str__(self):
@@ -155,8 +144,8 @@ class THORChainMemo:
 			die('SwapMemoParseError', str(e))
 		suf = '/'.join(str(n) for n in (
 			tl_enc,
-			self.stream_interval,
-			self.stream_quantity))
+			self.swap_cfg.stream_interval,
+			self.swap_cfg.stream_quantity))
 		ret = ':'.join([
 			self.function_abbrevs[self.function],
 			self.asset.memo_asset_name,

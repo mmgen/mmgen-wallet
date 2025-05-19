@@ -12,7 +12,7 @@
 swap.proto.thorchain: THORChain swap protocol implementation for the MMGen Wallet suite
 """
 
-__all__ = ['SwapAsset', 'Memo']
+__all__ = ['SwapCfg', 'SwapAsset', 'Memo']
 
 name = 'THORChain'
 exp_prec = 4
@@ -25,6 +25,8 @@ class ExpInt4(ExpInt):
 def rpc_client(tx, amt):
 	from .thornode import Thornode
 	return Thornode(tx, amt)
+
+from .cfg import THORChainSwapCfg as SwapCfg
 
 from .asset import THORChainSwapAsset as SwapAsset
 

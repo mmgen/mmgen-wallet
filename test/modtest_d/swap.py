@@ -7,12 +7,45 @@ test.modtest_d.swap: swap unit tests for the MMGen suite
 from mmgen.color import cyan
 from mmgen.cfg import Config
 from mmgen.amt import UniAmt
-from mmgen.swap.proto.thorchain import SwapAsset, Memo
+from mmgen.swap.proto.thorchain import SwapCfg, SwapAsset, Memo
 from mmgen.protocol import init_proto
 
 from ..include.common import cfg, vmsg, make_burn_addr
 
 class unit_tests:
+
+	def cfg(self, name, ut, desc='Swap configuration'):
+
+		for tl_arg, tl_chk in (
+				(None,      None),
+				('1',       UniAmt('1')),
+				('33',      UniAmt('33')),
+				('2%',      0.98),
+				('-2%',     1.02),
+				('3.333%',  0.96667),
+				('-3.333%', 1.03333),
+				('1.2345',  UniAmt('1.2345'))):
+			cfg_data = {'trade_limit': tl_arg}
+			sc = SwapCfg(Config(cfg_data))
+			vmsg(f'  trade_limit:     {tl_arg} => {sc.trade_limit}')
+			assert sc.trade_limit == tl_chk
+			assert sc.stream_interval == 3
+			assert sc.stream_quantity == 0
+
+		vmsg('\n  Testing error handling')
+
+		def bad1():
+			SwapCfg(Config({'trade_limit': 'x'}))
+
+		def bad2():
+			SwapCfg(Config({'trade_limit': '1.23x'}))
+
+		ut.process_bad_data((
+			('bad1', 'SwapCfgValueError', 'invalid parameter', bad1),
+			('bad2', 'SwapCfgValueError', 'invalid parameter', bad2),
+		), pfx='')
+
+		return True
 
 	def asset(self, name, ut, desc='SwapAsset class'):
 		for name, full_name, memo_name, chain, asset, direction in (
@@ -53,7 +86,9 @@ class unit_tests:
 				(None,         0,           '0/3/0'),
 			):
 				vmsg('\nTesting memo initialization:')
+				swap_cfg = SwapCfg(Config({'trade_limit': limit}))
 				m = Memo(
+					swap_cfg,
 					proto,
 					asset,
 					addr,
@@ -116,7 +151,7 @@ class unit_tests:
 				proto = init_proto(cfg, coin, need_amt=True)
 				addr = make_burn_addr(proto, 'C')
 				asset = SwapAsset(coin, 'send')
-				Memo(proto, asset, addr, trade_limit=None)
+				Memo(swap_cfg, proto, asset, addr, trade_limit=None)
 
 			def bad11():
 				SwapAsset('XYZ', 'send')

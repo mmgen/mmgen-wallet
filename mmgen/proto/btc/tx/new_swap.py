@@ -22,6 +22,7 @@ class NewSwap(New, TxNewSwap):
 		o = self.data_output._asdict()
 		parsed_memo = self.swap_proto_mod.Memo.parse(o['data'].decode())
 		memo = self.swap_proto_mod.Memo(
+			self.swap_cfg,
 			self.recv_proto,
 			self.recv_asset,
 			self.recv_proto.coin_addr(parsed_memo.address),

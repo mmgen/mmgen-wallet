@@ -156,10 +156,15 @@ class NewSwap(New):
 				'To sign this transaction, autosign or txsign must be invoked'
 				' with --allow-non-wallet-swap'))
 
+		sc = self.swap_cfg = self.swap_proto_mod.SwapCfg(self.cfg)
+
 		memo = sp.Memo(
+			self.swap_cfg,
 			self.recv_proto,
 			self.recv_asset,
-			recv_output.addr)
+			recv_output.addr,
+			# sc.trade_limit could be a float:
+			trade_limit = sc.trade_limit if isinstance(sc.trade_limit, UniAmt) else None)
 
 		# this goes into the transaction file:
 		self.swap_recv_addr_mmid = recv_output.mmid
@@ -168,14 +173,6 @@ class NewSwap(New):
 			[f'vault,{args.send_amt}', f'data:{memo}'] if args.send_amt and self.proto.is_evm else
 			[f'vault,{args.send_amt}', chg_output.mmid, f'data:{memo}'] if args.send_amt else
 			['vault', f'data:{memo}'])
-
-	def init_swap_cfg(self):
-		if s := self.cfg.trade_limit:
-			self.usr_trade_limit = (
-				1 - float(s[:-1]) / 100 if s.endswith('%') else
-				UniAmt(self.cfg.trade_limit))
-		else:
-			self.usr_trade_limit = None
 
 	def update_vault_addr(self, c, *, addr='inbound_address'):
 		vault_idx = self.vault_idx
@@ -192,16 +189,16 @@ class NewSwap(New):
 		from ..term import get_char
 
 		def get_trade_limit():
-			if type(self.usr_trade_limit) is UniAmt:
-				return self.usr_trade_limit
-			elif type(self.usr_trade_limit) is float:
+			if type(self.swap_cfg.trade_limit) is UniAmt:
+				return self.swap_cfg.trade_limit
+			elif type(self.swap_cfg.trade_limit) is float:
 				return (
 					UniAmt(int(c.data['expected_amount_out']), from_unit='satoshi')
-					* self.usr_trade_limit)
+					* self.swap_cfg.trade_limit)
 
 		while True:
 			self.cfg._util.qmsg(f'Retrieving data from {c.rpc.host}...')
-			c.get_quote()
+			c.get_quote(self.swap_cfg)
 			self.cfg._util.qmsg('OK')
 			self.swap_quote_refresh_time = time.time()
 			await self.set_gas(to_addr=c.router if self.is_token else None)
