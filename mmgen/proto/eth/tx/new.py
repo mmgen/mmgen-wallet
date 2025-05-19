@@ -12,8 +12,6 @@
 proto.eth.tx.new: Ethereum new transaction class
 """
 
-import json
-
 from ....tx import new as TxBase
 from ....obj import Int, ETHNonce, MMGenTxID
 from ....util import msg, ymsg, is_int, is_hex_str, make_chksum_6, suf, die
@@ -81,14 +79,14 @@ class New(Base, TxBase.New):
 		o_ok = 0 if self.usr_contract_data else 1
 		assert o_num == o_ok, f'Transaction has {o_num} output{suf(o_num)} (should have {o_ok})'
 		await self.make_txobj()
-		odict = {k:v if v is None else str(v) for k, v in self.txobj.items() if k != 'token_to'}
-		self.serialized = json.dumps(odict)
+		self.serialized = {k:v if v is None else str(v) for k, v in self.txobj.items() if k != 'token_to'}
 		self.update_txid()
 
 	def update_txid(self):
+		import json
 		assert not is_hex_str(self.serialized), (
 			'update_txid() must be called only when self.serialized is not hex data')
-		self.txid = MMGenTxID(make_chksum_6(self.serialized).upper())
+		self.txid = MMGenTxID(make_chksum_6(json.dumps(self.serialized)).upper())
 
 	def set_gas_with_data(self, data):
 		if not self.is_token:
