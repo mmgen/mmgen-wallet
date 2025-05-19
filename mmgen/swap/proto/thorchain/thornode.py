@@ -117,20 +117,20 @@ class Thornode:
 
 		if trade_limit:
 			from . import ExpInt4
-			e = ExpInt4(trade_limit.to_unit('satoshi'))
-			tl_rounded = UniAmt(e.trunc, from_unit='satoshi')
-			ratio = usr_trade_limit if type(usr_trade_limit) is float else float(tl_rounded / out_amt)
+			tl_int = ExpInt4(trade_limit.to_unit('satoshi'))
+			tl_uniamt = UniAmt(tl_int.trunc, from_unit='satoshi')
+			ratio = usr_trade_limit if type(usr_trade_limit) is float else float(tl_uniamt / out_amt)
 			direction = 'ABOVE' if ratio > 1 else 'below'
 			mcolor, lblcolor = (
 				(redbg, redbg) if (ratio < 0.93 or ratio > 0.999) else
 				(yelbg, yelbg) if ratio < 0.97 else
 				(green, grnbg))
 			trade_limit_disp = f"""
-  {lblcolor('Trade limit:')}                   {tl_rounded.hl()} {out_coin} """ + mcolor(
+  {lblcolor('Trade limit:')}                   {tl_uniamt.hl()} {out_coin} """ + mcolor(
 				f'({abs(1 - ratio) * 100:0.2f}% {direction} expected amount)')
-			tx_size_adj = len(e.enc) - 1
+			tx_size_adj = len(tl_int.enc) - 1
 			if tx.proto.is_evm:
-				tx.adj_gas_with_extra_data_len(len(e.enc) - 1) # one-shot method, no-op if repeated
+				tx.adj_gas_with_extra_data_len(len(tl_int.enc) - 1) # one-shot method, no-op if repeated
 		else:
 			trade_limit_disp = ''
 			tx_size_adj = 0
