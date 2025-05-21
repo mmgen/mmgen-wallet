@@ -16,7 +16,7 @@
   -E, --fee-estimate-mode M Specify the network fee estimate mode.  Choices:
                          'conservative','economical'.  Default: 'conservative'
   -f, --fee            f Transaction fee, as a decimal BTC amount or as
-                         satoshis per byte (an integer followed by 's').
+                         satoshis per byte (an integer followed by ‘s’).
                          See FEE SPECIFICATION below.  If omitted, fee will be
                          calculated using network fee estimation.
   -H, --hidden-incog-input-params f,o  Read hidden incognito data from file
@@ -47,6 +47,8 @@
   -q, --quiet            Suppress warnings; overwrite files without prompting
   -R, --no-rbf           Make transaction non-replaceable (non-replace-by-fee
                          according to BIP 125)
+  -T, --txhex-idx N      Send only part ‘N’ of a multi-part transaction.
+                         Indexing begins with one.
   -u, --subseeds       n The number of subseed pairs to scan for (default: 100,
                          maximum: 1000000). Only the default or first supplied
                          wallet is scanned for subseeds.
@@ -110,15 +112,15 @@
                                  FEE SPECIFICATION
 
   Transaction fees, both on the command line and at the interactive prompt, may
-  be specified as either absolute BTC amounts, using a plain decimal number, or
-  as satoshis per byte, using an integer followed by 's', for satoshi.
+  be specified as either absolute coin amounts, using a plain decimal number, or
+  as satoshis per byte, using an integer followed by ‘s’, for satoshi.
 
 
                                    SIGNING NOTES
 
   Transactions may contain both MMGen or non-MMGen input addresses.
 
-  To sign non-MMGen inputs, a bitcoind wallet dump or flat key list is used
+  To sign non-MMGen inputs, a coin daemon wallet dump or flat key list is used
   as the key source (--keys-from-file option).
 
   To sign MMGen inputs, key data is generated from a seed as with the
@@ -187,5 +189,5 @@
 
       $ mmgen-txdo B
 
-  MMGEN v15.1.dev18              March 2025                      MMGEN-TXDO(1)
+  MMGEN-WALLET 15.1.dev37        May 2025                        MMGEN-TXDO(1)
 ```

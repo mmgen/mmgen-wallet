@@ -16,7 +16,7 @@
   -E, --fee-estimate-mode M Specify the network fee estimate mode.  Choices:
                         'conservative','economical'.  Default: 'conservative'
   -f, --fee          f  Transaction fee, as a decimal BTC amount or as
-                        satoshis per byte (an integer followed by 's').
+                        satoshis per byte (an integer followed by ‘s’).
                         See FEE SPECIFICATION below.  If omitted, fee will be
                         calculated using network fee estimation.
   -i, --info            Display unspent outputs and exit
@@ -89,8 +89,8 @@
                                  FEE SPECIFICATION
 
   Transaction fees, both on the command line and at the interactive prompt, may
-  be specified as either absolute BTC amounts, using a plain decimal number, or
-  as satoshis per byte, using an integer followed by 's', for satoshi.
+  be specified as either absolute coin amounts, using a plain decimal number, or
+  as satoshis per byte, using an integer followed by ‘s’, for satoshi.
 
 
   EXAMPLES:
@@ -123,5 +123,5 @@
 
       $ mmgen-txcreate B
 
-  MMGEN v15.1.dev18              March 2025                  MMGEN-TXCREATE(1)
+  MMGEN-WALLET 15.1.dev37        May 2025                    MMGEN-TXCREATE(1)
 ```

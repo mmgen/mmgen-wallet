@@ -19,7 +19,7 @@
   -d, --outdir         d Specify an alternate directory 'd' for output
   -e, --echo-passphrase  Print passphrase to screen when typing it
   -f, --fee            f Transaction fee, as a decimal BTC amount or as
-                         satoshis per byte (an integer followed by 's').
+                         satoshis per byte (an integer followed by ‘s’).
                          See FEE SPECIFICATION below.
   -H, --hidden-incog-input-params f,o  Read hidden incognito data from file
                         'f' at offset 'o' (comma-separated)
@@ -44,6 +44,8 @@
   -q, --quiet            Suppress warnings; overwrite files without prompting
   -s, --send             Sign and send the transaction (the default if seed
                          data is provided)
+  -T, --txhex-idx N      Send only part ‘N’ of a multi-part transaction.
+                         Indexing begins with one.
   -v, --verbose          Produce more verbose output
   -W, --allow-non-wallet-swap Allow signing of swap transactions that send funds
                          to non-wallet addresses
@@ -72,13 +74,13 @@
                                  FEE SPECIFICATION
 
   Transaction fees, both on the command line and at the interactive prompt, may
-  be specified as either absolute BTC amounts, using a plain decimal number, or
-  as satoshis per byte, using an integer followed by 's', for satoshi.
+  be specified as either absolute coin amounts, using a plain decimal number, or
+  as satoshis per byte, using an integer followed by ‘s’, for satoshi.
 
 
   Transactions may contain both MMGen or non-MMGen input addresses.
 
-  To sign non-MMGen inputs, a bitcoind wallet dump or flat key list is used
+  To sign non-MMGen inputs, a coin daemon wallet dump or flat key list is used
   as the key source (--keys-from-file option).
 
   To sign MMGen inputs, key data is generated from a seed as with the
@@ -116,5 +118,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN-WALLET 15.1.dev25        March 2025                    MMGEN-TXBUMP(1)
+  MMGEN-WALLET 15.1.dev37        May 2025                      MMGEN-TXBUMP(1)
 ```

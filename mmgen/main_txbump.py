@@ -125,7 +125,7 @@ column below:
 			pnm     = gc.proj_name,
 			pnl     = gc.proj_name.lower(),
 			fu      = help_notes('rel_fee_desc'),
-			fl      = help_notes('fee_spec_letters'),
+			fl      = help_notes('fee_spec_letters', use_quotes=True),
 			kgs     = help_notes('keygen_backends'),
 			coin_id = help_notes('coin_id'),
 			dsl     = help_notes('dfl_seed_len'),

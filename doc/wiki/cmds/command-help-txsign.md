@@ -44,7 +44,7 @@
 
   Transactions may contain both MMGen or non-MMGen input addresses.
 
-  To sign non-MMGen inputs, a bitcoind wallet dump or flat key list is used
+  To sign non-MMGen inputs, a coin daemon wallet dump or flat key list is used
   as the key source (--keys-from-file option).
 
   To sign MMGen inputs, key data is generated from a seed as with the
@@ -82,5 +82,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN v15.1.dev18              March 2025                    MMGEN-TXSIGN(1)
+  MMGEN-WALLET 15.1.dev37        May 2025                      MMGEN-TXSIGN(1)
 ```

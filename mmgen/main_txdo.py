@@ -54,7 +54,7 @@ opts_data = {
 			b- -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
 			+                         {fe_all}.  Default: {fe_dfl!r}
 			-- -f, --fee=           f Transaction fee, as a decimal {cu} amount or as
-			+                         {fu} (an integer followed by {fl!r}).
+			+                         {fu} (an integer followed by {fl}).
 			+                         See FEE SPECIFICATION below.  If omitted, fee will be
 			+                         calculated using network fee estimation.
 			et -g, --gas=N            Set the gas limit (see GAS LIMIT below)
@@ -143,7 +143,7 @@ column below:
 			kgs     = help_notes('keygen_backends'),
 			coin_id = help_notes('coin_id'),
 			fu      = help_notes('rel_fee_desc'),
-			fl      = help_notes('fee_spec_letters'),
+			fl      = help_notes('fee_spec_letters', use_quotes=True),
 			dsl     = help_notes('dfl_seed_len'),
 			ss      = help_notes('dfl_subseeds'),
 			si      = help_notes('stream_interval'),

@@ -16,9 +16,13 @@
   -E, --fee-estimate-mode M Specify the network fee estimate mode.  Choices:
                         'conservative','economical'.  Default: 'conservative'
   -f, --fee          f  Transaction fee, as a decimal BTC amount or as
-                        satoshis per byte (an integer followed by 's').
+                        satoshis per byte (an integer followed by ‘s’).
                         See FEE SPECIFICATION below.  If omitted, fee will be
                         calculated using network fee estimation.
+  -g, --gas N           Set the gas limit for Ethereum (see GAS LIMIT below)
+  -G, --router-gas N    Set the gas limit for the Ethereum router contract
+                        (integer).  When unset, a hardcoded default will be
+                        used.  Applicable only for swaps from token assets.
   -i, --info            Display unspent outputs and exit
   -I, --inputs       i  Specify transaction inputs (comma-separated list of
                         MMGen IDs or coin addresses).  Note that ALL unspent
@@ -29,11 +33,15 @@
   -m, --minconf      n  Minimum number of confirmations required to spend
                         outputs (default: 1)
   -q, --quiet           Suppress warnings; overwrite files without prompting
+  -r, --stream-interval N Set block interval for streaming swap (default: 3)
   -s, --swap-proto      Swap protocol to use (Default: thorchain,
                         Choices: 'thorchain')
+  -S, --list-assets     List available swap assets
   -v, --verbose         Produce more verbose output
   -V, --vsize-adj    f  Adjust transaction's estimated vsize by factor 'f'
-  -x, --proxy P         Fetch the swap quote via SOCKS5 proxy ‘P’ (host:port)
+  -x, --proxy P         Fetch the swap quote via SOCKS5h proxy ‘P’ (host:port).
+                        Use special value ‘env’ to honor *_PROXY environment
+                        vars instead.
   -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 
 
@@ -56,19 +64,19 @@
   automount is likewise supported via the --autosign option.
 
   The command line must contain at minimum a send coin (COIN1) and receive coin
-  (COIN2) symbol.  Currently supported coins are BTC, LTC and BCH.  All other
-  arguments are optional.  If AMT is specified, the specified value of send coin
-  will be swapped and the rest returned to a change address in the originating
-  tracking wallet.  Otherwise, the entire value of the interactively selected
-  inputs will be swapped.
+  (COIN2) symbol.  Currently supported coins are BTC, LTC, BCH and ETH.  All
+  other arguments are optional.  If AMT is specified, the specified value of
+  send coin will be swapped and the rest returned to a change address in the
+  originating tracking wallet.  Otherwise, the entire value of the interactively
+  selected inputs will be swapped.
 
-  By default, the change and destination addresses are chosen automatically by
-  finding the lowest-indexed unused addresses of the preferred address types in
-  the send and receive tracking wallets.  For Bitcoin and forks, types ‘B’,
-  ‘S’ and ‘C’ (see ADDRESS TYPES below) are searched in that order for unused
-  addresses.  Note that sending to an unused address may be undesirable for
-  Ethereum, where address (i.e. account) reuse is the norm.  In that case, the
-  user should specify a destination address on the command line.
+  By default, the change (if applicable) and destination addresses are chosen
+  automatically by finding the lowest-indexed unused addresses of the preferred
+  address types in the send and receive tracking wallets.  For Bitcoin and
+  forks, types ‘B’, ‘S’ and ‘C’ (see ADDRESS TYPES below) are searched in that
+  order for unused addresses.  Note that sending to an unused address may be
+  undesirable for Ethereum, where address (i.e. account) reuse is the norm.  In
+  that case, the user should specify a destination address on the command line.
 
   If the wallet contains eligible unused addresses with multiple Seed IDs, the
   user will be presented with a list of the lowest-indexed addresses of
@@ -91,21 +99,21 @@
 
   When choosing a fee, bear in mind that the longer the transaction remains
   unconfirmed, the greater the risk that the vault address will expire, leading
-  to loss of funds.  It’s therefore advisable to learn how to create, sign and
+  to loss of funds.  It’s therefore recommended to learn how to create, sign and
   send replacement transactions with ‘mmgen-txbump’ before performing a swap
   with this script.  When bumping a stuck swap transaction, the safest option
   is to create a replacement transaction with one output that returns funds back
   to the originating tracking wallet, thus aborting the swap, rather than one
   that merely increases the fee (see EXAMPLES below).
 
-  Before broadcasting the transaction, it’s advisable to double-check the vault
-  address on a block explorer such as thorchain.net or runescan.io.
+  Before broadcasting the transaction, it’s a good idea to double-check the
+  vault address on a block explorer such as thorchain.net or runescan.io.
 
   The MMGen Node Tools suite contains two useful tools to help with fine-tuning
   transaction fees, ‘mmnode-feeview’ and ‘mmnode-blocks-info’, in addition to
   ‘mmnode-ticker’, which can be used to calculate the current cross-rate between
-  the asset pair of a swap, as well as the total receive value in terms of the
-  send value.
+  the asset pair of a swap, as well as the total receive value in terms of send
+  value.
 
 
                                   TRADE LIMIT
@@ -140,14 +148,33 @@
     ‘M’  monero       - Monero address
 
 
+                                   GAS LIMIT
+
+  This option specifies the maximum gas allowance for an Ethereum transaction.
+  It’s generally of interest only for token transactions or swap transactions
+  from token assets.
+
+  Parameter must be an integer or one of the special values ‘fallback’ (for a
+  locally computed sane default) or ‘auto’ (for gas estimate via an RPC call,
+  in the case of a token transaction, or locally computed default, in the case
+  of a standard transaction). The default is ‘auto’.
+
+
                                  FEE SPECIFICATION
 
   Transaction fees, both on the command line and at the interactive prompt, may
-  be specified as either absolute BTC amounts, using a plain decimal number, or
-  as satoshis per byte, using an integer followed by 's', for satoshi.
+  be specified as either absolute coin amounts, using a plain decimal number, or
+  as satoshis per byte, using an integer followed by ‘s’, for satoshi (for
+  Bitcoin, Litecoin and Bitcoin Cash), or gas price, using an integer followed
+  by ‘w’,‘K’,‘M’,‘G’,‘s’ or ‘f’, for wei, Kwei, Mwei, Gwei, szabo and finney,
+  respectively (for Ethereum)
 
 
   EXAMPLES:
+
+    Display available swap assets:
+
+      $ mmgen-swaptxcreate -S
 
     Create a BTC-to-LTC swap transaction, prompting the user for transaction
     inputs.  The full value of the inputs, minus miner fees, will be swapped
@@ -200,5 +227,22 @@
 
       $ mmgen-tool --coin=bch --bch-rpc-host=gemini twview minconf=0
 
-  MMGEN v15.1.dev23              March 2025               MMGEN-SWAPTXCREATE(1)
+    Create a Tether-to-LTC swap transaction for autosigning, connecting to the
+    swap quote server via Tor:
+
+      $ mmgen-swaptxcreate --autosign --proxy=localhost:9050 ETH.USDT 1000 LTC
+
+    After signing, send the transaction via public Etherscan proxy over Tor:
+
+      $ mmgen-txsend --autosign --quiet --tx-proxy=etherscan --proxy=localhost:9050
+
+    After sending, check the transaction status:
+
+      $ mmgen-txsend --autosign --verbose --status
+
+    Create a Tether-to-DAI swap transaction, with explicit destination account:
+
+      $ mmgen-swaptxcreate ETH.USDT 1000 ETH.DAI E:01234ABC:3
+
+  MMGEN-WALLET 15.1.dev37        May 2025                 MMGEN-SWAPTXCREATE(1)
 ```

@@ -97,7 +97,7 @@ opts_data = {
 			cu     = proto.coin,
 			a_info = help_notes('account_info_desc'),
 			fu     = help_notes('rel_fee_desc'),
-			fl     = help_notes('fee_spec_letters'),
+			fl     = help_notes('fee_spec_letters', use_quotes=True),
 			si     = help_notes('stream_interval'),
 			fe_all = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),
 			fe_dfl = cfg._autoset_opts['fee_estimate_mode'].choices[0],

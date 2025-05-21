@@ -19,15 +19,20 @@
                    action has been successfully sent out-of-band.
   -n, --tx-proxy P Send transaction via public TX proxy ‘P’ (supported proxies:
                    ‘etherscan’).  This is done via a publicly accessible web
-                   page, so no API key or registration is required
+                   page, so no API key or registration is required.
   -q, --quiet      Suppress warnings; overwrite files without prompting
   -r, --receipt    Print the receipt of the sent transaction (Ethereum only)
   -s, --status     Get status of a sent transaction (or current transaction,
                    whether sent or unsent, when used with --autosign)
   -t, --test       Test whether the transaction can be sent without sending it
+  -T, --txhex-idx N Send only part ‘N’ of a multi-part transaction.  Indexing
+                   begins with one.
   -v, --verbose    Be more verbose
-  -x, --proxy P    Connect to TX proxy via SOCKS5 proxy ‘P’ (host:port)
+  -w, --wait       Wait for transaction confirmation (Ethereum only)
+  -x, --proxy P    Connect to TX proxy via SOCKS5h proxy ‘P’ (host:port).
+                   Use special value ‘env’ to honor *_PROXY environment vars
+                   instead.
   -y, --yes        Answer 'yes' to prompts, suppress non-essential output
 
-  MMGEN-WALLET 15.1.dev25        March 2025                    MMGEN-TXSEND(1)
+  MMGEN-WALLET 15.1.dev37        May 2025                      MMGEN-TXSEND(1)
 ```
