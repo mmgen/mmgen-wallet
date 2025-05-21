@@ -135,7 +135,7 @@ def check_privkey(key_int):
 
 class BipHDConfig(Lockable):
 
-	supported_coins = ('btc', 'eth', 'doge', 'ltc', 'bch')
+	supported_coins = ('btc', 'eth', 'doge', 'ltc', 'bch', 'rune')
 
 	def __init__(self, base_cfg, coin, *, network, addr_type, from_path, no_path_checks):
 

@@ -110,6 +110,8 @@ eth_pubhex2 = '9166c289b9f905e55f9e3df9f69d7f356b4a22095f894f4715714aa4b56606aff
 xmr_pubhex1 = '1ed49357e217e79dab3c5503822f2bdb561e302e24476ee6ff33242c7551d4e78944790c0cfa9998c2f196061be89b2b8387f9d397db20ea8e049899cdc947d1'
 zec_pubhex1 = 'e6a4edbff547f21bcc2a825b6cf70f06e266a452d2da9d6dc5c1da3d99d7e996f488704dcdfe8d92cafe47772b3f692a98d59de1e99e00ff815f64ae59910f0c'
 
+rune_addr1 = 'thor1xptlvmwaymaxa7pxkr2u5pn7c0508stcr9tw2z'
+
 tests = {
 	'Mnemonic': {
 		'hex2mn': (
@@ -407,6 +409,9 @@ tests = {
 				([btc_addr5], pubhash1),
 				([btc_addr6], pubhash2),
 			],
+			'rune_mainnet': [
+				([rune_addr1], pubhash2),
+			],
 		},
 		'eth_checksummed_addr': {
 			'eth_mainnet': [
@@ -422,6 +427,9 @@ tests = {
 				(['8e34586186551f6320fa3eb2d238a9c61ab8264b'], '37ZBgCBjjz9WSEzp1Zjv8sqdgmNie3Kd5s',
 					['--type=segwit'], 'segwit'),
 				([pubhash2], btc_addr6, ['--type=bech32'], 'bech32'),
+			],
+			'rune_mainnet': [
+				([pubhash2], rune_addr1, ['--type=X'], 'bech32x'),
 			],
 		},
 		'addr2scriptpubkey': {
@@ -663,6 +671,12 @@ tests = {
 				(
 					['test/ref/ethereum_classic/98831F3A-ETC[1,31-33,500-501,1010-1011].addrs'],
 					'E97A D796 B495 E8BC'
+				),
+			],
+			'rune_mainnet': [
+				(
+					['test/ref/thorchain/98831F3A-RUNE-X[1,31-33,500-501,1010-1011].addrs'],
+					'00C6 1930 557F 5E99'
 				),
 			],
 		},

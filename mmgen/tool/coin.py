@@ -165,6 +165,8 @@ class tool_cmd(tool_cmd_base):
 			return self.proto.pubhash2segwitaddr(pubhash)
 		elif self.mmtype.name == 'bech32':
 			return self.proto.pubhash2bech32addr(pubhash)
+		elif self.mmtype.name == 'bech32x':
+			return self.proto.encode_addr_bech32x(pubhash)
 		else:
 			return self.proto.pubhash2addr(pubhash, self.mmtype.addr_fmt)
 

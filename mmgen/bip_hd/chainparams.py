@@ -58,6 +58,8 @@ def parse_data():
 
 	return out
 
+# RUNE derivation is SLIP-10, not BIP-44, but we treat them as equivalent
+
 _data_in = """
 
 [defaults]
@@ -105,6 +107,7 @@ IDX    CHAIN  CURVE NW ADDR_CLS         VB_PRV   VB_PUB   VB_WIF VB_ADDR  DFL_PA
 784    SUI    edw   m  Sui              x        x        -      -        0'/0'/0' Sui
 818    VET    x     m  Eth              x        x        -      -        x        VeChain Token
 888    NEO    nist  m  Neo              x        x        -      spec     x        NEO
+931    RUNE   x     m  BechP2PKH        x        x        -      h:thor   x        THORChain
 996    OKT    x     m  Okex             x        x        -      -        x        OKChain Token
 1023   ONE    x     m  One              x        x        -      -        x        HARMONY-ONE (Legacy)
 1024   ONT    nist  m  Neo              x        x        -      spec     x        Ontology
@@ -896,7 +899,6 @@ IDX    CHAIN    NAME
 921    AVN    - Avian Network
 925    DIP    - Dipper Network
 928    GHM    - HermitMatrixNetwork
-931    RUNE   - THORChain (RUNE)
 941    ---    - reserved
 945    UNLOCK - Jasiri protocol
 955    LTP    - LifetionCoin

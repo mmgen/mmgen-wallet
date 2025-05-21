@@ -146,6 +146,7 @@ vectors_multicoin = {
 	'bch_compressed': 'bitcoincash:qpqpcllprftg4s0chdgkpxhxv23wfymq3gj7n0a9vw',
 	'bsc_smart':    '0x373731f4d885Fc7Da05498F9f0804a87A14F891b',
 	'bnb_beacon':   'bnb179c3ymltqm4utlp089zxqeta5dvn48a305rhe5',
+	'rune':         'thor1nr6fye3nznyn20m5w6fey6w8a8l4q599cdqmpc',
 }
 
 def wif2addr(cfg, wif):

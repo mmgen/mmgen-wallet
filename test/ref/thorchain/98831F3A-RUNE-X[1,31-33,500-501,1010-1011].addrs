@@ -1,0 +1,20 @@
+# MMGen address file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is a comment and ignored by MMGen.
+# A text label of 80 screen cells or less may be added to the right of each
+# address, and it will be appended to the tracking wallet label upon import.
+# The label may contain any printable ASCII symbol.
+#
+# Address data checksum for 98831F3A-RUNE-X[1,31-33,500-501,1010-1011]: 00C6 1930 557F 5E99
+# Record this value to a secure location.
+98831F3A RUNE:BECH32X {
+  1     thor137aqwpky5muxw7rvrdy6kxegt838k04xp4rnge
+  31    thor1w758u285uqv5h3wuksylvxtahql9tjsdllurug
+  32    thor18srpqhu8q8ppp4zc3zje3yp5lf3jpmq8hu4phh
+  33    thor16hgd6g3cutx8dhslvdgxljss4w7prq32u9x20y
+  500   thor14q7m5jyajjnlqgccu3vh2dx0m2323558faxlz6
+  501   thor1gyaexk8l3rvt7vsfd693y33ate989r64ak65gk
+  1010  thor1g95knu2elqt8l0d5vcyf0hyuspn4mhsjrym8g9
+  1011  thor12f6lgkjy7amxdz7eznv33xypvzux9kxslkqvzq
+}

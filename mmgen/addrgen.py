@@ -59,6 +59,7 @@ def AddrGenerator(cfg, proto, addr_type):
 		'compressed': 'btc',
 		'segwit':     'btc',
 		'bech32':     'btc',
+		'bech32x':    'xchain',
 		'monero':     'xmr',
 		'ethereum':   'eth',
 		'zcash_z':    'zec',

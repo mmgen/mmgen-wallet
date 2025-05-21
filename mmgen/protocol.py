@@ -46,7 +46,8 @@ class CoinProtocol(MMGenObject):
 		'eth': proto_info('Ethereum',        4),
 		'etc': proto_info('EthereumClassic', 4),
 		'zec': proto_info('Zcash',           2),
-		'xmr': proto_info('Monero',          4)
+		'xmr': proto_info('Monero',          4),
+		'rune': proto_info('THORChain',      2)
 	}
 
 	class Base(Lockable):
