@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-swap.asset: swap asset class the MMGen Wallet suite
+swap.asset: swap asset class for the MMGen Wallet suite
 """
 
 from collections import namedtuple

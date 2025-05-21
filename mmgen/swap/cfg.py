@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-swap.cfg: swap configuration class the MMGen Wallet suite
+swap.cfg: swap configuration class for the MMGen Wallet suite
 """
 
 import re

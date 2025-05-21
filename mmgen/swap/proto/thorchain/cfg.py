@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-swap.proto.thorchain.cfg: THORChain swap configuration class the MMGen Wallet suite
+swap.proto.thorchain.cfg: THORChain swap configuration class for the MMGen Wallet suite
 """
 
 from ...cfg import SwapCfg

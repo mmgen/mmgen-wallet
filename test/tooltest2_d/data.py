@@ -69,6 +69,9 @@ privhex5 = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f'
 privhex6 = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'
 privhex7 = '118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'
 
+pubhash1 = '118089d66b4a5853765e94923abdd5de4616c6e5'
+pubhash2 = '3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'
+
 btc_addr1 = '1C5VPtgq9xQ6AcTgMAR3J6GDrs72HC4pS1'
 btc_addr2 = '1Kz9fVSUMshzPejpzW9D95kScgA3rY6QxF'
 btc_addr3 = '3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg'
@@ -401,8 +404,8 @@ tests = {
 	'Coin': {
 		'addr2pubhash': {
 			'btc_mainnet': [
-				([ btc_addr5], '118089d66b4a5853765e94923abdd5de4616c6e5'),
-				([ btc_addr6], '3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'),
+				([btc_addr5], pubhash1),
+				([btc_addr6], pubhash2),
 			],
 		},
 		'eth_checksummed_addr': {
@@ -415,17 +418,17 @@ tests = {
 		},
 		'pubhash2addr': {
 			'btc_mainnet': [
-				(['118089d66b4a5853765e94923abdd5de4616c6e5'], btc_addr5, None, 'legacy'),
+				([pubhash1], btc_addr5, None, 'legacy'),
 				(['8e34586186551f6320fa3eb2d238a9c61ab8264b'], '37ZBgCBjjz9WSEzp1Zjv8sqdgmNie3Kd5s',
 					['--type=segwit'], 'segwit'),
-				(['3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], btc_addr6, ['--type=bech32'], 'bech32'),
+				([pubhash2], btc_addr6, ['--type=bech32'], 'bech32'),
 			],
 		},
 		'addr2scriptpubkey': {
 			'btc_mainnet': [
-				([ btc_addr5], '76a914118089d66b4a5853765e94923abdd5de4616c6e588ac'),
-				([ btc_addr7], 'a9148e34586186551f6320fa3eb2d238a9c61ab8264b87'),
-				([ btc_addr6], '00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'),
+				([btc_addr5], '76a914118089d66b4a5853765e94923abdd5de4616c6e588ac'),
+				([btc_addr7], 'a9148e34586186551f6320fa3eb2d238a9c61ab8264b87'),
+				([btc_addr6], '00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'),
 			],
 		},
 		'scriptpubkey2addr': {
