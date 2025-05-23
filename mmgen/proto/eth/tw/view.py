@@ -33,6 +33,6 @@ class EthereumTwView(TwView):
 	def gen_subheader(self, cw, color):
 		if self.disp_prec == 8:
 			yield 'Balances truncated to 8 decimal points'
-		if self.cfg.cached_balances:
+		if self.twctl.use_cached_balances:
 			from ....color import nocolor, yellow
 			yield (nocolor, yellow)[color]('WARNING: Using cached balances. These may be out of date!')

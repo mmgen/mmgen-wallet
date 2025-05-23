@@ -54,6 +54,7 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 	aggressive_sync = False
 	importing = False
 	tw_fn = 'tracking-wallet.json'
+	use_cached_balances = False
 
 	def __new__(cls, cfg, proto, *args, **kwargs):
 		return MMGenObject.__new__(
@@ -80,6 +81,9 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 		self.mode = mode
 		self.desc = self.base_desc = f'{self.proto.name} tracking wallet'
 		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation
+
+		if cfg.cached_balances:
+			self.use_cached_balances = True
 
 		if not no_rpc:
 			self.rpc = await rpc_init(cfg, proto, ignore_wallet=rpc_ignore_wallet)
@@ -182,7 +186,7 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 	def get_cached_balance(self, addr, session_cache, data_root):
 		if addr in session_cache:
 			return self.proto.coin_amt(session_cache[addr])
-		if not self.cfg.cached_balances:
+		if not self.use_cached_balances:
 			return None
 		if addr in data_root and 'balance' in data_root[addr]:
 			return self.proto.coin_amt(data_root[addr]['balance'])
