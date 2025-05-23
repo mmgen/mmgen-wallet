@@ -226,12 +226,13 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		self._age_fmt = val
 
 	def age_disp(self, o, age_fmt):
-		if age_fmt == 'confs':
-			return o.confs or '-'
-		elif age_fmt == 'block':
-			return self.rpc.blockcount + 1 - o.confs if o.confs else '-'
-		else:
-			return self.date_formatter[age_fmt](self.rpc, o.date)
+		if self.has_age:
+			if age_fmt == 'confs':
+				return o.confs or '-'
+			elif age_fmt == 'block':
+				return self.rpc.blockcount + 1 - o.confs if o.confs else '-'
+			else:
+				return self.date_formatter[age_fmt](self.rpc, o.date)
 
 	def get_disp_prec(self, wide):
 		return self.proto.coin_amt.max_prec

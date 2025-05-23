@@ -16,9 +16,6 @@ from ....tw.view import TwView
 
 class EthereumTwView(TwView):
 
-	def age_disp(self, o, age_fmt): # TODO
-		pass
-
 	def get_disp_prec(self, wide):
 		return self.proto.coin_amt.max_prec if wide else 8
 
