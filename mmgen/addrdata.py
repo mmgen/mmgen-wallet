@@ -105,3 +105,20 @@ class TwAddrData(AddrData, metaclass=AsyncInit):
 				al_id = al_id,
 				adata = AddrListData(sorted(out[al_id], key=lambda a: a.idx))
 			))
+
+class TwAddrDataWithStore(TwAddrData):
+
+	msgs = {
+		'multiple_acct_addrs': """
+			ERROR: More than one address found for account: {acct!r}.
+			Your tracking wallet is corrupted!
+		"""
+	}
+
+	async def get_tw_data(self, *, twctl=None):
+		self.cfg._util.vmsg('Getting address data from tracking wallet')
+		if twctl is None:
+			from .tw.ctl import TwCtl
+			twctl = await TwCtl(self.cfg, self.proto)
+		# emulate the output of RPC 'listaccounts' and 'getaddressesbyaccount'
+		return [(mmid+' '+d['comment'], [d['addr']]) for mmid, d in list(twctl.mmid_ordered_dict.items())]
