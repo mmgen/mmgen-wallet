@@ -12,7 +12,7 @@
 tw.addresses: Tracking wallet listaddresses class for the MMGen suite
 """
 
-from ..util import msg, suf, is_int
+from ..util import msg, is_int
 from ..obj import MMGenListItem, ImmutableAttr, ListItemAttr, TwComment, NonNegativeInt
 from ..addr import CoinAddr, MMGenID, MMGenAddrType
 from ..amt import CoinAmtChk
@@ -202,10 +202,6 @@ class TwAddresses(TwView):
 			wide = wide,
 			interactive = interactive,
 		)
-
-	def gen_subheader(self, cw, color):
-		if self.minconf:
-			yield f'Displaying balances with at least {self.minconf} confirmation{suf(self.minconf)}'
 
 	def squeezed_col_hdr(self, cw, fs, color):
 		return fs.format(

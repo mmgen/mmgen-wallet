@@ -27,7 +27,7 @@ from ..cfg import gv
 from ..objmethods import MMGenObject
 from ..obj import get_obj, MMGenIdx, MMGenList
 from ..color import nocolor, yellow, green, red, blue
-from ..util import msg, msg_r, fmt, die, capfirst, make_timestr
+from ..util import msg, msg_r, fmt, die, capfirst, suf, make_timestr
 from ..rpc import rpc_init
 from ..base_obj import AsyncInit
 
@@ -379,7 +379,11 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			return do_ret(get_freews(self.cols, varws, varw, minw))
 
 	def gen_subheader(self, cw, color):
-		return ()
+		if self.twctl.use_cached_balances:
+			from ..color import nocolor, yellow
+			yield (nocolor, yellow)[color]('WARNING: Using cached balances. These may be out of date!')
+		else:
+			yield f'Displaying balances with {self.minconf} confirmation{suf(self.minconf)}'
 
 	def gen_footer(self, color):
 		if hasattr(self, 'total'):
