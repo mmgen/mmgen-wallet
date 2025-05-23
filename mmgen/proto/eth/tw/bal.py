@@ -36,6 +36,7 @@ class EthereumTwGetBalance(TwGetBalance):
 
 	async def create_data(self):
 		in_data = self.twctl.mmid_ordered_dict
+		block = self.twctl.rpc.get_block_from_minconf(self.minconf)
 		for d in in_data:
 			if d.type == 'mmgen':
 				label = d.obj.sid
@@ -44,7 +45,7 @@ class EthereumTwGetBalance(TwGetBalance):
 			else:
 				label = 'Non-MMGen'
 
-			amt = await self.twctl.get_balance(in_data[d]['addr'])
+			amt = await self.twctl.get_balance(in_data[d]['addr'], block=block)
 
 			self.data['TOTAL']['ge_minconf'] += amt
 			self.data[label]['ge_minconf'] += amt

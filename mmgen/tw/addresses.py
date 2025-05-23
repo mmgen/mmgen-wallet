@@ -131,19 +131,20 @@ class TwAddresses(TwView):
 	async def get_rpc_data(self):
 
 		self.total = self.proto.coin_amt('0')
-		self.minconf = None
 		addrs = {}
 
 		used_addrs = self.twctl.used_addrs
+		minconf = int(self.minconf)
+		block = self.twctl.rpc.get_block_from_minconf(minconf)
 
 		for e in await self.twctl.get_label_addr_pairs():
-			bal = await self.twctl.get_balance(e.coinaddr)
+			bal = await self.twctl.get_balance(e.coinaddr, block=block)
 			addrs[e.label.mmid] = {
 				'addr':  e.coinaddr,
 				'amt':   bal,
 				'recvd': bal,         # current bal only, CF btc.tw.addresses.get_rpc_data()
 				'is_used': bool(bal) or e.coinaddr in used_addrs,
-				'confs': 0,
+				'confs': minconf,
 				'lbl':   e.label}
 			self.total += bal
 

@@ -616,7 +616,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		('token_bal6',                 'the token balance'),
 
 		('listaddresses1',             'listaddresses'),
-		('listaddresses2',             'listaddresses minconf=999999999 (ignored)'),
+		('listaddresses2',             'listaddresses minconf=3'),
 		('listaddresses3',             'listaddresses sort=age (ignored)'),
 		('listaddresses4',             'listaddresses showempty=1 sort=age (ignored)'),
 
@@ -663,8 +663,8 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		('twview1',       'twview'),
 		('twview2',       'twview wide=1'),
 		('twview3',       'twview wide=1 sort=age (ignored)'),
-		('twview4',       'twview wide=1 minconf=999999999 (ignored)'),
-		('twview5',       'twview wide=1 minconf=0 (ignored)'),
+		('twview4',       'twview wide=1 minconf=15'),
+		('twview5',       'twview wide=1 minconf=0'),
 		('token_twview1', 'twview --token=mm1'),
 		('token_twview2', 'twview --token=mm1 wide=1'),
 		('token_twview3', 'twview --token=mm1 wide=1 sort=age (ignored)'),
@@ -1527,7 +1527,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def listaddresses1(self):
 		return self.listaddresses()
 	def listaddresses2(self):
-		return self.listaddresses(tool_args=['minconf=999999999'])
+		return self.listaddresses(tool_args=['minconf=3'])
 	def listaddresses3(self):
 		return self.listaddresses(tool_args=['sort=amt', 'reverse=1'])
 	def listaddresses4(self):
@@ -1619,7 +1619,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def twview3(self):
 		return self.twview(tool_args=['wide=1', 'sort=age'])
 	def twview4(self):
-		return self.twview(tool_args=['wide=1', 'minconf=999999999'])
+		return self.twview(tool_args=['wide=1', 'minconf=15'], expect_str=r'E:1\D.*\D100\D')
 	def twview5(self):
 		return self.twview(tool_args=['wide=1', 'minconf=0'])
 	def twview6(self):

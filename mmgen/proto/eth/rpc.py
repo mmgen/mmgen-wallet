@@ -92,6 +92,14 @@ class EthereumRPCClient(RPCClient, metaclass=AsyncInit):
 	def make_host_path(self, wallet):
 		return ''
 
+	def get_block_from_minconf(self, minconf):
+		assert minconf - 1 <= self.blockcount, (
+			f'{minconf}: illegal value for ‘minconf’ (exceeds block count)')
+		return (
+			'pending' if minconf == 0 else
+			'latest' if minconf == 1 else
+			hex(self.blockcount - (minconf - 1)))
+
 	rpcmethods = (
 		'eth_blockNumber',
 		'eth_call',

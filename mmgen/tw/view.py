@@ -86,6 +86,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	reverse     = False
 	group       = False
 	use_cached  = False
+	minconf     = 1
 	txid_w      = 64
 	sort_key    = 'age'
 	display_hdr = ()

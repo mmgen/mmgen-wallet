@@ -72,7 +72,7 @@ class TwUnspentOutputs(TwView):
 
 	async def __init__(self, cfg, proto, *, minconf=1, addrs=[]):
 		await super().__init__(cfg, proto)
-		self.minconf  = minconf
+		self.minconf  = NonNegativeInt(minconf)
 		self.addrs    = addrs
 		from ..cfg import gc
 		self.min_cols = gc.min_screen_width
