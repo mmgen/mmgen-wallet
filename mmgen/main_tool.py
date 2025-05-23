@@ -26,29 +26,30 @@ from .cfg import gc, Config
 from .util import msg, Msg, die, capfirst, suf, async_run
 
 opts_data = {
+	'filter_codes': ['-'],
 	'text': {
 		'desc':    f'Perform various {gc.proj_name}- and cryptocoin-related operations',
 		'usage':   '[opts] <command> <command args>',
 		'options': """
--d, --outdir=       d  Specify an alternate directory 'd' for output
--h, --help             Print this help message
---, --longhelp         Print help message for long (global) options
--e, --echo-passphrase  Echo passphrase or mnemonic to screen upon entry
--k, --use-internal-keccak-module Force use of the internal keccak module
--K, --keygen-backend=n Use backend 'n' for public key generation.  Options
-                       for {coin_id}: {kgs}
--l, --list             List available commands
--p, --hash-preset= p   Use the scrypt hash parameters defined by preset 'p'
-                       for password hashing (default: '{gc.dfl_hash_preset}')
--P, --passwd-file= f   Get passphrase from file 'f'.
--q, --quiet            Produce quieter output
--r, --usr-randchars=n  Get 'n' characters of additional randomness from
-                       user (min={cfg.min_urandchars}, max={cfg.max_urandchars})
--t, --type=t           Specify address type (valid choices: 'legacy',
-                       'compressed', 'segwit', 'bech32', 'zcash_z')
--v, --verbose          Produce more verbose output
--X, --cached-balances  Use cached balances (Ethereum only)
--y, --yes              Answer 'yes' to prompts, suppress non-essential output
+			-- -d, --outdir=       d  Specify an alternate directory 'd' for output
+			-- -h, --help             Print this help message
+			-- --, --longhelp         Print help message for long (global) options
+			-- -e, --echo-passphrase  Echo passphrase or mnemonic to screen upon entry
+			-- -k, --use-internal-keccak-module Force use of the internal keccak module
+			-- -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
+			+                         for {coin_id}: {kgs}
+			-- -l, --list             List available commands
+			-- -p, --hash-preset= p   Use the scrypt hash parameters defined by preset 'p'
+			+                         for password hashing (default: '{gc.dfl_hash_preset}')
+			-- -P, --passwd-file= f   Get passphrase from file 'f'.
+			-- -q, --quiet            Produce quieter output
+			-- -r, --usr-randchars=n  Get 'n' characters of additional randomness from
+			+                         user (min={cfg.min_urandchars}, max={cfg.max_urandchars})
+			-- -t, --type=t           Specify address type (valid choices: 'legacy',
+			+                         'compressed', 'segwit', 'bech32', 'zcash_z')
+			-- -v, --verbose          Produce more verbose output
+			e- -X, --cached-balances  Use cached balances
+			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 """,
 	'notes': """
 
