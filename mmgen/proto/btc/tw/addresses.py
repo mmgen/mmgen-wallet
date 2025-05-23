@@ -20,6 +20,8 @@ from .rpc import BitcoinTwRPC
 class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
 
 	has_age = True
+	has_used = True
+
 	prompt_fs_in = [
 		'Sort options: [a]mt, [A]ge, [M]mgen addr, [r]everse',
 		'Column options: toggle [D]ays/date/confs/block',

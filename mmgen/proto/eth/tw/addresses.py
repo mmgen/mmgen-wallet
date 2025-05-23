@@ -19,38 +19,11 @@ from .rpc import EthereumTwRPC
 
 class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
 
-	has_age = False
 	prompt_fs_in = [
 		'Sort options: [a]mt, [M]mgen addr, [r]everse',
 		'Filters: show [E]mpty addrs, show all [L]abels',
 		'View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}',
 		'Actions: [q]uit menu, r[e]draw, [D]elete addr, add [l]abel:']
-
-	def get_column_widths(self, data, *, wide, interactive):
-
-		return self.compute_column_widths(
-			widths = { # fixed cols
-				'num':  max(2, len(str(len(data)))+1),
-				'mmid': max(len(d.twmmid.disp) for d in data),
-				'used': 0,
-				'amt':  self.amt_widths['amt'],
-				'date': 0,
-				'block': 0,
-				'date_time': 0,
-				'spc':  5, # 4 spaces between cols + 1 leading space in fs
-			},
-			maxws = { # expandable cols
-				'addr':    max(len(d.addr) for d in data) if self.showcoinaddrs else 0,
-				'comment': max(d.comment.screen_width for d in data),
-			},
-			minws = {
-				'addr': 12 if self.showcoinaddrs else 0,
-				'comment': len('Comment'),
-			},
-			maxws_nice = {'addr': 18},
-			wide = wide,
-			interactive = interactive,
-		)
 
 	async def get_rpc_data(self):
 

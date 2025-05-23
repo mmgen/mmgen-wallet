@@ -35,6 +35,8 @@ class TwAddresses(TwView):
 	all_labels = False
 	no_data_errmsg = 'No addresses in tracking wallet!'
 	mod_subpath = 'tw.addresses'
+	has_age = False
+	has_used = False
 
 	key_mappings = {
 		'a':'s_amt',
@@ -97,6 +99,8 @@ class TwAddresses(TwView):
 		await super().__init__(cfg, proto)
 
 		self.minconf = NonNegativeInt(minconf)
+		self.spc_w = 5 + self.has_age + self.has_used # 1 space between cols + 1 leading space in fs
+		self.used_w = 4 if self.has_used else 0
 
 		if mmgen_addrs:
 			a = mmgen_addrs.rsplit(':', 1)
@@ -151,12 +155,12 @@ class TwAddresses(TwView):
 			widths = { # fixed cols
 				'num':  max(2, len(str(len(data)))+1),
 				'mmid': max(len(d.twmmid.disp) for d in data),
-				'used': 4,
+				'used': self.used_w,
 				'amt':  self.amt_widths['amt'],
 				'date': self.age_w if self.has_age else 0,
 				'block': self.age_col_params['block'][0] if wide and self.has_age else 0,
 				'date_time': self.age_col_params['date_time'][0] if wide and self.has_age else 0,
-				'spc':  7, # 6 spaces between cols + 1 leading space in fs
+				'spc': self.spc_w,
 			},
 			maxws = { # expandable cols
 				'addr':    max(len(d.addr) for d in data) if self.showcoinaddrs else 0,
