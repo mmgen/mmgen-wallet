@@ -243,11 +243,11 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	}
 
 	sort_funcs = {
-		'addr':   lambda i: '{} {:010} {:024.12f}'.format(i.addr, 0xffffffff - abs(i.confs), i.amt),
-		'age':    lambda i: '{:010} {:024.12f}'.format(0xffffffff - abs(i.confs), i.amt),
-		'amt':    lambda i: '{:024.12f} {:010} {}'.format(i.amt, 0xffffffff - abs(i.confs), i.addr),
+		'addr':   lambda i: i.addr,
+		'age':    lambda i: 0 - i.confs,
+		'amt':    lambda i: i.amt,
 		'txid':   lambda i: f'{i.txid} {i.vout:04}',
-		'twmmid': lambda i: '{} {:010} {:024.12f}'.format(i.twmmid.sort_key, 0xffffffff - abs(i.confs), i.amt)
+		'twmmid': lambda i: i.twmmid.sort_key
 	}
 
 	def sort_info(self, *, include_group=True):

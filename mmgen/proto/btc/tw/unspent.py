@@ -63,6 +63,14 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 		'w':'a_view_detail',
 		'l':'i_comment_add'}
 
+	sort_funcs = {
+		'addr':   lambda i: '{} {:010} {:024.12f}'.format(i.addr, 0xffffffff - abs(i.confs), i.amt),
+		'age':    lambda i: '{:010} {:024.12f}'.format(0xffffffff - abs(i.confs), i.amt),
+		'amt':    lambda i: '{:024.12f} {:010} {}'.format(i.amt, 0xffffffff - abs(i.confs), i.addr),
+		'txid':   lambda i: f'{i.txid} {i.vout:04}',
+		'twmmid': lambda i: '{} {:010} {:024.12f}'.format(
+			i.twmmid.sort_key, 0xffffffff - abs(i.confs), i.amt)}
+
 	async def get_rpc_data(self):
 		# bitcoin-cli help listunspent:
 		# Arguments:
