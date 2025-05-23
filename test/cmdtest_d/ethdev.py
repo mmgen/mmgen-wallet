@@ -1136,6 +1136,8 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		t.expect(expect_str)
 		if expect_str2:
 			t.expect(expect_str2)
+		if '--verbose' in add_opts:
+			t.expect('view: ', 'n')
 		return t
 
 	def tx_status1(self):

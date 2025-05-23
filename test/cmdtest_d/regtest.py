@@ -221,13 +221,13 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		('bob_import_miner_addr',        'importing miner’s coinbase addr into Bob’s wallet'),
 		('fund_bob_deterministic',       'funding Bob’s first MMGen address (deterministic method)'),
 		('fund_alice_deterministic',     'funding Alice’s first MMGen address (deterministic method)'),
+		('generate_extra_deterministic', 'generate extra blocks for deterministic run'),
 		('bob_recreate_tracking_wallet', 'creation of new tracking wallet (Bob)'),
 		('addrimport_bob2',              'reimporting Bob’s addresses'),
 		('fund_bob',                     'funding Bob’s wallet'),
 		('fund_alice',                   'funding Alice’s wallet'),
 		('generate',                     'mining a block'),
 		('bob_bal1',                     'Bob’s balance'),
-		('generate_extra_deterministic', 'generate extra blocks for deterministic run'),
 	),
 	'msg': (
 		'message signing',
@@ -643,6 +643,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			addr_range = '1-5',
 			num_addrs  = 5,
 			mmtypes    = [],
+			add_opts   = [],
 			batch      = True,
 			quiet      = True,
 			proto      = None):
@@ -665,6 +666,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 					(['--quiet'] if quiet else []) +
 					['--'+user] +
 					(['--batch'] if batch else []) +
+					add_opts +
 					[f'--coin={proto.coin}', addrfile]),
 				extra_desc = f'({desc})')
 			if self.cfg.debug:
@@ -702,9 +704,10 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 		return self.user_txdo(
 			'bob', '40s',
-			[f'{addr}, {rtFundAmt}', self.burn_addr],
+			[f'{addr},{rtFundAmt}', self.burn_addr],
 			utxo_nums,
 			extra_args = [f'--keys-from-file={keyfile}'],
+			tweaks = 'confirm_chg_non_mmgen',
 			skip_passphrase = skip_passphrase)
 
 	def fund_bob_deterministic(self):
@@ -740,7 +743,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def addrimport_bob2(self):
 		if not self.deterministic:
 			return 'skip'
-		return self.addrimport('bob')
+		return self.addrimport('bob', add_opts=['--rescan'])
 
 	def fund_wallet(self, user, mmtype, amt, sid=None, addr_range='1-5', proto=None):
 		proto = proto or self.proto
