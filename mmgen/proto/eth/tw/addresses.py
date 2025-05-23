@@ -18,33 +18,7 @@ from .view import EthereumTwView
 from .rpc import EthereumTwRPC
 
 class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
-
-	prompt_fs_in = [
-		'Sort options: [a]mt, [M]mgen addr, [r]everse',
-		'Filters: show [E]mpty addrs, show all [L]abels',
-		'View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}',
-		'Actions: [q]uit menu, r[e]draw, [D]elete addr, add [l]abel:']
-
-	async def get_rpc_data(self):
-
-		self.total = self.proto.coin_amt('0')
-		self.minconf = None
-		addrs = {}
-
-		used_addrs = self.twctl.used_addrs
-
-		for e in await self.twctl.get_label_addr_pairs():
-			bal = await self.twctl.get_balance(e.coinaddr)
-			addrs[e.label.mmid] = {
-				'addr':  e.coinaddr,
-				'amt':   bal,
-				'recvd': bal,         # current bal only, CF btc.tw.addresses.get_rpc_data()
-				'is_used': bool(bal) or e.coinaddr in used_addrs,
-				'confs': 0,
-				'lbl':   e.label}
-			self.total += bal
-
-		return addrs
+	pass
 
 class EthereumTokenTwAddresses(EthereumTwAddresses):
 	pass
