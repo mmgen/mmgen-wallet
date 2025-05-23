@@ -29,20 +29,10 @@ class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
 	prompt_fs_repl = {
 		'BCH': (1, 'Column options: toggle [D]ays/date/confs/block, cas[h]addr')
 	}
-	key_mappings = {
-		'a':'s_amt',
+	extra_key_mappings = {
 		'A':'s_age',
-		'M':'s_twmmid',
-		'r':'s_reverse',
 		'D':'d_days',
-		'e':'d_redraw',
-		'E':'d_showempty',
-		'u':'d_showused',
-		'L':'d_all_labels',
-		'v':'a_view',
-		'w':'a_view_detail',
-		'p':'a_print_detail',
-		'l':'i_comment_add'}
+		'u':'d_showused'}
 
 	async def get_rpc_data(self):
 

@@ -36,6 +36,19 @@ class TwAddresses(TwView):
 	no_data_errmsg = 'No addresses in tracking wallet!'
 	mod_subpath = 'tw.addresses'
 
+	key_mappings = {
+		'a':'s_amt',
+		'M':'s_twmmid',
+		'r':'s_reverse',
+		'e':'d_redraw',
+		'E':'d_showempty',
+		'L':'d_all_labels',
+		'l':'i_comment_add',
+		'D':'i_addr_delete',
+		'v':'a_view',
+		'w':'a_view_detail',
+		'p':'a_print_detail'}
+
 	class display_type(TwView.display_type):
 
 		class squeezed(TwView.display_type.squeezed):

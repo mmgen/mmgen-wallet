@@ -25,18 +25,6 @@ class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
 		'Filters: show [E]mpty addrs, show all [L]abels',
 		'View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}',
 		'Actions: [q]uit menu, r[e]draw, [D]elete addr, add [l]abel:']
-	key_mappings = {
-		'a':'s_amt',
-		'M':'s_twmmid',
-		'r':'s_reverse',
-		'e':'d_redraw',
-		'E':'d_showempty',
-		'L':'d_all_labels',
-		'l':'i_comment_add',
-		'D':'i_addr_delete',
-		'v':'a_view',
-		'w':'a_view_detail',
-		'p':'a_print_detail'}
 
 	def get_column_widths(self, data, *, wide, interactive):
 

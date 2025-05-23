@@ -186,6 +186,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		}
 	}
 	scroll_keys['darwin'] = scroll_keys['linux']
+	extra_key_mappings = {}
 
 	def __new__(cls, cfg, proto, *args, **kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls, cls.mod_subpath))
@@ -201,6 +202,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		if repl := self.prompt_fs_repl.get(self.proto.coin):
 			self.prompt_fs_in[repl[0]] = repl[1]
 		self.prompt_fs = '\n'.join(self.prompt_fs_in)
+		self.key_mappings.update(self.extra_key_mappings)
 		if self.proto.coin == 'BCH':
 			self.key_mappings.update({'h': 'd_addr_view_pref'})
 			self.addr_view_pref = 1 if not self.cfg.cashaddr else not self.proto.cashaddr
