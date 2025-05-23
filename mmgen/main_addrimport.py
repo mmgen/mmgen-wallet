@@ -81,7 +81,7 @@ addrimport_msgs = {
 	"""
 }
 
-def parse_cmd_args(rpc, cmd_args):
+def parse_cmd_args(cmd_args):
 
 	def import_mmgen_list(infile):
 		return (AddrList, KeyAddrList)[bool(cfg.keyaddr_file)](cfg, proto, infile=infile)
@@ -146,7 +146,7 @@ async def main():
 	for k, v in addrimport_msgs.items():
 		addrimport_msgs[k] = fmt(v, indent='  ', strip_char='\t').rstrip()
 
-	al, infile = parse_cmd_args(twctl.rpc, cfg._args)
+	al, infile = parse_cmd_args(cfg._args)
 
 	cfg._util.qmsg(
 		f'OK. {al.num_addrs} addresses'

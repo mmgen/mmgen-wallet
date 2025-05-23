@@ -132,7 +132,7 @@ class TwAddresses(TwView):
 				(not (d.is_used and not self.showused) and (d.amt or self.showempty))
 			)
 
-	def get_column_widths(self, data, wide, interactive):
+	def get_column_widths(self, data, *, wide, interactive):
 
 		return self.compute_column_widths(
 			widths = { # fixed cols

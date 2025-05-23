@@ -466,7 +466,8 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		return self._swaptxsend(add_opts=['--verbose', '--status'], status=True)
 
 	def swaptxmemo4(self):
-		self.mining_delay()
+		import time
+		time.sleep(1)
 		return self._check_token_swaptx_memo('=:b:mkQsXA7mqDtnUpkaXMbDtAL1KMeof4GPw3:0/3/0')
 
 	def swaptxreceipt4(self):

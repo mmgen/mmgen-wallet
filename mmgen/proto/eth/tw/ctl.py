@@ -174,7 +174,7 @@ class EthereumTwCtl(TwCtl):
 	def used_addrs(self):
 		from decimal import Decimal
 		return (
-			{k for k, v in self.data['accounts'].items() if Decimal(v['balance'])} |
+			{k for k, v in self.data['accounts'].items() if Decimal(v.get('balance', 0))} |
 			{k for t in self.data['tokens'].values() for k, v in t.items()
 				if Decimal(v.get('balance', 0))})
 

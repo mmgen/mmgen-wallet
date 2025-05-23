@@ -124,10 +124,11 @@ class ImmutableAttr: # Descriptor
 			def assign_with_check(instance, value):
 				if type(value) is dtype:
 					return value
-				raise TypeError('Attribute {!r} of {} instance must of type {}'.format(
+				raise TypeError('Attribute {!r} of {} instance must be of type {}, not {}'.format(
 					self.name,
 					type(instance).__name__,
-					dtype))
+					dtype,
+					type(value)))
 			self.conv = assign_with_check
 
 	def __set_name__(self, owner, name):

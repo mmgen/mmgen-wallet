@@ -20,9 +20,6 @@ class BitcoinTwCtl(TwCtl):
 	def init_empty(self):
 		self.data = {'coin': self.proto.coin, 'addresses': {}}
 
-	def upgrade_wallet_maybe(self):
-		pass
-
 	async def rpc_get_balance(self, addr, block='latest'):
 		raise NotImplementedError('not implemented')
 

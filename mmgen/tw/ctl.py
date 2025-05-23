@@ -110,6 +110,9 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 
 		self.conv_types(self.data[self.data_key])
 
+	def upgrade_wallet_maybe(self):
+		pass
+
 	def init_from_wallet_file(self):
 		from ..fileutil import check_or_create_dir, get_data_from_file
 		check_or_create_dir(self.tw_dir)
