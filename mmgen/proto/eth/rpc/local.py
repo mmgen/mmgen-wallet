@@ -9,15 +9,15 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-proto.eth.rpc: Ethereum base protocol RPC client class
+proto.eth.rpc.local: Ethereum base protocol local RPC client for the MMGen Project
 """
 
 import re
 
-from ...base_obj import AsyncInit
-from ...obj import Int
-from ...util import die, fmt, oneshot_warning_group
-from ...rpc import RPCClient
+from ....base_obj import AsyncInit
+from ....obj import Int
+from ....util import die, fmt, oneshot_warning_group
+from ....rpc.local import RPCClient
 
 class daemon_warning(oneshot_warning_group):
 

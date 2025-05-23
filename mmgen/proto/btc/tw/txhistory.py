@@ -307,7 +307,7 @@ class BitcoinTwTxHistory(TwTxHistory, BitcoinTwRPC):
 
 		if self.cfg.debug_tw:
 			import json
-			from ....rpc import json_encoder
+			from ....rpc.util import json_encoder
 			def do_json_dump(*data):
 				nw = f'{self.proto.coin.lower()}-{self.proto.network}'
 				for d, fn_stem in data:

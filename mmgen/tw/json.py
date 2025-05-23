@@ -18,7 +18,7 @@ from collections import namedtuple
 from ..util import msg, ymsg, fmt, suf, die, make_timestamp, make_chksum_8
 from ..base_obj import AsyncInit
 from ..objmethods import MMGenObject
-from ..rpc import json_encoder
+from ..rpc.util import json_encoder
 from .ctl import TwCtl
 
 class TwJSON:

@@ -16,7 +16,8 @@ import asyncio, json
 
 from .util2 import cliargs_convert
 from .cfg import gc, Config
-from .rpc import rpc_init, json_encoder
+from .rpc import rpc_init
+from .rpc.util import json_encoder
 
 opts_data = {
 	'text': {

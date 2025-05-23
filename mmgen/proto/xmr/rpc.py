@@ -13,7 +13,9 @@ proto.xmr.rpc: Monero base protocol RPC client class
 """
 
 import re
-from ...rpc import RPCClient, IPPort, auth_data
+
+from ...rpc.local import RPCClient
+from ...rpc.util import IPPort, auth_data
 
 class MoneroRPCClient(RPCClient):
 

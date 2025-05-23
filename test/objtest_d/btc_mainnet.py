@@ -25,7 +25,7 @@ from mmgen.key import PrivKey, WifKey, PubKey
 from mmgen.amt import BTCAmt
 from mmgen.addr import CoinAddr, MMGenID, MMGenAddrType, MMGenPasswordType
 from mmgen.tw.shared import TwMMGenID, TwLabel, TwComment
-from mmgen.rpc import IPPort
+from mmgen.rpc.util import IPPort
 from mmgen.protocol import init_proto
 
 from .common import r16, r32

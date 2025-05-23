@@ -9,16 +9,17 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-proto.btc.rpc: Bitcoin base protocol RPC client class
+proto.btc.rpc.local: Bitcoin base protocol local RPC client for the MMGen Project
 """
 
 import os
 
-from ...base_obj import AsyncInit
-from ...obj import TrackingWalletName
-from ...util import ymsg, die, fmt
-from ...fileutil import get_lines_from_file
-from ...rpc import RPCClient, auth_data
+from ....base_obj import AsyncInit
+from ....obj import TrackingWalletName
+from ....util import ymsg, die, fmt
+from ....fileutil import get_lines_from_file
+from ....rpc.local import RPCClient
+from ....rpc.util import auth_data
 
 no_credentials_errmsg = """
 	Error: no {proto_name} RPC authentication method found
@@ -212,7 +213,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 		MMGen's credentials override coin daemon's
 		"""
 		if self.cfg.network == 'regtest':
-			from .regtest import MMGenRegtest
+			from ..regtest import MMGenRegtest
 			user = MMGenRegtest.rpc_user
 			passwd = MMGenRegtest.rpc_password
 		else:

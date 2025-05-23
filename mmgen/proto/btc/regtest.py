@@ -24,7 +24,8 @@ import os, shutil, json
 from ...util import msg, gmsg, die, capfirst, suf
 from ...util2 import cliargs_convert
 from ...protocol import init_proto
-from ...rpc import rpc_init, json_encoder
+from ...rpc import rpc_init
+from ...rpc.util import json_encoder
 from ...objmethods import MMGenObject
 from ...daemon import CoinDaemon
 

@@ -48,7 +48,7 @@ class help_notes:
 			+ (f',{linebreak}respectively' if len(cu) > 1 else ''))
 
 	def dfl_twname(self):
-		from ..proto.btc.rpc import BitcoinRPCClient
+		from ..proto.btc.rpc.local import BitcoinRPCClient
 		return BitcoinRPCClient.dfl_twname
 
 	def MasterShareIdx(self):

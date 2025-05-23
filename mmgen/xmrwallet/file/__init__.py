@@ -15,7 +15,7 @@ xmrwallet.file: Monero file base class for the MMGen Suite
 import json
 from ...util import make_chksum_N
 from ...fileutil import get_data_from_file
-from ...rpc import json_encoder
+from ...rpc.util import json_encoder
 
 class MoneroMMGenFile:
 
