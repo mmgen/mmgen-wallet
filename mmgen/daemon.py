@@ -261,7 +261,7 @@ class RPCDaemon(Daemon):
 	def __init__(self, cfg, *, opts=None, flags=None):
 		super().__init__(cfg, opts=opts, flags=flags)
 		self.desc = '{} {} {}RPC daemon'.format(
-			self.rpc_type,
+			self.rpc_desc,
 			getattr(self.proto.network_names, self.proto.network),
 			'test suite ' if self.test_suite else '')
 		self._set_ok += ('usr_daemon_args',)

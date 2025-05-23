@@ -84,7 +84,7 @@ class monero_daemon(CoinDaemon):
 class MoneroWalletDaemon(RPCDaemon):
 
 	master_daemon = 'monero_daemon'
-	rpc_type = 'Monero wallet'
+	rpc_desc = 'Monero wallet'
 	exec_fn = 'monero-wallet-rpc'
 	coin = 'XMR'
 	new_console_mswin = True

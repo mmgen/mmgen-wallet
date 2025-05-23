@@ -191,7 +191,7 @@ class erigon_daemon(geth_daemon):
 class erigon_rpcdaemon(RPCDaemon):
 
 	master_daemon = 'erigon_daemon'
-	rpc_type = 'Erigon'
+	rpc_desc = 'Erigon'
 	exec_fn = 'rpcdaemon'
 	use_pidfile = False
 	use_threads = True
