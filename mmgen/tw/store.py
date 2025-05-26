@@ -49,7 +49,7 @@ class TwCtlWithStore(TwCtl):
 			elif label.mmid:
 				ymsg(f'Warning: MMGen ID {label.mmid!r} was missing in tracking wallet!')
 				r[addr]['mmid'] = label.mmid
-			if not r[addr]['comment']:
+			if not 'comment' in r[addr]:
 				ymsg(f'Warning: Label for MMGen ID {label.mmid!r} was missing in tracking wallet!')
 				r[addr]['comment'] = label.comment
 			elif label.comment: # overwrite existing comment only if new comment not empty
