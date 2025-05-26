@@ -17,7 +17,7 @@ from ....tw.addresses import TwAddresses
 from .view import EthereumTwView
 from .rpc import EthereumTwRPC
 
-class EthereumTwAddresses(TwAddresses, EthereumTwView, EthereumTwRPC):
+class EthereumTwAddresses(EthereumTwView, TwAddresses, EthereumTwRPC):
 	pass
 
 class EthereumTokenTwAddresses(EthereumTwAddresses):

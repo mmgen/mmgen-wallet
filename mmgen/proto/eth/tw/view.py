@@ -12,9 +12,7 @@
 proto.eth.tw.view: Ethereum base protocol base class for tracking wallet view classes
 """
 
-from ....tw.view import TwView
-
-class EthereumTwView(TwView):
+class EthereumTwView:
 
 	def get_disp_prec(self, wide):
 		return self.proto.coin_amt.max_prec if wide else 8
