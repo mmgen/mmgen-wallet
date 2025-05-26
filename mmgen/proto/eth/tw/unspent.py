@@ -24,12 +24,7 @@ from ....tw.shared import TwLabel
 from ....tw.unspent import TwUnspentOutputs
 from .view import EthereumTwView
 
-# No unspent outputs with Ethereum, but naming must be consistent
 class EthereumTwUnspentOutputs(EthereumTwView, TwUnspentOutputs):
-
-	class MMGenTwUnspentOutput(TwUnspentOutputs.MMGenTwUnspentOutput):
-		valid_attrs = {'txid', 'vout', 'amt', 'amt2', 'comment', 'twmmid', 'addr', 'confs', 'skip'}
-		invalid_attrs = {'proto'}
 
 	hdr_lbl = 'tracked accounts'
 	desc    = 'account balances'

@@ -26,7 +26,6 @@ from ..obj import (
 	ListItemAttr,
 	MMGenListItem,
 	TwComment,
-	HexStr,
 	CoinTxID,
 	NonNegativeInt)
 from ..addr import CoinAddr
@@ -82,17 +81,17 @@ class TwUnspentOutputs(TwView):
 			cols = ('num', 'addr', 'mmid', 'amt', 'amt2', 'comment')
 
 	class MMGenTwUnspentOutput(MMGenListItem):
-		txid         = ListItemAttr(CoinTxID)
-		vout         = ListItemAttr(NonNegativeInt)
-		amt          = ImmutableAttr(CoinAmtChk, include_proto=True)
-		amt2         = ListItemAttr(CoinAmtChk, include_proto=True) # the ETH balance for token account
-		comment      = ListItemAttr(TwComment, reassign_ok=True)
-		twmmid       = ImmutableAttr(TwMMGenID, include_proto=True)
-		addr         = ImmutableAttr(CoinAddr, include_proto=True)
-		confs        = ImmutableAttr(int, typeconv=False)
-		date         = ListItemAttr(int, typeconv=False, reassign_ok=True)
-		scriptPubKey = ImmutableAttr(HexStr)
-		skip         = ListItemAttr(str, typeconv=False, reassign_ok=True)
+		valid_attrs = {'txid', 'vout', 'amt', 'amt2', 'comment', 'twmmid', 'addr', 'confs', 'skip'}
+		invalid_attrs = {'proto'}
+		txid    = ListItemAttr(CoinTxID)
+		vout    = ListItemAttr(NonNegativeInt)
+		amt     = ImmutableAttr(CoinAmtChk, include_proto=True)
+		amt2    = ListItemAttr(CoinAmtChk, include_proto=True) # the ETH balance for token account
+		comment = ListItemAttr(TwComment, reassign_ok=True)
+		twmmid  = ImmutableAttr(TwMMGenID, include_proto=True)
+		addr    = ImmutableAttr(CoinAddr, include_proto=True)
+		confs   = ImmutableAttr(int, typeconv=False)
+		skip    = ListItemAttr(str, typeconv=False, reassign_ok=True)
 
 		def __init__(self, proto, **kwargs):
 			self.__dict__['proto'] = proto

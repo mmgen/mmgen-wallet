@@ -12,7 +12,9 @@
 proto.btc.tw.unspent: Bitcoin base protocol tracking wallet unspent outputs class
 """
 
+from ....obj import ImmutableAttr, ListItemAttr, HexStr
 from ....tw.unspent import TwUnspentOutputs
+
 from .view import BitcoinTwView
 
 class BitcoinTwUnspentOutputs(BitcoinTwView, TwUnspentOutputs):
@@ -39,7 +41,8 @@ class BitcoinTwUnspentOutputs(BitcoinTwView, TwUnspentOutputs):
 			'date',
 			'scriptPubKey',
 			'skip'}
-		invalid_attrs = {'proto'}
+		date         = ListItemAttr(int, typeconv=False, reassign_ok=True)
+		scriptPubKey = ImmutableAttr(HexStr)
 
 	has_age = True
 	can_group = True
