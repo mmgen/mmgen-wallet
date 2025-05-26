@@ -381,7 +381,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	def gen_subheader(self, cw, color):
 		if self.twctl.use_cached_balances:
 			from ..color import nocolor, yellow
-			yield (nocolor, yellow)[color]('WARNING: Using cached balances. These may be out of date!')
+			yield (nocolor, yellow)[color]('Using cached balances. These may be out of date!')
 		else:
 			yield f'Displaying balances with {self.minconf} confirmation{suf(self.minconf)}'
 

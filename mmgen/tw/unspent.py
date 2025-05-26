@@ -115,7 +115,7 @@ class TwUnspentOutputs(TwView):
 
 		return data
 
-	def get_column_widths(self, data, wide, interactive):
+	def get_column_widths(self, data, *, wide, interactive):
 
 		show_mmid = self.show_mmid or wide
 

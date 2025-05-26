@@ -299,11 +299,8 @@ class AddrFile(MMGenObject):
 			data = self.parse_file_body(lines[1:-1])
 			assert isinstance(data, list), 'Invalid file body data'
 		except Exception as e:
-			m = 'Invalid data in {} list file {!r}{} ({!s})'.format(
-				p.desc,
-				self.infile,
-				(f', content line {self.line_ctr}' if self.line_ctr else ''),
-				e)
+			m_add = f', content line {self.line_ctr}' if self.line_ctr else ''
+			m = f'Invalid data in {p.desc} list file ‘{fn}’{m_add} ({e!s})'
 			if exit_on_error:
 				die(3, m)
 			else:

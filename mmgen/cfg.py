@@ -854,7 +854,8 @@ def check_opts(cfg): # Raises exception if any check fails
 				from .wallet import get_wallet_data
 				wd = get_wallet_data(wtype='incog_hidden')
 				if val2 and val2 not in wd.fmt_codes:
-					die('UserOptError', f'Option conflict:\n  {fmt_opt(name)}, with\n  {fmt_opt(key2)}={val2}')
+					die('UserOptError',
+						f'Option {fmt_opt(name)} conflicts with option {fmt_opt(key2)}={val2}')
 
 		hidden_incog_output_params = hidden_incog_input_params
 

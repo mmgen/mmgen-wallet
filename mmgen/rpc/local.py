@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-rpc: local RPC client class for the MMGen Project
+rpc.local: local RPC client class for the MMGen Project
 """
 
 import sys, json, asyncio, importlib
