@@ -16,6 +16,7 @@ import time, json
 from collections import namedtuple
 
 from ....amt import UniAmt
+from ....http import HTTPClient
 
 _gd = namedtuple('gas_unit_data', ['code', 'disp'])
 gas_unit_data = {
@@ -23,37 +24,14 @@ gas_unit_data = {
 	'gwei':        _gd('G', 'Gwei'),
 }
 
-class ThornodeRPCClient:
+class ThornodeRPCClient(HTTPClient):
 
 	http_hdrs = {'Content-Type': 'application/json'}
-	proto = 'https'
 	host = 'thornode.ninerealms.com'
-	verify = True
 	timeout = 5
 
 	def __init__(self, tx, *, proto=None, host=None):
-		self.cfg = tx.cfg
-		if proto:
-			self.proto = proto
-		if host:
-			self.host = host
-		import requests
-		self.session = requests.Session()
-		self.session.trust_env = False # ignore *_PROXY environment vars
-		self.session.headers = self.http_hdrs
-		if self.cfg.proxy == 'env':
-			self.session.trust_env = True
-		elif self.cfg.proxy:
-			self.session.proxies.update({
-				'http':  f'socks5h://{self.cfg.proxy}',
-				'https': f'socks5h://{self.cfg.proxy}'
-			})
-
-	def get(self, path, *, timeout=None):
-		return self.session.get(
-			url     = self.proto + '://' + self.host + path,
-			timeout = timeout or self.timeout,
-			verify  = self.verify)
+		super().__init__(tx.cfg, proto=proto, host=host)
 
 class Thornode:
 
@@ -71,7 +49,7 @@ class Thornode:
 				f'to_asset={recv}&'
 				f'amount={amt}&'
 				f'streaming_interval={swap_cfg.stream_interval}')
-			data = json.loads(self.rpc.get(get_str).content)
+			data = json.loads(self.rpc.get(path=get_str))
 			if not 'expiry' in data:
 				from ....util import pp_fmt, die
 				die(2, pp_fmt(data))

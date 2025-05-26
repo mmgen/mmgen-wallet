@@ -14,50 +14,9 @@ tx.tx_proxy: tx proxy classes
 
 from ..color import green, pink, orange
 from ..util import msg, msg_r, die
+from ..http import HTTPClient
 
-class TxProxyClient:
-
-	proto = 'https'
-	verify = True
-	timeout = 60
-	http_hdrs = {
-		'User-Agent': 'curl/8.7.1',
-		'Proxy-Connection': 'Keep-Alive'}
-
-	def __init__(self, cfg):
-		self.cfg = cfg
-		import requests
-		self.session = requests.Session()
-		self.session.trust_env = False # ignore *_PROXY environment vars
-		self.session.headers = self.http_hdrs
-		if self.cfg.proxy == 'env':
-			self.session.trust_env = True
-		elif self.cfg.proxy:
-			self.session.proxies.update({
-				'http':  f'socks5h://{self.cfg.proxy}',
-				'https': f'socks5h://{self.cfg.proxy}'
-			})
-
-	def call(self, name, path, err_fs, timeout, *, data=None):
-		url = self.proto + '://' + self.host + path
-		kwargs = {
-			'url': url,
-			'timeout': timeout or self.timeout,
-			'verify': self.verify}
-		if data:
-			kwargs['data'] = data
-		res = getattr(self.session, name)(**kwargs)
-		if res.status_code != 200:
-			die(2, '\n' + err_fs.format(s=res.status_code, u=url, d=data))
-		return res.content.decode()
-
-	def get(self, *, path, timeout=None):
-		err_fs = 'HTTP Get failed with status code {s}\n  URL: {u}'
-		return self.call('get', path, err_fs, timeout)
-
-	def post(self, *, path, data, timeout=None):
-		err_fs = 'HTTP Post failed with status code {s}\n  URL: {u}\n  DATA: {d}'
-		return self.call('post', path, err_fs, timeout, data=data)
+class TxProxyClient(HTTPClient):
 
 	def get_form(self, timeout=None):
 		return self.get(path=self.form_path, timeout=timeout)
