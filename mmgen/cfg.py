@@ -535,6 +535,10 @@ class Config(Lockable):
 		# Step 6: set auto typeset opts from user-supplied data or cfgfile data, in that order:
 		self._set_auto_typeset_opts(self._cfgfile_opts.auto_typeset)
 
+		# Step 7: set opts_data['sets'] opts:
+		if opts_data and 'sets' in opts_data:
+			self._set_opts_data_sets_opts(opts_data)
+
 		if self.regtest or self.bob or self.alice or self.carol or gc.prog_name == f'{gc.proj_id}-regtest':
 			self.network = 'regtest'
 			self.regtest_user = 'bob' if self.bob else 'alice' if self.alice else 'carol' if self.carol else None
@@ -739,6 +743,19 @@ class Config(Lockable):
 				do_set(key, self._uopts[key], ref_type)
 			elif key in cfgfile_auto_typeset_opts:
 				do_set(key, cfgfile_auto_typeset_opts[key], ref_type)
+
+	def _set_opts_data_sets_opts(self, opts_data):
+		for a_opt, a_val, b_opt, b_val in opts_data['sets']:
+			if (usr_a_val := getattr(self, a_opt, None)) not in (None, False):
+				if a_val == bool or usr_a_val == a_val:
+					if ((usr_b_val := getattr(self, b_opt, None)) in (None, False)) or usr_b_val == b_val:
+						setattr(self, b_opt, b_val)
+					else:
+						die(1, 'Option --{}={} conflicts with option --{}={}\n'.format(
+							b_opt.replace('_', '-'),
+							usr_b_val,
+							a_opt.replace('_', '-'),
+							usr_a_val))
 
 	def _die_on_incompatible_opts(self):
 		for group in self._incompatible_opts:

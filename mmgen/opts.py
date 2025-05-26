@@ -135,19 +135,6 @@ def process_uopts(cfg, opts_data, opts, need_proto):
 	uargs = []
 	uopts = dict(get_uopts())
 
-	if 'sets' in opts_data:
-		for a_opt, a_val, b_opt, b_val in opts_data['sets']:
-			if a_opt in uopts:
-				u_val = uopts[a_opt]
-				if (u_val and a_val == bool) or u_val == a_val:
-					if b_opt in uopts and uopts[b_opt] != b_val:
-						die(1,
-							'Option conflict:'
-							+ '\n  --{}={}, with'.format(b_opt.replace('_', '-'), uopts[b_opt])
-							+ '\n  --{}={}\n'.format(a_opt.replace('_', '-'), uopts[a_opt]))
-					else:
-						uopts[b_opt] = b_val
-
 	return uopts, uargs
 
 cmd_opts_v1_pat      = re.compile(r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)')

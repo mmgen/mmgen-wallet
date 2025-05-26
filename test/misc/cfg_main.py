@@ -5,7 +5,22 @@ import os
 from mmgen.cfg import Config
 from mmgen.util import msg
 
-cfg = Config(process_opts=True)
+opts_data = {
+	'sets': [
+		('no_license', True, 'grokify', True),
+		('autosign', True, 'foobleize', True)
+	],
+	'text': {
+		'desc': 'Cfg file test',
+		'usage':'[args] [opts]',
+		'options': """
+-a, --autosign   Turn on autosigning
+-F, --foobleize  Foobleize the input
+-G, --grokify    Grokify the output
+"""},
+}
+
+cfg = Config(opts_data=opts_data)
 
 cmd_args = cfg._args
 op, args = (cmd_args[0], cmd_args[1:]) if cmd_args else (None, None)

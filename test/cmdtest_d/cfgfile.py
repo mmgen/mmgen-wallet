@@ -27,6 +27,8 @@ class CmdTestCfgFile(CmdTestBase):
 
 	cmd_group = (
 		('sysfile',                  (40, 'init with system cfg sample file in place', [])),
+		('opts_data_sets1',          (40, 'opts_data["sets"] opt set in environment', [])),
+		('opts_data_sets2',          (40, 'opts_data["sets"] opt set in cfg_file', [])),
 		('no_metadata_sample',       (40, 'init with unversioned cfg sample file', [])),
 		('altered_sample',           (40, 'init with user-modified cfg sample file', [])),
 		('old_sample',               (40, 'init with old v2 cfg sample file', [])),
@@ -100,6 +102,20 @@ class CmdTestCfgFile(CmdTestBase):
 		t.expect(e)
 		t.read()
 		self.check_replaced_sample()
+		return t
+
+	def opts_data_sets1(self): # no_license (in env) sets grokify
+		self.write_to_cfgfile('usr', ['scroll true'])
+		t = self.spawn_test(args=['print_cfg', 'no_license', 'foobleize', 'grokify', 'scroll'])
+		t.expect('foobleize: None')
+		t.expect('grokify: True')
+		return t
+
+	def opts_data_sets2(self): # autosign (in cfg file) sets foobleize
+		self.write_to_cfgfile('usr', ['autosign true'])
+		t = self.spawn_test(args=['print_cfg', 'no_license', 'autosign', 'foobleize', 'grokify'])
+		t.expect('foobleize: True')
+		t.expect('grokify: True')
 		return t
 
 	def no_metadata_sample(self):
