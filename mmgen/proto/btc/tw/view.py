@@ -13,4 +13,17 @@ proto.btc.tw.view: Bitcoin base protocol base class for tracking wallet view cla
 """
 
 class BitcoinTwView:
-	pass
+
+	txid_w = 64
+	txid_max_w  = {'txid': 64}
+	txid_min_w  = {'txid': 7}
+	txid_nice_w = {'txid': 12}
+	nice_addr_w = {'addr': 16}
+
+	age_col_params = {
+		'confs':     (7,  'Confs'),
+		'block':     (8,  'Block'),
+		'days':      (6,  'Age(d)'),
+		'date':      (8,  'Date'),
+		'date_time': (16, 'Date/Time'),
+	}

@@ -36,35 +36,6 @@ class EthereumTwUnspentOutputs(EthereumTwView, TwUnspentOutputs):
 	item_desc = 'account'
 	item_desc_pl = 'accounts'
 
-	def get_column_widths(self, data, *, wide, interactive):
-		# min screen width: 80 cols
-		# num addr [mmid] [comment] amt [amt2]
-		return self.compute_column_widths(
-			widths = { # fixed cols
-				'num': max(2, len(str(len(data)))+1),
-				'mmid': max(len(d.twmmid.disp) for d in data) if self.show_mmid else 0,
-				'amt': self.amt_widths['amt'],
-				'amt2': self.amt_widths.get('amt2', 0),
-				'spc': (5 if self.show_mmid else 3) + self.has_amt2, # 5(3) spaces in fs
-				'txid': 0,
-				'vout': 0,
-				'block': 0,
-				'date': 0,
-				'date_time': 0,
-			},
-			maxws = { # expandable cols
-				'addr': max(len(d.addr) for d in data),
-				'comment': max(d.comment.screen_width for d in data) if self.show_mmid else 0,
-			},
-			minws = {
-				'addr': 10,
-				'comment': len('Comment') if self.show_mmid else 0,
-			},
-			maxws_nice = {'addr': 14} if self.show_mmid else {},
-			wide = wide,
-			interactive = interactive,
-		)
-
 	def do_sort(self, key=None, *, reverse=False):
 		if key == 'txid':
 			return

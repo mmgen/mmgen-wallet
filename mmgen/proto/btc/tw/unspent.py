@@ -43,6 +43,8 @@ class BitcoinTwUnspentOutputs(BitcoinTwView, TwUnspentOutputs):
 
 	has_age = True
 	can_group = True
+	disp_spc = 5
+	vout_w = 4
 	hdr_lbl = 'unspent outputs'
 	desc = 'unspent outputs'
 	item_desc = 'unspent output'

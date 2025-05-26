@@ -39,6 +39,9 @@ class TwUnspentOutputs(TwView):
 	has_age = False
 	can_group = False
 	show_mmid = True
+	hdr_lbl = 'tracked addresses'
+	desc    = 'address balances'
+	item_desc = 'address'
 	item_desc_pl = 'addresses'
 	no_rpcdata_errmsg = """
 		No spendable outputs found!  Import addresses with balances into your
@@ -67,6 +70,8 @@ class TwUnspentOutputs(TwView):
 	extra_key_mappings = {
 		'D':'i_addr_delete',
 		'R':'i_balance_refresh'}
+	disp_spc = 3
+	vout_w = 0
 
 	class display_type(TwView.display_type):
 
@@ -142,30 +147,30 @@ class TwUnspentOutputs(TwView):
 
 		show_mmid = self.show_mmid or wide
 
-		# num txid vout addr [mmid] [comment] amt [amt2] date
 		return self.compute_column_widths(
 			widths = { # fixed cols
 				'num': max(2, len(str(len(data)))+1),
-				'vout': 4,
+				'txid': 0,
+				'vout': self.vout_w,
 				'mmid': max(len(d.twmmid.disp) for d in data) if show_mmid else 0,
 				'amt': self.amt_widths['amt'],
 				'amt2': self.amt_widths.get('amt2', 0),
 				'block': self.age_col_params['block'][0] if wide else 0,
 				'date_time': self.age_col_params['date_time'][0] if wide else 0,
 				'date': self.age_w,
-				'spc': 7 if show_mmid else 5, # 7(5) spaces in fs
+				'spc': self.disp_spc + (2 * show_mmid) + self.has_amt2
 			},
 			maxws = { # expandable cols
-				'txid': self.txid_w,
 				'addr': max(len(d.addr) for d in data),
 				'comment': max(d.comment.screen_width for d in data) if show_mmid else 0,
-			},
+			} | self.txid_max_w,
 			minws = {
-				'txid': 7,
 				'addr': 10,
 				'comment': len('Comment') if show_mmid else 0,
-			},
-			maxws_nice = {'txid':12, 'addr':16} if show_mmid else {'txid':12},
+			} | self.txid_min_w,
+			maxws_nice = (
+				self.nice_addr_w if show_mmid else {}
+			) | self.txid_nice_w,
 			wide = wide,
 			interactive = interactive,
 		)

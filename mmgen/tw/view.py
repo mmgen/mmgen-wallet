@@ -87,7 +87,11 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	group       = False
 	use_cached  = False
 	minconf     = 1
-	txid_w      = 64
+	txid_w      = 0
+	txid_max_w  = {}
+	txid_min_w  = {}
+	txid_nice_w = {}
+	nice_addr_w = {'addr': 14}
 	sort_key    = 'age'
 	display_hdr = ()
 	display_body = ()
@@ -127,11 +131,11 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	bch_addr_fmts = ('cashaddr', 'legacy')
 
 	age_col_params = {
-		'confs':     (7,  'Confs'),
-		'block':     (8,  'Block'),
-		'days':      (6,  'Age(d)'),
-		'date':      (8,  'Date'),
-		'date_time': (16, 'Date/Time'),
+		'confs':     (0,  'Confs'),
+		'block':     (0,  'Block'),
+		'days':      (0,  'Age(d)'),
+		'date':      (0,  'Date'),
+		'date_time': (0,  'Date/Time'),
 	}
 
 	date_formatter = {
