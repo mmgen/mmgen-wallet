@@ -20,7 +20,6 @@
 proto.eth.tw.unspent: Ethereum tracking wallet unspent outputs class
 """
 
-from ....tw.shared import TwLabel
 from ....tw.unspent import TwUnspentOutputs
 from .view import EthereumTwView
 
@@ -30,24 +29,6 @@ class EthereumTwUnspentOutputs(EthereumTwView, TwUnspentOutputs):
 	desc    = 'account balances'
 	item_desc = 'account'
 	item_desc_pl = 'accounts'
-
-	def do_sort(self, key=None, *, reverse=False):
-		if key == 'txid':
-			return
-		super().do_sort(key=key, reverse=reverse)
-
-	async def get_rpc_data(self):
-		wl = self.twctl.sorted_list
-		minconf = int(self.minconf)
-		block = self.twctl.rpc.get_block_from_minconf(minconf)
-		if self.addrs:
-			wl = [d for d in wl if d['addr'] in self.addrs]
-		return [{
-				'account': TwLabel(self.proto, d['mmid']+' '+d['comment']),
-				'address': d['addr'],
-				'amt': await self.twctl.get_balance(d['addr'], block=block),
-				'confirmations': minconf,
-				} for d in wl]
 
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 

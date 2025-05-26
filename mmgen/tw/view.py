@@ -266,6 +266,8 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		return ret
 
 	def do_sort(self, key=None, *, reverse=False):
+		if key == 'txid' and not self.txid_w:
+			return
 		key = key or self.sort_key
 		if key not in self.sort_funcs:
 			die(1, f'{key!r}: invalid sort key.  Valid options: {" ".join(self.sort_funcs)}')

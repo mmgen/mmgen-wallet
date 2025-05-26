@@ -30,7 +30,7 @@ from ..obj import (
 	NonNegativeInt)
 from ..addr import CoinAddr
 from ..amt import CoinAmtChk
-from .shared import TwMMGenID, get_tw_label
+from .shared import TwMMGenID, TwLabel, get_tw_label
 from .view import TwView
 
 class TwUnspentOutputs(TwView):
@@ -125,6 +125,19 @@ class TwUnspentOutputs(TwView):
 				yield self.MMGenTwUnspentOutput(
 					self.proto,
 					**{k:v for k, v in o.items() if k in self.MMGenTwUnspentOutput.valid_attrs})
+
+	async def get_rpc_data(self):
+		wl = self.twctl.sorted_list
+		minconf = int(self.minconf)
+		block = self.twctl.rpc.get_block_from_minconf(minconf)
+		if self.addrs:
+			wl = [d for d in wl if d['addr'] in self.addrs]
+		return [{
+				'account': TwLabel(self.proto, d['mmid']+' '+d['comment']),
+				'address': d['addr'],
+				'amt': await self.twctl.get_balance(d['addr'], block=block),
+				'confirmations': minconf,
+				} for d in wl]
 
 	def filter_data(self):
 
