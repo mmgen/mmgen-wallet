@@ -12,7 +12,7 @@
 tw.store: Tracking wallet control class with store
 """
 
-from ..util import msg, die, cached_property
+from ..util import msg, ymsg, die, cached_property
 from ..addr import is_coin_addr, is_mmgen_id, CoinAddr
 
 from .shared import TwLabel
@@ -42,11 +42,20 @@ class TwCtlWithStore(TwCtl):
 	async def import_address(self, addr, *, label, rescan=False):
 		r = self.data_root
 		if addr in r:
-			if not r[addr]['mmid'] and label.mmid:
-				msg(f'Warning: MMGen ID {label.mmid!r} was missing in tracking wallet!')
-			elif r[addr]['mmid'] != label.mmid:
-				die(3, 'MMGen ID {label.mmid!r} does not match tracking wallet!')
-		r[addr] = {'mmid': label.mmid, 'comment': label.comment}
+			if r[addr]['mmid']:
+				if r[addr]['mmid'] != label.mmid:
+					fs = 'imported MMGen ID {!r} does not match tracking wallet MMGen ID {!r}!'
+					die(3, fs.format(label.mmid, r[addr]['mmid']))
+			elif label.mmid:
+				ymsg(f'Warning: MMGen ID {label.mmid!r} was missing in tracking wallet!')
+				r[addr]['mmid'] = label.mmid
+			if not r[addr]['comment']:
+				ymsg(f'Warning: Label for MMGen ID {label.mmid!r} was missing in tracking wallet!')
+				r[addr]['comment'] = label.comment
+			elif label.comment: # overwrite existing comment only if new comment not empty
+				r[addr]['comment'] = label.comment
+		else:
+			r[addr] = {'mmid': label.mmid, 'comment': label.comment}
 
 	@write_mode
 	async def remove_address(self, addr):
