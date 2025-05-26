@@ -34,7 +34,6 @@ class EthereumTwUnspentOutputs(EthereumTwView, TwUnspentOutputs):
 	hdr_lbl = 'tracked accounts'
 	desc    = 'account balances'
 	item_desc = 'account'
-	dump_fn_pfx = 'balances'
 	item_desc_pl = 'accounts'
 
 	def get_column_widths(self, data, *, wide, interactive):

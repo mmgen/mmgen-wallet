@@ -13,6 +13,7 @@ proto.btc.tw.txhistory: Bitcoin base protocol tracking wallet transaction histor
 """
 
 from collections import namedtuple
+
 from ....tw.txhistory import TwTxHistory
 from ....tw.shared import get_tw_label, TwMMGenID
 from ....addr import CoinAddr

@@ -47,6 +47,7 @@ class TwUnspentOutputs(TwView):
 	update_widths_on_age_toggle = False
 	print_output_types = ('detail',)
 	mod_subpath = 'tw.unspent'
+	dump_fn_pfx = 'balances'
 	prompt_fs_in = [
 		'Sort options: [a]mount, a[d]dr, [M]mgen addr, [r]everse',
 		'Display options: show [m]mgen addr, r[e]draw screen',
