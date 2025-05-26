@@ -39,6 +39,7 @@ class TwUnspentOutputs(TwView):
 	has_age = False
 	can_group = False
 	show_mmid = True
+	item_desc_pl = 'addresses'
 	no_rpcdata_errmsg = """
 		No spendable outputs found!  Import addresses with balances into your
 		watch-only wallet using 'mmgen-addrimport' and then re-run this program.

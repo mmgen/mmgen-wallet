@@ -25,6 +25,7 @@ class TwAddresses(TwView):
 	hdr_lbl = 'tracking wallet addresses'
 	desc = 'address list'
 	item_desc = 'address'
+	item_desc_pl = 'addresses'
 	sort_key = 'twmmid'
 	update_widths_on_age_toggle = True
 	print_output_types = ('detail',)
@@ -33,7 +34,6 @@ class TwAddresses(TwView):
 	showempty = True
 	showused = 1 # tristate: 0:no, 1:yes, 2:all
 	all_labels = False
-	no_data_errmsg = 'No addresses in tracking wallet!'
 	mod_subpath = 'tw.addresses'
 	has_age = False
 	has_used = False

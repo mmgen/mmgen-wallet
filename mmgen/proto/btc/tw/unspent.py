@@ -46,7 +46,7 @@ class BitcoinTwUnspentOutputs(BitcoinTwView, TwUnspentOutputs):
 	hdr_lbl = 'unspent outputs'
 	desc = 'unspent outputs'
 	item_desc = 'unspent output'
-	no_data_errmsg = 'No unspent outputs in tracking wallet!'
+	item_desc_pl = 'unspent outputs'
 	dump_fn_pfx = 'listunspent'
 	prompt_fs_in = [
 		'Sort options: [t]xid, [a]mount, [A]ge, a[d]dr, [M]mgen addr, [r]everse',

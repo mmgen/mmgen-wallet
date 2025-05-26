@@ -246,7 +246,7 @@ class BitcoinTwTxHistory(BitcoinTwView, TwTxHistory, BitcoinTwRPC):
 	hdr_lbl = 'transaction history'
 	desc = 'transaction history'
 	item_desc = 'transaction'
-	no_data_errmsg = 'No transactions in tracking wallet!'
+	item_desc_pl = 'transactions'
 	prompt_fs_in = [
 		'Sort options: [t]xid, [a]mt, total a[m]t, [A]ge, block[n]um, [r]everse',
 		'Column options: toggle [D]ays/date/confs/block, tx[i]d, [T]otal amt',

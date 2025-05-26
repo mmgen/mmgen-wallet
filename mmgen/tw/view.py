@@ -286,7 +286,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		self.disp_data = list(self.filter_data())
 
 		if not self.data:
-			die(1, self.no_data_errmsg)
+			die(1, f'No {self.item_desc_pl} in tracking wallet!')
 
 		self.do_sort(key=sort_key, reverse=reverse_sort)
 

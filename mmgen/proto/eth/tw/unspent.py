@@ -35,7 +35,7 @@ class EthereumTwUnspentOutputs(EthereumTwView, TwUnspentOutputs):
 	desc    = 'account balances'
 	item_desc = 'account'
 	dump_fn_pfx = 'balances'
-	no_data_errmsg = 'No accounts in tracking wallet!'
+	item_desc_pl = 'accounts'
 
 	def get_column_widths(self, data, *, wide, interactive):
 		# min screen width: 80 cols
