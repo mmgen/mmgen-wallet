@@ -15,9 +15,11 @@ proto.btc.tw.addresses: Bitcoin base protocol tracking wallet address list class
 from ....tw.addresses import TwAddresses
 from ....tw.shared import TwLabel
 from ....obj import get_obj
-from .rpc import BitcoinTwRPC
 
-class BitcoinTwAddresses(TwAddresses, BitcoinTwRPC):
+from .rpc import BitcoinTwRPC
+from .view import BitcoinTwView
+
+class BitcoinTwAddresses(BitcoinTwView, TwAddresses, BitcoinTwRPC):
 
 	has_age = True
 	has_used = True

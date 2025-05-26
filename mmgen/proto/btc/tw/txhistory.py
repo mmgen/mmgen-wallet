@@ -19,7 +19,9 @@ from ....addr import CoinAddr
 from ....util import msg, msg_r
 from ....color import nocolor, red, pink, gray
 from ....obj import TwComment, CoinTxID, Int
+
 from .rpc import BitcoinTwRPC
+from .view import BitcoinTwView
 
 class BitcoinTwTransaction:
 
@@ -238,7 +240,7 @@ class BitcoinTwTransaction:
 				self.fee.to_unit(atomic_unit) // self.vsize,
 				atomic_unit)))
 
-class BitcoinTwTxHistory(TwTxHistory, BitcoinTwRPC):
+class BitcoinTwTxHistory(BitcoinTwView, TwTxHistory, BitcoinTwRPC):
 
 	has_age = True
 	hdr_lbl = 'transaction history'

@@ -13,8 +13,9 @@ proto.btc.tw.unspent: Bitcoin base protocol tracking wallet unspent outputs clas
 """
 
 from ....tw.unspent import TwUnspentOutputs
+from .view import BitcoinTwView
 
-class BitcoinTwUnspentOutputs(TwUnspentOutputs):
+class BitcoinTwUnspentOutputs(BitcoinTwView, TwUnspentOutputs):
 
 	class display_type(TwUnspentOutputs.display_type):
 
