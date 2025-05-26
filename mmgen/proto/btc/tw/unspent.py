@@ -16,6 +16,14 @@ from ....tw.unspent import TwUnspentOutputs
 
 class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 
+	class display_type(TwUnspentOutputs.display_type):
+
+		class squeezed(TwUnspentOutputs.display_type.squeezed):
+			cols = ('num', 'txid', 'vout', 'addr', 'mmid', 'comment', 'amt', 'amt2', 'date')
+
+		class detail(TwUnspentOutputs.display_type.detail):
+			cols = ('num', 'txid', 'vout', 'addr', 'mmid', 'amt', 'amt2', 'block', 'date_time', 'comment')
+
 	class MMGenTwUnspentOutput(TwUnspentOutputs.MMGenTwUnspentOutput):
 		# required by gen_unspent(); setting valid_attrs explicitly is also more efficient
 		valid_attrs = {
@@ -47,21 +55,11 @@ class BitcoinTwUnspentOutputs(TwUnspentOutputs):
 	prompt_fs_repl = {
 		'BCH': (1, 'Column options: toggle [D]ate/confs, cas[h]addr, gr[o]up, show [m]mgen addr')
 	}
-	key_mappings = {
-		't':'s_txid',
-		'a':'s_amt',
-		'd':'s_addr',
-		'A':'s_age',
-		'M':'s_twmmid',
-		'r':'s_reverse',
+	extra_key_mappings = {
 		'D':'d_days',
 		'o':'d_group',
-		'm':'d_mmid',
-		'e':'d_redraw',
-		'p':'a_print_detail',
-		'v':'a_view',
-		'w':'a_view_detail',
-		'l':'i_comment_add'}
+		't':'s_txid',
+		'A':'s_age'}
 
 	sort_funcs = {
 		'addr':   lambda i: '{} {:010} {:024.12f}'.format(i.addr, 0xffffffff - abs(i.confs), i.amt),

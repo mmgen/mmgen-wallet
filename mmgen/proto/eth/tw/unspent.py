@@ -27,43 +27,14 @@ from .view import EthereumTwView
 # No unspent outputs with Ethereum, but naming must be consistent
 class EthereumTwUnspentOutputs(EthereumTwView, TwUnspentOutputs):
 
-	class display_type(TwUnspentOutputs.display_type):
-
-		class squeezed(TwUnspentOutputs.display_type.squeezed):
-			cols = ('num', 'addr', 'mmid', 'comment', 'amt', 'amt2')
-
-		class detail(TwUnspentOutputs.display_type.detail):
-			cols = ('num', 'addr', 'mmid', 'amt', 'amt2', 'comment')
-
 	class MMGenTwUnspentOutput(TwUnspentOutputs.MMGenTwUnspentOutput):
 		valid_attrs = {'txid', 'vout', 'amt', 'amt2', 'comment', 'twmmid', 'addr', 'confs', 'skip'}
 		invalid_attrs = {'proto'}
 
-	has_age = False
-	can_group = False
 	hdr_lbl = 'tracked accounts'
 	desc    = 'account balances'
 	item_desc = 'account'
 	dump_fn_pfx = 'balances'
-	prompt_fs_in = [
-		'Sort options: [a]mount, a[d]dr, [M]mgen addr, [r]everse',
-		'Display options: show [m]mgen addr, r[e]draw screen',
-		'View/Print: pager [v]iew, [w]ide pager view, [p]rint to file{s}',
-		'Actions: [q]uit menu, [D]elete addr, add [l]abel, [R]efresh balance:']
-	key_mappings = {
-		'a':'s_amt',
-		'd':'s_addr',
-		'r':'s_reverse',
-		'M':'s_twmmid',
-		'm':'d_mmid',
-		'e':'d_redraw',
-		'p':'a_print_detail',
-		'v':'a_view',
-		'w':'a_view_detail',
-		'l':'i_comment_add',
-		'D':'i_addr_delete',
-		'R':'i_balance_refresh'}
-
 	no_data_errmsg = 'No accounts in tracking wallet!'
 
 	def get_column_widths(self, data, *, wide, interactive):

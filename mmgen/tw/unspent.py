@@ -36,14 +36,8 @@ from .view import TwView
 
 class TwUnspentOutputs(TwView):
 
-	class display_type(TwView.display_type):
-
-		class squeezed(TwView.display_type.squeezed):
-			cols = ('num', 'txid', 'vout', 'addr', 'mmid', 'comment', 'amt', 'amt2', 'date')
-
-		class detail(TwView.display_type.detail):
-			cols = ('num', 'txid', 'vout', 'addr', 'mmid', 'amt', 'amt2', 'block', 'date_time', 'comment')
-
+	has_age = False
+	can_group = False
 	show_mmid = True
 	no_rpcdata_errmsg = """
 		No spendable outputs found!  Import addresses with balances into your
@@ -52,6 +46,33 @@ class TwUnspentOutputs(TwView):
 	update_widths_on_age_toggle = False
 	print_output_types = ('detail',)
 	mod_subpath = 'tw.unspent'
+	prompt_fs_in = [
+		'Sort options: [a]mount, a[d]dr, [M]mgen addr, [r]everse',
+		'Display options: show [m]mgen addr, r[e]draw screen',
+		'View/Print: pager [v]iew, [w]ide pager view, [p]rint to file{s}',
+		'Actions: [q]uit menu, [D]elete addr, add [l]abel, [R]efresh balance:']
+	key_mappings = {
+		'a':'s_amt',
+		'd':'s_addr',
+		'r':'s_reverse',
+		'M':'s_twmmid',
+		'm':'d_mmid',
+		'e':'d_redraw',
+		'p':'a_print_detail',
+		'v':'a_view',
+		'w':'a_view_detail',
+		'l':'i_comment_add'}
+	extra_key_mappings = {
+		'D':'i_addr_delete',
+		'R':'i_balance_refresh'}
+
+	class display_type(TwView.display_type):
+
+		class squeezed(TwView.display_type.squeezed):
+			cols = ('num', 'addr', 'mmid', 'comment', 'amt', 'amt2')
+
+		class detail(TwView.display_type.detail):
+			cols = ('num', 'addr', 'mmid', 'amt', 'amt2', 'comment')
 
 	class MMGenTwUnspentOutput(MMGenListItem):
 		txid         = ListItemAttr(CoinTxID)
