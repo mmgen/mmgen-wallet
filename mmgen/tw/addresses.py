@@ -41,8 +41,8 @@ class TwAddresses(TwView):
 	prompt_fs_in = [
 		'Sort options: [a]mt, [M]mgen addr, [r]everse',
 		'Filters: show [E]mpty addrs, show all [L]abels',
-		'View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}',
-		'Actions: [q]uit menu, r[e]draw, [D]elete addr, add [l]abel:']
+		'View/Print: pager [v]iew, [w]ide pager view, [p]rint, r[e]draw{s}',
+		'Actions: [q]uit menu, [D]elete addr, add [l]abel, [R]efresh balance:']
 
 	key_mappings = {
 		'a':'s_amt',
@@ -56,6 +56,8 @@ class TwAddresses(TwView):
 		'v':'a_view',
 		'w':'a_view_detail',
 		'p':'a_print_detail'}
+	extra_key_mappings = {
+		'R':'i_balance_refresh'}
 
 	class display_type(TwView.display_type):
 

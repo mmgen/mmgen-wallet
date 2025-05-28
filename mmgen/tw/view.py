@@ -727,9 +727,15 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			if not parent.keypress_confirm(
 					f'Refreshing tracking wallet {parent.item_desc} #{idx}. OK?'):
 				return 'redo'
-			await parent.twctl.get_balance(parent.disp_data[idx-1].addr, force_rpc=True)
-			await parent.get_data()
-			parent.oneshot_msg = yellow(f'{parent.proto.dcoin} balance for account #{idx} refreshed')
+			res = await parent.twctl.get_balance(parent.disp_data[idx-1].addr, force_rpc=True)
+			if res is None:
+				parent.oneshot_msg = red(
+					f'Unable to refresh {parent.proto.dcoin} balance for {parent.item_desc} #{idx}')
+				return False
+			else:
+				await parent.get_data()
+				parent.oneshot_msg = yellow(
+					f'{parent.proto.dcoin} balance for {parent.item_desc} #{idx} refreshed')
 
 		async def i_addr_delete(self, parent, idx):
 			if not parent.keypress_confirm(
