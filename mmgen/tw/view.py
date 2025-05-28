@@ -385,9 +385,9 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			return do_ret(get_freews(self.cols, varws, varw, minw))
 
 	def gen_subheader(self, cw, color):
+		c_yellow = (nocolor, yellow)[color]
 		if self.twctl.use_cached_balances:
-			from ..color import nocolor, yellow
-			yield (nocolor, yellow)[color]('Using cached balances. These may be out of date!')
+			yield c_yellow('Using cached balances. These may be out of date!')
 		else:
 			yield f'Displaying balances with {self.minconf} confirmation{suf(self.minconf)}'
 
@@ -725,7 +725,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 		async def i_balance_refresh(self, parent, idx):
 			if not parent.keypress_confirm(
-					f'Refreshing tracking wallet {parent.item_desc} #{idx}.  Is this what you want?'):
+					f'Refreshing tracking wallet {parent.item_desc} #{idx}. OK?'):
 				return 'redo'
 			await parent.twctl.get_balance(parent.disp_data[idx-1].addr, force_rpc=True)
 			await parent.get_data()
@@ -733,7 +733,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 		async def i_addr_delete(self, parent, idx):
 			if not parent.keypress_confirm(
-					'Removing {} {} from tracking wallet.  Is this what you want?'.format(
+					'Removing {} {} from tracking wallet. OK?'.format(
 						parent.item_desc, red(f'#{idx}'))):
 				return 'redo'
 			if await parent.twctl.remove_address(parent.disp_data[idx-1].addr):
@@ -784,7 +784,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				parent.oneshot_msg = yellow(f'Label for {desc} unchanged')
 				return None
 			elif res == '':
-				if not parent.keypress_confirm(f'Removing label for {desc}.  Is this what you want?'):
+				if not parent.keypress_confirm(f'Removing label for {desc}. OK?'):
 					return 'redo'
 
 			return await do_comment_add(res)

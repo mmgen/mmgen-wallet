@@ -1592,7 +1592,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		for n in bals:
 			t.expect('[R]efresh balance:\b', 'R')
 			t.expect(' main menu): ', n+'\n')
-			t.expect('Is this what you want? (y/N): ', 'y')
+			t.expect('OK? (y/N): ', 'y')
 		t.expect('[R]efresh balance:\b', 'q')
 		t.expect(rf'Total unspent:.*\D{total}\D.*{total_coin}', regex=True)
 		return t

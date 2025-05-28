@@ -63,7 +63,7 @@ class CmdTestShared:
 
 		expect_pat = r'\[q\]uit menu, .*?:.'
 		delete_pat = r'Enter account number .*:.'
-		confirm_pat = r'Is this what you want.*:.'
+		confirm_pat = r'OK\?.*:.'
 
 		if used_chg_addr_resp is not None:
 			t.expect('reuse harms your privacy.*:.*', used_chg_addr_resp, regex=True)
