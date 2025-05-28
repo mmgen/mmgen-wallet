@@ -26,7 +26,7 @@ from collections import namedtuple
 from ..cfg import gv
 from ..objmethods import MMGenObject
 from ..obj import get_obj, MMGenIdx, MMGenList
-from ..color import nocolor, yellow, green, red, blue
+from ..color import nocolor, yellow, orange, green, red, blue
 from ..util import msg, msg_r, fmt, die, capfirst, suf, make_timestr
 from ..rpc import rpc_init
 from ..base_obj import AsyncInit
@@ -385,7 +385,13 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			return do_ret(get_freews(self.cols, varws, varw, minw))
 
 	def gen_subheader(self, cw, color):
+		c_orange = (nocolor, orange)[color]
 		c_yellow = (nocolor, yellow)[color]
+		if self.rpc.is_remote:
+			yield (
+				c_orange(f'WARNING: Connecting to public {self.rpc.server_proto} node at ') +
+				self.rpc.server_domain.hl(color=color))
+			yield c_orange('         To improve anonymity, proxy requests via Tor or I2P')
 		if self.twctl.use_cached_balances:
 			yield c_yellow('Using cached balances. These may be out of date!')
 		else:
@@ -434,9 +440,10 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				yield 'Network: {}'.format(Green(
 					self.proto.coin + ' ' + self.proto.chain_name.upper()))
 
-				yield 'Block {} [{}]'.format(
-					self.rpc.blockcount.hl(color=color),
-					make_timestr(self.rpc.cur_date))
+				if not self.rpc.is_remote:
+					yield 'Block {} [{}]'.format(
+						self.rpc.blockcount.hl(color=color),
+						make_timestr(self.rpc.cur_date))
 
 				if hasattr(self, 'total'):
 					yield 'Total {}: {}'.format(self.proto.dcoin, self.total.hl(color=color))

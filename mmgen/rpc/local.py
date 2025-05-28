@@ -20,6 +20,7 @@ from . import util
 
 class RPCClient:
 
+	is_remote = False
 	auth_type = None
 	has_auth_cookie = False
 	network_proto = 'http'
