@@ -361,9 +361,9 @@ def warn_trustlevel(cfg):
 		return
 
 	m = """
-		Support for coin {c!r} is EXPERIMENTAL.  The {p} project
+		Support for coin {c!r} is EXPERIMENTAL.  {a}
 		assumes no responsibility for any loss of funds you may incur.
-		This coin’s {p} testing status: {t}
+		This coin’s testing status: {t}
 		Are you sure you want to continue?
 	"""
 
@@ -378,7 +378,7 @@ def warn_trustlevel(cfg):
 			2: yellow('MEDIUM'),
 			3: green('OK'),
 		}[trust_level],
-		p = gc.proj_name)
+		a = gc.author)
 
 	if cfg.test_suite:
 		cfg._util.qmsg(warning)
