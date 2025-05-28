@@ -23,13 +23,13 @@ from ..include.common import imsg, chk_equal
 
 from .include.runner import CmdTestRunner
 from .include.common import dfl_sid, eth_inbound_addr, thorchain_router_addr_file
-from .httpd.thornode import ThornodeServer
+from .httpd.thornode_swap import ThornodeSwapServer
 
 from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods
 from .ethdev import CmdTestEthdev
 
-thornode_server = ThornodeServer()
+swap_server = ThornodeSwapServer()
 
 method_template = """
 def {name}(self):
@@ -150,7 +150,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('subgroup.eth_token_swap', ['fund', 'token_init']),
 		('stop',                    'stopping regtest daemon'),
 		('eth_stop',                'stopping Ethereum daemon'),
-		('thornode_server_stop',    'stopping the Thornode server'),
+		('swap_server_stop',        'stopping the Thornode server'),
 	)
 	cmd_subgroups = {
 	'init': (
@@ -281,7 +281,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		ethswap_eth = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
 		ethswap_eth.init_group(self.eth_group)
 
-		thornode_server.start()
+		swap_server.start()
 
 	def swaptxcreate1(self):
 		t = self._swaptxcreate(['BTC', '8.765', 'ETH'])
@@ -326,13 +326,13 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		t.expect('OK? (Y/n): ', 'y')
 		return self._swaptxcreate_ui_common(t)
 
-	def thornode_server_stop(self):
+	def swap_server_stop(self):
 		self.spawn(msg_only=True)
 		if self.cfg.no_daemon_stop:
 			msg_r('(leaving thornode server running by user request)')
 			imsg('')
 		else:
-			thornode_server.stop()
+			swap_server.stop()
 		return 'ok'
 
 class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev):

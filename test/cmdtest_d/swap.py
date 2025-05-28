@@ -19,12 +19,12 @@ from mmgen.wallet.mmgen import wallet as MMGenWallet
 
 from ..include.common import make_burn_addr, gr_uc
 from .include.common import dfl_bip39_file, dfl_words_file
-from .httpd.thornode import ThornodeServer
+from .httpd.thornode_swap import ThornodeSwapServer
 
 from .autosign import CmdTestAutosign, CmdTestAutosignThreaded
 from .regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, strip_ansi_escapes
 
-thornode_server = ThornodeServer()
+swap_server = ThornodeSwapServer()
 
 sample1 = gr_uc[:24]
 sample2 = '00010203040506'
@@ -280,7 +280,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		('subgroup.signsend',     ['init_swap']),
 		('subgroup.signsend_bad', ['init_swap']),
 		('subgroup.autosign',     ['init_data', 'signsend']),
-		('thornode_server_stop',  'stopping the Thornode server'),
+		('swap_server_stop',      'stopping the Thornode server'),
 		('stop',                  'stopping regtest daemons'),
 	)
 	cmd_subgroups = {
@@ -408,7 +408,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 
 		self.protos = [init_proto(cfg, k, network='regtest', need_amt=True) for k in ('btc', 'ltc', 'bch')]
 
-		thornode_server.start()
+		swap_server.start()
 
 		self.opts.append('--bob')
 
@@ -776,7 +776,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 	def mempool2(self):
 		return self._mempool(2)
 
-	def thornode_server_stop(self):
+	def swap_server_stop(self):
 		self.spawn(msg_only=True)
-		thornode_server.stop()
+		swap_server.stop()
 		return 'ok'

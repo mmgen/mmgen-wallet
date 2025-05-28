@@ -22,14 +22,14 @@ from ..include.common import imsg, omsg_r
 
 from .include.common import cleanup_env, dfl_words_file, dfl_sid
 from .include.runner import CmdTestRunner
-from .httpd.thornode import ThornodeServer
+from .httpd.thornode_swap import ThornodeSwapServer
 
 from .ethdev import CmdTestEthdev, CmdTestEthdevMethods
 from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods
 from .ethswap import CmdTestEthSwapMethods
 
-thornode_server = ThornodeServer()
+swap_server = ThornodeSwapServer()
 burn_addr = 'beefcafe22' * 4
 method_template = """
 def {name}(self):
@@ -292,7 +292,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		ethbump_ltc = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
 		ethbump_ltc.init_group('ethbump_ltc')
 
-		thornode_server.start()
+		swap_server.start()
 
 	def txcreate1(self):
 		return self._txcreate(args=[f'{burn_addr},987'], acct='1')
