@@ -29,7 +29,6 @@ from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods
 from .ethswap import CmdTestEthSwapMethods
 
-swap_server = ThornodeSwapServer()
 burn_addr = 'beefcafe22' * 4
 method_template = """
 def {name}(self):
@@ -139,6 +138,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		# ('subgroup.token_feebump_swap',  ['token_init_swap']), # TBD
 		('subgroup.token_new_outputs_swap',  ['token_init_swap']),
 		('ltc_stop',                    ''),
+		('swap_server_stop',            'stopping the Thornode server'),
 		('stop',                        'stopping daemon'),
 	)
 	cmd_subgroups = {
@@ -292,7 +292,8 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		ethbump_ltc = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
 		ethbump_ltc.init_group('ethbump_ltc')
 
-		swap_server.start()
+		self.swap_server = ThornodeSwapServer()
+		self.swap_server.start()
 
 	def txcreate1(self):
 		return self._txcreate(args=[f'{burn_addr},987'], acct='1')
@@ -440,6 +441,9 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 
 	token_swaptxbump1sign = token_swaptxbump2sign = swaptxbump1sign = swaptxbump2sign = token_txbump2sign
 	token_swaptxbump1send = token_swaptxbump2send = swaptxbump1send = swaptxbump2send = token_txbump2send
+
+	def swap_server_stop(self):
+		return self._thornode_server_stop()
 
 class CmdTestEthBumpLTC(CmdTestSwapMethods, CmdTestRegtest):
 	network = ('ltc',)

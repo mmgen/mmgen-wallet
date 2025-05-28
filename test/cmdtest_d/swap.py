@@ -17,14 +17,12 @@ from pathlib import Path
 from mmgen.protocol import init_proto
 from mmgen.wallet.mmgen import wallet as MMGenWallet
 
-from ..include.common import make_burn_addr, gr_uc
+from ..include.common import imsg, make_burn_addr, gr_uc
 from .include.common import dfl_bip39_file, dfl_words_file
 from .httpd.thornode_swap import ThornodeSwapServer
 
 from .autosign import CmdTestAutosign, CmdTestAutosignThreaded
 from .regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, strip_ansi_escapes
-
-swap_server = ThornodeSwapServer()
 
 sample1 = gr_uc[:24]
 sample2 = '00010203040506'
@@ -262,6 +260,14 @@ class CmdTestSwapMethods:
 		assert data
 		return 'ok'
 
+	def _thornode_server_stop(self, attrname='swap_server', name='thornode swap server'):
+		self.spawn(msg_only=True)
+		if self.cfg.no_daemon_stop:
+			imsg(f'(leaving {name} running by user request)')
+		else:
+			getattr(self, attrname).stop()
+		return 'ok'
+
 class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 	bdb_wallet = True
 	networks = ('btc',)
@@ -408,7 +414,8 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 
 		self.protos = [init_proto(cfg, k, network='regtest', need_amt=True) for k in ('btc', 'ltc', 'bch')]
 
-		swap_server.start()
+		self.swap_server = ThornodeSwapServer()
+		self.swap_server.start()
 
 		self.opts.append('--bob')
 
@@ -777,6 +784,4 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		return self._mempool(2)
 
 	def swap_server_stop(self):
-		self.spawn(msg_only=True)
-		swap_server.stop()
-		return 'ok'
+		return self._thornode_server_stop()

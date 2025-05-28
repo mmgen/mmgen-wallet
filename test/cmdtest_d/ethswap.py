@@ -29,8 +29,6 @@ from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods
 from .ethdev import CmdTestEthdev
 
-swap_server = ThornodeSwapServer()
-
 method_template = """
 def {name}(self):
 	self.spawn(log_only=True)
@@ -281,7 +279,8 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		ethswap_eth = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
 		ethswap_eth.init_group(self.eth_group)
 
-		swap_server.start()
+		self.swap_server = ThornodeSwapServer()
+		self.swap_server.start()
 
 	def swaptxcreate1(self):
 		t = self._swaptxcreate(['BTC', '8.765', 'ETH'])
@@ -327,13 +326,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		return self._swaptxcreate_ui_common(t)
 
 	def swap_server_stop(self):
-		self.spawn(msg_only=True)
-		if self.cfg.no_daemon_stop:
-			msg_r('(leaving thornode server running by user request)')
-			imsg('')
-		else:
-			swap_server.stop()
-		return 'ok'
+		return self._thornode_server_stop()
 
 class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev):
 	'Ethereum swap operations - Ethereum wallet'
