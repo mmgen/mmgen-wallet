@@ -12,17 +12,86 @@
 tw.store: Tracking wallet control class with store
 """
 
+import json
+from pathlib import Path
+
+from ..base_obj import AsyncInit
+from ..obj import TwComment
 from ..util import msg, ymsg, die, cached_property
 from ..addr import is_coin_addr, is_mmgen_id, CoinAddr
 
-from .shared import TwLabel
+from .shared import TwMMGenID, TwLabel
 from .ctl import TwCtl, write_mode, label_addr_pair
 
-class TwCtlWithStore(TwCtl):
+class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 
 	caps = ('batch',)
-	data_key = 'addresses'
-	use_tw_file = True
+	tw_fn = 'tracking-wallet.json'
+	aggressive_sync = False
+
+	async def __init__(
+			self,
+			cfg,
+			proto,
+			*,
+			mode              = 'r',
+			token_addr        = None,
+			no_rpc            = False,
+			no_wallet_init    = False,
+			rpc_ignore_wallet = False):
+
+		await super().__init__(cfg, proto, mode=mode, no_rpc=no_rpc, rpc_ignore_wallet=rpc_ignore_wallet)
+
+		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation
+
+		if cfg.cached_balances:
+			self.use_cached_balances = True
+
+		self.tw_dir = Path(
+			self.cfg.data_dir_root,
+			'altcoins',
+			self.proto.coin.lower(),
+			('' if self.proto.network == 'mainnet' else self.proto.network)
+		)
+		self.tw_path = self.tw_dir / self.tw_fn
+
+		if no_wallet_init:
+			return
+
+		self.init_from_wallet_file()
+
+		if self.data['coin'] != self.proto.coin:
+			fs = 'Tracking wallet coin ({}) does not match current coin ({})!'
+			die('WalletFileError', fs.format(self.data['coin'], self.proto.coin))
+
+		self.conv_types(self.data[self.data_key])
+
+	def __del__(self):
+		"""
+		TwCtl instances opened in write or import mode must be explicitly destroyed with ‘del
+		twuo.twctl’ and the like to ensure the instance is deleted and wallet is written before
+		global vars are destroyed by the interpreter at shutdown.
+
+		Not that this code can only be debugged by examining the program output, as exceptions
+		are ignored within __del__():
+
+			/usr/share/doc/python3.6-doc/html/reference/datamodel.html#object.__del__
+
+		Since no exceptions are raised, errors will not be caught by the test suite.
+		"""
+		if getattr(self, 'mode', None) == 'w': # mode attr might not exist in this state
+			self.write()
+		elif self.cfg.debug:
+			msg('read-only wallet, doing nothing')
+
+	def upgrade_wallet_maybe(self):
+		pass
+
+	def conv_types(self, ad):
+		for k, v in ad.items():
+			if k not in ('params', 'coin'):
+				v['mmid'] = TwMMGenID(self.proto, v['mmid'])
+				v['comment'] = TwComment(v['comment'])
 
 	def init_empty(self):
 		self.data = {
@@ -30,6 +99,32 @@ class TwCtlWithStore(TwCtl):
 			'network': self.proto.network.upper(),
 			'addresses': {},
 		}
+
+	def init_from_wallet_file(self):
+		from ..fileutil import check_or_create_dir, get_data_from_file
+		check_or_create_dir(self.tw_dir)
+		try:
+			self.orig_data = get_data_from_file(self.cfg, self.tw_path, quiet=True)
+			self.data = json.loads(self.orig_data)
+		except:
+			try:
+				self.tw_path.stat()
+			except:
+				self.orig_data = ''
+				self.init_empty()
+				self.force_write()
+			else:
+				die('WalletFileError', f'File ‘{self.tw_path}’ exists but does not contain valid JSON data')
+		else:
+			self.upgrade_wallet_maybe()
+
+		# ensure that wallet file is written when user exits via KeyboardInterrupt:
+		if self.mode == 'w':
+			import atexit
+			def del_twctl(twctl):
+				self.cfg._util.dmsg(f'Running exit handler del_twctl() for {twctl!r}')
+				del twctl
+			atexit.register(del_twctl, self)
 
 	@write_mode
 	async def batch_import_address(self, args_list):
@@ -42,17 +137,9 @@ class TwCtlWithStore(TwCtl):
 	async def import_address(self, addr, *, label, rescan=False):
 		r = self.data_root
 		if addr in r:
-			if r[addr]['mmid']:
-				if r[addr]['mmid'] != label.mmid:
-					fs = 'imported MMGen ID {!r} does not match tracking wallet MMGen ID {!r}!'
-					die(3, fs.format(label.mmid, r[addr]['mmid']))
-			elif label.mmid:
-				ymsg(f'Warning: MMGen ID {label.mmid!r} was missing in tracking wallet!')
+			if self.check_import_mmid(addr, r[addr]['mmid'], label.mmid):
 				r[addr]['mmid'] = label.mmid
-			if not 'comment' in r[addr]:
-				ymsg(f'Warning: Label for MMGen ID {label.mmid!r} was missing in tracking wallet!')
-				r[addr]['comment'] = label.comment
-			elif label.comment: # overwrite existing comment only if new comment not empty
+			if label.comment: # overwrite existing comment only if new comment not empty
 				r[addr]['comment'] = label.comment
 		else:
 			r[addr] = {'mmid': label.mmid, 'comment': label.comment}
@@ -112,3 +199,76 @@ class TwCtlWithStore(TwCtl):
 		from decimal import Decimal
 		# TODO: for now, consider used addrs to be addrs with balance
 		return ({k for k, v in self.data['addresses'].items() if Decimal(v.get('balance', 0))})
+
+	@property
+	def data_root(self):
+		return self.data[self.data_key]
+
+	@property
+	def data_root_desc(self):
+		return self.data_key
+
+	def cache_balance(self, addr, bal, *, session_cache, data_root, force=False):
+		if force or addr not in session_cache:
+			session_cache[addr] = str(bal)
+			if addr in data_root:
+				data_root[addr]['balance'] = str(bal)
+				if self.aggressive_sync:
+					self.write()
+
+	async def rpc_get_balance(self, addr, block='latest'):
+		assert self.rpc.is_remote, 'tw.store.rpc_get_balance(): RPC is not remote!'
+		try:
+			return self.rpc.get_balance(addr, block=block)
+		except Exception as e:
+			ymsg(f'{type(e).__name__}: {e}')
+			ymsg(f'Unable to get balance for address ‘{addr}’')
+			import asyncio
+			await asyncio.sleep(3)
+
+	def get_cached_balance(self, addr, session_cache, data_root):
+		if addr in session_cache:
+			return self.proto.coin_amt(session_cache[addr])
+		if self.use_cached_balances:
+			return self.proto.coin_amt(
+				data_root[addr]['balance'] if addr in data_root and 'balance' in data_root[addr]
+				else '0')
+
+	async def get_balance(self, addr, *, force_rpc=False, block='latest'):
+		ret = None if force_rpc else self.get_cached_balance(addr, self.cur_balances, self.data_root)
+		if ret is None:
+			ret = await self.rpc_get_balance(addr, block=block)
+			if ret is not None:
+				self.cache_balance(addr, ret, session_cache=self.cur_balances, data_root=self.data_root)
+		return ret
+
+	def force_write(self):
+		mode_save = self.mode
+		self.mode = 'w'
+		self.write()
+		self.mode = mode_save
+
+	@write_mode
+	def write_changed(self, data, quiet):
+		from ..fileutil import write_data_to_file
+		write_data_to_file(
+			self.cfg,
+			self.tw_path,
+			data,
+			desc              = f'{self.base_desc} data',
+			ask_overwrite     = False,
+			ignore_opt_outdir = True,
+			quiet             = quiet,
+			check_data        = True, # die if wallet has been altered by another program
+			cmp_data          = self.orig_data)
+
+		self.orig_data = data
+
+	def write(self, *, quiet=True):
+		self.cfg._util.dmsg(f'write(): checking if {self.desc} data has changed')
+
+		wdata = json.dumps(self.data)
+		if self.orig_data != wdata:
+			self.write_changed(wdata, quiet=quiet)
+		elif self.cfg.debug:
+			msg('Data is unchanged\n')

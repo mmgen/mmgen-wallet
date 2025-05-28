@@ -17,12 +17,10 @@ from ....util import msg, msg_r, rmsg, die, suf, fmt_list
 
 class BitcoinTwCtl(TwCtl):
 
-	def init_empty(self):
-		self.data = {'coin': self.proto.coin, 'addresses': {}}
-
 	async def rpc_get_balance(self, addr, block='latest'):
 		raise NotImplementedError('not implemented')
 
+	# TODO: do check with check_import_mmid()
 	@write_mode
 	async def import_address(self, addr, *, label, rescan=False):
 		if (await self.rpc.walletinfo).get('descriptors'):
