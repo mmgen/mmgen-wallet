@@ -19,10 +19,10 @@ groups_desc="
 "
 
 init_groups() {
-	dfl_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc xmr'
+	dfl_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc rune xmr'
 	extra_tests='dep dev lint pylint autosign_live ltc_tn bch_tn'
-	noalt_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt pylint'
-	quick_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen eth etc xmr'
+	noalt_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
+	quick_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen eth etc rune xmr'
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
 	noalt_ok_tests='lint'
 
@@ -272,6 +272,11 @@ init_tests() {
 		parity $cmdtest_py --coin=etc ethdev
 	"
 	[ "$SKIP_PARITY" ] && t_etc_skip='parity'
+
+	d_rune="operations for THORChain RUNE using testnet"
+	t_rune="
+		- $cmdtest_py --coin=rune rune
+	"
 
 	d_xmr="Monero xmrwallet operations"
 	t_xmr="

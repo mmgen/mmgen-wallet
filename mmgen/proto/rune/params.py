@@ -13,6 +13,7 @@ proto.rune.params: THORChain protocol
 """
 
 from ...protocol import CoinProtocol, decoded_addr, _nw
+from ...obj import Hostname
 from ...addr import CoinAddr
 from ...contrib import bech32
 
@@ -27,7 +28,7 @@ class mainnet(CoinProtocol.Secp256k1):
 	coin_amt        = 'UniAmt'
 	max_tx_fee      = 1 # TODO
 	caps            = ()
-	mmcaps          = ()
+	mmcaps          = ('tw', 'rpc_init', 'rpc_remote')
 	base_proto      = 'THORChain'
 	base_proto_coin = 'RUNE'
 	base_coin       = 'RUNE'
@@ -40,6 +41,10 @@ class mainnet(CoinProtocol.Secp256k1):
 	coin_cfg_opts = btc_mainnet.coin_cfg_opts
 	encode_wif = btc_mainnet.encode_wif
 	decode_wif = btc_mainnet.decode_wif
+
+	rpc_remote_params      = {'server_domain': Hostname('ninerealms.com')}
+	rpc_remote_http_params = {'host': Hostname('thornode.ninerealms.com')}
+	rpc_remote_rpc_params  = {'host': Hostname('rpc.ninerealms.com')}
 
 	def decode_addr(self, addr):
 		hrp, data = bech32.bech32_decode(addr)
@@ -58,6 +63,15 @@ class mainnet(CoinProtocol.Secp256k1):
 
 class testnet(mainnet): # testnet is stagenet
 	bech32_hrp = 'sthor'
+	rpc_remote_http_params = {'host': Hostname('stagenet-thornode.ninerealms.com')}
+	rpc_remote_rpc_params  = {'host': Hostname('stagenet-rpc.ninerealms.com')}
 
 class regtest(testnet): # regtest is deprecated testnet
 	bech32_hrp = 'tthor'
+	rpc_remote_params = {
+		'server_domain': Hostname('localhost')}
+	rpc_remote_http_params = {
+		'proto': 'http',
+		'host': Hostname('localhost:18800'),
+		'verify': False}
+	rpc_remote_rpc_params = rpc_remote_http_params

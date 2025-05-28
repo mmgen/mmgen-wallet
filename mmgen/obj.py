@@ -415,3 +415,7 @@ class MMGenPWIDString(MMGenLabel):
 	desc = 'password ID string'
 	forbidden = list(' :/\\')
 	trunc_ok = False
+
+class Hostname(MMGenLabel):
+	max_len = 256
+	color = 'pink'

@@ -43,6 +43,7 @@ cmd_groups_dfl = {
 	# 'chainsplit':         ('CmdTestChainsplit',      {}),
 	'ethdev':             ('CmdTestEthdev',            {}),
 	'ethbump':            ('CmdTestEthBump',           {}),
+	'rune':               ('CmdTestRune',              {}),
 	'xmrwallet':          ('CmdTestXMRWallet',         {}),
 	'xmr_autosign':       ('CmdTestXMRAutosign',       {}),
 }
@@ -250,6 +251,7 @@ cfgs = { # addr_idx_lists (except 31, 32, 33, 34) must contain exactly 8 address
 	'47': {}, # ethswap
 	'48': {}, # ethswap_eth
 	'49': {}, # autosign_automount
+	'50': {}, # rune
 	'59': {}, # autosign_eth
 	'99': {}, # dummy
 }
