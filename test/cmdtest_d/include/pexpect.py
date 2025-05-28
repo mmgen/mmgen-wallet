@@ -237,6 +237,8 @@ class CmdTestPexpect:
 		delay = delay or self.send_delay
 		if delay:
 			time.sleep(delay)
+			if cfg.demo:
+				time.sleep(0.5)
 		ret = self.p.send(t) # returns num bytes written
 		self.sent_value = t if ret else None
 		if cfg.demo and delay:

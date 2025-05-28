@@ -141,6 +141,22 @@ class CmdTestEthdevMethods:
 		t.written_to_file('Addresses')
 		return t
 
+	def _addrimport(
+			self,
+			ext       = '21-23]{}.regtest.addrs',
+			expect    = '9/9',
+			add_args  = [],
+			bad_input = False,
+			exit_val  = None):
+		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
+		fn = self.get_file_with_ext(ext, no_dot=True, delete=False)
+		t = self.spawn('mmgen-addrimport', ['--regtest=1'] + add_args + [fn], exit_val=exit_val)
+		if bad_input:
+			return t
+		t.expect('Importing')
+		t.expect(expect)
+		return t
+
 	def _create_tx(self, *, fee, args, add_opts=[]):
 		return self.txcreate_ui_common(
 			self.spawn('mmgen-txcreate', add_opts + ['-B'] + args),
@@ -217,7 +233,7 @@ class CmdTestEthdevMethods:
 
 	def _token_addrimport(self, addr_file, addr_range, expect, extra_args=[]):
 		token_addr = self.read_from_tmpfile(addr_file).strip()
-		return self.addrimport(
+		return self._addrimport(
 			ext      = f'[{addr_range}]{{}}.regtest.addrs',
 			expect   = expect,
 			add_args = ['--token-addr='+token_addr]+extra_args)
@@ -916,21 +932,8 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def addrgen(self):
 		return self._addrgen()
 
-	def addrimport(
-			self,
-			ext       = '21-23]{}.regtest.addrs',
-			expect    = '9/9',
-			add_args  = [],
-			bad_input = False,
-			exit_val  = None):
-		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
-		fn = self.get_file_with_ext(ext, no_dot=True, delete=False)
-		t = self.spawn('mmgen-addrimport', ['--regtest=1'] + add_args + [fn], exit_val=exit_val)
-		if bad_input:
-			return t
-		t.expect('Importing')
-		t.expect(expect)
-		return t
+	def addrimport(self):
+		return self._addrimport()
 
 	def _addrimport_one_addr(self, addr=None, extra_args=[]):
 		t = self.spawn('mmgen-addrimport', ['--regtest=1', '--quiet', f'--address={addr}'] + extra_args)
@@ -1384,7 +1387,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		return self._token_addrgen(mm_idxs=[11, 21], naddrs=3)
 
 	def token_addrimport_badaddr1(self):
-		t = self.addrimport(
+		t = self._addrimport(
 			ext       = '[11-13]{}.regtest.addrs',
 			add_args  = ['--token=abc'],
 			bad_input = True,
@@ -1393,7 +1396,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		return t
 
 	def token_addrimport_badaddr2(self):
-		t = self.addrimport(
+		t = self._addrimport(
 			ext       = '[11-13]{}.regtest.addrs',
 			add_args  = ['--token='+'00deadbeef'*4],
 			bad_input = True,
@@ -1411,7 +1414,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		return self._token_addrimport('token_addr1', '11-13', expect='3 addresses', extra_args=['--batch'])
 
 	def token_addrimport_sym(self):
-		return self.addrimport(
+		return self._addrimport(
 			ext      = '[21-23]{}.regtest.addrs',
 			expect   = '3/3',
 			add_args = ['--token=MM2'])
