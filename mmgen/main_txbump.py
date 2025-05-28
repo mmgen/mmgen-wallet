@@ -85,7 +85,9 @@ opts_data = {
 			e- -w, --wait             Wait for transaction confirmation
 			-- -W, --allow-non-wallet-swap Allow signing of swap transactions that send funds
 			+                         to non-wallet addresses
-			-- -x, --proxy=P          Fetch the swap quote via SOCKS5 proxy ‘P’ (host:port)
+			-- -x, --proxy=P          Fetch the swap quote via SOCKS5h proxy ‘P’ (host:port).
+			+                         Use special value ‘env’ to honor *_PROXY environment
+			+                         vars instead.
 			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 			-- -z, --show-hash-presets Show information on available hash presets
 """,

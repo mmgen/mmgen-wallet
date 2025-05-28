@@ -48,6 +48,9 @@ opts_data = {
 			-- -t, --type=t           Specify address type (valid choices: 'legacy',
 			+                         'compressed', 'segwit', 'bech32', 'zcash_z')
 			-- -v, --verbose          Produce more verbose output
+			-- -x, --proxy=P          Proxy HTTP connections via SOCKS5h proxy ‘P’ (host:port).
+			+                         Use special value ‘env’ to honor *_PROXY environment
+			+                         vars instead.
 			e- -X, --cached-balances  Use cached balances
 			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 """,

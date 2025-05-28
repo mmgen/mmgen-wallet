@@ -56,8 +56,8 @@ class mainnet(CoinProtocol.Secp256k1):
 				hrp  = self.bech32_hrp,
 				data = bech32.convertbits(list(pubhash), 8, 5)))
 
-class stagenet(mainnet):
+class testnet(mainnet): # testnet is stagenet
 	bech32_hrp = 'sthor'
 
-class testnet(stagenet): # testnet is deprecated
+class regtest(testnet): # regtest is deprecated testnet
 	bech32_hrp = 'tthor'
