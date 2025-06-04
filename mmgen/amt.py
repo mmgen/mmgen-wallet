@@ -163,7 +163,13 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 
 def is_coin_amt(proto, num, *, from_unit=None, from_decimal=False):
 	assert proto.coin_amt, 'proto.coin_amt is None!  Did you call init_proto() with ‘need_amt’?'
-	return get_obj(proto.coin_amt, num=num, from_unit=from_unit, from_decimal=from_decimal, silent=True, return_bool=True)
+	return get_obj(
+		proto.coin_amt,
+		num          = num,
+		from_unit    = from_unit,
+		from_decimal = from_decimal,
+		silent       = True,
+		return_bool  = True)
 
 class BTCAmt(CoinAmt):
 	coin = 'BTC'

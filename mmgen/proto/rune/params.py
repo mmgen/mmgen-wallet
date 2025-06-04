@@ -43,7 +43,7 @@ class mainnet(CoinProtocol.Secp256k1):
 	decode_wif = btc_mainnet.decode_wif
 
 	rpc_remote_params      = {'server_domain': Hostname('ninerealms.com')}
-	rpc_remote_http_params = {'host': Hostname('thornode.ninerealms.com')}
+	rpc_remote_rest_params = {'host': Hostname('thornode.ninerealms.com')}
 	rpc_remote_rpc_params  = {'host': Hostname('rpc.ninerealms.com')}
 
 	def decode_addr(self, addr):
@@ -63,15 +63,15 @@ class mainnet(CoinProtocol.Secp256k1):
 
 class testnet(mainnet): # testnet is stagenet
 	bech32_hrp = 'sthor'
-	rpc_remote_http_params = {'host': Hostname('stagenet-thornode.ninerealms.com')}
+	rpc_remote_rest_params = {'host': Hostname('stagenet-thornode.ninerealms.com')}
 	rpc_remote_rpc_params  = {'host': Hostname('stagenet-rpc.ninerealms.com')}
 
 class regtest(testnet): # regtest is deprecated testnet
 	bech32_hrp = 'tthor'
 	rpc_remote_params = {
 		'server_domain': Hostname('localhost')}
-	rpc_remote_http_params = {
+	rpc_remote_rest_params = {
 		'proto': 'http',
 		'host': Hostname('localhost:18800'),
 		'verify': False}
-	rpc_remote_rpc_params = rpc_remote_http_params
+	rpc_remote_rpc_params = rpc_remote_rest_params

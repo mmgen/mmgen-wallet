@@ -17,13 +17,13 @@ import json
 from ....http import HTTPClient
 from ....rpc.remote import RemoteRPCClient
 
-class ThornodeRemoteHTTPClient(HTTPClient):
+class ThornodeRemoteRESTClient(HTTPClient):
 
 	http_hdrs = {'Content-Type': 'application/json'}
 	timeout = 5
 
 	def __init__(self, cfg, *, proto=None, host=None):
-		for k, v in cfg._proto.rpc_remote_http_params.items():
+		for k, v in cfg._proto.rpc_remote_rest_params.items():
 			setattr(self, k, v)
 		super().__init__(cfg, proto=proto, host=host)
 
@@ -35,11 +35,11 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 			setattr(self, k, v)
 		super().__init__(cfg, proto)
 		self.caps = ('lbl_id',)
-		self.http = ThornodeRemoteHTTPClient(cfg)
+		self.rest_api = ThornodeRemoteRESTClient(cfg)
 
 	# throws exception on error
 	def get_balance(self, addr, *, block):
-		http_res = self.http.get(path=f'/bank/balances/{addr}')
+		http_res = self.rest_api.get(path=f'/bank/balances/{addr}')
 		data = json.loads(http_res)
 		if data['result'] is None:
 			from ....util import die

@@ -175,7 +175,7 @@ def Die(ev=0, s=''):
 
 def pp_fmt(d):
 	import pprint
-	return pprint.PrettyPrinter(indent=4, compact=False).pformat(d)
+	return pprint.PrettyPrinter().pformat(d)
 
 def pp_msg(d):
 	msg(pp_fmt(d))
