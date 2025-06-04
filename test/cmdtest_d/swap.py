@@ -19,7 +19,7 @@ from mmgen.wallet.mmgen import wallet as MMGenWallet
 
 from ..include.common import imsg, make_burn_addr, gr_uc
 from .include.common import dfl_bip39_file, dfl_words_file
-from .httpd.thornode_swap import ThornodeSwapServer
+from .httpd.thornode.swap import ThornodeSwapServer
 
 from .autosign import CmdTestAutosign, CmdTestAutosignThreaded
 from .regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, strip_ansi_escapes

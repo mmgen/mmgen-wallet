@@ -22,7 +22,7 @@ from ..include.common import imsg, omsg_r
 
 from .include.common import cleanup_env, dfl_words_file, dfl_sid
 from .include.runner import CmdTestRunner
-from .httpd.thornode_swap import ThornodeSwapServer
+from .httpd.thornode.swap import ThornodeSwapServer
 
 from .ethdev import CmdTestEthdev, CmdTestEthdevMethods
 from .regtest import CmdTestRegtest

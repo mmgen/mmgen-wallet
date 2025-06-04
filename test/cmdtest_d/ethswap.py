@@ -23,7 +23,7 @@ from ..include.common import imsg, chk_equal
 
 from .include.runner import CmdTestRunner
 from .include.common import dfl_sid, eth_inbound_addr, thorchain_router_addr_file
-from .httpd.thornode_swap import ThornodeSwapServer
+from .httpd.thornode.swap import ThornodeSwapServer
 
 from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods

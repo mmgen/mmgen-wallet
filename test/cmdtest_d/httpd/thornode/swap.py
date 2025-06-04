@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-test.cmdtest_d.httpd.thornode_swap: Thornode swap WSGI http server
+test.cmdtest_d.httpd.thornode.swap: Thornode swap HTTP server
 """
 
 import time, re, json
@@ -19,10 +19,9 @@ from mmgen.cfg import Config
 from mmgen.amt import UniAmt
 from mmgen.protocol import init_proto
 
-from ..include.common import eth_inbound_addr, thorchain_router_addr_file
+from ...include.common import eth_inbound_addr, thorchain_router_addr_file
 
-from . import HTTPD
-from .thornode import ThornodeServer
+from . import ThornodeServer
 
 cfg = Config()
 

@@ -9,28 +9,28 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-test.cmdtest_d.httpd.thornode: Thornode WSGI http server
+test.cmdtest_d.httpd.thornode.rpc: Thornode RPC HTTP server
 """
 
 import re, json
 from wsgiref.util import request_uri
 
-from . import HTTPD
+from . import ThornodeServer
 
-class ThornodeServer(HTTPD):
-	name = 'thornode server'
-	port = 18800
-	content_type = 'application/json'
-	request_pat = r'/bank/balances/(\S+)'
+class ThornodeRPCServer(ThornodeServer):
+	name = 'thornode RPC server'
 
 	def make_response_body(self, method, environ):
 		req_str = request_uri(environ)
-		m = re.search(self.request_pat, req_str)
-		assert m[1], f'‘{req_str}’: malformed query path'
-		data = {
-			'result': [
-				{'denom': 'foocoin', 'amount': 321321321321},
-				{'denom': 'rune',    'amount': 987654321321},
-				{'denom': 'barcoin', 'amount': 123123123123},
-			]}
+
+		if re.search(r'/bank/balances/(\S+)', req_str):
+			data = {
+				'result': [
+					{'denom': 'foocoin', 'amount': 321321321321},
+					{'denom': 'rune',    'amount': 987654321321},
+					{'denom': 'barcoin', 'amount': 123123123123},
+				]}
+		else:
+			raise ValueError(f'‘{req_str}’: malformed query path')
+
 		return json.dumps(data).encode()

@@ -13,7 +13,7 @@ test.cmdtest_d.rune: THORChain RUNE tests for the cmdtest.py test suite
 """
 
 from .include.common import dfl_sid
-from .httpd.thornode import ThornodeServer
+from .httpd.thornode.rpc import ThornodeRPCServer
 from .ethdev import CmdTestEthdevMethods
 from .base import CmdTestBase
 from .shared import CmdTestShared
@@ -59,7 +59,7 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		self.proto = init_proto(cfg, network_id=self.proto.coin + '_rt', need_amt=True)
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
 
-		self.thornode_server = ThornodeServer()
+		self.thornode_server = ThornodeRPCServer()
 		self.thornode_server.start()
 
 	def addrgen(self):
