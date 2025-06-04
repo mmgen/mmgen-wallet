@@ -17,6 +17,15 @@ import json
 from ....http import HTTPClient
 from ....rpc.remote import RemoteRPCClient
 
+# throws exception on error:
+def process_response(json_response, errmsg):
+	data = json.loads(json_response)
+	if data['result'] is None:
+		from ....util import die
+		die('RPCFailure', errmsg)
+	return data['result']
+
+# HTTP GET, params in query string, JSON-RPC response:
 class ThornodeRemoteRESTClient(HTTPClient):
 
 	http_hdrs = {'Content-Type': 'application/json'}
@@ -37,14 +46,10 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		self.caps = ('lbl_id',)
 		self.rest_api = ThornodeRemoteRESTClient(cfg)
 
-	# throws exception on error
-	def get_balance(self, addr, *, block):
-		http_res = self.rest_api.get(path=f'/bank/balances/{addr}')
-		data = json.loads(http_res)
-		if data['result'] is None:
-			from ....util import die
-			die('RPCFailure', f'address ‘{addr}’ not found in blockchain')
-		else:
-			rune_res = [d for d in data['result'] if d['denom'] == 'rune']
-			assert len(rune_res) == 1, f'{rune_res}: result length is not one!'
-			return self.proto.coin_amt(int(rune_res[0]['amount']), from_unit='satoshi')
+	def get_balance(self, addr, *, block=None):
+		res = process_response(
+			self.rest_api.get(path=f'/bank/balances/{addr}'),
+			errmsg =  f'address ‘{addr}’ not found in blockchain')
+		rune_res = [d for d in res if d['denom'] == 'rune']
+		assert len(rune_res) == 1, f'{rune_res}: result length is not one!'
+		return self.proto.coin_amt(int(rune_res[0]['amount']), from_unit='satoshi')
