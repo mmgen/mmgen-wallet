@@ -73,8 +73,12 @@ class SwapAsset:
 		return self.data.full_name.split('.', 1)[0] if self.data.full_name else self.name
 
 	@property
+	def coin(self):
+		return self.data.name or self.data.full_name.split('.', 1)[0]
+
+	@property
 	def asset(self):
-		return self.data.full_name.split('.', 1)[1] if self.data.full_name else None
+		return None if self.data.name else self.data.full_name.split('.', 1)[1]
 
 	@property
 	def full_name(self):

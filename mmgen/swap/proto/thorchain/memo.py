@@ -116,7 +116,7 @@ class THORChainMemo:
 		assert trade_limit is None or isinstance(trade_limit, UniAmt), f'{type(trade_limit)} != {UniAmt}'
 		assert is_coin_addr(proto, addr)
 
-		assert asset.chain == proto.coin, f'{asset.chain} != {proto.coin}'
+		assert asset.coin == proto.coin, f'{asset.coin} != {proto.coin}'
 		assert asset.asset == getattr(proto, 'tokensym', None), (
 			f'{asset.asset} != {getattr(proto, "tokensym", None)}')
 		assert asset.direction == 'recv', f'{asset.direction} != ‘recv’'

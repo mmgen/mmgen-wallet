@@ -25,7 +25,7 @@ def init_swap_proto(cfg, asset):
 	from ..protocol import init_proto
 	return init_proto(
 		cfg,
-		asset.chain,
+		asset.coin,
 		network = cfg._proto.network,
 		tokensym = asset.asset,
 		need_amt = True)
