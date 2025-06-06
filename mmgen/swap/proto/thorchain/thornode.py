@@ -30,8 +30,8 @@ class ThornodeRPCClient(HTTPClient):
 	host = 'thornode.ninerealms.com'
 	timeout = 5
 
-	def __init__(self, tx, *, proto=None, host=None):
-		super().__init__(tx.cfg, proto=proto, host=host)
+	def __init__(self, tx, *, network_proto=None, host=None):
+		super().__init__(tx.cfg, network_proto=network_proto, host=host)
 
 class Thornode:
 

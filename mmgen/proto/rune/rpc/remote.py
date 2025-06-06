@@ -31,10 +31,10 @@ class ThornodeRemoteRESTClient(HTTPClient):
 	http_hdrs = {'Content-Type': 'application/json'}
 	timeout = 5
 
-	def __init__(self, cfg, *, proto=None, host=None):
-		for k, v in cfg._proto.rpc_remote_rest_params.items():
+	def __init__(self, cfg, proto, *, network_proto=None, host=None):
+		for k, v in proto.rpc_remote_rest_params.items():
 			setattr(self, k, v)
-		super().__init__(cfg, proto=proto, host=host)
+		super().__init__(cfg, network_proto=network_proto, host=host)
 
 class THORChainRemoteRPCClient(RemoteRPCClient):
 	server_proto = 'THORChain'
@@ -44,7 +44,7 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 			setattr(self, k, v)
 		super().__init__(cfg, proto)
 		self.caps = ('lbl_id',)
-		self.rest_api = ThornodeRemoteRESTClient(cfg)
+		self.rest_api = ThornodeRemoteRESTClient(cfg, proto)
 
 	def get_balance(self, addr, *, block=None):
 		res = process_response(

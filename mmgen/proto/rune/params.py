@@ -71,7 +71,7 @@ class regtest(testnet): # regtest is deprecated testnet
 	rpc_remote_params = {
 		'server_domain': Hostname('localhost')}
 	rpc_remote_rest_params = {
-		'proto': 'http',
+		'network_proto': 'http',
 		'host': Hostname('localhost:18800'),
 		'verify': False}
 	rpc_remote_rpc_params = rpc_remote_rest_params

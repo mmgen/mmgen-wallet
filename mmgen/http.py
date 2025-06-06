@@ -16,7 +16,7 @@ import requests
 
 class HTTPClient:
 
-	proto = 'https'
+	network_proto = 'https'
 	host = None
 	timeout = 60
 	http_hdrs = {
@@ -26,10 +26,10 @@ class HTTPClient:
 	verify = True
 	text_mode = True
 
-	def __init__(self, cfg, *, proto=None, host=None):
+	def __init__(self, cfg, *, network_proto=None, host=None):
 		self.cfg = cfg
-		if proto:
-			self.proto = proto
+		if network_proto:
+			self.network_proto = network_proto
 		if host:
 			self.host = host
 		self.session = requests.Session()
@@ -44,7 +44,7 @@ class HTTPClient:
 			})
 
 	def call(self, name, path, err_fs, timeout, *, data=None):
-		url = self.proto + '://' + self.host + path
+		url = self.network_proto + '://' + self.host + path
 		kwargs = {
 			'url': url,
 			'timeout': timeout or self.timeout,
