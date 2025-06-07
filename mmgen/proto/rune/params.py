@@ -28,12 +28,13 @@ class mainnet(CoinProtocol.Secp256k1):
 	coin_amt        = 'UniAmt'
 	max_tx_fee      = 1 # TODO
 	caps            = ()
-	mmcaps          = ('tw', 'rpc_init', 'rpc_remote')
+	mmcaps          = ('tw', 'rpc', 'rpc_init')
 	base_proto      = 'THORChain'
 	base_proto_coin = 'RUNE'
 	base_coin       = 'RUNE'
 	bech32_hrp      = 'thor'
 	sign_mode       = 'standalone'
+	rpc_type        = 'remote'
 	avg_bdi         = 6 # TODO
 	address_reuse_ok = False
 

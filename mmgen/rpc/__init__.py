@@ -31,38 +31,34 @@ async def rpc_init(
 	if not 'rpc_init' in proto.mmcaps:
 		die(1, f'rpc_init() not supported for {proto.name} protocol!')
 
-	mod, clsname = (
-		('local', 'RPCClient') if 'rpc' in proto.mmcaps else
-		('remote', 'RemoteRPCClient') if 'rpc_remote' in proto.mmcaps else
-		(None, None))
+	if proto.rpc_type == 'remote':
+		return getattr(importlib.import_module(
+			f'mmgen.proto.{proto.base_proto_coin.lower()}.rpc.remote'),
+				proto.base_proto + 'RemoteRPCClient')(cfg=cfg, proto=proto)
 
-	cls = getattr(
-		importlib.import_module(f'mmgen.proto.{proto.base_proto_coin.lower()}.rpc.{mod}'),
-			proto.base_proto + clsname)
+	from ..daemon import CoinDaemon
 
-	if mod == 'local':
-		from ..daemon import CoinDaemon
-		rpc = await cls(
-			cfg           = cfg,
-			proto         = proto,
-			daemon        = daemon or CoinDaemon(cfg, proto=proto, test_suite=cfg.test_suite),
-			backend       = backend or cfg.rpc_backend,
-			ignore_wallet = ignore_wallet)
+	rpc = await getattr(importlib.import_module(
+			f'mmgen.proto.{proto.base_proto_coin.lower()}.rpc.local'),
+				proto.base_proto + 'RPCClient')(
+		cfg           = cfg,
+		proto         = proto,
+		daemon        = daemon or CoinDaemon(cfg, proto=proto, test_suite=cfg.test_suite),
+		backend       = backend or cfg.rpc_backend,
+		ignore_wallet = ignore_wallet)
 
-		if rpc.daemon_version > rpc.daemon.coind_version:
-			rpc.handle_unsupported_daemon_version(
-				proto.name,
-				ignore_daemon_version or proto.ignore_daemon_version or cfg.ignore_daemon_version)
+	if rpc.daemon_version > rpc.daemon.coind_version:
+		rpc.handle_unsupported_daemon_version(
+			proto.name,
+			ignore_daemon_version or proto.ignore_daemon_version or cfg.ignore_daemon_version)
 
-		if rpc.chain not in proto.chain_names:
-			die('RPCChainMismatch', '\n' + fmt(f"""
-				Protocol:           {proto.cls_name}
-				Valid chain names:  {fmt_list(proto.chain_names, fmt='bare')}
-				RPC client chain:   {rpc.chain}
-				""", indent='  ').rstrip())
+	if rpc.chain not in proto.chain_names:
+		die('RPCChainMismatch', '\n' + fmt(f"""
+			Protocol:           {proto.cls_name}
+			Valid chain names:  {fmt_list(proto.chain_names, fmt='bare')}
+			RPC client chain:   {rpc.chain}
+			""", indent='  ').rstrip())
 
-		rpc.blockcount = NonNegativeInt(rpc.blockcount)
-	else:
-		rpc = cls(cfg=cfg, proto=proto)
+	rpc.blockcount = NonNegativeInt(rpc.blockcount)
 
 	return rpc
