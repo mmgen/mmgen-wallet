@@ -50,10 +50,10 @@ class SwapAsset:
 		return '\n'.join(gen_good()) + '\n'.join(gen_bad())
 
 	@classmethod
-	def get_full_name(cls, s):
+	def init_from_memo(cls, s):
 		for d in cls.assets_data.values():
 			if s in (d.abbr, d.full_name):
-				return d.full_name or f'{d.name}.{d.name}'
+				return cls(d.name or d.full_name, 'recv')
 		die('SwapAssetError', f'{s!r}: unrecognized asset name or abbreviation')
 
 	@property
@@ -86,7 +86,11 @@ class SwapAsset:
 
 	@property
 	def short_name(self):
-		return self.asset or self.chain
+		return self.data.name or self.data.full_name.split('.', 1)[1]
+
+	@property
+	def tokensym(self):
+		return None if self.data.name else self.data.full_name.split('.', 1)[1]
 
 	@property
 	def memo_asset_name(self):

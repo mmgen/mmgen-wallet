@@ -72,11 +72,11 @@ class THORChainMemo:
 
 		function = get_id(cls.function_abbrevs, get_item('function'), 'function')
 
-		chain, asset = SwapAsset.get_full_name(get_item('asset')).split('.')
+		asset = SwapAsset.init_from_memo(get_item('asset'))
 
 		address = get_item('address')
 
-		if chain in SwapAsset.evm_chains:
+		if asset.chain in SwapAsset.evm_chains:
 			assert address.startswith('0x'), f'{address}: address does not start with ‘0x’'
 			assert len(address) == 42, f'{address}: address has incorrect length ({len(address)} != 42)'
 			address = address.removeprefix('0x')
@@ -104,9 +104,9 @@ class THORChainMemo:
 
 		ret = namedtuple(
 			'parsed_memo',
-			['proto', 'function', 'chain', 'asset', 'address', 'trade_limit', 'stream_interval', 'stream_quantity'])
+			['proto', 'function', 'asset', 'address', 'trade_limit', 'stream_interval', 'stream_quantity'])
 
-		return ret(proto_name, function, chain, asset, address, limit_int, int(interval), int(quantity))
+		return ret(proto_name, function, asset, address, limit_int, int(interval), int(quantity))
 
 	def __init__(self, swap_cfg, proto, asset, addr, *, trade_limit):
 

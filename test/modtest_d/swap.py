@@ -123,8 +123,8 @@ class unit_tests:
 				vmsg(pformat(p._asdict()))
 				assert p.proto == 'THORChain'
 				assert p.function == 'SWAP'
-				assert p.chain == coin.upper()
-				assert p.asset == token or coin.upper()
+				assert p.asset.chain == coin.upper()
+				assert p.asset.coin == token or coin.upper()
 				assert p.address == addr.views[addr.view_pref]
 				assert p.trade_limit == limit_chk
 				assert p.stream_interval == si or swap_cfg.si.dfl, f'{p.stream_interval} != {swap_cfg.si.dfl}'

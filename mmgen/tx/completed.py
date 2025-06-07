@@ -83,14 +83,14 @@ class Completed(Base):
 				from ..protocol import init_proto
 				text = memo_bytes.decode('ascii')
 				p = Memo.parse(text)
+				r = self.recv_asset
 				assert p.function == 'SWAP', f'‘{p.function}’: unsupported function in swap memo ‘{text}’'
-				aname = p.chain + (f'.{p.asset}' if p.asset != p.chain else '')
-				assert aname == self.recv_asset.name, f'invalid memo: {aname} != {self.recv_asset.name}'
+				assert p.asset.name == r.name, f'invalid memo: {p.asset.name} != {r.name}'
 				proto = init_proto(
 						self.cfg,
-						p.chain,
+						r.coin,
 						network = self.cfg.network,
-						tokensym = None if p.chain == p.asset else p.asset,
+						tokensym = r.tokensym,
 						need_amt = True)
 				if mmid := getattr(self, 'swap_recv_addr_mmid', None):
 					pass
