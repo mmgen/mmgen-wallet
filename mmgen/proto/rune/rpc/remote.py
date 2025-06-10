@@ -25,6 +25,16 @@ def process_response(json_response, errmsg):
 		die('RPCFailure', errmsg)
 	return data['result']
 
+# HTTP POST, JSON-RPC response:
+class ThornodeRemoteRPCClient(HTTPClient):
+
+	timeout = 30
+
+	def __init__(self, cfg, proto, *, network_proto=None, host=None):
+		for k, v in proto.rpc_remote_rpc_params.items():
+			setattr(self, k, v)
+		super().__init__(cfg, network_proto=network_proto, host=host)
+
 # HTTP GET, params in query string, JSON-RPC response:
 class ThornodeRemoteRESTClient(HTTPClient):
 
@@ -45,6 +55,7 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		super().__init__(cfg, proto)
 		self.caps = ('lbl_id',)
 		self.rest_api = ThornodeRemoteRESTClient(cfg, proto)
+		self.rpc_api = ThornodeRemoteRPCClient(cfg, proto)
 
 	def get_balance(self, addr, *, block=None):
 		res = process_response(
@@ -53,3 +64,24 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		rune_res = [d for d in res if d['denom'] == 'rune']
 		assert len(rune_res) == 1, f'{rune_res}: result length is not one!'
 		return self.proto.coin_amt(int(rune_res[0]['amount']), from_unit='satoshi')
+
+	def get_account_info(self, addr, *, block=None):
+		return process_response(
+			self.rest_api.get(path=f'/auth/accounts/{addr}'),
+			errmsg =  f'address ‘{addr}’ not found in blockchain')['value']
+
+	def get_tx_info(self, txhash):
+		return process_response(
+			self.rpc_api.post(
+				path = '/tx',
+				data = {'hash': '0x' + txhash}),
+			errmsg = f'get info for transaction {txhash} failed')
+
+	def tx_op(self, txbytes, op=None):
+		assert isinstance(txbytes, bytes)
+		assert op in ('check_tx', 'broadcast_tx_sync', 'broadcast_tx_async')
+		return process_response(
+			self.rpc_api.post(
+				path = '/' + op,
+				data = {'tx': '0x' + txbytes.hex()}),
+			errmsg = f'transaction operation ‘{op}’ failed')

@@ -22,6 +22,7 @@ from ..btc.params import mainnet as btc_mainnet
 class mainnet(CoinProtocol.Secp256k1):
 	mod_clsname     = 'THORChain'
 	network_names   = _nw('mainnet', 'stagenet', 'testnet')
+	chain_id        = 'thorchain-1'
 	mmtypes         = ('X',)
 	preferred_mmtypes  = ('X',)
 	dfl_mmtype      = 'X'
