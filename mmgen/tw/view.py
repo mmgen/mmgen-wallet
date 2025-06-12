@@ -743,6 +743,8 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				await parent.get_data()
 				parent.oneshot_msg = yellow(
 					f'{parent.proto.dcoin} balance for {parent.item_desc} #{idx} refreshed')
+				if res == 0:
+					return False # zeroing balance may mess up display
 
 		async def i_addr_delete(self, parent, idx):
 			if not parent.keypress_confirm(

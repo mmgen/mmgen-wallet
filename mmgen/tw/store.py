@@ -17,7 +17,7 @@ from pathlib import Path
 
 from ..base_obj import AsyncInit
 from ..obj import TwComment
-from ..util import msg, ymsg, die, cached_property
+from ..util import msg, die, cached_property
 from ..addr import is_coin_addr, is_mmgen_id, CoinAddr
 
 from .shared import TwMMGenID, TwLabel
@@ -215,16 +215,6 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 				data_root[addr]['balance'] = str(bal)
 				if self.aggressive_sync:
 					self.write()
-
-	async def rpc_get_balance(self, addr, block='latest'):
-		assert self.rpc.is_remote, 'tw.store.rpc_get_balance(): RPC is not remote!'
-		try:
-			return self.rpc.get_balance(addr, block=block)
-		except Exception as e:
-			ymsg(f'{type(e).__name__}: {e}')
-			ymsg(f'Unable to get balance for address ‘{addr}’')
-			import asyncio
-			await asyncio.sleep(3)
 
 	def get_cached_balance(self, addr, session_cache, data_root):
 		if addr in session_cache:
