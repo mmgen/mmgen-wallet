@@ -15,14 +15,16 @@ proto.eth.tx.unsigned: Ethereum unsigned transaction class
 import json
 
 from ....tx import unsigned as TxBase
-from ....util import msg, msg_r, die
 from ....obj import CoinTxID, ETHNonce, Int, HexStr
 from ....addr import CoinAddr, ContractAddr
+
+from ...vm.tx.unsigned import Unsigned as VmUnsigned
+
 from ..contract import Token, THORChainRouterContract
+
 from .completed import Completed, TokenCompleted
 
-class Unsigned(Completed, TxBase.Unsigned):
-	desc = 'unsigned transaction'
+class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 
 	def parse_txfile_serialized_data(self):
 		d = self.serialized if isinstance(self.serialized, dict) else json.loads(self.serialized)
@@ -65,42 +67,6 @@ class Unsigned(Completed, TxBase.Unsigned):
 					raise ValueError('contract-creating transaction cannot have to-address')
 			else:
 				self.txobj['token_addr'] = ContractAddr(self.proto, etx.creates.hex())
-
-	async def sign(self, tx_num_str, keys): # return TX object or False; don't exit or raise exception
-
-		from ....exception import TransactionChainMismatch
-		try:
-			self.check_correct_chain()
-		except TransactionChainMismatch:
-			return False
-
-		o = self.txobj
-
-		def do_mismatch_err(io, j, k, desc):
-			m = 'A compromised online installation may have altered your serialized data!'
-			fs = '\n{} mismatch!\n{}\n  orig:       {}\n  serialized: {}'
-			die(3, fs.format(desc.upper(), m, getattr(io[0], k), o[j]))
-
-		if o['from'] != self.inputs[0].addr:
-			do_mismatch_err(self.inputs, 'from', 'addr', 'from-address')
-		if self.outputs:
-			if o['to'] != self.outputs[0].addr:
-				do_mismatch_err(self.outputs, 'to', 'addr', 'to-address')
-			if o['amt'] != self.outputs[0].amt:
-				do_mismatch_err(self.outputs, 'amt', 'amt', 'amount')
-
-		msg_r(f'Signing transaction{tx_num_str}...')
-
-		try:
-			await self.do_sign(o, keys[0].sec.wif)
-			msg('OK')
-			from ....tx import SignedTX
-			tx = SignedTX(cfg=self.cfg, data=self.__dict__, automount=self.automount)
-			tx.check_serialized_integrity()
-			return tx
-		except Exception as e:
-			msg(f'{e}: transaction signing failed!')
-			return False
 
 class TokenUnsigned(TokenCompleted, Unsigned):
 	desc = 'unsigned transaction'

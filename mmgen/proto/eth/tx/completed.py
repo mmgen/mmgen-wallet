@@ -13,17 +13,13 @@ proto.eth.tx.completed: Ethereum completed transaction class
 """
 
 from ....tx import completed as TxBase
+
+from ...vm.tx.completed import Completed as VmCompleted
+
 from .base import Base, TokenBase
 
-class Completed(Base, TxBase.Completed):
+class Completed(VmCompleted, Base, TxBase.Completed):
 	fn_fee_unit = 'Mwei'
-
-	def get_swap_memo_maybe(self):
-		return self.swap_memo.encode() if getattr(self, 'swap_memo', None) else None
-
-	@property
-	def send_amt(self):
-		return self.outputs[0].amt if self.outputs else self.proto.coin_amt('0')
 
 	@property
 	def total_gas(self):
@@ -32,25 +28,6 @@ class Completed(Base, TxBase.Completed):
 	@property
 	def fee(self):
 		return self.fee_gasPrice2abs(self.txobj['gasPrice'].toWei())
-
-	@property
-	def change(self):
-		return self.sum_inputs() - self.send_amt - self.fee
-
-	def check_txfile_hex_data(self):
-		pass
-
-	def check_sigs(self): # TODO
-		from ....util import is_hex_str
-		if is_hex_str(self.serialized):
-			return True
-		return False
-
-	def check_pubkey_scripts(self):
-		pass
-
-	def get_serialized_locktime(self):
-		return None # TODO
 
 class TokenCompleted(TokenBase, Completed):
 
