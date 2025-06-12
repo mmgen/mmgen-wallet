@@ -13,7 +13,7 @@ proto.btc.tx.online: Bitcoin online signed transaction class
 """
 
 from ....tx import online as TxBase
-from ....util import msg, ymsg, die
+from ....util import msg, die
 from ....color import orange
 from .signed import Signed
 
@@ -47,10 +47,8 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 		if ret['allowed']:
 			from ....obj import CoinTxID
 			msg('TxID: {}'.format(CoinTxID(ret['txid']).hl()))
-			msg('Transaction can be sent')
 			return True
 		else:
-			ymsg('Transaction cannot be sent')
 			msg(ret['reject-reason'])
 			return False
 

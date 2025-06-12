@@ -14,7 +14,7 @@ tx.online: online signed transaction class
 
 import sys, time, asyncio
 
-from ..util import msg, Msg, ymsg, make_timestr, die
+from ..util import msg, Msg, gmsg, ymsg, make_timestr, die
 from ..color import pink, yellow
 
 from .signed import Signed, AutomountSigned
@@ -113,16 +113,20 @@ class OnlineSigned(Signed):
 					if cfg.test:
 						break
 				elif cfg.test:
-					await self.test_sendable(txhex)
+					if await self.test_sendable(txhex):
+						gmsg('Transaction can be sent')
+					else:
+						ymsg('Transaction cannot be sent')
 				else: # node send
 					msg(f'Sending TX: {coin_txid.hl()}')
-					if not cfg.bogus_send:
+					if cfg.bogus_send:
+						msg(f'BOGUS transaction NOT sent: {coin_txid.hl()}')
+					else:
 						if idx != '':
 							await asyncio.sleep(1)
 						ret = await self.send_with_node(txhex)
 						assert ret == coin_txid, f'txid mismatch (after sending) ({ret} != {coin_txid})'
-					desc = 'BOGUS transaction NOT' if cfg.bogus_send else 'Transaction'
-					msg(desc + ' sent: ' + coin_txid.hl())
+						msg(f'Transaction sent: {coin_txid.hl()}')
 					sent_status = 'no_confirm_post_send'
 
 				if cfg.wait and sent_status:

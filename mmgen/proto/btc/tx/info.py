@@ -18,6 +18,7 @@ from ....color import red, green, blue, pink
 from ....addr import MMGenID
 
 class TxInfo(TxInfo):
+
 	sort_orders = ('addr', 'raw')
 	txinfo_hdr_fs = '{hdr}\n  ID={i} ({a} {c}) RBF={r} Sig={s} Locktime={l}\n'
 	txinfo_hdr_fs_short = 'TX {i} ({a} {c}) RBF={r} Sig={s} Locktime={l}\n'

@@ -12,27 +12,21 @@
 proto.eth.tx.info: Ethereum transaction info class
 """
 
-from ....tx.info import TxInfo
-from ....util import fmt, pp_fmt
+from ....tx.info import TxInfo, mmid_disp
+from ....util import pp_fmt
 from ....color import red, yellow, blue, cyan, pink
-from ....addr import MMGenID
 from ....obj import Int
 
 class TxInfo(TxInfo):
-	txinfo_hdr_fs = '{hdr}\n  ID={i} ({a} {c}) Sig={s} Locktime={l}\n'
-	txinfo_hdr_fs_short = 'TX {i} ({a} {c}) Sig={s} Locktime={l}\n'
-	txinfo_ftr_fs = fmt("""
-		Total in account:  {i} {d}
-		Total to spend:    {o} {d}
-		Remaining balance: {C} {d}
-		TX fee:            {a} {c}{r}
-	""")
+
 	to_addr_key = 'to'
 
 	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, *, terse, sort):
 		tx = self.tx
-		def mmid_disp(io):
-			return ' ' + (io.mmid.hl() if io.mmid else MMGenID.hlc(nonmm_str))
+		t = tx.txobj
+		td = t['data']
+		to_addr = t[self.to_addr_key]
+		tokenswap = tx.is_swap and tx.is_token
 		fs = """
 			From:      {f}{f_mmid}
 			{toaddr}   {t}{t_mmid}{tvault}
@@ -42,10 +36,6 @@ class TxInfo(TxInfo):
 			Nonce:     {n}
 			Data:      {d}
 		""".strip().replace('\t', '') + ('\nMemo:      {m}' if tx.is_swap else '')
-		t = tx.txobj
-		td = t['data']
-		to_addr = t[self.to_addr_key]
-		tokenswap = tx.is_swap and tx.is_token
 		return fs.format(
 			f      = t['from'].hl(0),
 			t      = to_addr.hl(0) if to_addr else blue('None'),
@@ -59,8 +49,8 @@ class TxInfo(TxInfo):
 			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
 			G      = Int(tx.total_gas).hl(),
 			G_dec  = red(f" ({t['startGas']} + {t['router_gas']})") if tokenswap else '',
-			f_mmid = mmid_disp(tx.inputs[0]),
-			t_mmid = mmid_disp(tx.outputs[0]) if tx.outputs and not tx.is_swap else '') + '\n\n'
+			f_mmid = mmid_disp(tx.inputs[0], nonmm_str),
+			t_mmid = mmid_disp(tx.outputs[0], nonmm_str) if tx.outputs and not tx.is_swap else '') + '\n\n'
 
 	def format_abs_fee(self, iwidth, /, *, color=None):
 		return self.tx.fee.fmt(iwidth, color=color) + (' (max)' if self.tx.txobj['data'] else '')

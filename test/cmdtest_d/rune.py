@@ -28,8 +28,9 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	menu_prompt = 'efresh balance:\b'
 
 	cmd_group_in = (
-		('subgroup.init',     []),
-		('subgroup.main',     ['init']),
+		('subgroup.init',        []),
+		('subgroup.main',        ['init']),
+		('thornode_server_stop', 'stopping Thornode server'),
 	)
 	cmd_subgroups = {
 		'init': (
@@ -39,9 +40,8 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		),
 		'main': (
 			'tracking wallet and transaction operations',
-			('twview',        'viewing unspent outputs in tracking wallet'),
-			('bal_refresh',   'refreshing address balance in tracking wallet'),
-			('thornode_server_stop', 'stopping Thornode server'),
+			('twview',               'viewing unspent outputs in tracking wallet'),
+			('bal_refresh',          'refreshing address balance in tracking wallet'),
 		),
 	}
 

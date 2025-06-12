@@ -16,10 +16,23 @@ import importlib
 
 from ..cfg import gc
 from ..color import red, green, cyan, orange, blue, yellow, magenta
-from ..util import msg, msg_r, decode_timestamp, make_timestr
+from ..util import msg, msg_r, fmt, decode_timestamp, make_timestr
 from ..util2 import format_elapsed_hr
+from ..addr import MMGenID
+
+def mmid_disp(io, nonmm_str):
+	return ' ' + (io.mmid.hl() if io.mmid else MMGenID.hlc(nonmm_str))
 
 class TxInfo:
+
+	txinfo_hdr_fs = '{hdr}\n  ID={i} ({a} {c}) Sig={s}\n'
+	txinfo_hdr_fs_short = 'TX {i} ({a} {c}) Sig={s}\n'
+	txinfo_ftr_fs = fmt("""
+		Total in account:  {i} {d}
+		Total to spend:    {o} {d}
+		Remaining balance: {C} {d}
+		TX fee:            {a} {c}{r}
+	""")
 
 	def __init__(self, cfg, tx):
 		self.cfg = cfg
