@@ -52,7 +52,7 @@ class RPCClient:
 		self.host_url = f'{self.network_proto}://{host}:{port}'
 		self.host = host
 		self.port = port
-		self.timeout = self.cfg.http_timeout
+		self.timeout = self.cfg.http_timeout or 60
 		self.auth = None
 
 	def _get_backend(self, backend):

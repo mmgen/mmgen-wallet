@@ -301,7 +301,7 @@ class UserOpts(Opts):
 			Rr --daemon-id=ID         Specify the coin daemon ID
 			rr --ignore-daemon-version Ignore coin daemon version check
 			Rr --list-daemon-ids      List all available daemon IDs
-			rr --http-timeout=t       Set HTTP timeout in seconds for JSON-RPC connections
+			-r --http-timeout=t       Set HTTP timeout in seconds for JSON-RPC connections
 			-- --no-license           Suppress the GPL license prompt
 			Rr --rpc-host=HOST        Communicate with coin daemon running on host HOST
 			rr --rpc-port=PORT        Communicate with coin daemon listening on port PORT

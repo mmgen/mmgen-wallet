@@ -47,7 +47,7 @@ class HTTPClient:
 		url = self.network_proto + '://' + self.host + path
 		kwargs = {
 			'url': url,
-			'timeout': timeout or self.timeout,
+			'timeout': self.cfg.http_timeout or timeout or self.timeout,
 			'verify': self.verify}
 		if data:
 			kwargs['data'] = data

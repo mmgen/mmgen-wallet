@@ -170,7 +170,7 @@ class Config(Lockable):
 	no_license      = False
 
 	# limits
-	http_timeout       = 60
+	http_timeout       = 0
 	usr_randchars      = 30
 	fee_adjust         = 1.0
 	fee_estimate_confs = 3
