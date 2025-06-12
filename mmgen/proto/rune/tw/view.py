@@ -13,9 +13,4 @@ proto.rune.tw.view: THORChain protocol base class for tracking wallet view class
 """
 
 class THORChainTwView:
-
-	def gen_subheader(self, cw, color):
-		yield from super().gen_subheader(cw, color)
-		if self.proto.network == 'mainnet':
-			from ....color import red
-			yield red('For demonstration purposes only! DO NOT SPEND to these addresses!') # TODO
+	pass

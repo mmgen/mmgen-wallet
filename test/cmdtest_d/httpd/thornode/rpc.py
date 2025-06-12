@@ -69,6 +69,19 @@ class ThornodeRPCServer(ThornodeServer):
 					'codespace': ''
 				}
 			}
+		elif m := re.search(r'/broadcast_tx_sync$', req_str):
+			assert method == 'POST'
+			txhex = environ['wsgi.input'].read(24).decode().removeprefix('tx=0x').upper()
+			if txhex.startswith('0A540A52'):
+				data = {
+					'result': {
+						'code': 0,
+						'codespace': '',
+						'data': '',
+						'hash': '14463C716CF08A814868DB779156BCD85A1DF8EE49E924900A74482E9DEE132D',
+						'log': ''
+					}
+				}
 		else:
 			raise ValueError(f'‘{req_str}’: malformed query path')
 

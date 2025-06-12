@@ -358,6 +358,8 @@ class UserOpts(Opts):
 		  'e' - Ethereum or Ethereum code fork
 		  'r' - coin supporting RPC
 		  'h' - Bitcoin Cash
+		  'L' - local RPC coin
+		  'X' - remote RPC coin
 		  '-' - other coin
 		Cmd codes:
 		  'p' - proto required
@@ -372,10 +374,11 @@ class UserOpts(Opts):
 			return ret(
 				coin = caps.coin_codes or (
 					None if coin is None else
-					['-', 'r', 'R', 'b', 'h'] if coin == 'bch' else
-					['-', 'r', 'R', 'b'] if coin in gc.btc_fork_rpc_coins else
-					['-', 'r', 'R', 'e'] if coin in gc.eth_fork_coins else
-					['-', 'r'] if coin in gc.rpc_coins else
+					['-', 'r', 'R', 'b', 'h', 'L'] if coin == 'bch' else
+					['-', 'r', 'R', 'b', 'L'] if coin in gc.btc_fork_rpc_coins else
+					['-', 'r', 'R', 'e', 'L'] if coin in gc.eth_fork_coins else
+					['-', 'r', 'L'] if coin in gc.rpc_coins else
+					['-', 'X'] if coin in gc.remote_rpc_coins else
 					['-']),
 				cmd = (
 					['-']

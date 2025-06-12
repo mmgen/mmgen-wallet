@@ -12,7 +12,7 @@
 test.cmdtest_d.rune: THORChain RUNE tests for the cmdtest.py test suite
 """
 
-from .include.common import dfl_sid
+from .include.common import dfl_sid, dfl_words_file
 from .httpd.thornode.rpc import ThornodeRPCServer
 from .ethdev import CmdTestEthdevMethods
 from .base import CmdTestBase
@@ -42,6 +42,10 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			'tracking wallet and transaction operations',
 			('twview',               'viewing unspent outputs in tracking wallet'),
 			('bal_refresh',          'refreshing address balance in tracking wallet'),
+			('txcreate1',            'creating a transaction'),
+			('txsign1',              'signing the transaction'),
+			('txsend1_test',         'testing whether the transaction can be sent'),
+			('txsend1',              'sending the transaction'),
 		),
 	}
 
@@ -79,6 +83,47 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		t.expect(r'Total RUNE: \S*\D9876.54321321\D', regex=True)
 		t.expect('address #3 refreshed')
 		t.expect(self.menu_prompt, 'q')
+		return t
+
+	def txcreate1(self):
+		t = self.spawn('mmgen-txcreate', self.rune_opts + ['98831F3A:X:2,54.321'])
+		t.expect(self.menu_prompt, 'q')
+		t.expect('spend from: ', '3\n')
+		t.expect('(y/N): ', 'y') # add comment?
+		t.expect('Comment: ', 'RUNE Boy\n')
+		t.expect('view: ', 'y')
+		t.expect('to continue: ', 'z')
+		t.expect('(y/N): ', 'y') # save?
+		t.written_to_file('Unsigned transaction')
+		return t
+
+	def txsign1(self):
+		return self.txsign_ui_common(
+			self.spawn(
+				'mmgen-txsign',
+				self.rune_opts + [self.get_file_with_ext('rawtx'), dfl_words_file],
+				no_passthru_opts = ['coin']),
+			has_label = True)
+
+	def txsend1_test(self):
+		return self._txsend(add_args=['--test'])
+
+	def txsend1(self):
+		return self._txsend()
+
+	def _txsend(self, add_args=[]):
+		t = self.spawn(
+			'mmgen-txsend',
+			self.rune_opts + add_args + [self.get_file_with_ext('sigtx')],
+			no_passthru_opts = ['coin'])
+		t.expect('view: ', 'y')
+		t.expect('to continue: ', 'z')
+		t.expect('(y/N): ', 'n') # edit comment?
+		if add_args == ['--test']:
+			t.expect('can be sent')
+		else:
+			t.expect('to confirm: ', 'YES\n')
+			t.written_to_file('Sent transaction')
 		return t
 
 	def thornode_server_stop(self):

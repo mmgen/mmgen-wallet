@@ -51,8 +51,9 @@ class GlobalConstants(Lockable):
 	min_time_precision = 18
 
 	# must match CoinProtocol.coins
-	core_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'zec', 'xmr')
+	core_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'zec', 'xmr', 'rune')
 	rpc_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'xmr')
+	remote_rpc_coins = ('rune',)
 	btc_fork_rpc_coins = ('btc', 'bch', 'ltc')
 	eth_fork_coins = ('eth', 'etc')
 

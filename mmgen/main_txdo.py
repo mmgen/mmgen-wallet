@@ -41,7 +41,7 @@ opts_data = {
 		'options': """
 			-- -h, --help             Print this help message
 			-- --, --longhelp         Print help message for long (global) options
-			-- -A, --fee-adjust=    f Adjust transaction fee by factor 'f' (see below)
+			L- -A, --fee-adjust=    f Adjust transaction fee by factor ‘f’ (see below)
 			-- -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
 			+                         brainwallet input
 			-- -B, --no-blank         Don't blank screen before displaying {a_info}
@@ -53,7 +53,7 @@ opts_data = {
 			-- -e, --echo-passphrase  Print passphrase to screen when typing it
 			b- -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
 			+                         {fe_all}.  Default: {fe_dfl!r}
-			-- -f, --fee=           f Transaction fee, as a decimal {cu} amount or as
+			L- -f, --fee=           f Transaction fee, as a decimal {cu} amount or as
 			+                         {fu} (an integer followed by {fl}).
 			+                         See FEE SPECIFICATION below.  If omitted, fee will be
 			+                         calculated using network fee estimation.
@@ -107,9 +107,12 @@ opts_data = {
 			-- -v, --verbose          Produce more verbose output
 			b- -V, --vsize-adj=     f Adjust transaction's estimated vsize by factor 'f'
 			e- -w, --wait             Wait for transaction confirmation
-			-s -x, --proxy=P          Fetch the swap quote via SOCKS5h proxy ‘P’ (host:port).
+			Ls -x, --proxy=P          Fetch the swap quote via SOCKS5h proxy ‘P’ (host:port).
 			+                         Use special value ‘env’ to honor *_PROXY environment
 			+                         vars instead.
+			X- -x, --proxy=P          Connect to remote server(s) via SOCKS5h proxy ‘P’
+			+                         (host:port).  Use special value ‘env’ to honor *_PROXY
+			+                         environment vars instead.
 			e- -X, --cached-balances  Use cached balances
 			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 			-- -z, --show-hash-presets Show information on available hash presets
