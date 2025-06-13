@@ -52,7 +52,8 @@ class GlobalConstants(Lockable):
 
 	# core_coins must match CoinProtocol.coins
 	core_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'zec', 'xmr', 'rune')
-	rpc_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'xmr')
+	rpc_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'xmr', 'rune')
+	local_rpc_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'xmr')
 	remote_rpc_coins = ('rune',)
 	btc_fork_rpc_coins = ('btc', 'bch', 'ltc')
 	eth_fork_coins = ('eth', 'etc')
@@ -62,7 +63,7 @@ class GlobalConstants(Lockable):
 	cmd_caps_data = {
 		'addrgen':      _cc(True,  False, True,  None,     [],      'lmw'),
 		'addrimport':   _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
-		'autosign':     _cc(True,  True,  False, '-rRb',   ['rpc'], 'lm'),
+		'autosign':     _cc(True,  True,  False, '-bRrXx', ['rpc'], 'lm'),
 		'cli':          _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
 		'keygen':       _cc(True,  False, True,  None,     [],      'lmw'),
 		'msg':          _cc(True,  True,  True,  None,     ['msg'], 'lmw'),
@@ -72,18 +73,18 @@ class GlobalConstants(Lockable):
 		'seedjoin':     _cc(False, False, False, None,     [],      'lmw'),
 		'seedsplit':    _cc(False, False, False, None,     [],      'lmw'),
 		'subwalletgen': _cc(False, False, False, None,     [],      'lmw'),
-		'swaptxcreate': _cc(True,  True,  False, '-rRb',   ['tw'],  'lmw'),
-		'swaptxdo':     _cc(True,  True,  False, '-rRb',   ['tw'],  'lmw'),
+		'swaptxcreate': _cc(True,  True,  False, '-bRrx',  ['tw'],  'lmw'),
+		'swaptxdo':     _cc(True,  True,  False, '-bRrx',  ['tw'],  'lmw'),
 		'tool':         _cc(True,  True,  True,  None,     [],      'lmw'),
 		'txbump':       _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
 		'txcreate':     _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
 		'txdo':         _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
-		'txsend':       _cc(True,  True,  False, '-rRb',   ['tw'],  'lmw'),
-		'txsign':       _cc(True,  True,  False, '-rRb',   ['tw'],  'lmw'),
+		'txsend':       _cc(True,  True,  False, '-bRrXx', ['tw'],  'lmw'),
+		'txsign':       _cc(True,  True,  False, '-bRrXx', ['tw'],  'lmw'),
 		'walletchk':    _cc(False, False, False, None,     [],      'lmw'),
 		'walletconv':   _cc(False, False, False, None,     [],      'lmw'),
 		'walletgen':    _cc(False, False, False, None,     [],      'lmw'),
-		'xmrwallet':    _cc(True,  True,  False, '-r',     ['rpc'], 'lmw'),
+		'xmrwallet':    _cc(True,  True,  False, '-rx',    ['rpc'], 'lmw'),
 	}
 
 	prog_name = os.path.basename(sys.argv[0])

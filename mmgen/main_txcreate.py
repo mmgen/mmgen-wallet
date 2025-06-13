@@ -44,7 +44,7 @@ opts_data = {
 			-- -a, --autosign        Create a transaction for offline autosigning (see
 			+                        ‘mmgen-autosign’). The removable device is mounted and
 			+                        unmounted automatically
-			L- -A, --fee-adjust=  f  Adjust transaction fee by factor ‘f’ (see below)
+			r- -A, --fee-adjust=  f  Adjust transaction fee by factor ‘f’ (see below)
 			-- -B, --no-blank        Don't blank screen before displaying {a_info}
 			-- -c, --comment-file=f  Source the transaction's comment from file 'f'
 			b- -C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
@@ -53,7 +53,7 @@ opts_data = {
 			e- -D, --contract-data=D Path to file containing hex-encoded contract data
 			b- -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
 			+                        {fe_all}.  Default: {fe_dfl!r}
-			L- -f, --fee=         f  Transaction fee, as a decimal {cu} amount or as
+			r- -f, --fee=         f  Transaction fee, as a decimal {cu} amount or as
 			+                        {fu} (an integer followed by {fl}).
 			+                        See FEE SPECIFICATION below.  If omitted, fee will be
 			+                        calculated using network fee estimation.
@@ -81,7 +81,7 @@ opts_data = {
 			-s -S, --list-assets     List available swap assets
 			-- -v, --verbose         Produce more verbose output
 			b- -V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
-			Ls -x, --proxy=P         Fetch the swap quote via SOCKS5h proxy ‘P’ (host:port).
+			rs -x, --proxy=P         Fetch the swap quote via SOCKS5h proxy ‘P’ (host:port).
 			+                        Use special value ‘env’ to honor *_PROXY environment
 			+                        vars instead.
 			X- -x, --proxy=P         Connect to remote server(s) via SOCKS5h proxy ‘P’

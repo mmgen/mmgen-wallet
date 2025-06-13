@@ -301,7 +301,7 @@ class UserOpts(Opts):
 			Rr --daemon-id=ID         Specify the coin daemon ID
 			rr --ignore-daemon-version Ignore coin daemon version check
 			Rr --list-daemon-ids      List all available daemon IDs
-			-r --http-timeout=t       Set HTTP timeout in seconds for JSON-RPC connections
+			xr --http-timeout=t       Set HTTP timeout in seconds for JSON-RPC connections
 			-- --no-license           Suppress the GPL license prompt
 			Rr --rpc-host=HOST        Communicate with coin daemon running on host HOST
 			rr --rpc-port=PORT        Communicate with coin daemon listening on port PORT
@@ -356,11 +356,11 @@ class UserOpts(Opts):
 		  'b' - Bitcoin or Bitcoin code fork supporting RPC
 		  'R' - Bitcoin or Ethereum code fork supporting RPC
 		  'e' - Ethereum or Ethereum code fork
-		  'r' - coin supporting RPC
 		  'h' - Bitcoin Cash
-		  'L' - local RPC coin
+		  'r' - local RPC coin
 		  'X' - remote RPC coin
-		  '-' - other coin
+		  'x' - local or remote RPC coin
+		  '-' - any coin
 		Cmd codes:
 		  'p' - proto required
 		  'c' - proto required, --coin recognized
@@ -374,11 +374,11 @@ class UserOpts(Opts):
 			return ret(
 				coin = caps.coin_codes or (
 					None if coin is None else
-					['-', 'r', 'R', 'b', 'h', 'L'] if coin == 'bch' else
-					['-', 'r', 'R', 'b', 'L'] if coin in gc.btc_fork_rpc_coins else
-					['-', 'r', 'R', 'e', 'L'] if coin in gc.eth_fork_coins else
-					['-', 'r', 'L'] if coin in gc.rpc_coins else
-					['-', 'X'] if coin in gc.remote_rpc_coins else
+					['-', 'r', 'R', 'b', 'h', 'x'] if coin == 'bch' else
+					['-', 'r', 'R', 'b', 'x'] if coin in gc.btc_fork_rpc_coins else
+					['-', 'r', 'R', 'e', 'x'] if coin in gc.eth_fork_coins else
+					['-', 'r', 'x'] if coin in gc.local_rpc_coins else
+					['-', 'X', 'x'] if coin in gc.remote_rpc_coins else
 					['-']),
 				cmd = (
 					['-']
