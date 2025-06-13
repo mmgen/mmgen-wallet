@@ -50,7 +50,7 @@ class GlobalConstants(Lockable):
 	min_screen_width   = 80
 	min_time_precision = 18
 
-	# must match CoinProtocol.coins
+	# core_coins must match CoinProtocol.coins
 	core_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'zec', 'xmr', 'rune')
 	rpc_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'xmr')
 	remote_rpc_coins = ('rune',)
@@ -60,30 +60,30 @@ class GlobalConstants(Lockable):
 	# ‘use_coin_opt’ must be False if ‘coin_codes’ is set
 	_cc = namedtuple('cmd_cap', ['proto', 'rpc', 'use_coin_opt', 'coin_codes', 'caps', 'platforms'])
 	cmd_caps_data = {
-		'addrgen':      _cc(True,  False, True,  None,    [],      'lmw'),
-		'addrimport':   _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
-		'autosign':     _cc(True,  True,  False, '-rRb',  ['rpc'], 'lm'),
-		'cli':          _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
-		'keygen':       _cc(True,  False, True,  None,    [],      'lmw'),
-		'msg':          _cc(True,  True,  True,  None,    ['msg'], 'lmw'),
-		'passchg':      _cc(False, False, False, None,    [],      'lmw'),
-		'passgen':      _cc(False, False, False, None,    [],      'lmw'),
-		'regtest':      _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
-		'seedjoin':     _cc(False, False, False, None,    [],      'lmw'),
-		'seedsplit':    _cc(False, False, False, None,    [],      'lmw'),
-		'subwalletgen': _cc(False, False, False, None,    [],      'lmw'),
-		'swaptxcreate': _cc(True,  True,  False, '-rRb',  ['tw'],  'lmw'),
-		'swaptxdo':     _cc(True,  True,  False, '-rRb',  ['tw'],  'lmw'),
-		'tool':         _cc(True,  True,  True,  None,    [],      'lmw'),
-		'txbump':       _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
-		'txcreate':     _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
-		'txdo':         _cc(True,  True,  True,  None,    ['tw'],  'lmw'),
-		'txsend':       _cc(True,  True,  False, '-rRb',  ['tw'],  'lmw'),
-		'txsign':       _cc(True,  True,  False, '-rRb',  ['tw'],  'lmw'),
-		'walletchk':    _cc(False, False, False, None,    [],      'lmw'),
-		'walletconv':   _cc(False, False, False, None,    [],      'lmw'),
-		'walletgen':    _cc(False, False, False, None,    [],      'lmw'),
-		'xmrwallet':    _cc(True,  True,  False, '-r',    ['rpc'], 'lmw'),
+		'addrgen':      _cc(True,  False, True,  None,     [],      'lmw'),
+		'addrimport':   _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
+		'autosign':     _cc(True,  True,  False, '-rRb',   ['rpc'], 'lm'),
+		'cli':          _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
+		'keygen':       _cc(True,  False, True,  None,     [],      'lmw'),
+		'msg':          _cc(True,  True,  True,  None,     ['msg'], 'lmw'),
+		'passchg':      _cc(False, False, False, None,     [],      'lmw'),
+		'passgen':      _cc(False, False, False, None,     [],      'lmw'),
+		'regtest':      _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
+		'seedjoin':     _cc(False, False, False, None,     [],      'lmw'),
+		'seedsplit':    _cc(False, False, False, None,     [],      'lmw'),
+		'subwalletgen': _cc(False, False, False, None,     [],      'lmw'),
+		'swaptxcreate': _cc(True,  True,  False, '-rRb',   ['tw'],  'lmw'),
+		'swaptxdo':     _cc(True,  True,  False, '-rRb',   ['tw'],  'lmw'),
+		'tool':         _cc(True,  True,  True,  None,     [],      'lmw'),
+		'txbump':       _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
+		'txcreate':     _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
+		'txdo':         _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
+		'txsend':       _cc(True,  True,  False, '-rRb',   ['tw'],  'lmw'),
+		'txsign':       _cc(True,  True,  False, '-rRb',   ['tw'],  'lmw'),
+		'walletchk':    _cc(False, False, False, None,     [],      'lmw'),
+		'walletconv':   _cc(False, False, False, None,     [],      'lmw'),
+		'walletgen':    _cc(False, False, False, None,     [],      'lmw'),
+		'xmrwallet':    _cc(True,  True,  False, '-r',     ['rpc'], 'lmw'),
 	}
 
 	prog_name = os.path.basename(sys.argv[0])
