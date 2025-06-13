@@ -12,11 +12,13 @@
 proto.rune.tx.info: THORChain transaction info class
 """
 
-from ....tx.info import TxInfo, mmid_disp
+from ....tx.info import TxInfo
 from ....color import blue, pink
 from ....obj import NonNegativeInt
 
-class TxInfo(TxInfo):
+from ...vm.tx.info import VmTxInfo, mmid_disp
+
+class TxInfo(VmTxInfo, TxInfo):
 
 	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, *, terse, sort):
 		tx = self.tx

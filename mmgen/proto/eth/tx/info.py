@@ -12,11 +12,13 @@
 proto.eth.tx.info: Ethereum transaction info class
 """
 
-from ....tx.info import TxInfo, mmid_disp
+from ....tx.info import TxInfo
 from ....color import red, yellow, blue, cyan, pink
 from ....obj import NonNegativeInt
 
-class TxInfo(TxInfo):
+from ...vm.tx.info import VmTxInfo, mmid_disp
+
+class TxInfo(VmTxInfo, TxInfo):
 
 	to_addr_key = 'to'
 
