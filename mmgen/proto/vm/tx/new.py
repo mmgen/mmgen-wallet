@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-proto.vm.tx.new: new transaction class methods for VM chains
+proto.vm.tx.new: new transaction methods for VM chains
 """
 
 from ....obj import MMGenTxID

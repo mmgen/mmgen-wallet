@@ -77,11 +77,11 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 				data = {'hash': '0x' + txhash}),
 			errmsg = f'get info for transaction {txhash} failed')
 
-	def tx_op(self, txbytes, op=None):
-		assert isinstance(txbytes, bytes)
+	def tx_op(self, txhex, op=None):
+		assert isinstance(txhex, str)
 		assert op in ('check_tx', 'broadcast_tx_sync', 'broadcast_tx_async')
 		return process_response(
 			self.rpc_api.post(
 				path = '/' + op,
-				data = {'tx': '0x' + txbytes.hex()}),
+				data = {'tx': '0x' + txhex}),
 			errmsg = f'transaction operation ‘{op}’ failed')

@@ -169,5 +169,4 @@ def make_sig(*, sign_doc, sec_bytes):
 	from py_ecc.secp256k1.secp256k1 import ecdsa_raw_sign
 	msghash = sha256(bytes(sign_doc)).digest()
 	_, r, s = ecdsa_raw_sign(msghash, sec_bytes)
-	# pmsg('v:', _) # DEBUG
 	return r.to_bytes(length=32) + s.to_bytes(length=32)

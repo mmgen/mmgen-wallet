@@ -734,6 +734,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			if not parent.keypress_confirm(
 					f'Refreshing tracking wallet {parent.item_desc} #{idx}. OK?'):
 				return 'redo'
+			msg_r('Refreshing balance...')
 			res = await parent.twctl.get_balance(parent.disp_data[idx-1].addr, force_rpc=True)
 			if res is None:
 				parent.oneshot_msg = red(

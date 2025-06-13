@@ -221,7 +221,7 @@ class unit_tests:
 			res = rpc.get_tx_info(txhash)
 			assert res['hash'] == txhash.upper()
 
-			res = rpc.tx_op(txbytes, op='check_tx')
+			res = rpc.tx_op(txbytes.hex(), op='check_tx')
 			assert res['code'] == 0
 
 		asyncio.run(main())

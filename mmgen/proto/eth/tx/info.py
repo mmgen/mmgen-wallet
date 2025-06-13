@@ -13,9 +13,8 @@ proto.eth.tx.info: Ethereum transaction info class
 """
 
 from ....tx.info import TxInfo, mmid_disp
-from ....util import pp_fmt
 from ....color import red, yellow, blue, cyan, pink
-from ....obj import Int
+from ....obj import NonNegativeInt
 
 class TxInfo(TxInfo):
 
@@ -47,7 +46,7 @@ class TxInfo(TxInfo):
 			m      = pink(tx.swap_memo) if tx.is_swap else None,
 			c      = tx.proto.dcoin if len(tx.outputs) else '',
 			g      = yellow(tx.pretty_fmt_fee(t['gasPrice'].to_unit('Gwei'))),
-			G      = Int(tx.total_gas).hl(),
+			G      = NonNegativeInt(tx.total_gas).hl(),
 			G_dec  = red(f" ({t['startGas']} + {t['router_gas']})") if tokenswap else '',
 			f_mmid = mmid_disp(tx.inputs[0], nonmm_str),
 			t_mmid = mmid_disp(tx.outputs[0], nonmm_str) if tx.outputs and not tx.is_swap else '') + '\n\n'
@@ -62,6 +61,7 @@ class TxInfo(TxInfo):
 
 	def format_verbose_footer(self):
 		if self.tx.txobj['data'] and not self.tx.is_swap:
+			from ....util import pp_fmt
 			from ..contract import parse_abi
 			return '\nParsed contract data: ' + pp_fmt(parse_abi(self.tx.txobj['data']))
 		else:

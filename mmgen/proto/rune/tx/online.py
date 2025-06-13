@@ -20,7 +20,7 @@ from .signed import Signed
 class OnlineSigned(Signed, TxBase.OnlineSigned):
 
 	async def test_sendable(self, txhex):
-		res = self.rpc.tx_op(bytes.fromhex(txhex), op='check_tx')
+		res = self.rpc.tx_op(txhex, op='check_tx')
 		if res['code'] == 0:
 			return True
 		else:
@@ -31,7 +31,7 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 		pass
 
 	async def send_with_node(self, txhex):
-		res = self.rpc.tx_op(bytes.fromhex(txhex), op='broadcast_tx_sync') # broadcast_tx_async
+		res = self.rpc.tx_op(txhex, op='broadcast_tx_sync') # broadcast_tx_async
 		if res['code'] == 0:
 			return res['hash'].lower()
 		else:

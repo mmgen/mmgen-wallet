@@ -46,7 +46,6 @@ dfl_dfl_path = "0'/0/0"
 
 def get_bip_utils_data(bipnum, n):
 	name, v = bip_utils_data[bipnum][n]
-	#pexit(v.__dict__)
 	vb_prv = v.m_key_net_ver.m_priv_net_ver.hex()
 	vb_pub = v.m_key_net_ver.m_pub_net_ver.hex()
 	ap = v.m_addr_params

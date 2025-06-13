@@ -44,5 +44,6 @@ rec {
         # pysocks          = pysocks;         # XMR
         # monero           = monero;          # XMR (test suite)
         # eth-keys         = eth-keys;        # ETH, ETC (test suite)
+        # pure-protobuf    = pure-protobuf;   # THORChain
     };
 }
