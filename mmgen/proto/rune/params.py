@@ -37,6 +37,7 @@ class mainnet(CoinProtocol.Secp256k1):
 	sign_mode       = 'standalone'
 	rpc_type        = 'remote'
 	avg_bdi         = 6 # TODO
+	has_usr_fee     = False
 	address_reuse_ok = False
 
 	wif_ver_num = btc_mainnet.wif_ver_num

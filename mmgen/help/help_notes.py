@@ -119,8 +119,11 @@ FMT CODES:
 		return fmt_list(self.cfg._autoset_opts['tx_proxy'].choices, fmt='fancy')
 
 	def rel_fee_desc(self):
-		from ..tx import BaseTX
-		return BaseTX(cfg=self.cfg, proto=self.proto).rel_fee_desc
+		if self.proto.has_usr_fee:
+			from ..tx import BaseTX
+			return BaseTX(cfg=self.cfg, proto=self.proto).rel_fee_desc
+		else:
+			return ''
 
 	def gas_limit(self, target):
 		return """
@@ -138,6 +141,10 @@ of a standard transaction). The default is ‘auto’.
 		""" if target == 'swaptx' or self.proto.base_coin == 'ETH' else ''
 
 	def fee(self, all_coins=False):
+
+		if not self.proto.has_usr_fee:
+			return ''
+
 		from ..tx import BaseTX
 		text = """
                                FEE SPECIFICATION

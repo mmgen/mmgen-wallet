@@ -57,6 +57,7 @@ class CoinProtocol(MMGenObject):
 		is_fork_of = None
 		chain_names = None
 		is_evm = False
+		has_usr_fee = True
 		rpc_type = 'local'
 		networks   = ('mainnet', 'testnet', 'regtest')
 		decimal_prec = 28
