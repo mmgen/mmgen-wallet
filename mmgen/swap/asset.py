@@ -77,10 +77,6 @@ class SwapAsset:
 		return self.data.name or self.data.full_name.split('.', 1)[0]
 
 	@property
-	def asset(self):
-		return None if self.data.name else self.data.full_name.split('.', 1)[1]
-
-	@property
 	def full_name(self):
 		return self.data.full_name or f'{self.data.name}.{self.data.name}'
 

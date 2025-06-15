@@ -27,7 +27,7 @@ def init_swap_proto(cfg, asset):
 		cfg,
 		asset.coin,
 		network = cfg._proto.network,
-		tokensym = asset.asset,
+		tokensym = asset.tokensym,
 		need_amt = True)
 
 def get_send_proto(cfg):

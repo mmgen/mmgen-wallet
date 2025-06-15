@@ -117,8 +117,8 @@ class THORChainMemo:
 		assert is_coin_addr(proto, addr)
 
 		assert asset.coin == proto.coin, f'{asset.coin} != {proto.coin}'
-		assert asset.asset == getattr(proto, 'tokensym', None), (
-			f'{asset.asset} != {getattr(proto, "tokensym", None)}')
+		assert asset.tokensym == getattr(proto, 'tokensym', None), (
+			f'{asset.tokensym} != {getattr(proto, "tokensym", None)}')
 		assert asset.direction == 'recv', f'{asset.direction} != ‘recv’'
 
 		self.addr = addr.views[addr.view_pref]

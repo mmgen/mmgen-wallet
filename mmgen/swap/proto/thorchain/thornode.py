@@ -55,7 +55,7 @@ class Thornode:
 				die(2, pp_fmt(data))
 			return data
 
-		if self.tx.proto.tokensym or self.tx.recv_asset.asset: # token swap
+		if self.tx.proto.tokensym or self.tx.recv_asset.tokensym: # token swap
 			in_data = get_data(
 				self.tx.send_asset.full_name,
 				'THOR.RUNE',

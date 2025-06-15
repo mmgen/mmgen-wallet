@@ -63,7 +63,7 @@ class unit_tests:
 		return True
 
 	def asset(self, name, ut, desc='SwapAsset class'):
-		for name, full_name, memo_name, chain, asset, direction in (
+		for name, full_name, memo_name, chain, tokensym, direction in (
 			('BTC',      'BTC.BTC',  'b',        'BTC', None,   'recv'),
 			('LTC',      'LTC.LTC',  'l',        'LTC', None,   'recv'),
 			('BCH',      'BCH.BCH',  'c',        'BCH', None,   'recv'),
@@ -74,7 +74,7 @@ class unit_tests:
 			assert a.name == name
 			assert a.full_name == full_name
 			assert a.direction == direction
-			assert a.asset == asset
+			assert a.tokensym == tokensym
 			assert a.chain == chain
 			assert a.memo_asset_name == memo_name
 		return True
