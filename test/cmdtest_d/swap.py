@@ -204,7 +204,7 @@ class CmdTestSwapMethods:
 			no_passthru_opts = ['coin'])
 		if spawn_only:
 			return t
-		t.expect('view: ', 'v')
+		t.view_tx('v')
 		if status:
 			return t
 		t.expect('(y/N): ', 'n')

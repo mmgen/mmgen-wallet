@@ -85,7 +85,9 @@ class CmdTestPexpect:
 
 	def view_tx(self, view):
 		self.expect(r'View.* transaction.*\? .*: ', view, regex=True)
-		if view not in 'vn\n':
+		if cfg.pexpect_spawn and view == 'v':
+			self.expect('END', 'q')
+		elif view not in 'vn\n':
 			self.expect('to continue: ', '\n')
 
 	def do_comment(self, add_comment, has_label=False):

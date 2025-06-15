@@ -70,12 +70,12 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 			self.rest_api.get(path=f'/auth/accounts/{addr}'),
 			errmsg =  f'address ‘{addr}’ not found in blockchain')['value']
 
-	def get_tx_info(self, txhash):
+	def get_tx_info(self, txid):
 		return process_response(
 			self.rpc_api.post(
 				path = '/tx',
-				data = {'hash': '0x' + txhash}),
-			errmsg = f'get info for transaction {txhash} failed')
+				data = {'hash': '0x' + txid}),
+			errmsg = f'get info for transaction {txid} failed')
 
 	def tx_op(self, txhex, op=None):
 		assert isinstance(txhex, str)
