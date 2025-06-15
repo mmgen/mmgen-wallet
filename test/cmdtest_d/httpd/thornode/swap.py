@@ -130,6 +130,7 @@ def make_inbound_addr(proto, mmtype):
 			mmtype  = mmtype).pubhash2addr(f'{n:040x}')
 
 class ThornodeSwapServer(ThornodeServer):
+	port = 18900
 	name = 'thornode swap server'
 	request_pat = r'/thorchain/quote/swap\?from_asset=(\S+)\.(\S+)&to_asset=(\S+)\.(\S+)&amount=(\d+)'
 

@@ -18,6 +18,7 @@ from wsgiref.util import request_uri
 from . import ThornodeServer
 
 class ThornodeRPCServer(ThornodeServer):
+	port = 18800
 	name = 'thornode RPC server'
 
 	def make_response_body(self, method, environ):

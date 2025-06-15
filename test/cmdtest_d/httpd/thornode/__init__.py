@@ -16,5 +16,4 @@ from .. import HTTPD
 
 class ThornodeServer(HTTPD):
 	name = 'thornode server'
-	port = 18800
 	content_type = 'application/json'

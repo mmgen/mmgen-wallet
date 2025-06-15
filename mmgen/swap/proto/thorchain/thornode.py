@@ -15,6 +15,7 @@ swap.proto.thorchain.thornode: THORChain swap protocol network query ops
 import time, json
 from collections import namedtuple
 
+from ....protocol import init_proto
 from ....amt import UniAmt
 from ....http import HTTPClient
 
@@ -24,13 +25,15 @@ gas_unit_data = {
 	'gwei':        _gd('G', 'Gwei'),
 }
 
-class ThornodeRPCClient(HTTPClient):
+class ThornodeSwapClient(HTTPClient):
 
 	http_hdrs = {'Content-Type': 'application/json'}
-	host = 'thornode.ninerealms.com'
 	timeout = 5
 
 	def __init__(self, tx, *, network_proto=None, host=None):
+		rune_proto = init_proto(tx.cfg, 'rune', network=tx.cfg._proto.network)
+		for k, v in rune_proto.rpc_swap_params.items():
+			setattr(self, k, v)
 		super().__init__(tx.cfg, network_proto=network_proto, host=host)
 
 class Thornode:
@@ -38,7 +41,7 @@ class Thornode:
 	def __init__(self, tx, amt):
 		self.tx = tx
 		self.in_amt = UniAmt(f'{amt:.8f}')
-		self.rpc = ThornodeRPCClient(tx)
+		self.rpc = ThornodeSwapClient(tx)
 
 	def get_quote(self, swap_cfg):
 

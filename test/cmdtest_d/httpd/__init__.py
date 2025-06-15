@@ -37,7 +37,7 @@ class HTTPD:
 			handler_class = SilentRequestHandler)
 
 		import threading
-		t = threading.Thread(target=self.httpd.serve_forever, name=f'{self.name} thread')
+		t = threading.Thread(target=self.httpd.serve_forever, name=f'{type(self).__name__} thread')
 		t.daemon = True
 		t.start()
 
