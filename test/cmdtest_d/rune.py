@@ -28,9 +28,9 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	menu_prompt = 'efresh balance:\b'
 
 	cmd_group_in = (
-		('subgroup.init',        []),
-		('subgroup.main',        ['init']),
-		('thornode_server_stop', 'stopping Thornode server'),
+		('subgroup.init',   []),
+		('subgroup.main',   ['init']),
+		('rpc_server_stop', 'stopping the Thornode RPC server'),
 	)
 	cmd_subgroups = {
 		'init': (
@@ -63,8 +63,8 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		self.proto = init_proto(cfg, network_id=self.proto.coin + '_rt', need_amt=True)
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
 
-		self.thornode_server = ThornodeRPCServer()
-		self.thornode_server.start()
+		self.rpc_server = ThornodeRPCServer()
+		self.rpc_server.start()
 
 	def addrgen(self):
 		return self._addrgen()
@@ -126,6 +126,6 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			t.written_to_file('Sent transaction')
 		return t
 
-	def thornode_server_stop(self):
+	def rpc_server_stop(self):
 		return CmdTestSwapMethods._thornode_server_stop(
-			self, attrname='thornode_server', name='thornode server')
+			self, attrname='rpc_server', name='Thornode RPC server')
