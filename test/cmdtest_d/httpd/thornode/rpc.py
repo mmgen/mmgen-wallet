@@ -66,6 +66,8 @@ class ThornodeRPCServer(ThornodeServer):
 			res = {'code': 0, 'codespace': '', 'data': '', 'log': ''}
 			if txhex.startswith('0A540A52'):
 				res.update({'hash': '14463C716CF08A814868DB779156BCD85A1DF8EE49E924900A74482E9DEE132D'})
+			elif txhex.startswith('0AC1010A'):
+				res.update({'hash': '17F9411E48542C0DCA4D40A0DD4A1795DE6D5791A873A27CBBDC1031FE8D1BC5'})
 		else:
 			raise ValueError(f'‘{req_str}’: malformed query path')
 

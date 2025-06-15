@@ -33,11 +33,11 @@ class New:
 		self.serialized = {k:v if v is None else str(v) for k, v in self.txobj.items() if k != 'token_to'}
 		self.update_txid()
 
-	def update_txid(self):
+	def update_txid(self, data=None):
 		import json
 		assert not is_hex_str(self.serialized), (
 			'update_txid() must be called only when self.serialized is not hex data')
-		self.txid = MMGenTxID(make_chksum_6(json.dumps(self.serialized)).upper())
+		self.txid = MMGenTxID(make_chksum_6(json.dumps(data or self.serialized)).upper())
 
 	async def process_cmdline_args(self, cmd_args, ad_f, ad_w):
 

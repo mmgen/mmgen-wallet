@@ -276,6 +276,7 @@ init_tests() {
 	d_rune="operations for THORChain RUNE using testnet"
 	t_rune="
 		- $cmdtest_py --coin=rune rune
+		- $cmdtest_py runeswap
 	"
 
 	d_xmr="Monero xmrwallet operations"

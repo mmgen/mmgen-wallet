@@ -43,18 +43,20 @@ class Base(TxBase):
 			o = self.txobj
 			b = tx.body.messages[0].body
 
-			if s := self.proto.encode_addr_bech32x(b.fromAddress) != o['from']:
-				raise ValueError(f'{s}: invalid ‘from’ address in serialized data')
+			if self.is_swap:
+				from_k, amt_k = ('signer', 'coins')
+				if b.memo != self.swap_memo:
+					raise ValueError(f'{b.memo}: invalid swap memo in serialized data')
+			else:
+				from_k, amt_k = ('fromAddress', 'amount')
+				if s := self.proto.encode_addr_bech32x(b.toAddress) != o['to']:
+					raise ValueError(f'{s}: invalid ‘to’ address in serialized data')
 
-			if s := self.proto.encode_addr_bech32x(b.toAddress) != o['to']:
-				raise ValueError(f'{s}: invalid ‘to’ address in serialized data')
+			if s := self.proto.encode_addr_bech32x(getattr(b, from_k)) != o['from']:
+				raise ValueError(f'{s}: invalid {from_k} in serialized data')
 
-			if d := self.proto.coin_amt(int(b.amount[0].amount), from_unit='satoshi') != o['amt']:
+			if d := self.proto.coin_amt(int(getattr(b, amt_k)[0].amount), from_unit='satoshi') != o['amt']:
 				raise ValueError(f'{d}: invalid send amount in serialized data')
 
 			if n := tx.authInfo.signerInfos[0].sequence != o['sequence']:
 				raise ValueError(f'{n}: invalid sequence number in serialized data')
-
-			if self.is_swap:
-				if b.memo != self.swap_memo.encode():
-					raise ValueError(f'{b.memo}: invalid swap memo in serialized data')

@@ -34,18 +34,28 @@ class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 			'chain_id':       d['chain_id']}
 
 	async def do_sign(self, o, wif):
-		from .protobuf import build_tx, send_tx_parms
-		tx = build_tx(
-			self.cfg,
-			self.proto,
-			send_tx_parms(
+		if self.is_swap:
+			from .protobuf import swap_tx_parms, build_swap_tx as build_tx
+			parms = swap_tx_parms(
+				o['from'],
+				o['amt'],
+				o['gas'],
+				o['account_number'],
+				o['sequence'],
+				self.swap_memo,
+				wifkey = wif)
+		else:
+			from .protobuf import send_tx_parms, build_tx
+			parms = send_tx_parms(
 				o['from'],
 				o['to'],
 				o['amt'],
 				o['gas'],
 				o['account_number'],
 				o['sequence'],
-				wifkey = wif))
+				wifkey = wif)
+
+		tx = build_tx(self.cfg, self.proto, parms)
 		self.serialized = bytes(tx).hex()
 		self.coin_txid = CoinTxID(tx.txid)
 		tx.verify_sig(self.proto, o['account_number'])

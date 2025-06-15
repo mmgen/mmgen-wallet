@@ -23,7 +23,7 @@ class THORChainSwapAsset(SwapAsset):
 		'BCH':       _ad('Bitcoin Cash',            'BCH',  None,        'c',  True),
 		'ETH':       _ad('Ethereum',                'ETH',  None,        'e',  True),
 		'DOGE':      _ad('Dogecoin',                'DOGE', None,        'd',  False),
-		'RUNE':      _ad('Rune (THORChain)',        'RUNE', 'THOR.RUNE', 'r',  False),
+		'RUNE':      _ad('Rune (THORChain)',        'RUNE', 'THOR.RUNE', 'r',  True),
 		'ETH.AAVE':  _ad('Aave (ETH)',              None,   'ETH.AAVE',  None, True),
 		'ETH.DAI':   _ad('MakerDAO USD (ETH)',      None,   'ETH.DAI',   None, True),
 		'ETH.DPI':   _ad('DeFi Pulse Index (ETH)',  None,   'ETH.DPI',   None, True),
@@ -63,7 +63,7 @@ class THORChainSwapAsset(SwapAsset):
 		'ETH.YFI':   '0bc529c00c6401aef6d220be8c6ea1667f6ad93e',
 	}
 
-	unsupported = ('DOGE', 'RUNE')
+	unsupported = ('DOGE',)
 
 	blacklisted = {}
 

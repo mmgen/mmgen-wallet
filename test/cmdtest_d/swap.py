@@ -151,8 +151,9 @@ class CmdTestSwapMethods:
 		if reload_quote:
 			t.expect('to continue: ', 'r')  # reload swap quote
 		t.expect('to continue: ', '\n')     # exit swap quote view
-		t.expect('(Y/n): ', 'y')            # fee OK?
-		t.expect('(Y/n): ', 'y')            # change OK?
+		if self.proto.has_usr_fee:
+			t.expect('(Y/n): ', 'y')            # fee OK?
+			t.expect('(Y/n): ', 'y')            # change OK?
 		t.expect('(y/N): ', 'n')            # add comment?
 		t.expect('view: ', 'y')             # view TX
 		if expect:

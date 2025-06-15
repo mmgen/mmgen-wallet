@@ -26,6 +26,14 @@ class New(VmNew, Base, TxBase.New):
 	async def set_gas(self, *, to_addr=None, force=False):
 		self.gas = self.dfl_gas
 
+	def set_gas_with_data(self, data):
+		pass
+
+	def update_txid(self):
+		return super().update_txid(
+			self.serialized |
+			({'memo': self.swap_memo} if self.is_swap else {}))
+
 	async def make_txobj(self): # called by create_serialized()
 		acct_info = self.rpc.get_account_info(self.inputs[0].addr)
 		self.txobj = {

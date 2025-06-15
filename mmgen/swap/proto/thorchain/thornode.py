@@ -58,7 +58,9 @@ class Thornode:
 				die(2, pp_fmt(data))
 			return data
 
-		if self.tx.proto.tokensym or self.tx.recv_asset.tokensym: # token swap
+		if (
+				(self.tx.proto.tokensym or self.tx.recv_asset.tokensym)
+				and not self.tx.send_asset.chain == 'THOR'): # token swap
 			in_data = get_data(
 				self.tx.send_asset.full_name,
 				'THOR.RUNE',
@@ -92,7 +94,8 @@ class Thornode:
 		out_coin = tx.recv_asset.short_name
 		in_amt = self.in_amt
 		out_amt = UniAmt(int(d['expected_amount_out']), from_unit='satoshi')
-		gas_unit = d['gas_rate_units']
+		if tx.proto.has_usr_fee:
+			gas_unit = d['gas_rate_units']
 
 		if trade_limit:
 			from . import ExpInt4
@@ -121,7 +124,11 @@ class Thornode:
 
 		_amount_in_label = 'Amount in:'
 		if deduct_est_fee:
-			if gas_unit in gas_unit_data:
+			if not tx.proto.has_usr_fee:
+				in_amt -= tx.usr_fee
+				out_amt *= (in_amt / self.in_amt)
+				_amount_in_label = 'Amount in:'
+			elif gas_unit in gas_unit_data:
 				in_amt -= UniAmt(f'{get_estimated_fee():.8f}')
 				out_amt *= (in_amt / self.in_amt)
 				_amount_in_label = 'Amount in (estimated):'
@@ -129,7 +136,6 @@ class Thornode:
 				ymsg(f'Warning: unknown gas unit ‘{gas_unit}’, cannot estimate fee')
 
 		min_in_amt = UniAmt(int(d['recommended_min_amount_in']), from_unit='satoshi')
-		gas_unit_disp = _.disp if (_ := gas_unit_data.get(gas_unit)) else gas_unit
 		elapsed_disp = format_elapsed_hr(d['expiry'], future_msg='from now')
 		fees = d['fees']
 		fees_t = UniAmt(int(fees['total']), from_unit='satoshi')
@@ -137,19 +143,26 @@ class Thornode:
 		slip_pct_disp = str(fees['slippage_bps'] / 100) + '%'
 		hdr = f'SWAP QUOTE (source: {self.rpc.host})'
 
+		vault_info = '' if tx.send_asset.chain == 'THOR' else """
+  Vault address:                 {}""".format(cyan(self.inbound_address))
+
+		fee_info = '' if not tx.proto.has_usr_fee else """
+  Recommended fee:               {} {}
+  Network-estimated fee:         {} (from node)""".format(
+			pink(d['recommended_gas_rate']),
+			pink(_.disp if (_ := gas_unit_data.get(gas_unit)) else gas_unit),
+			await self.tx.network_fee_disp())
+
 		return f"""
 {cyan(hdr)}
   Protocol:                      {blue(name)}
-  Direction:                     {orange(f'{tx.send_asset.name} => {tx.recv_asset.name}')}
-  Vault address:                 {cyan(self.inbound_address)}
+  Direction:                     {orange(f'{tx.send_asset.name} => {tx.recv_asset.name}')}{vault_info}
   Quote expires:                 {pink(elapsed_disp)} [{make_timestr(d['expiry'])}]
   {_amount_in_label:<22}         {in_amt.hl()} {in_coin}
   Expected amount out:           {out_amt.hl()} {out_coin}{trade_limit_disp}
   Rate:                          {(out_amt / in_amt).hl()} {out_coin}/{in_coin}
   Reverse rate:                  {(in_amt / out_amt).hl()} {in_coin}/{out_coin}
-  Recommended minimum in amount: {min_in_amt.hl()} {in_coin}
-  Recommended fee:               {pink(d['recommended_gas_rate'])} {pink(gas_unit_disp)}
-  Network-estimated fee:         {await self.tx.network_fee_disp()} (from node)
+  Recommended minimum in amount: {min_in_amt.hl()} {in_coin}{fee_info}
   Fees:
     Total:    {fees_t.hl()} {out_coin} ({pink(fees_pct_disp)})
     Slippage: {pink(slip_pct_disp)}
@@ -166,9 +179,10 @@ class Thornode:
 
 	@property
 	def rel_fee_hint(self):
-		gas_unit = self.data['gas_rate_units']
-		if gas_unit in gas_unit_data:
-			return self.data['recommended_gas_rate'] + gas_unit_data[gas_unit].code
+		if self.tx.proto.has_usr_fee:
+			gas_unit = self.data['gas_rate_units']
+			if gas_unit in gas_unit_data:
+				return self.data['recommended_gas_rate'] + gas_unit_data[gas_unit].code
 
 	def __str__(self):
 		from pprint import pformat
