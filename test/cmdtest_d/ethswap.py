@@ -14,26 +14,18 @@ test.cmdtest_d.ethswap: Ethereum swap tests for the cmdtest.py test suite
 
 from subprocess import run, PIPE, DEVNULL
 
-from mmgen.cfg import Config
 from mmgen.util import msg_r, rmsg, die
 from mmgen.protocol import init_proto
 from mmgen.fileutil import get_data_from_file
 
 from ..include.common import imsg, chk_equal
 
-from .include.runner import CmdTestRunner
 from .include.common import dfl_sid, eth_inbound_addr, thorchain_router_addr_file
 from .httpd.thornode.swap import ThornodeSwapServer
 
 from .regtest import CmdTestRegtest
-from .swap import CmdTestSwapMethods
+from .swap import CmdTestSwapMethods, create_cross_methods
 from .ethdev import CmdTestEthdev
-
-method_template = """
-def {name}(self):
-	self.spawn(log_only=True)
-	return ethswap_eth.run_test("{eth_name}", sub=True)
-"""
 
 class CmdTestEthSwapMethods:
 
@@ -132,7 +124,8 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	tmpdir_nums = [47]
 	networks = ('btc',)
 	passthru_opts = ('coin', 'rpc_backend', 'eth_daemon_id')
-	eth_group = 'ethswap_eth'
+	cross_group = 'ethswap_eth'
+	cross_coin = 'eth'
 
 	cmd_group_in = (
 		('setup',                   'regtest (Bob and Alice) mode setup'),
@@ -253,10 +246,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	),
 	}
 
-	eth_tests = [c[0] for v in tuple(cmd_subgroups.values()) + (cmd_group_in,)
-		for c in v if isinstance(c, tuple) and c[0].startswith('eth_')]
-
-	exec(''.join(method_template.format(name=k, eth_name=k.removeprefix('eth_')) for k in eth_tests))
+	exec(create_cross_methods(cross_coin, cross_group, cmd_group_in, cmd_subgroups))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 
@@ -265,19 +255,9 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		if not trunner:
 			return
 
-		global ethswap_eth
-		cfg = Config({
-			'_clone': trunner.cfg,
-			'coin': 'eth',
-			'eth_daemon_id': trunner.cfg.eth_daemon_id,
-			'resume': None,
-			'resuming': None,
-			'resume_after': None,
-			'exit_after': None,
-			'log': None})
-		t = trunner
-		ethswap_eth = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
-		ethswap_eth.init_group(self.eth_group)
+		globals()[self.cross_group] = self.create_cross_runner(
+			trunner,
+			add_cfg = {'eth_daemon_id': trunner.cfg.eth_daemon_id})
 
 		self.swap_server = ThornodeSwapServer()
 		self.swap_server.start()

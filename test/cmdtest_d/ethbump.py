@@ -26,7 +26,7 @@ from .httpd.thornode.swap import ThornodeSwapServer
 
 from .ethdev import CmdTestEthdev, CmdTestEthdevMethods
 from .regtest import CmdTestRegtest
-from .swap import CmdTestSwapMethods
+from .swap import CmdTestSwapMethods, create_cross_methods
 from .ethswap import CmdTestEthSwapMethods
 
 burn_addr = 'beefcafe22' * 4
@@ -123,6 +123,8 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	dfl_devnet_block_period = {'geth': 7, 'reth': 9}
 	fund_amt = 100000
 	token_fund_amt = 1000
+	cross_group = 'ethbump_ltc'
+	cross_coin = 'ltc'
 
 	cmd_group_in = (
 		('subgroup.ltc_init',           []),
@@ -262,10 +264,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		),
 	}
 
-	ltc_tests = [c[0] for v in tuple(cmd_subgroups.values()) + (cmd_group_in,)
-		for c in v if isinstance(c, tuple) and c[0].startswith('ltc_')]
-
-	exec(''.join(method_template.format(name=k, ltc_name=k.removeprefix('ltc_')) for k in ltc_tests))
+	exec(create_cross_methods(cross_coin, cross_group, cmd_group_in, cmd_subgroups))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 
@@ -279,18 +278,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			'geth': [f'--dev.period={self.devnet_block_period}']
 		}[self.daemon.id]
 
-		global ethbump_ltc
-		cfg = Config({
-			'_clone': trunner.cfg,
-			'coin': 'ltc',
-			'resume': None,
-			'resuming': None,
-			'resume_after': None,
-			'exit_after': None,
-			'log': None})
-		t = trunner
-		ethbump_ltc = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
-		ethbump_ltc.init_group('ethbump_ltc')
+		globals()[self.cross_group] = self.create_cross_runner(trunner)
 
 		self.swap_server = ThornodeSwapServer()
 		self.swap_server.start()

@@ -14,10 +14,13 @@ test.cmdtest_d.swap: asset swap tests for the cmdtest.py test suite
 
 from pathlib import Path
 
+from mmgen.cfg import Config
 from mmgen.protocol import init_proto
 from mmgen.wallet.mmgen import wallet as MMGenWallet
 
 from ..include.common import imsg, make_burn_addr, gr_uc
+
+from .include.runner import CmdTestRunner
 from .include.common import dfl_bip39_file, dfl_words_file
 from .httpd.thornode.swap import ThornodeSwapServer
 
@@ -26,6 +29,23 @@ from .regtest import CmdTestRegtest, rt_data, dfl_wcls, rt_pw, strip_ansi_escape
 
 sample1 = gr_uc[:24]
 sample2 = '00010203040506'
+
+def create_cross_methods(cross_coin, cross_group, cmd_group_in, cmd_subgroups):
+
+	method_template = """
+def {name}(self):
+	self.spawn(log_only=True)
+	return {group}.run_test("{method_name}", sub=True)
+"""
+
+	tests = [c[0] for v in tuple(cmd_subgroups.values()) + (cmd_group_in,)
+		for c in v if isinstance(c, tuple) and c[0].startswith(f'{cross_coin}_')]
+
+	return ''.join(method_template.format(
+		name = k,
+		method_name = k.removeprefix(f'{cross_coin}_'),
+		group = cross_group)
+			for k in tests)
 
 class CmdTestSwapMethods:
 
@@ -267,6 +287,20 @@ class CmdTestSwapMethods:
 		else:
 			getattr(self, attrname).stop()
 		return 'ok'
+
+	def create_cross_runner(self, trunner, *, add_cfg={}):
+		cfg = Config({
+			'_clone': trunner.cfg,
+			'coin': self.cross_coin,
+			'resume': None,
+			'resuming': None,
+			'resume_after': None,
+			'exit_after': None,
+			'log': None} | add_cfg)
+		t = trunner
+		ret = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
+		ret.init_group(self.cross_group)
+		return ret
 
 class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 	bdb_wallet = True
