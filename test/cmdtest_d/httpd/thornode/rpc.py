@@ -25,65 +25,48 @@ class ThornodeRPCServer(ThornodeServer):
 		req_str = request_uri(environ)
 
 		if re.search(r'/bank/balances/(\S+)', req_str):
-			data = {
-				'result': [
-					{'denom': 'foocoin', 'amount': 321321321321},
-					{'denom': 'rune',    'amount': 987654321321},
-					{'denom': 'barcoin', 'amount': 123123123123},
-				]}
+			res = [
+				{'denom': 'foocoin', 'amount': 321321321321},
+				{'denom': 'rune',    'amount': 987654321321},
+				{'denom': 'barcoin', 'amount': 123123123123}]
 		elif m := re.search(r'/auth/accounts/(\S+)', req_str):
-			data = {
-				'result': {
-					'value': {
-						'address': m[1],
-						'pub_key': 'PubKeySecp256k1{0000}',
-						'account_number': '1234',
-						'sequence': '333444'
-				}}}
+			res = {
+				'value': {
+					'address': m[1],
+					'pub_key': 'PubKeySecp256k1{0000}',
+					'account_number': '1234',
+					'sequence': '333444'}}
 		elif m := re.search(r'/tx$', req_str):
 			assert method == 'POST'
 			txid = environ['wsgi.input'].read(71).decode().removeprefix('hash=0x').upper()
-			data = {
-				'result': {
-					'hash': txid,
-					'height': '21298600',
-					'index': 2,
-					'tx_result': {
-						'gas_used': '173222',
-						'events': [],
-						'codespace': ''
-					},
-					'tx': 'MHgwMGZvb2Jhcg=='
-				}
-			}
-		elif m := re.search(r'/check_tx$', req_str):
-			assert method == 'POST'
-			data = {
-				'result': {
-					'code': 0,
-					'data': '',
-					'log': '',
-					'info': '',
-					'gas_wanted': '-1',
-					'gas_used': '53774',
+			res = {
+				'hash': txid,
+				'height': '21298600',
+				'index': 2,
+				'tx_result': {
+					'gas_used': '173222',
 					'events': [],
 					'codespace': ''
-				}
-			}
+				},
+				'tx': 'MHgwMGZvb2Jhcg=='}
+		elif m := re.search(r'/check_tx$', req_str):
+			assert method == 'POST'
+			res = {
+				'code': 0,
+				'data': '',
+				'log': '',
+				'info': '',
+				'gas_wanted': '-1',
+				'gas_used': '53774',
+				'events': [],
+				'codespace': ''}
 		elif m := re.search(r'/broadcast_tx_sync$', req_str):
 			assert method == 'POST'
 			txhex = environ['wsgi.input'].read(24).decode().removeprefix('tx=0x').upper()
+			res = {'code': 0, 'codespace': '', 'data': '', 'log': ''}
 			if txhex.startswith('0A540A52'):
-				data = {
-					'result': {
-						'code': 0,
-						'codespace': '',
-						'data': '',
-						'hash': '14463C716CF08A814868DB779156BCD85A1DF8EE49E924900A74482E9DEE132D',
-						'log': ''
-					}
-				}
+				res.update({'hash': '14463C716CF08A814868DB779156BCD85A1DF8EE49E924900A74482E9DEE132D'})
 		else:
 			raise ValueError(f'‘{req_str}’: malformed query path')
 
-		return json.dumps(data).encode()
+		return json.dumps({'result': res}).encode()
