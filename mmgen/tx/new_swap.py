@@ -108,7 +108,7 @@ class NewSwap(New):
 				arg = get_arg()
 
 			# arg 3: chg_spec (change address spec)
-			if args.send_amt and not (self.proto.is_evm or arg in sa.recv): # is change arg
+			if args.send_amt and not (self.proto.is_vm or arg in sa.recv): # is change arg
 				nonlocal chg_output
 				chg_output = await self.get_chg_output(arg, addrfiles)
 				arg = get_arg()
@@ -140,7 +140,7 @@ class NewSwap(New):
 				get_char('Press any key to continue: ')
 				msg('')
 
-		if args.send_amt and not (chg_output or self.proto.is_evm):
+		if args.send_amt and not (chg_output or self.proto.is_vm):
 			chg_output = await self.get_chg_output(None, addrfiles)
 
 		recv_output = await self.get_swap_output(
@@ -170,7 +170,7 @@ class NewSwap(New):
 		self.swap_recv_addr_mmid = recv_output.mmid
 
 		return (
-			[f'vault,{args.send_amt}', f'data:{memo}'] if args.send_amt and self.proto.is_evm else
+			[f'vault,{args.send_amt}', f'data:{memo}'] if args.send_amt and self.proto.is_vm else
 			[f'vault,{args.send_amt}', chg_output.mmid, f'data:{memo}'] if args.send_amt else
 			['vault', f'data:{memo}'])
 

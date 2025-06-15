@@ -38,6 +38,7 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 	avg_bdi       = 15
 	decimal_prec  = 36
 	address_reuse_ok = True
+	is_vm = True
 	is_evm = True
 
 	# https://www.chainid.dev

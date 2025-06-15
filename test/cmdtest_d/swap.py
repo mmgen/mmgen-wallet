@@ -225,12 +225,12 @@ class CmdTestSwapMethods:
 			file_desc       = None,
 			new_outputs     = False):
 		if new_outputs:
-			if not self.proto.is_evm:
+			if not self.proto.is_vm:
 				t.expect(f'{self.fee_desc}: ', interactive_fee + '\n')
 			t.expect('(Y/n): ', 'y')        # fee ok?
 			t.expect('(Y/n): ', 'y')        # change ok?
 		else:
-			if not self.proto.is_evm:
+			if not self.proto.is_vm:
 				t.expect('ENTER for the change output): ', '\n')
 				t.expect('(Y/n): ', 'y')    # confirm deduct from chg output
 			t.expect('to continue: ', '\n') # exit swap quote

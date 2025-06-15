@@ -56,6 +56,7 @@ class CoinProtocol(MMGenObject):
 		base_coin  = None
 		is_fork_of = None
 		chain_names = None
+		is_vm = False
 		is_evm = False
 		has_usr_fee = True
 		rpc_type = 'local'

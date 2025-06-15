@@ -114,7 +114,7 @@ class Thornode:
 		def get_estimated_fee():
 			return tx.feespec2abs(
 				fee_arg = d['recommended_gas_rate'] + gas_unit_data[gas_unit].code,
-				tx_size = None if tx.proto.is_evm else tx.estimate_size() + tx_size_adj)
+				tx_size = None if tx.proto.is_vm else tx.estimate_size() + tx_size_adj)
 
 		_amount_in_label = 'Amount in:'
 		if deduct_est_fee:
