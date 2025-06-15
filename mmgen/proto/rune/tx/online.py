@@ -12,7 +12,7 @@
 proto.rune.tx.online: THORChain online signed transaction class
 """
 
-from ....util import pp_msg, die
+from ....util import msg, pp_msg, die
 from ....tx import online as TxBase
 
 from .signed import Signed
@@ -40,6 +40,13 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 
 	async def post_network_send(self, coin_txid):
 		return True
+
+	async def get_receipt(self, txid, *, receipt_only=False):
+		try:
+			return self.rpc.get_tx_info(txid)
+		except Exception as e:
+			msg(f'{type(e).__name__}: {e}')
+			return False
 
 class Sent(TxBase.Sent, OnlineSigned):
 	pass
