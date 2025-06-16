@@ -300,6 +300,8 @@ class CmdTestAutosignBase(CmdTestBase):
 					' '.join(sorted(i.name for i in d.iterdir()))).strip()
 
 class CmdTestAutosignClean(CmdTestAutosignBase):
+	'autosign directory cleaning operations'
+
 	have_online     = False
 	live            = False
 	simulate_led    = True

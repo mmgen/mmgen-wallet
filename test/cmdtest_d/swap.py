@@ -305,6 +305,8 @@ class CmdTestSwapMethods:
 		return ret
 
 class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
+	'swap operations for BTC, BCH and LTC'
+
 	bdb_wallet = True
 	networks = ('btc',)
 	tmpdir_nums = [37]

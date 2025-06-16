@@ -434,6 +434,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		return self._thornode_server_stop()
 
 class CmdTestEthBumpLTC(CmdTestSwapMethods, CmdTestRegtest):
+	'Ethereum transaction bumping operations - LTC wallet'
 	network = ('ltc',)
 	tmpdir_nums = [43]
 	is_helper = True

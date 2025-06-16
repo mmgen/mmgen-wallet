@@ -167,6 +167,7 @@ init_tests() {
 		a $cmdtest_py --coin=bch help
 		a $cmdtest_py --coin=eth help
 		a $cmdtest_py --coin=xmr help
+		a $cmdtest_py --coin=rune help
 		a $cmdtest_py --coin=doge help:helpscreens help:longhelpscreens
 	"
 	[ "$SKIP_ALT_DEP" ] && t_help_skip='a'

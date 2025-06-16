@@ -21,7 +21,7 @@ from .base import CmdTestBase
 
 class CmdTestHelp(CmdTestBase):
 	'help, info and usage screens'
-	networks = ('btc', 'ltc', 'bch', 'eth', 'xmr', 'doge')
+	networks = ('btc', 'ltc', 'bch', 'eth', 'xmr', 'doge', 'rune')
 	passthru_opts = ('daemon_data_dir', 'rpc_port', 'coin', 'testnet')
 	cmd_group = (
 		('usage1',            (1, 'usage message (via --usage)', [])),
