@@ -170,14 +170,15 @@ class CmdGroupMgr:
 			yield green(f'{desc} COMMAND GROUPS AND SUBGROUPS:')
 			yield ''
 			for name, cls in ginfo:
-				yield '  {} - {}'.format(
-					yellow(name.ljust(13)),
-					(cls.__doc__.strip() if cls.__doc__ else cls.__name__))
-				if 'cmd_subgroups' in cls.__dict__:
-					subgroups = {k:v for k, v in cls.cmd_subgroups.items() if not k.startswith('_')}
-					max_w = max(len(k) for k in subgroups)
-					for k, v in subgroups.items():
-						yield '    + {} · {}'.format(cyan(k.ljust(max_w+1)), v[0])
+				if not cls.is_helper:
+					yield '  {} - {}'.format(
+						yellow(name.ljust(13)),
+						(cls.__doc__.strip() if cls.__doc__ else cls.__name__))
+					if 'cmd_subgroups' in cls.__dict__:
+						subgroups = {k:v for k, v in cls.cmd_subgroups.items() if not k.startswith('_')}
+						max_w = max(len(k) for k in subgroups)
+						for k, v in subgroups.items():
+							yield '    + {} · {}'.format(cyan(k.ljust(max_w+1)), v[0])
 
 		from mmgen.ui import do_pager
 		do_pager('\n'.join(gen_output()))

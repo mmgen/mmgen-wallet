@@ -39,6 +39,7 @@ class CmdTestBase:
 	platform_skip = ()
 	tmpdir_nums = []
 	test_name = None
+	is_helper = False
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		if hasattr(self, 'name'): # init will be called multiple times for classes with multiple inheritance

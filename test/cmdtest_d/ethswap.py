@@ -321,6 +321,7 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 	tmpdir_nums = [48]
 	fund_amt = '123.456'
 	token_fund_amt = 1000
+	is_helper = True
 
 	bals = lambda self, k: {
 		'swap1': [('98831F3A:E:1', '123.456')],

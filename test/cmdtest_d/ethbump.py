@@ -436,6 +436,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 class CmdTestEthBumpLTC(CmdTestSwapMethods, CmdTestRegtest):
 	network = ('ltc',)
 	tmpdir_nums = [43]
+	is_helper = True
 	cmd_group_in = CmdTestRegtest.cmd_group_in + (
 		('setup',           'LTC regtest setup'),
 		('walletconv_bob',  'LTC wallet generation'),

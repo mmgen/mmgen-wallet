@@ -87,6 +87,7 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 	networks = ('rune',)
 	tmpdir_nums = [58]
 	input_sels_prompt = 'to spend from: '
+	is_helper = True
 
 	cmd_group_in = CmdTestRune.cmd_group_in + (
 		# rune_swap:
