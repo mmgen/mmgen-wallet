@@ -90,4 +90,13 @@ EXAMPLES:
   Create a Tether-to-DAI swap transaction, with explicit destination account:
 
     $ {gc.prog_name} ETH.USDT 1000 ETH.DAI E:01234ABC:3
+
+  Create a RUNE-to-BTC swap transaction, proxying requests to the remote
+  Thornode server via Tor:
+
+    $ {gc.prog_name} --proxy=localhost:9050 RUNE 1000 BTC
+
+  Same as above, but proxy requests via the I2P router running on host gw1:
+
+    $ https_proxy=http://gw1:4444 {gc.prog_name} --proxy=env RUNE 1000 BTC
 """
