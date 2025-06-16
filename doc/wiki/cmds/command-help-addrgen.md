@@ -99,6 +99,7 @@
     ‘C’  compressed   - Compressed P2PKH address
     ‘S’  segwit       - Segwit P2SH-P2WPKH address
     ‘B’  bech32       - Native Segwit (Bech32) address
+    ‘X’  bech32x      - Cross-chain Bech32 address
     ‘E’  ethereum     - Ethereum address
     ‘Z’  zcash_z      - Zcash z-address
     ‘M’  monero       - Monero address
@@ -120,5 +121,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN v15.1.dev18              March 2025                   MMGEN-ADDRGEN(1)
+  MMGEN-WALLET 15.1.dev44        June 2025                    MMGEN-ADDRGEN(1)
 ```

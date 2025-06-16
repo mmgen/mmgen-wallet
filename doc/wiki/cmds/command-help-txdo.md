@@ -4,7 +4,7 @@
   OPTIONS:
   -h, --help             Print this help message
       --longhelp         Print help message for long (global) options
-  -A, --fee-adjust     f Adjust transaction fee by factor 'f' (see below)
+  -A, --fee-adjust     f Adjust transaction fee by factor ‘f’ (see below)
   -b, --brain-params l,p Use seed length 'l' and hash preset 'p' for
                          brainwallet input
   -B, --no-blank         Don't blank screen before displaying unspent outputs
@@ -104,6 +104,7 @@
     ‘C’  compressed   - Compressed P2PKH address
     ‘S’  segwit       - Segwit P2SH-P2WPKH address
     ‘B’  bech32       - Native Segwit (Bech32) address
+    ‘X’  bech32x      - Cross-chain Bech32 address
     ‘E’  ethereum     - Ethereum address
     ‘Z’  zcash_z      - Zcash z-address
     ‘M’  monero       - Monero address
@@ -189,5 +190,5 @@
 
       $ mmgen-txdo B
 
-  MMGEN-WALLET 15.1.dev37        May 2025                        MMGEN-TXDO(1)
+  MMGEN-WALLET 15.1.dev44        June 2025                       MMGEN-TXDO(1)
 ```

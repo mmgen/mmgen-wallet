@@ -4,6 +4,9 @@
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options
+  -a, --autosign        Sign a transaction created for offline autosigning (see
+                        ‘mmgen-autosign’). The removable device is mounted and
+                        unmounted automatically
   -b, --brain-params l,p Use seed length 'l' and hash preset 'p' for
                         brainwallet input
   -d, --outdir       d  Specify an alternate directory 'd' for output
@@ -82,5 +85,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN-WALLET 15.1.dev37        May 2025                      MMGEN-TXSIGN(1)
+  MMGEN-WALLET 15.1.dev47        June 2025                     MMGEN-TXSIGN(1)
 ```

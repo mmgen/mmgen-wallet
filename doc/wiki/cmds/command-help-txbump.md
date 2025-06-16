@@ -49,7 +49,9 @@
   -v, --verbose          Produce more verbose output
   -W, --allow-non-wallet-swap Allow signing of swap transactions that send funds
                          to non-wallet addresses
-  -x, --proxy P          Fetch the swap quote via SOCKS5 proxy ‘P’ (host:port)
+  -x, --proxy P          Fetch the swap quote via SOCKS5h proxy ‘P’ (host:port).
+                         Use special value ‘env’ to honor *_PROXY environment
+                         vars instead.
   -y, --yes              Answer 'yes' to prompts, suppress non-essential output
   -z, --show-hash-presets Show information on available hash presets
 
@@ -118,5 +120,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN-WALLET 15.1.dev37        May 2025                      MMGEN-TXBUMP(1)
+  MMGEN-WALLET 15.1.dev44        June 2025                     MMGEN-TXBUMP(1)
 ```

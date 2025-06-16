@@ -7,7 +7,7 @@
   -a, --autosign        Create a transaction for offline autosigning (see
                         ‘mmgen-autosign’). The removable device is mounted and
                         unmounted automatically
-  -A, --fee-adjust   f  Adjust transaction fee by factor 'f' (see below)
+  -A, --fee-adjust   f  Adjust transaction fee by factor ‘f’ (see below)
   -B, --no-blank        Don't blank screen before displaying unspent outputs
   -c, --comment-file f  Source the transaction's comment from file 'f'
   -C, --fee-estimate-confs c Desired number of confirmations for fee estimation
@@ -143,6 +143,7 @@
     ‘C’  compressed   - Compressed P2PKH address
     ‘S’  segwit       - Segwit P2SH-P2WPKH address
     ‘B’  bech32       - Native Segwit (Bech32) address
+    ‘X’  bech32x      - Cross-chain Bech32 address
     ‘E’  ethereum     - Ethereum address
     ‘Z’  zcash_z      - Zcash z-address
     ‘M’  monero       - Monero address
@@ -244,5 +245,14 @@
 
       $ mmgen-swaptxcreate ETH.USDT 1000 ETH.DAI E:01234ABC:3
 
-  MMGEN-WALLET 15.1.dev37        May 2025                 MMGEN-SWAPTXCREATE(1)
+    Create a RUNE-to-BTC swap transaction, proxying requests to the remote
+    Thornode server via Tor:
+
+      $ mmgen-swaptxcreate --proxy=localhost:9050 RUNE 1000 BTC
+
+    Same as above, but proxy requests via the I2P router running on host gw1:
+
+      $ https_proxy=http://gw1:4444 mmgen-swaptxcreate --proxy=env RUNE 1000 BTC
+
+  MMGEN-WALLET 15.1.dev47        June 2025                MMGEN-SWAPTXCREATE(1)
 ```

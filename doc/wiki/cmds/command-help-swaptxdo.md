@@ -4,7 +4,7 @@
   OPTIONS:
   -h, --help             Print this help message
       --longhelp         Print help message for long (global) options
-  -A, --fee-adjust     f Adjust transaction fee by factor 'f' (see below)
+  -A, --fee-adjust     f Adjust transaction fee by factor ‘f’ (see below)
   -b, --brain-params l,p Use seed length 'l' and hash preset 'p' for
                          brainwallet input
   -B, --no-blank         Don't blank screen before displaying unspent outputs
@@ -165,6 +165,7 @@
     ‘C’  compressed   - Compressed P2PKH address
     ‘S’  segwit       - Segwit P2SH-P2WPKH address
     ‘B’  bech32       - Native Segwit (Bech32) address
+    ‘X’  bech32x      - Cross-chain Bech32 address
     ‘E’  ethereum     - Ethereum address
     ‘Z’  zcash_z      - Zcash z-address
     ‘M’  monero       - Monero address
@@ -306,5 +307,14 @@
 
       $ mmgen-swaptxdo ETH.USDT 1000 ETH.DAI E:01234ABC:3
 
-  MMGEN-WALLET 15.1.dev37        May 2025                    MMGEN-SWAPTXDO(1)
+    Create a RUNE-to-BTC swap transaction, proxying requests to the remote
+    Thornode server via Tor:
+
+      $ mmgen-swaptxdo --proxy=localhost:9050 RUNE 1000 BTC
+
+    Same as above, but proxy requests via the I2P router running on host gw1:
+
+      $ https_proxy=http://gw1:4444 mmgen-swaptxdo --proxy=env RUNE 1000 BTC
+
+  MMGEN-WALLET 15.1.dev47        June 2025                   MMGEN-SWAPTXDO(1)
 ```

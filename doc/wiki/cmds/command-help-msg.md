@@ -45,6 +45,7 @@
     ‘C’  compressed   - Compressed P2PKH address
     ‘S’  segwit       - Segwit P2SH-P2WPKH address
     ‘B’  bech32       - Native Segwit (Bech32) address
+    ‘X’  bech32x      - Cross-chain Bech32 address
     ‘E’  ethereum     - Ethereum address
     ‘Z’  zcash_z      - Zcash z-address
     ‘M’  monero       - Monero address
@@ -106,5 +107,5 @@
   Verify and display the exported JSON signature data:
   $ mmgen-msg verify signatures.json
 
-  MMGEN v15.1.dev18              March 2025                       MMGEN-MSG(1)
+  MMGEN-WALLET 15.1.dev44        June 2025                        MMGEN-MSG(1)
 ```
