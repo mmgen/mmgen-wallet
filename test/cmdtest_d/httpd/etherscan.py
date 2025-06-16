@@ -20,6 +20,19 @@ class EtherscanServer(HTTPD):
 	content_type = 'text/html'
 
 	def make_response_body(self, method, environ):
-		targets = {'GET': 'form', 'POST': 'result'}
-		with open(f'test/ref/ethereum/etherscan-{targets[method]}.html') as fh:
-			return fh.read().encode()
+		if method == 'GET':
+			target = 'form'
+		elif method == 'POST':
+			target = 'result'
+			length = int(environ.get('CONTENT_LENGTH', '0'))
+			qs = environ['wsgi.input'].read(length).decode()
+			tx = [s for s in qs.split('&') if 'RawTx=' in s][0].split('=')[1][:10]
+			if tx == '0xf86f0185':
+				txid = '1c034395c9aa2217abbbf3ed4d89c5ad1aa0f0215aa11d02efeea33a5ac8331c'
+			else:
+				txid = 'beadcafebeadcafebeadcafebeadcafebeadcafebeadcafebeadcafebeadcafe'
+
+		with open(f'test/ref/ethereum/etherscan-{target}.html') as fh:
+			text = fh.read()
+
+		return (text if method == 'GET' else text.format(txid='0x'+txid)).encode()
