@@ -12,6 +12,10 @@
 test.cmdtest_d.runeswap: THORChain swap tests for the cmdtest.py test suite
 """
 
+from hashlib import md5
+
+from mmgen.fileutil import get_data_from_file
+
 from .httpd.thornode.swap import ThornodeSwapServer
 from .include.proxy import TestProxy
 
@@ -59,6 +63,7 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 			('rune_swaptxsend1',    ''),
 			('rune_swaptxstatus1',  ''),
 			('rune_swaptxreceipt1', ''),
+			('rune_swaptxhex1',     ''),
 		),
 	}
 
@@ -88,6 +93,7 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 	tmpdir_nums = [58]
 	input_sels_prompt = 'to spend from: '
 	is_helper = True
+	txhex_chksum = '34980b41'
 
 	cmd_group_in = CmdTestRune.cmd_group_in + (
 		# rune_swap:
@@ -96,8 +102,13 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 		('swaptxsend1',              'sending the transaction'),
 		('swaptxstatus1',            'getting the transaction status'),
 		('swaptxreceipt1',           'getting the transaction receipt'),
+		('swaptxhex1',               'dumping the transaction hex'),
 		('thornode_server_stop',     'stopping Thornode server'),
 	)
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.txhex_file = f'{self.tmpdir}/tx_dump.hex'
 
 	def swaptxcreate1(self):
 		t = self._swaptxcreate(['RUNE', '8.765', 'BTC'])
@@ -115,3 +126,10 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 
 	def swaptxreceipt1(self):
 		return self._swaptxsend(add_opts=['--receipt'], spawn_only=True)
+
+	def swaptxhex1(self):
+		t = self._swaptxsend(add_opts=[f'--dump-hex={self.txhex_file}'], dump_hex=True)
+		t.read()
+		txhex = get_data_from_file(self.cfg, self.txhex_file, silent=True)
+		assert md5(txhex.encode()).hexdigest()[:8] == self.txhex_chksum
+		return t

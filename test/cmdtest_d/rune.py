@@ -12,6 +12,10 @@
 test.cmdtest_d.rune: THORChain RUNE tests for the cmdtest.py test suite
 """
 
+from hashlib import md5
+
+from mmgen.fileutil import get_data_from_file
+
 from .include.common import dfl_sid, dfl_words_file
 from .include.proxy import TestProxy
 from .httpd.thornode.rpc import ThornodeRPCServer
@@ -27,6 +31,7 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	tmpdir_nums = [50]
 	color = True
 	menu_prompt = 'efresh balance:\b'
+	txhex_chksum = '83f85785'
 
 	cmd_group_in = (
 		('subgroup.init',   []),
@@ -47,6 +52,7 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			('txsign1',              'signing the transaction'),
 			('txsend1_test',         'testing whether the transaction can be sent'),
 			('txsend1',              'sending the transaction'),
+			('txhex1',               'dumping the transaction hex'),
 		),
 	}
 
@@ -68,6 +74,8 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		self.rpc_server.start()
 
 		TestProxy(cfg)
+
+		self.txhex_file = f'{self.tmpdir}/tx_dump.hex'
 
 	def addrgen(self):
 		return self._addrgen()
@@ -114,19 +122,28 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def txsend1(self):
 		return self._txsend()
 
-	def _txsend(self, add_args=[]):
+	def _txsend(self, add_opts=[], *, test=False, dump_hex=False):
 		t = self.spawn(
 			'mmgen-txsend',
-			self.rune_opts + add_args + [self.get_file_with_ext('sigtx')],
+			self.rune_opts + add_opts + [self.get_file_with_ext('sigtx')],
 			no_passthru_opts = ['coin'])
 		t.expect('view: ', 'y')
 		t.expect('to continue: ', 'z')
 		t.expect('(y/N): ', 'n') # edit comment?
-		if add_args == ['--test']:
+		if dump_hex:
+			t.written_to_file('hex data')
+		elif test:
 			t.expect('can be sent')
 		else:
 			t.expect('to confirm: ', 'YES\n')
 			t.written_to_file('Sent transaction')
+		return t
+
+	def txhex1(self):
+		t = self._txsend(add_opts=[f'--dump-hex={self.txhex_file}'], dump_hex=True)
+		t.read()
+		txhex = get_data_from_file(self.cfg, self.txhex_file, silent=True)
+		assert md5(txhex.encode()).hexdigest()[:8] == self.txhex_chksum
 		return t
 
 	def rpc_server_stop(self):

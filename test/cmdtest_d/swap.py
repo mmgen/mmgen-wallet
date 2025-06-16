@@ -197,7 +197,7 @@ class CmdTestSwapMethods:
 			],
 			spawn_only = spawn_only)
 
-	def _swaptxsend(self, *, add_opts=[], spawn_only=False, status=False):
+	def _swaptxsend(self, *, add_opts=[], spawn_only=False, status=False, dump_hex=False):
 		fn = self.get_file_with_ext('sigtx')
 		t = self.spawn(
 			'mmgen-txsend',
@@ -209,7 +209,8 @@ class CmdTestSwapMethods:
 		if status:
 			return t
 		t.expect('(y/N): ', 'n')
-		t.expect('to confirm: ', 'YES\n')
+		if not dump_hex:
+			t.expect('to confirm: ', 'YES\n')
 		return t
 
 	def _swaptxsign(self, *, add_opts=[], expect=None):
