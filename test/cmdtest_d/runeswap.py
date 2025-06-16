@@ -13,6 +13,7 @@ test.cmdtest_d.runeswap: THORChain swap tests for the cmdtest.py test suite
 """
 
 from .httpd.thornode.swap import ThornodeSwapServer
+from .include.proxy import TestProxy
 
 from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods, create_cross_methods
@@ -75,6 +76,8 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 		self.swap_server = ThornodeSwapServer()
 		self.swap_server.start()
 
+		TestProxy(cfg)
+
 	def swap_server_stop(self):
 		return self._thornode_server_stop()
 
@@ -104,7 +107,7 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 		return self._swaptxsign()
 
 	def swaptxsend1(self):
-		return self._swaptxsend()
+		return self._swaptxsend(add_opts=[f'--proxy=localhost:{TestProxy.port}'])
 
 	def swaptxstatus1(self):
 		return self._swaptxsend(add_opts=['--verbose', '--status'], status=True)

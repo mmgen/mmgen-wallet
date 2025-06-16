@@ -21,6 +21,7 @@ from mmgen.fileutil import get_data_from_file
 from ..include.common import imsg, chk_equal
 
 from .include.common import dfl_sid, eth_inbound_addr, thorchain_router_addr_file
+from .include.proxy import TestProxy
 from .httpd.thornode.swap import ThornodeSwapServer
 
 from .regtest import CmdTestRegtest
@@ -262,6 +263,8 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		self.swap_server = ThornodeSwapServer()
 		self.swap_server.start()
 
+		TestProxy(cfg)
+
 	def swaptxcreate1(self):
 		t = self._swaptxcreate(['BTC', '8.765', 'ETH'])
 		t.expect('OK? (Y/n): ', 'y')
@@ -280,8 +283,11 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	def swaptxsend1(self):
 		return self._swaptxsend()
 
+	def swaptxsend2(self):
+		return self._swaptxsend(add_opts=[f'--proxy=localhost:{TestProxy.port}'])
+
 	swaptxsign3 = swaptxsign2 = swaptxsign1
-	swaptxsend3 = swaptxsend2 = swaptxsend1
+	swaptxsend3 = swaptxsend1
 
 	def swaptxbump1(self): # create one-output TX back to self to rescue funds
 		return self._swaptxbump('40s', output_args=[f'{dfl_sid}:B:1'])
@@ -450,7 +456,8 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		return self._swaptxsend_eth_proxy(test=True)
 
 	def swaptxsend5a(self):
-		return self._swaptxsend_eth_proxy(add_opts=['--txhex-idx=1'])
+		return self._swaptxsend_eth_proxy(
+			add_opts = ['--txhex-idx=1', f'--proxy=localhost:{TestProxy.port}'])
 
 	def swaptxsend5b(self):
 		return self._swaptxsend_eth_proxy(add_opts=['--txhex-idx=2'])

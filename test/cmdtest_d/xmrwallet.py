@@ -24,8 +24,7 @@ import sys, os, time, re, atexit, asyncio, shutil
 from subprocess import run, PIPE
 from collections import namedtuple
 
-from mmgen.util import msg, fmt, async_run, capfirst, is_int, die, list_gen
-from mmgen.util2 import port_in_use
+from mmgen.util import async_run, capfirst, is_int, die, list_gen
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
 from mmgen.addrlist import ViewKeyAddrList, KeyAddrList, AddrIdxList
@@ -43,6 +42,7 @@ from ..include.common import (
 	strip_ansi_escapes
 )
 from .include.common import get_file_with_ext
+from .include.proxy import TestProxy
 from .base import CmdTestBase
 
 # atexit functions:
@@ -52,12 +52,6 @@ def stop_daemons(self):
 
 def stop_miner_wallet_daemon(self):
 	async_run(self.users['miner'].wd_rpc.stop_daemon())
-
-def kill_proxy(cls, args):
-	if sys.platform in ('linux', 'darwin'):
-		omsg(f'Killing SSH SOCKS server at localhost:{cls.socks_port}')
-		cmd = ['pkill', '-f', ' '.join(args)]
-		run(cmd)
 
 class CmdTestXMRWallet(CmdTestBase):
 	"""
@@ -69,7 +63,6 @@ class CmdTestXMRWallet(CmdTestBase):
 	tmpdir_nums = [29]
 	dfl_random_txs = 3
 	color = True
-	socks_port = 49237
 	# Bob’s daemon is stopped via process kill, not RPC, so put Bob last in list:
 	#    user     sid      autosign  shift kal_range add_coind_args
 	user_data = (
@@ -134,7 +127,8 @@ class CmdTestXMRWallet(CmdTestBase):
 
 		self.tx_relay_daemon_parm = 'localhost:{}'.format(self.users[self.tx_relay_user].md.rpc_port)
 		self.tx_relay_daemon_proxy_parm = (
-			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}') # must be IP, not 'localhost'
+			# must be IP, not 'localhost':
+			self.tx_relay_daemon_parm + f':127.0.0.1:{TestProxy.port}')
 
 		if not cfg.no_daemon_stop:
 			atexit.register(stop_daemons, self)
@@ -146,79 +140,12 @@ class CmdTestXMRWallet(CmdTestBase):
 			if os.path.exists(self.datadir_base):
 				shutil.rmtree(self.datadir_base)
 			os.makedirs(self.datadir_base)
+			TestProxy(cfg)
 			self.start_daemons()
-			self.init_proxy(cfg)
 
 		self.balance = None
 
 	# init methods
-
-	@classmethod
-	def init_proxy(cls, cfg, external_call=False):
-
-		def start_proxy():
-			if external_call or not cfg.no_daemon_autostart:
-				run(a+b2)
-				omsg(f'SSH SOCKS server started, listening at localhost:{cls.socks_port}')
-
-		debug_file = os.path.join('' if external_call else cls.datadir_base, 'txrelay-proxy.debug')
-		a = ['ssh', '-x', '-o', 'ExitOnForwardFailure=True', '-D', f'localhost:{cls.socks_port}']
-		b0 = ['-o', 'PasswordAuthentication=False']
-		b1 = ['localhost', 'true']
-		b2 = ['-fN', '-E', debug_file, 'localhost']
-
-		if port_in_use(cls.socks_port):
-			omsg(f'Port {cls.socks_port} already in use.  Assuming SSH SOCKS server is running')
-		else:
-			cp = run(a+b0+b1, stdout=PIPE, stderr=PIPE)
-			err = cp.stderr.decode()
-			if err:
-				omsg(err)
-
-			if cp.returncode == 0:
-				start_proxy()
-			elif 'onnection refused' in err:
-				die(2, fmt("""
-					The SSH daemon must be running and listening on localhost in order to test
-					XMR TX relaying via SOCKS proxy.  If sshd is not running, please start it.
-					Otherwise, add the line 'ListenAddress 127.0.0.1' to your sshd_config, and
-					then restart the daemon.
-				""", indent='    '))
-			elif 'ermission denied' in err:
-				msg(fmt(f"""
-					In order to test XMR TX relaying via SOCKS proxy, it’s desirable to enable
-					SSH to localhost without a password, which is not currently supported by
-					your configuration.  Your possible courses of action:
-
-					1. Continue by answering 'y' at this prompt, and enter your system password
-					   at the following prompt;
-
-					2. Exit the test here, add your user SSH public key to your user
-					   'authorized_keys' file, and restart the test; or
-
-					3. Exit the test here, start the SSH SOCKS proxy manually by entering the
-					   following command, and restart the test:
-
-					      {' '.join(a+b2)}
-				""", indent='    ', strip_char='\t'))
-
-				from mmgen.ui import keypress_confirm
-				keypress_confirm(cfg, 'Continue?', do_exit=True)
-				start_proxy()
-			else:
-				die(2, fmt(f"""
-					Please start the SSH SOCKS proxy by entering the following command:
-
-						{' '.join(a+b2)}
-
-					Then restart the test.
-				""", indent='    '))
-
-		if not (external_call or cfg.no_daemon_stop):
-			atexit.unregister(kill_proxy)
-			atexit.register(kill_proxy, cls, a + b2)
-
-		return True
 
 	def init_users(self):
 		from mmgen.daemon import CoinDaemon

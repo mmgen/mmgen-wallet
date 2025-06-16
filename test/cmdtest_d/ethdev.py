@@ -59,6 +59,7 @@ from .include.common import (
 	Ctrl_U,
 	cleanup_env,
 	thorchain_router_addr_file)
+from .include.proxy import TestProxy
 
 from .base import CmdTestBase
 from .shared import CmdTestShared
@@ -743,6 +744,8 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		self.message = 'attack at dawn'
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
 
+		TestProxy(cfg)
+
 	@property
 	async def rpc(self):
 		from mmgen.rpc import rpc_init
@@ -1091,7 +1094,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def txsend_etherscan(self):
 		if self.proto.coin == 'ETC':
 			return 'skip'
-		return self.txsend(add_args=['--tx-proxy=ethersc'])
+		return self.txsend(add_args=['--tx-proxy=ethersc', f'--proxy=localhost:{TestProxy.port}'])
 
 	def etherscan_server_stop(self):
 		if self.proto.coin == 'ETC':

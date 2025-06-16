@@ -13,6 +13,7 @@ test.cmdtest_d.rune: THORChain RUNE tests for the cmdtest.py test suite
 """
 
 from .include.common import dfl_sid, dfl_words_file
+from .include.proxy import TestProxy
 from .httpd.thornode.rpc import ThornodeRPCServer
 from .ethdev import CmdTestEthdevMethods
 from .base import CmdTestBase
@@ -66,6 +67,8 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		self.rpc_server = ThornodeRPCServer()
 		self.rpc_server.start()
 
+		TestProxy(cfg)
+
 	def addrgen(self):
 		return self._addrgen()
 
@@ -106,7 +109,7 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			has_label = True)
 
 	def txsend1_test(self):
-		return self._txsend(add_args=['--test'])
+		return self._txsend(add_opts=['--test', f'--proxy=localhost:{TestProxy.port}'], test=True)
 
 	def txsend1(self):
 		return self._txsend()
