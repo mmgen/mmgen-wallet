@@ -34,6 +34,9 @@ opts_data = {
 		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long (global) options
+-a, --autosign        Sign a transaction created for offline autosigning (see
+                      ‘mmgen-autosign’). The removable device is mounted and
+                      unmounted automatically
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
                       brainwallet input
 -d, --outdir=      d  Specify an alternate directory 'd' for output

@@ -45,5 +45,6 @@ rec {
         # monero           = monero;          # XMR (test suite)
         # eth-keys         = eth-keys;        # ETH, ETC (test suite)
         # pure-protobuf    = pure-protobuf;   # THORChain
+        # bip-utils        = bip-utils;       # bip_hd
     };
 }
