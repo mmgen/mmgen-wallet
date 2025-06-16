@@ -90,7 +90,7 @@ opts_data = {
 			-- -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 			e- -X, --cached-balances Use cached balances
 		""",
-		'notes': '\n{c}\n{n_at}\n\n{g}{F}\n\n{x}',
+		'notes': '\n{c}\n{n_at}\n\n{g}{F}{x}',
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(

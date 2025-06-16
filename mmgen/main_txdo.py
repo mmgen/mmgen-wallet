@@ -122,8 +122,6 @@ opts_data = {
 {n_at}
 
 {g}{F}
-
-
                                  SIGNING NOTES
 {s}
 Seed source files must have the canonical extensions listed in the 'FileExt'

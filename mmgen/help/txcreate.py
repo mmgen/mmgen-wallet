@@ -41,14 +41,7 @@ cases, the resulting byte string must not exceed {bl} bytes in length.
 The transaction output is specified in the form ADDRESS,AMOUNT.
 """)
 
-	return f"""
-The transaction’s outputs are listed on the command line, while its inputs
-are chosen from a list of the wallet’s unspent outputs via an interactive
-menu.  Alternatively, inputs may be specified using the --inputs option.
-
-Addresses on the command line can be either native coin addresses or MMGen
-IDs in the form SEED_ID:ADDRTYPE_CODE:INDEX.
-{outputs_info}
+	fee_info = """
 If the transaction fee is not specified on the command line (see FEE
 SPECIFICATION below), it will be calculated dynamically using network fee
 estimation for the default (or user-specified) number of confirmations.
@@ -56,4 +49,13 @@ If network fee estimation fails, the user will be prompted for a fee.
 
 Network-estimated fees will be multiplied by the value of --fee-adjust, if
 specified.
-"""
+""" if proto.has_usr_fee else ''
+
+	return f"""
+The transaction’s outputs are listed on the command line, while its inputs
+are chosen from a list of the wallet’s unspent outputs via an interactive
+menu.  Alternatively, inputs may be specified using the --inputs option.
+
+Addresses on the command line can be either native coin addresses or MMGen
+IDs in the form SEED_ID:ADDRTYPE_CODE:INDEX.
+{outputs_info}{fee_info}"""

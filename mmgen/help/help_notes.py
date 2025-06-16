@@ -166,9 +166,9 @@ as {r}, using an integer followed by {l}, for{s}{u}""".format(
 					r = BaseTX(cfg=self.cfg, proto=eth_proto).rel_fee_desc,
 					l = self.fee_spec_letters(use_quotes=True, proto=eth_proto),
 					u = self.fee_spec_names(proto=eth_proto, linebreak='\n'))
-				+ ' (for Ethereum)')
+				+ ' (for Ethereum)\n\n')
 		else:
-			return text + '.'
+			return text + '.\n\n'
 
 	def passwd(self):
 		return """

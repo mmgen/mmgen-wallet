@@ -109,9 +109,7 @@ Internet must be reachable either directly or via the SOCKS5 proxy specified
 with the --proxy option.  To improve privacy, it’s recommended to proxy
 requests to the quote server via Tor or some other anonymity network.
 
-{g}{F}
-
-{s}
+{g}{F}{s}
 Seed source files must have the canonical extensions listed in the 'FileExt'
 column below:
 
