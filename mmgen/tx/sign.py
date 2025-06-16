@@ -35,10 +35,12 @@ def get_seed_for_seed_id(sid, infiles, saved_seeds):
 		return saved_seeds[sid]
 
 	subseeds_checked = False
+	seed = None
+
 	while True:
 		if infiles:
 			seed = Wallet(cfg, fn=infiles.pop(0), ignore_in_fmt=True, passwd_file=global_passwd_file).seed
-		elif subseeds_checked is False:
+		elif saved_seeds and subseeds_checked is False:
 			seed = saved_seeds[list(saved_seeds)[0]].subseed_by_seed_id(sid, print_msg=True)
 			subseeds_checked = True
 			if not seed:
@@ -123,9 +125,10 @@ def _pop_matching_fns(args, cmplist): # strips found args
 
 def get_tx_files(cfg, args):
 	from .unsigned import Unsigned, AutomountUnsigned
-	ret = _pop_matching_fns(args, [(AutomountUnsigned if cfg.autosign else Unsigned).ext])
+	ext = (AutomountUnsigned if cfg.autosign else Unsigned).ext
+	ret = _pop_matching_fns(args, [ext])
 	if not ret:
-		die(1, 'You must specify a raw transaction file!')
+		die(1, f'You must specify a raw transaction file with extension ‘.{ext}’')
 	return ret
 
 def get_seed_files(cfg, args, *, ignore_dfl_wallet=False, empty_ok=False):
