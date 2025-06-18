@@ -263,7 +263,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		self.swap_server = ThornodeSwapServer()
 		self.swap_server.start()
 
-		TestProxy(cfg)
+		TestProxy(self, cfg)
 
 	def swaptxcreate1(self):
 		t = self._swaptxcreate(['BTC', '8.765', 'ETH'])

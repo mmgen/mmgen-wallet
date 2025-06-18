@@ -744,7 +744,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		self.message = 'attack at dawn'
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
 
-		TestProxy(cfg)
+		TestProxy(self, cfg)
 
 	@property
 	async def rpc(self):

@@ -140,7 +140,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			if os.path.exists(self.datadir_base):
 				shutil.rmtree(self.datadir_base)
 			os.makedirs(self.datadir_base)
-			TestProxy(cfg)
+			TestProxy(self, cfg)
 			self.start_daemons()
 
 		self.balance = None

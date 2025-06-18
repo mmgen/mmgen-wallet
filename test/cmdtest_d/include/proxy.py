@@ -55,16 +55,18 @@ class TestProxy:
 
 	def kill_proxy(self, args):
 		if sys.platform in ('linux', 'darwin'):
-			omsg(f'Killing SSH SOCKS server at localhost:{self.port}')
+			omsg(f'Stopping SSH SOCKS server at localhost:{self.port}')
 			cmd = ['pkill', '-f', ' '.join(args)]
 			run(cmd)
 
-	def __init__(self, cfg, external_call=False):
+	def __init__(self, test_group, cfg):
+
+		if test_group and test_group.is_helper:
+			return
 
 		def start_proxy():
-			if external_call or not cfg.no_daemon_autostart:
-				run(a + b2)
-				omsg(f'SSH SOCKS server started, listening at localhost:{self.port}')
+			run(a + b2)
+			omsg(f'SSH SOCKS server started, listening at localhost:{self.port}')
 
 		a = ['ssh', '-x', '-o', 'ExitOnForwardFailure=True', '-D', f'localhost:{self.port}']
 		b0 = ['-o', 'PasswordAuthentication=False']
@@ -89,6 +91,9 @@ class TestProxy:
 			else:
 				die(2, fmt(self.need_start_errmsg.format(' '.join(a + b2)), indent='    '))
 
-		if not (external_call or cfg.no_daemon_stop):
+		if test_group is None:
+			self.kill_proxy(a + b2)
+		elif not hasattr(test_group.tr, 'proxy_stop_registered'):
 			atexit.unregister(self.kill_proxy)
 			atexit.register(self.kill_proxy, a + b2)
+			test_group.tr.proxy_stop_registered = True

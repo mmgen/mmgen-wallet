@@ -73,7 +73,7 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		self.rpc_server = ThornodeRPCServer()
 		self.rpc_server.start()
 
-		TestProxy(cfg)
+		TestProxy(self, cfg)
 
 		self.txhex_file = f'{self.tmpdir}/tx_dump.hex'
 

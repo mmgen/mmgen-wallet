@@ -66,4 +66,4 @@ class unit_tests:
 
 	def ssh_socks_proxy(self, name, ut):
 		from test.cmdtest_d.include.proxy import TestProxy
-		return TestProxy(cfg, external_call=True)
+		return TestProxy(None, cfg)

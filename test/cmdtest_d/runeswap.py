@@ -38,9 +38,9 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('subgroup.init',        []),
 		('subgroup.rune_init',   ['init']),
 		('subgroup.rune_swap',   ['rune_init']),
-		('stop',                 'stopping the regtest daemon'),
-		('swap_server_stop',     'stopping the Thornode swap server'),
 		('rune_rpc_server_stop', 'stopping the Thornode RPC server'),
+		('swap_server_stop',     'stopping the Thornode swap server'),
+		('stop',                 'stopping the regtest daemon'),
 	)
 	cmd_subgroups = {
 		'init': (
@@ -81,7 +81,7 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 		self.swap_server = ThornodeSwapServer()
 		self.swap_server.start()
 
-		TestProxy(cfg)
+		TestProxy(self, cfg)
 
 	def swap_server_stop(self):
 		return self._thornode_server_stop()
