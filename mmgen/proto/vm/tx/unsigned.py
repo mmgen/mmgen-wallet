@@ -17,7 +17,8 @@ from ....util import msg, msg_r, die
 class Unsigned:
 	desc = 'unsigned transaction'
 
-	async def sign(self, tx_num_str, keys): # return TX object or False; don't exit or raise exception
+	# Return signed object or False. Don’t exit or raise exception:
+	async def sign(self, keys, tx_num_str=''):
 
 		from ....exception import TransactionChainMismatch
 		try:

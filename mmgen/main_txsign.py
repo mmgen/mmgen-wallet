@@ -35,8 +35,7 @@ opts_data = {
 -h, --help            Print this help message
 --, --longhelp        Print help message for long (global) options
 -a, --autosign        Sign a transaction created for offline autosigning (see
-                      ‘mmgen-autosign’). The removable device is mounted and
-                      unmounted automatically
+                      ‘mmgen-autosign’)
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
                       brainwallet input
 -d, --outdir=      d  Specify an alternate directory 'd' for output
@@ -102,13 +101,11 @@ column below:
 
 cfg = Config(opts_data=opts_data)
 
-infiles = cfg._args
-
-if not infiles:
+if not cfg._args:
 	cfg._usage()
 
 from .fileutil import check_infile
-for i in infiles:
+for i in cfg._args:
 	check_infile(i)
 
 if not cfg.info and not cfg.terse_info:
@@ -117,19 +114,19 @@ if not cfg.info and not cfg.terse_info:
 
 from .tx.sign import txsign, get_tx_files, get_seed_files, get_keylist, get_keyaddrlist
 
-tx_files   = get_tx_files(cfg, infiles)
-seed_files = get_seed_files(cfg, infiles)
+txfiles = get_tx_files(cfg, cfg._args)
+seed_files = get_seed_files(cfg, cfg._args)
 
 async def main():
 
 	bad_tx_count = 0
 	tx_num_disp = ''
 
-	for tx_num, tx_file in enumerate(tx_files, 1):
+	for tx_num, tx_file in enumerate(txfiles, 1):
 
-		if len(tx_files) > 1:
+		if len(txfiles) > 1:
 			tx_num_disp = f' #{tx_num}'
-			msg(orange(f'\nTransaction{tx_num_disp} of {len(tx_files)}:'))
+			msg(orange(f'\nTransaction{tx_num_disp} of {len(txfiles)}:'))
 
 		from .tx import UnsignedTX
 		tx1 = UnsignedTX(cfg=cfg, filename=tx_file)

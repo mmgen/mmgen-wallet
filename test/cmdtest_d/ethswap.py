@@ -140,9 +140,9 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('subgroup.token_init',     ['eth_fund']),
 		('subgroup.token_swap',     ['fund', 'token_init']),
 		('subgroup.eth_token_swap', ['fund', 'token_init']),
-		('stop',                    'stopping regtest daemon'),
-		('eth_stop',                'stopping Ethereum daemon'),
 		('swap_server_stop',        'stopping the Thornode server'),
+		('eth_stop',                'stopping the Ethereum daemon'),
+		('stop',                    'stopping the regtest daemon'),
 	)
 	cmd_subgroups = {
 	'init': (

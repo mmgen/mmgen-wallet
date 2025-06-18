@@ -20,7 +20,8 @@ from .completed import Completed
 class Unsigned(Completed, TxBase.Unsigned):
 	desc = 'unsigned transaction'
 
-	async def sign(self, tx_num_str, keys): # return signed object or False; don't exit or raise exception
+	# Return signed object or False. Don’t exit or raise exception:
+	async def sign(self, keys, tx_num_str=''):
 
 		from ....exception import TransactionChainMismatch
 		try:

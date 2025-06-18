@@ -205,4 +205,4 @@ async def txsign(cfg_parm, tx, seed_files, kl, kal, *, tx_num_str='', passwd_fil
 	if extra_sids:
 		msg(f"Unused Seed ID{suf(extra_sids)}: {' '.join(extra_sids)}")
 
-	return await tx.sign(tx_num_str, keys) # returns signed TX object or False
+	return await tx.sign(keys, tx_num_str) # returns signed TX object or False

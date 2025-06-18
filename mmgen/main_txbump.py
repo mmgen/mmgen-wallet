@@ -143,7 +143,7 @@ cfg = Config(opts_data=opts_data)
 from .tx import CompletedTX, BumpTX, UnsignedTX, OnlineSignedTX
 from .tx.sign import txsign, get_seed_files, get_keyaddrlist, get_keylist
 
-seed_files = get_seed_files(
+seedfiles = get_seed_files(
 	cfg,
 	cfg._args,
 	ignore_dfl_wallet = not cfg.send,
@@ -176,12 +176,12 @@ async def main():
 				f'your {state} transaction, abort it with ‘mmgen-txsend --abort’ and create\n'
 				'a new one.')
 		orig_tx = await si.get_last_created()
-		kal = kl = sign_and_send = None
+		sign_and_send = False
 	else:
 		orig_tx = await CompletedTX(cfg=cfg, filename=tx_file)
-		kal = get_keyaddrlist(cfg, orig_tx.proto)
 		kl = get_keylist(cfg)
-		sign_and_send = any([seed_files, kl, kal])
+		kal = get_keyaddrlist(cfg, orig_tx.proto)
+		sign_and_send = any([seedfiles, kl, kal])
 
 	if not silent:
 		msg(green('ORIGINAL TRANSACTION'))
@@ -207,7 +207,7 @@ async def main():
 
 	if sign_and_send:
 		tx2 = UnsignedTX(cfg=cfg, data=tx.__dict__)
-		tx3 = await txsign(cfg, tx2, seed_files, kl, kal)
+		tx3 = await txsign(cfg, tx2, seedfiles, kl, kal)
 		if tx3:
 			tx4 = await OnlineSignedTX(cfg=cfg, data=tx3.__dict__)
 			tx4.file.write(ask_write=False)
