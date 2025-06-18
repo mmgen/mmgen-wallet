@@ -269,14 +269,14 @@ class Signable:
 			if tx1.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
 				tx1.rpc = await rpc_init(self.cfg, tx1.proto, ignore_wallet=True)
-			from .tx.sign import txsign
-			tx2 = await txsign(
-					cfg_parm    = self.cfg,
-					tx          = tx1,
-					seed_files  = self.parent.wallet_files[:],
-					kl          = None,
-					kal         = None,
-					passwd_file = str(self.parent.keyfile))
+			from .tx.keys import TxKeys
+			tx2 = await tx1.sign(
+				TxKeys(
+					self.cfg,
+					tx1,
+					seedfiles = self.parent.wallet_files[:],
+					passwdfile = str(self.parent.keyfile),
+					auto = True).keys)
 			if tx2:
 				tx2.file.write(ask_write=False, outdir=self.dir)
 				return tx2

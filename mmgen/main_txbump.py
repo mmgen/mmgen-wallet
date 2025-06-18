@@ -141,13 +141,9 @@ column below:
 cfg = Config(opts_data=opts_data)
 
 from .tx import CompletedTX, BumpTX, UnsignedTX, OnlineSignedTX
-from .tx.sign import txsign, get_seed_files, get_keyaddrlist, get_keylist
+from .tx.keys import TxKeys, pop_seedfiles, get_keylist, get_keyaddrlist
 
-seedfiles = get_seed_files(
-	cfg,
-	cfg._args,
-	ignore_dfl_wallet = not cfg.send,
-	empty_ok = not cfg.send)
+seedfiles = pop_seedfiles(cfg, ignore_dfl_wallet=not cfg.send, empty_ok=not cfg.send)
 
 if cfg.autosign:
 	if cfg.send:
@@ -207,8 +203,8 @@ async def main():
 
 	if sign_and_send:
 		tx2 = UnsignedTX(cfg=cfg, data=tx.__dict__)
-		tx3 = await txsign(cfg, tx2, seedfiles, kl, kal)
-		if tx3:
+		if tx3 := await tx2.sign(
+				TxKeys(cfg, tx2, seedfiles=seedfiles, keylist=kl, keyaddrlist=kal).keys):
 			tx4 = await OnlineSignedTX(cfg=cfg, data=tx3.__dict__)
 			tx4.file.write(ask_write=False)
 			await tx4.send(cfg, asi if cfg.autosign else None)

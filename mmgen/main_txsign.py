@@ -112,10 +112,10 @@ if not cfg.info and not cfg.terse_info:
 	from .ui import do_license_msg
 	do_license_msg(cfg, immed=True)
 
-from .tx.sign import txsign, get_tx_files, get_seed_files, get_keylist, get_keyaddrlist
+from .tx.keys import TxKeys, pop_txfiles, pop_seedfiles
 
-txfiles = get_tx_files(cfg, cfg._args)
-seed_files = get_seed_files(cfg, cfg._args)
+txfiles = pop_txfiles(cfg)
+seedfiles = pop_seedfiles(cfg)
 
 async def main():
 
@@ -148,11 +148,7 @@ async def main():
 		if not cfg.yes:
 			tx1.info.view_with_prompt(f'View data for transaction{tx_num_disp}?')
 
-		kal = get_keyaddrlist(cfg, tx1.proto)
-		kl = get_keylist(cfg)
-
-		tx2 = await txsign(cfg, tx1, seed_files, kl, kal, tx_num_str=tx_num_disp)
-		if tx2:
+		if tx2 := await tx1.sign(TxKeys(cfg, tx1, seedfiles=seedfiles).keys, tx_num_disp):
 			if not cfg.yes:
 				tx2.add_comment() # edits an existing comment
 			tx2.file.write(ask_write=not cfg.yes, ask_write_default_yes=True, add_desc=tx_num_disp)

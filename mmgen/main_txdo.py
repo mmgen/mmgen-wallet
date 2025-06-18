@@ -168,9 +168,9 @@ column below:
 cfg = Config(opts_data=opts_data)
 
 from .tx import NewTX, SentTX
-from .tx.sign import txsign, get_seed_files, get_keyaddrlist, get_keylist
+from .tx.keys import TxKeys, pop_seedfiles
 
-seed_files = get_seed_files(cfg, cfg._args)
+seedfiles = pop_seedfiles(cfg)
 
 async def main():
 
@@ -187,10 +187,7 @@ async def main():
 		locktime = int(cfg.locktime or 0),
 		caller   = 'txdo')
 
-	kal = get_keyaddrlist(cfg, cfg._proto)
-	kl = get_keylist(cfg)
-
-	tx3 = await txsign(cfg, tx2, seed_files, kl, kal)
+	tx3 = await tx2.sign(TxKeys(cfg, tx2, seedfiles=seedfiles).keys)
 
 	if tx3:
 		tx3.file.write(ask_write=False)
