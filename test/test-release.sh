@@ -18,28 +18,28 @@
 
 run_test() {
 	set +x
-	local tests="t_$1" skips="t_$1_skip" continue_on_error="e_$1" have_error=
+	local tests_in="t_$1" skips="t_$1_skip" continue_on_error="e_$1" have_error= tests
 
 	while read skip test; do
 		[ "$test" ] || continue
 		echo "${!skips}" | grep -q $skip && continue
+		tests[${#tests[@]}]="$test"
+	done <<<${!tests_in}
 
-		if [ "$LIST_CMDS" ]; then
-			echo $test
+	for test in "${tests[@]}"; do
+		if [ "$LIST_CMDS" ]; then echo $test; continue; fi
+		test_disp=$YELLOW${test/\#/$RESET$MAGENTA\#}$RESET
+		if [ "${test:0:1}" == '#' ]; then
+			echo -e "$test_disp"
 		else
-			test_disp=$YELLOW${test/\#/$RESET$MAGENTA\#}$RESET
-			if [ "${test:0:1}" == '#' ]; then
-				echo -e "$test_disp"
-			else
-				echo -e "${GREEN}Running:$RESET $test_disp"
-				eval "$test" || {
-					echo -e $RED"test-release.sh: test '$CUR_TEST' failed at command '$test'"$RESET
-					have_error=1
-					[ "${!continue_on_error}" ] || exit 1
-				}
-			fi
+			echo -e "${GREEN}Running:$RESET $test_disp"
+			eval "$test" || {
+				echo -e $RED"test-release.sh: test '$CUR_TEST' failed at command '$test'"$RESET
+				have_error=1
+				[ "${!continue_on_error}" ] || exit 1
+			}
 		fi
-	done <<<${!tests}
+	done
 	if [ "$have_error" ]; then { echo -e "$RED${!continue_on_error}$RESET"; exit 1; }; fi
 }
 
