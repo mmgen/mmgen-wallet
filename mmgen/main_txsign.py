@@ -25,7 +25,6 @@ from .util import msg, ymsg, suf, die, async_run
 from .subseed import SubSeedIdxRange
 from .color import orange
 
-# -w, --use-wallet-dat (keys from running coin daemon) removed: use walletdump rpc instead
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {

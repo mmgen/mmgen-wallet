@@ -41,7 +41,6 @@ def pop_seedfiles(cfg, *, ignore_dfl_wallet=False, empty_ok=False):
 	if not (ret
 			or empty_ok
 			or cfg.mmgen_keys_from_file
-			# or cfg.use_wallet_dat
 			or cfg.keys_from_file):
 		die(1, 'You must specify a seed or key source!')
 	return ret

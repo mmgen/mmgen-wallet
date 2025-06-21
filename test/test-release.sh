@@ -22,8 +22,8 @@ run_test() {
 
 	while read skip test; do
 		[ "$test" ] || continue
-		echo "${!skips}" | grep -q $skip && continue
-		tests[${#tests[@]}]="$test"
+		echo "${!skips}" | grep -q "\<$skip\>" && continue
+		tests+=("$test")
 	done <<<${!tests_in}
 
 	for test in "${tests[@]}"; do
