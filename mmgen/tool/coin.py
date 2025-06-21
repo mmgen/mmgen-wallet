@@ -58,18 +58,22 @@ class tool_cmd(tool_cmd_base):
 			pubkey_type = self.mmtype.pubkey_type,
 			compressed  = self.mmtype.compressed).wif
 
-	def randpair(self):
-		"generate a random private key/address pair"
+	def privhex2pair(self, privhex: 'sstr'):
+		"generate a wifkey/address pair from the provided hexadecimal key"
 		gd = self._init_generators()
-		from ..crypto import Crypto
 		privkey = PrivKey(
 			self.proto,
-			Crypto(self.cfg).get_random(32),
+			bytes.fromhex(privhex),
 			pubkey_type = self.mmtype.pubkey_type,
 			compressed  = self.mmtype.compressed)
 		return (
 			privkey.wif,
 			gd.ag.to_addr(gd.kg.gen_data(privkey)))
+
+	def randpair(self):
+		"generate a random wifkey/address pair"
+		from ..crypto import Crypto
+		return self.privhex2pair(Crypto(self.cfg).get_random(32).hex())
 
 	def wif2hex(self, wifkey: 'sstr'):
 		"convert a private key from WIF to hexadecimal format"

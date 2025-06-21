@@ -118,6 +118,7 @@ mods = {
 		'pubhash2addr',
 		'pubhex2addr',
 		'pubhex2redeem_script',
+		'privhex2pair',
 		'randpair',
 		'randwif',
 		'redeem_script2addr',
