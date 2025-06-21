@@ -707,7 +707,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			[f'{addr},{rtFundAmt}', self.burn_addr],
 			utxo_nums,
 			extra_args = [f'--keys-from-file={keyfile}'],
-			tweaks = 'confirm_chg_non_mmgen',
+			tweaks = ['confirm_chg_non_mmgen'],
 			skip_passphrase = skip_passphrase)
 
 	def fund_bob_deterministic(self):
@@ -745,23 +745,27 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			return 'skip'
 		return self.addrimport('bob', add_opts=['--rescan'])
 
-	def fund_wallet(self, user, mmtype, amt, sid=None, addr_range='1-5', proto=None):
+	def fund_wallet(self, user, amt, *, addr=None, mmtype=None, sid=None, addr_range='1-5', proto=None):
 		proto = proto or self.proto
 		if self.deterministic:
 			return 'skip'
 		if not sid:
 			sid = self._user_sid(user)
-		addr = self.get_addr_from_addrlist(user, sid, mmtype, 0, addr_range=addr_range, proto=proto)
-		t = self.spawn('mmgen-regtest', [f'--coin={proto.coin}', 'send', str(addr), str(amt)], no_passthru_opts=True)
+		addr = addr or self.get_addr_from_addrlist(
+			user, sid, mmtype, 0, addr_range=addr_range, proto=proto)
+		t = self.spawn(
+			'mmgen-regtest',
+			[f'--coin={proto.coin}', 'send', str(addr), str(amt)],
+			no_passthru_opts = True)
 		t.expect(f'Sending {amt} miner {proto.coin}')
 		t.expect('Mined 1 block')
 		return t
 
 	def fund_bob(self):
-		return self.fund_wallet('bob', 'C', rtFundAmt)
+		return self.fund_wallet('bob', rtFundAmt, mmtype='C')
 
 	def fund_alice(self):
-		return self.fund_wallet('alice', ('L', 'S')[self.proto.cap('segwit')], rtFundAmt)
+		return self.fund_wallet('alice', rtFundAmt, mmtype=('L', 'S')[self.proto.cap('segwit')])
 
 	def user_twview(
 			self,

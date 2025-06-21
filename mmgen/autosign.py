@@ -23,6 +23,7 @@ from .color import yellow, red, orange, brown, blue
 from .wallet import Wallet, get_wallet_cls
 from .addrlist import AddrIdxList
 from .filename import find_file_in_dir
+from .fileutil import shred_file
 from .ui import keypress_confirm
 
 def SwapMgr(*args, **kwargs):
@@ -239,10 +240,9 @@ class Signable:
 					suf(files),
 					fmt_list(map(str, files), fmt='col', indent='  ')),
 					do_exit = True)
-			for f in files:
-				msg(f'Shredding file ‘{f}’')
-				from .fileutil import shred_file
-				shred_file(f)
+			for fn in files:
+				msg(f'Shredding file ‘{fn}’')
+				shred_file(fn)
 			sys.exit(0)
 
 		async def get_last_created(self):
@@ -276,7 +276,7 @@ class Signable:
 					tx1,
 					seedfiles = self.parent.wallet_files[:],
 					passwdfile = str(self.parent.keyfile),
-					auto = True).keys)
+					autosign = True).keys)
 			if tx2:
 				tx2.file.write(ask_write=False, outdir=self.dir)
 				return tx2
@@ -693,7 +693,6 @@ class Autosign:
 
 	def wipe_encryption_key(self):
 		if self.keyfile.exists():
-			from .fileutil import shred_file
 			ymsg(f'Shredding wallet encryption key ‘{self.keyfile}’')
 			shred_file(self.keyfile, verbose=self.cfg.verbose)
 		else:
@@ -818,11 +817,10 @@ class Autosign:
 
 	def clean_old_files(self):
 
-		def do_shred(f):
+		def do_shred(fn):
 			nonlocal count
 			msg_r('.')
-			from .fileutil import shred_file
-			shred_file(f, verbose=self.cfg.verbose)
+			shred_file(fn, verbose=self.cfg.verbose)
 			count += 1
 
 		def clean_dir(s_name):

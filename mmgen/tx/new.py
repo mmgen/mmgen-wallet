@@ -508,7 +508,7 @@ class New(Base):
 					desc)) is not None:
 				break
 
-		self.check_non_mmgen_inputs(caller)
+		self.check_non_mmgen_inputs(caller=caller)
 
 		self.update_change_output(funds_left)
 

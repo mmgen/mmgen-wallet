@@ -27,6 +27,10 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	rt_data = {
 		'rtFundAmt': {'btc':'500', 'bch':'500', 'ltc':'5500'},
 	}
+	bal2_chk = {
+		'btc': '491.11002204',
+		'bch': '498.7653392',
+		'ltc': '5491.11002204'}
 
 	cmd_group = (
 		('setup',                            'regtest mode setup'),
@@ -267,9 +271,4 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 			output_args = ['data:message for posterity', f'{self.burn_addr},7.654321', f'{sid}:C:1'])
 
 	def alice_bal2(self):
-		bals = {
-			'btc': '491.11002204',
-			'ltc': '5491.11002204',
-			'bch': '498.7653392',
-		}
-		return self.user_bal('alice', bals.get(self.coin, None))
+		return self.user_bal('alice', self.bal2_chk[self.coin])

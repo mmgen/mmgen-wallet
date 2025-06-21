@@ -82,12 +82,12 @@ class TxKeys:
 			keylist     = None,
 			keyaddrlist = None,
 			passwdfile  = None,
-			auto        = False):
+			autosign    = False):
 		self.cfg         = cfg
 		self.tx          = tx
 		self.seedfiles   = seedfiles or pop_seedfiles(cfg)
-		self.keylist     = None if auto else keylist or get_keylist(cfg)
-		self.keyaddrlist = None if auto else keyaddrlist or get_keyaddrlist(cfg, tx.proto)
+		self.keylist     = keylist if autosign else keylist or get_keylist(cfg)
+		self.keyaddrlist = keyaddrlist if autosign else keyaddrlist or get_keyaddrlist(cfg, tx.proto)
 		self.passwdfile  = passwdfile
 		self.saved_seeds = {}
 
@@ -95,7 +95,9 @@ class TxKeys:
 		err_fs = 'ERROR: a key file must be supplied for the following non-{} address{}:{}'
 		sep = '\n    '
 		if addrs := self.tx.get_non_mmaddrs('inputs'):
-			self.tx.check_non_mmgen_inputs(caller='txsign', non_mmaddrs=addrs)
+			self.tx.check_non_mmgen_inputs(
+				caller = 'txsign',
+				non_mmaddrs = addrs)
 			kal = KeyAddrList(
 				cfg         = self.cfg,
 				proto       = self.tx.proto,
@@ -209,7 +211,7 @@ class TxKeys:
 		ret = self.get_keys_for_non_mmgen_inputs()
 		memo_output = self.tx.check_swap_memo() # do this for non-swap transactions too!
 
-		if self.cfg.mmgen_keys_from_file:
+		if self.keyaddrlist:
 			ret += self.add_keys('inputs', self.tx.inputs, from_keyaddrlist=True)
 			self.add_keys('outputs', self.tx.outputs, from_keyaddrlist=True)
 			if memo_output:

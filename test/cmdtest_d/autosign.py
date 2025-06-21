@@ -196,7 +196,8 @@ class CmdTestAutosignBase(CmdTestBase):
 			use_dfl_wallet = False,
 			seed_len       = None,
 			usr_entry_modes = False,
-			passwd         = 'abc',
+			wallet_passwd  = None,
+			add_opts       = [],
 			expect_args    = []):
 
 		mn_desc = mn_type or 'default'
@@ -209,7 +210,7 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		t = self.spawn(
 			'mmgen-autosign',
-			self.opts
+			self.opts + add_opts
 			+ ([] if mn_desc == 'default' else [f'--mnemonic-fmt={mn_type}'])
 			+ ([f'--seed-len={seed_len}'] if seed_len else [])
 			+ ['setup'],
@@ -217,7 +218,7 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		if use_dfl_wallet:
 			t.expect('Use default wallet for autosigning? (Y/n): ', 'y')
-			t.passphrase('MMGen wallet', passwd)
+			t.passphrase('MMGen wallet', wallet_passwd)
 		else:
 			if use_dfl_wallet is not None: # None => no dfl wallet present
 				t.expect('Use default wallet for autosigning? (Y/n): ', 'n')
@@ -447,11 +448,13 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			self,
 			user,
 			progname    = 'txcreate',
-			input_handler = None,
+			ui_handler  = None,
 			chg_addr    = None,
 			opts        = [],
 			output_args = [],
 			exit_val    = 0,
+			inputs      = '1',
+			tweaks      = [],
 			expect_str  = None,
 			data_arg    = None,
 			need_rbf    = False):
@@ -486,10 +489,11 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		if exit_val:
 			return do_return()
 
-		t = (input_handler or self.txcreate_ui_common)(
+		t = (ui_handler or self.txcreate_ui_common)(
 			t,
-			inputs          = '1',
+			inputs          = inputs,
 			interactive_fee = '32s',
+			tweaks          = tweaks,
 			file_desc       = 'Unsigned automount transaction')
 
 		return do_return()
@@ -615,6 +619,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 	live            = False
 	simulate_led    = True
 	no_insert_check = True
+	wallet_passwd   = 'abc'
 
 	filedir_map = (
 		('btc', ''),
@@ -719,7 +724,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 				'test/ref/98831F3A.hex'
 			]
 		)
-		t.passphrase_new('new MMGen wallet', 'abc')
+		t.passphrase_new('new MMGen wallet', self.wallet_passwd)
 		t.written_to_file('MMGen wallet')
 		return t
 
@@ -729,16 +734,16 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		return t
 
 	def bad_opt1(self):
-		return self._bad_opt(['--seed-len=128'], 'makes sense')
+		return self._bad_opt(['--seed-len=128'], 'is valid')
 
 	def bad_opt2(self):
-		return self._bad_opt(['--mnemonic-fmt=bip39', 'wait'], 'makes sense')
+		return self._bad_opt(['--mnemonic-fmt=bip39', 'wait'], 'is valid')
 
 	def bad_opt3(self):
-		return self._bad_opt(['--led', 'gen_key'], 'makes no sense')
+		return self._bad_opt(['--led', 'gen_key'], 'is not valid')
 
 	def run_setup_dfl_wallet(self):
-		return self.run_setup(mn_type='default', use_dfl_wallet=True)
+		return self.run_setup(mn_type='default', use_dfl_wallet=True, wallet_passwd=self.wallet_passwd)
 
 	def run_setup_bip39(self):
 		from mmgen.cfgfile import mmgen_cfg_file

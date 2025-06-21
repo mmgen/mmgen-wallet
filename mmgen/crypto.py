@@ -399,7 +399,7 @@ class Crypto:
 			from .ui import get_words_from_user
 			return ' '.join(get_words_from_user(self.cfg, f'Enter {pw_desc} for {data_desc}: '))
 
-	def mmgen_encrypt(self, data, *, desc='data', hash_preset=None):
+	def mmgen_encrypt(self, data, *, passwd=None, desc='data', hash_preset=None):
 		salt  = self.get_random(self.mmenc_salt_len)
 		iv    = self.get_random(self.aesctr_iv_len)
 		nonce = self.get_random(self.mmenc_nonce_len)
@@ -407,7 +407,7 @@ class Crypto:
 		m     = ('user-requested', 'default')[hp=='3']
 		self.util.vmsg(f'Encrypting {desc}')
 		self.util.qmsg(f'Using {m} hash preset of {hp!r}')
-		passwd = self.get_new_passphrase(
+		passwd = passwd or self.get_new_passphrase(
 			data_desc = desc,
 			hash_preset = hp,
 			passwd_file = self.cfg.passwd_file)
@@ -416,7 +416,7 @@ class Crypto:
 		enc_d  = self.encrypt_data(sha256(nonce+data).digest() + nonce + data, key=key, iv=iv, desc=desc)
 		return salt+iv+enc_d
 
-	def mmgen_decrypt(self, data, *, desc='data', hash_preset=None):
+	def mmgen_decrypt(self, data, *, passwd=None, desc='data', hash_preset=None):
 		self.util.vmsg(f'Preparing to decrypt {desc}')
 		dstart = self.mmenc_salt_len + self.aesctr_iv_len
 		salt   = data[:self.mmenc_salt_len]
@@ -425,7 +425,7 @@ class Crypto:
 		hp     = hash_preset or self.cfg.hash_preset or self.get_hash_preset_from_user(data_desc=desc)
 		m  = ('user-requested', 'default')[hp=='3']
 		self.util.qmsg(f'Using {m} hash preset of {hp!r}')
-		passwd = self.get_passphrase(
+		passwd = passwd or self.get_passphrase(
 			data_desc = desc,
 			passwd_file = self.cfg.passwd_file)
 		key    = self.make_key(passwd, salt, hp)

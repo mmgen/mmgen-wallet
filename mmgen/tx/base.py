@@ -99,7 +99,7 @@ class Base(MMGenObject):
 		as autosigning does not support the use of key files.
 
 		Non-{gc.proj_name} addresses found in inputs:
-		    {{}}
+		  {{}}
 	"""
 
 	class Input(MMGenTxIO):
@@ -212,7 +212,7 @@ class Base(MMGenObject):
 			edesc = 'non-MMGen address',
 			quiet = True)
 
-	def check_non_mmgen_inputs(self, caller, *, non_mmaddrs=None):
+	def check_non_mmgen_inputs(self, *, caller, non_mmaddrs=None):
 		non_mmaddrs = non_mmaddrs or self.get_non_mmaddrs('inputs')
 		if non_mmaddrs:
 			indent = '  '

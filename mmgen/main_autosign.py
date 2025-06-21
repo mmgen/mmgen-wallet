@@ -202,14 +202,14 @@ if cmd not in Autosign.cmds + Autosign.util_cmds:
 	die(1, f'‘{cmd}’: unrecognized command')
 
 if cmd != 'setup':
-	for opt in ('seed_len', 'mnemonic_fmt'):
+	for opt in ('seed_len', 'mnemonic_fmt', 'keys_from_file'):
 		if getattr(cfg, opt):
-			die(1, f'--{opt.replace("_", "-")} makes sense only for the ‘setup’ operation')
+			die(1, f'--{opt.replace("_", "-")} is valid only for the ‘setup’ operation')
 
 if cmd not in ('sign', 'wait'):
 	for opt in ('no_summary', 'led', 'stealth_led', 'full_summary'):
 		if getattr(cfg, opt):
-			die(1, f'--{opt.replace("_", "-")} makes no sense for the ‘{cmd}’ operation')
+			die(1, f'--{opt.replace("_", "-")} is not valid for the ‘{cmd}’ operation')
 
 asi = Autosign(cfg, cmd=cmd)
 

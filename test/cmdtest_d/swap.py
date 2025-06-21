@@ -74,7 +74,7 @@ class CmdTestSwapMethods:
 		return self.addrimport('bob', mmtypes=['S', 'B'], proto=self.protos[proto_idx])
 
 	def _fund_bob(self, proto_idx, addrtype_code, amt):
-		return self.fund_wallet('bob', addrtype_code, amt, proto=self.protos[proto_idx])
+		return self.fund_wallet('bob', amt, mmtype=addrtype_code, proto=self.protos[proto_idx])
 
 	def _bob_bal(self, proto_idx, bal, skip_check=False):
 		return self.user_bal('bob', bal, proto=self.protos[proto_idx], skip_check=skip_check)
@@ -142,6 +142,7 @@ class CmdTestSwapMethods:
 			inputs          = '1',
 			interactive_fee = None,
 			file_desc       = 'Unsigned transaction',
+			tweaks          = [],
 			reload_quote    = False,
 			sign_and_send   = False,
 			need_passphrase = True,
@@ -238,10 +239,25 @@ class CmdTestSwapMethods:
 			exit_val = exit_val)
 		return self._swaptxbump_ui_common(t, interactive_fee=fee, new_outputs=bool(output_args))
 
-	def _swaptxbump_ui_common_new_outputs(self, t, *, inputs=None, interactive_fee=None, file_desc=None):
-		return self._swaptxbump_ui_common(t, interactive_fee=interactive_fee, new_outputs=True)
+	def _swaptxbump_ui_common_new_outputs(
+			self,
+			t,
+			*,
+			tweaks          = [],
+			inputs          = None,
+			interactive_fee = None,
+			file_desc       = None):
+		return self._swaptxbump_ui_common(
+				t,
+				inputs          = inputs,
+				interactive_fee = interactive_fee,
+				file_desc       = file_desc,
+				new_outputs     = True)
 
-	def _swaptxbump_ui_common(self, t, *,
+	def _swaptxbump_ui_common(
+			self,
+			t,
+			*,
 			inputs          = None,
 			interactive_fee = None,
 			file_desc       = None,
@@ -780,7 +796,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		return self._user_txcreate(
 			'bob',
 			progname = 'swaptxcreate',
-			input_handler = self._swaptxcreate_ui_common,
+			ui_handler = self._swaptxcreate_ui_common,
 			output_args = ['BTC', '8.88', f'{self.sid}:S:3', 'LTC', f'{self.sid}:S:3'])
 
 	def autosign_swaptxsend1(self):
@@ -790,7 +806,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		return self._user_txcreate(
 			'bob',
 			progname = 'txbump',
-			input_handler = self._swaptxbump_ui_common_new_outputs,
+			ui_handler = self._swaptxbump_ui_common_new_outputs,
 			output_args = [f'{self.sid}:S:3'])
 
 	def autosign_swaptxsend2(self):
