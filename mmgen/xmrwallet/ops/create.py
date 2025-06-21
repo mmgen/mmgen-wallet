@@ -79,6 +79,6 @@ class OpCreateOffline(OpCreate):
 			if f.name.endswith(vkf.ext):
 				from ...fileutil import shred_file
 				msg(f'\nShredding old viewkey-address file ‘{f}’')
-				shred_file(f, verbose=self.cfg.verbose)
+				shred_file(self.cfg, f, iterations=15)
 
 		vkf.write(outdir=self.asi.xmr_dir)

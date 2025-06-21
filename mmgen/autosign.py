@@ -242,7 +242,7 @@ class Signable:
 					do_exit = True)
 			for fn in files:
 				msg(f'Shredding file ‘{fn}’')
-				shred_file(fn)
+				shred_file(self.cfg, fn, iterations=15)
 			sys.exit(0)
 
 		async def get_last_created(self):
@@ -694,7 +694,7 @@ class Autosign:
 	def wipe_encryption_key(self):
 		if self.keyfile.exists():
 			ymsg(f'Shredding wallet encryption key ‘{self.keyfile}’')
-			shred_file(self.keyfile, verbose=self.cfg.verbose)
+			shred_file(self.cfg, self.keyfile)
 		else:
 			gmsg('No wallet encryption key on removable device')
 
@@ -820,7 +820,7 @@ class Autosign:
 		def do_shred(fn):
 			nonlocal count
 			msg_r('.')
-			shred_file(fn, verbose=self.cfg.verbose)
+			shred_file(self.cfg, fn, iterations=15)
 			count += 1
 
 		def clean_dir(s_name):

@@ -57,12 +57,12 @@ def check_binary(args):
 		die(2, f'{args[0]!r} binary missing, not in path, or not executable')
 	set_vt100()
 
-def shred_file(fn, *, verbose=False):
+def shred_file(cfg, fn, *, iterations=30):
 	check_binary(['shred', '--version'])
 	from subprocess import run
 	run(
-		['shred', '--force', '--iterations=30', '--zero', '--remove=wipesync']
-		+ (['--verbose'] if verbose else [])
+		['shred', '--force', f'--iterations={iterations}', '--zero', '--remove=wipesync']
+		+ (['--verbose'] if cfg.verbose else [])
 		+ [str(fn)],
 		check=True)
 	set_vt100()

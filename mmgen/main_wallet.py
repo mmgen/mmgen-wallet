@@ -241,7 +241,7 @@ if invoked_as == 'passchg':
 	def secure_delete(fn):
 		bmsg('Securely deleting old wallet')
 		from .fileutil import shred_file
-		shred_file(fn, verbose = cfg.verbose)
+		shred_file(cfg, fn)
 
 	def rename_old_wallet_maybe(silent):
 		# though very unlikely, old and new wallets could have same Key ID and thus same filename.
