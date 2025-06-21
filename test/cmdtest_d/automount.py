@@ -15,7 +15,7 @@ import time
 
 from .autosign import CmdTestAutosignThreaded
 from .regtest import CmdTestRegtest, rt_pw
-from ..include.common import gr_uc
+from ..include.common import gr_uc, create_addrpairs
 
 class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	'automounted transacting operations via regtest mode'
@@ -23,21 +23,29 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	networks = ('btc', 'bch', 'ltc')
 	tmpdir_nums = [49]
 	bdb_wallet = True
+	keylist_passwd = 'abc'
 
 	rt_data = {
 		'rtFundAmt': {'btc':'500', 'bch':'500', 'ltc':'5500'},
 	}
+	bal1_chk = {
+		'btc': '502.46',
+		'bch': '502.46',
+		'ltc': '5502.46'}
 	bal2_chk = {
-		'btc': '491.11002204',
-		'bch': '498.7653392',
-		'ltc': '5491.11002204'}
+		'btc': '493.56992828',
+		'bch': '501.22524576',
+		'ltc': '5493.56992828'}
 
 	cmd_group = (
 		('setup',                            'regtest mode setup'),
 		('walletgen_alice',                  'wallet generation (Alice)'),
 		('addrgen_alice',                    'address generation (Alice)'),
 		('addrimport_alice',                 'importing Alice’s addresses'),
+		('addrimport_alice_non_mmgen',       'importing Alice’s non-MMGen addresses'),
 		('fund_alice',                       'funding Alice’s wallet'),
+		('fund_alice_non_mmgen1',            'funding Alice’s wallet (non-MMGen addr #1)'),
+		('fund_alice_non_mmgen2',            'funding Alice’s wallet (non-MMGen addr #2)'),
 		('generate',                         'mining a block'),
 		('alice_bal1',                       'checking Alice’s balance'),
 		('alice_txcreate1',                  'creating a transaction'),
@@ -92,9 +100,30 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 
 		self.opts.append('--alice')
 
+		self.non_mmgen_addrs = create_addrpairs(self.proto, 'C', 2)
+
+	def addrimport_alice_non_mmgen(self):
+		self.write_to_tmpfile(
+			'non_mmgen_addrs',
+			'\n'.join(e.addr for e in self.non_mmgen_addrs))
+		return self.spawn(
+			'mmgen-addrimport',
+			['--alice', '--quiet', '--addrlist', f'{self.tmpdir}/non_mmgen_addrs'])
+
+	def fund_alice_non_mmgen1(self):
+		return self.fund_wallet('alice', '1.23', addr=self.non_mmgen_addrs[0].addr)
+
+	def fund_alice_non_mmgen2(self):
+		return self.fund_wallet('alice', '1.23', addr=self.non_mmgen_addrs[1].addr)
+
+	def alice_bal1(self):
+		return self._user_bal_cli('alice', chk=self.bal1_chk[self.coin])
+
 	def alice_txcreate1(self):
 		return self._user_txcreate(
 			'alice',
+			inputs = '1-3',
+			tweaks = ['confirm_non_mmgen'],
 			chg_addr = 'C:5',
 			data_arg = 'data:'+gr_uc[:24])
 
@@ -147,7 +176,18 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		return self._user_txcreate('alice', chg_addr='C:5', exit_val=2, expect_str='unsent transaction')
 
 	def alice_run_autosign_setup(self):
-		return self.run_setup(mn_type='default', use_dfl_wallet=True, passwd=rt_pw)
+		from mmgen.crypto import Crypto
+		from mmgen.cfg import Config
+		new_cfg = Config({'_clone': self.cfg, 'usr_randchars': 0, 'hash_preset': '1'})
+		enc_data = Crypto(new_cfg).mmgen_encrypt(
+			'\n'.join(e.wif for e in self.non_mmgen_addrs).encode(), passwd=self.keylist_passwd)
+		self.write_to_tmpfile('non_mmgen_keys.mmenc', enc_data, binary=True)
+		return self.run_setup(
+			mn_type = 'default',
+			use_dfl_wallet = True,
+			wallet_passwd = rt_pw,
+			add_opts = [f'--keys-from-file={self.tmpdir}/non_mmgen_keys.mmenc'],
+			keylist_passwd = self.keylist_passwd)
 
 	def alice_txsend1(self):
 		return self._user_txsend('alice', comment='This one’s worth a comment', no_wait=True)

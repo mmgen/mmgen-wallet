@@ -95,8 +95,7 @@ class Base(MMGenObject):
 		This transaction includes inputs with non-{gc.proj_name} addresses.  When
 		signing the transaction, private keys for the addresses listed below must
 		be supplied using the --keys-from-file option.  The key file must contain
-		one key per line.  Please note that this transaction cannot be autosigned,
-		as autosigning does not support the use of key files.
+		one key per line.
 
 		Non-{gc.proj_name} addresses found in inputs:
 		  {{}}
@@ -213,6 +212,7 @@ class Base(MMGenObject):
 			quiet = True)
 
 	def check_non_mmgen_inputs(self, *, caller, non_mmaddrs=None):
+		assert caller in ('txcreate', 'txdo', 'txsign', 'autosign')
 		non_mmaddrs = non_mmaddrs or self.get_non_mmaddrs('inputs')
 		if non_mmaddrs:
 			indent = '  '
@@ -223,7 +223,7 @@ class Base(MMGenObject):
 					die('UserOptError', f'\n{indent}ERROR: {m}\n')
 			else:
 				msg(f'\n{indent}WARNING: {m}\n')
-				if not self.cfg.yes:
+				if not (caller == 'autosign' or self.cfg.yes):
 					from ..ui import keypress_confirm
 					keypress_confirm(self.cfg, 'Continue?', default_yes=True, do_exit=True)
 

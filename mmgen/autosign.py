@@ -275,6 +275,7 @@ class Signable:
 					self.cfg,
 					tx1,
 					seedfiles = self.parent.wallet_files[:],
+					keylist = self.parent.keylist,
 					passwdfile = str(self.parent.keyfile),
 					autosign = True).keys)
 			if tx2:
@@ -424,6 +425,7 @@ class Autosign:
 	macOS_ramdisk_name = 'AutosignRamDisk'
 	wallet_subdir = 'autosign'
 	linux_blkid_cmd = 'sudo blkid -s LABEL -o value'
+	keylist_fn = 'keylist.mmenc'
 
 	cmds = ('setup', 'xmr_setup', 'sign', 'wait')
 
@@ -672,6 +674,7 @@ class Autosign:
 			self.led.set('busy')
 		self.do_mount()
 		key_ok = self.decrypt_wallets()
+		self.init_non_mmgen_keys()
 		if key_ok:
 			if self.cfg.stealth_led:
 				self.led.set('busy')
@@ -779,6 +782,9 @@ class Autosign:
 			ss_in = Wallet(self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt])
 		ss_out = Wallet(self.cfg, ss=ss_in, passwd_file=str(self.keyfile))
 		ss_out.write_to_file(desc='autosign wallet', outdir=self.wallet_dir)
+
+		if self.cfg.keys_from_file:
+			self.setup_non_mmgen_keys()
 
 	@property
 	def xmrwallet_cfg(self):
@@ -908,3 +914,34 @@ class Autosign:
 			enabled = self.cfg.led,
 			simulate = self.cfg.test_suite_autosign_led_simulate)
 		self.led.set('off')
+
+	def setup_non_mmgen_keys(self):
+		from .fileutil import get_lines_from_file, write_data_to_file
+		from .crypto import Crypto
+		lines = get_lines_from_file(self.cfg, self.cfg.keys_from_file, desc='keylist data')
+		write_data_to_file(
+			self.cfg,
+			str(self.wallet_dir / self.keylist_fn),
+			Crypto(self.cfg).mmgen_encrypt(
+				data = '\n'.join(lines).encode(),
+				passwd = self.keyfile.read_text()),
+			desc = 'encrypted keylist data',
+			binary = True)
+		if keypress_confirm(self.cfg, 'Securely delete original keylist file?'):
+			shred_file(self.cfg, self.cfg.keys_from_file)
+
+	def init_non_mmgen_keys(self):
+		if not hasattr(self, 'keylist'):
+			path = self.wallet_dir / self.keylist_fn
+			if path.exists():
+				from .crypto import Crypto
+				from .fileutil import get_data_from_file
+				self.keylist = Crypto(self.cfg).mmgen_decrypt(
+					get_data_from_file(
+						self.cfg,
+						path,
+						desc = 'encrypted keylist data',
+						binary = True),
+					passwd = self.keyfile.read_text()).decode().split()
+			else:
+				self.keylist = None

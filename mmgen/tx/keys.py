@@ -89,6 +89,7 @@ class TxKeys:
 		self.keylist     = keylist if autosign else keylist or get_keylist(cfg)
 		self.keyaddrlist = keyaddrlist if autosign else keyaddrlist or get_keyaddrlist(cfg, tx.proto)
 		self.passwdfile  = passwdfile
+		self.autosign    = autosign
 		self.saved_seeds = {}
 
 	def get_keys_for_non_mmgen_inputs(self):
@@ -96,7 +97,7 @@ class TxKeys:
 		sep = '\n    '
 		if addrs := self.tx.get_non_mmaddrs('inputs'):
 			self.tx.check_non_mmgen_inputs(
-				caller = 'txsign',
+				caller = 'autosign' if self.autosign and self.keylist else 'txsign',
 				non_mmaddrs = addrs)
 			kal = KeyAddrList(
 				cfg         = self.cfg,

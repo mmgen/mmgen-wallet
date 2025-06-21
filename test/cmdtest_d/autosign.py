@@ -197,6 +197,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			seed_len       = None,
 			usr_entry_modes = False,
 			wallet_passwd  = None,
+			keylist_passwd = None,
 			add_opts       = [],
 			expect_args    = []):
 
@@ -243,6 +244,10 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		if expect_args:
 			t.expect(*expect_args)
+
+		if keylist_passwd:
+			t.passphrase('keylist data', keylist_passwd)
+			t.expect('(y/N): ', 'y')
 
 		t.read()
 		self.remove_device()

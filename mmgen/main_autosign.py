@@ -36,6 +36,12 @@ opts_data = {
 --, --longhelp        Print help message for long (global) options
 -c, --coins=c         Coins to sign for (comma-separated list)
 -I, --no-insert-check Don’t check for device insertion
+-k, --keys-from-file=F Use wif keys listed in file ‘F’ for signing non-MMGen
+                      inputs. The file may be MMGen encrypted if desired. The
+                      ‘setup’ operation creates a temporary encrypted copy of
+                      the file in volatile memory for use during the signing
+                      session, thus permitting the deletion of the original
+                      file for increased security.
 -l, --seed-len=N      Specify wallet seed length of ‘N’ bits (for setup only)
 -L, --led             Use status LED to signal standby, busy and error
 -m, --mountpoint=M    Specify an alternate mountpoint 'M'

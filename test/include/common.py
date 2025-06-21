@@ -23,6 +23,7 @@ test.include.common: Shared routines and data for the MMGen test suites
 import sys, os, re, atexit
 from subprocess import run, PIPE, DEVNULL
 from pathlib import Path
+from collections import namedtuple
 
 from mmgen.cfg import gv
 from mmgen.color import yellow, green, orange
@@ -361,6 +362,17 @@ def make_burn_addr(proto, mmtype='compressed', hexdata=None):
 		cmdname = 'pubhash2addr',
 		proto   = proto,
 		mmtype  = mmtype).pubhash2addr(hexdata or '00'*20)
+
+def create_addrpairs(proto, mmtype, num):
+	ap = namedtuple('addrpair', ['wif', 'addr'])
+	from mmgen.tool.coin import tool_cmd
+	n = 123456789123456789
+	return [ap(*tool_cmd(
+		cfg     = cfg,
+		cmdname = 'privhex2pair',
+		proto   = proto,
+		mmtype  = mmtype).privhex2pair(f'{n+m:064x}'))
+			for m in range(num)]
 
 def VirtBlockDevice(img_path, size):
 	if sys.platform == 'linux':
