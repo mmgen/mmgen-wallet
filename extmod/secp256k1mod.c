@@ -180,7 +180,7 @@ static PyObject * pubkey_check(PyObject *self, PyObject *args) {
 /* https://docs.python.org/3/howto/cporting.html */
 
 struct module_state {
-    PyObject *error;
+	PyObject *error;
 };
 
 #define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
@@ -204,44 +204,44 @@ static PyMethodDef secp256k1_methods[] = {
 		METH_VARARGS,
 		"Check a serialized pubkey, ensuring the encoded point is not point-at-infinity"
 	},
-    {NULL, NULL}
+	{NULL, NULL}
 };
 
 static int secp256k1_traverse(PyObject *m, visitproc visit, void *arg) {
-    Py_VISIT(GETSTATE(m)->error);
-    return 0;
+	Py_VISIT(GETSTATE(m)->error);
+	return 0;
 }
 
 static int secp256k1_clear(PyObject *m) {
-    Py_CLEAR(GETSTATE(m)->error);
-    return 0;
+	Py_CLEAR(GETSTATE(m)->error);
+	return 0;
 }
 
 static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT,
-        "secp256k1",
-        NULL,
-        sizeof(struct module_state),
-        secp256k1_methods,
-        NULL,
-        secp256k1_traverse,
-        secp256k1_clear,
-        NULL
+		PyModuleDef_HEAD_INIT,
+		"secp256k1",
+		NULL,
+		sizeof(struct module_state),
+		secp256k1_methods,
+		NULL,
+		secp256k1_traverse,
+		secp256k1_clear,
+		NULL
 };
 
 #define INITERROR return NULL
 
 PyMODINIT_FUNC PyInit_secp256k1(void) {
-    PyObject *module = PyModule_Create(&moduledef);
+	PyObject *module = PyModule_Create(&moduledef);
 
-    if (module == NULL)
-        INITERROR;
-    struct module_state *st = GETSTATE(module);
+	if (module == NULL)
+		INITERROR;
+	struct module_state *st = GETSTATE(module);
 
-    st->error = PyErr_NewException("secp256k1.Error", NULL, NULL);
-    if (st->error == NULL) {
-        Py_DECREF(module);
-        INITERROR;
-    }
-    return module;
+	st->error = PyErr_NewException("secp256k1.Error", NULL, NULL);
+	if (st->error == NULL) {
+		Py_DECREF(module);
+		INITERROR;
+	}
+	return module;
 }
