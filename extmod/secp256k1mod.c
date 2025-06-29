@@ -26,7 +26,7 @@
 #include <Python.h>
 #include <secp256k1.h>
 
-int privkey_check(
+static int privkey_check(
 		const secp256k1_context * ctx,
 		const unsigned char *     privkey_bytes,
 		const Py_ssize_t          privkey_bytes_len,
@@ -47,7 +47,7 @@ int privkey_check(
 	return 1;
 }
 
-int pubkey_parse_with_check(
+static int pubkey_parse_with_check(
 		const secp256k1_context * ctx,
 		secp256k1_pubkey *        pubkey_ptr,
 		const unsigned char *     pubkey_bytes,
@@ -89,7 +89,7 @@ static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
 	const unsigned char * privkey_bytes;
 	Py_ssize_t privkey_bytes_len;
 	int compressed;
-	if (!PyArg_ParseTuple(args, "y#I", &privkey_bytes, &privkey_bytes_len, &compressed)) {
+	if (!PyArg_ParseTuple(args, "y#i", &privkey_bytes, &privkey_bytes_len, &compressed)) {
 		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
 		return NULL;
 	}
