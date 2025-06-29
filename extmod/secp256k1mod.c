@@ -25,6 +25,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <secp256k1.h>
+#include <secp256k1_recovery.h>
 #include "random.h"
 
 static secp256k1_context * create_context(
@@ -196,6 +197,160 @@ static PyObject * pubkey_check(PyObject *self, PyObject *args) {
 	return Py_BuildValue("I", 1);
 }
 
+/*
+ * returns 64-byte serialized signature (r + s) plus integer recovery ID in range 0-3
+ */
+static PyObject * sign_msghash(PyObject *self, PyObject *args) {
+
+	const unsigned char * msghash_bytes;
+	const unsigned char * privkey_bytes;
+	Py_ssize_t msghash_bytes_len;
+	Py_ssize_t privkey_bytes_len;
+
+	if (!PyArg_ParseTuple(
+			args,
+			"y#y#",
+			&msghash_bytes,
+			&msghash_bytes_len,
+			&privkey_bytes,
+			&privkey_bytes_len)) {
+		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
+		return NULL;
+	}
+
+	if (msghash_bytes_len != 32) {
+		PyErr_SetString(PyExc_RuntimeError, "Invalid message hash length (not 32 bytes)");
+		return NULL;
+	}
+
+	secp256k1_context *ctx = create_context(1);
+
+	if (!privkey_check(ctx, privkey_bytes, privkey_bytes_len, "Private key")) {
+		return NULL;
+	}
+
+	secp256k1_ecdsa_recoverable_signature rsig;
+	unsigned char rsig_serialized[65];
+	int recid;
+
+	if (!secp256k1_ecdsa_sign_recoverable(ctx, &rsig, msghash_bytes, privkey_bytes, NULL, NULL)) {
+		PyErr_SetString(PyExc_ValueError, "Unable to sign message hash");
+		return NULL;
+	}
+	if (!secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, rsig_serialized, &recid, &rsig)) {
+		PyErr_SetString(PyExc_ValueError, "Unable to serialize signature");
+		return NULL;
+	}
+	/* truncate serialized sig to 64 bytes */
+	return Py_BuildValue("y#I", rsig_serialized, 64, recid);
+}
+
+static PyObject * verify_sig(PyObject *self, PyObject *args) {
+
+	const unsigned char * sig_bytes;
+	const unsigned char * msghash_bytes;
+	const unsigned char * pubkey_bytes;
+	Py_ssize_t sig_bytes_len;
+	Py_ssize_t msghash_bytes_len;
+	Py_ssize_t pubkey_bytes_len;
+
+	if (!PyArg_ParseTuple(
+			args,
+			"y#y#y#",
+			&sig_bytes,
+			&sig_bytes_len,
+			&msghash_bytes,
+			&msghash_bytes_len,
+			&pubkey_bytes,
+			&pubkey_bytes_len)) {
+		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
+		return NULL;
+	}
+
+	if (sig_bytes_len != 64) {
+		PyErr_SetString(PyExc_RuntimeError, "Invalid signature length (not 64 bytes)");
+		return NULL;
+	}
+	if (msghash_bytes_len != 32) {
+		PyErr_SetString(PyExc_RuntimeError, "Invalid message hash length (not 32 bytes)");
+		return NULL;
+	}
+
+	secp256k1_ecdsa_signature sig;
+	secp256k1_pubkey pubkey;
+	secp256k1_context *ctx = create_context(1);
+
+	if (!secp256k1_ecdsa_signature_parse_compact(ctx, &sig, sig_bytes)) {
+		PyErr_SetString(PyExc_RuntimeError, "Failed to parse signature");
+		return NULL;
+	}
+
+	if (!secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkey_bytes, pubkey_bytes_len)) {
+		PyErr_SetString(PyExc_RuntimeError, "Failed to parse public key");
+		return NULL;
+	}
+
+	/* returns 1 on valid sig, 0 on invalid sig */
+	return Py_BuildValue("I", secp256k1_ecdsa_verify(ctx, &sig, msghash_bytes, &pubkey));
+}
+
+static PyObject * pubkey_recover(PyObject *self, PyObject *args) {
+
+	const unsigned char * msghash_bytes;
+	const unsigned char * sig_bytes;
+	int recid;
+	int compressed;
+	Py_ssize_t msghash_bytes_len;
+	Py_ssize_t sig_bytes_len;
+
+	if (!PyArg_ParseTuple(
+			args,
+			"y#y#ii",
+			&msghash_bytes,
+			&msghash_bytes_len,
+			&sig_bytes,
+			&sig_bytes_len,
+			&recid,
+			&compressed)) {
+		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
+		return NULL;
+	}
+
+	if (recid < 0 || recid > 3) {
+		PyErr_SetString(PyExc_RuntimeError, "Invalid recovery ID (not in range 0-3)");
+		return NULL;
+	}
+	if (sig_bytes_len != 64) {
+		PyErr_SetString(PyExc_RuntimeError, "Invalid signature length (not 64 bytes)");
+		return NULL;
+	}
+	if (msghash_bytes_len != 32) {
+		PyErr_SetString(PyExc_RuntimeError, "Invalid message hash length (not 32 bytes)");
+		return NULL;
+	}
+
+	secp256k1_context *ctx = create_context(1);
+	secp256k1_ecdsa_recoverable_signature rsig;
+	secp256k1_pubkey pubkey;
+	size_t pubkey_bytes_len = compressed == 1 ? 33 : 65;
+	unsigned char pubkey_bytes[pubkey_bytes_len];
+
+	if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sig_bytes, recid)) {
+		PyErr_SetString(PyExc_RuntimeError, "Failed to parse signature");
+		return NULL;
+	}
+	if (!secp256k1_ecdsa_recover(ctx, &pubkey, &rsig, msghash_bytes)) {
+		PyErr_SetString(PyExc_RuntimeError, "Failed to recover public key");
+		return NULL;
+	}
+	if (secp256k1_ec_pubkey_serialize(ctx, pubkey_bytes, &pubkey_bytes_len, &pubkey,
+			compressed == 1 ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED) != 1) {
+		PyErr_SetString(PyExc_RuntimeError, "Failed to serialize public key");
+		return NULL;
+	}
+	return Py_BuildValue("y#", pubkey_bytes, pubkey_bytes_len);
+}
+
 /* https://docs.python.org/3/howto/cporting.html */
 
 struct module_state {
@@ -222,6 +377,24 @@ static PyMethodDef secp256k1_methods[] = {
 		pubkey_check,
 		METH_VARARGS,
 		"Check a serialized pubkey, ensuring the encoded point is not point-at-infinity"
+	},
+	{
+		"sign_msghash",
+		sign_msghash,
+		METH_VARARGS,
+		"Sign a 32-byte message hash with a private key"
+	},
+	{
+		"verify_sig",
+		verify_sig,
+		METH_VARARGS,
+		"Verify a signature"
+	},
+	{
+		"pubkey_recover",
+		pubkey_recover,
+		METH_VARARGS,
+		"Recover a serialized pubkey from a recoverable signature plus signed message"
 	},
 	{NULL, NULL}
 };

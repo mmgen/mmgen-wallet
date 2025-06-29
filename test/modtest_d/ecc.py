@@ -4,7 +4,16 @@
 test.modtest_d.ecc: elliptic curve unit test for the MMGen suite
 """
 
-from mmgen.proto.secp256k1.secp256k1 import pubkey_gen, pubkey_tweak_add, pubkey_check
+import ecdsa
+from py_ecc.secp256k1.secp256k1 import ecdsa_raw_sign
+
+from mmgen.proto.secp256k1.secp256k1 import (
+	pubkey_gen,
+	pubkey_tweak_add,
+	pubkey_check,
+	sign_msghash,
+	pubkey_recover,
+	verify_sig)
 
 from ..include.common import vmsg
 from ..include.ecc import pubkey_tweak_add_pyecdsa
@@ -12,7 +21,94 @@ from mmgen.protocol import CoinProtocol
 
 secp256k1_group_order = CoinProtocol.Secp256k1.secp256k1_group_order
 
+def sign_msghash_pyecc(msghash, privkey):
+	v, r, s = ecdsa_raw_sign(msghash, privkey)
+	return (
+		r.to_bytes(length=32) + s.to_bytes(length=32),
+		v - 27)
+
 class unit_tests:
+
+	def sig_ops(self, name, ut):
+		vmsg('  Creating and verifying signatures and recovering public keys:')
+		for mh, pk in (
+				(1,                  1),
+				(123456789 * 2**222, 12345),
+				(123456789 * 2**222, 2**256 - 2**129 - 987654321),
+				(9999999,            2**233),
+				(12345,              1234 * 2**240),
+			):
+			msghash = mh.to_bytes(32, 'big')
+			privkey = pk.to_bytes(32, 'big')
+			vmsg(f'\n   msg:     {msghash.hex()}')
+			vmsg(f'   privkey: {privkey.hex()}')
+			pubkey = pubkey_gen(privkey, 1)
+			sig, recid = sign_msghash(msghash, privkey)
+			sig_chk, _ = sign_msghash_pyecc(msghash, privkey)
+			if sig != sig_chk:
+				import time
+				from mmgen.util import ymsg
+				ymsg('Warning: signature (libsecp256k1) does not match reference value (py_ecc)!')
+				time.sleep(1)
+			vmsg(f'   recid:   {recid}')
+			assert recid in (0, 1)
+			ec_pubkey = ecdsa.VerifyingKey.from_string(pubkey, curve=ecdsa.curves.SECP256k1)
+			assert ec_pubkey.verify_digest(sig, msghash), 'signature verification failed (py-ecdsa)'
+			assert verify_sig(sig, msghash, pubkey) == 1, 'signature verification failed (secp256k1)'
+			pubkey_rec = pubkey_recover(msghash, sig, recid, True)
+			assert pubkey == pubkey_rec, f'{pubkey.hex()} != {pubkey_rec.hex()}'
+		return True
+
+	def sig_errors(self, name, ut):
+		vmsg('  Testing error handling for signature ops')
+
+		msghash = bytes.fromhex('deadbeef' * 8)
+		privkey = bytes.fromhex('beadcafe' * 8)
+		pubkey = pubkey_gen(privkey, 1)
+		sig, recid = sign_msghash(msghash, privkey)
+
+		def sign1(): sign_msghash(1, bytes(32))
+		def sign2(): sign_msghash(b'\xff' + bytes(32), bytes(32))
+		def sign3(): sign_msghash(bytes(32), bytes(32))
+
+		def verify1(): verify_sig(1, 2, 3)
+		def verify2(): verify_sig(bytes(64), bytes(32), bytes(33))
+		def verify3(): assert verify_sig(bytes([99]) + sig[1:], msghash, pubkey) == 1, 'bad signature'
+		def verify4(): assert verify_sig(sig, msghash, pubkey) == 0, 'good signature'
+		def verify5(): verify_sig(sig, msghash + bytes([201]), pubkey)
+		def verify6(): verify_sig(sig + bytes([66]), msghash, pubkey)
+
+		def recov1(): pubkey_recover(1, 2, 3)
+		def recov2(): pubkey_recover(msghash, sig, 8, True)
+		def recov3(): pubkey_recover(msghash, sig, -3, 1)
+		def recov4(): pubkey_recover(msghash, bytes([77]) + sig, recid, 1)
+		def recov5(): pubkey_recover(msghash + bytes([33]), sig, recid, 1)
+		def recov6():
+			assert pubkey_recover(msghash[:-1] + bytes([44]), sig, recid, 1) == pubkey, 'bad pubkey'
+		def recov7():
+			assert pubkey_recover(msghash, sig, recid, True) != pubkey, 'good pubkey'
+
+		bad_data = (
+			('sign: bad args',           'ValueError',     'Unable to parse',              sign1),
+			('sign: bad msghash len',    'RuntimeError',   'hash length',                  sign2),
+			('sign: privkey=0',          'ValueError',     'Private key not in allowable', sign3),
+			('verify: bad args',         'ValueError',     'Unable to parse',              verify1),
+			('verify: bad pubkey',       'RuntimeError',   'Failed to parse',              verify2),
+			('verify: bad sig',          'AssertionError', 'bad signature',                verify3),
+			('verify: good sig',         'AssertionError', 'good signature',               verify4),
+			('verify: bad msghash len',  'RuntimeError',   'message hash length',          verify5),
+			('verify: bad sig len',      'RuntimeError',   'Invalid signature length',     verify6),
+			('recover: bad args',        'ValueError',     'Unable to parse',              recov1),
+			('recover: bad recid',       'RuntimeError',   'Invalid recovery ID',          recov2),
+			('recover: bad recid',       'RuntimeError',   'Invalid recovery ID',          recov3),
+			('recover: bad sig len',     'RuntimeError',   'Invalid signature length',     recov4),
+			('recover: bad msghash len', 'RuntimeError',   'message hash length',          recov5),
+			('recover: bad pubkey',      'AssertionError', 'bad pubkey',                   recov6),
+			('recover: bad pubkey',      'AssertionError', 'good pubkey',                  recov7),
+		)
+
+		ut.process_bad_data(bad_data, pfx='')
+		return True
 
 	def pubkey_ops(self, name, ut):
 		vmsg('  Generating pubkey, adding scalar 123456789 to pubkey:')
@@ -43,6 +139,7 @@ class unit_tests:
 		return True
 
 	def pubkey_errors(self, name, ut):
+		vmsg('  Testing error handling for public key ops')
 
 		def gen1(): pubkey_gen(bytes(32), 1)
 		def gen2(): pubkey_gen(secp256k1_group_order.to_bytes(length=32, byteorder='big'), 1)

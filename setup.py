@@ -58,6 +58,7 @@ setup(
 	ext_modules = [Extension(
 		name      = 'mmgen.proto.secp256k1.secp256k1',
 		sources   = ['extmod/secp256k1mod.c'],
+		depends   = ['extmod/random.h'],
 		libraries = ['gmp', 'secp256k1'] if sys.platform == 'win32' else ['secp256k1'],
 		include_dirs = ['/usr/local/include'] if sys.platform == 'darwin' else [],
 		library_dirs = ['/usr/local/lib'] if sys.platform == 'darwin' else [],
