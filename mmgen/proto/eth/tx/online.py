@@ -80,7 +80,7 @@ class TokenOnlineSigned(TokenSigned, OnlineSigned):
 		o['amt'] = t.transferdata2amt(o['data'])
 		o['token_to'] = t.transferdata2sendaddr(o['data'])
 		if self.is_swap:
-			from ..pyethereum.transactions import Transaction
+			from .transaction import Transaction
 			from .. import rlp
 			etx = rlp.decode(bytes.fromhex(self.serialized2), Transaction)
 			d = etx.to_dict()

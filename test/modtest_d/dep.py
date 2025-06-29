@@ -18,7 +18,7 @@ from ..include.common import cfg, vmsg, check_solc_ver
 
 class unit_tests:
 
-	altcoin_deps = ('py_ecc', 'solc', 'keccak', 'pysocks', 'semantic_version')
+	altcoin_deps = ('solc', 'keccak', 'pysocks', 'semantic_version')
 	win_skip = ('led', 'semantic_version')
 
 	def secp256k1(self, name, ut):
@@ -54,11 +54,6 @@ class unit_tests:
 			return False
 		else:
 			return True
-
-	def py_ecc(self, name, ut): # ETH
-		from py_ecc.secp256k1 import privtopub
-		privtopub(b'f' * 32)
-		return True
 
 	def pysocks(self, name, ut):
 		import requests, urllib3

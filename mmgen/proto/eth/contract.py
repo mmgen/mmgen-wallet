@@ -102,7 +102,7 @@ class Contract:
 
 	async def txsign(self, tx_in, key, from_addr, *, chain_id=None):
 
-		from .pyethereum.transactions import Transaction
+		from .tx.transaction import Transaction
 
 		if chain_id is None:
 			res = await self.rpc.call('eth_chainId')

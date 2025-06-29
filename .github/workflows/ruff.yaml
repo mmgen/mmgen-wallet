@@ -41,7 +41,7 @@ jobs:
         python3 -m pip install pip setuptools build wheel
         python3 -m pip install gmpy2 cryptography pynacl ecdsa aiohttp requests pexpect scrypt semantic-version
         python3 -m pip install pycryptodomex pysocks pycoin ipaddress varint ruff
-        python3 -m pip install py_ecc mypy_extensions monero eth-keys
+        python3 -m pip install lxml py-ecc monero eth-keys
         python3 setup.py build_ext --inplace
 
     - name: Check the code with Ruff static code analyzer

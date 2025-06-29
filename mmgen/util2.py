@@ -55,7 +55,7 @@ def load_cryptodome(called=[]):
 			sys.modules['Cryptodome'] = Crypto # Cryptodome == pycryptodomex
 		called.append(True)
 
-# called with no arguments by pyethereum.utils:
+# called with no arguments by proto.eth.tx.transaction:
 def get_keccak(cfg=None, cached_ret=[]):
 
 	if not cached_ret:

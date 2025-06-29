@@ -52,7 +52,7 @@ class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 			'nonce':    o['nonce'],
 			'data':     self.swap_memo.encode() if self.is_swap else bytes.fromhex(o['data'])}
 
-		from ..pyethereum.transactions import Transaction
+		from .transaction import Transaction
 		etx = Transaction(**o_conv).sign(wif, o['chainId'])
 		assert etx.sender.hex() == o['from'], (
 			'Sender address recovered from signature does not match true sender')

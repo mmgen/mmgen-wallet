@@ -22,7 +22,7 @@ class Signed(Completed, TxBase.Signed):
 	desc = 'signed transaction'
 
 	def parse_txfile_serialized_data(self):
-		from ..pyethereum.transactions import Transaction
+		from .transaction import Transaction
 		from .. import rlp
 		etx = rlp.decode(bytes.fromhex(self.serialized), Transaction)
 		d = etx.to_dict() # ==> hex values have '0x' prefix, 0 is '0x'

@@ -309,7 +309,7 @@ init_tests() {
 		t $tooltest2_py --coin=rune
 		- $tooltest2_py --fork # run once with --fork so commands are actually executed
 	"
-	[ "$SKIP_ALT_DEP" ] && t_tool2_skip='a e t' # skip ETH,ETC: txview requires py_ecc
+	[ "$SKIP_ALT_DEP" ] && t_tool2_skip='a e t'
 
 	d_tool="'mmgen-tool' utility (all supported coins)"
 	t_tool="

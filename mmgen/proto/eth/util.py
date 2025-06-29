@@ -14,6 +14,8 @@ proto.eth.util: various utilities for Ethereum base protocol
 
 from ...util2 import get_keccak
 
+v_base = 27
+
 def decrypt_geth_keystore(cfg, wallet_fn, passwd, *, check_addr=True):
 	"""
 	Decrypt the encrypted private key in a Geth keystore wallet, returning the decrypted key
@@ -54,9 +56,9 @@ def ec_sign_message_with_privkey(cfg, message, key, msghash_type):
 
 	Conforms to the standard defined by the Geth `eth_sign` JSON-RPC call
 	"""
-	from py_ecc.secp256k1 import ecdsa_raw_sign
-	v, r, s = ecdsa_raw_sign(hash_message(cfg, message, msghash_type), key)
-	return '{:064x}{:064x}{:02x}'.format(r, s, v)
+	from ..secp256k1.secp256k1 import sign_msghash
+	sig, recid = sign_msghash(hash_message(cfg, message, msghash_type), key)
+	return sig.hex() + '{:02x}'.format(v_base + recid)
 
 def ec_recover_pubkey(cfg, message, sig, msghash_type):
 	"""
@@ -65,12 +67,13 @@ def ec_recover_pubkey(cfg, message, sig, msghash_type):
 
 	Conforms to the standard defined by the Geth `eth_sign` JSON-RPC call
 	"""
-	from py_ecc.secp256k1 import ecdsa_raw_recover
-	r, s, v = (sig[:64], sig[64:128], sig[128:])
-	return '{:064x}{:064x}'.format(
-		*ecdsa_raw_recover(
-			hash_message(cfg, message, msghash_type), tuple(int(hexstr, 16) for hexstr in (v, r, s)))
-	)
+	from ..secp256k1.secp256k1 import pubkey_recover
+	sig_bytes = bytes.fromhex(sig)
+	return pubkey_recover(
+		hash_message(cfg, message, msghash_type),
+		sig_bytes[:64],
+		sig_bytes[64] - v_base,
+		False).hex()
 
 def compute_contract_addr(cfg, deployer_addr, nonce):
 	from . import rlp

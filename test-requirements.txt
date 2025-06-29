@@ -1,3 +1,4 @@
 pycoin
 monero
 eth_keys
+py_ecc
