@@ -21,6 +21,8 @@ from typing import Annotated, List, Optional
 from pure_protobuf.annotations import Field
 from pure_protobuf.message import BaseMessage
 
+from ...secp256k1.util import sign_message
+
 from ...cosmos.tx.protobuf import (
 	ModeInfo,
 	SignDoc,
@@ -32,8 +34,7 @@ from ...cosmos.tx.protobuf import (
 	Fee,
 	AuthInfo,
 	Tx,
-	TxMsg,
-	make_sig)
+	TxMsg)
 
 send_tx_parms = namedtuple(
 	'rune_send_tx_parms', [
@@ -265,7 +266,11 @@ def build_tx(cfg, proto, parms, *, null_fee=False, skip_body_memo=False):
 
 	auth_info = AuthInfo(signerInfos=[signer_info], fee=Fee(gasLimit=p.gas_limit, amount=fee_amt))
 
-	signature = make_sig(
+	# cosmjs/packages/crypto/src/secp256k1signature.ts
+	# cosmjs/packages/amino/src/signature.ts
+	#   Signature must be 64 bytes long. Cosmos SDK uses a 2x32 byte fixed length
+	#   encoding for the secp256k1 signature integers r and s.
+	signature = sign_message(
 		sign_doc = SignDoc(
 			bodyBytes = bytes(body),
 			authInfoBytes = bytes(auth_info),

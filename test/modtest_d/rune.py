@@ -90,11 +90,12 @@ parse_vectors = [
 			'4ca00a66119b07c5168c6c78e22299becc82d5f311ee79ae9183776b0dff3269'))
 ]
 
-_bv = namedtuple('build_vector', ['txid', 'parms', 'null_fee'], defaults=[None])
+_bv = namedtuple('build_vector', ['txid', 'txid2', 'parms', 'null_fee'], defaults=[None])
 
 build_vectors = [
 	_bv(
 		'3939612d0ddc55fd4d1c6ef118d1b2085a6655cb57d55ac9efd658467e039e0c',
+		'e783ced14909a9e2a21c99b6b3b66fb38ba3bdf985876bb8d6cea02813d603a9',
 		send_tx_parms(
 			'thor1tx3nm6xfynq3re5ehtm6530z0pah9qjeu0r9nd',
 			'thor1j5u6vlr8kzt76fe7896hsmurkhgn68j0z4qa6w',
@@ -105,6 +106,7 @@ build_vectors = [
 			wifkey = 'L5nWojqqMLq7wh3CfhxUNYQ38acABD6sUao9dfb8i5B5wSefCJXe')),
 	_bv(
 		'0d41e0ee40cd18a991cd8f0ef0e60e4c5bea898c53d54e00b6dddc0c9ce7edb7',
+		'444e026fe5d0988da602dc22f0ff6172c080f1d2e2d66012d86f4afd314b78d6',
 		deposit_tx_parms(
 			'THOR', 'RUNE', 'RUNE',
 			'thor18ug6p4zs5dsy0m3u69gf5md5ssdg8hqkk8aya4',
@@ -120,6 +122,7 @@ build_vectors = [
 swap_build_vectors = [
 	_bv(
 		'0d41e0ee40cd18a991cd8f0ef0e60e4c5bea898c53d54e00b6dddc0c9ce7edb7',
+		'444e026fe5d0988da602dc22f0ff6172c080f1d2e2d66012d86f4afd314b78d6',
 		swap_tx_parms(
 			'thor18ug6p4zs5dsy0m3u69gf5md5ssdg8hqkk8aya4',
 			'123.456789',
@@ -161,10 +164,14 @@ def test_tx(src, cfg, vec):
 	tx.verify_sig(proto, parms.account_number)
 
 	pubkey = tx.authInfo.signerInfos[0].publicKey.key.data
+	vec_txid2 = getattr(vec, 'txid2', None)
 	assert hash160(pubkey) == getattr(
 		tx.body.messages[0].body,
 		'fromAddress' if msg_type == 'MsgSend' else 'signer')
-	assert tx.txid == vec.txid, tx.txid
+	if tx.txid not in (vec.txid, vec_txid2):
+		raise ValueError(f'{tx.txid} not in ({vec.txid}, {vec_txid2})')
+	if tx.txid == vec_txid2:
+		ymsg('\nWarning: non-standard TxID produced')
 
 	if src == 'parse' and parms.from_addr:
 		built_tx = build_tx(cfg, proto, parms, null_fee=vec.null_fee)

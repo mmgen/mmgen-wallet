@@ -134,7 +134,7 @@ class Tx(BaseMessage):
 		return sha256(bytes(self.raw)).hexdigest()
 
 	# raises exception on failure:
-	def verify_sig(self, proto, account_number, backend='ecdsa'):
+	def verify_sig(self, proto, account_number, backend='secp256k1'):
 		sign_doc = SignDoc(
 			bodyBytes = bytes(self.body),
 			authInfoBytes = bytes(self.authInfo),
@@ -144,29 +144,15 @@ class Tx(BaseMessage):
 		pubkey = self.authInfo.signerInfos[0].publicKey.key.data
 		msghash = sha256(bytes(sign_doc)).digest()
 
-		if backend == 'ecdsa':
+		if backend == 'secp256k1':
+			from ...secp256k1.secp256k1 import verify_sig
+			if not verify_sig(sig, msghash, pubkey):
+				raise ValueError('signature verification failed')
+		elif backend == 'ecdsa':
 			# ecdsa.keys.VerifyingKey.verify_digest():
 			#   raises BadSignatureError if the signature is invalid or malformed
 			import ecdsa
 			ec_pubkey = ecdsa.VerifyingKey.from_string(pubkey, curve=ecdsa.curves.SECP256k1)
 			ec_pubkey.verify_digest(sig, msghash)
-		elif backend == 'py_ecc':
-			from py_ecc.secp256k1.secp256k1 import ecdsa_raw_recover
-			y_is_odd = pubkey[0] - 2
-			x, y = ecdsa_raw_recover(
-				msghash,
-				(28 - y_is_odd, int.from_bytes(sig[:32]), int.from_bytes(sig[32:])))
-			assert y & 1 == y_is_odd, f'verify_sig(): parity mismatch for TX {self.txid}'
-			assert int.from_bytes(pubkey[1:]) == x, f'verify_sig(): invalid signature for TX {self.txid}'
 		else:
 			raise ValueError(f'verify_sig(): {backend}: unrecognized backend')
-
-# cosmjs/packages/crypto/src/secp256k1signature.ts
-# cosmjs/packages/amino/src/signature.ts
-#   Signature must be 64 bytes long. Cosmos SDK uses a 2x32 byte fixed length
-#   encoding for the secp256k1 signature integers r and s.
-def make_sig(*, sign_doc, sec_bytes):
-	from py_ecc.secp256k1.secp256k1 import ecdsa_raw_sign
-	msghash = sha256(bytes(sign_doc)).digest()
-	_, r, s = ecdsa_raw_sign(msghash, sec_bytes)
-	return r.to_bytes(length=32) + s.to_bytes(length=32)
