@@ -25,6 +25,28 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <secp256k1.h>
+#include "random.h"
+
+static secp256k1_context * create_context(
+		const unsigned char randomize
+	) {
+	secp256k1_context *ctx = secp256k1_context_create(
+		SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY
+		/* SECP256K1_CONTEXT_NONE */ /* see NOTE above */
+	);
+	if (randomize) {
+		unsigned char buf[32];
+		if (!fill_random(buf, sizeof(buf))) {
+			printf("Failed to generate entropy\n");
+			return NULL;
+		}
+		if (!secp256k1_context_randomize(ctx, buf)) {
+			printf("Failed to randomize context\n");
+			return NULL;
+		}
+	}
+	return ctx;
+}
 
 static int privkey_check(
 		const secp256k1_context * ctx,
@@ -96,8 +118,7 @@ static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
 	size_t pubkey_bytes_len = compressed == 1 ? 33 : 65;
 	unsigned char pubkey_bytes[pubkey_bytes_len];
 	secp256k1_pubkey pubkey;
-	/* see NOTE */
-	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+	secp256k1_context *ctx = create_context(1);
 	if (ctx == NULL) {
 		PyErr_SetString(PyExc_RuntimeError, "Context initialization failed");
 		return NULL;
@@ -132,8 +153,7 @@ static PyObject * pubkey_tweak_add(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
 		return NULL;
 	}
-	/* see NOTE */
-	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+	secp256k1_context *ctx = create_context(1);
 	secp256k1_pubkey pubkey;
 	if (!pubkey_parse_with_check(ctx, &pubkey, pubkey_bytes, pubkey_bytes_len)) {
 		return NULL;
@@ -168,8 +188,7 @@ static PyObject * pubkey_check(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
 		return NULL;
 	}
-	/* see NOTE */
-	secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+	secp256k1_context *ctx = create_context(1);
 	secp256k1_pubkey pubkey;
 	if (!pubkey_parse_with_check(ctx, &pubkey, pubkey_bytes, pubkey_bytes_len)) {
 		return NULL;
