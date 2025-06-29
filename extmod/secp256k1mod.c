@@ -59,12 +59,16 @@ int pubkey_parse_with_check(
 	}
 	if (pubkey_bytes_len == 33) {
 		if (pubkey_bytes[0] != 3 && pubkey_bytes[0] != 2) {
-			PyErr_SetString(PyExc_ValueError, "Invalid first byte for serialized compressed public key");
+			PyErr_SetString(
+				PyExc_ValueError,
+				"Invalid first byte for serialized compressed public key");
 			return 0;
 		}
 	} else if (pubkey_bytes_len == 65) {
 		if (pubkey_bytes[0] != 4) {
-			PyErr_SetString(PyExc_ValueError, "Invalid first byte for serialized uncompressed public key");
+			PyErr_SetString(
+				PyExc_ValueError,
+				"Invalid first byte for serialized uncompressed public key");
 			return 0;
 		}
 	} else {
@@ -73,7 +77,9 @@ int pubkey_parse_with_check(
 	}
 	/* checks for point-at-infinity (via secp256k1_pubkey_save) */
 	if (secp256k1_ec_pubkey_parse(ctx, pubkey_ptr, pubkey_bytes, pubkey_bytes_len) != 1) {
-		PyErr_SetString(PyExc_ValueError, "Public key could not be parsed or encodes point-at-infinity");
+		PyErr_SetString(
+			PyExc_ValueError,
+			"Public key could not be parsed or encodes point-at-infinity");
 		return 0;
 	}
 	return 1;
@@ -116,7 +122,13 @@ static PyObject * pubkey_tweak_add(PyObject *self, PyObject *args) {
 	const unsigned char * tweak_bytes;
 	Py_ssize_t pubkey_bytes_len;
 	Py_ssize_t tweak_bytes_len;
-	if (!PyArg_ParseTuple(args, "y#y#", &pubkey_bytes, &pubkey_bytes_len, &tweak_bytes, &tweak_bytes_len)) {
+	if (!PyArg_ParseTuple(
+			args,
+			"y#y#",
+			&pubkey_bytes,
+			&pubkey_bytes_len,
+			&tweak_bytes,
+			&tweak_bytes_len)) {
 		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
 		return NULL;
 	}
@@ -131,7 +143,9 @@ static PyObject * pubkey_tweak_add(PyObject *self, PyObject *args) {
 	}
 	/* checks for point-at-infinity (via secp256k1_pubkey_save) */
 	if (secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, tweak_bytes) != 1) {
-		PyErr_SetString(PyExc_RuntimeError, "Adding public key points failed or result was point-at-infinity");
+		PyErr_SetString(
+			PyExc_RuntimeError,
+			"Adding public key points failed or result was point-at-infinity");
 		return NULL;
 	}
 	unsigned char new_pubkey_bytes[pubkey_bytes_len];
