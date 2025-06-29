@@ -164,5 +164,5 @@ class tool_cmd(tool_cmd_base):
 		"decrypt the private key in a Geth keystore wallet, returning the decrypted key in hex format"
 		from ..ui import line_input
 		passwd = line_input(self.cfg, 'Enter passphrase: ', echo=self.cfg.echo_passphrase).strip().encode()
-		from ..proto.eth.misc import decrypt_geth_keystore
+		from ..proto.eth.util import decrypt_geth_keystore
 		return decrypt_geth_keystore(self.cfg, wallet_file, passwd, check_addr=check_addr).hex()

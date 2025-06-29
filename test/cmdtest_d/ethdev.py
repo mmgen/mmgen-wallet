@@ -28,7 +28,7 @@ from pathlib import Path
 
 from mmgen.color import red, yellow, blue, cyan, orange, set_vt100
 from mmgen.util import msg, msg_r, rmsg, die
-from mmgen.proto.eth.misc import compute_contract_addr
+from mmgen.proto.eth.util import compute_contract_addr
 
 from ..include.common import (
 	cfg,
@@ -799,7 +799,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 
 			wallet_fn = os.path.join( self.keystore_dir, os.listdir(self.keystore_dir)[0])
 
-			from mmgen.proto.eth.misc import decrypt_geth_keystore
+			from mmgen.proto.eth.util import decrypt_geth_keystore
 			key = decrypt_geth_keystore(
 				cfg       = self.cfg,
 				wallet_fn = wallet_fn,
@@ -1160,7 +1160,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		def create_signature_mmgen():
 			key = self.keystore_data['key']
 			imsg(f'Key:       {key}')
-			from mmgen.proto.eth.misc import ec_sign_message_with_privkey
+			from mmgen.proto.eth.util import ec_sign_message_with_privkey
 			return ec_sign_message_with_privkey(self.cfg, self.message, bytes.fromhex(key), 'eth_sign')
 
 		async def create_signature_rpc():
