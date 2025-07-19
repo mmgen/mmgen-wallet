@@ -1184,8 +1184,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		imsg(f'Message:   {self.message}')
 		imsg(f'Signature: {sig}')
 		if sig != sig_chk:
-			msg(yellow('Warning: Geth and MMGen signatures don’t match!'))
-			time.sleep(2)
+			self.tr.warn('MMGen signature doesn’t match reference signature from Geth daemon')
 
 		return 'ok'
 

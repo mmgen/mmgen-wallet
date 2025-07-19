@@ -16,7 +16,7 @@ import sys, os, time, asyncio
 
 from mmgen.cfg import gc
 from mmgen.color import red, yellow, green, blue, cyan, gray, nocolor
-from mmgen.util import msg, Msg, rmsg, bmsg, die, suf, make_timestr
+from mmgen.util import msg, Msg, rmsg, ymsg, bmsg, die, suf, make_timestr
 
 from ...include.common import (
 	cmdtest_py_log_fn,
@@ -58,6 +58,7 @@ class CmdTestRunner:
 		self.rebuild_list = {}
 		self.gm = CmdGroupMgr(cfg)
 		self.repo_root = repo_root
+		self.warnings = []
 		self.skipped_warnings = []
 		self.resume_cmd = None
 		self.deps_only = None
@@ -489,6 +490,10 @@ class CmdTestRunner:
 			print(yellow('The following tests were skipped and may require attention:'))
 			r = '-' * 72 + '\n'
 			print(r+('\n'+r).join(self.skipped_warnings))
+		if self.warnings:
+			print(yellow('The following issues were encountered and may require attention:'))
+			r = '-' * 72 + '\n'
+			print(r+('\n'+r).join(self.warnings))
 
 	def process_retval(self, cmd, ret):
 		if type(ret).__name__ == 'CmdTestPexpect':
@@ -505,10 +510,19 @@ class CmdTestRunner:
 		elif ret == 'error':
 			die(2, red(f'\nTest {self.tg.test_name!r} failed'))
 		elif isinstance(ret, tuple) and ret[0] == 'skip_warn':
-			self.skipped_warnings.append(
-				'Test {!r} was skipped:\n  {}'.format(cmd, '\n  '.join(ret[1].split('\n'))))
+			wmsg = 'Test {!r} was skipped:\n  {}'.format(cmd, '\n  '.join(ret[1].split('\n')))
+			self.skipped_warnings.append(wmsg)
+			if self.logging:
+				self.log_fd.write(f'WARNING: {wmsg}\n')
 		else:
 			die(2, f'{cmd!r} returned {ret}')
+
+	def warn(self, text):
+		ymsg(text)
+		wmsg = 'Test ‘{}:{}’: {}'.format(self.tg.group_name, self.tg.test_name, text)
+		self.warnings.append(wmsg)
+		if self.logging:
+			self.log_fd.write(f'WARNING: {wmsg}\n')
 
 	def check_deps(self, cmds): # TODO: broken, unused
 		if len(cmds) != 1:
