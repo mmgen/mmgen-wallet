@@ -325,7 +325,7 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 
 	bals = lambda self, k: {
 		'swap1': [('98831F3A:E:1', '123.456')],
-		'swap2': [('98831F3A:E:1', '114.690978056')],
+		'swap2': [('98831F3A:E:1', {'geth': '114.690978056', 'reth': '114.69097664'}[self.daemon.id])],
 	}[k]
 
 	cmd_group_in = CmdTestEthdev.cmd_group_in + (

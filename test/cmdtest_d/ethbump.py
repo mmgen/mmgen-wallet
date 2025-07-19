@@ -319,7 +319,8 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		return self._bal_check(pat=rf'{dfl_sid}:E:2\s+777\s')
 
 	def bal3(self):
-		return self._bal_check(pat=rf'{dfl_sid}:E:11\s+99987\.653431389777251448\s')
+		dec = {'geth': '653431389777251448', 'reth': '65337812418775812'}[self.daemon.id]
+		return self._bal_check(pat=rf'{dfl_sid}:E:11\s+99987\.{dec}\s')
 
 	def bal4(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:12\s+4444\.3333\s')

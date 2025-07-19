@@ -67,6 +67,7 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev, CmdTestEthdevMe
 		return self._fund_mmgen_addr(arg='98831F3A:E:1,123.456')
 
 	def create_tx(self):
+		self.mining_delay()
 		self.insert_device_online()
 		t = self._create_tx(fee='50G', args=['98831F3A:E:11,54.321'], add_opts=self.txop_opts)
 		t.read()
