@@ -484,7 +484,7 @@ class CmdTestRunner:
 		if cmd == self.cfg.exit_after:
 			sys.exit(0)
 
-	def warn_skipped(self):
+	def print_warnings(self):
 		if self.skipped_warnings:
 			print(yellow('The following tests were skipped and may require attention:'))
 			r = '-' * 72 + '\n'

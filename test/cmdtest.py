@@ -314,7 +314,7 @@ if __name__ == '__main__':
 	try:
 		tr = CmdTestRunner(cfg, repo_root, data_dir, trash_dir, trash_dir2)
 		tr.run_tests(cmd_args)
-		tr.warn_skipped()
+		tr.print_warnings()
 		if tr.daemon_started and not cfg.no_daemon_stop:
 			stop_test_daemons(tr.network_id, remove_datadir=True)
 		if hasattr(tr, 'tg'):
@@ -323,7 +323,7 @@ if __name__ == '__main__':
 	except KeyboardInterrupt:
 		if tr.daemon_started and not cfg.no_daemon_stop:
 			stop_test_daemons(tr.network_id, remove_datadir=True)
-		tr.warn_skipped()
+		tr.print_warnings()
 		if hasattr(tr, 'tg'):
 			del tr.tg
 		del tr
