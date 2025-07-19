@@ -67,8 +67,3 @@ class unit_tests:
 	def ssh_socks_proxy(self, name, ut):
 		from test.cmdtest_d.include.proxy import TestProxy
 		return TestProxy(None, cfg)
-
-	def py_ecc(self, name, ut):
-		from py_ecc.secp256k1 import privtopub
-		privtopub(b'f' * 32)
-		return True

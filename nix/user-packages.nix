@@ -40,7 +40,6 @@ rec {
 
     python-packages = with python.pkgs; {
         # pycryptodome     = pycryptodome;    # altcoins
-        # py-ecc           = py-ecc;          # test suite
         # pysocks          = pysocks;         # XMR
         # monero           = monero;          # XMR (test suite)
         # eth-keys         = eth-keys;        # ETH, ETC (test suite)

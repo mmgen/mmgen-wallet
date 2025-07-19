@@ -4,9 +4,6 @@
 test.modtest_d.ecc: elliptic curve unit test for the MMGen suite
 """
 
-import ecdsa
-from py_ecc.secp256k1.secp256k1 import ecdsa_raw_sign
-
 from mmgen.proto.secp256k1.secp256k1 import (
 	pubkey_gen,
 	pubkey_tweak_add,
@@ -16,16 +13,10 @@ from mmgen.proto.secp256k1.secp256k1 import (
 	verify_sig)
 
 from ..include.common import vmsg
-from ..include.ecc import pubkey_tweak_add_pyecdsa
+from ..include.ecc import pubkey_tweak_add_pyecdsa, sign_msghash_pyecdsa, verify_sig_pyecdsa
 from mmgen.protocol import CoinProtocol
 
 secp256k1_group_order = CoinProtocol.Secp256k1.secp256k1_group_order
-
-def sign_msghash_pyecc(msghash, privkey):
-	v, r, s = ecdsa_raw_sign(msghash, privkey)
-	return (
-		r.to_bytes(length=32) + s.to_bytes(length=32),
-		v - 27)
 
 class unit_tests:
 
@@ -44,17 +35,16 @@ class unit_tests:
 			vmsg(f'   privkey: {privkey.hex()}')
 			pubkey = pubkey_gen(privkey, 1)
 			sig, recid = sign_msghash(msghash, privkey)
-			sig_chk, _ = sign_msghash_pyecc(msghash, privkey)
+			sig_chk = sign_msghash_pyecdsa(msghash, privkey)
 			if sig != sig_chk:
 				import time
 				from mmgen.util import ymsg
-				ymsg('Warning: signature (libsecp256k1) does not match reference value (py_ecc)!')
+				ymsg(f'Warning: signature ({sig.hex()}) doesn’t match reference value ({sig_chk.hex()})!')
 				time.sleep(1)
 			vmsg(f'   recid:   {recid}')
 			assert recid in (0, 1)
-			ec_pubkey = ecdsa.VerifyingKey.from_string(pubkey, curve=ecdsa.curves.SECP256k1)
-			assert ec_pubkey.verify_digest(sig, msghash), 'signature verification failed (py-ecdsa)'
 			assert verify_sig(sig, msghash, pubkey) == 1, 'signature verification failed (secp256k1)'
+			assert verify_sig_pyecdsa(sig, msghash, pubkey) == 1, 'signature verification failed (ecdsa)'
 			pubkey_rec = pubkey_recover(msghash, sig, recid, True)
 			assert pubkey == pubkey_rec, f'{pubkey.hex()} != {pubkey_rec.hex()}'
 		return True

@@ -12,7 +12,7 @@
 test.include.ecc: elliptic curve utilities for the MMGen test suite
 """
 
-import ecdsa
+import ecdsa, hashlib
 from mmgen.proto.secp256k1.keygen import pubkey_format
 
 def _pubkey_to_pub_point(vk_bytes):
@@ -41,3 +41,14 @@ def pubkey_tweak_add_pyecdsa(vk_bytes, pk_addend_bytes):
 	return pubkey_format(
 		ecdsa.VerifyingKey.from_public_point(point_sum, curve=ecdsa.curves.SECP256k1).to_string(),
 		compressed = len(vk_bytes) == 33)
+
+def sign_msghash_pyecdsa(msghash, privkey):
+	ec_privkey = ecdsa.SigningKey.from_string(privkey, curve=ecdsa.curves.SECP256k1)
+	return ec_privkey.sign_digest_deterministic(
+		msghash,
+		hashfunc = hashlib.sha256,
+		sigencode = ecdsa.util.sigencode_string_canonize)
+
+def verify_sig_pyecdsa(sig, msghash, pubkey):
+	ec_pubkey = ecdsa.VerifyingKey.from_string(pubkey, curve=ecdsa.curves.SECP256k1)
+	return ec_pubkey.verify_digest(sig, msghash)
