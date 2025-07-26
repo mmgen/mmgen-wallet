@@ -19,7 +19,7 @@ from ...util import list_gen, die, contains_any
 from ...daemon import CoinDaemon, RPCDaemon, _nw, _dd
 
 class monero_daemon(CoinDaemon):
-	daemon_data = _dd('Monero', 18004000, '0.18.4.0-release')
+	daemon_data = _dd('Monero', 18004001, '0.18.4.1-release')
 	networks = ('mainnet', 'testnet')
 	exec_fn = 'monerod'
 	testnet_dir = 'stagenet'

@@ -129,7 +129,7 @@ class geth_daemon(ethereum_daemon):
 		)
 
 class reth_daemon(geth_daemon):
-	daemon_data = _dd('Reth', 1005001, '1.5.1')
+	daemon_data = _dd('Reth', 1006000, '1.6.0')
 	version_pat = r'reth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'reth'
 	datadirs = {
