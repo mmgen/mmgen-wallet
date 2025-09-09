@@ -30,26 +30,28 @@ confirm_or_exit('This script will interactively test LED functionality')
 
 led = LEDControl(enabled=True)
 
+color = led.board.color.capitalize()
+
 atexit.register(led.stop)
 
-confirm_or_exit('LED should now be turned off')
+confirm_or_exit(f'{color} LED should now be turned off')
 
 led.set('busy')
 
-confirm_or_exit('LED should now be signaling busy (rapid flashing)')
+confirm_or_exit(f'{color} LED should now be signaling busy (rapid flashing)')
 
 led.set('standby')
 
-confirm_or_exit('LED should now be signaling standby (slow flashing)')
+confirm_or_exit(f'{color} LED should now be signaling standby (slow flashing)')
 
 led.set('error')
 
-confirm_or_exit('LED should now be signaling error (insistent flashing)')
+confirm_or_exit(f'{color} LED should now be signaling error (insistent flashing)')
 
 led.set('off')
 
-confirm_or_exit('LED should now be turned off')
+confirm_or_exit(f'{color} LED should now be turned off')
 
 led.stop()
 
-confirm_or_exit(f'LED should now be in its original state [trigger={led.board.trigger_reset}]')
+confirm_or_exit(f'{color} LED should now be in its original state [trigger={led.board.trigger_reset}]')

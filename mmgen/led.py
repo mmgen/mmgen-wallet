@@ -40,38 +40,46 @@ class LEDControl:
 				control,
 				trigger         = None,
 				trigger_dfl     = 'heartbeat',
-				trigger_disable = 'none'):
+				trigger_disable = 'none',
+				color           = 'colored'):
 			self.name = name
 			self.control = control
 			self.trigger = trigger
 			self.trigger_dfl = trigger_dfl
 			self.trigger_reset = trigger_dfl
 			self.trigger_disable = trigger_disable
+			self.color = color
 
 	boards = {
 		'raspi_pi': binfo(
 			name    = 'Raspberry Pi',
 			control = '/sys/class/leds/led0/brightness',
 			trigger = '/sys/class/leds/led0/trigger',
-			trigger_dfl = 'mmc0'),
+			trigger_dfl = 'mmc0',
+			color   = 'red'),
 		'orange_pi': binfo(
 			name    = 'Orange Pi (Armbian)',
-			control = '/sys/class/leds/orangepi:red:status/brightness'),
+			control = '/sys/class/leds/orangepi:red:status/brightness',
+			color   = 'red'),
 		'orange_pi_5': binfo(
 			name    = 'Orange Pi 5 (Armbian)',
-			control = '/sys/class/leds/status_led/brightness'),
+			control = '/sys/class/leds/status_led/brightness',
+			color   = 'red'),
 		'rock_pi': binfo(
 			name    = 'Rock Pi (Armbian)',
 			control = '/sys/class/leds/status/brightness',
-			trigger = '/sys/class/leds/status/trigger'),
+			trigger = '/sys/class/leds/status/trigger',
+			color   = 'blue'),
 		'rock_5': binfo(
 			name    = 'Rock 5 (Armbian)',
 			control = '/sys/class/leds/user-led2/brightness',
-			trigger = '/sys/class/leds/user-led2/trigger'),
+			trigger = '/sys/class/leds/user-led2/trigger',
+			color   = 'blue'),
 		'banana_pi_f3': binfo(
 			name    = 'Banana Pi F3 (Armbian)',
 			control = '/sys/class/leds/sys-led/brightness',
-			trigger = '/sys/class/leds/sys-led/trigger'),
+			trigger = '/sys/class/leds/sys-led/trigger',
+			color   = 'green'),
 		'dummy': binfo(
 			name    = 'Fake Board',
 			control = '/tmp/led_status',

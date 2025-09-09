@@ -1034,10 +1034,12 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 			return
 
 		try:
-			LEDControl(enabled=True, simulate=self.simulate_led)
+			led = LEDControl(enabled=True, simulate=self.simulate_led)
 		except Exception as e:
 			msg(str(e))
 			die(2, 'LEDControl initialization failed')
+
+		self.color = led.board.color
 
 	def run_setup_mmgen(self):
 		return self.run_setup(mn_type='mmgen', use_dfl_wallet=None)
@@ -1046,7 +1048,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		return self.do_sign_live()
 
 	def sign_live_led(self):
-		return self.do_sign_live(['--led'], 'The LED should start blinking slowly now')
+		return self.do_sign_live(['--led'], f'The {self.color} LED should start blinking slowly now')
 
 	def sign_live_stealth_led(self):
 		return self.do_sign_live(['--stealth-led'], 'You should see no LED activity now')
@@ -1067,7 +1069,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		if led_opts:
 			opts_msg = '‘' + ' '.join(led_opts) + '’'
 			info_msg = 'Running ‘mmgen-autosign wait’ with {}. {}'.format(opts_msg, led_msg)
-			insert_msg = 'Insert removable device and watch for fast LED activity during signing'
+			insert_msg = f'Insert removable device and watch for fast {self.color} LED activity during signing'
 		else:
 			opts_msg = 'no LED'
 			info_msg = 'Running ‘mmgen-autosign wait’'
@@ -1098,7 +1100,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		t.kill(2) # 2 = SIGINT
 
 		if self.simulate_led and led_opts:
-			t.expect('Stopping LED')
+			t.expect(f'Resetting {self.color} LED')
 		return t
 
 class CmdTestAutosignLiveSimulate(CmdTestAutosignLive):
