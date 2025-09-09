@@ -850,7 +850,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 				'timestamp': '0x0',
 				'extraData': '0x',
 				'gasLimit': '0xaf79e0',
-				'difficulty': '0x1',
+				'difficulty': '0x0',
 				'mixHash': '0x0000000000000000000000000000000000000000000000000000000000000000',
 				'coinbase': '0x0000000000000000000000000000000000000000',
 				'number': '0x0',
