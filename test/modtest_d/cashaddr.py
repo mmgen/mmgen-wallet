@@ -4,8 +4,6 @@
 test.modtest_d.cashaddr: unit test for the BCH cashaddr module
 """
 
-altcoin_dep = True
-
 from collections import namedtuple
 
 from mmgen.proto.bch.cashaddr import cashaddr_parse_addr, cashaddr_decode_addr, cashaddr_encode_addr

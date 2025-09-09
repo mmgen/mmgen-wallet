@@ -4,8 +4,6 @@
 test.modtest_d.xmrseed: Monero mnemonic unit test for the MMGen suite
 """
 
-altcoin_dep = True
-
 from mmgen.util import ymsg
 from mmgen.xmrseed import xmrseed
 from ..include.common import cfg, vmsg

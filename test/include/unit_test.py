@@ -30,7 +30,7 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 	from mmgen.devinit import init_dev
 	init_dev()
 
-from mmgen.cfg import Config, gc
+from mmgen.cfg import Config, gc, gv
 from mmgen.color import gray, brown, orange, yellow, red
 from mmgen.util import msg, msg_r, gmsg, ymsg, Msg
 
@@ -70,9 +70,6 @@ sys.argv.insert(1, '--skip-cfg-file')
 
 cfg = Config(opts_data=opts_data)
 
-if cfg.no_altcoin_deps:
-	ymsg(f'{gc.prog_name}: skipping altcoin tests by user request')
-
 type(cfg)._reset_ok += ('use_internal_keccak_module', 'debug_addrlist')
 
 set_globals(cfg)
@@ -89,6 +86,10 @@ test_dir = os.path.join(repo_root, 'test', test_subdir)
 all_tests = sorted(fn.removesuffix('.py') for fn in os.listdir(test_dir) if not fn.startswith('_'))
 
 exclude = cfg.exclude.split(',') if cfg.exclude else []
+
+if cfg.no_altcoin_deps:
+	ymsg(f'{gc.prog_name}: skipping altcoin tests by user request')
+	altcoin_tests = importlib.import_module(f'test.{test_subdir}').altcoin_tests
 
 for e in exclude:
 	if e not in all_tests:
@@ -113,6 +114,19 @@ if cfg.list_subtests:
 	fs = '{:%s} {}' % max(len(t) for t in all_tests)
 	Msg(fs.format('TEST', 'SUBTESTS') + '\n' + '\n'.join(gen()))
 	sys.exit(0)
+
+def silence():
+	if not cfg.verbose:
+		global stdout_save, stderr_save
+		stdout_save = sys.stdout
+		stderr_save = sys.stderr
+		sys.stdout = sys.stderr = gv.stdout = gv.stderr = open(os.devnull, 'w')
+
+def end_silence():
+	if not cfg.verbose:
+		global stdout_save, stderr_save
+		sys.stdout = gv.stdout = stdout_save
+		sys.stderr = gv.stderr = stderr_save
 
 class UnitTestHelpers:
 
@@ -152,14 +166,13 @@ class UnitTestHelpers:
 tests_seen = []
 
 def run_test(test, subtest=None):
-	mod = importlib.import_module(f'test.{test_subdir}.{test}')
 
 	def run_subtest(t, subtest):
 		subtest_disp = subtest.replace('_', '-')
 		msg(brown(f'Running {test_type} subtest ') + orange(f'{test}.{subtest_disp}'))
 
 		if getattr(t, 'silence_output', False):
-			t._silence()
+			silence()
 
 		if hasattr(t, '_pre_subtest'):
 			getattr(t, '_pre_subtest')(test, subtest, UnitTestHelpers(subtest))
@@ -181,14 +194,14 @@ def run_test(test, subtest=None):
 				msg('OK\n' if cfg.verbose else 'OK')
 		except:
 			if getattr(t, 'silence_output', False):
-				t._end_silence()
+				end_silence()
 			raise
 
 		if hasattr(t, '_post_subtest'):
 			getattr(t, '_post_subtest')(test, subtest, UnitTestHelpers(subtest))
 
 		if getattr(t, 'silence_output', False):
-			t._end_silence()
+			end_silence()
 
 		if not ret:
 			die(4, f'Unit subtest {subtest_disp!r} failed')
@@ -197,9 +210,11 @@ def run_test(test, subtest=None):
 		gmsg(f'Running {test_type} test {test}')
 		tests_seen.append(test)
 
-	if cfg.no_altcoin_deps and getattr(mod, 'altcoin_dep', None):
+	if cfg.no_altcoin_deps and test in altcoin_tests:
 		cfg._util.qmsg(gray(f'Skipping {test_type} test {test!r} [--no-altcoin-deps]'))
 		return
+
+	mod = importlib.import_module(f'test.{test_subdir}.{test}')
 
 	if hasattr(mod, 'unit_tests'): # new class-based API
 		t = getattr(mod, 'unit_tests')()

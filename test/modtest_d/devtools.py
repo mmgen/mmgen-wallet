@@ -7,7 +7,6 @@ test.modtest_d.devtools: devtools unit tests for the MMGen suite
 import os, json
 from mmgen.util import msg
 from mmgen.devtools import print_diff, get_ndiff, print_stack_trace, pmsg_r, pmsg, Pmsg
-from . import unit_tests_base
 
 textA = """
 def main():
@@ -50,7 +49,7 @@ def print_hdr(hdr):
 		c = '-' * ((78 - len(hdr))//2 + (len(hdr) % 2))))
 
 # TODO: add data checks
-class unit_tests(unit_tests_base):
+class unit_tests:
 
 	silence_output = True
 

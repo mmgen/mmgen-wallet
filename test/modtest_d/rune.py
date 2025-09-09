@@ -7,7 +7,7 @@ from decimal import Decimal
 from mmgen.cfg import Config
 from mmgen.util import pp_fmt, ymsg
 from mmgen.proto.btc.common import hash160
-from mmgen.proto.cosmos.tx.protobuf import RawTx, SignDoc
+from mmgen.proto.cosmos.tx.protobuf import RawTx
 from mmgen.proto.rune.tx.protobuf import (
 	RuneTx,
 	build_tx,
@@ -21,7 +21,6 @@ from ..include.common import vmsg, silence, end_silence
 
 test_cfg = Config({'coin': 'rune', 'test_suite': True})
 
-altcoin_dep = True
 _pv = namedtuple('parse_vector', ['fn', 'txid', 'parms', 'null_fee'], defaults=[None])
 
 parse_vectors = [
