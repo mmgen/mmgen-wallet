@@ -256,6 +256,7 @@ class Config(Lockable):
 	test_suite_cfgtest       = False
 	test_suite_deterministic = False
 	test_suite_pexpect       = False
+	test_suite_pexpect_timeout = 0
 	test_suite_popen_spawn   = False
 	test_suite_root_pfx      = ''
 	hold_protect_disable     = False
@@ -339,6 +340,7 @@ class Config(Lockable):
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
 		'MMGEN_TEST_SUITE_ENABLE_COLOR',
 		'MMGEN_TEST_SUITE_PEXPECT',
+		'MMGEN_TEST_SUITE_PEXPECT_TIMEOUT',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
 		'MMGEN_TEST_SUITE_ROOT_PFX',
 		'MMGEN_TRACEBACK',

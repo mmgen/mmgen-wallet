@@ -64,7 +64,10 @@ class CmdTestPexpect:
 			redir = DEVNULL if (no_output or not cfg.exact_output) else None
 			self.ep = Popen([args[0]] + args[1:], stderr=redir, env=spawn_env)
 		else:
-			timeout = int(timeout or cfg.pexpect_timeout or 0) or (60, 5)[bool(cfg.debug_pexpect)]
+			timeout = int(
+				timeout
+				or cfg.pexpect_timeout
+				or cfg.test_suite_pexpect_timeout) or (60, 5)[bool(cfg.debug_pexpect)]
 			if pexpect_spawn:
 				self.p = pexpect.spawn(args[0], args[1:], encoding='utf8', timeout=timeout, env=spawn_env)
 			else:
