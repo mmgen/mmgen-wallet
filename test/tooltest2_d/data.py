@@ -454,6 +454,14 @@ tests = {
 				([privhex7], btc_wif2, ['--type=bech32'], 'bech32'),
 			],
 		},
+		'privhex2pair': {
+			'btc_mainnet': [
+				([privhex7], [btc_wif1, btc_addr1], None, 'legacy'),
+				([privhex7], [btc_wif2, btc_addr2], ['--type=compressed'], 'compressed'),
+				([privhex7], [btc_wif2, btc_addr3], ['--type=segwit'], 'segwit'),
+				([privhex7], [btc_wif2, btc_addr4], ['--type=bech32'], 'bech32'),
+			],
+		},
 		'privhex2addr': {
 			'btc_mainnet': [
 				([privhex7], btc_addr1, None, 'legacy'),
