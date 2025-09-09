@@ -8,7 +8,7 @@
 #   https://github.com/mmgen/mmgen-wallet
 #   https://gitlab.com/mmgen/mmgen-wallet
 
-all_tests="dep dev lint obj color daemon mod hash ref altref altgen xmr eth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
+all_tests="dep dev lint obj color daemon mod hash ref altref altgen xmr geth reth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
 
 groups_desc="
 	default  - All tests minus the extra tests
@@ -19,10 +19,10 @@ groups_desc="
 "
 
 init_groups() {
-	dfl_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt eth etc rune xmr'
+	dfl_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt geth reth etc rune xmr'
 	extra_tests='dep dev lint pylint autosign_live ltc_tn bch_tn'
 	noalt_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
-	quick_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen eth etc rune xmr'
+	quick_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen geth etc rune xmr'
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
 	noalt_ok_tests='lint'
 
@@ -258,14 +258,18 @@ init_tests() {
 	d_ltc_rt="overall operations using the regtest network (Litecoin)"
 	t_ltc_rt="- $cmdtest_py --coin=ltc regtest"
 
-	d_eth="operations for Ethereum using devnet"
-	t_eth="
-		geth $cmdtest_py --coin=btc --eth-daemon-id=geth ethswap
-		geth $cmdtest_py --coin=eth --eth-daemon-id=geth autosign_eth ethbump ethdev
-		reth $cmdtest_py --coin=btc --eth-daemon-id=reth ethswap
-		reth $cmdtest_py --coin=eth --eth-daemon-id=reth autosign_eth ethbump ethdev
+	d_geth="operations for Ethereum using devnet (Go-Ethereum daemon)"
+	t_geth="
+		- $cmdtest_py --coin=btc --eth-daemon-id=geth ethswap
+		- $cmdtest_py --coin=eth --eth-daemon-id=geth autosign_eth ethbump ethdev
 	"
-	[ "$FAST" ]  && t_eth_skip='reth'
+
+	d_reth="operations for Ethereum using devnet (Rust Ethereum daemon)"
+	t_reth="
+		r $cmdtest_py --coin=btc --eth-daemon-id=reth ethswap
+		r $cmdtest_py --coin=eth --eth-daemon-id=reth autosign_eth ethbump ethdev
+	"
+	[ "$FAST" ]  && t_reth_skip='r'
 
 	d_etc="operations for Ethereum Classic using devnet"
 	t_etc="
