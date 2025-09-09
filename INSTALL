@@ -1,8 +1,7 @@
-	MMGen is written in Python and builds and runs on MS Windows/MinGW and Linux.
+  MMGen Wallet is written in Python and runs on Linux, macOS and Windows/MSYS2.
 
-	Consult the MMGen wiki on Github for instructions on installation and use:
+  Instructions for installation and use may be found under the doc/wiki
+  directory, or in the repository wiki on Github or mmgen.org:
 
-		https://github.com/mmgen/mmgen/wiki/
-
-	Selected wiki pages in Markdown format can be found under the doc directory
-	of this distribution.
+    https://github.com/mmgen/mmgen-wallet/wiki
+    https://mmgen.org/project/mmgen/mmgen-wallet/wiki
