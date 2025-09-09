@@ -22,7 +22,10 @@ run_test() {
 
 	while read skip test; do
 		[ "$test" ] || continue
-		echo "${!skips}" | grep -q "\<$skip\>" && continue
+		echo "${!skips}" | grep -q "\<$skip\>" && {
+			echo -e "${GRAY}Skipping: $test$RESET"
+			continue
+		}
 		tests+=("$test")
 	done <<<${!tests_in}
 
@@ -382,7 +385,13 @@ done
 in_nix_environment && parity --help >/dev/null 2>&1 || SKIP_PARITY=1
 
 [ "$MMGEN_DISABLE_COLOR" -o ! -t 1 ] || {
-	RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" BLUE="\e[34;1m" MAGENTA="\e[35;1m" CYAN="\e[36;1m"
+	GRAY="\e[30;1m"
+	RED="\e[31;1m"
+	GREEN="\e[32;1m"
+	YELLOW="\e[33;1m"
+	BLUE="\e[34;1m"
+	MAGENTA="\e[35;1m"
+	CYAN="\e[36;1m"
 	RESET="\e[0m"
 }
 

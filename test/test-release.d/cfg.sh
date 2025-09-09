@@ -42,19 +42,19 @@ init_tests() {
 
 	d_obj="data objects"
 	t_obj="
-		- $objtest_py --coin=btc
-		- $objtest_py --getobj --coin=btc
-		- $objtest_py --coin=btc --testnet=1
+		x $objtest_py --coin=btc
+		x $objtest_py --getobj --coin=btc
+		x $objtest_py --coin=btc --testnet=1
 		a $objtest_py --coin=ltc
 		a $objtest_py --coin=ltc --testnet=1
 		a $objtest_py --coin=eth
-		- $objattrtest_py
+		x $objattrtest_py
 	"
 	[ "$SKIP_ALT_DEP" ] && t_obj_skip='a'
 
 	[ "$PYTHONOPTIMIZE" ] && {
 		echo -e "${YELLOW}PYTHONOPTIMIZE set, skipping object tests$RESET"
-		t_obj_skip='-'
+		t_obj_skip='x a'
 	}
 
 	d_color="color handling"
@@ -174,14 +174,13 @@ init_tests() {
 
 	d_autosign="transaction autosigning with automount"
 	t_autosign="
-		-   $cmdtest_py autosign_clean autosign_automount autosign
+		alt $cmdtest_py autosign_clean autosign_automount autosign
 		btc $cmdtest_py autosign_clean autosign_automount autosign_btc
-		-   $cmdtest_py --coin=bch autosign_automount
 		ltc $cmdtest_py --coin=ltc autosign_automount
+		bch $cmdtest_py --coin=bch autosign_automount
 	"
-	if [ "$SKIP_ALT_DEP" ]; then t_autosign_skip='- ltc etc'; else t_autosign_skip='btc'; fi
-	[ "$FAST" ] && t_autosign_skip+=' ltc etc'
-	[ "$SKIP_PARITY" ] && t_autosign_skip+=' etc'
+	if [ "$SKIP_ALT_DEP" ]; then t_autosign_skip='ltc bch alt'; else t_autosign_skip='btc'; fi
+	[ "$FAST" ] && t_autosign_skip+=' ltc'
 
 	d_autosign_live="transaction and message autosigning (interactive)"
 	t_autosign_live="- $cmdtest_py autosign_live"
@@ -220,9 +219,10 @@ init_tests() {
 	t_btc_rt="
 		- $cmdtest_py regtest
 		x $cmdtest_py regtest_legacy
-		- $cmdtest_py swap
+		a $cmdtest_py swap
 	"
-	[ "$FAST" ]  && t_btc_skip='x'
+	[ "$FAST" ] && t_btc_rt_skip='x'
+	[ "$SKIP_ALT_DEP" ] && t_btc_rt_skip+=' a'
 
 	d_bch="overall operations with emulated RPC data (Bitcoin Cash Node)"
 	t_bch="
