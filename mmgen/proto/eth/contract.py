@@ -68,7 +68,7 @@ class Contract:
 
 		args = {
 			'to': '0x' + self.addr,
-			'input': '0x' + data}
+			('data' if self.rpc.daemon.id == 'parity' else 'input'): '0x' + data}
 
 		if from_addr:
 			args['from'] = '0x' + from_addr
