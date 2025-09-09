@@ -169,6 +169,8 @@ class unit_tests:
 
 	altcoin_deps = ('ltc', 'bch', 'geth', 'reth', 'erigon', 'parity', 'xmrwallet')
 	arm_skip = ('parity',) # no prebuilt binaries for ARM
+	riscv_skip = ('parity',) # no prebuilt binaries for RISC-V
+	fast_skip = ('reth', 'erigon')
 
 	async def btc(self, name, ut):
 		return await run_test(

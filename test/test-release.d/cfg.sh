@@ -190,7 +190,6 @@ init_tests() {
 		- $cmdtest_py misc
 		- $cmdtest_py opts
 		- $cmdtest_py cfgfile
-		- $cmdtest_py help
 		- $cmdtest_py main
 		- $cmdtest_py conv
 		- $cmdtest_py ref

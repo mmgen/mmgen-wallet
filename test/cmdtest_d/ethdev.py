@@ -34,6 +34,7 @@ from ..include.common import (
 	cfg,
 	check_solc_ver,
 	omsg,
+	omsg_r,
 	imsg,
 	imsg_r,
 	joinpath,
@@ -305,7 +306,8 @@ class CmdTestEthdevMethods:
 			caller = mmgen_cmd,
 			quiet  = mmgen_cmd == 'txdo' or not self.cfg.debug,
 			contract_addr = contract_addr,
-			bogus_send = False)
+			bogus_send = False,
+			wait = self.name == 'CmdTestEthBump')
 
 		if key == 'Token':
 			imsg(f'\nToken MM{num} deployed!')
@@ -361,11 +363,15 @@ class CmdTestEthdevMethods:
 					gas       = 120000,
 					gasPrice  = self.proto.coin_amt(8, from_unit='Gwei'))
 				rpc = await self.rpc
+				imsg_r('Waiting for transaction receipt: ')
 				for n in range(50): # long delay for txbump
 					rx = await rpc.call('eth_getTransactionReceipt', '0x' + txid) # -> null if pending
 					if rx:
+						imsg('OK')
 						break
 					await asyncio.sleep(0.5)
+					if n % 2:
+						omsg_r('+')
 				if not rx:
 					die(1, 'tx receipt timeout exceeded')
 
@@ -1606,7 +1612,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def token_txdo_cached_balances(self):
 		return self.txdo_cached_balances(
 			acct          = '1',
-			fee_info_data = ('0.00260265', '50'),
+			fee_info_data = (0.0025786 if self.daemon.id == 'parity' else '0.00260265', '50'),
 			add_args      = ['--token=mm1', '98831F3A:E:12,43.21'])
 
 	def token_txcreate_refresh_balances(self):

@@ -86,6 +86,7 @@ class GlobalConstants(Lockable):
 		'walletgen':    _cc(False, False, False, None,     [],      'lmw'),
 		'xmrwallet':    _cc(True,  True,  False, '-rx',    ['rpc'], 'lmw'),
 	}
+	altcoin_cmds = ('swaptxcreate', 'swaptxdo', 'xmrwallet')
 
 	prog_name = os.path.basename(sys.argv[0])
 	prog_id = prog_name.removeprefix(f'{proj_id}-')

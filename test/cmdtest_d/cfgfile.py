@@ -209,6 +209,10 @@ class CmdTestCfgFile(CmdTestBase):
 		"""
 		ensure that derived classes explicitly set these variables
 		"""
+
+		if self.cfg.no_altcoin:
+			return 'skip'
+
 		d = [
 			'btc_max_tx_fee 1.2345',
 			'eth_max_tx_fee 5.4321',
@@ -224,8 +228,6 @@ class CmdTestCfgFile(CmdTestBase):
 			('ETH', 'True',  '5.4321', True),
 			('ETC', 'None',  '5.4321', False)
 		):
-			if self.cfg.no_altcoin and coin != 'BTC':
-				continue
 			t = self.spawn_test(
 				args = [
 					f'--coin={coin}',

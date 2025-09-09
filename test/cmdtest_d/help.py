@@ -118,7 +118,10 @@ class CmdTestHelp(CmdTestBase):
 
 		scripts = list(scripts or gc.cmd_caps_data)
 
-		cmdlist = sorted(set(scripts) - self._gen_skiplist(scripts))
+		cmdlist = sorted(
+			set(scripts)
+			- self._gen_skiplist(scripts)
+			- (set(gc.altcoin_cmds if self.cfg.no_altcoin else [])))
 
 		for cmdname in cmdlist:
 			cmd_caps = gc.cmd_caps_data[cmdname]

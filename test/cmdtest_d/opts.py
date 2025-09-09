@@ -293,12 +293,16 @@ class CmdTestOpts(CmdTestBase):
 		return self.check_vals(['--etc-max-tx-fee=0.1'], (('cfg.etc_max_tx_fee', '0.1'),), need_proto=True)
 
 	def opt_good30(self):
+		if self.cfg.no_altcoin:
+			return 'skip'
 		return self.check_vals(
 			['--coin=eth', '--eth-mainnet-chain-names=foo,bar'],
 			(('cfg.eth_mainnet_chain_names', r"\['foo', 'bar'\]"), ('proto.chain_names', r"\['foo', 'bar'\]")),
 			need_proto = True)
 
 	def opt_good31(self):
+		if self.cfg.no_altcoin:
+			return 'skip'
 		return self.check_vals(
 			['--coin=xmr', '--xmr-rpc-port=28081'],
 			(('cfg.xmr_rpc_port', '28081'),('proto.rpc_port', '28081'),),

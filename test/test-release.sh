@@ -380,6 +380,7 @@ do
 done
 
 in_nix_environment && parity --help >/dev/null 2>&1 || SKIP_PARITY=1
+[ "$RISCV64" ] && SKIP_PARITY=1
 
 [ "$MMGEN_DISABLE_COLOR" -o ! -t 1 ] || {
 	GRAY="\e[30;1m"

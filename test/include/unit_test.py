@@ -211,7 +211,7 @@ def run_test(test, subtest=None):
 		tests_seen.append(test)
 
 	if cfg.no_altcoin_deps and test in altcoin_tests:
-		cfg._util.qmsg(gray(f'Skipping {test_type} test {test!r} [--no-altcoin-deps]'))
+		msg(gray(f'Skipping {test_type} test {test!r} [--no-altcoin-deps]'))
 		return
 
 	mod = importlib.import_module(f'test.{test_subdir}.{test}')
@@ -222,6 +222,8 @@ def run_test(test, subtest=None):
 		win_skip = getattr(t, 'win_skip', ())
 		mac_skip = getattr(t, 'mac_skip', ())
 		arm_skip = getattr(t, 'arm_skip', ())
+		riscv_skip = getattr(t, 'riscv_skip', ())
+		fast_skip = getattr(t, 'fast_skip', ())
 		subtests = (
 			[subtest] if subtest else
 			[k for k, v in type(t).__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
@@ -238,6 +240,9 @@ def run_test(test, subtest=None):
 			if cfg.no_altcoin_deps and _subtest in altcoin_deps:
 				subtest_skip_msg(_subtest, '[--no-altcoin-deps]')
 				continue
+			if cfg.fast and _subtest in fast_skip:
+				subtest_skip_msg(_subtest, '[--fast]')
+				continue
 			if sys.platform == 'win32' and _subtest in win_skip:
 				subtest_skip_msg(_subtest, 'for Windows platform')
 				continue
@@ -246,6 +251,9 @@ def run_test(test, subtest=None):
 				continue
 			if platform.machine() == 'aarch64' and _subtest in arm_skip:
 				subtest_skip_msg(_subtest, 'for ARM platform')
+				continue
+			if platform.machine() == 'riscv64' and _subtest in riscv_skip:
+				subtest_skip_msg(_subtest, 'for RISC-V platform')
 				continue
 			run_subtest(t, _subtest)
 		if hasattr(t, '_post'):
