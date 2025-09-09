@@ -40,7 +40,10 @@ class CmdTestEthBumpMethods:
 
 	@property
 	def devnet_block_period(self):
-		return self.cfg.devnet_block_period or self.dfl_devnet_block_period[self.daemon.id]
+		return (
+			self.cfg.devnet_block_period
+			or self.cfg.test_suite_devnet_block_period
+			or self.dfl_devnet_block_period[self.daemon.id])
 
 	def _txcreate(self, args, acct):
 		self.get_file_with_ext('rawtx', delete_all=True)
@@ -277,6 +280,8 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 			'reth': [f'--dev.block-time={self.devnet_block_period}s'],
 			'geth': [f'--dev.period={self.devnet_block_period}']
 		}[self.daemon.id]
+
+		imsg(f'devnet block period: {self.devnet_block_period}')
 
 		globals()[self.cross_group] = self.create_cross_runner(trunner)
 

@@ -173,6 +173,7 @@ class Config(Lockable):
 
 	# limits
 	http_timeout       = 0
+	daemon_state_timeout = 60
 	usr_randchars      = 30
 	fee_adjust         = 1.0
 	fee_estimate_confs = 3
@@ -250,6 +251,7 @@ class Config(Lockable):
 	test_suite               = False
 	test_suite_autosign_led_simulate = False
 	test_suite_autosign_threaded = False
+	test_suite_devnet_block_period = 0
 	test_suite_xmr_autosign  = False
 	test_suite_cfgtest       = False
 	test_suite_deterministic = False
@@ -331,6 +333,7 @@ class Config(Lockable):
 		'MMGEN_TEST_SUITE',
 		'MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE',
 		'MMGEN_TEST_SUITE_AUTOSIGN_THREADED',
+		'MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD',
 		'MMGEN_TEST_SUITE_XMR_AUTOSIGN',
 		'MMGEN_TEST_SUITE_CFGTEST',
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
@@ -342,6 +345,7 @@ class Config(Lockable):
 		'MMGEN_BLACKLIST_DAEMONS',
 		'MMGEN_BOGUS_SEND',
 		'MMGEN_BOGUS_UNSPENT_DATA',
+		'MMGEN_DAEMON_STATE_TIMEOUT',
 		'MMGEN_DEBUG',
 		'MMGEN_DEBUG_DAEMON',
 		'MMGEN_DEBUG_EVM',
