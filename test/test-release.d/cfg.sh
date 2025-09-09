@@ -258,16 +258,20 @@ init_tests() {
 	d_ltc_rt="overall operations using the regtest network (Litecoin)"
 	t_ltc_rt="- $cmdtest_py --coin=ltc regtest"
 
+	[ "$SOC" ] && {
+		eth_env="MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD=${MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD:-22} "
+	}
+
 	d_geth="operations for Ethereum using devnet (Go-Ethereum daemon)"
 	t_geth="
 		- $cmdtest_py --coin=btc --eth-daemon-id=geth ethswap
-		- $cmdtest_py --coin=eth --eth-daemon-id=geth autosign_eth ethbump ethdev
+		- $eth_env$cmdtest_py --coin=eth --eth-daemon-id=geth autosign_eth ethbump ethdev
 	"
 
 	d_reth="operations for Ethereum using devnet (Rust Ethereum daemon)"
 	t_reth="
 		r $cmdtest_py --coin=btc --eth-daemon-id=reth ethswap
-		r $cmdtest_py --coin=eth --eth-daemon-id=reth autosign_eth ethbump ethdev
+		r $eth_env$cmdtest_py --coin=eth --eth-daemon-id=reth autosign_eth ethbump ethdev
 	"
 	[ "$FAST" ]  && t_reth_skip='r'
 
@@ -284,9 +288,15 @@ init_tests() {
 		- $cmdtest_py runeswap
 	"
 
+	[ "$SOC" ] && {
+		xmr_env1="MMGEN_TEST_SUITE_PEXPECT_TIMEOUT=${MMGEN_TEST_SUITE_PEXPECT_TIMEOUT:-300} "
+		xmr_env2="MMGEN_HTTP_TIMEOUT=${MMGEN_HTTP_TIMEOUT:-300} "
+		xmr_env3="MMGEN_DAEMON_STATE_TIMEOUT=${MMGEN_DAEMON_STATE_TIMEOUT:-180} "
+	}
+
 	d_xmr="Monero xmrwallet operations"
 	t_xmr="
-		- $HTTP_LONG_TIMEOUT$cmdtest_py$PEXPECT_LONG_TIMEOUT --coin=xmr --exclude help
+		- $xmr_env1$xmr_env2$xmr_env3$cmdtest_py --coin=xmr --exclude help
 	"
 
 	d_tool2="'mmgen-tool' utility with data check"

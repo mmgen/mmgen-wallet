@@ -245,9 +245,11 @@ orig_cwd=$(pwd)
 repo=$(basename $orig_cwd)
 
 if [ "$(uname -m)" == 'armv7l' ]; then
-	ARM32=1
+	SOC=1 ARM32=1
 elif [ "$(uname -m)" == 'aarch64' ]; then
-	ARM64=1
+	SOC=1 ARM64=1
+elif [ "$(uname -m)" == 'riscv64' ]; then
+	SOC=1 RISCV64=1
 elif [ "$(uname -s)" == 'Darwin' ]; then
 	DARWIN=1
 	DISTRO='DARWIN'
@@ -255,11 +257,6 @@ elif [ "$MSYSTEM" ] && uname -a | grep -qi 'msys'; then
 	MSYS2=1
 	DISTRO='MSYS2'
 fi
-
-[ "$ARM32" -o "$ARM64" ] && {
-	PEXPECT_LONG_TIMEOUT=' --pexpect-timeout=300'
-	HTTP_LONG_TIMEOUT='MMGEN_HTTP_TIMEOUT=300 '
-}
 
 if [ -e '/etc/os-release' ]; then
 	DISTRO=$(grep '^ID=' '/etc/os-release' | cut -c 4-)
