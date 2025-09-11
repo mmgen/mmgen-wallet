@@ -1,4 +1,4 @@
-## adapted from go-ethereum.nix in nixpkgs repository
+# adapted from go-ethereum.nix in nixpkgs repository
 
 {
     pkgs,

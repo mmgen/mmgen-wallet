@@ -15,7 +15,7 @@ rec {
     # python = pkgs.python312;
 
     system-packages = with pkgs; {
-        # monero-cli  = monero-cli;                      # Monero daemon
+        # monero-cli   = monero-cli;                                      # Monero daemon
         # # go-ethereum = go-ethereum;                     # Geth - latest version for transacting on mainnet
         # go-ethereum = callPackage (bdir + /go-ethereum.nix) { # Geth - old version for test suite (ethdev)
         #     buildGoModule = buildGo122Module;
@@ -35,15 +35,15 @@ rec {
         # xclip        = xclip;
 
         ### For test suite with --pure:
-        # openssh      = openssh; # XMR tests
+        # openssh      = openssh;
     };
 
     python-packages = with python.pkgs; {
-        # pycryptodome     = pycryptodome;    # altcoins
-        # pysocks          = pysocks;         # XMR
-        # monero           = monero;          # XMR (test suite)
-        # eth-keys         = eth-keys;        # ETH, ETC (test suite)
-        # pure-protobuf    = pure-protobuf;   # THORChain
-        # bip-utils        = bip-utils;       # bip_hd
+        # pycryptodome     = pycryptodome;  # altcoins
+        # pysocks          = pysocks;       # XMR
+        # monero           = monero;        # XMR (test suite)
+        # eth-keys         = eth-keys;      # ETH, ETC (test suite)
+        # pure-protobuf    = pure-protobuf; # THORChain
+        # bip-utils        = bip-utils;     # bip_hd
     };
 }
