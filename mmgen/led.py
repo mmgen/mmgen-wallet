@@ -80,6 +80,11 @@ class LEDControl:
 			control = '/sys/class/leds/sys-led/brightness',
 			trigger = '/sys/class/leds/sys-led/trigger',
 			color   = 'green'),
+		'nano_pi_m6': binfo(
+			name    = 'Nano Pi M6 (Armbian)',
+			control = '/sys/class/leds/user_led/brightness',
+			trigger = '/sys/class/leds/user_led/trigger',
+			color   = 'green'),
 		'dummy': binfo(
 			name    = 'Fake Board',
 			control = '/tmp/led_status',
