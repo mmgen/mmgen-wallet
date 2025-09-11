@@ -471,6 +471,11 @@ def have_sudo(*, silent=False):
 	except:
 		return False
 
+def in_nix_environment():
+	for path in os.getenv('PATH').split(':'):
+		if path.startswith('/nix/store/'):
+			return True
+
 def cached_property(orig_func):
 	@property
 	def new_func(self):

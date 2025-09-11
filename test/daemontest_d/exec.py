@@ -8,7 +8,7 @@ from subprocess import run, PIPE
 from collections import namedtuple
 
 from mmgen.color import orange, red
-from mmgen.util import fmt_list
+from mmgen.util import fmt_list, in_nix_environment
 from mmgen.daemon import CoinDaemon
 
 from ..include.common import cfg, qmsg, qmsg_r, vmsg, msg, msg_r
@@ -108,7 +108,25 @@ class unit_tests:
 
 	def avail(self, name, ut):
 		qmsg_r('Testing availability of coin daemons...')
-		return self._test_cmd(['start', '--print-version', '--mainnet-only'])
+		from platform import machine
+		test_reth = not (cfg.no_altcoin_deps or cfg.fast)
+		test_parity = not (
+			cfg.no_altcoin_deps
+			or machine() in ('riscv64', 'aarch64', 'armv7l')
+			or in_nix_environment())
+		ret1 = self._test_cmd(
+			['start', '--print-version', '--mainnet-only'],
+			network_ids = ['btc'] if cfg.no_altcoin_deps else ['btc', 'ltc', 'bch', 'xmr', 'eth'],
+			ok = not (test_reth or test_parity))
+		ret2 = self._test_cmd(
+			['start', '--print-version', '--mainnet-only', '--daemon-id=reth'],
+			network_ids = ['eth'],
+			ok = not test_parity) if test_reth else True
+		ret3 = self._test_cmd(
+			['start', '--print-version', '--mainnet-only'],
+			network_ids = ['etc'],
+			ok = True) if test_parity else True
+		return ret1 and ret2 and ret3
 
 	def versions(self, name, ut):
 		qmsg_r('Displaying coin daemon versions...')
