@@ -122,9 +122,11 @@ class geth_daemon(ethereum_daemon):
 			[f'--http.port={self.rpc_port}'],
 			[f'--authrpc.port={self.authrpc_port}'],
 			[f'--port={self.p2p_port}', self.p2p_port], # geth binds p2p port even with --maxpeers=0
+			[f'--discovery.port={self.p2p_port}', self.id == 'reth' and self.p2p_port],
 			['--maxpeers=0', self.id == 'geth' and not self.opt.online],
 			[f'--datadir={self.datadir}', self.non_dfl_datadir],
-			['--holesky', self.network=='testnet'],
+			['--holesky', self.network=='testnet' and self.id == 'geth'],
+			['--chain=holesky', self.network=='testnet' and self.id == 'reth'],
 			['--dev', self.network=='regtest'],
 		)
 
@@ -132,6 +134,7 @@ class reth_daemon(geth_daemon):
 	daemon_data = _dd('Reth', 1007000, '1.7.0')
 	version_pat = r'reth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'reth'
+	version_info_arg = '--version'
 	datadirs = {
 		'linux': [gc.home_dir, '.local', 'share', 'reth'],
 	}

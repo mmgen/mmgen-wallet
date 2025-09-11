@@ -19,15 +19,15 @@ groups_desc="
 "
 
 init_groups() {
-	dfl_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt geth reth etc rune xmr'
+	dfl_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt geth reth etc rune xmr'
 	extra_tests='dep dev lint pylint autosign_live ltc_tn bch_tn'
-	noalt_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
-	quick_tests='dep alt obj color daemon mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen geth etc rune xmr'
+	noalt_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
+	quick_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen geth etc rune xmr'
 	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
 	noalt_ok_tests='lint'
 
 	[ "$MSYS2" ] && SKIP_LIST='autosign autosign_live'
-	[ "$ARM32" -o "$ARM64" -o "$SKIP_PARITY" ] && SKIP_LIST+=' etc'
+	[ "$SKIP_PARITY" ] && SKIP_LIST+=' etc'
 
 	true
 }

@@ -68,8 +68,8 @@ Valid network IDs: {nid}, {xmrw_nid}, all, no_xmr
 }
 
 class warn_missing_exec(oneshot_warning):
-	color = 'nocolor'
-	message = 'daemon executable {!r} not found on this system!'
+	color = 'yellow'
+	message = 'missing executable {!r}'
 
 def run(network_id=None, proto=None, daemon_id=None, missing_exec_ok=False):
 
@@ -107,7 +107,8 @@ def run(network_id=None, proto=None, daemon_id=None, missing_exec_ok=False):
 			d.get_exec_version_str()
 		except Exception as e:
 			if not cfg.quiet:
-				msg(str(e))
+				if cfg.verbose:
+					msg(str(e))
 				warn_missing_exec(div=d.exec_fn, fmt_args=(d.exec_fn,))
 			return
 	if cfg.print_version:
@@ -150,4 +151,4 @@ def main():
 		for network_id in ids:
 			run(network_id=network_id.lower())
 
-cfg = Config(opts_data=opts_data)
+cfg = Config(opts_data=opts_data, init_opts={'skip_cfg_file': True})

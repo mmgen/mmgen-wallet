@@ -11,7 +11,7 @@ from mmgen.color import orange, red
 from mmgen.util import fmt_list
 from mmgen.daemon import CoinDaemon
 
-from ..include.common import cfg, qmsg, qmsg_r, vmsg, msg
+from ..include.common import cfg, qmsg, qmsg_r, vmsg, msg, msg_r
 
 def test_flags(coin):
 	d = CoinDaemon(cfg, network_id=coin)
@@ -64,9 +64,11 @@ class unit_tests:
 	def _pre(self):
 		self.daemon_ctrl_args = ['btc', 'btc_tn', 'btc_rt'] if cfg.no_altcoin_deps else ['all']
 
-	def _test_cmd(self, args_in, message):
-		qmsg_r(message)
-		args = ['python3', f'test/{args_in[0]}-coin-daemons.py'] + list(args_in[1:]) + self.daemon_ctrl_args
+	def _test_cmd(self, args_in, network_ids=[], ok=True):
+		args = (
+			['python3', f'test/{args_in[0]}-coin-daemons.py']
+			+ list(args_in[1:])
+			+ (network_ids or self.daemon_ctrl_args))
 		vmsg('\n' + orange(f"Running '{' '.join(args)}':"))
 		cp = run(args, stdout=PIPE, stderr=PIPE, text=True)
 		if cp.returncode != 0:
@@ -75,7 +77,11 @@ class unit_tests:
 			if cp.stderr:
 				msg(red(cp.stderr))
 			return False
-		qmsg('OK')
+		if cfg.verbose:
+			msg_r(cp.stderr.strip())
+		if ok:
+			vmsg('')
+			qmsg('OK')
 		return True
 
 	def flags(self, name, ut):
@@ -101,17 +107,27 @@ class unit_tests:
 		return True
 
 	def avail(self, name, ut):
-		return self._test_cmd(
-			['start', '--print-version', '--mainnet-only'], 'Testing availability of coin daemons...')
+		qmsg_r('Testing availability of coin daemons...')
+		return self._test_cmd(['start', '--print-version', '--mainnet-only'])
+
+	def versions(self, name, ut):
+		qmsg_r('Displaying coin daemon versions...')
+		ret1 = self._test_cmd(['start', '--print-version'], ok=False)
+		ret2 = self._test_cmd(['start', '--print-version', '--mainnet-only'])
+		return ret1 and ret2
 
 	def cmds(self, name, ut):
-		return self._test_cmd(['start', '--testing'], 'Testing start commands for coin daemons...')
+		qmsg_r('Testing start commands for coin daemons...')
+		return self._test_cmd(['start', '--testing'])
 
 	def start(self, name, ut):
-		return self._test_cmd(['start'], 'Starting coin daemons...')
+		qmsg_r('Starting coin daemons...')
+		return self._test_cmd(['start'])
 
 	def status(self, name, ut):
-		return self._test_cmd(['start'], 'Checking status of coin daemons...')
+		qmsg_r('Checking status of coin daemons...')
+		return self._test_cmd(['start'])
 
 	def stop(self, name, ut):
-		return self._test_cmd(['stop', '--remove-datadir'], 'Stopping coin daemons...')
+		qmsg_r('Stopping coin daemons...')
+		return self._test_cmd(['stop', '--remove-datadir'])
