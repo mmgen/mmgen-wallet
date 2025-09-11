@@ -5,7 +5,9 @@ pkgs.stdenv.mkDerivation rec {
     version = "v0.21.4";
     src = fetchGit {
         url = "https://github.com/litecoin-project/litecoin.git";
+        # url = /path/to/repo/litecoin-0.21.4.git;
         ref = "refs/tags/${version}";
+        shallow = true;
     };
     nativeBuildInputs = [
         pkgs.autoconf
@@ -15,7 +17,7 @@ pkgs.stdenv.mkDerivation rec {
         # pkgs.hexdump # for tests
     ];
     buildInputs = [
-        pkgs.boost
+        pkgs.boost183 # 'fs::copy_option' was removed in Boost 1.84
         pkgs.libevent
         pkgs.fmt
         pkgs.db4
@@ -30,7 +32,7 @@ pkgs.stdenv.mkDerivation rec {
         "--with-sqlite"
         "--disable-bench"
         "--disable-tests"
-        "--with-boost-libdir=${pkgs.boost.out}/lib"
+        "--with-boost-libdir=${pkgs.boost183.out}/lib"
     ];
     buildFlags = [
         "src/litecoind"

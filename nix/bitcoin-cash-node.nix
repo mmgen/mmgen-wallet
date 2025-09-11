@@ -5,13 +5,15 @@ pkgs.stdenv.mkDerivation rec {
     version = "v28.0.1";
     src = fetchGit {
         url = "https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node";
+        # url = /path/to/repo/bitcoin-cash-node-28.0.1;
         ref = "refs/tags/${version}";
+        shallow = true;
     };
     nativeBuildInputs = [
         pkgs.cmake
         pkgs.ninja
         pkgs.help2man
-        pkgs.python3
+        pkgs.python313
     ];
     buildInputs = [
         pkgs.boost

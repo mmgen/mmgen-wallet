@@ -39,6 +39,12 @@ will make executables from your native environment inaccessible within the
 shell, so you may need to add some additional tools to your environment such as
 a text editor.  For examples, refer to ‘user-packages.nix’
 
+Speedup tip: Look for the commented-out ‘url =’ lines in the *.nix files in
+this directory, and make local shallow clones of the corresponding remote git
+repositories using ‘git clone --depth=1’ plus ‘--revision=<commit>’ or
+‘--branch=<tag>’.  Then uncomment the local paths, adjusting them to suit.
+This will also allow you to use your installation in an offline environment.
+
 NixOS:
 
   To install the MMGen Wallet environment under NixOS, copy the contents of the ‘nix’

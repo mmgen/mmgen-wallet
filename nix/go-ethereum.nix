@@ -1,4 +1,5 @@
 # adapted from go-ethereum.nix in nixpkgs repository
+# not currently used, as nixpkgs 25.05 go-ethereum (v1.15.11) is OK
 
 {
     pkgs,

@@ -10,17 +10,10 @@
         libtool      = libtool;
         autoconf     = autoconf;
         gmp          = gmp;
-        gmp4         = gmp4;
         openssl      = openssl;
         pcre         = pcre;
         mpfr         = mpfr;
-        secp256k1    = secp256k1.overrideAttrs {
-            pname = "secp256k1-v0.6.0";
-            src = fetchGit {
-                url = "https://github.com/bitcoin-core/secp256k1.git";
-                ref = "refs/tags/v0.6.0";
-            };
-        };
+        secp256k1    = secp256k1;
         less         = less;   # test suite (cmdtest.py regtest)
         procps       = procps; # test suite (pgrep)
         ruff         = ruff;
