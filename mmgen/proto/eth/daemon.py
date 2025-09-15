@@ -115,6 +115,7 @@ class geth_daemon(ethereum_daemon):
 		self.coind_args = list_gen(
 			['node', self.id == 'reth'],
 			['--quiet', self.id == 'reth'],
+			['--disable-dns-discovery', self.id == 'reth' and self.test_suite],
 			['--verbosity=0', self.id == 'geth'],
 			['--ipcdisable'], # IPC-RPC: if path to socket is longer than 108 chars, geth fails to start
 			['--http'],

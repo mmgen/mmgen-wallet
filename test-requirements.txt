@@ -1,3 +1,0 @@
-pycoin
-monero
-eth_keys

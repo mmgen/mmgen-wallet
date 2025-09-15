@@ -70,15 +70,14 @@ class unit_tests:
 			+ list(args_in[1:])
 			+ (network_ids or self.daemon_ctrl_args))
 		vmsg('\n' + orange(f"Running '{' '.join(args)}':"))
-		cp = run(args, stdout=PIPE, stderr=PIPE, text=True)
+		redir = None if cfg.verbose else PIPE
+		cp = run(args, stdout=redir, stderr=redir, text=True)
 		if cp.returncode != 0:
 			if cp.stdout:
 				msg(cp.stdout)
 			if cp.stderr:
 				msg(red(cp.stderr))
 			return False
-		if cfg.verbose:
-			msg_r(cp.stderr.strip())
 		if ok:
 			vmsg('')
 			qmsg('OK')

@@ -1,5 +1,9 @@
 Nix configuration directory for the MMGen Wallet suite
 
+NOTE: If you plan to make changes to the files in this directory, first copy it
+(e.g. `cp -a nix mynix`) and then make your changes in the copied directory.
+Also make sure to replace ‘nix’ with ‘mynix’ (e.g.) in the examples below.
+
 Only BTC and a bare minimum of packages are enabled by default.
 
 For altcoin and additional package support, copy the file ‘user-packages.nix’ to
