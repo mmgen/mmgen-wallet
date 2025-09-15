@@ -8,7 +8,7 @@ import os
 from subprocess import run, DEVNULL
 
 from mmgen.util import ymsg, bmsg
-from ..include.common import cfg
+from ..include.common import cfg, get_ethkey
 
 sec = 'deadbeef' * 8
 
@@ -61,8 +61,14 @@ class unit_tests:
 		return True
 
 	def eth_keys(self, name, ut):
-		from eth_keys import keys
-		return True
+		try:
+			from eth_keys import keys
+			return True
+		except ImportError:
+			if get_ethkey():
+				return True
+		ymsg('Neither the ‘eth-keys’ package nor the Parity ‘ethkey’ executable '
+			'could be found on the system!')
 
 	def ssh_socks_proxy(self, name, ut):
 		from test.cmdtest_d.include.proxy import TestProxy

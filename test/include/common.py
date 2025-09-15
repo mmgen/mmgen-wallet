@@ -339,6 +339,18 @@ def check_solc_ver():
 		omsg(res)
 		return False
 
+def get_ethkey():
+	cmdnames = ('ethkey', 'openethereum-ethkey')
+	for cmdname in cmdnames:
+		try:
+			cp = run([cmdname, '--help'], stdout=PIPE, text=True)
+		except:
+			pass
+		else:
+			if 'Parity' in cp.stdout:
+				return cmdname
+	return None
+
 def do_run(cmd, check=True):
 	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=check)
 

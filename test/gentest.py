@@ -107,7 +107,10 @@ EXAMPLES:
 SUPPORTED EXTERNAL TOOLS:
 
   + eth-keys (for ETH, ETC)
-	https://github.com/ethereum/eth-keys
+    https://github.com/ethereum/eth-keys
+
+  + ethkey (eth-keys alternative for MSYS2, or if eth-keys is unavailable)
+    https://github.com/openethereum/openethereum/releases/tag/v3.1.0
 
   + zcash-mini (for Zcash-Z addresses and view keys)
     https://github.com/FiloSottile/zcash-mini
@@ -166,13 +169,25 @@ class GenToolEth_keys(GenTool):
 	desc = 'eth-keys'
 
 	def __init__(self, *args, **kwargs):
-		from eth_keys import keys
-		self.keys = keys
+		self.keys = self.cmdname = None
+		try:
+			from eth_keys import keys
+			self.keys = keys
+		except ImportError:
+			self.cmdname = get_ethkey()
+			self.desc = 'ethkey'
+		if not (self.keys or self.cmdname):
+			die(2, 'Neither the ‘eth-keys’ package nor the ‘ethkey’ executable '
+				'could be found on the system!')
 		super().__init__(*args, **kwargs)
 
 	def run(self, sec, vcoin):
-		sk = self.keys.PrivateKey(sec)
-		return gtr(str(sk)[2:], sk.public_key.to_address()[2:], None)
+		if self.keys:
+			sk = self.keys.PrivateKey(sec)
+			return gtr(str(sk)[2:], sk.public_key.to_address()[2:], None)
+		else:
+			o = get_cmd_output([self.cmdname, 'info', sec.hex()])
+			return gtr(o[0].split()[1], o[-1].split()[1], None)
 
 class GenToolKeyconv(GenTool):
 	desc = 'keyconv'
@@ -562,7 +577,7 @@ from mmgen.key import PrivKey
 from mmgen.addr import MMGenAddrType
 from mmgen.addrgen import KeyGenerator, AddrGenerator
 from mmgen.keygen import get_backends
-from test.include.common import getrand, set_globals
+from test.include.common import getrand, get_ethkey, set_globals
 
 gtr = namedtuple('gen_tool_result', ['wif', 'addr', 'viewkey'])
 sd = namedtuple('saved_data_item', ['reduced', 'wif', 'addr', 'viewkey'])
