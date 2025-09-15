@@ -19,7 +19,9 @@
   -t, --type t           Specify address type (valid choices: 'legacy',
                          'compressed', 'segwit', 'bech32', 'zcash_z')
   -v, --verbose          Produce more verbose output
-  -X, --cached-balances  Use cached balances (Ethereum only)
+  -x, --proxy P          Proxy HTTP connections via SOCKS5h proxy ‘P’ (host:port).
+                         Use special value ‘env’ to honor *_PROXY environment
+                         vars instead.
   -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 
 
@@ -84,7 +86,9 @@
     pubhex2addr          - convert a hexadecimal pubkey to an address
     pubhex2redeem_script - convert a hexadecimal pubkey to a Segwit
                            P2SH-P2WPKH redeem script
-    randpair             - generate a random private key/address pair
+    privhex2pair         - generate a wifkey/address pair from the provided
+                           hexadecimal key
+    randpair             - generate a random wifkey/address pair
     randwif              - generate a random private key in WIF format
     redeem_script2addr   - convert a Segwit P2SH-P2WPKH redeem script to an
                            address
@@ -198,5 +202,5 @@
 
   Type ‘mmgen-tool help <command>’ for help on a particular command
 
-  MMGEN v15.1.dev18              March 2025                      MMGEN-TOOL(1)
+  MMGEN-WALLET 16.0.0            September 2025                  MMGEN-TOOL(1)
 ```

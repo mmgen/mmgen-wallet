@@ -31,5 +31,5 @@
       '[{"txid":"832f5aa9af55dc453314e26869c8f96db1f2a9acac9f23ae18d396903971e0c6","vout":0}]' \
       '[{"1111111111111111111114oLvT2":0.001}]'
 
-  MMGEN v15.1.dev19              March 2025                       MMGEN-CLI(1)
+  MMGEN-WALLET 16.0.0            September 2025                   MMGEN-CLI(1)
 ```

@@ -34,5 +34,5 @@
                    instead.
   -y, --yes        Answer 'yes' to prompts, suppress non-essential output
 
-  MMGEN-WALLET 15.1.dev37        May 2025                      MMGEN-TXSEND(1)
+  MMGEN-WALLET 16.0.0            September 2025                MMGEN-TXSEND(1)
 ```

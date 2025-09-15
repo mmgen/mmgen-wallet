@@ -38,6 +38,8 @@ Every time the container is started, you may need to create the files afresh:
 
 ### BTC-only testing
 
+Install the Bitcoin Core daemon [(source)][sd] [(binaries)][bd].
+
 Install Pycoin:
 
 ```text
@@ -49,7 +51,8 @@ $ python3 -m pip download pycoin # online
 $ python3 -m pip install --no-build-isolation pycoin-*.tar.gz # offline
 ```
 
-CD to the MMGen Wallet repository root and build without installing:
+CD to the MMGen Wallet repository root and build the secp256k1 extension module
+in place:
 
 ```text
 $ cd path/to/mmgen/repo
@@ -62,7 +65,8 @@ Run the following if upgrading from a previous version of MMGen:
 $ test/cmdtest.py clean
 ```
 
-Run the test suite in fast mode, skipping altcoin tests:
+Run the test suite in fast mode, skipping altcoin tests (fast mode skips
+non-essential tests and uses fewer rounds for repeated tests):
 
 ```text
 $ test/test-release.sh -FA
@@ -75,9 +79,10 @@ Complete the BTC-only installation steps above, without running the test.
 Make sure the [Bitcoin Cash Node][cnd], [Litecoin][ld] and [Monero][md]
 daemons are installed on your system.
 
-Install [Parity, Geth and the ETH Python requirements][oe], optionally the
+Install [Reth, Geth, Parity and the ETH Python requirements][rg], optionally the
 [Solidity compiler][sc], and [the XMR Python requirements][xr] as described on
-the Altcoin-and-Forkcoin-Support page.
+the Altcoin-and-Forkcoin-Support page.  For Ethereum testing in fast mode, Reth
+may be omitted.
 
 In addition, you must install the following helper programs and libraries (MSYS2
 users can omit Zcash-Mini and leave out `sudo` in commands):
@@ -112,32 +117,54 @@ may also be started and stopped manually at the DOS or MSYS2 prompt as follows
 # net stop msys2_sshd
 ```
 
-#### Monero-Python
+#### Install Monero-Python
 
 ```text
 $ python3 -m pip install pycryptodome ipaddress varint
 $ python3 -m pip install --no-deps monero
 ```
 
-#### Eth-Keys
+#### Install Eth-Keys (non-MSYS2 systems)
+
+This pulls in a lot of dependencies.  If you prefer, you may install the
+openethereum ‘ethkey’ utility instead, if it’s available on your platform.
 
 ```text
 $ python3 -m pip install eth-keys
 ```
 
-#### Vanitygen PlusPlus (forked from Vanitygen Plus)
+#### Install OpenEthereum Ethkey (alternative to eth-keys)
+
+Install this on MSYS2 or if ‘eth-keys’ is unavailable on your platform.  Do not
+confuse this with the Reth ‘ethkey’ utility, which is entirely different.
+
+On Arch Linux and ArchLinuxArm systems, ‘ethkey’ is installed as follows:
+
+```text
+$ pacman -S openethereum
+```
+
+For 64-bit Windows (MSYS2), Linux and macOS systems, ‘ethkey’ can be found in
+the zip archives distributed with [this release][oz].
+
+#### Install Vanitygen PlusPlus (a fork of Vanitygen Plus)
 
 ```text
 $ git clone https://github.com/10gic/vanitygen-plusplus
 $ cd vanitygen-plusplus
 $ git checkout -b vanitygen-plus e7858035d092  # rewind to fork commit
+```
+
+Edit the Makefile, changing `-lpcre` to `-lpcre2-posix` on the second line.
+
+```text
 $ make keyconv # ‘mingw32-make.exe keyconv’ for MSYS2
 $ sudo install --strip keyconv /usr/local/bin  # Linux, macOS
 $ install --strip keyconv.exe /usr/local/bin   # MSYS2
 $ cd ..
 ```
 
-#### Zcash-Mini
+#### Install Zcash-Mini
 
 ```text
 $ sudo apt-get install golang  # skip this if Go is already installed
@@ -163,7 +190,7 @@ If you experience such a failure, just restart the test.
 
 ### Run the tests
 
-Now you can run the test suite for all coins:
+Now you may run the test suite in fast mode for all coins:
 
 ```text
 $ test/test-release.sh -F
@@ -205,7 +232,7 @@ display the commands’ output on the screen as they’re being run.
 [ad]: https://download.bitcoinabc.org/
 [cnd]: https://bitcoincashnode.org/
 [ld]: https://download.litecoin.org/litecoin-0.17.1/
-[oe]: Altcoin-and-Forkcoin-Support.md#a_ed
+[rg]: Altcoin-and-Forkcoin-Support.md#a_geth
 [sc]: Altcoin-and-Forkcoin-Support.md#a_dt
 [xr]: Altcoin-and-Forkcoin-Support.md#a_xmr_req
 [oz]: https://github.com/openethereum/openethereum/releases/tag/v3.1.0

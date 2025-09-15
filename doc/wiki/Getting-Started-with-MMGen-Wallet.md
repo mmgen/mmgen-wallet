@@ -38,31 +38,31 @@
 
 #### <a id="a_bb">Before you begin</a>
 
-Before you begin, note that the filenames, seed IDs and Bitcoin addresses used
-in this primer are intentionally invalid and are for purposes of illustration
-only.  As you perform the exercises, you will substitute real ones in their
-place.
+Before you begin, please note that the filenames, seed IDs and Bitcoin addresses
+used in this primer are intentionally invalid and are for purposes of
+illustration only.  As you perform the exercises, you will substitute real ones
+in their place.
 
 The up arrow (for repeating commands) and tab key (or Ctrl-I) (for completing
 commands and filenames) will speed up your work at the command line greatly.
 
 The examples in this tutorial are geared towards Bitcoin, but with some
 modification they may be used with altcoins and forkcoins for which MMGen
-Wallet supports transaction operations (BCH, LTC, ETH, ETC and XMR as of this
-writing).  See [Altcoin-and-Forkcoin-Support][09] for more details.
+Wallet supports transaction operations (BCH, LTC, ETH, ETC, RUNE and XMR as of
+this writing).  See [Altcoin-and-Forkcoin-Support][09] for more details.
 
 #### <a id="a_iv">Invocation</a>
 
-MMGen Wallet is not a single program but a suite of lightweight scripts run from
-the command line.  Commands all begin, not surprisingly, with `mmgen`, and thus
-you may view all available commands by typing `mmgen` followed by the TAB key.
-Every command has a help screen displaying detailed usage and options
-information.  To view it, type the command name followed by `--help`.  Note that
-most command options have long and short versions.  For example, the `--help`
-option may be abbreviated to `-h`.  Exceptions are the options listed by
-`--longhelp`, which have no short versions.
+MMGen Wallet is not a single program but a suite of scripts run from the command
+line.  Commands all begin, not surprisingly, with `mmgen`, and thus you may view
+all available commands by typing `mmgen` followed by the TAB key.  Every command
+has a help screen displaying detailed usage and options information, available
+by entering the command name followed by `--help`.  Note that most command
+options have long and short versions.  For example, the `--help` option may be
+abbreviated to `-h`.  Exceptions are the options listed by `--longhelp`, which
+have no short versions.
 
-MMGen Wallet’s commands are generally interactive, providing you with information
+MMGen Wallet’s scripts are generally interactive, providing you with information
 and prompting you for input.  The `--verbose` or `-v` option requests commands
 to be more wordy, while the `--quiet` or `-q` option suppresses all but the most
 essential information.  These options are available for all MMGen Wallet
@@ -80,31 +80,35 @@ Sample command invocations:
 
 ```text
 $ mmgen-txcreate --help
+$ mmgen-txcreate --coin=eth --help
 $ mmgen-addrgen --verbose 1-10
 $ mmgen-walletgen
 $ mmgen-walletgen --quiet --seed-len 128
 ```
 
+Note that the help screens are contextual, so the first two invocations will
+produce different output.
+
 #### <a id="a_cf">Configuration file</a>
 
-Just like Bitcoin Core, MMGen Wallet has its own data directory and
-configuration file.  The data directory is `.mmgen` in the user’s home directory
-and the config file is `mmgen.cfg`.  The config file contains global settings
-which you may wish to edit at some point to customize your installation.  These
-settings include the maximum transaction fee; the user name, password and
-hostname used for communicating with your Bitcoin or altcoin daemon; and a
-number of others.
+Just like Bitcoin Core, MMGen Wallet has its own data directory, `.mmgen` in the
+user’s home directory, and configuration file, `mmgen.cfg`.  The config file
+contains global settings which you may wish to edit at some point to customize
+your installation.  These settings include the maximum transaction fee; the user
+name, password and hostname used for communicating with your Bitcoin or altcoin
+daemon; and many others.  For details, consult the configuration file itself,
+which is extensively commented.
 
 #### <a id="a_ts">Bob and Alice regtest mode</a>
 
 If you just want to quickly test using MMGen Wallet, it’s possible to perform
 all wallet generation, wallet format conversion, address and key generation, and
-address import operations on an offline computer with no blockchain and no
-bitcoin balance.
+address import operations on an offline computer with no blockchain and no coin
+balance.
 
-If you want to practice creating, signing and sending transactions with real
-bitcoins, however, you’ll need a fully synced blockchain and some coins to play
-with.  This involves an expenditure of both time and money.
+However, if you want to practice creating, signing and sending transactions with
+real assets, you’ll need a fully synced blockchain and some coins to play with.
+This involves an expenditure of both time and money.
 
 Fortunately, there’s an alternative: MMGen Wallet’s **regtest mode** creates a
 virtual network of two users, Bob and Alice, who transact with each other on a
@@ -158,16 +162,16 @@ Since the wallet is a small, humanly readable ASCII file, it can easily be
 printed out on paper.
 
 Another highly recommended way to back up your wallet is to generate a mnemonic
-seed phrase or seed file [as described below](#a_ms) and write it down or
-memorize it.  If you have an average or better memory, you’ll find memorizing
-your seed phrase to be surprisingly easy. And the peace of mind that comes with
-knowing that your coins are recoverable **even if you lose all your physical
-backups** can’t be overestimated.
+seed phrase or seed file [as described below](#a_ms) and record or memorize it.
+If you have an average or better memory, you’ll find memorizing your seed phrase
+to be surprisingly easy. And the peace of mind that comes with knowing that your
+coins are recoverable **even if you lose all your physical backups** can’t be
+overestimated.
 
 ### <a id="a_tr">Transacting</a>
 
-*The following transacting information is applicable to BTC, BCH, LTC, ETH and
-ETC.  For transacting with Monero, consult [Altcoin-and-Forkcoin-Support][ax]
+*The following transacting information is applicable to BTC, BCH, LTC, ETH, ETC
+and RUNE. For transacting with Monero, consult [Altcoin-and-Forkcoin-Support][x]
 and the [`mmgen-xmrwallet`][mx] help screen.*
 
 #### <a id="a_ga">Generate addresses (offline computer)</a>
@@ -249,77 +253,51 @@ $ cat '89ABCDEF-B[1-10].addrs'
 Note that for non-legacy address types the code letter is included in the
 filename.
 
-To fund your wallet, first import the addresses into your tracking wallet and
-then send some coins to any of them.  If you run out of addresses, generate
-more.  To generate a hundred addresses you’d specify an address range of
-`1-100`.
-
-Let’s say you’ve decided to spend some BTC into the first four addresses above.
-Begin by importing these addresses into the tracking wallet on your online
-machine so their balances will be visible.  For convenience of reference,
-provide the addresses with labels.  We’ll use the labels ‘Donations’, ‘Storage
-1’, ‘Storage 2’ and ‘Storage 3’.
-
-Make a copy of the address file
-
-```text
-$ cp '89ABCDEF-S[1-10].addrs' my.addrs
-```
-
-and edit it using the text editor of your choice,
-
-```text
-$ nano my.addrs
-```
-
-adding labels to the addresses you’ve chosen to spend to:
-
-```text
-# My first MMGen addresses
-89ABCDEF SEGWIT {
-  1    36bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE  Donations
-  2    3AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc  Storage 1
-  3    3HgYCsfqYzIg7LVVfDTp7gYJocJEiDAy6N  Storage 2
-  4    34Tu3z1tiexXDonNsFIkvzqutE5E3pTK8s  Storage 3
-  5    3PeI55vtp2bX2uKDkAAR2c6ekHNYe4Hcq7
-  6    3FEqfEsSILwXPfMvVvVuUovzTaaST62Mnf
-  7    3LTTzuhMqPLwQ4IGCwwugny6ZMtUQJSJ1
-  8    3F9495H8EJLb54wirgZkVgI47SP7M2RQWv
-  9    3JbrCyt7BdxRE9GX1N7GiEct8UnIjPmpYd
-  10   3H7vVTk4ejUbQXw45I6g5qvPBSe9bsjDqh
-}
-```
-
-Any line beginning with `#` is a comment.  Comments may be placed at the ends
-of lines as well.
-
-Save the file, copy it onto a USB stick and transfer it to your online computer.
-
 #### <a id="a_ia">Import addresses (online computer)</a>
+
+To fund your wallet, you must import the addresses you’ve generated into your
+tracking wallet.
 
 Start the coin daemon with the required options (see the [Install-Bitcoind][08]
 wiki page for more details on invoking the daemon for your coin and platform).
 
 Upon startup, older daemons used to automatically generate a new default
 `wallet.dat`, which MMGen Wallet used as its tracking wallet.  With newer
-daemons (e.g. Core 0.21.0 and above), the tracking wallet will be a directory
-named `mmgen-tracking-wallet`, located by default under the `wallets`
-subdirectory in your daemon’s datadir.
+daemons (e.g. Core 0.21.0 and above), the tracking wallet is generated when
+first invoking `mmgen-addrimport` and will be a directory named
+`mmgen-tracking-wallet` located by default under the `wallets` subdirectory
+in your coin daemon’s datadir.
 
-Import the ten addresses into your new tracking wallet with the command:
+Create your tracking wallet and import the ten addresses generated above into
+it as follows:
 
 ```text
-$ mmgen-addrimport --batch my.addrs
+$ mmgen-addrimport my.addrs
 ```
 
-These addresses will now be tracked: any BTC transferred to them will show up in
-your listing of address balances.  Balances can be viewed using `mmgen-tool
-listaddresses` (the `showempty` option requests addresses with empty balances
-to be displayed too).
+These addresses are now tracked: any BTC transferred to them will show up in
+your listing of address balances, and balances will be updated automatically
+as your node syncs with the blockchain.  Balances can be viewed using
+`mmgen-tool listaddresses`:
 
 ```text
-$ mmgen-tool listaddresses showempty=1
-MMGenID       ADDRESS                             COMMENT    BALANCE
+$ mmgen-tool listaddresses
+MMGenID       Address                             Comment    Balance
+89ABCDEF:S:1  36bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE               0
+89ABCDEF:S:2  3AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc               0
+89ABCDEF:S:3  3HgYCsfqYzIg7LVVfDTp7gYJocJEiDAy6N               0
+89ABCDEF:S:4  34Tu3z1tiexXDonNsFIkvzqutE5E3pTK8s               0
+89ABCDEF:S:5  3PeI55vtp2bX2uKDkAAR2c6ekHNYe4Hcq7               0
+...
+TOTAL: 0 BTC
+```
+
+Invoke `mmgen-tool listaddresses interactive=1` and add some comments to your
+newly-imported addresses using the ‘l’ key.  Depending on your comments, your
+output will now look something like this:
+
+```text
+MMGenID       Address                             Comment    Balance
 89ABCDEF:S:1  36bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE  Donations    0
 89ABCDEF:S:2  3AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc  Storage 1    0
 89ABCDEF:S:3  3HgYCsfqYzIg7LVVfDTp7gYJocJEiDAy6N  Storage 2    0
@@ -330,10 +308,11 @@ TOTAL: 0 BTC
 ```
 
 *While not covered in this introduction, note that it’s also possible to [import
-external coin addresses into your tracking wallet][01].  This allows MMGen
+non-MMGen coin addresses into your tracking wallet][01].  This allows MMGen
 Wallet to track and spend funds from another wallet without having to transfer
-the coins through the network.  To do this, you must save the keys corresponding
-to the given addresses in a separate file for use during transaction signing.*
+the coins via the blockchain.  To do this, you must save the private keys
+corresponding to the given addresses in a separate file for use during
+transaction signing.*
 
 Note that each address has a unique ID (the ‘MMGen ID’) consisting of a Seed ID,
 address type code letter, and index.  Addresses of different types may be
@@ -342,29 +321,27 @@ sub-seeds you needn’t worry about key reuse.  For example, the addresses
 `89ABCDEF:S:1` and `89ABCDEF:B:1` are cryptographically unrelated: no one but the
 wallet’s owner can see that they were generated from the same seed.
 
-Now that your addresses are being tracked, you may go ahead and send some BTC to
-them over the Bitcoin network.  If you send 0.1, 0.2, 0.3 and 0.4 BTC
-respectively, your address listing will look like this after the transactions
-have confirmed:
+Now that your addresses are being tracked, you may send some BTC to them over
+the Bitcoin network.  If you send 0.1, 0.2, 0.3 and 0.4 BTC respectively, your
+address listing will look like this after the transactions have confirmed:
 
 ```text
 $ mmgen-tool listaddresses
-MMGenID       COMMENT    BALANCE
-89ABCDEF:S:1  Donations    0.1
-89ABCDEF:S:2  Storage 1    0.2
-89ABCDEF:S:3  Storage 2    0.3
-89ABCDEF:S:4  Storage 3    0.4
+MMGenID       Address                             Comment    Balance
+89ABCDEF:S:1  36bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE  Donations    0.1
+89ABCDEF:S:2  3AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc  Storage 1    0.2
+89ABCDEF:S:3  3HgYCsfqYzIg7LVVfDTp7gYJocJEiDAy6N  Storage 2    0.3
+89ABCDEF:S:4  34Tu3z1tiexXDonNsFIkvzqutE5E3pTK8s  Storage 3    0.4
 TOTAL: 1 BTC
 ```
 
 #### <a id="a_ct">Create a transaction (online computer)</a>
 
-Now that you have some BTC under MMGen Wallets’s control, you’re ready to create
-a transaction.  Note that transactions are harmless until they’re signed and
-broadcast to the network, so feel free to experiment and create transactions
+Now that you have some coins under MMGen Wallet’s control, you’re ready to
+create a transaction.  Note that transactions are harmless until they’re signed
+and broadcast to the network, so feel free to experiment and create transactions
 with different combinations of inputs and outputs.  Of course, if you’re using
-testnet or regtest mode, then you risk nothing even when broadcasting
-transactions.
+testnet or regtest mode, you risk nothing even when broadcasting transactions.
 
 To send 0.1 BTC to the a third-party address
 `3AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc`, for example, and send the change back to
@@ -426,8 +403,9 @@ amount of 0.1 BTC, plus the transaction fee (for more on fees, see ‘Transactio
 Fees’ under ‘Advanced Topics’ below).  Output #2 is worth 0.2 BTC, which is
 sufficient, so we’ll choose that and hit ENTER.  When prompted for a
 transaction fee, we’ll choose 0.0001 BTC (note that integer fees followed by
-the letter ‘s’ for “satoshis per byte” are also permissible).  After a couple
-more prompts and confirmations, your transaction will be saved:
+the letter ‘s’ for “satoshis per byte” are also accepted, and this is actually
+the preferred way to indicate fees).  After a couple more prompts and
+confirmations, your transaction will be saved:
 
 ```text
 Transaction written to file 'FEDCBA[0.1].rawtx'
@@ -475,17 +453,17 @@ Once the transaction is broadcast to the network and confirmed, your address
 listing should look something like this:
 
 ```text
-$ mmgen-tool listaddresses minconf=1
-MMGenID       COMMENT    BALANCE
-89ABCDEF:S:1  Donations    0.1
-89ABCDEF:S:3  Storage 2    0.3
-89ABCDEF:S:4  Storage 3    0.4
-89ABCDEF:S:5               0.0999
+$ mmgen-tool listaddresses
+MMGenID       Address                             Comment    Balance
+89ABCDEF:S:1  36bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE  Donations    0.1
+89ABCDEF:S:3  3HgYCsfqYzIg7LVVfDTp7gYJocJEiDAy6N  Storage 2    0.3
+89ABCDEF:S:4  34Tu3z1tiexXDonNsFIkvzqutE5E3pTK8s  Storage 3    0.4
+89ABCDEF:S:5  3PeI55vtp2bX2uKDkAAR2c6ekHNYe4Hcq7               0.0999
 TOTAL: 0.8999 BTC
 ```
 
-Alternatively, you may use `mmgen-tool twview` or `mmgen-txcreate -i` for more
-detailed and configurable output:
+Alternatively, you may use view your addresses with `mmgen-tool twview`, which
+lists only unspent outputs and provides some additional information:
 
 ```text
 $ mmgen-tool twview
@@ -1149,7 +1127,7 @@ $ python3 -m pip install user --upgrade dist/*.whl
 [07]: commands/command-help-autosign.md
 [08]: Install-Bitcoind.md
 [09]: Altcoin-and-Forkcoin-Support.md
-[ax]: Altcoin-and-Forkcoin-Support.md#a_xmr
+[x]:  Altcoin-and-Forkcoin-Support.md#a_xmr
 [cp]: ../../../../commits/master
 [mx]: commands/command-help-xmrwallet.md
 [li]: Install-MMGen-Wallet-on-Linux-or-macOS.md

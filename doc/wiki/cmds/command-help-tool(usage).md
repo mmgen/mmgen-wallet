@@ -61,6 +61,7 @@ GENERAL USAGE INFORMATION FOR MMGEN-TOOL COMMANDS
     pubhash2addr         pubhashhex [str or STDIN]
     pubhex2addr          pubkeyhex [str or STDIN]
     pubhex2redeem_script pubkeyhex [str or STDIN]
+    privhex2pair         privhex [str or STDIN]
     randpair
     randwif
     redeem_script2addr   redeem_script_hex [str or STDIN]
@@ -187,5 +188,5 @@ EXAMPLES:
   Same as above, but supply input via STDIN:
   $ echo "deadbeefcafe" | mmgen-tool hexreverse -
 
-  MMGEN v15.1.dev18              March 2025               MMGEN-TOOL(USAGE)(1)
+  MMGEN-WALLET 16.0.0            September 2025           MMGEN-TOOL(USAGE)(1)
 ```

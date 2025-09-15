@@ -11,7 +11,7 @@ For computers with no Internet connection, see **Note for offline machines** bel
 #### Debian/Ubuntu:
 
 ```text
-$ sudo apt-get install curl git gcc libtool make autoconf libgmp-dev libssl-dev libpcre2-dev libmpfr-dev libmpc-dev python3-dev python3-pip libsecp256k1-dev
+$ sudo apt-get install curl git gcc libtool make autoconf e2fsprogs libgmp-dev libssl-dev libpcre2-dev libmpfr-dev libmpc-dev python3-dev python3-pip libsecp256k1-dev
 ```
 
 #### Arch Linux:
@@ -25,6 +25,8 @@ $ sudo pacman -S curl git gcc libtool make autoconf automake autogen pcre python
 ```text
 $ brew install python bash autoconf coreutils gcc libmpc libtool readline secp256k1
 ```
+
+On RISC-V machines, you may additionally need to install the `libffi-dev` package and [Rust][rs]
 
 You may wish to use a [virtual environment][vv] to keep your MMGen Wallet
 installation isolated from the rest of your Python packages.
@@ -110,3 +112,4 @@ Congratulations, your installation is now complete!  You can now proceed to
 [af]: Altcoin-and-Forkcoin-Support.md
 [ec]: https://github.com/bitcoin-core/secp256k1.git
 [vv]: https://docs.python.org/3/library/venv.html
+[rs]: https://rustup.rs

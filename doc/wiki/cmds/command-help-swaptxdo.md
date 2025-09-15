@@ -316,5 +316,5 @@
 
       $ https_proxy=http://gw1:4444 mmgen-swaptxdo --proxy=env RUNE 1000 BTC
 
-  MMGEN-WALLET 15.1.dev47        June 2025                   MMGEN-SWAPTXDO(1)
+  MMGEN-WALLET 16.0.0            September 2025              MMGEN-SWAPTXDO(1)
 ```

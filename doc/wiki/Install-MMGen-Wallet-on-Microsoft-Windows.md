@@ -11,15 +11,13 @@
 	* [Offline install](#a_md1)
 * [4. Set up your shell environment](#a_ev)
 * [5. Choose your Python environment](#a_pev)
-* [6. Install the Python ECDSA library (offline install only)](#a_ec)
-* [7. Install the standalone scrypt package (required for strong password hashing)](#a_sc)
-* [8. Clone and copy the secp256k1 library (offline install only)](#a_se)
-* [9. Install MMGen Wallet](#a_mm)
+* [6. Install required Python packages](#a_pp)
+* [7. Clone and copy the secp256k1 library (offline install only)](#a_se)
+* [8. Install MMGen Wallet](#a_mm)
 	* [Stable version](#a_mms)
 	* [Development version](#a_mmd)
-* [10. Install Python Ethereum dependencies (if applicable)](#a_pe)
-* [11. Install and launch your coin daemons](#a_cd)
-* [12. You’re done!](#a_do)
+* [9. Install and launch your coin daemons](#a_cd)
+* [10. You’re done!](#a_do)
 
 #### [Keeping your installation up to date](#a_u)
 * [Upgrading MSYS2](#a_us)
@@ -106,14 +104,12 @@ $ ls 'C:\\msys64\etc'  # the path as seen by Windows
 >
 >> <https://mirror.msys2.org/msys/x86_64/msys.db>  
 >> <https://mirror.msys2.org/msys/x86_64/msys.db.sig>  
->> <https://mirror.msys2.org/mingw/x86_64/mingw64.db>  
->> <https://mirror.msys2.org/mingw/x86_64/mingw64.db.sig>  
->> <https://mirror.msys2.org/mingw/i686/mingw32.db>  
->> <https://mirror.msys2.org/mingw/i686/mingw32.db.sig>  
+>> <https://mirror.msys2.org/mingw/mingw64/mingw64.db>  
+>> <https://mirror.msys2.org/mingw/mingw64/mingw64.db.sig>  
+>> <https://mirror.msys2.org/mingw/mingw32/mingw32.db>  
+>> <https://mirror.msys2.org/mingw/mingw32/mingw32.db.sig>  
 >> <https://mirror.msys2.org/mingw/clang64/clang64.db>  
 >> <https://mirror.msys2.org/mingw/clang64/clang64.db.sig>  
->> <https://mirror.msys2.org/mingw/clang32/clang32.db>  
->> <https://mirror.msys2.org/mingw/clang32/clang32.db.sig>  
 >> <https://mirror.msys2.org/mingw/clangarm64/clangarm64.db>  
 >> <https://mirror.msys2.org/mingw/clangarm64/clangarm64.db.sig>  
 >> <https://mirror.msys2.org/mingw/ucrt64/ucrt64.db>  
@@ -195,7 +191,8 @@ pacman -S tar git vim autoconf automake-wrapper autogen libtool cygrunsrv \
 	mingw-w64-ucrt-x86_64-python-pysocks \
 	mingw-w64-ucrt-x86_64-python-requests \
 	mingw-w64-ucrt-x86_64-python-aiohttp \
-	mingw-w64-ucrt-x86_64-python-pyreadline3
+	mingw-w64-ucrt-x86_64-python-pyreadline3 \
+	mingw-w64-ucrt-x86_64-python-lxml
 ```
 
 ### <a id="a_ev">4. Set up your shell environment</a>
@@ -236,46 +233,25 @@ If you choose not to use a virtual environment, then you should add `--user` to
 the command line every time you run `pip install` as directed below.  This will
 prevent pip from installing packages in the system directory.
 
-### <a id="a_ec">6. Install the Python ECDSA library (offline install only)</a>
+### <a id="a_pp">6. Install required Python packages</a>
 
 On your online machine:
 
 ```text
 $ python3 -m pip download ecdsa
+$ python3 -m pip download --no-binary :all: scrypt==0.8.27 aiohttp==3.12.9
+
 ```
 
-Copy the downloaded file to your offline machine and install:
+Copy the downloaded files to your offline machine (if applicable) and install:
 
 ```text
 $ python3 -m pip install ecdsa-*.whl
+$ python3 -m pip install --no-build-isolation scrypt*gz
+$ python3 -m pip install --no-build-isolation aiohtt* multidic* yarl* aiohap* aiosig* attrs* frozenlist* idna* propcache*
 ```
 
-### <a id="a_sc">7. Install the standalone scrypt package (required for strong password hashing)</a>
-
-Due to a faulty implementation of the `scrypt` function included in Python’s
-`hashlib`, the standalone `scrypt` module is required for stronger-than-default
-password hashing (i.e. hash presets greater than `3`).  Installing the package is
-therefore highly advisable.
-
-On your online machine, clone the Py-Scrypt repository from Github:
-
-```text
-$ git clone https://github.com/holgern/py-scrypt.git
-```
-
-Offline install:
-
-> Copy the cloned repo to your offline machine.
-
-Build and install:
-
-```text
-$ cd py-scrypt
-$ python3 -m build --no-isolation
-$ python3 -m pip install dist/*.whl
-```
-
-### <a id="a_se">8. Clone and copy the secp256k1 library (offline install only)</a>
+### <a id="a_se">7. Clone and copy the secp256k1 library (offline install only)</a>
 
 On your online machine, clone the secp256k1 repository from Github:
 
@@ -292,7 +268,7 @@ $ cp -a /path/to/secp256k1/repo/secp256k1 ~/.cache/mmgen
 $ ls ~/.cache/mmgen/secp256k1/autogen.sh # check that files were correctly copied
 ```
 
-### <a id="a_mm">9. Install MMGen Wallet</a>
+### <a id="a_mm">8. Install MMGen Wallet</a>
 
 Now you’re ready to install MMGen Wallet itself.
 
@@ -350,31 +326,7 @@ occasion.
 Note that MMGen Wallet has a test suite.  Refer to the [Test Suite][ts] wiki
 page for details.
 
-### <a id="a_pe">10. Install Python Ethereum dependencies (if applicable)</a>
-
-If you’ll be using MMGen Wallet with Ethereum, then you must install a few
-dependencies.  From the MMGen repository root, type the following:
-
-Online install:
-
-> ```text
-> $ python3 -m pip install --no-deps -r eth-requirements.txt
-> ```
-
-Offline install:
-
-> ```text
-> $ python3 -m pip download --no-deps -r eth-requirements.txt
-> ```
->
-> Transfer the downloaded files to your offline machine, `cd` to the directory
-> containing the files and install them:
->
-> ```text
-> $ python3 -m pip install --no-deps *.whl
-> ```
-
-### <a id="a_cd">11. Install and launch your coin daemons</a>
+### <a id="a_cd">9. Install and launch your coin daemons</a>
 
 At this point your installation will be able to generate wallets, along with
 keys and addresses for all supported coins.  However, if you intend to do any
@@ -399,7 +351,7 @@ Please note that Ethereum daemons perform rather poorly under Windows due to
 threading limitations.  Unless you have very fast hardware, transacting and
 syncing the blockchain will be painfully slow.
 
-### <a id="a_do">12. You’re done!</a>
+### <a id="a_do">10. You’re done!</a>
 
 Congratulations, your installation is now complete, and you can proceed to
 [**Getting Started with MMGen Wallet**][gs].  Note that all features supported

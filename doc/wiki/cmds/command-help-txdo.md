@@ -190,5 +190,5 @@
 
       $ mmgen-txdo B
 
-  MMGEN-WALLET 15.1.dev44        June 2025                       MMGEN-TXDO(1)
+  MMGEN-WALLET 16.0.0            September 2025                  MMGEN-TXDO(1)
 ```

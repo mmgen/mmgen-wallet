@@ -499,10 +499,22 @@ Required ARG (type shown in square brackets):
   pubkeyhex [str] (use '-' to read from STDIN)
 ```
 
+### `mmgen-tool privhex2pair`
+
+```text
+Generate a wifkey/address pair from the provided hexadecimal key
+
+USAGE: mmgen-tool [OPTS] privhex2pair ARG
+
+Required ARG (type shown in square brackets):
+
+  privhex [str] (use '-' to read from STDIN)
+```
+
 ### `mmgen-tool randpair`
 
 ```text
-Generate a random private key/address pair
+Generate a random wifkey/address pair
 
 USAGE: mmgen-tool [OPTS] randpair
 ```
@@ -1240,5 +1252,5 @@ Optional KEYWORD ARGS (type and default value shown in square brackets):
 ```
 
 ```text
-MMGEN v15.1.dev18              March 2025                 MMGEN-TOOL(DETAIL)(1)
+MMGEN-WALLET 16.0.0            September 2025             MMGEN-TOOL(DETAIL)(1)
 ```

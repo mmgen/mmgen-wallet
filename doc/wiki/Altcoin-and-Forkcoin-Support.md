@@ -4,13 +4,17 @@
 
 #### [Ethereum (ETH), Ethereum Classic (ETC) and ERC20 Tokens](#a_eth)
 * [Install the Ethereum dependencies](#a_ed)
-* [Install and run Geth or Parity](#a_geth)
+* [Install and run Reth, Geth or Parity](#a_geth)
 * [Transacting and other basic operations](#a_tx)
 * [Creating and deploying ERC20 tokens](#a_dt)
 
 #### [Bitcoin Cash Node (BCH) and Litecoin (LTC)](#a_bch)
 
 #### [Monero (XMR)](#a_xmr)
+
+#### [THORChain (RUNE)](#a_rune)
+
+#### [Asset swaps via THORChain](#a_tcswap)
 
 #### [Key/address generation for Zcash (ZEC)](#a_zec)
 
@@ -35,20 +39,31 @@ From the MMGen Wallet repository root, type:
 
 ```text
 $ python3 -m pip install -r alt-requirements.txt # skip this for MSYS2
-$ python3 -m pip install --no-deps -r eth-requirements.txt
 ```
 
-#### <a id="a_geth">Install and run Geth or Parity</a>
+#### <a id="a_geth">Install and run Reth, Geth or Parity</a>
 
-MMGen Wallet uses Go-Ethereum (Geth) to communicate with the Ethereum network.
-For information on installing Geth on your system, visit the the Geth [Github
-repo][ge].  On Arch Linux systems, Go-Ethereum is a package and may be installed
-with `pacman`.
+MMGen Wallet uses Rust Ethereum (Reth) or Go-Ethereum (Geth) to communicate with
+the Ethereum network, with Reth now being preferred by the MMGen Project.
+
+Installation and usage instructions for Reth can be found [here][RE] and
+prebuilt binaries [here][rb].
+
+Information for Geth can be found at its [homepage][gh] or [Github repo][ge].
+On Arch Linux systems, Geth is a package and may be installed with `pacman`.  On
+RISC-V platforms, for which no prebuilt binaries are available, Geth must be
+built from source, preferably using the most recent version of [Go][gd].
 
 Note that the Ethereum daemon is not used for transaction signing, so you
 needn’t install it on your offline machine.
 
-For Geth, the following command-line options are required:
+For Reth, the following command-line options are required, among others:
+
+```text
+--http --http.api=eth,rpc,web3,txpool
+```
+
+For Geth, the following command-line options are required, among others:
 
 ```text
 --http --http.api=eth,web3,txpool --http.port=8745
@@ -71,8 +86,8 @@ Parity’s light client mode, which queries other nodes on the network for
 blockchain data, is supported.  Add the `--light` option to the Parity command
 line and read the applicable note in the [Transacting](#a_tx) section below.
 
-You may require other options as well.  Invoke your daemon with the `--help`
-option for more complete information.
+Other command-line options will certainly be required.  Invoke your daemon with
+the `--help` option for more complete information.
 
 #### <a id="a_tx">Transacting and other basic operations</a>
 
@@ -80,7 +95,7 @@ Basic operations with ETH, ETC and ERC20 tokens work as described in the
 [**Getting Started**][bo] guide, with some differences.  Please note the
 following:
 
-* Don’t forget to invoke all commands with `--coin=eth` or `--coin=etc`.
+* Don’t forget to invoke relevant commands with `--coin=eth` or `--coin=etc`.
 * Use the `--token` option with the token symbol as parameter for all token
   operations.  When importing addresses for a new token into your tracking
   wallet, use the `--token-addr` option with the token address instead.
@@ -93,6 +108,14 @@ following:
   your account balances have changed, they may be refreshed interactively within
   the TRACKED ACCOUNTS menu.  Cached balances are stored persistently in your
   tracking wallet.
+* Note that sending transactions with your Ethereum node can easily deanonymize
+  you by linking the transaction with your IP address (running a Reth node
+  over Tor or Tor+VPN is theoretically possible, but problematic in practice).
+  As a solution to this problem, MMGen Wallet supports broadcasting transactions
+  via the etherscan.io website with the `--tx-proxy` option.  Sending is done
+  using the site’s public web form, so no registration or API key is required.
+  For anonymity, the connection can be routed via Tor or I2P using the `--proxy`
+  option.  See `mmgen-txsend --help` for details.
 
 ##### Transacting example:
 
@@ -205,11 +228,14 @@ To transact BCH or Litecoin, first make sure the Bitcoin Cash Node or Litecoin
 daemons are properly installed ([source][si])([binaries][bi]), [running][p8] and
 synced.
 
+On RISC-V platforms, Bitcoin Cash Node must be compiled from source, as no
+precompiled binaries are available.
+
 MMGen Wallet requires that the bitcoin-bchn daemon be listening on non-standard
 [RPC port 8432][p8].  If your daemon version is >= 0.16.2, you must use the
 `--usecashaddr=0` option.
 
-Then just add the `--coin=bch` or `--coin=ltc` option to all your MMGen Wallet
+Then just add the `--coin=bch` or `--coin=ltc` option to applicable MMGen Wallet
 commands.  It’s that simple!
 
 ### <a id="a_xmr">Monero (XMR)</a>
@@ -273,6 +299,30 @@ have multiple wallets requiring long sync times.
 
 To learn how to transact using your wallets, continue on to the
 [`mmgen-xmrwallet`][mx] help screen.
+
+### <a id="a_rune">THORChain (RUNE)</a>
+
+Transacting RUNE with MMGen Wallet is similar to transacting BTC as described in
+the [**Getting Started**][gs] guide.  Just add the `--coin=rune` option to all
+relevant commands.  With `mmgen-autosign`, add `rune` to the list of coins in
+the `--coins` parameter.
+
+Note that MMGen Wallet’s RUNE support requires no locally running node; instead,
+balances are fetched and transactions sent via a public node at ninerealms.com.
+As this can compromise your privacy, it’s recommended to proxy all
+communications via Tor or I2P: refer to the helpscreens of `mmgen-txcreate`,
+`mmgen-swaptxcreate` and `mmgen-txsend` for more information.
+
+### <a id="a_tcswap">Asset swaps via THORChain</a>
+
+21 assets (as of this writing) may be swapped directly within MMGen Wallet via
+THORChain.  Swapping assets is just like normal transacting, except transactions
+are created using `mmgen-swaptxcreate` instead of `mmgen-txcreate`.  Note that
+coin daemons for both the send and receive assets must be running and synced
+before carrying out a swap.  Depending on your setup, communication with two
+daemons simultaneously may require the use of *coin-specific options* (see
+`mmgen-swaptxcreate --longhelp`).  For usage information, examples, and a list
+of supported assets, invoke `mmgen-swaptxcreate --help`.
 
 ### <a id="a_zec">Key/address generation for Zcash (ZEC)</a>
 
@@ -353,7 +403,11 @@ the MMGen Project.
 [si]: Install-Bitcoind-from-Source-on-Linux.md
 [bi]: Install-Bitcoind.md#a_d
 [p8]: Install-Bitcoind.md#a_r
+[gh]: https://geth.ethereum.org
 [ge]: https://github.com/ethereum/go-ethereum
 [mx]: commands/command-help-xmrwallet.md
 [sb]: https://github.com/ethereum/solidity/releases
 [sd]: https://docs.soliditylang.org
+[RE]: https://reth.rs/overview
+[rb]: https://github.com/paradigmxyz/reth/releases
+[gd]: https://go.dev

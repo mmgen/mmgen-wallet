@@ -120,5 +120,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN-WALLET 15.1.dev44        June 2025                     MMGEN-TXBUMP(1)
+  MMGEN-WALLET 16.0.0            September 2025                MMGEN-TXBUMP(1)
 ```
