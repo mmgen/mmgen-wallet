@@ -38,7 +38,8 @@ def build_libsecp256k1():
 		print(f'\nBuilding libsecp256k1 (cwd={str(src_path)})')
 		cmds = (
 			['sh', './autogen.sh'],
-			['sh', './configure', 'CFLAGS=-g -O2 -fPIC', '--disable-dependency-tracking'],
+			['sh', './configure', 'CFLAGS=-g -O2 -fPIC', '--disable-dependency-tracking',
+				'--enable-module-recovery', 'MAKE=mingw32-make'],
 			['mingw32-make', 'MAKE=mingw32-make'])
 		for cmd in cmds:
 			print('Executing {}'.format(' '.join(cmd)))
@@ -59,7 +60,7 @@ setup(
 		name      = 'mmgen.proto.secp256k1.secp256k1',
 		sources   = ['extmod/secp256k1mod.c'],
 		depends   = ['extmod/random.h'],
-		libraries = ['gmp', 'secp256k1'] if sys.platform == 'win32' else ['secp256k1'],
+		libraries = ['gmp', 'secp256k1', 'bcrypt'] if sys.platform == 'win32' else ['secp256k1'],
 		include_dirs = ['/usr/local/include'] if sys.platform == 'darwin' else [],
 		library_dirs = ['/usr/local/lib'] if sys.platform == 'darwin' else [],
 	)]

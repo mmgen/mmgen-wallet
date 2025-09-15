@@ -257,7 +257,7 @@ init_tests() {
 	d_ltc_rt="overall operations using the regtest network (Litecoin)"
 	t_ltc_rt="- $cmdtest_py --coin=ltc regtest"
 
-	[ "$SOC" ] && {
+	[ "$SOC" -o "$MSYS2" ] && {
 		eth_env="MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD=${MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD:-22} "
 	}
 
