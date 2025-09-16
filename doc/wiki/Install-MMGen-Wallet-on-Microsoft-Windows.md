@@ -437,7 +437,7 @@ Offline upgrade:
 [ib]: Install-Bitcoind.md
 [gs]: Getting-Started-with-MMGen-Wallet.md
 [pl]: Altcoin-and-Forkcoin-Support.md#a_ed
-[ax]: commands/command-help-autosign.md
+[ax]: cmds/command-help-autosign.md
 [mc]: Altcoin-and-Forkcoin-Support.md#a_xmr
 [ts]: Test-Suite.md
 [vv]: https://docs.python.org/3/library/venv.html

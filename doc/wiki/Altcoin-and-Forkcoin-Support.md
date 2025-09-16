@@ -397,7 +397,7 @@ the MMGen Project.
 [y]: https://github.com/ethereum/pyethereum
 [P]: https://pypi.org/project/pip
 [M]: https://getmonero.org/downloads/#linux
-[X]: commands/command-help-autosign.md
+[X]: cmds/command-help-autosign.md
 [gs]: Getting-Started-with-MMGen-Wallet.md
 [bo]: Getting-Started-with-MMGen-Wallet.md#a_bo
 [si]: Install-Bitcoind-from-Source-on-Linux.md
@@ -405,7 +405,7 @@ the MMGen Project.
 [p8]: Install-Bitcoind.md#a_r
 [gh]: https://geth.ethereum.org
 [ge]: https://github.com/ethereum/go-ethereum
-[mx]: commands/command-help-xmrwallet.md
+[mx]: cmds/command-help-xmrwallet.md
 [sb]: https://github.com/ethereum/solidity/releases
 [sd]: https://docs.soliditylang.org
 [RE]: https://reth.rs/overview

@@ -1124,11 +1124,11 @@ $ python3 -m pip install user --upgrade dist/*.whl
 [04]: MMGen-Wallet-Quick-Start-with-Regtest-Mode.md
 [05]: Key-address-files.md
 [06]: Subwallets.md
-[07]: commands/command-help-autosign.md
+[07]: cmds/command-help-autosign.md
 [08]: Install-Bitcoind.md
 [09]: Altcoin-and-Forkcoin-Support.md
 [x]:  Altcoin-and-Forkcoin-Support.md#a_xmr
 [cp]: ../../../../commits/master
-[mx]: commands/command-help-xmrwallet.md
+[mx]: cmds/command-help-xmrwallet.md
 [li]: Install-MMGen-Wallet-on-Linux-or-macOS.md
 [wi]: Install-MMGen-Wallet-on-Microsoft-Windows.md

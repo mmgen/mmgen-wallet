@@ -345,5 +345,5 @@ an example will be provided in a future version of this document.
 [wm]: https://en.wikipedia.org/wiki/Modular_arithmetic
 [otp]: https://en.wikipedia.org/wiki/One-time_pad
 [sc]: https://en.wikipedia.org/wiki/Stream_cipher
-[SS]: commands/command-help-seedsplit.md
-[SJ]: commands/command-help-seedjoin.md
+[SS]: cmds/command-help-seedsplit.md
+[SJ]: cmds/command-help-seedjoin.md
