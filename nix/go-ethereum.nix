@@ -17,7 +17,9 @@ buildGoModule {
 
     src = fetchGit {
         url = "https://github.com/ethereum/go-ethereum.git";
+        # url = /path/to/repo/go-ethereum.git;
         ref = "refs/tags/${tag_version}";
+        shallow = true;
     };
 
     proxyVendor = false;
@@ -33,8 +35,8 @@ buildGoModule {
 
     ## Fix for usb-related segmentation faults on darwin
     propagatedBuildInputs = lib.optionals stdenv.hostPlatform.isDarwin [
-       pkgs.libobjc
-       pkgs.IOKit
+        pkgs.libobjc
+        pkgs.IOKit
     ];
 
     # passthru.tests = { inherit (nixosTests) geth; };
