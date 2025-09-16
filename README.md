@@ -23,7 +23,7 @@ network-connected device.**
 MMGen Wallet is designed for reliability by having the reference Bitcoin or
 altcoin daemon, rather than less-tested third-party software, do all the “heavy
 lifting” of tracking and signing transactions.  It’s also designed with privacy
-in mind: unlike some other online/offline wallets, MMGen Wallet is a completely
+in mind: unlike most cryptocurrency wallets, MMGen Wallet is a completely
 self-contained system that makes **no connections to the Internet** apart from
 the coin network itself: no information about which addresses you’re tracking is
 ever leaked to the outside world.
@@ -69,8 +69,8 @@ that widespread standard.
 
 #### A brief overview of MMGen Wallet’s unique feature set:
 
-- **[Full transaction and address tracking support][T]** for Bitcoin, [Bcash][bx],
-  [Litecoin][bx], [Ethereum][E], Ethereum Classic and [ERC20 tokens][E].
+- **[Transaction support][T]** for BTC, [BCH][bx], [LTC][bx], [ETH][E],
+  [ETC][E] and [ERC20 tokens][E].
 - **Monero transacting and wallet management** via the interactive
   [`mmgen-xmrwallet`][xm] command.
 - **[Address generation support][ag]** for the above coins, plus [Zcash][zx]
@@ -134,10 +134,8 @@ that widespread standard.
 - **Scriptability:** Most of MMGen Wallet’s commands can be made
   non-interactive, allowing you to automate repetitive tasks using shell
   scripts.
-- The project also includes the [`mmgen-tool`][L] utility, a handy “pocket
-  knife” for cryptocurrency developers, along with an easy-to-use [**tool API
-  interface**][ta] providing access to a subset of its commands from within
-  Python.
+- The project also includes the [`mmgen-tool`][L] utility, a handy “Swiss
+  Army knife” for cryptocurrency developers.
 
 #### Supported platforms:
 
@@ -151,19 +149,26 @@ Homepage:
 [Clearnet](https://mmgen-wallet.cc) |
 [I2P](http://mmgen-wallet.i2p) |
 [Onion](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion)    
-Code repository:
+Code Repository:
 [Clearnet](https://mmgen.org/project/mmgen/mmgen-wallet) |
 [I2P](http://mmgen-wallet.i2p/project/mmgen/mmgen-wallet) |
 [Onion](http://mmgen55rtcahqfp2hn3v7syqv2wqanks5oeezqg3ykwfkebmouzjxlad.onion/project/mmgen/mmgen-wallet)    
-Code repository mirrors:
+Code Repository Mirrors:
 [Github](https://github.com/mmgen/mmgen-wallet) |
 [Gitlab](https://gitlab.com/mmgen/mmgen-wallet) |
 [Codeberg](https://codeberg.org/mmgen/mmgen-wallet)     
-[Keybase](https://keybase.io/mmgen) |
+IRC:
+**#mmgen-wallet** ([OFTC](https://oftc.net) | postman.i2p) &nbsp; | &nbsp;
+E-Mail:
+[Tuta](mailto:mmgen@tuta.io) |
+[Proton](mailto:mmgen-wallet@proton.me)  
+Accounts:
 [Twitter](https://twitter.com/TheMMGenProject) |
+[Bitcointalk](https://bitcointalk.org/index.php?topic=567069.new#new) |
+[Dread](http://dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion/u/MMGen) |
 [Reddit](https://www.reddit.com/user/mmgen-py) |
-[Bitcointalk](https://bitcointalk.org/index.php?topic=567069.new#new)   
-[PGP Signing Key][5]: 5C84 CB45 AEE2 250F 31A6 A570 3F8B 1861 E32B 7DA2    
+[Keybase](https://keybase.io/mmgen)  
+PGP Signing Key: [5C84 CB45 AEE2 250F 31A6 A570 3F8B 1861 E32B 7DA2][5]    
 Donate:    
 &nbsp;⊙&nbsp;BTC:&nbsp;*bc1qxmymxf8p5ckvlxkmkwgw8ap5t2xuaffmrpexap*    
 &nbsp;⊙&nbsp;BCH:&nbsp;*15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w*    
