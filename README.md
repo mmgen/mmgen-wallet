@@ -25,8 +25,8 @@ altcoin daemon, rather than less-tested third-party software, do all the “heav
 lifting” of tracking and signing transactions.  It’s also designed with privacy
 in mind: unlike most cryptocurrency wallets, MMGen Wallet is a completely
 self-contained system that makes **no connections to the Internet** apart from
-the coin network itself: no information about which addresses you’re tracking is
-ever leaked to the outside world.
+the coin network itself (RUNE transacting excepted): no information about which
+addresses you’re tracking is ever leaked to the outside world.
 
 Like all deterministic wallets, MMGen Wallet can generate a virtually unlimited
 number of address/key pairs from a single seed.  Your wallet never changes, so
@@ -70,7 +70,8 @@ that widespread standard.
 #### A brief overview of MMGen Wallet’s unique feature set:
 
 - **[Transaction support][T]** for BTC, [BCH][bx], [LTC][bx], [ETH][E],
-  [ETC][E] and [ERC20 tokens][E].
+  [ETC][E], [ERC20 tokens][E] and [RUNE][rx].
+- **[Native asset swaps via THORChain][tc]** (21 assets currently supported).
 - **Monero transacting and wallet management** via the interactive
   [`mmgen-xmrwallet`][xm] command.
 - **[Address generation support][ag]** for the above coins, plus [Zcash][zx]
@@ -135,7 +136,8 @@ that widespread standard.
   non-interactive, allowing you to automate repetitive tasks using shell
   scripts.
 - The project also includes the [`mmgen-tool`][L] utility, a handy “Swiss
-  Army knife” for cryptocurrency developers.
+  Army knife” for cryptocurrency developers, and [`mmgen-cli`][cl], for
+  easy communication with the RPC interfaces of all supported coin daemons.
 
 #### Supported platforms:
 
@@ -188,10 +190,13 @@ Donate:
 [xm]: ../../wiki/command-help-xmrwallet
 [G]:  ../../wiki/command-help-passgen
 [MS]: ../../wiki/command-help-msg
+[cl]: ../../wiki/command-help-cli
 [T]:  ../../wiki/Getting-Started-with-MMGen-Wallet#a_ct
 [E]:  ../../wiki/Altcoin-and-Forkcoin-Support#a_tx
 [ag]: ../../wiki/command-help-addrgen
 [bx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_bch
+[rx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_rune
+[tc]: ../../wiki/Altcoin-and-Forkcoin-Support#a_tcswap
 [zx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_zec
 [ax]: ../../wiki/Altcoin-and-Forkcoin-Support#a_kg
 [M]:  ../../wiki/Getting-Started-with-MMGen-Wallet#a_fee
