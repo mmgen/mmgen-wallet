@@ -84,6 +84,7 @@ init_tests() {
 	PYLINT_OPTS='--errors-only --jobs=0'
 	d_pylint="code errors with Pylint static code analyzer"
 	e_pylint="Error checking failed!"
+	# use pylint==3.1.1
 	t_pylint="
 		b $pylint $PYLINT_OPTS mmgen
 		b $pylint $PYLINT_OPTS test
