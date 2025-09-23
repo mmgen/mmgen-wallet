@@ -39,18 +39,19 @@ def _get_cls_info(clsname, modname, kwargs):
 		raise ValueError(
 			f"{clsname} must be instantiated with 'proto', 'data' or 'filename' keyword")
 
-	if clsname == 'Completed':
-		from ..util import get_extension, die
-		from .completed import Completed
-		ext = get_extension(kwargs['filename'])
-		cls = Completed.ext_to_cls(ext, proto)
-		if not cls:
-			die(1, f'{ext!r}: unrecognized file extension for CompletedTX')
-		clsname = cls.__name__
-		modname = cls.__module__.rsplit('.', maxsplit=1)[-1]
-	elif clsname == 'New' and kwargs['target'] == 'swaptx':
-		clsname = 'NewSwap'
-		modname = 'new_swap'
+	match clsname:
+		case 'Completed':
+			from ..util import get_extension, die
+			from .completed import Completed
+			ext = get_extension(kwargs['filename'])
+			cls = Completed.ext_to_cls(ext, proto)
+			if not cls:
+				die(1, f'{ext!r}: unrecognized file extension for CompletedTX')
+			clsname = cls.__name__
+			modname = cls.__module__.rsplit('.', maxsplit=1)[-1]
+		case 'New' if kwargs['target'] == 'swaptx':
+			clsname = 'NewSwap'
+			modname = 'new_swap'
 
 	kwargs['proto'] = proto
 

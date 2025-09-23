@@ -48,13 +48,14 @@ def parse_data():
 			key = line[1:-1]
 			continue
 		p = parse_line(line)
-		if key in out:
-			out[key][p[1]] = p
-		elif key == 'defaults':
-			out['defaults'] = p
-			defaults = p
-		else:
-			out[key] = {p[1]: p}
+		match key:
+			case k if k in out:
+				out[key][p[1]] = p
+			case 'defaults':
+				out['defaults'] = p
+				defaults = p
+			case _:
+				out[key] = {p[1]: p}
 
 	return out
 

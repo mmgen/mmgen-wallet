@@ -128,10 +128,11 @@ def get_bip_by_addr_type(addr_type):
 		44)
 
 def check_privkey(key_int):
-	if key_int == 0:
-		raise ValueError('private key is zero!')
-	elif key_int >= secp256k1_order:
-		raise ValueError(f'{key_int:x}: private key >= group order!')
+	match key_int:
+		case 0:
+			raise ValueError('private key is zero!')
+		case n if n >= secp256k1_order:
+			raise ValueError(f'{n:x}: private key >= group order!')
 
 class BipHDConfig(Lockable):
 

@@ -165,14 +165,15 @@ class tool_cmd(tool_cmd_base):
 	def pubhash2addr(self, pubhashhex: 'sstr'):
 		"convert public key hash to address"
 		pubhash = bytes.fromhex(pubhashhex)
-		if self.mmtype.name == 'segwit':
-			return self.proto.pubhash2segwitaddr(pubhash)
-		elif self.mmtype.name == 'bech32':
-			return self.proto.pubhash2bech32addr(pubhash)
-		elif self.mmtype.name == 'bech32x':
-			return self.proto.encode_addr_bech32x(pubhash)
-		else:
-			return self.proto.pubhash2addr(pubhash, self.mmtype.addr_fmt)
+		match self.mmtype.name:
+			case 'segwit':
+				return self.proto.pubhash2segwitaddr(pubhash)
+			case 'bech32':
+				return self.proto.pubhash2bech32addr(pubhash)
+			case 'bech32x':
+				return self.proto.encode_addr_bech32x(pubhash)
+			case _:
+				return self.proto.pubhash2addr(pubhash, self.mmtype.addr_fmt)
 
 	def addr2pubhash(self, addr: 'sstr'):
 		"convert coin address to public key hash"
