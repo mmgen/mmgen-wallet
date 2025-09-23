@@ -137,15 +137,16 @@ class BitcoinTwTransaction:
 			if self.confirmations > 0 else None)
 
 	def age_disp(self, age_fmt, *, width, color):
-		if age_fmt == 'confs':
-			ret_str = str(self.confirmations).ljust(width)
-			return gray(ret_str) if self.confirmations < 0 and color else ret_str
-		elif age_fmt == 'block':
-			ret = (self.rpc.blockcount - (abs(self.confirmations) - 1)) * (-1 if self.confirmations < 0 else 1)
-			ret_str = str(ret).ljust(width)
-			return gray(ret_str) if ret < 0 and color else ret_str
-		else:
-			return self.parent.date_formatter[age_fmt](self.rpc, self.tx.get('blocktime', 0))
+		match age_fmt:
+			case 'confs':
+				ret_str = str(self.confirmations).ljust(width)
+				return gray(ret_str) if self.confirmations < 0 and color else ret_str
+			case 'block':
+				ret = (self.rpc.blockcount - (abs(self.confirmations) - 1)) * (-1 if self.confirmations < 0 else 1)
+				ret_str = str(ret).ljust(width)
+				return gray(ret_str) if ret < 0 and color else ret_str
+			case _:
+				return self.parent.date_formatter[age_fmt](self.rpc, self.tx.get('blocktime', 0))
 
 	def txdate_disp(self, age_fmt):
 		return self.parent.date_formatter[age_fmt](self.rpc, self.time)

@@ -156,15 +156,15 @@ class TxInfo(TxInfo):
 		# If greater than or equal to 500 million, locktime is parsed using the Unix epoch time
 		# format (the number of seconds elapsed since 1970-01-01T00:00 UTC). The transaction can be
 		# added to any block whose block time is greater than the locktime.
-		num = locktime or self.tx.locktime
-		if num is None:
-			return '(None)'
-		elif num.bit_length() > 32:
-			die(2, f'{num!r}: invalid nLockTime value (integer size greater than 4 bytes)!')
-		elif num >= 500_000_000:
-			import time
-			return ' '.join(time.strftime('%c', time.gmtime(num)).split()[1:])
-		elif num > 0:
-			return '{}{}'.format(('block height ', '')[terse], num)
-		else:
-			die(2, f'{num!r}: invalid nLockTime value!')
+		match locktime or self.tx.locktime:
+			case None:
+				return '(None)'
+			case num if num.bit_length() > 32:
+				die(2, f'{num!r}: invalid nLockTime value (integer size greater than 4 bytes)!')
+			case num if num >= 500_000_000:
+				import time
+				return ' '.join(time.strftime('%c', time.gmtime(num)).split()[1:])
+			case num if num > 0:
+				return '{}{}'.format(('block height ', '')[terse], num)
+			case num:
+				die(2, f'{num!r}: invalid nLockTime value!')

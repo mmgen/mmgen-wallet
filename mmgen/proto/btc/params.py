@@ -80,10 +80,13 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 		vlen = self.wif_ver_bytes_len or self.get_wif_ver_bytes_len(key_data)
 		key = key_data[vlen:]
 
-		if len(key) == self.privkey_len + 1:
-			assert key[-1] == 0x01, f'{key[-1]!r}: invalid compressed key suffix byte'
-		elif len(key) != self.privkey_len:
-			raise ValueError(f'{len(key)}: invalid key length')
+		match len(key):
+			case x if x == self.privkey_len + 1:
+				assert key[-1] == 0x01, f'{key[-1]!r}: invalid compressed key suffix byte'
+			case self.privkey_len:
+				pass
+			case x:
+				raise ValueError(f'{x}: invalid key length')
 
 		return decoded_wif(
 			sec         = key[:self.privkey_len],

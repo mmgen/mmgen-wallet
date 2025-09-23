@@ -97,19 +97,19 @@ class New(Base, TxNew):
 		return ret
 
 	def convert_and_check_fee(self, fee, desc):
-		abs_fee = self.feespec2abs(fee, self.estimate_size())
-		if abs_fee is None:
-			raise ValueError(f'{fee}: cannot convert {self.rel_fee_desc} to {self.coin}'
-								+ ' because transaction size is unknown')
-		if abs_fee is False:
-			err = f'{fee!r}: invalid TX fee (not a {self.coin} amount or {self.rel_fee_desc} specification)'
-		elif abs_fee > self.proto.max_tx_fee:
-			err = f'{abs_fee} {self.coin}: {desc} fee too large (maximum fee: {self.proto.max_tx_fee} {self.coin})'
-		elif abs_fee < self.relay_fee:
-			err = f'{abs_fee} {self.coin}: {desc} fee too small (less than relay fee of {self.relay_fee} {self.coin})'
-		else:
-			return abs_fee
-		msg(err)
+		match self.feespec2abs(fee, self.estimate_size()): # abs_fee
+			case None:
+				raise ValueError(
+					f'{fee}: cannot convert {self.rel_fee_desc} to {self.coin} '
+					+ 'because transaction size is unknown')
+			case False:
+				msg(f'{fee!r}: invalid TX fee (not a {self.coin} amount or {self.rel_fee_desc} specification)')
+			case x if x > self.proto.max_tx_fee:
+				msg(f'{x} {self.coin}: {desc} fee too large (maximum fee: {self.proto.max_tx_fee} {self.coin})')
+			case x if x < self.relay_fee:
+				msg(f'{x} {self.coin}: {desc} fee too small (less than relay fee of {self.relay_fee} {self.coin})')
+			case x:
+				return x
 		return False
 
 	async def get_input_addrs_from_inputs_opt(self):
