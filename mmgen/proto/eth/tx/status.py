@@ -31,15 +31,16 @@ class Status(TxBase.Status):
 		async def is_in_mempool():
 			if not 'full_node' in tx.rpc.caps:
 				return False
-			if tx.rpc.daemon.id in ('parity', 'openethereum'):
-				return coin_txid in [x['hash'] for x in await tx.rpc.call('parity_pendingTransactions')]
-			elif tx.rpc.daemon.id in ('geth', 'reth', 'erigon'):
-				def gen(key):
-					for e in res[key].values():
-						for v in e.values():
-							yield v['hash']
-				res = await tx.rpc.call('txpool_content')
-				return coin_txid in list(gen('queued')) + list(gen('pending'))
+			match tx.rpc.daemon.id:
+				case 'parity' | 'openethereum':
+					return coin_txid in [x['hash'] for x in await tx.rpc.call('parity_pendingTransactions')]
+				case 'geth' | 'reth' | 'erigon':
+					def gen(key):
+						for e in res[key].values():
+							for v in e.values():
+								yield v['hash']
+					res = await tx.rpc.call('txpool_content')
+					return coin_txid in list(gen('queued')) + list(gen('pending'))
 
 		async def is_in_wallet():
 			d = await tx.rpc.call('eth_getTransactionReceipt', coin_txid)

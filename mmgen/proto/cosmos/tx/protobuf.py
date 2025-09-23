@@ -144,15 +144,16 @@ class Tx(BaseMessage):
 		pubkey = self.authInfo.signerInfos[0].publicKey.key.data
 		msghash = sha256(bytes(sign_doc)).digest()
 
-		if backend == 'secp256k1':
-			from ...secp256k1.secp256k1 import verify_sig
-			if not verify_sig(sig, msghash, pubkey):
-				raise ValueError('signature verification failed')
-		elif backend == 'ecdsa':
-			# ecdsa.keys.VerifyingKey.verify_digest():
-			#   raises BadSignatureError if the signature is invalid or malformed
-			import ecdsa
-			ec_pubkey = ecdsa.VerifyingKey.from_string(pubkey, curve=ecdsa.curves.SECP256k1)
-			ec_pubkey.verify_digest(sig, msghash)
-		else:
-			raise ValueError(f'verify_sig(): {backend}: unrecognized backend')
+		match backend:
+			case 'secp256k1':
+				from ...secp256k1.secp256k1 import verify_sig
+				if not verify_sig(sig, msghash, pubkey):
+					raise ValueError('signature verification failed')
+			case 'ecdsa':
+				# ecdsa.keys.VerifyingKey.verify_digest():
+				#   raises BadSignatureError if the signature is invalid or malformed
+				import ecdsa
+				ec_pubkey = ecdsa.VerifyingKey.from_string(pubkey, curve=ecdsa.curves.SECP256k1)
+				ec_pubkey.verify_digest(sig, msghash)
+			case _:
+				raise ValueError(f'verify_sig(): {backend}: unrecognized backend')

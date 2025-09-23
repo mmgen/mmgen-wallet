@@ -159,19 +159,19 @@ def base_unit_to_amt(n, *, decimals):
 def tx_info(tx, proto):
 	b = tx.body.messages[0].body
 	s = tx.authInfo.signerInfos[0]
-	msg_type = tx.body.messages[0].id.removeprefix('/types.')
-	if msg_type == 'MsgSend':
-		from_addr = proto.encode_addr_bech32x(b.fromAddress)
-		to_addr   = proto.encode_addr_bech32x(b.toAddress)
-		asset     = b.amount[0].denom.upper()
-		memo      = tx.body.memo
-		amt       = base_unit_to_amt(int(b.amount[0].amount), decimals=8)
-	elif msg_type == 'MsgDeposit':
-		from_addr = proto.encode_addr_bech32x(b.signer)
-		to_addr = 'None'
-		asset     = b.coins[0].asset.symbol
-		memo      = b.memo
-		amt       = base_unit_to_amt(int(b.coins[0].amount), decimals=b.coins[0].decimals or 8)
+	match msg_type := tx.body.messages[0].id.removeprefix('/types.'):
+		case 'MsgSend':
+			from_addr = proto.encode_addr_bech32x(b.fromAddress)
+			to_addr   = proto.encode_addr_bech32x(b.toAddress)
+			asset     = b.amount[0].denom.upper()
+			memo      = tx.body.memo
+			amt       = base_unit_to_amt(int(b.amount[0].amount), decimals=8)
+		case 'MsgDeposit':
+			from_addr = proto.encode_addr_bech32x(b.signer)
+			to_addr = 'None'
+			asset     = b.coins[0].asset.symbol
+			memo      = b.memo
+			amt       = base_unit_to_amt(int(b.coins[0].amount), decimals=b.coins[0].decimals or 8)
 	yield f'TxID:      {tx.txid}'
 	yield f'Type:      {msg_type}'
 	yield f'From:      {from_addr}'

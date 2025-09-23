@@ -64,13 +64,13 @@ class mainnet(mainnet):
 			return super().preprocess_key(sec, pubkey_type)
 
 	def pubhash2addr(self, pubhash, addr_type):
-		hash_len = len(pubhash)
-		if hash_len == 20:
-			return super().pubhash2addr(pubhash, addr_type)
-		elif hash_len == 64:
-			raise NotImplementedError('Zcash z-addresses do not support pubhash2addr()')
-		else:
-			raise ValueError(f'{hash_len}: incorrect pubkey hash length')
+		match len(pubhash):
+			case 20:
+				return super().pubhash2addr(pubhash, addr_type)
+			case 64:
+				raise NotImplementedError('Zcash z-addresses do not support pubhash2addr()')
+			case x:
+				raise ValueError(f'{x}: incorrect pubkey hash length')
 
 	def viewkey(self, viewkey_str):
 		return ZcashViewKey.__new__(ZcashViewKey, self, viewkey_str)

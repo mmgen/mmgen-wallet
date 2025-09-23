@@ -76,18 +76,19 @@ class EthereumRPCClient(RPCClient, metaclass=AsyncInit):
 		self.cur_date = int(bh['timestamp'], 16)
 
 		self.caps = ()
-		if self.daemon.id in ('parity', 'openethereum'):
-			if (await self.call('parity_nodeKind'))['capability'] == 'full':
+		match self.daemon.id:
+			case 'parity' | 'openethereum':
+				if (await self.call('parity_nodeKind'))['capability'] == 'full':
+					self.caps += ('full_node',)
+				# parity/openethereum return chainID only for dev chain:
+				self.chainID = None if ci is None else Int(ci, base=16)
+				self.chain = (await self.call('parity_chain')).replace(' ', '_').replace('_testnet', '')
+			case 'geth' | 'reth' | 'erigon':
+				if self.daemon.network == 'mainnet' and hasattr(daemon_warning, self.daemon.id):
+					daemon_warning(self.daemon.id)
 				self.caps += ('full_node',)
-			# parity/openethereum return chainID only for dev chain:
-			self.chainID = None if ci is None else Int(ci, base=16)
-			self.chain = (await self.call('parity_chain')).replace(' ', '_').replace('_testnet', '')
-		elif self.daemon.id in ('geth', 'reth', 'erigon'):
-			if self.daemon.network == 'mainnet' and hasattr(daemon_warning, self.daemon.id):
-				daemon_warning(self.daemon.id)
-			self.caps += ('full_node',)
-			self.chainID = Int(ci, base=16)
-			self.chain = self.proto.chain_ids[self.chainID]
+				self.chainID = Int(ci, base=16)
+				self.chain = self.proto.chain_ids[self.chainID]
 
 	def make_host_path(self, wallet):
 		return ''
