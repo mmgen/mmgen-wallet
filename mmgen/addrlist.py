@@ -35,15 +35,15 @@ class AddrIdxList(tuple, InitErrors, MMGenObject):
 			if fmt_str:
 				def gen():
 					for i in (fmt_str.split(sep)):
-						j = [int(x) for x in i.split('-')]
-						if len(j) == 1:
-							yield j[0]
-						elif len(j) == 2:
-							if j[0] > j[1]:
+						match [int(x) for x in i.split('-')]:
+							case [a]:
+								yield a
+							case [a, b]:
+								if a > b:
+									raise ValueError(f'{i}: invalid range')
+								yield from range(a, b + 1)
+							case _:
 								raise ValueError(f'{i}: invalid range')
-							yield from range(j[0], j[1] + 1)
-						else:
-							raise ValueError(f'{i}: invalid range')
 				idx_list = tuple(gen())
 			return tuple.__new__(cls, sorted({AddrIdx(i) for i in (idx_list or [])}))
 		except Exception as e:
