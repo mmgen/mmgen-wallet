@@ -157,11 +157,12 @@ def check_output(out, chk):
 		out = str(out).encode()
 	if isinstance(out, str):
 		out = out.encode()
-	err_fs = "Output ({!r}) doesn't match expected output ({!r})"
 	try:
 		outd = out.decode()
 	except:
 		outd = None
+
+	err_fs = "Output ({!r}) doesn't match expected output ({!r})"
 
 	if type(chk).__name__ == 'function':
 		assert chk(outd), f'{chk.__name__}({outd}) failed!'

@@ -42,7 +42,7 @@ class File:
 
 		import stat
 		if stat.S_ISBLK(st.st_mode):
-			if sys.platform in ('win32',):
+			if sys.platform == 'win32':
 				die(2, 'Access to raw block devices not supported on platform {sys.platform!r}')
 			mode = (os.O_RDONLY, os.O_RDWR)[bool(write)]
 			try:

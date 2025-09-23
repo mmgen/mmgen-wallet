@@ -64,17 +64,17 @@ cmd_args = cfg._args
 from .proto.btc.regtest import MMGenRegtest
 
 def check_num_args():
-	m = getattr(MMGenRegtest, cmd_args[0])
+	cmd, *args = cmd_args
+	m = getattr(MMGenRegtest, cmd)
 	margs = m.__code__.co_varnames[1:m.__code__.co_argcount]
 	mdfls = m.__defaults__ or ()
 	amin = len(margs) - len(mdfls)
 	amax = len(margs)
-	args = cmd_args[1:]
-	m = "{}: too {} arguments for command '%s' (must have no {} than {})" % cmd_args[0]
+	fs = '{}: too {} arguments for command ‘{}’ (must have no {} than {})'
 	if len(args) < amin:
-		die(1, m.format(args, 'few', 'less', amin))
-	elif len(cmd_args[1:]) > amax:
-		die(1, m.format(args, 'many', 'more', amax))
+		die(1, fs.format(args, 'few', cmd, 'less', amin))
+	elif len(args) > amax:
+		die(1, fs.format(args, 'many', cmd, 'more', amax))
 
 if not cmd_args:
 	cfg._usage()

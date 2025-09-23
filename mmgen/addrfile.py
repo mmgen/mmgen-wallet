@@ -343,7 +343,7 @@ class PasswordFile(AddrFile):
 		p = self.parent
 
 		if p.pw_fmt in ('bip39', 'xmrseed'):
-			ret = lines.pop(0).split(None, p.pw_len+1)
+			ret = lines.pop(0).split(None, p.pw_len + 1)
 			if len(ret) > p.pw_len+1:
 				m1 = f'extraneous text {ret[p.pw_len+1]!r} found after password'
 				m2 = '[bare comments not allowed in BIP39 password files]'

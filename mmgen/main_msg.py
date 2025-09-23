@@ -207,23 +207,22 @@ if len(cmd_args) < 2:
 	cfg._usage()
 
 op = cmd_args.pop(0)
+arg1 = cmd_args.pop(0)
 
 if cfg.msghash_type and op != 'create':
 	die(1, '--msghash-type option may only be used with the "create" command')
 
 async def main():
 	if op == 'create':
-		if len(cmd_args) < 2:
+		if not cmd_args:
 			cfg._usage()
-		MsgOps.create(cmd_args[0], ' '.join(cmd_args[1:]))
+		MsgOps.create(arg1, ' '.join(cmd_args))
 	elif op == 'sign':
-		if len(cmd_args) < 1:
-			cfg._usage()
-		await MsgOps.sign(cmd_args[0], cmd_args[1:])
+		await MsgOps.sign(arg1, cmd_args[:])
 	elif op in ('verify', 'export'):
-		if len(cmd_args) not in (1, 2):
+		if len(cmd_args) not in (0, 1):
 			cfg._usage()
-		await getattr(MsgOps, op)(cmd_args[0], addr=cmd_args[1] if len(cmd_args) == 2 else None)
+		await getattr(MsgOps, op)(arg1, addr=cmd_args[0] if cmd_args else None)
 	else:
 		die(1, f'{op!r}: unrecognized operation')
 

@@ -77,15 +77,13 @@ class BitcoinTwCtl(TwCtl):
 			return b if res else tip
 
 		def gen_chunks(start, stop, tip):
-			n = start
 			if endless:
 				stop = tip
 			elif stop > tip:
 				die(1, f'{stop}: stop value is higher than chain tip')
-
-			while n <= stop:
-				yield (n, min(n+99, stop))
-				n += 100
+			while start <= stop:
+				yield (start, min(start + 99, stop))
+				start += 100
 
 		last_block = await do_scan(gen_chunks(start, stop, self.rpc.blockcount), self.rpc.blockcount)
 

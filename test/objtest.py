@@ -65,10 +65,9 @@ from test.include.common import set_globals
 set_globals(cfg)
 
 def run_test(mod, test, arg, input_data, arg1, exc_name):
-	arg_copy = arg
-	kwargs = {}
-	ret_chk = arg
-	ret_idx = None
+
+	arg_copy, ret_chk, ret_idx, kwargs = (arg, arg, None, {})
+
 	if input_data == 'good' and isinstance(arg, tuple):
 		arg, ret_chk = arg
 	if isinstance(arg, dict): # pass one arg + kwargs to constructor

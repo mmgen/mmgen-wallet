@@ -120,6 +120,10 @@ class baseconv:
 		If 'seed', output length will be mapped from input length using data in seedlen_map.
 		If an integer, the string, hex string or byte output will be padded to this length.
 		"""
+
+		def do_die():
+			die('BaseConversionPadError', f"{pad!r}: illegal value for 'pad' (must be None, 'seed' or int)")
+
 		if pad is None:
 			return 0
 		elif type(pad) is int:
@@ -127,7 +131,7 @@ class baseconv:
 		elif pad == 'seed':
 			return seed_pad_func()
 		else:
-			die('BaseConversionPadError', f"{pad!r}: illegal value for 'pad' (must be None, 'seed' or int)")
+			do_die()
 
 	def tohex(self, words_arg, /, *, pad=None):
 		"convert string or list data of instance base to a hexadecimal string"
