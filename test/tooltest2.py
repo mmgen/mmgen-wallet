@@ -151,12 +151,17 @@ def tool_api(cls, cmd_name, args, opts):
 	return getattr(tool, cmd_name)(*pargs, **kwargs)
 
 def check_output(out, chk):
-	if isinstance(chk, str):
-		chk = chk.encode()
-	if isinstance(out, int):
-		out = str(out).encode()
-	if isinstance(out, str):
-		out = out.encode()
+
+	match chk:
+		case str():
+			chk = chk.encode()
+
+	match out:
+		case int():
+			out = str(out).encode()
+		case str():
+			out = out.encode()
+
 	try:
 		outd = out.decode()
 	except:
@@ -164,20 +169,23 @@ def check_output(out, chk):
 
 	err_fs = "Output ({!r}) doesn't match expected output ({!r})"
 
-	if type(chk).__name__ == 'function':
-		assert chk(outd), f'{chk.__name__}({outd}) failed!'
-	elif isinstance(chk, dict):
-		for k, v in chk.items():
-			match k:
-				case 'boolfunc':
-					assert v(outd), f'{v.__name__}({outd}) failed!'
-				case 'value':
-					assert outd == v, err_fs.format(outd, v)
-				case _:
-					if (outval := getattr(__builtins__, k)(out)) != v:
-						die(1, f'{k}({out}) returned {outval}, not {v}!')
-	elif chk is not None:
-		assert out == chk, err_fs.format(out, chk)
+	match type(chk).__name__:
+		case 'NoneType':
+			pass
+		case 'function':
+			assert chk(outd), f'{chk.__name__}({outd}) failed!'
+		case 'dict':
+			for k, v in chk.items():
+				match k:
+					case 'boolfunc':
+						assert v(outd), f'{v.__name__}({outd}) failed!'
+					case 'value':
+						assert outd == v, err_fs.format(outd, v)
+					case _:
+						if (outval := getattr(__builtins__, k)(out)) != v:
+							die(1, f'{k}({out}) returned {outval}, not {v}!')
+		case _:
+			assert out == chk, err_fs.format(out, chk)
 
 def run_test(cls, gid, cmd_name):
 	data = tests[gid][cmd_name]

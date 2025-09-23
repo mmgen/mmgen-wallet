@@ -70,32 +70,34 @@ def run_test(mod, test, arg, input_data, arg1, exc_name):
 
 	if input_data == 'good' and isinstance(arg, tuple):
 		arg, ret_chk = arg
-	if isinstance(arg, dict): # pass one arg + kwargs to constructor
-		arg_copy = arg.copy()
-		if 'arg' in arg:
-			args = [arg['arg']]
-			ret_chk = args[0]
-			del arg['arg']
-		else:
-			args = []
-			ret_chk = list(arg.values())[0] # assume only one key present
-		if 'ret' in arg:
-			ret_chk = arg['ret']
-			del arg['ret']
-			del arg_copy['ret']
-		if 'exc_name' in arg:
-			exc_name = arg['exc_name']
-			del arg['exc_name']
-			del arg_copy['exc_name']
-		if 'ret_idx' in arg:
-			ret_idx = arg['ret_idx']
-			del arg['ret_idx']
-			del arg_copy['ret_idx']
-		kwargs.update(arg)
-	elif isinstance(arg, tuple):
-		args = arg
-	else:
-		args = [arg]
+
+	match arg:
+		case dict(): # pass one arg + kwargs to constructor
+			arg_copy = arg.copy()
+			if 'arg' in arg:
+				args = [arg['arg']]
+				ret_chk = args[0]
+				del arg['arg']
+			else:
+				args = []
+				ret_chk = list(arg.values())[0] # assume only one key present
+			if 'ret' in arg:
+				ret_chk = arg['ret']
+				del arg['ret']
+				del arg_copy['ret']
+			if 'exc_name' in arg:
+				exc_name = arg['exc_name']
+				del arg['exc_name']
+				del arg_copy['exc_name']
+			if 'ret_idx' in arg:
+				ret_idx = arg['ret_idx']
+				del arg['ret_idx']
+				del arg_copy['ret_idx']
+			kwargs.update(arg)
+		case tuple():
+			args = arg
+		case _:
+			args = [arg]
 
 	if cfg.getobj:
 		if args:
