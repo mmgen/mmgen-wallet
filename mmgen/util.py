@@ -158,17 +158,18 @@ def mdie(*args):
 	sys.exit(0)
 
 def die(ev, s='', *, stdout=False):
-	if isinstance(ev, int):
-		from .exception import MMGenSystemExit, MMGenError
-		if ev <= 2:
-			raise MMGenSystemExit(ev, s, stdout)
-		else:
-			raise MMGenError(ev, s, stdout)
-	elif isinstance(ev, str):
-		from . import exception
-		raise getattr(exception, ev)(s)
-	else:
-		raise ValueError(f'{ev}: exit value must be string or int instance')
+	match ev:
+		case int():
+			from .exception import MMGenSystemExit, MMGenError
+			if ev <= 2:
+				raise MMGenSystemExit(ev, s, stdout)
+			else:
+				raise MMGenError(ev, s, stdout)
+		case str():
+			from . import exception
+			raise getattr(exception, ev)(s)
+		case _:
+			raise ValueError(f'{ev}: exit value must be string or integer')
 
 def Die(ev=0, s=''):
 	die(ev=ev, s=s, stdout=True)
@@ -235,12 +236,14 @@ def list_gen(*data):
 	assert type(data) in (list, tuple), f'{type(data).__name__} not in (list, tuple)'
 	def gen():
 		for d in data:
-			assert isinstance(d, list), f'{type(d).__name__} != list'
-			if len(d) == 1:
-				yield d[0]
-			elif d[-1]:
-				for idx in range(len(d)-1):
-					yield d[idx]
+			match d:
+				case [a]:
+					yield a
+				case [*a, b]:
+					if b:
+						yield from a
+				case _:
+					die(2, f'list_gen(): {d} (type {type(d).__name__}) is not an iterable')
 	return list(gen())
 
 def remove_dups(iterable, *, edesc='element', desc='list', quiet=False, hide=False):
@@ -278,13 +281,13 @@ def suf(arg, suf_type='s', *, verb='none'):
 			'ies': ('ies have', 'y has'),
 		},
 	}
-	if isinstance(arg, int):
-		n = arg
-	elif isinstance(arg, list | tuple | set | dict):
-		n = len(arg)
-	else:
-		die(2, f'{arg}: invalid parameter for suf()')
-	return suf_types[verb][suf_type][n == 1]
+	match arg:
+		case int():
+			return suf_types[verb][suf_type][arg == 1]
+		case list() | tuple() | set() | dict():
+			return suf_types[verb][suf_type][len(arg) == 1]
+		case _:
+			die(2, f'{arg}: invalid parameter for suf()')
 
 def get_extension(fn):
 	return os.path.splitext(fn)[1][1:]
