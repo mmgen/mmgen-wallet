@@ -674,14 +674,14 @@ class CmdTestXMRWallet(CmdTestBase):
 				ignore_battery       = True,  # ignore battery state (on laptop)
 				miner_address        = addr,  # account address to mine to
 				threads_count        = 1)    # number of mining threads to run
-			status = self.get_status(ret)
-			if status == 'OK':
-				return True
-			elif status == 'BUSY':
-				await asyncio.sleep(5)
-				omsg('Daemon busy.  Attempting to start mining...')
-			else:
-				die(2, f'Monerod returned status {status}')
+			match self.get_status(ret):
+				case 'OK':
+					return True
+				case 'BUSY':
+					await asyncio.sleep(5)
+					omsg('Daemon busy.  Attempting to start mining...')
+				case status:
+					die(2, f'Monerod returned status {status}')
 		die(2, 'Max retries exceeded')
 
 	async def stop_mining(self):

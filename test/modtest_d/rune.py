@@ -143,16 +143,17 @@ def test_tx(src, cfg, vec):
 
 	assert src in ('parse', 'build', 'swapbuild')
 
-	if src == 'parse':
-		tx_in = open(os.path.join('test/ref/thorchain', vec.fn), 'br').read()
-		tx = RuneTx.loads(tx_in)
-		if not parms.from_addr:
-			ymsg(f'Warning: missing test vector data for {vec.fn}')
-		assert bytes(tx) == tx_in
-	elif src == 'build':
-		tx = build_tx(cfg, proto, parms, null_fee=vec.null_fee)
-	elif src == 'swapbuild':
-		tx = build_swap_tx(cfg, proto, parms)
+	match src:
+		case 'parse':
+			tx_in = open(os.path.join('test/ref/thorchain', vec.fn), 'br').read()
+			tx = RuneTx.loads(tx_in)
+			if not parms.from_addr:
+				ymsg(f'Warning: missing test vector data for {vec.fn}')
+			assert bytes(tx) == tx_in
+		case 'build':
+			tx = build_tx(cfg, proto, parms, null_fee=vec.null_fee)
+		case 'swapbuild':
+			tx = build_swap_tx(cfg, proto, parms)
 
 	vmsg(pp_fmt(tx))
 

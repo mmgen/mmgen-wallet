@@ -496,26 +496,28 @@ class CmdTestRunner:
 			print(r+('\n'+r).join(self.warnings))
 
 	def process_retval(self, cmd, ret):
-		if type(ret).__name__ == 'CmdTestPexpect':
-			ret.ok(exit_val=self.exit_val)
-			self.cmd_total += 1
-		elif ret == 'ok':
-			ok()
-			self.cmd_total += 1
-		elif ret in ('skip', 'skip_msg', 'silent'):
-			if ret == 'silent':
+		match ret:
+			case x if type(x).__name__ == 'CmdTestPexpect':
+				ret.ok(exit_val=self.exit_val)
 				self.cmd_total += 1
-			elif ret == 'skip_msg':
+			case 'ok':
+				ok()
+				self.cmd_total += 1
+			case 'skip':
+				pass
+			case 'skip_msg':
 				ok('SKIP')
-		elif ret == 'error':
-			die(2, red(f'\nTest {self.tg.test_name!r} failed'))
-		elif isinstance(ret, tuple) and ret[0] == 'skip_warn':
-			wmsg = 'Test {!r} was skipped:\n  {}'.format(cmd, '\n  '.join(ret[1].split('\n')))
-			self.skipped_warnings.append(wmsg)
-			if self.logging:
-				self.log_fd.write(f'WARNING: {wmsg}\n')
-		else:
-			die(2, f'{cmd!r} returned {ret}')
+			case 'silent':
+				self.cmd_total += 1
+			case 'error':
+				die(2, red(f'\nTest {self.tg.test_name!r} failed'))
+			case (x, _) if x == 'skip_warn':
+				wmsg = 'Test {!r} was skipped:\n  {}'.format(cmd, '\n  '.join(ret[1].split('\n')))
+				self.skipped_warnings.append(wmsg)
+				if self.logging:
+					self.log_fd.write(f'WARNING: {wmsg}\n')
+			case _:
+				die(2, f'{cmd!r} returned {ret}')
 
 	def warn(self, text):
 		ymsg(text)

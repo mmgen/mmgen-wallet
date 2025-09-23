@@ -823,22 +823,22 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 		ocls = get_wallet_cls(fmt_code=out_fmt)
 
-		if ocls.enc and ocls.type != 'brain':
-			t.passphrase_new('new '+ocls.desc, self.wpasswd)
-			t.usr_rand(self.usr_rand_chars)
-
-		if ocls.type.startswith('incog'):
-			m = 'Encrypting random data from your operating system with ephemeral key'
-			t.expect(m)
-			t.expect(m)
-			incog_id = t.expect_getend('New Incog Wallet ID: ')
-			t.expect(m)
-
-		if ocls.type == 'incog_hidden':
-			self.write_to_tmpfile(incog_id_fn, incog_id)
-			t.hincog_create(hincog_bytes)
-		elif ocls.type == 'mmgen':
-			t.label()
+		if ocls.enc:
+			if ocls.type != 'brain':
+				t.passphrase_new('new '+ocls.desc, self.wpasswd)
+				t.usr_rand(self.usr_rand_chars)
+			match ocls.type:
+				case 'incog' | 'incog_hex' | 'incog_hidden':
+					m = 'Encrypting random data from your operating system with ephemeral key'
+					t.expect(m)
+					t.expect(m)
+					incog_id = t.expect_getend('New Incog Wallet ID: ')
+					t.expect(m)
+					if ocls.type == 'incog_hidden':
+						self.write_to_tmpfile(incog_id_fn, incog_id)
+						t.hincog_create(hincog_bytes)
+				case 'mmgen':
+					t.label()
 
 		return t.written_to_file(capfirst(ocls.desc)), t
 

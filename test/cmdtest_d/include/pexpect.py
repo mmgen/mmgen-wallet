@@ -88,10 +88,13 @@ class CmdTestPexpect:
 
 	def view_tx(self, view):
 		self.expect(r'View.* transaction.*\? .*: ', view, regex=True)
-		if cfg.pexpect_spawn and view == 'v':
-			self.expect('END', 'q')
-		elif view not in 'vn\n':
-			self.expect('to continue: ', '\n')
+		match view:
+			case 'v' if cfg.pexpect_spawn:
+				self.expect('END', 'q')
+			case 'v' | 'n' | '\n':
+				pass
+			case _:
+				self.expect('to continue: ', '\n')
 
 	def do_comment(self, add_comment, has_label=False):
 		p = ('Add a comment to transaction', 'Edit transaction comment')[has_label]

@@ -90,19 +90,20 @@ def test_attr_perm(obj, attrname, perm_name, perm_value, dobj, attrval_type):
 	pstem = pname.rstrip('e')
 
 	try:
-		if perm_name == 'read_ok': # non-existent perm
-			getattr(obj, attrname)
-		elif perm_name == 'reassign_ok':
-			try:
-				so = sample_objs[attrval_type.__name__]
-			except Exception as e:
-				raise SampleObjError(f'unable to find sample object of type {attrval_type.__name__!r}') from e
-			# ListItemAttr allows setting an attribute if its value is None
-			if type(dobj) is ListItemAttr and getattr(obj, attrname) is None:
+		match perm_name:
+			case 'read_ok': # non-existent perm
+				getattr(obj, attrname)
+			case 'reassign_ok':
+				try:
+					so = sample_objs[attrval_type.__name__]
+				except Exception as e:
+					raise SampleObjError(f'unable to find sample object of type {attrval_type.__name__!r}') from e
+				# ListItemAttr allows setting an attribute if its value is None
+				if type(dobj) is ListItemAttr and getattr(obj, attrname) is None:
+					setattr(obj, attrname, so)
 				setattr(obj, attrname, so)
-			setattr(obj, attrname, so)
-		elif perm_name == 'delete_ok':
-			delattr(obj, attrname)
+			case 'delete_ok':
+				delattr(obj, attrname)
 	except SampleObjError as e:
 		die(4, f'Test script error ({e})')
 	except Exception as e:

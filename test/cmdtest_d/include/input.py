@@ -47,20 +47,21 @@ def stealth_mnemonic_entry(t, mne, mn, entry_mode, pad_entry=False):
 			ret.append(w)
 		return ret
 
-	if entry_mode == 'fixed':
-		mn = ['bkr'] + mn[:5] + ['nfb'] + mn[5:]
-		ssl = mne.uniq_ss_len
-		def gen_mn():
-			for w in mn:
-				if len(w) >= ssl:
-					yield w[:ssl]
-				else:
-					yield w[0] + 'z\b' + '#' * (ssl-len(w)) + w[1:]
-		mn = list(gen_mn())
-	elif entry_mode in ('full', 'short'):
-		mn = ['fzr'] + mn[:5] + ['grd', 'grdbxm'] + mn[5:]
-		mn = pad_mnemonic(mn, mne.em.ss_len)
-		mn[10] = '@#$%*##' + mn[10]
+	match entry_mode:
+		case 'fixed':
+			mn = ['bkr'] + mn[:5] + ['nfb'] + mn[5:]
+			ssl = mne.uniq_ss_len
+			def gen_mn():
+				for w in mn:
+					if len(w) >= ssl:
+						yield w[:ssl]
+					else:
+						yield w[0] + 'z\b' + '#' * (ssl-len(w)) + w[1:]
+			mn = list(gen_mn())
+		case 'full' | 'short':
+			mn = ['fzr'] + mn[:5] + ['grd', 'grdbxm'] + mn[5:]
+			mn = pad_mnemonic(mn, mne.em.ss_len)
+			mn[10] = '@#$%*##' + mn[10]
 
 	wnum = 1
 	p_ok, p_err = mne.word_prompt

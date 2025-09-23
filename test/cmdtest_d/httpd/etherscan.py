@@ -22,15 +22,16 @@ class EtherscanServer(HTTPD):
 	content_type = 'text/html'
 
 	def make_response_body(self, method, environ):
-		if method == 'GET':
-			target = 'form'
-		elif method == 'POST':
-			target = 'result'
-			length = int(environ.get('CONTENT_LENGTH', '0'))
-			qs = environ['wsgi.input'].read(length).decode()
-			tx = [s for s in qs.split('&') if 'RawTx=' in s][0].split('=')[1]
-			keccak_256 = get_keccak()
-			txid = '0x' + keccak_256(bytes.fromhex(tx[2:])).hexdigest()
+		match method:
+			case 'GET':
+				target = 'form'
+			case 'POST':
+				target = 'result'
+				length = int(environ.get('CONTENT_LENGTH', '0'))
+				qs = environ['wsgi.input'].read(length).decode()
+				tx = [s for s in qs.split('&') if 'RawTx=' in s][0].split('=')[1]
+				keccak_256 = get_keccak()
+				txid = '0x' + keccak_256(bytes.fromhex(tx[2:])).hexdigest()
 
 		with open(f'test/ref/ethereum/etherscan-{target}.html') as fh:
 			text = fh.read()

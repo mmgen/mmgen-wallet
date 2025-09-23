@@ -167,14 +167,14 @@ def check_output(out, chk):
 		assert chk(outd), f'{chk.__name__}({outd}) failed!'
 	elif isinstance(chk, dict):
 		for k, v in chk.items():
-			if k == 'boolfunc':
-				assert v(outd), f'{v.__name__}({outd}) failed!'
-			elif k == 'value':
-				assert outd == v, err_fs.format(outd, v)
-			else:
-				outval = getattr(__builtins__, k)(out)
-				if outval != v:
-					die(1, f'{k}({out}) returned {outval}, not {v}!')
+			match k:
+				case 'boolfunc':
+					assert v(outd), f'{v.__name__}({outd}) failed!'
+				case 'value':
+					assert outd == v, err_fs.format(outd, v)
+				case _:
+					if (outval := getattr(__builtins__, k)(out)) != v:
+						die(1, f'{k}({out}) returned {outval}, not {v}!')
 	elif chk is not None:
 		assert out == chk, err_fs.format(out, chk)
 

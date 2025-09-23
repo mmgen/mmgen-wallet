@@ -21,16 +21,18 @@ commands = [
 	'get_char_one',
 	'get_char_one_raw',
 ]
-if sys.platform in ('linux', 'darwin'):
-	commands.extend([
-		'get_char',
-		'get_char_immed_chars',
-		'get_char_raw',
-	])
-elif sys.platform == 'win32':
-	commands.extend([
-		'get_char_one_char_immed_chars',
-	])
+
+match sys.platform:
+	case 'linux' | 'darwin':
+		commands.extend([
+			'get_char',
+			'get_char_immed_chars',
+			'get_char_raw',
+		])
+	case 'win32':
+		commands.extend([
+			'get_char_one_char_immed_chars',
+		])
 
 opts_data = {
 	'text': {

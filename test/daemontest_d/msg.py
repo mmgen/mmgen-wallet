@@ -15,20 +15,21 @@ from ..include.common import cfg, silence, end_silence, restart_test_daemons, st
 
 def get_obj(coin, network, msghash_type):
 
-	if coin == 'bch':
-		addrlists = 'DEADBEEF:C:1-20 98831F3A:C:8,2 A091ABAA:L:111 A091ABAA:C:1'
-	elif coin == 'eth':
-		addrlists = 'DEADBEEF:E:1-20 98831F3A:E:8,2 A091ABAA:E:111'
-	else:
-		# A091ABAA = 98831F3A:5S
-		addrlists = 'DEADBEEF:C:1-20 98831F3A:B:8,2 A091ABAA:S:10-11 A091ABAA:111 A091ABAA:C:1'
+	def get_addrlists():
+		match coin:
+			case 'bch':
+				return 'DEADBEEF:C:1-20 98831F3A:C:8,2 A091ABAA:L:111 A091ABAA:C:1'
+			case 'eth':
+				return 'DEADBEEF:E:1-20 98831F3A:E:8,2 A091ABAA:E:111'
+			case _:
+				return 'DEADBEEF:C:1-20 98831F3A:B:8,2 A091ABAA:S:10-11 A091ABAA:111 A091ABAA:C:1'
 
 	return NewMsg(
 		cfg       = cfg,
 		coin      = coin,
 		network   = network,
 		message   = '08/Jun/2021 Bitcoin Law Enacted by El Salvador Legislative Assembly',
-		addrlists = addrlists,
+		addrlists = get_addrlists(),
 		msghash_type = msghash_type)
 
 def print_total(n):

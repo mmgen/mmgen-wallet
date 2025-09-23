@@ -12,29 +12,27 @@ from mmgen.term import init_term, get_term
 init_term(cfg)
 term = get_term()
 
-if sys.argv[1] == 'echo':
+match sys.argv[1]:
+	case 'echo':
+		from mmgen.ui import line_input
+		from mmgen.term import get_char_raw
 
-	from mmgen.ui import line_input
-	from mmgen.term import get_char_raw
+		def test_noecho():
+			term.init(noecho=True)
+			ret = line_input(cfg, 'noecho> ')
+			msg(f'==> [{ret.upper()}]')
+			get_char_raw()
 
-	def test_noecho():
-		term.init(noecho=True)
-		ret = line_input(cfg, 'noecho> ')
-		msg(f'==> [{ret.upper()}]')
-		get_char_raw()
+		def test_echo():
+			term.set('echo')
+			ret = line_input(cfg, 'echo> ')
+			msg(f'==> [{ret.upper()}]')
 
-	def test_echo():
-		term.set('echo')
-		ret = line_input(cfg, 'echo> ')
-		msg(f'==> [{ret.upper()}]')
+		test_noecho()
+		test_echo()
+		test_noecho()
 
-	test_noecho()
-	test_echo()
-	test_noecho()
-
-elif sys.argv[1] == 'cleanup':
-
-	term.register_cleanup()
-
-	import tty
-	tty.setcbreak(term.stdin_fd)
+	case 'cleanup':
+		term.register_cleanup()
+		import tty
+		tty.setcbreak(term.stdin_fd)

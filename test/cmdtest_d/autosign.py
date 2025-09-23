@@ -143,29 +143,30 @@ class CmdTestAutosignBase(CmdTestBase):
 					raise
 
 	def _create_removable_device(self):
-		if sys.platform == 'linux':
-			self.txdev.create()
-			self.txdev.attach(silent=True)
-			args = [
-				'-E', 'root_owner={}:{}'.format(os.getuid(), os.getgid()),
-				'-L', self.asi.dev_label,
-				str(self.txdev.img_path)]
-			redir = DEVNULL
-			for cmd in ('/sbin/mkfs.ext2', 'mkfs.ext2'):
-				try:
-					run([cmd] + args, stdout=redir, stderr=redir, check=True)
-					break
-				except:
-					if cmd == 'mkfs.ext2':
-						raise
-			self.txdev.detach(silent=True)
-		elif sys.platform == 'darwin':
-			cmd = [
-				'hdiutil', 'create', '-size', '10M', '-fs', 'exFAT',
-				'-volname', self.asi.dev_label,
-				str(self.fs_image_path)]
-			redir = DEVNULL if self.tr.quiet else None
-			run(cmd, stdout=redir, check=True)
+		match sys.platform:
+			case 'linux':
+				self.txdev.create()
+				self.txdev.attach(silent=True)
+				args = [
+					'-E', 'root_owner={}:{}'.format(os.getuid(), os.getgid()),
+					'-L', self.asi.dev_label,
+					str(self.txdev.img_path)]
+				redir = DEVNULL
+				for cmd in ('/sbin/mkfs.ext2', 'mkfs.ext2'):
+					try:
+						run([cmd] + args, stdout=redir, stderr=redir, check=True)
+						break
+					except:
+						if cmd == 'mkfs.ext2':
+							raise
+				self.txdev.detach(silent=True)
+			case 'darwin':
+				cmd = [
+					'hdiutil', 'create', '-size', '10M', '-fs', 'exFAT',
+					'-volname', self.asi.dev_label,
+					str(self.fs_image_path)]
+				redir = DEVNULL if self.tr.quiet else None
+				run(cmd, stdout=redir, check=True)
 
 	def _macOS_mount_fs_image(self, loc):
 		time.sleep(0.2)
@@ -261,32 +262,35 @@ class CmdTestAutosignBase(CmdTestBase):
 		if self.live:
 			return
 		loc = getattr(self, asi)
-		if sys.platform == 'linux':
-			self._set_e2label(loc.dev_label)
-			self.txdev.attach()
-			for _ in range(20):
-				if loc.device_inserted:
-					break
-				time.sleep(0.1)
-			else:
-				die(2, f'device insert timeout exceeded {loc.dev_label}')
-		elif sys.platform == 'darwin':
-			self._macOS_mount_fs_image(loc)
+
+		match sys.platform:
+			case 'linux':
+				self._set_e2label(loc.dev_label)
+				self.txdev.attach()
+				for _ in range(20):
+					if loc.device_inserted:
+						break
+					time.sleep(0.1)
+				else:
+					die(2, f'device insert timeout exceeded {loc.dev_label}')
+			case 'darwin':
+				self._macOS_mount_fs_image(loc)
 
 	def remove_device(self, asi='asi'):
 		if self.live:
 			return
 		loc = getattr(self, asi)
-		if sys.platform == 'linux':
-			self.txdev.detach()
-			for _ in range(20):
-				if not loc.device_inserted:
-					break
-				time.sleep(0.1)
-			else:
-				die(2, f'device remove timeout exceeded {loc.dev_label}')
-		elif sys.platform == 'darwin':
-			self._macOS_eject_disk(loc.dev_label)
+		match sys.platform:
+			case 'linux':
+				self.txdev.detach()
+				for _ in range(20):
+					if not loc.device_inserted:
+						break
+					time.sleep(0.1)
+				else:
+					die(2, f'device remove timeout exceeded {loc.dev_label}')
+			case 'darwin':
+				self._macOS_eject_disk(loc.dev_label)
 
 	def _mount_ops(self, loc, cmd, *args, **kwargs):
 		return getattr(getattr(self, loc), cmd)(*args, silent=self.silent_mount, **kwargs)
@@ -837,18 +841,19 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		# create or delete 2 bad tx files
 		self.spawn(msg_only=True)
 		fns = [joinpath(self.asi.tx_dir, f'bad{n}.rawtx') for n in (1, 2)]
-		if op == 'create':
-			for fn in fns:
-				with open(fn, 'w') as fp:
-					fp.write('bad tx data\n')
-			self.bad_tx_count = 2
-		elif op == 'remove':
-			for fn in fns:
-				try:
-					os.unlink(fn)
-				except:
-					pass
-			self.bad_tx_count = 0
+		match op:
+			case 'create':
+				for fn in fns:
+					with open(fn, 'w') as fp:
+						fp.write('bad tx data\n')
+				self.bad_tx_count = 2
+			case 'remove':
+				for fn in fns:
+					try:
+						os.unlink(fn)
+					except:
+						pass
+				self.bad_tx_count = 0
 		self.do_umount()
 		self.remove_device()
 		return 'ok'
@@ -871,26 +876,29 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.insert_device()
 		self.do_mount()
 		os.makedirs(destdir, exist_ok=True)
-		if op.endswith('_invalid'):
-			fn = os.path.join(destdir, 'DEADBE[BTC].rawmsg.json')
-			if op == 'create_invalid':
-				with open(fn, 'w') as fp:
-					fp.write('bad data\n')
-				self.bad_msg_count += 1
-			elif op == 'remove_invalid':
-				os.unlink(fn)
-				self.bad_msg_count -= 1
-		else:
-			for fn in self.ref_msgfiles:
-				if op == 'copy':
+
+		match op:
+			case 'create_invalid' | 'remove_invalid':
+				fn = os.path.join(destdir, 'DEADBE[BTC].rawmsg.json')
+				if op == 'create_invalid':
+					with open(fn, 'w') as fp:
+						fp.write('bad data\n')
+					self.bad_msg_count += 1
+				else:
+					os.unlink(fn)
+					self.bad_msg_count -= 1
+			case 'copy':
+				for fn in self.ref_msgfiles:
 					if os.path.basename(fn) == 'ED405C[BTC].rawmsg.json': # contains bad Seed ID
 						self.bad_msg_count += 1
 					else:
 						self.good_msg_count += 1
 					imsg(f'Copying: {fn} -> {destdir}')
 					shutil.copy2(fn, destdir)
-				elif op == 'remove_signed':
+			case 'remove_signed':
+				for fn in self.ref_msgfiles:
 					os.unlink(os.path.join(destdir, os.path.basename(fn).replace('rawmsg', 'sigmsg')))
+
 		self.do_umount()
 		self.remove_device()
 		return 'ok'

@@ -68,10 +68,11 @@ class unit_tests:
 				for vec in self.vectors[wl_id]['idx_minimal']:
 					chk = vec[1]
 					b = m.idx(vec[0], 'minimal')
-					if chk is False:
-						assert b is None, (b, None)
-					elif chk is None:
-						assert type(b) is tuple, (type(b), tuple)
-					elif type(chk) is int:
-						assert b == chk, (b, chk)
+					match chk:
+						case False:
+							assert b is None, (b, None)
+						case None:
+							assert type(b) is tuple, (type(b), tuple)
+						case int(x):
+							assert b == x, (b, x)
 		return True

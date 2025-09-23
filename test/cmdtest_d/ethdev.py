@@ -95,35 +95,36 @@ amt2 = '888.111122223333444455'
 
 def set_vbals(daemon_id):
 	global vbal1, vbal2, vbal3, vbal4, vbal5, vbal6, vbal7, vbal9
-	if daemon_id == 'geth':
-		vbal1 = '1.2288334'
-		vbal2 = '99.996560752'
-		vbal3 = '1.2314176'
-		vbal4 = '127.0287834'
-		vbal5 = '999904.14775104212345678'
-		vbal6 = '999904.14880104212345678'
-		vbal7 = '999902.91891764212345678'
-		vbal9 = '1.2262504'
-	elif daemon_id == 'reth':
-		vbal1 = '1.2288334'
-		vbal2 = '99.996560752'
-		vbal3 = '1.23142525'
-		vbal3 = '1.2314176'
-		vbal4 = '127.0287834'
-		vbal5 = '999904.14775104212345678'
-		vbal6 = '999904.14880104212345678'
-		vbal7 = '999902.91891764212345678'
-		vbal9 = '1.2262504'
-	else:
-		vbal1 = '1.2288396'
-		vbal2 = '99.997088092'
-		vbal3 = '1.23142525'
-		vbal3 = '1.2314246'
-		vbal4 = '127.0287896'
-		vbal5 = '999904.14828458212345678'
-		vbal6 = '999904.14933458212345678'
-		vbal7 = '999902.91944498212345678'
-		vbal9 = '1.226261'
+	match daemon_id:
+		case 'geth':
+			vbal1 = '1.2288334'
+			vbal2 = '99.996560752'
+			vbal3 = '1.2314176'
+			vbal4 = '127.0287834'
+			vbal5 = '999904.14775104212345678'
+			vbal6 = '999904.14880104212345678'
+			vbal7 = '999902.91891764212345678'
+			vbal9 = '1.2262504'
+		case 'reth':
+			vbal1 = '1.2288334'
+			vbal2 = '99.996560752'
+			vbal3 = '1.23142525'
+			vbal3 = '1.2314176'
+			vbal4 = '127.0287834'
+			vbal5 = '999904.14775104212345678'
+			vbal6 = '999904.14880104212345678'
+			vbal7 = '999902.91891764212345678'
+			vbal9 = '1.2262504'
+		case _:
+			vbal1 = '1.2288396'
+			vbal2 = '99.997088092'
+			vbal3 = '1.23142525'
+			vbal3 = '1.2314246'
+			vbal4 = '127.0287896'
+			vbal5 = '999904.14828458212345678'
+			vbal6 = '999904.14933458212345678'
+			vbal7 = '999902.91944498212345678'
+			vbal9 = '1.226261'
 
 coin = cfg.coin
 
@@ -275,16 +276,17 @@ class CmdTestEthdevMethods:
 		] + (['--wait'] if mmgen_cmd == 'txdo' else [])
 
 		contract_addr = self._get_contract_address(dfl_devaddr)
-		if key == 'Token':
-			self.write_to_tmpfile(f'token_addr{num}', contract_addr+'\n')
-		elif key == 'thorchain_router':
-			from mmgen.fileutil import write_data_to_file
-			write_data_to_file(
-				self.cfg,
-				thorchain_router_addr_file,
-				contract_addr + '\n',
-				ask_overwrite = False,
-				quiet = True)
+		match key:
+			case 'Token':
+				self.write_to_tmpfile(f'token_addr{num}', contract_addr+'\n')
+			case 'thorchain_router':
+				from mmgen.fileutil import write_data_to_file
+				write_data_to_file(
+					self.cfg,
+					thorchain_router_addr_file,
+					contract_addr + '\n',
+					ask_overwrite = False,
+					quiet = True)
 
 		if mmgen_cmd == 'txdo':
 			args += ['-k', keyfile]
@@ -395,10 +397,11 @@ class CmdTestEthdevMethods:
 
 		silence()
 		usr_addrs = list(map(gen_addr, usr_mmaddrs))
-		if op == 'show_bals':
-			await show_bals(await self.rpc)
-		elif op == 'fund_user':
-			await fund_user(await self.rpc)
+		match op:
+			case 'show_bals':
+				await show_bals(await self.rpc)
+			case 'fund_user':
+				await fund_user(await self.rpc)
 		end_silence()
 		return 'ok'
 
@@ -907,10 +910,11 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		t = self.spawn(
 			'mmgen-cli',
 			[f'--coin={self.proto.coin}', '--regtest=1', 'eth_getBalance', '0x'+dfl_devaddr, 'latest'])
-		if self.daemon.id == 'geth':
-			t.expect('0x33b2e3c91ec0e9113986000')
-		elif self.daemon.id == 'reth':
-			t.expect('0xd3c21bab45fb313f0000')
+		match self.daemon.id:
+			case 'geth':
+				t.expect('0x33b2e3c91ec0e9113986000')
+			case 'reth':
+				t.expect('0xd3c21bab45fb313f0000')
 		return t
 
 	async def _wallet_upgrade(self, src_fn, expect1, expect2=None):

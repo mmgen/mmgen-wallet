@@ -111,14 +111,15 @@ class CmdTestMisc(CmdTestBase):
 		files = get_file_with_ext('test/ref/monero', 'tx', no_dot=True, delete=False, return_list=True)
 		t = self.spawn('mmgen-xmrwallet', [op] + files)
 		res = t.read(strip_color=True)
-		if op == 'txview':
-			for s in (
-				'Amount:    0.74 XMR',
-				'Dest:      56VQ9M6k',
-			):
-				assert s in res, f'{s} not in {res}'
-		elif op == 'txlist':
-			assert re.search('3EBD06-.*D94583-.*8BFA29-', res, re.DOTALL)
+		match op:
+			case 'txview':
+				for s in (
+					'Amount:    0.74 XMR',
+					'Dest:      56VQ9M6k',
+				):
+					assert s in res, f'{s} not in {res}'
+			case 'txlist':
+				assert re.search('3EBD06-.*D94583-.*8BFA29-', res, re.DOTALL)
 		return t
 
 	def xmrwallet_txlist(self):

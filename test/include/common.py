@@ -387,21 +387,23 @@ def create_addrpairs(proto, mmtype, num):
 			for m in range(num)]
 
 def VirtBlockDevice(img_path, size):
-	if sys.platform == 'linux':
-		return VirtBlockDeviceLinux(img_path, size)
-	elif sys.platform == 'darwin':
-		return VirtBlockDeviceMacOS(img_path, size)
+	match sys.platform:
+		case 'linux':
+			return VirtBlockDeviceLinux(img_path, size)
+		case 'darwin':
+			return VirtBlockDeviceMacOS(img_path, size)
 
 class VirtBlockDeviceBase:
 
 	@property
 	def dev(self):
-		res = self._get_associations()
-		if len(res) < 1:
-			die(2, f'No device associated with {self.img_path}')
-		elif len(res) > 1:
-			die(2, f'More than one device associated with {self.img_path}')
-		return res[0]
+		match self._get_associations():
+			case [x]:
+				return x
+			case []:
+				die(2, f'No device associated with {self.img_path}')
+			case _:
+				die(2, f'More than one device associated with {self.img_path}')
 
 	def try_detach(self):
 		try:
