@@ -124,14 +124,17 @@ class baseconv:
 		def do_die():
 			die('BaseConversionPadError', f"{pad!r}: illegal value for 'pad' (must be None, 'seed' or int)")
 
-		if pad is None:
-			return 0
-		elif type(pad) is int:
-			return pad
-		elif pad == 'seed':
-			return seed_pad_func()
-		else:
-			do_die()
+		match pad:
+			case None:
+				return 0
+			case bool():
+				do_die()
+			case int():
+				return pad
+			case 'seed':
+				return seed_pad_func()
+			case _:
+				do_die()
 
 	def tohex(self, words_arg, /, *, pad=None):
 		"convert string or list data of instance base to a hexadecimal string"
