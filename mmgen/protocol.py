@@ -149,13 +149,13 @@ class CoinProtocol(MMGenObject):
 
 		@staticmethod
 		def parse_network_id(network_id):
-			nid = namedtuple('parsed_network_id', ['coin', 'network'])
-			if network_id.endswith('_tn'):
-				return nid(network_id[:-3], 'testnet')
-			elif network_id.endswith('_rt'):
-				return nid(network_id[:-3], 'regtest')
-			else:
-				return nid(network_id, 'mainnet')
+			match network_id.rsplit('_', 1):
+				case (coin, netcode) if netcode in ('tn', 'rt'):
+					network = {'tn': 'testnet', 'rt': 'regtest'}[netcode]
+				case _:
+					coin = network_id
+					network = 'mainnet'
+			return namedtuple('parsed_network_id', ['coin', 'network'])(coin, network)
 
 		@staticmethod
 		def create_network_id(coin, network):
@@ -257,14 +257,15 @@ class CoinProtocol(MMGenObject):
 			# Key must be non-zero and less than group order of secp256k1 curve
 			if 0 < int.from_bytes(sec, 'big') < self.secp256k1_group_order:
 				return sec
-			else: # chance of this is less than 1 in 2^127
-				from .util import die, ymsg
-				pk = int.from_bytes(sec, 'big')
-				if pk == 0: # chance of this is 1 in 2^256
+
+			# less than 1 in 2^127 probability that we get here
+			from .util import die, ymsg
+			match int.from_bytes(sec, 'big'):
+				case 0:
 					die(4, 'Private key is zero!')
-				elif pk == self.secp256k1_group_order: # ditto
+				case self.secp256k1_group_order:
 					die(4, 'Private key == secp256k1_group_order!')
-				else: # return key mod group order as the key
+				case pk: # return key (mod group order) as the key
 					if not self.cfg.test_suite:
 						ymsg(f'Warning: private key is greater than secp256k1 group order!:\n  {sec.hex()}')
 					return (pk % self.secp256k1_group_order).to_bytes(self.privkey_len, 'big')
