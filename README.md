@@ -71,9 +71,9 @@ that widespread standard.
 
 - **[Transaction support][T]** for BTC, [BCH][bx], [LTC][bx], [ETH][E],
   [ETC][E], [ERC20 tokens][E] and [RUNE][rx].
-- **[Native asset swaps via THORChain][tc]** (21 assets currently supported).
-- **Monero transacting and wallet management** via the interactive
+- **[Monero][bm]** transacting and wallet management via the interactive
   [`mmgen-xmrwallet`][xm] command.
+- **[Native asset swaps via THORChain][tc]** (21 assets currently supported).
 - **[Address generation support][ag]** for the above coins, plus [Zcash][zx]
   (t and z addresses) and [144 Bitcoin-derived altcoins][ax].
 - **Support for all Bitcoin address types** including Segwit-P2SH and Bech32.
@@ -195,6 +195,7 @@ Donate:
 [E]:  ../../wiki/Altcoin-and-Forkcoin-Support#a_tx
 [ag]: ../../wiki/command-help-addrgen
 [bx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_bch
+[bm]: ../../wiki/Altcoin-and-Forkcoin-Support#a_xmr
 [rx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_rune
 [tc]: ../../wiki/Altcoin-and-Forkcoin-Support#a_tcswap
 [zx]: ../../wiki/Altcoin-and-Forkcoin-Support#a_zec
