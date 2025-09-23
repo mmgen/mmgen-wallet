@@ -79,11 +79,9 @@ class cfg_file:
 	def get_lines(self):
 		def gen_lines():
 			for lineno, line in enumerate(self.data, 1):
-				line = strip_comment(line)
-				if line == '':
+				if (line := strip_comment(line)) == '':
 					continue
-				m = re.fullmatch(r'(\w+)(\s+)(.*)', line)
-				if m:
+				if m := re.fullmatch(r'(\w+)(\s+)(.*)', line):
 					yield self.line_data(m[1], m[3], lineno, None)
 				else:
 					die('CfgFileParseError', f'Parse error in file {self.fn!r}, line {lineno}')

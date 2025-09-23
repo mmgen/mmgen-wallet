@@ -120,8 +120,8 @@ def int2bytespec(n, spec, fmt, *, print_sym=True, strip=False, add_space=False):
 			+ ((' ' if add_space else '') + spec if print_sym else ''))
 
 def parse_bytespec(nbytes):
-	m = re.match(r'([0123456789.]+)(.*)', nbytes)
-	if m:
+
+	if m := re.match(r'([0123456789.]+)(.*)', nbytes):
 		if m.group(2):
 			for k, v in bytespec_map:
 				if k == m.group(2):

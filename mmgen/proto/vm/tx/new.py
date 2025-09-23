@@ -69,8 +69,7 @@ class New:
 	def get_unspent_nums_from_user(self, unspent):
 		from ....ui import line_input
 		while True:
-			reply = line_input(self.cfg, 'Enter an account to spend from: ').strip()
-			if reply:
+			if reply := line_input(self.cfg, 'Enter an account to spend from: ').strip():
 				if not is_int(reply):
 					msg('Account number must be an integer')
 				elif int(reply) < 1:
