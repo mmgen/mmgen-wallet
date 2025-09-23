@@ -189,12 +189,11 @@ class NewSwap(New):
 		from ..term import get_char
 
 		def get_trade_limit():
-			if type(self.swap_cfg.trade_limit) is UniAmt:
-				return self.swap_cfg.trade_limit
-			elif type(self.swap_cfg.trade_limit) is float:
-				return (
-					UniAmt(int(c.data['expected_amount_out']), from_unit='satoshi')
-					* self.swap_cfg.trade_limit)
+			match self.swap_cfg.trade_limit:
+				case UniAmt(): # can’t use positional arg here (not supported by Decimal)
+					return self.swap_cfg.trade_limit
+				case float(x):
+					return UniAmt(int(c.data['expected_amount_out']), from_unit='satoshi') * x
 
 		while True:
 			self.cfg._util.qmsg(f'Retrieving data from {c.rpc.host}...')
