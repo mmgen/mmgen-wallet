@@ -27,7 +27,7 @@ from .obj import MMGenObject, TwComment, WalletPassword, MMGenPWIDString
 from .seed import SeedID, is_seed_id
 from .key import PrivKey
 from .addr import ViewKey, AddrListID, MMGenAddrType, MMGenPasswordType, is_addr_idx
-from .addrlist import KeyList, AddrListData
+from .addrlist import AddrListData
 
 class AddrFile(MMGenObject):
 	desc        = 'addresses'
@@ -120,21 +120,22 @@ class AddrFile(MMGenObject):
 		fs = '  {:<%s}  {:<34}{}' % len(str(p.data[-1].idx))
 		for e in p.data:
 			c = ' ' + e.comment if add_comments and e.comment else ''
-			if type(p) is KeyList:
-				out.append(fs.format(e.idx, f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c))
-			elif type(p).__name__ == 'PasswordList':
-				out.append(fs.format(e.idx, e.passwd, c))
-			else: # First line with idx
-				out.append(fs.format(e.idx, e.addr.views[e.addr.view_pref], c))
-				if p.has_keys:
-					if self.cfg.b16:
-						out.append(fs.format('', f'orig_hex: {e.sec.orig_bytes.hex()}', c))
-					if type(self) is not ViewKeyAddrFile:
-						out.append(fs.format('', f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c))
-					for k in ('viewkey', 'wallet_passwd'):
-						v = getattr(e, k)
-						if v:
-							out.append(fs.format('', f'{k}: {v}', c))
+			match type(p).__name__:
+				case 'KeyList':
+					out.append(fs.format(e.idx, f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c))
+				case 'PasswordList':
+					out.append(fs.format(e.idx, e.passwd, c))
+				case _: # First line with idx
+					out.append(fs.format(e.idx, e.addr.views[e.addr.view_pref], c))
+					if p.has_keys:
+						if self.cfg.b16:
+							out.append(fs.format('', f'orig_hex: {e.sec.orig_bytes.hex()}', c))
+						if type(self) is not ViewKeyAddrFile:
+							out.append(fs.format('', f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c))
+						for k in ('viewkey', 'wallet_passwd'):
+							v = getattr(e, k)
+							if v:
+								out.append(fs.format('', f'{k}: {v}', c))
 
 		out.append('}')
 		self.fmt_data = '\n'.join([l.rstrip() for l in out]) + '\n'
@@ -262,24 +263,25 @@ class AddrFile(MMGenObject):
 			sid = ls.pop(0)
 			assert is_seed_id(sid), f'{sid!r}: invalid Seed ID'
 
-			if type(p).__name__ == 'PasswordList' and len(ls) == 2:
-				ss = ls.pop().split(':')
-				assert len(ss) == 2, f'{ss!r}: invalid password length specifier (must contain colon)'
-				p.set_pw_fmt(ss[0])
-				p.set_pw_len(ss[1])
-				p.pw_id_str = MMGenPWIDString(ls.pop())
-				modname, funcname = p.pw_info[p.pw_fmt].chk_func.split('.')
-				import importlib
-				p.chk_func = getattr(importlib.import_module('mmgen.'+modname), funcname)
-				proto = init_proto(p.cfg, 'btc') # FIXME: dummy protocol
-				mmtype = MMGenPasswordType(proto, 'P')
-			elif len(ls) == 1:
-				proto, mmtype = parse_addrfile_label(ls[0])
-			elif len(ls) == 0:
-				proto = init_proto(p.cfg, 'btc')
-				mmtype = proto.addr_type('L')
-			else:
-				raise ValueError(f'{lines[0]}: Invalid first line for {p.gen_desc} file {fn!r}')
+			match len(ls):
+				case 2 if type(p).__name__ == 'PasswordList':
+					ss = ls.pop().split(':')
+					assert len(ss) == 2, f'{ss!r}: invalid password length specifier (must contain colon)'
+					p.set_pw_fmt(ss[0])
+					p.set_pw_len(ss[1])
+					p.pw_id_str = MMGenPWIDString(ls.pop())
+					modname, funcname = p.pw_info[p.pw_fmt].chk_func.split('.')
+					import importlib
+					p.chk_func = getattr(importlib.import_module('mmgen.'+modname), funcname)
+					proto = init_proto(p.cfg, 'btc') # FIXME: dummy protocol
+					mmtype = MMGenPasswordType(proto, 'P')
+				case 1:
+					proto, mmtype = parse_addrfile_label(ls[0])
+				case 0:
+					proto = init_proto(p.cfg, 'btc')
+					mmtype = proto.addr_type('L')
+				case _:
+					raise ValueError(f'{lines[0]}: Invalid first line for {p.gen_desc} file {fn!r}')
 
 			if type(p).__name__ != 'PasswordList':
 				if proto.base_coin != p.proto.base_coin or proto.network != p.proto.network:
@@ -344,15 +346,15 @@ class PasswordFile(AddrFile):
 
 		if p.pw_fmt in ('bip39', 'xmrseed'):
 			ret = lines.pop(0).split(None, p.pw_len + 1)
-			if len(ret) > p.pw_len+1:
-				m1 = f'extraneous text {ret[p.pw_len+1]!r} found after password'
-				m2 = '[bare comments not allowed in BIP39 password files]'
-				m = m1+' '+m2
-			elif len(ret) < p.pw_len+1:
-				m = f'invalid password length {len(ret)-1}'
-			else:
-				return (ret[0], ' '.join(ret[1:p.pw_len+1]), '')
-			raise ValueError(m)
+			match len(ret) - 1:
+				case p.pw_len:
+					return (ret[0], ' '.join(ret[1:p.pw_len + 1]), '')
+				case x if x > p.pw_len:
+					raise ValueError(
+						f'extraneous text {ret[p.pw_len + 1]!r} found after password '
+						'[bare comments not allowed in mnemonic password files]')
+				case x if x < p.pw_len:
+					raise ValueError(f'invalid password length {x}')
 		else:
 			ret = lines.pop(0).split(None, 2)
 			return ret if len(ret) == 3 else ret + ['']
