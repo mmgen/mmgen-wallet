@@ -221,38 +221,39 @@ asi = Autosign(cfg, cmd=cmd)
 
 cfg._post_init()
 
-if cmd == 'gen_key':
-	asi.gen_key()
-elif cmd == 'setup':
-	asi.setup()
-	from .ui import keypress_confirm
-	if cfg.xmrwallets and keypress_confirm(cfg, '\nContinue with Monero setup?', default_yes=True):
-		msg('')
+match cmd:
+	case 'gen_key':
+		asi.gen_key()
+	case 'setup':
+		asi.setup()
+		from .ui import keypress_confirm
+		if cfg.xmrwallets and keypress_confirm(cfg, '\nContinue with Monero setup?', default_yes=True):
+			msg('')
+			asi.xmr_setup()
+		asi.do_umount()
+	case 'xmr_setup':
+		if not cfg.xmrwallets:
+			die(1, 'Please specify a wallet or range of wallets with the --xmrwallets option')
+		asi.do_mount()
 		asi.xmr_setup()
-	asi.do_umount()
-elif cmd == 'xmr_setup':
-	if not cfg.xmrwallets:
-		die(1, 'Please specify a wallet or range of wallets with the --xmrwallets option')
-	asi.do_mount()
-	asi.xmr_setup()
-	asi.do_umount()
-elif cmd.startswith('macos_ramdisk'):
-	if sys.platform != 'darwin':
-		die(1, f'The ‘{cmd}’ operation is for the macOS platform only')
-	getattr(asi, cmd)()
-elif cmd == 'enable_swap':
-	asi.swap.enable()
-elif cmd == 'disable_swap':
-	asi.swap.disable()
-elif cmd == 'sign':
-	main(do_loop=False)
-elif cmd == 'wait':
-	main(do_loop=True)
-elif cmd == 'clean':
-	asi.do_mount()
-	asi.clean_old_files()
-	asi.do_umount()
-elif cmd == 'wipe_key':
-	asi.do_mount()
-	asi.wipe_encryption_key()
-	asi.do_umount()
+		asi.do_umount()
+	case 'macos_ramdisk_setup' | 'macos_ramdisk_delete':
+		if sys.platform != 'darwin':
+			die(1, f'The ‘{cmd}’ operation is for the macOS platform only')
+		getattr(asi, cmd)()
+	case 'enable_swap':
+		asi.swap.enable()
+	case 'disable_swap':
+		asi.swap.disable()
+	case 'sign':
+		main(do_loop=False)
+	case 'wait':
+		main(do_loop=True)
+	case 'clean':
+		asi.do_mount()
+		asi.clean_old_files()
+		asi.do_umount()
+	case 'wipe_key':
+		asi.do_mount()
+		asi.wipe_encryption_key()
+		asi.do_umount()

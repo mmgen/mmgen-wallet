@@ -321,24 +321,25 @@ def process_result(ret, *, pager=False, print_result=False):
 		else:
 			return o
 
-	if ret is True:
-		return True
-	elif ret in (False, None):
-		die(2, f'tool command returned {ret!r}')
-	elif isinstance(ret, str):
-		return triage_result(ret)
-	elif isinstance(ret, int):
-		return triage_result(str(ret))
-	elif isinstance(ret, tuple):
-		return triage_result('\n'.join([r.decode() if isinstance(r, bytes) else r for r in ret]))
-	elif isinstance(ret, bytes):
-		try:
-			return triage_result(ret.decode())
-		except:
-			# don't add NL to binary data if it can't be converted to utf8
-			return os.write(1, ret) if print_result else ret
-	else:
-		die(2, f'tool.py: can’t handle return value of type {type(ret).__name__!r}')
+	match ret:
+		case True:
+			return True
+		case False | None:
+			die(2, f'tool command returned {ret!r}')
+		case str():
+			return triage_result(ret)
+		case int():
+			return triage_result(str(ret))
+		case tuple():
+			return triage_result('\n'.join([r.decode() if isinstance(r, bytes) else r for r in ret]))
+		case bytes():
+			try:
+				return triage_result(ret.decode())
+			except:
+				# don't add NL to binary data if it can't be converted to utf8
+				return os.write(1, ret) if print_result else ret
+		case _:
+			die(2, f'tool.py: can’t handle return value of type {type(ret).__name__!r}')
 
 def get_cmd_cls(cmd):
 	for modname, cmdlist in mods.items():

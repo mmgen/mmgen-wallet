@@ -121,27 +121,28 @@ op     = cmd_args.pop(0)
 infile = cmd_args.pop(0)
 wallets = spec = None
 
-if op in ('relay', 'submit', 'resubmit', 'abort'):
-	if len(cmd_args) != 0:
-		cfg._usage()
-elif op in ('txview', 'txlist'):
-	infile = [infile] + cmd_args
-elif op in ('create', 'sync', 'list', 'view', 'listview', 'dump', 'restore'): # kafile_arg_ops
-	if len(cmd_args) > 1:
-		cfg._usage()
-	wallets = cmd_args.pop(0) if cmd_args else None
-elif op in ('new', 'transfer', 'sweep', 'sweep_all', 'label'):
-	if len(cmd_args) != 1:
-		cfg._usage()
-	spec = cmd_args[0]
-elif op in ('export-outputs', 'export-outputs-sign', 'import-key-images'):
-	if not cfg.autosign:
-		die(1, f'--autosign must be used with command {op!r}')
-	if len(cmd_args) > 1:
-		cfg._usage()
-	wallets = cmd_args.pop(0) if cmd_args else None
-else:
-	die(1, f'{op!r}: unrecognized operation')
+match op:
+	case 'relay' | 'submit' | 'resubmit' | 'abort':
+		if len(cmd_args) != 0:
+			cfg._usage()
+	case 'txview' | 'txlist':
+		infile = [infile] + cmd_args
+	case 'create' | 'sync' | 'list' | 'view' | 'listview' | 'dump' | 'restore': # kafile_arg_ops
+		if len(cmd_args) > 1:
+			cfg._usage()
+		wallets = cmd_args.pop(0) if cmd_args else None
+	case 'new' | 'transfer' | 'sweep' | 'sweep_all' | 'label':
+		if len(cmd_args) != 1:
+			cfg._usage()
+		spec = cmd_args[0]
+	case 'export-outputs' | 'export-outputs-sign' | 'import-key-images':
+		if not cfg.autosign:
+			die(1, f'--autosign must be used with command {op!r}')
+		if len(cmd_args) > 1:
+			cfg._usage()
+		wallets = cmd_args.pop(0) if cmd_args else None
+	case _:
+		die(1, f'{op!r}: unrecognized operation')
 
 m = xmrwallet.op(op, cfg, infile, wallets, spec=spec)
 

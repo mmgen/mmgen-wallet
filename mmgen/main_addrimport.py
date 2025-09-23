@@ -86,28 +86,27 @@ def parse_cmd_args(cmd_args):
 	def import_mmgen_list(infile):
 		return (AddrList, KeyAddrList)[bool(cfg.keyaddr_file)](cfg, proto, infile=infile)
 
-	if len(cmd_args) == 1:
-		infile = cmd_args[0]
-		from .fileutil import check_infile, get_lines_from_file
-		check_infile(infile)
-		if cfg.addrlist:
-			al = AddrList(
-				cfg      = cfg,
-				proto    = proto,
-				addrlist = get_lines_from_file(
-					cfg,
-					infile,
-					desc = f'non-{gc.proj_name} addresses',
-					trim_comments = True))
-		else:
-			al = import_mmgen_list(infile)
-	elif len(cmd_args) == 0 and cfg.address:
-		al = AddrList(cfg, proto=proto, addrlist=[cfg.address])
-		infile = 'command line'
-	else:
-		die(1, addrimport_msgs['bad_args'])
-
-	return al, infile
+	match cmd_args:
+		case [infile]:
+			from .fileutil import check_infile, get_lines_from_file
+			check_infile(infile)
+			if cfg.addrlist:
+				return (
+					AddrList(
+						cfg      = cfg,
+						proto    = proto,
+						addrlist = get_lines_from_file(
+							cfg,
+							infile,
+							desc = f'non-{gc.proj_name} addresses',
+							trim_comments = True)),
+					infile)
+			else:
+				return (import_mmgen_list(infile), infile)
+		case [] if cfg.address:
+			return (AddrList(cfg, proto=proto, addrlist=[cfg.address]), 'command line')
+		case _:
+			die(1, addrimport_msgs['bad_args'])
 
 def check_opts(twctl):
 	batch = bool(cfg.batch)

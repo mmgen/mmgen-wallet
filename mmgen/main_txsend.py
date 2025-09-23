@@ -90,27 +90,27 @@ if cfg.dump_hex and cfg.dump_hex != '-':
 
 asi = None
 
-if len(cfg._args) == 1:
-	infile = cfg._args[0]
-	from .fileutil import check_infile
-	check_infile(infile)
-elif not cfg._args and cfg.autosign:
-	from .tx.util import mount_removable_device
-	from .autosign import Signable
-	asi = mount_removable_device(cfg)
-	si = Signable.automount_transaction(asi)
-	if cfg.abort:
-		si.shred_abortable() # prompts user, then raises exception or exits
-	elif cfg.status or cfg.receipt:
-		if si.unsent:
-			die(1, 'Transaction is unsent')
-		if si.unsigned:
-			die(1, 'Transaction is unsigned')
-	else:
-		infile = si.get_unsent()
-		cfg._util.qmsg(f'Got signed transaction file ‘{infile}’')
-else:
-	cfg._usage()
+match cfg._args:
+	case [infile]:
+		from .fileutil import check_infile
+		check_infile(infile)
+	case [] if cfg.autosign:
+		from .tx.util import mount_removable_device
+		from .autosign import Signable
+		asi = mount_removable_device(cfg)
+		si = Signable.automount_transaction(asi)
+		if cfg.abort:
+			si.shred_abortable() # prompts user, then raises exception or exits
+		elif cfg.status or cfg.receipt:
+			if si.unsent:
+				die(1, 'Transaction is unsent')
+			if si.unsigned:
+				die(1, 'Transaction is unsigned')
+		else:
+			infile = si.get_unsent()
+			cfg._util.qmsg(f'Got signed transaction file ‘{infile}’')
+	case _:
+		cfg._usage()
 
 if not cfg.status:
 	from .ui import do_license_msg
