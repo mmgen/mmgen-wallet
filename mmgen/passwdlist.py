@@ -128,16 +128,15 @@ class PasswordList(AddrList):
 
 	def chk_pw_len(self):
 		assert self.pw_len, 'pw_len must be set'
-		pw_len = self.pw_len
 		fs = '{l}: invalid user-requested length for {b} ({c}{m})'
 		d = self.pw_info[self.pw_fmt]
-		if d.valid_lens:
-			if pw_len not in d.valid_lens:
+		match self.pw_len:
+			case pw_len if d.valid_lens and pw_len not in d.valid_lens:
 				die(2, fs.format(l=pw_len, b=d.desc, c='not one of ', m=d.valid_lens))
-		elif pw_len > d.max_len:
-			die(2, fs.format(l=pw_len, b=d.desc, c='>', m=d.max_len))
-		elif pw_len < d.min_len:
-			die(2, fs.format(l=pw_len, b=d.desc, c='<', m=d.min_len))
+			case pw_len if pw_len > d.max_len:
+				die(2, fs.format(l=pw_len, b=d.desc, c='>', m=d.max_len))
+			case pw_len if pw_len < d.min_len:
+				die(2, fs.format(l=pw_len, b=d.desc, c='<', m=d.min_len))
 
 	def set_pw_len(self, pw_len):
 		d = self.pw_info[self.pw_fmt]
@@ -152,71 +151,71 @@ class PasswordList(AddrList):
 		self.chk_pw_len()
 
 	def set_pw_len_vs_seed_len(self, seed):
-		pf = self.pw_fmt
-		if pf == 'hex':
-			pw_bytes = self.pw_len // 2
-			good_pw_len = seed.byte_len * 2
-		elif pf == 'bip39':
-			from .bip39 import bip39
-			self.bip39 = bip39()
-			pw_bytes = bip39.nwords2seedlen(self.pw_len, in_bytes=True)
-			good_pw_len = bip39.seedlen2nwords(seed.byte_len, in_bytes=True)
-		elif pf == 'xmrseed':
-			from .xmrseed import xmrseed
-			from .protocol import init_proto
-			self.xmrseed = xmrseed()
-			self.xmrproto = init_proto(self.cfg, 'xmr')
-			pw_bytes = xmrseed().seedlen_map_rev[self.pw_len]
-			try:
-				good_pw_len = xmrseed().seedlen_map[seed.byte_len]
-			except:
-				die(1, f'{seed.byte_len*8}: unsupported seed length for Monero new-style mnemonic')
-		elif pf in ('b32', 'b58'):
-			pw_int = (32 if pf == 'b32' else 58) ** self.pw_len
-			pw_bytes = pw_int.bit_length() // 8
-			from .baseconv import baseconv
-			self.baseconv = baseconv(self.pw_fmt)
-			good_pw_len = len(baseconv(pf).frombytes(b'\xff'*seed.byte_len))
-		else:
-			raise NotImplementedError(f'{pf!r}: unknown password format')
 
-		if pw_bytes > seed.byte_len:
-			die(1,
-				f'Cannot generate passwords with more entropy than underlying seed! ({len(seed.data)*8} bits)\n' +
-				(f'Re-run the command with --passwd-len={good_pw_len}' if pf in ('bip39', 'hex') else
-				'Re-run the command, specifying a password length of {} or less')
-			)
+		match self.pw_fmt:
+			case 'hex':
+				pw_bytes = self.pw_len // 2
+				good_pw_len = seed.byte_len * 2
+			case 'bip39':
+				from .bip39 import bip39
+				self.bip39 = bip39()
+				pw_bytes = bip39.nwords2seedlen(self.pw_len, in_bytes=True)
+				good_pw_len = bip39.seedlen2nwords(seed.byte_len, in_bytes=True)
+			case 'xmrseed':
+				from .xmrseed import xmrseed
+				from .protocol import init_proto
+				self.xmrseed = xmrseed()
+				self.xmrproto = init_proto(self.cfg, 'xmr')
+				pw_bytes = xmrseed().seedlen_map_rev[self.pw_len]
+				try:
+					good_pw_len = xmrseed().seedlen_map[seed.byte_len]
+				except:
+					die(1, f'{seed.byte_len*8}: unsupported seed length for Monero new-style mnemonic')
+			case 'b32' | 'b58' as pf:
+				pw_int = (32 if pf == 'b32' else 58) ** self.pw_len
+				pw_bytes = pw_int.bit_length() // 8
+				from .baseconv import baseconv
+				self.baseconv = baseconv(self.pw_fmt)
+				good_pw_len = len(baseconv(pf).frombytes(b'\xff'*seed.byte_len))
+			case pf:
+				raise NotImplementedError(f'{pf!r}: unknown password format')
 
-		if pf in ('bip39', 'hex') and pw_bytes < seed.byte_len:
-			from .ui import keypress_confirm
-			keypress_confirm(
-				self.cfg,
-				f'WARNING: requested {self.pw_info[pf].desc} length has less entropy ' +
-				'than underlying seed!\nIs this what you want?',
-				default_yes = True,
-				do_exit = True)
+		match pw_bytes:
+			case x if x > seed.byte_len:
+				die(1,
+					f'Cannot generate passwords with more entropy than underlying seed! ({len(seed.data)*8} bits)\n' +
+					(f'Re-run the command with --passwd-len={good_pw_len}' if self.pw_fmt in ('bip39', 'hex') else
+					'Re-run the command, specifying a password length of {} or less')
+				)
+			case x if x < seed.byte_len and self.pw_fmt in ('bip39', 'hex'):
+				from .ui import keypress_confirm
+				keypress_confirm(
+					self.cfg,
+					f'WARNING: requested {self.pw_info[self.pw_fmt].desc} length has less entropy ' +
+					'than underlying seed!\nIs this what you want?',
+					default_yes = True,
+					do_exit = True)
 
 	def gen_passwd(self, secbytes):
-		assert self.pw_fmt in self.pw_info
-		if self.pw_fmt == 'hex':
-			# take most significant part
-			return secbytes.hex()[:self.pw_len]
-		elif self.pw_fmt == 'bip39':
-			pw_len_bytes = self.bip39.nwords2seedlen(self.pw_len, in_bytes=True)
-			# take most significant part
-			return ' '.join(self.bip39.fromhex(secbytes[:pw_len_bytes].hex()))
-		elif self.pw_fmt == 'xmrseed':
-			pw_len_bytes = self.xmrseed.seedlen_map_rev[self.pw_len]
-			bytes_preproc = self.xmrproto.preprocess_key(
-				secbytes[:pw_len_bytes], # take most significant part
-				None)
-			return ' '.join(self.xmrseed.frombytes(bytes_preproc))
-		else:
-			# take least significant part
-			return self.baseconv.frombytes(
-				secbytes,
-				pad = self.pw_len,
-				tostr = True)[-self.pw_len:]
+		match self.pw_fmt:
+			case 'hex':
+				return secbytes.hex()[:self.pw_len] # take most significant part
+			case 'bip39':
+				pw_len_bytes = self.bip39.nwords2seedlen(self.pw_len, in_bytes=True)
+				return ' '.join(self.bip39.fromhex(secbytes[:pw_len_bytes].hex())) # take m.s.p.
+			case 'xmrseed':
+				pw_len_bytes = self.xmrseed.seedlen_map_rev[self.pw_len]
+				bytes_preproc = self.xmrproto.preprocess_key(
+					secbytes[:pw_len_bytes], # take most significant part
+					None)
+				return ' '.join(self.xmrseed.frombytes(bytes_preproc))
+			case x if x in self.pw_info:
+				return self.baseconv.frombytes(
+					secbytes,
+					pad = self.pw_len,
+					tostr = True)[-self.pw_len:] # take least significant part
+			case x:
+				die(2, f'{x}: unrecognized password format')
 
 	def check_format(self, pw):
 		if not self.chk_func(pw):
