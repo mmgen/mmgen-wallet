@@ -29,16 +29,19 @@ class OpRestore(OpCreate):
 	async def process_wallet(self, d, fn, last):
 
 		def get_dump_data():
+
 			def gen():
 				for fn in [self.get_wallet_fn(d, watch_only=wo) for wo in (True, False)]:
 					ret = fn.parent / (fn.name + '.dump')
 					if ret.exists():
 						yield ret
+
 			dump_fns = tuple(gen())
 			if not dump_fns:
 				die(1, f"No suitable dump file found for '{fn}'")
 			elif len(dump_fns) > 1:
 				ymsg(f"Warning: more than one dump file found for '{fn}' - using the first!")
+
 			return MoneroWalletDumpFile.Completed(
 				parent = self,
 				fn     = dump_fns[0]).data._asdict()['wallet_metadata']

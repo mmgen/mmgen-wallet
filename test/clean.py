@@ -31,7 +31,9 @@ opts_data = {
 	},
 }
 
-cfg = Config(opts_data=opts_data, init_opts={'skip_cfg_file': True})
+cfg = Config(
+	opts_data = opts_data,
+	init_opts = {'skip_cfg_file': True})
 
 from test.overlay import get_overlay_tree_dir
 overlay_tree_dir = get_overlay_tree_dir(repo_root)

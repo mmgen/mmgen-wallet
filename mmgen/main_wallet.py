@@ -75,12 +75,12 @@ elif invoked_as == 'seedsplit':
 opts_data = {
 	'filter_codes': {
 		# Write  In-fmt  Out-fmt  Keep-pass  Force-update  Master-share  passwd-file-New-only
-		'chk':       ['-',      'i'],
-		'conv':      ['-', 'w', 'i', 'o', 'k',      'n'],
-		'gen':       ['-', 'w',      'o'],
-		'passchg':   ['-', 'w', 'i',      'k', 'f', 'n'],
-		'seedsplit': ['-', 'w', 'i', 'o',      'm', 'n'],
-		'subgen':    ['-', 'w', 'i', 'o', 'k',      'n'],
+		'chk':       ['-',      'i'                         ],
+		'conv':      ['-', 'w', 'i', 'o', 'k',           'n'],
+		'gen':       ['-', 'w',      'o'                    ],
+		'passchg':   ['-', 'w', 'i',      'k', 'f',      'n'],
+		'seedsplit': ['-', 'w', 'i', 'o',           'm', 'n'],
+		'subgen':    ['-', 'w', 'i', 'o', 'k',           'n'],
 	}[invoked_as],
 	'text': {
 		'desc': desc,
