@@ -120,7 +120,7 @@ may also be started and stopped manually at the DOS or MSYS2 prompt as follows
 #### Install Monero-Python
 
 ```text
-$ python3 -m pip install pycryptodome ipaddress varint
+$ python3 -m pip install ipaddress varint
 $ python3 -m pip install --no-deps monero
 ```
 

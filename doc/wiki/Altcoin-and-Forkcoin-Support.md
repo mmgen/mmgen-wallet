@@ -35,10 +35,12 @@ tokens.  In addition, ERC20 token creation and deployment are supported via the
 
 #### <a id="a_ed">Install the Ethereum dependencies</a>
 
+Skip this step for MSYS2 or if your Python version is 3.13 or greater.
+
 From the MMGen Wallet repository root, type:
 
 ```text
-$ python3 -m pip install -r alt-requirements.txt # skip this for MSYS2
+$ python3 -m pip install -r keccak-requirements.txt
 ```
 
 #### <a id="a_geth">Install and run Reth, Geth or Parity</a>
@@ -247,11 +249,14 @@ in your executable path.
 
 <a id="a_xmr_req">Install the Python XMR requirements:</a>
 
-(Note that this step is not required for MSYS2, as these requirements were
-already installed by pacman.)
+Skip this step for MSYS2, as these requirements were already installed by
+pacman.
+
+Skip ‘keccak-requirements.txt’ if your Python version 3.13 or greater and
+you don’t plan to run the test suite.
 
 ```text
-$ python3 -m pip install -r alt-requirements.txt
+$ python3 -m pip install -r keccak-requirements.txt  # see above
 $ python3 -m pip install -r xmr-requirements.txt
 ```
 
@@ -302,6 +307,12 @@ To learn how to transact using your wallets, continue on to the
 
 ### <a id="a_rune">THORChain (RUNE)</a>
 
+Install the RUNE requirements:
+
+```text
+$ python3 -m pip install -r rune-requirements.txt
+```
+
 Transacting RUNE with MMGen Wallet is similar to transacting BTC as described in
 the [**Getting Started**][gs] guide.  Just add the `--coin=rune` option to all
 relevant commands.  With `mmgen-autosign`, add `rune` to the list of coins in
@@ -314,6 +325,8 @@ communications via Tor or I2P: refer to the helpscreens of `mmgen-txcreate`,
 `mmgen-swaptxcreate` and `mmgen-txsend` for more information.
 
 ### <a id="a_tcswap">Asset swaps via THORChain</a>
+
+Install the RUNE requirements as shown above.
 
 21 assets (as of this writing) may be swapped directly within MMGen Wallet via
 THORChain.  Swapping assets is just like normal transacting, except transactions
