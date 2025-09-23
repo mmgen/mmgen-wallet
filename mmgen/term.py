@@ -27,19 +27,20 @@ from collections import namedtuple
 
 from .util import msg, msg_r, die
 
-if sys.platform in ('linux', 'darwin'):
-	import tty, termios
-	from select import select
-	hold_protect_timeout = 2 if sys.platform == 'darwin' else 0.3
-elif sys.platform == 'win32':
-	try:
-		import msvcrt
-	except:
-		die(2, 'Unable to set terminal mode')
-	if not sys.stdin.isatty():
-		msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
-else:
-	die(2, f'{sys.platform!r}: unsupported platform')
+match sys.platform:
+	case 'linux' | 'darwin':
+		import tty, termios
+		from select import select
+		hold_protect_timeout = 2 if sys.platform == 'darwin' else 0.3
+	case 'win32':
+		try:
+			import msvcrt
+		except:
+			die(2, 'Unable to set terminal mode')
+		if not sys.stdin.isatty():
+			msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+	case x:
+		die(2, f'{x!r}: unsupported platform')
 
 _term_dimensions = namedtuple('terminal_dimensions', ['width', 'height'])
 

@@ -64,17 +64,16 @@ class cfg_file:
 				die(2, f'ERROR: unable to write to {fn!r}')
 
 	def parse_value(self, value, refval):
-		if isinstance(refval, dict):
-			m = re.fullmatch(r'((\s+\w+:\S+)+)', ' '+value) # expect one or more colon-separated values
-			if m:
-				return dict([i.split(':') for i in m[1].split()])
-		elif isinstance(refval, list | tuple):
-			m = re.fullmatch(r'((\s+\S+)+)', ' '+value)     # expect single value or list
-			if m:
-				ret = m[1].split()
-				return ret if isinstance(refval, list) else tuple(ret)
-		else:
-			return value
+		match refval:
+			case dict():            # expect one or more colon-separated values:
+				if m := re.fullmatch(r'((\s+\w+:\S+)+)', ' ' + value):
+					return dict([i.split(':') for i in m[1].split()])
+			case list() | tuple():  # expect single value or list:
+				if m := re.fullmatch(r'((\s+\S+)+)', ' ' + value):
+					ret = m[1].split()
+					return ret if isinstance(refval, list) else tuple(ret)
+			case _:
+				return value
 
 	def get_lines(self):
 		def gen_lines():

@@ -120,23 +120,26 @@ class Daemon(Lockable):
 		if self.use_pidfile:
 			with open(self.pidfile) as fp:
 				return fp.read().strip()
-		elif self.platform == 'win32':
-			# Assumes only one running instance of given daemon.  If multiple daemons are running,
-			# the first PID in the list is returned and self.pids is set to the PID list.
-			ss = f'{self.exec_fn}.exe'
-			cp = self.run_cmd(['ps', '-Wl'], silent=True)
-			self.pids = ()
-			# use Windows, not Cygwin, PID
-			pids = tuple(line.split()[3] for line in cp.stdout.decode().splitlines() if ss in line)
-			if pids:
-				if len(pids) > 1:
-					self.pids = pids
-				return pids[0]
-		elif self.platform in ('linux', 'darwin'):
-			ss = ' '.join(self.start_cmd)
-			cp = self.run_cmd(['pgrep', '-f', ss], silent=True)
-			if cp.stdout:
-				return cp.stdout.strip().decode()
+
+		match self.platform:
+			case 'win32':
+				# Assumes only one running instance of given daemon.  If multiple daemons are running,
+				# the first PID in the list is returned and self.pids is set to the PID list.
+				ss = f'{self.exec_fn}.exe'
+				cp = self.run_cmd(['ps', '-Wl'], silent=True)
+				self.pids = ()
+				# use Windows, not Cygwin, PID
+				pids = tuple(line.split()[3] for line in cp.stdout.decode().splitlines() if ss in line)
+				if pids:
+					if len(pids) > 1:
+						self.pids = pids
+					return pids[0]
+			case 'linux' | 'darwin':
+				ss = ' '.join(self.start_cmd)
+				cp = self.run_cmd(['pgrep', '-f', ss], silent=True)
+				if cp.stdout:
+					return cp.stdout.strip().decode()
+
 		die(2, f'{ss!r} not found in process list, cannot determine PID')
 
 	@property

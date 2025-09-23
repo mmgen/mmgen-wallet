@@ -67,12 +67,13 @@ def AddrGenerator(cfg, proto, addr_type):
 
 	from .addr import MMGenAddrType
 
-	if type(addr_type) is str:
-		addr_type = MMGenAddrType(proto=proto, id_str=addr_type)
-	elif type(addr_type) is MMGenAddrType:
-		assert addr_type in proto.mmtypes, f'{addr_type}: invalid address type for coin {proto.coin}'
-	else:
-		raise TypeError(f"{type(addr_type)}: incorrect argument type for 'addr_type' arg")
+	match addr_type:
+		case MMGenAddrType(x):
+			assert x in proto.mmtypes, f'{x}: invalid address type for coin {proto.coin}'
+		case str(x):
+			addr_type = MMGenAddrType(proto=proto, id_str=x)
+		case _:
+			raise TypeError(f"{type(addr_type)}: incorrect argument type for 'addr_type' arg")
 
 	import importlib
 	return getattr(

@@ -836,18 +836,17 @@ def check_opts(cfg): # Raises exception if any check fails
 				opt_unrecognized()
 			if name == 'out_fmt':
 				p = 'hidden_incog_output_params'
-
-				if wd.type == 'incog_hidden' and not getattr(cfg, p):
-					die('UserOptError',
-						'Hidden incog format output requested.  ' +
-						f'You must supply a file and offset with the {fmt_opt(p)!r} option')
-
-				if wd.base_type == 'incog_base' and cfg.old_incog_fmt:
-					display_opt(name, val, beg='Selected', end=' ')
-					display_opt('old_incog_fmt', beg='conflicts with', end=':\n')
-					die('UserOptError', 'Export to old incog wallet format unsupported')
-				elif wd.type == 'brain':
-					die('UserOptError', 'Output to brainwallet format unsupported')
+				match wd.type:
+					case 'incog_hidden' if not getattr(cfg, p):
+						die('UserOptError',
+							'Hidden incog format output requested.  ' +
+							f'You must supply a file and offset with the {fmt_opt(p)!r} option')
+					case ('incog' | 'incog_hex' | 'incog_hidden') if cfg.old_incog_fmt:
+						display_opt(name, val, beg='Selected', end=' ')
+						display_opt('old_incog_fmt', beg='conflicts with', end=':\n')
+						die('UserOptError', 'Export to old incog wallet format unsupported')
+					case 'brain':
+						die('UserOptError', 'Output to brainwallet format unsupported')
 
 		out_fmt = in_fmt
 

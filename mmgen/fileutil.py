@@ -127,14 +127,15 @@ def get_seed_file(cfg, *, nargs, wallets=None, invoked_as=None):
 
 	wd_from_opt = bool(cfg.hidden_incog_input_params or cfg.in_fmt) # have wallet data from opt?
 
-	if len(wallets) + (wd_from_opt or bool(wf)) < nargs:
-		if not wf:
-			msg('No default wallet found, and no other seed source was specified')
-		cfg._usage()
-	elif len(wallets) > nargs:
-		cfg._usage()
-	elif len(wallets) == nargs and wf and invoked_as != 'gen':
-		cfg._util.qmsg('Warning: overriding default wallet with user-supplied wallet')
+	match len(wallets): # errors, warnings:
+		case x if x < nargs - (wd_from_opt or bool(wf)):
+			if not wf:
+				msg('No default wallet found, and no other seed source was specified')
+			cfg._usage()
+		case x if x > nargs:
+			cfg._usage()
+		case x if x == nargs and wf and invoked_as != 'gen':
+			cfg._util.qmsg('Warning: overriding default wallet with user-supplied wallet')
 
 	if wallets or wf:
 		check_infile(wallets[0] if wallets else wf)

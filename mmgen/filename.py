@@ -52,11 +52,12 @@ class File:
 					die(2, f'{fn!r}: permission denied')
 #				if e.errno != 17: raise
 			else:
-				if sys.platform == 'linux':
-					self.size = os.lseek(fd, 0, os.SEEK_END)
-				elif sys.platform == 'darwin':
-					from .platform.darwin.util import get_device_size
-					self.size = get_device_size(fn)
+				match sys.platform:
+					case 'linux':
+						self.size = os.lseek(fd, 0, os.SEEK_END)
+					case 'darwin':
+						from .platform.darwin.util import get_device_size
+						self.size = get_device_size(fn)
 				os.close(fd)
 		else:
 			self.size  = st.st_size
@@ -122,12 +123,13 @@ def find_files_in_dir(subclass, fdir, *, no_dups=False):
 	matches = [l for l in os.listdir(fdir) if l.endswith('.'+subclass.ext)]
 
 	if no_dups:
-		if len(matches) == 1:
-			return os.path.join(fdir, matches[0])
-		elif matches:
-			die(1, f'ERROR: more than one {subclass.__name__} file in directory {fdir!r}')
-		else:
-			return None
+		match matches:
+			case [a]:
+				return os.path.join(fdir, a)
+			case []:
+				return None
+			case _:
+				die(1, f'ERROR: more than one {subclass.__name__} file in directory {fdir!r}')
 	else:
 		return [os.path.join(fdir, m) for m in matches]
 

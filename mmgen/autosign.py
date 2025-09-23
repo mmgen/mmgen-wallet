@@ -27,10 +27,11 @@ from .fileutil import shred_file
 from .ui import keypress_confirm
 
 def SwapMgr(*args, **kwargs):
-	if sys.platform == 'linux':
-		return SwapMgrLinux(*args, **kwargs)
-	elif sys.platform == 'darwin':
-		return SwapMgrMacOS(*args, **kwargs)
+	match sys.platform:
+		case 'linux':
+			return SwapMgrLinux(*args, **kwargs)
+		case 'darwin':
+			return SwapMgrMacOS(*args, **kwargs)
 
 class SwapMgrBase:
 
@@ -468,25 +469,26 @@ class Autosign:
 					cfg.mnemonic_fmt,
 					fmt_list(self.mn_fmts, fmt='no_spc')))
 
-		if sys.platform == 'linux':
-			self.dfl_mountpoint = f'/mnt/{self.linux_mount_subdir}'
-			self.dfl_shm_dir    = '/dev/shm'
+		match sys.platform:
+			case 'linux':
+				self.dfl_mountpoint = f'/mnt/{self.linux_mount_subdir}'
+				self.dfl_shm_dir    = '/dev/shm'
 
-			# linux-only attrs:
-			self.old_dfl_mountpoint = '/mnt/tx'
-			self.old_dfl_mountpoint_errmsg = f"""
-				Mountpoint ‘{self.old_dfl_mountpoint}’ is no longer supported!
-				Please rename ‘{self.old_dfl_mountpoint}’ to ‘{self.dfl_mountpoint}’
-				and update your fstab accordingly.
-			"""
-			self.mountpoint_errmsg_fs = """
-				Mountpoint ‘{}’ does not exist or does not point
-				to a directory!  Please create the mountpoint and add an entry
-				to your fstab as described in this script’s help text.
-			"""
-		elif sys.platform == 'darwin':
-			self.dfl_mountpoint = f'/Volumes/{self.dev_label}'
-			self.dfl_shm_dir    = f'/Volumes/{self.macOS_ramdisk_name}'
+				# linux-only attrs:
+				self.old_dfl_mountpoint = '/mnt/tx'
+				self.old_dfl_mountpoint_errmsg = f"""
+					Mountpoint ‘{self.old_dfl_mountpoint}’ is no longer supported!
+					Please rename ‘{self.old_dfl_mountpoint}’ to ‘{self.dfl_mountpoint}’
+					and update your fstab accordingly.
+				"""
+				self.mountpoint_errmsg_fs = """
+					Mountpoint ‘{}’ does not exist or does not point
+					to a directory!  Please create the mountpoint and add an entry
+					to your fstab as described in this script’s help text.
+				"""
+			case 'darwin':
+				self.dfl_mountpoint = f'/Volumes/{self.dev_label}'
+				self.dfl_shm_dir    = f'/Volumes/{self.macOS_ramdisk_name}'
 
 		self.cfg = cfg
 
@@ -495,12 +497,13 @@ class Autosign:
 		self.shm_dir    = Path(self.dfl_shm_dir)
 		self.wallet_dir = Path(cfg.wallet_dir or self.dfl_wallet_dir)
 
-		if sys.platform == 'linux':
-			self.mount_cmd  = f'mount {self.mountpoint}'
-			self.umount_cmd = f'umount {self.mountpoint}'
-		elif sys.platform == 'darwin':
-			self.mount_cmd  = f'diskutil mount {self.dev_label}'
-			self.umount_cmd = f'diskutil eject {self.dev_label}'
+		match sys.platform:
+			case 'linux':
+				self.mount_cmd  = f'mount {self.mountpoint}'
+				self.umount_cmd = f'umount {self.mountpoint}'
+			case 'darwin':
+				self.mount_cmd  = f'diskutil mount {self.dev_label}'
+				self.umount_cmd = f'diskutil eject {self.dev_label}'
 
 		self.init_fixup()
 
@@ -863,16 +866,17 @@ class Autosign:
 	def device_inserted(self):
 		if self.cfg.no_insert_check:
 			return True
-		if sys.platform == 'linux':
-			cp = run(self.linux_blkid_cmd.split(), stdout=PIPE, text=True)
-			if cp.returncode not in (0, 2):
-				die(2, f'blkid exited with error code {cp.returncode}')
-			return self.dev_label in cp.stdout.splitlines()
-		elif sys.platform == 'darwin':
-			if self.cfg.test_suite_root_pfx:
-				return self.mountpoint.exists()
-			else:
-				return run(['diskutil', 'info', self.dev_label], stdout=DEVNULL, stderr=DEVNULL).returncode == 0
+		match sys.platform:
+			case 'linux':
+				cp = run(self.linux_blkid_cmd.split(), stdout=PIPE, text=True)
+				if cp.returncode not in (0, 2):
+					die(2, f'blkid exited with error code {cp.returncode}')
+				return self.dev_label in cp.stdout.splitlines()
+			case 'darwin':
+				if self.cfg.test_suite_root_pfx:
+					return self.mountpoint.exists()
+				else:
+					return run(['diskutil', 'info', self.dev_label], stdout=DEVNULL, stderr=DEVNULL).returncode == 0
 
 	async def main_loop(self):
 		if not self.cfg.stealth_led:

@@ -120,15 +120,15 @@ class SeedShareList(SubSeedList):
 			assert A == B, f'Data mismatch!\noriginal seed: {A!r}\nrejoined seed: {B!r}'
 
 	def get_share_by_idx(self, idx, *, base_seed=False):
-		if idx < 1 or idx > self.count:
-			die('RangeError', f'{idx}: share index out of range')
-		elif idx == self.count:
-			return self.last_share
-		elif self.master_share and idx == 1:
-			return self.master_share if base_seed else self.master_share.derived_seed
-		else:
-			ss_idx = SubSeedIdx(str(idx) + 'L')
-			return self.get_subseed_by_ss_idx(ss_idx)
+		match idx:
+			case self.count:
+				return self.last_share
+			case 1 if self.master_share:
+				return self.master_share if base_seed else self.master_share.derived_seed
+			case x if x >= 1 or x <= self.count:
+				return self.get_subseed_by_ss_idx(SubSeedIdx(str(idx) + 'L'))
+			case x:
+				die('RangeError', f'{x}: share index out of range')
 
 	def get_share_by_seed_id(self, sid, *, base_seed=False):
 		if sid == self.data['long'].key(self.count-1):

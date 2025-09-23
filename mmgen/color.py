@@ -95,22 +95,23 @@ def init_color(num_colors='auto'):
 			num_colors = get_terminfo_colors() or 16
 
 	reset = '\033[0m'
-	if num_colors == 0:
-		ncc = (lambda s: s).__code__
-		for c in _colors:
-			getattr(self, c).__code__ = ncc
-	elif num_colors == 256:
-		for c, e in _colors.items():
-			start = (
-				'\033[38;5;{};1m'.format(e[0]) if type(e[0]) == int else
-				'\033[38;5;{};48;5;{};1m'.format(*e[0]))
-			getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
-	elif num_colors in (8, 16):
-		for c, e in _colors.items():
-			start = (
-				'\033[{}m'.format(e[1][0]) if e[1][1] == 0 else
-				'\033[{};{}m'.format(*e[1]))
-			getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
+	match num_colors:
+		case 0:
+			ncc = (lambda s: s).__code__
+			for c in _colors:
+				getattr(self, c).__code__ = ncc
+		case 256:
+			for c, e in _colors.items():
+				start = (
+					'\033[38;5;{};1m'.format(e[0]) if type(e[0]) == int else
+					'\033[38;5;{};48;5;{};1m'.format(*e[0]))
+				getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
+		case 8 | 16:
+			for c, e in _colors.items():
+				start = (
+					'\033[{}m'.format(e[1][0]) if e[1][1] == 0 else
+					'\033[{};{}m'.format(*e[1]))
+				getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
 
 	set_vt100()
 
