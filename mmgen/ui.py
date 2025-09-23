@@ -107,15 +107,15 @@ def keypress_confirm(
 
 	from .term import get_char
 	while True:
-		reply = get_char(prompt, immed_chars='yYnN').strip('\n\r')
-		if not reply:
-			msg_r(nl)
-			return do_return(default_yes)
-		elif reply in 'yYnN':
-			msg_r(nl)
-			return do_return(reply in 'yY')
-		else:
-			msg_r('\nInvalid reply\n' if verbose else '\r')
+		match get_char(prompt, immed_chars='yYnN').strip('\n\r'):
+			case '':
+				msg_r(nl)
+				return do_return(default_yes)
+			case 'y' | 'Y' | 'n' | 'N' as reply:
+				msg_r(nl)
+				return do_return(reply in 'yY')
+			case _:
+				msg_r('\nInvalid reply\n' if verbose else '\r')
 
 def do_pager(text):
 
@@ -153,12 +153,12 @@ def do_license_msg(cfg, *, immed=False):
 	from .term import get_char
 	prompt = "Press 'w' for conditions and warranty info, or 'c' to continue: "
 	while True:
-		reply = get_char(prompt, immed_chars=('', 'wc')[bool(immed)])
-		if reply == 'w':
-			do_pager(gpl.conditions)
-		elif reply == 'c':
-			msg('')
-			break
-		else:
-			msg_r('\r')
+		match get_char(prompt, immed_chars=('', 'wc')[bool(immed)]):
+			case 'w':
+				do_pager(gpl.conditions)
+			case 'c':
+				msg('')
+				break
+			case _:
+				msg_r('\r')
 	msg('')
