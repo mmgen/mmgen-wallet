@@ -36,15 +36,16 @@ class OpRestore(OpCreate):
 					if ret.exists():
 						yield ret
 
-			dump_fns = tuple(gen())
-			if not dump_fns:
-				die(1, f"No suitable dump file found for '{fn}'")
-			elif len(dump_fns) > 1:
-				ymsg(f"Warning: more than one dump file found for '{fn}' - using the first!")
+			match tuple(gen()):
+				case [dump_fn, *rest]:
+					if rest:
+						ymsg(f"Warning: more than one dump file found for '{fn}' - using the first!")
+				case _:
+					die(1, f"No suitable dump file found for '{fn}'")
 
 			return MoneroWalletDumpFile.Completed(
 				parent = self,
-				fn     = dump_fns[0]).data._asdict()['wallet_metadata']
+				fn     = dump_fn).data._asdict()['wallet_metadata']
 
 		def restore_accounts():
 			bmsg('  Restoring accounts:')

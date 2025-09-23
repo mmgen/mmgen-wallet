@@ -52,13 +52,14 @@ class OpMixinSpec:
 			else:
 				return s # None or empty string
 
-		if self.name in ('sweep', 'sweep_all'):
-			self.dest_acct = None if m[4] is None else int(m[4])
-		elif self.name == 'transfer':
-			self.dest_addr = CoinAddr(self.proto, m[3])
-			self.amount = self.proto.coin_amt(m[4])
-		elif self.name == 'new':
-			self.label = strip_quotes(m[3])
-		elif self.name == 'label':
-			self.address_idx = int(m[3])
-			self.label = strip_quotes(m[4])
+		match self.name:
+			case 'sweep' | 'sweep_all':
+				self.dest_acct = None if m[4] is None else int(m[4])
+			case 'transfer':
+				self.dest_addr = CoinAddr(self.proto, m[3])
+				self.amount = self.proto.coin_amt(m[4])
+			case 'new':
+				self.label = strip_quotes(m[3])
+			case 'label':
+				self.address_idx = int(m[3])
+				self.label = strip_quotes(m[4])

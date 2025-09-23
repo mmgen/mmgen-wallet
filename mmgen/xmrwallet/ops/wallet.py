@@ -52,11 +52,11 @@ class OpWallet(OpBase):
 		def check_wallets():
 			for d in self.addr_data:
 				fn = self.get_wallet_fn(d)
-				exists = wallet_exists(fn)
-				if exists and not self.wallet_exists:
-					die(1, f'Wallet ‘{fn}’ already exists!')
-				elif not exists and self.wallet_exists:
-					die(1, f'Wallet ‘{fn}’ not found!')
+				match wallet_exists(fn):
+					case True if not self.wallet_exists:
+						die(1, f'Wallet ‘{fn}’ already exists!')
+					case False if self.wallet_exists:
+						die(1, f'Wallet ‘{fn}’ not found!')
 
 		super().__init__(cfg, uarg_tuple)
 
