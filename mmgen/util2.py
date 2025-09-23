@@ -55,6 +55,14 @@ def load_cryptodome(called=[]):
 			sys.modules['Cryptodome'] = Crypto # Cryptodome == pycryptodomex
 		called.append(True)
 
+def get_hashlib_keccak():
+	import hashlib
+	try:
+		hashlib.new('keccak-256')
+	except ValueError:
+		return False
+	return lambda data: hashlib.new('keccak-256', data)
+
 # called with no arguments by proto.eth.tx.transaction:
 def get_keccak(cfg=None, cached_ret=[]):
 
@@ -62,11 +70,10 @@ def get_keccak(cfg=None, cached_ret=[]):
 		if cfg and cfg.use_internal_keccak_module:
 			cfg._util.qmsg('Using internal keccak module by user request')
 			from .contrib.keccak import keccak_256
-		else:
+		elif not (keccak_256 := get_hashlib_keccak()):
 			load_cryptodome()
 			from Crypto.Hash import keccak
-			def keccak_256(data):
-				return keccak.new(data=data, digest_bytes=32)
+			keccak_256 = lambda data: keccak.new(data=data, digest_bytes=32)
 		cached_ret.append(keccak_256)
 
 	return cached_ret[0]

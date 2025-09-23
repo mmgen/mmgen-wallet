@@ -44,16 +44,19 @@ class unit_tests:
 			gmsg('LED support found!')
 		return True
 
-	def keccak(self, name, ut): # used by ETH, XMR
-		from mmgen.util2 import get_keccak
-		try:
-			keccak_256 = get_keccak()
-			keccak_256(b'abc')
-		except Exception as e:
-			rmsg(str(e))
-			return False
-		else:
-			return True
+	def keccak(self, name, ut): # used by ETH, ETC, XMR
+		from mmgen.util2 import get_keccak, get_hashlib_keccak
+		if not (keccak_256 := get_hashlib_keccak()):
+			ymsg('Hashlib keccak_256() not available, falling back on cryptodome(x) package')
+			try:
+				keccak_256 = get_keccak()
+			except Exception as e:
+				rmsg(str(e))
+				return False
+
+		chk = 'c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470'
+		assert keccak_256(b'').hexdigest() == chk, 'hash mismatch!'
+		return True
 
 	def pysocks(self, name, ut):
 		import requests, urllib3
