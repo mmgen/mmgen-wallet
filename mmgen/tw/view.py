@@ -232,12 +232,13 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 	def age_disp(self, o, age_fmt):
 		if self.has_age:
-			if age_fmt == 'confs':
-				return o.confs or '-'
-			elif age_fmt == 'block':
-				return self.rpc.blockcount + 1 - o.confs if o.confs else '-'
-			else:
-				return self.date_formatter[age_fmt](self.rpc, o.date)
+			match age_fmt:
+				case 'confs':
+					return o.confs or '-'
+				case 'block':
+					return self.rpc.blockcount + 1 - o.confs if o.confs else '-'
+				case _:
+					return self.date_formatter[age_fmt](self.rpc, o.date)
 
 	def get_disp_prec(self, wide):
 		return self.proto.coin_amt.max_prec
@@ -604,19 +605,20 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 			self.oneshot_msg = ''
 
-			if reply in key_mappings:
-				ret = action_classes[reply].run(self, action_methods[reply])
-				if type(ret).__name__ == 'coroutine':
-					await ret
-			elif reply == 'q':
-				msg('')
-				if self.scroll:
-					self.term.set('echo')
-				return
-			else:
-				if not scroll:
-					msg_r('\ninvalid keypress ')
-				await asyncio.sleep(0.3)
+			match reply:
+				case ch if ch in key_mappings:
+					ret = action_classes[ch].run(self, action_methods[ch])
+					if type(ret).__name__ == 'coroutine':
+						await ret
+				case 'q':
+					msg('')
+					if self.scroll:
+						self.term.set('echo')
+					return
+				case _:
+					if not scroll:
+						msg_r('\ninvalid keypress ')
+					await asyncio.sleep(0.3)
 
 	@property
 	def blank_prompt(self):
@@ -796,12 +798,13 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				'Enter label text for {} {}: '.format(parent.item_desc, red(f'#{idx}')),
 				insert_txt = cur_comment)
 
-			if res == cur_comment:
-				parent.oneshot_msg = yellow(f'Label for {desc} unchanged')
-				return None
-			elif res == '':
-				if not parent.keypress_confirm(f'Removing label for {desc}. OK?'):
-					return 'redo'
+			match res:
+				case s if s == cur_comment:
+					parent.oneshot_msg = yellow(f'Label for {desc} unchanged')
+					return None
+				case '':
+					if not parent.keypress_confirm(f'Removing label for {desc}. OK?'):
+						return 'redo'
 
 			return await do_comment_add(res)
 
