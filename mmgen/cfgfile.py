@@ -68,7 +68,7 @@ class cfg_file:
 			m = re.fullmatch(r'((\s+\w+:\S+)+)', ' '+value) # expect one or more colon-separated values
 			if m:
 				return dict([i.split(':') for i in m[1].split()])
-		elif isinstance(refval, (list, tuple)):
+		elif isinstance(refval, list | tuple):
 			m = re.fullmatch(r'((\s+\S+)+)', ' '+value)     # expect single value or list
 			if m:
 				ret = m[1].split()

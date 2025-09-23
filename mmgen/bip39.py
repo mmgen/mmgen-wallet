@@ -72,7 +72,7 @@ class bip39(baseconv):
 		return self.tobytes(words_arg, pad=pad).hex()
 
 	def tobytes(self, words_arg, /, *, pad=None):
-		assert isinstance(words_arg, (list, tuple)), 'words_arg must be list or tuple'
+		assert isinstance(words_arg, list | tuple), 'words_arg must be list or tuple'
 		assert pad in (None, 'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
 		wl = self.digits

@@ -48,7 +48,7 @@ class xmrseed(baseconv):
 
 	def tobytes(self, words_arg, *, pad=None):
 
-		assert isinstance(words_arg, (list, tuple)), 'words must be list or tuple'
+		assert isinstance(words_arg, list | tuple), 'words must be list or tuple'
 		assert pad is None, f"{pad}: invalid 'pad' argument (must be None)"
 
 		words = words_arg

@@ -987,11 +987,11 @@ def conv_type(name, val, refval, *, src, invert_bool=False):
 			None
 		)
 		return do_fail() if ret is None else (not ret) if invert_bool else ret
-	elif isinstance(refval, (list, tuple)):
+	elif isinstance(refval, list | tuple):
 		if src == 'cmdline':
 			return type(refval)(val.split(','))
 		else:
-			assert isinstance(val, (list, tuple)), f'{val}: not a list or tuple'
+			assert isinstance(val, list | tuple), f'{val}: not a list or tuple'
 			return type(refval)(val)
 	else:
 		try:

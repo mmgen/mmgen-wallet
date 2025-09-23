@@ -136,7 +136,7 @@ class baseconv:
 	def tobytes(self, words_arg, /, *, pad=None):
 		"convert string or list data of instance base to byte string"
 
-		words = words_arg if isinstance(words_arg, (list, tuple)) else tuple(words_arg.strip())
+		words = words_arg if isinstance(words_arg, list | tuple) else tuple(words_arg.strip())
 		desc = self.desc.short
 
 		if len(words) == 0:

@@ -442,7 +442,7 @@ class New(Base):
 
 	async def create(self, cmd_args, *, locktime=None, do_info=False, caller='txcreate'):
 
-		assert isinstance(locktime, (int, type(None))), 'locktime must be of type int'
+		assert isinstance(locktime, int | type(None)), 'locktime must be of type int'
 
 		from ..tw.unspent import TwUnspentOutputs
 

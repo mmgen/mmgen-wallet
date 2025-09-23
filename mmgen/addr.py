@@ -111,7 +111,7 @@ class AddrListID(HiliteStr, InitErrors, MMGenObject):
 					mmtype = MMGenPasswordType(proto=proto, id_str=b)
 			else:
 				assert isinstance(sid, SeedID), f'{sid!r} not a SeedID instance'
-				if not isinstance(mmtype, (MMGenAddrType, MMGenPasswordType)):
+				if not isinstance(mmtype, MMGenAddrType | MMGenPasswordType):
 					raise ValueError(f'{mmtype!r}: not an instance of MMGenAddrType or MMGenPasswordType')
 			me = str.__new__(cls, sid+':'+mmtype)
 			me.sid = sid

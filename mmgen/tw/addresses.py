@@ -425,7 +425,7 @@ class TwAddresses(TwView):
 				f'{sid}:{mmtype}', bot=r.bot, top=r.top, exclude=exclude, desc=desc)
 					for sid, r in self.sid_ranges.items()]
 
-		assert isinstance(mmtype, (type(None), MMGenAddrType))
+		assert isinstance(mmtype, type(None) | MMGenAddrType)
 
 		if mmtype:
 			res = get_addr(mmtype)

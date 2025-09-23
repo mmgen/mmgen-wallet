@@ -246,7 +246,7 @@ def run_test(cls, gid, cmd_name):
 					cmd_out,
 					out[1],
 					func_out))
-		elif isinstance(out, (list, tuple)):
+		elif isinstance(out, list | tuple):
 			for co, o in zip(cmd_out.split(NL) if cfg.fork else cmd_out, out):
 				check_output(co, o)
 		else:

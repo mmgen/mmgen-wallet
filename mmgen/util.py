@@ -280,7 +280,7 @@ def suf(arg, suf_type='s', *, verb='none'):
 	}
 	if isinstance(arg, int):
 		n = arg
-	elif isinstance(arg, (list, tuple, set, dict)):
+	elif isinstance(arg, list | tuple | set | dict):
 		n = len(arg)
 	else:
 		die(2, f'{arg}: invalid parameter for suf()')
