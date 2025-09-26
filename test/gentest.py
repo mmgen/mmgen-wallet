@@ -582,7 +582,7 @@ vmsg = cfg._util.vmsg
 
 proto = cfg._proto
 
-if proto.coin == 'XMR':
+if proto.coin in ('ETH', 'ETC', 'XMR'):
 	from mmgen.util2 import load_cryptodome
 	load_cryptodome()
 

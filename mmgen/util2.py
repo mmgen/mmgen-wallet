@@ -30,6 +30,23 @@ def die_pause(ev=0, s=''):
 	input('Press ENTER to exit')
 	sys.exit(ev)
 
+def load_fake_cryptodome():
+	import hashlib
+	try:
+		hashlib.new('keccak-256')
+	except ValueError:
+		return False
+
+	class FakeHash:
+		class keccak:
+			def new(data=b'', digest_bits=256):
+				assert digest_bits == 256
+				return hashlib.new('keccak-256', data=data)
+
+	sys.modules['Cryptodome.Hash'] = FakeHash
+	sys.modules['Crypto.Hash'] = FakeHash
+	return True
+
 def cffi_override_fixup():
 	from cffi import FFI
 	class FFI_override:
@@ -38,21 +55,26 @@ def cffi_override_fixup():
 	FFI.cdef = FFI_override.cdef
 
 # monkey-patch function: makes modules pycryptodome and pycryptodomex available to packages that
-# expect them (monero-python, eth-keys), regardless of which one is installed on system
+# expect them for the keccak256 function (monero-python, eth-keys), regardless of which one is
+# installed on the system
+#
+# if the hashlib keccak256 function is available (>=OpenSSL 3.2, >=Python 3.13), it’s used instead
+# and loaded as Crypto[dome].Hash via load_fake_cryptodome()
 def load_cryptodome(called=[]):
 	if not called:
-		cffi_override_fixup()
-		try:
-			import Crypto # Crypto == pycryptodome
-		except ImportError:
+		if not load_fake_cryptodome():
+			cffi_override_fixup()
 			try:
-				import Cryptodome # Crypto == pycryptodome
+				import Crypto # Crypto == pycryptodome
 			except ImportError:
-				die(2, 'Unable to import the ‘pycryptodome’ or ‘pycryptodomex’ package')
+				try:
+					import Cryptodome # Crypto == pycryptodome
+				except ImportError:
+					die(2, 'Unable to import the ‘pycryptodome’ or ‘pycryptodomex’ package')
+				else:
+					sys.modules['Crypto'] = Cryptodome # Crypto == pycryptodome
 			else:
-				sys.modules['Crypto'] = Cryptodome # Crypto == pycryptodome
-		else:
-			sys.modules['Cryptodome'] = Crypto # Cryptodome == pycryptodomex
+				sys.modules['Cryptodome'] = Crypto # Cryptodome == pycryptodomex
 		called.append(True)
 
 def get_hashlib_keccak():
