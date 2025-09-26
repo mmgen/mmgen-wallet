@@ -40,7 +40,7 @@ class Crypto:
 	mmenc_nonce_len = 32
 
 	# Scrypt params: 'id_num': [N, r, p] (N is an exponent of two)
-	# NB: hashlib.scrypt in Python (>=v3.6) supports max N value of 14.  This means that
+	# NB: scrypt() in Python hashlib supports max N value of 14.  This means that
 	# for hash presets > 3 the standalone scrypt library must be used!
 	_hp = namedtuple('scrypt_preset', ['N', 'r', 'p'])
 	hash_presets = {

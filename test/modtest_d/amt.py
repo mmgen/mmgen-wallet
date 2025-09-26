@@ -21,7 +21,7 @@ def test_to_unit(data):
 	for proto, amt, unit, chk in data:
 		amt = protos[proto].coin_amt(amt)
 		res = amt.to_unit(unit)
-		vmsg(f'  {proto.upper()} {amt.fmt(8)} => {res:<14} {unit}')
+		vmsg(f'  {proto.upper()} {amt.fmt(4):<24} => {res:<21} {unit}')
 		if '.' in chk:
 			assert res == Decimal(chk), f'{res} != {Decimal(chk)}'
 		else:

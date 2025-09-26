@@ -113,10 +113,7 @@ class GlobalConstants(Lockable):
 		#    https://importlib-resources.readthedocs.io/en/latest/migration.html
 		#    https://setuptools.readthedocs.io/en/latest/pkg_resources.html
 
-		try:
-			from importlib.resources import files # Python 3.9 and above
-		except ImportError:
-			from importlib_resources import files
+		from importlib.resources import files
 		return files(package).joinpath('data', filename).read_text()
 
 	@property
