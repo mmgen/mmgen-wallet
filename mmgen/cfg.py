@@ -102,7 +102,7 @@ class GlobalConstants(Lockable):
 	else:
 		die2(2, '$HOME is not set!  Unable to determine home directory')
 
-	def get_mmgen_data_file(self, *, filename, package='mmgen'):
+	def read_mmgen_data_file(self, *, filename, package='mmgen'):
 		"""
 		this is an expensive import, so do only when required
 		"""
@@ -121,14 +121,14 @@ class GlobalConstants(Lockable):
 
 	@property
 	def version(self):
-		return self.get_mmgen_data_file(
+		return self.read_mmgen_data_file(
 				filename = 'version',
 				package  = 'mmgen_node_tools' if self.prog_name.startswith('mmnode-') else 'mmgen'
 			).strip()
 
 	@property
 	def release_date(self):
-		return self.get_mmgen_data_file(filename='release_date').strip()
+		return self.read_mmgen_data_file(filename='release_date').strip()
 
 gc = GlobalConstants()
 
