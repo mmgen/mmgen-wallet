@@ -77,16 +77,16 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 		cls.method_not_implemented()
 
 	def fmt(self, iwidth=1, /, *, color=False, prec=None): # iwidth: width of the integer part
-		prec = prec or self.max_prec
-		if '.' in (s := str(self)):
-			a, b = s.split('.', 1)
-			return self.colorize(
-				a.rjust(iwidth) + '.' + b.ljust(prec)[:prec], # truncation, not rounding!
-				color = color)
-		else:
-			return self.colorize(
-				s.rjust(iwidth).ljust(iwidth+prec+1),
-				color = color)
+		match str(self).split('.', 1):
+			case [a, b]:
+				return self.colorize(
+					# we truncate instead of rounding:
+					a.rjust(iwidth) + '.' + b.ljust(prec or self.max_prec)[:prec or self.max_prec],
+					color = color)
+			case [a]:
+				return self.colorize(
+					a.rjust(iwidth) + ' ' + ''.ljust(prec or self.max_prec),
+					color = color)
 
 	def hl(self, *, color=True):
 		return self.colorize(str(self), color=color)

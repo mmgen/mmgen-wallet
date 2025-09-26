@@ -37,6 +37,24 @@ def test_fee_spec(data):
 		assert res.unit == unit, f'  {res.unit} != {unit}'
 	return True
 
+def test_fmt(data):
+	protos = get_protos(data)
+	fs = '  {:5} {:18} {:<6} {:<5} {}'
+	vmsg(fs.format('PROTO', 'INPUT', 'IWIDTH', 'PREC', 'FORMATTED'))
+	for proto, amt, iwidth, prec, chk in data:
+		amt = protos[proto].coin_amt(amt)
+		args = (iwidth,) if iwidth else ()
+		kwargs = {'prec': prec} if prec else {}
+		res = amt.fmt(*args, **kwargs)
+		vmsg(fs.format(
+			proto.upper(),
+			f'[{str(amt)}]',
+			'None' if iwidth is None else iwidth,
+			'None' if prec is None else prec,
+			f'[{res}]'))
+		assert res == chk, f'[{res}] != [{chk}]'
+	return True
+
 class unit_tests:
 
 	altcoin_deps = ('fee_spec_alt', 'to_unit_alt', 'token_amt')
@@ -80,6 +98,35 @@ class unit_tests:
 			('eth', '3701w', '3701', 'wei'),
 			('eth', '3.07M', '3.07', 'Mwei'),
 			('xmr', '3.07a', '3.07', 'atomic')))
+
+	def fmt(self, name, ut, desc='column formatting (LTC, BCH, ETH, XMR)'):
+		return test_fmt((
+			('btc', '1',              None, None, '1         '),
+			('btc', '1.2',            None, None, '1.2       '),
+			('btc', '1',              1,    None, '1         '),
+			('btc', '1.2',            1,    None, '1.2       '),
+			('btc', '12',             None, None, '12         '),
+			('btc', '12.3',           None, None, '12.3       '),
+			('btc', '12',             1,    None, '12         '),
+			('btc', '12.3',           1,    None, '12.3       '),
+			('btc', '12',             2,    None, '12         '),
+			('btc', '12.3',           2,    None, '12.3       '),
+			('btc', '12',             3,    None, ' 12         '),
+			('btc', '12.3',           3,    None, ' 12.3       '),
+			('ltc', '0',              None, None, '0         '),
+			('ltc', '0.00000001',     None, None, '0.00000001'),
+			('ltc', '0.00000001',     8,    None, '       0.00000001'),
+			('xmr', '1.234567890123', None, None, '1.234567890123'),
+			('xmr', '1',              None, None, '1             '),
+			('xmr', '1',              None, 4,    '1     '),
+			('xmr', '123.456',        None, None, '123.456         '),
+			('xmr', '123.456',        2,    None, '123.456         '),
+			('xmr', '123.456',        None, 4,    '123.456 '),
+			('xmr', '123.456',        2,    4,    '123.456 '),
+			('xmr', '1.234567890123', None, 4,    '1.2345'),
+			('xmr', '1.234567890123', 8,    4,    '       1.2345'),
+			('xmr', '1',              8,    4,    '       1     '),
+			('xmr', '111',            8,    4,    '     111     ')))
 
 	def token_amt(self, name, ut, desc='TokenAmt (ETH)'):
 		for n, dec, unit, chk in (
