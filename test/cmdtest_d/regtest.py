@@ -191,6 +191,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		('subgroup._auto_chg_deps', ['twexport', 'label']),
 		('subgroup.auto_chg',       ['_auto_chg_deps']),
 		('subgroup.dump_hex',       ['fund_users']),
+		('subgroup.sort',           ['init_bob']),
 		('stop',                    'stopping regtest daemon'),
 	)
 	cmd_subgroups = {
@@ -471,6 +472,12 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		('generate',                 'mining a block'),
 		('bob_bal7',                 'Bob’s balance'),
 	),
+	'sort': (
+		'address sorting',
+		('addrgen_bob_extra',    'generating Bob’s extra address'),
+		('addrimport_bob_extra', 'importing Bob’s extra address'),
+		('bob_check_idx_sort',   'viewing Bob’s addresses (checking index sort order)'),
+	),
 	}
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
@@ -633,6 +640,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def addrgen_bob(self):
 		return self.addrgen('bob')
+
 	def addrgen_alice(self):
 		return self.addrgen('alice')
 
@@ -683,6 +691,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def addrimport_bob(self):
 		return self.addrimport('bob')
+
 	def addrimport_alice(self):
 		return self.addrimport('alice', batch=False, quiet=False)
 
@@ -2267,6 +2276,21 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		if not self.coin == 'btc':
 			return 'skip'
 		return self._user_bal_cli('bob', chks=['499.99990287', '46.51845565'])
+
+	def addrgen_bob_extra(self):
+		return self.addrgen('bob', addr_range='11', mmtypes=['C'])
+
+	def addrimport_bob_extra(self):
+		return self.addrimport('bob', addr_range='11', num_addrs=1, mmtypes=['C'])
+
+	def bob_check_idx_sort(self):
+		t = self.user_twview('bob', cmd='listaddresses', sort='twmmid')
+		sid = self._user_sid('bob')
+		idxs = [line.split()[1].split(':')[2]
+			for line in strip_ansi_escapes(t.read()).splitlines() if f' {sid}:C:' in line]
+		idxs_chk = ['1', '2', '3', '4', '5', '11']
+		assert idxs == idxs_chk, f'{idxs} != {idxs_chk}'
+		return t
 
 	def stop(self):
 		self.spawn(msg_only=True)
