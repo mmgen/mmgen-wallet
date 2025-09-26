@@ -297,15 +297,15 @@ class BitcoinTwTxHistory(BitcoinTwView, TwTxHistory, BitcoinTwRPC):
 		def gen_parsed_data():
 			for o in rpc_data:
 				if lbl_id in o:
-					l = get_tw_label(self.proto, o[lbl_id])
+					lbl = get_tw_label(self.proto, o[lbl_id])
+					yield o | {
+						'twmmid': lbl.mmid,
+						'comment': lbl.comment or ''}
 				else:
 					assert o['category'] == 'send', f"{o['address']}: {o['category']} != 'send'"
-					l = None
-				o.update({
-					'twmmid': l.mmid if l else None,
-					'comment': (l.comment or '') if l else None,
-				})
-				yield o
+					yield o | {
+						'twmmid': None,
+						'comment': None}
 
 		data = list(gen_parsed_data())
 

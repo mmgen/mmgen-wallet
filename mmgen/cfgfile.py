@@ -228,8 +228,7 @@ class CfgFileSampleUsr(cfg_file_sample):
 
 	def parse_metadata(self):
 		if self.data:
-			m = re.match(r'# Version (\d+) ([a-f0-9]{40})$', self.data[-1])
-			if m:
+			if m := re.match(r'# Version (\d+) ([a-f0-9]{40})$', self.data[-1]):
 				self.ver = m[1]
 				self.chksum = m[2]
 				self.data = self.data[:-1] # remove metadata line

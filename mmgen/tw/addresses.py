@@ -12,7 +12,7 @@
 tw.addresses: Tracking wallet listaddresses class for the MMGen suite
 """
 
-from ..util import msg, is_int
+from ..util import msg, is_int, die
 from ..obj import MMGenListItem, ImmutableAttr, ListItemAttr, TwComment, NonNegativeInt
 from ..addr import CoinAddr, MMGenID, MMGenAddrType
 from ..amt import CoinAmtChk
@@ -113,7 +113,6 @@ class TwAddresses(TwView):
 		if mmgen_addrs:
 			a = mmgen_addrs.rsplit(':', 1)
 			if len(a) != 2:
-				from ..util import die
 				die(1,
 					f'{mmgen_addrs}: invalid address list argument ' +
 					'(must be in form <seed ID>:[<type>:]<idx list>)')

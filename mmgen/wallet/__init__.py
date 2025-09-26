@@ -148,7 +148,7 @@ def Wallet(
 				die(1, f'{in_fmt}: --in-fmt parameter does not match extension of input file')
 			me = _get_me(wd.type)
 		else:
-			fn = ','.join(cfg.hidden_incog_input_params.split(',')[:-1]) # permit comma in filename
+			fn = cfg.hidden_incog_input_params.rsplit(',', 1)[0] # permit comma in filename
 			me = _get_me('incog_hidden')
 		from ..filename import MMGenFile
 		me.infile = MMGenFile(fn, subclass=type(me))

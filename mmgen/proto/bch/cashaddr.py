@@ -51,8 +51,8 @@ def PolyMod(v):
 
 def parse_ver_byte(ver):
 	assert not (ver >> 7), 'invalid version byte: most-significant bit must be zero'
-	t = namedtuple('parsed_version_byte', ['addr_type', 'bitlen'])
-	return t(addr_types_rev[ver >> 3], data_sizes[ver & 7])
+	return namedtuple('parsed_version_byte', ['addr_type', 'bitlen'])(
+		addr_types_rev[ver >> 3], data_sizes[ver & 7])
 
 def make_ver_byte(addr_type, bitlen):
 	assert addr_type in addr_types_rev, f'{addr_type}: invalid addr type'
@@ -66,8 +66,7 @@ def make_polymod_vec(pfx, payload_vec):
 	return ([ord(c) & 31  for c in pfx] + [0] + payload_vec)
 
 def cashaddr_parse_addr(addr):
-	t = namedtuple('parsed_cashaddr', ['pfx', 'payload'])
-	return t(*addr.split(':', 1))
+	return namedtuple('parsed_cashaddr', ['pfx', 'payload'])(*addr.split(':', 1))
 
 def cashaddr_encode_addr(addr_type, size, pfx, data):
 	t = namedtuple('encoded_cashaddr', ['addr', 'pfx', 'payload'])

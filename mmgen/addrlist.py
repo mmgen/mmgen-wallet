@@ -34,7 +34,7 @@ class AddrIdxList(tuple, InitErrors, MMGenObject):
 		try:
 			if fmt_str:
 				def gen():
-					for i in (fmt_str.split(sep)):
+					for i in fmt_str.split(sep):
 						match [int(x) for x in i.split('-')]:
 							case [a]:
 								yield a

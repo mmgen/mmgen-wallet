@@ -25,8 +25,8 @@ class wallet(wallet):
 
 	def get_bw_params(self):
 		# already checked
-		a = self.cfg.brain_params.split(',')
-		return int(a[0]), a[1]
+		a, b = self.cfg.brain_params.split(',', 1)
+		return int(a), b
 
 	def _deformat(self):
 		self.brainpasswd = ' '.join(self.fmt_data.split())

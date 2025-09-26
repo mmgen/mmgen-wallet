@@ -47,8 +47,9 @@ class wallet(wallet):
 	}
 
 	def _get_hincog_params(self, wtype):
-		a = getattr(self.cfg, 'hidden_incog_'+ wtype +'_params').split(',')
-		return ','.join(a[:-1]), int(a[-1]) # permit comma in filename
+		# permit comma in filename:
+		fn, offset = getattr(self.cfg, f'hidden_incog_{wtype}_params').rsplit(',', 1)
+		return fn, int(offset)
 
 	def _check_valid_offset(self, fn, action):
 		d = self.ssdata
