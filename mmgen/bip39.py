@@ -132,11 +132,10 @@ class bip39(baseconv):
 
 		self.tohex(words_arg) # validate
 
-		from cryptography.hazmat.primitives import hashes
-		from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-		return PBKDF2HMAC(
-			algorithm  = hashes.SHA512(),
-			length     = 64,
+		from hashlib import pbkdf2_hmac
+		return pbkdf2_hmac(
+			hash_name  = 'sha512',
+			password   = ' '.join(words_arg).encode(),
 			salt       = b'mnemonic' + passwd.encode(),
-			iterations = 2048
-		).derive(' '.join(words_arg).encode())
+			iterations = 2048,
+			dklen      = 64)
