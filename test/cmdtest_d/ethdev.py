@@ -875,7 +875,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 
 		def init_genesis(fn):
 			cmd = f'{d.exec_fn} init --datadir {d.datadir} {fn}'
-			cp = run( cmd.split(), stdout=PIPE, stderr=PIPE)
+			cp = run(cmd.split(), stdout=PIPE, stderr=PIPE)
 			if cp.returncode:
 				die(1, cp.stderr.decode())
 

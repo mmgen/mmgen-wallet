@@ -141,7 +141,7 @@ class wallet(wallet):
 		lmin, _, lmax = sorted(baseconv('b58').seedlen_map_rev) # 22, 33, 44
 		for i, key in (4, 'salt'), (5, 'enc_seed'):
 			l = lines[i].split(' ')
-			chk = l.pop(0)
+			chksum = l.pop(0)
 			b58_val = ''.join(l)
 
 			if len(b58_val) < lmin or len(b58_val) > lmax:
@@ -149,7 +149,7 @@ class wallet(wallet):
 				return False
 
 			if not self.cfg._util.compare_chksums(
-					chk,
+					chksum,
 					key,
 					make_chksum_6(b58_val),
 					'computed checksum',

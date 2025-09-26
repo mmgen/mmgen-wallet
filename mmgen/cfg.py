@@ -847,7 +847,7 @@ def check_opts(cfg): # Raises exception if any check fails
 
 		out_fmt = in_fmt
 
-		def hidden_incog_input_params():
+		def hidden_incog_params():
 			a = val.rsplit(',', 1) # permit comma in filename
 			if len(a) != 2:
 				display_opt(name, val)
@@ -879,7 +879,7 @@ def check_opts(cfg): # Raises exception if any check fails
 					die('UserOptError',
 						f'Option {fmt_opt(name)} conflicts with option {fmt_opt(key2)}={val2}')
 
-		hidden_incog_output_params = hidden_incog_input_params
+		hidden_incog_output_params = hidden_incog_input_params = hidden_incog_params
 
 		def subseeds():
 			from .subseed import SubSeedIdxRange
