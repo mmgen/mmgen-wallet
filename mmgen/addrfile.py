@@ -265,10 +265,12 @@ class AddrFile(MMGenObject):
 
 			match len(ls):
 				case 2 if type(p).__name__ == 'PasswordList':
-					ss = ls.pop().split(':')
-					assert len(ss) == 2, f'{ss!r}: invalid password length specifier (must contain colon)'
-					p.set_pw_fmt(ss[0])
-					p.set_pw_len(ss[1])
+					match ls.pop().split(':', 1):
+						case [a, b]:
+							p.set_pw_fmt(a)
+							p.set_pw_len(b)
+						case x:
+							die(1, f'{x!r}: invalid password length specifier (must contain colon)')
 					p.pw_id_str = MMGenPWIDString(ls.pop())
 					modname, funcname = p.pw_info[p.pw_fmt].chk_func.split('.')
 					import importlib

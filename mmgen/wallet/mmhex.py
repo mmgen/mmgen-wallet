@@ -28,13 +28,12 @@ class wallet(wallet):
 		self.fmt_data = f'{self.ssdata.chksum} {split_into_cols(4, seed_hex)}\n'
 
 	def _deformat(self):
-		d = self.fmt_data.split()
-		try:
-			d[1]
-			chksum, hex_str = d[0], ''.join(d[1:])
-		except:
-			msg(f'{self.fmt_data.strip()!r}: invalid {self.desc}')
-			return False
+		match self.fmt_data.split():
+			case [chksum, *hex_chunks] if hex_chunks:
+				hex_str = ''.join(hex_chunks)
+			case _:
+				msg(f'{self.fmt_data!r}: invalid {self.desc}')
+				return False
 
 		if not len(hex_str) * 4 in Seed.lens:
 			msg(f'Invalid data length ({len(hex_str)}) in {self.desc}')

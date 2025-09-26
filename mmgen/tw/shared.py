@@ -56,9 +56,12 @@ class TwLabel(str, InitErrors, MMGenObject):
 		if isinstance(text, cls):
 			return text
 		try:
-			ts = text.split(None, 1)
-			mmid = TwMMGenID(proto, ts[0])
-			comment = TwComment(ts[1] if len(ts) == 2 else '')
+			match text.split(None, 1):
+				case [mmid_in]:
+					comment = TwComment('')
+				case [mmid_in, comment]:
+					comment = TwComment(comment)
+			mmid = TwMMGenID(proto, mmid_in)
 			me = str.__new__(cls, mmid + (' ' + comment if comment else ''))
 			me.mmid = mmid
 			me.comment = comment

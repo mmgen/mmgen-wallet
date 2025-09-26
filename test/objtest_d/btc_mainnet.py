@@ -227,7 +227,7 @@ tests = {
 			{'text': 'F00BAA12:Z:99', 'proto': proto},
 			{'text': tw_pfx+' x',     'proto': proto},
 			{'text': tw_pfx+'я x',    'proto': proto},
-			{'text': utf8_ctrl[:40],  'proto': proto},
+			{'text': utf8_ctrl[:40],  'proto': proto, 'exc_name': 'BadTwComment'},
 			{'text': 'F00BAA12:S:1 ' + utf8_ctrl[:40], 'proto': proto, 'exc_name': 'BadTwComment'},
 			{'text': tw_pfx+'x comment', 'proto': proto},
 		),

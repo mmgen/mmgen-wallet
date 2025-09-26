@@ -33,15 +33,19 @@ class MMGenIDRange(HiliteStr, InitErrors, MMGenObject):
 		from .addr import AddrListID
 		from .seed import SeedID
 		try:
-			ss = str(id_str).split(':')
-			assert len(ss) in (2, 3), 'not 2 or 3 colon-separated items'
-			t = proto.addr_type((ss[1], proto.dfl_mmtype)[len(ss)==2])
-			me = str.__new__(cls, '{}:{}:{}'.format(ss[0], t, ss[-1]))
-			me.sid = SeedID(sid=ss[0])
-			me.idxlist = AddrIdxList(fmt_str=ss[-1])
-			me.mmtype = t
-			assert t in proto.mmtypes, f'{t}: invalid address type for {proto.cls_name}'
-			me.al_id = str.__new__(AddrListID, me.sid+':'+me.mmtype) # checks already done
+			match id_str.split(':'):
+				case [sid, t, fmt_str]:
+					assert t in proto.mmtypes, f'{t}: invalid address type for {proto.cls_name}'
+					mmtype = proto.addr_type(t)
+				case [sid, fmt_str]:
+					mmtype = proto.addr_type(proto.dfl_mmtype)
+				case _:
+					raise ValueError('not 2 or 3 colon-separated items')
+			me = str.__new__(cls, f'{sid}:{mmtype}:{fmt_str}')
+			me.sid = SeedID(sid=sid)
+			me.idxlist = AddrIdxList(fmt_str=fmt_str)
+			me.mmtype = mmtype
+			me.al_id = str.__new__(AddrListID, me.sid + ':' + me.mmtype) # checks already done
 			me.proto = proto
 			return me
 		except Exception as e:

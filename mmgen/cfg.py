@@ -848,28 +848,28 @@ def check_opts(cfg): # Raises exception if any check fails
 		out_fmt = in_fmt
 
 		def hidden_incog_params():
-			a = val.rsplit(',', 1) # permit comma in filename
-			if len(a) != 2:
-				display_opt(name, val)
-				die('UserOptError', 'Option requires two comma-separated arguments')
-
-			fn, offset = a
-			opt_is_int(offset)
+			match val.rsplit(',', 1): # permit comma in filename
+				case [fn, offset]:
+					opt_is_int(offset)
+				case _:
+					display_opt(name, val)
+					die('UserOptError', 'Option requires two comma-separated arguments')
 
 			from .fileutil import check_infile, check_outdir, check_outfile
-			if name == 'hidden_incog_input_params':
-				check_infile(fn, blkdev_ok=True)
-				key2 = 'in_fmt'
-			else:
-				try:
-					os.stat(fn)
-				except:
-					b = os.path.dirname(fn)
-					if b:
-						check_outdir(b)
-				else:
-					check_outfile(fn, blkdev_ok=True)
-				key2 = 'out_fmt'
+			match name:
+				case 'hidden_incog_input_params':
+					check_infile(fn, blkdev_ok=True)
+					key2 = 'in_fmt'
+				case 'hidden_incog_output_params':
+					try:
+						os.stat(fn)
+					except:
+						b = os.path.dirname(fn)
+						if b:
+							check_outdir(b)
+					else:
+						check_outfile(fn, blkdev_ok=True)
+					key2 = 'out_fmt'
 
 			if hasattr(cfg, key2):
 				val2 = getattr(cfg, key2)
@@ -895,17 +895,19 @@ def check_opts(cfg): # Raises exception if any check fails
 			opt_is_in_list(val, list(Crypto.hash_presets.keys()))
 
 		def brain_params():
-			a = val.split(',')
-			if len(a) != 2:
-				display_opt(name, val)
-				die('UserOptError', 'Option requires two comma-separated arguments')
-
-			opt_is_int(a[0], desc_pfx='seed length')
-			from .seed import Seed
-			opt_is_in_list(int(a[0]), Seed.lens, desc_pfx='seed length')
-
-			from .crypto import Crypto
-			opt_is_in_list(a[1], list(Crypto.hash_presets.keys()), desc_pfx='hash preset')
+			match val.split(',', 1):
+				case [seed_len, hash_preset]:
+					opt_is_int(seed_len, desc_pfx='seed length')
+					from .seed import Seed
+					opt_is_in_list(int(seed_len), Seed.lens, desc_pfx='seed length')
+					from .crypto import Crypto
+					opt_is_in_list(
+						hash_preset,
+						list(Crypto.hash_presets.keys()),
+						desc_pfx = 'hash preset')
+				case _:
+					display_opt(name, val)
+					die('UserOptError', 'Option requires two comma-separated arguments')
 
 		def usr_randchars():
 			if val != 0:

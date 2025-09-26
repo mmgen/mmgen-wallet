@@ -129,15 +129,18 @@ class MMGenID(HiliteStr, InitErrors, MMGenObject):
 	trunc_ok = False
 	def __new__(cls, proto, id_str):
 		try:
-			ss = str(id_str).split(':')
-			assert len(ss) in (2, 3), 'not 2 or 3 colon-separated items'
-			t = proto.addr_type((ss[1], proto.dfl_mmtype)[len(ss)==2])
-			me = str.__new__(cls, f'{ss[0]}:{t}:{ss[-1]}')
-			me.sid = SeedID(sid=ss[0])
-			me.idx = AddrIdx(ss[-1])
-			me.mmtype = t
-			assert t in proto.mmtypes, f'{t}: invalid address type for {proto.cls_name}'
-			me.al_id = str.__new__(AddrListID, me.sid+':'+me.mmtype) # checks already done
+			match id_str.split(':', 2):
+				case [sid, mmtype, idx]:
+					assert mmtype in proto.mmtypes, f'{mmtype}: invalid address type for {proto.cls_name}'
+				case [sid, idx]:
+					mmtype = proto.dfl_mmtype
+				case _:
+					raise ValueError('not 2 or 3 colon-separated items')
+			me = str.__new__(cls, f'{sid}:{mmtype}:{idx}')
+			me.sid = SeedID(sid=sid)
+			me.mmtype = proto.addr_type(mmtype)
+			me.idx = AddrIdx(idx)
+			me.al_id = str.__new__(AddrListID, me.sid + ':' + me.mmtype) # checks already done
 			me.sort_key = f'{me.sid}:{me.mmtype}:{me.idx:0{me.idx.max_digits}}'
 			me.proto = proto
 			return me

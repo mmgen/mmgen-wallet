@@ -223,18 +223,19 @@ class MMGenRange(tuple, InitErrors, MMGenObject):
 
 	def __new__(cls, *args):
 		try:
-			if len(args) == 1:
-				s = args[0]
-				if isinstance(s, cls):
-					return s
-				assert isinstance(s, str), 'not a string or string subclass'
-				ss = s.split('-', 1)
-				first = int(ss[0])
-				last = int(ss.pop())
-			else:
-				s = repr(args) # needed if exception occurs
-				assert len(args) == 2, 'one format string arg or two start, stop args required'
-				first, last = args
+			match args:
+				case [str(s)]:
+					match s.split('-', 1):
+						case [first]:
+							last = first
+						case [first, last]:
+							pass
+					first = int(first)
+					last = int(last)
+				case [int(first), int(last)]:
+					pass
+				case _:
+					raise ValueError('one format string arg or two integer args (start, stop) required')
 			assert first <= last, 'start of range greater than end of range'
 			if cls.min_idx is not None:
 				assert first >= cls.min_idx, f'start of range < {cls.min_idx:,}'
@@ -242,7 +243,7 @@ class MMGenRange(tuple, InitErrors, MMGenObject):
 				assert last <= cls.max_idx, f'end of range > {cls.max_idx:,}'
 			return tuple.__new__(cls, (first, last))
 		except Exception as e:
-			return cls.init_fail(e, s)
+			return cls.init_fail(e, args)
 
 	@property
 	def first(self):

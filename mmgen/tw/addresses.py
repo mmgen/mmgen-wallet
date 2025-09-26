@@ -111,13 +111,15 @@ class TwAddresses(TwView):
 		self.used_w = 4 if self.has_used else 0
 
 		if mmgen_addrs:
-			a = mmgen_addrs.rsplit(':', 1)
-			if len(a) != 2:
-				die(1,
-					f'{mmgen_addrs}: invalid address list argument ' +
-					'(must be in form <seed ID>:[<type>:]<idx list>)')
-			from ..addrlist import AddrIdxList
-			self.usr_addr_list = [MMGenID(self.proto, f'{a[0]}:{i}') for i in AddrIdxList(fmt_str=a[1])]
+			match mmgen_addrs.rsplit(':', 1):
+				case [mmid, fmt_str]:
+					from ..addrlist import AddrIdxList
+					self.usr_addr_list = [
+						MMGenID(self.proto, f'{mmid}:{i}') for i in AddrIdxList(fmt_str=fmt_str)]
+				case _:
+					die(1,
+						f'{mmgen_addrs}: invalid address list argument ' +
+						'(must be in form <seed ID>:[<type>:]<idx list>)')
 		else:
 			self.usr_addr_list = []
 

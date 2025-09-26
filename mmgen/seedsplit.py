@@ -43,13 +43,16 @@ class SeedSplitSpecifier(HiliteStr, InitErrors, MMGenObject):
 		if isinstance(s, cls):
 			return s
 		try:
-			arr = s.split(':')
-			assert len(arr) in (2, 3), 'cannot be parsed'
-			a, b, c = arr if len(arr) == 3 else ['default'] + arr
 			me = str.__new__(cls, s)
-			me.id = SeedSplitIDString(a)
-			me.idx = SeedShareIdx(b)
-			me.count = SeedShareCount(c)
+			match s.split(':', 2):
+				case [id_str, idx, count]:
+					me.id = SeedSplitIDString(id_str)
+				case [idx, count]:
+					me.id = SeedSplitIDString('default')
+				case _:
+					raise ValueError('seed split specifier cannot be parsed')
+			me.idx = SeedShareIdx(idx)
+			me.count = SeedShareCount(count)
 			assert me.idx <= me.count, 'share index greater than share count'
 			return me
 		except Exception as e:
