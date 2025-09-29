@@ -181,7 +181,7 @@ async def main():
 
 	if not silent:
 		msg(green('ORIGINAL TRANSACTION'))
-		msg(orig_tx.info.format(terse=True))
+		msg(orig_tx.info.format(terse=True, sort='raw'))
 
 	from .tw.ctl import TwCtl
 	tx = BumpTX(
@@ -199,7 +199,7 @@ async def main():
 
 	if not silent:
 		msg(green('\nREPLACEMENT TRANSACTION:'))
-		msg_r(tx.info.format(terse=True))
+		msg_r(tx.info.format(terse=True, sort='raw'))
 
 	if sign_and_send:
 		tx2 = UnsignedTX(cfg=cfg, data=tx.__dict__)

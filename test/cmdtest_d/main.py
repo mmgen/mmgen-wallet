@@ -782,7 +782,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		t = self.spawn('mmgen-txbump', args)
 		if seed_args:
 			t.do_decrypt_ka_data(pw=self.cfgs['14']['kapasswd'])
-		t.expect('deduct the fee from (Hit ENTER for the change output): ', '1\n')
+		t.expect('deduct the fee from (Hit ENTER for the change output): ', '2\n')
 		# Fee must be > tx_fee + network relay fee (currently 0.00001)
 		t.expect('OK? (Y/n): ', '\n')
 		t.expect('Enter transaction fee: ', self.txbump_fee+'\n')
