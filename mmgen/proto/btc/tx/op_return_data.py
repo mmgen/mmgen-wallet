@@ -18,9 +18,9 @@ class OpReturnData(bytes, InitErrors):
 
 	def __new__(cls, proto, data_spec):
 
-		desc = 'OpReturnData initializer'
+		desc = 'OP_RETURN data'
 
-		assert isinstance(data_spec, str), f'{desc} must be a string'
+		assert isinstance(data_spec, str), f'{desc} argument must be a string'
 
 		if data_spec.startswith('hexdata:'):
 			hexdata = data_spec[8:]
@@ -32,12 +32,12 @@ class OpReturnData(bytes, InitErrors):
 			try:
 				ret = data_spec[5:].encode('utf8')
 			except:
-				raise ValueError(f'{desc} string be UTF-8 encoded')
+				raise ValueError(f'{desc} value must be UTF-8 encoded')
 		else:
-			raise ValueError(f'{desc} string must start with ‘data:’ or ‘hexdata:’')
+			raise ValueError(f'{desc} argument must start with ‘data:’ or ‘hexdata:’')
 
 		assert 1 <= len(ret) <= proto.max_op_return_data_len, (
-			f'{len(ret)}: {desc} string encoded byte length not in range 1-{proto.max_op_return_data_len}')
+			f'{len(ret)}: invalid {desc} length: not in range 1-{proto.max_op_return_data_len}')
 
 		return bytes.__new__(cls, ret)
 

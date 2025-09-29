@@ -47,7 +47,7 @@ async def test_tx(tx_proto, tx_hex, desc, n):
 	dt = DeserializeTX(tx_proto, tx_hex)
 
 	if cfg.verbose:
-		Msg('\n\n================================ Core vector: ==================================')
+		Msg('\n\n=============================== Bitcoin Core: ==================================')
 	Msg_r('.' if cfg.quiet else f'{n:>3}) {desc}\n')
 	if cfg.verbose:
 		Pmsg(d)
