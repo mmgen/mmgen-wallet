@@ -62,9 +62,14 @@ class LEDControl:
 			trigger = '/sys/class/leds/status/trigger',
 			color   = 'blue'),
 		'rock_5': binfo(
-			name    = 'Rock 5 (Armbian)',
+			name    = 'Rock 5 (Armbian) [legacy kernel]',
 			control = '/sys/class/leds/user-led2/brightness',
 			trigger = '/sys/class/leds/user-led2/trigger',
+			color   = 'blue'),
+		'rock_5b': binfo(
+			name    = 'Rock 5 (Armbian)',
+			control = '/sys/class/leds/blue:status/brightness',
+			trigger = '/sys/class/leds/blue:status/trigger',
 			color   = 'blue'),
 		'banana_pi_f3': binfo(
 			name    = 'Banana Pi F3 (Armbian)',
