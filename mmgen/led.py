@@ -23,32 +23,23 @@ led: Control the LED on a single-board computer
 import sys, os, threading
 from collections import namedtuple
 from subprocess import run
+from dataclasses import dataclass
 
 from .util import msg, msg_r, die, have_sudo
 from .color import blue, orange
-from .base_obj import Lockable
 
 class LEDControl:
 
-	class binfo(Lockable):
-		_reset_ok = ('trigger_reset',)
+	orig_trigger_state = None
 
-		def __init__(
-				self,
-				*,
-				name,
-				control,
-				trigger         = None,
-				trigger_dfl     = 'heartbeat',
-				trigger_disable = 'none',
-				color           = 'colored'):
-			self.name = name
-			self.control = control
-			self.trigger = trigger
-			self.trigger_dfl = trigger_dfl
-			self.trigger_reset = trigger_dfl
-			self.trigger_disable = trigger_disable
-			self.color = color
+	@dataclass(frozen=True, kw_only=True)
+	class binfo:
+		name:            str
+		control:         str
+		trigger:         str = None
+		trigger_dfl:     str = 'heartbeat'
+		trigger_disable: str = 'none'
+		color:           str = 'colored'
 
 	boards = {
 		'raspi_pi': binfo(
@@ -162,7 +153,7 @@ class LEDControl:
 
 			if cur_state := get_cur_state():
 				msg(f'Saving current LED trigger state: [{cur_state}]')
-				board.trigger_reset = cur_state
+				self.orig_trigger_state = cur_state
 			else:
 				msg('Unable to determine current LED trigger state')
 
@@ -243,6 +234,6 @@ class LEDControl:
 		if self.debug:
 			msg('Stopping LED')
 
-		if self.board.trigger:
+		if self.orig_trigger_state:
 			with open(self.board.trigger, 'w') as fp:
-				fp.write(self.board.trigger_reset + '\n')
+				fp.write(self.orig_trigger_state + '\n')

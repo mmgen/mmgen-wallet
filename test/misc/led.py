@@ -54,4 +54,4 @@ confirm_or_exit(f'{color} LED should now be turned off')
 
 led.stop()
 
-confirm_or_exit(f'{color} LED should now be in its original state [trigger={led.board.trigger_reset}]')
+confirm_or_exit(f'{color} LED should now be in its original state [trigger={led.orig_trigger_state}]')
