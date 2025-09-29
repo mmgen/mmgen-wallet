@@ -646,7 +646,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			}
 		return ad, tx_data
 
-	def _make_txcreate_cmdline(self, tx_data):
+	def _make_txcreate_outputs(self, tx_data):
 		from mmgen.key import PrivKey
 		privkey = PrivKey(self.proto, getrand(32), compressed=True, pubkey_type='std')
 		t = ('compressed', 'segwit')['S' in self.proto.mmtypes]
@@ -667,26 +667,19 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 					getrandnum(4) % mod,
 					str(getrandnum(4))[:5])
 
-		cmd_args = ['--outdir='+self.tmpdir]
-		for num in tx_data:
-			s = tx_data[num]
-			cmd_args += [
-				'{}:{},{}'.format(
-					s['al_id'],
-					s['addr_idxs'][0],
-					self.cfgs[num]['amts'][0])]
-			# + one change address and one BTC address
-			if num is list(tx_data.keys())[-1]:
-				cmd_args += [
-					'{}:{}'.format(
+		def gen():
+			for num in tx_data:
+				s = tx_data[num]
+				yield '{}:{},{}'.format(
 						s['al_id'],
-						s['addr_idxs'][1])]
-				cmd_args += [
-					'{},{}'.format(
-						rand_coinaddr,
-						self.cfgs[num]['amts'][1])]
+						s['addr_idxs'][0],
+						self.cfgs[num]['amts'][0])
+				# + one change address and one BTC address
+				if num is list(tx_data.keys())[-1]:
+					yield '{}:{}'.format(s['al_id'], s['addr_idxs'][1])
+					yield '{},{}'.format(rand_coinaddr, self.cfgs[num]['amts'][1])
 
-		return cmd_args + [tx_data[num]['addrfile'] for num in tx_data]
+		return list(gen())
 
 	def txcreate_common(
 			self,
@@ -701,6 +694,16 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			cmdline_inputs             = False,
 			tweaks                     = []):
 
+		def make_input_opts():
+			from mmgen.tw.shared import TwLabel
+			return [
+				'--inputs={},{},{},{},{},{}'.format(
+					TwLabel(self.proto, dfake[0][self.lbl_id]).mmid, dfake[1]['address'],
+					TwLabel(self.proto, dfake[2][self.lbl_id]).mmid, dfake[3]['address'],
+					TwLabel(self.proto, dfake[4][self.lbl_id]).mmid, dfake[5]['address']
+				),
+				f'--outdir={self.tr.trash_dir}']
+
 		if not self.tr.quiet:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
 
@@ -710,31 +713,25 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		import json
 		from mmgen.rpc.util import json_encoder
 		self._write_fake_data_to_file(json.dumps(dfake, cls=json_encoder))
-		cmd_args = self._make_txcreate_cmdline(tx_data)
-
-		if cmdline_inputs:
-			from mmgen.tw.shared import TwLabel
-			cmd_args = [
-				'--inputs={},{},{},{},{},{}'.format(
-					TwLabel(self.proto, dfake[0][self.lbl_id]).mmid, dfake[1]['address'],
-					TwLabel(self.proto, dfake[2][self.lbl_id]).mmid, dfake[3]['address'],
-					TwLabel(self.proto, dfake[4][self.lbl_id]).mmid, dfake[5]['address']
-				),
-				f'--outdir={self.tr.trash_dir}'
-			] + cmd_args[1:]
-
 		end_silence()
 
 		if not self.tr.quiet:
 			sys.stderr.write('\n')
 
 		t = self.spawn(
-			'mmgen-'+('txcreate', 'txdo')[bool(ss_args)],
-			(['--no-rbf'], [])[self.proto.cap('rbf')] +
-			['-f', self.tx_fee, '-B'] + add_opts + cmd_args + ss_args)
+			('mmgen-txcreate', 'mmgen-txdo')[bool(ss_args)],
+			[f'--outdir={self.tmpdir}', f'--fee={self.tx_fee}', '--no-blank']
+			+ ([] if self.proto.cap('rbf') else ['--no-rbf'])
+			+ add_opts
+			+ (make_input_opts() if cmdline_inputs else [])
+			+ self._make_txcreate_outputs(tx_data)
+			+ [tx_data[num]['addrfile'] for num in tx_data]
+			+ ss_args)
 
-		if t.expect([('Get', 'Unsigned transac')[cmdline_inputs], r'Unable to connect to \S+'], regex=True) == 1:
-			die('TestSuiteException', '\n'+t.p.after)
+		if t.expect(
+				[('Get', 'Unsigned transac')[cmdline_inputs], r'Unable to connect to \S+'],
+				regex = True) == 1:
+			die('TestSuiteException', '\n' + t.p.after)
 
 		if cmdline_inputs:
 			t.written_to_file('tion')
