@@ -488,14 +488,14 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		silence()
 		self.write_to_tmpfile(pwfile, get_data_from_file(self.cfg, pf))
 		end_silence()
-		add_args = {
+		add_opts = {
 			'cmdline': ['-d', self.tmpdir, '-L', 'Changed label (UTF-8) α'],
 			'keep':    ['-d', self.tr.trash_dir, '--keep-label'],
 			'user':    ['-d', self.tr.trash_dir]
 		}[label_action]
 		t = self.spawn(
 			'mmgen-passchg',
-			self.testnet_opt + add_args + [self.usr_rand_arg, '-p2'] + ([wf] if wf else []),
+			self.testnet_opt + add_opts + [self.usr_rand_arg, '-p2'] + ([wf] if wf else []),
 			no_passthru_opts = True)
 		t.license()
 		wcls = MMGenWallet
@@ -652,8 +652,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		t = ('compressed', 'segwit')['S' in self.proto.mmtypes]
 		from mmgen.addrgen import KeyGenerator, AddrGenerator
 		rand_coinaddr = AddrGenerator(self.cfg, self.proto, t).to_addr(
-			KeyGenerator(self.cfg, self.proto, 'std').gen_data(privkey)
-		)
+			KeyGenerator(self.cfg, self.proto, 'std').gen_data(privkey))
 
 		# total of two outputs must be < 10 BTC (<1000 LTC)
 		mods = {
@@ -694,8 +693,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			sources                    = ['1'],
 			non_mmgen_input            = '',
 			do_label                   = False,
-			txdo_args                  = [],
-			add_args                   = [],
+			ss_args                    = [],
+			add_opts                   = [],
 			view                       = 'n',
 			addrs_per_wallet           = addrs_per_wallet,
 			non_mmgen_input_compressed = True,
@@ -730,9 +729,9 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			sys.stderr.write('\n')
 
 		t = self.spawn(
-			'mmgen-'+('txcreate', 'txdo')[bool(txdo_args)],
+			'mmgen-'+('txcreate', 'txdo')[bool(ss_args)],
 			(['--no-rbf'], [])[self.proto.cap('rbf')] +
-			['-f', self.tx_fee, '-B'] + add_args + cmd_args + txdo_args)
+			['-f', self.tx_fee, '-B'] + add_opts + cmd_args + ss_args)
 
 		if t.expect([('Get', 'Unsigned transac')[cmdline_inputs], r'Unable to connect to \S+'], regex=True) == 1:
 			die('TestSuiteException', '\n'+t.p.after)
@@ -763,13 +762,13 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			view        = view,
 			tweaks      = tweaks)
 
-		if txdo_args and add_args: # txdo4
+		if ss_args and add_opts: # txdo4
 			t.do_decrypt_ka_data(pw=self.cfgs['14']['kapasswd'])
 
 		return t
 
 	def txcreate(self, addrfile):
-		return self.txcreate_common(sources=['1'], add_args=['--vsize-adj=1.01'])
+		return self.txcreate_common(sources=['1'], add_opts=['--vsize-adj=1.01'])
 
 	def txbump(self, txfile, prepend_args=[], seed_args=[]):
 		if not self.proto.cap('rbf'):
@@ -806,7 +805,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return t
 
 	def txdo(self, addrfile, wallet):
-		t = self.txcreate_common(sources=['1'], txdo_args=[wallet])
+		t = self.txcreate_common(sources=['1'], ss_args=[wallet])
 		self.txsign_ui_common(t, view='n', do_passwd=True)
 		self.txsend_ui_common(t)
 		return t
@@ -862,8 +861,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 	def export_bip39(self, wf):
 		return self.export_seed(wf, out_fmt='bip39')
 
-	def export_incog(self, wf, out_fmt='i', add_args=[]):
-		uargs = ['-p1', self.usr_rand_arg] + add_args
+	def export_incog(self, wf, out_fmt='i', add_opts=[]):
+		uargs = ['-p1', self.usr_rand_arg] + add_opts
 		_, t = self._walletconv_export(wf, out_fmt=out_fmt, uargs=uargs)
 		return t
 
@@ -873,8 +872,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 	# TODO: make outdir and hidden incog compatible (ignore --outdir and warn user?)
 	def export_incog_hidden(self, wf):
 		rf = joinpath(self.tmpdir, hincog_fn)
-		add_args = ['-J', f'{rf},{hincog_offset}']
-		return self.export_incog(wf, out_fmt='hi', add_args=add_args)
+		add_opts = ['-J', f'{rf},{hincog_offset}']
+		return self.export_incog(wf, out_fmt='hi', add_opts=add_opts)
 
 	def addrgen_seed(self, wf, _, in_fmt='seed'):
 		wcls = get_wallet_cls(fmt_code=in_fmt)
@@ -939,7 +938,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return t
 
 	def txcreate_ni(self, addrfile):
-		return self.txcreate_common(sources=['1'], cmdline_inputs=True, add_args=['--yes'])
+		return self.txcreate_common(sources=['1'], cmdline_inputs=True, add_opts=['--yes'])
 
 	def walletgen2(self, del_dw_run='dummy'):
 		return self.walletgen(seed_len=128)
@@ -1014,15 +1013,14 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 	def txsign4(self, f1, f2, f3, f4, f5, f6):
 		non_mm_file = joinpath(self.tmpdir, non_mmgen_fn)
-		add_args = [
+		add_opts = [
 			'-d', self.tmpdir,
 			'-i', 'brain',
 			'-b' + self.bw_params,
 			'-p1',
 			'--keys-from-file=' + non_mm_file,
-			'--mmgen-keys-from-file=' + f6,
-			f1, f2, f3, f4, f5]
-		t = self.spawn('mmgen-txsign', add_args, no_passthru_opts=['coin'])
+			'--mmgen-keys-from-file=' + f6]
+		t = self.spawn('mmgen-txsign', add_opts + [f1, f2, f3, f4, f5], no_passthru_opts=['coin'])
 		t.license()
 		t.view_tx('t')
 		t.do_decrypt_ka_data(pw=self.cfgs['14']['kapasswd'])
@@ -1035,7 +1033,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 	def txdo4(self, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
 		non_mm_file = joinpath(self.tmpdir, non_mmgen_fn)
-		add_args = [
+		add_opts = [
 			'-d', self.tmpdir,
 			'-i', 'brain',
 			'-b'+self.bw_params,
@@ -1047,8 +1045,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			sources         = ['1', '2', '3', '4', '14'],
 			non_mmgen_input = '4',
 			do_label        = True,
-			txdo_args       = [f7, f8, f9, f10],
-			add_args        = add_args)
+			ss_args         = [f7, f8, f9, f10],
+			add_opts        = add_opts)
 
 		for cnum, wcls in (('1', IncogWallet), ('3', MMGenWallet)):
 			t.passphrase(wcls.desc, self.cfgs[cnum]['wpasswd'])
@@ -1080,11 +1078,11 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			non_mmgen_input_compressed = False,
 			tweaks                     = ['confirm_non_mmgen'])
 
-	def txsign5(self, wf, txf, bad_vsize=True, add_args=[]):
+	def txsign5(self, wf, txf, bad_vsize=True, add_opts=[]):
 		non_mm_file = joinpath(self.tmpdir, non_mmgen_fn)
 		t = self.spawn(
 			'mmgen-txsign',
-			add_args + ['-d', self.tmpdir, '-k', non_mm_file, txf, wf],
+			add_opts + ['-d', self.tmpdir, '-k', non_mm_file, txf, wf],
 			no_passthru_opts = ['coin'],
 			exit_val = 2 if bad_vsize else None)
 		t.license()
@@ -1110,8 +1108,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			sources                    = ['21'],
 			non_mmgen_input            = '21',
 			non_mmgen_input_compressed = False,
-			add_args                   = ['--vsize-adj=1.08'],
+			add_opts                   = ['--vsize-adj=1.08'],
 			tweaks                     = ['confirm_non_mmgen'])
 
 	def txsign6(self, wf, txf):
-		return self.txsign5(wf, txf, bad_vsize=False, add_args=['--vsize-adj=1.08'])
+		return self.txsign5(wf, txf, bad_vsize=False, add_opts=['--vsize-adj=1.08'])
