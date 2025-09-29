@@ -34,7 +34,7 @@ async def test_tx(tx_proto, tx_hex, desc, n):
 	def has_nonstandard_outputs(outputs):
 		for o in outputs:
 			t = o['scriptPubKey']['type']
-			if t in ('nonstandard', 'pubkey', 'nulldata'):
+			if t in ('nonstandard', 'pubkey'):
 				return True
 		return False
 
@@ -151,6 +151,7 @@ class unit_tests:
 		return await do_mmgen_ref(
 			('btc', 'btc_tn'),
 			(
+				'test/ref/tx/B498CE[5.55788,38].rawtx',
 				'test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx',
 				'test/ref/0C7115[15.86255,14,tl=1320969600].testnet.rawtx',
 				'test/ref/542169[5.68152,34].sigtx',

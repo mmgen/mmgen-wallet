@@ -415,7 +415,9 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return self.addrgen(wf=None, dfl_wallet=True)
 
 	def txcreate_dfl_wallet(self, addrfile):
-		return self.txcreate_common(sources=['15'])
+		return self.txcreate_common(
+			sources = ['15'],
+			add_output_args = ['data:' + 'z' * self.proto.max_op_return_data_len])
 
 	def txsign_dfl_wallet(self, txfile, pf='', save=True, has_label=False):
 		return self.txsign(None, txfile, save=save, has_label=has_label, dfl_wallet=True)
@@ -688,6 +690,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			do_label                   = False,
 			ss_args                    = [],
 			add_opts                   = [],
+			add_output_args            = [],
 			view                       = 'n',
 			addrs_per_wallet           = addrs_per_wallet,
 			non_mmgen_input_compressed = True,
@@ -725,6 +728,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			+ add_opts
 			+ (make_input_opts() if cmdline_inputs else [])
 			+ self._make_txcreate_outputs(tx_data)
+			+ add_output_args
 			+ [tx_data[num]['addrfile'] for num in tx_data]
 			+ ss_args)
 
@@ -765,7 +769,10 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return t
 
 	def txcreate(self, addrfile):
-		return self.txcreate_common(sources=['1'], add_opts=['--vsize-adj=1.01'])
+		return self.txcreate_common(
+			sources = ['1'],
+			add_opts = ['--vsize-adj=1.01'],
+			add_output_args = ['hexdata:' + 'ee' * self.proto.max_op_return_data_len])
 
 	def txbump(self, txfile, prepend_args=[], seed_args=[]):
 		if not self.proto.cap('rbf'):

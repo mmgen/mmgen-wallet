@@ -56,6 +56,7 @@ class unit_tests:
 			'Bitcoin',
 			(
 				'tx/7A8157[6.65227,34].rawtx',
+				'tx/B498CE[5.55788,38].rawtx',
 				'tx/BB3FD2[7.57134314,123].sigtx',
 				'tx/0A869F[1.23456,32].regtest.asubtx',
 			),
@@ -112,12 +113,16 @@ class unit_tests:
 		return True
 
 	def op_return_data(self, name, ut, desc='OpReturnData class'):
+		max_len = cfg._proto.max_op_return_data_len
 		from mmgen.proto.btc.tx.op_return_data import OpReturnData
 		vecs = [
 			'data:=:ETH.ETH:0x86d526d6624AbC0178cF7296cD538Ecc080A95F1:0/1/0',
 			'hexdata:3d3a4554482e4554483a30783836643532366436363234416243303137'
 				'38634637323936634435333845636330383041393546313a302f312f30',
 			'hexdata:00010203040506',
+			'hexdata:' + 'ee' * max_len,
+			'data:' + 'z' * max_len,
+			'data:a',
 			'data:a\n',
 			'data:a\tb',
 			'data:' + gr_uc[:24],
@@ -135,17 +140,19 @@ class unit_tests:
 			vmsg(repr(d))
 			vmsg(d.hl())
 			vmsg(d.hl(add_label=True))
+			vmsg(f'length: {len(str(d))}')
 
 		bad_data = [
 			'data:',
 			'hexdata:',
-			'data:' + ('x' * 81),
+			'data:' + 'x' * (max_len + 1),
 			'hexdata:' + ('deadbeef' * 20) + 'ee',
 			'hex:0abc',
 			'da:xyz',
 			'hexdata:xyz',
 			'hexdata:abcde',
 			b'data:abc',
+			'hexdata:' + 'dd' * (max_len + 1),
 		]
 
 		def bad(n):
@@ -164,6 +171,7 @@ class unit_tests:
 			('bad7',    'AssertionError', 'not in hex',   bad(6)),
 			('bad8',    'AssertionError', 'even',         bad(7)),
 			('bad9',    'AssertionError', 'a string',     bad(8)),
+			('bad10',   'AssertionError', 'not in range', bad(9)),
 		), pfx='')
 
 		return True

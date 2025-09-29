@@ -41,26 +41,40 @@ def decodeScriptPubKey(proto, s):
 	#   types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash
 	ret = namedtuple('decoded_scriptPubKey', ['type', 'addr_fmt', 'addr', 'data'])
 
-	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
-		return ret('pubkeyhash', 'p2pkh', proto.pubhash2addr(bytes.fromhex(s[6:-4]), 'p2pkh'), None)
-
-	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':
-		return ret('scripthash', 'p2sh', proto.pubhash2addr(bytes.fromhex(s[4:-2]), 'p2sh'), None)
-
-	elif len(s) == 44 and s[:4] == proto.witness_vernum_hex + '14':
-		return ret('witness_v0_keyhash', 'bech32', proto.pubhash2bech32addr(bytes.fromhex(s[4:])), None)
-
-	elif s[:2] == '6a': # OP_RETURN
-		# range 1-80 == hex 2-160, plus 4 for opcode byte + push byte
-		if 6 <= len(s) <= (proto.max_op_return_data_len * 2) + 6: # 2-160 -> 6-166
-			return ret('nulldata', None, None, s[4:]) # return data in hex format
-		else:
-			raise ValueError('{}: OP_RETURN data bytes length not in range 1-{}'.format(
-					len(s[4:]) // 2,
+	match len(s):
+		case 50 if s.startswith('76a914') and s.endswith('88ac'):
+			return ret('pubkeyhash', 'p2pkh', proto.pubhash2addr(bytes.fromhex(s[6:-4]), 'p2pkh'), None)
+		case 46 if s.startswith('a914') and s.endswith('87'):
+			return ret('scripthash', 'p2sh', proto.pubhash2addr(bytes.fromhex(s[4:-2]), 'p2sh'), None)
+		case 44 if s.startswith(proto.witness_vernum_hex + '14'):
+			return ret(
+				'witness_v0_keyhash',
+				'bech32',
+				proto.pubhash2bech32addr(bytes.fromhex(s[4:])),
+				None)
+		case 2 if s.startswith('6a'): # bare OP_RETURN
+			return ret('nulldata', None, None, '')
+		case x if s.startswith('6a'): # OP_RETURN with data
+			# skip opcode byte + push byte(s): https://en.bitcoin.it/wiki/Script
+			match int(s[2:4], 16):
+				case y if 0 < y < 76:
+					skip = 2
+				case 76:
+					skip = 3
+				case 77:
+					skip = 4
+				case 78:
+					skip = 6
+				case y:
+					raise ValueError(f'{y}: invalid first push byte in OP_RETURN data')
+			if 1 <= (x >> 1) - skip <= proto.max_op_return_data_len:
+				return ret('nulldata', None, None, s[skip * 2:]) # return data in hex format
+			else:
+				raise ValueError('{}: OP_RETURN data bytes length not in range 1-{}'.format(
+					(x >> 1) - skip,
 					proto.max_op_return_data_len))
-
-	else:
-		raise NotImplementedError(f'Unrecognized scriptPubKey ({s})')
+		case _:
+			raise NotImplementedError(f'Unrecognized scriptPubKey ({s})')
 
 def DeserializeTX(proto, txhex):
 	"""
