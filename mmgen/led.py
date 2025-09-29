@@ -47,15 +47,16 @@ class LEDControl:
 			control = '/sys/class/leds/led0/brightness',
 			trigger = '/sys/class/leds/led0/trigger',
 			trigger_dfl = 'mmc0',
-			color   = 'red'),
+			color   = 'green'),
 		'orange_pi': binfo(
 			name    = 'Orange Pi (Armbian)',
 			control = '/sys/class/leds/orangepi:red:status/brightness',
-			color   = 'red'),
+			color   = 'green'),
 		'orange_pi_5': binfo(
 			name    = 'Orange Pi 5 (Armbian)',
 			control = '/sys/class/leds/status_led/brightness',
-			color   = 'red'),
+			trigger = '/sys/class/leds/status_led/trigger',
+			color   = 'green'),
 		'rock_pi': binfo(
 			name    = 'Rock Pi (Armbian)',
 			control = '/sys/class/leds/status/brightness',
