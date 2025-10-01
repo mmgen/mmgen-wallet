@@ -4,11 +4,11 @@
 test.daemontest_d.rpc: RPC unit test for the MMGen suite
 """
 
-import sys, os
+import sys, os, asyncio
 
 from mmgen.cfg import Config
 from mmgen.color import yellow, cyan
-from mmgen.util import msg, gmsg, make_timestr, pp_fmt, die
+from mmgen.util import msg, gmsg, make_timestr, pp_fmt, die, async_run
 from mmgen.protocol import init_proto
 from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
@@ -124,9 +124,9 @@ class init_test:
 
 	etc = eth
 
-async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_override=None):
+def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_override=None):
 
-	async def do_test(d, cfg):
+	def do_test(d, cfg):
 
 		d.wait = True
 
@@ -140,17 +140,18 @@ async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_overrid
 
 		for n, backend in enumerate(cfg._autoset_opts['rpc_backend'].choices):
 			test = getattr(init_test, d.proto.coin.lower())
-			rpc = await test(cfg, d, backend, cfg_override)
+			cfg_b = Config({'_clone': cfg, 'rpc_backend': backend})
+			rpc = async_run(cfg_b, test, args=(cfg_b, d, backend, cfg_override))
 			if not n and cfg.verbose:
-				await print_daemon_info(rpc)
+				asyncio.run(print_daemon_info(rpc))
 
 		if not cfg.no_daemon_stop:
 			d.stop()
 			d.remove_datadir()
 
 		if test_cf_auth and sys.platform != 'win32':
-			await cfg_file_auth_test(cfg, d)
-			await cfg_file_auth_test(cfg, d, bad_auth=True)
+			asyncio.run(cfg_file_auth_test(cfg, d))
+			asyncio.run(cfg_file_auth_test(cfg, d, bad_auth=True))
 
 		qmsg('')
 
@@ -161,7 +162,7 @@ async def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_overrid
 		all_ids = CoinDaemon.get_daemon_ids(my_cfg, proto.coin)
 		ids = set(daemon_ids) & set(all_ids) if daemon_ids else all_ids
 		for daemon_id in ids:
-			await do_test(CoinDaemon(my_cfg, proto=proto, test_suite=True, daemon_id=daemon_id), my_cfg)
+			do_test(CoinDaemon(my_cfg, proto=proto, test_suite=True, daemon_id=daemon_id), my_cfg)
 
 	return True
 
@@ -172,8 +173,8 @@ class unit_tests:
 	riscv_skip = ('parity',) # no prebuilt binaries for RISC-V
 	fast_skip = ('reth', 'erigon')
 
-	async def btc(self, name, ut):
-		return await run_test(
+	def btc(self, name, ut):
+		return run_test(
 			['btc', 'btc_tn'],
 			test_cf_auth = True,
 			cfg_override = {
@@ -186,15 +187,15 @@ class unit_tests:
 				'eth_mainnet_chain_names': ['also', 'ignored'],
 		})
 
-	async def ltc(self, name, ut):
-		return await run_test(['ltc', 'ltc_tn'], test_cf_auth=True)
+	def ltc(self, name, ut):
+		return run_test(['ltc', 'ltc_tn'], test_cf_auth=True)
 
-	async def bch(self, name, ut):
-		return await run_test(['bch', 'bch_tn'], test_cf_auth=True)
+	def bch(self, name, ut):
+		return run_test(['bch', 'bch_tn'], test_cf_auth=True)
 
-	async def geth(self, name, ut):
+	def geth(self, name, ut):
 		# mainnet returns EIP-155 error on empty blockchain:
-		return await run_test(
+		return run_test(
 			['eth_tn', 'eth_rt'],
 			daemon_ids = ['geth'],
 			cfg_override = {
@@ -206,17 +207,17 @@ class unit_tests:
 				'eth_testnet_chain_names': ['goerli', 'holesky', 'foo', 'bar', 'baz'],
 		})
 
-	async def reth(self, name, ut):
-		return await run_test(['eth', 'eth_rt'], daemon_ids=['reth']) # TODO: eth_tn
+	def reth(self, name, ut):
+		return run_test(['eth', 'eth_rt'], daemon_ids=['reth']) # TODO: eth_tn
 
-	async def erigon(self, name, ut):
-		return await run_test(['eth', 'eth_tn', 'eth_rt'], daemon_ids=['erigon'])
+	def erigon(self, name, ut):
+		return run_test(['eth', 'eth_tn', 'eth_rt'], daemon_ids=['erigon'])
 
-	async def parity(self, name, ut):
+	def parity(self, name, ut):
 		if in_nix_environment() and not test_exec('parity --help'):
 			ut.skip_msg('Nix environment')
 			return True
-		return await run_test(['etc'])
+		return run_test(['etc'])
 
 	async def xmrwallet(self, name, ut):
 
