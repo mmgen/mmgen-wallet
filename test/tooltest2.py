@@ -36,7 +36,7 @@ from test.include.common import set_globals, end_msg, init_coverage
 from mmgen import main_tool
 from mmgen.cfg import Config
 from mmgen.color import green, blue, purple, cyan, gray
-from mmgen.util import msg, msg_r, Msg, die
+from mmgen.util import msg, msg_r, Msg, die, isAsync
 
 skipped_tests = ['mn2hex_interactive']
 coin_dependent_groups = ('Coin', 'File')
@@ -134,9 +134,7 @@ def call_method(cls, method, cmd_name, args, mmtype, stdin_input):
 			vmsg(f'Input: {stdin_input!r}')
 			sys.exit(0)
 	else:
-		ret = method(*aargs, **kwargs)
-		if type(ret).__name__ == 'coroutine':
-			ret = asyncio.run(ret)
+		ret = asyncio.run(method(*aargs, **kwargs)) if isAsync(method) else method(*aargs, **kwargs)
 		cfg._set_quiet(oq_save)
 		return ret
 

@@ -32,7 +32,7 @@ if not os.getenv('MMGEN_DEVTOOLS'):
 
 from mmgen.cfg import Config, gc, gv
 from mmgen.color import gray, brown, orange, yellow, red
-from mmgen.util import msg, msg_r, gmsg, ymsg, Msg
+from mmgen.util import msg, msg_r, gmsg, ymsg, Msg, isAsync
 
 from test.include.common import set_globals, end_msg
 
@@ -151,9 +151,7 @@ class UnitTestHelpers:
 		for (desc, exc_chk, emsg_chk, func) in data:
 			try:
 				cfg._util.vmsg_r('  {}{:{w}}'.format(pfx, desc+':', w=desc_w+1))
-				ret = func()
-				if type(ret).__name__ == 'coroutine':
-					asyncio.run(ret)
+				asyncio.run(func()) if isAsync(func) else func()
 			except Exception as e:
 				exc = type(e).__name__
 				emsg = e.args[0] if e.args else '(unspecified error)'
@@ -187,9 +185,11 @@ def run_test(test, subtest=None):
 				elif not cfg.quiet:
 					msg_r(f'Testing {func.__defaults__[0]}...')
 
-			ret = func(test, UnitTestHelpers(subtest))
-			if type(ret).__name__ == 'coroutine':
-				ret = asyncio.run(ret)
+			if isAsync(func):
+				ret = asyncio.run(func(test, UnitTestHelpers(subtest)))
+			else:
+				ret = func(test, UnitTestHelpers(subtest))
+
 			if do_desc and not cfg.quiet:
 				msg('OK\n' if cfg.verbose else 'OK')
 		except:

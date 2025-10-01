@@ -27,7 +27,7 @@ from ..cfg import gv
 from ..objmethods import MMGenObject
 from ..obj import get_obj, MMGenIdx, MMGenList
 from ..color import nocolor, yellow, orange, green, red, blue
-from ..util import msg, msg_r, fmt, die, capfirst, suf, make_timestr
+from ..util import msg, msg_r, fmt, die, capfirst, suf, make_timestr, isAsync
 from ..rpc import rpc_init
 from ..base_obj import AsyncInit
 
@@ -288,8 +288,10 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 		lbl_id = ('account', 'label')['label_api' in self.rpc.caps]
 
-		res = self.gen_data(rpc_data, lbl_id)
-		self.data = MMGenList(await res if type(res).__name__ == 'coroutine' else res)
+		self.data = MMGenList(
+			await self.gen_data(rpc_data, lbl_id) if isAsync(self.gen_data) else
+			self.gen_data(rpc_data, lbl_id))
+
 		self.disp_data = list(self.filter_data())
 
 		if not self.data:
@@ -607,9 +609,9 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 			match reply:
 				case ch if ch in key_mappings:
-					ret = action_classes[ch].run(self, action_methods[ch])
-					if type(ret).__name__ == 'coroutine':
-						await ret
+					func = action_classes[ch].run
+					arg = action_methods[ch]
+					await func(self, arg) if isAsync(func) else func(self, arg)
 				case 'q':
 					msg('')
 					if self.scroll:

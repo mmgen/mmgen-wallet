@@ -23,7 +23,7 @@ mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
 
 import sys, os, importlib
 from .cfg import gc, Config
-from .util import msg, Msg, die, capfirst, suf, async_run
+from .util import msg, Msg, die, capfirst, suf, async_run, isAsync
 
 opts_data = {
 	'filter_codes': ['-'],
@@ -391,10 +391,8 @@ if gc.prog_name.endswith('-tool'):
 
 	args, kwargs = process_args(cmd, args, cls)
 
-	ret = getattr(cls(cfg, cmdname=cmd), cmd)(*args, **kwargs)
-
-	if type(ret).__name__ == 'coroutine':
-		ret = async_run(ret)
+	func = getattr(cls(cfg, cmdname=cmd), cmd)
+	ret = async_run(func(*args, **kwargs)) if isAsync(func) else func(*args, **kwargs)
 
 	process_result(
 		ret,

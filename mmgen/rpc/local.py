@@ -14,7 +14,7 @@ rpc.local: local RPC client class for the MMGen Project
 
 import sys, json, asyncio, importlib
 
-from ..util import msg, die, fmt, oneshot_warning
+from ..util import msg, die, fmt, oneshot_warning, isAsync
 
 from . import util
 
@@ -55,7 +55,7 @@ class RPCClient:
 		self.timeout = self.cfg.http_timeout or 60
 		self.auth = None
 
-	def _get_backend(self, backend):
+	def _get_backend_cls(self, backend):
 		dfl_backends = {
 			'linux': 'httplib',
 			'darwin': 'httplib',
@@ -63,14 +63,14 @@ class RPCClient:
 		def get_cls(backend_id):
 			return getattr(importlib.import_module(f'mmgen.rpc.backends.{backend_id}'), backend_id)
 		backend_id = backend or self.cfg.rpc_backend
-		return get_cls(dfl_backends[sys.platform] if backend_id == 'auto' else backend_id)(self)
+		return get_cls(dfl_backends[sys.platform] if backend_id == 'auto' else backend_id)
 
 	def set_backend(self, backend=None):
-		self.backend = self._get_backend(backend)
+		self.backend = self._get_backend_cls(backend)(self)
 
 	async def set_backend_async(self, backend=None):
-		ret = self._get_backend(backend)
-		self.backend = (await ret) if type(ret).__name__ == 'coroutine' else ret
+		cls = self._get_backend_cls(backend)
+		self.backend = await cls(self) if isAsync(cls.__init__) else cls(self)
 
 	# Call family of methods - direct-to-daemon RPC call:
 	# - positional params are passed to the daemon, 'timeout' and 'wallet' kwargs to the backend

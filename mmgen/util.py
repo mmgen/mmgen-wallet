@@ -487,3 +487,6 @@ def cached_property(orig_func):
 			setattr(self, attr_name, orig_func(self))
 		return getattr(self, attr_name)
 	return new_func
+
+def isAsync(func):
+	return bool(func.__code__.co_flags & 128)

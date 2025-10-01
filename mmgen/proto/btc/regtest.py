@@ -21,7 +21,7 @@ proto.btc.regtest: Coin daemon regression test mode setup and operations
 """
 
 import os, shutil, json
-from ...util import msg, gmsg, die, capfirst, suf
+from ...util import msg, gmsg, die, capfirst, suf, isAsync
 from ...util2 import cliargs_convert
 from ...protocol import init_proto
 from ...rpc import rpc_init
@@ -256,8 +256,8 @@ class MMGenRegtest(MMGenObject):
 		print(ret if isinstance(ret, str) else json.dumps(ret, cls=json_encoder, indent=4))
 
 	async def cmd(self, args):
-		ret = getattr(self, args[0])(*args[1:])
-		return (await ret) if type(ret).__name__ == 'coroutine' else ret
+		func = getattr(self, args[0])
+		return await func(*args[1:]) if isAsync(func) else func(*args[1:])
 
 	async def fork(self, coin): # currently disabled
 
