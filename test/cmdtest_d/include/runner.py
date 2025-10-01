@@ -16,7 +16,7 @@ import sys, os, time, asyncio
 
 from mmgen.cfg import gc
 from mmgen.color import red, yellow, green, blue, cyan, gray, nocolor
-from mmgen.util import msg, Msg, rmsg, ymsg, bmsg, die, suf, make_timestr
+from mmgen.util import msg, Msg, rmsg, ymsg, bmsg, die, suf, make_timestr, isAsync
 
 from ...include.common import (
 	cmdtest_py_log_fn,
@@ -346,9 +346,8 @@ class CmdTestRunner:
 									self.check_needs_rerun(cmdname, build=True)
 								except Exception as e: # allow calling of functions not in cmd_group
 									if isinstance(e, KeyError) and e.args[0] == cmdname:
-										ret = getattr(self.tg, cmdname)()
-										if type(ret).__name__ == 'coroutine':
-											ret = asyncio.run(ret)
+										func = getattr(self.tg, cmdname)
+										ret = asyncio.run(func()) if isAsync(func) else func()
 										self.process_retval(cmdname, ret)
 									else:
 										raise
@@ -470,12 +469,11 @@ class CmdTestRunner:
 				if k in self.gm.cfg_attrs:
 					setattr(self.tg, k, test_cfg[k])
 
-		ret = getattr(self.tg, cmd)(*arg_list) # run the test
+		func = getattr(self.tg, cmd)
+		ret = asyncio.run(func(*arg_list)) if isAsync(func) else func(*arg_list) # run the test
+
 		if sub:
 			return ret
-
-		if type(ret).__name__ == 'coroutine':
-			ret = asyncio.run(ret)
 
 		self.process_retval(cmd, ret)
 
