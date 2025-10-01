@@ -28,20 +28,11 @@ class aiohttp(base, metaclass=AsyncInit):
 	variables (all are case insensitive).
 	"""
 
-	def __del__(self):
-		self.connector.close()
-		self.session.detach()
-		del self.session
-
 	async def __init__(self, caller):
 		super().__init__(caller)
-		import aiohttp
-		self.connector = aiohttp.TCPConnector(limit_per_host=self.cfg.aiohttp_rpc_queue_len)
-		self.session = aiohttp.ClientSession(
-			headers = {'Content-Type': 'application/json'},
-			connector = self.connector,
-		)
+		self.session = self.cfg.aiohttp_session
 		if caller.auth_type == 'basic':
+			import aiohttp
 			self.auth = aiohttp.BasicAuth(*caller.auth, encoding='UTF-8')
 		else:
 			self.auth = None

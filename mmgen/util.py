@@ -443,7 +443,17 @@ def get_subclasses(cls, *, names=False):
 
 def async_run(cfg, func, *, args=(), kwargs={}):
 	import asyncio
-	return asyncio.run(func(*args, **kwargs))
+	if cfg.rpc_backend == 'aiohttp':
+		async def func2():
+			import aiohttp
+			connector = aiohttp.TCPConnector(limit_per_host=cfg.aiohttp_rpc_queue_len)
+			async with aiohttp.ClientSession(
+					headers = {'Content-Type': 'application/json'},
+					connector = connector) as cfg.aiohttp_session:
+				return await func(*args, **kwargs)
+		return asyncio.run(func2())
+	else:
+		return asyncio.run(func(*args, **kwargs))
 
 def wrap_ripemd160(called=[]):
 	if not called:

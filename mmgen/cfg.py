@@ -147,7 +147,7 @@ class Config(Lockable):
 	  3 - config file
 	"""
 	_autolock = False
-	_set_ok = ('usr_randchars', '_proto')
+	_set_ok = ('usr_randchars', '_proto', 'aiohttp_session')
 	_reset_ok = ('accept_defaults',)
 	_delete_ok = ('_opts',)
 	_use_class_attr = True
@@ -200,6 +200,7 @@ class Config(Lockable):
 	rpc_user              = ''
 	rpc_password          = ''
 	aiohttp_rpc_queue_len = 16
+	aiohttp_session       = None
 	cached_balances       = False
 
 	# daemons
