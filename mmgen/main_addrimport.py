@@ -178,4 +178,4 @@ cfg = Config(opts_data=opts_data, need_amt=False)
 
 proto = cfg._proto
 
-async_run(main())
+async_run(cfg, main)

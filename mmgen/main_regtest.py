@@ -86,4 +86,4 @@ elif cmd_args[0] not in ('cli', 'wallet_cli', 'balances'):
 async def main():
 	await MMGenRegtest(cfg, cfg.coin, bdb_wallet=cfg.bdb_wallet).cmd(cmd_args)
 
-async_run(main())
+async_run(cfg, main)

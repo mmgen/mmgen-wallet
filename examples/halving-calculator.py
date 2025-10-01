@@ -87,4 +87,4 @@ async def main():
 		f'Est. time until halving: {dhms(cur["time"] + t_rem - clock_time)}\n'
 	)
 
-async_run(main())
+async_run(cfg, main)

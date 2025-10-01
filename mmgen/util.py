@@ -441,9 +441,9 @@ def get_subclasses(cls, *, names=False):
 			yield from gen(i)
 	return tuple((c.__name__ for c in gen(cls)) if names else gen(cls))
 
-def async_run(coro):
+def async_run(cfg, func, *, args=(), kwargs={}):
 	import asyncio
-	return asyncio.run(coro)
+	return asyncio.run(func(*args, **kwargs))
 
 def wrap_ripemd160(called=[]):
 	if not called:

@@ -227,4 +227,4 @@ async def main():
 		case _:
 			die(1, f'{op!r}: unrecognized operation')
 
-async_run(main())
+async_run(cfg, main)

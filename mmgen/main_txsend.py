@@ -158,4 +158,4 @@ async def main():
 
 	await tx.send(cfg, asi)
 
-async_run(main())
+async_run(cfg, main)

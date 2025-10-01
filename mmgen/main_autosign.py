@@ -187,7 +187,7 @@ def main(do_loop):
 			ret = await asi.do_sign()
 			asi.at_exit(not ret)
 
-	async_run(do())
+	async_run(cfg, do)
 
 from .cfg import Config
 from .autosign import Autosign

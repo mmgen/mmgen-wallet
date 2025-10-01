@@ -217,4 +217,4 @@ async def main():
 			ask_write_default_yes = False,
 			ask_overwrite         = not cfg.yes)
 
-async_run(main())
+async_run(cfg, main)

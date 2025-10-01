@@ -196,4 +196,4 @@ async def main():
 	else:
 		die(2, 'Transaction could not be signed')
 
-async_run(main())
+async_run(cfg, main)
