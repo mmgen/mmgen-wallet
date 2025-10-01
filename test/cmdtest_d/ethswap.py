@@ -71,8 +71,8 @@ class CmdTestEthSwapMethods:
 			gas = 1_000_000,
 			fn  = f'{self.tmpdir}/THORChain_Router.bin')
 
-	def token_fund_user(self):
-		return self._token_transfer_ops(
+	async def token_fund_user(self):
+		return await self._token_transfer_ops(
 			op          = 'fund_user',
 			mm_idxs     = [1, 2, 12],
 			token_addr  = 'token_addr1',
@@ -445,10 +445,10 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 	def swaptxstatus1(self):
 		return self._swaptxsend(add_opts=['--verbose', '--status'], status=True)
 
-	def swaptxmemo4(self):
+	async def swaptxmemo4(self):
 		import time
 		time.sleep(1)
-		return self._check_token_swaptx_memo('=:b:mkQsXA7mqDtnUpkaXMbDtAL1KMeof4GPw3:0/3/0')
+		return await self._check_token_swaptx_memo('=:b:mkQsXA7mqDtnUpkaXMbDtAL1KMeof4GPw3:0/3/0')
 
 	def swaptxreceipt4(self):
 		return self._swaptxsend(add_opts=['--receipt'], spawn_only=True)

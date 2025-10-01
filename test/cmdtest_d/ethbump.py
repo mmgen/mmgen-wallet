@@ -70,8 +70,8 @@ class CmdTestEthBumpMethods:
 			fee_desc = 'or gas price',
 			bad_fee = '0.9G')
 
-	def _token_fund_user(self, *, mm_idxs):
-		return self._token_transfer_ops(
+	async def _token_fund_user(self, *, mm_idxs):
+		return await self._token_transfer_ops(
 			op          = 'fund_user',
 			mm_idxs     = mm_idxs,
 			token_addr  = 'token_addr1',
@@ -330,11 +330,11 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	def bal4(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:12\s+4444\.3333\s')
 
-	def token_fund_user1(self):
-		return self._token_fund_user(mm_idxs=[1])
+	async def token_fund_user1(self):
+		return await self._token_fund_user(mm_idxs=[1])
 
-	def token_fund_user11(self):
-		return self._token_fund_user(mm_idxs=[11])
+	async def token_fund_user11(self):
+		return await self._token_fund_user(mm_idxs=[11])
 
 	def token_txdo1(self):
 		return self._token_txcreate(cmd='txdo', args=[f'{dfl_sid}:E:2,1.23456', dfl_words_file])

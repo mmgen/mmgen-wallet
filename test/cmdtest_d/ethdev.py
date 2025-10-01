@@ -1390,11 +1390,11 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def bal6(self):
 		return self.bal5()
 
-	def token_fund_users(self):
-		return self._token_transfer_ops(op='fund_user', mm_idxs=[11, 21])
+	async def token_fund_users(self):
+		return await self._token_transfer_ops(op='fund_user', mm_idxs=[11, 21])
 
-	def token_user_bals(self):
-		return self._token_transfer_ops(op='show_bals', mm_idxs=[11, 21])
+	async def token_user_bals(self):
+		return await self._token_transfer_ops(op='show_bals', mm_idxs=[11, 21])
 
 	def token_addrgen(self):
 		return self._token_addrgen(mm_idxs=[11, 21], naddrs=3)

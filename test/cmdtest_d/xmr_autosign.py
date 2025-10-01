@@ -214,17 +214,17 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 	def delete_dump_files(self):
 		return self._delete_files('.dump')
 
-	def fund_alice1(self):
-		return self.fund_alice(wallet=1)
+	async def fund_alice1(self):
+		return await self.fund_alice(wallet=1)
 
-	def check_bal_alice1(self):
-		return self.check_bal_alice(wallet=1)
+	async def check_bal_alice1(self):
+		return await self.check_bal_alice(wallet=1)
 
-	def fund_alice2(self):
-		return self.fund_alice(wallet=2)
+	async def fund_alice2(self):
+		return await self.fund_alice(wallet=2)
 
-	def check_bal_alice2(self):
-		return self.check_bal_alice(wallet=2)
+	async def check_bal_alice2(self):
+		return await self.check_bal_alice(wallet=2)
 
 	def autosign_setup(self):
 		return self.run_setup(
@@ -340,26 +340,19 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			'1-2',
 			lambda n, b, ub: b == ub and ((n == 1 and 0.8 < b < 0.86) or (n == 2 and b > 1.23)))
 
-	def _mine_chk(self, desc):
-		bal_type = {'locked':'b', 'unlocked':'ub'}[desc]
-		return self.mine_chk(
-			'alice', 1, 0,
-			lambda x: 0 < getattr(x, bal_type) < 1.234567891234,
-			f'{desc} balance 0 < 1.234567891234')
+	async def submit_transfer_tx1(self):
+		return await self._submit_transfer_tx()
 
-	def submit_transfer_tx1(self):
-		return self._submit_transfer_tx()
-
-	def resubmit_transfer_tx1(self):
-		return self._submit_transfer_tx(
+	async def resubmit_transfer_tx1(self):
+		return await self._submit_transfer_tx(
 				relay_parm = self.tx_relay_daemon_proxy_parm,
 				op         = 'resubmit',
 				check_bal  = False)
 
-	def submit_transfer_tx2(self):
-		return self._submit_transfer_tx(relay_parm=self.tx_relay_daemon_parm)
+	async def submit_transfer_tx2(self):
+		return await self._submit_transfer_tx(relay_parm=self.tx_relay_daemon_parm)
 
-	def _submit_transfer_tx(self, relay_parm=None, ext=None, op='submit', check_bal=True):
+	async def _submit_transfer_tx(self, relay_parm=None, ext=None, op='submit', check_bal=True):
 		t = self._xmr_autosign_op(
 			op            = op,
 			add_opts      = [f'--tx-relay-daemon={relay_parm}'] if relay_parm else [],
@@ -372,7 +365,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		self.remove_device_online() # device was inserted by _xmr_autosign_op()
 		if check_bal:
 			t.ok()
-			return self._mine_chk('unlocked')
+			return await self.mine_chk(
+				'alice', 1, 0,
+				lambda x: 0 < x.ub < 1.234567891234,
+				'unlocked balance 0 < 1.234567891234')
 		else:
 			return t
 

@@ -719,14 +719,14 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			tweaks = ['confirm_chg_non_mmgen'],
 			skip_passphrase = skip_passphrase)
 
-	def fund_bob_deterministic(self):
-		return self.fund_wallet_deterministic(f'{self._user_sid("bob")}:C:1', '1-11')
+	async def fund_bob_deterministic(self):
+		return await self.fund_wallet_deterministic(f'{self._user_sid("bob")}:C:1', '1-11')
 
-	def fund_alice_deterministic(self):
+	async def fund_alice_deterministic(self):
 		sid = self._user_sid('alice')
 		mmtype = ('L', 'S')[self.proto.cap('segwit')]
 		addr = self.get_addr_from_addrlist('alice', sid, mmtype, 0, addr_range='1-5')
-		return self.fund_wallet_deterministic(addr, '1-11', skip_passphrase=True)
+		return await self.fund_wallet_deterministic(addr, '1-11', skip_passphrase=True)
 
 	def generate_extra_deterministic(self):
 		if not self.deterministic:

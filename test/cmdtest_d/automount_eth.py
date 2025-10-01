@@ -91,8 +91,8 @@ class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev, CmdTestEthdevMe
 	def token_addrimport(self):
 		return self._token_addrimport('token_addr1', '11-13', expect='3/3')
 
-	def token_fund_user(self):
-		return self._token_transfer_ops(op='fund_user', mm_idxs=[11])
+	async def token_fund_user(self):
+		return await self._token_transfer_ops(op='fund_user', mm_idxs=[11])
 
 	def token_bal1(self):
 		return self._token_bal_check(pat=r':E:11\s+1000\s+54\.321\s+')
