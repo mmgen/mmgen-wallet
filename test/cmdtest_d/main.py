@@ -20,9 +20,9 @@
 test.cmdtest_d.main: Basic operations tests for the cmdtest.py test suite
 """
 
-import sys, os
+import sys, os, asyncio
 
-from mmgen.util import msg, msg_r, async_run, capfirst, get_extension, die
+from mmgen.util import msg, msg_r, capfirst, get_extension, die
 from mmgen.color import green, cyan, gray
 from mmgen.fileutil import get_data_from_file, write_data_to_file
 from mmgen.wallet import get_wallet_cls
@@ -388,7 +388,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 	@property
 	def lbl_id(self):
 		if not hasattr(self, '_lbl_id'):
-			rpc = async_run(rpc_init(self.cfg, self.proto))
+			rpc = asyncio.run(rpc_init(self.cfg, self.proto))
 			self._lbl_id = ('account', 'label')['label_api' in rpc.caps]
 		return self._lbl_id
 

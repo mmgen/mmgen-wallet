@@ -13,10 +13,9 @@
 test.cmdtest_d.xmr_autosign: xmr autosigning tests for the cmdtest.py test suite
 """
 
-import re
+import re, asyncio
 
 from mmgen.color import blue, cyan, brown
-from mmgen.util import async_run
 
 from ..include.common import imsg, silence, end_silence
 from .include.common import get_file_with_ext
@@ -139,8 +138,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		kal.file.write(ask_overwrite=False)
 		fn = get_file_with_ext(data.udir, 'akeys')
 		m = op('create', self.alice_cfg, fn, '1-2')
-		async_run(m.main())
-		async_run(m.stop_wallet_daemon())
+		asyncio.run(m.main())
+		asyncio.run(m.stop_wallet_daemon())
 		end_silence()
 		return 'ok'
 

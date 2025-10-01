@@ -24,7 +24,7 @@ import sys, os, time, re, atexit, asyncio, shutil
 from subprocess import run, PIPE
 from collections import namedtuple
 
-from mmgen.util import async_run, capfirst, is_int, die, list_gen
+from mmgen.util import capfirst, is_int, die, list_gen
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
 from mmgen.addrlist import ViewKeyAddrList, KeyAddrList, AddrIdxList
@@ -51,7 +51,7 @@ def stop_daemons(self):
 		v.md.stop()
 
 def stop_miner_wallet_daemon(self):
-	async_run(self.users['miner'].wd_rpc.stop_daemon())
+	asyncio.run(self.users['miner'].wd_rpc.stop_daemon())
 
 class CmdTestXMRWallet(CmdTestBase):
 	"""

@@ -343,7 +343,7 @@ if __name__ == '__main__':
 		if hasattr(tr, 'tg'):
 			del tr.tg
 		del tr
-		# if cmdtest.py itself is running under exec_wrapper, re-raise so exec_wrapper can handle exception:
+		# if cmdtest.py itself is running under exec_wrapper, re-raise so wrapper can handle exception:
 		if os.getenv('MMGEN_EXEC_WRAPPER') or not os.getenv('MMGEN_IGNORE_TEST_PY_EXCEPTION'):
 			raise
 		die(1, red('Test script exited with error'))
