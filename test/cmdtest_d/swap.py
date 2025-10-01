@@ -318,6 +318,7 @@ class CmdTestSwapMethods:
 		t = trunner
 		ret = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
 		ret.init_group(self.cross_group)
+		ret.parent_group = self
 		return ret
 
 class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):

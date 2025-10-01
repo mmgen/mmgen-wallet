@@ -126,7 +126,8 @@ class OnlineSigned(Signed):
 							await asyncio.sleep(1)
 						ret = await self.send_with_node(txhex)
 						msg(f'Transaction sent: {coin_txid.hl()}')
-						assert ret == coin_txid, f'txid mismatch (after sending) ({ret} != {coin_txid})'
+						if ret != coin_txid:
+							die('TxIDMismatch', f'txid mismatch (after sending) ({ret} != {coin_txid})')
 					sent_status = 'no_confirm_post_send'
 
 				if cfg.wait and sent_status:
