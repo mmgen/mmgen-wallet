@@ -719,24 +719,18 @@ class Config(Lockable):
 
 		# Check autoset opts, setting if unset
 		for key in self._autoset_opts:
-
-			if key in self._cloned:
-				continue
-
-			assert not hasattr(self, key), f'autoset opt {key!r} is already set, but it shouldn’t be!'
-
 			if key in self._uopts:
 				val, src = (self._uopts[key], 'cmdline')
+				setattr(self, key, get_autoset_opt(key, val, src=src))
+			elif key in self._cloned:
+				pass
 			elif key in cfgfile_autoset_opts:
 				val, src = (cfgfile_autoset_opts[key], 'cfgfile')
-			else:
-				val = None
-
-			if val is None:
-				if key not in self._dfl_none_autoset_opts:
-					setattr(self, key, self._autoset_opts[key].choices[0])
-			else:
 				setattr(self, key, get_autoset_opt(key, val, src=src))
+			elif hasattr(self, key):
+				raise ValueError(f'autoset opt {key!r} is already set, but it shouldn’t be!')
+			elif key not in self._dfl_none_autoset_opts:
+				setattr(self, key, self._autoset_opts[key].choices[0])
 
 	def _set_auto_typeset_opts(self, cfgfile_auto_typeset_opts):
 
