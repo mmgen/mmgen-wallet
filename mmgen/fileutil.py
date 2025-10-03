@@ -64,7 +64,7 @@ def shred_file(cfg, fn, *, iterations=30):
 		['shred', '--force', f'--iterations={iterations}', '--zero', '--remove=wipesync']
 		+ (['--verbose'] if cfg.verbose else [])
 		+ [str(fn)],
-		check=True)
+		check = True)
 	set_vt100()
 
 def _check_file_type_and_access(fname, ftype, *, blkdev_ok=False):

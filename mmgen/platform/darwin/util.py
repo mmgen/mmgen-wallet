@@ -70,7 +70,10 @@ class MacOSRamDisk:
 				self.cfg._util.qmsg(f'{self.desc.capitalize()} {self.label.hl()} at path {self.path} already exists')
 				return
 		self.cfg._util.qmsg(f'Creating {self.desc} {self.label.hl()} of size {self.size}MB')
-		cp = run(['hdiutil', 'attach', '-nomount', f'ram://{2048 * self.size}'], stdout=PIPE, check=True)
+		cp = run(
+			['hdiutil', 'attach', '-nomount', f'ram://{2048 * self.size}'],
+			stdout = PIPE,
+			check = True)
 		self.dev_name = cp.stdout.decode().strip()
 		self.cfg._util.qmsg(f'Created {self.desc} {self.label.hl()} [{self.dev_name}]')
 		run(['diskutil', 'eraseVolume', 'APFS', self.label, self.dev_name], stdout=redir, check=True)

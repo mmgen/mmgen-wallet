@@ -392,9 +392,8 @@ if gc.prog_name.endswith('-tool'):
 	args, kwargs = process_args(cmd, args, cls)
 
 	func = getattr(cls(cfg, cmdname=cmd), cmd)
-	ret = async_run(cfg, func, args=args, kwargs=kwargs) if isAsync(func) else func(*args, **kwargs)
 
 	process_result(
-		ret,
+		async_run(cfg, func, args=args, kwargs=kwargs) if isAsync(func) else func(*args, **kwargs),
 		pager = kwargs.get('pager'),
 		print_result = True)

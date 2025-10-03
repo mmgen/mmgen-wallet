@@ -17,7 +17,7 @@ from mmgen.proto.rune.tx.protobuf import (
 	deposit_tx_parms,
 	swap_tx_parms)
 
-from ..include.common import vmsg, silence, end_silence
+from ..include.common import vmsg, qmsg, silence, end_silence
 
 test_cfg = Config({'coin': 'rune', 'test_suite': True})
 
@@ -171,7 +171,8 @@ def test_tx(src, cfg, vec):
 	if tx.txid not in (vec.txid, vec_txid2):
 		raise ValueError(f'{tx.txid} not in ({vec.txid}, {vec_txid2})')
 	if tx.txid == vec_txid2:
-		ymsg('\nWarning: non-standard TxID produced')
+		qmsg('')
+		ymsg('Warning: non-standard TxID produced')
 
 	if src == 'parse' and parms.from_addr:
 		built_tx = build_tx(cfg, proto, parms, null_fee=vec.null_fee)

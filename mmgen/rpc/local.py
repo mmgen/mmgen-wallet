@@ -83,8 +83,7 @@ class RPCClient:
 		return self.process_http_resp(await self.backend.run(
 			payload = {'id': 1, 'jsonrpc': '2.0', 'method': method, 'params': params},
 			timeout = timeout,
-			host_path = self.make_host_path(wallet)
-		))
+			host_path = self.make_host_path(wallet)))
 
 	async def batch_call(self, method, param_list, *, timeout=None, wallet=None):
 		"""
