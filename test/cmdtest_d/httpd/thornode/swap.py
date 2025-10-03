@@ -15,15 +15,12 @@ test.cmdtest_d.httpd.thornode.swap: Thornode swap HTTP server
 import time, re, json
 from wsgiref.util import request_uri
 
-from mmgen.cfg import Config
 from mmgen.amt import UniAmt
 from mmgen.protocol import init_proto
 
 from ...include.common import eth_inbound_addr, thorchain_router_addr_file
 
 from . import ThornodeServer
-
-cfg = Config()
 
 # https://thornode.ninerealms.com/thorchain/quote/swap?from_asset=BCH.BCH&to_asset=LTC.LTC&amount=1000000
 prices = {'BTC': 97000, 'LTC': 115, 'BCH': 330, 'ETH': 2304, 'MM1': 0.998, 'RUNE': 1.4}
@@ -117,7 +114,7 @@ data_template_eth = {
 	'total_swap_seconds': 24
 }
 
-def make_inbound_addr(proto, mmtype):
+def make_inbound_addr(cfg, proto, mmtype):
 	if proto.is_evm:
 		return '0x' + eth_inbound_addr # non-checksummed as per ninerealms thornode
 	else:
@@ -155,15 +152,15 @@ class ThornodeSwapServer(ThornodeServer):
 		}
 
 		if send_asset != 'RUNE':
-			send_proto = init_proto(cfg, send_chain, network='regtest', need_amt=True)
+			send_proto = init_proto(self.cfg, send_chain, network='regtest', need_amt=True)
 			data.update({
-				'inbound_address': make_inbound_addr(send_proto, send_proto.preferred_mmtypes[0]),
+				'inbound_address': make_inbound_addr(self.cfg, send_proto, send_proto.preferred_mmtypes[0]),
 				'gas_rate_units': gas_rate_units[send_proto.base_proto_coin],
 				'recommended_gas_rate': recommended_gas_rate[send_proto.base_proto_coin]
 			})
 
 		if send_asset == 'MM1':
-			eth_proto = init_proto(cfg, 'eth', network='regtest')
+			eth_proto = init_proto(self.cfg, 'eth', network='regtest')
 			with open(thorchain_router_addr_file) as fh:
 				raw_addr = fh.read().strip()
 			data['router'] = '0x' + eth_proto.checksummed_addr(raw_addr)

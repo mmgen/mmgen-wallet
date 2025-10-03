@@ -260,7 +260,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 			trunner,
 			add_cfg = {'eth_daemon_id': trunner.cfg.eth_daemon_id})
 
-		self.swap_server = ThornodeSwapServer()
+		self.swap_server = ThornodeSwapServer(cfg)
 		self.swap_server.start()
 
 		TestProxy(self, cfg)

@@ -66,7 +66,7 @@ from .base import CmdTestBase
 from .shared import CmdTestShared
 from .httpd.etherscan import EtherscanServer
 
-etherscan_server = EtherscanServer()
+etherscan_server = EtherscanServer(cfg)
 
 del_addrs = ('4', '1')
 

@@ -24,6 +24,9 @@ class SilentRequestHandler(WSGIRequestHandler):
 
 class HTTPD:
 
+	def __init__(self, cfg):
+		self.cfg = cfg
+
 	def start(self):
 
 		if port_in_use(self.port):

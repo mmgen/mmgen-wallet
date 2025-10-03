@@ -209,7 +209,7 @@ class unit_tests:
 		regtest_cfg = Config({'coin': 'rune', 'regtest': True, 'test_suite': True})
 		end_silence()
 
-		thornode_server = ThornodeRPCServer()
+		thornode_server = ThornodeRPCServer(test_cfg)
 		thornode_server.start()
 
 		addr = 'thor1lukwlve7hayy66qrdkp4k7sh0emjqwergy7tl3'

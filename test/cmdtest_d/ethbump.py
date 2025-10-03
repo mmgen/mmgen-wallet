@@ -285,7 +285,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 
 		globals()[self.cross_group] = self.create_cross_runner(trunner)
 
-		self.swap_server = ThornodeSwapServer()
+		self.swap_server = ThornodeSwapServer(cfg)
 		self.swap_server.start()
 
 	def txcreate1(self):

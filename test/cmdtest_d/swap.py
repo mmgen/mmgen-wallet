@@ -469,7 +469,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 
 		self.protos = [init_proto(cfg, k, network='regtest', need_amt=True) for k in ('btc', 'ltc', 'bch')]
 
-		self.swap_server = ThornodeSwapServer()
+		self.swap_server = ThornodeSwapServer(cfg)
 		self.swap_server.start()
 
 		self.opts.append('--bob')

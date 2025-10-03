@@ -70,7 +70,7 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		self.proto = init_proto(cfg, network_id=self.proto.coin + '_rt', need_amt=True)
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
 
-		self.rpc_server = ThornodeRPCServer()
+		self.rpc_server = ThornodeRPCServer(cfg)
 		self.rpc_server.start()
 
 		TestProxy(self, cfg)

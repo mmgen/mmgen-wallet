@@ -78,7 +78,7 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 
 		globals()[self.cross_group] = self.create_cross_runner(trunner)
 
-		self.swap_server = ThornodeSwapServer()
+		self.swap_server = ThornodeSwapServer(cfg)
 		self.swap_server.start()
 
 		TestProxy(self, cfg)
