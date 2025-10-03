@@ -125,11 +125,7 @@ class CmdGroupMgr:
 					k = f'{a}_{n+1}'
 					if hasattr(cls, 'skip_cmds') and k in cls.skip_cmds:
 						continue
-					sdeps = get_shared_deps(k, i)
-					if isinstance(b, str):
-						cdata.append((k, (i, f'{b} ({j}-bit)', [[[]+sdeps, i]])))
-					else:
-						cdata.append((k, (i, f'{b[1]} ({j}-bit)', [[b[0]+sdeps, i]])))
+					cdata.append((k, (i, f'{b} ({j}-bit)', [[[] + get_shared_deps(k, i), i]])))
 			elif full_data:
 				cdata.append((a, b))
 			else:

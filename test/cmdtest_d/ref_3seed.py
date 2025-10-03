@@ -57,26 +57,26 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 	)
 	cmd_group = (
 		# reading saved reference wallets
-		('ref_wallet_chk',   ([], 'saved reference wallet')),
-		('ref_seed_chk',     ([], 'saved seed file')),
-		('ref_hex_chk',      ([], 'saved mmhex file')),
-		('ref_plainhex_chk', ([], 'saved hex file')),
-		('ref_dieroll_chk',  ([], 'saved dieroll (b6d) file')),
-		('ref_mn_chk',       ([], 'saved native MMGen mnemonic file')),
-		('ref_bip39_chk',    ([], 'saved BIP39 mnemonic file')),
-		('ref_hincog_chk',   ([], 'saved hidden incog reference wallet')),
-		('ref_brain_chk',    ([], 'saved brainwallet')),                    # in shared
+		('ref_wallet_chk',   'saved reference wallet'),
+		('ref_seed_chk',     'saved seed file'),
+		('ref_hex_chk',      'saved mmhex file'),
+		('ref_plainhex_chk', 'saved hex file'),
+		('ref_dieroll_chk',  'saved dieroll (b6d) file'),
+		('ref_mn_chk',       'saved native MMGen mnemonic file'),
+		('ref_bip39_chk',    'saved BIP39 mnemonic file'),
+		('ref_hincog_chk',   'saved hidden incog reference wallet'),
+		('ref_brain_chk',    'saved brainwallet'),                    # in shared
 
 		# generating new reference ('abc' brainwallet) wallets for filename checks:
-		('ref_walletgen_brain',         ([], 'generating new reference wallet + filename check (brain)')),
-		('ref_walletconv_words',        ([], 'wallet filename (native mnemonic)')),
-		('ref_walletconv_bip39',        ([], 'wallet filename (bip39)')),
-		('ref_walletconv_seed',         ([], 'wallet filename (seed)')),
-		('ref_walletconv_hexseed',      ([], 'wallet filename (hex seed)')),
-		('ref_walletconv_plainhexseed', ([], 'wallet filename (plain hex seed)')),
-		('ref_walletconv_dieroll',      ([], 'wallet filename (dieroll (b6d) seed)')),
-		('ref_walletconv_incog',        ([], 'wallet filename (incog)')),
-		('ref_walletconv_hexincog',     ([], 'wallet filename (hex incog)')),
+		('ref_walletgen_brain',         'generating new reference wallet + filename check (brain)'),
+		('ref_walletconv_words',        'wallet filename (native mnemonic)'),
+		('ref_walletconv_bip39',        'wallet filename (bip39)'),
+		('ref_walletconv_seed',         'wallet filename (seed)'),
+		('ref_walletconv_hexseed',      'wallet filename (hex seed)'),
+		('ref_walletconv_plainhexseed', 'wallet filename (plain hex seed)'),
+		('ref_walletconv_dieroll',      'wallet filename (dieroll (b6d) seed)'),
+		('ref_walletconv_incog',        'wallet filename (incog)'),
+		('ref_walletconv_hexincog',     'wallet filename (hex incog)'),
 	)
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
@@ -333,15 +333,15 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 	}
 
 	cmd_group = (
-		('ref_walletgen_brain',       ([], 'generating new reference wallet + filename check (brain)')),
-		('refaddrgen_legacy',         ([], 'new refwallet addr chksum (uncompressed)')),
-		('refaddrgen_compressed',     ([], 'new refwallet addr chksum (compressed)')),
-		('refaddrgen_segwit',         ([], 'new refwallet addr chksum (segwit)')),
-		('refaddrgen_bech32',         ([], 'new refwallet addr chksum (bech32)')),
-		('refkeyaddrgen_legacy',      ([], 'new refwallet key-addr chksum (uncompressed)')),
-		('refkeyaddrgen_compressed',  ([], 'new refwallet key-addr chksum (compressed)')),
-		('refkeyaddrgen_segwit',      ([], 'new refwallet key-addr chksum (segwit)')),
-		('refkeyaddrgen_bech32',      ([], 'new refwallet key-addr chksum (bech32)')),
+		('ref_walletgen_brain',       'generating new reference wallet + filename check (brain)'),
+		('refaddrgen_legacy',         'new refwallet addr chksum (uncompressed)'),
+		('refaddrgen_compressed',     'new refwallet addr chksum (compressed)'),
+		('refaddrgen_segwit',         'new refwallet addr chksum (segwit)'),
+		('refaddrgen_bech32',         'new refwallet addr chksum (bech32)'),
+		('refkeyaddrgen_legacy',      'new refwallet key-addr chksum (uncompressed)'),
+		('refkeyaddrgen_compressed',  'new refwallet key-addr chksum (compressed)'),
+		('refkeyaddrgen_segwit',      'new refwallet key-addr chksum (segwit)'),
+		('refkeyaddrgen_bech32',      'new refwallet key-addr chksum (bech32)'),
 	)
 
 	def call_addrgen(self, mmtype, name='addrgen'):
@@ -419,17 +419,17 @@ class CmdTestRef3Passwd(CmdTestRef3Seed):
 	}
 
 	cmd_group = (
-		('ref_walletgen_brain',        ([], 'generating new reference wallet + filename check (brain)')),
-		('refpasswdgen',               ([], 'new refwallet passwd file chksum')),
-		('refpasswdgen_half',          ([], 'new refwallet passwd file chksum (half-length)')),
-		('ref_b32passwdgen',           ([], 'new refwallet passwd file chksum (base32)')),
-		('ref_hexpasswdgen',           ([], 'new refwallet passwd file chksum (hex)')),
-		('ref_hexpasswdgen_half',      ([], 'new refwallet passwd file chksum (hex, half-length)')),
-		('ref_bip39_12_passwdgen',     ([], 'new refwallet passwd file chksum (BIP39, 12 words)')),
-		('ref_bip39_18_passwdgen',     ([], 'new refwallet passwd file chksum (BIP39, up to 18 words)')),
-		('ref_bip39_24_passwdgen',     ([], 'new refwallet passwd file chksum (BIP39, up to 24 words)')),
-		('ref_xmrseed_25_passwdgen',   ([], 'new refwallet passwd file chksum (Monero 25-word mnemonic)')),
-		('ref_hex2bip39_24_passwdgen', ([], 'new refwallet passwd file chksum (hex-to-BIP39, up to 24 words)')),
+		('ref_walletgen_brain',        'generating new reference wallet + filename check (brain)'),
+		('refpasswdgen',               'new refwallet passwd file chksum'),
+		('refpasswdgen_half',          'new refwallet passwd file chksum (half-length)'),
+		('ref_b32passwdgen',           'new refwallet passwd file chksum (base32)'),
+		('ref_hexpasswdgen',           'new refwallet passwd file chksum (hex)'),
+		('ref_hexpasswdgen_half',      'new refwallet passwd file chksum (hex, half-length)'),
+		('ref_bip39_12_passwdgen',     'new refwallet passwd file chksum (BIP39, 12 words)'),
+		('ref_bip39_18_passwdgen',     'new refwallet passwd file chksum (BIP39, up to 18 words)'),
+		('ref_bip39_24_passwdgen',     'new refwallet passwd file chksum (BIP39, up to 24 words)'),
+		('ref_xmrseed_25_passwdgen',   'new refwallet passwd file chksum (Monero 25-word mnemonic)'),
+		('ref_hex2bip39_24_passwdgen', 'new refwallet passwd file chksum (hex-to-BIP39, up to 24 words)'),
 	)
 
 	def pwgen(self, ftype, id_str, pwfmt=None, pwlen=None, extra_opts=[], stdout=False):
