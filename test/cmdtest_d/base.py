@@ -38,6 +38,7 @@ class CmdTestBase:
 	need_daemon = False
 	platform_skip = ()
 	tmpdir_nums = []
+	skip_cmds = ()
 	test_name = None
 	is_helper = False
 

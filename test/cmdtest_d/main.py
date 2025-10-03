@@ -241,13 +241,13 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			(3, 'tx signing with inputs and outputs from two wallets', [[['mmdat'], 1], [['mmdat', 'rawtx'], 3]])
 			),
 		('walletgen14',
-			(14, 'wallet generation (14)', [[['del_dw_run'], 15]], 14)
+			(14, 'wallet generation (14)', [[['del_dw_run'], 15]])
 		),
 		('addrgen14',
 			(14, 'address generation (14)', [[['mmdat'], 14]])
 		),
 		('keyaddrgen14',
-			(14, 'key-address file generation (14)', [[['mmdat'], 14]], 14)
+			(14, 'key-address file generation (14)', [[['mmdat'], 14]])
 		),
 		('walletgen4',
 			(4, 'wallet generation (4) (brainwallet)', [[['del_dw_run'], 15]])
@@ -310,7 +310,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			])
 		), # must go after txsign4
 		('walletgen5',
-			(20, 'wallet generation (5)', [[['del_dw_run'], 15]], 20)
+			(20, 'wallet generation (5)', [[['del_dw_run'], 15]])
 		),
 		('addrgen5',
 			(20, 'address generation (5)', [[['mmdat'], 20]])
@@ -322,7 +322,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			(20, 'transaction signing with bad vsize', [[['mmdat', 'rawtx'], 20]])
 		),
 		('walletgen6',
-			(21, 'wallet generation (6)', [[['del_dw_run'], 15]], 21)
+			(21, 'wallet generation (6)', [[['del_dw_run'], 15]])
 		),
 		('addrgen6',
 			(21, 'address generation (6)', [[['mmdat'], 21]])

@@ -13,10 +13,11 @@ test.cmdtest_d.include.runner: test runner for the MMGen Wallet cmdtest suite
 """
 
 import sys, os, time, asyncio
+from collections import namedtuple
 
 from mmgen.cfg import gc
 from mmgen.color import red, yellow, green, blue, cyan, gray, nocolor
-from mmgen.util import msg, Msg, rmsg, ymsg, bmsg, die, suf, make_timestr, isAsync
+from mmgen.util import msg, Msg, rmsg, ymsg, bmsg, die, suf, make_timestr, isAsync, capfirst
 
 from ...include.common import (
 	cmdtest_py_log_fn,
@@ -30,7 +31,7 @@ from ...include.common import (
 )
 
 from .common import get_file_with_ext, confirm_continue
-from .cfg import cfgs, cmd_groups_dfl
+from .cfg import cfgs
 from .group_mgr import CmdGroupMgr
 
 def format_args(args):
@@ -141,7 +142,8 @@ class CmdTestRunner:
 
 		self.exit_val = exit_val
 
-		desc = self.tg.test_name if self.cfg.names else self.gm.dpy_data[self.tg.test_name][1]
+		desc = self.tg.test_name if self.cfg.names else self.gm.dpy_data[self.tg.test_name].desc
+
 		if extra_desc:
 			desc += ' ' + extra_desc
 
@@ -347,8 +349,9 @@ class CmdTestRunner:
 								except Exception as e: # allow calling of functions not in cmd_group
 									if isinstance(e, KeyError) and e.args[0] == cmdname:
 										func = getattr(self.tg, cmdname)
-										ret = asyncio.run(func()) if isAsync(func) else func()
-										self.process_retval(cmdname, ret)
+										self.process_retval(
+											cmdname,
+											asyncio.run(func()) if isAsync(func) else func())
 									else:
 										raise
 								self.do_between()
@@ -385,16 +388,16 @@ class CmdTestRunner:
 
 		fns = []
 		if force_delete or not root:
-			# does cmd produce a needed dependency(ies)?
-			ret = self.get_num_exts_for_cmd(cmd)
-			if ret:
-				for ext in ret[1]:
-					fn = get_file_with_ext(cfgs[ret[0]]['tmpdir'], ext, delete=build)
-					if fn:
+			# does cmd produce a required dependency(ies)?
+			if deps := self.get_cmd_deps(cmd):
+				for ext in deps.exts:
+					if fn := get_file_with_ext(cfgs[deps.cfgnum]['tmpdir'], ext, delete=build):
 						if force_delete:
 							os.unlink(fn)
-						else: fns.append(fn)
-					else: rerun = True
+						else:
+							fns.append(fn)
+					else:
+						rerun = True
 
 		fdeps = self.generate_file_deps(cmd)
 		cdeps = self.generate_cmd_deps(fdeps)
@@ -419,10 +422,8 @@ class CmdTestRunner:
 					self.run_test(cmd)
 				if not root:
 					self.do_between()
-		else:
-			# If prog produces multiple files:
-			if cmd not in self.rebuild_list or rerun is True:
-				self.rebuild_list[cmd] = (rerun, fns[0] if fns else '') # FIX
+		elif rerun or cmd not in self.rebuild_list:
+			self.rebuild_list[cmd] = 'rebuild' if rerun and fns else 'build' if rerun else 'OK'
 
 		return rerun
 
@@ -432,9 +433,9 @@ class CmdTestRunner:
 			sys.exit(0)
 
 		if self.tg.full_data:
-			d = [(str(num), ext) for exts, num in self.gm.dpy_data[cmd][2] for ext in exts]
+			d = [(num, ext) for exts, num in self.gm.dpy_data[cmd].dpy_list for ext in exts]
 			# delete files depended on by this cmd
-			arg_list = [get_file_with_ext(cfgs[num]['tmpdir'], ext) for num, ext in d]
+			arg_list = [get_file_with_ext(cfgs[str(num)]['tmpdir'], ext) for num, ext in d]
 
 			# remove shared_deps from arg list
 			if hasattr(self.tg, 'shared_deps'):
@@ -456,7 +457,7 @@ class CmdTestRunner:
 		self.tg.test_name = cmd # NB: Do not remove, this needs to be set twice
 
 		if self.tg.full_data:
-			tmpdir_num = self.gm.dpy_data[cmd][0]
+			tmpdir_num = self.gm.dpy_data[cmd].tmpdir_num
 			self.tg.tmpdir_num = tmpdir_num
 			for k in (test_cfg := cfgs[str(tmpdir_num)]):
 				if k in self.gm.cfg_attrs:
@@ -532,33 +533,31 @@ class CmdTestRunner:
 		self.check_needs_rerun(cmd)
 
 		w = max(map(len, self.rebuild_list)) + 1
-		for cmd in self.rebuild_list:
-			c = self.rebuild_list[cmd]
-			m = 'Rebuild' if (c[0] and c[1]) else 'Build' if c[0] else 'OK'
-			omsg('cmd {:<{w}} {}'.format(cmd+':', m, w=w))
+		for cmd, desc in self.rebuild_list.items():
+			omsg('cmd {:<{w}} {}'.format(cmd+':', capfirst(desc), w=w))
 
 	def generate_file_deps(self, cmd):
-		return [(str(n), e) for exts, n in self.gm.dpy_data[cmd][2] for e in exts]
+		return [(str(n), e) for exts, n in self.gm.dpy_data[cmd].dpy_list for e in exts]
 
 	def generate_cmd_deps(self, fdeps):
 		return [cfgs[str(n)]['dep_generators'][ext] for n, ext in fdeps]
 
-	def get_num_exts_for_cmd(self, cmd):
+	def get_cmd_deps(self, cmd):
 		try:
-			num = str(self.gm.dpy_data[cmd][0])
+			self.gm.dpy_data[cmd]
 		except KeyError:
 			qmsg_r(f'Missing dependency {cmd!r}')
 			if gname := self.gm.find_cmd_in_groups(cmd):
 				kwargs = self.gm.cmd_groups[gname].params | {'add_dpy': True}
 				self.gm.create_group(gname, None, **kwargs)
-				num = str(self.gm.dpy_data[cmd][0])
 				qmsg(f' found in group {gname!r}')
 			else:
 				qmsg(' not found in any command group!')
 				raise
-		dgl = cfgs[num]['dep_generators']
-		if cmd in dgl.values():
-			exts = [k for k in dgl if dgl[k] == cmd]
-			return (num, exts)
+		num = str(self.gm.dpy_data[cmd].tmpdir_num)
+		dep_gens = cfgs[num]['dep_generators']
+		if cmd in dep_gens.values():
+			cd = namedtuple('cmd_deps', ['cfgnum', 'exts'])
+			return cd(num, [k for k in dep_gens if dep_gens[k] == cmd])
 		else:
 			return None

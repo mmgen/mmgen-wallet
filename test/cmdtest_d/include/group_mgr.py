@@ -13,6 +13,7 @@ cmdtest_d.include.group_mgr: Command group manager for the MMGen Wallet cmdtest 
 """
 
 import sys, os, time
+from collections import namedtuple
 
 from mmgen.color import yellow, green, cyan
 from mmgen.util import Msg, die
@@ -102,34 +103,33 @@ class CmdGroupMgr:
 		without touching 'cmd_list'
 		"""
 
-		cls = self.load_mod(gname, modname)
-		cdata = []
-
 		def get_shared_deps(cmdname, tmpdir_idx):
 			"""
 			shared_deps are "implied" dependencies for all cmds in cmd_group that don't appear in
 			the cmd_group data or cmds' argument lists.  Supported only for 3seed tests at present.
 			"""
-			if not hasattr(cls, 'shared_deps'):
-				return []
-
 			return [k for k, v in cfgs[str(tmpdir_idx)]['dep_generators'].items()
-						if k in cls.shared_deps and v != cmdname]
+				if k in cls.shared_deps and v != cmdname] if hasattr(cls, 'shared_deps') else []
+
+		cls = self.load_mod(gname, modname)
 
 		if not 'cmd_group' in cls.__dict__ and hasattr(cls, 'cmd_group_in'):
 			cls.cmd_group = self.create_cmd_group(cls, sg_name)
 
-		for a, b in cls.cmd_group:
-			if is3seed:
-				for n, (i, j) in enumerate(zip(cls.tmpdir_nums, (128, 192, 256))):
-					k = f'{a}_{n+1}'
-					if hasattr(cls, 'skip_cmds') and k in cls.skip_cmds:
-						continue
-					cdata.append((k, (i, f'{b} ({j}-bit)', [[[] + get_shared_deps(k, i), i]])))
-			elif full_data:
-				cdata.append((a, b))
-			else:
-				cdata.append((a, (cls.tmpdir_nums[0], b, [[[], cls.tmpdir_nums[0]]])))
+		def gen_cdata():
+			cgd = namedtuple('cmd_group_data', ['tmpdir_num', 'desc', 'dpy_list'])
+			for a, b in cls.cmd_group:
+				if is3seed:
+					for n, (i, j) in enumerate(zip(cls.tmpdir_nums, [128, 192, 256])):
+						k = f'{a}_{n + 1}'
+						if not k in cls.skip_cmds:
+							yield (k, cgd(i, f'{b} ({j}-bit)', [[get_shared_deps(k, i), i]]))
+				elif full_data:
+					yield (a, cgd(*b))
+				else:
+					yield (a, cgd(cls.tmpdir_nums[0], b, [[[], cls.tmpdir_nums[0]]]))
+
+		cdata = tuple(gen_cdata()) # cannot use dict() here because of repeated keys
 
 		if add_dpy:
 			self.dpy_data.update(dict(cdata))
@@ -192,9 +192,7 @@ class CmdGroupMgr:
 			name_w = max(len(name) for name in ginfo)
 			for name, cls in ginfo.items():
 				if not cls.is_helper:
-					yield '  {} - {}'.format(
-						yellow(name.ljust(name_w)),
-						(cls.__doc__.strip() if cls.__doc__ else cls.__name__))
+					yield '  {} - {}'.format(yellow(name.ljust(name_w)), cls.__doc__.strip())
 					if 'cmd_subgroups' in cls.__dict__:
 						subgroups = {k:v for k, v in cls.cmd_subgroups.items() if not k.startswith('_')}
 						max_w = max(len(k) for k in subgroups)
@@ -211,7 +209,7 @@ class CmdGroupMgr:
 		and return it as a string.  Loads modules but alters no global variables.
 		"""
 		if group:
-			if not group in [e[0] for e in self.cmd_groups]:
+			if not group in self.cmd_groups:
 				die(1, f'{group!r}: unrecognized group')
 			groups = [self.cmd_groups[group]]
 		else:
