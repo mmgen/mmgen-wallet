@@ -154,6 +154,25 @@ class CmdGroupMgr:
 	def get_cls_by_gname(self, gname):
 		return self.load_mod(gname, self.cmd_groups[gname].params.get('modname'))
 
+	def list_cmds(self):
+
+		def gen_output():
+			yield green('AVAILABLE COMMANDS:')
+			for gname in self.cmd_groups:
+				tg = self.gm_init_group(self.cfg, None, gname, None, None)
+				gdesc = tg.__doc__.strip() if tg.__doc__ else type(tg).__name__
+				yield '\n' + green(f'{gname!r} - {gdesc}:')
+				name_w = max(len(cmd) for cmd in self.cmd_list)
+				for cmd in self.cmd_list:
+					data = self.dpy_data[cmd]
+					yield '    {a:{w}} - {b}'.format(
+						a = cmd,
+						b = data if isinstance(data, str) else data.desc,
+						w = name_w)
+
+		from mmgen.ui import do_pager
+		do_pager('\n'.join(gen_output()))
+
 	def list_cmd_groups(self):
 
 		if self.cfg.list_current_cmd_groups:

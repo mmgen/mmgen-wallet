@@ -239,34 +239,6 @@ if cfg.skipping_deps:
 
 from test.cmdtest_d.include.cfg import cfgs
 
-def list_cmds():
-
-	def gen_output():
-
-		from test.cmdtest_d.include.group_mgr import CmdGroupMgr
-		gm = CmdGroupMgr(cfg)
-		cw, d = 0, []
-
-		yield green('AVAILABLE COMMANDS:')
-
-		for gname in gm.cmd_groups:
-			tg = gm.gm_init_group(cfg, None, gname, None, None)
-			gdesc = tg.__doc__.strip() if tg.__doc__ else type(tg).__name__
-			d.append((gname, gdesc, gm.cmd_list, gm.dpy_data))
-			cw = max(max(len(k) for k in gm.dpy_data), cw)
-
-		for gname, gdesc, cmd_list, dpy_data in d:
-			yield '\n'+green(f'{gname!r} - {gdesc}:')
-			for cmd in cmd_list:
-				data = dpy_data[cmd]
-				yield '    {:{w}} - {}'.format(
-					cmd,
-					(data if isinstance(data, str) else data[1]),
-					w = cw)
-
-	from mmgen.ui import do_pager
-	do_pager('\n'.join(gen_output()))
-
 def create_tmp_dirs(shm_dir):
 	if sys.platform in ('win32', 'darwin'):
 		for cfg in sorted(cfgs):
@@ -297,12 +269,14 @@ if __name__ == '__main__':
 	if not cfg.skipping_deps: # do this before list cmds exit, so we stay in sync with shm_dir
 		create_tmp_dirs(shm_dir)
 
+	if cfg.list_cmds:
+		from test.cmdtest_d.include.group_mgr import CmdGroupMgr
+		CmdGroupMgr(cfg).list_cmds()
+		sys.exit(0)
+
 	if cfg.list_cmd_groups:
 		from test.cmdtest_d.include.group_mgr import CmdGroupMgr
 		CmdGroupMgr(cfg).list_cmd_groups()
-		sys.exit(0)
-	elif cfg.list_cmds:
-		list_cmds()
 		sys.exit(0)
 
 	if cfg.pause:
