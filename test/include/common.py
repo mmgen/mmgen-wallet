@@ -324,10 +324,10 @@ tested_solc_ver = '0.8.26'
 def check_solc_ver():
 	cmd = 'python3 scripts/create-token.py --check-solc-version'
 	try:
-		cp = run(cmd.split(), check=False, stdout=PIPE)
+		cp = run(cmd.split(), check=False, stdout=PIPE, text=True)
 	except Exception as e:
 		die(4, f'Unable to execute {cmd!r}: {e}')
-	res = cp.stdout.decode().strip()
+	res = cp.stdout.strip()
 	if cp.returncode == 0:
 		omsg(
 			orange(f'Found supported solc version {res}') if res == tested_solc_ver else
@@ -352,7 +352,7 @@ def get_ethkey():
 	return None
 
 def do_run(cmd, check=True):
-	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=check)
+	return run(cmd, stdout=PIPE, stderr=DEVNULL, check=check, text=True)
 
 def test_exec(cmd):
 	try:
@@ -459,10 +459,10 @@ class VirtBlockDeviceLinux(VirtBlockDeviceBase):
 
 	def _get_associations(self):
 		cmd = ['sudo', 'losetup', '-n', '-O', 'NAME', '-j', str(self.img_path)]
-		return do_run(cmd).stdout.decode().splitlines()
+		return do_run(cmd).stdout.splitlines()
 
 	def get_new_dev(self):
-		return do_run(['sudo', 'losetup', '-f']).stdout.decode().strip()
+		return do_run(['sudo', 'losetup', '-f']).stdout.strip()
 
 	def do_create(self, size, path):
 		do_run(['truncate', f'--size={size}', str(path)])

@@ -189,8 +189,9 @@ if cfg.testing_status:
 		'tooltest2.py': run(
 			['python3', 'test/tooltest2.py', '--list-tested-cmds'],
 			stdout = PIPE,
+			text = True,
 			check = True
-		).stdout.decode().split()
+		).stdout.split()
 	}
 	for v in cmd_data.values():
 		tested_in['tooltest.py'] += list(v['cmd_data'].keys())
@@ -460,7 +461,7 @@ class MMGenToolTestCmds:
 		test_msg('command piping')
 		if cfg.verbose:
 			sys.stderr.write(green('Executing ') + cyan(cmd) + '\n')
-		res = run(cmd, stdout=PIPE, shell=True).stdout.decode().strip()
+		res = run(cmd, stdout=PIPE, shell=True, text=True).stdout.strip()
 		addr = read_from_tmpfile(tcfg, 'wif2addr3.out').strip()
 		cmp_or_die(addr, res)
 		ok()

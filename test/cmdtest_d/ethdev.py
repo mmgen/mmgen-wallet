@@ -829,9 +829,8 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			write_to_file(pwfile, '')
 			run(['rm', '-rf', self.keystore_dir])
 			cmd = f'geth account new --password={pwfile} --lightkdf --keystore {self.keystore_dir}'
-			cp = run(cmd.split(), stdout=PIPE, stderr=PIPE)
-			if cp.returncode:
-				die(1, cp.stderr.decode())
+			if (cp := run(cmd.split(), stdout=PIPE, stderr=PIPE, text=True)).returncode:
+				die(1, cp.stderr)
 
 		def make_genesis(signer_addr, prealloc_addr):
 			return {
@@ -875,9 +874,8 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 
 		def init_genesis(fn):
 			cmd = f'{d.exec_fn} init --datadir {d.datadir} {fn}'
-			cp = run(cmd.split(), stdout=PIPE, stderr=PIPE)
-			if cp.returncode:
-				die(1, cp.stderr.decode())
+			if (cp := run(cmd.split(), stdout=PIPE, stderr=PIPE, text=True)).returncode:
+				die(1, cp.stderr)
 
 		d.stop(quiet=True)
 		d.remove_datadir()
@@ -1349,10 +1347,9 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			'--outdir=' + odir
 		] + cmd_args + [self.proto.checksummed_addr(dfl_devaddr)]
 		imsg('Executing: {}'.format(' '.join(cmd)))
-		cp = run(cmd, stdout=DEVNULL, stderr=PIPE)
-		if cp.returncode != 0:
+		if (cp := run(cmd, stdout=DEVNULL, stderr=PIPE, text=True)).returncode:
 			rmsg('solc failed with the following output:')
-			die(2, cp.stderr.decode())
+			die(2, cp.stderr)
 		imsg('ERC20 token {!r} compiled'.format(token_data['symbol']))
 		return 'ok'
 

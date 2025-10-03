@@ -73,8 +73,9 @@ class MacOSRamDisk:
 		cp = run(
 			['hdiutil', 'attach', '-nomount', f'ram://{2048 * self.size}'],
 			stdout = PIPE,
+			text = True,
 			check = True)
-		self.dev_name = cp.stdout.decode().strip()
+		self.dev_name = cp.stdout.strip()
 		self.cfg._util.qmsg(f'Created {self.desc} {self.label.hl()} [{self.dev_name}]')
 		run(['diskutil', 'eraseVolume', 'APFS', self.label, self.dev_name], stdout=redir, check=True)
 		diskutil_size = self.get_diskutil_size()

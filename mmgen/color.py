@@ -61,7 +61,7 @@ def get_terminfo_colors(term=None):
 		cmd.append(term)
 
 	try:
-		cmdout = run(cmd, stdout=PIPE, check=True).stdout.decode()
+		cmdout = run(cmd, stdout=PIPE, check=True, text=True).stdout
 	except:
 		set_vt100()
 		return None

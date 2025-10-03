@@ -138,7 +138,7 @@ SUPPORTED EXTERNAL TOOLS:
 }
 
 def get_cmd_output(cmd, input=None):
-	return run(cmd, input=input, stdout=PIPE, stderr=DEVNULL).stdout.decode().splitlines()
+	return run(cmd, input=input, stdout=PIPE, stderr=DEVNULL, text=True).stdout.splitlines()
 
 saved_results = {}
 
@@ -201,7 +201,7 @@ class GenToolKeyconv(GenTool):
 class GenToolZcash_mini(GenTool):
 	desc = 'zcash-mini'
 	def run(self, sec, vcoin):
-		o = get_cmd_output(['zcash-mini', '-key', '-simple'], input=(sec.wif+'\n').encode())
+		o = get_cmd_output(['zcash-mini', '-key', '-simple'], input=sec.wif+'\n')
 		return gtr(o[1], o[0], o[-1])
 
 class GenToolPycoin(GenTool):

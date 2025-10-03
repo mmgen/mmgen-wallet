@@ -151,9 +151,9 @@ class unit_tests:
 				'--stdout',
 				init_proto(cfg, 'eth').checksummed_addr('deadbeef'*5),
 			]
-			cp = run(cmd, stdout=PIPE, stderr=PIPE)
-			vmsg(cp.stderr.decode())
+			cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True)
+			vmsg(cp.stderr)
 			if cp.returncode:
-				msg(cp.stderr.decode())
+				msg(cp.stderr)
 				return False
 		return True

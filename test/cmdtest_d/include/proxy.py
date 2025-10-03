@@ -76,14 +76,14 @@ class TestProxy:
 		if port_in_use(self.port):
 			omsg(f'Port {self.port} already in use. Assuming SSH SOCKS server is running')
 		else:
-			cp = run(a + b0 + b1, stdout=PIPE, stderr=PIPE)
-			if err := cp.stderr.decode():
-				omsg(err)
+			cp = run(a + b0 + b1, stdout=PIPE, stderr=PIPE, text=True)
+			if cp.stderr:
+				omsg(cp.stderr)
 			if cp.returncode == 0:
 				start_proxy()
-			elif 'onnection refused' in err:
+			elif 'onnection refused' in cp.stderr:
 				die(2, fmt(self.no_ssh_errmsg, indent='    '))
-			elif 'ermission denied' in err:
+			elif 'ermission denied' in cp.stderr:
 				msg(fmt(self.bad_perm_errmsg.format(' '.join(a + b2)), indent='    ', strip_char='\t'))
 				from mmgen.ui import keypress_confirm
 				keypress_confirm(cfg, 'Continue?', do_exit=True)

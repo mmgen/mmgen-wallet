@@ -100,7 +100,7 @@ def check_solc_version():
 	The output is used by other programs, so write to stdout only
 	"""
 	try:
-		cp = run(['solc', '--version'], check=True, stdout=PIPE)
+		cp = run(['solc', '--version'], check=True, text=True, stdout=PIPE)
 	except:
 		msg('solc missing or could not be executed') # this must go to stderr
 		return False
@@ -109,7 +109,7 @@ def check_solc_version():
 		Msg('solc exited with error')
 		return False
 
-	line = cp.stdout.decode().splitlines()[1]
+	line = cp.stdout.splitlines()[1]
 	version_str = re.sub(r'Version:\s*', '', line)
 	m = re.match(r'(\d+)\.(\d+)\.(\d+)', version_str)
 

@@ -247,14 +247,14 @@ class Daemon(Lockable):
 	@classmethod
 	def get_exec_version_str(cls):
 		try:
-			cp = run([cls.exec_fn, cls.version_info_arg], stdout=PIPE, stderr=PIPE, check=True)
+			cp = run([cls.exec_fn, cls.version_info_arg], stdout=PIPE, stderr=PIPE, check=True, text=True)
 		except Exception as e:
 			die(2, f'{e}\nUnable to execute {cls.exec_fn}')
 
 		if cp.returncode:
 			die(2, f'Unable to execute {cls.exec_fn}')
 		else:
-			res = cp.stdout.decode().splitlines()
+			res = cp.stdout.splitlines()
 			return (res[0] if len(res) == 1 else [s for s in res if 'ersion' in s][0]).strip()
 
 class RPCDaemon(Daemon):
