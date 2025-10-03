@@ -555,10 +555,8 @@ class CmdTestRunner:
 			num = str(self.gm.dpy_data[cmd][0])
 		except KeyError:
 			qmsg_r(f'Missing dependency {cmd!r}')
-			gname = self.gm.find_cmd_in_groups(cmd)
-			if gname:
-				kwargs = self.gm.cmd_groups[gname][1]
-				kwargs.update({'add_dpy':True})
+			if gname := self.gm.find_cmd_in_groups(cmd):
+				kwargs = self.gm.cmd_groups[gname].params | {'add_dpy': True}
 				self.gm.create_group(gname, None, **kwargs)
 				num = str(self.gm.dpy_data[cmd][0])
 				qmsg(f' found in group {gname!r}')

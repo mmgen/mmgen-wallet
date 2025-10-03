@@ -11,54 +11,56 @@
 """
 test.cmdtest_d.include.cfg: configuration data for cmdtest.py
 """
+from collections import namedtuple
 
 from ...include.common import cfg
 from .common import pwfile, hincog_fn, incog_id_fn, randbool
 
 cmd_groups_altcoin = ['ref_altcoin', 'autosign', 'ethdev', 'xmrwallet', 'xmr_autosign']
+gd = namedtuple('cmd_groups_data', ['clsname', 'params'])
 
 cmd_groups_dfl = {
-	'misc':               ('CmdTestMisc',              {}),
-	'opts':               ('CmdTestOpts',              {'full_data': True}),
-	'cfgfile':            ('CmdTestCfgFile',           {'full_data': True}),
-	'help':               ('CmdTestHelp',              {'full_data': True}),
-	'main':               ('CmdTestMain',              {'full_data': True}),
-	'conv':               ('CmdTestWalletConv',        {'is3seed': True, 'modname': 'wallet'}),
-	'ref':                ('CmdTestRef',               {}),
-	'ref3':               ('CmdTestRef3Seed',          {'is3seed': True, 'modname': 'ref_3seed'}),
-	'ref3_addr':          ('CmdTestRef3Addr',          {'is3seed': True, 'modname': 'ref_3seed'}),
-	'ref3_pw':            ('CmdTestRef3Passwd',        {'is3seed': True, 'modname': 'ref_3seed'}),
-	'ref_altcoin':        ('CmdTestRefAltcoin',        {}),
-	'seedsplit':          ('CmdTestSeedSplit',         {}),
-	'tool':               ('CmdTestTool',              {'full_data': True}),
-	'input':              ('CmdTestInput',             {}),
-	'output':             ('CmdTestOutput',            {'modname': 'misc', 'full_data': True}),
-	'autosign_clean':     ('CmdTestAutosignClean',     {'modname': 'autosign'}),
-	'autosign':           ('CmdTestAutosign',          {}),
-	'autosign_automount': ('CmdTestAutosignAutomount', {'modname': 'automount'}),
-	'autosign_eth':       ('CmdTestAutosignETH',       {'modname': 'automount_eth'}),
-	'regtest':            ('CmdTestRegtest',           {}),
-	'swap':               ('CmdTestSwap',              {}),
-	'ethswap':            ('CmdTestEthSwap',           {}),
-	# 'chainsplit':         ('CmdTestChainsplit',      {}),
-	'ethdev':             ('CmdTestEthdev',            {}),
-	'ethbump':            ('CmdTestEthBump',           {}),
-	'rune':               ('CmdTestRune',              {}),
-	'runeswap':           ('CmdTestRuneSwap',          {}),
-	'xmrwallet':          ('CmdTestXMRWallet',         {}),
-	'xmr_autosign':       ('CmdTestXMRAutosign',       {}),
+	'misc':               gd('CmdTestMisc',              {}),
+	'opts':               gd('CmdTestOpts',              {'full_data': True}),
+	'cfgfile':            gd('CmdTestCfgFile',           {'full_data': True}),
+	'help':               gd('CmdTestHelp',              {'full_data': True}),
+	'main':               gd('CmdTestMain',              {'full_data': True}),
+	'conv':               gd('CmdTestWalletConv',        {'is3seed': True, 'modname': 'wallet'}),
+	'ref':                gd('CmdTestRef',               {}),
+	'ref3':               gd('CmdTestRef3Seed',          {'is3seed': True, 'modname': 'ref_3seed'}),
+	'ref3_addr':          gd('CmdTestRef3Addr',          {'is3seed': True, 'modname': 'ref_3seed'}),
+	'ref3_pw':            gd('CmdTestRef3Passwd',        {'is3seed': True, 'modname': 'ref_3seed'}),
+	'ref_altcoin':        gd('CmdTestRefAltcoin',        {}),
+	'seedsplit':          gd('CmdTestSeedSplit',         {}),
+	'tool':               gd('CmdTestTool',              {'full_data': True}),
+	'input':              gd('CmdTestInput',             {}),
+	'output':             gd('CmdTestOutput',            {'modname': 'misc', 'full_data': True}),
+	'autosign_clean':     gd('CmdTestAutosignClean',     {'modname': 'autosign'}),
+	'autosign':           gd('CmdTestAutosign',          {}),
+	'autosign_automount': gd('CmdTestAutosignAutomount', {'modname': 'automount'}),
+	'autosign_eth':       gd('CmdTestAutosignETH',       {'modname': 'automount_eth'}),
+	'regtest':            gd('CmdTestRegtest',           {}),
+	'swap':               gd('CmdTestSwap',              {}),
+	'ethswap':            gd('CmdTestEthSwap',           {}),
+	# 'chainsplit':         gd('CmdTestChainsplit',      {}),
+	'ethdev':             gd('CmdTestEthdev',            {}),
+	'ethbump':            gd('CmdTestEthBump',           {}),
+	'rune':               gd('CmdTestRune',              {}),
+	'runeswap':           gd('CmdTestRuneSwap',          {}),
+	'xmrwallet':          gd('CmdTestXMRWallet',         {}),
+	'xmr_autosign':       gd('CmdTestXMRAutosign',       {}),
 }
 
 cmd_groups_extra = {
-	'ethswap_eth':            ('CmdTestEthSwapEth',           {'modname': 'ethswap'}),
-	'ethbump_ltc':            ('CmdTestEthBumpLTC',           {'modname': 'ethbump'}),
-	'runeswap_rune':          ('CmdTestRuneSwapRune',         {'modname': 'runeswap'}),
-	'dev':                    ('CmdTestDev',                  {'modname': 'misc'}),
-	'regtest_legacy':         ('CmdTestRegtestBDBWallet',     {'modname': 'regtest'}),
-	'autosign_btc':           ('CmdTestAutosignBTC',          {'modname': 'autosign'}),
-	'autosign_live':          ('CmdTestAutosignLive',         {'modname': 'autosign'}),
-	'autosign_live_simulate': ('CmdTestAutosignLiveSimulate', {'modname': 'autosign'}),
-	'create_ref_tx':          ('CmdTestRefTX',                {'modname': 'misc', 'full_data': True}),
+	'ethswap_eth':            gd('CmdTestEthSwapEth',           {'modname': 'ethswap'}),
+	'ethbump_ltc':            gd('CmdTestEthBumpLTC',           {'modname': 'ethbump'}),
+	'runeswap_rune':          gd('CmdTestRuneSwapRune',         {'modname': 'runeswap'}),
+	'dev':                    gd('CmdTestDev',                  {'modname': 'misc'}),
+	'regtest_legacy':         gd('CmdTestRegtestBDBWallet',     {'modname': 'regtest'}),
+	'autosign_btc':           gd('CmdTestAutosignBTC',          {'modname': 'autosign'}),
+	'autosign_live':          gd('CmdTestAutosignLive',         {'modname': 'autosign'}),
+	'autosign_live_simulate': gd('CmdTestAutosignLiveSimulate', {'modname': 'autosign'}),
+	'create_ref_tx':          gd('CmdTestRefTX',                {'modname': 'misc', 'full_data': True}),
 }
 
 cfgs = { # addr_idx_lists (except 31, 32, 33, 34) must contain exactly 8 addresses

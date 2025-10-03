@@ -80,12 +80,12 @@ class CmdGroupMgr:
 		return tuple(gen())
 
 	def load_mod(self, gname, modname=None):
-		clsname, kwargs = self.cmd_groups[gname]
-		if modname is None and 'modname' in kwargs:
-			modname = kwargs['modname']
+		grp = self.cmd_groups[gname]
+		if modname is None and 'modname' in grp.params:
+			modname = grp.params['modname']
 		import importlib
 		modpath = f'test.cmdtest_d.{modname or gname}'
-		return getattr(importlib.import_module(modpath), clsname)
+		return getattr(importlib.import_module(modpath), grp.clsname)
 
 	def create_group(self, gname, sg_name, full_data=False, modname=None, is3seed=False, add_dpy=False):
 		"""
@@ -143,13 +143,12 @@ class CmdGroupMgr:
 		return cls
 
 	def gm_init_group(self, cfg, trunner, gname, sg_name, spawn_prog):
-		kwargs = self.cmd_groups[gname][1]
-		cls = self.create_group(gname, sg_name, **kwargs)
+		cls = self.create_group(gname, sg_name, **self.cmd_groups[gname].params)
 		cls.group_name = gname
 		return cls(cfg, trunner, cfgs, spawn_prog)
 
 	def get_cls_by_gname(self, gname):
-		return self.load_mod(gname, self.cmd_groups[gname][1].get('modname'))
+		return self.load_mod(gname, self.cmd_groups[gname].params.get('modname'))
 
 	def list_cmd_groups(self):
 		ginfo = []
