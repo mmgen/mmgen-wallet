@@ -151,27 +151,26 @@ class CmdGroupMgr:
 		return self.load_mod(gname, self.cmd_groups[gname].params.get('modname'))
 
 	def list_cmd_groups(self):
-		ginfo = []
-		for gname in self.cmd_groups:
-			ginfo.append((gname, self.get_cls_by_gname(gname)))
 
 		if self.cfg.list_current_cmd_groups:
-			exclude = (self.cfg.exclude_groups or '').split(',')
-			ginfo = [g for g in ginfo
-						if self.network_id in g[1].networks
-							and not g[0] in exclude
-							and g[0] in tuple(self.cmd_groups_dfl) + tuple(self.cfg._args)]
+			names = tuple(cmd_groups_dfl) + tuple(self.cfg._args)
+			exclude = self.cfg.exclude_groups.split(',') if self.cfg.exclude_groups else []
+			ginfo = {name: cls
+				for name, cls in [(gname, self.get_cls_by_gname(gname)) for gname in names]
+				if self.network_id in cls.networks and not name in exclude}
 			desc = 'CONFIGURED'
 		else:
+			ginfo = {name: self.get_cls_by_gname(name) for name in self.cmd_groups}
 			desc = 'AVAILABLE'
 
 		def gen_output():
 			yield green(f'{desc} COMMAND GROUPS AND SUBGROUPS:')
 			yield ''
-			for name, cls in ginfo:
+			name_w = max(len(name) for name in ginfo)
+			for name, cls in ginfo.items():
 				if not cls.is_helper:
 					yield '  {} - {}'.format(
-						yellow(name.ljust(13)),
+						yellow(name.ljust(name_w)),
 						(cls.__doc__.strip() if cls.__doc__ else cls.__name__))
 					if 'cmd_subgroups' in cls.__dict__:
 						subgroups = {k:v for k, v in cls.cmd_subgroups.items() if not k.startswith('_')}
@@ -181,8 +180,7 @@ class CmdGroupMgr:
 
 		from mmgen.ui import do_pager
 		do_pager('\n'.join(gen_output()))
-
-		Msg('\n' + ' '.join(e[0] for e in ginfo))
+		Msg('\n' + ' '.join(ginfo))
 
 	def find_cmd_in_groups(self, cmd, group=None):
 		"""
