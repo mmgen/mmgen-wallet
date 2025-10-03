@@ -44,6 +44,14 @@ class CmdGroupMgr:
 		self.network_id = cfg._proto.coin.lower() + ('_tn' if cfg._proto.testnet else '')
 		self.name = type(self).__name__
 
+	@classmethod
+	def get_cmd_groups(cls, cfg):
+		exclude = cfg.exclude_groups.split(',') if cfg.exclude_groups else []
+		for e in exclude:
+			if e not in cmd_groups_dfl:
+				die(1, f'{e!r}: group not recognized')
+		return [s for s in cmd_groups_dfl if s not in exclude]
+
 	def create_cmd_group(self, cls, sg_name=None):
 
 		cmd_group_in = dict(cls.cmd_group_in)

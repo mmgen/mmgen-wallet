@@ -360,14 +360,7 @@ class CmdTestRunner:
 					else:
 						die(1, f'{arg!r}: command not recognized')
 		else:
-			if self.cfg.exclude_groups:
-				exclude = self.cfg.exclude_groups.split(',')
-				for e in exclude:
-					if e not in cmd_groups_dfl:
-						die(1, f'{e!r}: group not recognized')
-			for gname in cmd_groups_dfl:
-				if self.cfg.exclude_groups and gname in exclude:
-					continue
+			for gname in CmdGroupMgr.get_cmd_groups(self.cfg):
 				if self.init_group(gname):
 					for cmd in self.gm.cmd_list:
 						self.check_needs_rerun(cmd, build=True)
