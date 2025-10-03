@@ -35,7 +35,7 @@ def get_obj(coin, network, msghash_type):
 def print_total(n):
 	msg(f'{n} signature{suf(n)} verified')
 
-async def run_test(network_id, chksum, msghash_type='raw'):
+async def do_test(network_id, chksum, msghash_type='raw'):
 
 	coin, network = CoinProtocol.Base.parse_network_id(network_id)
 
@@ -130,23 +130,23 @@ class unit_tests:
 
 	altcoin_deps = ('ltc', 'bch', 'eth', 'eth_raw')
 
-	def btc(self, name, ut, desc='Bitcoin mainnet'):
-		return run_test('btc', 'AA0DB5')
+	async def btc(self, name, ut, desc='Bitcoin mainnet'):
+		return await do_test('btc', 'AA0DB5')
 
-	def btc_tn(self, name, ut, desc='Bitcoin testnet'):
-		return run_test('btc_tn', 'A88E1D')
+	async def btc_tn(self, name, ut, desc='Bitcoin testnet'):
+		return await do_test('btc_tn', 'A88E1D')
 
-	def btc_rt(self, name, ut, desc='Bitcoin regtest'):
-		return run_test('btc_rt', '578018')
+	async def btc_rt(self, name, ut, desc='Bitcoin regtest'):
+		return await do_test('btc_rt', '578018')
 
-	def ltc(self, name, ut, desc='Litecoin mainnet'):
-		return run_test('ltc', 'BA7549')
+	async def ltc(self, name, ut, desc='Litecoin mainnet'):
+		return await do_test('ltc', 'BA7549')
 
-	def bch(self, name, ut, desc='Bitcoin Cash mainnet'):
-		return run_test('bch', '1B8065')
+	async def bch(self, name, ut, desc='Bitcoin Cash mainnet'):
+		return await do_test('bch', '1B8065')
 
-	def eth(self, name, ut, desc='Ethereum mainnet'):
-		return run_test('eth', '35BAD9', msghash_type='eth_sign')
+	async def eth(self, name, ut, desc='Ethereum mainnet'):
+		return await do_test('eth', '35BAD9', msghash_type='eth_sign')
 
-	def eth_raw(self, name, ut, desc='Ethereum mainnet (raw message)'):
-		return run_test('eth', '9D900C')
+	async def eth_raw(self, name, ut, desc='Ethereum mainnet (raw message)'):
+		return await do_test('eth', '9D900C')
