@@ -40,8 +40,7 @@ class THORChainSwapAsset(SwapAsset):
 		'ETH.vTHOR': _ad('THORSwap Staking (ETH)',  None,   'ETH.vTHOR', None, True),
 		'ETH.WBTC':  _ad('Wrapped BTC (ETH)',       None,   'ETH.WBTC',  None, True),
 		'ETH.XRUNE': _ad('Thorstarter (ETH)',       None,   'ETH.XRUNE', None, True),
-		'ETH.YFI':   _ad('yearn.finance (ETH)',     None,   'ETH.YFI',   None, True),
-	}
+		'ETH.YFI':   _ad('yearn.finance (ETH)',     None,   'ETH.YFI',   None, True)}
 
 	evm_contracts = {
 		'ETH.AAVE':  '7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
@@ -60,8 +59,7 @@ class THORChainSwapAsset(SwapAsset):
 		'ETH.vTHOR': '815c23eca83261b6ec689b60cc4a58b54bc24d8d',
 		'ETH.WBTC':  '2260fac5e5542a773aa44fbcfedf7c193bc2c599',
 		'ETH.XRUNE': '69fa0fee221ad11012bab0fdb45d444d3d2ce71c',
-		'ETH.YFI':   '0bc529c00c6401aef6d220be8c6ea1667f6ad93e',
-	}
+		'ETH.YFI':   '0bc529c00c6401aef6d220be8c6ea1667f6ad93e'}
 
 	unsupported = ('DOGE',)
 

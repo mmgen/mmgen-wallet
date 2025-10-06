@@ -63,18 +63,19 @@ class TwTxHistory(TwView):
 		if not hasattr(self, 'varcol_maxwidths'):
 			self.varcol_maxwidths = {
 				'inputs': max(len(d.vouts_disp(
-					'inputs', width=None, color=False, addr_view_pref=self.addr_view_pref)) for d in data),
+					'inputs', width=None, color=False, addr_view_pref=self.addr_view_pref))
+						for d in data),
 				'outputs': max(len(d.vouts_disp(
-					'outputs', width=None, color=False, addr_view_pref=self.addr_view_pref)) for d in data),
-				'comment': max(len(d.comment) for d in data),
-			}
+					'outputs', width=None, color=False, addr_view_pref=self.addr_view_pref))
+						for d in data),
+				'comment': max(len(d.comment)
+						for d in data)}
 
 		maxws = self.varcol_maxwidths.copy()
 		minws = {
 			'inputs': 15,
 			'outputs': 15,
-			'comment': len('Comment'),
-		}
+			'comment': len('Comment')}
 		if self.show_txid:
 			maxws['txid'] = self.txid_w
 			minws['txid'] = 8
@@ -88,8 +89,7 @@ class TwTxHistory(TwView):
 			'num': max(2, len(str(len(data)))+1),
 			'date': self.age_w,
 			'amt': self.amt_widths['amt'],
-			'spc': 6 + self.show_txid, # 5(6) spaces between cols + 1 leading space in fs
-		}
+			'spc': 6 + self.show_txid} # 5(6) spaces between cols + 1 leading space in fs
 
 		return self.compute_column_widths(
 			widths,
@@ -171,16 +171,14 @@ class TwTxHistory(TwView):
 		'blockheight': 'Block Height',
 		'amt':         'Wallet Amt',
 		'total_amt':   'TX Amt',
-		'txid':        'TxID',
-	}
+		'txid':        'TxID'}
 
 	sort_funcs = {
 		'age':         lambda i: '{:010}.{:010}'.format(0xffffffff - abs(i.confirmations), i.time_received or 0),
 		'blockheight': lambda i: 0 - abs(i.confirmations), # old/altcoin daemons return no 'blockheight' field
 		'amt':         lambda i: i.wallet_outputs_total,
 		'total_amt':   lambda i: i.outputs_total,
-		'txid':        lambda i: i.txid,
-	}
+		'txid':        lambda i: i.txid}
 
 	async def set_dates(self, _):
 		pass

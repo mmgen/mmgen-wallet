@@ -188,8 +188,8 @@ class Signable:
 		def print_bad_list(self, bad_files):
 			msg('\n{a}\n{b}'.format(
 				a = red(f'Failed {self.desc}s:'),
-				b = '  {}\n'.format('\n  '.join(self.gen_bad_list(sorted(bad_files, key=lambda f: f.name))))
-			))
+				b = '  {}\n'.format('\n  '.join(
+					self.gen_bad_list(sorted(bad_files, key=lambda f: f.name))))))
 
 		def die_wrong_num_txs(self, tx_type, *, msg=None, desc=None, show_dir=False):
 			num_txs = len(getattr(self, tx_type))
@@ -199,8 +199,7 @@ class Signable:
 				b = desc or tx_type,
 				c = suf(num_txs),
 				d = 'already present' if num_txs else 'present',
-				e = f'in ‘{getattr(self.parent, self.dir_name)}’' if show_dir else 'on removable device',
-			))
+				e = f'in ‘{getattr(self.parent, self.dir_name)}’' if show_dir else 'on removable device'))
 
 		def check_create_ok(self):
 			if len(self.unsigned):
@@ -441,20 +440,20 @@ class Autosign:
 
 	mn_fmts = {
 		'mmgen': 'words',
-		'bip39': 'bip39',
-	}
+		'bip39': 'bip39'}
+
 	dfl_mn_fmt = 'mmgen'
 
 	non_xmr_dirs = {
 		'tx_dir':     'tx',
 		'txauto_dir': 'txauto',
-		'msg_dir':    'msg',
-	}
+		'msg_dir':    'msg'}
+
 	xmr_dirs = {
 		'xmr_dir':         'xmr',
 		'xmr_tx_dir':      'xmr/tx',
-		'xmr_outputs_dir': 'xmr/outputs',
-	}
+		'xmr_outputs_dir': 'xmr/outputs'}
+
 	have_xmr = False
 	xmr_only = False
 
@@ -802,8 +801,7 @@ class Autosign:
 				'autosign': True,
 				'autosign_mountpoint': str(self.mountpoint),
 				'offline': True,
-				'passwd_file': str(self.keyfile),
-			})
+				'passwd_file': str(self.keyfile)})
 		return self._xmrwallet_cfg
 
 	def xmr_setup(self):

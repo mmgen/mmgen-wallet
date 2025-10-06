@@ -47,8 +47,7 @@ class CoinProtocol(MMGenObject):
 		'etc': proto_info('EthereumClassic', 4),
 		'zec': proto_info('Zcash',           2),
 		'xmr': proto_info('Monero',          5),
-		'rune': proto_info('THORChain',      4)
-	}
+		'rune': proto_info('THORChain',      4)}
 
 	class Base(Lockable):
 		base_proto = None
@@ -82,14 +81,14 @@ class CoinProtocol(MMGenObject):
 			}[network]
 
 			if hasattr(self, 'wif_ver_num'):
-				self.wif_ver_bytes = {k:bytes.fromhex(v) for k, v in self.wif_ver_num.items()}
-				self.wif_ver_bytes_to_pubkey_type = {v:k for k, v in self.wif_ver_bytes.items()}
+				self.wif_ver_bytes = {k: bytes.fromhex(v) for k, v in self.wif_ver_num.items()}
+				self.wif_ver_bytes_to_pubkey_type = {v: k for k, v in self.wif_ver_bytes.items()}
 				vbs = list(self.wif_ver_bytes.values())
 				self.wif_ver_bytes_len = len(vbs[0]) if len(set(len(b) for b in vbs)) == 1 else None
 
 			if hasattr(self, 'addr_ver_info'):
-				self.addr_ver_bytes = {bytes.fromhex(k):v for k, v in self.addr_ver_info.items()}
-				self.addr_fmt_to_ver_bytes = {v:k for k, v in self.addr_ver_bytes.items()}
+				self.addr_ver_bytes = {bytes.fromhex(k): v for k, v in self.addr_ver_info.items()}
+				self.addr_fmt_to_ver_bytes = {v: k for k, v in self.addr_ver_bytes.items()}
 				self.addr_ver_bytes_len = len(list(self.addr_ver_bytes)[0])
 
 			if gc.cmd_caps:

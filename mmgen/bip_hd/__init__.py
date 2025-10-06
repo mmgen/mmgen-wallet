@@ -148,8 +148,7 @@ class BipHDConfig(Lockable):
 			'coin':    coin,
 			'network': network,
 			'type':    addr_type or None,
-			'quiet':   True
-		})
+			'quiet':   True})
 
 		dfl_type = base_cfg._proto.dfl_mmtype
 		addr_type = MMGenAddrType(
@@ -417,8 +416,7 @@ class BipHDNode(Lockable):
 		addr_types = {
 			84: 'bech32',
 			49: 'segwit',
-			44: None
-		}
+			44: None}
 
 		new = bip_hd_nodes[xk.depth]()
 

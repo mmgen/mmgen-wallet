@@ -84,8 +84,8 @@ class GlobalConstants(Lockable):
 		'walletchk':    _cc(False, False, False, None,     [],      'lmw'),
 		'walletconv':   _cc(False, False, False, None,     [],      'lmw'),
 		'walletgen':    _cc(False, False, False, None,     [],      'lmw'),
-		'xmrwallet':    _cc(True,  True,  False, '-rx',    ['rpc'], 'lmw'),
-	}
+		'xmrwallet':    _cc(True,  True,  False, '-rx',    ['rpc'], 'lmw')}
+
 	altcoin_cmds = ('swaptxcreate', 'swaptxdo', 'xmrwallet')
 
 	prog_name = os.path.basename(sys.argv[0])
@@ -390,15 +390,14 @@ class Config(Lockable):
 		'fee_estimate_mode': _ov('nocase_pfx', ['conservative', 'economical']),
 		'rpc_backend':       _ov('nocase_pfx', ['auto', 'httplib', 'curl', 'aiohttp', 'requests']),
 		'swap_proto':        _ov('nocase_pfx', ['thorchain']),
-		'tx_proxy':          _ov('nocase_pfx', ['etherscan']) # , 'blockchair'
-	}
+		'tx_proxy':          _ov('nocase_pfx', ['etherscan'])} # , 'blockchair'
+
 	_dfl_none_autoset_opts = ('tx_proxy',)
 
 	_auto_typeset_opts = {
 		'seed_len': int,
 		'subseeds': int,
-		'vsize_adj': float,
-	}
+		'vsize_adj': float}
 
 	# test suite:
 	err_disp_timeout   = 0.7
@@ -962,8 +961,7 @@ def conv_type(name, val, refval, *, src, invert_bool=False):
 		desc = {
 			'cmdline': 'command-line',
 			'cfg':     'Config',
-			'env':     'environment var',
-		}
+			'env':     'environment var'}
 		die(1, '{a!r}: invalid value for {b} option {c!r}{d} (must be of type {e!r})'.format(
 			a = val,
 			b = desc.get(src, 'config file'),

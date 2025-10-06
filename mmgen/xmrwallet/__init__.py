@@ -42,8 +42,7 @@ uarg_info = (
 		'label_spec':      e('WALLET:ACCOUNT:ADDRESS,"label text"', r'(\d+):(\d+):(\d+),(.*)'),
 	})(
 		namedtuple('uarg_info_entry', ['annot','pat']),
-		r'(?:[^:]+):(?:\d+)'
-	)
+		r'(?:[^:]+):(?:\d+)')
 
 # canonical op names mapped to their respective modules:
 op_names = {

@@ -36,8 +36,7 @@ class EthereumTwJSON(TwJSON):
 
 			return self.json_dump({
 				'accounts': list(gen_mappings(self.entries['accounts'])),
-				'tokens': {k:list(gen_mappings(v)) for k, v in self.entries['tokens'].items()}
-			})
+				'tokens': {k: list(gen_mappings(v)) for k, v in self.entries['tokens'].items()}})
 
 		@property
 		def num_entries(self):
@@ -82,8 +81,7 @@ class EthereumTwJSON(TwJSON):
 
 			return {
 				'accounts': list(gen_entries(edata['accounts'])),
-				'tokens': dict(list(gen_token_entries()))
-			}
+				'tokens': dict(list(gen_token_entries()))}
 
 		async def do_import(self, batch):
 
@@ -103,8 +101,7 @@ class EthereumTwJSON(TwJSON):
 				'coin': self.coin.upper(),
 				'network': self.network.upper(),
 				'accounts': dict(gen_data(self.entries['accounts'])),
-				'tokens': {k:dict(gen_data(v)) for k, v in self.entries['tokens'].items()},
-			}
+				'tokens': {k: dict(gen_data(v)) for k, v in self.entries['tokens'].items()}}
 			self.twctl.write(quiet=False)
 
 	class Export(TwJSON.Export, Base):
@@ -134,8 +131,7 @@ class EthereumTwJSON(TwJSON):
 				'accounts': sorted(
 					gen_data(self.twctl.data['accounts']),
 					key = lambda x: x.mmgen_id.sort_key),
-				'tokens': dict(sorted(gen_token_data()))
-			}
+				'tokens': dict(sorted(gen_token_data()))}
 
 		@property
 		async def entries_out(self):

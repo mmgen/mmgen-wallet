@@ -97,8 +97,7 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 		self.data = {
 			'coin': self.proto.coin,
 			'network': self.proto.network.upper(),
-			'addresses': {},
-		}
+			'addresses': {}}
 
 	def init_from_wallet_file(self):
 		from ..fileutil import check_or_create_dir, get_data_from_file

@@ -40,8 +40,7 @@ class HTTPClient:
 		elif cfg.proxy:
 			self.session.proxies.update({
 				'http':  f'socks5h://{cfg.proxy}',
-				'https': f'socks5h://{cfg.proxy}'
-			})
+				'https': f'socks5h://{cfg.proxy}'})
 
 	def call(self, name, path, err_fs, timeout, *, data=None):
 		url = self.network_proto + '://' + self.host + path

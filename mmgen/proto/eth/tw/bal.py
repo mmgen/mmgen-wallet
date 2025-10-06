@@ -27,8 +27,7 @@ class EthereumTwGetBalance(TwGetBalance):
 
 	start_labels = ('TOTAL', 'Non-MMGen')
 	conf_cols = {
-		'ge_minconf': 'Balance',
-	}
+		'ge_minconf': 'Balance'}
 
 	async def __init__(self, cfg, proto, *, minconf, quiet):
 		self.twctl = await TwCtl(cfg, proto, mode='w')

@@ -24,8 +24,7 @@ class THORChainMemo:
 	function = 'SWAP'
 
 	function_abbrevs = {
-		'SWAP': '=',
-	}
+		'SWAP': '='}
 
 	@classmethod
 	def is_partial_memo(cls, bytes_data):
@@ -38,8 +37,7 @@ class THORChainMemo:
 			'pool':     (r'POOL(\+|-)',),
 			'trade':    (r'TRADE(\+|-)',),
 			'secure':   (r'SECURE(\+|-)',),
-			'misc':     ('BOND', 'UNBOND', 'LEAVE', 'MIGRATE', 'NOOP', 'DONATE', 'RESERVE'),
-		}
+			'misc':     ('BOND', 'UNBOND', 'LEAVE', 'MIGRATE', 'NOOP', 'DONATE', 'RESERVE')}
 		pat = r'^(' + '|'.join('|'.join(pats) for pats in ops.values()) + r'):\S\S+'
 		return bool(re.search(pat.encode(), bytes_data))
 
@@ -60,7 +58,7 @@ class THORChainMemo:
 		def get_id(data, item, desc):
 			if item in data:
 				return item
-			rev_data = {v:k for k,v in data.items()}
+			rev_data = {v: k for k,v in data.items()}
 			if item in rev_data:
 				return rev_data[item]
 			die('SwapMemoParseError', f'{item!r}: unrecognized {proto_name} {desc} abbreviation')

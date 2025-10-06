@@ -121,8 +121,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		'date_time': fp('D', True, True,  ' {D:%s}',  ' {D:%s}'),
 		'block':     fp('b', True, True,  ' {b:%s}',  ' {b:<%s}'),
 		'inputs':    fp('i', True, False, ' {i:%s}',  ' {i}'),
-		'outputs':   fp('o', True, False, ' {o:%s}',  ' {o}'),
-	}
+		'outputs':   fp('o', True, False, ' {o:%s}',  ' {o}')}
 
 	age_fmts = ('confs', 'block', 'days', 'date', 'date_time')
 	age_fmts_date_dependent = ('days', 'date', 'date_time')
@@ -131,12 +130,11 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	bch_addr_fmts = ('cashaddr', 'legacy')
 
 	age_col_params = {
-		'confs':     (0,  'Confs'),
-		'block':     (0,  'Block'),
-		'days':      (0,  'Age(d)'),
-		'date':      (0,  'Date'),
-		'date_time': (0,  'Date/Time'),
-	}
+		'confs':     (0, 'Confs'),
+		'block':     (0, 'Block'),
+		'days':      (0, 'Age(d)'),
+		'date':      (0, 'Date'),
+		'date_time': (0, 'Date/Time')}
 
 	date_formatter = {
 		'days': lambda rpc, secs: (rpc.cur_date - secs) // 86400 if secs else 0,
@@ -145,8 +143,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				if secs else '-       '),
 		'date_time': (
 			lambda rpc, secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(secs)[:5])
-				if secs else '-               '),
-	}
+				if secs else '-               ')}
 
 	twidth_diemsg = """
 		--columns or MMGEN_COLUMNS value ({}) is too small to display the {}
@@ -163,7 +160,6 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 	squeezed_format_line = None
 	detail_format_line = None
-
 	scroll_keys = {
 		'vi': {
 			'k': 'm_cursor_up',
@@ -171,25 +167,21 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			'b': 'm_pg_up',
 			'f': 'm_pg_down',
 			'g': 'm_top',
-			'G': 'm_bot',
-		},
+			'G': 'm_bot'},
 		'linux': {
 			'\x1b[A': 'm_cursor_up',
 			'\x1b[B': 'm_cursor_down',
 			'\x1b[5~': 'm_pg_up',
 			'\x1b[6~': 'm_pg_down',
 			'\x1b[7~': 'm_top',
-			'\x1b[8~': 'm_bot',
-		},
+			'\x1b[8~': 'm_bot'},
 		'win32': {
 			'\xe0H': 'm_cursor_up',
 			'\xe0P': 'm_cursor_down',
 			'\xe0I': 'm_pg_up',
 			'\xe0Q': 'm_pg_down',
 			'\xe0G': 'm_top',
-			'\xe0O': 'm_bot',
-		}
-	}
+			'\xe0O': 'm_bot'}}
 	scroll_keys['darwin'] = scroll_keys['linux']
 	extra_key_mappings = {}
 
@@ -248,16 +240,14 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		'age':    'Age',
 		'amt':    'Amt',
 		'txid':   'TxID',
-		'twmmid': 'MMGenID',
-	}
+		'twmmid': 'MMGenID'}
 
 	sort_funcs = {
 		'addr':   lambda i: i.addr,
 		'age':    lambda i: 0 - i.confs,
 		'amt':    lambda i: i.amt,
 		'txid':   lambda i: f'{i.txid} {i.vout:04}',
-		'twmmid': lambda i: i.twmmid.sort_key
-	}
+		'twmmid': lambda i: i.twmmid.sort_key}
 
 	def sort_info(self, *, include_group=True):
 		ret = ([], ['Reverse'])[self.reverse]
@@ -327,12 +317,12 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	def compute_column_widths(self, widths, maxws, minws, maxws_nice, *, wide, interactive):
 
 		def do_ret(freews):
-			widths.update({k:minws[k] + freews.get(k, 0) for k in minws})
+			widths.update({k: minws[k] + freews.get(k, 0) for k in minws})
 			widths.update({ikey: widths[key] - self.disp_prec - 1 for key, ikey in self.amt_keys.items()})
 			return namedtuple('column_widths', widths.keys())(*widths.values())
 
 		def do_ret_max():
-			widths.update({k:max(minws[k], maxws[k]) for k in minws})
+			widths.update({k: max(minws[k], maxws[k]) for k in minws})
 			widths.update({ikey: widths[key] - self.disp_prec - 1 for key, ikey in self.amt_keys.items()})
 			return namedtuple('column_widths', widths.keys())(*widths.values())
 
@@ -340,7 +330,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			freew = cols - minw
 			if freew and varw:
 				x = freew / varw
-				freews = {k:int(varws[k] * x) for k in varws}
+				freews = {k: int(varws[k] * x) for k in varws}
 				remainder = freew - sum(freews.values())
 				for k in varws:
 					if not remainder:
@@ -352,7 +342,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			else:
 				return {k:0 for k in varws}
 
-		varws = {k:maxws[k] - minws[k] for k in maxws if maxws[k] > minws[k]}
+		varws = {k: maxws[k] - minws[k] for k in maxws if maxws[k] > minws[k]}
 		minw = sum(widths.values()) + sum(minws.values())
 		varw = sum(varws.values())
 
@@ -383,7 +373,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				sum(varws_lp.values()),
 				minw + sum(widths_hp.values()))
 			# sum the two for each field:
-			return do_ret({k:widths_hp[k] + widths_lp.get(k, 0) for k in varws})
+			return do_ret({k: widths_hp[k] + widths_lp.get(k, 0) for k in varws})
 		else:
 			return do_ret(get_freews(self.cols, varws, varw, minw))
 
@@ -407,8 +397,9 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	def set_amt_widths(self, data):
 		# width of amts column: min(7, width of integer part) + len('.') + width of fractional part
 		self.amt_widths = {
-			k:min(7, max(len(str(getattr(d, k).to_integral_value())) for d in data)) + 1 + self.disp_prec
-				for k in self.amt_keys}
+			k: min(7, max(len(str(getattr(d, k).to_integral_value()))
+				for d in data)) + 1 + self.disp_prec
+					for k in self.amt_keys}
 
 	async def format(
 			self,
@@ -428,7 +419,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				sort_info = ' '.join(self.sort_info())
 
 				def fmt_filter(k):
-					return '{}:{}'.format(k, {0:No, 1:Yes, 2:All}[getattr(self, k)])
+					return '{}:{}'.format(k, {0: No, 1: Yes, 2: All}[getattr(self, k)])
 
 				yield '{} (sort order: {}){}'.format(
 					self.hdr_lbl.upper(),
@@ -555,8 +546,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			's_': 'sort_action',
 			'd_': 'display_action',
 			'm_': 'scroll_action',
-			'i_': 'item_action',
-		}
+			'i_': 'item_action'}
 
 		def make_key_mappings(scroll):
 			if scroll:

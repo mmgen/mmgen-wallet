@@ -53,8 +53,8 @@ class MMGenAddrType(HiliteStr, InitErrors, MMGenObject):
 		'X': ati('bech32x',   'std', True, 'p2pkh',   'bech32',  'wif', (), 'Cross-chain Bech32 address'),
 		'E': ati('ethereum',  'std', False,'ethereum','p2pkh',   'privkey', ('wallet_passwd',),'Ethereum address'),
 		'Z': ati('zcash_z','zcash_z',False,'zcash_z', 'zcash_z', 'wif',     ('viewkey',),      'Zcash z-address'),
-		'M': ati('monero', 'monero', False,'monero',  'monero',  'spendkey',('viewkey','wallet_passwd'),'Monero address'),
-	}
+		'M': ati('monero', 'monero', False,'monero',  'monero',  'spendkey',('viewkey','wallet_passwd'),'Monero address')}
+
 	def __new__(cls, proto, id_str, *, errmsg=None):
 		if isinstance(id_str, cls):
 			return id_str

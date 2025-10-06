@@ -37,7 +37,7 @@ class Signed(Completed, TxBase.Signed):
 			'gasPrice': self.proto.coin_amt(d['gasprice'], from_unit='wei'),
 			'startGas': d['startgas'],
 			'nonce':    ETHNonce(d['nonce']),
-			'data':     HexStr(d['data']) }
+			'data':     HexStr(d['data'])}
 		if o['data'] and not o['to']: # token- or contract-creating transaction
 			# NB: could be a non-token contract address:
 			o['token_addr'] = ContractAddr(self.proto, etx.creates.hex())

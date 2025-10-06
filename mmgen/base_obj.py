@@ -80,10 +80,9 @@ class AttrCtrl(metaclass=AttrCtrlMeta):
 			ref_val = getattr(type(self), name) if self._use_class_attr else getattr(self, name)
 
 			if (
-				(name not in self._skip_type_check)
-				and (ref_val is not None)
-				and not isinstance(value, type(ref_val))
-			):
+					(name not in self._skip_type_check)
+					and (ref_val is not None)
+					and not isinstance(value, type(ref_val))):
 				do_error(name, value, ref_val)
 
 		return object.__setattr__(self, name, value)

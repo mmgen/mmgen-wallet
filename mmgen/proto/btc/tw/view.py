@@ -25,5 +25,4 @@ class BitcoinTwView:
 		'block':     (8,  'Block'),
 		'days':      (6,  'Age(d)'),
 		'date':      (8,  'Date'),
-		'date_time': (16, 'Date/Time'),
-	}
+		'date_time': (16, 'Date/Time')}

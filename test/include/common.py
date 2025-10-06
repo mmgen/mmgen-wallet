@@ -83,17 +83,13 @@ sample_text = 'The Times 03/Jan/2009 Chancellor on brink of second bailout for b
 sample_mn = {
 	'mmgen': { # 'able': 0, 'youth': 1625, 'after' == 'afternoon'[:5]
 		'mn': 'able cast forgive master funny gaze after afternoon million paint moral youth',
-		'hex': '0005685ab4e94cbe3b228cf92112bc5f',
-	},
+		'hex': '0005685ab4e94cbe3b228cf92112bc5f'},
 	'bip39': { # len('sun') < uniq_ss_len
 		'mn': 'vessel ladder alter error federal sibling chat ability sun glass valve picture',
-		'hex': 'f30f8c1da665478f49b001d94c5fc452',
-	},
+		'hex': 'f30f8c1da665478f49b001d94c5fc452'},
 	'xmrseed': {
 		'mn': 'viewpoint donuts ardent template unveil agile meant unafraid urgent athlete rustled mime azure jaded hawk baby jagged haystack baby jagged haystack ramped oncoming point template',
-		'hex': 'e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f',
-	},
-}
+		'hex': 'e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f'}}
 
 ref_kafile_pass = 'kafile password'
 ref_kafile_hash_preset = '1'
@@ -168,7 +164,7 @@ def mk_tmpdir(d):
 def clean(cfgs, tmpdir_ids=None, extra_dirs=[]):
 
 	def clean_tmpdirs():
-		cfg_tmpdirs = {k:cfgs[k]['tmpdir'] for k in cfgs}
+		cfg_tmpdirs = {k: cfgs[k]['tmpdir'] for k in cfgs}
 		for d in map(str, sorted(map(int, (tmpdir_ids or cfg_tmpdirs)))):
 			if d in cfg_tmpdirs:
 				if cleandir(cfg_tmpdirs[d]):

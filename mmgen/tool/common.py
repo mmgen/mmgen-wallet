@@ -47,4 +47,4 @@ class tool_cmd_base(MMGenObject):
 
 	@property
 	def user_commands(self):
-		return {k:v for k, v in type(self).__dict__.items() if callable(v) and not k.startswith('_')}
+		return {k: v for k, v in type(self).__dict__.items() if callable(v) and not k.startswith('_')}

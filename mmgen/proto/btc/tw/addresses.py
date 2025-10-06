@@ -31,8 +31,7 @@ class BitcoinTwAddresses(BitcoinTwView, TwAddresses, BitcoinTwRPC):
 		'View/Print: pager [v]iew, [w]ide pager view, [p]rint{s}',
 		'Actions: [q]uit menu, r[e]draw, add [l]abel:']
 	prompt_fs_repl = {
-		'BCH': (1, 'Column options: toggle [D]ays/date/confs/block, cas[h]addr')
-	}
+		'BCH': (1, 'Column options: toggle [D]ays/date/confs/block, cas[h]addr')}
 	extra_key_mappings = {
 		'A':'s_age',
 		'D':'d_days',

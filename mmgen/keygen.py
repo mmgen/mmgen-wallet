@@ -57,17 +57,13 @@ class keygen_base:
 backend_data = {
 	'std': {
 		'backends': ('libsecp256k1', 'python-ecdsa'),
-		'package': 'secp256k1',
-	},
+		'package': 'secp256k1'},
 	'monero': {
 		'backends': ('nacl', 'ed25519ll-djbec', 'ed25519'),
-		'package': 'xmr',
-	},
+		'package': 'xmr'},
 	'zcash_z': {
 		'backends': ('nacl',),
-		'package': 'zec',
-	},
-}
+		'package': 'zec'}}
 
 def get_backends(pubkey_type):
 	return backend_data[pubkey_type]['backends']

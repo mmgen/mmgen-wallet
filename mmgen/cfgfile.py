@@ -91,8 +91,7 @@ class cfg_file:
 		d = {
 			'usr':    CfgFileUsr,
 			'sys':    CfgFileSampleSys,
-			'sample': CfgFileSampleUsr,
-		}
+			'sample': CfgFileSampleUsr}
 		return d[id_str]
 
 class cfg_file_sample(cfg_file):
@@ -242,8 +241,7 @@ class CfgFileSampleUsr(cfg_file_sample):
 		if removed or added:
 			return {
 				'removed': [i for i in a_tup if i.name in removed],
-				'added':   [i for i in b_tup if i.name in added],
-			}
+				'added':   [i for i in b_tup if i.name in added]}
 		else:
 			return None
 

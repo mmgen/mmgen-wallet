@@ -29,8 +29,7 @@ class monero_daemon(CoinDaemon):
 	datadirs = {
 		'linux': [gc.home_dir, '.bitmonero'],
 		'darwin': [gc.home_dir, '.bitmonero'],
-		'win32': ['/', 'c', 'ProgramData', 'bitmonero']
-	}
+		'win32': ['/', 'c', 'ProgramData', 'bitmonero']}
 
 	def init_datadir(self):
 		self.logdir = super().init_datadir()

@@ -103,8 +103,7 @@ class TwAddrData(AddrData, metaclass=AsyncInit):
 				self.cfg,
 				self.proto,
 				al_id = al_id,
-				adata = AddrListData(sorted(out[al_id], key=lambda a: a.idx))
-			))
+				adata = AddrListData(sorted(out[al_id], key=lambda a: a.idx))))
 
 class TwAddrDataWithStore(TwAddrData):
 
@@ -112,8 +111,7 @@ class TwAddrDataWithStore(TwAddrData):
 		'multiple_acct_addrs': """
 			ERROR: More than one address found for account: {acct!r}.
 			Your tracking wallet is corrupted!
-		"""
-	}
+		"""}
 
 	async def get_tw_data(self, *, twctl=None):
 		self.cfg._util.vmsg('Getting address data from tracking wallet')

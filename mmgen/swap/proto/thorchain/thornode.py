@@ -74,8 +74,7 @@ class Thornode:
 			self.data = in_data | {
 				'expected_amount_out': out_data['expected_amount_out'],
 				'fees': out_data['fees'],
-				'expiry': min(in_data['expiry'], out_data['expiry'])
-			}
+				'expiry': min(in_data['expiry'], out_data['expiry'])}
 		else:
 			self.data = get_data(
 				self.tx.send_asset.full_name,

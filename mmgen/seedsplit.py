@@ -201,7 +201,7 @@ class SeedShareBase(MMGenObject):
 class SeedShare(SeedShareBase, SubSeed):
 
 	@staticmethod
-	def make_subseed_bin(parent_list, idx:int, nonce:int, length:str):
+	def make_subseed_bin(parent_list, idx: int, nonce: int, length: str):
 		seed = parent_list.parent_seed
 		assert parent_list.have_short is False
 		assert length == 'long'

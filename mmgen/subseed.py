@@ -71,7 +71,7 @@ class SubSeed(SeedBase):
 			seed_bin=self.make_subseed_bin(parent_list, idx, nonce, length))
 
 	@staticmethod
-	def make_subseed_bin(parent_list, idx:int, nonce:int, length:str):
+	def make_subseed_bin(parent_list, idx: int, nonce: int, length: str):
 		seed = parent_list.parent_seed
 		short = {'short': True, 'long': False}[length]
 		# field maximums: idx: 4294967295 (1000000), nonce: 65535 (1000), short: 255 (1)

@@ -201,8 +201,8 @@ class TwJSON:
 				'mappings_checksum': self.mappings_chksum,
 				'entries_keys': self.keys,
 				'entries': await self.entries_out,
-				'num_entries': self.num_entries,
-			}
+				'num_entries': self.num_entries}
+
 			if include_amts:
 				data['value'] = await self.total
 

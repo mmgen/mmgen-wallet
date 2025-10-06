@@ -268,19 +268,15 @@ def suf(arg, suf_type='s', *, verb='none'):
 		'none': {
 			's':   ('s',   ''),
 			'es':  ('es',  ''),
-			'ies': ('ies', 'y'),
-		},
+			'ies': ('ies', 'y')},
 		'is': {
 			's':   ('s are',   ' is'),
 			'es':  ('es are',  ' is'),
-			'ies': ('ies are', 'y is'),
-		},
+			'ies': ('ies are', 'y is')},
 		'has': {
 			's':   ('s have',   ' has'),
 			'es':  ('es have',  ' has'),
-			'ies': ('ies have', 'y has'),
-		},
-	}
+			'ies': ('ies have', 'y has')}}
 	match arg:
 		case int():
 			return suf_types[verb][suf_type][arg == 1]

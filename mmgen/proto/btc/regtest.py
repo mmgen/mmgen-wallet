@@ -71,8 +71,7 @@ class MMGenRegtest(MMGenObject):
 		# cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp hdseed=1
 		'btc': 'bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd',
 		'ltc': 'rltc1qaq8t3pakcftpk095tnqfv5cmmczysls05c8zyn',
-		'bch': 'n2fxhNx27GhHAWQhyuZ5REcBNrJqCJsJ12',
-	}
+		'bch': 'n2fxhNx27GhHAWQhyuZ5REcBNrJqCJsJ12'}
 
 	def __init__(self, cfg, coin, *, bdb_wallet=False):
 		self.cfg = cfg

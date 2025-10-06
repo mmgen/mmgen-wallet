@@ -85,8 +85,7 @@ class LEDControl:
 		'dummy': binfo(
 			name    = 'Fake Board',
 			control = '/tmp/led_status',
-			trigger = '/tmp/led_trigger'),
-	}
+			trigger = '/tmp/led_trigger')}
 
 	def __init__(self, *, enabled, simulate=False, debug=False):
 

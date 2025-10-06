@@ -64,8 +64,7 @@ class openethereum_daemon(ethereum_daemon):
 	datadirs = {
 		'linux': [gc.home_dir, '.local', 'share', 'io.parity.ethereum'],
 		'darwin': [gc.home_dir, 'Library', 'Application Support', 'io.parity.ethereum'],
-		'win32': [os.getenv('LOCALAPPDATA'), 'Parity', 'Ethereum']
-	}
+		'win32': [os.getenv('LOCALAPPDATA'), 'Parity', 'Ethereum']}
 
 	def init_subclass(self):
 
@@ -107,8 +106,7 @@ class geth_daemon(ethereum_daemon):
 	datadirs = {
 		'linux': [gc.home_dir, '.ethereum', 'geth'],
 		'darwin': [gc.home_dir, 'Library', 'Ethereum', 'geth'],
-		'win32': [os.getenv('LOCALAPPDATA'), 'Geth'] # FIXME
-	}
+		'win32': [os.getenv('LOCALAPPDATA'), 'Geth']} # FIXME
 
 	def init_subclass(self):
 
@@ -137,8 +135,7 @@ class reth_daemon(geth_daemon):
 	exec_fn = 'reth'
 	version_info_arg = '--version'
 	datadirs = {
-		'linux': [gc.home_dir, '.local', 'share', 'reth'],
-	}
+		'linux': [gc.home_dir, '.local', 'share', 'reth']}
 
 # https://github.com/ledgerwatch/erigon
 class erigon_daemon(geth_daemon):
@@ -150,8 +147,7 @@ class erigon_daemon(geth_daemon):
 	version_info_arg = '--version'
 	datadirs = {
 		'linux': [gc.home_dir, '.local', 'share', 'erigon'],
-		'win32': [os.getenv('LOCALAPPDATA'), 'Erigon'] # FIXME
-	}
+		'win32': [os.getenv('LOCALAPPDATA'), 'Erigon']} # FIXME
 
 	def init_subclass(self):
 

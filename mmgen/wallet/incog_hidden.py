@@ -43,8 +43,7 @@ class wallet(wallet):
   identify the incog wallet data in the future and to locate the offset
   where the data is hidden in the event you forget it.
 	""",
-		'decrypt_params': ', hash preset, offset {} seed length'
-	}
+		'decrypt_params': ', hash preset, offset {} seed length'}
 
 	def _get_hincog_params(self, wtype):
 		# permit comma in filename:

@@ -108,12 +108,10 @@ class BitcoinTwTransaction:
 		# 'outputs' refers to wallet-related outputs only
 		self.vouts_info = {
 			'inputs':  gen_vouts_info(gen_prevouts_data()),
-			'outputs': gen_vouts_info(gen_wallet_vouts_data())
-		}
+			'outputs': gen_vouts_info(gen_wallet_vouts_data())}
 		self.max_addrlen = {
 			'inputs':  max(len(addr) for addr in gen_all_addrs('inputs')),
-			'outputs': max(len(addr) for addr in gen_all_addrs('outputs'))
-		}
+			'outputs': max(len(addr) for addr in gen_all_addrs('outputs'))}
 		self.inputs_total = total(self.vouts_info['inputs'])
 		self.outputs_total = sum(coin_amt(i['value']) for i in self.tx['decoded']['vout'])
 		self.wallet_outputs_total = total(self.vouts_info['outputs'])
@@ -255,8 +253,7 @@ class BitcoinTwTxHistory(BitcoinTwView, TwTxHistory, BitcoinTwRPC):
 		'View/Print: pager [v]iew, full pager [V]iew, [p]rint, full [P]rint{s}',
 		'Filters/Actions: show [u]nconfirmed, [q]uit menu, r[e]draw:']
 	prompt_fs_repl = {
-		'BCH': (1, 'Column options: toggle [D]ate/confs, cas[h]addr, tx[i]d, [T]otal amt')
-	}
+		'BCH': (1, 'Column options: toggle [D]ate/confs, cas[h]addr, tx[i]d, [T]otal amt')}
 	key_mappings = {
 		'A':'s_age',
 		'n':'s_blockheight',
@@ -351,14 +348,12 @@ class BitcoinTwTxHistory(BitcoinTwView, TwTxHistory, BitcoinTwRPC):
 			do_json_dump((_wallet_txs, 'wallet-txs'),)
 
 		_wip = namedtuple('prevout', ['txid', 'vout'])
-		txdata = [
-			{
-				'tx': tx,
-				'wallet_vouts': sorted({i.vout for i in
-					[_wip(CoinTxID(d['txid']), d['vout']) for d in data]
-						if i.txid == tx['txid']}),
-				'prevouts': [_wip(CoinTxID(vin['txid']), vin['vout']) for vin in tx['decoded']['vin']]
-			}
+		txdata = [{
+			'tx': tx,
+			'wallet_vouts': sorted({i.vout for i in
+				[_wip(CoinTxID(d['txid']), d['vout']) for d in data]
+					if i.txid == tx['txid']}),
+			'prevouts': [_wip(CoinTxID(vin['txid']), vin['vout']) for vin in tx['decoded']['vin']]}
 				for tx in _wallet_txs]
 
 		_prevout_txids = {i.txid for d in txdata for i in d['prevouts']}

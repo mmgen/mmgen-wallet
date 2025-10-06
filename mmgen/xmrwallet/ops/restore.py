@@ -68,7 +68,7 @@ class OpRestore(OpCreate):
 					msg(fs.format(acct_idx, addr_idx, addr_data['label']))
 					self.c.call(
 						'label_address',
-						index = { 'major': acct_idx, 'minor': addr_idx },
+						index = {'major': acct_idx, 'minor': addr_idx},
 						label = addr_data['label'],
 					)
 

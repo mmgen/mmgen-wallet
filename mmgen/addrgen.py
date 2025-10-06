@@ -27,8 +27,8 @@ def check_data(orig_func):
 	def f(self, data):
 		assert data.pubkey_type == self.pubkey_type, 'addrgen.py:check_data() pubkey_type mismatch'
 		assert data.compressed == self.compressed, (
-	f'addrgen.py:check_data() expected compressed={self.compressed} but got compressed={data.compressed}'
-		)
+			f'addrgen.py:check_data() expected compressed={self.compressed} '
+			f'but got compressed={data.compressed}')
 		return orig_func(self, data)
 	return f
 
@@ -62,8 +62,7 @@ def AddrGenerator(cfg, proto, addr_type):
 		'bech32x':    'xchain',
 		'monero':     'xmr',
 		'ethereum':   'eth',
-		'zcash_z':    'zec',
-	}
+		'zcash_z':    'zec'}
 
 	from .addr import MMGenAddrType
 

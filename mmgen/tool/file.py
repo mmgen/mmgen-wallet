@@ -33,9 +33,9 @@ class tool_cmd(tool_cmd_base):
 		super().__init__(cfg=cfg, cmdname=cmdname, proto=proto, mmtype=mmtype)
 
 	def _file_chksum(self, mmgen_addrfile, obj):
-		kwargs = {'skip_chksum_msg':True}
+		kwargs = {'skip_chksum_msg': True}
 		if not obj.__name__ == 'PasswordList':
-			kwargs.update({'key_address_validity_check':False})
+			kwargs.update({'key_address_validity_check': False})
 		ret = obj(self.cfg, self.proto, infile=mmgen_addrfile, **kwargs)
 		if self.cfg.verbose:
 			from ..util import msg, capfirst
@@ -85,9 +85,7 @@ class tool_cmd(tool_cmd_base):
 					'pager': 'send output to pager',
 					'terse': 'produce compact tabular output',
 					'sort':  'sort order for transaction inputs and outputs ' + options_annot_str(['addr', 'raw']),
-					'filesort': 'file sort order ' + options_annot_str(['mtime', 'ctime', 'atime']),
-				}
-			},
+					'filesort': 'file sort order ' + options_annot_str(['mtime', 'ctime', 'atime'])}},
 			*infiles,
 			**kwargs):
 		"display specified raw or signed MMGen transaction files in human-readable form"

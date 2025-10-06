@@ -145,7 +145,7 @@ def compile_code(cfg, code):
 		msg(err)
 	if cfg.stdout:
 		o = out.split('\n')
-		return {k:o[i+2] for k in ('SafeMath', 'Owned', 'Token') for i in range(len(o)) if k in o[i]}
+		return {k: o[i+2] for k in ('SafeMath', 'Owned', 'Token') for i in range(len(o)) if k in o[i]}
 	else:
 		cfg._util.vmsg(out)
 

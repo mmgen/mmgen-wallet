@@ -105,9 +105,9 @@ def main():
 		slip44_data = json.loads(fh.read())
 
 	bip_utils_data = {
-		n:{v.m_coin_idx:(k, v) for k, v in globals()[f'Bip{n}Conf'].__dict__.items() if not k.startswith('_')}
-			for n in (44, 49, 84, 86)
-	}
+		n: {v.m_coin_idx: (k, v)
+			for k, v in globals()[f'Bip{n}Conf'].__dict__.items() if not k.startswith('_')}
+				for n in (44, 49, 84, 86)}
 
 	print('\n'.join(gen()))
 

@@ -50,8 +50,7 @@ class Crypto:
 		'4': _hp(15, 8, 12),
 		'5': _hp(16, 8, 16),
 		'6': _hp(17, 8, 20),
-		'7': _hp(18, 8, 24),
-	}
+		'7': _hp(18, 8, 24)}
 
 	class pwfile_reuse_warning(oneshot_warning):
 		message = 'Reusing passphrase from file {!r} at user request'
@@ -301,7 +300,7 @@ class Crypto:
 			rand_bytes,
 			*,
 			desc,
-			urand = {'data':b'', 'counter':0}):
+			urand = {'data': b'', 'counter': 0}):
 
 		assert type(rand_bytes) is bytes, 'add_user_random_chk1'
 

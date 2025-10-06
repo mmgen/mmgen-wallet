@@ -47,8 +47,7 @@ def mmaddr2coinaddr(cfg, mmaddr, ad_w, ad_f, proto):
 				No data for {gc.proj_name} address {mmaddr} could be found in the tracking
 				wallet.  Please import this address into your tracking wallet or supply an
 				address file for it on the command line.
-			"""
-		}
+			"""}
 		return '\n' + fmt(messages[k], indent='  ')
 
 	# assume mmaddr has already been checked
@@ -72,7 +71,7 @@ def mmaddr2coinaddr(cfg, mmaddr, ad_w, ad_f, proto):
 
 def parse_fee_spec(proto, fee_arg):
 	import re
-	units = {u[0]:u for u in proto.coin_amt.units}
+	units = {u[0]: u for u in proto.coin_amt.units}
 	pat = re.compile(r'((?:[1-9][0-9]*)|(?:[0-9]+\.[0-9]+))({})'.format('|'.join(units)))
 	if m := pat.match(fee_arg):
 		return namedtuple('parsed_fee_spec', ['amt', 'unit'])(m[1], units[m[2]])
@@ -370,7 +369,8 @@ class New(Base):
 			for d in tw_unspent_data:
 				i = self.Input(
 					self.proto,
-					**{attr:getattr(d, attr) for attr in d.__dict__ if attr in self.Input.tw_copy_attrs})
+					**{attr: getattr(d, attr) for attr in d.__dict__
+						if attr in self.Input.tw_copy_attrs})
 				if d.twmmid.type == 'mmgen':
 					i.mmid = d.twmmid # twmmid -> mmid
 				yield i

@@ -43,14 +43,16 @@ class baseconv:
 	constants = {
 	'desc': {
 		'b58':   dt('base58',             'base58-encoded data'),
-		'b32':   dt('MMGen base32',       'MMGen base32-encoded data created using simple base conversion'),
+		'b32':   dt('MMGen base32',
+			'MMGen base32-encoded data created using simple base conversion'),
 		'b16':   dt('hexadecimal string', 'base16 (hexadecimal) string data'),
 		'b10':   dt('base10 string',      'base10 (decimal) string data'),
 		'b8':    dt('base8 string',       'base8 (octal) string data'),
 		'b6d':   dt('base6d (die roll)',  'base6 data using the digits from one to six'),
 		'mmgen': dt('MMGen native mnemonic',
-		'MMGen native mnemonic seed phrase created using old Electrum wordlist and simple base conversion'),
-	},
+			'MMGen native mnemonic seed phrase created using old Electrum wordlist '
+			'and simple base conversion')},
+
 	# https://en.wikipedia.org/wiki/Base32#RFC_4648_Base32_alphabet
 	# https://tools.ietf.org/html/rfc4648
 	'digits': {
@@ -59,24 +61,22 @@ class baseconv:
 		'b16': tuple('0123456789abcdef'),
 		'b10': tuple('0123456789'),
 		'b8':  tuple('01234567'),
-		'b6d': tuple('123456'),
-	},
+		'b6d': tuple('123456')},
+
 	'wl_chksum': {
-		'mmgen':  '5ca31424',
+		'mmgen':  '5ca31424'},
 #		'tirosh': '48f05e1f', # tirosh truncated to mn_base
 #		'tirosh1633': '1a5faeff' # tirosh list is 1633 words long!
-	},
+
 	'seedlen_map': {
 		'b58':   {16:22, 24:33, 32:44},
 		'b6d':   {16:50, 24:75, 32:100},
-		'mmgen': {16:12, 24:18, 32:24},
-	},
+		'mmgen': {16:12, 24:18, 32:24}},
+
 	'seedlen_map_rev': {
 		'b58':   {22:16, 33:24, 44:32},
 		'b6d':   {50:16, 75:24, 100:32},
-		'mmgen': {12:16, 18:24, 24:32},
-	}
-	}
+		'mmgen': {12:16, 18:24, 24:32}}}
 
 	def __init__(self, wl_id):
 

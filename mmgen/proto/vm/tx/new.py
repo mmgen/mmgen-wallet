@@ -30,7 +30,8 @@ class New:
 		o_ok = 0 if self.usr_contract_data else 1
 		assert o_num == o_ok, f'Transaction has {o_num} output{suf(o_num)} (should have {o_ok})'
 		await self.make_txobj()
-		self.serialized = {k:v if v is None else str(v) for k, v in self.txobj.items() if k != 'token_to'}
+		self.serialized = {k: v if v is None else str(v)
+			for k, v in self.txobj.items() if k != 'token_to'}
 		self.update_txid()
 
 	def update_txid(self, data=None):

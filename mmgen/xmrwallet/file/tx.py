@@ -42,7 +42,7 @@ class MoneroMMGenTX:
 			'seed_id',
 			'source',
 			'dest',
-			'amount' }
+			'amount'}
 		full_chksum_fields = {
 			'op',
 			'create_time',
@@ -52,7 +52,7 @@ class MoneroMMGenTX:
 			'dest',
 			'amount',
 			'fee',
-			'blob' }
+			'blob'}
 		oneline_fs = '{a:7} {b:8} {c:19} {d:13} {e:9} {f:6} {x:2} {g:6} {h:17} {j}'
 		oneline_fixed_cols_w = 96 # width of all columns except the last (coin address)
 		chksum_nchars = 6

@@ -27,8 +27,7 @@ class BitcoinTwGetBalance(TwGetBalance):
 	conf_cols = {
 		'unconfirmed': 'Unconfirmed',
 		'lt_minconf':  '<{minconf} confs',
-		'ge_minconf':  '>={minconf} confs',
-	}
+		'ge_minconf':  '>={minconf} confs'}
 
 	async def create_data(self):
 		lbl_id = ('account', 'label')['label_api' in self.rpc.caps]

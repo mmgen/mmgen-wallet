@@ -214,10 +214,10 @@ def create_call_sig(cmd, cls, *, as_string=False):
 	else:
 		get_type_from_ann = lambda x: 'str' if ann[x] == 'sstr' else ann[x].__name__
 		return (
-			[(a, get_type_from_ann(a)) for a in args[:nargs]],            # c_args
-			{a:dfls[n] for n, a in enumerate(args[nargs:])},              # c_kwargs
-			{a:dfl_types[n] for n, a in enumerate(args[nargs:])},         # c_kwargs_types
-			('STDIN_OK' if nargs and ann[args[0]] == 'sstr' else flag),  # flag
+			[(a, get_type_from_ann(a)) for a in args[:nargs]],          # c_args
+			{a: dfls[n] for n, a in enumerate(args[nargs:])},           # c_kwargs
+			{a: dfl_types[n] for n, a in enumerate(args[nargs:])},      # c_kwargs_types
+			('STDIN_OK' if nargs and ann[args[0]] == 'sstr' else flag), # flag
 			ann)                                                        # ann
 
 def process_args(cmd, cmd_args, cls):
@@ -299,7 +299,7 @@ def process_args(cmd, cmd_args, cls):
 		args = [conv_type(u_args[i], c_args[0][0], c_args[0][1]) for i in range(len(u_args))]
 	else:
 		args = [conv_type(u_args[i], c_args[i][0], c_args[i][1]) for i in range(len(c_args))]
-	kwargs = {k:conv_type(v, k, c_kwargs_types[k].__name__) for k, v in u_kwargs.items()}
+	kwargs = {k: conv_type(v, k, c_kwargs_types[k].__name__) for k, v in u_kwargs.items()}
 
 	return (args, kwargs)
 

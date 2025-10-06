@@ -36,8 +36,7 @@ class EthereumTwCtl(TwCtlWithStore):
 			'coin': self.proto.coin,
 			'network': self.proto.network.upper(),
 			'accounts': {},
-			'tokens': {},
-		}
+			'tokens': {}}
 
 	def upgrade_wallet_maybe(self):
 
@@ -182,6 +181,4 @@ class EthereumTokenTwCtl(EthereumTwCtl):
 		self.data['tokens'][tokenaddr] = {
 			'params': {
 				'symbol': await t.get_symbol(),
-				'decimals': await t.get_decimals()
-			}
-		}
+				'decimals': await t.get_decimals()}}

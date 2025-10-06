@@ -32,7 +32,7 @@ class TwAddresses(TwView):
 	filters = ('showempty', 'showused', 'all_labels')
 	showcoinaddrs = True
 	showempty = True
-	showused = 1 # tristate: 0:no, 1:yes, 2:all
+	showused = 1 # tristate: 0: no, 1: yes, 2: all
 	all_labels = False
 	mod_subpath = 'tw.addresses'
 	has_age = False
@@ -191,20 +191,16 @@ class TwAddresses(TwView):
 				'date': self.age_w if self.has_age else 0,
 				'block': self.age_col_params['block'][0] if wide and self.has_age else 0,
 				'date_time': self.age_col_params['date_time'][0] if wide and self.has_age else 0,
-				'spc': self.spc_w,
-			},
+				'spc': self.spc_w},
 			maxws = { # expandable cols
 				'addr':    max(len(d.addr) for d in data) if self.showcoinaddrs else 0,
-				'comment': max(d.comment.screen_width for d in data),
-			},
+				'comment': max(d.comment.screen_width for d in data)},
 			minws = {
 				'addr': 12 if self.showcoinaddrs else 0,
-				'comment': len('Comment'),
-			},
+				'comment': len('Comment')},
 			maxws_nice = {'addr': 18},
 			wide = wide,
-			interactive = interactive,
-		)
+			interactive = interactive)
 
 	def squeezed_col_hdr(self, cw, fs, color):
 		return fs.format(
@@ -273,8 +269,7 @@ class TwAddresses(TwView):
 	sort_disp = {
 		'age': 'AddrListID+Age',
 		'amt': 'AddrListID+Amt',
-		'twmmid': 'MMGenID',
-	}
+		'twmmid': 'MMGenID'}
 
 	sort_funcs = {
 		'age': lambda d: '{}_{}_{}'.format(
@@ -283,8 +278,7 @@ class TwAddresses(TwView):
 			('{:>012}'.format(1_000_000_000 - d.confs) if d.confs else '_'),
 			d.twmmid.sort_key),
 		'amt': lambda d: f'{d.al_id}_{d.amt}',
-		'twmmid': lambda d: d.twmmid.sort_key,
-	}
+		'twmmid': lambda d: d.twmmid.sort_key}
 
 	@property
 	def dump_fn_pfx(self):

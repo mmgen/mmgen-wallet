@@ -116,8 +116,7 @@ class wallet(MMGenObject, metaclass=WalletMeta):
 			'desc':     desc or self.desc,
 			'ask_tty':  self.ask_tty,
 			'no_tty':   self.no_tty,
-			'binary':   self.file_mode == 'binary'
-		}
+			'binary':   self.file_mode == 'binary'}
 
 		if outdir:
 			# write_data_to_file(): outfile with absolute path overrides self.cfg.outdir

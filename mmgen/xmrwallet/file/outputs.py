@@ -87,11 +87,10 @@ class MoneroWalletOutputsFile:
 			init_data = dict.fromkeys(self.data_tuple._fields)
 			init_data.update({
 				'seed_id':      parent.kal.al_id.sid,
-				'wallet_index': wallet_idx or parent.get_idx_from_fn(wallet_fn),
-			})
+				'wallet_index': wallet_idx or parent.get_idx_from_fn(wallet_fn)})
 			if sign:
 				init_data['sign'] = sign
-			init_data.update({k:v for k, v in data.items() if k in init_data})
+			init_data.update({k: v for k, v in data.items() if k in init_data})
 			self.data = self.data_tuple(**init_data)
 
 	class Completed(New):

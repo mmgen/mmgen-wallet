@@ -36,8 +36,7 @@ class requests(base):
 		if self.proxy: # used only by XMR for now: requires pysocks package
 			self.session.proxies.update({
 				'http':  f'socks5h://{self.proxy}',
-				'https': f'socks5h://{self.proxy}'
-			})
+				'https': f'socks5h://{self.proxy}'})
 
 	async def run(self, *args, **kwargs):
 		return self.run_noasync(*args, **kwargs)

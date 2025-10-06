@@ -72,8 +72,7 @@ def gen_arg_tuple(cfg, func, text):
 		'proto':      proto,
 		'help_notes': help_notes,
 		'help_mod':   help_mod,
-		'cfg':        cfg,
-	}
+		'cfg':        cfg}
 
 	for arg in func.__code__.co_varnames:
 		yield d[arg] if arg in d else text

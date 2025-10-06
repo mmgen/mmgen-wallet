@@ -100,8 +100,7 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 				(res.rstrip('0').rstrip('.') if '.' in res else res) +
 				(' ' + self.coin if unit else ''),
 				color = color)
-			+ encl[1:]
-		)
+			+ encl[1:])
 
 	def __str__(self): # format simply, with no exponential notation
 		return str(int(self)) if int(self) == self else self.normalize().__format__('f')
@@ -135,22 +134,19 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 	def __mul__(self, other, *args, **kwargs):
 		return type(self)('{:0.{p}f}'.format(
 			Decimal.__mul__(self, Decimal(other), *args, **kwargs),
-			p = self.max_prec
-		))
+			p = self.max_prec))
 
 	__rmul__ = __mul__
 
 	def __truediv__(self, other, *args, **kwargs):
 		return type(self)('{:0.{p}f}'.format(
 			Decimal.__truediv__(self, Decimal(other), *args, **kwargs),
-			p = self.max_prec
-		))
+			p = self.max_prec))
 
 	def __rtruediv__(self, other, *args, **kwargs):
 		return type(self)('{:0.{p}f}'.format(
 			Decimal.__rtruediv__(self, Decimal(other), *args, **kwargs),
-			p = self.max_prec
-		))
+			p = self.max_prec))
 
 	def __neg__(self, *args, **kwargs):
 		self.method_not_implemented()

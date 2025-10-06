@@ -45,7 +45,7 @@ class Unsigned(Completed, TxBase.Unsigned):
 
 		sig_data = []
 		for d in self.inputs:
-			e = {k:getattr(d, k) for k in ('txid', 'vout', 'scriptPubKey', 'amt')}
+			e = {k: getattr(d, k) for k in ('txid', 'vout', 'scriptPubKey', 'amt')}
 			e['amount'] = e['amt']
 			del e['amt']
 			if d.mmtype == 'S':

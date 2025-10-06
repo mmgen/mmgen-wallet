@@ -38,15 +38,14 @@ class TwGetBalance(MMGenObject, metaclass=AsyncInit):
 					'unconfirmed': amt0,
 					'lt_minconf': amt0,
 					'ge_minconf': amt0,
-					'spendable': amt0,
-				}
+					'spendable': amt0}
 				dict.__init__(self, **data)
 
 		self.minconf = NonNegativeInt(minconf)
 		self.balance_info = BalanceInfo
 		self.quiet = quiet
 		self.proto = proto
-		self.data = {k:self.balance_info() for k in self.start_labels}
+		self.data = {k: self.balance_info() for k in self.start_labels}
 
 		if minconf < 2 and 'lt_minconf' in self.conf_cols:
 			del self.conf_cols['lt_minconf']

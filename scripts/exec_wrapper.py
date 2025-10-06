@@ -19,8 +19,8 @@ scripts/exec_wrapper.py: wrapper to launch MMGen scripts in a testing environmen
 def exec_wrapper_get_colors():
 	from collections import namedtuple
 	return namedtuple('colors', ['red', 'green', 'yellow', 'blue', 'purple'])(*[
-			(lambda s:s) if exec_wrapper_os.getenv('MMGEN_DISABLE_COLOR') else
-			(lambda s, n=n:f'\033[{n};1m{s}\033[0m')
+			(lambda s: s) if exec_wrapper_os.getenv('MMGEN_DISABLE_COLOR') else
+			(lambda s, n=n: f'\033[{n};1m{s}\033[0m')
 		for n in (31, 32, 33, 34, 35)])
 
 def exec_wrapper_init():

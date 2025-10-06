@@ -24,8 +24,7 @@ class BitcoinTwAddressesPrune(BitcoinTwAddresses, TwAddressesPrune):
 		'View/Actions: pager [v]iew, [w]ide view, r[e]draw{s}',
 		'Pruning: [q]uit pruning, [p]rune, [u]nprune, [c]lear prune list:']
 	prompt_fs_repl = {
-		'BCH': (1, 'Column options: toggle [D]ays/date/confs/block, cas[h]addr')
-	}
+		'BCH': (1, 'Column options: toggle [D]ays/date/confs/block, cas[h]addr')}
 	key_mappings = {
 		'a':'s_amt',
 		'A':'s_age',

@@ -58,8 +58,7 @@ class PasswordList(AddrList):
 		'b58':     pwinfo(8,  36 , 20, None,         'base58 password',           'baseconv.is_b58_str'),
 		'bip39':   pwinfo(12, 24 , 24, [12, 18, 24], 'BIP39 mnemonic',            'bip39.is_bip39_mnemonic'),
 		'xmrseed': pwinfo(25, 25,  25, [25],         'Monero new-style mnemonic', 'xmrseed.is_xmrseed'),
-		'hex':     pwinfo(32, 64 , 64, [32, 48, 64], 'hexadecimal password',      'util.is_hex_str'),
-	}
+		'hex':     pwinfo(32, 64 , 64, [32, 48, 64], 'hexadecimal password',      'util.is_hex_str')}
 	chksum_rec_f = lambda foo, e: (str(e.idx), e.passwd)
 
 	feature_warn_fs = 'WARNING: {!r} is a potentially dangerous feature.  Use at your own risk!'

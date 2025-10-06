@@ -135,9 +135,8 @@ class MoneroWalletRPC:
 	def set_label(self, account, address_idx, label):
 		return self.c.call(
 			'label_address',
-			index = { 'major': account, 'minor': address_idx },
-			label = label
-		)
+			index = {'major': account, 'minor': address_idx},
+			label = label)
 
 	def make_transfer_tx(self, account, addr, amt):
 		res = self.c.call(
@@ -145,8 +144,7 @@ class MoneroWalletRPC:
 			account_index = account,
 			destinations = [{
 				'amount':  amt.to_unit('atomic'),
-				'address': addr
-			}],
+				'address': addr}],
 			priority = self.cfg.priority or None,
 			do_not_relay = True,
 			get_tx_hex = True,

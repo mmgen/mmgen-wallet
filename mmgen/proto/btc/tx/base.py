@@ -245,8 +245,7 @@ class Base(TxBase):
 				'L': isize_common + sig_size + pubkey_size_uncompressed, # = 180
 				'C': isize_common + sig_size + pubkey_size_compressed,   # = 148
 				'S': isize_common + 23,                                  # = 64
-				'B': isize_common + 0                                    # = 41
-			}
+				'B': isize_common + 0}                                   # = 41
 			ret = sum(input_size[i.mmtype] for i in self.inputs if i.mmtype)
 
 			# We have no way of knowing whether a non-MMGen P2PKH addr is compressed or uncompressed

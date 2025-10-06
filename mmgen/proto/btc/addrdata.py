@@ -22,8 +22,7 @@ class BitcoinTwAddrData(TwAddrData):
 			Your 'wallet.dat' file appears to have been altered by a non-{proj} program.
 			Please restore your tracking wallet from a backup or create a new one and
 			re-import your addresses.
-		"""
-	}
+		"""}
 
 	async def get_tw_data(self, *, twctl=None):
 		self.cfg._util.vmsg('Getting address data from tracking wallet')

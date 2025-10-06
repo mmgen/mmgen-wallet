@@ -291,8 +291,7 @@ class CoinDaemon(Daemon):
 		'LTC': _cd(['litecoin_core']),
 		'XMR': _cd(['monero']),
 		'ETH': _cd(['geth', 'reth', 'erigon']), #, 'openethereum'
-		'ETC': _cd(['parity']),
-	}
+		'ETC': _cd(['parity'])}
 
 	@classmethod
 	def all_daemon_ids(cls):

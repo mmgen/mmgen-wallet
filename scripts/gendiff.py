@@ -35,7 +35,7 @@ def cleanup_file(fn):
 
 	def gen_text():
 		for line in data.split('\n'): # do not use splitlines()
-			line = line.translate({ord(a):b for a, b in translate.items()})
+			line = line.translate({ord(a): b for a, b in translate.items()})
 			line = re.sub(r'\s+$', '', line)  # trailing whitespace
 			yield line
 

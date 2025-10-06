@@ -27,8 +27,7 @@ class wallet(wallet):
   Make a record of the Incog ID but keep it secret.  You will use it to
   identify your incog wallet data in the future.
 	""",
-		'decrypt_params': " {} hash preset"
-	}
+		'decrypt_params': " {} hash preset"}
 
 	def _make_iv_chksum(self, s):
 		from hashlib import sha256

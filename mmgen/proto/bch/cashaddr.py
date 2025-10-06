@@ -33,7 +33,7 @@ cashaddr_addr_types = {
 	'token_script': 3,
 	'unknown':      15,
 }
-addr_types_rev = {v:k for k, v in cashaddr_addr_types.items()}
+addr_types_rev = {v: k for k, v in cashaddr_addr_types.items()}
 
 data_sizes = (160, 192, 224, 256, 320, 384, 448, 512)
 

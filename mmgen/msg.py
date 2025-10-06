@@ -67,7 +67,7 @@ class coin_msg:
 		def chksum(self):
 			return make_chksum_6(
 				json.dumps(
-					{k:self.data[k] for k in self.chksum_keys},
+					{k: self.data[k] for k in self.chksum_keys},
 					sort_keys = True,
 					separators = (',', ':')
 			))
@@ -99,9 +99,7 @@ class coin_msg:
 			data = {
 				'id': f'{gc.proj_name} {self.desc}',
 				'metadata': self.data,
-				'signatures': self.sigs,
-			}
-
+				'signatures': self.sigs}
 			write_data_to_file(
 				cfg           = self.cfg,
 				outfile       = os.path.join(outdir or '', self.filename),
@@ -122,8 +120,7 @@ class coin_msg:
 				'network': '{}_{}'.format(self.proto.coin.lower(), self.proto.network),
 				'addrlists': [MMGenIDRange(self.proto, i) for i in addrlists.split()],
 				'message': message,
-				'msghash_type': msghash_type,
-			}
+				'msghash_type': msghash_type}
 			self.sigs = {}
 
 	class completed(base):
@@ -150,8 +147,7 @@ class coin_msg:
 				'addr':       'address:',
 				'addr_p2pkh': 'addr_p2pkh:',
 				'pubhash':    'pubkey hash:',
-				'sig':        'signature:',
-			}
+				'sig':        'signature:'}
 
 			def gen_entry(e):
 				for k in labels:
@@ -186,8 +182,7 @@ class coin_msg:
 				'network':      ('Network:',           lambda v: v.replace('_', ' ').upper()),
 				'msghash_type': ('Message Hash Type:', lambda v: v),
 				'addrlists':    ('Address Ranges:',    lambda v: fmt_list(v, fmt='bare')),
-				'failed_sids':  ('Failed Seed IDs:',   lambda v: red(fmt_list(v, fmt='bare'))),
-			}
+				'failed_sids':  ('Failed Seed IDs:',   lambda v: red(fmt_list(v, fmt='bare')))}
 
 			if len(self.msg_cls.msghash_types) == 1:
 				del hdr_data['msghash_type']
@@ -235,10 +230,11 @@ class coin_msg:
 					mmid = f'{al_in.sid}:{al_in.mmtype}:{e.idx}'
 					data = {
 						'addr': e.addr,
-						'sig': sig,
-					}
+						'sig': sig}
+
 					if self.msg_cls.include_pubhash:
-						data.update({'pubhash': self.proto.decode_addr(e.addr_p2pkh or e.addr).bytes.hex()})
+						data.update(
+							{'pubhash': self.proto.decode_addr(e.addr_p2pkh or e.addr).bytes.hex()})
 
 					if e.addr_p2pkh:
 						data.update({'addr_p2pkh': e.addr_p2pkh})
@@ -295,7 +291,7 @@ class coin_msg:
 				req_addr = (
 					CoinAddr(self.proto, addr) if type(self).__name__ == 'exported_sigs' else
 					MMGenID(self.proto, addr))
-				sigs = {k:v for k, v in self.sigs.items() if k == req_addr}
+				sigs = {k: v for k, v in self.sigs.items() if k == req_addr}
 			else:
 				sigs = self.sigs
 
@@ -327,17 +323,14 @@ class coin_msg:
 			sigs = list(self.get_sigs(addr).values())
 			pfx = self.msg_cls.sigdata_pfx
 			if pfx:
-				sigs = [{k:pfx+v for k, v in e.items()} for e in sigs]
-			return json.dumps(
-				{
+				sigs = [{k: pfx+v for k, v in e.items()} for e in sigs]
+			return json.dumps({
 					'message': self.data['message'],
 					'msghash_type': self.data['msghash_type'],
 					'network': self.data['network'].upper(),
-					'signatures': sigs,
-				},
+					'signatures': sigs},
 				sort_keys = True,
-				indent = 4
-			)
+				indent = 4)
 
 	class exported_sigs(signed_online):
 
@@ -351,8 +344,8 @@ class coin_msg:
 				)
 
 			pfx = self.msg_cls.sigdata_pfx
-			self.sigs = {sig_data['addr']:sig_data for sig_data in (
-				[{k:v[len(pfx):] for k, v in e.items()} for e in self.data['signatures']]
+			self.sigs = {sig_data['addr']: sig_data for sig_data in (
+				[{k: v[len(pfx):] for k, v in e.items()} for e in self.data['signatures']]
 					if pfx else
 				self.data['signatures']
 			)}

@@ -81,26 +81,26 @@ class tool_cmd(tool_cmd_base):
 			msg(f'Seed: {randbytes.hex()}')
 		return self.hex2mn(randbytes.hex(), fmt=fmt)
 
-	def mn_rand128(self, fmt:mn_opts_disp = dfl_mnemonic_fmt):
+	def mn_rand128(self, fmt: mn_opts_disp = dfl_mnemonic_fmt):
 		"generate a random 128-bit mnemonic seed phrase"
 		return self._do_random_mn(16, fmt)
 
-	def mn_rand192(self, fmt:mn_opts_disp = dfl_mnemonic_fmt):
+	def mn_rand192(self, fmt: mn_opts_disp = dfl_mnemonic_fmt):
 		"generate a random 192-bit mnemonic seed phrase"
 		return self._do_random_mn(24, fmt)
 
-	def mn_rand256(self, fmt:mn_opts_disp = dfl_mnemonic_fmt):
+	def mn_rand256(self, fmt: mn_opts_disp = dfl_mnemonic_fmt):
 		"generate a random 256-bit mnemonic seed phrase"
 		return self._do_random_mn(32, fmt)
 
-	def hex2mn(self, hexstr: 'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt):
+	def hex2mn(self, hexstr: 'sstr', fmt: mn_opts_disp = dfl_mnemonic_fmt):
 		"convert a 16, 24 or 32-byte hexadecimal string to a mnemonic seed phrase"
 		if fmt == 'xmrseed':
 			hexstr = self._xmr_reduce(bytes.fromhex(hexstr)).hex()
 		f = mnemonic_fmts[fmt]
 		return ' '.join(f.conv_cls(fmt).fromhex(hexstr, pad=f.pad))
 
-	def mn2hex(self, seed_mnemonic: 'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt):
+	def mn2hex(self, seed_mnemonic: 'sstr', fmt: mn_opts_disp = dfl_mnemonic_fmt):
 		"convert a mnemonic seed phrase to a hexadecimal string"
 		f = mnemonic_fmts[fmt]
 		return f.conv_cls(fmt).tohex(seed_mnemonic.split(), pad=f.pad)
@@ -118,7 +118,7 @@ class tool_cmd(tool_cmd_base):
 			msg(mn)
 		return self.mn2hex(seed_mnemonic=mn, fmt=fmt)
 
-	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt):
+	def mn_stats(self, fmt: mn_opts_disp = dfl_mnemonic_fmt):
 		"show stats for a mnemonic wordlist"
 		return mnemonic_fmts[fmt].conv_cls(fmt).check_wordlist(self.cfg)
 

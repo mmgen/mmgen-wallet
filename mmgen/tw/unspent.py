@@ -120,11 +120,10 @@ class TwUnspentOutputs(TwView):
 					'twmmid':  l.mmid,
 					'comment': l.comment or '',
 					'addr':    CoinAddr(self.proto, o['address']),
-					'confs':   o['confirmations']
-				})
+					'confs':   o['confirmations']})
 				yield self.MMGenTwUnspentOutput(
 					self.proto,
-					**{k:v for k, v in o.items() if k in self.MMGenTwUnspentOutput.valid_attrs})
+					**{k: v for k, v in o.items() if k in self.MMGenTwUnspentOutput.valid_attrs})
 
 	async def get_rpc_data(self):
 		wl = self.twctl.sorted_list
@@ -170,8 +169,7 @@ class TwUnspentOutputs(TwView):
 				'block': self.age_col_params['block'][0] if wide else 0,
 				'date_time': self.age_col_params['date_time'][0] if wide else 0,
 				'date': self.age_w,
-				'spc': self.disp_spc + (2 * show_mmid) + self.has_amt2
-			},
+				'spc': self.disp_spc + (2 * show_mmid) + self.has_amt2},
 			maxws = { # expandable cols
 				'addr': max(len(d.addr) for d in data),
 				'comment': max(d.comment.screen_width for d in data) if show_mmid else 0,

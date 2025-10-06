@@ -54,20 +54,17 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 		17:   'developmentchain', # parity dev chain
 		1337: 'developmentchain', # geth dev chain
 		711:  'ethereum',         # geth mainnet (empty chain)
-		17000: 'holesky',         # proof-of-stake testnet
-	}
+		17000: 'holesky'}         # proof-of-stake testnet
 
 	coin_cfg_opts = (
 		'daemon_id',
 		'ignore_daemon_version',
 		'rpc_host',
 		'rpc_port',
-		'max_tx_fee',
-	)
+		'max_tx_fee')
 
 	proto_cfg_opts = (
-		'chain_names',
-	)
+		'chain_names')
 
 	@property
 	def dcoin(self):

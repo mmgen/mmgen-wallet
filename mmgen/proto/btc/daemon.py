@@ -30,8 +30,7 @@ class bitcoin_core_daemon(CoinDaemon):
 	datadirs = {
 		'linux': [gc.home_dir, '.bitcoin'],
 		'darwin': [gc.home_dir, 'Library', 'Application Support', 'Bitcoin'],
-		'win32': [os.getenv('APPDATA'), 'Bitcoin']
-	}
+		'win32': [os.getenv('APPDATA'), 'Bitcoin']}
 	avail_opts = ('no_daemonize', 'online', 'bdb_wallet')
 
 	def init_datadir(self):
@@ -133,8 +132,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	datadirs = {
 		'linux': [gc.home_dir, '.bitcoin-bchn'],
 		'darwin': [gc.home_dir, 'Library', 'Application Support', 'Bitcoin-Cash-Node'],
-		'win32': [os.getenv('APPDATA'), 'Bitcoin-Cash-Node']
-	}
+		'win32': [os.getenv('APPDATA'), 'Bitcoin-Cash-Node']}
 
 	def set_comment_args(self, rpc, coinaddr, lbl):
 		# bitcoin-{abc, bchn} 'setlabel' RPC is broken, so use old 'importaddress' method to set label
@@ -163,5 +161,4 @@ class litecoin_core_daemon(bitcoin_core_daemon):
 	datadirs = {
 		'linux': [gc.home_dir, '.litecoin'],
 		'darwin': [gc.home_dir, 'Library', 'Application Support', 'Litecoin'],
-		'win32': [os.getenv('APPDATA'), 'Litecoin']
-	}
+		'win32': [os.getenv('APPDATA'), 'Litecoin']}

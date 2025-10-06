@@ -59,8 +59,7 @@ class BitcoinTwUnspentOutputs(BitcoinTwView, TwUnspentOutputs):
 		'View options: pager [v]iew, [w]ide pager view{s}',
 		'Actions: [q]uit menu, [p]rint, r[e]draw, add [l]abel:']
 	prompt_fs_repl = {
-		'BCH': (1, 'Column options: toggle [D]ate/confs, cas[h]addr, gr[o]up, show [m]mgen addr')
-	}
+		'BCH': (1, 'Column options: toggle [D]ate/confs, cas[h]addr, gr[o]up, show [m]mgen addr')}
 	extra_key_mappings = {
 		'D':'d_days',
 		'o':'d_group',

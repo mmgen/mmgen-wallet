@@ -186,8 +186,7 @@ class MMGenListItem(MMGenObject):
 		'pexit',
 		'valid_attrs',
 		'invalid_attrs',
-		'immutable_attr_init_check',
-	}
+		'immutable_attr_init_check'}
 
 	def __init__(self, *args, **kwargs):
 		# generate valid_attrs, or use the class valid_attrs if set

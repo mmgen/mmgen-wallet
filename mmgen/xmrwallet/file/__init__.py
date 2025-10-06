@@ -50,10 +50,9 @@ class MoneroMMGenFile:
 			'data': in_data,
 		} if self.full_chksum else {
 			'base_chksum': self.base_chksum,
-			'data': in_data,
-		}
+			'data': in_data}
 		return json.dumps(
-			{ self.data_label: out },
+			{self.data_label: out},
 			cls = json_encoder,
 			indent = 2,
 		)

@@ -58,8 +58,7 @@ class BlockchairTxProxyClient(TxProxyClient):
 		'eth':  'ethereum',
 		'etc':  'ethereum-classic',
 		'ltc':  'litecoin',
-		'zec':  'zcash',
-	}
+		'zec':  'zcash'}
 	active_assets = () # tried with ETH, doesn’t work
 
 	def create_post_data(self, *, form_text, coin, tx_hex):

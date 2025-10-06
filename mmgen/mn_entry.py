@@ -223,8 +223,7 @@ class MnemonicEntry:
 			ignored.  This feature allows you to guard against acoustic side-channel
 			attacks by padding your keyboard entry with “dead characters”.  Pad char-
 			acters may be typed before, after, or in the middle of words.
-		""",
-	}
+		"""}
 	word_prompt = ('Enter word #{}: ', 'Incorrect entry. Repeat word #{}: ')
 	usr_dfl_entry_mode = None
 	_lw = None
@@ -373,8 +372,7 @@ class MnemonicEntry:
 		d = {
 			'mmgen': MnemonicEntryMMGen,
 			'bip39': MnemonicEntryBIP39,
-			'xmrseed': MnemonicEntryMonero,
-		}
+			'xmrseed': MnemonicEntryMonero}
 		wl = wl.lower()
 		if wl not in d:
 			raise ValueError(f'wordlist {wl!r} not recognized (valid choices: {fmt_list(list(d))})')

@@ -44,8 +44,7 @@ class bip39(baseconv):
 		160: bc(5, 15),
 		192: bc(6, 18),
 		224: bc(7, 21),
-		256: bc(8, 24),
-	}
+		256: bc(8, 24)}
 
 	def __init__(self, wl_id='bip39'):
 		assert wl_id == 'bip39', "initialize with 'bip39' for compatibility with baseconv API"

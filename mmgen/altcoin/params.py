@@ -287,15 +287,11 @@ def make_proto(e, *, testnet=False):
 				'base_coin': e.symbol,
 				'addr_ver_info': dict(
 					[(num2hexstr(e.p2pkh_info[0]), 'p2pkh')] +
-					([(num2hexstr(e.p2sh_info[0]), 'p2sh')] if e.p2sh_info else [])
-				),
+					([(num2hexstr(e.p2sh_info[0]), 'p2sh')] if e.p2sh_info else [])),
 				'wif_ver_num': {'std': num2hexstr(e.wif_ver_num)},
 				'mmtypes':    ('L', 'C', 'S') if e.has_segwit else ('L', 'C'),
 				'dfl_mmtype': 'L',
-				'mmcaps':     (),
-			},
-		)
-	)
+				'mmcaps':     ()}))
 
 def init_genonly_altcoins(usr_coin=None, *, testnet=False):
 	"""

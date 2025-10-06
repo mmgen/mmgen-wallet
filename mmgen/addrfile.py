@@ -89,8 +89,7 @@ class AddrFile(MMGenObject):
 		lbl_p2 = ':'.join(
 			([] if coin == 'BTC' or (coin == 'BCH' and not self.cfg.cashaddr) else [coin])
 			+ ([] if mmtype == 'E' or (mmtype == 'L' and not proto.testnet) else [mmtype.name.upper()])
-			+ ([proto.network.upper()] if proto.testnet else [])
-		)
+			+ ([proto.network.upper()] if proto.testnet else []))
 		return self.parent.al_id.sid + (' ' if lbl_p2 else '') + lbl_p2
 
 	def format(self, *, add_comments=False):
@@ -162,7 +161,7 @@ class AddrFile(MMGenObject):
 			assert is_addr_idx(idx), f'invalid address index {idx!r}'
 			p.check_format(addr)
 
-			a = le(**{'proto': p.proto, 'idx':int(idx), p.main_attr:addr, 'comment':comment})
+			a = le(**{'proto': p.proto, 'idx': int(idx), p.main_attr: addr, 'comment': comment})
 
 			if p.has_keys: # order: wif, (orig_hex), viewkey, wallet_passwd
 				if type(self) is not ViewKeyAddrFile:
@@ -350,7 +349,7 @@ class PasswordFile(AddrFile):
 			ret = lines.pop(0).split(None, p.pw_len + 1)
 			match len(ret) - 1:
 				case p.pw_len:
-					return (ret[0], ' '.join(ret[1:p.pw_len + 1]), '')
+					return (ret[0], ' '.join(ret[1: p.pw_len + 1]), '')
 				case x if x > p.pw_len:
 					raise ValueError(
 						f'extraneous text {ret[p.pw_len + 1]!r} found after password '
