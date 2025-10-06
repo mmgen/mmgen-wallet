@@ -18,7 +18,7 @@ in
 
 rustPlatform.buildRustPackage rec {
     pname = "reth";
-    version = "1.7.0";
+    version = "1.8.2";
 
     src = fetchGit {
         url = "https://github.com/paradigmxyz/reth";
@@ -27,7 +27,7 @@ rustPlatform.buildRustPackage rec {
         shallow = true;
     };
 
-    cargoHash = "sha256-2zdilVIHCW0N2yZNfLNoVpTASjXU1ABcZzQLzpAGEsY=";
+    cargoHash = "sha256-KxUiiOTlMNlPw4pHjEcqXsMF3RCA0KVO66WKpz1YoT0=";
 
     nativeBuildInputs = [
         pkgs.clang
