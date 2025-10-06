@@ -370,8 +370,8 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	def token_bal3(self):
 		return self._token_bal_check(pat=rf'{dfl_sid}:E:4\s+6\.54321')
 
-	def wait_reth1(self):
-		return self._wait_for_block() if self.daemon.id == 'reth' else 'silent'
+	async def wait_reth1(self):
+		return await self._wait_for_block() if self.daemon.id == 'reth' else 'silent'
 
 	def token_swaptxdo1(self):
 		self.get_file_with_ext('sigtx', delete_all=True)

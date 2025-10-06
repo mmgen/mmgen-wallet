@@ -1,6 +1,5 @@
 {
     lib,
-    pkgs,
     rustPlatform,
 }:
 
@@ -13,7 +12,7 @@ let
         rev = "fe89979ad5e8fd233ae0aac0e7e56f465945ae70";
         shallow = true;
     };
-    pkgs2 = import pinnedPkgs {};
+    pkgs = import pinnedPkgs {};
 
 in
 
@@ -33,8 +32,8 @@ rustPlatform.buildRustPackage rec {
     nativeBuildInputs = [
         pkgs.clang
         pkgs.libclang
-        pkgs2.rustc
-        pkgs2.cargo
+        pkgs.rustc
+        pkgs.cargo
     ];
 
     env.LIBCLANG_PATH = pkgs.libclang.lib  + "/lib/";
