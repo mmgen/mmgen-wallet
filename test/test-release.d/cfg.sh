@@ -218,10 +218,8 @@ init_tests() {
 	d_btc_rt="overall operations using the regtest network (Bitcoin, multicoin)"
 	t_btc_rt="
 		- $cmdtest_py regtest
-		x $cmdtest_py regtest_legacy
 		a $cmdtest_py swap
 	"
-	[ "$FAST" ] && t_btc_rt_skip='x'
 	[ "$SKIP_ALT_DEP" ] && t_btc_rt_skip+=' a'
 
 	d_bch="overall operations with emulated RPC data (Bitcoin Cash Node)"

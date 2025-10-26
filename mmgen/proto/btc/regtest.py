@@ -76,7 +76,7 @@ class MMGenRegtest(MMGenObject):
 	def __init__(self, cfg, coin, *, bdb_wallet=False):
 		self.cfg = cfg
 		self.coin = coin.lower()
-		self.bdb_wallet = bdb_wallet
+		self.bdb_wallet = bdb_wallet and self.coin != 'btc'
 
 		assert self.coin in self.coins, f'{coin!r}: invalid coin for regtest'
 
@@ -85,7 +85,7 @@ class MMGenRegtest(MMGenObject):
 			cfg,
 			network_id = self.coin + '_rt',
 			test_suite = cfg.test_suite,
-			opts       = ['bdb_wallet'] if bdb_wallet else None)
+			opts       = ['bdb_wallet'] if self.bdb_wallet else None)
 
 	# Caching creates problems (broken pipe) when recreating + loading wallets,
 	# so reinstantiate with every call:

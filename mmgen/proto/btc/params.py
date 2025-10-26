@@ -52,7 +52,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	max_halvings    = 64
 	start_subsidy   = 50
 	max_int         = 0xffffffff
-	max_op_return_data_len = 80
+	max_op_return_data_len = 4096
 	address_reuse_ok = False
 
 	coin_cfg_opts = (

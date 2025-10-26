@@ -49,8 +49,9 @@ class CallSigs:
 
 	class bitcoin_core:
 
-		def __init__(self, cfg):
+		def __init__(self, cfg, rpc):
 			self.cfg = cfg
+			self.rpc = rpc
 
 		def createwallet(
 				self,
@@ -88,6 +89,10 @@ class CallSigs:
 			return (
 				'gettransaction',
 				txid,
+				verbose
+			) if 'descriptor_wallet_only' in self.rpc.caps else (
+				'gettransaction',
+				txid,
 				include_watchonly,
 				verbose)
 
@@ -109,6 +114,11 @@ class CallSigs:
 				include_watchonly = True,
 				include_immature_coinbase = False):
 			return (
+				'listreceivedbylabel',
+				minconf,
+				include_empty,
+				include_immature_coinbase
+			) if 'descriptor_wallet_only' in self.rpc.caps else (
 				'listreceivedbylabel',
 				minconf,
 				include_empty,
@@ -134,6 +144,11 @@ class CallSigs:
 				include_watchonly = True,
 				include_removed = True):
 			return (
+				'listsinceblock',
+				blockhash,
+				target_confirmations,
+				include_removed
+			) if 'descriptor_wallet_only' in self.rpc.caps else (
 				'listsinceblock',
 				blockhash,
 				target_confirmations,
@@ -197,7 +212,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 
 		self.proto = proto
 		self.daemon = daemon
-		self.call_sigs = getattr(CallSigs, daemon.id)(cfg)
+		self.call_sigs = getattr(CallSigs, daemon.id)(cfg, self)
 		self.twname = TrackingWalletName(cfg.regtest_user or proto.tw_name or cfg.tw_name or self.dfl_twname)
 
 		super().__init__(
@@ -243,6 +258,9 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 		self.daemon_version = self.cached['networkinfo']['version']
 		self.daemon_version_str = self.cached['networkinfo']['subversion']
 		self.chain = self.cached['blockchaininfo']['chain']
+
+		if self.daemon.id == 'bitcoin_core' and self.daemon_version >= 300000:
+			self.caps += ('descriptor_wallet_only',)
 
 		tip = await self.call('getblockhash', self.blockcount)
 		self.cur_date = (await self.call('getblockheader', tip))['time']

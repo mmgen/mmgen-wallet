@@ -379,7 +379,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		if trunner is None or self.coin not in self.networks:
 			return
 		if self.coin in ('btc', 'bch', 'ltc'):
-			self.tx_fee     = {'btc':'0.0001', 'bch':'0.001', 'ltc':'0.01'}[self.coin]
+			self.tx_fee     = {'btc':'90s', 'bch':'0.001', 'ltc':'0.01'}[self.coin]
 			self.txbump_fee = {'btc':'123s', 'bch':'567s', 'ltc':'12345s'}[self.coin]
 
 		self.unspent_data_file = joinpath('test', 'trash', 'unspent.json')
@@ -417,6 +417,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 	def txcreate_dfl_wallet(self, addrfile):
 		return self.txcreate_common(
 			sources = ['15'],
+			add_opts = ['--btc-max-tx-fee=0.005'],
 			add_output_args = ['data:' + 'z' * self.proto.max_op_return_data_len])
 
 	def txsign_dfl_wallet(self, txfile, pf='', save=True, has_label=False):
@@ -771,7 +772,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 	def txcreate(self, addrfile):
 		return self.txcreate_common(
 			sources = ['1'],
-			add_opts = ['--vsize-adj=1.01'],
+			add_opts = ['--vsize-adj=1.01', '--btc-max-tx-fee=0.005'],
 			add_output_args = ['hexdata:' + 'ee' * self.proto.max_op_return_data_len])
 
 	def txbump(self, txfile, prepend_args=[], seed_args=[]):
@@ -780,6 +781,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			return 'skip'
 		args = prepend_args + [
 			'--quiet',
+			'--btc-max-tx-fee=0.006',
 			'--outdir='+self.tmpdir,
 			txfile
 			] + seed_args

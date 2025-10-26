@@ -21,6 +21,7 @@ class mainnet(mainnet):
 	mmtypes         = ('L', 'C', 'S', 'B')
 	coin_amt        = 'LTCAmt'
 	max_tx_fee      = 0.3
+	max_op_return_data_len = 80
 	base_coin       = 'LTC'
 	forks           = []
 	bech32_hrp      = 'ltc'
