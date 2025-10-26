@@ -23,7 +23,7 @@ addr: MMGen address-related types
 from collections import namedtuple
 
 from .objmethods import HiliteStr, InitErrors, MMGenObject
-from .obj import ImmutableAttr, MMGenIdx, get_obj
+from .obj import ImmutableAttr, MMGenIdx, Int, get_obj
 from .seed import SeedID
 from . import color as color_mod
 
@@ -93,6 +93,10 @@ class MMGenPasswordType(MMGenAddrType):
 class AddrIdx(MMGenIdx):
 	max_digits = 7
 
+class MoneroIdx(Int):
+	max_digits = 5
+	min_val = 0
+
 def is_addr_idx(s):
 	return get_obj(AddrIdx, n=s, silent=True, return_bool=True)
 
@@ -136,7 +140,14 @@ class MMGenID(HiliteStr, InitErrors, MMGenObject):
 					mmtype = proto.dfl_mmtype
 				case _:
 					raise ValueError('not 2 or 3 colon-separated items')
-			me = str.__new__(cls, f'{sid}:{mmtype}:{idx}')
+			if '-' in idx: # extended Monero ID
+				assert proto.coin == 'XMR', 'extended MMGen IDs supported for XMR only'
+				assert id_str.count(':') == 2, 'mmtype letter required for extended MMGen IDs'
+				me = str.__new__(cls, id_str)
+				idx, ext = idx.split('-', 1)
+				me.acct_num, me.acct_addr_num = [MoneroIdx(e) for e in ext.split('/', 1)]
+			else:
+				me = str.__new__(cls, f'{sid}:{mmtype}:{idx}')
 			me.sid = SeedID(sid=sid)
 			me.mmtype = proto.addr_type(mmtype)
 			me.idx = AddrIdx(idx)

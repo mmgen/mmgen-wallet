@@ -176,6 +176,7 @@ tests = {
 			{'id_str': 'x:L:3',         'proto': proto},
 			{'id_str': 'F00BAA12',      'proto': proto},
 			{'id_str': 'F00BAA12:Z:99', 'proto': proto},
+			{'id_str': 'F00BAA12:B:1-0/0', 'proto': proto},
 		),
 		'good': (
 			{'id_str': 'F00BAA12:99',   'proto': proto, 'ret': 'F00BAA12:L:99'},
