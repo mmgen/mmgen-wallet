@@ -146,7 +146,7 @@ class unit_tests:
 			'data:',
 			'hexdata:',
 			'data:' + 'x' * (max_len + 1),
-			'hexdata:' + ('deadbeef' * 20) + 'ee',
+			'hexdata:' + ('deadbeef' * (max_len // 4)) + 'ee',
 			'hex:0abc',
 			'da:xyz',
 			'hexdata:xyz',

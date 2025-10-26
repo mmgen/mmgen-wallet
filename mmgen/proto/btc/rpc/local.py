@@ -75,13 +75,21 @@ class CallSigs:
 				descriptors,     # 6. descriptors (native descriptor wallet)
 				load_on_startup) # 7. load_on_startup
 
+		# Get detailed information about in-wallet transaction <txid>
+		# Arguments:
+		# 1. txid                 (string, required) The transaction id
+		# 2. include_watchonly    (boolean, optional, default=true for watch-only wallets, otherwise
+		#                         false) Whether to include watch-only addresses in balance calculation
+		#                         and details[]
+		# 3. verbose              (boolean, optional, default=false) Whether to include a `decoded`
+		#                         field containing the decoded transaction (equivalent to RPC
+		#                         decoderawtransaction)
 		def gettransaction(self, txid, include_watchonly, verbose):
 			return (
 				'gettransaction',
-				txid,               # 1. transaction id
-				include_watchonly,  # 2. optional, default=true for watch-only wallets, otherwise false
-				verbose)            # 3. optional, default=false -- include a `decoded` field containing
-									# => the decoded transaction (equivalent to RPC decoderawtransaction)
+				txid,
+				include_watchonly,
+				verbose)
 
 	class litecoin_core(bitcoin_core):
 

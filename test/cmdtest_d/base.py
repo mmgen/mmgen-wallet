@@ -43,7 +43,7 @@ class CmdTestBase:
 	is_helper = False
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
-		if hasattr(self, 'name'): # init will be called multiple times for classes with multiple inheritance
+		if hasattr(self, 'name'): # init may called multiple times
 			return
 		self.name = type(self).__name__
 		self.cfg = cfg

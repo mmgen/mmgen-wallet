@@ -778,7 +778,11 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		if not self.proto.cap('rbf'):
 			msg(gray('Skipping RBF'))
 			return 'skip'
-		args = prepend_args + ['--quiet', '--outdir='+self.tmpdir, txfile] + seed_args
+		args = prepend_args + [
+			'--quiet',
+			'--outdir='+self.tmpdir,
+			txfile
+			] + seed_args
 		t = self.spawn('mmgen-txbump', args)
 		if seed_args:
 			t.do_decrypt_ka_data(pw=self.cfgs['14']['kapasswd'])
