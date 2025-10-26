@@ -275,19 +275,10 @@ class BitcoinTwTxHistory(BitcoinTwView, TwTxHistory, BitcoinTwRPC):
 		blockhash = (
 			await self.rpc.call('getblockhash', self.sinceblock)
 				if self.sinceblock else '')
-		# bitcoin-cli help listsinceblock:
-		# Arguments:
-		# 1. blockhash            (string, optional) If set, the block hash to list transactions since,
-		#                         otherwise list all transactions.
-		# 2. target_confirmations (numeric, optional, default=1) Return the nth block hash from the main
-		#                         chain. e.g. 1 would mean the best block hash. Note: this is not used
-		#                         as a filter, but only affects [lastblock] in the return value
-		# 3. include_watchonly    (boolean, optional, default=true for watch-only wallets, otherwise
-		#                         false) Include transactions to watch-only addresses
-		# 4. include_removed      (boolean, optional, default=true) Show transactions that were removed
-		#                         due to a reorg in the "removed" array (not guaranteed to work on
-		#                         pruned nodes)
-		return (await self.rpc.call('listsinceblock', blockhash, 1, True, False))['transactions']
+		return (await self.rpc.icall(
+			'listsinceblock',
+			blockhash = blockhash,
+			include_removed = False))['transactions']
 
 	async def gen_data(self, rpc_data, lbl_id):
 

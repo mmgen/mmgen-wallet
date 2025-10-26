@@ -91,6 +91,55 @@ class CallSigs:
 				include_watchonly,
 				verbose)
 
+		# List received transactions by label.
+		# 1. minconf                      (numeric, optional, default=1) The minimum number of
+		#                                 confirmations before payments are included.
+		# 2. include_empty                (boolean, optional, default=false) Whether to include labels
+		#                                 that haven't received any payments.
+		# 3. include_watchonly            (boolean, optional, default=true for watch-only wallets,
+		#                                 otherwise false) Whether to include watch-only addresses
+		#                                 (see 'importaddress')
+		# 4. include_immature_coinbase    (boolean, optional, default=false) Include immature coinbase
+		#                                 transactions.
+		def listreceivedbylabel(
+				self,
+				*,
+				minconf = 1,
+				include_empty = False,
+				include_watchonly = True,
+				include_immature_coinbase = False):
+			return (
+				'listreceivedbylabel',
+				minconf,
+				include_empty,
+				include_watchonly,
+				include_immature_coinbase)
+
+		# Get all transactions in blocks since block [blockhash], or all transactions if omitted.
+		# 1. blockhash            (string, optional) If set, the block hash to list transactions since,
+		#                         otherwise list all transactions.
+		# 2. target_confirmations (numeric, optional, default=1) Return the nth block hash from the main
+		#                         chain. e.g. 1 would mean the best block hash. Note: this is not used
+		#                         as a filter, but only affects [lastblock] in the return value
+		# 3. include_watchonly    (boolean, optional, default=true for watch-only wallets, otherwise
+		#                         false) Include transactions to watch-only addresses
+		# 4. include_removed      (boolean, optional, default=true) Show transactions that were removed
+		#                         due to a reorg in the "removed" array (not guaranteed to work on
+		#                         pruned nodes)
+		def listsinceblock(
+				self,
+				*,
+				blockhash = '',
+				target_confirmations = 1,
+				include_watchonly = True,
+				include_removed = True):
+			return (
+				'listsinceblock',
+				blockhash,
+				target_confirmations,
+				include_watchonly,
+				include_removed)
+
 	class litecoin_core(bitcoin_core):
 
 		def createwallet(
@@ -113,6 +162,19 @@ class CallSigs:
 				'gettransaction',
 				txid,               # 1. transaction id
 				include_watchonly)  # 2. optional, default=true for watch-only wallets, otherwise false
+
+		def listreceivedbylabel(
+				self,
+				*,
+				minconf = 1,
+				include_empty = False,
+				include_watchonly = True,
+				include_immature_coinbase = False):
+			return (
+				'listreceivedbylabel',
+				minconf,
+				include_empty,
+				include_watchonly)
 
 	class bitcoin_cash_node(litecoin_core):
 		pass
