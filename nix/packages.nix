@@ -2,7 +2,7 @@
 
 {
     system-packages = with pkgs; {
-        bitcoind     = bitcoind;                        # Bitcoin Core daemon
+        bitcoind     = (callPackage ./bitcoin.nix {});            # Bitcoin Core daemon
         vanitygen    = (callPackage ./vanitygen-plusplus.nix {}); # test suite
         curl         = curl;
         git          = git;
