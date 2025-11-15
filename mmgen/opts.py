@@ -320,6 +320,7 @@ class UserOpts(Opts):
 			x- --bob                  Specify user ‘Bob’ in MMGen regtest or test mode
 			x- --alice                Specify user ‘Alice’ in MMGen regtest or test mode
 			x- --carol                Specify user ‘Carol’ in MMGen regtest or test mode
+			x- --miner                Specify user ‘Miner’ in MMGen regtest or test mode
 			rr COIN-SPECIFIC OPTIONS:
 			rr   For descriptions, refer to the non-prefixed versions of these options above
 			rr   Prefixed options override their non-prefixed counterparts

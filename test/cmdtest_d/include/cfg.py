@@ -61,6 +61,7 @@ cmd_groups_extra = {
 	'autosign_live':          gd('CmdTestAutosignLive',         {'modname': 'autosign'}),
 	'autosign_live_simulate': gd('CmdTestAutosignLiveSimulate', {'modname': 'autosign'}),
 	'create_ref_tx':          gd('CmdTestRefTX',                {'modname': 'misc', 'full_data': True}),
+	'xmr_autosign_nocompat':  gd('CmdTestXMRAutosignNoCompat',  {'modname': 'xmr_autosign'}),
 }
 
 cfgs = { # addr_idx_lists (except 31, 32, 33, 34) must contain exactly 8 addresses

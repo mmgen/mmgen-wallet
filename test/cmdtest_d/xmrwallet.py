@@ -72,6 +72,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	)
 	tx_relay_user = 'bob'
 	daemon_datadir_base = os.path.join('test', 'daemons', 'xmrtest')
+	compat = False
 
 	cmd_group = (
 		('daemon_version',                'checking daemon version'),
@@ -183,6 +184,13 @@ class CmdTestXMRWallet(CmdTestBase):
 			udir = os.path.join(tmpdir, user)
 			daemon_datadir = os.path.join(self.daemon_datadir_base, user)
 
+			if self.compat:
+				from mmgen.tw.ctl import TwCtl
+				twctl_cls = self.proto.base_proto_subclass(TwCtl, 'tw.ctl')
+				wallet_dir = os.path.join(self.tr.data_dir, user, 'altcoins', 'xmr', twctl_cls.tw_subdir)
+			else:
+				wallet_dir = udir
+
 			md = CoinDaemon(
 				cfg        = self.cfg,
 				proto      = self.proto,
@@ -205,7 +213,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				cfg          = self.cfg,
 				proto        = self.proto,
 				test_suite   = True,
-				wallet_dir   = udir,
+				wallet_dir   = wallet_dir,
 				user         = 'foo',
 				passwd       = 'bar',
 				port_shift   = shift,
@@ -294,7 +302,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ [f'--wallet-dir={data.udir}']
+			+ ([f'--{user}', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
 			+ (self.autosign_opts if data.autosign else [])
 			+ add_opts
 			+ [op]
@@ -313,7 +321,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ [f'--wallet-dir={data.udir}']
+			+ (['--alice', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (['--no-start-wallet-daemon'] if cfg in ('continue', 'stop') else [])
 			+ (['--no-stop-wallet-daemon'] if cfg in ('start', 'continue') else [])
@@ -415,7 +423,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ [f'--wallet-dir={data.udir}']
+			+ ([f'--{user}', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (self.autosign_opts if data.autosign else [])
 			+ add_opts
@@ -466,7 +474,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ [f'--wallet-dir={data.udir}']
+			+ ([f'--{user}', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
 			+ cmd_opts
 			+ add_opts
 			+ (self.autosign_opts if data.autosign else [])

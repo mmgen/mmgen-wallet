@@ -33,7 +33,7 @@ def make_burn_addr(cfg):
 
 class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 	"""
-	Monero autosigning operations
+	Monero autosigning operations (xmrwallet compat mode)
 	"""
 	tmpdir_nums = [39]
 
@@ -46,6 +46,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 	# autosign attrs:
 	coins = ['xmr']
+	compat = True
 
 	cmd_group = (
 		('daemon_version',           'checking daemon version'),
@@ -109,10 +110,14 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		self.alice_cfg = Config({
 			'coin': 'XMR',
 			'outdir': self.users['alice'].udir,
-			'wallet_dir': self.users['alice'].udir,
 			'wallet_rpc_password': 'passwOrd',
 			'test_suite': True,
-		})
+		} | ({
+			'alice': True,
+			'compat': True
+		} if self.compat else {
+			'wallet_dir': self.users['alice'].udir
+		}))
 
 		self.burn_addr = make_burn_addr(cfg)
 
@@ -178,7 +183,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ [f'--wallet-dir={data.udir}']
+			+ (['--alice', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (self.autosign_opts if autosign else [])
 			+ ['dump']
@@ -191,8 +196,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 	def _delete_files(self, *ext_list):
 		data = self.users['alice']
 		self.spawn(msg_only=True)
+		wdir = data.wd.wallet_dir if self.compat else data.udir
 		for ext in ext_list:
-			get_file_with_ext(data.udir, ext, no_dot=True, delete_all=True)
+			get_file_with_ext(wdir, ext, no_dot=True, delete_all=True)
 		return 'ok'
 
 	def delete_tmp_wallets(self):
@@ -312,7 +318,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		args = (
 			self.extra_opts
 			+ self.autosign_opts
-			+ [f'--wallet-dir={data.udir}']
+			+ (['--alice', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ add_opts
 			+ [op]
@@ -472,3 +478,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 	def listview(self):
 		return self.sync_wallets('alice', op='listview', wallets='2')
+
+class CmdTestXMRAutosignNoCompat(CmdTestXMRAutosign):
+	"""
+	Monero autosigning operations (non-xmrwallet compat mode)
+	"""
+	compat = False

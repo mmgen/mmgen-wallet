@@ -295,7 +295,9 @@ init_tests() {
 	d_xmr="Monero xmrwallet operations"
 	t_xmr="
 		- $xmr_env1$xmr_env2$xmr_env3$cmdtest_py --coin=xmr --exclude help
+		s $xmr_env1$xmr_env2$xmr_env3$cmdtest_py --coin=xmr xmr_autosign_nocompat
 	"
+	[ "$FAST" ]  && t_xmr_skip='s'
 
 	d_tool2="'mmgen-tool' utility with data check"
 	t_tool2="

@@ -231,6 +231,7 @@ class Config(Lockable):
 	bob          = False
 	alice        = False
 	carol        = False
+	miner        = False
 	test_user    = ''
 
 	# altcoin:
@@ -284,7 +285,7 @@ class Config(Lockable):
 
 	_incompatible_opts = (
 		('help', 'longhelp'),
-		('bob', 'alice', 'carol'),
+		('bob', 'alice', 'carol', 'miner'),
 		('label', 'keep_label'),
 		('tx_id', 'info'),
 		('tx_id', 'terse_info'),
@@ -559,6 +560,7 @@ class Config(Lockable):
 				self.bob or
 				self.alice or
 				self.carol or
+				self.miner or
 				gc.prog_name == f'{gc.proj_id}-regtest'):
 			if self.coin != 'XMR':
 				self.network = 'regtest'
@@ -566,6 +568,7 @@ class Config(Lockable):
 				'bob' if self.bob else
 				'alice' if self.alice else
 				'carol' if self.carol else
+				'miner' if self.miner else
 				'')
 		else:
 			self.network = 'testnet' if self.testnet else 'mainnet'
