@@ -231,7 +231,7 @@ class Config(Lockable):
 	bob          = False
 	alice        = False
 	carol        = False
-	regtest_user = ''
+	test_user    = ''
 
 	# altcoin:
 	cashaddr = True
@@ -441,11 +441,15 @@ class Config(Lockable):
 		location of wallet and other data - same as data_dir_root for mainnet
 		"""
 		if not hasattr(self, '_data_dir'):
-			self._data_dir = os.path.normpath(os.path.join(*{
-				'regtest': (self.data_dir_root, 'regtest', (self.regtest_user or 'none')),
-				'testnet': (self.data_dir_root, 'testnet'),
-				'mainnet': (self.data_dir_root,),
-			}[self.network]))
+			def make_path():
+				match self.network:
+					case 'mainnet':
+						return (self.data_dir_root, self.test_user)
+					case 'testnet':
+						return (self.data_dir_root, 'testnet', self.test_user)
+					case 'regtest':
+						return (self.data_dir_root, 'regtest', (self.test_user or 'none'))
+			self._data_dir = os.path.normpath(os.path.join(*make_path()))
 		return self._data_dir
 
 	def __init__(
@@ -547,14 +551,15 @@ class Config(Lockable):
 		if opts_data and 'sets' in opts_data:
 			self._set_opts_data_sets_opts(opts_data)
 
-		if self.regtest or self.bob or self.alice or self.carol or gc.prog_name == f'{gc.proj_id}-regtest':
-			self.network = 'regtest'
-			self.regtest_user = 'bob' if self.bob else 'alice' if self.alice else 'carol' if self.carol else None
-		else:
-			self.network = 'testnet' if self.testnet else 'mainnet'
-
 		self.coin = self.coin.upper()
 		self.token = self.token.upper() if self.token else None
+
+		if self.regtest or self.bob or self.alice or self.carol or gc.prog_name == f'{gc.proj_id}-regtest':
+			if self.coin != 'XMR':
+				self.network = 'regtest'
+			self.test_user = 'bob' if self.bob else 'alice' if self.alice else 'carol' if self.carol else ''
+		else:
+			self.network = 'testnet' if self.testnet else 'mainnet'
 
 		if 'usage' in self._uopts: # requires self.coin
 			import importlib

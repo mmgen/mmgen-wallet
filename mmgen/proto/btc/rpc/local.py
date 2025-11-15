@@ -213,7 +213,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 		self.proto = proto
 		self.daemon = daemon
 		self.call_sigs = getattr(CallSigs, daemon.id)(cfg, self)
-		self.twname = TrackingWalletName(cfg.regtest_user or proto.tw_name or cfg.tw_name or self.dfl_twname)
+		self.twname = TrackingWalletName(cfg.test_user or proto.tw_name or cfg.tw_name or self.dfl_twname)
 
 		super().__init__(
 			cfg  = cfg,
@@ -287,7 +287,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 			await self.check_or_create_daemon_wallet()
 
 		# for regtest, wallet_path must remain '/' until Carol’s user wallet has been created
-		if self.chain != 'regtest' or cfg.regtest_user:
+		if self.chain != 'regtest' or cfg.test_user:
 			self.wallet_path = f'/wallet/{self.twname}'
 
 	@property
@@ -334,7 +334,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 
 	async def check_or_create_daemon_wallet(self):
 
-		if self.chain == 'regtest' and self.cfg.regtest_user != 'carol':
+		if self.chain == 'regtest' and self.cfg.test_user != 'carol':
 			return
 
 		loaded_wnames = await self.call('listwallets')
