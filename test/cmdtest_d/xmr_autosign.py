@@ -248,11 +248,14 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		return t
 
 	def create_watchonly_wallets(self):
-		return self.restore_wallets()
+		return self._create_wallets('restore')
 
 	def restore_wallets(self):
+		return self._create_wallets('restore')
+
+	def _create_wallets(self, op='create'):
 		self.insert_device_online()
-		t = self.create_wallets('alice', op='restore')
+		t = self.create_wallets('alice', op=op)
 		t.read() # required!
 		self.remove_device_online()
 		return t
@@ -313,8 +316,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			+ add_opts
 			+ [op]
 			+ ([get_file_with_ext(self.asi.xmr_tx_dir, ext)] if ext else [])
-			+ ([wallet_arg] if wallet_arg else [])
-		)
+			+ ([wallet_arg] if wallet_arg else []))
 		desc_pfx = f'{desc}, ' if desc else ''
 		self.insert_device_online() # device must be removed by calling method
 		return self.spawn('mmgen-xmrwallet', args, extra_desc=f'({desc_pfx}Alice)')
