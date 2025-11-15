@@ -117,7 +117,8 @@ if cmd_args and cfg.autosign and (
 if len(cmd_args) < 2:
 	cfg._usage()
 
-op     = cmd_args.pop(0)
+usr_op = cmd_args.pop(0)
+op     = usr_op.replace('-', '_')
 infile = cmd_args.pop(0)
 wallets = spec = None
 
@@ -135,14 +136,14 @@ match op:
 		if len(cmd_args) != 1:
 			cfg._usage()
 		spec = cmd_args[0]
-	case 'export-outputs' | 'export-outputs-sign' | 'import-key-images':
+	case 'export_outputs' | 'export_outputs_sign' | 'import_key_images':
 		if not cfg.autosign:
-			die(1, f'--autosign must be used with command {op!r}')
+			die(1, f'--autosign must be used with command {usr_op!r}')
 		if len(cmd_args) > 1:
 			cfg._usage()
 		wallets = cmd_args.pop(0) if cmd_args else None
 	case _:
-		die(1, f'{op!r}: unrecognized operation')
+		die(1, f'{usr_op!r}: unrecognized operation')
 
 m = xmrwallet.op(op, cfg, infile, wallets, spec=spec)
 
