@@ -25,6 +25,7 @@ class MoneroViewKey(HexStr):
 # https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 class mainnet(CoinProtocol.RPC, CoinProtocol.DummyWIF, CoinProtocol.Base):
 
+	mod_clsname    = 'Monero'
 	network_names  = _nw('mainnet', 'stagenet', None)
 	base_proto     = 'Monero'
 	base_proto_coin = 'XMR'

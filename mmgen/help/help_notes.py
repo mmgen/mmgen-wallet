@@ -51,6 +51,14 @@ class help_notes:
 		from ..proto.btc.rpc.local import BitcoinRPCClient
 		return BitcoinRPCClient.dfl_twname
 
+	def tw_dir(self):
+		from ..tw.ctl import TwCtl
+		twctl_cls = self.proto.base_proto_subclass(TwCtl, 'tw.ctl')
+		if hasattr(twctl_cls, 'get_tw_dir'):
+			return twctl_cls.get_tw_dir(self.cfg, self.proto)
+		else:
+			raise ValueError(f'protocol {self.proto.name} does not support tracking wallet with store')
+
 	def MasterShareIdx(self):
 		from ..seedsplit import MasterShareIdx
 		return MasterShareIdx

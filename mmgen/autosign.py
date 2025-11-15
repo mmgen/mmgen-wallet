@@ -801,6 +801,7 @@ class Autosign:
 				'autosign': True,
 				'autosign_mountpoint': str(self.mountpoint),
 				'offline': True,
+				'compat': False,
 				'passwd_file': str(self.keyfile)})
 		return self._xmrwallet_cfg
 

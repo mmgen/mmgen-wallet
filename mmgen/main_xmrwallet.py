@@ -47,6 +47,10 @@ opts_data = {
                                  When this option is in effect, filename argu-
                                  ments must be omitted, as files are located
                                  automatically.
+-c, --compat                     Adjust configuration for compatibility with
+                                 the mmgen-tx{{create,sign,send}} family of
+                                 commands.  Currently equivalent to
+                                 ‘-w {tw_dir}’
 -f, --priority=N                 Specify an integer priority ‘N’ for inclusion
                                  of a transaction in the blockchain (higher
                                  number means higher fee).  Valid parameters:
@@ -88,11 +92,12 @@ opts_data = {
 """
 	},
 	'code': {
-		'options': lambda cfg, s: s.format(
+		'options': lambda cfg, help_notes, s: s.format(
 			D   = xmrwallet.uarg_info['daemon'].annot,
 			R   = xmrwallet.uarg_info['tx_relay_daemon'].annot,
 			cfg = cfg,
 			gc  = gc,
+			tw_dir = help_notes('tw_dir'),
 			tp  = fmt_dict(xmrwallet.tx_priorities, fmt='equal_compact')
 		),
 		'notes': lambda help_mod, s: s.format(

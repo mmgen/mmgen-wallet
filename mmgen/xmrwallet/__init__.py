@@ -17,7 +17,7 @@ from collections import namedtuple
 
 from ..proto.btc.common import b58a
 
-from ..util import capfirst
+from ..util import die, capfirst
 
 tx_priorities = {
 	1: 'low',
@@ -113,4 +113,14 @@ def op_cls(op_name):
 	return cls
 
 def op(op, cfg, infile, wallets, *, spec=None):
+	if cfg.compat if cfg.compat is not None else cfg.xmrwallet_compat:
+		if cfg.wallet_dir:
+			die(1, '--wallet-dir can not be specified in xmrwallet compatibility mode')
+		from ..tw.ctl import TwCtl
+		from ..cfg import Config
+		twctl_cls = cfg._proto.base_proto_subclass(TwCtl, 'tw.ctl')
+		cfg = Config({
+			'_clone': cfg,
+			'compat': True,
+			'wallet_dir': twctl_cls.get_tw_dir(cfg, cfg._proto)})
 	return op_cls(op)(cfg, uargs(infile, wallets, spec))

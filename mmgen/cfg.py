@@ -239,6 +239,7 @@ class Config(Lockable):
 	# Monero:
 	monero_wallet_rpc_user     = 'monero'
 	monero_wallet_rpc_password = ''
+	xmrwallet_compat           = False
 	priority                   = 0
 
 	# test suite:
@@ -308,6 +309,7 @@ class Config(Lockable):
 		'max_input_size',
 		'max_tx_file_size',
 		'mnemonic_entry_modes',
+		'xmrwallet_compat',
 		'monero_wallet_rpc_password',
 		'monero_wallet_rpc_user',
 		'no_license',

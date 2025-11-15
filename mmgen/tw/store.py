@@ -26,6 +26,7 @@ from .ctl import TwCtl, write_mode, label_addr_pair
 class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 
 	caps = ('batch',)
+	tw_subdir = None
 	tw_fn = 'tracking-wallet.json'
 	aggressive_sync = False
 
@@ -85,7 +86,7 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 			cfg.data_dir_root,
 			'altcoins',
 			proto.coin.lower(),
-			('' if proto.network == 'mainnet' else proto.network))
+			('' if proto.network == 'mainnet' else proto.network)) / (cls.tw_subdir or '')
 
 	def upgrade_wallet_maybe(self):
 		pass
