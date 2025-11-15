@@ -438,7 +438,7 @@ class Config(Lockable):
 	@property
 	def data_dir(self):
 		"""
-		location of wallet and other data - same as data_dir_root for mainnet
+		location of wallet and other data
 		"""
 		if not hasattr(self, '_data_dir'):
 			def make_path():
@@ -554,10 +554,19 @@ class Config(Lockable):
 		self.coin = self.coin.upper()
 		self.token = self.token.upper() if self.token else None
 
-		if self.regtest or self.bob or self.alice or self.carol or gc.prog_name == f'{gc.proj_id}-regtest':
+		if (
+				self.regtest or
+				self.bob or
+				self.alice or
+				self.carol or
+				gc.prog_name == f'{gc.proj_id}-regtest'):
 			if self.coin != 'XMR':
 				self.network = 'regtest'
-			self.test_user = 'bob' if self.bob else 'alice' if self.alice else 'carol' if self.carol else ''
+			self.test_user = (
+				'bob' if self.bob else
+				'alice' if self.alice else
+				'carol' if self.carol else
+				'')
 		else:
 			self.network = 'testnet' if self.testnet else 'mainnet'
 

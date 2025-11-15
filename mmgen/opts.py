@@ -317,9 +317,9 @@ class UserOpts(Opts):
 			-- --skip-cfg-file        Skip reading the configuration file
 			-- --version              Print version information and exit
 			-- --usage                Print usage information and exit
-			b- --bob                  Specify user ‘Bob’ in MMGen regtest mode
-			b- --alice                Specify user ‘Alice’ in MMGen regtest mode
-			b- --carol                Specify user ‘Carol’ in MMGen regtest mode
+			x- --bob                  Specify user ‘Bob’ in MMGen regtest or test mode
+			x- --alice                Specify user ‘Alice’ in MMGen regtest or test mode
+			x- --carol                Specify user ‘Carol’ in MMGen regtest or test mode
 			rr COIN-SPECIFIC OPTIONS:
 			rr   For descriptions, refer to the non-prefixed versions of these options above
 			rr   Prefixed options override their non-prefixed counterparts

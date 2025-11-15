@@ -293,8 +293,8 @@ class CmdTestXMRWallet(CmdTestBase):
 			run(f'rm -f {glob}', shell=True)
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			[f'--wallet-dir={data.udir}']
-			+ self.extra_opts
+			self.extra_opts
+			+ [f'--wallet-dir={data.udir}']
 			+ (self.autosign_opts if data.autosign else [])
 			+ add_opts
 			+ [op]
@@ -412,13 +412,11 @@ class CmdTestXMRWallet(CmdTestBase):
 		data = self.users[user]
 		if data.autosign:
 			self.insert_device_online()
-		cmd_opts = list_gen(
-			[f'--wallet-dir={data.udir}'],
-			[f'--daemon=localhost:{data.md.rpc_port}'])
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ cmd_opts
+			+ [f'--wallet-dir={data.udir}']
+			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (self.autosign_opts if data.autosign else [])
 			+ add_opts
 			+ [op]
@@ -459,7 +457,6 @@ class CmdTestXMRWallet(CmdTestBase):
 
 		data = self.users[user]
 		cmd_opts = list_gen(
-			[f'--wallet-dir={data.udir}'],
 			[f'--outdir={data.udir}', not data.autosign],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
 			[f'--tx-relay-daemon={tx_relay_parm}', tx_relay_parm],
@@ -469,6 +466,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
+			+ [f'--wallet-dir={data.udir}']
 			+ cmd_opts
 			+ add_opts
 			+ (self.autosign_opts if data.autosign else [])

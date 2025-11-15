@@ -86,7 +86,8 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 			cfg.data_dir_root,
 			'altcoins',
 			proto.coin.lower(),
-			('' if proto.network == 'mainnet' else proto.network)) / (cls.tw_subdir or '')
+			('' if proto.network == 'mainnet' else proto.network),
+			(cls.tw_subdir or ''))
 
 	def upgrade_wallet_maybe(self):
 		pass

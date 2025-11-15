@@ -39,11 +39,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 	# xmrwallet attrs:
 	tx_relay_user = 'miner'
-	#    user     sid      autosign  shift kal_range add_coind_args
+	# user sid autosign port_shift kal_range add_coind_args
 	user_data = (
 		('miner', '98831F3A', False, 130, '1', []),
-		('alice', 'FE3C6545', True,  150, '1-2', []),
-	)
+		('alice', 'FE3C6545', True,  150, '1-2', []))
 
 	# autosign attrs:
 	coins = ['xmr']
@@ -179,7 +178,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ [f'--wallet-dir={data.udir}', f'--daemon=localhost:{data.md.rpc_port}']
+			+ [f'--wallet-dir={data.udir}']
+			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (self.autosign_opts if autosign else [])
 			+ ['dump']
 			+ ([] if autosign else [get_file_with_ext(data.udir, 'akeys')]))
@@ -312,7 +312,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		args = (
 			self.extra_opts
 			+ self.autosign_opts
-			+ [f'--wallet-dir={data.udir}', f'--daemon=localhost:{data.md.rpc_port}']
+			+ [f'--wallet-dir={data.udir}']
+			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ add_opts
 			+ [op]
 			+ ([get_file_with_ext(self.asi.xmr_tx_dir, ext)] if ext else [])
