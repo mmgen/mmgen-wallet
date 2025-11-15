@@ -47,12 +47,7 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 		if cfg.cached_balances:
 			self.use_cached_balances = True
 
-		self.tw_dir = Path(
-			self.cfg.data_dir_root,
-			'altcoins',
-			self.proto.coin.lower(),
-			('' if self.proto.network == 'mainnet' else self.proto.network)
-		)
+		self.tw_dir = type(self).get_tw_dir(self.cfg, self.proto)
 		self.tw_path = self.tw_dir / self.tw_fn
 
 		if no_wallet_init:
@@ -83,6 +78,14 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 			self.write()
 		elif self.cfg.debug:
 			msg('read-only wallet, doing nothing')
+
+	@classmethod
+	def get_tw_dir(cls, cfg, proto):
+		return Path(
+			cfg.data_dir_root,
+			'altcoins',
+			proto.coin.lower(),
+			('' if proto.network == 'mainnet' else proto.network))
 
 	def upgrade_wallet_maybe(self):
 		pass
