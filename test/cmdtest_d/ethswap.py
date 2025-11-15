@@ -88,7 +88,8 @@ class CmdTestEthSwapMethods:
 		token_addr = self.read_from_tmpfile('token_addr1').strip()
 		return self.spawn(
 			'mmgen-addrimport',
-			['--quiet', '--regtest=1', f'--token-addr={token_addr}', f'--address={eth_inbound_addr}'])
+			['--quiet', '--regtest=1', f'--token-addr={token_addr}', f'--address={eth_inbound_addr}']
+			+ self.add_eth_opts)
 
 	def token_bal1(self):
 		return self._token_bal_check(pat=rf'{dfl_sid}:E:1\s+{self.token_fund_amt}\s')
@@ -322,6 +323,7 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 	fund_amt = '123.456'
 	token_fund_amt = 1000
 	is_helper = True
+	add_eth_opts = ['--bob']
 
 	bals = lambda self, k: {
 		'swap1': [('98831F3A:E:1', '123.456')],

@@ -130,6 +130,8 @@ coin = cfg.coin
 
 class CmdTestEthdevMethods:
 
+	add_eth_opts = []
+
 	def _del_addr(self, addr):
 		t = self.spawn('mmgen-tool', self.eth_opts + ['remove_address', addr])
 		t.expect(f"'{addr}' deleted")
@@ -153,7 +155,10 @@ class CmdTestEthdevMethods:
 			exit_val  = None):
 		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
 		fn = self.get_file_with_ext(ext, no_dot=True, delete=False)
-		t = self.spawn('mmgen-addrimport', ['--regtest=1'] + add_args + [fn], exit_val=exit_val)
+		t = self.spawn(
+			'mmgen-addrimport',
+			['--regtest=1'] + self.add_eth_opts + add_args + [fn],
+			exit_val=exit_val)
 		if bad_input:
 			return t
 		t.expect('Importing')
@@ -223,7 +228,9 @@ class CmdTestEthdevMethods:
 
 	def _bal_check(self, *, pat, add_opts=[]):
 		self.mining_delay()
-		t = self.spawn('mmgen-tool', ['--regtest=1'] + add_opts + ['twview', 'wide=1'])
+		t = self.spawn(
+			'mmgen-tool',
+			['--regtest=1'] + self.add_eth_opts + add_opts + ['twview', 'wide=1'])
 		text = t.read(strip_color=True)
 		assert re.search(pat, text, re.DOTALL), f'output failed to match regex {pat}'
 		return t
@@ -721,8 +728,8 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		global coin
 		coin = cfg.coin
 
-		self.eth_opts         = [f'--outdir={self.tmpdir}', '--regtest=1', '--quiet']
-		self.eth_opts_noquiet = [f'--outdir={self.tmpdir}', '--regtest=1']
+		self.eth_opts         = [f'--outdir={self.tmpdir}', '--regtest=1', '--quiet'] + self.add_eth_opts
+		self.eth_opts_noquiet = [f'--outdir={self.tmpdir}', '--regtest=1'] + self.add_eth_opts
 
 		from mmgen.protocol import init_proto
 		self.proto = init_proto(cfg, network_id=self.proto.coin+'_rt', need_amt=True)
@@ -947,7 +954,9 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		return self._addrimport()
 
 	def _addrimport_one_addr(self, addr=None, extra_args=[]):
-		t = self.spawn('mmgen-addrimport', ['--regtest=1', '--quiet', f'--address={addr}'] + extra_args)
+		t = self.spawn(
+			'mmgen-addrimport',
+			['--regtest=1', '--quiet', f'--address={addr}'] + self.add_eth_opts + extra_args)
 		t.expect('OK')
 		return t
 

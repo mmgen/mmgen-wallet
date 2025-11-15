@@ -94,6 +94,7 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 	input_sels_prompt = 'to spend from: '
 	is_helper = True
 	txhex_chksum = '34980b41'
+	add_eth_opts = ['--bob']
 
 	cmd_group_in = CmdTestRune.cmd_group_in + (
 		# rune_swap:

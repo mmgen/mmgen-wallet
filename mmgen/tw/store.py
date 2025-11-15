@@ -84,6 +84,7 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 	def get_tw_dir(cls, cfg, proto):
 		return Path(
 			cfg.data_dir_root,
+			cfg.test_user,
 			'altcoins',
 			proto.coin.lower(),
 			('' if proto.network == 'mainnet' else proto.network),

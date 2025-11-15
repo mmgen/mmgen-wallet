@@ -128,6 +128,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	token_fund_amt = 1000
 	cross_group = 'ethbump_ltc'
 	cross_coin = 'ltc'
+	add_eth_opts = ['--bob']
 
 	cmd_group_in = (
 		('subgroup.ltc_init',           []),
@@ -312,10 +313,10 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		return self._swaptxsend()
 
 	def swaptxbump1(self):
-		return self._swaptxbump('41.1G')
+		return self._swaptxbump('41.1G', add_opts=['--bob'])
 
 	def swaptxbump2(self):
-		return self._swaptxbump('1.9G', output_args=[f'{dfl_sid}:E:12,4444.3333'])
+		return self._swaptxbump('1.9G', add_opts=['--bob'], output_args=[f'{dfl_sid}:E:12,4444.3333'])
 
 	def bal1(self):
 		return self._bal_check(pat=rf'{dfl_sid}:E:1\s+99012\.9999727\s')

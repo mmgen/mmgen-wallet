@@ -84,10 +84,12 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		return self._addrimport()
 
 	def twview(self):
-		return self.spawn('mmgen-tool', self.rune_opts + ['twview'])
+		return self.spawn('mmgen-tool', self.rune_opts + self.add_eth_opts + ['twview'])
 
 	def bal_refresh(self):
-		t = self.spawn('mmgen-tool', self.rune_opts + ['listaddresses', 'interactive=1'])
+		t = self.spawn(
+			'mmgen-tool',
+			self.rune_opts + self.add_eth_opts + ['listaddresses', 'interactive=1'])
 		t.expect(self.menu_prompt, 'R')
 		t.expect('menu): ', '3\n')
 		t.expect('(y/N): ', 'y')
