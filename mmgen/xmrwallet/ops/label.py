@@ -15,6 +15,7 @@ xmrwallet.ops.label: Monero wallet ops for the MMGen Suite
 from ...color import pink, cyan, gray
 from ...util import msg, ymsg, gmsg, die, make_timestr
 from ...ui import keypress_confirm
+from ...obj import TwComment
 from ...addr import CoinAddr
 
 from ..rpc import MoneroWalletRPC
@@ -28,7 +29,7 @@ class OpLabel(OpMixinSpec, OpWallet):
 	opts     = ()
 	wallet_offline = True
 
-	async def main(self):
+	async def main(self, add_timestr='ask'):
 
 		gmsg('\n{a} label for wallet {b}, account #{c}, address #{d}'.format(
 			a = 'Setting' if self.label else 'Removing',
@@ -53,7 +54,11 @@ class OpLabel(OpMixinSpec, OpWallet):
 				len(ret) - 1))
 
 		addr = ret[self.address_idx]
-		new_label = f'{self.label} [{make_timestr()}]' if self.label else ''
+		if self.label and add_timestr == 'ask':
+			add_timestr = keypress_confirm(self.cfg, '\n  Add timestamp to label?')
+		new_label = TwComment(
+			(self.label + (f' [{make_timestr()}]' if add_timestr else '')) if self.label
+			else '')
 
 		ca = CoinAddr(self.proto, addr['address'])
 		from . import addr_width

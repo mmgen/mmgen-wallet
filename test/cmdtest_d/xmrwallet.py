@@ -379,12 +379,14 @@ class CmdTestXMRWallet(CmdTestBase):
 		return self.set_label_user(
 			'miner',
 			'1:0:0,"Miner’s new primary account label [1:0:0]"',
+			'y',
 			'updated')
 
 	def remove_label_alice(self):
 		return self.set_label_user(
 			'alice',
 			'4:2:2,""',
+			None,
 			'removed',
 			add_opts = ['--full-address'])
 
@@ -392,9 +394,10 @@ class CmdTestXMRWallet(CmdTestBase):
 		return self.set_label_user(
 			'alice',
 			'4:2:2,"Alice’s new subaddress label [4:2:2]"',
+			'n',
 			'set')
 
-	def set_label_user(self, user, label_spec, expect, add_opts=[]):
+	def set_label_user(self, user, label_spec, add_timestr_resp, expect, add_opts=[]):
 		data = self.users[user]
 		cmd_opts = [f'--wallet-dir={data.udir}', f'--daemon=localhost:{data.md.rpc_port}']
 		t = self.spawn(
@@ -403,6 +406,8 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ add_opts
 			+ cmd_opts
 			+ ['label', data.kafile, label_spec])
+		if add_timestr_resp:
+			t.expect('(y/N): ', add_timestr_resp)
 		t.expect('(y/N): ', 'y')
 		t.expect(f'Label successfully {expect}')
 		return t
