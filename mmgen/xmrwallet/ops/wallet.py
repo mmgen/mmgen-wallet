@@ -173,8 +173,10 @@ class OpWallet(OpBase):
 		else:
 			self.addr_data = self.kal.data
 
-	async def restart_wallet_daemon(self):
-		atexit.register(lambda: asyncio.run(self.stop_wallet_daemon()))
+	async def restart_wallet_daemon(self, registered=[]):
+		if not registered:
+			atexit.register(lambda: asyncio.run(self.stop_wallet_daemon()))
+			registered.append(None)
 		await self.c.restart_daemon()
 
 	async def stop_wallet_daemon(self):

@@ -14,7 +14,7 @@ xmrwallet.ops.new: Monero wallet ops for the MMGen Suite
 
 from ...color import red, pink
 from ...util import msg, ymsg, make_timestr
-
+from ...obj import TwComment
 from ...ui import keypress_confirm
 
 from ..rpc import MoneroWalletRPC
@@ -32,7 +32,7 @@ class OpNew(OpMixinSpec, OpWallet):
 		h.open_wallet('Monero')
 
 		desc = 'account' if self.account is None else 'address'
-		label = (
+		label = TwComment(
 			None if self.label == '' else
 			'{} [{}]'.format(self.label or f'xmrwallet new {desc}', make_timestr()))
 

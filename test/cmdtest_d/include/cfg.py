@@ -49,6 +49,7 @@ cmd_groups_dfl = {
 	'runeswap':           gd('CmdTestRuneSwap',          {}),
 	'xmrwallet':          gd('CmdTestXMRWallet',         {}),
 	'xmr_autosign':       gd('CmdTestXMRAutosign',       {}),
+	'xmr_compat':         gd('CmdTestXMRCompat',         {'modname': 'xmr_autosign'}),
 }
 
 cmd_groups_extra = {

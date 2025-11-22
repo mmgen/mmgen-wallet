@@ -110,11 +110,12 @@ class MoneroWalletRPC:
 		msg('      Address: {}'.format(cyan(ret['base_address'])))
 		return (ret['account_index'], ret['base_address'])
 
-	def print_acct_addrs(self, wallet_data, account):
-		msg('\n      Addresses of account #{} ({}):'.format(
-			account,
-			wallet_data.accts_data['subaddress_accounts'][account]['label']))
-		msg('\n'.join(gen_acct_addr_info(self, wallet_data, account, indent='        ')))
+	def print_acct_addrs(self, wallet_data, account, silent=False):
+		if not silent:
+			msg('\n      Addresses of account #{} ({}):'.format(
+				account,
+				wallet_data.accts_data['subaddress_accounts'][account]['label']))
+			msg('\n'.join(gen_acct_addr_info(self, wallet_data, account, indent='        ')))
 		return wallet_data.addrs_data[account]['addresses']
 
 	def create_new_addr(self, account, label):

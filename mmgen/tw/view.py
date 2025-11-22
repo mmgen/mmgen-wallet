@@ -192,10 +192,11 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	async def __init__(self, cfg, proto):
 		self.cfg = cfg
 		self.proto = proto
-		self.rpc = await rpc_init(cfg, proto)
+		if have_rpc := 'rpc_init' in proto.mmcaps:
+			self.rpc = await rpc_init(cfg, proto)
 		if self.has_wallet:
 			from .ctl import TwCtl
-			self.twctl = await TwCtl(cfg, proto, mode='w')
+			self.twctl = await TwCtl(cfg, proto, mode='w', no_rpc=not have_rpc)
 		self.amt_keys = {'amt':'iwidth', 'amt2':'iwidth2'} if self.has_amt2 else {'amt':'iwidth'}
 		if repl_data := self.prompt_fs_repl.get(self.proto.coin):
 			for repl in [repl_data] if isinstance(repl_data[0], int) else repl_data:
@@ -441,7 +442,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				yield 'Network: {}'.format(Green(
 					self.proto.coin + ' ' + self.proto.chain_name.upper()))
 
-				if not self.rpc.is_remote:
+				if hasattr(self.rpc, 'blockcount'):
 					yield 'Block {} [{}]'.format(
 						self.rpc.blockcount.hl(color=color),
 						make_timestr(self.rpc.cur_date))
@@ -778,7 +779,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 						a = 'for' if edited else 'added to' if comment else 'removed from',
 						b = desc,
 						c = ' edited' if edited else ''))
-					return True
+					return 'redraw' if parent.cfg.coin == 'XMR' else True
 				else:
 					await asyncio.sleep(3)
 					parent.oneshot_msg = red('Label for {desc} could not be {action}'.format(

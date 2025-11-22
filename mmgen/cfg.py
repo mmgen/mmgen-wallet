@@ -240,6 +240,7 @@ class Config(Lockable):
 	# Monero:
 	monero_wallet_rpc_user     = 'monero'
 	monero_wallet_rpc_password = ''
+	monero_daemon              = ''
 	xmrwallet_compat           = False
 	priority                   = 0
 

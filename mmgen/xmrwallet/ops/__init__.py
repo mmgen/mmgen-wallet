@@ -111,12 +111,13 @@ class OpBase:
 			  Proxy: {blue(m[2] or 'None')}
 			""", strip_char='\t', indent=indent))
 
-	def mount_removable_device(self):
+	def mount_removable_device(self, registered=[]):
 		if self.cfg.autosign:
 			if not self.asi.device_inserted:
 				die(1, 'Removable device not present!')
-			if self.do_umount:
+			if self.do_umount and not registered:
 				atexit.register(lambda: self.asi.do_umount())
+				registered.append(None)
 			self.asi.do_mount()
 			self.post_mount_action()
 

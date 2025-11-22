@@ -308,6 +308,9 @@ class UserOpts(Opts):
 			br --rpc-user=USER        Authenticate to coin daemon using username USER
 			br --rpc-password=PASS    Authenticate to coin daemon using password PASS
 			Rr --rpc-backend=backend  Use backend 'backend' for JSON-RPC communications
+			mr --monero-wallet-rpc-user=USER Monero wallet RPC username
+			mr --monero-wallet-rpc-password=USER Monero wallet RPC password
+			mr --monero-daemon=HOST:PORT Connect to the monerod at HOST:PORT
 			Rr --aiohttp-rpc-queue-len=N Use N simultaneous RPC connections with aiohttp
 			-p --regtest=0|1          Disable or enable regtest mode
 			-- --testnet=0|1          Disable or enable testnet
@@ -361,6 +364,7 @@ class UserOpts(Opts):
 		  'r' - local RPC coin
 		  'X' - remote RPC coin
 		  'x' - local or remote RPC coin
+		  'm' - Monero
 		  '-' - any coin
 		Cmd codes:
 		  'p' - proto required
@@ -378,6 +382,7 @@ class UserOpts(Opts):
 					['-', 'r', 'R', 'b', 'h', 'x'] if coin == 'bch' else
 					['-', 'r', 'R', 'b', 'x'] if coin in gc.btc_fork_rpc_coins else
 					['-', 'r', 'R', 'e', 'x'] if coin in gc.eth_fork_coins else
+					['-', 'r', 'x', 'm'] if coin == 'xmr' else
 					['-', 'r', 'x'] if coin in gc.local_rpc_coins else
 					['-', 'X', 'x'] if coin in gc.remote_rpc_coins else
 					['-']),
