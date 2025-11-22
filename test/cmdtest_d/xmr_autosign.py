@@ -17,8 +17,8 @@ import re, asyncio
 
 from mmgen.color import blue, cyan, brown
 
-from ..include.common import imsg, silence, end_silence
-from .include.common import get_file_with_ext
+from ..include.common import imsg, silence, end_silence, strip_ansi_escapes
+from .include.common import get_file_with_ext, cleanup_env
 
 from .xmrwallet import CmdTestXMRWallet
 from .autosign import CmdTestAutosignThreaded
@@ -55,6 +55,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		('new_address_alice',        'adding an address to Alice’s tmp wallet'),
 		('new_address_alice_label',  'adding an address to Alice’s tmp wallet (with label)'),
 		('dump_tmp_wallets',         'dumping Alice’s tmp wallets'),
+		('dump_tmp_wallets_json',    'dumping Alice’s tmp wallets to JSON format'),
 		('delete_tmp_wallets',       'deleting Alice’s tmp wallets'),
 		('gen_kafile_miner',         'generating key-address file for Miner'),
 		('create_wallet_miner',      'creating Monero wallet for Miner'),
@@ -174,10 +175,13 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 	def dump_tmp_wallets(self):
 		return self._dump_wallets(autosign=False)
 
+	def dump_tmp_wallets_json(self):
+		return self._dump_wallets(autosign=False, op='dump_json')
+
 	def dump_wallets(self):
 		return self._dump_wallets(autosign=True)
 
-	def _dump_wallets(self, autosign):
+	def _dump_wallets(self, autosign, op='dump'):
 		data = self.users['alice']
 		self.insert_device_online()
 		t = self.spawn(
@@ -186,10 +190,14 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			+ (['--alice', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (self.autosign_opts if autosign else [])
-			+ ['dump']
-			+ ([] if autosign else [get_file_with_ext(data.udir, 'akeys')]))
+			+ [op]
+			+ ([] if autosign else [get_file_with_ext(data.udir, 'akeys')]),
+			env = cleanup_env(self.cfg))
 		t.expect('2 wallets dumped')
-		t.read()
+		res = t.read()
+		if op == 'dump_json':
+			import json
+			data = json.loads(re.sub('Stopping.*', '', strip_ansi_escapes(res)).strip())
 		self.remove_device_online()
 		return t
 

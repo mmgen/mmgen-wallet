@@ -12,7 +12,7 @@
 xmrwallet.ops.dump: Monero wallet ops for the MMGen Suite
 """
 
-from ...util import msg
+from ...util import msg, Msg
 
 from ..file.outputs import MoneroWalletDumpFile
 from ..rpc import MoneroWalletRPC
@@ -33,3 +33,30 @@ class OpDump(OpWallet):
 			data      = {'wallet_metadata': wallet_data.addrs_data}
 		).write()
 		return True
+
+class OpDumpDataBase(OpWallet):
+	wallet_offline = True
+	stem = 'dump'
+	return_data = True
+
+	async def process_wallet(self, d, fn, last):
+		h = MoneroWalletRPC(self, d)
+		h.open_wallet('source')
+		return {
+			'seed_id': self.kal.al_id.sid,
+			'wallet_num': d.idx,
+			'data': h.get_wallet_data(print=False)}
+
+	def post_main_success(self):
+		pass
+
+class OpDumpData(OpDumpDataBase):
+	start_daemon = False
+
+class OpDumpJson(OpDumpDataBase):
+
+	async def main(self):
+		import json
+		data = await super().main()
+		Msg(json.dumps(data))
+		return sum(map(bool, data))

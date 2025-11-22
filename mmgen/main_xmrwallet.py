@@ -28,7 +28,7 @@ opts_data = {
 		'desc': """Perform various Monero wallet and transacting operations for
                    addresses in an MMGen XMR key-address file""",
 		'usage2': [
-			'[opts] create | sync | list | view | listview | dump | restore [xmr_keyaddrfile] [wallets]',
+			'[opts] create | sync | list | view | listview | dump-json | dump | restore [xmr_keyaddrfile] [wallets]',
 			'[opts] label    [xmr_keyaddrfile] LABEL_SPEC',
 			'[opts] new      [xmr_keyaddrfile] NEW_ADDRESS_SPEC',
 			'[opts] transfer [xmr_keyaddrfile] TRANSFER_SPEC',
@@ -133,7 +133,7 @@ match op:
 			cfg._usage()
 	case 'txview' | 'txlist':
 		infile = [infile] + cmd_args
-	case 'create' | 'sync' | 'list' | 'view' | 'listview' | 'dump' | 'restore': # kafile_arg_ops
+	case 'create' | 'sync' | 'list' | 'view' | 'listview' | 'dump_json' | 'dump' | 'restore':
 		if len(cmd_args) > 1:
 			cfg._usage()
 		wallets = cmd_args.pop(0) if cmd_args else None

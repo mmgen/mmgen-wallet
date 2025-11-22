@@ -59,8 +59,11 @@ abort     - abort the current transaction created with --autosign.  The
             transaction may be signed or unsigned
 txview    - display detailed information about a transaction file or files
 txlist    - same as above, but display terse information in tabular format
-dump      - produce JSON dumps of wallet metadata (accounts, addresses and
-            labels) for a list or range of wallets
+dump-json - dump wallet metadata (accounts, addresses, labels), plus address
+            balances, for a list or range of wallets, to standard output in
+            JSON format
+dump      - same as above, but dump metadata only and save the dumps to
+            separate files for each wallet
 restore   - same as ‘create’, but additionally restore wallet metadata from
             the corresponding JSON dump files created with ‘dump’
 export-outputs      - export outputs of watch-only wallets for import into
