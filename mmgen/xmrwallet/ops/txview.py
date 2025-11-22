@@ -53,8 +53,7 @@ class OpTxview(OpBase):
 			(self.hdr if len(files) > 1 else '')
 			+ self.col_hdr
 			+ '\n'.join(getattr(tx, self.view_method)(addr_w=addr_w) for tx in txs)
-			+ self.footer
-		)
+			+ self.footer)
 
 class OpTxlist(OpTxview):
 	view_method = 'get_info_oneline'
@@ -89,6 +88,6 @@ class OpTxlist(OpTxview):
 			from ...term import get_terminal_size
 			cols = self.cfg.columns or get_terminal_size().width
 			if cols < self.fixed_cols_w + self.min_addr_w:
-				die(1, f'A terminal at least {self.fixed_cols_w + self.min_addr_w} columns wide is required '
-						'to display this output (or use --columns or --pager)')
+				die(1, f'A terminal at least {self.fixed_cols_w + self.min_addr_w} columns wide is'
+						' required to display this output (or use --columns or --pager)')
 		await super().main(cols=cols)

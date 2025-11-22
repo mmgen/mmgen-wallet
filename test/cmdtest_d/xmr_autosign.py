@@ -50,15 +50,15 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 	cmd_group = (
 		('daemon_version',           'checking daemon version'),
-		('gen_kafile_miner',         'generating key-address file for Miner'),
-		('create_wallet_miner',      'creating Monero wallet for Miner'),
-		('mine_initial_coins',       'mining initial coins'),
 		('create_tmp_wallets',       'creating temporary online wallets for Alice'),
 		('new_account_alice',        'adding an account to Alice’s tmp wallet'),
 		('new_address_alice',        'adding an address to Alice’s tmp wallet'),
 		('new_address_alice_label',  'adding an address to Alice’s tmp wallet (with label)'),
 		('dump_tmp_wallets',         'dumping Alice’s tmp wallets'),
 		('delete_tmp_wallets',       'deleting Alice’s tmp wallets'),
+		('gen_kafile_miner',         'generating key-address file for Miner'),
+		('create_wallet_miner',      'creating Monero wallet for Miner'),
+		('mine_initial_coins',       'mining initial coins'),
 		('autosign_setup',           'autosign setup with Alice’s seed'),
 		('autosign_xmr_setup',       'autosign setup (creation of Monero signing wallets)'),
 		('create_watchonly_wallets', 'creating watch-only wallets from Alice’s wallet dumps'),

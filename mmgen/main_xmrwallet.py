@@ -111,9 +111,9 @@ cfg = Config(opts_data=opts_data, init_opts={'coin':'xmr'})
 cmd_args = cfg._args
 
 if cmd_args and cfg.autosign and (
-		cmd_args[0] in (
+		cmd_args[0].replace('-', '_') in (
 			xmrwallet.kafile_arg_ops
-			+ ('export-outputs', 'export-outputs-sign', 'import-key-images', 'txview', 'txlist')
+			+ ('export_outputs', 'export_outputs_sign', 'import_key_images', 'txview', 'txlist')
 		)
 		or len(cmd_args) == 1 and cmd_args[0] in ('submit', 'resubmit', 'abort')
 	):

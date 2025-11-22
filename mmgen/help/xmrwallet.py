@@ -49,7 +49,7 @@ transfer  - transfer specified XMR amount from specified wallet:account to
             specified address
 sweep     - sweep funds in specified wallet:account to new address in same
             account, or new or specified account in another wallet
-sweep_all - same as above, but sweep balances of all addresses in the account
+sweep-all - same as above, but sweep balances of all addresses in the account
 relay     - relay a transaction from a transaction file created using ‘sweep’
             or ‘transfer’ with the --no-relay option
 submit    - submit an autosigned transaction to a wallet and the network

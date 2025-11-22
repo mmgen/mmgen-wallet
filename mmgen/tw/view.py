@@ -474,8 +474,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				tuple(gen_hdr(spc='' if line_processing == 'print' else ' ')),
 				tuple(
 					get_body(getattr(self, dt.fmt_method)) if data else
-					[(nocolor, yellow)[color](self.nodata_msg.ljust(self.term_width))])
-			)
+					[(nocolor, yellow)[color](self.nodata_msg.ljust(self.term_width))]))
 
 		if not gv.stdout.isatty():
 			line_processing = 'print'
@@ -536,8 +535,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			'\n'.join(display_hdr) + '\n'
 			+ dt.item_separator.join(display_body[top:bot])
 			+ fill
-			+ footer
-		)
+			+ footer)
 
 	async def view_filter_and_sort(self):
 
