@@ -157,13 +157,14 @@ class tool_cmd(tool_cmd_base):
 
 	async def add_label(self, mmgen_or_coin_addr: str, label: str):
 		"add descriptive label for address in tracking wallet"
+		from ..obj import TwComment
 		from ..tw.ctl import TwCtl
-		return await (await TwCtl(self.cfg, self.proto, mode='w')).set_comment(mmgen_or_coin_addr, label)
+		ret = await (await TwCtl(self.cfg, self.proto, mode='w')).set_comment(mmgen_or_coin_addr, label)
+		return True if isinstance(ret, TwComment) else False
 
 	async def remove_label(self, mmgen_or_coin_addr: str):
 		"remove descriptive label for address in tracking wallet"
-		await self.add_label(mmgen_or_coin_addr, '')
-		return True
+		return await self.add_label(mmgen_or_coin_addr, '')
 
 	async def remove_address(self, mmgen_or_coin_addr: str):
 		"remove an address from tracking wallet"

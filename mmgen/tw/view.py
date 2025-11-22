@@ -762,13 +762,15 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 		async def i_comment_add(self, parent, idx):
 
-			async def do_comment_add(comment):
-
-				if await parent.twctl.set_comment(
+			async def do_comment_add(comment_in):
+				from ..obj import TwComment
+				comment = await parent.twctl.set_comment(
 						addrspec     = None,
-						comment      = comment,
+						comment      = comment_in,
 						trusted_pair = (entry.twmmid, entry.addr),
-						silent       = parent.scroll):
+						silent       = parent.scroll)
+
+				if isinstance(comment, TwComment):
 					entry.comment = comment
 					edited = cur_comment and comment
 					parent.oneshot_msg = (green if comment else yellow)('Label {a} {b}{c}'.format(

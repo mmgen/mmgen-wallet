@@ -141,15 +141,11 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 				msg(
 					'Added label {} to {}'.format(comment.hl2(encl='‘’'), desc) if comment else
 					'Removed label from {}'.format(desc))
-			return True
+			return comment
 		else:
 			if not silent:
 				msg('Label could not be {}'.format('added' if comment else 'removed'))
 			return False
-
-	@write_mode
-	async def remove_comment(self, mmaddr):
-		await self.set_comment(mmaddr, '')
 
 	def check_import_mmid(self, addr, old_mmid, new_mmid):
 		'returns True if mmid needs update, None otherwise'
