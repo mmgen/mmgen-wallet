@@ -96,6 +96,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	display_hdr = ()
 	display_body = ()
 	prompt_fs_repl = {}
+	removed_key_mappings = {}
 	nodata_msg = '[no data for requested parameters]'
 	cols = 0
 	term_height = 0
@@ -196,9 +197,15 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			from .ctl import TwCtl
 			self.twctl = await TwCtl(cfg, proto, mode='w')
 		self.amt_keys = {'amt':'iwidth', 'amt2':'iwidth2'} if self.has_amt2 else {'amt':'iwidth'}
-		if repl := self.prompt_fs_repl.get(self.proto.coin):
-			self.prompt_fs_in[repl[0]] = repl[1]
+		if repl_data := self.prompt_fs_repl.get(self.proto.coin):
+			for repl in [repl_data] if isinstance(repl_data[0], int) else repl_data:
+				self.prompt_fs_in[repl[0]] = repl[1]
 		self.prompt_fs = '\n'.join(self.prompt_fs_in)
+		for k, v in self.removed_key_mappings.items():
+			if k in self.key_mappings and self.key_mappings[k] == v:
+				del self.key_mappings[k]
+			else:
+				raise ValueError(f'{k}: {v}: unrecognized or invalid key mapping')
 		self.key_mappings.update(self.extra_key_mappings)
 		if self.proto.coin == 'BCH':
 			self.key_mappings.update({'h': 'd_addr_view_pref'})
