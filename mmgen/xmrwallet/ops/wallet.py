@@ -207,7 +207,7 @@ class OpWallet(OpBase):
 			b = len(self.addr_data),
 			c = self.add_wallet_desc,
 			d = suf(self.addr_data)))
-		processed = 0
+		data = []
 		for n, d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
 			fn = self.get_wallet_fn(d)
 			gmsg('\n{a}ing wallet {b}/{c} ({d})'.format(
@@ -215,9 +215,9 @@ class OpWallet(OpBase):
 				b = n + 1,
 				c = len(self.addr_data),
 				d = fn.name))
-			processed += await self.process_wallet(d, fn, last=n==len(self.addr_data)-1)
-		gmsg(f'\n{processed} wallet{suf(processed)} {self.stem}ed\n')
-		return processed
+			data.append(await self.process_wallet(d, fn, last=n == len(self.addr_data) - 1))
+		gmsg(f'\n{len(data)} wallet{suf(len(data))} {self.stem}ed\n')
+		return data if self.return_data else sum(map(bool, data))
 
 	def head_msg(self, wallet_idx, fn):
 		gmsg('\n{a} {b}wallet #{c} ({d})'.format(

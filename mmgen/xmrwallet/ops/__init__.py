@@ -29,6 +29,7 @@ class OpBase:
 	trust_monerod = False
 	do_umount = True
 	name = None
+	return_data = False
 
 	def __init__(self, cfg, uarg_tuple):
 
