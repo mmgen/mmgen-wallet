@@ -34,14 +34,13 @@ class OpDump(OpWallet):
 		).write()
 		return True
 
-class OpDumpDataBase(OpWallet):
+class OpDumpDataCommon(OpWallet):
 	wallet_offline = True
-	stem = 'dump'
 	return_data = True
 
 	async def process_wallet(self, d, fn, last):
 		h = MoneroWalletRPC(self, d)
-		h.open_wallet('source')
+		h.open_wallet('source', refresh=False)
 		return {
 			'seed_id': self.kal.al_id.sid,
 			'wallet_num': d.idx,
@@ -50,10 +49,12 @@ class OpDumpDataBase(OpWallet):
 	def post_main_success(self):
 		pass
 
-class OpDumpData(OpDumpDataBase):
+class OpDumpData(OpDumpDataCommon):
 	start_daemon = False
+	stem = 'load'
 
-class OpDumpJson(OpDumpDataBase):
+class OpDumpJson(OpDumpDataCommon):
+	stem = 'dump'
 
 	async def main(self):
 		import json

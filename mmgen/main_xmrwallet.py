@@ -62,7 +62,7 @@ opts_data = {
 -b, --rescan-blockchain          Rescan the blockchain if wallet fails to sync
 -d, --outdir=D                   Save transaction files to directory 'D'
                                  instead of the working directory
--D, --daemon=H:P                 Connect to the monerod at {D}
+-D, --daemon=H:P                 Connect to the monerod at {dhp}
 -e, --skip-empty-accounts        Skip display of empty accounts in wallets
                                  where applicable
 -E, --skip-empty-addresses       Skip display of used empty addresses in
@@ -73,7 +73,7 @@ opts_data = {
 -P, --rescan-spent               Perform a rescan of spent outputs.  Used only
                                  with the ‘export-outputs-sign’ operation
 -R, --tx-relay-daemon=H:P[:H:P]  Relay transactions via a monerod specified by
-                                 {R}
+                                 {rdhp}
 -r, --restore-height=H           Scan from height 'H' when creating wallets.
                                  Use special value ‘current’ to create empty
                                  wallet at current blockchain height.
@@ -93,8 +93,8 @@ opts_data = {
 	},
 	'code': {
 		'options': lambda cfg, help_notes, s: s.format(
-			D   = xmrwallet.uarg_info['daemon'].annot,
-			R   = xmrwallet.uarg_info['tx_relay_daemon'].annot,
+			dhp = xmrwallet.uarg_info['daemon'].annot,
+			rdhp = xmrwallet.uarg_info['tx_relay_daemon'].annot,
 			cfg = cfg,
 			gc  = gc,
 			tw_dir = help_notes('tw_dir'),

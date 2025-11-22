@@ -62,7 +62,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		('mine_initial_coins',       'mining initial coins'),
 		('autosign_setup',           'autosign setup with Alice’s seed'),
 		('autosign_xmr_setup',       'autosign setup (creation of Monero signing wallets)'),
-		('create_watchonly_wallets', 'creating watch-only wallets from Alice’s wallet dumps'),
+		('restore_watchonly_wallets', 'creating watch-only wallets from Alice’s wallet dumps'),
 		('delete_tmp_dump_files',    'deleting Alice’s dump files'),
 		('fund_alice1',              'sending funds to Alice (wallet #1)'),
 		('check_bal_alice1',         'mining, checking balance (wallet #1)'),
@@ -261,7 +261,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		self.remove_device()
 		return t
 
-	def create_watchonly_wallets(self):
+	def restore_watchonly_wallets(self):
 		return self._create_wallets('restore')
 
 	def restore_wallets(self):

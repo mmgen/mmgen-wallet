@@ -718,12 +718,13 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					#  None:   action aborted by user or no action performed
 					#  False:  an error occurred
 					#  'redo': user will be re-prompted for item number
+					#  'redraw': action successfully performed, screen will be redrawn
 					ret = await action_method(parent, idx)
 					if ret != 'redo':
 						break
 					await asyncio.sleep(0.5)
 
-			if parent.scroll and ret is False:
+			if parent.scroll and ret is False or ret == 'redraw':
 				# error messages could leave screen in messy state, so do complete redraw:
 				msg_r(
 					CUR_HOME + ERASE_ALL +
@@ -744,7 +745,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				parent.oneshot_msg = yellow(
 					f'{parent.proto.dcoin} balance for {parent.item_desc} #{idx} refreshed')
 				if res == 0:
-					return False # zeroing balance may mess up display
+					return 'redraw' # zeroing balance may mess up display
 
 		async def i_addr_delete(self, parent, idx):
 			if not parent.keypress_confirm(

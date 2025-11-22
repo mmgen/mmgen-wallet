@@ -145,7 +145,7 @@ class MMGenID(HiliteStr, InitErrors, MMGenObject):
 				assert id_str.count(':') == 2, 'mmtype letter required for extended MMGen IDs'
 				me = str.__new__(cls, id_str)
 				idx, ext = idx.split('-', 1)
-				me.acct_num, me.acct_addr_num = [MoneroIdx(e) for e in ext.split('/', 1)]
+				me.acct_idx, me.addr_idx = [MoneroIdx(e) for e in ext.split('/', 1)]
 			else:
 				me = str.__new__(cls, f'{sid}:{mmtype}:{idx}')
 			me.sid = SeedID(sid=sid)

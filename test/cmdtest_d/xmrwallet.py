@@ -59,7 +59,6 @@ class CmdTestXMRWallet(CmdTestBase):
 	"""
 
 	networks = ('xmr',)
-	passthru_opts = ()
 	tmpdir_nums = [29]
 	dfl_random_txs = 3
 	color = True
@@ -377,13 +376,23 @@ class CmdTestXMRWallet(CmdTestBase):
 			random_txs = self.dfl_random_txs)
 
 	def set_label_miner(self):
-		return self.set_label_user('miner', '1:0:0,"Miner’s new primary account label [1:0:0]"', 'updated')
+		return self.set_label_user(
+			'miner',
+			'1:0:0,"Miner’s new primary account label [1:0:0]"',
+			'updated')
 
 	def remove_label_alice(self):
-		return self.set_label_user('alice', '4:2:2,""', 'removed', add_opts=['--full-address'])
+		return self.set_label_user(
+			'alice',
+			'4:2:2,""',
+			'removed',
+			add_opts = ['--full-address'])
 
 	def set_label_alice(self):
-		return self.set_label_user('alice', '4:2:2,"Alice’s new subaddress label [4:2:2]"', 'set')
+		return self.set_label_user(
+			'alice',
+			'4:2:2,"Alice’s new subaddress label [4:2:2]"',
+			'set')
 
 	def set_label_user(self, user, label_spec, expect, add_opts=[]):
 		data = self.users[user]
