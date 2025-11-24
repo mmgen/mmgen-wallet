@@ -328,12 +328,10 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	def compute_column_widths(self, widths, maxws, minws, maxws_nice, *, wide, interactive):
 
 		def do_ret(freews):
-			widths.update({k: minws[k] + freews.get(k, 0) for k in minws})
-			widths.update({ikey: widths[key] - self.disp_prec - 1 for key, ikey in self.amt_keys.items()})
-			return namedtuple('column_widths', widths.keys())(*widths.values())
-
-		def do_ret_max():
-			widths.update({k: max(minws[k], maxws[k]) for k in minws})
+			if freews:
+				widths.update({k: minws[k] + freews.get(k, 0) for k in minws})
+			else:
+				widths.update({k: max(minws[k], maxws[k]) for k in minws})
 			widths.update({ikey: widths[key] - self.disp_prec - 1 for key, ikey in self.amt_keys.items()})
 			return namedtuple('column_widths', widths.keys())(*widths.values())
 
@@ -365,7 +363,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		self.cols = min(self.term_width, minw + varw)
 
 		if wide or self.cols == minw + varw:
-			return do_ret_max()
+			return do_ret(None)
 
 		if maxws_nice:
 			# compute high-priority widths:
@@ -702,36 +700,49 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			if not parent.disp_data:
 				return
 
-			from ..ui import line_input
+			async def do_error_msg(data):
+				msg_r(
+					'Choice must be a single number between {n} and {m} inclusive{s}'.format(
+						n = 1,
+						m = len(data),
+						s = ' ' if parent.scroll else ''))
+				if parent.scroll:
+					await asyncio.sleep(1.5)
+					msg_r(CUR_UP(1) + '\r' + ERASE_ALL)
+
+			async def get_idx(desc, data):
+				from ..ui import line_input
+				while True:
+					msg_r(parent.blank_prompt if parent.scroll else '\n')
+					usr_ret = line_input(
+						parent.cfg,
+						f'Enter {desc} (or ENTER to return to main menu): ')
+					if usr_ret == '':
+						if parent.scroll:
+							msg_r(CUR_UP(1) + '\r' + ''.ljust(parent.term_width))
+						return None
+					idx = get_obj(MMGenIdx, n=usr_ret, silent=True)
+					if idx and idx <= len(data):
+						return idx
+					await do_error_msg(data)
+
+			async def get_idx_from_user():
+				return await get_idx(f'{parent.item_desc} number', parent.disp_data)
+
 			while True:
-				msg_r(parent.blank_prompt if parent.scroll else '\n')
-				ret = line_input(
-					parent.cfg,
-					f'Enter {parent.item_desc} number (or ENTER to return to main menu): ')
-				if ret == '':
-					if parent.scroll:
-						msg_r(CUR_UP(1) + '\r' + ''.ljust(parent.term_width))
-					return
-				idx = get_obj(MMGenIdx, n=ret, silent=True)
-				if not idx or idx < 1 or idx > len(parent.disp_data):
-					msg_r(
-						'Choice must be a single number between 1 and {n}{s}'.format(
-							n = len(parent.disp_data),
-							s = ' ' if parent.scroll else ''))
-					if parent.scroll:
-						await asyncio.sleep(1.5)
-						msg_r(CUR_UP(1) + '\r' + ERASE_ALL)
-				else:
-					# action return values:
-					#  True:   action successfully performed
-					#  None:   action aborted by user or no action performed
-					#  False:  an error occurred
-					#  'redo': user will be re-prompted for item number
-					#  'redraw': action successfully performed, screen will be redrawn
+				# action_method return values:
+				#  True:   action successfully performed
+				#  False:  an error occurred
+				#  None:   action aborted by user or no action performed
+				#  'redo': user will be re-prompted for item number
+				#  'redraw': action successfully performed, screen will be redrawn
+				if idx := await get_idx_from_user():
 					ret = await action_method(parent, idx)
-					if ret != 'redo':
-						break
-					await asyncio.sleep(0.5)
+				else:
+					ret = None
+				if ret != 'redo':
+					break
+				await asyncio.sleep(0.5)
 
 			if parent.scroll and ret is False or ret == 'redraw':
 				# error messages could leave screen in messy state, so do complete redraw:
@@ -799,22 +810,21 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					return False
 
 			entry = parent.disp_data[idx-1]
-			desc = f'{parent.item_desc} #{idx}'
+			desc       = f'{parent.item_desc} #{idx}'
+			color_desc = f'{parent.item_desc} {red("#" + str(idx))}'
+
 			cur_comment = parent.disp_data[idx-1].comment
 			msg('Current label: {}'.format(cur_comment.hl() if cur_comment else '(none)'))
 
 			from ..ui import line_input
-			res = line_input(
-				parent.cfg,
-				'Enter label text for {} {}: '.format(parent.item_desc, red(f'#{idx}')),
-				insert_txt = cur_comment)
+			res = line_input(parent.cfg, f'Enter label text for {color_desc}: ', insert_txt=cur_comment)
 
 			match res:
 				case s if s == cur_comment:
 					parent.oneshot_msg = yellow(f'Label for {desc} unchanged')
 					return None
 				case '':
-					if not parent.keypress_confirm(f'Removing label for {desc}. OK?'):
+					if not parent.keypress_confirm(f'Removing label for {color_desc}. OK?'):
 						return 'redo'
 
 			return await do_comment_add(res)
