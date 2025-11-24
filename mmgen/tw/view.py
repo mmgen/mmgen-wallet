@@ -264,20 +264,18 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			ret.append('Grouped')
 		return ret
 
-	def sort_data(self, key=None, *, reverse=False):
+	def sort_data(self, key):
 		if key == 'txid' and not self.txid_w:
 			return
-		key = key or self.sort_key
 		if key not in self.sort_funcs:
 			die(1, f'{key!r}: invalid sort key.  Valid options: {" ".join(self.sort_funcs)}')
 		self.sort_key = key
-		assert isinstance(reverse, bool)
 		save = self.data.copy()
-		self.data.sort(key=self.sort_funcs[key], reverse=reverse or self.reverse)
+		self.data.sort(key=self.sort_funcs[key], reverse=self.reverse)
 		if self.data != save:
 			self.pos = 0
 
-	async def get_data(self, *, sort_key=None, reverse_sort=False):
+	async def get_data(self):
 
 		rpc_data = await self.get_rpc_data()
 

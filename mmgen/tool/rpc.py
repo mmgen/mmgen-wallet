@@ -64,12 +64,13 @@ class tool_cmd(tool_cmd_base):
 			**kwargs):
 
 		obj.reverse = reverse
+		obj.sort_key = sort or obj.sort_key
 		obj.age_fmt = age_fmt
 
 		for k, v in kwargs.items():
 			setattr(obj, k, v)
 
-		await obj.get_data(sort_key=sort, reverse_sort=reverse)
+		await obj.get_data()
 
 		if interactive:
 			await obj.view_filter_and_sort()

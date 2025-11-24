@@ -34,7 +34,7 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	has_amt2 = True
 
-	async def get_data(self, *args, **kwargs):
-		await super().get_data(*args, **kwargs)
+	async def get_data(self):
+		await super().get_data()
 		for e in self.data:
 			e.amt2 = await self.twctl.get_eth_balance(e.addr)
