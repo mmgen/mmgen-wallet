@@ -146,6 +146,7 @@ class MMGenID(HiliteStr, InitErrors, MMGenObject):
 				me = str.__new__(cls, id_str)
 				idx, ext = idx.split('-', 1)
 				me.acct_idx, me.addr_idx = [MoneroIdx(e) for e in ext.split('/', 1)]
+				me.acct_id = f'{sid}:{mmtype}:{idx}:{me.acct_idx}'
 			else:
 				ext = None
 				me = str.__new__(cls, f'{sid}:{mmtype}:{idx}')
@@ -154,13 +155,15 @@ class MMGenID(HiliteStr, InitErrors, MMGenObject):
 			me.idx = AddrIdx(idx)
 			me.al_id = str.__new__(AddrListID, me.sid + ':' + me.mmtype) # checks already done
 			if ext:
-				me.sort_key = '{}:{}:{:0{w1}}:{:0{w2}}:{:0{w2}}'.format(
+				me.acct_sort_key = '{}:{}:{:0{w1}}:{:0{w2}}'.format(
 					me.sid,
 					me.mmtype,
 					me.idx,
 					me.acct_idx,
-					me.addr_idx,
 					w1 = me.idx.max_digits,
+					w2 = MoneroIdx.max_digits)
+				me.sort_key = me.acct_sort_key + ':{:0{w2}}'.format(
+					me.addr_idx,
 					w2 = MoneroIdx.max_digits)
 			else:
 				me.sort_key = '{}:{}:{:0{w}}'.format(me.sid, me.mmtype, me.idx, w=me.idx.max_digits)

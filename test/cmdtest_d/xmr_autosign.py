@@ -508,6 +508,8 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('gen_kafile_miner',         'generating key-address file for Miner'),
 		('create_wallet_miner',      'creating Monero wallet for Miner'),
 		('mine_initial_coins',       'mining initial coins'),
+		('fund_alice2',              'sending funds to Alice (wallet #2)'),
+		('check_bal_alice2',         'mining, checking balance (wallet #2)'),
 		('fund_alice1',              'sending funds to Alice (wallet #1)'),
 		('mine_blocks',              'mining some blocks'),
 		('alice_listaddresses',      'performing operations on Alice’s tracking wallets (listaddresses)'),
@@ -537,13 +539,15 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		return self._alice_twops('listaddresses', 2, 'y', r'Primary account.*1\.234567891234')
 
 	def alice_twview(self):
-		return self._alice_twops('twview', 1, 'n', r'New Label.*2\.469135782468')
+		return self._alice_twops('twview', 1, 'n', r'New Label.*2\.469135782468', addr_idx_num=0)
 
-	def _alice_twops(self, op, addr_num, add_timestr_resp, expect_str):
+	def _alice_twops(self, op, addr_num, add_timestr_resp, expect_str, *, addr_idx_num=None):
 		self.insert_device_online()
 		t = self.spawn('mmgen-tool', self.alice_opts + self.autosign_opts + [op, 'interactive=1'])
 		t.expect(self.menu_prompt, 'l')
 		t.expect('main menu): ', str(addr_num))
+		if addr_idx_num is not None:
+			t.expect('main menu): ', str(addr_idx_num))
 		t.expect(': ', 'New Label\n')
 		t.expect('(y/N): ', add_timestr_resp)
 		t.expect(self.menu_prompt, 'R')

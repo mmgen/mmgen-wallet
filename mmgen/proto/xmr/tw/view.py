@@ -21,15 +21,6 @@ class MoneroTwView:
 		caps = ()
 		is_remote = False
 
-	prompt_fs_repl = {'XMR': (
-		(1, 'Filters: show [E]mpty addrs, [u]sed addrs, all [L]abels'),
-		(3, 'Actions: [q]uit menu, add [l]abel, [R]efresh balances:'))}
-	extra_key_mappings = {
-		'u': 'd_showused',
-		'R': 'a_sync_wallets'}
-	removed_key_mappings = {
-		'D': 'i_addr_delete'}
-
 	async def get_rpc_data(self):
 		from mmgen.tw.shared import TwMMGenID, TwLabel
 

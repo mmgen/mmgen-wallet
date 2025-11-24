@@ -20,3 +20,12 @@ class MoneroTwAddresses(MoneroTwView, TwAddresses):
 
 	include_empty = True
 	has_used = True
+
+	prompt_fs_repl = {'XMR': (
+		(1, 'Filters: show [E]mpty addrs, [u]sed addrs, all [L]abels'),
+		(3, 'Actions: [q]uit menu, add [l]abel, [R]efresh balances:'))}
+	extra_key_mappings = {
+		'u': 'd_showused',
+		'R': 'a_sync_wallets'}
+	removed_key_mappings = {
+		'D': 'i_addr_delete'}

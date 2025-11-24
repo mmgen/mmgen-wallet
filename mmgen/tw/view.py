@@ -27,7 +27,7 @@ from ..cfg import gv
 from ..objmethods import MMGenObject
 from ..obj import get_obj, MMGenIdx, MMGenList
 from ..color import nocolor, yellow, orange, green, red, blue
-from ..util import msg, msg_r, fmt, die, capfirst, suf, make_timestr, isAsync
+from ..util import msg, msg_r, fmt, die, capfirst, suf, make_timestr, isAsync, is_int
 from ..rpc import rpc_init
 from ..base_obj import AsyncInit
 
@@ -80,6 +80,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			def do(method, data, cw, fs, color, fmt_method):
 				return [l.rstrip() for l in method(data, cw, fs, color, fmt_method)]
 
+	account_based = False
 	has_wallet  = True
 	has_amt2    = False
 	dates_set   = False
@@ -119,6 +120,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		'comment':   fp('c', True, False, ' {c:%s}',  ' {c}'),
 		'amt':       fp('A', True, False, ' {A:%s}',  ' {A}'),
 		'amt2':      fp('B', True, False, ' {B:%s}',  ' {B}'),
+		'addr_idx':  fp('I', True, False, ' {I:%s}',  ' {I}'),
 		'date':      fp('d', True, True,  ' {d:%s}',  ' {d:<%s}'),
 		'date_time': fp('D', True, True,  ' {D:%s}',  ' {D:%s}'),
 		'block':     fp('b', True, True,  ' {b:%s}',  ' {b:<%s}'),
@@ -700,18 +702,19 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			if not parent.disp_data:
 				return
 
-			async def do_error_msg(data):
+			async def do_error_msg(data, is_addr_idx):
 				msg_r(
 					'Choice must be a single number between {n} and {m} inclusive{s}'.format(
-						n = 1,
-						m = len(data),
+						n = list(data.keys())[0] if is_addr_idx else 1,
+						m = list(data.keys())[-1] if is_addr_idx else len(data),
 						s = ' ' if parent.scroll else ''))
 				if parent.scroll:
 					await asyncio.sleep(1.5)
 					msg_r(CUR_UP(1) + '\r' + ERASE_ALL)
 
-			async def get_idx(desc, data):
+			async def get_idx(desc, data, *, is_addr_idx=False):
 				from ..ui import line_input
+				ur = namedtuple('usr_idx_data', ['idx', 'addr_idx'])
 				while True:
 					msg_r(parent.blank_prompt if parent.scroll else '\n')
 					usr_ret = line_input(
@@ -721,13 +724,24 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 						if parent.scroll:
 							msg_r(CUR_UP(1) + '\r' + ''.ljust(parent.term_width))
 						return None
-					idx = get_obj(MMGenIdx, n=usr_ret, silent=True)
-					if idx and idx <= len(data):
-						return idx
-					await do_error_msg(data)
+					if is_addr_idx:
+						if is_int(usr_ret) and int(usr_ret) in data:
+							return ur(MMGenIdx(data[int(usr_ret)].disp_data_idx + 1), int(usr_ret))
+					else:
+						idx = get_obj(MMGenIdx, n=usr_ret, silent=True)
+						if idx and idx <= len(data):
+							return ur(idx, None)
+					await do_error_msg(data, is_addr_idx)
 
 			async def get_idx_from_user():
-				return await get_idx(f'{parent.item_desc} number', parent.disp_data)
+				if parent.account_based:
+					if res := await get_idx(f'{parent.item_desc} number', parent.accts_data):
+						return await get_idx(
+							'address index',
+							list(parent.accts_data.values())[res.idx - 1].data,
+							is_addr_idx = True)
+				else:
+					return await get_idx(f'{parent.item_desc} number', parent.disp_data)
 
 			while True:
 				# action_method return values:
@@ -736,8 +750,8 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				#  None:   action aborted by user or no action performed
 				#  'redo': user will be re-prompted for item number
 				#  'redraw': action successfully performed, screen will be redrawn
-				if idx := await get_idx_from_user():
-					ret = await action_method(parent, idx)
+				if usr_ret := await get_idx_from_user():
+					ret = await action_method(parent, usr_ret.idx, usr_ret.addr_idx)
 				else:
 					ret = None
 				if ret != 'redo':
@@ -750,7 +764,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					CUR_HOME + ERASE_ALL +
 					await parent.format(display_type='squeezed', interactive=True, scroll=True))
 
-		async def i_balance_refresh(self, parent, idx):
+		async def i_balance_refresh(self, parent, idx, addr_idx=None):
 			if not parent.keypress_confirm(
 					f'Refreshing tracking wallet {parent.item_desc} #{idx}. OK?'):
 				return 'redo'
@@ -767,7 +781,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				if res == 0:
 					return 'redraw' # zeroing balance may mess up display
 
-		async def i_addr_delete(self, parent, idx):
+		async def i_addr_delete(self, parent, idx, addr_idx=None):
 			if not parent.keypress_confirm(
 					'Removing {} {} from tracking wallet. OK?'.format(
 						parent.item_desc, red(f'#{idx}'))):
@@ -781,7 +795,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				parent.oneshot_msg = red('Address could not be removed')
 				return False
 
-		async def i_comment_add(self, parent, idx):
+		async def i_comment_add(self, parent, idx, addr_idx=None):
 
 			async def do_comment_add(comment_in):
 				from ..obj import TwComment
@@ -810,8 +824,12 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					return False
 
 			entry = parent.disp_data[idx-1]
-			desc       = f'{parent.item_desc} #{idx}'
-			color_desc = f'{parent.item_desc} {red("#" + str(idx))}'
+			if addr_idx is None:
+				desc       = f'{parent.item_desc} #{idx}'
+				color_desc = f'{parent.item_desc} {red("#" + str(idx))}'
+			else:
+				desc       = f'address #{addr_idx}'
+				color_desc = f'address {red("#" + str(addr_idx))}'
 
 			cur_comment = parent.disp_data[idx-1].comment
 			msg('Current label: {}'.format(cur_comment.hl() if cur_comment else '(none)'))
