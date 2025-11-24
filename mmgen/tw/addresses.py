@@ -79,8 +79,7 @@ class TwAddresses(TwView):
 			'amt',
 			'recvd',
 			'is_used',
-			'date',
-			'skip'}
+			'date'}
 		invalid_attrs = {'proto'}
 
 		twmmid  = ImmutableAttr(TwMMGenID, include_proto=True) # contains confs,txid(unused),date(unused),al_id
@@ -92,7 +91,6 @@ class TwAddresses(TwView):
 		recvd   = ImmutableAttr(CoinAmtChk, include_proto=True)
 		is_used = ImmutableAttr(bool)
 		date    = ListItemAttr(int, typeconv=False, reassign_ok=True)
-		skip    = ListItemAttr(str, typeconv=False, reassign_ok=True)
 
 		def __init__(self, proto, **kwargs):
 			self.__dict__['proto'] = proto
@@ -165,8 +163,7 @@ class TwAddresses(TwView):
 					amt     = data['amt'],
 					recvd   = data['recvd'],
 					is_used = data['is_used'],
-					date    = 0,
-					skip    = '')
+					date    = 0)
 				for twmmid, data in rpc_data.items())
 
 	def get_disp_data(self):

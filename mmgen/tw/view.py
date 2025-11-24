@@ -85,6 +85,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	dates_set   = False
 	reverse     = False
 	group       = False
+	groupable   = {}
 	use_cached  = False
 	minconf     = 1
 	txid_w      = 0
@@ -260,7 +261,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	def sort_info(self, *, include_group=True):
 		ret = ([], ['Reverse'])[self.reverse]
 		ret.append(self.sort_disp[self.sort_key])
-		if include_group and self.group and (self.sort_key in ('addr', 'txid', 'twmmid')):
+		if include_group and self.group and self.sort_key in self.groupable:
 			ret.append('Grouped')
 		return ret
 
@@ -288,12 +289,12 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			await self.gen_data(rpc_data, lbl_id) if isAsync(self.gen_data) else
 			self.gen_data(rpc_data, lbl_id))
 
-		self.disp_data = tuple(self.get_disp_data())
-
 		if not self.data:
 			die(1, f'No {self.item_desc_pl} in tracking wallet!')
 
 		self.sort_data(self.sort_key)
+
+		self.disp_data = tuple(self.get_disp_data())
 
 		# get_data() is immediately followed by display header, and get_rpc_data() produces output,
 		# so add NL here (' ' required because CUR_HOME erases preceding blank lines)

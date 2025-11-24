@@ -45,7 +45,10 @@ class BitcoinTwUnspentOutputs(BitcoinTwView, TwUnspentOutputs):
 		scriptPubKey = ImmutableAttr(HexStr)
 
 	has_age = True
-	can_group = True
+	groupable = {
+		'addr':   'addr',
+		'twmmid': 'addr',
+		'txid':   'txid'}
 	disp_spc = 5
 	vout_w = 4
 	hdr_lbl = 'unspent outputs'

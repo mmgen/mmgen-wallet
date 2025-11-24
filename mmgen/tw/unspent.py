@@ -36,7 +36,6 @@ from .view import TwView
 class TwUnspentOutputs(TwView):
 
 	has_age = False
-	can_group = False
 	show_mmid = True
 	hdr_lbl = 'tracked addresses'
 	desc    = 'address balances'
@@ -120,7 +119,8 @@ class TwUnspentOutputs(TwView):
 					'twmmid':  l.mmid,
 					'comment': l.comment or '',
 					'addr':    CoinAddr(self.proto, o['address']),
-					'confs':   o['confirmations']})
+					'confs':   o['confirmations'],
+					'skip':    ''})
 				yield self.MMGenTwUnspentOutput(
 					self.proto,
 					**{k: v for k, v in o.items() if k in self.MMGenTwUnspentOutput.valid_attrs})
@@ -140,19 +140,17 @@ class TwUnspentOutputs(TwView):
 
 	def get_disp_data(self):
 
-		data = self.data.copy()
-
-		for d in data:
+		for d in self.data:
 			d.skip = ''
 
-		gkeys = {'addr': 'addr', 'twmmid': 'addr', 'txid': 'txid'}
-		if self.group and self.sort_key in gkeys:
-			for a, b in [(data[i], data[i+1]) for i in range(len(data)-1)]:
-				for k in gkeys:
-					if self.sort_key == k and getattr(a, k) == getattr(b, k):
-						b.skip = gkeys[k]
+		if self.group and (e := self.sort_key) in self.groupable:
+			data = self.data
+			skip = self.groupable[e]
+			for i in range(len(data) - 1):
+				if getattr(data[i], e) == getattr(data[i + 1], e):
+					data[i + 1].skip = skip
 
-		return data
+		return self.data
 
 	def get_column_widths(self, data, *, wide, interactive):
 
@@ -272,5 +270,5 @@ class TwUnspentOutputs(TwView):
 			parent.show_mmid = not parent.show_mmid
 
 		def d_group(self, parent):
-			if parent.can_group:
+			if parent.groupable:
 				parent.group = not parent.group
