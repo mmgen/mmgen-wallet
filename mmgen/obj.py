@@ -263,6 +263,7 @@ class Int(int, Hilite, InitErrors):
 	min_val = None
 	max_val = None
 	max_digits = None
+	trunc_ok = False
 	color = 'red'
 
 	def __new__(cls, n, *, base=10):
@@ -282,10 +283,10 @@ class Int(int, Hilite, InitErrors):
 
 	@classmethod
 	def fmtc(cls, s, width, /, *, color=False):
-		return super().fmtc(str(s), width, color=color)
+		return cls.colorize(s.rjust(width), color=color)
 
 	def fmt(self, width, /, *, color=False):
-		return super().fmtc(str(self), width, color=color)
+		return self.fmtc(str(self), width, color=color)
 
 	def hl(self, **kwargs):
 		return super().colorize(str(self), **kwargs)
