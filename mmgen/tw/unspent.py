@@ -138,7 +138,7 @@ class TwUnspentOutputs(TwView):
 				'confirmations': minconf,
 				} for d in wl]
 
-	def filter_data(self):
+	def get_disp_data(self):
 
 		data = self.data.copy()
 

@@ -169,7 +169,7 @@ class TwAddresses(TwView):
 					skip    = '')
 				for twmmid, data in rpc_data.items())
 
-	def filter_data(self):
+	def get_disp_data(self):
 		if self.usr_addr_list:
 			return (d for d in self.data if d.twmmid.obj in self.usr_addr_list)
 		else:

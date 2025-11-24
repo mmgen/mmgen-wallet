@@ -51,7 +51,7 @@ class TwTxHistory(TwView):
 		return 'No transaction history {}found!'.format(
 			f'from block {self.sinceblock} ' if self.sinceblock else '')
 
-	def filter_data(self):
+	def get_disp_data(self):
 		return (d for d in self.data if d.confirmations > 0 or self.show_unconfirmed)
 
 	def set_amt_widths(self, data):

@@ -288,7 +288,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			await self.gen_data(rpc_data, lbl_id) if isAsync(self.gen_data) else
 			self.gen_data(rpc_data, lbl_id))
 
-		self.disp_data = list(self.filter_data())
+		self.disp_data = tuple(self.get_disp_data())
 
 		if not self.data:
 			die(1, f'No {self.item_desc_pl} in tracking wallet!')
@@ -461,20 +461,20 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 				yield spc * self.term_width
 
-				if data and dt.colhdr_fmt_method:
+				if self.disp_data and dt.colhdr_fmt_method:
 					col_hdr = getattr(self, dt.colhdr_fmt_method)(cw, hdr_fs, color)
 					yield col_hdr.rstrip() if line_processing == 'print' else col_hdr
 
 			def get_body(method):
 				if line_processing:
 					return getattr(self.line_processing, line_processing).do(
-						method, data, cw, fs, color, getattr(self, dt.line_fmt_method))
+						method, self.disp_data, cw, fs, color, getattr(self, dt.line_fmt_method))
 				else:
-					return method(data, cw, fs, color, getattr(self, dt.line_fmt_method))
+					return method(self.disp_data, cw, fs, color, getattr(self, dt.line_fmt_method))
 
-			if data and dt.need_column_widths:
-				self.set_amt_widths(data)
-				cw = self.get_column_widths(data, wide=dt.detail, interactive=interactive)
+			if self.disp_data and dt.need_column_widths:
+				self.set_amt_widths(self.disp_data)
+				cw = self.get_column_widths(self.disp_data, wide=dt.detail, interactive=interactive)
 				cwh = cw._asdict()
 				fp = self.fs_params
 				rfill = ' ' * (self.term_width - self.cols) if scroll else ''
@@ -488,7 +488,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			return (
 				tuple(gen_hdr(spc='' if line_processing == 'print' else ' ')),
 				tuple(
-					get_body(getattr(self, dt.fmt_method)) if data else
+					get_body(getattr(self, dt.fmt_method)) if self.disp_data else
 					[(nocolor, yellow)[color](self.nodata_msg.ljust(self.term_width))]))
 
 		if not gv.stdout.isatty():
@@ -506,10 +506,10 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			if self.has_age and (self.age_fmt in self.age_fmts_date_dependent or dt.detail):
 				await self.set_dates(self.data)
 
-			dsave = self.disp_data
-			data = self.disp_data = list(self.filter_data()) # method could be a generator
+			disp_data_save = self.disp_data
+			self.disp_data = tuple(self.get_disp_data()) # method could be a generator
 
-			if data != dsave:
+			if self.disp_data != disp_data_save:
 				self.pos = 0
 
 			display_hdr, display_body = make_display()
