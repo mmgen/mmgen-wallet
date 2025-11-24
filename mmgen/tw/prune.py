@@ -58,7 +58,7 @@ class TwAddressesPrune(TwAddresses):
 
 		pruned = []
 		self.reverse = False
-		self.do_sort('twmmid')
+		self.sort_data('twmmid')
 		self.data = list(gen())
 
 		return pruned

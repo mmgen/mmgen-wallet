@@ -263,7 +263,7 @@ class TwUnspentOutputs(TwView):
 	class sort_action(TwView.sort_action):
 
 		def s_twmmid(self, parent):
-			parent.do_sort('twmmid')
+			parent.sort_data('twmmid')
 			parent.show_mmid = True
 
 	class display_action(TwView.display_action):

@@ -195,14 +195,14 @@ class TwTxHistory(TwView):
 	class sort_action(TwView.sort_action):
 
 		def s_blockheight(self, parent):
-			parent.do_sort('blockheight')
+			parent.sort_data('blockheight')
 
 		def s_amt(self, parent):
-			parent.do_sort('amt')
+			parent.sort_data('amt')
 			parent.show_total_amt = False
 
 		def s_total_amt(self, parent):
-			parent.do_sort('total_amt')
+			parent.sort_data('total_amt')
 			parent.show_total_amt = True
 
 	class display_action(TwView.display_action):

@@ -264,7 +264,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			ret.append('Grouped')
 		return ret
 
-	def do_sort(self, key=None, *, reverse=False):
+	def sort_data(self, key=None, *, reverse=False):
 		if key == 'txid' and not self.txid_w:
 			return
 		key = key or self.sort_key
@@ -295,7 +295,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		if not self.data:
 			die(1, f'No {self.item_desc_pl} in tracking wallet!')
 
-		self.do_sort(key=sort_key, reverse=reverse_sort)
+		self.sort_data(self.sort_key)
 
 		# get_data() is immediately followed by display header, and get_rpc_data() produces output,
 		# so add NL here (' ' required because CUR_HOME erases preceding blank lines)
@@ -850,19 +850,19 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			return action_method(parent)
 
 		def s_addr(self, parent):
-			parent.do_sort('addr')
+			parent.sort_data('addr')
 
 		def s_age(self, parent):
-			parent.do_sort('age')
+			parent.sort_data('age')
 
 		def s_amt(self, parent):
-			parent.do_sort('amt')
+			parent.sort_data('amt')
 
 		def s_txid(self, parent):
-			parent.do_sort('txid')
+			parent.sort_data('txid')
 
 		def s_twmmid(self, parent):
-			parent.do_sort('twmmid')
+			parent.sort_data('twmmid')
 
 		def s_reverse(self, parent):
 			parent.data.reverse()
