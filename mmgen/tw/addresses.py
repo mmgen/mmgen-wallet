@@ -153,7 +153,7 @@ class TwAddresses(TwView):
 
 		return addrs
 
-	async def gen_data(self, rpc_data, lbl_id):
+	def gen_data(self, rpc_data, lbl_id):
 		return (
 			self.TwAddress(
 					self.proto,
@@ -167,8 +167,7 @@ class TwAddresses(TwView):
 					is_used = data['is_used'],
 					date    = 0,
 					skip    = '')
-				for twmmid, data in rpc_data.items()
-		)
+				for twmmid, data in rpc_data.items())
 
 	def filter_data(self):
 		if self.usr_addr_list:
@@ -177,8 +176,7 @@ class TwAddresses(TwView):
 			return (d for d in self.data if
 				(self.all_labels and d.comment) or
 				(self.showused == 2 and d.is_used) or
-				(not (d.is_used and not self.showused) and (d.amt or self.showempty))
-			)
+				(not (d.is_used and not self.showused) and (d.amt or self.showempty)))
 
 	def get_column_widths(self, data, *, wide, interactive):
 
@@ -260,8 +258,13 @@ class TwAddresses(TwView):
 		if not self.dates_set:
 			bc = self.rpc.blockcount + 1
 			caddrs = [addr for addr in addrs if addr.confs]
-			hashes = await self.rpc.gathered_call('getblockhash', [(n,) for n in [bc - a.confs for a in caddrs]])
-			dates = [d['time'] for d in await self.rpc.gathered_call('getblockheader', [(h,) for h in hashes])]
+			hashes = await self.rpc.gathered_call(
+				'getblockhash',
+				[(n,) for n in [bc - a.confs for a in caddrs]])
+			dates = [d['time']
+				for d in await self.rpc.gathered_call(
+					'getblockheader',
+					[(h,) for h in hashes])]
 			for idx, addr in enumerate(caddrs):
 				addr.date = dates[idx]
 			self.dates_set = True

@@ -314,9 +314,13 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				return _term_dimensions(cols, ts.height)
 			if sys.stdout.isatty():
 				if self.cfg.columns and cols < min_cols:
-					die(1, '\n'+fmt(self.twidth_diemsg.format(self.cfg.columns, self.desc, min_cols), indent='  '))
+					die(1, '\n'+fmt(
+						self.twidth_diemsg.format(self.cfg.columns, self.desc, min_cols),
+						indent = '  '))
 				else:
-					m, dim = (self.twidth_errmsg, min_cols) if cols < min_cols else (self.theight_errmsg, min_lines)
+					m, dim = (
+						(self.twidth_errmsg, min_cols) if cols < min_cols else
+						(self.theight_errmsg, min_lines))
 					get_char_raw(CUR_HOME + ERASE_ALL + fmt(m.format(self.desc, dim), append=''))
 					user_resized = True
 			else:
@@ -422,8 +426,13 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 			def gen_hdr(spc):
 
-				Blue, Green = (blue, green) if color else (nocolor, nocolor)
-				Yes, No, All = (green('yes'), red('no'), yellow('all')) if color else ('yes', 'no', 'all')
+				if color:
+					Blue, Green = (blue, green)
+					Yes, No, All = (green('yes'), red('no'), yellow('all'))
+				else:
+					Blue, Green = (nocolor, nocolor)
+					Yes, No, All = ('yes', 'no', 'all')
+
 				sort_info = ' '.join(self.sort_info())
 
 				def fmt_filter(k):
@@ -784,8 +793,10 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					await asyncio.sleep(3)
 					parent.oneshot_msg = red('Label for {desc} could not be {action}'.format(
 						desc = desc,
-						action = 'edited' if cur_comment and comment else 'added' if comment else 'removed'
-					))
+						action =
+							'edited' if cur_comment and comment else
+							'added' if comment else
+							'removed'))
 					return False
 
 			entry = parent.disp_data[idx-1]

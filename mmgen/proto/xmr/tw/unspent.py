@@ -19,5 +19,5 @@ from .view import MoneroTwView
 class MoneroTwUnspentOutputs(MoneroTwView, TwAddresses):
 
 	hdr_lbl = 'spendable accounts'
-	desc    = 'address balances'
+	desc = 'address balances'
 	include_empty = False

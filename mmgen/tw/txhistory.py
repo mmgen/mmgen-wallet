@@ -43,7 +43,8 @@ class TwTxHistory(TwView):
 
 	async def __init__(self, cfg, proto, *, sinceblock=0):
 		await super().__init__(cfg, proto)
-		self.sinceblock = NonNegativeInt(sinceblock if sinceblock >= 0 else self.rpc.blockcount + sinceblock)
+		self.sinceblock = NonNegativeInt(
+			sinceblock if sinceblock >= 0 else self.rpc.blockcount + sinceblock)
 
 	@property
 	def no_rpcdata_errmsg(self):
@@ -131,9 +132,11 @@ class TwTxHistory(TwView):
 				n = str(n) + ')',
 				t = d.txid_disp(width=cw.txid, color=color) if hasattr(cw, 'txid') else None,
 				d = d.age_disp(self.age_fmt, width=self.age_w, color=color),
-				i = d.vouts_disp('inputs', width=cw.inputs, color=color, addr_view_pref=self.addr_view_pref),
+				i = d.vouts_disp(
+					'inputs', width=cw.inputs, color=color, addr_view_pref=self.addr_view_pref),
 				A = d.amt_disp(self.show_total_amt).fmt(cw.iwidth, prec=self.disp_prec, color=color),
-				o = d.vouts_disp('outputs', width=cw.outputs, color=color, addr_view_pref=self.addr_view_pref),
+				o = d.vouts_disp(
+					'outputs', width=cw.outputs, color=color, addr_view_pref=self.addr_view_pref),
 				c = d.comment.fmt2(cw.comment, color=color, nullrepl='-'))
 
 	def gen_detail_display(self, data, cw, fs, color, fmt_method):
@@ -161,10 +164,11 @@ class TwTxHistory(TwView):
 				A = d.amt_disp(show_total_amt=True).hl(color=color),
 				B = d.amt_disp(show_total_amt=False).hl(color=color),
 				f = d.fee_disp(color=color),
-				i = d.vouts_list_disp('inputs', color=color, indent=' '*8, addr_view_pref=self.addr_view_pref),
+				i = d.vouts_list_disp(
+					'inputs', color=color, indent=' '*8, addr_view_pref=self.addr_view_pref),
 				N = d.nOutputs,
-				o = d.vouts_list_disp('outputs', color=color, indent=' '*8, addr_view_pref=self.addr_view_pref),
-			)
+				o = d.vouts_list_disp(
+					'outputs', color=color, indent=' '*8, addr_view_pref=self.addr_view_pref))
 
 	sort_disp = {
 		'age':         'Age',
@@ -174,8 +178,9 @@ class TwTxHistory(TwView):
 		'txid':        'TxID'}
 
 	sort_funcs = {
-		'age':         lambda i: '{:010}.{:010}'.format(0xffffffff - abs(i.confirmations), i.time_received or 0),
-		'blockheight': lambda i: 0 - abs(i.confirmations), # old/altcoin daemons return no 'blockheight' field
+		'age':         lambda i: '{:010}.{:010}'.format(
+			0xffffffff - abs(i.confirmations), i.time_received or 0),
+		'blockheight': lambda i: 0 - abs(i.confirmations), # old/altcoin daemons lack 'blockheight' field
 		'amt':         lambda i: i.wallet_outputs_total,
 		'total_amt':   lambda i: i.outputs_total,
 		'txid':        lambda i: i.txid}

@@ -182,8 +182,7 @@ class TwUnspentOutputs(TwView):
 				self.nice_addr_w if show_mmid else {}
 			) | self.txid_nice_w,
 			wide = wide,
-			interactive = interactive,
-		)
+			interactive = interactive)
 
 	def squeezed_col_hdr(self, cw, fs, color):
 		return fs.format(
@@ -225,8 +224,7 @@ class TwUnspentOutputs(TwView):
 				c = d.comment.fmt2(cw.comment, color=color, nullrepl='-') if cw.comment else None,
 				A = d.amt.fmt(cw.iwidth, color=color, prec=self.disp_prec),
 				B = d.amt2.fmt(cw.iwidth2, color=color, prec=self.disp_prec) if cw.amt2 else None,
-				d = self.age_disp(d, self.age_fmt),
-			)
+				d = self.age_disp(d, self.age_fmt))
 
 	def gen_detail_display(self, data, cw, fs, color, fmt_method):
 
@@ -255,7 +253,9 @@ class TwUnspentOutputs(TwView):
 		if not self.dates_set:
 			# 'blocktime' differs from 'time', is same as getblockheader['time']
 			dates = [o.get('blocktime', 0)
-				for o in await self.rpc.gathered_icall('gettransaction', [(o.txid, True, False) for o in us])]
+				for o in await self.rpc.gathered_icall(
+					'gettransaction',
+					[(o.txid, True, False) for o in us])]
 			for idx, o in enumerate(us):
 				o.date = dates[idx]
 			self.dates_set = True
