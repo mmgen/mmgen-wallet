@@ -151,8 +151,7 @@ class MoneroWalletRPC:
 			priority = self.cfg.priority or None,
 			do_not_relay = True,
 			get_tx_hex = True,
-			get_tx_metadata = True
-		)
+			get_tx_metadata = True)
 		return self.new_tx_cls(
 			cfg            = self.cfg,
 			op             = self.parent.name,
@@ -166,8 +165,7 @@ class MoneroWalletRPC:
 			fee            = self.proto.coin_amt(res['fee'], from_unit='atomic'),
 			blob           = res['tx_blob'],
 			metadata       = res['tx_metadata'],
-			unsigned_txset = res['unsigned_txset'] if self.cfg.watch_only else None,
-		)
+			unsigned_txset = res['unsigned_txset'] if self.cfg.watch_only else None)
 
 	def make_sweep_tx(self, account, dest_acct, dest_addr_idx, addr, addrs_data):
 		res = self.c.call(
@@ -179,8 +177,7 @@ class MoneroWalletRPC:
 			priority = self.cfg.priority or None,
 			do_not_relay = True,
 			get_tx_hex = True,
-			get_tx_metadata = True
-		)
+			get_tx_metadata = True)
 
 		if len(res['tx_hash_list']) > 1:
 			die(3, 'More than one TX required.  Cannot perform this sweep')
@@ -201,8 +198,7 @@ class MoneroWalletRPC:
 			fee            = self.proto.coin_amt(res['fee_list'][0], from_unit='atomic'),
 			blob           = res['tx_blob_list'][0],
 			metadata       = res['tx_metadata_list'][0],
-			unsigned_txset = res['unsigned_txset'] if self.cfg.watch_only else None,
-		)
+			unsigned_txset = res['unsigned_txset'] if self.cfg.watch_only else None)
 
 	def relay_tx(self, tx_hex):
 		ret = self.c.call('relay_tx', hex=tx_hex)
