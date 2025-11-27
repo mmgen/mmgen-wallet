@@ -488,8 +488,7 @@ class New(Base):
 		outputs_sum = self.sum_outputs()
 
 		msg('Total amount to spend: {}'.format(
-			f'{outputs_sum.hl()} {self.dcoin}' if outputs_sum else 'Unknown'
-		))
+			f'{outputs_sum.hl()} {self.dcoin}' if outputs_sum else 'Unknown'))
 
 		while True:
 			if not await self.get_inputs(outputs_sum):

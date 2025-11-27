@@ -143,7 +143,7 @@ def cleandir(d, do_msg=False):
 	if files:
 		from shutil import rmtree
 		if do_msg:
-			gmsg(f'Cleaning directory {d!r}')
+			gmsg(f'Cleaning directory ‘{d!r}’')
 		for f in files:
 			try:
 				os.unlink(os.path.join(d_enc, f))
@@ -159,7 +159,7 @@ def mk_tmpdir(d):
 		if e.errno != 17:
 			raise
 	else:
-		vmsg(f'Created directory {d!r}')
+		vmsg(f'Created directory ‘{d!r}’')
 
 def clean(cfgs, tmpdir_ids=None, extra_dirs=[]):
 
