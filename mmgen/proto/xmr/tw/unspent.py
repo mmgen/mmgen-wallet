@@ -25,7 +25,6 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 	hdr_lbl = 'spendable accounts'
 	desc = 'spendable accounts'
 	item_desc = 'account'
-	account_based = True
 	include_empty = False
 	total = None
 	nice_addr_w = {'addr': 20}
@@ -131,3 +130,10 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 			a = d.addr.fmt(self.addr_view_pref, cw.addr, color=color),
 			c = d.comment.fmt2(cw.comment, color=color, nullrepl='-'),
 			A = d.amt.fmt(cw.iwidth, color=color, prec=self.disp_prec))
+
+	async def get_idx_from_user(self):
+		if res := await self.get_idx(f'{self.item_desc} number', self.accts_data):
+			return await self.get_idx(
+				'address index',
+				list(self.accts_data.values())[res.idx - 1].data,
+				is_addr_idx = True)

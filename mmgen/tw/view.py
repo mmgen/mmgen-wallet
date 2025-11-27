@@ -80,7 +80,6 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			def do(method, data, cw, fs, color, fmt_method):
 				return [l.rstrip() for l in method(data, cw, fs, color, fmt_method)]
 
-	account_based = False
 	has_wallet  = True
 	has_amt2    = False
 	dates_set   = False
@@ -639,6 +638,41 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				msg_r('\r'+''.ljust(self.term_width)+'\r'+yellow('Canceling! '))
 			return False
 
+	async def get_idx_from_user(self):
+		return await self.get_idx(f'{self.item_desc} number', self.disp_data)
+
+	async def get_idx(self, desc, data, *, is_addr_idx=False):
+
+		async def do_error_msg():
+			msg_r(
+				'Choice must be a single number between {n} and {m} inclusive{s}'.format(
+					n = list(data.keys())[0] if is_addr_idx else 1,
+					m = list(data.keys())[-1] if is_addr_idx else len(data),
+					s = ' ' if self.scroll else ''))
+			if self.scroll:
+				await asyncio.sleep(1.5)
+				msg_r(CUR_UP(1) + '\r' + ERASE_ALL)
+
+		from ..ui import line_input
+		ur = namedtuple('usr_idx_data', ['idx', 'addr_idx'])
+		while True:
+			msg_r(self.blank_prompt if self.scroll else '\n')
+			usr_ret = line_input(
+				self.cfg,
+				f'Enter {desc} (or ENTER to return to main menu): ')
+			if usr_ret == '':
+				if self.scroll:
+					msg_r(CUR_UP(1) + '\r' + ''.ljust(self.term_width))
+				return None
+			if is_addr_idx:
+				if is_int(usr_ret) and int(usr_ret) in data:
+					return ur(MMGenIdx(data[int(usr_ret)].disp_data_idx + 1), int(usr_ret))
+			else:
+				idx = get_obj(MMGenIdx, n=usr_ret, silent=True)
+				if idx and idx <= len(data):
+					return ur(idx, None)
+			await do_error_msg()
+
 	class action:
 
 		@enable_echo
@@ -702,47 +736,6 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			if not parent.disp_data:
 				return
 
-			async def do_error_msg(data, is_addr_idx):
-				msg_r(
-					'Choice must be a single number between {n} and {m} inclusive{s}'.format(
-						n = list(data.keys())[0] if is_addr_idx else 1,
-						m = list(data.keys())[-1] if is_addr_idx else len(data),
-						s = ' ' if parent.scroll else ''))
-				if parent.scroll:
-					await asyncio.sleep(1.5)
-					msg_r(CUR_UP(1) + '\r' + ERASE_ALL)
-
-			async def get_idx(desc, data, *, is_addr_idx=False):
-				from ..ui import line_input
-				ur = namedtuple('usr_idx_data', ['idx', 'addr_idx'])
-				while True:
-					msg_r(parent.blank_prompt if parent.scroll else '\n')
-					usr_ret = line_input(
-						parent.cfg,
-						f'Enter {desc} (or ENTER to return to main menu): ')
-					if usr_ret == '':
-						if parent.scroll:
-							msg_r(CUR_UP(1) + '\r' + ''.ljust(parent.term_width))
-						return None
-					if is_addr_idx:
-						if is_int(usr_ret) and int(usr_ret) in data:
-							return ur(MMGenIdx(data[int(usr_ret)].disp_data_idx + 1), int(usr_ret))
-					else:
-						idx = get_obj(MMGenIdx, n=usr_ret, silent=True)
-						if idx and idx <= len(data):
-							return ur(idx, None)
-					await do_error_msg(data, is_addr_idx)
-
-			async def get_idx_from_user():
-				if parent.account_based:
-					if res := await get_idx(f'{parent.item_desc} number', parent.accts_data):
-						return await get_idx(
-							'address index',
-							list(parent.accts_data.values())[res.idx - 1].data,
-							is_addr_idx = True)
-				else:
-					return await get_idx(f'{parent.item_desc} number', parent.disp_data)
-
 			while True:
 				# action_method return values:
 				#  True:   action successfully performed
@@ -750,7 +743,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				#  None:   action aborted by user or no action performed
 				#  'redo': user will be re-prompted for item number
 				#  'redraw': action successfully performed, screen will be redrawn
-				if usr_ret := await get_idx_from_user():
+				if usr_ret := await parent.get_idx_from_user():
 					ret = await action_method(parent, usr_ret.idx, usr_ret.addr_idx)
 				else:
 					ret = None
