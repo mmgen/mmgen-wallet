@@ -13,6 +13,7 @@ proto.xmr.tw.view: Monero protocol base class for tracking wallet view classes
 """
 
 from ....xmrwallet import op as xmrwallet_op
+from ....seed import SeedID
 from ....tw.view import TwView
 
 class MoneroTwView:
@@ -27,6 +28,9 @@ class MoneroTwView:
 		op = xmrwallet_op('dump_data', self.cfg, None, None, compat_call=True)
 		await op.restart_wallet_daemon()
 		wallets_data = await op.main()
+
+		if wallets_data:
+			self.sid = SeedID(sid=wallets_data[0]['seed_id'])
 
 		self.total = self.proto.coin_amt('0')
 

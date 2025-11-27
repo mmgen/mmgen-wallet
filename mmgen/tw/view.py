@@ -441,6 +441,9 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					Blue(sort_info),
 					spc * (self.cols - len(f'{self.hdr_lbl} (sort order: {sort_info})')))
 
+				if hasattr(self, 'sid'):
+					yield f'Seed ID: {self.sid.hl()}'
+
 				if self.filters:
 					yield 'Filters: {}{}'.format(
 						' '.join(map(fmt_filter, self.filters)),
