@@ -40,11 +40,12 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 		'amt':    'Amt',
 		'twmmid': 'MMGenID'}
 
+	# NB: For account-based views, ALL sort keys MUST begin with acct_sort_key!
 	sort_funcs = {
 		'addr':   lambda i: '{}:{}'.format(i.twmmid.obj.acct_sort_key, i.addr),
 		'age':    lambda i: i.twmmid.sort_key, # dummy (age sort not supported)
 		'amt':    lambda i: '{}:{:050}'.format(i.twmmid.obj.acct_sort_key, i.amt.to_unit('atomic')),
-		'twmmid': lambda i: i.twmmid.sort_key}
+		'twmmid': lambda i: i.twmmid.sort_key} # sort_key begins with acct_sort_key
 
 	def gen_data(self, rpc_data, lbl_id):
 		return (
@@ -58,15 +59,18 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 				for twmmid, data in rpc_data.items())
 
 	def get_disp_data(self):
+		chk_fail_msg = 'For account-based views, ALL sort keys MUST begin with acct_sort_key!'
 		ad = namedtuple('accts_data', ['idx', 'acct_idx', 'total', 'data'])
 		bd = namedtuple('accts_data_data', ['disp_data_idx', 'data'])
 		def gen_accts_data():
 			idx, acct_idx, total, d_acc = (None, None, 0, {})
+			chk_acc = [] # check for out-of-order accounts (developer idiot-proofing)
 			for n, d in enumerate(self.data):
 				m = d.twmmid.obj
 				if idx != m.idx or acct_idx != m.acct_idx:
 					if idx:
 						yield ad(idx, acct_idx, total, d_acc)
+					chk_acc.append((m.idx, m.acct_idx))
 					idx = m.idx
 					acct_idx = m.acct_idx
 					total = d.amt
@@ -75,6 +79,7 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 					total += d.amt
 					d_acc[m.addr_idx] = bd(n, d)
 			if idx:
+				assert len(set(chk_acc)) == len(chk_acc), chk_fail_msg
 				yield ad(idx, acct_idx, total, d_acc)
 		self.accts_data = tuple(gen_accts_data())
 		return super().get_disp_data()
