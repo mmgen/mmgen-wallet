@@ -315,17 +315,25 @@ class CmdTestXMRWallet(CmdTestBase):
 				quiet = True)
 		return t
 
-	def new_addr_alice(self, spec, cfg, expect, kafile=None):
+	def new_addr_alice(self, spec, cfg, expect, kafile=None, do_autosign=False):
 		data = self.users['alice']
+		if do_autosign:
+			self.insert_device_online()
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
+			+ (self.autosign_opts if do_autosign else [])
 			+ (['--alice', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (['--no-start-wallet-daemon'] if cfg in ('continue', 'stop') else [])
 			+ (['--no-stop-wallet-daemon'] if cfg in ('start', 'continue') else [])
-			+ ['new', (kafile or data.kafile), spec])
+			+ ['new']
+			+ ([] if do_autosign else [kafile or data.kafile])
+			+ [spec])
 		t.expect(expect, 'y', regex=True)
+		if do_autosign:
+			t.read()
+			self.remove_device_online()
 		return t
 
 	na_idx = 1
@@ -361,12 +369,12 @@ class CmdTestXMRWallet(CmdTestBase):
 		# NB: a large balance is required to avoid ‘insufficient outputs’ error
 		return await self.mine_chk('miner', 1, 0, lambda x: x.ub > 2000, 'unlocked balance > 2000')
 
-	async def fund_alice(self, wallet=1, amt=1234567891234):
+	async def fund_alice(self, wallet=1, amt=1234567891234, addr=None):
 		self.spawn(msg_only=True, extra_desc='(transferring funds from Miner wallet)')
 		await self.transfer(
 			'miner',
 			amt,
-			read_from_file(self.users['alice'].addrfile_fs.format(wallet)))
+			addr or read_from_file(self.users['alice'].addrfile_fs.format(wallet)))
 		return 'ok'
 
 	async def check_bal_alice(self, wallet=1, bal='1.234567891234'):

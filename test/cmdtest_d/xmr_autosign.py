@@ -13,11 +13,11 @@
 test.cmdtest_d.xmr_autosign: xmr autosigning tests for the cmdtest.py test suite
 """
 
-import re, asyncio
+import os, re, asyncio, json
 
 from mmgen.color import blue, cyan, brown
 
-from ..include.common import imsg, silence, end_silence, strip_ansi_escapes
+from ..include.common import imsg, silence, end_silence, strip_ansi_escapes, read_from_file
 from .include.common import get_file_with_ext, cleanup_env
 
 from .xmrwallet import CmdTestXMRWallet
@@ -158,19 +158,22 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		return self._new_addr_alice(
 			'2',
 			'start',
-			r'Creating new account for wallet .*2.* with label .*‘xmrwallet new account .*y/N\): ')
+			r'Creating new account for wallet .*2.* with label '
+			r'.*‘xmrwallet new account .*y/N\): ')
 
 	def new_address_alice(self):
 		return self._new_addr_alice(
 			'2:1',
 			'continue',
-			r'Creating new address for wallet .*2.*, account .*#1.* with label .*‘xmrwallet new address .*y/N\): ')
+			r'Creating new address for wallet .*2.*, account .*#1.* with label '
+			r'.*‘xmrwallet new address .*y/N\): ')
 
 	def new_address_alice_label(self):
 		return self._new_addr_alice(
 			'2:1,Alice’s new address',
 			'stop',
-			r'Creating new address for wallet .*2.*, account .*#1.* with label .*‘Alice’s new address .*y/N\): ')
+			r'Creating new address for wallet .*2.*, account .*#1.* with label '
+			r'.*‘Alice’s new address .*y/N\): ')
 
 	def dump_tmp_wallets(self):
 		return self._dump_wallets(autosign=False)
@@ -196,7 +199,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		t.expect('2 wallets dumped')
 		res = t.read()
 		if op == 'dump_json':
-			import json
 			data = json.loads(re.sub('Stopping.*', '', strip_ansi_escapes(res)).strip())
 		self.remove_device_online()
 		return t
@@ -511,17 +513,21 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('fund_alice2',              'sending funds to Alice (wallet #2)'),
 		('check_bal_alice2',         'mining, checking balance (wallet #2)'),
 		('fund_alice1',              'sending funds to Alice (wallet #1)'),
-		('mine_blocks',              'mining some blocks'),
-		('alice_listaddresses',      'performing operations on Alice’s tracking wallets (listaddresses)'),
+		('mine_blocks_10',           'mining some blocks'),
+		('alice_listaddresses1',     'adding label to Alice’s tracking wallets (listaddresses)'),
 		('fund_alice1b',             'sending funds to Alice (wallet #1)'),
-		('mine_blocks',              'mining some blocks'),
-		('alice_twview',             'performing operations on Alice’s tracking wallets (twview)'),
+		('mine_blocks_10',           'mining some blocks'),
+		('alice_twview1',            'adding label to Alice’s tracking wallets (twview)'),
 	)
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		super().__init__(cfg, trunner, cfgs, spawn)
 		if trunner is None:
 			return
+		self.alice_tw_dir = os.path.join(self.tr.data_dir, 'alice', 'altcoins', 'xmr', 'tracking-wallets')
+		self.alice_dump_file = os.path.join(
+			self.alice_tw_dir,
+			'{}-2-MoneroWatchOnlyWallet.dump'.format(self.users['alice'].sid))
 		self.alice_opts = [
 			'--alice',
 			'--coin=xmr',
@@ -531,27 +537,67 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	def create_watchonly_wallets(self):
 		return self._create_wallets()
 
-	async def mine_blocks(self):
-		self.spawn(msg_only=True)
-		return await self.mine(10)
+	async def mine_blocks_10(self):
+		return await self._mine_blocks(10)
 
-	def alice_listaddresses(self):
-		return self._alice_twops('listaddresses', 2, 'y', r'Primary account.*1\.234567891234')
+	async def _mine_blocks(self, n):
+		self.spawn(msg_only=True)
+		return await self.mine(n)
+
+	def alice_listaddresses1(self):
+		return self._alice_twops(
+			'listaddresses',
+			lbl_addr_num = 2,
+			lbl_add_timestr = True,
+			menu = 'R',
+			expect_str = r'Primary account.*1\.234567891234')
 
 	def alice_twview(self):
-		return self._alice_twops('twview', 1, 'n', r'New Label.*2\.469135782468', addr_idx_num=0)
+		return self._alice_twops('twview')
 
-	def _alice_twops(self, op, addr_num, add_timestr_resp, expect_str, *, addr_idx_num=None):
+	def alice_twview1(self):
+		return self._alice_twops(
+			'twview',
+			lbl_addr_num = 1,
+			lbl_addr_idx_num = 0,
+			menu = 'R',
+			expect_str = r'New Label.*2\.469135782468')
+
+	def _alice_twops(
+			self,
+			op,
+			*,
+			lbl_addr_num = None,
+			lbl_addr_idx_num = None,
+			lbl_add_timestr = False,
+			menu = '',
+			expect_str = '',
+			expect_arr = []):
+
+		interactive = not expect_arr
 		self.insert_device_online()
-		t = self.spawn('mmgen-tool', self.alice_opts + self.autosign_opts + [op, 'interactive=1'])
-		t.expect(self.menu_prompt, 'l')
-		t.expect('main menu): ', str(addr_num))
-		if addr_idx_num is not None:
-			t.expect('main menu): ', str(addr_idx_num))
-		t.expect(': ', 'New Label\n')
-		t.expect('(y/N): ', add_timestr_resp)
-		t.expect(self.menu_prompt, 'R')
-		t.expect(expect_str, regex=True)
-		t.expect(self.menu_prompt, 'q')
+		t = self.spawn(
+			'mmgen-tool',
+			self.alice_opts
+			+ self.autosign_opts
+			+ [op]
+			+ (['interactive=1'] if interactive else []))
+		if interactive:
+			if lbl_addr_num:
+				t.expect(self.menu_prompt, 'l')
+				t.expect('main menu): ', str(lbl_addr_num))
+				if lbl_addr_idx_num is not None:
+					t.expect('main menu): ', str(lbl_addr_idx_num))
+				t.expect(': ', 'New Label\n')
+				t.expect('(y/N): ', 'y' if lbl_add_timestr else 'n')
+			for ch in menu:
+				t.expect(self.menu_prompt, ch)
+			if expect_str:
+				t.expect(expect_str, regex=True)
+			t.expect(self.menu_prompt, 'q')
+		elif expect_arr:
+			text = strip_ansi_escapes(t.read())
+			for s in expect_arr:
+				assert s in text
 		self.remove_device_online()
 		return t
