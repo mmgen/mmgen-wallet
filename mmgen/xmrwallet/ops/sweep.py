@@ -169,10 +169,10 @@ class OpSweep(OpMixinSpec, OpWallet):
 			die(2, f'{self.account}: requested account index out of bounds (>{max_acct})')
 
 	async def main(self):
-
-		gmsg(
-			f'\n{self.stem.capitalize()}ing account #{self.account}'
-			f' of wallet {self.source.idx}{self.add_desc}')
+		if not self.compat_call:
+			gmsg(
+				f'\n{self.stem.capitalize()}ing account #{self.account}'
+				f' of wallet {self.source.idx}{self.add_desc}')
 
 		h = MoneroWalletRPC(self, self.source)
 
@@ -191,7 +191,9 @@ class OpSweep(OpMixinSpec, OpWallet):
 		if self.cfg.tx_relay_daemon:
 			self.display_tx_relay_info(indent='    ')
 
-		msg('Saving TX data to file')
+		if not self.compat_call:
+			msg('Saving TX data to file')
+
 		new_tx.write(delete_metadata=True)
 
 		if self.cfg.no_relay or self.cfg.autosign:

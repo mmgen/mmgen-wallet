@@ -31,12 +31,13 @@ class OpLabel(OpMixinSpec, OpWallet):
 
 	async def main(self, add_timestr='ask', auto=False):
 
-		gmsg('\n{a} label for wallet {b}, account #{c}, address #{d}'.format(
-			a = 'Setting' if self.label else 'Removing',
-			b = self.source.idx,
-			c = self.account,
-			d = self.address_idx
-		))
+		if not self.compat_call:
+			gmsg('\n{a} label for wallet {b}, account #{c}, address #{d}'.format(
+				a = 'Setting' if self.label else 'Removing',
+				b = self.source.idx,
+				c = self.account,
+				d = self.address_idx))
+
 		h = MoneroWalletRPC(self, self.source)
 
 		h.open_wallet('source')

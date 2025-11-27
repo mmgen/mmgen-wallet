@@ -204,11 +204,12 @@ class OpWallet(OpBase):
 		return 'offline signing ' if self.cfg.offline else 'watch-only ' if self.cfg.watch_only else ''
 
 	async def main(self):
-		gmsg('\n{a}ing {b} {c}wallet{d}'.format(
-			a = self.stem.capitalize(),
-			b = len(self.addr_data),
-			c = self.add_wallet_desc,
-			d = suf(self.addr_data)))
+		if not self.compat_call:
+			gmsg('\n{a}ing {b} {c}wallet{d}'.format(
+				a = self.stem.capitalize(),
+				b = len(self.addr_data),
+				c = self.add_wallet_desc,
+				d = suf(self.addr_data)))
 		data = []
 		for n, d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
 			fn = self.get_wallet_fn(d)
@@ -218,7 +219,8 @@ class OpWallet(OpBase):
 				c = len(self.addr_data),
 				d = fn.name))
 			data.append(await self.process_wallet(d, fn, last=n == len(self.addr_data) - 1))
-		gmsg(f'\n{len(data)} wallet{suf(len(data))} {self.stem}ed\n')
+		if not self.compat_call:
+			gmsg(f'\n{len(data)} wallet{suf(len(data))} {self.stem}ed\n')
 		return data if self.return_data else sum(map(bool, data))
 
 	def head_msg(self, wallet_idx, fn):

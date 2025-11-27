@@ -89,7 +89,7 @@ class MoneroWalletRPC:
 		addrs_data = [
 			self.c.call('get_address', account_index=i)
 				for i in range(len(accts_data['subaddress_accounts']))]
-		if print:
+		if print and not self.parent.compat_call:
 			msg('\n' + '\n'.join(self.gen_accts_info(
 				accts_data,
 				addrs_data,
@@ -113,7 +113,7 @@ class MoneroWalletRPC:
 		return (ret['account_index'], ret['base_address'])
 
 	def print_acct_addrs(self, wallet_data, account, silent=False):
-		if not silent:
+		if not (self.parent.compat_call or silent):
 			msg('\n      Addresses of account #{} ({}):'.format(
 				account,
 				wallet_data.accts_data['subaddress_accounts'][account]['label']))
