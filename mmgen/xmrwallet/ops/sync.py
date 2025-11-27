@@ -25,7 +25,8 @@ class OpSync(OpWallet):
 
 	def check_uopts(self):
 		if self.cfg.rescan_blockchain and self.cfg.watch_only:
-			die(1, f'Operation ‘{self.name}’ does not support --rescan-blockchain with watch-only wallets')
+			die(1,
+				f'Operation ‘{self.name}’ does not support --rescan-blockchain with watch-only wallets')
 
 	def __init__(self, cfg, uarg_tuple):
 
@@ -71,7 +72,8 @@ class OpSync(OpWallet):
 			wallet_height = self.c.call('get_height')['height']
 			if wallet_height >= chain_height:
 				break
-			ymsg(f'  Wallet failed to sync (wallet height [{wallet_height}] < chain height [{chain_height}])')
+			ymsg('  Wallet failed to sync '
+				f'(wallet height [{wallet_height}] < chain height [{chain_height}])')
 			if i or not self.cfg.rescan_blockchain:
 				break
 			msg_r('  Rescanning blockchain, please be patient...')

@@ -85,7 +85,10 @@ class OpSweep(OpMixinSpec, OpWallet):
 				h, self.account, f'{self.name} from this account [{make_timestr()}]')
 			if dest_addr_chk:
 				wallet_data = h.get_wallet_data(print=False)
-			dest_addr, dest_addr_idx = h.get_last_addr(self.account, wallet_data, display=not dest_addr_chk)
+			dest_addr, dest_addr_idx = h.get_last_addr(
+				self.account,
+				wallet_data,
+				display = not dest_addr_chk)
 			if dest_addr_chk:
 				h.print_acct_addrs(wallet_data, self.account)
 		elif self.dest_acct is None: # sweep to wallet
@@ -118,7 +121,10 @@ class OpSweep(OpMixinSpec, OpWallet):
 				dest_addr_chk = create_new_addr_maybe(h, dest_acct, label)
 				if dest_addr_chk:
 					wallet_data = h.get_wallet_data(print=False)
-				dest_addr, dest_addr_idx = h.get_last_addr(dest_acct, wallet_data, display=not dest_addr_chk)
+				dest_addr, dest_addr_idx = h.get_last_addr(
+					dest_acct,
+					wallet_data,
+					display = not dest_addr_chk)
 				if dest_addr_chk:
 					h.print_acct_addrs(wallet_data, dest_acct)
 				return dest_addr, dest_addr_idx, dest_addr_chk
@@ -143,7 +149,12 @@ class OpSweep(OpMixinSpec, OpWallet):
 			f'dest_addr: ({dest_addr}) != dest_addr_chk: ({dest_addr_chk})')
 
 		msg(f'\n    Creating {self.name} transaction...')
-		return (h, h.make_sweep_tx(self.account, dest_acct, dest_addr_idx, dest_addr, wallet_data.addrs_data))
+		return (h, h.make_sweep_tx(
+			self.account,
+			dest_acct,
+			dest_addr_idx,
+			dest_addr,
+			wallet_data.addrs_data))
 
 	@property
 	def add_desc(self):

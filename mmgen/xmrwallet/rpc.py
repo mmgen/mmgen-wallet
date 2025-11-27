@@ -88,10 +88,12 @@ class MoneroWalletRPC:
 		accts_data = self.c.call('get_accounts')
 		addrs_data = [
 			self.c.call('get_address', account_index=i)
-				for i in range(len(accts_data['subaddress_accounts']))
-		]
+				for i in range(len(accts_data['subaddress_accounts']))]
 		if print:
-			msg('\n' + '\n'.join(self.gen_accts_info(accts_data, addrs_data, skip_empty_ok=skip_empty_ok)))
+			msg('\n' + '\n'.join(self.gen_accts_info(
+				accts_data,
+				addrs_data,
+				skip_empty_ok = skip_empty_ok)))
 		bals_data = self.c.call('get_balance', all_accounts=True)
 		return namedtuple('wallet_data', ['accts_data', 'addrs_data', 'bals_data'])(
 			accts_data, addrs_data, bals_data)

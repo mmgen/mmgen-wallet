@@ -74,8 +74,7 @@ class MoneroMMGenTX:
 			'metadata',
 			'unsigned_txset',
 			'signed_txset',
-			'complete',
-		])
+			'complete'])
 
 		def __init__(self):
 			self.name = type(self).__name__
@@ -93,11 +92,11 @@ class MoneroMMGenTX:
 					d = orange(self.file_id),
 					e = purple(d.op.ljust(9)),
 					f = red('{}:{}'.format(d.source.wallet, d.source.account).ljust(6)),
-					g = red('{}:{}'.format(d.dest.wallet, d.dest.account).ljust(6)) if d.dest else cyan('ext   '),
+					g = red('{}:{}'.format(d.dest.wallet, d.dest.account).ljust(6))
+						if d.dest else cyan('ext   '),
 					h = d.amount.fmt(4, color=True, prec=12),
 					j = d.dest_address.fmt(0, addr_w, color=True) if addr_w else d.dest_address.hl(0),
-					x = '->'
-				)
+					x = '->')
 
 		def get_info(self, *, indent='', addr_w=None):
 			d = self.data
@@ -116,8 +115,7 @@ class MoneroMMGenTX:
 				['  Fee:       {n} XMR'],
 				['  Dest:      {o}'],
 				['  Size:      {Z} bytes', d.signed_txset],
-				['  Payment ID: {P}', pmt_id],
-			))
+				['  Payment ID: {P}', pmt_id]))
 
 			from ...util2 import format_elapsed_hr
 			from ..ops import addr_width
@@ -135,19 +133,20 @@ class MoneroMMGenTX:
 					j = d.source.wallet.hl(),
 					k = red(f'#{d.source.account}'),
 					m = d.amount.hl(),
-					F = (Int(d.priority).hl() + f' [{tx_priorities[d.priority]}]') if d.priority else None,
+					F = (Int(d.priority).hl() + f' [{tx_priorities[d.priority]}]')
+						if d.priority else None,
 					n = d.fee.hl(),
-					o = d.dest_address.hl(0) if self.cfg.full_address
-						else d.dest_address.fmt(0, addr_width, color=True),
+					o = d.dest_address.hl(0)
+						if self.cfg.full_address else d.dest_address.fmt(0, addr_width, color=True),
 					P = pink(pmt_id.hex()) if pmt_id else None,
 					s = make_timestr(d.submit_time) if d.submit_time else None,
-					S = pink(f" [cold signed{', submitted' if d.complete else ''}]") if d.signed_txset else '',
+					S = pink(f" [cold signed{', submitted' if d.complete else ''}]")
+						if d.signed_txset else '',
 					t = format_elapsed_hr(d.submit_time) if d.submit_time else None,
 					x = d.dest.wallet.hl() if d.dest else None,
 					y = red(f'#{d.dest.account}') if d.dest else None,
 					z = red(f'#{d.dest.account_address}') if d.dest else None,
-					Z = Int(len(d.signed_txset) // 2).hl() if d.signed_txset else None,
-				)
+					Z = Int(len(d.signed_txset) // 2).hl() if d.signed_txset else None)
 
 		@property
 		def file_id(self):
@@ -162,8 +161,7 @@ class MoneroMMGenTX:
 				a = self.file_id,
 				b = self.data.amount,
 				c = '' if self.data.network == 'mainnet' else f'.{self.data.network}',
-				d = self.ext
-			)
+				d = self.ext)
 
 			if self.cfg.autosign:
 				fn = get_autosign_obj(self.cfg).xmr_tx_dir / fn
@@ -202,8 +200,10 @@ class MoneroMMGenTX:
 
 			self.data = self.xmrwallet_tx_data(
 				op             = d.op,
-				create_time    = now if self.name in ('NewSigned', 'NewUnsigned') else getattr(d, 'create_time', None),
-				sign_time      = now if self.name in ('NewSigned', 'NewColdSigned') else getattr(d, 'sign_time', None),
+				create_time    = now if self.name in ('NewSigned', 'NewUnsigned')
+					else getattr(d, 'create_time', None),
+				sign_time      = now if self.name in ('NewSigned', 'NewColdSigned')
+					else getattr(d, 'sign_time', None),
 				submit_time    = now if self.name == 'NewSubmitted' else None,
 				network        = d.network,
 				seed_id        = SeedID(sid=d.seed_id),
@@ -212,14 +212,14 @@ class MoneroMMGenTX:
 				dest_address   = CoinAddr(proto, d.dest_address),
 				txid           = CoinTxID(d.txid),
 				amount         = d.amount,
-				priority       = self.cfg.priority if self.name in ('NewSigned', 'NewUnsigned') else d.priority,
+				priority       = self.cfg.priority if self.name in ('NewSigned', 'NewUnsigned')
+					else d.priority,
 				fee            = d.fee,
 				blob           = d.blob,
 				metadata       = d.metadata,
 				unsigned_txset = d.unsigned_txset,
 				signed_txset   = getattr(d, 'signed_txset', None),
-				complete       = self.name in ('NewSigned', 'NewSubmitted'),
-			)
+				complete       = self.name in ('NewSigned', 'NewSubmitted'))
 
 	class NewUnsigned(New):
 		desc = 'unsigned transaction'
@@ -252,7 +252,8 @@ class MoneroMMGenTX:
 			try:
 				d_wrap = self.extract_data_from_file(cfg, fn)
 			except Exception as e:
-				die('MoneroMMGenTXFileParseError', f'{type(e).__name__}: {e}\nCould not load transaction file')
+				die('MoneroMMGenTXFileParseError',
+					f'{type(e).__name__}: {e}\nCould not load transaction file')
 
 			if 'unsigned_txset' in d_wrap['data']: # post-autosign
 				self.full_chksum_fields &= set(d_wrap['data']) # allow for added chksum fields in future
@@ -266,8 +267,10 @@ class MoneroMMGenTX:
 			d = self.xmrwallet_tx_data(**d_wrap['data'])
 
 			if self.name not in ('View', 'Completed'):
-				assert fn.name.endswith('.'+self.ext), 'TX file {fn} has incorrect extension (not {self.ext!r})'
-				assert getattr(d, self.req_field), f'{self.name} TX missing required field {self.req_field!r}'
+				assert fn.name.endswith('.' + self.ext), (
+					'TX file {fn} has incorrect extension (not {self.ext!r})')
+				assert getattr(d, self.req_field), (
+					f'{self.name} TX missing required field {self.req_field!r}')
 				assert bool(d.sign_time) == self.signed, '{a} has {b}sign time!'.format(
 					a = self.desc,
 					b = 'no ' if self.signed else'')
@@ -294,8 +297,7 @@ class MoneroMMGenTX:
 				metadata       = d.metadata,
 				unsigned_txset = d.unsigned_txset,
 				signed_txset   = d.signed_txset,
-				complete       = d.complete,
-			)
+				complete       = d.complete)
 
 			self.check_checksums(d_wrap)
 
