@@ -88,19 +88,36 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 					a.rjust(iwidth) + ' ' + ''.ljust(prec or self.max_prec),
 					color = color)
 
+	# same as fmt(), only with color override:
+	def fmt2(self, iwidth=1, /, *, color=False, prec=None, color_override=''):
+		match str(self).split('.', 1):
+			case [a, b]:
+				return self.colorize2(
+					a.rjust(iwidth) + '.' + b.ljust(prec or self.max_prec)[:prec or self.max_prec],
+					color = color,
+					color_override = color_override)
+			case [a]:
+				return self.colorize2(
+					a.rjust(iwidth) + ' ' + ''.ljust(prec or self.max_prec),
+					color = color,
+					color_override = color_override)
+
 	def hl(self, *, color=True):
 		return self.colorize(str(self), color=color)
 
+	def hl2(self, *, color=True, color_override=''):
+		return self.colorize2(str(self), color=color, color_override=color_override)
+
 	# fancy highlighting with coin unit, enclosure, formatting
-	def hl2(self, *, color=True, unit=False, fs='{}', encl=''):
+	def hl3(self, *, color=True, unit=False, fs='{}', encl='', color_override=''):
 		res = fs.format(self)
-		return (
+		return self.colorize2(
 			encl[:-1]
-			+ self.colorize(
-				(res.rstrip('0').rstrip('.') if '.' in res else res) +
-				(' ' + self.coin if unit else ''),
-				color = color)
-			+ encl[1:])
+			+ (res.rstrip('0').rstrip('.') if '.' in res else res)
+			+ (' ' + self.coin if unit else '')
+			+ encl[1:],
+			color = color,
+			color_override = color_override)
 
 	def __str__(self): # format simply, with no exponential notation
 		return str(int(self)) if int(self) == self else self.normalize().__format__('f')
