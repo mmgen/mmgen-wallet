@@ -56,7 +56,7 @@ class OpBase:
 		def hl_amt(amt):
 			return self.proto.coin_amt(amt, from_unit='atomic').hl()
 
-		addr_width = 95 if self.cfg.full_address else 17
+		addr_width = 95 if self.cfg.full_address else 24
 
 		self.proto = init_proto(cfg, 'xmr', network=self.cfg.network, need_amt=True)
 
