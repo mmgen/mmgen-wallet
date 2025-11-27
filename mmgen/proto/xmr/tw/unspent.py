@@ -15,8 +15,7 @@ proto.xmr.tw.unspent: Monero protocol tracking wallet unspent outputs class
 from collections import namedtuple
 
 from ....tw.unspent import TwUnspentOutputs
-from ....addr import MMGenID, MoneroIdx
-from ....color import red, green
+from ....addr import MoneroIdx
 
 from .view import MoneroTwView
 
@@ -59,24 +58,25 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 				for twmmid, data in rpc_data.items())
 
 	def get_disp_data(self):
-		ad = namedtuple('accts_data', ['total', 'data'])
+		ad = namedtuple('accts_data', ['idx', 'acct_idx', 'total', 'data'])
 		bd = namedtuple('accts_data_data', ['disp_data_idx', 'data'])
 		def gen_accts_data():
-			acct_id_save, total, d_acc = (None, 0, {})
+			idx, acct_idx, total, d_acc = (None, None, 0, {})
 			for n, d in enumerate(self.data):
 				m = d.twmmid.obj
-				if acct_id_save != m.acct_id:
-					if acct_id_save:
-						yield (acct_id_save, ad(total, d_acc))
-					acct_id_save = m.acct_id
+				if idx != m.idx or acct_idx != m.acct_idx:
+					if idx:
+						yield ad(idx, acct_idx, total, d_acc)
+					idx = m.idx
+					acct_idx = m.acct_idx
 					total = d.amt
 					d_acc = {m.addr_idx: bd(n, d)}
 				else:
 					total += d.amt
 					d_acc[m.addr_idx] = bd(n, d)
-			if acct_id_save:
-				yield (acct_id_save, ad(total, d_acc))
-		self.accts_data = dict(gen_accts_data())
+			if idx:
+				yield ad(idx, acct_idx, total, d_acc)
+		self.accts_data = tuple(gen_accts_data())
 		return super().get_disp_data()
 
 	class display_type(TwUnspentOutputs.display_type):
@@ -109,20 +109,16 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 			interactive = interactive)
 
 	def gen_display(self, data, cw, fs, color, fmt_method):
-		yes, no = (red('Yes '), green('No  ')) if color else ('Yes ', 'No  ')
-		fs_acct = '{:>4} {} {:%s}  {}' % MoneroIdx.max_digits
-		wallet_wid = 15
-		yield '     Wallet        Account  Balance'.ljust(self.term_width)
-		for n, (k, v) in enumerate(self.accts_data.items()):
-			mmid, acct_idx = k.rsplit(':', 1)
-			m = list(v.data.values())[0].data.twmmid.obj
+		fs_acct = '{:>4} {:6} {:7}  {}'
+		yield fs_acct.format('', 'Wallet', 'Account', 'Balance').ljust(self.term_width)
+		for n, d in enumerate(self.accts_data):
 			yield fs_acct.format(
 				str(n + 1) + ')',
-				MMGenID.hlc(mmid.ljust(wallet_wid), color=color),
-				m.acct_idx.fmt(MoneroIdx.max_digits, color=color),
-				v.total.hl(color=color)).ljust(self.term_width)
-			for v in v.data.values():
-				yield fmt_method(None, v.data, cw, fs, color, yes, no)
+				d.idx.fmt(6, color=color),
+				d.acct_idx.fmt(7, color=color),
+				d.total.hl(color=color)).ljust(self.term_width)
+			for v in d.data.values():
+				yield fmt_method(None, v.data, cw, fs, color, None, None)
 
 	def squeezed_format_line(self, n, d, cw, fs, color, yes, no):
 		return fs.format(
@@ -135,5 +131,5 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 		if res := await self.get_idx(f'{self.item_desc} number', self.accts_data):
 			return await self.get_idx(
 				'address index',
-				list(self.accts_data.values())[res.idx - 1].data,
+				self.accts_data[res.idx - 1].data,
 				is_addr_idx = True)
