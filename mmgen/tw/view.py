@@ -654,7 +654,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				msg_r(CUR_UP(1) + '\r' + ERASE_ALL)
 
 		from ..ui import line_input
-		ur = namedtuple('usr_idx_data', ['idx', 'addr_idx'])
+		ur = namedtuple('usr_idx_data', ['idx', 'acct_addr_idx'])
 		while True:
 			msg_r(self.blank_prompt if self.scroll else '\n')
 			usr_ret = line_input(
@@ -744,7 +744,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				#  'redo': user will be re-prompted for item number
 				#  'redraw': action successfully performed, screen will be redrawn
 				if usr_ret := await parent.get_idx_from_user():
-					ret = await action_method(parent, usr_ret.idx, usr_ret.addr_idx)
+					ret = await action_method(parent, usr_ret.idx, usr_ret.acct_addr_idx)
 				else:
 					ret = None
 				if ret != 'redo':
@@ -757,7 +757,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					CUR_HOME + ERASE_ALL +
 					await parent.format(display_type='squeezed', interactive=True, scroll=True))
 
-		async def i_balance_refresh(self, parent, idx, addr_idx=None):
+		async def i_balance_refresh(self, parent, idx, acct_addr_idx=None):
 			if not parent.keypress_confirm(
 					f'Refreshing tracking wallet {parent.item_desc} #{idx}. OK?'):
 				return 'redo'
@@ -774,7 +774,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				if res == 0:
 					return 'redraw' # zeroing balance may mess up display
 
-		async def i_addr_delete(self, parent, idx, addr_idx=None):
+		async def i_addr_delete(self, parent, idx, acct_addr_idx=None):
 			if not parent.keypress_confirm(
 					'Removing {} {} from tracking wallet. OK?'.format(
 						parent.item_desc, red(f'#{idx}'))):
@@ -788,7 +788,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				parent.oneshot_msg = red('Address could not be removed')
 				return False
 
-		async def i_comment_add(self, parent, idx, addr_idx=None):
+		async def i_comment_add(self, parent, idx, acct_addr_idx=None):
 
 			async def do_comment_add(comment_in):
 				from ..obj import TwComment
@@ -817,12 +817,12 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					return False
 
 			entry = parent.disp_data[idx-1]
-			if addr_idx is None:
+			if acct_addr_idx is None:
 				desc       = f'{parent.item_desc} #{idx}'
 				color_desc = f'{parent.item_desc} {red("#" + str(idx))}'
 			else:
-				desc       = f'address #{addr_idx}'
-				color_desc = f'address {red("#" + str(addr_idx))}'
+				desc       = f'address #{acct_addr_idx}'
+				color_desc = f'address {red("#" + str(acct_addr_idx))}'
 
 			cur_comment = parent.disp_data[idx-1].comment
 			msg('Current label: {}'.format(cur_comment.hl() if cur_comment else '(none)'))
