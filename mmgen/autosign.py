@@ -142,6 +142,7 @@ class Signable:
 		clean_all = False
 		multiple_ok = True
 		action_desc = 'signed'
+		fail_msg = 'failed to sign'
 
 		def __init__(self, parent):
 			self.parent = parent
@@ -150,29 +151,8 @@ class Signable:
 			self.name = type(self).__name__
 
 		@property
-		def submitted(self):
-			return self._processed('_submitted', self.subext)
-
-		def _processed(self, attrname, ext):
-			if not hasattr(self, attrname):
-				setattr(self, attrname, tuple(f for f in sorted(self.dir.iterdir())
-					if f.name.endswith('.' + ext)))
-			return getattr(self, attrname)
-
-		@property
 		def unsigned(self):
 			return self._unprocessed('_unsigned', self.rawext, self.sigext)
-
-		@property
-		def unsubmitted(self):
-			return self._unprocessed('_unsubmitted', self.sigext, self.subext)
-
-		@property
-		def unsubmitted_raw(self):
-			return self._unprocessed('_unsubmitted_raw', self.rawext, self.subext)
-
-		unsent = unsubmitted
-		unsent_raw = unsubmitted_raw
 
 		def _unprocessed(self, attrname, rawext, sigext):
 			if not hasattr(self, attrname):
@@ -191,6 +171,105 @@ class Signable:
 				a = red(f'Failed {self.desc}s:'),
 				b = '  {}\n'.format('\n  '.join(
 					self.gen_bad_list(sorted(bad_files, key=lambda f: f.name))))))
+
+		def gen_bad_list(self, bad_files):
+			for f in bad_files:
+				yield red(f.name)
+
+	class transaction(base):
+		desc = 'non-automount transaction'
+		rawext = 'rawtx'
+		sigext = 'sigtx'
+		dir_name = 'tx_dir'
+		automount = False
+
+		async def sign(self, f):
+			from .tx import UnsignedTX
+			tx1 = UnsignedTX(
+					cfg       = self.cfg,
+					filename  = f,
+					automount = self.automount)
+			if tx1.proto.sign_mode == 'daemon':
+				from .rpc import rpc_init
+				tx1.rpc = await rpc_init(self.cfg, tx1.proto, ignore_wallet=True)
+			from .tx.keys import TxKeys
+			tx2 = await tx1.sign(
+				TxKeys(
+					self.cfg,
+					tx1,
+					seedfiles = self.parent.wallet_files[:],
+					keylist = self.parent.keylist,
+					passwdfile = str(self.parent.keyfile),
+					autosign = True).keys)
+			if tx2:
+				tx2.file.write(ask_write=False, outdir=self.dir)
+				return tx2
+			else:
+				return False
+
+		def print_summary(self, signables):
+
+			if self.cfg.full_summary:
+				bmsg('\nAutosign summary:\n')
+				msg_r('\n'.join(tx.info.format(terse=True) for tx in signables))
+				return
+
+			def gen():
+				for tx in signables:
+					non_mmgen = [o for o in tx.outputs if not o.mmid]
+					if non_mmgen:
+						yield (tx, non_mmgen)
+
+			body = list(gen())
+
+			if body:
+				bmsg('\nAutosign summary:')
+				fs = '{}  {} {}'
+				t_wid, a_wid = 6, 44
+
+				def gen():
+					yield fs.format('TX ID ', 'Non-MMGen outputs'+' '*(a_wid-17), 'Amount')
+					yield fs.format('-'*t_wid, '-'*a_wid, '-'*7)
+					for tx, non_mmgen in body:
+						for nm in non_mmgen:
+							yield fs.format(
+								tx.txid.fmt(t_wid, color=True) if nm is non_mmgen[0] else ' '*t_wid,
+								nm.addr.fmt(nm.addr.view_pref, a_wid, color=True),
+								nm.amt.hl() + ' ' + yellow(tx.coin))
+
+				msg('\n' + '\n'.join(gen()))
+			else:
+				msg('\nNo non-MMGen outputs')
+
+	class automount_transaction(transaction):
+		desc = 'automount transaction'
+		dir_name = 'txauto_dir'
+		rawext = 'arawtx'
+		sigext = 'asigtx'
+		subext = 'asubtx'
+		multiple_ok = False
+		automount = True
+
+		@property
+		def unsubmitted(self):
+			return self._unprocessed('_unsubmitted', self.sigext, self.subext)
+
+		@property
+		def unsubmitted_raw(self):
+			return self._unprocessed('_unsubmitted_raw', self.rawext, self.subext)
+
+		unsent = unsubmitted
+		unsent_raw = unsubmitted_raw
+
+		@property
+		def submitted(self):
+			return self._processed('_submitted', self.subext)
+
+		def _processed(self, attrname, ext):
+			if not hasattr(self, attrname):
+				setattr(self, attrname, tuple(f for f in sorted(self.dir.iterdir())
+					if f.name.endswith('.' + ext)))
+			return getattr(self, attrname)
 
 		def die_wrong_num_txs(self, tx_type, *, msg=None, desc=None, show_dir=False):
 			num_txs = len(getattr(self, tx_type))
@@ -255,86 +334,7 @@ class Signable:
 					for txfile in files],
 				key = lambda x: x.timestamp)[-1]
 
-	class transaction(base):
-		desc = 'non-automount transaction'
-		rawext = 'rawtx'
-		sigext = 'sigtx'
-		dir_name = 'tx_dir'
-		fail_msg = 'failed to sign'
-		automount = False
-
-		async def sign(self, f):
-			from .tx import UnsignedTX
-			tx1 = UnsignedTX(
-					cfg       = self.cfg,
-					filename  = f,
-					automount = self.automount)
-			if tx1.proto.sign_mode == 'daemon':
-				from .rpc import rpc_init
-				tx1.rpc = await rpc_init(self.cfg, tx1.proto, ignore_wallet=True)
-			from .tx.keys import TxKeys
-			tx2 = await tx1.sign(
-				TxKeys(
-					self.cfg,
-					tx1,
-					seedfiles = self.parent.wallet_files[:],
-					keylist = self.parent.keylist,
-					passwdfile = str(self.parent.keyfile),
-					autosign = True).keys)
-			if tx2:
-				tx2.file.write(ask_write=False, outdir=self.dir)
-				return tx2
-			else:
-				return False
-
-		def print_summary(self, signables):
-
-			if self.cfg.full_summary:
-				bmsg('\nAutosign summary:\n')
-				msg_r('\n'.join(tx.info.format(terse=True) for tx in signables))
-				return
-
-			def gen():
-				for tx in signables:
-					non_mmgen = [o for o in tx.outputs if not o.mmid]
-					if non_mmgen:
-						yield (tx, non_mmgen)
-
-			body = list(gen())
-
-			if body:
-				bmsg('\nAutosign summary:')
-				fs = '{}  {} {}'
-				t_wid, a_wid = 6, 44
-
-				def gen():
-					yield fs.format('TX ID ', 'Non-MMGen outputs'+' '*(a_wid-17), 'Amount')
-					yield fs.format('-'*t_wid, '-'*a_wid, '-'*7)
-					for tx, non_mmgen in body:
-						for nm in non_mmgen:
-							yield fs.format(
-								tx.txid.fmt(t_wid, color=True) if nm is non_mmgen[0] else ' '*t_wid,
-								nm.addr.fmt(nm.addr.view_pref, a_wid, color=True),
-								nm.amt.hl() + ' ' + yellow(tx.coin))
-
-				msg('\n' + '\n'.join(gen()))
-			else:
-				msg('\nNo non-MMGen outputs')
-
-		def gen_bad_list(self, bad_files):
-			for f in bad_files:
-				yield red(f.name)
-
-	class automount_transaction(transaction):
-		desc   = 'automount transaction'
-		dir_name = 'txauto_dir'
-		rawext = 'arawtx'
-		sigext = 'asigtx'
-		subext = 'asubtx'
-		multiple_ok = False
-		automount = True
-
-	class xmr_signable(transaction): # mixin class
+	class xmr_signable: # mixin class
 		automount = True
 
 		def need_daemon_restart(self, m, new_idx):
@@ -346,11 +346,12 @@ class Signable:
 			bmsg('\nAutosign summary:')
 			msg('\n'.join(s.get_info(indent='  ') for s in signables) + self.summary_footer)
 
-	class xmr_transaction(xmr_signable):
+	class xmr_transaction(xmr_signable, automount_transaction):
 		dir_name = 'xmr_tx_dir'
 		desc = 'Monero transaction'
+		rawext = 'rawtx'
+		sigext = 'sigtx'
 		subext = 'subtx'
-		multiple_ok = False
 		summary_footer = ''
 
 		async def sign(self, f):
@@ -366,7 +367,7 @@ class Signable:
 			tx2.write(ask_write=False)
 			return tx2
 
-	class xmr_wallet_outputs_file(xmr_signable):
+	class xmr_wallet_outputs_file(xmr_signable, base):
 		desc = 'Monero wallet outputs file'
 		rawext = 'raw'
 		sigext = 'sig'
