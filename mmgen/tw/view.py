@@ -458,7 +458,13 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 						make_timestr(self.rpc.cur_date))
 
 				if hasattr(self, 'total'):
-					yield 'Total {}: {}'.format(self.proto.dcoin, self.total.hl(color=color))
+					if hasattr(self, 'unlocked_total') and self.total != self.unlocked_total:
+						yield 'Total {}: {} {}'.format(
+							self.proto.dcoin,
+							self.unlocked_total.hl(color=color),
+							self.total.hl3(color_override='orange', encl='[]'))
+					else:
+						yield 'Total {}: {}'.format(self.proto.dcoin, self.total.hl(color=color))
 
 				yield from getattr(self, dt.subhdr_fmt_method)(cw, color)
 

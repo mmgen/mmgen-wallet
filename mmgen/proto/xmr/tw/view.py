@@ -12,6 +12,8 @@
 proto.xmr.tw.view: Monero protocol base class for tracking wallet view classes
 """
 
+from collections import namedtuple
+
 from ....xmrwallet import op as xmrwallet_op
 from ....seed import SeedID
 from ....tw.view import TwView
@@ -32,33 +34,48 @@ class MoneroTwView:
 		if wallets_data:
 			self.sid = SeedID(sid=wallets_data[0]['seed_id'])
 
-		self.total = self.proto.coin_amt('0')
+		self.total = self.unlocked_total = self.proto.coin_amt('0')
 
 		def gen_addrs():
+			bd = namedtuple('address_balance_data', ['bal', 'unlocked_bal', 'blocks_to_unlock'])
 			for wdata in wallets_data:
 				bals_data = {i: {} for i in range(len(wdata['data'].accts_data['subaddress_accounts']))}
 
 				for d in wdata['data'].bals_data.get('per_subaddress', []):
-					bals_data[d['account_index']].update({d['address_index']: d['unlocked_balance']})
+					bals_data[d['account_index']].update({
+						d['address_index']: bd(
+							d['balance'],
+							d['unlocked_balance'],
+							d['blocks_to_unlock'])})
 
 				for acct_idx, acct_data in enumerate(wdata['data'].addrs_data):
 					for addr_data in acct_data['addresses']:
 						addr_idx = addr_data['address_index']
-						self.total += (bal := self.proto.coin_amt(
-							bals_data[acct_idx].get(addr_idx, 0),
-							from_unit = 'atomic'))
-						if self.include_empty or bal:
+						addr_bals = bals_data[acct_idx].get(addr_idx)
+						bal = self.proto.coin_amt(
+							addr_bals.bal if addr_bals else 0,
+							from_unit = 'atomic')
+						unlocked_bal = self.proto.coin_amt(
+							addr_bals.unlocked_bal if addr_bals else 0,
+							from_unit = 'atomic')
+						if bal or self.include_empty:
+							self.total += bal
+							self.unlocked_total += unlocked_bal
 							mmid = '{}:M:{}-{}/{}'.format(
 								wdata['seed_id'],
 								wdata['wallet_num'],
 								acct_idx,
 								addr_idx)
+							btu = addr_bals.blocks_to_unlock if addr_bals else 0
+							if not btu and bal != unlocked_bal:
+								btu = 12
 							yield (TwMMGenID(self.proto, mmid), {
 								'addr':    addr_data['address'],
 								'amt':     bal,
+								'unlocked_amt': unlocked_bal,
 								'recvd':   bal,
 								'is_used': addr_data['used'],
-								'confs':   1,
+								'confs':   11 - btu,
 								'lbl':     TwLabel(self.proto, mmid + ' ' + addr_data['label'])})
 
 		return dict(gen_addrs())

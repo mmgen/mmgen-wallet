@@ -518,6 +518,17 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('fund_alice1b',             'sending funds to Alice (wallet #1)'),
 		('mine_blocks_10',           'mining some blocks'),
 		('alice_twview1',            'adding label to Alice’s tracking wallets (twview)'),
+		('new_account_alice',        'adding an account to Alice’s wallet'),
+		('new_address_alice',        'adding an address to Alice’s wallet'),
+		('new_address_alice_label',  'adding an address to Alice’s wallet (with label)'),
+		('alice_dump',               'dumping alice’s wallets to JSON format'),
+		('fund_alice_sub1',          'sending funds to Alice’s subaddress #1 (wallet #2)'),
+		('mine_blocks_1',            'mining a block'),
+		('fund_alice_sub2',          'sending funds to Alice’s subaddress #2 (wallet #2)'),
+		('mine_blocks_1',            'mining a block'),
+		('fund_alice_sub3',          'sending funds to Alice’s subaddress #3 (wallet #2)'),
+		('alice_twview2',            'viewing Alice’s tracking wallets (reload, sort options)'),
+		('alice_twview3',            'viewing Alice’s tracking wallets (check balances)'),
 	)
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
@@ -537,12 +548,38 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	def create_watchonly_wallets(self):
 		return self._create_wallets()
 
+	async def mine_blocks_1(self):
+		return await self._mine_blocks(1)
+
 	async def mine_blocks_10(self):
 		return await self._mine_blocks(10)
 
 	async def _mine_blocks(self, n):
 		self.spawn(msg_only=True)
 		return await self.mine(n)
+
+	def _new_addr_alice(self, *args):
+		return self.new_addr_alice(*args, do_autosign=True)
+
+	async def alice_dump(self):
+		t = self._xmr_autosign_op('dump')
+		t.read()
+		self.remove_device_online() # device was inserted by _xmr_autosign_op()
+		return t
+
+	async def fund_alice_sub1(self):
+		return await self._fund_alice(1, 9876543210)
+
+	async def fund_alice_sub2(self):
+		return await self._fund_alice(2, 8765432109)
+
+	async def fund_alice_sub3(self):
+		return await self._fund_alice(3, 7654321098)
+
+	async def _fund_alice(self, addr_num, amt):
+		data = json.loads(read_from_file(self.alice_dump_file))
+		addr_data = data['MoneroMMGenWalletDumpFile']['data']['wallet_metadata'][1]['addresses']
+		return await self.fund_alice(addr=addr_data[addr_num-1]['address'], amt=amt)
 
 	def alice_listaddresses1(self):
 		return self._alice_twops(
@@ -562,6 +599,17 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			lbl_addr_idx_num = 0,
 			menu = 'R',
 			expect_str = r'New Label.*2\.469135782468')
+
+	def alice_twview2(self):
+		return self._alice_twops('twview', menu='RaAdMraAdMe')
+
+	def alice_twview3(self):
+		return self._alice_twops(
+			'twview',
+			expect_arr = [
+				'Total XMR: 3.722345649021 [3.729999970119]',
+				'1  0.026296296417',
+				'0.007654321098'])
 
 	def _alice_twops(
 			self,
