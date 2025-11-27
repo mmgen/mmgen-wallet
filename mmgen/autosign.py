@@ -249,8 +249,7 @@ class Signable:
 
 		async def get_last_created(self):
 			from .tx import CompletedTX
-			ext = '.' + Signable.automount_transaction.subext
-			files = [f for f in self.dir.iterdir() if f.name.endswith(ext)]
+			files = [f for f in self.dir.iterdir() if f.name.endswith(self.subext)]
 			return sorted(
 				[await CompletedTX(cfg=self.cfg, filename=str(txfile), quiet_open=True)
 					for txfile in files],
@@ -262,13 +261,14 @@ class Signable:
 		sigext = 'sigtx'
 		dir_name = 'tx_dir'
 		fail_msg = 'failed to sign'
+		automount = False
 
 		async def sign(self, f):
 			from .tx import UnsignedTX
 			tx1 = UnsignedTX(
 					cfg       = self.cfg,
 					filename  = f,
-					automount = self.name=='automount_transaction')
+					automount = self.automount)
 			if tx1.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
 				tx1.rpc = await rpc_init(self.cfg, tx1.proto, ignore_wallet=True)
@@ -332,8 +332,10 @@ class Signable:
 		sigext = 'asigtx'
 		subext = 'asubtx'
 		multiple_ok = False
+		automount = True
 
 	class xmr_signable(transaction): # mixin class
+		automount = True
 
 		def need_daemon_restart(self, m, new_idx):
 			old_idx = self.parent.xmr_cur_wallet_idx
