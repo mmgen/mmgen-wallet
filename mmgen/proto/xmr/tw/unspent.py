@@ -14,8 +14,10 @@ proto.xmr.tw.unspent: Monero protocol tracking wallet unspent outputs class
 
 from collections import namedtuple
 
-from ....tw.unspent import TwUnspentOutputs
+from ....obj import ImmutableAttr
 from ....addr import MoneroIdx
+from ....amt import CoinAmtChk
+from ....tw.unspent import TwUnspentOutputs
 
 from .view import MoneroTwView
 
@@ -28,9 +30,11 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 	total = None
 	nice_addr_w = {'addr': 20}
 
-	prompt_fs_repl = {'XMR': (
-		(1, 'Display options: r[e]draw screen'),
-		(3, 'Actions: [q]uit menu, add [l]abel, [R]efresh balances:'))}
+	prompt_fs_in = [
+		'Sort options: [a]mount, a[d]dr, [M]mgen addr, [r]everse',
+		'Display options: r[e]draw screen',
+		'View/Print: pager [v]iew, [w]ide pager view, [p]rint to file{s}',
+		'Actions: [q]uit menu, add [l]abel, [R]efresh balances:']
 	extra_key_mappings = {
 		'R': 'a_sync_wallets'}
 
@@ -47,9 +51,13 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 		'amt':    lambda i: '{}:{:050}'.format(i.twmmid.obj.acct_sort_key, i.amt.to_unit('atomic')),
 		'twmmid': lambda i: i.twmmid.sort_key} # sort_key begins with acct_sort_key
 
+	class MoneroMMGenTwUnspentOutput(TwUnspentOutputs.MMGenTwUnspentOutput):
+		valid_attrs = {'amt', 'unlocked_amt', 'comment', 'twmmid', 'addr', 'confs', 'skip'}
+		unlocked_amt = ImmutableAttr(CoinAmtChk, include_proto=True)
+
 	def gen_data(self, rpc_data, lbl_id):
 		return (
-			self.MMGenTwUnspentOutput(
+			self.MoneroMMGenTwUnspentOutput(
 					self.proto,
 					twmmid  = twmmid,
 					addr    = data['addr'],
