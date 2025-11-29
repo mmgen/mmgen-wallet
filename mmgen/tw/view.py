@@ -426,15 +426,15 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 				if color:
 					Blue, Green = (blue, green)
-					Yes, No, All = (green('yes'), red('no'), yellow('all'))
+					Yes, No, Only = (green('yes'), red('no'), yellow('only'))
 				else:
 					Blue, Green = (nocolor, nocolor)
-					Yes, No, All = ('yes', 'no', 'all')
+					Yes, No, Only = ('yes', 'no', 'only')
 
 				sort_info = ' '.join(self.sort_info())
 
 				def fmt_filter(k):
-					return '{}:{}'.format(k, {0: No, 1: Yes, 2: All}[getattr(self, k)])
+					return '{}:{}'.format(k, {0: No, 1: Yes, 2: Only}[getattr(self, k)])
 
 				yield '{} (sort order: {}){}'.format(
 					self.hdr_lbl.upper(),

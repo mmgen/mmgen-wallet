@@ -141,7 +141,7 @@ class tool_cmd(tool_cmd_base):
 			mmgen_addrs:  'hyphenated range or comma-separated list of addresses' = '',
 			showcoinaddrs:'display coin addresses in addition to MMGen IDs' = True,
 			showempty:    'show addresses with no balances' = True,
-			showused:     'show used addresses (tristate: 0=no, 1=yes, 2=all)' = 1,
+			showused:     'show used addresses (tristate: 0=no, 1=yes, 2=only)' = 1,
 			all_labels:   'show all addresses with labels' = False):
 		"list MMGen addresses in the tracking wallet and their balances"
 

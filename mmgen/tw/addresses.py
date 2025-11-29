@@ -32,7 +32,7 @@ class TwAddresses(TwView):
 	filters = ('showempty', 'showused', 'all_labels')
 	showcoinaddrs = True
 	showempty = True
-	showused = 1 # tristate: 0: no, 1: yes, 2: all
+	showused = 1 # tristate: 0: no, 1: yes, 2: only
 	all_labels = False
 	mod_subpath = 'tw.addresses'
 	has_age = False
@@ -168,12 +168,25 @@ class TwAddresses(TwView):
 
 	def get_disp_data(self):
 		if self.usr_addr_list:
-			return (d for d in self.data if d.twmmid.obj in self.usr_addr_list)
+			for d in self.data:
+				if d.twmmid.obj in self.usr_addr_list:
+					yield d
 		else:
-			return (d for d in self.data if
-				(self.all_labels and d.comment) or
-				(self.showused == 2 and d.is_used) or
-				(not (d.is_used and not self.showused) and (d.amt or self.showempty)))
+			for d in self.data:
+				if self.all_labels and d.comment:
+					yield d
+				else:
+					if not (self.showempty or d.amt):
+						continue
+					match self.showused: # tristate: 0:no, 1:yes, 2:only
+						case 0:
+							if not d.is_used:
+								yield d
+						case 1:
+							yield d
+						case 2:
+							if d.is_used:
+								yield d
 
 	def get_column_widths(self, data, *, wide, interactive):
 
