@@ -29,3 +29,14 @@ class MoneroTwAddresses(MoneroTwView, TwAddresses):
 		'R': 'a_sync_wallets'}
 	removed_key_mappings = {
 		'D': 'i_addr_delete'}
+
+	class display_type:
+
+		class squeezed(MoneroTwView.display_type.squeezed):
+			cols = ('addr_idx', 'addr', 'used', 'comment', 'amt')
+
+		class detail(MoneroTwView.display_type.detail):
+			cols = ('addr_idx', 'addr', 'used', 'amt', 'comment')
+
+	def get_disp_data(self):
+		return MoneroTwView.get_disp_data(self, input_data=tuple(TwAddresses.get_disp_data(self)))

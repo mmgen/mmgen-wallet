@@ -529,6 +529,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('fund_alice_sub3',          'sending funds to Alice’s subaddress #3 (wallet #2)'),
 		('alice_twview2',            'viewing Alice’s tracking wallets (reload, sort options)'),
 		('alice_twview3',            'viewing Alice’s tracking wallets (check balances)'),
+		('alice_listaddresses2',     'listing Alice’s addresses (sort options)'),
 	)
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
@@ -585,6 +586,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		return self._alice_twops(
 			'listaddresses',
 			lbl_addr_num = 2,
+			lbl_addr_idx_num = 0,
 			lbl_add_timestr = True,
 			menu = 'R',
 			expect_str = r'Primary account.*1\.234567891234')
@@ -608,8 +610,11 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			'twview',
 			expect_arr = [
 				'Total XMR: 3.722345649021 [3.729999970119]',
-				'1  0.026296296417',
+				'1         0.026296296417',
 				'0.007654321098'])
+
+	def alice_listaddresses2(self):
+		return self._alice_twops('listaddresses', menu='aAdMELLuuuraAdMeEuu')
 
 	def _alice_twops(
 			self,
