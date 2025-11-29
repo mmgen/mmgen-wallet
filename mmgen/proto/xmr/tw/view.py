@@ -83,10 +83,19 @@ class MoneroTwView:
 	class action(TwView.action):
 
 		async def a_sync_wallets(self, parent):
-			from ....util import msg, msg_r
+			from ....util import msg, msg_r, ymsg
 			from ....tw.view import CUR_HOME, ERASE_ALL
 			msg('')
-			op = xmrwallet_op('sync', parent.cfg, None, None, compat_call=True)
+			try:
+				op = xmrwallet_op('sync', parent.cfg, None, None, compat_call=True)
+			except Exception as e:
+				if type(e).__name__ == 'SocketError':
+					import asyncio
+					ymsg(str(e))
+					await asyncio.sleep(2)
+					msg_r(CUR_HOME + ERASE_ALL)
+					return False
+				raise
 			await op.restart_wallet_daemon()
 			await op.main()
 			await parent.get_data()
