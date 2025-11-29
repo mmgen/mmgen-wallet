@@ -272,13 +272,16 @@ class Signable:
 			return getattr(self, attrname)
 
 		def die_wrong_num_txs(self, tx_type, *, msg=None, desc=None, show_dir=False):
-			num_txs = len(getattr(self, tx_type))
+			match len(getattr(self, tx_type)): # num_txs
+				case 0: subj, suf, pred = ('No', 's', 'present')
+				case 1: subj, suf, pred = ('One', '', 'already present')
+				case _: subj, suf, pred = ('More than one', '', 'already present')
 			die('AutosignTXError', '{m}{a} {b} transaction{c} {d} {e}!'.format(
 				m = msg + '\n' if msg else '',
-				a = 'One' if num_txs == 1 else 'More than one' if num_txs else 'No',
+				a = subj,
 				b = desc or tx_type,
-				c = suf(num_txs),
-				d = 'already present' if num_txs else 'present',
+				c = suf,
+				d = pred,
 				e = f'in ‘{getattr(self.parent, self.dir_name)}’'
 					if show_dir else 'on removable device'))
 
