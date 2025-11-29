@@ -178,6 +178,11 @@ class MoneroMMGenTX:
 				ignore_opt_outdir     = self.cfg.autosign)
 
 	class New(Base):
+		is_new = False
+		is_signing = False
+		is_submitting = False
+		is_complete = False
+		signed = False
 
 		def __init__(self, *args, **kwargs):
 
@@ -200,11 +205,9 @@ class MoneroMMGenTX:
 
 			self.data = self.xmrwallet_tx_data(
 				op             = d.op,
-				create_time    = now if self.name in ('NewSigned', 'NewUnsigned')
-					else getattr(d, 'create_time', None),
-				sign_time      = now if self.name in ('NewSigned', 'NewColdSigned')
-					else getattr(d, 'sign_time', None),
-				submit_time    = now if self.name == 'NewSubmitted' else None,
+				create_time    = now if self.is_new else getattr(d, 'create_time', None),
+				sign_time      = now if self.is_signing else getattr(d, 'sign_time', None),
+				submit_time    = now if self.is_submitting else None,
 				network        = d.network,
 				seed_id        = SeedID(sid=d.seed_id),
 				source         = XMRWalletAddrSpec(d.source),
@@ -212,31 +215,35 @@ class MoneroMMGenTX:
 				dest_address   = CoinAddr(proto, d.dest_address),
 				txid           = CoinTxID(d.txid),
 				amount         = d.amount,
-				priority       = self.cfg.priority if self.name in ('NewSigned', 'NewUnsigned')
-					else d.priority,
+				priority       = self.cfg.priority if self.is_new else d.priority,
 				fee            = d.fee,
 				blob           = d.blob,
 				metadata       = d.metadata,
 				unsigned_txset = d.unsigned_txset,
 				signed_txset   = getattr(d, 'signed_txset', None),
-				complete       = self.name in ('NewSigned', 'NewSubmitted'))
+				complete       = self.is_complete)
 
 	class NewUnsigned(New):
 		desc = 'unsigned transaction'
 		ext = 'rawtx'
-		signed = False
+		is_new = True
 
-	class NewSigned(New):
+	class NewColdSigned(New):
 		desc = 'signed transaction'
 		ext = 'sigtx'
+		is_signing = True
 		signed = True
 
-	class NewColdSigned(NewSigned):
-		pass
+	class NewSigned(NewColdSigned):
+		is_new = True
+		is_complete = True
 
-	class NewSubmitted(NewColdSigned):
+	class NewSubmitted(New):
 		desc = 'submitted transaction'
 		ext = 'subtx'
+		signed = True
+		is_submitting = True
+		is_complete = True
 
 	class Completed(Base):
 		desc = 'transaction'
