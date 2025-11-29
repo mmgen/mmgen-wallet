@@ -141,12 +141,12 @@ class TwAddresses(TwView):
 		for e in await self.twctl.get_label_addr_pairs():
 			bal = await self.twctl.get_balance(e.coinaddr, block=block)
 			addrs[e.label.mmid] = {
-				'addr':  e.coinaddr,
-				'amt':   bal,
-				'recvd': bal,         # current bal only, CF btc.tw.addresses.get_rpc_data()
+				'addr':    e.coinaddr,
+				'amt':     bal,
+				'recvd':   bal,         # current bal only, CF btc.tw.addresses.get_rpc_data()
 				'is_used': bool(bal) or e.coinaddr in used_addrs,
-				'confs': minconf,
-				'lbl':   e.label}
+				'confs':   minconf,
+				'lbl':     e.label}
 			self.total += bal
 
 		return addrs
@@ -192,19 +192,19 @@ class TwAddresses(TwView):
 
 		return self.compute_column_widths(
 			widths = { # fixed cols
-				'num':  max(2, len(str(len(data)))+1),
-				'mmid': max(len(d.twmmid.disp) for d in data),
-				'used': self.used_w,
-				'amt':  self.amt_widths['amt'],
-				'date': self.age_w if self.has_age else 0,
-				'block': self.age_col_params['block'][0] if wide and self.has_age else 0,
+				'num':       max(2, len(str(len(data)))+1),
+				'mmid':      max(len(d.twmmid.disp) for d in data),
+				'used':      self.used_w,
+				'amt':       self.amt_widths['amt'],
+				'date':      self.age_w if self.has_age else 0,
+				'block':     self.age_col_params['block'][0] if wide and self.has_age else 0,
 				'date_time': self.age_col_params['date_time'][0] if wide and self.has_age else 0,
-				'spc': self.spc_w},
+				'spc':       self.spc_w},
 			maxws = { # expandable cols
 				'addr':    max(len(d.addr) for d in data) if self.showcoinaddrs else 0,
 				'comment': max(d.comment.screen_width for d in data)},
 			minws = {
-				'addr': 12 if self.showcoinaddrs else 0,
+				'addr':    12 if self.showcoinaddrs else 0,
 				'comment': len('Comment')},
 			maxws_nice = {'addr': 18},
 			wide = wide,
@@ -239,8 +239,7 @@ class TwAddresses(TwView):
 			a = d.addr.fmt(self.addr_view_pref, cw.addr, color=color),
 			c = d.comment.fmt2(cw.comment, color=color, nullrepl='-'),
 			A = d.amt.fmt(cw.iwidth, color=color, prec=self.disp_prec),
-			d = self.age_disp(d, self.age_fmt)
-		)
+			d = self.age_disp(d, self.age_fmt))
 
 	def detail_format_line(self, n, d, cw, fs, color, yes, no):
 		return fs.format(
