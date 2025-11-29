@@ -41,6 +41,8 @@ class OpBase:
 					break
 
 		self.cfg = cfg
+		self.uargs = uarg_tuple
+
 		classes = tuple(gen_classes())
 		self.opts = tuple(set(opt for cls in classes for opt in xmrwallet.opts))
 
@@ -48,8 +50,6 @@ class OpBase:
 			self.stem = self.name
 
 		global fmt_amt, hl_amt, addr_width
-
-		self.uargs = uarg_tuple
 
 		def fmt_amt(amt):
 			return self.proto.coin_amt(amt, from_unit='atomic').fmt(5, prec=12, color=True)

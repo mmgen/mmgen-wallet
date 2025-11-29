@@ -120,10 +120,8 @@ class OpResubmit(OpSubmit):
 	def get_tx(self):
 		from ...autosign import Signable
 		fns = Signable.xmr_transaction(self.asi).get_submitted()
-		return sorted(
-			(MoneroMMGenTX.Submitted(self.cfg, Path(fn)) for fn in fns),
-				key = lambda x: getattr(x.data, 'submit_time', None) or x.data.create_time
-		)[-1]
+		return sorted((MoneroMMGenTX.Submitted(self.cfg, Path(fn)) for fn in fns),
+			key = lambda x: getattr(x.data, 'submit_time', None) or x.data.create_time)[-1]
 
 class OpAbort(OpBase):
 	opts = ('watch_only', 'autosign')

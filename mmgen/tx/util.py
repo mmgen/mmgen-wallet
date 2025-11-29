@@ -20,8 +20,8 @@ def get_autosign_obj(cfg):
 			'_clone': cfg,
 			'mountpoint': cfg.autosign_mountpoint,
 			'coins': cfg.coin,
-			'online': not cfg.offline, # used only in online environment (xmrwallet, txcreate, txsend, txbump)
-		}))
+			# used only in online environment (xmrwallet, txcreate, txsend, txbump):
+			'online': not cfg.offline}))
 
 def mount_removable_device(cfg):
 	asi = get_autosign_obj(cfg)

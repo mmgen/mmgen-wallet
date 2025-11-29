@@ -339,6 +339,7 @@ class Signable:
 
 	class xmr_signable: # mixin class
 		automount = True
+		summary_footer = ''
 
 		def need_daemon_restart(self, m, new_idx):
 			old_idx = self.parent.xmr_cur_wallet_idx
@@ -348,14 +349,6 @@ class Signable:
 		def print_summary(self, signables):
 			bmsg('\nAutosign summary:')
 			msg('\n'.join(s.get_info(indent='  ') for s in signables) + self.summary_footer)
-
-	class xmr_transaction(xmr_signable, automount_transaction):
-		dir_name = 'xmr_tx_dir'
-		desc = 'Monero transaction'
-		rawext = 'rawtx'
-		sigext = 'sigtx'
-		subext = 'subtx'
-		summary_footer = ''
 
 		async def sign(self, f):
 			from . import xmrwallet
@@ -369,6 +362,13 @@ class Signable:
 			tx2 = await m.main(f, restart_daemon=self.need_daemon_restart(m, tx1.src_wallet_idx))
 			tx2.write(ask_write=False)
 			return tx2
+
+	class xmr_transaction(xmr_signable, automount_transaction):
+		dir_name = 'xmr_tx_dir'
+		desc = 'Monero non-compat transaction'
+		rawext = 'rawtx'
+		sigext = 'sigtx'
+		subext = 'subtx'
 
 	class xmr_wallet_outputs_file(xmr_signable, base):
 		desc = 'Monero wallet outputs file'
@@ -520,10 +520,10 @@ class Autosign:
 		if sys.platform == 'darwin': # test suite uses ‘fixed-up’ shm_dir
 			from .platform.darwin.util import MacOSRamDisk
 			self.ramdisk = MacOSRamDisk(
-					cfg,
-					self.macOS_ramdisk_name,
-					self._get_macOS_ramdisk_size(),
-					path = self.shm_dir)
+				cfg,
+				self.macOS_ramdisk_name,
+				self._get_macOS_ramdisk_size(),
+				path = self.shm_dir)
 
 		self.keyfile = self.mountpoint / 'autosign.key'
 

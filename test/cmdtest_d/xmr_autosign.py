@@ -365,9 +365,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 	async def resubmit_transfer_tx1(self):
 		return await self._submit_transfer_tx(
-				relay_parm = self.tx_relay_daemon_proxy_parm,
-				op         = 'resubmit',
-				check_bal  = False)
+			relay_parm = self.tx_relay_daemon_proxy_parm,
+			op         = 'resubmit',
+			check_bal  = False)
 
 	async def submit_transfer_tx2(self):
 		return await self._submit_transfer_tx(relay_parm=self.tx_relay_daemon_parm)
@@ -530,6 +530,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('alice_twview2',            'viewing Alice’s tracking wallets (reload, sort options)'),
 		('alice_twview3',            'viewing Alice’s tracking wallets (check balances)'),
 		('alice_listaddresses2',     'listing Alice’s addresses (sort options)'),
+		('stop_daemons',             'stopping all wallet and coin daemons'),
 	)
 
 	def __init__(self, cfg, trunner, cfgs, spawn):

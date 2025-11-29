@@ -275,7 +275,7 @@ class MoneroMMGenTX:
 
 			if self.name not in ('View', 'Completed'):
 				assert fn.name.endswith('.' + self.ext), (
-					'TX file {fn} has incorrect extension (not {self.ext!r})')
+					f'TX file {fn} has incorrect extension (not {self.ext!r})')
 				assert getattr(d, self.req_field), (
 					f'{self.name} TX missing required field {self.req_field!r}')
 				assert bool(d.sign_time) == self.signed, '{a} has {b}sign time!'.format(

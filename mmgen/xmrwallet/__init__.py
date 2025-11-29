@@ -23,14 +23,12 @@ tx_priorities = {
 	1: 'low',
 	2: 'normal',
 	3: 'high',
-	4: 'highest'
-}
+	4: 'highest'}
 
 uargs = namedtuple('xmrwallet_uargs', [
 	'infile',
 	'wallets',
-	'spec',
-])
+	'spec'])
 
 uarg_info = (
 	lambda e, hp: {
@@ -72,8 +70,7 @@ op_names = {
 	'export_outputs_sign': 'export',
 	'import_outputs':      'import',
 	'import_key_images':   'import',
-	'wallet':              'wallet', # virtual class
-}
+	'wallet':              'wallet'} # virtual class
 
 kafile_arg_ops = (
 	'create',
