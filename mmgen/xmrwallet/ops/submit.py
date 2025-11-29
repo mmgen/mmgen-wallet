@@ -56,8 +56,7 @@ class OpSubmit(OpWallet):
 			proto       = self.proto,
 			wallet_dir  = self.cfg.wallet_dir or '.',
 			test_suite  = self.cfg.test_suite,
-			monerod_addr = relay_opt[1],
-		)
+			monerod_addr = relay_opt[1])
 
 		u = wd.usr_daemon_args = []
 		if self.cfg.test_suite:
@@ -68,8 +67,7 @@ class OpSubmit(OpWallet):
 		return MoneroWalletRPCClient(
 			cfg             = self.cfg,
 			daemon          = wd,
-			test_connection = False,
-		)
+			test_connection = False)
 
 	async def main(self):
 		tx = self.tx
@@ -104,8 +102,8 @@ class OpSubmit(OpWallet):
 
 		new_tx = MoneroMMGenTX.NewSubmitted(
 			cfg          = self.cfg,
-			_in_tx       = tx,
-		)
+			_in_tx       = tx)
+
 		gmsg('\nOK')
 		new_tx.write(
 			ask_write     = not self.cfg.autosign,

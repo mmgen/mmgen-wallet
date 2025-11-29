@@ -47,8 +47,7 @@ class OpNew(OpMixinSpec, OpWallet):
 					a = desc,
 					b = red(str(self.source.idx)),
 					c = '' if desc == 'account' else f', account {red("#"+str(self.account))}',
-					d = 'label ' + pink('‘'+label+'’') if label else 'empty label')
-				):
+					d = 'label ' + pink('‘'+label+'’') if label else 'empty label')):
 
 			if desc == 'address':
 				h.create_new_addr(self.account, label=label)

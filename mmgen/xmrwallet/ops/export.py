@@ -50,8 +50,7 @@ class OpExportOutputs(OpWallet):
 			parent    = self,
 			wallet_fn = fn,
 			data      = self.c.call('export_outputs', all=True),
-			sign      = self.sign,
-		)
+			sign      = self.sign)
 		m.write()
 		return True
 

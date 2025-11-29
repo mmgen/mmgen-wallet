@@ -61,7 +61,10 @@ class OpImportKeyImages(OpWallet):
 		die(2, f'No signed key image files found{rw_msg}!')
 
 	async def process_wallet(self, d, fn, last):
-		keyimage_fn = MoneroWalletOutputsFile.Signed.find_fn_from_wallet_fn(self.cfg, fn, ret_on_no_match=True)
+		keyimage_fn = MoneroWalletOutputsFile.Signed.find_fn_from_wallet_fn(
+			self.cfg,
+			fn,
+			ret_on_no_match = True)
 		if not keyimage_fn:
 			msg(f'No signed key image file found for wallet #{d.idx}')
 			return False

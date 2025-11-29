@@ -41,8 +41,7 @@ class OpTxview(OpBase):
 		txs = sorted(
 			(MoneroMMGenTX.View(self.cfg, Path(fn)) for fn in files),
 				# old TX files have no ‘submit_time’ field:
-				key = lambda x: getattr(x.data, 'submit_time', None) or x.data.create_time
-		)
+				key = lambda x: getattr(x.data, 'submit_time', None) or x.data.create_time)
 
 		if self.cfg.autosign:
 			self.asi.do_umount()

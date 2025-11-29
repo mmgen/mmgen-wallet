@@ -77,7 +77,8 @@ class XMRWalletAddrSpec(HiliteStr, InitErrors, MMGenObject):
 				me = str.__new__(cls, f'{arg1}:{arg2}:{arg3}')
 				for arg in [arg1, arg2] + ([] if arg3 is None else [arg3]):
 					assert isinstance(arg, int), f'{arg}: XMRWalletAddrSpec component not of type int'
-					assert arg is None or arg <= 9999, f'{arg}: XMRWalletAddrSpec component greater than 9999'
+					assert arg is None or arg <= 9999, (
+						f'{arg}: XMRWalletAddrSpec component greater than 9999')
 				me.wallet = AddrIdx(arg1)
 				me.account = arg2
 				me.account_address = arg3

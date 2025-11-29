@@ -33,13 +33,11 @@ class OpSign(OpWallet):
 			'sign_transfer',
 			unsigned_txset = tx.data.unsigned_txset,
 			export_raw = True,
-			get_tx_keys = True
-		)
+			get_tx_keys = True)
 		new_tx = MoneroMMGenTX.NewColdSigned(
 			cfg            = self.cfg,
 			txid           = res['tx_hash_list'][0],
 			unsigned_txset = None,
 			signed_txset   = res['signed_txset'],
-			_in_tx         = tx,
-		)
+			_in_tx         = tx)
 		return new_tx

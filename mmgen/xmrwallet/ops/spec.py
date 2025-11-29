@@ -36,7 +36,9 @@ class OpMixinSpec:
 					try:
 						res = self.kal.entry(idx)
 					except:
-						die(1, f'Supplied key-address file does not contain address {self.kal.al_id.sid}:{idx}')
+						die(1,
+							'Supplied key-address file does not contain address '
+							f'{self.kal.al_id.sid}:{idx}')
 					else:
 						setattr(self, k, res)
 						yield res

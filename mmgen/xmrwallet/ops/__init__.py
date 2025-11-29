@@ -83,15 +83,13 @@ class OpBase:
 				die(1, '{!r}: invalid value for --{}: it must have format {!r}'.format(
 					val,
 					name.replace('_', '-'),
-					uarg_info[name].annot
-				))
+					uarg_info[name].annot))
 
 		for attr in self.cfg.__dict__:
 			if attr in xmrwallet.opts and not attr in self.opts:
 				die(1, 'Option --{} not supported for {!r} operation'.format(
 					attr.replace('_', '-'),
-					self.name,
-				))
+					self.name))
 
 		for opt in xmrwallet.pat_opts:
 			if getattr(self.cfg, opt, None):

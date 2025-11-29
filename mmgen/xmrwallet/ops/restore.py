@@ -39,9 +39,9 @@ class OpRestore(OpCreate):
 			match tuple(gen()):
 				case [dump_fn, *rest]:
 					if rest:
-						ymsg(f"Warning: more than one dump file found for '{fn}' - using the first!")
+						ymsg(f'Warning: more than one dump file found for ‘{fn}’ - using the first!')
 				case _:
-					die(1, f"No suitable dump file found for '{fn}'")
+					die(1, f'No suitable dump file found for ‘{fn}’')
 
 			return MoneroWalletDumpFile.Completed(
 				parent = self,
@@ -69,14 +69,12 @@ class OpRestore(OpCreate):
 					self.c.call(
 						'label_address',
 						index = {'major': acct_idx, 'minor': addr_idx},
-						label = addr_data['label'],
-					)
+						label = addr_data['label'])
 
 		def make_format_str():
 			return '    acct {:O>%s}, addr {:O>%s} [{}]' % (
 				len(str(len(data) - 1)),
-				len(str(max(len(acct_data['addresses']) for acct_data in data) - 1))
-			)
+				len(str(max(len(acct_data['addresses']) for acct_data in data) - 1)))
 
 		def check_restored_data():
 			restored_data = h.get_wallet_data(print=False).addrs_data

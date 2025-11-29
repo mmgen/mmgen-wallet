@@ -58,7 +58,9 @@ class OpView(OpSync):
 		wallet_height = self.c.call('get_height')['height']
 		msg(f'  Wallet height: {wallet_height}')
 
-		self.wallets_data[fn.name] = MoneroWalletRPC(self, d).get_wallet_data(print=False, skip_empty_ok=True)
+		self.wallets_data[fn.name] = MoneroWalletRPC(self, d).get_wallet_data(
+			print = False,
+			skip_empty_ok = True)
 
 		if not last:
 			self.c.call('close_wallet')

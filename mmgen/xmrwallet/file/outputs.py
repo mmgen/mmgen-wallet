@@ -38,8 +38,7 @@ class MoneroWalletOutputsFile:
 			'outputs_data_hex',
 			'signed_key_images',
 			'sign',
-			'imported',
-		])
+			'imported'])
 
 		def __init__(self, cfg):
 			self.name = type(self).__name__
@@ -62,13 +61,11 @@ class MoneroWalletOutputsFile:
 				wallet_fn.parent) / self.fn_fs.format(
 					a = wallet_fn.name,
 					b = self.base_chksum,
-					c = self.ext,
-				)
+					c = self.ext)
 
 		def get_wallet_fn(self, fn):
 			assert fn.name.endswith(f'.{self.ext}'), (
-				f'{self.name}: filename does not end with {"."+self.ext!r}'
-			)
+				f'{self.name}: filename does not end with {"."+self.ext!r}')
 			return fn.parent / fn.name[:-(len(self.ext)+self.ext_offset+1)]
 
 		def get_info(self, *, indent=''):
@@ -109,8 +106,7 @@ class MoneroWalletOutputsFile:
 				parent     = parent,
 				wallet_fn  = wallet_fn,
 				data       = data,
-				wallet_idx = wallet_idx,
-			)
+				wallet_idx = wallet_idx)
 			self.check_checksums(d_wrap)
 
 		@classmethod
@@ -119,8 +115,7 @@ class MoneroWalletOutputsFile:
 			pat = cls.fn_fs.format(
 				a = wallet_fn.name,
 				b = f'[0-9a-f]{{{cls.chksum_nchars}}}\\',
-				c = cls.ext,
-			)
+				c = cls.ext)
 			matches = [f for f in path.iterdir() if re.match(pat, f.name)]
 			if not matches and ret_on_no_match:
 				return None
@@ -128,8 +123,7 @@ class MoneroWalletOutputsFile:
 				die(2, "{a} matching pattern {b!r} found in '{c}'!".format(
 					a = 'No files' if not matches else 'More than one file',
 					b = pat,
-					c = path
-				))
+					c = path))
 			return matches[0]
 
 	class Unsigned(Completed):
@@ -154,8 +148,7 @@ class MoneroWalletDumpFile:
 		data_tuple = namedtuple('wallet_dump_data', [
 			'seed_id',
 			'wallet_index',
-			'wallet_metadata',
-		])
+			'wallet_metadata'])
 		def get_outfile(self, cfg, wallet_fn):
 			return wallet_fn.parent / f'{wallet_fn.name}.{self.ext}'
 

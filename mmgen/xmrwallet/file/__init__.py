@@ -24,8 +24,7 @@ class MoneroMMGenFile:
 	def make_chksum(self, *, keys=None):
 		res = json.dumps(
 			dict((k, v) for k, v in self.data._asdict().items() if (not keys or k in keys)),
-			cls = json_encoder
-		)
+			cls = json_encoder)
 		return make_chksum_N(res, rounds=1, nchars=self.chksum_nchars, upper=False)
 
 	@property
@@ -54,8 +53,7 @@ class MoneroMMGenFile:
 		return json.dumps(
 			{self.data_label: out},
 			cls = json_encoder,
-			indent = 2,
-		)
+			indent = 2)
 
 	def extract_data_from_file(self, cfg, fn):
 		return json.loads(
