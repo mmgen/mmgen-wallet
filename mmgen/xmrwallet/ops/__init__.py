@@ -42,6 +42,7 @@ class OpBase:
 
 		self.cfg = cfg
 		self.uargs = uarg_tuple
+		self.compat_call = self.uargs.compat_call
 
 		classes = tuple(gen_classes())
 		self.opts = tuple(set(opt for cls in classes for opt in xmrwallet.opts))

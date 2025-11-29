@@ -28,7 +28,8 @@ tx_priorities = {
 uargs = namedtuple('xmrwallet_uargs', [
 	'infile',
 	'wallets',
-	'spec'])
+	'spec',
+	'compat_call'])
 
 uarg_info = (
 	lambda e, hp: {
@@ -127,6 +128,4 @@ def op(op, cfg, infile, wallets, *, spec=None, compat_call=False):
 			'daemon': cfg.daemon or cfg.monero_daemon,
 			'watch_only': cfg.watch_only or cfg.autosign or bool(cfg.autosign_mountpoint),
 			'wallet_dir': twctl_cls.get_tw_dir(cfg, cfg._proto)})
-	ret = op_cls(op)(cfg, uargs(infile, wallets, spec))
-	ret.compat_call = compat_call
-	return ret
+	return op_cls(op)(cfg, uargs(infile, wallets, spec, compat_call))
