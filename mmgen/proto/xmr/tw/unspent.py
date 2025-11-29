@@ -128,16 +128,19 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 
 	def gen_display(self, data, cw, fs, color, fmt_method):
 		fs_acct = '{:>4} {:6} {:7}  {}'
-		yield fs_acct.format('', 'Wallet', 'Account', 'Balance').ljust(self.term_width)
+		# 30 = 4(col1) + 6(col2) + 7(col3) + 8(iwidth) + 1(len('.')) + 4(spc)
+		rfill = ' ' * (self.term_width - self.proto.coin_amt.max_prec - 30)
+		yield fs_acct.format('', 'Wallet', 'Account', ' Balance').ljust(self.term_width)
 		for n, d in enumerate(self.accts_data):
 			yield fs_acct.format(
 				str(n + 1) + ')',
 				d.idx.fmt(6, color=color),
 				d.acct_idx.fmt(7, color=color),
-				d.total.hl2(
+				d.total.fmt2(
+					8, # iwidth
 					color = color,
 					color_override = None if d.total == d.unlocked_total else 'orange'
-				)).ljust(self.term_width)
+				)) + rfill
 			for v in d.data.values():
 				yield fmt_method(None, v.data, cw, fs, color, None, None)
 
