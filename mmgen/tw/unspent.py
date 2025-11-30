@@ -28,14 +28,13 @@ from ..obj import (
 	TwComment,
 	CoinTxID,
 	NonNegativeInt)
-from ..addr import CoinAddr, MoneroIdx
+from ..addr import CoinAddr
 from ..amt import CoinAmtChk
 from .shared import TwMMGenID, TwLabel, get_tw_label
 from .view import TwView
 
 class TwUnspentOutputs(TwView):
 
-	has_age = False
 	show_mmid = True
 	hdr_lbl = 'tracked addresses'
 	desc    = 'address balances'
@@ -166,8 +165,6 @@ class TwUnspentOutputs(TwView):
 				'amt2': self.amt_widths.get('amt2', 0),
 				'block': self.age_col_params['block'][0] if wide else 0,
 				'date_time': self.age_col_params['date_time'][0] if wide else 0,
-				'addr_idx': MoneroIdx.max_digits,
-				'acct_idx': MoneroIdx.max_digits,
 				'date': self.age_w,
 				'spc': self.disp_spc + (2 * show_mmid) + self.has_amt2},
 			maxws = { # expandable cols

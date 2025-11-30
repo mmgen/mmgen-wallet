@@ -80,6 +80,8 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			def do(method, data, cw, fs, color, fmt_method):
 				return [l.rstrip() for l in method(data, cw, fs, color, fmt_method)]
 
+	has_age     = False
+	has_used    = False
 	has_wallet  = True
 	has_amt2    = False
 	dates_set   = False
@@ -199,7 +201,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		if self.has_wallet:
 			from .ctl import TwCtl
 			self.twctl = await TwCtl(cfg, proto, mode='w', no_rpc=not have_rpc)
-		self.amt_keys = {'amt':'iwidth', 'amt2':'iwidth2'} if self.has_amt2 else {'amt':'iwidth'}
+		self.amt_iwidth_keys = {'amt': 'iwidth'} | ({'amt2': 'iwidth2'} if self.has_amt2 else {})
 		if repl_data := self.prompt_fs_repl.get(self.proto.coin):
 			for repl in [repl_data] if isinstance(repl_data[0], int) else repl_data:
 				self.prompt_fs_in[repl[0]] = repl[1]
@@ -333,7 +335,9 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				widths.update({k: minws[k] + freews.get(k, 0) for k in minws})
 			else:
 				widths.update({k: max(minws[k], maxws[k]) for k in minws})
-			widths.update({ikey: widths[key] - self.disp_prec - 1 for key, ikey in self.amt_keys.items()})
+			widths.update({
+				ikey: widths[key] - self.disp_prec - 1
+					for key, ikey in self.amt_iwidth_keys.items()})
 			return namedtuple('column_widths', widths.keys())(*widths.values())
 
 		def get_freews(cols, varws, varw, minw):
@@ -409,7 +413,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		self.amt_widths = {
 			k: min(7, max(len(str(getattr(d, k).to_integral_value()))
 				for d in data)) + 1 + self.disp_prec
-					for k in self.amt_keys}
+					for k in self.amt_iwidth_keys}
 
 	async def format(
 			self,
@@ -760,7 +764,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					break
 				await asyncio.sleep(0.5)
 
-			if parent.scroll and ret is False or ret == 'redraw':
+			if parent.scroll and (ret is False or ret == 'redraw'):
 				# error messages could leave screen in messy state, so do complete redraw:
 				msg_r(
 					CUR_HOME + ERASE_ALL +
@@ -801,17 +805,17 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 			async def do_comment_add(comment_in):
 				from ..obj import TwComment
-				comment = await parent.twctl.set_comment(
-						addrspec     = None,
-						comment      = comment_in,
-						trusted_pair = (entry.twmmid, entry.addr),
-						silent       = parent.scroll)
+				new_comment = await parent.twctl.set_comment(
+					addrspec     = None,
+					comment      = comment_in,
+					trusted_pair = (entry.twmmid, entry.addr),
+					silent       = parent.scroll)
 
-				if isinstance(comment, TwComment):
-					entry.comment = comment
-					edited = cur_comment and comment
-					parent.oneshot_msg = (green if comment else yellow)('Label {a} {b}{c}'.format(
-						a = 'for' if edited else 'added to' if comment else 'removed from',
+				edited = old_comment and new_comment
+				if isinstance(new_comment, TwComment):
+					entry.comment = new_comment
+					parent.oneshot_msg = (green if new_comment else yellow)('Label {a} {b}{c}'.format(
+						a = 'for' if edited else 'added to' if new_comment else 'removed from',
 						b = desc,
 						c = ' edited' if edited else ''))
 					return 'redraw' if parent.cfg.coin == 'XMR' else True
@@ -819,13 +823,9 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					await asyncio.sleep(3)
 					parent.oneshot_msg = red('Label for {desc} could not be {action}'.format(
 						desc = desc,
-						action =
-							'edited' if cur_comment and comment else
-							'added' if comment else
-							'removed'))
+						action = 'edited' if edited else 'added' if new_comment else 'removed'))
 					return False
 
-			entry = parent.disp_data[idx-1]
 			if acct_addr_idx is None:
 				desc       = f'{parent.item_desc} #{idx}'
 				color_desc = f'{parent.item_desc} {red("#" + str(idx))}'
@@ -833,14 +833,16 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				desc       = f'address #{acct_addr_idx}'
 				color_desc = f'address {red("#" + str(acct_addr_idx))}'
 
-			cur_comment = parent.disp_data[idx-1].comment
-			msg('Current label: {}'.format(cur_comment.hl() if cur_comment else '(none)'))
+			entry = parent.disp_data[idx-1]
+			old_comment = entry.comment
+			msg('Current label: {}'.format(old_comment.hl() if old_comment else '(none)'))
 
 			from ..ui import line_input
-			res = line_input(parent.cfg, f'Enter label text for {color_desc}: ', insert_txt=cur_comment)
-
-			match res:
-				case s if s == cur_comment:
+			match res:= line_input(
+					parent.cfg,
+					f'Enter label text for {color_desc}: ',
+					insert_txt = old_comment):
+				case s if s == old_comment:
 					parent.oneshot_msg = yellow(f'Label for {desc} unchanged')
 					return None
 				case '':

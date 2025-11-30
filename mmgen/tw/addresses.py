@@ -35,8 +35,6 @@ class TwAddresses(TwView):
 	showused = 1 # tristate: 0: no, 1: yes, 2: only
 	all_labels = False
 	mod_subpath = 'tw.addresses'
-	has_age = False
-	has_used = False
 
 	prompt_fs_in = [
 		'Sort options: [a]mt, [M]mgen addr, [r]everse',

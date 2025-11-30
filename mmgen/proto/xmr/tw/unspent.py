@@ -21,7 +21,6 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 	hdr_lbl = 'spendable accounts'
 	desc = 'spendable accounts'
 	include_empty = False
-	has_used = False
 
 	prompt_fs_in = [
 		'Sort options: [a]mount, [A]ge, a[d]dr, [M]mgen addr, [r]everse',
