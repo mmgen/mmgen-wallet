@@ -110,6 +110,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	pos = 0
 	filters = ()
 
+	column_widths_data = namedtuple('twview_column_widths', ['widths', 'maxws', 'minws', 'maxws_nice'])
 	fp = namedtuple('fs_params', ['fs_key', 'hdr_fs_repl', 'fs_repl', 'hdr_fs', 'fs'])
 	fs_params = {
 		'num':       fp('n', True, True,  ' {n:>%s}', ' {n:>%s}'),
@@ -328,7 +329,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			else:
 				return _term_dimensions(min_cols, ts.height)
 
-	def compute_column_widths(self, widths, maxws, minws, maxws_nice, *, wide, interactive):
+	def compute_column_widths(self, in_data, *, wide, interactive):
 
 		def do_ret(freews):
 			if freews:
@@ -356,6 +357,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			else:
 				return {k:0 for k in varws}
 
+		widths, maxws, minws, maxws_nice = in_data
 		varws = {k: maxws[k] - minws[k] for k in maxws if maxws[k] > minws[k]}
 		minw = sum(widths.values()) + sum(minws.values())
 		varw = sum(varws.values())
@@ -487,7 +489,10 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 			if self.disp_data and dt.need_column_widths:
 				self.set_amt_widths(self.disp_data)
-				cw = self.get_column_widths(self.disp_data, wide=dt.detail, interactive=interactive)
+				cw = self.compute_column_widths(
+					self.get_column_widths(self.disp_data, wide=dt.detail),
+					wide = dt.detail,
+					interactive = interactive)
 				cwh = cw._asdict()
 				fp = self.fs_params
 				rfill = ' ' * (self.term_width - self.cols) if scroll else ''

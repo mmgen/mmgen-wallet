@@ -151,11 +151,9 @@ class TwUnspentOutputs(TwView):
 
 		return self.data
 
-	def get_column_widths(self, data, *, wide, interactive):
-
+	def get_column_widths(self, data, *, wide):
 		show_mmid = self.show_mmid or wide
-
-		return self.compute_column_widths(
+		return self.column_widths_data(
 			widths = { # fixed cols
 				'num': max(2, len(str(len(data)))+1),
 				'txid': 0,
@@ -177,9 +175,7 @@ class TwUnspentOutputs(TwView):
 			} | self.txid_min_w,
 			maxws_nice = (
 				self.nice_addr_w if show_mmid else {}
-			) | self.txid_nice_w,
-			wide = wide,
-			interactive = interactive)
+			) | self.txid_nice_w)
 
 	def squeezed_col_hdr(self, cw, fs, color):
 		return fs.format(

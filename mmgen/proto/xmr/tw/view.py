@@ -163,8 +163,8 @@ class MoneroTwView:
 			fmt_method = 'gen_display'
 			line_fmt_method = 'squeezed_format_line'
 
-	def get_column_widths(self, data, *, wide, interactive):
-		return self.compute_column_widths(
+	def get_column_widths(self, data, *, wide):
+		return self.column_widths_data(
 			widths = { # fixed cols
 				'addr_idx': MoneroIdx.max_digits,
 				'used': 4 if 'used' in self.display_type.squeezed.cols else 0,
@@ -176,9 +176,7 @@ class MoneroTwView:
 			minws = {
 				'addr': 16,
 				'comment': len('Comment')},
-			maxws_nice = self.nice_addr_w,
-			wide = wide,
-			interactive = interactive)
+			maxws_nice = self.nice_addr_w)
 
 	def gen_display(self, data, cw, fs, color, fmt_method):
 		yes, no = (red('Used'), green('New ')) if color else ('Used', 'New ')

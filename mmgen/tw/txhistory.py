@@ -58,8 +58,7 @@ class TwTxHistory(TwView):
 		amts_tuple = namedtuple('amts_data', ['amt'])
 		return super().set_amt_widths([amts_tuple(d.amt_disp(self.show_total_amt)) for d in data])
 
-	def get_column_widths(self, data, *, wide, interactive):
-
+	def get_column_widths(self, data, *, wide):
 		# var cols: inputs outputs comment [txid]
 		if not hasattr(self, 'varcol_maxwidths'):
 			self.varcol_maxwidths = {
@@ -71,34 +70,18 @@ class TwTxHistory(TwView):
 						for d in data),
 				'comment': max(len(d.comment)
 						for d in data)}
-
-		maxws = self.varcol_maxwidths.copy()
-		minws = {
-			'inputs': 15,
-			'outputs': 15,
-			'comment': len('Comment')}
-		if self.show_txid:
-			maxws['txid'] = self.txid_w
-			minws['txid'] = 8
-			maxws_nice = {'txid': 20}
-		else:
-			maxws['txid'] = 0
-			minws['txid'] = 0
-			maxws_nice = {}
-
-		widths = { # fixed cols
-			'num': max(2, len(str(len(data)))+1),
-			'date': self.age_w,
-			'amt': self.amt_widths['amt'],
-			'spc': 6 + self.show_txid} # 5(6) spaces between cols + 1 leading space in fs
-
-		return self.compute_column_widths(
-			widths,
-			maxws,
-			minws,
-			maxws_nice,
-			wide        = wide,
-			interactive = interactive)
+		return self.column_widths_data(
+			widths = { # fixed cols
+				'num': max(2, len(str(len(data)))+1),
+				'date': self.age_w,
+				'amt': self.amt_widths['amt'],
+				'spc': 6 + self.show_txid}, # 5(6) spaces between cols + 1 leading space in fs
+			maxws = self.varcol_maxwidths | {'txid': self.txid_w if self.show_txid else 0},
+			minws = {
+				'inputs': 15,
+				'outputs': 15,
+				'comment': len('Comment')} | {'txid': 8 if self.show_txid else 0},
+			maxws_nice = {'txid': 20 if self.show_txid else 0})
 
 	def gen_squeezed_subheader(self, cw, color):
 		# keep these shorter than min screen width (currently prompt width, or 65 chars)
