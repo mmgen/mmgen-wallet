@@ -19,6 +19,7 @@ from mmgen.color import blue, cyan, brown
 
 from ..include.common import (
 	imsg,
+	oqmsg,
 	silence,
 	end_silence,
 	strip_ansi_escapes,
@@ -507,6 +508,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	Monero autosigning operations (compat mode)
 	"""
 	menu_prompt = 'efresh balances:\b'
+	extra_daemons = ['ltc']
 
 	cmd_group = (
 		('autosign_setup',           'autosign setup with Alice’s seed'),
@@ -535,6 +537,17 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('alice_twview2',            'viewing Alice’s tracking wallets (reload, sort options)'),
 		('alice_twview3',            'viewing Alice’s tracking wallets (check balances)'),
 		('alice_listaddresses2',     'listing Alice’s addresses (sort options)'),
+		('wait_loop_start_compat',   'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
+		('alice_txcreate1',          'creating a transaction'),
+		('alice_txabort1',           'aborting the transaction'),
+		('alice_txcreate2',          'recreating the transaction'),
+		('wait_signed1',             'autosigning the transaction'),
+		('wait_loop_kill',           'stopping autosign wait loop'),
+		('alice_txabort2',           'aborting the raw and signed transactions'),
+		('alice_txcreate3',          'recreating the transaction'),
+		('wait_loop_start_ltc',      'starting autosign wait loop in XMR compat mode [--coins=ltc,xmr]'),
+		('alice_txsend1',            'sending the transaction'),
+		('wait_loop_kill',           'stopping autosign wait loop'),
 		('stop_daemons',             'stopping all wallet and coin daemons'),
 	)
 
@@ -546,11 +559,10 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		self.alice_dump_file = os.path.join(
 			self.alice_tw_dir,
 			'{}-2-MoneroWatchOnlyWallet.dump'.format(self.users['alice'].sid))
-		self.alice_opts = [
-			'--alice',
-			'--coin=xmr',
-			'--monero-wallet-rpc-password=passwOrd',
-			f'--monero-daemon=localhost:{self.users["alice"].md.rpc_port}']
+		self.alice_daemon_opts = [
+			f'--monero-daemon=localhost:{self.users["alice"].md.rpc_port}',
+			'--monero-wallet-rpc-password=passwOrd']
+		self.alice_opts = ['--alice', '--coin=xmr'] + self.alice_daemon_opts
 
 	def create_watchonly_wallets(self):
 		return self._create_wallets()
@@ -658,5 +670,63 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			text = strip_ansi_escapes(t.read())
 			for s in expect_arr:
 				assert s in text
+		self.remove_device_online()
+		return t
+
+	def wait_loop_start_compat(self):
+		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=xmr'])
+
+	def wait_loop_start_ltc(self):
+		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=ltc,xmr'])
+
+	def alice_txcreate1(self):
+		return self._alice_txops('txcreate', [f'{self.burn_addr},0.012345'], acct_num=1)
+
+	alice_txcreate3 = alice_txcreate2 = alice_txcreate1
+
+	def alice_txabort1(self):
+		return self._alice_txops('txsend', opts=['--alice', '--abort'])
+
+	alice_txabort2 = alice_txabort1
+
+	def alice_txsend1(self):
+		return self._alice_txops(
+			'txsend',
+			opts        = ['--alice', '--quiet'],
+			add_opts    = self.alice_daemon_opts,
+			acct_num    = 1,
+			wait_signed = True)
+
+	def wait_signed1(self):
+		self.spawn(msg_only=True)
+		oqmsg('')
+		self._wait_signed('transaction')
+		return 'silent'
+
+	def _alice_txops(
+			self,
+			op,
+			args = [],
+			*,
+			opts = [],
+			add_opts = [],
+			menu = '',
+			acct_num = None,
+			wait_signed = False,
+			signable_desc = 'transaction'):
+		if wait_signed:
+			self._wait_signed(signable_desc)
+		self.insert_device_online()
+		t = self.spawn(f'mmgen-{op}', (opts or self.alice_opts) + self.autosign_opts + add_opts + args)
+		if '--abort' in opts:
+			t.expect('(y/N): ', 'y')
+		elif op == 'txcreate':
+			for ch in menu + 'q':
+				t.expect(self.menu_prompt, ch)
+			t.expect('to spend from: ', f'{acct_num}\n')
+			t.expect('(y/N): ', 'y') # save?
+		elif op == 'txsend':
+			t.expect('(y/N): ', 'y') # view?
+		t.read() # required!
 		self.remove_device_online()
 		return t

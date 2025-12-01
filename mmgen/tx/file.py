@@ -25,6 +25,10 @@ import os, json
 from ..util import ymsg, make_chksum_6, die
 from ..obj import MMGenObject, HexStr, MMGenTxID, CoinTxID, MMGenTxComment
 
+def get_monero_proto(tx, data):
+	from ..protocol import init_proto
+	return init_proto(tx.cfg, 'XMR', network=data['MoneroMMGenTX']['data']['network'])
+
 class txdata_json_encoder(json.JSONEncoder):
 	def default(self, o):
 		if type(o).__name__.endswith('Amt'):
@@ -90,6 +94,9 @@ class MMGenTxFile(MMGenObject):
 		tx = self.tx
 		tx.file_format = 'json'
 		outer_data = json.loads(data)
+		if 'MoneroMMGenTX' in outer_data:
+			tx.proto = get_monero_proto(tx, outer_data)
+			return None
 		data = outer_data[self.data_label]
 		if outer_data['chksum'] != make_chksum_6(json_dumps(data)):
 			chk = make_chksum_6(json_dumps(data))

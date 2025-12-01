@@ -43,6 +43,7 @@ class OpBase:
 		self.cfg = cfg
 		self.uargs = uarg_tuple
 		self.compat_call = self.uargs.compat_call
+		self.tx_dir = 'txauto_dir' if self.compat_call else 'xmr_tx_dir'
 
 		classes = tuple(gen_classes())
 		self.opts = tuple(set(opt for cls in classes for opt in xmrwallet.opts))
@@ -101,6 +102,10 @@ class OpBase:
 			uarg_info['tx_relay_daemon'].pat,
 			self.cfg.tx_relay_daemon,
 			re.ASCII)
+
+	def get_tx_cls(self, clsname):
+		from ..file.tx import MoneroMMGenTX
+		return getattr(MoneroMMGenTX, clsname + ('Compat' if self.compat_call else ''))
 
 	def display_tx_relay_info(self, *, indent=''):
 		m = self.parse_tx_relay_opt()

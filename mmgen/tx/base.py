@@ -81,6 +81,8 @@ class Base(MMGenObject):
 	signed       = False
 	is_bump      = False
 	is_swap      = False
+	is_compat    = False
+	has_comment  = True
 	swap_attrs = {
 		'swap_proto': None,
 		'swap_quote_expiry': None,

@@ -32,6 +32,7 @@ class MoneroWalletRPC:
 		self.d = d
 		self.fn = parent.get_wallet_fn(d)
 		self.new_tx_cls = (
+			mtx.NewUnsignedCompat if self.parent.compat_call else
 			mtx.NewUnsigned if self.cfg.watch_only else
 			mtx.NewSigned)
 

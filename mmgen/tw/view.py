@@ -80,6 +80,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			def do(method, data, cw, fs, color, fmt_method):
 				return [l.rstrip() for l in method(data, cw, fs, color, fmt_method)]
 
+	is_account_based = False
 	has_age     = False
 	has_used    = False
 	has_wallet  = True

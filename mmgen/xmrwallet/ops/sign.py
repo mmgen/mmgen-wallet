@@ -12,7 +12,6 @@
 xmrwallet.ops.sign: Monero wallet ops for the MMGen Suite
 """
 
-from ..file.tx import MoneroMMGenTX
 from ..rpc import MoneroWalletRPC
 
 from .wallet import OpWallet
@@ -24,7 +23,7 @@ class OpSign(OpWallet):
 	async def main(self, fn, *, restart_daemon=True):
 		if restart_daemon:
 			await self.restart_wallet_daemon()
-		tx = MoneroMMGenTX.Unsigned(self.cfg, fn)
+		tx = self.get_tx_cls('Unsigned')(self.cfg, fn)
 		h = MoneroWalletRPC(self, self.addr_data[0])
 		self.head_msg(tx.src_wallet_idx, h.fn)
 		if restart_daemon:
@@ -34,7 +33,7 @@ class OpSign(OpWallet):
 			unsigned_txset = tx.data.unsigned_txset,
 			export_raw = True,
 			get_tx_keys = True)
-		new_tx = MoneroMMGenTX.NewColdSigned(
+		new_tx = self.get_tx_cls('NewColdSigned')(
 			cfg            = self.cfg,
 			txid           = res['tx_hash_list'][0],
 			unsigned_txset = None,

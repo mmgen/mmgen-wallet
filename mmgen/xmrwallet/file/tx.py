@@ -164,7 +164,7 @@ class MoneroMMGenTX:
 				d = self.ext)
 
 			if self.cfg.autosign:
-				fn = get_autosign_obj(self.cfg).xmr_tx_dir / fn
+				fn = getattr(get_autosign_obj(self.cfg), self.tx_dir) / fn
 
 			from ...fileutil import write_data_to_file
 			write_data_to_file(
@@ -183,6 +183,7 @@ class MoneroMMGenTX:
 		is_submitting = False
 		is_complete = False
 		signed = False
+		tx_dir = 'xmr_tx_dir'
 
 		def __init__(self, *args, **kwargs):
 
@@ -244,6 +245,18 @@ class MoneroMMGenTX:
 		signed = True
 		is_submitting = True
 		is_complete = True
+
+	class NewUnsignedCompat(NewUnsigned):
+		tx_dir = 'txauto_dir'
+		ext = 'arawtx'
+
+	class NewColdSignedCompat(NewColdSigned):
+		tx_dir = 'txauto_dir'
+		ext = 'asigtx'
+
+	class NewSubmittedCompat(NewSubmitted):
+		tx_dir = 'txauto_dir'
+		ext = 'asubtx'
 
 	class Completed(Base):
 		desc = 'transaction'
@@ -333,3 +346,12 @@ class MoneroMMGenTX:
 
 	class View(Completed):
 		silent_load = True
+
+	class UnsignedCompat(Unsigned):
+		ext = 'arawtx'
+
+	class ColdSignedCompat(ColdSigned):
+		ext = 'asigtx'
+
+	class SubmittedCompat(Submitted):
+		ext = 'asubtx'

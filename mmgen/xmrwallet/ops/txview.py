@@ -33,7 +33,7 @@ class OpTxview(OpBase):
 		self.mount_removable_device()
 
 		if self.cfg.autosign:
-			files = [f for f in self.asi.xmr_tx_dir.iterdir()
+			files = [f for f in getattr(self.asi, self.tx_dir).iterdir()
 						if f.name.endswith('.' + mtx.Submitted.ext)]
 		else:
 			files = self.uargs.infile

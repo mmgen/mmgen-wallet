@@ -56,6 +56,15 @@ EXAMPLES:
     $ {gc.prog_name} {mmtype}
 """
 
+		case 'Monero':
+			return f"""
+EXAMPLES:
+
+  Send 0.123 {proto.coin} to an external {proto.name} address:
+
+    $ {gc.prog_name} {sample_addr},0.123
+"""
+
 		case _:
 			return f"""
 EXAMPLES:

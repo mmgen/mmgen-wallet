@@ -22,6 +22,8 @@ class help_notes:
 		match self.proto.base_proto:
 			case 'Bitcoin':
 				return '[ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...]'
+			case 'Monero':
+				return 'ADDR,AMT'
 			case _:
 				return 'ADDR,AMT [addr file ...]'
 

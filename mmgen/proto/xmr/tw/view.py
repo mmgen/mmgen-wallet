@@ -25,6 +25,7 @@ from ....tw.unspent import TwUnspentOutputs
 
 class MoneroTwView:
 
+	is_account_based = True
 	item_desc = 'account'
 	nice_addr_w = {'addr': 20}
 	total = None

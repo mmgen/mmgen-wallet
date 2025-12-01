@@ -245,6 +245,9 @@ class New(Base):
 					is_chg = not a.amt,
 					is_vault = a.is_vault)
 
+		if self.is_compat:
+			return
+
 		if self.chg_idx is None:
 			die(2,
 				fmt(self.msg_no_change_output.format(self.dcoin)).strip()
@@ -386,7 +389,7 @@ class New(Base):
 
 	async def get_inputs(self, outputs_sum):
 
-		data = self.twuo.data
+		data = self.twuo.accts_data if self.twuo.is_account_based else self.twuo.data
 
 		sel_nums = (
 			self.get_unspent_nums_from_inputs_opt if self.cfg.inputs else
@@ -399,10 +402,10 @@ class New(Base):
 			' '.join(str(n) for n in sel_nums)))
 		sel_unspent = MMGenList(data[i-1] for i in sel_nums)
 
-		if not await self.precheck_sufficient_funds(
+		if not (self.is_compat or await self.precheck_sufficient_funds(
 				sum(s.amt for s in sel_unspent),
 				sel_unspent,
-				outputs_sum):
+				outputs_sum)):
 			return False
 
 		self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
@@ -456,13 +459,16 @@ class New(Base):
 			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(cmd_args)
 			if self.is_swap:
 				cmd_args = await self.process_swap_cmdline_args(cmd_args, addrfile_args)
-			from ..rpc import rpc_init
-			self.rpc = await rpc_init(self.cfg, self.proto)
-			from ..addrdata import TwAddrData
-			await self.process_cmdline_args(
-				cmd_args,
-				self.get_addrdata_from_files(self.proto, addrfile_args),
-				await TwAddrData(self.cfg, self.proto, twctl=self.twctl))
+			if self.is_compat:
+				await self.process_cmdline_args(cmd_args, None, None)
+			else:
+				from ..rpc import rpc_init
+				self.rpc = await rpc_init(self.cfg, self.proto)
+				from ..addrdata import TwAddrData
+				await self.process_cmdline_args(
+					cmd_args,
+					self.get_addrdata_from_files(self.proto, addrfile_args),
+					await TwAddrData(self.cfg, self.proto, twctl=self.twctl))
 
 		if not self.is_bump:
 			self.twuo = await TwUnspentOutputs(
@@ -510,19 +516,21 @@ class New(Base):
 					desc)) is not None:
 				break
 
-		self.check_non_mmgen_inputs(caller=caller)
+		if not self.is_compat:
+			self.check_non_mmgen_inputs(caller=caller)
+			self.update_change_output(funds_left)
+			self.check_chg_addr_is_wallet_addr()
 
-		self.update_change_output(funds_left)
-
-		self.check_chg_addr_is_wallet_addr()
-
-		if not self.cfg.yes:
+		if self.has_comment and not self.cfg.yes:
 			self.add_comment()  # edits an existing comment
 
 		if self.is_swap:
 			import time
 			if time.time() > self.swap_quote_refresh_time + self.swap_quote_refresh_timeout:
 				await self.update_vault_output(self.vault_output.amt)
+
+		if self.is_compat:
+			return await self.compat_create()
 
 		await self.create_serialized(locktime=locktime) # creates self.txid too
 

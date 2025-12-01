@@ -20,7 +20,6 @@ from ...ui import keypress_confirm
 from ...proto.xmr.daemon import MoneroWalletDaemon
 from ...proto.xmr.rpc import MoneroWalletRPCClient
 
-from ..file.tx import MoneroMMGenTX
 from ..rpc import MoneroWalletRPC
 
 from . import OpBase
@@ -45,7 +44,7 @@ class OpSubmit(OpWallet):
 		else:
 			from ...autosign import Signable
 			fn = Signable.xmr_transaction(self.asi).get_unsubmitted()
-		return MoneroMMGenTX.ColdSigned(cfg=self.cfg, fn=fn)
+		return self.get_tx_cls('ColdSigned')(cfg=self.cfg, fn=fn)
 
 	def get_relay_rpc(self):
 
@@ -100,7 +99,7 @@ class OpSubmit(OpWallet):
 			from ...util2 import format_elapsed_hr
 			msg(f'success\nRelay time: {format_elapsed_hr(t_start, rel_now=False, show_secs=True)}')
 
-		new_tx = MoneroMMGenTX.NewSubmitted(cfg=self.cfg, _in_tx=tx)
+		new_tx = self.get_tx_cls('NewSubmitted')(cfg=self.cfg, _in_tx=tx)
 
 		gmsg('\nOK')
 		new_tx.write(
@@ -118,7 +117,7 @@ class OpResubmit(OpSubmit):
 	def get_tx(self):
 		from ...autosign import Signable
 		fns = Signable.xmr_transaction(self.asi).get_submitted()
-		cls = MoneroMMGenTX.Submitted
+		cls = self.get_tx_cls('Submitted')
 		return sorted((cls(self.cfg, Path(fn)) for fn in fns),
 			key = lambda x: getattr(x.data, 'submit_time', None) or x.data.create_time)[-1]
 

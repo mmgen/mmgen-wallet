@@ -22,7 +22,8 @@ mmgen-txcreate: Create a cryptocoin transaction with MMGen- and/or non-MMGen
 """
 
 from .cfg import gc, Config
-from .util import Msg, fmt_list, async_run
+from .util import Msg, fmt_list, fmt_dict, async_run
+from .xmrwallet import tx_priorities
 
 target = gc.prog_name.split('-')[1].removesuffix('create')
 
@@ -72,6 +73,10 @@ opts_data = {
 			b- -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
 			-- -m, --minconf=     n  Minimum number of confirmations required to spend
 			+                        outputs (default: 1)
+			m- -p, --priority=N      Specify an integer priority ‘N’ for inclusion of trans-
+			+                        action in blockchain (higher number means higher fee).
+			+                        Valid parameters: {tp}.
+			+                        If option is omitted, the default priority will be used
 			-- -q, --quiet           Suppress warnings; overwrite files without prompting
 			-s -r, --stream-interval=N Set block interval for streaming swap (default: {si})
 			bt -R, --no-rbf          Make transaction non-replaceable (non-replace-by-fee
@@ -101,6 +106,7 @@ opts_data = {
 			a_info = help_notes('account_info_desc'),
 			fu     = help_notes('rel_fee_desc'),
 			fl     = help_notes('fee_spec_letters', use_quotes=True),
+			tp     = fmt_dict(tx_priorities, fmt='equal_compact'),
 			si     = help_notes('stream_interval'),
 			fe_all = fmt_list(cfg._autoset_opts['fee_estimate_mode'].choices, fmt='no_spc'),
 			fe_dfl = cfg._autoset_opts['fee_estimate_mode'].choices[0],
@@ -132,7 +138,7 @@ async def main():
 	if cfg.autosign:
 		from .tx.util import mount_removable_device
 		from .autosign import Signable
-		asi = mount_removable_device(cfg)
+		asi = mount_removable_device(cfg, add_cfg={'xmrwallet_compat': True})
 		Signable.automount_transaction(asi).check_create_ok()
 
 	if target == 'swaptx':
@@ -149,10 +155,11 @@ async def main():
 		locktime = int(cfg.locktime or 0),
 		do_info  = cfg.info)
 
-	tx2.file.write(
-		outdir                = asi.txauto_dir if cfg.autosign else None,
-		ask_write             = not cfg.yes,
-		ask_overwrite         = not cfg.yes,
-		ask_write_default_yes = False)
+	if not tx1.is_compat:
+		tx2.file.write(
+			outdir                = asi.txauto_dir if cfg.autosign else None,
+			ask_write             = not cfg.yes,
+			ask_overwrite         = not cfg.yes,
+			ask_write_default_yes = False)
 
 async_run(cfg, main)

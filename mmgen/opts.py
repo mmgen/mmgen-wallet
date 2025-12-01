@@ -308,9 +308,10 @@ class UserOpts(Opts):
 			br --rpc-user=USER        Authenticate to coin daemon using username USER
 			br --rpc-password=PASS    Authenticate to coin daemon using password PASS
 			Rr --rpc-backend=backend  Use backend 'backend' for JSON-RPC communications
-			mr --monero-wallet-rpc-user=USER Monero wallet RPC username
-			mr --monero-wallet-rpc-password=USER Monero wallet RPC password
-			mr --monero-daemon=HOST:PORT Connect to the monerod at HOST:PORT
+			-r --monero-wallet-rpc-user=USER Monero wallet RPC username
+			-r --monero-wallet-rpc-password=USER Monero wallet RPC password
+			-r --monero-daemon=HOST:PORT Connect to the monerod at HOST:PORT
+			-r --xmrwallet-compat     Enable XMR compatibility mode
 			Rr --aiohttp-rpc-queue-len=N Use N simultaneous RPC connections with aiohttp
 			-p --regtest=0|1          Disable or enable regtest mode
 			-- --testnet=0|1          Disable or enable testnet

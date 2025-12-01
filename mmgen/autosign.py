@@ -189,6 +189,11 @@ class Signable:
 				cfg       = self.cfg,
 				filename  = f,
 				automount = self.automount)
+			if tx1.proto.coin == 'XMR':
+				ctx = Signable.xmr_compat_transaction(self.parent)
+				for k in ('desc', 'print_summary', 'print_bad_list'):
+					setattr(self, k, getattr(ctx, k))
+				return await ctx.sign(f, compat_call=True)
 			if tx1.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
 				tx1.rpc = await rpc_init(self.cfg, tx1.proto, ignore_wallet=True)
@@ -357,7 +362,7 @@ class Signable:
 		sigext = 'sigtx'
 		subext = 'subtx'
 
-		async def sign(self, f):
+		async def sign(self, f, compat_call=False):
 			from . import xmrwallet
 			from .xmrwallet.file.tx import MoneroMMGenTX
 			tx1 = MoneroMMGenTX.Completed(self.parent.xmrwallet_cfg, f)
@@ -365,10 +370,18 @@ class Signable:
 				'sign',
 				self.parent.xmrwallet_cfg,
 				infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
-				wallets = str(tx1.src_wallet_idx))
+				wallets = str(tx1.src_wallet_idx),
+				compat_call = compat_call)
 			tx2 = await m.main(f, restart_daemon=self.need_daemon_restart(m, tx1.src_wallet_idx))
 			tx2.write(ask_write=False)
 			return tx2
+
+	class xmr_compat_transaction(xmr_transaction):
+		desc = 'Monero compat transaction'
+		dir_name = 'txauto_dir'
+		rawext = 'arawtx'
+		sigext = 'asigtx'
+		subext = 'asubtx'
 
 	class xmr_wallet_outputs_file(xmr_signable, base):
 		desc = 'Monero wallet outputs file'
@@ -553,8 +566,10 @@ class Autosign:
 			self.signables += Signable.non_xmr_signables
 
 		if self.have_xmr:
-			self.dirs |= self.xmr_dirs
-			self.signables += Signable.xmr_signables
+			self.dirs |= self.xmr_dirs | (
+				{'txauto_dir': 'txauto'} if cfg.xmrwallet_compat and self.xmr_only else {})
+			self.signables += Signable.xmr_signables + (
+				('automount_transaction',) if cfg.xmrwallet_compat and self.xmr_only else ())
 
 		for name, path in self.dirs.items():
 			setattr(self, name, self.mountpoint / path)

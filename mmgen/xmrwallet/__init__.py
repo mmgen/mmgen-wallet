@@ -116,16 +116,17 @@ def op_cls(op_name):
 
 def op(op, cfg, infile, wallets, *, spec=None, compat_call=False):
 	if compat_call or (cfg.compat if cfg.compat is not None else cfg.xmrwallet_compat):
-		if cfg.wallet_dir:
-			die(1, '--wallet-dir can not be specified in xmrwallet compatibility mode')
+		if cfg.wallet_dir and not cfg.offline:
+			die(1, '--wallet-dir cannot be specified in xmrwallet compatibility mode')
 		from ..tw.ctl import TwCtl
 		from ..cfg import Config
 		twctl_cls = cfg._proto.base_proto_subclass(TwCtl, 'tw.ctl')
 		cfg = Config({
 			'_clone': cfg,
 			'compat': True,
-			'no_start_wallet_daemon': cfg.no_start_wallet_daemon or compat_call,
-			'daemon': cfg.daemon or cfg.monero_daemon,
-			'watch_only': cfg.watch_only or cfg.autosign or bool(cfg.autosign_mountpoint),
-			'wallet_dir': twctl_cls.get_tw_dir(cfg, cfg._proto)})
+			'xmrwallet_compat': True} | ({} if cfg.offline else {
+				'no_start_wallet_daemon': cfg.no_start_wallet_daemon or compat_call,
+				'daemon': cfg.daemon or cfg.monero_daemon,
+				'watch_only': cfg.watch_only or cfg.autosign or bool(cfg.autosign_mountpoint),
+				'wallet_dir': twctl_cls.get_tw_dir(cfg, cfg._proto)}))
 	return op_cls(op)(cfg, uargs(infile, wallets, spec, compat_call))

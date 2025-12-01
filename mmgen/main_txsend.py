@@ -131,6 +131,9 @@ async def main():
 			automount  = cfg.autosign,
 			quiet_open = True)
 
+	if tx.is_compat:
+		return await tx.compat_send()
+
 	cfg = Config({'_clone': cfg, 'proto': tx.proto, 'coin': tx.proto.coin})
 
 	if cfg.tx_proxy:
