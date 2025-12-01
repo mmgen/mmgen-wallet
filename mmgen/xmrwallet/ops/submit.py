@@ -100,9 +100,7 @@ class OpSubmit(OpWallet):
 			from ...util2 import format_elapsed_hr
 			msg(f'success\nRelay time: {format_elapsed_hr(t_start, rel_now=False, show_secs=True)}')
 
-		new_tx = MoneroMMGenTX.NewSubmitted(
-			cfg          = self.cfg,
-			_in_tx       = tx)
+		new_tx = MoneroMMGenTX.NewSubmitted(cfg=self.cfg, _in_tx=tx)
 
 		gmsg('\nOK')
 		new_tx.write(
@@ -120,7 +118,8 @@ class OpResubmit(OpSubmit):
 	def get_tx(self):
 		from ...autosign import Signable
 		fns = Signable.xmr_transaction(self.asi).get_submitted()
-		return sorted((MoneroMMGenTX.Submitted(self.cfg, Path(fn)) for fn in fns),
+		cls = MoneroMMGenTX.Submitted
+		return sorted((cls(self.cfg, Path(fn)) for fn in fns),
 			key = lambda x: getattr(x.data, 'submit_time', None) or x.data.create_time)[-1]
 
 class OpAbort(OpBase):

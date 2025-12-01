@@ -20,7 +20,7 @@ from ..util import msg, msg_r, gmsg, gmsg_r, die
 from ..addr import CoinAddr
 
 from .include import gen_acct_addr_info, XMRWalletAddrSpec
-from .file.tx import MoneroMMGenTX
+from .file.tx import MoneroMMGenTX as mtx
 
 class MoneroWalletRPC:
 
@@ -32,8 +32,8 @@ class MoneroWalletRPC:
 		self.d = d
 		self.fn = parent.get_wallet_fn(d)
 		self.new_tx_cls = (
-			MoneroMMGenTX.NewUnsigned if self.cfg.watch_only else
-			MoneroMMGenTX.NewSigned)
+			mtx.NewUnsigned if self.cfg.watch_only else
+			mtx.NewSigned)
 
 	def open_wallet(self, desc=None, *, refresh=True):
 		add_desc = desc + ' ' if desc else self.parent.add_wallet_desc

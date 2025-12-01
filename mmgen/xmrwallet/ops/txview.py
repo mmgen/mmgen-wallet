@@ -16,7 +16,7 @@ from pathlib import Path
 
 from ...util import die
 
-from ..file.tx import MoneroMMGenTX
+from ..file.tx import MoneroMMGenTX as mtx
 
 from . import OpBase
 
@@ -34,12 +34,12 @@ class OpTxview(OpBase):
 
 		if self.cfg.autosign:
 			files = [f for f in self.asi.xmr_tx_dir.iterdir()
-						if f.name.endswith('.'+MoneroMMGenTX.Submitted.ext)]
+						if f.name.endswith('.' + mtx.Submitted.ext)]
 		else:
 			files = self.uargs.infile
 
 		txs = sorted(
-			(MoneroMMGenTX.View(self.cfg, Path(fn)) for fn in files),
+			(mtx.View(self.cfg, Path(fn)) for fn in files),
 				# old TX files have no ‘submit_time’ field:
 				key = lambda x: getattr(x.data, 'submit_time', None) or x.data.create_time)
 
@@ -58,7 +58,7 @@ class OpTxlist(OpTxview):
 	view_method = 'get_info_oneline'
 	add_nl = True
 	footer = '\n'
-	fixed_cols_w = MoneroMMGenTX.Base.oneline_fixed_cols_w
+	fixed_cols_w = mtx.Base.oneline_fixed_cols_w
 	min_addr_w = 10
 
 	@property
@@ -67,7 +67,7 @@ class OpTxlist(OpTxview):
 
 	@property
 	def col_hdr(self):
-		return MoneroMMGenTX.View.oneline_fs.format(
+		return mtx.View.oneline_fs.format(
 			a = 'Network',
 			b = 'Seed ID',
 			c = 'Submitted' if self.cfg.autosign else 'Date',

@@ -24,7 +24,7 @@ import sys, os, time, re, atexit, asyncio, shutil
 from subprocess import run, PIPE
 from collections import namedtuple
 
-from mmgen.util import capfirst, is_int, die, list_gen
+from mmgen.util import capfirst, is_int, die, suf, list_gen
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
 from mmgen.addrlist import ViewKeyAddrList, KeyAddrList, AddrIdxList
@@ -672,7 +672,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	async def mine(self, nblks):
 		start_height = height = await self._get_height()
 		imsg(f'Height: {height}')
-		imsg_r(f'Mining {nblks} blocks...')
+		imsg_r(f'Mining {nblks} block{suf(nblks)}...')
 		await self.start_mining()
 		while height < start_height + nblks:
 			await asyncio.sleep(2)

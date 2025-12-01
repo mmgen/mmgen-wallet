@@ -385,16 +385,19 @@ class New(Base):
 			in_sum - out_sum if in_sum >= out_sum else out_sum - in_sum)
 
 	async def get_inputs(self, outputs_sum):
+
+		data = self.twuo.data
+
 		sel_nums = (
 			self.get_unspent_nums_from_inputs_opt if self.cfg.inputs else
 			self.get_unspent_nums_from_user
-		)(self.twuo.data)
+		)(data)
 
 		msg('Selected {}{}: {}'.format(
 			self.twuo.item_desc,
 			suf(sel_nums),
 			' '.join(str(n) for n in sel_nums)))
-		sel_unspent = MMGenList(self.twuo.data[i-1] for i in sel_nums)
+		sel_unspent = MMGenList(data[i-1] for i in sel_nums)
 
 		if not await self.precheck_sufficient_funds(
 				sum(s.amt for s in sel_unspent),

@@ -178,17 +178,17 @@ class Signable:
 
 	class transaction(base):
 		desc = 'non-automount transaction'
+		dir_name = 'tx_dir'
 		rawext = 'rawtx'
 		sigext = 'sigtx'
-		dir_name = 'tx_dir'
 		automount = False
 
 		async def sign(self, f):
 			from .tx import UnsignedTX
 			tx1 = UnsignedTX(
-					cfg       = self.cfg,
-					filename  = f,
-					automount = self.automount)
+				cfg       = self.cfg,
+				filename  = f,
+				automount = self.automount)
 			if tx1.proto.sign_mode == 'daemon':
 				from .rpc import rpc_init
 				tx1.rpc = await rpc_init(self.cfg, tx1.proto, ignore_wallet=True)
@@ -350,6 +350,13 @@ class Signable:
 			bmsg('\nAutosign summary:')
 			msg('\n'.join(s.get_info(indent='  ') for s in signables) + self.summary_footer)
 
+	class xmr_transaction(xmr_signable, automount_transaction):
+		desc = 'Monero non-compat transaction'
+		dir_name = 'xmr_tx_dir'
+		rawext = 'rawtx'
+		sigext = 'sigtx'
+		subext = 'subtx'
+
 		async def sign(self, f):
 			from . import xmrwallet
 			from .xmrwallet.file.tx import MoneroMMGenTX
@@ -363,18 +370,11 @@ class Signable:
 			tx2.write(ask_write=False)
 			return tx2
 
-	class xmr_transaction(xmr_signable, automount_transaction):
-		dir_name = 'xmr_tx_dir'
-		desc = 'Monero non-compat transaction'
-		rawext = 'rawtx'
-		sigext = 'sigtx'
-		subext = 'subtx'
-
 	class xmr_wallet_outputs_file(xmr_signable, base):
 		desc = 'Monero wallet outputs file'
+		dir_name = 'xmr_outputs_dir'
 		rawext = 'raw'
 		sigext = 'sig'
-		dir_name = 'xmr_outputs_dir'
 		clean_all = True
 		summary_footer = '\n'
 
@@ -400,9 +400,9 @@ class Signable:
 
 	class message(base):
 		desc = 'message file'
+		dir_name = 'msg_dir'
 		rawext = 'rawmsg.json'
 		sigext = 'sigmsg.json'
-		dir_name = 'msg_dir'
 		fail_msg = 'failed to sign or signed incompletely'
 
 		async def sign(self, f):

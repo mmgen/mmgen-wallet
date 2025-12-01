@@ -116,8 +116,7 @@ class CmdTestAutosignBase(CmdTestBase):
 					'test_suite_xmr_autosign': self.name == 'CmdTestXMRAutosign',
 					'test_suite_autosign_threaded': self.threaded,
 					'test_suite_root_pfx': None if self.live else self.tmpdir,
-					'online': subdir == 'online',
-				}))
+					'online': subdir == 'online'}))
 
 			if create_dirs and not self.live:
 				for k in ('mountpoint', 'shm_dir', 'wallet_dir'):

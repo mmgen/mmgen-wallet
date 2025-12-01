@@ -17,7 +17,12 @@ import os, re, asyncio, json
 
 from mmgen.color import blue, cyan, brown
 
-from ..include.common import imsg, silence, end_silence, strip_ansi_escapes, read_from_file
+from ..include.common import (
+	imsg,
+	silence,
+	end_silence,
+	strip_ansi_escapes,
+	read_from_file)
 from .include.common import get_file_with_ext, cleanup_env
 
 from .xmrwallet import CmdTestXMRWallet
