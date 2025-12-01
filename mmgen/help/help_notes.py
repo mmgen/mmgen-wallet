@@ -19,10 +19,11 @@ class help_notes:
 		self.cfg = cfg
 
 	def txcreate_args(self):
-		return (
-			'[ADDR,AMT ... | DATA_SPEC] ADDR'
-				if self.proto.base_proto == 'Bitcoin' else
-			'ADDR,AMT')
+		match self.proto.base_proto:
+			case 'Bitcoin':
+				return '[ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...]'
+			case _:
+				return 'ADDR,AMT [addr file ...]'
 
 	def swaptxcreate_args(self):
 		return 'COIN1 [AMT CHG_ADDR] COIN2 [ADDR]'

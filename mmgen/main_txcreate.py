@@ -37,14 +37,14 @@ opts_data = {
 			'tx':     f'Create a transaction with outputs to specified coin or {gc.proj_name} addresses',
 			'swaptx': f'Create a DEX swap transaction from one {gc.proj_name} tracking wallet to another',
 		}[target],
-		'usage':   '[opts] {u_args} [addr file ...]',
+		'usage':   '[opts] {u_args}',
 		'options': """
 			-- -h, --help            Print this help message
 			-- --, --longhelp        Print help message for long (global) options
 			-- -a, --autosign        Create a transaction for offline autosigning (see
 			+                        ‘mmgen-autosign’). The removable device is mounted and
 			+                        unmounted automatically
-			r- -A, --fee-adjust=  f  Adjust transaction fee by factor ‘f’ (see below)
+			R- -A, --fee-adjust=  f  Adjust transaction fee by factor ‘f’ (see below)
 			-- -B, --no-blank        Don't blank screen before displaying {a_info}
 			-- -c, --comment-file=f  Source the transaction's comment from file 'f'
 			b- -C, --fee-estimate-confs=c Desired number of confirmations for fee estimation
@@ -53,7 +53,7 @@ opts_data = {
 			e- -D, --contract-data=D Path to file containing hex-encoded contract data
 			b- -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
 			+                        {fe_all}.  Default: {fe_dfl!r}
-			r- -f, --fee=         f  Transaction fee, as a decimal {cu} amount or as
+			R- -f, --fee=         f  Transaction fee, as a decimal {cu} amount or as
 			+                        {fu} (an integer followed by {fl}).
 			+                        See FEE SPECIFICATION below.  If omitted, fee will be
 			+                        calculated using network fee estimation.
@@ -63,7 +63,7 @@ opts_data = {
 			+                        (integer).  When unset, a hardcoded default will be
 			+                        used.  Applicable only for swaps from token assets.
 			-- -i, --info            Display {a_info} and exit
-			-- -I, --inputs=      i  Specify transaction inputs (comma-separated list of
+			R- -I, --inputs=      i  Specify transaction inputs (comma-separated list of
 			+                        MMGen IDs or coin addresses).  Note that ALL unspent
 			+                        outputs associated with each address will be included.
 			bt -l, --locktime=    t  Lock time (block height or unix seconds) (default: 0)

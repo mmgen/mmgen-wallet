@@ -22,7 +22,9 @@ def help(proto, cfg):
 	addr = t.privhex2addr('bead' * 16)
 	sample_addr = addr.views[addr.view_pref]
 
-	return f"""
+	match proto.base_proto:
+		case 'Bitcoin':
+			return f"""
 EXAMPLES:
 
   Send 0.123 {proto.coin} to an external {proto.name} address, returning the change to a
@@ -52,7 +54,10 @@ EXAMPLES:
   address of specified type:
 
     $ {gc.prog_name} {mmtype}
-""" if proto.base_proto == 'Bitcoin' else f"""
+"""
+
+		case _:
+			return f"""
 EXAMPLES:
 
   Send 0.123 {proto.coin} to an external {proto.name} address:
