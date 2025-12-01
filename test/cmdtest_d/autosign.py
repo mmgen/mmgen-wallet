@@ -546,21 +546,21 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		self.remove_device_online()
 		return t
 
-	def _wait_loop_start(self, add_opts=[]):
+	def _wait_loop_start(self, opts=[], add_opts=[]):
 		t = self.spawn(
 			'mmgen-autosign',
-			self.opts + add_opts + ['--full-summary', 'wait'],
+			(opts or self.opts) + add_opts + ['--full-summary', 'wait'],
 			direct_exec      = True,
 			no_passthru_opts = True,
 			spawn_env_override = self.spawn_env | {'EXEC_WRAPPER_DO_RUNTIME_MSG': ''})
 		self.write_to_tmpfile('autosign_thread_pid', str(t.ep.pid))
 		return t
 
-	def wait_loop_start(self, add_opts=[]):
+	def wait_loop_start(self, opts=[], add_opts=[]):
 		import threading
 		threading.Thread(
 			target = self._wait_loop_start,
-			kwargs = {'add_opts': add_opts},
+			kwargs = {'opts': opts, 'add_opts': add_opts},
 			name   = 'Autosign wait loop').start()
 		time.sleep(0.1) # try to ensure test output is displayed before next test starts
 		return 'silent'
