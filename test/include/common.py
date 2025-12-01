@@ -288,23 +288,23 @@ def end_msg(t):
 		('' if cfg.test_suite_deterministic else f', elapsed time: {t//60:02d}:{t%60:02d}')
 	))
 
-def start_test_daemons(*network_ids, remove_datadir=False):
+def start_test_daemons(*network_ids, remove_datadir=False, verbose=False):
 	if not cfg.no_daemon_autostart:
-		return test_daemons_ops(*network_ids, op='start', remove_datadir=remove_datadir)
+		return test_daemons_ops(*network_ids, op='start', remove_datadir=remove_datadir, verbose=verbose)
 
-def stop_test_daemons(*network_ids, force=False, remove_datadir=False):
+def stop_test_daemons(*network_ids, force=False, remove_datadir=False, verbose=False):
 	if force or not cfg.no_daemon_stop:
-		return test_daemons_ops(*network_ids, op='stop', remove_datadir=remove_datadir)
+		return test_daemons_ops(*network_ids, op='stop', remove_datadir=remove_datadir, verbose=verbose)
 
-def restart_test_daemons(*network_ids, remove_datadir=False):
-	if not stop_test_daemons(*network_ids, remove_datadir=remove_datadir):
+def restart_test_daemons(*network_ids, remove_datadir=False, verbose=False):
+	if not stop_test_daemons(*network_ids, remove_datadir=remove_datadir, verbose=verbose):
 		return False
-	return start_test_daemons(*network_ids, remove_datadir=remove_datadir)
+	return start_test_daemons(*network_ids, remove_datadir=remove_datadir, verbose=verbose)
 
-def test_daemons_ops(*network_ids, op, remove_datadir=False):
+def test_daemons_ops(*network_ids, op, remove_datadir=False, verbose=False):
 	if not cfg.no_daemon_autostart:
 		from mmgen.daemon import CoinDaemon
-		silent = not (cfg.verbose or cfg.exact_output)
+		silent = not (verbose or cfg.verbose or cfg.exact_output)
 		ret = False
 		for network_id in network_ids:
 			d = CoinDaemon(cfg, network_id=network_id, test_suite=True)

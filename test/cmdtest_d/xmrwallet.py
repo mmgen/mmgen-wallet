@@ -39,6 +39,8 @@ from ..include.common import (
 	read_from_file,
 	silence,
 	end_silence,
+	start_test_daemons,
+	stop_test_daemons,
 	strip_ansi_escapes
 )
 from .include.common import get_file_with_ext
@@ -49,6 +51,8 @@ from .base import CmdTestBase
 def stop_daemons(self):
 	for v in self.users.values():
 		v.md.stop()
+	if self.extra_daemons:
+		stop_test_daemons(*self.extra_daemons, remove_datadir=True, verbose=True)
 
 def stop_miner_wallet_daemon(self):
 	asyncio.run(self.users['miner'].wd_rpc.stop_daemon())
@@ -843,6 +847,8 @@ class CmdTestXMRWallet(CmdTestBase):
 		for v in self.users.values():
 			run(['mkdir', '-p', v.daemon_datadir])
 			v.md.start()
+		if self.extra_daemons:
+			start_test_daemons(*self.extra_daemons, verbose=True)
 
 	def stop_daemons(self):
 		self.spawn(msg_only=True)

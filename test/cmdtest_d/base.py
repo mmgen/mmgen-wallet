@@ -41,6 +41,7 @@ class CmdTestBase:
 	skip_cmds = ()
 	test_name = None
 	is_helper = False
+	extra_daemons = []
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		if hasattr(self, 'name'): # init may called multiple times
