@@ -104,9 +104,7 @@ class MMGenRegtest(MMGenObject):
 	@property
 	async def miner_wif(self):
 		if not hasattr(self, '_miner_wif'):
-			self._miner_wif = (
-				self.bdb_miner_wif if self.bdb_wallet else
-				await self.rpc_call('dumpprivkey', (await self.miner_addr), wallet='miner'))
+			self._miner_wif = self.bdb_miner_wif if self.bdb_wallet else None
 		return self._miner_wif
 
 	def create_hdseed_wif(self):

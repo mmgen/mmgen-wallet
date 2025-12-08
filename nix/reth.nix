@@ -1,19 +1,7 @@
 {
     lib,
+    pkgs,
 }:
-
-let
-    # cargo and rustc packages from 25.05 are out of date,
-    # so fetch them from a more recent commit:
-    pinnedPkgs = fetchGit {
-        url = "https://github.com/NixOS/nixpkgs.git";
-        # url = /path/to/repo/nixpkgs-fe8997.git;
-        rev = "fe89979ad5e8fd233ae0aac0e7e56f465945ae70";
-        shallow = true;
-    };
-    pkgs = import pinnedPkgs {};
-
-in
 
 pkgs.rustPlatform.buildRustPackage rec {
     pname = "reth";

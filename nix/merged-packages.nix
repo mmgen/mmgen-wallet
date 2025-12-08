@@ -1,7 +1,7 @@
 { add_pkgs_path }:
 
 let
-    dfl_nixpkgs = import ./nixpkgs-25.05.nix {};
+    dfl_nixpkgs = import ./nixpkgs-25.11.nix {};
     dfl_python = pkgs.python313;
     null_pkgs = {
         system-packages = {};
