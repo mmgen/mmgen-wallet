@@ -15,16 +15,17 @@ pkgs.mkShellNoCC {
         do_bin_override() {
             (
                 rm -rf .bin-override
-                mkdir .bin-override
-                cd .bin-override
-                if [ -x /bin/sudo ]; then
-                    ln -s /bin/sudo
-                    ln -s /bin/mount
-                    ln -s /bin/umount
-                elif [ -x /run/wrappers/bin/sudo ]; then
-                    ln -s /run/wrappers/bin/sudo
-                    ln -s /run/wrappers/bin/mount
-                    ln -s /run/wrappers/bin/umount
+                if mkdir .bin-override; then
+                    cd .bin-override
+                    if [ -x /bin/sudo ]; then
+                        ln -s /bin/sudo
+                        ln -s /bin/mount
+                        ln -s /bin/umount
+                    elif [ -x /run/wrappers/bin/sudo ]; then
+                        ln -s /run/wrappers/bin/sudo
+                        ln -s /run/wrappers/bin/mount
+                        ln -s /run/wrappers/bin/umount
+                    fi
                 fi
             )
         }
