@@ -14,11 +14,11 @@
 
 stdenv.mkDerivation (finalAttrs: {
     pname = "bitcoind";
-    version = "30.0";
+    version = "30.2";
 
     src = fetchGit {
         url = "https://github.com/bitcoin/bitcoin.git";
-        # url = /path/to/repo/bitcoin-30.0;
+        # url = /path/to/repo/bitcoin-30.2;
         ref = "refs/tags/v${finalAttrs.version}";
         shallow = true;
     };
