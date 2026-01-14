@@ -611,9 +611,10 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			[await CompletedTX(cfg=self.cfg, filename=path, quiet_open=True) for path in sorted(src.iterdir())],
 			key = lambda x: x.timestamp)
 		for tx in txs:
-			imsg(blue(f'\nViewing ‘{tx.infile.name}’:'))
-			out = tx.info.format(terse=True)
-			imsg(indent(out, indent='  '))
+			if not tx.is_compat:
+				imsg(blue(f'\nViewing ‘{tx.infile.name}’:'))
+				out = tx.info.format(terse=True)
+				imsg(indent(out, indent='  '))
 		self.do_umount()
 		self.remove_device()
 		return 'ok'

@@ -49,6 +49,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('generate',                         'mining a block'),
 		('alice_bal1',                       'checking Alice’s balance'),
 		('alice_txcreate1',                  'creating a transaction'),
+		('alice_add_xmr_compat_tx',          'adding XMR compat TX to txauto dir'),
 		('alice_txcreate_bad_have_unsigned', 'creating the transaction again (error)'),
 		('alice_run_autosign_setup',         'running ‘autosign setup’ (with default wallet)'),
 		('wait_loop_start',                  'starting autosign wait loop'),
@@ -118,6 +119,17 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 
 	def alice_bal1(self):
 		return self._user_bal_cli('alice', chk=self.bal1_chk[self.coin])
+
+	def alice_add_xmr_compat_tx(self):
+		self.spawn(msg_only=True)
+		self.insert_device()
+		self.do_mount()
+		from shutil import copyfile
+		tx_fn = '16E53D-E41192-XMR[0.012345].asubtx'
+		copyfile(f'test/ref/monero/{tx_fn}', f'{self.asi.txauto_dir}/{tx_fn}')
+		self.do_umount()
+		self.remove_device()
+		return 'ok'
 
 	def alice_txcreate1(self):
 		return self._user_txcreate(

@@ -13,6 +13,7 @@ proto.xmr.tx.completed: Monero completed transaction class
 """
 
 from ....cfg import Config
+from ....util import cached_property, make_timestamp
 
 from .base import Base
 
@@ -25,3 +26,13 @@ class Completed(Base):
 			'network': proto.network})
 		self.proto = proto
 		self.filename = filename
+
+	@cached_property
+	def compat_tx(self):
+		from pathlib import Path
+		from ....xmrwallet.file.tx import MoneroMMGenTX
+		return MoneroMMGenTX.View(self.cfg, Path(self.filename)) # View = Completed with silent open
+
+	@cached_property
+	def timestamp(self):
+		return make_timestamp(self.compat_tx.data.create_time)
