@@ -5,7 +5,7 @@
 
 pkgs.rustPlatform.buildRustPackage rec {
     pname = "reth";
-    version = "1.9.3";
+    version = "1.9.4";
 
     src = fetchGit {
         url = "https://github.com/paradigmxyz/reth";
@@ -14,7 +14,7 @@ pkgs.rustPlatform.buildRustPackage rec {
         shallow = true;
     };
 
-    cargoHash = "sha256-WDe75Sg7y4GfH3dSfY48aXrIBe89skj1VW0NcgtLEVU=";
+    cargoHash = "sha256-etYpgSbHPEdP0u6nywOa/05wda20kDrvOXVLOwcCiW4=";
 
     nativeBuildInputs = [
         pkgs.clang
