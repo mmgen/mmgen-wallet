@@ -47,7 +47,7 @@ class OnlineSigned(Signed):
 			action = 'broadcast this transaction to the {} {} network'.format(
 				self.proto.coin,
 				self.proto.network.upper()),
-			expect  = 'YES' if self.cfg.quiet or self.cfg.yes else 'YES, I REALLY WANT TO DO THIS')
+			expect = 'YES')
 		msg('Sending transaction')
 		if len(idxs) > 1 and getattr(self, 'coin_txid2', None) and self.is_swap:
 			ymsg('Warning: two transactions (approval and router) will be broadcast to the network')

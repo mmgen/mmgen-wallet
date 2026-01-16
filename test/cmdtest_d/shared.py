@@ -359,5 +359,6 @@ class CmdTestShared:
 	def _do_confirm_send(self, t, quiet=False, confirm_send=True, sure=True):
 		if sure:
 			t.expect('Are you sure you want to broadcast this')
-		m = ('YES, I REALLY WANT TO DO THIS', 'YES')[quiet]
-		t.expect(f'{m!r} to confirm: ', ('', m)[confirm_send]+'\n')
+		t.expect(
+			"'YES' to confirm: ",
+			('YES\n' if confirm_send else '\n'))
