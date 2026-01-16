@@ -41,9 +41,12 @@ class OnlineSigned(Signed):
 	def confirm_send(self, idxs):
 		from ..ui import confirm_or_raise
 		confirm_or_raise(
-			cfg     = self.cfg,
-			message = '' if self.cfg.quiet else 'Once this transaction is sent, there’s no taking it back!',
-			action  = f'broadcast this transaction to the {self.proto.coin} {self.proto.network.upper()} network',
+			cfg = self.cfg,
+			message = '' if self.cfg.quiet else
+				'Once this transaction is sent, there’s no taking it back!',
+			action = 'broadcast this transaction to the {} {} network'.format(
+				self.proto.coin,
+				self.proto.network.upper()),
 			expect  = 'YES' if self.cfg.quiet or self.cfg.yes else 'YES, I REALLY WANT TO DO THIS')
 		msg('Sending transaction')
 		if len(idxs) > 1 and getattr(self, 'coin_txid2', None) and self.is_swap:
