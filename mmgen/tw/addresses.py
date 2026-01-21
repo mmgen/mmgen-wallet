@@ -12,7 +12,7 @@
 tw.addresses: Tracking wallet listaddresses class for the MMGen suite
 """
 
-from ..util import msg, is_int, die
+from ..util import msg, die
 from ..obj import MMGenListItem, ImmutableAttr, ListItemAttr, TwComment, NonNegativeInt
 from ..addr import CoinAddr, MMGenID, MMGenAddrType
 from ..amt import CoinAmtChk
@@ -403,24 +403,12 @@ class TwAddresses(TwView):
 		"""
 
 		def choose_address(addrs):
-
-			def format_line(n, d):
-				return '{a:3}) {b}{c}'.format(
-					a = n,
-					b = d.twmmid.hl(),
-					c = yellow(' <== has a label!') if d.comment else ''
-				)
-
-			prompt = '\nChoose a {desc}:\n\n{items}\n\nEnter a number> '.format(
-				desc = desc,
-				items = '\n'.join(format_line(n, d) for n, d in enumerate(addrs, 1)))
-
-			from ..ui import line_input
-			while True:
-				res = line_input(self.cfg, prompt)
-				if is_int(res) and 0 < int(res) <= len(addrs):
-					return addrs[int(res)-1]
-				msg(f'{res}: invalid entry')
+			def format_addr(d):
+				return '{a}{b}'.format(
+					a = d.twmmid.hl(),
+					b = yellow(' <== has a label!') if d.comment else '')
+			from ..ui import item_chooser
+			return item_chooser(self.cfg, f'Choose a {desc}', addrs, format_addr).item
 
 		def get_addr(mmtype):
 			return [self.get_change_address(
