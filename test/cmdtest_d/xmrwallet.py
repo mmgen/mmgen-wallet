@@ -375,10 +375,9 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	async def fund_alice(self, wallet=1, amt=1234567891234, addr=None):
 		self.spawn(msg_only=True, extra_desc='(transferring funds from Miner wallet)')
-		await self.transfer(
-			'miner',
-			amt,
-			addr or read_from_file(self.users['alice'].addrfile_fs.format(wallet)))
+		addr = addr or read_from_file(self.users['alice'].addrfile_fs.format(wallet))
+		imsg(f'Dest: {addr}')
+		await self.transfer('miner', amt, addr)
 		return 'ok'
 
 	async def check_bal_alice(self, wallet=1, bal='1.234567891234'):

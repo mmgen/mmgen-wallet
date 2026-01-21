@@ -600,13 +600,19 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		addr_data = data['MoneroMMGenWalletDumpFile']['data']['wallet_metadata'][1]['addresses']
 		return await self.fund_alice(addr=addr_data[addr_num-1]['address'], amt=amt)
 
+	def alice_listaddresses(self):
+		return self._alice_twops('listaddresses', menu='R')
+
+	def alice_listaddresses_sort(self):
+		return self._alice_twops('listaddresses', menu='aAdMELLuuuraAdMeEuu')
+
 	def alice_listaddresses_lbl(self):
 		return self._alice_twops(
 			'listaddresses',
-			lbl_addr_num = 2,
-			lbl_addr_idx_num = 0,
+			lbl_acct_num = 2,
+			lbl_addr_idx = 0,
 			lbl_text = 'New Test Label',
-			lbl_add_timestr = True,
+			add_timestr = True,
 			menu = 'R',
 			expect_str = r'Primary account.*1\.234567891234')
 
@@ -616,8 +622,8 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	def alice_twview1(self):
 		return self._alice_twops(
 			'twview',
-			lbl_addr_num = 1,
-			lbl_addr_idx_num = 0,
+			lbl_acct_num = 1,
+			lbl_addr_idx = 0,
 			lbl_text = 'New Test Label',
 			menu = 'R',
 			expect_str = r'New Test Label.*2\.469135782468')
@@ -628,27 +634,25 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	def alice_twview3(self):
 		return self._alice_twops(
 			'twview',
+			interactive = False,
 			expect_arr = [
 				'Total XMR: 3.722345649021 [3.729999970119]',
 				'1         0.026296296417',
 				'0.007654321098'])
 
-	def alice_listaddresses_sort(self):
-		return self._alice_twops('listaddresses', menu='aAdMELLuuuraAdMeEuu')
-
 	def _alice_twops(
 			self,
 			op,
 			*,
-			lbl_addr_num = None,
-			lbl_addr_idx_num = None,
+			lbl_acct_num = None,
+			lbl_addr_idx = None,
 			lbl_text = '',
-			lbl_add_timestr = False,
+			add_timestr = False,
 			menu = '',
+			interactive = True,
 			expect_str = '',
 			expect_arr = []):
 
-		interactive = not expect_arr
 		self.insert_device_online()
 		t = self.spawn(
 			'mmgen-tool',
@@ -656,23 +660,26 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			+ self.autosign_opts
 			+ [op]
 			+ (['interactive=1'] if interactive else []))
+		menu_prompt = self.menu_prompt
+		have_lbl = lbl_acct_num
 		if interactive:
-			if lbl_addr_num:
-				t.expect(self.menu_prompt, 'l')
-				t.expect('main menu): ', str(lbl_addr_num))
-				if lbl_addr_idx_num is not None:
-					t.expect('main menu): ', str(lbl_addr_idx_num))
-				t.expect(': ', lbl_text + '\n') # label
-				t.expect('(y/N): ', 'y' if lbl_add_timestr else 'n')
+			if lbl_acct_num:
+				t.expect(menu_prompt, 'l')
+				t.expect('main menu): ', str(lbl_acct_num))
+				t.expect('main menu): ', str(lbl_addr_idx))
+			if have_lbl:
+				t.expect(': ', lbl_text + '\n')                    # add label
+				t.expect('(y/N): ', ('y' if add_timestr else 'n')) # add timestr
 			for ch in menu:
-				t.expect(self.menu_prompt, ch)
+				t.expect(menu_prompt, ch)
 			if expect_str:
 				t.expect(expect_str, regex=True)
-			t.expect(self.menu_prompt, 'q')
+			t.expect(menu_prompt, 'q')
 		elif expect_arr:
 			text = strip_ansi_escapes(t.read())
 			for s in expect_arr:
 				assert s in text
+		t.read()
 		self.remove_device_online()
 		return t
 
