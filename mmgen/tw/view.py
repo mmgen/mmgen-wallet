@@ -810,29 +810,6 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 		async def i_comment_add(self, parent, idx, acct_addr_idx=None):
 
-			async def do_comment_add(comment_in):
-				from ..obj import TwComment
-				new_comment = await parent.twctl.set_comment(
-					addrspec     = None,
-					comment      = comment_in,
-					trusted_pair = (entry.twmmid, entry.addr),
-					silent       = parent.scroll)
-
-				edited = old_comment and new_comment
-				if isinstance(new_comment, TwComment):
-					entry.comment = new_comment
-					parent.oneshot_msg = (green if new_comment else yellow)('Label {a} {b}{c}'.format(
-						a = 'for' if edited else 'added to' if new_comment else 'removed from',
-						b = desc,
-						c = ' edited' if edited else ''))
-					return 'redraw' if parent.cfg.coin == 'XMR' else True
-				else:
-					await asyncio.sleep(3)
-					parent.oneshot_msg = red('Label for {desc} could not be {action}'.format(
-						desc = desc,
-						action = 'edited' if edited else 'added' if new_comment else 'removed'))
-					return False
-
 			if acct_addr_idx is None:
 				desc       = f'{parent.item_desc} #{idx}'
 				color_desc = f'{parent.item_desc} {red("#" + str(idx))}'
@@ -845,7 +822,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			msg('Current label: {}'.format(old_comment.hl() if old_comment else '(none)'))
 
 			from ..ui import line_input
-			match res:= line_input(
+			match comment_in := line_input(
 					parent.cfg,
 					f'Enter label text for {color_desc}: ',
 					insert_txt = old_comment):
@@ -856,7 +833,27 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					if not parent.keypress_confirm(f'Removing label for {color_desc}. OK?'):
 						return 'redo'
 
-			return await do_comment_add(res)
+			from ..obj import TwComment
+			new_comment = await parent.twctl.set_comment(
+				addrspec     = None,
+				comment      = comment_in,
+				trusted_pair = (entry.twmmid, entry.addr),
+				silent       = parent.scroll)
+
+			edited = old_comment and new_comment
+			if isinstance(new_comment, TwComment):
+				entry.comment = new_comment
+				parent.oneshot_msg = (green if new_comment else yellow)('Label {a} {b}{c}'.format(
+					a = 'for' if edited else 'added to' if new_comment else 'removed from',
+					b = desc,
+					c = ' edited' if edited else ''))
+				return 'redraw' if parent.cfg.coin == 'XMR' else True
+			else:
+				await asyncio.sleep(3)
+				parent.oneshot_msg = red('Label for {desc} could not be {action}'.format(
+					desc = desc,
+					action = 'edited' if edited else 'added' if new_comment else 'removed'))
+				return False
 
 	class scroll_action:
 
