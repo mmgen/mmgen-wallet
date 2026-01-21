@@ -29,7 +29,7 @@ class OpLabel(OpMixinSpec, OpWallet):
 	opts     = ()
 	wallet_offline = True
 
-	async def main(self, add_timestr='ask', auto=False):
+	async def main(self, add_timestr='ask'):
 
 		if not self.compat_call:
 			gmsg('\n{a} label for wallet {b}, account #{c}, address #{d}'.format(
@@ -61,7 +61,7 @@ class OpLabel(OpMixinSpec, OpWallet):
 			(self.label + (f' [{make_timestr()}]' if add_timestr else '')) if self.label
 			else '')
 
-		if not auto:
+		if not self.compat_call:
 			ca = CoinAddr(self.proto, addr['address'])
 			from . import addr_width
 			msg('\n  {a} {b}\n  {c} {d}\n  {e} {f}'.format(
@@ -76,7 +76,7 @@ class OpLabel(OpMixinSpec, OpWallet):
 
 		if addr['label'] == new_label:
 			ymsg('\nLabel is unchanged, operation cancelled')
-		elif auto or keypress_confirm(self.cfg, f'  {op.capitalize()} label?'):
+		elif self.compat_call or keypress_confirm(self.cfg, f'  {op.capitalize()} label?'):
 			h.set_label(self.account, self.address_idx, new_label)
 			ret = h.print_acct_addrs(h.get_wallet_data(print=False), self.account)
 			label_chk = ret[self.address_idx]['label']

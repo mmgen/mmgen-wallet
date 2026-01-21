@@ -42,4 +42,4 @@ class MoneroTwCtl(TwCtlWithStore):
 			spec = f'{m.idx}:{m.acct_idx}:{m.addr_idx},{comment}',
 			compat_call = True)
 		await op.restart_wallet_daemon()
-		return await op.main(add_timestr=add_timestr, auto=True)
+		return await op.main(add_timestr=add_timestr)
