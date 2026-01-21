@@ -29,7 +29,7 @@ class OpNew(OpMixinSpec, OpWallet):
 
 	async def main(self):
 		h = MoneroWalletRPC(self, self.source)
-		h.open_wallet('Monero')
+		h.open_wallet('Monero', refresh=False)
 
 		desc = 'account' if self.account is None else 'address'
 		label = TwComment(

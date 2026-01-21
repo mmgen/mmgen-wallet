@@ -40,7 +40,7 @@ class OpLabel(OpMixinSpec, OpWallet):
 
 		h = MoneroWalletRPC(self, self.source)
 
-		h.open_wallet('source')
+		h.open_wallet('source', refresh=False)
 		wallet_data = h.get_wallet_data()
 
 		max_acct = len(wallet_data.accts_data['subaddress_accounts']) - 1
