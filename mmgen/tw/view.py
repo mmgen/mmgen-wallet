@@ -692,11 +692,19 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					return ur(idx, None)
 			await do_error_msg()
 
+	async def post_action_cleanup(self, ret):
+		if self.scroll and (ret is False or ret in ('redraw', 'erase')):
+			# error messages could leave screen in messy state, so do complete redraw:
+			msg_r(
+				CUR_HOME + ERASE_ALL + (
+					'' if ret == 'erase' else
+					await self.format(display_type='squeezed', interactive=True, scroll=True)))
+
 	class action:
 
 		@enable_echo
 		async def run(self, parent, action_method):
-			return await action_method(parent)
+			await parent.post_action_cleanup(await action_method(parent))
 
 		async def a_print_detail(self, parent):
 			return await self._print(parent, output_type='detail')
@@ -763,6 +771,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				#  None:   action aborted by user or no action performed
 				#  'redo': user will be re-prompted for item number
 				#  'redraw': action successfully performed, screen will be redrawn
+				#  'erase': action successfully performed, screen will be erased
 				if usr_ret := await parent.get_idx_from_user(action_method.__name__):
 					ret = await action_method(parent, usr_ret.idx, usr_ret.acct_addr_idx)
 				else:
@@ -771,11 +780,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					break
 				await asyncio.sleep(0.5)
 
-			if parent.scroll and (ret is False or ret == 'redraw'):
-				# error messages could leave screen in messy state, so do complete redraw:
-				msg_r(
-					CUR_HOME + ERASE_ALL +
-					await parent.format(display_type='squeezed', interactive=True, scroll=True))
+			await parent.post_action_cleanup(ret)
 
 		async def i_balance_refresh(self, parent, idx, acct_addr_idx=None):
 			if not parent.keypress_confirm(
