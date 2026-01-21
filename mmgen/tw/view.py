@@ -657,7 +657,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				msg_r('\r'+''.ljust(self.term_width)+'\r'+yellow('Canceling! '))
 			return False
 
-	async def get_idx_from_user(self):
+	async def get_idx_from_user(self, method_name):
 		return await self.get_idx(f'{self.item_desc} number', self.disp_data)
 
 	async def get_idx(self, desc, data, *, is_addr_idx=False):
@@ -748,6 +748,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			do_pager(await parent.format('detail', color=True))
 
 	class item_action:
+		acct_methods = ()
 
 		@enable_echo
 		async def run(self, parent, action_method):
@@ -762,7 +763,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				#  None:   action aborted by user or no action performed
 				#  'redo': user will be re-prompted for item number
 				#  'redraw': action successfully performed, screen will be redrawn
-				if usr_ret := await parent.get_idx_from_user():
+				if usr_ret := await parent.get_idx_from_user(action_method.__name__):
 					ret = await action_method(parent, usr_ret.idx, usr_ret.acct_addr_idx)
 				else:
 					ret = None

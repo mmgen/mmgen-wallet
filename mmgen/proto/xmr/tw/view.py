@@ -210,8 +210,10 @@ class MoneroTwView:
 				color_override = None if d.amt == d.unlocked_amt else 'orange',
 				prec = self.disp_prec))
 
-	async def get_idx_from_user(self):
+	async def get_idx_from_user(self, method_name):
 		if res := await self.get_idx(f'{self.item_desc} number', self.accts_data):
+			if method_name in self.item_action.acct_methods:
+				return res
 			return await self.get_idx(
 				'address index',
 				self.accts_data[res.idx - 1].data,
