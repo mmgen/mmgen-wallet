@@ -57,16 +57,16 @@ class MoneroTwView:
 
 		op = xmrwallet_op('dump_data', self.cfg, None, None, compat_call=True)
 		await op.restart_wallet_daemon()
-		wallets_data = await op.main()
+		self.dump_data = await op.main()
 
-		if wallets_data:
-			self.sid = SeedID(sid=wallets_data[0]['seed_id'])
+		if self.dump_data:
+			self.sid = SeedID(sid=self.dump_data[0]['seed_id'])
 
 		self.total = self.unlocked_total = self.proto.coin_amt('0')
 
 		def gen_addrs():
 			bd = namedtuple('address_balance_data', ['bal', 'unlocked_bal', 'blocks_to_unlock'])
-			for wdata in wallets_data:
+			for wdata in self.dump_data:
 				bals_data = {i: {} for i in range(len(wdata['data'].accts_data['subaddress_accounts']))}
 
 				for d in wdata['data'].bals_data.get('per_subaddress', []):

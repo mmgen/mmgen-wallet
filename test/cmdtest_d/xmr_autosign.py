@@ -508,6 +508,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	Monero autosigning operations (compat mode)
 	"""
 	menu_prompt = 'efresh balances:\b'
+	listaddresses_menu_prompt = 'efresh bals:\b'
 	extra_daemons = ['ltc']
 
 	cmd_group = (
@@ -548,6 +549,14 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('wait_loop_start_ltc',      'starting autosign wait loop in XMR compat mode [--coins=ltc,xmr]'),
 		('alice_txsend1',            'sending the transaction'),
 		('wait_loop_kill',           'stopping autosign wait loop'),
+		('alice_newacct1',           'adding account to Alice’s tracking wallet (dfl label)'),
+		('alice_newacct2',           'adding account to Alice’s tracking wallet (no timestr)'),
+		('alice_newacct3',           'adding account to Alice’s tracking wallet'),
+		('alice_newacct4',           'adding account to Alice’s tracking wallet (dfl label, no timestr)'),
+		('alice_newaddr1',           'adding address to Alice’s tracking wallet'),
+		('alice_newaddr2',           'adding address to Alice’s tracking wallet (no timestr)'),
+		('alice_newaddr3',           'adding address to Alice’s tracking wallet (dfl label)'),
+		('alice_newaddr4',           'adding address to Alice’s tracking wallet (dfl label, no timestr)'),
 		('stop_daemons',             'stopping all wallet and coin daemons'),
 	)
 
@@ -600,6 +609,46 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		addr_data = data['MoneroMMGenWalletDumpFile']['data']['wallet_metadata'][1]['addresses']
 		return await self.fund_alice(addr=addr_data[addr_num-1]['address'], amt=amt)
 
+	def alice_newacct1(self):
+		return self._alice_newacct(2, lbl_text='New Test Account', add_timestr=True)
+
+	def alice_newacct2(self):
+		return self._alice_newacct(1, lbl_text='New Test Account')
+
+	def alice_newacct3(self):
+		return self._alice_newacct(2, add_timestr=True)
+
+	def alice_newacct4(self):
+		return self._alice_newacct(2)
+
+	def _alice_newacct(self, wallet_num, lbl_text='', add_timestr=False):
+		return self._alice_twops(
+			'listaddresses',
+			newacct_wallet_num = wallet_num,
+			lbl_text = lbl_text,
+			add_timestr = add_timestr,
+			expect_str = (lbl_text or 'new account ') + (r'.*\[20.*\]' if add_timestr else ''))
+
+	def alice_newaddr1(self):
+		return self._alice_newaddr(1, lbl_text='New Test Address', add_timestr=True)
+
+	def alice_newaddr2(self):
+		return self._alice_newaddr(1, lbl_text='New Test Address')
+
+	def alice_newaddr3(self):
+		return self._alice_newaddr(2, add_timestr=True)
+
+	def alice_newaddr4(self):
+		return self._alice_newaddr(2)
+
+	def _alice_newaddr(self, acct_num, lbl_text='', add_timestr=False):
+		return self._alice_twops(
+			'listaddresses',
+			newaddr_acct_num = acct_num,
+			lbl_text = lbl_text,
+			add_timestr = add_timestr,
+			expect_str = (lbl_text or 'new address ') + (r'.*\[20.*\]' if add_timestr else ''))
+
 	def alice_listaddresses(self):
 		return self._alice_twops('listaddresses', menu='R')
 
@@ -646,6 +695,8 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			*,
 			lbl_acct_num = None,
 			lbl_addr_idx = None,
+			newacct_wallet_num = None,
+			newaddr_acct_num = None,
 			lbl_text = '',
 			add_timestr = False,
 			menu = '',
@@ -660,16 +711,25 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			+ self.autosign_opts
 			+ [op]
 			+ (['interactive=1'] if interactive else []))
-		menu_prompt = self.menu_prompt
-		have_lbl = lbl_acct_num
+		menu_prompt = self.listaddresses_menu_prompt if op == 'listaddresses' else self.menu_prompt
+		have_lbl = lbl_acct_num or newacct_wallet_num or newaddr_acct_num
+		have_new_addr = newacct_wallet_num or newaddr_acct_num
 		if interactive:
 			if lbl_acct_num:
 				t.expect(menu_prompt, 'l')
 				t.expect('main menu): ', str(lbl_acct_num))
 				t.expect('main menu): ', str(lbl_addr_idx))
+			elif newacct_wallet_num:
+				t.expect(menu_prompt, 'N')
+				t.expect('number> ', f'{newacct_wallet_num}\n')
+			elif newaddr_acct_num:
+				t.expect(menu_prompt, 'n')
+				t.expect('main menu): ', str(newaddr_acct_num))
 			if have_lbl:
 				t.expect(': ', lbl_text + '\n')                    # add label
 				t.expect('(y/N): ', ('y' if add_timestr else 'n')) # add timestr
+			if have_new_addr:
+				t.expect('(y/N): ', 'y')
 			for ch in menu:
 				t.expect(menu_prompt, ch)
 			if expect_str:

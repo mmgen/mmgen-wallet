@@ -27,14 +27,16 @@ class OpNew(OpMixinSpec, OpWallet):
 	spec_key = ((1, 'source'),)
 	wallet_offline = True
 
-	async def main(self):
+	async def main(self, add_timestr=True):
 		h = MoneroWalletRPC(self, self.source)
 		h.open_wallet('Monero', refresh=False)
 
 		desc = 'account' if self.account is None else 'address'
 		label = TwComment(
 			None if self.label == '' else
-			'{} [{}]'.format(self.label or f'xmrwallet new {desc}', make_timestr()))
+			'{a}{b}'.format(
+				a = self.label or (f'new {desc}' if self.compat_call else f'xmrwallet new {desc}'),
+				b = ' [{}]'.format(make_timestr()) if add_timestr else ''))
 
 		wallet_data = h.get_wallet_data()
 
@@ -58,11 +60,14 @@ class OpNew(OpMixinSpec, OpWallet):
 
 			if desc == 'address':
 				h.print_acct_addrs(wallet_data, self.account)
+			ret = True
 		else:
 			ymsg('\nOperation cancelled by user request')
+			ret = False
 
 		# wallet must be left open: otherwise the 'stop_wallet' RPC call used to stop the daemon will fail
 		if self.cfg.no_stop_wallet_daemon:
 			h.close_wallet('Monero')
 
 		msg('')
+		return ret
