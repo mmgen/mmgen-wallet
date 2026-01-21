@@ -236,4 +236,5 @@ class MoneroTwView:
 			await op.restart_wallet_daemon()
 			await op.main()
 			await parent.get_data()
-			msg_r(CUR_HOME + ERASE_ALL)
+			if parent.scroll:
+				msg_r(CUR_HOME + ERASE_ALL)

@@ -521,7 +521,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('check_bal_alice2',         'mining, checking balance (wallet #2)'),
 		('fund_alice1',              'sending funds to Alice (wallet #1)'),
 		('mine_blocks_10',           'mining some blocks'),
-		('alice_listaddresses1',     'adding label to Alice’s tracking wallets (listaddresses)'),
+		('alice_listaddresses_lbl',  'adding label to Alice’s tracking wallets (listaddresses)'),
 		('fund_alice1b',             'sending funds to Alice (wallet #1)'),
 		('mine_blocks_10',           'mining some blocks'),
 		('alice_twview1',            'adding label to Alice’s tracking wallets (twview)'),
@@ -536,7 +536,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('fund_alice_sub3',          'sending funds to Alice’s subaddress #3 (wallet #2)'),
 		('alice_twview2',            'viewing Alice’s tracking wallets (reload, sort options)'),
 		('alice_twview3',            'viewing Alice’s tracking wallets (check balances)'),
-		('alice_listaddresses2',     'listing Alice’s addresses (sort options)'),
+		('alice_listaddresses_sort', 'listing Alice’s addresses (sort options)'),
 		('wait_loop_start_compat',   'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
 		('alice_txcreate1',          'creating a transaction'),
 		('alice_txabort1',           'aborting the transaction'),
@@ -600,11 +600,12 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		addr_data = data['MoneroMMGenWalletDumpFile']['data']['wallet_metadata'][1]['addresses']
 		return await self.fund_alice(addr=addr_data[addr_num-1]['address'], amt=amt)
 
-	def alice_listaddresses1(self):
+	def alice_listaddresses_lbl(self):
 		return self._alice_twops(
 			'listaddresses',
 			lbl_addr_num = 2,
 			lbl_addr_idx_num = 0,
+			lbl_text = 'New Test Label',
 			lbl_add_timestr = True,
 			menu = 'R',
 			expect_str = r'Primary account.*1\.234567891234')
@@ -617,8 +618,9 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			'twview',
 			lbl_addr_num = 1,
 			lbl_addr_idx_num = 0,
+			lbl_text = 'New Test Label',
 			menu = 'R',
-			expect_str = r'New Label.*2\.469135782468')
+			expect_str = r'New Test Label.*2\.469135782468')
 
 	def alice_twview2(self):
 		return self._alice_twops('twview', menu='RaAdMraAdMe')
@@ -631,7 +633,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 				'1         0.026296296417',
 				'0.007654321098'])
 
-	def alice_listaddresses2(self):
+	def alice_listaddresses_sort(self):
 		return self._alice_twops('listaddresses', menu='aAdMELLuuuraAdMeEuu')
 
 	def _alice_twops(
@@ -640,6 +642,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			*,
 			lbl_addr_num = None,
 			lbl_addr_idx_num = None,
+			lbl_text = '',
 			lbl_add_timestr = False,
 			menu = '',
 			expect_str = '',
@@ -659,7 +662,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 				t.expect('main menu): ', str(lbl_addr_num))
 				if lbl_addr_idx_num is not None:
 					t.expect('main menu): ', str(lbl_addr_idx_num))
-				t.expect(': ', 'New Label\n')
+				t.expect(': ', lbl_text + '\n') # label
 				t.expect('(y/N): ', 'y' if lbl_add_timestr else 'n')
 			for ch in menu:
 				t.expect(self.menu_prompt, ch)

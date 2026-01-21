@@ -41,13 +41,13 @@ class OpLabel(OpMixinSpec, OpWallet):
 		h = MoneroWalletRPC(self, self.source)
 
 		h.open_wallet('source')
-		wallet_data = h.get_wallet_data(print=not auto)
+		wallet_data = h.get_wallet_data()
 
 		max_acct = len(wallet_data.accts_data['subaddress_accounts']) - 1
 		if self.account > max_acct:
 			die(2, f'{self.account}: requested account index out of bounds (>{max_acct})')
 
-		ret = h.print_acct_addrs(wallet_data, self.account, silent=auto)
+		ret = h.print_acct_addrs(wallet_data, self.account)
 
 		if self.address_idx > len(ret) - 1:
 			die(2, '{}: requested address index out of bounds (>{})'.format(
