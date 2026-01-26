@@ -536,7 +536,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('mine_blocks_1',            'mining a block'),
 		('fund_alice_sub3',          'sending funds to Alice’s subaddress #3 (wallet #2)'),
 		('alice_twview2',            'viewing Alice’s tracking wallets (reload, sort options)'),
-		('alice_twview3',            'viewing Alice’s tracking wallets (check balances)'),
+		('alice_twview_chk1',        'viewing Alice’s tracking wallets (check balances)'),
 		('alice_listaddresses_sort', 'listing Alice’s addresses (sort options)'),
 		('wait_loop_start_compat',   'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
 		('alice_txcreate1',          'creating a transaction'),
@@ -680,14 +680,18 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	def alice_twview2(self):
 		return self._alice_twops('twview', menu='RaAdMraAdMe')
 
-	def alice_twview3(self):
+	def alice_twview_chk1(self):
+		return self._alice_twview_chk([
+			'Total XMR: 3.722345649021 [3.729999970119]',
+			'1         0.026296296417',
+			'0.007654321098'])
+
+	def _alice_twview_chk(self, expect_arr, sync=False):
 		return self._alice_twops(
 			'twview',
-			interactive = False,
-			expect_arr = [
-				'Total XMR: 3.722345649021 [3.729999970119]',
-				'1         0.026296296417',
-				'0.007654321098'])
+			interactive = sync,
+			menu = 'R' if sync else '',
+			expect_arr = expect_arr)
 
 	def _alice_twops(
 			self,
@@ -754,18 +758,19 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 
 	alice_txcreate3 = alice_txcreate2 = alice_txcreate1
 
-	def alice_txabort1(self):
+	def _alice_txabort(self):
 		return self._alice_txops('txsend', opts=['--alice', '--abort'])
 
-	alice_txabort2 = alice_txabort1
+	alice_txabort1 = alice_txabort2 = _alice_txabort
 
-	def alice_txsend1(self):
+	def _alice_txsend(self):
 		return self._alice_txops(
 			'txsend',
 			opts        = ['--alice', '--quiet'],
 			add_opts    = self.alice_daemon_opts,
-			acct_num    = 1,
 			wait_signed = True)
+
+	alice_txsend1 = _alice_txsend
 
 	def wait_signed1(self):
 		self.spawn(msg_only=True)
@@ -791,9 +796,10 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		if '--abort' in opts:
 			t.expect('(y/N): ', 'y')
 		elif op == 'txcreate':
-			for ch in menu + 'q':
-				t.expect(self.menu_prompt, ch)
-			t.expect('to spend from: ', f'{acct_num}\n')
+			if True:
+				for ch in menu + 'q':
+					t.expect(self.menu_prompt, ch)
+				t.expect('to spend from: ', f'{acct_num}\n')
 			t.expect('(y/N): ', 'y') # save?
 		elif op == 'txsend':
 			t.expect('(y/N): ', 'y') # view?
