@@ -530,6 +530,8 @@ class New(Base):
 				await self.update_vault_output(self.vault_output.amt)
 
 		if self.is_compat:
+			del self.twctl
+			del self.twuo.twctl
 			return await self.compat_create()
 
 		await self.create_serialized(locktime=locktime) # creates self.txid too

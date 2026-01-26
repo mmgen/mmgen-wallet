@@ -41,15 +41,21 @@ class New(Base, TxNew):
 				msg(f'Account number must be an integer between 1 and {len(accts_data)} inclusive')
 
 	async def compat_create(self):
+
+		if True:
+			op = 'transfer'
+			i = self.inputs[0]
+			o = self.outputs[0]
+			spec = f'{i.idx}:{i.acct_idx}:{o.addr},{o.amt}'
+
 		from ....xmrwallet import op as xmrwallet_op
-		i = self.inputs[0]
-		o = self.outputs[0]
 		op = xmrwallet_op(
-			'transfer',
+			op,
 			self.cfg,
 			None,
 			None,
-			spec = f'{i.idx}:{i.acct_idx}:{o.addr},{o.amt}',
+			spec = spec,
 			compat_call = True)
+
 		await op.restart_wallet_daemon()
 		return await op.main()

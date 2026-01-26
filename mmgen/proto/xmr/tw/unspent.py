@@ -22,11 +22,12 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 	desc = 'spendable accounts'
 	include_empty = False
 
-	prompt_fs_in = [
-		'Sort options: [a]mount, [A]ge, a[d]dr, [M]mgen addr, [r]everse',
-		'Display options: r[e]draw screen',
-		'View/Print: pager [v]iew, [w]ide pager view, [p]rint to file{s}',
-		'Actions: [q]uit menu, add [l]abel, [R]efresh balances:']
-	extra_key_mappings = {
-		'R': 'a_sync_wallets',
-		'A': 's_age'}
+	async def __init__(self, cfg, proto, *, minconf=1, addrs=[], tx=None):
+		self.prompt_fs_in = [
+			'Sort options: [a]mount, [A]ge, a[d]dr, [M]mgen addr, [r]everse',
+			'View/Print: pager [v]iew, [w]ide pager view, [p]rint to file{s}',
+			'Actions: [q]uit menu, add [l]abel, r[e]draw, [R]efresh balances:']
+		self.extra_key_mappings = {
+			'R': 'a_sync_wallets',
+			'A': 's_age'}
+		await super().__init__(cfg, proto, minconf=minconf, addrs=addrs, tx=tx)

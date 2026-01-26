@@ -588,6 +588,12 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				self.key_mappings.update(self.scroll_keys[sys.platform])
 			return self.key_mappings
 
+		def cleanup(add_nl=False):
+			if add_nl:
+				msg('')
+			if self.scroll:
+				self.term.set('echo')
+
 		scroll = self.scroll = self.cfg.scroll
 
 		key_mappings = make_key_mappings(scroll)
@@ -635,10 +641,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					arg = action_methods[ch]
 					await func(self, arg) if isAsync(func) else func(self, arg)
 				case 'q':
-					msg('')
-					if self.scroll:
-						self.term.set('echo')
-					return
+					return cleanup(add_nl=True)
 				case _:
 					if not scroll:
 						msg_r('\ninvalid keypress ')
@@ -704,7 +707,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 		@enable_echo
 		async def run(self, parent, action_method):
-			await parent.post_action_cleanup(await action_method(parent))
+			return await parent.post_action_cleanup(await action_method(parent))
 
 		async def a_print_detail(self, parent):
 			return await self._print(parent, output_type='detail')
@@ -780,7 +783,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 					break
 				await asyncio.sleep(0.5)
 
-			await parent.post_action_cleanup(ret)
+			return await parent.post_action_cleanup(ret)
 
 		async def i_balance_refresh(self, parent, idx, acct_addr_idx=None):
 			if not parent.keypress_confirm(
