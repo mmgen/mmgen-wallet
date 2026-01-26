@@ -568,8 +568,10 @@ class Autosign:
 		if self.have_xmr:
 			self.dirs |= self.xmr_dirs | (
 				{'txauto_dir': 'txauto'} if cfg.xmrwallet_compat and self.xmr_only else {})
-			self.signables += Signable.xmr_signables + (
-				('automount_transaction',) if cfg.xmrwallet_compat and self.xmr_only else ())
+			self.signables = (
+				Signable.xmr_signables # xmr_wallet_outputs_file must be signed before XMR TXs
+				+ (('automount_transaction',) if cfg.xmrwallet_compat and self.xmr_only else ())
+				+ self.signables)      # self.signables could contain compat XMR TXs
 
 		for name, path in self.dirs.items():
 			setattr(self, name, self.mountpoint / path)
