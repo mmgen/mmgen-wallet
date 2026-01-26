@@ -21,6 +21,7 @@ def help(proto, cfg):
 	t = tool_cmd(cfg, mmtype=mmtype)
 	addr = t.privhex2addr('bead' * 16)
 	sample_addr = addr.views[addr.view_pref]
+	cmd_base = gc.prog_name + ('' if proto.coin == 'BTC' else f' --coin={proto.coin.lower()}')
 
 	match proto.base_proto:
 		case 'Bitcoin':
@@ -30,30 +31,30 @@ EXAMPLES:
   Send 0.123 {proto.coin} to an external {proto.name} address, returning the change to a
   specific MMGen address in the tracking wallet:
 
-    $ {gc.prog_name} {sample_addr},0.123 01ABCDEF:{mmtype}:7
+    $ {cmd_base} {sample_addr},0.123 01ABCDEF:{mmtype}:7
 
   Same as above, but select the change address automatically:
 
-    $ {gc.prog_name} {sample_addr},0.123 01ABCDEF:{mmtype}
+    $ {cmd_base} {sample_addr},0.123 01ABCDEF:{mmtype}
 
   Same as above, but select the change address automatically by address type:
 
-    $ {gc.prog_name} {sample_addr},0.123 {mmtype}
+    $ {cmd_base} {sample_addr},0.123 {mmtype}
 
   Same as above, but reduce verbosity and specify fee of 20 satoshis
   per byte:
 
-    $ {gc.prog_name} -q -f 20s {sample_addr},0.123 {mmtype}
+    $ {cmd_base} -q -f 20s {sample_addr},0.123 {mmtype}
 
   Send entire balance of selected inputs minus fee to an external {proto.name}
   address:
 
-    $ {gc.prog_name} {sample_addr}
+    $ {cmd_base} {sample_addr}
 
   Send entire balance of selected inputs minus fee to first unused wallet
   address of specified type:
 
-    $ {gc.prog_name} {mmtype}
+    $ {cmd_base} {mmtype}
 """
 
 		case 'Monero':
@@ -62,7 +63,7 @@ EXAMPLES:
 
   Send 0.123 {proto.coin} to an external {proto.name} address:
 
-    $ {gc.prog_name} {sample_addr},0.123
+    $ {cmd_base} {sample_addr},0.123
 """
 
 		case _:
@@ -71,9 +72,9 @@ EXAMPLES:
 
   Send 0.123 {proto.coin} to an external {proto.name} address:
 
-    $ {gc.prog_name} {sample_addr},0.123
+    $ {cmd_base} {sample_addr},0.123
 
   Send 0.123 {proto.coin} to another account in wallet 01ABCDEF:
 
-    $ {gc.prog_name} 01ABCDEF:{mmtype}:7,0.123
+    $ {cmd_base} 01ABCDEF:{mmtype}:7,0.123
 """
