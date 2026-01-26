@@ -23,12 +23,14 @@ def get_autosign_obj(cfg, add_cfg={}):
 			# used only in online environment (xmrwallet, txcreate, txsend, txbump):
 			'online': not cfg.offline} | add_cfg))
 
-def mount_removable_device(cfg, add_cfg={}):
-	asi = get_autosign_obj(cfg, add_cfg=add_cfg)
+def mount_removable_device(cfg, do_umount=True, asi=None, add_cfg={}, do_umount_registered=[]):
+	asi = asi or get_autosign_obj(cfg, add_cfg=add_cfg)
 	if not asi.device_inserted:
 		from ..util import die
 		die(1, 'Removable device not present!')
-	import atexit
-	atexit.register(lambda: asi.do_umount())
+	if do_umount and not do_umount_registered:
+		import atexit
+		atexit.register(lambda: asi.do_umount())
+		do_umount_registered.append(None)
 	asi.do_mount()
 	return asi

@@ -12,7 +12,7 @@
 xmrwallet.ops.__init__: Monero wallet ops for the MMGen Suite
 """
 
-import re, atexit
+import re
 
 from ...color import blue
 from ...util import msg, die, fmt
@@ -115,14 +115,10 @@ class OpBase:
 			  Proxy: {blue(m[2] or 'None')}
 			""", strip_char='\t', indent=indent))
 
-	def mount_removable_device(self, registered=[]):
+	def mount_removable_device(self):
 		if self.cfg.autosign:
-			if not self.asi.device_inserted:
-				die(1, 'Removable device not present!')
-			if self.do_umount and not registered:
-				atexit.register(lambda: self.asi.do_umount())
-				registered.append(None)
-			self.asi.do_mount()
+			from ...tx.util import mount_removable_device
+			mount_removable_device(self.cfg, do_umount=self.do_umount, asi=self.asi)
 			self.post_mount_action()
 
 	def pre_init_action(self):
