@@ -548,6 +548,16 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('alice_txcreate3',          'recreating the transaction'),
 		('wait_loop_start_ltc',      'starting autosign wait loop in XMR compat mode [--coins=ltc,xmr]'),
 		('alice_txsend1',            'sending the transaction'),
+		('mine_blocks_10',           'mining some blocks'),
+		('alice_twview_chk2',        'viewing Alice’s tracking wallets (check balances)'),
+		('alice_txcreate_sweep1',    'creating a sweep transaction (account sweep)'),
+		('alice_txsend2',            'sending the transaction'),
+		('mine_blocks_10',           'mining some blocks'),
+		('alice_twview_chk3',        'viewing Alice’s tracking wallets (check balances)'),
+		('alice_txcreate_sweep2',    'creating a sweep transaction (address sweep)'),
+		('alice_txsend3',            'sending the transaction'),
+		('mine_blocks_10',           'mining some blocks'),
+		('alice_twview_chk4',        'viewing Alice’s tracking wallets (check balances)'),
 		('wait_loop_kill',           'stopping autosign wait loop'),
 		('alice_newacct1',           'adding account to Alice’s tracking wallet (dfl label)'),
 		('alice_newacct2',           'adding account to Alice’s tracking wallet (no timestr)'),
@@ -686,6 +696,15 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			'1         0.026296296417',
 			'0.007654321098'])
 
+	def alice_twview_chk2(self):
+		return self._alice_twview_chk(['Total XMR: 3.715053370119'], sync=True)
+
+	def alice_twview_chk3(self):
+		return self._alice_twview_chk(['Total XMR: 3.713242570119', '1.232757091234'], sync=True)
+
+	def alice_twview_chk4(self):
+		return self._alice_twview_chk(['Total XMR: 3.709050970119', '1.254861787651'], sync=True)
+
 	def _alice_twview_chk(self, expect_arr, sync=False):
 		return self._alice_twops(
 			'twview',
@@ -756,6 +775,12 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	def alice_txcreate1(self):
 		return self._alice_txops('txcreate', [f'{self.burn_addr},0.012345'], acct_num=1)
 
+	def alice_txcreate_sweep1(self):
+		return self._alice_txops('txcreate', menu='S', sweep_menu='23', sweep_type='sweep')
+
+	def alice_txcreate_sweep2(self):
+		return self._alice_txops('txcreate', menu='s', sweep_menu='2', sweep_type='sweep_all')
+
 	alice_txcreate3 = alice_txcreate2 = alice_txcreate1
 
 	def _alice_txabort(self):
@@ -770,7 +795,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			add_opts    = self.alice_daemon_opts,
 			wait_signed = True)
 
-	alice_txsend1 = _alice_txsend
+	alice_txsend1 = alice_txsend2 = alice_txsend3 = _alice_txsend
 
 	def wait_signed1(self):
 		self.spawn(msg_only=True)
@@ -788,6 +813,8 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			menu = '',
 			acct_num = None,
 			wait_signed = False,
+			sweep_type = None,
+			sweep_menu = '',
 			signable_desc = 'transaction'):
 		if wait_signed:
 			self._wait_signed(signable_desc)
@@ -796,7 +823,13 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		if '--abort' in opts:
 			t.expect('(y/N): ', 'y')
 		elif op == 'txcreate':
-			if True:
+			if sweep_type:
+				t.expect(self.menu_prompt, menu)
+				for ch in sweep_menu:
+					t.expect('main menu): ', ch)
+				t.expect('number> ', {'sweep': '1', 'sweep_all': '2'}[sweep_type])
+				t.expect('(y/N): ', 'y') # create new address?
+			else:
 				for ch in menu + 'q':
 					t.expect(self.menu_prompt, ch)
 				t.expect('to spend from: ', f'{acct_num}\n')

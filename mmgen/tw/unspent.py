@@ -95,7 +95,8 @@ class TwUnspentOutputs(TwView):
 			self.__dict__['proto'] = proto
 			MMGenListItem.__init__(self, **kwargs)
 
-	async def __init__(self, cfg, proto, *, minconf=1, addrs=[]):
+	async def __init__(self, cfg, proto, *, minconf=1, addrs=[], tx=None):
+		self.tx  = tx
 		await super().__init__(cfg, proto)
 		self.minconf  = NonNegativeInt(minconf)
 		self.addrs    = addrs

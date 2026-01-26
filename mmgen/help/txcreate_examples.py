@@ -22,6 +22,7 @@ def help(proto, cfg):
 	addr = t.privhex2addr('bead' * 16)
 	sample_addr = addr.views[addr.view_pref]
 	cmd_base = gc.prog_name + ('' if proto.coin == 'BTC' else f' --coin={proto.coin.lower()}')
+	action = 'Create' if gc.prog_name == 'mmgen-txcreate' else 'Execute'
 
 	match proto.base_proto:
 		case 'Bitcoin':
@@ -64,6 +65,10 @@ EXAMPLES:
   Send 0.123 {proto.coin} to an external {proto.name} address:
 
     $ {cmd_base} {sample_addr},0.123
+
+  {action} a sweep transaction:
+
+    $ {cmd_base}
 """
 
 		case _:

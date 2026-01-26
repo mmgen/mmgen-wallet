@@ -130,7 +130,7 @@ if cfg.list_assets:
 	Msg('AVAILABLE SWAP ASSETS:\n' + sp.SwapAsset('BTC', 'send').fmt_assets_data(indent='  '))
 	sys.exit(0)
 
-if not (cfg.info or cfg.contract_data):
+if not (cfg.info or cfg.contract_data or cfg.coin == 'XMR'):
 	if len(cfg._args) < {'tx': 1, 'swaptx': 2}[target]:
 		cfg._usage()
 

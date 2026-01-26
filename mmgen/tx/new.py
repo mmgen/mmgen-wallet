@@ -79,6 +79,7 @@ def parse_fee_spec(proto, fee_arg):
 class New(Base):
 
 	fee_is_approximate = False
+	is_sweep = False
 	msg_wallet_low_coin = 'Wallet has insufficient funds for this transaction ({} {} needed)'
 	msg_no_change_output = """
 		ERROR: No change address specified.  If you wish to create a transaction with
@@ -455,7 +456,7 @@ class New(Base):
 		if self.cfg.comment_file:
 			self.add_comment(infile=self.cfg.comment_file)
 
-		if not do_info:
+		if cmd_args and not do_info:
 			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(cmd_args)
 			if self.is_swap:
 				cmd_args = await self.process_swap_cmdline_args(cmd_args, addrfile_args)
@@ -475,7 +476,8 @@ class New(Base):
 				self.cfg,
 				self.proto,
 				minconf = self.cfg.minconf,
-				addrs = await self.get_input_addrs_from_inputs_opt())
+				addrs = await self.get_input_addrs_from_inputs_opt(),
+				tx = self if self.is_sweep else None)
 			await self.twuo.get_data()
 			self.twctl = self.twuo.twctl
 
@@ -484,6 +486,11 @@ class New(Base):
 
 		if not (self.is_bump or self.cfg.inputs):
 			await self.twuo.view_filter_and_sort()
+
+		if self.is_sweep:
+			del self.twctl
+			del self.twuo.twctl
+			return await self.compat_create()
 
 		if not self.is_bump:
 			self.twuo.display_total()

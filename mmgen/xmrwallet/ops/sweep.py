@@ -169,10 +169,9 @@ class OpSweep(OpMixinSpec, OpWallet):
 			die(2, f'{self.account}: requested account index out of bounds (>{max_acct})')
 
 	async def main(self):
-		if not self.compat_call:
-			gmsg(
-				f'\n{self.stem.capitalize()}ing account #{self.account}'
-				f' of wallet {self.source.idx}{self.add_desc}')
+		gmsg(
+			f'\n{self.stem.capitalize()}ing account #{self.account}'
+			f' of wallet {self.source.idx}{self.add_desc}')
 
 		h = MoneroWalletRPC(self, self.source)
 

@@ -23,7 +23,7 @@ class help_notes:
 			case 'Bitcoin':
 				return '[ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...]'
 			case 'Monero':
-				return 'ADDR,AMT'
+				return '[ADDR,AMT]'
 			case _:
 				return 'ADDR,AMT [addr file ...]'
 

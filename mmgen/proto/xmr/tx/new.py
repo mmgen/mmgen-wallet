@@ -18,6 +18,11 @@ from .base import Base
 
 class New(Base, TxNew):
 
+	async def create(self, cmd_args, **kwargs):
+		self.is_sweep = not cmd_args
+		self.sweep_spec = None
+		return await super().create(cmd_args, **kwargs)
+
 	async def get_input_addrs_from_inputs_opt(self):
 		return [] # TODO
 
@@ -42,7 +47,20 @@ class New(Base, TxNew):
 
 	async def compat_create(self):
 
-		if True:
+		if self.is_sweep:
+			if not self.sweep_spec:
+				from ....util import ymsg
+				ymsg('No transaction operation specified. Exiting')
+				return None
+			from ....ui import item_chooser
+			from ....color import pink
+			op = item_chooser(
+				self.cfg,
+				'Choose the sweep operation type',
+				('sweep', 'sweep_all'),
+				lambda s: pink(s.upper())).item
+			spec = self.sweep_spec
+		else:
 			op = 'transfer'
 			i = self.inputs[0]
 			o = self.outputs[0]

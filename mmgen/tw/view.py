@@ -639,7 +639,9 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				case ch if ch in key_mappings:
 					func = action_classes[ch].run
 					arg = action_methods[ch]
-					await func(self, arg) if isAsync(func) else func(self, arg)
+					ret = await func(self, arg) if isAsync(func) else func(self, arg)
+					if ret == 'quit_view':
+						return cleanup()
 				case 'q':
 					return cleanup(add_nl=True)
 				case _:
@@ -696,6 +698,8 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			await do_error_msg()
 
 	async def post_action_cleanup(self, ret):
+		if ret == 'quit_view':
+			return ret
 		if self.scroll and (ret is False or ret in ('redraw', 'erase')):
 			# error messages could leave screen in messy state, so do complete redraw:
 			msg_r(
