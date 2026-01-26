@@ -117,18 +117,24 @@ def keypress_confirm(
 			case _:
 				msg_r('\nInvalid reply\n' if verbose else '\r')
 
-def item_chooser(cfg, hdr, items, item_formatter, indent='  '):
+def item_chooser(cfg, hdr, items, item_formatter, indent='', empty_ok=False, add_nl=False):
 	from collections import namedtuple
 	col1_w = len(str(len(items)))
 	prompt = '{i}{a}:\n{i}{b}\n{i}{c}'.format(
 		a = hdr,
 		b = ('\n' + indent).join(f'  {n:{col1_w}}) {item_formatter(d)}' for n, d in enumerate(items, 1)),
-		c = 'Enter a number> ',
+		c = 'Enter a number, or ENTER to return to main menu> ' if empty_ok else 'Enter a number> ',
 		i = indent)
 	while True:
 		res = line_input(cfg, prompt)
+		if not res and empty_ok:
+			if add_nl:
+				msg('')
+			return None
 		if is_int(res) and 0 < int(res) <= len(items):
 			num = int(res)
+			if add_nl:
+				msg('')
 			return namedtuple('user_choice', 'num idx item')(num, num - 1, items[num - 1])
 		msg(f'{indent}{res}: invalid entry\n')
 

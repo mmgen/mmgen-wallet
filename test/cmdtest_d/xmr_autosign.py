@@ -721,7 +721,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 				t.expect('main menu): ', str(lbl_addr_idx))
 			elif newacct_wallet_num:
 				t.expect(menu_prompt, 'N')
-				t.expect('number> ', f'{newacct_wallet_num}\n')
+				t.expect('number, or ENTER to return to main menu> ', f'{newacct_wallet_num}\n')
 			elif newaddr_acct_num:
 				t.expect(menu_prompt, 'n')
 				t.expect('main menu): ', str(newaddr_acct_num))

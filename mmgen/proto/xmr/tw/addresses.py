@@ -17,13 +17,9 @@ from ....tw.addresses import TwAddresses
 from .view import MoneroTwView
 
 async def add_new_address(parent, spec, ok_msg):
-	from ....ui import line_input, keypress_confirm
 	from ....color import green, yellow
 	from ....xmrwallet import op as xmrwallet_op
-	lbl = line_input(
-		parent.cfg,
-		'Enter label text for new address (or ENTER for default label): ')
-	add_timestr = keypress_confirm(parent.cfg, 'Add timestamp to label?')
+	lbl, add_timestr = parent.get_label_from_user()
 	op = xmrwallet_op(
 		'new',
 		parent.cfg,
@@ -70,25 +66,13 @@ class MoneroTwAddresses(MoneroTwView, TwAddresses):
 	class action(MoneroTwView.action):
 
 		async def a_acct_new(self, parent):
-			from ....obj import Int
-			from ....util import suf
-			from ....addr import MMGenID
-			from ....ui import item_chooser
-			def wallet_id(wnum):
-				return MMGenID(proto=parent.proto, id_str='{}:M:{}'.format(parent.sid, wnum))
-			res = item_chooser(
-				parent.cfg,
-				'Choose a wallet to add a new account to',
-				[(d['wallet_num'], len(d['data'].accts_data['subaddress_accounts']))
-					for d in parent.dump_data],
-				lambda d: '{a} [{b} account{c}]'.format(
-					a = wallet_id(d[0]).hl(),
-					b = Int(d[1]).hl(),
-					c = suf(d[1])))
-			return await add_new_address(
-				parent,
-				str(res.item[0]),
-				f'New account added to wallet {wallet_id(res.item[0]).hl()}')
+			if res := parent.choose_wallet('Choose a wallet to add a new account to'):
+				return await add_new_address(
+					parent,
+					str(res.item[0]),
+					f'New account added to wallet {parent.make_wallet_id(res.item[0]).hl()}')
+			else:
+				return 'erase'
 
 	class item_action(TwAddresses.item_action):
 		acct_methods = ('i_addr_new')

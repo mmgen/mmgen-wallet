@@ -219,6 +219,34 @@ class MoneroTwView:
 				self.accts_data[res.idx - 1].data,
 				is_addr_idx = True)
 
+	def get_label_from_user(self):
+		from ....ui import line_input, keypress_confirm
+		lbl = line_input(
+			self.cfg,
+			'Enter label text for new address (or ENTER for default label): ')
+		add_timestr = keypress_confirm(self.cfg, 'Add timestamp to label?')
+		return lbl, add_timestr
+
+	def make_wallet_id(self, wnum):
+		from ....addr import MMGenID
+		return MMGenID(proto=self.proto, id_str='{}:M:{}'.format(self.sid, wnum))
+
+	def choose_wallet(self, prompt):
+		from ....obj import Int
+		from ....util import msg, suf
+		from ....ui import item_chooser
+		msg('\n')
+		return item_chooser(
+			self.cfg,
+			prompt,
+			[(d['wallet_num'], len(d['data'].accts_data['subaddress_accounts']))
+				for d in self.dump_data],
+			lambda d: '{a} [{b} account{c}]'.format(
+				a = self.make_wallet_id(d[0]).hl(),
+				b = Int(d[1]).hl(),
+				c = suf(d[1])),
+			empty_ok = True)
+
 	class action(TwView.action):
 
 		async def a_sync_wallets(self, parent):
