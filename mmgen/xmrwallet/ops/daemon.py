@@ -9,7 +9,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-xmrwallet.ops.relay: Monero wallet ops for the MMGen Suite
+xmrwallet.ops.daemon: Monero wallet ops for the MMGen Suite
 """
 
 import time
@@ -23,7 +23,7 @@ from ..file.tx import MoneroMMGenTX
 
 from . import OpBase
 
-class OpRelay(OpBase):
+class OpDaemon(OpBase):
 	opts = ('tx_relay_daemon',)
 
 	def __init__(self, cfg, uarg_tuple):
@@ -31,8 +31,6 @@ class OpRelay(OpBase):
 		super().__init__(cfg, uarg_tuple)
 
 		self.mount_removable_device()
-
-		self.tx = MoneroMMGenTX.Signed(self.cfg, Path(self.uargs.infile))
 
 		if self.cfg.tx_relay_daemon:
 			m = self.parse_tx_relay_opt()
@@ -42,7 +40,9 @@ class OpRelay(OpBase):
 		else:
 			from ...daemon import CoinDaemon
 			md = CoinDaemon(self.cfg, network_id='xmr', test_suite=self.cfg.test_suite)
-			host, port = ('localhost', md.rpc_port)
+			host, port = (
+				self.cfg.daemon.split(':') if self.cfg.daemon else
+				('localhost', md.rpc_port))
 			proxy = None
 
 		self.dc = MoneroRPCClient(
@@ -55,6 +55,12 @@ class OpRelay(OpBase):
 			passwd = None,
 			test_connection = host == 'localhost', # avoid extra connections if relay is a public node
 			proxy  = proxy)
+
+class OpRelay(OpDaemon):
+
+	def __init__(self, cfg, uarg_tuple):
+		super().__init__(cfg, uarg_tuple)
+		self.tx = MoneroMMGenTX.Signed(self.cfg, Path(self.uargs.infile))
 
 	async def main(self):
 		msg('\n' + self.tx.get_info(indent='    '))
