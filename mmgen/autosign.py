@@ -19,7 +19,7 @@ from subprocess import run, PIPE, DEVNULL
 
 from .cfg import Config
 from .util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list, is_int, have_sudo, capfirst
-from .color import yellow, red, orange, brown, blue
+from .color import yellow, red, orange, brown, blue, gray
 from .wallet import Wallet, get_wallet_cls
 from .addrlist import AddrIdxList
 from .filename import find_file_in_dir
@@ -641,7 +641,7 @@ class Autosign:
 			redir = None if verbose else DEVNULL
 			if run(self.mount_cmd.split(), stderr=redir, stdout=redir).returncode == 0:
 				if not silent:
-					msg(f'Mounting ‘{self.mountpoint}’')
+					msg(gray(f'Mounting ‘{self.mountpoint}’'))
 			else:
 				die(1, f'Unable to mount device ‘{self.dev_label}’ at ‘{self.mountpoint}’')
 
@@ -652,7 +652,7 @@ class Autosign:
 		if self.mountpoint.is_mount():
 			run(['sync'], check=True)
 			if not silent:
-				msg(f'Unmounting ‘{self.mountpoint}’')
+				msg(gray(f'Unmounting ‘{self.mountpoint}’'))
 			redir = None if verbose else DEVNULL
 			run(self.umount_cmd.split(), stdout=redir, check=True)
 		if not silent:

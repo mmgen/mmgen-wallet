@@ -67,8 +67,7 @@ class MoneroRPCClient(RPCClient):
 				self.daemon_version_str = ver_str
 				self.daemon_version = sum(
 					int(m) * (1000 ** n) for n, m in
-						enumerate(reversed(re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)', ver_str).groups()))
-				)
+						enumerate(reversed(re.match(r'(\d+)\.(\d+)\.(\d+)\.(\d+)', ver_str).groups())))
 				if self.daemon and self.daemon_version > self.daemon.coind_version:
 					self.handle_unsupported_daemon_version(
 						proto.name,
@@ -82,8 +81,7 @@ class MoneroRPCClient(RPCClient):
 		return self.process_http_resp(self.backend.run_noasync(
 			payload = {'id': 0, 'jsonrpc': '2.0', 'method': method, 'params': kwargs},
 			timeout = 3600, # allow enough time to sync ≈1,000,000 blocks
-			host_path = '/json_rpc'
-		))
+			host_path = '/json_rpc'))
 
 	def call_raw(self, method, *params, **kwargs):
 		assert not params, f'{self.name}.call() accepts keyword arguments only'
@@ -91,7 +89,7 @@ class MoneroRPCClient(RPCClient):
 			payload = kwargs,
 			timeout = self.timeout,
 			host_path = f'/{method}'
-		), json_rpc=False)
+		), json_rpc = False)
 
 	async def do_stop_daemon(self, *, silent=False):
 		return self.call_raw('stop_daemon') # unreliable on macOS (daemon stops, but closes connection)

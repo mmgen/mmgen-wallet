@@ -124,6 +124,7 @@ def op(op, cfg, infile, wallets, *, spec=None, compat_call=False):
 		cfg = Config({
 			'_clone': cfg,
 			'compat': True,
+			'full_address': cfg.full_address or compat_call,
 			'xmrwallet_compat': True} | ({} if cfg.offline else {
 				'no_start_wallet_daemon': cfg.no_start_wallet_daemon or compat_call,
 				'daemon': cfg.daemon or cfg.monero_daemon,

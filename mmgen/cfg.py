@@ -217,8 +217,7 @@ class Config(Lockable):
 	columns         = 0
 	color = bool(
 		(sys.stdout.isatty() and not os.getenv('MMGEN_TEST_SUITE_PEXPECT')) or
-		os.getenv('MMGEN_TEST_SUITE_ENABLE_COLOR')
-	)
+		os.getenv('MMGEN_TEST_SUITE_ENABLE_COLOR'))
 
 	# miscellaneous features:
 	use_internal_keccak_module     = False
@@ -280,9 +279,7 @@ class Config(Lockable):
 	_use_cfg_file           = False
 	_use_env                = False
 
-	_forbidden_opts = (
-		'data_dir_root',
-	)
+	_forbidden_opts = ('data_dir_root',)
 
 	_incompatible_opts = (
 		('help', 'longhelp'),
@@ -290,8 +287,7 @@ class Config(Lockable):
 		('label', 'keep_label'),
 		('tx_id', 'info'),
 		('tx_id', 'terse_info'),
-		('autosign', 'outdir'),
-	)
+		('autosign', 'outdir'))
 
 	# proto-specific only: eth_mainnet_chain_names eth_testnet_chain_names
 	# coin-specific only:  bch_cashaddr (alias of cashaddr)
@@ -376,8 +372,7 @@ class Config(Lockable):
 		'MMGEN_IGNORE_DAEMON_VERSION',
 		'MMGEN_USE_STANDALONE_SCRYPT_MODULE',
 		'MMGEN_ENABLE_ERIGON',
-		'MMGEN_DISABLE_COLOR',
-	)
+		'MMGEN_DISABLE_COLOR')
 
 	_infile_opts = (
 		'keys_from_file',
@@ -385,8 +380,7 @@ class Config(Lockable):
 		'passwd_file',
 		'keysforaddrs',
 		'comment_file',
-		'contract_data',
-	)
+		'contract_data')
 
 	# Auto-typechecked and auto-set opts - first value in list is the default
 	_ov = namedtuple('autoset_opt_info', ['type', 'choices'])
