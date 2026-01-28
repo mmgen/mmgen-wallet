@@ -18,9 +18,30 @@ class OnlineSigned(Completed):
 
 	async def compat_send(self):
 		from ....xmrwallet import op as xmrwallet_op
-		op = xmrwallet_op('submit', self.cfg, self.filename, None, compat_call=True)
-		await op.restart_wallet_daemon()
-		return await op.main()
+		op_name = 'daemon' if self.cfg.status else 'submit'
+		op = xmrwallet_op(op_name, self.cfg, self.filename, None, compat_call=True)
+		if self.cfg.status:
+			from ....util import msg, ymsg, suf
+			txid = self.compat_tx.data.txid
+			if self.cfg.verbose:
+				msg(self.compat_tx.get_info())
+			elif not self.cfg.quiet:
+				from ....obj import CoinTxID
+				msg('TxID: {}'.format(CoinTxID(txid).hl()))
+			res = op.dc.call_raw('get_transactions', txs_hashes=[txid])
+			if res['status'] == 'OK':
+				tx = res['txs'][0]
+				if tx['in_pool']:
+					msg('Transaction is in mempool')
+				else:
+					confs = tx['confirmations']
+					msg('Transaction has {} confirmation{}'.format(confs, suf(confs)))
+			else:
+				ymsg('An RPC error occurred while fetching transaction data')
+				return False
+		else:
+			await op.restart_wallet_daemon()
+			return await op.main()
 
 class Sent(OnlineSigned):
 	pass

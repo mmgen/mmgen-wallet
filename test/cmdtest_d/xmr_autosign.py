@@ -548,7 +548,10 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('alice_txcreate3',          'recreating the transaction'),
 		('wait_loop_start_ltc',      'starting autosign wait loop in XMR compat mode [--coins=ltc,xmr]'),
 		('alice_txsend1',            'sending the transaction'),
+		('alice_txstatus1',          'getting the transaction status (in mempool)'),
 		('mine_blocks_10',           'mining some blocks'),
+		('alice_txstatus2',          'getting the transaction status (confirmations)'),
+		('alice_txstatus3',          'getting the transaction status (verbose)'),
 		('alice_twview_chk2',        'viewing Alice’s tracking wallets (check balances)'),
 		('alice_txcreate_sweep1',    'creating a sweep transaction (account sweep)'),
 		('alice_txsend2',            'sending the transaction'),
@@ -797,6 +800,22 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 
 	alice_txsend1 = alice_txsend2 = alice_txsend3 = _alice_txsend
 
+	def alice_txstatus1(self):
+		return self._alice_txstatus(expect_str='TxID: .* in mempool')
+
+	def alice_txstatus2(self):
+		return self._alice_txstatus(['--quiet'], expect_str='confirmations')
+
+	def alice_txstatus3(self):
+		return self._alice_txstatus(['--verbose'], expect_str='Info for transaction .* confirmations')
+
+	def _alice_txstatus(self, add_opts=[], expect_str=None):
+		return self._alice_txops(
+			'txsend',
+			opts     = ['--alice', '--status'],
+			add_opts = self.alice_daemon_opts + add_opts,
+			expect_str = expect_str)
+
 	def wait_signed1(self):
 		self.spawn(msg_only=True)
 		oqmsg('')
@@ -815,7 +834,8 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			wait_signed = False,
 			sweep_type = None,
 			sweep_menu = '',
-			signable_desc = 'transaction'):
+			signable_desc = 'transaction',
+			expect_str = None):
 		if wait_signed:
 			self._wait_signed(signable_desc)
 		self.insert_device_online()
@@ -834,8 +854,10 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 					t.expect(self.menu_prompt, ch)
 				t.expect('to spend from: ', f'{acct_num}\n')
 			t.expect('(y/N): ', 'y') # save?
-		elif op == 'txsend':
+		elif op == 'txsend' and not '--status' in opts:
 			t.expect('(y/N): ', 'y') # view?
+		if expect_str:
+			t.expect(expect_str, regex=True)
 		t.read() # required!
 		self.remove_device_online()
 		return t
