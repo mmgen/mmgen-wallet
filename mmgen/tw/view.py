@@ -175,11 +175,11 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			'f': 'm_pg_down',
 			'g': 'm_top',
 			'G': 'm_bot'},
-		'linux': {
-			'\x1b[A': 'm_cursor_up',
-			'\x1b[B': 'm_cursor_down',
-			'\x1b[5~': 'm_pg_up',
-			'\x1b[6~': 'm_pg_down',
+		'linux': {                      # Terminfo codes:
+			'\x1b[A': 'm_cursor_up',    # cuu
+			'\x1b[B': 'm_cursor_down',  # cud
+			'\x1b[5~': 'm_pg_up',       # kpp
+			'\x1b[6~': 'm_pg_down',     # knp
 			'\x1b[7~': 'm_top',
 			'\x1b[8~': 'm_bot'},
 		'win32': {
@@ -584,8 +584,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			if scroll:
 				for k in self.scroll_keys['vi']:
 					assert k not in self.key_mappings, f'{k!r} is in key_mappings'
-				self.key_mappings.update(self.scroll_keys['vi'])
-				self.key_mappings.update(self.scroll_keys[sys.platform])
+				self.key_mappings.update(self.scroll_keys['vi'] | self.scroll_keys[sys.platform])
 			return self.key_mappings
 
 		def cleanup(add_nl=False):
@@ -773,12 +772,12 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 
 			while True:
 				# action_method return values:
-				#  True:   action successfully performed
-				#  False:  an error occurred
-				#  None:   action aborted by user or no action performed
-				#  'redo': user will be re-prompted for item number
+				#   True:    action successfully performed
+				#   False:   an error occurred
+				#   None:    action aborted by user or no action performed
+				#  'redo':   user will be re-prompted for item number
 				#  'redraw': action successfully performed, screen will be redrawn
-				#  'erase': action successfully performed, screen will be erased
+				#  'erase':  action successfully performed, screen will be erased
 				if usr_ret := await parent.get_idx_from_user(action_method.__name__):
 					ret = await action_method(parent, usr_ret.idx, usr_ret.acct_addr_idx)
 				else:

@@ -27,7 +27,7 @@ class OnlineSigned(Completed):
 				msg(self.compat_tx.get_info())
 			elif not self.cfg.quiet:
 				from ....obj import CoinTxID
-				msg('TxID: {}'.format(CoinTxID(txid).hl()))
+				msg('{} TxID: {}'.format(self.cfg.coin, CoinTxID(txid).hl()))
 			res = op.dc.call_raw('get_transactions', txs_hashes=[txid])
 			if res['status'] == 'OK':
 				tx = res['txs'][0]

@@ -85,7 +85,7 @@ class OnlineSigned(Signed):
 			if coin_txid := getattr(self, f'coin_txid{idx}', None):
 				txhex = getattr(self, f'serialized{idx}')
 				if cfg.status:
-					cfg._util.qmsg(f'{self.proto.coin} txid: {coin_txid.hl()}')
+					cfg._util.qmsg(f'{self.proto.coin} TxID: {coin_txid.hl()}')
 					if cfg.verbose:
 						await self.post_network_send(coin_txid)
 					status_exitval = await self.status.display(idx=idx)
