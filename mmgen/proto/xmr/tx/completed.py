@@ -36,3 +36,7 @@ class Completed(Base):
 	@cached_property
 	def timestamp(self):
 		return make_timestamp(self.compat_tx.data.create_time)
+
+	@cached_property
+	def sent_timestamp(self):
+		return make_timestamp(self.compat_tx.data.submit_time)

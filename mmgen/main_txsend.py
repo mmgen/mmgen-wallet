@@ -32,7 +32,10 @@ opts_data = {
 	],
 	'text': {
 		'desc':    f'Send a signed {gc.proj_name} cryptocoin transaction',
-		'usage':   '[opts] [signed transaction file]',
+		'usage2': [
+			'[opts] <signed transaction file>',
+			'[opts] --autosign',
+		],
 		'options': """
 -h, --help       Print this help message
 --, --longhelp   Print help message for long (global) options
@@ -88,27 +91,33 @@ if cfg.dump_hex and cfg.dump_hex != '-':
 	from .fileutil import check_outfile_dir
 	check_outfile_dir(cfg.dump_hex)
 
+post_send_op = cfg.status or cfg.receipt
+
 asi = None
 
+def init_autosign():
+	global asi, si, infile
+	from .tx.util import mount_removable_device
+	from .autosign import Signable
+	asi = mount_removable_device(cfg)
+	si = Signable.automount_transaction(asi)
+	if cfg.abort:
+		si.shred_abortable() # prompts user, then raises exception or exits
+	elif post_send_op:
+		if si.unsent:
+			die(1, 'Transaction is unsent')
+		if si.unsigned:
+			die(1, 'Transaction is unsigned')
+	else:
+		infile = si.get_unsent()
+		cfg._util.qmsg(f'Got signed transaction file ‘{infile}’')
+
 match cfg._args:
+	case [] if cfg.autosign:
+		init_autosign()
 	case [infile]:
 		from .fileutil import check_infile
 		check_infile(infile)
-	case [] if cfg.autosign:
-		from .tx.util import mount_removable_device
-		from .autosign import Signable
-		asi = mount_removable_device(cfg)
-		si = Signable.automount_transaction(asi)
-		if cfg.abort:
-			si.shred_abortable() # prompts user, then raises exception or exits
-		elif cfg.status or cfg.receipt:
-			if si.unsent:
-				die(1, 'Transaction is unsent')
-			if si.unsigned:
-				die(1, 'Transaction is unsigned')
-		else:
-			infile = si.get_unsent()
-			cfg._util.qmsg(f'Got signed transaction file ‘{infile}’')
 	case _:
 		cfg._usage()
 
@@ -122,8 +131,8 @@ async def main():
 
 	global cfg
 
-	if (cfg.status or cfg.receipt) and cfg.autosign:
-		tx = await si.get_last_created()
+	if cfg.autosign and post_send_op:
+		tx = await si.get_last_sent()
 	else:
 		tx = await OnlineSignedTX(
 			cfg        = cfg,
@@ -149,7 +158,7 @@ async def main():
 		await tx.post_send(asi)
 		sys.exit(0)
 
-	if not (cfg.status or cfg.receipt):
+	if not post_send_op:
 		if tx.is_swap and not tx.check_swap_expiry():
 			die(1, 'Swap quote has expired. Please re-create the transaction')
 
