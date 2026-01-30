@@ -334,19 +334,22 @@ class Signable:
 				shred_file(self.cfg, fn, iterations=15)
 			sys.exit(0)
 
-		async def get_last_sent(self):
+		async def get_last_sent(self, *, idx=0):
 			return await self.get_last_created(
 				# compat fallback - ‘sent_timestamp’ attr is missing in some old TX files:
-				sort_key = lambda x: x.sent_timestamp or x.timestamp)
+				sort_key = lambda x: x.sent_timestamp or x.timestamp,
+				idx = idx)
 
-		async def get_last_created(self, *, sort_key=lambda x: x.timestamp):
+		async def get_last_created(self, *, sort_key=lambda x: x.timestamp, idx=0):
 			from .tx import CompletedTX
 			fns = [f for f in self.dir.iterdir() if f.name.endswith(self.subext)]
 			files = sorted(
 				[await CompletedTX(cfg=self.cfg, filename=str(txfile), quiet_open=True)
 					for txfile in fns],
 				key = sort_key)
-			return files[-1]
+			if not (0 <= idx < len(files)):
+				die(2, f'{idx}: invalid transaction index (must be less than {len(files)})')
+			return files[-1 - idx]
 
 	class xmr_signable: # mixin class
 		automount = True

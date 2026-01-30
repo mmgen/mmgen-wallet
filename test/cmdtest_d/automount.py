@@ -82,6 +82,9 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('alice_txbump5',                    'bumping the transaction (new outputs)'),
 		('alice_txsend5',                    'sending the bumped transaction'),
 		('alice_txstatus5',                  'getting transaction status (in mempool)'),
+		('alice_txstatus6',                  'getting transaction status (idx=0, in mempool)'),
+		('alice_txstatus7',                  'getting transaction status (idx=1, replaced)'),
+		('alice_txstatus8',                  'getting transaction status (idx=3, 2 confirmations)'),
 		('generate',                         'mining a block'),
 		('alice_bal2',                       'checking Alice’s balance'),
 		('wait_loop_kill',                   'stopping autosign wait loop'),
@@ -221,7 +224,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	def alice_txsend5(self):
 		return self._user_txsend('alice', need_rbf=True)
 
-	def _alice_txstatus(self, expect, exit_val=None, need_rbf=False):
+	def _alice_txstatus(self, expect, exit_val=None, need_rbf=False, idx=None):
 
 		if need_rbf and not self.proto.cap('rbf'):
 			return 'skip'
@@ -229,7 +232,8 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		self.insert_device_online()
 		t = self.spawn(
 				'mmgen-txsend',
-				['--alice', '--autosign', '--status', '--verbose'],
+				['--alice', '--autosign', '--status', '--verbose']
+				+ ([] if idx is None else [str(idx)]),
 				no_passthru_opts = ['coin'],
 				exit_val = exit_val)
 		t.expect(expect)
@@ -254,6 +258,15 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 
 	def alice_txstatus5(self):
 		return self._alice_txstatus('in mempool', need_rbf=True)
+
+	def alice_txstatus6(self):
+		return self._alice_txstatus('in mempool', need_rbf=True, idx=0)
+
+	def alice_txstatus7(self):
+		return self._alice_txstatus('replaced', need_rbf=True, idx=1)
+
+	def alice_txstatus8(self):
+		return self._alice_txstatus('2 confirmations', need_rbf=True, idx=3)
 
 	def alice_txsend_bad_no_unsent(self):
 		self.insert_device_online()

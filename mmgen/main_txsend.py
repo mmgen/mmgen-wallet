@@ -23,7 +23,7 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 import sys
 
 from .cfg import gc, Config
-from .util import async_run, die
+from .util import async_run, die, is_int
 
 opts_data = {
 	'sets': [
@@ -35,6 +35,7 @@ opts_data = {
 		'usage2': [
 			'[opts] <signed transaction file>',
 			'[opts] --autosign',
+			'[opts] --autosign (--status | --receipt) [IDX]',
 		],
 		'options': """
 -h, --help       Print this help message
@@ -68,6 +69,12 @@ opts_data = {
                  Use special value ‘env’ to honor *_PROXY environment vars
                  instead.
 -y, --yes        Answer 'yes' to prompts, suppress non-essential output
+""",
+		'notes': """
+With --autosign, combined with --status or --receipt, the optional IDX arg
+represents an index into the list of sent transaction files on the removable
+device, in reverse chronological order.  ‘0’ (the default) specifies the
+last sent transaction, ‘1’ the next-to-last, and so on.
 """
 	},
 	'code': {
@@ -95,8 +102,8 @@ post_send_op = cfg.status or cfg.receipt
 
 asi = None
 
-def init_autosign():
-	global asi, si, infile
+def init_autosign(arg):
+	global asi, si, infile, tx_idx
 	from .tx.util import mount_removable_device
 	from .autosign import Signable
 	asi = mount_removable_device(cfg)
@@ -108,13 +115,18 @@ def init_autosign():
 			die(1, 'Transaction is unsent')
 		if si.unsigned:
 			die(1, 'Transaction is unsigned')
+		if not is_int(arg):
+			die(2, f'{arg}: invalid transaction index (must be a non-negative integer)')
+		tx_idx = int(arg)
 	else:
 		infile = si.get_unsent()
 		cfg._util.qmsg(f'Got signed transaction file ‘{infile}’')
 
 match cfg._args:
+	case [arg] if cfg.autosign and post_send_op:
+		init_autosign(arg)
 	case [] if cfg.autosign:
-		init_autosign()
+		init_autosign(0)
 	case [infile]:
 		from .fileutil import check_infile
 		check_infile(infile)
@@ -132,7 +144,7 @@ async def main():
 	global cfg
 
 	if cfg.autosign and post_send_op:
-		tx = await si.get_last_sent()
+		tx = await si.get_last_sent(idx=tx_idx)
 	else:
 		tx = await OnlineSignedTX(
 			cfg        = cfg,
