@@ -180,6 +180,8 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			'\x1b[B': 'm_cursor_down',  # cud
 			'\x1b[5~': 'm_pg_up',       # kpp
 			'\x1b[6~': 'm_pg_down',     # knp
+			'\x1b[1~': 'm_top',         # khome
+			'\x1b[4~': 'm_bot',         # kend
 			'\x1b[7~': 'm_top',
 			'\x1b[8~': 'm_bot'},
 		'win32': {
