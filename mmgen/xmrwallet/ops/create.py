@@ -77,10 +77,16 @@ class OpCreateOffline(OpCreate):
 		vkf = vkal.file
 
 		# before writing viewkey-address file, shred any old ones in the directory:
+		do_write = True
 		for f in Path(self.asi.xmr_dir).iterdir():
-			if f.name.endswith(vkf.ext):
+			if f.name == vkf.filename:
+				do_write = False
+			elif f.name.endswith(vkf.ext):
 				from ...fileutil import shred_file
-				msg(f'\nShredding old viewkey-address file ‘{f}’')
+				msg(f'Shredding old viewkey-address file ‘{f}’')
 				shred_file(self.cfg, f, iterations=15)
 
-		vkf.write(outdir=self.asi.xmr_dir)
+		if do_write:
+			vkf.write(outdir=self.asi.xmr_dir)
+		else:
+			msg(f'Viewkey-address file ‘{vkf.filename}’ already exists, skipping creation')

@@ -256,7 +256,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			use_dfl_wallet = None,
 			expect_args    = ['Continue with Monero setup? (Y/n): ', 'n'])
 
-	def autosign_xmr_setup(self):
+	def autosign_xmr_setup_redo(self):
+		return self.autosign_xmr_setup(write_viewkeys=False)
+
+	def autosign_xmr_setup(self, write_viewkeys=True):
 		self.insert_device_online()
 		self.do_mount_online()
 		self.asi_online.xmr_dir.mkdir(exist_ok=True)
@@ -266,7 +269,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 		self.insert_device()
 		t = self.spawn('mmgen-autosign', self.opts + ['xmr_setup'], no_passthru_opts=True)
-		t.written_to_file('View keys')
+		if write_viewkeys:
+			t.written_to_file('View keys')
+		else:
+			t.expect('already exists, skipping')
 		t.read()
 		self.remove_device()
 		return t
@@ -514,6 +520,9 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	cmd_group = (
 		('autosign_setup',           'autosign setup with Alice’s seed'),
 		('autosign_xmr_setup',       'autosign setup (creation of Monero signing wallets)'),
+		('delete_setup',             'deleting offline autosign setup'),
+		('autosign_setup',           'autosign setup with Alice’s seed'),
+		('autosign_xmr_setup_redo',  'autosign setup (creation of Monero signing wallets, redo)'),
 		('create_watchonly_wallets', 'creating Alice’s watch-only wallets'),
 		('gen_kafile_miner',         'generating key-address file for Miner'),
 		('create_wallet_miner',      'creating Monero wallet for Miner'),
