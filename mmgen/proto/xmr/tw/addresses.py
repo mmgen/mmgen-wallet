@@ -48,7 +48,8 @@ class MoneroTwAddresses(MoneroTwView, TwAddresses):
 		'N': 'a_acct_new',
 		'n': 'i_addr_new',
 		'u': 'd_showused',
-		'R': 'a_sync_wallets'}
+		'R': 'a_sync_wallets',
+		'\x12': 'a_sync_wallets'}
 	removed_key_mappings = {
 		'D': 'i_addr_delete'}
 

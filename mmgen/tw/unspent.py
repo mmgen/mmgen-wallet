@@ -66,7 +66,8 @@ class TwUnspentOutputs(TwView):
 		'l':'i_comment_add'}
 	extra_key_mappings = {
 		'D':'i_addr_delete',
-		'R':'i_balance_refresh'}
+		'R':'i_balance_refresh',
+		'\x12':'i_balance_refresh'}
 	disp_spc = 3
 	vout_w = 0
 

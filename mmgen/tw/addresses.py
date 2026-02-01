@@ -55,7 +55,8 @@ class TwAddresses(TwView):
 		'w':'a_view_detail',
 		'p':'a_print_detail'}
 	extra_key_mappings = {
-		'R':'i_balance_refresh'}
+		'R':'i_balance_refresh',
+		'\x12':'i_balance_refresh'}
 
 	class display_type(TwView.display_type):
 

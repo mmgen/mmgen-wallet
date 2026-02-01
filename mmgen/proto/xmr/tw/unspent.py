@@ -29,6 +29,7 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 			'Actions: [q]uit menu, add [l]abel, r[e]draw, [R]efresh balances:']
 		self.extra_key_mappings = {
 			'R': 'a_sync_wallets',
+			'\x12': 'a_sync_wallets',
 			'A': 's_age'}
 		if tx and tx.is_sweep:
 			self.prompt_fs_in[-1] = 'Actions: [q]uit, add [l]abel, r[e]draw, [R]efresh balances:'
