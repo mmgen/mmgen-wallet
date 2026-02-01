@@ -23,7 +23,7 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 import sys
 
 from .cfg import gc, Config
-from .util import async_run, die, is_int
+from .util import msg, async_run, die
 
 opts_data = {
 	'sets': [
@@ -35,7 +35,7 @@ opts_data = {
 		'usage2': [
 			'[opts] <signed transaction file>',
 			'[opts] --autosign',
-			'[opts] --autosign (--status | --receipt) [IDX]',
+			'[opts] --autosign (--status | --receipt) [index or range]',
 		],
 		'options': """
 -h, --help       Print this help message
@@ -71,10 +71,13 @@ opts_data = {
 -y, --yes        Answer 'yes' to prompts, suppress non-essential output
 """,
 		'notes': """
-With --autosign, combined with --status or --receipt, the optional IDX arg
-represents an index into the list of sent transaction files on the removable
-device, in reverse chronological order.  ‘0’ (the default) specifies the
-last sent transaction, ‘1’ the next-to-last, and so on.
+With --autosign, combined with --status or --receipt, the optional index or
+range arg represents an index or range into the list of sent transaction files
+on the removable device, in reverse chronological order.  ‘0’ (the default)
+specifies the last sent transaction, ‘1’ the next-to-last, and so on.  Hyphen-
+separated ranges are also supported.  For example, specifying a range ‘0-3’
+would output data for the last four sent transactions, beginning with the most
+recent.
 """
 	},
 	'code': {
@@ -99,12 +102,12 @@ if cfg.dump_hex and cfg.dump_hex != '-':
 	check_outfile_dir(cfg.dump_hex)
 
 post_send_op = cfg.status or cfg.receipt
-
-asi = None
+asi, tx_range = (None, None)
 
 def init_autosign(arg):
-	global asi, si, infile, tx_idx
+	global asi, si, infile, tx_range
 	from .tx.util import mount_removable_device
+	from .tx.online import SentTXRange
 	from .autosign import Signable
 	asi = mount_removable_device(cfg)
 	si = Signable.automount_transaction(asi)
@@ -113,9 +116,11 @@ def init_autosign(arg):
 	elif post_send_op and (si.unsent or si.unsigned):
 		die(1, 'Transaction is {}'.format('unsent' if si.unsent else 'unsigned'))
 	elif post_send_op:
-		if not is_int(arg):
-			die(2, f'{arg}: invalid transaction index (must be a non-negative integer)')
-		tx_idx = int(arg)
+		try:
+			tx_range = SentTXRange(arg)
+		except:
+			die(2, f'{arg}: invalid transaction index arg '
+			'(must be a non-negative integer or hyphen-separated range)')
 	else:
 		infile = si.get_unsent()
 		cfg._util.qmsg(f'Got signed transaction file ‘{infile}’')
@@ -124,7 +129,7 @@ match cfg._args:
 	case [arg] if cfg.autosign and post_send_op:
 		init_autosign(arg)
 	case [] if cfg.autosign:
-		init_autosign(0)
+		init_autosign('0')
 	case [infile]:
 		from .fileutil import check_infile
 		check_infile(infile)
@@ -137,8 +142,15 @@ if not cfg.status:
 
 from .tx import OnlineSignedTX
 
+batch = tx_range and (tx_range.last != tx_range.first)
+
+def do_sep():
+	if batch:
+		msg('-' * 74)
+
 async def process_tx(tx):
 
+	do_sep()
 	cfg._util.vmsg(f'Getting {tx.desc} ‘{tx.infile}’')
 
 	if tx.is_compat:
@@ -168,11 +180,14 @@ async def process_tx(tx):
 				if not cfg.autosign:
 					tx.file.write(ask_write_default_yes=True)
 
-	return await tx.send(txcfg, asi)
+	return await tx.send(txcfg, asi, batch=batch)
 
 async def main():
 	if cfg.autosign and post_send_op:
-		return await process_tx(await si.get_last_sent(idx=tx_idx))
+		exitvals = [await process_tx(tx)
+			for tx in reversed(await si.get_last_sent(tx_range=tx_range))]
+		do_sep()
+		return max(exitvals)
 	else:
 		return await process_tx(await OnlineSignedTX(
 			cfg        = cfg,

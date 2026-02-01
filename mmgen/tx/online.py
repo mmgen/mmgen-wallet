@@ -14,10 +14,15 @@ tx.online: online signed transaction class
 
 import time, asyncio
 
+from ..obj import MMGenRange
 from ..util import msg, Msg, gmsg, ymsg, make_timestr, die
 from ..color import pink, yellow
 
 from .signed import Signed, AutomountSigned
+
+class SentTXRange(MMGenRange):
+	min_idx = 0
+	max_idx = 1_000_000
 
 class OnlineSigned(Signed):
 
@@ -62,7 +67,7 @@ class OnlineSigned(Signed):
 			ask_overwrite = False,
 			ask_write     = False)
 
-	async def send(self, cfg, asi):
+	async def send(self, cfg, asi, batch=False):
 		"""
 		returns integer exit val to system
 		"""
@@ -149,7 +154,10 @@ class OnlineSigned(Signed):
 
 		if status_exitval is not None:
 			if cfg.verbose:
-				self.info.view_with_prompt('View transaction details?', pause=False)
+				if batch:
+					self.info.view(pause=False, terse=True)
+				else:
+					self.info.view_with_prompt('View transaction details?', pause=False)
 			return status_exitval
 		return 0
 

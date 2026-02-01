@@ -82,9 +82,10 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('alice_txbump5',                    'bumping the transaction (new outputs)'),
 		('alice_txsend5',                    'sending the bumped transaction'),
 		('alice_txstatus5',                  'getting transaction status (in mempool)'),
-		('alice_txstatus6',                  'getting transaction status (idx=0, in mempool)'),
-		('alice_txstatus7',                  'getting transaction status (idx=1, replaced)'),
-		('alice_txstatus8',                  'getting transaction status (idx=3, 2 confirmations)'),
+		('alice_txstatus6',                  'getting transaction status (tx_range=0, in mempool)'),
+		('alice_txstatus7',                  'getting transaction status (tx_range=1, replaced)'),
+		('alice_txstatus8',                  'getting transaction status (tx_range=3, 2 confirmations)'),
+		('alice_txstatus9',                  'getting transaction status (tx_range=0-3)'),
 		('generate',                         'mining a block'),
 		('alice_bal2',                       'checking Alice’s balance'),
 		('wait_loop_kill',                   'stopping autosign wait loop'),
@@ -229,8 +230,9 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 			expect,
 			exit_val = None,
 			need_rbf = False,
-			idx      = None,
-			verbose  = True):
+			tx_range = None,
+			verbose  = True,
+			batch    = False):
 
 		if need_rbf and not self.proto.cap('rbf'):
 			return 'skip'
@@ -240,11 +242,11 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 				'mmgen-txsend',
 				['--alice', '--autosign', '--status']
 				+ (['--verbose'] if verbose else [])
-				+ ([] if idx is None else [str(idx)]),
+				+ ([] if tx_range is None else [tx_range]),
 				no_passthru_opts = ['coin'],
 				exit_val = exit_val)
 		t.expect(expect, regex=True)
-		if not exit_val:
+		if not (exit_val or batch):
 			t.expect('view: ', 'n')
 		t.read()
 		self.remove_device_online()
@@ -267,13 +269,21 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		return self._alice_txstatus('in mempool', need_rbf=True)
 
 	def alice_txstatus6(self):
-		return self._alice_txstatus('in mempool', need_rbf=True, idx=0)
+		return self._alice_txstatus('in mempool', need_rbf=True, tx_range='0')
 
 	def alice_txstatus7(self):
-		return self._alice_txstatus('replaced', need_rbf=True, idx=1)
+		return self._alice_txstatus('replaced', need_rbf=True, tx_range='1')
 
 	def alice_txstatus8(self):
-		return self._alice_txstatus('2 confirmations', need_rbf=True, idx=3)
+		return self._alice_txstatus('2 confirmations', need_rbf=True, tx_range='3')
+
+	def alice_txstatus9(self):
+		return self._alice_txstatus(
+			'in mempool.*replaced.*replaced.*2 confirmations',
+			need_rbf = True,
+			tx_range = '0-3',
+			verbose = False,
+			batch = True)
 
 	def alice_txsend_bad_no_unsent(self):
 		self.insert_device_online()
