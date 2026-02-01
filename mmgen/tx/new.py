@@ -456,7 +456,7 @@ class New(Base):
 		if self.cfg.comment_file:
 			self.add_comment(infile=self.cfg.comment_file)
 
-		if cmd_args and not do_info:
+		if not (do_info or self.is_sweep):
 			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(cmd_args)
 			if self.is_swap:
 				cmd_args = await self.process_swap_cmdline_args(cmd_args, addrfile_args)
