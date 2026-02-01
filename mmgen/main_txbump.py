@@ -17,9 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-txbump: Create, and optionally send and sign, a replacement transaction
-              on supporting networks
+mmgen-txbump: Create, and optionally send and sign, a replacement transaction on supported networks
 """
+
+import sys
 
 from .cfg import gc, Config
 from .util import msg, msg_r, die, async_run
@@ -207,7 +208,7 @@ async def main():
 				TxKeys(cfg, tx2, seedfiles=seedfiles, keylist=kl, keyaddrlist=kal).keys):
 			tx4 = await OnlineSignedTX(cfg=cfg, data=tx3.__dict__)
 			tx4.file.write(ask_write=False)
-			await tx4.send(cfg, asi if cfg.autosign else None)
+			sys.exit(await tx4.send(cfg, asi if cfg.autosign else None))
 		else:
 			die(2, 'Transaction could not be signed')
 	else:

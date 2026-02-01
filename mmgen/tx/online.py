@@ -12,7 +12,7 @@
 tx.online: online signed transaction class
 """
 
-import sys, time, asyncio
+import time, asyncio
 
 from ..util import msg, Msg, gmsg, ymsg, make_timestr, die
 from ..color import pink, yellow
@@ -63,7 +63,9 @@ class OnlineSigned(Signed):
 			ask_write     = False)
 
 	async def send(self, cfg, asi):
-
+		"""
+		returns integer exit val to system
+		"""
 		status_exitval = None
 		sent_status = None
 		all_ok = True
@@ -85,9 +87,10 @@ class OnlineSigned(Signed):
 			if coin_txid := getattr(self, f'coin_txid{idx}', None):
 				txhex = getattr(self, f'serialized{idx}')
 				if cfg.status:
-					cfg._util.qmsg(f'{self.proto.coin} TxID: {coin_txid.hl()}')
 					if cfg.verbose:
 						await self.post_network_send(coin_txid)
+					else:
+						cfg._util.qmsg(f'{self.proto.coin} TxID: {coin_txid.hl()}')
 					status_exitval = await self.status.display(idx=idx)
 				elif cfg.receipt:
 					if res := await self.get_receipt(coin_txid, receipt_only=True):
@@ -147,7 +150,8 @@ class OnlineSigned(Signed):
 		if status_exitval is not None:
 			if cfg.verbose:
 				self.info.view_with_prompt('View transaction details?', pause=False)
-			sys.exit(status_exitval)
+			return status_exitval
+		return 0
 
 class AutomountOnlineSigned(AutomountSigned, OnlineSigned):
 	pass

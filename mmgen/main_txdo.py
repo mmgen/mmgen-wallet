@@ -20,6 +20,8 @@
 mmgen-txdo: Create, sign and send an online MMGen transaction
 """
 
+import sys
+
 from .cfg import gc, Config
 from .util import die, fmt_list, async_run
 from .subseed import SubSeedIdxRange
@@ -192,8 +194,8 @@ async def main():
 	if tx3:
 		tx3.file.write(ask_write=False)
 		tx4 = await SentTX(cfg=cfg, data=tx3.__dict__)
-		await tx4.send(cfg, asi=None)
+		return await tx4.send(cfg, asi=None)
 	else:
 		die(2, 'Transaction could not be signed')
 
-async_run(cfg, main)
+sys.exit(async_run(cfg, main))

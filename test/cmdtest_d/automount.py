@@ -224,7 +224,13 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	def alice_txsend5(self):
 		return self._user_txsend('alice', need_rbf=True)
 
-	def _alice_txstatus(self, expect, exit_val=None, need_rbf=False, idx=None):
+	def _alice_txstatus(
+			self,
+			expect,
+			exit_val = None,
+			need_rbf = False,
+			idx      = None,
+			verbose  = True):
 
 		if need_rbf and not self.proto.cap('rbf'):
 			return 'skip'
@@ -232,11 +238,12 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		self.insert_device_online()
 		t = self.spawn(
 				'mmgen-txsend',
-				['--alice', '--autosign', '--status', '--verbose']
+				['--alice', '--autosign', '--status']
+				+ (['--verbose'] if verbose else [])
 				+ ([] if idx is None else [str(idx)]),
 				no_passthru_opts = ['coin'],
 				exit_val = exit_val)
-		t.expect(expect)
+		t.expect(expect, regex=True)
 		if not exit_val:
 			t.expect('view: ', 'n')
 		t.read()

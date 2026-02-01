@@ -110,11 +110,9 @@ def init_autosign(arg):
 	si = Signable.automount_transaction(asi)
 	if cfg.abort:
 		si.shred_abortable() # prompts user, then raises exception or exits
+	elif post_send_op and (si.unsent or si.unsigned):
+		die(1, 'Transaction is {}'.format('unsent' if si.unsent else 'unsigned'))
 	elif post_send_op:
-		if si.unsent:
-			die(1, 'Transaction is unsent')
-		if si.unsigned:
-			die(1, 'Transaction is unsigned')
 		if not is_int(arg):
 			die(2, f'{arg}: invalid transaction index (must be a non-negative integer)')
 		tx_idx = int(arg)
@@ -139,38 +137,28 @@ if not cfg.status:
 
 from .tx import OnlineSignedTX
 
-async def main():
+async def process_tx(tx):
 
-	global cfg
-
-	if cfg.autosign and post_send_op:
-		tx = await si.get_last_sent(idx=tx_idx)
-	else:
-		tx = await OnlineSignedTX(
-			cfg        = cfg,
-			filename   = infile,
-			automount  = cfg.autosign,
-			quiet_open = True)
+	cfg._util.vmsg(f'Getting {tx.desc} ‘{tx.infile}’')
 
 	if tx.is_compat:
 		return await tx.compat_send()
 
-	cfg = Config({'_clone': cfg, 'proto': tx.proto, 'coin': tx.proto.coin})
-
-	if cfg.tx_proxy:
-		from .tx.tx_proxy import check_client
-		check_client(cfg)
-
-	from .rpc import rpc_init
-	tx.rpc = await rpc_init(cfg)
-
-	cfg._util.vmsg(f'Getting {tx.desc} ‘{tx.infile}’')
-
-	if cfg.mark_sent:
-		await tx.post_send(asi)
-		sys.exit(0)
+	txcfg = Config({'_clone': cfg, 'proto': tx.proto, 'coin': tx.proto.coin})
 
 	if not post_send_op:
+		if cfg.tx_proxy:
+			from .tx.tx_proxy import check_client
+			check_client(txcfg)
+
+	from .rpc import rpc_init
+	tx.rpc = await rpc_init(txcfg)
+
+	if not post_send_op:
+		if cfg.mark_sent:
+			await tx.post_send(asi)
+			return 0
+
 		if tx.is_swap and not tx.check_swap_expiry():
 			die(1, 'Swap quote has expired. Please re-create the transaction')
 
@@ -180,6 +168,16 @@ async def main():
 				if not cfg.autosign:
 					tx.file.write(ask_write_default_yes=True)
 
-	await tx.send(cfg, asi)
+	return await tx.send(txcfg, asi)
 
-async_run(cfg, main)
+async def main():
+	if cfg.autosign and post_send_op:
+		return await process_tx(await si.get_last_sent(idx=tx_idx))
+	else:
+		return await process_tx(await OnlineSignedTX(
+			cfg        = cfg,
+			filename   = infile,
+			automount  = cfg.autosign,
+			quiet_open = True))
+
+sys.exit(async_run(cfg, main))

@@ -816,7 +816,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		return self._alice_txstatus(['--quiet'], expect_str='confirmations')
 
 	def alice_txstatus3(self):
-		return self._alice_txstatus(['--verbose'], expect_str='Info for transaction .* confirmations')
+		return self._alice_txstatus(['--verbose'], expect_str='confirmations.*Info for transaction')
 
 	def _alice_txstatus(self, add_opts=[], expect_str=None):
 		return self._alice_txops(

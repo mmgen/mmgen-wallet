@@ -26,6 +26,7 @@ class Completed(Base):
 			'network': proto.network})
 		self.proto = proto
 		self.filename = filename
+		self.infile = filename
 
 	@cached_property
 	def compat_tx(self):
