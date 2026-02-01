@@ -47,7 +47,7 @@ from ..include.common import (
 from .include.common import ref_dir, dfl_words_file, dfl_bip39_file
 
 from .base import CmdTestBase
-from .include.input import stealth_mnemonic_entry
+from .include.input import mnemonic_entry
 
 class CmdTestAutosignBase(CmdTestBase):
 	networks     = ('btc',)
@@ -238,7 +238,7 @@ class CmdTestAutosignBase(CmdTestBase):
 					'Type a number.*: ',
 					str(mne.entry_modes.index(entry_mode) + 1),
 					regex = True)
-			stealth_mnemonic_entry(t, mne, mn, entry_mode)
+			mnemonic_entry(t, mne, mn)
 
 		t.written_to_file('Autosign wallet')
 

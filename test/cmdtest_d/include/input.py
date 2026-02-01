@@ -14,6 +14,11 @@ import time
 from ...include.common import getrand
 from .common import randbool
 
+def mnemonic_entry(t, mne, mn):
+	p_ok, _ = mne.word_prompt
+	for wnum, word in enumerate(mn, 1):
+		t.expect(p_ok.format(wnum), word + ' ')
+
 def stealth_mnemonic_entry(t, mne, mn, entry_mode, pad_entry=False):
 
 	def pad_mnemonic(mn, ss_len):
