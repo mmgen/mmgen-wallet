@@ -57,16 +57,16 @@ class MoneroTwView:
 
 		op = xmrwallet_op('dump_data', self.cfg, None, None, compat_call=True)
 		await op.restart_wallet_daemon()
-		self.dump_data = await op.main()
+		dump_data = await op.main()
 
-		if self.dump_data:
-			self.sid = SeedID(sid=self.dump_data[0]['seed_id'])
+		if dump_data:
+			self.sid = SeedID(sid=dump_data[0]['seed_id'])
 
 		self.total = self.unlocked_total = self.proto.coin_amt('0')
 
 		def gen_addrs():
 			bd = namedtuple('address_balance_data', ['bal', 'unlocked_bal', 'blocks_to_unlock'])
-			for wdata in self.dump_data:
+			for wdata in dump_data:
 				bals_data = {i: {} for i in range(len(wdata['data'].accts_data['subaddress_accounts']))}
 
 				for d in wdata['data'].bals_data.get('per_subaddress', []):
@@ -235,12 +235,14 @@ class MoneroTwView:
 		from ....obj import Int
 		from ....util import msg, suf
 		from ....ui import item_chooser
+		wdata = {}
+		for d in self.accts_data:
+			wdata[d.idx] = (wdata[d.idx] + 1) if d.idx in wdata else 1
 		msg('\n')
 		return item_chooser(
 			self.cfg,
 			prompt,
-			[(d['wallet_num'], len(d['data'].accts_data['subaddress_accounts']))
-				for d in self.dump_data],
+			tuple(wdata.items()),
 			lambda d: '{a} [{b} account{c}]'.format(
 				a = self.make_wallet_id(d[0]).hl(),
 				b = Int(d[1]).hl(),
