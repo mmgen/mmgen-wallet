@@ -165,8 +165,8 @@ class OpSweep(OpMixinSpec, OpWallet):
 
 	def check_account_exists(self, accts_data, idx):
 		max_acct = len(accts_data['subaddress_accounts']) - 1
-		if self.account > max_acct:
-			die(2, f'{self.account}: requested account index out of bounds (>{max_acct})')
+		if idx > max_acct:
+			die(2, f'{idx}: requested account index out of bounds (>{max_acct})')
 
 	async def main(self):
 		gmsg(
