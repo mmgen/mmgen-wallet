@@ -20,7 +20,6 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 
 	hdr_lbl = 'spendable accounts'
 	desc = 'spendable accounts'
-	include_empty = False
 
 	async def __init__(self, cfg, proto, *, minconf=1, addrs=[], tx=None):
 		self.prompt_fs_in = [
@@ -38,6 +37,7 @@ class MoneroTwUnspentOutputs(MoneroTwView, TwUnspentOutputs):
 				's': 'i_addr_sweep',
 				'S': 'i_acct_sweep'})
 		await super().__init__(cfg, proto, minconf=minconf, addrs=addrs, tx=tx)
+		self.is_sweep = self.include_empty = self.tx and self.tx.is_sweep
 
 	async def get_idx_from_user(self, method_name):
 		if method_name in ('i_acct_sweep', 'i_addr_sweep'):

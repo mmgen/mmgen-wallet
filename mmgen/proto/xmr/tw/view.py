@@ -29,6 +29,7 @@ class MoneroTwView:
 	item_desc = 'account'
 	nice_addr_w = {'addr': 20}
 	total = None
+	is_sweep = False
 
 	sort_disp = {
 		'addr':   'Addr',
@@ -195,8 +196,14 @@ class MoneroTwView:
 					color = color,
 					color_override = None if d.total == d.unlocked_total else 'orange'
 				)) + rfill
-			for v in d.data.values():
-				yield fmt_method(None, v.data, cw, fs, color, yes, no)
+			if self.is_sweep:
+				if d.total:
+					for v in d.data.values():
+						if v.data.amt:
+							yield fmt_method(None, v.data, cw, fs, color, yes, no)
+			else:
+				for v in d.data.values():
+					yield fmt_method(None, v.data, cw, fs, color, yes, no)
 
 	def squeezed_format_line(self, n, d, cw, fs, color, yes, no):
 		return fs.format(

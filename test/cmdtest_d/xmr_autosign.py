@@ -791,7 +791,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		return self._alice_txops('txcreate', menu='S', sweep_menu='23', sweep_type='sweep')
 
 	def alice_txcreate_sweep2(self):
-		return self._alice_txops('txcreate', menu='s', sweep_menu='2', sweep_type='sweep_all')
+		return self._alice_txops('txcreate', menu='s', sweep_menu='3', sweep_type='sweep_all')
 
 	alice_txcreate3 = alice_txcreate2 = alice_txcreate1
 
