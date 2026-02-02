@@ -189,7 +189,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		stop_test_daemons(*(self.network_ids + self.extra_daemons), remove_datadir=True)
 		return 'ok'
 
-	def delete_setup(self):
+	def delete_offline_shmdir(self):
 		self.spawn(msg_only=True)
 		imsg(f'Deleting ‘{self.asi.wallet_dir}’')
 		shutil.rmtree(self.asi.wallet_dir, ignore_errors=True)

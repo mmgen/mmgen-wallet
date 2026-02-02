@@ -76,4 +76,14 @@ class New(Base, TxNew):
 			compat_call = True)
 
 		await op.restart_wallet_daemon()
+
+		if idxs := op.get_idxs_for_missing_outputs_files():
+			op2 = xmrwallet_op(
+				'export_outputs',
+				self.cfg,
+				None,
+				','.join(map(str, idxs)),
+				compat_call = True)
+			await op2.main()
+
 		return await op.main()

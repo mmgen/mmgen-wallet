@@ -520,9 +520,6 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	cmd_group = (
 		('autosign_setup',           'autosign setup with Alice’s seed'),
 		('autosign_xmr_setup',       'autosign setup (creation of Monero signing wallets)'),
-		('delete_setup',             'deleting offline autosign setup'),
-		('autosign_setup',           'autosign setup with Alice’s seed'),
-		('autosign_xmr_setup_redo',  'autosign setup (creation of Monero signing wallets, redo)'),
 		('create_watchonly_wallets', 'creating Alice’s watch-only wallets'),
 		('gen_kafile_miner',         'generating key-address file for Miner'),
 		('create_wallet_miner',      'creating Monero wallet for Miner'),
@@ -570,6 +567,15 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('alice_txsend3',            'sending the transaction'),
 		('mine_blocks_10',           'mining some blocks'),
 		('alice_twview_chk4',        'viewing Alice’s tracking wallets (check balances)'),
+		('wait_loop_kill',           'stopping autosign wait loop'),
+		('delete_offline_shmdir',    'deleting offline autosign wallet dir'),
+		('autosign_setup',           'autosign setup with Alice’s seed'),
+		('autosign_xmr_setup_redo',  'autosign setup (creation of Monero signing wallets, redo)'),
+		('wait_loop_start_compat',   'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
+		('alice_txcreate_sweep3',    'creating a sweep transaction (sweep to empty account)'),
+		('alice_txsend4',            'sending the transaction'),
+		('mine_blocks_10',           'mining some blocks'),
+		('alice_twview_chk5',        'viewing Alice’s tracking wallets (check balances)'),
 		('wait_loop_kill',           'stopping autosign wait loop'),
 		('alice_newacct1',           'adding account to Alice’s tracking wallet (dfl label)'),
 		('alice_newacct2',           'adding account to Alice’s tracking wallet (no timestr)'),
@@ -717,6 +723,9 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	def alice_twview_chk4(self):
 		return self._alice_twview_chk(['Total XMR: 3.709050970119', '1.254861787651'], sync=True)
 
+	def alice_twview_chk5(self):
+		return self._alice_twview_chk(['Total XMR: 3.707234170119', '2.452375982468'], sync=True)
+
 	def _alice_twview_chk(self, expect_arr, sync=False):
 		return self._alice_twops(
 			'twview',
@@ -793,6 +802,9 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	def alice_txcreate_sweep2(self):
 		return self._alice_txops('txcreate', menu='s', sweep_menu='3', sweep_type='sweep_all')
 
+	def alice_txcreate_sweep3(self):
+		return self._alice_txops('txcreate', menu='S', sweep_menu='12', sweep_type='sweep')
+
 	alice_txcreate3 = alice_txcreate2 = alice_txcreate1
 
 	def _alice_txabort(self):
@@ -807,7 +819,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			add_opts    = self.alice_daemon_opts,
 			wait_signed = True)
 
-	alice_txsend1 = alice_txsend2 = alice_txsend3 = _alice_txsend
+	alice_txsend1 = alice_txsend2 = alice_txsend3 = alice_txsend4 = _alice_txsend
 
 	def alice_txstatus1(self):
 		return self._alice_txstatus(expect_str='TxID: .* in mempool')

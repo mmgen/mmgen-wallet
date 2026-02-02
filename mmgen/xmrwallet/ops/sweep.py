@@ -168,6 +168,21 @@ class OpSweep(OpMixinSpec, OpWallet):
 		if idx > max_acct:
 			die(2, f'{idx}: requested account index out of bounds (>{max_acct})')
 
+	def get_idxs_for_missing_outputs_files(self):
+		from ..file.outputs import MoneroWalletOutputsFile
+		def gen():
+			d_old = None
+			for k in ('source', 'dest'):
+				d = getattr(self, k, None)
+				if d and d != d_old:
+					d_old = d
+					if not MoneroWalletOutputsFile.Unsigned.find_fn_from_wallet_fn(
+							cfg             = self.cfg,
+							wallet_fn       = self.get_wallet_fn(d),
+							ret_on_no_match = True):
+						yield(d.idx)
+		return tuple(gen())
+
 	async def main(self):
 		gmsg(
 			f'\n{self.stem.capitalize()}ing account #{self.account}'
