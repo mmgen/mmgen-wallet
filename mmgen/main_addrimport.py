@@ -33,6 +33,10 @@ opts_data = {
 		'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long (global) options
+-a, --autosign     Import addresses from pre-created key-address file on the
+                   removable device.  The removable device is mounted and
+                   unmounted automatically.  This option is available for XMR
+                   only (see XMR NOTES below).
 -A, --address=ADDR Import the single coin address ADDR
 -b, --batch        Import all addresses in one RPC call
 -l, --addrlist     Address source is a flat list of non-MMGen coin addresses
@@ -45,6 +49,25 @@ opts_data = {
 -t, --token-addr=ADDR Import addresses for ERC20 token with address ADDR
 """,
 	'notes': """
+                                   XMR NOTES
+
+For Monero, --autosign is required, and a key-address file on the removable
+device is used instead of an address file.  Specifying the file explicitly
+on the command line is not supported.
+
+When ‘mmgen-autosign setup’ (or ‘xmr_setup’) is run with the --xmrwallets
+option, an ephemeral Monero wallet is created for each wallet number listed,
+to be used for transaction signing. In addition, a key-address file is created
+on the removable device, with an address and viewkey matching the base address
+of each signing wallet.
+
+This script uses that file to create an online view-only tracking wallet to
+match each offline signing wallet.  If a tracking wallet for a given address
+already exists, it is left untouched and no action is performed.  To create
+additional tracking wallets, just specify new wallet numbers via --xmrwallets
+during the offline setup process.
+
+
                            NOTES FOR BTC, LTC AND BCH
 
 Rescanning now uses the ‘scantxoutset’ RPC call and a selective scan of
@@ -133,7 +156,27 @@ def check_opts(twctl):
 
 	return batch, rescan
 
+def check_xmr_args():
+	for k in ('address', 'batch', 'addrlist', 'keyaddr_file', 'rescan', 'token_addr'):
+		if getattr(cfg, k):
+			die(1, 'Option --{} not supported for XMR'.format(k.replace('_', '-')))
+	if not cfg.autosign:
+		die(1, 'For XMR address import, --autosign is required')
+	if cfg._args:
+		die(1, 'Address file arg not supported with --autosign')
+
 async def main():
+
+	if cfg._proto.base_coin == 'XMR':
+		from .tx.util import mount_removable_device
+		from .xmrwallet import op as xmrwallet_op
+		check_xmr_args()
+		mount_removable_device(cfg)
+		op = xmrwallet_op('create', cfg, None, None, compat_call=True)
+		if op.to_process:
+			await op.restart_wallet_daemon()
+			await op.main()
+		return
 
 	from .tw.ctl import TwCtl
 	twctl = await TwCtl(

@@ -520,7 +520,8 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	cmd_group = (
 		('autosign_setup',           'autosign setup with Alice’s seed'),
 		('autosign_xmr_setup',       'autosign setup (creation of Monero signing wallets)'),
-		('create_watchonly_wallets', 'creating Alice’s watch-only wallets'),
+		('addrimport_alice',         'creating (importing) Alice’s watch-only wallets from key-address file'),
+		('addrimport_alice2',        'reimporting Alice’s watch-only wallets from key-address file'),
 		('gen_kafile_miner',         'generating key-address file for Miner'),
 		('create_wallet_miner',      'creating Monero wallet for Miner'),
 		('mine_initial_coins',       'mining initial coins'),
@@ -601,8 +602,22 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			'--monero-wallet-rpc-password=passwOrd']
 		self.alice_opts = ['--alice', '--coin=xmr'] + self.alice_daemon_opts
 
-	def create_watchonly_wallets(self):
-		return self._create_wallets()
+	def addrimport_alice(self):
+		return self._addrimport_alice(create_address_files=True)
+
+	def addrimport_alice2(self):
+		return self._addrimport_alice(expect_str='Skipping.*Skipping')
+
+	def _addrimport_alice(self, *, expect_str=None, create_address_files=False):
+		self.insert_device_online()
+		t = self.spawn('mmgen-addrimport', self.alice_opts + self.autosign_opts)
+		if expect_str:
+			t.expect(expect_str, regex=True)
+		if create_address_files:
+			self._create_address_files(t, 'alice')
+		t.read() # required!
+		self.remove_device_online()
+		return t
 
 	async def mine_blocks_1(self):
 		return await self._mine_blocks(1)

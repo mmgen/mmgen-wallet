@@ -293,6 +293,16 @@ class CmdTestXMRWallet(CmdTestBase):
 	def create_wallets_alice(self):
 		return self.create_wallets('alice')
 
+	def _create_address_files(self, t, user, wallet=None):
+		data = self.users[user]
+		for i in MMGenRange(wallet or data.kal_range).items:
+			write_data_to_file(
+				self.cfg,
+				data.addrfile_fs.format(i),
+				t.expect_getend('Address: '),
+				ask_overwrite = False,
+				quiet = True)
+
 	def create_wallets(self, user, wallet=None, add_opts=[], op='create'):
 		assert wallet is None or is_int(wallet), 'wallet arg'
 		data = self.users[user]
@@ -311,12 +321,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ [op]
 			+ ([] if data.autosign else [data.kafile])
 			+ [wallet or data.kal_range])
-		for i in MMGenRange(wallet or data.kal_range).items:
-			write_data_to_file(
-				self.cfg,
-				self.users[user].addrfile_fs.format(i),
-				t.expect_getend('Address: '),
-				quiet = True)
+		self._create_address_files(t, user, wallet)
 		return t
 
 	def new_addr_alice(self, spec, cfg, expect, kafile=None, do_autosign=False):
