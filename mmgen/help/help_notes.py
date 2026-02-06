@@ -21,7 +21,10 @@ class help_notes:
 	def txcreate_args(self):
 		match self.proto.base_proto:
 			case 'Bitcoin':
-				return '[ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...]'
+				if self.cfg.autosign:
+					return '[ADDR,AMT ... | DATA_SPEC] ADDR'
+				else:
+					return '[ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...]'
 			case 'Monero':
 				return '[ADDR,AMT]'
 			case _:

@@ -45,21 +45,24 @@ opts_data = {
 -t, --token-addr=ADDR Import addresses for ERC20 token with address ADDR
 """,
 	'notes': """
-
-This command can also be used to update the comment fields or balances of
-addresses already in the tracking wallet.
+                           NOTES FOR BTC, LTC AND BCH
 
 Rescanning now uses the ‘scantxoutset’ RPC call and a selective scan of
 blocks containing the relevant UTXOs for much faster performance than the
 previous implementation.  The rescan operation typically takes around two
 minutes total, independent of the number of addresses imported.
 
+It’s recommended to use ‘--rpc-backend=aio’ with ‘--rescan’.
+
 Bear in mind that the UTXO scan will not find historical transactions: to add
 them to the tracking wallet, you must perform a full or partial rescan of the
 blockchain with the ‘mmgen-tool rescan_blockchain’ utility.  A full rescan of
 the blockchain may take up to several hours.
 
-It’s recommended to use ‘--rpc-backend=aio’ with ‘--rescan’.
+A full rescan is required if you plan to use ‘mmgen-tool txhist’ or the
+automatic change address functionality of ‘mmgen-txcreate’, or wish to see
+which addresses in your tracking wallet are used.  Without it, all addresses
+without balances will be displayed as new.
 """
 	}
 }

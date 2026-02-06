@@ -32,11 +32,13 @@ opts_data = {
 	'text': {
 		'desc': """
                 Create, and optionally send and sign, a replacement transaction
-                on supporting networks
+                on supported networks
 		 """,
 		'usage2':   (
 			f'[opts] [{gc.proj_name} TX file] [seed source] ...',
 			f'[opts] {{u_args}} [{gc.proj_name} TX file] [seed source] ...',
+			'--autosign [opts]',
+			'--autosign [opts] {u_args}',
 		),
 		'options': """
 			-- -h, --help             Print this help message
