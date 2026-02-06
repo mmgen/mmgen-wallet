@@ -70,14 +70,14 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('alice_txsend_abort5',              'aborting the transaction again (error)'),
 		('generate',                         'mining a block'),
 		('alice_txcreate4',                  'creating a transaction'),
-		('alice_txbump1',                    'bumping the unsigned transaction (error)'),
+		('alice_txbump1',                    'bumping the unsigned transaction (error, idx=0)'),
 		('alice_txbump2',                    'bumping the unsent transaction (error)'),
 		('alice_txsend2_dump_hex',           'dumping the transaction to hex'),
 		('alice_txsend2_cli',                'sending the transaction via cli'),
 		('alice_txsend2_mark_sent',          'marking the transaction sent'),
 		('alice_txbump3',                    'bumping the transaction'),
 		('alice_txsend3',                    'sending the bumped transaction'),
-		('alice_txbump4',                    'bumping the transaction (new outputs, fee too low)'),
+		('alice_txbump4',                    'bumping the transaction (new outputs, fee too low, idx=0)'),
 		('alice_txbump_abort1',              'aborting the transaction'),
 		('alice_txbump5',                    'bumping the transaction (new outputs)'),
 		('alice_txsend5',                    'sending the bumped transaction'),
@@ -86,6 +86,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('alice_txstatus7',                  'getting transaction status (tx_range=1, replaced)'),
 		('alice_txstatus8',                  'getting transaction status (tx_range=3, 2 confirmations)'),
 		('alice_txstatus9',                  'getting transaction status (tx_range=0-3)'),
+		('alice_txbump6',                    'bumping the next-to-last sent transaction (idx=1)'),
 		('generate',                         'mining a block'),
 		('alice_bal2',                       'checking Alice’s balance'),
 		('wait_loop_kill',                   'stopping autosign wait loop'),
@@ -293,7 +294,14 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		self.remove_device_online()
 		return t
 
-	def _alice_txbump(self, fee_opt=None, output_args=[], bad_tx_expect=None, low_fee_fix=None):
+	def _alice_txbump(
+			self,
+			fee_opt        = None,
+			output_args    = [],
+			bad_tx_expect  = None,
+			low_fee_fix    = None,
+			orig_tx_expect = None,
+			idx            = None):
 		if not self.proto.cap('rbf'):
 			return 'skip'
 		self.insert_device_online()
@@ -301,6 +309,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 				'mmgen-txbump',
 				['--alice', '--autosign']
 				+ ([fee_opt] if fee_opt else [])
+				+ ([] if idx is None else [str(idx)])
 				+ output_args,
 				exit_val = 1 if bad_tx_expect else None)
 		if bad_tx_expect:
@@ -308,6 +317,8 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 			t.expect('Only sent transactions')
 			t.expect(bad_tx_expect)
 		else:
+			if orig_tx_expect:
+				t.expect(orig_tx_expect)
 			if not output_args:
 				t.expect(r'to deduct the fee from .* change output\): ', '\n', regex=True)
 				t.expect(r'(Y/n): ', 'y')  # output OK?
@@ -325,7 +336,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		return t
 
 	def alice_txbump1(self):
-		return self._alice_txbump(bad_tx_expect='unsigned transaction')
+		return self._alice_txbump(bad_tx_expect='unsigned transaction', idx=0)
 
 	def alice_txbump2(self):
 		self._wait_signed('transaction')
@@ -339,7 +350,8 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		return self._alice_txbump(
 			fee_opt = '--fee=3s',
 			output_args = [f'{self.burn_addr},7.654321', f'{sid}:C:1'],
-			low_fee_fix = '300s')
+			low_fee_fix = '300s',
+			idx = 0)
 
 	def alice_txbump_abort1(self):
 		if not self.proto.cap('rbf'):
@@ -351,6 +363,9 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		return self._alice_txbump(
 			fee_opt = '--fee=400s',
 			output_args = ['data:message for posterity', f'{self.burn_addr},7.654321', f'{sid}:C:1'])
+
+	def alice_txbump6(self):
+		return self._alice_txbump(idx=1, fee_opt='--fee=250s', orig_tx_expect='1.23456')
 
 	def alice_bal2(self):
 		return self.user_bal('alice', self.bal2_chk[self.coin])

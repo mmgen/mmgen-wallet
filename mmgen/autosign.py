@@ -334,13 +334,13 @@ class Signable:
 				shred_file(self.cfg, fn, iterations=15)
 			sys.exit(0)
 
-		async def get_last_sent(self, *, tx_range=None):
+		async def get_last_sent(self, *, tx_range):
 			return await self.get_last_created(
 				# compat fallback - ‘sent_timestamp’ attr is missing in some old TX files:
 				sort_key = lambda x: x.sent_timestamp or x.timestamp,
 				tx_range = tx_range)
 
-		async def get_last_created(self, *, sort_key=lambda x: x.timestamp, tx_range=None):
+		async def get_last_created(self, *, tx_range, sort_key=lambda x: x.timestamp):
 			from .tx import CompletedTX
 			fns = [f for f in self.dir.iterdir() if f.name.endswith(self.subext)]
 			files = sorted(
@@ -348,9 +348,7 @@ class Signable:
 					for txfile in fns],
 				key = sort_key)
 			if files:
-				return (
-					files[-1] if tx_range is None else
-					files[len(files) - 1 - tx_range.last:len(files) - tx_range.first])
+				return files[len(files) - 1 - tx_range.last:len(files) - tx_range.first]
 			else:
 				die(1, 'No sent automount transactions!')
 

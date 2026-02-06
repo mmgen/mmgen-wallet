@@ -23,7 +23,7 @@ mmgen-txbump: Create, and optionally send and sign, a replacement transaction on
 import sys
 
 from .cfg import gc, Config
-from .util import msg, msg_r, die, async_run
+from .util import msg, msg_r, die, is_int, async_run
 from .color import green
 
 opts_data = {
@@ -37,8 +37,8 @@ opts_data = {
 		'usage2':   (
 			f'[opts] [{gc.proj_name} TX file] [seed source] ...',
 			f'[opts] {{u_args}} [{gc.proj_name} TX file] [seed source] ...',
-			'--autosign [opts]',
-			'--autosign [opts] {u_args}',
+			'--autosign [opts] [index]',
+			'--autosign [opts] [index] {u_args}',
 		),
 		'options': """
 			-- -h, --help             Print this help message
@@ -96,8 +96,12 @@ opts_data = {
 """,
 	'notes': """
 
-With --autosign, the TX file argument is omitted, and the last submitted TX
-file on the removable device will be used.
+With --autosign, the TX file argument is omitted, and the last submitted
+transaction on the removable device will be used.  Or, if the first non-option
+argument is a non-negative integer, it specifies an index into the list of
+submitted transactions, in reverse chronological order, and that transaction
+will be bumped.  ‘0’ (the default) signifies the last sent transaction, ‘1’
+the next-to-last, and so on.
 
 If no outputs are specified, the original outputs will be used for the
 replacement transaction, otherwise a new transaction will be created with the
@@ -151,6 +155,8 @@ seedfiles = pop_seedfiles(cfg, ignore_dfl_wallet=not cfg.send, empty_ok=not cfg.
 if cfg.autosign:
 	if cfg.send:
 		die(1, '--send cannot be used together with --autosign')
+	from .tx.online import CreatedTXRange
+	tx_range = CreatedTXRange(cfg._args.pop(0) if cfg._args and is_int(cfg._args[0]) else '0')
 else:
 	tx_file = cfg._args.pop()
 	from .fileutil import check_infile
@@ -174,7 +180,7 @@ async def main():
 				'Only sent transactions can be bumped with --autosign.  Instead of bumping\n'
 				f'your {state} transaction, abort it with ‘mmgen-txsend --abort’ and create\n'
 				'a new one.')
-		orig_tx = await si.get_last_created()
+		orig_tx = (await si.get_last_created(tx_range=tx_range))[0]
 		sign_and_send = False
 	else:
 		orig_tx = await CompletedTX(cfg=cfg, filename=tx_file)

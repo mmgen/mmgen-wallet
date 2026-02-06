@@ -24,6 +24,9 @@ class SentTXRange(MMGenRange):
 	min_idx = 0
 	max_idx = 1_000_000
 
+class CreatedTXRange(SentTXRange):
+	pass
+
 class OnlineSigned(Signed):
 
 	@property
