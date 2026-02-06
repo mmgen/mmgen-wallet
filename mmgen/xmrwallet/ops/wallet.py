@@ -15,8 +15,9 @@ xmrwallet.ops.wallet: xmrwallet wallet op for the MMGen Suite
 import asyncio, re, atexit
 from pathlib import Path
 
-from ...color import orange
+from ...color import orange, cyan
 from ...util import msg, gmsg, ymsg, die, suf
+from ...addr import MMGenID
 from ...addrlist import KeyAddrList, ViewKeyAddrList, AddrIdxList
 from ...proto.xmr.rpc import MoneroRPCClient, MoneroWalletRPCClient
 from ...proto.xmr.daemon import MoneroWalletDaemon
@@ -40,13 +41,19 @@ class OpWallet(OpBase):
 	def __init__(self, cfg, uarg_tuple):
 
 		def check_wallets():
+			count = 0
 			for d in self.addr_data:
 				fn = self.get_wallet_fn(d)
 				match self.stat_wallet(fn):
 					case True if self.is_create:
-						die(1, f'Wallet ‘{fn}’ already exists!')
-					case False:
+						msg('Skipping wallet create for {} - {} exists'.format(
+							MMGenID(cfg._proto, id_str=f'{self.kal.al_id}:{d.idx}').hl(),
+							cyan(f'‘{fn.name}’')))
+						continue
+					case False if not self.is_create:
 						die(1, f'Wallet ‘{fn}’ not found!')
+				count += 1
+			return count
 
 		super().__init__(cfg, uarg_tuple)
 
@@ -110,9 +117,9 @@ class OpWallet(OpBase):
 		self.create_addr_data()
 
 		if not self.skip_wallet_check:
-			check_wallets()
+			self.to_process = check_wallets()
 
-		if self.start_daemon and not self.cfg.no_start_wallet_daemon:
+		if self.to_process and self.start_daemon and not self.cfg.no_start_wallet_daemon:
 			asyncio.run(self.restart_wallet_daemon())
 
 	@staticmethod
@@ -206,15 +213,17 @@ class OpWallet(OpBase):
 		return 'offline signing ' if self.cfg.offline else 'watch-only ' if self.cfg.watch_only else ''
 
 	async def main(self):
-		if not self.compat_call:
+		if self.to_process and not self.compat_call:
 			gmsg('\n{a}ing {b} {c}wallet{d}'.format(
 				a = self.stem.capitalize(),
-				b = len(self.addr_data),
+				b = self.to_process,
 				c = self.add_wallet_desc,
-				d = suf(self.addr_data)))
+				d = suf(self.to_process)))
 		data = []
 		for n, d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
 			fn = self.get_wallet_fn(d)
+			if self.is_create and self.stat_wallet(fn):
+				continue
 			gmsg('\n{a}ing wallet {b}/{c} ({d})'.format(
 				a = self.stem.capitalize(),
 				b = n + 1,
