@@ -21,7 +21,6 @@ from .wallet import OpWallet
 
 class OpCreate(OpWallet):
 	stem    = 'creat'
-	wallet_exists = False
 	opts    = ('restore_height',)
 
 	def check_uopts(self):

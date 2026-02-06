@@ -34,32 +34,25 @@ class OpWallet(OpBase):
 		'autosign',
 		'watch_only')
 	wallet_offline = False
-	wallet_exists = True
 	start_daemon = True
 	skip_wallet_check = False # for debugging
 
 	def __init__(self, cfg, uarg_tuple):
 
-		def wallet_exists(fn):
-			try:
-				fn.stat()
-			except:
-				return False
-			else:
-				return True
-
 		def check_wallets():
 			for d in self.addr_data:
 				fn = self.get_wallet_fn(d)
-				match wallet_exists(fn):
-					case True if not self.wallet_exists:
+				match self.stat_wallet(fn):
+					case True if self.is_create:
 						die(1, f'Wallet ‘{fn}’ already exists!')
-					case False if self.wallet_exists:
+					case False:
 						die(1, f'Wallet ‘{fn}’ not found!')
 
 		super().__init__(cfg, uarg_tuple)
 
-		if self.cfg.offline or (self.name == 'create' and self.cfg.restore_height is None):
+		self.is_create = self.name in ('create', 'create_offline', 'restore')
+
+		if self.cfg.offline or (self.is_create and self.cfg.restore_height is None):
 			self.wallet_offline = True
 
 		self.wd = MoneroWalletDaemon(
@@ -121,6 +114,15 @@ class OpWallet(OpBase):
 
 		if self.start_daemon and not self.cfg.no_start_wallet_daemon:
 			asyncio.run(self.restart_wallet_daemon())
+
+	@staticmethod
+	def stat_wallet(fn):
+		try:
+			fn.stat()
+		except:
+			return False
+		else:
+			return True
 
 	@classmethod
 	def get_idx_from_fn(cls, fn):

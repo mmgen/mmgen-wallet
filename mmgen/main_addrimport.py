@@ -33,7 +33,7 @@ opts_data = {
 		'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long (global) options
--a, --address=a    Import the single coin address 'a'
+-A, --address=ADDR Import the single coin address ADDR
 -b, --batch        Import all addresses in one RPC call
 -l, --addrlist     Address source is a flat list of non-MMGen coin addresses
 -k, --keyaddr-file Address source is a key-address file
@@ -42,7 +42,7 @@ opts_data = {
                    blockchain for unspent outputs that include the imported
                    address(es).  Required if any of the imported addresses
                    are already in the blockchain and have a balance.
--t, --token-addr=A Import addresses for ERC20 token with address 'A'
+-t, --token-addr=ADDR Import addresses for ERC20 token with address ADDR
 """,
 	'notes': """
 
@@ -131,8 +131,8 @@ def check_opts(twctl):
 	return batch, rescan
 
 async def main():
-	from .tw.ctl import TwCtl
 
+	from .tw.ctl import TwCtl
 	twctl = await TwCtl(
 		cfg        = cfg,
 		proto      = proto,
