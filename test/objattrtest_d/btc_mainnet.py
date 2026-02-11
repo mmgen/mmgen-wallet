@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # MMGen Wallet, a terminal-based cryptocurrency wallet
-# Copyright (C)2013-2025 The MMGen Project <mmgen@tuta.io>
+# Copyright (C)2013-2026 The MMGen Project <mmgen@tuta.io>
 
 """
 test.objattrtest_d.btc_mainnet: BTC mainnet test vectors for MMGen data objects
