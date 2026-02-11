@@ -27,66 +27,34 @@ from .util import msg, suf, die, fmt, async_run
 from .addrlist import AddrList, KeyAddrList
 
 opts_data = {
+	'filter_codes': ['-'],
 	'text': {
 		'desc': f'Import addresses into an {gc.proj_name} tracking wallet',
-		'usage':'[opts] [MMGen address file]',
+		'usage': '{u_args}',
 		'options': """
--h, --help         Print this help message
---, --longhelp     Print help message for long (global) options
--a, --autosign     Import addresses from pre-created key-address file on the
-                   removable device.  The removable device is mounted and
-                   unmounted automatically.  This option is available for XMR
-                   only (see XMR NOTES below).
--A, --address=ADDR Import the single coin address ADDR
--b, --batch        Import all addresses in one RPC call
--l, --addrlist     Address source is a flat list of non-MMGen coin addresses
--k, --keyaddr-file Address source is a key-address file
--q, --quiet        Suppress warnings
--r, --rescan       Update address balances by selectively rescanning the
-                   blockchain for unspent outputs that include the imported
-                   address(es).  Required if any of the imported addresses
-                   are already in the blockchain and have a balance.
--t, --token-addr=ADDR Import addresses for ERC20 token with address ADDR
+			-- -h, --help         Print this help message
+			-- --, --longhelp     Print help message for long (global) options
+			m- -a, --autosign     Import addresses from pre-created key-address file on the
+			+                     removable device.  The removable device is mounted and
+			+                     unmounted automatically.  See notes below.
+			R- -A, --address=ADDR Import the single coin address ADDR
+			R- -b, --batch        Import all addresses in one RPC call (where applicable)
+			R- -l, --addrlist     Address source is a flat list of non-MMGen coin addresses
+			R- -k, --keyaddr-file Address source is a key-address file
+			-- -q, --quiet        Suppress warnings
+			b- -r, --rescan       Update address balances by selectively rescanning the
+			+                     blockchain for unspent outputs that include the imported
+			+                     address(es).  Required if any of the imported addresses
+			+                     are already in the blockchain and have a balance.
+			e- -t, --token-addr=ADDR Import addresses for ERC20 token with address ADDR
 """,
-	'notes': """
-                                   XMR NOTES
-
-For Monero, --autosign is required, and a key-address file on the removable
-device is used instead of an address file.  Specifying the file explicitly
-on the command line is not supported.
-
-When ‘mmgen-autosign setup’ (or ‘xmr_setup’) is run with the --xmrwallets
-option, an ephemeral Monero wallet is created for each wallet number listed,
-to be used for transaction signing. In addition, a key-address file is created
-on the removable device, with an address and viewkey matching the base address
-of each signing wallet.
-
-This script uses that file to create an online view-only tracking wallet to
-match each offline signing wallet.  If a tracking wallet for a given address
-already exists, it is left untouched and no action is performed.  To create
-additional tracking wallets, just specify new wallet numbers via --xmrwallets
-during the offline setup process.
-
-
-                           NOTES FOR BTC, LTC AND BCH
-
-Rescanning now uses the ‘scantxoutset’ RPC call and a selective scan of
-blocks containing the relevant UTXOs for much faster performance than the
-previous implementation.  The rescan operation typically takes around two
-minutes total, independent of the number of addresses imported.
-
-It’s recommended to use ‘--rpc-backend=aio’ with ‘--rescan’.
-
-Bear in mind that the UTXO scan will not find historical transactions: to add
-them to the tracking wallet, you must perform a full or partial rescan of the
-blockchain with the ‘mmgen-tool rescan_blockchain’ utility.  A full rescan of
-the blockchain may take up to several hours.
-
-A full rescan is required if you plan to use ‘mmgen-tool txhist’ or the
-automatic change address functionality of ‘mmgen-txcreate’, or wish to see
-which addresses in your tracking wallet are used.  Without it, all addresses
-without balances will be displayed as new.
-"""
+	'notes': '{notes}',
+	},
+	'code': {
+		'usage': lambda help_notes, s: s.format(
+			u_args = help_notes('addrimport_args')),
+		'notes': lambda help_mod, s: s.format(
+			notes = help_mod('addrimport'))
 	}
 }
 
@@ -157,9 +125,6 @@ def check_opts(twctl):
 	return batch, rescan
 
 def check_xmr_args():
-	for k in ('address', 'batch', 'addrlist', 'keyaddr_file', 'rescan', 'token_addr'):
-		if getattr(cfg, k):
-			die(1, 'Option --{} not supported for XMR'.format(k.replace('_', '-')))
 	if not cfg.autosign:
 		die(1, 'For XMR address import, --autosign is required')
 	if cfg._args:

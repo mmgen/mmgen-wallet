@@ -18,6 +18,13 @@ class help_notes:
 		self.proto = proto
 		self.cfg = cfg
 
+	def addrimport_args(self):
+		match self.proto.base_proto:
+			case 'Monero':
+				return '[opts]'
+			case _:
+				return '[opts] [MMGen address file]'
+
 	def txcreate_args(self):
 		match self.proto.base_proto:
 			case 'Bitcoin':
