@@ -18,7 +18,7 @@ from ..include.common import cfg, vmsg, check_solc_ver
 
 class unit_tests:
 
-	altcoin_deps = ('solc', 'keccak', 'pysocks', 'semantic_version')
+	altcoin_deps = ('solc', 'keccak', 'pysocks', 'semantic_version', 'pure_protobuf')
 	win_skip = ('led', 'semantic_version')
 
 	def secp256k1(self, name, ut):
@@ -156,4 +156,9 @@ class unit_tests:
 			if cp.returncode:
 				msg(cp.stderr)
 				return False
+		return True
+
+	def pure_protobuf(self, name, ut):
+		from pure_protobuf.annotations import Field
+		from pure_protobuf.message import BaseMessage
 		return True
