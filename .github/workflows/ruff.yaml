@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
     - uses: actions/checkout@v4
@@ -40,8 +40,8 @@ jobs:
       run: |
         python3 -m pip install pip setuptools build wheel
         python3 -m pip install gmpy2 cryptography pynacl ecdsa aiohttp requests pexpect scrypt semantic-version
-        python3 -m pip install pycryptodomex pysocks pycoin ipaddress varint ruff
-        python3 -m pip install lxml py-ecc monero eth-keys
+        python3 -m pip install pycryptodome pysocks pycoin ipaddress varint ruff
+        python3 -m pip install lxml py-ecc monero eth-keys pure-protobuf
         python3 setup.py build_ext --inplace
 
     - name: Check the code with Ruff static code analyzer
