@@ -1083,7 +1083,7 @@ Optional KEYWORD ARGS (type and default value shown in square brackets):
   mmgen_addrs   [str='']      Hyphenated range or comma-separated list of addresses
   showcoinaddrs [bool=True]   Display coin addresses in addition to MMGen IDs
   showempty     [bool=True]   Show addresses with no balances
-  showused      [int=1]       Show used addresses (tristate: 0=no, 1=yes, 2=all)
+  showused      [int=1]       Show used addresses (tristate: 0=no, 1=yes, 2=only)
   all_labels    [bool=False]  Show all addresses with labels
 ```
 
@@ -1252,5 +1252,5 @@ Optional KEYWORD ARGS (type and default value shown in square brackets):
 ```
 
 ```text
-MMGEN-WALLET 16.0.0            September 2025             MMGEN-TOOL(DETAIL)(1)
+MMGEN-WALLET 16.1.dev37        May 2026                   MMGEN-TOOL(DETAIL)(1)
 ```

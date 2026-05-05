@@ -1,6 +1,11 @@
 ```text
   MMGEN-TXSEND: Send a signed MMGen cryptocoin transaction
-  USAGE:        mmgen-txsend [opts] [signed transaction file]
+
+  USAGE:
+    mmgen-txsend [opts] <signed transaction file>
+    mmgen-txsend [opts] --autosign
+    mmgen-txsend [opts] --autosign (--status | --receipt) [index or range]
+
   OPTIONS:
   -h, --help       Print this help message
       --longhelp   Print help message for long (global) options
@@ -34,5 +39,14 @@
                    instead.
   -y, --yes        Answer 'yes' to prompts, suppress non-essential output
 
-  MMGEN-WALLET 16.0.0            September 2025                MMGEN-TXSEND(1)
+
+  With --autosign, combined with --status or --receipt, the optional index or
+  range arg represents an index or range into the list of sent transaction files
+  on the removable device, in reverse chronological order.  ‘0’ (the default)
+  specifies the last sent transaction, ‘1’ the next-to-last, and so on.  Hyphen-
+  separated ranges are also supported.  For example, specifying a range ‘0-3’
+  would output data for the last four sent transactions, beginning with the most
+  recent.
+
+  MMGEN-WALLET 16.1.dev37        May 2026                      MMGEN-TXSEND(1)
 ```

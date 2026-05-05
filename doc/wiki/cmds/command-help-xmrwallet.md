@@ -1,16 +1,19 @@
 ```text
   MMGEN-XMRWALLET: Perform various Monero wallet and transacting operations for
                    addresses in an MMGen XMR key-address file
-  USAGE:           mmgen-xmrwallet [opts] create | sync | list | view | listview | dump | restore [xmr_keyaddrfile] [wallets]
-                   mmgen-xmrwallet [opts] label    [xmr_keyaddrfile] LABEL_SPEC
-                   mmgen-xmrwallet [opts] new      [xmr_keyaddrfile] NEW_ADDRESS_SPEC
-                   mmgen-xmrwallet [opts] transfer [xmr_keyaddrfile] TRANSFER_SPEC
-                   mmgen-xmrwallet [opts] sweep | sweep_all [xmr_keyaddrfile] SWEEP_SPEC
-                   mmgen-xmrwallet [opts] submit   [TX_file]
-                   mmgen-xmrwallet [opts] relay    <TX_file>
-                   mmgen-xmrwallet [opts] resubmit | abort (for use with --autosign only)
-                   mmgen-xmrwallet [opts] txview | txlist [TX_file] ...
-                   mmgen-xmrwallet [opts] export-outputs | export-outputs-sign | import-key-images [wallets]
+
+  USAGE:
+    mmgen-xmrwallet --coin=xmr [opts] create | sync | list | view | listview | dump-json | dump | restore [xmr_keyaddrfile] [wallets]
+    mmgen-xmrwallet --coin=xmr [opts] label    [xmr_keyaddrfile] LABEL_SPEC
+    mmgen-xmrwallet --coin=xmr [opts] new      [xmr_keyaddrfile] NEW_ADDRESS_SPEC
+    mmgen-xmrwallet --coin=xmr [opts] transfer [xmr_keyaddrfile] TRANSFER_SPEC
+    mmgen-xmrwallet --coin=xmr [opts] sweep | sweep_all [xmr_keyaddrfile] SWEEP_SPEC
+    mmgen-xmrwallet --coin=xmr [opts] submit   [TX_file]
+    mmgen-xmrwallet --coin=xmr [opts] relay    <TX_file>
+    mmgen-xmrwallet --coin=xmr [opts] resubmit | abort (for use with --autosign only)
+    mmgen-xmrwallet --coin=xmr [opts] txview | txlist [TX_file] ...
+    mmgen-xmrwallet --coin=xmr [opts] export-outputs | export-outputs-sign | import-key-images [wallets]
+
   OPTIONS:
   -h, --help                       Print this help message
       --longhelp                   Print help message for long (global) options
@@ -19,6 +22,10 @@
                                    When this option is in effect, filename argu-
                                    ments must be omitted, as files are located
                                    automatically.
+  -c, --compat                     Adjust configuration for compatibility with
+                                   the mmgen-tx{create,sign,send} family of
+                                   commands.  Currently equivalent to
+                                   ‘-w /home/vbr/.mmgen/altcoins/xmr/tracking-wallets’
   -f, --priority N                 Specify an integer priority ‘N’ for inclusion
                                    of a transaction in the blockchain (higher
                                    number means higher fee).  Valid parameters:
@@ -88,7 +95,7 @@
               specified address
   sweep     - sweep funds in specified wallet:account to new address in same
               account, or new or specified account in another wallet
-  sweep_all - same as above, but sweep balances of all addresses in the account
+  sweep-all - same as above, but sweep balances of all addresses in the account
   relay     - relay a transaction from a transaction file created using ‘sweep’
               or ‘transfer’ with the --no-relay option
   submit    - submit an autosigned transaction to a wallet and the network
@@ -98,8 +105,11 @@
               transaction may be signed or unsigned
   txview    - display detailed information about a transaction file or files
   txlist    - same as above, but display terse information in tabular format
-  dump      - produce JSON dumps of wallet metadata (accounts, addresses and
-              labels) for a list or range of wallets
+  dump-json - dump wallet metadata (accounts, addresses, labels), plus address
+              balances, for a list or range of wallets, to standard output in
+              JSON format
+  dump      - same as above, but dump metadata only and save the dumps to
+              separate files for each wallet
   restore   - same as ‘create’, but additionally restore wallet metadata from
               the corresponding JSON dump files created with ‘dump’
   export-outputs      - export outputs of watch-only wallets for import into
@@ -499,5 +509,5 @@
   to delete your old hot wallets, make sure to do so securely using ‘shred’,
   ‘wipe’ or some other secure deletion utility.
 
-  MMGEN-WALLET 16.0.0            September 2025             MMGEN-XMRWALLET(1)
+  MMGEN-WALLET 16.1.dev37        May 2026                   MMGEN-XMRWALLET(1)
 ```

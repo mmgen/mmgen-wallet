@@ -1,6 +1,8 @@
 ```text
   MMGEN-TXDO: Create, sign and send an MMGen transaction
-  USAGE:      mmgen-txdo [opts] [ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...] [seed source ...]
+
+  USAGE: mmgen-txdo [opts] [ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...] [addr file ...] [seed source ...]
+
   OPTIONS:
   -h, --help             Print this help message
       --longhelp         Print help message for long (global) options
@@ -85,7 +87,7 @@
   or "hexdata":DATA. In the first form, DATA is a string in your system’s native
   encoding, typically UTF-8.  In the second, DATA is a hexadecimal string (with
   the leading ‘0x’ omitted) encoding the binary data to be embedded.  In both
-  cases, the resulting byte string must not exceed 80 bytes in length.
+  cases, the resulting byte string must not exceed 4096 bytes in length.
 
   If the transaction fee is not specified on the command line (see FEE
   SPECIFICATION below), it will be calculated dynamically using network fee
@@ -142,7 +144,6 @@
   Seed source files must have the canonical extensions listed in the 'FileExt'
   column below:
 
-
   FMT CODES:
 
     Format             FileExt   Valid codes
@@ -190,5 +191,5 @@
 
       $ mmgen-txdo B
 
-  MMGEN-WALLET 16.0.0            September 2025                  MMGEN-TXDO(1)
+  MMGEN-WALLET 16.1.dev37        May 2026                        MMGEN-TXDO(1)
 ```

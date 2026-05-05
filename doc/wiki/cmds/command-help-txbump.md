@@ -1,8 +1,13 @@
 ```text
   MMGEN-TXBUMP: Create, and optionally send and sign, a replacement transaction
-                on supporting networks
-  USAGE:        mmgen-txbump [opts] [MMGen TX file] [seed source] ...
-                mmgen-txbump [opts] [ADDR,AMT ... | DATA_SPEC] ADDR [MMGen TX file] [seed source] ...
+                on supported networks
+
+  USAGE:
+    mmgen-txbump [opts] [MMGen TX file] [seed source] ...
+    mmgen-txbump [opts] [ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...] [MMGen TX file] [seed source] ...
+    mmgen-txbump --autosign [opts] [index]
+    mmgen-txbump --autosign [opts] [index] [ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...]
+
   OPTIONS:
   -h, --help             Print this help message
       --longhelp         Print help message for long (global) options
@@ -56,8 +61,12 @@
   -z, --show-hash-presets Show information on available hash presets
 
 
-  With --autosign, the TX file argument is omitted, and the last submitted TX
-  file on the removable device will be used.
+  With --autosign, the TX file argument is omitted, and the last submitted
+  transaction on the removable device will be used.  Or, if the first non-option
+  argument is a non-negative integer, it specifies an index into the list of
+  submitted transactions, in reverse chronological order, and that transaction
+  will be bumped.  ‘0’ (the default) signifies the last sent transaction, ‘1’
+  the next-to-last, and so on.
 
   If no outputs are specified, the original outputs will be used for the
   replacement transaction, otherwise a new transaction will be created with the
@@ -103,7 +112,6 @@
   Seed source files must have the canonical extensions listed in the 'FileExt'
   column below:
 
-
   FMT CODES:
 
     Format             FileExt   Valid codes
@@ -120,5 +128,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN-WALLET 16.0.0            September 2025                MMGEN-TXBUMP(1)
+  MMGEN-WALLET 16.1.dev37        May 2026                      MMGEN-TXBUMP(1)
 ```

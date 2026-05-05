@@ -1,10 +1,13 @@
 ```text
   MMGEN-TOOL: Perform various MMGen- and cryptocoin-related operations
-  USAGE:      mmgen-tool [opts] <command> <command args>
+
+  USAGE: mmgen-tool [opts] <command> <command args>
+
   OPTIONS:
   -d, --outdir        d  Specify an alternate directory 'd' for output
   -h, --help             Print this help message
       --longhelp         Print help message for long (global) options
+  -a, --autosign         Operate on an autosigned transaction
   -e, --echo-passphrase  Echo passphrase or mnemonic to screen upon entry
   -k, --use-internal-keccak-module Force use of the internal keccak module
   -K, --keygen-backend n Use backend 'n' for public key generation.  Options
@@ -202,5 +205,5 @@
 
   Type ‘mmgen-tool help <command>’ for help on a particular command
 
-  MMGEN-WALLET 16.0.0            September 2025                  MMGEN-TOOL(1)
+  MMGEN-WALLET 16.1.dev37        May 2026                        MMGEN-TOOL(1)
 ```
