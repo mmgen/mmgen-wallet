@@ -53,6 +53,10 @@ specified.
 
 	return f"""
 
+The transaction’s output is listed on the command line, while its input
+is chosen via an interactive menu.
+{outputs_info}{fee_info}""" if proto.base_proto == 'Monero' else f"""
+
 The transaction’s outputs are listed on the command line, while its inputs
 are chosen from a list of the wallet’s unspent outputs via an interactive
 menu.  Alternatively, inputs may be specified using the --inputs option.

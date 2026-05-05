@@ -112,8 +112,9 @@ class help_notes:
 		return "'{}' or '{}'".format(self.proto.dfl_mmtype, MMGenAddrType.mmtypes[self.proto.dfl_mmtype].name)
 
 	def address_types(self):
+		from ..cfg import gc
 		from ..addr import MMGenAddrType
-		return """
+		return '' if gc.cmd_caps.use_coin_opt and self.proto.base_proto != 'Bitcoin' else """
 
 ADDRESS TYPES:
 

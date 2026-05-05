@@ -50,7 +50,7 @@ This script uses that file to create an online view-only Monero wallet to
 match each offline signing wallet.  The set of view-only wallets currently
 configured via --xmrwallets comprises the user’s tracking wallet.
 
-If a view-only wallet for a given address already exists, it’s left untouched
+If a view-only wallet for a given index already exists, it’s left untouched
 and no action is performed.  To add view-only wallets to your tracking wallet,
 just specify additional wallet indexes via --xmrwallets during the offline
 setup process.
