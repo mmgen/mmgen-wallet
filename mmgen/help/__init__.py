@@ -77,21 +77,19 @@ def gen_arg_tuple(cfg, func, text):
 	for arg in func.__code__.co_varnames:
 		yield d[arg] if arg in d else text
 
-def make_usage_str(cfg, caller):
-	indent, col1_w = {
-		'help': (2, len(gc.prog_name) + 1),
-		'user': (0, len('USAGE:')),
-	}[caller]
+def make_usage_str(cfg, *, caller):
 	def gen():
-		ulbl = 'USAGE:'
-		for line in [cfg._usage_data.strip()] if isinstance(cfg._usage_data, str) else cfg._usage_data:
-			yield '{a:{w}} {b} {c}'.format(
+		single_line = isinstance(cfg._usage_data, str)
+		ulbl = 'USAGE:' + (' ' if single_line else join_str)
+		for line in [cfg._usage_data.strip()] if single_line else cfg._usage_data:
+			yield '{a}{b} {c}'.format(
 				a = ulbl,
 				b = gc.prog_name,
-				c = cfg._usage_code(*gen_arg_tuple(cfg, cfg._usage_code, line)) if cfg._usage_code else line,
-				w = col1_w)
+				c = cfg._usage_code(*gen_arg_tuple(cfg, cfg._usage_code, line))
+					if cfg._usage_code else line)
 			ulbl = ''
-	return ('\n' + (' ' * indent)).join(gen())
+	join_str = {'help': '\n    ', 'user': '\n  '}[caller]
+	return join_str.join(gen())
 
 def usage(cfg):
 	print(make_usage_str(cfg, caller='user'))
