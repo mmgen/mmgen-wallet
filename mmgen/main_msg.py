@@ -131,9 +131,7 @@ following format:
 where ADDRTYPE_CODE is a one-letter address type code from the list below, and
 ADDR_IDX_SPEC is a comma-separated list of address indexes or hyphen-separated
 address index ranges.
-
 {n_at}
-
 
                                     NOTES
 

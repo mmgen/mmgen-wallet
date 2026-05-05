@@ -15,6 +15,7 @@ help.seedsplit: seedsplit help notes for MMGen suite
 def help(proto, cfg):
 	from ..seedsplit import SeedShareIdx, SeedShareCount, MasterShareIdx
 	return """
+
 COMMAND NOTES:
 
 This command generates shares one at a time.  Shares may be output to any
@@ -98,8 +99,7 @@ EXAMPLES:
     $ mmgen-seedsplit -M4 -o hincog -J my.hincog,1325 1:2 # Step M (share A)
     $ mmgen-seedsplit -M4 -o bip39 2:2                    # Step N (share B)
     $ mmgen-seedjoin -M4 -H my.hincog,1325 <output_of_step_N>
-
-""".strip().format(
+""".format(
 	si = SeedShareIdx,
 	sc = SeedShareCount,
 	mi = MasterShareIdx)

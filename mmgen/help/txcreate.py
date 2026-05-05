@@ -52,6 +52,7 @@ specified.
 """ if proto.has_usr_fee else ''
 
 	return f"""
+
 The transaction’s outputs are listed on the command line, while its inputs
 are chosen from a list of the wallet’s unspent outputs via an interactive
 menu.  Alternatively, inputs may be specified using the --inputs option.

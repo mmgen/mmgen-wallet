@@ -72,13 +72,9 @@ opts_data = {
                       to non-wallet addresses
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 """,
-	'notes': """
-{t}
+	'notes': """{n_ts}
 Seed source files must have the canonical extensions listed in the 'FileExt'
-column below:
-
-{f}
-"""
+column below:{n_fc}"""
 	},
 	'code': {
 		'options': lambda cfg, proto, help_notes, s: s.format(
@@ -93,8 +89,8 @@ column below:
 			ss_max  = SubSeedIdxRange.max_idx,
 			cu      = proto.coin),
 		'notes': lambda help_mod, help_notes, s: s.format(
-			t       = help_mod('txsign'),
-			f       = help_notes('fmt_codes')),
+			n_ts = help_mod('txsign'),
+			n_fc = help_notes('fmt_codes')),
 	}
 }
 

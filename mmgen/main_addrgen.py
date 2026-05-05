@@ -31,7 +31,7 @@ if gc.prog_name == 'mmgen-keygen':
 	gen_clsname = 'KeyAddrList'
 	gen_desc = 'secret keys'
 	filter_codes = ['-', 'k']
-	note_addrkey = 'By default, both addresses and secret keys are generated.\n\n'
+	note_addrkey = '\n\nBy default, both addresses and secret keys are generated.'
 else:
 	gen_what = 'addresses'
 	gen_clsname = 'AddrList'
@@ -86,19 +86,12 @@ opts_data = {
                            NOTES FOR THIS COMMAND
 
 Address indexes are given as a comma-separated list and/or hyphen-separated
-range(s).
+range(s).{n_ak}
 
-{n_addrkey}If available, the libsecp256k1 library will be used for address generation.
+If available, the libsecp256k1 library will be used for address generation.
 
 
-                      NOTES FOR ALL GENERATOR COMMANDS
-
-{n_sw}{n_pw}{n_bw}
-
-{n_at}
-
-{n_fmt}
-"""
+                      NOTES FOR ALL GENERATOR COMMANDS{n_sw}{n_pw}{n_bw}{n_at}{n_fc}"""
 	},
 	'code': {
 		'options': lambda proto, help_notes, cfg, s: s.format(
@@ -109,16 +102,14 @@ range(s).
 			pnm       = gc.proj_name,
 			what      = gen_what,
 			cfg       = cfg,
-			gc        = gc,
-		),
+			gc        = gc),
 		'notes': lambda help_mod, help_notes, s: s.format(
-			n_addrkey = note_addrkey,
-			n_sw      = help_mod('subwallet')+'\n\n',
-			n_pw      = help_notes('passwd')+'\n\n',
-			n_bw      = help_notes('brainwallet'),
-			n_fmt     = help_notes('fmt_codes'),
-			n_at      = help_notes('address_types'),
-		)
+			n_ak = note_addrkey,
+			n_sw = help_mod('subwallet'),
+			n_pw = help_notes('passwd'),
+			n_bw = help_notes('brainwallet'),
+			n_fc = help_notes('fmt_codes'),
+			n_at = help_notes('address_types'))
 	}
 }
 

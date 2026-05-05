@@ -115,12 +115,9 @@ When bumping a swap transaction, the swap protocol’s quote server on the
 Internet must be reachable either directly or via the SOCKS5 proxy specified
 with the --proxy option.  To improve privacy, it’s recommended to proxy
 requests to the quote server via Tor or some other anonymity network.
-
-{g}{F}{s}
+{n_gl}{n_fe}{n_ts}
 Seed source files must have the canonical extensions listed in the 'FileExt'
-column below:
-
-{f}
+column below:{n_fc}
 """
 	},
 	'code': {
@@ -138,10 +135,10 @@ column below:
 			dsl     = help_notes('dfl_seed_len'),
 			cu      = proto.coin),
 		'notes': lambda help_mod, help_notes, s: s.format(
-			g       = help_notes('gas_limit', target=None),
-			F       = help_notes('fee'),
-			s       = help_mod('txsign'),
-			f       = help_notes('fmt_codes')),
+			n_gl = help_notes('gas_limit', target=None),
+			n_fe = help_notes('fee'),
+			n_ts = help_mod('txsign'),
+			n_fc = help_notes('fmt_codes')),
 	}
 }
 

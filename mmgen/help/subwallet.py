@@ -15,6 +15,7 @@ help.subwallet: subwallet help notes for the MMGen Wallet suite
 def help(proto, cfg):
 	from ..subseed import SubSeedIdxRange
 	return f"""
+
 SUBWALLETS:
 
 Subwallets (subseeds) are specified by a ‘Subseed Index’ consisting of:
@@ -49,4 +50,4 @@ Seed ID collisions among them doesn’t present a problem.
 A safe rule of thumb, therefore, is for *each user* to derive all of his/her
 subwallets from a single parent.  This leaves each user with a total of two
 million subwallets, which should be enough for most practical purposes.
-""".strip()
+"""

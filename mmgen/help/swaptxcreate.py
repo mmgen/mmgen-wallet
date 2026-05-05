@@ -14,6 +14,7 @@ help.swaptxcreate: swaptxcreate and swaptxdo help notes for the MMGen Wallet sui
 
 def help(proto, cfg):
 	return """
+
 This script is similar in operation to ‘mmgen-txcreate’, only with additional
 steps.  Users are advised to first familiarize themselves with the use of that
 script before attempting to perform a swap with this one.

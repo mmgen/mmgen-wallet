@@ -59,7 +59,7 @@ opts_data = {
 
                                COMMANDS
 
-{ch}
+{n_th}
 Type ‘{pn} help <command>’ for help on a particular command
 """
 	},
@@ -71,8 +71,8 @@ Type ‘{pn} help <command>’ for help on a particular command
 			gc      = gc,
 		),
 		'notes': lambda cfg, s, help_notes: s.format(
-			ch      = help_notes('tool_help'),
-			pn      = gc.prog_name)
+			n_th = help_notes('tool_help'),
+			pn   = gc.prog_name)
 	}
 }
 

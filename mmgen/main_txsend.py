@@ -71,6 +71,7 @@ opts_data = {
 -y, --yes        Answer 'yes' to prompts, suppress non-essential output
 """,
 		'notes': """
+
 With --autosign, combined with --status or --receipt, the optional index or
 range arg represents an index or range into the list of sent transaction files
 on the removable device, in reverse chronological order.  ‘0’ (the default)

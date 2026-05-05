@@ -51,7 +51,8 @@ opts_data = {
 -l, --locktime=    t Lock time (block height or unix seconds)
                      (default: {bh})
 """,
-	'notes': f"""\n
+	'notes': f"""
+
 This command creates two transactions: one (with the timelock) to be broadcast
 on the long chain and one on the short chain after a replayable chain fork.
 Only {gc.proj_name} addresses may be spent to.

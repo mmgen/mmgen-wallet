@@ -16,6 +16,7 @@ def help(proto, cfg):
 	from ..xmrwallet import uarg_info
 
 	return """
+
 Many operations take an optional ‘wallets’ argument: one or more address
 indexes (expressed as a comma-separated list and/or hyphenated range) in
 the default or specified key-address file, each corresponding to a Monero
@@ -462,9 +463,8 @@ Tutorial above.
 Once you’ve gained proficiency with the autosigning process and feel ready
 to delete your old hot wallets, make sure to do so securely using ‘shred’,
 ‘wipe’ or some other secure deletion utility.
-""".strip().format(
+""".format(
 	newaddr_spec  = uarg_info['newaddr_spec'].annot,
 	label_spec    = uarg_info['label_spec'].annot,
 	transfer_spec = uarg_info['transfer_spec'].annot,
-	sweep_spec    = uarg_info['sweep_spec'].annot,
-)
+	sweep_spec    = uarg_info['sweep_spec'].annot)

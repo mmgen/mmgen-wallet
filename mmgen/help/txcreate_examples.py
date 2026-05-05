@@ -27,6 +27,7 @@ def help(proto, cfg):
 	match proto.base_proto:
 		case 'Bitcoin':
 			return f"""
+
 EXAMPLES:
 
   Send 0.123 {proto.coin} to an external {proto.name} address, returning the change to a
@@ -60,6 +61,7 @@ EXAMPLES:
 
 		case 'Monero':
 			return f"""
+
 EXAMPLES:
 
   Send 0.123 {proto.coin} to an external {proto.name} address:
@@ -73,6 +75,7 @@ EXAMPLES:
 
 		case _:
 			return f"""
+
 EXAMPLES:
 
   Send 0.123 {proto.coin} to an external {proto.name} address:

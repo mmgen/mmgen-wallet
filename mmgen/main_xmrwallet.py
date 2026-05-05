@@ -86,10 +86,7 @@ opts_data = {
 -U, --wallet-rpc-user=user       Wallet RPC username (currently: {cfg.monero_wallet_rpc_user!r})
 -P, --wallet-rpc-password=pass   Wallet RPC password (currently: [scrubbed])
 """,
-	'notes': """
-
-{xmrwallet_help}
-"""
+	'notes': '{n_xw}'
 	},
 	'code': {
 		'options': lambda cfg, help_notes, s: s.format(
@@ -101,7 +98,7 @@ opts_data = {
 			tp  = fmt_dict(xmrwallet.tx_priorities, fmt='equal_compact')
 		),
 		'notes': lambda help_mod, s: s.format(
-			xmrwallet_help = help_mod('xmrwallet')
+			n_xw = help_mod('xmrwallet')
 		)
 	}
 }

@@ -119,12 +119,7 @@ opts_data = {
 			-w -S, --stdout          Write wallet data to stdout instead of file
 			-- -v, --verbose         Produce more verbose output
 		""",
-		'notes': """
-
-{n_ss}{n_sw}{n_pw}{n_bw}
-
-{f}
-"""
+		'notes': '{n_ss}{n_sw}{n_pw}{n_bw}{n_fc}'
 	},
 	'code': {
 		'options': lambda cfg, help_notes, s: s.format(
@@ -134,15 +129,13 @@ opts_data = {
 			ms_max  = help_notes('MasterShareIdx').max_val,
 			dsl     = help_notes('dfl_seed_len'),
 			cfg     = cfg,
-			gc      = gc,
-		),
+			gc      = gc),
 		'notes': lambda cfg, help_mod, help_notes, s: s.format(
-			f       = help_notes('fmt_codes'),
-			n_ss    = ('', help_mod('seedsplit')+'\n\n')[do_ss_note],
-			n_sw    = ('', help_mod('subwallet')+'\n\n')[do_sw_note],
-			n_pw    = help_notes('passwd'),
-			n_bw    = ('', '\n\n'+help_notes('brainwallet'))[do_bw_note]
-		)
+			n_ss = ('', help_mod('seedsplit'))[do_ss_note],
+			n_sw = ('', help_mod('subwallet'))[do_sw_note],
+			n_pw = help_notes('passwd'),
+			n_bw = ('', help_notes('brainwallet'))[do_bw_note],
+			n_fc = help_notes('fmt_codes'))
 	}
 }
 

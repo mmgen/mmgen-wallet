@@ -53,7 +53,7 @@ opts_data = {
   cli             - execute an RPC call with supplied arguments
   wallet_cli      - execute a wallet RPC call with supplied arguments (wallet
                     is first argument)
-	"""
+"""
 	}
 }
 

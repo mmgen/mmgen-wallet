@@ -80,9 +80,9 @@ range(s).
 Changing either the password format (base32,base58) or length alters the seed
 and thus generates a completely new set of passwords.
 
-PASSWORD FORMATS:
 
-  {pfi}
+PASSWORD FORMATS:{n_pf}
+
 
 EXAMPLES:
 
@@ -104,14 +104,7 @@ EXAMPLES:
   about inadvertent reuse of private data.
 
 
-                      NOTES FOR ALL GENERATOR COMMANDS
-
-{n_pw}
-
-{n_bw}
-
-{n_fmt}
-"""
+                      NOTES FOR ALL GENERATOR COMMANDS{n_pw}{n_bw}{n_fc}"""
 	},
 	'code': {
 		'options': lambda cfg, help_notes, s: s.format(
@@ -121,17 +114,17 @@ EXAMPLES:
 			gc    = gc,
 		),
 		'notes': lambda cfg, help_notes, s: s.format(
-			cfg   = cfg,
-			i58   = pwi['b58'],
-			i32   = pwi['b32'],
-			i39   = pwi['bip39'],
-			ml    = MMGenPWIDString.max_len,
-			fs    = '", "'.join(MMGenPWIDString.forbidden),
-			n_pw  = help_notes('passwd'),
-			n_bw  = help_notes('brainwallet'),
-			pfi   = help_notes('password_formats'),
-			n_fmt = help_notes('fmt_codes'),
-			gc    = gc,
+			cfg  = cfg,
+			i58  = pwi['b58'],
+			i32  = pwi['b32'],
+			i39  = pwi['bip39'],
+			ml   = MMGenPWIDString.max_len,
+			fs   = '", "'.join(MMGenPWIDString.forbidden),
+			n_pw = help_notes('passwd'),
+			n_bw = help_notes('brainwallet'),
+			n_pf = help_notes('password_formats'),
+			n_fc = help_notes('fmt_codes'),
+			gc   = gc,
 		)
 	}
 }

@@ -70,10 +70,7 @@ The --id-str option is required only for master share joins.  For ordinary
 joins it will be ignored.
 
 For usage examples, see the help screen for the 'mmgen-seedsplit' command.
-
-{n_pw}
-
-{f}
+{n_pw}{n_fc}
 """
 	},
 	'code': {
@@ -84,8 +81,8 @@ For usage examples, see the help screen for the 'mmgen-seedsplit' command.
 			gc     = gc,
 		),
 		'notes': lambda cfg, help_notes, s: s.format(
-			f      = help_notes('fmt_codes'),
-			n_pw   = help_notes('passwd'),
+			n_fc = help_notes('fmt_codes'),
+			n_pw = help_notes('passwd'),
 		)
 	}
 }

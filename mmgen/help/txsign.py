@@ -21,6 +21,7 @@ def help(proto, cfg):
 		return CoinDaemon(cfg, network_id=proto.coin).exec_fn if proto.coin in CoinDaemon.coins else 'bitcoind'
 
 	return """
+
 Transactions may contain both {pnm} or non-{pnm} input addresses.
 
 To sign non-{pnm} inputs, a coin daemon wallet dump or flat key list is used

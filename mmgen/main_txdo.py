@@ -119,19 +119,11 @@ opts_data = {
 			-- -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 			-- -z, --show-hash-presets Show information on available hash presets
 		""",
-		'notes': """
-{c}
-{n_at}
+		'notes': """{n_tc}{n_at}{n_gl}{n_fe}
 
-{g}{F}
-                                 SIGNING NOTES
-{s}
+                                 SIGNING NOTES{n_ts}
 Seed source files must have the canonical extensions listed in the 'FileExt'
-column below:
-
-{f}
-
-{x}"""
+column below:{n_fc}{n_cx}"""
 	},
 	'code': {
 		'usage': lambda cfg, proto, help_notes, s: s.format(
@@ -157,13 +149,13 @@ column below:
 			x_all   = fmt_list(cfg._autoset_opts['swap_proto'].choices, fmt='no_spc'),
 			x_dfl   = cfg._autoset_opts['swap_proto'].choices[0]),
 		'notes': lambda cfg, help_mod, help_notes, s: s.format(
-			c       = help_mod(f'{target}create'),
-			g       = help_notes('gas_limit', target),
-			F       = help_notes('fee'),
-			n_at    = help_notes('address_types'),
-			f       = help_notes('fmt_codes'),
-			s       = help_mod('txsign'),
-			x       = help_mod(f'{target}create_examples'))
+			n_tc = help_mod(f'{target}create'),
+			n_gl = help_notes('gas_limit', target),
+			n_fe = help_notes('fee'),
+			n_at = help_notes('address_types'),
+			n_fc = help_notes('fmt_codes'),
+			n_ts = help_mod('txsign'),
+			n_cx = help_mod(f'{target}create_examples'))
 	}
 }
 

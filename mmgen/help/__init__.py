@@ -103,7 +103,9 @@ class Help:
 
 		def gen_output():
 			yield '  {} {}'.format(gc.prog_name.upper() + ':', opts.opts_data['text']['desc'].strip())
+			yield ''
 			yield make_usage_str(cfg, caller='help')
+			yield ''
 			yield self.help_type.upper().replace('_', ' ') + ':'
 
 			# process code for options
