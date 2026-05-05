@@ -82,10 +82,11 @@ def make_usage_str(cfg, *, caller):
 		single_line = isinstance(cfg._usage_data, str)
 		ulbl = 'USAGE:' + (' ' if single_line else join_str)
 		for line in [cfg._usage_data.strip()] if single_line else cfg._usage_data:
-			yield '{a}{b} {c}'.format(
+			yield '{a}{b}{c} {d}'.format(
 				a = ulbl,
 				b = gc.prog_name,
-				c = cfg._usage_code(*gen_arg_tuple(cfg, cfg._usage_code, line))
+				c = '' if cfg.coin in (None, 'BTC') else f' --coin={cfg.coin.lower()}',
+				d = cfg._usage_code(*gen_arg_tuple(cfg, cfg._usage_code, line))
 					if cfg._usage_code else line)
 			ulbl = ''
 	join_str = {'help': '\n    ', 'user': '\n  '}[caller]

@@ -21,6 +21,14 @@ class help_notes:
 		self.proto = proto
 		self.cfg = cfg
 
+	def cmd_coin_arg(self):
+		from ..cfg import gc
+		match self.proto.coin:
+			case 'BTC':
+				return gc.prog_name
+			case _:
+				return f'{gc.prog_name} --coin={self.proto.coin.lower()}'
+
 	def addrimport_args(self):
 		match self.proto.base_proto:
 			case 'Monero':

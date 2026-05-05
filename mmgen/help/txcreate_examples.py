@@ -13,6 +13,7 @@ help.txcreate_examples: txcreate and txdo help examples for the MMGen Wallet sui
 """
 
 from ..cfg import gc
+from . import help_notes
 
 def help(proto, cfg):
 
@@ -21,7 +22,7 @@ def help(proto, cfg):
 	t = tool_cmd(cfg, mmtype=mmtype)
 	addr = t.privhex2addr('bead' * 16)
 	sample_addr = addr.views[addr.view_pref]
-	cmd_base = gc.prog_name + ('' if proto.coin == 'BTC' else f' --coin={proto.coin.lower()}')
+	cmd_base = help_notes.help_notes(proto, cfg).cmd_coin_arg()
 	action = 'Create' if gc.prog_name == 'mmgen-txcreate' else 'Execute'
 
 	match proto.base_proto:
