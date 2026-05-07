@@ -942,7 +942,7 @@ class Autosign:
 				await self.do_sign()
 			prev_status = status
 			if not n % 10:
-				msg_r(f'\r{" "*17}\rWaiting')
+				msg_r(f'\r{" " * 38}\rWaiting for device insertion')
 			await asyncio.sleep(0.2 if threaded else 1)
 			if not threaded:
 				msg_r('.')

@@ -1086,7 +1086,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 			t.expect(f'{self.tx_count} non-automount transactions signed')
 			if self.bad_tx_count:
 				t.expect(f'{self.bad_tx_count} non-automount transactions failed to sign')
-			t.expect('Waiting')
+			t.expect('Waiting for device insertion')
 
 		if led_opts:
 			opts_msg = '‘' + ' '.join(led_opts) + '’'

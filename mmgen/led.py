@@ -43,7 +43,7 @@ class LEDControl:
 
 	boards = {
 		'raspi_pi': binfo(
-			name    = 'Raspberry Pi',
+			name    = 'Raspberry Pi (Armbian)',
 			control = '/sys/class/leds/led0/brightness',
 			trigger = '/sys/class/leds/led0/trigger',
 			trigger_dfl = 'mmc0',
