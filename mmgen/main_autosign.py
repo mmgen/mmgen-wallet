@@ -130,6 +130,10 @@ if cmd in ('test_led', 'list_led'):
 				gmsg('LED signaling is supported by this platform!')
 	sys.exit(0)
 
+if cfg.xmrwallets:
+	if cmd not in ('setup', 'xmr_setup'):
+		die(1, '--xmrwallets is valid only for the ‘setup’ and ‘xmr_setup’ operations')
+
 if cmd != 'setup':
 	for opt in ('seed_len', 'mnemonic_fmt', 'keys_from_file'):
 		if getattr(cfg, opt):

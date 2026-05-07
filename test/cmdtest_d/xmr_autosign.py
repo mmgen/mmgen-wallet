@@ -128,8 +128,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 		self.burn_addr = make_burn_addr(cfg)
 
-		self.opts.append('--xmrwallets={}'.format(self.users['alice'].kal_range)) # mmgen-autosign opts
-		self.autosign_opts = ['--autosign']                                       # mmgen-xmrwallet opts
+		self.xmrwallets_opt = f'--xmrwallets={self.users["alice"].kal_range}'
+		self.autosign_opts = ['--autosign'] # mmgen-xmrwallet opts
 		self.spawn_env['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = '1'
 
 	def create_tmp_wallets(self):
@@ -254,6 +254,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			mn_type        = 'mmgen',
 			mn_file        = self.users['alice'].mmwords,
 			use_dfl_wallet = None,
+			add_opts       = [self.xmrwallets_opt],
 			expect_args    = ['Continue with Monero setup? (Y/n): ', 'n'])
 
 	def autosign_xmr_setup_redo(self):
@@ -268,7 +269,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		self.remove_device_online()
 
 		self.insert_device()
-		t = self.spawn('mmgen-autosign', self.opts + ['xmr_setup'], no_passthru_opts=True)
+		t = self.spawn(
+				'mmgen-autosign',
+				self.opts + [self.xmrwallets_opt] + ['xmr_setup'],
+				no_passthru_opts = True)
 		if write_viewkeys:
 			t.written_to_file('View keys')
 		else:
