@@ -646,6 +646,8 @@ class CmdTestAutosign(CmdTestAutosignBase):
 	)
 
 	cmd_group = (
+		('test_led',                  'testing for LED support'),
+		('list_led',                  'listing LED-supported boards'),
 		('start_daemons',             'starting daemons'),
 		('copy_tx_files',             'copying transaction files'),
 		('gen_key',                   'generating key'),
@@ -1014,6 +1016,14 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		t.read()
 		self.remove_device()
 		return t
+
+	def test_led(self, *, op='test_led', expect_str='LED signaling'):
+		t = self.spawn('mmgen-autosign', ['--quiet', '--no-insert-check', op])
+		t.expect(expect_str)
+		return t
+
+	def list_led(self):
+		return self.test_led(op='list_led', expect_str='Boards with')
 
 class CmdTestAutosignBTC(CmdTestAutosign):
 	'autosigning BTC transactions'

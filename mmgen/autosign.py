@@ -470,7 +470,9 @@ class Autosign:
 		'enable_swap',
 		'disable_swap',
 		'clean',
-		'wipe_key')
+		'wipe_key',
+		'list_led',
+		'test_led')
 
 	mn_fmts = {
 		'mmgen': 'words',

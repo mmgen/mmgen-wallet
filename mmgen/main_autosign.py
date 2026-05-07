@@ -22,7 +22,7 @@ autosign: Auto-sign MMGen transactions, message files and XMR wallet output file
 
 import sys
 
-from .util import msg, die, fmt_list, exit_if_mswin, async_run
+from .util import msg, ymsg, gmsg, die, fmt_list, exit_if_mswin, async_run
 
 exit_if_mswin('autosigning')
 
@@ -94,6 +94,8 @@ wipe_key  - wipe the wallet encryption key on the removable device, making
             signing transactions or stealing the user’s seed impossible.
             The operation is intended as a ‘kill switch’ and thus performed
             without prompting
+list_led  - list boards with tested LED signaling support
+test_led  - test the current board for LED signaling support
 
 
                                USAGE NOTES
@@ -106,10 +108,6 @@ device and exits.
 If invoked with ‘wait’, the program waits in a loop, mounting the removable
 device, performing signing operations and unmounting the device every time it
 is inserted.
-
-On supported platforms (currently Orange Pi, Rock Pi and Raspberry Pi boards),
-the status LED indicates whether the program is busy or in standby mode, i.e.
-ready for device insertion or removal.
 
 The removable device must have a partition with a filesystem labeled MMGEN_TX
 and a user-writable root directory.  For interoperability between OS-es, it’s
@@ -125,6 +123,27 @@ Signing is performed with a temporary wallet created in volatile memory in
 the directory ‘{asi.wallet_dir}’ (as currently configured).  The wallet is
 encrypted with a 32-byte password saved in the file ‘autosign.key’ in the
 root of the removable device’s filesystem.
+
+
+                             LED SIGNALING SUPPORT
+
+On supported platforms (selected Orange Pi, Rock Pi, Banana Pi, Nano Pi and
+Raspberry Pi boards), a flashing LED indicates whether signing is in progress
+or the program is in standby mode, i.e. ready for device insertion or removal.
+
+The operation ‘test_led’ tests the current installation for LED support, while
+‘list_led’ displays a list of supported board/OS combinations.  Note that this
+list is not exhaustive: signaling may work with other boards, especially those
+produced by the listed manufacturers.  If ‘test_led’ reports that your board is
+not supported, please submit an issue to the mmgen-wallet repository on Github
+or via e-mail, including the board model, OS version and output of the
+following shell command:
+
+    ls -RH /sys/class/leds/{{*status*,*led*}}
+
+In the absence of LED support, the user must observe the signing progress
+on-screen and wait for the “safe to extract” message to appear.
+
 
 The password and temporary wallet may be created in one operation by invoking
 ‘mmgen-autosign setup’ with the removable device inserted.  In this case, the
@@ -205,6 +224,23 @@ cmd = cfg._args[0] if len(cfg._args) == 1 else 'sign' if not cfg._args else cfg.
 
 if cmd not in Autosign.cmds + Autosign.util_cmds:
 	die(1, f'‘{cmd}’: unrecognized command')
+
+if cmd in ('test_led', 'list_led'):
+	from .led import LEDControl
+	match cmd:
+		case 'list_led':
+			msg(
+				'Boards with tested LED signaling support:\n' +
+				'\n'.join(f'  {v.name}' for k, v in LEDControl.boards.items() if k != 'dummy'))
+		case 'test_led':
+			from .exception import NoLEDSupport
+			try:
+				LEDControl(enabled=True)
+			except NoLEDSupport:
+				ymsg('No LED signaling support for this platform')
+			else:
+				gmsg('LED signaling is supported by this platform!')
+	sys.exit(0)
 
 if cmd != 'setup':
 	for opt in ('seed_len', 'mnemonic_fmt', 'keys_from_file'):
