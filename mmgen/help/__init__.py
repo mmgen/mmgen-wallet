@@ -60,10 +60,10 @@ def gen_arg_tuple(cfg, func, text):
 		return getattr(importlib.import_module(
 			f'{cfg._help_pkg}.help_notes').help_notes(proto, cfg), k)(*args, **kwargs)
 
-	def help_mod(modname):
+	def help_mod(modname, *args, **kwargs):
 		import importlib
 		return importlib.import_module(
-			f'{cfg._opts.help_pkg}.{modname}').help(proto, cfg)
+			f'{cfg._opts.help_pkg}.{modname}').help(proto, cfg, *args, **kwargs)
 
 	from ..protocol import init_proto_from_cfg
 	proto = init_proto_from_cfg(cfg, need_amt=True)
