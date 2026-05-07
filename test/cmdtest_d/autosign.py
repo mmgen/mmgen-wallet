@@ -227,8 +227,6 @@ class CmdTestAutosignBase(CmdTestBase):
 			t.expect('Use default wallet for autosigning? (Y/n): ', 'y')
 			t.passphrase('MMGen wallet', wallet_passwd)
 		else:
-			if use_dfl_wallet is not None: # None => no dfl wallet present
-				t.expect('Use default wallet for autosigning? (Y/n): ', 'n')
 			mn_file = mn_file or {'mmgen': dfl_words_file, 'bip39': dfl_bip39_file}[mn_type]
 			mn = read_from_file(mn_file).strip().split()
 			if not seed_len:

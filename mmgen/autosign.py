@@ -817,14 +817,19 @@ class Autosign:
 		remove_wallet_dir()
 		create_wallet_dir()
 
-		wf = find_file_in_dir(get_wallet_cls('mmgen'), self.cfg.data_dir)
-		if wf and keypress_confirm(
+		def get_mn_wallet():
+			return Wallet(self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt])
+
+		if self.cfg.mnemonic_fmt or self.cfg.seed_len:
+			ss_in = get_mn_wallet()
+		elif (wf := find_file_in_dir(get_wallet_cls('mmgen'), self.cfg.data_dir)) and keypress_confirm(
 				cfg         = self.cfg,
 				prompt      = f'Default wallet ‘{wf}’ found.\nUse default wallet for autosigning?',
 				default_yes = True):
 			ss_in = Wallet(Config(), fn=wf)
 		else:
-			ss_in = Wallet(self.cfg, in_fmt=self.mn_fmts[self.cfg.mnemonic_fmt or self.dfl_mn_fmt])
+			ss_in = get_mn_wallet()
+
 		ss_out = Wallet(self.cfg, ss=ss_in, passwd_file=str(self.keyfile))
 		ss_out.write_to_file(desc='autosign wallet', outdir=self.wallet_dir)
 

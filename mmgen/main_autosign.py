@@ -42,7 +42,8 @@ opts_data = {
                       the file in volatile memory for use during the signing
                       session, thus permitting the deletion of the original
                       file for increased security.
--l, --seed-len=N      Specify wallet seed length of ‘N’ bits (for setup only)
+-l, --seed-len=N      Specify wallet seed length of ‘N’ bits (for setup with
+                      mnemonic seed phrase only)
 -L, --led             Use status LED to signal standby, busy and error
 -m, --mountpoint=M    Specify an alternate mountpoint 'M'
                       (default: {asi.dfl_mountpoint!r})
