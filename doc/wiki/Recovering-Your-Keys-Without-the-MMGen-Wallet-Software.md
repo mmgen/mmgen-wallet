@@ -12,7 +12,7 @@
 
 #### <a id="a_i">Introduction</a>
 
-If you’re considering using MMGen Wallet and are a Bitcoiner with a normal,
+If you’re considering using MMGen Wallet and are a crypto user with a normal,
 healthy degree of paranoia, then the following question will probably come to
 mind: “What if I have funds in MMGen Wallet and I lose the software?  How do
 I recover my coins?”

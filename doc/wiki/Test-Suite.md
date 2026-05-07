@@ -62,7 +62,7 @@ $ python3 setup.py build_ext --inplace
 Run the following if upgrading from a previous version of MMGen:
 
 ```text
-$ test/cmdtest.py clean
+$ test/clean.py
 ```
 
 Run the test suite in fast mode, skipping altcoin tests (fast mode skips
@@ -138,12 +138,6 @@ $ python3 -m pip install eth-keys
 Install this on MSYS2 or if ‘eth-keys’ is unavailable on your platform.  Do not
 confuse this with the Reth ‘ethkey’ utility, which is entirely different.
 
-On Arch Linux and ArchLinuxArm systems, ‘ethkey’ is installed as follows:
-
-```text
-$ pacman -S openethereum
-```
-
 For 64-bit Windows (MSYS2), Linux and macOS systems, ‘ethkey’ can be found in
 the zip archives distributed with [this release][oz].
 
@@ -155,7 +149,8 @@ $ cd vanitygen-plusplus
 $ git checkout -b vanitygen-plus e7858035d092  # rewind to fork commit
 ```
 
-Edit the Makefile, changing `-lpcre` to `-lpcre2-posix` on the second line.
+Optional: On some systems, you may need to edit the Makefile, changing `-lpcre`
+to `-lpcre2-posix` on the second line.
 
 ```text
 $ make keyconv # ‘mingw32-make.exe keyconv’ for MSYS2
@@ -166,8 +161,12 @@ $ cd ..
 
 #### Install Zcash-Mini
 
+Skip the go installation step if go is already installed (check by invoking
+`go version`)
+
 ```text
-$ sudo apt-get install golang  # skip this if Go is already installed
+$ sudo apt-get install golang  # Debian, Ubuntu
+$ sudo pacman -S go            # Arch Linux
 $ git clone https://github.com/FiloSottile/zcash-mini
 $ cd zcash-mini
 $ sed -e "s@github.com/FiloSottile/@@" -i main.go
