@@ -168,7 +168,7 @@ async def main():
 
 	if cfg.autosign:
 		from .tx.util import mount_removable_device
-		from .autosign import Signable
+		from .autosign.signable import Signable
 		asi = mount_removable_device(cfg)
 		si = Signable.automount_transaction(asi)
 		if si.unsigned or si.unsent:

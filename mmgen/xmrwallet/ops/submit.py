@@ -42,7 +42,7 @@ class OpSubmit(OpWallet):
 		if self.uargs.infile:
 			fn = Path(self.uargs.infile)
 		else:
-			from ...autosign import Signable
+			from ...autosign.signable import Signable
 			fn = Signable.xmr_transaction(self.asi).get_unsubmitted()
 		return self.get_tx_cls('ColdSigned')(cfg=self.cfg, fn=fn)
 
@@ -115,7 +115,7 @@ class OpResubmit(OpSubmit):
 			die(1, '--autosign is required for this operation')
 
 	def get_tx(self):
-		from ...autosign import Signable
+		from ...autosign.signable import Signable
 		fns = Signable.xmr_transaction(self.asi).get_submitted()
 		cls = self.get_tx_cls('Submitted')
 		return sorted((cls(self.cfg, Path(fn)) for fn in fns),
@@ -127,5 +127,5 @@ class OpAbort(OpBase):
 	def __init__(self, cfg, uarg_tuple):
 		super().__init__(cfg, uarg_tuple)
 		self.mount_removable_device()
-		from ...autosign import Signable
+		from ...autosign.signable import Signable
 		Signable.xmr_transaction(self.asi).shred_abortable() # prompts user, then raises exception or exits

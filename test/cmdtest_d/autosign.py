@@ -28,7 +28,8 @@ from mmgen.cfg import Config
 from mmgen.color import red, blue, yellow, cyan, orange, purple, gray
 from mmgen.util import msg, suf, die, indent, fmt
 from mmgen.led import LEDControl
-from mmgen.autosign import Autosign, Signable
+from mmgen.autosign import Autosign
+from mmgen.autosign.signable import Signable
 
 from ..include.common import (
 	omsg,
@@ -998,11 +999,11 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		res = t.read()
 		self.remove_device()
 		for signable_list in present:
-			for signable_clsname in getattr(Signable, signable_list):
+			for signable_clsname in getattr(Autosign, signable_list):
 				desc = getattr(Signable, signable_clsname).desc
 				assert f'No unsigned {desc}s' in res, f'‘No unsigned {desc}s’ missing in output'
 		for signable_list in absent:
-			for signable_clsname in getattr(Signable, signable_list):
+			for signable_clsname in getattr(Autosign, signable_list):
 				desc = getattr(Signable, signable_clsname).desc
 				assert not f'No unsigned {desc}s' in res, f'‘No unsigned {desc}s’ should be absent in output'
 		return t

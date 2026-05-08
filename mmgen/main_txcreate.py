@@ -138,7 +138,7 @@ async def main():
 
 	if cfg.autosign:
 		from .tx.util import mount_removable_device
-		from .autosign import Signable
+		from .autosign.signable import Signable
 		asi = mount_removable_device(cfg, add_cfg={'xmrwallet_compat': True})
 		Signable.automount_transaction(asi).check_create_ok()
 
