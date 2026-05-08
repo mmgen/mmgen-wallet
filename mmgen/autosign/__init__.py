@@ -17,14 +17,14 @@ from stat import S_IWUSR, S_IRUSR
 from pathlib import Path
 from subprocess import run, PIPE, DEVNULL
 
-from .cfg import Config
-from .util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list, is_int, have_sudo, capfirst
-from .color import yellow, red, orange, brown, blue, gray
-from .wallet import Wallet, get_wallet_cls
-from .addrlist import AddrIdxList
-from .filename import find_file_in_dir
-from .fileutil import shred_file
-from .ui import keypress_confirm
+from ..cfg import Config
+from ..util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list, is_int, have_sudo, capfirst
+from ..color import yellow, red, orange, brown, blue, gray
+from ..wallet import Wallet, get_wallet_cls
+from ..addrlist import AddrIdxList
+from ..filename import find_file_in_dir
+from ..fileutil import shred_file
+from ..ui import keypress_confirm
 
 def SwapMgr(*args, **kwargs):
 	match sys.platform:
@@ -184,7 +184,7 @@ class Signable:
 		automount = False
 
 		async def sign(self, f):
-			from .tx import UnsignedTX
+			from ..tx import UnsignedTX
 			tx1 = UnsignedTX(
 				cfg       = self.cfg,
 				filename  = f,
@@ -195,9 +195,9 @@ class Signable:
 					setattr(self, k, getattr(ctx, k))
 				return await ctx.sign(f, compat_call=True)
 			if tx1.proto.sign_mode == 'daemon':
-				from .rpc import rpc_init
+				from ..rpc import rpc_init
 				tx1.rpc = await rpc_init(self.cfg, tx1.proto, ignore_wallet=True)
-			from .tx.keys import TxKeys
+			from ..tx.keys import TxKeys
 			tx2 = await tx1.sign(
 				TxKeys(
 					self.cfg,
@@ -341,7 +341,7 @@ class Signable:
 				tx_range = tx_range)
 
 		async def get_last_created(self, *, tx_range, sort_key=lambda x: x.timestamp):
-			from .tx import CompletedTX
+			from ..tx import CompletedTX
 			fns = [f for f in self.dir.iterdir() if f.name.endswith(self.subext)]
 			files = sorted(
 				[await CompletedTX(cfg=self.cfg, filename=str(txfile), quiet_open=True)
@@ -373,8 +373,8 @@ class Signable:
 		subext = 'subtx'
 
 		async def sign(self, f, compat_call=False):
-			from . import xmrwallet
-			from .xmrwallet.file.tx import MoneroMMGenTX
+			from .. import xmrwallet
+			from ..xmrwallet.file.tx import MoneroMMGenTX
 			tx1 = MoneroMMGenTX.Completed(self.parent.xmrwallet_cfg, f)
 			m = xmrwallet.op(
 				'sign',
@@ -409,7 +409,7 @@ class Signable:
 					if not json.loads(f.read_text())['MoneroMMGenWalletOutputsFile']['data']['imported'])
 
 		async def sign(self, f):
-			from . import xmrwallet
+			from .. import xmrwallet
 			wallet_idx = xmrwallet.op_cls('wallet').get_idx_from_fn(f)
 			m = xmrwallet.op(
 				'import_outputs',
@@ -429,7 +429,7 @@ class Signable:
 		fail_msg = 'failed to sign or signed incompletely'
 
 		async def sign(self, f):
-			from .msg import UnsignedMsg, SignedMsg
+			from ..msg import UnsignedMsg, SignedMsg
 			m = UnsignedMsg(self.cfg, infile=f)
 			await m.sign(wallet_files=self.parent.wallet_files[:], passwd_file=str(self.parent.keyfile))
 			m = SignedMsg(self.cfg, data=m.__dict__)
@@ -543,7 +543,7 @@ class Autosign:
 		self.init_fixup()
 
 		if sys.platform == 'darwin': # test suite uses ‘fixed-up’ shm_dir
-			from .platform.darwin.util import MacOSRamDisk
+			from ..platform.darwin.util import MacOSRamDisk
 			self.ramdisk = MacOSRamDisk(
 				cfg,
 				self.macOS_ramdisk_name,
@@ -591,17 +591,17 @@ class Autosign:
 		self.swap = SwapMgr(self.cfg, ignore_zram=True)
 
 	async def check_daemons_running(self):
-		from .protocol import init_proto
+		from ..protocol import init_proto
 		for coin in self.coins:
 			proto = init_proto(self.cfg,  coin, network=self.cfg.network, need_amt=True)
 			if proto.sign_mode == 'daemon':
 				self.cfg._util.vmsg(f'Checking {coin} daemon')
-				from .rpc import rpc_init
-				from .exception import SocketError
+				from ..rpc import rpc_init
+				from ..exception import SocketError
 				try:
 					await rpc_init(self.cfg, proto, ignore_wallet=True)
 				except SocketError as e:
-					from .daemon import CoinDaemon
+					from ..daemon import CoinDaemon
 					d = CoinDaemon(self.cfg, proto=proto, test_suite=self.cfg.test_suite)
 					die(2,
 						f'\n{e}\nIs the {d.coind_name} daemon ({d.exec_fn}) running '
@@ -772,7 +772,7 @@ class Autosign:
 		self.ramdisk.destroy()
 
 	def _get_macOS_ramdisk_size(self):
-		from .platform.darwin.util import MacOSRamDisk, warn_ramdisk_too_small
+		from ..platform.darwin.util import MacOSRamDisk, warn_ramdisk_too_small
 		# allow 1MB for each Monero wallet
 		xmr_size = len(AddrIdxList(fmt_str=self.cfg.xmrwallets)) if self.cfg.xmrwallets else 0
 		calc_size = xmr_size + 1
@@ -856,7 +856,7 @@ class Autosign:
 	def xmr_setup(self):
 
 		def create_signing_wallets():
-			from . import xmrwallet
+			from .. import xmrwallet
 			if len(self.wallet_files) > 1:
 				ymsg(
 					'Warning: more than one wallet file, using the first '
@@ -964,15 +964,15 @@ class Autosign:
 		signal.signal(signal.SIGINT, handler)
 
 	def init_led(self):
-		from .led import LEDControl
+		from ..led import LEDControl
 		self.led = LEDControl(
 			enabled = self.cfg.led,
 			simulate = self.cfg.test_suite_autosign_led_simulate)
 		self.led.set('off')
 
 	def setup_non_mmgen_keys(self):
-		from .fileutil import get_lines_from_file, write_data_to_file
-		from .crypto import Crypto
+		from ..fileutil import get_lines_from_file, write_data_to_file
+		from ..crypto import Crypto
 		lines = get_lines_from_file(self.cfg, self.cfg.keys_from_file, desc='keylist data')
 		write_data_to_file(
 			self.cfg,
@@ -989,8 +989,8 @@ class Autosign:
 		if not hasattr(self, 'keylist'):
 			path = self.wallet_dir / self.keylist_fn
 			if path.exists():
-				from .crypto import Crypto
-				from .fileutil import get_data_from_file
+				from ..crypto import Crypto
+				from ..fileutil import get_data_from_file
 				self.keylist = Crypto(self.cfg).mmgen_decrypt(
 					get_data_from_file(
 						self.cfg,

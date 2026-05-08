@@ -1,4 +1,4 @@
-from .autosign_orig import *
+from .__init___orig import *
 
 class overlay_fake_Autosign:
 
