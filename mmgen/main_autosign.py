@@ -152,6 +152,8 @@ match cmd:
 	case 'gen_key':
 		asi.gen_key()
 	case 'setup':
+		asi.do_mount()
+		asi.clean_old_files()
 		asi.setup()
 		from .ui import keypress_confirm
 		if cfg.xmrwallets and keypress_confirm(cfg, '\nContinue with Monero setup?', default_yes=True):
@@ -162,6 +164,7 @@ match cmd:
 		if not cfg.xmrwallets:
 			die(1, 'Please specify a wallet or range of wallets with the --xmrwallets option')
 		asi.do_mount()
+		asi.clean_old_files()
 		asi.xmr_setup()
 		asi.do_umount()
 	case 'macos_ramdisk_setup' | 'macos_ramdisk_delete':

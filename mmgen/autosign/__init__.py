@@ -442,24 +442,18 @@ class Autosign:
 		return self._xmrwallet_cfg
 
 	def xmr_setup(self):
-
-		def create_signing_wallets():
-			from .. import xmrwallet
-			if len(self.wallet_files) > 1:
-				ymsg(
-					'Warning: more than one wallet file, using the first '
-					f'({self.wallet_files[0]}) for xmrwallet generation')
-			m = xmrwallet.op(
-				'create_offline',
-				self.xmrwallet_cfg,
-				infile  = str(self.wallet_files[0]), # MMGen wallet file
-				wallets = self.cfg.xmrwallets)       # XMR wallet idxs
-			asyncio.run(m.main())
-			asyncio.run(m.stop_wallet_daemon())
-
-		self.clean_old_files()
-
-		create_signing_wallets()
+		from .. import xmrwallet
+		if len(self.wallet_files) > 1:
+			ymsg(
+				'Warning: more than one wallet file, using the first '
+				f'({self.wallet_files[0]}) for xmrwallet generation')
+		m = xmrwallet.op(
+			'create_offline',
+			self.xmrwallet_cfg,
+			infile  = str(self.wallet_files[0]), # MMGen wallet file
+			wallets = self.cfg.xmrwallets)       # XMR wallet idxs
+		asyncio.run(m.main())
+		asyncio.run(m.stop_wallet_daemon())
 
 	def clean_old_files(self):
 
