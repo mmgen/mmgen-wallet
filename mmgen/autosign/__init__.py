@@ -21,10 +21,6 @@ from ..cfg import Config
 from ..util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list, is_int, cached_property
 from ..color import yellow, brown, gray
 from ..wallet import Wallet, get_wallet_cls
-from ..addrlist import AddrIdxList
-from ..filename import find_file_in_dir
-from ..fileutil import shred_file
-from ..ui import keypress_confirm
 
 class Autosign:
 
@@ -329,6 +325,7 @@ class Autosign:
 	def wipe_encryption_key(self):
 		if self.keyfile.exists():
 			ymsg(f'Shredding wallet encryption key ‘{self.keyfile}’')
+			from ..fileutil import shred_file
 			shred_file(self.cfg, self.keyfile)
 		else:
 			gmsg('No wallet encryption key on removable device')
@@ -359,6 +356,7 @@ class Autosign:
 		self.ramdisk.destroy()
 
 	def _get_macOS_ramdisk_size(self):
+		from ..addrlist import AddrIdxList
 		from ..platform.darwin.util import MacOSRamDisk, warn_ramdisk_too_small
 		# allow 1MB for each Monero wallet
 		xmr_size = len(AddrIdxList(fmt_str=self.cfg.xmrwallets)) if self.cfg.xmrwallets else 0
@@ -409,13 +407,16 @@ class Autosign:
 
 		if self.cfg.mnemonic_fmt or self.cfg.seed_len:
 			ss_in = get_mn_wallet()
-		elif (wf := find_file_in_dir(get_wallet_cls('mmgen'), self.cfg.data_dir)) and keypress_confirm(
-				cfg         = self.cfg,
-				prompt      = f'Default wallet ‘{wf}’ found.\nUse default wallet for autosigning?',
-				default_yes = True):
-			ss_in = Wallet(Config(), fn=wf)
 		else:
-			ss_in = get_mn_wallet()
+			from ..filename import find_file_in_dir
+			from ..ui import keypress_confirm
+			if (wf := find_file_in_dir(get_wallet_cls('mmgen'), self.cfg.data_dir)) and keypress_confirm(
+					cfg         = self.cfg,
+					prompt      = f'Default wallet ‘{wf}’ found.\nUse default wallet for autosigning?',
+					default_yes = True):
+				ss_in = Wallet(Config(), fn=wf)
+			else:
+				ss_in = get_mn_wallet()
 
 		ss_out = Wallet(self.cfg, ss=ss_in, passwd_file=str(self.keyfile))
 		ss_out.write_to_file(desc='autosign wallet', outdir=self.wallet_dir)
@@ -492,6 +493,7 @@ class Autosign:
 
 			msg('done' if s.dir.is_dir() else 'skipped (no dir)')
 
+		from ..fileutil import shred_file
 		count = 0
 
 		for s_name in self.signables:
@@ -561,6 +563,7 @@ class Autosign:
 	def setup_non_mmgen_keys(self):
 		from ..fileutil import get_lines_from_file, write_data_to_file
 		from ..crypto import Crypto
+		from ..ui import keypress_confirm
 		lines = get_lines_from_file(self.cfg, self.cfg.keys_from_file, desc='keylist data')
 		write_data_to_file(
 			self.cfg,
@@ -571,6 +574,7 @@ class Autosign:
 			desc = 'encrypted keylist data',
 			binary = True)
 		if keypress_confirm(self.cfg, 'Securely delete original keylist file?'):
+			from ..fileutil import shred_file
 			shred_file(self.cfg, self.cfg.keys_from_file)
 
 	def init_non_mmgen_keys(self):

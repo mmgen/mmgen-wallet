@@ -16,8 +16,6 @@ import sys
 
 from ..util import msg, msg_r, gmsg, bmsg, die, suf, fmt_list
 from ..color import yellow, red, orange
-from ..fileutil import shred_file
-from ..ui import keypress_confirm
 
 class Signable:
 
@@ -206,6 +204,8 @@ class Signable:
 			return self.unsent_raw + self.unsent
 
 		def shred_abortable(self):
+			from ..ui import keypress_confirm
+			from ..fileutil import shred_file
 			files = self.get_abortable() # raises AutosignTXError if no unsent TXs available
 			keypress_confirm(
 				self.cfg,
