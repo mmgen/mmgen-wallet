@@ -81,7 +81,7 @@ opts_data = {
 	}
 }
 
-def main(do_loop):
+def main(*, asi, do_loop):
 
 	asi.init_led()
 	asi.init_exit_handler()
@@ -110,25 +110,30 @@ cfg = Config(
 
 cmd = cfg._args[0] if len(cfg._args) == 1 else 'sign' if not cfg._args else cfg._usage()
 
+if cmd in ('enable_swap', 'disable_swap', 'list_led', 'test_led'):
+	match cmd:
+		case 'enable_swap' | 'disable_swap':
+			from .autosign.swap_mgr import SwapMgr
+			sm = SwapMgr(cfg, ignore_zram=True)
+			sm.enable() if cmd == 'enable_swap' else sm.disable()
+		case 'list_led' | 'test_led':
+			from .led import LEDControl
+			if cmd == 'list_led':
+				msg(
+					'Boards with tested LED signaling support:\n' +
+					'\n'.join(f'  {v.name}' for k, v in LEDControl.boards.items() if k != 'dummy'))
+			else:
+				from .exception import NoLEDSupport
+				try:
+					LEDControl(enabled=True)
+				except NoLEDSupport:
+					ymsg('No LED signaling support for this platform')
+				else:
+					gmsg('LED signaling is supported by this platform!')
+	sys.exit(0)
+
 if cmd not in Autosign.cmds + Autosign.util_cmds:
 	die(1, f'‘{cmd}’: unrecognized command')
-
-if cmd in ('test_led', 'list_led'):
-	from .led import LEDControl
-	match cmd:
-		case 'list_led':
-			msg(
-				'Boards with tested LED signaling support:\n' +
-				'\n'.join(f'  {v.name}' for k, v in LEDControl.boards.items() if k != 'dummy'))
-		case 'test_led':
-			from .exception import NoLEDSupport
-			try:
-				LEDControl(enabled=True)
-			except NoLEDSupport:
-				ymsg('No LED signaling support for this platform')
-			else:
-				gmsg('LED signaling is supported by this platform!')
-	sys.exit(0)
 
 if cfg.xmrwallets:
 	if cmd not in ('setup', 'xmr_setup'):
@@ -149,8 +154,6 @@ asi = Autosign(cfg, cmd=cmd)
 cfg._post_init()
 
 match cmd:
-	case 'gen_key':
-		asi.gen_key()
 	case 'setup':
 		asi.do_mount()
 		asi.clean_old_files()
@@ -167,23 +170,21 @@ match cmd:
 		asi.clean_old_files()
 		asi.xmr_setup()
 		asi.do_umount()
-	case 'macos_ramdisk_setup' | 'macos_ramdisk_delete':
-		if sys.platform != 'darwin':
-			die(1, f'The ‘{cmd}’ operation is for the macOS platform only')
-		getattr(asi, cmd)()
-	case 'enable_swap':
-		asi.swap.enable()
-	case 'disable_swap':
-		asi.swap.disable()
 	case 'sign':
-		main(do_loop=False)
+		main(asi=asi, do_loop=False)
 	case 'wait':
-		main(do_loop=True)
+		main(asi=asi, do_loop=True)
 	case 'clean':
 		asi.do_mount()
 		asi.clean_old_files()
 		asi.do_umount()
+	case 'gen_key':
+		asi.gen_key()
 	case 'wipe_key':
 		asi.do_mount()
 		asi.wipe_encryption_key()
 		asi.do_umount()
+	case 'macos_ramdisk_setup' | 'macos_ramdisk_delete':
+		if sys.platform != 'darwin':
+			die(1, f'The ‘{cmd}’ operation is for the macOS platform only')
+		asi.macos_ramdisk.create() if cmd == 'macos_ramdisk_setup' else asi.macos_ramdisk.destroy()

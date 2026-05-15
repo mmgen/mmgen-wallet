@@ -100,7 +100,7 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		if not self.cfg.no_daemon_stop:
 			if sys.platform == 'darwin':
-				for label in (self.asi.dev_label, self.asi.ramdisk.label):
+				for label in (self.asi.dev_label, self.asi.macos_ramdisk.label):
 					self._macOS_eject_disk(label)
 
 	def _create_autosign_instances(self, create_dirs):
@@ -212,7 +212,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		mn_type = mn_type or 'mmgen'
 
 		if sys.platform == 'darwin' and not self.cfg.no_daemon_stop:
-			self._macOS_eject_disk(self.asi.ramdisk.label)
+			self._macOS_eject_disk(self.asi.macos_ramdisk.label)
 
 		self.insert_device()
 
@@ -258,7 +258,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		self.remove_device()
 
 		if sys.platform == 'darwin' and not self.cfg.no_daemon_stop:
-			atexit.register(self._macOS_eject_disk, self.asi.ramdisk.label)
+			atexit.register(self._macOS_eject_disk, self.asi.macos_ramdisk.label)
 
 		return t
 

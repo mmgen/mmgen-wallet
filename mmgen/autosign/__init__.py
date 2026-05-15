@@ -37,12 +37,8 @@ class Autosign:
 		'gen_key',
 		'macos_ramdisk_setup',
 		'macos_ramdisk_delete',
-		'enable_swap',
-		'disable_swap',
 		'clean',
-		'wipe_key',
-		'list_led',
-		'test_led')
+		'wipe_key')
 
 	mn_fmts = {
 		'mmgen': 'words',
@@ -121,14 +117,6 @@ class Autosign:
 
 		self.init_fixup()
 
-		if sys.platform == 'darwin': # test suite uses ‘fixed-up’ shm_dir
-			from ..platform.darwin.util import MacOSRamDisk
-			self.ramdisk = MacOSRamDisk(
-				cfg,
-				self.macOS_ramdisk_name,
-				self._get_macOS_ramdisk_size(),
-				path = self.shm_dir)
-
 		self.keyfile = self.mountpoint / 'autosign.key'
 
 		if any(k in cfg._uopts for k in ('help', 'longhelp')):
@@ -168,9 +156,13 @@ class Autosign:
 			setattr(self, name, self.mountpoint / path)
 
 	@cached_property
-	def swap(self):
-		from .swap_mgr import SwapMgr
-		return SwapMgr(self.cfg, ignore_zram=True)
+	def macos_ramdisk(self): # test suite uses ‘fixed-up’ shm_dir
+		from ..platform.darwin.util import MacOSRamDisk
+		return MacOSRamDisk(
+			self.cfg,
+			self.macOS_ramdisk_name,
+			self._get_macOS_ramdisk_size(),
+			path = self.shm_dir)
 
 	async def check_daemons_running(self):
 		from ..protocol import init_proto
@@ -349,12 +341,6 @@ class Autosign:
 		if not no_unmount:
 			self.do_umount()
 
-	def macos_ramdisk_setup(self):
-		self.ramdisk.create()
-
-	def macos_ramdisk_delete(self):
-		self.ramdisk.destroy()
-
 	def _get_macOS_ramdisk_size(self):
 		from ..addrlist import AddrIdxList
 		from ..platform.darwin.util import MacOSRamDisk, warn_ramdisk_too_small
@@ -394,10 +380,11 @@ class Autosign:
 
 		self.gen_key(no_unmount=True)
 
-		self.swap.disable()
+		from .swap_mgr import SwapMgr
+		SwapMgr(self.cfg, ignore_zram=True).disable()
 
 		if sys.platform == 'darwin':
-			self.macos_ramdisk_setup()
+			self.macos_ramdisk.create()
 
 		remove_wallet_dir()
 		create_wallet_dir()
