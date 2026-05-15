@@ -292,7 +292,7 @@ class UserOpts(Opts):
 			er --token=t              Specify an ERC20 token by address or symbol
 			-- --color=0|1            Disable or enable color output (default: 1)
 			-- --columns=N            Force N columns of output with certain commands
-			Rr --scroll               Use the curses-like scrolling interface for
+			xr --scroll               Use the curses-like scrolling interface for
 			+                         tracking wallet views
 			-- --force-256-color      Force 256-color output when color is enabled
 			-- --pager                Pipe output of certain commands to pager (WIP)

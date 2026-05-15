@@ -46,6 +46,8 @@ opts_data = {
 			-- -q, --quiet            Produce quieter output
 			-- -r, --usr-randchars=n  Get 'n' characters of additional randomness from
 			+                         user (min={cfg.min_urandchars}, max={cfg.max_urandchars})
+			x- -s, --scroll           Use the curses-like scrolling interface for tracking
+			+                         wallet views
 			-- -t, --type=t           Specify address type (valid choices: 'legacy',
 			+                         'compressed', 'segwit', 'bech32', 'zcash_z')
 			-- -v, --verbose          Produce more verbose output
