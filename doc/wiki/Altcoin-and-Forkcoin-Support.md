@@ -94,7 +94,7 @@ the `--help` option for more complete information.
 #### <a id="a_tx">Transacting and other basic operations</a>
 
 Basic operations with ETH, ETC and ERC20 tokens work as described in the
-[**Getting Started**][bo] guide, with some differences.  Please note the
+[**Getting Started**][ct] guide, with some differences.  Please note the
 following:
 
 * Don’t forget to invoke relevant commands with `--coin=eth` or `--coin=etc`.
@@ -156,7 +156,7 @@ On your offline machine, sign the TX:
 $ mmgen-txsign --coin=eth --token=eos ABC123-EOS[10,50000].rawtx
 ```
 
-*You can also set up and use [autosigning][X] on the offline machine.*
+*You can also set up and use [**autosigning**][ax] on the offline machine.*
 
 On your online machine, send the TX:
 
@@ -242,10 +242,10 @@ commands.  It’s that simple!
 
 ### <a id="a_xmr">Monero (XMR)</a>
 
-MMGen Wallet’s Monero support includes automated wallet creation/syncing and
-transacting via the [`mmgen-xmrwallet`][mx] command.  Make sure that
-[Monerod][M] is installed and running and that `monero-wallet-rpc` is located
-in your executable path.
+Monero is fully supported by MMGen Wallet.
+
+Make sure that [Monerod][M] is installed and running and that
+`monero-wallet-rpc` is located in your executable path.
 
 <a id="a_xmr_req">Install the Python XMR requirements:</a>
 
@@ -259,6 +259,32 @@ you don’t plan to run the test suite.
 $ python3 -m pip install -r keccak-requirements.txt  # see above
 $ python3 -m pip install -r xmr-requirements.txt
 ```
+
+#### Wallet creation and transacting via the compatibility layer
+
+This is now the preferred way to transact XMR, replacing the deprecated
+`mmgen-xmrwallet` command for most operations.  Everything works as described
+in the [**Getting Started**][ct] guide, with the following differences:
+
+- Manual transacting is not supported, only version 2 [**autosigning**][ax].
+- XMR compatibility mode must be enabled.  Use `--xmrwallet-compat` for online
+  commands, or set `xmrwallet_compat` to `true` in your config file.
+- The `mmgen-addrgen` script is not used.  Instead, addresses are created
+  automatically when `mmgen-autosign setup` is run with the `--xmrwallets`
+  option.  Type `mmgen-autosign --help` for more information.
+- After autosign setup, `mmgen-addrimport --coin=xmr` is run on the online
+  machine with no arguments.  This creates the watch-only wallet or wallets
+  that together comprise the user’s tracking wallet.  For watch-only wallets
+  that already exist, no action is performed.
+- The `mmgen-xmrwallet` script may be used to list and view sent transactions
+  on the removable device.  Type `mmgen-xmrwallet --help` for details.
+- New accounts and addresses may be added to the tracking wallet via
+  `mmgen-tool --coin=xmr listaddresses`.
+
+#### Wallet creation and transacting via `mmgen-xmrwallet` (deprecated)
+
+Monero support includes automated wallet creation/syncing and transacting via
+the [`mmgen-xmrwallet`][mx] command.
 
 *The following instructions are applicable for a hot wallet setup.  To learn
 how to cold sign transactions using MMGen Wallet’s autosign feature, first
@@ -410,9 +436,9 @@ the MMGen Project.
 [y]: https://github.com/ethereum/pyethereum
 [P]: https://pypi.org/project/pip
 [M]: https://getmonero.org/downloads/#linux
-[X]: cmds/command-help-autosign.md
+[ax]: Autosigning.md
 [gs]: Getting-Started-with-MMGen-Wallet.md
-[bo]: Getting-Started-with-MMGen-Wallet.md#a_bo
+[ct]: Getting-Started-with-MMGen-Wallet.md#a_ct
 [si]: Install-Bitcoind-from-Source-on-Linux.md
 [bi]: Install-Bitcoind.md#a_d
 [p8]: Install-Bitcoind.md#a_r

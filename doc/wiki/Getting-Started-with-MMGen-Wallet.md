@@ -48,8 +48,9 @@ commands and filenames) will speed up your work at the command line greatly.
 
 The examples in this tutorial are geared towards Bitcoin, but with some
 modification they may be used with altcoins and forkcoins for which MMGen
-Wallet supports transaction operations (BCH, LTC, ETH, ETC, RUNE and XMR as of
-this writing).  See [Altcoin-and-Forkcoin-Support][09] for more details.
+Wallet supports transaction operations (BCH, LTC, ETH, ETC, ERC20 tokens, RUNE
+and XMR as of this writing).  See [**Altcoin-and-Forkcoin-Support**][09] for
+more details.
 
 #### <a id="a_iv">Invocation</a>
 
@@ -170,9 +171,10 @@ overestimated.
 
 ### <a id="a_tr">Transacting</a>
 
-*The following transacting information is applicable to BTC, BCH, LTC, ETH, ETC
-and RUNE. For transacting with Monero, consult [Altcoin-and-Forkcoin-Support][x]
-and the [`mmgen-xmrwallet`][mx] help screen.*
+*Transacting is supported for BTC, BCH, LTC, ETH, ETC, ERC20 tokens, RUNE and
+XMR.  The description below applies to BTC, BCH and LTC.  For other coins, there
+are important differences: consult [**Altcoin-and-Forkcoin-Support**][09] for
+details.*
 
 #### <a id="a_ga">Generate addresses (offline computer)</a>
 
@@ -337,6 +339,15 @@ TOTAL: 1 BTC
 
 #### <a id="a_ct">Create a transaction (online computer)</a>
 
+*The following decribes the old, manual way of transacting with MMGen Wallet.
+Instead, you should consider setting up [transaction autosigning][ax] on your
+offline machine, which will greatly simplify the transacting process.  For
+optimal user experience, the offline signing device should be a Raspberry Pi
+or other single-board computer for which LED signaling support is provided.*
+
+*The [**Autosigning**][ax] wiki page outlines the differences between the manual
+and autosigning methods of transacting.*
+
 Now that you have some coins under MMGen Wallet’s control, you’re ready to
 create a transaction.  Note that transactions are harmless until they’re signed
 and broadcast to the network, so feel free to experiment and create transactions
@@ -474,6 +485,17 @@ Network: BTC MAINNET
  2)  face..  6 3HgYCsfqYzIg7LVVfDTp7gYJ.. 89ABCDEF:S:3 Storage 2      0.3        68
  3)  abab..  6 34Tu3z1tiexXDonNsFIkvzqu.. 89ABCDEF:S:4 Storage 3      0.4        68
  4)  123c..  6 3PeI55vtp2bX2uKDkAAR2c6e.. 89ABCDEF:S:5                0.0999     7
+```
+
+Note that all tracking wallet views support the --scroll option, which provides
+a curses-like scrolling interface that greatly improves the user experience when
+there’s more than a screenful of lines to display.  The option may also be set
+in the configuration file.
+
+```text
+$ mmgen-txcreate --scroll --info
+$ mmgen-tool --scroll twview
+$ mmgen-tool --scroll listaddresses
 ```
 
 Since you’ve sent 0.1 BTC to a third party, your balance has decreased by 0.1
@@ -849,18 +871,12 @@ Signed transaction written to file 'ABCDEF[0.1].sigtx'
 
 #### <a id="a_hw">Hot wallets</a>
 
-*Instead of using a hot wallet, you should consider setting up [transaction
-autosigning][07] on your offline machine.  Autosigning makes it possible to
-transact directly from cold storage in a secure and convenient way.  Ideally,
-your autosigning device should be a Raspberry Pi or other single-board computer
-for which MMGen Wallet provides LED support.  However, an old laptop running
-Linux or macOS will also suffice, provided its network interfaces are removed
-or disabled.*
+For greater transacting convenience, it’s possible to place a small portion of
+your funds in a “hot wallet” on your online computer.  You may then use the
+`mmgen-txdo` command to quickly create, sign and send transactions in one
+operation.
 
-To use MMGen Wallet for not only cold storage but also day-to-day transacting,
-it’s possible to place a portion of your funds in a “hot wallet” on your online
-computer.  You may then use the `mmgen-txdo` command to quickly create, sign and
-send transactions in one operation.
+It’s recommended to entrust only very small sums to the hot wallet.
 
 *Note: prior to Version 0.11.0, MMGen Wallet implemented hot wallets using
 [key-address files][05], but these have now been obsoleted by [subwallets][06].
@@ -1124,11 +1140,10 @@ $ python3 -m pip install user --upgrade dist/*.whl
 [04]: MMGen-Wallet-Quick-Start-with-Regtest-Mode.md
 [05]: Key-address-files.md
 [06]: Subwallets.md
-[07]: cmds/command-help-autosign.md
 [08]: Install-Bitcoind.md
 [09]: Altcoin-and-Forkcoin-Support.md
-[x]:  Altcoin-and-Forkcoin-Support.md#a_xmr
 [cp]: ../../../../commits/master
 [mx]: cmds/command-help-xmrwallet.md
 [li]: Install-MMGen-Wallet-on-Linux-or-macOS.md
 [wi]: Install-MMGen-Wallet-on-Microsoft-Windows.md
+[ax]: Autosigning.md
