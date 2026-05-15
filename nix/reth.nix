@@ -17,7 +17,7 @@ in
 
 pkgs.rustPlatform.buildRustPackage rec {
     pname = "reth";
-    version = "2.1.0";
+    version = "2.2.0";
 
     src = fetchGit {
         url = "https://github.com/paradigmxyz/reth";
@@ -26,7 +26,7 @@ pkgs.rustPlatform.buildRustPackage rec {
         shallow = true;
     };
 
-    cargoHash = "sha256-//UOHtknfhq33bA3/xzwS0K9FPbn4Tkwx3kkNuluoAM=";
+    cargoHash = "sha256-tnFIuC9hKjrLjaUuHJVM/oEUQWls11gdstOtPFkFW8w=";
 
     doCheck = false;
     doInstallCheck = false;
