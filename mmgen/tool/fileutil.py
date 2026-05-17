@@ -38,15 +38,18 @@ class tool_cmd(tool_cmd_base):
 		"Use an Incog ID to find hidden incognito wallet data"
 
 		from hashlib import sha256
+		from itertools import count
 
 		ivsize, bsize, mod = (Crypto.aesctr_iv_len, 4096, 4096*8)
-		n, carry = 0, b' '*ivsize
+		carry = b' ' * ivsize
 		flgs = os.O_RDONLY|os.O_BINARY if gc.platform == 'win32' else os.O_RDONLY
 		f = os.open(filename, flgs)
+
 		for ch in incog_id:
 			if ch not in '0123456789ABCDEF':
 				die(2, f'{incog_id!r}: invalid Incog ID')
-		while True:
+
+		for n in count(step=bsize):
 			d = os.read(f, bsize)
 			if not d:
 				break
@@ -60,7 +63,6 @@ class tool_cmd(tool_cmd_base):
 						import sys
 						sys.exit(0)
 			carry = d[len(d)-ivsize:]
-			n += bsize
 			if not n % mod:
 				msg_r(f'\rSearched: {n} bytes')
 
