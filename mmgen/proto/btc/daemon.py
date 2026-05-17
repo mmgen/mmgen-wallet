@@ -151,7 +151,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 class litecoin_core_daemon(bitcoin_core_daemon):
 	# v0.21.2rc5 crashes when mining more than 431 blocks in regtest mode:
 	#   CreateNewBlock: TestBlockValidity failed: bad-txns-vin-empty, Transaction check failed
-	daemon_data = _dd('Litecoin Core', 210504, '0.21.5.4')
+	daemon_data = _dd('Litecoin Core', 210505, '0.21.5.5')
 	exec_fn = 'litecoind'
 	cli_fn = 'litecoin-cli'
 	testnet_dir = 'testnet4'

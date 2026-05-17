@@ -2,10 +2,10 @@
 
 pkgs.stdenv.mkDerivation rec {
     pname = "litecoin";
-    version = "v0.21.4";
+    version = "v0.21.5.5";
     src = fetchGit {
         url = "https://github.com/litecoin-project/litecoin.git";
-        # url = /path/to/repo/litecoin-0.21.4.git;
+        # url = /path/to/repo/litecoin-0.21.5.5.git;
         ref = "refs/tags/${version}";
         shallow = true;
     };
