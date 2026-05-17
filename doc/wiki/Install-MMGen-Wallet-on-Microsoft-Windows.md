@@ -59,9 +59,9 @@ Download the MSYS2 executable installer for your architecture from the [MSYS2
 homepage][mh], but ignore the installation instructions there.
 
 Run the installer, accepting all defaults.  When installation completes,
-uncheck ‘Run MSYS2 now’ and click ‘Finish’.  From the Start menu, drag the
-‘MSYS2 UCRT64’ icon to the desktop.  You will use it to launch all MSYS2
-terminal sessions from now on.  Double-click the icon to launch the terminal.
+uncheck ‘Run MSYS2 now’ and click ‘Finish’.  From the Start menu, pin the
+‘MSYS2 UCRT64’ icon to the taskbar.  You will use it to launch all MSYS2
+terminal sessions from now on.  Click the icon to launch the terminal.
 
 Note that the root of your MSYS2 installation is located in `C:\\msys64`, so the
 following commands, for example, will produce a listing of the same directory:
@@ -102,18 +102,18 @@ $ ls 'C:\\msys64\etc'  # the path as seen by Windows
 >
 > Download up-to-date versions of these files from the primary MSYS2 mirror:
 >
->> <https://mirror.msys2.org/msys/x86_64/msys.db>  
->> <https://mirror.msys2.org/msys/x86_64/msys.db.sig>  
->> <https://mirror.msys2.org/mingw/mingw64/mingw64.db>  
->> <https://mirror.msys2.org/mingw/mingw64/mingw64.db.sig>  
->> <https://mirror.msys2.org/mingw/mingw32/mingw32.db>  
->> <https://mirror.msys2.org/mingw/mingw32/mingw32.db.sig>  
->> <https://mirror.msys2.org/mingw/clang64/clang64.db>  
->> <https://mirror.msys2.org/mingw/clang64/clang64.db.sig>  
->> <https://mirror.msys2.org/mingw/clangarm64/clangarm64.db>  
->> <https://mirror.msys2.org/mingw/clangarm64/clangarm64.db.sig>  
->> <https://mirror.msys2.org/mingw/ucrt64/ucrt64.db>  
->> <https://mirror.msys2.org/mingw/ucrt64/ucrt64.db.sig>
+>> <https://repo.msys2.org/msys/x86_64/msys.db>  
+>> <https://repo.msys2.org/msys/x86_64/msys.db.sig>  
+>> <https://repo.msys2.org/mingw/mingw64/mingw64.db>  
+>> <https://repo.msys2.org/mingw/mingw64/mingw64.db.sig>  
+>> <https://repo.msys2.org/mingw/mingw32/mingw32.db>  
+>> <https://repo.msys2.org/mingw/mingw32/mingw32.db.sig>  
+>> <https://repo.msys2.org/mingw/clang64/clang64.db>  
+>> <https://repo.msys2.org/mingw/clang64/clang64.db.sig>  
+>> <https://repo.msys2.org/mingw/clangarm64/clangarm64.db>  
+>> <https://repo.msys2.org/mingw/clangarm64/clangarm64.db.sig>  
+>> <https://repo.msys2.org/mingw/ucrt64/ucrt64.db>  
+>> <https://repo.msys2.org/mingw/ucrt64/ucrt64.db.sig>
 >
 > Copy the files to your offline machine, replacing the originals at
 > `C:\msys64\var\lib\pacman\sync`.
@@ -184,13 +184,13 @@ pacman -S tar git vim autoconf automake-wrapper autogen libtool cygrunsrv \
 	mingw-w64-ucrt-x86_64-libsodium \
 	mingw-w64-ucrt-x86_64-python-pynacl \
 	mingw-w64-ucrt-x86_64-python-cryptography \
-	mingw-w64-ucrt-x86_64-python-pycryptodome \
 	mingw-w64-ucrt-x86_64-python-six \
 	mingw-w64-ucrt-x86_64-python-pexpect \
 	mingw-w64-ucrt-x86_64-python-gmpy2 \
 	mingw-w64-ucrt-x86_64-python-pysocks \
 	mingw-w64-ucrt-x86_64-python-requests \
 	mingw-w64-ucrt-x86_64-python-aiohttp \
+	mingw-w64-ucrt-x86_64-python-ecdsa \
 	mingw-w64-ucrt-x86_64-python-pyreadline3 \
 	mingw-w64-ucrt-x86_64-python-lxml
 ```
@@ -238,17 +238,13 @@ prevent pip from installing packages in the system directory.
 On your online machine:
 
 ```text
-$ python3 -m pip download ecdsa
-$ python3 -m pip download --no-binary :all: scrypt==0.8.27 aiohttp==3.12.9
-
+$ python3 -m pip download --no-binary :all: scrypt==0.8.27
 ```
 
 Copy the downloaded files to your offline machine (if applicable) and install:
 
 ```text
-$ python3 -m pip install ecdsa-*.whl
 $ python3 -m pip install --no-build-isolation scrypt*gz
-$ python3 -m pip install --no-build-isolation aiohtt* multidic* yarl* aiohap* aiosig* attrs* frozenlist* idna* propcache*
 ```
 
 ### <a id="a_se">7. Clone and copy the secp256k1 library (offline install only)</a>
@@ -316,7 +312,7 @@ Enter the repo directory, build and install:
 
 ```text
 $ cd mmgen-wallet
-$ python3 -m build --no-isolation
+$ python3 -m build --no-isolation --wheel
 $ python3 -m pip install dist/*.whl
 ```
 

@@ -1,6 +1,8 @@
 ```text
   MMGEN-CLI: Communicate with a coin daemon via its JSON-RPC interface
-  USAGE:     mmgen-cli [opts] <command> <command args>
+
+  USAGE: mmgen-cli [opts] <command> <command args>
+
   OPTIONS:
   -h, --help             Print this help message
       --longhelp         Print help message for long (global) options

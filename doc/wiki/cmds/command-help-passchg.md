@@ -1,6 +1,8 @@
 ```text
   MMGEN-PASSCHG: Change the passphrase, hash preset or label of the default or specified MMGen wallet
-  USAGE:         mmgen-passchg [opts] [infile]
+
+  USAGE: mmgen-passchg [opts] [infile]
+
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options

@@ -60,8 +60,8 @@ Enter Version 2 Autosigning.
 ## <a id="as_v2">Autosigning, Version 2</a>
 
 Here the main innovation was to automate all mounting, unmounting, and file
-copying operations.  Version 2 autosigning is sometimes referred to in program
-output by the term “automount”.
+copying operations.  Version 2 autosigning is sometimes referred to in the
+program output and documentation by the term “automount”.
 
 #### Preparation of signing session:
 1. Same as for [Version 1](#as_v1_s)

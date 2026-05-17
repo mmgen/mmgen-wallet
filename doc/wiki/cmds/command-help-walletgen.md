@@ -1,6 +1,8 @@
 ```text
   MMGEN-WALLETGEN: Generate an MMGen wallet from a random seed
-  USAGE:           mmgen-walletgen [opts]
+
+  USAGE: mmgen-walletgen [opts]
+
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options
@@ -30,6 +32,7 @@
   For passphrases all combinations of whitespace are equal, and leading and
   trailing space are ignored.  This permits reading passphrase or brainwallet
   data from a multi-line file with free spacing and indentation.
+
 
   BRAINWALLET NOTE:
 

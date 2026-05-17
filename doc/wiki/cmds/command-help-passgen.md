@@ -1,7 +1,9 @@
 ```text
   MMGEN-PASSGEN: Generate a range or list of passwords from an MMGen wallet,
                  mnemonic, seed or brainwallet for the given ID string
-  USAGE:         mmgen-passgen [opts] [seed source] <ID string> <index list or range(s)>
+
+  USAGE: mmgen-passgen [opts] [seed source] <ID string> <index list or range(s)>
+
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options
@@ -41,6 +43,7 @@
   Changing either the password format (base32,base58) or length alters the seed
   and thus generates a completely new set of passwords.
 
+
   PASSWORD FORMATS:
 
     Code       Description                Min Len  Max Len  Default Len
@@ -49,6 +52,7 @@
     bip39    - BIP39 mnemonic             12       24       24
     xmrseed  - Monero new-style mnemonic  25       25       25
     hex      - hexadecimal password       32       64       64
+
 
   EXAMPLES:
 
@@ -77,6 +81,7 @@
   For passphrases all combinations of whitespace are equal, and leading and
   trailing space are ignored.  This permits reading passphrase or brainwallet
   data from a multi-line file with free spacing and indentation.
+
 
   BRAINWALLET NOTE:
 

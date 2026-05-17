@@ -51,12 +51,10 @@ $ python3 -m pip download pycoin # online
 $ python3 -m pip install --no-build-isolation pycoin-*.tar.gz # offline
 ```
 
-CD to the MMGen Wallet repository root and build the secp256k1 extension module
-in place:
+CD to the MMGen Wallet repository root: 
 
 ```text
 $ cd path/to/mmgen/repo
-$ python3 setup.py build_ext --inplace
 ```
 
 Run the following if upgrading from a previous version of MMGen:
@@ -94,7 +92,8 @@ requires the SSH daemon to be set up and running.  On MSYS2 systems, SSHD
 is not configured by default, but it may be easily set up with the following
 steps:
 
-Open PowerShell as administrator, and at the DOS prompt, execute:
+Open PowerShell as administrator (right mouse click, “Run as Administrator”).
+At the DOS prompt, execute:
 
 ```text
 system32> net user administrator /active:yes

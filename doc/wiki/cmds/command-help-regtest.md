@@ -1,6 +1,8 @@
 ```text
   MMGEN-REGTEST: Coin daemon regression test mode setup and operations for the MMGen suite
-  USAGE:         mmgen-regtest [opts] <command>
+
+  USAGE: mmgen-regtest [opts] <command>
+
   OPTIONS:
   -h, --help          Print this help message
       --longhelp      Print help message for long (global) options

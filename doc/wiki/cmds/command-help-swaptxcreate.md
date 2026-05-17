@@ -1,6 +1,8 @@
 ```text
   MMGEN-SWAPTXCREATE: Create a DEX swap transaction from one MMGen tracking wallet to another
-  USAGE:              mmgen-swaptxcreate [opts] COIN1 [AMT CHG_ADDR] COIN2 [ADDR] [addr file ...]
+
+  USAGE: mmgen-swaptxcreate [opts] COIN1 [AMT CHG_ADDR] COIN2 [ADDR]
+
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options

@@ -1,6 +1,8 @@
 ```text
   MMGEN-SEEDSPLIT: Generate a seed share from the default or specified MMGen wallet
-  USAGE:           mmgen-seedsplit [opts] [infile] [<Split ID String>:]<index>:<share count>
+
+  USAGE: mmgen-seedsplit [opts] [infile] [<Split ID String>:]<index>:<share count>
+
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options
@@ -115,11 +117,13 @@
       $ mmgen-seedsplit -M4 -o bip39 2:2                    # Step N (share B)
       $ mmgen-seedjoin -M4 -H my.hincog,1325 <output_of_step_N>
 
+
   PASSPHRASE NOTE:
 
   For passphrases all combinations of whitespace are equal, and leading and
   trailing space are ignored.  This permits reading passphrase or brainwallet
   data from a multi-line file with free spacing and indentation.
+
 
   BRAINWALLET NOTE:
 

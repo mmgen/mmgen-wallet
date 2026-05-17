@@ -1,6 +1,8 @@
 ```text
   MMGEN-SUBWALLETGEN: Generate a subwallet from the default or specified MMGen wallet
-  USAGE:              mmgen-subwalletgen [opts] [infile] <Subseed Index>
+
+  USAGE: mmgen-subwalletgen [opts] [infile] <Subseed Index>
+
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options
@@ -68,11 +70,13 @@
   subwallets from a single parent.  This leaves each user with a total of two
   million subwallets, which should be enough for most practical purposes.
 
+
   PASSPHRASE NOTE:
 
   For passphrases all combinations of whitespace are equal, and leading and
   trailing space are ignored.  This permits reading passphrase or brainwallet
   data from a multi-line file with free spacing and indentation.
+
 
   BRAINWALLET NOTE:
 

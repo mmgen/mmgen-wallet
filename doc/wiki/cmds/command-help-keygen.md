@@ -1,7 +1,9 @@
 ```text
   MMGEN-KEYGEN: Generate a range or list of secret keys from an MMGen wallet,
                  mnemonic, seed or brainwallet
-  USAGE:        mmgen-keygen [opts] [seed source] <index list or range(s)>
+
+  USAGE: mmgen-keygen [opts] [seed source] <index list or range(s)>
+
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options
@@ -83,11 +85,13 @@
   subwallets from a single parent.  This leaves each user with a total of two
   million subwallets, which should be enough for most practical purposes.
 
+
   PASSPHRASE NOTE:
 
   For passphrases all combinations of whitespace are equal, and leading and
   trailing space are ignored.  This permits reading passphrase or brainwallet
   data from a multi-line file with free spacing and indentation.
+
 
   BRAINWALLET NOTE:
 

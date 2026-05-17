@@ -1,10 +1,13 @@
 ```text
   MMGEN-MSG: Perform message signing operations for MMGen addresses
-  USAGE:     mmgen-msg [opts] create MESSAGE_TEXT ADDRESS_SPEC [...]
-             mmgen-msg [opts] sign   MESSAGE_FILE [WALLET_FILE ...]
-             mmgen-msg [opts] verify MESSAGE_FILE [MMGen ID]
-             mmgen-msg [opts] verify <exported JSON dump file> [address]
-             mmgen-msg [opts] export MESSAGE_FILE [MMGen ID]
+
+  USAGE:
+    mmgen-msg [opts] create MESSAGE_TEXT ADDRESS_SPEC [...]
+    mmgen-msg [opts] sign   MESSAGE_FILE [WALLET_FILE ...]
+    mmgen-msg [opts] verify MESSAGE_FILE [MMGen ID]
+    mmgen-msg [opts] verify <exported JSON dump file> [address]
+    mmgen-msg [opts] export MESSAGE_FILE [MMGen ID]
+
   OPTIONS:
   -h, --help           Print this help message
       --longhelp       Print help message for long (global) options

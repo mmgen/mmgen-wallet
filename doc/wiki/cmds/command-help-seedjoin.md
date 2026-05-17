@@ -1,7 +1,9 @@
 ```text
   MMGEN-SEEDJOIN: Regenerate an MMGen deterministic wallet from seed shares
                   created by 'mmgen-seedsplit'
-  USAGE:          mmgen-seedjoin [options] share1 share2 [...shareN]
+
+  USAGE: mmgen-seedjoin [options] share1 share2 [...shareN]
+
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options
@@ -38,6 +40,7 @@
   joins it will be ignored.
 
   For usage examples, see the help screen for the 'mmgen-seedsplit' command.
+
 
   PASSPHRASE NOTE:
 

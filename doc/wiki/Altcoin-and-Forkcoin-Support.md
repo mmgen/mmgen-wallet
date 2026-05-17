@@ -252,8 +252,7 @@ Make sure that [Monerod][M] is installed and running and that
 Skip this step for MSYS2, as these requirements were already installed by
 pacman.
 
-Skip ‘keccak-requirements.txt’ if your Python version 3.13 or greater and
-you don’t plan to run the test suite.
+Skip ‘keccak-requirements.txt’ if your Python version is 3.13 or greater.
 
 ```text
 $ python3 -m pip install -r keccak-requirements.txt  # see above
@@ -276,10 +275,15 @@ in the [**Getting Started**][ct] guide, with the following differences:
   machine with no arguments.  This creates the watch-only wallet or wallets
   that together comprise the user’s tracking wallet.  For watch-only wallets
   that already exist, no action is performed.
+- `mmgen-txcreate` supports both sweep transactions and send to external
+  address (see `mmgen-txcreate --coin=xmr --help`)
+- Tracking wallet views are account-based.
 - The `mmgen-xmrwallet` script may be used to list and view sent transactions
   on the removable device.  Type `mmgen-xmrwallet --help` for details.
 - New accounts and addresses may be added to the tracking wallet via
   `mmgen-tool --coin=xmr listaddresses`.
+- Compatibility mode is not available for Windows.  Windows users must use
+  `mmgen-xmrwallet` in non-automount (v1) mode to transact Monero.
 
 #### Wallet creation and transacting via `mmgen-xmrwallet` (deprecated)
 

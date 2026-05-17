@@ -1,6 +1,8 @@
 ```text
   MMGEN-WALLETCHK: Check validity of the default or specified MMGen wallet
-  USAGE:           mmgen-walletchk [opts] [infile]
+
+  USAGE: mmgen-walletchk [opts] [infile]
+
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options
@@ -27,6 +29,7 @@
   For passphrases all combinations of whitespace are equal, and leading and
   trailing space are ignored.  This permits reading passphrase or brainwallet
   data from a multi-line file with free spacing and indentation.
+
 
   BRAINWALLET NOTE:
 

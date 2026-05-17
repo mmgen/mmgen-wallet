@@ -1,6 +1,8 @@
 ```text
   MMGEN-SWAPTXDO: Create, sign and send a DEX swap transaction from one MMGen tracking wallet to another
-  USAGE:          mmgen-swaptxdo [opts] COIN1 [AMT CHG_ADDR] COIN2 [ADDR] [addr file ...] [seed source ...]
+
+  USAGE: mmgen-swaptxdo [opts] COIN1 [AMT CHG_ADDR] COIN2 [ADDR] [addr file ...] [seed source ...]
+
   OPTIONS:
   -h, --help             Print this help message
       --longhelp         Print help message for long (global) options
@@ -214,7 +216,6 @@
 
   Seed source files must have the canonical extensions listed in the 'FileExt'
   column below:
-
 
   FMT CODES:
 

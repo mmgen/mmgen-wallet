@@ -1,6 +1,8 @@
 ```text
   MMGEN-WALLETCONV: Convert the default or specified MMGen wallet from one format to another
-  USAGE:            mmgen-walletconv [opts] [infile]
+
+  USAGE: mmgen-walletconv [opts] [infile]
+
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options
@@ -38,6 +40,7 @@
   For passphrases all combinations of whitespace are equal, and leading and
   trailing space are ignored.  This permits reading passphrase or brainwallet
   data from a multi-line file with free spacing and indentation.
+
 
   BRAINWALLET NOTE:
 

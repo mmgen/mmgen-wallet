@@ -345,8 +345,8 @@ offline machine, which will greatly simplify the transacting process.  For
 optimal user experience, the offline signing device should be a Raspberry Pi
 or other single-board computer for which LED signaling support is provided.*
 
-*The [**Autosigning**][ax] wiki page outlines the differences between the manual
-and autosigning methods of transacting.*
+*The* [***Autosigning***][ax] *wiki page outlines the differences between the
+manual and autosigning methods of transacting.*
 
 Now that you have some coins under MMGen Wallet’s control, you’re ready to
 create a transaction.  Note that transactions are harmless until they’re signed

@@ -19,6 +19,8 @@
   -q, --quiet            Produce quieter output
   -r, --usr-randchars n  Get 'n' characters of additional randomness from
                          user (min=10, max=80)
+  -s, --scroll           Use the curses-like scrolling interface for tracking
+                         wallet views
   -t, --type t           Specify address type (valid choices: 'legacy',
                          'compressed', 'segwit', 'bech32', 'zcash_z')
   -v, --verbose          Produce more verbose output
@@ -205,5 +207,5 @@
 
   Type ‘mmgen-tool help <command>’ for help on a particular command
 
-  MMGEN-WALLET 16.1.dev37        May 2026                        MMGEN-TOOL(1)
+  MMGEN-WALLET 16.1.dev41        May 2026                        MMGEN-TOOL(1)
 ```
