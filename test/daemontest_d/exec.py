@@ -65,10 +65,10 @@ class unit_tests:
 	def _pre(self):
 		self.daemon_ctrl_args = ['btc', 'btc_tn', 'btc_rt'] if cfg.no_altcoin_deps else ['all']
 
-	def _test_cmd(self, args_in, network_ids=[], ok=True):
+	def _test_cmd(self, cmd, *, opts=[], network_ids=[], ok=True):
 		args = (
-			['python3', f'test/{args_in[0]}-coin-daemons.py']
-			+ list(args_in[1:])
+			['python3', f'test/{cmd}-coin-daemons.py']
+			+ opts
 			+ (network_ids or self.daemon_ctrl_args))
 		vmsg('\n' + orange(f"Running '{' '.join(args)}':"))
 		redir = None if cfg.verbose else PIPE
@@ -83,6 +83,30 @@ class unit_tests:
 			vmsg('')
 			qmsg('OK')
 		return True
+
+	def _test_daemons(self, cmd, *, msg, opts=[]):
+		qmsg_r(msg + ' coin daemons...')
+		test_reth = not (cfg.no_altcoin_deps or cfg.fast)
+		test_parity = not (
+			cfg.no_altcoin_deps
+			or gc.machine in ('riscv64', 'aarch64', 'armv7l')
+			or in_nix_environment())
+		ret1 = self._test_cmd(
+			cmd,
+			opts = opts,
+			network_ids = ['btc'] if cfg.no_altcoin_deps else ['btc', 'ltc', 'bch', 'xmr', 'eth'],
+			ok = not (test_reth or test_parity))
+		ret2 = self._test_cmd(
+			cmd,
+			opts = opts + ['--daemon-id=reth'],
+			network_ids = ['eth'],
+			ok = not test_parity) if test_reth else True
+		ret3 = self._test_cmd(
+			cmd,
+			opts = opts,
+			network_ids = ['etc'],
+			ok = True) if test_parity else True
+		return ret1 and ret2 and ret3
 
 	def flags(self, name, ut):
 		qmsg_r('Testing flags and opts (BTC)...')
@@ -107,44 +131,26 @@ class unit_tests:
 		return True
 
 	def avail(self, name, ut):
-		qmsg_r('Testing availability of coin daemons...')
-		test_reth = not (cfg.no_altcoin_deps or cfg.fast)
-		test_parity = not (
-			cfg.no_altcoin_deps
-			or gc.machine in ('riscv64', 'aarch64', 'armv7l')
-			or in_nix_environment())
-		ret1 = self._test_cmd(
-			['start', '--print-version', '--mainnet-only'],
-			network_ids = ['btc'] if cfg.no_altcoin_deps else ['btc', 'ltc', 'bch', 'xmr', 'eth'],
-			ok = not (test_reth or test_parity))
-		ret2 = self._test_cmd(
-			['start', '--print-version', '--mainnet-only', '--daemon-id=reth'],
-			network_ids = ['eth'],
-			ok = not test_parity) if test_reth else True
-		ret3 = self._test_cmd(
-			['start', '--print-version', '--mainnet-only'],
-			network_ids = ['etc'],
-			ok = True) if test_parity else True
-		return ret1 and ret2 and ret3
+		return self._test_daemons(
+			'start',
+			msg = 'Testing availability of',
+			opts = ['--print-version', '--mainnet-only'])
 
 	def versions(self, name, ut):
 		qmsg_r('Displaying coin daemon versions...')
-		ret1 = self._test_cmd(['start', '--print-version'], ok=False)
-		ret2 = self._test_cmd(['start', '--print-version', '--mainnet-only'])
+		ret1 = self._test_cmd('start', opts=['--print-version'], ok=False)
+		ret2 = self._test_cmd('start', opts=['--print-version', '--mainnet-only'])
 		return ret1 and ret2
 
 	def cmds(self, name, ut):
 		qmsg_r('Testing start commands for coin daemons...')
-		return self._test_cmd(['start', '--testing'])
+		return self._test_cmd('start', opts=['--testing'])
 
 	def start(self, name, ut):
-		qmsg_r('Starting coin daemons...')
-		return self._test_cmd(['start'])
+		return self._test_daemons('start', msg='Starting')
 
 	def status(self, name, ut):
-		qmsg_r('Checking status of coin daemons...')
-		return self._test_cmd(['start'])
+		return self._test_daemons('start', msg='Checking status of')
 
 	def stop(self, name, ut):
-		qmsg_r('Stopping coin daemons...')
-		return self._test_cmd(['stop', '--remove-datadir'])
+		return self._test_daemons('stop', msg='Stopping', opts=['--remove-datadir'])
