@@ -20,7 +20,7 @@
 test.include.unit_test: Unit test framework for the MMGen suite
 """
 
-import sys, os, time, importlib, platform, asyncio
+import sys, os, time, importlib, asyncio
 
 from .test_init import repo_root
 
@@ -249,10 +249,10 @@ def run_test(test, subtest=None):
 			if gc.platform == 'darwin' and _subtest in mac_skip:
 				subtest_skip_msg(_subtest, 'for macOS platform')
 				continue
-			if platform.machine() == 'aarch64' and _subtest in arm_skip:
+			if gc.machine == 'aarch64' and _subtest in arm_skip:
 				subtest_skip_msg(_subtest, 'for ARM platform')
 				continue
-			if platform.machine() == 'riscv64' and _subtest in riscv_skip:
+			if gc.machine == 'riscv64' and _subtest in riscv_skip:
 				subtest_skip_msg(_subtest, 'for RISC-V platform')
 				continue
 			run_subtest(t, _subtest)

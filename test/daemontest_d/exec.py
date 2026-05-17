@@ -7,6 +7,7 @@ test.daemontest_d.exec: unit test for the MMGen suite's Daemon class
 from subprocess import run, PIPE
 from collections import namedtuple
 
+from mmgen.cfg import gc
 from mmgen.color import orange, red
 from mmgen.util import fmt_list, in_nix_environment
 from mmgen.daemon import CoinDaemon
@@ -107,11 +108,10 @@ class unit_tests:
 
 	def avail(self, name, ut):
 		qmsg_r('Testing availability of coin daemons...')
-		from platform import machine
 		test_reth = not (cfg.no_altcoin_deps or cfg.fast)
 		test_parity = not (
 			cfg.no_altcoin_deps
-			or machine() in ('riscv64', 'aarch64', 'armv7l')
+			or gc.machine in ('riscv64', 'aarch64', 'armv7l')
 			or in_nix_environment())
 		ret1 = self._test_cmd(
 			['start', '--print-version', '--mainnet-only'],

@@ -20,7 +20,7 @@
 cfg: Configuration classes for the MMGen suite
 """
 
-import sys, os
+import sys, os, platform
 from collections import namedtuple
 from .base_obj import Lockable
 
@@ -92,6 +92,7 @@ class GlobalConstants(Lockable):
 	prog_id = prog_name.removeprefix(f'{proj_id}-')
 	cmd_caps = cmd_caps_data.get(prog_id)
 
+	machine = platform.machine() # x86_64, aarch64, armv7l, riscv64, AMD64 (MSYS2)
 	platform = sys.platform      # linux, darwin, win32 (MSYS2)
 
 	if platform not in ('linux', 'win32', 'darwin'):
