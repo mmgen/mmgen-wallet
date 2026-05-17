@@ -23,7 +23,7 @@ tw.view: base class for tracking wallet view classes
 import sys, time, asyncio
 from collections import namedtuple
 
-from ..cfg import gv
+from ..cfg import gv, gc
 from ..objmethods import MMGenObject
 from ..obj import get_obj, MMGenIdx, MMGenList
 from ..color import nocolor, yellow, orange, green, red, blue
@@ -586,7 +586,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			if scroll:
 				for k in self.scroll_keys['vi']:
 					assert k not in self.key_mappings, f'{k!r} is in key_mappings'
-				self.key_mappings.update(self.scroll_keys['vi'] | self.scroll_keys[sys.platform])
+				self.key_mappings.update(self.scroll_keys['vi'] | self.scroll_keys[gc.platform])
 			return self.key_mappings
 
 		def cleanup(add_nl=False):

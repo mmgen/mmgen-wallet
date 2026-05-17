@@ -17,7 +17,7 @@ from stat import S_IWUSR, S_IRUSR
 from pathlib import Path
 from subprocess import run, PIPE, DEVNULL
 
-from ..cfg import Config
+from ..cfg import Config, gc
 from ..util import msg, msg_r, ymsg, rmsg, gmsg, bmsg, die, suf, fmt, fmt_list, is_int, cached_property
 from ..color import yellow, brown, gray
 from ..wallet import Wallet, get_wallet_cls
@@ -79,7 +79,7 @@ class Autosign:
 					cfg.mnemonic_fmt,
 					fmt_list(self.mn_fmts, fmt='no_spc')))
 
-		match sys.platform:
+		match gc.platform:
 			case 'linux':
 				self.dfl_mountpoint = f'/mnt/{self.linux_mount_subdir}'
 				self.dfl_shm_dir    = '/dev/shm'
@@ -107,7 +107,7 @@ class Autosign:
 		self.shm_dir    = Path(self.dfl_shm_dir)
 		self.wallet_dir = Path(cfg.wallet_dir or self.dfl_wallet_dir)
 
-		match sys.platform:
+		match gc.platform:
 			case 'linux':
 				self.mount_cmd  = f'mount {self.mountpoint}'
 				self.umount_cmd = f'umount {self.mountpoint}'
@@ -215,7 +215,7 @@ class Autosign:
 				msg(f'Creating ‘{path}’')
 				path.mkdir(parents=True)
 
-		if sys.platform == 'linux' and not self.mountpoint.is_dir():
+		if gc.platform == 'linux' and not self.mountpoint.is_dir():
 			def do_die(m):
 				die(1, '\n' + yellow(fmt(m.strip(), indent='  ')))
 			if Path(self.old_dfl_mountpoint).is_dir():
@@ -383,7 +383,7 @@ class Autosign:
 		from .swap_mgr import SwapMgr
 		SwapMgr(self.cfg, ignore_zram=True).disable()
 
-		if sys.platform == 'darwin':
+		if gc.platform == 'darwin':
 			self.macos_ramdisk.create()
 
 		remove_wallet_dir()
@@ -486,7 +486,7 @@ class Autosign:
 	def device_inserted(self):
 		if self.cfg.no_insert_check:
 			return True
-		match sys.platform:
+		match gc.platform:
 			case 'linux':
 				cp = run(self.linux_blkid_cmd.split(), stdout=PIPE, text=True)
 				if cp.returncode not in (0, 2):

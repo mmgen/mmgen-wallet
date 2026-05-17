@@ -22,6 +22,7 @@ test.cmdtest_d.misc: Miscellaneous test groups for the cmdtest.py test suite
 
 import sys, re
 
+from mmgen.cfg import gc
 from mmgen.util import die
 
 from ..include.common import start_test_daemons, stop_test_daemons, imsg
@@ -208,7 +209,7 @@ class CmdTestOutput(CmdTestBase):
 
 	def oneshot_warning(self, pexpect_spawn=None):
 		t = self.spawn('test/misc/oneshot_warning.py', cmd_dir='.', pexpect_spawn=pexpect_spawn)
-		nl = '\r\n' if sys.platform == 'win32' or t.pexpect_spawn else '\n'
+		nl = '\r\n' if gc.platform == 'win32' or t.pexpect_spawn else '\n'
 		for s in (
 			f'pw{nl}wg1',
 			'foo is experimental',

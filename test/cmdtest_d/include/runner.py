@@ -88,7 +88,7 @@ class CmdTestRunner:
 			omsg(f'INFO → Writing coverage files to {coverdir!r}')
 			self.pre_args = ['python3', '-m', 'trace', '--count', '--coverdir='+coverdir, '--file='+accfile]
 		else:
-			self.pre_args = ['python3'] if sys.platform == 'win32' else []
+			self.pre_args = ['python3'] if gc.platform == 'win32' else []
 
 		if self.cfg.pexpect_spawn:
 			omsg('INFO → Using pexpect.spawn() for real terminal emulation')
@@ -190,7 +190,7 @@ class CmdTestRunner:
 					clr1, clr2 = (nocolor, nocolor) if self.cfg.print_cmdline else (green, cyan)
 					omsg(
 						clr1('Executing: ') +
-						clr2(repr(cmd_disp) if sys.platform == 'win32' else cmd_disp)
+						clr2(repr(cmd_disp) if gc.platform == 'win32' else cmd_disp)
 					)
 			else:
 				omsg_r('{a}Testing {b}: {c}'.format(
@@ -242,8 +242,8 @@ class CmdTestRunner:
 
 		ct_cls = self.gm.load_mod(gname)
 
-		if sys.platform in ct_cls.platform_skip:
-			omsg(gray(f'INFO → skipping test {gname!r} for platform {sys.platform!r}'))
+		if gc.platform in ct_cls.platform_skip:
+			omsg(gray(f'INFO → skipping test {gname!r} for platform {gc.platform!r}'))
 			return None
 
 		for k in ('segwit', 'segwit_random', 'bech32'):

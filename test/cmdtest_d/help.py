@@ -12,7 +12,7 @@
 test.cmdtest_d.help: helpscreen test group for the cmdtest.py test suite
 """
 
-import sys, os, time
+import os, time
 
 from mmgen.util import ymsg
 from mmgen.cfg import gc
@@ -103,7 +103,7 @@ class CmdTestHelp(CmdTestBase):
 				scripts = [scripts]
 			for script in scripts:
 				d = gc.cmd_caps_data[script]
-				if sys.platform == 'win32' and 'w' not in d.platforms:
+				if gc.platform == 'win32' and 'w' not in d.platforms:
 					yield script
 				elif not (d.use_coin_opt or self.proto.coin.lower() == 'btc'):
 					yield script

@@ -12,8 +12,9 @@
 rpc.local: local RPC client class for the MMGen Project
 """
 
-import sys, json, asyncio, importlib
+import json, asyncio, importlib
 
+from ..cfg import gc
 from ..util import msg, die, fmt, oneshot_warning, isAsync
 
 from . import util
@@ -32,7 +33,7 @@ class RPCClient:
 		self.name = type(self).__name__
 
 		# aiohttp workaround, and may speed up RPC performance overall on some systems:
-		if sys.platform == 'win32' and host == 'localhost':
+		if gc.platform == 'win32' and host == 'localhost':
 			host = '127.0.0.1'
 
 		if not self.cfg.debug_rpc:
@@ -63,7 +64,7 @@ class RPCClient:
 		def get_cls(backend_id):
 			return getattr(importlib.import_module(f'mmgen.rpc.backends.{backend_id}'), backend_id)
 		backend_id = backend or self.cfg.rpc_backend
-		return get_cls(dfl_backends[sys.platform] if backend_id == 'auto' else backend_id)
+		return get_cls(dfl_backends[gc.platform] if backend_id == 'auto' else backend_id)
 
 	def set_backend(self, backend=None):
 		self.backend = self._get_backend_cls(backend)(self)

@@ -23,7 +23,7 @@ util: Frequently-used variables, classes and utility functions for the MMGen sui
 import sys, os, time, re
 
 from .color import red, yellow, green, blue, purple
-from .cfg import gv
+from .cfg import gv, gc
 
 ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
 
@@ -96,7 +96,7 @@ class Util:
 			msg(f'{capfirst(desc2)} OK ({val2})')
 		return True
 
-if sys.platform == 'win32':
+if gc.platform == 'win32':
 	def msg_r(s):
 		try:
 			gv.stderr.write(s)
@@ -468,7 +468,7 @@ def wrap_ripemd160(called=[]):
 		called.append(True)
 
 def exit_if_mswin(feature):
-	if sys.platform == 'win32':
+	if gc.platform == 'win32':
 		die(2, capfirst(feature) + ' not supported on the MSWin / MSYS2 platform')
 
 def have_sudo(*, silent=False):

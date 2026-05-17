@@ -34,7 +34,7 @@ except ImportError:
 from test.include.common import set_globals, end_msg, init_coverage
 
 from mmgen import main_tool
-from mmgen.cfg import Config
+from mmgen.cfg import Config, gc
 from mmgen.color import green, blue, purple, cyan, gray
 from mmgen.util import msg, msg_r, Msg, die, isAsync
 
@@ -234,7 +234,7 @@ def run_test(cls, gid, cmd_name):
 		elif cfg.fork:
 			cmd_out = fork_cmd(cmd_name, args, opts, stdin_input)
 		else:
-			if stdin_input and sys.platform == 'win32':
+			if stdin_input and gc.platform == 'win32':
 				msg(gray('Skipping for MSWin - no os.fork()'))
 				continue
 			method = getattr(cls(cfg, cmdname=cmd_name, proto=proto, mmtype=mmtype), cmd_name)

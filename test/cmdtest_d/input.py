@@ -10,7 +10,7 @@
 test.cmdtest_d.input: user input tests for the MMGen cmdtest.py test suite
 """
 
-import sys, os
+import os
 
 from mmgen.cfg import gc
 from mmgen.util import fmt, capfirst, remove_whitespace
@@ -28,7 +28,7 @@ from .include.common import Ctrl_U, ref_dir
 from .base import CmdTestBase
 from .include.input import stealth_mnemonic_entry, user_dieroll_entry
 
-hold_protect_delay = 2 if sys.platform == 'darwin' else None
+hold_protect_delay = 2 if gc.platform == 'darwin' else None
 
 class CmdTestInput(CmdTestBase):
 	'user input'
@@ -236,7 +236,7 @@ class CmdTestInput(CmdTestBase):
 		return t
 
 	def _input_func(self, func_name, arg_dfls, func_args, text, expect, term, delay=None):
-		if term and sys.platform == 'win32':
+		if term and gc.platform == 'win32':
 			return ('skip_warn', 'pexpect_spawn not supported on Windows platform')
 		func_args = dict(zip(arg_dfls.keys(), func_args))
 		t = self.spawn(
@@ -285,7 +285,7 @@ class CmdTestInput(CmdTestBase):
 		return self._get_char(['prompt> ', '', True, 5], 'x', 'x', False)
 
 	def get_char2(self):
-		expect = 'x' if sys.platform == 'win32' else 'xxxxx'
+		expect = 'x' if gc.platform == 'win32' else 'xxxxx'
 		return self._get_char(['prompt> ', '', True, 5], 'xxxxx', expect, False)
 
 	def get_char3(self):
@@ -383,7 +383,7 @@ class CmdTestInput(CmdTestBase):
 			hold_protect_delay)
 
 	def _password_entry(self, prompt, opts=[], term=False):
-		if term and sys.platform == 'win32':
+		if term and gc.platform == 'win32':
 			return ('skip_warn', 'pexpect_spawn not supported on Windows platform')
 		t = self.spawn('test/misc/input_func.py', opts + ['passphrase'], cmd_dir='.', pexpect_spawn=term)
 		imsg(f'Terminal: {term}')

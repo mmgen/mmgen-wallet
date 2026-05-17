@@ -20,10 +20,11 @@
 test.cmdtest_d.xmrwallet: xmrwallet tests for the cmdtest.py test suite
 """
 
-import sys, os, time, re, atexit, asyncio, shutil
+import os, time, re, atexit, asyncio, shutil
 from subprocess import run, PIPE
 from collections import namedtuple
 
+from mmgen.cfg import gc
 from mmgen.util import capfirst, is_int, die, suf, list_gen
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
@@ -798,7 +799,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		h = await self._get_height()
 		imsg_r(f'Chain height: {h} ')
 
-		max_iterations, min_height = (300, 64) if sys.platform == 'win32' else (50, 300)
+		max_iterations, min_height = (300, 64) if gc.platform == 'win32' else (50, 300)
 		verbose = False
 
 		for count in range(max_iterations):

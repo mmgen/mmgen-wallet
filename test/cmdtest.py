@@ -30,7 +30,7 @@ def create_shm_dir(data_dir, trash_dir):
 	# under '/dev/shm' and put datadir and tmpdirs here.
 	import shutil
 	from subprocess import run
-	if sys.platform in ('win32', 'darwin'):
+	if gc.platform in ('win32', 'darwin'):
 		for tdir in (data_dir, trash_dir):
 			try:
 				os.listdir(tdir)
@@ -81,7 +81,7 @@ try:
 except ImportError:
 	from test.include.test_init import repo_root
 
-from mmgen.cfg import Config
+from mmgen.cfg import Config, gc
 from mmgen.color import red, yellow, green, blue, init_color
 from mmgen.util import msg, Msg, rmsg, die
 
@@ -203,7 +203,7 @@ cfg.skipping_deps = cfg.resuming or 'skip_deps' in po.user_opts
 
 cmd_args = cfg._args
 
-if cfg.pexpect_spawn and sys.platform == 'win32':
+if cfg.pexpect_spawn and gc.platform == 'win32':
 	die(1, '--pexpect-spawn option not supported on Windows platform, exiting')
 
 if cfg.daemon_id and cfg.daemon_id in cfg.blacklisted_daemons.split():
@@ -240,7 +240,7 @@ if cfg.skipping_deps:
 from test.cmdtest_d.include.cfg import cfgs
 
 def create_tmp_dirs(shm_dir):
-	if sys.platform in ('win32', 'darwin'):
+	if gc.platform in ('win32', 'darwin'):
 		for cfg in sorted(cfgs):
 			mk_tmpdir(cfgs[cfg]['tmpdir'])
 	else:

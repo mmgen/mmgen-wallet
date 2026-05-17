@@ -20,7 +20,9 @@
 filename: File and MMGenFile classes and methods for the MMGen suite
 """
 
-import sys, os
+import os
+
+from .cfg import gc
 from .util import die, get_extension
 
 class File:
@@ -42,8 +44,8 @@ class File:
 
 		import stat
 		if stat.S_ISBLK(st.st_mode):
-			if sys.platform == 'win32':
-				die(2, 'Access to raw block devices not supported on platform {sys.platform!r}')
+			if gc.platform == 'win32':
+				die(2, 'Access to raw block devices not supported on platform {gc.platform!r}')
 			mode = (os.O_RDONLY, os.O_RDWR)[bool(write)]
 			try:
 				fd = os.open(fn, mode)
@@ -52,7 +54,7 @@ class File:
 					die(2, f'{fn!r}: permission denied')
 #				if e.errno != 17: raise
 			else:
-				match sys.platform:
+				match gc.platform:
 					case 'linux':
 						self.size = os.lseek(fd, 0, os.SEEK_END)
 					case 'darwin':

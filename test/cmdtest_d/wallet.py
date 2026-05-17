@@ -20,8 +20,9 @@
 test.cmdtest_d.wallet: Wallet conversion tests for the cmdtest.py test suite
 """
 
-import sys, os
+import os
 
+from mmgen.cfg import gc
 from mmgen.util import msg, capfirst, get_extension
 from mmgen.wallet import get_wallet_cls
 
@@ -174,7 +175,7 @@ class CmdTestWalletConv(CmdTestBase, CmdTestShared):
 
 		b = VirtBlockDevice(os.path.join(self.tmpdir, 'hincog_blkdev_img'), '1K')
 		b.create()
-		b.attach(dev_mode='0666' if sys.platform == 'linux' else None)
+		b.attach(dev_mode='0666' if gc.platform == 'linux' else None)
 		self.ref_hincog_conv_out(ic_f=b.dev)
 		b.detach()
 

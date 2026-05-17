@@ -20,6 +20,8 @@
 color: color handling for the MMGen suite
 """
 
+from .cfg import gc
+
 _colors = {
 	'black':   (232,        (30, 0)),
 	'red':     (210,        (31, 1)),
@@ -49,8 +51,7 @@ def nocolor(s):
 
 def set_vt100():
 	'hack to put term into VT100 mode under MSWin'
-	import sys
-	if sys.platform == 'win32':
+	if gc.platform == 'win32':
 		from subprocess import run
 		run([], shell=True)
 
@@ -84,7 +85,7 @@ def init_color(num_colors='auto'):
 
 	if num_colors == 'auto':
 		import os
-		if sys.platform == 'win32':
+		if gc.platform == 'win32':
 			# Force 256-color for MSYS2: terminal supports it, however infocmp reports 8-color.
 			# We also avoid spawning a subprocess, leading to a subsequent OSError 22 when testing
 			# with pexpect spawn.

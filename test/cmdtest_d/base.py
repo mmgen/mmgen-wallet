@@ -20,8 +20,9 @@
 test.cmdtest_d.base: Base class for the cmdtest.py test suite
 """
 
-import sys, os
+import os
 
+from mmgen.cfg import gc
 from mmgen.util import msg
 from mmgen.color import gray, purple, yellow
 
@@ -95,7 +96,7 @@ class CmdTestBase:
 			msg(f'{fn}: file does not exist or could not be deleted')
 
 	def skip_for_platform(self, name, extra_msg=None):
-		if sys.platform == name:
+		if gc.platform == name:
 			msg(gray('Skipping test {!r} for {} platform{}'.format(
 				self.test_name,
 				name,

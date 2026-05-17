@@ -20,8 +20,7 @@
 autosign: Auto-sign MMGen transactions, message files and XMR wallet output files
 """
 
-import sys
-
+from .cfg import gc
 from .util import msg, ymsg, gmsg, die, fmt_list, exit_if_mswin, async_run
 
 exit_if_mswin('autosigning')
@@ -130,6 +129,7 @@ if cmd in ('enable_swap', 'disable_swap', 'list_led', 'test_led'):
 					ymsg('No LED signaling support for this platform')
 				else:
 					gmsg('LED signaling is supported by this platform!')
+	import sys
 	sys.exit(0)
 
 if cmd not in Autosign.cmds + Autosign.util_cmds:
@@ -185,6 +185,6 @@ match cmd:
 		asi.wipe_encryption_key()
 		asi.do_umount()
 	case 'macos_ramdisk_setup' | 'macos_ramdisk_delete':
-		if sys.platform != 'darwin':
+		if gc.platform != 'darwin':
 			die(1, f'The ‘{cmd}’ operation is for the macOS platform only')
 		asi.macos_ramdisk.create() if cmd == 'macos_ramdisk_setup' else asi.macos_ramdisk.destroy()

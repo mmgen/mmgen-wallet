@@ -243,10 +243,10 @@ def run_test(test, subtest=None):
 			if cfg.fast and _subtest in fast_skip:
 				subtest_skip_msg(_subtest, '[--fast]')
 				continue
-			if sys.platform == 'win32' and _subtest in win_skip:
+			if gc.platform == 'win32' and _subtest in win_skip:
 				subtest_skip_msg(_subtest, 'for Windows platform')
 				continue
-			if sys.platform == 'darwin' and _subtest in mac_skip:
+			if gc.platform == 'darwin' and _subtest in mac_skip:
 				subtest_skip_msg(_subtest, 'for macOS platform')
 				continue
 			if platform.machine() == 'aarch64' and _subtest in arm_skip:

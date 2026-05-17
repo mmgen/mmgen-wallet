@@ -24,6 +24,7 @@ fileutil: Routines that read, write, execute or stat files
 
 import sys, os
 
+from .cfg import gc
 from .color import set_vt100
 from .util import (
 	msg,
@@ -83,7 +84,7 @@ def _check_file_type_and_access(fname, ftype, *, blkdev_ok=False):
 			(stat.S_ISLNK, 'symbolic link')
 		]
 		if blkdev_ok:
-			if not sys.platform in ('win32',):
+			if not gc.platform in ('win32',):
 				ok_types.append((stat.S_ISBLK, 'block device'))
 
 	try:
@@ -217,7 +218,7 @@ def write_data_to_file(
 			else:
 				msg('Redirecting output to file')
 
-		if binary and sys.platform == 'win32':
+		if binary and gc.platform == 'win32':
 			import msvcrt
 			msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 

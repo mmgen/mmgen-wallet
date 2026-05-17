@@ -24,7 +24,7 @@ import sys, os, time, shutil, atexit
 from subprocess import run, DEVNULL
 from pathlib import Path
 
-from mmgen.cfg import Config
+from mmgen.cfg import Config, gc
 from mmgen.color import red, blue, yellow, cyan, orange, purple, gray
 from mmgen.util import msg, suf, die, indent, fmt
 from mmgen.led import LEDControl
@@ -71,13 +71,13 @@ class CmdTestAutosignBase(CmdTestBase):
 		self._create_autosign_instances(create_dirs=not cfg.skipping_deps)
 		self.fs_image_path = Path(self.tmpdir).absolute() / 'removable_device_image'
 
-		if sys.platform == 'linux':
+		if gc.platform == 'linux':
 			self.txdev = VirtBlockDevice(self.fs_image_path, '10M')
 
 		if not (cfg.skipping_deps or self.live):
 			self._create_removable_device()
 
-		if sys.platform == 'darwin' and not cfg.no_daemon_stop:
+		if gc.platform == 'darwin' and not cfg.no_daemon_stop:
 			atexit.register(self._macOS_eject_disk, self.asi.dev_label)
 
 		self.opts = ['--coins='+','.join(self.coins)]
@@ -99,7 +99,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			del self.txdev
 
 		if not self.cfg.no_daemon_stop:
-			if sys.platform == 'darwin':
+			if gc.platform == 'darwin':
 				for label in (self.asi.dev_label, self.asi.macos_ramdisk.label):
 					self._macOS_eject_disk(label)
 
@@ -123,10 +123,10 @@ class CmdTestAutosignBase(CmdTestBase):
 				for k in ('mountpoint', 'shm_dir', 'wallet_dir'):
 					if subdir == 'online' and k in ('shm_dir', 'wallet_dir'):
 						continue
-					if sys.platform == 'darwin' and k != 'mountpoint':
+					if gc.platform == 'darwin' and k != 'mountpoint':
 						continue
 					getattr(asi, k).mkdir(parents=True, exist_ok=True)
-					if sys.platform == 'darwin' and k == 'mountpoint':
+					if gc.platform == 'darwin' and k == 'mountpoint':
 						asi.mountpoint.rmdir()
 						continue
 
@@ -143,7 +143,7 @@ class CmdTestAutosignBase(CmdTestBase):
 					raise
 
 	def _create_removable_device(self):
-		match sys.platform:
+		match gc.platform:
 			case 'linux':
 				self.txdev.create()
 				self.txdev.attach(silent=True)
@@ -211,7 +211,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		mn_desc = mn_type or 'default'
 		mn_type = mn_type or 'mmgen'
 
-		if sys.platform == 'darwin' and not self.cfg.no_daemon_stop:
+		if gc.platform == 'darwin' and not self.cfg.no_daemon_stop:
 			self._macOS_eject_disk(self.asi.macos_ramdisk.label)
 
 		self.insert_device()
@@ -257,7 +257,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		t.read()
 		self.remove_device()
 
-		if sys.platform == 'darwin' and not self.cfg.no_daemon_stop:
+		if gc.platform == 'darwin' and not self.cfg.no_daemon_stop:
 			atexit.register(self._macOS_eject_disk, self.asi.macos_ramdisk.label)
 
 		return t
@@ -267,7 +267,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			return
 		loc = getattr(self, asi)
 
-		match sys.platform:
+		match gc.platform:
 			case 'linux':
 				self._set_e2label(loc.dev_label)
 				self.txdev.attach()
@@ -284,7 +284,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		if self.live:
 			return
 		loc = getattr(self, asi)
-		match sys.platform:
+		match gc.platform:
 			case 'linux':
 				self.txdev.detach()
 				for _ in range(20):
@@ -407,7 +407,7 @@ class CmdTestAutosignClean(CmdTestAutosignBase):
 		t = self.spawn('mmgen-autosign', [f'--coins={coins}', 'clean'], no_msg=True)
 		out = t.read()
 
-		if sys.platform == 'darwin':
+		if gc.platform == 'darwin':
 			self.insert_device()
 
 		silence()
@@ -718,7 +718,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 			for fn in (db.control, db.trigger):
 				run(f'sudo rm -f {fn}'.split(), check=True)
 			LEDControl.create_dummy_control_files()
-			usrgrp = {'linux': 'root:root', 'darwin': 'root:wheel'}[sys.platform]
+			usrgrp = {'linux': 'root:root', 'darwin': 'root:wheel'}[gc.platform]
 			for fn in (db.control, db.trigger): # trigger the auto-chmod feature
 				run(f'sudo chmod 644 {fn}'.split(), check=True)
 				run(f'sudo chown {usrgrp} {fn}'.split(), check=True)

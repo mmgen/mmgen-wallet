@@ -20,12 +20,13 @@
 test.cmdtest_d.ethdev: Ethdev tests for the cmdtest.py test suite
 """
 
-import sys, time, os, re, shutil, asyncio, json
+import time, os, re, shutil, asyncio, json
 from decimal import Decimal
 from collections import namedtuple
 from subprocess import run, PIPE, DEVNULL
 from pathlib import Path
 
+from mmgen.cfg import gc
 from mmgen.color import red, yellow, blue, cyan, orange, set_vt100
 from mmgen.util import msg, msg_r, rmsg, die
 from mmgen.proto.eth.util import compute_contract_addr
@@ -1701,7 +1702,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def edit_comment1(self):
 		return self.edit_comment(out_num=del_addrs[0], comment_text=tw_comment_zh[:3])
 	def edit_comment2(self):
-		spawn = not sys.platform == 'win32'
+		spawn = not gc.platform == 'win32'
 		return self.edit_comment(
 			out_num       = del_addrs[0],
 			comment_text  = tw_comment_zh[3:],

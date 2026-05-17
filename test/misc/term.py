@@ -22,7 +22,7 @@ commands = [
 	'get_char_one_raw',
 ]
 
-match sys.platform:
+match gc.platform:
 	case 'linux' | 'darwin':
 		commands.extend([
 			'get_char',
@@ -42,7 +42,7 @@ opts_data = {
 -h, --help     Print this help message
 """,
 	'notes': f"""
-available commands for platform {sys.platform!r}:
+available commands for platform {gc.platform!r}:
 {fmt_list(commands, fmt='col', indent='    ')}
 """
 	}
@@ -122,7 +122,7 @@ def _tt_get_char(raw=False, one_char=False, immed_chars=''):
 			if one_char else
 		'echoed as a FULL CONTROL SEQUENCE.'
 	)
-	if sys.platform == 'win32':
+	if gc.platform == 'win32':
 		if raw:
 			m3 = 'The Escape and F1-F12 keys will be returned as two-character strings.'
 		else:

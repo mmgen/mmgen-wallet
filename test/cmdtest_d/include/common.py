@@ -22,6 +22,7 @@ test.cmdtest_d.include.common: Shared routines and data for the cmdtest.py test 
 
 import sys, os
 
+from mmgen.cfg import gc
 from mmgen.color import green, blue, gray
 from mmgen.util import msg
 
@@ -55,7 +56,7 @@ from mmgen.obj import MMGenTxComment, TwComment
 tx_comment_jp = text_jp
 tx_comment_zh = text_zh
 
-lcg = ascii_cyr_gr if sys.platform == 'win32' else lat_cyr_gr # MSYS2 popen_spawn issue
+lcg = ascii_cyr_gr if gc.platform == 'win32' else lat_cyr_gr # MSYS2 popen_spawn issue
 tx_comment_lat_cyr_gr = lcg[:MMGenTxComment.max_len] # 72 chars
 
 tw_comment_zh         = text_zh[:TwComment.max_screen_width // 2]

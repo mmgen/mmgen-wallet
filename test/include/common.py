@@ -25,7 +25,7 @@ from subprocess import run, PIPE, DEVNULL
 from pathlib import Path
 from collections import namedtuple
 
-from mmgen.cfg import gv
+from mmgen.cfg import gv, gc
 from mmgen.color import yellow, green, orange
 from mmgen.util import msg, msg_r, Msg, Msg_r, gmsg, die, suf, fmt_list
 from mmgen.fileutil import write_data_to_file, get_data_from_file
@@ -383,7 +383,7 @@ def create_addrpairs(proto, mmtype, num):
 			for m in range(num)]
 
 def VirtBlockDevice(img_path, size):
-	match sys.platform:
+	match gc.platform:
 		case 'linux':
 			return VirtBlockDeviceLinux(img_path, size)
 		case 'darwin':

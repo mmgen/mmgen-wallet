@@ -12,8 +12,9 @@
 test.tooltest2_d.data: Test vectors for the ‘mmgen-tool’ utility
 """
 
-import sys
 from decimal import Decimal
+
+from mmgen.cfg import gc
 
 from mmgen.key import is_wif
 from mmgen.addr import is_coin_addr
@@ -47,7 +48,7 @@ def md5_hash_strip(s):
 	s = s.replace(NL, '\n')             # fix DOS newlines
 	return md5_hash(s.strip())
 
-NL = ('\n', '\r\n')[sys.platform=='win32']
+NL = ('\n', '\r\n')[gc.platform=='win32']
 
 sample_text_hexdump = (
 	'000000: 5468 6520 5469 6d65 7320 3033 2f4a 616e{n}' +

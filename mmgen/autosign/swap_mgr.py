@@ -12,14 +12,14 @@
 autosign.swap_mgr: swap management for MMGen Wallet autosigning
 """
 
-import sys
 from subprocess import run, PIPE, DEVNULL
 
+from ..cfg import gc
 from ..util import msg, ymsg, suf, fmt_list, have_sudo, capfirst
 from ..color import orange, blue
 
 def SwapMgr(*args, **kwargs):
-	match sys.platform:
+	match gc.platform:
 		case 'linux':
 			return SwapMgrLinux(*args, **kwargs)
 		case 'darwin':
@@ -70,6 +70,7 @@ class SwapMgrBase:
 				d = fmt_list(cmds, indent='  ', fmt='col')) + '\n' + post
 			msg(m)
 			if not self.cfg.test_suite:
+				import sys
 				sys.exit(1)
 
 class SwapMgrLinux(SwapMgrBase):

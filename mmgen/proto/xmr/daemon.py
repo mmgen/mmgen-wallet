@@ -12,7 +12,7 @@
 proto.xmr.daemon: Monero base protocol daemon classes
 """
 
-import sys, os
+import os
 
 from ...cfg import gc
 from ...util import list_gen, die, contains_any
@@ -53,7 +53,7 @@ class monero_daemon(CoinDaemon):
 			test_connection = False,
 			daemon = self)
 
-		self.use_pidfile = sys.platform == 'linux'
+		self.use_pidfile = gc.platform == 'linux'
 
 		self.shared_args = list_gen(
 			['--no-zmq'],
@@ -67,13 +67,13 @@ class monero_daemon(CoinDaemon):
 			['--no-igd'],
 			[f'--data-dir={self.datadir}', self.non_dfl_datadir],
 			[f'--pidfile={self.pidfile}', self.use_pidfile],
-			['--detach',                  not (self.opt.no_daemonize or self.platform=='win32')],
+			['--detach',                  not (self.opt.no_daemonize or gc.platform=='win32')],
 			['--offline',                 not self.opt.online],
 		)
 
 	@property
 	def stop_cmd(self):
-		if self.platform == 'win32':
+		if gc.platform == 'win32':
 			return ['kill', '-Wf', self.pid]
 		elif contains_any(self.start_cmd, ['--restricted-rpc', '--public-node']):
 			return ['kill', self.pid]
@@ -135,7 +135,7 @@ class MoneroWalletDaemon(RPCDaemon):
 		self.pidfile = os.path.join(self.datadir, id_str+'.pid')
 		self.logfile = os.path.join(self.datadir, id_str+'.log')
 
-		self.use_pidfile = sys.platform == 'linux'
+		self.use_pidfile = gc.platform == 'linux'
 
 		self.proxy = proxy
 		self.monerod_addr = monerod_addr
@@ -175,8 +175,8 @@ class MoneroWalletDaemon(RPCDaemon):
 			[f'--daemon-address={self.monerod_addr}', self.monerod_addr],
 			[f'--daemon-port={self.monerod_port}',    not self.monerod_addr],
 			[f'--proxy={self.proxy}',                self.proxy],
-			[f'--pidfile={self.pidfile}',            self.platform == 'linux'],
-			['--detach',                             not (self.opt.no_daemonize or self.platform=='win32')],
+			[f'--pidfile={self.pidfile}',            gc.platform == 'linux'],
+			['--detach',                             not (self.opt.no_daemonize or gc.platform=='win32')],
 			['--stagenet',                           self.network == 'testnet'],
 			['--allow-mismatched-daemon-version',    test_suite],
 		)

@@ -4,9 +4,9 @@
 test.daemontest_d.rpc: RPC unit test for the MMGen suite
 """
 
-import sys, os, asyncio
+import os, asyncio
 
-from mmgen.cfg import Config
+from mmgen.cfg import Config, gc
 from mmgen.color import yellow, cyan
 from mmgen.util import msg, gmsg, make_timestr, pp_fmt, die, async_run
 from mmgen.protocol import init_proto
@@ -149,7 +149,7 @@ def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_override=None
 			d.stop()
 			d.remove_datadir()
 
-		if test_cf_auth and sys.platform != 'win32':
+		if test_cf_auth and gc.platform != 'win32':
 			asyncio.run(cfg_file_auth_test(cfg, d))
 			asyncio.run(cfg_file_auth_test(cfg, d, bad_auth=True))
 
@@ -267,7 +267,7 @@ class unit_tests:
 					password = 'foo',
 					seed     = xmrseed().fromhex('beadface'*8, tostr=True))
 
-				if sys.platform == 'win32':
+				if gc.platform == 'win32':
 					wd.stop()
 					wd.start()
 

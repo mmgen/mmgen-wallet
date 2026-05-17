@@ -12,9 +12,10 @@
 test.cmdtest_d.include.proxy: SSH SOCKS proxy runner for the cmdtest.py test suite
 """
 
-import sys, atexit
+import atexit
 from subprocess import run, PIPE
 
+from mmgen.cfg import gc
 from mmgen.util import msg, die, fmt
 from mmgen.util2 import port_in_use
 
@@ -54,7 +55,7 @@ class TestProxy:
 	"""
 
 	def kill_proxy(self, args):
-		if sys.platform in ('linux', 'darwin'):
+		if gc.platform in ('linux', 'darwin'):
 			omsg(f'Stopping SSH SOCKS server at localhost:{self.port}')
 			cmd = ['pkill', '-f', ' '.join(args)]
 			run(cmd)

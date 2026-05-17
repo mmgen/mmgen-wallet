@@ -25,13 +25,14 @@ term: Terminal classes for the MMGen suite
 import sys, os, time
 from collections import namedtuple
 
+from .cfg import gc
 from .util import msg, msg_r, die
 
-match sys.platform:
+match gc.platform:
 	case 'linux' | 'darwin':
 		import tty, termios
 		from select import select
-		hold_protect_timeout = 2 if sys.platform == 'darwin' else 0.3
+		hold_protect_timeout = 2 if gc.platform == 'darwin' else 0.3
 	case 'win32':
 		try:
 			import msvcrt
@@ -288,7 +289,7 @@ def get_term():
 		'linux': (MMGenTermLinux if sys.stdin.isatty() else MMGenTermLinuxStub),
 		'darwin': (MMGenTermLinux if sys.stdin.isatty() else MMGenTermLinuxStub),
 		'win32': (MMGenTermMSWin if sys.stdin.isatty() else MMGenTermMSWinStub),
-	}[sys.platform]
+	}[gc.platform]
 
 def init_term(cfg, *, noecho=False):
 

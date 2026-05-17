@@ -10,8 +10,9 @@
 test.cmdtest_d.cfgfile: CfgFile tests for the MMGen cmdtest.py test suite
 """
 
-import sys, os, time, shutil
+import os, time, shutil
 
+from mmgen.cfg import gc
 from mmgen.color import yellow
 from mmgen.cfgfile import CfgFileSampleSys, CfgFileSampleUsr, cfg_file_sample
 
@@ -180,7 +181,7 @@ class CmdTestCfgFile(CmdTestBase):
 		self.write_to_cfgfile('usr', ['foo true', 'bar false'])
 		t = self.old_sample_common(
 			old_set       = True,
-			pexpect_spawn = not sys.platform == 'win32')
+			pexpect_spawn = not gc.platform == 'win32')
 		t.expect('unrecognized option')
 		return t
 

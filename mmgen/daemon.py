@@ -20,10 +20,11 @@
 daemon: Daemon control interface for the MMGen suite
 """
 
-import sys, os, time, importlib
+import os, time, importlib
 from subprocess import run, PIPE, CompletedProcess
 from collections import namedtuple
 
+from .cfg import gc
 from .base_obj import Lockable
 from .color import set_vt100
 from .util import msg, Msg_r, die, remove_dups, oneshot_warning, fmt_list
@@ -53,8 +54,7 @@ class Daemon(Lockable):
 	def __init__(self, cfg, *, opts=None, flags=None):
 
 		self.cfg = cfg
-		self.platform = sys.platform
-		if self.platform == 'win32':
+		if gc.platform == 'win32':
 			self.use_pidfile = False
 			self.use_threads = True
 
@@ -64,11 +64,11 @@ class Daemon(Lockable):
 
 	def exec_cmd_thread(self, cmd):
 		import threading
-		tname = ('exec_cmd', 'exec_cmd_win_console')[self.platform == 'win32' and self.new_console_mswin]
+		tname = ('exec_cmd', 'exec_cmd_win_console')[gc.platform == 'win32' and self.new_console_mswin]
 		t = threading.Thread(target=getattr(self, tname), args=(cmd,))
 		t.daemon = True
 		t.start()
-		if self.platform == 'win32':
+		if gc.platform == 'win32':
 			Msg_r(' \b') # blocks w/o this...crazy
 		return True
 
@@ -121,7 +121,7 @@ class Daemon(Lockable):
 			with open(self.pidfile) as fp:
 				return fp.read().strip()
 
-		match self.platform:
+		match gc.platform:
 			case 'win32':
 				# Assumes only one running instance of given daemon.  If multiple daemons are running,
 				# the first PID in the list is returned and self.pids is set to the PID list.
@@ -159,7 +159,7 @@ class Daemon(Lockable):
 	@property
 	def stop_cmd(self):
 		return (
-			['kill', '-Wf', self.pid] if self.platform == 'win32' else
+			['kill', '-Wf', self.pid] if gc.platform == 'win32' else
 			['kill', '-9', self.pid] if self.force_kill else
 			['kill', self.pid])
 
@@ -448,7 +448,7 @@ class CoinDaemon(Daemon):
 		if self.test_suite:
 			return os.path.join('test', 'daemons', self.network_id)
 		else:
-			return os.path.join(*self.datadirs[self.platform])
+			return os.path.join(*self.datadirs[gc.platform])
 
 	@property
 	def network_datadir(self):

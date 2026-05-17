@@ -20,7 +20,9 @@
 tool.util: Utility commands for the 'mmgen-tool' utility
 """
 
-import sys, os
+import os
+
+from ..cfg import gc
 
 from .common import tool_cmd_base
 
@@ -125,8 +127,8 @@ class tool_cmd(tool_cmd_base):
 
 	def unhexdump(self, infile: str):
 		"decode hexdump from file (use '-' for stdin) (warning: outputs binary data)"
-		if sys.platform == 'win32':
-			import msvcrt
+		if gc.platform == 'win32':
+			import sys, msvcrt
 			msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 		from ..fileutil import get_data_from_file
 		from ..util2 import decode_pretty_hexdump

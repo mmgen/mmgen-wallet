@@ -21,7 +21,7 @@ test/scrambletest.py: seed scrambling and addrlist data generation tests for all
                       supported coins + passwords
 """
 
-import sys, os, time
+import os, time
 from subprocess import run, PIPE
 from collections import namedtuple
 
@@ -31,7 +31,7 @@ except ImportError:
 	from test.include import test_init
 
 from mmgen.main import launch
-from mmgen.cfg import Config
+from mmgen.cfg import Config, gc
 from mmgen.util import msg, msg_r, bmsg, die, list_gen
 from mmgen.color import gray, green
 from test.include.common import set_globals, init_coverage, end_msg
@@ -136,7 +136,7 @@ def make_coin_test_data():
 	bmsg('Testing address scramble strings and list IDs')
 	coin_data = bitcoin_data | ({} if cfg.no_altcoin else altcoin_data)
 	for id_str, test_data in coin_data.items():
-		if id_str == 'zec_zcash_z' and sys.platform == 'win32':
+		if id_str == 'zec_zcash_z' and gc.platform == 'win32':
 			msg(gray("Skipping 'zec_zcash_z' test for Windows platform"))
 			continue
 		coin, mmtype = id_str.split('_', 1) if '_' in id_str else (id_str, None)

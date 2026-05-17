@@ -68,8 +68,8 @@ class openethereum_daemon(ethereum_daemon):
 
 	def init_subclass(self):
 
-		self.use_pidfile = self.platform == 'linux' and not self.opt.no_daemonize
-		self.use_threads = self.platform in ('win32', 'darwin')
+		self.use_pidfile = gc.platform == 'linux' and not self.opt.no_daemonize
+		self.use_threads = gc.platform in ('win32', 'darwin')
 
 		self.coind_args = list_gen(
 			['--no-ws'],

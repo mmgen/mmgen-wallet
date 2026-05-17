@@ -92,12 +92,14 @@ class GlobalConstants(Lockable):
 	prog_id = prog_name.removeprefix(f'{proj_id}-')
 	cmd_caps = cmd_caps_data.get(prog_id)
 
-	if sys.platform not in ('linux', 'win32', 'darwin'):
-		die2(1, f'{sys.platform!r}: platform not supported by {proj_name}')
+	platform = sys.platform      # linux, darwin, win32 (MSYS2)
+
+	if platform not in ('linux', 'win32', 'darwin'):
+		die2(1, f'{platform!r}: platform not supported by {proj_name}')
 
 	if os.getenv('HOME'):   # Linux, MSYS2, or macOS
 		home_dir = os.getenv('HOME')
-	elif sys.platform == 'win32': # Windows without MSYS2 - not supported
+	elif platform == 'win32': # Windows without MSYS2 - not supported
 		die2(1, f'$HOME not set!  {proj_name} for Windows must be run in MSYS2 environment')
 	else:
 		die2(2, '$HOME is not set!  Unable to determine home directory')
