@@ -14,7 +14,7 @@ sec = 'deadbeef' * 8
 
 class unit_tests:
 
-	altcoin_deps = ('pycoin', 'monero_python', 'keyconv', 'zcash_mini', 'eth_keys', 'ssh_socks_proxy')
+	altcoin_deps = ('monero_python', 'keyconv', 'zcash_mini', 'eth_keys', 'ssh_socks_proxy')
 	win_skip = ('losetup', 'zcash_mini', 'sudo')
 	mac_skip = ('losetup',)
 

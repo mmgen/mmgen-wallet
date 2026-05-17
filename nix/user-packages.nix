@@ -48,10 +48,10 @@ rec {
     };
 
     python-packages = with python.pkgs; {
-        # pycryptodome     = pycryptodome;  # altcoins
         # pysocks          = pysocks;       # XMR
         # monero           = monero;        # XMR (test suite)
         # eth-keys         = eth-keys;      # ETH, ETC (test suite)
+        # pydantic         = pydantic;      # eth-keys
         # pure-protobuf    = pure-protobuf; # THORChain
         # bip-utils        = bip-utils;     # bip_hd
     };

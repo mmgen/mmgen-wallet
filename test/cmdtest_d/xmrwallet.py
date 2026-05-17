@@ -799,7 +799,9 @@ class CmdTestXMRWallet(CmdTestBase):
 		h = await self._get_height()
 		imsg_r(f'Chain height: {h} ')
 
-		max_iterations, min_height = (300, 64) if gc.platform == 'win32' else (50, 300)
+		max_iterations, min_height = (
+			(300, 64) if gc.machine == 'riscv64' or gc.platform == 'win32' else
+			(200, 300))
 		verbose = False
 
 		for count in range(max_iterations):
