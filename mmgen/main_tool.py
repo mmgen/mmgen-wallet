@@ -384,7 +384,9 @@ if gc.prog_name.endswith('-tool'):
 		opts_data   = opts_data,
 		parsed_opts = po,
 		need_proto  = cls.need_proto,
-		init_opts   = {'rpc_backend':'aiohttp'} if cmd == 'twimport' else None,
+		init_opts   = {'rpc_backend':'aiohttp'} if cmd == 'twimport'
+			and gc.machine != 'aarch64' # TODO: aiohttp + Reth is broken for arm64
+				else None,
 		process_opts = True)
 
 	cmd, *args = cfg._args
