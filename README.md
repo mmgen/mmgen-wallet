@@ -69,14 +69,12 @@ that widespread standard.
 
 #### A brief overview of MMGen Wallet’s unique feature set:
 
-- **[Transaction support][T]** for BTC, [BCH][bx], [LTC][bx], [ETH][E],
-  [ETC][E], [ERC20 tokens][E] and [RUNE][rx].
-- **[Monero][bm]** transacting and wallet management via the interactive
-  [`mmgen-xmrwallet`][xm] command.
+- **[Transaction support][T]** for BTC, [XMR][bm], [BCH][bx], [LTC][bx],
+  [ETH][E], [ETC][E], [ERC20 tokens][E] and [RUNE][rx].
 - **[Native asset swaps via THORChain][tc]** (21 assets currently supported).
 - **[Address generation support][ag]** for the above coins, plus [Zcash][zx]
   (t and z addresses) and [144 Bitcoin-derived altcoins][ax].
-- **Support for all Bitcoin address types** including Segwit-P2SH and Bech32.
+- Support for **Segwit-P2SH** and **Bech32** Bitcoin address types.
 - **Independent key derivation for each address type:** No two addresses ever
   share the same private key.  Certain wallets in wide use today regrettably
   fail to guarantee this property, leading to the danger of inadvertent key
@@ -186,8 +184,7 @@ Donate:
 [bw]: https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
 [fl]: https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Contemporary_poetry
 [U]:  ../../wiki/Subwallets
-[X]:  ../../wiki/command-help-autosign
-[xm]: ../../wiki/command-help-xmrwallet
+[X]:  ../../wiki/Autosigning
 [G]:  ../../wiki/command-help-passgen
 [MS]: ../../wiki/command-help-msg
 [cl]: ../../wiki/command-help-cli

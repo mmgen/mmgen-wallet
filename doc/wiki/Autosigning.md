@@ -11,18 +11,21 @@ Transacting manually involves the following steps:
 1. Boot and log in to offline signing machine
 
 #### Transacting:
-1. On online machine, create transaction with [`mmgen-txcreate`][tc] (or [`mmgen-swaptxcreate`][sc])
+1. On online machine, create transaction with [`mmgen-txcreate`][tc]
+   (or [`mmgen-swaptxcreate`][sc])
 1. Insert removable device
 1. Mount removable device
 1. Copy transaction file to removable device
 1. Unmount removable device
 1. Extract removable device and transfer it to offline machine
 1. Mount removable device
-1. Locate transaction file on removable device, sign it with [`mmgen-txsign`][ts]
+1. Locate transaction file on removable device, sign it with
+   [`mmgen-txsign`][ts]
 1. Unmount removable device
 1. Extract removable device and transfer it to online machine
 1. Mount removable device
-1. Locate signed transaction file on removable device, send it with [`mmgen-txsend`][tx]
+1. Locate signed transaction file on removable device, send it with
+   [`mmgen-txsend`][tx]
 
 Admittedly, this is all quite tedious. To simplify the transaction workflow,
 Version 1 Autosigning was introduced.
@@ -38,21 +41,26 @@ offline signing machine during the signing process.
 1. Start signing loop ([`mmgen-autosign wait`][as])
 
 #### Transacting:
-1. On online machine, create transaction with [`mmgen-txcreate`][tc] (or [`mmgen-swaptxcreate`][sc])
+1. On online machine, create transaction with [`mmgen-txcreate`][tc]
+   (or [`mmgen-swaptxcreate`][sc])
 1. Insert removable device
 1. Mount removable device
 1. Copy transaction file to `/mnt/mmgen_autosign/tx` on removable device
+   (or `/mnt/mmgen_autosign/xmr/tx` for Monero)
 1. Unmount removable device
 1. Extract removable device and transfer it to offline machine
 1. Wait for [autosigning][as] to complete
 1. Extract removable device and transfer it to online machine
 1. Mount removable device
-1. Locate signed transaction file on removable device, send it with [`mmgen-txsend`][tx]
+1. Locate signed transaction file on removable device, send it with
+   [`mmgen-txsend`][tx]
 
 #### Differences compared to manual method:
 
 - signing session preparation involves additional steps
 - signing requires no keyboard interaction
+- removable device and, for Linux, mountpoints must be prepared as described
+  in [`mmgen-autosign --help`][as]
 
 While this is already much better, there was still room for improvement.
 Enter Version 2 Autosigning.
@@ -68,7 +76,8 @@ program output and documentation by the term “automount”.
 
 #### Transacting:
 1. On online machine, insert removable device
-1. Create transaction with [`mmgen-txcreate`][tc] (or [`mmgen-swaptxcreate`][sc])
+1. Create transaction with [`mmgen-txcreate`][tc]
+   (or [`mmgen-swaptxcreate`][sc])
 1. Extract removable device and transfer it to offline machine
 1. Wait for [autosigning][as] to complete
 1. Extract removable device and transfer it to online machine

@@ -278,10 +278,10 @@ in the [**Getting Started**][ct] guide, with the following differences:
 - `mmgen-txcreate` supports both sweep transactions and send to external
   address (see `mmgen-txcreate --coin=xmr --help`)
 - Tracking wallet views are account-based.
-- The `mmgen-xmrwallet` script may be used to list and view sent transactions
-  on the removable device.  Type `mmgen-xmrwallet --help` for details.
 - New accounts and addresses may be added to the tracking wallet via
   `mmgen-tool --coin=xmr listaddresses`.
+- The `mmgen-xmrwallet` script may be used to list and view sent transactions
+  on the removable device.  Type `mmgen-xmrwallet --help` for details.
 - Compatibility mode is not available for Windows.  Windows users must use
   `mmgen-xmrwallet` in non-automount (v1) mode to transact Monero.
 
