@@ -38,7 +38,7 @@
   which addresses in your tracking wallet are used.  Without it, all addresses
   without balances will be displayed as new.
 
-  MMGEN-WALLET 16.1.dev37        May 2026                  MMGEN-ADDRIMPORT(1)
+  MMGEN-WALLET 16.1.0            May 2026                  MMGEN-ADDRIMPORT(1)
 ```
 
 <br>
@@ -60,7 +60,7 @@
   -q, --quiet        Suppress warnings
   -t, --token-addr ADDR Import addresses for ERC20 token with address ADDR
 
-  MMGEN-WALLET 16.1.dev37        May 2026                  MMGEN-ADDRIMPORT(1)
+  MMGEN-WALLET 16.1.0            May 2026                  MMGEN-ADDRIMPORT(1)
 ```
 
 <br>
@@ -99,5 +99,5 @@
   just specify additional wallet indexes via --xmrwallets during the offline
   setup process.
 
-  MMGEN-WALLET 16.1.dev37        May 2026                  MMGEN-ADDRIMPORT(1)
+  MMGEN-WALLET 16.1.0            May 2026                  MMGEN-ADDRIMPORT(1)
 ```

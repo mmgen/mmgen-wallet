@@ -130,7 +130,7 @@
 
       $ mmgen-txcreate B
 
-  MMGEN-WALLET 16.1.dev37        May 2026                    MMGEN-TXCREATE(1)
+  MMGEN-WALLET 16.1.0            May 2026                    MMGEN-TXCREATE(1)
 ```
 
 <br>
@@ -218,7 +218,7 @@
 
       $ mmgen-txcreate --coin=eth 01ABCDEF:E:7,0.123
 
-  MMGEN-WALLET 16.1.dev37        May 2026                    MMGEN-TXCREATE(1)
+  MMGEN-WALLET 16.1.0            May 2026                    MMGEN-TXCREATE(1)
 ```
 
 <br>
@@ -267,5 +267,5 @@
 
       $ mmgen-txcreate --coin=xmr
 
-  MMGEN-WALLET 16.1.dev37        May 2026                    MMGEN-TXCREATE(1)
+  MMGEN-WALLET 16.1.0            May 2026                    MMGEN-TXCREATE(1)
 ```

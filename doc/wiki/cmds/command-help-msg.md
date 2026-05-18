@@ -110,5 +110,5 @@
   Verify and display the exported JSON signature data:
   $ mmgen-msg verify signatures.json
 
-  MMGEN-WALLET 16.0.0            September 2025                   MMGEN-MSG(1)
+  MMGEN-WALLET 16.1.0            May 2026                         MMGEN-MSG(1)
 ```

@@ -207,5 +207,5 @@
 
   Type ‘mmgen-tool help <command>’ for help on a particular command
 
-  MMGEN-WALLET 16.1.dev41        May 2026                        MMGEN-TOOL(1)
+  MMGEN-WALLET 16.1.0            May 2026                        MMGEN-TOOL(1)
 ```

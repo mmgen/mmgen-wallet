@@ -188,5 +188,5 @@ EXAMPLES:
   Same as above, but supply input via STDIN:
   $ echo "deadbeefcafe" | mmgen-tool hexreverse -
 
-  MMGEN-WALLET 16.0.0            September 2025           MMGEN-TOOL(USAGE)(1)
+  MMGEN-WALLET 16.1.0            May 2026                 MMGEN-TOOL(USAGE)(1)
 ```
