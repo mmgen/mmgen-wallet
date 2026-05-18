@@ -504,17 +504,20 @@ class Autosign:
 		if not self.cfg.stealth_led:
 			self.led.set('standby')
 		threaded = self.cfg.test_suite_autosign_threaded
-		n = 1 if threaded else 0
+		n, sleep_interval = (1, 0.2) if threaded else (0, 1)
 		prev_status = False
 		while True:
 			status = self.device_inserted
 			if status and not prev_status:
 				msg('Device insertion detected')
 				await self.do_sign()
+				if not threaded:
+					n = 0
 			prev_status = status
 			if not n % 10:
 				msg_r(f'\r{" " * 38}\rWaiting for device insertion')
-			await asyncio.sleep(0.2 if threaded else 1)
+				n = 0
+			await asyncio.sleep(sleep_interval)
 			if not threaded:
 				msg_r('.')
 				n += 1
