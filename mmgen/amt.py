@@ -138,7 +138,7 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 
 	def __sub__(self, other, *args, **kwargs):
 		if type(other) is type(self):
-			return type(self)(Decimal.__sub__(self, other, *args, **kwargs),  from_decimal=True)
+			return type(self)(Decimal.__sub__(Decimal(self), Decimal(other), *args, **kwargs),  from_decimal=True)
 		raise TypeError(
 			f'operand {other} is of incorrect type ({type(other).__name__} != {type(self).__name__})')
 
