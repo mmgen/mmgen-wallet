@@ -108,9 +108,12 @@ class CmdTestInput(CmdTestBase):
 
 	def skip_no_readline_insert(self, extra_msg=None):
 		return self.skip_on_condition(
-			gc.platform == 'darwin',
+			gc.platform == 'darwin' or self.cfg.threaded_python,
 			' (no readline insert support)',
 			extra_msg)
+
+	def skip_no_readline_edit(self, extra_msg=None):
+		return self.skip_on_condition(self.cfg.threaded_python, ' (no readline edit support)', extra_msg)
 
 	def get_seed_from_stdin(self):
 		self.spawn(msg_only=True)
@@ -361,6 +364,8 @@ class CmdTestInput(CmdTestBase):
 			True)
 
 	def line_input_edit_term(self):
+		if self.skip_no_readline_edit():
+			return 'skip'
 		return self._line_input(
 			['prompt> ', True, '', True],
 			'\b\bφυφυ\b\bβαρ',
@@ -369,7 +374,7 @@ class CmdTestInput(CmdTestBase):
 			hold_protect_delay)
 
 	def line_input_edit_term_insert(self):
-		if self.skip_no_readline_insert():
+		if self.skip_no_readline_edit() or self.skip_no_readline_insert():
 			return 'skip'
 		return self._line_input(
 			['prompt> ', True, 'φυφυ', True],
