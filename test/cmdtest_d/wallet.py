@@ -53,13 +53,12 @@ class CmdTestWalletConv(CmdTestBase, CmdTestShared):
 			'hic_wallet_old': '1378FC64-B55E9958-D85FF20C[192,1].incog-old.offset123',
 		},
 		'256': {
-			'ref_wallet':     '98831F3A-27F2BF93[256,1].mmdat',
+			'ref_wallet':     '98831F3A-F825E2A0[256,1].mmdat',
 			'ic_wallet':      '98831F3A-5482381C-18460FB1[256,1].mmincog',
 			'ic_wallet_hex':  '98831F3A-1630A9F2-870376A9[256,1].mmincox',
 
 			'hic_wallet':      '98831F3A-F59B07A0-559CEF19[256,1].incog.offset123',
 			'hic_wallet_old':  '98831F3A-F59B07A0-848535F3[256,1].incog-old.offset123',
-
 		},
 	}
 	cmd_group = (

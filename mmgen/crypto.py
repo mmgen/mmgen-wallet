@@ -31,7 +31,6 @@ class Crypto:
 	mmenc_ext = 'mmenc'
 	scramble_hash_rounds = 10
 
-	salt_len       = 16
 	aesctr_iv_len  = 16
 	aesctr_dfl_iv  = int.to_bytes(1, aesctr_iv_len, 'big')
 	hincog_chk_len = 8

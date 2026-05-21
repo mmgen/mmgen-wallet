@@ -18,6 +18,8 @@ from .enc import wallet
 
 class wallet(wallet):
 
+	salt_len = 16
+
 	_msg = {
 		'check_incog_id': """
   Check the generated Incog ID above against your records.  If it doesn't
@@ -36,7 +38,7 @@ class wallet(wallet):
 	def _get_incog_data_len(self, seed_len):
 		return (
 			self.crypto.aesctr_iv_len
-			+ self.crypto.salt_len
+			+ self.salt_len
 			+ (0 if self.cfg.old_incog_fmt else self.crypto.hincog_chk_len)
 			+ seed_len//8)
 
@@ -71,7 +73,7 @@ class wallet(wallet):
 		self.cfg._util.qmsg('Make a record of this value')
 		self.cfg._util.vmsg('\n  ' + self.msg['record_incog_id'].strip()+'\n')
 
-		d.salt = crypto.get_random(crypto.salt_len)
+		d.salt = crypto.get_random(self.salt_len)
 		seed_key = crypto.make_key(
 			passwd      = d.passwd,
 			salt        = d.salt,
@@ -167,8 +169,8 @@ class wallet(wallet):
 			iv       = d.iv,
 			desc     = 'incog data')
 
-		d.salt     = dd[0:crypto.salt_len]
-		d.enc_seed = dd[crypto.salt_len:]
+		d.salt     = dd[0:self.salt_len]
+		d.enc_seed = dd[self.salt_len:]
 
 		seed_key = crypto.make_key(
 			passwd      = d.passwd,

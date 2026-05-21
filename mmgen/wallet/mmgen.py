@@ -24,6 +24,7 @@ from .enc import wallet
 class wallet(wallet):
 
 	desc = 'MMGen wallet'
+	salt_len = 32
 
 	def __init__(self, *args, **kwargs):
 		if self.cfg.label:

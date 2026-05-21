@@ -94,7 +94,7 @@ class wallet(wallet):
 			d.passwd = self._get_new_passphrase()
 
 		from hashlib import sha256
-		d.salt     = sha256(self.crypto.get_random(128)).digest()[:self.crypto.salt_len]
+		d.salt     = sha256(self.crypto.get_random(128)).digest()[:self.salt_len]
 		key        = self.crypto.make_key(d.passwd, d.salt, d.hash_preset)
 		d.key_id   = make_chksum_8(key)
 		d.enc_seed = self.crypto.encrypt_seed(self.seed.data, key)
