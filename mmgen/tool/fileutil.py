@@ -70,7 +70,7 @@ class tool_cmd(tool_cmd_base):
 		os.close(f)
 		return True
 
-	def rand2file(self, outfile: str, nbytes: str, *, threads=4, silent=False):
+	def rand2file(self, outfile: str, nbytes: str, *, silent=False):
 		"""
 		write ‘nbytes’ bytes of random data to specified file (dd-style byte specifiers supported)
 
@@ -118,7 +118,12 @@ class tool_cmd(tool_cmd_base):
 		key = Crypto(self.cfg).get_random(32)
 		q1, q2 = (Queue(), Queue())
 
-		for i in range(max(1, threads-2)):
+		try:
+			threads = os.process_cpu_count() # Python 3.13
+		except AttributeError:
+			threads = os.cpu_count()
+
+		for i in range(max(1, threads - 1)):
 			t = Thread(target=encrypt_worker)
 			t.daemon = True
 			t.start()
