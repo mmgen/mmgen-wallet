@@ -67,6 +67,9 @@ class Crypto:
 	def __init__(self, cfg):
 		self.cfg = cfg
 		self.util = cfg._util
+		if cfg.test_suite and self.cfg.aes_backend == 'pyaes':
+			self.get_aes_ctr = self.get_aes_ctr_pyaes
+			self.encrypt_aes_ctr = self.encrypt_aes_ctr_pyaes
 
 	@staticmethod
 	def get_aes_ctr(key, iv):
@@ -77,6 +80,16 @@ class Crypto:
 	def encrypt_aes_ctr(self, key, iv, data):
 		encryptor = self.get_aes_ctr(key, iv)
 		return encryptor.update(data) + encryptor.finalize()
+
+	@staticmethod
+	def get_aes_ctr_pyaes(key, iv):
+		import pyaes
+		class MyAES(pyaes.AESModeOfOperationCTR):
+			update = pyaes.AESModeOfOperationCTR.encrypt
+		return MyAES(key, pyaes.Counter(int.from_bytes(iv)))
+
+	def encrypt_aes_ctr_pyaes(self, key, iv, data):
+		return self.get_aes_ctr_pyaes(key, iv).encrypt(data)
 
 	def get_hash_params(self, hash_preset):
 		if hash_preset in self.hash_presets:

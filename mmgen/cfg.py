@@ -229,6 +229,7 @@ class Config(Lockable):
 	autochg_ignore_labels          = False
 	autosign                       = False
 	threaded_python                = not sys._is_gil_enabled()
+	aes_backend                    = 'cryptography'
 
 	# regtest:
 	bob          = False
@@ -333,6 +334,7 @@ class Config(Lockable):
 	_env_opts = (
 		'MMGEN_DEBUG_ALL', # special: there is no `debug_all` attribute
 
+		'MMGEN_AES_BACKEND',
 		'MMGEN_BLACKLIST_DAEMONS',
 		'MMGEN_BOGUS_SEND',
 		'MMGEN_BOGUS_UNSPENT_DATA',

@@ -54,5 +54,6 @@ rec {
         # pydantic         = pydantic;      # eth-keys
         # pure-protobuf    = pure-protobuf; # THORChain
         # bip-utils        = bip-utils;     # bip_hd
+        # pyaes            = pyaes;         # developer testing
     };
 }

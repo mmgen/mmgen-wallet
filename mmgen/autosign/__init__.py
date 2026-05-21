@@ -401,7 +401,10 @@ class Autosign:
 					cfg         = self.cfg,
 					prompt      = f'Default wallet ‘{wf}’ found.\nUse default wallet for autosigning?',
 					default_yes = True):
-				ss_in = Wallet(Config(), fn=wf)
+				ss_in = Wallet(Config({
+						'test_suite': self.cfg.test_suite,
+						'aes_backend': self.cfg.aes_backend
+					}), fn=wf)
 			else:
 				ss_in = get_mn_wallet()
 

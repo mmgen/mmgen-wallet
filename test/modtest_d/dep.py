@@ -74,7 +74,7 @@ class unit_tests:
 				msg('Is the ‘pysocks’ package installed?')
 		return False
 
-	def cryptography(self, name, ut):
+	def aes(self, name, ut):
 		from mmgen.crypto import Crypto
 		Crypto(cfg).encrypt_aes_ctr(b'deadbeef' * 4, b'deadbeef' * 2, b'foo')
 		return True
