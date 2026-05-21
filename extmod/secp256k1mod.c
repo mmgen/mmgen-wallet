@@ -428,12 +428,19 @@ PyMODINIT_FUNC PyInit_secp256k1(void) {
 
 	if (module == NULL)
 		INITERROR;
+
 	struct module_state *st = GETSTATE(module);
 
 	st->error = PyErr_NewException("secp256k1.Error", NULL, NULL);
+
 	if (st->error == NULL) {
 		Py_DECREF(module);
 		INITERROR;
 	}
+
+#ifdef Py_GIL_DISABLED
+	PyUnstable_Module_SetGIL(module, Py_MOD_GIL_NOT_USED);
+#endif
+
 	return module;
 }
