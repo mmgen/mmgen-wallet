@@ -106,6 +106,12 @@ class CmdTestInput(CmdTestBase):
 	)
 	}
 
+	def skip_no_readline_insert(self, extra_msg=None):
+		return self.skip_on_condition(
+			gc.platform == 'darwin',
+			' (no readline insert support)',
+			extra_msg)
+
 	def get_seed_from_stdin(self):
 		self.spawn(msg_only=True)
 		from subprocess import run, PIPE
@@ -336,7 +342,7 @@ class CmdTestInput(CmdTestBase):
 			False)
 
 	def line_input_insert_term1(self):
-		if self.skip_for_mac('readline text buffer issues'):
+		if self.skip_no_readline_insert():
 			return 'skip'
 		return self._line_input(
 			['prompt> ', True, 'foo', True],
@@ -346,7 +352,7 @@ class CmdTestInput(CmdTestBase):
 			hold_protect_delay)
 
 	def line_input_insert_term2(self):
-		if self.skip_for_mac('readline text buffer issues'):
+		if self.skip_no_readline_insert():
 			return 'skip'
 		return self._line_input(
 			['prompt> ', True, 'foo', False],
@@ -363,7 +369,7 @@ class CmdTestInput(CmdTestBase):
 			hold_protect_delay)
 
 	def line_input_edit_term_insert(self):
-		if self.skip_for_mac('readline text buffer issues'):
+		if self.skip_no_readline_insert():
 			return 'skip'
 		return self._line_input(
 			['prompt> ', True, 'φυφυ', True],
@@ -373,7 +379,7 @@ class CmdTestInput(CmdTestBase):
 			hold_protect_delay)
 
 	def line_input_erase_term(self):
-		if self.skip_for_mac('readline text buffer issues'):
+		if self.skip_no_readline_insert():
 			return 'skip'
 		return self._line_input(
 			['prompt> ', True, 'foobarbaz', True],

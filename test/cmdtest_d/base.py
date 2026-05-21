@@ -95,21 +95,21 @@ class CmdTestBase:
 		except:
 			msg(f'{fn}: file does not exist or could not be deleted')
 
-	def skip_for_platform(self, name, extra_msg=None):
-		if gc.platform == name:
-			msg(gray('Skipping test {!r} for {} platform{}'.format(
+	def skip_on_condition(self, condition, message, extra_msg):
+		if condition:
+			msg(gray('Skipping test {!r} {}{}'.format(
 				self.test_name,
-				name,
+				message,
 				f' ({extra_msg})' if extra_msg else "")))
 			return True
 		else:
 			return False
 
 	def skip_for_mac(self, extra_msg=None):
-		return self.skip_for_platform('darwin', extra_msg)
+		return self.skip_on_condition(gc.platform=='darwin', 'for macOS platform', extra_msg)
 
 	def skip_for_win(self, extra_msg=None):
-		return self.skip_for_platform('win32', extra_msg)
+		return self.skip_on_condition(gc.platform=='win32', 'for win32 platform', extra_msg)
 
 	def spawn_chk(self, *args, **kwargs):
 		"""
