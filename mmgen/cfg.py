@@ -228,6 +228,7 @@ class Config(Lockable):
 	enable_erigon                  = False
 	autochg_ignore_labels          = False
 	autosign                       = False
+	threaded_python                = not sys._is_gil_enabled()
 
 	# regtest:
 	bob          = False
@@ -345,6 +346,7 @@ class Config(Lockable):
 		'MMGEN_TEST_SUITE_PEXPECT_TIMEOUT',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
 		'MMGEN_TEST_SUITE_ROOT_PFX',
+		'MMGEN_THREADED_PYTHON',
 		'MMGEN_TRACEBACK',
 		'MMGEN_BLACKLIST_DAEMONS',
 		'MMGEN_BOGUS_SEND',
