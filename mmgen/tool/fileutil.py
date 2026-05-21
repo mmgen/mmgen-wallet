@@ -94,15 +94,12 @@ class tool_cmd(tool_cmd_base):
 		"""
 		from threading import Thread
 		from queue import Queue
-		from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-		from cryptography.hazmat.backends import default_backend
 
 		from ..util2 import parse_bytespec
+		from ..crypto import Crypto
 
 		def encrypt_worker():
-			ctr_init_val = os.urandom(Crypto.aesctr_iv_len)
-			c = Cipher(algorithms.AES(key), modes.CTR(ctr_init_val), backend=default_backend())
-			encryptor = c.encryptor()
+			encryptor = Crypto(self.cfg).get_aes_ctr(key, os.urandom(Crypto.aesctr_iv_len))
 			while True:
 				q2.put(encryptor.update(q1.get()))
 				q1.task_done()
@@ -161,7 +158,7 @@ class tool_cmd(tool_cmd_base):
 		with open(wallet_file) as fh:
 			data = json.loads(fh.read())
 		from ..altcoin.util import decrypt_keystore
-		ret = decrypt_keystore(data[0]['keystore'], passwd)
+		ret = decrypt_keystore(self.cfg, data[0]['keystore'], passwd)
 		return ret.hex() if output_hex else ret
 
 	def decrypt_geth_keystore(self, wallet_file: str, *, check_addr=True):

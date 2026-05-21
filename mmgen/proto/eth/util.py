@@ -27,6 +27,7 @@ def decrypt_geth_keystore(cfg, wallet_fn, passwd, *, check_addr=True):
 
 	from ...altcoin.util import decrypt_keystore
 	key = decrypt_keystore(
+		cfg,
 		wallet_data,
 		passwd,
 		mac_algo = get_keccak())

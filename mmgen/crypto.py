@@ -68,6 +68,16 @@ class Crypto:
 		self.cfg = cfg
 		self.util = cfg._util
 
+	@staticmethod
+	def get_aes_ctr(key, iv):
+		from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+		from cryptography.hazmat.backends import default_backend
+		return Cipher(algorithms.AES(key), modes.CTR(iv), backend=default_backend()).encryptor()
+
+	def encrypt_aes_ctr(self, key, iv, data):
+		encryptor = self.get_aes_ctr(key, iv)
+		return encryptor.update(data) + encryptor.finalize()
+
 	def get_hash_params(self, hash_preset):
 		if hash_preset in self.hash_presets:
 			return self.hash_presets[hash_preset] # N, r, p
@@ -126,20 +136,14 @@ class Crypto:
 			verify = True,
 			silent = False):
 
-		from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-		from cryptography.hazmat.backends import default_backend
 		if not silent:
 			self.util.vmsg(f'Encrypting {desc}')
-		c = Cipher(algorithms.AES(key), modes.CTR(iv), backend=default_backend())
-		encryptor = c.encryptor()
-		enc_data = encryptor.update(data) + encryptor.finalize()
+
+		enc_data = self.encrypt_aes_ctr(key, iv, data)
 
 		if verify:
 			self.util.vmsg_r(f'Performing a test decryption of the {desc}...')
-			c = Cipher(algorithms.AES(key), modes.CTR(iv), backend=default_backend())
-			encryptor = c.encryptor()
-			dec_data = encryptor.update(enc_data) + encryptor.finalize()
-			if dec_data != data:
+			if self.encrypt_aes_ctr(key, iv, enc_data) != data:
 				die(2, f'ERROR.\nDecrypted {desc} doesn’t match original {desc}')
 			if not silent:
 				self.util.vmsg('done')
@@ -154,12 +158,9 @@ class Crypto:
 			iv   = aesctr_dfl_iv,
 			desc = 'data'):
 
-		from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-		from cryptography.hazmat.backends import default_backend
 		self.util.vmsg_r(f'Decrypting {desc} with key...')
-		c = Cipher(algorithms.AES(key), modes.CTR(iv), backend=default_backend())
-		encryptor = c.encryptor()
-		return encryptor.update(enc_data) + encryptor.finalize()
+
+		return self.encrypt_aes_ctr(key, iv, enc_data)
 
 	def scrypt_hash_passphrase(
 			self,

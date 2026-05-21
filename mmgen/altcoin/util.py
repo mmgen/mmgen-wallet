@@ -14,7 +14,7 @@ altcoin.util: various altcoin-related utilities
 
 from ..util import die
 
-def decrypt_keystore(data, passwd, *, mac_algo=None, mac_params={}):
+def decrypt_keystore(cfg, data, passwd, *, mac_algo=None, mac_params={}):
 	"""
 	Decrypt the encrypted data in a cross-chain keystore
 	Returns the decrypted data as a bytestring
@@ -70,12 +70,8 @@ def decrypt_keystore(data, passwd, *, mac_algo=None, mac_params={}):
 		die(1, 'incorrect password')
 
 	# Decrypt data:
-	from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-	from cryptography.hazmat.backends import default_backend
-	cipher_len = int(cipher.split('-')[1]) // 8
-	c = Cipher(
-		algorithms.AES(hashed_pw[:cipher_len]),
-		modes.CTR(bytes.fromhex(cdata['cipherparams']['iv'])),
-		backend = default_backend())
-	encryptor = c.encryptor()
-	return encryptor.update(bytes.fromhex(cdata['ciphertext'])) + encryptor.finalize()
+	from ..crypto import Crypto
+	return Crypto(cfg).encrypt_aes_ctr(
+		hashed_pw[:int(cipher.split('-')[1]) // 8],
+		bytes.fromhex(cdata['cipherparams']['iv']),
+		bytes.fromhex(cdata['ciphertext']))

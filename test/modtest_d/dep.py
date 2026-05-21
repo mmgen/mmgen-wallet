@@ -75,11 +75,8 @@ class unit_tests:
 		return False
 
 	def cryptography(self, name, ut):
-		from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-		from cryptography.hazmat.backends import default_backend
-		c = Cipher(algorithms.AES(b'deadbeef'*4), modes.CTR(b'deadbeef'*2), backend=default_backend())
-		encryptor = c.encryptor()
-		encryptor.update(b'foo') + encryptor.finalize()
+		from mmgen.crypto import Crypto
+		Crypto(cfg).encrypt_aes_ctr(b'deadbeef' * 4, b'deadbeef' * 2, b'foo')
 		return True
 
 	def ecdsa(self, name, ut):
