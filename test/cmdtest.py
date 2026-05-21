@@ -122,6 +122,8 @@ opts_data = {
 -x, --debug-pexpect  Produce debugging output for pexpect calls
 --, --demo           Add extra delay after each send to make input visible.
                      Implies --exact-output --pexpect-spawn --buf-keypress
+--, --dev-mode       Run spawned scripts in Python Development Mode
+                     (PYTHONDEVMODE=1 PYTHONTRACEMALLOC=10)
 -d, --deps-only      Run a command or command subgroup’s dependencies without
                      running the command or command group itself.
 -D, --no-daemon-stop Don't stop auto-started daemons after running tests

@@ -67,7 +67,8 @@ class CmdTestPexpect:
 			timeout = int(
 				timeout
 				or cfg.pexpect_timeout
-				or cfg.test_suite_pexpect_timeout) or (60, 5)[bool(cfg.debug_pexpect)]
+				or cfg.test_suite_pexpect_timeout) or (
+					5 if cfg.debug_pexpect else 180 if cfg.dev_mode else 60)
 			if pexpect_spawn:
 				self.p = pexpect.spawn(args[0], args[1:], encoding='utf8', timeout=timeout, env=spawn_env)
 			else:

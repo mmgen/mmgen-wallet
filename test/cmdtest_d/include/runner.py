@@ -105,14 +105,19 @@ class CmdTestRunner:
 	def set_spawn_env(self):
 
 		self.spawn_env = dict(os.environ)
+
 		self.spawn_env.update({
 			'MMGEN_NO_LICENSE': '1',
 			'MMGEN_BOGUS_SEND': '1',
 			'MMGEN_TEST_SUITE_PEXPECT': '1',
 			'EXEC_WRAPPER_DO_RUNTIME_MSG':'1',
 			# if cmdtest.py itself is running under exec_wrapper, disable writing of traceback file for spawned script
-			'EXEC_WRAPPER_TRACEBACK': '' if os.getenv('MMGEN_EXEC_WRAPPER') else '1',
-		})
+			'EXEC_WRAPPER_TRACEBACK': '' if os.getenv('MMGEN_EXEC_WRAPPER') else '1'})
+
+		if self.cfg.dev_mode:
+			self.spawn_env.update({
+				'PYTHONDEVMODE': '1',
+				'PYTHONTRACEMALLOC': '10'})
 
 		if self.cfg.exact_output:
 			from mmgen.term import get_terminal_size
