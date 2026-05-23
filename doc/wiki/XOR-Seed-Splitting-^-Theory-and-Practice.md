@@ -8,8 +8,9 @@
 
 ### <a id="a_xor">XOR Seed Splitting: A Theoretical Introduction</a>
 
-The bitwise exclusive-or operation (usually denoted as `XOR`, or “![⊕]”)
-has interesting properties that make it very useful in cryptography.
+The bitwise exclusive-or operation (usually denoted as `XOR`, “![⊕]”, or “^” in
+programming languages), has interesting properties that make it very useful in
+cryptography.
 
 Suppose we have two bytes, *a* and *b*:
 

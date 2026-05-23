@@ -201,7 +201,7 @@ Donate:
 [R]:  ../../wiki/Getting-Started-with-MMGen-Wallet#a_rbf
 [B]:  ../../wiki/command-help-txbump
 [69]: https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
-[O]:  ../../wiki/XOR-Seed-Splitting:-Theory-and-Practice
+[O]:  ../../wiki/XOR-Seed-Splitting-^-Theory-and-Practice
 [ms]: ../../wiki/command-help-seedsplit
 [ta]: ../../wiki/Tool-API
 [L]:  ../../wiki/command-help-tool

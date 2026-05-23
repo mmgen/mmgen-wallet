@@ -244,8 +244,9 @@ commands.  It’s that simple!
 
 Monero is fully supported by MMGen Wallet.
 
-Make sure that [Monerod][M] is installed and running and that
-`monero-wallet-rpc` is located in your executable path.
+Make sure that [Monerod][M] is installed and running on your online machine and
+that `monero-wallet-rpc` is installed to your executable path on both online and
+offline machines.
 
 <a id="a_xmr_req">Install the Python XMR requirements:</a>
 
