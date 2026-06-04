@@ -345,8 +345,10 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 	)
 
 	def call_addrgen(self, mmtype, name='addrgen'):
-		wf = self.get_file_with_ext('mmdat')
-		return getattr(self, name)(wf, check_ref=True, mmtype=mmtype)
+		if self.coin in self.chk_data[self.test_name]:
+			wf = self.get_file_with_ext('mmdat')
+			return getattr(self, name)(wf, check_ref=True, mmtype=mmtype)
+		return 'skip'
 
 	def refaddrgen_legacy(self):
 		return self.call_addrgen('legacy')
@@ -355,14 +357,10 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		return self.call_addrgen('compressed')
 
 	def refaddrgen_segwit(self):
-		if self.proto.cap('segwit'):
-			return self.call_addrgen('segwit')
-		return 'skip'
+		return self.call_addrgen('segwit')
 
 	def refaddrgen_bech32(self):
-		if self.proto.cap('segwit'):
-			return self.call_addrgen('bech32')
-		return 'skip'
+		return self.call_addrgen('bech32')
 
 	def refkeyaddrgen_legacy(self):
 		return self.call_addrgen('legacy', 'keyaddrgen')
@@ -371,14 +369,10 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		return self.call_addrgen('compressed', 'keyaddrgen')
 
 	def refkeyaddrgen_segwit(self):
-		if self.proto.cap('segwit'):
-			return self.call_addrgen('segwit', 'keyaddrgen')
-		return 'skip'
+		return self.call_addrgen('segwit', 'keyaddrgen')
 
 	def refkeyaddrgen_bech32(self):
-		if self.proto.cap('segwit'):
-			return self.call_addrgen('bech32', 'keyaddrgen')
-		return 'skip'
+		return self.call_addrgen('bech32', 'keyaddrgen')
 
 class CmdTestRef3Passwd(CmdTestRef3Seed):
 	'generated reference password files for 128-, 192- and 256-bit seeds'
