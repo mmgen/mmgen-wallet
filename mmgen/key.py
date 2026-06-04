@@ -35,7 +35,8 @@ class WifKey(HiliteStr, InitErrors):
 			return wif
 		try:
 			assert wif.isascii() and wif.isalnum(), 'not an ASCII alphanumeric string'
-			proto.decode_wif(wif) # raises exception on error
+			k = proto.decode_wif(wif) # raises exception on error
+			assert len(k.sec) == proto.privkey_len, f'incorrect private key length for proto {proto.name}! ({len(k.sec)} != {proto.privkey_len})'
 			return str.__new__(cls, wif)
 		except Exception as e:
 			return cls.init_fail(e, wif)
@@ -77,6 +78,7 @@ class PrivKey(bytes, InitErrors, MMGenObject):
 				assert s is None, "'wif' and key hex args are mutually exclusive"
 				assert wif.isascii() and wif.isalnum(), 'not an ASCII alphanumeric string'
 				k = proto.decode_wif(wif) # raises exception on error
+				assert len(k.sec) == proto.privkey_len, f'incorrect private key length for proto {proto.name}! ({len(k.sec)} != {proto.privkey_len})'
 				me = bytes.__new__(cls, k.sec)
 				me.compressed = k.compressed
 				me.pubkey_type = k.pubkey_type
@@ -105,6 +107,7 @@ class PrivKey(bytes, InitErrors, MMGenObject):
 					me = bytes.__new__(cls, proto.preprocess_key(s, pubkey_type))
 					me.wif = WifKey(proto, proto.encode_wif(me, pubkey_type, compressed=compressed))
 					me.compressed = compressed
+				assert len(me) == proto.privkey_len, f'incorrect private key length for proto {proto.name}! ({len(me)} != {proto.privkey_len})'
 				me.pubkey_type = pubkey_type
 				me.orig_bytes = s # save the non-preprocessed key
 				me.proto = proto
