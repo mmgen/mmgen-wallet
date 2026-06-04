@@ -175,14 +175,17 @@ class tool_cmd(tool_cmd_base):
 			case _:
 				return self.proto.pubhash2addr(pubhash, self.mmtype.addr_fmt)
 
-	def addr2pubhash(self, addr: 'sstr'):
-		"convert coin address to public key hash"
+	def _addr2pub(self, addr, *, ptype):
 		ap = self.proto.decode_addr(addr)
 		assert ap, f'coin address {addr!r} could not be parsed'
-		if ap.fmt not in MMGenAddrType.pkh_fmts:
+		if ap.fmt not in getattr(MMGenAddrType, f'{ptype}_fmts'):
 			from ..util import die
-			die(2, f'{ap.fmt} addresses cannot be converted to pubhash')
+			die(2, f'{ap.fmt} addresses cannot be converted to {ptype}')
 		return ap.bytes.hex()
+
+	def addr2pubhash(self, addr: 'sstr'):
+		"convert coin address to public key hash"
+		return self._addr2pub(addr, ptype='pubhash')
 
 	def addr2scriptpubkey(self, addr: 'sstr'):
 		"convert coin address to scriptPubKey"
