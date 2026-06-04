@@ -143,12 +143,13 @@ class BipHDConfig(Lockable):
 		if not coin.lower() in self.supported_coins:
 			raise ValueError(f'bip_hd: coin {coin.upper()} not supported')
 
-		base_cfg = Config({
-			'_clone':  base_cfg,
-			'coin':    coin,
-			'network': network,
-			'type':    addr_type or None,
-			'quiet':   True})
+		base_cfg = Config(
+			cfg = {
+				'_clone':  base_cfg,
+				'coin':    coin,
+				'network': network,
+				'type':    addr_type or None,
+				'quiet':   True})
 
 		dfl_type = base_cfg._proto.dfl_mmtype
 		addr_type = MMGenAddrType(
@@ -276,8 +277,7 @@ class BipHDNode(Lockable):
 					pubkey_type   = self.cfg.addr_type.pubkey_type,
 					compressed    = self.cfg.addr_type.compressed)
 				if self.public else
-			self.priv2pub()
-		)
+			self.priv2pub())
 
 	# Extended keys can be identified by the Hash160 (RIPEMD160 after SHA256) of the serialized ECDSA
 	# public key K, ignoring the chain code. This corresponds exactly to the data used in traditional

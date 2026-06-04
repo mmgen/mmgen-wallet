@@ -78,20 +78,20 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	def decode_wif(self, wif):
 		key_data = b58chk_decode(wif)
 		vlen = self.wif_ver_bytes_len or self.get_wif_ver_bytes_len(key_data)
-		key = key_data[vlen:]
+		sec_bytes = key_data[vlen:]
 
-		match len(key):
+		match len(sec_bytes):
 			case x if x == self.privkey_len + 1:
-				assert key[-1] == 0x01, f'{key[-1]!r}: invalid compressed key suffix byte'
+				assert sec_bytes[-1] == 0x01, f'{sec_bytes[-1]!r}: invalid compressed key suffix byte'
 			case self.privkey_len:
 				pass
 			case x:
 				raise ValueError(f'{x}: invalid key length')
 
 		return decoded_wif(
-			sec         = key[:self.privkey_len],
+			sec         = sec_bytes[:self.privkey_len],
 			pubkey_type = self.wif_ver_bytes_to_pubkey_type[key_data[:vlen]],
-			compressed  = len(key) == self.privkey_len + 1)
+			compressed  = len(sec_bytes) == self.privkey_len + 1)
 
 	def decode_addr(self, addr):
 
