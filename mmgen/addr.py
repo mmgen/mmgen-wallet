@@ -45,12 +45,14 @@ class MMGenAddrType(HiliteStr, InitErrors, MMGenObject):
 	desc        = ImmutableAttr(str)
 
 	pubhash_fmts = ('p2pkh', 'bech32', 'ethereum')
+	pubkey_fmts = ('bech32pk')
 	mmtypes = {
 		'L': ati('legacy',    'std', False,'p2pkh',   'p2pkh',   'wif', (), 'Legacy uncompressed address'),
 		'C': ati('compressed','std', True, 'p2pkh',   'p2pkh',   'wif', (), 'Compressed P2PKH address'),
 		'S': ati('segwit',    'std', True, 'segwit',  'p2sh',    'wif', (), 'Segwit P2SH-P2WPKH address'),
 		'B': ati('bech32',    'std', True, 'bech32',  'bech32',  'wif', (), 'Native Segwit (Bech32) address'),
 		'X': ati('bech32x',   'std', True, 'p2pkh',   'bech32',  'wif', (), 'Cross-chain Bech32 address'),
+		'K': ati('bech32pk',  'std', True, 'bech32pk','bech32',  'wif', (), 'Cross-chain pubkey Bech32 address'),
 		'E': ati('ethereum',  'std', False,'ethereum','p2pkh',   'privkey', ('wallet_passwd',),'Ethereum address'),
 		'Z': ati('zcash_z','zcash_z',False,'zcash_z', 'zcash_z', 'wif',     ('viewkey',),      'Zcash z-address'),
 		'M': ati('monero', 'monero', False,'monero',  'monero',  'spendkey',('viewkey','wallet_passwd'),'Monero address')}

@@ -113,6 +113,7 @@ mods = {
 	),
 	'coin': (
 		'addr2pubhash',
+		'addr2pubhex',
 		'addr2scriptpubkey',
 		'eth_checksummed_addr',
 		'hex2wif',

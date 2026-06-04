@@ -214,7 +214,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 
 class CmdTestRef3Addr(CmdTestRef3Seed):
 	'generated reference address and key-address files for 128-, 192- and 256-bit seeds'
-	networks = ('btc', 'btc_tn', 'ltc', 'ltc_tn', 'bch', 'bch_tn')
+	networks = ('btc', 'btc_tn', 'ltc', 'ltc_tn', 'bch', 'bch_tn', 'nostr')
 	passthru_opts = ('coin', 'testnet', 'cashaddr')
 	tmpdir_nums = [26, 27, 28]
 	shared_deps = ['mmdat', pwfile]
@@ -330,6 +330,24 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 			'btc': ('D0DD BDE3 87BE 15AE', '7552 D70C AAB8 DEAA'),
 			'ltc': ('74A0 7DD5 963B 6326', '2CDA A007 4B9F E9A5'),
 		},
+		'refaddrgen_bech32pk_1': {
+			'nostr': ('005B CFEC B290 32FE',),
+		},
+		'refaddrgen_bech32pk_2': {
+			'nostr': ('9BB5 F044 6048 2007',),
+		},
+		'refaddrgen_bech32pk_3': {
+			'nostr': ('652F D99A 174F 9055',),
+		},
+		'refkeyaddrgen_bech32pk_1': {
+			'nostr': ('84B5 4714 A15C D72E',),
+		},
+		'refkeyaddrgen_bech32pk_2': {
+			'nostr': ('3802 94B3 27D3 F42A',),
+		},
+		'refkeyaddrgen_bech32pk_3': {
+			'nostr': ('9A54 4897 DC3D 80D0',),
+		},
 	}
 
 	cmd_group = (
@@ -338,10 +356,12 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		('refaddrgen_compressed',     'new refwallet addr chksum (compressed)'),
 		('refaddrgen_segwit',         'new refwallet addr chksum (segwit)'),
 		('refaddrgen_bech32',         'new refwallet addr chksum (bech32)'),
+		('refaddrgen_bech32pk',       'new refwallet addr chksum (bech32pk)'),
 		('refkeyaddrgen_legacy',      'new refwallet key-addr chksum (uncompressed)'),
 		('refkeyaddrgen_compressed',  'new refwallet key-addr chksum (compressed)'),
 		('refkeyaddrgen_segwit',      'new refwallet key-addr chksum (segwit)'),
 		('refkeyaddrgen_bech32',      'new refwallet key-addr chksum (bech32)'),
+		('refkeyaddrgen_bech32pk',    'new refwallet key-addr chksum (bech32pk)'),
 	)
 
 	def call_addrgen(self, mmtype, name='addrgen'):
@@ -362,6 +382,9 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 	def refaddrgen_bech32(self):
 		return self.call_addrgen('bech32')
 
+	def refaddrgen_bech32pk(self):
+		return self.call_addrgen('bech32pk')
+
 	def refkeyaddrgen_legacy(self):
 		return self.call_addrgen('legacy', 'keyaddrgen')
 
@@ -373,6 +396,9 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 
 	def refkeyaddrgen_bech32(self):
 		return self.call_addrgen('bech32', 'keyaddrgen')
+
+	def refkeyaddrgen_bech32pk(self):
+		return self.call_addrgen('bech32pk', 'keyaddrgen')
 
 class CmdTestRef3Passwd(CmdTestRef3Seed):
 	'generated reference password files for 128-, 192- and 256-bit seeds'

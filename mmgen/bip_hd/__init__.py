@@ -136,7 +136,7 @@ def check_privkey(key_int):
 
 class BipHDConfig(Lockable):
 
-	supported_coins = ('btc', 'eth', 'doge', 'ltc', 'bch', 'rune')
+	supported_coins = ('btc', 'eth', 'doge', 'ltc', 'bch', 'rune', 'nostr')
 
 	def __init__(self, base_cfg, coin, *, network, addr_type, from_path, no_path_checks):
 
@@ -149,7 +149,8 @@ class BipHDConfig(Lockable):
 				'coin':    coin,
 				'network': network,
 				'type':    addr_type or None,
-				'quiet':   True})
+				'quiet':   True},
+			need_amt = False)
 
 		dfl_type = base_cfg._proto.dfl_mmtype
 		addr_type = MMGenAddrType(

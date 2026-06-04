@@ -113,6 +113,16 @@ zec_pubhex1 = 'e6a4edbff547f21bcc2a825b6cf70f06e266a452d2da9d6dc5c1da3d99d7e996f
 
 rune_addr1 = 'thor1xptlvmwaymaxa7pxkr2u5pn7c0508stcr9tw2z'
 
+nostr_privhex1 = 'c15d739894c81a2fcfd3a2df85a0d2c0dbc47a280d092799f144d73d7ae78add'
+nostr_pubhex1 = 'd41b22899549e1f3d335a31002cfd382174006e166d3e658e3a5eecdb6463573'
+nostr_wif1 = 'nsec1c9wh8xy5eqdzln7n5t0ctgxjcrdug73gp5yj0x03gntn67h83twssdfhel'
+nostr_addr1 = 'npub16sdj9zv4f8sl85e45vgq9n7nsgt5qphpvmf7vk8r5hhvmdjxx4es8rq74h'
+
+nostr_privhex2 = '7f7ff03d123792d6ac594bfa67bf6d0c0ab55b6b1fdb6249303fe861f1ccba9a'
+nostr_pubhex2 = '17162c921dc4d2518f9a101db33695df1afb56ab82f5ff3e5da6eec3ca5cd917'
+nostr_wif2 = 'nsec10allq0gjx7fddtzef0ax00mdps9t2kmtrldkyjfs8l5xruwvh2dq0lhhkp'
+nostr_addr2 = 'npub1zutzeysacnf9rru6zqwmxd54mud0k44tst6l70ja5mhv8jjumytsd2x7nu'
+
 tests = {
 	'Mnemonic': {
 		'hex2mn': (
@@ -414,6 +424,12 @@ tests = {
 				([rune_addr1], pubhash2),
 			],
 		},
+		'addr2pubhex': {
+			'nostr_mainnet': [
+				([nostr_addr1], nostr_pubhex1),
+				([nostr_addr2], nostr_pubhex2),
+			],
+		},
 		'eth_checksummed_addr': {
 			'eth_mainnet': [
 				(['00a329c0648769a73afac7f9381e08fb43dbea72'], '00a329c0648769A73afAc7F9381E08FB43dBEA72'),
@@ -461,6 +477,10 @@ tests = {
 				([privhex7], [btc_wif2, btc_addr2], ['--type=compressed'], 'compressed'),
 				([privhex7], [btc_wif2, btc_addr3], ['--type=segwit'], 'segwit'),
 				([privhex7], [btc_wif2, btc_addr4], ['--type=bech32'], 'bech32'),
+			],
+			'nostr_mainnet': [
+				([nostr_privhex1], [nostr_wif1, nostr_addr1], None, 'bech32pk'),
+				([nostr_privhex2], [nostr_wif2, nostr_addr2], None, 'bech32pk'),
 			],
 		},
 		'privhex2addr': {
@@ -528,6 +548,10 @@ tests = {
 			],
 			'zec_mainnet': [
 				([zec_pubhex1], zec_addr1, ['--type=zcash_z'], 'zcash_z'),
+			],
+			'nostr_mainnet': [
+				([nostr_pubhex1], nostr_addr1, None, 'bech32pk'),
+				([nostr_pubhex2], nostr_addr2, None, 'bech32pk'),
 			],
 		},
 		'pubhex2redeem_script': {

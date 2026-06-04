@@ -183,6 +183,10 @@ class tool_cmd(tool_cmd_base):
 			die(2, f'{ap.fmt} addresses cannot be converted to {ptype}')
 		return ap.bytes.hex()
 
+	def addr2pubhex(self, addr: 'sstr'):
+		"convert coin address to public key"
+		return self._addr2pub(addr, ptype='pubkey')
+
 	def addr2pubhash(self, addr: 'sstr'):
 		"convert coin address to public key hash"
 		return self._addr2pub(addr, ptype='pubhash')

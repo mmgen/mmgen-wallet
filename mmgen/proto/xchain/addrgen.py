@@ -20,3 +20,9 @@ class bech32x(addr_generator.base):
 	@check_data
 	def to_addr(self, data):
 		return self.proto.encode_addr_bech32x(hash160(data.pubkey))
+
+class bech32pk(addr_generator.base):
+
+	@check_data
+	def to_addr(self, data):
+		return self.proto.encode_addr_bech32pk(data.pubkey)

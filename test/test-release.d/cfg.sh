@@ -135,6 +135,7 @@ init_tests() {
 		- $gentest_py --coin=xmr --use-internal-keccak-module 1 $rounds10x
 		- $gentest_py --coin=zec 1 $rounds10x
 		- $gentest_py --coin=zec --type=zcash_z 1 $rounds10x
+		- $gentest_py --coin=nostr 1 $rounds10x
 		- # verification against external libraries and tools:
 		- #   pycoin
 		- $gentest_py --all-coins --type=legacy 1:pycoin $rounds
@@ -321,6 +322,7 @@ init_tests() {
 		e $tooltest2_py --coin=eth --token=mm1 --testnet=1
 		e $tooltest2_py --coin=etc
 		t $tooltest2_py --coin=rune
+		t $tooltest2_py --coin=nostr
 		- $tooltest2_py --fork # run once with --fork so commands are actually executed
 	"
 	[ "$SKIP_ALT_DEP" ] && t_tool2_skip='a e t'

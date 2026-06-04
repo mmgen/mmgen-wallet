@@ -111,6 +111,7 @@ IDX    CHAIN  CURVE NW ADDR_CLS         VB_PRV   VB_PUB   VB_WIF VB_ADDR  DFL_PA
 996    OKT    x     m  Okex             x        x        -      -        x        OKChain Token
 1023   ONE    x     m  One              x        x        -      -        x        HARMONY-ONE (Legacy)
 1024   ONT    nist  m  Neo              x        x        -      spec     x        Ontology
+1237   NOSTR  x     m  BechPK           x        x        -      h:npub   x        Nostr
 1729   XTZ    edw   m  Xtz              x        x        -      spec     0'/0'    Tezos
 1815   ADA    khol  m  AdaByronIcarus   0f4331d4 x        -      spec     x        Cardano
 9000   AVAX   x     m  AvaxXChain       x        x        -      -        x        Avalanche
@@ -958,7 +959,6 @@ IDX    CHAIN    NAME
 1170   HOO    - Hoo Smart Chain
 1234   ALPH   - Alephium
 1236   ---    - Masca
-1237   ---    - Nostr
 1280   ---    - Kudos Setler
 1284   GLMR   - Moonbeam
 1285   MOVR   - Moonriver
