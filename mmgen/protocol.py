@@ -58,6 +58,8 @@ class CoinProtocol(MMGenObject):
 		is_vm = False
 		is_evm = False
 		has_usr_fee = True
+		coin_amt = None
+		max_tx_fee = None
 		rpc_type = 'local'
 		networks   = ('mainnet', 'testnet', 'regtest')
 		decimal_prec = 28
@@ -110,15 +112,12 @@ class CoinProtocol(MMGenObject):
 				from .util2 import get_keccak
 				self.keccak_256 = get_keccak(cfg)
 
-			if need_amt:
+			if need_amt and self.coin_amt:
 				from . import amt
 				from decimal import getcontext
 				self.coin_amt = getattr(amt, self.coin_amt)
-				self.max_tx_fee = self.coin_amt(str(self.max_tx_fee)) if hasattr(self, 'max_tx_fee') else None
+				self.max_tx_fee = self.coin_amt(str(self.max_tx_fee)) if self.max_tx_fee else None
 				getcontext().prec = self.decimal_prec
-			else:
-				self.coin_amt = None
-				self.max_tx_fee = None
 
 			self.set_cfg_opts()
 
