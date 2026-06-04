@@ -24,7 +24,7 @@ from ..keygen import KeyGenerator, keygen_public_data
 from ..addrgen import AddrGenerator
 from ..addr import MMGenAddrType
 from ..key import PrivKey
-from ..protocol import CoinProtocol
+from ..protocol import CoinProtocol, init_proto
 from ..proto.btc.common import hash160, b58chk_encode, b58chk_decode
 from ..proto.secp256k1.secp256k1 import pubkey_tweak_add, pubkey_check
 
@@ -379,9 +379,11 @@ class BipHDNode(Lockable):
 		if path.pop(0) != 'm':
 			raise ValueError(f'{path_str}: invalid path string (first component is not "m")')
 
+		proto = init_proto(base_cfg, coin or 'btc')
+
 		res = MasterNode(base_cfg, seed).init_cfg(
-			coin           = coin or 'btc',
-			addr_type      = addr_type or 'compressed',
+			coin           = proto.coin,
+			addr_type      = addr_type or proto.dfl_mmtype,
 			no_path_checks = no_path_checks,
 			from_path      = True)
 

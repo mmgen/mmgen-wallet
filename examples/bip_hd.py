@@ -74,7 +74,6 @@ nonstd_path = BipHDNode.from_path(
 	seed      = seed,
 	path_str  = "m/111'/222/333/444",
 	coin      = 'eth',
-	addr_type = 'E',
 	no_path_checks = True)
 
 print('Non-standard path (ETH):\n')
