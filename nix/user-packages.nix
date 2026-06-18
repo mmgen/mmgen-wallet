@@ -3,12 +3,12 @@
 # In addition to setting new attributes, this file may be used to override the defaults
 # in nix/packages.nix of the mmgen-wallet repository
 
-{ pkgs, python, bdir }:
+{ pkgs, old_pkgs, python, bdir }:
 
 rec {
     ### Set nixpkgs globally for the MMGen environment.
     ### If you set it, make sure to uncomment the python variable assignment below.
-    # pkgs = import (bdir + /nixpkgs-25.11.nix) {};
+    # pkgs = import (bdir + /nixpkgs-26.05.nix) {};
 
     ### Set python version globally for the MMGen environment.
     ### Must be set if pkgs is set.
@@ -18,17 +18,17 @@ rec {
         # monero-cli   = monero-cli;                                      # Monero daemon
         # go-ethereum  = go-ethereum;                                     # Geth
         # reth         = callPackage (bdir + /reth.nix) {};               # Rust Ethereum daemon
-        # solc         = callPackage (bdir + /solc.nix) {};               # Solidity compiler
+        # solc         = callPackage (bdir + /solc.nix) { old_pkgs=old_pkgs; }; # Solidity compiler
         # litecoin     = callPackage (bdir + /litecoin.nix) {};           # Litecoin daemon
         # bitcoin-cash = callPackage (bdir + /bitcoin-cash-node.nix) {};  # Bitcoin Cash Node daemon
         # zcash-mini   = callPackage (bdir + /zcash-mini.nix) {};         # ZEC (test suite)
 
         ### For development with --pure (add/remove packages for your setup):
-        # neovim       = neovim;
-        # neovim-qt    = neovim-qt;
+        # neovim       = old_pkgs.neovim;
+        # neovim-qt    = old_pkgs.neovim-qt;
         # rxvt-unicode = rxvt-unicode;
         # which        = which;
-        # ctags        = ctags;
+        # ctags        = universal-ctags;
         # xclip        = xclip;
         # ruff         = ruff;
         # perl         = perl;

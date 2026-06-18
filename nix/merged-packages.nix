@@ -1,7 +1,8 @@
 { add_pkgs_path }:
 
 let
-    dfl_nixpkgs = import ./nixpkgs-25.11.nix {};
+    dfl_nixpkgs = import ./nixpkgs-26.05.nix {};
+    old_nixpkgs = import ./nixpkgs-25.11.nix {};
     dfl_python = pkgs.python313;
     null_pkgs = {
         system-packages = {};
@@ -11,6 +12,7 @@ let
         ~/.mmgen/user-packages.nix else ./user-packages.nix;
     usr_pkgs = import usr_pkgs_path {
         pkgs = dfl_nixpkgs;
+        old_pkgs = old_nixpkgs;
         python = dfl_python;
         bdir = ./.; };
     pkgs = if usr_pkgs?pkgs then usr_pkgs.pkgs else dfl_nixpkgs;

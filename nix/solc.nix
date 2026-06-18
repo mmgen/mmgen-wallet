@@ -1,6 +1,6 @@
-{ pkgs, fetchzip, fetchurl }:
+{ old_pkgs, fetchzip, fetchurl }:
 
-pkgs.stdenv.mkDerivation rec {
+old_pkgs.stdenv.mkDerivation rec {
     pname = "solc";
     version = "0.8.26";
     src = fetchzip {
@@ -19,8 +19,8 @@ pkgs.stdenv.mkDerivation rec {
         url = "https://github.com/nlohmann/json/releases/download/v3.11.3/json.hpp";
         sha256 = "sha256-m+pMgGbvShwgayvlo2MC+JJvf9xgh69dILQX0M8QPqY=";
     };
-    nativeBuildInputs = [ pkgs.cmake ];
-    buildInputs = [ pkgs.boost ];
+    nativeBuildInputs = [ old_pkgs.cmake ];
+    buildInputs = [ old_pkgs.boost ];
     cmakeFlags = [ "-DBoost_USE_STATIC_LIBS=OFF" ];
     patchPhase = ''
         mkdir -p deps/downloads
