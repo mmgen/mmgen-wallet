@@ -58,7 +58,7 @@ class OpSync(OpWallet):
 
 		behind = chain_height - wallet_height
 		if behind > 1000:
-			msg_r(f'  Wallet is {behind} blocks behind chain tip.  Please be patient.  Syncing...')
+			msg_r(f'  Wallet is {behind} blocks behind node.  Please be patient.  Syncing...')
 
 		ret = self.c.call('refresh')
 

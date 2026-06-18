@@ -9,7 +9,10 @@ let
     };
     usr_pkgs_path = if builtins.pathExists ~/.mmgen/user-packages.nix then
         ~/.mmgen/user-packages.nix else ./user-packages.nix;
-    usr_pkgs = import usr_pkgs_path { pkgs = dfl_nixpkgs; python = dfl_python; bdir = ./.; };
+    usr_pkgs = import usr_pkgs_path {
+        pkgs = dfl_nixpkgs;
+        python = dfl_python;
+        bdir = ./.; };
     pkgs = if usr_pkgs?pkgs then usr_pkgs.pkgs else dfl_nixpkgs;
     python = if usr_pkgs?pkgs then usr_pkgs.python else dfl_python;
     wallet_pkgs = import ./packages.nix { pkgs = pkgs; python = python; };
