@@ -79,8 +79,6 @@ cfg = Config(
 
 set_globals(cfg)
 
-from test.tooltest2_d.data import *
-
 def fork_cmd(cmd_name, args, opts, stdin_input):
 	cmd = (
 		tool_cmd_preargs +
@@ -283,9 +281,9 @@ def do_group(gid):
 			m = f'No test for command {cmdname!r} in group {gid!r}!'
 			if cfg.die_on_missing:
 				die(1, m+'  Aborting')
-			else:
+			elif not cfg.quiet:
 				msg(m)
-				continue
+			continue
 		run_test(cls, gid, cmdname)
 
 def do_cmd_in_group(cmdname):
@@ -313,14 +311,29 @@ def main():
 		for garg in tests:
 			do_group(garg)
 
+NL = ('\n', '\r\n')[gc.platform=='win32']
+
 qmsg = cfg._util.qmsg
 vmsg = cfg._util.vmsg
 
 proto = cfg._proto
 
+coin_mod = importlib.import_module(f'test.tooltest2_d.{cfg.coin.lower()}')
+
+if cfg.coin == 'BTC':
+	from test.tooltest2_d.nocoin import tests
+	for k in coin_mod.tests:
+		if k != 'Wallet':
+			tests[k] = coin_mod.tests[k]
+	if not cfg.tool_api:
+		tests['Wallet'].update(coin_mod.tests['Wallet'])
+else:
+	tests = coin_mod.tests
+
 if cfg.tool_api:
-	del tests['Wallet']
-	del tests['File']
+	for k in ('Wallet', 'File'):
+		if k in tests:
+			del tests[k]
 
 if cfg.list_tests:
 	Msg('Available tests:')
