@@ -46,10 +46,10 @@ class mainnet(CoinProtocol.Secp256k1):
 	encode_wif = btc_mainnet.encode_wif
 	decode_wif = btc_mainnet.decode_wif
 
-	rpc_remote_params      = {'server_domain': Hostname('ninerealms.com')}
-	rpc_remote_rest_params = {'host': Hostname('thornode.ninerealms.com')}
-	rpc_remote_rpc_params  = {'host': Hostname('rpc.ninerealms.com')}
-	rpc_swap_params        = {'host': Hostname('thornode.ninerealms.com')}
+	rpc_remote_params      = {'server_domain': Hostname('liquify.com')}
+	rpc_remote_rest_params = {'host': Hostname('gateway.liquify.com/chain/thorchain_api')}
+	rpc_remote_rpc_params  = {'host': Hostname('gateway.liquify.com/chain/thorchain_rpc')}
+	rpc_swap_params        = {'host': Hostname('gateway.liquify.com/chain/thorchain_api')}
 
 	def decode_addr(self, addr):
 		hrp, data = bech32.bech32_decode(addr)
