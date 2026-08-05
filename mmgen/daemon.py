@@ -376,7 +376,7 @@ class CoinDaemon(Daemon):
 			or daemon_ids[0])
 
 		if daemon_id not in daemon_ids:
-			die(1, f'{daemon_id!r}: invalid daemon_id - valid choices: {fmt_list(daemon_ids)}')
+			die(1, f'{daemon_id!r}: invalid daemon_id for coin {coin} - valid choices: {fmt_list(daemon_ids)}')
 
 		me = Daemon.__new__(cls.get_daemon(cfg, None, daemon_id, proto=proto))
 

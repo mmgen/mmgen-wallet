@@ -26,7 +26,7 @@ from collections import namedtuple
 from ..cfg import gv, gc
 from ..objmethods import MMGenObject
 from ..obj import get_obj, MMGenIdx, MMGenList
-from ..color import nocolor, yellow, orange, green, red, blue
+from ..color import nocolor, yellow, orange, green, red, blue, pink
 from ..util import msg, msg_r, fmt, die, capfirst, suf, make_timestr, isAsync, is_int
 from ..rpc import rpc_init
 from ..base_obj import AsyncInit
@@ -434,10 +434,10 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			def gen_hdr(spc):
 
 				if color:
-					Blue, Green = (blue, green)
+					Blue, Green, Pink = (blue, green, pink)
 					Yes, No, Only = (green('yes'), red('no'), yellow('only'))
 				else:
-					Blue, Green = (nocolor, nocolor)
+					Blue, Green, Pink = (nocolor, nocolor, nocolor)
 					Yes, No, Only = ('yes', 'no', 'only')
 
 				sort_info = ' '.join(self.sort_info())
@@ -458,8 +458,10 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 						' '.join(map(fmt_filter, self.filters)),
 						spc * len(self.filters))
 
-				yield 'Network: {}'.format(Green(
-					self.proto.coin + ' ' + self.proto.chain_name.upper()))
+				yield (
+					'Network: {}'.format(Green(self.proto.coin + ' ' + self.proto.chain_name.upper())) +
+					(', Daemon: {}'.format(Pink(self.rpc.daemon.coind_name))
+						if hasattr(self.rpc, 'daemon') else ''))
 
 				if hasattr(self.rpc, 'blockcount'):
 					yield 'Block {} [{}]'.format(

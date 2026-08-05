@@ -67,10 +67,10 @@ class TwGetBalance(MMGenObject, metaclass=AsyncInit):
 					return self.data[label][col].fmt(iwidths[col], color=color)
 
 				if color:
-					from ..color import green, yellow
+					from ..color import green, yellow, pink
 				else:
 					from ..color import nocolor
-					green = yellow = nocolor
+					green = yellow = pink = nocolor
 
 				add_w = self.proto.coin_amt.max_prec + 1 # 1 = len('.')
 				iwidth_adj = 1 # so that min iwidth (1) + add_w + iwidth_adj >= len('Unconfirmed')
@@ -79,8 +79,9 @@ class TwGetBalance(MMGenObject, metaclass=AsyncInit):
 				iwidths = {colname: get_col_iwidth(colname) for colname in self.conf_cols}
 
 				net_desc = self.proto.coin + ' ' + self.proto.network.upper()
-				if net_desc != 'BTC MAINNET':
-					yield f'Network: {green(net_desc)}'
+				yield f'Network: {green(net_desc)}'
+				if getattr(self, 'rpc', None):
+					yield f'Daemon: {pink(self.rpc.daemon.coind_name)}'
 
 				yield '{lbl:{w}} {cols}'.format(
 					lbl = 'Wallet',
