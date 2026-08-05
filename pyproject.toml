@@ -17,12 +17,12 @@ indent-style = "tab"
 [tool.ruff.lint]
 ignore = [
 	"E401", # multiple imports per line
-	"E701", # multiple statements per line
-	"E721", # use isinstance()
-	"E731", # lambda instead of def
 	"E402", # module import not top of file
-	"E722", # bare except
+	"E701", # multiple statements per line
 	"E713", # membership 'not in'
+	"E721", # use isinstance()
+	"E722", # bare except
+	"E731", # lambda instead of def
 	"E741", # ambiguous variable name
 ]
 
