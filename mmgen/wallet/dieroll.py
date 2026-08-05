@@ -59,6 +59,7 @@ class wallet(wallet):
 				from ..crypto import Crypto
 				seed_bytes = Crypto(self.cfg).add_user_random(
 					rand_bytes = seed_bytes,
+					osrand_bytes = 32,
 					desc = 'gathered from your die rolls')
 				self.desc += ' plus OS and user-supplied entropy'
 			msg('')
