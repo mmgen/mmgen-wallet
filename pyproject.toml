@@ -16,6 +16,23 @@ indent-style = "tab"
 
 [tool.ruff.lint]
 ignore = [
+	"ASYNC221", # Async functions should not run processes with blocking methods
+	"ASYNC230", # Async functions should not open files with blocking methods like `open`
+	"ASYNC251", # Async functions should not call `time.sleep`
+	"B006", # Do not use mutable data structures for argument defaults
+	"B008", # Do not perform function call `options_annot_str` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+	"B009", # Do not call `getattr` with a constant attribute value. It is not any safer than normal property access.
+	"B010", # Do not call `setattr` with a constant attribute value. It is not any safer than normal property access.
+	"B018", # Found useless expression. Either assign it to a variable or remove it.
+	"B023", # Function definition does not bind loop variable `confs`
+	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged
+	"BLE001", # Do not catch blind exception: `Exception`
+	"C401", # Unnecessary generator (rewrite as a set comprehension)
+	"C402", # Unnecessary generator (rewrite as a dict comprehension)
+	"C409", # Unnecessary list literal passed to `tuple()` (rewrite as a tuple literal)
+	"C410", # Unnecessary list literal passed to `list()` (remove the outer call to `list()`)
+	"C414", # Unnecessary `list()` call within `set()`
+	"C418", # Unnecessary dict literal passed to `dict()` (remove the outer call to `dict()`)
 	"E401", # multiple imports per line
 	"E402", # module import not top of file
 	"E701", # multiple statements per line
@@ -24,6 +41,62 @@ ignore = [
 	"E722", # bare except
 	"E731", # lambda instead of def
 	"E741", # ambiguous variable name
+	"EXE001", # Shebang is present but file is not executable
+	"EXE002", # The file is executable but no shebang is present
+	"FURB129", # Instead of calling `readlines()`, iterate over file object directly
+	"FURB157", # Verbose expression in `Decimal` constructor
+	"FURB163", # Prefer `math.log2(state.lanew)` over `math.log` with a redundant base
+	"FURB166", # Use of `int` with explicit `base=16` after removing prefix
+	"FURB192", # Prefer `max` over `sorted()` to compute the maximum value in a sequence
+	"I001", # Import block is un-sorted or un-formatted
+	"ISC004", # Unparenthesized implicit string concatenation in collection
+	"N999", # Invalid module name: 'import'
+	"PERF102", # When using only the keys of a dict use the `keys()` method
+	"PIE790", # Unnecessary `pass` statement
+	"PIE804", # Unnecessary `dict` kwargs
+	"PLC0206", # Extracting value from dictionary without calling `.items()`
+	"PLC3002", # Lambda expression called directly. Execute the expression inline instead.
+	"PLR1704", # Redefining argument with the local name `tx`
+	"PLW0406", # Module `test.include.common` imports itself
+	"PLW0602", # Using global for `stderr_save` but no assignment is done
+	"PLW0602", # Using global for `stdout_save` but no assignment is done
+	"PLW1510", # `subprocess.run` without explicit `check` argument
+	"RET501", # Do not explicitly `return None` in function if it is the only possible return value
+	"RUF010", # Use explicit conversion flag
+	"RUF012", # Mutable default value for class attribute
+	"RUF013", # PEP 484 prohibits implicit `Optional`
+	"RUF015", # Prefer `next(s for s in res if 'ersion' in s)` over single element slice
+	"RUF022", # `__all__` is not sorted
+	"RUF046", # Value being cast to `int` is already an integer
+	"RUF059", # Unpacked variable `recv_chain` is never used
+	"RUF100", # Unused `noqa` directive (non-enabled: `F401`)
+	"S102", # Use of `exec` detected
+	"S110", # `try`-`except`-`pass` detected, consider logging the exception
+	"SIM102", # Use a single `if` statement instead of nested `if` statements
+	"SIM103", # Return the negated condition directly
+	"SIM114", # Combine `if` branches using logical `or` operator
+	"SIM115", # Use a context manager for opening files
+	"SIM118", # Use `key in dict` instead of `key in dict.keys()`
+	"SIM201", # Use `path.stat().st_mode & S_IWUSR | S_IRUSR != S_IWUSR | S_IRUSR` instead of `not path.stat().st_mode & S_IWUSR | S_IRUSR == S_IWUSR | S_IRUSR`
+	"SIM210", # Use `bool(...)` instead of `True if ... else False`
+	"SIM401", # Use `d.get(arg, text)` instead of an `if` block
+	"SIM905", # Consider using a list literal instead of `str.split`
+	"TRY002", # Create your own exception
+	"TRY201", # Use `raise` without specifying exception name
+	"UP004", # Class `Binary` inherits from `object`
+	"UP006", # Use `list` instead of `List` for type annotation
+	"UP008", # Use `super()` instead of `super(__class__, self)`
+	"UP018", # Unnecessary `bool` call (rewrite as a literal)
+	"UP018", # Unnecessary `int` call (rewrite as a literal)
+	"UP018", # Unnecessary `str` call (rewrite as a literal)
+	"UP022", # Prefer `capture_output` over sending `stdout` and `stderr` to `PIPE`
+	"UP030", # Use implicit references for positional format fields
+	"UP031", # Use format specifiers instead of percent format
+	"UP032", # Use f-string instead of `format` call
+	"UP034", # Avoid extraneous parentheses
+	"UP035", # `typing.List` is deprecated, use `list` instead
+	"UP045", # Use `X | None` for type annotations
+	"YTT204", # `sys.version_info.minor` compared to integer (python4), compare `sys.version_info` to tuple
 ]
 
 [tool.ruff.lint.per-file-ignores]
