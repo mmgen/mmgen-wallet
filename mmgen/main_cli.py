@@ -12,8 +12,9 @@
 mmgen-cli: Communicate with a coin daemon via its JSON-RPC interface
 """
 
-import asyncio, json
+import json
 
+from .util import async_run
 from .util2 import cliargs_convert
 from .cfg import gc, Config
 from .rpc import rpc_init
@@ -72,4 +73,4 @@ async def main():
 		(ascii(ret) if cfg.ascii_output else ret) if isinstance(ret, str) else
 		json.dumps(ret, cls=json_encoder, indent=4, ensure_ascii=cfg.ascii_output))
 
-asyncio.run(main())
+async_run(cfg, main)
