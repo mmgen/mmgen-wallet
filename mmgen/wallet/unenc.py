@@ -54,5 +54,5 @@ class wallet(wallet):
 					self.cfg,
 					prompt,
 					default_yes = True,
-					no_nl       = not self.cfg.test_suite):
+					no_nl_on_false = True):
 				return usr_len

@@ -87,19 +87,21 @@ def keypress_confirm(
 		default_yes     = False,
 		verbose         = False,
 		no_nl           = False,
+		no_nl_on_false  = False,
 		complete_prompt = False,
 		do_exit         = False,
 		exit_msg        = 'Exiting at user request'):
 
 	def do_return(retval):
+		msg_r(f'\r{" "*len(prompt)}\r' if no_nl or (retval is False and no_nl_on_false) else '\n')
 		if do_exit and not retval:
 			die(1, exit_msg)
 		return retval
 
+	assert not (no_nl and no_nl_on_false), 'keypress_confirm(): ‘no_nl’ and ‘no_nl_on_false’ are mutually exclusive'
+
 	if not complete_prompt:
 		prompt = '{} {}: '.format(prompt, '(Y/n)' if default_yes else '(y/N)')
-
-	nl = f'\r{" "*len(prompt)}\r' if no_nl else '\n'
 
 	if cfg.accept_defaults:
 		msg(prompt)
@@ -109,11 +111,11 @@ def keypress_confirm(
 	while True:
 		match get_char(prompt, immed_chars='yYnN').strip('\n\r'):
 			case '':
-				msg_r(nl)
 				return do_return(default_yes)
-			case 'y' | 'Y' | 'n' | 'N' as reply:
-				msg_r(nl)
-				return do_return(reply in 'yY')
+			case 'y' | 'Y':
+				return do_return(True)
+			case 'n' | 'N':
+				return do_return(False)
 			case _:
 				msg_r('\nInvalid reply\n' if verbose else '\r')
 
