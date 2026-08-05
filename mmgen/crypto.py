@@ -313,6 +313,7 @@ class Crypto:
 			rand_bytes,
 			*,
 			desc,
+			osrand_bytes = 8,
 			urand = {'data': b'', 'counter': 0}):
 
 		assert type(rand_bytes) is bytes, 'add_user_random_chk1'
@@ -326,8 +327,9 @@ class Crypto:
 			# counter protects against very evil rng that might repeatedly output the same data
 			urand['counter'] += 1
 
-			os_rand = os.urandom(8)
-			assert len(os_rand) == 8, f'OS random number generator returned {len(os_rand)} (!= 8) bytes!'
+			os_rand = os.urandom(osrand_bytes)
+			assert len(os_rand) == osrand_bytes, (
+				f'OS random number generator returned {len(os_rand)} (!= {osrand_bytes}) bytes!')
 
 			import hmac
 			key = hmac.digest(
