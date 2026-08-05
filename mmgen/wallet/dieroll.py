@@ -28,7 +28,9 @@ class wallet(wallet):
 	mn_type = 'base6d'
 	choose_seedlen_prompt = 'Choose a seed length: 1) 128 bits, 2) 192 bits, 3) 256 bits: '
 	choose_seedlen_confirm = 'Seed length of {} bits chosen. OK?'
-	user_entropy_prompt = 'Would you like to provide some additional entropy from the keyboard?'
+	user_entropy_prompt = (
+		'Would you like to provide some additional entropy from the keyboard and\n'
+		'your OS’s random number generator?')
 	interactive_input = False
 
 	def _format(self):
@@ -53,12 +55,13 @@ class wallet(wallet):
 
 		if self.interactive_input and self.cfg.usr_randchars:
 			from ..ui import keypress_confirm
-			if keypress_confirm(self.cfg, self.user_entropy_prompt):
+			if keypress_confirm(self.cfg, '\n' + self.user_entropy_prompt):
 				from ..crypto import Crypto
 				seed_bytes = Crypto(self.cfg).add_user_random(
 					rand_bytes = seed_bytes,
-					desc       = 'gathered from your die rolls')
-				self.desc += ' plus user-supplied entropy'
+					desc = 'gathered from your die rolls')
+				self.desc += ' plus OS and user-supplied entropy'
+			msg('')
 
 		self.seed = Seed(self.cfg, seed_bin=seed_bytes)
 
@@ -90,7 +93,7 @@ class wallet(wallet):
 			enter the result on the keyboard as a digit.  If you make an invalid entry,
 			you'll be prompted to re-enter it.
 		"""
-		msg('\n'+fmt(message.strip()).format(sb=seed_bitlen, nd=nDierolls)+'\n')
+		msg('\n'+fmt(message.strip()).format(sb=seed_bitlen, nd=nDierolls))
 
 		CUR_HIDE = '\033[?25l'
 		CUR_SHOW = '\033[?25h'
@@ -117,7 +120,7 @@ class wallet(wallet):
 			dierolls.append(get_digit(n))
 			n += 1
 
-		msg('Die rolls successfully entered' + CUR_SHOW)
+		msg('\nDie rolls successfully entered' + CUR_SHOW)
 		self.interactive_input = True
 
 		return ''.join(dierolls)
