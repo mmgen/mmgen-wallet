@@ -25,10 +25,10 @@ from collections import namedtuple
 from .util import die
 
 def is_b58_str(s):
-	return set(list(s)) <= set(baseconv('b58').digits)
+	return set(s) <= set(baseconv('b58').digits)
 
 def is_b32_str(s):
-	return set(list(s)) <= set(baseconv('b32').digits)
+	return set(s) <= set(baseconv('b32').digits)
 
 def is_mmgen_mnemonic(s):
 	try:

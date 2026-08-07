@@ -381,7 +381,7 @@ class MMGenLabel(HiliteStr, InitErrors):
 			if cls.first_char and s and not s[0] in cls.first_char:
 				raise ValueError('first character not in set ' + ' '.join(cls.first_char))
 
-			if cls.allowed and not set(list(s)).issubset(set(cls.allowed)):
+			if cls.allowed and not set(s).issubset(set(cls.allowed)):
 				raise ValueError('contains symbols not in set: ' + ' '.join(cls.allowed))
 
 			if cls.forbidden and any(ch in s for ch in cls.forbidden):
