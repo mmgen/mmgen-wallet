@@ -104,17 +104,18 @@ class tool_cmd(tool_cmd_base):
 				q2.put(encryptor.update(q1.get()))
 				q1.task_done()
 
-		def output_worker():
+		def output_worker(fh):
 			while True:
-				f.write(q2.get())
+				fh.write(q2.get())
 				q2.task_done()
 
 		nbytes = parse_bytespec(nbytes)
 		if self.cfg.outdir:
 			outfile = make_full_path(self.cfg.outdir, outfile)
 
-		f = open(outfile, 'wb')
+		fh = open(outfile, 'wb')
 
+		blk_size = 1024 * 1024
 		key = Crypto(self.cfg).get_random(32)
 		q1, q2 = (Queue(), Queue())
 
@@ -124,29 +125,24 @@ class tool_cmd(tool_cmd_base):
 			threads = os.cpu_count()
 
 		for i in range(max(1, threads - 1)):
-			t = Thread(target=encrypt_worker)
-			t.daemon = True
-			t.start()
+			Thread(target=encrypt_worker, daemon=True).start()
 
-		t = Thread(target=output_worker)
-		t.daemon = True
-		t.start()
+		if True:
+			Thread(target=output_worker, args=(fh,), daemon=True).start()
 
-		blk_size = 1024 * 1024
-		for i in range(nbytes // blk_size):
-			if not i % 4:
-				msg_r(f'\rRead: {i * blk_size} bytes')
-			q1.put(os.urandom(blk_size))
+			for i in range(nbytes // blk_size):
+				if not i % 4:
+					msg_r(f'\rRead: {i * blk_size} bytes')
+				q1.put(os.urandom(blk_size))
 
-		if nbytes % blk_size:
-			q1.put(os.urandom(nbytes % blk_size))
+			if nbytes % blk_size:
+				q1.put(os.urandom(nbytes % blk_size))
 
-		q1.join()
-		q2.join()
-		f.close()
+			q1.join()
+			q2.join()
+			fh.close()
 
-		fsize = os.stat(outfile).st_size
-		if fsize != nbytes:
+		if (fsize := os.stat(outfile).st_size) != nbytes:
 			die(3, f'{fsize}: incorrect random file size (should be {nbytes})')
 
 		if not silent:
