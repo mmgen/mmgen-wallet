@@ -2273,7 +2273,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return self._user_dump_hex_send_cli('bob', subdir='nochg_tx')
 
 	def bob_bal7(self):
-		if not self.coin == 'btc':
+		if self.coin != 'btc':
 			return 'skip'
 		return self._user_bal_cli('bob', chks=['499.99990287', '46.51845565'])
 

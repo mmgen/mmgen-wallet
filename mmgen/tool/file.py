@@ -34,7 +34,7 @@ class tool_cmd(tool_cmd_base):
 
 	def _file_chksum(self, mmgen_addrfile, obj):
 		kwargs = {'skip_chksum_msg': True}
-		if not obj.__name__ == 'PasswordList':
+		if obj.__name__ != 'PasswordList':
 			kwargs.update({'key_address_validity_check': False})
 		ret = obj(self.cfg, self.proto, infile=mmgen_addrfile, **kwargs)
 		if self.cfg.verbose:

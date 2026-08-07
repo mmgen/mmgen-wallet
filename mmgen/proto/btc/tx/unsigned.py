@@ -72,7 +72,7 @@ class Unsigned(Completed, TxBase.Unsigned):
 			tx_decoded = await self.rpc.call('decoderawtransaction', ret['hex'])
 			new.compare_size_and_estimated_size(tx_decoded)
 			new.coin_txid = CoinTxID(self.deserialized.txid)
-			if not new.coin_txid == tx_decoded['txid']:
+			if new.coin_txid != tx_decoded['txid']:
 				die('BadMMGenTxID', 'txid mismatch (after signing)')
 			msg('OK')
 			return new

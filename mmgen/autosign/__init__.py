@@ -204,7 +204,7 @@ class Autosign:
 		def check_or_create(dirname):
 			path = getattr(self, dirname)
 			if path.is_dir():
-				if not path.stat().st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR:
+				if path.stat().st_mode & S_IWUSR|S_IRUSR != S_IWUSR|S_IRUSR:
 					die(1, f'‘{path}’ is not read/write for this user!')
 			elif path.exists():
 				die(1, f'‘{path}’ is not a directory!')

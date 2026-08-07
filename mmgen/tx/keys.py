@@ -136,7 +136,7 @@ class TxKeys:
 				self.cfg._util.qmsg(f'Need seed data for Seed ID {sid}')
 				seed = Wallet(self.cfg, passwd_file=self.passwdfile).seed
 				msg(f'User input produced Seed ID {seed.sid}')
-				if not seed.sid == sid: # TODO: add test
+				if seed.sid != sid: # TODO: add test
 					seed = seed.subseed_by_seed_id(sid, print_msg=True)
 
 			if seed:

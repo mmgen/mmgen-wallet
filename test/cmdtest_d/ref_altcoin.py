@@ -113,7 +113,7 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 					extra_desc = f'{proto.coin}{token_desc} {proto.network}')
 				t.read()
 				t.ok()
-				if proto.sign_mode == 'daemon' and not proto.network_id == 'btc':
+				if proto.sign_mode == 'daemon' and proto.network_id != 'btc':
 					stop_test_daemons(proto.network_id, remove_datadir=True)
 		return 'ok'
 

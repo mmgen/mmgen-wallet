@@ -965,7 +965,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		return self._addrimport_one_addr(addr=dfl_devaddr)
 
 	def addrimport_reth_devaddr(self):
-		if not self.daemon.id == 'reth':
+		if self.daemon.id != 'reth':
 			return 'silent'
 		return self._addrimport_one_addr(addr=reth_devaddr)
 
@@ -1076,7 +1076,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		return t
 
 	def del_reth_devaddr(self):
-		if not self.daemon.id == 'reth':
+		if self.daemon.id != 'reth':
 			return 'silent'
 		return self._del_addr(reth_devaddr)
 
@@ -1190,7 +1190,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 				'0x' + addr,
 				'0x' + self.message.encode().hex())
 
-		if not self.daemon.id == 'geth':
+		if self.daemon.id != 'geth':
 			return 'skip'
 
 		self.spawn(msg_only=True)
@@ -1702,7 +1702,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def edit_comment1(self):
 		return self.edit_comment(out_num=del_addrs[0], comment_text=tw_comment_zh[:3])
 	def edit_comment2(self):
-		spawn = not gc.platform == 'win32'
+		spawn = gc.platform != 'win32'
 		return self.edit_comment(
 			out_num       = del_addrs[0],
 			comment_text  = tw_comment_zh[3:],

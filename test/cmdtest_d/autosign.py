@@ -820,7 +820,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 				ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
 				fn = fn[:-len(ext)] + '-α' + ext
 			target = joinpath(self.asi.tx_dir, fn)
-			if not op == 'remove_signed':
+			if op != 'remove_signed':
 				shutil.copyfile(src, target)
 			try:
 				os.unlink(target.replace('.rawtx', '.sigtx'))

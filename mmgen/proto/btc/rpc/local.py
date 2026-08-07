@@ -389,8 +389,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 			if 'deployment_info' in self.caps:
 				return (
 					self.cached['deploymentinfo']['deployments']['segwit']['active']
-					or (self.cfg.test_suite and not self.chain == 'regtest')
-				)
+					or (self.cfg.test_suite and self.chain != 'regtest'))
 
 			d = self.cached['blockchaininfo']
 
@@ -406,7 +405,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 			except:
 				pass
 
-			return self.cfg.test_suite and not self.chain == 'regtest'
+			return self.cfg.test_suite and self.chain != 'regtest'
 
 		return locals()[info_id]()
 

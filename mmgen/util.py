@@ -74,7 +74,7 @@ class Util:
 			die_on_fail = False,
 			verbose     = False):
 
-		if not chk1 == chk2:
+		if chk1 != chk2:
 			fs = "{} ERROR: {} checksum ({}) doesn't match {} checksum ({})"
 			m = fs.format((hdr+':\n   ' if hdr else 'CHECKSUM'), desc2, chk2, desc1, chk1)
 			if die_on_fail:

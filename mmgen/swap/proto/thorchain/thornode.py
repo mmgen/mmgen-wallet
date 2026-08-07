@@ -60,7 +60,7 @@ class Thornode:
 
 		if (
 				(self.tx.proto.tokensym or self.tx.recv_asset.tokensym)
-				and not self.tx.send_asset.chain == 'THOR'): # token swap
+				and self.tx.send_asset.chain != 'THOR'): # token swap
 			in_data = get_data(
 				self.tx.send_asset.full_name,
 				'THOR.RUNE',

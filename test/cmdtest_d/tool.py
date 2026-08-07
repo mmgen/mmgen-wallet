@@ -102,7 +102,7 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 		vmsg(f'Incog ID: {cyan(i_id)}')
 		t = self.spawn('mmgen-tool', ['-d', self.tmpdir, 'find_incog_data', f1, i_id])
 		o = t.expect_getend(f'Incog data for ID {i_id} found at offset ')
-		if not gc.platform == 'win32':
+		if gc.platform != 'win32':
 			os.unlink(f1) # causes problems with MSYS2
 		cmp_or_die(hincog_offset, int(o))
 		return t

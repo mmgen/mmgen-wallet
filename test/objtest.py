@@ -164,7 +164,7 @@ def run_test(mod, test, arg, input_data, arg1, exc_name):
 	except Exception as e:
 		if input_data == 'good':
 			raise ValueError(f'Error on good input data: {e}') from e
-		if not type(e).__name__ == exc_name:
+		if type(e).__name__ != exc_name:
 			msg(f'Incorrect exception: expected {exc_name} but got {type(e).__name__}')
 			raise
 		if cfg.super_silent:

@@ -181,7 +181,7 @@ class CmdTestCfgFile(CmdTestBase):
 		self.write_to_cfgfile('usr', ['foo true', 'bar false'])
 		t = self.old_sample_common(
 			old_set       = True,
-			pexpect_spawn = not gc.platform == 'win32')
+			pexpect_spawn = gc.platform != 'win32')
 		t.expect('unrecognized option')
 		return t
 

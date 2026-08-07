@@ -48,7 +48,7 @@ class New(VmNew, Base, TxBase.New):
 				self.gas = int(self.cfg.gas)
 			elif self.cfg.gas == 'fallback':
 				self.gas = self.dfl_gas
-			elif self.is_bump and not self.rpc.daemon.id == 'reth':
+			elif self.is_bump and self.rpc.daemon.id != 'reth':
 				self.gas = self.txobj['startGas']
 			else:
 				assert self.cfg.gas in ('auto', None), f'{self.cfg.gas}: invalid value for cfg.gas'
