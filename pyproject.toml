@@ -29,7 +29,6 @@ ignore = [
 	"E722", # bare except
 	"E731", # lambda instead of def
 	"E741", # ambiguous variable name
-	"EXE001", # Shebang is present but file is not executable
 	"EXE002", # The file is executable but no shebang is present
 	"FURB129", # Instead of calling `readlines()`, iterate over file object directly
 	"FURB157", # Verbose expression in `Decimal` constructor
