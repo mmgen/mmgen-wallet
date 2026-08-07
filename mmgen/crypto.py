@@ -305,6 +305,7 @@ class Crypto:
 
 		return self.add_user_random(
 			rand_bytes = os_rand,
+			osrand_bytes = 8, # we’ve already gathered OS entropy, so reduce
 			desc       = 'from your operating system')
 
 	def add_user_random(
@@ -312,7 +313,7 @@ class Crypto:
 			rand_bytes,
 			*,
 			desc,
-			osrand_bytes = 8,
+			osrand_bytes = 32,
 			urand = {'data': b'', 'counter': 0}):
 
 		assert type(rand_bytes) is bytes, 'add_user_random_chk1'
