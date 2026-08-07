@@ -134,7 +134,7 @@ class Token(Contract):
 		if decimals:
 			assert isinstance(decimals, int), f'decimals param must be int instance, not {type(decimals)}'
 			self.decimals = decimals
-			self.base_unit = Decimal('10') ** -self.decimals
+			self.base_unit = Decimal(10) ** -self.decimals
 
 	async def get_balance(self, acct_addr, block='latest'):
 		return self.proto.coin_amt(
@@ -200,7 +200,7 @@ class ResolvedToken(Token, metaclass=AsyncInit):
 		self.decimals = await self.get_decimals()
 		if not self.decimals:
 			die('TokenNotInBlockchain', f'Token {addr!r} not in blockchain')
-		self.base_unit = Decimal('10') ** -self.decimals
+		self.base_unit = Decimal(10) ** -self.decimals
 
 # Tokens: First approve router to spend tokens from user: asset.approve(router,amount).
 # Then call router.depositWithExpiry(inbound_address, asset, amount, memo, expiry).

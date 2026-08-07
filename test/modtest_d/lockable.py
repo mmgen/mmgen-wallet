@@ -78,7 +78,7 @@ class unit_tests:
 		# are these considered set?
 		lc.alpha = 0             # yes
 		lc.beta = False          # yes
-		lc.gamma = Decimal('0')  # yes
+		lc.gamma = Decimal(0)    # yes
 		lc.delta = 0.0           # yes
 		lc.epsilon = []          # no
 
@@ -98,7 +98,7 @@ class unit_tests:
 		def bad4(): lc.x = 1
 		def bad5(): lc.alpha = 0
 		def bad6(): lc.beta = False
-		def bad7(): lc.gamma = Decimal('0')
+		def bad7(): lc.gamma = Decimal(0)
 		def bad8(): lc.delta = float(0)
 		def bad9(): lc.epsilon = [0]
 

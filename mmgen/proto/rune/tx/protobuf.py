@@ -151,10 +151,10 @@ class RuneTx(Tx):
 	signatures: Annotated[List[bytes], Field(3)]
 
 def amt_to_base_unit(amt, *, decimals):
-	return int(Decimal(amt) * (Decimal('10') ** decimals))
+	return int(Decimal(amt) * (Decimal(10) ** decimals))
 
 def base_unit_to_amt(n, *, decimals):
-	return n * Decimal('10') ** -decimals
+	return n * Decimal(10) ** -decimals
 
 def tx_info(tx, proto):
 	b = tx.body.messages[0].body

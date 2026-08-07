@@ -40,7 +40,7 @@ tests = {
 					'from_decimal': True,
 					'ret': Decimal('1.123456789123456789')},
 				{'num': Decimal('1.234'), 'from_decimal': True, 'ret': Decimal('1.234')},
-				{'num': Decimal('0.0'), 'from_decimal': True, 'ret': Decimal('0')},
+				{'num': Decimal('0.0'), 'from_decimal': True, 'ret': Decimal(0)},
 				{'num': 1234, 'from_unit': 'wei', 'ret': Decimal('0.000000000000001234')},
 				{'num': 1234, 'from_unit': 'Mwei', 'ret': Decimal('0.000000001234')},
 		)

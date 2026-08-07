@@ -52,7 +52,7 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 				me = Decimal.__new__(cls, num * getattr(cls, from_unit))
 			elif from_decimal:
 				assert isinstance(num, Decimal), f'number must be of type Decimal, not {type(num).__name__})'
-				me = Decimal.__new__(cls, num.quantize(Decimal('10') ** -cls.max_prec))
+				me = Decimal.__new__(cls, num.quantize(Decimal(10) ** -cls.max_prec))
 			else:
 				assert isinstance(num, str), f'non-string passed to {cls.__name__} initializer'
 				me = Decimal.__new__(cls, num)
