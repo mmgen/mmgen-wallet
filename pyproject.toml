@@ -18,7 +18,6 @@ indent-style = "tab"
 ignore = [
 	"ASYNC221", # blocking method in async function (mmgen/rpc/backends/curl.py)
 	"B006", # Do not use mutable data structures for argument defaults
-	"B010", # Do not call `setattr` with a constant attribute value. It is not any safer than normal property access.
 	"B018", # Found useless expression. Either assign it to a variable or remove it.
 	"B023", # Function definition does not bind loop variable `confs`
 	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged

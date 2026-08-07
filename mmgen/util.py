@@ -411,7 +411,7 @@ class oneshot_warning:
 			msg(getattr(color, wcls.color)('WARNING: ' + wcls.message.format(*fmt_args)))
 
 		if not hasattr(wcls, 'data'):
-			setattr(wcls, 'data', [])
+			wcls.data = []
 
 		data = wcls.data
 		condition = (div in data) if reverse else (not div in data)

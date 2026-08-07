@@ -68,6 +68,6 @@ def init_dev():
 	import builtins
 	# MMGenObject is added to the namespace by objmethods.py, so we must name the builtin differently
 	# to avoid inadvertently adding MMGenObject to the global namespace here:
-	setattr(builtins, 'MMGenObjectDevTools', MMGenObjectDevTools)
+	builtins.MMGenObjectDevTools = MMGenObjectDevTools
 	for funcname, func in devtools_funcs.items():
 		setattr(builtins, funcname, func)
