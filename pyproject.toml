@@ -17,10 +17,7 @@ indent-style = "tab"
 [tool.ruff.lint]
 ignore = [
 	"ASYNC221", # Async functions should not run processes with blocking methods
-	"ASYNC230", # Async functions should not open files with blocking methods like `open`
-	"ASYNC251", # Async functions should not call `time.sleep`
 	"B006", # Do not use mutable data structures for argument defaults
-	"B008", # Do not perform function call `options_annot_str` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
 	"B009", # Do not call `getattr` with a constant attribute value. It is not any safer than normal property access.
 	"B010", # Do not call `setattr` with a constant attribute value. It is not any safer than normal property access.
 	"B018", # Found useless expression. Either assign it to a variable or remove it.
@@ -104,6 +101,9 @@ ignore = [
 	"F722", # Syntax error in forward annotation
 	"F821"  # Undefined name `sstr`
 ]
+"mmgen/tool/file.py"            = [ "B008" ]         # function call in dfl args
+"examples/*"                    = [ "ASYNC230" ]     # open() in async function
+
 "test/include/common.py"        = [ "F821" ]         # undefined name 'cfg'
 "test/misc/input_func.py"       = [ "F401" ]         # imported but unused
 "test/modtest_d/cashaddr.py"    = [ "F841" ]         # assigned to but never used
@@ -116,6 +116,8 @@ ignore = [
 "test/*.py"                     = [ "F401" ]         # imported but unused
 "test/colortest.py"             = [ "F403", "F405" ] # `import *` used
 "test/tooltest2.py"             = [ "F403", "F405" ] # `import *` used
+"test/*"                        = [ "ASYNC230" ]     # open() in async function
+"test/cmdtest_d/*"              = [ "ASYNC251" ]     # time.sleep() in async function
 "test/overlay/tree/*"           = [ "ALL" ]
 
 [tool.pylint.format]
