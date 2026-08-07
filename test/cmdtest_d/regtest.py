@@ -496,7 +496,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 		gldict = globals()
 		for k in rt_data:
-			gldict[k] = rt_data[k][coin] if coin in rt_data[k] else None
+			gldict[k] = rt_data[k].get(coin, None)
 
 		self.use_bdb_wallet = self.bdb_wallet or coin != 'btc'
 

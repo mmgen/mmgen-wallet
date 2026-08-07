@@ -153,11 +153,11 @@ class TokenNew(TokenBase, New):
 				method = 'eth_estimateGas',
 				from_addr = self.inputs[0].addr,
 				data = data)
-		except Exception as e:
+		except Exception:
 			ymsg(
 				'Unable to estimate gas limit via node. '
 				'Please retry with --gas set to an integer value, or ‘fallback’ for a sane default')
-			raise e
+			raise
 
 		return int(res, 16)
 

@@ -75,7 +75,7 @@ def gen_arg_tuple(cfg, func, text):
 		'cfg':        cfg}
 
 	for arg in func.__code__.co_varnames:
-		yield d[arg] if arg in d else text
+		yield d.get(arg, text)
 
 def make_usage_str(cfg, *, caller):
 	def gen():
