@@ -106,12 +106,13 @@ class wallet(wallet):
 				msg(f'Incorrect master checksum ({lines[0]}) in {desc} data')
 				return False
 
-			chk = make_chksum_6(' '.join(lines[1:]))
-			if not self.cfg._util.compare_chksums(lines[0], 'master', chk, 'computed',
-						hdr='For wallet master checksum', verbose=True):
-				return False
-
-			return True
+			return self.cfg._util.compare_chksums(
+				lines[0],
+				'master',
+				make_chksum_6(' '.join(lines[1:])),
+				'computed',
+				hdr = 'For wallet master checksum',
+				verbose = True)
 
 		lines = self.fmt_data.splitlines()
 		if not check_master_chksum(lines, self.desc):

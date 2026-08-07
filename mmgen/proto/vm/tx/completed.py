@@ -30,9 +30,7 @@ class Completed:
 
 	def check_sigs(self): # TODO
 		from ....util import is_hex_str
-		if is_hex_str(self.serialized):
-			return True
-		return False
+		return is_hex_str(self.serialized)
 
 	def check_pubkey_scripts(self):
 		pass

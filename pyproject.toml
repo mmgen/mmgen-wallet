@@ -34,7 +34,6 @@ ignore = [
 	"S102", # Use of `exec` detected
 	"S110", # `try`-`except`-`pass` detected, consider logging the exception
 	"SIM102", # Use a single `if` statement instead of nested `if` statements
-	"SIM103", # Return the negated condition directly
 	"SIM114", # Combine `if` branches using logical `or` operator
 	"SIM115", # Use a context manager for opening files
 	"SIM118", # Use `key in dict` instead of `key in dict.keys()`

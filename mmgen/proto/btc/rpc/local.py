@@ -406,10 +406,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 			except:
 				pass
 
-			if self.cfg.test_suite and not self.chain == 'regtest':
-				return True
-
-			return False
+			return self.cfg.test_suite and not self.chain == 'regtest'
 
 		return locals()[info_id]()
 
