@@ -98,10 +98,9 @@ class CmdTestAutosignBase(CmdTestBase):
 		if hasattr(self, 'txdev'):
 			del self.txdev
 
-		if not self.cfg.no_daemon_stop:
-			if gc.platform == 'darwin':
-				for label in (self.asi.dev_label, self.asi.macos_ramdisk.label):
-					self._macOS_eject_disk(label)
+		if (not self.cfg.no_daemon_stop) and gc.platform == 'darwin':
+			for label in (self.asi.dev_label, self.asi.macos_ramdisk.label):
+				self._macOS_eject_disk(label)
 
 	def _create_autosign_instances(self, create_dirs):
 		d = {'offline': {'name':'asi'}}

@@ -73,11 +73,10 @@ class Autosign:
 
 	def __init__(self, cfg, *, cmd=None):
 
-		if cfg.mnemonic_fmt:
-			if cfg.mnemonic_fmt not in self.mn_fmts:
-				die(1, '{!r}: invalid mnemonic format (must be one of: {})'.format(
-					cfg.mnemonic_fmt,
-					fmt_list(self.mn_fmts, fmt='no_spc')))
+		if cfg.mnemonic_fmt and cfg.mnemonic_fmt not in self.mn_fmts:
+			die(1, '{!r}: invalid mnemonic format (must be one of: {})'.format(
+				cfg.mnemonic_fmt,
+				fmt_list(self.mn_fmts, fmt='no_spc')))
 
 		match gc.platform:
 			case 'linux':

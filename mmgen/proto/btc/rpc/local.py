@@ -316,10 +316,9 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 			self.auth = auth_data(user, passwd)
 			return
 
-		if self.has_auth_cookie:
-			if cookie := self.get_daemon_auth_cookie():
-				self.auth = auth_data(*cookie.split(':'))
-				return
+		if self.has_auth_cookie and (cookie := self.get_daemon_auth_cookie()):
+			self.auth = auth_data(*cookie.split(':'))
+			return
 
 		die(1, '\n\n' + fmt(no_credentials_errmsg, strip_char='\t', indent='  ').format(
 			proto_name = self.proto.name,

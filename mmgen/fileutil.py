@@ -40,11 +40,10 @@ def check_or_create_dir(path):
 	try:
 		os.listdir(path)
 	except:
-		if os.getenv('MMGEN_TEST_SUITE'):
-			if os.path.exists(path): # path is a link or regular file
-				from subprocess import run
-				run(['rm', '-rf', str(path)])
-				set_vt100()
+		if os.getenv('MMGEN_TEST_SUITE') and os.path.exists(path): # path is a link or regular file
+			from subprocess import run
+			run(['rm', '-rf', str(path)])
+			set_vt100()
 		try:
 			os.makedirs(path, 0o700)
 		except:
@@ -83,9 +82,8 @@ def _check_file_type_and_access(fname, ftype, *, blkdev_ok=False):
 			(stat.S_ISREG, 'regular file'),
 			(stat.S_ISLNK, 'symbolic link')
 		]
-		if blkdev_ok:
-			if not gc.platform in ('win32',):
-				ok_types.append((stat.S_ISBLK, 'block device'))
+		if blkdev_ok and gc.platform != 'win32':
+			ok_types.append((stat.S_ISBLK, 'block device'))
 
 	try:
 		mode = os.stat(fname).st_mode

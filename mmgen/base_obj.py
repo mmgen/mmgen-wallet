@@ -117,12 +117,11 @@ class Lockable(AttrCtrl):
 			val = getattr(self, name)
 			if name not in (self._set_ok + self._reset_ok):
 				raise AttributeError(f'attribute {name!r} of {type(self).__name__} object is read-only')
-			elif name not in self._reset_ok:
-				if not (
+			elif name not in self._reset_ok and not (
 					(val != 0 and not val) or
 					(self._use_class_attr and name not in self.__dict__)):
-					raise AttributeError(
-						f'attribute {name!r} of {type(self).__name__} object is already set,'
-						+ ' and resetting is forbidden')
+				raise AttributeError(
+					f'attribute {name!r} of {type(self).__name__} object is already set,'
+					+ ' and resetting is forbidden')
 
 		return AttrCtrl.__setattr__(self, name, value)

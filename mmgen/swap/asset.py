@@ -31,13 +31,12 @@ class SwapAsset:
 			fs = '%s{:10} {:23} {:9} {}' % indent
 			yield fs.format('ASSET', 'DESCRIPTION', 'STATUS', 'CONTRACT ADDRESS')
 			for k, v in self.assets_data.items():
-				if not k in self.blacklisted:
-					if k in self.send or k in self.recv:
-						yield fs.format(
-							k,
-							v.desc,
-							'tested' if v.tested else 'untested',
-							self.evm_contracts.get(k,'-'))
+				if not k in self.blacklisted and (k in self.send or k in self.recv):
+					yield fs.format(
+						k,
+						v.desc,
+						'tested' if v.tested else 'untested',
+						self.evm_contracts.get(k,'-'))
 
 		def gen_bad():
 			if self.blacklisted:

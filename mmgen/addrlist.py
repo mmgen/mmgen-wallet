@@ -222,9 +222,8 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		if self.al_id is None:
 			return
 
-		if type(self) is ViewKeyAddrList:
-			if not 'viewkey' in self.al_id.mmtype.extra_attrs:
-				die(1, f'viewkeys not supported for address type {self.al_id.mmtype.desc!r}')
+		if type(self) is ViewKeyAddrList and not 'viewkey' in self.al_id.mmtype.extra_attrs:
+			die(1, f'viewkeys not supported for address type {self.al_id.mmtype.desc!r}')
 
 		self.id_str = AddrListIDStr(self)
 

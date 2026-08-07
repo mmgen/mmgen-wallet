@@ -198,9 +198,8 @@ class Signable:
 				self.die_wrong_num_txs('unsent_raw', desc='unsent')
 			if len(self.unsent) > 1:
 				self.die_wrong_num_txs('unsent')
-			if self.unsent:
-				if self.unsent[0].stem != self.unsent_raw[0].stem:
-					die(1, f'{self.unsent[0]}, {self.unsent_raw[0]}: file mismatch')
+			if self.unsent and self.unsent[0].stem != self.unsent_raw[0].stem:
+				die(1, f'{self.unsent[0]}, {self.unsent_raw[0]}: file mismatch')
 			return self.unsent_raw + self.unsent
 
 		def shred_abortable(self):

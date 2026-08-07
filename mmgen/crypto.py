@@ -116,10 +116,9 @@ class Crypto:
 	def decrypt_seed(self, enc_seed, key, *, seed_id, key_id):
 		self.util.vmsg_r('Checking key...')
 		chk1 = make_chksum_8(key)
-		if key_id:
-			if not self.util.compare_chksums(key_id, 'key ID', chk1, 'computed'):
-				msg('Incorrect passphrase or hash preset')
-				return False
+		if key_id and not self.util.compare_chksums(key_id, 'key ID', chk1, 'computed'):
+			msg('Incorrect passphrase or hash preset')
+			return False
 
 		dec_seed = self.decrypt_data(enc_seed, key, desc='seed')
 		chk2     = make_chksum_8(dec_seed)

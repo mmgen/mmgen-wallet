@@ -159,10 +159,9 @@ async def process_tx(tx):
 
 	txcfg = Config({'_clone': cfg, 'proto': tx.proto, 'coin': tx.proto.coin})
 
-	if not post_send_op:
-		if cfg.tx_proxy:
-			from .tx.tx_proxy import check_client
-			check_client(txcfg)
+	if (not post_send_op) and cfg.tx_proxy:
+		from .tx.tx_proxy import check_client
+		check_client(txcfg)
 
 	from .rpc import rpc_init
 	tx.rpc = await rpc_init(txcfg)
@@ -177,9 +176,8 @@ async def process_tx(tx):
 
 		if not cfg.yes:
 			tx.info.view_with_prompt('View transaction details?')
-			if tx.add_comment(): # edits an existing comment, returns true if changed
-				if not cfg.autosign:
-					tx.file.write(ask_write_default_yes=True)
+			if tx.add_comment() and not cfg.autosign: # edits existing comment, returns true if changed
+				tx.file.write(ask_write_default_yes=True)
 
 	return await tx.send(txcfg, asi, batch=batch)
 

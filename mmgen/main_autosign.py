@@ -135,9 +135,8 @@ if cmd in ('enable_swap', 'disable_swap', 'list_led', 'test_led'):
 if cmd not in Autosign.cmds + Autosign.util_cmds:
 	die(1, f'‘{cmd}’: unrecognized command')
 
-if cfg.xmrwallets:
-	if cmd not in ('setup', 'xmr_setup'):
-		die(1, '--xmrwallets is valid only for the ‘setup’ and ‘xmr_setup’ operations')
+if cfg.xmrwallets and cmd not in ('setup', 'xmr_setup'):
+	die(1, '--xmrwallets is valid only for the ‘setup’ and ‘xmr_setup’ operations')
 
 if cmd != 'setup':
 	for opt in ('seed_len', 'mnemonic_fmt', 'keys_from_file'):

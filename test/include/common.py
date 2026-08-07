@@ -174,9 +174,8 @@ def clean(cfgs, tmpdir_ids=None, extra_dirs=[]):
 
 	def clean_extra_dirs():
 		for d in extra_dirs:
-			if os.path.exists(d):
-				if cleandir(d):
-					yield os.path.relpath(d)
+			if os.path.exists(d) and cleandir(d):
+				yield os.path.relpath(d)
 
 	for clean_func, list_fmt in (
 				(clean_tmpdirs, 'no_quotes'),

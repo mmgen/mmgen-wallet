@@ -143,10 +143,9 @@ class Base(MMGenObject):
 		return init_info(self.cfg, self)
 
 	def check_correct_chain(self):
-		if hasattr(self, 'rpc'):
-			if self.chain != self.rpc.chain:
-				die('TransactionChainMismatch',
-					f'Transaction is for {self.chain}, but coin daemon chain is {self.rpc.chain}!')
+		if hasattr(self, 'rpc') and self.chain != self.rpc.chain:
+			die('TransactionChainMismatch',
+				f'Transaction is for {self.chain}, but coin daemon chain is {self.rpc.chain}!')
 
 	def sum_inputs(self):
 		return sum(e.amt for e in self.inputs)

@@ -226,12 +226,11 @@ class CfgFileSampleUsr(cfg_file_sample):
 		self.copy_system_data(self.fn)
 
 	def parse_metadata(self):
-		if self.data:
-			if m := re.match(r'# Version (\d+) ([a-f0-9]{40})$', self.data[-1]):
-				self.ver = m[1]
-				self.chksum = m[2]
-				self.data = self.data[:-1] # remove metadata line
-				return True
+		if self.data and (m := re.match(r'# Version (\d+) ([a-f0-9]{40})$', self.data[-1])):
+			self.ver = m[1]
+			self.chksum = m[2]
+			self.data = self.data[:-1] # remove metadata line
+			return True
 
 	def diff(self, a_tup, b_tup): # a=user, b=system
 		a = [i.name for i in a_tup]#[3:] # Debug
