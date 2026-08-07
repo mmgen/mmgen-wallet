@@ -20,7 +20,7 @@ def build_libsecp256k1():
 	cache_path    = home.joinpath('.cache', 'mmgen')
 	src_path      = home.joinpath('.cache', 'mmgen', 'secp256k1')
 	lib_file      = src_path.joinpath('.libs', 'libsecp256k1.dll.a')
-	root = Path().resolve().anchor
+	root = Path().cwd().anchor
 	installed_lib_file = Path(root, 'msys64', 'ucrt64', 'lib', 'libsecp256k1.dll.a')
 
 	if installed_lib_file.exists():
