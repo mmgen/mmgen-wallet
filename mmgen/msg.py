@@ -196,7 +196,7 @@ class coin_msg:
 			fs_hdr = '{:%s} {}' % max(len(v[0]) for v in hdr_data.values())
 			fs_sig = '%s{:%s} %s{}' % (
 				' ' * (2 if req_addr else 5),
-				max(len(labels[k]) for v in self.sigs.values() for k in v.keys()),
+				max(len(labels[k]) for v in self.sigs.values() for k in v),
 				self.msg_cls.sigdata_pfx or ''
 			) if self.sigs else None
 

@@ -35,7 +35,6 @@ ignore = [
 	"S110", # `try`-`except`-`pass` detected, consider logging the exception
 	"SIM102", # Use a single `if` statement instead of nested `if` statements
 	"SIM114", # Combine `if` branches using logical `or` operator
-	"SIM118", # Use `key in dict` instead of `key in dict.keys()`
 	"SIM201", # Use `path.stat().st_mode & S_IWUSR | S_IRUSR != S_IWUSR | S_IRUSR` instead of `not path.stat().st_mode & S_IWUSR | S_IRUSR == S_IWUSR | S_IRUSR`
 	"SIM210", # Use `bool(...)` instead of `True if ... else False`
 	"SIM401", # Use `d.get(arg, text)` instead of an `if` block

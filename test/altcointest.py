@@ -269,7 +269,7 @@ class TestCoinInfo(CoinInfo):
 			if isinstance(e['p2sh_info'], tuple):
 				fix_ver_info(e, 'p2sh_info')
 
-			for k in e.keys():
+			for k in e:
 				e[k] = repr(e[k])
 				e[k] = re.sub(r"'0x(..)'", r'0x\1', e[k])
 				e[k] = re.sub(r"'0x(....)'", r'0x\1', e[k])
