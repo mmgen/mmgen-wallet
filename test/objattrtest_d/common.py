@@ -25,12 +25,12 @@ seed_bin = getrand(32)
 # use the constructors here! otherwise reassignment test might fail when
 # reassignment would otherwise succeed
 sample_objs = {
-	'int':       int(1),
+	'int':       1,
 	'Decimal':   Decimal('0.01'),
 	'NoneType':  None,
-	'bool':      bool(True),
-	'str':       str('foo'),
-	'dict':      dict({'a': 1}),
+	'bool':      True,
+	'str':       'foo',
+	'dict':      {'a': 1},
 	'list':      [1],
 	'tuple':     (1, 2),
 	'bytes':     bytes(1),

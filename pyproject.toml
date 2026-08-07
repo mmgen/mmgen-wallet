@@ -21,7 +21,6 @@ ignore = [
 	"B018", # Found useless expression. Either assign it to a variable or remove it.
 	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged
 	"BLE001", # Do not catch blind exception: `Exception`
-	"C418", # Unnecessary dict literal passed to `dict()` (remove the outer call to `dict()`)
 	"E401", # multiple imports per line
 	"E402", # module import not top of file
 	"E701", # multiple statements per line
@@ -75,9 +74,6 @@ ignore = [
 	"UP004", # Class `Binary` inherits from `object`
 	"UP006", # Use `list` instead of `List` for type annotation
 	"UP008", # Use `super()` instead of `super(__class__, self)`
-	"UP018", # Unnecessary `bool` call (rewrite as a literal)
-	"UP018", # Unnecessary `int` call (rewrite as a literal)
-	"UP018", # Unnecessary `str` call (rewrite as a literal)
 	"UP022", # Prefer `capture_output` over sending `stdout` and `stderr` to `PIPE`
 	"UP030", # Use implicit references for positional format fields
 	"UP031", # Use format specifiers instead of percent format
