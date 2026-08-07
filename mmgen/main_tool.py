@@ -348,11 +348,11 @@ def process_result(ret, *, pager=False, print_result=False):
 def get_cmd_cls(cmd):
 	for modname, cmdlist in mods.items():
 		if cmd in cmdlist:
-			return getattr(importlib.import_module(f'mmgen.tool.{modname}'), 'tool_cmd')
+			return importlib.import_module(f'mmgen.tool.{modname}').tool_cmd
 	return False
 
 def get_mod_cls(modname):
-	return getattr(importlib.import_module(f'mmgen.tool.{modname}'), 'tool_cmd')
+	return importlib.import_module(f'mmgen.tool.{modname}').tool_cmd
 
 if gc.prog_name.endswith('-tool'):
 

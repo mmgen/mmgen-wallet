@@ -70,9 +70,8 @@ def get_backends(pubkey_type):
 
 def get_pubkey_type_cls(pubkey_type):
 	import importlib
-	return getattr(
-		importlib.import_module(f'mmgen.proto.{backend_data[pubkey_type]["package"]}.keygen'),
-		'backend')
+	return importlib.import_module(
+		f'mmgen.proto.{backend_data[pubkey_type]["package"]}.keygen').backend
 
 def _check_backend(cfg, backend, pubkey_type, *, desc='keygen backend'):
 

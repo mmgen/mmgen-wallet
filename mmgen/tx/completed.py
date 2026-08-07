@@ -64,7 +64,7 @@ class Completed(Base):
 		from .unsigned import Unsigned, AutomountUnsigned
 		from .online import Sent, AutomountSent
 		for cls in (Unsigned, AutomountUnsigned, Sent, AutomountSent):
-			if ext == getattr(cls, 'ext'):
+			if ext == cls.ext:
 				return cls
 
 		if proto.tokensym:
@@ -73,7 +73,7 @@ class Completed(Base):
 		else:
 			from .signed import Signed, AutomountSigned
 		for cls in (Signed, AutomountSigned):
-			if ext == getattr(cls, 'ext'):
+			if ext == cls.ext:
 				return cls
 
 	def check_swap_memo(self):

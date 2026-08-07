@@ -106,8 +106,8 @@ if cfg.list_subtests:
 		for test in all_tests:
 			mod = importlib.import_module(f'test.{test_subdir}.{test}')
 			if hasattr(mod, 'unit_tests'):
-				t = getattr(mod, 'unit_tests')
-				subtests = [k for k, v in t.__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
+				subtests = [k for k, v in mod.unit_tests.__dict__.items()
+					if type(v).__name__ == 'function' and k[0] != '_']
 				yield fs.format(test, ' '.join(f'{subtest}' for subtest in subtests))
 			else:
 				yield test
@@ -173,7 +173,7 @@ def run_test(test, subtest=None):
 			silence()
 
 		if hasattr(t, '_pre_subtest'):
-			getattr(t, '_pre_subtest')(test, subtest, UnitTestHelpers(subtest))
+			t._pre_subtest(test, subtest, UnitTestHelpers(subtest))
 
 		try:
 			func = getattr(t, subtest.replace('-', '_'))
@@ -198,7 +198,7 @@ def run_test(test, subtest=None):
 			raise
 
 		if hasattr(t, '_post_subtest'):
-			getattr(t, '_post_subtest')(test, subtest, UnitTestHelpers(subtest))
+			t._post_subtest(test, subtest, UnitTestHelpers(subtest))
 
 		if getattr(t, 'silence_output', False):
 			end_silence()
@@ -217,7 +217,7 @@ def run_test(test, subtest=None):
 	mod = importlib.import_module(f'test.{test_subdir}.{test}')
 
 	if hasattr(mod, 'unit_tests'): # new class-based API
-		t = getattr(mod, 'unit_tests')()
+		t = mod.unit_tests()
 		altcoin_deps = getattr(t, 'altcoin_deps', ())
 		win_skip = getattr(t, 'win_skip', ())
 		mac_skip = getattr(t, 'mac_skip', ())

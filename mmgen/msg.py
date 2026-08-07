@@ -365,9 +365,8 @@ def _get_obj(clsname, cfg, *args, coin=None, network='mainnet', infile=None, dat
 		coin_msg.base.get_proto_from_file(cfg, infile))
 
 	try:
-		msg_cls = getattr(
-			importlib.import_module(f'mmgen.proto.{proto.base_proto_coin.lower()}.msg'),
-			'coin_msg')
+		msg_cls = importlib.import_module(
+			f'mmgen.proto.{proto.base_proto_coin.lower()}.msg').coin_msg
 	except:
 		die(1, f'Message signing operations not supported for {proto.base_proto} protocol')
 

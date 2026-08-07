@@ -183,7 +183,7 @@ def do_loop():
 	import importlib
 	modname = f'test.objtest_d.{proto.coin.lower()}_{proto.network}'
 	mod = importlib.import_module(modname)
-	test_data = getattr(mod, 'tests')
+	test_data = mod.tests
 	gmsg(f'Running data object tests for {proto.coin} {proto.network}')
 
 	clr = None

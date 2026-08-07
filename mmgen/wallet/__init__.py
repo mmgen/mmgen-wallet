@@ -79,15 +79,12 @@ def get_wallet_cls(
 		ext         = None,
 		die_on_fail = False):
 
-	return getattr(
-		importlib.import_module('mmgen.wallet.{}'.format(
+	return importlib.import_module('mmgen.wallet.{}'.format(
 			wtype or
 			get_wallet_data(
 				fmt_code    = fmt_code,
 				ext         = ext,
-				die_on_fail = die_on_fail).type
-		)),
-		'wallet')
+				die_on_fail = die_on_fail).type)).wallet
 
 def get_wallet_extensions(key):
 	return {
@@ -109,7 +106,7 @@ def format_fmt_codes():
 	return '\n'.join(ret) + '\n'
 
 def _get_me(modname):
-	return MMGenObject.__new__(getattr(importlib.import_module(f'mmgen.wallet.{modname}'), 'wallet'))
+	return MMGenObject.__new__(importlib.import_module(f'mmgen.wallet.{modname}').wallet)
 
 def Wallet(
 	cfg,

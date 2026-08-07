@@ -167,7 +167,7 @@ def do_loop():
 	import importlib
 	modname = f'test.objattrtest_d.{proto.coin.lower()}_{proto.network}'
 	mod = importlib.import_module(modname)
-	test_data = getattr(mod, 'tests')
+	test_data = mod.tests
 	gmsg(f'Running immutable attribute tests for {proto.coin} {proto.network}')
 
 	utests = cfg._args

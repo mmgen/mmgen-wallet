@@ -113,7 +113,7 @@ class TxMsg(BaseMessage):
 		msg_cls = getattr(cls.msgs_cls, id.removeprefix('/types.'))
 		me = BaseMessage.__new__(msg_cls)
 		me.id = id
-		me.body = getattr(msg_cls, 'Body').loads(bodyBytes)
+		me.body = msg_cls.Body.loads(bodyBytes)
 		return me
 
 @dataclass

@@ -577,7 +577,7 @@ class Config(Lockable):
 
 		if 'usage' in self._uopts: # requires self.coin
 			import importlib
-			getattr(importlib.import_module(UserOpts.help_pkg), 'usage')(self) # exits
+			importlib.import_module(UserOpts.help_pkg).usage(self) # exits
 
 		# self.color is finalized, so initialize color:
 		if self.color: # MMGEN_DISABLE_COLOR sets this to False

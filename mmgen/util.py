@@ -408,12 +408,12 @@ class oneshot_warning:
 
 		def do_warning():
 			from . import color
-			msg(getattr(color, getattr(wcls, 'color'))('WARNING: ' + getattr(wcls, 'message').format(*fmt_args)))
+			msg(getattr(color, wcls.color)('WARNING: ' + wcls.message.format(*fmt_args)))
 
 		if not hasattr(wcls, 'data'):
 			setattr(wcls, 'data', [])
 
-		data = getattr(wcls, 'data')
+		data = wcls.data
 		condition = (div in data) if reverse else (not div in data)
 
 		if not div in data:
