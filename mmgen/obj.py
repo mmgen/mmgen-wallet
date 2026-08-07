@@ -213,7 +213,7 @@ class MMGenListItem(MMGenObject):
 		return object.__setattr__(self, name, value)
 
 	def _asdict(self):
-		return dict((k, v) for k, v in self.__dict__.items() if k in self.valid_attrs)
+		return {k: v for k, v in self.__dict__.items() if k in self.valid_attrs}
 
 class MMGenRange(tuple, InitErrors, MMGenObject):
 

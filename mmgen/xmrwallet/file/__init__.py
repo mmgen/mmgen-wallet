@@ -23,7 +23,7 @@ class MoneroMMGenFile:
 
 	def make_chksum(self, *, keys=None):
 		res = json.dumps(
-			dict((k, v) for k, v in self.data._asdict().items() if (not keys or k in keys)),
+			{k: v for k, v in self.data._asdict().items() if (not keys or k in keys)},
 			cls = json_encoder)
 		return make_chksum_N(res, rounds=1, nchars=self.chksum_nchars, upper=False)
 

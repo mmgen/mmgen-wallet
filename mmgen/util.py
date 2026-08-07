@@ -385,7 +385,7 @@ def is_utf8(s):
 		return True
 
 def remove_whitespace(s, *, ws='\t\r\n '):
-	return s.translate(dict((ord(e), None) for e in ws))
+	return s.translate({ord(e): None for e in ws})
 
 def strip_comment(line):
 	return re.sub('#.*', '', line).rstrip()

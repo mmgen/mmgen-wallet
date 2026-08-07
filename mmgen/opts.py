@@ -29,10 +29,10 @@ def negated_opts(opts, data={}):
 	if data:
 		return data
 	else:
-		data.update(dict(
-			((k[3:] if k.startswith('no-') else f'no-{k}'), v)
+		data.update({
+			(k[3:] if k.startswith('no-') else f'no-{k}'): v
 				for k, v in opts.items()
-					if len(k) > 1 and not v.has_parm))
+					if len(k) > 1 and not v.has_parm})
 		return data
 
 def get_opt_by_substring(opt, opts):

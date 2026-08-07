@@ -191,7 +191,7 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 
 	@property
 	def mmid_ordered_dict(self):
-		return dict((x['mmid'], {'addr': x['addr'], 'comment': x['comment']}) for x in self.sorted_list)
+		return {x['mmid']: {'addr': x['addr'], 'comment': x['comment']} for x in self.sorted_list}
 
 	async def get_label_addr_pairs(self):
 		return [label_addr_pair(

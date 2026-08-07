@@ -364,7 +364,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 				self.cfg, fn, desc='daemon config file', silent=not self.cfg.verbose)
 		except:
 			self.cfg._util.vmsg(f'Warning: {fn!r} does not exist or is unreadable')
-			return dict((k, None) for k in req_keys)
+			return {k: None for k in req_keys}
 
 		def gen():
 			for key in req_keys:
