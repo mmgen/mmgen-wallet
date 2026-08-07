@@ -17,7 +17,7 @@ proto.rune.tx.protobuf: transaction serialization for THORChain protocol
 from decimal import Decimal
 from collections import namedtuple
 from dataclasses import dataclass #, field
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 from pure_protobuf.annotations import Field
 from pure_protobuf.message import BaseMessage
 
@@ -107,7 +107,7 @@ class Messages:
 		class Body(BaseMessage):
 			fromAddress: Annotated[bytes, Field(1)]
 			toAddress:   Annotated[bytes, Field(2)]
-			amount:      Annotated[List[Coin], Field(3)]
+			amount:      Annotated[list[Coin], Field(3)]
 
 		id:   Annotated[str, Field(1)] # '/types.MsgSend'
 		body: Annotated[Body, Field(2)]
@@ -123,7 +123,7 @@ class Messages:
 	# }
 		@dataclass
 		class Body(BaseMessage):
-			coins:  Annotated[List[CoinWithAsset], Field(1)]
+			coins:  Annotated[list[CoinWithAsset], Field(1)]
 			memo:   Annotated[str, Field(2)]
 			signer: Annotated[bytes, Field(3)]
 
@@ -138,7 +138,7 @@ class RuneTxMsg(TxMsg):
 
 @dataclass
 class RuneTxBody(BaseMessage):
-	messages:                    Annotated[List[RuneTxMsg], Field(1)]
+	messages:                    Annotated[list[RuneTxMsg], Field(1)]
 	memo:                        Annotated[Optional[str], Field(2)] = None
 	timeoutHeight:               Annotated[Optional[int], Field(3)] = None
 	extensionOptions:            Annotated[Optional[bytes], Field(4)] = None
@@ -148,7 +148,7 @@ class RuneTxBody(BaseMessage):
 class RuneTx(Tx):
 	body:       Annotated[RuneTxBody, Field(1)]
 	authInfo:   Annotated[AuthInfo, Field(2)]
-	signatures: Annotated[List[bytes], Field(3)]
+	signatures: Annotated[list[bytes], Field(3)]
 
 def amt_to_base_unit(amt, *, decimals):
 	return int(Decimal(amt) * (Decimal(10) ** decimals))

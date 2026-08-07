@@ -21,7 +21,7 @@ from hashlib import sha256
 from dataclasses import dataclass
 from pure_protobuf.annotations import Field
 from pure_protobuf.message import BaseMessage
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 from enum import IntEnum
 
 class SignMode(IntEnum):
@@ -52,7 +52,7 @@ class ModeInfo(BaseMessage):
 	@dataclass
 	class Multi(BaseMessage):
 		bitarray:  Annotated[bytes, Field(1)]
-		modeInfos: Annotated[List[bytes], Field(2)]
+		modeInfos: Annotated[list[bytes], Field(2)]
 
 	single: Annotated[Optional[Single], Field(1)] = None
 	multi:  Annotated[Optional[Multi], Field(2)] = None
@@ -74,14 +74,14 @@ class Coin(BaseMessage):
 
 @dataclass
 class Fee(BaseMessage):
-	amount:   Annotated[Optional[List[Coin]], Field(1)] = None # = field(default_factory=list)
+	amount:   Annotated[Optional[list[Coin]], Field(1)] = None # = field(default_factory=list)
 	gasLimit: Annotated[Optional[int], Field(2)] = None
 	payer:    Annotated[Optional[str], Field(3)] = None
 	granter:  Annotated[Optional[str], Field(4)] = None
 
 @dataclass
 class AuthInfo(BaseMessage):
-	signerInfos: Annotated[List[SignerInfo], Field(1)]
+	signerInfos: Annotated[list[SignerInfo], Field(1)]
 	fee:         Annotated[Optional[Fee], Field(2)] = None
 	tip:         Annotated[Optional[int], Field(3)] = None
 
@@ -93,7 +93,7 @@ class AuthInfo(BaseMessage):
 class RawTx(BaseMessage): # TxRaw (cosmjs)
 	bodyBytes:     Annotated[bytes, Field(1)]
 	authInfoBytes: Annotated[bytes, Field(2)]
-	signatures:    Annotated[List[bytes], Field(3)]
+	signatures:    Annotated[list[bytes], Field(3)]
 
 # SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT
 @dataclass
@@ -120,7 +120,7 @@ class TxMsg(BaseMessage):
 class Tx(BaseMessage):
 	body:       Annotated[bytes, Field(1)]
 	authInfo:   Annotated[bytes, Field(2)]
-	signatures: Annotated[List[bytes], Field(3)]
+	signatures: Annotated[list[bytes], Field(3)]
 
 	@property
 	def raw(self):

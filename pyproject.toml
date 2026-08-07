@@ -36,7 +36,6 @@ ignore = [
 	"SIM102", # Use a single `if` statement instead of nested `if` statements
 	"SIM114", # Combine `if` branches using logical `or` operator
 	"SIM905", # Consider using a list literal instead of `str.split`
-	"UP006", # Use `list` instead of `List` for type annotation
 	"UP022", # Prefer `capture_output` over sending `stdout` and `stderr` to `PIPE`
 	"UP030", # Use implicit references for positional format fields
 	"UP031", # Use format specifiers instead of percent format
