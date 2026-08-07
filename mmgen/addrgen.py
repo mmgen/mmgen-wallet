@@ -20,7 +20,7 @@
 addrgen: Address generation initialization code for the MMGen suite
 """
 
-from .keygen import KeyGenerator # convenience import
+from .keygen import KeyGenerator # noqa: F401 (convenience import)
 
 # decorator for to_addr() and to_viewkey()
 def check_data(orig_func):

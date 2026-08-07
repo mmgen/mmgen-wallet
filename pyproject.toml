@@ -100,9 +100,6 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"mmgen/proto/eth/pyethereum/*"  = [ "F401" ]         # imported but unused
-"mmgen/proto/eth/rlp/sedes/*"   = [ "F401" ]         # imported but unused
-"mmgen/addrgen.py"              = [ "F401" ]         # imported but unused
 "mmgen/tool/*"                  = [
 	"F722", # Syntax error in forward annotation
 	"F821"  # Undefined name `sstr`
