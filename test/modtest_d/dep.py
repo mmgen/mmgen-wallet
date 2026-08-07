@@ -9,7 +9,7 @@ test.modtest_d.dep: dependency unit tests for the MMGen suite
 
 import sys
 
-from subprocess import run, PIPE
+from subprocess import run
 
 from mmgen.util import msg, rmsg, ymsg, gmsg
 from mmgen.exception import NoLEDSupport
@@ -29,7 +29,7 @@ class unit_tests:
 		except ModuleNotFoundError as e:
 			ymsg(f'{type(e).__name__}: {e}')
 			msg('Installing secp256k1 module locally...')
-			run(['python3', './setup.py', 'build_ext', '--inplace'], stdout=PIPE, stderr=PIPE, check=True)
+			run(['python3', './setup.py', 'build_ext', '--inplace'], capture_output=True, check=True)
 			ymsg('The module has been installed.  Try re-running the test')
 			sys.exit(1)
 		return False
@@ -148,7 +148,7 @@ class unit_tests:
 				'--stdout',
 				init_proto(cfg, 'eth').checksummed_addr('deadbeef'*5),
 			]
-			cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True)
+			cp = run(cmd, capture_output=True, text=True)
 			vmsg(cp.stderr)
 			if cp.returncode:
 				msg(cp.stderr)

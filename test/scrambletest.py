@@ -22,7 +22,7 @@ test/scrambletest.py: seed scrambling and addrlist data generation tests for all
 """
 
 import os, time
-from subprocess import run, PIPE
+from subprocess import run
 from collections import namedtuple
 
 try:
@@ -107,7 +107,7 @@ def make_cmd(progname, opts, add_opts, args):
 	return ['python3'] + cvrg_opts + [f'cmds/{progname}', '-qS'] + opts + add_opts + [words_file] + args + ['1']
 
 def run_cmd(cmd):
-	cp = run(cmd, stdout=PIPE, stderr=PIPE, text=True, env=run_env)
+	cp = run(cmd, capture_output=True, text=True, env=run_env)
 	if cp.returncode != 0:
 		die(2, f'\nSpawned program exited with error code {cp.returncode}:\n{cp.stderr}')
 	return cp.stdout.splitlines()

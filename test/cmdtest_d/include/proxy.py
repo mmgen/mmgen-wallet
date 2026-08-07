@@ -13,7 +13,7 @@ test.cmdtest_d.include.proxy: SSH SOCKS proxy runner for the cmdtest.py test sui
 """
 
 import atexit
-from subprocess import run, PIPE
+from subprocess import run
 
 from mmgen.cfg import gc
 from mmgen.util import msg, die, fmt
@@ -77,7 +77,7 @@ class TestProxy:
 		if port_in_use(self.port):
 			omsg(f'Port {self.port} already in use. Assuming SSH SOCKS server is running')
 		else:
-			cp = run(a + b0 + b1, stdout=PIPE, stderr=PIPE, text=True)
+			cp = run(a + b0 + b1, capture_output=True, text=True)
 			if cp.stderr:
 				omsg(cp.stderr)
 			if cp.returncode == 0:

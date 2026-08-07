@@ -475,7 +475,7 @@ class VirtBlockDeviceMacOS(VirtBlockDeviceBase):
 		self.size = size
 
 	def _get_associations(self):
-		cp = run(['hdiutil', 'info'], stdout=PIPE, stderr=PIPE, text=True, check=False)
+		cp = run(['hdiutil', 'info'], capture_output=True, text=True, check=False)
 		if cp.returncode == 0:
 			lines = cp.stdout.splitlines()
 			out = [re.sub('.* ', '', s.strip()) for s in lines if re.match(r'image-path|/dev/', s)]

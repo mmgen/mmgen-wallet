@@ -89,7 +89,7 @@ def fork_cmd(cmd_name, args, opts, stdin_input):
 	vmsg('{} {}'.format(
 		green('Executing'),
 		cyan(' '.join(cmd))))
-	cp = run(cmd, input=stdin_input or None, stdout=PIPE, stderr=PIPE)
+	cp = run(cmd, input=stdin_input or None, capture_output=True)
 	try:
 		cmd_out = cp.stdout.decode()
 	except:

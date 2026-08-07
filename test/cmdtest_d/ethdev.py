@@ -837,7 +837,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			write_to_file(pwfile, '')
 			run(['rm', '-rf', self.keystore_dir])
 			cmd = f'geth account new --password={pwfile} --lightkdf --keystore {self.keystore_dir}'
-			if (cp := run(cmd.split(), stdout=PIPE, stderr=PIPE, text=True)).returncode:
+			if (cp := run(cmd.split(), capture_output=True, text=True)).returncode:
 				die(1, cp.stderr)
 
 		def make_genesis(signer_addr, prealloc_addr):
@@ -882,7 +882,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 
 		def init_genesis(fn):
 			cmd = f'{d.exec_fn} init --datadir {d.datadir} {fn}'
-			if (cp := run(cmd.split(), stdout=PIPE, stderr=PIPE, text=True)).returncode:
+			if (cp := run(cmd.split(), capture_output=True, text=True)).returncode:
 				die(1, cp.stderr)
 
 		d.stop(quiet=True)

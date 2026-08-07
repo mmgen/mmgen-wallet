@@ -247,7 +247,7 @@ class Daemon(Lockable):
 	@classmethod
 	def get_exec_version_str(cls):
 		try:
-			cp = run([cls.exec_fn, cls.version_info_arg], stdout=PIPE, stderr=PIPE, check=True, text=True)
+			cp = run([cls.exec_fn, cls.version_info_arg], capture_output=True, check=True, text=True)
 		except Exception as e:
 			die(2, f'{e}\nUnable to execute {cls.exec_fn}')
 

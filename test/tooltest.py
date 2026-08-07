@@ -266,7 +266,7 @@ class MMGenToolTestUtils:
 			else:
 				msg_r('Testing {:{w}}'.format(full_name+':', w=msg_w))
 
-		cp = run(sys_cmd, stdout=PIPE, stderr=PIPE)
+		cp = run(sys_cmd, capture_output=True)
 		out = cp.stdout
 		err = cp.stderr
 		if cfg.debug:
