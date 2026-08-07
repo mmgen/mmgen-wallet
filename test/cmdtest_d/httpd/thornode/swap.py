@@ -134,7 +134,7 @@ class ThornodeSwapServer(ThornodeServer):
 	def make_response_body(self, method, environ):
 
 		m = re.search(self.request_pat, request_uri(environ))
-		send_chain, send_asset, recv_chain, recv_asset, amt_atomic = m.groups()
+		send_chain, send_asset, _, recv_asset, amt_atomic = m.groups()
 
 		in_amt = UniAmt(int(amt_atomic), from_unit='satoshi')
 		out_amt = in_amt * (prices[send_asset] / prices[recv_asset])

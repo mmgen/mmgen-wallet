@@ -124,7 +124,6 @@ def silence():
 
 def end_silence():
 	if not cfg.verbose:
-		global stdout_save, stderr_save
 		sys.stdout = gv.stdout = stdout_save
 		sys.stderr = gv.stderr = stderr_save
 

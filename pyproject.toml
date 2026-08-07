@@ -24,20 +24,13 @@ ignore = [
 	"E722", # bare except
 	"I001", # Import block is un-sorted or un-formatted
 	"ISC004", # Unparenthesized implicit string concatenation in collection
-	"N999", # Invalid module name: 'import'
+	"N999", # Invalid module name: 'import'...
 	"PLC0206", # Extracting value from dictionary without calling `.items()`
-	"PLC3002", # Lambda expression called directly. Execute the expression inline instead.
-	"PLW0406", # Module `test.include.common` imports itself
-	"PLW0602", # Using global for `stderr_save` but no assignment is done
-	"PLW0602", # Using global for `stdout_save` but no assignment is done
 	"PLW1510", # `subprocess.run` without explicit `check` argument
 	"RET501", # Do not explicitly `return None` in function if it is the only possible return value
 	"RUF012", # Mutable default value for class attribute
-	"RUF013", # PEP 484 prohibits implicit `Optional`
 	"RUF015", # Prefer `next(s for s in res if 'ersion' in s)` over single element slice
 	"RUF022", # `__all__` is not sorted
-	"RUF046", # Value being cast to `int` is already an integer
-	"RUF059", # Unpacked variable `recv_chain` is never used
 	"RUF100", # Unused `noqa` directive (non-enabled: `F401`)
 	"S102", # Use of `exec` detected
 	"S110", # `try`-`except`-`pass` detected, consider logging the exception
@@ -66,12 +59,17 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+"mmgen/xmrwallet/__init__.py"   = [ "PLC3002" ]      # Lambda expression called directly
 "mmgen/tool/*"                  = [ "F821" ]         # Undefined name `sstr`
 "mmgen/tool/file.py"            = [ "B008" ]         # function call in dfl args
+"mmgen/tool/rpc.py"             = [ "RUF013" ]       # PEP 484 prohibits implicit `Optional`
 "mmgen/contrib/keccak.py"       = [ "FURB163" ]      # `math.log` -> `math.log2(state.lanew)`
 "examples/*"                    = [ "ASYNC230" ]     # open() in async function
 
-"test/include/common.py"        = [ "F821" ]         # undefined name 'cfg'
+"test/include/common.py" = [
+	"F821",   # undefined name 'cfg'
+	"PLW0406" # self-import
+]
 "test/misc/input_func.py"       = [ "F401" ]         # imported but unused
 "test/modtest_d/cashaddr.py"    = [ "F841" ]         # assigned to but never used
 "test/modtest_d/dep.py"         = [ "F401" ]         # imported but unused
