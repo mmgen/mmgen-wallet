@@ -354,7 +354,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 			self.daemon.cfg_file)
 
 	def get_daemon_cfg_option(self, req_key):
-		return list(self.get_daemon_cfg_options([req_key]).values())[0]
+		return next(iter(self.get_daemon_cfg_options([req_key]).values()))
 
 	def get_daemon_cfg_options(self, req_keys):
 

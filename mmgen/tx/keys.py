@@ -128,7 +128,7 @@ class TxKeys:
 					ignore_in_fmt = True,
 					passwd_file = self.passwdfile).seed
 			elif self.saved_seeds and subseeds_checked is False:
-				seed = self.saved_seeds[list(self.saved_seeds)[0]].subseed_by_seed_id(sid, print_msg=True)
+				seed = self.saved_seeds[next(iter(self.saved_seeds))].subseed_by_seed_id(sid, print_msg=True)
 				subseeds_checked = True
 				if not seed:
 					continue

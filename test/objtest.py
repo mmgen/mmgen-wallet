@@ -80,7 +80,7 @@ def run_test(mod, test, arg, input_data, arg1, exc_name):
 				del arg['arg']
 			else:
 				args = []
-				ret_chk = list(arg.values())[0] # assume only one key present
+				ret_chk = next(iter(arg.values())) # assume only one key present
 			if 'ret' in arg:
 				ret_chk = arg['ret']
 				del arg['ret']

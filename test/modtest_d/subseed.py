@@ -63,14 +63,14 @@ class unit_tests:
 			assert len(s_lines) == nSubseeds + 4, s
 
 			a = seed.subseed('2L').sid
-			b = [e for e in s_lines if ' 2L:' in e][0].strip().split()[1]
+			b = next(e for e in s_lines if ' 2L:' in e).strip().split()[1]
 			assert a == b, b
 
 			c = seed.subseed('2').sid
 			assert c == a, c
 
 			a = seed.subseed('5S').sid
-			b = [e for e in s_lines if ' 5S:' in e][0].strip().split()[3]
+			b = next(e for e in s_lines if ' 5S:' in e).strip().split()[3]
 			assert a == b, b
 
 			s = seed.subseeds.format(nSubseeds+1, nSubseeds+2)
@@ -79,7 +79,7 @@ class unit_tests:
 
 			ss_idx = str(nSubseeds+2) + 'S'
 			a = seed.subseed(ss_idx).sid
-			b = [e for e in s_lines if f' {ss_idx}:' in e][0].strip().split()[3]
+			b = next(e for e in s_lines if f' {ss_idx}:' in e).strip().split()[3]
 			assert a == b, b
 
 			s = seed.subseeds.format(1, 10)

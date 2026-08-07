@@ -581,7 +581,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 	def fund_bob_recv_subwallet(self, proto_idx=1, amt='5'):
 		coin_arg = f'--coin={self.protos[proto_idx].coin}'
 		t = self.spawn('mmgen-tool', ['--bob', coin_arg, 'listaddresses'])
-		addr = [s for s in strip_ansi_escapes(t.read()).splitlines() if 'C:1 No' in s][0].split()[3]
+		addr = next(s for s in strip_ansi_escapes(t.read()).splitlines() if 'C:1 No' in s).split()[3]
 		t = self.spawn(
 			'mmgen-regtest',
 			[coin_arg, 'send', addr, str(amt)],

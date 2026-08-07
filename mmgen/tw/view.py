@@ -673,7 +673,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		async def do_error_msg():
 			msg_r(
 				'Choice must be a single number between {n} and {m} inclusive{s}'.format(
-					n = list(data.keys())[0] if is_addr_idx else 1,
+					n = next(iter(data.keys())) if is_addr_idx else 1,
 					m = list(data.keys())[-1] if is_addr_idx else len(data),
 					s = ' ' if self.scroll else ''))
 			if self.scroll:

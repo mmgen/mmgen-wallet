@@ -29,7 +29,7 @@ class EtherscanServer(HTTPD):
 				target = 'result'
 				length = int(environ.get('CONTENT_LENGTH', '0'))
 				qs = environ['wsgi.input'].read(length).decode()
-				tx = [s for s in qs.split('&') if 'RawTx=' in s][0].split('=')[1]
+				tx = next(s for s in qs.split('&') if 'RawTx=' in s).split('=')[1]
 				keccak_256 = get_keccak()
 				txid = '0x' + keccak_256(bytes.fromhex(tx[2:])).hexdigest()
 

@@ -73,7 +73,7 @@ class CmdTestShared:
 			e2 = fr'Using .*{auto_chg_addr}.* as.*address'
 			res = t.expect([e1, e2], regex=True)
 			if res == 0:
-				choice = [s.split(')')[0].lstrip() for s in t.p.match[0].split('\n') if auto_chg_addr in s][0]
+				choice = next(s.split(')', 1)[0].lstrip() for s in t.p.match[0].split('\n') if auto_chg_addr in s)
 				t.send(f'{choice}\n')
 				t.expect(e2, regex=True)
 			t.send('y')

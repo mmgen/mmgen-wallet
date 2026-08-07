@@ -255,7 +255,7 @@ class Daemon(Lockable):
 			die(2, f'Unable to execute {cls.exec_fn}')
 		else:
 			res = cp.stdout.splitlines()
-			return (res[0] if len(res) == 1 else [s for s in res if 'ersion' in s][0]).strip()
+			return (res[0] if len(res) == 1 else next(s for s in res if 'ersion' in s)).strip()
 
 class RPCDaemon(Daemon):
 

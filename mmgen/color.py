@@ -68,7 +68,7 @@ def get_terminfo_colors(term=None):
 		return None
 	else:
 		set_vt100()
-		s = [e.split('#')[1] for e in cmdout.split(',') if e.startswith('colors')][0]
+		s = next(iter(e.split('#', 1)[1] for e in cmdout.split(',') if e.startswith('colors')))
 		from .util import is_hex_str
 		if s.isdecimal():
 			return int(s)

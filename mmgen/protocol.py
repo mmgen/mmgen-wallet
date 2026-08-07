@@ -92,7 +92,7 @@ class CoinProtocol(MMGenObject):
 			if hasattr(self, 'addr_ver_info'):
 				self.addr_ver_bytes = {bytes.fromhex(k): v for k, v in self.addr_ver_info.items()}
 				self.addr_fmt_to_ver_bytes = {v: k for k, v in self.addr_ver_bytes.items()}
-				self.addr_ver_bytes_len = len(list(self.addr_ver_bytes)[0])
+				self.addr_ver_bytes_len = len(next(iter(self.addr_ver_bytes)))
 
 			if gc.cmd_caps:
 				for cap in gc.cmd_caps.caps:

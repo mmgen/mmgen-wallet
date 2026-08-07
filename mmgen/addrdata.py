@@ -51,7 +51,7 @@ class AddrData(MMGenObject):
 
 	def coinaddr2mmaddr(self, coinaddr):
 		d = self.make_reverse_dict([coinaddr])
-		return (list(d.values())[0][0]) if d else None
+		return next(iter(d.values()))[0] if d else None
 
 	def add(self, addrlist):
 		if isinstance(addrlist, AddrList):

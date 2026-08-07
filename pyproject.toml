@@ -29,7 +29,6 @@ ignore = [
 	"PLW1510", # `subprocess.run` without explicit `check` argument
 	"RET501", # Do not explicitly `return None` in function if it is the only possible return value
 	"RUF012", # Mutable default value for class attribute
-	"RUF015", # Prefer `next(s for s in res if 'ersion' in s)` over single element slice
 	"RUF022", # `__all__` is not sorted
 	"RUF100", # Unused `noqa` directive (non-enabled: `F401`)
 	"S102", # Use of `exec` detected

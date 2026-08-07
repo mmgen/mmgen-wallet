@@ -1510,7 +1510,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		assert self.proto.cap('segwit')
 		if not hasattr(self, '_b_start_'):
 			t = self.spawn('mmgen-tool', ['--color=0', '--bob', 'listaddresses'], no_msg=True)
-			self._b_start_ = int([e for e in t.read().split('\n') if ':B:1' in e][0].split()[0].rstrip(')'))
+			self._b_start_ = int(next(e for e in t.read().split('\n') if ':B:1' in e).split(maxsplit=1)[0].rstrip(')'))
 			t.close()
 		return self._b_start_
 
@@ -1677,7 +1677,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def alice_add_comment_coinaddr(self):
 		mmid = self._user_sid('alice') + (':S:1', ':L:1')[self.proto.coin=='BCH']
 		t = self.spawn('mmgen-tool', ['--alice', 'listaddress', mmid, 'wide=true'], no_msg=True)
-		addr = [i for i in strip_ansi_escapes(t.read()).splitlines() if re.search(rf'\b{mmid}\b', i)][0].split()[3]
+		addr = next(i for i in strip_ansi_escapes(t.read()).splitlines() if re.search(rf'\b{mmid}\b', i)).split()[3]
 		return self.user_add_comment('alice', addr, 'Label added using coin address of MMGen address')
 
 	def alice_chk_comment_coinaddr(self):

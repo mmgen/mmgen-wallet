@@ -33,11 +33,11 @@ class unit_tests:
 
 		}
 
-		col1_w = max(len(str(e)) for e in list(chks.values())[0]) + 1
+		col1_w = max(len(str(e)) for e in next(iter(chks.values()))) + 1
 
 		for _name, sample in samples.items():
 			vmsg(cyan(f'Input: {sample}'))
-			for fmt in list(chks.values())[0]:
+			for fmt in next(iter(chks.values())):
 				spc = '\n' if fmt in ('col', 'list') else ' '
 				indent = '    + ' if fmt == 'col' else ''
 				res = fmt_list(sample, fmt=fmt, indent=indent) if fmt else fmt_list(sample, indent=indent)
@@ -82,11 +82,11 @@ class unit_tests:
 		}
 		}
 
-		col1_w = max(len(str(e)) for e in list(chks.values())[0]) + 1
+		col1_w = max(len(str(e)) for e in next(iter(chks.values()))) + 1
 
 		for _name, sample in samples.items():
 			vmsg(cyan(f'Input: {sample}'))
-			for fmt in list(chks.values())[0]:
+			for fmt in next(iter(chks.values())):
 				res = fmt_dict(sample, fmt=fmt) if fmt else fmt_dict(sample)
 				vmsg(f'  {str(fmt)+":":{col1_w}} {res}')
 				if _name in chks:
