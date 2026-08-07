@@ -228,7 +228,7 @@ def decode_pretty_hexdump(data):
 	pat = re.compile(fr'^[{hexdigits}]+:\s+')
 	lines = [pat.sub('', line) for line in data.splitlines()]
 	try:
-		return bytes.fromhex(''.join((''.join(lines).split())))
+		return bytes.fromhex(''.join(''.join(lines).split()))
 	except:
 		msg('Data not in hexdump format')
 		return False

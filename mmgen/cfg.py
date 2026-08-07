@@ -228,7 +228,7 @@ class Config(Lockable):
 	enable_erigon                  = False
 	autochg_ignore_labels          = False
 	autosign                       = False
-	threaded_python                = sys.version_info.minor > 12 and not sys._is_gil_enabled()
+	threaded_python                = sys.version_info >= (3, 13) and not sys._is_gil_enabled()
 	aes_backend                    = 'cryptography'
 
 	# regtest:

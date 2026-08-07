@@ -16,7 +16,6 @@ indent-style = "tab"
 
 [tool.ruff.lint]
 ignore = [
-	"ASYNC221", # blocking method in async function (mmgen/rpc/backends/curl.py)
 	"B006", # Do not use mutable data structures for argument defaults
 	"B018", # Found useless expression. Either assign it to a variable or remove it.
 	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged
@@ -30,22 +29,18 @@ ignore = [
 	"RET501", # Do not explicitly `return None` in function if it is the only possible return value
 	"RUF012", # Mutable default value for class attribute
 	"RUF022", # `__all__` is not sorted
-	"RUF100", # Unused `noqa` directive (non-enabled: `F401`)
 	"S102", # Use of `exec` detected
 	"S110", # `try`-`except`-`pass` detected, consider logging the exception
 	"SIM102", # Use a single `if` statement instead of nested `if` statements
 	"SIM114", # Combine `if` branches using logical `or` operator
 	"SIM905", # Consider using a list literal instead of `str.split`
-	"UP030", # Use implicit references for positional format fields
 	"UP031", # Use format specifiers instead of percent format
 	"UP032", # Use f-string instead of `format` call
-	"UP034", # Avoid extraneous parentheses
-	"UP035", # `typing.List` is deprecated, use `list` instead
-	"UP045", # Use `X | None` for type annotations
-	"YTT204", # `sys.version_info.minor` compared to integer (python4), compare `sys.version_info` to tuple
 ]
 
 [tool.ruff.lint.per-file-ignores]
+"protobuf.py"                   = [ "UP045" ]     # Use `X | None` for type annotations
+"mmgen/rpc/backends/curl.py"    = [ "ASYNC221" ]  # blocking method in async function
 "mmgen/xmrwallet/__init__.py"   = [ "PLC3002" ]   # Lambda expression called directly
 "mmgen/tool/*"                  = [ "F821" ]      # Undefined name `sstr`
 "mmgen/tool/file.py"            = [ "B008" ]      # function call in dfl args
@@ -55,7 +50,9 @@ ignore = [
 "mmgen/proto/eth/rlp/*" = [
 	"TRY002", # create your own exception
 	"UP004",  # class `Binary` inherits from `object`
-	"UP008"   # Use `super()` instead of `super(__class__, self)`
+	"UP008",  # Use `super()` instead of `super(__class__, self)`
+	"UP030",  # Use implicit references for positional format fields
+	"RUF100"  # Unused `noqa` directive (non-enabled: `F401`)
 ]
 
 "test/include/common.py" = [

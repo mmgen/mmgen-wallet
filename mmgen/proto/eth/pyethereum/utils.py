@@ -4,7 +4,8 @@
 #
 
 import struct, functools
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
+from collections.abc import Callable
 
 ALL_BYTES = tuple(struct.pack('B', i) for i in range(256))
 

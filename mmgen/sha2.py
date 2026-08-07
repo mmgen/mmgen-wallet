@@ -103,7 +103,7 @@ class Sha2:
 		self.M = tuple(unpack(self.word_fmt, self.M[i*ws:ws+(i*ws)])[0] for i in range(len(self.M) // ws))
 
 	def digest(self):
-		return b''.join((pack(self.word_fmt, w) for w in self.H))
+		return b''.join(pack(self.word_fmt, w) for w in self.H)
 
 	def hexdigest(self):
 		return self.digest().hex()
