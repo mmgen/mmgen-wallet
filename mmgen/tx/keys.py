@@ -173,7 +173,7 @@ class TxKeys:
 		if from_keyaddrlist:
 			desc = 'key-address file'
 			err_desc = 'From key-address file:'
-			kals = tuple([self.keyaddrlist])
+			kals = (self.keyaddrlist,)
 		else:
 			desc = 'seed(s)'
 			err_desc = 'Generated from seed:'

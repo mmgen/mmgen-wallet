@@ -21,8 +21,6 @@ ignore = [
 	"B018", # Found useless expression. Either assign it to a variable or remove it.
 	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged
 	"BLE001", # Do not catch blind exception: `Exception`
-	"C409", # Unnecessary list literal passed to `tuple()` (rewrite as a tuple literal)
-	"C410", # Unnecessary list literal passed to `list()` (remove the outer call to `list()`)
 	"C414", # Unnecessary `list()` call within `set()`
 	"C418", # Unnecessary dict literal passed to `dict()` (remove the outer call to `dict()`)
 	"E401", # multiple imports per line

@@ -31,8 +31,8 @@ sample_objs = {
 	'bool':      bool(True),
 	'str':       str('foo'),
 	'dict':      dict({'a': 1}),
-	'list':      list([1]),
-	'tuple':     tuple((1, 2)),
+	'list':      [1],
+	'tuple':     (1, 2),
 	'bytes':     bytes(1),
 
 	'HexStr':    HexStr('ff'),
