@@ -30,7 +30,7 @@ rec {
         # which        = which;
         # ctags        = universal-ctags;
         # xclip        = xclip;
-        # ruff         = ruff;
+        # ruff         = callPackage (bdir + /ruff.nix) {};
         # perl         = perl;
         # netcat       = netcat-openbsd;
         # jq           = jq;
