@@ -22,8 +22,6 @@ ignore = [
 	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged
 	"BLE001", # Do not catch blind exception: `Exception`
 	"E722", # bare except
-	"FURB163", # Prefer `math.log2(state.lanew)` over `math.log` with a redundant base
-	"FURB166", # Use of `int` with explicit `base=16` after removing prefix
 	"FURB192", # Prefer `max` over `sorted()` to compute the maximum value in a sequence
 	"I001", # Import block is un-sorted or un-formatted
 	"ISC004", # Unparenthesized implicit string concatenation in collection
@@ -73,6 +71,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "mmgen/tool/*"                  = [ "F821" ]         # Undefined name `sstr`
 "mmgen/tool/file.py"            = [ "B008" ]         # function call in dfl args
+"mmgen/contrib/keccak.py"       = [ "FURB163" ]      # `math.log` -> `math.log2(state.lanew)`
 "examples/*"                    = [ "ASYNC230" ]     # open() in async function
 
 "test/include/common.py"        = [ "F821" ]         # undefined name 'cfg'

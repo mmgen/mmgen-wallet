@@ -73,7 +73,7 @@ def get_terminfo_colors(term=None):
 		if s.isdecimal():
 			return int(s)
 		elif s.startswith('0x') and is_hex_str(s[2:]):
-			return int(s[2:], 16)
+			return int(s, 16)
 		else:
 			return None
 

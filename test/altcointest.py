@@ -240,7 +240,7 @@ class TestCoinInfo(CoinInfo):
 		def fix_ver_info(e, k):
 			e[k] = list(e[k])
 			e[k][0] = myhex(e[k][0])
-			s1 = cls.find_addr_leading_symbol(int(e[k][0][2:], 16))
+			s1 = cls.find_addr_leading_symbol(int(e[k][0], 16))
 			m = f'Fixing leading address letter for coin {e["symbol"]} ({e[k][1]!r} --> {s1})'
 			if e[k][1] != '?':
 				assert s1 == e[k][1], f'First letters do not match! {m}'
