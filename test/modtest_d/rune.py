@@ -145,7 +145,8 @@ def test_tx(src, cfg, vec):
 
 	match src:
 		case 'parse':
-			tx_in = open(os.path.join('test/ref/thorchain', vec.fn), 'br').read()
+			with open(os.path.join('test/ref/thorchain', vec.fn), 'rb') as fh:
+				tx_in = fh.read()
 			tx = RuneTx.loads(tx_in)
 			if not parms.from_addr:
 				ymsg(f'Warning: missing test vector data for {vec.fn}')
@@ -215,7 +216,8 @@ class unit_tests:
 
 		addr = 'thor1lukwlve7hayy66qrdkp4k7sh0emjqwergy7tl3'
 		txhash = 'abcdef01' * 8
-		txbytes = open('test/ref/thorchain/mainnet-tx-msgsend1.binpb', 'rb').read()
+		with open('test/ref/thorchain/mainnet-tx-msgsend1.binpb', 'rb') as fh:
+			txbytes = fh.read()
 
 		async def main():
 

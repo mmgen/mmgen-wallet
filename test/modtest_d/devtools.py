@@ -70,7 +70,8 @@ class unit_tests:
 
 	def stack_trace(self, name, ut):
 		print_hdr('stack trace')
-		print_stack_trace('Test', fh_list=[open(os.devnull, 'w')], trim=0)
+		with open(os.devnull, 'w') as fh:
+			print_stack_trace('Test', fh_list=[fh], trim=0)
 		return True
 
 	def obj_pmsg(self, name, ut):

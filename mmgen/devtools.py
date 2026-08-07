@@ -56,7 +56,8 @@ def Pexit(*args):
 def print_stack_trace(message=None, fh_list=[], nl='\n', sep='\n  ', trim=4):
 	if not fh_list:
 		import os
-		fh_list.append(open(f'devtools.trace.{os.getpid()}', 'w'))
+		with open(f'devtools.trace.{os.getpid()}', 'w') as fh:
+			fh_list.append(fh)
 		nl = ''
 	res = get_stack_trace(message, nl, sep, trim)
 	sys.stderr.write(res)

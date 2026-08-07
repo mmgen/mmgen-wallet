@@ -113,8 +113,6 @@ class tool_cmd(tool_cmd_base):
 		if self.cfg.outdir:
 			outfile = make_full_path(self.cfg.outdir, outfile)
 
-		fh = open(outfile, 'wb')
-
 		blk_size = 1024 * 1024
 		key = Crypto(self.cfg).get_random(32)
 		q1, q2 = (Queue(), Queue())
@@ -127,7 +125,7 @@ class tool_cmd(tool_cmd_base):
 		for i in range(max(1, threads - 1)):
 			Thread(target=encrypt_worker, daemon=True).start()
 
-		if True:
+		with open(outfile, 'wb') as fh:
 			Thread(target=output_worker, args=(fh,), daemon=True).start()
 
 			for i in range(nbytes // blk_size):
@@ -140,7 +138,6 @@ class tool_cmd(tool_cmd_base):
 
 			q1.join()
 			q2.join()
-			fh.close()
 
 		if (fsize := os.stat(outfile).st_size) != nbytes:
 			die(3, f'{fsize}: incorrect random file size (should be {nbytes})')
