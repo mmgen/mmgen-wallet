@@ -46,12 +46,12 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"mmgen/xmrwallet/__init__.py"   = [ "PLC3002" ]      # Lambda expression called directly
-"mmgen/tool/*"                  = [ "F821" ]         # Undefined name `sstr`
-"mmgen/tool/file.py"            = [ "B008" ]         # function call in dfl args
-"mmgen/tool/rpc.py"             = [ "RUF013" ]       # PEP 484 prohibits implicit `Optional`
-"mmgen/contrib/keccak.py"       = [ "FURB163" ]      # `math.log` -> `math.log2(state.lanew)`
-"examples/*"                    = [ "ASYNC230" ]     # open() in async function
+"mmgen/xmrwallet/__init__.py"   = [ "PLC3002" ]   # Lambda expression called directly
+"mmgen/tool/*"                  = [ "F821" ]      # Undefined name `sstr`
+"mmgen/tool/file.py"            = [ "B008" ]      # function call in dfl args
+"mmgen/tool/rpc.py"             = [ "RUF013" ]    # PEP 484 prohibits implicit `Optional`
+"mmgen/contrib/keccak.py"       = [ "FURB163" ]   # `math.log` -> `math.log2(state.lanew)`
+"examples/*"                    = [ "ASYNC230" ]  # open() in async function
 "mmgen/proto/eth/rlp/*" = [
 	"TRY002", # create your own exception
 	"UP004",  # class `Binary` inherits from `object`
