@@ -22,7 +22,6 @@ ignore = [
 	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged
 	"BLE001", # Do not catch blind exception: `Exception`
 	"E722", # bare except
-	"FURB192", # Prefer `max` over `sorted()` to compute the maximum value in a sequence
 	"I001", # Import block is un-sorted or un-formatted
 	"ISC004", # Unparenthesized implicit string concatenation in collection
 	"N999", # Invalid module name: 'import'

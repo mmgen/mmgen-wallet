@@ -115,11 +115,12 @@ class OpResubmit(OpSubmit):
 			die(1, '--autosign is required for this operation')
 
 	def get_tx(self):
+		def keyfunc(x):
+			return getattr(x.data, 'submit_time', None) or x.data.create_time
 		from ...autosign.signable import Signable
 		fns = Signable.xmr_transaction(self.asi).get_submitted()
 		cls = self.get_tx_cls('Submitted')
-		return sorted((cls(self.cfg, Path(fn)) for fn in fns),
-			key = lambda x: getattr(x.data, 'submit_time', None) or x.data.create_time)[-1]
+		return max((cls(self.cfg, Path(fn)) for fn in fns), key=keyfunc)
 
 class OpAbort(OpBase):
 	opts = ('watch_only', 'autosign')
