@@ -27,7 +27,6 @@ ignore = [
 	"N999", # Invalid module name: 'import'
 	"PLC0206", # Extracting value from dictionary without calling `.items()`
 	"PLC3002", # Lambda expression called directly. Execute the expression inline instead.
-	"PLR1704", # Redefining argument with the local name `tx`
 	"PLW0406", # Module `test.include.common` imports itself
 	"PLW0602", # Using global for `stderr_save` but no assignment is done
 	"PLW0602", # Using global for `stdout_save` but no assignment is done

@@ -422,8 +422,8 @@ class TwAddresses(TwView):
 			res = get_addr(mmtype)
 		else:
 			have_used = False
-			for mmtype in self.proto.preferred_mmtypes:
-				res = get_addr(mmtype)
+			for mmpref in self.proto.preferred_mmtypes:
+				res = get_addr(mmpref)
 				if any(res):
 					break
 				if False in res:

@@ -47,10 +47,10 @@ class BitcoinTwTransaction:
 
 		def gen_prevouts_data():
 			_d = namedtuple('prevout_data', ['txid', 'data'])
-			for tx in prevout_txs:
+			for ptx in prevout_txs:
 				for e in prevouts:
-					if e.txid == tx['txid']:
-						yield _d(e.txid, tx['vout'][e.vout])
+					if e.txid == ptx['txid']:
+						yield _d(e.txid, ptx['vout'][e.vout])
 
 		def gen_wallet_vouts_data():
 			_d = namedtuple('wallet_vout_data', ['txid', 'data'])

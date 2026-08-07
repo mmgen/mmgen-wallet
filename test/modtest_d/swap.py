@@ -63,15 +63,15 @@ class unit_tests:
 		return True
 
 	def asset(self, name, ut, desc='SwapAsset class'):
-		for name, full_name, memo_name, chain, tokensym, direction in (
+		for asset_name, full_name, memo_name, chain, tokensym, direction in (
 			('BTC',      'BTC.BTC',  'b',        'BTC', None,   'recv'),
 			('LTC',      'LTC.LTC',  'l',        'LTC', None,   'recv'),
 			('BCH',      'BCH.BCH',  'c',        'BCH', None,   'recv'),
 			('ETH.USDT', 'ETH.USDT', 'ETH.USDT', 'ETH', 'USDT', 'recv'),
 		):
-			a = SwapAsset(name, direction)
+			a = SwapAsset(asset_name, direction)
 			vmsg(f'  {a.name}')
-			assert a.name == name
+			assert a.name == asset_name
 			assert a.full_name == full_name
 			assert a.direction == direction
 			assert a.tokensym == tokensym

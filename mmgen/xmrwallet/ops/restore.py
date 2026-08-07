@@ -31,8 +31,8 @@ class OpRestore(OpCreate):
 		def get_dump_data():
 
 			def gen():
-				for fn in [self.get_wallet_fn(d, watch_only=wo) for wo in (True, False)]:
-					ret = fn.parent / (fn.name + '.dump')
+				for f in [self.get_wallet_fn(d, watch_only=wo) for wo in (True, False)]:
+					ret = f.parent / (f.name + '.dump')
 					if ret.exists():
 						yield ret
 
