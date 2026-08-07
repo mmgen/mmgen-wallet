@@ -337,7 +337,7 @@ if cfg.tool_api:
 
 if cfg.list_tests:
 	Msg('Available tests:')
-	for modname, cmdlist in main_tool.mods.items():
+	for modname in main_tool.mods.keys():
 		cls = importlib.import_module(f'mmgen.tool.{modname}').tool_cmd
 		Msg(f'  {modname:6} - {docstring_head(cls)}')
 	sys.exit(0)

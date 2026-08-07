@@ -162,7 +162,7 @@ class GenTool:
 		else:
 			ret = self.run(sec, vcoin)
 			if cache_data:
-				self.data[key] = sd(**{'reduced':sec.hex()}, **ret._asdict())
+				self.data[key] = sd(reduced=sec.hex(), **ret._asdict())
 			return ret
 
 class GenToolEth_keys(GenTool):
@@ -453,7 +453,7 @@ def speed_test(proto, kg, ag, rounds):
 def dump_test(proto, kg, ag, filename):
 
 	with open(filename) as fp:
-		dump = [[*(e.split()[0] for e in line.split('addr='))] for line in fp.readlines() if 'addr=' in line]
+		dump = [[*(e.split()[0] for e in line.split('addr='))] for line in fp if 'addr=' in line]
 		if not dump:
 			die(1, f'File {filename!r} appears not to be a wallet dump')
 

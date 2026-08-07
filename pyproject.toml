@@ -22,7 +22,6 @@ ignore = [
 	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged
 	"BLE001", # Do not catch blind exception: `Exception`
 	"E722", # bare except
-	"FURB129", # Instead of calling `readlines()`, iterate over file object directly
 	"FURB157", # Verbose expression in `Decimal` constructor
 	"FURB163", # Prefer `math.log2(state.lanew)` over `math.log` with a redundant base
 	"FURB166", # Use of `int` with explicit `base=16` after removing prefix
@@ -30,9 +29,6 @@ ignore = [
 	"I001", # Import block is un-sorted or un-formatted
 	"ISC004", # Unparenthesized implicit string concatenation in collection
 	"N999", # Invalid module name: 'import'
-	"PERF102", # When using only the keys of a dict use the `keys()` method
-	"PIE790", # Unnecessary `pass` statement
-	"PIE804", # Unnecessary `dict` kwargs
 	"PLC0206", # Extracting value from dictionary without calling `.items()`
 	"PLC3002", # Lambda expression called directly. Execute the expression inline instead.
 	"PLR1704", # Redefining argument with the local name `tx`

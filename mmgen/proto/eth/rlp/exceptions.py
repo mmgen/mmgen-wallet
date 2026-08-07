@@ -1,6 +1,5 @@
 class RLPException(Exception):
     """Base class for exceptions raised by this package."""
-    pass
 
 
 class EncodingError(RLPException):
