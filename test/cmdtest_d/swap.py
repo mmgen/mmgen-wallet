@@ -494,7 +494,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 			'--usr-randchars=0',
 			'--hash-preset=1',
 			'--label=SwapWalletLabel',
-			f'--outdir={str(dest)}',
+			f'--outdir={dest!s}',
 			dfl_bip39_file])
 		t.expect('wallet: ', rt_pw + '\n')
 		t.expect('phrase: ', rt_pw + '\n')

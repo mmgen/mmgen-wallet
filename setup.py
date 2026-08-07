@@ -35,7 +35,7 @@ def build_libsecp256k1():
 		run(['git', 'clone', 'https://github.com/bitcoin-core/secp256k1.git'], check=True, cwd=cache_path)
 
 	if not lib_file.exists():
-		print(f'\nBuilding libsecp256k1 (cwd={str(src_path)})')
+		print(f'\nBuilding libsecp256k1 (cwd={src_path!s})')
 		cmds = (
 			['sh', './autogen.sh'],
 			['sh', './configure', 'CFLAGS=-g -O2 -fPIC', '--disable-dependency-tracking',

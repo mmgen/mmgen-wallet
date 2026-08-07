@@ -269,7 +269,7 @@ class CmdTestInput(CmdTestBase):
 		else:
 			t.send(text, delay=delay)
 		ret = t.expect_getend('  ==> ')
-		assert ret == repr(expect), f'Text mismatch! {ret} != {repr(expect)}'
+		assert ret == repr(expect), f'Text mismatch! {ret} != {expect!r}'
 		return t
 
 	def _get_char(self, func_args, text, expect, term):

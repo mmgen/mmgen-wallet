@@ -32,7 +32,6 @@ ignore = [
 	"PLW0602", # Using global for `stdout_save` but no assignment is done
 	"PLW1510", # `subprocess.run` without explicit `check` argument
 	"RET501", # Do not explicitly `return None` in function if it is the only possible return value
-	"RUF010", # Use explicit conversion flag
 	"RUF012", # Mutable default value for class attribute
 	"RUF013", # PEP 484 prohibits implicit `Optional`
 	"RUF015", # Prefer `next(s for s in res if 'ersion' in s)` over single element slice

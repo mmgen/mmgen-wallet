@@ -639,7 +639,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			ad.add(al)
 			aix = AddrIdxList(fmt_str=self.cfgs[s]['addr_idx_list'])
 			if len(aix) != addrs_per_wallet:
-				die('TestSuiteFatalException', f'Address index list length != {addrs_per_wallet}: {repr(aix)}')
+				die('TestSuiteFatalException', f'Address index list length != {addrs_per_wallet}: {aix!r}')
 			tx_data[s] = {
 				'addrfile': addrfile,
 				'chk': al.chksum,

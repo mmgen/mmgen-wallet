@@ -48,7 +48,7 @@ def test_fmt(data):
 		res = amt.fmt(*args, **kwargs)
 		vmsg(fs.format(
 			proto.upper(),
-			f'[{str(amt)}]',
+			f'[{amt!s}]',
 			'None' if iwidth is None else iwidth,
 			'None' if prec is None else prec,
 			f'[{res}]'))
