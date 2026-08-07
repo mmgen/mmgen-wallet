@@ -22,7 +22,6 @@ ignore = [
 	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged
 	"BLE001", # Do not catch blind exception: `Exception`
 	"E722", # bare except
-	"EXE002", # The file is executable but no shebang is present
 	"FURB129", # Instead of calling `readlines()`, iterate over file object directly
 	"FURB157", # Verbose expression in `Decimal` constructor
 	"FURB163", # Prefer `math.log2(state.lanew)` over `math.log` with a redundant base
