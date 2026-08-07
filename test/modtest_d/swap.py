@@ -81,6 +81,24 @@ class unit_tests:
 
 	def memo(self, name, ut, desc='Swap transaction memo'):
 
+		def bad(s):
+			return lambda: Memo.parse(s)
+
+		def bad10(swap_cfg):
+			def inner():
+				coin = 'BTC'
+				proto = init_proto(cfg, coin, need_amt=True)
+				addr = make_burn_addr(proto, 'C')
+				asset = SwapAsset(coin, 'send')
+				Memo(swap_cfg, proto, asset, addr, trade_limit=None)
+			return inner
+
+		def bad11():
+			SwapAsset('XYZ', 'send')
+
+		def bad12():
+			SwapAsset('DOGE', 'send')
+
 		for coin, addrtype, asset_name, token in (
 			('ltc', 'bech32',     'LTC',      None),
 			('bch', 'compressed', 'BCH',      None),
@@ -158,22 +176,6 @@ class unit_tests:
 
 			vmsg('\nTesting error handling:')
 
-			def bad(s):
-				return lambda: Memo.parse(s)
-
-			def bad10():
-				coin = 'BTC'
-				proto = init_proto(cfg, coin, need_amt=True)
-				addr = make_burn_addr(proto, 'C')
-				asset = SwapAsset(coin, 'send')
-				Memo(swap_cfg, proto, asset, addr, trade_limit=None)
-
-			def bad11():
-				SwapAsset('XYZ', 'send')
-
-			def bad12():
-				SwapAsset('DOGE', 'send')
-
 			ut.process_bad_data((
 				('bad1',  'SwapMemoParseError', 'must contain',      bad('x')),
 				('bad2',  'SwapMemoParseError', 'must contain',      bad('y:z:x')),
@@ -182,7 +184,7 @@ class unit_tests:
 				('bad5',  'SwapMemoParseError', 'failed to parse',   bad('=:l:foobar:n')),
 				('bad6',  'SwapMemoParseError', 'invalid specifier', bad('=:l:foobar:x/3/0')),
 				('bad7',  'SwapMemoParseError', 'extra',             bad('=:l:foobar:0/3/0:x')),
-				('bad10', 'AssertionError',     'recv',              bad10),
+				('bad10', 'AssertionError',     'recv',              bad10(swap_cfg)),
 				('bad11', 'SwapAssetError',     'unrecognized',      bad11),
 				('bad12', 'SwapAssetError',     'unsupported',       bad12),
 			), pfx='')
