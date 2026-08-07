@@ -21,14 +21,7 @@ ignore = [
 	"B018", # Found useless expression. Either assign it to a variable or remove it.
 	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged
 	"BLE001", # Do not catch blind exception: `Exception`
-	"E401", # multiple imports per line
-	"E402", # module import not top of file
-	"E701", # multiple statements per line
-	"E713", # membership 'not in'
-	"E721", # use isinstance()
 	"E722", # bare except
-	"E731", # lambda instead of def
-	"E741", # ambiguous variable name
 	"EXE002", # The file is executable but no shebang is present
 	"FURB129", # Instead of calling `readlines()`, iterate over file object directly
 	"FURB157", # Verbose expression in `Decimal` constructor
