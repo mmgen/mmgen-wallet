@@ -46,7 +46,7 @@ class OpBase:
 		self.tx_dir = 'txauto_dir' if self.compat_call else 'xmr_tx_dir'
 
 		classes = tuple(gen_classes())
-		self.opts = tuple(set(opt for cls in classes for opt in xmrwallet.opts))
+		self.opts = tuple({opt for cls in classes for opt in xmrwallet.opts})
 
 		if not hasattr(self, 'stem'):
 			self.stem = self.name

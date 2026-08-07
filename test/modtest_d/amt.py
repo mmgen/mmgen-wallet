@@ -14,7 +14,7 @@ from mmgen.amt import TokenAmt
 from ..include.common import cfg, vmsg
 
 def get_protos(data):
-	return {coin: init_proto(cfg, coin, need_amt=True) for coin in set(d[0] for d in data)}
+	return {coin: init_proto(cfg, coin, need_amt=True) for coin in {d[0] for d in data}}
 
 def test_to_unit(data):
 	protos = get_protos(data)
