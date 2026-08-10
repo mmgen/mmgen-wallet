@@ -30,7 +30,7 @@ class OpSubmit(OpWallet):
 	opts = ('tx_relay_daemon',)
 
 	def post_mount_action(self):
-		self.tx # trigger an exit if no suitable transaction present
+		return self.tx # trigger an exit if no suitable transaction present
 
 	@property
 	def tx(self):
