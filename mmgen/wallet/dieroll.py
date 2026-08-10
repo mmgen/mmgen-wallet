@@ -60,7 +60,7 @@ class wallet(wallet):
 				seed_bytes = Crypto(self.cfg).add_user_random(
 					rand_bytes = seed_bytes,
 					desc = 'gathered from your die rolls')
-				self.desc += ' plus OS and user-supplied entropy'
+				self.desc += ' plus OS & user entropy'
 			msg('')
 
 		self.seed = Seed(self.cfg, seed_bin=seed_bytes)
