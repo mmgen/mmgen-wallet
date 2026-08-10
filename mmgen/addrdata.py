@@ -98,12 +98,12 @@ class TwAddrData(AddrData, metaclass=AsyncInit):
 
 		self.cfg._util.vmsg(f'{i} {gc.proj_name} addresses found, {len(twd)} accounts total')
 
-		for al_id in out:
+		for al_id, data in out.items():
 			self.add(AddrList(
 				self.cfg,
 				self.proto,
 				al_id = al_id,
-				adata = AddrListData(sorted(out[al_id], key=lambda a: a.idx))))
+				adata = AddrListData(sorted(data, key=lambda a: a.idx))))
 
 class TwAddrDataWithStore(TwAddrData):
 

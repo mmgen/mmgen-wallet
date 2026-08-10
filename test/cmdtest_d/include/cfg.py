@@ -267,8 +267,8 @@ cfgs = { # addr_idx_lists (except 31, 32, 33, 34) must contain exactly 8 address
 def fixup_cfgs():
 	import os
 
-	for k in cfgs:
-		cfgs[k]['tmpdir'] = os.path.join('test', 'tmp', str(k))
+	for k, v in cfgs.items():
+		v['tmpdir'] = os.path.join('test', 'tmp', str(k))
 
 	for src, target in (
 			('6', '11'),
@@ -280,11 +280,11 @@ def fixup_cfgs():
 		cfgs[target].update(cfgs[src])
 		cfgs[target]['tmpdir'] = os.path.join('test', 'tmp', target)
 
-	for k in cfgs:
-		cfgs[k]['segwit'] = randbool() if cfg.segwit_random else bool(cfg.segwit or cfg.bech32)
+	for k, v in cfgs.items():
+		v['segwit'] = randbool() if cfg.segwit_random else bool(cfg.segwit or cfg.bech32)
 
 	if cfg.debug_utf8:
-		for k in cfgs:
-			cfgs[k]['tmpdir'] += '-α'
+		for k, v in cfgs.items():
+			v['tmpdir'] += '-α'
 
 fixup_cfgs()

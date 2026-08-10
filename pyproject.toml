@@ -24,7 +24,6 @@ ignore = [
 	"I001", # Import block is un-sorted or un-formatted
 	"ISC004", # Unparenthesized implicit string concatenation in collection
 	"N999", # Invalid module name: 'import'...
-	"PLC0206", # Extracting value from dictionary without calling `.items()`
 	"PLW1510", # `subprocess.run` without explicit `check` argument
 	"RET501", # Do not explicitly `return None` in function if it is the only possible return value
 	"RUF012", # Mutable default value for class attribute

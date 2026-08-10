@@ -495,8 +495,8 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		self.proto = init_proto(cfg, coin, network='regtest', need_amt=True)
 
 		gldict = globals()
-		for k in rt_data:
-			gldict[k] = rt_data[k].get(coin, None)
+		for k, v in rt_data.items():
+			gldict[k] = v.get(coin, None)
 
 		self.use_bdb_wallet = self.bdb_wallet or coin != 'btc'
 

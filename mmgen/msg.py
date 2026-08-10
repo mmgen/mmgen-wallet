@@ -150,9 +150,9 @@ class coin_msg:
 				'sig':        'signature:'}
 
 			def gen_entry(e):
-				for k in labels:
+				for k, v in labels.items():
 					if e.get(k):
-						yield fs_sig.format(labels[k], e[k])
+						yield fs_sig.format(v, e[k])
 
 			def gen_all():
 				for k, v in hdr_data.items():
