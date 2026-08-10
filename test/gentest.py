@@ -25,7 +25,7 @@ import sys, os, time
 try:
 	from include import test_init
 except ImportError:
-	from test.include import test_init
+	from test.include import test_init # noqa: F401
 
 # Import these _after_ local path's been added to sys.path
 from mmgen.cfg import gc, Config

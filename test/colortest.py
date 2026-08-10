@@ -12,7 +12,7 @@ import os
 try:
 	from include import test_init
 except ImportError:
-	from test.include import test_init
+	from test.include import test_init # noqa: F401
 
 from mmgen.color import *
 from mmgen.util import msg, ymsg, gmsg

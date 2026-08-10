@@ -14,17 +14,14 @@ test.cmdtest_d.ethbump: Ethereum transaction bumping tests for the cmdtest.py te
 
 import sys, time, asyncio, json
 
-from mmgen.cfg import Config
-from mmgen.protocol import init_proto
 from mmgen.util import ymsg, suf
 
 from ..include.common import imsg, omsg_r
 
 from .include.common import cleanup_env, dfl_words_file, dfl_sid
-from .include.runner import CmdTestRunner
 from .httpd.thornode.swap import ThornodeSwapServer
 
-from .ethdev import CmdTestEthdev, CmdTestEthdevMethods
+from .ethdev import CmdTestEthdev
 from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods, create_cross_methods
 from .ethswap import CmdTestEthSwapMethods

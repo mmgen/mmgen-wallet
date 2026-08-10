@@ -17,7 +17,7 @@ import sys
 try:
 	from include import test_init
 except ImportError:
-	from test.include import test_init
+	from test.include import test_init # noqa: F401
 
 from mmgen.cfg import gc, Config
 from mmgen.util import msg

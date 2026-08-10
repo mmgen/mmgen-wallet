@@ -12,7 +12,7 @@ from mmgen.color import orange, red
 from mmgen.util import fmt_list, in_nix_environment
 from mmgen.daemon import CoinDaemon
 
-from ..include.common import cfg, qmsg, qmsg_r, vmsg, msg, msg_r
+from ..include.common import cfg, qmsg, qmsg_r, vmsg, msg
 
 def test_flags(coin):
 	d = CoinDaemon(cfg, network_id=coin)

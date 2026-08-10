@@ -16,7 +16,7 @@ from hashlib import md5
 
 from mmgen.fileutil import get_data_from_file
 
-from .include.common import dfl_sid, dfl_words_file
+from .include.common import dfl_words_file
 from .include.proxy import TestProxy
 from .httpd.thornode.rpc import ThornodeRPCServer
 from .ethdev import CmdTestEthdevMethods

@@ -54,6 +54,9 @@ ignore = [
 	"RUF100"  # Unused `noqa` directive (non-enabled: `F401`)
 ]
 
+"test/objattrtest_d/*"       = [ "F401" ] # imported but unused
+"test/objtest_d/*"           = [ "F401" ] # imported but unused
+"test/modtest_d/dep.py"      = [ "F401" ] # imported but unused
 "test/include/common.py" = [
 	"F821",   # undefined name 'cfg'
 	"PLW0406" # self-import
@@ -62,15 +65,9 @@ ignore = [
 	"SIM115",  # open() with context manager
 	"ASYNC230" # open() in async func
 ]
-"test/misc/input_func.py"       = [ "F401" ]         # imported but unused
 "test/modtest_d/cashaddr.py"    = [ "F841" ]         # assigned to but never used
-"test/modtest_d/dep.py"         = [ "F401" ]         # imported but unused
-"test/modtest_d/testdep.py"     = [ "F401" ]         # imported but unused
 "test/modtest_d/obj.py"         = [ "F841" ]         # assigned to but never used
-"test/objtest_d/*"              = [ "F401" ]         # imported but unused
-"test/objattrtest_d/*"          = [ "F401" ]         # imported but unused
 "test/overlay/fakemods/*"       = [ "F403", "F405" ] # `import *` used
-"test/*.py"                     = [ "F401" ]         # imported but unused
 "test/colortest.py"             = [ "F403", "F405" ] # `import *` used
 "test/tooltest2.py"             = [ "F403", "F405" ] # `import *` used
 "test/cmdtest_d/*"              = [ "ASYNC251" ]     # time.sleep() in async function

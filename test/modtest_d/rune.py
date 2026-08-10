@@ -203,7 +203,7 @@ class unit_tests:
 		return True
 
 	def rpc(self, name, ut, desc='remote RPC operations'):
-		import sys, asyncio
+		import asyncio
 		from mmgen.rpc import rpc_init
 		from ..cmdtest_d.httpd.thornode.rpc import ThornodeRPCServer
 

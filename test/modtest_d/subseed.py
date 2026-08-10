@@ -4,7 +4,6 @@
 test.modtest_d.subseed: subseed unit tests for the MMGen suite
 """
 
-from mmgen.util import msg
 from mmgen.seed import Seed
 from mmgen.subseed import SubSeedList, SubSeedIdxRange
 
@@ -178,7 +177,6 @@ class unit_tests:
 		assert seed.subseed(last_idx).sid == last_sid, seed.subseed(last_idx).sid
 
 		for sid in ss.data['long']:
-			# msg(sid)
 			assert sid not in ss.data['short']
 
 		collisions = 0

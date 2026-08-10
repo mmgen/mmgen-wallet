@@ -12,7 +12,6 @@
 cmdtest_d.include.group_mgr: Command group manager for the MMGen Wallet cmdtest suite
 """
 
-import sys, os, time
 from collections import namedtuple
 
 from mmgen.color import yellow, green, cyan

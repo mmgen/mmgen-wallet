@@ -20,8 +20,6 @@
 test.cmdtest_d.ref: Reference file tests for the cmdtest.py test suite
 """
 
-import os
-
 from mmgen.util import capfirst
 from mmgen.wallet import get_wallet_cls
 from ..include.common import (

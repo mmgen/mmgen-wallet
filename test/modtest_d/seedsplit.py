@@ -4,7 +4,6 @@
 test.modtest_d.seedsplit: seed splitting unit tests for the MMGen suite
 """
 
-from mmgen.util import msg, msg_r
 from mmgen.color import pink
 from mmgen.seed import Seed
 from mmgen.seedsplit import SeedShareList, SeedShareIdx

@@ -20,12 +20,12 @@
 test.cmdtest_d.autosign: Autosign tests for the cmdtest.py test suite
 """
 
-import sys, os, time, shutil, atexit
+import os, time, shutil, atexit
 from subprocess import run, DEVNULL
 from pathlib import Path
 
 from mmgen.cfg import Config, gc
-from mmgen.color import red, blue, yellow, cyan, orange, purple, gray
+from mmgen.color import red, blue, cyan, orange, purple, gray
 from mmgen.util import msg, suf, die, indent, fmt
 from mmgen.led import LEDControl
 from mmgen.autosign import Autosign

@@ -82,8 +82,8 @@ except ImportError:
 	from test.include.test_init import repo_root
 
 from mmgen.cfg import Config, gc
-from mmgen.color import red, yellow, green, blue, init_color
-from mmgen.util import msg, Msg, rmsg, die
+from mmgen.color import red, yellow, blue, init_color
+from mmgen.util import Msg, rmsg, die
 
 from test.include.common import (
 	set_globals,

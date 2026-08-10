@@ -8,7 +8,6 @@ from decimal import Decimal
 
 from mmgen.protocol import init_proto
 from mmgen.tx.new import parse_fee_spec
-from mmgen.cfg import Config
 from mmgen.amt import TokenAmt
 
 from ..include.common import cfg, vmsg

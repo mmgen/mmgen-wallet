@@ -11,12 +11,10 @@
 """
 test.cmdtest_d.automount_eth: Ethereum automount autosigning tests for the cmdtest.py test suite
 """
-import os, re
 
 from .autosign import CmdTestAutosignThreaded
 from .ethdev import CmdTestEthdev, CmdTestEthdevMethods
-from .include.common import dfl_words_file
-from ..include.common import cfg, joinpath
+from ..include.common import cfg
 
 class CmdTestAutosignETH(CmdTestAutosignThreaded, CmdTestEthdev, CmdTestEthdevMethods):
 	'automounted transacting operations for Ethereum via ethdev'

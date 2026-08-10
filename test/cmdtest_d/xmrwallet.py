@@ -21,7 +21,7 @@ test.cmdtest_d.xmrwallet: xmrwallet tests for the cmdtest.py test suite
 """
 
 import os, time, re, atexit, asyncio, shutil
-from subprocess import run, PIPE
+from subprocess import run
 from collections import namedtuple
 
 from mmgen.cfg import gc

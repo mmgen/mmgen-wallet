@@ -27,7 +27,7 @@ from collections import namedtuple
 try:
 	from include import test_init
 except ImportError:
-	from test.include import test_init
+	from test.include import test_init # noqa: F401
 
 from mmgen.cfg import Config
 from mmgen.util import msg, msg_r, gmsg, die

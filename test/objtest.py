@@ -25,7 +25,7 @@ import os, re
 try:
 	from include import test_init
 except ImportError:
-	from test.include import test_init
+	from test.include import test_init # noqa: F401
 
 # for objtest, violate MMGen Project best practices and allow use of the dev tools
 # in production code:

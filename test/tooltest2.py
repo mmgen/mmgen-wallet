@@ -24,12 +24,12 @@ test/tooltest2.py: Test the 'mmgen-tool' utility
 # TODO: move all(?) tests in 'tooltest.py' here (or duplicate them?)
 
 import sys, os, time, importlib, asyncio
-from subprocess import run, PIPE
+from subprocess import run
 
 try:
 	from include import test_init
 except ImportError:
-	from test.include import test_init
+	from test.include import test_init # noqa: F401
 
 from test.include.common import set_globals, end_msg, init_coverage
 

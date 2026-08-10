@@ -27,7 +27,7 @@ match cfg._args:
 		msg('Entered: {}'.format(' '.join(pw)))
 	case 'get_char' | 'line_input' as cmd, args:
 		from mmgen.term import get_char
-		from mmgen.ui import line_input
+		from mmgen.ui import line_input # noqa: F401
 		from ast import literal_eval
 		func_args = literal_eval(args)
 		msg(f'\n  term: {get_char.__self__.__name__}')

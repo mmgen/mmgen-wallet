@@ -35,7 +35,6 @@ from mmgen.wallet import Wallet, get_wallet_cls
 from ..include.common import (
 	imsg,
 	omsg,
-	ok,
 	stop_test_daemons,
 	joinpath,
 	silence,

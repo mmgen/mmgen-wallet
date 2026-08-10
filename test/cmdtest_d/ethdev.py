@@ -57,7 +57,6 @@ from .include.common import (
 	tw_comment_zh,
 	tw_comment_lat_cyr_gr,
 	get_file_with_ext,
-	ok_msg,
 	Ctrl_U,
 	cleanup_env,
 	thorchain_router_addr_file)

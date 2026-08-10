@@ -14,8 +14,7 @@ test.cmdtest_d.ethswap: Ethereum swap tests for the cmdtest.py test suite
 
 from subprocess import run, PIPE, DEVNULL
 
-from mmgen.util import msg_r, rmsg, die
-from mmgen.protocol import init_proto
+from mmgen.util import rmsg, die
 from mmgen.fileutil import get_data_from_file
 
 from ..include.common import imsg, chk_equal

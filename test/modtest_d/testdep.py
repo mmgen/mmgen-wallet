@@ -7,7 +7,7 @@ test.modtest_d.testdep: test dependency unit tests for the MMGen suite
 import os
 from subprocess import run, DEVNULL
 
-from mmgen.util import ymsg, bmsg
+from mmgen.util import ymsg
 from ..include.common import cfg, get_ethkey
 
 sec = 'deadbeef' * 8
@@ -62,7 +62,7 @@ class unit_tests:
 
 	def eth_keys(self, name, ut):
 		try:
-			from eth_keys import keys
+			from eth_keys import keys # noqa: F401
 			return True
 		except ImportError:
 			if get_ethkey():

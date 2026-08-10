@@ -16,8 +16,8 @@ import sys, os, time, asyncio
 from collections import namedtuple
 
 from mmgen.cfg import gc
-from mmgen.color import red, yellow, green, blue, cyan, gray, nocolor
-from mmgen.util import msg, Msg, rmsg, ymsg, bmsg, die, suf, make_timestr, isAsync, capfirst
+from mmgen.color import red, yellow, green, cyan, gray, nocolor
+from mmgen.util import ymsg, bmsg, die, suf, make_timestr, isAsync, capfirst
 
 from ...include.common import (
 	cmdtest_py_log_fn,

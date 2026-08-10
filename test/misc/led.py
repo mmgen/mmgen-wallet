@@ -7,7 +7,6 @@ os.chdir(parpar)
 sys.path[0] = os.curdir
 
 from mmgen.cfg import Config
-from mmgen.util import msg
 from mmgen.ui import keypress_confirm
 from mmgen.led import LEDControl
 
