@@ -22,13 +22,11 @@ ignore = [
 	"BLE001", # Do not catch blind exception: `Exception`
 	"E722", # bare except
 	"I001", # Import block is un-sorted or un-formatted
-	"ISC004", # Unparenthesized implicit string concatenation in collection
 	"N999", # Invalid module name: 'import'...
 	"PLW1510", # `subprocess.run` without explicit `check` argument
 	"RET501", # Do not explicitly `return None` in function if it is the only possible return value
 	"RUF012", # Mutable default value for class attribute
 	"RUF022", # `__all__` is not sorted
-	"S102", # Use of `exec` detected
 	"S110", # `try`-`except`-`pass` detected, consider logging the exception
 	"SIM102", # Use a single `if` statement instead of nested `if` statements
 	"SIM114", # Combine `if` branches using logical `or` operator
@@ -38,14 +36,13 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"protobuf.py"                   = [ "UP045" ]     # Use `X | None` for type annotations
-"mmgen/rpc/backends/curl.py"    = [ "ASYNC221" ]  # blocking method in async function
-"mmgen/xmrwallet/__init__.py"   = [ "PLC3002" ]   # Lambda expression called directly
-"mmgen/tool/*"                  = [ "F821" ]      # Undefined name `sstr`
-"mmgen/tool/file.py"            = [ "B008" ]      # function call in dfl args
-"mmgen/tool/rpc.py"             = [ "RUF013" ]    # PEP 484 prohibits implicit `Optional`
-"mmgen/contrib/keccak.py"       = [ "FURB163" ]   # `math.log` -> `math.log2(state.lanew)`
-"examples/*"                    = [ "ASYNC230" ]  # open() in async function
+"protobuf.py"                 = [ "UP045" ]    # Use `X | None` for type annotations
+"mmgen/rpc/backends/curl.py"  = [ "ASYNC221" ] # blocking method in async function
+"mmgen/xmrwallet/__init__.py" = [ "PLC3002" ]  # Lambda expression called directly
+"mmgen/tool/*"                = [ "F821" ]     # Undefined name `sstr`
+"mmgen/tool/file.py"          = [ "B008" ]     # function call in dfl args
+"mmgen/tool/rpc.py"           = [ "RUF013" ]   # PEP 484 prohibits implicit `Optional`
+"mmgen/contrib/keccak.py"     = [ "FURB163" ]  # `math.log` -> `math.log2(state.lanew)`
 "mmgen/proto/eth/rlp/*" = [
 	"TRY002", # create your own exception
 	"UP004",  # class `Binary` inherits from `object`
@@ -54,24 +51,27 @@ ignore = [
 	"RUF100"  # Unused `noqa` directive (non-enabled: `F401`)
 ]
 
+"examples/*" = [ "ASYNC230" ] # open() in async function
+
+"test/overlay/tree/*"        = [ "ALL" ]
+"test/modtest_d/cashaddr.py" = [ "F841" ] # assigned to but never used
+"test/modtest_d/obj.py"      = [ "F841" ] # assigned to but never used
 "test/objattrtest_d/*"       = [ "F401" ] # imported but unused
 "test/objtest_d/*"           = [ "F401" ] # imported but unused
 "test/modtest_d/dep.py"      = [ "F401" ] # imported but unused
+"test/cmdtest_d/*" = [
+	"ASYNC251", # time.sleep() in async function
+	"S102"      # Use of `exec` detected
+]
 "test/include/common.py" = [
 	"F821",   # undefined name 'cfg'
 	"PLW0406" # self-import
 ]
 "test/*" = [
-	"SIM115",  # open() with context manager
-	"ASYNC230" # open() in async func
+	"SIM115",   # open() with context manager
+	"ASYNC230", # open() in async func
+	"ISC004"    # Unparenthesized implicit string concatenation in collection
 ]
-"test/modtest_d/cashaddr.py"    = [ "F841" ]         # assigned to but never used
-"test/modtest_d/obj.py"         = [ "F841" ]         # assigned to but never used
-"test/overlay/fakemods/*"       = [ "F403", "F405" ] # `import *` used
-"test/colortest.py"             = [ "F403", "F405" ] # `import *` used
-"test/tooltest2.py"             = [ "F403", "F405" ] # `import *` used
-"test/cmdtest_d/*"              = [ "ASYNC251" ]     # time.sleep() in async function
-"test/overlay/tree/*"           = [ "ALL" ]
 
 [tool.pylint.format]
 indent-string = "\t"
