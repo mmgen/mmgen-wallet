@@ -41,6 +41,7 @@ ignore = [
 "mmgen/tool/file.py"          = [ "B008" ]     # function call in dfl args
 "mmgen/tool/rpc.py"           = [ "RUF013" ]   # PEP 484 prohibits implicit `Optional`
 "mmgen/contrib/keccak.py"     = [ "FURB163" ]  # `math.log` -> `math.log2(state.lanew)`
+"mmgen/devtools.py"           = [ "SIM115" ]   # open() with context manager
 "mmgen/proto/eth/rlp/*" = [
 	"TRY002", # create your own exception
 	"UP004",  # class `Binary` inherits from `object`

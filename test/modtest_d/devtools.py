@@ -70,8 +70,10 @@ class unit_tests:
 
 	def stack_trace(self, name, ut):
 		print_hdr('stack trace')
-		with open(os.devnull, 'w') as fh:
-			print_stack_trace('Test', fh_list=[fh], trim=0)
+		print_stack_trace('Test', trim=0)
+		print_stack_trace('Test2', trim=2)
+		with open(f'devtools.trace.{os.getpid()}', 'r') as fh:
+			assert len([l for l in fh if l.startswith('STACK TRACE')]) == 2
 		return True
 
 	def obj_pmsg(self, name, ut):
