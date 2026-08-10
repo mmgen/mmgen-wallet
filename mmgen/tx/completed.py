@@ -24,7 +24,7 @@ class Completed(Base):
 
 		assert (filename or data) and not (filename and data), 'CompletedTX_chk1'
 
-		super().__init__(cfg=cfg, *args, **kwargs)
+		super().__init__(*args, cfg=cfg, **kwargs)
 
 		if data:
 			self.__dict__ = data | {'twctl': self.twctl}

@@ -18,7 +18,6 @@ indent-style = "tab"
 ignore = [
 	"B006", # Do not use mutable data structures for argument defaults
 	"B018", # Found useless expression. Either assign it to a variable or remove it.
-	"B026", # Star-arg unpacking after a keyword argument is strongly discouraged
 	"BLE001", # Do not catch blind exception: `Exception`
 	"E722", # bare except
 	"I001", # Import block is un-sorted or un-formatted

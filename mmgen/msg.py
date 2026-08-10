@@ -375,7 +375,7 @@ def _get_obj(clsname, cfg, *args, coin=None, network='mainnet', infile=None, dat
 	me.cfg = cfg
 	me.proto = proto
 
-	me.__init__(infile=infile, data=data, *args, **kwargs)
+	me.__init__(*args, infile=infile, data=data, **kwargs)
 
 	return me
 
