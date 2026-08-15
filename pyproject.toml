@@ -86,7 +86,6 @@ ignore = [
 	"wordlist",
 	"pyethereum",
 	"rlp",
-	"main_split.py",
 	"tx.py",
 ]
 ignored-modules = [ # ignored for no-member, otherwise checked
