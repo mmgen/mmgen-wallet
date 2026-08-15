@@ -150,6 +150,10 @@ class Tx(BaseMessage):
 				if not verify_sig(sig, msghash, pubkey):
 					raise ValueError('signature verification failed')
 			case 'ecdsa':
+				import os
+				if not os.getenv('MMGEN_TEST_SUITE'):
+					from ....util import die
+					die(3, 'The `ecdsa` package is unsafe and may be used only in a testing environment')
 				# ecdsa.keys.VerifyingKey.verify_digest():
 				#   raises BadSignatureError if the signature is invalid or malformed
 				import ecdsa

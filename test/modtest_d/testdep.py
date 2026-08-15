@@ -45,6 +45,17 @@ class unit_tests:
 		network.address.for_p2pkh_wit(hash160_c)
 		return True
 
+	def ecdsa(self, name, ut):
+		import ecdsa
+		pko = ecdsa.SigningKey.from_secret_exponent(12345678901234, curve=ecdsa.SECP256k1)
+		pko.get_verifying_key().to_string().hex()
+		return True
+
+	def pexpect(self, name, ut):
+		import pexpect
+		from pexpect.popen_spawn import PopenSpawn
+		return True
+
 	def monero_python(self, name, ut):
 		from mmgen.util2 import load_cryptodome
 		load_cryptodome()

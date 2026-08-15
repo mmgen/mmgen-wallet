@@ -79,12 +79,6 @@ class unit_tests:
 		Crypto(cfg).encrypt_aes_ctr(b'deadbeef' * 4, b'deadbeef' * 2, b'foo')
 		return True
 
-	def ecdsa(self, name, ut):
-		import ecdsa
-		pko = ecdsa.SigningKey.from_secret_exponent(12345678901234, curve=ecdsa.SECP256k1)
-		pko.get_verifying_key().to_string().hex()
-		return True
-
 	def ripemd160(self, name, ut):
 		import hashlib
 		if hashlib.new.__name__ == 'hashlib_new_wrapper':
@@ -107,11 +101,6 @@ class unit_tests:
 			):
 				pass
 		asyncio.run(do())
-		return True
-
-	def pexpect(self, name, ut):
-		import pexpect
-		from pexpect.popen_spawn import PopenSpawn
 		return True
 
 	def scrypt(self, name, ut):
