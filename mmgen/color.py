@@ -53,7 +53,7 @@ def set_vt100():
 	'hack to put term into VT100 mode under MSWin'
 	if gc.platform == 'win32':
 		from subprocess import run
-		run([], shell=True)
+		run([], shell=True) # nosec
 
 def get_terminfo_colors(term=None):
 	from subprocess import run, PIPE
@@ -106,13 +106,13 @@ def init_color(num_colors='auto'):
 				start = (
 					'\033[38;5;{};1m'.format(e[0]) if type(e[0]) == int else
 					'\033[38;5;{};48;5;{};1m'.format(*e[0]))
-				getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
+				getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__') # nosec
 		case 8 | 16:
 			for c, e in _colors.items():
 				start = (
 					'\033[{}m'.format(e[1][0]) if e[1][1] == 0 else
 					'\033[{};{}m'.format(*e[1]))
-				getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
+				getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__') # nosec
 
 	set_vt100()
 

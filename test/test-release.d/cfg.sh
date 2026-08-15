@@ -8,7 +8,7 @@
 #   https://github.com/mmgen/mmgen-wallet
 #   https://gitlab.com/mmgen/mmgen-wallet
 
-all_tests="dep dev ruff pylint obj color daemon mod hash ref altref altgen xmr geth reth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
+all_tests="dep dev ruff pylint bandit obj color daemon mod hash ref altref altgen xmr geth reth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
 
 groups_desc="
 	default  - All tests minus the extra tests
@@ -20,7 +20,7 @@ groups_desc="
 
 init_groups() {
 	dfl_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt geth reth etc rune xmr'
-	extra_tests='dep dev ruff pylint autosign_live ltc_tn bch_tn'
+	extra_tests='dep dev ruff pylint bandit autosign_live ltc_tn bch_tn'
 	noalt_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
 	quick_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen geth etc rune xmr'
 	qskip_tests='ruff btc_tn bch bch_rt ltc ltc_rt'
@@ -92,6 +92,12 @@ init_tests() {
 		- $pylint examples
 	"
 	if [ "$SKIP_ALT_DEP" ]; then t_pylint_skip='b'; else t_pylint_skip='a'; fi
+
+	d_bandit="code vulnerabilities with Bandit static analyzer"
+	e_bandit="Error checking failed!"
+	t_bandit="
+		- $bandit mmgen
+	"
 
 	d_daemon="low-level subsystems involving coin daemons"
 	t_daemon="- $daemontest_py --exclude exec"

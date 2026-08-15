@@ -279,6 +279,7 @@ altcoin_mod_opts='--quiet'
 mmgen_tool='cmds/mmgen-tool'
 pylint='pylint'
 ruff='ruff --silent'
+bandit='bandit --silent --recursive --severity-level=medium --configfile=pyproject.toml'
 python='python3'
 rounds=10
 typescript_file='test-release.out'
@@ -375,6 +376,7 @@ do
 		objattrtest_py+=" --verbose"
 		pylint+=" --verbose"
 		ruff="${ruff/' --silent'}"
+		bandit="${bandit/' --silent'}"
 		scrambletest_py+=" --verbose" ;;
 	X)  IN_REEXEC=1 ;;
 	*)  exit ;;

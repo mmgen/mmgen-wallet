@@ -94,7 +94,7 @@ def get_keccak(cfg=None, cached_ret=[]):
 			from .contrib.keccak import keccak_256
 		elif not (keccak_256 := get_hashlib_keccak()):
 			load_cryptodome()
-			from Crypto.Hash import keccak # pylint: disable=import-error
+			from Crypto.Hash import keccak # nosec # pylint: disable=import-error
 			keccak_256 = lambda data: keccak.new(data=data, digest_bytes=32)
 		cached_ret.append(keccak_256)
 

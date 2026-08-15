@@ -6,6 +6,11 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.bandit]
+skips = [
+	"B108", # hardcoded_tmp_directory: probable insecure usage of temp file/directory
+]
+
 [tool.ruff]
 line-length = 106
 indent-width = 4
