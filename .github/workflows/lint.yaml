@@ -1,0 +1,65 @@
+name: lint (ruff+pylint+bandit)
+
+on:
+  push:
+    paths:
+      - '.github/workflows/lint.yaml'
+      - '.github/build-requirements.txt'
+      - 'pyproject.toml'
+      - 'setup.cfg'
+      - 'test/ref/**'
+      - 'cmds/**'
+      - '**.py'
+      - '**.c'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install Ubuntu package dependencies
+      run: |
+        sudo apt-get install libsecp256k1-dev
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          .github/build-requirements.txt
+          setup.cfg
+          **-requirements.txt
+
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install pip setuptools build wheel
+        python3 -m pip install gmpy2 cryptography pynacl aiohttp requests lxml scrypt semantic-version
+        python3 -m pip install pycryptodome pure-protobuf pysocks
+        python3 -m pip install pexpect ecdsa pyaes pycoin monero eth-keys ruff pylint bandit
+        python3 setup.py build_ext --inplace
+
+    - name: Check the code with Ruff static analyzer
+      run: |
+        ruff check --output-format=github mmgen
+        ruff check --output-format=github test
+        ruff check --output-format=github examples
+
+    - name: Check the code with Pylint static analyzer
+      env:
+        PYTHONPATH: .
+      run: |
+        pylint mmgen
+        pylint test
+        pylint --disable=relative-beyond-top-level test/cmdtest_d
+        pylint examples
+
+    - name: Check code vulnerabilities with Bandit static analyzer
+      run: |
+        bandit --silent --recursive --severity-level=medium --configfile=pyproject.toml mmgen

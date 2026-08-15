@@ -3,7 +3,7 @@
 ##### A terminal-based online/offline cryptocurrency wallet
 
 ![build](https://github.com/mmgen/mmgen-wallet/workflows/build/badge.svg)
-![ruff](https://github.com/mmgen/mmgen-wallet/workflows/ruff/badge.svg)
+![lint](https://github.com/mmgen/mmgen-wallet/workflows/lint/badge.svg)
 
 ### Description
 
