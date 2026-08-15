@@ -8,7 +8,7 @@
 #   https://github.com/mmgen/mmgen-wallet
 #   https://gitlab.com/mmgen/mmgen-wallet
 
-all_tests="dep dev lint obj color daemon mod hash ref altref altgen xmr geth reth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
+all_tests="dep dev ruff pylint obj color daemon mod hash ref altref altgen xmr geth reth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
 
 groups_desc="
 	default  - All tests minus the extra tests
@@ -20,11 +20,11 @@ groups_desc="
 
 init_groups() {
 	dfl_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt geth reth etc rune xmr'
-	extra_tests='dep dev lint pylint autosign_live ltc_tn bch_tn'
+	extra_tests='dep dev ruff pylint autosign_live ltc_tn bch_tn'
 	noalt_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
 	quick_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen geth etc rune xmr'
-	qskip_tests='lint btc_tn bch bch_rt ltc ltc_rt'
-	noalt_ok_tests='lint'
+	qskip_tests='ruff btc_tn bch bch_rt ltc ltc_rt'
+	noalt_ok_tests='ruff'
 
 	[ "$MSYS2" ] && SKIP_LIST='autosign autosign_live'
 	[ "$SKIP_PARITY" ] && SKIP_LIST+=' etc'
@@ -71,28 +71,25 @@ init_tests() {
 		- $cmdtest_py dev
 	"
 
-	[ "$VERBOSE" ] || STDOUT_DEVNULL='> /dev/null'
-	d_lint="code errors with Ruff static code analyzer"
-	e_lint="Error checking failed!"
-	t_lint="
-		b ruff check setup.py $STDOUT_DEVNULL
-		b ruff check mmgen $STDOUT_DEVNULL
-		b ruff check test $STDOUT_DEVNULL
-		b ruff check examples $STDOUT_DEVNULL
+	d_ruff="code errors with Ruff static analyzer"
+	e_ruff="Error checking failed!"
+	t_ruff="
+		b $ruff check setup.py
+		b $ruff check mmgen
+		b $ruff check test
+		b $ruff check examples
 	"
 
-	PYLINT_OPTS='--errors-only --jobs=0'
-	d_pylint="code errors with Pylint static code analyzer"
+	d_pylint="code errors with Pylint static analyzer"
 	e_pylint="Error checking failed!"
-	# use pylint==3.1.1
 	t_pylint="
-		b $pylint $PYLINT_OPTS mmgen
-		b $pylint $PYLINT_OPTS test
-		b $pylint $PYLINT_OPTS --disable=relative-beyond-top-level test/cmdtest_d
-		a $pylint $PYLINT_OPTS --ignore-paths '.*/eth/.*' mmgen
-		a $pylint $PYLINT_OPTS --ignore-paths '.*/dep.py,.*/testdep.py' test
-		a $pylint $PYLINT_OPTS --ignore-paths '.*/ethdev.py' --disable=relative-beyond-top-level test/cmdtest_d
-		- $pylint $PYLINT_OPTS examples
+		b $pylint mmgen
+		b $pylint test
+		b $pylint --disable=relative-beyond-top-level test/cmdtest_d
+		a $pylint --ignore-paths '.*/eth/.*' mmgen
+		a $pylint --ignore-paths '.*/dep.py,.*/testdep.py' test
+		a $pylint --ignore-paths '.*/ethdev.py' --disable=relative-beyond-top-level test/cmdtest_d
+		- $pylint examples
 	"
 	if [ "$SKIP_ALT_DEP" ]; then t_pylint_skip='b'; else t_pylint_skip='a'; fi
 
@@ -105,7 +102,7 @@ init_tests() {
 	d_hash="internal hash function implementations"
 	t_hash="
 		256    $python test/hashfunc.py sha256 $rounds5x
-		512    $python test/hashfunc.py sha512 $rounds5x # native SHA512 - not used by the MMGen wallet
+		512    $python test/hashfunc.py sha512 $rounds5x # internal SHA512 not used by MMGen Wallet
 		keccak $python test/hashfunc.py keccak $rounds5x
 		ripemd160 $python mmgen/contrib/ripemd160.py $VERBOSE $fast_opt
 	"

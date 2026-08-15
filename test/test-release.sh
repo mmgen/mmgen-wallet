@@ -65,7 +65,7 @@ list_avail_tests() {
 		[ "$a" ] && printf "   %-8s - %s\n" $a "$c"
 	done <<<$groups_desc
 	echo
-	echo   "By default, all tests are run"
+	echo   "By default, all tests in default or specified test group are run"
 }
 
 run_tests() {
@@ -277,7 +277,8 @@ gentest_py='test/gentest.py --quiet'
 scrambletest_py='test/scrambletest.py'
 altcoin_mod_opts='--quiet'
 mmgen_tool='cmds/mmgen-tool'
-pylint='PYTHONPATH=. pylint' # PYTHONPATH required by older Pythons (e.g. v3.9)
+pylint='pylint'
+ruff='ruff --silent'
 python='python3'
 rounds=10
 typescript_file='test-release.out'
@@ -373,6 +374,7 @@ do
 		mmgen_tool+=" --verbose"
 		objattrtest_py+=" --verbose"
 		pylint+=" --verbose"
+		ruff="${ruff/' --silent'}"
 		scrambletest_py+=" --verbose" ;;
 	X)  IN_REEXEC=1 ;;
 	*)  exit ;;

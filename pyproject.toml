@@ -80,6 +80,7 @@ max-line-length = 106
 
 [tool.pylint.main]
 recursive = true
+errors-only = true
 jobs = 0
 ignore = [
 	"data",

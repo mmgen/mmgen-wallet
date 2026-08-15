@@ -33,7 +33,8 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 	networks = ('btc',)
 	segwit_opts_ok = False
 	tmpdir_nums = [9]
-	enc_infn = 'tool_encrypt.in'
+	enc_in_fn = 'tool_encrypt.in'
+	dec_out_fn = 'tool_decrypt.out'
 	cmd_group = (
 		('tool_find_incog_data',
 			(9, '‘mmgen-tool find_incog_data’', [[[hincog_fn], 1], [[incog_id_fn], 1]])
@@ -45,7 +46,7 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 			(9, '‘mmgen-tool encrypt’ (random data)', [])
 		),
 		('tool_decrypt',
-			(9, '‘mmgen-tool decrypt’ (random data)', [[[enc_infn+'.mmenc'], 9]])
+			(9, '‘mmgen-tool decrypt’ (random data)', [[[enc_in_fn+'.mmenc'], 9]])
 		),
 		('tool_twview_bad_comment',
 			(9, '‘mmgen-tool twview’ (with bad comment)', [])
@@ -78,7 +79,7 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 		return t
 
 	def tool_encrypt(self):
-		infile = joinpath(self.tmpdir, self.enc_infn)
+		infile = joinpath(self.tmpdir, self.enc_in_fn)
 		write_to_file(infile, getrand(1033), binary=True)
 		t = self.spawn('mmgen-tool', ['-d', self.tmpdir, self.usr_rand_arg, 'encrypt', infile])
 		t.usr_rand(self.usr_rand_chars)
@@ -88,12 +89,13 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 		return t
 
 	def tool_decrypt(self, f1):
-		out_fn = 'tool_encrypt.out'
-		t = self.spawn('mmgen-tool', ['-d', self.tmpdir, 'decrypt', f1, 'outfile='+out_fn, 'hash_preset=1'])
+		t = self.spawn(
+			'mmgen-tool',
+			['-d', self.tmpdir, 'decrypt', f1, 'outfile='+self.dec_out_fn, 'hash_preset=1'])
 		t.passphrase('data', tool_enc_passwd)
 		t.written_to_file('Decrypted data')
-		d1 = self.read_from_tmpfile(self.enc_infn, binary=True)
-		d2 = self.read_from_tmpfile(out_fn, binary=True)
+		d1 = self.read_from_tmpfile(self.enc_in_fn, binary=True)
+		d2 = self.read_from_tmpfile(self.dec_out_fn, binary=True)
 		cmp_or_die(d1, d2)
 		return t
 
