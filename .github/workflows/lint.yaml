@@ -1,4 +1,4 @@
-name: lint (ruff+pylint+bandit)
+name: lint(ruff+pylint+bandit)
 
 on:
   push:
