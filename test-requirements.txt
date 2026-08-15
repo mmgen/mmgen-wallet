@@ -1,0 +1,9 @@
+pexpect
+ecdsa
+pyaes
+pycoin
+monero
+eth-keys
+ruff
+pylint
+bandit
