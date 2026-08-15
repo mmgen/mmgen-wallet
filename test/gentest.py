@@ -495,7 +495,7 @@ def parse_args():
 	match cfg._args:
 		case (gen1, rounds) if is_int(gen1) and is_int(rounds):
 			test, dumpfile = ('speed', None)
-		case (gen1, dumpfile) if is_int(gen1) and os.access(dumpfile, os.R_OK):
+		case (gen1, dumpfile) if is_int(gen1) and os.access(dumpfile, os.R_OK): # pylint: disable=used-before-assignment
 			test, rounds = ('dump', None)
 		case (ab, rounds) if (ab := ab.split(':')) and is_int(rounds):
 			test, dumpfile = ('ab', None)

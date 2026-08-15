@@ -206,7 +206,7 @@ class LEDControl:
 						msg('\n')
 					return
 
-	def set(self, state):
+	def set(self, state): # pylint: disable=method-hidden
 		lt = namedtuple('led_timings', ['on_secs', 'off_secs'])
 		timings = {
 			'off':     lt(0,    0),
@@ -230,7 +230,7 @@ class LEDControl:
 
 		self.led_thread.start()
 
-	def stop(self):
+	def stop(self): # pylint: disable=method-hidden
 
 		self.set('off')
 		self.ev.set()

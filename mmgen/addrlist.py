@@ -149,7 +149,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 	has_keys     = False
 	chksum_rec_f = lambda foo, e: (str(e.idx), e.addr.views[e.addr.view_pref])
 
-	def dmsg_sc(self, desc, data):
+	def dmsg_sc(self, desc, data): # pylint: disable=method-hidden
 		Msg(f'sc_debug_{desc}: {data}')
 
 	def noop(self, desc, data):

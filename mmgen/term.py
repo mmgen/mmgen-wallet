@@ -35,7 +35,7 @@ match gc.platform:
 		hold_protect_timeout = 2 if gc.platform == 'darwin' else 0.3
 	case 'win32':
 		try:
-			import msvcrt
+			import msvcrt # pylint: disable=import-error
 		except:
 			die(2, 'Unable to set terminal mode')
 		if not sys.stdin.isatty():
@@ -304,3 +304,6 @@ def init_term(cfg, *, noecho=False):
 
 def reset_term():
 	get_term().reset()
+
+# required by pylint:
+get_char = get_char_raw = kb_hold_protect = get_terminal_size = lambda *args, **kwargs: None

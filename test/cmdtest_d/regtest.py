@@ -486,12 +486,12 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		if trunner is None:
 			return
 
-		if self.proto.testnet:
+		if self.proto.testnet: # pylint: disable=access-member-before-definition
 			die(2, '--testnet and --regtest options incompatible with regtest test suite')
 
 		coin = self.coin
 
-		self.proto = init_proto(cfg, coin, network='regtest', need_amt=True)
+		self.proto = init_proto(cfg, coin, network='regtest', need_amt=True) # redefinition
 
 		gldict = globals()
 		for k, v in rt_data.items():

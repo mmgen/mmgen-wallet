@@ -29,7 +29,7 @@ from mmgen.color import red, blue, cyan, orange, purple, gray
 from mmgen.util import msg, suf, die, indent, fmt
 from mmgen.led import LEDControl
 from mmgen.autosign import Autosign
-from mmgen.autosign.signable import Signable
+from mmgen.autosign.signable import Signable # pylint: disable=no-name-in-module,import-error
 
 from ..include.common import (
 	omsg,

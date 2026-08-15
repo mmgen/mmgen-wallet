@@ -120,7 +120,7 @@ class CmdTestRunner:
 				'PYTHONTRACEMALLOC': '10'})
 
 		if self.cfg.exact_output:
-			from mmgen.term import get_terminal_size
+			from mmgen.term import get_terminal_size # pylint: disable=no-name-in-module
 			self.spawn_env['MMGEN_COLUMNS'] = str(get_terminal_size().width)
 		else:
 			self.spawn_env['MMGEN_COLUMNS'] = '120'

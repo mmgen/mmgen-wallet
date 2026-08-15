@@ -128,7 +128,7 @@ class tool_cmd(tool_cmd_base):
 	def unhexdump(self, infile: str):
 		"decode hexdump from file (use '-' for stdin) (warning: outputs binary data)"
 		if gc.platform == 'win32':
-			import sys, msvcrt
+			import sys, msvcrt # pylint: disable=import-error
 			msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 		from ..fileutil import get_data_from_file
 		from ..util2 import decode_pretty_hexdump

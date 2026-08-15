@@ -127,7 +127,7 @@ class TokenNew(TokenBase, New):
 		if self.is_swap and (force or not hasattr(self, 'router_gas')):
 			self.router_gas = (
 				int(self.cfg.router_gas) if self.cfg.router_gas else
-				self.txobj['router_gas'] if self.txobj else
+				self.txobj['router_gas'] if hasattr(self, 'txobj') else
 				self.dfl_router_gas)
 
 	@property

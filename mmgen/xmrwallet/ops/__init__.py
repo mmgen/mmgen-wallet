@@ -23,6 +23,8 @@ from ... import xmrwallet
 
 from .. import uarg_info
 
+fmt_amt = hl_amt = lambda *args, **kwargs: None # pylint
+
 class OpBase:
 
 	opts = ('wallet_dir',)

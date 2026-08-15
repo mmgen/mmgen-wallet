@@ -217,7 +217,7 @@ def write_data_to_file(
 				msg('Redirecting output to file')
 
 		if binary and gc.platform == 'win32':
-			import msvcrt
+			import msvcrt # pylint: disable=import-error
 			msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 
 		# MSWin workaround. See msg_r()

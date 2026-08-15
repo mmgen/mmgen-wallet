@@ -34,7 +34,7 @@ class ThornodeRPCServer(ThornodeServer):
 			def get_account_info(m, length):
 				return {
 					'value': {
-						'address': m[1],
+						'address': m[1], # pylint: disable=unsubscriptable-object
 						'pub_key': 'PubKeySecp256k1{0000}',
 						'account_number': '1234',
 						'sequence': '333444'}}

@@ -102,9 +102,9 @@ class unit_tests:
 
 	def errors(self, name, ut, desc='reading transaction files (error handling)'):
 		async def bad1():
-			await CompletedTX(cfg, filename='foo')
+			await CompletedTX(cfg, filename='foo') # pylint: disable=too-many-function-args
 		def bad2():
-			UnsignedTX(cfg, filename='foo')
+			UnsignedTX(cfg, filename='foo') # pylint: disable=too-many-function-args
 		bad_data = (
 			('forbidden positional args', 'TypeError', 'positional arguments', bad1),
 			('forbidden positional args', 'TypeError', 'positional arguments', bad2),

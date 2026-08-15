@@ -21,7 +21,6 @@ class Base(TxBase):
 
 	rel_fee_desc = 'gas price'
 	rel_fee_disp = 'gas price in Gwei'
-	txobj = None
 	dfl_gas = 21000 # the startGas amt used in the transaction
 	                # for simple sends with no data, startGas = 21000
 	contract_desc = 'contract'

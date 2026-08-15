@@ -84,86 +84,20 @@ errors-only = true
 jobs = 0
 ignore = [
 	"data",
-	"wordlist",
-	"pyethereum",
-	"rlp",
-	"tx.py",
 ]
-ignored-modules = [ # ignored for no-member, otherwise checked
+extension-pkg-allow-list = [
 	"mmgen.proto.secp256k1.secp256k1",
-	"mmgen.term",
-	"msvcrt",
 	"gmpy2",
 ]
 
 [tool.pylint."messages control"]
 disable = [
-	"raw-checker-failed",
-	"bad-inline-option",
-	"locally-disabled",
-	"file-ignored",
-	"suppressed-message",
-	"useless-suppression",
-	"deprecated-pragma",
-	"use-symbolic-message-instead",
-	"use-implicit-booleaness-not-comparison-to-string",
-	"use-implicit-booleaness-not-comparison-to-zero",
-	"not-async-context-manager",
-# non-default:
 	"no-method-argument",
+	"no-self-argument",
 	"function-redefined",
-	"method-hidden",
+	"possibly-used-before-assignment",
+	"no-member",
 ]
 
 [tool.pylint.miscellaneous]
-notes = ["FIXME", "TODO", "DEBUG", "WIP"]
-
-[tool.pylint.typecheck]
-mixin-class-rgx = """.*[Mm]ixin|\
-	^(Hilite|InitErrors|DummyWIF|\
-	cfg_file|cfg_file_sample|\
-	MoneroMMGenFile|keygen_base|xmr_signable|\
-	CmdTestShared|CmdTestSwapMethods|HTTPD|\
-	RPC|TxProxyClient|Contract)$"""
-
-ignored-classes = [ # ignored for no-member, otherwise checked
-	"argparse.Namespace",
-	"optparse.Values",
-	"thread._local",
-	"_thread._local",
-# mmgen:
-	"baseconv",
-	"deserialized_tx",
-	"mmgen.autosign.Signable.base",
-	"mmgen.autosign.Autosign", # tx_dir, etc. created dynamically
-	"mmgen.rpc.local.RPCClient",
-	"mmgen.proto.eth.tx.transaction.Transaction",
-	"mmgen.proto.eth.tw.view.EthereumTwView",
-	"mmgen.xmrwallet.file.MoneroMMGenTX.Base",
-	"mmgen.xmrwallet.file.MoneroWalletOutputsFile.Base",
-	"mmgen.xmrwallet.ops.sweep.OpSweep",
-	"mmgen.xmrwallet.ops.wallet.OpWallet",
-	"mmgen.xmrwallet.ops.label.OpLabel",
-	"mmgen.xmrwallet.ops.new.OpNew",
-	"mmgen.xmrwallet.ops.txview.OpTxview",
-	"mmgen.xmrwallet.file.outputs.MoneroWalletOutputsFile.Base",
-	"mmgen.xmrwallet.file.tx.MoneroMMGenTX.Base",
-	"MMGenObjectDevTools",
-	"MnemonicEntry",
-	"MnEntryMode",
-	"Sha2",
-	"TwRPC",
-	"TxInfo",
-# test suite:
-	"CmdGroupMgr",
-	"CmdTestEthBumpMethods",
-	"CmdTestEthdevMethods",
-	"CmdTestEthSwapMethods",
-	"FFI_override",
-	"GenTool",
-	"Help",
-	"Opts",
-	"SwapMgrBase",
-	"TestHashFunc",
-	"VirtBlockDeviceBase",
-]
+notes = ["FIXME", "TODO", "DEBUG", "WIP", "NB"]
