@@ -74,7 +74,7 @@ def encode_raw(item):
         payload = b''.join(encode_raw(x) for x in item)
         prefix_offset = 192  # list
     else:
-        msg = 'Cannot encode object of type {0}'.format(type(item).__name__)
+        msg = 'Cannot encode object of type {}'.format(type(item).__name__)
         raise EncodingError(msg, item)
 
     try:
@@ -129,7 +129,7 @@ def consume_length_prefix(rlp, start):
         if rlp[start + 1:start + 2] == b'\x00':
             raise DecodingError('Length starts with zero bytes', rlp)
         len_prefix = rlp[start + 1:start + 1 + ll]
-        l = big_endian_to_int(len_prefix)  # noqa: E741
+        l = big_endian_to_int(len_prefix)
         if l < 56:
             raise DecodingError('Long string prefix used for short string', rlp)
         return (rlp[start:start + 1] + len_prefix, bytes, l, start + 1 + ll)
@@ -140,7 +140,7 @@ def consume_length_prefix(rlp, start):
         if rlp[start + 1:start + 2] == b'\x00':
             raise DecodingError('Length starts with zero bytes', rlp)
         len_prefix = rlp[start + 1:start + 1 + ll]
-        l = big_endian_to_int(len_prefix)  # noqa: E741
+        l = big_endian_to_int(len_prefix)
         if l < 56:
             raise DecodingError('Long list prefix used for short list', rlp)
         return (rlp[start:start + 1] + len_prefix, list, l, start + 1 + ll)

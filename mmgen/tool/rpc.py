@@ -193,8 +193,8 @@ class tool_cmd(tool_cmd_base):
 		return await (await TwCtl(self.cfg, self.proto, mode='w')).rescan_address(mmgen_or_coin_addr)
 
 	async def rescan_blockchain(self, *,
-			start_block: int = None,
-			stop_block: int  = None):
+			start_block: int = None,  # noqa: RUF013
+			stop_block: int  = None): # noqa: RUF013
 		"""
 		rescan the blockchain to update historical transactions in the tracking wallet
 

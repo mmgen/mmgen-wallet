@@ -6,7 +6,7 @@
 # This is the old, pre-SHA3 version of Keccak used by Ethereum, which is not supported
 # by hashlib.sha3
 
-from math import log
+from math import log2
 from operator import xor
 from copy import deepcopy
 from functools import reduce
@@ -98,7 +98,7 @@ def keccak_f(state):
 		# iota
 		A[0][0] ^= RC
 
-	l = int(log(state.lanew, 2))
+	l = int(log2(state.lanew))
 	nr = 12 + 2 * l
 
 	for ir in range(nr):

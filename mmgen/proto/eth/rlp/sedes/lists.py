@@ -43,7 +43,7 @@ class List(list):
     """
 
     def __init__(self, elements=None, strict=True):
-        super(List, self).__init__()
+        super().__init__()
         self.strict = strict
 
         if elements:

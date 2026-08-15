@@ -13,7 +13,7 @@ class Boolean:
         elif obj is True:
             return b'\x01'
         else:
-            raise Exception("Invariant: no other options for boolean values")
+            raise ValueError("Invariant: no other options for boolean values")
 
     def deserialize(self, serial):
         if serial == b'':

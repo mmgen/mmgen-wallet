@@ -57,7 +57,7 @@ def print_stack_trace(message=None, fh_list=[], sep='\n  ', trim=4):
 	res = get_stack_trace(message, ('\n' if fh_list else ''), sep, trim)
 	if not fh_list:
 		import os
-		fh_list.append(open(f'devtools.trace.{os.getpid()}', 'w'))
+		fh_list.append(open(f'devtools.trace.{os.getpid()}', 'w')) # noqa: SIM115
 	sys.stderr.write(res)
 	fh_list[0].write(res)
 	fh_list[0].flush()

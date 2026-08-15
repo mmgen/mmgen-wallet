@@ -36,19 +36,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "protobuf.py"                 = [ "UP045" ]    # Use `X | None` for type annotations
 "mmgen/rpc/backends/curl.py"  = [ "ASYNC221" ] # blocking method in async function
-"mmgen/xmrwallet/__init__.py" = [ "PLC3002" ]  # Lambda expression called directly
 "mmgen/tool/*"                = [ "F821" ]     # Undefined name `sstr`
-"mmgen/tool/file.py"          = [ "B008" ]     # function call in dfl args
-"mmgen/tool/rpc.py"           = [ "RUF013" ]   # PEP 484 prohibits implicit `Optional`
-"mmgen/contrib/keccak.py"     = [ "FURB163" ]  # `math.log` -> `math.log2(state.lanew)`
-"mmgen/devtools.py"           = [ "SIM115" ]   # open() with context manager
-"mmgen/proto/eth/rlp/*" = [
-	"TRY002", # create your own exception
-	"UP004",  # class `Binary` inherits from `object`
-	"UP008",  # Use `super()` instead of `super(__class__, self)`
-	"UP030",  # Use implicit references for positional format fields
-	"RUF100"  # Unused `noqa` directive (non-enabled: `F401`)
-]
 
 "examples/*" = [ "ASYNC230" ] # open() in async function
 
@@ -58,6 +46,7 @@ ignore = [
 "test/objattrtest_d/*"       = [ "F401" ] # imported but unused
 "test/objtest_d/*"           = [ "F401" ] # imported but unused
 "test/modtest_d/dep.py"      = [ "F401" ] # imported but unused
+"test/modtest_d/testdep.py"  = [ "F401" ] # imported but unused
 "test/cmdtest_d/*" = [
 	"ASYNC251", # time.sleep() in async function
 	"S102"      # Use of `exec` detected

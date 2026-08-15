@@ -31,7 +31,7 @@ uargs = namedtuple('xmrwallet_uargs', [
 	'spec',
 	'compat_call'])
 
-uarg_info = (
+uarg_info = ( # noqa: PLC3002
 	lambda e, hp: {
 		'daemon':          e('HOST:PORT', hp),
 		'tx_relay_daemon': e('HOST:PORT[:PROXY_IP:PROXY_PORT]',     rf'({hp})(?::({hp}))?'),

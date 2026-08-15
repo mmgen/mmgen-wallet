@@ -73,7 +73,7 @@ class unit_tests:
 
 	def eth_keys(self, name, ut):
 		try:
-			from eth_keys import keys # noqa: F401
+			from eth_keys import keys
 			return True
 		except ImportError:
 			if get_ethkey():

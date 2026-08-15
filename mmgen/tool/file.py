@@ -22,6 +22,9 @@ tool.file: Address and transaction file routines for the 'mmgen-tool' utility
 
 from .common import tool_cmd_base, options_annot_str
 
+txview_sort_exp = options_annot_str(['addr', 'raw'])
+txview_filesort_exp = options_annot_str(['mtime', 'ctime', 'atime'])
+
 class tool_cmd(tool_cmd_base):
 	"utilities for viewing/checking MMGen address and transaction files"
 
@@ -84,8 +87,8 @@ class tool_cmd(tool_cmd_base):
 					'mmgen_tx_file(s)': str,
 					'pager': 'send output to pager',
 					'terse': 'produce compact tabular output',
-					'sort':  'sort order for transaction inputs and outputs ' + options_annot_str(['addr', 'raw']),
-					'filesort': 'file sort order ' + options_annot_str(['mtime', 'ctime', 'atime'])}},
+					'sort':  f'sort order for transaction inputs and outputs {txview_sort_exp}',
+					'filesort': f'file sort order {txview_filesort_exp}'}},
 			*infiles,
 			**kwargs):
 		"display specified raw or signed MMGen transaction files in human-readable form"

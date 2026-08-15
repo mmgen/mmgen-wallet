@@ -2,7 +2,7 @@ from ..exceptions import SerializationError,DeserializationError
 from ..atomic import Atomic
 
 
-class Binary(object):
+class Binary:
     """A sedes object for binary data of certain length.
 
     :param min_length: the minimal length in bytes or `None` for no lower limit

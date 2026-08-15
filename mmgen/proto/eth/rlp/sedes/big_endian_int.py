@@ -2,7 +2,7 @@ from ...pyethereum.utils import int_to_big_endian,big_endian_to_int
 from ..exceptions import DeserializationError,SerializationError
 
 
-class BigEndianInt(object):
+class BigEndianInt:
     """A sedes for big endian integers.
 
     :param l: the size of the serialized representation in bytes or `None` to
