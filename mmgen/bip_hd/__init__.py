@@ -26,7 +26,7 @@ from ..addr import MMGenAddrType
 from ..key import PrivKey
 from ..protocol import CoinProtocol, init_proto
 from ..proto.btc.common import hash160, b58chk_encode, b58chk_decode
-from ..proto.secp256k1.secp256k1 import pubkey_tweak_add, pubkey_check
+from ..proto.secp256k1.secp256k1 import pubkey_tweak_add, pubkey_check, pubkey_decompress
 
 from . import chainparams
 chainparams_data = chainparams.parse_data()
@@ -56,10 +56,6 @@ def compress_pubkey(pubkey_bytes):
 	# see: proto.secp256k1.keygen.pubkey_format()
 	return (b'\x02', b'\x03')[pubkey_bytes[-1] & 1] + pubkey_bytes[1:33]
 
-def decompress_pubkey(pubkey_bytes):
-	import ecdsa
-	return b'\x04' + ecdsa.VerifyingKey.from_string(pubkey_bytes, curve=ecdsa.curves.SECP256k1).to_string()
-
 class Bip32ExtendedKey(Lockable):
 
 	def __init__(self, key_b58):
@@ -73,7 +69,7 @@ class Bip32ExtendedKey(Lockable):
 
 		# Serialization:
 		#   ver_bytes | depth | par_print | idx      | chaincode  | serialized_key
-		#   0:4 (4)   | 4 (1) | 5:9 (4)   | 9:13 (4) | 13:45 (32) | 45(46): 33(32)
+		#   0:4 (4)   | 4 (1) | 5:9 (4)   | 9:13 (4) | 13:45 (32) | 45: (33), or 46: (32)
 		ver_hex = key[:4].hex()
 		bipnum, cp_entry = parse_version_bytes(ver_hex)
 
@@ -273,7 +269,7 @@ class BipHDNode(Lockable):
 	def address(self):
 		return self.cfg.ag.to_addr(
 			keygen_public_data(
-					pubkey        = self.key if self.cfg.addr_type.compressed else decompress_pubkey(self.key),
+					pubkey        = self.key if self.cfg.addr_type.compressed else pubkey_decompress(self.key),
 					viewkey_bytes = None,
 					pubkey_type   = self.cfg.addr_type.pubkey_type,
 					compressed    = self.cfg.addr_type.compressed)

@@ -8,6 +8,7 @@ from mmgen.proto.secp256k1.secp256k1 import (
 	pubkey_gen,
 	pubkey_tweak_add,
 	pubkey_check,
+	pubkey_decompress,
 	sign_msghash,
 	pubkey_recover,
 	verify_sig)
@@ -101,7 +102,7 @@ class unit_tests:
 		return True
 
 	def pubkey_ops(self, name, ut):
-		vmsg('  Generating pubkey, adding scalar 123456789 to pubkey:')
+		vmsg('  Generating, checking, decompressing, and adding scalar to pubkey:')
 		pk_addend_bytes = int.to_bytes(123456789, length=32, byteorder='big')
 
 		for privkey in (
@@ -125,6 +126,11 @@ class unit_tests:
 
 				assert len(res1) == length
 				assert res1 == res2
+
+				res3 = pubkey_decompress(res2)
+				pubkey_check(res3)
+				assert res3[0] == 4
+				assert len(res3) == 65
 
 		return True
 

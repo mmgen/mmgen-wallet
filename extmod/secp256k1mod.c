@@ -197,6 +197,28 @@ static PyObject * pubkey_check(PyObject *self, PyObject *args) {
 	return Py_BuildValue("I", 1);
 }
 
+static PyObject * pubkey_decompress(PyObject *self, PyObject *args) {
+	const unsigned char * in_pubkey_bytes;
+	Py_ssize_t in_pubkey_bytes_len;
+	if (!PyArg_ParseTuple(args, "y#", &in_pubkey_bytes, &in_pubkey_bytes_len)) {
+		PyErr_SetString(PyExc_ValueError, "Unable to parse extension mod arguments");
+		return NULL;
+	}
+	secp256k1_context *ctx = create_context(1);
+	secp256k1_pubkey pubkey;
+	if (!pubkey_parse_with_check(ctx, &pubkey, in_pubkey_bytes, in_pubkey_bytes_len)) {
+		return NULL;
+	}
+	size_t pubkey_bytes_len = 65;
+	unsigned char pubkey_bytes[pubkey_bytes_len];
+	if (secp256k1_ec_pubkey_serialize(ctx, pubkey_bytes, &pubkey_bytes_len, &pubkey,
+			SECP256K1_EC_UNCOMPRESSED) != 1) {
+		PyErr_SetString(PyExc_RuntimeError, "Public key serialization failed");
+		return NULL;
+	}
+	return Py_BuildValue("y#", pubkey_bytes, pubkey_bytes_len);
+}
+
 /*
  * returns 64-byte serialized signature (r + s) plus integer recovery ID in range 0-3
  */
@@ -395,6 +417,12 @@ static PyMethodDef secp256k1_methods[] = {
 		pubkey_recover,
 		METH_VARARGS,
 		"Recover a serialized pubkey from a recoverable signature plus signed message"
+	},
+	{
+		"pubkey_decompress",
+		pubkey_decompress,
+		METH_VARARGS,
+		"Convert a compressed or uncompressed serialized pubkey into an uncompressed serialized pubkey"
 	},
 	{NULL, NULL}
 };
