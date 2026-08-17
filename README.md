@@ -205,5 +205,5 @@ Donate:
 [ms]: ../../wiki/command-help-seedsplit
 [ta]: ../../wiki/Tool-API
 [L]:  ../../wiki/command-help-tool
-[bb]: https://github.com/mmgen/mmgen-wallet/workflows/build/badge.svg
-[lb]: https://github.com/mmgen/mmgen-wallet/workflows/lint(ruff+pylint+bandit)/badge.svg
+[bb]: https://github.com/mmgen/mmgen-wallet/actions/workflows/build.yaml/badge.svg
+[lb]: https://github.com/mmgen/mmgen-wallet/actions/workflows/lint.yaml/badge.svg

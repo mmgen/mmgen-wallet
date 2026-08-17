@@ -1,4 +1,6 @@
-name: lint(ruff+pylint+bandit)
+name: Check
+
+run-name: Check code with Ruff, Bandit and Pylint static analyzers
 
 on:
   push:
@@ -47,19 +49,23 @@ jobs:
 
     - name: Check the code with Ruff static analyzer
       run: |
+        ruff check --output-format=github setup.py
         ruff check --output-format=github mmgen
         ruff check --output-format=github test
         ruff check --output-format=github examples
+
+    - name: Check code vulnerabilities with Bandit static analyzer
+      run: |
+        bandit --silent --recursive --severity-level=all --configfile=pyproject.toml setup.py
+        bandit --silent --recursive --severity-level=all --configfile=pyproject.toml mmgen
+        bandit --silent --recursive --severity-level=all --configfile=pyproject.toml examples
 
     - name: Check the code with Pylint static analyzer
       env:
         PYTHONPATH: .
       run: |
+        pylint setup.py
         pylint mmgen
         pylint test
         pylint --disable=relative-beyond-top-level test/cmdtest_d
         pylint examples
-
-    - name: Check code vulnerabilities with Bandit static analyzer
-      run: |
-        bandit --silent --recursive --severity-level=medium --configfile=pyproject.toml mmgen

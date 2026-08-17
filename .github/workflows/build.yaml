@@ -1,4 +1,4 @@
-name: build
+name: Build/Install
 
 on:
   push:
@@ -21,14 +21,14 @@ jobs:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install Ubuntu package dependencies
       run: |
         sudo apt-get install libsecp256k1-dev
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
@@ -39,5 +39,5 @@ jobs:
     - name: Build and install MMGen Wallet
       run: |
         python3 -m pip install setuptools build wheel
-        python3 -m build --no-isolation
+        python3 -m build --no-isolation --wheel
         python3 -m pip install --user --break-system-packages dist/*.whl
