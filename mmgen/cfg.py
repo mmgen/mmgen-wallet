@@ -675,8 +675,7 @@ class Config(Lockable):
 		already_set = tuple(self._uopts) + env_cfg
 
 		def set_opt(d, obj, name, refval):
-			val = ucfg.parse_value(d.value, refval)
-			if not val:
+			if not (val:= ucfg.parse_value(d.value, refval)):
 				die('CfgFileParseError', f'Parse error in file {ucfg.fn!r}, line {d.lineno}')
 			val_conv = conv_type(name, val, refval, src=ucfg.fn)
 			setattr(obj, name, val_conv)

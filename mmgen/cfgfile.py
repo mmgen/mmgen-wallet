@@ -214,10 +214,10 @@ class CfgFileSampleUsr(cfg_file_sample):
 		if self.data:
 			if self.parse_metadata():
 				if self.chksum == self.computed_chksum:
-					diff = self.diff(self.get_lines(), src.get_lines())
-					if not diff:
-						return
-					self.show_changes(diff)
+					if diff := self.make_diff(src):
+						self.show_changes(diff)
+					else:
+						return # no changes, skip copying system data
 				else:
 					msg(self.altered_by_user_fs.format(self.fn))
 			else:
@@ -232,56 +232,51 @@ class CfgFileSampleUsr(cfg_file_sample):
 			self.data = self.data[:-1] # remove metadata line
 			return True
 
-	def diff(self, a_tup, b_tup): # a=user, b=system
-		a = [i.name for i in a_tup]#[3:] # Debug
-		b = [i.name for i in b_tup]#[:-2] # Debug
-		removed = set(a) - set(b)
-		added   = set(b) - set(a)
+	def make_diff(self, other):
+		a_tup = self.get_lines()
+		b_tup = other.get_lines()
+		a = {i.name for i in a_tup} #[3:] # Debug
+		b = {i.name for i in b_tup} #[:-2] # Debug
+		removed, added = (a - b), (b - a)
 		if removed or added:
 			return {
 				'removed': [i for i in a_tup if i.name in removed],
 				'added':   [i for i in b_tup if i.name in added]}
-		else:
-			return None
 
 	def show_changes(self, diff):
 		ymsg('Warning: configuration file options have changed!\n')
 		for desc in ('added', 'removed'):
 			changed_opts = [i.name for i in diff[desc]
 				# workaround for coin-specific opts previously listed in sample file:
-				if not (i.name.endswith('_ignore_daemon_version') and desc == 'removed')
-			]
+				if not (i.name.endswith('_ignore_daemon_version') and desc == 'removed')]
 			if changed_opts:
 				msg(f'  The following option{suf(changed_opts, verb="has")} been {desc}:')
 				msg(f'    {fmt_list(changed_opts, fmt="bare")}\n')
 				if desc == 'removed':
 					uc = mmgen_cfg_file(self.cfg, 'usr')
 					usr_names = [i.name for i in uc.get_lines()]
-					bad = sorted(set(usr_names).intersection(changed_opts))
-					if bad:
-						m = f"""
+					if bad:= sorted(set(usr_names).intersection(changed_opts)):
+						ymsg(fmt(f"""
 							The following removed option{suf(bad, verb='is')} set in {uc.fn!r}
 							and must be deleted or commented out:
 							{'  ' + fmt_list(bad, fmt='bare')}
-						"""
-						ymsg(fmt(m, indent='  ', strip_char='\t'))
+						""", indent='  ', strip_char='\t'))
+
+		def get_details():
+			sep, sep2 = ('\n  ', '\n\n  ')
+			for desc, data in diff.items():
+				if data:
+					yield (
+						f'{capfirst(desc)} section{suf(data)}:'
+						+ sep2
+						+ sep2.join([f'{sep.join(v.chunk)}' for v in data]))
 
 		from .ui import keypress_confirm, do_pager
 		while True:
-			if not keypress_confirm(self.cfg, self.details_confirm_prompt, no_nl=True):
-				return
-
-			def get_details():
-				for desc, data in diff.items():
-					sep, sep2 = ('\n  ', '\n\n  ')
-					if data:
-						yield (
-							f'{capfirst(desc)} section{suf(data)}:'
-							+ sep2
-							+ sep2.join([f'{sep.join(v.chunk)}' for v in data])
-						)
-
-			do_pager(
-				'CONFIGURATION FILE CHANGES\n\n'
-				+ '\n\n'.join(get_details()) + '\n'
-			)
+			if keypress_confirm(
+					self.cfg,
+					self.details_confirm_prompt,
+					no_nl = True):
+				do_pager('CONFIGURATION FILE CHANGES\n\n' + '\n\n'.join(get_details()) + '\n')
+			else:
+				break
