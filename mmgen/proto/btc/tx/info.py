@@ -99,37 +99,35 @@ class TxInfo(TxInfo):
 					if have_bch and e.addr:
 						yield '{:3} [{}]\n'.format('', e.addr.hl(vp2, color=False))
 			else:
-				def gen(n, e):
-					mmid_fmt = get_mmid_fmt(e, is_input)
-					if is_input:
-						yield (n+1, 'tx,vout:', f'{e.txid.hl()},{red(str(e.vout))}')
-						yield ('',  'address:', f'{e.addr.hl(vp1)} {mmid_fmt}')
-						if have_bch:
-							yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
-					else:
-						yield (
-							n + 1,
-							'address:',
-							(f'{e.addr.hl(vp1)} {mmid_fmt}' if e.addr else e.data.hl(add_label=True)))
-						if have_bch and e.addr:
-							yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
-
+				def gen_common(e):
 					if e.comment:
-						yield ('',  'comment:', e.comment.hl())
+						yield ('', 'comment:', e.comment.hl())
+					yield ('', 'amount:', f'{e.amt.hl()} {tx.dcoin}')
 
-					yield     ('',  'amount:',  f'{e.amt.hl()} {tx.dcoin}')
+				def gen_input(n, e):
+					yield (n + 1, 'tx,vout:', f'{e.txid.hl()},{red(str(e.vout))}')
+					yield ('', 'address:', f'{e.addr.hl(vp1)} {get_mmid_fmt(e, True)}')
+					if have_bch:
+						yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
+					yield from gen_common(e)
+					if blockcount:
+						nc = e.confs + blockcount - tx.blockcount
+						yield ('', 'confirmations:', f'{nc} (around {nc // confs_per_day} days)')
 
-					if is_input and blockcount:
-						confs = e.confs + blockcount - tx.blockcount
-						yield ('', 'confirmations:', f'{confs} (around {confs // confs_per_day} days)')
+				def gen_output(n, e):
+					yield (n + 1, 'address:', (f'{e.addr.hl(vp1)} {get_mmid_fmt(e, False)}'
+						if e.addr else e.data.hl(add_label=True)))
+					if have_bch and e.addr:
+						yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
+					yield from gen_common(e)
+					if e.is_chg:
+						yield ('', 'change:', green('True'))
 
-					if not is_input and e.is_chg:
-						yield ('',  'change:',  green('True'))
-
-				col1_w = len(str(len(io))) + 1
+				lcw = len(str(len(io))) + 1
+				gen = gen_input if is_input else gen_output
 
 				for n, e in enumerate(io_sorted()):
-					yield '\n'.join('{:>{w}} {:<8} {}'.format(*d, w=col1_w) for d in gen(n, e)) + '\n\n'
+					yield '\n'.join(f'{a:>{lcw}} {b:<8} {c}' for a, b, c in gen(n, e)) + '\n\n'
 
 		tx = self.tx
 
