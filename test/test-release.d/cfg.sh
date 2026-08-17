@@ -74,29 +74,28 @@ init_tests() {
 	d_ruff="code errors with Ruff static analyzer"
 	e_ruff="Error checking failed!"
 	t_ruff="
-		b $ruff check setup.py
-		b $ruff check mmgen
-		b $ruff check test
-		b $ruff check examples
+		- $ruff check setup.py
+		- $ruff check mmgen
+		- $ruff check test
+		- $ruff check examples
 	"
 
 	d_pylint="code errors with Pylint static analyzer"
 	e_pylint="Error checking failed!"
 	t_pylint="
-		b $pylint mmgen
-		b $pylint test
-		b $pylint --disable=relative-beyond-top-level test/cmdtest_d
-		a $pylint --ignore-paths '.*/eth/.*' mmgen
-		a $pylint --ignore-paths '.*/dep.py,.*/testdep.py' test
-		a $pylint --ignore-paths '.*/ethdev.py' --disable=relative-beyond-top-level test/cmdtest_d
+		- $pylint setup.py
+		- $pylint mmgen
+		- $pylint test
+		- $pylint --disable=relative-beyond-top-level test/cmdtest_d
 		- $pylint examples
 	"
-	if [ "$SKIP_ALT_DEP" ]; then t_pylint_skip='b'; else t_pylint_skip='a'; fi
 
 	d_bandit="code vulnerabilities with Bandit static analyzer"
 	e_bandit="Error checking failed!"
 	t_bandit="
+		- $bandit setup.py
 		- $bandit mmgen
+		- $bandit examples
 	"
 
 	d_daemon="low-level subsystems involving coin daemons"

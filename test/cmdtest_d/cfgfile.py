@@ -130,7 +130,7 @@ class CmdTestCfgFile(CmdTestBase):
 		e = CfgFileSampleUsr.altered_by_user_fs.format(self.path('sample'))
 		return self.bad_sample(s, e)
 
-	def old_sample_common(self, old_set=False, args=[], pexpect_spawn=False):
+	def _old_sample_common(self, old_set=False, args=[], pexpect_spawn=False):
 		d = (
 			self.read_from_cfgfile('sys').replace('monero_', 'zcash_').splitlines()
 			+ ['', '# Uncomment to make foo true:', '# foo true']
@@ -175,11 +175,11 @@ class CmdTestCfgFile(CmdTestBase):
 
 	def old_sample(self):
 		self.write_to_cfgfile('usr', ['testnet true', 'rpc_password passwOrd'])
-		return self.old_sample_common(args=['parse_test'])
+		return self._old_sample_common(args=['parse_test'])
 
 	def old_sample_bad_var(self):
 		self.write_to_cfgfile('usr', ['foo true', 'bar false'])
-		t = self.old_sample_common(
+		t = self._old_sample_common(
 			old_set       = True,
 			pexpect_spawn = gc.platform != 'win32')
 		t.expect('unrecognized option')
