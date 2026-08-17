@@ -120,7 +120,7 @@ if cmd in ('enable_swap', 'disable_swap', 'list_led', 'test_led'):
 			if cmd == 'list_led':
 				msg(
 					'Boards with tested LED signaling support:\n' +
-					'\n'.join(f'  {v.name}' for k, v in LEDControl.boards.items() if k != 'dummy'))
+					'\n'.join(f'  {v.name}' for k, v in LEDControl.boards.items()))
 			else:
 				from .exception import NoLEDSupport
 				try:

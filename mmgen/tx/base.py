@@ -89,7 +89,7 @@ class Base(MMGenObject):
 		'swap_recv_addr_mmid': None,
 		'swap_recv_asset_spec': None,
 		'swap_memo': None,
-		'token_vault_addr': None,
+		'token_vault_addr': None, # nosec # B105
 		'serialized2': None,
 		'coin_txid2': CoinTxID}
 	file_format  = 'json'

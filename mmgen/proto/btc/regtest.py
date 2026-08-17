@@ -51,7 +51,7 @@ def create_data_dir(cfg, data_dir):
 class MMGenRegtest(MMGenObject):
 
 	rpc_user     = 'bobandalice'
-	rpc_password = 'hodltothemoon'
+	rpc_password = 'hodltothemoon' # nosec B105
 	users        = ('bob', 'alice', 'carol', 'miner')
 	coins        = ('btc', 'bch', 'ltc')
 	usr_cmds     = (

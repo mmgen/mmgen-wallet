@@ -279,7 +279,7 @@ altcoin_mod_opts='--quiet'
 mmgen_tool='cmds/mmgen-tool'
 pylint='pylint'
 ruff='ruff --silent'
-bandit='bandit --silent --recursive --severity-level=medium --configfile=pyproject.toml'
+bandit='bandit --silent --recursive --severity-level=all --configfile=pyproject.toml'
 python='python3'
 rounds=10
 typescript_file='test-release.out'

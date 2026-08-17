@@ -81,7 +81,7 @@ class Autosign:
 		match gc.platform:
 			case 'linux':
 				self.dfl_mountpoint = f'/mnt/{self.linux_mount_subdir}'
-				self.dfl_shm_dir    = '/dev/shm'
+				self.dfl_shm_dir    = '/dev/shm' # nosec B108 # (used on offline device only)
 
 				# linux-only attrs:
 				self.old_dfl_mountpoint = '/mnt/tx'
@@ -420,7 +420,7 @@ class Autosign:
 				'_clone': self.cfg,
 				'coin': 'xmr',
 				'wallet_rpc_user': 'autosign',
-				'wallet_rpc_password': 'autosign password',
+				'wallet_rpc_password': 'autosign password', # nosec # B105 (offline device use only)
 				'wallet_rpc_port': 23232 if self.cfg.test_suite_xmr_autosign else None,
 				'wallet_dir': str(self.wallet_dir),
 				'autosign': True,

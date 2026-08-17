@@ -81,11 +81,7 @@ class LEDControl:
 			name    = 'Nano Pi M6 (Armbian)',
 			control = '/sys/class/leds/user_led/brightness',
 			trigger = '/sys/class/leds/user_led/trigger',
-			color   = 'green'),
-		'dummy': binfo(
-			name    = 'Fake Board',
-			control = '/tmp/led_status',
-			trigger = '/tmp/led_trigger')}
+			color   = 'green')}
 
 	def __init__(self, *, enabled, simulate=False, debug=False):
 

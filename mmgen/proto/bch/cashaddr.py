@@ -29,8 +29,8 @@ b32a = re.sub(r'\s', '', b32_matrix)
 cashaddr_addr_types = {
 	'p2pkh':        0,
 	'p2sh':         1,
-	'token_pubkey': 2,
-	'token_script': 3,
+	'token_pubkey': 2, # nosec # B105
+	'token_script': 3, # nosec # B105
 	'unknown':      15,
 }
 addr_types_rev = {v: k for k, v in cashaddr_addr_types.items()}

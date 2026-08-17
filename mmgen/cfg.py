@@ -158,9 +158,9 @@ class Config(Lockable):
 
 	# general
 	coin        = 'BTC'
-	token       = ''
+	token       = '' # nosec B105
 	outdir      = ''
-	passwd_file = ''
+	passwd_file = '' # nosec B105
 	network     = 'mainnet'
 	testnet     = False
 	regtest     = False
@@ -201,7 +201,7 @@ class Config(Lockable):
 	rpc_host              = ''
 	rpc_port              = 0
 	rpc_user              = ''
-	rpc_password          = ''
+	rpc_password          = '' # nosec B105 # empty pw rejected, user must set, see BitcoinRPCClient
 	aiohttp_rpc_queue_len = 16
 	aiohttp_session       = None
 	cached_balances       = False
@@ -243,7 +243,7 @@ class Config(Lockable):
 
 	# Monero:
 	monero_wallet_rpc_user     = 'monero'
-	monero_wallet_rpc_password = ''
+	monero_wallet_rpc_password = '' # nosec B105 # empty pw rejected, user must set, see MoneroWalletDaemon
 	monero_daemon              = ''
 	xmrwallet_compat           = False
 	priority                   = 0

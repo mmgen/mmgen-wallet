@@ -303,7 +303,7 @@ class BitcoinTwTxHistory(BitcoinTwView, TwTxHistory, BitcoinTwRPC):
 			def do_json_dump(*data):
 				nw = f'{self.proto.coin.lower()}-{self.proto.network}'
 				for d, fn_stem in data:
-					with open(f'/tmp/{fn_stem}-{nw}.json', 'w') as fh:
+					with open(f'debug-{fn_stem}-{nw}.json', 'w') as fh:
 						fh.write(json.dumps(d, cls=json_encoder))
 
 		_mmp = namedtuple('mmap_datum', ['twmmid', 'comment'])

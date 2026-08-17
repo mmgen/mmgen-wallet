@@ -214,7 +214,7 @@ class CoinProtocol(MMGenObject):
 		rpc_host              = ''
 		rpc_port              = 0
 		rpc_user              = ''
-		rpc_password          = ''
+		rpc_password          = '' # nosec B105 # empty pw rejected, user must set, see BitcoinRPCClient
 		tw_name               = ''
 		daemon_id             = ''
 

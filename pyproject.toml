@@ -7,8 +7,14 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.bandit]
+exclude_dirs = ["test/overlay/tree"]
 skips = [
-	"B108", # hardcoded_tmp_directory: probable insecure usage of temp file/directory
+	# severity level low:
+	"B101", # assert_used
+	"B404", # import_subprocess (blacklist)
+	"B603", # subprocess - check for execution of untrusted input
+	"B607", # subprocess - starting a process with a partial executable path
+	"B110", # try_except_pass: Try, Except, Pass detected
 ]
 
 [tool.ruff]
