@@ -243,7 +243,7 @@ static PyObject * sign_msghash(PyObject *Py_UNUSED(self), PyObject *args) {
 	}
 
 	if (msghash_bytes_len != 32) {
-		PyErr_SetString(PyExc_RuntimeError, "Invalid message hash length (not 32 bytes)");
+		PyErr_SetString(PyExc_ValueError, "Invalid message hash length (not 32 bytes)");
 		return NULL;
 	}
 
@@ -257,11 +257,11 @@ static PyObject * sign_msghash(PyObject *Py_UNUSED(self), PyObject *args) {
 	int recid;
 
 	if (!secp256k1_ecdsa_sign_recoverable(ctx, &rsig, msghash_bytes, privkey_bytes, NULL, NULL)) {
-		PyErr_SetString(PyExc_ValueError, "Unable to sign message hash");
+		PyErr_SetString(PyExc_RuntimeError, "Unable to sign message hash");
 		return NULL;
 	}
 	if (!secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, rsig_serialized, &recid, &rsig)) {
-		PyErr_SetString(PyExc_ValueError, "Unable to serialize signature");
+		PyErr_SetString(PyExc_RuntimeError, "Unable to serialize signature");
 		return NULL;
 	}
 	/* truncate serialized sig to 64 bytes */
@@ -291,11 +291,11 @@ static PyObject * verify_sig(PyObject *Py_UNUSED(self), PyObject *args) {
 	}
 
 	if (sig_bytes_len != 64) {
-		PyErr_SetString(PyExc_RuntimeError, "Invalid signature length (not 64 bytes)");
+		PyErr_SetString(PyExc_ValueError, "Invalid signature length (not 64 bytes)");
 		return NULL;
 	}
 	if (msghash_bytes_len != 32) {
-		PyErr_SetString(PyExc_RuntimeError, "Invalid message hash length (not 32 bytes)");
+		PyErr_SetString(PyExc_ValueError, "Invalid message hash length (not 32 bytes)");
 		return NULL;
 	}
 
@@ -341,15 +341,15 @@ static PyObject * pubkey_recover(PyObject *Py_UNUSED(self), PyObject *args) {
 	}
 
 	if (recid < 0 || recid > 3) {
-		PyErr_SetString(PyExc_RuntimeError, "Invalid recovery ID (not in range 0-3)");
+		PyErr_SetString(PyExc_ValueError, "Invalid recovery ID (not in range 0-3)");
 		return NULL;
 	}
 	if (sig_bytes_len != 64) {
-		PyErr_SetString(PyExc_RuntimeError, "Invalid signature length (not 64 bytes)");
+		PyErr_SetString(PyExc_ValueError, "Invalid signature length (not 64 bytes)");
 		return NULL;
 	}
 	if (msghash_bytes_len != 32) {
-		PyErr_SetString(PyExc_RuntimeError, "Invalid message hash length (not 32 bytes)");
+		PyErr_SetString(PyExc_ValueError, "Invalid message hash length (not 32 bytes)");
 		return NULL;
 	}
 
