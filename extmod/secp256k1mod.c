@@ -424,7 +424,7 @@ static PyMethodDef secp256k1_methods[] = {
 		METH_VARARGS,
 		"Convert a compressed or uncompressed serialized pubkey into an uncompressed serialized pubkey"
 	},
-	{NULL, NULL}
+	{NULL, NULL, 0, NULL}
 };
 
 static int secp256k1_traverse(PyObject *m, visitproc visit, void *arg) {
