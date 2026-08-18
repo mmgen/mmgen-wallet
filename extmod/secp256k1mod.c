@@ -108,7 +108,7 @@ static int pubkey_parse_with_check(
 	return 1;
 }
 
-static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
+static PyObject * pubkey_gen(PyObject *Py_UNUSED(self), PyObject *args) {
 	const unsigned char * privkey_bytes;
 	Py_ssize_t privkey_bytes_len;
 	int compressed;
@@ -139,7 +139,7 @@ static PyObject * pubkey_gen(PyObject *self, PyObject *args) {
 	return Py_BuildValue("y#", pubkey_bytes, pubkey_bytes_len);
 }
 
-static PyObject * pubkey_tweak_add(PyObject *self, PyObject *args) {
+static PyObject * pubkey_tweak_add(PyObject *Py_UNUSED(self), PyObject *args) {
 	const unsigned char * pubkey_bytes;
 	const unsigned char * tweak_bytes;
 	Py_ssize_t pubkey_bytes_len;
@@ -182,7 +182,7 @@ static PyObject * pubkey_tweak_add(PyObject *self, PyObject *args) {
 	return Py_BuildValue("y#", new_pubkey_bytes, pubkey_bytes_len);
 }
 
-static PyObject * pubkey_check(PyObject *self, PyObject *args) {
+static PyObject * pubkey_check(PyObject *Py_UNUSED(self), PyObject *args) {
 	const unsigned char * pubkey_bytes;
 	Py_ssize_t pubkey_bytes_len;
 	if (!PyArg_ParseTuple(args, "y#", &pubkey_bytes, &pubkey_bytes_len)) {
@@ -197,7 +197,7 @@ static PyObject * pubkey_check(PyObject *self, PyObject *args) {
 	return Py_BuildValue("I", 1);
 }
 
-static PyObject * pubkey_decompress(PyObject *self, PyObject *args) {
+static PyObject * pubkey_decompress(PyObject *Py_UNUSED(self), PyObject *args) {
 	const unsigned char * in_pubkey_bytes;
 	Py_ssize_t in_pubkey_bytes_len;
 	if (!PyArg_ParseTuple(args, "y#", &in_pubkey_bytes, &in_pubkey_bytes_len)) {
@@ -222,7 +222,7 @@ static PyObject * pubkey_decompress(PyObject *self, PyObject *args) {
 /*
  * returns 64-byte serialized signature (r + s) plus integer recovery ID in range 0-3
  */
-static PyObject * sign_msghash(PyObject *self, PyObject *args) {
+static PyObject * sign_msghash(PyObject *Py_UNUSED(self), PyObject *args) {
 
 	const unsigned char * msghash_bytes;
 	const unsigned char * privkey_bytes;
@@ -267,7 +267,7 @@ static PyObject * sign_msghash(PyObject *self, PyObject *args) {
 	return Py_BuildValue("y#I", rsig_serialized, 64, recid);
 }
 
-static PyObject * verify_sig(PyObject *self, PyObject *args) {
+static PyObject * verify_sig(PyObject *Py_UNUSED(self), PyObject *args) {
 
 	const unsigned char * sig_bytes;
 	const unsigned char * msghash_bytes;
@@ -316,7 +316,7 @@ static PyObject * verify_sig(PyObject *self, PyObject *args) {
 	return Py_BuildValue("I", secp256k1_ecdsa_verify(ctx, &sig, msghash_bytes, &pubkey));
 }
 
-static PyObject * pubkey_recover(PyObject *self, PyObject *args) {
+static PyObject * pubkey_recover(PyObject *Py_UNUSED(self), PyObject *args) {
 
 	const unsigned char * msghash_bytes;
 	const unsigned char * sig_bytes;
