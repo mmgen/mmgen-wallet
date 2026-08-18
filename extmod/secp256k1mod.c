@@ -35,14 +35,18 @@ static secp256k1_context * create_context(
 		SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY
 		/* SECP256K1_CONTEXT_NONE */ /* see NOTE above */
 	);
+	if (ctx == NULL) {
+		PyErr_SetString(PyExc_RuntimeError, "Context initialization failed");
+		return NULL;
+	}
 	if (randomize) {
 		unsigned char buf[32];
 		if (!fill_random(buf, sizeof(buf))) {
-			printf("Failed to generate entropy\n");
+			PyErr_SetString(PyExc_RuntimeError, "Failed to generate entropy");
 			return NULL;
 		}
 		if (!secp256k1_context_randomize(ctx, buf)) {
-			printf("Failed to randomize context\n");
+			PyErr_SetString(PyExc_RuntimeError, "Failed to randomize context");
 			return NULL;
 		}
 	}
@@ -76,10 +80,6 @@ static int pubkey_parse_with_check(
 		const unsigned char *     pubkey_bytes,
 		const Py_ssize_t          pubkey_bytes_len
 	) {
-	if (ctx == NULL) {
-		PyErr_SetString(PyExc_RuntimeError, "Context initialization failed");
-		return 0;
-	}
 	if (pubkey_bytes_len == 33) {
 		if (pubkey_bytes[0] != 3 && pubkey_bytes[0] != 2) {
 			PyErr_SetString(
@@ -120,10 +120,8 @@ static PyObject * pubkey_gen(PyObject *Py_UNUSED(self), PyObject *args) {
 	unsigned char pubkey_bytes[pubkey_bytes_len];
 	secp256k1_pubkey pubkey;
 	secp256k1_context *ctx = create_context(1);
-	if (ctx == NULL) {
-		PyErr_SetString(PyExc_RuntimeError, "Context initialization failed");
-		return NULL;
-	}
+	if (ctx == NULL) { return NULL; }
+
 	if (!privkey_check(ctx, privkey_bytes, privkey_bytes_len, "Private key")) {
 		return NULL;
 	}
@@ -155,6 +153,8 @@ static PyObject * pubkey_tweak_add(PyObject *Py_UNUSED(self), PyObject *args) {
 		return NULL;
 	}
 	secp256k1_context *ctx = create_context(1);
+	if (ctx == NULL) { return NULL; }
+
 	secp256k1_pubkey pubkey;
 	if (!pubkey_parse_with_check(ctx, &pubkey, pubkey_bytes, pubkey_bytes_len)) {
 		return NULL;
@@ -190,6 +190,8 @@ static PyObject * pubkey_check(PyObject *Py_UNUSED(self), PyObject *args) {
 		return NULL;
 	}
 	secp256k1_context *ctx = create_context(1);
+	if (ctx == NULL) { return NULL; }
+
 	secp256k1_pubkey pubkey;
 	if (!pubkey_parse_with_check(ctx, &pubkey, pubkey_bytes, pubkey_bytes_len)) {
 		return NULL;
@@ -205,6 +207,8 @@ static PyObject * pubkey_decompress(PyObject *Py_UNUSED(self), PyObject *args) {
 		return NULL;
 	}
 	secp256k1_context *ctx = create_context(1);
+	if (ctx == NULL) { return NULL; }
+
 	secp256k1_pubkey pubkey;
 	if (!pubkey_parse_with_check(ctx, &pubkey, in_pubkey_bytes, in_pubkey_bytes_len)) {
 		return NULL;
@@ -246,6 +250,7 @@ static PyObject * sign_msghash(PyObject *Py_UNUSED(self), PyObject *args) {
 	}
 
 	secp256k1_context *ctx = create_context(1);
+	if (ctx == NULL) { return NULL; }
 
 	if (!privkey_check(ctx, privkey_bytes, privkey_bytes_len, "Private key")) {
 		return NULL;
@@ -301,6 +306,7 @@ static PyObject * verify_sig(PyObject *Py_UNUSED(self), PyObject *args) {
 	secp256k1_ecdsa_signature sig;
 	secp256k1_pubkey pubkey;
 	secp256k1_context *ctx = create_context(1);
+	if (ctx == NULL) { return NULL; }
 
 	if (!secp256k1_ecdsa_signature_parse_compact(ctx, &sig, sig_bytes)) {
 		PyErr_SetString(PyExc_RuntimeError, "Failed to parse signature");
@@ -352,6 +358,8 @@ static PyObject * pubkey_recover(PyObject *Py_UNUSED(self), PyObject *args) {
 	}
 
 	secp256k1_context *ctx = create_context(1);
+	if (ctx == NULL) { return NULL; }
+
 	secp256k1_ecdsa_recoverable_signature rsig;
 	secp256k1_pubkey pubkey;
 	size_t pubkey_bytes_len = compressed == 1 ? 33 : 65;
