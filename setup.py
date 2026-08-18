@@ -63,5 +63,6 @@ setup(
 		libraries = ['gmp', 'secp256k1', 'bcrypt'] if sys.platform == 'win32' else ['secp256k1'],
 		include_dirs = ['/usr/local/include'] if sys.platform == 'darwin' else [],
 		library_dirs = ['/usr/local/lib'] if sys.platform == 'darwin' else [],
+		extra_compile_args = ['-Wextra', '-fanalyzer'] if sys.platform == 'linux' else [],
 	)]
 )
