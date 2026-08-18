@@ -214,10 +214,10 @@ class CfgFileSampleUsr(cfg_file_sample):
 		if self.data:
 			if self.parse_metadata():
 				if self.chksum == self.computed_chksum:
+					if self.data == src.data:
+						return # no changes, skip copying system data
 					if diff := self.make_diff(src):
 						self.show_changes(diff)
-					else:
-						return # no changes, skip copying system data
 				else:
 					msg(self.altered_by_user_fs.format(self.fn))
 			else:
