@@ -122,9 +122,8 @@ static PyObject * pubkey_gen(PyObject *Py_UNUSED(self), PyObject *args) {
 	secp256k1_context *ctx = create_context(1);
 	if (ctx == NULL) { return NULL; }
 
-	if (!privkey_check(ctx, privkey_bytes, privkey_bytes_len, "Private key")) {
-		return NULL;
-	}
+	if (!privkey_check(ctx, privkey_bytes, privkey_bytes_len, "Private key")) { return NULL; }
+
 	if (secp256k1_ec_pubkey_create(ctx, &pubkey, privkey_bytes) != 1) {
 		PyErr_SetString(PyExc_RuntimeError, "Public key creation failed");
 		return NULL;
@@ -159,9 +158,8 @@ static PyObject * pubkey_tweak_add(PyObject *Py_UNUSED(self), PyObject *args) {
 	if (!pubkey_parse_with_check(ctx, &pubkey, pubkey_bytes, pubkey_bytes_len)) {
 		return NULL;
 	}
-	if (!privkey_check(ctx, tweak_bytes, tweak_bytes_len, "Tweak")) {
-		return NULL;
-	}
+	if (!privkey_check(ctx, tweak_bytes, tweak_bytes_len, "Tweak")) { return NULL; }
+
 	/* checks for point-at-infinity (via secp256k1_pubkey_save) */
 	if (secp256k1_ec_pubkey_tweak_add(ctx, &pubkey, tweak_bytes) != 1) {
 		PyErr_SetString(
@@ -252,9 +250,7 @@ static PyObject * sign_msghash(PyObject *Py_UNUSED(self), PyObject *args) {
 	secp256k1_context *ctx = create_context(1);
 	if (ctx == NULL) { return NULL; }
 
-	if (!privkey_check(ctx, privkey_bytes, privkey_bytes_len, "Private key")) {
-		return NULL;
-	}
+	if (!privkey_check(ctx, privkey_bytes, privkey_bytes_len, "Private key")) { return NULL; }
 
 	secp256k1_ecdsa_recoverable_signature rsig;
 	unsigned char rsig_serialized[65];
