@@ -113,7 +113,7 @@ This involves an expenditure of both time and money.
 
 Fortunately, there’s an alternative: MMGen Wallet’s **regtest mode** creates a
 virtual network of two users, Bob and Alice, who transact with each other on a
-private blockchain.  All of MMGen Wallet’s functionality is available in regtest
+private blockchain. Most of MMGen Wallet’s functionality is available in regtest
 mode, making it an ideal way to learn to use the wallet without risking real
 coins.  You may wish to pause here and perform the steps in the tutorial [MMGen
 Wallet Quick Start with Regtest Mode][04] before continuing on.
@@ -130,8 +130,8 @@ other than your MMGen data directory.  Otherwise, it’s recommended, as it free
 you from having to type your wallet filename on the command line.*
 
 *The following examples assume that you’ve chosen to use a default wallet.
-If you haven’t, then you must include the path to a wallet file or other seed
-source in all commands where a seed source is required.*
+If you choose not to, then you must include the path to a wallet file or other
+seed source in all commands where a seed source is required.*
 
 On your **offline** computer, generate a wallet:
 

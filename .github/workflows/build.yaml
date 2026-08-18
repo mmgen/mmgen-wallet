@@ -1,5 +1,7 @@
 name: Build/Install
 
+run-name: Build and install
+
 on:
   push:
     paths:

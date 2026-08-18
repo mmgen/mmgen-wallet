@@ -2,8 +2,8 @@
 
 ##### A terminal-based online/offline cryptocurrency wallet
 
-![build][bb]
-![lint][lb]
+[![Build/Install][bb_img]][bb]
+[![Check code with Ruff, Bandit and Pylint static analyzers][lb_img]][lb]
 
 ### Description
 
@@ -205,5 +205,7 @@ Donate:
 [ms]: ../../wiki/command-help-seedsplit
 [ta]: ../../wiki/Tool-API
 [L]:  ../../wiki/command-help-tool
-[bb]: https://github.com/mmgen/mmgen-wallet/actions/workflows/build.yaml/badge.svg
-[lb]: https://github.com/mmgen/mmgen-wallet/actions/workflows/lint.yaml/badge.svg
+[bb_img]: https://github.com/mmgen/mmgen-wallet/actions/workflows/build.yaml/badge.svg
+[lb_img]: https://github.com/mmgen/mmgen-wallet/actions/workflows/lint.yaml/badge.svg
+[bb]: https://github.com/mmgen/mmgen-wallet/actions/workflows/build.yaml
+[lb]: https://github.com/mmgen/mmgen-wallet/actions/workflows/lint.yaml

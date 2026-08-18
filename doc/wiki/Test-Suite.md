@@ -38,37 +38,42 @@ Every time the container is started, you may need to create the files afresh:
 
 ### BTC-only testing
 
-Install the Bitcoin Core daemon [(source)][sd] [(binaries)][bd].
+#### Install the Bitcoin Core daemon:
 
-Install Pycoin:
+Source [here][sd], binaries [here][bd].
+
+#### Install the `pycoin`, `ecdsa` and `pexpect` Python packages:
+
+##### Online install:
 
 ```text
-# online install:
-$ python3 -m pip install pycoin
-
-# offline install:
-$ python3 -m pip download pycoin # online
-$ python3 -m pip install --no-build-isolation pycoin-*.tar.gz # offline
+$ python3 -m pip install pycoin ecdsa pexpect
 ```
 
-CD to the MMGen Wallet repository root: 
+##### Offline install:
+
+Download files on online machine:
 
 ```text
-$ cd path/to/mmgen/repo
+$ python3 -m pip download pycoin ecdsa pexpect
 ```
 
-Run the following if upgrading from a previous version of MMGen:
+Copy downloaded files to offline machine and install:
 
 ```text
-$ test/clean.py
+$ python3 -m pip install --no-build-isolation <downloaded files>
 ```
 
-Run the test suite in fast mode, skipping altcoin tests (fast mode skips
-non-essential tests and uses fewer rounds for repeated tests):
+#### Enter the repository root and run the test suite:
 
 ```text
+$ cd /path/to/mmgen-wallet
+$ test/clean.py  # do this after an upgrade or previous test run
 $ test/test-release.sh -FA
 ```
+
+The `-A` option skips altcoin tests, while `-F` runs the test suite in fast
+mode, skipping non-essential tests and using fewer rounds for repeated tests.
 
 ### Complete testing (BTC plus all supported altcoins)
 
@@ -108,8 +113,8 @@ $ scripts/msys2-sshd-setup.sh
 ```
 
 The daemon should now start automatically every time the system is booted. It
-may also be started and stopped manually at the DOS or MSYS2 prompt as follows
-(PowerShell must be running with admin privileges):
+may also be started and stopped manually at the DOS or MSYS2 prompt (via admin
+PowerShell) as follows:
 
 ```text
 # net start msys2_sshd
@@ -146,19 +151,17 @@ the zip archives distributed with [this release][oz].
 $ git clone https://github.com/10gic/vanitygen-plusplus
 $ cd vanitygen-plusplus
 $ git checkout -b vanitygen-plus e7858035d092  # rewind to fork commit
-```
-
-Optional: On some systems, you may need to edit the Makefile, changing `-lpcre`
-to `-lpcre2-posix` on the second line.
-
-```text
-$ make keyconv # ‘mingw32-make.exe keyconv’ for MSYS2
+$ make keyconv              # Linux, macOS (see Build note)
+$ mingw32-make.exe keyconv  # MSYS2        (see Build note)
 $ sudo install --strip keyconv /usr/local/bin  # Linux, macOS
 $ install --strip keyconv.exe /usr/local/bin   # MSYS2
 $ cd ..
 ```
 
-#### Install Zcash-Mini
+Build note: on some systems the build step may fail.  In that case you must
+edit the Makefile, changing `-lpcre` to `-lpcre2-posix` on the second line.
+
+#### Install Zcash-Mini (Linux, macOS)
 
 Skip the go installation step if go is already installed (check by invoking
 `go version`)
