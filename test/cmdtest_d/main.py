@@ -124,7 +124,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		('delete_dfl_wallet',
 			(15, 'delete default wallet', [[[pwfile], 15]])
 		),
-		('walletgen',
+		('walletgen1',
 			(1, 'wallet generation', [[['del_dw_run'], 15]])
 		),
 		('subwalletgen',
@@ -146,23 +146,23 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		('walletchk_newpass',
 			(5, 'wallet check with new pw, label and hash preset', [[['mmdat', pwfile], 5]])
 		),
-		('addrgen',
+		('addrgen1',
 			(1, 'address generation', [[['mmdat'], 1]])
 		),
-		('txcreate',
+		('txcreate1',
 			(1, 'transaction creation', [[['addrs'], 1]])
 		),
-		('txbump',
+		('txbump1',
 			(1, 'transaction fee bumping (no send)', [[['rawtx'], 1]])
 		),
-		('txsign',
+		('txsign1',
 			(1, 'transaction signing', [[['mmdat', 'rawtx'], 1]])
 		),
-		('txsend',
+		('txsend1',
 			(1, 'transaction sending', [[['sigtx'], 1]])
 		),
-		# txdo must go after txsign
-		('txdo',
+		# txdo1 must go after txsign1
+		('txdo1',
 			(1, 'online transaction', [[['sigtx', 'mmdat'], 1]])
 		),
 		('export_seed',
@@ -335,13 +335,13 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		),
 	)
 	segwit_do = (
-		'walletgen',
-		'addrgen',
-		'txcreate',
-		'txbump',
-		'txsign',
-		'txsend',
-		'txdo',
+		'walletgen1',
+		'addrgen1',
+		'txcreate1',
+		'txbump1',
+		'txsign1',
+		'txsend1',
+		'txdo1',
 		'export_incog',
 		'keyaddrgen',
 		'txsign_keyaddr',
@@ -403,7 +403,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return chk
 
 	def walletgen_dfl_wallet(self, seed_len=None):
-		return self.walletgen(seed_len=seed_len, gen_dfl_wallet=True)
+		return self.walletgen1(seed_len=seed_len, gen_dfl_wallet=True)
 
 	def subwalletgen_dfl_wallet(self, pf):
 		return self.subwalletgen(wf='default')
@@ -439,7 +439,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		self.have_dfl_wallet = False
 		return 'ok'
 
-	def walletgen(self, del_dw_run='dummy', seed_len=None, gen_dfl_wallet=False):
+	def walletgen1(self, del_dw_run='dummy', seed_len=None, gen_dfl_wallet=False):
 		self.write_to_tmpfile(pwfile, self.wpasswd+'\n')
 		args = ['-p1']
 		if not gen_dfl_wallet:
@@ -769,13 +769,16 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 		return t
 
-	def txcreate(self, addrfile):
+	def txcreate1(self, addrfile):
 		return self.txcreate_common(
 			sources = ['1'],
 			add_opts = ['--vsize-adj=1.01', '--btc-max-tx-fee=0.005'],
 			add_output_args = ['hexdata:' + 'ee' * self.proto.max_op_return_data_len])
 
-	def txbump(self, txfile, prepend_args=[], seed_args=[]):
+	def txsign1(self, *args, **kwargs):
+		return self.txsign(*args, **kwargs)
+
+	def txbump1(self, txfile, prepend_args=[], seed_args=[]):
 		if not self.proto.cap('rbf'):
 			msg(gray('Skipping RBF'))
 			return 'skip'
@@ -809,12 +812,12 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		os.system(cmd)
 		return t
 
-	def txsend(self, sigfile, extra_opts=[]):
+	def txsend1(self, sigfile, extra_opts=[]):
 		t = self.spawn('mmgen-txsend', extra_opts + ['-d', self.tmpdir, sigfile], no_passthru_opts=['coin'])
 		self.txsend_ui_common(t, view='t', add_comment='')
 		return t
 
-	def txdo(self, addrfile, wallet):
+	def txdo1(self, addrfile, wallet):
 		t = self.txcreate_common(sources=['1'], ss_args=[wallet])
 		self.txsign_ui_common(t, view='n', do_passwd=True)
 		self.txsend_ui_common(t)
@@ -951,10 +954,13 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return self.txcreate_common(sources=['1'], cmdline_inputs=True, add_opts=['--yes'])
 
 	def walletgen2(self, del_dw_run='dummy'):
-		return self.walletgen(seed_len=128)
+		return self.walletgen1(seed_len=128)
+
+	def addrgen1(self, wf):
+		return self.addrgen(wf)
 
 	def addrgen2(self, wf):
-		return self.addrgen(wf)
+		return self.addrgen1(wf)
 
 	def txcreate2(self, addrfile):
 		return self.txcreate_common(sources=['2'])
@@ -974,7 +980,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return self.export_mnemonic(wf)
 
 	def walletgen3(self, del_dw_run='dummy'):
-		return self.walletgen()
+		return self.walletgen1()
 
 	def addrgen3(self, wf):
 		return self.addrgen(wf)
@@ -992,7 +998,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		self.txsign_end(t)
 		return t
 
-	walletgen14 = walletgen
+	walletgen14 = walletgen1
 	addrgen14 = CmdTestShared.addrgen
 	keyaddrgen14 = CmdTestShared.keyaddrgen
 
@@ -1070,13 +1076,13 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 
 	def txbump4(self, f1, f2, f3, f4, f5, f6, f7, f8, f9): # f7:txfile, f9:'txdo'
 		non_mm_file = joinpath(self.tmpdir, non_mmgen_fn)
-		return self.txbump(
+		return self.txbump1(
 			f7,
 			prepend_args = ['-p1', '-k', non_mm_file, '-M', f1],
 			seed_args    = [f2, f3, f4, f6, f8])
 
 	def walletgen5(self, del_dw_run='dummy'):
-		return self.walletgen()
+		return self.walletgen1()
 
 	def addrgen5(self, wf):
 		return self.addrgen(wf)
@@ -1108,7 +1114,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return t
 
 	def walletgen6(self, del_dw_run='dummy'):
-		return self.walletgen()
+		return self.walletgen1()
 
 	def addrgen6(self, wf):
 		return self.addrgen(wf)
