@@ -27,7 +27,7 @@ from subprocess import run, PIPE, DEVNULL
 from pathlib import Path
 
 from mmgen.cfg import gc
-from mmgen.color import red, yellow, blue, cyan, orange, set_vt100
+from mmgen.color import red, yellow, blue, cyan, orange
 from mmgen.util import msg, msg_r, rmsg, die
 from mmgen.proto.eth.util import compute_contract_addr
 
@@ -784,7 +784,6 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 
 		if d.id in ('geth', 'erigon'):
 			self.genesis_setup(d)
-			set_vt100()
 
 		if d.id == 'erigon':
 			self.write_to_tmpfile('signer_key', self.keystore_data['key']+'\n')
@@ -1793,5 +1792,4 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			imsg('')
 		elif not stop_test_daemons(self.proto.coin+'_rt', remove_datadir=True):
 			return False
-		set_vt100()
 		return 'ok'

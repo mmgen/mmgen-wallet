@@ -7,7 +7,7 @@ os.chdir(parpar)
 sys.path[0] = os.curdir
 
 from mmgen.cfg import Config, gc
-from mmgen.color import yellow, blue, cyan, set_vt100
+from mmgen.color import yellow, blue, cyan
 from mmgen.util import msg, ymsg, gmsg, fmt, fmt_list, die
 
 commands = [
@@ -87,7 +87,6 @@ def tt_license():
 	do_license_msg(cfg)
 
 def tt_line_input():
-	set_vt100()
 	cmsg('Testing line_input():')
 	msg(fmt("""
 		At the Ready? prompt type and hold down "y".
@@ -166,7 +165,6 @@ def tt_txview():
 	tx = UnsignedTX(cfg=cfg, filename=fn, quiet_open=True)
 	while True:
 		tx.info.view_with_prompt('View data for transaction?', pause=False)
-		set_vt100()
 		if not keypress_confirm(cfg, 'Continue testing transaction view?', default_yes=True):
 			break
 

@@ -150,7 +150,6 @@ def do_pager(text):
 		pagers = [os.environ['PAGER']] + pagers
 
 	from subprocess import run
-	from .color import set_vt100
 	for pager in pagers:
 		try:
 			m = text + ('' if pager == 'less' else end_msg)
@@ -162,7 +161,6 @@ def do_pager(text):
 			break
 	else:
 		Msg(text+end_msg)
-	set_vt100()
 
 def do_license_msg(cfg, *, immed=False):
 

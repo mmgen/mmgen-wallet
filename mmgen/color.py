@@ -49,12 +49,6 @@ _colors = {
 def nocolor(s):
 	return s
 
-def set_vt100():
-	'hack to put term into VT100 mode under MSWin'
-	if gc.platform == 'win32':
-		from subprocess import run
-		run([], shell=True) # nosec B602
-
 def get_terminfo_colors(term=None):
 	from subprocess import run, PIPE
 	cmd = ['infocmp', '-0']
@@ -64,10 +58,8 @@ def get_terminfo_colors(term=None):
 	try:
 		cmdout = run(cmd, stdout=PIPE, check=True, text=True).stdout
 	except:
-		set_vt100()
 		return None
 	else:
-		set_vt100()
 		s = next(iter(e.split('#', 1)[1] for e in cmdout.split(',') if e.startswith('colors')))
 		from .util import is_hex_str
 		if s.isdecimal():
@@ -113,8 +105,6 @@ def init_color(num_colors='auto'):
 					'\033[{}m'.format(e[1][0]) if e[1][1] == 0 else
 					'\033[{};{}m'.format(*e[1]))
 				getattr(self, c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__') # nosec B307
-
-	set_vt100()
 
 # Each color name must be bound to an independent stub function with its own
 # address in memory.  The names themselves must never be redefined, since other

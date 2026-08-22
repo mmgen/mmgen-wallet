@@ -25,7 +25,6 @@ fileutil: Routines that read, write, execute or stat files
 import sys, os
 
 from .cfg import gc
-from .color import set_vt100
 from .util import (
 	msg,
 	die,
@@ -43,7 +42,6 @@ def check_or_create_dir(path):
 		if os.getenv('MMGEN_TEST_SUITE') and os.path.exists(path): # path is a link or regular file
 			from subprocess import run
 			run(['rm', '-rf', str(path)])
-			set_vt100()
 		try:
 			os.makedirs(path, 0o700)
 		except:
@@ -55,7 +53,6 @@ def check_binary(args):
 		run(args, stdout=DEVNULL, stderr=DEVNULL, check=True)
 	except:
 		die(2, f'{args[0]!r} binary missing, not in path, or not executable')
-	set_vt100()
 
 def shred_file(cfg, fn, *, iterations=30):
 	check_binary(['shred', '--version'])
@@ -65,7 +62,6 @@ def shred_file(cfg, fn, *, iterations=30):
 		+ (['--verbose'] if cfg.verbose else [])
 		+ [str(fn)],
 		check = True)
-	set_vt100()
 
 def _check_file_type_and_access(fname, ftype, *, blkdev_ok=False):
 

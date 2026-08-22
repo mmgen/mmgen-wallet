@@ -125,8 +125,6 @@ class CmdTestInput(CmdTestBase):
 
 		cp = run(cmd, input=mn.encode(), capture_output=True, env=run_env)
 
-		from mmgen.color import set_vt100
-		set_vt100()
 		imsg(cp.stderr.decode().strip())
 		res = get_data_from_file(self.cfg, 'test/trash/A773B05C[128].mmwords', silent=True).strip()
 		assert res == mn, f'{res} != {mn}'

@@ -26,7 +26,6 @@ from collections import namedtuple
 
 from .cfg import gc
 from .base_obj import Lockable
-from .color import set_vt100
 from .util import msg, Msg_r, die, remove_dups, oneshot_warning, fmt_list
 from .flags import ClassFlags, ClassOpts
 
@@ -84,7 +83,6 @@ class Daemon(Lockable):
 			cp = run(cmd, check=False, stdout=out, stderr=out)
 		except OSError as e:
 			die('MMGenCalledProcessError', f'Error starting executable: {type(e).__name__} [Errno {e.errno}]')
-		set_vt100()
 		if check_retcode and cp.returncode:
 			die(1, str(cp))
 		if self.debug:
@@ -498,6 +496,5 @@ class CoinDaemon(Daemon):
 		assert self.test_suite, 'datadir removal restricted to test suite'
 		if self.state == 'stopped':
 			run(['rm', '-rf', self.datadir])
-			set_vt100()
 		else:
 			msg(f'Cannot remove {self.network_datadir!r} - daemon is not stopped')

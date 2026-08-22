@@ -20,8 +20,6 @@
 test.cmdtest_d.ref_altcoin: Altcoin reference file tests for the cmdtest.py test suite
 """
 
-from mmgen.color import set_vt100
-
 from .include.common import pwfile, dfl_wpasswd, ref_dir, dfl_words_file, dfl_addr_idx_list
 from ..include.common import joinpath, start_test_daemons, stop_test_daemons, cmp_or_die
 from .ref import CmdTestRef
@@ -105,7 +103,6 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 				proto = MMGenTxFile.get_proto(self.cfg, txfile, quiet_open=True)
 				if proto.sign_mode == 'daemon':
 					start_test_daemons(proto.network_id)
-					set_vt100()
 				t = self.spawn(
 					'mmgen-txsign',
 					['--outdir=test/trash', '--yes', f'--passwd-file={passfile}', dfl_words_file, txfile],
