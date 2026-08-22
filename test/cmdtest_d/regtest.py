@@ -27,7 +27,7 @@ from mmgen.proto.btc.regtest import MMGenRegtest
 from mmgen.proto.bch.cashaddr import b32a
 from mmgen.proto.btc.common import b58a
 from mmgen.color import yellow
-from mmgen.util import msg_r, die, gmsg, capfirst, suf, fmt_list, is_hex_str
+from mmgen.util import msg_r, die, gmsg, capfirst, suf, fmt_list, is_hex_str, fmt
 from mmgen.protocol import init_proto
 from mmgen.addrlist import AddrList
 from mmgen.wallet import Wallet, get_wallet_cls
@@ -505,6 +505,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC
 			if cfg.test_suite_deterministic:
 				self.deterministic = True
+				omsg('Deterministic testing enabled!')
 
 		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
 		self.write_to_tmpfile('wallet_password', rt_pw)
@@ -548,6 +549,17 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 				rmtree(joinpath(self.tr.data_dir, 'regtest'))
 			except:
 				pass
+		if self.deterministic:
+			action = 'Loading'
+			if not os.path.exists('wallets/alice'):
+				die(1, fmt("""
+				Saved tracking wallets are required for deterministic testing.
+
+				Run ‘mmgen-regtest create_wallets’, move or copy the resulting ‘wallet’
+				directory to the repository root, and re-run the test.
+				"""))
+		else:
+			action = 'Creating'
 		t = self.spawn(
 			'mmgen-regtest',
 			self.regtest_opts
@@ -556,7 +568,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			no_passthru_opts = True)
 		t.expect('Starting')
 		for _ in range(3):
-			t.expect('Creating')
+			t.expect(action)
 		for _ in range(17):
 			t.expect('Mined')
 		t.expect('Setup complete')

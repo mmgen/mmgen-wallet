@@ -37,12 +37,15 @@ opts_data = {
 -n, --setup-no-stop-daemon  Don't stop daemon after setup is finished
 -q, --quiet         Produce quieter output
 -v, --verbose       Produce more verbose output
+-w, --wallet-src=DIR Initialize miner and tracking wallets from wallets in
+                    DIR instead of creating new ones
 """,
 	'notes': """
 
                          AVAILABLE COMMANDS
 
   setup           - set up Bob and Alice regtest mode
+  create_wallets  - create Miner wallet and Bob and Alice’s tracking wallets
   start           - start the regtest coin daemon
   stop            - stop the regtest coin daemon
   generate N      - mine N blocks (defaults to 1)

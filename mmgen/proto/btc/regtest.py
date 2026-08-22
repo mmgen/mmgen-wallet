@@ -56,6 +56,7 @@ class MMGenRegtest(MMGenObject):
 	coins        = ('btc', 'bch', 'ltc')
 	usr_cmds     = (
 		'setup',
+		'create_wallets',
 		'generate',
 		'send',
 		'start',
@@ -96,11 +97,26 @@ class MMGenRegtest(MMGenObject):
 		return await rpc_init(self.cfg, self.proto, backend=None, daemon=self.d)
 
 	@property
+	async def miner_bip_hd_node(self):
+		if not hasattr(self, '_miner_bip_hd_node'):
+			from ...cfg import Config
+			from ...bip_hd import BipHDNode
+			data = await self.rpc_call('gethdkeys', {'private': True}, wallet='miner')
+			self._miner_bip_hd_node = BipHDNode.from_path(
+				Config({'regtest': True}),
+				None,
+				"m/{}'/1'/0'/0/0".format(44 if self.proto.coin == 'BCH' else 84),
+				xprv           = data[0]['xprv'],
+				addr_type      = 'compressed' if self.proto.coin == 'BCH' else 'bech32',
+				no_path_checks = True)
+		return self._miner_bip_hd_node
+
+	@property
 	async def miner_addr(self):
 		if not hasattr(self, '_miner_addr'):
 			self._miner_addr = (
 				self.bdb_miner_addrs[self.coin] if self.bdb_wallet else
-				await self.rpc_call('getnewaddress', wallet='miner'))
+				(await self.miner_bip_hd_node).address)
 		return self._miner_addr
 
 	@property
@@ -108,7 +124,7 @@ class MMGenRegtest(MMGenObject):
 		if not hasattr(self, '_miner_wif'):
 			self._miner_wif = (
 				self.bdb_miner_wif if self.bdb_wallet else
-				None)
+				(await self.miner_bip_hd_node).privkey.wif)
 		return self._miner_wif
 
 	def create_hdseed_wif(self):
@@ -150,7 +166,19 @@ class MMGenRegtest(MMGenObject):
 			descriptors     = not self.bdb_wallet,
 			load_on_startup = False)
 
-	async def setup(self):
+	async def copy_wallet(self, user):
+		gmsg(f'Copying {capfirst(user)}’s tracking wallet')
+		from shutil import copytree
+		src = os.path.join(self.cfg.wallet_src, user)
+		if not os.path.exists(src):
+			die(2, f'Source wallet ‘{os.path.abspath(src)}’ does not exist!')
+		dest = os.path.join(self.d.network_datadir, 'wallets', user)
+		copytree(src, dest)
+
+	async def create_wallets(self):
+		await self.setup(create_wallets_only=True)
+
+	async def setup(self, create_wallets_only=False):
 
 		try:
 			os.makedirs(self.d.datadir)
@@ -167,7 +195,19 @@ class MMGenRegtest(MMGenObject):
 		self.d.start(silent=True)
 
 		for user in ('miner', 'bob', 'alice'):
-			await self.create_wallet(user)
+			if self.cfg.wallet_src:
+				await self.copy_wallet(user)
+			else:
+				await self.create_wallet(user)
+
+		if create_wallets_only:
+			msg(f"Wallets are in '{self.d.network_datadir}/wallets'")
+			msg('Stopping regtest daemon')
+			await self.rpc_call('stop')
+			return
+
+		if self.cfg.wallet_src:
+			await self.load_wallets()
 
 		# BCH and LTC daemons refuse to set HD seed with empty blockchain ("in IBD" error),
 		# so generate a block:
@@ -204,6 +244,9 @@ class MMGenRegtest(MMGenObject):
 	async def start_daemon(self, *, reindex=False, silent=True):
 		self.init_daemon(reindex=reindex)
 		self.d.start(silent=silent)
+		await self.load_wallets()
+
+	async def load_wallets(self):
 		for user in ('miner', 'bob', 'alice'):
 			msg(f'Loading {capfirst(user)}’s wallet')
 			await self.rpc_call('loadwallet', user, start_daemon=False)

@@ -60,14 +60,14 @@ class CmdTestChainsplit(CmdTestRegtest):
 
 	def split_fork(self):
 		self.coin = 'B2X'
-		t = self.spawn('mmgen-regtest', ['fork', 'btc'])
+		t = self.spawn('mmgen-regtest', self.regtest_opts + ['fork', 'btc'])
 		t.expect('Creating fork from coin')
 		t.expect('successfully created')
 		t.ok()
 
 	def split_start(self, coin):
 		self.coin = coin
-		t = self.spawn('mmgen-regtest', ['bob'])
+		t = self.spawn('mmgen-regtest', self.regtest_opts + ['bob'])
 		t.expect('Starting')
 		t.expect('done')
 		t.ok()

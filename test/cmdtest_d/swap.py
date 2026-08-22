@@ -588,7 +588,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		addr = next(s for s in strip_ansi_escapes(t.read()).splitlines() if 'C:1 No' in s).split()[3]
 		t = self.spawn(
 			'mmgen-regtest',
-			[coin_arg, 'send', addr, str(amt)],
+			self.regtest_opts + [coin_arg, 'send', addr, str(amt)],
 			no_passthru_opts = ['coin'],
 			no_msg = True)
 		return t
