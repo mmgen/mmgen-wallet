@@ -530,33 +530,9 @@ class Config(Lockable):
 		# Step 3: set cfg from environment, skipping already-set opts; save names set from environment:
 		self._envopts = tuple(self._set_cfg_from_env()) if self._use_env else ()
 
-		from .term import init_term
-		init_term(self) # requires ‘hold_protect_disable’ (set from env)
-
-		from .fileutil import check_or_create_dir
-		check_or_create_dir(self.data_dir_root)
-
-		from .util import wrap_ripemd160
-		wrap_ripemd160() # ripemd160 required by mmgen_cfg_file() in _set_cfg_from_cfg_file()
-
-		# Step 4: set cfg from cfgfile, skipping already-set opts and auto opts; save set opts and auto
-		#         opts to be set:
-		# requires ‘data_dir_root’, ‘test_suite_cfgtest’
-		self._cfgfile_opts = self._set_cfg_from_cfg_file(self._envopts, need_proto=need_proto)
-
-		# Step 5: set autoset opts from user-supplied data, cfgfile data, or default values, in that order:
-		self._set_autoset_opts(self._cfgfile_opts.autoset)
-
-		# Step 6: set auto typeset opts from user-supplied data or cfgfile data, in that order:
-		self._set_auto_typeset_opts(self._cfgfile_opts.auto_typeset)
-
-		# Step 7: set opts_data['sets'] opts:
-		if opts_data and 'sets' in opts_data:
-			self._set_opts_data_sets_opts(opts_data)
-
+		# Step 4: finalize some cmdline-only opts:
 		self.coin = self.coin.upper()
 		self.token = self.token.upper() if self.token else None
-
 		if (
 				self.regtest or
 				self.bob or
@@ -574,6 +550,30 @@ class Config(Lockable):
 				'')
 		else:
 			self.network = 'testnet' if self.testnet else 'mainnet'
+
+		from .term import init_term
+		init_term(self) # requires ‘hold_protect_disable’ (set from env)
+
+		from .fileutil import check_or_create_dir
+		check_or_create_dir(self.data_dir_root)
+
+		from .util import wrap_ripemd160
+		wrap_ripemd160() # ripemd160 required by mmgen_cfg_file() in _set_cfg_from_cfg_file()
+
+		# Step 5: set cfg from cfgfile, skipping already-set opts and auto opts; save set opts and auto
+		#         opts to be set:
+		# requires ‘data_dir_root’, ‘test_suite_cfgtest’
+		self._cfgfile_opts = self._set_cfg_from_cfg_file(self._envopts, need_proto=need_proto)
+
+		# Step 6: set autoset opts from user-supplied data, cfgfile data, or default values, in that order:
+		self._set_autoset_opts(self._cfgfile_opts.autoset)
+
+		# Step 7: set auto typeset opts from user-supplied data or cfgfile data, in that order:
+		self._set_auto_typeset_opts(self._cfgfile_opts.auto_typeset)
+
+		# Step 8: set opts_data['sets'] opts:
+		if opts_data and 'sets' in opts_data:
+			self._set_opts_data_sets_opts(opts_data)
 
 		if 'usage' in self._uopts: # requires self.coin
 			import importlib
