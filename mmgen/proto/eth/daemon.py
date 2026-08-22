@@ -96,7 +96,7 @@ class geth_daemon(ethereum_daemon):
 	#   mempool deadlock in dev mode: "transaction indexing is in progress"
 	#   https://github.com/ethereum/go-ethereum/issues/29475
 	#   offending commit (via git bisect): 0a2f33946b95989e8ce36e72a88138adceab6a23
-	daemon_data = _dd('Geth', 1017004, '1.17.4')
+	daemon_data = _dd('Geth', 1017005, '1.17.5')
 	version_pat = r'Geth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'geth'
 	use_pidfile = False
@@ -130,7 +130,7 @@ class geth_daemon(ethereum_daemon):
 		)
 
 class reth_daemon(geth_daemon):
-	daemon_data = _dd('Reth', 2003000, '2.3.0')
+	daemon_data = _dd('Reth', 2005001, '2.5.1')
 	version_pat = r'reth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'reth'
 	version_info_arg = '--version'
