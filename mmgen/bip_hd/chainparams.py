@@ -5,6 +5,10 @@
 #   https://github.com/MetaMask/slip44/blob/main/slip44.json (1bc984bee)
 #   https://github.com/ebellocchia/bip_utils (5649541c6)
 
+"""
+bip_hd.chainparams: BIP-44/49/84, SLIP-44 hierarchical-deterministic key derivation library
+"""
+
 from collections import namedtuple
 
 def parse_data():
@@ -132,7 +136,7 @@ IDX    CHAIN  CURVE NW ADDR_CLS         VB_PRV   VB_PUB   VB_WIF VB_ADDR  DFL_PA
 [bip-84]
 IDX    CHAIN  CURVE NW ADDR_CLS         VB_PRV   VB_PUB   VB_WIF VB_ADDR  DFL_PATH NAME
 0      BTC    x     m  P2WPKH           04b2430c 04b24746 80     h:bc     x        Bitcoin
-1      LTC    x     T  P2WPKH           0436ef7d 0436f6e1 ef     h:tltc   x        Litecoin TestNet
+1      -      x     T  P2WPKH           0436ef7d 0436f6e1 ef     h:tb     x        TestNet (all coins)
 2      LTC    x     m  P2WPKH           04b2430c 04b24746 b0     h:ltc    x        Litecoin
 
 [bip-86]

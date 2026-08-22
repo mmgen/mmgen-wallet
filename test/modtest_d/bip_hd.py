@@ -192,6 +192,16 @@ class unit_tests:
 		vmsg('seed: 98831F3A (default derivation)')
 
 		m = MasterNode(cfg, self._seed)
+		master = m.init_cfg('btc', network=None, addr_type='bech32')
+		vmsg(f'  {master.xprv=}')
+
+		chain_from_master_xprv = BipHDNode.from_path(
+				cfg,
+				None,
+				"m/84'/0'/0'/0",
+				no_path_checks = True,
+				addr_type      = 'bech32',
+				xprv           = master.xprv)
 
 		purpose = m.init_cfg(coin='btc', addr_type='bech32').derive_private()
 		vmsg(f'  {purpose.address=}')
@@ -210,7 +220,9 @@ class unit_tests:
 
 		chain3 = m.to_coin_type(coin='btc', addr_type='bech32').to_chain(0, public=True)
 		assert chain3.address == chain1.address
+		assert chain1.address == chain_from_master_xprv.address
 		vmsg(f'  {chain1.address=}')
+		vmsg(f'  {chain_from_master_xprv.address=}')
 
 		a = BipHDNode.from_extended_key(cfg, 'btc', chain2.xpub)
 		b = BipHDNode.from_extended_key(cfg, 'btc', chain2.xprv)

@@ -368,6 +368,7 @@ class BipHDNode(Lockable):
 			seed,
 			path_str,
 			*,
+			xprv           = None,
 			coin           = None,
 			addr_type      = None,
 			no_path_checks = False):
@@ -378,11 +379,20 @@ class BipHDNode(Lockable):
 
 		proto = init_proto(base_cfg, coin or 'btc')
 
-		res = MasterNode(base_cfg, seed).init_cfg(
-			coin           = proto.coin,
-			addr_type      = addr_type or proto.dfl_mmtype,
-			no_path_checks = no_path_checks,
-			from_path      = True)
+		if xprv:
+			assert seed == None, 'BipHDNode.from_path(): `seed` must be None if `xprv` is specified'
+			res = BipHDNode.from_extended_key(
+				base_cfg  = base_cfg,
+				coin      = coin or proto.coin,
+				xkey_b58  = xprv,
+				no_path_checks = no_path_checks,
+				addr_type = addr_type or proto.dfl_mmtype)
+		else:
+			res = MasterNode(base_cfg, seed).init_cfg(
+				coin           = proto.coin,
+				addr_type      = addr_type or proto.dfl_mmtype,
+				no_path_checks = no_path_checks,
+				from_path      = True)
 
 		for s in path:
 			for suf in ("'", 'h'):
@@ -404,7 +414,7 @@ class BipHDNode(Lockable):
 	@staticmethod
 	# ‘addr_type’ is required for broken coins with duplicate version bytes across BIP protocols
 	# (i.e. Dogecoin)
-	def from_extended_key(base_cfg, coin, xkey_b58, *, addr_type=None):
+	def from_extended_key(base_cfg, coin, xkey_b58, *, addr_type=None, no_path_checks=False):
 		xk = Bip32ExtendedKey(xkey_b58)
 
 		if xk.public:
@@ -425,7 +435,7 @@ class BipHDNode(Lockable):
 			network = xk.network,
 			addr_type = addr_type or addr_types[xk.bip_proto],
 			from_path = False,
-			no_path_checks = False)
+			no_path_checks = no_path_checks)
 
 		new.par_print  = xk.par_print
 		new.depth      = xk.depth
