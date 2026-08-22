@@ -149,7 +149,7 @@ def tt_urand():
 	cmsg('Testing _get_random_data_from_user():')
 	from mmgen.crypto import Crypto
 	ret = Crypto(cfg)._get_random_data_from_user(uchars=10, desc='data').decode()
-	msg(f'USER ENTROPY (user input + keystroke timings):\n\n{fmt(ret, "  ")}')
+	msg(f'USER ENTROPY (user input + keystroke timings):\n\n{fmt(ret, indent="  ")}')
 	times = ret.splitlines()[1:]
 	avg_prec = sum(len(t.split('.')[1]) for t in times) // len(times)
 	if avg_prec < gc.min_time_precision:

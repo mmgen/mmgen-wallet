@@ -76,8 +76,8 @@ init_tests() {
 	t_ruff="
 		- $ruff check setup.py
 		- $ruff check mmgen
-		- $ruff check test
 		- $ruff check examples
+		- $ruff check test
 	"
 
 	d_pylint="code errors with Pylint static analyzer"
@@ -85,9 +85,9 @@ init_tests() {
 	t_pylint="
 		- $pylint setup.py
 		- $pylint mmgen
+		- $pylint examples
 		- $pylint test
 		- $pylint --disable=relative-beyond-top-level test/cmdtest_d
-		- $pylint examples
 	"
 
 	d_bandit="code vulnerabilities with Bandit static analyzer"

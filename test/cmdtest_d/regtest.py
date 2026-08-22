@@ -695,11 +695,12 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return self.addrimport('alice', batch=False, quiet=False)
 
 	async def bob_import_miner_addr(self):
-		if not self.deterministic:
+		if self.deterministic:
+			return self.spawn(
+				'mmgen-addrimport',
+				['--bob', '--rescan', '--quiet', f'--address={await self.rt.miner_addr}'])
+		else:
 			return 'skip'
-		return self.spawn(
-			'mmgen-addrimport',
-			['--bob', '--rescan', '--quiet', f'--address={await self.rt.miner_addr}'])
 
 	async def fund_wallet_deterministic(self, addr, utxo_nums, skip_passphrase=False):
 		"""
@@ -2303,4 +2304,5 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 class CmdTestRegtestBDBWallet(CmdTestRegtest):
 	'transacting and tracking wallet operations via regtest mode (legacy BDB wallet)'
+	networks = ('ltc', 'bch')
 	bdb_wallet = True

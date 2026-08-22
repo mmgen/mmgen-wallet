@@ -481,11 +481,12 @@ class CmdTestInput(CmdTestBase):
 			stealth_mnemonic_entry(t, mne, mn, entry_mode=entry_mode)
 		elif wcls.type == 'dieroll':
 			user_dieroll_entry(t, mn)
+			prompt = wcls.user_entropy_prompt.split('\n')[-1]
 			if usr_rand:
-				t.expect(wcls.user_entropy_prompt, 'y')
+				t.expect(prompt, 'y')
 				t.usr_rand(10)
 			else:
-				t.expect(wcls.user_entropy_prompt, 'n')
+				t.expect(prompt, 'n')
 		if not usr_rand:
 			sid_chk = 'FE3C6545'
 			sid = strip_ansi_escapes(

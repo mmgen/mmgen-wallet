@@ -12,11 +12,14 @@
 test.cmdtest_d.swap: asset swap tests for the cmdtest.py test suite
 """
 
+import json
 from pathlib import Path
 
 from mmgen.cfg import Config
+from mmgen.util import make_chksum_6
 from mmgen.protocol import init_proto
 from mmgen.wallet.mmgen import wallet as MMGenWallet
+from mmgen.tx.file import json_dumps
 
 from ..include.common import imsg, make_burn_addr, gr_uc
 
@@ -773,9 +776,6 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		return self._swaptxsign()
 
 	def swaptxsend_bad2(self):
-		import json
-		from mmgen.tx.file import json_dumps
-		from mmgen.util import make_chksum_6
 		fn = self.get_file_with_ext('sigtx')
 		with open(fn) as fh:
 			data = json.load(fh)
