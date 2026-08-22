@@ -65,6 +65,8 @@ class MMGenRegtest(MMGenObject):
 		'mempool',
 		'cli',
 		'wallet_cli')
+
+	# for legacy BDB wallets only:
 	bdb_hdseed = 'beadcafe' * 8
 	bdb_miner_wif = 'cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp'
 	bdb_miner_addrs = {
@@ -104,7 +106,9 @@ class MMGenRegtest(MMGenObject):
 	@property
 	async def miner_wif(self):
 		if not hasattr(self, '_miner_wif'):
-			self._miner_wif = self.bdb_miner_wif if self.bdb_wallet else None
+			self._miner_wif = (
+				self.bdb_miner_wif if self.bdb_wallet else
+				None)
 		return self._miner_wif
 
 	def create_hdseed_wif(self):
@@ -137,6 +141,7 @@ class MMGenRegtest(MMGenObject):
 			gmsg(f'Mined {blocks} block{suf(blocks)}')
 
 	async def create_wallet(self, user):
+		gmsg(f'Creating {capfirst(user)}’s tracking wallet')
 		return await (await self.rpc).icall(
 			'createwallet',
 			wallet_name     = user,
@@ -162,7 +167,6 @@ class MMGenRegtest(MMGenObject):
 		self.d.start(silent=True)
 
 		for user in ('miner', 'bob', 'alice'):
-			gmsg(f'Creating {capfirst(user)}’s tracking wallet')
 			await self.create_wallet(user)
 
 		# BCH and LTC daemons refuse to set HD seed with empty blockchain ("in IBD" error),
@@ -181,8 +185,9 @@ class MMGenRegtest(MMGenObject):
 
 		# Broken litecoind can only mine 431 blocks in regtest mode, so generate just enough
 		# blocks to fund the test suite.  Generation is slow, so divide into chunks:
-		for n in (100, 100, 100, 92): # 392 blocks
-			await self.generate(n)
+		for _ in range(15): # 15 * 25 + 17 = 392 blocks
+			await self.generate(25)
+		await self.generate(17)
 
 		gmsg('Setup complete')
 

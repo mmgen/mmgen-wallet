@@ -514,6 +514,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		self.user_sids = {}
 		self.protos = (self.proto,)
 		self.dump_hex_subdir = os.path.join(self.tmpdir, 'nochg_tx')
+		self.regtest_opts = (['--bdb-wallet'] if self.use_bdb_wallet else [])
 
 	def _add_comments_to_addr_file(self, proto, addrfile, outfile, use_comments=False):
 		silence()
@@ -549,12 +550,15 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 				pass
 		t = self.spawn(
 			'mmgen-regtest',
-			(['--bdb-wallet'] if self.use_bdb_wallet else [])
+			self.regtest_opts
+			+ (['--wallet-src=wallets'] if self.deterministic else [])
 			+ [f'--coin={proto.coin}', '--setup-no-stop-daemon', 'setup'],
 			no_passthru_opts = True)
 		t.expect('Starting')
-		for _ in range(3): t.expect('Creating')
-		for _ in range(5): t.expect('Mined')
+		for _ in range(3):
+			t.expect('Creating')
+		for _ in range(17):
+			t.expect('Mined')
 		t.expect('Setup complete')
 		return t
 
@@ -764,7 +768,8 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			user, sid, mmtype, 0, addr_range=addr_range, proto=proto)
 		t = self.spawn(
 			'mmgen-regtest',
-			[f'--coin={proto.coin}', 'send', str(addr), str(amt)],
+			self.regtest_opts
+			+ [f'--coin={proto.coin}', 'send', str(addr), str(amt)],
 			no_passthru_opts = True)
 		t.expect(f'Sending {amt} miner {proto.coin}')
 		t.expect('Mined 1 block')
@@ -779,17 +784,18 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def user_twview(
 			self,
 			user,
-			chk      = None,
+			*,
 			expect   = None,
+			chk      = None,
 			cmd      = 'twview',
 			opts     = [],
 			sort     = 'age',
 			exit_val = None):
 		t = self.spawn('mmgen-tool', [f'--{user}'] + opts + [cmd] + [f'sort={sort}'], exit_val=exit_val)
-		if chk:
-			t.expect(r'{}\b.*\D{}\b'.format(*chk), regex=True)
 		if expect:
 			t.expect(expect, regex=True)
+		if chk:
+			t.expect(r'{}\b.*\D{}\b'.format(*chk), regex=True)
 		return t
 
 	def bob_twview_noaddrs(self):
@@ -1049,7 +1055,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			outputs_list = '1')
 
 	def bob_alice_bal(self):
-		t = self.spawn('mmgen-regtest', ['balances'])
+		t = self.spawn('mmgen-regtest', self.regtest_opts + ['balances'])
 		ret = t.expect_getend("Bob's balance:").strip()
 		cmp_or_die(rtBals[4], ret)
 		ret = t.expect_getend("Alice's balance:").strip()
@@ -1244,7 +1250,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def generate(self, num_blocks=1, add_opts=[]):
 		int(num_blocks)
-		t = self.spawn('mmgen-regtest', add_opts + ['generate', str(num_blocks)])
+		t = self.spawn('mmgen-regtest', self.regtest_opts + add_opts + ['generate', str(num_blocks)])
 		t.expect(f'Mined {num_blocks} block')
 		return t
 
@@ -1254,7 +1260,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def _do_mmgen_regtest(self, cmd_args, decode_json=False):
 		ret = self.spawn(
 			'mmgen-regtest',
-			cmd_args,
+			self.regtest_opts + cmd_args,
 			env = cleanup_env(self.cfg),
 			no_msg = True
 		).read().strip()
@@ -1599,7 +1605,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		imsg('Unloading Carol’s tracking wallet')
 		if self.proto.coin == 'BCH':
 			time.sleep(0.2)
-		t = self.spawn('mmgen-regtest', ['cli', 'unloadwallet', 'carol'])
+		t = self.spawn('mmgen-regtest', self.regtest_opts + ['cli', 'unloadwallet', 'carol'])
 		t.ok()
 		wdir = joinpath((await self.rt.rpc).daemon.network_datadir, 'wallets', 'carol')
 		from shutil import rmtree
