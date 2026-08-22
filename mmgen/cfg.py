@@ -548,6 +548,8 @@ class Config(Lockable):
 				'carol' if self.carol else
 				'miner' if self.miner else
 				'')
+			if not self.test_suite: # could be set in environment
+				self._use_cfg_file = False
 		else:
 			self.network = 'testnet' if self.testnet else 'mainnet'
 
