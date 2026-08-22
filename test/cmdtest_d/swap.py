@@ -526,7 +526,8 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		return self._data_tx_sign()
 
 	def data_tx1_send(self):
-		return self._data_tx_send()
+		t = self._data_tx_send()
+		return 'ok' if self.has_segfault_on_exit_bug else t
 
 	def data_tx1_chk(self):
 		return self._data_tx_chk(sample1.encode().hex())

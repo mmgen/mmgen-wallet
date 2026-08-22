@@ -20,10 +20,10 @@
 test.cmdtest_d.base: Base class for the cmdtest.py test suite
 """
 
-import os
+import sys, os
 
 from mmgen.cfg import gc
-from mmgen.util import msg
+from mmgen.util import msg, distro_codename
 from mmgen.color import gray, purple, yellow
 
 from ..include.common import write_to_file, read_from_file, imsg
@@ -68,6 +68,10 @@ class CmdTestBase:
 			self.spawn_env['MMGEN_TEST_SUITE_ENABLE_COLOR'] = '1' if self.color else ''
 		else:
 			self.spawn_env = {} # placeholder
+		self.has_segfault_on_exit_bug = (
+			self.coin in ('btc', 'bch')
+			and distro_codename() == 'trixie'
+			and sys.version_info[:2] == (3, 13))
 
 	def get_altcoin_pfx(self, coin, cashaddr=True):
 		coin = coin.lower()

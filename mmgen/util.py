@@ -480,6 +480,11 @@ def have_sudo(*, silent=False):
 	except:
 		return False
 
+def distro_codename():
+	if os.path.exists('/etc/os-release'):
+		with open('/etc/os-release') as fh:
+			return next(line for line in fh if line.startswith('VERSION_CODENAME=')).rstrip().split('=', 1)[1]
+
 def in_nix_environment():
 	for path in os.getenv('PATH').split(':'):
 		if path.startswith('/nix/store/'):
