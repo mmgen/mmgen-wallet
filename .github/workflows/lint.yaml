@@ -51,8 +51,8 @@ jobs:
       run: |
         ruff check --output-format=github setup.py
         ruff check --output-format=github mmgen
-        ruff check --output-format=github test
         ruff check --output-format=github examples
+        ruff check --output-format=github test
 
     - name: Check code vulnerabilities with Bandit static analyzer
       run: |
@@ -66,6 +66,6 @@ jobs:
       run: |
         pylint setup.py
         pylint mmgen
+        pylint examples
         pylint test
         pylint --disable=relative-beyond-top-level test/cmdtest_d
-        pylint examples

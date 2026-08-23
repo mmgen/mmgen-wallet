@@ -23,7 +23,7 @@ test.cmdtest_d.base: Base class for the cmdtest.py test suite
 import sys, os
 
 from mmgen.cfg import gc
-from mmgen.util import msg, distro_codename
+from mmgen.util import msg, distro_codename # pylint: disable=no-name-in-module
 from mmgen.color import gray, purple, yellow
 
 from ..include.common import write_to_file, read_from_file, imsg

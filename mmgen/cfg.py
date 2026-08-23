@@ -539,9 +539,11 @@ class Config(Lockable):
 				self.alice or
 				self.carol or
 				self.miner or
-				gc.prog_name == f'{gc.proj_id}-regtest'):
+				gc.prog_name == 'mmgen-regtest'):
 			if self.coin != 'XMR':
 				self.network = 'regtest'
+			if gc.prog_name == 'mmgen-regtest' and self.coin != 'BTC':
+				self.bdb_wallet = True
 			self.test_user = (
 				'bob' if self.bob else
 				'alice' if self.alice else
