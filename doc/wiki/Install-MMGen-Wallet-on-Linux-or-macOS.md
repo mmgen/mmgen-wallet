@@ -27,6 +27,7 @@ $ brew install python bash autoconf coreutils gcc libmpc libtool readline secp25
 ```
 
 On RISC-V machines, you may additionally need to install the `libffi-dev` package and [Rust][rs]
+(requirements for the Python `cryptography` package).
 
 You may wish to use a [virtual environment][vv] to keep your MMGen Wallet
 installation isolated from the rest of your Python packages.

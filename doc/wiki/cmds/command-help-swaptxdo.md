@@ -168,6 +168,7 @@
     ‘S’  segwit       - Segwit P2SH-P2WPKH address
     ‘B’  bech32       - Native Segwit (Bech32) address
     ‘X’  bech32x      - Cross-chain Bech32 address
+    ‘K’  bech32pk     - Cross-chain pubkey Bech32 address
     ‘E’  ethereum     - Ethereum address
     ‘Z’  zcash_z      - Zcash z-address
     ‘M’  monero       - Monero address
@@ -317,5 +318,5 @@
 
       $ https_proxy=http://gw1:4444 mmgen-swaptxdo --proxy=env RUNE 1000 BTC
 
-  MMGEN-WALLET 16.1.0            May 2026                    MMGEN-SWAPTXDO(1)
+  MMGEN-WALLET 16.2.0            August 2026                 MMGEN-SWAPTXDO(1)
 ```

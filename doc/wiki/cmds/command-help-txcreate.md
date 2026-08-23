@@ -88,6 +88,7 @@
     ‘S’  segwit       - Segwit P2SH-P2WPKH address
     ‘B’  bech32       - Native Segwit (Bech32) address
     ‘X’  bech32x      - Cross-chain Bech32 address
+    ‘K’  bech32pk     - Cross-chain pubkey Bech32 address
     ‘E’  ethereum     - Ethereum address
     ‘Z’  zcash_z      - Zcash z-address
     ‘M’  monero       - Monero address
@@ -130,7 +131,7 @@
 
       $ mmgen-txcreate B
 
-  MMGEN-WALLET 16.1.0            May 2026                    MMGEN-TXCREATE(1)
+  MMGEN-WALLET 16.2.0            August 2026                 MMGEN-TXCREATE(1)
 ```
 
 <br>
@@ -218,7 +219,7 @@
 
       $ mmgen-txcreate --coin=eth 01ABCDEF:E:7,0.123
 
-  MMGEN-WALLET 16.1.0            May 2026                    MMGEN-TXCREATE(1)
+  MMGEN-WALLET 16.2.0            August 2026                 MMGEN-TXCREATE(1)
 ```
 
 <br>
@@ -267,5 +268,5 @@
 
       $ mmgen-txcreate --coin=xmr
 
-  MMGEN-WALLET 16.1.0            May 2026                    MMGEN-TXCREATE(1)
+  MMGEN-WALLET 16.2.0            August 2026                 MMGEN-TXCREATE(1)
 ```

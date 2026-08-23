@@ -73,7 +73,7 @@ that widespread standard.
   [ETH][E], [ETC][E], [ERC20 tokens][E] and [RUNE][rx].
 - **[Native asset swaps via THORChain][tc]** (21 assets currently supported).
 - **[Address generation support][ag]** for the above coins, plus [Zcash][zx]
-  (t and z addresses) and [144 Bitcoin-derived altcoins][ax].
+  (t and z addresses), Nostr and [144 Bitcoin-derived altcoins][ax].
 - Support for **Segwit-P2SH** and **Bech32** Bitcoin address types.
 - **Independent key derivation for each address type:** No two addresses ever
   share the same private key.  Certain wallets in wide use today regrettably

@@ -53,6 +53,7 @@ GENERAL USAGE INFORMATION FOR MMGEN-TOOL COMMANDS
       mmgen-tool --coin=zec --type=zcash_z randpair
 
     addr2pubhash         addr [str or STDIN]
+    addr2pubhex          addr [str or STDIN]
     addr2scriptpubkey    addr [str or STDIN]
     eth_checksummed_addr addr [str or STDIN]
     hex2wif              privhex [str or STDIN]
@@ -127,7 +128,7 @@ GENERAL USAGE INFORMATION FOR MMGEN-TOOL COMMANDS
     decrypt_keystore      wallet_file [str] output_hex [bool=False]
     decrypt_geth_keystore wallet_file [str] check_addr [bool=True]
     find_incog_data       filename [str] incog_id [str] keep_searching [bool=False]
-    rand2file             outfile [str] nbytes [str] threads [int=4] silent [bool=False]
+    rand2file             outfile [str] nbytes [str] silent [bool=False]
 
 
   Key, address or subseed generation from an MMGen wallet:
@@ -188,5 +189,5 @@ EXAMPLES:
   Same as above, but supply input via STDIN:
   $ echo "deadbeefcafe" | mmgen-tool hexreverse -
 
-  MMGEN-WALLET 16.1.0            May 2026                 MMGEN-TOOL(USAGE)(1)
+  MMGEN-WALLET 16.2.0            August 2026              MMGEN-TOOL(USAGE)(1)
 ```

@@ -80,6 +80,7 @@
       mmgen-tool --coin=zec --type=zcash_z randpair
 
     addr2pubhash         - convert coin address to public key hash
+    addr2pubhex          - convert coin address to public key
     addr2scriptpubkey    - convert coin address to scriptPubKey
     eth_checksummed_addr - create a checksummed Ethereum address
     hex2wif              - convert a private key from hexadecimal to WIF format
@@ -207,5 +208,5 @@
 
   Type ‘mmgen-tool help <command>’ for help on a particular command
 
-  MMGEN-WALLET 16.1.0            May 2026                        MMGEN-TOOL(1)
+  MMGEN-WALLET 16.2.0            August 2026                     MMGEN-TOOL(1)
 ```

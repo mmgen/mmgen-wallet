@@ -403,6 +403,18 @@ Required ARG (type shown in square brackets):
   addr [str] (use '-' to read from STDIN)
 ```
 
+### `mmgen-tool addr2pubhex`
+
+```text
+Convert coin address to public key
+
+USAGE: mmgen-tool [OPTS] addr2pubhex ARG
+
+Required ARG (type shown in square brackets):
+
+  addr [str] (use '-' to read from STDIN)
+```
+
 ### `mmgen-tool addr2scriptpubkey`
 
 ```text
@@ -874,17 +886,16 @@ Optional KEYWORD ARG (type and default value shown in square brackets):
 ```text
 Write ‘nbytes’ bytes of random data to specified file (dd-style byte specifiers supported)
 
-USAGE: mmgen-tool [OPTS] rand2file ARGS [KEYWORD ARGS]
+USAGE: mmgen-tool [OPTS] rand2file ARGS [KEYWORD ARG]
 
 Required ARGS (type shown in square brackets):
 
   outfile [str]
   nbytes  [str]
 
-Optional KEYWORD ARGS (type and default value shown in square brackets):
+Optional KEYWORD ARG (type and default value shown in square brackets):
 
-  threads [int=4]
-  silent  [bool=False]
+  silent [bool=False]
 
 Valid specifiers:
 
@@ -1252,5 +1263,5 @@ Optional KEYWORD ARGS (type and default value shown in square brackets):
 ```
 
 ```text
-MMGEN-WALLET 16.1.0            May 2026                   MMGEN-TOOL(DETAIL)(1)
+MMGEN-WALLET 16.2.0            August 2026                MMGEN-TOOL(DETAIL)(1)
 ```

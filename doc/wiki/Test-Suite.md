@@ -44,6 +44,9 @@ Source [here][sd], binaries [here][bd].
 
 #### Install the `pycoin`, `ecdsa` and `pexpect` Python packages:
 
+*Note: MSYS users need to install `pycoin` only, as `ecdsa` and `pexpect` are
+already installed by pacman.*
+
 ##### Online install:
 
 ```text

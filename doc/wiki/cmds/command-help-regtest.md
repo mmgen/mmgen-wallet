@@ -11,11 +11,14 @@
   -n, --setup-no-stop-daemon  Don't stop daemon after setup is finished
   -q, --quiet         Produce quieter output
   -v, --verbose       Produce more verbose output
+  -w, --wallet-src DIR Initialize miner and tracking wallets from wallets in
+                      DIR instead of creating new ones
 
 
                            AVAILABLE COMMANDS
 
     setup           - set up Bob and Alice regtest mode
+    create_wallets  - create Miner wallet and Bob and Alice’s tracking wallets
     start           - start the regtest coin daemon
     stop            - stop the regtest coin daemon
     generate N      - mine N blocks (defaults to 1)
@@ -27,5 +30,5 @@
     wallet_cli      - execute a wallet RPC call with supplied arguments (wallet
                       is first argument)
 
-  MMGEN-WALLET 16.1.0            May 2026                     MMGEN-REGTEST(1)
+  MMGEN-WALLET 16.2.0            August 2026                  MMGEN-REGTEST(1)
 ```
