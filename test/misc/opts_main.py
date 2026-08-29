@@ -6,7 +6,11 @@ from mmgen.cfg import Config
 from mmgen.util import msg
 
 opts_data = {
-	'sets': [('print_checksum', True, 'quiet', True)],
+	'sets': [
+		('print_checksum', True, 'quiet', True),
+		('silent', True, 'verbose', False),
+		('no_foobleize', True, 'in_fmt', 'hex'),
+	],
 	'text': {
 		'desc': 'Opts test',
 		'usage':'[args] [opts]',
@@ -29,6 +33,7 @@ opts_data = {
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Be quieter
+-s, --silent          Be silent
 -t, --min-temp=    t  Minimum temperature (in degrees Celsius)
 -T, --max-temp=    t  Maximum temperature (in degrees Celsius)
 -x, --point=       P  Point in Euclidean space

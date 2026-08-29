@@ -32,6 +32,15 @@ def die2(exit_val, s):
 	sys.stderr.write(s+'\n')
 	sys.exit(exit_val)
 
+def fmt_opt_val(opt, val):
+	match val:
+		case True:
+			return '--{}'.format(opt.replace('_', '-'))
+		case False:
+			return '--no-{}'.format(opt.replace('_', '-'))
+		case _:
+			return '--{}={}'.format(opt.replace('_', '-'), val)
+
 class GlobalConstants(Lockable):
 	"""
 	These values are non-runtime-configurable.  They’re constant for a given machine,
@@ -575,9 +584,10 @@ class Config(Lockable):
 		# Step 7: set auto typeset opts from user-supplied data or cfgfile data, in that order:
 		self._set_auto_typeset_opts(self._cfgfile_opts.auto_typeset)
 
-		# Step 8: set opts_data['sets'] opts:
-		if opts_data and 'sets' in opts_data:
-			self._set_opts_data_sets_opts(opts_data)
+		# Step 8: process opts_data['sets']:
+		if opts_data:
+			if 'sets' in opts_data:
+				self._set_opts_data_sets_opts(opts_data)
 
 		if 'usage' in self._uopts: # requires self.coin
 			import importlib
@@ -775,11 +785,9 @@ class Config(Lockable):
 					if ((usr_b_val := getattr(self, b_opt, None)) in (None, False)) or usr_b_val == b_val:
 						setattr(self, b_opt, b_val)
 					else:
-						die(1, 'Option --{}={} conflicts with option --{}={}\n'.format(
-							b_opt.replace('_', '-'),
-							usr_b_val,
-							a_opt.replace('_', '-'),
-							usr_a_val))
+						die('UserOptError', 'Option {} conflicts with option {}\n'.format(
+							fmt_opt_val(b_opt, usr_b_val),
+							fmt_opt_val(a_opt, usr_a_val)))
 
 	def _die_on_incompatible_opts(self):
 		for group in self._incompatible_opts:

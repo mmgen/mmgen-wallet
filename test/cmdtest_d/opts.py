@@ -52,11 +52,15 @@ class CmdTestOpts(CmdTestBase):
 		('opt_good29',           (41, 'good cmdline opt (--etc-max-tx-fee=0.1)', [])),
 		('opt_good30',           (41, 'good cmdline opt (--eth-chain-names=foo,bar)', [])),
 		('opt_good31',           (41, 'good cmdline opt (--xmr-rpc-port=28081)', [])),
+		('opt_good32',           (41, 'good cmdline opt (A sets B)', [])),
+		('opt_good33',           (41, 'good cmdline opt (A sets not B)', [])),
 		('opt_bad_param',        (41, 'bad global opt (--pager=1)', [])),
 		('opt_bad_infile',       (41, 'bad infile parameter', [])),
 		('opt_bad_outdir',       (41, 'bad outdir parameter', [])),
 		('opt_bad_incompatible', (41, 'incompatible opts', [])),
 		('opt_bad_autoset',      (41, 'invalid autoset value', [])),
+		('opt_bad_sets1',        (41, "invalid value for opts_data['sets']", [])),
+		('opt_bad_sets2',        (41, "invalid value for opts_data['sets']", [])),
 		('opt_invalid_1',        (41, 'invalid cmdline opt ‘--x’', [])),
 		('opt_invalid_2',        (41, 'invalid cmdline opt ‘---’', [])),
 		('opt_invalid_5',        (41, 'invalid cmdline opt (missing parameter)', [])),
@@ -111,7 +115,8 @@ class CmdTestOpts(CmdTestBase):
 
 	def do_run(self, args, expect, exit_val, regex=False):
 		t = self.spawn_prog(args, exit_val=exit_val or None)
-		t.expect(expect, regex=regex)
+		if expect:
+			t.expect(expect, regex=regex)
 		return t
 
 	def opt_helpscreen(self):
@@ -308,6 +313,12 @@ class CmdTestOpts(CmdTestBase):
 			(('cfg.xmr_rpc_port', '28081'),('proto.rpc_port', '28081'),),
 			need_proto = True)
 
+	def opt_good32(self):
+		return self.do_run(['--in-fmt=hex', '--no-foobleize'], None, 0)
+
+	def opt_good33(self):
+		return self.do_run(['--silent', '--no-verbose'], None, 0)
+
 	def opt_bad_param(self):
 		return self.do_run(['--pager=1'], 'no parameter', 1)
 
@@ -324,6 +335,12 @@ class CmdTestOpts(CmdTestBase):
 
 	def opt_bad_autoset(self):
 		return self.do_run(['--fee-estimate-mode=Fubar'], 'not unique substring', 1)
+
+	def opt_bad_sets1(self):
+		return self.do_run(['--silent', '--verbose'], 'conflicts with', 1)
+
+	def opt_bad_sets2(self):
+		return self.do_run(['--no-foobleize', '--in-fmt=csv'], 'conflicts with', 1)
 
 	def opt_invalid(self, args, expect, opts=[], need_proto=False, exit_val=1):
 		t = self.spawn_prog(args, opts=opts, exit_val=exit_val, need_proto=need_proto)
