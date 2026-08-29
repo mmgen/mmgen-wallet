@@ -33,6 +33,7 @@ opts_data = {
 		'swaptx': ['-', 's'],
 	}[target],
 	'sets': [('yes', True, 'quiet', True)],
+	'requires': [('coin', 'XMR', 'autosign', True)],
 	'text': {
 		'desc': {
 			'tx':     f'Create a transaction with outputs to specified coin or {gc.proj_name} addresses',

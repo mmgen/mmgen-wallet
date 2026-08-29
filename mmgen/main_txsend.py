@@ -155,6 +155,8 @@ async def process_tx(tx):
 	cfg._util.vmsg(f'Getting {tx.desc} ‘{tx.infile}’')
 
 	if tx.is_compat:
+		if not cfg.autosign:
+			die(1, 'Sending XMR transaction via compatibility layer requires --autosign')
 		return await tx.compat_send()
 
 	txcfg = Config({'_clone': cfg, 'proto': tx.proto, 'coin': tx.proto.coin})
