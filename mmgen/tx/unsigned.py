@@ -20,6 +20,18 @@ class Unsigned(Completed):
 	ext  = 'rawtx'
 	automount = False
 
+	# Return signed object or False.  Don’t exit or raise exception, unless fatal:
+	async def sign(self, keys, tx_num_str=''):
+
+		try:
+			self.check_correct_chain()
+		except Exception as e:
+			if type(e).__name__ == 'TransactionChainMismatch':
+				return False
+			raise # fatal
+
+		return await self.proto_sign(keys, tx_num_str=tx_num_str)
+
 	def delete_attrs(self, desc, attr):
 		for e in getattr(self, desc):
 			if hasattr(e, attr):

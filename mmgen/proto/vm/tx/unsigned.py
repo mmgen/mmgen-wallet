@@ -18,13 +18,7 @@ class Unsigned:
 	desc = 'unsigned transaction'
 
 	# Return signed object or False. Don’t exit or raise exception:
-	async def sign(self, keys, tx_num_str=''):
-
-		from ....exception import TransactionChainMismatch
-		try:
-			self.check_correct_chain()
-		except TransactionChainMismatch:
-			return False
+	async def proto_sign(self, keys, tx_num_str=''):
 
 		o = self.txobj
 

@@ -21,13 +21,7 @@ class Unsigned(Completed, TxBase.Unsigned):
 	desc = 'unsigned transaction'
 
 	# Return signed object or False. Don’t exit or raise exception:
-	async def sign(self, keys, tx_num_str=''):
-
-		from ....exception import TransactionChainMismatch
-		try:
-			self.check_correct_chain()
-		except TransactionChainMismatch:
-			return False
+	async def proto_sign(self, keys, tx_num_str=''):
 
 		if (self.has_segwit_inputs() or self.has_segwit_outputs()) and not self.proto.cap('segwit'):
 			ymsg(f"TX has Segwit inputs or outputs, but {self.coin} doesn't support Segwit!")
