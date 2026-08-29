@@ -4,6 +4,8 @@ run-name: Build and install
 
 on:
   push:
+    branches:
+      - ci
     paths:
       - '.github/workflows/build.yaml'
       - '.github/build-requirements.txt'

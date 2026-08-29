@@ -4,6 +4,8 @@ run-name: Check code with Ruff, Bandit and Pylint static analyzers
 
 on:
   push:
+    branches:
+      - ci
     paths:
       - '.github/workflows/lint.yaml'
       - '.github/build-requirements.txt'

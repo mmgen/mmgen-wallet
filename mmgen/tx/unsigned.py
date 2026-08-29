@@ -13,7 +13,7 @@ tx.unsigned: unsigned transaction class
 """
 
 from .completed import Completed
-from ..util import remove_dups
+from ..util import die, remove_dups
 
 class Unsigned(Completed):
 	desc = 'unsigned transaction'
@@ -22,6 +22,11 @@ class Unsigned(Completed):
 
 	# Return signed object or False.  Don’t exit or raise exception, unless fatal:
 	async def sign(self, keys, tx_num_str=''):
+
+		if self.file_format == 'legacy': # fatal
+			die('LegacyTxSignRequestError',
+				'Request to sign legacy-format transaction. '
+				'Has your online installation been compromised?')
 
 		try:
 			self.check_correct_chain()
