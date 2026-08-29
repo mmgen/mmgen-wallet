@@ -54,6 +54,8 @@ class CmdTestOpts(CmdTestBase):
 		('opt_good31',           (41, 'good cmdline opt (--xmr-rpc-port=28081)', [])),
 		('opt_good32',           (41, 'good cmdline opt (A sets B)', [])),
 		('opt_good33',           (41, 'good cmdline opt (A sets not B)', [])),
+		('opt_good34',           (41, 'good cmdline opt (A requires B)', [])),
+		('opt_good35',           (41, 'good cmdline opt (A requires not B)', [])),
 		('opt_bad_param',        (41, 'bad global opt (--pager=1)', [])),
 		('opt_bad_infile',       (41, 'bad infile parameter', [])),
 		('opt_bad_outdir',       (41, 'bad outdir parameter', [])),
@@ -61,6 +63,8 @@ class CmdTestOpts(CmdTestBase):
 		('opt_bad_autoset',      (41, 'invalid autoset value', [])),
 		('opt_bad_sets1',        (41, "invalid value for opts_data['sets']", [])),
 		('opt_bad_sets2',        (41, "invalid value for opts_data['sets']", [])),
+		('opt_bad_requires1',    (41, "invalid value for opts_data['requires']", [])),
+		('opt_bad_requires2',    (41, "invalid value for opts_data['requires']", [])),
 		('opt_invalid_1',        (41, 'invalid cmdline opt ‘--x’', [])),
 		('opt_invalid_2',        (41, 'invalid cmdline opt ‘---’', [])),
 		('opt_invalid_5',        (41, 'invalid cmdline opt (missing parameter)', [])),
@@ -319,6 +323,12 @@ class CmdTestOpts(CmdTestBase):
 	def opt_good33(self):
 		return self.do_run(['--silent', '--no-verbose'], None, 0)
 
+	def opt_good34(self):
+		return self.do_run(['--coin=DOGE', '--no-foobleize'], None, 0)
+
+	def opt_good35(self):
+		return self.do_run(['--no-silent', '--no-foobleize'], None, 0)
+
 	def opt_bad_param(self):
 		return self.do_run(['--pager=1'], 'no parameter', 1)
 
@@ -341,6 +351,12 @@ class CmdTestOpts(CmdTestBase):
 
 	def opt_bad_sets2(self):
 		return self.do_run(['--no-foobleize', '--in-fmt=csv'], 'conflicts with', 1)
+
+	def opt_bad_requires1(self):
+		return self.do_run(['--coin=DOGE'], 'requires option', 1)
+
+	def opt_bad_requires2(self):
+		return self.do_run(['--no-foobleize', '--silent'], 'requires option --no-', 1)
 
 	def opt_invalid(self, args, expect, opts=[], need_proto=False, exit_val=1):
 		t = self.spawn_prog(args, opts=opts, exit_val=exit_val, need_proto=need_proto)

@@ -584,10 +584,12 @@ class Config(Lockable):
 		# Step 7: set auto typeset opts from user-supplied data or cfgfile data, in that order:
 		self._set_auto_typeset_opts(self._cfgfile_opts.auto_typeset)
 
-		# Step 8: process opts_data['sets']:
+		# Step 8: process opts_data['sets'] and opts_data['requires']:
 		if opts_data:
 			if 'sets' in opts_data:
 				self._set_opts_data_sets_opts(opts_data)
+			if 'requires' in opts_data: # for required value of None, use False instead
+				self._check_opts_data_requires_opts(opts_data)
 
 		if 'usage' in self._uopts: # requires self.coin
 			import importlib
@@ -788,6 +790,13 @@ class Config(Lockable):
 						die('UserOptError', 'Option {} conflicts with option {}\n'.format(
 							fmt_opt_val(b_opt, usr_b_val),
 							fmt_opt_val(a_opt, usr_a_val)))
+
+	def _check_opts_data_requires_opts(self, opts_data):
+		for a_opt, a_val, b_opt, b_val in opts_data['requires']:
+			if getattr(self, a_opt, False) == a_val and getattr(self, b_opt, False) != b_val:
+				die('UserOptError', 'Option {} requires option {}\n'.format(
+					fmt_opt_val(a_opt, a_val),
+					fmt_opt_val(b_opt, b_val)))
 
 	def _die_on_incompatible_opts(self):
 		for group in self._incompatible_opts:

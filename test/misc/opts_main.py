@@ -11,6 +11,10 @@ opts_data = {
 		('silent', True, 'verbose', False),
 		('no_foobleize', True, 'in_fmt', 'hex'),
 	],
+	'requires': [
+		('coin', 'DOGE', 'no_foobleize', True),
+		('no_foobleize', True, 'silent', False),
+	],
 	'text': {
 		'desc': 'Opts test',
 		'usage':'[args] [opts]',
