@@ -143,7 +143,9 @@ async def main():
 		if not cfg.yes:
 			tx1.info.view_with_prompt(f'View data for transaction{tx_num_disp}?')
 
-		if tx2 := await tx1.sign(TxKeys(cfg, tx1, seedfiles=seedfiles).keys, tx_num_disp):
+		if tx2 := await tx1.sign(
+				TxKeys(cfg, tx1, seedfiles=seedfiles).keys,
+				tx_num_str = tx_num_disp):
 			if not cfg.yes:
 				tx2.add_comment() # edits an existing comment
 			tx2.file.write(ask_write=not cfg.yes, ask_write_default_yes=True, add_desc=tx_num_disp)

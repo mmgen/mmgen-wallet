@@ -18,7 +18,7 @@ class Unsigned:
 	desc = 'unsigned transaction'
 
 	# Return signed object or False. Don’t exit or raise exception:
-	async def proto_sign(self, keys, tx_num_str=''):
+	async def proto_sign(self, keys, *, tx_num_str):
 
 		o = self.txobj
 

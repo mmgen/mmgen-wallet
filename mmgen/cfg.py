@@ -539,7 +539,7 @@ class Config(Lockable):
 		# Step 3: set cfg from environment, skipping already-set opts; save names set from environment:
 		self._envopts = tuple(self._set_cfg_from_env()) if self._use_env else ()
 
-		# Step 4: finalize some cmdline-only opts:
+		# Step 4: finalize some non-cfg-file opts:
 		self.coin = self.coin.upper()
 		self.token = self.token.upper() if self.token else None
 		if (
@@ -803,7 +803,7 @@ class Config(Lockable):
 			bad = [k for k in self.__dict__
 				if k in group and k in self._uopts and getattr(self, k) is not None]
 			if len(bad) > 1:
-				die(1, 'Conflicting options: {}'.format(', '.join(map(fmt_opt, bad))))
+				die('UserOptError', 'Conflicting options: {}'.format(', '.join(map(fmt_opt, bad))))
 
 	def _set_quiet(self, val):
 		from .util import Util
@@ -1004,7 +1004,7 @@ def conv_type(name, val, refval, *, src, invert_bool=False):
 			'cmdline': 'command-line',
 			'cfg':     'Config',
 			'env':     'environment var'}
-		die(1, '{a!r}: invalid value for {b} option {c!r}{d} (must be of type {e!r})'.format(
+		die('UserOptError', '{a!r}: invalid value for {b} option {c!r}{d} (must be of type {e!r})'.format(
 			a = val,
 			b = desc.get(src, 'config file'),
 			c = fmt_opt(name) if src == 'cmdline' else name,

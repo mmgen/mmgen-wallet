@@ -136,7 +136,7 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 		t = self._swaptxsend(add_opts=[f'--dump-hex={self.txhex_file}'], dump_hex=True)
 		t.read()
 		txhex = get_data_from_file(self.cfg, self.txhex_file, silent=True)
-		if md5(txhex.encode()).hexdigest()[:8] != self.txhex_chksum:
-			self.tr.parent_group.tr.warn('txid mismatch')
+		if (chk := md5(txhex.encode()).hexdigest()[:8]) != self.txhex_chksum:
+			self.tr.parent_group.tr.warn(f'txid mismatch ({chk} != {self.txhex_chksum})')
 			return 'ok'
 		return t

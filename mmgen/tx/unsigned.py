@@ -21,7 +21,7 @@ class Unsigned(Completed):
 	automount = False
 
 	# Return signed object or False.  Don’t exit or raise exception, unless fatal:
-	async def sign(self, keys, tx_num_str=''):
+	async def sign(self, keys, *, tx_num_str=''):
 
 		if self.file_format == 'legacy': # fatal
 			die('LegacyTxSignRequestError',
