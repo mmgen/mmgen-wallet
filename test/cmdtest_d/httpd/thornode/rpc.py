@@ -69,7 +69,7 @@ class ThornodeRPCServer(ThornodeServer):
 				if txhex.startswith('0A540A52'):
 					res.update({'hash': '14463C716CF08A814868DB779156BCD85A1DF8EE49E924900A74482E9DEE132D'})
 				elif txhex.startswith('0AC1010A'):
-					res.update({'hash': '17F9411E48542C0DCA4D40A0DD4A1795DE6D5791A873A27CBBDC1031FE8D1BC5'})
+					res.update({'hash': 'BD30B8FD9FC278A26E7A81ABB36C4709260DE64087EB578900BD23CEBF11D1A2'})
 				return res
 
 		pat_info = (

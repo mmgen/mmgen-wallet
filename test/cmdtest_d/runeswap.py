@@ -28,7 +28,7 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 
 	bdb_wallet = True
 	tmpdir_nums = [57]
-	networks = ('btc',)
+	networks = ('ltc',)
 	passthru_opts = ('coin', 'rpc_backend')
 	cross_group = 'runeswap_rune'
 	cross_coin = 'rune'
@@ -57,7 +57,7 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 			('rune_twview',      ''),
 		),
 		'rune_swap': (
-			'swap operations (RUNE -> BTC)',
+			'swap operations (RUNE -> LTC)',
 			('rune_swaptxcreate1',  ''),
 			('rune_swaptxsign1',    ''),
 			('rune_swaptxsend1',    ''),
@@ -93,12 +93,12 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 	tmpdir_nums = [58]
 	input_sels_prompt = 'to spend from: '
 	is_helper = True
-	txhex_chksum = '34980b41'
+	txhex_chksum = '0b84cb00'
 	add_eth_opts = ['--bob']
 
 	cmd_group_in = CmdTestRune.cmd_group_in + (
 		# rune_swap:
-		('swaptxcreate1',            'creating a RUNE->BTC swap transaction'),
+		('swaptxcreate1',            'creating a RUNE->LTC swap transaction'),
 		('swaptxsign1',              'signing the transaction'),
 		('swaptxsend1',              'sending the transaction'),
 		('swaptxstatus1',            'getting the transaction status'),
@@ -112,7 +112,7 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 		self.txhex_file = f'{self.tmpdir}/tx_dump.hex'
 
 	def swaptxcreate1(self):
-		t = self._swaptxcreate(['RUNE', '8.765', 'BTC'])
+		t = self._swaptxcreate(['RUNE', '8.765', 'LTC'])
 		t.expect('OK? (Y/n): ', 'y')
 		return self._swaptxcreate_ui_common(t, inputs='3')
 

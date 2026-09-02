@@ -286,7 +286,7 @@ init_tests() {
 	d_rune="operations for THORChain RUNE using testnet"
 	t_rune="
 		- $cmdtest_py --coin=rune rune
-		- $cmdtest_py runeswap
+		- $cmdtest_py --coin=ltc runeswap
 	"
 
 	[ "$SOC" ] && {
