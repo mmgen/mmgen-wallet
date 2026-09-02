@@ -311,9 +311,6 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		t.expect('OK? (Y/n): ', 'y')
 		return self._swaptxcreate_ui_common(t)
 
-	def swap_server_stop(self):
-		return self._thornode_server_stop()
-
 class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev):
 	'Ethereum swap operations - Ethereum wallet'
 

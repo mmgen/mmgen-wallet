@@ -83,9 +83,6 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 
 		TestProxy(self, cfg)
 
-	def swap_server_stop(self):
-		return self._thornode_server_stop()
-
 class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 	'RUNE swap operations - RUNE wallet'
 

@@ -249,6 +249,12 @@ class CmdTestSwapMethods:
 			getattr(self, attrname).stop()
 		return 'ok'
 
+	def swap_server_stop(self):
+		return self._thornode_server_stop()
+
+	def rpc_server_stop(self):
+		return self._thornode_server_stop(attrname='rpc_server', name='Thornode RPC server')
+
 	def create_cross_runner(self, trunner, *, add_cfg={}):
 		cfg = Config({
 			'_clone': trunner.cfg,
@@ -273,6 +279,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 	passthru_opts = ('rpc_backend',)
 	coins         = ['bch', 'ltc']
 	daemon_coins  = ['bch', 'ltc']
+	subseed_idx = '29L'
 
 	cmd_group_in = (
 		('list_assets',           'listing swap assets'),
@@ -288,14 +295,14 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 	cmd_subgroups = {
 		'init_swap': (
 			'Initialize regtest setup for swap operations',
-			('setup_send_coin',               'setting up the sending coin regtest blockchain'),
+			('setup_send_coin',               'setting up the sending coin regtest blockchain (BCH)'),
 			('walletcreate_bob',              'wallet creation (Bob)'),
 			('addrgen_bob_send',              'address generation (Bob, sending coin)'),
 			('addrimport_bob_send',           'importing Bob’s addresses (sending coin)'),
-			('fund_bob_send',                 'funding Bob’s wallet (bech32)'),
-			('bob_bal_send',                  'displaying Bob’s send balance'),
+			('fund_bob_send',                 'funding Bob’s wallet (compressed)'),
+			('bob_bal_send',                  'displaying Bob’s send balance (BCH)'),
 
-			('setup_recv_coin',               'setting up the receiving coin regtest blockchain'),
+			('setup_recv_coin',               'setting up the receiving coin regtest blockchain (LTC)'),
 			('addrgen_bob_recv',              'address generation (Bob, receiving coin)'),
 			('addrimport_bob_recv',           'importing Bob’s addresses (receiving coin)'),
 			('fund_bob_recv1',                'funding Bob’s wallet (bech32)'),
@@ -303,7 +310,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 			('addrgen_bob_recv_subwallet',    'address generation (Bob, receiving coin)'),
 			('addrimport_bob_recv_subwallet', 'importing Bob’s addresses (receiving coin)'),
 			('fund_bob_recv_subwallet',       'funding Bob’s subwwallet (native Segwit)'),
-			('bob_bal_recv',                  'displaying Bob’s receive balance'),
+			('bob_bal_recv',                  'displaying Bob’s receive balance (LTC)'),
 		),
 		'create': (
 			'Swap TX create operations (BCH => LTC)',
@@ -433,10 +440,10 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		return self._fund_bob(0, 'B', '5')
 
 	def addrgen_bob_recv_subwallet(self):
-		return self._addrgen_bob(0, ['C', 'B'], subseed_idx='29L')
+		return self._addrgen_bob(0, ['C', 'B'], subseed_idx=self.subseed_idx)
 
 	def addrimport_bob_recv_subwallet(self):
-		return self._subwallet_addrimport('bob', '29L', ['C', 'B'], proto=self.protos[0])
+		return self._subwallet_addrimport('bob', self.subseed_idx, ['C', 'B'], proto=self.protos[0])
 
 	def fund_bob_recv_subwallet(self, proto_idx=0, amt='5'):
 		coin_arg = f'--coin={self.protos[proto_idx].coin}'
@@ -683,6 +690,3 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 
 	def mempool1(self):
 		return self._mempool(1)
-
-	def swap_server_stop(self):
-		return self._thornode_server_stop()

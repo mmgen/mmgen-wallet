@@ -152,6 +152,5 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			self.tr.warn('txid mismatch')
 		return t
 
-	def rpc_server_stop(self):
-		return CmdTestSwapMethods._thornode_server_stop(
-			self, attrname='rpc_server', name='Thornode RPC server')
+	_thornode_server_stop = CmdTestSwapMethods._thornode_server_stop
+	rpc_server_stop = CmdTestSwapMethods.rpc_server_stop

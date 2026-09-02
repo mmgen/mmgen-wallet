@@ -589,7 +589,8 @@ class Config(Lockable):
 			if 'sets' in opts_data:
 				self._set_opts_data_sets_opts(opts_data)
 			if 'requires' in opts_data: # for required value of None, use False instead
-				self._check_opts_data_requires_opts(opts_data)
+				if not {'help', 'longhelp', 'usage'}.intersection(self._uopts):
+					self._check_opts_data_requires_opts(opts_data)
 
 		if 'usage' in self._uopts: # requires self.coin
 			import importlib

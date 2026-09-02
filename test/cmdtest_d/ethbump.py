@@ -434,9 +434,6 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 	token_swaptxbump1sign = token_swaptxbump2sign = swaptxbump1sign = swaptxbump2sign = token_txbump2sign
 	token_swaptxbump1send = token_swaptxbump2send = swaptxbump1send = swaptxbump2send = token_txbump2send
 
-	def swap_server_stop(self):
-		return self._thornode_server_stop()
-
 class CmdTestEthBumpLTC(CmdTestSwapMethods, CmdTestRegtest):
 	'Ethereum transaction bumping operations - LTC wallet'
 	network = ('ltc',)
