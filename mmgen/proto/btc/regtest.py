@@ -223,11 +223,13 @@ class MMGenRegtest(MMGenObject):
 				self.create_hdseed_wif(),
 				wallet = 'miner')
 
-		# Broken litecoind can only mine 431 blocks in regtest mode, so generate just enough
-		# blocks to fund the test suite.  Generation is slow, so divide into chunks:
-		for _ in range(15): # 15 * 25 + 17 = 392 blocks
-			await self.generate(25)
-		await self.generate(17)
+		if self.bdb_wallet:
+			# Broken litecoind can only mine 431 blocks in regtest mode, so generate
+			# just enough blocks to fund the test suite.
+			await self.generate(392)
+		else:
+			for _ in range(6): # 120 blocks required for sufficient funds
+				await self.generate(20)
 
 		gmsg('Setup complete')
 

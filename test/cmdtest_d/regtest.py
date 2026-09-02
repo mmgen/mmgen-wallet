@@ -169,7 +169,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	color = True
 	deterministic = False
 	test_rbf = False
-	bdb_wallet = False
+	prefer_bdb_wallet = False
 	menu_prompt = 'abel:\b'
 	input_sels_prompt = 'to spend: '
 
@@ -498,9 +498,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		for k, v in rt_data.items():
 			gldict[k] = v.get(coin, None)
 
-		self.use_bdb_wallet = self.bdb_wallet or coin != 'btc'
-
-		self.rt = MMGenRegtest(cfg, coin, bdb_wallet=self.use_bdb_wallet)
+		self.rt = MMGenRegtest(cfg, coin, bdb_wallet=self.prefer_bdb_wallet or coin != 'btc')
 
 		if coin == 'btc':
 			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC
@@ -516,7 +514,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		self.user_sids = {}
 		self.protos = (self.proto,)
 		self.dump_hex_subdir = os.path.join(self.tmpdir, 'nochg_tx')
-		self.regtest_opts = (['--bdb-wallet'] if self.use_bdb_wallet else [])
+		self.regtest_opts = (['--bdb-wallet'] if self.rt.bdb_wallet else [])
 
 	def _add_comments_to_addr_file(self, proto, addrfile, outfile, use_comments=False):
 		silence()
@@ -570,7 +568,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		t.expect('Starting')
 		for _ in range(3):
 			t.expect(action)
-		for _ in range(17):
+		for _ in range(6 if proto.coin == 'BTC' else 1): # can’t use self.rt.bdb_wallet here
 			t.expect('Mined')
 		t.expect('Setup complete')
 		return t
@@ -1007,22 +1005,22 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			expect2 = rf'[{b58a}]{{8}}' if self.proto.coin == 'BCH' else None)
 
 	def bob_txhist3(self):
+		n1, n2 = (399, 405) if self.rt.bdb_wallet else (127, 133)
 		return self.user_txhist('bob',
 			args = ['sort=blockheight', 'sinceblock=-7', 'age_fmt=block'],
-			expect = fr'Displaying transactions since block 399.*\s6\)\s+405\s.*\s{rtBals[9]}\s.*:L:5.*\s7\)'
-		)
+			expect = fr'Displaying transactions since block {n1}.*\s6\)\s+{n2}\s.*\s{rtBals[9]}\s.*:L:5.*\s7\)')
 
 	def bob_txhist4(self):
+		n = 406 if self.rt.bdb_wallet else 134
 		return self.user_txhist('bob',
 			args = ['sort=blockheight', 'age_fmt=block', 'detail=1'],
-			expect = fr'Block:.*406.*Value:.*{rtBals[10]}'
-		)
+			expect = fr'Block:.*{n}.*Value:.*{rtBals[10]}')
 
 	def bob_txhist5(self):
+		n1, n2 = (399, 406) if self.rt.bdb_wallet else (127, 134)
 		return self.user_txhist('bob',
-			args = ['sort=blockheight', 'sinceblock=399', 'age_fmt=block', 'detail=1'],
-			expect = fr'Displaying transactions since block 399.*\s7\).*Block:.*406.*Value:.*{rtBals[10]}'
-		)
+			args = ['sort=blockheight', f'sinceblock={n1}', 'age_fmt=block', 'detail=1'],
+			expect = fr'Displaying transactions since block {n1}.*\s7\).*Block:.*{n2}.*Value:.*{rtBals[10]}')
 
 	def bob_txhist_interactive(self):
 		self.get_file_with_ext('out', delete_all=True)
@@ -1427,16 +1425,20 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return t
 
 	def bob_rescan_blockchain_all(self):
-		return self._usr_rescan_blockchain('bob', [], '300-396')
+		print(self.rt.bdb_wallet)
+		n1, n2 = (300, 396) if self.rt.bdb_wallet else (100, 124)
+		return self._usr_rescan_blockchain('bob', [], f'{n1}-{n2}')
 
 	def bob_rescan_blockchain_gb(self):
 		return self._usr_rescan_blockchain('bob', ['start_block=0', 'stop_block=0'], '0-0')
 
 	def bob_rescan_blockchain_one(self):
-		return self._usr_rescan_blockchain('bob', ['start_block=300', 'stop_block=300'], '300-300')
+		n = 300 if self.rt.bdb_wallet else 124
+		return self._usr_rescan_blockchain('bob', [f'start_block={n}', f'stop_block={n}'], f'{n}-{n}')
 
 	def bob_rescan_blockchain_ss(self):
-		return self._usr_rescan_blockchain('bob', ['start_block=300', 'stop_block=302'], '300-302')
+		n1, n2 = (300, 302) if self.rt.bdb_wallet else (111, 112)
+		return self._usr_rescan_blockchain('bob', [f'start_block={n1}', f'stop_block={n2}'], f'{n1}-{n2}')
 
 	def bob_twexport(self, add_args=[]):
 		t = self.spawn('mmgen-tool', ['--bob', f'--outdir={self.tmpdir}', 'twexport'] + add_args)
@@ -2340,4 +2342,4 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 class CmdTestRegtestBDBWallet(CmdTestRegtest):
 	'transacting and tracking wallet operations via regtest mode (legacy BDB wallet)'
 	networks = ('ltc', 'bch')
-	bdb_wallet = True
+	prefer_bdb_wallet = True
