@@ -53,6 +53,7 @@ from .include.common import (
 	tw_comment_zh,
 	tx_comment_jp,
 	cleanup_env,
+	dfl_bip39_file,
 	rt_pw)
 
 from .base import CmdTestBase
@@ -609,6 +610,22 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def walletgen_alice(self):
 		return self.walletgen('alice')
+
+	def walletcreate_bob(self):
+		from pathlib import Path
+		dest = Path(self.tr.data_dir, 'regtest', 'bob')
+		dest.mkdir(exist_ok=True)
+		t = self.spawn('mmgen-walletconv', [
+			'--quiet',
+			'--usr-randchars=0',
+			'--hash-preset=1',
+			'--label=Test Label',
+			f'--outdir={dest!s}',
+			dfl_bip39_file])
+		t.expect('wallet: ', rt_pw + '\n')
+		t.expect('phrase: ', rt_pw + '\n')
+		t.written_to_file('wallet')
+		return t
 
 	def _user_dir(self, user, coin=None):
 		return joinpath(self.tr.data_dir, 'regtest', user)

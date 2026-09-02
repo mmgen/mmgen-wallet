@@ -221,6 +221,7 @@ init_tests() {
 	d_btc_rt="overall operations using the regtest network (Bitcoin, multicoin)"
 	t_btc_rt="
 		- $cmdtest_py regtest
+		- $cmdtest_py op_return
 		a $cmdtest_py swap
 	"
 	[ "$SKIP_ALT_DEP" ] && t_btc_rt_skip+=' a'

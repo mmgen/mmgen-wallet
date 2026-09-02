@@ -40,6 +40,7 @@ cmd_groups_dfl = {
 	'autosign_automount': gd('CmdTestAutosignAutomount', {'modname': 'automount'}),
 	'autosign_eth':       gd('CmdTestAutosignETH',       {'modname': 'automount_eth'}),
 	'regtest':            gd('CmdTestRegtest',           {}),
+	'op_return':          gd('CmdTestOpReturn',          {}),
 	'swap':               gd('CmdTestSwap',              {}),
 	'ethswap':            gd('CmdTestEthSwap',           {}),
 	# 'chainsplit':         gd('CmdTestChainsplit',      {}),
@@ -247,6 +248,7 @@ cfgs = { # addr_idx_lists (except 31, 32, 33, 34) must contain exactly 8 address
 	'32': {}, # ref_tx
 	'33': {}, # ref_tx
 	'34': {}, # ref_tx
+	'36': {}, # op_return
 	'37': {}, # swap
 	'38': {}, # autosign_clean
 	'39': {}, # xmr_autosign
