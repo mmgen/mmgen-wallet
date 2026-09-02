@@ -930,6 +930,8 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		if exc_exit_val:
 			return do_return()
 
+		t.expect('compromised')
+
 		t.expect(
 			f'{self.tx_count} {tx_desc}{suf(self.tx_count)} signed' if self.tx_count else
 			f'No unsigned {tx_desc}s')
