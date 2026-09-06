@@ -107,6 +107,9 @@ class unit_tests:
 	def data_output_btc(self, name, ut, desc='BitcoinDataOutput class'):
 		return self._data_output(ut, 'btc')
 
+	def data_output_eth(self, name, ut, desc='EthereumDataOutput class'):
+		return self._data_output(ut, 'eth')
+
 	def data_output_rune(self, name, ut, desc='THORChainDataOutput class'):
 		return self._data_output(ut, 'rune')
 
