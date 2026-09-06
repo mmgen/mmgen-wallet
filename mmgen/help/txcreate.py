@@ -13,8 +13,16 @@ help.txcreate: txcreate and txdo help notes for the MMGen Wallet suite
 """
 
 def help(proto, cfg):
-	outputs_info = (
-	"""
+
+	data_spec_info = """DATA_SPEC may be of the form "data":DATA
+or "hexdata":DATA. In the first form, DATA is a string in your system’s native
+encoding, typically UTF-8.  In the second, DATA is a hexadecimal string (with
+the leading ‘0x’ omitted) encoding the binary data to be embedded.  In both
+cases, the resulting byte string must not exceed {dl} bytes in length."""
+
+	match proto.base_proto:
+		case 'Bitcoin':
+			outputs_info = """
 Outputs are specified in the form ADDRESS,AMOUNT or ADDRESS.  The first form
 creates an output sending the given amount to the given address.  The bare
 address form designates the given address as either the change output or the
@@ -31,15 +39,20 @@ See EXAMPLES below.
 
 A single DATA_SPEC argument may also be given on the command line to create
 an OP_RETURN data output with a zero spend amount.  This is the preferred way
-to embed data in the blockchain.  DATA_SPEC may be of the form "data":DATA
-or "hexdata":DATA. In the first form, DATA is a string in your system’s native
-encoding, typically UTF-8.  In the second, DATA is a hexadecimal string (with
-the leading ‘0x’ omitted) encoding the binary data to be embedded.  In both
-cases, the resulting byte string must not exceed {bl} bytes in length.
-""".format(bl=proto.max_op_return_data_len)
-	if proto.base_proto == 'Bitcoin' else """
+to embed data in the blockchain.  {ds}
+""".format(ds=data_spec_info.format(dl=proto.max_op_return_data_len))
+		case 'THORChain':
+			from ..swap.proto.thorchain.memo import THORChainMemo
+			outputs_info = """
 The transaction output is specified in the form ADDRESS,AMOUNT.
-""")
+
+A single DATA_SPEC argument may also be given on the command line to embed
+data (e.g. a memo) in the transaction.  {ds}
+""".format(ds=data_spec_info.format(dl=THORChainMemo.max_len))
+		case _:
+			outputs_info = """
+The transaction output is specified in the form ADDRESS,AMOUNT.
+"""
 
 	fee_info = """
 If the transaction fee is not specified on the command line (see FEE

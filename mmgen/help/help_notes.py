@@ -40,11 +40,13 @@ class help_notes:
 		match self.proto.base_proto:
 			case 'Bitcoin':
 				if self.cfg.autosign:
-					return '[ADDR,AMT ... | DATA_SPEC] ADDR'
+					return '[ADDR,AMT ...] ADDR [DATA_SPEC]'
 				else:
-					return '[ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...]'
+					return '[ADDR,AMT ...] ADDR [DATA_SPEC] [addr file ...]'
 			case 'Monero':
 				return '[ADDR,AMT]'
+			case 'THORChain':
+				return 'ADDR,AMT [DATA_SPEC] [addr file ...]'
 			case _:
 				return 'ADDR,AMT [addr file ...]'
 
