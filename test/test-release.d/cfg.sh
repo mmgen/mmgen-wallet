@@ -8,7 +8,7 @@
 #   https://github.com/mmgen/mmgen-wallet
 #   https://gitlab.com/mmgen/mmgen-wallet
 
-all_tests="dep dev ruff pylint bandit gcc obj color daemon mod hash ref altref altgen xmr geth reth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
+all_tests="dep dev lint ruff pylint bandit gcc obj color daemon mod hash ref altref altgen xmr geth reth autosign btc btc_tn btc_rt bch bch_tn bch_rt ltc ltc_tn ltc_rt tool tool2 gen alt help"
 
 groups_desc="
 	default  - All tests minus the extra tests
@@ -20,10 +20,10 @@ groups_desc="
 
 init_groups() {
 	dfl_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt altref altgen bch bch_rt ltc ltc_rt geth reth etc rune xmr'
-	extra_tests='dep dev ruff pylint bandit gcc autosign_live ltc_tn bch_tn'
+	extra_tests='dep dev lint ruff pylint bandit gcc autosign_live ltc_tn bch_tn'
 	noalt_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_tn btc_rt'
 	quick_tests='dep daemon alt obj color mod hash ref tool tool2 gen help autosign btc btc_rt altref altgen geth etc rune xmr'
-	qskip_tests='ruff btc_tn bch bch_rt ltc ltc_rt'
+	qskip_tests='lint ruff btc_tn bch bch_rt ltc ltc_rt'
 	noalt_ok_tests='ruff'
 
 	[ "$MSYS2" ] && SKIP_LIST='autosign autosign_live'
@@ -103,6 +103,19 @@ init_tests() {
 	t_gcc="
 		- rm -rf build
 		- python3 ./setup.py build_ext --inplace $STDOUT_DEVNULL
+	"
+
+	d_lint="code errors and vulnerabilities with all available tools"
+	e_lint="Error checking failed!"
+	t_lint="
+		- # ruff
+		$t_ruff
+		- # bandit
+		$t_bandit
+		- # gcc -fanalyzer
+		$t_gcc
+		- # pylint
+		$t_pylint
 	"
 
 	d_daemon="low-level subsystems involving coin daemons"

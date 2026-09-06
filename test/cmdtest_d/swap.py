@@ -18,7 +18,7 @@ from mmgen.cfg import Config
 from mmgen.util import make_chksum_6
 from mmgen.protocol import init_proto
 from mmgen.wallet.mmgen import wallet as MMGenWallet
-from mmgen.tx.file import txfile_json_dumps
+from mmgen.tx.file import txfile_json_dumps # pylint: disable=no-name-in-module
 
 from ..include.common import imsg, make_burn_addr, gr_uc
 
