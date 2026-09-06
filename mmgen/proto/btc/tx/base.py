@@ -18,7 +18,7 @@ from ....tx.base import Base as TxBase
 from ....obj import MMGenList, HexStr, ListItemAttr
 from ....util import msg, make_chksum_6, die, pp_fmt
 
-from ....tx.data_output import DataOutput
+from .data_output import DataOutput
 
 def data2scriptPubKey(data):
 	return '6a' + '{:02x}'.format(len(data)) + data.hex() # OP_RETURN data

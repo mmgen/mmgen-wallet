@@ -16,13 +16,9 @@ from ..obj import InitErrors
 
 class DataOutput(bytes, InitErrors):
 
-	desc = 'OP_RETURN data'
+	def __new__(base_cls, proto, data_spec):
 
-	@property
-	def max_len(self):
-		return self.proto.max_op_return_data_len
-
-	def __new__(cls, proto, data_spec):
+		cls = proto.base_proto_subclass(base_cls, 'tx.data_output')
 
 		assert isinstance(data_spec, str), f'{cls.desc} argument must be a string'
 

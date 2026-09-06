@@ -9,6 +9,7 @@ import os
 from mmgen.tx import CompletedTX, UnsignedTX
 from mmgen.tx.file import MMGenTxFile
 from mmgen.cfg import Config
+from mmgen.protocol import init_proto
 
 from ..include.common import cfg, qmsg, vmsg, gr_uc
 
@@ -112,9 +113,13 @@ class unit_tests:
 		ut.process_bad_data(bad_data)
 		return True
 
-	def data_output(self, name, ut, desc='DataOutput class'):
-		max_len = cfg._proto.max_op_return_data_len
+	def data_output_btc(self, name, ut, desc='BitcoinDataOutput class'):
+		return self._data_output(ut, 'btc')
+
+	def _data_output(self, ut, coin):
+		proto = init_proto(cfg, coin)
 		from mmgen.tx.data_output import DataOutput
+		max_len = DataOutput(proto, 'data:abc').max_len
 		vecs = [
 			'data:=:ETH.ETH:0x86d526d6624AbC0178cF7296cD538Ecc080A95F1:0/1/0',
 			'hexdata:3d3a4554482e4554483a30783836643532366436363234416243303137'
@@ -128,11 +133,11 @@ class unit_tests:
 			'data:' + gr_uc[:24],
 		]
 
-		assert DataOutput(cfg._proto, vecs[0]) == DataOutput(cfg._proto, vecs[1])
+		assert DataOutput(proto, vecs[0]) == DataOutput(proto, vecs[1])
 
 		for vec in vecs:
-			d = DataOutput(cfg._proto, vec)
-			assert d == DataOutput(cfg._proto, repr(d)) # repr() must return a valid initializer
+			d = DataOutput(proto, vec)
+			assert d == DataOutput(proto, repr(d)) # repr() must return a valid initializer
 			assert isinstance(d, bytes)
 			assert isinstance(str(d), str)
 			vmsg('-' * 80)
@@ -156,7 +161,7 @@ class unit_tests:
 		]
 
 		def bad(n):
-			return lambda: DataOutput(cfg._proto, bad_data[n])
+			return lambda: DataOutput(proto, bad_data[n])
 
 		vmsg('-' * 80)
 		vmsg('Testing error handling:')
