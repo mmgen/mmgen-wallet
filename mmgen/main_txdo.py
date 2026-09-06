@@ -177,7 +177,7 @@ async def main():
 	tx1 = NewTX(cfg=cfg, proto=proto, target=target)
 
 	tx2 = await tx1.create(
-		cmd_args = cfg._args,
+		args     = cfg._args,
 		locktime = int(cfg.locktime or 0),
 		caller   = 'txdo')
 

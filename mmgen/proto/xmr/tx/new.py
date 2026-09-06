@@ -18,10 +18,10 @@ from .base import Base
 
 class New(Base, TxNew):
 
-	async def create(self, cmd_args, **kwargs):
-		self.is_sweep = not cmd_args
+	async def create(self, args, **kwargs):
+		self.is_sweep = not args
 		self.sweep_spec = None
-		return await super().create(cmd_args, **kwargs)
+		return await super().create(args, **kwargs)
 
 	async def get_input_addrs_from_inputs_opt(self):
 		return [] # TODO

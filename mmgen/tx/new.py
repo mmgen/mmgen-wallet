@@ -273,14 +273,14 @@ class New(Base):
 			elif len(self.nondata_outputs) > 1:
 				await self.warn_addr_used(self.proto, self.chg_output, 'change address')
 
-	def get_addrfiles_from_cmdline(self, cmd_args):
+	def get_addrfiles_from_cmdline(self, args):
 		from ..addrfile import AddrFile
 		addrfile_args = remove_dups(
-			tuple(a for a in cmd_args if get_extension(a) == AddrFile.ext),
+			tuple(a for a in args if get_extension(a) == AddrFile.ext),
 			desc = 'command line',
 			edesc = 'argument',
 		)
-		cmd_args = tuple(a for a in cmd_args if a not in addrfile_args)
+		cmd_args = tuple(a for a in args if a not in addrfile_args)
 		if not self.is_swap:
 			cmd_args = remove_dups(cmd_args, desc='command line', edesc='argument')
 		return cmd_args, addrfile_args
@@ -447,7 +447,7 @@ class New(Base):
 			message = yellow(message),
 			action = 'Are you sure this is what you want?')
 
-	async def create(self, cmd_args, *, locktime=None, do_info=False, caller='txcreate'):
+	async def create(self, args, *, locktime=None, do_info=False, caller='txcreate'):
 
 		assert isinstance(locktime, int | type(None)), 'locktime must be of type int'
 
@@ -457,7 +457,7 @@ class New(Base):
 			self.add_comment(infile=self.cfg.comment_file)
 
 		if not (do_info or self.is_sweep):
-			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(cmd_args)
+			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(args)
 			if self.is_swap:
 				cmd_args = await self.process_swap_cmdline_args(cmd_args, addrfile_args)
 			if self.is_compat:
