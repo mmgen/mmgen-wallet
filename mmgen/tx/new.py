@@ -185,7 +185,7 @@ class New(Base):
 
 		coin_addr, mmid, is_vault = (None, None, False)
 
-		if arg == 'vault' and self.is_swap:
+		if arg == 'vault' and self.is_swap: # ‘is_swap’ test necessary because could be bump tx
 			is_vault = True
 		elif mmid := get_obj(MMGenID, proto=proto, id_str=arg, silent=True):
 			coin_addr = mmaddr2coinaddr(self.cfg, arg, ad_w, ad_f, proto)

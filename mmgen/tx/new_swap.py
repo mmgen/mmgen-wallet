@@ -169,10 +169,12 @@ class NewSwap(New):
 		# this goes into the transaction file:
 		self.swap_recv_addr_mmid = recv_output.mmid
 
-		return (
-			[f'vault,{args.send_amt}', f'data:{memo}'] if args.send_amt and self.proto.is_vm else
-			[f'vault,{args.send_amt}', chg_output.mmid, f'data:{memo}'] if args.send_amt else
-			['vault', f'data:{memo}'])
+		ret = (
+			[f'vault,{args.send_amt}'] if args.send_amt and self.proto.is_vm else
+			[f'vault,{args.send_amt}', chg_output.mmid] if args.send_amt else
+			['vault'])
+
+		return ret + [f'data:{memo}']
 
 	def update_vault_addr(self, c, *, addr='inbound_address'):
 		vault_idx = self.vault_idx
