@@ -36,7 +36,10 @@ class New(VmNew, Base, TxBase.New):
 			m = "'--contract-data' option may not be used with token transaction"
 			assert 'Token' not in self.name, m
 			with open(self.cfg.contract_data) as fp:
-				self.usr_contract_data = bytes.fromhex(fp.read().strip())
+				data = bytes.fromhex(fp.read().strip())
+			assert len(data) <= self.proto.max_data_len, (
+				f'{len(data)}: data length too large (>{self.proto.max_data_len})')
+			self.usr_contract_data = data
 			self.disable_fee_check = True
 
 	def process_data_output_arg(self, arg):

@@ -40,6 +40,7 @@ class mainnet(CoinProtocol.DummyWIF, CoinProtocol.Secp256k1):
 	address_reuse_ok = True
 	is_vm = True
 	is_evm = True
+	max_data_len = 1024 * 10 # arbitrary value (Token.bin is 3.24 kb)
 
 	# https://www.chainid.dev
 	chain_ids = {
