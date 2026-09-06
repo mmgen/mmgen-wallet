@@ -39,7 +39,7 @@ class New(VmNew, Base, TxBase.New):
 		self.txobj = {
 			'from':           self.inputs[0].addr,
 			'to':             self.outputs[0].addr if self.outputs else None,
-			'amt':            self.outputs[0].amt if self.outputs else self.swap_amt,
+			'amt':            self.sum_outputs(),
 			'gas':            self.gas,
 			'account_number': int(acct_info['account_number']),
 			'sequence':       int(acct_info['sequence']),

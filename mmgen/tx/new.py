@@ -80,6 +80,7 @@ class New(Base):
 
 	fee_is_approximate = False
 	is_sweep = False
+	is_bump = False
 	msg_wallet_low_coin = 'Wallet has insufficient funds for this transaction ({} {} needed)'
 	msg_no_change_output = """
 		ERROR: No change address specified.  If you wish to create a transaction with

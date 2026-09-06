@@ -23,13 +23,14 @@ class TxInfo(VmTxInfo, TxInfo):
 	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, *, terse, sort):
 		tx = self.tx
 		t = tx.txobj
+		has_memo = tx.is_swap
 		fs = """
 			From:      {f}{f_mmid}
 			Amount:    {a} {c}
 			Gas limit: {G}
 			Sequence:  {N}
 			Memo:      {m}
-		""" if tx.is_swap else """
+		""" if has_memo else """
 			From:      {f}{f_mmid}
 			To:        {t}{t_mmid}
 			Amount:    {a} {c}
@@ -38,14 +39,14 @@ class TxInfo(VmTxInfo, TxInfo):
 		"""
 		return fs.strip().replace('\t', '').format(
 			f      = t['from'].hl(0),
-			t      = None if tx.is_swap else t['to'].hl(0),
+			t      = None if has_memo else t['to'].hl(0),
 			a      = t['amt'].hl(),
 			N      = NonNegativeInt(t['sequence']).hl(),
-			m      = pink(tx.swap_memo) if tx.is_swap else None,
+			m      = pink(tx.swap_memo) if has_memo else None,
 			c      = tx.proto.dcoin if tx.outputs else '',
 			G      = NonNegativeInt(tx.total_gas).hl(),
 			f_mmid = mmid_disp(tx.inputs[0], nonmm_str),
-			t_mmid = None if tx.is_swap else mmid_disp(tx.outputs[0], nonmm_str)) + '\n\n'
+			t_mmid = None if has_memo else mmid_disp(tx.outputs[0], nonmm_str)) + '\n\n'
 
 	def format_abs_fee(self, iwidth, /, *, color=None):
 		return self.tx.fee.fmt(iwidth, color=color)

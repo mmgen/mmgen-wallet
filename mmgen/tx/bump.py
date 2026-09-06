@@ -49,7 +49,7 @@ class Bump(Completed, NewSwap):
 		if check_sent and not self.coin_txid:
 			die(1, f'Transaction {self.txid!r} was not broadcast to the network')
 
-		self.coin_txid = ''
+		self.coin_txid = None
 		self.sent_timestamp = None
 
 	async def get_inputs(self, outputs_sum):

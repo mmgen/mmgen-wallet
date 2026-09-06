@@ -38,12 +38,12 @@ class CmdTestRuneMethods:
 		t.expect(prompt, 'q')
 		return t
 
-	def _rune_txcreate(self, add_opts=[]):
-		t = self.spawn('mmgen-txcreate', self.rune_opts + add_opts + ['98831F3A:X:2,54.321'])
-		t.expect(self.menu_prompt, 'q')
+	def _rune_txcreate(self, args=['98831F3A:X:2,54.321'], add_opts=[], append_args=[], menu_prompt=None):
+		t = self.spawn('mmgen-txcreate', self.rune_opts + add_opts + args + append_args)
+		t.expect(menu_prompt or self.menu_prompt, 'q')
 		t.expect('spend from: ', '3\n')
 		t.expect('(y/N): ', 'y') # add comment?
-		t.expect('Comment: ', 'RUNE Boy\n')
+		t.expect('Comment: ', 'THOR Chad #1\n')
 		t.expect('view: ', 'y')
 		t.expect('to continue: ', 'z')
 		t.expect('(y/N): ', 'y') # save?

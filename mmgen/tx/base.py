@@ -79,7 +79,6 @@ class Base(MMGenObject):
 	locktime     = None
 	chain        = None
 	signed       = False
-	is_bump      = False
 	is_swap      = False
 	is_compat    = False
 	has_comment  = True
@@ -151,13 +150,8 @@ class Base(MMGenObject):
 		return sum(e.amt for e in self.inputs)
 
 	def sum_outputs(self, *, exclude=None):
-		if exclude is None:
-			olist = self.outputs
-		else:
-			olist = self.outputs[:exclude] + self.outputs[exclude+1:]
-		if not olist:
-			return self.proto.coin_amt('0')
-		return sum(e.amt for e in olist)
+		olist = self.outputs if exclude is None else self.outputs[:exclude] + self.outputs[exclude+1:]
+		return sum(e.amt for e in olist) if olist else self.proto.coin_amt('0')
 
 	def _chg_output_ops(self, op, attr):
 		is_chgs = [getattr(x, attr) for x in self.outputs]

@@ -100,8 +100,9 @@ class CmdTestSwapMethods:
 			reload_quote    = False,
 			sign_and_send   = False,
 			need_passphrase = True,
-			expect         = None):
-		t.expect(self.menu_prompt, 'q')
+			menu_prompt     = None,
+			expect          = None):
+		t.expect(menu_prompt or self.menu_prompt, 'q')
 		t.expect(self.input_sels_prompt, f'{inputs}\n')
 		if reload_quote:
 			t.expect('to continue: ', 'r')  # reload swap quote
@@ -292,7 +293,7 @@ class CmdTestSwap(
 		('subgroup.signsend',     ['init_swap']),
 		('subgroup.signsend_bad', ['init_swap']),
 		('subgroup.autosign',     ['signsend']),
-		('swap_server_stop',      'stopping the Thornode server'),
+		('swap_server_stop',      'stopping the Thornode swap server'),
 		('stop',                  'stopping regtest daemons'),
 	)
 	cmd_subgroups = {

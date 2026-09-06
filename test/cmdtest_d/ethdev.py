@@ -137,10 +137,10 @@ class CmdTestEthdevMethods:
 		t.expect(f"'{addr}' deleted")
 		return t
 
-	def _addrgen(self, addrs='1-3,11-13,21-23', no_msg=False):
+	def _addrgen(self, addrs='1-3,11-13,21-23', no_msg=False, coin=None):
 		t = self.spawn(
 			'mmgen-addrgen',
-			[f'--coin={self.proto.coin}'] + self.eth_opts + [dfl_words_file, addrs],
+			[f'--coin={coin or self.proto.coin}'] + self.eth_opts + [dfl_words_file, addrs],
 			no_msg = no_msg,
 			no_passthru_opts = True)
 		t.written_to_file('Addresses')
