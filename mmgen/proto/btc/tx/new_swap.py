@@ -20,13 +20,7 @@ class NewSwap(New, TxNewSwap):
 
 	def update_data_output(self, trade_limit):
 		o = self.data_output._asdict()
-		parsed_memo = self.swap_proto_mod.Memo.parse(o['data'].decode())
-		memo = self.swap_proto_mod.Memo(
-			self.swap_cfg,
-			self.recv_proto,
-			self.recv_asset,
-			self.recv_proto.coin_addr(parsed_memo.address),
-			trade_limit = trade_limit)
+		memo = self.update_memo(o['data'].decode(), trade_limit)
 		o['data'] = f'data:{memo}'
 		self.data_output = self.Output(self.proto, **o)
 

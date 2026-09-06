@@ -181,6 +181,14 @@ class NewSwap(New):
 		o['addr'] = getattr(c, addr)
 		self.outputs[vault_idx] = self.Output(self.proto, **o)
 
+	def update_memo(self, memo, trade_limit):
+		return self.swap_proto_mod.Memo(
+			self.swap_cfg,
+			self.recv_proto,
+			self.recv_asset,
+			self.recv_proto.coin_addr(self.swap_proto_mod.Memo.parse(memo).address),
+			trade_limit = trade_limit)
+
 	async def update_vault_output(self, amt, *, deduct_est_fee=False):
 		c = self.swap_proto_mod.rpc_client(self, amt)
 

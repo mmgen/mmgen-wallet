@@ -15,13 +15,7 @@ proto.vm.tx.new_swap: new swap transaction methods for VM chains
 class VmNewSwap:
 
 	def update_data_output(self, trade_limit):
-		parsed_memo = self.swap_proto_mod.Memo.parse(self.swap_memo)
-		self.swap_memo = str(self.swap_proto_mod.Memo(
-			self.swap_cfg,
-			self.recv_proto,
-			self.recv_asset,
-			self.recv_proto.coin_addr(parsed_memo.address),
-			trade_limit = trade_limit))
+		self.swap_memo = str(self.update_memo(self.swap_memo, trade_limit))
 		self.set_gas_with_data(self.swap_memo.encode())
 
 	@property
