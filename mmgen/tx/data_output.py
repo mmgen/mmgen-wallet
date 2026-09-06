@@ -9,10 +9,10 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-proto.btc.tx.data_output: Bitcoin data output class
+tx.data_output: transaction data output class
 """
 
-from ....obj import InitErrors
+from ..obj import InitErrors
 
 class DataOutput(bytes, InitErrors):
 
@@ -28,7 +28,7 @@ class DataOutput(bytes, InitErrors):
 
 		if data_spec.startswith('hexdata:'):
 			hexdata = data_spec[8:]
-			from ....util import is_hex_str
+			from ..util import is_hex_str
 			assert is_hex_str(hexdata), f'{hexdata!r}: {cls.desc} hexdata not in hexadecimal format'
 			assert not len(hexdata) % 2, f'{len(hexdata)}: {cls.desc} hexdata of non-even length'
 			ret = bytes.fromhex(hexdata)
@@ -71,7 +71,7 @@ class DataOutput(bytes, InitErrors):
 
 	def hl(self, *, add_label=False):
 		'colorize and optionally label the result of str()'
-		from ....color import blue, pink
+		from ..color import blue, pink
 		ret = str(self)
 		if add_label:
 			return blue(self.desc + (' (hex): ' if self.display_hex else ': ')) + pink(ret)

@@ -172,7 +172,13 @@ class New(Base):
 			self.Output(self.proto, addr=coinaddr, amt=amt, is_chg=is_chg, is_vault=is_vault, data=data))
 
 	def process_data_output_arg(self, arg):
-		return None
+		if any(arg.startswith(pfx) for pfx in ('data:', 'hexdata:')):
+			if hasattr(self, '_have_data_output'):
+				die(1, 'Transaction may have at most one data output!')
+			self._have_data_output = True
+			from .data_output import DataOutput
+			DataOutput(self.proto, arg) # test data for validity
+			return arg
 
 	def parse_cmdline_arg(self, proto, arg_in, ad_f, ad_w):
 

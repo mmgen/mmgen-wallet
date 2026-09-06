@@ -114,7 +114,7 @@ class unit_tests:
 
 	def data_output(self, name, ut, desc='DataOutput class'):
 		max_len = cfg._proto.max_op_return_data_len
-		from mmgen.proto.btc.tx.data_output import DataOutput
+		from mmgen.tx.data_output import DataOutput
 		vecs = [
 			'data:=:ETH.ETH:0x86d526d6624AbC0178cF7296cD538Ecc080A95F1:0/1/0',
 			'hexdata:3d3a4554482e4554483a30783836643532366436363234416243303137'

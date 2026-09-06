@@ -39,6 +39,9 @@ class New(VmNew, Base, TxBase.New):
 				self.usr_contract_data = bytes.fromhex(fp.read().strip())
 			self.disable_fee_check = True
 
+	def process_data_output_arg(self, arg):
+		pass
+
 	async def get_gas_estimateGas(self, *, to_addr):
 		return self.dfl_gas
 

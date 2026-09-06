@@ -27,15 +27,6 @@ class New(Base, TxNew):
 	async def set_gas(self, *, to_addr=None, force=False):
 		return None
 
-	def process_data_output_arg(self, arg):
-		if any(arg.startswith(pfx) for pfx in ('data:', 'hexdata:')):
-			if hasattr(self, '_have_op_return_data'):
-				die(1, 'Transaction may have at most one OP_RETURN data output!')
-			self._have_op_return_data = True
-			from .data_output import DataOutput
-			DataOutput(self.proto, arg) # test data for validity
-			return arg
-
 	@property
 	def relay_fee(self):
 		kb_fee = self.proto.coin_amt(self.rpc.cached['networkinfo']['relayfee'])
