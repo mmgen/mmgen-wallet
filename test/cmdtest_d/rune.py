@@ -22,9 +22,63 @@ from .httpd.thornode.rpc import ThornodeRPCServer
 from .ethdev import CmdTestEthdevMethods
 from .base import CmdTestBase
 from .shared import CmdTestShared
-from .swap import CmdTestSwapMethods
 
-class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
+class CmdTestRuneMethods:
+
+	def _rune_bal_refresh(self, menu_prompt=None):
+		t = self.spawn(
+			'mmgen-tool',
+			self.rune_opts + self.add_eth_opts + ['listaddresses', 'interactive=1'])
+		prompt = menu_prompt or self.menu_prompt
+		t.expect(prompt, 'R')
+		t.expect('menu): ', '3\n')
+		t.expect('(y/N): ', 'y')
+		t.expect(r'Total RUNE: \S*\D9876.54321321\D', regex=True)
+		t.expect('address #3 refreshed')
+		t.expect(prompt, 'q')
+		return t
+
+	def _rune_txcreate(self, add_opts=[]):
+		t = self.spawn('mmgen-txcreate', self.rune_opts + add_opts + ['98831F3A:X:2,54.321'])
+		t.expect(self.menu_prompt, 'q')
+		t.expect('spend from: ', '3\n')
+		t.expect('(y/N): ', 'y') # add comment?
+		t.expect('Comment: ', 'RUNE Boy\n')
+		t.expect('view: ', 'y')
+		t.expect('to continue: ', 'z')
+		t.expect('(y/N): ', 'y') # save?
+		t.written_to_file('Unsigned transaction')
+		return t
+
+	def _rune_txsign(self):
+		return self.txsign_ui_common(
+			self.spawn(
+				'mmgen-txsign',
+				self.rune_opts + [self.get_file_with_ext('rawtx'), dfl_words_file],
+				no_passthru_opts = ['coin']),
+			has_label = True)
+
+	def _rune_txsend(self, add_opts=[], *, test=False, dump_hex=False):
+		t = self.spawn(
+			'mmgen-txsend',
+			self.rune_opts + add_opts + [self.get_file_with_ext('sigtx')],
+			no_passthru_opts = ['coin'])
+		t.expect('view: ', 'y')
+		t.expect('to continue: ', 'z')
+		t.expect('(y/N): ', 'n') # edit comment?
+		if dump_hex:
+			t.written_to_file('hex data')
+		elif test:
+			t.expect('can be sent')
+		else:
+			t.expect('to confirm: ', 'YES\n')
+			t.expect('Transaction sent: ')
+			if t.expect(['written to file', 'txid mismatch']):
+				self.tr.warn('txid mismatch')
+				return 'ok'
+		return t
+
+class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	'THORChain RUNE tracking wallet and transacting operations'
 	networks = ('rune',)
 	passthru_opts = ('coin', 'http_timeout')
@@ -86,63 +140,16 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def twview(self):
 		return self.spawn('mmgen-tool', self.rune_opts + self.add_eth_opts + ['twview'])
 
-	def bal_refresh(self):
-		t = self.spawn(
-			'mmgen-tool',
-			self.rune_opts + self.add_eth_opts + ['listaddresses', 'interactive=1'])
-		t.expect(self.menu_prompt, 'R')
-		t.expect('menu): ', '3\n')
-		t.expect('(y/N): ', 'y')
-		t.expect(r'Total RUNE: \S*\D9876.54321321\D', regex=True)
-		t.expect('address #3 refreshed')
-		t.expect(self.menu_prompt, 'q')
-		return t
-
-	def txcreate1(self):
-		t = self.spawn('mmgen-txcreate', self.rune_opts + ['98831F3A:X:2,54.321'])
-		t.expect(self.menu_prompt, 'q')
-		t.expect('spend from: ', '3\n')
-		t.expect('(y/N): ', 'y') # add comment?
-		t.expect('Comment: ', 'RUNE Boy\n')
-		t.expect('view: ', 'y')
-		t.expect('to continue: ', 'z')
-		t.expect('(y/N): ', 'y') # save?
-		t.written_to_file('Unsigned transaction')
-		return t
-
-	def txsign1(self):
-		return self.txsign_ui_common(
-			self.spawn(
-				'mmgen-txsign',
-				self.rune_opts + [self.get_file_with_ext('rawtx'), dfl_words_file],
-				no_passthru_opts = ['coin']),
-			has_label = True)
+	bal_refresh = CmdTestRuneMethods._rune_bal_refresh
+	txcreate1 = CmdTestRuneMethods._rune_txcreate
+	txsign1 = CmdTestRuneMethods._rune_txsign
+	_txsend = CmdTestRuneMethods._rune_txsend
 
 	def txsend1_test(self):
 		return self._txsend(add_opts=['--test', f'--proxy=localhost:{TestProxy.port}'], test=True)
 
 	def txsend1(self):
 		return self._txsend()
-
-	def _txsend(self, add_opts=[], *, test=False, dump_hex=False):
-		t = self.spawn(
-			'mmgen-txsend',
-			self.rune_opts + add_opts + [self.get_file_with_ext('sigtx')],
-			no_passthru_opts = ['coin'])
-		t.expect('view: ', 'y')
-		t.expect('to continue: ', 'z')
-		t.expect('(y/N): ', 'n') # edit comment?
-		if dump_hex:
-			t.written_to_file('hex data')
-		elif test:
-			t.expect('can be sent')
-		else:
-			t.expect('to confirm: ', 'YES\n')
-			t.expect('Transaction sent: ')
-			if t.expect(['written to file', 'txid mismatch']):
-				self.tr.warn('txid mismatch')
-				return 'ok'
-		return t
 
 	def txhex1(self):
 		t = self._txsend(add_opts=[f'--dump-hex={self.txhex_file}'], dump_hex=True)
@@ -152,5 +159,6 @@ class CmdTestRune(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			self.tr.warn('txid mismatch')
 		return t
 
-	_thornode_server_stop = CmdTestSwapMethods._thornode_server_stop
-	rpc_server_stop = CmdTestSwapMethods.rpc_server_stop
+	def rpc_server_stop(self):
+		from .swap import CmdTestSwapMethods
+		return CmdTestSwapMethods.rpc_server_stop(self)

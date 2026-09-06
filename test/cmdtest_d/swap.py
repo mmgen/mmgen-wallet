@@ -32,6 +32,14 @@ from .regtest import CmdTestRegtest, dfl_wcls, rt_pw, strip_ansi_escapes
 sample1 = gr_uc[:24]
 sample2 = '00010203040506'
 
+def thornode_server_stop(self, attrname='swap_server', name='thornode swap server'):
+	self.spawn(msg_only=True)
+	if self.cfg.no_daemon_stop:
+		imsg(f'(leaving {name} running by user request)')
+	else:
+		getattr(self, attrname).stop()
+	return 'ok'
+
 def create_cross_methods(cross_coin, cross_group, cmd_group_in, cmd_subgroups):
 
 	method_template = """
@@ -241,19 +249,11 @@ class CmdTestSwapMethods:
 		assert data
 		return 'ok'
 
-	def _thornode_server_stop(self, attrname='swap_server', name='thornode swap server'):
-		self.spawn(msg_only=True)
-		if self.cfg.no_daemon_stop:
-			imsg(f'(leaving {name} running by user request)')
-		else:
-			getattr(self, attrname).stop()
-		return 'ok'
-
 	def swap_server_stop(self):
-		return self._thornode_server_stop()
+		return thornode_server_stop(self)
 
 	def rpc_server_stop(self):
-		return self._thornode_server_stop(attrname='rpc_server', name='Thornode RPC server')
+		return thornode_server_stop(self, attrname='rpc_server', name='Thornode RPC server')
 
 	def create_cross_runner(self, trunner, *, add_cfg={}):
 		cfg = Config({
