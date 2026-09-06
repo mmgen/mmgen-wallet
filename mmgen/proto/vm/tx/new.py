@@ -43,9 +43,10 @@ class New:
 	async def process_cmdline_args(self, cmd_args, ad_f, ad_w):
 
 		def process_data_arg(arg):
-			assert arg.startswith('data:'), f'{arg}: invalid data arg (must start with "data:")'
-			self.swap_memo = arg.removeprefix('data:')
-			self.set_gas_with_data(self.swap_memo.encode())
+			from ....tx.data_output import DataOutput
+			res = DataOutput(self.proto, arg) # test data for validity
+			self.swap_memo = str(res)
+			self.set_gas_with_data(res)
 
 		match len(cmd_args):
 			case 1:
