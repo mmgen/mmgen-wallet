@@ -19,14 +19,10 @@ from ..util import msg, pp_fmt
 from ..objmethods import HiliteStr, InitErrors
 
 def dmsg_rpc(fs, data=None, *, is_json=False):
-	msg(
-		fs if data is None else
-		fs.format(pp_fmt(json.loads(data) if is_json else data))
-	)
+	msg(fs if data is None else fs.format(pp_fmt(json.loads(data) if is_json else data)))
 
 def dmsg_rpc_backend(host_url, host_path, payload):
-	msg(
-		f'\n    RPC URL: {host_url}{host_path}' +
+	msg(f'\n    RPC URL: {host_url}{host_path}' +
 		'\n    RPC PAYLOAD data (httplib) ==>' +
 		f'\n{pp_fmt(payload)}\n')
 

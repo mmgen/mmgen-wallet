@@ -30,7 +30,7 @@ def get_monero_proto(tx, data):
 	from ..protocol import init_proto
 	return init_proto(tx.cfg, 'XMR', network=data['MoneroMMGenTX']['data']['network'])
 
-class txdata_json_encoder(json.JSONEncoder):
+class txfile_json_encoder(json.JSONEncoder):
 	def default(self, o):
 		if type(o).__name__.endswith('Amt'):
 			return str(o)
@@ -39,8 +39,8 @@ class txdata_json_encoder(json.JSONEncoder):
 		else:
 			return json.JSONEncoder.default(self, o)
 
-def json_dumps(data):
-	return json.dumps(data, separators = (',', ':'), cls=txdata_json_encoder)
+def txfile_json_dumps(data):
+	return json.dumps(data, separators = (',', ':'), cls=txfile_json_encoder)
 
 def get_proto_from_coin_id(tx, coin_id, chain):
 	coin, tokensym = coin_id.split(':') if ':' in coin_id else (coin_id, None)
@@ -99,8 +99,8 @@ class MMGenTxFile(MMGenObject):
 			tx.proto = get_monero_proto(tx, outer_data)
 			return None
 		data = outer_data[self.data_label]
-		if outer_data['chksum'] != make_chksum_6(json_dumps(data)):
-			chk = make_chksum_6(json_dumps(data))
+		if outer_data['chksum'] != make_chksum_6(txfile_json_dumps(data)):
+			chk = make_chksum_6(txfile_json_dumps(data))
 			die(3, f'{self.data_label}: invalid checksum for TxID {data["txid"]} ({chk} != {outer_data["chksum"]})')
 
 		tx.proto = get_proto_from_coin_id(tx, data['coin_id'], data['chain'])
@@ -283,7 +283,7 @@ class MMGenTxFile(MMGenObject):
 			return '\n'.join([make_chksum_6(' '.join(lines))] + lines) + '\n'
 
 		def format_data_json():
-			data = json_dumps({
+			data = txfile_json_dumps({
 					'coin_id': coin_id
 				} | {
 					k: getattr(tx, k) for k in self.attrs

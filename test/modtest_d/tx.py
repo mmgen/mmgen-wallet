@@ -13,7 +13,7 @@ from mmgen.protocol import init_proto
 
 from ..include.common import cfg, qmsg, vmsg, gr_uc
 
-async def do_txfile_test(desc, fns, cfg=cfg, check=False):
+async def do_txfile_test(desc, fns, cfg=cfg, do_format=True):
 	qmsg(f'\n  Testing CompletedTX initializer ({desc})')
 	for fn in fns:
 		qmsg(f'     parsing: {os.path.basename(fn)}')
@@ -30,9 +30,9 @@ async def do_txfile_test(desc, fns, cfg=cfg, check=False):
 
 		assert fn_gen == os.path.basename(fn), f'{fn_gen} != {fn}'
 
-		if check:
+		if do_format:
 			import json
-			from mmgen.tx.file import json_dumps
+			from mmgen.tx.file import txfile_json_dumps
 			from mmgen.util import make_chksum_6
 			text = f.format()
 			with open(fpath) as fh:
@@ -41,8 +41,8 @@ async def do_txfile_test(desc, fns, cfg=cfg, check=False):
 			outputs = data_chk['MMGenTransaction']['outputs']
 			for n, o in enumerate(outputs):
 				outputs[n] = {k:v for k,v in o.items() if not (type(v) is bool and v is False)}
-			data_chk['chksum'] = make_chksum_6(json_dumps(data_chk['MMGenTransaction']))
-			text_chk_fixed = json_dumps(data_chk)
+			data_chk['chksum'] = make_chksum_6(txfile_json_dumps(data_chk['MMGenTransaction']))
+			text_chk_fixed = txfile_json_dumps(data_chk)
 			assert text == text_chk_fixed, f'\nformatted text:\n{text}\n  !=\noriginal file:\n{text_chk_fixed}'
 
 	qmsg('  OK')
@@ -52,54 +52,46 @@ class unit_tests:
 
 	altcoin_deps = ('txfile_alt', 'txfile_alt_legacy')
 
-	async def txfile(self, name, ut, desc='displaying transaction files (BTC)'):
+	async def txfile(self, name, ut, desc='displaying and formatting transaction files (BTC)'):
 		return await do_txfile_test(
-			'Bitcoin',
-			(
+			'Bitcoin', (
 				'tx/7A8157[6.65227,34].rawtx',
 				'tx/B498CE[5.55788,38].rawtx',
 				'tx/BB3FD2[7.57134314,123].sigtx',
 				'tx/0A869F[1.23456,32].regtest.asubtx',
-			),
-			check = True
-		)
+			))
 
-	async def txfile_alt(self, name, ut, desc='displaying transaction files (LTC, BCH, ETH)'):
+	async def txfile_alt(self, name, ut, desc='displaying and formatting transaction files (LTC, BCH, ETH)'):
 		return await do_txfile_test(
-			'altcoins',
-			(
+			'altcoins', (
 				'tx/C09D73-LTC[981.73747,2000].testnet.rawtx',
 				'tx/91060A-BCH[1.23456].regtest.arawtx',
 				'tx/D850C6-MM1[43.21,50000].subtx', # token tx
 			),
 			# token resolved by tracking wallet under data_dir:
-			cfg = Config({'data_dir': 'test/ref/data_dir'}),
-			check = True
-		)
+			cfg = Config({'data_dir': 'test/ref/data_dir'}))
 
 	async def txfile_legacy(self, name, ut, desc='displaying transaction files (legacy format, BTC)'):
 		return await do_txfile_test(
-			'Bitcoin - legacy file format',
-			(
+			'Bitcoin - legacy file format', (
 				'0B8D5A[15.31789,14,tl=1320969600].rawtx',
 				'542169[5.68152,34].sigtx',
 				'0C7115[15.86255,14,tl=1320969600].testnet.rawtx',
 				'25EFA3[2.34].testnet.rawtx',
-			)
-		)
+			),
+			do_format = False)
 
 	async def txfile_alt_legacy(self, name, ut, desc='displaying transaction files (legacy format, LTC, BCH, ETH)'):
 		return await do_txfile_test(
-			'altcoins - legacy file format',
-			(
+			'altcoins - legacy file format', (
 				'460D4D-BCH[10.19764,tl=1320969600].rawtx',
 				'ethereum/5881D2-MM1[1.23456,50000].rawtx',
 				'ethereum/6BDB25-MM1[1.23456,50000].testnet.rawtx',
 				'ethereum/88FEFD-ETH[23.45495,40000].rawtx',
 				'litecoin/A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx',
 				'litecoin/AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx',
-			)
-		)
+			),
+			do_format = False)
 
 	def errors(self, name, ut, desc='reading transaction files (error handling)'):
 		async def bad1():
@@ -108,8 +100,7 @@ class unit_tests:
 			UnsignedTX(cfg, filename='foo') # pylint: disable=too-many-function-args
 		bad_data = (
 			('forbidden positional args', 'TypeError', 'positional arguments', bad1),
-			('forbidden positional args', 'TypeError', 'positional arguments', bad2),
-		)
+			('forbidden positional args', 'TypeError', 'positional arguments', bad2))
 		ut.process_bad_data(bad_data)
 		return True
 
@@ -133,8 +124,7 @@ class unit_tests:
 			'data:a',
 			'data:a\n',
 			'data:a\tb',
-			'data:' + gr_uc[:24],
-		]
+			'data:' + gr_uc[:24]]
 
 		assert DataOutput(proto, vecs[0]) == DataOutput(proto, vecs[1])
 
@@ -160,8 +150,7 @@ class unit_tests:
 			'hexdata:xyz',
 			'hexdata:abcde',
 			b'data:abc',
-			'hexdata:' + 'dd' * (max_len + 1),
-		]
+			'hexdata:' + 'dd' * (max_len + 1)]
 
 		def bad(n):
 			return lambda: DataOutput(proto, bad_data[n])

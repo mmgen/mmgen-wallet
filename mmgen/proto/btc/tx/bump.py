@@ -29,10 +29,7 @@ class Bump(Completed, NewSwap, TxBase.Bump):
 		return self.sum_inputs() - self.sum_outputs() + self.relay_fee
 
 	def bump_fee(self, idx, fee):
-		self.update_output_amt(
-			idx,
-			self.sum_inputs() - self.sum_outputs(exclude=idx) - fee
-		)
+		self.update_output_amt(idx, self.sum_inputs() - self.sum_outputs(exclude=idx) - fee)
 
 	def convert_and_check_fee(self, fee, desc):
 		ret = super().convert_and_check_fee(fee, desc)

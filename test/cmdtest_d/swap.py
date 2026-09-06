@@ -18,7 +18,7 @@ from mmgen.cfg import Config
 from mmgen.util import make_chksum_6
 from mmgen.protocol import init_proto
 from mmgen.wallet.mmgen import wallet as MMGenWallet
-from mmgen.tx.file import json_dumps
+from mmgen.tx.file import txfile_json_dumps
 
 from ..include.common import imsg, make_burn_addr, gr_uc
 
@@ -270,7 +270,10 @@ class CmdTestSwapMethods:
 		ret.parent_group = self
 		return ret
 
-class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
+class CmdTestSwap(
+		CmdTestSwapMethods,
+		CmdTestRegtest,
+		CmdTestAutosignThreaded):
 	'swap operations (LTC <=> BCH)'
 
 	bdb_wallet = True
@@ -638,7 +641,7 @@ class CmdTestSwap(CmdTestSwapMethods, CmdTestRegtest, CmdTestAutosignThreaded):
 		with open(fn) as fh:
 			data = json.load(fh)
 		data['MMGenTransaction']['swap_quote_expiry'] -= 2400
-		data['chksum'] = make_chksum_6(json_dumps(data['MMGenTransaction']))
+		data['chksum'] = make_chksum_6(txfile_json_dumps(data['MMGenTransaction']))
 		with open(fn, 'w') as fh:
 			json.dump(data, fh)
 		t = self.spawn('mmgen-txsend', ['-d', self.tmpdir, '--bob', fn], exit_val=1)

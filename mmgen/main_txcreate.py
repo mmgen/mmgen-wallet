@@ -150,7 +150,10 @@ async def main():
 		proto = cfg._proto
 
 	from .tx import NewTX
-	tx1 = NewTX(cfg=cfg, proto=proto, target=target)
+	tx1 = NewTX(
+		cfg    = cfg,
+		proto  = proto,
+		target = target)
 
 	tx2 = await tx1.create(
 		args     = cfg._args,
