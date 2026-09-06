@@ -116,6 +116,9 @@ class unit_tests:
 	def data_output_btc(self, name, ut, desc='BitcoinDataOutput class'):
 		return self._data_output(ut, 'btc')
 
+	def data_output_rune(self, name, ut, desc='THORChainDataOutput class'):
+		return self._data_output(ut, 'rune')
+
 	def _data_output(self, ut, coin):
 		proto = init_proto(cfg, coin)
 		from mmgen.tx.data_output import DataOutput
@@ -151,7 +154,7 @@ class unit_tests:
 			'data:',
 			'hexdata:',
 			'data:' + 'x' * (max_len + 1),
-			'hexdata:' + ('deadbeef' * (max_len // 4)) + 'ee',
+			'hexdata:' + ('deadbeefdeadbeef' * (max_len // 2)) + 'ee',
 			'hex:0abc',
 			'da:xyz',
 			'hexdata:xyz',
