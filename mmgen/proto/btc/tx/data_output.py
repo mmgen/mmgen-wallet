@@ -9,37 +9,45 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-proto.btc.tx.op_return_data: Bitcoin OP_RETURN data class
+proto.btc.tx.data_output: Bitcoin data output class
 """
 
 from ....obj import InitErrors
 
-class OpReturnData(bytes, InitErrors):
+class DataOutput(bytes, InitErrors):
+
+	desc = 'OP_RETURN data'
+
+	@property
+	def max_len(self):
+		return self.proto.max_op_return_data_len
 
 	def __new__(cls, proto, data_spec):
 
-		desc = 'OP_RETURN data'
-
-		assert isinstance(data_spec, str), f'{desc} argument must be a string'
+		assert isinstance(data_spec, str), f'{cls.desc} argument must be a string'
 
 		if data_spec.startswith('hexdata:'):
 			hexdata = data_spec[8:]
 			from ....util import is_hex_str
-			assert is_hex_str(hexdata), f'{hexdata!r}: {desc} hexdata not in hexadecimal format'
-			assert not len(hexdata) % 2, f'{len(hexdata)}: {desc} hexdata of non-even length'
+			assert is_hex_str(hexdata), f'{hexdata!r}: {cls.desc} hexdata not in hexadecimal format'
+			assert not len(hexdata) % 2, f'{len(hexdata)}: {cls.desc} hexdata of non-even length'
 			ret = bytes.fromhex(hexdata)
 		elif data_spec.startswith('data:'):
 			try:
 				ret = data_spec[5:].encode('utf8')
 			except:
-				raise ValueError(f'{desc} value must be UTF-8 encoded')
+				raise ValueError(f'{cls.desc} value must be UTF-8 encoded')
 		else:
-			raise ValueError(f'{desc} argument must start with ‘data:’ or ‘hexdata:’')
-
-		assert 1 <= len(ret) <= proto.max_op_return_data_len, (
-			f'{len(ret)}: invalid {desc} length: not in range 1-{proto.max_op_return_data_len}')
+			raise ValueError(f'{cls.desc} argument must start with ‘data:’ or ‘hexdata:’')
 
 		return bytes.__new__(cls, ret)
+
+	def __init__(self, proto, data_spec):
+
+		self.proto = proto
+
+		assert 1 <= len(self) <= self.max_len, (
+			f'{len(self)}: invalid {self.desc} length: not in range 1-{self.max_len}')
 
 	def __repr__(self):
 		'return an initialization string'
@@ -66,6 +74,6 @@ class OpReturnData(bytes, InitErrors):
 		from ....color import blue, pink
 		ret = str(self)
 		if add_label:
-			return blue('OP_RETURN data' + (' (hex): ' if self.display_hex else ': ')) + pink(ret)
+			return blue(self.desc + (' (hex): ' if self.display_hex else ': ')) + pink(ret)
 		else:
 			return pink(ret)

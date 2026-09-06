@@ -18,7 +18,7 @@ from ....tx.base import Base as TxBase
 from ....obj import MMGenList, HexStr, ListItemAttr
 from ....util import msg, make_chksum_6, die, pp_fmt
 
-from .op_return_data import OpReturnData
+from .data_output import DataOutput
 
 def data2scriptPubKey(data):
 	return '6a' + '{:02x}'.format(len(data)) + data.hex() # OP_RETURN data
@@ -188,7 +188,7 @@ class Base(TxBase):
 	_deserialized = None
 
 	class Output(TxBase.Output): # output contains either addr or data, but not both
-		data = ListItemAttr(OpReturnData, include_proto=True) # type None in parent cls
+		data = ListItemAttr(DataOutput, include_proto=True) # type None in parent cls
 
 	class InputList(TxBase.InputList):
 

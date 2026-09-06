@@ -34,7 +34,7 @@ class txdata_json_encoder(json.JSONEncoder):
 	def default(self, o):
 		if type(o).__name__.endswith('Amt'):
 			return str(o)
-		elif type(o).__name__ == 'OpReturnData':
+		elif type(o).__name__.endswith('DataOutput'):
 			return repr(o)
 		else:
 			return json.JSONEncoder.default(self, o)

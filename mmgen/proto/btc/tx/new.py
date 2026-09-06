@@ -32,8 +32,8 @@ class New(Base, TxNew):
 			if hasattr(self, '_have_op_return_data'):
 				die(1, 'Transaction may have at most one OP_RETURN data output!')
 			self._have_op_return_data = True
-			from .op_return_data import OpReturnData
-			OpReturnData(self.proto, arg) # test data for validity
+			from .data_output import DataOutput
+			DataOutput(self.proto, arg) # test data for validity
 			return arg
 
 	@property
