@@ -42,20 +42,20 @@ class New:
 
 	async def process_cmdline_args(self, cmd_args, ad_f, ad_w):
 
-		lc = len(cmd_args)
-
-		if lc == 2 and self.is_swap:
-			data_arg = cmd_args.pop()
-			lc = 1
-			assert data_arg.startswith('data:'), f'{data_arg}: invalid data arg (must start with "data:")'
-			self.swap_memo = data_arg.removeprefix('data:')
+		def process_data_arg(arg):
+			assert arg.startswith('data:'), f'{arg}: invalid data arg (must start with "data:")'
+			self.swap_memo = arg.removeprefix('data:')
 			self.set_gas_with_data(self.swap_memo.encode())
 
-		if lc == 0 and self.usr_contract_data and 'Token' not in self.name:
-			return
-
-		if lc != 1:
-			die(1, f'{lc} output{suf(lc)} specified, but VM transactions must have exactly one')
+		match len(cmd_args):
+			case 1:
+				pass
+			case 0 if self.usr_contract_data and 'Token' not in self.name:
+				return
+			case 2 if self.is_swap:
+				process_data_arg(cmd_args[1])
+			case n:
+				die(1, f'{n} output{suf(n)} specified, but VM transactions must have exactly one')
 
 		a = self.parse_cmdline_arg(self.proto, cmd_args[0], ad_f, ad_w)
 

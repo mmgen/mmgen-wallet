@@ -198,7 +198,7 @@ class New(Base):
 		else:
 			die(2, f'{arg_in}: invalid command-line argument')
 
-		return _pa(arg, mmid, coin_addr, amt, None, is_vault)
+		return _pa(arg, mmid or None, coin_addr, amt, None, is_vault)
 
 	async def get_autochg_addr(self, proto, arg, *, exclude, desc, all_addrtypes=False):
 		from ..tw.addresses import TwAddresses

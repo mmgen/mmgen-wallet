@@ -174,7 +174,7 @@ class NewSwap(New):
 			[f'vault,{args.send_amt}', chg_output.mmid] if args.send_amt else
 			['vault'])
 
-		return ret + [f'data:{memo}']
+		return tuple(ret + [f'data:{memo}'])
 
 	def update_vault_addr(self, c, *, addr='inbound_address'):
 		vault_idx = self.vault_idx
