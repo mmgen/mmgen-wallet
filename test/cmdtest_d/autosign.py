@@ -909,7 +909,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.remove_device()
 		return 'ok'
 
-	def do_sign(self, args=[], have_msg=False, exc_exit_val=None, expect_str=None):
+	def do_sign(self, args=[], have_msg=False, exc_exit_val=None, expect_str=None, bad_version=False):
 
 		tx_desc = Signable.transaction.desc
 		self.insert_device()
@@ -929,6 +929,9 @@ class CmdTestAutosign(CmdTestAutosignBase):
 
 		if exc_exit_val:
 			return do_return()
+
+		if bad_version:
+			t.expect('out of date')
 
 		t.expect('legacy-format')
 
@@ -953,10 +956,10 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		return do_return()
 
 	def sign_quiet(self):
-		return self.do_sign(['--quiet'])
+		return self.do_sign(['--quiet'], bad_version=True)
 
 	def sign_full_summary(self):
-		return self.do_sign(['--full-summary'])
+		return self.do_sign(['--full-summary'], bad_version=True)
 
 	def sign_led(self):
 		return self.do_sign(['--quiet', '--led'])

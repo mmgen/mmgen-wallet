@@ -94,7 +94,7 @@ class MMGenTxFile(MMGenObject):
 		tx = self.tx
 		tx.file_format = 'json'
 		outer_data = json.loads(data)
-		if 'MoneroMMGenTX' in outer_data:
+		if 'MoneroMMGenTX' in outer_data: # txfile_version_chk for Monero TBD
 			tx.proto = get_monero_proto(tx, outer_data)
 			return None
 		data = outer_data[self.data_label]
@@ -106,6 +106,9 @@ class MMGenTxFile(MMGenObject):
 
 		if get_proto_only:
 			return
+
+		if data.get('version', 0) != tx.txfile_version:
+			tx.txfile_version_chk(data.get('version', 0), tx.txfile_version)
 
 		for k, v in self.attrs.items():
 			if v != 'skip':
@@ -278,7 +281,8 @@ class MMGenTxFile(MMGenObject):
 
 		def format_data_json():
 			data = txfile_json_dumps({
-					'coin_id': coin_id
+					'coin_id': coin_id,
+					'version': tx.txfile_version
 				} | {
 					k: getattr(tx, k) for k in self.attrs
 				} | {

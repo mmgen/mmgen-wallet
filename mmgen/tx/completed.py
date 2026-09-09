@@ -21,6 +21,7 @@ class Completed(Base):
 	signed or unsigned transaction with associated file
 	"""
 	filename_api = True
+	txfile_version = 4
 
 	def __init__(self, cfg, *args, filename=None, data=None, quiet_open=False, **kwargs):
 
@@ -115,6 +116,20 @@ class Completed(Base):
 			return
 		fs = f'Request to {{}} legacy-format transaction ({desc}). {{}}'
 		self.die_on_version_error(fs.format(a, b))
+
+	def txfile_version_chk(self, f_ver, s_ver):
+		if 'sign' in gc.prog_name:
+			a = 'sign'
+			b = 'Is your {} installation out of date?'.format('offline' if f_ver > s_ver else 'online')
+		elif 'send' in gc.prog_name:
+			a = 'send'
+			b = 'Is your {} installation out of date?'.format('offline' if f_ver < s_ver else 'online')
+		else:
+			return
+		fs = (
+			f'Request to {{}} transaction with version {f_ver}, which is {{}} '
+			f'than version {s_ver} current with installed software. {{}}')
+		self.die_on_version_error(fs.format(a, ('greater' if f_ver > s_ver else 'less'), b))
 
 class DummyCompleted: # required by MMGenTxFile.get_proto()
 

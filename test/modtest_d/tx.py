@@ -45,7 +45,13 @@ async def do_txfile_test(desc, fns, cfg=cfg, do_format=True):
 			ref_text = txfile_json_dumps(ref_data)
 
 			# process newly-formatted data:
-			new_text = f.format()
+			if 'version' in ref_data:
+				new_text = f.format()
+			else:
+				new_data = json.loads(f.format())
+				del new_data['MMGenTransaction']['version']
+				new_data['chksum'] = make_chksum_6(txfile_json_dumps(new_data['MMGenTransaction']))
+				new_text = txfile_json_dumps(new_data)
 
 			assert new_text == ref_text, f'\nformatted text:\n{new_text}\n  !=\noriginal file:\n{ref_text}'
 
