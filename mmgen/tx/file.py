@@ -336,7 +336,7 @@ class MMGenTxFile(MMGenObject):
 
 	@classmethod
 	def get_proto(cls, cfg, filename, *, quiet_open=False):
-		from . import BaseTX
-		tmp_tx = BaseTX(cfg=cfg)
+		from .completed import DummyCompleted
+		tmp_tx = DummyCompleted(cfg=cfg)
 		cls(tmp_tx).parse(filename, get_proto_only=True, quiet_open=quiet_open)
 		return tmp_tx.proto

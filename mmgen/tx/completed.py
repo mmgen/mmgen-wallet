@@ -103,3 +103,10 @@ class Completed(Base):
 
 		if self.is_swap:
 			raise ValueError('missing or invalid memo in swap transaction')
+
+class DummyCompleted: # required by MMGenTxFile.get_proto()
+
+	desc = 'dummy transaction'
+
+	def __init__(self, cfg):
+		self.cfg = cfg
