@@ -184,9 +184,9 @@ class LEDControl:
 		if self.debug:
 			msg(f'led_loop({on_secs}, {off_secs})')
 
-		if not on_secs:
+		if not off_secs: # 'on' or 'off'
 			with open(self.board.control, 'w') as fp:
-				fp.write('0\n')
+				fp.write('255\n' if on_secs else '0\n')
 			while True:
 				if self.ev_sleep(3600):
 					return
@@ -205,6 +205,7 @@ class LEDControl:
 	def set(self, state): # pylint: disable=method-hidden
 		lt = namedtuple('led_timings', ['on_secs', 'off_secs'])
 		timings = {
+			'on':      lt(1,    0),
 			'off':     lt(0,    0),
 			'standby': lt(2.2,  0.2),
 			'busy':    lt(0.06, 0.06),

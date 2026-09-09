@@ -22,18 +22,24 @@ opts_data = {
 
 cfg = Config(opts_data=opts_data)
 
+led = LEDControl(enabled=True)
+
 def confirm_or_exit(prompt):
 	keypress_confirm(cfg, f'{prompt}.  OK?', default_yes=True, do_exit=True)
 
 confirm_or_exit('This script will interactively test LED functionality')
 
-led = LEDControl(enabled=True)
-
 color = led.board.color.capitalize()
 
 atexit.register(led.stop)
 
+led.set('off')
+
 confirm_or_exit(f'{color} LED should now be turned off')
+
+led.set('on')
+
+confirm_or_exit(f'{color} LED should now be turned on')
 
 led.set('busy')
 
