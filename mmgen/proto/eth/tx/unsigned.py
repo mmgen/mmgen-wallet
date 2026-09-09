@@ -30,6 +30,7 @@ class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 		if isinstance(self.serialized, dict):
 			d = self.serialized
 		else:
+			self.legacy_fmt_chk('double-encoded serialized data')
 			d = json.loads(self.serialized)
 
 		o = {

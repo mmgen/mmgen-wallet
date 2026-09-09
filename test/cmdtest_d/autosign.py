@@ -930,7 +930,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		if exc_exit_val:
 			return do_return()
 
-		t.expect('compromised')
+		t.expect('legacy-format')
 
 		t.expect(
 			f'{self.tx_count} {tx_desc}{suf(self.tx_count)} signed' if self.tx_count else

@@ -22,7 +22,6 @@ tx.file: Transaction file operations for the MMGen suite
 
 import os, json
 
-from ..cfg import gc
 from ..util import ymsg, make_chksum_6, die
 from ..obj import MMGenObject, HexStr, MMGenTxID, CoinTxID, MMGenTxComment
 
@@ -134,12 +133,7 @@ class MMGenTxFile(MMGenObject):
 		tx = self.tx
 		tx.file_format = 'legacy'
 
-		if 'sign' in gc.prog_name:
-			m = 'Request to sign legacy-format transaction. Has your online installation been compromised?'
-			if tx.cfg.test_suite:
-				ymsg(m)
-			else:
-				die('LegacyTxSignRequestError', m)
+		tx.legacy_fmt_chk('non-JSON')
 
 		def deserialize(raw_data, *, desc):
 			from ast import literal_eval

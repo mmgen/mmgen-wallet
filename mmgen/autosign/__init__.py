@@ -272,7 +272,9 @@ class Autosign:
 				except Exception as e:
 					ymsg('An error occurred with {} ‘{}’:\n    {}: ‘{}’'.format(
 						target.desc, f.name, type(e).__name__, e))
-					if type(e).__name__ == 'LegacyTxSignRequestError':
+					if type(e).__name__ == 'TxFileVersionError':
+						self.do_umount()
+						self.led.set('on')
 						raise
 				except:
 					ymsg('An error occurred with {} ‘{}’'.format(target.desc, f.name))

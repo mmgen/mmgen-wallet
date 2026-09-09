@@ -12,6 +12,7 @@
 tx.completed: completed transaction class
 """
 
+from ..cfg import gc
 from ..util import msg, ymsg, die
 from .base import Base
 
@@ -102,9 +103,25 @@ class Completed(Base):
 		if self.is_swap:
 			raise ValueError('missing or invalid memo in swap transaction')
 
+	def die_on_version_error(self, errmsg): # overridden by test.overlay.fakemods
+		die('TxFileVersionError', errmsg)
+
+	def legacy_fmt_chk(self, desc):
+		if 'sign' in gc.prog_name:
+			a, b = ('sign', 'Has your online installation been compromised?')
+		elif 'send' in gc.prog_name:
+			a, b = ('send', 'Is your offline installation out of date?')
+		else:
+			return
+		fs = f'Request to {{}} legacy-format transaction ({desc}). {{}}'
+		self.die_on_version_error(fs.format(a, b))
+
 class DummyCompleted: # required by MMGenTxFile.get_proto()
 
 	desc = 'dummy transaction'
 
 	def __init__(self, cfg):
 		self.cfg = cfg
+
+	die_on_version_error = Completed.die_on_version_error
+	legacy_fmt_chk = Completed.legacy_fmt_chk
