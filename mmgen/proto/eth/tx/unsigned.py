@@ -27,7 +27,11 @@ from .completed import Completed, TokenCompleted
 class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 
 	def parse_txfile_serialized_data(self):
-		d = self.serialized if isinstance(self.serialized, dict) else json.loads(self.serialized)
+		if isinstance(self.serialized, dict):
+			d = self.serialized
+		else:
+			d = json.loads(self.serialized)
+
 		o = {
 			'from':     CoinAddr(self.proto, d['from']),
 			# NB: for token, 'to' is sendto address

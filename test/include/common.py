@@ -195,21 +195,27 @@ def clean(cfgs, tmpdir_ids=None, extra_dirs=[]):
 def get_tmpfile(cfg, fn):
 	return os.path.join(cfg['tmpdir'], fn)
 
-def write_to_file(fn, data, binary=False):
+def write_to_file(fn, data, **kwargs):
 	write_data_to_file(
 		cfg,
 		fn,
 		data,
 		quiet = True,
 		no_stdout = True,
-		binary = binary,
-		ignore_opt_outdir = True)
+		ignore_opt_outdir = True,
+		**kwargs)
+
+def write_to_cfgfile(lines, **kwargs):
+	return write_to_file(
+		os.path.join(cfg.test_datadir, 'mmgen.cfg'),
+		'\n'.join(lines) + ('\n' if lines else ''),
+		ask_overwrite = False)
 
 def write_to_tmpfile(cfg, fn, data, binary=False):
-	write_to_file(os.path.join(cfg['tmpdir'], fn), data=data, binary=binary)
+	write_to_file(os.path.join(cfg['tmpdir'], fn), data, binary=binary)
 
-def read_from_file(fn, binary=False):
-	return get_data_from_file(cfg, fn, quiet=True, binary=binary)
+def read_from_file(fn, **kwargs):
+	return get_data_from_file(cfg, fn, quiet=True, **kwargs)
 
 def read_from_tmpfile(cfg, fn, binary=False):
 	return read_from_file(os.path.join(cfg['tmpdir'], fn), binary=binary)

@@ -12,8 +12,8 @@
 tx.unsigned: unsigned transaction class
 """
 
-from .completed import Completed
 from ..util import remove_dups
+from .completed import Completed
 
 class Unsigned(Completed):
 	desc = 'unsigned transaction'

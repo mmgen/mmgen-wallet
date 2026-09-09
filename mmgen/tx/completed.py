@@ -12,6 +12,7 @@
 tx.completed: completed transaction class
 """
 
+from ..util import msg, ymsg, die
 from .base import Base
 
 class Completed(Base):
@@ -36,7 +37,6 @@ class Completed(Base):
 				self.check_serialized_integrity()
 			except Exception:
 				from ..color import orange
-				from ..util import msg
 				msg(orange(
 					f'Something is wrong with transaction file ‘{filename}’\n'
 					'To fix this problem, please move or delete the file'))
@@ -46,7 +46,6 @@ class Completed(Base):
 			self.check_correct_chain()
 
 			if self.check_sigs() != self.signed:
-				from ..util import die
 				die(1, 'Transaction is {}signed!'.format('not ' if self.signed else ''))
 
 			self.infile = filename
@@ -95,7 +94,6 @@ class Completed(Base):
 				if mmid := getattr(self, 'swap_recv_addr_mmid', None):
 					pass
 				elif self.cfg.allow_non_wallet_swap:
-					from ..util import ymsg
 					ymsg('Warning: allowing swap to non-wallet address (--allow-non-wallet-swap)')
 				else:
 					raise ValueError('Swap to non-wallet address forbidden (override with --allow-non-wallet-swap)')

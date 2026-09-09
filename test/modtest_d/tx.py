@@ -17,8 +17,8 @@ async def do_txfile_test(desc, fns, cfg=cfg, do_format=True):
 	qmsg(f'\n  Testing CompletedTX initializer ({desc})')
 	for fn in fns:
 		qmsg(f'     parsing: {os.path.basename(fn)}')
-		fpath = os.path.join('test', 'ref', fn)
-		tx = await CompletedTX(cfg=cfg, filename=fpath, quiet_open=True)
+		ref_tx_path = os.path.join('test', 'ref', fn)
+		tx = await CompletedTX(cfg=cfg, filename=ref_tx_path, quiet_open=True)
 
 		vmsg('\n' + tx.info.format())
 
@@ -34,16 +34,20 @@ async def do_txfile_test(desc, fns, cfg=cfg, do_format=True):
 			import json
 			from mmgen.tx.file import txfile_json_dumps
 			from mmgen.util import make_chksum_6
-			text = f.format()
-			with open(fpath) as fh:
-				text_chk = fh.read()
-			data_chk = json.loads(text_chk)
-			outputs = data_chk['MMGenTransaction']['outputs']
-			for n, o in enumerate(outputs):
-				outputs[n] = {k:v for k,v in o.items() if not (type(v) is bool and v is False)}
-			data_chk['chksum'] = make_chksum_6(txfile_json_dumps(data_chk['MMGenTransaction']))
-			text_chk_fixed = txfile_json_dumps(data_chk)
-			assert text == text_chk_fixed, f'\nformatted text:\n{text}\n  !=\noriginal file:\n{text_chk_fixed}'
+
+			# process reference file, fixing up deprecated outputs:
+			with open(ref_tx_path) as fh:
+				ref_data = json.loads(fh.read())
+			ref_outputs = ref_data['MMGenTransaction']['outputs']
+			for n, o in enumerate(ref_outputs):
+				ref_outputs[n] = {k:v for k,v in o.items() if not (type(v) is bool and v is False)}
+			ref_data['chksum'] = make_chksum_6(txfile_json_dumps(ref_data['MMGenTransaction']))
+			ref_text = txfile_json_dumps(ref_data)
+
+			# process newly-formatted data:
+			new_text = f.format()
+
+			assert new_text == ref_text, f'\nformatted text:\n{new_text}\n  !=\noriginal file:\n{ref_text}'
 
 	qmsg('  OK')
 	return True
@@ -58,8 +62,7 @@ class unit_tests:
 				'tx/7A8157[6.65227,34].rawtx',
 				'tx/B498CE[5.55788,38].rawtx',
 				'tx/BB3FD2[7.57134314,123].sigtx',
-				'tx/0A869F[1.23456,32].regtest.asubtx',
-			))
+				'tx/0A869F[1.23456,32].regtest.asubtx'))
 
 	async def txfile_alt(self, name, ut, desc='displaying and formatting transaction files (LTC, BCH, ETH)'):
 		return await do_txfile_test(
