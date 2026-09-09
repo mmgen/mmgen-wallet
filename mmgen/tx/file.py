@@ -82,16 +82,16 @@ class MMGenTxFile(MMGenObject):
 		self.fmt_data = None
 		self.filename = None
 
-	def parse(self, infile, *, metadata_only=False, quiet_open=False):
+	def parse(self, infile, *, get_proto_only=False, quiet_open=False):
 		tx = self.tx
 		from ..fileutil import get_data_from_file
 		data = get_data_from_file(tx.cfg, infile, desc=f'{tx.desc} data', quiet=quiet_open)
 		if len(data) > tx.cfg.max_tx_file_size:
 			die('MaxFileSizeExceeded',
 				f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)')
-		return (self.parse_data_json if data[0] == '{' else self.parse_data_legacy)(data, metadata_only)
+		return (self.parse_data_json if data[0] == '{' else self.parse_data_legacy)(data, get_proto_only)
 
-	def parse_data_json(self, data, metadata_only):
+	def parse_data_json(self, data, get_proto_only):
 		tx = self.tx
 		tx.file_format = 'json'
 		outer_data = json.loads(data)
@@ -105,12 +105,12 @@ class MMGenTxFile(MMGenObject):
 
 		tx.proto = get_proto_from_coin_id(tx, data['coin_id'], data['chain'])
 
+		if get_proto_only:
+			return
+
 		for k, v in self.attrs.items():
 			if v != 'skip':
 				setattr(tx, k, v(data[k]) if v else data[k])
-
-		if metadata_only:
-			return
 
 		for k, v in self.extra_attrs.items():
 			if k in data:
@@ -130,7 +130,7 @@ class MMGenTxFile(MMGenObject):
 
 		assert tx.proto.coin_amt(data['send_amt']) == tx.send_amt, f'{data["send_amt"]} != {tx.send_amt}'
 
-	def parse_data_legacy(self, data, metadata_only):
+	def parse_data_legacy(self, data, get_proto_only):
 		tx = self.tx
 		tx.file_format = 'legacy'
 
@@ -199,6 +199,9 @@ class MMGenTxFile(MMGenObject):
 			desc = 'coin_id or chain'
 			tx.proto = get_proto_from_coin_id(tx, coin_id, tx.chain)
 
+			if get_proto_only:
+				return
+
 			desc = 'metadata (4 items)'
 			(txid, send_amt, tx.timestamp, blockcount) = metadata
 
@@ -206,9 +209,6 @@ class MMGenTxFile(MMGenObject):
 			tx.txid = MMGenTxID(txid)
 			desc = 'block count in metadata'
 			tx.blockcount = int(blockcount)
-
-			if metadata_only:
-				return
 
 			desc = 'transaction file hex data'
 			tx.check_txfile_hex_data()
@@ -338,5 +338,5 @@ class MMGenTxFile(MMGenObject):
 	def get_proto(cls, cfg, filename, *, quiet_open=False):
 		from . import BaseTX
 		tmp_tx = BaseTX(cfg=cfg)
-		cls(tmp_tx).parse(filename, metadata_only=True, quiet_open=quiet_open)
+		cls(tmp_tx).parse(filename, get_proto_only=True, quiet_open=quiet_open)
 		return tmp_tx.proto
