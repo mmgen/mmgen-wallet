@@ -23,13 +23,10 @@ test.cmdtest_d.ref: Reference file tests for the cmdtest.py test suite
 from mmgen.util import capfirst
 from mmgen.wallet import get_wallet_cls
 from ..include.common import (
-	imsg_r,
 	ok,
 	joinpath,
 	cmp_or_die,
 	ref_kafile_pass,
-	read_from_file,
-	sample_text
 )
 from .include.common import (
 	dfl_words_file,
@@ -37,9 +34,6 @@ from .include.common import (
 	chksum_pat,
 	pwfile,
 	ref_bw_file_spc,
-	ref_enc_fn,
-	cleanup_env,
-	tool_enc_passwd,
 	skip
 )
 
@@ -164,7 +158,6 @@ class CmdTestRef(CmdTestBase, CmdTestShared):
 		('ref_tx_chk',                   'signing saved reference tx file'),
 		('ref_brain_chk_spc3',           'saved brainwallet (non-standard spacing)'),
 		('ref_dieroll_chk_seedtruncate', 'saved dieroll wallet with extra entropy bits'),
-		('ref_tool_decrypt',             'decryption of saved MMGen-encrypted file'),
 	)
 
 	@property
@@ -331,17 +324,3 @@ class CmdTestRef(CmdTestBase, CmdTestShared):
 	def ref_dieroll_chk_seedtruncate(self):
 		wf = joinpath(ref_dir, 'overflow128.b6d')
 		return self.walletchk(wf, sid='8EC6D4A2')
-
-	def ref_tool_decrypt(self):
-		f = joinpath(ref_dir, ref_enc_fn)
-		dec_file = joinpath(self.tmpdir, 'famous.txt')
-		t = self.spawn(
-			'mmgen-tool',
-			['-q', 'decrypt', f, 'outfile='+dec_file, 'hash_preset=1'],
-			env = cleanup_env(self.cfg))
-		t.passphrase('data', tool_enc_passwd)
-		t.written_to_file('Decrypted data')
-		dec_txt = read_from_file(dec_file)
-		imsg_r(dec_txt)
-		cmp_or_die(sample_text+'\n', dec_txt) # file adds a newline to sample_text
-		return t

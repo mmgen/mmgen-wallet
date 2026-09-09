@@ -18,13 +18,23 @@ from mmgen.color import cyan
 
 from ..include.common import (
 	vmsg,
+	imsg_r,
 	read_from_file,
 	write_to_file,
 	cmp_or_die,
 	joinpath,
-	getrand
+	getrand,
+	sample_text
 )
-from .include.common import hincog_fn, incog_id_fn, hincog_offset, tool_enc_passwd, ref_dir
+from .include.common import (
+	hincog_fn,
+	incog_id_fn,
+	hincog_offset,
+	tool_enc_passwd,
+	ref_dir,
+	ref_enc_fn,
+	cleanup_env,
+)
 from .base import CmdTestBase
 from .main import CmdTestMain
 
@@ -56,6 +66,9 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 		),
 		('tool_decrypt_geth_keystore',
 			(9, '‘mmgen-tool decrypt_geth_keystore’', [])
+		),
+		('tool_decrypt_ref',
+			(9, '‘mmgen-tool decrypt’ on saved reference file', [])
 		),
 		('tool_api',
 			(9, 'tool API (initialization, config methods, wif2addr)', [])
@@ -139,6 +152,20 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 			fn  = 'test/ref/ethereum/geth-wallet.json',
 			pw  = '',
 			chk = '9627ddb68354f5e0ff45fb2da49d7a20a013b7257a83ef4adbbbd87aeaccc75e')
+
+	def tool_decrypt_ref(self):
+		f = joinpath(ref_dir, ref_enc_fn)
+		dec_file = joinpath(self.tmpdir, 'famous.txt')
+		t = self.spawn(
+			'mmgen-tool',
+			['-q', 'decrypt', f, 'outfile='+dec_file, 'hash_preset=1'],
+			env = cleanup_env(self.cfg))
+		t.passphrase('data', tool_enc_passwd)
+		t.written_to_file('Decrypted data')
+		dec_txt = read_from_file(dec_file)
+		imsg_r(dec_txt)
+		cmp_or_die(sample_text+'\n', dec_txt) # file adds a newline to sample_text
+		return t
 
 	def tool_api(self):
 		t = self.spawn(
