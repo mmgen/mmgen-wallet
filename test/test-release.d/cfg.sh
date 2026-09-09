@@ -217,6 +217,7 @@ init_tests() {
 		- $cmdtest_py main
 		- $cmdtest_py conv
 		- $cmdtest_py ref
+		- $cmdtest_py ref_tx
 		- $cmdtest_py ref3
 		- $cmdtest_py ref3_addr
 		- $cmdtest_py ref3_pw

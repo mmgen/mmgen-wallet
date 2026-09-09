@@ -27,6 +27,7 @@ cmd_groups_dfl = {
 	'main':               gd('CmdTestMain',              {'full_data': True}),
 	'conv':               gd('CmdTestWalletConv',        {'is3seed': True, 'modname': 'wallet'}),
 	'ref':                gd('CmdTestRef',               {}),
+	'ref_tx':             gd('CmdTestRefTX',             {'modname': 'ref'}),
 	'ref3':               gd('CmdTestRef3Seed',          {'is3seed': True, 'modname': 'ref_3seed'}),
 	'ref3_addr':          gd('CmdTestRef3Addr',          {'is3seed': True, 'modname': 'ref_3seed'}),
 	'ref3_pw':            gd('CmdTestRef3Passwd',        {'is3seed': True, 'modname': 'ref_3seed'}),
@@ -62,7 +63,7 @@ cmd_groups_extra = {
 	'autosign_btc':           gd('CmdTestAutosignBTC',          {'modname': 'autosign'}),
 	'autosign_live':          gd('CmdTestAutosignLive',         {'modname': 'autosign'}),
 	'autosign_live_simulate': gd('CmdTestAutosignLiveSimulate', {'modname': 'autosign'}),
-	'create_ref_tx':          gd('CmdTestRefTX',                {'modname': 'misc', 'full_data': True}),
+	'create_ref_tx':          gd('CmdTestCreateRefTX',          {'modname': 'misc', 'full_data': True}),
 	'xmr_autosign_nocompat':  gd('CmdTestXMRAutosignNoCompat',  {'modname': 'xmr_autosign'}),
 }
 

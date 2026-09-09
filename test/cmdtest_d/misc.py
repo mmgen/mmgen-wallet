@@ -237,7 +237,7 @@ class CmdTestOutput(CmdTestBase):
 			return 'skip'
 		return self.oneshot_warning(pexpect_spawn=True)
 
-class CmdTestRefTX(CmdTestMain, CmdTestBase):
+class CmdTestCreateRefTX(CmdTestMain, CmdTestBase):
 	'create a reference transaction file (administrative command)'
 	segwit_opts_ok = False
 	passthru_opts = ('daemon_data_dir', 'rpc_port', 'coin', 'testnet')

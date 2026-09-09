@@ -792,9 +792,9 @@ class CmdTestAutosign(CmdTestAutosignBase):
 
 		assert op in ('copy', 'set_count', 'remove_signed')
 
-		from .ref import CmdTestRef
+		from .ref import CmdTestRefTX
 		def gen():
-			d = CmdTestRef.sources['ref_tx_file']
+			d = CmdTestRefTX.sources['ref_tx_file']
 			dirmap = [e for e in self.filedir_map if e[0] in (txfile_coins or self.txfile_coins)]
 			for coin, coindir in dirmap:
 				for network in (0, 1):

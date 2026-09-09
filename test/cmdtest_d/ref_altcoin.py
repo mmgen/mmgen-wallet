@@ -22,7 +22,7 @@ test.cmdtest_d.ref_altcoin: Altcoin reference file tests for the cmdtest.py test
 
 from .include.common import pwfile, dfl_wpasswd, ref_dir, dfl_words_file, dfl_addr_idx_list
 from ..include.common import joinpath, start_test_daemons, stop_test_daemons, cmp_or_die
-from .ref import CmdTestRef
+from .ref import CmdTestRef, CmdTestRefTX
 from .base import CmdTestBase
 
 class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
@@ -86,8 +86,10 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 		self.write_to_tmpfile(pwfile, dfl_wpasswd)
 		passfile = joinpath(self.tmpdir, pwfile)
 		from mmgen.tx.file import MMGenTxFile
-		src = CmdTestRef.sources['ref_tx_file']
+		src = CmdTestRefTX.sources['ref_tx_file']
 		for coin, files in src.items():
+			if coin == 'btc':
+				continue
 			if coin == 'mm1':
 				coin = 'eth'
 				token_desc = ':MM1'

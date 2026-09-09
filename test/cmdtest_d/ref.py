@@ -43,7 +43,7 @@ from .shared import CmdTestShared
 wpasswd = 'reference password'
 
 class CmdTestRef(CmdTestBase, CmdTestShared):
-	'saved reference address, password and transaction files'
+	'saved reference address, password and non-standard wallet files'
 	tmpdir_nums = [8]
 	networks = ('btc', 'btc_tn', 'ltc', 'ltc_tn')
 	passthru_opts = ('daemon_data_dir', 'rpc_port', 'coin', 'testnet')
@@ -67,32 +67,6 @@ class CmdTestRef(CmdTestBase, CmdTestShared):
 		'ref_passwdfile_bip39_24': '98831F3A-фубар@crypto.org-bip39-24[1,4,1100].pws',
 		'ref_passwdfile_xmrseed_25': '98831F3A-фубар@crypto.org-xmrseed-25[1,4,1100].pws',
 		'ref_passwdfile_hex2bip39_12': '98831F3A-фубар@crypto.org-hex2bip39-12[1,4,1100].pws',
-		'ref_tx_file': { # data shared with ref_altcoin, autosign
-			'btc': (
-				'0B8D5A[15.31789,14,tl=1320969600].rawtx',
-				'0C7115[15.86255,14,tl=1320969600].testnet.rawtx'
-			),
-			'ltc': (
-				'AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx',
-				'A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx'
-			),
-			'bch': (
-				'460D4D-BCH[10.19764,tl=1320969600].rawtx',
-				'359FD5-BCH[6.68868,tl=1320969600].testnet.rawtx'
-			),
-			'eth': (
-				'88FEFD-ETH[23.45495,40000].rawtx',
-				'76CF8C-ETH[99.99895,50000].regtest.rawtx'
-			),
-			'mm1': (
-				'5881D2-MM1[1.23456,50000].rawtx',
-				'6BDB25-MM1[1.23456,50000].testnet.rawtx'
-			),
-			'etc': (
-				'ED3848-ETC[1.2345,40000].rawtx',
-				''
-			)
-		},
 	}
 	chk_data = {
 		'ref_subwallet_sid': {
@@ -155,7 +129,6 @@ class CmdTestRef(CmdTestBase, CmdTestShared):
 
 #	Create the fake inputs:
 #	('txcreate8',          'transaction creation (8)'),
-		('ref_tx_chk',                   'signing saved reference tx file'),
 		('ref_brain_chk_spc3',           'saved brainwallet (non-standard spacing)'),
 		('ref_dieroll_chk_seedtruncate', 'saved dieroll wallet with extra entropy bits'),
 	)
@@ -309,18 +282,55 @@ class CmdTestRef(CmdTestBase, CmdTestShared):
 	def ref_passwdfile_chk_hex2bip39_12(self):
 		return self.ref_passwdfile_chk(key='hex2bip39_12', pat=r'BIP39.*len.* 12\b')
 
-	def ref_tx_chk(self):
-		fn = self.sources['ref_tx_file'][self.coin][bool(self.tn_ext)]
-		if not fn:
-			return
-		tf = joinpath(ref_dir, self.ref_subdir, fn)
-		wf = dfl_words_file
-		self.write_to_tmpfile(pwfile, wpasswd)
-		return self.txsign(wf, tf, save=False, has_label=True, view='y')
-
 	def ref_brain_chk_spc3(self):
 		return self.ref_brain_chk(bw_file=ref_bw_file_spc)
 
 	def ref_dieroll_chk_seedtruncate(self):
 		wf = joinpath(ref_dir, 'overflow128.b6d')
 		return self.walletchk(wf, sid='8EC6D4A2')
+
+class CmdTestRefTX(CmdTestRef):
+	'saved reference transaction files'
+	color = True
+	networks = ('btc',) # other networks handled by ref_altcoin
+
+	cmd_group = (
+		('ref_txfile_sign',                       'signing saved reference tx file'),
+	)
+
+	sources = {
+		'ref_tx_file': { # data shared with ref_altcoin, autosign
+			'btc': (
+				'0B8D5A[15.31789,14,tl=1320969600].rawtx',
+				'0C7115[15.86255,14,tl=1320969600].testnet.rawtx',
+			),
+			'ltc': (
+				'AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx',
+				'A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx'
+			),
+			'bch': (
+				'460D4D-BCH[10.19764,tl=1320969600].rawtx',
+				'359FD5-BCH[6.68868,tl=1320969600].testnet.rawtx'
+			),
+			'eth': (
+				'88FEFD-ETH[23.45495,40000].rawtx',
+				'76CF8C-ETH[99.99895,50000].regtest.rawtx'
+			),
+			'mm1': (
+				'5881D2-MM1[1.23456,50000].rawtx',
+				'6BDB25-MM1[1.23456,50000].testnet.rawtx'
+			),
+			'etc': (
+				'ED3848-ETC[1.2345,40000].rawtx',
+				''
+			)
+		},
+	}
+
+	def _get_txfile(self, idx):
+		return joinpath(ref_dir, self.ref_subdir, self.sources['ref_tx_file'][self.coin][idx])
+
+	def ref_txfile_sign(self):
+		self.write_to_tmpfile(pwfile, wpasswd)
+		idx = 1 if self.tn_ext else 0
+		return self.txsign(dfl_words_file, self._get_txfile(idx), save=False, has_label=True, view='y')
