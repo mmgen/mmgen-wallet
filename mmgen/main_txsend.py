@@ -107,9 +107,9 @@ asi, tx_range = (None, None)
 
 def init_autosign(arg):
 	global asi, si, infile, tx_range
-	from .tx.util import mount_removable_device
-	from .tx.online import SentTXRange
+	from .autosign.util import mount_removable_device
 	from .autosign.signable import Signable
+	from .tx.online import SentTXRange
 	asi = mount_removable_device(cfg)
 	si = Signable.automount_transaction(asi)
 	if cfg.abort:

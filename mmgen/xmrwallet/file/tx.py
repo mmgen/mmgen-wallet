@@ -22,7 +22,7 @@ from ...util import die, fmt, make_timestr, list_gen
 from ...seed import SeedID
 from ...protocol import init_proto
 from ...addr import CoinAddr
-from ...tx.util import get_autosign_obj
+from ...autosign.util import get_autosign_obj
 
 from ..include import XMRWalletAddrSpec
 from . import MoneroMMGenFile

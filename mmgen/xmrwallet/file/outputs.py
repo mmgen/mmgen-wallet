@@ -17,7 +17,7 @@ from collections import namedtuple
 from pathlib import Path
 
 from ...util import die, suf
-from ...tx.util import get_autosign_obj
+from ...autosign.util import get_autosign_obj
 
 from . import MoneroMMGenFile
 

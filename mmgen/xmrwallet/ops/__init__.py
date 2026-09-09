@@ -17,7 +17,7 @@ import re
 from ...color import blue
 from ...util import msg, die, fmt
 from ...protocol import init_proto
-from ...tx.util import get_autosign_obj
+from ...autosign.util import get_autosign_obj
 
 from ... import xmrwallet
 
@@ -119,7 +119,7 @@ class OpBase:
 
 	def mount_removable_device(self):
 		if self.cfg.autosign:
-			from ...tx.util import mount_removable_device
+			from ...autosign.util import mount_removable_device
 			mount_removable_device(self.cfg, do_umount=self.do_umount, asi=self.asi)
 			self.post_mount_action()
 

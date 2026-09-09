@@ -133,7 +133,7 @@ def check_xmr_args():
 async def main():
 
 	if cfg._proto.base_coin == 'XMR':
-		from .tx.util import mount_removable_device
+		from .autosign.util import mount_removable_device
 		from .xmrwallet import op as xmrwallet_op
 		check_xmr_args()
 		mount_removable_device(cfg)

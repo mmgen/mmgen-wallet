@@ -9,12 +9,12 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-tx.util: transaction utilities
+autosign.util: autosign utilities
 """
 
 def get_autosign_obj(cfg, add_cfg={}):
 	from ..cfg import Config
-	from ..autosign import Autosign
+	from . import Autosign
 	return Autosign(
 		Config({
 			'_clone': cfg,
