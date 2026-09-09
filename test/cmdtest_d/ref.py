@@ -27,6 +27,7 @@ from ..include.common import (
 	joinpath,
 	cmp_or_die,
 	ref_kafile_pass,
+	write_to_cfgfile,
 )
 from .include.common import (
 	dfl_words_file,
@@ -296,6 +297,12 @@ class CmdTestRefTX(CmdTestRef):
 
 	cmd_group = (
 		('ref_txfile_sign',                       'signing saved reference tx file'),
+		('ref_txfile_legacy_forbidden',           'viewing a legacy tx file (forbidden)'),
+		('ref_txfile_legacy_allowed',             'viewing a legacy tx file (allowed)'),
+		('ref_txfile_mismatched_forbidden',       'viewing an out-of-date tx file (forbidden)'),
+		('ref_txfile_mismatched_allowed',         'viewing an out-of-date tx file (allowed)'),
+		('ref_txfile_mismatched_forbidden_nover', 'viewing an out-of-date tx file (forbidden, no version)'),
+		('ref_txfile_mismatched_allowed_nover',   'viewing an out-of-date tx file (allowed, no version)'),
 	)
 
 	sources = {
@@ -303,6 +310,8 @@ class CmdTestRefTX(CmdTestRef):
 			'btc': (
 				'0B8D5A[15.31789,14,tl=1320969600].rawtx',
 				'0C7115[15.86255,14,tl=1320969600].testnet.rawtx',
+				'721A2C[33.55555877,90].rawtx', # JSON, no version (no key)
+				'3B13CB[30.65968918,90].rawtx'  # JSON, version 1 (no key)
 			),
 			'ltc': (
 				'AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx',
@@ -334,3 +343,31 @@ class CmdTestRefTX(CmdTestRef):
 		self.write_to_tmpfile(pwfile, wpasswd)
 		idx = 1 if self.tn_ext else 0
 		return self.txsign(dfl_words_file, self._get_txfile(idx), save=False, has_label=True, view='y')
+
+	def _ref_txfile_chk(self, cfgfile_lines=[], *, idx, ver=None, allowed=False):
+		expect_str = 'legacy-format' if ver is None else f'with version {ver}'
+		write_to_cfgfile(cfgfile_lines)
+		t = self.spawn('mmgen-tool', ['txview', self._get_txfile(idx)])
+		if allowed:
+			assert not expect_str in t.read()
+		else:
+			t.expect(expect_str)
+		return t
+
+	def ref_txfile_legacy_forbidden(self):
+		return self._ref_txfile_chk(idx=0)
+
+	def ref_txfile_legacy_allowed(self):
+		return self._ref_txfile_chk(['allow_legacy_tx_files true'], idx=0, allowed=True)
+
+	def ref_txfile_mismatched_forbidden(self):
+		return self._ref_txfile_chk(['forbid_version_mismatched_tx_files true'], idx=3, ver=1)
+
+	def ref_txfile_mismatched_allowed(self):
+		return self._ref_txfile_chk(idx=3, ver=1, allowed=True)
+
+	def ref_txfile_mismatched_forbidden_nover(self):
+		return self._ref_txfile_chk(['forbid_version_mismatched_tx_files true'], idx=2, ver=0)
+
+	def ref_txfile_mismatched_allowed_nover(self):
+		return self._ref_txfile_chk(idx=2, ver=0, allowed=True)

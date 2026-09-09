@@ -194,6 +194,10 @@ class Config(Lockable):
 	max_urandchars     = 80
 	macos_autosign_ramdisk_size = 10 # see MacOSRamDisk
 
+	# security
+	allow_legacy_tx_files              = False
+	forbid_version_mismatched_tx_files = False
+
 	# debug
 	debug                = False
 	debug_daemon         = False
@@ -306,6 +310,7 @@ class Config(Lockable):
 	# proto-specific only: eth_mainnet_chain_names eth_testnet_chain_names
 	# coin-specific only:  bch_cashaddr (alias of cashaddr)
 	_cfg_file_opts = (
+		'allow_legacy_tx_files',
 		'autochg_ignore_labels',
 		'autosign',
 		'color',
@@ -313,6 +318,7 @@ class Config(Lockable):
 		'daemon_id', # also coin-specific
 		'debug',
 		'fee_adjust',
+		'forbid_version_mismatched_tx_files',
 		'force_256_color',
 		'hash_preset',
 		'http_timeout',

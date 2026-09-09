@@ -112,6 +112,8 @@ class Completed(Base):
 			a, b = ('sign', 'Has your online installation been compromised?')
 		elif 'send' in gc.prog_name:
 			a, b = ('send', 'Is your offline installation out of date?')
+		elif not self.cfg.allow_legacy_tx_files:
+			a, b = ('operate on', 'Operation forbidden by ‘allow_legacy_tx_files false’')
 		else:
 			return
 		fs = f'Request to {{}} legacy-format transaction ({desc}). {{}}'
@@ -124,6 +126,9 @@ class Completed(Base):
 		elif 'send' in gc.prog_name:
 			a = 'send'
 			b = 'Is your {} installation out of date?'.format('offline' if f_ver < s_ver else 'online')
+		elif self.cfg.forbid_version_mismatched_tx_files:
+			a = 'operate on'
+			b = 'Operation forbidden by ‘forbid_version_mismatched_tx_files true’'
 		else:
 			return
 		fs = (
