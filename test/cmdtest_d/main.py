@@ -220,7 +220,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			(2, 'address generation (2)', [[['mmdat'], 2]])
 		),
 		('txcreate2',
-			(2, 'transaction creation (2)', [[['addrs'], 2]])
+			(2, 'transaction creation (2, single-output)', [[['addrs'], 2]])
 		),
 		('txsign2',
 			(2, 'transaction signing, two transactions', [[['mmdat', 'rawtx'], 1], [['mmdat', 'rawtx'], 2]])
@@ -649,7 +649,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			}
 		return ad, tx_data
 
-	def _make_txcreate_outputs(self, tx_data):
+	def _make_txcreate_outputs(self, tx_data, single_output):
 		from mmgen.key import PrivKey
 		privkey = PrivKey(self.proto, getrand(32), compressed=True, pubkey_type='std')
 		t = ('compressed', 'segwit')['S' in self.proto.mmtypes]
@@ -677,12 +677,18 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 						s['al_id'],
 						s['addr_idxs'][0],
 						self.cfgs[num]['amts'][0])
-				# + one change address and one BTC address
+				# + one change address and one non-MMGen address
 				if num is list(tx_data.keys())[-1]:
 					yield '{}:{}'.format(s['al_id'], s['addr_idxs'][1])
 					yield '{},{}'.format(rand_coinaddr, self.cfgs[num]['amts'][1])
 
-		return list(gen())
+		def gen_one_output():
+			for num in tx_data:
+				s = tx_data[num]
+				if num is list(tx_data.keys())[-1]:
+					yield '{}:{}'.format(s['al_id'], s['addr_idxs'][1])
+
+		return list(gen_one_output() if single_output else gen())
 
 	def txcreate_common(
 			self,
@@ -696,6 +702,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			addrs_per_wallet           = addrs_per_wallet,
 			non_mmgen_input_compressed = True,
 			cmdline_inputs             = False,
+			single_output              = False,
 			tweaks                     = []):
 
 		def make_input_opts():
@@ -728,7 +735,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			+ ([] if self.proto.cap('rbf') else ['--no-rbf'])
 			+ add_opts
 			+ (make_input_opts() if cmdline_inputs else [])
-			+ self._make_txcreate_outputs(tx_data)
+			+ self._make_txcreate_outputs(tx_data, single_output)
 			+ add_output_args
 			+ [tx_data[num]['addrfile'] for num in tx_data]
 			+ ss_args)
@@ -750,7 +757,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			verify_checksum_or_exit(tx_data[num]['chk'], chk)
 
 		# not in tracking wallet warning, (1 + num sources) times
-		for num in range(len(tx_data) + 1):
+		for num in range(1 if single_output else (len(tx_data) + 1)):
 			t.expect('Continue anyway? (y/N): ', 'y')
 
 		outputs_list = [(addrs_per_wallet+1)*i + 1 for i in range(len(tx_data))]
@@ -964,7 +971,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		return self.addrgen1(wf)
 
 	def txcreate2(self, addrfile):
-		return self.txcreate_common(sources=['2'])
+		return self.txcreate_common(sources=['2'], single_output=True)
 
 	def txsign2(self, wf1, txf1, wf2, txf2):
 		t = self.spawn('mmgen-txsign',
