@@ -12,7 +12,6 @@
 tx.completed: completed transaction class
 """
 
-from ..cfg import gc
 from ..util import msg, ymsg, die
 from .base import Base
 
@@ -108,9 +107,9 @@ class Completed(Base):
 		die('TxFileVersionError', errmsg)
 
 	def legacy_fmt_chk(self, desc):
-		if 'sign' in gc.prog_name:
+		if self.cfg.is_signing:
 			a, b = ('sign', 'Has your online installation been compromised?')
-		elif 'send' in gc.prog_name:
+		elif self.cfg.is_sending:
 			a, b = ('send', 'Is your offline installation out of date?')
 		elif not self.cfg.allow_legacy_tx_files:
 			a, b = ('operate on', 'Operation forbidden by ‘allow_legacy_tx_files false’')
@@ -120,10 +119,10 @@ class Completed(Base):
 		self.die_on_version_error(fs.format(a, b))
 
 	def txfile_version_chk(self, f_ver, s_ver):
-		if 'sign' in gc.prog_name:
+		if self.cfg.is_signing:
 			a = 'sign'
 			b = 'Is your {} installation out of date?'.format('offline' if f_ver > s_ver else 'online')
-		elif 'send' in gc.prog_name:
+		elif self.cfg.is_sending:
 			a = 'send'
 			b = 'Is your {} installation out of date?'.format('offline' if f_ver < s_ver else 'online')
 		elif self.cfg.forbid_version_mismatched_tx_files:
