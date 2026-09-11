@@ -330,8 +330,10 @@ class CmdTestRefTX(CmdTestRef):
 				'6BDB25-MM1[1.23456,50000].testnet.rawtx'
 			),
 			'etc': (
-				'ED3848-ETC[1.2345,40000].rawtx',
-				''
+				'ED3848-ETC[1.2345,40000].rawtx', ''
+			),
+			'xmr': (
+				'8BFA29-963699-XMR[0.257].rawtx', ''
 			)
 		},
 	}

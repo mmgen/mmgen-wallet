@@ -88,7 +88,7 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 		from mmgen.tx.file import MMGenTxFile
 		src = CmdTestRefTX.sources['ref_tx_file']
 		for coin, files in src.items():
-			if coin == 'btc':
+			if coin in ('btc', 'xmr'): # XMR is automount-only
 				continue
 			if coin == 'mm1':
 				coin = 'eth'

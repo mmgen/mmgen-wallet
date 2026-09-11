@@ -64,7 +64,8 @@ class CmdTestAutosignBase(CmdTestBase):
 		('ltc', 'litecoin'),
 		('eth', 'ethereum'),
 		('mm1', 'ethereum'),
-		('etc', 'ethereum_classic'))
+		('etc', 'ethereum_classic'),
+		('xmr', 'monero'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 

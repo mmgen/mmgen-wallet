@@ -112,7 +112,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 
 	def add_legacy_txfiles(self):
 		self.spawn(msg_only=True)
-		self.tx_file_ops('copy', txfile_coins=['btc'], tx_dir='txauto_dir')
+		self.tx_file_ops('copy', txfile_coins=['btc', 'xmr'], tx_dir='txauto_dir')
 		return 'ok'
 
 	async def txview_allow_legacy(self):
