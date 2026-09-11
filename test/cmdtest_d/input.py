@@ -22,8 +22,9 @@ from ..include.common import (
 	sample_mn,
 	get_data_from_file,
 	read_from_file,
-	strip_ansi_escapes
-)
+	strip_ansi_escapes,
+	trash_dir)
+
 from .include.common import Ctrl_U, ref_dir
 from .base import CmdTestBase
 from .include.input import stealth_mnemonic_entry, user_dieroll_entry
@@ -124,7 +125,7 @@ class CmdTestInput(CmdTestBase):
 			'--skip-cfg-file',
 			'--in-fmt=words',
 			'--out-fmt=words',
-			'--outdir=test/trash']
+			f'--outdir={trash_dir}']
 		mn = sample_mn['mmgen']['mn']
 		run_env = dict(os.environ)
 		run_env['MMGEN_TEST_SUITE'] = ''
@@ -134,7 +135,7 @@ class CmdTestInput(CmdTestBase):
 		imsg(cp.stderr.decode().strip())
 		res = get_data_from_file(
 			self.cfg,
-			'test/trash/A773B05C[128].mmwords',
+			os.path.join(trash_dir, 'A773B05C[128].mmwords'),
 			silent = True).strip()
 		assert res == mn, f'{res} != {mn}'
 		return 'ok' if b'written to file' in cp.stderr else 'error'
@@ -209,12 +210,12 @@ class CmdTestInput(CmdTestBase):
 		return t
 
 	def get_passphrase_cmdline(self):
-		with open('test/trash/pwfile', 'w') as fp:
+		with open(os.path.join(trash_dir, 'pwfile'), 'w') as fp:
 			fp.write('reference password\n')
 		t = self.spawn('test/misc/get_passphrase.py', [
 			'--usr-randchars=0',
 			'--label=MyLabel',
-			'--passwd-file=test/trash/pwfile',
+			'--passwd-file={}'.format(os.path.join(trash_dir, 'pwfile')),
 			'--hash-preset=1',
 			'seed'],
 			cmd_dir = '.')

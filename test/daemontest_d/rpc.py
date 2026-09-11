@@ -15,7 +15,7 @@ from mmgen.daemon import CoinDaemon
 from mmgen.proto.xmr.rpc import MoneroRPCClient, MoneroWalletRPCClient
 from mmgen.proto.xmr.daemon import MoneroWalletDaemon
 
-from ..include.common import cfg, qmsg, vmsg, in_nix_environment, test_exec
+from ..include.common import cfg, qmsg, vmsg, in_nix_environment, test_exec, trash_dir2
 
 async def cfg_file_auth_test(cfg, d, bad_auth=False):
 	m = 'missing credentials' if bad_auth else f'credentials from {d.cfg_file}'
@@ -246,8 +246,8 @@ class unit_tests:
 						cfg        = cfg,
 						proto      = proto,
 						test_suite = True,
-						wallet_dir = os.path.join('test', 'trash2'),
-						datadir    = os.path.join('test', 'trash2', 'wallet_rpc'),
+						wallet_dir = trash_dir2,
+						datadir    = os.path.join(trash_dir2, 'wallet_rpc'),
 						passwd     = 'ut_rpc_passw0rd')
 				) for proto in (init_proto(cfg, 'xmr', network=network) for network in networks)]
 
@@ -282,7 +282,7 @@ class unit_tests:
 			gmsg('OK')
 
 		import shutil
-		shutil.rmtree('test/trash2', ignore_errors=True)
-		os.makedirs('test/trash2/wallet_rpc')
+		shutil.rmtree(trash_dir2, ignore_errors=True)
+		os.makedirs(os.path.join(trash_dir2, 'wallet_rpc'))
 		await run()
 		return True

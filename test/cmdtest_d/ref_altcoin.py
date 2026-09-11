@@ -25,7 +25,8 @@ from ..include.common import (
 	joinpath,
 	start_test_daemons,
 	stop_test_daemons,
-	cmp_or_die)
+	cmp_or_die,
+	trash_dir)
 from .ref import CmdTestRef, CmdTestRefTX
 from .base import CmdTestBase
 
@@ -111,7 +112,7 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 					start_test_daemons(proto.network_id)
 				t = self.spawn(
 					'mmgen-txsign',
-					['--outdir=test/trash', '--yes', f'--passwd-file={passfile}', dfl_words_file, txfile],
+					[f'--outdir={trash_dir}', '--yes', f'--passwd-file={passfile}', dfl_words_file, txfile],
 					no_passthru_opts = ['coin'],
 					extra_desc = f'{proto.coin}{token_desc} {proto.network}')
 				t.read()

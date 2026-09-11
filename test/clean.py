@@ -43,15 +43,14 @@ if os.path.exists(overlay_tree_dir):
 	rmtree(overlay_tree_dir, ignore_errors=True)
 	print(f'Removed {os.path.relpath(overlay_tree_dir)!r}')
 
-from test.include.common import clean, set_globals
+from test.include.common import clean, set_globals, trash_dir, trash_dir2
 
 set_globals(cfg)
 
 extra_dirs = [
 	Config.test_datadir,
-	os.path.join('test', 'trash'),
-	os.path.join('test', 'trash2')
-]
+	trash_dir,
+	trash_dir2]
 
 from test.cmdtest_d.include.cfg import cfgs
 clean(cfgs, extra_dirs=extra_dirs)

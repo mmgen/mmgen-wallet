@@ -285,7 +285,7 @@ class Config(Lockable):
 	exit_after               = ''
 	resuming                 = False
 	skipping_deps            = False
-	test_datadir             = os.path.join('test', 'data_dir' + ('', '-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
+	test_datadir             = os.path.join('test', 'tmp', 'data_dir')
 
 	mnemonic_entry_modes = {}
 

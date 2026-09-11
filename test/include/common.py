@@ -60,6 +60,9 @@ def set_globals(cfg):
 def strip_ansi_escapes(s):
 	return re.sub('\x1b' + r'\[[;0-9]+?m', '', s)
 
+trash_dir = os.path.join('test', 'tmp', 'trash')
+trash_dir2 = os.path.join('test', 'tmp', 'trash2')
+
 cmdtest_py_log_fn = 'cmdtest.py.log'
 cmdtest_py_error_fn = 'cmdtest.py.err'
 parity_dev_amt = 1606938044258990275541962092341162602522202993782792835301376

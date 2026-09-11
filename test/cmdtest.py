@@ -25,13 +25,13 @@ def check_segwit_opts(proto):
 		if getattr(cfg, k) and m not in proto.mmtypes:
 			die(1, f'--{k.replace("_", "-")} option incompatible with {proto.cls_name}')
 
-def create_shm_dir(data_dir, trash_dir):
+def create_shm_dir(data_dir, trash_dir, trash_dir2):
 	# Laggy flash media can cause pexpect to fail, so create a temporary directory
 	# under '/dev/shm' and put datadir and tmpdirs here.
 	import shutil
 	from subprocess import run
 	if gc.platform in ('win32', 'darwin'):
-		for tdir in (data_dir, trash_dir):
+		for tdir in (data_dir, trash_dir, trash_dir2):
 			try:
 				os.listdir(tdir)
 			except:
@@ -61,11 +61,12 @@ def create_shm_dir(data_dir, trash_dir):
 		except Exception as e:
 			die(2, f'Unable to create temporary directory in {tdir} ({e.args[0]})')
 
-		dest = os.path.join(shm_dir, os.path.basename(trash_dir))
-		os.mkdir(dest, 0o755)
+		for tdir in (trash_dir, trash_dir2):
+			dest = os.path.join(shm_dir, os.path.basename(tdir))
+			os.mkdir(dest, 0o755)
 
-		run(f'rm -rf {trash_dir}', shell=True, check=True)
-		os.symlink(dest, trash_dir)
+			run(f'rm -rf {tdir}', shell=True, check=True)
+			os.symlink(dest, tdir)
 
 		dest = os.path.join(shm_dir, os.path.basename(data_dir))
 		shutil.move(data_dir, dest) # data_dir was created by Config()
@@ -90,6 +91,8 @@ from test.include.common import (
 	cmdtest_py_log_fn,
 	cmdtest_py_error_fn,
 	mk_tmpdir,
+	trash_dir,
+	trash_dir2,
 	stop_test_daemons)
 
 try:
@@ -179,10 +182,11 @@ data_dir = Config.test_datadir
 
 # step 1: delete data_dir symlink in ./test;
 if not po.user_opts.get('skip_deps'):
-	try:
-		os.unlink(data_dir)
-	except:
-		pass
+	for fn in (data_dir,):
+		try:
+			os.unlink(fn)
+		except:
+			pass
 
 # step 2: opts.init will create new data_dir in ./test (if not po.user_opts['skip_deps'])
 cfg = Config(opts_data=opts_data)
@@ -212,11 +216,8 @@ if cfg.daemon_id and cfg.daemon_id in cfg.blacklisted_daemons.split():
 	die(1, f'cmdtest.py: daemon {cfg.daemon_id!r} blacklisted, exiting')
 
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
-trash_dir = os.path.join('test', 'trash')
-trash_dir2 = os.path.join('test', 'trash2')
-
 if not cfg.skipping_deps:
-	shm_dir = create_shm_dir(data_dir, trash_dir)
+	shm_dir = create_shm_dir(data_dir, trash_dir, trash_dir2)
 
 check_segwit_opts(cfg._proto)
 

@@ -26,7 +26,7 @@ import os
 from mmgen.util import msg, capfirst
 from mmgen.wallet import get_wallet_cls
 
-from ..include.common import cmp_or_die, joinpath
+from ..include.common import cmp_or_die, joinpath, trash_dir
 from .include.common import (
 	pwfile,
 	ref_wallet_hash_preset,
@@ -172,7 +172,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 	def ref_walletconv(self, ofmt, extra_args=[], re_pat=None):
 		wf = self.get_file_with_ext('mmdat')
 		pf = joinpath(self.tmpdir, pwfile)
-		t = self.spawn('mmgen-walletconv', extra_args+['-d', 'test/trash', '-o', ofmt, '-P'+pf, wf])
+		t = self.spawn('mmgen-walletconv', extra_args+['-d', trash_dir, '-o', ofmt, '-P'+pf, wf])
 		wcls = get_wallet_cls(fmt_code=ofmt)
 		fn = os.path.split(t.written_to_file(capfirst(wcls.desc)))[-1]
 		idx = int(self.test_name[-1]) - 1

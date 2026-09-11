@@ -74,7 +74,7 @@ Ctrl_U = '\x15'
 
 eth_inbound_addr = (28 * '0') + 'feedbeefcafe'
 
-thorchain_router_addr_file = 'test/data_dir/thorchain_router_addr'
+thorchain_router_addr_file = os.path.join(cfg.test_datadir, 'thorchain_router_addr')
 
 def ok_msg():
 	if cfg.profile:

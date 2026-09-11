@@ -16,7 +16,8 @@ from ..include.common import (
 	silence,
 	end_silence,
 	restart_test_daemons,
-	stop_test_daemons)
+	stop_test_daemons,
+	trash_dir2)
 
 def get_obj(coin, network, msghash_type):
 
@@ -54,7 +55,7 @@ async def do_test(network_id, chksum, msghash_type='raw'):
 
 	pumsg('\nTesting data creation:\n')
 
-	tmpdir = os.path.join('test', 'trash2')
+	tmpdir = trash_dir2
 
 	os.makedirs(tmpdir, exist_ok=True)
 

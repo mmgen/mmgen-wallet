@@ -39,6 +39,7 @@ from ..include.common import (
 	getrandnum,
 	getrandnum_range,
 	getrandhex,
+	trash_dir,
 	strip_ansi_escapes)
 
 from .include.common import (
@@ -382,7 +383,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			self.tx_fee     = {'btc':'90s', 'bch':'0.001', 'ltc':'0.01'}[self.coin]
 			self.txbump_fee = {'btc':'123s', 'bch':'567s', 'ltc':'12345s'}[self.coin]
 
-		self.unspent_data_file = joinpath('test', 'trash', 'unspent.json')
+		self.unspent_data_file = joinpath(trash_dir, 'unspent.json')
 		self.spawn_env['MMGEN_TEST_SUITE_BOGUS_UNSPENT_DATA'] = self.unspent_data_file
 
 	@property
