@@ -39,8 +39,8 @@ from ..include.common import (
 	getrandnum,
 	getrandnum_range,
 	getrandhex,
-	strip_ansi_escapes
-)
+	strip_ansi_escapes)
+
 from .include.common import (
 	pwfile,
 	hincog_fn,
@@ -51,8 +51,8 @@ from .include.common import (
 	hincog_bytes,
 	hincog_seedlen,
 	incog_id_fn,
-	non_mmgen_fn
-)
+	non_mmgen_fn)
+
 from .base import CmdTestBase
 from .shared import CmdTestShared
 

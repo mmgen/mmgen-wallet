@@ -33,8 +33,8 @@ from .include.common import (
 	ref_wallet_brainpass,
 	ref_wallet_incog_offset,
 	ref_dir,
-	ok_msg
-)
+	ok_msg)
+
 from .base import CmdTestBase
 from .shared import CmdTestShared
 from .wallet import CmdTestWalletConv

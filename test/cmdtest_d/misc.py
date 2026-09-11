@@ -89,8 +89,9 @@ class CmdTestMisc(CmdTestBase):
 		if self.cfg.no_altcoin:
 			return 'skip'
 		tx = 'test/ref/bitcoin_cash/895108-BCH[2.65913].rawtx'
-		t = self.spawn('mmgen-tool', ['--coin=bch', f'--cashaddr={view_pref}', 'txview', tx, f'terse={terse}'])
-		#t = self.spawn('mmgen-tool', ['--coin=bch', '--longhelp'])
+		t = self.spawn(
+			'mmgen-tool',
+			['--coin=bch', f'--cashaddr={view_pref}', 'txview', tx, f'terse={terse}'])
 		t.expect(expect)
 		return t
 

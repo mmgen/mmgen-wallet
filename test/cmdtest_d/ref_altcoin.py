@@ -21,7 +21,11 @@ test.cmdtest_d.ref_altcoin: Altcoin reference file tests for the cmdtest.py test
 """
 
 from .include.common import pwfile, dfl_wpasswd, ref_dir, dfl_words_file, dfl_addr_idx_list
-from ..include.common import joinpath, start_test_daemons, stop_test_daemons, cmp_or_die
+from ..include.common import (
+	joinpath,
+	start_test_daemons,
+	stop_test_daemons,
+	cmp_or_die)
 from .ref import CmdTestRef, CmdTestRefTX
 from .base import CmdTestBase
 

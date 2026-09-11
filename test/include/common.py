@@ -184,8 +184,7 @@ def clean(cfgs, tmpdir_ids=None, extra_dirs=[]):
 		if cleaned := list(clean_func()):
 			iqmsg(green('Cleaned director{} {}'.format(
 				suf(cleaned, 'ies'),
-				fmt_list(cleaned, fmt=list_fmt)
-			)))
+				fmt_list(cleaned, fmt=list_fmt))))
 
 	for d in extra_dirs:
 		if (os.path.exists(d) or os.path.islink(d)) and not os.path.isdir(d):

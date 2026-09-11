@@ -617,7 +617,9 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 	def _wait_loop_start(self, opts=[], add_opts=[]):
 		t = self.spawn(
 			'mmgen-autosign',
-			(opts or self.opts) + add_opts + ['--full-summary', 'wait'],
+				(opts or self.opts)
+				+ add_opts
+				+ ['--full-summary', 'wait'],
 			direct_exec      = True,
 			no_passthru_opts = True,
 			spawn_env_override = self.spawn_env | {'EXEC_WRAPPER_DO_RUNTIME_MSG': ''})
@@ -673,7 +675,9 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		self.insert_device()
 		self.do_mount()
 		src = Path(self.asi.txauto_dir)
-		t = self.spawn('mmgen-tool', ['txview'] + [str(fn) for fn in sorted(src.iterdir())])
+		t = self.spawn(
+			'mmgen-tool',
+			['txview'] + [str(fn) for fn in sorted(src.iterdir())])
 		text = t.read()
 		if expect_str:
 			if reverse:

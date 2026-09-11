@@ -118,7 +118,13 @@ class CmdTestInput(CmdTestBase):
 	def get_seed_from_stdin(self):
 		self.spawn(msg_only=True)
 		from subprocess import run
-		cmd = ['python3', 'cmds/mmgen-walletconv', '--skip-cfg-file', '--in-fmt=words', '--out-fmt=words', '--outdir=test/trash']
+		cmd = [
+			'python3',
+			'cmds/mmgen-walletconv',
+			'--skip-cfg-file',
+			'--in-fmt=words',
+			'--out-fmt=words',
+			'--outdir=test/trash']
 		mn = sample_mn['mmgen']['mn']
 		run_env = dict(os.environ)
 		run_env['MMGEN_TEST_SUITE'] = ''
@@ -126,7 +132,10 @@ class CmdTestInput(CmdTestBase):
 		cp = run(cmd, input=mn.encode(), capture_output=True, env=run_env)
 
 		imsg(cp.stderr.decode().strip())
-		res = get_data_from_file(self.cfg, 'test/trash/A773B05C[128].mmwords', silent=True).strip()
+		res = get_data_from_file(
+			self.cfg,
+			'test/trash/A773B05C[128].mmwords',
+			silent = True).strip()
 		assert res == mn, f'{res} != {mn}'
 		return 'ok' if b'written to file' in cp.stderr else 'error'
 

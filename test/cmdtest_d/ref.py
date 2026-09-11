@@ -354,7 +354,9 @@ class CmdTestRefTX(CmdTestRef):
 	def _ref_txfile_chk(self, cfgfile_lines=[], *, idx, ver=None, allowed=False):
 		expect_str = 'legacy-format' if ver is None else f'with version {ver}'
 		write_to_cfgfile(cfgfile_lines)
-		t = self.spawn('mmgen-tool', ['txview', self._get_txfile(idx)])
+		t = self.spawn(
+			'mmgen-tool',
+			['txview', self._get_txfile(idx)])
 		if allowed:
 			assert not expect_str in t.read()
 		else:
