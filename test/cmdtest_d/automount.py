@@ -91,7 +91,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('alice_bal2',                       'checking Alice’s balance'),
 		('wait_loop_kill',                   'stopping autosign wait loop'),
 		('stop',                             'stopping regtest daemon'),
-		('txview',                           'viewing transactions'),
+		('autosign_txview',                  'viewing transactions on removable device'),
 	)
 
 	def __init__(self, cfg, trunner, cfgs, spawn):

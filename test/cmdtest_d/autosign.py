@@ -25,7 +25,7 @@ from subprocess import run, DEVNULL
 from pathlib import Path
 
 from mmgen.cfg import Config, gc
-from mmgen.color import red, blue, cyan, orange, purple, gray
+from mmgen.color import red, cyan, orange, purple, gray
 from mmgen.util import msg, suf, die, indent, fmt
 from mmgen.led import LEDControl
 from mmgen.autosign import Autosign
@@ -667,23 +667,15 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 	def do_umount_online(self, *args, **kwargs):
 		return self._mount_ops('asi_online', 'do_umount', *args, **kwargs)
 
-	async def txview(self):
-		self.spawn(msg_only=True)
+	async def autosign_txview(self):
 		self.insert_device()
 		self.do_mount()
 		src = Path(self.asi.txauto_dir)
-		from mmgen.tx import CompletedTX
-		txs = sorted(
-			[await CompletedTX(cfg=self.cfg, filename=path, quiet_open=True) for path in sorted(src.iterdir())],
-			key = lambda x: x.timestamp)
-		for tx in txs:
-			if not tx.is_compat:
-				imsg(blue(f'\nViewing ‘{tx.infile.name}’:'))
-				out = tx.info.format(terse=True)
-				imsg(indent(out, indent='  '))
+		t = self.spawn('mmgen-tool', ['txview'] + [str(fn) for fn in sorted(src.iterdir())])
+		t.read()
 		self.do_umount()
 		self.remove_device()
-		return 'ok'
+		return t
 
 class CmdTestAutosign(CmdTestAutosignBase):
 	'autosigning transactions for all supported coins'
