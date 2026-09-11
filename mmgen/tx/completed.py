@@ -110,7 +110,7 @@ class Completed(Base):
 		if self.cfg.is_signing:
 			a, b = ('sign', 'Has your online installation been compromised?')
 		elif self.cfg.is_sending:
-			a, b = ('send', 'Is your offline installation out of date?')
+			a, b = ('send', 'Is your offline installation compromised or out of date?')
 		elif not self.cfg.allow_legacy_tx_files:
 			a, b = ('operate on', 'Operation forbidden by ‘allow_legacy_tx_files false’')
 		else:

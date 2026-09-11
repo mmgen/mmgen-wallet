@@ -249,7 +249,8 @@ class CmdTestAutosignBase(CmdTestBase):
 			if op != 'remove_signed':
 				shutil.copyfile(src, target)
 			try:
-				os.unlink(target.replace('.rawtx', '.sigtx'))
+				if target.endswith('.rawtx'):
+					os.unlink(target.replace('.rawtx', '.sigtx'))
 			except:
 				pass
 

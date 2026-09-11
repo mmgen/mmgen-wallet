@@ -343,8 +343,12 @@ class CmdTestRefTX(CmdTestRef):
 
 	def ref_txfile_sign(self):
 		self.write_to_tmpfile(pwfile, wpasswd)
-		idx = 1 if self.tn_ext else 0
-		return self.txsign(dfl_words_file, self._get_txfile(idx), save=False, has_label=True, view='y')
+		return self.txsign(
+			dfl_words_file,
+			self._get_txfile(0),
+			save       = False,
+			has_label  = True,
+			view       = 'y')
 
 	def _ref_txfile_chk(self, cfgfile_lines=[], *, idx, ver=None, allowed=False):
 		expect_str = 'legacy-format' if ver is None else f'with version {ver}'
