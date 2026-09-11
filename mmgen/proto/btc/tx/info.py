@@ -131,9 +131,9 @@ class TxInfo(TxInfo):
 
 		tx = self.tx
 
-		if self.cfg._proto.coin == 'BCH':
+		if tx.proto.coin == 'BCH':
 			have_bch = True
-			vp1 = 1 if not self.cfg.cashaddr else not self.cfg._proto.cashaddr
+			vp1 = 1 if not getattr(self.cfg, 'cashaddr', None) else not tx.proto.cashaddr
 			vp2 = (vp1 + 1) % 2
 		else:
 			have_bch = False
