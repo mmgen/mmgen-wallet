@@ -667,12 +667,17 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 	def do_umount_online(self, *args, **kwargs):
 		return self._mount_ops('asi_online', 'do_umount', *args, **kwargs)
 
-	async def autosign_txview(self):
+	async def autosign_txview(self, *, expect_str=None, reverse=False):
 		self.insert_device()
 		self.do_mount()
 		src = Path(self.asi.txauto_dir)
 		t = self.spawn('mmgen-tool', ['txview'] + [str(fn) for fn in sorted(src.iterdir())])
-		t.read()
+		text = t.read()
+		if expect_str:
+			if reverse:
+				assert not expect_str in text
+			else:
+				assert expect_str in text
 		self.do_umount()
 		self.remove_device()
 		return t

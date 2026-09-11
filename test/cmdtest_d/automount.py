@@ -15,7 +15,7 @@ import time
 
 from .autosign import CmdTestAutosignThreaded
 from .regtest import CmdTestRegtest, rt_pw
-from ..include.common import gr_uc, create_addrpairs
+from ..include.common import gr_uc, create_addrpairs, write_to_cfgfile
 
 class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	'automounted transacting operations via regtest mode'
@@ -40,6 +40,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	cmd_group = (
 		('setup',                            'regtest mode setup'),
 		('walletgen_alice',                  'wallet generation (Alice)'),
+		('add_legacy_txfiles',               'adding legacy transaction files to removable device'),
 		('addrgen_alice',                    'address generation (Alice)'),
 		('addrimport_alice',                 'importing Alice’s addresses'),
 		('addrimport_alice_non_mmgen',       'importing Alice’s non-MMGen addresses'),
@@ -91,7 +92,8 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('alice_bal2',                       'checking Alice’s balance'),
 		('wait_loop_kill',                   'stopping autosign wait loop'),
 		('stop',                             'stopping regtest daemon'),
-		('autosign_txview',                  'viewing transactions on removable device'),
+		('txview_allow_legacy',              'viewing transactions on removable device (allow legacy files'),
+		('txview_forbid_legacy',             'viewing transactions on removable device (forbid legacy files'),
 	)
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
@@ -107,6 +109,19 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		self.opts.append('--alice')
 
 		self.non_mmgen_addrs = create_addrpairs(self.proto, 'C', 2)
+
+	def add_legacy_txfiles(self):
+		self.spawn(msg_only=True)
+		self.tx_file_ops('copy', txfile_coins=['btc'], tx_dir='txauto_dir')
+		return 'ok'
+
+	async def txview_allow_legacy(self):
+		write_to_cfgfile(['allow_legacy_tx_files true'])
+		return await self.autosign_txview(expect_str='forbidden', reverse=True)
+
+	async def txview_forbid_legacy(self):
+		write_to_cfgfile(['allow_legacy_tx_files false'])
+		return await self.autosign_txview(expect_str='forbidden', reverse=False)
 
 	def addrimport_alice_non_mmgen(self):
 		self.write_to_tmpfile(
