@@ -141,7 +141,6 @@ class CmdTestRunner:
 			pexpect_spawn   = None,
 			direct_exec     = False,
 			no_passthru_opts = False,
-			spawn_env_override = None,
 			exit_val        = None,
 			silent          = False,
 			env             = {}):
@@ -213,7 +212,7 @@ class CmdTestRunner:
 		send_delay = 0.4 if pexpect_spawn is True or self.cfg.buf_keypress else None
 		pexpect_spawn = pexpect_spawn if pexpect_spawn is not None else bool(self.cfg.pexpect_spawn)
 
-		spawn_env = dict(spawn_env_override or self.tg.spawn_env)
+		spawn_env = dict(self.tg.spawn_env)
 		spawn_env.update({
 			'MMGEN_HOLD_PROTECT_DISABLE': '' if send_delay else '1',
 			'MMGEN_TEST_SUITE_POPEN_SPAWN': '' if pexpect_spawn else '1',

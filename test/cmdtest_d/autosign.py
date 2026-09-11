@@ -625,7 +625,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 				+ ['--full-summary', 'wait'],
 			direct_exec      = True,
 			no_passthru_opts = True,
-			spawn_env_override = self.spawn_env | {'EXEC_WRAPPER_DO_RUNTIME_MSG': ''})
+			env = {'EXEC_WRAPPER_DO_RUNTIME_MSG': ''})
 		self.write_to_tmpfile('autosign_thread_pid', str(t.ep.pid))
 		return t
 

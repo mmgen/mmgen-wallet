@@ -232,6 +232,7 @@ class CmdTestShared:
 			extra_opts = [],
 			extra_desc = '',
 			expect_str = None,
+			env        = {},
 			view       = 'n',
 			dfl_wallet = False):
 		opts = extra_opts + ['-d', self.tmpdir, txfile] + ([wf] if wf else [])
@@ -241,6 +242,7 @@ class CmdTestShared:
 			opts,
 			extra_desc,
 			no_passthru_opts = ['coin'],
+			env = env,
 			exit_val = None if save or (wcls.enc and wcls.type != 'brain') else 1)
 		t.license()
 		if expect_str:
