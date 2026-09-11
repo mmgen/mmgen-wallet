@@ -593,7 +593,9 @@ class Config(Lockable):
 		# Step 8: process opts_data['sets'] and opts_data['requires']:
 		if opts_data:
 			if 'sets' in opts_data:
-				self._set_opts_data_sets_opts(opts_data)
+				self._set_opts_data_sets_opts(opts_data, 'sets')
+			if 'overrides' in opts_data:
+				self._set_opts_data_sets_opts(opts_data, 'overrides', overrides=True)
 			if 'requires' in opts_data: # for required value of None, use False instead
 				if not {'help', 'longhelp', 'usage'}.intersection(self._uopts):
 					self._check_opts_data_requires_opts(opts_data)
@@ -792,11 +794,11 @@ class Config(Lockable):
 			elif key in cfgfile_auto_typeset_opts:
 				do_set(key, cfgfile_auto_typeset_opts[key], ref_type)
 
-	def _set_opts_data_sets_opts(self, opts_data):
-		for a_opt, a_val, b_opt, b_val in opts_data['sets']:
+	def _set_opts_data_sets_opts(self, opts_data, op, *, overrides=False):
+		for a_opt, a_val, b_opt, b_val in opts_data[op]:
 			if (usr_a_val := getattr(self, a_opt, None)) not in (None, False):
 				if a_val == bool or usr_a_val == a_val:
-					if ((usr_b_val := getattr(self, b_opt, None)) in (None, False)) or usr_b_val == b_val:
+					if overrides or ((usr_b_val := getattr(self, b_opt, None)) in (None, False)) or usr_b_val == b_val:
 						setattr(self, b_opt, b_val)
 					else:
 						die('UserOptError', 'Option {} conflicts with option {}\n'.format(
