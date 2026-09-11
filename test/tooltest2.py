@@ -26,6 +26,8 @@ test/tooltest2.py: Test the 'mmgen-tool' utility
 import sys, os, time, importlib, asyncio
 from subprocess import run
 
+os.environ['MMGEN_TEST_SUITE_LEGACY_TX'] = '1'
+
 try:
 	from include import test_init
 except ImportError:

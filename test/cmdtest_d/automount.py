@@ -87,14 +87,13 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('alice_txstatus7',                  'getting transaction status (tx_range=1, replaced)'),
 		('alice_txstatus8',                  'getting transaction status (tx_range=3, 2 confirmations)'),
 		('alice_txstatus9',                  'getting transaction status (tx_range=0-3)'),
-		('alice_txstatus_allow_legacy',      'getting transaction status (check legacy TX files allowed)'),
 		('alice_txstatus_forbid_legacy',     'getting transaction status (check legacy TX files forbidden)'),
 		('alice_txbump6',                    'bumping the next-to-last sent transaction (idx=1)'),
 		('generate',                         'mining a block'),
 		('alice_bal2',                       'checking Alice’s balance'),
 		('wait_loop_kill',                   'stopping autosign wait loop'),
 		('stop',                             'stopping regtest daemon'),
-		('txview_allow_legacy',              'viewing transactions on removable device (allow legacy files'),
+		('txview',                           'viewing transactions on removable device'),
 		('txview_forbid_legacy',             'viewing transactions on removable device (forbid legacy files'),
 	)
 
@@ -111,6 +110,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		self.opts.append('--alice')
 
 		self.non_mmgen_addrs = create_addrpairs(self.proto, 'C', 2)
+		write_to_cfgfile(['allow_legacy_tx_files true'])
 
 	def add_legacy_txfiles(self):
 		self.spawn(msg_only=True)
@@ -121,13 +121,13 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 			tx_dir = 'txauto_dir')
 		return 'ok'
 
-	async def txview_allow_legacy(self):
-		write_to_cfgfile(['allow_legacy_tx_files true'])
-		return await self.autosign_txview(expect_str='forbidden', reverse=True)
-
 	async def txview_forbid_legacy(self):
 		write_to_cfgfile(['allow_legacy_tx_files false'])
-		return await self.autosign_txview(expect_str='forbidden', reverse=False)
+		return await self.autosign_txview(expect_str='legacy-format', exit_val=3)
+
+	async def txview(self):
+		write_to_cfgfile(['allow_legacy_tx_files true'])
+		return await self.autosign_txview(expect_str='cold signed')
 
 	def addrimport_alice_non_mmgen(self):
 		self.write_to_tmpfile(
@@ -255,7 +255,6 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 			need_rbf = False,
 			tx_range = None,
 			verbose  = True,
-			expect_missing = False,
 			batch    = False):
 
 		if need_rbf and not self.proto.cap('rbf'):
@@ -269,13 +268,10 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 				+ ([] if tx_range is None else [tx_range]),
 				no_passthru_opts = ['coin'],
 				exit_val = exit_val)
-		if expect_missing:
-			assert expect_str not in t.read()
-		else:
-			t.expect(expect_str, regex=True)
-			if verbose and not (exit_val or batch):
-				t.expect('view: ', 'n')
-			t.read()
+		t.expect(expect_str, regex=True)
+		if verbose and not (exit_val or batch):
+			t.expect('view: ', 'n')
+		t.read()
 		self.remove_device_online()
 		return t
 
@@ -312,20 +308,11 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 			verbose = False,
 			batch = True)
 
-	def alice_txstatus_allow_legacy(self):
-		return self._alice_txstatus_chk_legacy('true', True)
-
 	def alice_txstatus_forbid_legacy(self):
-		return self._alice_txstatus_chk_legacy('false', False)
-
-	def _alice_txstatus_chk_legacy(self, bool_val, expect_missing):
-		write_to_cfgfile([f'allow_legacy_tx_files {bool_val}'])
-		t = self._alice_txstatus(
-			'legacy-format',
-			expect_missing = expect_missing,
-			need_rbf = True,
-			verbose = False,
-			tx_range = '1')
+		write_to_cfgfile(['allow_legacy_tx_files false'])
+		t = self._alice_txstatus('legacy-format', 3)
+		t.read()
+		write_to_cfgfile(['allow_legacy_tx_files true'])
 		return t
 
 	def alice_txsend_bad_no_unsent(self):

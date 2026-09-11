@@ -674,19 +674,17 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 	def do_umount_online(self, *args, **kwargs):
 		return self._mount_ops('asi_online', 'do_umount', *args, **kwargs)
 
-	async def autosign_txview(self, *, expect_str=None, reverse=False):
+	async def autosign_txview(self, *, expect_str=None, exit_val=0):
 		self.insert_device()
 		self.do_mount()
 		src = Path(self.asi.txauto_dir)
 		t = self.spawn(
 			'mmgen-tool',
-			['txview'] + [str(fn) for fn in sorted(src.iterdir())])
-		text = t.read()
+			['txview'] + [str(fn) for fn in sorted(src.iterdir())],
+			exit_val = exit_val)
 		if expect_str:
-			if reverse:
-				assert not expect_str in text
-			else:
-				assert expect_str in text
+			t.expect(expect_str)
+		t.read()
 		self.do_umount()
 		self.remove_device()
 		return t
@@ -760,6 +758,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.ref_msgfiles = tuple(self.gen_msg_fns())
 		self.good_msg_count = 0
 		self.bad_msg_count = 0
+		self.spawn_env['MMGEN_TEST_SUITE_LEGACY_TX'] = '1'
 
 		if self.simulate_led:
 			db = LEDControl.boards['dummy']

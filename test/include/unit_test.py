@@ -22,6 +22,8 @@ test.include.unit_test: Unit test framework for the MMGen suite
 
 import sys, os, time, importlib, asyncio
 
+os.environ['MMGEN_TEST_SUITE_LEGACY_TX'] = '1'
+
 from .test_init import repo_root
 
 # for the unit tests, violate MMGen Project best practices and allow use of the dev tools

@@ -274,6 +274,7 @@ class Config(Lockable):
 	test_suite_xmr_autosign  = False
 	test_suite_cfgtest       = False
 	test_suite_deterministic = False
+	test_suite_legacy_tx     = False
 	test_suite_pexpect       = False
 	test_suite_pexpect_timeout = 0
 	test_suite_popen_spawn   = False
@@ -387,6 +388,7 @@ class Config(Lockable):
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
 		'MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD',
 		'MMGEN_TEST_SUITE_ENABLE_COLOR',
+		'MMGEN_TEST_SUITE_LEGACY_TX',
 		'MMGEN_TEST_SUITE_PEXPECT',
 		'MMGEN_TEST_SUITE_PEXPECT_TIMEOUT',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',

@@ -349,18 +349,17 @@ class CmdTestRefTX(CmdTestRef):
 			save       = False,
 			has_label  = True,
 			expect_str = 'legacy-format',
+			env        = {'MMGEN_TEST_SUITE_LEGACY_TX': '1'},
 			view       = 'y')
 
 	def _ref_txfile_chk(self, cfgfile_lines=[], *, idx, ver=None, allowed=False):
-		expect_str = 'legacy-format' if ver is None else f'with version {ver}'
 		write_to_cfgfile(cfgfile_lines)
 		t = self.spawn(
 			'mmgen-tool',
-			['txview', self._get_txfile(idx)])
-		if allowed:
-			assert not expect_str in t.read()
-		else:
-			t.expect(expect_str)
+			['txview', self._get_txfile(idx)],
+			exit_val = 0 if allowed else 3)
+		if not allowed:
+			t.expect('legacy-format' if ver is None else f'with version {ver}')
 		return t
 
 	def ref_txfile_legacy_forbidden(self):

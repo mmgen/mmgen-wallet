@@ -26,6 +26,7 @@ from ..include.common import (
 	start_test_daemons,
 	stop_test_daemons,
 	cmp_or_die,
+	write_to_cfgfile,
 	trash_dir)
 from .ref import CmdTestRef, CmdTestRefTX
 from .base import CmdTestBase
@@ -89,6 +90,7 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 		via the command line, so it's worth doing
 		"""
 		self.write_to_tmpfile(pwfile, dfl_wpasswd)
+		write_to_cfgfile(['allow_legacy_tx_files true'])
 		passfile = joinpath(self.tmpdir, pwfile)
 		from mmgen.tx.file import MMGenTxFile
 		src = CmdTestRefTX.sources['ref_tx_file']
@@ -114,6 +116,7 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 					'mmgen-txsign',
 					[f'--outdir={trash_dir}', '--yes', f'--passwd-file={passfile}', dfl_words_file, txfile],
 					no_passthru_opts = ['coin'],
+					env = {'MMGEN_TEST_SUITE_LEGACY_TX': '1'},
 					extra_desc = f'{proto.coin}{token_desc} {proto.network}')
 				t.read()
 				t.ok()

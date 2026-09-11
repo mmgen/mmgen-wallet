@@ -101,6 +101,7 @@ try:
 except:
 	pass
 
+os.environ['MMGEN_TEST_SUITE_LEGACY_TX'] = '1' # disabled for spawned scripts
 os.environ['MMGEN_QUIET'] = '0' # for this script and spawned scripts
 
 opts_data = {
