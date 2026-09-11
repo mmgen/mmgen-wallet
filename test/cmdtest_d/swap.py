@@ -266,7 +266,7 @@ class CmdTestSwapMethods:
 			'exit_after': None,
 			'log': None} | add_cfg)
 		t = trunner
-		ret = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.trash_dir, t.trash_dir2)
+		ret = CmdTestRunner(cfg, t.repo_root, t.data_dir, t.autosign_data_dir, t.trash_dir, t.trash_dir2)
 		ret.init_group(self.cross_group)
 		ret.parent_group = self
 		return ret

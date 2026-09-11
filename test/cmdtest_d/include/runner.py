@@ -48,11 +48,12 @@ class CmdTestRunner:
 		if self.logging:
 			self.log_fd.close()
 
-	def __init__(self, cfg, repo_root, data_dir, trash_dir, trash_dir2):
+	def __init__(self, cfg, repo_root, data_dir, autosign_data_dir, trash_dir, trash_dir2):
 
 		self.cfg = cfg
 		self.proto = cfg._proto
 		self.data_dir = data_dir
+		self.autosign_data_dir = autosign_data_dir
 		self.trash_dir = trash_dir
 		self.trash_dir2 = trash_dir2
 		self.cmd_total = 0

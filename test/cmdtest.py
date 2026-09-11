@@ -25,13 +25,13 @@ def check_segwit_opts(proto):
 		if getattr(cfg, k) and m not in proto.mmtypes:
 			die(1, f'--{k.replace("_", "-")} option incompatible with {proto.cls_name}')
 
-def create_shm_dir(data_dir, trash_dir, trash_dir2):
+def create_shm_dir(data_dir, autosign_data_dir, trash_dir, trash_dir2):
 	# Laggy flash media can cause pexpect to fail, so create a temporary directory
 	# under '/dev/shm' and put datadir and tmpdirs here.
 	import shutil
 	from subprocess import run
 	if gc.platform in ('win32', 'darwin'):
-		for tdir in (data_dir, trash_dir, trash_dir2):
+		for tdir in (data_dir, autosign_data_dir, trash_dir, trash_dir2):
 			try:
 				os.listdir(tdir)
 			except:
@@ -61,7 +61,7 @@ def create_shm_dir(data_dir, trash_dir, trash_dir2):
 		except Exception as e:
 			die(2, f'Unable to create temporary directory in {tdir} ({e.args[0]})')
 
-		for tdir in (trash_dir, trash_dir2):
+		for tdir in (autosign_data_dir, trash_dir, trash_dir2):
 			dest = os.path.join(shm_dir, os.path.basename(tdir))
 			os.mkdir(dest, 0o755)
 
@@ -91,6 +91,7 @@ from test.include.common import (
 	cmdtest_py_log_fn,
 	cmdtest_py_error_fn,
 	mk_tmpdir,
+	autosign_data_dir,
 	trash_dir,
 	trash_dir2,
 	stop_test_daemons)
@@ -182,7 +183,7 @@ data_dir = Config.test_datadir
 
 # step 1: delete data_dir symlink in ./test;
 if not po.user_opts.get('skip_deps'):
-	for fn in (data_dir,):
+	for fn in (data_dir, autosign_data_dir):
 		try:
 			os.unlink(fn)
 		except:
@@ -217,7 +218,7 @@ if cfg.daemon_id and cfg.daemon_id in cfg.blacklisted_daemons.split():
 
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
 if not cfg.skipping_deps:
-	shm_dir = create_shm_dir(data_dir, trash_dir, trash_dir2)
+	shm_dir = create_shm_dir(data_dir, autosign_data_dir, trash_dir, trash_dir2)
 
 check_segwit_opts(cfg._proto)
 
@@ -289,7 +290,7 @@ if __name__ == '__main__':
 	from test.cmdtest_d.include.runner import CmdTestRunner
 
 	try:
-		tr = CmdTestRunner(cfg, repo_root, data_dir, trash_dir, trash_dir2)
+		tr = CmdTestRunner(cfg, repo_root, data_dir, autosign_data_dir, trash_dir, trash_dir2)
 		tr.run_tests(cmd_args)
 		tr.print_warnings()
 		if tr.daemon_started and not cfg.no_daemon_stop:

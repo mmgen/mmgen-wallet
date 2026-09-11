@@ -38,6 +38,7 @@ from ..include.common import (
 	oqmsg_r,
 	start_test_daemons,
 	stop_test_daemons,
+	autosign_data_dir,
 	joinpath,
 	imsg,
 	read_from_file,
@@ -619,6 +620,8 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			'mmgen-autosign',
 				(opts or self.opts)
 				+ add_opts
+				# ensure that changes to online cfg file don’t affect autosign:
+				+ [f'--data-dir={autosign_data_dir}']
 				+ ['--full-summary', 'wait'],
 			direct_exec      = True,
 			no_passthru_opts = True,

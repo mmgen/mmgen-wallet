@@ -60,6 +60,7 @@ def set_globals(cfg):
 def strip_ansi_escapes(s):
 	return re.sub('\x1b' + r'\[[;0-9]+?m', '', s)
 
+autosign_data_dir = os.path.join('test', 'tmp', 'autosign_data_dir')
 trash_dir = os.path.join('test', 'tmp', 'trash')
 trash_dir2 = os.path.join('test', 'tmp', 'trash2')
 
