@@ -43,8 +43,8 @@ from ..include.common import (
 	read_from_file,
 	silence,
 	end_silence,
-	VirtBlockDevice,
-)
+	VirtBlockDevice)
+
 from .include.common import ref_dir, dfl_words_file, dfl_bip39_file
 
 from .base import CmdTestBase
@@ -57,6 +57,14 @@ class CmdTestAutosignBase(CmdTestBase):
 	platform_skip = ('win32',)
 	threaded     = False
 	daemon_coins = []
+
+	filedir_map = (
+		('btc', ''),
+		('bch', ''),
+		('ltc', 'litecoin'),
+		('eth', 'ethereum'),
+		('mm1', 'ethereum'),
+		('etc', 'ethereum_classic'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 
@@ -193,6 +201,60 @@ class CmdTestAutosignBase(CmdTestBase):
 		self.spawn(msg_only=True)
 		imsg(f'Deleting ‘{self.asi.wallet_dir}’')
 		shutil.rmtree(self.asi.wallet_dir, ignore_errors=True)
+		return 'ok'
+
+	def gen_txfile_fn_data(self, *, txfile_coins=[]):
+		from .ref import CmdTestRefTX
+		d = CmdTestRefTX.sources['ref_tx_file']
+		dirmap = [e for e in self.filedir_map if e[0] in (txfile_coins or self.txfile_coins)]
+		for coin, coindir in dirmap:
+			for network in (0, 1):
+				if fn := d[coin][network]:
+					yield (coindir, fn)
+		yield ('', '25EFA3[2.34].testnet.rawtx') # TX with 2 non-MMGen outputs
+
+	def gen_msg_fns(self):
+		fmap = dict(self.filedir_map)
+		for coin in self.coins:
+			if coin == 'xmr':
+				continue
+			sdir = os.path.join('test', 'ref', fmap[coin])
+			for fn in os.listdir(sdir):
+				if fn.endswith(f'[{coin.upper()}].rawmsg.json'):
+					yield os.path.join(sdir, fn)
+
+	def tx_file_ops(self, op, txfile_coins=[], tx_dir='tx_dir'):
+
+		assert op in ('copy', 'set_count', 'remove_signed')
+
+		fn_data = tuple(self.gen_txfile_fn_data(txfile_coins=txfile_coins))
+
+		self.tx_count = len(fn_data)
+		if op == 'set_count':
+			return
+
+		self.insert_device()
+
+		silence()
+		self.do_mount(verbose=not self.tr.quiet)
+		end_silence()
+
+		for coindir, fn in fn_data:
+			src = joinpath(ref_dir, coindir, fn)
+			if self.cfg.debug_utf8:
+				ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
+				fn = fn[:-len(ext)] + '-α' + ext
+			target = joinpath(getattr(self.asi, tx_dir), fn)
+			if op != 'remove_signed':
+				shutil.copyfile(src, target)
+			try:
+				os.unlink(target.replace('.rawtx', '.sigtx'))
+			except:
+				pass
+
+		self.do_umount()
+		self.remove_device()
+
 		return 'ok'
 
 	def run_setup(
@@ -634,15 +696,6 @@ class CmdTestAutosign(CmdTestAutosignBase):
 	no_insert_check = True
 	wallet_passwd   = 'abc'
 
-	filedir_map = (
-		('btc', ''),
-		('bch', ''),
-		('ltc', 'litecoin'),
-		('eth', 'ethereum'),
-		('mm1', 'ethereum'),
-		('etc', 'ethereum_classic'),
-	)
-
 	cmd_group = (
 		('test_led',                  'testing for LED support'),
 		('list_led',                  'listing LED-supported boards'),
@@ -698,17 +751,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		self.tx_file_ops('set_count') # initialize self.tx_count here so we can resume anywhere
 		self.bad_tx_count = 0
 
-		def gen_msg_fns():
-			fmap = dict(self.filedir_map)
-			for coin in self.coins:
-				if coin == 'xmr':
-					continue
-				sdir = os.path.join('test', 'ref', fmap[coin])
-				for fn in os.listdir(sdir):
-					if fn.endswith(f'[{coin.upper()}].rawmsg.json'):
-						yield os.path.join(sdir, fn)
-
-		self.ref_msgfiles = tuple(gen_msg_fns())
+		self.ref_msgfiles = tuple(self.gen_msg_fns())
 		self.good_msg_count = 0
 		self.bad_msg_count = 0
 
@@ -787,50 +830,6 @@ class CmdTestAutosign(CmdTestAutosignBase):
 	def remove_signed_txfiles_btc(self):
 		self.tx_file_ops('remove_signed', txfile_coins=['btc'])
 		return 'skip'
-
-	def tx_file_ops(self, op, txfile_coins=[]):
-
-		assert op in ('copy', 'set_count', 'remove_signed')
-
-		from .ref import CmdTestRefTX
-		def gen():
-			d = CmdTestRefTX.sources['ref_tx_file']
-			dirmap = [e for e in self.filedir_map if e[0] in (txfile_coins or self.txfile_coins)]
-			for coin, coindir in dirmap:
-				for network in (0, 1):
-					fn = d[coin][network]
-					if fn:
-						yield (coindir, fn)
-
-		data = list(gen()) + [('', '25EFA3[2.34].testnet.rawtx')] # TX with 2 non-MMGen outputs
-
-		self.tx_count = len(data)
-		if op == 'set_count':
-			return
-
-		self.insert_device()
-
-		silence()
-		self.do_mount(verbose=not self.tr.quiet)
-		end_silence()
-
-		for coindir, fn in data:
-			src = joinpath(ref_dir, coindir, fn)
-			if self.cfg.debug_utf8:
-				ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
-				fn = fn[:-len(ext)] + '-α' + ext
-			target = joinpath(self.asi.tx_dir, fn)
-			if op != 'remove_signed':
-				shutil.copyfile(src, target)
-			try:
-				os.unlink(target.replace('.rawtx', '.sigtx'))
-			except:
-				pass
-
-		self.do_umount()
-		self.remove_device()
-
-		return 'ok'
 
 	def create_bad_txfiles(self):
 		return self.bad_txfiles('create')
