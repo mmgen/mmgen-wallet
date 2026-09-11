@@ -758,7 +758,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			dfl_devkey+'\n')
 
 		self.message = 'attack at dawn'
-		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
+		self.spawn_env['MMGEN_TEST_SUITE_BOGUS_SEND'] = ''
 
 		TestProxy(self, cfg)
 

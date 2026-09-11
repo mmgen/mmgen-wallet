@@ -23,7 +23,7 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 
 		self.check_correct_chain()
 
-		if not self.cfg.bogus_send:
+		if not self.cfg.test_suite_bogus_send:
 			if self.has_segwit_outputs() and not self.rpc.info('segwit_is_active'):
 				die(2, 'Transaction has Segwit outputs, but this blockchain does not support Segwit'
 						+ ' at the current height')

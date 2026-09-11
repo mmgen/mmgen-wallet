@@ -108,7 +108,7 @@ class CmdTestRunner:
 
 		self.spawn_env.update({
 			'MMGEN_NO_LICENSE': '1',
-			'MMGEN_BOGUS_SEND': '1',
+			'MMGEN_TEST_SUITE_BOGUS_SEND': '1',
 			'MMGEN_TEST_SUITE_PEXPECT': '1',
 			'EXEC_WRAPPER_DO_RUNTIME_MSG':'1',
 			# if cmdtest.py itself is running under exec_wrapper, disable writing of traceback file for spawned script

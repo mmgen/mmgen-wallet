@@ -122,7 +122,7 @@ class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTest
 
 		from mmgen.protocol import init_proto
 		self.proto = init_proto(cfg, network_id=self.proto.coin + '_rt', need_amt=True)
-		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
+		self.spawn_env['MMGEN_TEST_SUITE_BOGUS_SEND'] = ''
 
 		self.rpc_server = ThornodeRPCServer(cfg)
 		self.rpc_server.start()

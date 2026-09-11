@@ -262,14 +262,14 @@ class Config(Lockable):
 	priority                   = 0
 
 	# test suite:
-	bogus_send               = False
-	bogus_unspent_data       = ''
 	debug_utf8               = False
 	exec_wrapper             = False
 	ignore_test_py_exception = False
 	test_suite               = False
 	test_suite_autosign_led_simulate = False
 	test_suite_autosign_threaded = False
+	test_suite_bogus_send    = False
+	test_suite_bogus_unspent_data = ''
 	test_suite_devnet_block_period = 0
 	test_suite_xmr_autosign  = False
 	test_suite_cfgtest       = False
@@ -351,8 +351,6 @@ class Config(Lockable):
 
 		'MMGEN_AES_BACKEND',
 		'MMGEN_BLACKLIST_DAEMONS',
-		'MMGEN_BOGUS_SEND',
-		'MMGEN_BOGUS_UNSPENT_DATA',
 		'MMGEN_COLUMNS',
 		'MMGEN_DAEMON_STATE_TIMEOUT',
 		'MMGEN_DEBUG',
@@ -383,6 +381,8 @@ class Config(Lockable):
 		'MMGEN_TEST_SUITE',
 		'MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE',
 		'MMGEN_TEST_SUITE_AUTOSIGN_THREADED',
+		'MMGEN_TEST_SUITE_BOGUS_SEND',
+		'MMGEN_TEST_SUITE_BOGUS_UNSPENT_DATA',
 		'MMGEN_TEST_SUITE_CFGTEST',
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
 		'MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD',

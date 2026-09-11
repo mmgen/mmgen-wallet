@@ -126,7 +126,7 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 		t = self.spawn(
 			'mmgen-tool',
 			['twview'],
-			env = {'MMGEN_BOGUS_UNSPENT_DATA': joinpath(ref_dir, 'bad-comment-unspent.json')},
+			env = {'MMGEN_TEST_SUITE_BOGUS_UNSPENT_DATA': joinpath(ref_dir, 'bad-comment-unspent.json')},
 			exit_val = 2)
 		t.expect('cannot be converted to TwComment')
 		return t

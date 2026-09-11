@@ -506,7 +506,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 				self.deterministic = True
 				omsg('Deterministic testing enabled!')
 
-		self.spawn_env['MMGEN_BOGUS_SEND'] = ''
+		self.spawn_env['MMGEN_TEST_SUITE_BOGUS_SEND'] = ''
 		self.write_to_tmpfile('wallet_password', rt_pw)
 
 		self.dfl_mmtype = 'C' if coin == 'bch' else 'B'

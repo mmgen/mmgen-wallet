@@ -383,7 +383,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			self.txbump_fee = {'btc':'123s', 'bch':'567s', 'ltc':'12345s'}[self.coin]
 
 		self.unspent_data_file = joinpath('test', 'trash', 'unspent.json')
-		self.spawn_env['MMGEN_BOGUS_UNSPENT_DATA'] = self.unspent_data_file
+		self.spawn_env['MMGEN_TEST_SUITE_BOGUS_UNSPENT_DATA'] = self.unspent_data_file
 
 	@property
 	def lbl_id(self):

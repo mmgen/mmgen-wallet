@@ -133,7 +133,7 @@ class OnlineSigned(Signed):
 						ymsg('Transaction cannot be sent')
 				else: # node send
 					msg(f'Sending TX: {coin_txid.hl()}')
-					if cfg.bogus_send:
+					if cfg.test_suite_bogus_send:
 						msg(f'BOGUS transaction NOT sent: {coin_txid.hl()}')
 					else:
 						if idx != '':
