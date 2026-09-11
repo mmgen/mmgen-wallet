@@ -628,11 +628,6 @@ class Config(Lockable):
 		if hasattr(self, 'bch_cashaddr') and not hasattr(self, 'cashaddr'):
 			self.cashaddr = self.bch_cashaddr
 
-		if 'sign' in gc.prog_name:
-			self.is_signing = True
-		elif 'send' in gc.prog_name and not (hasattr(self, 'status') or hasattr(self, 'receipt')):
-			self.is_sending = True
-
 		self._lock()
 
 		if need_proto:

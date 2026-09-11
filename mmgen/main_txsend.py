@@ -30,6 +30,10 @@ opts_data = {
 		('yes', True, 'quiet', True),
 		('abort', True, 'autosign', True),
 	],
+	'overrides': [
+		('status', True, 'is_sending', False),
+		('receipt', True, 'is_sending', False),
+	],
 	'text': {
 		'desc':    f'Send a signed {gc.proj_name} cryptocoin transaction',
 		'usage2': [
@@ -87,7 +91,7 @@ recent.
 	}
 }
 
-cfg = Config(opts_data=opts_data)
+cfg = Config(opts_data=opts_data, init_opts={'is_sending': True})
 
 if cfg.autosign and cfg.outdir:
 	die(1, '--outdir cannot be used in combination with --autosign')

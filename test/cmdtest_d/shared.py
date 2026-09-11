@@ -231,6 +231,7 @@ class CmdTestShared:
 			has_label  = False,
 			extra_opts = [],
 			extra_desc = '',
+			expect_str = None,
 			view       = 'n',
 			dfl_wallet = False):
 		opts = extra_opts + ['-d', self.tmpdir, txfile] + ([wf] if wf else [])
@@ -242,6 +243,8 @@ class CmdTestShared:
 			no_passthru_opts = ['coin'],
 			exit_val = None if save or (wcls.enc and wcls.type != 'brain') else 1)
 		t.license()
+		if expect_str:
+			t.expect(expect_str)
 		t.view_tx(view)
 		if wcls.enc and wcls.type != 'brain':
 			t.passphrase(wcls.desc, self.wpasswd)

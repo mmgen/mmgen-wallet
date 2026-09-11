@@ -101,6 +101,7 @@ from .autosign import Autosign
 cfg = Config(
 	opts_data = opts_data,
 	init_opts = {
+		'is_signing': True,
 		'out_fmt': 'wallet',
 		'usr_randchars': 0,
 		'hash_preset': '1',

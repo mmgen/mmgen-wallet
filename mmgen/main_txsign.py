@@ -94,7 +94,7 @@ column below:{n_fc}"""
 	}
 }
 
-cfg = Config(opts_data=opts_data)
+cfg = Config(opts_data=opts_data, init_opts={'is_signing': True})
 
 if not cfg._args:
 	cfg._usage()

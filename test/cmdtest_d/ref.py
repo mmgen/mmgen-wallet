@@ -348,6 +348,7 @@ class CmdTestRefTX(CmdTestRef):
 			self._get_txfile(0),
 			save       = False,
 			has_label  = True,
+			expect_str = 'legacy-format',
 			view       = 'y')
 
 	def _ref_txfile_chk(self, cfgfile_lines=[], *, idx, ver=None, allowed=False):
