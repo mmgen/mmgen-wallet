@@ -224,7 +224,7 @@ class CmdTestAutosignBase(CmdTestBase):
 				if fn.endswith(f'[{coin.upper()}].rawmsg.json'):
 					yield os.path.join(sdir, fn)
 
-	def tx_file_ops(self, op, txfile_coins=[], tx_dir='tx_dir'):
+	def tx_file_ops(self, op, txfile_coins=[], tx_dir='tx_dir', extra_fn_data=()):
 
 		assert op in ('copy', 'set_count', 'remove_signed')
 
@@ -240,7 +240,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		self.do_mount(verbose=not self.tr.quiet)
 		end_silence()
 
-		for coindir, fn in fn_data:
+		for coindir, fn in (fn_data + extra_fn_data):
 			src = joinpath(ref_dir, coindir, fn)
 			if self.cfg.debug_utf8:
 				ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'

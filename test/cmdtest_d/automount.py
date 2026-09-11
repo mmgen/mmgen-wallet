@@ -87,6 +87,8 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('alice_txstatus7',                  'getting transaction status (tx_range=1, replaced)'),
 		('alice_txstatus8',                  'getting transaction status (tx_range=3, 2 confirmations)'),
 		('alice_txstatus9',                  'getting transaction status (tx_range=0-3)'),
+		('alice_txstatus_allow_legacy',      'getting transaction status (check legacy TX files allowed)'),
+		('alice_txstatus_forbid_legacy',     'getting transaction status (check legacy TX files forbidden)'),
 		('alice_txbump6',                    'bumping the next-to-last sent transaction (idx=1)'),
 		('generate',                         'mining a block'),
 		('alice_bal2',                       'checking Alice’s balance'),
@@ -114,7 +116,8 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		self.spawn(msg_only=True)
 		self.tx_file_ops(
 			'copy',
-			txfile_coins = ['btc', 'xmr'],
+			txfile_coins = ['btc', 'ltc', 'xmr'],
+			extra_fn_data = (('litecoin', '27795D-LTC[1.23456,32].regtest.asubtx'),),
 			tx_dir = 'txauto_dir')
 		return 'ok'
 
@@ -252,6 +255,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 			need_rbf = False,
 			tx_range = None,
 			verbose  = True,
+			expect_missing = False,
 			batch    = False):
 
 		if need_rbf and not self.proto.cap('rbf'):
@@ -265,10 +269,13 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 				+ ([] if tx_range is None else [tx_range]),
 				no_passthru_opts = ['coin'],
 				exit_val = exit_val)
-		t.expect(expect_str, regex=True)
-		if not (exit_val or batch):
-			t.expect('view: ', 'n')
-		t.read()
+		if expect_missing:
+			assert expect_str not in t.read()
+		else:
+			t.expect(expect_str, regex=True)
+			if verbose and not (exit_val or batch):
+				t.expect('view: ', 'n')
+			t.read()
 		self.remove_device_online()
 		return t
 
@@ -304,6 +311,22 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 			tx_range = '0-3',
 			verbose = False,
 			batch = True)
+
+	def alice_txstatus_allow_legacy(self):
+		return self._alice_txstatus_chk_legacy('true', True)
+
+	def alice_txstatus_forbid_legacy(self):
+		return self._alice_txstatus_chk_legacy('false', False)
+
+	def _alice_txstatus_chk_legacy(self, bool_val, expect_missing):
+		write_to_cfgfile([f'allow_legacy_tx_files {bool_val}'])
+		t = self._alice_txstatus(
+			'legacy-format',
+			expect_missing = expect_missing,
+			need_rbf = True,
+			verbose = False,
+			tx_range = '1')
+		return t
 
 	def alice_txsend_bad_no_unsent(self):
 		self.insert_device_online()
