@@ -98,7 +98,7 @@ class MoneroMMGenTX:
 					j = d.dest_address.fmt(0, addr_w, color=True) if addr_w else d.dest_address.hl(0),
 					x = '->')
 
-		def get_info(self, *, indent='', addr_w=None):
+		def get_info(self, *, indent='', addr_w=None, full_address=False):
 			d = self.data
 			pmt_id = d.dest_address.parsed.payment_id
 			fs = '\n'.join(list_gen(
@@ -118,7 +118,11 @@ class MoneroMMGenTX:
 				['  Payment ID: {P}', pmt_id]))
 
 			from ...util2 import format_elapsed_hr
-			from ..ops import addr_width
+			if full_address or self.cfg.full_address:
+				addr_disp = d.dest_address.hl(0)
+			else:
+				from ..ops import addr_width
+				addr_disp = d.dest_address.fmt(0, addr_width, color=True)
 			from .. import tx_priorities
 			return fmt(fs, strip_char='\t', indent=indent).format(
 					a = orange(self.file_id),
@@ -136,8 +140,7 @@ class MoneroMMGenTX:
 					F = (Int(d.priority).hl() + f' [{tx_priorities[d.priority]}]')
 						if d.priority else None,
 					n = d.fee.hl(),
-					o = d.dest_address.hl(0)
-						if self.cfg.full_address else d.dest_address.fmt(0, addr_width, color=True),
+					o = addr_disp,
 					P = pink(pmt_id.hex()) if pmt_id else None,
 					s = make_timestr(d.submit_time) if d.submit_time else None,
 					S = pink(f" [cold signed{', submitted' if d.complete else ''}]")

@@ -41,3 +41,11 @@ class Completed(Base):
 	@cached_property
 	def sent_timestamp(self):
 		return make_timestamp(self.compat_tx.data.submit_time)
+
+	@property
+	def info(self):
+		class info_cls:
+			@staticmethod
+			def format(*args, **kwargs):
+				return self.compat_tx.get_info(full_address=True)
+		return info_cls
