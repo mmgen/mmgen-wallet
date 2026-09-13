@@ -200,11 +200,11 @@ class Config(Lockable):
 
 	# debug
 	debug                = False
+	debug_addrlist       = False
 	debug_daemon         = False
 	debug_evm            = False
 	debug_opts           = False
 	debug_rpc            = False
-	debug_addrlist       = False
 	debug_subseed        = False
 	debug_tw             = False
 	devtools             = False

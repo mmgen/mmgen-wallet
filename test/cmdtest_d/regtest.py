@@ -693,9 +693,12 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		for mmtype in mmtypes or proto.mmtypes:
 			desc = MMGenAddrType.mmtypes[mmtype].name
 			addrfile = joinpath(self._user_dir(user),
-				'{}{}{}[{}]{x}.regtest.addrs'.format(
-					sid, self.get_altcoin_pfx(proto.coin), id_strs[desc], addr_range,
-					x='-α' if self.cfg.debug_utf8 else ''))
+				'{}{}{}[{}]{}.regtest.addrs'.format(
+					sid,
+					self.get_altcoin_pfx(proto.coin),
+					id_strs[desc],
+					addr_range,
+					'-α' if self.cfg.debug_utf8 else ''))
 			if mmtype == proto.mmtypes[0] and user == 'bob':
 				self._add_comments_to_addr_file(proto, addrfile, addrfile, use_comments=True)
 			t = self.spawn(
@@ -1176,8 +1179,12 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def get_addr_from_addrlist(self, user, sid, mmtype, idx, addr_range='1-5', proto=None):
 		proto = proto or self.proto
 		id_str = {'L':'', 'S':'-S', 'C':'-C', 'B':'-B'}[mmtype]
-		ext = '{}{}{}[{}]{x}.regtest.addrs'.format(
-			sid, self.get_altcoin_pfx(proto.coin), id_str, addr_range, x='-α' if self.cfg.debug_utf8 else '')
+		ext = '{}{}{}[{}]{}.regtest.addrs'.format(
+			sid,
+			self.get_altcoin_pfx(proto.coin),
+			id_str,
+			addr_range,
+			'-α' if self.cfg.debug_utf8 else '')
 		addrfile = get_file_with_ext(self._user_dir(user), ext, no_dot=True)
 		silence()
 		addr = AddrList(self.cfg, proto, infile=addrfile).data[idx].addr

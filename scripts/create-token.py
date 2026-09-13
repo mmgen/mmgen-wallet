@@ -150,7 +150,8 @@ def compile_code(cfg, code):
 		cfg._util.vmsg(out)
 
 def main():
-	cfg = Config(opts_data=opts_data)
+	cfg = Config(
+		opts_data = opts_data)
 
 	if cfg.check_solc_version:
 		sys.exit(0 if check_solc_version() else 1)

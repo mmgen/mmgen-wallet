@@ -26,8 +26,6 @@ os.environ['MMGEN_TEST_SUITE_LEGACY_TX'] = '1'
 
 from .test_init import repo_root
 
-# for the unit tests, violate MMGen Project best practices and allow use of the dev tools
-# in production code:
 if not os.getenv('MMGEN_DEVTOOLS'):
 	from mmgen.devinit import init_dev
 	init_dev()

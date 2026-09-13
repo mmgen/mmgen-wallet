@@ -109,8 +109,7 @@ proto_cmds = (
 	'txdo',
 	'txsend',
 	'txsign',
-	'xmrwallet',
-)
+	'xmrwallet')
 
 def getrand(n):
 	if cfg.test_suite_deterministic:

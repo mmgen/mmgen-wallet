@@ -151,4 +151,7 @@ def main():
 		for network_id in ids:
 			run(network_id=network_id.lower())
 
-cfg = Config(opts_data=opts_data, init_opts={'skip_cfg_file': True})
+cfg = Config(
+	opts_data = opts_data,
+	init_opts = {
+		'skip_cfg_file': True})

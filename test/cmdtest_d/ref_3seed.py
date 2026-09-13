@@ -183,12 +183,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 			pat = re_pat.format(sid, slen)
 			assert re.match(pat, fn), f'{pat} != {fn}'
 		else:
-			cmp_or_die('{}[{}]{}.{}'.format(
-				sid,
-				slen,
-				'-α' if self.cfg.debug_utf8 else '',
-				wcls.ext),
-				fn)
+			cmp_or_die('{}[{}]{}.{}'.format(sid, slen, '-α' if self.cfg.debug_utf8 else '', wcls.ext), fn)
 		return t
 
 	def ref_walletconv_words(self):
