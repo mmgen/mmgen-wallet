@@ -237,6 +237,9 @@ class Base(MMGenObject):
 	def recv_asset(self):
 		if hasattr(self, 'swap_recv_asset_spec'):
 			return self.swap_proto_mod.SwapAsset(self.swap_recv_asset_spec, 'recv')
+		elif self.is_swap and hasattr(self, 'data_output'):
+			from ..swap.proto.thorchain.memo import THORChainMemo
+			return THORChainMemo.parse(str(self.data_output.data)).asset
 		else: # backwards-compatibility workaround
 			from ..swap.asset import SwapAsset
 			x = '[unknown]'

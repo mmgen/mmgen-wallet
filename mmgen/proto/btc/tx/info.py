@@ -83,17 +83,21 @@ class TxInfo(TxInfo):
 				'raw':  lambda: io
 			}[sort]
 
-			def data_disp(data):
-				return f'OP_RETURN data ({len(data)} bytes)'
-
 			if terse:
+				def data_disp(data):
+					if len(str(data)) > info_w:
+						return blue(f'OP_RETURN data ({len(data)} bytes)'.ljust(info_w))
+					else:
+						return pink(str(data).ljust(info_w))
 				iwidth = max(len(str(int(e.amt))) for e in io)
-				addr_w = max((len(e.addr.views[vp1]) if e.addr else len(data_disp(e.data))) for f in (tx.inputs, tx.outputs) for e in f)
+				addr_w = max(len(e.addr.views[vp1]) if e.addr else 0
+					for f in (tx.inputs, tx.outputs) for e in f)
+				info_w = addr_w + max_mmwid + 1
 				for n, e in enumerate(io_sorted()):
-					yield '{:3} {} {} {} {}\n'.format(
-						n+1,
-						e.addr.fmt(vp1, addr_w, color=True) if e.addr else blue(data_disp(e.data).ljust(addr_w)),
-						get_mmid_fmt(e, is_input) if e.addr else ''.ljust(max_mmwid),
+					yield '{:3} {} {} {}\n'.format(
+						n + 1,
+						e.addr.fmt(vp1, addr_w, color=True) + ' ' + get_mmid_fmt(e, is_input)
+							if e.addr else data_disp(e.data),
 						e.amt.fmt(iwidth, color=True),
 						tx.dcoin)
 					if have_bch and e.addr:
