@@ -24,7 +24,7 @@ import sys, json, re
 from subprocess import run, PIPE
 from collections import namedtuple
 
-import script_init
+import script_init # noqa
 from mmgen.main import launch
 from mmgen.cfg import Config
 from mmgen.util import Msg, msg, rmsg, ymsg, die
@@ -133,7 +133,7 @@ def compile_code(cfg, code):
 		cmd += ['--output-dir', cfg.outdir or '.']
 	cmd += ['-']
 	msg(f"Executing: {' '.join(cmd)}")
-	cp = run(cmd, input=code.encode(), stdout=PIPE, stderr=PIPE)
+	cp = run(cmd, input=code.encode(), capture_output=True)
 	out = cp.stdout.decode().replace('\r', '')
 	err = cp.stderr.decode().replace('\r', '').strip()
 	if cp.returncode != 0:
@@ -159,7 +159,7 @@ def main():
 	if not cfg._proto.coin in ('ETH', 'ETC'):
 		die(1, '--coin option must be ETH or ETC')
 
-	if not len(cfg._args) == 1:
+	if len(cfg._args) != 1:
 		cfg._usage()
 
 	code = create_src(cfg, solidity_code_template, token_data)

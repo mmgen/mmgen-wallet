@@ -45,7 +45,7 @@ dfl_curve = 'secp'
 dfl_dfl_path = "0'/0/0"
 
 def get_bip_utils_data(bipnum, n):
-	name, v = bip_utils_data[bipnum][n]
+	_, v = bip_utils_data[bipnum][n]
 	vb_prv = v.m_key_net_ver.m_priv_net_ver.hex()
 	vb_pub = v.m_key_net_ver.m_pub_net_ver.hex()
 	ap = v.m_addr_params
@@ -71,11 +71,11 @@ def gen():
 
 	fs = '{:<6} {:6} {:1} {}'
 
-	yield f'[defaults]'
+	yield '[defaults]'
 	yield fs.format('IDX', 'CHAIN', hdr2, 'NAME')
 	yield fs.format('0', '-', fs2.format(dfl_curve, '-', '-', dfl_vb_prv, dfl_vb_pub, '-', '-', dfl_dfl_path), '-')
 
-	yield f'\n[bip-44]'
+	yield '\n[bip-44]'
 	yield fs.format('IDX', 'CHAIN', hdr2, 'NAME')
 	for k, v in slip44_data.items():
 		if int(k) in bip_utils_data[44]:
@@ -88,7 +88,7 @@ def gen():
 			nd = v[1].m_coin_names
 			yield format_data(bipnum, n, nd.m_abbr, nd.m_name)
 
-	yield f'\n[bip-44-unsupported]'
+	yield '\n[bip-44-unsupported]'
 	yield fs.format('IDX', 'CHAIN', '', 'NAME')
 	for k, v in slip44_data.items():
 		if not int(k) in bip_utils_data[44]:

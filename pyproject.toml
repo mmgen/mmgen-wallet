@@ -48,6 +48,7 @@ ignore = [
 "protobuf.py"                 = [ "UP045" ]    # Use `X | None` for type annotations
 "mmgen/rpc/backends/curl.py"  = [ "ASYNC221" ] # blocking method in async function
 "mmgen/tool/*"                = [ "F821" ]     # Undefined name `sstr`
+"create-bip-hd-chain-params.py" = [ "F401" ]
 
 "examples/*" = [ "ASYNC230" ] # open() in async function
 

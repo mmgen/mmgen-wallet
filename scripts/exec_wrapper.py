@@ -60,12 +60,12 @@ def exec_wrapper_write_traceback(e, exit_val):
 
 		def gen_output():
 			yield 'Traceback (most recent call last):'
-			for e in traceback.extract_tb(sys.exc_info()[2]):
+			for d in traceback.extract_tb(sys.exc_info()[2]):
 				yield '  File "{f}", line {l}, in {n}\n    {L}'.format(
-					f = exec_wrapper_execed_file if e.filename == '<string>' else fixup_fn(e.filename),
-					l = '(scrubbed)' if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') else e.lineno,
-					n = e.name,
-					L = e.line or 'N/A')
+					f = exec_wrapper_execed_file if d.filename == '<string>' else fixup_fn(d.filename),
+					l = '(scrubbed)' if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC') else d.lineno,
+					n = d.name,
+					L = d.line or 'N/A')
 
 		tb_lines = list(gen_output())
 
@@ -152,7 +152,7 @@ try:
 	exec_wrapper_sys.argv.pop(0)
 	exec_wrapper_execed_file = exec_wrapper_sys.argv[0]
 	with open(exec_wrapper_execed_file) as fp:
-		exec(fp.read())
+		exec(fp.read()) # noqa
 except SystemExit as e:
 	exec_wrapper_do_exit(e, e.code)
 except Exception as e:

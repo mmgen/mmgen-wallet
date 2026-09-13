@@ -54,6 +54,7 @@ jobs:
         ruff check --output-format=github setup.py
         ruff check --output-format=github mmgen
         ruff check --output-format=github examples
+        ruff check --output-format=github scripts
         ruff check --output-format=github test
 
     - name: Check code vulnerabilities with Bandit static analyzer

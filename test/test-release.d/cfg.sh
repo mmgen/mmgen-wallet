@@ -77,6 +77,7 @@ init_tests() {
 		- $ruff check setup.py
 		- $ruff check mmgen
 		- $ruff check examples
+		- $ruff check scripts
 		- $ruff check test
 	"
 

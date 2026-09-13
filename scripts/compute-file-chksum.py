@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-import sys, os
-
-import script_init
+import script_init # noqa
 from mmgen.main import launch
 from mmgen.cfg import Config
 from mmgen.util import msg, Msg, make_chksum_6
