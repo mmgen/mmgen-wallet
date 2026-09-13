@@ -225,7 +225,6 @@ class Config(Lockable):
 	ignore_daemon_version = False
 
 	# display:
-	test_suite_enable_color = False # placeholder
 	force_256_color = False
 	scroll          = False
 	pager           = False
@@ -242,6 +241,7 @@ class Config(Lockable):
 	autosign                       = False
 	threaded_python                = sys.version_info >= (3, 13) and not sys._is_gil_enabled()
 	aes_backend                    = 'cryptography'
+	mnemonic_entry_modes           = {}
 
 	# regtest:
 	bob          = False
@@ -271,6 +271,7 @@ class Config(Lockable):
 	test_suite_deterministic = False
 	test_suite_devnet_block_period = 0
 	test_suite_devtools      = False
+	test_suite_enable_color  = False # placeholder
 	test_suite_exec_wrapper  = False
 	test_suite_hold_protect_disable = False
 	test_suite_ignore_test_py_exception = False
@@ -287,8 +288,6 @@ class Config(Lockable):
 	resuming                 = False
 	skipping_deps            = False
 	test_datadir             = os.path.join('test', 'tmp', 'data_dir')
-
-	mnemonic_entry_modes = {}
 
 	# external use:
 	_opts  = None
@@ -573,7 +572,7 @@ class Config(Lockable):
 			self.network = 'testnet' if self.testnet else 'mainnet'
 
 		from .term import init_term
-		init_term(self) # requires ‘hold_protect_disable’ (set from env)
+		init_term(self)
 
 		from .fileutil import check_or_create_dir
 		check_or_create_dir(self.data_dir_root)
