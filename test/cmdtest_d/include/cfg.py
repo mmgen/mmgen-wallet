@@ -286,7 +286,7 @@ def fixup_cfgs():
 	for k, v in cfgs.items():
 		v['segwit'] = randbool() if cfg.segwit_random else bool(cfg.segwit or cfg.bech32)
 
-	if cfg.debug_utf8:
+	if cfg.test_suite_debug_utf8:
 		for k, v in cfgs.items():
 			v['tmpdir'] += '-α'
 

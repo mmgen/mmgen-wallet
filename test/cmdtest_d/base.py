@@ -80,7 +80,7 @@ class CmdTestBase:
 
 	@property
 	def utf8_suf(self):
-		return '-α' if self.cfg.debug_utf8 else ''
+		return '-α' if self.cfg.test_suite_debug_utf8 else ''
 
 	@property
 	def tmpdir(self):

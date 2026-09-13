@@ -31,7 +31,7 @@ match cfg._args:
 		from ast import literal_eval
 		func_args = literal_eval(args)
 		msg(f'\n  term: {get_char.__self__.__name__}')
-		msg(f'  cfg.hold_protect_disable: {cfg.hold_protect_disable}')
+		msg(f'  cfg.test_suite_hold_protect_disable: {cfg.test_suite_hold_protect_disable}')
 		if cmd == 'line_input':
 			func_args.update({'cfg':cfg})
 		msg('  Calling {name}({args})'.format(

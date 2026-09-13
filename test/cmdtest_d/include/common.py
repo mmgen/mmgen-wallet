@@ -102,7 +102,7 @@ def randbool():
 
 def cleanup_env(cfg):
 	ret = dict(os.environ)
-	if cfg.debug_utf8:
+	if cfg.test_suite_debug_utf8:
 		return ret
 	for k in cfg._env_opts:
 		if k[:11] == 'MMGEN_DEBUG' and k in ret:

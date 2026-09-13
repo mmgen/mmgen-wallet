@@ -243,7 +243,7 @@ class CmdTestAutosignBase(CmdTestBase):
 
 		for coindir, fn in (fn_data + extra_fn_data):
 			src = joinpath(ref_dir, coindir, fn)
-			if self.cfg.debug_utf8:
+			if self.cfg.test_suite_debug_utf8:
 				ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
 				fn = fn[:-len(ext)] + '-α' + ext
 			target = joinpath(getattr(self.asi, tx_dir), fn)

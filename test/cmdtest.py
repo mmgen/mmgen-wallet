@@ -309,7 +309,7 @@ if __name__ == '__main__':
 		die(1, yellow('\ntest.py exiting at user request'))
 	except TestSuiteSpawnedScriptException as e:
 		# if spawned script is not running under exec_wrapper, output brief error msg:
-		if os.getenv('MMGEN_EXEC_WRAPPER'):
+		if os.getenv('MMGEN_TEST_SUITE_EXEC_WRAPPER'):
 			Msg(red(str(e)))
 			Msg(blue('cmdtest.py: spawned script exited with error'))
 		if hasattr(tr, 'tg'):
@@ -323,6 +323,6 @@ if __name__ == '__main__':
 			del tr.tg
 		del tr
 		# if cmdtest.py itself is running under exec_wrapper, re-raise so wrapper can handle exception:
-		if os.getenv('MMGEN_EXEC_WRAPPER') or not os.getenv('MMGEN_IGNORE_TEST_PY_EXCEPTION'):
+		if os.getenv('MMGEN_TEST_SUITE_EXEC_WRAPPER') or not os.getenv('MMGEN_TEST_SUITE_IGNORE_TEST_PY_EXCEPTION'):
 			raise
 		die(1, red('Test script exited with error'))

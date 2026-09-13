@@ -30,7 +30,7 @@ except ImportError:
 # for objtest, violate MMGen Project best practices and allow use of the dev tools
 # in production code:
 from mmgen.devtools import pmsg
-if not os.getenv('MMGEN_DEVTOOLS'):
+if not os.getenv('MMGEN_TEST_SUITE_DEVTOOLS'):
 	from mmgen.devinit import init_dev
 	init_dev()
 

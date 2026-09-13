@@ -35,7 +35,7 @@ def exec_wrapper_init():
 	else:
 		exec_wrapper_sys.path.pop(0)
 
-	exec_wrapper_os.environ['MMGEN_EXEC_WRAPPER'] = '1'
+	exec_wrapper_os.environ['MMGEN_TEST_SUITE_EXEC_WRAPPER'] = '1'
 
 def exec_wrapper_write_traceback(e, exit_val):
 
@@ -142,7 +142,7 @@ if exec_wrapper_os.getenv('MMGEN_TRACEMALLOC'):
 	exec_wrapper_tracemalloc_setup()
 
 # import mmgen mods only after sys.path[0] is set to overlay root!
-if exec_wrapper_os.getenv('MMGEN_DEVTOOLS'):
+if exec_wrapper_os.getenv('MMGEN_TEST_SUITE_DEVTOOLS'):
 	from mmgen.devinit import init_dev as exec_wrapper_init_dev
 	exec_wrapper_init_dev()
 

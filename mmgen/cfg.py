@@ -207,7 +207,6 @@ class Config(Lockable):
 	debug_rpc            = False
 	debug_subseed        = False
 	debug_tw             = False
-	devtools             = False
 	traceback            = False
 
 	# rpc:
@@ -262,24 +261,25 @@ class Config(Lockable):
 	priority                   = 0
 
 	# test suite:
-	debug_utf8               = False
-	exec_wrapper             = False
-	ignore_test_py_exception = False
 	test_suite               = False
 	test_suite_autosign_led_simulate = False
 	test_suite_autosign_threaded = False
 	test_suite_bogus_send    = False
 	test_suite_bogus_unspent_data = ''
-	test_suite_devnet_block_period = 0
-	test_suite_xmr_autosign  = False
 	test_suite_cfgtest       = False
+	test_suite_debug_utf8    = False
 	test_suite_deterministic = False
+	test_suite_devnet_block_period = 0
+	test_suite_devtools      = False
+	test_suite_exec_wrapper  = False
+	test_suite_hold_protect_disable = False
+	test_suite_ignore_test_py_exception = False
 	test_suite_legacy_tx     = False
 	test_suite_pexpect       = False
 	test_suite_pexpect_timeout = 0
 	test_suite_popen_spawn   = False
 	test_suite_root_pfx      = ''
-	hold_protect_disable     = False
+	test_suite_xmr_autosign  = False
 	no_daemon_autostart      = False
 	names                    = False
 	no_timings               = False
@@ -351,7 +351,7 @@ class Config(Lockable):
 		'MMGEN_DEBUG_ALL', # special: there is no `debug_all` attribute
 
 		'MMGEN_AES_BACKEND',
-		'MMGEN_BLACKLIST_DAEMONS',
+		'MMGEN_BLACKLISTED_DAEMONS',
 		'MMGEN_COLUMNS',
 		'MMGEN_DAEMON_STATE_TIMEOUT',
 		'MMGEN_DEBUG',
@@ -362,16 +362,11 @@ class Config(Lockable):
 		'MMGEN_DEBUG_RPC',
 		'MMGEN_DEBUG_SUBSEED',
 		'MMGEN_DEBUG_TW',
-		'MMGEN_DEBUG_UTF8',
-		'MMGEN_DEVTOOLS',
 		'MMGEN_DISABLE_COLOR',
 		'MMGEN_ENABLE_ERIGON',
-		'MMGEN_EXEC_WRAPPER',
 		'MMGEN_FORCE_256_COLOR',
-		'MMGEN_HOLD_PROTECT_DISABLE',
 		'MMGEN_HTTP_TIMEOUT',
 		'MMGEN_IGNORE_DAEMON_VERSION',
-		'MMGEN_IGNORE_TEST_PY_EXCEPTION',
 		'MMGEN_NO_LICENSE',
 		'MMGEN_QUIET',
 		'MMGEN_REGTEST',
@@ -385,9 +380,14 @@ class Config(Lockable):
 		'MMGEN_TEST_SUITE_BOGUS_SEND',
 		'MMGEN_TEST_SUITE_BOGUS_UNSPENT_DATA',
 		'MMGEN_TEST_SUITE_CFGTEST',
+		'MMGEN_TEST_SUITE_DEBUG_UTF8',
 		'MMGEN_TEST_SUITE_DETERMINISTIC',
+		'MMGEN_TEST_SUITE_DEVTOOLS',
 		'MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD',
 		'MMGEN_TEST_SUITE_ENABLE_COLOR',
+		'MMGEN_TEST_SUITE_EXEC_WRAPPER',
+		'MMGEN_TEST_SUITE_HOLD_PROTECT_DISABLE',
+		'MMGEN_TEST_SUITE_IGNORE_TEST_PY_EXCEPTION',
 		'MMGEN_TEST_SUITE_LEGACY_TX',
 		'MMGEN_TEST_SUITE_PEXPECT',
 		'MMGEN_TEST_SUITE_PEXPECT_TIMEOUT',

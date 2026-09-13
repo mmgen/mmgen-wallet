@@ -66,7 +66,7 @@ def launch(*, mod=None, func=None, fqmod=None, package='mmgen'):
 				e = e))
 			+ '\n')
 
-		if os.getenv('MMGEN_EXEC_WRAPPER') or os.getenv('MMGEN_TRACEBACK'):
+		if os.getenv('MMGEN_TEST_SUITE_EXEC_WRAPPER') or os.getenv('MMGEN_TRACEBACK'):
 			raise
 
 		sys.exit(d.exit_val)

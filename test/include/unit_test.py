@@ -26,7 +26,7 @@ os.environ['MMGEN_TEST_SUITE_LEGACY_TX'] = '1'
 
 from .test_init import repo_root
 
-if not os.getenv('MMGEN_DEVTOOLS'):
+if not os.getenv('MMGEN_TEST_SUITE_DEVTOOLS'):
 	from mmgen.devinit import init_dev
 	init_dev()
 

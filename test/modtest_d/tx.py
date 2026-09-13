@@ -25,7 +25,7 @@ async def do_txfile_test(desc, fns, cfg=cfg, do_format=True):
 		f = MMGenTxFile(tx)
 		fn_gen = f.make_filename()
 
-		if cfg.debug_utf8:
+		if cfg.test_suite_debug_utf8:
 			fn_gen = fn_gen.replace('-α', '')
 
 		assert fn_gen == os.path.basename(fn), f'{fn_gen} != {fn}'
