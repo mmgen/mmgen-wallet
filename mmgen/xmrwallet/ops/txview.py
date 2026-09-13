@@ -49,12 +49,12 @@ class OpTxview(OpBase):
 		if self.cfg.autosign:
 			self.asi.do_umount()
 
-		addr_w = None if self.cfg.full_address or cols is None else cols - self.fixed_cols_w
+		addr_col_w = None if self.cfg.full_address or cols is None else cols - self.fixed_cols_w
 
 		self.cfg._util.stdout_or_pager(
 			(self.hdr if len(files) > 1 else '')
 			+ self.col_hdr
-			+ '\n'.join(getattr(tx, self.view_method)(addr_w=addr_w) for tx in txs)
+			+ '\n'.join(getattr(tx, self.view_method)(addr_col_w=addr_col_w) for tx in txs)
 			+ self.footer)
 
 class OpTxlist(OpTxview):
