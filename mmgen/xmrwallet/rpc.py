@@ -64,12 +64,12 @@ class MoneroWalletRPC:
 		gmsg_r('done')
 
 	def gen_accts_info(self, accts_data, addrs_data, *, indent='    ', skip_empty_ok=False):
-		from .ops import addr_width
+		from .ops import fmt_amt, hdr_addr_width, short_addr_width
 		fs = indent + '  {I:<3} {A} {N} {B} {L}'
 		yield indent + f'Accounts of wallet {self.fn.name}:'
 		yield fs.format(
 			I = '',
-			A = 'Base Address'.ljust(addr_width),
+			A = 'Base Address'.ljust(hdr_addr_width),
 			N = 'nAddrs',
 			B = '  Unlocked Balance',
 			L = 'Label')
@@ -77,10 +77,9 @@ class MoneroWalletRPC:
 			if skip_empty_ok and self.cfg.skip_empty_accounts and not e['unlocked_balance']:
 				continue
 			ca = CoinAddr(self.proto, e['base_address'])
-			from .ops import fmt_amt
 			yield fs.format(
 				I = str(e['account_index']),
-				A = ca.hl(0) if self.cfg.full_address else ca.fmt(0, addr_width, color=True),
+				A = ca.hl(0) if self.cfg.full_address else ca.fmt(0, short_addr_width, color=True),
 				N = red(str(len(addrs_data[i]['addresses'])).ljust(6)),
 				B = fmt_amt(e['unlocked_balance']),
 				L = pink(e['label']))

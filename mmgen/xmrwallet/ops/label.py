@@ -62,11 +62,11 @@ class OpLabel(OpMixinSpec, OpWallet):
 			else '')
 
 		if not self.compat_call:
+			from . import short_addr_width
 			ca = CoinAddr(self.proto, addr['address'])
-			from . import addr_width
 			msg('\n  {a} {b}\n  {c} {d}\n  {e} {f}'.format(
 					a = 'Address:       ',
-					b = ca.hl(0) if self.cfg.full_address else ca.fmt(0, addr_width, color=True),
+					b = ca.hl(0) if self.cfg.full_address else ca.fmt(0, short_addr_width, color=True),
 					c = 'Existing label:',
 					d = pink(addr['label']) if addr['label'] else gray('[none]'),
 					e = 'New label:     ',

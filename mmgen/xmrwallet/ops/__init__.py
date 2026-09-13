@@ -25,6 +25,8 @@ from .. import uarg_info
 
 fmt_amt = hl_amt = lambda *args, **kwargs: None # pylint
 
+short_addr_width = 24
+
 class OpBase:
 
 	opts = ('wallet_dir',)
@@ -53,14 +55,14 @@ class OpBase:
 		if not hasattr(self, 'stem'):
 			self.stem = self.name
 
-		global fmt_amt, hl_amt, addr_width
+		global fmt_amt, hl_amt, hdr_addr_width
 
 		def fmt_amt(amt):
 			return self.proto.coin_amt(amt, from_unit='atomic').fmt(5, prec=12, color=True)
 		def hl_amt(amt):
 			return self.proto.coin_amt(amt, from_unit='atomic').hl()
 
-		addr_width = 95 if self.cfg.full_address else 24
+		hdr_addr_width = 95 if self.cfg.full_address else short_addr_width
 
 		self.proto = init_proto(cfg, 'xmr', network=self.cfg.network, need_amt=True)
 

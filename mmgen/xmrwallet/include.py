@@ -31,10 +31,11 @@ def gen_acct_addr_info(self, wallet_data, account, *, indent=''):
 			if d['account_index'] == account:
 				addrs_data[d['address_index']]['unlocked_balance'] = d['unlocked_balance']
 
-	from .ops import addr_width
+	from .ops import fmt_amt, hdr_addr_width, short_addr_width
+
 	yield fs.format(
 		I = '',
-		A = 'Address'.ljust(addr_width),
+		A = 'Address'.ljust(hdr_addr_width),
 		U = 'Used'.ljust(5),
 		B = '  Unlocked Balance',
 		L = 'Label')
@@ -44,10 +45,9 @@ def gen_acct_addr_info(self, wallet_data, account, *, indent=''):
 		bal = addr['unlocked_balance']
 		if self.cfg.skip_empty_addresses and addr['used'] and not bal:
 			continue
-		from .ops import fmt_amt
 		yield fs.format(
 			I = addr['address_index'],
-			A = ca.hl(0) if self.cfg.full_address else ca.fmt(0, addr_width, color=True),
+			A = ca.hl(0) if self.cfg.full_address else ca.fmt(0, short_addr_width, color=True),
 			U = (red('True ') if addr['used'] else green('False')),
 			B = fmt_amt(bal),
 			L = pink(addr['label']))
