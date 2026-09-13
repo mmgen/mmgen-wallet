@@ -698,7 +698,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 					self.get_altcoin_pfx(proto.coin),
 					id_strs[desc],
 					addr_range,
-					'-α' if self.cfg.debug_utf8 else ''))
+					self.utf8_suf))
 			if mmtype == proto.mmtypes[0] and user == 'bob':
 				self._add_comments_to_addr_file(proto, addrfile, addrfile, use_comments=True)
 			t = self.spawn(
@@ -1184,7 +1184,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			self.get_altcoin_pfx(proto.coin),
 			id_str,
 			addr_range,
-			'-α' if self.cfg.debug_utf8 else '')
+			self.utf8_suf)
 		addrfile = get_file_with_ext(self._user_dir(user), ext, no_dot=True)
 		silence()
 		addr = AddrList(self.cfg, proto, infile=addrfile).data[idx].addr
@@ -1205,7 +1205,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 	def bob_rbf_1output_bump(self):
 		if not self.test_rbf:
 			return 'skip'
-		ext = '9343,3]{x}.regtest.rawtx'.format(x='-α' if self.cfg.debug_utf8 else '')
+		ext = f'9343,3]{self.utf8_suf}.regtest.rawtx'
 		txfile = get_file_with_ext(self.tr.trash_dir, ext, delete=False, no_dot=True)
 		return self.user_txbump('bob',
 			self.tr.trash_dir,
@@ -1278,7 +1278,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return self._bob_rbf_bump(['--send'], rtFee[2])
 
 	def _bob_rbf_bump(self, add_args, fee):
-		ext = ',{}]{x}.regtest.sigtx'.format(rtFee[1][:-1], x='-α' if self.cfg.debug_utf8 else '')
+		ext = ',{}]{}.regtest.sigtx'.format(rtFee[1][:-1], self.utf8_suf)
 		txfile = self.get_file_with_ext(ext, delete=False, no_dot=True)
 		return self.user_txbump('bob', self.tmpdir, txfile, fee, add_args=add_args)
 
@@ -1341,7 +1341,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			r1, r2 = (f'Transaction has {confirmations} confirmation', '')
 		else:
 			r1, r2 = ('in mempool, replaceable', '')
-		ext = ',{}]{x}.regtest.sigtx'.format(fee[:-1], x='-α' if self.cfg.debug_utf8 else '')
+		ext = ',{}]{}.regtest.sigtx'.format(fee[:-1], self.utf8_suf)
 		txfile = self.get_file_with_ext(ext, delete=False, no_dot=True)
 		return self.user_txsend_status('bob', txfile, r1, r2, exit_val=exit_val)
 

@@ -153,7 +153,7 @@ class CmdTestEthdevMethods:
 			add_args  = [],
 			bad_input = False,
 			exit_val  = None):
-		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
+		ext = ext.format(self.utf8_suf)
 		fn = self.get_file_with_ext(ext, no_dot=True, delete=False)
 		t = self.spawn(
 			'mmgen-addrimport',
@@ -197,7 +197,7 @@ class CmdTestEthdevMethods:
 		return t
 
 	def _txbump(self, *, fee, ext, add_opts=[], add_args=[]):
-		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
+		ext = ext.format(self.utf8_suf)
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn('mmgen-txbump', self.eth_opts + add_opts + ['--yes', txfile] + add_args)
 		t.expect('or gas price: ', fee+'\n')
@@ -300,7 +300,7 @@ class CmdTestEthdevMethods:
 		t = self.spawn('mmgen-'+mmgen_cmd, self.eth_opts + args)
 		if mmgen_cmd == 'txcreate':
 			t.written_to_file('transaction')
-			ext = '[0,8000]{}.regtest.rawtx'.format('-α' if self.cfg.debug_utf8 else '')
+			ext = '[0,8000]{}.regtest.rawtx'.format(self.utf8_suf)
 			txfile = self.get_file_with_ext(ext, no_dot=True)
 			t = self.spawn(
 				'mmgen-txsign',
@@ -1005,7 +1005,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		return t
 
 	def txsign(self, ni=False, ext='{}.regtest.rawtx', add_args=[], dev_send=False, has_label=True):
-		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
+		ext = ext.format(self.utf8_suf)
 		keyfile = joinpath(self.tmpdir, dfl_devkey_fn)
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
@@ -1027,7 +1027,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			return_early = False,
 			has_label    = True,
 			env          = {}):
-		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
+		ext = ext.format(self.utf8_suf)
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
 			'mmgen-txsend',
@@ -1045,7 +1045,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		return t
 
 	def txview(self, ext_fs):
-		ext = ext_fs.format('-α' if self.cfg.debug_utf8 else '')
+		ext = ext_fs.format(self.utf8_suf)
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		return self.spawn('mmgen-tool', ['--verbose', 'txview', txfile])
 
@@ -1148,7 +1148,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 
 	def tx_status(self, ext, *, expect_str, expect_str2='', add_opts=[], exit_val=0):
 		self.mining_delay()
-		ext = ext.format('-α' if self.cfg.debug_utf8 else '')
+		ext = ext.format(self.utf8_suf)
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		t = self.spawn(
 			'mmgen-txsend',

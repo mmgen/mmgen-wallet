@@ -59,7 +59,7 @@ class CmdTestEthBumpMethods:
 
 	def _txbump_new_outputs(self, *, args, fee, add_opts=[]):
 		self.get_file_with_ext('rawtx', delete_all=True)
-		ext = '{}.regtest.sigtx'.format('-α' if self.cfg.debug_utf8 else '')
+		ext = f'{self.utf8_suf}.regtest.sigtx'
 		txfile = self.get_file_with_ext(ext, no_dot=True)
 		return self.txbump_ui_common(
 			self.spawn('mmgen-txbump', self.eth_opts + add_opts + args + [txfile]),

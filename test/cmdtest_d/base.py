@@ -79,8 +79,12 @@ class CmdTestBase:
 		return '' if fork == 'btc' else f'-{coin.upper()}'
 
 	@property
+	def utf8_suf(self):
+		return '-α' if self.cfg.debug_utf8 else ''
+
+	@property
 	def tmpdir(self):
-		return os.path.join('test', 'tmp', '{}{}'.format(self.tmpdir_num, '-α' if self.cfg.debug_utf8 else ''))
+		return os.path.join('test', 'tmp', '{}{}'.format(self.tmpdir_num, self.utf8_suf))
 
 	def get_file_with_ext(self, ext, **kwargs):
 		return get_file_with_ext(self.tmpdir, ext, **kwargs)

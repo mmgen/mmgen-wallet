@@ -163,7 +163,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 		pat = r'{}-[0-9A-F]{{8}}\[{},1\]{}.mmdat'.format(
 			self.chk_data['sids'][idx],
 			self.chk_data['lens'][idx],
-			'-α' if self.cfg.debug_utf8 else '')
+			self.utf8_suf)
 		assert re.match(pat, fn), f'{pat} != {fn}'
 		sid = os.path.basename(fn.split('-')[0])
 		cmp_or_die(sid, self.seed_id, desc='Seed ID')
@@ -183,7 +183,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 			pat = re_pat.format(sid, slen)
 			assert re.match(pat, fn), f'{pat} != {fn}'
 		else:
-			cmp_or_die('{}[{}]{}.{}'.format(sid, slen, '-α' if self.cfg.debug_utf8 else '', wcls.ext), fn)
+			cmp_or_die('{}[{}]{}.{}'.format(sid, slen, self.utf8_suf, wcls.ext), fn)
 		return t
 
 	def ref_walletconv_words(self):
@@ -201,7 +201,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 
 	def ref_walletconv_incog(self, ofmt='incog', ext='mmincog'):
 		args = ['-r0', '-p1']
-		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\]' + ('-α' if self.cfg.debug_utf8 else '') + '.' + ext
+		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\]' + self.utf8_suf + '.' + ext
 		return self.ref_walletconv(ofmt=ofmt, extra_args=args, re_pat=pat)
 
 	def ref_walletconv_hexincog(self):
