@@ -154,4 +154,5 @@ def main():
 cfg = Config(
 	opts_data = opts_data,
 	init_opts = {
-		'skip_cfg_file': True})
+		'skip_cfg_file': True,
+		'ignore_env': True})

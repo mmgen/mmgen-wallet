@@ -31,7 +31,7 @@ from .include.common import get_file_with_ext
 
 class CmdTestBase:
 	'initializer class for the cmdtest.py test suite'
-	base_passthru_opts = ('data_dir', 'skip_cfg_file')
+	base_passthru_opts = ('data_dir', 'skip_cfg_file', 'ignore_env')
 	passthru_opts = ()
 	networks = ()
 	segwit_opts_ok = False

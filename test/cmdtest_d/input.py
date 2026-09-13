@@ -107,6 +107,15 @@ class CmdTestInput(CmdTestBase):
 	)
 	}
 
+	def clean_env_spawn(self, cmd, cmd_args, *args, **kwargs):
+		return self.spawn(
+			cmd,
+			['--skip-cfg-file', '--ignore-env'] + cmd_args,
+			*args,
+			no_exec_wrapper = True,
+			cmd_dir = '.',
+			**kwargs)
+
 	def skip_no_readline_insert(self, extra_msg=None):
 		return self.skip_on_condition(
 			gc.platform == 'darwin' or self.cfg.threaded_python,
@@ -141,7 +150,7 @@ class CmdTestInput(CmdTestBase):
 		return 'ok' if b'written to file' in cp.stderr else 'error'
 
 	def get_passphrase_ui(self):
-		t = self.spawn('test/misc/get_passphrase.py', ['--usr-randchars=0', 'seed'], cmd_dir='.')
+		t = self.clean_env_spawn('test/misc/get_passphrase.py', ['--usr-randchars=0', 'seed'])
 
 		# 1 - new wallet, default hp, label;empty pw
 		t.expect('accept the default.*: ', '\n', regex=True)
@@ -212,20 +221,19 @@ class CmdTestInput(CmdTestBase):
 	def get_passphrase_cmdline(self):
 		with open(os.path.join(trash_dir, 'pwfile'), 'w') as fp:
 			fp.write('reference password\n')
-		t = self.spawn('test/misc/get_passphrase.py', [
+		t = self.clean_env_spawn('test/misc/get_passphrase.py', [
 			'--usr-randchars=0',
 			'--label=MyLabel',
 			'--passwd-file={}'.format(os.path.join(trash_dir, 'pwfile')),
 			'--hash-preset=1',
-			'seed'],
-			cmd_dir = '.')
+			'seed'])
 		for _ in range(4):
 			t.expect('[reference password][1][MyLabel]')
 
 		return t
 
 	def get_passphrase_crypto(self):
-		t = self.spawn('test/misc/get_passphrase.py', ['--usr-randchars=0', 'crypto'], cmd_dir='.')
+		t = self.clean_env_spawn('test/misc/get_passphrase.py', ['--usr-randchars=0', 'crypto'])
 
 		# new passwd
 		t.expect('passphrase for .*: ', 'x\n', regex=True)
@@ -256,11 +264,9 @@ class CmdTestInput(CmdTestBase):
 		if term and gc.platform == 'win32':
 			return ('skip_warn', 'pexpect_spawn not supported on Windows platform')
 		func_args = dict(zip(arg_dfls.keys(), func_args))
-		t = self.spawn(
-			'test/misc/input_func.py',
+		t = self.clean_env_spawn('test/misc/input_func.py',
 			[func_name, repr(func_args)],
-			cmd_dir='.',
-			pexpect_spawn=term)
+			pexpect_spawn = term)
 		imsg('Parameters:')
 		imsg(f'  pexpect_spawn: {term}')
 		imsg(f'  sending:       {text!r}')
@@ -404,7 +410,7 @@ class CmdTestInput(CmdTestBase):
 	def _password_entry(self, prompt, opts=[], term=False):
 		if term and gc.platform == 'win32':
 			return ('skip_warn', 'pexpect_spawn not supported on Windows platform')
-		t = self.spawn('test/misc/input_func.py', opts + ['passphrase'], cmd_dir='.', pexpect_spawn=term)
+		t = self.clean_env_spawn('test/misc/input_func.py', opts + ['passphrase'], pexpect_spawn=term)
 		imsg(f'Terminal: {term}')
 		pw = 'abc-α'
 		t.expect(prompt, pw+'\n')

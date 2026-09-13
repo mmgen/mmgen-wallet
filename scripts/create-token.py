@@ -151,7 +151,10 @@ def compile_code(cfg, code):
 
 def main():
 	cfg = Config(
-		opts_data = opts_data)
+		opts_data = opts_data,
+		init_opts = {
+			'skip_cfg_file': True,
+			'ignore_env': True})
 
 	if cfg.check_solc_version:
 		sys.exit(0 if check_solc_version() else 1)

@@ -261,7 +261,7 @@ class Opts:
 
 		cfg._opts = self
 		cfg._parsed_opts = po
-		cfg._use_env = True
+		cfg._use_env = not 'ignore_env' in uopts
 		cfg._use_cfg_file = not 'skip_cfg_file' in uopts
 
 		# Make these available to usage():
@@ -300,6 +300,7 @@ class UserOpts(Opts):
 			rr --daemon-data-dir=path Specify coin daemon data directory location
 			Rr --daemon-id=ID         Specify the coin daemon ID
 			rr --ignore-daemon-version Ignore coin daemon version check
+			-- --ignore-env           Do not process MMGen environment variables
 			Rr --list-daemon-ids      List all available daemon IDs
 			xr --http-timeout=t       Set HTTP timeout in seconds for JSON-RPC connections
 			-- --no-license           Suppress the GPL license prompt
