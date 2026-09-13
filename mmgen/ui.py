@@ -57,7 +57,7 @@ def line_input(cfg, prompt, *, echo=True, insert_txt='', hold_protect=True):
 		from .term import kb_hold_protect
 		kb_hold_protect()
 
-	if cfg.test_suite_popen_spawn:
+	if getattr(cfg, 'test_suite_popen_spawn', False):
 		msg(prompt)
 		sys.stderr.flush() # required by older Pythons (e.g. v3.7)
 		reply = os.read(0, 4096).decode().rstrip('\n') # strip NL to mimic behavior of input()

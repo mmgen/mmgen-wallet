@@ -229,9 +229,7 @@ class Config(Lockable):
 	scroll          = False
 	pager           = False
 	columns         = 0
-	color = bool(
-		(sys.stdout.isatty() and not os.getenv('MMGEN_TEST_SUITE_PEXPECT')) or
-		os.getenv('MMGEN_TEST_SUITE_ENABLE_COLOR'))
+	color           = sys.stdout.isatty()
 
 	# miscellaneous features:
 	use_internal_keccak_module     = False
@@ -260,28 +258,7 @@ class Config(Lockable):
 	xmrwallet_compat           = False
 	priority                   = 0
 
-	# test suite:
-	test_suite               = False
-	test_suite_autosign_led_simulate = False
-	test_suite_autosign_threaded = False
-	test_suite_bogus_send    = False
-	test_suite_bogus_unspent_data = ''
-	test_suite_cfgtest       = False
-	test_suite_debug_utf8    = False
-	test_suite_deterministic = False
-	test_suite_devnet_block_period = 0
-	test_suite_devtools      = False
-	test_suite_enable_color  = False # placeholder
-	test_suite_exec_wrapper  = False
-	test_suite_hold_protect_disable = False
-	test_suite_ignore_test_py_exception = False
-	test_suite_legacy_tx     = False
-	test_suite_pexpect       = False
-	test_suite_pexpect_timeout = 0
-	test_suite_popen_spawn   = False
-	test_suite_root_pfx      = ''
-	test_suite_xmr_autosign  = False
-	test_datadir             = os.path.join('test', 'tmp', 'data_dir')
+	test_suite = False # 30 references
 
 	# external use:
 	_opts  = None
@@ -363,26 +340,6 @@ class Config(Lockable):
 		'MMGEN_NO_LICENSE',
 		'MMGEN_QUIET',
 		'MMGEN_RPC_BACKEND',
-		'MMGEN_TEST_SUITE',
-		'MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE',
-		'MMGEN_TEST_SUITE_AUTOSIGN_THREADED',
-		'MMGEN_TEST_SUITE_BOGUS_SEND',
-		'MMGEN_TEST_SUITE_BOGUS_UNSPENT_DATA',
-		'MMGEN_TEST_SUITE_CFGTEST',
-		'MMGEN_TEST_SUITE_DEBUG_UTF8',
-		'MMGEN_TEST_SUITE_DETERMINISTIC',
-		'MMGEN_TEST_SUITE_DEVTOOLS',
-		'MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD',
-		'MMGEN_TEST_SUITE_ENABLE_COLOR',
-		'MMGEN_TEST_SUITE_EXEC_WRAPPER',
-		'MMGEN_TEST_SUITE_HOLD_PROTECT_DISABLE',
-		'MMGEN_TEST_SUITE_IGNORE_TEST_PY_EXCEPTION',
-		'MMGEN_TEST_SUITE_LEGACY_TX',
-		'MMGEN_TEST_SUITE_PEXPECT',
-		'MMGEN_TEST_SUITE_PEXPECT_TIMEOUT',
-		'MMGEN_TEST_SUITE_POPEN_SPAWN',
-		'MMGEN_TEST_SUITE_ROOT_PFX',
-		'MMGEN_TEST_SUITE_XMR_AUTOSIGN',
 		'MMGEN_THREADED_PYTHON',
 		'MMGEN_TRACEBACK',
 		'MMGEN_USE_STANDALONE_SCRYPT_MODULE')
@@ -414,16 +371,6 @@ class Config(Lockable):
 	err_disp_timeout   = 0.7
 	short_disp_timeout = 0.3
 	stdin_tty          = sys.stdin.isatty()
-
-	if os.getenv('MMGEN_TEST_SUITE'):
-		min_urandchars = 3
-		err_disp_timeout = 0.1
-		short_disp_timeout = 0.1
-		if os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'):
-			stdin_tty = True
-		if gc.prog_name == 'modtest.py':
-			_set_ok += ('debug_subseed',)
-			_reset_ok += ('force_standalone_scrypt_module',)
 
 	if os.getenv('MMGEN_DEBUG_ALL'):
 		for name in _env_opts:

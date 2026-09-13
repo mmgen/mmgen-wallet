@@ -118,7 +118,7 @@ class MMGenTermLinux(MMGenTerm):
 
 	@classmethod
 	def kb_hold_protect(cls):
-		if cls.cfg.hold_protect_disable:
+		if getattr(cls.cfg, 'test_suite_hold_protect_disable', False):
 			return
 		tty.setcbreak(cls.stdin_fd)
 		while True:
@@ -139,7 +139,7 @@ class MMGenTermLinux(MMGenTerm):
 		timeout = 0.3
 		tty.setcbreak(cls.stdin_fd)
 		msg_r(prompt)
-		if cls.cfg.hold_protect_disable:
+		if getattr(cls.cfg, 'test_suite_hold_protect_disable', False):
 			prehold_protect = False
 		while True:
 			# Protect against held-down key before read()

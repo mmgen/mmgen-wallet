@@ -31,6 +31,8 @@ opts_data = {
 	},
 }
 
+Config.test_datadir = os.path.join('test', 'tmp', 'data_dir') # NB: must match value in fakemods
+
 cfg = Config(
 	opts_data = opts_data,
 	need_proto = False,

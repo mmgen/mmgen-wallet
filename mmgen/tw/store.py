@@ -107,7 +107,7 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 
 	def init_from_wallet_file(self):
 		from ..fileutil import check_or_create_dir, get_data_from_file
-		check_or_create_dir(self.tw_dir)
+		check_or_create_dir(self.cfg, self.tw_dir)
 		try:
 			self.orig_data = get_data_from_file(self.cfg, self.tw_path, quiet=True)
 			self.data = json.loads(self.orig_data)

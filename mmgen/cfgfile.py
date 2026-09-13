@@ -179,7 +179,7 @@ class CfgFileSampleSys(cfg_file_sample):
 
 	def __init__(self, cfg):
 		self.cfg = cfg
-		if self.cfg.test_suite_cfgtest:
+		if getattr(cfg, 'test_suite_cfgtest', False):
 			self.fn = os.path.join(cfg.data_dir_root, self.test_fn_subdir, self.fn_base)
 			with open(self.fn) as fp:
 				self.data = fp.read().splitlines()
