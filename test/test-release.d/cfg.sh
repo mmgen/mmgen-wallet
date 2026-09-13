@@ -87,6 +87,7 @@ init_tests() {
 		- $pylint setup.py
 		- $pylint mmgen
 		- $pylint examples
+		- $pylint scripts
 		- $pylint test
 		- $pylint --disable=relative-beyond-top-level test/cmdtest_d
 	"

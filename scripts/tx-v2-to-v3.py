@@ -31,5 +31,5 @@ cfg = Config(opts_data=opts_data)
 if len(cfg._args) != 1:
 	cfg._usage()
 
-tx = asyncio.run(CompletedTX(cfg._args[0], quiet_open=True))
+tx = asyncio.run(CompletedTX(cfg=cfg._args[0], quiet_open=True))
 tx.file.write(ask_tty=False, ask_overwrite=not cfg.quiet, ask_write=not cfg.quiet)
