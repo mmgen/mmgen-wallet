@@ -86,6 +86,16 @@ from mmgen.cfg import Config, gc
 from mmgen.color import red, yellow, blue, init_color
 from mmgen.util import Msg, rmsg, die
 
+for k, v in {
+	'no_daemon_autostart': False,
+	'names':               False,
+	'no_timings':          False,
+	'exit_after':          '',
+	'resuming':            False,
+	'skipping_deps':       False,
+}.items():
+	setattr(Config, k, v)
+
 from test.include.common import (
 	set_globals,
 	cmdtest_py_log_fn,

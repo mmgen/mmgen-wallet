@@ -281,12 +281,6 @@ class Config(Lockable):
 	test_suite_popen_spawn   = False
 	test_suite_root_pfx      = ''
 	test_suite_xmr_autosign  = False
-	no_daemon_autostart      = False
-	names                    = False
-	no_timings               = False
-	exit_after               = ''
-	resuming                 = False
-	skipping_deps            = False
 	test_datadir             = os.path.join('test', 'tmp', 'data_dir')
 
 	# external use:
