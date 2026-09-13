@@ -35,11 +35,11 @@ from .util import (
 	strip_comments,
 )
 
-def check_or_create_dir(path):
+def check_or_create_dir(cfg, path):
 	try:
 		os.listdir(path)
 	except:
-		if os.getenv('MMGEN_TEST_SUITE') and os.path.exists(path): # path is a link or regular file
+		if getattr(cfg, 'test_suite', False) and os.path.exists(path): # path is a link or regular file
 			from subprocess import run
 			run(['rm', '-rf', str(path)])
 		try:

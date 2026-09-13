@@ -162,7 +162,7 @@ def test_tx(src, cfg, vec):
 
 	vmsg('\n  TX info:\n    ' + '\n    '.join(tx_info(tx, proto)) + '\n')
 
-	tx.verify_sig(proto, parms.account_number)
+	tx.verify_sig(cfg, proto, parms.account_number)
 
 	pubkey = tx.authInfo.signerInfos[0].publicKey.key.data
 	vec_txid2 = getattr(vec, 'txid2', None)

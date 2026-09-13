@@ -58,7 +58,7 @@ class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 		tx = build_tx(self.cfg, self.proto, parms)
 		self.serialized = bytes(tx).hex()
 		self.coin_txid = CoinTxID(tx.txid)
-		tx.verify_sig(self.proto, o['account_number'])
+		tx.verify_sig(self.cfg, self.proto, o['account_number'])
 
 class AutomountUnsigned(TxBase.AutomountUnsigned, Unsigned):
 	pass

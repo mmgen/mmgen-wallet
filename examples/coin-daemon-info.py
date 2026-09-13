@@ -18,14 +18,7 @@ examples/coin-daemon-info.py:
 #
 #  Testing mode:
 #
-#   1) From the MMGen repository root, start the mainnet test suite daemons as follows
-#      (note that Geth is the default testing daemon for ETH):
-#
-#       test/start-coin-daemons.py btc ltc eth
-#
-#   2) Then run the script as follows:
-#
-#       PYTHONPATH=. MMGEN_TEST_SUITE=1 examples/coin-daemon-info.py btc ltc eth
+#    test/cmdtest.py -e coin_daemon_info
 #
 #  Live mode:
 #

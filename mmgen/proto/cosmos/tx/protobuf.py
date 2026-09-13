@@ -134,7 +134,7 @@ class Tx(BaseMessage):
 		return sha256(bytes(self.raw)).hexdigest()
 
 	# raises exception on failure:
-	def verify_sig(self, proto, account_number, backend='secp256k1'):
+	def verify_sig(self, cfg, proto, account_number, backend='secp256k1'):
 		sign_doc = SignDoc(
 			bodyBytes = bytes(self.body),
 			authInfoBytes = bytes(self.authInfo),
@@ -150,8 +150,7 @@ class Tx(BaseMessage):
 				if not verify_sig(sig, msghash, pubkey):
 					raise ValueError('signature verification failed')
 			case 'ecdsa':
-				import os
-				if not os.getenv('MMGEN_TEST_SUITE'):
+				if not cfg.test_suite:
 					from ....util import die
 					die(3, 'The `ecdsa` package is unsafe and may be used only in a testing environment')
 				# ecdsa.keys.VerifyingKey.verify_digest():

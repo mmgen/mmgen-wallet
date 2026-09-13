@@ -565,7 +565,7 @@ class Config(Lockable):
 		init_term(self)
 
 		from .fileutil import check_or_create_dir
-		check_or_create_dir(self.data_dir_root)
+		check_or_create_dir(self, self.data_dir_root)
 
 		from .util import wrap_ripemd160
 		wrap_ripemd160() # ripemd160 required by mmgen_cfg_file() in _set_cfg_from_cfg_file()
@@ -602,7 +602,7 @@ class Config(Lockable):
 
 		self._die_on_incompatible_opts()
 
-		check_or_create_dir(self.data_dir)
+		check_or_create_dir(self, self.data_dir)
 
 		if self.debug and gc.prog_name != 'cmdtest.py':
 			self.verbose = True
