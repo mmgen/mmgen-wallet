@@ -150,7 +150,7 @@ class Token(Contract):
 	async def get_decimals(self):
 		ret = await self.do_call('decimals()')
 		try:
-			assert ret[:2] == '0x'
+			assert ret.startswith('0x')
 			return int(ret, 16)
 		except:
 			msg(f'RPC call to decimals() failed (returned {ret!r})')

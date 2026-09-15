@@ -139,7 +139,7 @@ class TokenBase(Base):
 			if self.is_swap:
 				d = rlp.decode(bytes.fromhex(self.serialized2))
 				data = d[5].hex()
-				assert data[:8] == '44bc937b', (
+				assert data.startswith('44bc937b'), (
 					f'{data[:8]}: invalid MethodID in router TX serialized data')
 				assert data[32:72] == self.token_vault_addr, (
 					f'{data[32:72]}: invalid vault address in router TX serialized data')

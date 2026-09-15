@@ -376,7 +376,7 @@ class Config(Lockable):
 
 	if os.getenv('MMGEN_DEBUG_ALL'):
 		for name in _env_opts:
-			if name[:11] == 'MMGEN_DEBUG':
+			if name.startswith('MMGEN_DEBUG'):
 				os.environ[name] = '1'
 
 	@property

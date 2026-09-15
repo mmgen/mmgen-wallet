@@ -157,7 +157,7 @@ class tool_cmd(tool_cmd_base):
 	def redeem_script2addr(self, redeem_script_hex: 'sstr'): # new
 		"convert a Segwit P2SH-P2WPKH redeem script to an address"
 		assert self.mmtype.name == 'segwit', 'This command is meaningful only for --type=segwit'
-		assert redeem_script_hex[:4] == '0014', f'{redeem_script_hex!r}: invalid redeem script'
+		assert redeem_script_hex.startswith('0014'), f'{redeem_script_hex!r}: invalid redeem script'
 		assert len(redeem_script_hex) == 44, f'{len(redeem_script_hex)//2} bytes: invalid redeem script length'
 		from ..proto.btc.common import hash160
 		return self.proto.pubhash2addr(hash160(bytes.fromhex(redeem_script_hex)), 'p2sh')

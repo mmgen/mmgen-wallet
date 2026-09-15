@@ -193,7 +193,7 @@ class CmdTestWalletConv(CmdTestBase, CmdTestShared):
 			t.expect('Enter brainwallet: ', ref_wallet_brainpass+'\n')
 		if icls.enc and icls.type != 'brain':
 			t.passphrase(icls.desc, self.wpasswd)
-			if self.test_name[:19] == 'ref_hincog_conv_old':
+			if self.test_name.startswith('ref_hincog_conv_old'):
 				t.expect('Is the Seed ID correct? (Y/n): ', '\n')
 			else:
 				t.expect(['Passphrase is OK', ' are correct'])

@@ -197,7 +197,7 @@ def write_data_to_file(
 				of = None # Windows
 
 			if of:
-				if of[:5] == 'pipe:':
+				if of.startswith('pipe:'):
 					if no_tty:
 						die(2, f'Writing {desc} to pipe is not allowed')
 					if ask_tty and not cfg.quiet:

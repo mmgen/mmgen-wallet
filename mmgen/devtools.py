@@ -66,7 +66,7 @@ def get_stack_trace(message=None, nl='\n', sep='\n  ', trim=3):
 
 	import os, re, traceback
 
-	tb = [t for t in traceback.extract_stack() if t.filename[:1] != '<']
+	tb = [t for t in traceback.extract_stack() if not t.filename.startswith('<')]
 	fs = '{}:{}: in {}:\n    {}'
 	out = [
 		fs.format(
