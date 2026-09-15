@@ -122,6 +122,8 @@ class Tx(BaseMessage):
 	authInfo:   Annotated[bytes, Field(2)]
 	signatures: Annotated[list[bytes], Field(3)]
 
+	verify_sig_backends = ('secp256k1',)
+
 	@property
 	def raw(self):
 		return RawTx(
@@ -133,30 +135,24 @@ class Tx(BaseMessage):
 	def txid(self):
 		return sha256(bytes(self.raw)).hexdigest()
 
+	def verify_sig_secp256k1(self, *, sig, msghash, pubkey):
+		from ...secp256k1.secp256k1 import verify_sig
+		if not verify_sig(sig, msghash, pubkey):
+			raise ValueError('signature verification failed')
+
 	# raises exception on failure:
 	def verify_sig(self, cfg, proto, account_number, backend='secp256k1'):
+
+		if not backend in self.verify_sig_backends:
+			raise ValueError(f'verify_sig(): {backend}: unrecognized backend')
+
 		sign_doc = SignDoc(
 			bodyBytes = bytes(self.body),
 			authInfoBytes = bytes(self.authInfo),
 			chainId = proto.chain_id,
 			accountNumber = account_number)
-		sig = self.signatures[0]
-		pubkey = self.authInfo.signerInfos[0].publicKey.key.data
-		msghash = sha256(bytes(sign_doc)).digest()
 
-		match backend:
-			case 'secp256k1':
-				from ...secp256k1.secp256k1 import verify_sig
-				if not verify_sig(sig, msghash, pubkey):
-					raise ValueError('signature verification failed')
-			case 'ecdsa':
-				if not cfg.test_suite:
-					from ....util import die
-					die(3, 'The `ecdsa` package is unsafe and may be used only in a testing environment')
-				# ecdsa.keys.VerifyingKey.verify_digest():
-				#   raises BadSignatureError if the signature is invalid or malformed
-				import ecdsa
-				ec_pubkey = ecdsa.VerifyingKey.from_string(pubkey, curve=ecdsa.curves.SECP256k1)
-				ec_pubkey.verify_digest(sig, msghash)
-			case _:
-				raise ValueError(f'verify_sig(): {backend}: unrecognized backend')
+		getattr(self, f'verify_sig_{backend}')(
+			sig     = self.signatures[0],
+			msghash = sha256(bytes(sign_doc)).digest(),
+			pubkey  = self.authInfo.signerInfos[0].publicKey.key.data)
