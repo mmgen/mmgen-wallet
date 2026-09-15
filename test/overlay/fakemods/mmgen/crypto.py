@@ -1,6 +1,20 @@
 import os as overlay_fake_os
 from .crypto_orig import *
 
+class overlay_fake_Crypto:
+
+	def get_aes_ctr_pyaes(self, key, iv):
+		import pyaes
+		class MyAES(pyaes.AESModeOfOperationCTR):
+			update = pyaes.AESModeOfOperationCTR.encrypt
+			@staticmethod
+			def finalize():
+				return b''
+		return MyAES(key, pyaes.Counter(int.from_bytes(iv)))
+
+Crypto.aes_backends = ('cryptography', 'pyaes')
+Crypto.get_aes_ctr_pyaes = overlay_fake_Crypto.get_aes_ctr_pyaes
+
 if overlay_fake_os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 
 	overlay_fake_get_random_orig = Crypto.get_random

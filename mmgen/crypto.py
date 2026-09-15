@@ -24,13 +24,14 @@ import os
 from collections import namedtuple
 
 from .cfg import gc
-from .util import msg, msg_r, ymsg, fmt, die, make_chksum_8, oneshot_warning
+from .util import msg, msg_r, ymsg, fmt, die, make_chksum_8, oneshot_warning, fmt_list
 
 class Crypto:
 
 	mmenc_ext = 'mmenc'
 	scramble_hash_rounds = 10
 
+	aes_backends = ('cryptography',)
 	aesctr_iv_len  = 16
 	aesctr_dfl_iv  = int.to_bytes(1, aesctr_iv_len, 'big')
 	hincog_chk_len = 8
@@ -67,30 +68,15 @@ class Crypto:
 	def __init__(self, cfg):
 		self.cfg = cfg
 		self.util = cfg._util
-		match self.cfg.aes_backend:
-			case 'cryptography':
-				self.get_aes_ctr = self.get_aes_ctr_cryptography
-			case 'pyaes':
-				assert cfg.test_suite, '`pyaes` module is insecure and suitable only for testing'
-				self.get_aes_ctr = self.get_aes_ctr_pyaes
-			case s:
-				die(3, f'{s}: unrecognized AES backend')
+		if self.cfg.aes_backend not in self.aes_backends:
+			raise ValueError(
+				f'{self.cfg.aes_backend}: unrecognized AES backend (available: {fmt_list(self.aes_backends)})')
+		self.get_aes_ctr = getattr(self, f'get_aes_ctr_{self.cfg.aes_backend}')
 
-	@staticmethod
-	def get_aes_ctr_cryptography(key, iv):
+	def get_aes_ctr_cryptography(self, key, iv):
 		from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 		from cryptography.hazmat.backends import default_backend
 		return Cipher(algorithms.AES(key), modes.CTR(iv), backend=default_backend()).encryptor()
-
-	@staticmethod
-	def get_aes_ctr_pyaes(key, iv):
-		import pyaes
-		class MyAES(pyaes.AESModeOfOperationCTR):
-			update = pyaes.AESModeOfOperationCTR.encrypt
-			@staticmethod
-			def finalize():
-				return b''
-		return MyAES(key, pyaes.Counter(int.from_bytes(iv)))
 
 	def encrypt_aes_ctr(self, key, iv, data):
 		encryptor = self.get_aes_ctr(key, iv)
