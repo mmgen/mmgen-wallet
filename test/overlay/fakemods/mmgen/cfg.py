@@ -25,11 +25,11 @@ for k, v in {
 		'min_urandchars':     3,
 		'err_disp_timeout':   0.1,
 		'short_disp_timeout': 0.1,
+		'test_suite':         True,
 
 		### everything below is missing in Config:
 
 		# these are referenced in production code:
-		'test_suite':                       True,
 		'test_suite_cfgtest':               False, # cfgfile - using getattr() with dfl val - OK
 		'test_suite_popen_spawn':           False, # line_input() - using getattr() with dfl val - OK
 		'test_suite_hold_protect_disable':  False, # init_term() - using getattr() with dfl val - OK

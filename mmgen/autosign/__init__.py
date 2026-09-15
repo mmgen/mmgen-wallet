@@ -69,7 +69,7 @@ class Autosign:
 	have_xmr = False
 	xmr_only = False
 
-	def init_fixup(self): # see test/overlay/fakemods/mmgen/autosign.py
+	def init_fixup(self): # see test/overlay/fakemods/mmgen/autosign/__init__.py
 		pass
 
 	def __init__(self, cfg, *, cmd=None):

@@ -39,7 +39,7 @@ def check_or_create_dir(cfg, path):
 	try:
 		os.listdir(path)
 	except:
-		if getattr(cfg, 'test_suite', False) and os.path.exists(path): # path is a link or regular file
+		if cfg.test_suite and os.path.exists(path): # path is a link or regular file
 			from subprocess import run
 			run(['rm', '-rf', str(path)])
 		try:

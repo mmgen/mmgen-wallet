@@ -68,7 +68,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	dfl_random_txs = 3
 	color = True
 	# Bob’s daemon is stopped via process kill, not RPC, so put Bob last in list:
-	#    user     sid      autosign  shift kal_range add_coind_args
+	#    user     sid autosign port_shift kal_range add_coind_args
 	user_data = (
 		('miner', '98831F3A', False, 130, '1-2', []),
 		('alice', 'FE3C6545', False, 150, '1-4', []),
