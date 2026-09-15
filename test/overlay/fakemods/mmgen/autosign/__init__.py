@@ -20,3 +20,6 @@ Autosign.dev_label          = 'MMGEN_TS_TX' # autosign_live only (Linux)
 Autosign.linux_mount_subdir = 'mmgen_ts_autosign'
 Autosign.macOS_ramdisk_name = 'TestAutosignRamDisk'
 Autosign.init_fixup         = overlay_fake_Autosign.init_fixup
+
+if os.getenv('MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE'):
+	Autosign.simulate_led = True

@@ -33,7 +33,6 @@ for k, v in {
 		'test_suite_cfgtest':               False, # cfgfile - using getattr() with dfl val - OK
 		'test_suite_popen_spawn':           False, # line_input() - using getattr() with dfl val - OK
 		'test_suite_hold_protect_disable':  False, # init_term() - using getattr() with dfl val - OK
-		'test_suite_autosign_led_simulate': False, # autosign - OK
 		'test_suite_autosign_threaded':     False, # autosign - OK
 		'test_suite_xmr_autosign':          False, # autosign - OK
 		'test_suite_root_pfx':              '',    # autosign - OK
@@ -41,6 +40,7 @@ for k, v in {
 		'test_datadir':                     os.path.join('test', 'tmp', 'data_dir'), # cfg - OK
 
 		# these are referenced in test suite only:
+		'test_suite_autosign_led_simulate':    False,
 		'test_suite_exec_wrapper':             False,
 		'test_suite_bogus_unspent_data':       '',
 		'test_suite_debug_utf8':               False,

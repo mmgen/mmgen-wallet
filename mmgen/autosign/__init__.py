@@ -30,6 +30,7 @@ class Autosign:
 	wallet_subdir = 'autosign'
 	linux_blkid_cmd = 'sudo blkid -s LABEL -o value'
 	keylist_fn = 'keylist.mmenc'
+	simulate_led = False
 
 	cmds = ('setup', 'xmr_setup', 'sign', 'wait')
 
@@ -544,7 +545,7 @@ class Autosign:
 		from ..led import LEDControl
 		self.led = LEDControl(
 			enabled = self.cfg.led,
-			simulate = self.cfg.test_suite_autosign_led_simulate)
+			simulate = self.simulate_led)
 		self.led.set('off')
 
 	def setup_non_mmgen_keys(self):

@@ -1126,7 +1126,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		t.kill(2) # 2 = SIGINT
 
 		if self.simulate_led and led_opts:
-			t.expect(f'Resetting {self.color} LED')
+			t.expect('Stopping LED')
 		return t
 
 class CmdTestAutosignLiveSimulate(CmdTestAutosignLive):
