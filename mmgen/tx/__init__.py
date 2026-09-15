@@ -12,30 +12,39 @@
 tx.__init__: transaction class initializer
 """
 
-def _base_proto_subclass(clsname, modname, kwargs):
-	proto = kwargs['proto']
-	if proto:
-		clsname = ('Token' if proto.tokensym else '') + clsname
-		modname = f'mmgen.proto.{proto.base_proto_coin.lower()}.tx.{modname}'
-	else:
-		modname = 'mmgen.tx.base'
-	import importlib
-	return getattr(importlib.import_module(modname), clsname)
+import importlib
+from collections import namedtuple
 
-def _get_cls_info(clsname, modname, kwargs):
+cinfo = namedtuple('cls_info', 'clsname modname cfg proto')
+
+def _base_proto_subclass(clsname, modname, cfg=None, proto=None):
+	if proto:
+		return getattr(
+			importlib.import_module(f'mmgen.proto.{proto.base_proto_coin.lower()}.tx.{modname}'),
+			('Token' if proto.tokensym else '') + clsname)
+	else:
+		return getattr(importlib.import_module('mmgen.tx.base'), clsname)
+
+def _get_cls_info(
+		clsname,
+		modname,
+		*,
+		cfg,
+		proto     = None,
+		data      = None,
+		filename  = None,
+		automount = False,
+		target    = None,
+		**kwargs):
 	"""
 	determine cls/mod/proto and pass them to _base_proto_subclass() to get a TX instance
 	"""
-	if 'proto' in kwargs:
-		proto = kwargs['proto']
-	elif 'data' in kwargs:
-		proto = kwargs['data']['proto']
-	elif 'filename' in kwargs:
+	if data:
+		proto = data['proto']
+	elif filename:
 		from .file import MMGenTxFile
-		proto = MMGenTxFile.get_proto(kwargs['cfg'], kwargs['filename'], quiet_open=True)
-	elif clsname == 'Base':
-		proto = None
-	else:
+		proto = MMGenTxFile.get_proto(cfg, filename, quiet_open=True)
+	elif not (proto or clsname == 'Base'):
 		raise ValueError(
 			f"{clsname} must be instantiated with 'proto', 'data' or 'filename' keyword")
 
@@ -43,45 +52,40 @@ def _get_cls_info(clsname, modname, kwargs):
 		case 'Completed':
 			from ..util import get_extension, die
 			from .completed import Completed
-			ext = get_extension(kwargs['filename'])
-			cls = Completed.ext_to_cls(ext, proto)
-			if not cls:
-				die(1, f'{ext!r}: unrecognized file extension for CompletedTX')
+			if not (cls := Completed.ext_to_cls(get_extension(filename), proto)):
+				die(1, f'{get_extension(filename)!r}: unrecognized file extension for CompletedTX')
 			clsname = cls.__name__
 			modname = cls.__module__.rsplit('.', maxsplit=1)[-1]
-		case 'New' if kwargs['target'] == 'swaptx':
+		case 'New' if target == 'swaptx':
 			clsname = 'NewSwap'
 			modname = 'new_swap'
 
-	kwargs['proto'] = proto
+	return cinfo(('Automount' + clsname if automount else clsname), modname, cfg, proto)
 
-	if 'automount' in kwargs:
-		if kwargs['automount']:
-			clsname = 'Automount' + clsname
-		del kwargs['automount']
-
-	return (clsname, modname, kwargs)
-
-async def _add_twctl(clsname, modname, kwargs):
-	proto = kwargs['proto']
+async def _get_twctl(d):
 	# TwCtl instance required to retrieve the 'symbol' and 'decimals' parameters
 	# of token contract (see twctl:import_token()).
 	# No twctl required by the Unsigned and Signed classes used during signing,
 	# or by the New and Bump classes, which already have a twctl.
-	if proto and proto.tokensym and clsname in (
+	if d.proto and d.proto.tokensym and d.clsname in (
 			'OnlineSigned',
 			'AutomountOnlineSigned',
 			'Sent',
 			'AutomountSent'):
 		from ..tw.ctl import TwCtl
-		kwargs['twctl'] = await TwCtl(kwargs['cfg'], proto, no_rpc=True)
-	return (clsname, modname, kwargs)
+		return await TwCtl(d.cfg, d.proto, no_rpc=True)
+	else:
+		return None
 
 def _get(clsname, modname, kwargs):
-	return _base_proto_subclass(*_get_cls_info(clsname, modname, kwargs))(**kwargs)
+	ret = _get_cls_info(clsname, modname, **kwargs)
+	return _base_proto_subclass(*ret)(
+		**(kwargs | {'proto': ret.proto}))
 
 async def _get_async(clsname, modname, kwargs):
-	return _base_proto_subclass(*(await _add_twctl(*_get_cls_info(clsname, modname, kwargs))))(**kwargs)
+	ret = _get_cls_info(clsname, modname, **kwargs)
+	return _base_proto_subclass(*ret)(
+		**(kwargs | {'proto': ret.proto, 'twctl': await _get_twctl(ret)}))
 
 BaseTX         = lambda **kwargs: _get('Base',     'base',     kwargs)
 NewTX          = lambda **kwargs: _get('New',      'new',      kwargs)
