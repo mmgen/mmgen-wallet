@@ -57,7 +57,6 @@ for k, v in {
 
 Config._env_opts += (
 	# these are referenced in test suite only, except as noted:
-	'MMGEN_TEST_SUITE',
 	'MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE',
 	'MMGEN_TEST_SUITE_AUTOSIGN_THREADED',
 	'MMGEN_TEST_SUITE_BOGUS_SEND',

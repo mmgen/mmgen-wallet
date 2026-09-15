@@ -136,10 +136,7 @@ class CmdTestInput(CmdTestBase):
 			'--out-fmt=words',
 			f'--outdir={trash_dir}']
 		mn = sample_mn['mmgen']['mn']
-		run_env = dict(os.environ)
-		run_env['MMGEN_TEST_SUITE'] = ''
-
-		cp = run(cmd, input=mn.encode(), capture_output=True, env=run_env)
+		cp = run(cmd, input=mn.encode(), capture_output=True)
 
 		imsg(cp.stderr.decode().strip())
 		res = get_data_from_file(

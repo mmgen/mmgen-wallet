@@ -29,7 +29,7 @@ examples/coin-daemon-info.py:
 #
 #       PYTHONPATH=. examples/coin-daemon-info.py btc ltc eth
 
-import sys, os, asyncio
+import sys, asyncio
 
 from mmgen.exception import SocketError
 from mmgen.cfg import Config
@@ -46,12 +46,11 @@ async def main(coins):
 
 	rpcs = {}
 	cfgs = {}
-	test_suite = os.getenv('MMGEN_TEST_SUITE')
 	base_cfg = Config({'pager':True})
 
 	for coin in coins:
 		cfg_in = {'coin': coin}
-		if coin == 'eth' and not test_suite:
+		if coin == 'eth' and not Config.test_suite:
 			cfg_in.update({'daemon_id': 'geth'})
 		cfgs[coin] = Config(cfg_in)
 		rpcs[coin] = await get_rpc(cfgs[coin])
