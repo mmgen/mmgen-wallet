@@ -148,8 +148,7 @@ class ThornodeSwapServer(ThornodeServer):
 		data = data_template | {
 			'recommended_min_amount_in': str(int(70 * 10**8 / prices[send_asset])), # $70
 			'expected_amount_out': str(out_amt.to_unit('satoshi')),
-			'expiry': int(time.time()) + (10 * 60),
-		}
+			'expiry': int(time.time()) + (10 * 60)}
 
 		if send_asset != 'RUNE':
 			send_proto = init_proto(self.cfg, send_chain, network='regtest', need_amt=True)

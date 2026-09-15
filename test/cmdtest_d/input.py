@@ -291,8 +291,7 @@ class CmdTestInput(CmdTestBase):
 			'prompt': '',
 			'immed_chars': '',
 			'prehold_protect': True,
-			'num_bytes': 5,
-		}
+			'num_bytes': 5}
 		return self._input_func('get_char', arg_dfls, func_args, text, expect, term)
 
 	def _line_input(self, func_args, text, expect, term, delay=None):
@@ -300,8 +299,7 @@ class CmdTestInput(CmdTestBase):
 			'prompt': '', # positional
 			'echo': True,
 			'insert_txt': '',
-			'hold_protect': True,
-		}
+			'hold_protect': True}
 		return self._input_func('line_input', arg_dfls, func_args, text+'\n', expect, term, delay=delay)
 
 	def get_char1(self):

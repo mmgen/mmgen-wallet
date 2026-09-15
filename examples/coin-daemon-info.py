@@ -52,8 +52,7 @@ async def main(coins):
 	for coin in coins:
 		cfg_in = {
 			'coin': coin,
-			'test_suite': test_suite,
-		}
+			'test_suite': test_suite}
 		if coin == 'eth' and not test_suite:
 			cfg_in.update({'daemon_id': 'geth'})
 		cfgs[coin] = Config(cfg_in)

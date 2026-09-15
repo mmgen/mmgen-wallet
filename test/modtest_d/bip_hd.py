@@ -118,8 +118,7 @@ vectors_derive = {
 	'bech32': {
 		0: 'bc1qwg77fxw0tkmc3h58tcnnpegxk7mp3h6ly44d3n',
 		1: 'bc1q6g79y6kwpkufevv2njacvnqnsdxmen68jyvjde',
-		2: 'bc1qknujpwlxc9e9e6avz50q5k90p552xy8g3qjd8u',
-	}
+		2: 'bc1qknujpwlxc9e9e6avz50q5k90p552xy8g3qjd8u'}
 }
 
 # Source: bip_utils

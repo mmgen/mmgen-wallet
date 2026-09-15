@@ -119,8 +119,7 @@ class Messages:
 	# MsgDeposit{
 	#     Coins:  coins,
 	#     Memo:   memo,
-	#     Signer: signer,
-	# }
+	#     Signer: signer}
 		@dataclass
 		class Body(BaseMessage):
 			coins:  Annotated[list[CoinWithAsset], Field(1)]

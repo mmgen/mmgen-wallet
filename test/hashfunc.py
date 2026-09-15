@@ -102,8 +102,7 @@ class TestKeccak(TestHashFunc):
 		'\x0a\x0d'*513:               '187c8fa19c9ac5dedbe4a3078290120eb2f5f7b3b0cb4590cdfbebcfb37bf2b3',
 		'\x00\x0f'*1024:              '7aa8a949809ac159cb98fe947ddc40de05be9309aff563130d7d55afb4cc9e11',
 		'\x0e\x0f'*1023:              '5c82fa38e3d35efe65a392835be500ba62d0dfc9c0de28950cdeb5bc0d96689d',
-		'\x0a\x0d'*1025:              'bc99495fcaf4a987c421ff1cc5854b25786964ab863836b34c82a437a473f4c4',
-	}
+		'\x0a\x0d'*1025:              'bc99495fcaf4a987c421ff1cc5854b25786964ab863836b34c82a437a473f4c4'}
 
 	def __init__(self):
 		from mmgen.contrib.keccak import keccak_256

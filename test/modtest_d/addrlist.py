@@ -41,8 +41,7 @@ def do_test(
 	} if pw_id_str else {
 		'seed': seed,
 		'addr_idxs': idxs,
-		'mmtype': mmtype,
-	}
+		'mmtype': mmtype}
 
 	if add_kwargs:
 		kwargs.update(add_kwargs)

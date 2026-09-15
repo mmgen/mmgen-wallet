@@ -75,9 +75,7 @@ class unit_tests:
 			'sweep_spec': (
 				vs('1:2',     "('1', '2', None, None)"),
 				vs('1:2,3',   "('1', '2', '3', None)"),
-				vs('1:2,3:4', "('1', '2', '3', '4')"),
-			),
-		}
+				vs('1:2,3:4', "('1', '2', '3', '4')"))}
 
 		vmsg('')
 		for k, v in uarg_info.items():

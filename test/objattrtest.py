@@ -129,8 +129,7 @@ def test_attr(data, obj, attrname, dobj, bits, attrval_type):
 			'reassign_ok': purple,
 			'delete_ok': red,
 			'typeconv': green,
-			'set_none_ok': yellow,
-		}
+			'set_none_ok': yellow}
 		for k in bits:
 			if k in d:
 				if d[k] != bits[k]:

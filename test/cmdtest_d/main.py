@@ -582,8 +582,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 			'address': coinaddr,
 			'spendable': False,
 			'scriptPubKey': f'{s_beg}{coinaddr.bytes.hex()}{s_end}',
-			'confirmations': getrandnum(3) // 20 # max: 838860 (6 digits)
-		}
+			'confirmations': getrandnum(3) // 20} # max: 838860 (6 digits)
 		return ret
 
 	def _create_fake_unspent_data(
@@ -645,8 +644,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 				'chk': al.chksum,
 				'al_id': al.al_id,
 				'addr_idxs': aix[-2:],
-				'segwit': self.cfgs[s]['segwit']
-			}
+				'segwit': self.cfgs[s]['segwit']}
 		return ad, tx_data
 
 	def _make_txcreate_outputs(self, tx_data, single_output):

@@ -716,8 +716,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		('twview6',            'twview (balance reduced after address removal)'),
 		('remove_addr2',       f'removing addr #{del_addrs[1]} from {coin} tracking wallet'),
 		('token_remove_addr1', f'removing addr #{del_addrs[0]} from {coin} token tracking wallet'),
-		('token_remove_addr2', f'removing addr #{del_addrs[1]} from {coin} token tracking wallet'),
-	),
+		('token_remove_addr2', f'removing addr #{del_addrs[1]} from {coin} token tracking wallet'))
 	}
 
 	def __init__(self, cfg, trunner, cfgs, spawn):

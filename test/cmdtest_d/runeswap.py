@@ -63,8 +63,7 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 			('rune_swaptxsend1',    ''),
 			('rune_swaptxstatus1',  ''),
 			('rune_swaptxreceipt1', ''),
-			('rune_swaptxhex1',     ''),
-		),
+			('rune_swaptxhex1',     ''))
 	}
 
 	exec(create_cross_methods(cross_coin, cross_group, cmd_group_in, cmd_subgroups))

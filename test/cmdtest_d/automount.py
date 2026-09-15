@@ -26,8 +26,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	keylist_passwd = 'abc'
 
 	rt_data = {
-		'rtFundAmt': {'btc':'500', 'bch':'500', 'ltc':'5500'},
-	}
+		'rtFundAmt': {'btc':'500', 'bch':'500', 'ltc':'5500'} }
 	bal1_chk = {
 		'btc': '502.46',
 		'bch': '502.46',

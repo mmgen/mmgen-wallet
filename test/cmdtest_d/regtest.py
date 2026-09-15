@@ -157,8 +157,7 @@ rt_data = {
 	'rtAmts': {
 		'btc': ('500', '500'),
 		'bch': ('500', '560'),
-		'ltc': ('5500', '5500')
-	}
+		'ltc': ('5500', '5500')}
 }
 
 class CmdTestRegtest(CmdTestBase, CmdTestShared):
@@ -476,8 +475,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		'address sorting',
 		('addrgen_bob_extra',    'generating Bob’s extra address'),
 		('addrimport_bob_extra', 'importing Bob’s extra address'),
-		('bob_check_idx_sort',   'viewing Bob’s addresses (checking index sort order)'),
-	),
+		('bob_check_idx_sort',   'viewing Bob’s addresses (checking index sort order)'))
 	}
 
 	def __init__(self, cfg, trunner, cfgs, spawn):

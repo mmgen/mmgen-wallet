@@ -15,8 +15,8 @@ class unit_tests:
 
 		samples = {
 			'pids': [18234, 18444, 19324],
-			'vardata': [None, True, 1234, 'sample string'],
-		}
+			'vardata': [None, True, 1234, 'sample string']}
+
 		chks = {
 			'vardata': {
 				None:        "'None', 'True', '1234', 'sample string'",
@@ -28,10 +28,7 @@ class unit_tests:
 				'min':       "None,True,1234,sample string",
 				'repr':      "None, True, 1234, 'sample string'",
 				'csv':       "None,True,1234,'sample string'",
-				'col':       "    + None\n    + True\n    + 1234\n    + sample string",
-			}
-
-		}
+				'col':       "    + None\n    + True\n    + 1234\n    + sample string"}}
 
 		col1_w = max(len(str(e)) for e in next(iter(chks.values()))) + 1
 
@@ -67,20 +64,17 @@ class unit_tests:
 				'text': 'foo bar',
 				'stdin': None,
 				'offset': 123,
-				'env': {},
-			}
-		}
+				'env': {}}}
+
 		chks = {
-		'cmdline': {
-			None:           "'cmd' (['ls', '-l']), 'text' (foo bar), 'stdin' (None), 'offset' (123), 'env' ({})",
-			'dfl':          "'cmd' (['ls', '-l']), 'text' (foo bar), 'stdin' (None), 'offset' (123), 'env' ({})",
-			'square':       "'cmd' [['ls', '-l']], 'text' [foo bar], 'stdin' [None], 'offset' [123], 'env' [{}]",
-			'equal':        "'cmd'=['ls', '-l'], 'text'=foo bar, 'stdin'=None, 'offset'=123, 'env'={}",
-			'equal_spaced': "'cmd' = ['ls', '-l'], 'text' = foo bar, 'stdin' = None, 'offset' = 123, 'env' = {}",
-			'kwargs':       "cmd=['ls', '-l'], text='foo bar', stdin=None, offset=123, env={}",
-			'colon':        "cmd:['ls', '-l'], text:'foo bar', stdin:None, offset:123, env:{}",
-		}
-		}
+			'cmdline': {
+				None:           "'cmd' (['ls', '-l']), 'text' (foo bar), 'stdin' (None), 'offset' (123), 'env' ({})",
+				'dfl':          "'cmd' (['ls', '-l']), 'text' (foo bar), 'stdin' (None), 'offset' (123), 'env' ({})",
+				'square':       "'cmd' [['ls', '-l']], 'text' [foo bar], 'stdin' [None], 'offset' [123], 'env' [{}]",
+				'equal':        "'cmd'=['ls', '-l'], 'text'=foo bar, 'stdin'=None, 'offset'=123, 'env'={}",
+				'equal_spaced': "'cmd' = ['ls', '-l'], 'text' = foo bar, 'stdin' = None, 'offset' = 123, 'env' = {}",
+				'kwargs':       "cmd=['ls', '-l'], text='foo bar', stdin=None, offset=123, env={}",
+				'colon':        "cmd:['ls', '-l'], text:'foo bar', stdin:None, offset:123, env:{}"}}
 
 		col1_w = max(len(str(e)) for e in next(iter(chks.values()))) + 1
 

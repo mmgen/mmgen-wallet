@@ -106,8 +106,7 @@ class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTest
 			('txsign1',              'signing the transaction'),
 			('txsend1_test',         'testing whether the transaction can be sent'),
 			('txsend1',              'sending the transaction'),
-			('txhex1',               'dumping the transaction hex'),
-		),
+			('txhex1',               'dumping the transaction hex'))
 	}
 
 	def __init__(self, cfg, trunner, cfgs, spawn):

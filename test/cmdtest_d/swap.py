@@ -381,8 +381,7 @@ class CmdTestSwap(
 			('autosign_swaptxsend2',   'sending the transaction'),
 			('generate_ltc',           'generating a block'),
 			('swap_bal3',              'checking the balance'),
-			('wait_loop_kill',         'stopping autosign wait loop'),
-		),
+			('wait_loop_kill',         'stopping autosign wait loop'))
 	}
 
 	def __init__(self, cfg, trunner, cfgs, spawn):

@@ -243,8 +243,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('eth_swaptxsend5a',           ''),
 		('eth_swaptxsend5b',           ''),
 		('eth_swaptxsend5',            ''),
-		('eth_etherscan_server_stop',  ''),
-	),
+		('eth_etherscan_server_stop',  ''))
 	}
 
 	exec(create_cross_methods(cross_coin, cross_group, cmd_group_in, cmd_subgroups))

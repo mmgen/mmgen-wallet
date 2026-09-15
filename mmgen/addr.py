@@ -89,8 +89,7 @@ def is_mmgen_addrtype(proto, id_str):
 
 class MMGenPasswordType(MMGenAddrType):
 	mmtypes = {
-		'P': ati('password', 'password', None, None, None, None, None, 'Password generated from MMGen seed')
-	}
+		'P': ati('password', 'password', None, None, None, None, None, 'Password generated from MMGen seed') }
 
 class AddrIdx(MMGenIdx):
 	max_digits = 7

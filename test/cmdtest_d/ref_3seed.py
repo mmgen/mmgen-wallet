@@ -48,8 +48,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 	pass_idx_list_in = '1,4,9-11,1100'
 	chk_data = {
 		'lens': (128, 192, 256),
-		'sids': ('FE3C6545', '1378FC64', '98831F3A'),
-	}
+		'sids': ('FE3C6545', '1378FC64', '98831F3A')}
 	shared_deps = ['mmdat', pwfile]
 	skip_cmds = (
 		'ref_xmrseed_25_passwdgen_1',
