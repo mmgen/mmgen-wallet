@@ -12,6 +12,8 @@ test.overlay.fakemods.mmgen.cfg: overlay setup for cfg.py
 
 from .cfg_orig import *
 
+GlobalConstants.CR = '\n'
+
 for k, v in {
 		# NB: check carefully that none of these attrs are required by Config(), Opts()
 		# or anything they import or call before the lock is set in Config()

@@ -12,6 +12,7 @@
 proto.btc.tw.ctl: Bitcoin base protocol tracking wallet control class
 """
 
+from ....cfg import gc
 from ....tw.ctl import TwCtl, write_mode
 from ....util import msg, msg_r, rmsg, die, suf, fmt_list
 
@@ -61,7 +62,6 @@ class BitcoinTwCtl(TwCtl):
 
 		start = start or 0
 		endless = stop is None
-		CR = '\n' if self.cfg.test_suite else '\r'
 
 		if not (start >= 0 and (stop if stop is not None else start) >= start):
 			die(1, f'{start} {stop}: invalid range')
@@ -69,7 +69,7 @@ class BitcoinTwCtl(TwCtl):
 		async def do_scan(chunks, tip):
 			res = None
 			for a, b in chunks:
-				msg_r(f'{CR}Scanning blocks {a}-{b} ')
+				msg_r(f'{gc.CR}Scanning blocks {a}-{b} ')
 				res = await self.rpc.call('rescanblockchain', a, b, timeout=7200)
 				if res['start_height'] != a or res['stop_height'] != b:
 					die(1, f'\nAn error occurred in block range {a}-{b}')
@@ -119,9 +119,8 @@ class BitcoinTwCtl(TwCtl):
 				len(blocks),
 				suf(blocks)))
 			self.cfg._util.vmsg(f'Blocks to rescan: {fmt_list(blocks, fmt="bare")}')
-			CR = '\n' if self.cfg.test_suite else '\r'
 			for n, block in enumerate(blocks):
-				msg_r(f'{CR}Rescanning block: {block} ({n+1}/{len(blocks)})')
+				msg_r(f'{gc.CR}Rescanning block: {block} ({n+1}/{len(blocks)})')
 				# httplib seems to require fresh connection here, so specify timeout
 				await self.rpc.call('rescanblockchain', block, block, timeout=60)
 			msg(f'\nAddress balance{suf(coin_addrs)} updated successfully')

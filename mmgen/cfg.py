@@ -59,6 +59,8 @@ class GlobalConstants(Lockable):
 	min_screen_width   = 80
 	min_time_precision = 18
 
+	CR = '\r'
+
 	# core_coins must match CoinProtocol.coins
 	core_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'zec', 'xmr', 'rune')
 	rpc_coins = ('btc', 'bch', 'ltc', 'eth', 'etc', 'xmr', 'rune')
@@ -258,7 +260,7 @@ class Config(Lockable):
 	xmrwallet_compat           = False
 	priority                   = 0
 
-	test_suite = False # 30 references
+	test_suite = False # 25 references
 
 	# external use:
 	_opts  = None

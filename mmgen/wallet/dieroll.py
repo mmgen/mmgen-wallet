@@ -13,6 +13,7 @@ wallet.dieroll: dieroll wallet class
 """
 
 import time
+from ..cfg import gc
 from ..util import msg, msg_r, die, fmt, remove_whitespace
 from ..util2 import block_format
 from ..seed import Seed
@@ -97,10 +98,9 @@ class wallet(wallet):
 
 		CUR_HIDE = '\033[?25l'
 		CUR_SHOW = '\033[?25h'
-		cr = '\n' if self.cfg.test_suite else '\r'
-		prompt_fs = f'\b\b\b   {cr}Enter die roll #{{}}: {CUR_SHOW}'
+		prompt_fs = f'\b\b\b   {gc.CR}Enter die roll #{{}}: {CUR_SHOW}'
 		clear_line = '' if self.cfg.test_suite else '\r' + ' ' * 25
-		invalid_msg = CUR_HIDE + cr + 'Invalid entry' + ' ' * 11
+		invalid_msg = CUR_HIDE + gc.CR + 'Invalid entry' + ' ' * 11
 
 		from ..term import get_char
 		def get_digit(n):

@@ -12,6 +12,7 @@
 wallet.unenc: unencrypted wallet base class
 """
 
+from ..cfg import gc
 from ..color import blue, yellow
 from ..util import msg, msg_r, capfirst, is_int
 from .base import wallet
@@ -43,7 +44,7 @@ class wallet(wallet):
 				r = get_char('\r'+prompt)
 				if is_int(r) and 1 <= int(r) <= len(ok_lens):
 					break
-			msg_r(('\r', '\n')[self.cfg.test_suite] + ' '*len(prompt) + '\r')
+			msg_r(gc.CR + ' ' * len(prompt) + '\r')
 			return ok_lens[int(r)-1]
 
 		while True:
