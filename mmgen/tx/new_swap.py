@@ -41,10 +41,10 @@ class NewSwap(New):
 	desc = 'swap transaction'
 	swap_quote_refresh_timeout = 30
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *, cfg, **kwargs):
 		self.is_swap = True
-		self.swap_proto = kwargs['cfg'].swap_proto
-		New.__init__(self, *args, **kwargs)
+		self.swap_proto = cfg.swap_proto
+		New.__init__(self, cfg=cfg, **kwargs)
 
 	def check_addr_is_wallet_addr(self, output, *, message):
 		if not output.mmid:

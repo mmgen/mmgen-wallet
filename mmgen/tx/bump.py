@@ -23,9 +23,9 @@ class Bump(Completed, NewSwap):
 	bump_output_idx = None
 	is_bump = True
 
-	def __init__(self, *, check_sent, new_outputs, **kwargs):
+	def __init__(self, *, cfg, check_sent, new_outputs, **kwargs):
 
-		super().__init__(**kwargs)
+		super().__init__(cfg=cfg, **kwargs)
 
 		self.new_outputs = new_outputs
 		self.orig_rel_fee = self.get_orig_rel_fee()
@@ -36,7 +36,7 @@ class Bump(Completed, NewSwap):
 				for attr in self.swap_attrs:
 					setattr(self, attr, None)
 			self.outputs = self.OutputList(self)
-			self.cfg = kwargs['cfg'] # must use current cfg opts, not those from orig_tx
+			self.cfg = cfg # must use current cfg opts, not those from orig_tx
 		elif self.is_swap and self.is_token:
 			die(1,
 				orange('Fee-bumping of token swap transactions currently not supported.\n') +

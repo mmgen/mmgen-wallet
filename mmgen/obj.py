@@ -24,7 +24,7 @@ import unicodedata
 
 from .objmethods import MMGenObject, Hilite, HiliteStr, InitErrors
 
-def get_obj(objname, *args, **kwargs):
+def get_obj(objname, *args, silent=False, return_bool=False, **kwargs):
 	"""
 	Wrapper for data objects
 	- If the object throws an exception on instantiation, return False, otherwise return the object.
@@ -33,14 +33,6 @@ def get_obj(objname, *args, **kwargs):
 	Only keyword args are accepted.
 	"""
 	assert not args, 'get_obj_chk1'
-
-	silent, return_bool = (False, False)
-	if 'silent' in kwargs:
-		silent = kwargs['silent']
-		del kwargs['silent']
-	if 'return_bool' in kwargs:
-		return_bool = kwargs['return_bool']
-		del kwargs['return_bool']
 
 	try:
 		ret = objname(**kwargs)

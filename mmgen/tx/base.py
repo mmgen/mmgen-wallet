@@ -119,13 +119,13 @@ class Base(MMGenObject):
 	class OutputList(MMGenTxIOList):
 		desc = 'transaction outputs'
 
-	def __init__(self, *args, **kwargs):
-		self.cfg      = kwargs['cfg']
+	def __init__(self, *, cfg, proto, twctl=None, **kwargs):
+		self.cfg      = cfg
 		self.inputs   = self.InputList(self)
 		self.outputs  = self.OutputList(self)
 		self.name     = type(self).__name__
-		self.proto    = kwargs['proto']
-		self.twctl    = kwargs.get('twctl')
+		self.proto    = proto
+		self.twctl    = twctl
 		self.is_token = 'Token' in self.name
 
 	@property
