@@ -423,7 +423,6 @@ class Autosign:
 				'coin': 'xmr',
 				'wallet_rpc_user': 'autosign',
 				'wallet_rpc_password': 'autosign password', # nosec # B105 (offline device use only)
-				'wallet_rpc_port': 23232 if self.cfg.test_suite_xmr_autosign else None,
 				'wallet_dir': str(self.wallet_dir),
 				'autosign': True,
 				'autosign_mountpoint': str(self.mountpoint),

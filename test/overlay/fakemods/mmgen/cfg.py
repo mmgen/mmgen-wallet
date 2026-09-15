@@ -34,7 +34,6 @@ for k, v in {
 		'test_suite_popen_spawn':           False, # line_input() - using getattr() with dfl val - OK
 		'test_suite_hold_protect_disable':  False, # init_term() - using getattr() with dfl val - OK
 		'test_suite_autosign_threaded':     False, # autosign - OK
-		'test_suite_xmr_autosign':          False, # autosign - OK
 		'test_suite_root_pfx':              '',    # autosign - OK
 		'test_suite_bogus_send':            False, # tx.online - OK
 		'test_datadir':                     os.path.join('test', 'tmp', 'data_dir'), # cfg - OK
@@ -74,8 +73,7 @@ Config._env_opts += (
 	'MMGEN_TEST_SUITE_PEXPECT',
 	'MMGEN_TEST_SUITE_PEXPECT_TIMEOUT',
 	'MMGEN_TEST_SUITE_POPEN_SPAWN',
-	'MMGEN_TEST_SUITE_ROOT_PFX',
-	'MMGEN_TEST_SUITE_XMR_AUTOSIGN')
+	'MMGEN_TEST_SUITE_ROOT_PFX')
 
 if os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'):
 	Config.stdin_tty = True

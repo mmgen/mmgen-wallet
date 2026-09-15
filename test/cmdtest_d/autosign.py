@@ -122,7 +122,6 @@ class CmdTestAutosignBase(CmdTestBase):
 			asi = Autosign(
 				Config({
 					'coins': ','.join(self.coins),
-					'test_suite_xmr_autosign': self.name == 'CmdTestXMRAutosign',
 					'test_suite_autosign_threaded': self.threaded,
 					'test_suite_root_pfx': None if self.live else self.tmpdir,
 					'online': subdir == 'online'}))

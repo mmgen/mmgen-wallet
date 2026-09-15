@@ -119,9 +119,7 @@ class MoneroWalletDaemon(RPCDaemon):
 
 		self.network = proto.network
 		self.wallet_dir = wallet_dir or (self.test_suite_datadir if self.test_suite else None)
-		self.rpc_port = (
-			self.cfg.wallet_rpc_port or
-			getattr(self.rpc_ports, self.network) + (11 if self.test_suite else 0))
+		self.rpc_port = getattr(self.rpc_ports, self.network) + (11 if self.test_suite else 0)
 
 		if port_shift:
 			self.rpc_port += port_shift

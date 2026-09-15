@@ -128,7 +128,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 		self.xmrwallets_opt = f'--xmrwallets={self.users["alice"].kal_range}'
 		self.autosign_opts = ['--autosign'] # mmgen-xmrwallet opts
-		self.spawn_env['MMGEN_TEST_SUITE_XMR_AUTOSIGN'] = '1'
 
 	def create_tmp_wallets(self):
 		self.spawn(msg_only=True)
