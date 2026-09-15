@@ -86,4 +86,4 @@ async def main():
 		f'Est. halving date (UTC):  {date(cur["time"] + t_rem)}\n'
 		f'Est. time until halving: {dhms(cur["time"] + t_rem - clock_time)}\n')
 
-async_run(cfg, main)
+async_run(cfg, main) # pylint: disable=too-many-function-args

@@ -30,7 +30,7 @@ def exec_wrapper_init():
 		repo_root = exec_wrapper_os.getcwd() # assume we’re in repo root
 		exec_wrapper_sys.path[0] = repo_root
 		# ensure loading of mmgen mods from overlay tree, not repo root:
-		from test.overlay import overlay_setup # pylint: disable=import-error
+		from test.overlay import overlay_setup # pylint: disable=import-error,no-name-in-module
 		overlay_setup(repo_root)
 	else:
 		exec_wrapper_sys.path.pop(0)
@@ -51,7 +51,7 @@ def exec_wrapper_write_traceback(e, exit_val):
 		import traceback
 		cwd = os.getcwd()
 		sys.path.insert(0, cwd)
-		from test.overlay import get_overlay_tree_dir # pylint: disable=import-error
+		from test.overlay import get_overlay_tree_dir # pylint: disable=import-error,no-name-in-module
 		overlay_path_pfx = os.path.relpath(get_overlay_tree_dir(cwd)) + '/'
 
 		def fixup_fn(fn_in):

@@ -13,7 +13,7 @@ test.include.ecc: elliptic curve utilities for the MMGen test suite
 """
 
 import ecdsa, hashlib
-from mmgen.proto.secp256k1.keygen import overlay_fake_pubkey_format
+from mmgen.proto.secp256k1.keygen import overlay_fake_pubkey_format # pylint: disable=no-name-in-module
 
 def _pubkey_to_pub_point(vk_bytes):
 	try:

@@ -17,7 +17,7 @@ from collections import namedtuple
 
 from mmgen.cfg import gc
 from mmgen.color import red, yellow, green, cyan, gray, nocolor
-from mmgen.util import ymsg, bmsg, die, suf, make_timestr, isAsync, capfirst
+from mmgen.util import ymsg, bmsg, die, suf, make_timestr, isAsync, capfirst # pylint: disable=no-name-in-module
 
 from ...include.common import (
 	cmdtest_py_log_fn,
