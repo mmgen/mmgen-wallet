@@ -38,40 +38,9 @@ class backend:
 
 		@classmethod
 		def get_clsname(cls, cfg, *, silent=False):
-			try:
-				from .secp256k1 import pubkey_gen
-				if not pubkey_gen(bytes.fromhex('deadbeef'*8), 1):
-					from ...util import die
-					die('ExtensionModuleError',
-						'Unable to execute pubkey_gen() from secp256k1 extension module')
-				return cls.__name__
-			except ImportError as e:
-				if not silent:
-					from ...util import ymsg
-					ymsg(str(e))
-				cfg._util.qmsg('Using (slow) native Python ECDSA library for public key generation')
-				return 'python_ecdsa'
-
-	class python_ecdsa(keygen_base):
-
-		production_safe = False
-
-		def __init__(self, cfg):
-			super().__init__(cfg)
-			import ecdsa
-			self.ecdsa = ecdsa
-
-		def to_pubkey(self, privkey):
-			"""
-			devdoc/guide_wallets.md:
-			Uncompressed public keys start with 0x04; compressed public keys begin with 0x03 or
-			0x02 depending on whether they're greater or less than the midpoint of the curve.
-			"""
-			def privnum2pubkey(numpriv, *, compressed=False):
-				pk = self.ecdsa.SigningKey.from_secret_exponent(numpriv, curve=self.ecdsa.SECP256k1)
-				# vk_bytes = x (32 bytes) + y (32 bytes) (unsigned big-endian)
-				return pubkey_format(pk.verifying_key.to_string(), compressed)
-
-			return PubKey(
-				s = privnum2pubkey(int.from_bytes(privkey, 'big'), compressed=privkey.compressed),
-				compressed = privkey.compressed)
+			from .secp256k1 import pubkey_gen
+			if not pubkey_gen(bytes.fromhex('deadbeef'*8), 1):
+				from ...util import die
+				die('ExtensionModuleError',
+					'Unable to execute pubkey_gen() from secp256k1 extension module')
+			return cls.__name__

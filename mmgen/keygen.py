@@ -33,11 +33,7 @@ keygen_public_data = namedtuple(
 class keygen_base:
 
 	def __init__(self, cfg):
-		if not (self.production_safe or cfg.test_suite):
-			from .util import die
-			die(2,
-				f'Public key generator {type(self).__name__!r} is not safe from timing attacks '
-				'and may only be used in a testing environment')
+		pass
 
 	def gen_data(self, privkey):
 		assert isinstance(privkey, PrivKey)
@@ -56,10 +52,10 @@ class keygen_base:
 
 backend_data = {
 	'std': {
-		'backends': ('libsecp256k1', 'python-ecdsa'),
+		'backends': ('libsecp256k1',),
 		'package': 'secp256k1'},
 	'monero': {
-		'backends': ('nacl', 'ed25519ll-djbec', 'ed25519'),
+		'backends': ('nacl',),
 		'package': 'xmr'},
 	'zcash_z': {
 		'backends': ('nacl',),

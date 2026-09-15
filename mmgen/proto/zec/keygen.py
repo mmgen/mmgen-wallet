@@ -19,8 +19,6 @@ class backend:
 
 	class nacl(keygen_base):
 
-		production_safe = True
-
 		def __init__(self, cfg):
 			super().__init__(cfg)
 			from nacl.bindings import crypto_scalarmult_base
