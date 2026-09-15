@@ -46,8 +46,7 @@ class tool_cmd(tool_cmd_base):
 	def _init_generators(self):
 		return generator_data(
 			kg = KeyGenerator(self.cfg, self.proto, self.mmtype.pubkey_type),
-			ag = AddrGenerator(self.cfg, self.proto, self.mmtype),
-		)
+			ag = AddrGenerator(self.cfg, self.proto, self.mmtype))
 
 	def randwif(self):
 		"generate a random private key in WIF format"

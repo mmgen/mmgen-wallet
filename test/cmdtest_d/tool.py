@@ -72,9 +72,8 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 		),
 		('tool_api',
 			(9, 'tool API (initialization, config methods, wif2addr)', [])
-		),
+		))
 		# ('tool_encrypt_ref', (9, '‘mmgen-tool encrypt’ (reference text)', [])),
-	)
 
 	def tool_rand2file(self):
 		from mmgen.util2 import parse_bytespec
@@ -82,8 +81,7 @@ class CmdTestTool(CmdTestMain, CmdTestBase):
 			t = self.spawn(
 				'mmgen-tool',
 				['-d', self.tmpdir, '-r0', 'rand2file', 'rand2file.out', nbytes],
-				extra_desc='({} byte{})'.format(nbytes, suf(parse_bytespec(nbytes)))
-			)
+				extra_desc='({} byte{})'.format(nbytes, suf(parse_bytespec(nbytes))))
 			t.expect('random data written to file')
 			t.read()
 			t.p.wait()

@@ -59,8 +59,7 @@ class monero_daemon(CoinDaemon):
 			['--no-zmq'],
 			[f'--p2p-bind-port={self.p2p_port}', self.p2p_port],
 			[f'--rpc-bind-port={self.rpc_port}'],
-			['--stagenet', self.network == 'testnet'],
-		)
+			['--stagenet', self.network == 'testnet'])
 
 		self.coind_args = list_gen(
 			['--hide-my-port'],
@@ -68,8 +67,7 @@ class monero_daemon(CoinDaemon):
 			[f'--data-dir={self.datadir}', self.non_dfl_datadir],
 			[f'--pidfile={self.pidfile}', self.use_pidfile],
 			['--detach',                  not (self.opt.no_daemonize or gc.platform=='win32')],
-			['--offline',                 not self.opt.online],
-		)
+			['--offline',                 not self.opt.online])
 
 	@property
 	def stop_cmd(self):
@@ -144,8 +142,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			CoinDaemon(
 				cfg        = self.cfg,
 				proto      = proto,
-				test_suite = test_suite).rpc_port
-		)
+				test_suite = test_suite).rpc_port)
 
 		if test_monerod and self.monerod_port:
 			import socket
@@ -178,8 +175,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			[f'--pidfile={self.pidfile}',            gc.platform == 'linux'],
 			['--detach',                             not (self.opt.no_daemonize or gc.platform=='win32')],
 			['--stagenet',                           self.network == 'testnet'],
-			['--allow-mismatched-daemon-version',    test_suite],
-		)
+			['--allow-mismatched-daemon-version',    test_suite])
 
 		from .rpc import MoneroWalletRPCClient
 		self.rpc = MoneroWalletRPCClient(

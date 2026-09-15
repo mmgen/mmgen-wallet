@@ -142,8 +142,8 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('subgroup.eth_token_swap', ['fund', 'token_init']),
 		('swap_server_stop',        'stopping the Thornode server'),
 		('eth_stop',                'stopping the Ethereum daemon'),
-		('stop',                    'stopping the regtest daemon'),
-	)
+		('stop',                    'stopping the regtest daemon'))
+
 	cmd_subgroups = {
 	'init': (
 		'creating Bob’s MMGen wallet and tracking wallet',
@@ -378,8 +378,7 @@ class CmdTestEthSwapEth(CmdTestEthSwapMethods, CmdTestSwapMethods, CmdTestEthdev
 		('swaptxsend5a',           'sending the transaction via Etherscan (p1)'),
 		('swaptxsend5b',           'sending the transaction via Etherscan (p2)'),
 		('swaptxsend5',            'sending the transaction via Etherscan (complete)'),
-		('etherscan_server_stop',  'stopping the Etherscan server'),
-	)
+		('etherscan_server_stop',  'stopping the Etherscan server'))
 
 	def fund_mmgen_addr1b(self):
 		return self._fund_mmgen_addr(arg=f'{dfl_sid}:E:3,0.001')

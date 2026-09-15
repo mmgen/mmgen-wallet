@@ -229,8 +229,7 @@ class unit_tests:
 				port   = md.rpc_port,
 				user   = None,
 				passwd = None,
-				daemon = md,
-			)
+				daemon = md)
 			if cfg.verbose:
 				await print_daemon_info(rpc)
 			rpc.call_raw('get_height')

@@ -43,8 +43,7 @@ class unit_tests:
 			(0, 7200,                  False,  True, '2 hours'),
 			(0, 3600 + 180 + 1,        False,  True, '1 hour 3 minutes 1 second'),
 			(0, 3600*27 + 180 + 7,     False,  True, '1 day 3 hours 3 minutes 7 seconds'),
-			(0, 3600*24*367 + 180 + 7, True,   True, '367 days 3 minutes 7 seconds ago'),
-		)
+			(0, 3600*24*367 + 180 + 7, True,   True, '367 days 3 minutes 7 seconds ago'))
 
 		fs = '    {:7}  {:9}  {:<8}    {}'
 		vmsg(brown('  vectors:'))

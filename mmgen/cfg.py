@@ -769,11 +769,9 @@ def check_opts(cfg): # Raises exception if any check fails
 			+ (
 				f'parameter for command-line option {fmt_opt(name)!r}'
 					if name in cfg._uopts and cfg._uopt_src == 'cmdline' else
-				f'value for configuration option {name!r}'
-			)
+				f'value for configuration option {name!r}')
 			+ (' from environment' if name in cfg._envopts else '')
-			+ (f' in {cfg._cfgfile_fn!r}' if name in cfg._cfgfile_opts.non_auto else '')
-		)
+			+ (f' in {cfg._cfgfile_fn!r}' if name in cfg._cfgfile_opts.non_auto else ''))
 
 	def display_opt(name, val='', *, beg='For selected', end=':\n'):
 		from .util import msg_r
@@ -966,8 +964,7 @@ def conv_type(name, val, refval, *, src, invert_bool=False):
 		ret = (
 			True  if v in ('true', 'yes', '1', 'on') else
 			False if v in ('false', 'no', 'none', '0', 'off', '') else
-			None
-		)
+			None)
 		return do_fail() if ret is None else (not ret) if invert_bool else ret
 	elif isinstance(refval, list | tuple):
 		if src == 'cmdline':

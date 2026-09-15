@@ -94,8 +94,7 @@ class unit_tests:
 	def addr(self, name, ut):
 		return (
 			do_test(AddrList, 'BCE8 082C 0973 A525', '1-3') and
-			do_test(AddrList, '88FA B04B A380 C1CB', '199999,99-101,77-78,7,3,2-9')
-		)
+			do_test(AddrList, '88FA B04B A380 C1CB', '199999,99-101,77-78,7,3,2-9'))
 
 	def key(self, name, ut):
 		return do_test(KeyList, None)

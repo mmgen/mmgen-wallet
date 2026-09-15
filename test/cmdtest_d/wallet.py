@@ -86,8 +86,7 @@ class CmdTestWalletConv(CmdTestBase, CmdTestShared):
 		('ref_incog_conv_out',         'ref seed conversion to incog data'),
 		('ref_incox_conv_out',         'ref seed conversion to hex incog data'),
 		('ref_hincog_conv_out',        'ref seed conversion to hidden incog data'),
-		('ref_hincog_blkdev_conv_out', 'ref seed conversion to hidden incog data on block device')
-	)
+		('ref_hincog_blkdev_conv_out', 'ref seed conversion to hidden incog data on block device'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		for k, _ in self.cmd_group:

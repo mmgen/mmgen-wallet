@@ -76,8 +76,7 @@ class EthereumTwJSON(TwJSON):
 				for token_addr, token_data in edata['tokens'].items():
 					yield (
 						token_addr,
-						list(gen_entries(token_data)),
-					)
+						list(gen_entries(token_data)))
 
 			return {
 				'accounts': list(gen_entries(edata['accounts'])),
@@ -123,9 +122,7 @@ class EthereumTwJSON(TwJSON):
 						token_addr,
 						sorted(
 							gen_data(token_data),
-							key = lambda x: x.mmgen_id.sort_key if hasattr(x, 'mmgen_id') else '+'
-						)
-					)
+							key = lambda x: x.mmgen_id.sort_key if hasattr(x, 'mmgen_id') else '+'))
 
 			return {
 				'accounts': sorted(

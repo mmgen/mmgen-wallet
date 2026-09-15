@@ -36,8 +36,7 @@ class backend:
 			return PubKey(
 				self.zhash256(privkey, 0)
 				+ self.crypto_scalarmult_base(self.zhash256(privkey, 1)),
-				compressed = privkey.compressed
-			)
+				compressed = privkey.compressed)
 
 		def to_viewkey(self, privkey):
 			vk = bytearray(self.zhash256(privkey, 0) + self.zhash256(privkey, 1))

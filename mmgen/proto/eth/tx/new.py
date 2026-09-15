@@ -198,11 +198,9 @@ class TokenNew(TokenBase, New):
 	def final_inputs_ok_msg(self, funds_left):
 		token_bal = (
 			self.proto.coin_amt('0') if self.outputs[0].is_chg
-			else self.inputs[0].amt - self.outputs[0].amt
-		)
+			else self.inputs[0].amt - self.outputs[0].amt)
 		return "Transaction leaves ≈{} {} and {} {} in the sender's account".format(
 			funds_left.hl(),
 			self.proto.coin,
 			token_bal.hl(),
-			self.proto.dcoin
-		)
+			self.proto.dcoin)

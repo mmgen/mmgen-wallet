@@ -90,8 +90,8 @@ class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTest
 	cmd_group_in = (
 		('subgroup.init',   []),
 		('subgroup.main',   ['init']),
-		('rpc_server_stop', 'stopping the Thornode RPC server'),
-	)
+		('rpc_server_stop', 'stopping the Thornode RPC server'))
+
 	cmd_subgroups = {
 		'init': (
 			'initializing wallets',

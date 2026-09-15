@@ -40,8 +40,8 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('subgroup.rune_swap',   ['rune_init']),
 		('rune_rpc_server_stop', 'stopping the Thornode RPC server'),
 		('swap_server_stop',     'stopping the Thornode swap server'),
-		('stop',                 'stopping the regtest daemon'),
-	)
+		('stop',                 'stopping the regtest daemon'))
+
 	cmd_subgroups = {
 		'init': (
 			'creating Bob’s MMGen wallet and tracking wallet',
@@ -101,8 +101,7 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 		('swaptxstatus1',            'getting the transaction status'),
 		('swaptxreceipt1',           'getting the transaction receipt'),
 		('swaptxhex1',               'dumping the transaction hex'),
-		('thornode_server_stop',     'stopping Thornode server'),
-	)
+		('thornode_server_stop',     'stopping Thornode server'))
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)

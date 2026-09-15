@@ -65,5 +65,4 @@ if len(fns) == 2:
 			'\n'.join(a.rstrip() for a in unified_diff(
 				*cleaned_texts,
 				fromfile = f'a/{fns[0]}',
-				tofile   = f'b/{fns[1]}'))
-		)
+				tofile   = f'b/{fns[1]}')))

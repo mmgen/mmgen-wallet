@@ -123,8 +123,7 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		'close_wallet',
 		# filename,password,seed (restore_height,language,seed_offset,autosave_current)
 		'restore_deterministic_wallet',
-		'refresh',       # start_height
-	)
+		'refresh')       # start_height
 
 	def call_raw(self, *args, **kwargs):
 		raise NotImplementedError('call_raw() not implemented for class MoneroWalletRPCClient')

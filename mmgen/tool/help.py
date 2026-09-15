@@ -52,8 +52,7 @@ def main_help():
 						pretty_format(
 							code.__doc__.strip().split('\n')[0].strip(),
 							width = 79-(max_w+7),
-							pfx   = ' '*(max_w+5)).lstrip()
-					)
+							pfx   = ' '*(max_w+5)).lstrip())
 			yield ''
 
 	return '\n'.join(do())

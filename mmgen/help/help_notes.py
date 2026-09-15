@@ -140,8 +140,7 @@ FMT CODES:
 		from ..keygen import get_backends
 		from ..addr import MMGenAddrType
 		backends = get_backends(
-			MMGenAddrType(self.proto, self.cfg.type or self.proto.dfl_mmtype).pubkey_type
-		)
+			MMGenAddrType(self.proto, self.cfg.type or self.proto.dfl_mmtype).pubkey_type)
 		return ' '.join('{n}:{k}{t}'.format(n=n, k=k, t=('', ' [default]')[n == 1])
 			for n, k in enumerate(backends, 1))
 

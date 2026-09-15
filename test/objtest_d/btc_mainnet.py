@@ -55,8 +55,7 @@ tests = {
 			{'n': '0x0', 'base': 16, 'ret': 0},
 			{'n': '0x1', 'base': 16, 'ret': 1},
 			{'n': '0xf', 'base': 16, 'ret': 15},
-			{'n': '0xff', 'base': 16, 'ret': 255},
-		)
+			{'n': '0xff', 'base': 16, 'ret': 255})
 	},
 	'AddrIdx': {
 		'arg1': 'n',
@@ -90,8 +89,7 @@ tests = {
 		'good': (
 			{'fmt_str': '3,2,2', 'ret': (2, 3)},
 			{'fmt_str': '101,1,3,5,2-7,99', 'ret': (1, 2, 3, 4, 5, 6, 7, 99, 101)},
-			{'idx_list': AddrIdxList(fmt_str='1-5'), 'ret': (1, 2, 3, 4, 5)},
-		)
+			{'idx_list': AddrIdxList(fmt_str='1-5'), 'ret': (1, 2, 3, 4, 5)})
 	},
 	'SubSeedIdxRange': {
 		'bad': (33, 'x', '-11', '66,3','0', '3-2', '8000000', '100000000', (1, 2, 3)),
@@ -100,8 +98,7 @@ tests = {
 			((3, 5), (3, 5)),
 			('1-2', (1, 2)),
 			(str(SubSeedList.dfl_len), (SubSeedList.dfl_len, SubSeedList.dfl_len)),
-			(str(SubSeedIdxRange.max_idx), (SubSeedIdxRange.max_idx, SubSeedIdxRange.max_idx)),
-		)
+			(str(SubSeedIdxRange.max_idx), (SubSeedIdxRange.max_idx, SubSeedIdxRange.max_idx)))
 	},
 	'BTCAmt': {
 		'arg1': 'num',
@@ -125,8 +122,7 @@ tests = {
 				{   'num': Decimal('0.00011249') * Decimal('1.0') * 221 / 1024 , # ≈11 sat/byte
 					'from_decimal': True,
 					'ret': Decimal('0.00002428')},
-				{'num': 1234, 'from_unit': 'satoshi', 'ret': Decimal('0.00001234')},
-		)
+				{'num': 1234, 'from_unit': 'satoshi', 'ret': Decimal('0.00001234')})
 	},
 	'CoinAddr': {
 		'arg1': 'addr',
@@ -155,8 +151,7 @@ tests = {
 		'good': (
 			{'sid': 'F00BAA12'},
 			{'seed': Seed(cfg, seed_bin=r16),     'ret': SeedID(seed=Seed(cfg, seed_bin=r16))},
-			{'sid':  Seed(cfg, seed_bin=r16).sid, 'ret': SeedID(seed=Seed(cfg, seed_bin=r16))}
-		)
+			{'sid':  Seed(cfg, seed_bin=r16).sid, 'ret': SeedID(seed=Seed(cfg, seed_bin=r16))})
 	},
 	'SubSeedIdx': {
 		'arg1': 's',
@@ -267,8 +262,7 @@ tests = {
 		),
 		'good': (
 			{'proto': proto, 'wif': '5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',  'ret_idx': 1},
-			{'proto': proto, 'wif': 'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk', 'ret_idx': 1},
-		)
+			{'proto': proto, 'wif': 'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk', 'ret_idx': 1})
 	},
 	'PubKey': {
 		'arg1': 's',
@@ -277,8 +271,7 @@ tests = {
 			{'s': 'F00BAA12', 'compressed': False},
 		),
 		'good': ( # TODO: add real pubkeys
-			{'s': bytes.fromhex('deadbeef'), 'compressed': True},
-		)
+			{'s': bytes.fromhex('deadbeef'), 'compressed': True},)
 	},
 	'PrivKey': {
 		'arg1': 'proto',
@@ -300,8 +293,7 @@ tests = {
 			{'proto': proto, 'wif': 'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk',
 			'ret': bytes.fromhex('08d0ed83b64b68d56fa064be48e2385060ed205be2b1e63cd56d218038c3a05f')},
 			{'proto': proto, 's': r32, 'compressed': False, 'pubkey_type': 'std', 'ret': r32},
-			{'proto': proto, 's': r32, 'compressed': True, 'pubkey_type': 'std', 'ret': r32}
-		)
+			{'proto': proto, 's': r32, 'compressed': True, 'pubkey_type': 'std', 'ret': r32})
 	},
 	'AddrListID': {
 		'arg1': 'sid',
@@ -312,8 +304,7 @@ tests = {
 		'good': (
 			{'id_str': 'F00BAA12:B', 'proto': proto, 'ret': 'F00BAA12:B'},
 			{'sid': SeedID(sid='F00BAA12'), 'mmtype': proto.addr_type(id_str='S'), 'ret': 'F00BAA12:S'},
-			{'sid': SeedID(sid='F00BAA12'), 'mmtype': proto.addr_type(id_str='L'), 'ret': 'F00BAA12:L'},
-		)
+			{'sid': SeedID(sid='F00BAA12'), 'mmtype': proto.addr_type(id_str='L'), 'ret': 'F00BAA12:L'})
 	},
 	'MMGenWalletLabel': {
 		'arg1': 's',
@@ -360,8 +351,7 @@ tests = {
 			{'proto': proto, 'id_str': 'segwit',     'ret': 'S'},
 			{'proto': proto, 'id_str': 'S',          'ret': 'S'},
 			{'proto': proto, 'id_str': 'bech32',     'ret': 'B'},
-			{'proto': proto, 'id_str': 'B',          'ret': 'B'}
-		)
+			{'proto': proto, 'id_str': 'B',          'ret': 'B'})
 	},
 	'MMGenPasswordType': {
 		'arg1': 'proto',
@@ -374,15 +364,13 @@ tests = {
 		),
 		'good': (
 			{'proto': proto, 'id_str': 'password', 'ret': 'P'},
-			{'proto': proto, 'id_str': 'P',        'ret': 'P'},
-		)
+			{'proto': proto, 'id_str': 'P',        'ret': 'P'})
 	},
 	'SeedSplitSpecifier': {
 		'arg1': 's',
 		'bad': ('M', 'αβ:2', 1, '0:1', '1:1', '2:1', '3:2', '1:2000', 'abc:0:2'),
 		'good': (
-			('1:2', '2:2', 'alice:2:2', 'αβ:2:2', '1:'+ssm, ssm+':'+ssm)
-		)
+			('1:2', '2:2', 'alice:2:2', 'αβ:2:2', '1:'+ssm, ssm+':'+ssm))
 	},
 	'IPPort': {
 		'arg1': 's',
@@ -408,8 +396,6 @@ tests = {
 				'10.0.0.1:0',
 				'127.0.0.1:65535',
 				'255.0.0.0:400',
-				'255.255.255.255:65535',
-			)
-		)
+				'255.255.255.255:65535'))
 	},
 }

@@ -119,5 +119,4 @@ class EthereumRPCClient(RPCClient, metaclass=AsyncInit):
 		'parity_chain',
 		'parity_nodeKind',
 		'parity_pendingTransactions',
-		'txpool_content', # Geth and friends only
-	)
+		'txpool_content') # Geth and friends only

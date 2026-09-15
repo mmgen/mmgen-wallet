@@ -29,8 +29,8 @@ class CmdTestOpReturn(CmdTestRegtest):
 	cmd_group_in = (
 		('subgroup.init_data',    []),
 		('subgroup.data',         ['init_data']),
-		('stop',                  'stopping regtest daemon'),
-	)
+		('stop',                  'stopping regtest daemon'))
+
 	cmd_subgroups = {
 		'init_data': (
 			'Initialize regtest setup for OP_RETURN data operations',

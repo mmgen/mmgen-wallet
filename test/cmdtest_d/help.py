@@ -36,8 +36,7 @@ class CmdTestHelp(CmdTestBase):
 		('tool_help',         (1, '‘mmgen-tool’ usage screen', [])),
 		('tool_cmd_usage',    (1, '‘mmgen-tool’ usage screen', [])),
 		('test_help',         (1, '‘cmdtest.py’ help screens', [])),
-		('tooltest_help',     (1, '‘tooltest.py’ help screens', [])),
-	)
+		('tooltest_help',     (1, '‘tooltest.py’ help screens', [])))
 
 	def usage1(self):
 		return self._usage('walletgen', ['--usage'], True, False, 0)

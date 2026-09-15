@@ -119,8 +119,7 @@ def _tt_get_char(raw=False, one_char=False, immed_chars=''):
 			if one_char and not raw else
 		"echoed AS A SINGLE character '\\x1b'."
 			if one_char else
-		'echoed as a FULL CONTROL SEQUENCE.'
-	)
+		'echoed as a FULL CONTROL SEQUENCE.')
 	if gc.platform == 'win32':
 		if raw:
 			m3 = 'The Escape and F1-F12 keys will be returned as two-character strings.'

@@ -105,8 +105,7 @@ class unit_tests:
 			['g', 'h', 0],
 			[None],
 			[0],
-			[False],
-		)
+			[False])
 		chk = ['a', 'c', 'd', 'e', None, 1, 'f', None, 0, False]
 
 		vmsg('=> ' + str(res))

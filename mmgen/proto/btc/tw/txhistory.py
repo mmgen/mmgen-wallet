@@ -87,8 +87,7 @@ class BitcoinTwTransaction:
 					mmid = e.twlabel.twmmid
 					yield (
 						(mmid if mmid.type == 'mmgen' else mmid.split(':', 1)[1]) +
-						('*' if mmid in self.unspent_info else '')
-					)
+						('*' if mmid in self.unspent_info else ''))
 				else:
 					yield e.coin_addr
 
@@ -311,15 +310,13 @@ class BitcoinTwTxHistory(BitcoinTwView, TwTxHistory, BitcoinTwRPC):
 		mm_map = {
 			i['address']: (
 				_mmp(TwMMGenID(self.proto, i['twmmid']), TwComment(i['comment']))
-					if i['twmmid'] else _mmp(None, None)
-			)
+					if i['twmmid'] else _mmp(None, None))
 			for i in data if 'address' in i}
 
 		if self.sinceblock: # mapping data may be incomplete for inputs, so update from 'listlabels'
 			mm_map.update(
 				{e.coinaddr: _mmp(e.label.mmid, e.label.comment) if e.label else _mmp(None, None)
-					for e in await self.get_label_addr_pairs()}
-			)
+					for e in await self.get_label_addr_pairs()})
 
 		msg_r('Getting wallet transactions...')
 		_wallet_txs = await self.rpc.gathered_icall(
@@ -364,8 +361,7 @@ class BitcoinTwTxHistory(BitcoinTwView, TwTxHistory, BitcoinTwRPC):
 				(data,         'txhist'),
 				(mm_map,       'mmap'),
 				(_prevout_txs, 'prevout-txs'),
-				(txdata,       'txdata'),
-			)
+				(txdata,       'txdata'))
 
 		unspent_info = await self.get_unspent_by_mmid()
 

@@ -348,8 +348,7 @@ def secs_to_dhms(secs):
 		('{} day{}, '.format(hrs//24, suf(hrs//24)) if hrs > 24 else ''),
 		hrs % 24,
 		(secs // 60) % 60,
-		secs % 60
-	)
+		secs % 60)
 
 def secs_to_hms(secs):
 	return '{:02d}:{:02d}:{:02d}'.format(secs//3600, (secs//60) % 60, secs % 60)

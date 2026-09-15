@@ -72,8 +72,7 @@ def parse_attrbits(bits):
 		bool(0b00010 & bits), # delete
 		bool(0b00100 & bits), # reassign
 		bool(0b01000 & bits), # typeconv
-		bool(0b10000 & bits), # set_none
-	)
+		bool(0b10000 & bits)) # set_none
 
 def get_descriptor_obj(objclass, attrname):
 	for o in (objclass, objclass.__bases__[0]): # assume there's only one base class

@@ -36,6 +36,7 @@ class CmdTestInput(CmdTestBase):
 	networks = ('btc',)
 	tmpdir_nums = [1]
 	color = True
+
 	cmd_group_in = (
 		('subgroup.char', []),
 		('subgroup.line', []),
@@ -43,8 +44,8 @@ class CmdTestInput(CmdTestBase):
 		('subgroup.misc', []),
 		('subgroup.wallet', []),
 		('subgroup.mnemonic', []),
-		('subgroup.dieroll', []),
-	)
+		('subgroup.dieroll', []))
+
 	cmd_subgroups = {
 	'char': (
 		'get_char() function',
@@ -103,8 +104,7 @@ class CmdTestInput(CmdTestBase):
 	'dieroll': (
 		'dieroll entry',
 		('dieroll_entry',                 'dieroll entry (base6d)'),
-		('dieroll_entry_usrrand',         'dieroll entry (base6d) with added user entropy'),
-	)
+		('dieroll_entry_usrrand',         'dieroll entry (base6d) with added user entropy'))
 	}
 
 	def clean_env_spawn(self, cmd, cmd_args, *args, **kwargs):
@@ -479,8 +479,7 @@ class CmdTestInput(CmdTestBase):
 			'mmgen-walletconv',
 			['--usr-randchars=10', '--stdout']
 			+ (['--seed-len=128'] if seedlen_opt else [])
-			+ [f'--in-fmt={fmt}', f'--out-fmt={out_fmt or fmt}']
-		)
+			+ [f'--in-fmt={fmt}', f'--out-fmt={out_fmt or fmt}'])
 		t.expect(f'{capfirst(wcls.base_type or wcls.type)} type:.*{wcls.mn_type}', regex=True)
 		if not seedlen_opt:
 			t.expect(wcls.choose_seedlen_prompt, '1')

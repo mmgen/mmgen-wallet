@@ -95,8 +95,7 @@ class unit_tests:
 			('recover: bad sig len',     'ValueError',     'Invalid signature length',     recov4),
 			('recover: bad msghash len', 'ValueError',     'message hash length',          recov5),
 			('recover: bad pubkey',      'AssertionError', 'bad pubkey',                   recov6),
-			('recover: bad pubkey',      'AssertionError', 'good pubkey',                  recov7),
-		)
+			('recover: bad pubkey',      'AssertionError', 'good pubkey',                  recov7))
 
 		ut.process_bad_data(bad_data, pfx='')
 		return True
@@ -169,8 +168,7 @@ class unit_tests:
 			('invalid pubkey (65 bytes)', 'ValueError', 'Invalid first byte',                 check2),
 			('invalid pubkey (65 bytes)', 'ValueError', 'Invalid first byte',                 check3),
 			('pubkey length == 64',       'ValueError', 'Serialized public key length not',   check4),
-			('pubkey length == 0',        'ValueError', 'Serialized public key length not',   check5),
-		)
+			('pubkey length == 0',        'ValueError', 'Serialized public key length not',   check5))
 
 		ut.process_bad_data(bad_data, pfx='')
 		return True

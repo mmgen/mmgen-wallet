@@ -183,8 +183,7 @@ def parse_opts(cfg, opts_data, global_opts_data, global_filter_codes, *, need_pr
 	return namedtuple('parsed_cmd_opts', ['user_opts', 'cmd_args', 'opts'])(
 		uopts, # dict
 		uargs, # list, callers can pop
-		tuple(v.name for k, v in opts if len(k) > 1)
-	)
+		tuple(v.name for k, v in opts if len(k) > 1))
 
 def opt_preproc_debug(po):
 	d = (
@@ -192,8 +191,7 @@ def opt_preproc_debug(po):
 		('Filtered opts',      po.filtered_opts,   False),
 		('User-selected opts', po.user_opts,       False),
 		('Cmd args',           po.cmd_args,        False),
-		('Opts',               po.opts,            True),
-	)
+		('Opts',               po.opts,            True))
 	from .util import Msg, fmt_list
 	Msg('\n=== opts.py debug ===')
 	for label, data, pretty in d:

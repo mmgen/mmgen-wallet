@@ -102,8 +102,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		('txlist',                   'listing Alice’s submitted transactions'),
 		('txview',                   'viewing Alice’s submitted transactions'),
 		('txview_all',               'viewing all raw, signed and submitted transactions'),
-		('check_tx_dirs',            'cleaning and checking signable file directories'),
-	)
+		('check_tx_dirs',            'cleaning and checking signable file directories'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 
@@ -590,8 +589,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('alice_newaddr2',           'adding address to Alice’s tracking wallet (no timestr)'),
 		('alice_newaddr3',           'adding address to Alice’s tracking wallet (dfl label)'),
 		('alice_newaddr4',           'adding address to Alice’s tracking wallet (dfl label, no timestr)'),
-		('stop_daemons',             'stopping all wallet and coin daemons'),
-	)
+		('stop_daemons',             'stopping all wallet and coin daemons'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		super().__init__(cfg, trunner, cfgs, spawn)

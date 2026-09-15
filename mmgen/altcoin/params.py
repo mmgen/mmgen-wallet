@@ -191,8 +191,7 @@ class CoinInfo:
 	ce('ZetaCoin',              'ZET',     0xe0,   (0x50,'Z'),       None,             False, 0),
 	ce('ZiftrCoin',             'ZRC',     0xd0,   (0x50,'Z'),       (0x05,'3'),       False, 1),
 	ce('ZLiteQubit',            'ZLQ',     0xe0,   (0x26,'G'),       None,             False, 0),
-	ce('Zoomcoin',              'ZOOM',    0xe7,   (0x67,'i'),       (0x5c,'e'),       False, 1),
-	)
+	ce('Zoomcoin',              'ZOOM',    0xe7,   (0x67,'i'),       (0x5c,'e'),       False, 1))
 
 	coin_constants['testnet'] = (
 	ce('Bitcoin',     'BTC',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       True,  5),
@@ -204,8 +203,7 @@ class CoinInfo:
 	ce('Feathercoin', 'FTC',   0xc1,   (0x41,'T'),       (0xc4,'2'),       False, 2),
 	ce('Viacoin',     'VIA',   0xff,   (0x7f,'t'),       (0xc4,'2'),       False, 2),
 	ce('Emercoin',    'EMC',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       False, 2),
-	ce('Litecoin',    'LTC',   0xef,   (0x6f,('m','n')), (0x3a,'Q'),       True,  5), # old p2sh: 0xc4
-	)
+	ce('Litecoin',    'LTC',   0xef,   (0x6f,('m','n')), (0x3a,'Q'),       True,  5)) # old p2sh: 0xc4
 
 	coin_sources = (
 	('BTC',    'https://github.com/bitcoin/bitcoin/blob/master/src/chainparams.cpp'),
@@ -252,8 +250,7 @@ class CoinInfo:
 	('OK',     'https://github.com/okcashpro/okcash/blob/master/src/chainparams.cpp'),
 	('DOGED',  'https://github.com/doged/dogedsource/blob/master/src/base58.h'),
 	('EFL',    'https://github.com/Electronic-Gulden-Foundation/egulden/blob/master/src/base58.h'),
-	('POT',    'https://github.com/potcoin/Potcoin/blob/master/src/base58.h'),
-	)
+	('POT',    'https://github.com/potcoin/Potcoin/blob/master/src/base58.h'))
 
 	@classmethod
 	def get_supported_coins(cls, network):

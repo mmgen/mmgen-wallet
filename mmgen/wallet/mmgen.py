@@ -89,8 +89,7 @@ class wallet(wallet):
 			'{} {} {} {} {}'.format(s.sid.lower(), d.key_id.lower(), s.bitlen, d.pw_status, d.timestamp),
 			'{}: {} {} {}'.format(d.hash_preset, *self.crypto.get_hash_params(d.hash_preset)),
 			'{} {}'.format(make_chksum_6(slt_fmt), split_into_cols(4, slt_fmt)),
-			'{} {}'.format(make_chksum_6(es_fmt),  split_into_cols(4, es_fmt))
-		)
+			'{} {}'.format(make_chksum_6(es_fmt),  split_into_cols(4, es_fmt)))
 		chksum = make_chksum_6(' '.join(lines).encode())
 		self.fmt_data = '\n'.join((chksum,)+lines) + '\n'
 

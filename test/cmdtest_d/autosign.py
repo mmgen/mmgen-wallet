@@ -391,8 +391,7 @@ class CmdTestAutosignClean(CmdTestAutosignBase):
 	cmd_group = (
 		('clean_no_xmr',   'cleaning signable file directories (no XMR)'),
 		('clean_xmr_only', 'cleaning signable file directories (XMR-only)'),
-		('clean_all',      'cleaning signable file directories (with XMR)'),
-	)
+		('clean_all',      'cleaning signable file directories (with XMR)'))
 
 	def create_fake_tx_files(self):
 		imsg('Creating fake transaction files')
@@ -736,8 +735,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 		('sign_no_unsigned_xmronly',  'signing transactions and messages (nothing to sign, XMR-only)'),
 		('stop_daemons',              'stopping daemons'),
 		('sign_bad_no_daemon',        'signing transactions (error, no daemons running)'),
-		('wipe_key',                  'wiping the wallet encryption key'),
-	)
+		('wipe_key',                  'wiping the wallet encryption key'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 
@@ -785,8 +783,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 				f'--outdir={self.cfg.data_dir}',
 				'--usr-randchars=0', '--quiet', '--hash-preset=1', '--label=foo',
 				'test/ref/98831F3A.hex'
-			]
-		)
+			])
 		t.passphrase_new('new MMGen wallet', self.wallet_passwd)
 		t.written_to_file('MMGen wallet')
 		return t
@@ -1054,8 +1051,7 @@ class CmdTestAutosignLive(CmdTestAutosignBTC):
 		('sign_live_led',         'signing transactions (--led)'),
 		('remove_bad_txfiles',    'removing bad transaction files'),
 		('sign_live_stealth_led', 'signing transactions (--stealth-led)'),
-		('stop_daemons',          'stopping daemons'),
-	)
+		('stop_daemons',          'stopping daemons'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 

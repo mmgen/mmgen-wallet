@@ -222,8 +222,7 @@ def run_test(test, subtest=None):
 		fast_skip = getattr(t, 'fast_skip', ())
 		subtests = (
 			[subtest] if subtest else
-			[k for k, v in type(t).__dict__.items() if type(v).__name__ == 'function' and k[0] != '_']
-		)
+			[k for k, v in type(t).__dict__.items() if type(v).__name__ == 'function' and k[0] != '_'])
 		if hasattr(t, '_pre'):
 			t._pre()
 

@@ -44,8 +44,7 @@ tests = {
 		),
 		'good': (
 			{'proto': proto, 'wif': '93HsQEpH75ibaUJYi3QwwiQxnkW4dUuYFPXZxcbcKds7XrqHkY6',  'ret_idx': 1},
-			{'proto': proto, 'wif': 'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR', 'ret_idx': 1},
-		)
+			{'proto': proto, 'wif': 'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR', 'ret_idx': 1})
 	},
 	'PrivKey': {
 		'bad': (

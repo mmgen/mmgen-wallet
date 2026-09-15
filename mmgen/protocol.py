@@ -249,8 +249,7 @@ class CoinProtocol(MMGenObject):
 		def parse_addr(self, ver_bytes, addr_bytes, fmt):
 			return parsed_addr(
 				ver_bytes  = ver_bytes,
-				data       = addr_bytes,
-			)
+				data       = addr_bytes)
 
 		def preprocess_key(self, sec, pubkey_type):
 			# Key must be non-zero and less than group order of secp256k1 curve
@@ -324,8 +323,7 @@ def init_proto(
 		setattr(
 			CoinProtocol,
 			proto_name,
-			getattr(importlib.import_module(f'mmgen.proto.{coin}.params'), network)
-		)
+			getattr(importlib.import_module(f'mmgen.proto.{coin}.params'), network))
 
 	if return_cls:
 		return getattr(CoinProtocol, proto_name)

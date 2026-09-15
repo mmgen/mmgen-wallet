@@ -55,14 +55,12 @@ def coinamt_test(cls, aa, bb, ut):
 		('floor division',    'NotImplementedError', 'not implemented',    lambda: b // a),
 		('negative result',   'ObjectInitError',     'cannot be negative', lambda: a - b),
 		('operand type',      'TypeError',           'incorrect type',     lambda: a + B),
-		('operand type',      'TypeError',           'incorrect type',     lambda: b - A),
-	)
+		('operand type',      'TypeError',           'incorrect type',     lambda: b - A))
 
 	if cls.max_amt is not None:
 		bad_data += (
 			('result', 'ObjectInitError', 'too large', lambda: b + b),
-			('result', 'ObjectInitError', 'too large', lambda: b * b),
-		)
+			('result', 'ObjectInitError', 'too large', lambda: b * b))
 
 	ut.process_bad_data(bad_data)
 

@@ -495,8 +495,8 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		('subgroup.view',     ['cached']),
 		('subgroup.label',    ['cached']),
 		('subgroup.remove',   ['cached']),
-		('stop',              'stopping daemon'),
-	)
+		('stop',              'stopping daemon'))
+
 	cmd_subgroups = {
 	'misc': (
 		'miscellaneous commands',

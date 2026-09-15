@@ -240,8 +240,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 			('getnetworkinfo', ()),
 			('getblockchaininfo', ()),
 		] + (
-			[('getdeploymentinfo', ())] if 'deployment_info' in self.caps else []
-		)
+			[('getdeploymentinfo', ())] if 'deployment_info' in self.caps else [])
 
 		(
 			self.blockcount,
@@ -252,8 +251,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 		) = (
 			await self.gathered_call(None, tuple(call_group))
 		) + (
-			[] if 'deployment_info' in self.caps else [None]
-		)
+			[] if 'deployment_info' in self.caps else [None])
 
 		self.daemon_version = self.cached['networkinfo']['version']
 		self.daemon_version_str = self.cached['networkinfo']['subversion']
@@ -449,5 +447,4 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 		'signrawtransaction',
 		'signrawtransactionwithkey', # method new to Core v0.17.0
 		'validateaddress',
-		'walletpassphrase',
-	)
+		'walletpassphrase')

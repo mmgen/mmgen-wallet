@@ -226,10 +226,7 @@ class unit_tests:
 
 		a = BipHDNode.from_extended_key(cfg, 'btc', chain2.xpub)
 		b = BipHDNode.from_extended_key(cfg, 'btc', chain2.xprv)
-		vmsg(
-			'\n  xpub:\n' +
-			fmt(str(Bip32ExtendedKey(b.xpub)), indent='    ')
-		)
+		vmsg('\n  xpub:\n' + fmt(str(Bip32ExtendedKey(b.xpub)), indent='    '))
 		assert a.xpub == b.xpub
 
 		vmsg('  Addresses:')
@@ -389,8 +386,7 @@ class unit_tests:
 			('depth 3 (account):   node not hardened', 'ValueError', 'value for ‘hardened’', bad09),
 			('depth 4 (chain):     idx not set',       'ValueError', 'must be either 0',     bad10),
 			('depth 5 (leaf node): idx not set',       'ValueError', 'must be set',          bad11),
-			('depth 5 (leaf node): hardened True',     'ValueError', 'must be None',         bad12),
-		)
+			('depth 5 (leaf node): hardened True',     'ValueError', 'must be None',         bad12))
 
 		ut.process_bad_data(bad_data, pfx='')
 		vmsg('')
@@ -416,8 +412,8 @@ class unit_tests:
 			'private key is zero!',
 			'private key >= group order!',
 			'Public key could not be parsed', # extmod
-			'incorrect checksum',
-		)
+			'incorrect checksum')
+
 		ut.process_bad_data([(vec[n][1], 'ValueError', exc[n], func[n]) for n in range(len(vec))], pfx='')
 		vmsg('')
 		return True

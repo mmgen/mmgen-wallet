@@ -180,8 +180,7 @@ def format_elapsed_hr(
 				((' ago'           if rel_now else '') if e > 0 else
 				(f' {future_msg}' if rel_now else ' (negative elapsed)'))
 					if (abs_e if show_secs else abs_e // 60) else
-				('just now' if rel_now else ('0 ' + ('seconds' if show_secs else 'minutes')))
-			)
+				('just now' if rel_now else ('0 ' + ('seconds' if show_secs else 'minutes'))))
 		abs_e = abs(e)
 		data = (
 			('day',    abs_e // 86400),
@@ -191,8 +190,7 @@ def format_elapsed_hr(
 		) if show_secs else (
 			('day',    abs_e // 86400),
 			('hour',   abs_e // 3600 % 24),
-			('minute', abs_e // 60 % 60),
-		)
+			('minute', abs_e // 60 % 60))
 		cached[key] = ' '.join(f'{n} {desc}{suf(n)}' for desc, n in data if n) + add_suffix()
 	return cached[key]
 

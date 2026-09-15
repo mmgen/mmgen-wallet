@@ -50,9 +50,7 @@ class unit_tests:
 		), (
 			'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f',
 			'foamy solved soggy foamy solved soggy foamy solved soggy foamy solved soggy foamy solved soggy ' +
-			'foamy solved soggy foamy solved soggy jury yawning ankle soggy'
-		),
-	)
+			'foamy solved soggy foamy solved soggy jury yawning ankle soggy'))
 
 	@property
 	def _use_monero_python(self):

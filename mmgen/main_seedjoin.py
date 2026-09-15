@@ -82,8 +82,7 @@ For usage examples, see the help screen for the 'mmgen-seedsplit' command.
 		),
 		'notes': lambda cfg, help_notes, s: s.format(
 			n_fc = help_notes('fmt_codes'),
-			n_pw = help_notes('passwd'),
-		)
+			n_pw = help_notes('passwd'))
 	}
 }
 

@@ -72,15 +72,16 @@ async def main(coins):
 			'Version',
 			'Datadir')
 		for coin, rpc in rpcs.items():
-			info = ('Down', '-', '-', '-', '-', '-', '-') if rpc is False else (
+			info = (
+				'Down', '-', '-', '-', '-', '-', '-'
+			) if rpc is False else (
 				'Up',
 				rpc.port,
 				rpc.chain,
 				f'{rpc.blockcount:<8} [{make_timestr(rpc.cur_date)}]',
 				rpc.daemon.coind_name,
 				rpc.daemon_version_str,
-				rpc.daemon.datadir
-			)
+				rpc.daemon.datadir)
 			yield fs.format(coin.upper(), cfgs[coin].network, *info)
 
 	base_cfg._util.stdout_or_pager('\n'.join(gen_output()))

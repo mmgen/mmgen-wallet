@@ -95,8 +95,7 @@ class CmdTestOpts(CmdTestBase):
 		('opt_invalid_31',       (41, 'invalid cmdline opt (--bch-cashaddr without --coin=bch)', [])),
 		('opt_invalid_32',       (41, 'invalid cmdline opt (--eth-chain-names without --coin=eth)', [])),
 		('opt_invalid_33',       (41, 'invalid cmdline opt (--xmr-rpc-host)', [])),
-		('opt_invalid_34',       (41, 'invalid cmdline opt (--eth-rpc-user)', [])),
-	)
+		('opt_invalid_34',       (41, 'invalid cmdline opt (--eth-rpc-user)', [])))
 
 	def spawn_prog(self, args, opts=[], exit_val=None, need_proto=False):
 		return self.spawn(

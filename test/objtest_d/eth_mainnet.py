@@ -42,8 +42,7 @@ tests = {
 				{'num': Decimal('1.234'), 'from_decimal': True, 'ret': Decimal('1.234')},
 				{'num': Decimal('0.0'), 'from_decimal': True, 'ret': Decimal(0)},
 				{'num': 1234, 'from_unit': 'wei', 'ret': Decimal('0.000000000000001234')},
-				{'num': 1234, 'from_unit': 'Mwei', 'ret': Decimal('0.000000001234')},
-		)
+				{'num': 1234, 'from_unit': 'Mwei', 'ret': Decimal('0.000000001234')})
 	},
 	'ETHNonce': {
 		'bad': ('z', 'я', -1, '-1', 0.0, '0.0'),
@@ -52,7 +51,6 @@ tests = {
 			{'n': '0x0', 'base': 16, 'ret': 0},
 			{'n': '0x1', 'base': 16, 'ret': 1},
 			{'n': '0xf', 'base': 16, 'ret': 15},
-			{'n': '0xff', 'base': 16, 'ret': 255},
-		)
+			{'n': '0xff', 'base': 16, 'ret': 255})
 	},
 }

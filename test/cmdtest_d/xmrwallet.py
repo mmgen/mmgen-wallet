@@ -72,8 +72,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	user_data = (
 		('miner', '98831F3A', False, 130, '1-2', []),
 		('alice', 'FE3C6545', False, 150, '1-4', []),
-		('bob',   '1378FC64', False, 140, None,  ['--restricted-rpc']),
-	)
+		('bob',   '1378FC64', False, 140, None,  ['--restricted-rpc']))
 	tx_relay_user = 'bob'
 	daemon_datadir_base = os.path.join('test', 'daemons', 'xmrtest')
 	compat = False
@@ -112,8 +111,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 		('sweep_create_and_send',         'sweeping to new account (create TX + send TX, in stages)'),
 		('list_wallets_all',              'listing wallets'),
-		('stop_daemons',                  'stopping all wallet and coin daemons'),
-	)
+		('stop_daemons',                  'stopping all wallet and coin daemons'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)
@@ -201,8 +199,8 @@ class CmdTestXMRWallet(CmdTestBase):
 				test_suite = True,
 				port_shift = shift,
 				opts       = ['online'],
-				datadir    = daemon_datadir
-			)
+				datadir    = daemon_datadir)
+
 			md_rpc = MoneroRPCClient(
 				cfg    = self.cfg,
 				proto  = self.proto,
@@ -211,8 +209,8 @@ class CmdTestXMRWallet(CmdTestBase):
 				user   = None,
 				passwd = None,
 				test_connection = False,
-				daemon = md,
-			)
+				daemon = md)
+
 			wd = MoneroWalletDaemon(
 				cfg          = self.cfg,
 				proto        = self.proto,
@@ -221,13 +219,13 @@ class CmdTestXMRWallet(CmdTestBase):
 				user         = 'foo',
 				passwd       = 'bar',
 				port_shift   = shift,
-				monerod_addr = f'127.0.0.1:{md.rpc_port}',
-			)
+				monerod_addr = f'127.0.0.1:{md.rpc_port}')
+
 			wd_rpc = MoneroWalletRPCClient(
 				cfg             = self.cfg,
 				daemon          = wd,
-				test_connection = False,
-			)
+				test_connection = False)
+
 			if autosign:
 				kafile_suf = 'vkeys'
 				fn_stem    = 'MoneroWatchOnlyWallet'
@@ -749,8 +747,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				await self.transfer(
 					'miner',
 					123456789,
-					t.randpair()[1],
-				)
+					t.randpair()[1])
 				imsg_r(f'{i+1} ')
 				oqmsg_r('+')
 				await asyncio.sleep(0.5)

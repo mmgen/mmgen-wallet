@@ -97,9 +97,7 @@ class unit_tests:
 		), (
 			"f585c11aec520db57dd353c69554b21a89b20fb0650966fa0a9d6f74fd989d8f",
 			"void come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen "
-			"patrol group space point ten exist slush involve unfold"
-		)
-	)
+			"patrol group space point ten exist slush involve unfold"))
 
 	def conversion(self, name, ut):
 
@@ -154,8 +152,7 @@ class unit_tests:
 			('pad len (tohex)',   'AssertionError', "invalid 'pad' arg", lambda: th(good_mn, pad=23)),
 			('word',              'MnemonicError',  "not in the BIP39",  lambda: th(bad_word_mn)),
 			('checksum',          'MnemonicError',  "checksum",          lambda: th(bad_chksum_mn)),
-			('seed phrase len',   'MnemonicError',  "phrase len",        lambda: th(bad_len_mn)),
-		)
+			('seed phrase len',   'MnemonicError',  "phrase len",        lambda: th(bad_len_mn)))
 
 		ut.process_bad_data(bad_data)
 

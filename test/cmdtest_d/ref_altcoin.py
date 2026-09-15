@@ -80,8 +80,7 @@ class CmdTestRefAltcoin(CmdTestRef, CmdTestBase):
 		('ref_keyaddrfile_chk_zec',     'reference key-address file (ZEC-T)'),
 		('ref_keyaddrfile_chk_zec_z',   'reference key-address file (ZEC-Z)'),
 		('ref_keyaddrfile_chk_xmr',     'reference key-address file (XMR)'),
-		('ref_viewkeyaddrfile_chk_xmr', 'reference viewkey-address file (XMR)'),
-	)
+		('ref_viewkeyaddrfile_chk_xmr', 'reference viewkey-address file (XMR)'))
 
 	def ref_altcoin_tx_chk(self):
 		"""

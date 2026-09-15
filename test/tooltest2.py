@@ -86,8 +86,7 @@ def fork_cmd(cmd_name, args, opts, stdin_input):
 		tool_cmd_preargs +
 		tool_cmd +
 		(opts or []) +
-		[cmd_name] + args
-	)
+		[cmd_name] + args)
 	vmsg('{} {}'.format(
 		green('Executing'),
 		cyan(' '.join(cmd))))

@@ -53,8 +53,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 	shared_deps = ['mmdat', pwfile]
 	skip_cmds = (
 		'ref_xmrseed_25_passwdgen_1',
-		'ref_xmrseed_25_passwdgen_2',
-	)
+		'ref_xmrseed_25_passwdgen_2')
 	cmd_group = (
 		# reading saved reference wallets
 		('ref_wallet_chk',   'saved reference wallet'),
@@ -76,8 +75,7 @@ class CmdTestRef3Seed(CmdTestBase, CmdTestShared):
 		('ref_walletconv_plainhexseed', 'wallet filename (plain hex seed)'),
 		('ref_walletconv_dieroll',      'wallet filename (dieroll (b6d) seed)'),
 		('ref_walletconv_incog',        'wallet filename (incog)'),
-		('ref_walletconv_hexincog',     'wallet filename (hex incog)'),
-	)
+		('ref_walletconv_hexincog',     'wallet filename (hex incog)'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		for k, _ in self.cmd_group:
@@ -356,8 +354,7 @@ class CmdTestRef3Addr(CmdTestRef3Seed):
 		('refkeyaddrgen_compressed',  'new refwallet key-addr chksum (compressed)'),
 		('refkeyaddrgen_segwit',      'new refwallet key-addr chksum (segwit)'),
 		('refkeyaddrgen_bech32',      'new refwallet key-addr chksum (bech32)'),
-		('refkeyaddrgen_bech32pk',    'new refwallet key-addr chksum (bech32pk)'),
-	)
+		('refkeyaddrgen_bech32pk',    'new refwallet key-addr chksum (bech32pk)'))
 
 	def call_addrgen(self, mmtype, name='addrgen'):
 		if self.coin in self.chk_data[self.test_name]:
@@ -444,8 +441,7 @@ class CmdTestRef3Passwd(CmdTestRef3Seed):
 		('ref_bip39_18_passwdgen',     'new refwallet passwd file chksum (BIP39, up to 18 words)'),
 		('ref_bip39_24_passwdgen',     'new refwallet passwd file chksum (BIP39, up to 24 words)'),
 		('ref_xmrseed_25_passwdgen',   'new refwallet passwd file chksum (Monero 25-word mnemonic)'),
-		('ref_hex2bip39_24_passwdgen', 'new refwallet passwd file chksum (hex-to-BIP39, up to 24 words)'),
-	)
+		('ref_hex2bip39_24_passwdgen', 'new refwallet passwd file chksum (hex-to-BIP39, up to 24 words)'))
 
 	def pwgen(self, ftype, id_str, pwfmt=None, pwlen=None, extra_opts=[], stdout=False):
 		wf = self.get_file_with_ext('mmdat')

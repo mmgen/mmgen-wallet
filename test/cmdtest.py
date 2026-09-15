@@ -182,8 +182,7 @@ environment var
 	},
 	'code': {
 		'options': lambda proto, help_notes, s: s.format(
-				lf = cmdtest_py_log_fn
-			)
+				lf = cmdtest_py_log_fn)
 	}
 }
 

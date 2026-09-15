@@ -294,8 +294,8 @@ class CmdTestSwap(
 		('subgroup.signsend_bad', ['init_swap']),
 		('subgroup.autosign',     ['signsend']),
 		('swap_server_stop',      'stopping the Thornode swap server'),
-		('stop',                  'stopping regtest daemons'),
-	)
+		('stop',                  'stopping regtest daemons'))
+
 	cmd_subgroups = {
 		'init_swap': (
 			'Initialize regtest setup for swap operations',

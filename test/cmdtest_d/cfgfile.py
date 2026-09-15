@@ -42,8 +42,7 @@ class CmdTestCfgFile(CmdTestBase):
 		('chain_names',              (40, 'setting chain names', [])),
 		('mnemonic_entry_modes',     (40, 'setting mnemonic entry modes', [])),
 		('opt_override1',            (40, 'cfg file opts not overridden', [])),
-		('opt_override2',            (40, 'negative cmdline opts overriding cfg file opts', [])),
-	)
+		('opt_override2',            (40, 'negative cmdline opts overriding cfg file opts', [])))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)
@@ -134,8 +133,7 @@ class CmdTestCfgFile(CmdTestBase):
 		d = (
 			self.read_from_cfgfile('sys').replace('monero_', 'zcash_').splitlines()
 			+ ['', '# Uncomment to make foo true:', '# foo true']
-			+ ['', '# Uncomment to make bar false:', '# bar false']
-		)
+			+ ['', '# Uncomment to make bar false:', '# bar false'])
 		self.write_to_cfgfile('sample', d + cfg_file_sample.cls_make_metadata(d))
 
 		t = self.spawn_test(args=args, pexpect_spawn=pexpect_spawn, exit_val=1 if old_set else None)

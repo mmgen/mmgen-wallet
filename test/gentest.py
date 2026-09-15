@@ -371,8 +371,7 @@ def do_ab_test(proto, scfg, addr_type, gen1, kg2, ag, tool, cache_data):
 		int.to_bytes(group_order - 1, 32, 'big'), # bitcoin will not reduce
 		bytes([0x00]*31 + [0xff]), # monero will reduce
 		bytes([0xff]*31 + [0x0f]), # monero will not reduce
-		bytes.fromhex('deadbeef'*8),
-	)
+		bytes.fromhex('deadbeef'*8))
 
 	qmsg(purple('edge cases:'))
 	for i, privbytes in enumerate(edgecase_sks):
@@ -447,8 +446,7 @@ def speed_test(proto, kg, ag, rounds):
 	qmsg(
 		f'\rRound {i+1}/{rounds} ' +
 		f'\n{rounds} addresses generated' +
-		('' if cfg.test_suite_deterministic else f' in {time.time()-start:.2f} seconds')
-	)
+		('' if cfg.test_suite_deterministic else f' in {time.time()-start:.2f} seconds'))
 
 def dump_test(proto, kg, ag, filename):
 

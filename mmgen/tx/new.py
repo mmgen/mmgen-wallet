@@ -285,8 +285,7 @@ class New(Base):
 		addrfile_args = remove_dups(
 			tuple(a for a in args if get_extension(a) == AddrFile.ext),
 			desc = 'command line',
-			edesc = 'argument',
-		)
+			edesc = 'argument')
 		cmd_args = tuple(a for a in args if a not in addrfile_args)
 		if not self.is_swap:
 			cmd_args = remove_dups(cmd_args, desc='command line', edesc='argument')

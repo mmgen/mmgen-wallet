@@ -80,8 +80,7 @@ class CmdTestSeedSplit(CmdTestBase):
 		('ss_bad_invocation8',       'bad invocation of ‘mmgen-seedjoin’ - nonexistent file'),
 		('ss_bad_invocation9',       'bad invocation of ‘mmgen-seedsplit’ - bad specifier'),
 		('ss_bad_invocation10',      'bad invocation of ‘mmgen-seedsplit’ - nonexistent file'),
-		('ss_bad_invocation11',      'bad invocation of ‘mmgen-seedsplit’ - invalid file extension'),
-	)
+		('ss_bad_invocation11',      'bad invocation of ‘mmgen-seedsplit’ - invalid file extension'))
 
 	def get_tmp_subdir(self, subdir):
 		return os.path.join(self.tmpdir, subdir)

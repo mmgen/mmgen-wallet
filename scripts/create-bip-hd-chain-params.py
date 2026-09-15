@@ -57,8 +57,7 @@ def get_bip_utils_data(bipnum, n):
 		'x' if vb_pub == dfl_vb_pub else vb_pub,
 		v.m_wif_net_ver.hex() if isinstance(v.m_wif_net_ver, bytes) else '-',
 		ap['net_ver'].hex() if 'net_ver' in ap else 'h:'+ap['hrp'] if 'hrp' in ap else 'spec' if ap else '-',
-		'x' if v.m_def_path == dfl_dfl_path else v.m_def_path,
-	)
+		'x' if v.m_def_path == dfl_dfl_path else v.m_def_path)
 
 def gen():
 

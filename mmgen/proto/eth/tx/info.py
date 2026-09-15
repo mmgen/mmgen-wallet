@@ -58,8 +58,7 @@ class TxInfo(VmTxInfo, TxInfo):
 
 	def format_rel_fee(self):
 		return ' ({} of spend amount)'.format(
-			pink('{:0.6f}%'.format(self.tx.fee / self.tx.send_amt * 100))
-		)
+			pink('{:0.6f}%'.format(self.tx.fee / self.tx.send_amt * 100)))
 
 	def format_verbose_footer(self):
 		if self.tx.txobj['data'] and not self.tx.is_swap:

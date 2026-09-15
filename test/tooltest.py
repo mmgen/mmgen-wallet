@@ -208,8 +208,7 @@ if cfg.testing_status:
 		set(ignore) -
 		set(tested_in['tooltest.py']) -
 		set(tested_in['tooltest2.py']) -
-		set(tested_in['cmdtest.py'])
-	)
+		set(tested_in['cmdtest.py']))
 	if uc:
 		Msg(yellow('\n  {}\n    {}'.format('Untested commands:', '\n    '.join(uc))))
 	sys.exit(0)
@@ -254,8 +253,7 @@ class MMGenToolTestUtils:
 			add_opts +
 			[name.lower()] +
 			tool_args +
-			kwargs.split()
-		)
+			kwargs.split())
 		if extra_msg:
 			extra_msg = f'({extra_msg})'
 		full_name = ' '.join([name.lower()]+add_opts+kwargs.split()+extra_msg.split())

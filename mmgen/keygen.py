@@ -81,8 +81,7 @@ def _check_backend(cfg, backend, pubkey_type, *, desc='keygen backend'):
 		die(1,
 			f'{backend}: {desc} out of range\n' +
 			'Configured backends: ' +
-			' '.join(f'{n}:{k}' for n, k in enumerate(backends, 1))
-		)
+			' '.join(f'{n}:{k}' for n, k in enumerate(backends, 1)))
 
 	cfg._util.qmsg(f'Using backend {backends[int(backend)-1]!r} for public key generation')
 

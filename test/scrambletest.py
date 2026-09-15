@@ -143,8 +143,7 @@ def make_coin_test_data():
 		opts = list_gen(
 			[f'--coin={coin}'],
 			[f'--type={mmtype}', mmtype],
-			['--cashaddr=0', coin == 'bch']
-		)
+			['--cashaddr=0', coin == 'bch'])
 		yield ('mmgen-addrgen', opts, [], [], test_data, 'address')
 
 def make_passwd_test_data():
@@ -155,8 +154,7 @@ def make_passwd_test_data():
 		pw_fmt, pw_len, pw_id = id_str.split('_')
 		opts = list_gen(
 			[f'--passwd-fmt={pw_fmt}', pw_fmt != 'dfl'],
-			[f'--passwd-len={pw_len}', pw_len != 'dfl'],
-		)
+			[f'--passwd-len={pw_len}', pw_len != 'dfl'])
 		yield ('mmgen-passgen', opts, ['--accept-defaults'], [pw_id], test_data, 'password')
 
 def main():

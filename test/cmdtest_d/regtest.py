@@ -192,8 +192,8 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		('subgroup.auto_chg',       ['_auto_chg_deps']),
 		('subgroup.dump_hex',       ['fund_users']),
 		('subgroup.sort',           ['init_bob']),
-		('stop',                    'stopping regtest daemon'),
-	)
+		('stop',                    'stopping regtest daemon'))
+
 	cmd_subgroups = {
 	'misc': (
 		'miscellaneous commands',
@@ -1065,8 +1065,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			cmp_or_die(
 				' '.join(bals[k]),
 				' '.join(ret.split()),
-				desc = k,
-			)
+				desc = k)
 		return t
 
 	def bob_0conf0_getbalance(self):
@@ -1800,8 +1799,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 				f'--outdir={self.tr.trash_dir}',
 				'listaddresses',
 				'interactive=1',
-			]
-		)
+			])
 		prompt = 'abel:\b'
 		t.expect(prompt, 'p')
 		ret = t.expect([prompt, 'to confirm: '])
@@ -1834,8 +1832,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			[rf'[{b32a}]{{8}}'],
 			[prompt, 'h'],
 			[rf'[{b58a}]{{8}}'],
-			[prompt, 'q']
-		)
+			[prompt, 'q'])
 		return self._alice_listaddresses_interactive(expect=expect)
 
 	def alice_listaddresses_empty(self):
@@ -2046,8 +2043,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 
 	def bob_msgverify_export(self):
 		return self.bob_msgverify(
-			msgfile = os.path.join(self.tmpdir, 'signatures.json')
-		)
+			msgfile = os.path.join(self.tmpdir, 'signatures.json'))
 
 	def bob_msgverify_export_single(self):
 		sid = self._user_sid('bob')
@@ -2059,8 +2055,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		t.close()
 		return self.bob_msgverify(
 			addr = addr,
-			msgfile = os.path.join(self.tmpdir, 'signatures.json')
-		)
+			msgfile = os.path.join(self.tmpdir, 'signatures.json'))
 
 	def bob_auto_chg_split(self):
 		if not self.proto.cap('segwit'):
@@ -2096,8 +2091,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 				+ (['--autochg-ignore-labels'] if ignore_labels else [])
 				+ [mmtype if by_mmtype else f'{sid}:{mmtype}']
 				+ ([self.burn_addr+',0.01'] if include_dest else [])
-				+ add_args
-			)
+				+ add_args)
 		return self.txcreate_ui_common(t,
 			menu            = [],
 			inputs          = '1',

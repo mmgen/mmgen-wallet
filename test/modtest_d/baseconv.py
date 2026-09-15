@@ -245,8 +245,7 @@ class unit_test:
 			('pad arg (out)',    bpe, "illegal value for 'pad'", lambda: to58('Z', pad='foo')),
 			('pad arg (out)',    bpe, "illegal value for 'pad'", lambda: to58('Z', pad=False)),
 			('pad arg (out)',    bpe, "illegal value for 'pad'", lambda: to58('Z', pad=True)),
-			('seedlen (out)',    bce, 'invalid length for seed', lambda: to58('Z', pad='seed')),
-		)
+			('seedlen (out)',    bce, 'invalid length for seed', lambda: to58('Z', pad='seed')))
 
 		ut.process_bad_data(bad_data)
 

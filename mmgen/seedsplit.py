@@ -210,13 +210,11 @@ class SeedShare(SeedShareBase, SubSeed):
 			f'{parent_list.split_type}:{parent_list.id_str}:'.encode() +
 			parent_list.count.to_bytes(2, 'big') +
 			idx.to_bytes(2, 'big') +
-			nonce.to_bytes(2, 'big')
-		)
+			nonce.to_bytes(2, 'big'))
 		if parent_list.master_share:
 			scramble_key += (
 				b':master:' +
-				parent_list.master_share.idx.to_bytes(2, 'big')
-			)
+				parent_list.master_share.idx.to_bytes(2, 'big'))
 		return Crypto(parent_list.parent_seed.cfg).scramble_seed(seed.data, scramble_key)[:seed.byte_len]
 
 class SeedShareLast(SeedShareBase, SeedBase):

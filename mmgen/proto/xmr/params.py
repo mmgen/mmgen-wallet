@@ -44,8 +44,7 @@ class mainnet(CoinProtocol.RPC, CoinProtocol.DummyWIF, CoinProtocol.Base):
 
 	coin_cfg_opts = (
 		'ignore_daemon_version',
-		'rpc_port',
-	)
+		'rpc_port')
 
 	def get_addr_len(self, addr_fmt):
 		return (64, 72)[addr_fmt == 'monero_integrated']
@@ -81,8 +80,7 @@ class mainnet(CoinProtocol.RPC, CoinProtocol.DummyWIF, CoinProtocol.Base):
 		return parsed_addr(
 			ver_bytes  = ver_bytes,
 			data       = addr_bytes[:addr_len],
-			payment_id = addr_bytes[addr_len:] if fmt == 'monero_integrated' else None,
-		)
+			payment_id = addr_bytes[addr_len:] if fmt == 'monero_integrated' else None)
 
 	def pubhash2addr(self, *args, **kwargs):
 		raise NotImplementedError('Monero addresses do not support pubhash2addr()')

@@ -34,8 +34,7 @@ class unit_test:
 		pws = (
 			('',      'cc8d99ce7365d8a9d2422d71ce330e130b2cade46a8cc0459a3f83e1a6ac3d30'),
 			('foo',   'f0e2cce1d9980edf2373a2070ad3560c2506faf9bc50704a1bc5cdb3c7f63f3b'),
-			('φυβαρ', '64898d01ffcea1252c17411e7bd6c12d00191ee8ddcbf95420e5de8f37a7a1cb')
-		)
+			('φυβαρ', '64898d01ffcea1252c17411e7bd6c12d00191ee8ddcbf95420e5de8f37a7a1cb'))
 
 		def test_passwords():
 			for pw_base, res in pws:

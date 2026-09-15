@@ -35,8 +35,7 @@ def pubkey_tweak_add_pyecdsa(vk_bytes, pk_addend_bytes):
 	pk_addend = int.from_bytes(pk_addend_bytes, byteorder='big')
 	point_sum = (
 		_pubkey_to_pub_point(vk_bytes) +
-		ecdsa.SigningKey.from_secret_exponent(pk_addend, curve=ecdsa.SECP256k1).verifying_key.pubkey.point
-	)
+		ecdsa.SigningKey.from_secret_exponent(pk_addend, curve=ecdsa.SECP256k1).verifying_key.pubkey.point)
 	_check_pub_point(point_sum, vk_bytes, pk_addend_bytes)
 	return overlay_fake_pubkey_format(
 		ecdsa.VerifyingKey.from_public_point(point_sum, curve=ecdsa.curves.SECP256k1).to_string(),

@@ -49,8 +49,7 @@ class CmdTestChainsplit(CmdTestRegtest):
 		('split_txdo_timelock_bad_btc',  'sending transaction with bad locktime (BTC)'),
 		('split_txdo_timelock_good_btc', 'sending transaction with good locktime (BTC)'),
 		('split_txdo_timelock_bad_b2x',  'sending transaction with bad locktime (B2X)'),
-		('split_txdo_timelock_good_b2x', 'sending transaction with good locktime (B2X)'),
-	)
+		('split_txdo_timelock_good_b2x', 'sending transaction with good locktime (B2X)'))
 
 	def split_setup(self):
 		if self.proto.coin != 'BTC':

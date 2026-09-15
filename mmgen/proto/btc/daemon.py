@@ -67,8 +67,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			[f'--rpcuser={self.rpc_user}',         self.network == 'regtest'],
 			[f'--rpcpassword={self.rpc_password}', self.network == 'regtest'],
 			['--testnet',                          self.network == 'testnet'],
-			['--regtest',                          self.network == 'regtest'],
-		)
+			['--regtest',                          self.network == 'regtest'])
 
 		self.coind_args = list_gen(
 			['--listen=0'],
@@ -81,8 +80,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--deprecatedrpc=create_bdb', self.coin == 'BTC' and self.opt.bdb_wallet],
 			['--mempoolreplacement=1', self.coin == 'LTC'],
 			['--txindex=1',            self.coin == 'LTC' or self.network == 'regtest'],
-			['--addresstype=bech32',   self.coin == 'LTC' and self.network == 'regtest'],
-		)
+			['--addresstype=bech32',   self.coin == 'LTC' and self.network == 'regtest'])
 
 		self.lockfile = os.path.join(self.network_datadir, '.cookie')
 

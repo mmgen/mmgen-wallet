@@ -94,8 +94,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 		('wait_loop_kill',                   'stopping autosign wait loop'),
 		('stop',                             'stopping regtest daemon'),
 		('txview',                           'viewing transactions on removable device'),
-		('txview_forbid_legacy',             'viewing transactions on removable device (forbid legacy files'),
-	)
+		('txview_forbid_legacy',             'viewing transactions on removable device (forbid legacy files'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 

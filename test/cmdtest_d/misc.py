@@ -33,12 +33,11 @@ from .main import CmdTestMain
 class CmdTestDev(CmdTestBase):
 	'developer scripts'
 	networks = ('btc',)
-	cmd_group = (
-		('compute_file_chksum', 'scripts/compute-file-chksum.py'),
-		('create_bip_hd_chain_params', 'scripts/create-bip-hd-chain-params.py'),
-	)
 	tmpdir_nums = [99]
 	color = True
+	cmd_group = (
+		('compute_file_chksum', 'scripts/compute-file-chksum.py'),
+		('create_bip_hd_chain_params', 'scripts/create-bip-hd-chain-params.py'))
 
 	def _spawn(self, script, args):
 		return self.spawn(script, args, cmd_dir='.', no_exec_wrapper=True)
@@ -63,6 +62,8 @@ class CmdTestMisc(CmdTestBase):
 	networks = ('btc',)
 	tmpdir_nums = [99]
 	passthru_opts = ('daemon_data_dir', 'rpc_port')
+	color = True
+	need_daemon = True
 	cmd_group = (
 		('rpc_backends',         'RPC backends'),
 		('bch_txview_legacy1',   '‘mmgen-tool --coin=bch --cashaddr=0 txview terse=0’'),
@@ -74,10 +75,7 @@ class CmdTestMisc(CmdTestBase):
 		('coin_daemon_info',     '‘examples/coin-daemon-info.py’'),
 		('examples_bip_hd',      '‘examples/bip_hd.py’'),
 		('term_echo',            'term.set("echo")'),
-		('term_cleanup',         'term.register_cleanup()'),
-	)
-	need_daemon = True
-	color = True
+		('term_cleanup',         'term.register_cleanup()'))
 
 	def rpc_backends(self):
 		backends = self.cfg._autoset_opts['rpc_backend'][1]
@@ -187,15 +185,14 @@ class CmdTestMisc(CmdTestBase):
 class CmdTestOutput(CmdTestBase):
 	'screen output'
 	networks = ('btc',)
+	color = True
 	cmd_group = (
 		('output_gr',            (1, 'Greek text', [])),
 		('output_ru',            (1, 'Russian text', [])),
 		('output_zh',            (1, 'Chinese text', [])),
 		('output_jp',            (1, 'Japanese text', [])),
 		('oneshot_warning',      (1, 'Oneshot warnings', [])),
-		('oneshot_warning_term', (1, 'Oneshot warnings (pexpect_spawn)', []))
-	)
-	color = True
+		('oneshot_warning_term', (1, 'Oneshot warnings (pexpect_spawn)', [])))
 
 	def screen_output(self, lang):
 		return self.spawn('test/misc/utf8_output.py', [lang], cmd_dir='.')
@@ -253,8 +250,7 @@ class CmdTestCreateRefTX(CmdTestMain, CmdTestBase):
 		('ref_tx_txcreate',
 			(31, 'transaction creation',
 			([['addrs'], 31], [['addrs'], 32], [['addrs'], 33], [['addrs'], 34]))
-		),
-	)
+		))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		if cfgs:

@@ -177,8 +177,7 @@ class TwCtl(MMGenObject, metaclass=AsyncInit):
 		fs = '{:%s}: {:%s} {:%s} - OK' % (
 			len(str(len(fdata))) * 2 + 1,
 			max(len(d.addr) for d in fdata),
-			max(len(d.mmid_disp) for d in fdata) + 2
-		)
+			max(len(d.mmid_disp) for d in fdata) + 2)
 
 		nAddrs = len(data)
 		out = [( # create list, not generator, so we know data is valid before starting import

@@ -84,7 +84,6 @@ async def main():
 		f'Current block discovery rate (over last {sample_size} blocks): {bdr/60:0.1f} minutes\n'
 		f'Current clock time (UTC): {date(clock_time)}\n'
 		f'Est. halving date (UTC):  {date(cur["time"] + t_rem)}\n'
-		f'Est. time until halving: {dhms(cur["time"] + t_rem - clock_time)}\n'
-	)
+		f'Est. time until halving: {dhms(cur["time"] + t_rem - clock_time)}\n')
 
 async_run(cfg, main)

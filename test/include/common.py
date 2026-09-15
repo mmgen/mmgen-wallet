@@ -237,8 +237,7 @@ def cmp_or_die(s, t, desc=None):
 	if s != t:
 		die('TestSuiteFatalException',
 			(f'For {desc}:\n' if desc else '') +
-			f'ERROR: recoded data:\n{t!r}\ndiffers from original data:\n{s!r}'
-		)
+			f'ERROR: recoded data:\n{t!r}\ndiffers from original data:\n{s!r}')
 
 def chk_equal(a, b):
 	assert a == b, f'equality test failed: {a} != {b}'
@@ -334,8 +333,7 @@ def check_solc_ver():
 	if cp.returncode == 0:
 		omsg(
 			orange(f'Found supported solc version {res}') if res == tested_solc_ver else
-			yellow(f'WARNING: solc version ({res}) does not match tested version ({tested_solc_ver})')
-		)
+			yellow(f'WARNING: solc version ({res}) does not match tested version ({tested_solc_ver})'))
 		return True
 	else:
 		omsg(yellow('Warning: Solidity compiler (solc) could not be executed or has unsupported version'))

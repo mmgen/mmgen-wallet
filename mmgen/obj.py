@@ -193,8 +193,7 @@ class MMGenListItem(MMGenObject):
 		self.__dict__['valid_attrs'] = self.valid_attrs or (
 				{e for e in dir(self) if e[0] != '_'}
 				- MMGenListItem.invalid_attrs
-				- self.invalid_attrs
-			)
+				- self.invalid_attrs)
 
 		if args:
 			raise ValueError(f'Non-keyword args not allowed in {type(self).__name__!r} constructor')

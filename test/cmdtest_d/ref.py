@@ -127,12 +127,9 @@ class CmdTestRef(CmdTestBase, CmdTestShared):
 		('ref_passwdfile_chk_bip39_24',     'saved reference password file (BIP39, 24 words)'),
 		('ref_passwdfile_chk_xmrseed_25',   'saved reference password file (Monero new-style mnemonic, 25 words)'),
 		('ref_passwdfile_chk_hex2bip39_12', 'saved reference password file (hex-to-BIP39, 12 words)'),
-
-#	Create the fake inputs:
-#	('txcreate8',          'transaction creation (8)'),
+#		('txcreate8',                       'transaction creation (8)'), # create the fake inputs
 		('ref_brain_chk_spc3',           'saved brainwallet (non-standard spacing)'),
-		('ref_dieroll_chk_seedtruncate', 'saved dieroll wallet with extra entropy bits'),
-	)
+		('ref_dieroll_chk_seedtruncate', 'saved dieroll wallet with extra entropy bits'))
 
 	@property
 	def nw_desc(self):
@@ -302,8 +299,7 @@ class CmdTestRefTX(CmdTestRef):
 		('ref_txfile_mismatched_forbidden',       'viewing an out-of-date tx file (forbidden)'),
 		('ref_txfile_mismatched_allowed',         'viewing an out-of-date tx file (allowed)'),
 		('ref_txfile_mismatched_forbidden_nover', 'viewing an out-of-date tx file (forbidden, no version)'),
-		('ref_txfile_mismatched_allowed_nover',   'viewing an out-of-date tx file (allowed, no version)'),
-	)
+		('ref_txfile_mismatched_allowed_nover',   'viewing an out-of-date tx file (allowed, no version)'))
 
 	sources = {
 		'ref_tx_file': { # data shared with ref_altcoin, autosign

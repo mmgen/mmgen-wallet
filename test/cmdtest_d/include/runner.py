@@ -196,8 +196,7 @@ class CmdTestRunner:
 					clr1, clr2 = (nocolor, nocolor) if self.cfg.print_cmdline else (green, cyan)
 					omsg(
 						clr1('Executing: ') +
-						clr2(repr(cmd_disp) if gc.platform == 'win32' else cmd_disp)
-					)
+						clr2(repr(cmd_disp) if gc.platform == 'win32' else cmd_disp))
 			else:
 				omsg_r('{a}Testing {b}: {c}'.format(
 					a = t_pfx,

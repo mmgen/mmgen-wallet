@@ -232,8 +232,7 @@ class BipHDNode(Lockable):
 			raise ValueError(
 				'{}: invalid value for ‘{}’ at depth {} ({!r}) (must be {})'.format(
 					val, name, self.depth, self.desc,
-					'None' if getattr(cls, name) is None else f'None or {getattr(cls, name)}')
-			)
+					'None' if getattr(cls, name) is None else f'None or {getattr(cls, name)}'))
 
 	def set_params(self, cfg, idx, *, hardened):
 		self.check_param('idx', idx)
@@ -310,8 +309,7 @@ class BipHDNode(Lockable):
 				length    = 4,
 				byteorder = 'big')
 			+ self.chaincode
-			+ (self.pubkey_bytes if public else b'\x00' + self.key)
-		)
+			+ (self.pubkey_bytes if public else b'\x00' + self.key))
 		return ret if as_str else Bip32ExtendedKey(ret)
 
 	def derive_public(self, idx=None):

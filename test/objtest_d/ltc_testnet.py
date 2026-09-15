@@ -44,8 +44,7 @@ tests = {
 		),
 		'good': (
 			{'proto': proto, 'wif': '936Fd4qs3Zy2ZiYHH7vZ3UpT23KtCAiGiG2xBTkjHo7jE9aWA2f',  'ret_idx': 1},
-			{'proto': proto, 'wif': 'cQY3EumdaSNuttvDSUuPdiMYLyw8aVmYfFqxo9kdPuWbJBN4Ny66', 'ret_idx': 1},
-		)
+			{'proto': proto, 'wif': 'cQY3EumdaSNuttvDSUuPdiMYLyw8aVmYfFqxo9kdPuWbJBN4Ny66', 'ret_idx': 1})
 	},
 	'PrivKey': {
 		'bad': (
@@ -66,7 +65,6 @@ tests = {
 			{'proto': proto, 'wif': 'cSaJAXBAm9ooHpVJgoxqjDG3AcareFy29Cz8mhnNTRijjv2HLgta',
 			'ret': bytes.fromhex('94fa8b90c11fea8fb907c9376b919534b0a75b9a9621edf71a78753544b4101c')},
 			{'proto': proto, 's': r32, 'compressed': False, 'pubkey_type': 'std', 'ret': r32},
-			{'proto': proto, 's': r32, 'compressed': True, 'pubkey_type': 'std', 'ret': r32}
-		)
+			{'proto': proto, 's': r32, 'compressed': True, 'pubkey_type': 'std', 'ret': r32})
 	},
 }

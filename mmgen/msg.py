@@ -340,15 +340,13 @@ class coin_msg:
 				get_data_from_file(
 					cfg    = self.cfg,
 					infile = infile,
-					desc   = self.desc)
-				)
+					desc   = self.desc))
 
 			pfx = self.msg_cls.sigdata_pfx
 			self.sigs = {sig_data['addr']: sig_data for sig_data in (
 				[{k: v[len(pfx):] for k, v in e.items()} for e in self.data['signatures']]
 					if pfx else
-				self.data['signatures']
-			)}
+				self.data['signatures'])}
 
 def _get_obj(clsname, cfg, *args, coin=None, network='mainnet', infile=None, data=None, **kwargs):
 

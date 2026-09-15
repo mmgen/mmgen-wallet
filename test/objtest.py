@@ -102,9 +102,9 @@ def run_test(mod, test, arg, input_data, arg1, exc_name):
 	if cfg.getobj:
 		if args:
 			assert len(args) == 1, 'objtest_chk1: only one positional arg is allowed'
-			kwargs.update( { arg1: args[0] } )
+			kwargs.update({arg1: args[0]})
 		if cfg.silent:
-			kwargs.update( { 'silent': True } )
+			kwargs.update({'silent': True})
 
 	try:
 		if not cfg.super_silent:
@@ -172,7 +172,7 @@ def run_test(mod, test, arg, input_data, arg1, exc_name):
 		elif cfg.silent:
 			msg(f'==> {exc_name}')
 		else:
-			msg( yellow(f' {exc_name}:') + str(e) )
+			msg(yellow(f' {exc_name}:') + str(e))
 	except SystemExit as e:
 		if input_data == 'good':
 			raise ValueError('Error on good input data') from e

@@ -124,8 +124,7 @@ EXAMPLES:
 			n_bw = help_notes('brainwallet'),
 			n_pf = help_notes('password_formats'),
 			n_fc = help_notes('fmt_codes'),
-			gc   = gc,
-		)
+			gc   = gc)
 	}
 }
 

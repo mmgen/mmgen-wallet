@@ -72,8 +72,7 @@ def cashaddr_encode_addr(addr_type, size, pfx, data):
 	t = namedtuple('encoded_cashaddr', ['addr', 'pfx', 'payload'])
 	payload_bin = (
 		'{:08b}'.format(make_ver_byte(addr_type, size * 8)) +
-		'{:0{w}b}'.format(int.from_bytes(data, 'big'), w=len(data) * 8)
-	)
+		'{:0{w}b}'.format(int.from_bytes(data, 'big'), w=len(data) * 8))
 	payload_vec = bin2vec(payload_bin + '0' * (-len(payload_bin) % 5))
 	chksum_vec = bin2vec('{:040b}'.format(PolyMod(make_polymod_vec(pfx, payload_vec + [0] * 8))))
 	payload = ''.join(b32a[i] for i in payload_vec + chksum_vec)

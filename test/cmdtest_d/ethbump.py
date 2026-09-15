@@ -142,8 +142,8 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		('subgroup.token_new_outputs_swap',  ['token_init_swap']),
 		('ltc_stop',                    ''),
 		('swap_server_stop',            'stopping the Thornode server'),
-		('stop',                        'stopping daemon'),
-	)
+		('stop',                        'stopping daemon'))
+
 	cmd_subgroups = {
 		'eth_init': (
 			'initializing ETH tracking wallet',
@@ -444,5 +444,4 @@ class CmdTestEthBumpLTC(CmdTestSwapMethods, CmdTestRegtest):
 		('walletconv_bob',  'LTC wallet generation'),
 		('addrgen_bob',     'LTC address generation'),
 		('addrimport_bob',  'importing LTC addresses'),
-		('stop',            'stopping the Litecoin daemon'),
-	)
+		('stop',            'stopping the Litecoin daemon'))

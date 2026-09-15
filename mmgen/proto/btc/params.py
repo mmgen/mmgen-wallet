@@ -64,8 +64,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 		'rpc_password',
 		'tw_name',
 		'max_tx_fee',
-		'cashaddr',
-	)
+		'cashaddr')
 
 	def encode_wif(self, privbytes, pubkey_type, *, compressed): # input is preprocessed
 		assert pubkey_type in self.wif_ver_bytes, f'{pubkey_type!r}: invalid pubkey_type'

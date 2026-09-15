@@ -98,8 +98,7 @@ opts_data = {
 			tp  = fmt_dict(xmrwallet.tx_priorities, fmt='equal_compact')
 		),
 		'notes': lambda help_mod, s: s.format(
-			n_xw = help_mod('xmrwallet')
-		)
+			n_xw = help_mod('xmrwallet'))
 	}
 }
 
@@ -110,8 +109,7 @@ cmd_args = cfg._args
 if cmd_args and cfg.autosign and (
 		cmd_args[0].replace('-', '_') in (
 			xmrwallet.kafile_arg_ops
-			+ ('export_outputs', 'export_outputs_sign', 'import_key_images', 'txview', 'txlist')
-		)
+			+ ('export_outputs', 'export_outputs_sign', 'import_key_images', 'txview', 'txlist'))
 		or len(cmd_args) == 1 and cmd_args[0] in ('submit', 'resubmit', 'abort')
 	):
 	cmd_args.insert(1, None)

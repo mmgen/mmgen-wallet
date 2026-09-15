@@ -62,8 +62,7 @@ Valid network IDs: {nid}, {xmrw_nid}, all, no_xmr
 			pn = gc.prog_name),
 		'notes': lambda s, help_notes: s.format(
 			nid = help_notes('coin_daemon_network_ids'),
-			xmrw_nid = ', '.join(xmr_wallet_network_ids),
-		)
+			xmrw_nid = ', '.join(xmr_wallet_network_ids))
 	}
 }
 

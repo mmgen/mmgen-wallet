@@ -333,8 +333,8 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		),
 		('txsign6',
 			(21, 'transaction signing with corrected vsize', [[['mmdat', 'rawtx'], 21]])
-		),
-	)
+		))
+
 	segwit_do = (
 		'walletgen1',
 		'addrgen1',
@@ -372,8 +372,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		'walletgen6',
 		'addrgen6',
 		'txcreate6',
-		'txsign6',
-	)
+		'txsign6')
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)

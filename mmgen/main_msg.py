@@ -192,8 +192,7 @@ $ mmgen-msg verify signatures.json
 	},
 	'code': {
 		'notes': lambda help_notes, s: s.format(
-			n_at = help_notes('address_types'),
-		)
+			n_at = help_notes('address_types'))
 	}
 }
 

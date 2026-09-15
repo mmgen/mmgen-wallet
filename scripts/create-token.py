@@ -85,8 +85,7 @@ def create_src(cfg, template, token_data):
 				val = (
 					getattr(cfg, k)
 					or getattr(field, 'default', None)
-					or die(1, f'The --{k} option must be specified')
-				)
+					or die(1, f'The --{k} option must be specified'))
 				if not field.test(val):
 					die(1, f'{val!r}: invalid parameter for option --{k}')
 

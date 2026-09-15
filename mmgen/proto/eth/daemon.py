@@ -83,8 +83,7 @@ class openethereum_daemon(ethereum_daemon):
 			['--mode=offline', self.test_suite or self.network=='regtest'],
 			[f'--log-file={self.logfile}', self.non_dfl_datadir],
 			['daemon', self.use_pidfile],
-			[self.pidfile, self.use_pidfile],
-		)
+			[self.pidfile, self.use_pidfile])
 
 class parity_daemon(openethereum_daemon):
 	daemon_data = _dd('Parity', 2007002, '2.7.2')
@@ -126,8 +125,7 @@ class geth_daemon(ethereum_daemon):
 			[f'--datadir={self.datadir}', self.non_dfl_datadir],
 			['--holesky', self.network=='testnet' and self.id == 'geth'],
 			['--chain=holesky', self.network=='testnet' and self.id == 'reth'],
-			['--dev', self.network=='regtest'],
-		)
+			['--dev', self.network=='regtest'])
 
 class reth_daemon(geth_daemon):
 	daemon_data = _dd('Reth', 2005001, '2.5.1')
@@ -163,8 +161,7 @@ class erigon_daemon(geth_daemon):
 			['--chain=goerli', self.network=='testnet'],
 			[f'--torrent.port={self.torrent_ports.testnet}', self.network=='testnet'],
 			['--chain=dev', self.network=='regtest'],
-			['--mine', self.network=='regtest'],
-		)
+			['--mine', self.network=='regtest'])
 
 		self.rpc_d = erigon_rpcdaemon(
 			cfg          = self.cfg,
@@ -212,5 +209,4 @@ class erigon_rpcdaemon(RPCDaemon):
 			[f'--private.api.addr=127.0.0.1:{private_port}'],
 			[f'--http.port={self.rpc_port}'],
 			[f'--datadir={self.datadir}'],
-			['--http.api=eth,erigon,web3,net,debug,trace,txpool,parity'],
-		)
+			['--http.api=eth,erigon,web3,net,debug,trace,txpool,parity'])

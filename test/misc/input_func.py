@@ -23,7 +23,7 @@ match cfg._args:
 		from mmgen.ui import get_words_from_user
 		pw = get_words_from_user(
 			cfg,
-			('Enter passphrase: ', 'Enter passphrase (echoed): ')[bool(cfg.echo_passphrase)] )
+			('Enter passphrase: ', 'Enter passphrase (echoed): ')[bool(cfg.echo_passphrase)])
 		msg('Entered: {}'.format(' '.join(pw)))
 	case 'get_char' | 'line_input' as cmd, args:
 		from mmgen.term import get_char
