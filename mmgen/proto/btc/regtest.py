@@ -210,7 +210,7 @@ class MMGenRegtest(MMGenObject):
 
 		# BCH and LTC daemons refuse to set HD seed with empty blockchain ("in IBD" error),
 		# so generate a block:
-		await self.generate(1)
+		await self.generate(1 if self.bdb_wallet else 2) # add a BTC block for sufficient funds
 
 		# Unfortunately, we don’t get deterministic output with BCH and LTC even with fixed
 		# hdseed, as their 'sendtoaddress' calls produce non-deterministic TXIDs due to random
@@ -227,7 +227,7 @@ class MMGenRegtest(MMGenObject):
 			# just enough blocks to fund the test suite.
 			await self.generate(392)
 		else:
-			for _ in range(6): # 120 blocks required for sufficient funds
+			for _ in range(6): # 120 + 2 blocks required for sufficient funds
 				await self.generate(20)
 
 		gmsg('Setup complete')

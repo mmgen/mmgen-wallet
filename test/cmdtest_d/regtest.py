@@ -1006,19 +1006,19 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			expect2 = rf'[{b58a}]{{8}}' if self.proto.coin == 'BCH' else None)
 
 	def bob_txhist3(self):
-		n1, n2 = (399, 405) if self.rt.bdb_wallet else (127, 133)
+		n1, n2 = (399, 405) if self.rt.bdb_wallet else (128, 134)
 		return self.user_txhist('bob',
 			args = ['sort=blockheight', 'sinceblock=-7', 'age_fmt=block'],
 			expect = fr'Displaying transactions since block {n1}.*\s6\)\s+{n2}\s.*\s{rtBals[9]}\s.*:L:5.*\s7\)')
 
 	def bob_txhist4(self):
-		n = 406 if self.rt.bdb_wallet else 134
+		n = 406 if self.rt.bdb_wallet else 135
 		return self.user_txhist('bob',
 			args = ['sort=blockheight', 'age_fmt=block', 'detail=1'],
 			expect = fr'Block:.*{n}.*Value:.*{rtBals[10]}')
 
 	def bob_txhist5(self):
-		n1, n2 = (399, 406) if self.rt.bdb_wallet else (127, 134)
+		n1, n2 = (399, 406) if self.rt.bdb_wallet else (128, 135)
 		return self.user_txhist('bob',
 			args = ['sort=blockheight', f'sinceblock={n1}', 'age_fmt=block', 'detail=1'],
 			expect = fr'Displaying transactions since block {n1}.*\s7\).*Block:.*{n2}.*Value:.*{rtBals[10]}')
@@ -1037,7 +1037,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		for resp in ('u', 'i', 't', 'a', 'm', 'T', 'A', 'r', 'r', 'D', 'D', 'D', 'D', 'p', 'P', 'n', 'V'):
 			t.expect('draw:\b', resp, regex=True)
 		if t.pexpect_spawn:
-			t.expect(r'Block:.*394', regex=True)
+			t.expect(r'Block:.*{}'.format(394 if self.rt.bdb_wallet else 123), regex=True)
 			time.sleep(1)
 			t.send('q')
 			time.sleep(0.2)
@@ -1429,15 +1429,14 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		return t
 
 	def bob_rescan_blockchain_all(self):
-		print(self.rt.bdb_wallet)
-		n1, n2 = (300, 396) if self.rt.bdb_wallet else (100, 124)
+		n1, n2 = (300, 396) if self.rt.bdb_wallet else (100, 125)
 		return self._usr_rescan_blockchain('bob', [], f'{n1}-{n2}')
 
 	def bob_rescan_blockchain_gb(self):
 		return self._usr_rescan_blockchain('bob', ['start_block=0', 'stop_block=0'], '0-0')
 
 	def bob_rescan_blockchain_one(self):
-		n = 300 if self.rt.bdb_wallet else 124
+		n = 300 if self.rt.bdb_wallet else 125
 		return self._usr_rescan_blockchain('bob', [f'start_block={n}', f'stop_block={n}'], f'{n}-{n}')
 
 	def bob_rescan_blockchain_ss(self):
