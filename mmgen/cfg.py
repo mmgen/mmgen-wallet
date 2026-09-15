@@ -260,7 +260,7 @@ class Config(Lockable):
 	xmrwallet_compat           = False
 	priority                   = 0
 
-	test_suite = False # 22 references
+	test_suite = False # 13 references
 
 	# external use:
 	_opts  = None

@@ -50,9 +50,7 @@ async def main(coins):
 	base_cfg = Config({'pager':True})
 
 	for coin in coins:
-		cfg_in = {
-			'coin': coin,
-			'test_suite': test_suite}
+		cfg_in = {'coin': coin}
 		if coin == 'eth' and not test_suite:
 			cfg_in.update({'daemon_id': 'geth'})
 		cfgs[coin] = Config(cfg_in)

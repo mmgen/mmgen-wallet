@@ -19,7 +19,7 @@ from mmgen.proto.rune.tx.protobuf import (
 
 from ..include.common import vmsg, qmsg, silence, end_silence
 
-test_cfg = Config({'coin': 'rune', 'test_suite': True})
+test_cfg = Config({'coin': 'rune'})
 
 _pv = namedtuple('parse_vector', ['fn', 'txid', 'parms', 'null_fee'], defaults=[None])
 
@@ -209,7 +209,7 @@ class unit_tests:
 		from ..cmdtest_d.httpd.thornode.rpc import ThornodeRPCServer
 
 		silence()
-		regtest_cfg = Config({'coin': 'rune', 'regtest': True, 'test_suite': True})
+		regtest_cfg = Config({'coin': 'rune', 'regtest': True})
 		end_silence()
 
 		thornode_server = ThornodeRPCServer(test_cfg)
