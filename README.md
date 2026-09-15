@@ -168,14 +168,15 @@ Accounts:
 [Dread](http://dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion/u/MMGen) |
 [Reddit](https://www.reddit.com/user/mmgen-py) |
 [Keybase](https://keybase.io/mmgen)  
-PGP Signing Key: [5C84 CB45 AEE2 250F 31A6 A570 3F8B 1861 E32B 7DA2][5]    
+Repository Signing Key: [5C84 CB45 AEE2 250F 31A6 A570 3F8B 1861 E32B 7DA2][5]    
+PGP Encryption Key: [6EF5 A0EA E833 BA79 EE47 6A36 7C60 2DC4 55BF CC26][5]    
 Donate:    
 &nbsp;⊙&nbsp;BTC:&nbsp;*bc1qxmymxf8p5ckvlxkmkwgw8ap5t2xuaffmrpexap*    
 &nbsp;⊙&nbsp;BCH:&nbsp;*15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w*    
 &nbsp;⊙&nbsp;XMR:&nbsp;*8B14zb8wgLuKDdse5p8f3aKpFqRdB4i4xj83b7BHYABHMvHifWxiDXeKRELnaxL5FySfeRRS5girgUvgy8fQKsYMEzPUJ8h*
 
 [D]:  ../../wiki
-[5]:  ../../wiki/MMGen-Signing-Keys
+[5]:  PGP_KEYS.asc
 [9]:  https://mmgen.org/images/rxvt-txcreate.jpg
 [K]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Wallet-Software
 [S]:  ../../wiki/Recovering-Your-Keys-Without-the-MMGen-Wallet-Software#a_mh
