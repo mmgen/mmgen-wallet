@@ -29,6 +29,7 @@ for k, v in {
 		### everything below is missing in Config:
 
 		# these are referenced in production code:
+		'test_suite':                       True,
 		'test_suite_cfgtest':               False, # cfgfile - using getattr() with dfl val - OK
 		'test_suite_popen_spawn':           False, # line_input() - using getattr() with dfl val - OK
 		'test_suite_hold_protect_disable':  False, # init_term() - using getattr() with dfl val - OK

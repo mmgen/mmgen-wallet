@@ -43,7 +43,7 @@ async def rpc_init(
 				proto.base_proto + 'RPCClient')(
 		cfg           = cfg,
 		proto         = proto,
-		daemon        = daemon or CoinDaemon(cfg, proto=proto, test_suite=cfg.test_suite),
+		daemon        = daemon or CoinDaemon(cfg, proto=proto),
 		backend       = backend or cfg.rpc_backend,
 		ignore_wallet = ignore_wallet)
 

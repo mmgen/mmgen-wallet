@@ -54,7 +54,6 @@ class OpSubmit(OpWallet):
 			cfg         = self.cfg,
 			proto       = self.proto,
 			wallet_dir  = self.cfg.wallet_dir or '.',
-			test_suite  = self.cfg.test_suite,
 			monerod_addr = relay_opt[1])
 
 		u = wd.usr_daemon_args = []

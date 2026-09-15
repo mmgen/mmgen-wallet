@@ -79,7 +79,6 @@ def run(network_id=None, proto=None, daemon_id=None, missing_exec_ok=False):
 			proto         = init_proto(cfg, coin='XMR', network=xmr_wallet_network_ids[network_id]),
 			user          = 'test',
 			passwd        = 'test passwd',
-			test_suite    = True,
 			monerod_addr  = None,
 			trust_monerod = True,
 			test_monerod  = False,

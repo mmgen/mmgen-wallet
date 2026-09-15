@@ -103,7 +103,6 @@ class MoneroWalletDaemon(RPCDaemon):
 			proto,
 			*,
 			wallet_dir  = None,
-			test_suite  = False,
 			user        = None,
 			passwd      = None,
 			monerod_addr = None,
@@ -112,24 +111,23 @@ class MoneroWalletDaemon(RPCDaemon):
 			datadir     = None,
 			trust_monerod = False,
 			test_monerod = False,
-			opts         = None,
-			flags        = None):
+			**kwargs):
 
 		self.proto = proto
-		self.test_suite = test_suite
 
-		super().__init__(cfg, opts=opts, flags=flags)
+		super().__init__(cfg, **kwargs)
 
 		self.network = proto.network
-		self.wallet_dir = wallet_dir or (self.test_suite_datadir if test_suite else None)
+		self.wallet_dir = wallet_dir or (self.test_suite_datadir if self.test_suite else None)
 		self.rpc_port = (
 			self.cfg.wallet_rpc_port or
-			getattr(self.rpc_ports, self.network) + (11 if test_suite else 0))
+			getattr(self.rpc_ports, self.network) + (11 if self.test_suite else 0))
+
 		if port_shift:
 			self.rpc_port += port_shift
 
 		id_str = f'{self.exec_fn}-{self.bind_port}'
-		self.datadir = datadir or (self.test_suite_datadir if test_suite else self.exec_fn + '.d')
+		self.datadir = datadir or (self.test_suite_datadir if self.test_suite else self.exec_fn + '.d')
 		self.pidfile = os.path.join(self.datadir, id_str+'.pid')
 		self.logfile = os.path.join(self.datadir, id_str+'.log')
 
@@ -140,9 +138,8 @@ class MoneroWalletDaemon(RPCDaemon):
 		self.monerod_port = (
 			None if monerod_addr else
 			CoinDaemon(
-				cfg        = self.cfg,
-				proto      = proto,
-				test_suite = test_suite).rpc_port)
+				cfg   = self.cfg,
+				proto = proto).rpc_port)
 
 		if test_monerod and self.monerod_port:
 			import socket
@@ -175,7 +172,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			[f'--pidfile={self.pidfile}',            gc.platform == 'linux'],
 			['--detach',                             not (self.opt.no_daemonize or gc.platform=='win32')],
 			['--stagenet',                           self.network == 'testnet'],
-			['--allow-mismatched-daemon-version',    test_suite])
+			['--allow-mismatched-daemon-version',    self.test_suite])
 
 		from .rpc import MoneroWalletRPCClient
 		self.rpc = MoneroWalletRPCClient(

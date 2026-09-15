@@ -117,7 +117,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			'coin': 'XMR',
 			'outdir': self.users['alice'].udir,
 			'wallet_rpc_password': 'passwOrd',
-			'test_suite': True,
 		} | ({
 			'alice': True,
 			'compat': True

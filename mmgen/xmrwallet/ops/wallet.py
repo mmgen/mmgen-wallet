@@ -66,7 +66,6 @@ class OpWallet(OpBase):
 			cfg         = self.cfg,
 			proto       = self.proto,
 			wallet_dir  = self.cfg.wallet_dir or '.',
-			test_suite  = self.cfg.test_suite,
 			monerod_addr = self.cfg.daemon or None,
 			trust_monerod = self.trust_monerod,
 			test_monerod = not self.wallet_offline)

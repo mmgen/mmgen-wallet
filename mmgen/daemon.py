@@ -50,7 +50,7 @@ class Daemon(Lockable):
 	_reset_ok = ('debug', 'wait', 'pids')
 	version_info_arg = '--version'
 
-	def __init__(self, cfg, *, opts=None, flags=None):
+	def __init__(self, cfg, *, opts=None, flags=None, test_suite=None):
 
 		self.cfg = cfg
 		if gc.platform == 'win32':
@@ -60,6 +60,7 @@ class Daemon(Lockable):
 		self.opt = ClassOpts(self, opts)
 		self.flag = ClassFlags(self, flags)
 		self.debug = self.debug or cfg.debug_daemon
+		self.test_suite = cfg.test_suite if test_suite is None else test_suite
 
 	def exec_cmd_thread(self, cmd):
 		import threading
@@ -259,8 +260,8 @@ class RPCDaemon(Daemon):
 
 	avail_opts = ('no_daemonize',)
 
-	def __init__(self, cfg, *, opts=None, flags=None):
-		super().__init__(cfg, opts=opts, flags=flags)
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
 		self.desc = '{} {} {}RPC daemon'.format(
 			self.rpc_desc,
 			getattr(self.proto.network_names, self.proto.network),
@@ -342,13 +343,11 @@ class CoinDaemon(Daemon):
 			*,
 			network_id = None,
 			proto      = None,
-			opts       = None,
-			flags      = None,
-			test_suite = False,
 			port_shift = None,
 			p2p_port   = None,
 			datadir    = None,
-			daemon_id  = None):
+			daemon_id  = None,
+			**kwargs):
 
 		assert network_id or proto,        'CoinDaemon_chk1'
 		assert not (network_id and proto), 'CoinDaemon_chk2'
@@ -392,17 +391,13 @@ class CoinDaemon(Daemon):
 			*,
 			network_id = None,
 			proto      = None,
-			opts       = None,
-			flags      = None,
-			test_suite = False,
 			port_shift = None,
 			p2p_port   = None,
 			datadir    = None,
-			daemon_id  = None):
+			daemon_id  = None,
+			**kwargs):
 
-		self.test_suite = test_suite
-
-		super().__init__(cfg=cfg, opts=opts, flags=flags)
+		super().__init__(cfg, **kwargs)
 
 		self._set_ok += ('shared_args', 'usr_coind_args')
 		self.shared_args = []
@@ -414,23 +409,23 @@ class CoinDaemon(Daemon):
 		self.desc = '{} {} {}daemon'.format(
 			self.coind_name,
 			getattr(self.proto.network_names, self.network),
-			'test suite ' if test_suite else '')
+			'test suite ' if self.test_suite else '')
 
 		# user-set values take precedence
 		self.datadir = os.path.abspath(datadir or cfg.daemon_data_dir or self.init_datadir())
-		self.non_dfl_datadir = bool(datadir or cfg.daemon_data_dir or test_suite or self.network == 'regtest')
+		self.non_dfl_datadir = bool(datadir or cfg.daemon_data_dir or self.test_suite or self.network == 'regtest')
 
 		# init_datadir() may have already initialized logdir
 		self.logdir = os.path.abspath(getattr(self, 'logdir', self.datadir))
 
-		ps_adj = (port_shift or 0) + (self.test_suite_port_shift if test_suite else 0)
+		ps_adj = (port_shift or 0) + (self.test_suite_port_shift if self.test_suite else 0)
 
 		# user-set values take precedence
 		usr_rpc_port = self.proto.rpc_port or cfg.rpc_port
 		self.rpc_port = usr_rpc_port + (port_shift or 0) if usr_rpc_port else ps_adj + self.get_rpc_port()
 		self.p2p_port = (
 			p2p_port or (
-				self.get_p2p_port() + ps_adj if self.get_p2p_port() and (test_suite or ps_adj) else None
+				self.get_p2p_port() + ps_adj if self.get_p2p_port() and (self.test_suite or ps_adj) else None
 			) if self.network != 'regtest' else None)
 
 		if hasattr(self, 'private_ports'):

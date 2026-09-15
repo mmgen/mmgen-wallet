@@ -52,7 +52,6 @@ class OpSweep(OpMixinSpec, OpWallet):
 			cfg         = self.cfg,
 			proto       = self.proto,
 			wallet_dir  = self.cfg.wallet_dir or '.',
-			test_suite  = self.cfg.test_suite,
 			monerod_addr = m[1],
 			proxy       = m[2])
 

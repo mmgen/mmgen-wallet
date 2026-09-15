@@ -33,7 +33,7 @@ class tool_cmd(tool_cmd_base):
 	async def daemon_version(self):
 		"print coin daemon version"
 		from ..daemon import CoinDaemon
-		d = CoinDaemon(cfg=self.cfg, proto=self.proto, test_suite=self.cfg.test_suite)
+		d = CoinDaemon(cfg=self.cfg, proto=self.proto)
 		if self.proto.base_proto == 'Monero':
 			from ..proto.xmr.rpc import MoneroRPCClient
 			r = MoneroRPCClient(

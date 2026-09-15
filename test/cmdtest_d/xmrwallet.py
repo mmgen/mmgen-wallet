@@ -196,7 +196,6 @@ class CmdTestXMRWallet(CmdTestBase):
 			md = CoinDaemon(
 				cfg        = self.cfg,
 				proto      = self.proto,
-				test_suite = True,
 				port_shift = shift,
 				opts       = ['online'],
 				datadir    = daemon_datadir)
@@ -214,7 +213,6 @@ class CmdTestXMRWallet(CmdTestBase):
 			wd = MoneroWalletDaemon(
 				cfg          = self.cfg,
 				proto        = self.proto,
-				test_suite   = True,
 				wallet_dir   = wallet_dir,
 				user         = 'foo',
 				passwd       = 'bar',

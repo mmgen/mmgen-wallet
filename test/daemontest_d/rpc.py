@@ -162,7 +162,7 @@ def run_test(network_ids, test_cf_auth=False, daemon_ids=None, cfg_override=None
 		all_ids = CoinDaemon.get_daemon_ids(my_cfg, proto.coin)
 		ids = set(daemon_ids) & set(all_ids) if daemon_ids else all_ids
 		for daemon_id in ids:
-			do_test(CoinDaemon(my_cfg, proto=proto, test_suite=True, daemon_id=daemon_id), my_cfg)
+			do_test(CoinDaemon(my_cfg, proto=proto, daemon_id=daemon_id), my_cfg)
 
 	return True
 
@@ -240,11 +240,10 @@ class unit_tests:
 		async def run():
 			networks = init_proto(cfg, 'xmr').networks
 			daemons = [(
-					CoinDaemon(cfg, proto=proto, test_suite=True),
+					CoinDaemon(cfg, proto=proto),
 					MoneroWalletDaemon(
 						cfg        = cfg,
 						proto      = proto,
-						test_suite = True,
 						wallet_dir = trash_dir2,
 						datadir    = os.path.join(trash_dir2, 'wallet_rpc'),
 						passwd     = 'ut_rpc_passw0rd')

@@ -26,7 +26,7 @@ class ethereum_daemon(CoinDaemon):
 	daemon_port_offset = 100
 	network_port_offsets = _nw(0, 10, 20)
 
-	def __init__(self, *args, test_suite=False, **kwargs):
+	def __init__(self, *args, test_suite=None, **kwargs):
 
 		if not hasattr(self, 'all_daemons'):
 			ethereum_daemon.all_daemons = get_subclasses(ethereum_daemon, names=True)
@@ -168,7 +168,6 @@ class erigon_daemon(geth_daemon):
 			proto        = self.proto,
 			rpc_port     = self.rpc_port,
 			private_port = self.private_port,
-			test_suite   = self.test_suite,
 			datadir      = self.datadir)
 
 	def start(self, *, quiet=False, silent=False):
@@ -193,13 +192,11 @@ class erigon_rpcdaemon(RPCDaemon):
 	use_pidfile = False
 	use_threads = True
 
-	def __init__(self, cfg, proto, *, rpc_port, private_port, test_suite, datadir):
-
-		self.proto = proto
-		self.test_suite = test_suite
+	def __init__(self, cfg, *, proto, rpc_port, private_port, datadir):
 
 		super().__init__(cfg)
 
+		self.proto = proto
 		self.network = proto.network
 		self.rpc_port = rpc_port
 		self.datadir = datadir

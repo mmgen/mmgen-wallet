@@ -734,7 +734,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		self.proto = init_proto(cfg, network_id=self.proto.coin+'_rt', need_amt=True)
 
 		from mmgen.daemon import CoinDaemon
-		self.daemon = CoinDaemon(cfg, network_id=self.proto.coin+'_rt', test_suite=True)
+		self.daemon = CoinDaemon(cfg, network_id=self.proto.coin+'_rt')
 
 		if self.daemon.id == 'reth':
 			global reth_devkey, reth_devaddr

@@ -87,7 +87,6 @@ class MMGenRegtest(MMGenObject):
 		self.d = CoinDaemon(
 			cfg,
 			network_id = self.coin + '_rt',
-			test_suite = cfg.test_suite,
 			opts       = ['bdb_wallet'] if self.bdb_wallet else None)
 
 	# Caching creates problems (broken pipe) when recreating + loading wallets,
