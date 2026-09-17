@@ -212,8 +212,7 @@ class Daemon(Lockable):
 
 			if self.pids:
 				msg('Warning: multiple PIDs [{}] -- we may be stopping the wrong instance'.format(
-					fmt_list(self.pids, fmt='bare')
-				))
+					fmt_list(self.pids, fmt='bare')))
 			if self.wait:
 				self.wait_for_state('stopped')
 				time.sleep(0.3) # race condition
@@ -262,7 +261,7 @@ class RPCDaemon(Daemon):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.desc = '{} {} {}RPC daemon'.format(
+		self.desc = '{} {} {}daemon'.format(
 			self.rpc_desc,
 			getattr(self.proto.network_names, self.proto.network),
 			'test suite ' if self.test_suite else '')

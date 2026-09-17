@@ -1,4 +1,4 @@
-include README.md SIGNING_KEYS.pub LICENSE INSTALL *-requirements.txt
+include README.md PGP_KEYS.asc LICENSE INSTALL *-requirements.txt
 
 include doc/release-notes/*
 include doc/wiki/*/*
