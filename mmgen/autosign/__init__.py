@@ -496,7 +496,7 @@ class Autosign:
 					die(2, f'blkid exited with error code {cp.returncode}')
 				return self.dev_label in cp.stdout.splitlines()
 			case 'darwin':
-				if self.cfg.test_suite_root_pfx:
+				if self.cfg.test_suite_autosign_root_dir:
 					return self.mountpoint.exists()
 				else:
 					return run(

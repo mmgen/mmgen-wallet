@@ -3,7 +3,7 @@ from .__init___orig import *
 class overlay_fake_Autosign:
 
 	def init_fixup(self):
-		if pfx := self.cfg.test_suite_root_pfx:
+		if pfx := self.cfg.test_suite_autosign_root_dir:
 			subdir = pfx + '/' + ('online' if self.cfg.online else 'offline')
 			for k in ('mountpoint', 'shm_dir', 'wallet_dir'):
 				orig_path = str(getattr(self, k))

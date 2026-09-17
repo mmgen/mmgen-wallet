@@ -94,7 +94,7 @@ class CmdTestAutosignBase(CmdTestBase):
 		self.txhex_file = f'{self.tmpdir}/tx_dump.hex'
 
 		if not self.live:
-			self.spawn_env['MMGEN_TEST_SUITE_ROOT_PFX'] = self.tmpdir
+			self.spawn_env['MMGEN_TEST_SUITE_AUTOSIGN_ROOT_DIR'] = self.tmpdir
 
 		if self.threaded:
 			self.spawn_env['MMGEN_TEST_SUITE_AUTOSIGN_THREADED'] = '1'
@@ -123,7 +123,7 @@ class CmdTestAutosignBase(CmdTestBase):
 				Config({
 					'coins': ','.join(self.coins),
 					'test_suite_autosign_threaded': self.threaded,
-					'test_suite_root_pfx': None if self.live else self.tmpdir,
+					'test_suite_autosign_root_dir': None if self.live else self.tmpdir,
 					'online': subdir == 'online'}))
 
 			if create_dirs and not self.live:
