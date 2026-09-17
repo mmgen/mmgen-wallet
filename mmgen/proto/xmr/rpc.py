@@ -12,7 +12,7 @@
 proto.xmr.rpc: Monero base protocol RPC client class
 """
 
-import re
+import os, re
 
 from ...rpc.local import RPCClient
 from ...rpc.util import IPPort, auth_data
@@ -133,13 +133,23 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		NB: the 'stop_wallet' RPC call closes the open wallet before shutting down the daemon,
 		returning an error if no wallet is open
 		"""
+		from requests.exceptions import ConnectionError
+		from ...util import ymsg
 		try:
 			return self.call('stop_wallet')
-		except Exception as e:
-			from ...util import msg, msg_r, ymsg
-			from ...color import yellow
-			msg(f'{type(e).__name__}: {e}')
-			msg_r(yellow('Unable to shut down wallet daemon gracefully, so killing process instead...'))
-			ret = self.daemon.stop(silent=True)
-			ymsg('done')
-			return ret
+		except ConnectionError as e:
+			# Handle the monero-wallet-rpc random connection closing regression with ‘stop_wallet’:
+			if 'closed connection' in str(e):
+				if self.daemon.use_pidfile:
+					try:
+						os.waitid(os.P_PID, int(self.daemon.pid), os.WEXITED|os.WNOHANG) # noqa ASYNC222
+					# The daemon really did stop, so skip the warning and return:
+					except ChildProcessError:
+						return True
+				ymsg('Wallet daemon hung up unexpectedly, killing process just in case')
+			else:
+				ymsg(f'{type(e).__name__}: {e}')
+		except Exception:
+			ymsg('Unable to shut down wallet daemon gracefully, so killing process instead')
+
+		return self.daemon.stop(silent=True)
