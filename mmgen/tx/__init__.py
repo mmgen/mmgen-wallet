@@ -74,8 +74,6 @@ async def _get_twctl(d):
 			'AutomountSent'):
 		from ..tw.ctl import TwCtl
 		return await TwCtl(d.cfg, d.proto, no_rpc=True)
-	else:
-		return None
 
 def _get(clsname, modname, kwargs):
 	ret = _get_cls_info(clsname, modname, **kwargs)
