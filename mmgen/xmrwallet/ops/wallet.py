@@ -37,6 +37,7 @@ class OpWallet(OpBase):
 	wallet_offline = False
 	start_daemon = True
 	skip_wallet_check = False # for debugging
+	disable_authentication = False
 
 	def __init__(self, cfg, uarg_tuple):
 
@@ -67,6 +68,7 @@ class OpWallet(OpBase):
 			proto       = self.proto,
 			wallet_dir  = self.cfg.wallet_dir or '.',
 			monerod_addr = self.cfg.daemon or None,
+			disable_authentication = self.disable_authentication,
 			trust_monerod = self.trust_monerod,
 			test_monerod = not self.wallet_offline)
 

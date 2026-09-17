@@ -149,7 +149,11 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 				ymsg('Wallet daemon hung up unexpectedly, killing process just in case')
 			else:
 				ymsg(f'{type(e).__name__}: {e}')
-		except Exception:
-			ymsg('Unable to shut down wallet daemon gracefully, so killing process instead')
+		except Exception as e:
+			# Included for completeness: with ‘disable_authentication’ in effect, we shouldn’t be here:
+			if 'unauthorized' in str(e).lower():
+				ymsg('Unable to shut down wallet daemon gracefully, so killing process instead')
+			else:
+				ymsg(f'{type(e).__name__}: {e}')
 
 		return self.daemon.stop(silent=True)

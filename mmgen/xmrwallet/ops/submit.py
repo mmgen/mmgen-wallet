@@ -28,6 +28,11 @@ from .wallet import OpWallet
 class OpSubmit(OpWallet):
 	action = 'submitting transaction with'
 	opts = ('tx_relay_daemon',)
+	# The following is a workaround for a monero-wallet-rpc authorization failure regression
+	# with the ‘stop_wallet’ command.  Authentication to send a signed transaction is overkill
+	# in any case: if an attacker has access to the online machine, and hence the transaction,
+	# they can broadcast it to the network by some other means.
+	disable_authentication = True # FIXME
 
 	def post_mount_action(self):
 		return self.tx # trigger an exit if no suitable transaction present

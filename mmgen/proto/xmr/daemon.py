@@ -109,6 +109,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			proxy       = None,
 			port_shift  = None,
 			datadir     = None,
+			disable_authentication = False,
 			trust_monerod = False,
 			test_monerod = False,
 			**kwargs):
@@ -120,6 +121,7 @@ class MoneroWalletDaemon(RPCDaemon):
 		self.network = proto.network
 		self.wallet_dir = wallet_dir or (self.test_suite_datadir if self.test_suite else None)
 		self.rpc_port = getattr(self.rpc_ports, self.network) + (11 if self.test_suite else 0)
+		self.disable_authentication = disable_authentication
 
 		if port_shift:
 			self.rpc_port += port_shift
@@ -158,12 +160,13 @@ class MoneroWalletDaemon(RPCDaemon):
 				"the MMGen config file.")
 
 		self.daemon_args = list_gen(
+			['--disable-rpc-login', self.disable_authentication],
 			['--trusted-daemon', trust_monerod],
 			['--untrusted-daemon', not trust_monerod],
 			[f'--rpc-bind-port={self.rpc_port}'],
 			[f'--wallet-dir={self.wallet_dir}'],
 			[f'--log-file={self.logfile}'],
-			[f'--rpc-login={self.user}:{self.passwd}'],
+			[f'--rpc-login={self.user}:{self.passwd}', not self.disable_authentication],
 			[f'--daemon-address={self.monerod_addr}', self.monerod_addr],
 			[f'--daemon-port={self.monerod_port}',    not self.monerod_addr],
 			[f'--proxy={self.proxy}',                self.proxy],

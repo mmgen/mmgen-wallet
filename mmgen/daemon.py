@@ -45,6 +45,7 @@ class Daemon(Lockable):
 	new_console_mswin = False
 	lockfile = None
 	private_port = None
+	disable_authentication = False
 	avail_opts = ()
 	avail_flags = () # like opts, but can be set or unset after instantiation
 	_reset_ok = ('debug', 'wait', 'pids')
