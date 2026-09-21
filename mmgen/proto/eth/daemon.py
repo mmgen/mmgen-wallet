@@ -38,15 +38,17 @@ class ethereum_daemon(CoinDaemon):
 
 		super().__init__(*args, test_suite=test_suite, **kwargs)
 
-	def get_rpc_port(self):
+	@property
+	def dfl_rpc_port(self):
 		return self.base_rpc_port + self.port_offset
+
+	@property
+	def dfl_p2p_port(self):
+		return self.base_p2p_port + self.port_offset
 
 	@property
 	def authrpc_port(self):
 		return self.base_authrpc_port + self.port_offset
-
-	def get_p2p_port(self):
-		return self.base_p2p_port + self.port_offset
 
 class openethereum_daemon(ethereum_daemon):
 	daemon_data = _dd('OpenEthereum', 3003005, '3.3.5')

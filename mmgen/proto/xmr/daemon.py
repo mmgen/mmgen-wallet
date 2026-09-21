@@ -32,7 +32,8 @@ class monero_daemon(CoinDaemon):
 		'win32': ['/', 'c', 'ProgramData', 'bitmonero']}
 	use_pidfile = gc.platform == 'linux'
 
-	def get_p2p_port(self):
+	@property
+	def dfl_p2p_port(self):
 		return self.rpc_port - 1
 
 	def init_subclass(self):

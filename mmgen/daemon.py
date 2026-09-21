@@ -432,10 +432,10 @@ class CoinDaemon(Daemon):
 
 		# user-set values take precedence
 		usr_rpc_port = self.proto.rpc_port or cfg.rpc_port
-		self.rpc_port = usr_rpc_port + (port_shift or 0) if usr_rpc_port else ps_adj + self.get_rpc_port()
+		self.rpc_port = usr_rpc_port + (port_shift or 0) if usr_rpc_port else ps_adj + self.dfl_rpc_port
 		self.p2p_port = (
 			p2p_port or (
-				self.get_p2p_port() + ps_adj if self.get_p2p_port() and (self.test_suite or ps_adj) else None
+				self.dfl_p2p_port + ps_adj if self.dfl_p2p_port and (self.test_suite or ps_adj) else None
 			) if self.network != 'regtest' else None)
 
 		if hasattr(self, 'private_ports'):
@@ -457,10 +457,12 @@ class CoinDaemon(Daemon):
 			os.path.join('test', 'daemons', self.network_id) if self.test_suite else
 			os.path.join(*self.datadirs[gc.platform]))
 
-	def get_rpc_port(self):
+	@property
+	def dfl_rpc_port(self):
 		return getattr(self.rpc_ports, self.network)
 
-	def get_p2p_port(self):
+	@property
+	def dfl_p2p_port(self):
 		return None
 
 	@property
