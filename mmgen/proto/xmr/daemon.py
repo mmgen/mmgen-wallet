@@ -30,6 +30,7 @@ class monero_daemon(CoinDaemon):
 		'linux': [gc.home_dir, '.bitmonero'],
 		'darwin': [gc.home_dir, '.bitmonero'],
 		'win32': ['/', 'c', 'ProgramData', 'bitmonero']}
+	use_pidfile = gc.platform == 'linux'
 
 	def get_p2p_port(self):
 		return self.rpc_port - 1
@@ -46,8 +47,6 @@ class monero_daemon(CoinDaemon):
 			passwd = None,
 			test_connection = False,
 			daemon = self)
-
-		self.use_pidfile = gc.platform == 'linux'
 
 		self.shared_args = list_gen(
 			['--no-zmq'],
@@ -81,6 +80,7 @@ class MoneroWalletDaemon(RPCDaemon):
 	new_console_mswin = True
 	networks = ('mainnet', 'testnet')
 	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
+	use_pidfile = gc.platform == 'linux'
 	_reset_ok = ('debug', 'wait', 'pids', 'force_kill')
 	test_user_port_shifts = {
 		'bob':   10,
@@ -124,10 +124,9 @@ class MoneroWalletDaemon(RPCDaemon):
 			self.wallet_dir = MoneroTwCtl.get_tw_dir(self.proto)
 
 		fn_stem = f'{self.exec_fn}-{self.bind_port}'
-		self.pidfile = self.proto.network_datadir / (fn_stem + '.pid')
+		if self.use_pidfile:
+			self.pidfile = self.proto.network_datadir / (fn_stem + '.pid')
 		self.logfile = self.proto.network_datadir / (fn_stem + '.log')
-
-		self.use_pidfile = gc.platform == 'linux'
 
 		self.proxy = proxy
 		self.monerod_addr = monerod_addr

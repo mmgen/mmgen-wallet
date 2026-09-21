@@ -204,8 +204,7 @@ class unit_tests:
 				'rpc_port':     32323, # ignored
 				'btc_tw_name': 'ignored',
 				'tw_name':     'also-ignored',
-				'eth_testnet_chain_names': ['goerli', 'holesky', 'foo', 'bar', 'baz'],
-		})
+				'eth_testnet_chain_names': ['goerli', 'holesky', 'foo', 'bar', 'baz']})
 
 	def reth(self, name, ut):
 		return run_test(['eth', 'eth_rt'], daemon_ids=['reth']) # TODO: eth_tn

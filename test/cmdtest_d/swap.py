@@ -145,12 +145,11 @@ class CmdTestSwapMethods:
 	def _swaptxsend1(self, *, add_opts=[], spawn_only=False):
 		return self._swaptxsend(
 			add_opts = add_opts + [
-			# test overriding host:port with coin-specific options:
-			'--rpc-host=unreachable', # unreachable host
-			'--ltc-rpc-host=localhost',
-			'--rpc-port=46381',       # bad port
-			'--ltc-rpc-port=20680',
-			],
+				# test overriding host:port with coin-specific options:
+				'--rpc-host=unreachable', # unreachable host
+				'--ltc-rpc-host=localhost',
+				'--rpc-port=46381',       # bad port
+				'--ltc-rpc-port=20680'],
 			spawn_only = spawn_only)
 
 	def _swaptxsend(self, *, add_opts=[], spawn_only=False, status=False, dump_hex=False):

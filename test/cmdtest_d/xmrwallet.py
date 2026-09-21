@@ -20,7 +20,8 @@
 test.cmdtest_d.xmrwallet: xmrwallet tests for the cmdtest.py test suite
 """
 
-import os, time, re, atexit, asyncio, shutil
+import os
+import time, re, atexit, asyncio, shutil
 from subprocess import run
 from collections import namedtuple
 
@@ -67,12 +68,11 @@ class CmdTestXMRWallet(CmdTestBase):
 	tmpdir_nums = [29]
 	dfl_random_txs = 3
 	color = True
-	# Bob’s daemon is stopped via process kill, not RPC, so put Bob last in list:
-	#    user     sid autosign port_shift kal_range add_coind_args
 	user_data = (
+		# user    sid      autosign port_shift kal_range add_coind_args
 		('miner', '98831F3A', False, 130, '1-2', []),
-		('alice', 'FE3C6545', False, 150, '1-4', []),
-		('bob',   '1378FC64', False, 140, None,  ['--restricted-rpc']))
+		('bob',   '1378FC64', False, 140, None,  ['--restricted-rpc']),
+		('alice', 'FE3C6545', False, 150, '1-4', []))
 	tx_relay_user = 'bob'
 	daemon_datadir_base = os.path.join('test', 'daemons', 'xmrtest')
 	compat = False

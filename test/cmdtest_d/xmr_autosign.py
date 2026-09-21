@@ -45,8 +45,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 	# xmrwallet attrs:
 	tx_relay_user = 'miner'
-	# user sid autosign port_shift kal_range add_coind_args
 	user_data = (
+		# user    sid       autosign port_shift kal_range add_coind_args
 		('miner', '98831F3A', False, 130, '1', []),
 		('alice', 'FE3C6545', True,  150, '1-2', []))
 
