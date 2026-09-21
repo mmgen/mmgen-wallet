@@ -19,7 +19,6 @@ from ...util import list_gen, get_subclasses
 from ...daemon import CoinDaemon, RPCDaemon, _nw, _dd
 
 class ethereum_daemon(CoinDaemon):
-	chain_subdirs = _nw('ethereum', 'goerli', 'DevelopmentChain')
 	base_rpc_port = 8545  # same for all networks!
 	base_authrpc_port = 8551 # same for all networks!
 	base_p2p_port = 30303 # same for all networks!
@@ -49,13 +48,6 @@ class ethereum_daemon(CoinDaemon):
 	def get_p2p_port(self):
 		return self.base_p2p_port + self.port_offset
 
-	def init_datadir(self):
-		self.logdir = super().init_datadir()
-		return os.path.join(
-			self.logdir,
-			self.id,
-			getattr(self.chain_subdirs, self.network))
-
 class openethereum_daemon(ethereum_daemon):
 	daemon_data = _dd('OpenEthereum', 3003005, '3.3.5')
 	version_pat = r'OpenEthereum//v(\d+)\.(\d+)\.(\d+)'
@@ -77,13 +69,13 @@ class openethereum_daemon(ethereum_daemon):
 			['--no-secretstore'],
 			[f'--jsonrpc-port={self.rpc_port}'],
 			[f'--port={self.p2p_port}', self.p2p_port],
-			[f'--base-path={self.datadir}', self.has_non_dfl_datadir],
+			[f'--base-path={self.network_datadir}', self.has_non_dfl_datadir],
 			[f'--chain={self.proto.chain_name}', self.network!='regtest'],
 			['--config=dev', self.network=='regtest'], # no presets for mainnet or testnet
 			['--mode=offline', self.test_suite or self.network=='regtest'],
 			[f'--log-file={self.logfile}', self.has_non_dfl_datadir],
 			['daemon', self.use_pidfile],
-			[self.pidfile, self.use_pidfile])
+			[str(self.pidfile), self.use_pidfile])
 
 class parity_daemon(openethereum_daemon):
 	daemon_data = _dd('Parity', 2007002, '2.7.2')
@@ -122,7 +114,7 @@ class geth_daemon(ethereum_daemon):
 			[f'--port={self.p2p_port}', self.p2p_port], # geth binds p2p port even with --maxpeers=0
 			[f'--discovery.port={self.p2p_port}', self.id == 'reth' and self.p2p_port],
 			['--maxpeers=0', self.id == 'geth' and not self.opt.online],
-			[f'--datadir={self.datadir}', self.has_non_dfl_datadir],
+			[f'--datadir={self.network_datadir}', self.has_non_dfl_datadir],
 			['--holesky', self.network=='testnet' and self.id == 'geth'],
 			['--chain=holesky', self.network=='testnet' and self.id == 'reth'],
 			['--dev', self.network=='regtest'])
@@ -157,7 +149,7 @@ class erigon_daemon(geth_daemon):
 			[f'--port={self.p2p_port}', self.p2p_port],
 			['--maxpeers=0', not self.opt.online],
 			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
-			[f'--datadir={self.datadir}', self.has_non_dfl_datadir],
+			[f'--datadir={self.network_datadir}', self.has_non_dfl_datadir],
 			['--chain=goerli', self.network=='testnet'],
 			[f'--torrent.port={self.torrent_ports.testnet}', self.network=='testnet'],
 			['--chain=dev', self.network=='regtest'],

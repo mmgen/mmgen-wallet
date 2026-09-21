@@ -62,7 +62,6 @@ class OpSubmit(OpWallet):
 		wd = MoneroWalletDaemon(
 			cfg         = self.cfg,
 			proto       = self.proto,
-			wallet_dir  = self.cfg.wallet_dir or '.',
 			monerod_addr = relay_opt[1])
 
 		u = wd.usr_daemon_args = []

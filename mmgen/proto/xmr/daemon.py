@@ -12,7 +12,7 @@
 proto.xmr.daemon: Monero base protocol daemon classes
 """
 
-import os
+from pathlib import Path
 
 from ...cfg import gc
 from ...util import list_gen, die, contains_any
@@ -30,12 +30,6 @@ class monero_daemon(CoinDaemon):
 		'linux': [gc.home_dir, '.bitmonero'],
 		'darwin': [gc.home_dir, '.bitmonero'],
 		'win32': ['/', 'c', 'ProgramData', 'bitmonero']}
-
-	def init_datadir(self):
-		self.logdir = super().init_datadir()
-		return os.path.join(
-			self.logdir,
-			self.testnet_dir if self.network == 'testnet' else '')
 
 	def get_p2p_port(self):
 		return self.rpc_port - 1
@@ -64,7 +58,7 @@ class monero_daemon(CoinDaemon):
 		self.coind_args = list_gen(
 			['--hide-my-port'],
 			['--no-igd'],
-			[f'--data-dir={self.datadir}', self.has_non_dfl_datadir],
+			[f'--data-dir={self.network_datadir}', self.has_non_dfl_datadir],
 			[f'--pidfile={self.pidfile}', self.use_pidfile],
 			['--detach',                  not (self.opt.no_daemonize or gc.platform=='win32')],
 			['--offline',                 not self.opt.online])
@@ -88,7 +82,10 @@ class MoneroWalletDaemon(RPCDaemon):
 	networks = ('mainnet', 'testnet')
 	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
 	_reset_ok = ('debug', 'wait', 'pids', 'force_kill')
-	test_suite_datadir = os.path.join('test', 'daemons', 'xmrtest', 'wallet_rpc')
+	test_user_port_shifts = {
+		'bob':   10,
+		'alice': 20,
+		'miner': 30}
 
 	def __init__(
 			self,
@@ -112,17 +109,23 @@ class MoneroWalletDaemon(RPCDaemon):
 		super().__init__(cfg, **kwargs)
 
 		self.network = proto.network
-		self.wallet_dir = wallet_dir or (self.test_suite_datadir if self.test_suite else None)
 		self.rpc_port = getattr(self.rpc_ports, self.network) + (11 if self.test_suite else 0)
 		self.disable_authentication = disable_authentication
 
 		if port_shift:
 			self.rpc_port += port_shift
+		elif cfg.test_user:
+			self.rpc_port += self.test_user_port_shifts[cfg.test_user]
 
-		id_str = f'{self.exec_fn}-{self.bind_port}'
-		self.datadir = datadir or (self.test_suite_datadir if self.test_suite else self.exec_fn + '.d')
-		self.pidfile = os.path.join(self.datadir, id_str+'.pid')
-		self.logfile = os.path.join(self.datadir, id_str+'.log')
+		if wallet_dir or cfg.wallet_dir:
+			self.wallet_dir = Path(wallet_dir or cfg.wallet_dir)
+		else:
+			from .tw.ctl import MoneroTwCtl
+			self.wallet_dir = MoneroTwCtl.get_tw_dir(self.proto)
+
+		fn_stem = f'{self.exec_fn}-{self.bind_port}'
+		self.pidfile = self.proto.network_datadir / (fn_stem + '.pid')
+		self.logfile = self.proto.network_datadir / (fn_stem + '.log')
 
 		self.use_pidfile = gc.platform == 'linux'
 
@@ -176,7 +179,7 @@ class MoneroWalletDaemon(RPCDaemon):
 
 	def start(self, *args, **kwargs):
 		try: # NB: required due to bug in v18.3.1: PID file not deleted on shutdown
-			os.unlink(self.pidfile)
+			self.pidfile.unlink()
 		except FileNotFoundError:
 			pass
 		super().start(*args, **kwargs)

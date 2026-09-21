@@ -51,7 +51,6 @@ class OpSweep(OpMixinSpec, OpWallet):
 		wd2 = MoneroWalletDaemon(
 			cfg         = self.cfg,
 			proto       = self.proto,
-			wallet_dir  = self.cfg.wallet_dir or '.',
 			monerod_addr = m[1],
 			proxy       = m[2])
 

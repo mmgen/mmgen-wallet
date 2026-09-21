@@ -23,6 +23,7 @@ daemon: Daemon control interface for the MMGen suite
 import os, time, importlib
 from subprocess import run, PIPE, CompletedProcess
 from collections import namedtuple
+from pathlib import Path
 
 from .cfg import gc
 from .base_obj import Lockable
@@ -118,8 +119,7 @@ class Daemon(Lockable):
 	@property
 	def pid(self):
 		if self.use_pidfile:
-			with open(self.pidfile) as fp:
-				return fp.read().strip()
+			return self.pidfile.read_text().strip()
 
 		match gc.platform:
 			case 'win32':
@@ -278,7 +278,7 @@ class CoinDaemon(Daemon):
 	cfg_file_hdr = ''
 	avail_flags = ('keep_cfg_file',)
 	avail_opts = ('no_daemonize', 'online')
-	testnet_dir = None
+	testnet_dir = 'testnet'
 	test_suite_port_shift = 1237
 	rpc_user = None
 	rpc_password = None
@@ -411,12 +411,22 @@ class CoinDaemon(Daemon):
 			getattr(self.proto.network_names, self.network),
 			'test suite ' if self.test_suite else '')
 
-		# user-set values take precedence
-		self.datadir = os.path.abspath(datadir or cfg.daemon_data_dir or self.init_datadir())
-		self.has_non_dfl_datadir = bool(datadir or cfg.daemon_data_dir or self.test_suite or self.network == 'regtest')
+		self.datadir = Path(datadir or cfg.daemon_data_dir or self.dfl_datadir).absolute()
 
-		# init_datadir() may have already initialized logdir
-		self.logdir = os.path.abspath(getattr(self, 'logdir', self.datadir))
+		if self.test_suite and cfg.test_user:
+			self.datadir = self.datadir / cfg.test_user
+
+		self.has_non_dfl_datadir = bool(datadir or cfg.daemon_data_dir or self.test_suite)
+
+		# location of the network's blockchain data and authentication cookie
+		self.network_datadir = (
+			self.datadir / {
+				'mainnet': '',
+				'testnet': self.testnet_dir,
+				'regtest': 'regtest',
+			}[self.network]
+				if self.proto.base_proto == 'Bitcoin' or not self.test_suite else
+			self.datadir)
 
 		ps_adj = (port_shift or 0) + (self.test_suite_port_shift if self.test_suite else 0)
 
@@ -432,20 +442,20 @@ class CoinDaemon(Daemon):
 			self.private_port = getattr(self.private_ports, self.network)
 
 		# bind_port == self.private_port or self.rpc_port
-		self.pidfile = f'{self.logdir}/{self.id}-{self.network}-daemon-{self.bind_port}.pid'
-		self.logfile = f'{self.logdir}/{self.id}-{self.network}-daemon-{self.bind_port}.log'
+		fn_stem = f'{self.id}-{self.network}-daemon-{self.bind_port}'
+
+		self.logfile = self.network_datadir / (fn_stem + '.log')
+
+		if self.use_pidfile:
+			self.pidfile = self.network_datadir / (fn_stem + '.pid')
 
 		self.init_subclass()
 
-	def init_datadir(self):
-		if self.test_suite:
-			return os.path.join('test', 'daemons', self.network_id)
-		else:
-			return os.path.join(*self.datadirs[gc.platform])
-
 	@property
-	def network_datadir(self):
-		return self.datadir
+	def dfl_datadir(self):
+		return (
+			os.path.join('test', 'daemons', self.network_id) if self.test_suite else
+			os.path.join(*self.datadirs[gc.platform]))
 
 	def get_rpc_port(self):
 		return getattr(self.rpc_ports, self.network)
@@ -484,7 +494,7 @@ class CoinDaemon(Daemon):
 		if self.use_pidfile and os.path.exists(self.pidfile):
 			# Parity overwrites the data in the existing pidfile without zeroing it first, leading
 			# to interesting consequences when the new PID has fewer digits than the previous one.
-			os.unlink(self.pidfile)
+			self.pidfile.unlink()
 
 	def remove_datadir(self):
 		"remove the network's datadir"

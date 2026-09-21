@@ -13,7 +13,6 @@ xmrwallet.ops.wallet: xmrwallet wallet op for the MMGen Suite
 """
 
 import asyncio, re, atexit
-from pathlib import Path
 
 from ...color import orange, cyan
 from ...util import msg, gmsg, ymsg, die, suf
@@ -66,7 +65,6 @@ class OpWallet(OpBase):
 		self.wd = MoneroWalletDaemon(
 			cfg         = self.cfg,
 			proto       = self.proto,
-			wallet_dir  = self.cfg.wallet_dir or '.',
 			monerod_addr = self.cfg.daemon or None,
 			disable_authentication = self.disable_authentication,
 			trust_monerod = self.trust_monerod,
@@ -204,13 +202,11 @@ class OpWallet(OpBase):
 	def get_wallet_fn(self, data, *, watch_only=None):
 		if watch_only is None:
 			watch_only = self.cfg.watch_only
-		return Path(
-			(self.cfg.wallet_dir or '.'),
-			'{a}-{b}-Monero{c}Wallet{d}'.format(
-				a = self.kal.al_id.sid,
-				b = data.idx,
-				c = 'WatchOnly' if watch_only else '',
-				d = f'.{self.cfg.network}' if self.cfg.network != 'mainnet' else ''))
+		return self.wd.wallet_dir / '{a}-{b}-Monero{c}Wallet{d}'.format(
+			a = self.kal.al_id.sid,
+			b = data.idx,
+			c = 'WatchOnly' if watch_only else '',
+			d = f'.{self.cfg.network}' if self.cfg.network != 'mainnet' else '')
 
 	@property
 	def add_wallet_desc(self):

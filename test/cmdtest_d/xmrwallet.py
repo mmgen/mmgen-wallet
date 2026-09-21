@@ -24,7 +24,7 @@ import os, time, re, atexit, asyncio, shutil
 from subprocess import run
 from collections import namedtuple
 
-from mmgen.cfg import gc
+from mmgen.cfg import Config, gc
 from mmgen.util import capfirst, is_int, die, suf, list_gen
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
@@ -156,14 +156,14 @@ class CmdTestXMRWallet(CmdTestBase):
 		from mmgen.proto.xmr.daemon import MoneroWalletDaemon
 		from mmgen.proto.xmr.rpc import MoneroRPCClient, MoneroWalletRPCClient
 		self.users = {}
-		tmpdir_num = self.tmpdir_nums[0]
 
 		ud = namedtuple('user_data', [
+			'cfg',
 			'sid',
+			'udir',
+			'twdir',
 			'mmwords',
 			'autosign',
-			'udir',
-			'daemon_datadir',
 			'kal_range',
 			'kafile',
 			'walletfile_fs',
@@ -183,27 +183,18 @@ class CmdTestXMRWallet(CmdTestBase):
 				kal_range,
 				add_coind_args) in self.user_data:
 
-			tmpdir = os.path.join('test', 'tmp', str(tmpdir_num))
-			udir = os.path.join(tmpdir, user)
-			daemon_datadir = os.path.join(self.daemon_datadir_base, user)
-
-			if self.compat:
-				from mmgen.tw.ctl import TwCtl
-				twctl_cls = self.proto.base_proto_subclass(TwCtl, 'tw.ctl')
-				wallet_dir = os.path.join(self.tr.data_dir, user, 'altcoins', 'xmr', twctl_cls.tw_subdir)
-			else:
-				wallet_dir = udir
+			usr_cfg = Config({'_clone': self.cfg, user: True, 'wallet_rpc_password': 'abc'})
+			udir = usr_cfg._proto.network_datadir
 
 			md = CoinDaemon(
-				cfg        = self.cfg,
-				proto      = self.proto,
+				cfg        = usr_cfg,
+				proto      = usr_cfg._proto,
 				port_shift = shift,
-				opts       = ['online'],
-				datadir    = daemon_datadir)
+				opts       = ['online'])
 
 			md_rpc = MoneroRPCClient(
-				cfg    = self.cfg,
-				proto  = self.proto,
+				cfg    = usr_cfg,
+				proto  = usr_cfg._proto,
 				host   = 'localhost',
 				port   = md.rpc_port,
 				user   = None,
@@ -212,37 +203,35 @@ class CmdTestXMRWallet(CmdTestBase):
 				daemon = md)
 
 			wd = MoneroWalletDaemon(
-				cfg          = self.cfg,
-				proto        = self.proto,
-				wallet_dir   = wallet_dir,
+				cfg          = usr_cfg,
+				proto        = usr_cfg._proto,
+				wallet_dir   = None if autosign else
+					(usr_cfg._proto.network_datadir / 'tracking-wallets'),
 				user         = 'foo',
 				passwd       = 'bar',
 				port_shift   = shift,
 				monerod_addr = f'127.0.0.1:{md.rpc_port}')
 
 			wd_rpc = MoneroWalletRPCClient(
-				cfg             = self.cfg,
+				cfg             = usr_cfg,
 				daemon          = wd,
 				test_connection = False)
 
-			if autosign:
-				kafile_suf = 'vkeys'
-				fn_stem    = 'MoneroWatchOnlyWallet'
-				kafile_dir = self.asi_online.xmr_dir
-			else:
-				kafile_suf = 'akeys'
-				fn_stem    = 'MoneroWallet'
-				kafile_dir = udir
+			kafile_suf, fn_stem = (
+				('vkeys', 'MoneroWatchOnlyWallet') if autosign else
+				('akeys', 'MoneroWallet'))
+
 			self.users[user] = ud(
+				cfg            = usr_cfg,
 				sid            = sid,
 				mmwords        = f'test/ref/{sid}.mmwords',
 				autosign       = autosign,
 				udir           = udir,
-				daemon_datadir = daemon_datadir,
+				twdir          = wd.wallet_dir,
 				kal_range      = kal_range,
-				kafile         = f'{kafile_dir}/{sid}-XMR-M[{kal_range}].{kafile_suf}',
-				walletfile_fs  = f'{udir}/{sid}-{{}}-{fn_stem}',
-				addrfile_fs    = f'{udir}/{sid}-{{}}-{fn_stem}.address.txt',
+				kafile         = str(udir / f'{sid}-XMR-M[{kal_range}].{kafile_suf}'),
+				walletfile_fs  = str(wd.wallet_dir / f'{sid}-{{}}-{fn_stem}'),
+				addrfile_fs    = str(wd.wallet_dir / f'{sid}-{{}}-{fn_stem}.address.txt'),
 				md             = md,
 				md_rpc         = md_rpc,
 				wd             = wd,
@@ -272,8 +261,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		for user, data in self.users.items():
 			if not user in users:
 				continue
-			run(['mkdir', '-p', data.udir])
-			run(f'rm -f {data.kafile}', shell=True)
+			run(['mkdir', '-p', str(data.udir)])
 			t = self.spawn(
 				'mmgen-keygen',
 				['--quiet', '--accept-defaults', '--coin=xmr', f'--outdir={data.udir}']
@@ -313,7 +301,8 @@ class CmdTestXMRWallet(CmdTestBase):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ ([f'--{user}', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
+			+ [f'--{user}']
+			+ (['--compat'] if self.compat else [])
 			+ (self.autosign_opts if data.autosign else [])
 			+ add_opts
 			+ [op]
@@ -330,7 +319,8 @@ class CmdTestXMRWallet(CmdTestBase):
 			'mmgen-xmrwallet',
 			self.extra_opts
 			+ (self.autosign_opts if do_autosign else [])
-			+ (['--alice', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
+			+ ['--alice']
+			+ (['--compat'] if self.compat else [])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (['--no-start-wallet-daemon'] if cfg in ('continue', 'stop') else [])
 			+ (['--no-stop-wallet-daemon'] if cfg in ('start', 'continue') else [])
@@ -413,10 +403,11 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	def set_label_user(self, user, label_spec, add_timestr_resp, expect, add_opts=[]):
 		data = self.users[user]
-		cmd_opts = [f'--wallet-dir={data.udir}', f'--daemon=localhost:{data.md.rpc_port}']
+		cmd_opts = [f'--daemon=localhost:{data.md.rpc_port}']
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
+			+ [f'--{user}']
 			+ add_opts
 			+ cmd_opts
 			+ ['label', data.kafile, label_spec])
@@ -451,7 +442,8 @@ class CmdTestXMRWallet(CmdTestBase):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ ([f'--{user}', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
+			+ [f'--{user}']
+			+ (['--compat'] if self.compat else [f'--wallet-dir={data.twdir}']) # test --wallet-dir option
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (self.autosign_opts if data.autosign else [])
 			+ add_opts
@@ -502,7 +494,8 @@ class CmdTestXMRWallet(CmdTestBase):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ ([f'--{user}', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
+			+ [f'--{user}']
+			+ (['--compat'] if self.compat else [])
 			+ cmd_opts
 			+ add_opts
 			+ (self.autosign_opts if data.autosign else [])
@@ -631,8 +624,8 @@ class CmdTestXMRWallet(CmdTestBase):
 			self.do_mount_online()
 		silence()
 		kal = (ViewKeyAddrList if data.autosign else KeyAddrList)(
-			cfg      = self.cfg,
-			proto    = self.proto,
+			cfg      = data.cfg,
+			proto    = data.cfg._proto,
 			infile   = data.kafile,
 			skip_chksum_msg = True,
 			key_address_validity_check = False)
@@ -853,7 +846,6 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	def start_daemons(self):
 		for v in self.users.values():
-			run(['mkdir', '-p', v.daemon_datadir])
 			v.md.start()
 		if self.extra_daemons:
 			start_test_daemons(*self.extra_daemons, verbose=True)

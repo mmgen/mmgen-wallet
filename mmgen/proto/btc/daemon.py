@@ -33,22 +33,6 @@ class bitcoin_core_daemon(CoinDaemon):
 		'win32': [os.getenv('APPDATA'), 'Bitcoin']}
 	avail_opts = ('no_daemonize', 'online', 'bdb_wallet')
 
-	def init_datadir(self):
-		if self.network == 'regtest' and not self.test_suite:
-			return os.path.join(self.cfg.data_dir_root, 'regtest', self.cfg.coin.lower())
-		else:
-			return super().init_datadir()
-
-	@property
-	def network_datadir(self):
-		"location of the network's blockchain data and authentication cookie"
-		return os.path.join (
-			self.datadir, {
-				'mainnet': '',
-				'testnet': self.testnet_dir,
-				'regtest': 'regtest',
-			}[self.network])
-
 	@property
 	def auth_cookie_fn(self):
 		return os.path.join(self.network_datadir, '.cookie')
@@ -62,7 +46,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			self.rpc_password = MMGenRegtest.rpc_password
 
 		self.shared_args = list_gen(
-			[f'--datadir={self.datadir}',         self.nonstd_datadir or self.has_non_dfl_datadir],
+			[f'--datadir={self.datadir}',          self.nonstd_datadir or self.has_non_dfl_datadir],
 			[f'--rpcport={self.rpc_port}'],
 			[f'--rpcuser={self.rpc_user}',         self.network == 'regtest'],
 			[f'--rpcpassword={self.rpc_password}', self.network == 'regtest'],

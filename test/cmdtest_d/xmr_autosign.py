@@ -113,17 +113,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		if trunner is None:
 			return
 
-		from mmgen.cfg import Config
-		self.alice_cfg = Config({
-			'coin': 'XMR',
-			'outdir': self.users['alice'].udir,
-			'wallet_rpc_password': 'passwOrd',
-		} | ({
-			'alice': True,
-			'compat': True
-		} if self.compat else {
-			'wallet_dir': self.users['alice'].udir
-		}))
+		self.alice_cfg = self.users['alice'].cfg
+		self.alice_datadir = self.users['alice'].cfg._proto.network_datadir
 
 		self.burn_addr = make_burn_addr(cfg)
 
@@ -144,8 +135,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			seed      = Wallet(self.alice_cfg, fn=data.mmwords).seed,
 			skip_chksum_msg = True,
 			key_address_validity_check = False)
-		kal.file.write(ask_overwrite=False)
-		fn = get_file_with_ext(data.udir, 'akeys')
+		kal.file.write(outdir=self.alice_datadir, ask_overwrite=False)
+		fn = get_file_with_ext(self.alice_datadir, 'akeys')
 		m = op('create', self.alice_cfg, fn, '1-2')
 		asyncio.run(m.main())
 		asyncio.run(m.stop_wallet_daemon())
@@ -194,7 +185,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ (['--alice', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
+			+ (['--alice', '--compat'] if self.compat else [])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (self.autosign_opts if autosign else [])
 			+ [op]
@@ -347,7 +338,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		args = (
 			self.extra_opts
 			+ self.autosign_opts
-			+ (['--alice', '--compat'] if self.compat else [f'--wallet-dir={data.udir}'])
+			+ (['--alice', '--compat'] if self.compat else [])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ add_opts
 			+ [op]
@@ -598,13 +589,13 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		super().__init__(cfg, trunner, cfgs, spawn)
 		if trunner is None:
 			return
-		self.alice_tw_dir = os.path.join(self.tr.data_dir, 'alice', 'altcoins', 'xmr', 'tracking-wallets')
+		data = self.users['alice']
 		self.alice_dump_file = os.path.join(
-			self.alice_tw_dir,
-			'{}-2-MoneroWatchOnlyWallet.dump'.format(self.users['alice'].sid))
+			data.wd.wallet_dir,
+			f'{data.sid}-2-MoneroWatchOnlyWallet.dump')
 		self.alice_daemon_opts = [
-			f'--monero-daemon=localhost:{self.users["alice"].md.rpc_port}',
-			'--monero-wallet-rpc-password=passwOrd']
+			f'--monero-daemon=localhost:{data.md.rpc_port}',
+			'--monero-wallet-rpc-password=abc']
 		self.alice_opts = ['--alice', '--coin=xmr'] + self.alice_daemon_opts
 
 	def addrimport_alice(self):
