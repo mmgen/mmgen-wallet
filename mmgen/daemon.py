@@ -413,7 +413,7 @@ class CoinDaemon(Daemon):
 
 		# user-set values take precedence
 		self.datadir = os.path.abspath(datadir or cfg.daemon_data_dir or self.init_datadir())
-		self.non_dfl_datadir = bool(datadir or cfg.daemon_data_dir or self.test_suite or self.network == 'regtest')
+		self.has_non_dfl_datadir = bool(datadir or cfg.daemon_data_dir or self.test_suite or self.network == 'regtest')
 
 		# init_datadir() may have already initialized logdir
 		self.logdir = os.path.abspath(getattr(self, 'logdir', self.datadir))

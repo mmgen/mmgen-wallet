@@ -875,7 +875,12 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		if wait_signed:
 			self._wait_signed(signable_desc)
 		self.insert_device_online()
-		t = self.spawn(f'mmgen-{op}', (opts or self.alice_opts) + self.autosign_opts + add_opts + args)
+		t = self.spawn(
+			f'mmgen-{op}',
+			(opts or self.alice_opts)
+			+ self.autosign_opts
+			+ add_opts
+			+ args)
 		if '--abort' in opts:
 			t.expect('(y/N): ', 'y')
 		elif op == 'txcreate':

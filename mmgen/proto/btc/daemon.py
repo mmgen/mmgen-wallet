@@ -62,7 +62,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			self.rpc_password = MMGenRegtest.rpc_password
 
 		self.shared_args = list_gen(
-			[f'--datadir={self.datadir}',         self.nonstd_datadir or self.non_dfl_datadir],
+			[f'--datadir={self.datadir}',         self.nonstd_datadir or self.has_non_dfl_datadir],
 			[f'--rpcport={self.rpc_port}'],
 			[f'--rpcuser={self.rpc_user}',         self.network == 'regtest'],
 			[f'--rpcpassword={self.rpc_password}', self.network == 'regtest'],
@@ -74,7 +74,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--keypool=1'],
 			['--rpcallowip=127.0.0.1'],
 			[f'--rpcbind=127.0.0.1:{self.rpc_port}'],
-			['--pid='+self.pidfile,    self.use_pidfile],
+			[f'--pid={self.pidfile}',   self.use_pidfile],
 			['--daemon',               gc.platform in ('linux', 'darwin') and not self.opt.no_daemonize],
 			['--fallbackfee=0.0002',   self.coin == 'BTC' and self.network == 'regtest'],
 			['--deprecatedrpc=create_bdb', self.coin == 'BTC' and self.opt.bdb_wallet],

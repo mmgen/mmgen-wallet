@@ -77,11 +77,11 @@ class openethereum_daemon(ethereum_daemon):
 			['--no-secretstore'],
 			[f'--jsonrpc-port={self.rpc_port}'],
 			[f'--port={self.p2p_port}', self.p2p_port],
-			[f'--base-path={self.datadir}', self.non_dfl_datadir],
+			[f'--base-path={self.datadir}', self.has_non_dfl_datadir],
 			[f'--chain={self.proto.chain_name}', self.network!='regtest'],
 			['--config=dev', self.network=='regtest'], # no presets for mainnet or testnet
 			['--mode=offline', self.test_suite or self.network=='regtest'],
-			[f'--log-file={self.logfile}', self.non_dfl_datadir],
+			[f'--log-file={self.logfile}', self.has_non_dfl_datadir],
 			['daemon', self.use_pidfile],
 			[self.pidfile, self.use_pidfile])
 
@@ -122,7 +122,7 @@ class geth_daemon(ethereum_daemon):
 			[f'--port={self.p2p_port}', self.p2p_port], # geth binds p2p port even with --maxpeers=0
 			[f'--discovery.port={self.p2p_port}', self.id == 'reth' and self.p2p_port],
 			['--maxpeers=0', self.id == 'geth' and not self.opt.online],
-			[f'--datadir={self.datadir}', self.non_dfl_datadir],
+			[f'--datadir={self.datadir}', self.has_non_dfl_datadir],
 			['--holesky', self.network=='testnet' and self.id == 'geth'],
 			['--chain=holesky', self.network=='testnet' and self.id == 'reth'],
 			['--dev', self.network=='regtest'])
@@ -157,7 +157,7 @@ class erigon_daemon(geth_daemon):
 			[f'--port={self.p2p_port}', self.p2p_port],
 			['--maxpeers=0', not self.opt.online],
 			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
-			[f'--datadir={self.datadir}', self.non_dfl_datadir],
+			[f'--datadir={self.datadir}', self.has_non_dfl_datadir],
 			['--chain=goerli', self.network=='testnet'],
 			[f'--torrent.port={self.torrent_ports.testnet}', self.network=='testnet'],
 			['--chain=dev', self.network=='regtest'],

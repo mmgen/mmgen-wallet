@@ -64,7 +64,7 @@ class monero_daemon(CoinDaemon):
 		self.coind_args = list_gen(
 			['--hide-my-port'],
 			['--no-igd'],
-			[f'--data-dir={self.datadir}', self.non_dfl_datadir],
+			[f'--data-dir={self.datadir}', self.has_non_dfl_datadir],
 			[f'--pidfile={self.pidfile}', self.use_pidfile],
 			['--detach',                  not (self.opt.no_daemonize or gc.platform=='win32')],
 			['--offline',                 not self.opt.online])
@@ -89,13 +89,6 @@ class MoneroWalletDaemon(RPCDaemon):
 	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
 	_reset_ok = ('debug', 'wait', 'pids', 'force_kill')
 	test_suite_datadir = os.path.join('test', 'daemons', 'xmrtest', 'wallet_rpc')
-
-	def start(self, *args, **kwargs):
-		try: # NB: required due to bug in v18.3.1: PID file not deleted on shutdown
-			os.unlink(self.pidfile)
-		except FileNotFoundError:
-			pass
-		super().start(*args, **kwargs)
 
 	def __init__(
 			self,
@@ -170,7 +163,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			[f'--daemon-address={self.monerod_addr}', self.monerod_addr],
 			[f'--daemon-port={self.monerod_port}',    not self.monerod_addr],
 			[f'--proxy={self.proxy}',                self.proxy],
-			[f'--pidfile={self.pidfile}',            gc.platform == 'linux'],
+			[f'--pidfile={self.pidfile}',            self.use_pidfile],
 			['--detach',                             not (self.opt.no_daemonize or gc.platform=='win32')],
 			['--stagenet',                           self.network == 'testnet'],
 			['--allow-mismatched-daemon-version',    self.test_suite])
@@ -180,3 +173,10 @@ class MoneroWalletDaemon(RPCDaemon):
 			cfg             = self.cfg,
 			daemon          = self,
 			test_connection = False)
+
+	def start(self, *args, **kwargs):
+		try: # NB: required due to bug in v18.3.1: PID file not deleted on shutdown
+			os.unlink(self.pidfile)
+		except FileNotFoundError:
+			pass
+		super().start(*args, **kwargs)

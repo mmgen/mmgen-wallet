@@ -26,7 +26,7 @@ class requests(base):
 	def __init__(self, caller):
 		super().__init__(caller)
 		import requests, urllib3
-		urllib3.disable_warnings()
+		urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 		self.session = requests.Session()
 		self.session.trust_env = False # ignore *_PROXY environment vars
 		self.session.headers = caller.http_hdrs

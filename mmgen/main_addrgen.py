@@ -51,7 +51,7 @@ opts_data = {
 		'options': """
 			-- -h, --help            Print this help message
 			-- --, --longhelp        Print help message for long (global) options
-			-k -A, --no-addresses    Print only secret keys, no addresses
+			-k -A, --no-addresses    Generate only secret keys, no addresses
 			-- -c, --print-checksum  Print address list checksum and exit
 			-- -d, --outdir=      d  Output files to directory 'd' instead of working dir
 			-- -e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry
@@ -77,9 +77,9 @@ opts_data = {
 			+                        (default: {dmat})
 			-- -U, --subwallet=   U  Generate {what} for subwallet 'U' (see SUBWALLETS
 			+                        below)
-			-k -V, --viewkeys        Print viewkeys, omitting secret keys
+			-k -V, --viewkeys        Generate viewkeys, omitting spend keys
 			-- -v, --verbose         Produce more verbose output
-			-k -x, --b16             Print secret keys in hexadecimal too
+			-k -x, --b16             Generate secret keys in hexadecimal too
 		""",
 		'notes': """
 

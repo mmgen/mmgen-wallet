@@ -32,6 +32,10 @@ class OpSubmit(OpWallet):
 	# with the ‘stop_wallet’ command.  Authentication to send a signed transaction is overkill
 	# in any case: if an attacker has access to the online machine, and hence the transaction,
 	# they can broadcast it to the network by some other means.
+	#
+	# RPC authentication for the wallet daemon in particular seems unnecessary, because without
+	# the wallet password a potential attacker cannot open the wallet anyway to do anything
+	# nasty.  In future, an option should be added to disable it globally.
 	disable_authentication = True # FIXME
 
 	def post_mount_action(self):

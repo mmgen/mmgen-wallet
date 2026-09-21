@@ -274,10 +274,9 @@ class CmdTestXMRWallet(CmdTestBase):
 			run(['mkdir', '-p', data.udir])
 			run(f'rm -f {data.kafile}', shell=True)
 			t = self.spawn(
-				'mmgen-keygen', [
-					'-q', '--accept-defaults', '--coin=xmr',
-					f'--outdir={data.udir}', data.mmwords, data.kal_range
-				],
+				'mmgen-keygen',
+				['--quiet', '--accept-defaults', '--coin=xmr', f'--outdir={data.udir}']
+				+ [data.mmwords, data.kal_range],
 				extra_desc = f'({capfirst(user)})')
 			t.read()
 			t.ok()
