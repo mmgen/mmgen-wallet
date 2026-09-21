@@ -121,7 +121,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 		from mmgen.protocol import init_proto
 		self.proto = init_proto(cfg, 'XMR', network='mainnet')
-		self.extra_opts = ['--wallet-rpc-password=passw0rd']
+		self.extra_opts = ['--wallet-rpc-password=abc']
 		self.init_users()
 		self.init_daemon_args()
 
@@ -133,6 +133,8 @@ class CmdTestXMRWallet(CmdTestBase):
 			# must be IP, not 'localhost':
 			self.tx_relay_daemon_parm + f':127.0.0.1:{TestProxy.port}')
 
+		TestProxy(self, cfg)
+
 		if not cfg.no_daemon_stop:
 			atexit.register(stop_daemons, self)
 			atexit.register(stop_miner_wallet_daemon, self)
@@ -143,7 +145,6 @@ class CmdTestXMRWallet(CmdTestBase):
 			if os.path.exists(self.daemon_datadir_base):
 				shutil.rmtree(self.daemon_datadir_base)
 			os.makedirs(self.daemon_datadir_base)
-			TestProxy(self, cfg)
 			self.start_daemons()
 
 		self.balance = None
@@ -579,28 +580,33 @@ class CmdTestXMRWallet(CmdTestBase):
 	def transfer_to_miner_create2(self):
 		return self.transfer_to_miner_create('0.0012')
 
-	def relay_tx(self, relay_opt, add_desc=None):
+	def relay_tx(self, do_proxy=False):
 		user = 'alice'
 		data = self.users[user]
-		add_desc = (', ' + add_desc) if add_desc else ''
+		if do_proxy:
+			relay_opt = f'--tx-relay-daemon={self.tx_relay_daemon_proxy_parm}'
+			add_desc = 'via proxy'
+		else:
+			relay_opt = f'--tx-relay-daemon={self.tx_relay_daemon_parm}'
+			add_desc = 'no proxy'
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
 			+ [relay_opt, 'relay', get_file_with_ext(data.udir, 'sigtx')],
-			extra_desc = f'(relaying TX, {capfirst(user)}{add_desc})')
+			extra_desc = f'(relaying TX, {capfirst(user)}, {add_desc})')
 		t.expect('Relay transaction? ', 'y')
 		t.read()
 		t.ok()
 		return t
 
 	async def transfer_to_miner_send1(self):
-		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_proxy_parm}', add_desc='via proxy')
+		self.relay_tx(do_proxy=True)
 		await self.mine_chk('miner', 2, 0, lambda x: str(x.ub) == '0.2456', 'unlocked balance == 0.2456')
 		ok()
 		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 0.9, 'unlocked balance > 0.9')
 
 	async def transfer_to_miner_send2(self):
-		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}', add_desc='no proxy')
+		self.relay_tx()
 		await self.mine_chk('miner', 2, 0, lambda x: str(x.ub) == '0.2468', 'unlocked balance == 0.2468')
 		ok()
 		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 0.9, 'unlocked balance > 0.9')
@@ -611,7 +617,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		self.do_op('sweep_all', 'alice', '2:1,3', no_relay=True, use_existing=True)
 		ok()
 
-		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}')
+		self.relay_tx()
 
 		min_bal = XMRAmt('0.9')
 		return await self.mine_chk('alice', 3, 0, lambda x: x.ub > min_bal, f'bal > {min_bal}')
@@ -634,7 +640,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		if data.autosign:
 			self.do_umount_online()
 			self.remove_device_online()
-		self.users[user].wd.start(silent=self.tr.quiet)
+		data.wd.start(silent=self.tr.quiet)
 		return data.wd_rpc.call(
 			'open_wallet',
 			filename = os.path.basename(data.walletfile_fs.format(wnum)),
