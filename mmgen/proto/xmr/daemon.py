@@ -83,22 +83,18 @@ class MoneroWalletDaemon(RPCDaemon):
 	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
 	use_pidfile = gc.platform == 'linux'
 	_reset_ok = ('debug', 'wait', 'pids', 'force_kill')
-	test_user_port_shifts = {
-		'bob':   10,
-		'alice': 20,
-		'miner': 30}
 
 	def __init__(
 			self,
 			cfg,
 			proto,
 			*,
+			test_user   = None,
 			wallet_dir  = None,
 			user        = None,
 			passwd      = None,
 			monerod_addr = None,
 			proxy       = None,
-			port_shift  = None,
 			datadir     = None,
 			disable_authentication = False,
 			trust_monerod = False,
@@ -110,13 +106,8 @@ class MoneroWalletDaemon(RPCDaemon):
 		super().__init__(cfg, **kwargs)
 
 		self.network = proto.network
-		self.rpc_port = getattr(self.rpc_ports, self.network) + (11 if self.test_suite else 0)
+		self.rpc_port = getattr(self.rpc_ports, self.network) + self.port_shift
 		self.disable_authentication = disable_authentication
-
-		if port_shift:
-			self.rpc_port += port_shift
-		elif cfg.test_user:
-			self.rpc_port += self.test_user_port_shifts[cfg.test_user]
 
 		if wallet_dir or cfg.wallet_dir:
 			self.wallet_dir = Path(wallet_dir or cfg.wallet_dir)

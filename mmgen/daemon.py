@@ -46,13 +46,14 @@ class Daemon(Lockable):
 	new_console_mswin = False
 	lockfile = None
 	private_port = None
+	port_shift = 0
 	disable_authentication = False
 	avail_opts = ()
 	avail_flags = () # like opts, but can be set or unset after instantiation
 	_reset_ok = ('debug', 'wait', 'pids')
 	version_info_arg = '--version'
 
-	def __init__(self, cfg, *, opts=None, flags=None, test_suite=None):
+	def __init__(self, cfg, *, opts=None, flags=None, test_suite=None, test_user=None):
 
 		self.cfg = cfg
 		if gc.platform == 'win32':
@@ -63,6 +64,7 @@ class Daemon(Lockable):
 		self.flag = ClassFlags(self, flags)
 		self.debug = self.debug or cfg.debug_daemon
 		self.test_suite = cfg.test_suite if test_suite is None else test_suite
+		self.test_user = test_user
 
 	def exec_cmd_thread(self, cmd):
 		import threading
@@ -279,7 +281,6 @@ class CoinDaemon(Daemon):
 	avail_flags = ('keep_cfg_file',)
 	avail_opts = ('no_daemonize', 'online')
 	testnet_dir = 'testnet'
-	test_suite_port_shift = 1237
 	rpc_user = None
 	rpc_password = None
 
@@ -343,8 +344,6 @@ class CoinDaemon(Daemon):
 			*,
 			network_id = None,
 			proto      = None,
-			port_shift = None,
-			p2p_port   = None,
 			datadir    = None,
 			daemon_id  = None,
 			**kwargs):
@@ -391,8 +390,6 @@ class CoinDaemon(Daemon):
 			*,
 			network_id = None,
 			proto      = None,
-			port_shift = None,
-			p2p_port   = None,
 			datadir    = None,
 			daemon_id  = None,
 			**kwargs):
@@ -428,15 +425,14 @@ class CoinDaemon(Daemon):
 				if self.proto.base_proto == 'Bitcoin' or not self.test_suite else
 			self.datadir)
 
-		ps_adj = (port_shift or 0) + (self.test_suite_port_shift if self.test_suite else 0)
+		self.rpc_port = (
+			self.proto.rpc_port or
+			cfg.rpc_port or
+			(self.dfl_rpc_port + self.port_shift))
 
-		# user-set values take precedence
-		usr_rpc_port = self.proto.rpc_port or cfg.rpc_port
-		self.rpc_port = usr_rpc_port + (port_shift or 0) if usr_rpc_port else ps_adj + self.dfl_rpc_port
 		self.p2p_port = (
-			p2p_port or (
-				self.dfl_p2p_port + ps_adj if self.dfl_p2p_port and (self.test_suite or ps_adj) else None
-			) if self.network != 'regtest' else None)
+			None if self.dfl_p2p_port is None or self.network == 'regtest' else
+			(self.dfl_p2p_port + self.port_shift))
 
 		fn_stem = f'{self.id}-{self.network}-daemon-{self.bind_port}'
 

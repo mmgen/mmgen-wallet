@@ -47,6 +47,7 @@ for k, v in {
 		'test_suite_devnet_block_period':      0,
 		'test_suite_devtools':                 False,
 		'test_suite_enable_color':             False,
+		'test_suite_enable_user_port_shift':   False,
 		'test_suite_ignore_test_py_exception': False,
 		'test_suite_legacy_tx':                False,
 		'test_suite_pexpect':                  False,
@@ -67,6 +68,7 @@ Config._env_opts += (
 	'MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD',
 	'MMGEN_TEST_SUITE_DEVTOOLS',
 	'MMGEN_TEST_SUITE_ENABLE_COLOR',
+	'MMGEN_TEST_SUITE_ENABLE_USER_PORT_SHIFT',
 	'MMGEN_TEST_SUITE_EXEC_WRAPPER', # main - using os.getenv() - OK
 	'MMGEN_TEST_SUITE_HOLD_PROTECT_DISABLE',
 	'MMGEN_TEST_SUITE_IGNORE_TEST_PY_EXCEPTION',

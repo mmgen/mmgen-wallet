@@ -21,6 +21,8 @@ test.cmdtest_d.xmrwallet: xmrwallet tests for the cmdtest.py test suite
 """
 
 import os
+os.environ['MMGEN_TEST_SUITE_ENABLE_USER_PORT_SHIFT'] = '1'
+
 import time, re, atexit, asyncio, shutil
 from subprocess import run
 from collections import namedtuple
@@ -69,10 +71,10 @@ class CmdTestXMRWallet(CmdTestBase):
 	dfl_random_txs = 3
 	color = True
 	user_data = (
-		# user    sid      autosign port_shift kal_range add_coind_args
-		('miner', '98831F3A', False, 130, '1-2', []),
-		('bob',   '1378FC64', False, 140, None,  ['--restricted-rpc']),
-		('alice', 'FE3C6545', False, 150, '1-4', []))
+		# user    sid      autosign  kal_range add_coind_args
+		('miner', '98831F3A', False, '1-2', []),
+		('bob',   '1378FC64', False, None,  ['--restricted-rpc']),
+		('alice', 'FE3C6545', False, '1-4', []))
 	tx_relay_user = 'bob'
 	daemon_datadir_base = os.path.join('test', 'daemons', 'xmrtest')
 	compat = False
@@ -148,6 +150,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			self.start_daemons()
 
 		self.balance = None
+		self.spawn_env['MMGEN_TEST_SUITE_ENABLE_USER_PORT_SHIFT'] = '1'
 
 	# init methods
 
@@ -179,7 +182,6 @@ class CmdTestXMRWallet(CmdTestBase):
 				user,
 				sid,
 				autosign,
-				shift,
 				kal_range,
 				add_coind_args) in self.user_data:
 
@@ -189,7 +191,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			md = CoinDaemon(
 				cfg        = usr_cfg,
 				proto      = usr_cfg._proto,
-				port_shift = shift,
+				test_user  = user,
 				opts       = ['online'])
 
 			md_rpc = MoneroRPCClient(
@@ -205,11 +207,11 @@ class CmdTestXMRWallet(CmdTestBase):
 			wd = MoneroWalletDaemon(
 				cfg          = usr_cfg,
 				proto        = usr_cfg._proto,
+				test_user    = user,
 				wallet_dir   = None if autosign else
 					(usr_cfg._proto.network_datadir / 'tracking-wallets'),
 				user         = 'foo',
 				passwd       = 'bar',
-				port_shift   = shift,
 				monerod_addr = f'127.0.0.1:{md.rpc_port}')
 
 			wd_rpc = MoneroWalletRPCClient(

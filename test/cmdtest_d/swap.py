@@ -149,7 +149,7 @@ class CmdTestSwapMethods:
 				'--rpc-host=unreachable', # unreachable host
 				'--ltc-rpc-host=localhost',
 				'--rpc-port=46381',       # bad port
-				'--ltc-rpc-port=20680'],
+				'--ltc-rpc-port=19571'],
 			spawn_only = spawn_only)
 
 	def _swaptxsend(self, *, add_opts=[], spawn_only=False, status=False, dump_hex=False):

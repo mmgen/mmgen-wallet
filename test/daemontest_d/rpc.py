@@ -243,6 +243,7 @@ class unit_tests:
 					MoneroWalletDaemon(
 						cfg        = cfg,
 						proto      = proto,
+						test_user  = 'bob',
 						wallet_dir = trash_dir2,
 						datadir    = os.path.join(trash_dir2, 'wallet_rpc'),
 						passwd     = 'ut_rpc_passw0rd')

@@ -42,7 +42,6 @@ opts_data = {
 -i, --daemon-ids     Print all known daemon IDs
 -m, --mainnet-only   Perform operations for mainnet daemons only
 -n, --no-daemonize   Don't fork daemon to background
--p, --port-shift=    Shift the RPC port by this number
 -r, --remove-datadir Remove the datadir(s) after stopping the daemon(s)
 -s, --get-state      Get the state of the daemon(s) and exit
 -t, --testing        Testing mode.  Print commands but don't execute them
@@ -90,7 +89,6 @@ def run(network_id=None, proto=None, daemon_id=None, missing_exec_ok=False):
 			proto      = proto,
 			test_suite = not cfg.usermode,
 			opts       = ['no_daemonize'] if cfg.no_daemonize else None,
-			port_shift = int(cfg.port_shift or 0),
 			datadir    = cfg.datadir,
 			daemon_id  = daemon_id)
 
