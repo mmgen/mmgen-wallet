@@ -698,7 +698,13 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			expect_str = (lbl_text or 'new address ') + (r'.*\[20.*\]' if add_timestr else ''))
 
 	def alice_listaddresses(self):
+		return self._alice_twops('listaddresses')
+
+	def alice_listaddresses_refresh(self):
 		return self._alice_twops('listaddresses', menu='R')
+
+	def alice_listaddresses_interact(self):
+		return self._alice_twops('listaddresses', pexpect_interact=True) # requires cmdtest.py -O
 
 	def alice_listaddresses_sort(self):
 		return self._alice_twops('listaddresses', menu='aAdMELLuuuraAdMeEuu')
@@ -765,6 +771,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			add_timestr = False,
 			menu = '',
 			interactive = True,
+			pexpect_interact = False,
 			expect_str = '',
 			expect_arr = []):
 
@@ -778,7 +785,11 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		menu_prompt = self.listaddresses_menu_prompt if op == 'listaddresses' else self.menu_prompt
 		have_lbl = lbl_acct_num or newacct_wallet_num or newaddr_acct_num
 		have_new_addr = newacct_wallet_num or newaddr_acct_num
-		if interactive:
+		if pexpect_interact:
+			t.p.interact() # pexpect interact() is currently broken
+			self.remove_device_online()
+			return t
+		elif interactive:
 			if lbl_acct_num:
 				t.expect(menu_prompt, 'l')
 				t.expect('main menu): ', str(lbl_acct_num))
