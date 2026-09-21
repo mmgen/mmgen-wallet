@@ -26,8 +26,6 @@ class OpCreate(OpWallet):
 	def check_uopts(self):
 		if self.cfg.restore_height != 'current' and int(self.cfg.restore_height or 0) < 0:
 			die(1, f'{self.cfg.restore_height}: invalid value for --restore-height (less than zero)')
-		if self.cfg.compat:
-			self.cfg.wallet_dir.mkdir(parents=True, exist_ok=True)
 
 	async def process_wallet(self, d, fn, last):
 		msg_r('') # for pexpect
