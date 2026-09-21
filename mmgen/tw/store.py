@@ -13,7 +13,6 @@ tw.store: Tracking wallet control class with store
 """
 
 import json
-from pathlib import Path
 
 from ..base_obj import AsyncInit
 from ..obj import TwComment
@@ -48,7 +47,7 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 		if cfg.cached_balances:
 			self.use_cached_balances = True
 
-		self.tw_dir = type(self).get_tw_dir(self.cfg, self.proto)
+		self.tw_dir = type(self).get_tw_dir(self.proto)
 		self.tw_path = self.tw_dir / self.tw_fn
 
 		if no_wallet_init:
@@ -81,14 +80,8 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 			msg('read-only wallet, doing nothing')
 
 	@classmethod
-	def get_tw_dir(cls, cfg, proto):
-		return Path(
-			cfg.data_dir_root,
-			cfg.test_user,
-			'altcoins',
-			proto.coin.lower(),
-			('' if proto.network == 'mainnet' else proto.network),
-			(cls.tw_subdir or ''))
+	def get_tw_dir(cls, proto):
+		return proto.network_datadir / (cls.tw_subdir or '')
 
 	def upgrade_wallet_maybe(self):
 		pass

@@ -126,6 +126,16 @@ class CoinProtocol(MMGenObject):
 			pass
 
 		@property
+		def network_datadir(self):
+			from pathlib import Path
+			return Path(
+				self.cfg.data_dir_root,
+				self.cfg.test_user,
+				'altcoins',
+				self.coin.lower(),
+				('' if self.network == 'mainnet' else self.network))
+
+		@property
 		def dcoin(self):
 			return self.coin
 

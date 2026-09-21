@@ -81,7 +81,7 @@ class help_notes:
 		from ..tw.ctl import TwCtl
 		twctl_cls = self.proto.base_proto_subclass(TwCtl, 'tw.ctl')
 		if hasattr(twctl_cls, 'get_tw_dir'):
-			return twctl_cls.get_tw_dir(self.cfg, self.proto)
+			return twctl_cls.get_tw_dir(self.proto)
 		else:
 			raise ValueError(f'protocol {self.proto.name} does not support tracking wallet with store')
 
