@@ -438,10 +438,6 @@ class CoinDaemon(Daemon):
 				self.dfl_p2p_port + ps_adj if self.dfl_p2p_port and (self.test_suite or ps_adj) else None
 			) if self.network != 'regtest' else None)
 
-		if hasattr(self, 'private_ports'):
-			self.private_port = getattr(self.private_ports, self.network)
-
-		# bind_port == self.private_port or self.rpc_port
 		fn_stem = f'{self.id}-{self.network}-daemon-{self.bind_port}'
 
 		self.logfile = self.network_datadir / (fn_stem + '.log')

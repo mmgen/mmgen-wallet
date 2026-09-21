@@ -24,6 +24,7 @@ class ethereum_daemon(CoinDaemon):
 	base_p2p_port = 30303 # same for all networks!
 	daemon_port_offset = 100
 	network_port_offsets = _nw(0, 10, 20)
+	private_ports = None
 
 	def __init__(self, *args, test_suite=None, **kwargs):
 
@@ -35,6 +36,9 @@ class ethereum_daemon(CoinDaemon):
 			if test_suite else 0)
 
 		self.port_offset = daemon_idx_offset + getattr(self.network_port_offsets, self.network)
+
+		if self.private_ports:
+			self.private_port = getattr(self.private_ports, self.network)
 
 		super().__init__(*args, test_suite=test_suite, **kwargs)
 
