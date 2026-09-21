@@ -64,6 +64,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		('dump_tmp_wallets_json',    'dumping Alice’s tmp wallets to JSON format'),
 		('delete_tmp_wallets',       'deleting Alice’s tmp wallets'),
 		('gen_kafile_miner',         'generating key-address file for Miner'),
+		('gen_vkafile_alice',        'generating viewkey-address file for Alice'),
 		('create_wallet_miner',      'creating Monero wallet for Miner'),
 		('mine_initial_coins',       'mining initial coins'),
 		('autosign_setup',           'autosign setup with Alice’s seed'),
@@ -225,6 +226,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 	def gen_kafile_miner(self):
 		return self.gen_kafiles(['miner'])
+
+	def gen_vkafile_alice(self):
+		return self.gen_kafiles(['alice'], add_opts=['--viewkeys'])
 
 	def create_wallet_miner(self):
 		return self.create_wallets_miner()
@@ -524,6 +528,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('addrimport_alice',         'creating (importing) Alice’s watch-only wallets from key-address file'),
 		('addrimport_alice2',        'reimporting Alice’s watch-only wallets from key-address file'),
 		('gen_kafile_miner',         'generating key-address file for Miner'),
+		('gen_vkafile_alice',        'generating viewkey-address file for Alice'),
 		('create_wallet_miner',      'creating Monero wallet for Miner'),
 		('mine_initial_coins',       'mining initial coins'),
 		('fund_alice2',              'sending funds to Alice (wallet #2)'),

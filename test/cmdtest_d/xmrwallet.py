@@ -267,7 +267,7 @@ class CmdTestXMRWallet(CmdTestBase):
 	def gen_kafiles_miner_alice(self):
 		return self.gen_kafiles(['miner', 'alice'])
 
-	def gen_kafiles(self, users):
+	def gen_kafiles(self, users, add_opts=[]):
 		for user, data in self.users.items():
 			if not user in users:
 				continue
@@ -276,6 +276,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			t = self.spawn(
 				'mmgen-keygen',
 				['--quiet', '--accept-defaults', '--coin=xmr', f'--outdir={data.udir}']
+				+ add_opts
 				+ [data.mmwords, data.kal_range],
 				extra_desc = f'({capfirst(user)})')
 			t.read()
