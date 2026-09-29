@@ -66,16 +66,11 @@ def create_call_sig(cmd, cls, *, as_string=False):
 def process_args(cmd, cmd_args, cls):
 	c_args, c_kwargs, c_kwargs_types, flag, _ = create_call_sig(cmd, cls)
 	have_stdin_input = False
-	from ..util import msg, suf
-
-	def usage_die(s):
-		msg(s)
-		from .help import usage
-		usage(cmd)
+	from ..util import suf
 
 	if flag != 'VAR_ARGS':
 		if len(cmd_args) < len(c_args):
-			usage_die(f'Command requires exactly {len(c_args)} non-keyword argument{suf(c_args)}')
+			die(1, f'Command requires exactly {len(c_args)} non-keyword argument{suf(c_args)}')
 
 		u_args = cmd_args[:len(c_args)]
 
@@ -108,13 +103,13 @@ def process_args(cmd, cmd_args, cls):
 	elif u_nkwargs > 0:
 		u_kwargs = dict([a.split('=', 1) for a in cmd_args[len(c_args):] if '=' in a])
 		if len(u_kwargs) != u_nkwargs:
-			usage_die(f'Command requires exactly {len(c_args)} non-keyword argument{suf(c_args)}')
+			die(1, f'Command requires exactly {len(c_args)} non-keyword argument{suf(c_args)}')
 		if len(u_kwargs) > len(c_kwargs):
-			usage_die(f'Command accepts no more than {len(c_kwargs)} keyword argument{suf(c_kwargs)}')
+			die(1, f'Command accepts no more than {len(c_kwargs)} keyword argument{suf(c_kwargs)}')
 
 	for k in u_kwargs:
 		if k not in c_kwargs:
-			usage_die(f'{k!r}: invalid keyword argument')
+			die(1, f'{k!r}: invalid keyword argument')
 
 	def conv_type(arg, arg_name, arg_type):
 		if arg_type == 'bytes' and not isinstance(arg, bytes):
@@ -125,14 +120,13 @@ def process_args(cmd, cmd_args, cls):
 			arg = arg.decode()
 			if arg[-len(NL):] == NL: # rstrip one newline
 				arg = arg[:-len(NL)]
-
-		if arg_type == 'bool':
+		elif arg_type == 'bool':
 			if arg.lower() in ('true', 'yes', '1', 'on'):
 				arg = True
 			elif arg.lower() in ('false', 'no', '0', 'off'):
 				arg = False
 			else:
-				usage_die(f'{arg!r}: invalid boolean value for keyword argument')
+				die(1, f'{arg!r}: invalid boolean value for keyword argument')
 
 		try:
 			return __builtins__[arg_type](arg)
