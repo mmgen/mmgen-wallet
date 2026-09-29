@@ -40,7 +40,9 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 	max_amt  = None   # coin supply if known, otherwise None
 	units    = ()     # defined unit names, e.g. ('satoshi',...)
 
-	def __new__(cls, num, *, from_unit=None, from_decimal=False):
+	def __new__(cls, num, *, from_unit=None, from_decimal=False, decimals=None):
+
+		assert decimals == None
 
 		if isinstance(num, CoinAmt):
 			raise TypeError(f'CoinAmt: {num} is instance of {cls.__name__}')
@@ -129,39 +131,42 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 		raise TypeError(
 			f'operand {other} is of incorrect type ({type(other).__name__} != {type(self).__name__})')
 
-	def __add__(self, other):
+	def __add__(self, other, decimals=None):
 		"""
 		we must allow other to be int(0) to use the sum() builtin
 		"""
-		if type(other) is type(self) or (other == 0 and isinstance(other, int)):
-			return type(self)(Decimal.__add__(self, other),  from_decimal=True)
+		if type(other) in (type(self), Decimal) or (other == 0 and isinstance(other, int)):
+			return type(self)(Decimal.__add__(self, other), from_decimal=True, decimals=decimals)
 		self.incorrect_type_error(other)
 
 	__radd__ = __add__
 
-	def __sub__(self, other):
-		if type(other) is type(self):
-			return type(self)(Decimal.__sub__(Decimal(self), Decimal(other)),  from_decimal=True)
+	def __sub__(self, other, decimals=None):
+		if type(other) in (type(self), Decimal):
+			return type(self)(Decimal.__sub__(self, other), from_decimal=True, decimals=decimals)
 		self.incorrect_type_error(other)
 
-	def __rsub__(self, other):
+	def __rsub__(self, other, decimals=None):
 		if type(other) is type(self):
-			return type(self)(Decimal.__rsub__(self, other),  from_decimal=True)
+			return type(self)(Decimal.__rsub__(self, other),  from_decimal=True, decimals=decimals)
 		self.incorrect_type_error(other)
 
-	def __mul__(self, other):
-		return type(self)('{:0.{p}f}'.format(
-			Decimal.__mul__(self, Decimal(other)), p=self.max_prec))
+	def __mul__(self, other, decimals=None):
+		return type(self)(
+			'{:0.{p}f}'.format(Decimal.__mul__(self, Decimal(other)), p=self.max_prec),
+			decimals = decimals)
 
 	__rmul__ = __mul__
 
-	def __truediv__(self, other):
-		return type(self)('{:0.{p}f}'.format(
-			Decimal.__truediv__(self, Decimal(other)), p=self.max_prec))
+	def __truediv__(self, other, decimals=None):
+		return type(self)(
+			'{:0.{p}f}'.format(Decimal.__truediv__(self, Decimal(other)), p=self.max_prec),
+			decimals = decimals)
 
-	def __rtruediv__(self, other):
-		return type(self)('{:0.{p}f}'.format(
-			Decimal.__rtruediv__(self, Decimal(other)), p=self.max_prec))
+	def __rtruediv__(self, other, decimals=None):
+		return type(self)(
+			'{:0.{p}f}'.format(Decimal.__rtruediv__(self, Decimal(other)), p=self.max_prec),
+			decimals = decimals)
 
 	def __neg__(self):
 		self.method_not_implemented()
@@ -228,16 +233,38 @@ class ETCAmt(ETHAmt):
 class TokenAmt(ETHAmt):
 	units = ('atomic',)
 
-	def __new__(cls, num, *, decimals, from_unit=None):
+	def __new__(cls, num, *, decimals, from_unit=None, from_decimal=False):
 		assert isinstance(decimals, int)
 		cls.max_prec = decimals
 		cls.atomic = Decimal(f'{10 ** -decimals:0.{decimals}f}')
-		return ETHAmt.__new__(cls, num=num, from_unit=from_unit)
+		return ETHAmt.__new__(cls, num=num, from_unit=from_unit, from_decimal=from_decimal)
 
 	def to_unit(self, unit):
 		if (u := getattr(self, unit)) == self.atomic:
 			return int(Decimal(self) // u)
 		raise ValueError('TokenAmt unit must be ‘atomic’')
+
+	def __add__(self, other):
+		return super().__add__(other, decimals=self.max_prec)
+
+	__radd__ = __add__
+
+	def __sub__(self, other):
+		return super().__sub__(other, decimals=self.max_prec)
+
+	def __rsub__(self, other):
+		return super().__rsub__(other, decimals=self.max_prec)
+
+	def __mul__(self, other):
+		return super().__mul__(other, decimals=self.max_prec)
+
+	__rmul__ = __mul__
+
+	def __truediv__(self, other):
+		return super().__truediv__(other, decimals=self.max_prec)
+
+	def __rtruediv__(self, other):
+		return super().__rtruediv__(other, decimals=self.max_prec)
 
 def CoinAmtChk(proto, num):
 	assert type(num) is proto.coin_amt, f'CoinAmtChk: {type(num)} != {proto.coin_amt}'

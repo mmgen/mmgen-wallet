@@ -140,4 +140,12 @@ class unit_tests:
 			if unit == 'atomic':
 				assert amt.to_unit('atomic') == n
 			assert amt_disp == chk, f'{amt_disp} != {chk}'
+			assert amt + amt == amt * 2
+			assert amt - amt == 0
+			assert amt + 0 == amt
+			assert amt + Decimal(0) == amt
+			assert amt + Decimal('2.123') == Decimal(amt + Decimal('2.123'))
+			assert amt - Decimal(0) == Decimal(amt)
+			assert amt * 7 == Decimal(amt) * 7
+			assert amt / 7 == round(Decimal(amt) / 7, dec)
 		return True

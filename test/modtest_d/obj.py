@@ -47,15 +47,16 @@ def coinamt_test(cls, aa, bb, ut):
 	do('a * b / a', a * b / a, A * B / A)
 	do('a * b / b', a * b / b, A * B / B)
 
+	do('a + B', a + B, B + a)
+	do('b - A', b - A, b - a)
+
 	vmsg(f'\nChecking {cls.__name__} error handling...')
 
 	bad_data = (
 		('negation',          'NotImplementedError', 'not implemented',    lambda: -a),
 		('modulus',           'NotImplementedError', 'not implemented',    lambda: b % a),
 		('floor division',    'NotImplementedError', 'not implemented',    lambda: b // a),
-		('negative result',   'ObjectInitError',     'cannot be negative', lambda: a - b),
-		('operand type',      'TypeError',           'incorrect type',     lambda: a + B),
-		('operand type',      'TypeError',           'incorrect type',     lambda: b - A))
+		('negative result',   'ObjectInitError',     'cannot be negative', lambda: a - b))
 
 	if cls.max_amt is not None:
 		bad_data += (
@@ -131,16 +132,15 @@ class unit_tests:
 		b = 2 / a
 		test_equal(type(b), coin_amt)
 		test_equal(b, coin_amt('1.62074554'))
+		test_equal(a + Decimal(1), Decimal(1) + a)
 
 		def bad1(): b = a + 1
 		def bad2(): b = a - 1
-		def bad3(): a + Decimal(1)
 		def bad4(): b = a + 0.0
 		def bad5(): b = a - 0.0
 
 		def bad1r(): b = 1 + a
 		def bad2r(): b = 3 - a
-		def bad3r(): Decimal(1) + a
 		def bad4r(): b = 0.0 + a
 		def bad5r(): b = 0.0 - a
 
@@ -159,13 +159,11 @@ class unit_tests:
 			(
 				('addition with int',      'TypeError',       'incorrect type',     bad1),
 				('subtraction with int',   'TypeError',       'incorrect type',     bad2),
-				('addition with Decimal',  'TypeError',       'incorrect type',     bad3),
 				('addition with float',    'TypeError',       'incorrect type',     bad4),
 				('subtraction with float', 'TypeError',       'incorrect type',     bad5),
 
 				('addition with int',      'TypeError',       'incorrect type',     bad1r),
 				('subtraction with int',   'TypeError',       'incorrect type',     bad2r),
-				('addition with Decimal',  'TypeError',       'incorrect type',     bad3r),
 				('addition with float',    'TypeError',       'incorrect type',     bad4r),
 				('subtraction with float', 'TypeError',       'incorrect type',     bad5r),
 
