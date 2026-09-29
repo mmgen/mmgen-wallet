@@ -18,7 +18,7 @@ from ..util import die
 
 class SwapAsset:
 
-	_ad = namedtuple('swap_asset_data', ['desc', 'name', 'full_name', 'abbr', 'tested'])
+	_ad = namedtuple('swap_asset_data', ['desc', 'name', 'full_name', 'abbr', 'decimals', 'tested'])
 	assets_data = {}
 	evm_contracts = {}
 	unsupported = ()
@@ -86,6 +86,10 @@ class SwapAsset:
 	@property
 	def tokensym(self):
 		return None if self.data.name else self.data.full_name.split('.', 1)[1]
+
+	@property
+	def decimals(self):
+		return self.data.decimals
 
 	@property
 	def memo_asset_name(self):
