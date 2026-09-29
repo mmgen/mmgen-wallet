@@ -29,7 +29,7 @@ class New(Base, TxNew):
 	async def set_gas(self):
 		pass
 
-	async def get_fee(self, fee, outputs_sum, start_fee_desc):
+	async def get_funds_remaining(self, fee, outputs_sum, start_fee_desc):
 		return True
 
 	def copy_inputs_from_tw(self, tw_unspent_data):

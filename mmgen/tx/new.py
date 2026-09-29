@@ -424,7 +424,7 @@ class New(Base):
 			'N/A' if res.fee is None else
 			self.network_fee_to_unit_disp(res))
 
-	async def get_fee(self, fee, outputs_sum, start_fee_desc):
+	async def get_funds_remaining(self, fee, outputs_sum, start_fee_desc):
 
 		if fee:
 			self.usr_fee = self.get_usr_fee_interactive(fee, desc=start_fee_desc)
@@ -523,7 +523,7 @@ class New(Base):
 				await self.set_gas()
 				fee_hint = None
 			desc = 'User-selected' if self.cfg.fee else 'Recommended' if fee_hint else None
-			if (funds_left := await self.get_fee(
+			if (funds_left := await self.get_funds_remaining(
 					self.cfg.fee or fee_hint,
 					outputs_sum,
 					desc)) is not None:

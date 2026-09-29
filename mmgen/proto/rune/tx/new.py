@@ -20,7 +20,7 @@ from .base import Base
 
 class New(VmNew, Base, TxBase.New):
 
-	async def get_fee(self, fee, outputs_sum, start_fee_desc):
+	async def get_funds_remaining(self, fee, outputs_sum, start_fee_desc):
 		return await self.twctl.get_balance(self.inputs[0].addr)
 
 	async def set_gas(self, *, to_addr=None, force=False):
