@@ -22,7 +22,7 @@ tool.help: Help screen routines for the 'mmgen-tool' utility
 
 from .. import main_tool
 
-from .common import tool_cmd_base
+from .common import tool_cmd_base, fstr
 
 def main_help():
 
@@ -156,12 +156,12 @@ def gen_tool_cmd_usage(mod, cmdname):
 		yield f'Required {ARGS} (type shown in square brackets):'
 		yield ''
 		for argname, argtype in args:
-			have_sstr = ann.get(argname) == 'sstr'
+			have_fstr = ann.get(argname) == fstr
 			yield '  {a:{w}} [{b}]{c}{d}'.format(
 				a = argname,
 				b = argtype,
-				c = " (use '-' to read from STDIN)" if have_sstr else '',
-				d = ' ' + ann[argname] if isinstance(ann.get(argname), str) and not have_sstr else '',
+				c = " (use '-' to read from STDIN)" if have_fstr else '',
+				d = ' ' + ann[argname] if isinstance(ann.get(argname), str) and not have_fstr else '',
 				w = max_w)
 
 	if kwargs:

@@ -22,6 +22,9 @@ tool.common: Base class and shared routines for the 'mmgen-tool' utility
 
 from ..objmethods import MMGenObject
 
+class fstr(str):
+	pass
+
 def options_annot_str(l):
 	return "(valid choices: '{}')".format("','".join(l))
 

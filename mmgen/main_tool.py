@@ -24,6 +24,7 @@ mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
 import sys, os, importlib
 from .cfg import gc, Config
 from .util import msg, Msg, die, capfirst, suf, async_run, isAsync
+from .tool.common import fstr
 
 opts_data = {
 	'filter_codes': ['-'],
@@ -211,17 +212,17 @@ def create_call_sig(cmd, cls, *, as_string=False):
 			for i, a in enumerate(args[nargs:]))
 
 	if as_string:
-		get_type_from_ann = lambda x: 'str or STDIN' if ann[x] == 'sstr' else ann[x].__name__
+		get_type_from_ann = lambda x: 'str or STDIN' if ann[x] == fstr else ann[x].__name__
 		return ' '.join(
 			[f'{a} [{get_type_from_ann(a)}]' for a in args[:nargs]] +
 			[f'{a} [{dfl_types[n].__name__}={dfls[n]!r}]' for n, a in enumerate(args[nargs:])])
 	else:
-		get_type_from_ann = lambda x: 'str' if ann[x] == 'sstr' else ann[x].__name__
+		get_type_from_ann = lambda x: 'str' if ann[x] == fstr else ann[x].__name__
 		return (
 			[(a, get_type_from_ann(a)) for a in args[:nargs]],          # c_args
 			{a: dfls[n] for n, a in enumerate(args[nargs:])},           # c_kwargs
 			{a: dfl_types[n] for n, a in enumerate(args[nargs:])},      # c_kwargs_types
-			('STDIN_OK' if nargs and ann[args[0]] == 'sstr' else flag), # flag
+			('STDIN_OK' if nargs and ann[args[0]] == fstr else flag),   # flag
 			ann)                                                        # ann
 
 def process_args(cmd, cmd_args, cls):

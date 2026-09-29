@@ -22,7 +22,7 @@ tool.mnemonic: Mnemonic routines for the 'mmgen-tool' utility
 
 from collections import namedtuple
 
-from .common import tool_cmd_base, options_annot_str
+from .common import tool_cmd_base, options_annot_str, fstr
 
 from ..baseconv import baseconv
 from ..xmrseed import xmrseed
@@ -93,14 +93,14 @@ class tool_cmd(tool_cmd_base):
 		"generate a random 256-bit mnemonic seed phrase"
 		return self._do_random_mn(32, fmt)
 
-	def hex2mn(self, hexstr: 'sstr', fmt: mn_opts_disp = dfl_mnemonic_fmt):
+	def hex2mn(self, hexstr: fstr, fmt: mn_opts_disp = dfl_mnemonic_fmt):
 		"convert a 16, 24 or 32-byte hexadecimal string to a mnemonic seed phrase"
 		if fmt == 'xmrseed':
 			hexstr = self._xmr_reduce(bytes.fromhex(hexstr)).hex()
 		f = mnemonic_fmts[fmt]
 		return ' '.join(f.conv_cls(fmt).fromhex(hexstr, pad=f.pad))
 
-	def mn2hex(self, seed_mnemonic: 'sstr', fmt: mn_opts_disp = dfl_mnemonic_fmt):
+	def mn2hex(self, seed_mnemonic: fstr, fmt: mn_opts_disp = dfl_mnemonic_fmt):
 		"convert a mnemonic seed phrase to a hexadecimal string"
 		f = mnemonic_fmts[fmt]
 		return f.conv_cls(fmt).tohex(seed_mnemonic.split(), pad=f.pad)
