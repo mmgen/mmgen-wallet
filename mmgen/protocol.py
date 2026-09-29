@@ -113,14 +113,14 @@ class CoinProtocol(MMGenObject):
 				from .util2 import get_keccak
 				self.keccak_256 = get_keccak(cfg)
 
-			if need_amt and self.coin_amt:
+			self.set_cfg_opts()            # a) could reset max_tx_fee
+
+			if need_amt and self.coin_amt: # b) set type of max_tx_fee _after_ possible reset
 				from . import amt
 				from decimal import getcontext
 				self.coin_amt = getattr(amt, self.coin_amt)
 				self.max_tx_fee = self.coin_amt(str(self.max_tx_fee)) if self.max_tx_fee else None
 				getcontext().prec = self.decimal_prec
-
-			self.set_cfg_opts()
 
 		def set_cfg_opts(self):
 			pass

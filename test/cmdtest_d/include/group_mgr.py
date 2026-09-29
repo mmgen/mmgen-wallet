@@ -148,7 +148,8 @@ class CmdGroupMgr:
 		return cls
 
 	def gm_init_group(self, cfg, trunner, gname, sg_name, spawn_prog):
-		write_to_cfgfile([])
+		if not (cfg.resuming or cfg.skipping_deps):
+			write_to_cfgfile([])
 		cls = self.create_group(gname, sg_name, **self.cmd_groups[gname].params)
 		cls.group_name = gname
 		return cls(cfg, trunner, cfgs, spawn_prog)
