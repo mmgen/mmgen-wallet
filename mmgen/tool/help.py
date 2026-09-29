@@ -183,7 +183,7 @@ def gen_tool_cmd_usage(mod, cmdname):
 		for line in docstr.split('\n')[1:]:
 			yield line.lstrip('\t')
 
-def usage(cmdname=None, *, exit_val=1):
+def usage(cmdname, *, exit_val=1):
 
 	from ..util import Msg, die
 
@@ -204,10 +204,10 @@ def usage(cmdname=None, *, exit_val=1):
 class tool_cmd(tool_cmd_base):
 	"help/usage commands"
 
-	def help(self, command_name=''):
+	def help(self, cmdname=''):
 		"display usage information for a single command or all commands"
-		usage(command_name, exit_val=0)
+		usage(cmdname, exit_val=0)
 
-	def usage(self, command_name=''):
+	def usage(self, cmdname=''):
 		"display usage information for a single command or all commands"
-		usage(command_name, exit_val=0)
+		usage(cmdname, exit_val=0)

@@ -677,7 +677,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	async def mine(self, nblks):
 		start_height = height = await self._get_height()
-		imsg(f'Height: {height}')
+		imsg(f'Chain height: {height}')
 		imsg_r(f'Mining {nblks} block{suf(nblks)}...')
 		await self.start_mining()
 		while height < start_height + nblks:
@@ -686,7 +686,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			imsg_r('.')
 		ret = await self.stop_mining()
 		imsg('done')
-		imsg(f'Height: {height}')
+		imsg(f'Chain height: {height}')
 		return 'ok' if ret == 'OK' else False
 
 	async def start_mining(self):
@@ -815,7 +815,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			if count > 12: # something might have gone wrong, so be more verbose
 				if not verbose:
 					imsg('')
-				imsg_r(f'Height: {h}, ')
+				imsg_r(f'Chain height: {h}, ')
 				print_balance(dest, bal_info)
 				verbose = True
 			else:

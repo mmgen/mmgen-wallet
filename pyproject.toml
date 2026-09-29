@@ -47,7 +47,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "protobuf.py"                 = [ "UP045" ]    # Use `X | None` for type annotations
 "mmgen/rpc/backends/curl.py"  = [ "ASYNC221" ] # blocking method in async function
-"create-bip-hd-chain-params.py" = [ "F401" ]
+"create-bip-hd-chain-params.py" = [ "F401" ]   # imported but unused
 
 "examples/*" = [ "ASYNC230" ] # open() in async function
 

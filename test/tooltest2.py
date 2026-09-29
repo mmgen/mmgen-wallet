@@ -78,7 +78,7 @@ cfg = Config(
 		'usr_randchars': 0,
 		'hash_preset': '1',
 		'passwd_file': 'test/ref/keyaddrfile_password',
-	})
+		'allow_legacy_tx_files': True})
 
 set_globals(cfg)
 

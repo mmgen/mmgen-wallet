@@ -272,7 +272,7 @@ if gc.prog_name.endswith('-tool'):
 	cmd, *args = cfg._args
 
 	if cmd in ('help', 'usage') and args:
-		args[0] = 'command_name=' + args[0]
+		args[0] = 'cmdname=' + args[0]
 
 	args, kwargs = process_args(cmd, args, cls)
 

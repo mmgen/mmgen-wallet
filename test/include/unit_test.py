@@ -65,7 +65,7 @@ If no test is specified, all available tests are run
 
 sys.argv.insert(1, '--skip-cfg-file')
 
-cfg = Config(opts_data=opts_data)
+cfg = Config(opts_data=opts_data, init_opts={'allow_legacy_tx_files': True})
 
 type(cfg)._reset_ok += ('use_internal_keccak_module', 'debug_addrlist')
 
