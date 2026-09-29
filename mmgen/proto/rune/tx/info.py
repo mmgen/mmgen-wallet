@@ -13,7 +13,7 @@ proto.rune.tx.info: THORChain transaction info class
 """
 
 from ....tx.info import TxInfo
-from ....color import pink
+from ....color import blue, pink
 from ....obj import NonNegativeInt
 
 from ...vm.tx.info import VmTxInfo, mmid_disp
@@ -27,6 +27,7 @@ class TxInfo(VmTxInfo, TxInfo):
 		fs = """
 			From:      {f}{f_mmid}
 			Amount:    {a} {c}
+			Fee:       {F} {C}
 			Gas limit: {G}
 			Sequence:  {N}
 			Memo:      {m}
@@ -34,6 +35,7 @@ class TxInfo(VmTxInfo, TxInfo):
 			From:      {f}{f_mmid}
 			To:        {t}{t_mmid}
 			Amount:    {a} {c}
+			Fee:       {F} {C}
 			Gas limit: {G}
 			Sequence:  {N}
 		"""
@@ -41,9 +43,11 @@ class TxInfo(VmTxInfo, TxInfo):
 			f      = t['from'].hl(0),
 			t      = None if has_memo else t['to'].hl(0),
 			a      = t['amt'].hl(),
+			F      = blue('None') if t['fee'] is None else t['fee'].hl(),
 			N      = NonNegativeInt(t['sequence']).hl(),
 			m      = pink(tx.swap_memo) if has_memo else None,
 			c      = tx.proto.dcoin if tx.outputs else '',
+			C      = tx.proto.dcoin,
 			G      = NonNegativeInt(tx.total_gas).hl(),
 			f_mmid = mmid_disp(tx.inputs[0], nonmm_str),
 			t_mmid = None if has_memo else mmid_disp(tx.outputs[0], nonmm_str)) + '\n\n'

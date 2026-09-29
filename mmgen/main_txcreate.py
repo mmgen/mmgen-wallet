@@ -55,6 +55,7 @@ opts_data = {
 			e- -D, --contract-data=D Path to file containing hex-encoded contract data
 			b- -E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
 			+                        {fe_all}.  Default: {fe_dfl!r}
+			X- -f, --fee=         f  Transaction fee, as a decimal {cu} amount
 			R- -f, --fee=         f  Transaction fee, as a decimal {cu} amount or as
 			+                        {fu} (an integer followed by {fl}).
 			+                        See FEE SPECIFICATION below.  If omitted, fee will be

@@ -26,4 +26,4 @@ class Completed(VmCompleted, Base, TxBase.Completed):
 
 	@property
 	def fee(self):
-		return self.proto.coin_amt(self.dfl_fee, from_unit='satoshi')
+		return self.txobj['fee'] if self.txobj['fee'] else self.proto.coin_amt('0')

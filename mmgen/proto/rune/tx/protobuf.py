@@ -44,10 +44,11 @@ send_tx_parms = namedtuple(
 		'gas_limit',
 		'account_number',
 		'sequence',
+		'fee', # begin default fields
 		'pubkey',
 		'wifkey',
 		'signature'],
-		defaults = (None, None, None))
+		defaults = (0, None, None, None))
 
 deposit_tx_parms = namedtuple(
 	'rune_deposit_tx_parms', [
@@ -61,13 +62,14 @@ deposit_tx_parms = namedtuple(
 		'sequence',
 		'decimals',
 		'memo',
-		'synth', # begin default fields
+		'fee', # begin default fields
+		'synth',
 		'trade',
 		'secured',
 		'pubkey',
 		'wifkey',
 		'signature'],
-		defaults = (None, None, None, None, None, None))
+		defaults = (0, None, None, None, None, None, None))
 
 # subset of deposit_tx_parms:
 swap_tx_parms = namedtuple(
@@ -78,13 +80,14 @@ swap_tx_parms = namedtuple(
 		'account_number',
 		'sequence',
 		'memo',
-		'synth', # begin default fields
+		'fee', # begin default fields
+		'synth',
 		'trade',
 		'secured',
 		'pubkey',
 		'wifkey',
 		'signature'],
-		defaults = (None, None, None, None, None, None))
+		defaults = (0, None, None, None, None, None, None))
 
 @dataclass
 class Asset(BaseMessage):
@@ -158,9 +161,16 @@ def amt_to_base_unit(amt, *, decimals):
 def base_unit_to_amt(n, *, decimals):
 	return n * Decimal(10) ** -decimals
 
+def parse_fee(proto, tx, color=None):
+	if (fee := tx.authInfo.fee.amount) is None:
+		return None
+	else:
+		return proto.coin_amt(int(fee[0].amount), from_unit='atomic')
+
 def tx_info(tx, proto):
 	b = tx.body.messages[0].body
 	s = tx.authInfo.signerInfos[0]
+	fee = parse_fee(proto, tx)
 	match msg_type := tx.body.messages[0].id.removeprefix('/types.'):
 		case 'MsgSend':
 			from_addr = proto.encode_addr_bech32x(b.fromAddress)
@@ -180,6 +190,7 @@ def tx_info(tx, proto):
 	yield f'To:        {to_addr}'
 	yield f'Asset:     {asset}'
 	yield f'Amount:    {amt}'
+	yield f'Fee:       {None if fee is None else fee.hl(color=None)}'
 	yield f'Sequence:  {int(s.sequence)}'
 	yield f'Gas limit: {tx.authInfo.fee.gasLimit}'
 	yield f'Memo:      {memo}'
@@ -203,6 +214,7 @@ def build_swap_tx(cfg, proto, parms, *, skip_body_memo=False):
 				account_number = p.account_number,
 				sequence = p.sequence,
 				decimals = 8,
+				fee = p.fee,
 				synth = p.synth,
 				trade = p.trade,
 				secured = p.secured,
@@ -256,7 +268,7 @@ def build_tx(cfg, proto, parms, *, null_fee=False, skip_body_memo=False):
 				coins = [coin_data],
 				memo = p.memo,
 				signer = proto.decode_addr(p.from_addr).bytes))
-		fee_amt = None if null_fee else [Coin(denom='rune', amount='0')]
+		fee_amt = None if null_fee else [Coin(denom='rune', amount=str(p.fee))]
 
 	signer_info = SignerInfo(
 		publicKey = PublicKey(

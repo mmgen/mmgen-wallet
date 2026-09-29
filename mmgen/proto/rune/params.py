@@ -27,7 +27,7 @@ class mainnet(CoinProtocol.Secp256k1):
 	preferred_mmtypes  = ('X',)
 	dfl_mmtype      = 'X'
 	coin_amt        = 'UniAmt'
-	max_tx_fee      = 0.1
+	max_tx_fee      = 0.2
 	caps            = ()
 	mmcaps          = ('tw', 'rpc', 'rpc_init')
 	base_proto      = 'THORChain'

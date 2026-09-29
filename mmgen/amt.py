@@ -193,7 +193,7 @@ class BTCAmt(CoinAmt):
 	max_amt = 21000000
 	satoshi = Decimal('0.00000001')
 	atomic = satoshi
-	units = ('satoshi',)
+	units = ('atomic', 'satoshi')
 
 class UniAmt(BTCAmt):
 	coin = None

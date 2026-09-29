@@ -86,7 +86,8 @@ class New:
 
 	def check_fee(self):
 		if not self.disable_fee_check:
-			assert self.usr_fee <= self.proto.max_tx_fee
+			if self.usr_fee and self.usr_fee > self.proto.max_tx_fee:
+				die('MaxFeeExceeded', f'{self.usr_fee} > max fee ({self.proto.max_tx_fee})')
 
 	@property
 	def total_gas(self):

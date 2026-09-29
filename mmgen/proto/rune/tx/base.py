@@ -25,10 +25,6 @@ class Base(TxBase):
 	def nondata_outputs(self):
 		return self.outputs
 
-	@property
-	def usr_fee(self):
-		return self.proto.coin_amt(self.dfl_fee, from_unit='satoshi')
-
 	def add_blockcount(self):
 		pass
 

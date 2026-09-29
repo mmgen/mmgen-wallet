@@ -28,6 +28,7 @@ class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 			'from':           CoinAddr(self.proto, d['from']),
 			'to':             CoinAddr(self.proto, d['to']) if d['to'] else None,
 			'amt':            self.proto.coin_amt(d['amt']),
+			'fee':            None if d['fee'] is None else self.proto.coin_amt(d['fee']),
 			'gas':            NonNegativeInt(d['gas']),
 			'account_number': NonNegativeInt(d['account_number']),
 			'sequence':       NonNegativeInt(d['sequence']),
@@ -43,6 +44,7 @@ class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 				o['account_number'],
 				o['sequence'],
 				self.swap_memo,
+				fee = 0 if o['fee'] is None else o['fee'].to_unit('atomic'),
 				wifkey = wif)
 		else:
 			from .protobuf import send_tx_parms, build_tx
@@ -53,6 +55,7 @@ class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 				o['gas'],
 				o['account_number'],
 				o['sequence'],
+				fee = 0 if o['fee'] is None else o['fee'].to_unit('atomic'),
 				wifkey = wif)
 
 		tx = build_tx(self.cfg, self.proto, parms)

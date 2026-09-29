@@ -20,8 +20,13 @@ from .base import Base
 
 class New(VmNew, Base, TxBase.New):
 
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.usr_fee = None if self.cfg.fee is None else self.proto.coin_amt(self.cfg.fee)
+
 	async def get_funds_remaining(self, fee, outputs_sum, start_fee_desc):
-		return await self.twctl.get_balance(self.inputs[0].addr)
+		res = await self.twctl.get_balance(self.inputs[0].addr)
+		return (res - self.usr_fee) if self.usr_fee else res
 
 	async def set_gas(self, *, to_addr=None, force=False):
 		self.gas = self.dfl_gas
@@ -40,6 +45,7 @@ class New(VmNew, Base, TxBase.New):
 			'from':           self.inputs[0].addr,
 			'to':             self.outputs[0].addr if self.outputs else None,
 			'amt':            self.sum_outputs(),
+			'fee':            self.usr_fee,
 			'gas':            self.gas,
 			'account_number': int(acct_info['account_number']),
 			'sequence':       int(acct_info['sequence']),

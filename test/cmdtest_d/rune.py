@@ -139,8 +139,10 @@ class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTest
 	def twview(self):
 		return self.spawn('mmgen-tool', self.rune_opts + self.add_eth_opts + ['twview'])
 
+	def txcreate1(self):
+		return self._rune_txcreate(add_opts=['--fee=0.2'])
+
 	bal_refresh = CmdTestRuneMethods._rune_bal_refresh
-	txcreate1 = CmdTestRuneMethods._rune_txcreate
 	txsign1 = CmdTestRuneMethods._rune_txsign
 	_txsend = CmdTestRuneMethods._rune_txsend
 

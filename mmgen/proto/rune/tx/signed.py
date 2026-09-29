@@ -21,7 +21,7 @@ class Signed(Completed, TxBase.Signed):
 	desc = 'signed transaction'
 
 	def parse_txfile_serialized_data(self):
-		from .protobuf import RuneTx
+		from .protobuf import RuneTx, parse_fee
 		tx = RuneTx.loads(bytes.fromhex(self.serialized))
 
 		b = tx.body.messages[0].body
@@ -33,6 +33,7 @@ class Signed(Completed, TxBase.Signed):
 			'from':     self.proto.encode_addr_bech32x(getattr(b, from_k)),
 			'to':       None if self.is_swap else self.proto.encode_addr_bech32x(b.toAddress),
 			'amt':      self.proto.coin_amt(int(getattr(b, amt_k)[0].amount), from_unit='satoshi'),
+			'fee':      parse_fee(self.proto, tx),
 			'gas':      NonNegativeInt(i.fee.gasLimit),
 			'sequence': NonNegativeInt(i.signerInfos[0].sequence)}
 
