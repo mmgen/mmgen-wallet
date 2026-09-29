@@ -20,6 +20,7 @@
 tool.help: Help screen routines for the 'mmgen-tool' utility
 """
 
+from ..util import capfirst
 from .. import main_tool
 
 from .common import tool_cmd_base, fstr
@@ -102,15 +103,10 @@ def main_help():
 
 	return '\n'.join(do())
 
-def gen_tool_usage():
+def gen_usage_body(mods_data, get_mod_cls_func):
 
-	from ..util import capfirst
-
-	for line in usage_hdr.lstrip().split('\n'):
-		yield line
-
-	for clsname, cmdlist in main_tool.mods.items():
-		cls = main_tool.get_mod_cls(clsname)
+	for clsname, cmdlist in mods_data.items():
+		cls = get_mod_cls_func(clsname)
 		cls_docstr = cls.__doc__.strip()
 		yield ''
 		yield '  {}:'.format(capfirst(cls_docstr.split('\n')[0].strip()))
@@ -128,9 +124,6 @@ def gen_tool_usage():
 				b = create_call_sig(cmdname, cls, as_string=True),
 				w = max_w)
 		yield ''
-
-	for line in usage_examples.rstrip().split('\n'):
-		yield line
 
 def gen_tool_cmd_usage(mod, cmdname):
 
@@ -185,6 +178,7 @@ def gen_tool_cmd_usage(mod, cmdname):
 
 def usage(cmdname, *, exit_val=1):
 
+	from ..main_tool import mods, get_mod_cls
 	from ..util import Msg, die
 
 	if cmdname:
@@ -196,7 +190,10 @@ def usage(cmdname, *, exit_val=1):
 			die(1, f'{cmdname!r}: no such tool command')
 	else:
 		from ..ui import do_pager
-		do_pager('\n'.join(gen_tool_usage()) + '\n')
+		do_pager(
+			usage_hdr.lstrip()
+			+ '\n' + '\n'.join(gen_usage_body(mods, get_mod_cls))
+			+ '\n' + usage_examples.rstrip())
 
 	import sys
 	sys.exit(exit_val)
