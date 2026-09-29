@@ -78,10 +78,13 @@ swap_tx_parms = namedtuple(
 		'account_number',
 		'sequence',
 		'memo',
-		'pubkey', # begin default fields
+		'synth', # begin default fields
+		'trade',
+		'secured',
+		'pubkey',
 		'wifkey',
 		'signature'],
-		defaults = (None, None, None))
+		defaults = (None, None, None, None, None, None))
 
 @dataclass
 class Asset(BaseMessage):
@@ -200,6 +203,9 @@ def build_swap_tx(cfg, proto, parms, *, skip_body_memo=False):
 				account_number = p.account_number,
 				sequence = p.sequence,
 				decimals = 8,
+				synth = p.synth,
+				trade = p.trade,
+				secured = p.secured,
 				memo = p.memo,
 				pubkey = p.pubkey,
 				wifkey = p.wifkey,
