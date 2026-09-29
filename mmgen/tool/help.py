@@ -24,6 +24,50 @@ from .. import main_tool
 
 from .common import tool_cmd_base, fstr
 
+usage_hdr = """
+GENERAL USAGE INFORMATION FOR MMGEN-TOOL COMMANDS
+
+  Arguments with only type specified in square brackets are required
+
+  Arguments with both type and default value specified in square brackets are
+  optional and must be specified in the form ‘name=value’
+
+  For more detailed usage information for a particular tool command, type
+  ‘mmgen-tool help <command name>’
+"""
+
+usage_examples = """
+  To force a command to read from STDIN instead of file (for commands taking
+  a filename as their first argument), substitute "-" for the filename.
+
+
+EXAMPLES:
+
+  Generate a random LTC Bech32 public/private keypair:
+  $ mmgen-tool -r0 --coin=ltc --type=bech32 randpair
+
+  Generate a DASH address with compressed public key from the supplied WIF key:
+  $ mmgen-tool --coin=dash --type=compressed wif2addr XJkVRC3eGKurc9Uzx1wfQoio3yqkmaXVqLMTa6y7s3M3jTBnmxfw
+
+  Generate a well-known burn address:
+  $ mmgen-tool hextob58chk 000000000000000000000000000000000000000000
+
+  Generate a random 12-word seed phrase:
+  $ mmgen-tool -r0 mn_rand128 fmt=bip39
+
+  Same as above, but get additional entropy from user:
+  $ mmgen-tool mn_rand128 fmt=bip39
+
+  Encode bytes from a file to base 58:
+  $ mmgen-tool bytestob58 /etc/timezone pad=20
+
+  Reverse a hex string:
+  $ mmgen-tool hexreverse "deadbeefcafe"
+
+  Same as above, but supply input via STDIN:
+  $ echo "deadbeefcafe" | mmgen-tool hexreverse -
+"""
+
 def main_help():
 
 	from ..util import capfirst
@@ -61,52 +105,8 @@ def gen_tool_usage():
 
 	from ..util import capfirst
 
-	m1 = """
-		GENERAL USAGE INFORMATION FOR MMGEN-TOOL COMMANDS
-
-		  Arguments with only type specified in square brackets are required
-
-		  Arguments with both type and default value specified in square brackets are
-		  optional and must be specified in the form ‘name=value’
-
-		  For more detailed usage information for a particular tool command, type
-		  ‘mmgen-tool help <command name>’
-		"""
-
-	m2 = """
-		  To force a command to read from STDIN instead of file (for commands taking
-		  a filename as their first argument), substitute "-" for the filename.
-
-
-		EXAMPLES:
-
-		  Generate a random LTC Bech32 public/private keypair:
-		  $ mmgen-tool -r0 --coin=ltc --type=bech32 randpair
-
-		  Generate a DASH address with compressed public key from the supplied WIF key:
-		  $ mmgen-tool --coin=dash --type=compressed wif2addr XJkVRC3eGKurc9Uzx1wfQoio3yqkmaXVqLMTa6y7s3M3jTBnmxfw
-
-		  Generate a well-known burn address:
-		  $ mmgen-tool hextob58chk 000000000000000000000000000000000000000000
-
-		  Generate a random 12-word seed phrase:
-		  $ mmgen-tool -r0 mn_rand128 fmt=bip39
-
-		  Same as above, but get additional entropy from user:
-		  $ mmgen-tool mn_rand128 fmt=bip39
-
-		  Encode bytes from a file to base 58:
-		  $ mmgen-tool bytestob58 /etc/timezone pad=20
-
-		  Reverse a hex string:
-		  $ mmgen-tool hexreverse "deadbeefcafe"
-
-		  Same as above, but supply input via STDIN:
-		  $ echo "deadbeefcafe" | mmgen-tool hexreverse -
-		"""
-
-	for line in m1.lstrip().split('\n'):
-		yield line.lstrip('\t')
+	for line in usage_hdr.lstrip().split('\n'):
+		yield line
 
 	for clsname, cmdlist in main_tool.mods.items():
 		cls = main_tool.get_mod_cls(clsname)
@@ -128,8 +128,8 @@ def gen_tool_usage():
 				w = max_w)
 		yield ''
 
-	for line in m2.rstrip().split('\n'):
-		yield line.lstrip('\t')
+	for line in usage_examples.rstrip().split('\n'):
+		yield line
 
 def gen_tool_cmd_usage(mod, cmdname):
 
