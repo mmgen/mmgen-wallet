@@ -225,7 +225,7 @@ class Base(MMGenObject):
 	# swap methods:
 	@cached_property
 	def swap_proto_mod(self):
-		from .new_swap import get_swap_proto_mod
+		from ..swap.util import get_swap_proto_mod
 		return get_swap_proto_mod(self.swap_proto)
 
 	@cached_property

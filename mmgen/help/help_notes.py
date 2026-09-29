@@ -62,7 +62,7 @@ class help_notes:
 		return pfx + sep.join(u[0] for u in cu[:-1]) + ('', conj)[len(cu)>1] + cu[-1][0] + sfx
 
 	def stream_interval(self):
-		from ..tx.new_swap import get_swap_proto_mod
+		from ..swap.util import get_swap_proto_mod
 		return get_swap_proto_mod(self.cfg.swap_proto).SwapCfg(self.cfg).si.dfl
 
 	def fee_spec_names(self, *, proto=None, linebreak=' '):

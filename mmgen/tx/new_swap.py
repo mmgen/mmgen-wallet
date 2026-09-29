@@ -16,19 +16,7 @@ from collections import namedtuple
 
 from .new import New
 from ..amt import UniAmt
-
-def get_swap_proto_mod(swap_proto_name):
-	import importlib
-	return importlib.import_module(f'mmgen.swap.proto.{swap_proto_name}')
-
-def init_swap_proto(cfg, asset):
-	from ..protocol import init_proto
-	return init_proto(
-		cfg,
-		asset.coin,
-		network = cfg._proto.network,
-		tokensym = asset.tokensym,
-		need_amt = True)
+from ..swap.util import get_swap_proto_mod, init_swap_proto
 
 def get_send_proto(cfg):
 	try:

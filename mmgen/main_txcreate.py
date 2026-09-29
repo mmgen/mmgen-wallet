@@ -126,7 +126,7 @@ cfg = Config(opts_data=opts_data)
 
 if cfg.list_assets:
 	import sys
-	from .tx.new_swap import get_swap_proto_mod
+	from .swap.util import get_swap_proto_mod
 	sp = get_swap_proto_mod(cfg.swap_proto)
 	Msg('AVAILABLE SWAP ASSETS:\n' + sp.SwapAsset('BTC', 'send').fmt_assets_data(indent='  '))
 	sys.exit(0)
