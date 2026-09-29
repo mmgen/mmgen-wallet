@@ -171,21 +171,21 @@ def tx_info(tx, proto):
 	b = tx.body.messages[0].body
 	s = tx.authInfo.signerInfos[0]
 	fee = parse_fee(proto, tx)
-	match msg_type := tx.body.messages[0].id.removeprefix('/types.'):
-		case 'MsgSend':
+	match msg_type := type(tx.body.messages[0]):
+		case Messages.MsgSend:
 			from_addr = proto.encode_addr_bech32x(b.fromAddress)
 			to_addr   = proto.encode_addr_bech32x(b.toAddress)
 			asset     = b.amount[0].denom.upper()
 			memo      = tx.body.memo
 			amt       = base_unit_to_amt(int(b.amount[0].amount), decimals=8)
-		case 'MsgDeposit':
+		case Messages.MsgDeposit:
 			from_addr = proto.encode_addr_bech32x(b.signer)
 			to_addr = 'None'
 			asset     = b.coins[0].asset.symbol
 			memo      = b.memo
 			amt       = base_unit_to_amt(int(b.coins[0].amount), decimals=b.coins[0].decimals or 8)
 	yield f'TxID:      {tx.txid}'
-	yield f'Type:      {msg_type}'
+	yield f'Type:      {msg_type.__name__}'
 	yield f'From:      {from_addr}'
 	yield f'To:        {to_addr}'
 	yield f'Asset:     {asset}'
@@ -196,40 +196,9 @@ def tx_info(tx, proto):
 	yield f'Memo:      {memo}'
 	yield f'Pubkey:    {s.publicKey.key.data.hex()}'
 
-def build_swap_tx(cfg, proto, parms, *, skip_body_memo=False):
-
-	p = parms
-	assert type(p) == swap_tx_parms, f'{p}: invalid ‘parms’ (not swap_tx_parms instance)'
-
-	return build_tx(
-			cfg,
-			proto,
-			deposit_tx_parms(
-				chain = 'THOR',
-				symbol = 'RUNE',
-				ticker = 'RUNE',
-				from_addr = p.from_addr,
-				amt = p.amt,
-				gas_limit = p.gas_limit,
-				account_number = p.account_number,
-				sequence = p.sequence,
-				decimals = 8,
-				fee = p.fee,
-				synth = p.synth,
-				trade = p.trade,
-				secured = p.secured,
-				memo = p.memo,
-				pubkey = p.pubkey,
-				wifkey = p.wifkey,
-				signature = p.signature),
-			skip_body_memo = skip_body_memo)
-
 def build_tx(cfg, proto, parms, *, null_fee=False, skip_body_memo=False):
 
 	p = parms
-	assert type(p) in (send_tx_parms, deposit_tx_parms), f'{p}: invalid ‘parms’ (not *_tx_parms instance)'
-
-	msg_type = 'MsgSend' if type(p) == send_tx_parms else 'MsgDeposit'
 
 	if p.wifkey:
 		assert p.pubkey is None and p.signature is None
@@ -241,34 +210,48 @@ def build_tx(cfg, proto, parms, *, null_fee=False, skip_body_memo=False):
 		assert p.pubkey and p.signature
 		pubkey = p.pubkey
 
-	cls = getattr(Messages, msg_type)
+	match type(p).__name__:
+		case 'rune_send_tx_parms':
+			message = Messages.MsgSend(
+				id   = '/types.MsgSend',
+				body = Messages.MsgSend.Body(
+					fromAddress = proto.decode_addr(p.from_addr).bytes,
+					toAddress = proto.decode_addr(p.to_addr).bytes,
+					amount = [Coin(denom='rune', amount=str(amt_to_base_unit(p.amt, decimals=8)))]))
+			fee_amt = None
+		case 'rune_deposit_tx_parms':
+			coin_data = CoinWithAsset(
+				asset = Asset(
+					chain = p.chain,
+					symbol = p.symbol,
+					ticker = p.ticker,
+					synth = p.synth,
+					trade = p.trade,
+					secured = p.secured),
+				amount = str(amt_to_base_unit(p.amt, decimals=p.decimals or 8)),
+				decimals = p.decimals)
+		case 'rune_swap_tx_parms':
+			coin_data = CoinWithAsset(
+				asset = Asset(
+					chain = 'THOR',
+					symbol = 'RUNE',
+					ticker = 'RUNE',
+					synth = p.synth,
+					trade = p.trade,
+					secured = p.secured),
+				amount = str(amt_to_base_unit(p.amt, decimals=8)),
+				decimals = 8)
 
-	if msg_type == 'MsgSend':
-		message = cls(
-			id   = '/types.MsgSend',
-			body = cls.Body(
-				fromAddress = proto.decode_addr(p.from_addr).bytes,
-				toAddress = proto.decode_addr(p.to_addr).bytes,
-				amount = [Coin(denom='rune', amount=str(amt_to_base_unit(p.amt, decimals=8)))]))
-		fee_amt = None
-	elif msg_type == 'MsgDeposit':
-		coin_data = CoinWithAsset(
-			asset = Asset(
-				chain = p.chain,
-				symbol = p.symbol,
-				ticker = p.ticker,
-				synth = p.synth,
-				trade = p.trade,
-				secured = p.secured),
-			amount = str(amt_to_base_unit(p.amt, decimals=p.decimals or 8)),
-			decimals = p.decimals)
-		message = cls(
-			id   = '/types.MsgDeposit',
-			body = cls.Body(
-				coins = [coin_data],
-				memo = p.memo,
-				signer = proto.decode_addr(p.from_addr).bytes))
-		fee_amt = None if null_fee else [Coin(denom='rune', amount=str(p.fee))]
+	match type(p).__name__:
+		case 'rune_deposit_tx_parms' | 'rune_swap_tx_parms':
+			message = Messages.MsgDeposit(
+				id   = '/types.MsgDeposit',
+				body = Messages.MsgDeposit.Body(
+					coins = [coin_data],
+					memo = p.memo,
+					signer = proto.decode_addr(p.from_addr).bytes))
+			fee_amt = None if null_fee else [Coin(denom='rune', amount=str(p.fee))]
+
 
 	signer_info = SignerInfo(
 		publicKey = PublicKey(

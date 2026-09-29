@@ -11,7 +11,6 @@ from mmgen.proto.cosmos.tx.protobuf import RawTx
 from mmgen.proto.rune.tx.protobuf import (
 	RuneTx,
 	build_tx,
-	build_swap_tx,
 	tx_info,
 	send_tx_parms,
 	deposit_tx_parms,
@@ -40,14 +39,12 @@ parse_vectors = [
 	_pv(
 		'mainnet-tx-msgdeposit1.binpb',
 		'1089bbd54746bbc6a40e264d3ce8085561978739094c9c5aac59c569b4c28ba9',
-		deposit_tx_parms(
-			'THOR', 'RUNE', 'RUNE',
+		swap_tx_parms(
 			'thor1lukwlve7hayy66qrdkp4k7sh0emjqwergy7tl3',
 			'299.23861844',
 			600000000,
 			125632,
 			348388,
-			decimals = 8,
 			memo = '=:LTC~LTC:thor1lukwlve7hayy66qrdkp4k7sh0emjqwergy7tl3:605926421/0/1',
 			pubkey = '03da157f891abfe7822efb91f59667aa6cc6c3768a7e280caeb9ae243c969eb3e7',
 			signature = '869399bcc2ccb9c9c286bdf214439ad132221cb8206547ceb012e06efbc3ff3e' # r
@@ -115,11 +112,8 @@ build_vectors = [
 			37,
 			decimals = 8,
 			memo = '=:MEMO',
-			wifkey = 'Ky9bSjPUD35uUaY3JReXiESivnfxV6rLMsW1wTFyvVZwYXpX95vF'))
-]
-
-swap_build_vectors = [
-	_bv(
+			wifkey = 'Ky9bSjPUD35uUaY3JReXiESivnfxV6rLMsW1wTFyvVZwYXpX95vF')),
+	_bv( # same as above, only via swap_tx_parms()
 		'0d41e0ee40cd18a991cd8f0ef0e60e4c5bea898c53d54e00b6dddc0c9ce7edb7',
 		'444e026fe5d0988da602dc22f0ff6172c080f1d2e2d66012d86f4afd314b78d6',
 		swap_tx_parms(
@@ -141,7 +135,7 @@ def test_tx(src, cfg, vec):
 			pubkey = bytes.fromhex(parms.pubkey),
 			signature = bytes.fromhex(parms.signature))
 
-	assert src in ('parse', 'build', 'swapbuild')
+	assert src in ('parse', 'build')
 
 	match src:
 		case 'parse':
@@ -153,8 +147,6 @@ def test_tx(src, cfg, vec):
 			assert bytes(tx) == tx_in
 		case 'build':
 			tx = build_tx(cfg, proto, parms, null_fee=vec.null_fee)
-		case 'swapbuild':
-			tx = build_swap_tx(cfg, proto, parms)
 
 	vmsg(pp_fmt(tx))
 
@@ -196,11 +188,6 @@ class unit_tests:
 	def txbuild(self, name, ut, desc='transaction building and signing (MsgSend, MsgDeposit)'):
 		for vec in build_vectors:
 			test_tx('build', test_cfg, vec)
-		return True
-
-	def swaptxbuild(self, name, ut, desc='transaction building and signing (Swap TX)'):
-		for vec in swap_build_vectors:
-			test_tx('swapbuild', test_cfg, vec)
 		return True
 
 	def rpc(self, name, ut, desc='remote RPC operations'):

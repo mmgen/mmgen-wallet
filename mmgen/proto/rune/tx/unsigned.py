@@ -35,30 +35,24 @@ class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 			'chain_id':       d['chain_id']}
 
 	async def do_sign(self, o, wif):
-		if self.is_swap:
-			from .protobuf import swap_tx_parms, build_swap_tx as build_tx
-			parms = swap_tx_parms(
-				o['from'],
-				o['amt'],
-				o['gas'],
-				o['account_number'],
-				o['sequence'],
-				self.swap_memo,
-				fee = 0 if o['fee'] is None else o['fee'].to_unit('atomic'),
-				wifkey = wif)
-		else:
-			from .protobuf import send_tx_parms, build_tx
-			parms = send_tx_parms(
-				o['from'],
-				o['to'],
-				o['amt'],
-				o['gas'],
-				o['account_number'],
-				o['sequence'],
-				fee = 0 if o['fee'] is None else o['fee'].to_unit('atomic'),
-				wifkey = wif)
+		parms = {
+			'from_addr':      o['from'],
+			'amt':            o['amt'],
+			'gas_limit':      o['gas'],
+			'account_number': o['account_number'],
+			'sequence':       o['sequence'],
+			'fee':            0 if o['fee'] is None else o['fee'].to_unit('atomic'),
+			'wifkey':         wif}
 
-		tx = build_tx(self.cfg, self.proto, parms)
+		if self.is_swap:
+			from .protobuf import swap_tx_parms as tx_parms
+			add_parms = {'memo': self.swap_memo}
+		else:
+			from .protobuf import send_tx_parms as tx_parms
+			add_parms = {'to_addr': o['to']}
+
+		from .protobuf import build_tx
+		tx = build_tx(self.cfg, self.proto, tx_parms(**(parms | add_parms)))
 		self.serialized = bytes(tx).hex()
 		self.coin_txid = CoinTxID(tx.txid)
 		tx.verify_sig(self.cfg, self.proto, o['account_number'])
