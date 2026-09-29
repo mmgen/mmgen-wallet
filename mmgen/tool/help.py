@@ -23,6 +23,7 @@ tool.help: Help screen routines for the 'mmgen-tool' utility
 from .. import main_tool
 
 from .common import tool_cmd_base, fstr
+from . import create_call_sig
 
 usage_hdr = """
 GENERAL USAGE INFORMATION FOR MMGEN-TOOL COMMANDS
@@ -124,7 +125,7 @@ def gen_tool_usage():
 		for cmdname in cmdlist:
 			yield '    {a:{w}} {b}'.format(
 				a = cmdname,
-				b = main_tool.create_call_sig(cmdname, cls, as_string=True),
+				b = create_call_sig(cmdname, cls, as_string=True),
 				w = max_w)
 		yield ''
 
@@ -138,7 +139,7 @@ def gen_tool_cmd_usage(mod, cmdname):
 
 	cls = main_tool.get_mod_cls(mod)
 	docstr = getattr(cls, cmdname).__doc__.strip()
-	args, kwargs, kwargs_types, _, ann = main_tool.create_call_sig(cmdname, cls)
+	args, kwargs, kwargs_types, _, ann = create_call_sig(cmdname, cls)
 	ARGS = 'ARG' if len(args) == 1 else 'ARGS' if args else ''
 	KWARGS = 'KEYWORD ARG' if len(kwargs) == 1 else 'KEYWORD ARGS' if kwargs else ''
 

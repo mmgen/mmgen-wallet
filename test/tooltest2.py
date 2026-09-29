@@ -36,6 +36,7 @@ except ImportError:
 from test.include.common import set_globals, end_msg, init_coverage
 
 from mmgen import main_tool
+from mmgen.tool import process_args
 from mmgen.cfg import Config, gc
 from mmgen.color import green, blue, purple, cyan, gray
 from mmgen.util import msg, msg_r, Msg, die, isAsync
@@ -112,7 +113,7 @@ def call_method(cls, method, cmd_name, args, mmtype, stdin_input):
 		a = purple('Running'),
 		b = ' '.join([cmd_name]+[repr(e) for e in args]),
 		c = ' '+mmtype if mmtype else ''))
-	aargs, kwargs = main_tool.process_args(cmd_name, args, cls)
+	aargs, kwargs = process_args(cmd_name, args, cls)
 	oq_save = bool(cfg.quiet)
 	if not cfg.verbose:
 		cfg._set_quiet(True)
@@ -144,7 +145,7 @@ def tool_api(cls, cmd_name, args, opts):
 		for o in opts:
 			if o.startswith('--type='):
 				tool.addrtype = o.split('=')[1]
-	pargs, kwargs = main_tool.process_args(cmd_name, args, cls)
+	pargs, kwargs = process_args(cmd_name, args, cls)
 	return getattr(tool, cmd_name)(*pargs, **kwargs)
 
 def check_output(out, chk):

@@ -202,9 +202,10 @@ if cfg.testing_status:
 		Msg('    '+'\n    '.join(sorted(tested_in[l])))
 
 	ignore = ()
-	from mmgen.main_tool import get_cmds
+	from mmgen.tool import get_cmds
+	from mmgen.main_tool import mods
 	uc = sorted(
-		set(get_cmds()) -
+		set(get_cmds(mods)) -
 		set(ignore) -
 		set(tested_in['tooltest.py']) -
 		set(tested_in['tooltest2.py']) -
