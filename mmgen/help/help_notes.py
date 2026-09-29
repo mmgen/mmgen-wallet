@@ -90,8 +90,9 @@ class help_notes:
 		return MasterShareIdx
 
 	def tool_help(self):
-		from ..tool.help import main_help
-		return main_help()
+		from ..tool.help import gen_main_help
+		from ..main_tool import mods, get_mod_cls
+		return '\n'.join(gen_main_help(mods_data=mods, get_mod_cls_func=get_mod_cls))
 
 	def dfl_subseeds(self):
 		from ..subseed import SubSeedList

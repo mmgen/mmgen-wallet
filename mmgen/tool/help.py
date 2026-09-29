@@ -21,8 +21,6 @@ tool.help: Help screen routines for the 'mmgen-tool' utility
 """
 
 from ..util import capfirst
-from .. import main_tool
-
 from .common import tool_cmd_base, fstr
 from . import create_call_sig
 
@@ -70,38 +68,33 @@ EXAMPLES:
   $ echo "deadbeefcafe" | mmgen-tool hexreverse -
 """
 
-def main_help():
-
-	from ..util import capfirst
+def gen_main_help(*, mods_data, get_mod_cls_func, indent=''):
 	from ..util2 import pretty_format
+	for clsname, cmdlist in mods_data.items():
+		cls = get_mod_cls_func(clsname)
+		cls_docstr = cls.__doc__.strip()
+		yield capfirst(cls_docstr.split('\n')[0].strip()) + ':'
+		yield ''
 
-	def do():
-		for clsname, cmdlist in main_tool.mods.items():
-			cls = main_tool.get_mod_cls(clsname)
-			cls_docstr = cls.__doc__.strip()
-			yield capfirst(cls_docstr.split('\n')[0].strip()) + ':'
+		if '\n' in cls_docstr:
+			for line in cls_docstr.split('\n')[2:]:
+				yield indent + '  ' + line.lstrip('\t')
 			yield ''
 
-			if '\n' in cls_docstr:
-				for line in cls_docstr.split('\n')[2:]:
-					yield '  ' + line.lstrip('\t')
-				yield ''
+		max_w = max(map(len, cmdlist))
 
-			max_w = max(map(len, cmdlist))
-
-			for cmdname in cmdlist:
-				code = getattr(cls, cmdname)
-				if code.__doc__:
-					yield '  {:{}} - {}'.format(
-						cmdname,
-						max_w,
-						pretty_format(
-							code.__doc__.strip().split('\n')[0].strip(),
-							width = 79-(max_w+7),
-							pfx   = ' '*(max_w+5)).lstrip())
-			yield ''
-
-	return '\n'.join(do())
+		for cmdname in cmdlist:
+			code = getattr(cls, cmdname)
+			if code.__doc__:
+				yield '{}  {:{}} - {}'.format(
+					indent,
+					cmdname,
+					max_w,
+					pretty_format(
+						code.__doc__.strip().split('\n')[0].strip(),
+						width = 79 - (max_w+7),
+						pfx   = indent + ' '*(max_w+5)).lstrip())
+		yield ''
 
 def gen_usage_body(mods_data, get_mod_cls_func):
 
@@ -125,12 +118,11 @@ def gen_usage_body(mods_data, get_mod_cls_func):
 				w = max_w)
 		yield ''
 
-def gen_tool_cmd_usage(mod, cmdname):
+def gen_tool_cmd_usage(mod, cmdname, get_mod_cls_func):
 
 	from ..cfg import gc
-	from ..util import capfirst
 
-	cls = main_tool.get_mod_cls(mod)
+	cls = get_mod_cls_func(mod)
 	docstr = getattr(cls, cmdname).__doc__.strip()
 	args, kwargs, kwargs_types, _, ann = create_call_sig(cmdname, cls)
 	ARGS = 'ARG' if len(args) == 1 else 'ARGS' if args else ''
@@ -182,9 +174,9 @@ def usage(cmdname, *, exit_val=1):
 	from ..util import Msg, die
 
 	if cmdname:
-		for mod, cmdlist in main_tool.mods.items():
+		for mod, cmdlist in mods.items():
 			if cmdname in cmdlist:
-				Msg('\n'.join(gen_tool_cmd_usage(mod, cmdname)))
+				Msg('\n'.join(gen_tool_cmd_usage(mod, cmdname, get_mod_cls)))
 				break
 		else:
 			die(1, f'{cmdname!r}: no such tool command')
