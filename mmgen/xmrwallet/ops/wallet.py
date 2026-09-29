@@ -97,24 +97,14 @@ class OpWallet(OpBase):
 				skip_chksum_msg = True)
 		else:
 			self.mount_removable_device()
-			# with watch_only, make a second attempt to open the file as KeyAddrList:
-			for first_try in (True, False):
-				addr_list = ViewKeyAddrList if (self.cfg.watch_only and first_try) else KeyAddrList
-				try:
-					self.kal = addr_list(
-						cfg    = cfg,
-						proto  = self.proto,
-						infile =
-							str(self.autosign_viewkey_addr_file) if self.cfg.autosign else
-							self.uargs.infile,
-						key_address_validity_check = True,
-						skip_chksum_msg = True)
-					break
-				except:
-					if first_try:
-						msg(f'Attempting to open ‘{self.uargs.infile}’ as key-address list')
-						continue
-					raise
+			self.kal = (ViewKeyAddrList if self.cfg.watch_only else KeyAddrList)(
+				cfg    = cfg,
+				proto  = self.proto,
+				infile =
+					str(self.autosign_viewkey_addr_file) if self.cfg.autosign else
+					self.uargs.infile,
+				key_address_validity_check = True,
+				skip_chksum_msg = True)
 
 		self.create_addr_data()
 
