@@ -14,9 +14,10 @@ tx.new_swap: new swap transaction class
 
 from collections import namedtuple
 
-from .new import New
 from ..amt import UniAmt
 from ..swap.util import get_swap_proto_mod, init_swap_proto
+
+from .new import New
 
 def get_send_proto(cfg):
 	try:

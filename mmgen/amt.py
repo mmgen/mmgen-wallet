@@ -125,45 +125,43 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 	def __repr__(self):
 		return "{}('{}')".format(type(self).__name__, self.__str__())
 
+	def incorrect_type_error(self, other):
+		raise TypeError(
+			f'operand {other} is of incorrect type ({type(other).__name__} != {type(self).__name__})')
+
 	def __add__(self, other):
 		"""
 		we must allow other to be int(0) to use the sum() builtin
 		"""
 		if type(other) is type(self) or (other == 0 and isinstance(other, int)):
 			return type(self)(Decimal.__add__(self, other),  from_decimal=True)
-		raise TypeError(
-			f'operand {other} is of incorrect type ({type(other).__name__} != {type(self).__name__})')
+		self.incorrect_type_error(other)
 
 	__radd__ = __add__
 
 	def __sub__(self, other):
 		if type(other) is type(self):
 			return type(self)(Decimal.__sub__(Decimal(self), Decimal(other)),  from_decimal=True)
-		raise TypeError(
-			f'operand {other} is of incorrect type ({type(other).__name__} != {type(self).__name__})')
+		self.incorrect_type_error(other)
 
 	def __rsub__(self, other):
 		if type(other) is type(self):
 			return type(self)(Decimal.__rsub__(self, other),  from_decimal=True)
-		raise TypeError(
-			f'operand {other} is of incorrect type ({type(other).__name__} != {type(self).__name__})')
+		self.incorrect_type_error(other)
 
 	def __mul__(self, other):
 		return type(self)('{:0.{p}f}'.format(
-			Decimal.__mul__(self, Decimal(other)),
-			p = self.max_prec))
+			Decimal.__mul__(self, Decimal(other)), p=self.max_prec))
 
 	__rmul__ = __mul__
 
 	def __truediv__(self, other):
 		return type(self)('{:0.{p}f}'.format(
-			Decimal.__truediv__(self, Decimal(other)),
-			p = self.max_prec))
+			Decimal.__truediv__(self, Decimal(other)), p=self.max_prec))
 
 	def __rtruediv__(self, other):
 		return type(self)('{:0.{p}f}'.format(
-			Decimal.__rtruediv__(self, Decimal(other)),
-			p = self.max_prec))
+			Decimal.__rtruediv__(self, Decimal(other)), p=self.max_prec))
 
 	def __neg__(self):
 		self.method_not_implemented()

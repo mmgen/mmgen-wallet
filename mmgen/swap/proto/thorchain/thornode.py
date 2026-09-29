@@ -32,7 +32,7 @@ class ThornodeSwapClient(HTTPClient):
 
 	def __init__(self, tx, *, network_proto=None, host=None):
 		rune_proto = init_proto(tx.cfg, 'rune', network=tx.cfg._proto.network)
-		for k, v in rune_proto.rpc_swap_params.items():
+		for k, v in rune_proto.rpc_remote_swap_params.items():
 			setattr(self, k, v)
 		super().__init__(tx.cfg, network_proto=network_proto, host=host)
 

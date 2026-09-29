@@ -49,7 +49,7 @@ class mainnet(CoinProtocol.Secp256k1):
 	rpc_remote_params      = {'server_domain': Hostname('liquify.com')}
 	rpc_remote_rest_params = {'host': Hostname('gateway.liquify.com/chain/thorchain_api')}
 	rpc_remote_rpc_params  = {'host': Hostname('gateway.liquify.com/chain/thorchain_rpc')}
-	rpc_swap_params        = {'host': Hostname('gateway.liquify.com/chain/thorchain_api')}
+	rpc_remote_swap_params = {'host': Hostname('gateway.liquify.com/chain/thorchain_api')}
 
 	def decode_addr(self, addr):
 		hrp, data = bech32.bech32_decode(addr)
@@ -70,7 +70,7 @@ class testnet(mainnet): # testnet is stagenet
 	bech32_hrp = 'sthor'
 	rpc_remote_rest_params = {'host': Hostname('stagenet-thornode.ninerealms.com')}
 	rpc_remote_rpc_params  = {'host': Hostname('stagenet-rpc.ninerealms.com')}
-	rpc_swap_params        = {'host': Hostname('stagenet-thornode.ninerealms.com')}
+	rpc_remote_swap_params = {'host': Hostname('stagenet-thornode.ninerealms.com')}
 
 class regtest(testnet): # regtest is deprecated testnet
 	bech32_hrp = 'tthor'
@@ -81,4 +81,4 @@ class regtest(testnet): # regtest is deprecated testnet
 		'host': Hostname('localhost:18800'),
 		'verify': False}
 	rpc_remote_rpc_params = rpc_remote_rest_params
-	rpc_swap_params = rpc_remote_rest_params | {'host': Hostname('localhost:18900')}
+	rpc_remote_swap_params = rpc_remote_rest_params | {'host': Hostname('localhost:18900')}

@@ -25,6 +25,8 @@ class ThornodeRPCServer(ThornodeServer):
 
 		class responses:
 
+			# pylint: disable=unsubscriptable-object
+
 			def get_balance(m, length):
 				return [
 					{'denom': 'foocoin', 'amount': 321321321321},
@@ -34,7 +36,7 @@ class ThornodeRPCServer(ThornodeServer):
 			def get_account_info(m, length):
 				return {
 					'value': {
-						'address': m[1], # pylint: disable=unsubscriptable-object
+						'address': m[1],
 						'pub_key': 'PubKeySecp256k1{0000}',
 						'account_number': '1234',
 						'sequence': '333444'}}
