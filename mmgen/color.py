@@ -39,6 +39,9 @@ _colors = {
 	'melon':   (222,        (33, 1)),
 	'brown':   (173,        (33, 0)),
 	'grndim':  (108,        (32, 0)),
+	'puce':    (137,        (33, 0)),
+	'sky':     (117,        (34, 1)),
+	'lime':    (115,        (32, 1)),
 
 	'redbg':   ((232, 210), (30, 101)),
 	'grnbg':   ((232, 121), (30, 102)),
@@ -128,6 +131,9 @@ pink    = lambda s: s
 melon   = lambda s: s
 brown   = lambda s: s
 grndim  = lambda s: s
+puce    = lambda s: s
+sky     = lambda s: s
+lime    = lambda s: s
 
 redbg   = lambda s: s
 grnbg   = lambda s: s

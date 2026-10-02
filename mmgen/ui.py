@@ -140,6 +140,58 @@ def item_chooser(cfg, hdr, items, item_formatter, indent='', empty_ok=False, add
 			return namedtuple('user_choice', 'num idx item')(num, num - 1, items[num - 1])
 		msg(f'{indent}{res}: invalid entry\n')
 
+def colorize_json(text):
+	"Colorize a pretty-formatted JSON string. Original indentation is preserved"
+
+	from .color import puce, orange, gray, sky, lime
+	import re
+
+	colon = orange(':')
+	# dict item:
+	pat01 = re.compile(r'(\s*)("\S+"): (".*")(,)*$')
+	pat02 = re.compile(r'(\s*)("\S+"): ([0-9]+)(,)*$')
+	pat03 = re.compile(r'(\s*)("\S+"): (true|false|null)(,)*$')
+	# list item
+	pat10 = re.compile(r'(\s*)(".+")(,)*$')
+	pat11 = re.compile(r'(\s*)([0-9]+)(,)*$')
+	pat12 = re.compile(r'(\s*)(true|false|null)(,)*$')
+	# dict item with punc
+	pat20 = re.compile(r'(\s*)("\S+"): ([\[\{\]\},]+)$')
+	# punc
+	pat30 = re.compile(r'(\s*)([\[\{\]\},]+)$')
+
+	def ep(m):
+		return orange(m) if m else ''
+
+	def tfn(s):
+		return {
+			'true':  puce('true'),
+			'false': puce('false'),
+			'null':  gray('null')}[s]
+
+	def gen():
+		for line in text.split('\n'): # order matches by frequency of occurrence:
+			if m := pat01.match(line):
+				yield '{}{}{} {}{}'.format(m[1], sky(m[2]), colon, lime(m[3]), ep(m[4]))
+			elif m := pat02.match(line):
+				yield '{}{}{} {}{}'.format(m[1], sky(m[2]), colon, m[3], ep(m[4]))
+			elif m := pat03.match(line):
+				yield '{}{}{} {}{}'.format(m[1], sky(m[2]), colon, tfn(m[3]), ep(m[4]))
+			elif m := pat30.match(line):
+				yield '{}{}'.format(m[1], orange(m[2]))
+			elif m := pat20.match(line):
+				yield '{}{}{} {}'.format(m[1], sky(m[2]), colon, orange(m[3]))
+			elif m := pat10.match(line):
+				yield '{}{}{}'.format(m[1], lime(m[2]), ep(m[3]))
+			elif m := pat11.match(line):
+				yield '{}{}{}'.format(m[1], m[2], ep(m[3]))
+			elif m := pat12.match(line):
+				yield '{}{}{}'.format(m[1], tfn(m[2]), ep(m[3]))
+			else: # fallback: we shouldn’t be here
+				yield line
+
+	return '\n'.join(gen())
+
 def do_pager(text):
 
 	pagers = ['less', 'more']
