@@ -70,3 +70,12 @@ class HTTPClient:
 			'HTTP POST failed with status code {s}\n  URL: {u}\n  DATA: {d}',
 			timeout,
 			data = data)
+
+class RemoteJSONClient(HTTPClient):
+
+	http_hdrs = {'Content-Type': 'application/json'}
+
+	def __init__(self, cfg, proto, *, network_proto=None, host=None):
+		for k, v in getattr(proto, self.params).items():
+			setattr(self, k, v)
+		super().__init__(cfg, network_proto=network_proto, host=host)

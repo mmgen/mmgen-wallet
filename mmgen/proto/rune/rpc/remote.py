@@ -14,7 +14,7 @@ proto.rune.rpc.remote: THORChain base protocol remote RPC client for the MMGen P
 
 import json
 
-from ....http import HTTPClient
+from ....http import RemoteJSONClient
 from ....rpc.remote import RemoteRPCClient
 
 # throws exception on error:
@@ -26,25 +26,14 @@ def process_response(json_response, errmsg):
 	return data['result']
 
 # HTTP POST, JSON-RPC response:
-class ThornodeRemoteRPCClient(HTTPClient):
-
+class ThornodeRemoteRPCClient(RemoteJSONClient):
+	params = 'rpc_remote_rpc_params'
 	timeout = 30
 
-	def __init__(self, cfg, proto, *, network_proto=None, host=None):
-		for k, v in proto.rpc_remote_rpc_params.items():
-			setattr(self, k, v)
-		super().__init__(cfg, network_proto=network_proto, host=host)
-
 # HTTP GET, params in query string, JSON-RPC response:
-class ThornodeRemoteRESTClient(HTTPClient):
-
-	http_hdrs = {'Content-Type': 'application/json'}
-	timeout = 5
-
-	def __init__(self, cfg, proto, *, network_proto=None, host=None):
-		for k, v in proto.rpc_remote_rest_params.items():
-			setattr(self, k, v)
-		super().__init__(cfg, network_proto=network_proto, host=host)
+class ThornodeRemoteRESTClient(RemoteJSONClient):
+	params = 'rpc_remote_rest_params'
+	timeout = 15
 
 class THORChainRemoteRPCClient(RemoteRPCClient):
 	"communicate with remote THORChain JSON-RPC endpoint"

@@ -17,7 +17,7 @@ from collections import namedtuple
 
 from ....protocol import init_proto
 from ....amt import UniAmt
-from ....http import HTTPClient
+from ....http import RemoteJSONClient
 
 _gd = namedtuple('gas_unit_data', ['code', 'disp'])
 gas_unit_data = {
@@ -25,23 +25,17 @@ gas_unit_data = {
 	'gwei':        _gd('G', 'Gwei'),
 }
 
-class ThornodeSwapClient(HTTPClient):
-
-	http_hdrs = {'Content-Type': 'application/json'}
+class ThornodeSwapClient(RemoteJSONClient):
+	params = 'rpc_remote_swap_params'
 	timeout = 5
-
-	def __init__(self, tx, *, network_proto=None, host=None):
-		rune_proto = init_proto(tx.cfg, 'rune', network=tx.cfg._proto.network)
-		for k, v in rune_proto.rpc_remote_swap_params.items():
-			setattr(self, k, v)
-		super().__init__(tx.cfg, network_proto=network_proto, host=host)
 
 class Thornode:
 
 	def __init__(self, tx, amt):
 		self.tx = tx
 		self.in_amt = UniAmt(f'{amt:.8f}')
-		self.rpc = ThornodeSwapClient(tx)
+		proto = init_proto(tx.cfg, 'rune', network=tx.cfg._proto.network)
+		self.rpc = ThornodeSwapClient(tx.cfg, proto)
 
 	def get_quote(self, swap_cfg):
 
