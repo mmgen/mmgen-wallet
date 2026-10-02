@@ -313,16 +313,15 @@ init_tests() {
 		- $cmdtest_py --coin=ltc runeswap
 	"
 
-	[ "$SOC" ] && {
-		xmr_env1="MMGEN_TEST_SUITE_PEXPECT_TIMEOUT=${MMGEN_TEST_SUITE_PEXPECT_TIMEOUT:-600} "
-		xmr_env2="MMGEN_HTTP_TIMEOUT=${MMGEN_HTTP_TIMEOUT:-600} "
-		xmr_env3="MMGEN_DAEMON_STATE_TIMEOUT=${MMGEN_DAEMON_STATE_TIMEOUT:-300} "
-	}
+	[ "$SOC" ] && xmr_env=(
+		"MMGEN_TEST_SUITE_PEXPECT_TIMEOUT=${MMGEN_TEST_SUITE_PEXPECT_TIMEOUT:-600}"
+		"MMGEN_HTTP_TIMEOUT=${MMGEN_HTTP_TIMEOUT:-600}"
+		"MMGEN_DAEMON_STATE_TIMEOUT=${MMGEN_DAEMON_STATE_TIMEOUT:-300}")
 
 	d_xmr="Monero xmrwallet operations"
 	t_xmr="
-		- $xmr_env1$xmr_env2$xmr_env3$cmdtest_py --coin=xmr --exclude help
-		s $xmr_env1$xmr_env2$xmr_env3$cmdtest_py --coin=xmr xmr_autosign_nocompat
+		- ${xmr_env[*]} $cmdtest_py --coin=xmr --exclude help
+		s ${xmr_env[*]} $cmdtest_py --coin=xmr xmr_autosign_nocompat
 	"
 	[ "$FAST" ]  && t_xmr_skip='s'
 

@@ -16,7 +16,6 @@ from hashlib import md5
 
 from mmgen.fileutil import get_data_from_file
 
-from .httpd.thornode.swap import ThornodeSwapServer
 from .include.proxy import TestProxy
 
 from .regtest import CmdTestRegtest

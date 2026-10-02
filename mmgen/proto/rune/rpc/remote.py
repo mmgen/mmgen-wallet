@@ -36,7 +36,7 @@ class ThornodeRemoteRESTClient(RemoteJSONClient):
 	timeout = 15
 
 class THORChainRemoteRPCClient(RemoteRPCClient):
-	"communicate with remote THORChain JSON-RPC endpoint"
+	"retrieve data from a remote THORChain JSON-RPC endpoint"
 
 	server_proto = 'THORChain'
 
@@ -48,8 +48,14 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		self.rest_api = ThornodeRemoteRESTClient(cfg, proto)
 		self.rpc_api = ThornodeRemoteRPCClient(cfg, proto)
 
+	def acct_info(self, addr: str, *, block=None):
+		"get account information for a given address"
+		return process_response(
+			self.rest_api.get(path=f'/auth/accounts/{addr}'),
+			errmsg =  f'address ‘{addr}’ not found in blockchain')['value']
+
 	def balance(self, addr: str, *, block=None):
-		"get balance for a given address, optionally at a given block height"
+		"get balance for a given address"
 		res = process_response(
 			self.rest_api.get(path=f'/bank/balances/{addr}'),
 			errmsg =  f'address ‘{addr}’ not found in blockchain')
@@ -57,14 +63,8 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		assert len(rune_res) == 1, f'{rune_res}: result length is not one!'
 		return self.proto.coin_amt(int(rune_res[0]['amount']), from_unit='satoshi')
 
-	def acct_info(self, addr: str, *, block=None):
-		"get account information for a given address, optionally at a given block height"
-		return process_response(
-			self.rest_api.get(path=f'/auth/accounts/{addr}'),
-			errmsg =  f'address ‘{addr}’ not found in blockchain')['value']
-
 	def tx_info(self, txid: str):
-		"get transaction information for a given TxID"
+		"get information for a transaction by TxID"
 		return process_response(
 			self.rpc_api.post(
 				path = '/tx',

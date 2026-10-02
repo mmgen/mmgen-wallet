@@ -50,17 +50,18 @@ send_tx_parms = namedtuple(
 		'signature'],
 		defaults = (0, None, None, None))
 
+# superset of swap_tx_parms, differences as noted (##):
 deposit_tx_parms = namedtuple(
 	'rune_deposit_tx_parms', [
-		'chain',
-		'symbol',
-		'ticker',
+		'chain',       ## 'THOR'
+		'symbol',      ## 'RUNE'
+		'ticker',      ## 'RUNE'
 		'from_addr',
 		'amt',
 		'gas_limit',
 		'account_number',
 		'sequence',
-		'decimals',
+		'decimals',    ## 8
 		'memo',
 		'fee', # begin default fields
 		'synth',

@@ -16,7 +16,6 @@ from hashlib import md5
 
 from mmgen.fileutil import get_data_from_file
 
-from ..include.common import imsg
 from .include.common import dfl_words_file
 from .include.proxy import TestProxy
 from .ethdev import CmdTestEthdevMethods
@@ -101,14 +100,13 @@ class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTest
 		),
 		'main': (
 			'tracking wallet and transaction operations',
-			('twview',               'viewing unspent outputs in tracking wallet'),
-			('bal_refresh',          'refreshing address balance in tracking wallet'),
-			('txcreate1',            'creating a transaction'),
-			('txsign1',              'signing the transaction'),
-			('txsend1_test',         'testing whether the transaction can be sent'),
-			('txsend1',              'sending the transaction'),
-			('txhex1',               'dumping the transaction hex'))
-	}
+			('twview',       'viewing unspent outputs in tracking wallet'),
+			('bal_refresh',  'refreshing address balance in tracking wallet'),
+			('txcreate1',    'creating a transaction'),
+			('txsign1',      'signing the transaction'),
+			('txsend1_test', 'testing whether the transaction can be sent'),
+			('txsend1',      'sending the transaction'),
+			('txhex1',       'dumping the transaction hex'))}
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		CmdTestBase.__init__(self, cfg, trunner, cfgs, spawn)
@@ -147,21 +145,23 @@ class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTest
 	def twview(self):
 		return self.spawn('mmgen-tool', self.rune_opts + self.add_eth_opts + ['twview'])
 
+	def bal_refresh(self):
+		return self._rune_bal_refresh()
+
 	def txcreate1(self):
 		return self._rune_txcreate(add_opts=['--fee=0.2'])
 
-	bal_refresh = CmdTestRuneMethods._rune_bal_refresh
-	txsign1 = CmdTestRuneMethods._rune_txsign
-	_txsend = CmdTestRuneMethods._rune_txsend
+	def txsign1(self):
+		return self._rune_txsign()
 
 	def txsend1_test(self):
-		return self._txsend(add_opts=['--test', f'--proxy=localhost:{TestProxy.port}'], test=True)
+		return self._rune_txsend(add_opts=['--test', f'--proxy=localhost:{TestProxy.port}'], test=True)
 
 	def txsend1(self):
-		return self._txsend()
+		return self._rune_txsend()
 
 	def txhex1(self):
-		t = self._txsend(add_opts=[f'--dump-hex={self.txhex_file}'], dump_hex=True)
+		t = self._rune_txsend(add_opts=[f'--dump-hex={self.txhex_file}'], dump_hex=True)
 		t.read()
 		txhex = get_data_from_file(self.cfg, self.txhex_file, silent=True)
 		if md5(txhex.encode()).hexdigest()[:8] != self.txhex_chksum:

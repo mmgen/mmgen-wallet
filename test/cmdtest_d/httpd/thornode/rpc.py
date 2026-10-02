@@ -74,7 +74,7 @@ class ThornodeRPCServer(ThornodeServer):
 					res.update({'hash': 'BD30B8FD9FC278A26E7A81ABB36C4709260DE64087EB578900BD23CEBF11D1A2'})
 				return res
 
-		pat_info = (
+		pat_info = ( # these are matched in order, so more specific patterns must go first
 			('balance',           'GET',  r'/bank/balances/(\S+)'),
 			('acct_info',         'GET',  r'/auth/accounts/(\S+)'),
 			('tx_info',           'POST', r'/tx$'),

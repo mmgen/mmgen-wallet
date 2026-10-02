@@ -152,8 +152,10 @@ def do_pager(text):
 	from subprocess import run
 	for pager in pagers:
 		try:
-			m = text + ('' if pager == 'less' else end_msg)
-			run([pager], input=m.encode(), check=True)
+			run(
+				[pager],
+				input = text.encode() if pager == 'less' else (text + end_msg).encode(),
+				check = True)
 			msg_r('\r')
 		except:
 			pass

@@ -20,7 +20,7 @@ from mmgen.protocol import init_proto
 from mmgen.wallet.mmgen import wallet as MMGenWallet
 from mmgen.tx.file import txfile_json_dumps # pylint: disable=no-name-in-module
 
-from ..include.common import make_burn_addr, gr_uc
+from ..include.common import make_burn_addr, gr_uc, imsg
 
 from .include.runner import CmdTestRunner
 from .include.common import dfl_words_file
