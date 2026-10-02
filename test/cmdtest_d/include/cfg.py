@@ -43,6 +43,7 @@ cmd_groups_dfl = {
 	'regtest':            gd('CmdTestRegtest',           {}),
 	'op_return':          gd('CmdTestOpReturn',          {}),
 	'swap':               gd('CmdTestSwap',              {}),
+	'remote':             gd('CmdTestRemote',            {}),
 	'ethswap':            gd('CmdTestEthSwap',           {}),
 	# 'chainsplit':         gd('CmdTestChainsplit',      {}),
 	'ethdev':             gd('CmdTestEthdev',            {}),

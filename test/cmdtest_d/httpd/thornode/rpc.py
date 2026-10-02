@@ -17,6 +17,19 @@ from wsgiref.util import request_uri
 
 from . import ThornodeServer
 
+ping_info = {'ping': 'pong'}
+
+lastblock_info = [{
+		'chain': 'BTC',
+		'last_observed_in': 969302,
+		'last_signed_out': 28043381,
+		'thorchain': 28043387
+	}, {
+		'chain': 'ETH',
+		'last_observed_in': 26090346,
+		'last_signed_out': 28043381,
+		'thorchain': 28043387}]
+
 class ThornodeRPCServer(ThornodeServer):
 	port = 18800
 	name = 'thornode RPC server'
@@ -74,7 +87,20 @@ class ThornodeRPCServer(ThornodeServer):
 					res.update({'hash': 'BD30B8FD9FC278A26E7A81ABB36C4709260DE64087EB578900BD23CEBF11D1A2'})
 				return res
 
+			def ping(m, length):
+				return ping_info
+
+			def lastblock(m, length):
+				return lastblock_info
+
+			def inbound_addrs(m, length):
+				with open('test/ref/thorchain/inbound.json') as fh:
+					return json.loads(fh.read())
+
 		pat_info = ( # these are matched in order, so more specific patterns must go first
+			('ping',              'GET',  r'/thorchain/ping'),
+			('lastblock',         'GET',  r'/thorchain/lastblock(.*)'),
+			('inbound_addrs',     'GET',  r'/thorchain/inbound_addresses'),
 			('balance',           'GET',  r'/bank/balances/(\S+)'),
 			('acct_info',         'GET',  r'/auth/accounts/(\S+)'),
 			('tx_info',           'POST', r'/tx$'),

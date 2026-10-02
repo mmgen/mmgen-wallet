@@ -16,7 +16,7 @@ from hashlib import md5
 
 from mmgen.fileutil import get_data_from_file
 
-from .include.common import dfl_words_file
+from .include.common import dfl_words_file, cleanup_env
 from .include.proxy import TestProxy
 from .ethdev import CmdTestEthdevMethods
 from .base import CmdTestBase
@@ -76,6 +76,12 @@ class CmdTestRuneMethods:
 				self.tr.warn('txid mismatch')
 				return 'ok'
 		return t
+
+	def _rune_remote(self, cmd, cmd_args=(), color=True):
+		return self.spawn(
+			'mmgen-remote',
+			['--coin=rune', '--regtest=1', f'--color={int(color)}'] + [cmd] + list(cmd_args),
+			env = cleanup_env(self.cfg))
 
 class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	'THORChain RUNE tracking wallet and transacting operations'

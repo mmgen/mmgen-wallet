@@ -50,6 +50,7 @@ class mainnet(CoinProtocol.Secp256k1):
 	rpc_remote_rest_params = {'host': Hostname('gateway.liquify.com/chain/thorchain_api')}
 	rpc_remote_rpc_params  = {'host': Hostname('gateway.liquify.com/chain/thorchain_rpc')}
 	rpc_remote_swap_params = {'host': Hostname('gateway.liquify.com/chain/thorchain_api')}
+	rpc_remote_midgard_params = {'host': Hostname('gateway.liquify.com/chain/thorchain_midgard')}
 
 	def decode_addr(self, addr):
 		hrp, data = bech32.bech32_decode(addr)
@@ -82,3 +83,4 @@ class regtest(testnet): # regtest is deprecated testnet
 		'verify': False}
 	rpc_remote_rpc_params = rpc_remote_rest_params
 	rpc_remote_swap_params = rpc_remote_rest_params | {'host': Hostname('localhost:18900')}
+	rpc_remote_midgard_params = rpc_remote_rest_params | {'host': Hostname('localhost:19000')}

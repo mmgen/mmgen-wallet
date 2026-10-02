@@ -81,6 +81,7 @@ class GlobalConstants(Lockable):
 		'passchg':      _cc(False, False, False, None,     [],      'lmw'),
 		'passgen':      _cc(False, False, False, None,     [],      'lmw'),
 		'regtest':      _cc(True,  True,  True,  None,     ['tw'],  'lmw'),
+		'remote':       _cc(True,  True,  True,  None,     [],      'lmw'),
 		'seedjoin':     _cc(False, False, False, None,     [],      'lmw'),
 		'seedsplit':    _cc(False, False, False, None,     [],      'lmw'),
 		'subwalletgen': _cc(False, False, False, None,     [],      'lmw'),

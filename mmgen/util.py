@@ -60,8 +60,10 @@ class Util:
 		if cfg.pager:
 			from .ui import do_pager
 			self.stdout_or_pager = do_pager
+			self.stdout_or_pager_nl = do_pager
 		else:
 			self.stdout_or_pager = Msg_r
+			self.stdout_or_pager_nl = Msg
 
 	def compare_chksums(
 			self,
@@ -190,6 +192,17 @@ def fmt(s, *, indent='', strip_char=None, append='\n'):
 	return (
 		indent
 		+ ('\n'+indent).join(l.lstrip(strip_char) for l in s.strip().splitlines())
+		+ append)
+
+def fmt_with_color(s, color_func, *, indent='', strip_char=None, append='\n'):
+	"""
+	de-indent multiple lines of text, or indent with specified string, with color
+
+	each line is colored separately as a workaround for a ‘less’ pager ANSI color bug
+	"""
+	return (
+		indent
+		+ ('\n'+indent).join(color_func(l.lstrip(strip_char)) for l in s.strip().splitlines())
 		+ append)
 
 def fmt_list(iterable, *, fmt='dfl', indent='', conv=None):

@@ -311,6 +311,7 @@ init_tests() {
 	t_rune="
 		- $cmdtest_py --coin=rune rune
 		- $cmdtest_py --coin=ltc runeswap
+		- $cmdtest_py remote
 	"
 
 	[ "$SOC" ] && xmr_env=(
