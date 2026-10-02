@@ -16,9 +16,9 @@ from hashlib import md5
 
 from mmgen.fileutil import get_data_from_file
 
+from ..include.common import imsg
 from .include.common import dfl_words_file
 from .include.proxy import TestProxy
-from .httpd.thornode.rpc import ThornodeRPCServer
 from .ethdev import CmdTestEthdevMethods
 from .base import CmdTestBase
 from .shared import CmdTestShared
@@ -83,6 +83,7 @@ class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTest
 	networks = ('rune',)
 	passthru_opts = ('coin', 'http_timeout')
 	tmpdir_nums = [50]
+	thornode_servers = ('rpc',)
 	color = True
 	menu_prompt = 'efresh balance:\b'
 	txhex_chksum = '83f85785'
@@ -90,7 +91,7 @@ class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTest
 	cmd_group_in = (
 		('subgroup.init',   []),
 		('subgroup.main',   ['init']),
-		('rpc_server_stop', 'stopping the Thornode RPC server'))
+		('stop_thornode_servers', 'stopping the Thornode RPC server'))
 
 	cmd_subgroups = {
 		'init': (
@@ -123,12 +124,19 @@ class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTest
 		self.proto = init_proto(cfg, network_id=self.proto.coin + '_rt', need_amt=True)
 		self.spawn_env['MMGEN_TEST_SUITE_BOGUS_SEND'] = ''
 
-		self.rpc_server = ThornodeRPCServer(cfg)
-		self.rpc_server.start()
+		self.start_thornode_servers()
 
 		TestProxy(self, cfg)
 
 		self.txhex_file = f'{self.tmpdir}/tx_dump.hex'
+
+	def start_thornode_servers(self):
+		from .swap import CmdTestSwapMethods
+		return CmdTestSwapMethods.start_thornode_servers(self)
+
+	def stop_thornode_servers(self):
+		from .swap import CmdTestSwapMethods
+		return CmdTestSwapMethods.stop_thornode_servers(self)
 
 	def addrgen(self):
 		return self._addrgen()
@@ -159,7 +167,3 @@ class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTest
 		if md5(txhex.encode()).hexdigest()[:8] != self.txhex_chksum:
 			self.tr.warn('txid mismatch')
 		return t
-
-	def rpc_server_stop(self):
-		from .swap import CmdTestSwapMethods
-		return CmdTestSwapMethods.rpc_server_stop(self)

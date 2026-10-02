@@ -29,6 +29,7 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 	bdb_wallet = True
 	tmpdir_nums = [57]
 	networks = ('ltc',)
+	thornode_servers = ('swap',)
 	passthru_opts = ('coin', 'rpc_backend')
 	cross_group = 'runeswap_rune'
 	cross_coin = 'rune'
@@ -38,8 +39,8 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('subgroup.init',        []),
 		('subgroup.rune_init',   ['init']),
 		('subgroup.rune_swap',   ['rune_init']),
-		('rune_rpc_server_stop', 'stopping the Thornode RPC server'),
-		('swap_server_stop',     'stopping the Thornode swap server'),
+		('rune_stop_thornode_servers', 'stopping the Thornode swap server'),
+		('stop_thornode_servers','stopping the Thornode RPC server'),
 		('stop',                 'stopping the regtest daemon'))
 
 	cmd_subgroups = {
@@ -77,8 +78,7 @@ class CmdTestRuneSwap(CmdTestSwapMethods, CmdTestRegtest):
 
 		globals()[self.cross_group] = self.create_cross_runner(trunner)
 
-		self.swap_server = ThornodeSwapServer(cfg)
-		self.swap_server.start()
+		self.start_thornode_servers()
 
 		TestProxy(self, cfg)
 
@@ -87,6 +87,7 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 
 	networks = ('rune',)
 	tmpdir_nums = [58]
+	thornode_servers = ('rpc',)
 	input_sels_prompt = 'to spend from: '
 	is_helper = True
 	txhex_chksum = '0b84cb00'
@@ -100,7 +101,7 @@ class CmdTestRuneSwapRune(CmdTestSwapMethods, CmdTestRune):
 		('swaptxstatus1',            'getting the transaction status'),
 		('swaptxreceipt1',           'getting the transaction receipt'),
 		('swaptxhex1',               'dumping the transaction hex'),
-		('thornode_server_stop',     'stopping Thornode server'))
+		('stop_thornode_servers',    'stopping the Thornode RPC server'))
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)

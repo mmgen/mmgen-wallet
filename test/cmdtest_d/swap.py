@@ -20,25 +20,17 @@ from mmgen.protocol import init_proto
 from mmgen.wallet.mmgen import wallet as MMGenWallet
 from mmgen.tx.file import txfile_json_dumps # pylint: disable=no-name-in-module
 
-from ..include.common import imsg, make_burn_addr, gr_uc
+from ..include.common import make_burn_addr, gr_uc
 
 from .include.runner import CmdTestRunner
 from .include.common import dfl_words_file
-from .httpd.thornode.swap import ThornodeSwapServer
 
 from .autosign import CmdTestAutosign, CmdTestAutosignThreaded
 from .regtest import CmdTestRegtest, dfl_wcls, rt_pw, strip_ansi_escapes
+from .rune import CmdTestRuneMethods
 
 sample1 = gr_uc[:24]
 sample2 = '00010203040506'
-
-def thornode_server_stop(self, attrname='swap_server', name='thornode swap server'):
-	self.spawn(msg_only=True)
-	if self.cfg.no_daemon_stop:
-		imsg(f'(leaving {name} running by user request)')
-	else:
-		getattr(self, attrname).stop()
-	return 'ok'
 
 def create_cross_methods(cross_coin, cross_group, cmd_group_in, cmd_subgroups):
 
@@ -249,12 +241,6 @@ class CmdTestSwapMethods:
 		assert data
 		return 'ok'
 
-	def swap_server_stop(self):
-		return thornode_server_stop(self)
-
-	def rpc_server_stop(self):
-		return thornode_server_stop(self, attrname='rpc_server', name='Thornode RPC server')
-
 	def create_cross_runner(self, trunner, *, add_cfg={}):
 		cfg = Config({
 			'_clone': trunner.cfg,
@@ -270,8 +256,31 @@ class CmdTestSwapMethods:
 		ret.parent_group = self
 		return ret
 
+	def start_thornode_servers(self):
+		import importlib
+		pkg = 'test.cmdtest_d.httpd.thornode'
+		d = {
+			'rpc': 'ThornodeRPCServer',
+			'swap': 'ThornodeSwapServer',
+			'midgard': 'ThornodeMidgardServer'}
+		for name in self.thornode_servers:
+			cls = getattr(importlib.import_module(f'{pkg}.{name}'), d[name])
+			attr = f'{name}_server'
+			setattr(self, attr, cls(self.cfg))
+			getattr(self, attr).start()
+
+	def stop_thornode_servers(self):
+		self.spawn(msg_only=True)
+		for name in self.thornode_servers:
+			if self.cfg.no_daemon_stop:
+				imsg(f'(leaving Thornode {name} server running by user request)')
+			else:
+				getattr(self, f'{name}_server').stop()
+		return 'ok'
+
 class CmdTestSwap(
 		CmdTestSwapMethods,
+		CmdTestRuneMethods,
 		CmdTestRegtest,
 		CmdTestAutosignThreaded):
 	'swap operations (LTC <=> BCH)'
@@ -279,6 +288,7 @@ class CmdTestSwap(
 	bdb_wallet = True
 	networks = ('btc',)
 	tmpdir_nums = [37]
+	thornode_servers = ('rpc', 'swap')
 	passthru_opts = ('rpc_backend',)
 	coins         = ['bch', 'ltc']
 	daemon_coins  = ['bch', 'ltc']
@@ -292,7 +302,7 @@ class CmdTestSwap(
 		('subgroup.signsend',     ['init_swap']),
 		('subgroup.signsend_bad', ['init_swap']),
 		('subgroup.autosign',     ['signsend']),
-		('swap_server_stop',      'stopping the Thornode swap server'),
+		('stop_thornode_servers', 'stopping the Thornode RPC and swap servers'),
 		('stop',                  'stopping regtest daemons'))
 
 	cmd_subgroups = {
@@ -393,10 +403,9 @@ class CmdTestSwap(
 
 		self.protos = [init_proto(cfg, k, network='regtest', need_amt=True) for k in ('ltc', 'bch')]
 
-		self.swap_server = ThornodeSwapServer(cfg)
-		self.swap_server.start()
-
 		self.opts.append('--bob')
+
+		self.start_thornode_servers()
 
 	@property
 	def sid(self):

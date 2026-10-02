@@ -21,7 +21,6 @@ from ..include.common import imsg, chk_equal
 
 from .include.common import dfl_sid, eth_inbound_addr, thorchain_router_addr_file
 from .include.proxy import TestProxy
-from .httpd.thornode.swap import ThornodeSwapServer
 
 from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods, create_cross_methods
@@ -124,6 +123,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	bdb_wallet = True
 	tmpdir_nums = [47]
 	networks = ('btc',)
+	thornode_servers = ('swap',)
 	passthru_opts = ('coin', 'rpc_backend', 'eth_daemon_id')
 	cross_group = 'ethswap_eth'
 	cross_coin = 'eth'
@@ -140,7 +140,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 		('subgroup.token_init',     ['eth_fund']),
 		('subgroup.token_swap',     ['fund', 'token_init']),
 		('subgroup.eth_token_swap', ['fund', 'token_init']),
-		('swap_server_stop',        'stopping the Thornode server'),
+		('stop_thornode_servers',   'stopping the Thornode swap server'),
 		('eth_stop',                'stopping the Ethereum daemon'),
 		('stop',                    'stopping the regtest daemon'))
 
@@ -259,8 +259,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 			trunner,
 			add_cfg = {'eth_daemon_id': trunner.cfg.eth_daemon_id})
 
-		self.swap_server = ThornodeSwapServer(cfg)
-		self.swap_server.start()
+		self.start_thornode_servers()
 
 		TestProxy(self, cfg)
 

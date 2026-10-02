@@ -19,7 +19,6 @@ from mmgen.util import ymsg, suf
 from ..include.common import imsg, omsg_r
 
 from .include.common import cleanup_env, dfl_words_file, dfl_sid
-from .httpd.thornode.swap import ThornodeSwapServer
 
 from .ethdev import CmdTestEthdev
 from .regtest import CmdTestRegtest
@@ -120,6 +119,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 
 	networks = ('eth',)
 	tmpdir_nums = [42]
+	thornode_servers = ('swap',)
 	dfl_devnet_block_period = {'geth': 7, 'reth': 9}
 	fund_amt = 100000
 	token_fund_amt = 1000
@@ -141,7 +141,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 		# ('subgroup.token_feebump_swap',  ['token_init_swap']), # TBD
 		('subgroup.token_new_outputs_swap',  ['token_init_swap']),
 		('ltc_stop',                    ''),
-		('swap_server_stop',            'stopping the Thornode server'),
+		('stop_thornode_servers',       'stopping the Thornode swap server'),
 		('stop',                        'stopping daemon'))
 
 	cmd_subgroups = {
@@ -283,8 +283,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 
 		globals()[self.cross_group] = self.create_cross_runner(trunner)
 
-		self.swap_server = ThornodeSwapServer(cfg)
-		self.swap_server.start()
+		self.start_thornode_servers()
 
 	def txcreate1(self):
 		return self._txcreate(args=[f'{burn_addr},987'], acct='1')
