@@ -43,7 +43,7 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 
 	async def get_receipt(self, txid, *, receipt_only=False):
 		try:
-			return self.rpc.get_tx_info(txid)
+			return self.rpc.tx_info(txid)
 		except Exception as e:
 			msg(f'{type(e).__name__}: {e}')
 			return False

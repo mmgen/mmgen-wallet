@@ -22,7 +22,7 @@ class THORChainTwCtl(TwCtlWithStore):
 	async def rpc_get_balance(self, addr, block='latest'):
 		assert self.rpc.is_remote, 'tw.store.rpc_get_balance(): RPC is not remote!'
 		try:
-			return self.rpc.get_balance(addr, block=block)
+			return self.rpc.balance(addr, block=block)
 		except Exception as e:
 			ymsg(f'{type(e).__name__}: {e}')
 			ymsg(f'Unable to get balance for address ‘{addr}’')

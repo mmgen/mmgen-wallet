@@ -134,7 +134,7 @@ column below:{n_fc}{n_cx}"""
 			cu      = proto.coin,
 			pnm     = gc.proj_name,
 			pnl     = gc.proj_name.lower(),
-			a_info  = help_notes('account_info_desc'),
+			a_info  = help_notes('acct_info_desc'),
 			kgs     = help_notes('keygen_backends'),
 			coin_id = help_notes('coin_id'),
 			fu      = help_notes('rel_fee_desc'),

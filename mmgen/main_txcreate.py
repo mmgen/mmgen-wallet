@@ -105,7 +105,7 @@ opts_data = {
 		'options': lambda cfg, proto, help_notes, s: s.format(
 			cfg    = cfg,
 			cu     = proto.coin,
-			a_info = help_notes('account_info_desc'),
+			a_info = help_notes('acct_info_desc'),
 			fu     = help_notes('rel_fee_desc'),
 			fl     = help_notes('fee_spec_letters', use_quotes=True),
 			tp     = fmt_dict(tx_priorities, fmt='equal_compact'),

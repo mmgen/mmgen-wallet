@@ -40,7 +40,7 @@ class New(VmNew, Base, TxBase.New):
 			({'memo': self.swap_memo} if self.is_swap else {}))
 
 	async def make_txobj(self): # called by create_serialized()
-		acct_info = self.rpc.get_account_info(self.inputs[0].addr)
+		acct_info = self.rpc.acct_info(self.inputs[0].addr)
 		self.txobj = {
 			'from':           self.inputs[0].addr,
 			'to':             self.outputs[0].addr if self.outputs else None,

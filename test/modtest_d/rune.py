@@ -211,12 +211,12 @@ class unit_tests:
 
 			rpc = await rpc_init(regtest_cfg)
 
-			res = rpc.get_account_info(addr)
+			res = rpc.acct_info(addr)
 			assert res['address'] == addr
 			assert res['account_number']
 			assert res['sequence']
 
-			res = rpc.get_tx_info(txhash)
+			res = rpc.tx_info(txhash)
 			assert res['hash'] == txhash.upper()
 
 			res = rpc.tx_op(txbytes.hex(), op='check_tx')

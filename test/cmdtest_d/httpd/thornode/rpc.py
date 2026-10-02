@@ -27,13 +27,13 @@ class ThornodeRPCServer(ThornodeServer):
 
 			# pylint: disable=unsubscriptable-object
 
-			def get_balance(m, length):
+			def balance(m, length):
 				return [
 					{'denom': 'foocoin', 'amount': 321321321321},
 					{'denom': 'rune',    'amount': 987654321321},
 					{'denom': 'barcoin', 'amount': 123123123123}]
 
-			def get_account_info(m, length):
+			def acct_info(m, length):
 				return {
 					'value': {
 						'address': m[1],
@@ -41,7 +41,7 @@ class ThornodeRPCServer(ThornodeServer):
 						'account_number': '1234',
 						'sequence': '333444'}}
 
-			def get_tx_info(m, length):
+			def tx_info(m, length):
 				txid = environ['wsgi.input'].read(length).decode().removeprefix('hash=0x').upper()
 				return {
 					'hash': txid,
@@ -75,9 +75,9 @@ class ThornodeRPCServer(ThornodeServer):
 				return res
 
 		pat_info = (
-			('get_balance',       'GET',  r'/bank/balances/(\S+)'),
-			('get_account_info',  'GET',  r'/auth/accounts/(\S+)'),
-			('get_tx_info',       'POST', r'/tx$'),
+			('balance',           'GET',  r'/bank/balances/(\S+)'),
+			('acct_info',         'GET',  r'/auth/accounts/(\S+)'),
+			('tx_info',           'POST', r'/tx$'),
 			('check_tx',          'POST', r'/check_tx$'),
 			('broadcast_tx_sync', 'POST', r'/broadcast_tx_sync$'))
 

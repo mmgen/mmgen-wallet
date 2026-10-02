@@ -20,7 +20,7 @@ class Status(TxBase.Status):
 	async def display(self, *, idx=''):
 
 		try:
-			self.tx.rpc.get_tx_info(self.tx.coin_txid)
+			self.tx.rpc.tx_info(self.tx.coin_txid)
 		except Exception as e:
 			msg(f'{type(e).__name__}: {e}')
 			return 2

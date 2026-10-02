@@ -53,7 +53,7 @@ class help_notes:
 	def swaptxcreate_args(self):
 		return 'COIN1 [AMT CHG_ADDR] COIN2 [ADDR]'
 
-	def account_info_desc(self):
+	def acct_info_desc(self):
 		return 'unspent outputs' if self.proto.base_proto == 'Bitcoin' else 'account info'
 
 	def fee_spec_letters(self, *, use_quotes=False, proto=None):
