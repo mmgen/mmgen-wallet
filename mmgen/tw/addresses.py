@@ -333,9 +333,20 @@ class TwAddresses(TwView):
 				return e.is_used
 		return None # addr not in tracking wallet
 
+	def get_target(self, key_in):
+		return key_in
+
+	@staticmethod
+	def get_bisect_key(d):
+		return d.twmmid
+
+	@staticmethod
+	def get_match_key(d):
+		return d.al_id
+
 	def get_change_address(
 			self,
-			key_in,
+			key,
 			*,
 			bot             = None,
 			top             = None,
@@ -349,43 +360,23 @@ class TwAddresses(TwView):
 		    False: no unused addresses in wallet with requested AddrListID
 		"""
 
-		def get_start(bot, top):
-			"""
-			bisecting algorithm to find first entry matching requested match key
-
-			Since 'btc' > 'F' and target sorts below the first twmmid of the match key
-			stringwise, we can just search on raw twmmids.
-			"""
-
-			# bisect target key sorts just below the desired target and never matches the bisect key
-			pre_target_key = key + ':0'
-			n = top >> 1
-
-			while True:
-
-				if bot == top:
-					return bot if self.data[bot].al_id == key else None
-
-				if self.data[n].twmmid < pre_target_key:
-					bot = n + 1
-				else:
-					top = n
-
-				n = (top + bot) >> 1
-
 		assert self.sort_key == 'twmmid'
 		assert self.reverse is False
 
-		key = key_in
+		from ..algo import get_start
+		target = self.get_target(key)
 		start = get_start(
-			bot = 0             if bot is None else bot,
-			top = len(self.data) - 1 if top is None else top)
-
+			data            = self.data,
+			bot             = 0 if bot is None else bot,
+			top             = len(self.data) - 1 if top is None else top,
+			target          = target,
+			bisect_key_func = self.get_bisect_key,
+			match_key_func  = self.get_match_key)
 		if start is None:
 			return None
 
 		for d in self.data[start:]:
-			if d.al_id == key:
+			if self.get_match_key(d) == target:
 				if (
 						not d.is_used
 						and not d.twmmid in exclude
