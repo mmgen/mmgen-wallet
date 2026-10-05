@@ -28,6 +28,8 @@ class CmdTestRemote(CmdTestBase, CmdTestSwapMethods, CmdTestRuneMethods):
 		('health',              'checking health of THORChain network'),
 		('inbounds',            'getting inbound addresses (all coins)'),
 		('inbound_ltc',         'getting inbound address for LTC'),
+		('inbound_ltc_log',     'getting inbound addresses (all coins, logging to file)'),
+		('inbound_ltc_log_chk', 'checking log file'),
 		('lastblock',           'getting lastblock info'),
 		('lastblock_btc',       'getting lastblock info for BTC'),
 		('actions_addr',        'getting actions for address'),
@@ -41,10 +43,10 @@ class CmdTestRemote(CmdTestBase, CmdTestSwapMethods, CmdTestRuneMethods):
 			return
 		self.start_thornode_servers()
 
-	def ping(self, *, asset=None):
+	def ping(self):
 		return self._rune_remote('ping')
 
-	def health(self, *, asset=None):
+	def health(self):
 		return self._rune_remote('health')
 
 	def inbounds(self):
@@ -53,19 +55,28 @@ class CmdTestRemote(CmdTestBase, CmdTestSwapMethods, CmdTestRuneMethods):
 	def inbound_ltc(self):
 		return self._rune_remote('inbound_addrs', ['coin=ltc'])
 
-	def lastblock(self, *, asset=None):
+	def inbound_ltc_log(self):
+		return self._rune_remote('inbound_addrs', ['coin=ltc'], add_opts=['--log'])
+
+	def inbound_ltc_log_chk(self):
+		import json
+		self.spawn(msg_only=True)
+		json.loads(self.read_from_tmpfile('mmgen-remote-RUNE-inbound-addrs-coin=ltc.json'))
+		return 'ok'
+
+	def lastblock(self):
 		return self._rune_remote('lastblock')
 
-	def lastblock_btc(self, *, asset=None):
+	def lastblock_btc(self):
 		return self._rune_remote('lastblock', ['coin=btc'])
 
-	def actions_addr(self, *, asset=None):
+	def actions_addr(self):
 		return self._rune_remote('actions', ['addr=thor1abcdefg'])
 
-	def actions_txid(self, *, asset=None):
+	def actions_txid(self):
 		return self._rune_remote('actions', ['txid=deadbeef'])
 
-	def actions_addr_txid(self, *, asset=None):
+	def actions_addr_txid(self):
 		return self._rune_remote('actions', ['addr=thor1abcdefg', 'txid=deadbeef'])
 
 	def stop_servers(self):

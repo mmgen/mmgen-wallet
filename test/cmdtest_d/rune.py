@@ -77,10 +77,13 @@ class CmdTestRuneMethods:
 				return 'ok'
 		return t
 
-	def _rune_remote(self, cmd, cmd_args=(), color=True):
+	def _rune_remote(self, cmd, cmd_args=(), *, add_opts=[], color=True):
 		return self.spawn(
 			'mmgen-remote',
-			['--coin=rune', '--regtest=1', f'--color={int(color)}'] + [cmd] + list(cmd_args),
+				['--coin=rune', '--regtest=1', f'--color={int(color)}', f'--outdir={self.tmpdir}']
+				+ add_opts
+				+ [cmd]
+				+ list(cmd_args),
 			env = cleanup_env(self.cfg))
 
 class CmdTestRune(CmdTestRuneMethods, CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
