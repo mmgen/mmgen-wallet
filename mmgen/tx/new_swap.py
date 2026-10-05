@@ -49,16 +49,21 @@ class NewSwap(New):
 				self.get_addrdata_from_files(proto, addrfiles),
 				await TwAddrData(self.cfg, proto))
 			if pa.addr:
-				await self.warn_addr_used(proto, pa, desc)
+				await self.warn_addr_used(proto, pa, f'{desc} address')
 				return ret(proto.coin, proto.network, pa.addr, pa.mmid)
 
-		full_desc = f'{desc} on the {proto.coin} {proto.network} network'
-		res = await self.get_autochg_addr(proto, arg, exclude=[], desc=full_desc, all_addrtypes=not arg)
+		full_desc = f'{desc} address on the {proto.coin} {proto.network} network'
+		res = await self.get_autochg_addr(
+			proto,
+			arg,
+			exclude = [],
+			desc = full_desc,
+			match_all_addrtypes = not arg)
 		self.confirm_autoselected_addr(res.twmmid, full_desc)
 		return ret(proto.coin, proto.network, res.addr, res.twmmid)
 
 	async def get_chg_output(self, arg, addrfiles):
-		chg_output = await self.get_swap_output(self.proto, arg, addrfiles, 'change address')
+		chg_output = await self.get_swap_output(self.proto, arg, addrfiles, 'change')
 		self.check_addr_is_wallet_addr(
 			chg_output,
 			message = 'Change address is not an MMGen wallet address!')
@@ -97,7 +102,9 @@ class NewSwap(New):
 				arg = get_arg()
 
 			# arg 3: chg_spec (change address spec)
-			if args.send_amt and not (self.proto.is_vm or arg in sa.recv): # is change arg
+			if args.send_amt and not (
+					self.proto.is_vm or
+					arg in sa.recv): # is change arg
 				nonlocal chg_output
 				chg_output = await self.get_chg_output(arg, addrfiles)
 				arg = get_arg()
@@ -136,7 +143,7 @@ class NewSwap(New):
 			self.recv_proto,
 			args.recv_spec,
 			addrfiles,
-			'destination address')
+			'destination')
 
 		self.check_addr_is_wallet_addr(
 			recv_output,

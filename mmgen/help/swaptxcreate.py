@@ -53,10 +53,10 @@ user will be presented with a list of the lowest-indexed addresses of
 preferred type for each Seed ID and prompted to choose from among them.
 
 Change and destination addresses may also be specified manually with the
-CHG_ADDR and ADDR arguments.  These may be given as full MMGen IDs or in the
-form ADDRTYPE_CODE or SEED_ID:ADDRTYPE_CODE (see EXAMPLES below and the
-‘mmgen-txcreate’ help screen for details).  For Ethereum, the CHG_ADDR
-argument is not supported.
+CHG_ADDR and DEST_ADDR arguments.  These are given either as full MMGen IDs
+or in the form [SEED_ID:]ADDRTYPE_CODE, with the following exception: for
+Ethereum the CHG_ADDR argument is not supported.  See EXAMPLES below and the
+‘mmgen-txcreate’ help screen for details.
 
 While discouraged, sending change or swapping to non-wallet addresses is also
 supported, in which case the signing script (‘mmgen-txsign’ or ‘mmgen-

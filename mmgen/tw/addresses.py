@@ -332,7 +332,15 @@ class TwAddresses(TwView):
 				return e.is_used
 		return None # addr not in tracking wallet
 
-	def get_change_address(self, al_id, *, bot=None, top=None, exclude=None, desc=None):
+	def get_change_address(
+			self,
+			key_in,
+			*,
+			bot             = None,
+			top             = None,
+			exclude         = None,
+			desc            = None):
+
 		"""
 		Get lowest-indexed unused address in tracking wallet for requested AddrListID.
 		Return values on failure:
@@ -342,20 +350,22 @@ class TwAddresses(TwView):
 
 		def get_start(bot, top):
 			"""
-			bisecting algorithm to find first entry with requested al_id
+			bisecting algorithm to find first entry matching requested match key
 
-			Since 'btc' > 'F' and pre_target sorts below the first twmmid of the al_id
+			Since 'btc' > 'F' and target sorts below the first twmmid of the match key
 			stringwise, we can just search on raw twmmids.
 			"""
-			pre_target = al_id + ':0'
+
+			# bisect target key sorts just below the desired target and never matches the bisect key
+			pre_target_key = key + ':0'
 			n = top >> 1
 
 			while True:
 
 				if bot == top:
-					return bot if data[bot].al_id == al_id else None
+					return bot if self.data[bot].al_id == key else None
 
-				if data[n].twmmid < pre_target:
+				if self.data[n].twmmid < pre_target_key:
 					bot = n + 1
 				else:
 					top = n
@@ -365,18 +375,20 @@ class TwAddresses(TwView):
 		assert self.sort_key == 'twmmid'
 		assert self.reverse is False
 
-		data = self.data
+		key = key_in
 		start = get_start(
 			bot = 0             if bot is None else bot,
-			top = len(data) - 1 if top is None else top)
+			top = len(self.data) - 1 if top is None else top)
 
 		if start is not None:
-			for d in data[start:]:
-				if d.al_id == al_id:
+			for d in self.data[start:]:
+				if d.al_id == key:
 					if (
 							not d.is_used
 							and not d.twmmid in exclude
-							and (self.cfg.autochg_ignore_labels or not d.comment)
+							and (
+								self.cfg.autochg_ignore_labels or
+								not d.comment)
 						):
 						if d.comment:
 							msg('{} {} {} {}{}'.format(
@@ -384,8 +396,7 @@ class TwAddresses(TwView):
 								d.twmmid.hl(),
 								yellow('has a label,'),
 								d.comment.hl2(encl='‘’'),
-								yellow(f',\n  but allowing it for {desc} anyway by user request')
-							))
+								yellow(f',\n  but allowing it for {desc} anyway by user request')))
 						return d
 				else:
 					break

@@ -89,6 +89,7 @@ class New(Base):
 	chg_autoselected = False
 	_funds_available = namedtuple('funds_available', ['is_positive', 'amt'])
 	_net_fee = namedtuple('network_fee_estimate', ['fee', 'type'])
+	_cl_output = namedtuple('txcreate_cmdline_output', 'arg mmid addr amt data is_vault')
 
 	def warn_insufficient_funds(self, amt, coin):
 		msg(self.msg_insufficient_funds.format(amt.hl(), coin))
@@ -183,10 +184,8 @@ class New(Base):
 
 	def parse_cmdline_arg(self, proto, arg_in, ad_f, ad_w):
 
-		_pa = namedtuple('txcreate_cmdline_output', ['arg', 'mmid', 'addr', 'amt', 'data', 'is_vault'])
-
 		if data := self.process_data_output_arg(arg_in):
-			return _pa(arg_in, None, None, None, data, False)
+			return self._cl_output(arg_in, None, None, None, data, False)
 
 		arg, amt = arg_in.split(',', 1) if ',' in arg_in else (arg_in, None)
 
@@ -205,13 +204,21 @@ class New(Base):
 		else:
 			die(2, f'{arg_in}: invalid command-line argument')
 
-		return _pa(arg, mmid or None, coin_addr, amt, None, is_vault)
+		return self._cl_output(arg, mmid or None, coin_addr, amt, None, is_vault)
 
-	async def get_autochg_addr(self, proto, arg, *, exclude, desc, all_addrtypes=False):
+	async def get_autochg_addr(
+			self,
+			proto,
+			arg,
+			*,
+			exclude,
+			desc,
+			match_all_addrtypes = False):
+
 		from ..tw.addresses import TwAddresses
 		al = await TwAddresses(self.cfg, proto, get_data=True)
 
-		if all_addrtypes:
+		if match_all_addrtypes:
 			res = al.get_change_address_by_addrtype(None, exclude=exclude, desc=desc)
 			req_desc = 'of any allowed address type'
 		elif obj := get_obj(MMGenAddrType, proto=proto, id_str=arg, silent=True):
@@ -276,7 +283,9 @@ class New(Base):
 
 		if self.chg_output is not None:
 			if self.chg_autoselected and not self.is_swap: # swap TX, so user has already confirmed
-				self.confirm_autoselected_addr(self.chg_output.mmid, 'change address')
+				self.confirm_autoselected_addr(
+					self.chg_output.mmid,
+					'change address')
 			elif len(self.nondata_outputs) > 1:
 				await self.warn_addr_used(self.proto, self.chg_output, 'change address')
 

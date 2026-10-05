@@ -40,7 +40,6 @@ class MoneroTwAddresses(MoneroTwView, TwAddresses):
 
 	include_empty = True
 	has_used = True
-
 	prompt_fs_repl = {'XMR': (
 		(1, 'Filters: show [E]mpty addrs, [u]sed addrs, all [L]abels'),
 		(3, 'Actions: [q]uit menu, add [l]abel, [N]ew acct, [n]ew addr, [R]efresh bals:'))}
