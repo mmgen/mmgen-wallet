@@ -35,6 +35,7 @@ class TwAddresses(TwView):
 	showused = 1 # tristate: 0: no, 1: yes, 2: only
 	all_labels = False
 	autochg_ignore_labels = False # if set, this overrides the global cfg var of the same name
+	autochg_match_full_list = False
 	mod_subpath = 'tw.addresses'
 
 	prompt_fs_in = [
@@ -354,29 +355,33 @@ class TwAddresses(TwView):
 			desc            = None):
 
 		"""
-		Get lowest-indexed unused address in tracking wallet for requested AddrListID.
+		Get lowest-indexed unused address in tracking wallet matching requested key, if key is
+		given, else entire tracking wallet.
+
 		Return values on failure:
-		    None:  no addresses in wallet with requested AddrListID
-		    False: no unused addresses in wallet with requested AddrListID
+		    None:  no addresses in wallet matching requested key
+		    False: no unused addresses in wallet matching requested key, if key is given, else
+		           no unused addresses in entire wallet
 		"""
 
 		assert self.sort_key == 'twmmid'
 		assert self.reverse is False
 
-		from ..algo import get_start
-		target = self.get_target(key)
-		start = get_start(
-			data            = self.data,
-			bot             = 0 if bot is None else bot,
-			top             = len(self.data) - 1 if top is None else top,
-			target          = target,
-			bisect_key_func = self.get_bisect_key,
-			match_key_func  = self.get_match_key)
-		if start is None:
-			return None
+		if key:
+			from ..algo import get_start
+			target = self.get_target(key)
+			start = get_start(
+				data            = self.data,
+				bot             = 0 if bot is None else bot,
+				top             = len(self.data) - 1 if top is None else top,
+				target          = target,
+				bisect_key_func = self.get_bisect_key,
+				match_key_func  = self.get_match_key)
+			if start is None:
+				return None
 
-		for d in self.data[start:]:
-			if self.get_match_key(d) == target:
+		for d in (self.data[start:] if key else self.data):
+			if (not key) or self.get_match_key(d) == target:
 				if (
 						not d.is_used
 						and not d.twmmid in exclude

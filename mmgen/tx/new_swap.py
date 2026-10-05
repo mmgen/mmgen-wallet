@@ -53,12 +53,7 @@ class NewSwap(New):
 				return ret(proto.coin, proto.network, pa.addr, pa.mmid)
 
 		full_desc = f'{desc} address on the {proto.coin} {proto.network} network'
-		res = await self.get_autochg_addr(
-			proto,
-			arg,
-			exclude = [],
-			desc = full_desc,
-			match_all_addrtypes = not arg)
+		res = await self.get_autochg_addr(proto, arg, exclude=[], desc=full_desc)
 		self.confirm_autoselected_addr(res.twmmid, res.comment, full_desc)
 		return ret(proto.coin, proto.network, res.addr, res.twmmid)
 

@@ -206,19 +206,15 @@ class New(Base):
 
 		return self._cl_output(arg, mmid or None, coin_addr, amt, None, is_vault)
 
-	async def get_autochg_addr(
-			self,
-			proto,
-			arg,
-			*,
-			exclude,
-			desc,
-			match_all_addrtypes = False):
+	async def get_autochg_addr(self, proto, arg, *, exclude, desc):
 
 		from ..tw.addresses import TwAddresses
 		al = await TwAddresses(self.cfg, proto, get_data=True)
 
-		if match_all_addrtypes:
+		if arg is None and al.autochg_match_full_list:
+			res = al.get_change_address(None, exclude=exclude, desc=desc)
+			req_desc = None
+		elif arg is None:
 			res = al.get_change_address_by_addrtype(None, exclude=exclude, desc=desc)
 			req_desc = 'of any allowed address type'
 		elif obj := get_obj(MMGenAddrType, proto=proto, id_str=arg, silent=True):
@@ -231,9 +227,9 @@ class New(Base):
 		if res:
 			return res
 
-		die(2, 'Tracking wallet contains no {t}addresses {d}'.format(
+		die(2, 'Tracking wallet contains no {t}addresses{d}'.format(
 			t = '' if res is None else 'unused ',
-			d = req_desc))
+			d = ' ' + req_desc if req_desc else ''))
 
 	async def process_cmdline_args(self, cmd_args, ad_f, ad_w):
 
