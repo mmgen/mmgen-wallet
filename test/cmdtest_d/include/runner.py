@@ -64,7 +64,7 @@ class CmdTestRunner:
 		self.skipped_warnings = []
 		self.resume_cmd = None
 		self.deps_only = None
-		self.logging = self.cfg.log or os.getenv('MMGEN_TEST_SUITE_EXEC_WRAPPER')
+		self.logging = self.cfg.log or os.getenv('MMGEN_EXEC_WRAPPER')
 		self.testing_segwit = cfg.segwit or cfg.segwit_random or cfg.bech32
 		self.network_id = self.proto.coin.lower() + ('_tn' if self.proto.testnet else '')
 		self.daemon_started = False
@@ -114,7 +114,7 @@ class CmdTestRunner:
 			'MMGEN_TEST_SUITE_PEXPECT': '1',
 			'EXEC_WRAPPER_DO_RUNTIME_MSG':'1',
 			# if cmdtest.py itself is running under exec_wrapper, disable writing of traceback file for spawned script
-			'EXEC_WRAPPER_TRACEBACK': '' if os.getenv('MMGEN_TEST_SUITE_EXEC_WRAPPER') else '1'})
+			'EXEC_WRAPPER_TRACEBACK': '' if os.getenv('MMGEN_EXEC_WRAPPER') else '1'})
 
 		if self.cfg.dev_mode:
 			self.spawn_env.update({

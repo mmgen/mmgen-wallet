@@ -211,6 +211,8 @@ class Config(Lockable):
 	debug_subseed        = False
 	debug_tw             = False
 	traceback            = False
+	exec_wrapper         = False
+	devtools             = False
 
 	# rpc:
 	rpc_host              = ''
@@ -335,8 +337,10 @@ class Config(Lockable):
 		'MMGEN_DEBUG_RPC',
 		'MMGEN_DEBUG_SUBSEED',
 		'MMGEN_DEBUG_TW',
+		'MMGEN_DEVTOOLS',
 		'MMGEN_DISABLE_COLOR',
 		'MMGEN_ENABLE_ERIGON',
+		'MMGEN_EXEC_WRAPPER',
 		'MMGEN_FORCE_256_COLOR',
 		'MMGEN_HTTP_TIMEOUT',
 		'MMGEN_IGNORE_DAEMON_VERSION',

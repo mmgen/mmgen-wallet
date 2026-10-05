@@ -40,12 +40,10 @@ for k, v in {
 
 		# these are referenced in test suite only:
 		'test_suite_autosign_led_simulate':    False,
-		'test_suite_exec_wrapper':             False,
 		'test_suite_bogus_unspent_data':       '',
 		'test_suite_debug_utf8':               False,
 		'test_suite_deterministic':            False,
 		'test_suite_devnet_block_period':      0,
-		'test_suite_devtools':                 False,
 		'test_suite_enable_color':             False,
 		'test_suite_enable_user_port_shift':   False,
 		'test_suite_ignore_test_py_exception': False,
@@ -66,10 +64,8 @@ Config._env_opts += (
 	'MMGEN_TEST_SUITE_DEBUG_UTF8',
 	'MMGEN_TEST_SUITE_DETERMINISTIC',
 	'MMGEN_TEST_SUITE_DEVNET_BLOCK_PERIOD',
-	'MMGEN_TEST_SUITE_DEVTOOLS',
 	'MMGEN_TEST_SUITE_ENABLE_COLOR',
 	'MMGEN_TEST_SUITE_ENABLE_USER_PORT_SHIFT',
-	'MMGEN_TEST_SUITE_EXEC_WRAPPER', # main - using os.getenv() - OK
 	'MMGEN_TEST_SUITE_HOLD_PROTECT_DISABLE',
 	'MMGEN_TEST_SUITE_IGNORE_TEST_PY_EXCEPTION',
 	'MMGEN_TEST_SUITE_LEGACY_TX',
