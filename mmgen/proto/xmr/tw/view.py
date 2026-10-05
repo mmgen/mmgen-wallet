@@ -90,7 +90,7 @@ class MoneroTwView:
 						if bal or self.include_empty:
 							self.total += bal
 							self.unlocked_total += unlocked_bal
-							mmid = '{}:M:{}-{}/{}'.format(
+							mmid = '{}:M:{}/{}/{}'.format(
 								wdata['seed_id'],
 								wdata['wallet_num'],
 								acct_idx,

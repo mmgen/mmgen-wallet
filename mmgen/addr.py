@@ -141,11 +141,11 @@ class MMGenID(HiliteStr, InitErrors, MMGenObject):
 					mmtype = proto.dfl_mmtype
 				case _:
 					raise ValueError('not 2 or 3 colon-separated items')
-			if '-' in idx: # extended Monero ID
+			if '/' in idx: # extended Monero ID
 				assert proto.coin == 'XMR', 'extended MMGen IDs supported for XMR only'
 				assert id_str.count(':') == 2, 'mmtype letter required for extended MMGen IDs'
 				me = str.__new__(cls, id_str)
-				idx, ext = idx.split('-', 1)
+				idx, ext = idx.split('/', 1)
 				me.acct_idx, me.addr_idx = [MoneroIdx(e) for e in ext.split('/', 1)]
 				me.acct_id = f'{sid}:{mmtype}:{idx}:{me.acct_idx}'
 			else:
