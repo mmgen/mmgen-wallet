@@ -285,6 +285,7 @@ class New(Base):
 			if self.chg_autoselected and not self.is_swap: # swap TX, so user has already confirmed
 				self.confirm_autoselected_addr(
 					self.chg_output.mmid,
+					self.chg_output.comment,
 					'change address')
 			elif len(self.nondata_outputs) > 1:
 				await self.warn_addr_used(self.proto, self.chg_output, 'change address')
@@ -313,13 +314,14 @@ class New(Base):
 				msg(f'{type(e).__name__}: {e}')
 		return ad_f
 
-	def confirm_autoselected_addr(self, mmid, desc):
+	def confirm_autoselected_addr(self, mmid, lbl, desc):
 		from ..ui import keypress_confirm
 		keypress_confirm(
 			self.cfg,
-			'Using {a} as {b}. OK?'.format(
+			'Using {a}{b}as {c}. OK?'.format(
 				a = mmid.hl(),
-				b = 'single output address' if len(self.nondata_outputs) == 1 else desc),
+				b = ' {}\n  '.format(lbl.hl2(encl='()')) if lbl else ' ',
+				c = 'single output address' if len(self.nondata_outputs) == 1 else desc),
 			default_yes = True,
 			do_exit = True)
 

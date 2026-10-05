@@ -59,7 +59,7 @@ class NewSwap(New):
 			exclude = [],
 			desc = full_desc,
 			match_all_addrtypes = not arg)
-		self.confirm_autoselected_addr(res.twmmid, full_desc)
+		self.confirm_autoselected_addr(res.twmmid, res.comment, full_desc)
 		return ret(proto.coin, proto.network, res.addr, res.twmmid)
 
 	async def get_chg_output(self, arg, addrfiles):
