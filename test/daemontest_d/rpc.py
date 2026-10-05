@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.daemontest_d.rpc: RPC unit test for the MMGen suite
 """

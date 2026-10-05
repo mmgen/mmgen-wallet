@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Source: https://github.com/monero-project/monero/blob/master/src/mnemonics/english.h
 
 words = tuple("""

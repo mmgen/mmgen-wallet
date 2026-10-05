@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Created using scripts/create-bip-hd-chain-params.py
 # Source data:
 #   https://github.com/MetaMask/slip44/blob/main/slip44.json (1bc984bee)

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # MMGen Wallet, a terminal-based cryptocurrency wallet
 # Copyright (C)2013-2026 The MMGen Project <mmgen@tuta.io>
 

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.daemontest_d.msg: message signing unit tests for the MMGen suite
 """

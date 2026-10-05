@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.modtest_d.baseconv: Base conversion unit test for the MMGen suite
 """

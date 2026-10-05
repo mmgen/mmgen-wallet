@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.modtest_d.bip_hd: bip_hd unit test for the MMGen suite
 """

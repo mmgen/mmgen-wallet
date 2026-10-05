@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.modtest_d.subseed: subseed unit tests for the MMGen suite
 """

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.modtest_d.cashaddr: unit test for the BCH cashaddr module
 """

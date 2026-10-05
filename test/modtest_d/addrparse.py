@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.modtest_d.addrparse: address parsing tests for the MMGen suite
 """

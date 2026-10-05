@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.modtest_d.scrypt: password hashing unit test for the MMGen suite
 """

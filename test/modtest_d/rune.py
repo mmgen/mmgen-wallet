@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+"""
+test.modtest_d.rune: RUNE unit tests for the MMGen suite
+"""
 
 import os
 from collections import namedtuple

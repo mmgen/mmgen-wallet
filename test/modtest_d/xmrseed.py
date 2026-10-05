@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.modtest_d.xmrseed: Monero mnemonic unit test for the MMGen suite
 """

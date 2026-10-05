@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.modtest_d.gen: key/address generation unit tests for the MMGen suite
 """

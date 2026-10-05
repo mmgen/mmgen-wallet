@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 test.modtest_d.dep: dependency unit tests for the MMGen suite
 
