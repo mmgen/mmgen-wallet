@@ -381,28 +381,31 @@ class TwAddresses(TwView):
 			bot = 0             if bot is None else bot,
 			top = len(self.data) - 1 if top is None else top)
 
-		if start is not None:
-			for d in self.data[start:]:
-				if d.al_id == key:
-					if (
-							not d.is_used
-							and not d.twmmid in exclude
-							and (
-								self.cfg.autochg_ignore_labels or
-								self.autochg_ignore_labels or
-								not d.comment)
-						):
-						if d.comment and not self.autochg_ignore_labels:
-							msg('{} {} {} {}{}'.format(
-								yellow('WARNING: address'),
-								d.twmmid.hl(),
-								yellow('has a label,'),
-								d.comment.hl2(encl='‘’'),
-								yellow(f',\n  but allowing it for {desc} anyway by user request')))
-						return d
-				else:
-					break
-			return False
+		if start is None:
+			return None
+
+		for d in self.data[start:]:
+			if d.al_id == key:
+				if (
+						not d.is_used
+						and not d.twmmid in exclude
+						and (
+							self.cfg.autochg_ignore_labels or
+							self.autochg_ignore_labels or
+							not d.comment)
+					):
+					if d.comment and not self.autochg_ignore_labels:
+						msg('{} {} {} {}{}'.format(
+							yellow('WARNING: address'),
+							d.twmmid.hl(),
+							yellow('has a label,'),
+							d.comment.hl2(encl='‘’'),
+							yellow(f',\n  but allowing it for {desc} anyway by user request')))
+					return d
+			else:
+				break
+
+		return False
 
 	def get_change_address_by_addrtype(self, mmtype, *, exclude, desc):
 		"""
