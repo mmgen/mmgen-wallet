@@ -34,6 +34,7 @@ class TwAddresses(TwView):
 	showempty = True
 	showused = 1 # tristate: 0: no, 1: yes, 2: only
 	all_labels = False
+	autochg_ignore_labels = False # if set, this overrides the global cfg var of the same name
 	mod_subpath = 'tw.addresses'
 
 	prompt_fs_in = [
@@ -388,9 +389,10 @@ class TwAddresses(TwView):
 							and not d.twmmid in exclude
 							and (
 								self.cfg.autochg_ignore_labels or
+								self.autochg_ignore_labels or
 								not d.comment)
 						):
-						if d.comment:
+						if d.comment and not self.autochg_ignore_labels:
 							msg('{} {} {} {}{}'.format(
 								yellow('WARNING: address'),
 								d.twmmid.hl(),
