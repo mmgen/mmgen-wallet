@@ -250,6 +250,8 @@ class Base(MMGenObject):
 		rpc = await rpc_init(self.cfg, proto)
 		data = rpc.inbound_addrs()
 		for asset in (self.send_asset, self.recv_asset):
+			if asset.name == 'RUNE':
+				continue
 			for key, state in (
 					('global_trading_paused', 'paused'),
 					('chain_trading_paused',  f'paused for asset {asset.name}'),

@@ -11,7 +11,7 @@ mmgen-remote: Retrieve data from a remote JSON-RPC server
 """
 
 from .cfg import Config
-from .util import Msg, die, fmt_list, async_run
+from .util import Msg, die, fmt_list
 
 opts_data = {
 	'filter_codes': ['-'],
@@ -49,7 +49,7 @@ def log(text, cmd, args, kwargs):
 	from .fileutil import write_data_to_file
 	write_data_to_file(cfg, fn, text)
 
-async def main():
+def main():
 	from .tool import get_cmds, process_args
 
 	match cfg.coin:
@@ -82,4 +82,4 @@ async def main():
 		case _:
 			cfg._usage()
 
-async_run(cfg, main)
+main()

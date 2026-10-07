@@ -48,6 +48,7 @@ init_tests() {
 		a $objtest_py --coin=ltc
 		a $objtest_py --coin=ltc --testnet=1
 		a $objtest_py --coin=eth
+		a $objtest_py --coin=xmr
 		x $objattrtest_py
 	"
 	[ "$SKIP_ALT_DEP" ] && t_obj_skip='a'
@@ -266,7 +267,7 @@ init_tests() {
 
 	d_ltc="overall operations with emulated RPC data (Litecoin)"
 	t_ltc="
-		- $cmdtest_py --coin=ltc --exclude regtest,autosign_automount,help
+		- $cmdtest_py --coin=ltc --exclude regtest,autosign_automount,help,runeswap
 		- $cmdtest_py --coin=ltc --segwit
 		- $cmdtest_py --coin=ltc --segwit-random
 		- $cmdtest_py --coin=ltc --bech32

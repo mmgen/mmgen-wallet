@@ -15,6 +15,9 @@ import json
 from ....http import RemoteJSONClient
 from ....rpc.remote import RemoteRPCClient
 
+def make_query_string(kwargs):
+	return '&'.join(f'{k}={v}' for k, v in kwargs.items() if v)
+
 # throws exception on error:
 def process_response(json_response, errmsg):
 	data = json.loads(json_response)
@@ -26,16 +29,16 @@ def process_response(json_response, errmsg):
 	return data
 
 # HTTP POST, JSON-RPC response:
-class ThornodeRemoteRPCClient(RemoteJSONClient):
+class RPCClient(RemoteJSONClient):
 	params = 'rpc_remote_rpc_params'
 	timeout = 30
 
-# HTTP GET, params in query string, JSON-RPC response:
-class ThornodeRemoteRESTClient(RemoteJSONClient):
+# HTTP GET, JSON-RPC response:
+class RESTClient(RemoteJSONClient): # same endpoint as RPCClient for test suite
 	params = 'rpc_remote_rest_params'
 	timeout = 15
 
-class ThornodeRemoteMidgardClient(RemoteJSONClient):
+class MidgardClient(RemoteJSONClient):
 	params = 'rpc_remote_midgard_params'
 	timeout = 30
 
@@ -61,9 +64,9 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 			setattr(self, k, v)
 		super().__init__(cfg, proto)
 		self.caps = ('lbl_id',)
-		self.rest_api = ThornodeRemoteRESTClient(cfg, proto)
-		self.rpc_api = ThornodeRemoteRPCClient(cfg, proto)
-		self.midgard_api = ThornodeRemoteMidgardClient(cfg, proto)
+		self.rest_api = RESTClient(cfg, proto)
+		self.rpc_api = RPCClient(cfg, proto)
+		self.midgard_api = MidgardClient(cfg, proto)
 
 	@staticmethod
 	def data_for_coin(ret, coin):
@@ -102,7 +105,7 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 	def actions(self, *, addr: str=None, txid: str=None): # noqa: RUF013
 		"get actions for a given address or TxID"
 		assert addr or txid, 'one of addr or txid must be specified'
-		qs = '&'.join(f'{k}={v}' for k, v in (('address', addr), ('txid', txid)) if v)
+		qs = make_query_string({'address': addr, 'txid': txid})
 		return process_response(
 			self.midgard_api.get(path=f'/v2/actions?{qs}'),
 			errmsg = 'get actions info failed')
