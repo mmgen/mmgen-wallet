@@ -476,12 +476,12 @@ def dump_test(proto, kg, ag, filename):
 
 def get_protos(proto, addr_type, toolname):
 
-	init_genonly_altcoins(testnet=proto.testnet)
+	init_genonly_altcoins(network=proto.network)
 
 	for coin in cinfo.external_tests[proto.network][toolname]:
 		if coin.lower() not in CoinProtocol.coins:
 			continue
-		ret = init_proto(cfg, coin, testnet=proto.testnet)
+		ret = init_proto(cfg, coin, network=proto.network)
 		if addr_type not in ret.mmtypes:
 			continue
 		yield ret

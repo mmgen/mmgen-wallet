@@ -301,33 +301,27 @@ def init_proto(
 		cfg,
 		coin       = None,
 		*,
-		testnet    = False,
-		regtest    = False,
 		network    = None,
 		network_id = None,
 		tokensym   = None,
 		need_amt   = False,
 		return_cls = False):
 
-	assert type(testnet) is bool, 'init_proto_chk1'
-	assert type(regtest) is bool, 'init_proto_chk2'
-	assert coin or network_id, 'init_proto_chk3'
-	assert not (coin and network_id), 'init_proto_chk4'
+	assert coin or network_id, 'init_proto_chk1'
+	assert not (coin and network_id), 'init_proto_chk2'
 
 	if network_id:
 		coin, network = CoinProtocol.Base.parse_network_id(network_id)
 	elif network:
-		assert network in CoinProtocol.Base.networks, f'init_proto_chk5 - {network!r}: invalid network'
-		assert testnet is False, 'init_proto_chk6'
-		assert regtest is False, 'init_proto_chk7'
+		assert network in CoinProtocol.Base.networks, f'init_proto_chk3 - {network!r}: invalid network'
 	else:
-		network = 'regtest' if regtest else 'testnet' if testnet else 'mainnet'
+		network = cfg.network
 
 	coin = coin.lower()
 
 	if coin not in CoinProtocol.coins:
 		from .altcoin.params import init_genonly_altcoins
-		init_genonly_altcoins(coin, testnet=testnet) # raises exception on failure
+		init_genonly_altcoins(coin, network=network) # raises exception on failure
 
 	name = CoinProtocol.coins[coin].name
 	proto_name = name + ('' if network == 'mainnet' else network.capitalize())

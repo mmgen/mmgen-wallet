@@ -87,7 +87,6 @@ class Completed(Base):
 				proto = init_proto(
 						self.cfg,
 						r.coin,
-						network = self.cfg.network,
 						tokensym = r.tokensym,
 						need_amt = True)
 				if mmid := getattr(self, 'swap_recv_addr_mmid', None):

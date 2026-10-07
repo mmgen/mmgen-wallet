@@ -81,7 +81,7 @@ class MMGenRegtest(MMGenObject):
 
 		assert self.coin in self.coins, f'{coin!r}: invalid coin for regtest'
 
-		self.proto = init_proto(cfg, self.coin, regtest=True, need_amt=True)
+		self.proto = init_proto(cfg, self.coin, network='regtest', need_amt=True)
 		self.d = CoinDaemon(
 			cfg,
 			network_id = self.coin + '_rt',
@@ -305,7 +305,7 @@ class MMGenRegtest(MMGenObject):
 
 	async def fork(self, coin): # currently disabled
 
-		proto = init_proto(self.cfg, coin, testnet=False)
+		proto = init_proto(self.cfg, coin)
 		if not [f for f in proto.forks if f[2] == proto.coin.lower() and f[3] is True]:
 			die(1, f'Coin {proto.coin} is not a replayable fork of coin {coin}')
 

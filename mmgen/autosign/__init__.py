@@ -165,7 +165,7 @@ class Autosign:
 	async def check_daemons_running(self):
 		from ..protocol import init_proto
 		for coin in self.coins:
-			proto = init_proto(self.cfg,  coin, network=self.cfg.network, need_amt=True)
+			proto = init_proto(self.cfg,  coin, need_amt=True)
 			if proto.sign_mode == 'daemon':
 				self.cfg._util.vmsg(f'Checking {coin} daemon')
 				from ..rpc import rpc_init

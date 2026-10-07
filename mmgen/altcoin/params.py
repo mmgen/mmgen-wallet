@@ -288,7 +288,7 @@ def make_proto(e, *, testnet=False):
 				'dfl_mmtype': 'L',
 				'mmcaps':     ()}))
 
-def init_genonly_altcoins(usr_coin=None, *, testnet=False):
+def init_genonly_altcoins(usr_coin=None, *, network=None):
 	"""
 	Initialize altcoin protocol class or classes for current network.
 	If usr_coin is a core coin, initialization is skipped.
@@ -298,8 +298,8 @@ def init_genonly_altcoins(usr_coin=None, *, testnet=False):
 	"""
 
 	data = {'mainnet': (), 'testnet': ()}
-	networks = ['mainnet'] + (['testnet'] if testnet else [])
-	network = 'testnet' if testnet else 'mainnet'
+	network = 'testnet' if network in ('testnet', 'regtest') else 'mainnet'
+	networks = ['mainnet'] + (['testnet'] if network == 'testnet' else [])
 
 	if usr_coin is None:
 		for network in networks:

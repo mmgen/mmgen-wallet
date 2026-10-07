@@ -32,8 +32,7 @@ class Thornode:
 	def __init__(self, tx, amt):
 		self.tx = tx
 		self.in_amt = UniAmt(f'{amt:.8f}')
-		proto = init_proto(tx.cfg, 'rune', network=tx.cfg._proto.network)
-		self.rpc = ThornodeSwapClient(tx.cfg, proto)
+		self.rpc = ThornodeSwapClient(tx.cfg, init_proto(tx.cfg, 'rune'))
 
 	def get_quote(self, swap_cfg):
 

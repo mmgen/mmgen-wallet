@@ -246,7 +246,7 @@ class Base(MMGenObject):
 	async def check_swap_network(self):
 		from ..protocol import init_proto
 		from ..rpc import rpc_init
-		proto = init_proto(self.cfg, self.swap_proto_mod.coin, network=self.cfg.network)
+		proto = init_proto(self.cfg, self.swap_proto_mod.coin)
 		rpc = await rpc_init(self.cfg, proto)
 		data = rpc.inbound_addrs()
 		for asset in (self.send_asset, self.recv_asset):

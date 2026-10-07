@@ -62,7 +62,7 @@ class OpBase:
 
 		hdr_addr_width = 95 if self.cfg.full_address else short_addr_width
 
-		self.proto = init_proto(cfg, 'xmr', network=self.cfg.network, need_amt=True)
+		self.proto = init_proto(cfg, 'xmr', need_amt=True)
 
 		id_cur = None
 		for cls in classes:
