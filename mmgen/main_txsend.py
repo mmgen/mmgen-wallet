@@ -176,7 +176,7 @@ async def process_tx(tx):
 			return 0
 
 		if tx.is_swap:
-			await tx.check_swap_network()
+			tx.check_swap_network()
 			if not tx.check_swap_expiry():
 				die(1, 'Swap quote has expired. Please re-create the transaction')
 

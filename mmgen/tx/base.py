@@ -222,6 +222,11 @@ class Base(MMGenObject):
 
 	# swap methods:
 	@cached_property
+	def swap_proto_rpc(self):
+		from ..swap.util import get_swap_proto_rpc
+		return get_swap_proto_rpc(self.cfg, self.swap_proto_mod.coin)
+
+	@cached_property
 	def swap_proto_mod(self):
 		from ..swap.util import get_swap_proto_mod
 		return get_swap_proto_mod(self.swap_proto)
@@ -243,11 +248,8 @@ class Base(MMGenObject):
 			x = '[unknown]'
 			return SwapAsset._ad(x, x, x, x, x)
 
-	async def check_swap_network(self):
-		from ..protocol import init_proto
-		from ..rpc import rpc_init
-		proto = init_proto(self.cfg, self.swap_proto_mod.coin)
-		rpc = await rpc_init(self.cfg, proto)
+	def check_swap_network(self):
+		rpc = self.swap_proto_rpc
 		data = rpc.inbound_addrs()
 		for asset in (self.send_asset, self.recv_asset):
 			if asset.name == 'RUNE':

@@ -54,8 +54,10 @@ def main():
 
 	match cfg.coin:
 		case 'RUNE':
-			from .proto.rune.rpc.remote import THORChainRemoteRPCClient as cls
-			cmds = get_cmds(cls.mods)
+			from .rpc import get_remote_rpc
+			from .protocol import init_proto
+			rpc = get_remote_rpc(cfg, init_proto(cfg, cfg.coin))
+			cmds = get_cmds(rpc.mods)
 		case _:
 			cmds = ()
 
@@ -66,13 +68,13 @@ def main():
 		case ['help', cmd]:
 			if cmd in cmds:
 				from .tool.help import gen_tool_cmd_usage
-				Msg('\n'.join(gen_tool_cmd_usage(None, cmd, lambda x: cls)))
+				Msg('\n'.join(gen_tool_cmd_usage(None, cmd, lambda x: rpc)))
 			else:
 				fs = '‘{}’: invalid command\n\nSupported commands:\n{}'
 				die(1, fs.format(cmd, fmt_list(cmds, fmt='col', indent=' ' * 4)))
 		case [cmd, *cmd_args] if cmd in cmds:
-			args, kwargs = process_args(cmd, cmd_args, cls)
-			res = getattr(cls(cfg, cfg._proto), cmd)(*args, **kwargs)
+			args, kwargs = process_args(cmd, cmd_args, rpc)
+			res = getattr(rpc, cmd)(*args, **kwargs)
 			import json
 			from .ui import colorize_json
 			text = json.dumps(res, indent=2)

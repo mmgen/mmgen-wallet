@@ -15,6 +15,11 @@ import importlib
 from ..util import die, fmt, fmt_list
 from ..obj import NonNegativeInt
 
+def get_remote_rpc(cfg, proto):
+	return getattr(importlib.import_module(
+		f'mmgen.proto.{proto.base_proto_coin.lower()}.rpc.remote'),
+			proto.base_proto + 'RemoteRPCClient')(cfg=cfg, proto=proto)
+
 async def rpc_init(
 		cfg,
 		proto                 = None,
@@ -30,9 +35,7 @@ async def rpc_init(
 		die(1, f'rpc_init() not supported for {proto.name} protocol!')
 
 	if proto.rpc_type == 'remote':
-		return getattr(importlib.import_module(
-			f'mmgen.proto.{proto.base_proto_coin.lower()}.rpc.remote'),
-				proto.base_proto + 'RemoteRPCClient')(cfg=cfg, proto=proto)
+		return get_remote_rpc(cfg, proto)
 
 	from ..daemon import CoinDaemon
 
