@@ -809,7 +809,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 	def keystore_data(self):
 		if not hasattr(self, '_keystore_data'):
 
-			wallet_fn = os.path.join( self.keystore_dir, os.listdir(self.keystore_dir)[0])
+			wallet_fn = os.path.join(self.keystore_dir, os.listdir(self.keystore_dir)[0])
 
 			from mmgen.proto.eth.util import decrypt_geth_keystore
 			key = decrypt_geth_keystore(
@@ -820,7 +820,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 			with open(wallet_fn) as fh:
 				res = json.loads(fh.read())
 
-			res.update( { 'key': key.hex()})
+			res.update({'key': key.hex()})
 			self._keystore_data = res
 
 		return self._keystore_data
@@ -871,7 +871,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 				'excessBlobGas': None,
 				'blobGasUsed': None,
 				'alloc': {
-					prealloc_addr: { 'balance': hex(prealloc_amt.toWei())}
+					prealloc_addr: {'balance': hex(prealloc_amt.toWei())}
 				}
 			}
 
@@ -898,7 +898,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		imsg(f'  Genesis block data: {self.genesis_fn}')
 
 		genesis_data = make_genesis(signer_addr, dfl_devaddr)
-		write_to_file( self.genesis_fn, json.dumps(genesis_data, indent='  ')+'\n')
+		write_to_file(self.genesis_fn, json.dumps(genesis_data, indent='  ') + '\n')
 		init_genesis(self.genesis_fn)
 
 	def daemon_version(self):

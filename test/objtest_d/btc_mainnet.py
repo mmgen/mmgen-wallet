@@ -312,16 +312,18 @@ tests = {
 	'TwComment': {
 		'exc_name': 'BadTwComment',
 		'arg1': 's',
-		'bad': (    utf8_combining[:40],
-					utf8_ctrl[:40],
-					text_jp[:41],
-					text_zh[:41],
-					gr_uc_w_ctrl,
-					utf8_text[:81]),
-		'good': (  utf8_text[:80],
-					(ru_uc + gr_uc + utf8_text)[:80],
-					text_jp[:40],
-					text_zh[:40])
+		'bad': (
+			utf8_combining[:40],
+			utf8_ctrl[:40],
+			text_jp[:41],
+			text_zh[:41],
+			gr_uc_w_ctrl,
+			utf8_text[:81]),
+		'good': (
+			utf8_text[:80],
+			(ru_uc + gr_uc + utf8_text)[:80],
+			text_jp[:40],
+			text_zh[:40])
 	},
 	'MMGenTxComment': {
 		'arg1': 's',

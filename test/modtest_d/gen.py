@@ -69,7 +69,7 @@ def do_test(proto, wif, addr_chk, addr_type, internal_keccak):
 			if v and k in ('pubkey', 'viewkey_bytes'):
 				qmsg(f'    {k+":":19} {v.hex()}')
 
-		ag = AddrGenerator( cfg, proto, addr_type)
+		ag = AddrGenerator(cfg, proto, addr_type)
 		addr = ag.to_addr(data)
 		qmsg(f'    addr:               {addr}\n')
 
@@ -78,7 +78,7 @@ def do_test(proto, wif, addr_chk, addr_type, internal_keccak):
 	cfg.use_internal_keccak_module = False
 
 def do_tests(coin, internal_keccak=False):
-	proto = init_proto( cfg, coin)
+	proto = init_proto(cfg, coin)
 	for wif, addr, addr_type in vectors[coin]:
 		do_test(proto, wif, addr, addr_type, internal_keccak)
 	return True
