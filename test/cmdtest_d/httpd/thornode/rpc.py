@@ -51,6 +51,12 @@ class ThornodeRPCServer(ThornodeServer):
 
 	inbounds_info = get_inbounds_info()
 
+	chain_var_actions = {
+		'ltc_global_paused': ('inbounds_info', 'LTC', 'global_trading_paused'),
+		'ltc_paused':        ('inbounds_info', 'LTC', 'chain_trading_paused'),
+		'ltc_halted':        ('inbounds_info', 'LTC', 'halted'),
+		'bch_halted':        ('inbounds_info', 'BCH', 'halted')}
+
 	def make_response_body(self, method, environ):
 
 		class responses:

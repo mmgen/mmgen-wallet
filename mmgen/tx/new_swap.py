@@ -121,6 +121,8 @@ class NewSwap(New):
 
 		await parse()
 
+		await self.check_swap_network()
+
 		for asset in (self.send_asset, self.recv_asset):
 			if asset.name not in sa.tested:
 				from ..util import msg, ymsg

@@ -243,6 +243,20 @@ class Base(MMGenObject):
 			x = '[unknown]'
 			return SwapAsset._ad(x, x, x, x, x)
 
+	async def check_swap_network(self):
+		from ..protocol import init_proto
+		from ..rpc import rpc_init
+		proto = init_proto(self.cfg, self.swap_proto_mod.coin, network=self.cfg.network)
+		rpc = await rpc_init(self.cfg, proto)
+		data = rpc.inbound_addrs()
+		for asset in (self.send_asset, self.recv_asset):
+			for key, state in (
+					('global_trading_paused', 'paused'),
+					('chain_trading_paused',  f'paused for asset {asset.name}'),
+					('halted',                f'halted for asset {asset.name}')):
+				if rpc.data_for_coin(data, asset.coin)[key]:
+					die(2, f'Trading is {state} on the {self.swap_proto_mod.name} network')
+
 	# token methods:
 	@property
 	def token_op(self):

@@ -124,8 +124,8 @@ class CmdTestSwapMethods:
 			exit_val = exit_val,
 			no_passthru_opts = ['coin'])
 
-	def _swaptxcreate_bad(self, args, *, exit_val=1, expect1=None, expect2=None):
-		t = self._swaptxcreate(args, exit_val=exit_val)
+	def _swaptxcreate_bad(self, args, *, add_opts=[], exit_val=1, expect1=None, expect2=None):
+		t = self._swaptxcreate(args, add_opts=add_opts, exit_val=exit_val)
 		if expect1:
 			t.expect(expect1)
 		if expect2:
@@ -297,6 +297,7 @@ class CmdTestSwap(
 		('subgroup.init_swap',       []),
 		('subgroup.create',          ['init_swap']),
 		('subgroup.create_bad',      ['init_swap']),
+		('subgroup.create_neterror', ['init_swap']),
 		('subgroup.signsend',        ['init_swap']),
 		('subgroup.signsend_bad',    ['init_swap']),
 		('subgroup.autosign',        ['signsend']),
@@ -345,6 +346,12 @@ class CmdTestSwap(
 			('swaptxcreate_bad8',  'creating a swap transaction (bad, non-MMGen change address)'),
 			('swaptxcreate_bad9',  'creating a swap transaction (bad, invalid addrtype)'),
 		),
+		'create_neterror': (
+			'Swap TX create operations: network error handling',
+			('swaptxcreate_neterror1', 'creating a swap transaction (network error, trading paused)'),
+			('swaptxcreate_neterror2', 'creating a swap transaction (network error, trading for coin paused)'),
+			('swaptxcreate_neterror3', 'creating a swap transaction (network error, trading for coin halted)'),
+		),
 		'signsend': (
 			'Swap TX create, sign and send operations (LTC => BCH)',
 			('swaptxsign1_create', 'creating a swap transaction (full args)'),
@@ -376,6 +383,8 @@ class CmdTestSwap(
 			('swaptxsign_bad1',        'signing the transaction (non-wallet swap address)'),
 			('swaptxsign_bad2_create', 'creating a swap transaction'),
 			('swaptxsign_bad2',        'signing the transaction'),
+			('swaptxsend_neterror1',   'sending the transaction (LTC swaps halted)'),
+			('swaptxsend_neterror2',   'sending the transaction (BCH swaps halted)'),
 			('swaptxsend_bad2',        'sending the transaction (swap quote expired)'),
 		),
 		'autosign': (
@@ -567,6 +576,23 @@ class CmdTestSwap(
 	def swaptxcreate_bad9(self):
 		return self._swaptxcreate_bad(['BCH', '1.234', 'S', 'LTC', 'B'], exit_val=2, expect1='invalid command-')
 
+	def swaptxcreate_neterror1(self):
+		return self._swaptxcreate_neterror('ltc_global_paused', 'Trading is paused on the')
+
+	def swaptxcreate_neterror2(self):
+		return self._swaptxcreate_neterror('ltc_paused', 'Trading is paused for asset')
+
+	def swaptxcreate_neterror3(self):
+		return self._swaptxcreate_neterror('ltc_halted', 'Trading is halted for asset')
+
+	def _swaptxcreate_neterror(self, key, expect_str, *, add_opts=[]):
+		if key:
+			self.rpc_server.setvar(key, True)
+		ret = self._swaptxcreate_bad(['BCH', 'LTC'], add_opts=add_opts, exit_val=2, expect1=expect_str)
+		if key:
+			self.rpc_server.setvar(key, False)
+		return ret
+
 	def swaptxsign1_create(self):
 		return self._swaptxcreate_ui_common(
 			self._swaptxcreate(['LTC', '4.321', f'{self.sid}:S:2', 'BCH', f'{self.sid}:C:2']))
@@ -641,6 +667,20 @@ class CmdTestSwap(
 
 	def swaptxsign_bad2(self):
 		return self._swaptxsign()
+
+	def swaptxsend_neterror1(self):
+		return self._swaptxsend_bad_neterror('ltc_halted')
+
+	def swaptxsend_neterror2(self):
+		return self._swaptxsend_bad_neterror('bch_halted')
+
+	def _swaptxsend_bad_neterror(self, key):
+		fn = self.get_file_with_ext('sigtx')
+		self.rpc_server.setvar(key, True)
+		t = self.spawn('mmgen-txsend', ['-d', self.tmpdir, '--bob', fn], exit_val=2)
+		t.expect('halted')
+		self.rpc_server.setvar(key, False)
+		return t
 
 	def swaptxsend_bad2(self):
 		fn = self.get_file_with_ext('sigtx')

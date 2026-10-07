@@ -13,6 +13,7 @@ swap.proto.thorchain: THORChain swap protocol implementation for the MMGen Walle
 __all__ = ['SwapCfg', 'SwapAsset', 'Memo']
 
 name = 'THORChain'
+coin = 'RUNE'
 exp_prec = 4
 
 from ....util2 import ExpInt
