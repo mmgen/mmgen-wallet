@@ -15,3 +15,23 @@ from .. import HTTPD
 class ThornodeServer(HTTPD):
 	name = 'thornode server'
 	content_type = 'application/json'
+
+	var_actions = {}
+	chain_var_actions = {}
+
+	def get_idx(self, key, coin):
+		return next(n for n, e in enumerate(getattr(self, key)) if e['chain'] == coin)
+
+	def set_var(self, key, name, val):
+		getattr(self, key)[name] = val
+
+	def set_chain_var(self, key, chain, name, val):
+		getattr(self, key)[self.get_idx(key, chain)][name] = val
+
+	def setvar(self, name, val):
+		if name in self.var_actions:
+			self.set_var(*self.var_actions[name], val)
+		elif name in self.chain_var_actions:
+			self.set_chain_var(*self.chain_var_actions[name], val)
+		else:
+			raise ValueError(f'{name!r}: unrecognized action')
