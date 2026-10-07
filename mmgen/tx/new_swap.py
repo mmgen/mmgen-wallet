@@ -121,11 +121,11 @@ class NewSwap(New):
 
 		await parse()
 
-		for a in (self.send_asset, self.recv_asset):
-			if a.name not in sa.tested:
+		for asset in (self.send_asset, self.recv_asset):
+			if asset.name not in sa.tested:
 				from ..util import msg, ymsg
 				from ..term import get_char
-				ymsg(f'Warning: {a.direction} asset {a.name} is untested by the MMGen Project')
+				ymsg(f'Warning: {asset.direction} asset {asset.name} is untested by the MMGen Project')
 				get_char('Press any key to continue: ')
 				msg('')
 

@@ -293,15 +293,15 @@ class CmdTestSwap(
 	subseed_idx = '29L'
 
 	cmd_group_in = (
-		('list_assets',           'listing swap assets'),
-		('subgroup.init_swap',    []),
-		('subgroup.create',       ['init_swap']),
-		('subgroup.create_bad',   ['init_swap']),
-		('subgroup.signsend',     ['init_swap']),
-		('subgroup.signsend_bad', ['init_swap']),
-		('subgroup.autosign',     ['signsend']),
-		('stop_thornode_servers', 'stopping the Thornode RPC and swap servers'),
-		('stop',                  'stopping regtest daemons'))
+		('list_assets',              'listing swap assets'),
+		('subgroup.init_swap',       []),
+		('subgroup.create',          ['init_swap']),
+		('subgroup.create_bad',      ['init_swap']),
+		('subgroup.signsend',        ['init_swap']),
+		('subgroup.signsend_bad',    ['init_swap']),
+		('subgroup.autosign',        ['signsend']),
+		('stop_thornode_servers',    'stopping the Thornode RPC and swap servers'),
+		('stop',                     'stopping regtest daemons'))
 
 	cmd_subgroups = {
 		'init_swap': (

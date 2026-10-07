@@ -25,9 +25,6 @@ def process_response(json_response, errmsg):
 		return data['result']
 	return data
 
-def data_for_coin(ret, coin):
-	return next(iter([e for e in ret if e['chain'] == coin.upper()] or [None])) if coin else ret
-
 # HTTP POST, JSON-RPC response:
 class ThornodeRemoteRPCClient(RemoteJSONClient):
 	params = 'rpc_remote_rpc_params'
@@ -68,6 +65,10 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		self.rpc_api = ThornodeRemoteRPCClient(cfg, proto)
 		self.midgard_api = ThornodeRemoteMidgardClient(cfg, proto)
 
+	@staticmethod
+	def data_for_coin(ret, coin):
+		return next(iter([e for e in ret if e['chain'] == coin.upper()] or [None])) if coin else ret
+
 	def ping(self):
 		"ping the remote REST endpoint"
 		return process_response(
@@ -88,7 +89,7 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 
 	def lastblock(self, *, coin: str=None): # noqa: RUF013
 		"get last block info for all coins or a given coin"
-		return data_for_coin(process_response(
+		return self.data_for_coin(process_response(
 			self.rest_api.get(path='/thorchain/lastblock'),
 			errmsg = 'unable to retrieve lastblock data'), coin)
 
@@ -108,7 +109,7 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 
 	def inbound_addrs(self, *, coin: str=None): # noqa: RUF013
 		"get current inbound (vault) addresses"
-		return data_for_coin(process_response(
+		return self.data_for_coin(process_response(
 			self.rest_api.get(path='/thorchain/inbound_addresses'),
 			errmsg = 'unable to retrieve inbound (vault) addresses'), coin)
 

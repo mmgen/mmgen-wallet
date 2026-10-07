@@ -15,22 +15,34 @@ from wsgiref.util import request_uri
 
 from . import ThornodeServer
 
-ping_info = {'ping': 'pong'}
-
-lastblock_info = [{
-		'chain': 'BTC',
-		'last_observed_in': 969302,
-		'last_signed_out': 28043381,
-		'thorchain': 28043387
-	}, {
-		'chain': 'ETH',
-		'last_observed_in': 26090346,
-		'last_signed_out': 28043381,
-		'thorchain': 28043387}]
+def get_inbounds_info():
+	with open('test/ref/thorchain/inbound.json') as fh:
+		return json.loads(fh.read())
 
 class ThornodeRPCServer(ThornodeServer):
 	port = 18800
 	name = 'thornode RPC server'
+
+	ping_info = {'ping': 'pong'}
+
+	lastblock_info = [{
+			'chain': 'BTC',
+			'last_observed_in': 969302,
+			'last_signed_out': 28043381,
+			'thorchain': 28043387
+		}, {
+			'chain': 'ETH',
+			'last_observed_in': 26090346,
+			'last_signed_out': 28043381,
+			'thorchain': 28043387}]
+
+	memo_info = {
+		'reference': '13579',
+		'asset': 'LTC.LTC',
+		'memo': '=:c:qq6myf0qd6q5tln96ntl37hq0u7940w2xvs9jsuqv0:0/3/0',
+		'height': '12345678'}
+
+	inbounds_info = get_inbounds_info()
 
 	def make_response_body(self, method, environ):
 
@@ -86,14 +98,13 @@ class ThornodeRPCServer(ThornodeServer):
 				return res
 
 			def ping(m, length):
-				return ping_info
+				return self.ping_info
 
 			def lastblock(m, length):
-				return lastblock_info
+				return self.lastblock_info
 
 			def inbound_addrs(m, length):
-				with open('test/ref/thorchain/inbound.json') as fh:
-					return json.loads(fh.read())
+				return self.inbounds_info
 
 		pat_info = ( # these are matched in order, so more specific patterns must go first
 			('ping',              'GET',  r'/thorchain/ping'),
