@@ -13,7 +13,7 @@ tx.new_swap: new swap transaction class
 from collections import namedtuple
 
 from ..amt import UniAmt
-from ..swap.util import get_swap_proto_mod, init_swap_proto
+from ..swap.util import get_swap_asset, init_swap_proto
 
 from .new import New
 
@@ -22,7 +22,7 @@ def get_send_proto(cfg):
 		arg = cfg._args.pop(0)
 	except:
 		cfg._usage()
-	return init_swap_proto(cfg, get_swap_proto_mod(cfg.swap_proto).SwapAsset(arg, 'send'))
+	return init_swap_proto(cfg, get_swap_asset(cfg, arg, direction='send'))
 
 class NewSwap(New):
 	desc = 'swap transaction'

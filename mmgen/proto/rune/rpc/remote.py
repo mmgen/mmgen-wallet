@@ -63,6 +63,7 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 			'inbound_addrs',
 			'acct_info',
 			'balance',
+			'quote',
 			'tx_info')}
 
 	def __init__(self, cfg, proto):
@@ -137,6 +138,14 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		rune_res = [d for d in res if d['denom'] == 'rune']
 		assert len(rune_res) == 1, f'{rune_res}: result length is not one!'
 		return self.proto.coin_amt(int(rune_res[0]['amount']), from_unit='satoshi')
+
+	def quote(self, send_asset: str, recv_asset: str, amt: Decimal):
+		"get a swap quote for a given send asset, receive asset and amount"
+		from ....swap.util import init_swap_proto, get_swap_asset
+		from_asset = get_swap_asset(self.cfg, send_asset, direction='send')
+		to_asset = get_swap_asset(self.cfg, recv_asset, direction='recv')
+		send_amt = init_swap_proto(self.cfg, from_asset).coin_amt(str(amt))
+		return self.get_quote(from_asset, to_asset, send_amt)
 
 	def get_quote(self, from_asset, to_asset, amt, *, amt_is_atomic=False):
 		from ....swap.util import get_swap_proto_mod

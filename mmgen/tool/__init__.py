@@ -125,6 +125,10 @@ def process_args(cmd, cmd_args, cls):
 				arg = False
 			else:
 				die(1, f'{arg!r}: invalid boolean value for keyword argument')
+		elif arg_type == 'Decimal':
+			from decimal import Decimal
+			Decimal(arg) # check without converting
+			return arg
 
 		try:
 			return __builtins__[arg_type](arg)

@@ -26,3 +26,8 @@ def init_swap_proto(cfg, asset):
 		asset.coin,
 		tokensym = asset.tokensym,
 		need_amt = True)
+
+def get_swap_asset(cfg, asset, *, direction='send'):
+	"given an asset symbol, and optionally direction, return a swap asset instance"
+	assert isinstance(asset, str), '‘asset’ must be a string'
+	return get_swap_proto_mod(cfg.swap_proto).SwapAsset(asset, direction)

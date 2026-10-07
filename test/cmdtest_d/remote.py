@@ -34,6 +34,7 @@ class CmdTestRemote(CmdTestBase, CmdTestSwapMethods, CmdTestRuneMethods):
 		('actions_addr',        'getting actions for address'),
 		('actions_txid',        'getting actions for txid'),
 		('actions_addr_txid',   'getting actions for txid and addr'),
+		('quote',               'getting a swap quote'),
 		('stop_thornode_servers','stopping the Thornode RPC and Midgard servers'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
@@ -80,6 +81,9 @@ class CmdTestRemote(CmdTestBase, CmdTestSwapMethods, CmdTestRuneMethods):
 
 	def actions_addr_txid(self):
 		return self._rune_remote('actions', ['addr=thor1abcdefg', 'txid=deadbeef'])
+
+	def quote(self):
+		return self._rune_remote('quote', ['BTC', 'LTC', '1.2345'])
 
 	def stop_servers(self):
 		self.stop_thornode_servers(['rpc','midgard'])
