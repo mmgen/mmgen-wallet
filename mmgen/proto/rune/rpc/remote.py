@@ -11,6 +11,7 @@ proto.rune.rpc.remote: THORChain base protocol remote RPC client for the MMGen P
 """
 
 import json
+from decimal import Decimal
 
 from ....http import RemoteJSONClient
 from ....rpc.remote import RemoteRPCClient
@@ -38,6 +39,10 @@ class RESTClient(RemoteJSONClient): # same endpoint as RPCClient for test suite
 	params = 'rpc_remote_rest_params'
 	timeout = 15
 
+class SwapClient(RemoteJSONClient): # same endpoint as RESTClient for mainnet
+	params = 'rpc_remote_swap_params'
+	timeout = 15
+
 class MidgardClient(RemoteJSONClient):
 	params = 'rpc_remote_midgard_params'
 	timeout = 30
@@ -46,6 +51,7 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 	"retrieve data from a remote THORChain JSON-RPC endpoint"
 
 	server_proto = 'THORChain'
+	swap_proto = 'thorchain'
 	mods = {
 		'get': (
 			'ping',
@@ -66,6 +72,7 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		self.caps = ('lbl_id',)
 		self.rest_api = RESTClient(cfg, proto)
 		self.rpc_api = RPCClient(cfg, proto)
+		self.swap_api = SwapClient(cfg, proto)
 		self.midgard_api = MidgardClient(cfg, proto)
 
 	@staticmethod
@@ -130,6 +137,18 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		rune_res = [d for d in res if d['denom'] == 'rune']
 		assert len(rune_res) == 1, f'{rune_res}: result length is not one!'
 		return self.proto.coin_amt(int(rune_res[0]['amount']), from_unit='satoshi')
+
+	def get_quote(self, from_asset, to_asset, amt, *, amt_is_atomic=False):
+		from ....swap.util import get_swap_proto_mod
+		swap_cfg = get_swap_proto_mod(self.swap_proto).SwapCfg(self.cfg)
+		qs = make_query_string({
+			'from_asset': from_asset.full_name,
+			'to_asset': to_asset.full_name,
+			'amount': amt if amt_is_atomic else amt.to_unit('atomic'),
+			'streaming_interval': swap_cfg.stream_interval})
+		return process_response(
+			self.swap_api.get(path=f'/thorchain/quote/swap?{qs}'),
+			errmsg = 'swap quote request failed')
 
 	def tx_info(self, txid: str):
 		"get information for a transaction by TxID"

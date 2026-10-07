@@ -19,7 +19,7 @@ class CmdTestRemote(CmdTestBase, CmdTestSwapMethods, CmdTestRuneMethods):
 
 	networks = ('btc',)
 	tmpdir_nums = [37]
-	thornode_servers = ('rpc', 'midgard')
+	thornode_servers = ('rpc', 'midgard', 'swap')
 
 	cmd_group = (
 		('ping',                'pinging remote REST server'),

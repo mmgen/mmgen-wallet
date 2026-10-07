@@ -117,7 +117,7 @@ class CmdTestEthBump(CmdTestEthBumpMethods, CmdTestEthSwapMethods, CmdTestSwapMe
 
 	networks = ('eth',)
 	tmpdir_nums = [42]
-	thornode_servers = ('swap',)
+	thornode_servers = ('rpc', 'swap')
 	dfl_devnet_block_period = {'geth': 7, 'reth': 9}
 	fund_amt = 100000
 	token_fund_amt = 1000

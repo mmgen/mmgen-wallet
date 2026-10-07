@@ -121,7 +121,7 @@ class CmdTestEthSwap(CmdTestSwapMethods, CmdTestRegtest):
 	bdb_wallet = True
 	tmpdir_nums = [47]
 	networks = ('btc',)
-	thornode_servers = ('swap',)
+	thornode_servers = ('rpc', 'swap')
 	passthru_opts = ('coin', 'rpc_backend', 'eth_daemon_id')
 	cross_group = 'ethswap_eth'
 	cross_coin = 'eth'

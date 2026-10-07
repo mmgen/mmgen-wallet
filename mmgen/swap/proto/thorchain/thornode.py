@@ -10,12 +10,12 @@
 swap.proto.thorchain.thornode: THORChain swap protocol network query ops
 """
 
-import time, json
+import time
 from collections import namedtuple
 
 from ....protocol import init_proto
 from ....amt import UniAmt
-from ....http import RemoteJSONClient
+from ....rpc import get_remote_rpc
 
 _gd = namedtuple('gas_unit_data', ['code', 'disp'])
 gas_unit_data = {
@@ -23,54 +23,33 @@ gas_unit_data = {
 	'gwei':        _gd('G', 'Gwei'),
 }
 
-class ThornodeSwapClient(RemoteJSONClient):
-	params = 'rpc_remote_swap_params'
-	timeout = 5
-
 class Thornode:
 
 	def __init__(self, tx, amt):
 		self.tx = tx
 		self.in_amt = UniAmt(f'{amt:.8f}')
-		self.rpc = ThornodeSwapClient(tx.cfg, init_proto(tx.cfg, 'rune'))
+		self.rpc = get_remote_rpc(tx.cfg, init_proto(tx.cfg, 'rune'))
 
 	def get_quote(self, swap_cfg):
-
-		def get_data(send, recv, amt):
-			get_str = (
-				'/thorchain/quote/swap?'
-				f'from_asset={send}&'
-				f'to_asset={recv}&'
-				f'amount={amt}&'
-				f'streaming_interval={swap_cfg.stream_interval}')
-			data = json.loads(self.rpc.get(path=get_str))
-			if not 'expiry' in data:
-				from ....util import pp_fmt, die
-				die(2, pp_fmt(data))
-			return data
-
 		if (
 				(self.tx.proto.tokensym or self.tx.recv_asset.tokensym)
 				and self.tx.send_asset.chain != 'THOR'): # token swap
-			in_data = get_data(
-				self.tx.send_asset.full_name,
-				'THOR.RUNE',
-				self.in_amt.to_unit('satoshi'))
+			from ....swap.util import get_swap_asset
+			rune_asset = get_swap_asset(self.tx.cfg, 'RUNE')
+			in_data = self.rpc.get_quote(self.tx.send_asset, rune_asset, self.in_amt)
 			if self.tx.proto.network != 'regtest':
 				time.sleep(1.1) # ninerealms max request rate 1/sec
-			out_data = get_data(
-				'THOR.RUNE',
-				self.tx.recv_asset.full_name,
-				in_data['expected_amount_out'])
+			out_data = self.rpc.get_quote(
+				rune_asset,
+				self.tx.recv_asset,
+				in_data['expected_amount_out'],
+				amt_is_atomic = True)
 			self.data = in_data | {
 				'expected_amount_out': out_data['expected_amount_out'],
 				'fees': out_data['fees'],
 				'expiry': min(in_data['expiry'], out_data['expiry'])}
 		else:
-			self.data = get_data(
-				self.tx.send_asset.full_name,
-				self.tx.recv_asset.full_name,
-				self.in_amt.to_unit('satoshi'))
+			self.data = self.rpc.get_quote(self.tx.send_asset, self.tx.recv_asset, self.in_amt)
 
 	async def format_quote(self, trade_limit, *, deduct_est_fee=False):
 		from ....util import make_timestr, ymsg
@@ -131,7 +110,7 @@ class Thornode:
 		fees_t = UniAmt(int(fees['total']), from_unit='satoshi')
 		fees_pct_disp = str(fees['total_bps'] / 100) + '%'
 		slip_pct_disp = str(fees['slippage_bps'] / 100) + '%'
-		hdr = f'SWAP QUOTE (source: {self.rpc.host})'
+		hdr = f'SWAP QUOTE (source: {self.rpc.swap_api.host})'
 
 		vault_info = '' if tx.send_asset.chain == 'THOR' else """
   Vault address:                 {}""".format(cyan(self.inbound_address))

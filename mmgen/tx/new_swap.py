@@ -197,7 +197,7 @@ class NewSwap(New):
 					return UniAmt(int(c.data['expected_amount_out']), from_unit='satoshi') * x
 
 		while True:
-			self.cfg._util.qmsg(f'Retrieving data from {c.rpc.host}...')
+			self.cfg._util.qmsg(f'Retrieving data from {c.rpc.swap_api.host}...')
 			c.get_quote(self.swap_cfg)
 			self.cfg._util.qmsg('OK')
 			self.swap_quote_refresh_time = time.time()
