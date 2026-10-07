@@ -183,7 +183,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				kal_range,
 				add_coind_args) in self.user_data:
 
-			usr_cfg = Config({'_clone': self.cfg, user: True, 'wallet_rpc_password': 'abc'})
+			usr_cfg = Config({'_clone': self.cfg, 'test_user': user, 'wallet_rpc_password': 'abc'})
 			udir = usr_cfg._proto.network_datadir
 
 			md = CoinDaemon(

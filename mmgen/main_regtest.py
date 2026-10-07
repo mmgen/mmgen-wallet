@@ -58,7 +58,7 @@ opts_data = {
 	}
 }
 
-cfg = Config(opts_data=opts_data)
+cfg = Config(opts_data=opts_data, init_opts={'regtest': True})
 
 cmd_args = cfg._args
 

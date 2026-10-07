@@ -23,6 +23,8 @@ from collections import namedtuple
 
 from .cfg import gc
 
+test_users = ('bob', 'alice', 'carol', 'miner')
+
 def negated_opts(opts, data={}):
 	if data:
 		return data
@@ -75,6 +77,8 @@ def process_uopts(cfg, opts_data, opts, need_proto):
 						if parm:
 							die('CmdlineOptError', f'option --{_opt} requires no parameter')
 						yield (opts[_opt].name, True)
+						if _opt in test_users:
+							yield ('test_user', opts[_opt].name)
 				elif (
 						(_opt := opt) in negated_opts(opts)
 						or (_opt := get_opt_by_substring(_opt, negated_opts(opts)))):
