@@ -24,6 +24,7 @@ class CmdTestRemote(CmdTestBase, CmdTestSwapMethods, CmdTestRuneMethods):
 	cmd_group = (
 		('ping',                'pinging remote REST server'),
 		('health',              'checking health of THORChain network'),
+		('mimir',               'getting Mimir variables'),
 		('inbounds',            'getting inbound addresses (all coins)'),
 		('inbound_ltc',         'getting inbound address for LTC'),
 		('inbound_ltc_log',     'getting inbound addresses (all coins, logging to file)'),
@@ -46,6 +47,9 @@ class CmdTestRemote(CmdTestBase, CmdTestSwapMethods, CmdTestRuneMethods):
 
 	def health(self):
 		return self._rune_remote('health')
+
+	def mimir(self):
+		return self._rune_remote('mimir')
 
 	def inbounds(self):
 		return self._rune_remote('inbound_addrs')

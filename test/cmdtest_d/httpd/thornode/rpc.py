@@ -25,6 +25,13 @@ class ThornodeRPCServer(ThornodeServer):
 
 	ping_info = {'ping': 'pong'}
 
+	mimir_info = {
+		'ASGARDSIZE': 20,
+		'CHURNINTERVAL': 43200,
+		'HALTBTCCHAIN': 0,
+		'HALTMEMOLESS': 0,
+		'MEMOLESSTXNCOST': 200000}
+
 	lastblock_info = [{
 			'chain': 'BTC',
 			'last_observed_in': 969302,
@@ -100,6 +107,9 @@ class ThornodeRPCServer(ThornodeServer):
 			def ping(m, length):
 				return self.ping_info
 
+			def mimir(m, length):
+				return self.mimir_info
+
 			def lastblock(m, length):
 				return self.lastblock_info
 
@@ -108,6 +118,7 @@ class ThornodeRPCServer(ThornodeServer):
 
 		pat_info = ( # these are matched in order, so more specific patterns must go first
 			('ping',              'GET',  r'/thorchain/ping'),
+			('mimir',             'GET',  r'/thorchain/mimir'),
 			('lastblock',         'GET',  r'/thorchain/lastblock(.*)'),
 			('inbound_addrs',     'GET',  r'/thorchain/inbound_addresses'),
 			('balance',           'GET',  r'/bank/balances/(\S+)'),
