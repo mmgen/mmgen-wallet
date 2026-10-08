@@ -10,6 +10,7 @@
 tx.new_swap: new swap transaction class
 """
 
+import time
 from collections import namedtuple
 
 from ..amt import UniAmt
@@ -169,6 +170,14 @@ class NewSwap(New):
 
 		return tuple(ret + [f'data:{memo}'])
 
+	async def display_quote(self, qd, *, deduct_est_fee=False):
+		self.cfg._util.qmsg(f'Retrieving data from {qd.rpc.swap_api.host}...')
+		qd.get_quote(self.swap_cfg)
+		self.cfg._util.qmsg('OK')
+		self.swap_quote_refresh_time = time.time()
+		await self.set_gas(to_addr=qd.router if self.is_token else None)
+		msg(await qd.format_quote(deduct_est_fee=deduct_est_fee))
+
 	def update_vault_addr(self, qd, *, addr='inbound_address'):
 		vault_idx = self.vault_idx
 		assert vault_idx == 0, f'{vault_idx}: vault index is not zero!'
@@ -185,24 +194,14 @@ class NewSwap(New):
 			trade_limit = trade_limit)
 
 	async def update_vault_output(self, amt, *, deduct_est_fee=False):
-		qd = self.swap_proto_mod.rpc_client(self, amt)
-
-		import time
-		from ..util import msg
 		from ..term import get_char
-
+		qd = self.swap_proto_mod.rpc_client(self, amt)
 		while True:
-			self.cfg._util.qmsg(f'Retrieving data from {qd.rpc.swap_api.host}...')
-			qd.get_quote(self.swap_cfg)
-			self.cfg._util.qmsg('OK')
-			self.swap_quote_refresh_time = time.time()
-			await self.set_gas(to_addr=qd.router if self.is_token else None)
-			msg(await qd.format_quote(deduct_est_fee=deduct_est_fee))
+			await self.display_quote(qd, deduct_est_fee=deduct_est_fee)
 			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')
 			msg('')
 			if ch not in 'Rr':
 				break
-
 		self.swap_quote_expiry = qd.data['expiry']
 		self.update_vault_addr(qd)
 		self.update_data_output(qd.trade_limit)
