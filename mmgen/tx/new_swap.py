@@ -13,6 +13,7 @@ tx.new_swap: new swap transaction class
 from collections import namedtuple
 
 from ..amt import UniAmt
+from ..util import msg, ymsg
 from ..swap.util import get_swap_asset, init_swap_proto
 
 from .new import New
@@ -121,11 +122,12 @@ class NewSwap(New):
 
 		await parse()
 
+		self.swap_cfg = self.swap_proto_mod.SwapCfg(self.cfg)
+
 		self.check_swap_network()
 
 		for asset in (self.send_asset, self.recv_asset):
 			if asset.name not in sa.tested:
-				from ..util import msg, ymsg
 				from ..term import get_char
 				ymsg(f'Warning: {asset.direction} asset {asset.name} is untested by the MMGen Project')
 				get_char('Press any key to continue: ')
@@ -147,15 +149,15 @@ class NewSwap(New):
 				'To sign this transaction, autosign or txsign must be invoked'
 				' with --allow-non-wallet-swap'))
 
-		sc = self.swap_cfg = self.swap_proto_mod.SwapCfg(self.cfg)
-
 		memo = sp.Memo(
 			self.swap_cfg,
 			self.recv_proto,
 			self.recv_asset,
 			recv_output.addr,
-			# sc.trade_limit could be a float:
-			trade_limit = sc.trade_limit if isinstance(sc.trade_limit, UniAmt) else None)
+			# self.swap_cfg.trade_limit could be a float:
+			trade_limit = (
+				self.swap_cfg.trade_limit if isinstance(self.swap_cfg.trade_limit, UniAmt)
+				else None))
 
 		# this goes into the transaction file:
 		self.swap_recv_addr_mmid = recv_output.mmid
@@ -167,11 +169,11 @@ class NewSwap(New):
 
 		return tuple(ret + [f'data:{memo}'])
 
-	def update_vault_addr(self, c, *, addr='inbound_address'):
+	def update_vault_addr(self, qd, *, addr='inbound_address'):
 		vault_idx = self.vault_idx
 		assert vault_idx == 0, f'{vault_idx}: vault index is not zero!'
 		o = self.outputs[vault_idx]._asdict()
-		o['addr'] = getattr(c, addr)
+		o['addr'] = getattr(qd, addr)
 		self.outputs[vault_idx] = self.Output(self.proto, **o)
 
 	def update_memo(self, memo, trade_limit):
@@ -182,35 +184,35 @@ class NewSwap(New):
 			self.recv_proto.coin_addr(self.swap_proto_mod.Memo.parse(memo).address),
 			trade_limit = trade_limit)
 
+	def get_trade_limit(self, qd):
+		match self.swap_cfg.trade_limit:
+			case UniAmt(): # can’t use positional arg here (not supported by Decimal)
+				return self.swap_cfg.trade_limit
+			case float(x):
+				return UniAmt(int(qd.data['expected_amount_out']), from_unit='satoshi') * x
+
 	async def update_vault_output(self, amt, *, deduct_est_fee=False):
-		c = self.swap_proto_mod.rpc_client(self, amt)
+		qd = self.swap_proto_mod.rpc_client(self, amt)
 
 		import time
 		from ..util import msg
 		from ..term import get_char
 
-		def get_trade_limit():
-			match self.swap_cfg.trade_limit:
-				case UniAmt(): # can’t use positional arg here (not supported by Decimal)
-					return self.swap_cfg.trade_limit
-				case float(x):
-					return UniAmt(int(c.data['expected_amount_out']), from_unit='satoshi') * x
-
 		while True:
-			self.cfg._util.qmsg(f'Retrieving data from {c.rpc.swap_api.host}...')
-			c.get_quote(self.swap_cfg)
+			self.cfg._util.qmsg(f'Retrieving data from {qd.rpc.swap_api.host}...')
+			qd.get_quote(self.swap_cfg)
 			self.cfg._util.qmsg('OK')
 			self.swap_quote_refresh_time = time.time()
-			await self.set_gas(to_addr=c.router if self.is_token else None)
-			trade_limit = get_trade_limit()
-			msg(await c.format_quote(trade_limit, deduct_est_fee=deduct_est_fee))
+			await self.set_gas(to_addr=qd.router if self.is_token else None)
+			trade_limit = self.get_trade_limit(qd)
+			msg(await qd.format_quote(trade_limit, deduct_est_fee=deduct_est_fee))
 			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')
 			msg('')
 			if ch not in 'Rr':
 				break
 
-		self.swap_quote_expiry = c.data['expiry']
-		self.update_vault_addr(c)
+		self.swap_quote_expiry = qd.data['expiry']
+		self.update_vault_addr(qd)
 		self.update_data_output(trade_limit)
-		self.quote_data = c
-		return c.rel_fee_hint
+		self.quote_data = qd
+		return qd.rel_fee_hint

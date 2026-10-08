@@ -81,7 +81,7 @@ opts_data = {
 			-s -r, --stream-interval=N Set block interval for streaming swap (default: {si})
 			bt -R, --no-rbf          Make transaction non-replaceable (non-replace-by-fee
 			+                        according to BIP 125)
-			-s -s, --swap-proto      Swap protocol to use (Default: {x_dfl},
+			-s -s, --swap-proto=P    Swap protocol to use (Default: {x_dfl},
 			+                        Choices: {x_all})
 			-s -S, --list-assets     List available swap assets
 			-- -v, --verbose         Produce more verbose output
