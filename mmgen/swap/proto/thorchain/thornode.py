@@ -51,7 +51,7 @@ class Thornode:
 		else:
 			self.data = self.rpc.get_quote(self.tx.send_asset, self.tx.recv_asset, self.in_amt)
 
-	async def format_quote(self, trade_limit, *, deduct_est_fee=False):
+	async def format_quote(self, *, deduct_est_fee=False):
 		from ....util import make_timestr, ymsg
 		from ....util2 import format_elapsed_hr
 		from ....color import blue, green, cyan, pink, orange, redbg, yelbg, grnbg
@@ -66,9 +66,9 @@ class Thornode:
 		if tx.proto.has_usr_fee:
 			gas_unit = d['gas_rate_units']
 
-		if trade_limit:
+		if self.trade_limit:
 			from . import ExpInt4
-			tl_int = ExpInt4(trade_limit.to_unit('satoshi'))
+			tl_int = ExpInt4(self.trade_limit.to_unit('satoshi'))
 			tl_uniamt = UniAmt(tl_int.trunc, from_unit='satoshi')
 			ratio = float(tl_uniamt / out_amt)
 			direction = 'ABOVE' if ratio > 1 else 'below'
@@ -136,6 +136,14 @@ class Thornode:
     Total:    {fees_t.hl()} {out_coin} ({pink(fees_pct_disp)})
     Slippage: {pink(slip_pct_disp)}
 """
+
+	@property
+	def trade_limit(self):
+		match self.tx.swap_cfg.trade_limit:
+			case UniAmt(): # can’t use positional arg here (not supported by Decimal)
+				return self.tx.swap_cfg.trade_limit
+			case float(x):
+				return UniAmt(int(self.data['expected_amount_out']), from_unit='satoshi') * x
 
 	@property
 	def inbound_address(self):

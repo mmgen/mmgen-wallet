@@ -184,13 +184,6 @@ class NewSwap(New):
 			self.recv_proto.coin_addr(self.swap_proto_mod.Memo.parse(memo).address),
 			trade_limit = trade_limit)
 
-	def get_trade_limit(self, qd):
-		match self.swap_cfg.trade_limit:
-			case UniAmt(): # can’t use positional arg here (not supported by Decimal)
-				return self.swap_cfg.trade_limit
-			case float(x):
-				return UniAmt(int(qd.data['expected_amount_out']), from_unit='satoshi') * x
-
 	async def update_vault_output(self, amt, *, deduct_est_fee=False):
 		qd = self.swap_proto_mod.rpc_client(self, amt)
 
@@ -204,8 +197,7 @@ class NewSwap(New):
 			self.cfg._util.qmsg('OK')
 			self.swap_quote_refresh_time = time.time()
 			await self.set_gas(to_addr=qd.router if self.is_token else None)
-			trade_limit = self.get_trade_limit(qd)
-			msg(await qd.format_quote(trade_limit, deduct_est_fee=deduct_est_fee))
+			msg(await qd.format_quote(deduct_est_fee=deduct_est_fee))
 			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')
 			msg('')
 			if ch not in 'Rr':
@@ -213,6 +205,6 @@ class NewSwap(New):
 
 		self.swap_quote_expiry = qd.data['expiry']
 		self.update_vault_addr(qd)
-		self.update_data_output(trade_limit)
+		self.update_data_output(qd.trade_limit)
 		self.quote_data = qd
 		return qd.rel_fee_hint
