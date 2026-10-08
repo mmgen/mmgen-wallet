@@ -333,6 +333,7 @@ class CmdTestSwap(
 			('swaptxcreate5',  'creating a swap transaction (chg and dest by addrlist ID)'),
 			('swaptxcreate6',  'creating a swap transaction (dest is non-wallet addr)'),
 			('swaptxcreate7',  'creating a swap transaction (coin-amt-coin)'),
+			('swaptxcreate8',  'creating a swap transaction (quote only)'),
 		),
 		'create_bad': (
 			'Swap TX create operations: error handling',
@@ -345,6 +346,7 @@ class CmdTestSwap(
 			('swaptxcreate_bad7',  'creating a swap transaction (bad, bad user input, user exit)'),
 			('swaptxcreate_bad8',  'creating a swap transaction (bad, non-MMGen change address)'),
 			('swaptxcreate_bad9',  'creating a swap transaction (bad, invalid addrtype)'),
+			('swaptxcreate_bad10', 'creating a swap transaction (bad, --quote with no amount)'),
 		),
 		'create_neterror': (
 			'Swap TX create operations: network error handling',
@@ -532,6 +534,11 @@ class CmdTestSwap(
 		t.expect('OK? (Y/n): ', 'y')
 		return self._swaptxcreate_ui_common(t, expect=':0/3/0')
 
+	def swaptxcreate8(self):
+		t = self._swaptxcreate(['BCH', '0.56789', 'LTC'], add_opts=['--quote', '--no-quiet'])
+		t.expect('SWAP QUOTE')
+		return t
+
 	def swaptxcreate_bad1(self):
 		t = self._swaptxcreate_bad(
 			['BCH', '1.234', f'{self.sid}:C:3', 'LTC', f'{self.sid}:S:1'],
@@ -575,6 +582,9 @@ class CmdTestSwap(
 
 	def swaptxcreate_bad9(self):
 		return self._swaptxcreate_bad(['BCH', '1.234', 'S', 'LTC', 'B'], exit_val=2, expect1='invalid command-')
+
+	def swaptxcreate_bad10(self):
+		return self._swaptxcreate_bad(['BCH', 'LTC'], add_opts=['--quote'], exit_val=1, expect1='send amount')
 
 	def swaptxcreate_neterror1(self):
 		return self._swaptxcreate_neterror('ltc_global_paused', 'Trading is paused on the')

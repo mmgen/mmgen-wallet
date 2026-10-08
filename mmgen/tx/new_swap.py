@@ -10,11 +10,11 @@
 tx.new_swap: new swap transaction class
 """
 
-import time
+import sys, time
 from collections import namedtuple
 
 from ..amt import UniAmt
-from ..util import msg, ymsg
+from ..util import msg, ymsg, die
 from ..swap.util import get_swap_asset, init_swap_proto
 
 from .new import New
@@ -101,7 +101,8 @@ class NewSwap(New):
 					self.proto.is_vm or
 					arg in sa.recv): # is change arg
 				nonlocal chg_output
-				chg_output = await self.get_chg_output(arg, addrfiles)
+				if not self.cfg.quote:
+					chg_output = await self.get_chg_output(arg, addrfiles)
 				arg = get_arg()
 
 			# arg 4: recv_coin
@@ -124,6 +125,14 @@ class NewSwap(New):
 		await parse()
 
 		self.swap_cfg = self.swap_proto_mod.SwapCfg(self.cfg)
+
+		if self.cfg.quote:
+			if not args.send_amt:
+				die(1, 'With --quote, you must supply a send amount')
+			await self.display_quote(
+				self.swap_proto_mod.rpc_client(self, args.send_amt),
+				skip_est_fee = True)
+			sys.exit(0)
 
 		self.check_swap_network()
 
@@ -170,13 +179,13 @@ class NewSwap(New):
 
 		return tuple(ret + [f'data:{memo}'])
 
-	async def display_quote(self, qd, *, deduct_est_fee=False):
+	async def display_quote(self, qd, *, deduct_est_fee=False, skip_est_fee=False):
 		self.cfg._util.qmsg(f'Retrieving data from {qd.rpc.swap_api.host}...')
 		qd.get_quote(self.swap_cfg)
 		self.cfg._util.qmsg('OK')
 		self.swap_quote_refresh_time = time.time()
 		await self.set_gas(to_addr=qd.router if self.is_token else None)
-		msg(await qd.format_quote(deduct_est_fee=deduct_est_fee))
+		msg(await qd.format_quote(deduct_est_fee=deduct_est_fee, skip_est_fee=skip_est_fee))
 
 	def update_vault_addr(self, qd, *, addr='inbound_address'):
 		vault_idx = self.vault_idx

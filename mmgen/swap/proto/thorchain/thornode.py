@@ -51,7 +51,7 @@ class Thornode:
 		else:
 			self.data = self.rpc.get_quote(self.tx.send_asset, self.tx.recv_asset, self.in_amt)
 
-	async def format_quote(self, *, deduct_est_fee=False):
+	async def format_quote(self, *, deduct_est_fee=False, skip_est_fee=False):
 		from ....util import make_timestr, ymsg
 		from ....util2 import format_elapsed_hr
 		from ....color import blue, green, cyan, pink, orange, redbg, yelbg, grnbg
@@ -116,11 +116,11 @@ class Thornode:
   Vault address:                 {}""".format(cyan(self.inbound_address))
 
 		fee_info = '' if not tx.proto.has_usr_fee else """
-  Recommended fee:               {} {}
-  Network-estimated fee:         {} (from node)""".format(
-			pink(d['recommended_gas_rate']),
-			pink(_.disp if (_ := gas_unit_data.get(gas_unit)) else gas_unit),
-			await self.tx.network_fee_disp())
+  Recommended fee:               {} {}""".format(
+				pink(d['recommended_gas_rate']),
+				pink(_.disp if (_ := gas_unit_data.get(gas_unit)) else gas_unit)) + (
+			'' if skip_est_fee else """
+  Network-estimated fee:         {} (from node)""".format(await self.tx.network_fee_disp()))
 
 		return f"""
 {cyan(hdr)}

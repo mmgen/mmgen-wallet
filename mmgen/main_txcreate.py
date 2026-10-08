@@ -78,6 +78,7 @@ opts_data = {
 			+                        Valid parameters: {tp}.
 			+                        If option is omitted, the default priority will be used
 			-- -q, --quiet           Suppress warnings; overwrite files without prompting
+			-s -Q, --quote           Get a swap quote and exit.  Do not create transaction
 			-s -r, --stream-interval=N Set block interval for streaming swap (default: {si})
 			bt -R, --no-rbf          Make transaction non-replaceable (non-replace-by-fee
 			+                        according to BIP 125)
