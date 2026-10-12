@@ -135,6 +135,13 @@ if not (cfg.info or cfg.contract_data or cfg.coin == 'XMR'):
 	if len(cfg._args) < {'tx': 1, 'swaptx': 2}[target]:
 		cfg._usage()
 
+def write_to_file(tx, asi):
+	tx.file.write(
+		outdir                = asi.txauto_dir if asi else None,
+		ask_write             = not cfg.yes,
+		ask_overwrite         = not cfg.yes,
+		ask_write_default_yes = False)
+
 async def main():
 
 	if cfg.autosign:
@@ -142,18 +149,15 @@ async def main():
 		from .autosign.signable import Signable
 		asi = mount_removable_device(cfg, add_cfg={'xmrwallet_compat': True})
 		Signable.automount_transaction(asi).check_create_ok()
-
-	if target == 'swaptx':
-		from .tx.new_swap import get_send_proto
-		proto = get_send_proto(cfg)
 	else:
-		proto = cfg._proto
+		asi = None
 
 	from .tx import NewTX
-	tx1 = NewTX(
-		cfg    = cfg,
-		proto  = proto,
-		target = target)
+	if target == 'swaptx':
+		from .tx.new_swap import get_send_proto
+		tx1 = NewTX(cfg=cfg, proto=get_send_proto(cfg), target=target)
+	else:
+		tx1 = NewTX(cfg=cfg, proto=cfg._proto, target=target)
 
 	tx2 = await tx1.create(
 		args     = cfg._args,
@@ -161,10 +165,6 @@ async def main():
 		do_info  = cfg.info)
 
 	if not tx1.is_compat:
-		tx2.file.write(
-			outdir                = asi.txauto_dir if cfg.autosign else None,
-			ask_write             = not cfg.yes,
-			ask_overwrite         = not cfg.yes,
-			ask_write_default_yes = False)
+		write_to_file(tx2, asi)
 
 async_run(cfg, main)
