@@ -21,11 +21,3 @@ class NewSwap(New, TxNewSwap):
 		memo = self.update_memo(o['data'].decode(), trade_limit)
 		o['data'] = f'data:{memo}'
 		self.data_output = self.Output(self.proto, **o)
-
-	@property
-	def vault_idx(self):
-		return self._chg_output_ops('idx', 'is_vault')
-
-	@property
-	def vault_output(self):
-		return self._chg_output_ops('output', 'is_vault')

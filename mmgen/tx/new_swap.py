@@ -17,6 +17,7 @@ from ..amt import UniAmt
 from ..util import msg, ymsg, die
 from ..swap.util import get_swap_asset, init_swap_proto
 
+from .base_swap import BaseSwapMethods
 from .new import New
 
 def get_send_proto(cfg):
@@ -26,7 +27,7 @@ def get_send_proto(cfg):
 		cfg._usage()
 	return init_swap_proto(cfg, get_swap_asset(cfg, arg, direction='send'))
 
-class NewSwap(New):
+class NewSwap(BaseSwapMethods, New):
 	desc = 'swap transaction'
 	swap_quote_refresh_timeout = 30
 	_output = namedtuple('swap_output', ['coin', 'network', 'addr', 'mmid'])

@@ -49,6 +49,12 @@ class Completed(Base):
 
 			self.infile = filename
 
+		if self.is_swap:
+			from .base_swap import BaseSwapMethods as m
+			for k in m.__dict__:
+				if not k.startswith('_'):
+					setattr(type(self), k, getattr(m, k))
+
 	@property
 	def file(self):
 		from .file import MMGenTxFile

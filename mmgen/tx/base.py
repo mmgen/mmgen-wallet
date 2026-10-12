@@ -24,7 +24,7 @@ from ..obj import (
 )
 from ..amt import CoinAmtChk
 from ..addr import MMGenID, CoinAddr
-from ..util import msg, ymsg, fmt, remove_dups, make_timestamp, die, cached_property
+from ..util import msg, ymsg, fmt, remove_dups, make_timestamp, die
 
 class MMGenTxIO(MMGenListItem):
 	vout     = ListItemAttr(NonNegativeInt)
@@ -68,6 +68,7 @@ class MMGenTxIOList(list, MMGenObject):
 
 class Base(MMGenObject):
 	desc         = 'transaction'
+	data_desc    = 'transaction data'
 	comment      = None
 	txid         = None
 	coin_txid    = None
@@ -125,14 +126,6 @@ class Base(MMGenObject):
 		self.proto    = proto
 		self.twctl    = twctl
 		self.is_token = 'Token' in self.name
-
-	@property
-	def data_desc(self):
-		def gen():
-			if self.is_swap:
-				yield 'swap'
-			yield 'transaction data'
-		return ' '.join(gen())
 
 	@property
 	def coin(self):
@@ -227,46 +220,6 @@ class Base(MMGenObject):
 				if not (caller == 'autosign' or self.cfg.yes):
 					from ..ui import keypress_confirm
 					keypress_confirm(self.cfg, 'Continue?', default_yes=True, do_exit=True)
-
-	# swap methods:
-	@cached_property
-	def swap_proto_rpc(self):
-		from ..swap.util import get_swap_proto_rpc
-		return get_swap_proto_rpc(self.cfg, self.swap_proto_mod.coin)
-
-	@cached_property
-	def swap_proto_mod(self):
-		from ..swap.util import get_swap_proto_mod
-		return get_swap_proto_mod(self.swap_proto)
-
-	@cached_property
-	def send_asset(self):
-		spec = self.proto.coin + (f'.{self.proto.tokensym}' if self.proto.tokensym else '')
-		return self.swap_proto_mod.SwapAsset(spec, 'send')
-
-	@cached_property
-	def recv_asset(self):
-		if hasattr(self, 'swap_recv_asset_spec'):
-			return self.swap_proto_mod.SwapAsset(self.swap_recv_asset_spec, 'recv')
-		elif self.is_swap and hasattr(self, 'data_output'):
-			from ..swap.proto.thorchain.memo import THORChainMemo
-			return THORChainMemo.parse(str(self.data_output.data)).asset
-		else: # backwards-compatibility workaround
-			from ..swap.asset import SwapAsset
-			x = '[unknown]'
-			return SwapAsset._ad(x, x, x, x, x, x)
-
-	def check_swap_network(self):
-		rpc = self.swap_proto_rpc
-		data = rpc.inbound_addrs()
-		for asset in (self.send_asset, self.recv_asset):
-			if asset.name != 'RUNE':
-				for key, state in (
-						('global_trading_paused', 'paused'),
-						('chain_trading_paused',  f'paused for asset {asset.name}'),
-						('halted',                f'halted for asset {asset.name}')):
-					if rpc.data_for_coin(data, asset.coin)[key]:
-						die(2, f'Trading is {state} on the {self.swap_proto_mod.name} network')
 
 	# token methods:
 	@property

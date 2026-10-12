@@ -15,11 +15,3 @@ class VmNewSwap:
 	def update_data_output(self, trade_limit):
 		self.swap_memo = str(self.update_memo(self.swap_memo, trade_limit))
 		self.set_gas_with_data(self.swap_memo.encode())
-
-	@property
-	def vault_idx(self):
-		return 0
-
-	@property
-	def vault_output(self):
-		return self.outputs[0]
