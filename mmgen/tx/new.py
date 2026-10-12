@@ -185,7 +185,9 @@ class New(Base):
 		if data := self.process_data_output_arg(arg_in):
 			return self._cl_output(arg_in, None, None, None, data, False)
 
-		arg, amt = arg_in.split(',', 1) if ',' in arg_in else (arg_in, None)
+		arg, amt_in = arg_in.split(',', 1) if ',' in arg_in else (arg_in, None)
+
+		amt = self.proto.coin_amt(amt_in or '0')
 
 		coin_addr, mmid, is_vault = (None, None, False)
 
@@ -250,7 +252,7 @@ class New(Base):
 							a.arg,
 							exclude = [a.mmid for a in parsed_args if a.mmid],
 							desc = 'change address')).addr,
-					amt = self.proto.coin_amt(a.amt or '0'),
+					amt = a.amt,
 					is_chg = not a.amt,
 					is_vault = a.is_vault)
 

@@ -60,7 +60,7 @@ class New:
 
 		self.add_output(
 			coinaddr = None if a.is_vault else a.addr,
-			amt      = self.proto.coin_amt(a.amt or '0'),
+			amt      = a.amt,
 			is_chg   = not a.amt,
 			is_vault = a.is_vault)
 
