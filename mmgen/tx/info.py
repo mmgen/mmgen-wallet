@@ -49,7 +49,7 @@ class TxInfo:
 
 		def gen_view():
 			yield (self.txinfo_hdr_fs_short if terse else self.txinfo_hdr_fs).format(
-				hdr = cyan(('SWAP ' if tx.is_swap else '') + 'TRANSACTION DATA'),
+				hdr = cyan(tx.data_desc.upper()),
 				i = tx.txid.hl(),
 				a = tx.send_amt.hl(),
 				c = tx.dcoin,

@@ -29,18 +29,18 @@ def get_send_proto(cfg):
 class NewSwap(New):
 	desc = 'swap transaction'
 	swap_quote_refresh_timeout = 30
+	_output = namedtuple('swap_output', ['coin', 'network', 'addr', 'mmid'])
 
 	def __init__(self, *, cfg, **kwargs):
-		self.is_swap = True
 		self.swap_proto = cfg.swap_proto
-		New.__init__(self, cfg=cfg, **kwargs)
+		self.is_swap = True
+		super().__init__(cfg=cfg, **kwargs)
 
 	def check_addr_is_wallet_addr(self, output, *, message):
 		if not output.mmid:
 			self._non_wallet_addr_confirm(message)
 
 	async def get_swap_output(self, proto, arg, addrfiles, desc):
-		ret = namedtuple('swap_output', ['coin', 'network', 'addr', 'mmid'])
 		if arg:
 			from ..addrdata import TwAddrData
 			pa = self.parse_cmdline_arg(
@@ -50,12 +50,12 @@ class NewSwap(New):
 				await TwAddrData(self.cfg, proto))
 			if pa.addr:
 				await self.warn_addr_used(proto, pa, f'{desc} address')
-				return ret(proto.coin, proto.network, pa.addr, pa.mmid)
+				return self._output(proto.coin, proto.network, pa.addr, pa.mmid)
 
 		full_desc = f'{desc} address on the {proto.coin} {proto.network} network'
 		res = await self.get_autochg_addr(proto, arg, exclude=[], desc=full_desc)
 		self.confirm_autoselected_addr(res.twmmid, res.comment, full_desc)
-		return ret(proto.coin, proto.network, res.addr, res.twmmid)
+		return self._output(proto.coin, proto.network, res.addr, res.twmmid)
 
 	async def get_chg_output(self, arg, addrfiles):
 		chg_output = await self.get_swap_output(self.proto, arg, addrfiles, 'change')
@@ -106,7 +106,8 @@ class NewSwap(New):
 				arg = get_arg()
 
 			# arg 4: recv_coin
-			self.swap_recv_asset_spec = arg # this goes into the transaction file
+			# this goes into the transaction file:
+			self.swap_recv_asset_spec = sp.SwapAsset(arg, 'recv').name # used by ‘recv_asset’ property
 			self.recv_proto = init_swap_proto(self.cfg, self.recv_asset)
 
 			# arg 5: recv_spec (receive address spec)
@@ -179,12 +180,22 @@ class NewSwap(New):
 
 		return tuple(ret + [f'data:{memo}'])
 
+	async def display_quote_loop(self, qd, *, deduct_est_fee=False):
+		from ..term import get_char
+		while True:
+			await self.display_quote(qd, deduct_est_fee=deduct_est_fee)
+			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')
+			msg('')
+			if ch not in 'Rr':
+				break
+
 	async def display_quote(self, qd, *, deduct_est_fee=False, skip_est_fee=False):
 		self.cfg._util.qmsg(f'Retrieving data from {qd.rpc.swap_api.host}...')
 		qd.get_quote(self.swap_cfg)
 		self.cfg._util.qmsg('OK')
 		self.swap_quote_refresh_time = time.time()
-		await self.set_gas(to_addr=qd.router if self.is_token else None)
+		if not skip_est_fee:
+			await self.set_gas(to_addr=qd.router if self.is_token else None)
 		msg(await qd.format_quote(deduct_est_fee=deduct_est_fee, skip_est_fee=skip_est_fee))
 
 	def update_vault_addr(self, qd, *, addr='inbound_address'):
@@ -203,14 +214,8 @@ class NewSwap(New):
 			trade_limit = trade_limit)
 
 	async def update_vault_output(self, amt, *, deduct_est_fee=False):
-		from ..term import get_char
 		qd = self.swap_proto_mod.quote_client(self, amt)
-		while True:
-			await self.display_quote(qd, deduct_est_fee=deduct_est_fee)
-			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')
-			msg('')
-			if ch not in 'Rr':
-				break
+		await self.display_quote_loop(qd, deduct_est_fee=deduct_est_fee)
 		self.swap_quote_expiry = qd.data['expiry']
 		self.update_vault_addr(qd)
 		self.update_data_output(qd.trade_limit)

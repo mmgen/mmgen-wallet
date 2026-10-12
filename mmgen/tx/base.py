@@ -117,7 +117,7 @@ class Base(MMGenObject):
 	class OutputList(MMGenTxIOList):
 		desc = 'transaction outputs'
 
-	def __init__(self, *, cfg, proto, twctl=None, **kwargs):
+	def __init__(self, *, cfg, proto, twctl=None, target=None, automount=None):
 		self.cfg      = cfg
 		self.inputs   = self.InputList(self)
 		self.outputs  = self.OutputList(self)
@@ -125,6 +125,14 @@ class Base(MMGenObject):
 		self.proto    = proto
 		self.twctl    = twctl
 		self.is_token = 'Token' in self.name
+
+	@property
+	def data_desc(self):
+		def gen():
+			if self.is_swap:
+				yield 'swap'
+			yield 'transaction data'
+		return ' '.join(gen())
 
 	@property
 	def coin(self):
@@ -246,20 +254,19 @@ class Base(MMGenObject):
 		else: # backwards-compatibility workaround
 			from ..swap.asset import SwapAsset
 			x = '[unknown]'
-			return SwapAsset._ad(x, x, x, x, x)
+			return SwapAsset._ad(x, x, x, x, x, x)
 
 	def check_swap_network(self):
 		rpc = self.swap_proto_rpc
 		data = rpc.inbound_addrs()
 		for asset in (self.send_asset, self.recv_asset):
-			if asset.name == 'RUNE':
-				continue
-			for key, state in (
-					('global_trading_paused', 'paused'),
-					('chain_trading_paused',  f'paused for asset {asset.name}'),
-					('halted',                f'halted for asset {asset.name}')):
-				if rpc.data_for_coin(data, asset.coin)[key]:
-					die(2, f'Trading is {state} on the {self.swap_proto_mod.name} network')
+			if asset.name != 'RUNE':
+				for key, state in (
+						('global_trading_paused', 'paused'),
+						('chain_trading_paused',  f'paused for asset {asset.name}'),
+						('halted',                f'halted for asset {asset.name}')):
+					if rpc.data_for_coin(data, asset.coin)[key]:
+						die(2, f'Trading is {state} on the {self.swap_proto_mod.name} network')
 
 	# token methods:
 	@property

@@ -44,10 +44,11 @@ class ThornodeRPCServer(ThornodeServer):
 			'thorchain': 28043387}]
 
 	memo_info = {
-		'reference': '13579',
-		'asset': 'LTC.LTC',
-		'memo': '=:c:qq6myf0qd6q5tln96ntl37hq0u7940w2xvs9jsuqv0:0/3/0',
-		'height': '12345678'}
+		'0c7454c0': { # 0c7454c06d3fc0e520d34283e6f491ce7afe5abb3f569bbdfea1732e04b716ec
+			'reference': '13579',
+			'asset': 'LTC.LTC',
+			'memo': '=:c:qq6myf0qd6q5tln96ntl37hq0u7940w2xvs9jsuqv0:0/3/0',
+			'height': '12345678'}}
 
 	inbounds_info = get_inbounds_info()
 
@@ -102,13 +103,10 @@ class ThornodeRPCServer(ThornodeServer):
 					'codespace': ''}
 
 			def broadcast_tx_sync(m, length):
+				from mmgen.proto.rune.tx.protobuf import RuneTx
 				txhex = environ['wsgi.input'].read(length).decode().removeprefix('tx=0x').upper()
-				res = {'code': 0, 'codespace': '', 'data': '', 'log': ''}
-				if txhex.startswith('0A540A52'):
-					res.update({'hash': '14463C716CF08A814868DB779156BCD85A1DF8EE49E924900A74482E9DEE132D'})
-				elif txhex.startswith('0AC1010A'):
-					res.update({'hash': 'BD30B8FD9FC278A26E7A81ABB36C4709260DE64087EB578900BD23CEBF11D1A2'})
-				return res
+				tx = RuneTx.loads(bytes.fromhex(txhex))
+				return {'code': 0, 'codespace': '', 'data': '', 'log': '', 'hash': tx.txid}
 
 			def ping(m, length):
 				return self.ping_info
