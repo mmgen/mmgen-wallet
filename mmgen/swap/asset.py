@@ -93,7 +93,12 @@ class SwapAsset:
 	def memo_asset_name(self):
 		return self.data.abbr or self.data.full_name
 
-	def __init__(self, name, direction):
+	def __init__(self, name, direction, sanitize_input=False):
+
+		if sanitize_input:
+			name = name.upper()
+			if '.' in name and (ss := name.split('.', 1)) and ss[0] == ss[1]: # BTC.BTC -> BTC
+				name = ss[0]
 
 		if name not in self.assets_data:
 			die('SwapAssetError', f'{name!r}: unrecognized asset')

@@ -142,8 +142,8 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 	def quote(self, send_asset: str, recv_asset: str, amt: Decimal):
 		"get a swap quote for a given send asset, receive asset and amount"
 		from ....swap.util import init_swap_proto, get_swap_asset
-		from_asset = get_swap_asset(self.cfg, send_asset, direction='send')
-		to_asset = get_swap_asset(self.cfg, recv_asset, direction='recv')
+		from_asset = get_swap_asset(self.cfg, send_asset, direction='send', sanitize_input=True)
+		to_asset = get_swap_asset(self.cfg, recv_asset, direction='recv', sanitize_input=True)
 		send_amt = init_swap_proto(self.cfg, from_asset).coin_amt(str(amt))
 		return self.do_quote(from_asset, to_asset, send_amt)
 
