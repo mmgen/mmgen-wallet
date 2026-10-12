@@ -21,9 +21,9 @@ class ExpInt4(ExpInt):
 	def __new__(cls, spec):
 		return ExpInt.__new__(cls, spec, prec=exp_prec)
 
-def rpc_client(tx, amt):
-	from .thornode import Thornode
-	return Thornode(tx, amt)
+def quote_client(tx, amt):
+	from .quote import ThornodeQuote
+	return ThornodeQuote(tx, amt)
 
 from .cfg import THORChainSwapCfg as SwapCfg
 

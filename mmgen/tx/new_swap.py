@@ -130,7 +130,7 @@ class NewSwap(New):
 			if not args.send_amt:
 				die(1, 'With --quote, you must supply a send amount')
 			await self.display_quote(
-				self.swap_proto_mod.rpc_client(self, args.send_amt),
+				self.swap_proto_mod.quote_client(self, args.send_amt),
 				skip_est_fee = True)
 			sys.exit(0)
 
@@ -204,7 +204,7 @@ class NewSwap(New):
 
 	async def update_vault_output(self, amt, *, deduct_est_fee=False):
 		from ..term import get_char
-		qd = self.swap_proto_mod.rpc_client(self, amt)
+		qd = self.swap_proto_mod.quote_client(self, amt)
 		while True:
 			await self.display_quote(qd, deduct_est_fee=deduct_est_fee)
 			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')

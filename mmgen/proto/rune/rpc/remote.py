@@ -145,9 +145,9 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		from_asset = get_swap_asset(self.cfg, send_asset, direction='send')
 		to_asset = get_swap_asset(self.cfg, recv_asset, direction='recv')
 		send_amt = init_swap_proto(self.cfg, from_asset).coin_amt(str(amt))
-		return self.get_quote(from_asset, to_asset, send_amt)
+		return self.do_quote(from_asset, to_asset, send_amt)
 
-	def get_quote(self, from_asset, to_asset, amt, *, amt_is_atomic=False):
+	def do_quote(self, from_asset, to_asset, amt, *, amt_is_atomic=False):
 		from ....swap.util import get_swap_proto_mod
 		swap_cfg = get_swap_proto_mod(self.swap_proto).SwapCfg(self.cfg)
 		qs = make_query_string({

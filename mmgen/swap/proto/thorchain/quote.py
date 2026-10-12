@@ -7,7 +7,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-swap.proto.thorchain.thornode: THORChain swap protocol network query ops
+swap.proto.thorchain.quote: THORChain swap protocol remote quote class
 """
 
 import time
@@ -23,7 +23,7 @@ gas_unit_data = {
 	'gwei':        _gd('G', 'Gwei'),
 }
 
-class Thornode:
+class ThornodeQuote:
 
 	def __init__(self, tx, amt):
 		self.tx = tx
@@ -36,10 +36,10 @@ class Thornode:
 				and self.tx.send_asset.chain != 'THOR'): # token swap
 			from ....swap.util import get_swap_asset
 			rune_asset = get_swap_asset(self.tx.cfg, 'RUNE')
-			in_data = self.rpc.get_quote(self.tx.send_asset, rune_asset, self.in_amt)
+			in_data = self.rpc.do_quote(self.tx.send_asset, rune_asset, self.in_amt)
 			if self.tx.proto.network != 'regtest':
 				time.sleep(1.1) # ninerealms max request rate 1/sec
-			out_data = self.rpc.get_quote(
+			out_data = self.rpc.do_quote(
 				rune_asset,
 				self.tx.recv_asset,
 				in_data['expected_amount_out'],
@@ -49,7 +49,7 @@ class Thornode:
 				'fees': out_data['fees'],
 				'expiry': min(in_data['expiry'], out_data['expiry'])}
 		else:
-			self.data = self.rpc.get_quote(self.tx.send_asset, self.tx.recv_asset, self.in_amt)
+			self.data = self.rpc.do_quote(self.tx.send_asset, self.tx.recv_asset, self.in_amt)
 
 	async def format_quote(self, *, deduct_est_fee=False, skip_est_fee=False):
 		from ....util import make_timestr, ymsg
