@@ -24,7 +24,8 @@ def process_response(json_response, errmsg):
 	data = json.loads(json_response)
 	if isinstance(data, dict) and 'result' in data:
 		if data['result'] is None:
-			from ....util import die
+			from ....util import ymsg, pp_fmt, die
+			ymsg(pp_fmt(data))
 			die('RPCFailure', errmsg)
 		return data['result']
 	return data

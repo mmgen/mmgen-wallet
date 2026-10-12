@@ -53,13 +53,13 @@ class TxInfo(TxInfo):
 				sort,
 				','.join(self.sort_orders)))
 
-		def get_mmid_fmt(e, is_input):
+		def get_mmid_fmt(e, is_output, *, terse=False):
 			if e.mmid:
 				return e.mmid.fmt2(
 					max_mmwid,
 					encl = '()',
 					color = True,
-					append_chars = ('', ' (chg)')[bool(not is_input and e.is_chg and terse)],
+					append_chars = ('', ' (chg)')[bool(is_output and e.is_chg and terse)],
 					append_color = 'green')
 			else:
 				return MMGenID.fmtc(
@@ -69,7 +69,7 @@ class TxInfo(TxInfo):
 
 		def format_io(desc):
 			io = getattr(tx, desc)
-			is_input = desc == 'inputs'
+			is_output = desc == 'outputs'
 			yield desc.capitalize() + ':\n' + enl
 			confs_per_day = 60*60*24 // tx.proto.avg_bdi
 
@@ -93,7 +93,7 @@ class TxInfo(TxInfo):
 				for n, e in enumerate(io_sorted()):
 					yield '{:3} {} {} {}\n'.format(
 						n + 1,
-						e.addr.fmt(vp1, addr_w, color=True) + ' ' + get_mmid_fmt(e, is_input)
+						e.addr.fmt(vp1, addr_w, color=True) + ' ' + get_mmid_fmt(e, is_output, terse=True)
 							if e.addr else data_disp(e.data),
 						e.amt.fmt(iwidth, color=True),
 						tx.dcoin)
@@ -107,7 +107,7 @@ class TxInfo(TxInfo):
 
 				def gen_input(n, e):
 					yield (n + 1, 'tx,vout:', f'{e.txid.hl()},{red(str(e.vout))}')
-					yield ('', 'address:', f'{e.addr.hl(vp1)} {get_mmid_fmt(e, True)}')
+					yield ('', 'address:', f'{e.addr.hl(vp1)} {get_mmid_fmt(e, False)}')
 					if have_bch:
 						yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
 					yield from gen_common(e)
@@ -116,7 +116,7 @@ class TxInfo(TxInfo):
 						yield ('', 'confirmations:', f'{nc} (around {nc // confs_per_day} days)')
 
 				def gen_output(n, e):
-					yield (n + 1, 'address:', (f'{e.addr.hl(vp1)} {get_mmid_fmt(e, False)}'
+					yield (n + 1, 'address:', (f'{e.addr.hl(vp1)} {get_mmid_fmt(e, True)}'
 						if e.addr else e.data.hl(add_label=True)))
 					if have_bch and e.addr:
 						yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
@@ -125,7 +125,7 @@ class TxInfo(TxInfo):
 						yield ('', 'change:', green('True'))
 
 				lcw = len(str(len(io))) + 1
-				gen = gen_input if is_input else gen_output
+				gen = gen_output if is_output else gen_input
 
 				for n, e in enumerate(io_sorted()):
 					yield '\n'.join(f'{a:>{lcw}} {b:<8} {c}' for a, b, c in gen(n, e)) + '\n\n'

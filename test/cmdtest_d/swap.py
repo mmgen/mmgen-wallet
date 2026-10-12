@@ -142,7 +142,14 @@ class CmdTestSwapMethods:
 				'--ltc-rpc-port=19571'],
 			spawn_only = spawn_only)
 
-	def _swaptxsend(self, *, add_opts=[], spawn_only=False, status=False, dump_hex=False):
+	def _swaptxsend(
+			self,
+			*,
+			add_opts   = [],
+			spawn_only = False,
+			status     = False,
+			dump_hex   = False,
+			expect_pats = None):
 		fn = self.get_file_with_ext('sigtx')
 		t = self.spawn(
 			'mmgen-txsend',
@@ -151,6 +158,8 @@ class CmdTestSwapMethods:
 		if spawn_only:
 			return t
 		t.view_tx('v')
+		if expect_pats:
+			t.expect(expect_pats, regex=True)
 		if status:
 			return t
 		t.expect('(y/N): ', 'n')
@@ -174,14 +183,21 @@ class CmdTestSwapMethods:
 		t.written_to_file('Signed transaction')
 		return t
 
-	def _swaptxbump(self, fee, *, add_opts=[], output_args=[], exit_val=None):
+	def _swaptxbump(self, fee, *, add_opts=[], output_args=[], single_output=False, exit_val=None):
 		self.get_file_with_ext('rawtx', delete_all=True)
 		fn = self.get_file_with_ext('sigtx')
 		t = self.spawn(
 			'mmgen-txbump',
 			['-q', '-d', self.tmpdir] + self.bob_opt + add_opts + output_args + [fn],
 			exit_val = exit_val)
-		return self._swaptxbump_ui_common(t, interactive_fee=fee, new_outputs=bool(output_args))
+		t = self._swaptxbump_ui_common(
+				t,
+				interactive_fee = fee,
+				single_output   = single_output,
+				new_outputs     = bool(output_args))
+		t.read()
+		os.unlink(fn) # bumped sigtx replaces the original
+		return t
 
 	def _swaptxbump_ui_common_new_outputs(
 			self,
@@ -205,6 +221,7 @@ class CmdTestSwapMethods:
 			inputs          = None,
 			interactive_fee = None,
 			file_desc       = None,
+			single_output   = False,
 			new_outputs     = False):
 		if new_outputs:
 			if not self.proto.is_vm:
@@ -212,7 +229,7 @@ class CmdTestSwapMethods:
 			t.expect('(Y/n): ', 'y')        # fee ok?
 			t.expect('(Y/n): ', 'y')        # change ok?
 		else:
-			if not self.proto.is_vm:
+			if not (self.proto.is_vm or single_output):
 				t.expect('ENTER for the change output): ', '\n')
 				t.expect('(Y/n): ', 'y')    # confirm deduct from chg output
 			t.expect('to continue: ', '\n') # exit swap quote

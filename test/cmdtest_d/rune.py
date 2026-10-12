@@ -22,10 +22,10 @@ from .shared import CmdTestShared
 
 class CmdTestRuneMethods:
 
-	def _rune_bal_refresh(self, menu_prompt=None):
+	def _rune_bal_refresh(self, menu_prompt=None, add_opts=[]):
 		t = self.spawn(
 			'mmgen-tool',
-			self.rune_opts + self.add_eth_opts + ['listaddresses', 'interactive=1'])
+			self.rune_opts + self.add_eth_opts + add_opts + ['listaddresses', 'interactive=1'])
 		prompt = menu_prompt or self.menu_prompt
 		t.expect(prompt, 'R')
 		t.expect('menu): ', '3\n')
@@ -55,11 +55,13 @@ class CmdTestRuneMethods:
 				no_passthru_opts = ['coin']),
 			has_label = True)
 
-	def _rune_txsend(self, add_opts=[], *, test=False, dump_hex=False):
+	def _rune_txsend(self, add_opts=[], *, test=False, dump_hex=False, spawn_only=False):
 		t = self.spawn(
 			'mmgen-txsend',
 			self.rune_opts + add_opts + [self.get_file_with_ext('sigtx')],
 			no_passthru_opts = ['coin'])
+		if spawn_only:
+			return t
 		t.expect('view: ', 'y')
 		t.expect('to continue: ', 'z')
 		t.expect('(y/N): ', 'n') # edit comment?
