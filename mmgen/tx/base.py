@@ -79,16 +79,22 @@ class Base(MMGenObject):
 	chain        = None
 	signed       = False
 	is_swap      = False
+	is_deposit   = False
+	is_refreq    = False
+	is_memoless  = False
 	is_compat    = False
 	has_comment  = True
 	swap_attrs = {
 		'swap_proto': None,
 		'swap_quote_expiry': None,
+		'swap_send_asset_spec': None,
 		'swap_recv_addr_mmid': None,
 		'swap_recv_asset_spec': None,
 		'swap_memo': None,
 		'token_vault_addr': None, # nosec # B105
 		'serialized2': None,
+		'is_memoless': None,
+		'refnum': None,
 		'coin_txid2': CoinTxID}
 	file_format  = 'json'
 	non_mmgen_inputs_msg = f"""

@@ -85,7 +85,39 @@ parse_vectors = [
 			memo = '=:THOR.RUNE:thor1lukwlve7hayy66qrdkp4k7sh0emjqwergy7tl3:127025748855/0/1',
 			pubkey = '03da157f891abfe7822efb91f59667aa6cc6c3768a7e280caeb9ae243c969eb3e7',
 			signature = 'be8324f6a1535b971d63715532e2e42ee3c35c05b81ed9b6bccd9a1765688eca'
-			'4ca00a66119b07c5168c6c78e22299becc82d5f311ee79ae9183776b0dff3269'))
+			'4ca00a66119b07c5168c6c78e22299becc82d5f311ee79ae9183776b0dff3269')),
+	_pv(
+		'mainnet-tx-msgdeposit-refreq1.binpb',
+		'957e120cb0c94fb26e2601a7c9190ae038c4b30cdddd37b55674650f2082b2c2',
+		swap_tx_parms(
+			'thor1uszfy2dyd2rcjxxpy6wjuv450muljac6ssr70k',
+			'0',
+			50000000,
+			147684,
+			25562,
+			fee = 2000000,
+			synth = False,
+			trade = False,
+			memo = 'REFERENCE:LTC.LTC:=:e:0x7182f0983a455113d925ea5fb92b99056bb953c7:310716643/0/16:sto/uws:0/1',
+			pubkey = '025fa52beedbfb8d0140cc092281c12f5d3951c444fe9ea1f3249170c9bf29c283',
+			signature = 'fe62a40de37e09109297fb1e969b3b26499b6a22abd58daf50a0fd4afbb94184'
+			'61ac1c3613e0c58813b5436dc04e615bd92e6af9044880405639034be4888696')),
+	_pv(
+		'mainnet-tx-msgdeposit-refreq2.binpb',
+		'f197ff8e235097e9a086ef3e0bc49c2d03e01dae36042a759cba683e99775c40',
+		swap_tx_parms(
+			'thor1uszfy2dyd2rcjxxpy6wjuv450muljac6ssr70k',
+			'0',
+			50000000,
+			147684,
+			2675,
+			fee = 2000000,
+			synth = False,
+			trade = False,
+			memo = 'REFERENCE:BTC.BTC:=:l:ltc1qxahvkaz58s27q38h9qg2aykp4efwqfph6ar6mu:1016595987/1/0:sto:0',
+			pubkey = '025fa52beedbfb8d0140cc092281c12f5d3951c444fe9ea1f3249170c9bf29c283',
+			signature = '246ede219411b4a1f7da334f2c1c51cbb1376d43d5bd63c04d40d4b7d4ac0f2d'
+			'421ce07c8acbf7aa7e61e782266a83a5468c46c2e5a232314716391bbdc9e2c8'))
 ]
 
 _bv = namedtuple('build_vector', ['txid', 'txid2', 'parms', 'null_fee'], defaults=[None])

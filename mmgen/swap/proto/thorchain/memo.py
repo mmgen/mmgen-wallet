@@ -40,6 +40,21 @@ class THORChainMemo:
 		return bool(re.search(pat.encode(), bytes_data))
 
 	@classmethod
+	def digest(cls, parsed_memo):
+		"""
+		Produce a human-readable digest from a parsed memo
+		"""
+		m = parsed_memo
+		return '{} {} {} {} {}/{}/{}'.format(
+			m.proto,
+			m.function,
+			m.asset.full_name,
+			m.address,
+			m.trade_limit,
+			m.stream_interval,
+			m.stream_quantity)
+
+	@classmethod
 	def parse(cls, s):
 		"""
 		All fields are validated, excluding address (cannot validate, since network is unknown)

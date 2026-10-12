@@ -45,6 +45,9 @@ class Unsigned(VmUnsigned, Completed, TxBase.Unsigned):
 		if self.is_swap:
 			from .protobuf import swap_tx_parms as tx_parms
 			add_parms = {'memo': self.swap_memo}
+		elif self.is_deposit:
+			from .protobuf import swap_tx_parms as tx_parms
+			add_parms = {'memo': self.swap_memo, 'trade': False, 'synth': False}
 		else:
 			from .protobuf import send_tx_parms as tx_parms
 			add_parms = {'to_addr': o['to']}

@@ -84,7 +84,11 @@ class Bump(Completed, NewSwap):
 				self.rel_fee_disp))
 
 		if self.is_swap:
-			self.recv_proto = self.check_swap_memo().proto
+			if self.is_memoless:
+				from ..swap.util import init_swap_proto
+				self.recv_proto = init_swap_proto(self.cfg, self.recv_asset)
+			else:
+				self.recv_proto = self.check_swap_memo().proto
 			self.swap_cfg = self.swap_proto_mod.SwapCfg(self.cfg)
 			fee_hint = await self.update_vault_output(self.send_amt)
 		else:
@@ -95,6 +99,9 @@ class Bump(Completed, NewSwap):
 			desc = 'User-selected' if self.cfg.fee else 'Recommended' if fee_hint else None)
 
 		self.bump_fee(output_idx, self.usr_fee)
+
+		if self.is_memoless and output_idx == self.vault_idx:
+			self.update_vault_memoless_amt(round_down=True)
 
 		assert self.fee <= self.proto.max_tx_fee
 

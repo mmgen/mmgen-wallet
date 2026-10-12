@@ -30,7 +30,10 @@ opts_data = {
 		'tx':     ['-', 't'],
 		'swaptx': ['-', 's'],
 	}[target],
-	'sets': [('yes', True, 'quiet', True)],
+	'sets': [
+		('yes', True, 'quiet', True),
+		('refnum', bool, 'memoless', True),
+		('no_refreq_tx', True, 'memoless', True)],
 	'requires': [('coin', 'XMR', 'autosign', True)],
 	'text': {
 		'desc': {
@@ -73,6 +76,12 @@ opts_data = {
 			b- -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
 			-- -m, --minconf=     n  Minimum number of confirmations required to spend
 			+                        outputs (default: 1)
+			-s -M, --memoless        Perform a memoless swap, creating a reference request
+			+                        TX (activates first pass).
+			-s -n, --refnum=N        The memoless reference number obtained after sending
+			+                        the reference request TX (activates second pass).
+			-s -N, --no-refreq-tx    With --memoless, do not create a reference request TX.
+			+                        Instead, display the reference memo and exit.
 			m- -p, --priority=N      Specify an integer priority ‘N’ for inclusion of trans-
 			+                        action in blockchain (higher number means higher fee).
 			+                        Valid parameters: {tp}.
@@ -155,7 +164,7 @@ async def main():
 	from .tx import NewTX
 	if target == 'swaptx':
 		from .tx.new_swap import get_send_proto
-		tx1 = NewTX(cfg=cfg, proto=get_send_proto(cfg), target=target)
+		tx1 = NewTX(cfg=cfg, proto=get_send_proto(cfg), target=target, is_memoless=cfg.memoless)
 	else:
 		tx1 = NewTX(cfg=cfg, proto=cfg._proto, target=target)
 
@@ -164,7 +173,18 @@ async def main():
 		locktime = int(cfg.locktime or 0),
 		do_info  = cfg.info)
 
-	if not tx1.is_compat:
+	if tx1.is_compat:
+		return
+
+	if tx1.is_swap and tx1.is_refreq: # memoless first pass
+		if cfg.no_refreq_tx:
+			Msg(f'MEMO: {tx1.reference_memo}')
+		else:
+			rune_cfg = Config({'_clone': cfg, 'coin': 'rune', 'fee': tx1.memoless_tx_fee})
+			tx2 = NewTX(cfg=rune_cfg, proto=rune_cfg._proto, target='tx', refreq_src=tx1)
+			tx3 = await tx2.create(args=('deposit,0', f'data:{tx1.reference_memo}'))
+			write_to_file(tx3, asi)
+	else:
 		write_to_file(tx2, asi)
 
 async_run(cfg, main)

@@ -25,6 +25,14 @@ def quote_client(tx, amt):
 	from .quote import ThornodeQuote
 	return ThornodeQuote(tx, amt)
 
+def reference_memo(send_asset, memo):
+	from .memoless import THORChainReferenceMemo
+	return THORChainReferenceMemo(send_asset, memo)
+
+def memoless_amt(amt, refnum=None, *, round_down=False):
+	from .memoless import THORChainMemolessAmount
+	return THORChainMemolessAmount(amt, refnum=refnum, round_down=round_down)
+
 from .cfg import THORChainSwapCfg as SwapCfg
 
 from .asset import THORChainSwapAsset as SwapAsset

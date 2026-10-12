@@ -191,7 +191,7 @@ class New(Base):
 
 		coin_addr, mmid, is_vault = (None, None, False)
 
-		if arg == 'vault' and self.is_swap: # ‘is_swap’ test necessary because could be bump tx
+		if (arg == 'vault' and self.is_swap) or (arg == 'deposit' and self.is_deposit):
 			is_vault = True
 		elif mmid := get_obj(MMGenID, proto=proto, id_str=arg, silent=True):
 			coin_addr = mmaddr2coinaddr(self.cfg, arg, ad_w, ad_f, proto)
@@ -473,6 +473,8 @@ class New(Base):
 			cmd_args, addrfile_args = self.get_addrfiles_from_cmdline(args)
 			if self.is_swap:
 				cmd_args = await self.process_swap_cmdline_args(cmd_args, addrfile_args)
+				if cmd_args is None: # memoless
+					return self
 			if self.is_compat:
 				await self.process_cmdline_args(cmd_args, None, None)
 			else:
@@ -496,6 +498,9 @@ class New(Base):
 
 		from ..ui import do_license_msg
 		do_license_msg(self.cfg)
+
+		if self.is_memoless and self.refnum and self.vault_output.amt:
+			self.update_vault_memoless_amt()
 
 		if not (self.is_bump or self.cfg.inputs):
 			await self.twuo.view_filter_and_sort()
@@ -539,6 +544,8 @@ class New(Base):
 		if not self.is_compat:
 			self.check_non_mmgen_inputs(caller=caller)
 			self.update_change_output(funds_left)
+			if self.is_memoless and self.refnum:
+				self.update_vault_memoless_amt(round_down=len(self.outputs) == 1)
 			self.check_chg_addr_is_wallet_addr()
 
 		if self.has_comment and not self.cfg.yes:

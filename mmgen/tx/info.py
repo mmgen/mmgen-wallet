@@ -70,9 +70,10 @@ class TxInfo:
 			if tx.coin_txid:
 				yield f'  {tx.coin} TxID: {tx.coin_txid.hl()}\n'
 
-			if tx.is_swap:
+			if tx.is_swap and not tx.is_memoless:
 				from ..swap.proto.thorchain import Memo, name
 				data = (
+					tx.memoless_memo.encode() if tx.is_memoless else
 					tx.swap_memo.encode() if tx.proto.is_vm else
 					tx.data_output.data)
 				if Memo.is_partial_memo(data):

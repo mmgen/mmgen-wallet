@@ -65,7 +65,10 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 			'acct_info',
 			'balance',
 			'quote',
-			'tx_info')}
+			'tx_info',
+			'get_refnum',
+			'validate_refnum',
+			'validate_amt')}
 
 	def __init__(self, cfg, proto):
 		for k, v in proto.rpc_remote_params.items():
@@ -159,6 +162,34 @@ class THORChainRemoteRPCClient(RemoteRPCClient):
 		return process_response(
 			self.swap_api.get(path=f'/thorchain/quote/swap?{qs}'),
 			errmsg = 'swap quote request failed')
+
+	def get_refnum(self, txid: str):
+		"get reference memo info for a reference request transaction by TxID"
+		return process_response(
+			self.rest_api.get(path=f'/thorchain/memo/{txid}'),
+			errmsg = f'get reference memo info for txid ‘{txid}’ failed')
+
+	def validate_refnum(self, asset: str, refnum: str):
+		"check that given asset/reference combination is valid"
+		from ....swap.util import get_swap_asset
+		swap_asset = get_swap_asset(self.cfg, asset, sanitize_input=True)
+		return process_response(
+			self.rest_api.get(path=f'/thorchain/memo/{swap_asset.full_name}/{refnum}'),
+			errmsg = f'asset/reference combination {swap_asset.full_name}/{refnum} is invalid')
+
+	def validate_amt(self, asset: str, amt: Decimal):
+		"check that given asset/amount combination resolves to a valid reference"
+		from ....swap.util import get_swap_asset, init_swap_proto
+		swap_asset = get_swap_asset(self.cfg, asset, sanitize_input=True)
+		return self.do_validate_amt(
+			swap_asset,
+			init_swap_proto(self.cfg, swap_asset).coin_amt(amt))
+
+	def do_validate_amt(self, asset, amt):
+		int_amt = amt.to_unit('atomic')
+		return process_response(
+			self.rest_api.get(path=f'/thorchain/memo/check/{asset.full_name}/{int_amt}'),
+			errmsg = f'asset/amount combination {asset.full_name}/{int_amt} is invalid')
 
 	def tx_info(self, txid: str):
 		"get information for a transaction by TxID"

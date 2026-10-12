@@ -13,6 +13,9 @@ test.cmdtest_d.httpd.thornode.rpc: Thornode RPC HTTP server
 import re, json
 from wsgiref.util import request_uri
 
+from mmgen.util import is_int
+from mmgen.cfg import Config
+
 from . import ThornodeServer
 
 def get_inbounds_info():
@@ -51,6 +54,10 @@ class ThornodeRPCServer(ThornodeServer):
 			'height': '12345678'}}
 
 	inbounds_info = get_inbounds_info()
+
+	var_actions = {
+		'halt_memoless':   ('mimir_info', 'HALTMEMOLESS'),
+		'memoless_tx_fee': ('mimir_info', 'MEMOLESSTXNCOST')}
 
 	chain_var_actions = {
 		'ltc_global_paused': ('inbounds_info', 'LTC', 'global_trading_paused'),
@@ -117,6 +124,39 @@ class ThornodeRPCServer(ThornodeServer):
 			def lastblock(m, length):
 				return self.lastblock_info
 
+			def get_refnum(m, length):
+				return self.memo_info[m[1].lower()[:8]] # 0c7454c0
+
+			def validate_refnum(m, length):
+				mi = self.memo_info['0c7454c0']
+				assert m[1] == mi['asset']
+				assert m[2] == mi['reference']
+				return mi
+
+			def validate_amt(m, length):
+				mi = self.memo_info['0c7454c0']
+				assert m[1] == mi['asset']
+				assert is_int(m[2])
+
+				from mmgen.swap.util import get_swap_asset, init_swap_proto # pylint: disable=all
+				from mmgen.swap.proto.thorchain.memoless import THORChainMemolessAmount # pylint: disable=all
+
+				cfg = Config()
+				swap_asset = get_swap_asset(cfg, m[1], sanitize_input=True)
+				amt = init_swap_proto(cfg, swap_asset).coin_amt(int(m[2]), from_unit='atomic')
+
+				a = THORChainMemolessAmount(amt)
+				assert a.refnum == int(mi['reference']), f'{a.refnum} != {int(mi["reference"])}'
+
+				return {
+					'reference': a.refnum,
+					'available': True,
+					'can_register': True,
+					'expires_at': 9999999999,
+					'memo': mi['memo'],
+					'usage_count': 0,
+					'max_use': 1} # 0 = unlimited
+
 			def inbound_addrs(m, length):
 				return self.inbounds_info
 
@@ -125,6 +165,9 @@ class ThornodeRPCServer(ThornodeServer):
 			('mimir',             'GET',  r'/thorchain/mimir'),
 			('lastblock',         'GET',  r'/thorchain/lastblock(.*)'),
 			('inbound_addrs',     'GET',  r'/thorchain/inbound_addresses'),
+			('validate_amt',      'GET',  r'/thorchain/memo/check/(\S+)/(\S+)'),
+			('validate_refnum',   'GET',  r'/thorchain/memo/(\S+)/(\S+)'),
+			('get_refnum',        'GET',  r'/thorchain/memo/(\S+)'),
 			('balance',           'GET',  r'/bank/balances/(\S+)'),
 			('acct_info',         'GET',  r'/auth/accounts/(\S+)'),
 			('tx_info',           'POST', r'/tx$'),

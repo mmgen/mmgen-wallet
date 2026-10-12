@@ -175,8 +175,12 @@ async def process_tx(tx):
 			await tx.post_send(asi)
 			return 0
 
-		if tx.is_swap:
+		if tx.is_swap or tx.is_refreq:
 			tx.check_swap_network()
+
+		if tx.is_swap:
+			if tx.is_memoless:
+				await tx.check_memoless_presend()
 			if not tx.check_swap_expiry():
 				die(1, 'Swap quote has expired. Please re-create the transaction')
 

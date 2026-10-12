@@ -131,6 +131,9 @@ mods = {
 		'wif2redeem_script',
 		'wif2segwit_pair',
 	),
+	'amt': (
+		'memoless_amt',
+	),
 	'mnemonic': (
 		'hex2mn',
 		'mn2hex',

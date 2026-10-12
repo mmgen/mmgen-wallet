@@ -32,6 +32,18 @@ class OnlineSigned(Signed):
 		from . import _base_proto_subclass
 		return _base_proto_subclass('Status', 'status', proto=self.proto)(self)
 
+	async def check_memoless_presend(self):
+		data = self.swap_proto_rpc.do_validate_amt(self.send_asset, self.vault_output.amt)
+		if data['reference'] != self.refnum:
+			die(3, f'registered reference number ({data["reference"]}) does not match ours ({self.refnum})')
+		if not data['available']:
+			die(3, f'reference number {self.refnum} is not available')
+		await self.parse_network_memo(
+			data = data,
+			recv_asset_spec = self.swap_recv_asset_spec,
+			recv_twmmid = self.swap_recv_addr_mmid,
+			chk_only = True)
+
 	def check_swap_expiry(self):
 		from ..util2 import format_elapsed_hr
 		expiry = self.swap_quote_expiry

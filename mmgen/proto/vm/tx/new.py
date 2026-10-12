@@ -53,6 +53,9 @@ class New:
 				return
 			case 2 if self.is_swap:
 				process_data_arg(cmd_args[1])
+			case 2 if cmd_args[0].startswith('deposit,'):
+				process_data_arg(cmd_args[1])
+				self.is_deposit = True
 			case n:
 				die(1, f'{n} output{suf(n)} specified, but VM transactions must have exactly one')
 

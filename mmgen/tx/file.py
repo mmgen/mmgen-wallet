@@ -72,7 +72,9 @@ class MMGenTxFile(MMGenObject):
 		'comment': MMGenTxComment,
 		'coin_txid': CoinTxID,
 		'sent_timestamp': None,
-		'is_swap': None}
+		'is_deposit': None,
+		'is_swap': None,
+		'is_refreq': None}
 
 	def __init__(self, tx):
 		self.tx       = tx
@@ -116,7 +118,7 @@ class MMGenTxFile(MMGenObject):
 			if k in data:
 				setattr(tx, k, v(data[k]) if v else data[k])
 
-		if tx.is_swap:
+		if tx.is_swap or tx.is_deposit:
 			for k, v in tx.swap_attrs.items():
 				if k in data:
 					setattr(tx, k, v(data[k]) if v else data[k])
@@ -288,10 +290,10 @@ class MMGenTxFile(MMGenObject):
 					'outputs': [{k: v for k,v in e._asdict().items()
 						if not (type(v) is bool and v is False)} for e in tx.outputs]
 				} | {
-					k: getattr(tx, k) for k in self.extra_attrs if getattr(tx, k)
+					k: getattr(tx, k) for k in self.extra_attrs if getattr(tx, k, None)
 				} | ({
 					k: getattr(tx, k) for k in tx.swap_attrs if getattr(tx, k, None)
-				} if tx.is_swap else {}))
+				} if tx.is_swap or tx.is_deposit else {}))
 			return '{{"{}":{},"chksum":"{}"}}'.format(self.data_label, data, make_chksum_6(data))
 
 		fmt_data = {'json': format_data_json, 'legacy': format_data_legacy}[tx.file_format]()

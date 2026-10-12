@@ -21,7 +21,7 @@ class TxInfo(VmTxInfo, TxInfo):
 	def format_body(self, blockcount, nonmm_str, max_mmwid, enl, *, terse, sort):
 		tx = self.tx
 		t = tx.txobj
-		has_memo = tx.is_swap
+		has_memo = tx.is_swap or tx.is_deposit
 		fs = """
 			From:      {f}{f_mmid}
 			Amount:    {a} {c}

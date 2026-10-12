@@ -12,7 +12,7 @@ proto.btc.tx.info: Bitcoin transaction info class
 
 from ....tx.info import TxInfo
 from ....util import fmt, die
-from ....color import red, green, blue, pink
+from ....color import red, green, blue, pink, orange
 from ....addr import MMGenID
 
 class TxInfo(TxInfo):
@@ -62,10 +62,15 @@ class TxInfo(TxInfo):
 					append_chars = ('', ' (chg)')[bool(is_output and e.is_chg and terse)],
 					append_color = 'green')
 			else:
-				return MMGenID.fmtc(
-					'[vault address]' if not is_input and e.is_vault else nonmm_str,
-					max_mmwid,
-					color = True)
+				return (
+					(orange('[vault refnum ')
+							+ red(str(tx.refnum))
+							+ orange(']')
+							+ (' ' * (max_mmwid - 15 - len(str(tx.refnum))))
+						if tx.is_memoless and terse and tx.refnum else
+					MMGenID.fmtc('[vault address]', max_mmwid, color=True))
+						if is_output and e.is_vault else
+					MMGenID.fmtc(nonmm_str, max_mmwid, color=True))
 
 		def format_io(desc):
 			io = getattr(tx, desc)
@@ -121,6 +126,8 @@ class TxInfo(TxInfo):
 					if have_bch and e.addr:
 						yield ('', '', f'[{e.addr.hl(vp2, color=False)}]')
 					yield from gen_common(e)
+					if e.is_vault and tx.is_memoless and tx.refnum:
+						yield ('', 'refnum:', red(str(tx.refnum)))
 					if e.is_chg:
 						yield ('', 'change:', green('True'))
 

@@ -188,3 +188,148 @@ class unit_tests:
 			), pfx='')
 
 		return True
+
+	def memoless(self, name, ut, desc='memoless amounts'):
+		from mmgen.swap.proto.thorchain.memoless import THORChainMemolessAmount
+		from mmgen.swap.util import get_coin_amt
+		vecs = [
+			{
+				'desc': 'BTC',
+				'asset': 'btc',
+				'data': (
+					('1.00020002', '1.00020002', 100020002, 20002, False),
+					('1',          '1.00049999', 100049999, 49999, False),
+					('1.00020002', '1.00049999', 100049999, 49999, False),
+					('1',          '1.0005',     100050000, 50000, False),
+					('1',          '0.99950001',  99950001, 50001, False),
+					('1',          '0.99999999',  99999999, 99999, False),
+					('1.00049999', '1.00020002', 100020002, 20002, False),
+					('1.00050001', '1.00000001', 100000001,     1, False),
+					('1.99999999', '2.00000001', 200000001,     1, False))
+			}, {
+				'desc': 'BTC round down',
+				'asset': 'btc',
+				'data': (
+					('1.00020002', '1.00020002', 100020002, 20002, True),
+					('1',          '0.99949999',  99949999, 49999, True),
+					('1.00020002', '0.99949999',  99949999, 49999, True),
+					('1',          '0.9995',      99950000, 50000, True),
+					('1',          '0.99950001',  99950001, 50001, True),
+					('1',          '0.99999999',  99999999, 99999, True),
+					('1.00049999', '1.00020002', 100020002, 20002, True),
+					('1.00050001', '1.00000001', 100000001,     1, True),
+					('1.99999999', '1.99900001', 199900001,     1, True))
+			}, {
+				'desc': 'BTC misc',
+				'asset': 'btc',
+				'data': (
+					('1',          '1.00020002', 100020002, 20002, False),
+					('1',          '0.99920002',  99920002, 20002, True),
+					('1.234',      '1.23420002', 123420002, 20002, False),
+					('1.234',      '1.23320002', 123320002, 20002, True),
+					('1.234',      '1.23449999', 123449999, 49999, False),
+					('1.234',      '1.2345',     123450000, 50000, False),
+					('1.234',      '1.2335',     123350000, 50000, True),
+					('1.234',      '1.23350001', 123350001, 50001, False),
+					('1.234',      '1.23350001', 123350001, 50001, True),
+					('1.234',      '1.23399999', 123399999, 99999, False),
+					('1.2345',     '1.23449999', 123449999, 49999, False),
+					('1.23456789', '1.23420002', 123420002, 20002, False),
+					('1.23456789', '1.23499999', 123499999, 99999, False),
+					('1.23456789', '1.23399999', 123399999, 99999, True))
+			}, {
+				'desc': 'ETH',
+				'asset': 'eth',
+				'data': (
+					('1.234567800000000001', '1.234567800000000001', 1234567800000000001, 1,     False),
+					('1.2345678',            '1.234567800000000001', 1234567800000000001, 1,     False),
+					('1.234567800000000001', '1.234567800000050001', 1234567800000050001, 50001, False),
+					('1.2345678',            '1.234567799999999999', 1234567799999999999, 99999, False),
+					('1.234567899999923456', '1.234567899999900001', 1234567899999900001, 1,     True),
+					('1.234567899999960001', '1.234567899999910001', 1234567899999910001, 10001, True),
+					('1.234567899999960002', '1.234567899999910001', 1234567899999910001, 10001, True),
+					('1.23456789',           '1.234567890000020002', 1234567890000020002, 20002, False),
+					('1.23456789',           '1.234567889999920002', 1234567889999920002, 20002, True),
+					('1.23456789',           '1.234567889999999999', 1234567889999999999, 99999, False),
+					('1.23456789',           '1.234567889999999999', 1234567889999999999, 99999, True))
+			}, {
+				'desc': 'USDT',
+				'asset': 'eth.usdt',
+				'data': (
+					('1.012345',   '1.012345', 1012345, 12345, False),
+					('1',          '1.020002', 1020002, 20002, False),
+					('1.025',      '1.075',    1075000, 75000, False),
+					('1.025',      '0.975001',  975001, 75001, False),
+					('1.075',      '1.025001', 1025001, 25001, False),
+					('1.075',      '1.025',    1025000, 25000, False),
+					('1.076',      '1.125',    1125000, 25000, False),
+					('1.012345',   '1.012345', 1012345, 12345, True),
+					('1',          '0.920002',  920002, 20002, True),
+					('1.025',      '0.975',     975000, 75000, True),
+					('1.025',      '0.975001',  975001, 75001, True),
+					('1.075',      '1.025001', 1025001, 25001, True),
+					('1.075',      '1.025',    1025000, 25000, True),
+					('1.076',      '1.025',    1025000, 25000, True),
+					('1.234567',   '1.220002', 1220002, 20002, False),
+					('1.234567',   '1.25',     1250000, 50000, False),
+					('1.234567',   '1.250001', 1250001, 50001, False),
+					('1.234567',   '1.199999', 1199999, 99999, False),
+					('1.234567',   '1.199999', 1199999, 99999, True),
+					('1.567',      '1.520002', 1520002, 20002, False))}]
+
+		def get_type(diff):
+			return 'A' if diff == 0 else (
+				('B' if diff < halfmod else 'C' if diff == halfmod else 'D') if diff > 0 else
+				('E' if diff > -halfmod else 'F' if diff == -halfmod else 'G'))
+
+		mod = THORChainMemolessAmount.mod
+		halfmod = mod // 2
+
+		for vec in vecs:
+			wid = get_coin_amt(cfg, vec['asset'], '0').max_prec + 3
+			fs = '    {:{w}} {:{w}} {:<{w}} {:<6} {:<4} {}'
+			vmsg(f'\n  {vec["desc"]}')
+			vmsg(fs.format('AMT_IN', 'AMT_OUT', 'INT_AMT', 'REFNUM', 'TYPE', 'ROUND_DOWN', w=wid))
+			vmsg(fs.format('------', '-------', '-------', '------', '----', '----------', w=wid))
+			for amt_in, amt_out, int_amt, refnum, round_down in vec['data']:
+				amt = get_coin_amt(cfg, vec['asset'], amt_in)
+				enc = THORChainMemolessAmount(amt, refnum=refnum, round_down=round_down)
+				vmsg(fs.format(
+					amt_in,
+					amt_out,
+					int_amt,
+					refnum,
+					get_type(refnum - amt.to_unit('atomic') % mod),
+					round_down,
+					w = wid))
+
+				assert enc.refnum == refnum, f'{enc.refnum} != {refnum}'
+				assert str(enc.amt) == amt_out, f'{enc.amt!s} != {amt_out}'
+				assert enc.int_amt == int_amt, f'{enc.int_amt} != {int_amt}'
+				if round_down:
+					assert enc.amt <= amt
+
+				dec = THORChainMemolessAmount(enc.amt)
+				assert enc.amt == dec.amt, f'{enc.amt} != {dec.amt}'
+				assert enc.int_amt == dec.int_amt, f'{enc.int_amt} != {dec.int_amt}'
+				assert enc.refnum == dec.refnum, f'{enc.refnum} != {dec.refnum}'
+
+		return True
+
+		vmsg('\nTesting error handling')
+
+		proto = init_proto(cfg, 'btc', need_amt=True)
+
+		def bad1(): THORChainMemolessAmount(proto.coin_amt('1'), 100000)
+		def bad2(): THORChainMemolessAmount(proto.coin_amt('1'), 'foo')
+		def bad3(): THORChainMemolessAmount(proto.coin_amt('1'), -1)
+		def bad4(): THORChainMemolessAmount(1, 1)
+
+		ut.process_bad_data((
+			('refnum (100000)',  'AssertionError', 'must be an integer', bad1),
+			('refnum ("foo")',   'AssertionError', 'must be an integer', bad2),
+			('refnum (-1)',      'AssertionError', 'must be an integer', bad3),
+			('amount (integer)', 'AssertionError', 'must be CoinAmt',    bad4),
+		))
+
+		return True

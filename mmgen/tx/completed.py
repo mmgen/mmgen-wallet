@@ -49,7 +49,7 @@ class Completed(Base):
 
 			self.infile = filename
 
-		if self.is_swap:
+		if self.is_swap or self.is_refreq:
 			from .base_swap import BaseSwapMethods as m
 			for k in m.__dict__:
 				if not k.startswith('_'):
@@ -87,7 +87,8 @@ class Completed(Base):
 				from ..protocol import init_proto
 				text = memo_bytes.decode('ascii')
 				p = Memo.parse(text)
-				r = self.recv_asset
+				# NB: short-circuit asset match test for deposit TX (nothing to match against)
+				r = self.recv_asset if self.is_swap else p.asset
 				assert p.function == 'SWAP', f'‘{p.function}’: unsupported function in swap memo ‘{text}’'
 				assert p.asset.name == r.name, f'invalid memo: {p.asset.name} != {r.name}'
 				proto = init_proto(
@@ -97,13 +98,15 @@ class Completed(Base):
 						need_amt = True)
 				if mmid := getattr(self, 'swap_recv_addr_mmid', None):
 					pass
+				elif not self.is_swap:
+					pass
 				elif self.cfg.allow_non_wallet_swap:
 					ymsg('Warning: allowing swap to non-wallet address (--allow-non-wallet-swap)')
 				else:
 					raise ValueError('Swap to non-wallet address forbidden (override with --allow-non-wallet-swap)')
 				return self.Output(proto, addr=p.address, mmid=mmid, amt=proto.coin_amt('0'))
 
-		if self.is_swap:
+		if self.is_swap and not self.is_memoless:
 			raise ValueError('missing or invalid memo in swap transaction')
 
 	def die_on_version_error(self, errmsg): # overridden by test.overlay.fakemods

@@ -18,9 +18,14 @@ from .base import Base
 
 class New(VmNew, Base, TxBase.New):
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args, refreq_src=None, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.usr_fee = None if self.cfg.fee is None else self.proto.coin_amt(self.cfg.fee)
+		if refreq_src:
+			d = refreq_src.__dict__
+			self.__dict__ |= {k: d[k] for k in self.swap_attrs if k in d and k != 'swap_recv_addr_mmid'}
+			self.is_refreq = True
+			self.swap_send_asset_spec = refreq_src.send_asset.name
 
 	async def get_funds_remaining(self, fee, outputs_sum, start_fee_desc):
 		res = await self.twctl.get_balance(self.inputs[0].addr)

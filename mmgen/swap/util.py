@@ -31,3 +31,13 @@ def get_swap_asset(cfg, asset, *, direction='send', sanitize_input=False):
 	"given an asset symbol, and optionally direction, return a swap asset instance"
 	assert isinstance(asset, str), '‘asset’ must be a string'
 	return get_swap_proto_mod(cfg.swap_proto).SwapAsset(asset, direction, sanitize_input=sanitize_input)
+
+def get_coin_amt(cfg, asset, amt):
+	"given an asset symbol and amount (as string), return a coin amount instance"
+	from ..amt import TokenAmt
+	assert isinstance(asset, str), '‘asset’ must be a string'
+	assert isinstance(amt, str), '‘amt’ must be a string'
+	swap_asset = get_swap_asset(cfg, asset, sanitize_input=True)
+	return (
+		TokenAmt(amt, decimals=swap_asset.decimals) if swap_asset.tokensym else
+		init_swap_proto(cfg, swap_asset).coin_amt(amt))

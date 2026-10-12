@@ -10,10 +10,10 @@
 test.cmdtest_d.swap: asset swap tests for the cmdtest.py test suite
 """
 
-import json
+import os, json
 
 from mmgen.cfg import Config
-from mmgen.util import make_chksum_6
+from mmgen.util import make_chksum_6, cached_property
 from mmgen.protocol import init_proto
 from mmgen.wallet.mmgen import wallet as MMGenWallet
 from mmgen.tx.file import txfile_json_dumps # pylint: disable=no-name-in-module
@@ -21,10 +21,11 @@ from mmgen.tx.file import txfile_json_dumps # pylint: disable=no-name-in-module
 from ..include.common import make_burn_addr, gr_uc, imsg
 
 from .include.runner import CmdTestRunner
-from .include.common import dfl_words_file
+from .include.common import cleanup_env, dfl_words_file
 
 from .autosign import CmdTestAutosign, CmdTestAutosignThreaded
 from .regtest import CmdTestRegtest, dfl_wcls, rt_pw, strip_ansi_escapes
+from .ethdev import CmdTestEthdevMethods
 from .rune import CmdTestRuneMethods
 
 sample1 = gr_uc[:24]
@@ -90,6 +91,7 @@ class CmdTestSwapMethods:
 			reload_quote    = False,
 			sign_and_send   = False,
 			need_passphrase = True,
+			memoless        = False,
 			menu_prompt     = None,
 			expect          = None):
 		t.expect(menu_prompt or self.menu_prompt, 'q')
@@ -105,6 +107,8 @@ class CmdTestSwapMethods:
 		if expect:
 			t.expect(expect)
 		t.expect('to continue: ', '\n')
+		if memoless:
+			return t
 		if sign_and_send:
 			if need_passphrase:
 				t.passphrase(dfl_wcls.desc, rt_pw)
@@ -297,7 +301,8 @@ class CmdTestSwap(
 		CmdTestSwapMethods,
 		CmdTestRuneMethods,
 		CmdTestRegtest,
-		CmdTestAutosignThreaded):
+		CmdTestAutosignThreaded,
+		CmdTestEthdevMethods):
 	'swap operations (LTC <=> BCH)'
 
 	bdb_wallet = True
@@ -308,6 +313,8 @@ class CmdTestSwap(
 	coins         = ['bch', 'ltc']
 	daemon_coins  = ['bch', 'ltc']
 	subseed_idx = '29L'
+	rune_menu_prompt = 'efresh balance:\b'
+	refreq_txid = '0c7454c06d3fc0e520d34283e6f491ce7afe5abb3f569bbdfea1732e04b716ec'
 
 	cmd_group_in = (
 		('list_assets',              'listing swap assets'),
@@ -318,6 +325,7 @@ class CmdTestSwap(
 		('subgroup.signsend',        ['init_swap']),
 		('subgroup.signsend_bad',    ['init_swap']),
 		('subgroup.autosign',        ['signsend']),
+		('subgroup.memoless',        ['init_swap']),
 		('stop_thornode_servers',    'stopping the Thornode RPC and swap servers'),
 		('stop',                     'stopping regtest daemons'))
 
@@ -370,6 +378,7 @@ class CmdTestSwap(
 			('swaptxcreate_neterror1', 'creating a swap transaction (network error, trading paused)'),
 			('swaptxcreate_neterror2', 'creating a swap transaction (network error, trading for coin paused)'),
 			('swaptxcreate_neterror3', 'creating a swap transaction (network error, trading for coin halted)'),
+			('swaptxcreate_neterror4', 'creating a swap transaction (network error, memoless swaps halted)'),
 		),
 		'signsend': (
 			'Swap TX create, sign and send operations (LTC => BCH)',
@@ -416,7 +425,45 @@ class CmdTestSwap(
 			('autosign_swaptxsend2',   'sending the transaction'),
 			('generate_ltc',           'generating a block'),
 			('swap_bal3',              'checking the balance'),
-			('wait_loop_kill',         'stopping autosign wait loop'))
+			('wait_loop_kill',         'stopping autosign wait loop'),
+		),
+		'memoless': (
+			'Memoless swap TX operations (LTC => BCH)',
+			('rune_addrgen',              'generating RUNE addresses'),
+			('rune_addrimport',           'importing RUNE addresses'),
+			('rune_bal_refresh',          'refreshing balances in RUNE tracking wallet'),
+			('memoless_swaptxcreate',     'creating a memoless swap transaction (--no-refreq-tx)'),
+			('rune_txcreate_refreq',      'creating a rune reference request transaction'),
+			('rune_txsign_refreq',        'signing the transaction'),
+			('rune_txsend_refreq',        'sending the transaction'),
+			('refreq_swaptxcreate',       'creating a memoless swap transaction (first pass)'),
+			('refreq_swaptxsign',         'signing the transaction'),
+			('refreq_swaptxsend',         'sending the transaction'),
+			('remote_get_refnum',         'getting the reference number'),
+			('refnum_swaptxcreate1',      'creating a memoless swap transaction (second pass)'),
+			('refnum_swaptxsign1',        'signing the transaction'),
+			('refnum_swaptxsend1',        'sending the transaction'),
+			('refnum_swaptxbump1',        'bumping the transaction'),
+			('refnum_swaptxsign2',        'signing the bumped transaction'),
+			('refnum_swaptxsend2',        'sending the bumped transaction'),
+			('refnum_swaptxcreate2',      'creating a memoless swap transaction (second pass, no chg)'),
+			('refnum_swaptxsign3',        'signing the transaction'),
+			('refnum_swaptxbump2',        'bumping the transaction'),
+			('refnum_swaptxsign4',        'signing the bumped transaction'),
+			('refnum_swaptxsend3',        'sending the bumped transaction'),
+			('remote_get_refnum_color',   'getting the reference number (color output)'),
+			('remote_validate_refnum',    'validating the reference number'),
+			('remote_validate_refnum_short', 'validating the reference number (short form for asset)'),
+			('remote_get_inbound_ltc',    'getting inbound address (LTC)'),
+			('tool_get_memoless_amt',     'getting the memoless amount (LTC)'),
+			('remote_validate_amt',       'validating the memoless amount'),
+			('remote_validate_amt_short', 'validating the memoless amount (short form for asset)'),
+			('txcreate_memoless_amt',     'creating a transaction sending the memoless amount'),
+			('txsign_memoless_amt',       'signing the transaction'),
+			('txsend_memoless_amt',       'sending the transaction'),
+			('generate_ltc',              'generating a block'),
+			('bob_bal_memoless',          'displaying Bob’s balance (LTC)'),
+		),
 	}
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
@@ -430,12 +477,18 @@ class CmdTestSwap(
 		self.protos = [init_proto(cfg, k, network='regtest', need_amt=True) for k in ('ltc', 'bch')]
 
 		self.opts.append('--bob')
+		self.rune_opts = [f'--outdir={self.tmpdir}', '--regtest=1', '--bob', '--quiet']
+		self.eth_opts = self.rune_opts
 
 		self.start_thornode_servers()
 
 	@property
 	def sid(self):
 		return self._user_sid('bob')
+
+	@cached_property
+	def subsid(self):
+		return self._get_user_subsid('bob', self.subseed_idx)
 
 	def list_assets(self):
 		t = self.spawn('mmgen-swaptxcreate', ['--list-assets'])
@@ -612,6 +665,9 @@ class CmdTestSwap(
 	def swaptxcreate_neterror3(self):
 		return self._swaptxcreate_neterror('ltc_halted', 'Trading is halted for asset')
 
+	def swaptxcreate_neterror4(self):
+		return self._swaptxcreate_neterror('halt_memoless', 'Memoless swaps are halted', add_opts=['--memoless'])
+
 	def _swaptxcreate_neterror(self, key, expect_str, *, add_opts=[]):
 		if key:
 			self.rpc_server.setvar(key, True)
@@ -747,6 +803,194 @@ class CmdTestSwap(
 
 	def autosign_swaptxsend2(self):
 		return self._user_txsend('bob', need_rbf=True)
+
+	# memoless:
+
+	def rune_addrgen(self):
+		return self._addrgen(coin='RUNE')
+
+	def rune_addrimport(self):
+		return self._addrimport(add_args=['--coin=RUNE', '--bob'])
+
+	def rune_bal_refresh(self):
+		return self._rune_bal_refresh(
+			add_opts = ['--coin=rune'],
+			menu_prompt = self.rune_menu_prompt)
+
+	def _memoless_swaptxcreate(
+			self,
+			args,
+			*,
+			add_opts = ['--memoless'],
+			refreq   = False,
+			refnum   = False):
+		t = self._swaptxcreate(args, add_opts=add_opts)
+		if refnum:
+			return self._swaptxcreate_ui_common(t, inputs='2')
+		if args[-1] == 'BCH': # no dest addr
+			t.expect('(Y/n): ', 'y')
+		t.expect('to continue: ', '\n')
+		if refreq:
+			t.expect(self.rune_menu_prompt, 'q')
+			t.expect('spend from: ', '3\n')
+			t.expect('(y/N): ', 'y') # add comment?
+			t.expect('Comment: ', 'Memoless!\n')
+			t.expect('view: ', 'y')
+			t.expect('to continue: ', 'z')
+			t.expect('(y/N): ', 'y') # save?
+			t.written_to_file('Unsigned transaction')
+		else:
+			self.write_to_tmpfile('memo', t.expect_getend('MEMO: '))
+		return t
+
+	def memoless_swaptxcreate(self):
+		return self._memoless_swaptxcreate(
+			['LTC', '2.345', f'{self.subsid}:B:1', 'BCH'], # no dest addr
+			add_opts  = ['--no-refreq'])
+
+	def rune_txcreate_refreq(self):
+		self.get_file_with_ext('rawtx', delete_all=True)
+		memo = self.read_from_tmpfile('memo')
+		return self._rune_txcreate(
+			args = ['deposit,0', f'data:{memo}'],
+			add_opts = ['--coin=rune', '--fee=0.2'],
+			menu_prompt = self.rune_menu_prompt)
+
+	def rune_txsign_refreq(self):
+		self.get_file_with_ext('sigtx', delete_all=True)
+		return self._rune_txsign()
+
+	def rune_txsend_refreq(self):
+		return self._rune_txsend()
+
+	def refreq_swaptxcreate(self):
+		self.get_file_with_ext('rawtx', delete_all=True)
+		return self._memoless_swaptxcreate(
+			['LTC', '2.345', f'{self.subsid}:B:1', 'BCH', f'{self.sid}:C:2'],
+			refreq = True)
+
+	refreq_swaptxsign = rune_txsign_refreq
+	refreq_swaptxsend = rune_txsend_refreq
+
+	def remote_get_refnum(self):
+		t = self._rune_remote('get_refnum', (self.refreq_txid,), color=False)
+		self.write_to_tmpfile('memo_info.json', t.read().strip())
+		return t
+
+	def _refnum_swaptxcreate(self, args, *, chg_addr=None, dest_addr=None):
+		data = json.loads(self.read_from_tmpfile('memo_info.json'))
+		return self._memoless_swaptxcreate(args, add_opts=[f'--refnum={data["reference"]}'], refnum=True)
+
+	def refnum_swaptxcreate1(self):
+		return self._refnum_swaptxcreate(['LTC', '2.345', f'{self.subsid}:B:1', 'BCH', f'{self.sid}:C:2'])
+
+	def refnum_swaptxsign1(self):
+		return self._swaptxsign()
+
+	def refnum_swaptxsend1(self):
+		return self._swaptxsend(expect_pats=[r'Fee:.*0\.0000084'])
+
+	def refnum_swaptxbump1(self):
+		return self._swaptxbump('100s')
+
+	def refnum_swaptxsign2(self):
+		return self._swaptxsign()
+
+	def refnum_swaptxsend2(self):
+		return self._swaptxsend(expect_pats=[r'Fee:.*0\.00014'])
+
+	def refnum_swaptxcreate2(self):
+		return self._refnum_swaptxcreate(['LTC', 'BCH'])
+
+	def refnum_swaptxsign3(self):
+		return self._swaptxsign()
+
+	def refnum_swaptxbump2(self):
+		return self._swaptxbump('700s', single_output=True)
+
+	def refnum_swaptxsign4(self):
+		return self._swaptxsign()
+
+	def refnum_swaptxsend3(self):
+		# depending on whether invoked as ‘swap’ or ‘swap.memoless’, TX spends different
+		# addrtype and thus has different size:
+		return self._swaptxsend(expect_pats=[r'Fee:.*0\.00186421', r'Fee:.*0\.00177765'])
+
+	def remote_get_refnum_color(self):
+		t = self._rune_remote('get_refnum', (self.refreq_txid,))
+		return t
+
+	def remote_validate_refnum(self):
+		return self._remote_validate_refnum()
+
+	def remote_validate_refnum_short(self):
+		return self._remote_validate_refnum(asset='ltc')
+
+	def _remote_validate_refnum(self, *, asset=None):
+		data = json.loads(self.read_from_tmpfile('memo_info.json'))
+		return self._rune_remote('validate_refnum', [(asset or data['asset']), data['reference']])
+
+	def remote_get_inbound_ltc(self):
+		t = self._rune_remote('inbound_addrs', ['coin=ltc'], color=False)
+		self.write_to_tmpfile('inbound_addr_info.json', t.read().strip())
+		return t
+
+	def tool_get_memoless_amt(self):
+		return self._tool_get_memoless_amt()
+
+	def tool_get_memoless_amt_short(self):
+		return self._tool_get_memoless_amt(asset='ltc')
+
+	def _tool_get_memoless_amt(self, *, asset=None):
+		data = json.loads(self.read_from_tmpfile('memo_info.json'))
+		t = self.spawn(
+			'mmgen-tool',
+			['memoless_amt', (asset or data['asset']), '0.12345', data['reference']],
+			env = cleanup_env(self.cfg))
+		self.write_to_tmpfile('memoless_amt', t.read().strip())
+		return t
+
+	def remote_validate_amt(self):
+		return self._remote_validate_amt()
+
+	def remote_validate_amt_short(self):
+		return self._remote_validate_amt(asset='ltc')
+
+	def _remote_validate_amt(self, *, asset=None):
+		data = json.loads(self.read_from_tmpfile('memo_info.json'))
+		amt = self.read_from_tmpfile('memoless_amt').strip()
+		return self._rune_remote('validate_amt', [(asset or data['asset']), amt])
+
+	def txcreate_memoless_amt(self):
+		self.get_file_with_ext('rawtx', delete_all=True)
+		data = json.loads(self.read_from_tmpfile('inbound_addr_info.json'))
+		amt = self.read_from_tmpfile('memoless_amt').strip()
+		return self.txcreate_ui_common(
+			self.spawn(
+				'mmgen-txcreate',
+				['--coin=ltc']
+				+ self.rune_opts
+				+ ['{},{}'.format(data['address'], amt), 'B']),
+			inputs = '1',
+			auto_chg_addr = 'B',
+			interactive_fee = '10s')
+
+	def txsign_memoless_amt(self):
+		self.get_file_with_ext('sigtx', delete_all=True)
+		txfile = self.get_file_with_ext('rawtx')
+		return self.txsign_ui_common(
+			self.spawn('mmgen-txsign', self.rune_opts + [txfile]),
+			do_passwd = True,
+			passwd = rt_pw)
+
+	def txsend_memoless_amt(self):
+		txfile = self.get_file_with_ext('sigtx')
+		t = self.spawn('mmgen-txsend', self.rune_opts + [txfile])
+		self.txsend_ui_common(t, bogus_send=False)
+		return t
+
+	def bob_bal_memoless(self):
+		return self._bob_bal(0, None, skip_check=True)
 
 	# admin methods:
 

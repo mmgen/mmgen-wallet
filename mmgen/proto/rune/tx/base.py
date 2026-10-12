@@ -37,7 +37,7 @@ class Base(TxBase):
 			o = self.txobj
 			b = tx.body.messages[0].body
 
-			if self.is_swap:
+			if self.is_swap or self.is_deposit:
 				from_k, amt_k = ('signer', 'coins')
 				if b.memo != self.swap_memo:
 					raise ValueError(f'{b.memo}: invalid swap memo in serialized data')

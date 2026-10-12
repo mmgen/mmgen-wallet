@@ -14,7 +14,7 @@ import sys, time
 from collections import namedtuple
 
 from ..amt import UniAmt
-from ..util import msg, ymsg, die
+from ..util import msg, ymsg, is_int, die
 from ..swap.util import get_swap_asset, init_swap_proto
 
 from .base_swap import BaseSwapMethods
@@ -30,11 +30,16 @@ def get_send_proto(cfg):
 class NewSwap(BaseSwapMethods, New):
 	desc = 'swap transaction'
 	swap_quote_refresh_timeout = 30
+	memoless_tx_fee = '0.2' # RUNE
 	_output = namedtuple('swap_output', ['coin', 'network', 'addr', 'mmid'])
 
-	def __init__(self, *, cfg, **kwargs):
+	def __init__(self, *, cfg, is_memoless=False, **kwargs):
+		assert is_int(cfg.refnum) or cfg.refnum is None, '--refnum must be an integer'
+		self.refnum = int(cfg.refnum) if is_int(cfg.refnum) else None
 		self.swap_proto = cfg.swap_proto
 		self.is_swap = True
+		self.is_memoless = bool(is_memoless)
+		self.is_refreq = self.is_memoless and not self.refnum
 		super().__init__(cfg=cfg, **kwargs)
 
 	def check_addr_is_wallet_addr(self, output, *, message):
@@ -64,6 +69,17 @@ class NewSwap(BaseSwapMethods, New):
 			chg_output,
 			message = 'Change address is not an MMGen wallet address!')
 		return chg_output
+
+	def check_ref_memo(self, cls, memo, pm_ref):
+		pm = cls.parse(str(memo))
+		if cls.digest(pm) != cls.digest(pm_ref):
+			if pm.trade_limit != pm_ref.trade_limit:
+				ymsg(
+					f'Trade limit has changed! {pm.trade_limit} != {pm_ref.trade_limit}\n'
+					'Cannot create this transaction!')
+			die(2,
+				'Newly-created memo does not match registered memo:'
+				f'\n  new:        {cls.digest(pm)}\n  registered: {cls.digest(pm_ref)}')
 
 	async def process_swap_cmdline_args(self, cmd_args, addrfiles):
 
@@ -126,6 +142,12 @@ class NewSwap(BaseSwapMethods, New):
 
 		await parse()
 
+		if self.refnum:
+			recv_output, parsed_ref_memo = await self.parse_network_memo(
+				data = self.swap_proto_rpc.validate_refnum(self.proto.coin, self.refnum),
+				recv_asset_spec = self.swap_recv_asset_spec,
+				recv_twmmid = args.recv_spec)
+
 		self.swap_cfg = self.swap_proto_mod.SwapCfg(self.cfg)
 
 		if self.cfg.quote:
@@ -148,11 +170,12 @@ class NewSwap(BaseSwapMethods, New):
 		if args.send_amt and not (chg_output or self.proto.is_vm):
 			chg_output = await self.get_chg_output(None, addrfiles)
 
-		recv_output = await self.get_swap_output(
-			self.recv_proto,
-			args.recv_spec,
-			addrfiles,
-			'destination')
+		if not self.refnum:
+			recv_output = await self.get_swap_output(
+				self.recv_proto,
+				args.recv_spec,
+				addrfiles,
+				'destination')
 
 		self.check_addr_is_wallet_addr(
 			recv_output,
@@ -171,15 +194,37 @@ class NewSwap(BaseSwapMethods, New):
 				self.swap_cfg.trade_limit if isinstance(self.swap_cfg.trade_limit, UniAmt)
 				else None))
 
+		if self.refnum:
+			self.check_ref_memo(sp.Memo, memo, parsed_ref_memo)
+
+		if self.is_memoless:
+			self.memoless_memo = str(memo)
+
 		# this goes into the transaction file:
 		self.swap_recv_addr_mmid = recv_output.mmid
+
+		if self.is_refreq:
+			if memo.trade_limit:
+				ymsg(
+					'Warning: setting a trade limit on a memoless transaction is dangerous!\n'
+					'On the second pass, both amount and trade limit must remain unchanged!')
+			from ..rpc import rpc_init
+			if not args.send_amt:
+				die(1, 'With --memoless first pass, you must supply a send amount')
+			self.rpc = await rpc_init(self.cfg, self.proto)
+			qd = self.swap_proto_mod.quote_client(self, args.send_amt)
+			await self.display_quote_loop(qd, deduct_est_fee=False)
+			self.reference_memo = self.swap_proto_mod.reference_memo(
+				self.send_asset,
+				str(self.update_memo(self.memoless_memo, qd.trade_limit)))
+			return None
 
 		ret = (
 			[f'vault,{args.send_amt}'] if args.send_amt and self.proto.is_vm else
 			[f'vault,{args.send_amt}', chg_output.mmid] if args.send_amt else
 			['vault'])
 
-		return tuple(ret + [f'data:{memo}'])
+		return tuple(ret if self.is_memoless else (ret + [f'data:{memo}']))
 
 	async def display_quote_loop(self, qd, *, deduct_est_fee=False):
 		from ..term import get_char
@@ -198,6 +243,14 @@ class NewSwap(BaseSwapMethods, New):
 		if not skip_est_fee:
 			await self.set_gas(to_addr=qd.router if self.is_token else None)
 		msg(await qd.format_quote(deduct_est_fee=deduct_est_fee, skip_est_fee=skip_est_fee))
+
+	def update_vault_memoless_amt(self, round_down=False):
+		self.update_output_amt(
+			self.vault_idx,
+			self.swap_proto_mod.memoless_amt(
+				self.outputs[self.vault_idx].amt,
+				self.refnum,
+				round_down = round_down).amt)
 
 	def update_vault_addr(self, qd, *, addr='inbound_address'):
 		vault_idx = self.vault_idx
@@ -219,6 +272,10 @@ class NewSwap(BaseSwapMethods, New):
 		await self.display_quote_loop(qd, deduct_est_fee=deduct_est_fee)
 		self.swap_quote_expiry = qd.data['expiry']
 		self.update_vault_addr(qd)
-		self.update_data_output(qd.trade_limit)
+		if self.is_memoless:
+			if not self.is_bump:
+				self.memoless_memo = str(self.update_memo(self.memoless_memo, qd.trade_limit))
+		else:
+			self.update_data_output(qd.trade_limit)
 		self.quote_data = qd
 		return qd.rel_fee_hint

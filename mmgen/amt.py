@@ -220,7 +220,7 @@ class ETHAmt(CoinAmt):
 	szabo   = Decimal('0.000001')
 	finney  = Decimal('0.001')
 	atomic  = wei
-	units   = ('wei', 'Kwei', 'Mwei', 'Gwei', 'szabo', 'finney')
+	units   = ('atomic', 'wei', 'Kwei', 'Mwei', 'Gwei', 'szabo', 'finney')
 
 	def toWei(self):
 		return int(Decimal(self) // self.wei)

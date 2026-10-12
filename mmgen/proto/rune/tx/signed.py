@@ -25,11 +25,13 @@ class Signed(Completed, TxBase.Signed):
 		b = tx.body.messages[0].body
 		i = tx.authInfo
 
-		from_k, amt_k = ('signer', 'coins') if self.is_swap else ('fromAddress', 'amount')
+		msg_dep = self.is_swap or self.is_deposit
+
+		from_k, amt_k = ('signer', 'coins') if msg_dep else ('fromAddress', 'amount')
 
 		self.txobj = {
 			'from':     self.proto.encode_addr_bech32x(getattr(b, from_k)),
-			'to':       None if self.is_swap else self.proto.encode_addr_bech32x(b.toAddress),
+			'to':       None if msg_dep else self.proto.encode_addr_bech32x(b.toAddress),
 			'amt':      self.proto.coin_amt(int(getattr(b, amt_k)[0].amount), from_unit='satoshi'),
 			'fee':      parse_fee(self.proto, tx),
 			'gas':      NonNegativeInt(i.fee.gasLimit),
