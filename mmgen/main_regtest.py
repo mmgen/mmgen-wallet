@@ -24,6 +24,7 @@ from .util import die, async_run
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
+	'overrides': [('coin', 'BTC', 'bdb_wallet', False)],
 	'text': {
 		'desc': f'Coin daemon regression test mode setup and operations for the {gc.proj_name} suite',
 		'usage':   '[opts] <command>',
@@ -58,7 +59,7 @@ opts_data = {
 	}
 }
 
-cfg = Config(opts_data=opts_data, init_opts={'regtest': True})
+cfg = Config(opts_data=opts_data, init_opts={'regtest': True, 'bdb_wallet': True})
 
 cmd_args = cfg._args
 

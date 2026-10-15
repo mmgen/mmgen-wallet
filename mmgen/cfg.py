@@ -494,8 +494,6 @@ class Config(Lockable):
 		if self.test_user or self.regtest:
 			if self.coin != 'XMR':
 				self.network = 'regtest'
-			if gc.prog_name == 'mmgen-regtest' and self.coin != 'BTC':
-				self.bdb_wallet = True
 			if not self.test_suite: # could be set in environment
 				self._use_cfg_file = False
 		else:
