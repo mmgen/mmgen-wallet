@@ -53,7 +53,7 @@ class TxInfo(TxInfo):
 				sort,
 				','.join(self.sort_orders)))
 
-		def get_mmid_fmt(e, is_output, *, terse=False):
+		def get_mmid_fmt(e, is_output):
 			if e.mmid:
 				return e.mmid.fmt2(
 					max_mmwid,
@@ -98,7 +98,7 @@ class TxInfo(TxInfo):
 				for n, e in enumerate(io_sorted()):
 					yield '{:3} {} {} {}\n'.format(
 						n + 1,
-						e.addr.fmt(vp1, addr_w, color=True) + ' ' + get_mmid_fmt(e, is_output, terse=True)
+						e.addr.fmt(vp1, addr_w, color=True) + ' ' + get_mmid_fmt(e, is_output)
 							if e.addr else data_disp(e.data),
 						e.amt.fmt(iwidth, color=True),
 						tx.dcoin)

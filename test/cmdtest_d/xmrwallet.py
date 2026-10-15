@@ -242,7 +242,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		common_args = ['--p2p-bind-ip=127.0.0.1', '--fixed-difficulty=1', '--regtest'] # --rpc-ssl-allow-any-cert
 		for u in self.users:
 			other_ports = [self.users[u2].md.p2p_port for u2 in self.users if u2 != u]
-			node_args = [f'--add-exclusive-node=127.0.0.1:{p}' for p in other_ports]
+			node_args = [f'--add-exclusive-node=127.0.0.1:{p}' for p in other_ports if p]
 			self.users[u].md.usr_coind_args = (
 				common_args
 				+ node_args

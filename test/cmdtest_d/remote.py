@@ -22,6 +22,9 @@ class CmdTestRemote(CmdTestBase, CmdTestSwapMethods, CmdTestRuneMethods):
 	thornode_servers = ('rpc', 'midgard', 'swap')
 
 	cmd_group = (
+		('full_help',           'printing help info (--help)'),
+		('help',                'printing help info (help)'),
+		('cmd_help',            'printing help info for command (balance)'),
 		('ping',                'pinging remote REST server'),
 		('health',              'checking health of THORChain network'),
 		('mimir',               'getting Mimir variables'),
@@ -42,6 +45,15 @@ class CmdTestRemote(CmdTestBase, CmdTestSwapMethods, CmdTestRuneMethods):
 		if trunner is None:
 			return
 		self.start_thornode_servers()
+
+	def full_help(self):
+		return self._rune_remote('--help')
+
+	def help(self):
+		return self._rune_remote('help')
+
+	def cmd_help(self):
+		return self._rune_remote('help', ['balance'])
 
 	def ping(self):
 		return self._rune_remote('ping')

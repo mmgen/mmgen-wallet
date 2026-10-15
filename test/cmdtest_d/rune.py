@@ -35,7 +35,12 @@ class CmdTestRuneMethods:
 		t.expect(prompt, 'q')
 		return t
 
-	def _rune_txcreate(self, args=['98831F3A:X:2,54.321'], add_opts=[], append_args=[], menu_prompt=None):
+	def _rune_txcreate(
+			self,
+			args        = ['98831F3A:X:2,54.321'],
+			add_opts    = [],
+			append_args = [],
+			menu_prompt = None):
 		t = self.spawn('mmgen-txcreate', self.rune_opts + add_opts + args + append_args)
 		t.expect(menu_prompt or self.menu_prompt, 'q')
 		t.expect('spend from: ', '3\n')
