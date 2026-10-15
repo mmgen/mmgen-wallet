@@ -26,9 +26,10 @@ def help(proto, cfg):
 		For individual command usage, invoke ‘{gc.prog_name} --coin={cfg.coin.lower()} help COMMAND’
 		"""
 
-	match cfg.coin:
-		case 'RUNE':
-			from ..proto.rune.rpc.remote import THORChainRemoteRPCClient as rpc
+	match proto.base_proto:
+		case 'THORChain':
+			from ..rpc import get_remote_rpc
+			rpc = get_remote_rpc(cfg, proto)
 			clist = '\n  ' + '\n'.join(gen_main_help(
 				mods_data        = rpc.mods,
 				get_mod_cls_func = lambda x: rpc,

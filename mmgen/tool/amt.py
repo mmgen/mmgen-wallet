@@ -24,7 +24,7 @@ class tool_cmd(tool_cmd_base):
 
 		assert self.cfg.coin == 'BTC', '--coin arg not supported for this command'
 
-		from ..swap.proto.thorchain.memoless import THORChainMemolessAmount
-		from ..swap.util import get_coin_amt
+		from ..swap.util import get_swap_proto_mod, get_coin_amt
 
-		return str(THORChainMemolessAmount(get_coin_amt(self.cfg, asset, amt), refnum).amt)
+		return str(get_swap_proto_mod(self.cfg.swap_proto).memoless_amt(
+			get_coin_amt(self.cfg, asset, amt), refnum).amt)

@@ -40,13 +40,13 @@ an OP_RETURN data output with a zero spend amount.  This is the preferred way
 to embed data in the blockchain.  {ds}
 """.format(ds=data_spec_info.format(dl=proto.max_op_return_data_len))
 		case 'THORChain':
-			from ..swap.proto.thorchain.memo import THORChainMemo
+			from ..swap.util import get_swap_proto_mod
 			outputs_info = """
 The transaction output is specified in the form ADDRESS,AMOUNT.
 
 A single DATA_SPEC argument may also be given on the command line to embed
 data (e.g. a memo) in the transaction.  {ds}
-""".format(ds=data_spec_info.format(dl=THORChainMemo.max_len))
+""".format(ds=data_spec_info.format(dl=get_swap_proto_mod(cfg.swap_proto).Memo.max_len))
 		case _:
 			outputs_info = """
 The transaction output is specified in the form ADDRESS,AMOUNT.
