@@ -311,15 +311,15 @@ class CmdTestXMRWallet(CmdTestBase):
 		self._create_address_files(t, user, wallet)
 		return t
 
-	def new_addr_alice(self, spec, cfg, expect, kafile=None, do_autosign=False):
-		data = self.users['alice']
+	def _new_addr_user(self, user, spec, cfg, expect, kafile=None, do_autosign=False):
+		data = self.users[user]
 		if do_autosign:
 			self.insert_device_online()
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
 			+ (self.autosign_opts if do_autosign else [])
-			+ ['--alice']
+			+ [f'--{user}']
 			+ (['--compat'] if self.compat else [])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (['--no-start-wallet-daemon'] if cfg in ('continue', 'stop') else [])
@@ -336,25 +336,29 @@ class CmdTestXMRWallet(CmdTestBase):
 	na_idx = 1
 
 	def new_account_alice(self):
-		return self.new_addr_alice(
+		return self._new_addr_user(
+			'alice',
 			'4',
 			'start',
 			r'Creating new account for wallet .*4.* with label .*‘xmrwallet new account .*y/N\): ')
 
 	def new_account_alice_label(self):
-		return self.new_addr_alice(
+		return self._new_addr_user(
+			'alice',
 			'4,Alice’s new account',
 			'continue',
 			r'Creating new account for wallet .*4.* with label .*‘Alice’s new account .*y/N\): ')
 
 	def new_address_alice(self):
-		return self.new_addr_alice(
+		return self._new_addr_user(
+			'alice',
 			'4:2',
 			'continue',
 			r'Creating new address for wallet .*4.*, account .*#2.* with label .*‘xmrwallet new address .*y/N\): ')
 
 	def new_address_alice_label(self):
-		return self.new_addr_alice(
+		return self._new_addr_user(
+			'alice',
 			'4:2,Alice’s new address',
 			'stop',
 			r'Creating new address for wallet .*4.*, account .*#2.* with label .*‘Alice’s new address .*y/N\): ')
@@ -366,28 +370,34 @@ class CmdTestXMRWallet(CmdTestBase):
 		# NB: a large balance is required to avoid ‘insufficient outputs’ error
 		return await self.mine_chk('miner', 1, 0, lambda x: x.ub > 2000, 'unlocked balance > 2000')
 
-	async def fund_alice(self, wallet=1, amt=1234567891234, addr=None):
+	async def fund_alice(self):
+		return await self._fund_user('alice')
+
+	async def _fund_user(self, user, wallet=1, amt=1234567891234, addr=None):
 		self.spawn(msg_only=True, extra_desc='(transferring funds from Miner wallet)')
-		addr = addr or read_from_file(self.users['alice'].addrfile_fs.format(wallet))
+		addr = addr or read_from_file(self.users[user].addrfile_fs.format(wallet))
 		imsg(f'Dest: {addr}')
 		await self.transfer('miner', amt, addr)
 		return 'ok'
 
-	async def check_bal_alice(self, wallet=1, bal='1.234567891234'):
+	async def check_bal_alice(self):
+		return await self._check_bal_user('alice')
+
+	async def _check_bal_user(self, user, wallet=1, bal='1.234567891234'):
 		return await self.mine_chk(
-			'alice', wallet, 0,
+			user, wallet, 0,
 			lambda x: str(x.ub) == bal, f'unlocked balance == {bal}',
 			random_txs = self.dfl_random_txs)
 
 	def set_label_miner(self):
-		return self.set_label_user(
+		return self._set_label_user(
 			'miner',
 			'1:0:0,"Miner’s new primary account label [1:0:0]"',
 			'y',
 			'updated')
 
 	def remove_label_alice(self):
-		return self.set_label_user(
+		return self._set_label_user(
 			'alice',
 			'4:2:2,""',
 			None,
@@ -395,13 +405,13 @@ class CmdTestXMRWallet(CmdTestBase):
 			add_opts = ['--full-address'])
 
 	def set_label_alice(self):
-		return self.set_label_user(
+		return self._set_label_user(
 			'alice',
 			'4:2:2,"Alice’s new subaddress label [4:2:2]"',
 			'n',
 			'set')
 
-	def set_label_user(self, user, label_spec, add_timestr_resp, expect, add_opts=[]):
+	def _set_label_user(self, user, label_spec, add_timestr_resp, expect, add_opts=[]):
 		data = self.users[user]
 		cmd_opts = [f'--daemon=localhost:{data.md.rpc_port}']
 		t = self.spawn(

@@ -51,57 +51,58 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 	# autosign attrs:
 	coins = ['xmr']
 	compat = True
+	user = 'alice'
 
 	cmd_group = (
-		('daemon_version',           'checking daemon version'),
-		('create_tmp_wallets',       'creating temporary online wallets for Alice'),
-		('new_account_alice',        'adding an account to Alice’s tmp wallet'),
-		('new_address_alice',        'adding an address to Alice’s tmp wallet'),
-		('new_address_alice_label',  'adding an address to Alice’s tmp wallet (with label)'),
-		('dump_tmp_wallets',         'dumping Alice’s tmp wallets'),
-		('dump_tmp_wallets_json',    'dumping Alice’s tmp wallets to JSON format'),
-		('delete_tmp_wallets',       'deleting Alice’s tmp wallets'),
-		('gen_kafile_miner',         'generating key-address file for Miner'),
-		('gen_vkafile_alice',        'generating viewkey-address file for Alice'),
-		('create_wallet_miner',      'creating Monero wallet for Miner'),
-		('mine_initial_coins',       'mining initial coins'),
-		('autosign_setup',           'autosign setup with Alice’s seed'),
-		('autosign_xmr_setup',       'autosign setup (creation of Monero signing wallets)'),
-		('restore_watchonly_wallets', 'creating watch-only wallets from Alice’s wallet dumps'),
-		('delete_tmp_dump_files',    'deleting Alice’s dump files'),
-		('fund_alice1',              'sending funds to Alice (wallet #1)'),
-		('check_bal_alice1',         'mining, checking balance (wallet #1)'),
-		('fund_alice2',              'sending funds to Alice (wallet #2)'),
-		('check_bal_alice2',         'mining, checking balance (wallet #2)'),
-		('wait_loop_start',          'starting autosign wait loop'),
-		('export_outputs1',          'exporting outputs from Alice’s watch-only wallet #1'),
-		('create_transfer_tx1',      'creating a transfer TX'),
-		('submit_transfer_tx1',      'submitting the transfer TX'),
-		('resubmit_transfer_tx1',    'resubmitting the transfer TX'),
-		('export_outputs2',          'exporting outputs from Alice’s watch-only wallet #1'),
-		('import_key_images1',       'importing signed key images into Alice’s online wallets'),
-		('sync_chkbal1',             'syncing Alice’s wallet #1'),
-		('abort_tx1',                'aborting the current transaction (error)'),
-		('create_transfer_tx2',      'creating a transfer TX (for relaying via proxy)'),
-		('abort_tx2',                'aborting the current transaction (OK, unsigned)'),
-		('create_transfer_tx2a',     'creating the transfer TX again'),
-		('submit_transfer_tx2',      'submitting the transfer TX (relaying via proxy)'),
-		('sync_chkbal2',             'syncing Alice’s wallets and checking balance'),
-		('dump_wallets',             'dumping Alice’s wallets'),
-		('delete_wallets',           'deleting Alice’s wallets'),
-		('restore_wallets',          'creating online (watch-only) wallets for Alice'),
-		('delete_dump_files',        'deleting Alice’s dump files'),
-		('export_outputs3',          'exporting outputs from Alice’s watch-only wallets'),
-		('import_key_images2',       'importing signed key images into Alice’s online wallets'),
-		('sync_chkbal3',             'syncing Alice’s wallets and checking balance'),
-		('wait_loop_kill',           'stopping autosign wait loop'),
-		('stop_daemons',             'stopping all wallet and coin daemons'),
-		('view',                     'viewing Alice’s wallet in offline mode (wallet #1)'),
-		('listview',                 'list-viewing Alice’s wallet in offline mode (wallet #2)'),
-		('txlist',                   'listing Alice’s submitted transactions'),
-		('txview',                   'viewing Alice’s submitted transactions'),
-		('txview_all',               'viewing all raw, signed and submitted transactions'),
-		('check_tx_dirs',            'cleaning and checking signable file directories'))
+		('daemon_version',            'checking daemon version'),
+		('create_tmp_wallets',        'creating temporary online wallets for user'),
+		('new_account_user',          'adding an account to user’s tmp wallet'),
+		('new_address_user',          'adding an address to user’s tmp wallet'),
+		('new_address_user_label',    'adding an address to user’s tmp wallet (with label)'),
+		('dump_tmp_wallets',          'dumping user’s tmp wallets'),
+		('dump_tmp_wallets_json',     'dumping user’s tmp wallets to JSON format'),
+		('delete_tmp_wallets',        'deleting user’s tmp wallets'),
+		('gen_kafile_miner',          'generating key-address file for Miner'),
+		('gen_vkafile_user',          'generating viewkey-address file for user'),
+		('create_wallet_miner',       'creating Monero wallet for Miner'),
+		('mine_initial_coins',        'mining initial coins'),
+		('autosign_setup',            'autosign setup with user’s seed'),
+		('autosign_xmr_setup',        'autosign setup (creation of Monero signing wallets)'),
+		('restore_watchonly_wallets', 'creating watch-only wallets from user’s wallet dumps'),
+		('delete_tmp_dump_files',     'deleting user’s dump files'),
+		('fund_user1',                'sending funds to user (wallet #1)'),
+		('check_bal_user1',           'mining, checking balance (wallet #1)'),
+		('fund_user2',                'sending funds to user (wallet #2)'),
+		('check_bal_user2',           'mining, checking balance (wallet #2)'),
+		('wait_loop_start',           'starting autosign wait loop'),
+		('export_outputs1',           'exporting outputs from user’s watch-only wallet #1'),
+		('create_transfer_tx1',       'creating a transfer TX'),
+		('submit_transfer_tx1',       'submitting the transfer TX'),
+		('resubmit_transfer_tx1',     'resubmitting the transfer TX'),
+		('export_outputs2',           'exporting outputs from user’s watch-only wallet #1'),
+		('import_key_images1',        'importing signed key images into user’s online wallets'),
+		('sync_chkbal1',              'syncing user’s wallet #1'),
+		('abort_tx1',                 'aborting the current transaction (error)'),
+		('create_transfer_tx2',       'creating a transfer TX (for relaying via proxy)'),
+		('abort_tx2',                 'aborting the current transaction (OK, unsigned)'),
+		('create_transfer_tx2a',      'creating the transfer TX again'),
+		('submit_transfer_tx2',       'submitting the transfer TX (relaying via proxy)'),
+		('sync_chkbal2',              'syncing user’s wallets and checking balance'),
+		('dump_wallets',              'dumping user’s wallets'),
+		('delete_wallets',            'deleting user’s wallets'),
+		('restore_wallets',           'creating online (watch-only) wallets for user'),
+		('delete_dump_files',         'deleting user’s dump files'),
+		('export_outputs3',           'exporting outputs from user’s watch-only wallets'),
+		('import_key_images2',        'importing signed key images into user’s online wallets'),
+		('sync_chkbal3',              'syncing user’s wallets and checking balance'),
+		('wait_loop_kill',            'stopping autosign wait loop'),
+		('stop_daemons',              'stopping all wallet and coin daemons'),
+		('view',                      'viewing user’s wallet in offline mode (wallet #1)'),
+		('listview',                  'list-viewing user’s wallet in offline mode (wallet #2)'),
+		('txlist',                    'listing user’s submitted transactions'),
+		('txview',                    'viewing user’s submitted transactions'),
+		('txview_all',                'viewing all raw, signed and submitted transactions'),
+		('check_tx_dirs',             'cleaning and checking signable file directories'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 
@@ -111,62 +112,63 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		if trunner is None:
 			return
 
-		self.alice_cfg = self.users['alice'].cfg
-		self.alice_datadir = self.users['alice'].cfg._proto.network_datadir
+		self.user_cfg = self.users[self.user].cfg
+		self.user_datadir = self.users[self.user].cfg._proto.network_datadir
 
 		self.burn_addr = make_burn_addr(cfg)
 
-		self.xmrwallets_opt = f'--xmrwallets={self.users["alice"].kal_range}'
+		self.xmrwallets_opt = f'--xmrwallets={self.users[self.user].kal_range}'
 		self.autosign_opts = ['--autosign'] # mmgen-xmrwallet opts
 
 	def create_tmp_wallets(self):
 		self.spawn(msg_only=True)
-		data = self.users['alice']
+		data = self.users[self.user]
 		from mmgen.wallet import Wallet
 		from mmgen.xmrwallet import op
 		from mmgen.addrlist import KeyAddrList
 		silence()
 		kal = KeyAddrList(
-			cfg       = self.alice_cfg,
+			cfg       = self.user_cfg,
 			proto     = self.proto,
 			addr_idxs = '1-2',
-			seed      = Wallet(self.alice_cfg, fn=data.mmwords).seed,
+			seed      = Wallet(self.user_cfg, fn=data.mmwords).seed,
 			skip_chksum_msg = True,
 			key_address_validity_check = False)
-		kal.file.write(outdir=self.alice_datadir, ask_overwrite=False)
-		fn = get_file_with_ext(self.alice_datadir, 'akeys')
-		m = op('create', self.alice_cfg, fn, '1-2')
+		kal.file.write(outdir=self.user_datadir, ask_overwrite=False)
+		fn = get_file_with_ext(self.user_datadir, 'akeys')
+		m = op('create', self.user_cfg, fn, '1-2')
 		asyncio.run(m.main())
 		asyncio.run(m.stop_wallet_daemon())
 		end_silence()
 		return 'ok'
 
-	def _new_addr_alice(self, *args):
-		data = self.users['alice']
-		return self.new_addr_alice(
+	def _new_addr_user_autosign(self, *args):
+		data = self.users[self.user]
+		return self._new_addr_user(
+			self.user,
 			*args,
 			kafile = get_file_with_ext(data.udir, 'akeys'))
 
-	def new_account_alice(self):
-		return self._new_addr_alice(
+	def new_account_user(self):
+		return self._new_addr_user_autosign(
 			'2',
 			'start',
 			r'Creating new account for wallet .*2.* with label '
 			r'.*‘xmrwallet new account .*y/N\): ')
 
-	def new_address_alice(self):
-		return self._new_addr_alice(
+	def new_address_user(self):
+		return self._new_addr_user_autosign(
 			'2:1',
 			'continue',
 			r'Creating new address for wallet .*2.*, account .*#1.* with label '
 			r'.*‘xmrwallet new address .*y/N\): ')
 
-	def new_address_alice_label(self):
-		return self._new_addr_alice(
-			'2:1,Alice’s new address',
+	def new_address_user_label(self):
+		return self._new_addr_user_autosign(
+			'2:1,user’s new address',
 			'stop',
 			r'Creating new address for wallet .*2.*, account .*#1.* with label '
-			r'.*‘Alice’s new address .*y/N\): ')
+			r'.*‘user’s new address .*y/N\): ')
 
 	def dump_tmp_wallets(self):
 		return self._dump_wallets(autosign=False)
@@ -178,12 +180,12 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		return self._dump_wallets(autosign=True)
 
 	def _dump_wallets(self, autosign, op='dump'):
-		data = self.users['alice']
+		data = self.users[self.user]
 		self.insert_device_online()
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ (['--alice', '--compat'] if self.compat else [])
+			+ ([f'--{self.user}', '--compat'] if self.compat else [])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (self.autosign_opts if autosign else [])
 			+ [op]
@@ -197,7 +199,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		return t
 
 	def _delete_files(self, *ext_list):
-		data = self.users['alice']
+		data = self.users[self.user]
 		self.spawn(msg_only=True)
 		wdir = data.wd.wallet_dir if self.compat else data.udir
 		for ext in ext_list:
@@ -216,8 +218,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 	def gen_kafile_miner(self):
 		return self.gen_kafiles(['miner'])
 
-	def gen_vkafile_alice(self):
-		return self.gen_kafiles(['alice'], add_opts=['--viewkeys'])
+	def gen_vkafile_user(self):
+		return self.gen_kafiles([self.user], add_opts=['--viewkeys'])
 
 	def create_wallet_miner(self):
 		return self.create_wallets_miner()
@@ -225,24 +227,24 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 	def delete_dump_files(self):
 		return self._delete_files('.dump')
 
-	async def fund_alice1(self):
-		return await self.fund_alice(wallet=1)
+	async def fund_user1(self):
+		return await self._fund_user(self.user, wallet=1)
 
-	fund_alice1b = fund_alice1
+	fund_user1b = fund_user1
 
-	async def check_bal_alice1(self):
-		return await self.check_bal_alice(wallet=1)
+	async def check_bal_user1(self):
+		return await self._check_bal_user(self.user, wallet=1)
 
-	async def fund_alice2(self):
-		return await self.fund_alice(wallet=2)
+	async def fund_user2(self):
+		return await self._fund_user(self.user, wallet=2)
 
-	async def check_bal_alice2(self):
-		return await self.check_bal_alice(wallet=2)
+	async def check_bal_user2(self):
+		return await self._check_bal_user(self.user, wallet=2)
 
 	def autosign_setup(self):
 		return self.run_setup(
 			mn_type        = 'mmgen',
-			mn_file        = self.users['alice'].mmwords,
+			mn_file        = self.users[self.user].mmwords,
 			use_dfl_wallet = None,
 			add_opts       = [self.xmrwallets_opt],
 			expect_args    = ['Continue with Monero setup? (Y/n): ', 'n'])
@@ -279,7 +281,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 	def _create_wallets(self, op='create'):
 		self.insert_device_online()
-		t = self.create_wallets('alice', op=op)
+		t = self.create_wallets(self.user, op=op)
 		t.read() # required!
 		self.remove_device_online()
 		return t
@@ -288,7 +290,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		self.insert_device_online()
 		t = self.do_op(
 			'transfer',
-			'alice',
+			self.user,
 			f'1:0:{self.burn_addr},{amt}',
 			no_relay = True,
 			do_ret   = True,
@@ -332,11 +334,11 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			wait_signed   = False):
 		if wait_signed:
 			self._wait_signed(signable_desc)
-		data = self.users['alice']
+		data = self.users[self.user]
 		args = (
 			self.extra_opts
 			+ self.autosign_opts
-			+ (['--alice', '--compat'] if self.compat else [])
+			+ ([f'--{self.user}', '--compat'] if self.compat else [])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ add_opts
 			+ [op]
@@ -344,11 +346,11 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 			+ ([wallet_arg] if wallet_arg else []))
 		desc_pfx = f'{desc}, ' if desc else ''
 		self.insert_device_online() # device must be removed by calling method
-		return self.spawn('mmgen-xmrwallet', args, extra_desc=f'({desc_pfx}Alice)')
+		return self.spawn('mmgen-xmrwallet', args, extra_desc=f'({desc_pfx}user)')
 
 	def _sync_chkbal(self, wallet_arg, bal_chk_func):
 		return self.sync_wallets(
-			'alice',
+			self.user,
 			op           = 'sync',
 			wallets      = wallet_arg,
 			bal_chk_func = bal_chk_func)
@@ -392,7 +394,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		if check_bal:
 			t.ok()
 			return await self.mine_chk(
-				'alice', 1, 0,
+				self.user, 1, 0,
 				lambda x: 0 < x.ub < 1.234567891234,
 				'unlocked balance 0 < 1.234567891234')
 		else:
@@ -492,10 +494,10 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		return t
 
 	def view(self):
-		return self.sync_wallets('alice', op='view', wallets='1')
+		return self.sync_wallets(self.user, op='view', wallets='1')
 
 	def listview(self):
-		return self.sync_wallets('alice', op='listview', wallets='2')
+		return self.sync_wallets(self.user, op='listview', wallets='2')
 
 class CmdTestXMRAutosignNoCompat(CmdTestXMRAutosign):
 	"""
@@ -512,103 +514,103 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	extra_daemons = ['ltc']
 
 	cmd_group = (
-		('autosign_setup',           'autosign setup with Alice’s seed'),
-		('autosign_xmr_setup',       'autosign setup (creation of Monero signing wallets)'),
-		('addrimport_alice',         'creating (importing) Alice’s watch-only wallets from key-address file'),
-		('addrimport_alice2',        'reimporting Alice’s watch-only wallets from key-address file'),
-		('gen_kafile_miner',         'generating key-address file for Miner'),
-		('gen_vkafile_alice',        'generating viewkey-address file for Alice'),
-		('create_wallet_miner',      'creating Monero wallet for Miner'),
-		('mine_initial_coins',       'mining initial coins'),
-		('fund_alice2',              'sending funds to Alice (wallet #2)'),
-		('check_bal_alice2',         'mining, checking balance (wallet #2)'),
-		('fund_alice1',              'sending funds to Alice (wallet #1)'),
-		('mine_blocks_10',           'mining some blocks'),
-		('alice_listaddresses_lbl',  'adding label to Alice’s tracking wallets (listaddresses)'),
-		('fund_alice1b',             'sending funds to Alice (wallet #1)'),
-		('mine_blocks_10',           'mining some blocks'),
-		('alice_twview1',            'adding label to Alice’s tracking wallets (twview)'),
-		('new_account_alice',        'adding an account to Alice’s wallet'),
-		('new_address_alice',        'adding an address to Alice’s wallet'),
-		('new_address_alice_label',  'adding an address to Alice’s wallet (with label)'),
-		('alice_dump',               'dumping alice’s wallets to JSON format'),
-		('fund_alice_sub1',          'sending funds to Alice’s subaddress #1 (wallet #2)'),
-		('mine_blocks_1',            'mining a block'),
-		('fund_alice_sub2',          'sending funds to Alice’s subaddress #2 (wallet #2)'),
-		('mine_blocks_1',            'mining a block'),
-		('fund_alice_sub3',          'sending funds to Alice’s subaddress #3 (wallet #2)'),
-		('alice_twview2',            'viewing Alice’s tracking wallets (reload, sort options)'),
-		('alice_twview_chk1',        'viewing Alice’s tracking wallets (check balances)'),
-		('alice_listaddresses_sort', 'listing Alice’s addresses (sort options)'),
-		('wait_loop_start_compat',   'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
-		('alice_txcreate1',          'creating a transaction'),
-		('alice_txabort1',           'aborting the transaction'),
-		('alice_txcreate2',          'recreating the transaction'),
-		('wait_signed1',             'autosigning the transaction'),
-		('wait_loop_kill',           'stopping autosign wait loop'),
-		('alice_txabort2',           'aborting the raw and signed transactions'),
-		('alice_txcreate3',          'recreating the transaction'),
-		('wait_loop_start_ltc',      'starting autosign wait loop in XMR compat mode [--coins=ltc,xmr]'),
-		('alice_txsend1',            'sending the transaction'),
-		('alice_txstatus1',          'getting the transaction status (in mempool)'),
-		('mine_blocks_10',           'mining some blocks'),
-		('alice_txstatus2',          'getting the transaction status (confirmations)'),
-		('alice_txstatus3',          'getting the transaction status (verbose)'),
-		('alice_twview_chk2',        'viewing Alice’s tracking wallets (check balances)'),
-		('alice_txcreate_sweep1',    'creating a sweep transaction (account sweep)'),
-		('alice_txsend2',            'sending the transaction'),
-		('mine_blocks_10',           'mining some blocks'),
-		('alice_twview_chk3',        'viewing Alice’s tracking wallets (check balances)'),
-		('alice_txcreate_sweep2',    'creating a sweep transaction (address sweep)'),
-		('alice_txsend3',            'sending the transaction'),
-		('mine_blocks_10',           'mining some blocks'),
-		('alice_twview_chk4',        'viewing Alice’s tracking wallets (check balances)'),
-		('wait_loop_kill',           'stopping autosign wait loop'),
-		('delete_offline_shmdir',    'deleting offline autosign wallet dir'),
-		('autosign_setup',           'autosign setup with Alice’s seed'),
-		('autosign_xmr_setup_redo',  'autosign setup (creation of Monero signing wallets, redo)'),
-		('wait_loop_start_compat',   'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
-		('alice_txcreate_sweep3',    'creating a sweep transaction (sweep to empty account)'),
-		('alice_txsend4',            'sending the transaction'),
-		('mine_blocks_10',           'mining some blocks'),
-		('alice_twview_chk5',        'viewing Alice’s tracking wallets (check balances)'),
-		('wait_loop_kill',           'stopping autosign wait loop'),
-		('alice_newacct1',           'adding account to Alice’s tracking wallet (dfl label)'),
-		('alice_newacct2',           'adding account to Alice’s tracking wallet (no timestr)'),
-		('alice_newacct3',           'adding account to Alice’s tracking wallet'),
-		('alice_newacct4',           'adding account to Alice’s tracking wallet (dfl label, no timestr)'),
-		('alice_newaddr1',           'adding address to Alice’s tracking wallet'),
-		('alice_newaddr2',           'adding address to Alice’s tracking wallet (no timestr)'),
-		('alice_newaddr3',           'adding address to Alice’s tracking wallet (dfl label)'),
-		('alice_newaddr4',           'adding address to Alice’s tracking wallet (dfl label, no timestr)'),
-		('stop_daemons',             'stopping all wallet and coin daemons'))
+		('autosign_setup',          'autosign setup with user’s seed'),
+		('autosign_xmr_setup',      'autosign setup (creation of Monero signing wallets)'),
+		('addrimport_user',         'creating (importing) user’s watch-only wallets from key-address file'),
+		('addrimport_user2',        'reimporting user’s watch-only wallets from key-address file'),
+		('gen_kafile_miner',        'generating key-address file for Miner'),
+		('gen_vkafile_user',        'generating viewkey-address file for user'),
+		('create_wallet_miner',     'creating Monero wallet for Miner'),
+		('mine_initial_coins',      'mining initial coins'),
+		('fund_user2',              'sending funds to user (wallet #2)'),
+		('check_bal_user2',         'mining, checking balance (wallet #2)'),
+		('fund_user1',              'sending funds to user (wallet #1)'),
+		('mine_blocks_10',          'mining some blocks'),
+		('user_listaddresses_lbl',  'adding label to user’s tracking wallets (listaddresses)'),
+		('fund_user1b',             'sending funds to user (wallet #1)'),
+		('mine_blocks_10',          'mining some blocks'),
+		('user_twview1',            'adding label to user’s tracking wallets (twview)'),
+		('new_account_user',        'adding an account to user’s wallet'),
+		('new_address_user',        'adding an address to user’s wallet'),
+		('new_address_user_label',  'adding an address to user’s wallet (with label)'),
+		('user_dump',               'dumping user’s wallets to JSON format'),
+		('fund_user_sub1',          'sending funds to user’s subaddress #1 (wallet #2)'),
+		('mine_blocks_1',           'mining a block'),
+		('fund_user_sub2',          'sending funds to user’s subaddress #2 (wallet #2)'),
+		('mine_blocks_1',           'mining a block'),
+		('fund_user_sub3',          'sending funds to user’s subaddress #3 (wallet #2)'),
+		('user_twview2',            'viewing user’s tracking wallets (reload, sort options)'),
+		('user_twview_chk1',        'viewing user’s tracking wallets (check balances)'),
+		('user_listaddresses_sort', 'listing user’s addresses (sort options)'),
+		('wait_loop_start_compat',  'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
+		('user_txcreate1',          'creating a transaction'),
+		('user_txabort1',           'aborting the transaction'),
+		('user_txcreate2',          'recreating the transaction'),
+		('wait_signed1',            'autosigning the transaction'),
+		('wait_loop_kill',          'stopping autosign wait loop'),
+		('user_txabort2',           'aborting the raw and signed transactions'),
+		('user_txcreate3',          'recreating the transaction'),
+		('wait_loop_start_ltc',     'starting autosign wait loop in XMR compat mode [--coins=ltc,xmr]'),
+		('user_txsend1',            'sending the transaction'),
+		('user_txstatus1',          'getting the transaction status (in mempool)'),
+		('mine_blocks_10',          'mining some blocks'),
+		('user_txstatus2',          'getting the transaction status (confirmations)'),
+		('user_txstatus3',          'getting the transaction status (verbose)'),
+		('user_twview_chk2',        'viewing user’s tracking wallets (check balances)'),
+		('user_txcreate_sweep1',    'creating a sweep transaction (account sweep)'),
+		('user_txsend2',            'sending the transaction'),
+		('mine_blocks_10',          'mining some blocks'),
+		('user_twview_chk3',        'viewing user’s tracking wallets (check balances)'),
+		('user_txcreate_sweep2',    'creating a sweep transaction (address sweep)'),
+		('user_txsend3',            'sending the transaction'),
+		('mine_blocks_10',          'mining some blocks'),
+		('user_twview_chk4',        'viewing user’s tracking wallets (check balances)'),
+		('wait_loop_kill',          'stopping autosign wait loop'),
+		('delete_offline_shmdir',   'deleting offline autosign wallet dir'),
+		('autosign_setup',          'autosign setup with user’s seed'),
+		('autosign_xmr_setup_redo', 'autosign setup (creation of Monero signing wallets, redo)'),
+		('wait_loop_start_compat',  'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
+		('user_txcreate_sweep3',    'creating a sweep transaction (sweep to empty account)'),
+		('user_txsend4',            'sending the transaction'),
+		('mine_blocks_10',          'mining some blocks'),
+		('user_twview_chk5',        'viewing user’s tracking wallets (check balances)'),
+		('wait_loop_kill',          'stopping autosign wait loop'),
+		('user_newacct1',           'adding account to user’s tracking wallet (dfl label)'),
+		('user_newacct2',           'adding account to user’s tracking wallet (no timestr)'),
+		('user_newacct3',           'adding account to user’s tracking wallet'),
+		('user_newacct4',           'adding account to user’s tracking wallet (dfl label, no timestr)'),
+		('user_newaddr1',           'adding address to user’s tracking wallet'),
+		('user_newaddr2',           'adding address to user’s tracking wallet (no timestr)'),
+		('user_newaddr3',           'adding address to user’s tracking wallet (dfl label)'),
+		('user_newaddr4',           'adding address to user’s tracking wallet (dfl label, no timestr)'),
+		('stop_daemons',            'stopping all wallet and coin daemons'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		super().__init__(cfg, trunner, cfgs, spawn)
 		if trunner is None:
 			return
-		data = self.users['alice']
-		self.alice_dump_file = os.path.join(
+		data = self.users[self.user]
+		self.user_dump_file = os.path.join(
 			data.wd.wallet_dir,
 			f'{data.sid}-2-MoneroWatchOnlyWallet.dump')
-		self.alice_daemon_opts = [
+		self.user_daemon_opts = [
 			f'--monero-daemon=localhost:{data.md.rpc_port}',
 			'--monero-wallet-rpc-password=abc']
-		self.alice_opts = ['--alice', '--coin=xmr'] + self.alice_daemon_opts
+		self.user_opts = [f'--{self.user}', '--coin=xmr'] + self.user_daemon_opts
 
-	def addrimport_alice(self):
-		return self._addrimport_alice(create_address_files=True)
+	def addrimport_user(self):
+		return self._addrimport_user(create_address_files=True)
 
-	def addrimport_alice2(self):
-		return self._addrimport_alice(expect_str='Skipping.*Skipping')
+	def addrimport_user2(self):
+		return self._addrimport_user(expect_str='Skipping.*Skipping')
 
-	def _addrimport_alice(self, *, expect_str=None, create_address_files=False):
+	def _addrimport_user(self, *, expect_str=None, create_address_files=False):
 		self.insert_device_online()
-		t = self.spawn('mmgen-addrimport', self.alice_opts + self.autosign_opts)
+		t = self.spawn('mmgen-addrimport', self.user_opts + self.autosign_opts)
 		if expect_str:
 			t.expect(expect_str, regex=True)
 		if create_address_files:
-			self._create_address_files(t, 'alice')
+			self._create_address_files(t, self.user)
 		t.read() # required!
 		self.remove_device_online()
 		return t
@@ -623,83 +625,83 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		self.spawn(msg_only=True)
 		return await self.mine(n)
 
-	def _new_addr_alice(self, *args):
-		return self.new_addr_alice(*args, do_autosign=True)
+	def _new_addr_user_autosign(self, *args):
+		return self._new_addr_user(self.user, *args, do_autosign=True)
 
-	async def alice_dump(self):
+	async def user_dump(self):
 		t = self._xmr_autosign_op('dump')
 		t.read()
 		self.remove_device_online() # device was inserted by _xmr_autosign_op()
 		return t
 
-	async def fund_alice_sub1(self):
-		return await self._fund_alice(1, 9876543210)
+	async def fund_user_sub1(self):
+		return await self._fund_user_autosign(1, 9876543210)
 
-	async def fund_alice_sub2(self):
-		return await self._fund_alice(2, 8765432109)
+	async def fund_user_sub2(self):
+		return await self._fund_user_autosign(2, 8765432109)
 
-	async def fund_alice_sub3(self):
-		return await self._fund_alice(3, 7654321098)
+	async def fund_user_sub3(self):
+		return await self._fund_user_autosign(3, 7654321098)
 
-	async def _fund_alice(self, addr_num, amt):
-		data = json.loads(read_from_file(self.alice_dump_file))
+	async def _fund_user_autosign(self, addr_num, amt):
+		data = json.loads(read_from_file(self.user_dump_file))
 		addr_data = data['MoneroMMGenWalletDumpFile']['data']['wallet_metadata'][1]['addresses']
-		return await self.fund_alice(addr=addr_data[addr_num-1]['address'], amt=amt)
+		return await self._fund_user(self.user, addr=addr_data[addr_num-1]['address'], amt=amt)
 
-	def alice_newacct1(self):
-		return self._alice_newacct(2, lbl_text='New Test Account', add_timestr=True)
+	def user_newacct1(self):
+		return self._user_newacct(2, lbl_text='New Test Account', add_timestr=True)
 
-	def alice_newacct2(self):
-		return self._alice_newacct(1, lbl_text='New Test Account')
+	def user_newacct2(self):
+		return self._user_newacct(1, lbl_text='New Test Account')
 
-	def alice_newacct3(self):
-		return self._alice_newacct(2, add_timestr=True)
+	def user_newacct3(self):
+		return self._user_newacct(2, add_timestr=True)
 
-	def alice_newacct4(self):
-		return self._alice_newacct(2)
+	def user_newacct4(self):
+		return self._user_newacct(2)
 
-	def _alice_newacct(self, wallet_num, lbl_text='', add_timestr=False):
-		return self._alice_twops(
+	def _user_newacct(self, wallet_num, lbl_text='', add_timestr=False):
+		return self._user_twops(
 			'listaddresses',
 			newacct_wallet_num = wallet_num,
 			lbl_text = lbl_text,
 			add_timestr = add_timestr,
 			expect_str = (lbl_text or 'new account ') + (r'.*\[20.*\]' if add_timestr else ''))
 
-	def alice_newaddr1(self):
-		return self._alice_newaddr(1, lbl_text='New Test Address', add_timestr=True)
+	def user_newaddr1(self):
+		return self._user_newaddr(1, lbl_text='New Test Address', add_timestr=True)
 
-	def alice_newaddr2(self):
-		return self._alice_newaddr(1, lbl_text='New Test Address')
+	def user_newaddr2(self):
+		return self._user_newaddr(1, lbl_text='New Test Address')
 
-	def alice_newaddr3(self):
-		return self._alice_newaddr(2, add_timestr=True)
+	def user_newaddr3(self):
+		return self._user_newaddr(2, add_timestr=True)
 
-	def alice_newaddr4(self):
-		return self._alice_newaddr(2)
+	def user_newaddr4(self):
+		return self._user_newaddr(2)
 
-	def _alice_newaddr(self, acct_num, lbl_text='', add_timestr=False):
-		return self._alice_twops(
+	def _user_newaddr(self, acct_num, lbl_text='', add_timestr=False):
+		return self._user_twops(
 			'listaddresses',
 			newaddr_acct_num = acct_num,
 			lbl_text = lbl_text,
 			add_timestr = add_timestr,
 			expect_str = (lbl_text or 'new address ') + (r'.*\[20.*\]' if add_timestr else ''))
 
-	def alice_listaddresses(self):
-		return self._alice_twops('listaddresses')
+	def user_listaddresses(self):
+		return self._user_twops('listaddresses')
 
-	def alice_listaddresses_refresh(self):
-		return self._alice_twops('listaddresses', menu='R')
+	def user_listaddresses_refresh(self):
+		return self._user_twops('listaddresses', menu='R')
 
-	def alice_listaddresses_interact(self):
-		return self._alice_twops('listaddresses', pexpect_interact=True) # requires cmdtest.py -O
+	def user_listaddresses_interact(self):
+		return self._user_twops('listaddresses', pexpect_interact=True) # requires cmdtest.py -O
 
-	def alice_listaddresses_sort(self):
-		return self._alice_twops('listaddresses', menu='aAdMELLuuuraAdMeEuu')
+	def user_listaddresses_sort(self):
+		return self._user_twops('listaddresses', menu='aAdMELLuuuraAdMeEuu')
 
-	def alice_listaddresses_lbl(self):
-		return self._alice_twops(
+	def user_listaddresses_lbl(self):
+		return self._user_twops(
 			'listaddresses',
 			lbl_acct_num = 2,
 			lbl_addr_idx = 0,
@@ -708,11 +710,11 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			menu = 'R',
 			expect_str = r'Primary account.*1\.234567891234')
 
-	def alice_twview(self):
-		return self._alice_twops('twview')
+	def user_twview(self):
+		return self._user_twops('twview')
 
-	def alice_twview1(self):
-		return self._alice_twops(
+	def user_twview1(self):
+		return self._user_twops(
 			'twview',
 			lbl_acct_num = 1,
 			lbl_addr_idx = 0,
@@ -720,35 +722,35 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			menu = 'R',
 			expect_str = r'New Test Label.*2\.469135782468')
 
-	def alice_twview2(self):
-		return self._alice_twops('twview', menu='RaAdMraAdMe')
+	def user_twview2(self):
+		return self._user_twops('twview', menu='RaAdMraAdMe')
 
-	def alice_twview_chk1(self):
-		return self._alice_twview_chk([
+	def user_twview_chk1(self):
+		return self._user_twview_chk([
 			'Total XMR: 3.722345649021 [3.729999970119]',
 			'1         0.026296296417',
 			'0.007654321098'])
 
-	def alice_twview_chk2(self):
-		return self._alice_twview_chk(['Total XMR: 3.715053370119'], sync=True)
+	def user_twview_chk2(self):
+		return self._user_twview_chk(['Total XMR: 3.715053370119'], sync=True)
 
-	def alice_twview_chk3(self):
-		return self._alice_twview_chk(['Total XMR: 3.713242570119', '1.232757091234'], sync=True)
+	def user_twview_chk3(self):
+		return self._user_twview_chk(['Total XMR: 3.713242570119', '1.232757091234'], sync=True)
 
-	def alice_twview_chk4(self):
-		return self._alice_twview_chk(['Total XMR: 3.709050970119', '1.254861787651'], sync=True)
+	def user_twview_chk4(self):
+		return self._user_twview_chk(['Total XMR: 3.709050970119', '1.254861787651'], sync=True)
 
-	def alice_twview_chk5(self):
-		return self._alice_twview_chk(['Total XMR: 3.707234170119', '2.452375982468'], sync=True)
+	def user_twview_chk5(self):
+		return self._user_twview_chk(['Total XMR: 3.707234170119', '2.452375982468'], sync=True)
 
-	def _alice_twview_chk(self, expect_arr, sync=False):
-		return self._alice_twops(
+	def _user_twview_chk(self, expect_arr, sync=False):
+		return self._user_twops(
 			'twview',
 			interactive = sync,
 			menu = 'R' if sync else '',
 			expect_arr = expect_arr)
 
-	def _alice_twops(
+	def _user_twops(
 			self,
 			op,
 			*,
@@ -767,7 +769,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		self.insert_device_online()
 		t = self.spawn(
 			'mmgen-tool',
-			self.alice_opts
+			self.user_opts
 			+ self.autosign_opts
 			+ [op]
 			+ (['interactive=1'] if interactive else []))
@@ -813,48 +815,48 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	def wait_loop_start_ltc(self):
 		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=ltc,xmr'])
 
-	def alice_txcreate1(self):
-		return self._alice_txops('txcreate', [f'{self.burn_addr},0.012345'], acct_num=1)
+	def user_txcreate1(self):
+		return self._user_txops('txcreate', [f'{self.burn_addr},0.012345'], acct_num=1)
 
-	def alice_txcreate_sweep1(self):
-		return self._alice_txops('txcreate', menu='S', sweep_menu='23', sweep_type='sweep')
+	def user_txcreate_sweep1(self):
+		return self._user_txops('txcreate', menu='S', sweep_menu='23', sweep_type='sweep')
 
-	def alice_txcreate_sweep2(self):
-		return self._alice_txops('txcreate', menu='s', sweep_menu='3', sweep_type='sweep_all')
+	def user_txcreate_sweep2(self):
+		return self._user_txops('txcreate', menu='s', sweep_menu='3', sweep_type='sweep_all')
 
-	def alice_txcreate_sweep3(self):
-		return self._alice_txops('txcreate', menu='S', sweep_menu='12', sweep_type='sweep')
+	def user_txcreate_sweep3(self):
+		return self._user_txops('txcreate', menu='S', sweep_menu='12', sweep_type='sweep')
 
-	alice_txcreate3 = alice_txcreate2 = alice_txcreate1
+	user_txcreate3 = user_txcreate2 = user_txcreate1
 
-	def _alice_txabort(self):
-		return self._alice_txops('txsend', opts=['--alice', '--abort'])
+	def _user_txabort(self):
+		return self._user_txops('txsend', opts=[f'--{self.user}', '--abort'])
 
-	alice_txabort1 = alice_txabort2 = _alice_txabort
+	user_txabort1 = user_txabort2 = _user_txabort
 
-	def _alice_txsend(self):
-		return self._alice_txops(
+	def _user_txsend(self):
+		return self._user_txops(
 			'txsend',
-			opts        = ['--alice', '--quiet'],
-			add_opts    = self.alice_daemon_opts,
+			opts        = [f'--{self.user}', '--quiet'],
+			add_opts    = self.user_daemon_opts,
 			wait_signed = True)
 
-	alice_txsend1 = alice_txsend2 = alice_txsend3 = alice_txsend4 = _alice_txsend
+	user_txsend1 = user_txsend2 = user_txsend3 = user_txsend4 = _user_txsend
 
-	def alice_txstatus1(self):
-		return self._alice_txstatus(expect_str='TxID: .* in mempool')
+	def user_txstatus1(self):
+		return self._user_txstatus(expect_str='TxID: .* in mempool')
 
-	def alice_txstatus2(self):
-		return self._alice_txstatus(['--quiet'], expect_str='confirmations')
+	def user_txstatus2(self):
+		return self._user_txstatus(['--quiet'], expect_str='confirmations')
 
-	def alice_txstatus3(self):
-		return self._alice_txstatus(['--verbose'], expect_str='confirmations.*Info for transaction')
+	def user_txstatus3(self):
+		return self._user_txstatus(['--verbose'], expect_str='confirmations.*Info for transaction')
 
-	def _alice_txstatus(self, add_opts=[], expect_str=None):
-		return self._alice_txops(
+	def _user_txstatus(self, add_opts=[], expect_str=None):
+		return self._user_txops(
 			'txsend',
-			opts     = ['--alice', '--status'],
-			add_opts = self.alice_daemon_opts + add_opts,
+			opts     = [f'--{self.user}', '--status'],
+			add_opts = self.user_daemon_opts + add_opts,
 			expect_str = expect_str)
 
 	def wait_signed1(self):
@@ -863,7 +865,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		self._wait_signed('transaction')
 		return 'silent'
 
-	def _alice_txops(
+	def _user_txops(
 			self,
 			op,
 			args = [],
@@ -882,7 +884,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		self.insert_device_online()
 		t = self.spawn(
 			f'mmgen-{op}',
-			(opts or self.alice_opts)
+			(opts or self.user_opts)
 			+ self.autosign_opts
 			+ add_opts
 			+ args)
