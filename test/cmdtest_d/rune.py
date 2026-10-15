@@ -40,6 +40,7 @@ class CmdTestRuneMethods:
 			args        = ['98831F3A:X:2,54.321'],
 			add_opts    = [],
 			append_args = [],
+			expect_pat  = None,
 			menu_prompt = None):
 		t = self.spawn('mmgen-txcreate', self.rune_opts + add_opts + args + append_args)
 		t.expect(menu_prompt or self.menu_prompt, 'q')
@@ -47,6 +48,8 @@ class CmdTestRuneMethods:
 		t.expect('(y/N): ', 'y') # add comment?
 		t.expect('Comment: ', 'THOR Chad #1\n')
 		t.expect('view: ', 'y')
+		if expect_pat:
+			t.expect(expect_pat, regex=True)
 		t.expect('to continue: ', 'z')
 		t.expect('(y/N): ', 'y') # save?
 		t.written_to_file('Unsigned transaction')

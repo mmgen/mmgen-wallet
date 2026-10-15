@@ -854,6 +854,7 @@ class CmdTestSwap(
 		return self._rune_txcreate(
 			args = ['deposit,0', f'data:{memo}'],
 			add_opts = ['--coin=rune', '--fee=0.2'],
+			expect_pat = r'to spend:.*\b0\b.*RUNE',
 			menu_prompt = self.rune_menu_prompt)
 
 	def rune_txsign_refreq(self):

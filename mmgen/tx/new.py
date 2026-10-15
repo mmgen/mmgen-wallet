@@ -189,6 +189,9 @@ class New(Base):
 
 		amt = self.proto.coin_amt(amt_in or '0')
 
+		if not (amt or amt_in is None or self.is_deposit):
+			die(2, 'For non-deposit transactions, amount must be nonzero')
+
 		coin_addr, mmid, is_vault = (None, None, False)
 
 		if (arg == 'vault' and self.is_swap) or (arg == 'deposit' and self.is_deposit):
@@ -543,7 +546,8 @@ class New(Base):
 
 		if not self.is_compat:
 			self.check_non_mmgen_inputs(caller=caller)
-			self.update_change_output(funds_left)
+			if not self.is_deposit:
+				self.update_change_output(funds_left)
 			if self.is_memoless and self.refnum:
 				self.update_vault_memoless_amt(round_down=len(self.outputs) == 1)
 			self.check_chg_addr_is_wallet_addr()
