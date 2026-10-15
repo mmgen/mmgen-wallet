@@ -15,6 +15,8 @@ from ..addr import CoinAddr
 
 class BaseSwapMethods:
 
+	memoless_memo = None
+
 	@property
 	def data_desc(self):
 		def gen():

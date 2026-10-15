@@ -70,22 +70,21 @@ class TxInfo:
 			if tx.coin_txid:
 				yield f'  {tx.coin} TxID: {tx.coin_txid.hl()}\n'
 
-			if tx.is_swap and not tx.is_memoless:
-				from ..swap.proto.thorchain import Memo, name
-				data = (
-					tx.memoless_memo.encode() if tx.is_memoless else
-					tx.swap_memo.encode() if tx.proto.is_vm else
-					tx.data_output.data)
-				if Memo.is_partial_memo(data):
-					recv_mmid = getattr(tx, 'swap_recv_addr_mmid', None)
-					p = Memo.parse(data.decode('ascii'))
-					yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(name))
-					yield '    Swap: {}\n'.format(orange(f'{tx.send_asset.name} => {tx.recv_asset.name}'))
-					yield '    Dest: {}{}\n'.format(
-						cyan(p.address),
-						orange(f' {recv_mmid}') if recv_mmid else '')
-					if not recv_mmid:
-						yield yellow('    Warning: swap destination address is not a wallet address!\n')
+			if tx.is_swap:
+				yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(tx.swap_proto_mod.name))
+				yield '    Swap: {}\n'.format(orange(f'{tx.send_asset.name} => {tx.recv_asset.name}'))
+				recv_mmid = getattr(tx, 'swap_recv_addr_mmid', None)
+				if (not tx.is_memoless) or tx.memoless_memo:
+					data = (
+						tx.memoless_memo.encode() if tx.is_memoless else
+						tx.swap_memo.encode() if tx.proto.is_vm else
+						tx.data_output.data)
+					if tx.swap_proto_mod.Memo.is_partial_memo(data):
+						yield '    Dest: {}{}\n'.format(
+							cyan(tx.swap_proto_mod.Memo.parse(data.decode('ascii')).address),
+							orange(f' {recv_mmid}') if recv_mmid else '')
+				if not recv_mmid:
+					yield yellow('    Warning: swap destination address is not a wallet address!\n')
 
 			enl = ('\n', '')[bool(terse)]
 			yield enl

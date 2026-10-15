@@ -38,6 +38,7 @@ class OnlineSigned(Signed):
 			die(3, f'registered reference number ({data["reference"]}) does not match ours ({self.refnum})')
 		if not data['available']:
 			die(3, f'reference number {self.refnum} is not available')
+		self.memoless_memo = data['memo']
 		await self.parse_network_memo(
 			data = data,
 			recv_asset_spec = self.swap_recv_asset_spec,
