@@ -128,12 +128,12 @@ class CmdTestXMRWallet(CmdTestBase):
 		for v in self.users.values():
 			run(['mkdir', '-p', v.udir])
 
-		self.tx_relay_daemon_parm = 'localhost:{}'.format(self.users[self.tx_relay_user].md.rpc_port)
-		self.tx_relay_daemon_proxy_parm = (
-			# must be IP, not 'localhost':
-			self.tx_relay_daemon_parm + f':127.0.0.1:{TestProxy.port}')
-
-		TestProxy(self, cfg)
+		if self.tx_relay_user:
+			self.tx_relay_daemon_parm = 'localhost:{}'.format(self.users[self.tx_relay_user].md.rpc_port)
+			self.tx_relay_daemon_proxy_parm = (
+				# must be IP, not 'localhost':
+				self.tx_relay_daemon_parm + f':127.0.0.1:{TestProxy.port}')
+			TestProxy(self, cfg)
 
 		if not cfg.no_daemon_stop:
 			atexit.register(stop_daemons, self)
@@ -218,8 +218,8 @@ class CmdTestXMRWallet(CmdTestBase):
 				test_connection = False)
 
 			kafile_suf, fn_stem = (
-				('vkeys', 'MoneroWatchOnlyWallet') if autosign else
-				('akeys', 'MoneroWallet'))
+				('.vkeys', 'MoneroWatchOnlyWallet') if autosign else
+				('.akeys', 'MoneroWallet'))
 
 			self.users[user] = ud(
 				cfg            = usr_cfg,
@@ -229,7 +229,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				udir           = udir,
 				twdir          = wd.wallet_dir,
 				kal_range      = kal_range,
-				kafile         = str(udir / f'{sid}-XMR-M[{kal_range}].{kafile_suf}'),
+				kafile         = str(udir / f'{sid}-XMR-M[{kal_range}]{kafile_suf}'),
 				walletfile_fs  = str(wd.wallet_dir / f'{sid}-{{}}-{fn_stem}'),
 				addrfile_fs    = str(wd.wallet_dir / f'{sid}-{{}}-{fn_stem}.address.txt'),
 				md             = md,
@@ -255,9 +255,9 @@ class CmdTestXMRWallet(CmdTestBase):
 		return self.spawn('mmgen-tool', ['--coin=xmr', f'--rpc-port={rpc_port}', 'daemon_version'])
 
 	def gen_kafiles_miner_alice(self):
-		return self.gen_kafiles(['miner', 'alice'])
+		return self._gen_kafiles(['miner', 'alice'])
 
-	def gen_kafiles(self, users, add_opts=[]):
+	def _gen_kafiles(self, users, add_opts=[]):
 		for user, data in self.users.items():
 			if not user in users:
 				continue

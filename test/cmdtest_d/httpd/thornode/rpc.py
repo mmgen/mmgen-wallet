@@ -13,7 +13,6 @@ test.cmdtest_d.httpd.thornode.rpc: Thornode RPC HTTP server
 import re, json
 from wsgiref.util import request_uri
 
-from mmgen.util import is_int
 from mmgen.cfg import Config
 
 from . import ThornodeServer
@@ -125,31 +124,31 @@ class ThornodeRPCServer(ThornodeServer):
 				return self.lastblock_info
 
 			def get_refnum(m, length):
-				return self.memo_info[m[1].lower()[:8]] # 0c7454c0
+				return self.memo_info[m[1].lower()[:8]]
 
 			def validate_refnum(m, length):
-				mi = self.memo_info['0c7454c0']
-				assert m[1] == mi['asset']
-				assert m[2] == mi['reference']
-				return mi
+				for v in self.memo_info.values():
+					if v['asset'] == m[1] and v['reference'] == m[2]:
+						return v
 
 			def validate_amt(m, length):
-				mi = self.memo_info['0c7454c0']
-				assert m[1] == mi['asset']
-				assert is_int(m[2])
-
 				from mmgen.swap.util import get_swap_asset, init_swap_proto # pylint: disable=all
 				from mmgen.swap.proto.thorchain.memoless import THORChainMemolessAmount # pylint: disable=all
 
 				cfg = Config()
 				swap_asset = get_swap_asset(cfg, m[1], sanitize_input=True)
 				amt = init_swap_proto(cfg, swap_asset).coin_amt(int(m[2]), from_unit='atomic')
+				ma = THORChainMemolessAmount(amt)
 
-				a = THORChainMemolessAmount(amt)
-				assert a.refnum == int(mi['reference']), f'{a.refnum} != {int(mi["reference"])}'
+				for v in self.memo_info.values():
+					if v['asset'] == m[1] and int(v['reference']) == ma.refnum:
+						mi = v
+						break
+				else:
+					raise ValueError(f'No reference matching asset {m[1]} and refnum {ma.refnum}')
 
 				return {
-					'reference': a.refnum,
+					'reference': ma.refnum,
 					'available': True,
 					'can_register': True,
 					'expires_at': 9999999999,

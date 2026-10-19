@@ -81,7 +81,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	is_account_based = False
 	has_age     = False
 	has_used    = False
-	has_wallet  = True
+	has_twctl   = True
 	has_amt2    = False
 	dates_set   = False
 	reverse     = False
@@ -200,7 +200,7 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 		self.proto = proto
 		if have_rpc := 'rpc_init' in proto.mmcaps:
 			self.rpc = await rpc_init(cfg, proto)
-		if self.has_wallet:
+		if self.has_twctl:
 			from .ctl import TwCtl
 			self.twctl = await TwCtl(cfg, proto, mode='w', no_rpc=not have_rpc)
 		self.amt_iwidth_keys = {'amt': 'iwidth'} | ({'amt2': 'iwidth2'} if self.has_amt2 else {})

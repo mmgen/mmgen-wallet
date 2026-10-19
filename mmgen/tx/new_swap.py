@@ -142,12 +142,6 @@ class NewSwap(BaseSwapMethods, New):
 
 		await parse()
 
-		if self.refnum:
-			recv_output, parsed_ref_memo = await self.parse_network_memo(
-				data = self.swap_proto_rpc.validate_refnum(self.proto.coin, self.refnum),
-				recv_asset_spec = self.swap_recv_asset_spec,
-				recv_twmmid = args.recv_spec)
-
 		self.swap_cfg = self.swap_proto_mod.SwapCfg(self.cfg)
 
 		if self.cfg.quote:
@@ -170,7 +164,12 @@ class NewSwap(BaseSwapMethods, New):
 		if args.send_amt and not (chg_output or self.proto.is_vm):
 			chg_output = await self.get_chg_output(None, addrfiles)
 
-		if not self.refnum:
+		if self.refnum:
+			recv_output, parsed_ref_memo = await self.parse_network_memo(
+				data = self.swap_proto_rpc.validate_refnum(self.proto.coin, self.refnum),
+				recv_asset_spec = self.swap_recv_asset_spec,
+				recv_twmmid = args.recv_spec)
+		else:
 			recv_output = await self.get_swap_output(
 				self.recv_proto,
 				args.recv_spec,
@@ -210,7 +209,7 @@ class NewSwap(BaseSwapMethods, New):
 					'On the second pass, both amount and trade limit must remain unchanged!')
 			from ..rpc import rpc_init
 			if not args.send_amt:
-				die(1, 'With --memoless first pass, you must supply a send amount')
+				die(1, 'With --memoless (reference request transaction), you must supply a send amount')
 			self.rpc = await rpc_init(self.cfg, self.proto)
 			qd = self.swap_proto_mod.quote_client(self, args.send_amt)
 			await self.display_quote_loop(qd, deduct_est_fee=False)

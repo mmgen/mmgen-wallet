@@ -21,7 +21,13 @@ from ...include.common import eth_inbound_addr, thorchain_router_addr_file
 from . import ThornodeServer
 
 # https://thornode.ninerealms.com/thorchain/quote/swap?from_asset=BCH.BCH&to_asset=LTC.LTC&amount=1000000
-prices = {'BTC': 97000, 'LTC': 115, 'BCH': 330, 'ETH': 2304, 'MM1': 0.998, 'RUNE': 1.4}
+prices = {
+	'BTC': 97000,
+	'LTC': 115,
+	'BCH': 330,
+	'ETH': 2304,
+	'MM1': 0.998,
+	'RUNE': 1.4}
 gas_rate_units = {'ETH': 'gwei', 'BTC': 'satsperbyte'}
 recommended_gas_rate = {'ETH': '1', 'BTC': '6'}
 

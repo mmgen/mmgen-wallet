@@ -30,14 +30,15 @@ def die2(exit_val, s):
 	sys.stderr.write(s+'\n')
 	sys.exit(exit_val)
 
-def fmt_opt_val(opt, val):
+def fmt_opt_val(opt_in, val):
+	opt = opt_in.replace('_', '-')
 	match val:
 		case True:
-			return '--{}'.format(opt.replace('_', '-'))
+			return f'--{opt}'
 		case False:
-			return '--no-{}'.format(opt.replace('_', '-'))
+			return f'--no-{opt}'
 		case _:
-			return '--{}={}'.format(opt.replace('_', '-'), val)
+			return f'--{opt}={val}'
 
 class GlobalConstants(Lockable):
 	"""

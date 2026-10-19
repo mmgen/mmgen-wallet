@@ -820,11 +820,11 @@ class CmdTestSwap(
 	def _memoless_swaptxcreate(
 			self,
 			args,
+			opts,
 			*,
-			add_opts = ['--memoless'],
 			refreq   = False,
 			refnum   = False):
-		t = self._swaptxcreate(args, add_opts=add_opts)
+		t = self._swaptxcreate(args, add_opts=opts)
 		if refnum:
 			return self._swaptxcreate_ui_common(t, inputs='2')
 		if args[-1] == 'BCH': # no dest addr
@@ -846,7 +846,7 @@ class CmdTestSwap(
 	def memoless_swaptxcreate(self):
 		return self._memoless_swaptxcreate(
 			['LTC', '2.345', f'{self.subsid}:B:1', 'BCH'], # no dest addr
-			add_opts  = ['--no-refreq'])
+			opts = ['--no-refreq'])
 
 	def rune_txcreate_refreq(self):
 		self.get_file_with_ext('rawtx', delete_all=True)
@@ -868,6 +868,7 @@ class CmdTestSwap(
 		self.get_file_with_ext('rawtx', delete_all=True)
 		return self._memoless_swaptxcreate(
 			['LTC', '2.345', f'{self.subsid}:B:1', 'BCH', f'{self.sid}:C:2'],
+			opts = ['--memoless'],
 			refreq = True)
 
 	refreq_swaptxsign = rune_txsign_refreq
@@ -880,7 +881,10 @@ class CmdTestSwap(
 
 	def _refnum_swaptxcreate(self, args, *, chg_addr=None, dest_addr=None):
 		data = json.loads(self.read_from_tmpfile('memo_info.json'))
-		return self._memoless_swaptxcreate(args, add_opts=[f'--refnum={data["reference"]}'], refnum=True)
+		return self._memoless_swaptxcreate(
+			args,
+			opts = [f'--refnum={data["reference"]}'],
+			refnum = True)
 
 	def refnum_swaptxcreate1(self):
 		return self._refnum_swaptxcreate(['LTC', '2.345', f'{self.subsid}:B:1', 'BCH', f'{self.sid}:C:2'])

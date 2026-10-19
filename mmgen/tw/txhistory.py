@@ -30,7 +30,7 @@ class TwTxHistory(TwView):
 			colhdr_fmt_method = None
 			item_separator = '\n\n'
 
-	has_wallet = False
+	has_twctl = False
 	show_txid = False
 	show_unconfirmed = False
 	show_total_amt = False
