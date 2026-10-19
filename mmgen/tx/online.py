@@ -42,8 +42,7 @@ class OnlineSigned(Signed):
 		await self.parse_network_memo(
 			data = data,
 			recv_asset_spec = self.swap_recv_asset_spec,
-			recv_twmmid = self.swap_recv_addr_mmid,
-			chk_only = True)
+			recv_twmmid = self.swap_recv_addr_mmid)
 
 	def check_swap_expiry(self):
 		from ..util2 import format_elapsed_hr

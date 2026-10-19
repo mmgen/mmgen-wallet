@@ -372,6 +372,7 @@ class CmdTestSwap(
 			('swaptxcreate_bad8',  'creating a swap transaction (bad, non-MMGen change address)'),
 			('swaptxcreate_bad9',  'creating a swap transaction (bad, invalid addrtype)'),
 			('swaptxcreate_bad10', 'creating a swap transaction (bad, --quote with no amount)'),
+			('swaptxcreate_bad11', 'creating a swap transaction (bad, --refnum with --trade-limit)'),
 		),
 		'create_neterror': (
 			'Swap TX create operations: network error handling',
@@ -656,6 +657,9 @@ class CmdTestSwap(
 	def swaptxcreate_bad10(self):
 		return self._swaptxcreate_bad(['BCH', 'LTC'], add_opts=['--quote'], exit_val=1, expect1='send amount')
 
+	def swaptxcreate_bad11(self):
+		return self._swaptxcreate_bad(['BCH', 'LTC'], add_opts=['--refnum=123', '--trade-limit=1%'], exit_val=1, expect1='requires option')
+
 	def swaptxcreate_neterror1(self):
 		return self._swaptxcreate_neterror('ltc_global_paused', 'Trading is paused on the')
 
@@ -868,7 +872,7 @@ class CmdTestSwap(
 		self.get_file_with_ext('rawtx', delete_all=True)
 		return self._memoless_swaptxcreate(
 			['LTC', '2.345', f'{self.subsid}:B:1', 'BCH', f'{self.sid}:C:2'],
-			opts = ['--memoless'],
+			opts = ['--memoless', '--trade-limit=2.5%'],
 			refreq = True)
 
 	refreq_swaptxsign = rune_txsign_refreq
@@ -887,7 +891,7 @@ class CmdTestSwap(
 			refnum = True)
 
 	def refnum_swaptxcreate1(self):
-		return self._refnum_swaptxcreate(['LTC', '2.345', f'{self.subsid}:B:1', 'BCH', f'{self.sid}:C:2'])
+		return self._refnum_swaptxcreate(['LTC', '2.345', f'{self.subsid}:B:1', 'BCH'])
 
 	def refnum_swaptxsign1(self):
 		return self._swaptxsign()

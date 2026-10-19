@@ -13,6 +13,7 @@ tx.new_swap: new swap transaction class
 import sys, time
 from collections import namedtuple
 
+from ..addr import CoinAddr
 from ..amt import UniAmt
 from ..util import msg, ymsg, is_int, die
 from ..swap.util import get_swap_asset, init_swap_proto
@@ -60,7 +61,8 @@ class NewSwap(BaseSwapMethods, New):
 
 		full_desc = f'{desc} address on the {proto.coin} {proto.network} network'
 		res = await self.get_autochg_addr(proto, arg, exclude=[], desc=full_desc)
-		self.confirm_autoselected_addr(res.twmmid, res.comment, full_desc)
+		if not (self.refnum and desc == 'destination'):
+			self.confirm_autoselected_addr(res.twmmid, res.comment, full_desc)
 		return self._output(proto.coin, proto.network, res.addr, res.twmmid)
 
 	async def get_chg_output(self, arg, addrfiles):
@@ -69,17 +71,6 @@ class NewSwap(BaseSwapMethods, New):
 			chg_output,
 			message = 'Change address is not an MMGen wallet address!')
 		return chg_output
-
-	def check_ref_memo(self, cls, memo, pm_ref):
-		pm = cls.parse(str(memo))
-		if cls.digest(pm) != cls.digest(pm_ref):
-			if pm.trade_limit != pm_ref.trade_limit:
-				ymsg(
-					f'Trade limit has changed! {pm.trade_limit} != {pm_ref.trade_limit}\n'
-					'Cannot create this transaction!')
-			die(2,
-				'Newly-created memo does not match registered memo:'
-				f'\n  new:        {cls.digest(pm)}\n  registered: {cls.digest(pm_ref)}')
 
 	async def process_swap_cmdline_args(self, cmd_args, addrfiles):
 
@@ -129,6 +120,8 @@ class NewSwap(BaseSwapMethods, New):
 
 			# arg 5: recv_spec (receive address spec)
 			if args_in:
+				if self.refnum:
+					die(1, 'destination address must be omitted with --refnum')
 				args.recv_spec = get_arg()
 
 			if args_in: # done parsing, all args consumed
@@ -165,10 +158,16 @@ class NewSwap(BaseSwapMethods, New):
 			chg_output = await self.get_chg_output(None, addrfiles)
 
 		if self.refnum:
-			recv_output, parsed_ref_memo = await self.parse_network_memo(
+			pm, resolved_addr = await self.parse_network_memo(
 				data = self.swap_proto_rpc.validate_refnum(self.proto.coin, self.refnum),
-				recv_asset_spec = self.swap_recv_asset_spec,
-				recv_twmmid = args.recv_spec)
+				recv_asset_spec = self.swap_recv_asset_spec)
+			if pm.trade_limit:
+				self.swap_cfg.trade_limit = UniAmt(pm.trade_limit, from_unit='satoshi')
+			recv_output = self._output(
+				self.recv_proto.coin,
+				self.recv_proto.network,
+				CoinAddr(self.recv_proto, pm.address),
+				resolved_addr.twmmid)
 		else:
 			recv_output = await self.get_swap_output(
 				self.recv_proto,
@@ -192,9 +191,6 @@ class NewSwap(BaseSwapMethods, New):
 			trade_limit = (
 				self.swap_cfg.trade_limit if isinstance(self.swap_cfg.trade_limit, UniAmt)
 				else None))
-
-		if self.refnum:
-			self.check_ref_memo(sp.Memo, memo, parsed_ref_memo)
 
 		if self.is_memoless:
 			self.memoless_memo = str(memo)

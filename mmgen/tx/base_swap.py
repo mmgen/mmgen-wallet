@@ -11,7 +11,6 @@ tx.base_swap: base swap transaction mixin class
 """
 
 from ..util import ymsg, die, cached_property
-from ..addr import CoinAddr
 
 class BaseSwapMethods:
 
@@ -85,7 +84,7 @@ class BaseSwapMethods:
 					if rpc.data_for_coin(data, asset.coin)[key]:
 						die(2, f'Trading is {state} on the {self.swap_proto_mod.name} network')
 
-	async def parse_network_memo(self, *, data, recv_asset_spec, recv_twmmid, chk_only=False):
+	async def parse_network_memo(self, *, data, recv_asset_spec, recv_twmmid=None):
 		from ..swap.util import init_swap_proto
 		from ..tw.ctl import TwCtl
 		pm = self.swap_proto_mod.Memo.parse(data['memo'])
@@ -100,6 +99,4 @@ class BaseSwapMethods:
 			ymsg(
 				f'Warning: address from registered memo ({ra.twmmid!r}) '
 				f'does not match our destination address ({recv_twmmid!r})')
-		return None if chk_only else (
-			self._output(pm.asset.coin, self.cfg.network, CoinAddr(pm_proto, pm.address), ra.twmmid),
-			pm)
+		return (pm, ra)

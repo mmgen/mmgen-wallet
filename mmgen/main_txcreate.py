@@ -34,7 +34,9 @@ opts_data = {
 		('yes', True, 'quiet', True),
 		('refnum', bool, 'memoless', True),
 		('no_refreq_tx', True, 'memoless', True)],
-	'requires': [('coin', 'XMR', 'autosign', True)],
+	'requires': [
+		('coin', 'XMR', 'autosign', True),
+		('refnum', bool, 'trade_limit', False)],
 	'text': {
 		'desc': {
 			'tx':     f'Create a transaction with outputs to specified coin or {gc.proj_name} addresses',

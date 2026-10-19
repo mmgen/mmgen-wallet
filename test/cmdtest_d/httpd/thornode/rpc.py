@@ -49,7 +49,7 @@ class ThornodeRPCServer(ThornodeServer):
 		'0c7454c0': { # 0c7454c06d3fc0e520d34283e6f491ce7afe5abb3f569bbdfea1732e04b716ec
 			'reference': '13579',
 			'asset': 'LTC.LTC',
-			'memo': '=:c:qq6myf0qd6q5tln96ntl37hq0u7940w2xvs9jsuqv0:0/3/0',
+			'memo': '=:c:qq6myf0qd6q5tln96ntl37hq0u7940w2xvs9jsuqv0:7967e4/3/0',
 			'height': '12345678'}}
 
 	inbounds_info = get_inbounds_info()
