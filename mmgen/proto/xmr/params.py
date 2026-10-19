@@ -24,7 +24,7 @@ class MoneroViewKey(HexStr):
 class mainnet(CoinProtocol.RPC, CoinProtocol.DummyWIF, CoinProtocol.Base):
 
 	mod_clsname    = 'Monero'
-	network_names  = _nw('mainnet', 'stagenet', None)
+	network_names  = _nw('mainnet', 'stagenet', 'regtest')
 	base_proto     = 'Monero'
 	base_proto_coin = 'XMR'
 	base_coin      = 'XMR'
@@ -89,3 +89,6 @@ class mainnet(CoinProtocol.RPC, CoinProtocol.DummyWIF, CoinProtocol.Base):
 class testnet(mainnet): # use stagenet for testnet
 	# testnet is {'35', '3f', '36'}
 	addr_ver_info = {'18': 'monero', '24': 'monero_sub', '19': 'monero_integrated'}
+
+class regtest(mainnet):
+	pass

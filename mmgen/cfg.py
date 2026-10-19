@@ -493,8 +493,7 @@ class Config(Lockable):
 		self.coin = self.coin.upper()
 		self.token = self.token.upper() if self.token else None
 		if self.test_user or self.regtest:
-			if self.coin != 'XMR':
-				self.network = 'regtest'
+			self.network = 'regtest'
 			if not self.test_suite: # could be set in environment
 				self._use_cfg_file = False
 		else:

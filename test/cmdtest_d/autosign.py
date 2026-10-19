@@ -616,7 +616,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 				(opts or self.opts)
 				+ add_opts
 				# ensure that changes to online cfg file don’t affect autosign:
-				+ [f'--data-dir={autosign_data_dir}']
+				+ [f'--data-dir={autosign_data_dir}', '--regtest=1']
 				+ ['--full-summary', 'wait'],
 			direct_exec      = True,
 			no_passthru_opts = True,

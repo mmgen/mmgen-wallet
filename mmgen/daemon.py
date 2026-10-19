@@ -281,6 +281,7 @@ class CoinDaemon(Daemon):
 	testnet_dir = 'testnet'
 	rpc_user = None
 	rpc_password = None
+	disable_regtest_p2p = True
 
 	_cd = namedtuple('coins_data', ['daemon_ids'])
 	coins = {
@@ -429,7 +430,8 @@ class CoinDaemon(Daemon):
 			(self.dfl_rpc_port + self.port_shift))
 
 		self.p2p_port = (
-			None if self.dfl_p2p_port is None or self.network == 'regtest' else
+			None if self.dfl_p2p_port is None
+				or (self.network == 'regtest' and self.disable_regtest_p2p) else
 			(self.dfl_p2p_port + self.port_shift))
 
 		fn_stem = f'{self.id}-{self.network}-daemon-{self.bind_port}'

@@ -118,7 +118,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 		self.burn_addr = make_burn_addr(cfg)
 
 		self.autosign_opts = ['--autosign'] # mmgen-xmrwallet opts
-		self.autosign_setup_opts = [f'--xmrwallets={self.users[self.user].kal_range}']
+		self.autosign_setup_opts = ['--regtest=1', f'--xmrwallets={self.users[self.user].kal_range}']
 
 	def create_tmp_wallets(self):
 		self.spawn(msg_only=True)
@@ -511,7 +511,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	"""
 	menu_prompt = 'efresh balances:\b'
 	listaddresses_menu_prompt = 'efresh bals:\b'
-	extra_daemons = ['ltc']
+	extra_daemons = ['ltc_rt']
 
 	cmd_group = (
 		('autosign_setup',          'autosign setup with user’s seed'),
@@ -592,10 +592,11 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		data = self.users[self.user]
 		self.user_dump_file = os.path.join(
 			data.wd.wallet_dir,
-			f'{data.sid}-2-MoneroWatchOnlyWallet.dump')
+			f'{data.sid}-2-MoneroWatchOnlyWallet.regtest.dump')
 		self.user_daemon_opts = [
 			f'--monero-daemon=localhost:{data.md.rpc_port}',
-			'--monero-wallet-rpc-password=abc']
+			'--monero-wallet-rpc-password=abc',
+			'--regtest=1']
 		self.user_opts = [f'--{self.user}', '--coin=xmr'] + self.user_daemon_opts
 
 	def addrimport_user(self):

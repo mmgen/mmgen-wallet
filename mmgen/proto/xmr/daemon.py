@@ -18,17 +18,18 @@ from ...daemon import CoinDaemon, RPCDaemon, _nw, _dd
 
 class monero_daemon(CoinDaemon):
 	daemon_data = _dd('Monero', 18005001, '0.18.5.1-release')
-	networks = ('mainnet', 'testnet')
+	networks = ('mainnet', 'testnet', 'regtest')
 	exec_fn = 'monerod'
 	testnet_dir = 'stagenet'
 	new_console_mswin = True
-	rpc_ports = _nw(18081, 38081, None) # testnet is stagenet
+	rpc_ports = _nw(18081, 28081, 38081) # testnet is stagenet
 	cfg_file = 'bitmonero.conf'
 	datadirs = {
 		'linux': [gc.home_dir, '.bitmonero'],
 		'darwin': [gc.home_dir, '.bitmonero'],
 		'win32': ['/', 'c', 'ProgramData', 'bitmonero']}
 	use_pidfile = gc.platform == 'linux'
+	disable_regtest_p2p = False
 
 	@property
 	def dfl_p2p_port(self):
@@ -51,7 +52,8 @@ class monero_daemon(CoinDaemon):
 			['--no-zmq'],
 			[f'--p2p-bind-port={self.p2p_port}', self.p2p_port],
 			[f'--rpc-bind-port={self.rpc_port}'],
-			['--stagenet', self.network == 'testnet'])
+			['--stagenet', self.network == 'testnet'],
+			['--p2p-bind-ip=127.0.0.1', '--fixed-difficulty=1', '--regtest', self.network == 'regtest'])
 
 		self.coind_args = list_gen(
 			['--hide-my-port'],
@@ -77,8 +79,8 @@ class MoneroWalletDaemon(RPCDaemon):
 	exec_fn = 'monero-wallet-rpc'
 	coin = 'XMR'
 	new_console_mswin = True
-	networks = ('mainnet', 'testnet')
-	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
+	networks = ('mainnet', 'testnet', 'regtest')
+	rpc_ports = _nw(13131, 13141, 13151) # testnet is non-standard
 	use_pidfile = gc.platform == 'linux'
 	_reset_ok = ('debug', 'wait', 'pids', 'force_kill')
 

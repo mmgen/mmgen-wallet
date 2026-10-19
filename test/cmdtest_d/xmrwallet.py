@@ -120,8 +120,8 @@ class CmdTestXMRWallet(CmdTestBase):
 			return
 
 		from mmgen.protocol import init_proto
-		self.proto = init_proto(cfg, 'XMR', network='mainnet')
-		self.extra_opts = ['--wallet-rpc-password=abc']
+		self.proto = init_proto(cfg, 'XMR', network='regtest')
+		self.extra_opts = ['--regtest=1', '--wallet-rpc-password=abc']
 		self.init_users()
 		self.init_daemon_args()
 
@@ -217,6 +217,7 @@ class CmdTestXMRWallet(CmdTestBase):
 				daemon          = wd,
 				test_connection = False)
 
+			network_suf = '.regtest'
 			kafile_suf, fn_stem = (
 				('.vkeys', 'MoneroWatchOnlyWallet') if autosign else
 				('.akeys', 'MoneroWallet'))
@@ -229,9 +230,9 @@ class CmdTestXMRWallet(CmdTestBase):
 				udir           = udir,
 				twdir          = wd.wallet_dir,
 				kal_range      = kal_range,
-				kafile         = str(udir / f'{sid}-XMR-M[{kal_range}]{kafile_suf}'),
-				walletfile_fs  = str(wd.wallet_dir / f'{sid}-{{}}-{fn_stem}'),
-				addrfile_fs    = str(wd.wallet_dir / f'{sid}-{{}}-{fn_stem}.address.txt'),
+				kafile         = str(udir / f'{sid}-XMR-M[{kal_range}]{network_suf}{kafile_suf}'),
+				walletfile_fs  = str(wd.wallet_dir / f'{sid}-{{}}-{fn_stem}{network_suf}'),
+				addrfile_fs    = str(wd.wallet_dir / f'{sid}-{{}}-{fn_stem}{network_suf}.address.txt'),
 				md             = md,
 				md_rpc         = md_rpc,
 				wd             = wd,
@@ -239,14 +240,10 @@ class CmdTestXMRWallet(CmdTestBase):
 				add_coind_args = add_coind_args)
 
 	def init_daemon_args(self):
-		common_args = ['--p2p-bind-ip=127.0.0.1', '--fixed-difficulty=1', '--regtest'] # --rpc-ssl-allow-any-cert
 		for u in self.users:
 			other_ports = [self.users[u2].md.p2p_port for u2 in self.users if u2 != u]
 			node_args = [f'--add-exclusive-node=127.0.0.1:{p}' for p in other_ports if p]
-			self.users[u].md.usr_coind_args = (
-				common_args
-				+ node_args
-				+ self.users[u].add_coind_args)
+			self.users[u].md.usr_coind_args = node_args + self.users[u].add_coind_args
 
 	# cmd_group methods
 
@@ -264,7 +261,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			run(['mkdir', '-p', str(data.udir)])
 			t = self.spawn(
 				'mmgen-keygen',
-				['--quiet', '--accept-defaults', '--coin=xmr', f'--outdir={data.udir}']
+				['--quiet', '--accept-defaults', '--coin=xmr', '--regtest=1', f'--outdir={data.udir}']
 				+ add_opts
 				+ [data.mmwords, data.kal_range],
 				extra_desc = f'({capfirst(user)})')
