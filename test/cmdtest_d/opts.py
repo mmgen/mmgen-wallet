@@ -63,6 +63,7 @@ class CmdTestOpts(CmdTestBase):
 		('opt_bad_sets2',        (41, "invalid value for opts_data['sets']", [])),
 		('opt_bad_requires1',    (41, "invalid value for opts_data['requires']", [])),
 		('opt_bad_requires2',    (41, "invalid value for opts_data['requires']", [])),
+		('opt_bad_requires3',    (41, "invalid value for opts_data['requires']", [])),
 		('opt_invalid_1',        (41, 'invalid cmdline opt ‘--x’', [])),
 		('opt_invalid_2',        (41, 'invalid cmdline opt ‘---’', [])),
 		('opt_invalid_5',        (41, 'invalid cmdline opt (missing parameter)', [])),
@@ -353,7 +354,10 @@ class CmdTestOpts(CmdTestBase):
 		return self.do_run(['--coin=DOGE'], 'requires option', 1)
 
 	def opt_bad_requires2(self):
-		return self.do_run(['--no-foobleize', '--silent'], 'requires option --no-', 1)
+		return self.do_run(['--no-foobleize', '--silent'], 'to be omitted', 1)
+
+	def opt_bad_requires3(self):
+		return self.do_run(['--data-size=123', '--data-ratio=3%'], 'to be omitted', 1)
 
 	def opt_invalid(self, args, expect, opts=[], need_proto=False, exit_val=1):
 		t = self.spawn_prog(args, opts=opts, exit_val=exit_val, need_proto=need_proto)

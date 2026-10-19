@@ -14,6 +14,7 @@ opts_data = {
 	'requires': [
 		('coin', 'DOGE', 'no_foobleize', True),
 		('no_foobleize', True, 'silent', False),
+		('data_size', bool, 'data_ratio', False),
 	],
 	'text': {
 		'desc': 'Opts test',
@@ -23,6 +24,8 @@ opts_data = {
 --, --longhelp        Print help message for long (global) options
 -i, --in-fmt=      f  Input is from wallet format 'f'
 -d, --outdir=      d  Use outdir 'd'
+--, --data-size=N     Specify data size of N
+--, --data-ratio=N    Specify data ratio of N percent
 -C, --print-checksum  Print a checksum
 -E, --fee-estimate-mode=M Specify the network fee estimate mode.
 -F, --no-foobleize    Do not foobleize the output, even on user request

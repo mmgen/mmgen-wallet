@@ -30,11 +30,13 @@ def die2(exit_val, s):
 	sys.stderr.write(s+'\n')
 	sys.exit(exit_val)
 
-def fmt_opt_val(opt_in, val):
+def fmt_opt_val(opt_in, val, requires=False):
 	opt = opt_in.replace('_', '-')
 	match val:
 		case True:
 			return f'--{opt}'
+		case False if requires:
+			return f'--{opt} to be omitted'
 		case False:
 			return f'--no-{opt}'
 		case _:
@@ -731,10 +733,13 @@ class Config(Lockable):
 
 	def _check_opts_data_requires_opts(self, opts_data):
 		for a_opt, a_val, b_opt, b_val in opts_data['requires']:
-			if getattr(self, a_opt, False) == a_val and getattr(self, b_opt, False) != b_val:
+			usr_a_val = getattr(self, a_opt, False)
+			if (
+					(usr_a_val == a_val or (usr_a_val and a_val is bool))
+					and getattr(self, b_opt, False) != b_val):
 				die('UserOptError', 'Option {} requires option {}\n'.format(
-					fmt_opt_val(a_opt, a_val),
-					fmt_opt_val(b_opt, b_val)))
+					fmt_opt_val(a_opt, usr_a_val),
+					fmt_opt_val(b_opt, b_val, requires=True)))
 
 	def _die_on_incompatible_opts(self):
 		for group in self._incompatible_opts:
