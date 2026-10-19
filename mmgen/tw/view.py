@@ -209,13 +209,12 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 				self.prompt_fs_in[repl[0]] = repl[1]
 		self.prompt_fs = '\n'.join(self.prompt_fs_in)
 		for k, v in self.removed_key_mappings.items():
-			if k in self.key_mappings and self.key_mappings[k] == v:
-				del self.key_mappings[k]
-			else:
+			if not self.key_mappings.get(k) == v:
 				raise ValueError(f'{k}: {v}: unrecognized or invalid key mapping')
-		self.key_mappings.update(self.extra_key_mappings)
+		self.obj_key_mappings = {k: v for k, v in self.key_mappings.items()
+			if k not in self.removed_key_mappings} | self.extra_key_mappings
 		if self.proto.coin == 'BCH':
-			self.key_mappings.update({'h': 'd_addr_view_pref'})
+			self.obj_key_mappings.update({'h': 'd_addr_view_pref'})
 			self.addr_view_pref = 1 if not self.cfg.cashaddr else not self.proto.cashaddr
 
 	@property
@@ -586,8 +585,8 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 			if scroll:
 				for k in self.scroll_keys['vi']:
 					assert k not in self.key_mappings, f'{k!r} is in key_mappings'
-				self.key_mappings.update(self.scroll_keys['vi'] | self.scroll_keys[gc.platform])
-			return self.key_mappings
+				return self.obj_key_mappings | self.scroll_keys['vi'] | self.scroll_keys[gc.platform]
+			return self.obj_key_mappings
 
 		def cleanup(add_nl=False):
 			if add_nl:
