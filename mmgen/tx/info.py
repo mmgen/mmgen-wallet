@@ -23,6 +23,23 @@ class TxInfo:
 		self.cfg = cfg
 		self.tx = tx
 
+	def gen_swap_subhdr(self):
+		tx = self.tx
+		yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(tx.swap_proto_mod.name))
+		yield '    Swap: {}\n'.format(orange(f'{tx.send_asset.name} => {tx.recv_asset.name}'))
+		recv_mmid = getattr(tx, 'swap_recv_addr_mmid', None)
+		if (not tx.is_memoless) or tx.memoless_memo:
+			data = (
+				tx.memoless_memo.encode() if tx.is_memoless else
+				tx.swap_memo.encode() if tx.proto.is_vm else
+				tx.data_output.data)
+			if tx.swap_proto_mod.Memo.is_partial_memo(data):
+				yield '    Dest: {}{}\n'.format(
+					cyan(tx.swap_proto_mod.Memo.parse(data.decode('ascii')).address),
+					orange(f' {recv_mmid}') if recv_mmid else '')
+		if not recv_mmid:
+			yield yellow('    Warning: swap destination address is not a wallet address!\n')
+
 	def format(self, *, terse=False, sort='addr'):
 
 		tx = self.tx
@@ -71,20 +88,7 @@ class TxInfo:
 				yield f'  {tx.coin} TxID: {tx.coin_txid.hl()}\n'
 
 			if tx.is_swap:
-				yield '  {} {}\n'.format(magenta('DEX Protocol:'), blue(tx.swap_proto_mod.name))
-				yield '    Swap: {}\n'.format(orange(f'{tx.send_asset.name} => {tx.recv_asset.name}'))
-				recv_mmid = getattr(tx, 'swap_recv_addr_mmid', None)
-				if (not tx.is_memoless) or tx.memoless_memo:
-					data = (
-						tx.memoless_memo.encode() if tx.is_memoless else
-						tx.swap_memo.encode() if tx.proto.is_vm else
-						tx.data_output.data)
-					if tx.swap_proto_mod.Memo.is_partial_memo(data):
-						yield '    Dest: {}{}\n'.format(
-							cyan(tx.swap_proto_mod.Memo.parse(data.decode('ascii')).address),
-							orange(f' {recv_mmid}') if recv_mmid else '')
-				if not recv_mmid:
-					yield yellow('    Warning: swap destination address is not a wallet address!\n')
+				yield from self.gen_swap_subhdr()
 
 			enl = ('\n', '')[bool(terse)]
 			yield enl
