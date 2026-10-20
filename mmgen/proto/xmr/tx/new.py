@@ -27,6 +27,12 @@ class New(Base, TxNew):
 	async def set_gas(self, *, to_addr=None, force=False):
 		pass
 
+	def process_data_output_arg(self, arg):
+		pass
+
+	def get_addrdata_from_files(self, proto, addrfiles):
+		pass
+
 	async def get_funds_remaining(self, fee, outputs_sum, start_fee_desc):
 		return True
 

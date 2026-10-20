@@ -31,8 +31,7 @@ class overlay_fake_Daemon:
 			'miner': 1,
 			'bob':   2,
 			'alice': 3}
-
-		if os.getenv('MMGEN_TEST_SUITE_ENABLE_USER_PORT_SHIFT'):
+		if os.getenv('MMGEN_TEST_SUITE_ENABLE_USER_PORT_SHIFT') and self.proto.coin == 'XMR':
 			return 1 << 7 | udata[self.test_user or self.cfg.test_user] << 5
 		else:
 			return 1 << 7

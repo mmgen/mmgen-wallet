@@ -98,4 +98,46 @@ EXAMPLES:
   Same as above, but proxy requests via the I2P router running on host gw1:
 
     $ https_proxy=http://gw1:4444 {gc.prog_name} --proxy=env RUNE 1000 BTC
+
+
+MEMOLESS SWAP EXAMPLES:
+
+  The following examples assume --autosign
+
+  Initiate a BTC-to-XMR swap with autoselected destination address.  The
+  command produces a THORChain registration transaction:
+
+    $ {gc.prog_name} --memoless BTC 0.1234 XMR
+
+  Send the registration transaction:
+
+    $ mmgen-txsend
+    => TxID
+
+  Get the reference number from the THORChain network:
+
+    $ mmgen-remote --coin=rune get_refnum TxID
+
+  Create a BTC-to-XMR swap transaction using the reference number:
+
+    $ {gc.prog_name} --refnum=REFNUM BTC 0.1234 XMR
+
+  Send the swap transaction:
+
+    $ mmgen-txsend
+
+  Monitor your XMR wallet for the funds:
+
+    $ mmgen-tool --coin=xmr twview
+
+  Initiate a BTC-to-XMR swap with destination argument in the form
+  WALLET_NUM:ACCT_IDX:
+
+    $ {gc.prog_name} --memoless BTC 0.1234 XMR 3:12
+
+  Initiate a BTC-to-XMR swap with destination argument being a specific
+  address denoted by an extended MMGen ID in the form SEED_ID:ADDR_TYPE:
+  WALLET_NUM/ACCT_IDX/ADDR_IDX:
+
+    $ {gc.prog_name} --memoless BTC 0.1234 XMR 4BA5D19B:M:3/12/7
 """

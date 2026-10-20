@@ -50,7 +50,19 @@ class ThornodeRPCServer(ThornodeServer):
 			'reference': '13579',
 			'asset': 'LTC.LTC',
 			'memo': '=:c:qq6myf0qd6q5tln96ntl37hq0u7940w2xvs9jsuqv0:7967e4/3/0',
-			'height': '12345678'}}
+			'height': '12345678'},
+		'fbbbd382': { # fbbbd382edd2d5478e0316b6c31ef6a0bbad57bcebc9d8b30cc52e5dbf107622
+			'reference': '78787',
+			'asset': 'XMR.XMR',
+			'memo': '=:l:rltc1q6rs4znw8kajd6n6yn2snlfra3pluz3x5paj6x3:0/3/0',
+			'height': '12349876'},
+		'ae04ecd8': { # ae04ecd8ff1f0c13861bd2d6123ce33ea03a731ccd142f5ca2f2450a54f215ba
+			'reference': '98765',
+			'asset': 'LTC.LTC',
+			'memo': '=:XMR.XMR:88u4waXXrPUD9EkCGMcFifKJakDZ6vx6zNpePuS238SLP7ziiMuqeP31c8ftJEDSymcSK88FFzKvQfoohF4LSyFu5E3yWTH:0/3/0',
+			'height': '12346789'}}
+
+	refreq_txid_xmr = 'fbbbd382edd2d5478e0316b6c31ef6a0bbad57bcebc9d8b30cc52e5dbf107622'
 
 	inbounds_info = get_inbounds_info()
 

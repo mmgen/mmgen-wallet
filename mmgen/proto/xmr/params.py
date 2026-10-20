@@ -31,6 +31,7 @@ class mainnet(CoinProtocol.RPC, CoinProtocol.DummyWIF, CoinProtocol.Base):
 	addr_ver_info  = {'12': 'monero', '2a': 'monero_sub', '13': 'monero_integrated'}
 	pubkey_types   = ('monero',)
 	mmtypes        = ('M',)
+	preferred_mmtypes  = ('M',)
 	dfl_mmtype     = 'M'
 	pubkey_type    = 'monero' # required by DummyWIF
 	avg_bdi        = 120
@@ -39,6 +40,7 @@ class mainnet(CoinProtocol.RPC, CoinProtocol.DummyWIF, CoinProtocol.Base):
 	coin_amt       = 'XMRAmt'
 	sign_mode      = 'standalone'
 	has_usr_fee    = False
+	address_reuse_ok = False
 
 	coin_cfg_opts = (
 		'ignore_daemon_version',

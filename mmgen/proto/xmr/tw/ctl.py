@@ -10,7 +10,10 @@
 proto.xmr.tw.ctl: Monero tracking wallet control class
 """
 
-from ....tw.ctl import TwCtl, write_mode
+from ....addr import CoinAddr
+from ....tw.shared import TwLabel
+from ....tw.ctl import TwCtl, write_mode, label_addr_pair
+from ....tw.addresses import TwAddresses
 
 class MoneroTwCtl(TwCtl):
 
@@ -46,3 +49,11 @@ class MoneroTwCtl(TwCtl):
 			compat_call = True)
 		op.c.call('close_wallet')
 		return await op.main(add_timestr=add_timestr)
+
+	async def get_label_addr_pairs(self):
+		twaddrs = await TwAddresses(self.cfg, self.proto, add_twctl=False)
+		rpc_data = await twaddrs.get_rpc_data()
+		return [label_addr_pair(
+				TwLabel(self.proto, k),
+				CoinAddr(self.proto, v['addr'])
+			) for k, v in rpc_data.items()]

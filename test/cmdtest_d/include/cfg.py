@@ -51,12 +51,14 @@ cmd_groups_dfl = {
 	'xmrwallet':          gd('CmdTestXMRWallet',         {}),
 	'xmr_autosign':       gd('CmdTestXMRAutosign',       {}),
 	'xmr_compat':         gd('CmdTestXMRCompat',         {'modname': 'xmr_autosign'}),
+	'xmrswap':            gd('CmdTestXMRSwap',           {}),
 }
 
 cmd_groups_extra = {
 	'ethswap_eth':            gd('CmdTestEthSwapEth',           {'modname': 'ethswap'}),
 	'ethbump_ltc':            gd('CmdTestEthBumpLTC',           {'modname': 'ethbump'}),
 	'runeswap_rune':          gd('CmdTestRuneSwapRune',         {'modname': 'runeswap'}),
+	'xmrswap_xmr':            gd('CmdTestXMRSwapXMR',           {'modname': 'xmrswap'}),
 	'dev':                    gd('CmdTestDev',                  {'modname': 'misc'}),
 	'regtest_legacy':         gd('CmdTestRegtestBDBWallet',     {'modname': 'regtest'}),
 	'autosign_btc':           gd('CmdTestAutosignBTC',          {'modname': 'autosign'}),
@@ -263,6 +265,7 @@ cfgs = { # addr_idx_lists (except 31, 32, 33, 34) must contain exactly 8 address
 	'57': {}, # runeswap
 	'58': {}, # runeswap_rune
 	'59': {}, # autosign_eth
+	'77': {}, # xmrswap
 	'99': {}, # dummy
 }
 

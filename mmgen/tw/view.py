@@ -195,12 +195,12 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 	def __new__(cls, cfg, proto, *args, **kwargs):
 		return MMGenObject.__new__(proto.base_proto_subclass(cls, cls.mod_subpath))
 
-	async def __init__(self, cfg, proto):
+	async def __init__(self, cfg, proto, *, add_twctl=True):
 		self.cfg = cfg
 		self.proto = proto
 		if have_rpc := 'rpc_init' in proto.mmcaps:
 			self.rpc = await rpc_init(cfg, proto)
-		if self.has_twctl:
+		if self.has_twctl and add_twctl:
 			from .ctl import TwCtl
 			self.twctl = await TwCtl(cfg, proto, mode='w', no_rpc=not have_rpc)
 		self.amt_iwidth_keys = {'amt': 'iwidth'} | ({'amt2': 'iwidth2'} if self.has_amt2 else {})

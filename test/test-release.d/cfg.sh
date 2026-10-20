@@ -267,7 +267,7 @@ init_tests() {
 
 	d_ltc="overall operations with emulated RPC data (Litecoin)"
 	t_ltc="
-		- $cmdtest_py --coin=ltc --exclude regtest,autosign_automount,help,runeswap
+		- $cmdtest_py --coin=ltc --exclude regtest,autosign_automount,help,runeswap,xmrswap
 		- $cmdtest_py --coin=ltc --segwit
 		- $cmdtest_py --coin=ltc --segwit-random
 		- $cmdtest_py --coin=ltc --bech32
@@ -322,6 +322,8 @@ init_tests() {
 
 	d_xmr="Monero xmrwallet operations"
 	t_xmr="
+		- test/clean.py
+		- ${xmr_env[*]} $cmdtest_py --coin=ltc xmrswap
 		- ${xmr_env[*]} $cmdtest_py --coin=xmr --exclude help
 		s ${xmr_env[*]} $cmdtest_py --coin=xmr xmr_autosign_nocompat
 	"

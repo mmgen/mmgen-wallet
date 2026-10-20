@@ -26,16 +26,19 @@ prices = {
 	'LTC': 115,
 	'BCH': 330,
 	'ETH': 2304,
+	'XMR': 550,
 	'MM1': 0.998,
 	'RUNE': 1.4}
 
 gas_rate_units = {
 	'BTC': 'satsperbyte',
-	'ETH': 'gwei'}
+	'ETH': 'gwei',
+	'XMR': 'atomic'}
 
 recommended_gas_rate = {
 	'BTC': '6',
-	'ETH': '1'}
+	'ETH': '1',
+	'XMR': '600'}
 
 data_template_from_rune = {
 	'outbound_delay_blocks': 0,

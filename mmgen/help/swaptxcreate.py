@@ -45,6 +45,10 @@ forks, types ‘B’, ‘S’ and ‘C’ (see ADDRESS TYPES below) are searched
 order for unused addresses.  Note that sending to an unused address may be
 undesirable for Ethereum, where address (i.e. account) reuse is the norm.  In
 that case, the user should specify a destination address on the command line.
+Monero tracking wallets are likely to contain no unused addresses in the
+desired destination account, or even in the entire wallet, in which case the
+user must create a new address via ‘mmgen-tool --coin=xmr listaddresses
+interactive=1’.
 
 If the wallet contains eligible unused addresses with multiple Seed IDs, the
 user will be presented with a list of the lowest-indexed addresses of
@@ -52,8 +56,10 @@ preferred type for each Seed ID and prompted to choose from among them.
 
 Change and destination addresses may also be specified manually with the
 CHG_ADDR and DEST_ADDR arguments.  These are given either as full MMGen IDs
-or in the form [SEED_ID:]ADDRTYPE_CODE, with the following exception: for
-Ethereum the CHG_ADDR argument is not supported.  See EXAMPLES below and the
+or in the form [SEED_ID:]ADDRTYPE_CODE, with the following exceptions: for
+Ethereum and Monero the CHG_ADDR argument is not supported, and for Monero
+the DEST_ADDR argument, if given, is replaced by an extended MMGen ID or a
+specifier in the form WALLET_NUM:ACCT_IDX.  See EXAMPLES below and the
 ‘mmgen-txcreate’ help screen for details.
 
 While discouraged, sending change or swapping to non-wallet addresses is also

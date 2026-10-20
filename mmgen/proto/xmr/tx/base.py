@@ -13,3 +13,7 @@ proto.xmr.tx.base: Monero base transaction class
 class Base:
 	is_compat = True
 	has_comment = False
+
+	@property
+	def nondata_outputs(self):
+		return ()

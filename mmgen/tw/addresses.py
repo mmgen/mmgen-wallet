@@ -99,9 +99,9 @@ class TwAddresses(TwView):
 	def coinaddr_list(self):
 		return [d.addr for d in self.data]
 
-	async def __init__(self, cfg, proto, *, minconf=1, mmgen_addrs='', get_data=False):
+	async def __init__(self, cfg, proto, *, minconf=1, mmgen_addrs='', get_data=False, add_twctl=True):
 
-		await super().__init__(cfg, proto)
+		await super().__init__(cfg, proto, add_twctl=add_twctl)
 
 		self.minconf = NonNegativeInt(minconf)
 		self.spc_w = 5 + self.has_age + self.has_used # 1 space between cols + 1 leading space in fs

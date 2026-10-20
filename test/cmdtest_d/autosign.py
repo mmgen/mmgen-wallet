@@ -582,6 +582,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			need_rbf  = False,
 			dump_hex  = False,
 			expect_pat = None,
+			is_xmr    = False,
 			mark_sent = False):
 
 		if need_rbf and not self.proto.cap('rbf'):
@@ -604,6 +605,11 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 				t.expect(expect_pat, regex=True)
 		elif mark_sent:
 			t.written_to_file('Sent automount transaction')
+		elif is_xmr:
+			if expect_pat:
+				t.expect(expect_pat, regex=True)
+			t.expect('Submit transaction? (y/N): ', 'y')
+			t.written_to_file('Submitted transaction')
 		else:
 			t.view_tx('t', expect_pat=expect_pat)
 			t.do_comment(comment)

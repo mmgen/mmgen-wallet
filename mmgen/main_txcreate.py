@@ -84,9 +84,13 @@ opts_data = {
 			+                        the reference request TX (activates second pass).
 			-s -N, --no-refreq-tx    With --memoless, do not create a reference request TX.
 			+                        Instead, display the reference memo and exit.
-			m- -p, --priority=N      Specify an integer priority ‘N’ for inclusion of trans-
+			mt -p, --priority=N      Specify an integer priority ‘N’ for inclusion of trans-
 			+                        action in blockchain (higher number means higher fee).
 			+                        Valid parameters: {tp}.
+			+                        If option is omitted, the default priority will be used
+			-s -p, --priority=N      Specify an integer priority ‘N’ for inclusion of trans-
+			+                        action in blockchain (higher number means higher fee).
+			+                        XMR only. Valid params: {tp}
 			+                        If option is omitted, the default priority will be used
 			-- -q, --quiet           Suppress warnings; overwrite files without prompting
 			-s -Q, --quote           Get a swap quote and exit.  Do not create transaction

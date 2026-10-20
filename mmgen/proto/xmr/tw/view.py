@@ -43,9 +43,10 @@ class MoneroTwView:
 		'twmmid': lambda i: i.twmmid.sort_key} # sort_key begins with acct_sort_key
 
 	class MoneroTwViewItem(TwUnspentOutputs.MMGenTwUnspentOutput):
-		valid_attrs = {'amt', 'unlocked_amt', 'comment', 'twmmid', 'addr', 'confs', 'is_used', 'skip'}
+		valid_attrs = {'amt', 'unlocked_amt', 'comment', 'twmmid', 'al_id', 'addr', 'confs', 'is_used', 'skip'}
 		unlocked_amt = ImmutableAttr(CoinAmtChk, include_proto=True)
 		is_used = ImmutableAttr(bool)
+		al_id = ImmutableAttr(str)
 
 	class rpc:
 		caps = ()
@@ -60,6 +61,7 @@ class MoneroTwView:
 
 		if dump_data:
 			self.sid = SeedID(sid=dump_data[0]['seed_id'])
+			self.al_id = self.sid + ':M'
 
 		self.total = self.unlocked_total = self.proto.coin_amt('0')
 
@@ -112,6 +114,7 @@ class MoneroTwView:
 			self.MoneroTwViewItem(
 					self.proto,
 					twmmid  = twmmid,
+					al_id   = twmmid.addr.al_id,
 					addr    = data['addr'],
 					confs   = data['confs'],
 					is_used = data['is_used'],

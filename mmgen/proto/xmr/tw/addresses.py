@@ -38,6 +38,8 @@ class MoneroTwAddresses(MoneroTwView, TwAddresses):
 
 	include_empty = True
 	has_used = True
+	autochg_ignore_labels = True
+	autochg_match_full_list = True
 	prompt_fs_repl = {'XMR': (
 		(1, 'Filters: show [E]mpty addrs, [u]sed addrs, all [L]abels'),
 		(3, 'Actions: [q]uit menu, add [l]abel, [N]ew acct, [n]ew addr, [R]efresh bals:'))}
@@ -49,6 +51,23 @@ class MoneroTwAddresses(MoneroTwView, TwAddresses):
 		'\x12': 'a_sync_wallets'}
 	removed_key_mappings = {
 		'D': 'i_addr_delete'}
+
+	def get_target(self, key_in):
+		from ....addr import AddrIdx, MoneroIdx
+		return '{}:{}'.format(
+			self.al_id,
+			'{:0{w1}}:{:0{w2}}'.format(
+				*map(int, key_in.split(':')),
+				w1 = AddrIdx.max_digits,
+				w2 = MoneroIdx.max_digits))
+
+	@staticmethod
+	def get_bisect_key(d):
+		return d.twmmid.addr.sort_key
+
+	@staticmethod
+	def get_match_key(d):
+		return d.twmmid.addr.acct_sort_key
 
 	class display_type:
 

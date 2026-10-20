@@ -48,7 +48,11 @@ class NewSwap(BaseSwapMethods, New):
 			self._non_wallet_addr_confirm(message)
 
 	async def get_swap_output(self, proto, arg, addrfiles, desc):
-		if arg:
+
+		def is_acct_id(arg):
+			return (ss := arg.split(':', 1)) and all(map(is_int, ss))
+
+		if arg and not (desc == 'destination' and is_acct_id(arg)):
 			from ..addrdata import TwAddrData
 			pa = self.parse_cmdline_arg(
 				proto,
@@ -204,7 +208,8 @@ class NewSwap(BaseSwapMethods, New):
 			from ..rpc import rpc_init
 			if not args.send_amt:
 				die(1, 'With --memoless (reference request transaction), you must supply a send amount')
-			self.rpc = await rpc_init(self.cfg, self.proto)
+			if 'rpc_init' in self.proto.mmcaps:
+				self.rpc = await rpc_init(self.cfg, self.proto)
 			qd = self.swap_proto_mod.quote_client(self, args.send_amt)
 			await self.display_quote_loop(qd, deduct_est_fee=False)
 			self.reference_memo = self.swap_proto_mod.reference_memo(

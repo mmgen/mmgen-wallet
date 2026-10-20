@@ -120,6 +120,7 @@ def op(op, cfg, infile, wallets, *, spec=None, compat_call=False):
 		from ..cfg import Config
 		cfg = Config({
 			'_clone': cfg,
+			'coin': 'XMR',
 			'compat': True,
 			'full_address': cfg.full_address or compat_call,
 			'xmrwallet_compat': True} | ({} if cfg.offline else {

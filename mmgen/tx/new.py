@@ -220,6 +220,9 @@ class New(Base):
 		elif arg is None:
 			res = al.get_change_address_by_addrtype(None, exclude=exclude, desc=desc)
 			req_desc = 'of any allowed address type'
+		elif al.is_account_based: # arg is an acct_id
+			res = al.get_change_address(arg, exclude=exclude, desc=desc)
+			req_desc = f'matching account {al.al_id}:{arg}'
 		elif obj := get_obj(MMGenAddrType, proto=proto, id_str=arg, silent=True):
 			res = al.get_change_address_by_addrtype(obj, exclude=exclude, desc=desc)
 			req_desc = f'of address type {arg!r}'
