@@ -129,8 +129,7 @@ class UnitTestHelpers:
 
 	def skip_msg(self, desc):
 		cfg._util.qmsg(gray(
-			f'Skipping {test_type} subtest {self.subtest_name.replace("_", "-")!r} for {desc}'
-		))
+			f'Skipping {test_type} subtest {self.subtest_name.replace("_", "-")!r} for {desc}'))
 
 	def process_bad_data(self, data, pfx='bad '):
 		if os.getenv('PYTHONOPTIMIZE'):
@@ -226,8 +225,7 @@ def run_test(test, subtest=None):
 
 		def subtest_skip_msg(name, add_msg):
 			cfg._util.qmsg(gray(
-				'Skipping {} subtest {!r} {}'.format(test_type, name.replace('_', '-'), add_msg)
-			))
+				'Skipping {} subtest {!r} {}'.format(test_type, name.replace('_', '-'), add_msg)))
 
 		for _subtest in subtests:
 			if cfg.no_altcoin_deps and _subtest in altcoin_deps:

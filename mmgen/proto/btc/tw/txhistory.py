@@ -76,8 +76,7 @@ class BitcoinTwTransaction:
 					(d.twlabel.twmmid.sort_key if d.twlabel and d.twlabel.twmmid.type == 'mmgen' else '')
 					+ '_'
 					+ d.txid
-					+ '{:08d}'.format(d.data['n'])
-				))
+					+ '{:08d}'.format(d.data['n'])))
 
 		def gen_all_addrs(src):
 			for e in self.vouts_info[src]:

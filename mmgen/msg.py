@@ -67,8 +67,7 @@ class coin_msg:
 				json.dumps(
 					{k: self.data[k] for k in self.chksum_keys},
 					sort_keys = True,
-					separators = (',', ':')
-			))
+					separators = (',', ':')))
 
 		@property
 		def filename_stem(self):

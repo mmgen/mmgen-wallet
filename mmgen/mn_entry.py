@@ -303,8 +303,7 @@ class MnemonicEntry:
 			msg('  {}) {:8} {}'.format(
 				n,
 				mode.name + ':',
-				fmt(mode.choose_info, indent=' '*14).lstrip().format(usl=self.uniq_ss_len),
-			))
+				fmt(mode.choose_info, indent=' '*14).lstrip().format(usl=self.uniq_ss_len)))
 		prompt = f'Type a number, or hit ENTER for the default ({capfirst(self.dfl_entry_mode)}): '
 		erase = '\r' + ' ' * (len(prompt)+19) + '\r'
 		while True:
@@ -343,8 +342,7 @@ class MnemonicEntry:
 					ml       = mn_len,
 					ssl      = em.ss_len,
 					pad_max  = em.pad_max,
-					sw       = self.shortest_word,
-			))
+					sw       = self.shortest_word))
 
 		clear_line = '\n' if self.cfg.test_suite else '{r}{s}{r}'.format(r='\r', s=' '*40)
 		idx, idxs = 1, [] # initialize idx to a non-None value

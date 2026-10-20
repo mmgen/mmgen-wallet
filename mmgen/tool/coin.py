@@ -142,8 +142,7 @@ class tool_cmd(tool_cmd_base):
 			pubkey        = bytes.fromhex(pubkeyhex),
 			viewkey_bytes = None,
 			pubkey_type   = self.mmtype.pubkey_type,
-			compressed    = self.mmtype.compressed,
-		))
+			compressed    = self.mmtype.compressed))
 
 	def pubhex2redeem_script(self, pubkeyhex: fstr): # new
 		"convert a hexadecimal pubkey to a Segwit P2SH-P2WPKH redeem script"

@@ -50,8 +50,7 @@ match op:
 				cfg._proto.coin.lower(),
 				type(cfg._proto).__name__,
 				varname,
-				getattr(cfg._proto, varname)
-			))
+				getattr(cfg._proto, varname)))
 	case 'autoset_opts':
 		assert cfg.rpc_backend == 'aiohttp', "cfg.rpc_backend != 'aiohttp'"
 	case 'autoset_opts_cmdline':

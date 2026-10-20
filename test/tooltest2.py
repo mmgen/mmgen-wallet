@@ -273,8 +273,7 @@ def do_group(gid):
 	cls = main_tool.get_mod_cls(gid.lower())
 	qmsg(blue('Testing ' +
 		desc if cfg.names else
-		(docstring_head(cls) or desc)
-	))
+		(docstring_head(cls) or desc)))
 
 	for cmdname in cls(cfg).user_commands:
 		if cmdname in skipped_tests:

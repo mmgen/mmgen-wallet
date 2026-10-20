@@ -53,10 +53,9 @@ class EthereumRPCClient(RPCClient, metaclass=AsyncInit):
 		await self.set_backend_async(backend)
 
 		vi, bh, ci = await self.gathered_call(None, (
-				('web3_clientVersion', ()),
-				('eth_getBlockByNumber', ('latest', False)),
-				('eth_chainId', ()),
-			))
+			('web3_clientVersion', ()),
+			('eth_getBlockByNumber', ('latest', False)),
+			('eth_chainId', ())))
 
 		vip = re.match(self.daemon.version_pat, vi, re.ASCII)
 		if not vip:

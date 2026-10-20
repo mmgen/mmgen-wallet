@@ -233,8 +233,7 @@ class CmdTestRunner:
 		t = int(time.time() - self.start_time)
 		sys.stderr.write(green(
 			f'{self.cmd_total} test{suf(self.cmd_total)} performed' +
-			('\n' if self.cfg.no_timings else f'.  Elapsed time: {t//60:02d}:{t%60:02d}\n')
-		))
+			('\n' if self.cfg.no_timings else f'.  Elapsed time: {t//60:02d}:{t%60:02d}\n')))
 
 	def init_group(self, gname, sg_name=None, cmd=None, quiet=False, do_clean=True):
 

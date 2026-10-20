@@ -86,8 +86,7 @@ class OpSync(OpWallet):
 		from . import hl_amt
 		msg('  Balance: {} Unlocked balance: {}'.format(
 			hl_amt(wd.accts_data['total_balance']),
-			hl_amt(wd.accts_data['total_unlocked_balance']),
-		))
+			hl_amt(wd.accts_data['total_unlocked_balance'])))
 
 		self.wallets_data[fn.name] = wd
 

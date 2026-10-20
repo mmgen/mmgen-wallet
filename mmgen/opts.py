@@ -391,7 +391,6 @@ class UserOpts(Opts):
 				cmd = (
 					['-']
 					+ (['r'] if caps.rpc else [])
-					+ (['p', 'c'] if caps.proto and caps.use_coin_opt else ['p'] if caps.proto else [])
-				))
+					+ (['p', 'c'] if caps.proto and caps.use_coin_opt else ['p'] if caps.proto else [])))
 		else: # unmanaged command: enable everything
 			return ret(None, None)

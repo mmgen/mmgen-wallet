@@ -289,8 +289,7 @@ def oqmsg_r(s):
 def end_msg(t):
 	omsg(green(
 		'All requested tests finished OK' +
-		('' if cfg.test_suite_deterministic else f', elapsed time: {t//60:02d}:{t%60:02d}')
-	))
+		('' if cfg.test_suite_deterministic else f', elapsed time: {t//60:02d}:{t%60:02d}')))
 
 def start_test_daemons(*network_ids, remove_datadir=False, verbose=False):
 	if not cfg.no_daemon_autostart:

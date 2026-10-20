@@ -68,8 +68,7 @@ class wallet(MMGenObject, metaclass=WalletMeta):
 			b = self.seed.sid.hl(),
 			c = f' (seed length {self.seed.bitlen})' if self.seed.bitlen != 256 else '',
 			d = '' if not hasattr(self, 'mnemonic') or self.mnemonic.has_chksum else
-				orange(' [mnemonic format has no checksum]')
-		))
+				orange(' [mnemonic format has no checksum]')))
 
 	def _get_data(self):
 		if hasattr(self, 'infile'):

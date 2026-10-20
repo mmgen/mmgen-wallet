@@ -30,8 +30,7 @@ class wallet(wallet):
 	def _print_seed_type(self):
 		msg('{} {}'.format(
 			blue(f'{capfirst(self.base_type or self.type)} type:'),
-			yellow(self.mn_type)
-		))
+			yellow(self.mn_type)))
 
 	def _choose_seedlen(self, ok_lens):
 

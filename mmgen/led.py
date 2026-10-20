@@ -125,8 +125,7 @@ class LEDControl:
 				msg('\n{}\n{}\n{}'.format(
 					blue(f'You do not have write access to the {desc}'),
 					blue(f'To allow access, run the following command:\n\n    {cmd}'),
-					orange('[To prevent this message in the future, enable sudo without a password]')
-				))
+					orange('[To prevent this message in the future, enable sudo without a password]')))
 				sys.exit(1)
 
 		def init_state(fn, *, desc, init_val=None):

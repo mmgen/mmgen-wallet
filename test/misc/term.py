@@ -133,8 +133,8 @@ def _tt_get_char(raw=False, one_char=False, immed_chars=''):
 
 	cmsg('Testing {}({}):'.format(
 		funcname,
-		','.join(f'{a}={b!r}' for a, b in kwargs.items())
-	))
+		','.join(f'{a}={b!r}' for a, b in kwargs.items())))
+
 	msg(fs.format(m1, yellow(m2), yellow(m3)))
 
 	try:

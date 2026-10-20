@@ -864,8 +864,7 @@ class CmdTestMain(CmdTestBase, CmdTestShared):
 		wcls = get_wallet_cls(fmt_code=out_fmt)
 		msg('==> {}: {}'.format(
 			wcls.desc,
-			cyan(get_data_from_file(self.cfg, f, desc=wcls.desc))
-		))
+			cyan(get_data_from_file(self.cfg, f, desc=wcls.desc))))
 		end_silence()
 		return t
 

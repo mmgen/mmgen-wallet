@@ -10,7 +10,6 @@ if overlay_fake_os.getenv('MMGEN_TEST_SUITE_BOGUS_UNSPENT_DATA'):
 			from ....fileutil import get_data_from_file
 			return json.loads(get_data_from_file(
 				self.cfg,
-				overlay_fake_os.getenv('MMGEN_TEST_SUITE_BOGUS_UNSPENT_DATA')
-			))
+				overlay_fake_os.getenv('MMGEN_TEST_SUITE_BOGUS_UNSPENT_DATA')))
 
 	BitcoinTwUnspentOutputs.get_rpc_data = overlay_fake_BitcoinTwUnspentOutputs.get_rpc_data

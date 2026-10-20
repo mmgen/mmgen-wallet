@@ -37,8 +37,7 @@ def write_mode(orig_func):
 		if self.mode != 'w':
 			die(1, '{} opened in read-only mode: cannot execute method {}()'.format(
 				type(self).__name__,
-				locals()['orig_func'].__name__
-			))
+				locals()['orig_func'].__name__))
 		return orig_func(self, *args, **kwargs)
 	return f
 

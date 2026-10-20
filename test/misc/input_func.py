@@ -36,7 +36,6 @@ match cfg._args:
 			func_args.update({'cfg':cfg})
 		msg('  Calling {name}({args})'.format(
 			name = cmd,
-			args = ', '.join(f'{k}={v!r}' for k, v in func_args.items())
-			))
+			args = ', '.join(f'{k}={v!r}' for k, v in func_args.items())))
 		ret = locals()[cmd](**func_args)
 		msg(f'  ==> {ret!r}')

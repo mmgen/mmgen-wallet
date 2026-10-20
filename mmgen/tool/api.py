@@ -92,8 +92,7 @@ class tool_api(
 		from ..altcoin.params import CoinInfo
 		return sorted(set(
 			[c.upper() for c in CoinProtocol.coins]
-			+ [c.symbol for c in CoinInfo.get_supported_coins(self.proto.network)]
-		))
+			+ [c.symbol for c in CoinInfo.get_supported_coins(self.proto.network)]))
 
 	@property
 	def coin(self):

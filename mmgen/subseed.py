@@ -99,8 +99,7 @@ class SubSeedList(MMGenObject):
 			msg_r('{} {} of {}...'.format(
 				green('Generating subseed'),
 				ss_idx.hl(),
-				self.parent_seed.sid.hl(),
-			))
+				self.parent_seed.sid.hl()))
 
 		if ss_idx.idx > len(self):
 			self._generate(ss_idx.idx)
@@ -134,8 +133,7 @@ class SubSeedList(MMGenObject):
 					green('Found subseed'),
 					subseed.sid.hl(),
 					self.parent_seed.sid.hl(),
-					subseed.ss_idx.hl(),
-				))
+					subseed.ss_idx.hl()))
 
 		if last_idx is None:
 			last_idx = self.len
