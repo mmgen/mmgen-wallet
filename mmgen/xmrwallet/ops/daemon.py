@@ -37,7 +37,7 @@ class OpDaemon(OpBase):
 			md = None
 		else:
 			from ...daemon import CoinDaemon
-			md = CoinDaemon(self.cfg, network_id='xmr')
+			md = CoinDaemon(self.cfg, proto=self.cfg._proto)
 			host, port = (
 				self.cfg.daemon.split(':') if self.cfg.daemon else
 				('localhost', md.rpc_port))
