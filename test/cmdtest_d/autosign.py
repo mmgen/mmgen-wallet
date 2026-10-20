@@ -610,6 +610,25 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		self.remove_device_online()
 		return t
 
+	def _txsend_abort(self, err=False, send_resp='y', expect_str=None, shred_expect_str=[]):
+		self.insert_device_online()
+		t = self.spawn(
+				'mmgen-txsend',
+				['--quiet', '--abort'],
+				no_passthru_opts = ['coin'],
+				exit_val = 2 if err else 1 if send_resp == 'n' else None)
+		if err:
+			t.expect(expect_str)
+		else:
+			t.expect('(y/N): ', send_resp)
+			if expect_str:
+				t.expect(expect_str)
+			for pat in shred_expect_str:
+				t.expect(pat, regex=True)
+		t.read()
+		self.remove_device_online()
+		return t
+
 	def _wait_loop_start(self, opts=[], add_opts=[]):
 		t = self.spawn(
 			'mmgen-autosign',

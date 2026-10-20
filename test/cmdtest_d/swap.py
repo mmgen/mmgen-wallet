@@ -879,7 +879,10 @@ class CmdTestSwap(
 	refreq_swaptxsend = rune_txsend_refreq
 
 	def remote_get_refnum(self):
-		t = self._rune_remote('get_refnum', (self.refreq_txid,), color=False)
+		return self._remote_get_refnum(self.refreq_txid)
+
+	def _remote_get_refnum(self, txid):
+		t = self._rune_remote('get_refnum', (txid,), color=False)
 		self.write_to_tmpfile('memo_info.json', t.read().strip())
 		return t
 

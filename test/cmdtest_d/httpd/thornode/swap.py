@@ -28,8 +28,14 @@ prices = {
 	'ETH': 2304,
 	'MM1': 0.998,
 	'RUNE': 1.4}
-gas_rate_units = {'ETH': 'gwei', 'BTC': 'satsperbyte'}
-recommended_gas_rate = {'ETH': '1', 'BTC': '6'}
+
+gas_rate_units = {
+	'BTC': 'satsperbyte',
+	'ETH': 'gwei'}
+
+recommended_gas_rate = {
+	'BTC': '6',
+	'ETH': '1'}
 
 data_template_from_rune = {
 	'outbound_delay_blocks': 0,
@@ -123,12 +129,12 @@ def make_inbound_addr(cfg, proto, mmtype):
 		return '0x' + eth_inbound_addr # non-checksummed as per ninerealms thornode
 	else:
 		from mmgen.tool.coin import tool_cmd
-		n = int(time.time()) // (60 * 60 * 24) # increments once every 24 hrs
+		n = int(time.time()) // (60 * 60 * 24) + int('beadcafe' * 8, 16) # increments once every 24 hrs
 		return tool_cmd(
 			cfg     = cfg,
-			cmdname = 'pubhash2addr',
+			cmdname = 'privhex2addr',
 			proto   = proto,
-			mmtype  = mmtype).pubhash2addr(f'{n:040x}')
+			mmtype  = mmtype).privhex2addr(f'{n:064x}')
 
 class ThornodeSwapServer(ThornodeServer):
 	port = 18900

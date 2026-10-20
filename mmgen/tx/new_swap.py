@@ -98,13 +98,13 @@ class NewSwap(BaseSwapMethods, New):
 			from ..amt import is_coin_amt
 			arg = get_arg()
 
-			# arg 2: amt
+			# arg 2: optional amt
 			if is_coin_amt(self.proto, arg):
 				UniAmt(arg) # throw exception on decimal overflow
 				args.send_amt = self.proto.coin_amt(arg)
 				arg = get_arg()
 
-			# arg 3: chg_spec (change address spec)
+			# arg 3: optional chg_spec (change address spec, requires amt)
 			if args.send_amt and not (
 					self.proto.is_vm or
 					arg in sa.recv): # is change arg
@@ -118,7 +118,7 @@ class NewSwap(BaseSwapMethods, New):
 			self.swap_recv_asset_spec = sp.SwapAsset(arg, 'recv').name # used by ‘recv_asset’ property
 			self.recv_proto = init_swap_proto(self.cfg, self.recv_asset)
 
-			# arg 5: recv_spec (receive address spec)
+			# arg 5: optional recv_spec (receive address spec)
 			if args_in:
 				if self.refnum:
 					die(1, 'destination address must be omitted with --refnum')
@@ -214,12 +214,10 @@ class NewSwap(BaseSwapMethods, New):
 				str(self.update_memo(self.memoless_memo, qd.trade_limit)))
 			return None
 
-		ret = (
-			[f'vault,{args.send_amt}'] if args.send_amt and self.proto.is_vm else
-			[f'vault,{args.send_amt}', chg_output.mmid] if args.send_amt else
-			['vault'])
-
-		return tuple(ret if self.is_memoless else (ret + [f'data:{memo}']))
+		return tuple((
+			[f'vault,{args.send_amt}', chg_output.mmid] if chg_output else
+			[f'vault,{args.send_amt}'] if args.send_amt else
+			['vault']) + ([] if self.is_memoless else [f'data:{memo}']))
 
 	async def display_quote_loop(self, qd, *, deduct_est_fee=False):
 		from ..term import get_char

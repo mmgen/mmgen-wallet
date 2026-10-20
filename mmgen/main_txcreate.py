@@ -175,9 +175,6 @@ async def main():
 		locktime = int(cfg.locktime or 0),
 		do_info  = cfg.info)
 
-	if tx1.is_compat:
-		return
-
 	if tx1.is_swap and tx1.is_refreq: # memoless first pass
 		if cfg.no_refreq_tx:
 			Msg(f'MEMO: {tx1.reference_memo}')
@@ -186,7 +183,7 @@ async def main():
 			tx2 = NewTX(cfg=rune_cfg, proto=rune_cfg._proto, target='tx', refreq_src=tx1)
 			tx3 = await tx2.create(args=('deposit,0', f'data:{tx1.reference_memo}'))
 			write_to_file(tx3, asi)
-	else:
+	elif not tx1.is_compat:
 		write_to_file(tx2, asi)
 
 async_run(cfg, main)

@@ -169,37 +169,18 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	def alice_txcreate4(self):
 		return self._user_txcreate('alice', chg_addr='L:4', need_rbf=True)
 
-	def _alice_txsend_abort(self, err=False, send_resp='y', expect_str=None, shred_expect_str=[]):
-		self.insert_device_online()
-		t = self.spawn(
-				'mmgen-txsend',
-				['--quiet', '--abort'],
-				no_passthru_opts = ['coin'],
-				exit_val = 2 if err else 1 if send_resp == 'n' else None)
-		if err:
-			t.expect(expect_str)
-		else:
-			t.expect('(y/N): ', send_resp)
-			if expect_str:
-				t.expect(expect_str)
-			for pat in shred_expect_str:
-				t.expect(pat, regex=True)
-		t.read()
-		self.remove_device_online()
-		return t
-
 	def alice_txsend_abort1(self):
-		return self._alice_txsend_abort(shred_expect_str=['Shredding .*arawtx'])
+		return self._txsend_abort(shred_expect_str=['Shredding .*arawtx'])
 
 	def alice_txsend_abort2(self):
-		return self._alice_txsend_abort(err=True, expect_str='No unsent transactions')
+		return self._txsend_abort(err=True, expect_str='No unsent transactions')
 
 	def alice_txsend_abort3(self):
-		return self._alice_txsend_abort(send_resp='n', expect_str='Exiting at user request')
+		return self._txsend_abort(send_resp='n', expect_str='Exiting at user request')
 
 	def alice_txsend_abort4(self):
 		self._wait_signed('transaction')
-		return self._alice_txsend_abort(shred_expect_str=[r'Shredding .*arawtx', r'Shredding .*asigtx'])
+		return self._txsend_abort(shred_expect_str=[r'Shredding .*arawtx', r'Shredding .*asigtx'])
 
 	alice_txsend_abort5 = alice_txsend_abort2
 
@@ -381,7 +362,7 @@ class CmdTestAutosignAutomount(CmdTestAutosignThreaded, CmdTestRegtest):
 	def alice_txbump_abort1(self):
 		if not self.proto.cap('rbf'):
 			return 'skip'
-		return self._alice_txsend_abort(shred_expect_str=['Shredding .*arawtx'])
+		return self._txsend_abort(shred_expect_str=['Shredding .*arawtx'])
 
 	def alice_txbump5(self):
 		sid = self._user_sid('alice')
