@@ -40,7 +40,7 @@ class New(VmNew, Base, TxBase.New):
 	def update_txid(self):
 		return super().update_txid(
 			self.serialized |
-			({'memo': self.swap_memo} if self.is_swap else {}))
+			({'memo': self.swap_memo} if self.is_swap or self.is_deposit else {}))
 
 	async def make_txobj(self): # called by create_serialized()
 		acct_info = self.rpc.acct_info(self.inputs[0].addr)
