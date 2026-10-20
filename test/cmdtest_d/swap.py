@@ -233,7 +233,7 @@ class CmdTestSwapMethods:
 			t.expect('(Y/n): ', 'y')        # fee ok?
 			t.expect('(Y/n): ', 'y')        # change ok?
 		else:
-			if not (self.proto.is_vm or single_output):
+			if self.proto.has_chg and not single_output:
 				t.expect('ENTER for the change output): ', '\n')
 				t.expect('(Y/n): ', 'y')    # confirm deduct from chg output
 			t.expect('to continue: ', '\n') # exit swap quote

@@ -105,9 +105,7 @@ class NewSwap(BaseSwapMethods, New):
 				arg = get_arg()
 
 			# arg 3: optional chg_spec (change address spec, requires amt)
-			if args.send_amt and not (
-					self.proto.is_vm or
-					arg in sa.recv): # is change arg
+			if self.proto.has_chg and args.send_amt and not arg in sa.recv: # is change arg
 				nonlocal chg_output
 				if not self.cfg.quote:
 					chg_output = await self.get_chg_output(arg, addrfiles)
@@ -154,7 +152,7 @@ class NewSwap(BaseSwapMethods, New):
 				get_char('Press any key to continue: ')
 				msg('')
 
-		if args.send_amt and not (chg_output or self.proto.is_vm):
+		if self.proto.has_chg and args.send_amt and not chg_output:
 			chg_output = await self.get_chg_output(None, addrfiles)
 
 		if self.refnum:

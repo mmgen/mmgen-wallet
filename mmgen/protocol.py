@@ -56,6 +56,7 @@ class CoinProtocol(MMGenObject):
 		chain_names = None
 		is_vm = False
 		is_evm = False
+		has_chg = False
 		has_usr_fee = True
 		coin_amt = None
 		max_tx_fee = None
