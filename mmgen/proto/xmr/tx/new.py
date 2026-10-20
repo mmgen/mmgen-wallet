@@ -24,7 +24,7 @@ class New(Base, TxNew):
 	async def get_input_addrs_from_inputs_opt(self):
 		return [] # TODO
 
-	async def set_gas(self):
+	async def set_gas(self, *, to_addr=None, force=False):
 		pass
 
 	async def get_funds_remaining(self, fee, outputs_sum, start_fee_desc):

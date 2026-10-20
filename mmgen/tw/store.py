@@ -12,7 +12,6 @@ tw.store: Tracking wallet control class with store
 
 import json
 
-from ..base_obj import AsyncInit
 from ..obj import TwComment
 from ..util import msg, die, cached_property
 from ..addr import is_coin_addr, is_mmgen_id, CoinAddr
@@ -20,10 +19,9 @@ from ..addr import is_coin_addr, is_mmgen_id, CoinAddr
 from .shared import TwMMGenID, TwLabel
 from .ctl import TwCtl, write_mode, label_addr_pair
 
-class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
+class TwCtlWithStore(TwCtl):
 
 	caps = ('batch',)
-	tw_subdir = None
 	tw_fn = 'tracking-wallet.json'
 	aggressive_sync = False
 
@@ -79,7 +77,7 @@ class TwCtlWithStore(TwCtl, metaclass=AsyncInit):
 
 	@classmethod
 	def get_tw_dir(cls, proto):
-		return proto.network_datadir / (cls.tw_subdir or '')
+		return proto.network_datadir
 
 	def upgrade_wallet_maybe(self):
 		pass

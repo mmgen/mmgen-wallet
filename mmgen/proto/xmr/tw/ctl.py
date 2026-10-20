@@ -10,13 +10,18 @@
 proto.xmr.tw.ctl: Monero tracking wallet control class
 """
 
-from ....tw.ctl import write_mode
-from ....tw.store import TwCtlWithStore
+from ....tw.ctl import TwCtl, write_mode
 
-class MoneroTwCtl(TwCtlWithStore):
+class MoneroTwCtl(TwCtl):
 
-	tw_subdir = 'tracking-wallets'
 	use_cached_balances = True
+
+	async def __init__(self, cfg, proto, *, mode='r', **kwargs):
+		await super().__init__(cfg, proto, mode=mode, no_rpc=True)
+
+	@classmethod
+	def get_tw_dir(cls, proto):
+		return proto.network_datadir / 'tracking-wallets'
 
 	@write_mode
 	async def set_comment(

@@ -36,9 +36,9 @@ class File:
 		self.atime    = None
 
 		try:
-			st = os.stat(fn)
+			st = os.stat(str(fn))
 		except:
-			die('FileNotFound', f'{fn!r}: file not found')
+			die('FileNotFound', f'{fn!s}: file not found')
 
 		import stat
 		if stat.S_ISBLK(st.st_mode):

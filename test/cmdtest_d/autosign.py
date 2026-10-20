@@ -529,6 +529,7 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			tweaks      = [],
 			expect_str  = None,
 			data_arg    = None,
+			ui_handler_args = None,
 			need_rbf    = False):
 
 		if output_args:
@@ -563,10 +564,11 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 		t = (ui_handler or self.txcreate_ui_common)(
 			t,
-			inputs          = inputs,
-			interactive_fee = '32s',
-			tweaks          = tweaks,
-			file_desc       = 'Unsigned automount transaction')
+			**(ui_handler_args if ui_handler_args else {
+				'inputs':          inputs,
+				'interactive_fee': '32s',
+				'tweaks':          tweaks,
+				'file_desc':       'Unsigned automount transaction'}))
 
 		return do_return()
 
@@ -575,9 +577,11 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			user,
 			*,
 			comment   = None,
+			add_opts  = [],
 			no_wait   = False,
 			need_rbf  = False,
 			dump_hex  = False,
+			expect_pat = None,
 			mark_sent = False):
 
 		if need_rbf and not self.proto.cap('rbf'):
@@ -593,12 +597,15 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 		self.insert_device_online()
 		t = self.spawn('mmgen-txsend',
-			[f'--{user}', '--quiet', '--autosign'] + extra_opt, no_passthru_opts=['coin'])
+			[f'--{user}', '--quiet', '--autosign'] + extra_opt + add_opts, no_passthru_opts=['coin'])
 
-		if mark_sent:
+		if '--status' in add_opts:
+			if expect_pat:
+				t.expect(expect_pat, regex=True)
+		elif mark_sent:
 			t.written_to_file('Sent automount transaction')
 		else:
-			t.view_tx('t')
+			t.view_tx('t', expect_pat=expect_pat)
 			t.do_comment(comment)
 			if dump_hex:
 				t.written_to_file('Serialized transaction hex data')

@@ -26,7 +26,6 @@ class overlay_fake_Daemon:
 
 	@property
 	def port_shift(self):
-
 		udata = {
 			'':      0,
 			'miner': 1,

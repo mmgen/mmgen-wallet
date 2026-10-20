@@ -85,7 +85,7 @@ class CmdTestPexpect:
 		if not have_yes_opt:
 			self.expect('Check key-to-address validity? (y/N): ', ('n', 'y')[check])
 
-	def view_tx(self, view):
+	def view_tx(self, view, *, expect_pat=None):
 		self.expect(r'View.* transaction.*\? .*: ', view, regex=True)
 		match view:
 			case 'v' if cfg.pexpect_spawn:
@@ -93,6 +93,8 @@ class CmdTestPexpect:
 			case 'v' | 'n' | '\n':
 				pass
 			case _:
+				if expect_pat:
+					self.expect(expect_pat, regex=True)
 				self.expect('to continue: ', '\n')
 
 	def do_comment(self, add_comment, has_label=False):
