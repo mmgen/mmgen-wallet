@@ -41,7 +41,7 @@ class OnlineSigned(Completed):
 				ymsg('An RPC error occurred while fetching transaction data')
 				ret = 1
 			if self.cfg.verbose:
-				msg_r('\n' + self.compat_tx.get_info())
+				msg_r('\n' + self.info.format())
 			return ret
 		else:
 			await op.restart_wallet_daemon()

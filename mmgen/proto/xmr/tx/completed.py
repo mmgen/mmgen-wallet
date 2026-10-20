@@ -42,8 +42,8 @@ class Completed(Base):
 
 	@property
 	def info(self):
-		class info_cls:
-			@staticmethod
-			def format(*args, **kwargs):
+		from ....tx.info import TxInfo
+		class info_cls(TxInfo):
+			def format(info_self, *args, **kwargs):
 				return self.compat_tx.get_info(full_address=True)
-		return info_cls
+		return info_cls(self.cfg, self)
