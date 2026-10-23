@@ -13,8 +13,9 @@ proto.xmr.tx.unsigned: Monero unsigned transaction class
 from .completed import Completed
 
 class Unsigned(Completed):
-	pass
+	desc = 'unsigned transaction'
+	ext = 'rawtx'
 
-class AutomountUnsigned(Unsigned):
+class AutomountUnsigned(Completed):
 	desc = 'unsigned automount transaction'
 	ext = 'arawtx'

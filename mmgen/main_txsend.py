@@ -186,7 +186,8 @@ async def process_tx(tx):
 
 		if not cfg.yes:
 			tx.info.view_with_prompt('View transaction details?')
-			if tx.add_comment() and not cfg.autosign: # edits existing comment, returns true if changed
+			# edits existing comment, returns true if changed:
+			if tx.add_comment() and not cfg.autosign:
 				tx.file.write(ask_write_default_yes=True)
 
 	return await tx.send(txcfg, asi, batch=batch)

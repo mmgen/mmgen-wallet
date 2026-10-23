@@ -133,8 +133,6 @@ class MMGenTxFile(MMGenObject):
 
 		tx.parse_txfile_serialized_data() # Ethereum RLP or JSON data
 
-		assert tx.proto.coin_amt(data['send_amt']) == tx.send_amt, f'{data["send_amt"]} != {tx.send_amt}'
-
 	def parse_data_legacy(self, data, get_proto_only):
 		tx = self.tx
 		tx.file_format = 'legacy'

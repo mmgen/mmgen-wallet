@@ -895,6 +895,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			+ add_opts
 			+ args,
 			exit_val = exit_val)
+
 		if exit_val:
 			pass
 		elif '--abort' in opts:
@@ -913,8 +914,10 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			t.expect('(y/N): ', 'y') # save?
 		elif op == 'txsend' and not '--status' in opts:
 			t.expect('(y/N): ', 'y') # view?
+
 		if expect_str:
 			t.expect(expect_str, regex=True)
+
 		t.read() # required!
 		self.remove_device_online()
 		return t

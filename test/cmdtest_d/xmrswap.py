@@ -113,12 +113,13 @@ class CmdTestXMRSwapMethods:
 				'expect_pats': expect_pats},
 			output_args = args)
 
-	def _swaptxsend_refnum(self, expect_pat, *, add_opts=[], is_xmr=False):
+	def _swaptxsend_refnum(self, expect_pat, *, add_opts=[], is_xmr=False, no_wait=False):
 		return self._user_txsend(
 			'bob',
 			add_opts = ['--monero-wallet-rpc-password=abc'] + add_opts,
 			expect_pat = expect_pat,
 			is_xmr = is_xmr,
+			no_wait = no_wait,
 			need_rbf = True)
 
 class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):

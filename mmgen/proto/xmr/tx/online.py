@@ -48,12 +48,14 @@ class OnlineSigned(Completed):
 			await op.restart_wallet_daemon()
 			return int(not await op.main())
 
-class Sent(OnlineSigned):
-	desc = 'sent transaction'
-
 class AutomountOnlineSigned(OnlineSigned):
 	desc = 'signed automount transaction'
+	ext = 'asigtx'
 
-class AutomountSent(AutomountOnlineSigned):
+class Sent(OnlineSigned):
+	desc = 'sent transaction'
+	ext = 'asubtx'
+
+class AutomountSent(OnlineSigned):
 	desc = 'sent automount transaction'
 	ext = 'asubtx'

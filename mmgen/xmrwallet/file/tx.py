@@ -96,7 +96,7 @@ class MoneroMMGenTX:
 						d.dest_address.hl(0),
 					x = '->')
 
-		def get_info(self, *, indent='', addr_col_w=None, full_address=False):
+		def get_info(self, *, indent='', addr_col_w=None, full_address=False, is_swap=False):
 			d = self.data
 			pmt_id = d.dest_address.parsed.payment_id
 			fs = '\n'.join(list_gen(
@@ -111,7 +111,7 @@ class MoneroMMGenTX:
 				['  Amount:    {m} XMR'],
 				['  Priority:  {F}', d.priority],
 				['  Fee:       {n} XMR'],
-				['  Dest:      {o}'],
+				['  {dest}     {{o}}'.format(dest='Vault:' if is_swap else 'Dest: ')],
 				['  Size:      {Z} bytes', d.signed_txset],
 				['  Payment ID: {P}', pmt_id]))
 
@@ -157,10 +157,8 @@ class MoneroMMGenTX:
 				b = self.data.amount,
 				c = '' if self.data.network == 'mainnet' else f'.{self.data.network}',
 				d = self.ext)
-
 			if self.cfg.autosign:
 				fn = getattr(get_autosign_obj(self.cfg), self.tx_dir) / fn
-
 			from ...fileutil import write_data_to_file
 			write_data_to_file(
 				cfg                   = self.cfg,

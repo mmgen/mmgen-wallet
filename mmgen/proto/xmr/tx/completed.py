@@ -28,8 +28,8 @@ class Completed(Base):
 
 	@cached_property
 	def compat_tx(self):
-		from pathlib import Path
 		from ....xmrwallet.file.tx import MoneroMMGenTX
+		from pathlib import Path
 		return MoneroMMGenTX.View(self.cfg, Path(self.filename)) # View = Completed with silent open
 
 	@cached_property
@@ -45,5 +45,5 @@ class Completed(Base):
 		from ....tx.info import TxInfo
 		class info_cls(TxInfo):
 			def format(info_self, *args, **kwargs):
-				return self.compat_tx.get_info(full_address=True)
+				return self.compat_tx.get_info(full_address=True, indent='  ', is_swap=self.is_swap)
 		return info_cls(self.cfg, self)

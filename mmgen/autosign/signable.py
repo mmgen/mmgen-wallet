@@ -254,18 +254,21 @@ class Signable:
 		subext = 'subtx'
 
 		async def sign(self, f, compat_call=False):
+			tx = await self.do_sign(f, compat_call=compat_call)
+			tx.write(ask_write=False)
+			return tx
+
+		async def do_sign(self, f, compat_call=False):
 			from .. import xmrwallet
 			from ..xmrwallet.file.tx import MoneroMMGenTX
-			tx1 = MoneroMMGenTX.Completed(self.parent.xmrwallet_cfg, f)
+			tx = MoneroMMGenTX.Completed(self.parent.xmrwallet_cfg, f)
 			m = xmrwallet.op(
 				'sign',
 				self.parent.xmrwallet_cfg,
 				infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
-				wallets = str(tx1.src_wallet_idx),
+				wallets = str(tx.src_wallet_idx),
 				compat_call = compat_call)
-			tx2 = await m.main(f, restart_daemon=self.need_daemon_restart(m, tx1.src_wallet_idx))
-			tx2.write(ask_write=False)
-			return tx2
+			return await m.main(f, restart_daemon=self.need_daemon_restart(m, tx.src_wallet_idx))
 
 	class xmr_compat_transaction(xmr_transaction):
 		desc = 'Monero compat transaction'
