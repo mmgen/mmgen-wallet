@@ -136,8 +136,13 @@ class CmdTestBase:
 		return [f'--cashaddr={val}'] if self.proto.coin == 'BCH' else []
 
 	def _kill_process_from_pid_file(self, fn, desc):
-		self.spawn(msg_only=True)
-		pid = int(self.read_from_tmpfile(fn))
+		try:
+			pid = int(self.read_from_tmpfile(fn))
+		except Exception as e:
+			if 'Unable to open file' in str(e):
+				imsg(f'PID file {fn!r} not found, skipping')
+				return 'skip_msg'
+			raise
 		self.delete_tmpfile(fn)
 		from signal import SIGTERM
 		imsg(purple(f'Killing {desc} [PID {pid}]'))

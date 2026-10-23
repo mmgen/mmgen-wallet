@@ -131,18 +131,18 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 	xmr_prompt = 'efresh balances:\b'
 
 	cmd_group_in = (
-		('setup',               'regtest (Bob and Alice) mode setup'),
-		('subgroup.ltc_setup',  []),
-		('subgroup.xmr_setup',  []),
-		('subgroup.swap',       ['ltc_setup', 'xmr_setup']),
-		('subgroup.xmr_swap',   ['swap']),
-		('xmr_wait_loop_kill',  'stopping autosign wait loop'),
-		('xmr_stop_daemons',    'stopping the XMR daemons'))
+		('setup',                   'regtest (Bob and Alice) mode setup'),
+		('subgroup.ltc_setup',      []),
+		('subgroup.xmr_setup',      []),
+		('subgroup.swap',           ['ltc_setup', 'xmr_setup']),
+		('subgroup.xmr_swap',       ['swap']),
+		('xmr_wait_loop_kill',      ''),
+		('xmr_stop_daemons',        ''))
 
 	cmd_subgroups = {
 	'ltc_setup': (
-		'creating Bob’s MMGen wallet and tracking wallet',
-		('walletconv_bob',        'wallet creation (Bob)'),
+		'setting up Bob’s MMGen wallet and tracking wallet',
+		('walletconv_bob',        'MMGen wallet creation (Bob)'),
 		('addrgen_bob',           'address generation (Bob)'),
 		('addrimport_bob',        'importing Bob’s addresses'),
 		('bob_import_miner_addr', 'importing miner’s coinbase addr into Bob’s wallet'),
@@ -153,7 +153,7 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('bob_bal1',              'Bob’s balance'),
 	),
 	'xmr_setup': (
-		'setting miner’s and user’s XMR tracking wallets',
+		'setting up miner’s and Bob’s XMR tracking wallets',
 		('xmr_autosign_setup',             ''),
 		('xmr_autosign_xmr_setup',         ''),
 		('xmr_addrimport_user',            ''),
@@ -176,27 +176,27 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('rune_addrimport',      'importing RUNE addresses'),
 		('rune_bal_refresh',     'refreshing balances in RUNE tracking wallet'),
 		('remote_get_refnum',    'getting the reference number'),
-		('swaptxcreate_refreq1', 'creating an LTC->XMR swap transaction (refreq, auto chg, auto dest)'),
+		('swaptxcreate_refreq1', 'creating an LTC->XMR registration transaction (auto chg, auto dest)'),
 		('swaptxcreate_abort1',  'aborting the transaction'),
-		('swaptxcreate_refreq2', 'creating an LTC->XMR swap transaction (refreq, auto chg, 1:0)'),
+		('swaptxcreate_refreq2', 'creating an LTC->XMR registration transaction (auto chg, 1:0)'),
 		('swaptxcreate_abort2',  'aborting the transaction'),
-		('swaptxcreate_refreq3', 'creating an LTC->XMR swap transaction (refreq, auto chg, mmid dest)'),
+		('swaptxcreate_refreq3', 'creating an LTC->XMR registration transaction (auto chg, mmid dest)'),
 		('swaptxsend_refreq1',   'sending the transaction'),
-		('swaptxcreate_refreq4', 'creating an LTC->XMR swap transaction (refreq, auto chg, 1:1)'),
+		('swaptxcreate_refreq4', 'creating an LTC->XMR registration transaction (auto chg, 1:1)'),
 		('swaptxsend_refreq2',   'sending the transaction'),
-		('swaptxcreate_refnum1', 'creating an LTC->XMR swap transaction (swap, auto chg, auto dest)'),
+		('swaptxcreate_refnum1', 'creating an LTC->XMR swap transaction (auto chg, auto dest)'),
 		('swaptxsend_refnum1',   'sending the swap transaction'),
 		('generate_ltc',         'generating a block'),
-		('swaptxcreate_refnum2', 'creating an LTC->XMR swap transaction (swap, no chg, auto dest)'),
+		('swaptxcreate_refnum2', 'creating an LTC->XMR swap transaction (no chg, auto dest)'),
 		('swaptxsend_refnum2',   'sending the swap transaction'),
 		('generate_ltc',         'generating a block'),
 		('bob_bal2',             'Bob’s balance')),
 	'xmr_swap': (
 		'swap operations (XMR -> LTC)',
 		('remote_get_refnum_xmr', 'getting the reference number'),
-		('swaptxcreate_refreq7',  'creating an XMR->LTC swap transaction (refreq, auto chg, auto dest)'),
+		('swaptxcreate_refreq7',  'creating an XMR->LTC registration transaction (auto chg, auto dest)'),
 		('swaptxsend_refreq7',    'sending the transaction'),
-		('swaptxcreate_refnum7',  'creating an XMR->LTC swap transaction (swap, auto chg, auto dest)'),
+		('swaptxcreate_refnum7',  'creating an XMR->LTC swap transaction (auto chg, auto dest)'),
 		('swaptxsend_refnum7',    'sending the transaction'),
 		('xmr_mine_blocks_10',    ''),
 		('swaptxstatus_refnum7',  'getting the transaction status'))}
