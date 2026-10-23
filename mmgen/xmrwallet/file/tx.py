@@ -170,7 +170,7 @@ class MoneroMMGenTX:
 			write_data_to_file(
 				cfg                   = self.cfg,
 				outfile               = str(fn),
-				data                  = self.make_wrapped_data(dict_data),
+				data                  = self.make_wrapped_json_data(dict_data),
 				desc                  = self.desc,
 				ask_write             = ask_write,
 				ask_write_default_yes = not ask_write,

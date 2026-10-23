@@ -83,6 +83,7 @@ class Base(MMGenObject):
 	is_refreq    = False
 	is_memoless  = False
 	is_compat    = False
+	compat_data  = None
 	has_comment  = True
 	swap_attrs = {
 		'swap_proto': None,

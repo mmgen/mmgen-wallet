@@ -40,18 +40,17 @@ class MoneroMMGenFile:
 				b = d_wrap[k]
 				assert a == b, f'{k} mismatch: {a} != {b}'
 
+	def make_wrapped_json_data(self, in_data):
+		return json.dumps(self.make_wrapped_data(in_data), cls=json_encoder, indent=2)
+
 	def make_wrapped_data(self, in_data):
-		out = {
+		return {self.data_label: {
 			'base_chksum': self.base_chksum,
 			'full_chksum': self.full_chksum,
 			'data': in_data,
 		} if self.full_chksum else {
 			'base_chksum': self.base_chksum,
-			'data': in_data}
-		return json.dumps(
-			{self.data_label: out},
-			cls = json_encoder,
-			indent = 2)
+			'data': in_data}}
 
 	def extract_data_from_file(self, cfg, fn):
 		return json.loads(
