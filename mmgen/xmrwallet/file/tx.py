@@ -152,10 +152,6 @@ class MoneroMMGenTX:
 			return (self.base_chksum + ('-' + self.full_chksum if self.full_chksum else '')).upper()
 
 		def write(self, *, delete_metadata=False, ask_write=True, ask_overwrite=True):
-			dict_data = self.data._asdict()
-			if delete_metadata:
-				dict_data['metadata'] = None
-
 			fn = '{a}-XMR[{b!s}]{c}.{d}'.format(
 				a = self.file_id,
 				b = self.data.amount,
@@ -169,7 +165,7 @@ class MoneroMMGenTX:
 			write_data_to_file(
 				cfg                   = self.cfg,
 				outfile               = str(fn),
-				data                  = self.make_wrapped_json_data(dict_data),
+				data                  = self.make_json_data(),
 				desc                  = self.desc,
 				ask_write             = ask_write,
 				ask_write_default_yes = not ask_write,

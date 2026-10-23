@@ -47,7 +47,7 @@ class MoneroWalletOutputsFile:
 			write_data_to_file(
 				cfg               = self.cfg,
 				outfile           = str(self.get_outfile(self.cfg, self.wallet_fn)) + add_suf,
-				data              = self.make_wrapped_json_data(self.data._asdict()),
+				data              = self.make_json_data(delete_metadata=False),
 				desc              = self.desc,
 				ask_overwrite     = False,
 				quiet             = quiet,
