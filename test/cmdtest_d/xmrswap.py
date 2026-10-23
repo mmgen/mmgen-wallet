@@ -131,10 +131,12 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 	xmr_prompt = 'efresh balances:\b'
 
 	cmd_group_in = (
-		('setup',                   'regtest (Bob and Alice) mode setup'),
 		('subgroup.ltc_setup',      []),
-		('subgroup.xmr_setup',      []),
-		('subgroup.swap',           ['ltc_setup', 'xmr_setup']),
+		('subgroup.rune_setup',     ['ltc_setup']),
+		('subgroup.autosign_setup', []),
+		('subgroup.xmr_setup',      ['ltc_setup', 'autosign_setup']),
+		('subgroup.wait_loop',      ['autosign_setup']),
+		('subgroup.swap',           ['rune_setup', 'xmr_setup', 'wait_loop']),
 		('subgroup.xmr_swap',       ['swap']),
 		('xmr_wait_loop_kill',      ''),
 		('xmr_stop_daemons',        ''))
@@ -142,6 +144,7 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 	cmd_subgroups = {
 	'ltc_setup': (
 		'setting up Bob’s MMGen wallet and tracking wallet',
+		('setup',                 'regtest (Bob and Alice) mode setup'),
 		('walletconv_bob',        'MMGen wallet creation (Bob)'),
 		('addrgen_bob',           'address generation (Bob)'),
 		('addrimport_bob',        'importing Bob’s addresses'),
@@ -152,10 +155,19 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('generate_ltc',          'mining a block'),
 		('bob_bal1',              'Bob’s balance'),
 	),
+	'rune_setup': (
+		'setting up Bob’s RUNE tracking wallet',
+		('rune_addrgen',     'generating RUNE addresses'),
+		('rune_addrimport',  'importing RUNE addresses'),
+		('rune_bal_refresh', 'refreshing balances in RUNE tracking wallet'),
+	),
+	'autosign_setup': (
+		'setting up offline autosigning',
+		('xmr_autosign_setup',     ''),
+		('xmr_autosign_xmr_setup', ''),
+	),
 	'xmr_setup': (
 		'setting up miner’s and Bob’s XMR tracking wallets',
-		('xmr_autosign_setup',             ''),
-		('xmr_autosign_xmr_setup',         ''),
 		('xmr_addrimport_user',            ''),
 		('xmr_gen_kafile_miner',           ''),
 		('xmr_gen_vkafile_user',           ''),
@@ -168,13 +180,13 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('xmr_new_account_user',           ''),
 		('xmr_mine_blocks_10',             ''),
 		('xmr_user_listaddresses_refresh', ''),
-		('xmr_wait_loop_start_compat',     ''),
+	),
+	'wait_loop': (
+		'starting the autosign wait loop',
+		('xmr_wait_loop_start_compat', ''),
 	),
 	'swap': (
 		'swap operations (LTC -> XMR)',
-		('rune_addrgen',         'generating RUNE addresses'),
-		('rune_addrimport',      'importing RUNE addresses'),
-		('rune_bal_refresh',     'refreshing balances in RUNE tracking wallet'),
 		('remote_get_refnum',    'getting the reference number'),
 		('swaptxcreate_refreq1', 'creating an LTC->XMR registration transaction (auto chg, auto dest)'),
 		('swaptxcreate_abort1',  'aborting the transaction'),
