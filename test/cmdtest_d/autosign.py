@@ -601,18 +601,16 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 			[f'--{user}', '--quiet', '--autosign'] + extra_opt + add_opts, no_passthru_opts=['coin'])
 
 		if '--status' in add_opts:
+			if '--verbose' in add_opts:
+				t.expect('view: ', 't')
 			if expect_pat:
 				t.expect(expect_pat, regex=True)
 		elif mark_sent:
 			t.written_to_file('Sent automount transaction')
-		elif is_xmr:
-			if expect_pat:
-				t.expect(expect_pat, regex=True)
-			t.expect('Submit transaction? (y/N): ', 'y')
-			t.written_to_file('Submitted transaction')
 		else:
 			t.view_tx('t', expect_pat=expect_pat)
-			t.do_comment(comment)
+			if not is_xmr:
+				t.do_comment(comment)
 			if dump_hex:
 				t.written_to_file('Serialized transaction hex data')
 			else:

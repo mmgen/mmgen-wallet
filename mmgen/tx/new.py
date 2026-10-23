@@ -513,11 +513,6 @@ class New(Base):
 		if not (self.is_bump or self.cfg.inputs):
 			await self.twuo.view_filter_and_sort()
 
-		if self.is_sweep:
-			del self.twctl
-			del self.twuo.twctl
-			return await self.compat_create()
-
 		if not self.is_bump:
 			self.twuo.display_total()
 
@@ -527,27 +522,26 @@ class New(Base):
 			import sys
 			sys.exit(0)
 
-		outputs_sum = self.sum_outputs()
-
-		msg('Total amount to spend: {}'.format(
-			f'{outputs_sum.hl()} {self.dcoin}' if outputs_sum else 'Unknown'))
-
-		while True:
-			if not await self.get_inputs(outputs_sum):
-				continue
-			if self.is_swap:
-				fee_hint = await self.update_vault_output(
-					self.vault_output.amt or self.sum_inputs(),
-					deduct_est_fee = self.vault_output == self.chg_output)
-			else:
-				await self.set_gas()
-				fee_hint = None
-			desc = 'User-selected' if self.cfg.fee else 'Recommended' if fee_hint else None
-			if (funds_left := await self.get_funds_remaining(
-					self.cfg.fee or fee_hint,
-					outputs_sum,
-					desc)) is not None:
-				break
+		if not self.is_sweep:
+			outputs_sum = self.sum_outputs()
+			msg('Total amount to spend: {}'.format(
+				f'{outputs_sum.hl()} {self.dcoin}' if outputs_sum else 'Unknown'))
+			while True:
+				if not await self.get_inputs(outputs_sum):
+					continue
+				if self.is_swap:
+					fee_hint = await self.update_vault_output(
+						self.vault_output.amt or self.sum_inputs(),
+						deduct_est_fee = self.vault_output == self.chg_output)
+				else:
+					await self.set_gas()
+					fee_hint = None
+				desc = 'User-selected' if self.cfg.fee else 'Recommended' if fee_hint else None
+				if (funds_left := await self.get_funds_remaining(
+						self.cfg.fee or fee_hint,
+						outputs_sum,
+						desc)) is not None:
+					break
 
 		if not self.is_compat:
 			self.check_non_mmgen_inputs(caller=caller)
@@ -566,16 +560,15 @@ class New(Base):
 				await self.update_vault_output(self.vault_output.amt)
 
 		if self.is_compat:
-			del self.twctl
-			del self.twuo.twctl
-			return await self.compat_create()
-
-		await self.create_serialized(locktime=locktime) # creates self.txid too
-
-		self.add_timestamp()
-		self.add_blockcount()
-		self.chain = self.proto.chain_name
-		self.check_fee()
+			self.compat_data = await self.compat_create()
+			self.send_amt = self.compat_data['data']['amount']
+			self.txid = self.compat_data['base_chksum'].upper()
+		else:
+			await self.create_serialized(locktime=locktime) # creates self.txid too
+			self.add_timestamp()
+			self.add_blockcount()
+			self.chain = self.proto.chain_name
+			self.check_fee()
 
 		self.cfg._util.qmsg('Transaction successfully created')
 

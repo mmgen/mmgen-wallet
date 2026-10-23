@@ -32,8 +32,8 @@ class OnlineSigned(Signed):
 		from . import _base_proto_subclass
 		return _base_proto_subclass('Status', 'status', proto=self.proto)(self)
 
-	async def check_memoless_presend(self):
-		data = self.swap_proto_rpc.do_validate_amt(self.send_asset, self.vault_output.amt)
+	async def check_memoless_presend(self, *, amt=None):
+		data = self.swap_proto_rpc.do_validate_amt(self.send_asset, amt or self.vault_output.amt)
 		if data['reference'] != self.refnum:
 			die(3, f'registered reference number ({data["reference"]}) does not match ours ({self.refnum})')
 		if not data['available']:

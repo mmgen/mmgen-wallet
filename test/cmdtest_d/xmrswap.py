@@ -44,15 +44,11 @@ class CmdTestXMRSwapMethods:
 			t.expect(prompt, 'q')
 			t.expect('to spend: ', f'{inputs}\n')
 			t.expect('continue: ', '\n')
-			if tx_type == 'xmr_swap':
-				for pat in expect_pats:
-					t.expect(pat, regex=True)
-				t.expect('(y/N): ', 'y')    # save?
-				t.written_to_file('Unsigned transaction')
-				return t
-			t.expect('(Y/n): ', 'y')        # fee OK?
-			t.expect('(Y/n): ', 'y')        # change OK?
-		t.expect('(y/N): ', 'n')            # add comment?
+			if tx_type != 'xmr_swap':
+				t.expect('(Y/n): ', 'y') # fee OK?
+				t.expect('(Y/n): ', 'y') # change OK?
+		if tx_type != 'xmr_swap':
+			t.expect('(y/N): ', 'n')     # add comment?
 		t.expect('view: ', 't')
 		for pat in expect_pats:
 			t.expect(pat, regex=True)
@@ -217,8 +213,10 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('swaptxcreate_refnum7_bad', 'creating an XMR->LTC swap transaction (bad, no amount)'),
 		('swaptxcreate_refnum7',     'creating an XMR->LTC swap transaction (auto chg, auto dest)'),
 		('swaptxsend_refnum7',       'sending the transaction'),
+		('swaptxstatus_refnum7a',    'getting the transaction status (mempool)'),
 		('xmr_mine_blocks_10',       ''),
-		('swaptxstatus_refnum7',     'getting the transaction status'))}
+		('swaptxstatus_refnum7b',    'getting the transaction status (confirmations)'),
+		('swaptxstatus_refnum7c',    'getting the transaction status (--verbose)'))}
 
 	exec(create_cross_methods(cross_coin, cross_group, cmd_group_in, cmd_subgroups))
 
@@ -349,8 +347,14 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 	def swaptxsend_refnum7(self):
 		return self._swaptxsend_refnum(r'Amount:.*0.234499978787', is_xmr=True)
 
-	def swaptxstatus_refnum7(self):
-		return self._swaptxsend_refnum(r'Amount:.*0.234499978787', add_opts=['--status', '--verbose'])
+	def swaptxstatus_refnum7a(self):
+		return self._swaptxsend_refnum('in mempool', add_opts=['--status'], no_wait=True)
+
+	def swaptxstatus_refnum7b(self):
+		return self._swaptxsend_refnum('confirmations', add_opts=['--status'], no_wait=True)
+
+	def swaptxstatus_refnum7c(self):
+		return self._swaptxsend_refnum(None, add_opts=['--status', '--verbose'], no_wait=True)
 
 class CmdTestXMRSwapXMR(CmdTestXMRSwapMethods, CmdTestSwapMethods, CmdTestXMRCompat):
 	'Monero swap operations - Monero wallet'

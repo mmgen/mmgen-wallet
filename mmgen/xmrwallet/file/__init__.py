@@ -57,4 +57,4 @@ class MoneroMMGenFile:
 
 	def extract_data_from_file(self, cfg, fn):
 		data = json.loads(get_data_from_file(cfg, str(fn), desc=self.desc, silent=self.silent_load))
-		return data[self.data_label]
+		return data.get(self.data_label) or data['MMGenTransaction'][self.data_label]

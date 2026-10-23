@@ -187,7 +187,7 @@ async def main():
 			tx2 = NewTX(cfg=rune_cfg, proto=rune_cfg._proto, target='tx', refreq_src=tx1)
 			tx3 = await tx2.create(args=('deposit,0', f'data:{tx1.reference_memo}'))
 			write_to_file(tx3, asi)
-	elif not tx1.is_compat:
+	else:
 		write_to_file(tx2, asi)
 
 async_run(cfg, main)

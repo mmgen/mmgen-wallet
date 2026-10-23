@@ -86,12 +86,11 @@ class OpSubmit(OpWallet):
 			h = MoneroWalletRPC(self, self.kal.entry(tx.src_wallet_idx))
 			h.open_wallet('TX-relay-configured watch-only', refresh=False)
 
-		msg('\n' + tx.get_info(indent='    '))
-
-		if self.cfg.tx_relay_daemon:
-			self.display_tx_relay_info(indent='    ')
-
-		keypress_confirm(self.cfg, f'{self.name.capitalize()} transaction?', do_exit=True)
+		if not self.compat_call:
+			msg('\n' + tx.get_info(indent='    '))
+			if self.cfg.tx_relay_daemon:
+				self.display_tx_relay_info(indent='    ')
+			keypress_confirm(self.cfg, f'{self.name.capitalize()} transaction?', do_exit=True)
 
 		if self.cfg.tx_relay_daemon:
 			msg_r('Relaying transaction to remote daemon, please be patient...')
@@ -107,6 +106,10 @@ class OpSubmit(OpWallet):
 		new_tx = self.get_tx_cls('NewSubmitted')(cfg=self.cfg, _in_tx=tx)
 
 		gmsg('\nOK')
+
+		if self.compat_call:
+			return new_tx.make_outer_data()
+
 		new_tx.write(
 			ask_write     = not self.cfg.autosign,
 			ask_overwrite = not self.cfg.autosign)

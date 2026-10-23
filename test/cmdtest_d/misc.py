@@ -69,7 +69,9 @@ class CmdTestMisc(CmdTestBase):
 		('bch_txview_cashaddr1', '‘mmgen-tool --coin=bch --cashaddr=1 txview terse=0’'),
 		('bch_txview_cashaddr2', '‘mmgen-tool --coin=bch --cashaddr=1 txview terse=1’'),
 		('xmr_txview',           '‘mmgen-tool txview’ with XMR transactions'),
+		('xmr_txview_compat',    '‘mmgen-tool txview’ with XMR compat transactions'),
 		('xmrwallet_txview',     '‘mmgen-xmrwallet txview’'),
+		('xmrwallet_txview_compat', '‘mmgen-xmrwallet txview’ with XMR compat transactions'),
 		('xmrwallet_txlist',     '‘mmgen-xmrwallet txlist’'),
 		('coin_daemon_info',     '‘examples/coin-daemon-info.py’'),
 		('examples_bip_hd',      '‘examples/bip_hd.py’'),
@@ -105,6 +107,9 @@ class CmdTestMisc(CmdTestBase):
 	def bch_txview_cashaddr2(self):
 		return self._bch_txview(1, 1, '[1HpynST7vkLn8yNtdrqPfeghexZk4sdB3W]')
 
+	def xmr_txview_compat(self):
+		return self._xmr_txview(tdir='test/ref/monero/compat', ext='tx')
+
 	def xmr_txview(self):
 		return self._xmr_txview(tdir='test/ref/monero', ext='tx')
 
@@ -121,6 +126,11 @@ class CmdTestMisc(CmdTestBase):
 
 	def xmrwallet_txview(self):
 		return self._xmrwallet_txview(search_list=('Amount:    0.74 XMR', 'Dest:      56VQ9M6k'))
+
+	def xmrwallet_txview_compat(self):
+		return self._xmrwallet_txview(
+			tdir = 'test/ref/monero/compat',
+			search_list = ('Amount:    0.234499978787 XMR', 'Dest:      477PUpbuezBNte'))
 
 	def _xmrwallet_txview(self, tdir='test/ref/monero', op='txview', search_list=None, search_pat=None):
 		if self.cfg.no_altcoin:

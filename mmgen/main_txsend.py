@@ -156,10 +156,8 @@ async def process_tx(tx):
 	do_sep()
 	cfg._util.vmsg(f'Getting {tx.desc} ‘{tx.infile}’')
 
-	if tx.is_compat:
-		if not cfg.autosign:
-			die(1, 'Sending XMR transaction via compatibility layer requires --autosign')
-		return await tx.compat_send()
+	if tx.is_compat and not cfg.autosign:
+		die(1, 'Sending XMR transaction via compatibility layer requires --autosign')
 
 	txcfg = Config({'_clone': cfg, 'proto': tx.proto, 'coin': tx.proto.coin})
 
@@ -167,8 +165,9 @@ async def process_tx(tx):
 		from .tx.tx_proxy import check_client
 		check_client(txcfg)
 
-	from .rpc import rpc_init
-	tx.rpc = await rpc_init(txcfg)
+	if 'rpc_init' in txcfg.proto.mmcaps:
+		from .rpc import rpc_init
+		tx.rpc = await rpc_init(txcfg)
 
 	if not post_send_op:
 		if cfg.mark_sent:
@@ -187,7 +186,7 @@ async def process_tx(tx):
 		if not cfg.yes:
 			tx.info.view_with_prompt('View transaction details?')
 			# edits existing comment, returns true if changed:
-			if tx.add_comment() and not cfg.autosign:
+			if tx.has_comment and tx.add_comment() and not cfg.autosign:
 				tx.file.write(ask_write_default_yes=True)
 
 	return await tx.send(txcfg, asi, batch=batch)

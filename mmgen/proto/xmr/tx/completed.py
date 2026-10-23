@@ -10,27 +10,24 @@
 proto.xmr.tx.completed: Monero completed transaction class
 """
 
-from ....cfg import Config
 from ....util import cached_property, make_timestamp
+from ....color import cyan
+from ....tx.completed import Completed as TxCompleted
 
 from .base import Base
 
-class Completed(Base):
-
-	def __init__(self, cfg, *args, proto, filename, **kwargs):
-		self.cfg = Config({
-			'_clone':  cfg,
-			'coin':    'XMR',
-			'network': proto.network})
-		self.proto = proto
-		self.filename = filename
-		self.infile = filename
+class Completed(Base, TxCompleted):
 
 	@cached_property
 	def compat_tx(self):
 		from ....xmrwallet.file.tx import MoneroMMGenTX
-		from pathlib import Path
-		return MoneroMMGenTX.View(self.cfg, Path(self.filename)) # View = Completed with silent open
+		if self.compat_data:
+			return MoneroMMGenTX.ViewData(self.cfg, self.compat_data)
+		elif self.raw_compat_data:
+			return MoneroMMGenTX.Completed(self.cfg, None, compat_data=self.raw_compat_data)
+		else:
+			from pathlib import Path
+			return MoneroMMGenTX.View(self.cfg, Path(self.infile))
 
 	@cached_property
 	def timestamp(self):
@@ -45,5 +42,10 @@ class Completed(Base):
 		from ....tx.info import TxInfo
 		class info_cls(TxInfo):
 			def format(info_self, *args, **kwargs):
-				return self.compat_tx.get_info(full_address=True, indent='  ', is_swap=self.is_swap)
+				body = self.compat_tx.get_info(full_address=True, indent='  ', is_swap=self.is_swap)
+				if self.compat_data or self.raw_compat_data:
+					swap_subhdr = ''.join(info_self.gen_swap_subhdr()) + '\n' if self.is_swap else ''
+					return cyan(self.data_desc.upper()) + '\n' + swap_subhdr + body
+				else:
+					return body
 		return info_cls(self.cfg, self)

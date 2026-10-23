@@ -196,14 +196,16 @@ class OpSweep(OpMixinSpec, OpWallet):
 
 		h, new_tx = self.create_tx(h, wallet_data)
 
-		msg('\n' + new_tx.get_info(indent='    '))
+		if not self.compat_call:
+			msg('\n' + new_tx.get_info(indent='    '))
 
 		if self.cfg.tx_relay_daemon:
 			self.display_tx_relay_info(indent='    ')
 
-		if not self.compat_call:
-			msg('Saving TX data to file')
+		if self.compat_call:
+			return new_tx.make_outer_data()
 
+		msg('Saving TX data to file')
 		new_tx.write(delete_metadata=True)
 
 		if self.cfg.no_relay or self.cfg.autosign:

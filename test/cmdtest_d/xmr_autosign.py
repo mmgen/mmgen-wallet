@@ -24,6 +24,7 @@ from ..include.common import (
 	read_from_file)
 from .include.common import get_file_with_ext, cleanup_env
 
+from .shared import CmdTestShared
 from .xmrwallet import CmdTestXMRWallet
 from .autosign import CmdTestAutosignThreaded
 
@@ -35,7 +36,7 @@ def make_burn_addr(cfg):
 		proto   = cfg._proto,
 		mmtype  = 'monero').privhex2addr('beadcafe'*8)
 
-class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
+class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShared):
 	"""
 	Monero autosigning operations (xmrwallet compat mode)
 	"""
@@ -119,6 +120,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded):
 
 		self.autosign_opts = ['--autosign'] # mmgen-xmrwallet opts
 		self.autosign_setup_opts = ['--regtest=1', f'--xmrwallets={self.users[self.user].kal_range}']
+		self.spawn_env['MMGEN_TEST_SUITE_BOGUS_SEND'] = ''
 
 	def create_tmp_wallets(self):
 		self.spawn(msg_only=True)
@@ -849,13 +851,13 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	user_txsend1 = user_txsend2 = user_txsend3 = user_txsend4 = _user_txsend
 
 	def user_txstatus1(self):
-		return self._user_txstatus(expect_str='TxID: .* in mempool')
+		return self._user_txstatus(expect_str='in mempool')
 
 	def user_txstatus2(self):
 		return self._user_txstatus(['--quiet'], expect_str='confirmations')
 
 	def user_txstatus3(self):
-		return self._user_txstatus(['--verbose'], expect_str='confirmations.*Info for transaction')
+		return self._user_txstatus(['--verbose'], expect_str='TRANSACTION DATA')
 
 	def _user_txstatus(self, add_opts=[], expect_str=None):
 		return self._user_txops(
@@ -900,6 +902,9 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			pass
 		elif '--abort' in opts:
 			t.expect('(y/N): ', 'y')
+		elif '--status' in opts:
+			if '--verbose' in add_opts:
+				t.expect('view: ', 't')
 		elif op == 'txcreate':
 			if sweep_type:
 				t.expect(self.menu_prompt, menu)
@@ -911,9 +916,11 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 				for ch in menu + 'q':
 					t.expect(self.menu_prompt, ch)
 				t.expect('to spend from: ', f'{acct_num}\n')
+			t.view_tx('y')
 			t.expect('(y/N): ', 'y') # save?
-		elif op == 'txsend' and not '--status' in opts:
-			t.expect('(y/N): ', 'y') # view?
+		elif op == 'txsend':
+			t.view_tx('y')
+			self._do_confirm_send(t)
 
 		if expect_str:
 			t.expect(expect_str, regex=True)

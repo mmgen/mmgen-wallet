@@ -64,19 +64,20 @@ class MMGenTxFile(MMGenObject):
 		'timestamp': None,
 		'blockcount': None,
 		'serialized': None}
-	extra_attrs = {
-		'locktime': None,
-		'comment': MMGenTxComment,
-		'coin_txid': CoinTxID,
-		'sent_timestamp': None,
-		'is_deposit': None,
-		'is_swap': None,
-		'is_refreq': None}
 
 	def __init__(self, tx):
 		self.tx       = tx
 		self.fmt_data = None
 		self.filename = None
+		self.extra_attrs = {
+			'locktime': None,
+			'comment': MMGenTxComment,
+			'is_deposit': None,
+			'is_swap': None,
+			'is_refreq': None} | (
+			{} if tx.is_compat else {
+			'coin_txid': CoinTxID,
+			'sent_timestamp': None})
 
 	def parse(self, infile, *, get_proto_only=False, quiet_open=False):
 		tx = self.tx
@@ -85,9 +86,10 @@ class MMGenTxFile(MMGenObject):
 		if len(data) > tx.cfg.max_tx_file_size:
 			die('MaxFileSizeExceeded',
 				f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)')
-		return (self.parse_data_json if data[0] == '{' else self.parse_data_legacy)(data, get_proto_only)
+		return (self.parse_data_json if data[0] == '{' else self.parse_data_legacy)(
+			data, infile, get_proto_only)
 
-	def parse_data_json(self, data, get_proto_only):
+	def parse_data_json(self, data, infile, get_proto_only):
 		tx = self.tx
 		tx.file_format = 'json'
 
@@ -98,6 +100,7 @@ class MMGenTxFile(MMGenObject):
 				tx.cfg,
 				'XMR',
 				network = outer_data[self.xmr_data_label]['data']['network'])
+			tx.infile = infile
 			return None
 
 		data = outer_data[self.data_label]
@@ -105,7 +108,12 @@ class MMGenTxFile(MMGenObject):
 			chk = make_chksum_6(txfile_json_dumps(data))
 			die(3, f'{self.data_label}: invalid checksum for TxID {data["txid"]} ({chk} != {outer_data["chksum"]})')
 
-		tx.proto = get_proto_from_coin_id(tx, data['coin_id'], data['chain'])
+		if self.xmr_data_label in data:
+			compat_data = data[self.xmr_data_label]
+			tx.proto = get_proto_from_coin_id(tx, data['coin_id'], compat_data['data']['network'])
+		else:
+			compat_data = None
+			tx.proto = get_proto_from_coin_id(tx, data['coin_id'], data['chain'])
 
 		if get_proto_only:
 			return
@@ -113,9 +121,19 @@ class MMGenTxFile(MMGenObject):
 		if data.get('version', 0) != tx.txfile_version:
 			tx.txfile_version_chk(data.get('version', 0), tx.txfile_version)
 
-		for k, v in self.attrs.items():
-			if v != 'skip':
-				setattr(tx, k, v(data[k]) if v else data[k])
+		if compat_data:
+			cdata = compat_data['data']
+			tx.raw_compat_data = compat_data
+			tx.txid = MMGenTxID(compat_data['base_chksum'].upper())
+			tx.chain = cdata['network']
+			tx.coin_txid = CoinTxID(cdata['txid'])
+			tx.send_amt = tx.proto.coin_amt(cdata['amount'])
+			tx.serialized = cdata['unsigned_txset'] or cdata['signed_txset']
+			tx.blockcount = None
+		else:
+			for k, v in self.attrs.items():
+				if v != 'skip':
+					setattr(tx, k, v(data[k]) if v else data[k])
 
 		for k, v in self.extra_attrs.items():
 			if k in data:
@@ -126,14 +144,13 @@ class MMGenTxFile(MMGenObject):
 				if k in data:
 					setattr(tx, k, v(data[k]) if v else data[k])
 
-		for k in ('inputs', 'outputs'):
-			setattr(tx, k, eval_io_data(tx, data[k], desc=k))
+		if not compat_data:
+			for k in ('inputs', 'outputs'):
+				setattr(tx, k, eval_io_data(tx, data[k], desc=k))
+			tx.check_txfile_hex_data()
+			tx.parse_txfile_serialized_data() # Ethereum RLP or JSON data
 
-		tx.check_txfile_hex_data()
-
-		tx.parse_txfile_serialized_data() # Ethereum RLP or JSON data
-
-	def parse_data_legacy(self, data, get_proto_only):
+	def parse_data_legacy(self, data, infile, get_proto_only):
 		tx = self.tx
 		tx.file_format = 'legacy'
 
@@ -284,7 +301,7 @@ class MMGenTxFile(MMGenObject):
 			data = txfile_json_dumps({
 					'coin_id': coin_id,
 					'version': tx.txfile_version
-				} | (tx.compat_data or ({
+				} | ({self.xmr_data_label: tx.compat_data} if tx.compat_data else ({
 					k: getattr(tx, k) for k in self.attrs
 				} | {
 					'inputs':  [e._asdict() for e in tx.inputs],

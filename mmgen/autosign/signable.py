@@ -12,6 +12,7 @@ autosign.signable: Signable class for MMGen Wallet autosigning
 
 import sys
 
+from ..tx import UnsignedTX, SignedTX
 from ..util import msg, msg_r, gmsg, bmsg, die, suf, fmt_list
 from ..color import yellow, red, orange
 
@@ -244,7 +245,9 @@ class Signable:
 
 		def print_summary(self, signables):
 			bmsg('\nAutosign summary:')
-			msg('\n'.join(s.get_info(indent='  ') for s in signables) + self.summary_footer)
+			msg('\n'.join(
+				s.get_info(indent='  ') if hasattr(s, 'get_info') else s.info.format()
+					for s in signables) + self.summary_footer)
 
 	class xmr_transaction(xmr_signable, automount_transaction):
 		desc = 'Monero non-compat transaction'
@@ -276,6 +279,13 @@ class Signable:
 		rawext = 'arawtx'
 		sigext = 'asigtx'
 		subext = 'asubtx'
+
+		async def sign(self, f, compat_call=False):
+			tx1 = UnsignedTX(cfg=self.parent.xmrwallet_cfg, filename=f)
+			tx2 = SignedTX(cfg=self.parent.xmrwallet_cfg, data=tx1.__dict__, automount=self.automount)
+			tx2.compat_data = await self.do_sign(f, compat_call=compat_call)
+			tx2.file.write(ask_write=False, outdir=self.dir)
+			return tx2
 
 	class xmr_wallet_outputs_file(xmr_signable, base):
 		desc = 'Monero wallet outputs file'

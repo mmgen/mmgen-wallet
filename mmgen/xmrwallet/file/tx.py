@@ -255,17 +255,20 @@ class MoneroMMGenTX:
 		desc = 'transaction'
 		forbidden_fields = ()
 
-		def __init__(self, cfg, fn):
+		def __init__(self, cfg, fn, *, compat_data=None):
 
 			super().__init__()
 
 			self.cfg = cfg
 
-			try:
-				d_wrap = self.extract_data_from_file(cfg, fn)
-			except Exception as e:
-				die('MoneroMMGenTXFileParseError',
-					f'{type(e).__name__}: {e}\nCould not load transaction file')
+			if compat_data:
+				d_wrap = compat_data
+			else:
+				try:
+					d_wrap = self.extract_data_from_file(cfg, fn)
+				except Exception as e:
+					die('MoneroMMGenTXFileParseError',
+						f'{type(e).__name__}: {e}\nCould not load transaction file')
 
 			if 'unsigned_txset' in d_wrap['data']: # post-autosign
 				self.full_chksum_fields &= set(d_wrap['data']) # allow for added chksum fields in future
@@ -338,6 +341,12 @@ class MoneroMMGenTX:
 
 	class View(Completed):
 		silent_load = True
+
+	class ViewData(Completed):
+		def __init__(self, cfg, data):
+			MoneroMMGenTX.Base.__init__(self)
+			self.cfg = cfg
+			self.data = self.xmrwallet_tx_data(**data['data'])
 
 	class UnsignedCompat(Unsigned):
 		ext = 'arawtx'

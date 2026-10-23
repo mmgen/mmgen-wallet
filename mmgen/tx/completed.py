@@ -18,7 +18,7 @@ class Completed(Base):
 	signed or unsigned transaction with associated file
 	"""
 	filename_api = True
-	txfile_version = 4
+	txfile_version = 5
 
 	def __init__(self, cfg, *args, filename=None, data=None, quiet_open=False, **kwargs):
 
@@ -144,6 +144,7 @@ class Completed(Base):
 class DummyCompleted: # required by MMGenTxFile.get_proto()
 
 	desc = 'dummy transaction'
+	is_compat = False
 
 	def __init__(self, cfg):
 		self.cfg = cfg

@@ -10,43 +10,23 @@
 proto.xmr.tx.online: Monero online signed transaction class
 """
 
+from ....xmrwallet import op as xmrwallet_op
+from ....tx.online import OnlineSigned as TxOnlineSigned
 from .completed import Completed
 
-class OnlineSigned(Completed):
-	desc = 'signed transaction'
-	ext = 'asigtx'
+class OnlineSigned(Completed, TxOnlineSigned):
 
-	async def compat_send(self):
-		"""
-		returns integer exit val to system
-		"""
-		from ....xmrwallet import op as xmrwallet_op
-		op_name = 'daemon' if self.cfg.status else 'submit'
-		op = xmrwallet_op(op_name, self.cfg, self.filename, None, compat_call=True)
-		if self.cfg.status:
-			from ....util import msg, msg_r, ymsg, suf
-			ret = 0
-			txid = self.compat_tx.data.txid
-			if not (self.cfg.verbose or self.cfg.quiet):
-				from ....obj import CoinTxID
-				msg('{} TxID: {}'.format(self.cfg.coin, CoinTxID(txid).hl()))
-			res = op.dc.call_raw('get_transactions', txs_hashes=[txid])
-			if res['status'] == 'OK':
-				tx = res['txs'][0]
-				if tx['in_pool']:
-					msg('Transaction is in mempool')
-				else:
-					confs = tx['confirmations']
-					msg('Transaction has {} confirmation{}'.format(confs, suf(confs)))
-			else:
-				ymsg('An RPC error occurred while fetching transaction data')
-				ret = 1
-			if self.cfg.verbose:
-				msg_r('\n' + self.info.format())
-			return ret
-		else:
-			await op.restart_wallet_daemon()
-			return int(not await op.main())
+	async def post_network_send(self, coin_txid):
+		return True
+
+	async def check_memoless_presend(self):
+		return await super().check_memoless_presend(amt=self.send_amt)
+
+	async def send_with_node(self, txhex):
+		op = xmrwallet_op('submit', self.cfg, self.infile, None, compat_call=True)
+		await op.restart_wallet_daemon()
+		self.compat_data = await op.main()
+		return self.compat_data['data']['txid']
 
 class AutomountOnlineSigned(OnlineSigned):
 	desc = 'signed automount transaction'

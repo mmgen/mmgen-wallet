@@ -37,4 +37,6 @@ class OpSign(OpWallet):
 			unsigned_txset = None,
 			signed_txset   = res['signed_txset'],
 			_in_tx         = tx)
+		if self.compat_call:
+			return new_tx.make_outer_data()
 		return new_tx
