@@ -23,10 +23,6 @@ import os, json
 from ..util import ymsg, make_chksum_6, die
 from ..obj import MMGenObject, HexStr, MMGenTxID, CoinTxID, MMGenTxComment
 
-def get_monero_proto(tx, data):
-	from ..protocol import init_proto
-	return init_proto(tx.cfg, 'XMR', network=data['MoneroMMGenTX']['data']['network'])
-
 class txfile_json_encoder(json.JSONEncoder):
 	def default(self, o):
 		if type(o).__name__.endswith('Amt'):
@@ -60,6 +56,7 @@ def eval_io_data(tx, data, *, desc):
 
 class MMGenTxFile(MMGenObject):
 	data_label = 'MMGenTransaction'
+	xmr_data_label = 'MoneroMMGenTX'
 	attrs = {
 		'chain': None,
 		'txid': MMGenTxID,
@@ -93,10 +90,16 @@ class MMGenTxFile(MMGenObject):
 	def parse_data_json(self, data, get_proto_only):
 		tx = self.tx
 		tx.file_format = 'json'
-		outer_data = json.loads(data)
-		if 'MoneroMMGenTX' in outer_data: # txfile_version_chk for Monero TBD
-			tx.proto = get_monero_proto(tx, outer_data)
+
+		# TODO: txfile_version_chk for Monero
+		if self.xmr_data_label in (outer_data := json.loads(data)):
+			from ..protocol import init_proto
+			tx.proto = init_proto(
+				tx.cfg,
+				'XMR',
+				network = outer_data[self.xmr_data_label]['data']['network'])
 			return None
+
 		data = outer_data[self.data_label]
 		if outer_data['chksum'] != make_chksum_6(txfile_json_dumps(data)):
 			chk = make_chksum_6(txfile_json_dumps(data))

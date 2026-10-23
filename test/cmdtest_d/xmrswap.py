@@ -57,7 +57,7 @@ class CmdTestXMRSwapMethods:
 		for pat in expect_pats:
 			t.expect(pat, regex=True)
 		t.expect('to continue: ', '\n')
-		t.expect('(y/N): ', 'y')            # save?
+		t.expect('(y/N): ', 'y')         # save?
 		t.written_to_file('Unsigned automount transaction')
 		return t
 

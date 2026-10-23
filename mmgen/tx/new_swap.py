@@ -13,6 +13,7 @@ tx.new_swap: new swap transaction class
 import sys, time
 from collections import namedtuple
 
+from ..obj import PositiveInt
 from ..addr import CoinAddr
 from ..amt import UniAmt
 from ..util import msg, ymsg, is_int, die
@@ -36,7 +37,7 @@ class NewSwap(BaseSwapMethods, New):
 
 	def __init__(self, *, cfg, is_memoless=False, **kwargs):
 		assert is_int(cfg.refnum) or cfg.refnum is None, '--refnum must be an integer'
-		self.refnum = int(cfg.refnum) if is_int(cfg.refnum) else None
+		self.refnum = PositiveInt(cfg.refnum) if is_int(cfg.refnum) else None
 		self.swap_proto = cfg.swap_proto
 		self.is_swap = True
 		self.is_memoless = bool(is_memoless)

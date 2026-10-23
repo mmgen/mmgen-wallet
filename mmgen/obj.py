@@ -283,6 +283,9 @@ class Int(int, Hilite, InitErrors):
 class NonNegativeInt(Int):
 	min_val = 0
 
+class PositiveInt(Int):
+	min_val = 1
+
 class MMGenIdx(Int):
 	min_val = 1
 

@@ -20,8 +20,8 @@ from ..obj import (
 	TwComment,
 	CoinTxID,
 	HexStr,
-	NonNegativeInt
-)
+	NonNegativeInt,
+	PositiveInt)
 from ..amt import CoinAmtChk
 from ..addr import MMGenID, CoinAddr
 from ..util import msg, ymsg, fmt, remove_dups, make_timestamp, die
@@ -95,7 +95,7 @@ class Base(MMGenObject):
 		'token_vault_addr': None, # nosec # B105
 		'serialized2': None,
 		'is_memoless': None,
-		'refnum': None,
+		'refnum': PositiveInt,
 		'coin_txid2': CoinTxID}
 	file_format  = 'json'
 	non_mmgen_inputs_msg = f"""

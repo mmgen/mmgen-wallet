@@ -12,7 +12,6 @@ xmrwallet.file.tx: Monero transaction file class for the MMGen Suite
 
 import time
 from collections import namedtuple
-from pathlib import Path
 
 from ...obj import CoinTxID, Int
 from ...color import red, yellow, blue, cyan, pink, orange, purple
@@ -267,7 +266,6 @@ class MoneroMMGenTX:
 			super().__init__()
 
 			self.cfg = cfg
-			self.fn = Path(fn)
 
 			try:
 				d_wrap = self.extract_data_from_file(cfg, fn)

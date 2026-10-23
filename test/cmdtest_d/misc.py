@@ -68,6 +68,7 @@ class CmdTestMisc(CmdTestBase):
 		('bch_txview_legacy2',   '‘mmgen-tool --coin=bch --cashaddr=0 txview terse=1’'),
 		('bch_txview_cashaddr1', '‘mmgen-tool --coin=bch --cashaddr=1 txview terse=0’'),
 		('bch_txview_cashaddr2', '‘mmgen-tool --coin=bch --cashaddr=1 txview terse=1’'),
+		('xmr_txview',           '‘mmgen-tool txview’ with XMR transactions'),
 		('xmrwallet_txview',     '‘mmgen-xmrwallet txview’'),
 		('xmrwallet_txlist',     '‘mmgen-xmrwallet txlist’'),
 		('coin_daemon_info',     '‘examples/coin-daemon-info.py’'),
@@ -104,6 +105,14 @@ class CmdTestMisc(CmdTestBase):
 	def bch_txview_cashaddr2(self):
 		return self._bch_txview(1, 1, '[1HpynST7vkLn8yNtdrqPfeghexZk4sdB3W]')
 
+	def xmr_txview(self, tdir='test/ref/monero', ext='asubtx'):
+		if self.cfg.no_altcoin:
+			return 'skip'
+		files = get_file_with_ext(tdir, ext, no_dot=True, delete=False, return_list=True)
+		t = self.spawn('mmgen-tool', ['txview'] + files)
+		t.read()
+		return t
+
 	def xmrwallet_txview(self, op='txview'):
 		if self.cfg.no_altcoin:
 			return 'skip'
@@ -113,9 +122,8 @@ class CmdTestMisc(CmdTestBase):
 		match op:
 			case 'txview':
 				for s in (
-					'Amount:    0.74 XMR',
-					'Dest:      56VQ9M6k',
-				):
+						'Amount:    0.74 XMR',
+						'Dest:      56VQ9M6k'):
 					assert s in res, f'{s} not in {res}'
 			case 'txlist':
 				assert re.search('3EBD06-.*D94583-.*8BFA29-', res, re.DOTALL)

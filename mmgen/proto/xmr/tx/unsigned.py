@@ -16,4 +16,5 @@ class Unsigned(Completed):
 	pass
 
 class AutomountUnsigned(Unsigned):
-	pass
+	desc = 'unsigned automount transaction'
+	ext = 'arawtx'

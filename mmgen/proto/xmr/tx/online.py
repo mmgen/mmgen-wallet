@@ -14,6 +14,7 @@ from .completed import Completed
 
 class OnlineSigned(Completed):
 	desc = 'signed transaction'
+	ext = 'asigtx'
 
 	async def compat_send(self):
 		"""
@@ -55,3 +56,4 @@ class AutomountOnlineSigned(OnlineSigned):
 
 class AutomountSent(AutomountOnlineSigned):
 	desc = 'sent automount transaction'
+	ext = 'asubtx'
