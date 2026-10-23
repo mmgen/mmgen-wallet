@@ -107,6 +107,8 @@ class NewSwap(BaseSwapMethods, New):
 				UniAmt(arg) # throw exception on decimal overflow
 				args.send_amt = self.proto.coin_amt(arg)
 				arg = get_arg()
+			elif self.proto.tx_amt_arg_required: # not optional in this case
+				die(1, f'send amount is required for protocol {self.proto.name}')
 
 			# arg 3: optional chg_spec (change address spec, requires amt)
 			if self.proto.has_chg and args.send_amt and not arg in sa.recv: # is change arg

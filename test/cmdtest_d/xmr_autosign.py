@@ -543,6 +543,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('user_twview_chk1',        'viewing user’s tracking wallets (check balances)'),
 		('user_listaddresses_sort', 'listing user’s addresses (sort options)'),
 		('wait_loop_start_compat',  'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
+		('user_txcreate1_bad',      'creating a transaction (bad, no amount)'),
 		('user_txcreate1',          'creating a transaction'),
 		('user_txabort1',           'aborting the transaction'),
 		('user_txcreate2',          'recreating the transaction'),
@@ -815,6 +816,9 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 
 	def wait_loop_start_ltc(self):
 		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=ltc,xmr'])
+
+	def user_txcreate1_bad(self):
+		return self._user_txops('txcreate', [self.burn_addr], acct_num=1, exit_val=1, expect_str='amount is required')
 
 	def user_txcreate1(self):
 		return self._user_txops('txcreate', [f'{self.burn_addr},0.012345'], acct_num=1)

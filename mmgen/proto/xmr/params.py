@@ -41,6 +41,7 @@ class mainnet(CoinProtocol.RPC, CoinProtocol.DummyWIF, CoinProtocol.Base):
 	sign_mode      = 'standalone'
 	has_usr_fee    = False
 	address_reuse_ok = False
+	tx_amt_arg_required = True
 
 	coin_cfg_opts = (
 		'ignore_daemon_version',

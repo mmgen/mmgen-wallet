@@ -262,6 +262,9 @@ class New(Base):
 					is_chg = not a.amt,
 					is_vault = a.is_vault)
 
+		if self.proto.tx_amt_arg_required and not self.sum_outputs():
+			die(1, f'send amount is required for protocol {self.proto.name}')
+
 		self.check_dup_addrs('outputs')
 
 		if self.is_compat:

@@ -210,8 +210,10 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 	'xmr_swap': (
 		'swap operations (XMR -> LTC)',
 		('remote_get_refnum_xmr',    'getting the reference number'),
+		('swaptxcreate_refreq7_bad', 'creating an XMR->LTC registration transaction (bad, no amount)'),
 		('swaptxcreate_refreq7',     'creating an XMR->LTC registration transaction (auto chg, auto dest)'),
 		('swaptxsend_refreq7',       'sending the transaction'),
+		('swaptxcreate_refnum7_bad', 'creating an XMR->LTC swap transaction (bad, no amount)'),
 		('swaptxcreate_refnum7',     'creating an XMR->LTC swap transaction (auto chg, auto dest)'),
 		('swaptxsend_refnum7',       'sending the transaction'),
 		('xmr_mine_blocks_10',       ''),
@@ -309,6 +311,9 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 	def remote_get_refnum_xmr(self):
 		return self._remote_get_refnum(self.refreq_txid_xmr)
 
+	def swaptxcreate_refreq7_bad(self):
+		return self._swaptxcreate_refreq_xmr(['XMR', 'LTC'], exit_val=1)
+
 	def swaptxcreate_refreq7(self):
 		return self._swaptxcreate_refreq_xmr(['XMR', '0.2345', 'LTC'])
 
@@ -322,6 +327,9 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 
 	def swaptxsend_refreq7(self):
 		return self._user_txsend('bob', need_rbf=True)
+
+	def swaptxcreate_refnum7_bad(self):
+		return self._swaptxcreate_refnum_xmr(['XMR', 'LTC'], exit_val=1)
 
 	def swaptxcreate_refnum7(self):
 		return self._swaptxcreate_refnum_xmr(['XMR', '0.2345', 'LTC'])
