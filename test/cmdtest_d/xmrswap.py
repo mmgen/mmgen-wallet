@@ -68,7 +68,8 @@ class CmdTestXMRSwapMethods:
 			inputs,
 			auto_chg_addr  = None,
 			auto_dest_addr = None,
-			expect_pats    = None):
+			expect_pats    = None,
+			exit_val       = 0):
 		return self._user_txcreate(
 			'bob',
 			progname = 'swaptxcreate',
@@ -81,6 +82,7 @@ class CmdTestXMRSwapMethods:
 				'auto_chg_addr': auto_chg_addr,
 				'auto_dest_addr': auto_dest_addr,
 				'expect_pats': expect_pats},
+			exit_val = exit_val,
 			output_args = args)
 
 	def _swaptxcreate_refnum(
@@ -93,12 +95,14 @@ class CmdTestXMRSwapMethods:
 			auto_chg_addr  = None,
 			auto_dest_addr = None,
 			prompt         = None,
-			expect_pats    = None):
+			expect_pats    = None,
+			exit_val       = 0):
 		data = json.loads(self.read_from_tmpfile('memo_info.json'))
 		return self._user_txcreate(
 			'bob',
 			progname = 'swaptxcreate',
 			opts = ['--monero-wallet-rpc-password=abc', f'--refnum={data["reference"]}'] + add_opts,
+			exit_val = exit_val,
 			ui_handler = self._swaptxcreate_ui,
 			ui_handler_args = {
 				'prompt': prompt or self.menu_prompt,
@@ -205,13 +209,13 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('bob_bal2',             'Bob’s balance')),
 	'xmr_swap': (
 		'swap operations (XMR -> LTC)',
-		('remote_get_refnum_xmr', 'getting the reference number'),
-		('swaptxcreate_refreq7',  'creating an XMR->LTC registration transaction (auto chg, auto dest)'),
-		('swaptxsend_refreq7',    'sending the transaction'),
-		('swaptxcreate_refnum7',  'creating an XMR->LTC swap transaction (auto chg, auto dest)'),
-		('swaptxsend_refnum7',    'sending the transaction'),
-		('xmr_mine_blocks_10',    ''),
-		('swaptxstatus_refnum7',  'getting the transaction status'))}
+		('remote_get_refnum_xmr',    'getting the reference number'),
+		('swaptxcreate_refreq7',     'creating an XMR->LTC registration transaction (auto chg, auto dest)'),
+		('swaptxsend_refreq7',       'sending the transaction'),
+		('swaptxcreate_refnum7',     'creating an XMR->LTC swap transaction (auto chg, auto dest)'),
+		('swaptxsend_refnum7',       'sending the transaction'),
+		('xmr_mine_blocks_10',       ''),
+		('swaptxstatus_refnum7',     'getting the transaction status'))}
 
 	exec(create_cross_methods(cross_coin, cross_group, cmd_group_in, cmd_subgroups))
 
@@ -306,9 +310,13 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		return self._remote_get_refnum(self.refreq_txid_xmr)
 
 	def swaptxcreate_refreq7(self):
+		return self._swaptxcreate_refreq_xmr(['XMR', '0.2345', 'LTC'])
+
+	def _swaptxcreate_refreq_xmr(self, args, *, exit_val=0):
 		return self._swaptxcreate_refreq(
-			args = ['XMR', '0.2345', 'LTC'],
+			args = args,
 			inputs = '3',
+			exit_val = exit_val,
 			auto_dest_addr = '98831F3A:B:3',
 			expect_pats = ['rltc1q6rs4znw8k', r'to spend:.*\b0\b.*RUNE'])
 
@@ -316,12 +324,16 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		return self._user_txsend('bob', need_rbf=True)
 
 	def swaptxcreate_refnum7(self):
+		return self._swaptxcreate_refnum_xmr(['XMR', '0.2345', 'LTC'])
+
+	def _swaptxcreate_refnum_xmr(self, args, *, exit_val=0):
 		return self._swaptxcreate_refnum(
 			add_opts = ['--priority=3'],
-			args = ['XMR', '0.2345', 'LTC'],
+			args = args,
 			inputs = '1',
 			tx_type = 'xmr_swap',
 			prompt = self.xmr_prompt,
+			exit_val = exit_val,
 			auto_dest_addr = '98831F3A:B:3',
 			expect_pats = [r'Amount:.*0.234499978787', r'Priority:.*high'])
 

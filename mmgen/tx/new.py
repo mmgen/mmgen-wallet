@@ -262,6 +262,8 @@ class New(Base):
 					is_chg = not a.amt,
 					is_vault = a.is_vault)
 
+		self.check_dup_addrs('outputs')
+
 		if self.is_compat:
 			return
 
@@ -280,8 +282,6 @@ class New(Base):
 			die(2, 'At least one spending output must be specified on the command line')
 
 		self.add_mmaddrs_to_outputs(ad_f, ad_w)
-
-		self.check_dup_addrs('outputs')
 
 		if self.chg_output is not None:
 			if self.chg_autoselected and not self.is_swap: # swap TX, so user has already confirmed
@@ -470,8 +470,6 @@ class New(Base):
 
 		assert isinstance(locktime, int | type(None)), 'locktime must be of type int'
 
-		from ..tw.unspent import TwUnspentOutputs
-
 		if self.cfg.comment_file:
 			self.add_comment(infile=self.cfg.comment_file)
 
@@ -493,6 +491,7 @@ class New(Base):
 					await TwAddrData(self.cfg, self.proto, twctl=self.twctl))
 
 		if not self.is_bump:
+			from ..tw.unspent import TwUnspentOutputs
 			self.twuo = await TwUnspentOutputs(
 				self.cfg,
 				self.proto,

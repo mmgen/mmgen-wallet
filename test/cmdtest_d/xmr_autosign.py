@@ -879,7 +879,8 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			sweep_type = None,
 			sweep_menu = '',
 			signable_desc = 'transaction',
-			expect_str = None):
+			expect_str = None,
+			exit_val = 0):
 		if wait_signed:
 			self._wait_signed(signable_desc)
 		self.insert_device_online()
@@ -888,8 +889,11 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			(opts or self.user_opts)
 			+ self.autosign_opts
 			+ add_opts
-			+ args)
-		if '--abort' in opts:
+			+ args,
+			exit_val = exit_val)
+		if exit_val:
+			pass
+		elif '--abort' in opts:
 			t.expect('(y/N): ', 'y')
 		elif op == 'txcreate':
 			if sweep_type:
