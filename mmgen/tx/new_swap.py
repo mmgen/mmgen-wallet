@@ -213,11 +213,11 @@ class NewSwap(BaseSwapMethods, New):
 				die(1, 'With --memoless (reference request transaction), you must supply a send amount')
 			if 'rpc_init' in self.proto.mmcaps:
 				self.rpc = await rpc_init(self.cfg, self.proto)
-			qd = self.swap_proto_mod.quote_client(self, args.send_amt)
-			await self.display_quote_loop(qd, deduct_est_fee=False)
+			qc = self.swap_proto_mod.quote_client(self, args.send_amt)
+			await self.display_quote_loop(qc, deduct_est_fee=False)
 			self.reference_memo = self.swap_proto_mod.reference_memo(
 				self.send_asset,
-				str(self.update_memo(self.memoless_memo, qd.trade_limit)))
+				str(self.update_memo(self.memoless_memo, qc.trade_limit)))
 			return None
 
 		return tuple((
@@ -225,23 +225,23 @@ class NewSwap(BaseSwapMethods, New):
 			[f'vault,{args.send_amt}'] if args.send_amt else
 			['vault']) + ([] if self.is_memoless else [f'data:{memo}']))
 
-	async def display_quote_loop(self, qd, *, deduct_est_fee=False):
+	async def display_quote_loop(self, qc, *, deduct_est_fee=False):
 		from ..term import get_char
 		while True:
-			await self.display_quote(qd, deduct_est_fee=deduct_est_fee)
+			await self.display_quote(qc, deduct_est_fee=deduct_est_fee)
 			ch = get_char('Press ‘r’ to refresh quote, any other key to continue: ')
 			msg('')
 			if ch not in 'Rr':
 				break
 
-	async def display_quote(self, qd, *, deduct_est_fee=False, skip_est_fee=False):
-		self.cfg._util.qmsg(f'Retrieving data from {qd.rpc.swap_api.host}...')
-		qd.get_quote(self.swap_cfg)
+	async def display_quote(self, qc, *, deduct_est_fee=False, skip_est_fee=False):
+		self.cfg._util.qmsg(f'Retrieving data from {qc.rpc.swap_api.host}...')
+		qc.get_quote(self.swap_cfg)
 		self.cfg._util.qmsg('OK')
 		self.swap_quote_refresh_time = time.time()
 		if not skip_est_fee:
-			await self.set_gas(to_addr=qd.router if self.is_token else None)
-		msg(await qd.format_quote(deduct_est_fee=deduct_est_fee, skip_est_fee=skip_est_fee))
+			await self.set_gas(to_addr=qc.router if self.is_token else None)
+		msg(await qc.format_quote(deduct_est_fee=deduct_est_fee, skip_est_fee=skip_est_fee))
 
 	def update_vault_memoless_amt(self, round_down=False):
 		self.update_output_amt(
@@ -251,12 +251,11 @@ class NewSwap(BaseSwapMethods, New):
 				self.refnum,
 				round_down = round_down).amt)
 
-	def update_vault_addr(self, qd, *, addr='inbound_address'):
-		vault_idx = self.vault_idx
-		assert vault_idx == 0, f'{vault_idx}: vault index is not zero!'
-		o = self.outputs[vault_idx]._asdict()
-		o['addr'] = getattr(qd, addr)
-		self.outputs[vault_idx] = self.Output(self.proto, **o)
+	def update_vault_addr(self, qc, *, addr='inbound_address'):
+		assert self.vault_idx == 0, f'{self.vault_idx}: vault index is not zero!'
+		o = self.outputs[self.vault_idx]._asdict()
+		o['addr'] = getattr(qc, addr)
+		self.outputs[self.vault_idx] = self.Output(self.proto, **o)
 
 	def update_memo(self, memo, trade_limit):
 		return self.swap_proto_mod.Memo(
@@ -267,14 +266,14 @@ class NewSwap(BaseSwapMethods, New):
 			trade_limit = trade_limit)
 
 	async def update_vault_output(self, amt, *, deduct_est_fee=False):
-		qd = self.swap_proto_mod.quote_client(self, amt)
-		await self.display_quote_loop(qd, deduct_est_fee=deduct_est_fee)
-		self.swap_quote_expiry = qd.data['expiry']
-		self.update_vault_addr(qd)
+		qc = self.swap_proto_mod.quote_client(self, amt)
+		await self.display_quote_loop(qc, deduct_est_fee=deduct_est_fee)
+		self.swap_quote_expiry = qc.data['expiry']
+		self.update_vault_addr(qc)
 		if self.is_memoless:
 			if not self.is_bump:
-				self.memoless_memo = str(self.update_memo(self.memoless_memo, qd.trade_limit))
+				self.memoless_memo = str(self.update_memo(self.memoless_memo, qc.trade_limit))
 		else:
-			self.update_data_output(qd.trade_limit)
-		self.quote_data = qd
-		return qd.rel_fee_hint
+			self.update_data_output(qc.trade_limit)
+		self.quote_data = qc
+		return qc.rel_fee_hint
