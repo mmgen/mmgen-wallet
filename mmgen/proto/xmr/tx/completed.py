@@ -42,10 +42,11 @@ class Completed(Base, TxCompleted):
 		from ....tx.info import TxInfo
 		class info_cls(TxInfo):
 			def format(info_self, *args, **kwargs):
-				body = self.compat_tx.get_info(full_address=True, indent='  ', is_swap=self.is_swap)
-				if self.compat_data or self.raw_compat_data:
-					swap_subhdr = ''.join(info_self.gen_swap_subhdr()) + '\n' if self.is_swap else ''
-					return cyan(self.data_desc.upper()) + '\n' + swap_subhdr + body
-				else:
-					return body
+				return (
+					cyan(self.data_desc.upper())
+					+ '\n'
+					+ ((''.join(info_self.gen_swap_subhdr()) + '\n')
+							if (self.compat_data or self.raw_compat_data) and self.is_swap
+								else '')
+					+ self.compat_tx.get_info(full_address=True, indent='  ', is_swap=self.is_swap))
 		return info_cls(self.cfg, self)

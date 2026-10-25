@@ -512,7 +512,7 @@ class New(Base):
 		if not (self.is_bump or self.cfg.inputs):
 			await self.twuo.view_filter_and_sort()
 
-		if not self.is_bump:
+		if not (self.is_bump or self.is_compat):
 			self.twuo.display_total()
 
 		if do_info:
