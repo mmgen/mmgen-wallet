@@ -16,9 +16,9 @@ from wsgiref.util import request_uri
 from mmgen.amt import UniAmt
 from mmgen.protocol import init_proto
 
-from ...include.common import eth_inbound_addr, thorchain_router_addr_file
+from ...include.common import thorchain_router_addr_file
 
-from . import ThornodeServer
+from . import ThornodeServer, make_inbound_addr
 
 # https://thornode.ninerealms.com/thorchain/quote/swap?from_asset=BCH.BCH&to_asset=LTC.LTC&amount=1000000
 prices = {
@@ -127,18 +127,6 @@ data_template_eth = {
 	'total_swap_seconds': 24
 }
 
-def make_inbound_addr(cfg, proto, mmtype):
-	if proto.is_evm:
-		return '0x' + eth_inbound_addr # non-checksummed as per ninerealms thornode
-	else:
-		from mmgen.tool.coin import tool_cmd
-		n = int(time.time()) // (60 * 60 * 24) + int('beadcafe' * 8, 16) # increments once every 24 hrs
-		return tool_cmd(
-			cfg     = cfg,
-			cmdname = 'privhex2addr',
-			proto   = proto,
-			mmtype  = mmtype).privhex2addr(f'{n:064x}')
-
 class ThornodeSwapServer(ThornodeServer):
 	port = 18900
 	name = 'thornode swap server'
@@ -166,7 +154,7 @@ class ThornodeSwapServer(ThornodeServer):
 		if send_asset != 'RUNE':
 			send_proto = init_proto(self.cfg, send_chain, network='regtest', need_amt=True)
 			data.update({
-				'inbound_address': make_inbound_addr(self.cfg, send_proto, send_proto.preferred_mmtypes[0]),
+				'inbound_address': make_inbound_addr(send_chain),
 				'gas_rate_units': gas_rate_units[send_proto.base_proto_coin],
 				'recommended_gas_rate': recommended_gas_rate[send_proto.base_proto_coin]})
 

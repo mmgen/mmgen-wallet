@@ -17,12 +17,15 @@ from mmgen.fileutil import get_data_from_file
 
 from ..include.common import imsg, chk_equal
 
-from .include.common import dfl_sid, eth_inbound_addr, thorchain_router_addr_file
+from .include.common import dfl_sid, thorchain_router_addr_file
 from .include.proxy import TestProxy
 
 from .regtest import CmdTestRegtest
 from .swap import CmdTestSwapMethods, create_cross_methods
 from .ethdev import CmdTestEthdev
+from .httpd.thornode import make_inbound_addr
+
+eth_inbound_addr = make_inbound_addr('ETH').removeprefix('0x')
 
 class CmdTestEthSwapMethods:
 

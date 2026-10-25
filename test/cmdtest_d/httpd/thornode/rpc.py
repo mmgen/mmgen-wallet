@@ -15,11 +15,14 @@ from wsgiref.util import request_uri
 
 from mmgen.cfg import Config
 
-from . import ThornodeServer
+from . import ThornodeServer, make_inbound_addr
 
 def get_inbounds_info():
 	with open('test/ref/thorchain/inbound.json') as fh:
-		return json.loads(fh.read())
+		data = json.loads(fh.read())
+	for d in data:
+		d['address'] = make_inbound_addr(d['chain'])
+	return data
 
 class ThornodeRPCServer(ThornodeServer):
 	port = 18800

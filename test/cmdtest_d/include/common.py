@@ -70,8 +70,6 @@ chksum_pat = r'\b[A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4}\b'
 
 Ctrl_U = '\x15'
 
-eth_inbound_addr = (28 * '0') + 'feedbeefcafe'
-
 thorchain_router_addr_file = os.path.join(cfg.test_datadir, 'thorchain_router_addr')
 
 def ok_msg():

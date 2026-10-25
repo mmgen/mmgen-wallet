@@ -10,7 +10,26 @@
 test.cmdtest_d.httpd.thornode: Thornode WSGI HTTP server
 """
 
+import time
+
+from mmgen.cfg import Config
+
 from .. import HTTPD
+
+day = int(time.time() // (24 * 60 * 60))
+cfg = Config()
+
+def make_inbound_addr(coin):
+	from mmgen.protocol import init_proto
+	from mmgen.tool.coin import tool_cmd
+	proto = init_proto(cfg, coin, network='regtest', need_amt=True)
+	n = (day + int('beadcafe' * 8, 16)) % (2 ** 256) # address changes every 24 hours
+	ret = tool_cmd(
+		cfg     = cfg,
+		cmdname = 'privhex2addr',
+		proto   = proto,
+		mmtype  = proto.preferred_mmtypes[0]).privhex2addr(f'{n:064x}')
+	return ('0x' + ret) if coin.upper() == 'ETH' else ret.views[0]
 
 class ThornodeServer(HTTPD):
 	name = 'thornode server'
