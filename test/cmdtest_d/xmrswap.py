@@ -331,9 +331,15 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		return self._swaptxcreate_refnum_xmr(['XMR', 'LTC'], exit_val=1)
 
 	def swaptxcreate_refnum7(self):
-		return self._swaptxcreate_refnum_xmr(['XMR', '0.2345', 'LTC'])
+		from mmgen.rpc import get_remote_rpc
+		from mmgen.protocol import init_proto
+		rpc = get_remote_rpc(self.cfg, init_proto(self.cfg, 'RUNE', network='regtest'))
+		vault_addr = rpc.inbound_addrs(coin='XMR')['address']
+		return self._swaptxcreate_refnum_xmr(
+			['XMR', '0.2345', 'LTC'],
+			add_expect_pats = [rf'Vault:.*{vault_addr}'])
 
-	def _swaptxcreate_refnum_xmr(self, args, *, exit_val=0):
+	def _swaptxcreate_refnum_xmr(self, args, *, exit_val=0, add_expect_pats=[]):
 		return self._swaptxcreate_refnum(
 			add_opts = ['--priority=3'],
 			args = args,
@@ -342,7 +348,7 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 			prompt = self.xmr_prompt,
 			exit_val = exit_val,
 			auto_dest_addr = '98831F3A:B:3',
-			expect_pats = [r'Amount:.*0.234499978787', r'Priority:.*high'])
+			expect_pats = [r'Amount:.*0.234499978787', r'Priority:.*high'] + add_expect_pats)
 
 	def swaptxsend_refnum7(self):
 		return self._swaptxsend_refnum(r'Amount:.*0.234499978787', is_xmr=True)
