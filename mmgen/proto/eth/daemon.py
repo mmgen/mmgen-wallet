@@ -124,7 +124,7 @@ class geth_daemon(ethereum_daemon):
 			['--dev', self.network=='regtest'])
 
 class reth_daemon(geth_daemon):
-	daemon_data = _dd('Reth', 2005001, '2.5.1')
+	daemon_data = _dd('Reth', 2008001, '2.8.1')
 	version_pat = r'reth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'reth'
 	version_info_arg = '--version'
