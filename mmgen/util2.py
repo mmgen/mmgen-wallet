@@ -116,8 +116,7 @@ bytespec_map = (
 	('PB', 1000000000000000),
 	('P',  1125899906842624),
 	('EB', 1000000000000000000),
-	('E',  1152921504606846976),
-)
+	('E',  1152921504606846976))
 
 def int2bytespec(n, spec, fmt, *, print_sym=True, strip=False, add_space=False):
 

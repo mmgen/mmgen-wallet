@@ -140,7 +140,7 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 			if 'closed connection' in str(e):
 				if self.daemon.use_pidfile:
 					try:
-						os.waitid(os.P_PID, int(self.daemon.pid), os.WEXITED|os.WNOHANG) # noqa ASYNC222
+						os.waitid(os.P_PID, int(self.daemon.pid), os.WEXITED|os.WNOHANG) # noqa: ASYNC222
 					# The daemon really did stop, so skip the warning and return:
 					except ChildProcessError:
 						return True

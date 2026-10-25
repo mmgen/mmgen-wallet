@@ -25,16 +25,14 @@ from ..include.common import (
 	joinpath,
 	cmp_or_die,
 	ref_kafile_pass,
-	write_to_cfgfile,
-)
+	write_to_cfgfile)
 from .include.common import (
 	dfl_words_file,
 	ref_dir,
 	chksum_pat,
 	pwfile,
 	ref_bw_file_spc,
-	skip
-)
+	skip)
 
 from .base import CmdTestBase
 from .shared import CmdTestShared

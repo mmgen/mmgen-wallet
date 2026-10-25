@@ -24,8 +24,7 @@ from ..addr import (
 	CoinAddr,
 	is_mmgen_addrtype,
 	is_coin_addr,
-	is_addrlist_id
-)
+	is_addrlist_id)
 
 def mmaddr2coinaddr(cfg, mmaddr, ad_w, ad_f, proto):
 

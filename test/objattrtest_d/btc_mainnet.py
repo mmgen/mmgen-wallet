@@ -38,8 +38,7 @@ from mmgen.seedsplit import (
 	SeedShareList,
 	SeedShareLast,
 	SeedShareMaster,
-	SeedShareMasterJoining
-)
+	SeedShareMasterJoining)
 from mmgen.proto.btc.tw.unspent import BitcoinTwUnspentOutputs
 from mmgen.tx.base import Base
 

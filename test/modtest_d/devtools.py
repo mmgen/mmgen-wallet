@@ -30,15 +30,13 @@ text_data = (
 	(textA, textB, 'a/main.py',   'b/main.py',   False, 'text: one line difference'),
 	('',    textB, 'a/main.py',   'b/main.py',   False, 'text: first file empty'),
 	(textA, textA, 'a/main.py',   'b/main.py',   False, 'text: identical files'),
-	('',    '',    'a/empty.txt', 'b/empty.txt', False, 'text: empty files'),
-)
+	('',    '',    'a/empty.txt', 'b/empty.txt', False, 'text: empty files'))
 
 json_data = (
 	(jsonA, jsonB, 'a/data.json', 'b/data.json', True,  'json: one difference'),
 	('{}',  jsonB, 'a/data.json', 'b/data.json', True,  'json: first file empty'),
 	(jsonA, jsonA, 'a/data.json', 'b/data.json', True,  'json: identical files'),
-	('{}',  '{}',  'a/data.json', 'b/data.json', True,  'json: empty files'),
-)
+	('{}',  '{}',  'a/data.json', 'b/data.json', True,  'json: empty files'))
 
 def print_hdr(hdr):
 	print('{a} {b} {c}'.format(

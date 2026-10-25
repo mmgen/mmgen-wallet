@@ -22,8 +22,7 @@ from ..include.common import (
 	cmp_or_die,
 	joinpath,
 	getrand,
-	sample_text
-)
+	sample_text)
 from .include.common import (
 	hincog_fn,
 	incog_id_fn,
@@ -31,8 +30,7 @@ from .include.common import (
 	tool_enc_passwd,
 	ref_dir,
 	ref_enc_fn,
-	cleanup_env,
-)
+	cleanup_env)
 from .base import CmdTestBase
 from .main import CmdTestMain
 

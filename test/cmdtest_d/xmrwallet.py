@@ -43,8 +43,7 @@ from ..include.common import (
 	end_silence,
 	start_test_daemons,
 	stop_test_daemons,
-	strip_ansi_escapes
-)
+	strip_ansi_escapes)
 from .include.common import get_file_with_ext
 from .include.proxy import TestProxy
 from .base import CmdTestBase

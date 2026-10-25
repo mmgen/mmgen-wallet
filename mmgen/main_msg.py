@@ -19,8 +19,7 @@ from .msg import (
 	UnsignedMsg,
 	SignedMsg,
 	SignedOnlineMsg,
-	ExportedMsgSigs,
-)
+	ExportedMsgSigs)
 
 class MsgOps:
 	ops = ('create', 'sign', 'verify')

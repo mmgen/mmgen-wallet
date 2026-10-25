@@ -86,8 +86,9 @@ class MMGenTxFile(MMGenObject):
 		if len(data) > tx.cfg.max_tx_file_size:
 			die('MaxFileSizeExceeded',
 				f'Transaction file size exceeds limit ({tx.cfg.max_tx_file_size} bytes)')
-		return (self.parse_data_json if data[0] == '{' else self.parse_data_legacy)(
-			data, infile, get_proto_only)
+		return (
+			self.parse_data_json if data[0] == '{' else
+			self.parse_data_legacy)(data, infile, get_proto_only)
 
 	def parse_data_json(self, data, infile, get_proto_only):
 		tx = self.tx

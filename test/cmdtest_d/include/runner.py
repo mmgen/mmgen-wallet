@@ -25,8 +25,7 @@ from ...include.common import (
 	ok,
 	start_test_daemons,
 	init_coverage,
-	clean
-)
+	clean)
 
 from .common import get_file_with_ext, confirm_continue
 from .cfg import cfgs

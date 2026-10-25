@@ -28,8 +28,7 @@ from .addrlist import (
 	AddrListChksum,
 	AddrListIDStr,
 	AddrListEntryBase,
-	AddrList,
-)
+	AddrList)
 
 class PasswordListEntry(AddrListEntryBase):
 	passwd  = ListItemAttr(str, typeconv=False) # TODO: create Password type

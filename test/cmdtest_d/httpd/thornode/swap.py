@@ -168,8 +168,7 @@ class ThornodeSwapServer(ThornodeServer):
 			data.update({
 				'inbound_address': make_inbound_addr(self.cfg, send_proto, send_proto.preferred_mmtypes[0]),
 				'gas_rate_units': gas_rate_units[send_proto.base_proto_coin],
-				'recommended_gas_rate': recommended_gas_rate[send_proto.base_proto_coin]
-			})
+				'recommended_gas_rate': recommended_gas_rate[send_proto.base_proto_coin]})
 
 		if send_asset == 'MM1':
 			eth_proto = init_proto(self.cfg, 'eth', network='regtest')

@@ -70,8 +70,7 @@ from test.include.common import (
 	getrandhex,
 	end_msg,
 	init_coverage,
-	get_tmpfile,
-)
+	get_tmpfile)
 set_globals(cfg)
 
 vmsg = cfg._util.vmsg

@@ -64,5 +64,4 @@ setup(
 		include_dirs = ['/usr/local/include'] if sys.platform == 'darwin' else [],
 		library_dirs = ['/usr/local/lib'] if sys.platform == 'darwin' else [],
 		extra_compile_args = ['-Wextra', '-Werror', '-fanalyzer'] if sys.platform == 'linux' else [],
-	)]
-)
+	)])

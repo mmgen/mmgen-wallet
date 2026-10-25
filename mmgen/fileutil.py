@@ -30,8 +30,7 @@ from .util import (
 	is_utf8,
 	capfirst,
 	make_full_path,
-	strip_comments,
-)
+	strip_comments)
 
 def check_or_create_dir(cfg, path):
 	try:
