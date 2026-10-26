@@ -100,7 +100,7 @@ def check_solc_version():
 	"""
 	try:
 		cp = run(['solc', '--version'], check=True, text=True, stdout=PIPE)
-	except:
+	except FileNotFoundError:
 		msg('solc missing or could not be executed') # this must go to stderr
 		return False
 

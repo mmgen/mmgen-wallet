@@ -315,7 +315,7 @@ class MMGenRegtest(MMGenObject):
 
 		try:
 			os.stat(source_rt.d.datadir)
-		except:
+		except FileNotFoundError:
 			die(1, f'Source directory {source_rt.d.datadir!r} does not exist!')
 
 		# stop the source daemon

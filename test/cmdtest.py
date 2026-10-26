@@ -108,7 +108,7 @@ from test.include.common import (
 
 try:
 	os.unlink(os.path.join(repo_root, cmdtest_py_error_fn))
-except:
+except FileNotFoundError:
 	pass
 
 os.environ['MMGEN_TEST_SUITE_LEGACY_TX'] = '1' # disabled for spawned scripts

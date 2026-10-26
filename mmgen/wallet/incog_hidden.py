@@ -97,7 +97,7 @@ class wallet(wallet):
 		check_offset = True
 		try:
 			os.stat(fn)
-		except:
+		except FileNotFoundError:
 			from ..ui import keypress_confirm, line_input
 			keypress_confirm(
 				self.cfg,

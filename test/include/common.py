@@ -342,7 +342,7 @@ def get_ethkey():
 	for cmdname in cmdnames:
 		try:
 			cp = run([cmdname, '--help'], stdout=PIPE, text=True)
-		except:
+		except FileNotFoundError:
 			pass
 		else:
 			if 'Parity' in cp.stdout:

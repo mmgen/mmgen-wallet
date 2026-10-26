@@ -58,7 +58,7 @@ def get_terminfo_colors(term=None):
 
 	try:
 		cmdout = run(cmd, stdout=PIPE, check=True, text=True).stdout
-	except:
+	except FileNotFoundError:
 		return None
 	else:
 		s = next(iter(e.split('#', 1)[1] for e in cmdout.split(',') if e.startswith('colors')))

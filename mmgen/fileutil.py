@@ -80,7 +80,7 @@ def _check_file_type_and_access(fname, ftype, *, blkdev_ok=False):
 
 	try:
 		mode = os.stat(fname).st_mode
-	except:
+	except FileNotFoundError:
 		die('FileNotFound', f'Requested {ftype} ‘{fname}’ not found')
 
 	for t in ok_types:
@@ -190,7 +190,7 @@ def write_data_to_file(
 		else:
 			try:
 				of = os.readlink(f'/proc/{os.getpid()}/fd/1') # Linux
-			except:
+			except FileNotFoundError:
 				of = None # Windows
 
 			if of:
@@ -250,7 +250,7 @@ def write_data_to_file(
 			try:
 				with open(outfile, ('r', 'rb')[bool(binary)]) as fp:
 					d = fp.read()
-			except:
+			except FileNotFoundError:
 				pass
 			if d != cmp_data:
 				die(3, f'{desc} in file {outfile!r} has been altered by some other program! Aborting file write')

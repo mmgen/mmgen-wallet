@@ -143,7 +143,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			try:
 				run([cmd, str(self.txdev.img_path), label], check=True)
 				break
-			except:
+			except FileNotFoundError:
 				if cmd == 'e2label':
 					raise
 
@@ -161,7 +161,7 @@ class CmdTestAutosignBase(CmdTestBase):
 					try:
 						run([cmd] + args, stdout=redir, stderr=redir, check=True)
 						break
-					except:
+					except FileNotFoundError:
 						if cmd == 'mkfs.ext2':
 							raise
 				self.txdev.detach(silent=True)
@@ -248,7 +248,7 @@ class CmdTestAutosignBase(CmdTestBase):
 			try:
 				if target.endswith('.rawtx'):
 					os.unlink(target.replace('.rawtx', '.sigtx'))
-			except:
+			except FileNotFoundError:
 				pass
 
 		self.do_umount()
@@ -887,7 +887,7 @@ class CmdTestAutosign(CmdTestAutosignBase):
 				for fn in fns:
 					try:
 						os.unlink(fn)
-					except:
+					except FileNotFoundError:
 						pass
 				self.bad_tx_count = 0
 		self.do_umount()

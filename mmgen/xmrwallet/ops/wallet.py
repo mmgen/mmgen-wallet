@@ -116,10 +116,9 @@ class OpWallet(OpBase):
 	def stat_wallet(fn):
 		try:
 			fn.stat()
-		except:
-			return False
-		else:
 			return True
+		except FileNotFoundError:
+			return False
 
 	@classmethod
 	def get_idx_from_fn(cls, fn):

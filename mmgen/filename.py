@@ -37,7 +37,7 @@ class File:
 
 		try:
 			st = os.stat(str(fn))
-		except:
+		except FileNotFoundError:
 			die('FileNotFound', f'{fn!s}: file not found')
 
 		import stat

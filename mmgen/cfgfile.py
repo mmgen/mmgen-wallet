@@ -44,7 +44,7 @@ class cfg_file:
 		try:
 			with open(fn) as fp:
 				return fp.read().splitlines()
-		except:
+		except FileNotFoundError:
 			if self.warn_missing:
 				self.warn_missing_file(div=fn, fmt_args=(self.desc, fn))
 			return ''

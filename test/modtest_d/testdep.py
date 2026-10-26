@@ -30,7 +30,7 @@ class unit_tests:
 			try:
 				run([cmd, '-f'], check=True, stdout=DEVNULL)
 				break
-			except:
+			except FileNotFoundError:
 				if cmd == 'losetup':
 					raise
 		return True
