@@ -245,11 +245,11 @@ class CmdTestAutosignBase(CmdTestBase):
 			target = joinpath(getattr(self.asi, tx_dir), fn)
 			if op != 'remove_signed':
 				shutil.copyfile(src, target)
-			try:
-				if target.endswith('.rawtx'):
+			if target.endswith('.rawtx'):
+				try:
 					os.unlink(target.replace('.rawtx', '.sigtx'))
-			except FileNotFoundError:
-				pass
+				except FileNotFoundError:
+					pass
 
 		self.do_umount()
 		self.remove_device()

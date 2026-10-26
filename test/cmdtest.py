@@ -195,7 +195,10 @@ if not po.user_opts.get('skip_deps'):
 	for fn in (data_dir, autosign_data_dir):
 		try:
 			os.unlink(fn)
-		except:
+		except IsADirectoryError:
+			import shutil
+			shutil.rmtree(fn)
+		except FileNotFoundError:
 			pass
 
 # step 2: opts.init will create new data_dir in test/tmp (if not po.user_opts['skip_deps'])

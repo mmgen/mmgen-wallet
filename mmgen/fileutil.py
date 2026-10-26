@@ -35,14 +35,11 @@ from .util import (
 def check_or_create_dir(cfg, path):
 	try:
 		os.listdir(path)
-	except:
-		if cfg.test_suite and os.path.exists(path): # path is a link or regular file
-			from subprocess import run
-			run(['rm', '-rf', str(path)])
-		try:
-			os.makedirs(path, 0o700)
-		except:
-			die(2, f'ERROR: unable to read or create path ‘{path}’')
+	except FileNotFoundError:
+		os.makedirs(path, 0o700) # will fail if file is a broken link
+	except NotADirectoryError: # path is a good link or regular file
+		os.unlink(path)
+		os.makedirs(path, 0o700)
 
 def check_binary(args):
 	from subprocess import run, DEVNULL

@@ -1636,7 +1636,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			time.sleep(0.2)
 		t = self.spawn('mmgen-regtest', self.regtest_opts + ['cli', 'unloadwallet', 'carol'])
 		t.ok()
-		wdir = joinpath((await self.rt.rpc).daemon.network_datadir, 'wallets', 'carol')
+		wdir = joinpath((await self.rt.rpc).daemon.network_datadir, 'carol')
 		from shutil import rmtree
 		imsg('Deleting Carol’s tracking wallet')
 		rmtree(wdir)

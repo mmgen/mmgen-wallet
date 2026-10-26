@@ -28,23 +28,20 @@ from ...objmethods import MMGenObject
 from ...daemon import CoinDaemon
 
 def create_data_dir(cfg, data_dir):
+	rt_dir = os.path.join(data_dir, 'regtest')
 	try:
-		os.stat(os.path.join(data_dir, 'regtest'))
-	except:
-		pass
+		os.stat(rt_dir)
+	except FileNotFoundError:
+		os.makedirs(rt_dir)
 	else:
 		from ...ui import keypress_confirm
 		if keypress_confirm(
 				cfg,
-				f'Delete your existing MMGen regtest setup at {data_dir!r} and create a new one?'):
-			shutil.rmtree(data_dir)
+				f'Delete your existing MMGen regtest setup at {rt_dir!r} and create a new one?'):
+			shutil.rmtree(rt_dir)
+			os.makedirs(rt_dir)
 		else:
 			die(1, 'Exiting')
-
-	try:
-		os.makedirs(data_dir)
-	except:
-		pass
 
 class MMGenRegtest(MMGenObject):
 
