@@ -540,10 +540,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 		stop_test_daemons(proto.network_id, force=True, remove_datadir=True)
 		if remove_datadir:
 			from shutil import rmtree
-			try:
-				rmtree(joinpath(self.tr.data_dir, 'regtest'))
-			except:
-				pass
+			rmtree(joinpath(self.tr.data_dir, 'regtest'), ignore_errors=True)
 		if self.deterministic:
 			action = 'Loading'
 			if not os.path.exists('wallets/alice'):
@@ -2250,8 +2247,7 @@ class CmdTestRegtest(CmdTestBase, CmdTestShared):
 			'contains no unused addresses of address type')
 
 	def bob_dump_hex_create(self):
-		if not os.path.exists(self.dump_hex_subdir):
-			os.mkdir(self.dump_hex_subdir)
+		os.makedirs(self.dump_hex_subdir, exist_ok=True)
 		autochg_arg = self._user_sid('bob') + ':C'
 		return self.txcreate_ui_common(
 			self.spawn('mmgen-txcreate',

@@ -1341,10 +1341,7 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		self.spawn(msg_only=True)
 		cmd_args = [f'--{k}={v}' for k, v in list(token_data.items())]
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
-		try:
-			os.mkdir(odir)
-		except:
-			pass
+		os.makedirs(odir, exist_ok=True)
 		cmd = [
 			'python3',
 			'scripts/create-token.py',

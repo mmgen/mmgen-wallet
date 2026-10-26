@@ -177,10 +177,7 @@ class MMGenRegtest(MMGenObject):
 
 	async def setup(self, create_wallets_only=False):
 
-		try:
-			os.makedirs(self.d.datadir)
-		except:
-			pass
+		os.makedirs(self.d.datadir, exist_ok=True)
 
 		if self.d.state != 'stopped':
 			await self.rpc_call('stop')
@@ -326,10 +323,7 @@ class MMGenRegtest(MMGenObject):
 		if self.d.state != 'stopped':
 			await self.rpc_call('stop')
 
-		try:
-			os.makedirs(self.d.datadir)
-		except:
-			pass
+		os.makedirs(self.d.datadir, exist_ok=True)
 
 		create_data_dir(self.cfg, self.d.datadir)
 		os.rmdir(self.d.datadir)

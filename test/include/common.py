@@ -243,10 +243,7 @@ def chk_equal(a, b):
 def init_coverage():
 	coverdir = os.path.join('test', 'trace')
 	acc_file = os.path.join('test', 'trace.acc')
-	try:
-		os.mkdir(coverdir, 0o755)
-	except:
-		pass
+	os.makedirs(coverdir, 0o755, exist_ok=True)
 	return coverdir, acc_file
 
 def silence():

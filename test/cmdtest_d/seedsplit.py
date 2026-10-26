@@ -93,10 +93,7 @@ class CmdTestSeedSplit(CmdTestBase):
 		return t
 
 	def ss_splt(self, tdir, ofmt, spec, add_args=[], wf=None, master=None):
-		try:
-			os.mkdir(self.get_tmp_subdir(tdir))
-		except:
-			pass
+		os.makedirs(self.get_tmp_subdir(tdir), exist_ok=True)
 		t = self.spawn('mmgen-seedsplit',
 				['-q', '-d', self.get_tmp_subdir(tdir), '-r0', '-o', ofmt]
 				+ (['-L', (spec or 'label')] if ofmt == 'w' else [])
