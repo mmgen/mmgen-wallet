@@ -372,7 +372,7 @@ class TestCoinInfo(CoinInfo):
 
 		try:
 			bl = cls.external_tests_blacklist[addr_type][tool]
-		except:
+		except KeyError:
 			pass
 		else:
 			if bl is True or coin in bl:

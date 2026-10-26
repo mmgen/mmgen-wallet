@@ -165,7 +165,7 @@ class PasswordList(AddrList):
 				pw_bytes = xmrseed().seedlen_map_rev[self.pw_len]
 				try:
 					good_pw_len = xmrseed().seedlen_map[seed.byte_len]
-				except:
+				except KeyError:
 					die(1, f'{seed.byte_len*8}: unsupported seed length for Monero new-style mnemonic')
 			case 'b32' | 'b58' as pf:
 				pw_int = (32 if pf == 'b32' else 58) ** self.pw_len

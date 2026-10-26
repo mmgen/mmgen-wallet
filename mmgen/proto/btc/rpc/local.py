@@ -392,13 +392,13 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 			try:
 				if d['softforks']['segwit']['active'] is True:
 					return True
-			except:
+			except KeyError:
 				pass
 
 			try:
 				if d['bip9_softforks']['segwit']['status'] == 'active':
 					return True
-			except:
+			except KeyError:
 				pass
 
 			return self.cfg.test_suite and self.chain != 'regtest'

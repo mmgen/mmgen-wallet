@@ -154,7 +154,7 @@ class ListItemAttr(ImmutableAttr):
 		"return None if attribute doesn't exist"
 		try:
 			return instance.__dict__[self.name]
-		except:
+		except KeyError:
 			return None
 
 	def setattr_condition(self, instance):

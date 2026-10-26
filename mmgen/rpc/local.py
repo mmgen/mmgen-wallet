@@ -172,10 +172,10 @@ class RPCClient:
 						t = json.loads(text)
 						try:
 							m = t['error']['message']
-						except:
+						except KeyError:
 							try:
 								m = t['error']
-							except:
+							except KeyError:
 								m = t
 					die('RPCFailure', m)
 		else:
