@@ -436,8 +436,7 @@ class CoinDaemon(Daemon):
 
 		fn_stem = f'{self.id}-{self.network}-daemon-{self.bind_port}'
 		self.logfile = self.network_datadir / (fn_stem + '.log')
-		if self.use_pidfile:
-			self.pidfile = self.network_datadir / (fn_stem + '.pid')
+		self.pidfile = self.network_datadir / (fn_stem + '.pid')
 
 		self.init_subclass()
 

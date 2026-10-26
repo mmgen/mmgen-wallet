@@ -116,8 +116,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			self.wallet_dir = MoneroTwCtl.get_tw_dir(self.proto)
 
 		fn_stem = f'{self.exec_fn}-{self.bind_port}'
-		if self.use_pidfile:
-			self.pidfile = self.proto.network_datadir / (fn_stem + '.pid')
+		self.pidfile = self.proto.network_datadir / (fn_stem + '.pid')
 		self.logfile = self.proto.network_datadir / (fn_stem + '.log')
 
 		self.proxy = proxy

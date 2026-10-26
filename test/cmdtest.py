@@ -195,7 +195,7 @@ if not po.user_opts.get('skip_deps'):
 	for fn in (data_dir, autosign_data_dir):
 		try:
 			os.unlink(fn)
-		except IsADirectoryError:
+		except (IsADirectoryError, PermissionError):
 			import shutil
 			shutil.rmtree(fn)
 		except FileNotFoundError:
