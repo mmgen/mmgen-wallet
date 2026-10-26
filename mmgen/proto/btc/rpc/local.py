@@ -381,27 +381,16 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 	def info(self, info_id):
 
 		def segwit_is_active():
-
-			if 'deployment_info' in self.caps:
-				return (
-					self.cached['deploymentinfo']['deployments']['segwit']['active']
-					or (self.cfg.test_suite and self.chain != 'regtest'))
-
-			d = self.cached['blockchaininfo']
-
-			try:
-				if d['softforks']['segwit']['active'] is True:
-					return True
-			except KeyError:
-				pass
-
-			try:
-				if d['bip9_softforks']['segwit']['status'] == 'active':
-					return True
-			except KeyError:
-				pass
-
-			return self.cfg.test_suite and self.chain != 'regtest'
+			for test in [
+					lambda: self.cfg.test_suite and self.chain != 'regtest',
+					lambda: self.cached['deploymentinfo']['deployments']['segwit']['active'],
+					lambda: self.cached['blockchaininfo']['softforks']['segwit']['active'],
+					lambda: self.cached['blockchaininfo']['bip9_softforks']['segwit']['status'] == 'active']:
+				try:
+					if test():
+						return True
+				except (TypeError, KeyError):
+					pass
 
 		return locals()[info_id]()
 
