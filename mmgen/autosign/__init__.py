@@ -275,7 +275,7 @@ class Autosign:
 						self.do_umount()
 						self.led.set('on')
 						raise
-				except:
+				except: # noqa: E722 (signing must always succeed so we don’t break out of loop)
 					ymsg('An error occurred with {} ‘{}’'.format(target.desc, f.name))
 				good.append(ret) if ret else bad.append(f)
 				self.cfg._util.qmsg('')

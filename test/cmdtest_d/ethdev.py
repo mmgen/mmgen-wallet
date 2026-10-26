@@ -1345,8 +1345,8 @@ class CmdTestEthdev(CmdTestEthdevMethods, CmdTestBase, CmdTestShared):
 		cmd = [
 			'python3',
 			'scripts/create-token.py',
-			'--coin=' + self.proto.coin,
-			'--outdir=' + odir
+			f'--coin={self.proto.coin}',
+			f'--outdir={odir}'
 		] + cmd_args + [self.proto.checksummed_addr(dfl_devaddr)]
 		imsg('Executing: {}'.format(' '.join(cmd)))
 		if (cp := run(cmd, stdout=DEVNULL, stderr=PIPE, text=True)).returncode:

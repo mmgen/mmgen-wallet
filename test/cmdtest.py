@@ -64,7 +64,6 @@ def create_shm_dir(data_dir, autosign_data_dir, trash_dir, trash_dir2):
 		for tdir in (autosign_data_dir, trash_dir, trash_dir2):
 			dest = os.path.join(shm_dir, os.path.basename(tdir))
 			os.mkdir(dest, 0o755)
-
 			run(f'rm -rf {tdir}', shell=True, check=True)
 			os.symlink(dest, tdir)
 
@@ -191,7 +190,7 @@ po = Config(opts_data=opts_data, parse_only=True)._parsed_opts
 
 data_dir = Config.test_datadir
 
-# step 1: delete data_dir symlink in ./test;
+# step 1: delete data_dir symlinks in test/tmp:
 if not po.user_opts.get('skip_deps'):
 	for fn in (data_dir, autosign_data_dir):
 		try:
@@ -199,7 +198,7 @@ if not po.user_opts.get('skip_deps'):
 		except:
 			pass
 
-# step 2: opts.init will create new data_dir in ./test (if not po.user_opts['skip_deps'])
+# step 2: opts.init will create new data_dir in test/tmp (if not po.user_opts['skip_deps'])
 cfg = Config(opts_data=opts_data)
 
 if cfg.no_altcoin and cfg.coin != 'BTC':

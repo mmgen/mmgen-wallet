@@ -48,8 +48,8 @@ def check_binary(args):
 	from subprocess import run, DEVNULL
 	try:
 		run(args, stdout=DEVNULL, stderr=DEVNULL, check=True)
-	except Exception:
-		die(2, f'{args[0]!r} binary missing, not in path, or not executable')
+	except Exception as e:
+		die(2, f'{args[0]!r} binary missing, not in path, or not executable ({e})')
 
 def shred_file(cfg, fn, *, iterations=30):
 	check_binary(['shred', '--version'])
@@ -137,13 +137,13 @@ def get_seed_file(cfg, *, nargs, wallets=None, invoked_as=None):
 def _open_or_die(filename, mode, *, silent=False):
 	try:
 		return open(filename, mode)
-	except Exception:
+	except Exception as e:
 		if silent:
 			die(2, '')
 		else:
 			fn = {0:'STDIN', 1:'STDOUT', 2:'STDERR'}[filename] if isinstance(filename, int) else f'‘{filename}’'
 			desc = 'reading' if 'r' in mode else 'writing'
-			die(2, f'Unable to open file {fn} for {desc}')
+			die(2, f'Unable to open file {fn} for {desc} ({e})')
 
 def write_data_to_file(
 		cfg,

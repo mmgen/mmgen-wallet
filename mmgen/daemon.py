@@ -435,9 +435,7 @@ class CoinDaemon(Daemon):
 			(self.dfl_p2p_port + self.port_shift))
 
 		fn_stem = f'{self.id}-{self.network}-daemon-{self.bind_port}'
-
 		self.logfile = self.network_datadir / (fn_stem + '.log')
-
 		if self.use_pidfile:
 			self.pidfile = self.network_datadir / (fn_stem + '.pid')
 

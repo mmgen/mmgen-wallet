@@ -187,7 +187,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
-			+ ([f'--{self.user}', '--compat'] if self.compat else [])
+			+ [f'--{self.user}']
+			+ (['--compat'] if self.compat else [])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ (self.autosign_opts if autosign else [])
 			+ [op]
@@ -340,7 +341,8 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 		args = (
 			self.extra_opts
 			+ self.autosign_opts
-			+ ([f'--{self.user}', '--compat'] if self.compat else [])
+			+ [f'--{self.user}']
+			+ (['--compat'] if self.compat else [])
 			+ [f'--daemon=localhost:{data.md.rpc_port}']
 			+ add_opts
 			+ [op]

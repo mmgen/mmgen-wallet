@@ -841,8 +841,7 @@ def check_opts(cfg): # Raises exception if any check fails
 					try:
 						os.stat(fn)
 					except Exception:
-						b = os.path.dirname(fn)
-						if b:
+						if b := os.path.dirname(fn):
 							check_outdir(b)
 					else:
 						check_outfile(fn, blkdev_ok=True)
