@@ -44,7 +44,7 @@ class RPCClient:
 			import socket
 			try:
 				socket.create_connection((host, port), timeout=1).close()
-			except:
+			except ConnectionError:
 				die('SocketError', f'Unable to connect to {host}:{port}')
 
 		self.http_hdrs = {'Content-Type': 'application/json'}

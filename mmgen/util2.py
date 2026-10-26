@@ -248,7 +248,7 @@ def port_in_use(port):
 	import socket
 	try:
 		socket.create_connection(('localhost', port)).close()
-	except:
+	except ConnectionError:
 		return False
 	else:
 		return True

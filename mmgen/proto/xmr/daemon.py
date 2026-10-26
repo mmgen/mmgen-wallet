@@ -132,7 +132,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			import socket
 			try:
 				socket.create_connection(('localhost', self.monerod_port), timeout=1).close()
-			except:
+			except ConnectionError:
 				die('SocketError', f'Unable to connect to Monero daemon at localhost:{self.monerod_port}')
 
 		self.user = user or self.cfg.wallet_rpc_user or self.cfg.monero_wallet_rpc_user

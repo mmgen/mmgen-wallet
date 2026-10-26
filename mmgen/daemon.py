@@ -231,7 +231,7 @@ class Daemon(Lockable):
 		import socket
 		try:
 			socket.create_connection((host, port), timeout=timeout).close()
-		except:
+		except ConnectionError:
 			return False
 		else:
 			return True
