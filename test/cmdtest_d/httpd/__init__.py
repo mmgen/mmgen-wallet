@@ -12,8 +12,7 @@ test.cmdtest_d.httpd: WSGI http server
 
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 
-from mmgen.util import msg
-from mmgen.util2 import port_in_use
+from mmgen.util import msg, test_socket # pylint: disable=no-name-in-module
 
 class SilentRequestHandler(WSGIRequestHandler):
 
@@ -27,7 +26,7 @@ class HTTPD:
 
 	def start(self):
 
-		if port_in_use(self.port):
+		if test_socket('localhost', self.port):
 			msg(f'\nPort {self.port} in use. Assuming {self.name} is running')
 			return True
 

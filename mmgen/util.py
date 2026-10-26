@@ -518,3 +518,14 @@ def cached_property(orig_func):
 
 def isAsync(func):
 	return bool(func.__code__.co_flags & 128)
+
+def test_socket(host, port, *, timeout=None):
+	import socket
+	try:
+		socket.create_connection(
+			(host, port),
+			**({} if timeout is None else {'timeout': timeout})).close()
+	except ConnectionError:
+		return False
+	else:
+		return True

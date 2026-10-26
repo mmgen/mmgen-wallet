@@ -13,7 +13,7 @@ rpc.local: local RPC client class for the MMGen Project
 import json, asyncio, importlib
 
 from ..cfg import gc
-from ..util import msg, die, fmt, oneshot_warning, isAsync
+from ..util import msg, die, fmt, oneshot_warning, isAsync, test_socket
 
 from . import util
 
@@ -41,10 +41,7 @@ class RPCClient:
 		util.dmsg_rpc(f'    cls [{self.name}] host [{host}] port [{port}]\n')
 
 		if test_connection:
-			import socket
-			try:
-				socket.create_connection((host, port), timeout=1).close()
-			except ConnectionError:
+			if not test_socket(host, port, timeout=1):
 				die('SocketError', f'Unable to connect to {host}:{port}')
 
 		self.http_hdrs = {'Content-Type': 'application/json'}

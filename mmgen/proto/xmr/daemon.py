@@ -13,7 +13,7 @@ proto.xmr.daemon: Monero base protocol daemon classes
 from pathlib import Path
 
 from ...cfg import gc
-from ...util import list_gen, die, contains_any
+from ...util import list_gen, die, contains_any, test_socket
 from ...daemon import CoinDaemon, RPCDaemon, _nw, _dd
 
 class monero_daemon(CoinDaemon):
@@ -128,10 +128,7 @@ class MoneroWalletDaemon(RPCDaemon):
 				proto = proto).rpc_port)
 
 		if test_monerod and self.monerod_port:
-			import socket
-			try:
-				socket.create_connection(('localhost', self.monerod_port), timeout=1).close()
-			except ConnectionError:
+			if not test_socket('localhost', self.monerod_port, timeout=1):
 				die('SocketError', f'Unable to connect to Monero daemon at localhost:{self.monerod_port}')
 
 		self.user = user or self.cfg.wallet_rpc_user or self.cfg.monero_wallet_rpc_user

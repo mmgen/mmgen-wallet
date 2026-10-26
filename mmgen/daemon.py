@@ -25,7 +25,7 @@ from pathlib import Path
 
 from .cfg import gc
 from .base_obj import Lockable
-from .util import msg, Msg_r, die, remove_dups, oneshot_warning, fmt_list
+from .util import msg, Msg_r, die, remove_dups, oneshot_warning, fmt_list, test_socket
 from .flags import ClassFlags, ClassOpts
 
 _dd = namedtuple('daemon_data', ['coind_name', 'coind_version', 'coind_version_str']) # latest tested version
@@ -150,7 +150,7 @@ class Daemon(Lockable):
 	def state(self):
 		if self.debug:
 			msg(f'Testing port {self.bind_port}')
-		return 'ready' if self.test_socket('localhost', self.bind_port) else 'stopped'
+		return 'ready' if test_socket('localhost', self.bind_port, timeout=10) else 'stopped'
 
 	@property
 	def start_cmds(self):
@@ -226,15 +226,6 @@ class Daemon(Lockable):
 	def restart(self, *, silent=False):
 		self.stop(silent=silent)
 		return self.start(silent=silent)
-
-	def test_socket(self, host, port, *, timeout=10):
-		import socket
-		try:
-			socket.create_connection((host, port), timeout=timeout).close()
-		except ConnectionError:
-			return False
-		else:
-			return True
 
 	def wait_for_state(self, req_state):
 		for _ in range(self.cfg.daemon_state_timeout * 5):

@@ -14,8 +14,7 @@ import atexit
 from subprocess import run
 
 from mmgen.cfg import gc
-from mmgen.util import msg, die, fmt
-from mmgen.util2 import port_in_use
+from mmgen.util import msg, die, fmt, test_socket # pylint: disable=no-name-in-module
 
 from ...include.common import omsg
 
@@ -72,7 +71,7 @@ class TestProxy:
 		b1 = ['localhost', 'true']
 		b2 = ['-fN', '-E', 'txrelay-proxy.debug', 'localhost']
 
-		if port_in_use(self.port):
+		if test_socket('localhost', self.port):
 			omsg(f'Port {self.port} already in use. Assuming SSH SOCKS server is running')
 		else:
 			cp = run(a + b0 + b1, capture_output=True, text=True)
