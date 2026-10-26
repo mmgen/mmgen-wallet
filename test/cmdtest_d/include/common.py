@@ -175,7 +175,7 @@ def get_comment(do_shuffle=False):
 	global label_iter
 	try:
 		return next(label_iter)
-	except:
+	except (NameError, StopIteration):
 		if do_shuffle:
 			shuffle(labels)
 		label_iter = iter(labels)

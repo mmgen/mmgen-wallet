@@ -148,6 +148,6 @@ class CmdTestBase:
 		imsg(purple(f'Killing {desc} [PID {pid}]'))
 		try:
 			os.kill(pid, SIGTERM)
-		except:
+		except ProcessLookupError:
 			imsg(yellow(f'{pid}: no such process'))
 		return 'ok'

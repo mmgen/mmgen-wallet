@@ -34,8 +34,8 @@ match gc.platform:
 	case 'win32':
 		try:
 			import msvcrt # pylint: disable=import-error
-		except:
-			die(2, 'Unable to set terminal mode')
+		except ImportError as e:
+			die(2, f'Unable to set terminal mode ({e})')
 		if not sys.stdin.isatty():
 			msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
 	case x:

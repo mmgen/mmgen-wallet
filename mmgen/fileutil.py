@@ -287,8 +287,8 @@ def get_words_from_file(cfg, infile, *, desc, quiet=False):
 
 	try:
 		words = data.decode().split()
-	except:
-		die(1, f'{capfirst(desc)} data must be UTF-8 encoded.')
+	except UnicodeError as e:
+		die(1, f'{capfirst(desc)} data must be UTF-8 encoded ({e})')
 
 	cfg._util.dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 

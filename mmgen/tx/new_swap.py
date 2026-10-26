@@ -25,7 +25,7 @@ from .new import New
 def get_send_proto(cfg):
 	try:
 		arg = cfg._args.pop(0)
-	except:
+	except IndexError:
 		cfg._usage()
 	return init_swap_proto(cfg, get_swap_asset(cfg, arg, direction='send'))
 
@@ -93,7 +93,7 @@ class NewSwap(BaseSwapMethods, New):
 		def get_arg():
 			try:
 				return args_in.pop(0)
-			except:
+			except IndexError:
 				self.cfg._usage()
 
 		async def parse():
