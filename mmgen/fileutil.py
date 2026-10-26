@@ -48,7 +48,7 @@ def check_binary(args):
 	from subprocess import run, DEVNULL
 	try:
 		run(args, stdout=DEVNULL, stderr=DEVNULL, check=True)
-	except:
+	except Exception:
 		die(2, f'{args[0]!r} binary missing, not in path, or not executable')
 
 def shred_file(cfg, fn, *, iterations=30):
@@ -137,7 +137,7 @@ def get_seed_file(cfg, *, nargs, wallets=None, invoked_as=None):
 def _open_or_die(filename, mode, *, silent=False):
 	try:
 		return open(filename, mode)
-	except:
+	except Exception:
 		if silent:
 			die(2, '')
 		else:
@@ -216,7 +216,7 @@ def write_data_to_file(
 		# MSWin workaround. See msg_r()
 		try:
 			sys.stdout.write(data.decode() if isinstance(data, bytes) else data)
-		except:
+		except Exception:
 			os.write(1, data if isinstance(data, bytes) else data.encode())
 
 	def do_file(outfile, ask_write_prompt):
@@ -260,7 +260,7 @@ def write_data_to_file(
 		try:
 			with _open_or_die(outfile, 'wb') as fp:
 				fp.write(data if binary else data.encode())
-		except:
+		except Exception:
 			die(2, f'Failed to write {desc} to file {outfile!r}')
 
 		if not (hush or quiet):

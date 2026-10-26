@@ -100,10 +100,10 @@ class TwCtlWithStore(TwCtl):
 		try:
 			self.orig_data = get_data_from_file(self.cfg, self.tw_path, quiet=True)
 			self.data = json.loads(self.orig_data)
-		except:
+		except Exception:
 			try:
 				self.tw_path.stat()
-			except:
+			except Exception:
 				self.orig_data = ''
 				self.init_empty()
 				self.force_write()

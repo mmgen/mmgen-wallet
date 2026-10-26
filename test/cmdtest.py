@@ -34,15 +34,15 @@ def create_shm_dir(data_dir, autosign_data_dir, trash_dir, trash_dir2):
 		for tdir in (data_dir, autosign_data_dir, trash_dir, trash_dir2):
 			try:
 				os.listdir(tdir)
-			except:
+			except Exception:
 				pass
 			else:
 				try:
 					shutil.rmtree(tdir)
-				except: # we couldn't remove data dir - perhaps regtest daemon is running
+				except Exception: # we couldn't remove data dir - perhaps regtest daemon is running
 					try:
 						run(['python3', os.path.join('cmds', 'mmgen-regtest'), 'stop'], check=True)
-					except:
+					except Exception:
 						die(4, f'Unable to remove {tdir!r}!')
 					else:
 						time.sleep(2)

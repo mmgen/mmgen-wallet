@@ -54,7 +54,7 @@ class BitcoinTwJSON(TwJSON):
 			try:
 				await self.twctl.rpc.check_or_create_daemon_wallet()
 				return True
-			except:
+			except Exception:
 				return False
 
 		async def get_entries(self):

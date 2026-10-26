@@ -105,12 +105,12 @@ class MMGenTermLinux(MMGenTerm):
 	def get_terminal_size(cls):
 		try:
 			ret = os.get_terminal_size()
-		except:
+		except Exception:
 			try:
 				ret = (
 					int(os.environ['COLUMNS']),
 					int(os.environ['LINES']))
-			except:
+			except Exception:
 				ret = (80, 25)
 		return _term_dimensions(*ret)
 
@@ -207,7 +207,7 @@ class MMGenTermMSWin(MMGenTerm):
 			left, top, right, bottom = struct.unpack('hhhhHhhhhhh', csbi.raw)[5:9]
 			x = right - left + 1
 			y = bottom - top + 1
-		except:
+		except Exception:
 			pass
 
 		if x and y:
@@ -276,7 +276,7 @@ class MMGenTermMSWinStub(MMGenTermMSWin):
 		while True:
 			try:
 				return sys.stdin.read(1)
-			except:
+			except Exception:
 				msg('[read error, trying again]')
 				time.sleep(0.5)
 

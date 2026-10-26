@@ -207,7 +207,7 @@ def do_pager(text):
 				input = text.encode() if pager == 'less' else (text + end_msg).encode(),
 				check = True)
 			msg_r('\r')
-		except:
+		except Exception:
 			pass
 		else:
 			break

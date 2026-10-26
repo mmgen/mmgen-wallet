@@ -121,7 +121,7 @@ def init_autosign(arg):
 	elif post_send_op:
 		try:
 			tx_range = SentTXRange(arg)
-		except:
+		except Exception:
 			die(2, f'{arg}: invalid transaction index arg '
 			'(must be a non-negative integer or hyphen-separated range)')
 	else:

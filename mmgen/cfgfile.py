@@ -58,7 +58,7 @@ class cfg_file:
 				with open(fn, 'w') as fp:
 					fp.write('\n'.join(data)+'\n')
 				os.chmod(fn, 0o600)
-			except:
+			except Exception:
 				die(2, f'ERROR: unable to write to {fn!r}')
 
 	def parse_value(self, value, refval):

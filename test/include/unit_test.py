@@ -185,7 +185,7 @@ def run_test(test, subtest=None):
 
 			if do_desc and not cfg.quiet:
 				msg('OK\n' if cfg.verbose else 'OK')
-		except:
+		except Exception:
 			if getattr(t, 'silence_output', False):
 				end_silence()
 			raise

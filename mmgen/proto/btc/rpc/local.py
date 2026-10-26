@@ -357,7 +357,7 @@ class BitcoinRPCClient(RPCClient, metaclass=AsyncInit):
 		try:
 			lines = get_lines_from_file(
 				self.cfg, fn, desc='daemon config file', silent=not self.cfg.verbose)
-		except:
+		except Exception:
 			self.cfg._util.vmsg(f'Warning: {fn!r} does not exist or is unreadable')
 			return {k: None for k in req_keys}
 

@@ -101,7 +101,7 @@ if gc.platform == 'win32':
 		try:
 			gv.stderr.write(s)
 			gv.stderr.flush()
-		except:
+		except Exception:
 			os.write(2, s.encode())
 
 	def msg(s):
@@ -111,7 +111,7 @@ if gc.platform == 'win32':
 		try:
 			gv.stdout.write(s)
 			gv.stdout.flush()
-		except:
+		except Exception:
 			os.write(1, s.encode())
 
 	def Msg(s):
@@ -392,7 +392,7 @@ def is_hex_str_lc(s):
 def is_utf8(s):
 	try:
 		s.decode('utf8')
-	except:
+	except Exception:
 		return False
 	else:
 		return True
@@ -490,7 +490,7 @@ def have_sudo(*, silent=False):
 	try:
 		run(['sudo', '--non-interactive', 'true'], stdout=redir, stderr=redir, check=True)
 		return True
-	except:
+	except Exception:
 		return False
 
 def distro_codename():

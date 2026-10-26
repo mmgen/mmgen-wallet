@@ -465,7 +465,7 @@ def dump_test(proto, kg, ag, filename):
 		qmsg_r(f'\rKey {count}/{len(dump)} ')
 		try:
 			b_sec = PrivKey(proto, wif=b_wif)
-		except:
+		except Exception:
 			die(2, f'\nInvalid {proto.network} WIF address in dump file: {b_wif}')
 		a_addr = ag.to_addr(kg.gen_data(b_sec))
 		vmsg(f'\nwif: {b_wif}\naddr: {b_addr}\n')

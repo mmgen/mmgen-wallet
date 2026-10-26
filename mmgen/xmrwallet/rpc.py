@@ -202,5 +202,5 @@ class MoneroWalletRPC:
 		ret = self.c.call('relay_tx', hex=tx_hex)
 		try:
 			msg('\n    Relayed {}'.format(CoinTxID(ret['tx_hash']).hl()))
-		except:
+		except Exception:
 			msg(f'\n   Server returned: {ret!s}')

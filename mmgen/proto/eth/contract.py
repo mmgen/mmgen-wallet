@@ -150,7 +150,7 @@ class Token(Contract):
 		try:
 			assert ret.startswith('0x')
 			return int(ret, 16)
-		except:
+		except Exception:
 			msg(f'RPC call to decimals() failed (returned {ret!r})')
 
 	async def get_total_supply(self):

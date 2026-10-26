@@ -258,7 +258,7 @@ class CoinInfo:
 	def get_entry(cls, coin, network):
 		try:
 			idx = [e.symbol for e in cls.coin_constants[network]].index(coin.upper())
-		except:
+		except Exception:
 			return None
 		return cls.coin_constants[network][idx]
 

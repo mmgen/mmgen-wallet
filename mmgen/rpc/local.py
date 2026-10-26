@@ -167,7 +167,7 @@ class RPCClient:
 						return ret
 					else:
 						return json.loads(text, parse_float=float_parser)
-				except:
+				except Exception:
 					if not m:
 						t = json.loads(text)
 						try:
@@ -184,10 +184,10 @@ class RPCClient:
 			if text:
 				try:
 					m = json.loads(text)['error']['message']
-				except:
+				except Exception:
 					try:
 						m = text.decode()
-					except:
+					except Exception:
 						m = text
 			die('RPCFailure', f'{s.value} {s.name}: {m}')
 

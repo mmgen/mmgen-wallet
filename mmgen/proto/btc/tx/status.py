@@ -38,7 +38,7 @@ class Status(TxBase.Status):
 					txid              = tx.coin_txid,
 					include_watchonly = True,
 					verbose           = False)
-			except:
+			except Exception:
 				return False
 			if ret.get('confirmations', 0) > 0:
 				r.confs = ret['confirmations']
@@ -49,14 +49,14 @@ class Status(TxBase.Status):
 		async def is_in_utxos():
 			try:
 				return 'txid' in await tx.rpc.call('getrawtransaction', tx.coin_txid, True)
-			except:
+			except Exception:
 				return False
 
 		async def is_in_mempool():
 			try:
 				await tx.rpc.call('getmempoolentry', tx.coin_txid)
 				return True
-			except:
+			except Exception:
 				return False
 
 		async def is_replaced():
@@ -68,7 +68,7 @@ class Status(TxBase.Status):
 					txid              = tx.coin_txid,
 					include_watchonly = True,
 					verbose           = False)
-			except:
+			except Exception:
 				return False
 			else:
 				if 'bip125-replaceable' in ret and ret.get('confirmations', 1) <= 0:
@@ -108,7 +108,7 @@ class Status(TxBase.Status):
 				for txid in r.replacing_txs:
 					try:
 						d.append(await tx.rpc.call('getmempoolentry', txid))
-					except:
+					except Exception:
 						d.append({})
 				for txid, mp_entry in zip(r.replacing_txs, d):
 					msg(f'  {txid}' + (' in mempool' if 'height' in mp_entry else ''))

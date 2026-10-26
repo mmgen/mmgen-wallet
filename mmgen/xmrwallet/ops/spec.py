@@ -33,7 +33,7 @@ class OpMixinSpec:
 					idx = int(m[i])
 					try:
 						res = self.kal.entry(idx)
-					except:
+					except Exception:
 						die(1,
 							'Supplied key-address file does not contain address '
 							f'{self.kal.al_id.sid}:{idx}')

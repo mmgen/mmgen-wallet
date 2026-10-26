@@ -132,7 +132,7 @@ def process_args(cmd, cmd_args, cls):
 
 		try:
 			return __builtins__[arg_type](arg)
-		except:
+		except Exception:
 			die(1, f'{arg!r}: Invalid argument for argument {arg_name} ({arg_type!r} required)')
 
 	if flag == 'VAR_ARGS':

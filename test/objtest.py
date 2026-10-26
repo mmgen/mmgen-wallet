@@ -151,7 +151,7 @@ def run_test(mod, test, arg, input_data, arg1, exc_name):
 		else:
 			try:
 				ret_disp = ret.decode()
-			except:
+			except Exception:
 				ret_disp = ret
 			msg(f'==> {ret_disp!r}')
 

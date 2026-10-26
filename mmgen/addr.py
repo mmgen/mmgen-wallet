@@ -110,7 +110,7 @@ class AddrListID(HiliteStr, InitErrors, MMGenObject):
 				sid = SeedID(sid=a)
 				try:
 					mmtype = MMGenAddrType(proto=proto, id_str=b)
-				except:
+				except Exception:
 					mmtype = MMGenPasswordType(proto=proto, id_str=b)
 			else:
 				assert isinstance(sid, SeedID), f'{sid!r} not a SeedID instance'

@@ -41,7 +41,7 @@ def launch(*, mod=None, func=None, fqmod=None, package='mmgen'):
 	except Exception as e:
 		try:
 			errmsg = str(e.args[0])
-		except:
+		except Exception:
 			errmsg = repr(e.args[0]) if e.args else repr(e)
 
 		from collections import namedtuple

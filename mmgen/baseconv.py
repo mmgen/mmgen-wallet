@@ -32,7 +32,7 @@ def is_mmgen_mnemonic(s):
 	try:
 		baseconv('mmgen').tobytes(s.split(), pad='seed')
 		return True
-	except:
+	except Exception:
 		return False
 
 class baseconv:

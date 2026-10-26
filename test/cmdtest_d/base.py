@@ -98,7 +98,7 @@ class CmdTestBase:
 		fn = os.path.join(self.tmpdir, fn)
 		try:
 			return os.unlink(fn)
-		except:
+		except Exception:
 			msg(f'{fn}: file does not exist or could not be deleted')
 
 	def skip_on_condition(self, condition, message, extra_msg):

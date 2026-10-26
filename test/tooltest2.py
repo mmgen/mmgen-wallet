@@ -94,7 +94,7 @@ def fork_cmd(cmd_name, args, opts, stdin_input):
 	cp = run(cmd, input=stdin_input or None, capture_output=True)
 	try:
 		cmd_out = cp.stdout.decode()
-	except:
+	except Exception:
 		cmd_out = cp.stdout
 	if cp.stderr:
 		vmsg(cp.stderr.strip().decode())
@@ -162,7 +162,7 @@ def check_output(out, chk):
 
 	try:
 		outd = out.decode()
-	except:
+	except Exception:
 		outd = None
 
 	err_fs = "Output ({!r}) doesn't match expected output ({!r})"
@@ -242,7 +242,7 @@ def run_test(cls, gid, cmd_name):
 
 		try:
 			vmsg(f'Output:\n{cmd_out}\n')
-		except:
+		except Exception:
 			vmsg(f'Output:\n{cmd_out!r}\n')
 
 		if isinstance(out, tuple) and type(out[0]).__name__ == 'function':

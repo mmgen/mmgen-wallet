@@ -219,7 +219,7 @@ def process_result(ret, *, pager=False, print_result=False):
 		case bytes():
 			try:
 				return triage_result(ret.decode())
-			except:
+			except Exception:
 				# don't add NL to binary data if it can't be converted to utf8
 				return os.write(1, ret) if print_result else ret
 		case _:

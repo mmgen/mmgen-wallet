@@ -172,7 +172,7 @@ class Daemon(Lockable):
 	def state_msg(self, *, extra_text=None):
 		try:
 			pid = self.pid
-		except:
+		except Exception:
 			pid = None
 		extra_text = 'not ' if self.state == 'stopped' else f'{extra_text} ' if extra_text else ''
 		return '{:{w}} {:10} {}'.format(

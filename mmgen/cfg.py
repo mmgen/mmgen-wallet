@@ -840,7 +840,7 @@ def check_opts(cfg): # Raises exception if any check fails
 				case 'hidden_incog_output_params':
 					try:
 						os.stat(fn)
-					except:
+					except Exception:
 						b = os.path.dirname(fn)
 						if b:
 							check_outdir(b)
@@ -969,5 +969,5 @@ def conv_type(name, val, refval, *, src, invert_bool=False):
 	else:
 		try:
 			return type(refval)(not val if invert_bool else val)
-		except:
+		except Exception:
 			do_fail()

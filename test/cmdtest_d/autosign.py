@@ -182,7 +182,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	def _macOS_eject_disk(self, label):
 		try:
 			run(['diskutil' , 'eject', label], stdout=DEVNULL, stderr=DEVNULL)
-		except:
+		except Exception:
 			pass
 
 	def start_daemons(self):

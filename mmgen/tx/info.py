@@ -57,7 +57,7 @@ class TxInfo:
 		else:
 			try:
 				blockcount = tx.rpc.blockcount
-			except:
+			except Exception:
 				blockcount = None
 
 		def get_max_mmwid(io):

@@ -161,7 +161,7 @@ class MMGenTxFile(MMGenObject):
 			from ast import literal_eval
 			try:
 				return literal_eval(raw_data)
-			except:
+			except Exception:
 				if desc == 'inputs':
 					ymsg('Warning: transaction data appears to be in old format')
 				import re

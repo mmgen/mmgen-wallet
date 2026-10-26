@@ -29,7 +29,7 @@ class DataOutput(bytes, InitErrors):
 		elif data_spec.startswith('data:'):
 			try:
 				ret = data_spec[5:].encode('utf8')
-			except:
+			except Exception:
 				raise ValueError(f'{cls.desc} value must be UTF-8 encoded')
 		else:
 			raise ValueError(f'{cls.desc} argument must start with ‘data:’ or ‘hexdata:’')
@@ -53,7 +53,7 @@ class DataOutput(bytes, InitErrors):
 		self.display_hex = True
 		try:
 			ret = self.decode('utf8')
-		except:
+		except Exception:
 			return self.hex()
 		else:
 			import unicodedata

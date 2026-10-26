@@ -224,7 +224,7 @@ def decode_pretty_hexdump(data):
 	lines = [pat.sub('', line) for line in data.splitlines()]
 	try:
 		return bytes.fromhex(''.join(''.join(lines).split()))
-	except:
+	except Exception:
 		msg('Data not in hexdump format')
 		return False
 

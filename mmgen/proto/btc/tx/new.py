@@ -57,7 +57,7 @@ class New(Base, TxNew):
 				self.cfg.fee_estimate_mode.upper())
 			fee_per_kb = self.proto.coin_amt(ret['feerate']) if 'feerate' in ret else None
 			fe_type = 'estimatesmartfee'
-		except:
+		except Exception:
 			args = self.rpc.daemon.estimatefee_args(self.rpc)
 			ret = await self.rpc.call('estimatefee', *args)
 			fee_per_kb = self.proto.coin_amt(ret)

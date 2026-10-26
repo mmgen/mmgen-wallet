@@ -186,7 +186,7 @@ class Autosign:
 
 			try:
 				dirlist = self.wallet_dir.iterdir()
-			except:
+			except Exception:
 				die(1,
 					f'Cannot open wallet directory ‘{self.wallet_dir}’. '
 					'Did you run ‘mmgen-autosign setup’?')
@@ -330,7 +330,7 @@ class Autosign:
 		try:
 			self.keyfile.write_text(os.urandom(32).hex())
 			self.keyfile.chmod(0o400)
-		except:
+		except Exception:
 			die(2, 'Unable to write ' + desc)
 		msg('Wrote ' + desc)
 
@@ -367,17 +367,17 @@ class Autosign:
 			import shutil
 			try:
 				shutil.rmtree(self.wallet_dir)
-			except:
+			except Exception:
 				pass
 
 		def create_wallet_dir():
 			try:
 				self.wallet_dir.mkdir(parents=True)
-			except:
+			except Exception:
 				pass
 			try:
 				self.wallet_dir.stat()
-			except:
+			except Exception:
 				die(2, f'Unable to create wallet directory ‘{self.wallet_dir}’')
 
 		self.gen_key(no_unmount=True)

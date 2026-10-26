@@ -271,7 +271,7 @@ class MMGenToolTestUtils:
 			from test.include.common import dmsg
 			try:
 				dmsg(err.decode())
-			except:
+			except Exception:
 				dmsg(repr(err))
 		if not binary:
 			out = out.decode()
@@ -354,7 +354,7 @@ tu = MMGenToolTestUtils()
 def ok_or_die(val, chk_func, s, skip_ok=False):
 	try:
 		ret = chk_func(val)
-	except:
+	except Exception:
 		ret = False
 	if ret:
 		if not skip_ok:

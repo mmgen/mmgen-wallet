@@ -138,7 +138,7 @@ def cleandir(d, do_msg=False):
 
 	try:
 		files = os.listdir(d_enc)
-	except:
+	except Exception:
 		return None
 
 	if files:
@@ -148,7 +148,7 @@ def cleandir(d, do_msg=False):
 		for f in files:
 			try:
 				os.unlink(os.path.join(d_enc, f))
-			except:
+			except Exception:
 				rmtree(os.path.join(d_enc, f), ignore_errors=True)
 
 	return files
@@ -406,7 +406,7 @@ class VirtBlockDeviceBase:
 	def try_detach(self):
 		try:
 			dev = self.dev
-		except:
+		except Exception:
 			pass
 		else:
 			self.do_detach(dev, check=False)

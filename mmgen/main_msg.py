@@ -61,7 +61,7 @@ class MsgOps:
 		async def __init__(self, msgfile, *, addr=None):
 			try:
 				m = SignedOnlineMsg(cfg, infile=msgfile)
-			except:
+			except Exception:
 				m = ExportedMsgSigs(cfg, infile=msgfile)
 
 			nSigs = await m.verify(addr=addr)
