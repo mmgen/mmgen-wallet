@@ -131,7 +131,7 @@ class EtherscanTxProxyClient(TxProxyClient):
 			msg(f'{type(e).__name__}: {e}')
 		return CoinTxID(txid) if is_coin_txid(txid) else False
 
-def send_tx(cfg, txhex):
+def send_tx(cfg, txhex, *, test=False):
 
 	c = get_client(cfg)
 	msg(f'Using {pink(cfg.tx_proxy.upper())} tx proxy')
@@ -147,10 +147,10 @@ def send_tx(cfg, txhex):
 		tx_hex    = txhex)
 	msg('done')
 
-	if cfg.test:
+	if test:
 		msg(f'Form retrieved from {orange(c.host)} and parsed')
 		msg(green('Transaction can be sent'))
-		return False
+		return None
 
 	msg_r('Sending data...')
 	result_text = c.post_form(data=post_data, timeout=180)

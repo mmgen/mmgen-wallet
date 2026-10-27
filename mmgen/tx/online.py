@@ -123,7 +123,7 @@ class OnlineSigned(Signed):
 						await asyncio.sleep(2)
 					from .tx_proxy import send_tx
 					msg('{} TX: {}'.format('Testing' if cfg.test else 'Sending', coin_txid.hl()))
-					if ret := send_tx(cfg, txhex):
+					if ret := send_tx(cfg, txhex, test=cfg.test):
 						if ret != coin_txid:
 							ymsg(f'Warning: txid mismatch (after sending) ({ret} != {coin_txid})')
 						sent_status = 'confirm_post_send'
