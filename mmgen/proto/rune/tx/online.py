@@ -28,7 +28,7 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 	async def send_checks(self):
 		pass
 
-	async def send_with_node(self, txhex):
+	async def rpc_send(self, txhex):
 		res = self.rpc.tx_op(txhex, op='broadcast_tx_sync') # broadcast_tx_async
 		if res['code'] == 0:
 			return res['hash'].lower()

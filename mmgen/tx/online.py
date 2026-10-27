@@ -149,7 +149,7 @@ class OnlineSigned(Signed):
 					else:
 						if idx != '':
 							await asyncio.sleep(1)
-						ret = await self.send_with_node(txhex)
+						ret = await self.rpc_send(txhex)
 						msg(f'Transaction sent: {coin_txid.hl()}')
 						if ret != coin_txid:
 							die('TxIDMismatch', f'txid mismatch (after sending) ({ret} != {coin_txid})')

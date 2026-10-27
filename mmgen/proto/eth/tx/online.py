@@ -31,7 +31,7 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 				self.proto.coin))
 		await self.status.display()
 
-	async def send_with_node(self, txhex):
+	async def rpc_send(self, txhex):
 		try:
 			ret = await self.rpc.call('eth_sendRawTransaction', '0x' + txhex)
 		except Exception as e:

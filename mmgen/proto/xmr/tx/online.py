@@ -22,7 +22,7 @@ class OnlineSigned(Completed, TxOnlineSigned):
 	async def check_memoless_presend(self):
 		return await super().check_memoless_presend(amt=self.send_amt)
 
-	async def send_with_node(self, txhex):
+	async def rpc_send(self, txhex):
 		op = xmrwallet_op('submit', self.cfg, self.infile, None, compat_call=True)
 		await op.restart_wallet_daemon()
 		self.compat_data = await op.main()

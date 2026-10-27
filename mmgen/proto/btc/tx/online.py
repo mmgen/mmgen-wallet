@@ -50,7 +50,7 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 			msg(ret['reject-reason'])
 			return False
 
-	async def send_with_node(self, txhex):
+	async def rpc_send(self, txhex):
 		try:
 			return await self.rpc.call('sendrawtransaction', txhex)
 		except Exception as e:
