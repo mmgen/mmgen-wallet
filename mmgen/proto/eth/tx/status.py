@@ -15,7 +15,7 @@ from ....util import msg, suf, capfirst
 
 class Status(TxBase.Status):
 
-	async def display(self, *, idx=''):
+	async def display(self, *, idx=0):
 
 		def do_return(exitval, message):
 			if message:
@@ -23,8 +23,9 @@ class Status(TxBase.Status):
 			return exitval
 
 		tx = self.tx
-		coin_txid = '0x' + getattr(tx, f'coin_txid{idx}')
-		tx_desc = 'transaction' + (f' {idx}' if idx else '')
+		sfx = idx + 1 if idx else ''
+		coin_txid = '0x' + getattr(tx, f'coin_txid{sfx}')
+		tx_desc = 'transaction' + (f' {sfx}' if sfx else '')
 
 		async def is_in_mempool():
 			if not 'full_node' in tx.rpc.caps:

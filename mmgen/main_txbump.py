@@ -211,7 +211,7 @@ async def main():
 				TxKeys(cfg, tx2, seedfiles=seedfiles, keylist=kl, keyaddrlist=kal).keys):
 			tx4 = await OnlineSignedTX(cfg=cfg, data=tx3.__dict__)
 			tx4.file.write(ask_write=False)
-			sys.exit(await tx4.send(cfg, asi if cfg.autosign else None))
+			sys.exit(await tx4.send(cfg, 'rpc_send', None, asi if cfg.autosign else None))
 		else:
 			die(2, 'Transaction could not be signed')
 	else:

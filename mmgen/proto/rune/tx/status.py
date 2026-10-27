@@ -15,7 +15,7 @@ from ....tx import status as TxBase
 
 class Status(TxBase.Status):
 
-	async def display(self, *, idx=''):
+	async def display(self, *, idx=0):
 
 		try:
 			self.tx.rpc.tx_info(self.tx.coin_txid)

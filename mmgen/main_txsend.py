@@ -20,7 +20,7 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 
 import sys
 
-from .cfg import gc, Config
+from .cfg import gc, Config, fmt_opt
 from .util import msg, async_run, die
 
 opts_data = {
@@ -97,14 +97,30 @@ if cfg.autosign and cfg.outdir:
 if cfg.mark_sent and not cfg.autosign:
 	die(1, '--mark-sent is used only in combination with --autosign')
 
-if cfg.test and cfg.dump_hex:
-	die(1, '--test cannot be used in combination with --dump-hex')
+opt_ops = (
+	'test',
+	'dump_hex',
+	'status',
+	'receipt',
+	'mark_sent',
+	'abort')
 
-if cfg.dump_hex and cfg.dump_hex != '-':
+match [op for op in opt_ops if getattr(cfg, op) is not None]:
+	case []:
+		op = 'proxy_send' if cfg.tx_proxy else 'rpc_send'
+		op_val = None
+	case [usr_op]:
+		op = ('proxy_test' if cfg.tx_proxy else 'rpc_test') if usr_op == 'test' else usr_op
+		op_val = getattr(cfg, usr_op)
+	case usr_ops:
+		die(1, 'Only one of the following options may be specified: {}'.format(
+			', '.join(fmt_opt(op) for op in usr_ops)))
+
+if op == 'dump_hex' and op_val != '-':
 	from .fileutil import check_outfile_dir
-	check_outfile_dir(cfg.dump_hex)
+	check_outfile_dir(op_val)
 
-post_send_op = cfg.status or cfg.receipt
+post_send_op = op in ('status', 'receipt')
 asi, tx_range = (None, None)
 
 def init_autosign(arg):
@@ -114,7 +130,7 @@ def init_autosign(arg):
 	from .tx.online import SentTXRange
 	asi = mount_removable_device(cfg)
 	si = Signable.automount_transaction(asi)
-	if cfg.abort:
+	if op == 'abort':
 		si.shred_abortable() # prompts user, then raises exception or exits
 	elif post_send_op and (si.unsent or si.unsigned):
 		die(1, 'Transaction is {}'.format('unsent' if si.unsent else 'unsigned'))
@@ -139,7 +155,7 @@ match cfg._args:
 	case _:
 		cfg._usage()
 
-if not cfg.status:
+if not post_send_op:
 	from .ui import do_license_msg
 	do_license_msg(cfg)
 
@@ -170,7 +186,7 @@ async def process_tx(tx):
 
 	txcfg = Config({'_clone': cfg, 'proto': tx.proto, 'coin': tx.proto.coin})
 
-	if (not post_send_op) and cfg.tx_proxy:
+	if op == 'proxy_send':
 		from .tx.tx_proxy import check_client
 		check_client(txcfg)
 
@@ -178,10 +194,11 @@ async def process_tx(tx):
 		from .rpc import rpc_init
 		tx.rpc = await rpc_init(txcfg)
 
+	if op == 'mark_sent':
+		await tx.post_send(asi)
+		return 0
+
 	if not post_send_op:
-		if cfg.mark_sent:
-			await tx.post_send(asi)
-			return 0
 
 		if tx.is_swap or tx.is_refreq:
 			tx.check_swap_network()
@@ -198,7 +215,7 @@ async def process_tx(tx):
 			if tx.has_comment and tx.add_comment() and not cfg.autosign:
 				tx.file.write(ask_write_default_yes=True)
 
-	return await tx.send(txcfg, asi, batch=batch)
+	return await tx.send(txcfg, op, op_val, asi, batch=batch)
 
 async def main():
 	if cfg.autosign and post_send_op:

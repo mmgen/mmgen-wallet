@@ -18,6 +18,13 @@ from ..color import pink, yellow
 
 from .signed import Signed, AutomountSigned
 
+def test_txid(txid, txid_chk):
+	if txid == txid_chk:
+		return 0
+	else:
+		ymsg(f'Warning: txid mismatch (after sending) ({txid} != {txid_chk})')
+		return 1
+
 class SentTXRange(MMGenRange):
 	min_idx = 0
 	max_idx = 1_000_000
@@ -26,6 +33,9 @@ class CreatedTXRange(SentTXRange):
 	pass
 
 class OnlineSigned(Signed):
+	"""
+	send_op_*() methods return an integer exit value to the system
+	"""
 
 	@property
 	def status(self):
@@ -78,94 +88,104 @@ class OnlineSigned(Signed):
 			ask_overwrite = False,
 			ask_write     = False)
 
-	async def send(self, cfg, asi, batch=False):
+	async def send_op_status(self, cfg, idx, txid, txhex, op_val):
+		if cfg.verbose:
+			await self.post_network_send(txid)
+		else:
+			cfg._util.qmsg(f'{self.proto.coin} TxID: {txid.hl()}')
+		return await self.status.display(idx=idx)
+
+	async def send_op_receipt(self, cfg, idx, txid, txhex, op_val):
+		if res := await self.get_receipt(txid, receipt_only=True):
+			import json
+			Msg(json.dumps(res, indent=4))
+			return 0
+		else:
+			msg(f'Unable to get receipt for TX {txid.hl()}')
+			return 1
+
+	async def send_op_dump_hex(self, cfg, idx, txid, txhex, op_val):
+		from ..fileutil import write_data_to_file
+		sfx = idx + 1 if idx else ''
+		write_data_to_file(
+			cfg,
+			('-' if op_val == '-' else f'{op_val}{sfx}'),
+			txhex + '\n',
+			desc = 'serialized transaction hex data',
+			ask_overwrite = False,
+			ask_tty = False)
+		return 0
+
+	async def send_op_rpc_send(self, cfg, idx, txid, txhex, op_val):
+		msg(f'Sending TX: {txid.hl()}')
+		if cfg.test_suite_bogus_send:
+			msg(f'BOGUS transaction NOT sent: {txid.hl()}')
+			return 0
+		else:
+			if idx:
+				await asyncio.sleep(1)
+			ret = await self.rpc_send(txhex)
+			msg(f'Transaction sent: {txid.hl()}')
+			return test_txid(ret, txid)
+
+	async def send_op_rpc_test(self, cfg, idx, txid, txhex, op_val):
+		if await self.test_sendable(txhex):
+			gmsg('Transaction can be sent')
+			return 0
+		else:
+			ymsg('Transaction cannot be sent')
+			return 1
+
+	async def send_op_proxy_send(self, cfg, idx, txid, txhex, op_val, *, test=False):
+		if idx and not cfg.test_suite:
+			await asyncio.sleep(2)
+		from .tx_proxy import send_tx
+		msg('{} TX: {}'.format('Testing' if test else 'Sending', txid.hl()))
+		ret = send_tx(cfg, txhex, test=test)
+		return 0 if test else test_txid(ret, txid)
+
+	async def send_op_proxy_test(self, cfg, idx, txid, txhex, op_val):
+		return await self.send_op_proxy_send(cfg, idx, txid, txhex, op_val, test=True)
+
+	async def send(self, cfg, op, op_val, asi, batch=False):
 		"""
 		returns an integer exit value to the system
 		"""
 
-		status_exitval = None
-		sent_status = None
-		all_ok = True
-		idxs = ['', '2']
+		sending = op in ('rpc_send', 'proxy_send')
+		idxs = (
+			[int(cfg.txhex_idx) - 1] if cfg.txhex_idx else
+			[0, 1] if getattr(self, 'coin_txid2', None) else
+			[0])
+		ret = []
+		post_network_ret = []
 
-		if cfg.txhex_idx and getattr(self, 'coin_txid2', None):
-			idxs = ['' if cfg.txhex_idx == '1' else cfg.txhex_idx]
-
-		if not (cfg.status or cfg.receipt or cfg.dump_hex or cfg.test):
+		if sending:
 			self.confirm_send(idxs)
 
 		for idx in idxs:
-			if coin_txid := getattr(self, f'coin_txid{idx}', None):
-				txhex = getattr(self, f'serialized{idx}')
-				if cfg.status:
-					if cfg.verbose:
-						await self.post_network_send(coin_txid)
-					else:
-						cfg._util.qmsg(f'{self.proto.coin} TxID: {coin_txid.hl()}')
-					status_exitval = await self.status.display(idx=idx)
-				elif cfg.receipt:
-					if res := await self.get_receipt(coin_txid, receipt_only=True):
-						import json
-						Msg(json.dumps(res, indent=4))
-					else:
-						msg(f'Unable to get receipt for TX {coin_txid.hl()}')
-				elif cfg.dump_hex:
-					from ..fileutil import write_data_to_file
-					write_data_to_file(
-							cfg,
-							cfg.dump_hex + idx,
-							txhex + '\n',
-							desc = 'serialized transaction hex data',
-							ask_overwrite = False,
-							ask_tty = False)
-				elif cfg.tx_proxy:
-					if idx != '' and not cfg.test_suite:
-						await asyncio.sleep(2)
-					from .tx_proxy import send_tx
-					msg('{} TX: {}'.format('Testing' if cfg.test else 'Sending', coin_txid.hl()))
-					if ret := send_tx(cfg, txhex, test=cfg.test):
-						if ret != coin_txid:
-							ymsg(f'Warning: txid mismatch (after sending) ({ret} != {coin_txid})')
-						sent_status = 'confirm_post_send'
-					if cfg.test:
-						break
-				elif cfg.test:
-					if await self.test_sendable(txhex):
-						gmsg('Transaction can be sent')
-					else:
-						ymsg('Transaction cannot be sent')
-				else: # node send
-					msg(f'Sending TX: {coin_txid.hl()}')
-					if cfg.test_suite_bogus_send:
-						msg(f'BOGUS transaction NOT sent: {coin_txid.hl()}')
-					else:
-						if idx != '':
-							await asyncio.sleep(1)
-						ret = await self.rpc_send(txhex)
-						msg(f'Transaction sent: {coin_txid.hl()}')
-						if ret != coin_txid:
-							die('TxIDMismatch', f'txid mismatch (after sending) ({ret} != {coin_txid})')
-					sent_status = 'no_confirm_post_send'
+			sfx = idx + 1 if idx else ''
+			txid = getattr(self, f'coin_txid{sfx}')
+			txhex = getattr(self, f'serialized{sfx}')
+			ret.append(await getattr(self, f'send_op_{op}')(cfg, idx, txid, txhex, op_val))
+			if op == 'proxy_send' and cfg.test:
+				continue
+			if sending and cfg.wait:
+				post_network_ret.append(await self.post_network_send(txid))
 
-				if cfg.wait and sent_status:
-					res = await self.post_network_send(coin_txid)
-					if all_ok:
-						all_ok = res
-
-		if not cfg.txhex_idx and sent_status and all_ok:
+		if sending and all(post_network_ret) and not cfg.txhex_idx:
 			from ..ui import keypress_confirm
-			if sent_status == 'no_confirm_post_send' or not asi or keypress_confirm(
+			if op == 'rpc_send' or not asi or keypress_confirm(
 					cfg, 'Mark transaction as sent on removable device?'):
 				await self.post_send(asi)
 
-		if status_exitval is not None:
-			if cfg.verbose:
-				if batch:
-					self.info.view(pause=False, terse=True)
-				else:
-					self.info.view_with_prompt('View transaction details?', pause=False)
-			return status_exitval
-		return 0
+		if op == 'status' and cfg.verbose:
+			if batch:
+				self.info.view(pause=False, terse=True)
+			else:
+				self.info.view_with_prompt('View transaction details?', pause=False)
+
+		return max(ret)
 
 class AutomountOnlineSigned(AutomountSigned, OnlineSigned):
 	pass

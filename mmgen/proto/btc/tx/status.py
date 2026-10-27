@@ -18,7 +18,7 @@ from ....util2 import format_elapsed_hr
 
 class Status(TxBase.Status):
 
-	async def display(self, *, idx=''):
+	async def display(self, *, idx=0):
 
 		def do_return(exitval, message):
 			if message:
@@ -112,3 +112,5 @@ class Status(TxBase.Status):
 				for txid, mp_entry in zip(r.replacing_txs, d):
 					msg(f'  {txid}' + (' in mempool' if 'height' in mp_entry else ''))
 			return do_return(0, '')
+		else:
+			return do_return(3, 'Transaction is in an unknown state')

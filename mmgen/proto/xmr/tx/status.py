@@ -16,7 +16,7 @@ from ....xmrwallet import op as xmrwallet_op
 
 class Status(TxBase.Status):
 
-	async def display(self, *, idx=''):
+	async def display(self, *, idx=0):
 		tx = self.tx
 		if tx.cfg.verbose:
 			msg(f'{tx.proto.coin} TxID: {tx.coin_txid.hl()}')

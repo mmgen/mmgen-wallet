@@ -184,7 +184,7 @@ async def main():
 	if tx3:
 		tx3.file.write(ask_write=False)
 		tx4 = await SentTX(cfg=cfg, data=tx3.__dict__)
-		return await tx4.send(cfg, asi=None)
+		return await tx4.send(cfg, 'rpc_send', None, asi=None)
 	else:
 		die(2, 'Transaction could not be signed')
 
