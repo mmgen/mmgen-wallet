@@ -82,8 +82,9 @@ class OnlineSigned(Signed):
 
 	async def send(self, cfg, asi, batch=False):
 		"""
-		returns integer exit val to system
+		returns an integer exit value to the system
 		"""
+
 		status_exitval = None
 		sent_status = None
 		all_ok = True
