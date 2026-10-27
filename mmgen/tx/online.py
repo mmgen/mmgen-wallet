@@ -67,8 +67,6 @@ class OnlineSigned(Signed):
 				self.proto.network.upper()),
 			expect = 'YES')
 		msg('Sending transaction')
-		if len(idxs) > 1 and getattr(self, 'coin_txid2', None) and self.is_swap:
-			ymsg('Warning: two transactions (approval and router) will be broadcast to the network')
 
 	async def post_send(self, asi):
 		from . import SentTX
@@ -90,14 +88,8 @@ class OnlineSigned(Signed):
 		all_ok = True
 		idxs = ['', '2']
 
-		if cfg.txhex_idx:
-			if getattr(self, 'coin_txid2', None):
-				if cfg.txhex_idx in ('1', '2'):
-					idxs = ['' if cfg.txhex_idx == '1' else cfg.txhex_idx]
-				else:
-					die(1, f'{cfg.txhex_idx}: invalid parameter for --txhex-idx (must be 1 or 2)')
-			else:
-				die(1, 'Transaction has only one part, so --txhex-idx makes no sense')
+		if cfg.txhex_idx and getattr(self, 'coin_txid2', None):
+			idxs = ['' if cfg.txhex_idx == '1' else cfg.txhex_idx]
 
 		if not (cfg.status or cfg.receipt or cfg.dump_hex or cfg.test):
 			self.confirm_send(idxs)

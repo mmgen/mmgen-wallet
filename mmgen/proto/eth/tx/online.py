@@ -10,7 +10,7 @@
 proto.eth.tx.online: Ethereum online signed transaction class
 """
 
-from ....util import msg, die
+from ....util import msg, ymsg, die
 from ....color import yellow, green, orange
 from ....tx import online as TxBase
 from .. import erigon_sleep
@@ -20,6 +20,11 @@ class OnlineSigned(Signed, TxBase.OnlineSigned):
 
 	async def test_sendable(self, txhex):
 		raise NotImplementedError('transaction testing not implemented for Ethereum')
+
+	def confirm_send(self, idxs):
+		super().confirm_send(idxs)
+		if len(idxs) > 1 and self.is_swap:
+			ymsg('Warning: two transactions (approval and router) will be broadcast to the network')
 
 	async def send_checks(self):
 		self.check_correct_chain()

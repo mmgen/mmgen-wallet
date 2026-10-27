@@ -25,7 +25,6 @@ class Status(TxBase.Status):
 				msg(message)
 			return exitval
 
-		assert idx == '', f'multiple txhex not supported for {self.tx.proto}'
 		tx = self.tx
 
 		class r:

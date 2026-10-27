@@ -159,6 +159,15 @@ async def process_tx(tx):
 	if tx.is_compat and not cfg.autosign:
 		die(1, 'Sending XMR transaction via compatibility layer requires --autosign')
 
+	if cfg.txhex_idx:
+		if not 'multiple_txhex' in tx.proto.mmcaps:
+			die(1, f'--txhex-idx not supported for {tx.proto.name} protocol')
+		if getattr(tx, 'coin_txid2', None):
+			if cfg.txhex_idx not in ('1', '2'):
+				die(1, f'{cfg.txhex_idx}: invalid parameter for --txhex-idx (must be 1 or 2)')
+		else:
+			die(1, '--txhex-idx not supported for transactions with only one part')
+
 	txcfg = Config({'_clone': cfg, 'proto': tx.proto, 'coin': tx.proto.coin})
 
 	if (not post_send_op) and cfg.tx_proxy:
