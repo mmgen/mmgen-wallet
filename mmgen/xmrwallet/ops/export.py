@@ -41,6 +41,7 @@ class OpExportOutputs(OpWallet):
 			old_fn = getattr(MoneroWalletOutputsFile, ftype).find_fn_from_wallet_fn(
 				cfg             = self.cfg,
 				wallet_fn       = fn,
+				wallet_dir      = None if self.cfg.autosign else self.wd.wallet_dir,
 				ret_on_no_match = True)
 			if old_fn:
 				old_fn.unlink()

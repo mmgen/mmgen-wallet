@@ -9,6 +9,7 @@
 """
 xmrwallet.ops.import: Monero wallet ops for the MMGen Suite
 """
+from pathlib import Path
 
 from ...util import msg, bmsg, die, suf
 
@@ -19,19 +20,16 @@ from .wallet import OpWallet
 
 class OpImportOutputs(OpWallet):
 	action = 'importing wallet outputs into'
-	start_daemon = False
+	stem = 'process'
+	return_data = True
+	main_starts_daemon = True
 
-	async def main(self, fn, wallet_idx, *, restart_daemon=True):
-		outputs_file = fn
-		if restart_daemon:
-			await self.restart_wallet_daemon()
-		h = MoneroWalletRPC(self, self.addr_data[0])
-		self.head_msg(wallet_idx, fn)
-		if restart_daemon:
-			h.open_wallet(refresh=False)
-		m = MoneroWalletOutputsFile.Unsigned(
-			parent = self,
-			fn     = fn)
+	async def process_wallet(self, d, fn, last):
+		h = MoneroWalletRPC(self, d)
+		h.open_wallet(refresh=False)
+		self.head_msg(d.idx, h.fn)
+		outputs_file = Path(self.uargs.spec)
+		m = MoneroWalletOutputsFile.Unsigned(parent=self, fn=outputs_file)
 		res = self.c.call(
 			'import_outputs',
 			outputs_data_hex = m.data.outputs_data_hex)
@@ -63,6 +61,7 @@ class OpImportKeyImages(OpWallet):
 		keyimage_fn = MoneroWalletOutputsFile.Signed.find_fn_from_wallet_fn(
 			self.cfg,
 			fn,
+			wallet_dir = None if self.cfg.autosign else self.wd.wallet_dir,
 			ret_on_no_match = True)
 		if not keyimage_fn:
 			msg(f'No signed key image file found for wallet #{d.idx}')

@@ -12,6 +12,7 @@ autosign.signable: Signable class for MMGen Wallet autosigning
 
 import sys
 
+from ..cfg import Config
 from ..tx import UnsignedTX, SignedTX
 from ..util import msg, msg_r, gmsg, bmsg, die, suf, fmt_list
 from ..color import yellow, red, orange
@@ -238,10 +239,12 @@ class Signable:
 		automount = True
 		summary_footer = ''
 
-		def need_daemon_restart(self, m, new_idx):
+		def get_cfg(self, new_idx):
 			old_idx = self.parent.xmr_cur_wallet_idx
 			self.parent.xmr_cur_wallet_idx = new_idx
-			return old_idx != new_idx or m.wd.state != 'ready'
+			return Config({
+				'_clone': self.parent.xmrwallet_cfg,
+				'no_restart_wallet_daemon': old_idx == new_idx})
 
 		def print_summary(self, signables):
 			bmsg('\nAutosign summary:')
@@ -267,11 +270,12 @@ class Signable:
 			tx = MoneroMMGenTX.Completed(self.parent.xmrwallet_cfg, f, silent_load=silent_load)
 			m = xmrwallet.op(
 				'sign',
-				self.parent.xmrwallet_cfg,
+				self.get_cfg(tx.src_wallet_idx), # sets wallet idx
 				infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
 				wallets = str(tx.src_wallet_idx),
+				spec = f, # tx file
 				compat_call = compat_call)
-			return await m.main(f, restart_daemon=self.need_daemon_restart(m, tx.src_wallet_idx))
+			return (await m.main())[0]
 
 	class xmr_compat_transaction(xmr_transaction):
 		desc = 'Monero compat transaction'
@@ -307,10 +311,11 @@ class Signable:
 			wallet_idx = xmrwallet.op_cls('wallet').get_idx_from_fn(f)
 			m = xmrwallet.op(
 				'import_outputs',
-				self.parent.xmrwallet_cfg,
+				self.get_cfg(wallet_idx), # sets wallet idx
 				infile  = str(self.parent.wallet_files[0]), # MMGen wallet file
-				wallets = str(wallet_idx))
-			obj = await m.main(f, wallet_idx, restart_daemon=self.need_daemon_restart(m, wallet_idx))
+				wallets = str(wallet_idx),
+				spec = f)
+			obj = (await m.main())[0]
 			obj.write(quiet=not obj.data.sign)
 			self.action_desc = 'imported and signed' if obj.data.sign else 'imported'
 			return obj

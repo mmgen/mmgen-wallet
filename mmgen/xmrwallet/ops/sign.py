@@ -10,22 +10,22 @@
 xmrwallet.ops.sign: Monero wallet ops for the MMGen Suite
 """
 
+from pathlib import Path
 from ..rpc import MoneroWalletRPC
 
 from .wallet import OpWallet
 
 class OpSign(OpWallet):
 	action = 'signing transaction with'
-	start_daemon = False
+	stem = 'process'
+	return_data = True
+	main_starts_daemon = True
 
-	async def main(self, fn, *, restart_daemon=True):
-		if restart_daemon:
-			await self.restart_wallet_daemon()
-		tx = self.get_tx_cls('Unsigned')(self.cfg, fn)
-		h = MoneroWalletRPC(self, self.addr_data[0])
-		self.head_msg(tx.src_wallet_idx, h.fn)
-		if restart_daemon:
-			h.open_wallet(refresh=False)
+	async def process_wallet(self, d, fn, last):
+		h = MoneroWalletRPC(self, d)
+		h.open_wallet(refresh=False)
+		self.head_msg(d.idx, h.fn)
+		tx = self.get_tx_cls('Unsigned')(self.cfg, Path(self.uargs.spec))
 		res = self.c.call(
 			'sign_transfer',
 			unsigned_txset = tx.data.unsigned_txset,

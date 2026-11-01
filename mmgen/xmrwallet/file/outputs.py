@@ -108,8 +108,8 @@ class MoneroWalletOutputsFile:
 			self.check_checksums(d_wrap)
 
 		@classmethod
-		def find_fn_from_wallet_fn(cls, cfg, wallet_fn, *, ret_on_no_match=False):
-			path = get_autosign_obj(cfg).xmr_outputs_dir or Path()
+		def find_fn_from_wallet_fn(cls, cfg, wallet_fn, *, ret_on_no_match=False, wallet_dir=None):
+			path = wallet_dir or get_autosign_obj(cfg).xmr_outputs_dir or Path()
 			pat = cls.fn_fs.format(
 				a = wallet_fn.name,
 				b = f'[0-9a-f]{{{cls.chksum_nchars}}}\\',
