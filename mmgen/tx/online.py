@@ -168,12 +168,10 @@ class OnlineSigned(Signed):
 			txid = getattr(self, f'coin_txid{sfx}')
 			txhex = getattr(self, f'serialized{sfx}')
 			ret.append(await getattr(self, f'send_op_{op}')(cfg, idx, txid, txhex, op_val))
-			if op == 'proxy_send' and cfg.test:
-				continue
-			if sending and cfg.wait:
+			if cfg.wait and sending and not ret[-1]:
 				post_network_ret.append(await self.post_network_send(txid))
 
-		if sending and all(post_network_ret) and not cfg.txhex_idx:
+		if sending and all(post_network_ret) and not (cfg.txhex_idx or max(ret)):
 			from ..ui import keypress_confirm
 			if op == 'rpc_send' or not asi or keypress_confirm(
 					cfg, 'Mark transaction as sent on removable device?'):
