@@ -67,6 +67,7 @@ cmd_groups_extra = {
 	'create_ref_tx':          gd('CmdTestCreateRefTX',          {'modname': 'misc', 'full_data': True}),
 	'xmr_autosign_nocompat':  gd('CmdTestXMRAutosignNoCompat',  {'modname': 'xmr_autosign'}),
 	'xmr_watchonly':          gd('CmdTestXMRWatchOnly',         {'modname': 'xmrwallet'}),
+	'xmr_compat_dev':         gd('CmdTestXMRCompatDev',         {'modname': 'xmr_autosign'}),
 }
 
 cfgs = { # addr_idx_lists (except 31, 32, 33, 34) must contain exactly 8 addresses

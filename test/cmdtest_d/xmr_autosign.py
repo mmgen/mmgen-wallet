@@ -930,3 +930,32 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		t.read() # required!
 		self.remove_device_online()
 		return t
+
+class CmdTestXMRCompatDev(CmdTestXMRCompat):
+	"""
+	Monero autosigning operations (compat mode, for development)
+	"""
+	extra_daemons = []
+	tx_relay_user = None
+	user_data = (
+		#      user    sid       autosign kal_range add_coind_args
+		udata('miner', '98831F3A', False, '1', []),
+		udata('alice', 'FE3C6545', True,  '1', []))
+	cmd_group = (
+		('autosign_setup',      'autosign setup with user’s seed'),
+		('autosign_xmr_setup',  'autosign setup (creation of Monero signing wallet)'),
+		('addrimport_user',     'creating (importing) user’s watch-only wallet from key-address file'),
+		('gen_kafile_miner',    'generating key-address file for Miner'),
+		('gen_vkafile_user',    'generating viewkey-address file for user'),
+		('create_wallet_miner', 'creating Monero wallet for Miner'),
+		('mine_initial_coins',  'mining initial coins'),
+		('fund_user1',          'sending funds to user (wallet #1)'),
+		('check_bal_alice',     'mining, checking balance'),
+		('user_txcreate1',      'creating a transaction'),
+		('wait_loop_start_xmr', 'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
+		('wait_signed1',        'autosigning the transaction'),
+		('wait_loop_kill',      'stopping autosign wait loop'),
+		('stop_daemons',        'stopping all wallet and coin daemons'))
+
+	def wait_loop_start_xmr(self):
+		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=xmr'])
