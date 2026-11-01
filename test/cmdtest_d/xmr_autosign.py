@@ -284,7 +284,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 
 	def _create_wallets(self, op='create'):
 		self.insert_device_online()
-		t = self.create_wallets(self.user, op=op)
+		t = self.create_wallets(self.user, op=op, watch_only=True)
 		t.read() # required!
 		self.remove_device_online()
 		return t
@@ -616,7 +616,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		if expect_str:
 			t.expect(expect_str, regex=True)
 		if create_address_files:
-			self._create_address_files(t, self.user)
+			self._create_address_files(t, self.user, watch_only=True)
 		t.read() # required!
 		self.remove_device_online()
 		return t

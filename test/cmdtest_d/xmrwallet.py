@@ -50,7 +50,8 @@ from .base import CmdTestBase
 
 udata = namedtuple(
 	'user_data_in',
-	'user sid autosign kal_range add_coind_args')
+	'user sid autosign kal_range add_coind_args watch_only',
+	defaults = [False])
 
 # atexit functions:
 def stop_daemons(self):
@@ -171,14 +172,21 @@ class CmdTestXMRWallet(CmdTestBase):
 			'autosign',
 			'kal_range',
 			'kafile',
+			'vkafile',
+			'dfl_kafile',
 			'walletfile_fs',
+			'wo_walletfile_fs',
+			'dfl_walletfile_fs',
 			'addrfile_fs',
+			'wo_addrfile_fs',
+			'dfl_addrfile_fs',
 			'md',
 			'md_rpc',
 			'wd',
 			'wd_rpc',
 			'add_coind_args',
-		])
+			'watch_only',
+		], defaults=[False])
 
 		for d in self.user_data:
 
@@ -217,9 +225,13 @@ class CmdTestXMRWallet(CmdTestBase):
 				test_connection = False)
 
 			network_suf = '.regtest'
-			kafile_suf, fn_stem = (
-				('.vkeys', 'MoneroWatchOnlyWallet') if d.autosign else
-				('.akeys', 'MoneroWallet'))
+			kafile_ext = 'akeys'
+			vkafile_ext = 'vkeys'
+			wf_stem = 'MoneroWallet'
+			wo_wf_stem = 'MoneroWatchOnlyWallet'
+			dfl_kafile_ext, dfl_wf_stem = (
+				('vkeys', wo_wf_stem) if d.autosign or d.watch_only else
+				('akeys', wf_stem))
 
 			self.users[d.user] = ud(
 				cfg            = usr_cfg,
@@ -229,14 +241,21 @@ class CmdTestXMRWallet(CmdTestBase):
 				udir           = udir,
 				twdir          = wd.wallet_dir,
 				kal_range      = d.kal_range,
-				kafile         = str(udir / f'{d.sid}-XMR-M[{d.kal_range}]{network_suf}{kafile_suf}'),
-				walletfile_fs  = str(wd.wallet_dir / f'{d.sid}-{{}}-{fn_stem}{network_suf}'),
-				addrfile_fs    = str(wd.wallet_dir / f'{d.sid}-{{}}-{fn_stem}{network_suf}.address.txt'),
+				kafile         = str(udir / f'{d.sid}-XMR-M[{d.kal_range}]{network_suf}.{kafile_ext}'),
+				vkafile        = str(udir / f'{d.sid}-XMR-M[{d.kal_range}]{network_suf}.{vkafile_ext}'),
+				dfl_kafile     = str(udir / f'{d.sid}-XMR-M[{d.kal_range}]{network_suf}.{dfl_kafile_ext}'),
+				walletfile_fs  = str(wd.wallet_dir / f'{d.sid}-{{}}-{wf_stem}{network_suf}'),
+				wo_walletfile_fs = str(wd.wallet_dir / f'{d.sid}-{{}}-{wo_wf_stem}{network_suf}'),
+				dfl_walletfile_fs = str(wd.wallet_dir / f'{d.sid}-{{}}-{dfl_wf_stem}{network_suf}'),
+				addrfile_fs    = str(wd.wallet_dir / f'{d.sid}-{{}}-{wf_stem}{network_suf}.address.txt'),
+				wo_addrfile_fs = str(wd.wallet_dir / f'{d.sid}-{{}}-{wo_wf_stem}{network_suf}.address.txt'),
+				dfl_addrfile_fs = str(wd.wallet_dir / f'{d.sid}-{{}}-{dfl_wf_stem}{network_suf}.address.txt'),
 				md             = md,
 				md_rpc         = md_rpc,
 				wd             = wd,
 				wd_rpc         = wd_rpc,
-				add_coind_args = d.add_coind_args)
+				add_coind_args = d.add_coind_args,
+				watch_only     = d.autosign or d.watch_only)
 
 	def init_daemon_args(self):
 		for u in self.users:
@@ -275,20 +294,21 @@ class CmdTestXMRWallet(CmdTestBase):
 	def create_wallets_alice(self):
 		return self.create_wallets('alice')
 
-	def _create_address_files(self, t, user, wallet=None):
+	def _create_address_files(self, t, user, *, wallet=None, watch_only=False):
 		data = self.users[user]
 		for i in MMGenRange(wallet or data.kal_range).items:
 			write_data_to_file(
 				self.cfg,
-				data.addrfile_fs.format(i),
+				getattr(data, 'wo_addrfile_fs' if watch_only else 'addrfile_fs').format(i),
 				t.expect_getend('Address: '),
 				ask_overwrite = False,
 				quiet = True)
 
-	def create_wallets(self, user, wallet=None, add_opts=[], op='create'):
+	def create_wallets(self, user, wallet=None, add_opts=[], op='create', watch_only=False):
 		assert wallet is None or is_int(wallet), 'wallet arg'
 		data = self.users[user]
-		stem_glob = data.walletfile_fs.format(wallet or '*')
+		fs = getattr(data, 'wo_walletfile_fs' if watch_only else 'walletfile_fs')
+		stem_glob = fs.format(wallet or '*')
 		for glob in (
 				stem_glob,
 				stem_glob + '.keys',
@@ -299,12 +319,13 @@ class CmdTestXMRWallet(CmdTestBase):
 			self.extra_opts
 			+ [f'--{user}']
 			+ (['--compat'] if self.compat else [])
+			+ (['--watch-only'] if watch_only else [])
 			+ (self.autosign_opts if data.autosign else [])
 			+ add_opts
 			+ [op]
-			+ ([] if data.autosign else [data.kafile])
+			+ ([] if data.autosign else [data.vkafile if watch_only else data.kafile])
 			+ [wallet or data.kal_range])
-		self._create_address_files(t, user, wallet)
+		self._create_address_files(t, user, wallet=wallet, watch_only=watch_only)
 		return t
 
 	def _new_addr_user(self, user, spec, cfg, expect, kafile=None, do_autosign=False):
@@ -321,7 +342,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ (['--no-start-wallet-daemon'] if cfg in ('continue', 'stop') else [])
 			+ (['--no-stop-wallet-daemon'] if cfg in ('start', 'continue') else [])
 			+ ['new']
-			+ ([] if do_autosign else [kafile or data.kafile])
+			+ ([] if do_autosign else [kafile or data.dfl_kafile])
 			+ [spec])
 		t.expect(expect, 'y', regex=True)
 		if do_autosign:
@@ -371,7 +392,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	async def _fund_user(self, user, wallet=1, amt=1234567891234, addr=None):
 		self.spawn(msg_only=True, extra_desc='(transferring funds from Miner wallet)')
-		addr = addr or read_from_file(self.users[user].addrfile_fs.format(wallet))
+		addr = addr or read_from_file(self.users[user].dfl_addrfile_fs.format(wallet))
 		imsg(f'Dest: {addr}')
 		await self.transfer('miner', amt, addr)
 		return 'ok'
@@ -416,7 +437,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ [f'--{user}']
 			+ add_opts
 			+ cmd_opts
-			+ ['label', data.kafile, label_spec])
+			+ ['label', data.dfl_kafile, label_spec])
 		if add_timestr_resp:
 			t.expect('(y/N): ', add_timestr_resp)
 		t.expect('(y/N): ', 'y')
@@ -454,14 +475,14 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ (self.autosign_opts if data.autosign else [])
 			+ add_opts
 			+ [op]
-			+ ([] if data.autosign else [data.kafile])
+			+ ([] if data.autosign else [data.dfl_kafile])
 			+ ([wallets] if wallets else []))
 		wlist = AddrIdxList(fmt_str=wallets) if wallets else MMGenRange(data.kal_range).items
 		for n, wnum in enumerate(wlist, 1):
 			t.expect('ing wallet {}/{} ({})'.format(
 				n,
 				len(wlist),
-				os.path.basename(data.walletfile_fs.format(wnum))))
+				os.path.basename(data.dfl_walletfile_fs.format(wnum))))
 			if op in ('view', 'listview'):
 				t.expect('Wallet height: ')
 			else:
@@ -507,7 +528,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ add_opts
 			+ (self.autosign_opts if data.autosign else [])
 			+ [op]
-			+ ([] if data.autosign else [data.kafile])
+			+ ([] if data.autosign else [data.dfl_kafile])
 			+ [arg2],
 			extra_desc = f'({capfirst(user)}{add_desc})')
 
@@ -520,7 +541,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			if use_existing:
 				t.expect(rf'to last existing {desc} .* \(y/N\): ', 'y', regex=True)
 
-		dtype = 'unsigned' if data.autosign else 'signed'
+		dtype = 'unsigned' if data.watch_only else 'signed'
 		t.expect(f'Save {dtype} transaction? (y/N): ', 'y')
 		t.written_to_file(f'{dtype.capitalize()} transaction')
 
@@ -554,11 +575,11 @@ class CmdTestXMRWallet(CmdTestBase):
 		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 1, 'unlocked balance > 1')
 
 	async def sweep_to_same_account_noproxy(self):
-		self.do_op('sweep', 'alice', '2:1', self.tx_relay_daemon_parm)
+		self.do_op('sweep', 'alice', '2:1', tx_relay_parm=self.tx_relay_daemon_parm)
 		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 0.9, 'unlocked balance > 0.9')
 
 	async def transfer_to_miner_proxy(self):
-		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
+		addr = read_from_file(self.users['miner'].dfl_addrfile_fs.format(2))
 		amt = '0.135'
 		self.do_op(
 			'transfer',
@@ -572,7 +593,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 0.9, 'unlocked balance > 0.9')
 
 	async def transfer_to_miner_noproxy(self):
-		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
+		addr = read_from_file(self.users['miner'].dfl_addrfile_fs.format(2))
 		self.do_op(
 			'transfer',
 			'alice',
@@ -585,7 +606,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	def transfer_to_miner_create(self, amt):
 		get_file_with_ext(self.users['alice'].udir, 'sigtx', delete_all=True)
-		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
+		addr = read_from_file(self.users['miner'].dfl_addrfile_fs.format(2))
 		return self.do_op(
 			'transfer',
 			'alice',
@@ -650,10 +671,10 @@ class CmdTestXMRWallet(CmdTestBase):
 			self.insert_device_online()
 			self.do_mount_online()
 		silence()
-		kal = (ViewKeyAddrList if data.autosign else KeyAddrList)(
+		kal = (ViewKeyAddrList if data.watch_only else KeyAddrList)(
 			cfg      = data.cfg,
 			proto    = data.cfg._proto,
-			infile   = data.kafile,
+			infile   = data.dfl_kafile,
 			skip_chksum_msg = True,
 			key_address_validity_check = False)
 		end_silence()
@@ -663,7 +684,7 @@ class CmdTestXMRWallet(CmdTestBase):
 		data.wd.start(silent=self.tr.quiet)
 		return data.wd_rpc.call(
 			'open_wallet',
-			filename = os.path.basename(data.walletfile_fs.format(wnum)),
+			filename = os.path.basename(data.dfl_walletfile_fs.format(wnum)),
 			password = kal.entry(wnum).wallet_passwd)
 
 	async def stop_wallet_user(self, user):
@@ -716,7 +737,7 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	async def start_mining(self):
 		data = self.users['miner']
-		addr = read_from_file(data.addrfile_fs.format(1)) # mine to wallet #1, account 0
+		addr = read_from_file(data.dfl_addrfile_fs.format(1)) # mine to wallet #1, account 0
 
 		for _ in range(20):
 			# NB: threads_count > 1 provides no benefit and leads to connection errors with MSWin/MSYS2
@@ -889,3 +910,45 @@ class CmdTestXMRWallet(CmdTestBase):
 			stop_miner_wallet_daemon(self)
 			atexit.unregister(stop_miner_wallet_daemon)
 		return 'silent'
+
+class CmdTestXMRWatchOnly(CmdTestXMRWallet):
+	"""
+	Monero legacy watch-only wallet operations
+	"""
+
+	tx_relay_user = None
+	user = 'alice'
+	user_data = (
+		#      user    sid       autosign kal_range add_coind_args (watch_only)
+		udata('miner', '98831F3A', False, '1', []),
+		udata('alice', 'FE3C6545', False, '1', [], True))
+
+	cmd_group = (
+		('daemon_version',          'checking daemon version'),
+		('gen_kafiles_miner_alice', 'generating key-address files for Miner and Alice'),
+		('gen_vkafile_alice',       'generating viewkey-address file for Alice'),
+		('create_wallet_miner',     'creating Monero wallets (Miner)'),
+		('create_wallet_alice',     'creating Monero wallet (Alice)'),
+		('create_wo_wallet_alice',  'creating watch-only Monero wallet (Alice)'),
+		('mine_initial_coins',      'mining initial coins'),
+		('fund_alice',              'sending funds'),
+		('check_bal_alice',         'mining, checking balance'),
+		('sweep',                   'creating a sweep transaction'),
+	)
+
+	def gen_vkafile_alice(self):
+		return self._gen_kafiles([self.user], add_opts=['--viewkeys'])
+
+	def create_wallet_alice(self):
+		return self.create_wallets('alice')
+
+	def create_wo_wallet_alice(self):
+		return self.create_wallets('alice', watch_only=True)
+
+	def create_wallet_miner(self):
+		return self.create_wallets('miner')
+
+	async def sweep(self):
+		get_file_with_ext(self.users[self.user].udir, 'rawtx', delete_all=True)
+		self.do_op('sweep', 'alice', '1:0', add_opts=['--watch-only'], no_relay=True)
+		return 'ok'
