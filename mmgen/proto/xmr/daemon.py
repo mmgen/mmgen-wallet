@@ -96,6 +96,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			monerod_addr = None,
 			proxy       = None,
 			datadir     = None,
+			offline     = False,
 			disable_authentication = False,
 			trust_monerod = False,
 			test_monerod = False,
@@ -120,11 +121,12 @@ class MoneroWalletDaemon(RPCDaemon):
 		self.logfile = self.proto.network_datadir / (fn_stem + '.log')
 
 		self.proxy = proxy
-		self.monerod_addr = monerod_addr
+		self.monerod_addr = None if offline else monerod_addr
 		self.monerod_port = (
-			None if monerod_addr else
+			None if offline or monerod_addr else
 			CoinDaemon(
 				cfg   = self.cfg,
+				test_user = test_user,
 				proto = proto).rpc_port)
 
 		if test_monerod and self.monerod_port:
@@ -144,19 +146,20 @@ class MoneroWalletDaemon(RPCDaemon):
 
 		self.daemon_args = list_gen(
 			['--disable-rpc-login', self.disable_authentication],
-			['--trusted-daemon', trust_monerod],
-			['--untrusted-daemon', not trust_monerod],
+			['--trusted-daemon', not offline and trust_monerod],
+			['--untrusted-daemon', not offline and not trust_monerod],
 			[f'--rpc-bind-port={self.rpc_port}'],
 			[f'--wallet-dir={self.wallet_dir}'],
 			[f'--log-file={self.logfile}'],
 			[f'--rpc-login={self.user}:{self.passwd}', not self.disable_authentication],
 			[f'--daemon-address={self.monerod_addr}', self.monerod_addr],
-			[f'--daemon-port={self.monerod_port}',    not self.monerod_addr],
-			[f'--proxy={self.proxy}',                self.proxy],
-			[f'--pidfile={self.pidfile}',            self.use_pidfile],
-			['--detach',                             not (self.opt.no_daemonize or gc.platform=='win32')],
-			['--stagenet',                           self.network == 'testnet'],
-			['--allow-mismatched-daemon-version',    self.test_suite])
+			[f'--daemon-port={self.monerod_port}', self.monerod_port],
+			[f'--proxy={self.proxy}',              self.proxy],
+			[f'--pidfile={self.pidfile}',          self.use_pidfile],
+			['--stagenet',                         self.network == 'testnet'],
+			['--detach',                           not (self.opt.no_daemonize or gc.platform=='win32')],
+			['--offline',                          offline],
+			['--allow-mismatched-daemon-version',  not offline and self.test_suite])
 
 		from .rpc import MoneroWalletRPCClient
 		self.rpc = MoneroWalletRPCClient(

@@ -66,14 +66,12 @@ class OpWallet(OpBase):
 			proto       = self.proto,
 			monerod_addr = self.cfg.daemon or None,
 			disable_authentication = self.disable_authentication,
+			offline = self.wallet_offline,
 			trust_monerod = self.trust_monerod,
 			test_monerod = not self.wallet_offline)
 
 		if self.is_create and self.cfg.compat:
 			self.wd.wallet_dir.mkdir(parents=True, exist_ok=True)
-
-		if self.wallet_offline:
-			self.wd.usr_daemon_args = ['--offline']
 
 		self.c = MoneroWalletRPCClient(
 			cfg             = self.cfg,
