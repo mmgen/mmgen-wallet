@@ -114,7 +114,8 @@ class OpWallet(OpBase):
 		if (
 				self.to_process
 				and self.start_daemon
-				and not self.cfg.no_start_wallet_daemon):
+				and not self.cfg.no_start_wallet_daemon
+				and not (self.cfg.no_restart_wallet_daemon and self.wd.state == 'ready')):
 			if self.main_starts_daemon:
 				self.need_daemon_start = True
 			else:

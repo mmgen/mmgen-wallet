@@ -78,6 +78,7 @@ opts_data = {
 -R, --no-relay                   Save transaction to file instead of relaying
 -s, --no-start-wallet-daemon     Don’t start the wallet daemon at startup
 -S, --no-stop-wallet-daemon      Don’t stop the wallet daemon at exit
+-x, --no-restart-wallet-daemon   Don’t start wallet daemon if already started
 -W, --watch-only                 Create or operate on watch-only wallets
 -w, --wallet-dir=D               Output or operate on wallets in directory 'D'
                                  instead of the working directory
