@@ -287,6 +287,7 @@ class Signable:
 		async def sign(self, f, compat_call=False):
 			tx1 = UnsignedTX(cfg=self.parent.xmrwallet_cfg, filename=f, quiet_open=True)
 			tx2 = SignedTX(cfg=self.parent.xmrwallet_cfg, data=tx1.__dict__, automount=self.automount)
+			del tx2._compat_tx # force cached property to reload the underlying data
 			tx2.compat_data = await self.do_sign(f, compat_call=compat_call, silent_load=True)
 			tx2.file.write(ask_write=False, outdir=self.dir)
 			return tx2
