@@ -25,7 +25,7 @@ from ..include.common import (
 from .include.common import get_file_with_ext, cleanup_env
 
 from .shared import CmdTestShared
-from .xmrwallet import CmdTestXMRWallet
+from .xmrwallet import CmdTestXMRWallet, udata
 from .autosign import CmdTestAutosignThreaded
 
 def make_burn_addr(cfg):
@@ -45,9 +45,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 	# xmrwallet attrs:
 	tx_relay_user = 'miner'
 	user_data = (
-		# user    sid       autosign kal_range add_coind_args
-		('miner', '98831F3A', False, '1',   []),
-		('alice', 'FE3C6545', True,  '1-2', []))
+		#      user    sid       autosign kal_range add_coind_args
+		udata('miner', '98831F3A', False, '1',   []),
+		udata('alice', 'FE3C6545', True,  '1-2', []))
 
 	# autosign attrs:
 	coins = ['xmr']

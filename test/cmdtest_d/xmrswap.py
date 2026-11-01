@@ -12,6 +12,7 @@ test.cmdtest_d.xmrswap: Monero swap tests for the cmdtest.py test suite
 
 import json
 
+from .xmrwallet import udata
 from .xmr_autosign import CmdTestXMRCompat
 from .swap import CmdTestSwap, CmdTestSwapMethods, create_cross_methods
 
@@ -370,9 +371,9 @@ class CmdTestXMRSwapXMR(CmdTestXMRSwapMethods, CmdTestSwapMethods, CmdTestXMRCom
 	tx_relay_user = None
 	user = 'bob'
 	user_data = (
-		# user    sid       autosign kal_range add_coind_args
-		('miner', 'FE3C6545', False, '1',   []),
-		('bob',   '98831F3A', True,  '1-2', []))
+		#      user    sid       autosign kal_range add_coind_args
+		udata('miner', 'FE3C6545', False, '1',   []),
+		udata('bob',   '98831F3A', True,  '1-2', []))
 
 	cmd_group = CmdTestXMRCompat.cmd_group + (
 		('user_txcreate_sweep1',       'creating a sweep transaction (address sweep)'),

@@ -48,6 +48,10 @@ from .include.common import get_file_with_ext
 from .include.proxy import TestProxy
 from .base import CmdTestBase
 
+udata = namedtuple(
+	'user_data_in',
+	'user sid autosign kal_range add_coind_args')
+
 # atexit functions:
 def stop_daemons(self):
 	for v in self.users.values():
@@ -68,10 +72,11 @@ class CmdTestXMRWallet(CmdTestBase):
 	dfl_random_txs = 3
 	color = True
 	user_data = (
-		# user    sid      autosign  kal_range add_coind_args
-		('miner', '98831F3A', False, '1-2', []),
-		('bob',   '1378FC64', False, None,  ['--restricted-rpc']),
-		('alice', 'FE3C6545', False, '1-4', []))
+		# kal_range must be None, a single digit, or a single hyphenated range
+		#      user    sid      autosign  kal_range add_coind_args (watch_only)
+		udata('miner', '98831F3A', False, '1-2', []),
+		udata('bob',   '1378FC64', False, None,  ['--restricted-rpc']),
+		udata('alice', 'FE3C6545', False, '1-4', []))
 	tx_relay_user = 'bob'
 	daemon_datadir_base = os.path.join('test', 'daemons', 'xmrtest')
 	compat = False
@@ -174,21 +179,16 @@ class CmdTestXMRWallet(CmdTestBase):
 			'wd_rpc',
 			'add_coind_args',
 		])
-		# kal_range must be None, a single digit, or a single hyphenated range
-		for (
-				user,
-				sid,
-				autosign,
-				kal_range,
-				add_coind_args) in self.user_data:
 
-			usr_cfg = Config({'_clone': self.cfg, 'test_user': user, 'wallet_rpc_password': 'abc'})
+		for d in self.user_data:
+
+			usr_cfg = Config({'_clone': self.cfg, 'test_user': d.user, 'wallet_rpc_password': 'abc'})
 			udir = usr_cfg._proto.network_datadir
 
 			md = CoinDaemon(
 				cfg        = usr_cfg,
 				proto      = usr_cfg._proto,
-				test_user  = user,
+				test_user  = d.user,
 				opts       = ['online'])
 
 			md_rpc = MoneroRPCClient(
@@ -204,8 +204,8 @@ class CmdTestXMRWallet(CmdTestBase):
 			wd = MoneroWalletDaemon(
 				cfg          = usr_cfg,
 				proto        = usr_cfg._proto,
-				test_user    = user,
-				wallet_dir   = None if autosign else
+				test_user    = d.user,
+				wallet_dir   = None if d.autosign else
 					(usr_cfg._proto.network_datadir / 'tracking-wallets'),
 				user         = 'foo',
 				passwd       = 'bar',
@@ -218,25 +218,25 @@ class CmdTestXMRWallet(CmdTestBase):
 
 			network_suf = '.regtest'
 			kafile_suf, fn_stem = (
-				('.vkeys', 'MoneroWatchOnlyWallet') if autosign else
+				('.vkeys', 'MoneroWatchOnlyWallet') if d.autosign else
 				('.akeys', 'MoneroWallet'))
 
-			self.users[user] = ud(
+			self.users[d.user] = ud(
 				cfg            = usr_cfg,
-				sid            = sid,
-				mmwords        = f'test/ref/{sid}.mmwords',
-				autosign       = autosign,
+				sid            = d.sid,
+				mmwords        = f'test/ref/{d.sid}.mmwords',
+				autosign       = d.autosign,
 				udir           = udir,
 				twdir          = wd.wallet_dir,
-				kal_range      = kal_range,
-				kafile         = str(udir / f'{sid}-XMR-M[{kal_range}]{network_suf}{kafile_suf}'),
-				walletfile_fs  = str(wd.wallet_dir / f'{sid}-{{}}-{fn_stem}{network_suf}'),
-				addrfile_fs    = str(wd.wallet_dir / f'{sid}-{{}}-{fn_stem}{network_suf}.address.txt'),
+				kal_range      = d.kal_range,
+				kafile         = str(udir / f'{d.sid}-XMR-M[{d.kal_range}]{network_suf}{kafile_suf}'),
+				walletfile_fs  = str(wd.wallet_dir / f'{d.sid}-{{}}-{fn_stem}{network_suf}'),
+				addrfile_fs    = str(wd.wallet_dir / f'{d.sid}-{{}}-{fn_stem}{network_suf}.address.txt'),
 				md             = md,
 				md_rpc         = md_rpc,
 				wd             = wd,
 				wd_rpc         = wd_rpc,
-				add_coind_args = add_coind_args)
+				add_coind_args = d.add_coind_args)
 
 	def init_daemon_args(self):
 		for u in self.users:
