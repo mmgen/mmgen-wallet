@@ -22,6 +22,7 @@ class OpImportOutputs(OpWallet):
 	start_daemon = False
 
 	async def main(self, fn, wallet_idx, *, restart_daemon=True):
+		outputs_file = fn
 		if restart_daemon:
 			await self.restart_wallet_daemon()
 		h = MoneroWalletRPC(self, self.addr_data[0])
@@ -34,17 +35,17 @@ class OpImportOutputs(OpWallet):
 		res = self.c.call(
 			'import_outputs',
 			outputs_data_hex = m.data.outputs_data_hex)
-		idata = res['num_imported']
-		bmsg(f'\n  {idata} output{suf(idata)} imported')
+		count = res['num_imported']
+		bmsg(f'\n  {count} output{suf(count)} imported')
 		if m.data.sign:
 			data = m.data._asdict()
 			data.update(self.c.call('export_key_images', all=True))
 			m = MoneroWalletOutputsFile.SignedNew(
 				parent    = self,
-				wallet_fn = m.get_wallet_fn(fn),
+				wallet_fn = m.get_wallet_fn(outputs_file),
 				data      = data)
-			idata = m.data.signed_key_images or []
-			bmsg(f'  {len(idata)} key image{suf(idata)} signed')
+			kdata = m.data.signed_key_images or []
+			bmsg(f'  {len(kdata)} key image{suf(kdata)} signed')
 		else:
 			m.data = m.data._replace(imported=True)
 		return m

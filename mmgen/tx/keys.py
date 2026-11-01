@@ -7,7 +7,7 @@
 #   https://gitlab.com/mmgen/mmgen-wallet
 
 """
-tx.keys: transaction keys class for the MMGen suite
+tx.keys: transaction signing keys class for the MMGen Project
 """
 
 from ..cfg import gc
@@ -69,7 +69,8 @@ class TxKeys:
 	key-address files for all MMGen addresses involved in the transaction must be
 	provided.
 
-	Verification of the swap memo against TX metadata is also performed.
+	For swap transactions, verification of the swap memo against TX metadata is
+	also performed.
 	"""
 	def __init__(
 			self,

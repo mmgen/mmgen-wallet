@@ -213,6 +213,7 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('swaptxsend_refreq7',       'sending the transaction'),
 		('swaptxcreate_refnum7_bad', 'creating an XMR->LTC swap transaction (bad, no amount)'),
 		('swaptxcreate_refnum7',     'creating an XMR->LTC swap transaction (auto chg, auto dest)'),
+		('xmr_swaptxview_refnum7',   ''),
 		('swaptxsend_refnum7',       'sending the transaction'),
 		('swaptxstatus_refnum7a',    'getting the transaction status (mempool)'),
 		('xmr_mine_blocks_10',       ''),
@@ -380,6 +381,7 @@ class CmdTestXMRSwapXMR(CmdTestXMRSwapMethods, CmdTestSwapMethods, CmdTestXMRCom
 		('new_address_user1',          'adding an address to user’s wallet (acct 0)'),
 		('new_address_user2',          'adding an address to user’s wallet (acct 0)'),
 		('new_account_user',           'adding an account to user’s wallet'),
+		('swaptxview_refnum7',         'viewing the transaction'),
 		('user_listaddresses_refresh', 'listing the user’s wallet, with refresh'))
 
 	def user_txcreate_sweep1(self):
@@ -404,3 +406,14 @@ class CmdTestXMRSwapXMR(CmdTestXMRSwapMethods, CmdTestSwapMethods, CmdTestXMRCom
 			'stop',
 			r'Creating new account for wallet .*1.* with label '
 			r'.*‘xmrwallet new account .*y/N\): ')
+
+	def swaptxview_refnum7(self):
+		self.insert_device_online()
+		self.do_mount_online()
+		tdir = self.asi_online.mountpoint / 'txauto'
+		files = [str(p) for p in tdir.glob('*XMR*rawtx')]
+		t = self.spawn('mmgen-tool', ['txview'] + files)
+		t.read()
+		self.do_umount_online()
+		self.remove_device_online()
+		return t

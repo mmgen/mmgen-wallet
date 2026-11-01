@@ -64,7 +64,7 @@ def stop_miner_wallet_daemon(self):
 
 class CmdTestXMRWallet(CmdTestBase):
 	"""
-	Monero wallet operations
+	Monero legacy wallet operations
 	"""
 
 	networks = ('xmr',)
@@ -482,6 +482,7 @@ class CmdTestXMRWallet(CmdTestBase):
 			op,
 			user,
 			arg2,
+			*,
 			tx_relay_parm = None,
 			no_relay      = False,
 			use_existing  = False,
@@ -544,7 +545,12 @@ class CmdTestXMRWallet(CmdTestBase):
 		return await self.mine_chk('alice', 3, 0, lambda x: x.ub > 1, 'unlocked balance > 1')
 
 	async def sweep_to_wallet_account_proxy(self):
-		self.do_op('sweep', 'alice', '3:0,2:1', self.tx_relay_daemon_proxy_parm, add_opts=['--priority=3', '-Ee'])
+		self.do_op(
+			'sweep',
+			'alice',
+			'3:0,2:1',
+			tx_relay_parm = self.tx_relay_daemon_proxy_parm,
+			add_opts      = ['--priority=3', '-Ee'])
 		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 1, 'unlocked balance > 1')
 
 	async def sweep_to_same_account_noproxy(self):
@@ -554,7 +560,11 @@ class CmdTestXMRWallet(CmdTestBase):
 	async def transfer_to_miner_proxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
 		amt = '0.135'
-		self.do_op('transfer', 'alice', f'2:1:{addr},{amt}', self.tx_relay_daemon_proxy_parm)
+		self.do_op(
+			'transfer',
+			'alice',
+			f'2:1:{addr},{amt}',
+			tx_relay_parm = self.tx_relay_daemon_proxy_parm)
 		await self.stop_wallet_user('miner')
 		await self.open_wallet_user('miner', 2)
 		await self.mine_chk('miner', 2, 0, lambda x: str(x.ub) == amt, f'unlocked balance == {amt}')
@@ -563,7 +573,12 @@ class CmdTestXMRWallet(CmdTestBase):
 
 	async def transfer_to_miner_noproxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
-		self.do_op('transfer', 'alice', f'2:1:{addr},0.0995', self.tx_relay_daemon_parm, add_opts=['--full-address'])
+		self.do_op(
+			'transfer',
+			'alice',
+			f'2:1:{addr},0.0995',
+			tx_relay_parm = self.tx_relay_daemon_parm,
+			add_opts     = ['--full-address'])
 		await self.mine_chk('miner', 2, 0, lambda x: str(x.ub) == '0.2345', 'unlocked balance == 0.2345')
 		ok()
 		return await self.mine_chk('alice', 2, 1, lambda x: x.ub > 0.9, 'unlocked balance > 0.9')
@@ -571,7 +586,13 @@ class CmdTestXMRWallet(CmdTestBase):
 	def transfer_to_miner_create(self, amt):
 		get_file_with_ext(self.users['alice'].udir, 'sigtx', delete_all=True)
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
-		return self.do_op('transfer', 'alice', f'2:1:{addr},{amt}', no_relay=True, do_ret=True, add_opts=['-Ee'])
+		return self.do_op(
+			'transfer',
+			'alice',
+			f'2:1:{addr},{amt}',
+			no_relay = True,
+			do_ret   = True,
+			add_opts = ['-Ee'])
 
 	def transfer_to_miner_create1(self):
 		return self.transfer_to_miner_create('0.0111')

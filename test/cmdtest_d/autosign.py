@@ -665,8 +665,6 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 
 	def wait_loop_kill(self):
 		self.spawn(msg_only=True)
-		if self.cfg.no_daemon_stop:
-			return 'skip_msg'
 		return self._kill_process_from_pid_file('autosign_thread_pid', 'autosign wait loop')
 
 	def _wait_signed(self, desc):
