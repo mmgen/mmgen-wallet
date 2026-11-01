@@ -88,6 +88,15 @@ kafile_arg_ops = (
 	'dump',
 	'restore')
 
+file_arg_ops = (
+	'export_outputs',
+	'export_outputs_sign',
+	'import_key_images',
+	'import_outputs',
+	'sign',
+	'txview',
+	'txlist')
+
 opts = (
 	'wallet_dir',
 	'daemon',

@@ -102,30 +102,29 @@ opts_data = {
 
 cfg = Config(opts_data=opts_data, init_opts={'coin':'xmr'})
 
-cmd_args = cfg._args
-
-if cmd_args and cfg.autosign and (
-		cmd_args[0].replace('-', '_') in (
-			xmrwallet.kafile_arg_ops
-			+ ('export_outputs', 'export_outputs_sign', 'import_key_images', 'txview', 'txlist'))
-		or len(cmd_args) == 1 and cmd_args[0] in ('submit', 'resubmit', 'abort')
-	):
-	cmd_args.insert(1, None)
-
-if len(cmd_args) < 2:
+if cmd_args := cfg._args:
+	usr_op = cmd_args.pop(0)
+	op = usr_op.replace('-', '_')
+else:
 	cfg._usage()
 
-usr_op = cmd_args.pop(0)
-op     = usr_op.replace('-', '_')
-infile = cmd_args.pop(0)
-wallets = spec = None
+if cfg.autosign and (
+		op in xmrwallet.kafile_arg_ops + xmrwallet.file_arg_ops
+		or (not cmd_args and op in ('relay', 'submit', 'resubmit', 'abort'))):
+	cmd_args.insert(0, None)
+
+if cmd_args:
+	infile = cmd_args.pop(0)
+	wallets = spec = None
+else:
+	cfg._usage()
 
 match op:
 	case 'relay' | 'submit' | 'resubmit' | 'abort':
 		if len(cmd_args) != 0:
 			cfg._usage()
 	case 'txview' | 'txlist':
-		infile = [infile] + cmd_args
+		infile = [infile] + cmd_args # pylint: disable=used-before-assignment
 	case 'create' | 'sync' | 'list' | 'view' | 'listview' | 'dump_json' | 'dump' | 'restore':
 		if len(cmd_args) > 1:
 			cfg._usage()
