@@ -55,6 +55,10 @@ class MoneroMMGenFile:
 			'base_chksum': self.base_chksum,
 			'data': self.data._asdict() | ({'metadata': None} if delete_metadata else {})}
 
-	def extract_data_from_file(self, cfg, fn):
-		data = json.loads(get_data_from_file(cfg, str(fn), desc=self.desc, silent=self.silent_load))
+	def extract_data_from_file(self, cfg, fn, *, silent_load=False):
+		data = json.loads(get_data_from_file(
+			cfg,
+			str(fn),
+			desc   = self.desc,
+			silent = silent_load or self.silent_load))
 		return data.get(self.data_label) or data['MMGenTransaction'][self.data_label]

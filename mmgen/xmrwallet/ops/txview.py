@@ -40,7 +40,7 @@ class OpTxview(OpBase):
 			files = self.uargs.infile
 
 		txs = sorted(
-			(mtx.View(self.cfg, Path(fn)) for fn in files),
+			(mtx.Completed(self.cfg, Path(fn), silent_load=True) for fn in files),
 				# old TX files have no ‘submit_time’ field:
 				key = lambda x: getattr(x.data, 'submit_time', None) or x.data.create_time)
 
@@ -68,7 +68,7 @@ class OpTxlist(OpTxview):
 
 	@property
 	def col_hdr(self):
-		return mtx.View.oneline_fs.format(
+		return mtx.Completed.oneline_fs.format(
 			a = 'Network',
 			b = 'Seed ID',
 			c = 'Submitted' if self.cfg.autosign else 'Date',

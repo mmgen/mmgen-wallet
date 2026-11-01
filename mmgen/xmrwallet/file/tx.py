@@ -255,7 +255,7 @@ class MoneroMMGenTX:
 		desc = 'transaction'
 		forbidden_fields = ()
 
-		def __init__(self, cfg, fn, *, compat_data=None):
+		def __init__(self, cfg, fn, *, compat_data=None, silent_load=False):
 
 			super().__init__()
 
@@ -265,7 +265,7 @@ class MoneroMMGenTX:
 				d_wrap = compat_data
 			else:
 				try:
-					d_wrap = self.extract_data_from_file(cfg, fn)
+					d_wrap = self.extract_data_from_file(cfg, fn, silent_load=silent_load)
 				except Exception as e:
 					die('MoneroMMGenTXFileParseError',
 						f'{type(e).__name__}: {e}\nCould not load transaction file')
@@ -339,10 +339,7 @@ class MoneroMMGenTX:
 		ext = 'subtx'
 		silent_load = True
 
-	class View(Completed):
-		silent_load = True
-
-	class ViewData(Completed):
+	class CompletedFromData(Completed):
 		def __init__(self, cfg, data):
 			MoneroMMGenTX.Base.__init__(self)
 			self.cfg = cfg

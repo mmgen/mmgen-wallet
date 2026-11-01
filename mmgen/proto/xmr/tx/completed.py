@@ -22,12 +22,12 @@ class Completed(Base, TxCompleted):
 	def compat_tx(self):
 		from ....xmrwallet.file.tx import MoneroMMGenTX
 		if self.compat_data:
-			return MoneroMMGenTX.ViewData(self.cfg, self.compat_data)
+			return MoneroMMGenTX.CompletedFromData(self.cfg, self.compat_data)
 		elif self.raw_compat_data:
 			return MoneroMMGenTX.Completed(self.cfg, None, compat_data=self.raw_compat_data)
 		else:
 			from pathlib import Path
-			return MoneroMMGenTX.View(self.cfg, Path(self.infile))
+			return MoneroMMGenTX.Completed(self.cfg, Path(self.infile), silent_load=True)
 
 	@cached_property
 	def timestamp(self):
