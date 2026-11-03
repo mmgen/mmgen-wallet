@@ -43,7 +43,7 @@ class MMGenAddrType(HiliteStr, InitErrors, MMGenObject):
 	desc        = ImmutableAttr(str)
 
 	pubhash_fmts = ('p2pkh', 'bech32', 'ethereum')
-	pubkey_fmts = ('bech32pk')
+	pubkey_fmts = ('bech32pk', 'monero')
 	mmtypes = {
 		'L': ati('legacy',    'std', False,'p2pkh',   'p2pkh',   'wif', (), 'Legacy uncompressed address'),
 		'C': ati('compressed','std', True, 'p2pkh',   'p2pkh',   'wif', (), 'Compressed P2PKH address'),

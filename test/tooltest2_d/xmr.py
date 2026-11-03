@@ -43,6 +43,11 @@ tests = {
 				([pubhex1], addr1),
 			],
 		},
+		'addr2pubhex': {
+			'xmr_mainnet': [
+				([addr1], pubhex1),
+			],
+		},
 		'wif2addr': {
 			'xmr_mainnet': [
 				([privhex1], addr1),
