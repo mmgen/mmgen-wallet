@@ -189,7 +189,7 @@ def tx_info(tx, proto):
 	yield f'To:        {to_addr}'
 	yield f'Asset:     {asset}'
 	yield f'Amount:    {amt}'
-	yield f'Fee:       {None if fee is None else fee.hl(color=None)}'
+	yield f'Fee:       {None if fee is None else fee.hl(color=False)}'
 	yield f'Sequence:  {int(s.sequence)}'
 	yield f'Gas limit: {tx.authInfo.fee.gasLimit}'
 	yield f'Memo:      {memo}'

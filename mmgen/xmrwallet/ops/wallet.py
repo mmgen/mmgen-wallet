@@ -86,12 +86,7 @@ class OpWallet(OpBase):
 				ignore_in_fmt = True)
 
 			gmsg('\nCreating ephemeral key-address list for offline wallets')
-			self.kal = KeyAddrList(
-				cfg       = cfg,
-				proto     = self.proto,
-				seed      = self.seed_src.seed,
-				addr_idxs = self.uargs.wallets,
-				skip_chksum_msg = True)
+			self.kal = self.gen_keyaddr_list(self.uargs.wallets)
 		else:
 			self.mount_removable_device()
 			self.kal = (ViewKeyAddrList if self.cfg.watch_only else KeyAddrList)(
@@ -130,6 +125,14 @@ class OpWallet(OpBase):
 	@classmethod
 	def get_idx_from_fn(cls, fn):
 		return int(re.match(r'[0-9a-fA-F]{8}-(\d+)-Monero(WatchOnly)?Wallet.*', fn.name)[1])
+
+	def gen_keyaddr_list(self, wallets_spec):
+		return KeyAddrList(
+			cfg       = self.cfg,
+			proto     = self.proto,
+			seed      = self.seed_src.seed,
+			addr_idxs = wallets_spec,
+			skip_chksum_msg = True)
 
 	def pre_init_action(self):
 		if self.cfg.skip_empty_accounts:

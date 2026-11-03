@@ -57,18 +57,19 @@ def eval_io_data(tx, data, *, desc):
 class MMGenTxFile(MMGenObject):
 	data_label = 'MMGenTransaction'
 	xmr_data_label = 'MoneroMMGenTX'
-	attrs = {
-		'chain': None,
-		'txid': MMGenTxID,
-		'send_amt': 'skip',
-		'timestamp': None,
-		'blockcount': None,
-		'serialized': None}
-
 	def __init__(self, tx):
 		self.tx       = tx
 		self.fmt_data = None
 		self.filename = None
+		self.attrs = {
+			'chain': None,
+			'txid': MMGenTxID,
+			'send_amt': 'skip',
+			'timestamp': None,
+			'blockcount': None,
+			'serialized': None}
+		if tx.is_compat:
+			del self.attrs['timestamp'] # property for XMR (mmgen/proto/xmr/tx/completed.py)
 		self.extra_attrs = {
 			'locktime': None,
 			'comment': MMGenTxComment,
@@ -76,8 +77,8 @@ class MMGenTxFile(MMGenObject):
 			'is_swap': None,
 			'is_refreq': None} | (
 			{} if tx.is_compat else {
-			'coin_txid': CoinTxID,
-			'sent_timestamp': None})
+			'coin_txid': CoinTxID,   # set from compat_data (see below)
+			'sent_timestamp': None}) # property for XMR (mmgen/proto/xmr/tx/completed.py)
 
 	def parse(self, infile, *, get_proto_only=False, quiet_open=False):
 		tx = self.tx

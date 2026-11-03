@@ -56,6 +56,7 @@ class CmdTestAutosignBase(CmdTestBase):
 	platform_skip = ('win32',)
 	threaded     = False
 	daemon_coins = []
+	extra_asi_cfg = {}
 
 	filedir_map = (
 		('btc', ''),
@@ -117,12 +118,12 @@ class CmdTestAutosignBase(CmdTestBase):
 			d['online'] =  {'name':'asi_online'}
 
 		for subdir, data in d.items():
-			asi = Autosign(
-				Config({
-					'coins': ','.join(self.coins),
-					'test_suite_autosign_threaded': self.threaded,
-					'test_suite_autosign_root_dir': None if self.live else self.tmpdir,
-					'online': subdir == 'online'}))
+			asi_cfg = {
+				'coins': ','.join(self.coins),
+				'test_suite_autosign_threaded': self.threaded,
+				'test_suite_autosign_root_dir': None if self.live else self.tmpdir,
+				'online': subdir == 'online'}
+			asi = Autosign(Config(asi_cfg | self.extra_asi_cfg))
 
 			if create_dirs and not self.live:
 				for k in ('mountpoint', 'shm_dir', 'wallet_dir'):

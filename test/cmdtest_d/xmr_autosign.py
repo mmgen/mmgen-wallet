@@ -13,7 +13,9 @@ test.cmdtest_d.xmr_autosign: xmr autosigning tests for the cmdtest.py test suite
 
 import os, re, asyncio, json
 
+from mmgen.util import suf
 from mmgen.color import blue, cyan, brown
+from mmgen.fileutil import get_data_from_file
 
 from ..include.common import (
 	imsg,
@@ -256,6 +258,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 		return self.autosign_xmr_setup(write_viewkeys=False)
 
 	def autosign_xmr_setup(self, write_viewkeys=True):
+		from mmgen.addrlist import AddrIdxList
+		al = AddrIdxList(fmt_str=self.users[self.user].kal_range)
+
 		self.insert_device_online()
 		self.do_mount_online()
 		self.asi_online.xmr_dir.mkdir(exist_ok=True)
@@ -264,6 +269,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 		self.remove_device_online()
 
 		self.insert_device()
+
 		t = self.spawn(
 				'mmgen-autosign',
 				self.opts + self.autosign_setup_opts + ['xmr_setup'],
@@ -272,6 +278,11 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 			t.written_to_file('View keys')
 		else:
 			t.expect('already exists, skipping')
+
+		for n in range(len(al) + 1):
+			t.expect('Creating')
+
+		t.expect(f'{len(al)} wallet{suf(al)} created')
 		t.read()
 		self.remove_device()
 		return t
@@ -568,14 +579,14 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('user_twview_chk3',        'viewing user’s tracking wallets (check balances)'),
 		('user_txcreate_sweep2',    'creating a sweep transaction (address sweep)'),
 		('user_txsend3',            'sending the transaction'),
+		('wait_loop_kill',          'stopping autosign wait loop'),
 		('mine_blocks_10',          'mining some blocks'),
 		('user_twview_chk4',        'viewing user’s tracking wallets (check balances)'),
-		('wait_loop_kill',          'stopping autosign wait loop'),
 		('delete_offline_shmdir',   'deleting offline autosign wallet dir'),
 		('autosign_setup',          'autosign setup with user’s seed'),
 		('autosign_xmr_setup_redo', 'autosign setup (creation of Monero signing wallets, redo)'),
-		('wait_loop_start_compat',  'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
 		('user_txcreate_sweep3',    'creating a sweep transaction (sweep to empty account)'),
+		('wait_loop_start_compat2', 'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
 		('user_txsend4',            'sending the transaction'),
 		('mine_blocks_10',          'mining some blocks'),
 		('user_twview_chk5',        'viewing user’s tracking wallets (check balances)'),
@@ -818,6 +829,8 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 	def wait_loop_start_compat(self):
 		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=xmr'])
 
+	wait_loop_start_compat2 = wait_loop_start_compat
+
 	def wait_loop_start_ltc(self):
 		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=ltc,xmr'])
 
@@ -935,6 +948,7 @@ class CmdTestXMRCompatDev(CmdTestXMRCompat):
 	"""
 	Monero autosigning operations (compat mode, for development)
 	"""
+	extra_asi_cfg = {'xmrwallet_compat': True}
 	extra_daemons = []
 	tx_relay_user = None
 	user_data = (
@@ -951,11 +965,41 @@ class CmdTestXMRCompatDev(CmdTestXMRCompat):
 		('mine_initial_coins',  'mining initial coins'),
 		('fund_user1',          'sending funds to user (wallet #1)'),
 		('check_bal_alice',     'mining, checking balance'),
-		('user_txcreate1',      'creating a transaction'),
+		# ('user_txcreate1',      'creating a transaction'),
+		('user_txcreate_sweep1', 'creating a sweep transaction'),
 		('wait_loop_start_xmr', 'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
-		('wait_signed1',        'autosigning the transaction'),
+		# ('wait_signed1',        'autosigning the transaction'),
+		('user_txsend1',        'sending the transaction'),
+		('user_gettxdata',      'getting transaction data'),
+		# ('user_listaddresses_refresh', 'refreshing wallet'),
 		('wait_loop_kill',      'stopping autosign wait loop'),
 		('stop_daemons',        'stopping all wallet and coin daemons'))
 
+	def user_view(self):
+		return self.sync_wallets(self.user, op='listview', wallets='1')
+
+	def user_txcreate_sweep1(self):
+		return self._user_txops('txcreate', menu='s', sweep_menu='1', sweep_type='sweep')
+
 	def wait_loop_start_xmr(self):
 		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=xmr'])
+
+	async def user_gettxdata(self):
+		self.insert_device_online()
+		self.do_mount_online()
+		fn = get_file_with_ext(self.asi_online.txauto_dir, 'asubtx')
+		txdata = json.loads(get_data_from_file(self.cfg, fn))['MMGenTransaction']['MoneroMMGenTX']['data']
+		from mmgen.util import pp_msg
+		pp_msg(txdata)
+		self.do_umount_online()
+		self.remove_device_online()
+		udata = self.users[self.user]
+		rpc_data = udata.md_rpc.call_raw(
+			'get_transactions',
+			txs_hashes = [txdata['txid']],
+			decode_as_json = True)
+		tx_parsed = json.loads(rpc_data['txs'][0]['as_json'])
+		pp_msg(rpc_data['txs_as_hex'][0])
+		pp_msg(txdata['blob'])
+		pp_msg(tx_parsed)
+		return 'ok'

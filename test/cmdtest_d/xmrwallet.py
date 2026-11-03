@@ -85,20 +85,22 @@ class CmdTestXMRWallet(CmdTestBase):
 	cmd_group = (
 		('daemon_version',                'checking daemon version'),
 		('gen_kafiles_miner_alice',       'generating key-address files for Miner and Alice'),
-		('create_wallets_miner',          'creating Monero wallets (Miner)'),
-		('set_label_miner',               'setting an address label (Miner, primary account)'),
-		('mine_initial_coins',            'mining initial coins'),
-		('create_wallets_alice',          'creating Monero wallets (Alice)'),
-		('fund_alice',                    'sending funds'),
-		('check_bal_alice',               'mining, checking balance'),
 
-		('sync_wallets_all',              'syncing all wallets'),
+		('create_wallets_alice',          'creating Monero wallets (Alice)'),
 		('new_account_alice',             'creating a new account (Alice)'),
 		('new_account_alice_label',       'creating a new account (Alice, with label)'),
 		('new_address_alice',             'creating a new address (Alice)'),
 		('new_address_alice_label',       'creating a new address (Alice, with label)'),
 		('remove_label_alice',            'removing an address label (Alice, subaddress)'),
 		('set_label_alice',               'setting an address label (Alice, subaddress)'),
+
+		('create_wallets_miner',          'creating Monero wallets (Miner)'),
+		('set_label_miner',               'setting an address label (Miner, primary account)'),
+		('mine_initial_coins',            'mining initial coins'),
+		('fund_alice',                    'sending funds'),
+		('check_bal_alice',               'mining, checking balance'),
+
+		('sync_wallets_all',              'syncing all wallets'),
 		('sync_wallets_selected',         'syncing selected wallets'),
 
 		('sweep_to_wallet',               'sweeping to new account in another wallet'),
@@ -328,13 +330,14 @@ class CmdTestXMRWallet(CmdTestBase):
 		self._create_address_files(t, user, wallet=wallet, watch_only=watch_only)
 		return t
 
-	def _new_addr_user(self, user, spec, cfg, expect, kafile=None, do_autosign=False):
+	def _new_addr_user(self, user, spec, cfg, expect, kafile=None, do_autosign=False, add_opts=[]):
 		data = self.users[user]
 		if do_autosign:
 			self.insert_device_online()
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.extra_opts
+			+ add_opts
 			+ (self.autosign_opts if do_autosign else [])
 			+ [f'--{user}']
 			+ (['--compat'] if self.compat else [])
@@ -378,7 +381,8 @@ class CmdTestXMRWallet(CmdTestBase):
 			'alice',
 			'4:2,Alice’s new address',
 			'stop',
-			r'Creating new address for wallet .*4.*, account .*#2.* with label .*‘Alice’s new address .*y/N\): ')
+			r'Creating new address for wallet .*4.*, account .*#2.* with label .*‘Alice’s new address .*y/N\): ',
+			add_opts = ['--full-address'])
 
 	async def mine_initial_coins(self):
 		self.spawn(msg_only=True, extra_desc='(opening wallet)')

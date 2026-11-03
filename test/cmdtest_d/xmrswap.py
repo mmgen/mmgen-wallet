@@ -333,7 +333,7 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		return self._swaptxcreate_refnum_xmr(['XMR', 'LTC'], exit_val=1)
 
 	def swaptxcreate_refnum7(self):
-		from mmgen.rpc import get_remote_rpc
+		from mmgen.rpc import get_remote_rpc # pylint: disable=no-name-in-module
 		from mmgen.protocol import init_proto
 		rpc = get_remote_rpc(self.cfg, init_proto(self.cfg, 'RUNE', network='regtest'))
 		vault_addr = rpc.inbound_addrs(coin='XMR')['address']
