@@ -60,6 +60,49 @@ class unit_tests:
 
 		return True
 
+	def xmr_subaddress(self, name, ut, desc='generating XMR subaddresses'):
+		vectors = [
+			['45mLzbVEU5jNEN5qrfvbWMEbBK3LHDdzvgtSxiBgoUs7WYyKatHdzzEM612XpKv3xR52JZq5V7GURSbp5EqpqvQ7UCPrmwU'],
+			['82x63Tnxi8xTLkU1WvYm3MTDcFZek6AyN1W6TppMtTnUVuK11GRGtXGJLQKCB5cGU7hukQuoKQsMm1hvnW3mrGxY8JQqVWD'],
+			[
+				'8AEK8kKkU5ddKr8PL32RgoUW97fDeMFrJNJ3Fh15RWfFUqjodYcd6oAjCdrLrYT3io22vFUkB3FAP7r1hgY39bzEKtHGChq',
+				'86JzhV6CUy1bFrLoLJ23Qmgmphz5bsMVubLosp87RRstNxCsderXWvRhEe3s1PWdjv1j6mG9t4hSSQ1JXu1bAZRDSvadW9m',
+				'88jM6aonkzqP3EcHYCQnMSAHrvv3ZBZo8gC1sVEc4nUgBZsPww3WEx6jfsdLxbWBLE3zVDvp1w6CWAPeybrSF1Cx3BH3EYC',
+			]
+		]
+		from mmgen.proto.xmr.subaddress import get_subaddress
+		from mmgen.addrlist import KeyAddrList
+		from mmgen.cfg import Config
+		from mmgen.protocol import init_proto
+		from mmgen.seed import Seed
+		with open('test/ref/FE3C6545.hex') as fh:
+			seed_hex = fh.read().strip()
+		cfg = Config()
+		proto = init_proto(cfg, 'xmr', network='regtest')
+		kal = KeyAddrList(
+			cfg         = cfg,
+			proto       = proto,
+			seed        = Seed(cfg, seed_bin=bytes.fromhex(seed_hex)),
+			addr_idxs   = '4',
+			mmtype      = 'M',
+			skip_chksum = True)
+		data = kal.data[0]
+		for acct_idx, addr_idx in (
+				(0, 0),
+				(1, 0),
+				(2, 0),
+				(2, 1),
+				(2, 2)):
+			addr = get_subaddress(
+				proto = proto,
+				master_addr = data.addr,
+				master_svk = bytes.fromhex(data.viewkey),
+				acct_idx = acct_idx,
+				addr_idx = addr_idx)
+			vmsg(f'{acct_idx=} {addr_idx=} {addr=}')
+			assert addr == vectors[acct_idx][addr_idx]
+		return True
+
 	def xmrwallet_uarg_info(self, name, ut, desc='dict xmrwallet.xmrwallet_uarg_info'): # WIP
 		from mmgen.xmrwallet import uarg_info
 		vs = namedtuple('vector_data', ['text', 'groups'])
