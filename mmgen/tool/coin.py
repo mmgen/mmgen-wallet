@@ -87,7 +87,7 @@ class tool_cmd(tool_cmd_base):
 			compressed  = self.mmtype.compressed).wif
 
 	def wif2addr(self, wifkey: fstr):
-		"generate a coin address from a key in WIF format"
+		"generate an address from a key in WIF format"
 		gd = self._init_generators()
 		privkey = PrivKey(
 			self.proto,
@@ -125,7 +125,7 @@ class tool_cmd(tool_cmd_base):
 		return data.pubkey.hex() if output_pubhex else gd.ag.to_addr(data)
 
 	def privhex2addr(self, privhex: fstr):
-		"generate a coin address from raw hexadecimal private key data"
+		"generate an address from raw hexadecimal private key data"
 		return self._privhex2out(privhex)
 
 	def privhex2pubhex(self, privhex: fstr): # new
@@ -133,7 +133,7 @@ class tool_cmd(tool_cmd_base):
 		return self._privhex2out(privhex, output_pubhex=True)
 
 	def pubhex2addr(self, pubkeyhex: fstr):
-		"convert a hexadecimal pubkey to an address"
+		"convert a hexadecimal public key to an address"
 		if self.proto.base_proto == 'Ethereum' and len(pubkeyhex) == 128: # support raw ETH pubkeys
 			pubkeyhex = '04' + pubkeyhex
 		from ..keygen import keygen_public_data
@@ -159,7 +159,7 @@ class tool_cmd(tool_cmd_base):
 		return self.proto.pubhash2addr(hash160(bytes.fromhex(redeem_script_hex)), 'p2sh')
 
 	def pubhash2addr(self, pubhashhex: fstr):
-		"convert public key hash to address"
+		"convert a hexadecimal public key hash to an address"
 		pubhash = bytes.fromhex(pubhashhex)
 		match self.mmtype.name:
 			case 'segwit':
@@ -173,27 +173,27 @@ class tool_cmd(tool_cmd_base):
 
 	def _addr2pub(self, addr, *, ptype):
 		ap = self.proto.decode_addr(addr)
-		assert ap, f'coin address {addr!r} could not be parsed'
+		assert ap, f'address {addr!r} could not be parsed'
 		if ap.fmt not in getattr(MMGenAddrType, f'{ptype}_fmts'):
 			from ..util import die
 			die(2, f'{ap.fmt} addresses cannot be converted to {ptype}')
 		return ap.bytes.hex()
 
 	def addr2pubhex(self, addr: fstr):
-		"convert coin address to public key"
+		"convert an address to a hexadecimal public key"
 		return self._addr2pub(addr, ptype='pubkey')
 
 	def addr2pubhash(self, addr: fstr):
-		"convert coin address to public key hash"
+		"convert an address to a public key hash"
 		return self._addr2pub(addr, ptype='pubhash')
 
 	def addr2scriptpubkey(self, addr: fstr):
-		"convert coin address to scriptPubKey"
+		"convert an address to a scriptPubKey"
 		from ..proto.btc.tx.base import addr2scriptPubKey
 		return addr2scriptPubKey(self.proto, CoinAddr(self.proto, addr))
 
 	def scriptpubkey2addr(self, hexstr: fstr):
-		"convert scriptPubKey to coin address"
+		"convert a scriptPubKey to an address"
 		from ..proto.btc.tx.base import decodeScriptPubKey
 		return decodeScriptPubKey(self.proto, hexstr).addr
 
