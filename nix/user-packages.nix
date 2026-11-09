@@ -15,7 +15,7 @@ rec {
     # python = pkgs.python313;
 
     system-packages = with pkgs; {
-        # monero-cli   = monero-cli;                                      # Monero daemon
+        # monero-cli   = callPackage (bdir + /monero.nix) {};             # Monero daemon
         # go-ethereum  = go-ethereum;                                     # Geth
         # reth         = callPackage (bdir + /reth.nix) {};               # Rust Ethereum daemon
         # solc         = callPackage (bdir + /solc.nix) { old_pkgs=old_pkgs; }; # Solidity compiler
