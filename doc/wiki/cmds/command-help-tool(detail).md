@@ -3,12 +3,13 @@
 ## Table of Contents
 * [General string conversion and hashing utilities](#a_1)
 * [Cryptocoin key/address utilities](#a_2)
-* [Seed phrase utilities](#a_3)
-* [Utilities for viewing/checking MMGen address and transaction files](#a_4)
-* [File encryption and decryption](#a_5)
-* [File utilities](#a_6)
-* [Key, address or subseed generation from an MMGen wallet](#a_7)
-* [Tracking-wallet commands using the JSON-RPC interface](#a_8)
+* [Coin amount utilities](#a_3)
+* [Seed phrase utilities](#a_4)
+* [Utilities for viewing/checking MMGen address and transaction files](#a_5)
+* [File encryption and decryption](#a_6)
+* [File utilities](#a_7)
+* [Key, address or subseed generation from an MMGen wallet](#a_8)
+* [Tracking-wallet commands using the JSON-RPC interface](#a_9)
 
 ## <a id="a_1">General string conversion and hashing utilities:</a>
 
@@ -394,7 +395,7 @@ Required ARG (type shown in square brackets):
 ### `mmgen-tool addr2pubhash`
 
 ```text
-Convert coin address to public key hash
+Convert an address to a public key hash
 
 USAGE: mmgen-tool [OPTS] addr2pubhash ARG
 
@@ -406,7 +407,7 @@ Required ARG (type shown in square brackets):
 ### `mmgen-tool addr2pubhex`
 
 ```text
-Convert coin address to public key
+Convert an address to a hexadecimal public key
 
 USAGE: mmgen-tool [OPTS] addr2pubhex ARG
 
@@ -418,7 +419,7 @@ Required ARG (type shown in square brackets):
 ### `mmgen-tool addr2scriptpubkey`
 
 ```text
-Convert coin address to scriptPubKey
+Convert an address to a scriptPubKey
 
 USAGE: mmgen-tool [OPTS] addr2scriptpubkey ARG
 
@@ -454,7 +455,7 @@ Required ARG (type shown in square brackets):
 ### `mmgen-tool privhex2addr`
 
 ```text
-Generate a coin address from raw hexadecimal private key data
+Generate an address from raw hexadecimal private key data
 
 USAGE: mmgen-tool [OPTS] privhex2addr ARG
 
@@ -478,7 +479,7 @@ Required ARG (type shown in square brackets):
 ### `mmgen-tool pubhash2addr`
 
 ```text
-Convert public key hash to address
+Convert a hexadecimal public key hash to an address
 
 USAGE: mmgen-tool [OPTS] pubhash2addr ARG
 
@@ -490,7 +491,7 @@ Required ARG (type shown in square brackets):
 ### `mmgen-tool pubhex2addr`
 
 ```text
-Convert a hexadecimal pubkey to an address
+Convert a hexadecimal public key to an address
 
 USAGE: mmgen-tool [OPTS] pubhex2addr ARG
 
@@ -554,7 +555,7 @@ Required ARG (type shown in square brackets):
 ### `mmgen-tool scriptpubkey2addr`
 
 ```text
-Convert scriptPubKey to coin address
+Convert a scriptPubKey to an address
 
 USAGE: mmgen-tool [OPTS] scriptpubkey2addr ARG
 
@@ -566,7 +567,7 @@ Required ARG (type shown in square brackets):
 ### `mmgen-tool wif2addr`
 
 ```text
-Generate a coin address from a key in WIF format
+Generate an address from a key in WIF format
 
 USAGE: mmgen-tool [OPTS] wif2addr ARG
 
@@ -612,7 +613,24 @@ Required ARG (type shown in square brackets):
 ```
 
 
-## <a id="a_3">Seed phrase utilities:</a>
+## <a id="a_3">Coin amount utilities:</a>
+
+### `mmgen-tool memoless_amt`
+
+```text
+Create a memoless swap amount from a given asset, amount and reference number
+
+USAGE: mmgen-tool [OPTS] memoless_amt ARGS
+
+Required ARGS (type shown in square brackets):
+
+  asset  [str]
+  amt    [Decimal]
+  refnum [int]
+```
+
+
+## <a id="a_4">Seed phrase utilities:</a>
 
 ### `mmgen-tool hex2mn`
 
@@ -723,7 +741,7 @@ Optional KEYWORD ARG (type and default value shown in square brackets):
 ```
 
 
-## <a id="a_4">Utilities for viewing/checking MMGen address and transaction files:</a>
+## <a id="a_5">Utilities for viewing/checking MMGen address and transaction files:</a>
 
 ### `mmgen-tool addrfile_chksum`
 
@@ -793,7 +811,7 @@ Optional KEYWORD ARGS (type and default value shown in square brackets):
 ```
 
 
-## <a id="a_5">File encryption and decryption:</a>
+## <a id="a_6">File encryption and decryption:</a>
 
 ### `mmgen-tool decrypt`
 
@@ -830,7 +848,7 @@ Optional KEYWORD ARGS (type and default value shown in square brackets):
 ```
 
 
-## <a id="a_6">File utilities:</a>
+## <a id="a_7">File utilities:</a>
 
 ### `mmgen-tool decrypt_keystore`
 
@@ -917,7 +935,7 @@ Valid specifiers:
 ```
 
 
-## <a id="a_7">Key, address or subseed generation from an MMGen wallet:</a>
+## <a id="a_8">Key, address or subseed generation from an MMGen wallet:</a>
 
 ### `mmgen-tool gen_addr`
 
@@ -1019,7 +1037,7 @@ Optional KEYWORD ARG (type and default value shown in square brackets):
 ```
 
 
-## <a id="a_8">Tracking-wallet commands using the JSON-RPC interface:</a>
+## <a id="a_9">Tracking-wallet commands using the JSON-RPC interface:</a>
 
 ### `mmgen-tool add_label`
 
@@ -1263,5 +1281,5 @@ Optional KEYWORD ARGS (type and default value shown in square brackets):
 ```
 
 ```text
-MMGEN-WALLET 16.2.0            August 2026                MMGEN-TOOL(DETAIL)(1)
+MMGEN-WALLET 17.0.0            November 2026              MMGEN-TOOL(DETAIL)(1)
 ```

@@ -11,7 +11,7 @@
   -e, --echo-passphrase  Echo passphrase or mnemonic to screen upon entry
   -k, --use-internal-keccak-module Force use of the internal keccak module
   -K, --keygen-backend n Use backend 'n' for public key generation.  Options
-                         for BTC: 1:libsecp256k1 [default] 2:python-ecdsa
+                         for BTC: 1:libsecp256k1 [default]
   -l, --list             List available commands
   -p, --hash-preset  p   Use the scrypt hash parameters defined by preset 'p'
                          for password hashing (default: '3')
@@ -79,17 +79,17 @@
       mmgen-tool --coin=ltc --type=bech32 wif2addr <wif key>
       mmgen-tool --coin=zec --type=zcash_z randpair
 
-    addr2pubhash         - convert coin address to public key hash
-    addr2pubhex          - convert coin address to public key
-    addr2scriptpubkey    - convert coin address to scriptPubKey
+    addr2pubhash         - convert an address to a public key hash
+    addr2pubhex          - convert an address to a hexadecimal public key
+    addr2scriptpubkey    - convert an address to a scriptPubKey
     eth_checksummed_addr - create a checksummed Ethereum address
     hex2wif              - convert a private key from hexadecimal to WIF format
-    privhex2addr         - generate a coin address from raw hexadecimal
-                           private key data
+    privhex2addr         - generate an address from raw hexadecimal private
+                           key data
     privhex2pubhex       - generate a hexadecimal public key from raw
                            hexadecimal private key data
-    pubhash2addr         - convert public key hash to address
-    pubhex2addr          - convert a hexadecimal pubkey to an address
+    pubhash2addr         - convert a hexadecimal public key hash to an address
+    pubhex2addr          - convert a hexadecimal public key to an address
     pubhex2redeem_script - convert a hexadecimal pubkey to a Segwit
                            P2SH-P2WPKH redeem script
     privhex2pair         - generate a wifkey/address pair from the provided
@@ -98,13 +98,18 @@
     randwif              - generate a random private key in WIF format
     redeem_script2addr   - convert a Segwit P2SH-P2WPKH redeem script to an
                            address
-    scriptpubkey2addr    - convert scriptPubKey to coin address
-    wif2addr             - generate a coin address from a key in WIF format
+    scriptpubkey2addr    - convert a scriptPubKey to an address
+    wif2addr             - generate an address from a key in WIF format
     wif2hex              - convert a private key from WIF to hexadecimal format
     wif2redeem_script    - convert a WIF private key to a Segwit P2SH-P2WPKH
                            redeem script
     wif2segwit_pair      - generate a Segwit P2SH-P2WPKH redeem script and
                            address from a WIF private key
+
+  Coin amount utilities:
+
+    memoless_amt - create a memoless swap amount from a given asset, amount
+                   and reference number
 
   Seed phrase utilities:
 
@@ -208,5 +213,5 @@
 
   Type ‘mmgen-tool help <command>’ for help on a particular command
 
-  MMGEN-WALLET 16.2.0            August 2026                     MMGEN-TOOL(1)
+  MMGEN-WALLET 17.0.0            November 2026                   MMGEN-TOOL(1)
 ```

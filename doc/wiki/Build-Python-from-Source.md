@@ -16,10 +16,9 @@ $ git clone --depth=1 --branch=3.15 https://github.com/python/cpython.git
 In this example, we’ll build a free-threaded interpreter. For a single-threaded
 one you’d omit the `--disable-gil` option.
 
-Omitting `--enable-optimizations` will also cause the tests to be skipped and
-thus greatly speed up the build, though this not recommended.  Compilation
-without the tests typically takes around 10 seconds (!) on a modern 12-core
-computer.
+Omitting `--enable-optimizations` will cause the tests to be skipped and thus
+greatly speed up the build, though this is not recommended.  Compilation without
+the tests typically takes around 10 seconds (!) on a modern 12-core computer.
 
 ```bash
 $ cd cpython

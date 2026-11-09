@@ -1,7 +1,7 @@
 ```text
   MMGEN-SWAPTXDO: Create, sign and send a DEX swap transaction from one MMGen tracking wallet to another
 
-  USAGE: mmgen-swaptxdo [opts] COIN1 [AMT CHG_ADDR] COIN2 [ADDR] [addr file ...] [seed source ...]
+  USAGE: mmgen-swaptxdo [opts] COIN1 [AMT CHG_ADDR] COIN2 [DEST_ADDR] [addr file ...] [seed source ...]
 
   OPTIONS:
   -h, --help             Print this help message
@@ -36,7 +36,7 @@
                          with non-standard (< 256-bit) seed lengths.
   -k, --keys-from-file f Provide additional keys for non-MMGen addresses
   -K, --keygen-backend n Use backend 'n' for public key generation.  Options
-                         for BTC: 1:libsecp256k1 [default] 2:python-ecdsa
+                         for BTC: 1:libsecp256k1 [default]
   -l, --trade-limit L    Minimum swap amount, as either percentage or absolute
                          coin amount (see TRADE LIMIT below)
   -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
@@ -101,16 +101,22 @@
   order for unused addresses.  Note that sending to an unused address may be
   undesirable for Ethereum, where address (i.e. account) reuse is the norm.  In
   that case, the user should specify a destination address on the command line.
+  Monero tracking wallets are likely to contain no unused addresses in the
+  desired destination account, or even in the entire wallet, in which case the
+  user must create a new address via ‘mmgen-tool --coin=xmr listaddresses
+  interactive=1’.
 
   If the wallet contains eligible unused addresses with multiple Seed IDs, the
   user will be presented with a list of the lowest-indexed addresses of
   preferred type for each Seed ID and prompted to choose from among them.
 
   Change and destination addresses may also be specified manually with the
-  CHG_ADDR and ADDR arguments.  These may be given as full MMGen IDs or in the
-  form ADDRTYPE_CODE or SEED_ID:ADDRTYPE_CODE (see EXAMPLES below and the
-  ‘mmgen-txcreate’ help screen for details).  For Ethereum, the CHG_ADDR
-  argument is not supported.
+  CHG_ADDR and DEST_ADDR arguments.  These are given either as full MMGen IDs
+  or in the form [SEED_ID:]ADDRTYPE_CODE, with the following exceptions: for
+  Ethereum and Monero the CHG_ADDR argument is not supported, and for Monero
+  the DEST_ADDR argument, if given, is replaced by an extended MMGen ID or a
+  specifier in the form WALLET_NUM:ACCT_IDX.  See EXAMPLES below and the
+  ‘mmgen-txcreate’ help screen for details.
 
   While discouraged, sending change or swapping to non-wallet addresses is also
   supported, in which case the signing script (‘mmgen-txsign’ or ‘mmgen-
@@ -318,5 +324,48 @@
 
       $ https_proxy=http://gw1:4444 mmgen-swaptxdo --proxy=env RUNE 1000 BTC
 
-  MMGEN-WALLET 16.2.0            August 2026                 MMGEN-SWAPTXDO(1)
+
+  MEMOLESS SWAP EXAMPLES:
+
+    The following examples assume --autosign
+
+    Initiate a BTC-to-XMR swap with autoselected destination address.  The
+    command produces a THORChain registration transaction:
+
+      $ mmgen-swaptxdo --memoless BTC 0.1234 XMR
+
+    Send the registration transaction to the THORChain network:
+
+      $ mmgen-txsend
+      => TxID
+
+    Get the reference number from the THORChain network:
+
+      $ mmgen-remote --coin=rune get_refnum TxID
+      => REFNUM
+
+    Create a BTC-to-XMR swap transaction using the reference number:
+
+      $ mmgen-swaptxdo --refnum=REFNUM BTC 0.1234 XMR
+
+    Send the swap transaction:
+
+      $ mmgen-txsend
+
+    Monitor your XMR wallet for the funds:
+
+      $ mmgen-tool --coin=xmr twview
+
+    Initiate a BTC-to-XMR swap with destination argument in the form
+    WALLET_NUM:ACCT_IDX:
+
+      $ mmgen-swaptxdo --memoless BTC 0.1234 XMR 3:12
+
+    Initiate a BTC-to-XMR swap with destination argument being a specific
+    address denoted by an extended MMGen ID in the form SEED_ID:ADDR_TYPE:
+    WALLET_NUM/ACCT_IDX/ADDR_IDX:
+
+      $ mmgen-swaptxdo --memoless BTC 0.1234 XMR 4BA5D19B:M:3/12/7
+
+  MMGEN-WALLET 17.0.0            November 2026               MMGEN-SWAPTXDO(1)
 ```

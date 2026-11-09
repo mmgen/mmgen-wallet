@@ -1,7 +1,7 @@
 ```text
   MMGEN-SWAPTXCREATE: Create a DEX swap transaction from one MMGen tracking wallet to another
 
-  USAGE: mmgen-swaptxcreate [opts] COIN1 [AMT CHG_ADDR] COIN2 [ADDR]
+  USAGE: mmgen-swaptxcreate [opts] COIN1 [AMT CHG_ADDR] COIN2 [DEST_ADDR]
 
   OPTIONS:
   -h, --help            Print this help message
@@ -34,9 +34,20 @@
   -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
   -m, --minconf      n  Minimum number of confirmations required to spend
                         outputs (default: 1)
+  -M, --memoless        Perform a memoless swap, creating a reference request
+                        TX (activates first pass).
+  -n, --refnum N        The memoless reference number obtained after sending
+                        the reference request TX (activates second pass).
+  -N, --no-refreq-tx    With --memoless, do not create a reference request TX.
+                        Instead, display the reference memo and exit.
+  -p, --priority N      Specify an integer priority ‘N’ for inclusion of trans-
+                        action in blockchain (higher number means higher fee).
+                        XMR only. Valid params: 1=low 2=normal 3=high 4=highest
+                        If option is omitted, the default priority will be used
   -q, --quiet           Suppress warnings; overwrite files without prompting
+  -Q, --quote           Get a swap quote and exit.  Do not create transaction
   -r, --stream-interval N Set block interval for streaming swap (default: 3)
-  -s, --swap-proto      Swap protocol to use (Default: thorchain,
+  -s, --swap-proto P    Swap protocol to use (Default: thorchain,
                         Choices: 'thorchain')
   -S, --list-assets     List available swap assets
   -v, --verbose         Produce more verbose output
@@ -79,16 +90,22 @@
   order for unused addresses.  Note that sending to an unused address may be
   undesirable for Ethereum, where address (i.e. account) reuse is the norm.  In
   that case, the user should specify a destination address on the command line.
+  Monero tracking wallets are likely to contain no unused addresses in the
+  desired destination account, or even in the entire wallet, in which case the
+  user must create a new address via ‘mmgen-tool --coin=xmr listaddresses
+  interactive=1’.
 
   If the wallet contains eligible unused addresses with multiple Seed IDs, the
   user will be presented with a list of the lowest-indexed addresses of
   preferred type for each Seed ID and prompted to choose from among them.
 
   Change and destination addresses may also be specified manually with the
-  CHG_ADDR and ADDR arguments.  These may be given as full MMGen IDs or in the
-  form ADDRTYPE_CODE or SEED_ID:ADDRTYPE_CODE (see EXAMPLES below and the
-  ‘mmgen-txcreate’ help screen for details).  For Ethereum, the CHG_ADDR
-  argument is not supported.
+  CHG_ADDR and DEST_ADDR arguments.  These are given either as full MMGen IDs
+  or in the form [SEED_ID:]ADDRTYPE_CODE, with the following exceptions: for
+  Ethereum and Monero the CHG_ADDR argument is not supported, and for Monero
+  the DEST_ADDR argument, if given, is replaced by an extended MMGen ID or a
+  specifier in the form WALLET_NUM:ACCT_IDX.  See EXAMPLES below and the
+  ‘mmgen-txcreate’ help screen for details.
 
   While discouraged, sending change or swapping to non-wallet addresses is also
   supported, in which case the signing script (‘mmgen-txsign’ or ‘mmgen-
@@ -257,5 +274,48 @@
 
       $ https_proxy=http://gw1:4444 mmgen-swaptxcreate --proxy=env RUNE 1000 BTC
 
-  MMGEN-WALLET 16.2.0            August 2026              MMGEN-SWAPTXCREATE(1)
+
+  MEMOLESS SWAP EXAMPLES:
+
+    The following examples assume --autosign
+
+    Initiate a BTC-to-XMR swap with autoselected destination address.  The
+    command produces a THORChain registration transaction:
+
+      $ mmgen-swaptxcreate --memoless BTC 0.1234 XMR
+
+    Send the registration transaction to the THORChain network:
+
+      $ mmgen-txsend
+      => TxID
+
+    Get the reference number from the THORChain network:
+
+      $ mmgen-remote --coin=rune get_refnum TxID
+      => REFNUM
+
+    Create a BTC-to-XMR swap transaction using the reference number:
+
+      $ mmgen-swaptxcreate --refnum=REFNUM BTC 0.1234 XMR
+
+    Send the swap transaction:
+
+      $ mmgen-txsend
+
+    Monitor your XMR wallet for the funds:
+
+      $ mmgen-tool --coin=xmr twview
+
+    Initiate a BTC-to-XMR swap with destination argument in the form
+    WALLET_NUM:ACCT_IDX:
+
+      $ mmgen-swaptxcreate --memoless BTC 0.1234 XMR 3:12
+
+    Initiate a BTC-to-XMR swap with destination argument being a specific
+    address denoted by an extended MMGen ID in the form SEED_ID:ADDR_TYPE:
+    WALLET_NUM/ACCT_IDX/ADDR_IDX:
+
+      $ mmgen-swaptxcreate --memoless BTC 0.1234 XMR 4BA5D19B:M:3/12/7
+
+  MMGEN-WALLET 17.0.0            November 2026            MMGEN-SWAPTXCREATE(1)
 ```

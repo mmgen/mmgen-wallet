@@ -7,7 +7,7 @@
   OPTIONS:
   -h, --help            Print this help message
       --longhelp        Print help message for long (global) options
-  -A, --no-addresses    Print only secret keys, no addresses
+  -A, --no-addresses    Generate only secret keys, no addresses
   -c, --print-checksum  Print address list checksum and exit
   -d, --outdir       d  Output files to directory 'd' instead of working dir
   -e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry
@@ -17,7 +17,7 @@
   -O, --old-incog-fmt   Specify old-format incognito input
   -k, --use-internal-keccak-module Force use of the internal keccak module
   -K, --keygen-backend n Use backend 'n' for public key generation.  Options
-                        for BTC: 1:libsecp256k1 [default] 2:python-ecdsa
+                        for BTC: 1:libsecp256k1 [default]
   -l, --seed-len     l  Specify wallet seed length of 'l' bits.  This option
                         is required only for brainwallet and incognito inputs
                         with non-standard (< 256-bit) seed lengths.
@@ -33,9 +33,9 @@
                         (default: 'L' or 'legacy')
   -U, --subwallet    U  Generate keys for subwallet 'U' (see SUBWALLETS
                         below)
-  -V, --viewkeys        Print viewkeys, omitting secret keys
+  -V, --viewkeys        Generate viewkeys, omitting spend keys
   -v, --verbose         Produce more verbose output
-  -x, --b16             Print secret keys in hexadecimal too
+  -x, --b16             Generate secret keys in hexadecimal too
 
 
                              NOTES FOR THIS COMMAND
@@ -131,5 +131,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN-WALLET 16.2.0            August 2026                   MMGEN-KEYGEN(1)
+  MMGEN-WALLET 17.0.0            November 2026                 MMGEN-KEYGEN(1)
 ```

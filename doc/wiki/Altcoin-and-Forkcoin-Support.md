@@ -267,20 +267,24 @@ This is now the preferred way to transact XMR, replacing the deprecated
 in the [**Getting Started**][ct] guide, with the following differences:
 
 - Manual transacting is not supported, only version 2 [**autosigning**][ax].
-- XMR compatibility mode must be enabled.  Use `--xmrwallet-compat` for online
-  commands, or set `xmrwallet_compat` to `true` in your config file.
-- The `mmgen-addrgen` script is not used.  Instead, addresses are created
+- XMR compatibility mode must be enabled.  Use `--xmrwallet-compat`, or set
+  `xmrwallet_compat` to `true` in your config file.
+- The `mmgen-addrgen` script is not used.  Instead, addresses are generated
   automatically when `mmgen-autosign setup` is run with the `--xmrwallets`
   option.  Type `mmgen-autosign --help` for more information.
 - After autosign setup, `mmgen-addrimport --coin=xmr` is run on the online
-  machine with no arguments.  This creates the watch-only wallet or wallets
-  that together comprise the user’s tracking wallet.  For watch-only wallets
-  that already exist, no action is performed.
-- `mmgen-txcreate` supports both sweep transactions and send to external
-  address (see `mmgen-txcreate --coin=xmr --help`)
+  machine with no arguments.  This creates a watch-only wallet or wallets
+  to match the offline signing wallets created during the autosign setup
+  process.  These wallets are permananent and together comprise the user’s
+  tracking wallet.  Thus if a watch-only wallet already exists, it’s left
+  untouched.
+- `mmgen-txcreate` supports both sweep transactions and sends to an external
+  address.  Sweeps are created by invoking the script with no arguments.  See
+  `mmgen-txcreate --coin=xmr --help` for details.
 - Tracking wallet views are account-based.
-- New accounts and addresses may be added to the tracking wallet via
-  `mmgen-tool --coin=xmr listaddresses`.
+- New accounts and addresses may be added to the tracking wallet by invoking
+  `mmgen-tool --coin=xmr listaddresses interactive=1`. Label editing is also
+  supported.
 - The `mmgen-xmrwallet` script may be used to list and view sent transactions
   on the removable device.  Type `mmgen-xmrwallet --help` for details.
 - Compatibility mode is not available for Windows.  Windows users must use
@@ -350,23 +354,26 @@ relevant commands.  With `mmgen-autosign`, add `rune` to the list of coins in
 the `--coins` parameter.
 
 Note that MMGen Wallet’s RUNE support requires no locally running node; instead,
-balances are fetched and transactions sent via a public node at ninerealms.com.
-As this can compromise your privacy, it’s recommended to proxy all
-communications via Tor or I2P: refer to the helpscreens of `mmgen-txcreate`,
-`mmgen-swaptxcreate` and `mmgen-txsend` for more information.
+balances are fetched and transactions sent via a public node at liquify.com.
+As this can compromise your privacy, it’s highly recommended to proxy all
+communications via Tor or I2P.  Refer to the helpscreens of `mmgen-txcreate`,
+`mmgen-swaptxcreate` and `mmgen-txsend` for details.
+
+The `mmgen-remote` script can be used to retrieve information from the public
+node before transacting.  This script also supports proxying via Tor and I2P.
 
 ### <a id="a_tcswap">Asset swaps via THORChain</a>
 
 Install the RUNE requirements as shown above.
 
-21 assets (as of this writing) may be swapped directly within MMGen Wallet via
-THORChain.  Swapping assets is just like normal transacting, except transactions
-are created using `mmgen-swaptxcreate` instead of `mmgen-txcreate`.  Note that
-coin daemons for both the send and receive assets must be running and synced
-before carrying out a swap.  Depending on your setup, communication with two
-daemons simultaneously may require the use of *coin-specific options* (see
-`mmgen-swaptxcreate --longhelp`).  For usage information, examples, and a list
-of supported assets, invoke `mmgen-swaptxcreate --help`.
+21 assets (as of this writing) may be swapped directly from MMGen Wallet via
+THORChain.  Performing a swap is similar to transacting normally, except that
+`mmgen-swaptxcreate` is used to create transactions instead of `mmgen-txcreate`.
+Note that coin daemons for both the send and receive assets must be running and
+synced before initiating the swap.  Depending on your setup, connecting to two
+daemons simultaneously may require the use of *coin-specific options*, as
+described in `mmgen-swaptxcreate --longhelp`.  Invoke `mmgen-swaptxcreate
+--help` for usage information, examples, and a list of supported assets.
 
 ### <a id="a_zec">Key/address generation for Zcash (ZEC)</a>
 

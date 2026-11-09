@@ -55,6 +55,7 @@
   -R, --no-relay                   Save transaction to file instead of relaying
   -s, --no-start-wallet-daemon     Don’t start the wallet daemon at startup
   -S, --no-stop-wallet-daemon      Don’t stop the wallet daemon at exit
+  -x, --no-restart-wallet-daemon   Don’t start wallet daemon if already started
   -W, --watch-only                 Create or operate on watch-only wallets
   -w, --wallet-dir D               Output or operate on wallets in directory 'D'
                                    instead of the working directory
@@ -509,5 +510,5 @@
   to delete your old hot wallets, make sure to do so securely using ‘shred’,
   ‘wipe’ or some other secure deletion utility.
 
-  MMGEN-WALLET 16.2.0            August 2026                MMGEN-XMRWALLET(1)
+  MMGEN-WALLET 17.0.0            November 2026              MMGEN-XMRWALLET(1)
 ```

@@ -7,6 +7,7 @@
 * [mmgen-passchg](cmds/command-help-passchg.md)
 * [mmgen-passgen](cmds/command-help-passgen.md)
 * [mmgen-regtest](cmds/command-help-regtest.md)
+* [mmgen-remote](cmds/command-help-remote.md)
 * [mmgen-seedjoin](cmds/command-help-seedjoin.md)
 * [mmgen-seedsplit](cmds/command-help-seedsplit.md)
 * [mmgen-subwalletgen](cmds/command-help-subwalletgen.md)

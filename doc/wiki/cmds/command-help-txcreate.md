@@ -5,7 +5,7 @@
 ```text
   MMGEN-TXCREATE: Create a transaction with outputs to specified coin or MMGen addresses
 
-  USAGE: mmgen-txcreate [opts] [ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...]
+  USAGE: mmgen-txcreate [opts] [ADDR,AMT ...] ADDR [DATA_SPEC] [addr file ...]
 
   OPTIONS:
   -h, --help            Print this help message
@@ -131,7 +131,7 @@
 
       $ mmgen-txcreate B
 
-  MMGEN-WALLET 16.2.0            August 2026                 MMGEN-TXCREATE(1)
+  MMGEN-WALLET 17.0.0            November 2026               MMGEN-TXCREATE(1)
 ```
 
 <br>
@@ -219,7 +219,7 @@
 
       $ mmgen-txcreate --coin=eth 01ABCDEF:E:7,0.123
 
-  MMGEN-WALLET 16.2.0            August 2026                 MMGEN-TXCREATE(1)
+  MMGEN-WALLET 17.0.0            November 2026               MMGEN-TXCREATE(1)
 ```
 
 <br>
@@ -268,5 +268,5 @@
 
       $ mmgen-txcreate --coin=xmr
 
-  MMGEN-WALLET 16.2.0            August 2026                 MMGEN-TXCREATE(1)
+  MMGEN-WALLET 17.0.0            November 2026               MMGEN-TXCREATE(1)
 ```

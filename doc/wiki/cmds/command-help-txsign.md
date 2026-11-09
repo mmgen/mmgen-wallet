@@ -26,7 +26,7 @@
   -z, --show-hash-presets Show information on available hash presets
   -k, --keys-from-file f Provide additional keys for non-MMGen addresses
   -K, --keygen-backend n Use backend 'n' for public key generation.  Options
-                        for BTC: 1:libsecp256k1 [default] 2:python-ecdsa
+                        for BTC: 1:libsecp256k1 [default]
   -M, --mmgen-keys-from-file f Provide keys for MMGen addresses in a key-
                         address file (output of 'mmgen-keygen'). Permits
                         online signing without an MMGen seed source. The
@@ -85,5 +85,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN-WALLET 16.2.0            August 2026                   MMGEN-TXSIGN(1)
+  MMGEN-WALLET 17.0.0            November 2026                 MMGEN-TXSIGN(1)
 ```

@@ -12,8 +12,8 @@ GENERAL USAGE INFORMATION FOR MMGEN-TOOL COMMANDS
 
   Help/usage commands:
 
-    help  command_name [str='']
-    usage command_name [str='']
+    help  cmdname [str='']
+    usage cmdname [str='']
 
 
   General string conversion and hashing utilities:
@@ -71,6 +71,11 @@ GENERAL USAGE INFORMATION FOR MMGEN-TOOL COMMANDS
     wif2hex              wifkey [str or STDIN]
     wif2redeem_script    wifkey [str or STDIN]
     wif2segwit_pair      wifkey [str or STDIN]
+
+
+  Coin amount utilities:
+
+    memoless_amt asset [str] amt [Decimal] refnum [int]
 
 
   Seed phrase utilities:
@@ -189,5 +194,5 @@ EXAMPLES:
   Same as above, but supply input via STDIN:
   $ echo "deadbeefcafe" | mmgen-tool hexreverse -
 
-  MMGEN-WALLET 16.2.0            August 2026              MMGEN-TOOL(USAGE)(1)
+  MMGEN-WALLET 17.0.0            November 2026            MMGEN-TOOL(USAGE)(1)
 ```

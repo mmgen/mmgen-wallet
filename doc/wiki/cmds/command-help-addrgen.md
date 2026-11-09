@@ -16,7 +16,7 @@
   -O, --old-incog-fmt   Specify old-format incognito input
   -k, --use-internal-keccak-module Force use of the internal keccak module
   -K, --keygen-backend n Use backend 'n' for public key generation.  Options
-                        for BTC: 1:libsecp256k1 [default] 2:python-ecdsa
+                        for BTC: 1:libsecp256k1 [default]
   -l, --seed-len     l  Specify wallet seed length of 'l' bits.  This option
                         is required only for brainwallet and incognito inputs
                         with non-standard (< 256-bit) seed lengths.
@@ -126,5 +126,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN-WALLET 16.2.0            August 2026                  MMGEN-ADDRGEN(1)
+  MMGEN-WALLET 17.0.0            November 2026                MMGEN-ADDRGEN(1)
 ```

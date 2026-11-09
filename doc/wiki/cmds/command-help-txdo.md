@@ -1,7 +1,7 @@
 ```text
   MMGEN-TXDO: Create, sign and send an MMGen transaction
 
-  USAGE: mmgen-txdo [opts] [ADDR,AMT ... | DATA_SPEC] ADDR [addr file ...] [addr file ...] [seed source ...]
+  USAGE: mmgen-txdo [opts] [ADDR,AMT ...] ADDR [DATA_SPEC] [addr file ...] [addr file ...] [seed source ...]
 
   OPTIONS:
   -h, --help             Print this help message
@@ -32,7 +32,7 @@
                          with non-standard (< 256-bit) seed lengths.
   -k, --keys-from-file f Provide additional keys for non-MMGen addresses
   -K, --keygen-backend n Use backend 'n' for public key generation.  Options
-                         for BTC: 1:libsecp256k1 [default] 2:python-ecdsa
+                         for BTC: 1:libsecp256k1 [default]
   -l, --locktime       t Lock time (block height or unix seconds) (default: 0)
   -L, --autochg-ignore-labels Ignore labels when autoselecting change addresses
   -m, --minconf n        Minimum number of confirmations required to spend
@@ -192,5 +192,5 @@
 
       $ mmgen-txdo B
 
-  MMGEN-WALLET 16.2.0            August 2026                     MMGEN-TXDO(1)
+  MMGEN-WALLET 17.0.0            November 2026                   MMGEN-TXDO(1)
 ```
