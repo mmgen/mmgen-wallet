@@ -48,5 +48,5 @@
   would output data for the last four sent transactions, beginning with the most
   recent.
 
-  MMGEN-WALLET 16.2.0            August 2026                   MMGEN-TXSEND(1)
+  MMGEN-WALLET 17.0.0            November 2026                 MMGEN-TXSEND(1)
 ```

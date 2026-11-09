@@ -269,5 +269,5 @@
   $ mount /mnt/mmgen_autosign
   $ mmgen-addrgen -P /mnt/mmgen_autosign/autosign.key --coin=ltc --type=B /dev/shm/autosign/*.mmdat 1-10
 
-  MMGEN-WALLET 16.2.0            August 2026                 MMGEN-AUTOSIGN(1)
+  MMGEN-WALLET 17.0.0            November 2026               MMGEN-AUTOSIGN(1)
 ```

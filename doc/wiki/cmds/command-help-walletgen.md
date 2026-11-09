@@ -57,5 +57,5 @@
     MMGenWallet        .mmdat    wallet,w
     PlainHexSeedFile   .hex      hex,rawhex,plainhex
 
-  MMGEN-WALLET 16.2.0            August 2026                MMGEN-WALLETGEN(1)
+  MMGEN-WALLET 17.0.0            November 2026              MMGEN-WALLETGEN(1)
 ```
