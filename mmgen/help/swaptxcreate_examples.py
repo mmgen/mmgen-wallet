@@ -109,7 +109,7 @@ MEMOLESS SWAP EXAMPLES:
 
     $ {gc.prog_name} --memoless BTC 0.1234 XMR
 
-  Send the registration transaction:
+  Send the registration transaction to the THORChain network:
 
     $ mmgen-txsend
     => TxID
@@ -117,6 +117,7 @@ MEMOLESS SWAP EXAMPLES:
   Get the reference number from the THORChain network:
 
     $ mmgen-remote --coin=rune get_refnum TxID
+    => REFNUM
 
   Create a BTC-to-XMR swap transaction using the reference number:
 

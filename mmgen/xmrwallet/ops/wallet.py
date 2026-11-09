@@ -80,11 +80,7 @@ class OpWallet(OpBase):
 
 		if self.cfg.offline:
 			from ...wallet import Wallet
-			self.seed_src = Wallet(
-				cfg           = cfg,
-				fn            = self.uargs.infile,
-				ignore_in_fmt = True)
-
+			self.seed_src = Wallet(cfg=cfg, fn=self.uargs.infile, ignore_in_fmt=True)
 			gmsg('\nCreating ephemeral key-address list for offline wallets')
 			self.kal = self.gen_keyaddr_list(self.uargs.wallets)
 		else:

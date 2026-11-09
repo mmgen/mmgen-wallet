@@ -367,6 +367,7 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 class CmdTestXMRSwapXMR(CmdTestXMRSwapMethods, CmdTestSwapMethods, CmdTestXMRCompat):
 	'Monero swap operations - Monero wallet'
 	networks = ('xmr',)
+	extra_daemons = ()
 	tmpdir_nums = [77]
 	is_helper = True
 	tx_relay_user = None

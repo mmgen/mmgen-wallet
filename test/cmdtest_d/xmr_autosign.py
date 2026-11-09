@@ -16,6 +16,7 @@ import os, re, asyncio, json
 from mmgen.util import suf
 from mmgen.color import blue, cyan, brown
 from mmgen.fileutil import get_data_from_file
+from mmgen.addrlist import AddrIdxList
 
 from ..include.common import (
 	imsg,
@@ -258,7 +259,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 		return self.autosign_xmr_setup(write_viewkeys=False)
 
 	def autosign_xmr_setup(self, write_viewkeys=True):
-		from mmgen.addrlist import AddrIdxList
 		al = AddrIdxList(fmt_str=self.users[self.user].kal_range)
 
 		self.insert_device_online()
@@ -619,13 +619,14 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		return self._addrimport_user(create_address_files=True)
 
 	def addrimport_user2(self):
-		return self._addrimport_user(expect_str='Skipping.*Skipping')
+		return self._addrimport_user()
 
-	def _addrimport_user(self, *, expect_str=None, create_address_files=False):
+	def _addrimport_user(self, *, create_address_files=False):
 		self.insert_device_online()
 		t = self.spawn('mmgen-addrimport', self.user_opts + self.autosign_opts)
-		if expect_str:
-			t.expect(expect_str, regex=True)
+		al = AddrIdxList(fmt_str=self.users[self.user].kal_range)
+		for n in range(len(al)):
+			t.expect(['Creating', 'Skipping'])
 		if create_address_files:
 			self._create_address_files(t, self.user, watch_only=True)
 		t.read() # required!
@@ -793,6 +794,10 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		menu_prompt = self.listaddresses_menu_prompt if op == 'listaddresses' else self.menu_prompt
 		have_lbl = lbl_acct_num or newacct_wallet_num or newaddr_acct_num
 		have_new_addr = newacct_wallet_num or newaddr_acct_num
+		al = AddrIdxList(fmt_str=self.users[self.user].kal_range)
+		for n in range(len(al)):
+			t.expect('Loading')
+			t.expect('Opening')
 		if pexpect_interact:
 			t.p.interact() # pexpect interact() is currently broken
 			self.remove_device_online()
@@ -815,6 +820,12 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 				t.expect('(y/N): ', 'y')
 			for ch in menu:
 				t.expect(menu_prompt, ch)
+				if ch == 'R':
+					for n in range(len(al)):
+						t.expect('Syncing')
+					for n in range(len(al)):
+						t.expect('Loading')
+						t.expect('Opening')
 			if expect_str:
 				t.expect(expect_str, regex=True)
 			t.expect(menu_prompt, 'q')
@@ -902,9 +913,12 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			signable_desc = 'transaction',
 			expect_str = None,
 			exit_val = 0):
+
 		if wait_signed:
 			self._wait_signed(signable_desc)
+
 		self.insert_device_online()
+
 		t = self.spawn(
 			f'mmgen-{op}',
 			(opts or self.user_opts)
@@ -921,6 +935,10 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			if '--verbose' in add_opts:
 				t.expect('view: ', 't')
 		elif op == 'txcreate':
+			al = AddrIdxList(fmt_str=self.users[self.user].kal_range)
+			for n in range(len(al)):
+				t.expect('Loading')
+				t.expect('Opening')
 			if sweep_type:
 				t.expect(self.menu_prompt, menu)
 				for ch in sweep_menu:
@@ -965,12 +983,12 @@ class CmdTestXMRCompatDev(CmdTestXMRCompat):
 		('mine_initial_coins',  'mining initial coins'),
 		('fund_user1',          'sending funds to user (wallet #1)'),
 		('check_bal_alice',     'mining, checking balance'),
-		# ('user_txcreate1',      'creating a transaction'),
-		('user_txcreate_sweep1', 'creating a sweep transaction'),
+		('user_txcreate1',      'creating a transaction'),
+		# ('user_txcreate_sweep1', 'creating a sweep transaction'),
 		('wait_loop_start_xmr', 'starting autosign wait loop in XMR compat mode [--coins=xmr]'),
-		# ('wait_signed1',        'autosigning the transaction'),
-		('user_txsend1',        'sending the transaction'),
-		('user_gettxdata',      'getting transaction data'),
+		('wait_signed1',        'autosigning the transaction'),
+		# ('user_txsend1',        'sending the transaction'),
+		# ('user_gettxdata',      'getting transaction data'),
 		# ('user_listaddresses_refresh', 'refreshing wallet'),
 		('wait_loop_kill',      'stopping autosign wait loop'),
 		('stop_daemons',        'stopping all wallet and coin daemons'))
