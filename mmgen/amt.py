@@ -47,7 +47,7 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 
 		try:
 			if from_unit:
-				assert from_unit in cls.units, f'{from_unit!r}: unrecognized coin unit for {cls.__name__}'
+				assert from_unit == 'atomic' or from_unit in cls.units, f'{from_unit!r}: unrecognized coin unit for {cls.__name__}'
 				assert isinstance(num, int), 'value is not an integer'
 				me = Decimal.__new__(cls, num * getattr(cls, from_unit), **kwargs)
 			elif from_decimal:
@@ -194,7 +194,7 @@ class BTCAmt(CoinAmt):
 	max_amt = 21000000
 	satoshi = Decimal('0.00000001')
 	atomic = satoshi
-	units = ('atomic', 'satoshi')
+	units = ('satoshi',)
 
 class UniAmt(BTCAmt):
 	coin = None
@@ -223,7 +223,7 @@ class ETHAmt(CoinAmt):
 	szabo   = Decimal('0.000001')
 	finney  = Decimal('0.001')
 	atomic  = wei
-	units   = ('atomic', 'wei', 'Kwei', 'Mwei', 'Gwei', 'szabo', 'finney')
+	units   = ('wei', 'Kwei', 'Mwei', 'Gwei', 'szabo', 'finney')
 
 	def toWei(self):
 		return int(Decimal(self) // self.wei)
