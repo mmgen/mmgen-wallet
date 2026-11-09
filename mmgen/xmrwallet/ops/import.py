@@ -26,7 +26,8 @@ class OpImportOutputs(OpWallet):
 
 	async def process_wallet(self, d, fn, last):
 		h = MoneroWalletRPC(self, d)
-		h.open_wallet(refresh=False)
+		if self.need_daemon_start or len(self.kal.data) != 1:
+			h.open_wallet(refresh=False)
 		self.head_msg(d.idx, h.fn)
 		outputs_file = Path(self.uargs.spec)
 		m = MoneroWalletOutputsFile.Unsigned(parent=self, fn=outputs_file)
