@@ -27,7 +27,7 @@ class Base:
 		return None
 
 	def check_serialized_integrity(self):
-		pass
+		'This check is performed by check_integrity() in mmgen/xmrwallet/ops/sign.py'
 
 	def check_sigs(self):
 		return bool(getattr(self.compat_tx.data, 'signed_txset', None))

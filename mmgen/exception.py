@@ -84,6 +84,7 @@ class HexadecimalStringError(Exception):  mmcode = 3
 class SeedLengthError(Exception):         mmcode = 3
 class PrivateKeyError(Exception):         mmcode = 3
 class TxFileVersionError(Exception):      mmcode = 3
+class TxIntegrityCheckError(Exception):   mmcode = 3
 class MMGenCalledProcessError(Exception): mmcode = 3
 class TestSuiteFatalException(Exception): mmcode = 3
 
