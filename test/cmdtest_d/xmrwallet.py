@@ -915,9 +915,9 @@ class CmdTestXMRWallet(CmdTestBase):
 			atexit.unregister(stop_miner_wallet_daemon)
 		return 'silent'
 
-class CmdTestXMRWatchOnly(CmdTestXMRWallet):
+class CmdTestXMRWalletDev(CmdTestXMRWallet):
 	"""
-	Monero legacy watch-only wallet operations
+	Monero legacy wallet operations (for development)
 	"""
 
 	tx_relay_user = None
@@ -925,34 +925,30 @@ class CmdTestXMRWatchOnly(CmdTestXMRWallet):
 	user_data = (
 		#      user    sid       autosign kal_range add_coind_args (watch_only)
 		udata('miner', '98831F3A', False, '1', []),
-		udata('alice', 'FE3C6545', False, '1', [], True))
+		udata('alice', 'FE3C6545', False, '1', []))
 
 	cmd_group = (
 		('daemon_version',          'checking daemon version'),
 		('gen_kafiles_miner_alice', 'generating key-address files for Miner and Alice'),
-		('gen_vkafile_alice',       'generating viewkey-address file for Alice'),
-		('create_wallet_miner',     'creating Monero wallets (Miner)'),
-		('create_wallet_alice',     'creating Monero wallet (Alice)'),
-		('create_wo_wallet_alice',  'creating watch-only Monero wallet (Alice)'),
+		('create_wallets_miner',    'creating Monero wallets (Miner)'),
+		('create_wallets_alice',    'creating Monero wallet (Alice)'),
 		('mine_initial_coins',      'mining initial coins'),
 		('fund_alice',              'sending funds'),
 		('check_bal_alice',         'mining, checking balance'),
-		('sweep',                   'creating a sweep transaction'),
+		('sweep',                   'performing a sweep transaction'),
+		('check_bal_alice2',        'mining, checking balance'),
+		('transfer_to_miner',       'performing a transfer transaction'),
 	)
 
-	def gen_vkafile_alice(self):
-		return self._gen_kafiles([self.user], add_opts=['--viewkeys'])
-
-	def create_wallet_alice(self):
-		return self.create_wallets('alice')
-
-	def create_wo_wallet_alice(self):
-		return self.create_wallets('alice', watch_only=True)
-
-	def create_wallet_miner(self):
-		return self.create_wallets('miner')
+	async def check_bal_alice2(self):
+		return await self._check_bal_user('alice', bal='1.232759491234')
 
 	async def sweep(self):
 		get_file_with_ext(self.users[self.user].udir, 'rawtx', delete_all=True)
-		self.do_op('sweep', 'alice', '1:0', add_opts=['--watch-only'], no_relay=True)
+		self.do_op('sweep', 'alice', '1:0')
 		return 'ok'
+
+	async def transfer_to_miner(self):
+		addr = read_from_file(self.users['miner'].dfl_addrfile_fs.format(1))
+		self.do_op('transfer', 'alice', f'1:0:{addr},0.0995')
+		return await self.mine_chk('alice', 1, 0, lambda x: x.ub > 1, 'unlocked balance > 1')

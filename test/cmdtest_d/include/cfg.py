@@ -66,7 +66,7 @@ cmd_groups_extra = {
 	'autosign_live_simulate': gd('CmdTestAutosignLiveSimulate', {'modname': 'autosign'}),
 	'create_ref_tx':          gd('CmdTestCreateRefTX',          {'modname': 'misc', 'full_data': True}),
 	'xmr_autosign_nocompat':  gd('CmdTestXMRAutosignNoCompat',  {'modname': 'xmr_autosign'}),
-	'xmr_watchonly':          gd('CmdTestXMRWatchOnly',         {'modname': 'xmrwallet'}),
+	'xmrwallet_dev':          gd('CmdTestXMRWalletDev',         {'modname': 'xmrwallet'}),
 	'xmr_compat_dev':         gd('CmdTestXMRCompatDev',         {'modname': 'xmr_autosign'}),
 }
 
