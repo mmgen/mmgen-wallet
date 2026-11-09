@@ -10,6 +10,7 @@
 tx.new: new transaction class
 """
 
+import sys
 from collections import namedtuple
 
 from .base import Base
@@ -57,7 +58,6 @@ def mmaddr2coinaddr(cfg, mmaddr, ad_w, ad_f, proto):
 				msg(wmsg('addr_in_addrfile_only'))
 				from ..ui import keypress_confirm
 				if not (cfg.yes or keypress_confirm(cfg, 'Continue anyway?')):
-					import sys
 					sys.exit(1)
 			else:
 				die(2, wmsg('addr_not_found'))
@@ -518,7 +518,6 @@ class New(Base):
 		if do_info:
 			del self.twctl
 			del self.twuo.twctl
-			import sys
 			sys.exit(0)
 
 		if not self.is_sweep:
@@ -560,6 +559,8 @@ class New(Base):
 
 		if self.is_compat:
 			self.compat_data = await self.compat_create()
+			if not self.compat_data:
+				sys.exit(1)
 			self.send_amt = self.compat_data['data']['amount']
 			self.txid = self.compat_data['base_chksum'].upper()
 		else:
