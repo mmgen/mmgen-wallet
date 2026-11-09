@@ -134,19 +134,19 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 		we must allow other to be int(0) to use the sum() builtin
 		"""
 		if type(other) in (type(self), Decimal) or (other == 0 and isinstance(other, int)):
-			return type(self)(Decimal.__add__(self, other), from_decimal=True, decimals=decimals, **kwargs)
+			return type(self)(Decimal(Decimal.__add__(self, other)), from_decimal=True, decimals=decimals, **kwargs)
 		self.incorrect_type_error(other)
 
 	__radd__ = __add__
 
 	def __sub__(self, other, decimals=None, **kwargs):
 		if type(other) in (type(self), Decimal):
-			return type(self)(Decimal.__sub__(self, other), from_decimal=True, decimals=decimals, **kwargs)
+			return type(self)(Decimal(Decimal.__sub__(self, other)), from_decimal=True, decimals=decimals, **kwargs)
 		self.incorrect_type_error(other)
 
 	def __rsub__(self, other, decimals=None, **kwargs):
 		if type(other) is type(self):
-			return type(self)(Decimal.__rsub__(self, other),  from_decimal=True, decimals=decimals, **kwargs)
+			return type(self)(Decimal(Decimal.__rsub__(self, other)),  from_decimal=True, decimals=decimals, **kwargs)
 		self.incorrect_type_error(other)
 
 	def __mul__(self, other, decimals=None, **kwargs):
