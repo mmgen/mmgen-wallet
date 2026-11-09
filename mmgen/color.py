@@ -51,24 +51,16 @@ def nocolor(s):
 	return s
 
 def get_terminfo_colors(term=None):
-	from subprocess import run, PIPE
-	cmd = ['infocmp', '-0']
-	if term:
-		cmd.append(term)
-
+	from subprocess import run, PIPE, CalledProcessError
+	cmd = ['infocmp', '-1'] + ([term] if term else [])
 	try:
 		cmdout = run(cmd, stdout=PIPE, check=True, text=True).stdout
-	except FileNotFoundError:
+	except (FileNotFoundError, CalledProcessError):
 		return None
 	else:
-		s = next(iter(e.split('#', 1)[1] for e in cmdout.split(',') if e.startswith('colors')))
-		from .util import is_hex_str
-		if s.isdecimal():
-			return int(s)
-		elif s.startswith('0x') and is_hex_str(s[2:]):
-			return int(s, 16)
-		else:
-			return None
+		s = next(iter(line.strip().removeprefix('colors#').removesuffix(',')
+			for line in cmdout.splitlines() if line.lstrip().startswith('colors#')))
+		return int(s, 16) if s.startswith('0x') else int(s) if s.isdecimal() else None
 
 def init_color(num_colors='auto'):
 	assert num_colors in ('auto', 8, 16, 256, 0)
