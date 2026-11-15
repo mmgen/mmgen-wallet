@@ -130,7 +130,7 @@ class Signable:
 										if nm is non_mmgen[0] else ''.ljust(t_wid),
 								a = nm.addr.fmt(nm.addr.view_pref, a_wid, color=True)
 										if nm.addr else '-'.ljust(a_wid),
-								A = nm.amt.hl() + ' ' + yellow(tx.coin))
+								A = nm.amt.hl3(unit=tx.proto.dcoin))
 
 				msg('\n' + '\n'.join(gen()))
 			else:

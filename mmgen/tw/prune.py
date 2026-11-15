@@ -88,7 +88,7 @@ class TwAddressesPrune(TwAddresses):
 					red('Address #{a} ({b}) has a balance of {c}!'.format(
 						a = addrnum,
 						b = e.twmmid.addr,
-						c = e.amt.hl3(color=False, unit=True))),
+						c = e.amt.hl3(color=False, unit=self.proto.dcoin))),
 					'[p]rune anyway, [P]rune all with balance, [s]kip, [S]kip all with balance: '),
 				'used': md(
 					yellow('Address #{a} ({b}) is used!'.format(

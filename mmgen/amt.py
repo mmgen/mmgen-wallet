@@ -109,12 +109,12 @@ class CoinAmt(Decimal, Hilite, InitErrors): # abstract class
 		return self.colorize2(str(self), color=color, color_override=color_override)
 
 	# fancy highlighting with coin unit, enclosure, formatting
-	def hl3(self, *, color=True, unit=False, fs='{}', encl='', color_override=''):
+	def hl3(self, *, color=True, unit=None, fs='{}', encl='', color_override=''):
 		res = fs.format(self)
 		return self.colorize2(
 			encl[:-1]
 			+ (res.rstrip('0').rstrip('.') if '.' in res else res)
-			+ (' ' + self.coin if unit else '')
+			+ (' ' + unit if unit else '')
 			+ encl[1:],
 			color = color,
 			color_override = color_override)
