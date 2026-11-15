@@ -99,16 +99,14 @@ class OpWallet(OpBase):
 		if not self.skip_wallet_check:
 			self.to_process = check_wallets()
 
-		self.need_daemon_start = False
-		if (
-				self.to_process
-				and self.start_daemon
-				and not self.cfg.no_start_wallet_daemon
-				and not (self.cfg.no_restart_wallet_daemon and self.wd.state == 'ready')):
-			if self.main_starts_daemon:
-				self.need_daemon_start = True
-			else:
-				asyncio.run(self.restart_wallet_daemon())
+		self.need_daemon_start = (
+			self.to_process
+			and self.start_daemon
+			and not self.cfg.no_start_wallet_daemon
+			and not (self.cfg.no_restart_wallet_daemon and self.wd.state == 'ready'))
+
+		if self.need_daemon_start and not self.main_starts_daemon:
+			asyncio.run(self.restart_wallet_daemon())
 
 	@staticmethod
 	def stat_wallet(fn):
@@ -206,7 +204,7 @@ class OpWallet(OpBase):
 		return 'offline signing ' if self.cfg.offline else 'watch-only ' if self.cfg.watch_only else ''
 
 	async def main(self):
-		if self.main_starts_daemon and self.need_daemon_start:
+		if self.need_daemon_start and self.main_starts_daemon:
 			await self.restart_wallet_daemon()
 
 		if self.to_process and not self.compat_call:
