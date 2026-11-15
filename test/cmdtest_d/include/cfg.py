@@ -67,6 +67,7 @@ cmd_groups_extra = {
 	'create_ref_tx':          gd('CmdTestCreateRefTX',          {'modname': 'misc', 'full_data': True}),
 	'xmr_autosign_nocompat':  gd('CmdTestXMRAutosignNoCompat',  {'modname': 'xmr_autosign'}),
 	'xmrwallet_dev':          gd('CmdTestXMRWalletDev',         {'modname': 'xmrwallet'}),
+	'xmr_autosign_dev':       gd('CmdTestXMRAutosignDev',       {'modname': 'xmr_autosign'}),
 	'xmr_compat_dev':         gd('CmdTestXMRCompatDev',         {'modname': 'xmr_autosign'}),
 }
 

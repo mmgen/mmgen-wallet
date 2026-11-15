@@ -135,13 +135,13 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 		kal = KeyAddrList(
 			cfg       = self.user_cfg,
 			proto     = self.proto,
-			addr_idxs = '1-2',
+			addr_idxs = data.kal_range,
 			seed      = Wallet(self.user_cfg, fn=data.mmwords).seed,
 			skip_chksum_msg = True,
 			key_address_validity_check = False)
 		kal.file.write(outdir=self.user_datadir, ask_overwrite=False)
 		fn = get_file_with_ext(self.user_datadir, 'akeys')
-		m = op('create', self.user_cfg, fn, '1-2')
+		m = op('create', self.user_cfg, fn, data.kal_range)
 		asyncio.run(m.main())
 		asyncio.run(m.stop_wallet_daemon())
 		end_silence()
@@ -197,7 +197,7 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 			+ [op]
 			+ ([] if autosign else [get_file_with_ext(data.udir, 'akeys')]),
 			env = cleanup_env(self.cfg))
-		t.expect('2 wallets dumped')
+		t.expect('dumped')
 		res = t.read()
 		if op == 'dump_json':
 			data = json.loads(re.sub('Stopping.*', '', strip_ansi_escapes(res)).strip())
@@ -382,6 +382,12 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 		return self._sync_chkbal(
 			'1-2',
 			lambda n, b, ub: b == ub and ((n == 1 and 0.8 < b < 0.86) or (n == 2 and b > 1.23)))
+
+	def wait_signed1(self):
+		self.spawn(msg_only=True)
+		oqmsg('')
+		self._wait_signed('transaction')
+		return 'silent'
 
 	async def submit_transfer_tx1(self):
 		return await self._submit_transfer_tx()
@@ -892,12 +898,6 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			add_opts = self.user_daemon_opts + add_opts,
 			expect_str = expect_str)
 
-	def wait_signed1(self):
-		self.spawn(msg_only=True)
-		oqmsg('')
-		self._wait_signed('transaction')
-		return 'silent'
-
 	def _user_txops(
 			self,
 			op,
@@ -961,6 +961,34 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		t.read() # required!
 		self.remove_device_online()
 		return t
+
+class CmdTestXMRAutosignDev(CmdTestXMRAutosign):
+	tx_relay_user = None
+	user_data = (
+		#      user    sid       autosign kal_range add_coind_args
+		udata('miner', '98831F3A', False, '1', []),
+		udata('alice', 'FE3C6545', True,  '1', []))
+	cmd_group = (
+		('create_tmp_wallets',        'creating temporary online wallets for user'),
+		('dump_tmp_wallets',          'dumping user’s tmp wallets'),
+		('delete_tmp_wallets',        'deleting user’s tmp wallets'),
+		('gen_kafile_miner',          'generating key-address file for Miner'),
+		('gen_vkafile_user',          'generating viewkey-address file for user'),
+		('create_wallet_miner',       'creating Monero wallet for Miner'),
+		('mine_initial_coins',        'mining initial coins'),
+		('autosign_setup',            'autosign setup with user’s seed'),
+		('autosign_xmr_setup',        'autosign setup (creation of Monero signing wallets)'),
+		('restore_watchonly_wallets', 'creating watch-only wallets from user’s wallet dumps'),
+		('delete_tmp_dump_files',     'deleting user’s dump files'),
+		('fund_user1',                'sending funds to user (wallet #1)'),
+		('check_bal_user1',           'mining, checking balance (wallet #1)'),
+		('export_outputs1',           'exporting outputs from user’s watch-only wallet #1'),
+		('create_transfer_tx1',       'creating a transfer TX'),
+		('wait_loop_start',           'starting autosign wait loop'),
+		# ('wait_signed1',              'autosigning the transaction'),
+		('submit_transfer_tx1',       'submitting the transfer TX'),
+		('wait_loop_kill',            'stopping autosign wait loop'),
+	)
 
 class CmdTestXMRCompatDev(CmdTestXMRCompat):
 	"""
