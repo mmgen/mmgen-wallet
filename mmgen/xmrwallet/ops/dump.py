@@ -41,9 +41,23 @@ class OpDumpDataCommon(OpWallet):
 		h = MoneroWalletRPC(self, d)
 		h.open_wallet('source', refresh=not self.wallet_offline)
 
+		if (height := self.c.call('get_height')['height']) > 1:
+			from requests.exceptions import ConnectionError
+			blockcount = height - 1
+			dc = self.get_coin_daemon_rpc(test_connection=False)
+			try:
+				timestamp = dc.call('getblock', height=blockcount)['block_header']['timestamp']
+			except ConnectionError:
+				timestamp = None
+		else:
+			blockcount = 0
+			timestamp = None
+
 		return {
 			'seed_id': self.kal.al_id.sid,
 			'wallet_num': d.idx,
+			'blockcount': blockcount,
+			'timestamp': timestamp,
 			'data': h.get_wallet_data(print=False)}
 
 	def post_main_success(self):

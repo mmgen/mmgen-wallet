@@ -14,7 +14,7 @@ import asyncio
 from collections import namedtuple
 
 from ....obj import ImmutableAttr, Int
-from ....util import msg, ymsg, suf
+from ....util import msg, ymsg, suf, cached_property
 from ....color import red, green
 from ....addr import MoneroIdx
 from ....amt import CoinAmtChk
@@ -50,9 +50,14 @@ class MoneroTwView:
 		is_used = ImmutableAttr(bool)
 		al_id = ImmutableAttr(str)
 
-	class rpc:
-		caps = ()
-		is_remote = False
+	@cached_property
+	def rpc(self):
+		class DummyRPC:
+			caps = ()
+			is_remote = False
+			blockcount = self.blockcount
+			cur_date = self.timestamp
+		return DummyRPC
 
 	async def get_rpc_data(self, refresh=False):
 		from mmgen.tw.shared import TwMMGenID, TwLabel
@@ -73,6 +78,8 @@ class MoneroTwView:
 
 		if dump_data:
 			self.sid = SeedID(sid=dump_data[0]['seed_id'])
+			self.blockcount = Int(dump_data[0]['blockcount'])
+			self.timestamp = dump_data[0]['timestamp']
 			self.al_id = self.sid + ':M'
 
 		self.total = self.unlocked_total = self.proto.coin_amt('0')
