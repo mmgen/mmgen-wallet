@@ -37,8 +37,10 @@ class OpDumpDataCommon(OpWallet):
 	return_data = True
 
 	async def process_wallet(self, d, fn, last):
+
 		h = MoneroWalletRPC(self, d)
 		h.open_wallet('source', refresh=not self.wallet_offline)
+
 		return {
 			'seed_id': self.kal.al_id.sid,
 			'wallet_num': d.idx,

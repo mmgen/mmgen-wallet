@@ -463,9 +463,9 @@ class TwView(MMGenObject, metaclass=AsyncInit):
 						if hasattr(self.rpc, 'daemon') else ''))
 
 				if hasattr(self.rpc, 'blockcount'):
-					yield 'Block {} [{}]'.format(
-						self.rpc.blockcount.hl(color=color),
-						make_timestr(self.rpc.cur_date))
+					yield 'Block {a}{b}'.format(
+						a = self.rpc.blockcount.hl(color=color),
+						b = ' [{}]'.format(make_timestr(self.rpc.cur_date)) if self.rpc.cur_date else '')
 
 				if hasattr(self, 'total'):
 					if hasattr(self, 'unlocked_total') and self.total != self.unlocked_total:

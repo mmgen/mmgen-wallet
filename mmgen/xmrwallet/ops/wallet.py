@@ -62,13 +62,14 @@ class OpWallet(OpBase):
 			self.wallet_offline = True
 
 		self.wd = MoneroWalletDaemon(
-			cfg         = self.cfg,
-			proto       = self.proto,
-			monerod_addr = self.cfg.daemon or None,
+			cfg                    = self.cfg,
+			proto                  = self.proto,
+			test_user              = self.cfg.test_user,
+			monerod_addr           = self.cfg.daemon or None,
 			disable_authentication = self.disable_authentication,
-			offline = self.wallet_offline,
-			trust_monerod = self.trust_monerod,
-			test_monerod = not self.wallet_offline)
+			offline                = self.wallet_offline,
+			trust_monerod          = self.trust_monerod,
+			test_monerod           = not self.wallet_offline)
 
 		if self.is_create and self.cfg.compat:
 			self.wd.wallet_dir.mkdir(parents=True, exist_ok=True)

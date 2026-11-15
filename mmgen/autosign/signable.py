@@ -15,7 +15,7 @@ import sys
 from ..cfg import Config
 from ..tx import UnsignedTX, SignedTX
 from ..util import msg, msg_r, gmsg, bmsg, die, suf, fmt_list
-from ..color import yellow, red, orange
+from ..color import red, orange
 
 class Signable:
 
@@ -111,19 +111,26 @@ class Signable:
 
 			if body:
 				bmsg('\nAutosign summary:')
-				fs = '{}  {} {}'
-				t_wid, a_wid = 6, 44
+				fs = '{t}  {a} {A}'
+				t_wid, a_wid, A_wid = (6, 44, 7)
 
 				def gen():
-					yield fs.format('TX ID ', 'Non-MMGen outputs'+' '*(a_wid-17), 'Amount')
-					yield fs.format('-'*t_wid, '-'*a_wid, '-'*7)
+					yield fs.format(
+						t = 'TX ID'.ljust(t_wid),
+						a = 'Non-MMGen outputs'.ljust(a_wid),
+						A = 'Amount')
+					yield fs.format(
+						t = '-' * t_wid,
+						a = '-' * a_wid,
+						A = '-' * A_wid)
 					for tx, non_mmgen in body:
 						for nm in non_mmgen:
 							yield fs.format(
-								tx.txid.fmt(t_wid, color=True) if nm is non_mmgen[0] else ' '*t_wid,
-								nm.addr.fmt(nm.addr.view_pref, a_wid, color=True)
+								t = tx.txid.fmt(t_wid, color=True)
+										if nm is non_mmgen[0] else ''.ljust(t_wid),
+								a = nm.addr.fmt(nm.addr.view_pref, a_wid, color=True)
 										if nm.addr else '-'.ljust(a_wid),
-								nm.amt.hl() + ' ' + yellow(tx.coin))
+								A = nm.amt.hl() + ' ' + yellow(tx.coin))
 
 				msg('\n' + '\n'.join(gen()))
 			else:

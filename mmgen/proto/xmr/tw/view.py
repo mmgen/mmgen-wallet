@@ -13,7 +13,8 @@ proto.xmr.tw.view: Monero protocol base class for tracking wallet view classes
 import asyncio
 from collections import namedtuple
 
-from ....obj import ImmutableAttr
+from ....obj import ImmutableAttr, Int
+from ....util import msg, ymsg, suf
 from ....color import red, green
 from ....addr import MoneroIdx
 from ....amt import CoinAmtChk
@@ -251,8 +252,6 @@ class MoneroTwView:
 		return MMGenID(proto=self.proto, id_str='{}:M:{}'.format(self.sid, wnum))
 
 	def choose_wallet(self, prompt):
-		from ....obj import Int
-		from ....util import msg, suf
 		from ....ui import item_chooser
 		wdata = {}
 		for d in self.accts_data:
@@ -271,7 +270,6 @@ class MoneroTwView:
 	class action(TwView.action):
 
 		async def a_sync_wallets(self, parent):
-			from ....util import msg, ymsg
 			msg('')
 			await parent.get_data(refresh=True)
 			del parent._rpc

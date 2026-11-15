@@ -54,9 +54,10 @@ class OpSign(OpWallet):
 			- check that input amount is equal to sum of send amount, change amount and fee
 
 		  Actions performed by the user:
-			- For transfers, observe output of the offline signing operation and check correctness
-			  of destination address and amount.  The offline installation cannot know how much the
-			  user intended to send and to what address.
+			- for all transactions, check signing summary for correctness of transaction type
+			- for transfers, check signing summary for correctness of destination address and
+			  amount - the offline installation cannot know how much the user intended to send
+			  and to what address
 		"""
 
 		def do_err(msg):
