@@ -63,6 +63,7 @@ op_names = {
 	'resubmit':            'submit',
 	'abort':               'submit',
 	'dump_data':           'dump',
+	'dump_data_refresh':   'dump',
 	'dump_json':           'dump',
 	'dump':                'dump',
 	'restore':             'restore',
@@ -84,6 +85,7 @@ kafile_arg_ops = (
 	'sweep',
 	'sweep_all',
 	'dump_data',
+	'dump_data_refresh',
 	'dump_json',
 	'dump',
 	'restore')

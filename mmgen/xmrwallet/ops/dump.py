@@ -38,7 +38,7 @@ class OpDumpDataCommon(OpWallet):
 
 	async def process_wallet(self, d, fn, last):
 		h = MoneroWalletRPC(self, d)
-		h.open_wallet('source', refresh=False)
+		h.open_wallet('source', refresh=not self.wallet_offline)
 		return {
 			'seed_id': self.kal.al_id.sid,
 			'wallet_num': d.idx,
@@ -50,6 +50,9 @@ class OpDumpDataCommon(OpWallet):
 class OpDumpData(OpDumpDataCommon):
 	start_daemon = False
 	stem = 'load'
+
+class OpDumpDataRefresh(OpDumpData):
+	wallet_offline = False
 
 class OpDumpJson(OpDumpDataCommon):
 	stem = 'dump'

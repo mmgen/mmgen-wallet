@@ -833,10 +833,8 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 				t.expect(menu_prompt, ch)
 				if ch == 'R':
 					for n in range(len(al)):
-						t.expect('Syncing')
-					for n in range(len(al)):
-						t.expect('Loading')
-						t.expect('Opening')
+						for s in ('Loading', 'Opening', 'Refreshing'):
+							t.expect(s)
 			if expect_str:
 				t.expect(expect_str, regex=True)
 			t.expect(menu_prompt, 'q')

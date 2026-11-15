@@ -10,6 +10,7 @@
 proto.xmr.tw.view: Monero protocol base class for tracking wallet view classes
 """
 
+import asyncio
 from collections import namedtuple
 
 from ....obj import ImmutableAttr
@@ -52,10 +53,20 @@ class MoneroTwView:
 		caps = ()
 		is_remote = False
 
-	async def get_rpc_data(self):
+	async def get_rpc_data(self, refresh=False):
 		from mmgen.tw.shared import TwMMGenID, TwLabel
 
-		op = xmrwallet_op('dump_data', self.cfg, None, None, compat_call=True)
+		if refresh:
+			from ....exception import SocketError
+			try:
+				op = xmrwallet_op('dump_data_refresh', self.cfg, None, None, compat_call=True)
+			except SocketError as e:
+				ymsg('\nRefresh failed: ' + str(e))
+				await asyncio.sleep(1.5)
+				return None
+		else:
+			op = xmrwallet_op('dump_data', self.cfg, None, None, compat_call=True)
+
 		await op.restart_wallet_daemon()
 		dump_data = await op.main()
 
@@ -262,16 +273,6 @@ class MoneroTwView:
 		async def a_sync_wallets(self, parent):
 			from ....util import msg, ymsg
 			msg('')
-			try:
-				op = xmrwallet_op('sync', parent.cfg, None, None, compat_call=True)
-			except Exception as e:
-				if type(e).__name__ == 'SocketError':
-					import asyncio
-					ymsg(str(e))
-					await asyncio.sleep(2)
-					return False
-				raise
-			await op.restart_wallet_daemon()
-			await op.main()
-			await parent.get_data()
+			await parent.get_data(refresh=True)
+			del parent._rpc
 			return 'erase'
