@@ -15,7 +15,6 @@ from pathlib import Path
 
 from ...util import msg, msg_r, gmsg, ymsg, die
 from ...ui import keypress_confirm
-from ...proto.xmr.rpc import MoneroRPCClient
 
 from ..file.tx import MoneroMMGenTX
 
@@ -30,29 +29,7 @@ class OpDaemon(OpBase):
 
 		self.mount_removable_device()
 
-		if self.cfg.tx_relay_daemon:
-			m = self.parse_tx_relay_opt()
-			host, port = m[1].split(':')
-			proxy = m[2]
-			md = None
-		else:
-			from ...daemon import CoinDaemon
-			md = CoinDaemon(self.cfg, proto=self.cfg._proto)
-			host, port = (
-				self.cfg.daemon.split(':') if self.cfg.daemon else
-				('localhost', md.rpc_port))
-			proxy = None
-
-		self.dc = MoneroRPCClient(
-			cfg    = self.cfg,
-			proto  = self.proto,
-			daemon = md,
-			host   = host,
-			port   = int(port),
-			user   = None,
-			passwd = None,
-			test_connection = host == 'localhost', # avoid extra connections if relay is a public node
-			proxy  = proxy)
+		self.dc = self.get_coin_daemon_rpc()
 
 class OpRelay(OpDaemon):
 

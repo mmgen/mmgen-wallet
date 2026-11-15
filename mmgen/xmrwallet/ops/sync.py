@@ -31,7 +31,7 @@ class OpSync(OpWallet):
 		super().__init__(cfg, uarg_tuple)
 
 		if not self.wallet_offline:
-			self.dc = self.get_coin_daemon_rpc()
+			self.dc = self.get_coin_daemon_rpc(test_connection=True)
 
 		self.wallets_data = {}
 

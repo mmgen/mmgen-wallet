@@ -105,6 +105,32 @@ class OpBase:
 			self.cfg.tx_relay_daemon,
 			re.ASCII)
 
+	def get_coin_daemon_rpc(self, test_connection=None):
+
+		from ...daemon import CoinDaemon
+		from ...proto.xmr.rpc import MoneroRPCClient
+
+		if self.cfg.tx_relay_daemon:
+			m = self.parse_tx_relay_opt()
+			host, port = m[1].split(':')
+			proxy = m[2]
+		else:
+			host, port = self.cfg.daemon.split(':') if self.cfg.daemon else (None, None)
+			proxy = None
+
+		md = CoinDaemon(self.cfg, proto=self.proto, test_user=self.cfg.test_user)
+		return MoneroRPCClient(
+			cfg    = self.cfg,
+			proto  = self.proto,
+			host   = host or 'localhost',
+			port   = port or md.rpc_port,
+			user   = None,
+			passwd = None,
+			# avoid extra connections if relay is a public node:
+			test_connection = (host=='localhost') if test_connection is None else test_connection,
+			daemon = md,
+			proxy = proxy)
+
 	def get_tx_cls(self, clsname):
 		from ..file.tx import MoneroMMGenTX
 		return getattr(MoneroMMGenTX, clsname + ('Compat' if self.compat_call else ''))

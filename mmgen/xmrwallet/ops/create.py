@@ -29,7 +29,7 @@ class OpCreate(OpWallet):
 		msg_r('') # for pexpect
 
 		if self.cfg.restore_height == 'current':
-			restore_height = self.get_coin_daemon_rpc().call_raw('get_height')['height']
+			restore_height = self.get_coin_daemon_rpc(test_connection=True).call_raw('get_height')['height']
 		else:
 			restore_height = self.cfg.restore_height
 

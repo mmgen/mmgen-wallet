@@ -16,7 +16,7 @@ from ...color import orange, cyan
 from ...util import msg, gmsg, ymsg, die, suf
 from ...addr import MMGenID
 from ...addrlist import KeyAddrList, ViewKeyAddrList, AddrIdxList
-from ...proto.xmr.rpc import MoneroRPCClient, MoneroWalletRPCClient
+from ...proto.xmr.rpc import MoneroWalletRPCClient
 from ...proto.xmr.daemon import MoneroWalletDaemon
 
 from . import OpBase
@@ -134,22 +134,6 @@ class OpWallet(OpBase):
 			msg(orange('Skipping display of empty accounts where applicable'))
 		if self.cfg.skip_empty_addresses:
 			msg(orange('Skipping display of empty used addresses where applicable'))
-
-	def get_coin_daemon_rpc(self):
-
-		host, port = (
-			self.cfg.daemon.split(':') if self.cfg.daemon else
-			('localhost', self.wd.monerod_port))
-
-		from ...daemon import CoinDaemon
-		return MoneroRPCClient(
-			cfg    = self.cfg,
-			proto  = self.proto,
-			daemon = CoinDaemon(self.cfg, network_id='xmr'),
-			host   = host,
-			port   = int(port),
-			user   = None,
-			passwd = None)
 
 	@property
 	def autosign_viewkey_addr_file(self):
