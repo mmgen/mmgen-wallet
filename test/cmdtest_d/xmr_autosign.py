@@ -78,10 +78,12 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 		('check_bal_user1',           'mining, checking balance (wallet #1)'),
 		('fund_user2',                'sending funds to user (wallet #2)'),
 		('check_bal_user2',           'mining, checking balance (wallet #2)'),
-		('wait_loop_start',           'starting autosign wait loop'),
 		('export_outputs1',           'exporting outputs from user’s watch-only wallet #1'),
 		('create_transfer_tx1',       'creating a transfer TX'),
+		('wait_loop_start_terse',     'starting autosign wait loop (no full summary)'),
 		('submit_transfer_tx1',       'submitting the transfer TX'),
+		('wait_loop_kill',            'stopping autosign wait loop'),
+		('wait_loop_start',           'starting autosign wait loop'),
 		('resubmit_transfer_tx1',     'resubmitting the transfer TX'),
 		('export_outputs2',           'exporting outputs from user’s watch-only wallet #1'),
 		('import_key_images1',        'importing signed key images into user’s online wallets'),
@@ -124,6 +126,9 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 		self.autosign_opts = ['--autosign'] # mmgen-xmrwallet opts
 		self.autosign_setup_opts = ['--regtest=1', f'--xmrwallets={self.users[self.user].kal_range}']
 		self.spawn_env['MMGEN_TEST_SUITE_BOGUS_SEND'] = ''
+
+	def wait_loop_start_terse(self):
+		return self.wait_loop_start(full_summary=False)
 
 	def create_tmp_wallets(self):
 		self.spawn(msg_only=True)
@@ -844,7 +849,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		return t
 
 	def wait_loop_start_compat(self):
-		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=xmr'])
+		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=xmr'], full_summary=False)
 
 	wait_loop_start_compat2 = wait_loop_start_compat
 
@@ -889,7 +894,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		return self._user_txstatus(['--quiet'], expect_str='confirmations')
 
 	def user_txstatus3(self):
-		return self._user_txstatus(['--verbose'], expect_str='TRANSACTION DATA')
+		return self._user_txstatus(['--verbose'], expect_str='transfer')
 
 	def _user_txstatus(self, add_opts=[], expect_str=None):
 		return self._user_txops(
@@ -984,7 +989,7 @@ class CmdTestXMRAutosignDev(CmdTestXMRAutosign):
 		('check_bal_user1',           'mining, checking balance (wallet #1)'),
 		('export_outputs1',           'exporting outputs from user’s watch-only wallet #1'),
 		('create_transfer_tx1',       'creating a transfer TX'),
-		('wait_loop_start',           'starting autosign wait loop'),
+		('wait_loop_start_terse',     'starting autosign wait loop (no full summary)'),
 		# ('wait_signed1',              'autosigning the transaction'),
 		('submit_transfer_tx1',       'submitting the transfer TX'),
 		('wait_loop_kill',            'stopping autosign wait loop'),
@@ -1028,7 +1033,7 @@ class CmdTestXMRCompatDev(CmdTestXMRCompat):
 		return self._user_txops('txcreate', menu='s', sweep_menu='1', sweep_type='sweep')
 
 	def wait_loop_start_xmr(self):
-		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=xmr'])
+		return self.wait_loop_start(opts=['--xmrwallet-compat', '--coins=xmr'], full_summary=False)
 
 	async def user_gettxdata(self):
 		self.insert_device_online()

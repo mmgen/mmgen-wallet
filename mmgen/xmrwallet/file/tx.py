@@ -80,21 +80,27 @@ class MoneroMMGenTX:
 		def src_wallet_idx(self):
 			return int(self.data.source.split(':')[0])
 
-		def get_info_oneline(self, *, indent='', addr_col_w=None):
+		def get_info_oneline(self, *, indent='', addr_col_w=None, full_address=False, is_swap=False):
 			d = self.data
+			if addr_col_w:
+				e = purple(d.op.ljust(9))
+				f = red('{}:{}'.format(d.source.wallet, d.source.account).ljust(6))
+				g = red('{}:{}'.format(d.dest.wallet, d.dest.account).ljust(6)) if d.dest else cyan('ext   ')
+				h = d.amount.fmt(4, color=True, prec=12)
+				j = d.dest_address.fmt(0, addr_col_w, color=True)
+			else:
+				e = purple(d.op)
+				f = red('{}:{}'.format(d.source.wallet, d.source.account))
+				g = red('{}:{}'.format(d.dest.wallet, d.dest.account)) if d.dest else cyan('ext')
+				h = d.amount.hl(color=True)
+				j = d.dest_address.hl(0)
 			return self.oneline_fs.format(
-					a = yellow(d.network),
-					b = d.seed_id.hl(),
-					c = make_timestr(d.submit_time if d.submit_time is not None else d.create_time),
-					d = orange(self.file_id),
-					e = purple(d.op.ljust(9)),
-					f = red('{}:{}'.format(d.source.wallet, d.source.account).ljust(6)),
-					g = red('{}:{}'.format(d.dest.wallet, d.dest.account).ljust(6))
-						if d.dest else cyan('ext   '),
-					h = d.amount.fmt(4, color=True, prec=12),
-					j = d.dest_address.fmt(0, addr_col_w, color=True) if addr_col_w else
-						d.dest_address.hl(0),
-					x = '->')
+				a = yellow(d.network),
+				b = d.seed_id.hl(),
+				c = make_timestr(d.submit_time if d.submit_time is not None else d.create_time),
+				d = orange(self.file_id),
+				e=e, f=f, g=g, h=h, j=j,
+				x = '->')
 
 		def get_info(self, *, indent='', addr_col_w=None, full_address=False, is_swap=False):
 			d = self.data

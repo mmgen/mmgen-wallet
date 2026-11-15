@@ -73,6 +73,8 @@ class MoneroWalletOutputsFile:
 			else:
 				return f'{indent}{self.wallet_fn.name}: no key images'
 
+		get_info_oneline = get_info
+
 	class New(Base):
 		ext = 'raw'
 

@@ -11,7 +11,7 @@ proto.xmr.tx.completed: Monero completed transaction class
 """
 
 from ....util import cached_property, make_timestamp
-from ....color import cyan
+from ....color import yellow, cyan
 from ....tx.completed import Completed as TxCompleted
 
 from .base import Base
@@ -41,12 +41,19 @@ class Completed(Base, TxCompleted):
 	def info(self):
 		from ....tx.info import TxInfo
 		class info_cls(TxInfo):
-			def format(info_self, *args, **kwargs):
+			def format(info_self, *, terse=False, sort='addr'):
+				swap_hdr = (
+					(''.join(info_self.gen_swap_subhdr()) + '\n')
+						if (self.compat_data or self.raw_compat_data) and self.is_swap else
+					'')
 				return (
+					swap_hdr
+					+ yellow('XMR ')
+					+ self.compat_tx.get_info_oneline()
+					+ '\n'
+						) if terse else (
 					cyan(self.data_desc.upper())
 					+ '\n'
-					+ ((''.join(info_self.gen_swap_subhdr()) + '\n')
-							if (self.compat_data or self.raw_compat_data) and self.is_swap
-								else '')
+					+ swap_hdr
 					+ self.compat_tx.get_info(full_address=True, indent='  ', is_swap=self.is_swap))
 		return info_cls(self.cfg, self)

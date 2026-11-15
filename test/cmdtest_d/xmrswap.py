@@ -32,6 +32,7 @@ class CmdTestXMRSwapMethods:
 			auto_dest_addr  = None,
 			reload_quote    = False,
 			menu_prompt     = None,
+			tx_view_resp    = 't',
 			expect_pats     = []):
 		if auto_chg_addr:
 			t.expect(rf'Using.*{auto_chg_addr}.*as change address.*: ', 'y', regex=True)
@@ -50,7 +51,7 @@ class CmdTestXMRSwapMethods:
 				t.expect('(Y/n): ', 'y') # change OK?
 		if tx_type != 'xmr_swap':
 			t.expect('(y/N): ', 'n')     # add comment?
-		t.expect('view: ', 't')
+		t.expect('view: ', tx_view_resp)
 		for pat in expect_pats:
 			t.expect(pat, regex=True)
 		t.expect('to continue: ', '\n')
@@ -107,6 +108,7 @@ class CmdTestXMRSwapMethods:
 				'inputs': inputs,
 				'auto_chg_addr': auto_chg_addr,
 				'auto_dest_addr': auto_dest_addr,
+				'tx_view_resp': 'y',
 				'expect_pats': expect_pats},
 			output_args = args)
 
@@ -117,6 +119,7 @@ class CmdTestXMRSwapMethods:
 			expect_pat = expect_pat,
 			is_xmr = is_xmr,
 			no_wait = no_wait,
+			tx_view_resp = 'y',
 			need_rbf = True)
 
 class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
@@ -137,10 +140,8 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('subgroup.rune_setup',     ['ltc_setup']),
 		('subgroup.autosign_setup', []),
 		('subgroup.xmr_setup',      ['ltc_setup', 'autosign_setup']),
-		('subgroup.wait_loop',      ['autosign_setup']),
-		('subgroup.swap',           ['rune_setup', 'xmr_setup', 'wait_loop']),
+		('subgroup.swap',           ['rune_setup', 'xmr_setup']),
 		('subgroup.xmr_swap',       ['swap']),
-		('xmr_wait_loop_kill',      ''),
 		('xmr_stop_daemons',        ''))
 
 	cmd_subgroups = {
@@ -183,10 +184,6 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('xmr_mine_blocks_10',             ''),
 		('xmr_user_listaddresses_refresh', ''),
 	),
-	'wait_loop': (
-		'starting the autosign wait loop',
-		('xmr_wait_loop_start_compat', ''),
-	),
 	'swap': (
 		'swap operations (LTC -> XMR)',
 		('remote_get_refnum',    'getting the reference number'),
@@ -195,6 +192,7 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('swaptxcreate_refreq2', 'creating an LTC->XMR registration transaction (auto chg, 1:0)'),
 		('swaptxcreate_abort2',  'aborting the transaction'),
 		('swaptxcreate_refreq3', 'creating an LTC->XMR registration transaction (auto chg, mmid dest)'),
+		('wait_loop_start_terse', 'starting the signing loop (terse summary)'),
 		('swaptxsend_refreq1',   'sending the transaction'),
 		('swaptxcreate_refreq4', 'creating an LTC->XMR registration transaction (auto chg, 1:1)'),
 		('swaptxsend_refreq2',   'sending the transaction'),
@@ -203,6 +201,7 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('generate_ltc',         'generating a block'),
 		('swaptxcreate_refnum2', 'creating an LTC->XMR swap transaction (no chg, auto dest)'),
 		('swaptxsend_refnum2',   'sending the swap transaction'),
+		('wait_loop_kill',       'killing the signing loop'),
 		('generate_ltc',         'generating a block'),
 		('bob_bal2',             'Bob’s balance')),
 	'xmr_swap': (
@@ -210,11 +209,13 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 		('remote_get_refnum_xmr',    'getting the reference number'),
 		('swaptxcreate_refreq7_bad', 'creating an XMR->LTC registration transaction (bad, no amount)'),
 		('swaptxcreate_refreq7',     'creating an XMR->LTC registration transaction (auto chg, auto dest)'),
+		('wait_loop_start_xmrcompat', 'starting the signing loop (--xmrwallet-compat)'),
 		('swaptxsend_refreq7',       'sending the transaction'),
 		('swaptxcreate_refnum7_bad', 'creating an XMR->LTC swap transaction (bad, no amount)'),
 		('swaptxcreate_refnum7',     'creating an XMR->LTC swap transaction (auto chg, auto dest)'),
 		('xmr_swaptxview_refnum7',   ''),
 		('swaptxsend_refnum7',       'sending the transaction'),
+		('wait_loop_kill',           'killing the signing loop'),
 		('swaptxstatus_refnum7a',    'getting the transaction status (mempool)'),
 		('xmr_mine_blocks_10',       ''),
 		('swaptxstatus_refnum7b',    'getting the transaction status (confirmations)'),
@@ -232,6 +233,12 @@ class CmdTestXMRSwap(CmdTestXMRSwapMethods, CmdTestSwap):
 			return
 
 		globals()[self.cross_group] = self.create_cross_runner(trunner, add_cfg={})
+
+	def wait_loop_start_terse(self):
+		return self.wait_loop_start(opts=['--coins=ltc'], full_summary=False)
+
+	def wait_loop_start_xmrcompat(self):
+		return self.wait_loop_start(opts=['--coins=xmr', '--xmrwallet-compat'])
 
 	def fund_bob1(self):
 		return self.fund_wallet('bob', 500, mmtype='C')

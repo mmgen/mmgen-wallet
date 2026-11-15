@@ -121,7 +121,8 @@ class Signable:
 						for nm in non_mmgen:
 							yield fs.format(
 								tx.txid.fmt(t_wid, color=True) if nm is non_mmgen[0] else ' '*t_wid,
-								nm.addr.fmt(nm.addr.view_pref, a_wid, color=True),
+								nm.addr.fmt(nm.addr.view_pref, a_wid, color=True)
+										if nm.addr else '-'.ljust(a_wid),
 								nm.amt.hl() + ' ' + yellow(tx.coin))
 
 				msg('\n' + '\n'.join(gen()))
@@ -247,10 +248,9 @@ class Signable:
 				'no_restart_wallet_daemon': old_idx == new_idx})
 
 		def print_summary(self, signables):
+			info_func = 'get_info' if self.cfg.full_summary else 'get_info_oneline'
 			bmsg('\nAutosign summary:')
-			msg('\n'.join(
-				s.get_info(indent='  ') if hasattr(s, 'get_info') else s.info.format()
-					for s in signables) + self.summary_footer)
+			msg('\n'.join(getattr(s, info_func)(indent='  ') for s in signables) + self.summary_footer)
 
 	class xmr_transaction(xmr_signable, automount_transaction):
 		desc = 'Monero non-compat transaction'
@@ -291,6 +291,13 @@ class Signable:
 			tx2.compat_data = await self.do_sign(f, compat_call=compat_call, silent_load=True)
 			tx2.file.write(ask_write=False, outdir=self.dir)
 			return tx2
+
+		def print_summary(self, signables):
+			terse = not self.cfg.full_summary
+			bmsg('\nAutosign summary:')
+			msg(
+				('' if terse else '\n')
+				+ '\n'.join(tx.info.format(terse=terse) for tx in signables))
 
 	class xmr_wallet_outputs_file(xmr_signable, base):
 		desc = 'Monero wallet outputs file'
