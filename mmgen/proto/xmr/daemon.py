@@ -13,7 +13,7 @@ proto.xmr.daemon: Monero base protocol daemon classes
 from pathlib import Path
 
 from ...cfg import gc
-from ...util import list_gen, die, contains_any, test_socket
+from ...util import msg, list_gen, die, contains_any, test_socket
 from ...daemon import CoinDaemon, RPCDaemon, _nw, _dd
 
 class monero_daemon(CoinDaemon):
@@ -129,9 +129,8 @@ class MoneroWalletDaemon(RPCDaemon):
 				test_user = test_user,
 				proto = proto).rpc_port)
 
-		if test_monerod and self.monerod_port:
-			if not test_socket('localhost', self.monerod_port, timeout=1):
-				die('SocketError', f'Unable to connect to Monero daemon at localhost:{self.monerod_port}')
+		if test_monerod:
+			self.test_monerod_port()
 
 		self.user = user or self.cfg.wallet_rpc_user or self.cfg.monero_wallet_rpc_user
 		self.passwd = passwd or self.cfg.wallet_rpc_password or self.cfg.monero_wallet_rpc_password
@@ -166,6 +165,13 @@ class MoneroWalletDaemon(RPCDaemon):
 			cfg             = self.cfg,
 			daemon          = self,
 			test_connection = False)
+
+	def test_monerod_port(self):
+		if self.monerod_port:
+			if not test_socket('localhost', self.monerod_port, timeout=1):
+				die('SocketError', f'Unable to connect to Monero daemon at localhost:{self.monerod_port}')
+		else:
+			msg('No monerod port configured, skipping socket test')
 
 	def start(self, *args, **kwargs):
 		try: # NB: required due to bug in v18.3.1: PID file not deleted on shutdown
