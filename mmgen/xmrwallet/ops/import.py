@@ -14,7 +14,6 @@ from pathlib import Path
 from ...util import msg, bmsg, die, suf
 
 from ..file.outputs import MoneroWalletOutputsFile
-from ..rpc import MoneroWalletRPC
 
 from .wallet import OpWallet
 
@@ -24,8 +23,7 @@ class OpImportOutputs(OpWallet):
 	return_data = True
 	main_starts_daemon = True
 
-	async def process_wallet(self, d, fn, last):
-		h = MoneroWalletRPC(self, d)
+	async def process_wallet(self, d, h, last):
 		if self.need_daemon_start or len(self.kal.data) != 1:
 			h.open_wallet(refresh=False)
 		self.head_msg(d.idx, h.fn)
@@ -58,16 +56,15 @@ class OpImportKeyImages(OpWallet):
 		rw_msg = ' for requested wallets' if self.uargs.wallets else ''
 		die(2, f'No signed key image files found{rw_msg}!')
 
-	async def process_wallet(self, d, fn, last):
+	async def process_wallet(self, d, h, last):
 		keyimage_fn = MoneroWalletOutputsFile.Signed.find_fn_from_wallet_fn(
 			self.cfg,
-			fn,
+			h.fn,
 			wallet_dir = None if self.cfg.autosign else self.wd.wallet_dir,
 			ret_on_no_match = True)
 		if not keyimage_fn:
 			msg(f'No signed key image file found for wallet #{d.idx}')
 			return False
-		h = MoneroWalletRPC(self, d)
 		h.open_wallet()
 		self.head_msg(d.idx, h.fn)
 		m = MoneroWalletOutputsFile.Signed(parent=self, fn=keyimage_fn)

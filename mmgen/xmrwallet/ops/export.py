@@ -13,7 +13,6 @@ xmrwallet.ops.export: Monero wallet ops for the MMGen Suite
 from ...util import gmsg, gmsg_r
 
 from ..file.outputs import MoneroWalletOutputsFile
-from ..rpc import MoneroWalletRPC
 
 from .wallet import OpWallet
 
@@ -22,8 +21,7 @@ class OpExportOutputs(OpWallet):
 	stem = 'process'
 	sign = False
 
-	async def process_wallet(self, d, fn, last):
-		h = MoneroWalletRPC(self, d)
+	async def process_wallet(self, d, h, last):
 		h.open_wallet('source')
 
 		if self.cfg.rescan_blockchain:
@@ -40,14 +38,14 @@ class OpExportOutputs(OpWallet):
 		for ftype in ('Unsigned', 'Signed'):
 			old_fn = getattr(MoneroWalletOutputsFile, ftype).find_fn_from_wallet_fn(
 				cfg             = self.cfg,
-				wallet_fn       = fn,
+				wallet_fn       = h.fn,
 				wallet_dir      = None if self.cfg.autosign else self.wd.wallet_dir,
 				ret_on_no_match = True)
 			if old_fn:
 				old_fn.unlink()
 		m = MoneroWalletOutputsFile.New(
 			parent    = self,
-			wallet_fn = fn,
+			wallet_fn = h.fn,
 			data      = self.c.call('export_outputs', all=True),
 			sign      = self.sign)
 		m.write()

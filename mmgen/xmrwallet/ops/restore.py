@@ -13,7 +13,6 @@ xmrwallet.ops.restore: Monero wallet ops for the MMGen Suite
 from ...util import msg, gmsg, bmsg, ymsg, rmsg, die
 
 from ..file.outputs import MoneroWalletDumpFile
-from ..rpc import MoneroWalletRPC
 
 from .create import OpCreate
 
@@ -24,7 +23,7 @@ class OpRestore(OpCreate):
 		if self.cfg.restore_height is not None:
 			die(1, '--restore-height must be unset when running the ‘restore’ command')
 
-	async def process_wallet(self, d, fn, last):
+	async def process_wallet(self, d, h, last):
 
 		def get_dump_data():
 
@@ -37,9 +36,9 @@ class OpRestore(OpCreate):
 			match tuple(gen()):
 				case [dump_fn, *rest]:
 					if rest:
-						ymsg(f'Warning: more than one dump file found for ‘{fn}’ - using the first!')
+						ymsg(f'Warning: more than one dump file found for ‘{h.fn}’ - using the first!')
 				case _:
-					die(1, f'No suitable dump file found for ‘{fn}’')
+					die(1, f'No suitable dump file found for ‘{h.fn}’')
 
 			return MoneroWalletDumpFile.Completed(
 				parent = self,
@@ -80,14 +79,13 @@ class OpRestore(OpCreate):
 				rmsg('Restored data does not match original dump!  Dumping bad data.')
 				MoneroWalletDumpFile.New(
 					parent    = self,
-					wallet_fn = fn,
+					wallet_fn = h.fn,
 					data      = {'wallet_metadata': restored_data}
 				).write(add_suf='.bad')
 				die(3, 'Fatal error')
 
-		await super().process_wallet(d, fn, last)
+		await super().process_wallet(d, h, last)
 
-		h = MoneroWalletRPC(self, d)
 		h.open_wallet('newly created')
 
 		msg('')

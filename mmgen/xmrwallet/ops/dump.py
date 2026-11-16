@@ -13,21 +13,19 @@ xmrwallet.ops.dump: Monero wallet ops for the MMGen Suite
 from ...util import msg, Msg
 
 from ..file.outputs import MoneroWalletDumpFile
-from ..rpc import MoneroWalletRPC
 
 from .wallet import OpWallet
 
 class OpDump(OpWallet):
 	wallet_offline = True
 
-	async def process_wallet(self, d, fn, last):
-		h = MoneroWalletRPC(self, d)
+	async def process_wallet(self, d, h, last):
 		h.open_wallet('source')
 		wallet_data = h.get_wallet_data(print=False)
 		msg('')
 		MoneroWalletDumpFile.New(
 			parent    = self,
-			wallet_fn = fn,
+			wallet_fn = h.fn,
 			data      = {'wallet_metadata': wallet_data.addrs_data}
 		).write()
 		return True
@@ -36,9 +34,8 @@ class OpDumpDataCommon(OpWallet):
 	wallet_offline = True
 	return_data = True
 
-	async def process_wallet(self, d, fn, last):
+	async def process_wallet(self, d, h, last):
 
-		h = MoneroWalletRPC(self, d)
 		h.open_wallet('source', refresh=not self.wallet_offline)
 
 		if (height := self.c.call('get_height')['height']) > 1:

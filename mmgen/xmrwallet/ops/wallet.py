@@ -19,6 +19,8 @@ from ...addrlist import KeyAddrList, ViewKeyAddrList, AddrIdxList
 from ...proto.xmr.rpc import MoneroWalletRPCClient
 from ...proto.xmr.daemon import MoneroWalletDaemon
 
+from ..rpc import MoneroWalletRPC
+
 from . import OpBase
 
 class OpWallet(OpBase):
@@ -208,7 +210,10 @@ class OpWallet(OpBase):
 				b = n + 1,
 				c = len(self.addr_data),
 				d = fn.name))
-			data.append(await self.process_wallet(d, fn, last=n == len(self.addr_data) - 1))
+			data.append(await self.process_wallet(
+				d,
+				MoneroWalletRPC(self, d),
+				last = n == len(self.addr_data) - 1))
 		if not self.compat_call:
 			gmsg(f'\n{len(data)} wallet{suf(len(data))} {self.stem}ed\n')
 		return data if self.return_data else sum(map(bool, data))

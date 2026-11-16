@@ -25,7 +25,7 @@ class OpCreate(OpWallet):
 		if self.cfg.restore_height != 'current' and int(self.cfg.restore_height or 0) < 0:
 			die(1, f'{self.cfg.restore_height}: invalid value for --restore-height (less than zero)')
 
-	async def process_wallet(self, d, fn, last):
+	async def process_wallet(self, d, h, last):
 		msg_r('') # for pexpect
 
 		if self.cfg.restore_height == 'current':
@@ -36,7 +36,7 @@ class OpCreate(OpWallet):
 		if self.cfg.watch_only:
 			ret = self.c.call(
 				'generate_from_keys',
-				filename       = fn.name,
+				filename       = h.fn.name,
 				password       = d.wallet_passwd,
 				address        = d.addr,
 				viewkey        = d.viewkey,
@@ -45,7 +45,7 @@ class OpCreate(OpWallet):
 			from ...xmrseed import xmrseed
 			ret = self.c.call(
 				'restore_deterministic_wallet',
-				filename       = fn.name,
+				filename       = h.fn.name,
 				password       = d.wallet_passwd,
 				seed           = xmrseed().fromhex(d.sec.wif, tostr=True),
 				restore_height = restore_height,

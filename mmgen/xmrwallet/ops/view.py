@@ -14,7 +14,6 @@ from ...color import green
 from ...util import msg, ymsg
 
 from ..include import gen_acct_addr_info
-from ..rpc import MoneroWalletRPC
 
 from .sync import OpSync
 
@@ -46,19 +45,13 @@ class OpView(OpSync):
 	def pre_init_action(self):
 		ymsg('Running in offline mode. Balances may be out of date!')
 
-	async def process_wallet(self, d, fn, last):
-
-		self.c.call(
-			'open_wallet',
-			filename = fn.name,
-			password = d.wallet_passwd)
+	async def process_wallet(self, d, h, last):
+		h.open_wallet(refresh=False)
 
 		wallet_height = self.c.call('get_height')['height']
 		msg(f'  Wallet height: {wallet_height}')
 
-		self.wallets_data[fn.name] = MoneroWalletRPC(self, d).get_wallet_data(
-			print = False,
-			skip_empty_ok = True)
+		self.wallets_data[h.fn.name] = h.get_wallet_data(print=False, skip_empty_ok=True)
 
 		if not last:
 			self.c.call('close_wallet')

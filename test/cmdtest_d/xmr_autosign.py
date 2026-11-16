@@ -1007,12 +1007,13 @@ class CmdTestXMRCompatDev(CmdTestXMRCompat):
 	user_data = (
 		#      user    sid       autosign kal_range add_coind_args
 		udata('miner', '98831F3A', False, '1', []),
-		udata('alice', 'FE3C6545', True,  '1', []))
+		udata('alice', 'FE3C6545', True,  '1-2', []))
 	cmd_group = (
 		('autosign_setup',      'autosign setup with user’s seed'),
 		('autosign_xmr_setup',  'autosign setup (creation of Monero signing wallet)'),
 		('addrimport_user',     'creating (importing) user’s watch-only wallet from key-address file'),
 		('gen_vkafile_user',    'generating viewkey-address file for user'),
+		('user_listaddresses_refresh', 'refreshing wallet'),
 		('gen_kafile_miner',    'generating key-address file for Miner'),
 		('create_wallet_miner', 'creating Monero wallet for Miner'),
 		('mine_initial_coins',  'mining initial coins'),

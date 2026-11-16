@@ -35,19 +35,13 @@ class OpSync(OpWallet):
 
 		self.wallets_data = {}
 
-	async def process_wallet(self, d, fn, last):
+	async def process_wallet(self, d, h, last):
 
 		chain_height = self.dc.call_raw('get_height')['height']
 		msg(f'  Chain height: {chain_height}')
 
 		t_start = time.time()
-
-		msg_r('  Opening wallet...')
-		self.c.call(
-			'open_wallet',
-			filename = fn.name,
-			password = d.wallet_passwd)
-		msg('done')
+		h.open_wallet(refresh=False)
 
 		msg_r('  Getting wallet height (be patient, this could take a long time)...')
 		wallet_height = self.c.call('get_height')['height']
@@ -88,7 +82,7 @@ class OpSync(OpWallet):
 			hl_amt(wd.accts_data['total_balance']),
 			hl_amt(wd.accts_data['total_unlocked_balance'])))
 
-		self.wallets_data[fn.name] = wd
+		self.wallets_data[h.fn.name] = wd
 
 		msg(f'  Wallet height: {wallet_height}')
 		msg(f'  Sync time: {t_elapsed//60:02}:{t_elapsed%60:02}')

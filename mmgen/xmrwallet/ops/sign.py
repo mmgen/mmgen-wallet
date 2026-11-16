@@ -14,8 +14,6 @@ from pathlib import Path
 
 from ...util import ymsg, die
 
-from ..rpc import MoneroWalletRPC
-
 from .wallet import OpWallet
 
 class OpSign(OpWallet):
@@ -131,8 +129,7 @@ class OpSign(OpWallet):
 		if (osum := odata[0]['amount'] + res['change_amount'] + res['fee']) != res['amount_in']:
 			do_err(f'sum of outputs ({osum}) does not match sum of inputs ({res["amount_in"]})')
 
-	async def process_wallet(self, d, fn, last):
-		h = MoneroWalletRPC(self, d)
+	async def process_wallet(self, d, h, last):
 		if self.need_daemon_start or len(self.kal.data) != 1:
 			h.open_wallet(refresh=False)
 		self.head_msg(d.idx, h.fn)
