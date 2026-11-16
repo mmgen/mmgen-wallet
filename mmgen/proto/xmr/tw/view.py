@@ -67,7 +67,7 @@ class MoneroTwView:
 			try:
 				op = xmrwallet_op('dump_data_refresh', self.cfg, None, None, compat_call=True)
 			except SocketError as e:
-				ymsg('\nRefresh failed: ' + str(e))
+				ymsg(f'Refresh failed: {e}')
 				await asyncio.sleep(1.5)
 				return None
 		else:

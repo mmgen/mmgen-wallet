@@ -79,7 +79,7 @@ class TwAddressesPrune(TwAddresses):
 				else:
 					return []
 
-		def query_user(self, desc, addrnum, e):
+		def query_user(self, parent, desc, addrnum, e):
 
 			from collections import namedtuple
 			md = namedtuple('mdata', ['wmsg', 'prompt'])
@@ -88,7 +88,7 @@ class TwAddressesPrune(TwAddresses):
 					red('Address #{a} ({b}) has a balance of {c}!'.format(
 						a = addrnum,
 						b = e.twmmid.addr,
-						c = e.amt.hl3(color=False, unit=self.proto.dcoin))),
+						c = e.amt.hl3(color=False, unit=parent.proto.dcoin))),
 					'[p]rune anyway, [P]rune all with balance, [s]kip, [S]kip all with balance: '),
 				'used': md(
 					yellow('Address #{a} ({b}) is used!'.format(
@@ -120,7 +120,7 @@ class TwAddressesPrune(TwAddresses):
 				if auto[desc]:
 					return False
 				else:
-					auto[desc], prune = self.query_user(desc, addrnum, e)
+					auto[desc], prune = self.query_user(parent, desc, addrnum, e)
 					dfl[desc] = auto[desc] and prune
 					skip_all_used = auto['used'] and not dfl['used']
 					if auto[desc]: # we’ve switched to auto mode, so go back and fix up all previous entries

@@ -602,6 +602,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('mine_blocks_10',          'mining some blocks'),
 		('user_twview_chk5',        'viewing user’s tracking wallets (check balances)'),
 		('wait_loop_kill',          'stopping autosign wait loop'),
+		('stop_daemons',            'stopping all wallet and coin daemons'),
 		('user_newacct1',           'adding account to user’s tracking wallet (dfl label)'),
 		('user_newacct2',           'adding account to user’s tracking wallet (no timestr)'),
 		('user_newacct3',           'adding account to user’s tracking wallet'),
@@ -609,8 +610,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('user_newaddr1',           'adding address to user’s tracking wallet'),
 		('user_newaddr2',           'adding address to user’s tracking wallet (no timestr)'),
 		('user_newaddr3',           'adding address to user’s tracking wallet (dfl label)'),
-		('user_newaddr4',           'adding address to user’s tracking wallet (dfl label, no timestr)'),
-		('stop_daemons',            'stopping all wallet and coin daemons'))
+		('user_newaddr4',           'adding address to user’s tracking wallet (dfl label, no timestr)'))
 
 	def __init__(self, cfg, trunner, cfgs, spawn):
 		super().__init__(cfg, trunner, cfgs, spawn)
@@ -970,6 +970,9 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		return t
 
 class CmdTestXMRAutosignDev(CmdTestXMRAutosign):
+	"""
+	Monero autosigning operations (non-compat mode, for development)
+	"""
 	tx_relay_user = None
 	user_data = (
 		#      user    sid       autosign kal_range add_coind_args
@@ -1013,10 +1016,11 @@ class CmdTestXMRCompatDev(CmdTestXMRCompat):
 		('autosign_xmr_setup',  'autosign setup (creation of Monero signing wallet)'),
 		('addrimport_user',     'creating (importing) user’s watch-only wallet from key-address file'),
 		('gen_vkafile_user',    'generating viewkey-address file for user'),
-		('user_listaddresses_refresh', 'refreshing wallet'),
 		('gen_kafile_miner',    'generating key-address file for Miner'),
 		('create_wallet_miner', 'creating Monero wallet for Miner'),
 		('mine_initial_coins',  'mining initial coins'),
+		# ('user_listaddresses_refresh_loop', 'refreshing wallet'),
+		# ('mine_blocks_10',       'mining some blocks'),
 		('fund_user1',          'sending funds to user (wallet #1)'),
 		('check_bal_alice',     'mining, checking balance'),
 		('user_txcreate1',      'creating a transaction'),
@@ -1028,6 +1032,9 @@ class CmdTestXMRCompatDev(CmdTestXMRCompat):
 		# ('user_listaddresses_refresh', 'refreshing wallet'),
 		('wait_loop_kill',      'stopping autosign wait loop'),
 		('stop_daemons',        'stopping all wallet and coin daemons'))
+
+	def user_listaddresses_refresh_loop(self):
+		return self._user_twops('listaddresses', refresh_loop=True)
 
 	def user_view(self):
 		return self.sync_wallets(self.user, op='listview', wallets='1')

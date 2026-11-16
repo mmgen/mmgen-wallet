@@ -193,6 +193,7 @@ class OpWallet(OpBase):
 		return 'offline signing ' if self.cfg.offline else 'watch-only ' if self.cfg.watch_only else ''
 
 	async def main(self):
+
 		if self.need_daemon_start and self.main_starts_daemon:
 			await self.restart_wallet_daemon()
 
@@ -202,8 +203,9 @@ class OpWallet(OpBase):
 				b = self.to_process,
 				c = self.add_wallet_desc,
 				d = suf(self.to_process)))
+
 		data = []
-		for n, d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
+		for n, d in enumerate(self.addr_data): # [d.idx, d.sec, d.addr, d.wallet_passwd, d.viewkey]
 			fn = self.get_wallet_fn(d)
 			if self.is_create and self.stat_wallet(fn):
 				continue
@@ -216,9 +218,12 @@ class OpWallet(OpBase):
 			h = MoneroWalletRPC(self, d)
 			if self.main_opens_wallet:
 				h.open_wallet(self.wallet_desc, refresh=not self.wallet_offline)
+
 			data.append(await self.process_wallet(d, h, last=(n == len(self.addr_data) - 1)))
+
 		if not self.compat_call:
 			gmsg(f'\n{len(data)} wallet{suf(len(data))} {self.stem}ed\n')
+
 		return data if self.return_data else sum(map(bool, data))
 
 	def head_msg(self, wallet_idx, fn):
