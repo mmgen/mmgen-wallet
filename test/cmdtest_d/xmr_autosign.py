@@ -11,7 +11,7 @@
 test.cmdtest_d.xmr_autosign: xmr autosigning tests for the cmdtest.py test suite
 """
 
-import os, re, asyncio, json
+import os, re, asyncio, json, time
 
 from mmgen.util import suf
 from mmgen.color import blue, cyan, brown
@@ -603,6 +603,7 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		('user_twview_chk5',        'viewing user’s tracking wallets (check balances)'),
 		('wait_loop_kill',          'stopping autosign wait loop'),
 		('stop_daemons',            'stopping all wallet and coin daemons'),
+		('user_listaddresses_refresh_fail', 'failed wallet refresh'),
 		('user_newacct1',           'adding account to user’s tracking wallet (dfl label)'),
 		('user_newacct2',           'adding account to user’s tracking wallet (no timestr)'),
 		('user_newacct3',           'adding account to user’s tracking wallet'),
@@ -796,6 +797,8 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			menu = '',
 			interactive = True,
 			pexpect_interact = False,
+			refresh_loop = False,
+			refresh_fail = False,
 			expect_str = '',
 			expect_arr = []):
 
@@ -812,7 +815,6 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		al = AddrIdxList(fmt_str=self.users[self.user].kal_range)
 		for n in range(len(al)):
 			t.expect('Loading')
-			t.expect('Opening')
 		if pexpect_interact:
 			t.p.interact() # pexpect interact() is currently broken
 			self.remove_device_online()
@@ -831,13 +833,20 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			if have_lbl:
 				t.expect(': ', lbl_text + '\n')                    # add label
 				t.expect('(y/N): ', ('y' if add_timestr else 'n')) # add timestr
+			if refresh_loop:
+				while True:
+					t.expect(menu_prompt, 'R')
+					time.sleep(1)
 			if have_new_addr:
 				t.expect('(y/N): ', 'y')
 			for ch in menu:
 				t.expect(menu_prompt, ch)
 				if ch == 'R':
+					if refresh_fail:
+						t.expect('Refresh failed')
+						break
 					for n in range(len(al)):
-						for s in ('Loading', 'Opening', 'Refreshing'):
+						for s in ('Loading', 'Refreshing'):
 							t.expect(s)
 			if expect_str:
 				t.expect(expect_str, regex=True)
@@ -945,7 +954,6 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 			al = AddrIdxList(fmt_str=self.users[self.user].kal_range)
 			for n in range(len(al)):
 				t.expect('Loading')
-				t.expect('Opening')
 			if sweep_type:
 				t.expect(self.menu_prompt, menu)
 				for ch in sweep_menu:
@@ -968,6 +976,9 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 		t.read() # required!
 		self.remove_device_online()
 		return t
+
+	def user_listaddresses_refresh_fail(self):
+		return self._user_twops('listaddresses', menu='R', refresh_fail=True)
 
 class CmdTestXMRAutosignDev(CmdTestXMRAutosign):
 	"""

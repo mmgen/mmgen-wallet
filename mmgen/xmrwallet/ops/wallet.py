@@ -40,6 +40,7 @@ class OpWallet(OpBase):
 	disable_authentication = False
 	main_starts_daemon = False
 	main_opens_wallet = True
+	skip_refresh = False
 
 	def __init__(self, cfg, uarg_tuple):
 
@@ -73,7 +74,7 @@ class OpWallet(OpBase):
 			disable_authentication = self.disable_authentication,
 			offline                = self.wallet_offline,
 			trust_monerod          = self.trust_monerod,
-			test_monerod           = not self.wallet_offline)
+			test_monerod           = not (self.wallet_offline or self.skip_refresh))
 
 		if self.is_create and self.cfg.compat:
 			self.wd.wallet_dir.mkdir(parents=True, exist_ok=True)
@@ -108,7 +109,8 @@ class OpWallet(OpBase):
 			self.to_process
 			and self.start_daemon
 			and not self.cfg.no_start_wallet_daemon
-			and not (self.cfg.no_restart_wallet_daemon and self.wd.state == 'ready'))
+			and not (self.cfg.no_restart_wallet_daemon and self.wd.state == 'ready')
+			and not self.cfg.cur_wallet)
 
 		if self.need_daemon_start and not self.main_starts_daemon:
 			asyncio.run(self.restart_wallet_daemon())
@@ -194,6 +196,9 @@ class OpWallet(OpBase):
 
 	async def main(self):
 
+		def do_open_wallet(h):
+			h.open_wallet(desc=self.wallet_desc, refresh=not (self.wallet_offline or self.skip_refresh))
+
 		if self.need_daemon_start and self.main_starts_daemon:
 			await self.restart_wallet_daemon()
 
@@ -204,8 +209,16 @@ class OpWallet(OpBase):
 				c = self.add_wallet_desc,
 				d = suf(self.to_process)))
 
+		if self.cfg.cur_wallet:
+			addr_data = (
+				[a for a in self.addr_data if a.idx == self.cfg.cur_wallet]
+				+ [a for a in self.addr_data if a.idx != self.cfg.cur_wallet])
+			assert addr_data[0].idx == self.cfg.cur_wallet, 'wallet index mismatch'
+		else:
+			addr_data = self.addr_data
+
 		data = []
-		for n, d in enumerate(self.addr_data): # [d.idx, d.sec, d.addr, d.wallet_passwd, d.viewkey]
+		for n, d in enumerate(addr_data): # [d.idx, d.sec, d.addr, d.wallet_passwd, d.viewkey]
 			fn = self.get_wallet_fn(d)
 			if self.is_create and self.stat_wallet(fn):
 				continue
@@ -216,8 +229,13 @@ class OpWallet(OpBase):
 				d = fn.name))
 
 			h = MoneroWalletRPC(self, d)
-			if self.main_opens_wallet:
-				h.open_wallet(self.wallet_desc, refresh=not self.wallet_offline)
+			if self.cfg.cur_wallet:
+				if n:
+					do_open_wallet(h)
+				else:
+					gmsg('\n  Using already opened wallet')
+			elif self.main_opens_wallet:
+				do_open_wallet(h)
 
 			data.append(await self.process_wallet(d, h, last=(n == len(self.addr_data) - 1)))
 

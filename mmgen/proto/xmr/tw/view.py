@@ -13,6 +13,7 @@ proto.xmr.tw.view: Monero protocol base class for tracking wallet view classes
 import asyncio
 from collections import namedtuple
 
+from ....cfg import Config
 from ....obj import ImmutableAttr, Int
 from ....util import msg, ymsg, suf, cached_property
 from ....color import red, green
@@ -64,22 +65,24 @@ class MoneroTwView:
 
 		if refresh:
 			from ....exception import SocketError
+			cfg = Config({'_clone': self.cfg, 'cur_wallet': self.cur_wallet})
+			op = xmrwallet_op('dump_data_refresh', cfg, None, None, compat_call=True)
 			try:
-				op = xmrwallet_op('dump_data_refresh', self.cfg, None, None, compat_call=True)
+				dump_data = await op.main()
 			except SocketError as e:
 				ymsg(f'Refresh failed: {e}')
 				await asyncio.sleep(1.5)
 				return None
 		else:
 			op = xmrwallet_op('dump_data', self.cfg, None, None, compat_call=True)
-
-		await op.restart_wallet_daemon()
-		dump_data = await op.main()
+			await op.restart_wallet_daemon()
+			dump_data = await op.main()
 
 		if dump_data:
 			self.sid = SeedID(sid=dump_data[0]['seed_id'])
 			self.blockcount = Int(dump_data[0]['blockcount'])
 			self.timestamp = dump_data[0]['timestamp']
+			self.cur_wallet = dump_data[-1]['wallet_num']
 			self.al_id = self.sid + ':M'
 
 		self.total = self.unlocked_total = self.proto.coin_amt('0')

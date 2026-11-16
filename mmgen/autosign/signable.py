@@ -252,7 +252,8 @@ class Signable:
 			self.parent.xmr_cur_wallet_idx = new_idx
 			return Config({
 				'_clone': self.parent.xmrwallet_cfg,
-				'no_restart_wallet_daemon': old_idx == new_idx})
+				'no_restart_wallet_daemon': old_idx is not None,
+				'cur_wallet': new_idx if new_idx == old_idx else None})
 
 		def print_summary(self, signables):
 			info_func = 'get_info' if self.cfg.full_summary else 'get_info_oneline'
