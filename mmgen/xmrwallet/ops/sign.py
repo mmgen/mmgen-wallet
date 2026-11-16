@@ -130,8 +130,6 @@ class OpSign(OpWallet):
 			do_err(f'sum of outputs ({osum}) does not match sum of inputs ({res["amount_in"]})')
 
 	async def process_wallet(self, d, h, last):
-		if self.need_daemon_start or len(self.kal.data) != 1:
-			h.open_wallet(refresh=False)
 		self.head_msg(d.idx, h.fn)
 		tx = self.get_tx_cls('Unsigned')(self.cfg, Path(self.uargs.spec))
 		self.check_integrity(

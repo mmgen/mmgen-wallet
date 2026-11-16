@@ -19,10 +19,10 @@ from .wallet import OpWallet
 class OpExportOutputs(OpWallet):
 	action = 'exporting outputs from'
 	stem = 'process'
+	wallet_desc = 'source'
 	sign = False
 
 	async def process_wallet(self, d, h, last):
-		h.open_wallet('source')
 
 		if self.cfg.rescan_blockchain:
 			gmsg_r('\n  Rescanning blockchain...')

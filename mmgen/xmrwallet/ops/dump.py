@@ -18,9 +18,9 @@ from .wallet import OpWallet
 
 class OpDump(OpWallet):
 	wallet_offline = True
+	wallet_desc = 'source'
 
 	async def process_wallet(self, d, h, last):
-		h.open_wallet('source')
 		wallet_data = h.get_wallet_data(print=False)
 		msg('')
 		MoneroWalletDumpFile.New(
@@ -33,10 +33,9 @@ class OpDump(OpWallet):
 class OpDumpDataCommon(OpWallet):
 	wallet_offline = True
 	return_data = True
+	wallet_desc = 'source'
 
 	async def process_wallet(self, d, h, last):
-
-		h.open_wallet('source', refresh=not self.wallet_offline)
 
 		if (height := self.c.call('get_height')['height']) > 1:
 			from requests.exceptions import ConnectionError

@@ -40,13 +40,13 @@ class OpList(OpSync):
 class OpView(OpSync):
 	stem = 'open'
 	opts = ()
+	main_opens_wallet = True
 	wallet_offline = True
 
 	def pre_init_action(self):
 		ymsg('Running in offline mode. Balances may be out of date!')
 
 	async def process_wallet(self, d, h, last):
-		h.open_wallet(refresh=False)
 
 		wallet_height = self.c.call('get_height')['height']
 		msg(f'  Wallet height: {wallet_height}')

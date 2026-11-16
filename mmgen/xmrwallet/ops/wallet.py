@@ -33,11 +33,13 @@ class OpWallet(OpBase):
 		'no_stop_wallet_daemon',
 		'autosign',
 		'watch_only')
+	wallet_desc = None
 	wallet_offline = False
 	start_daemon = True
 	skip_wallet_check = False # for debugging
 	disable_authentication = False
 	main_starts_daemon = False
+	main_opens_wallet = True
 
 	def __init__(self, cfg, uarg_tuple):
 
@@ -210,10 +212,11 @@ class OpWallet(OpBase):
 				b = n + 1,
 				c = len(self.addr_data),
 				d = fn.name))
-			data.append(await self.process_wallet(
-				d,
-				MoneroWalletRPC(self, d),
-				last = n == len(self.addr_data) - 1))
+
+			h = MoneroWalletRPC(self, d)
+			if self.main_opens_wallet:
+				h.open_wallet(self.wallet_desc, refresh=not self.wallet_offline)
+			data.append(await self.process_wallet(d, h, last=(n == len(self.addr_data) - 1)))
 		if not self.compat_call:
 			gmsg(f'\n{len(data)} wallet{suf(len(data))} {self.stem}ed\n')
 		return data if self.return_data else sum(map(bool, data))

@@ -20,6 +20,7 @@ from .wallet import OpWallet
 
 class OpSync(OpWallet):
 	opts = ('rescan_blockchain', 'skip_empty_accounts', 'skip_empty_addresses')
+	main_opens_wallet = False
 
 	def check_uopts(self):
 		if self.cfg.rescan_blockchain and self.cfg.watch_only:

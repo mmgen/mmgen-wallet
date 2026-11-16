@@ -20,6 +20,7 @@ from .wallet import OpWallet
 class OpCreate(OpWallet):
 	stem    = 'creat'
 	opts    = ('restore_height',)
+	main_opens_wallet = False
 
 	def check_uopts(self):
 		if self.cfg.restore_height != 'current' and int(self.cfg.restore_height or 0) < 0:

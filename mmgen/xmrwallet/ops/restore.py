@@ -18,6 +18,7 @@ from .create import OpCreate
 
 class OpRestore(OpCreate):
 	wallet_offline = True
+	wallet_desc = 'newly created'
 
 	def check_uopts(self):
 		if self.cfg.restore_height is not None:
@@ -86,7 +87,7 @@ class OpRestore(OpCreate):
 
 		await super().process_wallet(d, h, last)
 
-		h.open_wallet('newly created')
+		h.open_wallet(self.wallet_desc)
 
 		msg('')
 		data = get_dump_data()

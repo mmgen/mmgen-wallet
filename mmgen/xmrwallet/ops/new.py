@@ -24,10 +24,11 @@ class OpNew(OpMixinSpec, OpWallet):
 	spec_id = 'newaddr_spec'
 	spec_key = ((1, 'source'),)
 	wallet_offline = True
+	wallet_desc = 'Monero'
 
 	async def main(self, add_timestr=True):
 		h = MoneroWalletRPC(self, self.source)
-		h.open_wallet('Monero', refresh=False)
+		h.open_wallet(self.wallet_desc, refresh=False)
 
 		desc = 'account' if self.account is None else 'address'
 		label = TwComment(
@@ -65,7 +66,7 @@ class OpNew(OpMixinSpec, OpWallet):
 
 		# wallet must be left open: otherwise the 'stop_wallet' RPC call used to stop the daemon will fail
 		if self.cfg.no_stop_wallet_daemon:
-			h.close_wallet('Monero')
+			h.close_wallet(self.wallet_desc)
 
 		msg('')
 		return ret

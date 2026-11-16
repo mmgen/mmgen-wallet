@@ -24,8 +24,6 @@ class OpImportOutputs(OpWallet):
 	main_starts_daemon = True
 
 	async def process_wallet(self, d, h, last):
-		if self.need_daemon_start or len(self.kal.data) != 1:
-			h.open_wallet(refresh=False)
 		self.head_msg(d.idx, h.fn)
 		outputs_file = Path(self.uargs.spec)
 		m = MoneroWalletOutputsFile.Unsigned(parent=self, fn=outputs_file)
@@ -65,7 +63,6 @@ class OpImportKeyImages(OpWallet):
 		if not keyimage_fn:
 			msg(f'No signed key image file found for wallet #{d.idx}')
 			return False
-		h.open_wallet()
 		self.head_msg(d.idx, h.fn)
 		m = MoneroWalletOutputsFile.Signed(parent=self, fn=keyimage_fn)
 		data = m.data.signed_key_images or []
