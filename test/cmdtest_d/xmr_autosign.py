@@ -634,12 +634,16 @@ class CmdTestXMRCompat(CmdTestXMRAutosign):
 
 	def _addrimport_user(self, *, create_address_files=False):
 		self.insert_device_online()
+		data = self.users[self.user]
 		t = self.spawn('mmgen-addrimport', self.user_opts + self.autosign_opts)
-		al = AddrIdxList(fmt_str=self.users[self.user].kal_range)
-		for n in range(len(al)):
-			t.expect(['Creating', 'Skipping'])
-		if create_address_files:
-			self._create_address_files(t, self.user, watch_only=True)
+		af_data = []
+		for wallet_num in AddrIdxList(fmt_str=data.kal_range):
+			ret = t.expect(['Creating', 'Skipping'])
+			if ret == 0 and create_address_files:
+				addr = t.expect_getend('Address: ')
+				af_data.append([wallet_num, addr])
+		for d in af_data:
+			self._create_address_file(data, d[0], d[1], watch_only=True)
 		t.read() # required!
 		self.remove_device_online()
 		return t
@@ -1008,8 +1012,8 @@ class CmdTestXMRCompatDev(CmdTestXMRCompat):
 		('autosign_setup',      'autosign setup with user’s seed'),
 		('autosign_xmr_setup',  'autosign setup (creation of Monero signing wallet)'),
 		('addrimport_user',     'creating (importing) user’s watch-only wallet from key-address file'),
-		('gen_kafile_miner',    'generating key-address file for Miner'),
 		('gen_vkafile_user',    'generating viewkey-address file for user'),
+		('gen_kafile_miner',    'generating key-address file for Miner'),
 		('create_wallet_miner', 'creating Monero wallet for Miner'),
 		('mine_initial_coins',  'mining initial coins'),
 		('fund_user1',          'sending funds to user (wallet #1)'),

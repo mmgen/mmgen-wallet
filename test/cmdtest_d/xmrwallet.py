@@ -27,7 +27,6 @@ from collections import namedtuple
 
 from mmgen.cfg import Config, gc
 from mmgen.util import capfirst, is_int, die, suf, list_gen
-from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
 from mmgen.addrlist import ViewKeyAddrList, KeyAddrList, AddrIdxList
 
@@ -296,15 +295,13 @@ class CmdTestXMRWallet(CmdTestBase):
 	def create_wallets_alice(self):
 		return self.create_wallets('alice')
 
-	def _create_address_files(self, t, user, *, wallet=None, watch_only=False):
-		data = self.users[user]
-		for i in MMGenRange(wallet or data.kal_range).items:
-			write_data_to_file(
-				self.cfg,
-				getattr(data, 'wo_addrfile_fs' if watch_only else 'addrfile_fs').format(i),
-				t.expect_getend('Address: '),
-				ask_overwrite = False,
-				quiet = True)
+	def _create_address_file(self, data, wallet_num, addr, watch_only=False):
+		write_data_to_file(
+			self.cfg,
+			getattr(data, 'wo_addrfile_fs' if watch_only else 'addrfile_fs').format(wallet_num),
+			addr,
+			ask_overwrite = False,
+			quiet = True)
 
 	def create_wallets(self, user, wallet=None, add_opts=[], op='create', watch_only=False):
 		assert wallet is None or is_int(wallet), 'wallet arg'
@@ -327,7 +324,12 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ [op]
 			+ ([] if data.autosign else [data.vkafile if watch_only else data.kafile])
 			+ [wallet or data.kal_range])
-		self._create_address_files(t, user, wallet=wallet, watch_only=watch_only)
+		af_data = []
+		for wallet_num in AddrIdxList(fmt_str=wallet or data.kal_range):
+			addr = t.expect_getend('Address: ')
+			af_data.append([wallet_num, addr])
+		for d in af_data:
+			self._create_address_file(data, d[0], d[1], watch_only=watch_only)
 		return t
 
 	def _new_addr_user(self, user, spec, cfg, expect, kafile=None, do_autosign=False, add_opts=[]):
@@ -481,12 +483,12 @@ class CmdTestXMRWallet(CmdTestBase):
 			+ [op]
 			+ ([] if data.autosign else [data.dfl_kafile])
 			+ ([wallets] if wallets else []))
-		wlist = AddrIdxList(fmt_str=wallets) if wallets else MMGenRange(data.kal_range).items
-		for n, wnum in enumerate(wlist, 1):
+		wallet_nums = AddrIdxList(fmt_str=wallets or data.kal_range)
+		for n, wallet_num in enumerate(wallet_nums, 1):
 			t.expect('ing wallet {}/{} ({})'.format(
 				n,
-				len(wlist),
-				os.path.basename(data.dfl_walletfile_fs.format(wnum))))
+				len(wallet_nums),
+				os.path.basename(data.dfl_walletfile_fs.format(wallet_num))))
 			if op in ('view', 'listview'):
 				t.expect('Wallet height: ')
 			else:
