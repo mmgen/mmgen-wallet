@@ -122,8 +122,15 @@ class MoneroWalletDaemon(RPCDaemon):
 
 		self.proxy = proxy
 		self.monerod_addr = None if offline else monerod_addr
+
+		def get_local_port(spec):
+			if spec:
+				a, b = spec.split(':', 1)
+				if a in ('localhost', '127.0.0.1'):
+					return int(b)
+
 		self.monerod_port = (
-			None if offline or monerod_addr else
+			None if offline else get_local_port(self.monerod_addr) or
 			CoinDaemon(
 				cfg   = self.cfg,
 				test_user = test_user,
