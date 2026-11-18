@@ -64,12 +64,12 @@ class MoneroTwView:
 		from mmgen.tw.shared import TwMMGenID, TwLabel
 
 		if refresh:
-			from ....exception import SocketError
+			from ....exception import SocketError, RPCFailure
 			cfg = Config({'_clone': self.cfg, 'cur_wallet': self.cur_wallet})
 			op = xmrwallet_op('dump_data_refresh', cfg, None, None, compat_call=True)
 			try:
 				dump_data = await op.main()
-			except SocketError as e:
+			except (SocketError, RPCFailure) as e:
 				ymsg(f'Refresh failed: {e}')
 				await asyncio.sleep(1.5)
 				return None
