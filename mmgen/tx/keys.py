@@ -183,22 +183,25 @@ class TxKeys:
 
 		def gen_keys():
 			for e in need_keys:
+				mmid = e.mmid
 				for kal in kals:
-					for d in kal.data:
-						if mmid := f'{kal.al_id}:{d.idx}' == e.mmid:
-							if d.addr == e.addr:
-								e.have_wif = True
-								if src == 'inputs':
+					if kal.al_id == mmid.al_id:
+						for d in kal.data:
+							if d.idx == mmid.idx:
+								if d.addr == e.addr:
+									e.have_wif = True
 									yield d
-							else:
-								die(3, fmt(f"""
-									{gc.proj_name} -> {proto.coin} address mappings differ!
-									{err_desc:<23} {mmid} -> {d.addr}
-									{'tx file:':<23} {e.mmid} -> {e.addr}
-									""").strip())
+								else:
+									die(3, fmt(f"""
+										{gc.proj_name} -> {proto.coin} address mappings differ!
+										{err_desc:<23} {mmid} -> {d.addr}
+										{'tx file:':<23} {mmid} -> {e.addr}
+										""").strip())
 
 		if new_keys := list(gen_keys()):
-			self.cfg._util.vmsg(f'Added {len(new_keys)} wif key{suf(new_keys)} from {desc}')
+			self.cfg._util.vmsg(
+				f'Added {len(new_keys)} wif key{suf(new_keys)} from {desc}' if src == 'inputs' else
+				f'Resolved {len(new_keys)} MMGen ID{suf(new_keys)} from {desc}')
 
 		return new_keys
 
@@ -210,17 +213,26 @@ class TxKeys:
 		"""
 		ret = self.get_keys_for_non_mmgen_inputs()
 		memo_output = self.tx.check_swap_memo() # do this for non-swap transactions too!
+		okeys, mkeys = ([], [])
+		num_okeys = len([e for e in self.tx.outputs if e.mmid and not e.have_wif])
+		num_mkeys = 1
 
 		if self.keyaddrlist:
 			ret += self.add_keys('inputs', self.tx.inputs, from_keyaddrlist=True)
-			self.add_keys('outputs', self.tx.outputs, from_keyaddrlist=True)
+			okeys += self.add_keys('outputs', self.tx.outputs, from_keyaddrlist=True)
 			if memo_output:
-				self.add_keys('swap destination address', [memo_output], from_keyaddrlist=True)
+				mkeys += self.add_keys('swap destination address', [memo_output], from_keyaddrlist=True)
 
 		ret += self.add_keys('inputs', self.tx.inputs)
-		self.add_keys('outputs', self.tx.outputs)
+		okeys += self.add_keys('outputs', self.tx.outputs)
+
+		if len(okeys) != num_okeys:
+			die('TxKeysError', 'Could not resolve all MMGen outputs')
+
 		if memo_output:
-			self.add_keys('swap destination address', [memo_output])
+			mkeys += self.add_keys('swap destination address', [memo_output])
+			if len(mkeys) != num_mkeys and not self.cfg.allow_non_wallet_swap:
+				die('TxKeysError', 'Unable to resolve memo destination address')
 
 		# this (boolean) attr isn't needed in transaction file
 		self.tx.delete_attrs('inputs', 'have_wif')
