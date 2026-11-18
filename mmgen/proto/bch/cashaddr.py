@@ -86,7 +86,7 @@ def cashaddr_decode_addr(addr):
 	chksum  = int(data_bin[-40:], 2).to_bytes(5, 'big')
 	pad_bin = data_bin[8+vi.bitlen:-40]
 	assert not pad_bin or pad_bin in '0000', f'{pad_bin}: invalid cashaddr data'
-	if chksum_chk := PolyMod(make_polymod_vec(a.pfx, [b32a.index(c) for c in a.payload])) != 0:
+	if (chksum_chk := PolyMod(make_polymod_vec(a.pfx, [b32a.index(c) for c in a.payload]))) != 0:
 		raise ValueError(
 			'checksum check failed\n'
 			f'  address:  {addr}\n'
