@@ -82,6 +82,9 @@ class Completed(Base):
 
 	def check_swap_memo(self):
 		if memo_bytes := self.get_swap_memo_maybe():
+			if self.is_refreq:
+				memo_bytes = self.swap_proto_mod.reference_memo(
+					reference_memo_str=memo_bytes.decode()).memo.encode()
 			from ..swap.proto.thorchain import Memo
 			if Memo.is_partial_memo(memo_bytes):
 				from ..protocol import init_proto

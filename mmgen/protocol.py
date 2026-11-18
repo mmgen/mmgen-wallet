@@ -200,6 +200,9 @@ class CoinProtocol(MMGenObject):
 		def viewkey(self, viewkey_str):
 			raise NotImplementedError(f'{self.name} protocol does not support view keys')
 
+		def keyaddrlist_entry2addr(self, kal_entry, mmid):
+			return kal_entry.addr
+
 		def base_proto_subclass(self, cls, modname, *, sub_clsname=None, is_token=False):
 			"""
 			magic module loading and class selection

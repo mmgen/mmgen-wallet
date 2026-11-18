@@ -188,13 +188,13 @@ class TxKeys:
 					if kal.al_id == mmid.al_id:
 						for d in kal.data:
 							if d.idx == mmid.idx:
-								if d.addr == e.addr:
+								if (addr := proto.keyaddrlist_entry2addr(d, mmid)) == e.addr:
 									e.have_wif = True
 									yield d
 								else:
 									die(3, fmt(f"""
 										{gc.proj_name} -> {proto.coin} address mappings differ!
-										{err_desc:<23} {mmid} -> {d.addr}
+										{err_desc:<23} {mmid} -> {addr}
 										{'tx file:':<23} {mmid} -> {e.addr}
 										""").strip())
 

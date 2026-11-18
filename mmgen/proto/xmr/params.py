@@ -89,6 +89,15 @@ class mainnet(CoinProtocol.RPC, CoinProtocol.DummyWIF, CoinProtocol.Base):
 	def viewkey(self, viewkey_str):
 		return MoneroViewKey.__new__(MoneroViewKey, viewkey_str)
 
+	def keyaddrlist_entry2addr(self, kal_entry, mmid):
+		from .subaddress import get_subaddress
+		return get_subaddress(
+			proto = self,
+			master_addr = kal_entry.addr,
+			master_svk = bytes.fromhex(kal_entry.viewkey),
+			acct_idx = mmid.acct_idx,
+			addr_idx = mmid.addr_idx)
+
 class testnet(mainnet): # use stagenet for testnet
 	# testnet is {'35', '3f', '36'}
 	addr_ver_info = {'18': 'monero', '24': 'monero_sub', '19': 'monero_integrated'}
