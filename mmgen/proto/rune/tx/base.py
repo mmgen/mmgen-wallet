@@ -41,6 +41,8 @@ class Base(TxBase):
 				from_k, amt_k = ('signer', 'coins')
 				if b.memo != self.swap_memo:
 					raise ValueError(f'{b.memo}: invalid swap memo in serialized data')
+				if b.memo != tx.body.memo:
+					raise ValueError('memos in tx and message body do not match')
 			else:
 				from_k, amt_k = ('fromAddress', 'amount')
 				if s := self.proto.encode_addr_bech32x(b.toAddress) != o['to']:

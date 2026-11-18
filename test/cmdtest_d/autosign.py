@@ -670,6 +670,12 @@ class CmdTestAutosignThreaded(CmdTestAutosignBase):
 		self.spawn(msg_only=True)
 		return self._kill_process_from_pid_file('autosign_thread_pid', 'autosign wait loop')
 
+	def wait_signed1(self):
+		self.spawn(msg_only=True)
+		oqmsg('')
+		self._wait_signed('transaction')
+		return 'silent'
+
 	def _wait_signed(self, desc):
 		oqmsg_r(gray(f'→ offline wallet{"s" if desc.endswith("s") else ""} waiting for {desc}'))
 		assert not self.asi.device_inserted, f'‘{self.asi.dev_label}’ is inserted!'

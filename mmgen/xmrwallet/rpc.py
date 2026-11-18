@@ -42,7 +42,6 @@ class MoneroWalletRPC:
 			filename = self.fn.name,
 			password = self.d.wallet_passwd)
 		gmsg('done')
-
 		if refresh:
 			gmsg_r(f'  Refreshing {add_desc}wallet...')
 			ret = self.c.call('refresh')

@@ -58,21 +58,21 @@ class New(Base, TxNew):
 				return None
 			from ....ui import item_chooser
 			from ....color import pink
-			op = item_chooser(
+			op_name = item_chooser(
 				self.cfg,
 				'Choose the sweep operation type',
 				('sweep', 'sweep_all'),
 				lambda s: pink(s.upper())).item
 			spec = self.sweep_spec
 		else:
-			op = 'transfer'
+			op_name = 'transfer'
 			i = self.inputs[0]
 			o = self.outputs[0]
 			spec = f'{i.idx}:{i.acct_idx}:{o.addr},{o.amt}'
 
 		from ....xmrwallet import op as xmrwallet_op
 		op = xmrwallet_op(
-			op,
+			op_name,
 			self.cfg,
 			None,
 			None,

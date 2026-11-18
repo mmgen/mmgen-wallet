@@ -184,16 +184,16 @@ class TxKeys:
 		def gen_keys():
 			for e in need_keys:
 				for kal in kals:
-					for f in kal.data:
-						if mmid := f'{kal.al_id}:{f.idx}' == e.mmid:
-							if f.addr == e.addr:
+					for d in kal.data:
+						if mmid := f'{kal.al_id}:{d.idx}' == e.mmid:
+							if d.addr == e.addr:
 								e.have_wif = True
 								if src == 'inputs':
-									yield f
+									yield d
 							else:
 								die(3, fmt(f"""
 									{gc.proj_name} -> {proto.coin} address mappings differ!
-									{err_desc:<23} {mmid} -> {f.addr}
+									{err_desc:<23} {mmid} -> {d.addr}
 									{'tx file:':<23} {e.mmid} -> {e.addr}
 									""").strip())
 

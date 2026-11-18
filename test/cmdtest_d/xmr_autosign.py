@@ -20,7 +20,6 @@ from mmgen.addrlist import AddrIdxList
 
 from ..include.common import (
 	imsg,
-	oqmsg,
 	silence,
 	end_silence,
 	strip_ansi_escapes,
@@ -387,12 +386,6 @@ class CmdTestXMRAutosign(CmdTestXMRWallet, CmdTestAutosignThreaded, CmdTestShare
 		return self._sync_chkbal(
 			'1-2',
 			lambda n, b, ub: b == ub and ((n == 1 and 0.8 < b < 0.86) or (n == 2 and b > 1.23)))
-
-	def wait_signed1(self):
-		self.spawn(msg_only=True)
-		oqmsg('')
-		self._wait_signed('transaction')
-		return 'silent'
 
 	async def submit_transfer_tx1(self):
 		return await self._submit_transfer_tx()

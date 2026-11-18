@@ -23,7 +23,7 @@ class New(VmNew, Base, TxBase.New):
 		self.usr_fee = None if self.cfg.fee is None else self.proto.coin_amt(self.cfg.fee)
 		if refreq_src:
 			d = refreq_src.__dict__
-			self.__dict__ |= {k: d[k] for k in self.swap_attrs if k in d and k != 'swap_recv_addr_mmid'}
+			self.__dict__ |= {k: d[k] for k in self.swap_attrs if k in d}
 			self.is_refreq = True
 			self.swap_send_asset_spec = refreq_src.send_asset.name
 
