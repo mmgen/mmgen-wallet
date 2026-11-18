@@ -10,7 +10,7 @@
 xmrwallet.ops.dump: Monero wallet ops for the MMGen Suite
 """
 
-from ...util import msg, Msg, gmsg
+from ...util import msg, Msg
 
 from ..file.outputs import MoneroWalletDumpFile
 
@@ -67,8 +67,7 @@ class OpDumpDataRefresh(OpDumpData):
 
 	async def process_wallet(self, d, h, last):
 		self.wd.test_monerod_port() # raises SocketError on fail, handled by caller
-		gmsg('  Refreshing wallet')
-		self.c.call('refresh')
+		h.refresh_wallet()          # raises RPCFailure on fail, handled by caller
 		return await super().process_wallet(d, h, last)
 
 class OpDumpJson(OpDumpDataCommon):

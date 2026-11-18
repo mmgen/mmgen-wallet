@@ -34,6 +34,14 @@ class MoneroWalletRPC:
 			mtx.NewUnsigned if self.cfg.watch_only else
 			mtx.NewSigned)
 
+	def refresh_wallet(self, desc=None):
+		add_desc = desc + ' ' if desc else self.parent.add_wallet_desc
+		gmsg_r(f'  Refreshing {add_desc}wallet...')
+		ret = self.c.call('refresh')
+		gmsg('done')
+		if ret['received_money']:
+			msg('  Wallet has received funds')
+
 	def open_wallet(self, desc=None, *, refresh=True):
 		add_desc = desc + ' ' if desc else self.parent.add_wallet_desc
 		gmsg_r(f'\n  Opening {add_desc}wallet...')
@@ -43,11 +51,7 @@ class MoneroWalletRPC:
 			password = self.d.wallet_passwd)
 		gmsg('done')
 		if refresh:
-			gmsg_r(f'  Refreshing {add_desc}wallet...')
-			ret = self.c.call('refresh')
-			gmsg('done')
-			if ret['received_money']:
-				msg('  Wallet has received funds')
+			self.refresh_wallet(desc)
 
 	def close_wallet(self, desc):
 		gmsg_r(f'\n  Closing {desc} wallet...')
