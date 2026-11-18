@@ -16,9 +16,14 @@ class THORChainReferenceMemo:
 
 	pfx = 'REFERENCE'
 
-	def __init__(self, send_asset, memo):
-		self.send_asset = send_asset
-		self.memo = memo
+	def __init__(self, send_asset=None, memo=None, reference_memo_str=None):
+		if reference_memo_str is None:
+			assert send_asset and memo, 'THORChainReferenceMemo_err1'
+			self.send_asset = send_asset
+			self.memo = memo
+		else:
+			assert send_asset is memo is None, 'THORChainReferenceMemo_err2'
+			self.parse(reference_memo_str)
 
 	def __str__(self):
 		return f'{self.pfx}:{self.send_asset.full_name}:{self.memo}'
@@ -26,7 +31,7 @@ class THORChainReferenceMemo:
 	def parse(self, s):
 		from .asset import THORChainSwapAsset
 		_, name, self.memo = s.split(':', 2)
-		self.asset = THORChainSwapAsset(name, 'send', sanitize_input=True)
+		self.send_asset = THORChainSwapAsset(name, 'send', sanitize_input=True)
 
 class THORChainMemolessAmount:
 

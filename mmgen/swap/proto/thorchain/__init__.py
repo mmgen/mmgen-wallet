@@ -25,9 +25,9 @@ def quote_client(tx, amt):
 	from .quote import ThornodeQuote
 	return ThornodeQuote(tx, amt)
 
-def reference_memo(send_asset, memo):
+def reference_memo(send_asset=None, memo=None, reference_memo_str=None):
 	from .memoless import THORChainReferenceMemo
-	return THORChainReferenceMemo(send_asset, memo)
+	return THORChainReferenceMemo(send_asset, memo, reference_memo_str)
 
 def memoless_amt(amt, refnum=None, *, round_down=False):
 	from .memoless import THORChainMemolessAmount
