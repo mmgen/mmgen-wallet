@@ -83,6 +83,7 @@ class Completed(Base):
 	def check_swap_memo(self):
 		if memo_bytes := self.get_swap_memo_maybe():
 			if self.is_refreq:
+				assert 'refreq' in self.proto.caps, f'{self.proto.name} protocol does not support reference memos'
 				memo_bytes = self.swap_proto_mod.reference_memo(
 					reference_memo_str=memo_bytes.decode()).memo.encode()
 			from ..swap.proto.thorchain import Memo
