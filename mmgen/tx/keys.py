@@ -215,12 +215,12 @@ class TxKeys:
 		memo_output = self.tx.check_swap_memo() # do this for non-swap transactions too!
 		okeys, mkeys = ([], [])
 		num_okeys = len([e for e in self.tx.outputs if e.mmid and not e.have_wif])
-		num_mkeys = 1
+		num_mkeys = 1 if memo_output and memo_output.mmid else None
 
 		if self.keyaddrlist:
 			ret += self.add_keys('inputs', self.tx.inputs, from_keyaddrlist=True)
 			okeys += self.add_keys('outputs', self.tx.outputs, from_keyaddrlist=True)
-			if memo_output:
+			if num_mkeys:
 				mkeys += self.add_keys('swap destination address', [memo_output], from_keyaddrlist=True)
 
 		ret += self.add_keys('inputs', self.tx.inputs)
@@ -229,7 +229,7 @@ class TxKeys:
 		if len(okeys) != num_okeys:
 			die('TxKeysError', 'Could not resolve all MMGen outputs')
 
-		if memo_output:
+		if num_mkeys:
 			mkeys += self.add_keys('swap destination address', [memo_output])
 			if len(mkeys) != num_mkeys and not self.cfg.allow_non_wallet_swap:
 				die('TxKeysError', 'Unable to resolve memo destination address')

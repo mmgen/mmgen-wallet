@@ -100,15 +100,16 @@ class Completed(Base):
 						r.coin,
 						tokensym = r.tokensym,
 						need_amt = True)
+
 				if mmid := getattr(self, 'swap_recv_addr_mmid', None):
-					pass
+					return self.Output(proto, addr=p.address, mmid=mmid, amt=proto.coin_amt('0'))
 				elif not self.is_swap:
 					pass
 				elif self.cfg.allow_non_wallet_swap:
 					ymsg('Warning: allowing swap to non-wallet address (--allow-non-wallet-swap)')
+					return self.Output(proto, addr=p.address, mmid=None, amt=proto.coin_amt('0'))
 				else:
 					raise ValueError('Swap to non-wallet address forbidden (override with --allow-non-wallet-swap)')
-				return self.Output(proto, addr=p.address, mmid=mmid, amt=proto.coin_amt('0'))
 
 		if self.is_swap and not self.is_memoless:
 			raise ValueError('missing or invalid memo in swap transaction')
