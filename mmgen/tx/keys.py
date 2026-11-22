@@ -214,7 +214,7 @@ class TxKeys:
 		ret = self.get_keys_for_non_mmgen_inputs()
 		memo_output = self.tx.check_swap_memo() # do this for non-swap transactions too!
 		okeys, mkeys = ([], [])
-		num_okeys = len([e for e in self.tx.outputs if e.mmid and not e.have_wif])
+		num_okeys = len([e for e in self.tx.outputs if e.mmid])
 		num_mkeys = 1 if memo_output and memo_output.mmid else None
 
 		if self.keyaddrlist:

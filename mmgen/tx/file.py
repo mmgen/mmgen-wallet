@@ -47,6 +47,11 @@ def eval_io_data(tx, data, *, desc):
 	if not (desc == 'outputs' and tx.proto.base_coin == 'ETH'): # ETH txs can have no outputs
 		assert len(data), f'no {desc}!'
 	for d in data:
+		if 'have_wif' in d:
+			die(
+				'TxKeysError',
+				f'transaction file {desc} contains extraneous ‘have_wif’ field. '
+				'Your online installation may be compromised!')
 		d['amt'] = tx.proto.coin_amt(d['amt'])
 	io, io_list = {
 		'inputs':  (tx.Input, tx.InputList),
