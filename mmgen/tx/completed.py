@@ -101,10 +101,13 @@ class Completed(Base):
 						tokensym = r.tokensym,
 						need_amt = True)
 
+				if not (self.is_swap or self.is_deposit):
+					raise ValueError(
+						'Swap memo present in transaction but ‘is_swap’ field not set. '
+						'Your online installation may be compromised!')
+
 				if mmid := getattr(self, 'swap_recv_addr_mmid', None):
 					return self.Output(proto, addr=p.address, mmid=mmid, amt=proto.coin_amt('0'))
-				elif not self.is_swap:
-					pass
 				elif self.cfg.allow_non_wallet_swap:
 					ymsg('Warning: allowing swap to non-wallet address (--allow-non-wallet-swap)')
 					return self.Output(proto, addr=p.address, mmid=None, amt=proto.coin_amt('0'))
