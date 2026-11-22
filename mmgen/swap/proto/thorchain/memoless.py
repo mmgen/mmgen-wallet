@@ -30,7 +30,8 @@ class THORChainReferenceMemo:
 
 	def parse(self, s):
 		from .asset import THORChainSwapAsset
-		_, name, self.memo = s.split(':', 2)
+		pfx, name, self.memo = s.split(':', 2)
+		assert pfx.upper() == self.pfx, f'{pfx}: invalid reference memo prefix'
 		self.send_asset = THORChainSwapAsset(name, 'send', sanitize_input=True)
 
 class THORChainMemolessAmount:
